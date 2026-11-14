@@ -3,6 +3,7 @@
 -- start with the v11 bump even though their screens ship later. Written only
 -- inside existing fenced transactions (HatchProgress.transact / award).
 local Book=require(game:GetService("ReplicatedStorage").Shared.BookCatalog)
+local RoundItems=require(game:GetService("ReplicatedStorage").Shared.RoundItems)
 local State={}
 State.Counters={"rounds","winsEasy","winsMedium","winsHard","tidyWins","merges","bestChain","tierFive",
 	"itemsUsed","pets","parkGames","starsEarned","starsSpent"}
@@ -11,7 +12,19 @@ State.BookLimit=256
 State.FoundMask=2^31-1 -- discovery bits 0..30 only (BUILD-PLAN architect change 4)
 State.RunMerges=10000 -- per-round bounds, mirrored by the award validator (HatchProgress.award)
 State.RunItems=64
+-- Optional counters (overnight 2026-11-14, slice D). Known to add/max/bor but NOT in the
+-- required `Counters` list: a save without them is valid and reads 0, so no old save fails.
+--   weeklyBonuses  weekly bonus quests claimed (slot 0); counts from this build on, no backfill
+--   itemWinKinds   OR of the round-item kinds used in won rounds (bits: swap 1, pop 2, bomb 4, magnet 8)
+State.Optional={"weeklyBonuses","itemWinKinds"}
+State.ItemKindsMask=2^#RoundItems.Order-1
 local known={};for _,key in ipairs(State.Counters)do known[key]=true end
+for _,key in ipairs(State.Optional)do known[key]=true end
+-- The bit of one round item id (0 for an unknown id). Order is RoundItems.Order, append-only.
+function State.itemKindBit(id)
+	local index=table.find(RoundItems.Order,id)
+	return if index then bit32.lshift(1,index-1)else 0
+end
 
 local function integer(value,max)
 	return type(value)=="number"and value==value and value%1==0 and value>=0 and value<=(max or State.Cap)
@@ -51,16 +64,42 @@ function State.max(state,key,value)
 	stats[key]=math.clamp(math.max(stats[key]or 0,math.floor(value)),0,State.Cap)
 end
 
+-- OR `mask` into an optional bit-set counter, clipped to `limit`.
+function State.bor(state,key,mask,limit)
+	local stats=state.stats
+	if type(stats)~="table"or not known[key]or type(mask)~="number"or mask~=mask or mask<0 or mask==math.huge then return end
+	limit=limit or State.FoundMask
+	local current=if integer(stats[key],limit)then stats[key]else 0
+	stats[key]=bit32.band(bit32.bor(current,bit32.band(math.floor(mask),limit)),limit)
+end
+
 local function bits(mask)local n=0;while mask>0 do n+=mask%2;mask=math.floor(mask/2)end;return n end
 -- After any committed transaction: wallet and pet deltas. Robux grants are not
--- "earned"; every debit is "spent".
-function State.record(before,after,signature)
+-- "earned"; every debit is "spent". `now` (the transaction's clock, read inside the
+-- UpdateAsync callback) feeds the state-derived Discoveries (slice D).
+function State.record(before,after,signature,now)
 	if type(after.stats)~="table"then return end
+	signature=if type(signature)=="string"then signature else ""
 	local delta=after.nectar-before.nectar
 	if delta<0 then State.add(after,"starsSpent",-delta)
-	elseif delta>0 and string.sub(signature or "",1,9)~="purchase:"then State.add(after,"starsEarned",delta)end
+	elseif delta>0 and string.sub(signature,1,9)~="purchase:"then State.add(after,"starsEarned",delta)end
 	local gained=bits(after.inventoryMask or 0)-bits(before.inventoryMask or 0)
 	if gained>0 then State.add(after,"pets",gained)end
+	-- Weekly bonus quest claimed (signature quest:weekly:<period>:0; slot 0 is the bonus)
+	-- and paid: the Star charm counts these. No QuestState change needed.
+	if delta>0 and string.match(signature,"^quest:weekly:.+:0$")then State.add(after,"weeklyBonuses",1)end
+	-- Discoveries the save itself has earned (BookCatalog.stateBits, Lane K). pet_night belongs
+	-- to the pet write alone: its bit is dropped for every other signature, whatever the
+	-- catalogue returns.
+	if type(Book.stateBits)=="function"then
+		local found=Book.stateBits(after,now,signature)
+		local night=type(Book.DiscoveryById)=="table"and Book.DiscoveryById.pet_night
+		if type(found)=="number"and found==found and found>0 and found~=math.huge then
+			found=bit32.band(math.floor(found),State.FoundMask)
+			if night and string.sub(signature,1,4)~="pet:"then found=bit32.band(found,bit32.bnot(bit32.lshift(1,night.bit)))end
+			State.setFound(after,found)
+		end
+	end
 end
 -- One saved round (inside the award transaction).
 function State.recordRun(state,run,heat)
@@ -74,6 +113,8 @@ function State.recordRun(state,run,heat)
 	if type(run.merges)=="number"then State.add(state,"merges",math.min(run.merges,State.RunMerges))end
 	if type(run.itemsUsed)=="number"then State.add(state,"itemsUsed",math.min(run.itemsUsed,State.RunItems))end
 	if run.maxTier==5 then State.add(state,"tierFive",1)end
+	-- Item kinds count toward win_each_item only on a win (slice D).
+	if run.success and type(run.itemKinds)=="number"then State.bor(state,"itemWinKinds",run.itemKinds,State.ItemKindsMask)end
 	State.setFound(state,Book.runBits(run,heat))
 end
 

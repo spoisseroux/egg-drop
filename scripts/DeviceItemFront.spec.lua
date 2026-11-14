@@ -35,7 +35,8 @@ return function(client,parent)
     view:close()
    end)
    test(tostring(size).." five egg families disclose actual pool and full feature odds",function()
-    local s=state();s.toyUnlocks={ball=true};shop:open(s);settle()
+    -- Three of pool 2's five toys owned, so two remain at 50% each.
+    local s=state();s.toyUnlocks={ball=true,squeaky_carrot=true,wobble_top=true};shop:open(s);settle()
     for _,id in ipairs({"hue","material","toy"})do assert(shop:selectRecipe(id));settle();local card=shop.body.EggColumn["Recipe_"..id];assert(card and card.AbsoluteSize.X>=44);fit(card.RecipeName);fit(card.Cost)end
     -- Redesign 3: odds render once, in the pane; the Feature Egg row is hidden by the flag.
     shop:selectRecipe("toy");settle();local odds=shop.oddsHolder;assert(not odds:FindFirstChild("Odds_ball")and odds.Odds_bone:GetAttribute("OddsText")=="50%"and odds.Odds_sparkler:GetAttribute("OddsText")=="50%")

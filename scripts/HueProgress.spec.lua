@@ -3,6 +3,10 @@ return function(server)
  local H=require(server.HatchProgress);local S=require(server.HueState);local L=require(server.LegacyHueState)
  local Shared=game.ReplicatedStorage.Shared;local Hue=require(Shared.HueCatalog);local Palette=require(Shared.PetPalette)
  local cases={};local function test(name,f)f();table.insert(cases,name)end
+ -- Slice E (2026-11-14): Hue.Supported also lists the earned pet (blip), which these
+ -- fixtures never own; the seven saved pets are the ones without `earned`.
+ local Pets=require(Shared.PetCatalog)
+ local function saved(pet)return Pets.byId[pet]~=nil and Pets.byId[pet].earned~=true end
  local function copy(x)if type(x)~="table"then return x end;local r={};for k,v in pairs(x)do r[k]=copy(v)end;return r end
  local currentDb
  local function fixture(rank)
@@ -69,7 +73,8 @@ return function(server)
   local h,db=fixture();assert(h.state.version==11 and S.valid(h.state));assert(db.player_1.custom=="kept"and not db.player_1.petAppearance.pip.charmVisible)
   for _,item in ipairs(Hue.ItemOrder)do assert(h.state.hueInventory[item]==0)end
   local p=H.public(h);assert(not p.hueReservation and not p.hueItemReceipts and not p.hueReceiptOrder)
-  for pet in pairs(Hue.Supported)do assert(Palette.resolve(pet,{mainDoses=Hue.emptyCounts(),secondaryDoses=Hue.emptyCounts()}))end
+  for pet in pairs(Hue.Supported)do if saved(pet)then assert(Palette.resolve(pet,{mainDoses=Hue.emptyCounts(),secondaryDoses=Hue.emptyCounts()}))end end
+  assert(Hue.Supported.blip==true,"slice E: the earned pet can be dyed once owned")
  end)
  test("each 25-percent server roll stores exactly one item, one debit and no companion pity change",function()
   local h,_,c=fixture();fund(h);c.callbackReplay=true
@@ -167,7 +172,7 @@ return function(server)
  end)
  test("each seven-pet channel can consume independently without changing equip, charm, sibling channel or ownership",function()
   local h,db,c=fixture();fund(h);local mask=h.state.inventoryMask
-  for pet in pairs(Hue.Supported)do for _,channel in ipairs({"main","secondary"})do
+  for pet in pairs(Hue.Supported)do for _,channel in ipairs(if saved(pet)then {"main","secondary"}else {})do
    buy(h,c,"iris");use(h,"iris",pet,channel,true)
    assert(S.row(h.state,pet)[channel].iris==1 and h.state.inventoryMask==mask and db.player_1.petAppearance.pip.charmVisible==false)
   end end

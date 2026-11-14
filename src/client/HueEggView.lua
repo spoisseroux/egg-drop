@@ -63,7 +63,7 @@ function View.new(parent,intent,options)
  local body=Instance.new("ScrollingFrame");body.Name,body.Parent="Body",card;body.BackgroundTransparency=1;body.BorderSizePixel=0;body.ZIndex=22
  body.Active=true -- Native scrolling owns wheel input instead of also zooming the garden camera.
  body.ScrollingDirection,body.ElasticBehavior=Enum.ScrollingDirection.Y,Enum.ElasticBehavior.Never;body.ScrollBarThickness=4;Art.bind(body,{ScrollBarImageColor3="accent"})
- local self=setmetatable({shade=shade,card=card,body=body,intent=intent,options=options or {},state={},petId="pip",page="palette",tab="hue",channel="main",targets={},jars={},bars={},charmRequests={},epoch=0,
+ local self=setmetatable({shade=shade,card=card,body=body,intent=intent,options=options or {},state={},petId=(Pets.active[1]or Pets[1]).id,page="palette",tab="hue",channel="main",targets={},jars={},bars={},charmRequests={},epoch=0,
   cardPreviews=CardPreviews.new({live=8,size=16})},View)
  -- A card that gives its preview up shows its icon again.
  self.cardPreviews.onDetach=function(holder)for _,child in ipairs(holder:GetChildren())do if string.match(child.Name,"^Icon_")then child.Visible=true end end end
@@ -219,7 +219,10 @@ function View:hasMaterialAssignment()
  local result=self.state.pendingMaterialResult;local draft=self.materialAssignment
  return result~=nil and draft~=nil and result.id==draft.resultId and result.finishId==draft.finishId
 end
-function View:owned(id)return Eggs.isOwned(self.state.inventoryMask or 0,id)end
+-- Overnight 2026-11-14 slice E: Pets.collection also holds pets whose rig is not in this
+-- build (the second pet behind its flag). Only a pet with a rig can be drawn or customized.
+function View.drawable(id)return type(id)=="string"and require(Shared.PetRigDefinitions)[id]~=nil end
+function View:owned(id)return View.drawable(id)and Eggs.isOwned(self.state.inventoryMask or 0,id)end
 function View:counts()local p=self.state.petHues and self.state.petHues[self.petId];return countsCopy(p and p[self.channel])end
 function View:appearance()
  local appearance=table.clone(self.options.appearance and self.options.appearance(self.petId)or {})
@@ -1022,7 +1025,17 @@ function View.tabList(flags)
  return tabs
 end
 -- Pure: the Charm cards. None is the first card, a normal option like the others.
-function View.charmCards(appearance,enabled)
+-- Slice D (overnight 2026-11-14): earned shapes (CharmCatalog rules). `facts` is
+-- CharmCatalog.facts(snapshot); without it every shape reads as free (older callers).
+-- A locked card can still be focused (it previews on the pet) but not worn.
+function View.charmRule(id,facts)
+ local key="pool3.charm."..tostring(id)..".rule"
+ local line=UICopy.get(if UICopy.has(key)then key else "pool3.charm.fallback.rule")
+ local progress=type(CharmCatalog.progress)=="function"and facts~=nil and CharmCatalog.progress(id,facts)
+ if progress and progress.need>1 then line=line.." · "..progress.have.."/"..progress.need end
+ return line
+end
+function View.charmCards(appearance,enabled,facts)
  appearance=appearance or {}
  local hidden=appearance.charmVisible==false
  local shape=appearance.charmShape or CharmCatalog.Default
@@ -1032,7 +1045,11 @@ function View.charmCards(appearance,enabled)
  for _,id in ipairs(CharmCatalog.Order)do
   if enabled or id==shown then
    local wearing=not hidden and known and id==shape
-   table.insert(cards,{id=id,name=CharmCatalog.ById[id].name,status=if wearing then "WEARING"else "Free",tone=if wearing then "accent"else "soft",wearing=wearing})
+   local ruled=facts~=nil and type(CharmCatalog.rule)=="function"and CharmCatalog.rule(id)~=nil
+   local locked=ruled and not wearing and not CharmCatalog.earned(id,facts)
+   table.insert(cards,{id=id,name=CharmCatalog.ById[id].name,wearing=wearing,locked=locked,rule=if ruled then View.charmRule(id,facts)else nil,
+    status=if wearing then "WEARING"elseif locked then UICopy.get("pool3.charm.locked")elseif ruled then UICopy.get("pool3.charm.earned")else "Free",
+    tone=if wearing then "accent"elseif locked then "dim"else "soft"})
   end
  end
  return cards
@@ -1045,6 +1062,8 @@ end
 -- Pure: the pane for a focused Charm card. pending = the in-flight request or nil.
 function View.charmPane(card,petName,pending,message)
  local line=if card.id=="none"then "No charm floats beside "..petName else "Floats beside "..petName.." in its Secondary colour"
+ -- Slice D: a locked shape says how it is earned; its button stays, disabled.
+ if card.locked then return{button=UICopy.get("pool3.charm.locked"),enabled=false,line=card.rule or line,status=message or ""}end
  if pending and pending.retry then return{button="Try again",enabled=true,line=line,status=message or "Not saved yet."}end
  if pending then return{button="Saving…",enabled=false,line=line,status="Saving…"}end
  -- QA v2 R3.5: the worn card keeps its button, disabled, reading "Equipped".
@@ -1289,7 +1308,7 @@ function View:layoutChrome()
   if self.intent.status=="Retrying"then pane.button="Try again";pane.enabled=true end
  elseif self.tab=="charm"then
   local enabled=self:shapeSelectionsEnabled()
-  local cards=View.charmCards(a,enabled)
+  local cards=View.charmCards(a,enabled,self:charmFacts())
   -- First visit lands on the card being worn.
   if not self.chromeFocus.charm then for i,c in ipairs(cards)do if c.wearing then index=i end end end
   index=math.clamp(index,1,#cards);self.chromeFocus.charm=index
@@ -1297,9 +1316,9 @@ function View:layoutChrome()
   local tint=Palette.resolve(self.petId,a).secondary
   for i,c in ipairs(cards)do
    local b=self.charmCards[c.id];b.Visible=true;Cards.place(b,rects[i])
-   Cards.dress(b,{name=c.name,status=c.status,tone=c.tone,icon=if c.id=="none"then "none"elseif c.id=="dot"then "sparkle"elseif c.id=="ring"then "ball"else "sphere",
-    iconColor=if c.id=="none"then Kit.Color.soft else tint,focused=i==index,compact=compact})
-   b:SetAttribute("Wearing",c.wearing)
+   Cards.dress(b,{name=c.name,status=c.status,tone=c.tone,icon=if c.locked then "lock"else View.charmIcon(c.id),
+    iconColor=if c.id=="none"or c.locked then Kit.Color.soft else tint,focused=i==index,compact=compact})
+   b:SetAttribute("Wearing",c.wearing);b:SetAttribute("Locked",c.locked==true)
    local cardId=c.id
    table.insert(focus,{button=b,id=c.id,act=function()return self:wearCharm(cardId)end})
   end
@@ -1312,7 +1331,8 @@ function View:layoutChrome()
   end
   local c=cards[index];self.charmFocusId=c.id
   local s=View.charmPane(c,petName,self.charmRequests[self.petId],self.charmMessage)
-  pane.name=c.name;pane.chip={"Free","accent"};pane.line=s.line;pane.status=s.status;pane.button=s.button;pane.enabled=s.enabled and allowed
+  pane.name=c.name;pane.line=s.line;pane.status=s.status;pane.button=s.button;pane.enabled=s.enabled and allowed
+  pane.chip=if c.locked then {UICopy.get("pool3.charm.locked"),"plain"}elseif c.rule then {UICopy.get("pool3.charm.earned"),"accent"}else {"Free","accent"}
  else
   local panel=if self.tab=="materials"then self.materialPanel elseif self.tab=="toys"then self.toyPanel else self.featurePanel
   if panel.root.Visible then
@@ -1399,9 +1419,24 @@ function View:chromeAct()
  return item.act()==true
 end
 -- Charm: None sends charm(petId, false); a shape sends charm(petId, true, shape).
+-- Slice D: the card icon of a charm shape (Kit icon names; a star for the Star, the
+-- sparkle for shapes without their own glyph).
+function View.charmIcon(id)
+ if id=="none"then return "none"end
+ if id=="dot"then return "sparkle"end
+ if id=="ring"then return "ball"end
+ if id=="pebble"then return "sphere"end
+ if id=="star"then return "star"end
+ return "sparkle"
+end
+function View:charmFacts()
+ return if type(CharmCatalog.facts)=="function"then CharmCatalog.facts(self.state)else nil
+end
 function View:wearCharm(id)
  if self.intent.pending then return false end
  if id~="none"and not CharmCatalog.known(id)then return false end
+ -- Slice D: a locked shape is never requested (the server refuses it as well).
+ if id~="none"and type(CharmCatalog.earned)=="function"and type(CharmCatalog.facts)=="function"and not CharmCatalog.earned(id,self:charmFacts())then return false end
  local visible,shape=View.charmRequestFor(id)
  if shape and not self:shapeSelectionsEnabled()then shape=nil end
  return self:requestCharm(visible,shape)

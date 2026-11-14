@@ -85,7 +85,7 @@ return function(server)
 		local ok, reason = H.buyFaceplate(h, "buy-r", "tidepool", 40)
 		assert(not ok and reason == "OperationConflict", tostring(ok) .. " " .. tostring(reason))
 		assert(not Faceplates.owns(h.state, "tidepool") and h.state.nectar == balance and c.writes == writes)
-		assert(db.player_1.hatching.lastOperation.digest == "plate:night_orb")
+		assert(db.player_1.hatching.lastOperation.digest == "plate:night_orb:80", "op id bound to plate + price (slice C)")
 		-- Another server with a stale snapshot is refused inside the callback too.
 		local h2, db2 = fixture()
 		fund(h2, 200)

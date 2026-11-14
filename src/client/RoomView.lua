@@ -28,6 +28,11 @@ local Art = require(script.Parent.DeckArt)
 local DeckTransition = require(script.Parent.DeckTransition)
 local Config = require(ReplicatedStorage.Shared.BoardConfig)
 local Pets = require(ReplicatedStorage.Shared.PetCatalog)
+-- Overnight 2026-11-14: slice E (any supported pet has a charm) and slice F (bond pips,
+-- the level-up flourish and tricks 1-2).
+local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
+local BondPips=require(script.Parent.BondPips)
+local PetIdleBeats=require(script.Parent.PetIdleBeats)
 
 local Room = {}
 Room.__index = Room
@@ -273,6 +278,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
             -- FEEL-ALIVE B2/B3: look-at-owner and the owner-still sit (8 studs, 6 s).
             self.pet.ownerPosition=root and root.Position or nil;self.pet.ownerMoving=not still
             self.pet.ownerStillNearFor=if still and(root.Position-self.pet.origin).Magnitude<=8 then serverNow-self.ownerStillSince else 0
+            self:bondTricks(reduced) -- slice F: Hello (level 1) and Sit (level 2)
             if self.pet.idleBeat and self.pet.idleBeat.kind then self.pet.poseDirty=true end
             self.pet.cosmeticTime=serverNow
             -- Close-up petting (boop squash, fast wag, the 1 s pose change) renders every
@@ -473,13 +479,86 @@ function Room:refreshPetAppearance()
   if before~=self.pet.featureRevision then self.focusGeometry=nil end
  end
 	if self.focusUI and self.focusUI.setCharmVisible then
-		local supported=self.shownPet.id=="pip"or self.shownPet.id=="puddle"
+		local supported=HueCatalog.Supported[self.shownPet.id]==true
 		self.focusUI:setCharmVisible(if supported then appearance.charmVisible else nil,self.charmPending~=nil,self.pet and self.pet.secondaryColor)
+	end
+	self:syncBond()
+end
+-- Slice F. The snapshot's bond map ({petId = xp}); nil while the server does not send one.
+function Room:setBond(bond)
+	self.bond=if type(bond)=="table"then bond else nil
+	self:syncBond()
+end
+function Room:bondInfo()
+	if not self.shownPet then return nil end
+	return BondPips.info(self.bond,self.shownPet.id)
+end
+-- The focus card: the shown pet's name and pips (hidden without bond data).
+function Room:syncBond(animate)
+	if not self.focusUI or not self.focusUI.setBond then return end
+	local info=self:bondInfo()
+	self.focusUI:setBond(if info and self.shownPet then {name=self.shownPet.name,bond=info}else nil,animate)
+end
+-- Start an idle beat now (tricks and the level-up stretch). The pet's own scheduler
+-- carries it on; it ends at once when the pet is not free to play a beat.
+function Room:playBeat(kind)
+	local pet=self.pet
+	if not pet or pet.destroyed or not PetIdleBeats.Durations[kind]then return false end
+	local s=pet.idleBeat
+	if not s then s={idle=0,clock=0,last=-math.huge};pet.idleBeat=s end
+	if s.kind then return false end
+	s.kind,s.age,s.previous,s.landed=kind,0,kind,false
+	s.duration=PetIdleBeats.Durations[kind];s.side=s.side or 1;s.count=(s.count or 0)+1
+	if pet.model then pet.model:SetAttribute("IdleBeat",kind)end
+	pet.poseDirty=true
+	return true
+end
+-- A bond level-up on the shown pet (VISUAL-BRIEF 5): the stretch rise with the pleased
+-- face, the heart burst in the secondary colour, a chirp, and the new pip pops on the
+-- focus card. Reduced Effects: no stretch, no hearts; the pip fades in (the caller toasts).
+-- A level earned while the deck is up (a round's XP lands on the results screen) waits
+-- for the garden: the flourish plays the next time the pet is on screen (within 2 min).
+Room.BondFlourishWait=120
+function Room:bondLevelUp(petId,level)
+	if not self.shownPet or self.shownPet.id~=petId then return false end
+	self:syncBond(true)
+	self.pendingBond={petId=petId,level=level,at=os.clock()}
+	return true
+end
+function Room:bondFlourish()
+	local pending=self.pendingBond
+	if not pending then return false end
+	if os.clock()-pending.at>Room.BondFlourishWait or not self.shownPet or self.shownPet.id~=pending.petId then self.pendingBond=nil;return false end
+	if self.mode~="Room"or self.target~="Room"or self.busy or self.focusTransitioning or not self.pet or self.pet.destroyed then return false end
+	self.pendingBond=nil
+	if not self.reduceEffects()then
+		self:playBeat("stretch")
+		if self.affection then self.lastBondBurst=self.affection:bondBurst(self.pet.secondaryColor,false)end
+	end
+	if self.shownPet.cue and self.audio then self.audio:play(self.shownPet.cue,1.12,.32)end
+	if self.pet.model then self.pet.model:SetAttribute("BondLevelUp",pending.level)end
+	return true
+end
+-- Tricks 1-2 (local presentation only; gated on the snapshot's bond, so nothing changes
+-- while the server sends none). Level 1 "Hello": a wave the first time the owner stands
+-- near this session. Level 2 "Sit": the owner-still sit needs level 2.
+function Room:bondTricks(reduced)
+	local pet=self.pet
+	local info=self:bondInfo()
+	pet.bondLevel=info and info.shown or nil
+	if self.pendingBond then self:bondFlourish()end
+	if not info then return end
+	if info.shown<2 then pet.ownerStillNearFor=0 end
+	local id=self.shownPet.id
+	self.bondHello=self.bondHello or {}
+	if not self.bondHello[id]and not reduced and pet.idleBeatsEnabled and pet.ownerNearStill
+		and(pet.gaitWeight or 0)<.03 and not(pet.idleBeat and pet.idleBeat.kind)then
+		if self:playBeat("wave")then self.bondHello[id]=true end
 	end
 end
 function Room:setCharmVisible(visible)
 	if type(visible)~="boolean"or self.charmPending or not self.focusing or self.mode~="Room"or self.busy or self.overlayOpen()then return false end
-	if self.shownPet.id~="pip"and self.shownPet.id~="puddle"then return false end
+	if HueCatalog.Supported[self.shownPet.id]~=true then return false end
 	self:setPetContact(false)
 	self.charmSeq=(self.charmSeq or 0)+1
 	self.charmPending={petId=self.shownPet.id,seq=self.charmSeq}
@@ -652,7 +731,8 @@ end
 
 function Room.captureFocusSubject(pet,family)
 	local rig=pet.model:GetAttribute("RigId")
-	if rig=="zivvi"or rig=="ovelle"or rig=="bear"then return PetGreetingShot.captureFocusedSubject(pet)end
+	-- Slice E: Blip is built on the Bear base, so it takes the Bear's capture path.
+	if rig=="zivvi"or rig=="ovelle"or rig=="bear"or rig=="blip"then return PetGreetingShot.captureFocusedSubject(pet)end
 	local fields={"greeting","focusPose","gaitWeight","movementBob","affectionTilt","lastFrame"}
 	local saved={};for i,key in ipairs(fields)do saved[i]=pet[key]end
 	pet.greeting=if family=="pip"or family=="puddle"then 2 else 0

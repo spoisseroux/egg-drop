@@ -13,6 +13,7 @@ local Themes=require(Shared.DeckThemes)
 local Catalog=require(Shared.AppearanceCatalog)
 local Kit=require(script.Parent.DeckKit)
 local UICopy=require(Shared.UICopy)
+local Deal=require(script.Parent.ShelfDeal)
 local Assets=require(script.Parent.DeckAssets)
 local BackgroundShop=require(script.Parent.BackgroundShop)
 -- Third tab, Balls (batch 2026-11-13 R1): ball themes, drawn by BallShop.
@@ -37,7 +38,16 @@ Shop.Hints={
  {pairs={{"browse","Browse"},{"tab","Tab"},{"confirm","Buy or use"},{"back","Back"}},promise=UICopy.get("style.promise.balls")},
 }
 local TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
- rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")},book={"BOOK",Kit.Tint.book}}
+ rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")},book={"BOOK",Kit.Tint.book},
+ -- Slice C: the deluxe tier (160), in Stars gold.
+ deluxe={UICopy.get("shelf.deluxe"),Kit.Color.stars}}
+Shop.TierChip=TierChip
+-- Slice C: the shelf week for a ctx. ctx.week wins (false = no shelf, for specs); without
+-- one the owner snapshot's day decides (ShelfDeal.week), as the server's check does.
+local function weekOf(ctx)
+ if ctx and ctx.week~=nil then return ctx.week end
+ return Deal.week()
+end
 local function finishName(theme)
  local finish=theme.finish or "gloss"
  return string.upper(string.sub(finish,1,1))..string.sub(finish,2)
@@ -52,11 +62,13 @@ function Shop.status(id,ctx)
  -- QA v2 R3.5 (194500, 195844): the plate on the deck keeps the Equip button, disabled,
  -- reading "Equipped" (no status line under the name, which overlapped it on phones).
  if ctx.equipped==id then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
- local price=Themes.price(id)
- if price and not Catalog.ownsFaceplate(facts,id)then
+ local base=Themes.price(id)
+ if base and not Catalog.ownsFaceplate(facts,id)then
   local wallet=ctx.wallet or 0
-  if wallet>=price then return {kind="buy",text="You have enough Stars",button="★ Buy "..price,price=price,enabled=true}end
-  return {kind="short",text=(price-wallet).." more Stars needed",button="★ Buy "..price,price=price,enabled=false}
+  -- Slice C: a plate on this week's shelf sells at the shelf price (`full` = the struck price).
+  local price,full=Deal.quote("faceplate",id,base,weekOf(ctx))
+  if wallet>=price then return {kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
+  return {kind="short",text=(price-wallet).." more Stars needed",button="★ Buy "..price,price=price,full=full,enabled=false}
  end
  local requirement=Catalog.describeRequirement("theme",id,facts)
  if requirement.unlocked then return {kind="owned",text=if theme.bookOnly then "From the book"else "",button="Equip",enabled=true}end
@@ -67,8 +79,8 @@ function Shop.tileStatus(id,ctx)
  local s=Shop.status(id,ctx)
  if s.kind=="equipped"then return "EQUIPPED","accent"end
  if s.kind=="owned"then return (if Themes.isBookOnly(id)then "From the book"else "✓ Owned"),"soft"end
- if s.kind=="buy"then return "★ "..s.price,"stars"end
- if s.kind=="short"then return "★ "..s.price,"dim"end
+ if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
+ if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
  local short=({firstWin="Win 1",rankI="Win 3",rankII="Win 10",book="Book"})[Themes.ById[id]and Themes.ById[id].rule or ""]or "Locked"
  return "🔒 "..short,"dim"
 end
@@ -229,6 +241,8 @@ function Shop:buildRegular()
  self.preview=miniDeck(pane,296,UDim2.fromOffset(16,16))
  self.name=txt(pane,"Title","","text",20,170,200,30,{TextTruncate=Enum.TextTruncate.AtEnd})
  self.tier=Kit.chip(pane,"RARE","sticker",26);self.tier.root.AnchorPoint=Vector2.new(1,.5);self.tier.root.Position=UDim2.fromOffset(308,185)
+ -- Slice C: "THIS WEEK −20%" over the preview's corner while the focused plate is on the shelf.
+ self.deal=Deal.chip(pane,22);self.deal.root.ZIndex=pane.ZIndex+20;self.deal.root.Position=UDim2.fromOffset(24,24);self.dealWidth=pw-48
  self.finish=txt(pane,"Small","","soft",20,204,288,20,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
  local sample=Kit.frame(pane,"Sample",nil,UDim2.fromOffset(20,234),UDim2.fromOffset(288,44),12);sample.BackgroundTransparency=0
  Kit.stroke(sample)
@@ -308,6 +322,7 @@ function Shop:buildCompact(v)
  local nameY=10+deckW/2+16+9
  self.name=txt(pane,"Title","","text",12,nameY-12,pw-24-90,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd})
  self.tier=Kit.chip(pane,"RARE","sticker",22);self.tier.label.TextSize=12;self.tier.root.AnchorPoint=Vector2.new(1,.5);self.tier.root.Position=UDim2.fromOffset(pw-12,nameY)
+ self.deal=Deal.chip(pane,22);self.deal.root.ZIndex=pane.ZIndex+20;self.deal.root.Position=UDim2.fromOffset(14,14);self.dealWidth=pw-28
  self.finish=txt(pane,"Small","","soft",12,nameY+22-9,pw-24,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
  local buttonY=ph-60
  local statusY=buttonY-14
@@ -435,7 +450,7 @@ function Shop:refresh()
  for index,tile in ipairs(self.tiles)do
   local text,role=Shop.tileStatus(tile.id,self.ctx)
   if self.view and role=="dim"then role="soft"end
-  tile.status.Text=text
+  Deal.setPrice(tile.status,text)
   tile.status.FontFace=if role=="accent"then Kit.Type.Label[3]else Kit.Type.Counter[3]
   Kit.paint(tile.status,"TextColor3",function()return colorOf(role)end)
   local focused=index==self.index
@@ -461,6 +476,8 @@ function Shop:paintPane()
   p.track.BackgroundColor3=theme.ui.raised;p.fill.BackgroundColor3=theme.accent
  end
  local status=Shop.status(id,self.ctx)
+ if self.deal then self.deal.set(status.full~=nil,self.dealWidth)end
+ self.root:SetAttribute("ShelfPrice",if status.full then status.price else nil)
  local retry=self.ctx.retry==true and self.ctx.chosen==id
  local note=if self.ctx.chosen==id and self.ctx.note then self.ctx.note else nil
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
@@ -591,6 +608,7 @@ end
 -- NeedStars and the shortfall is known; the plain reason when it is not.
 function Shop.shortText(plateId,ctx)
  local price=Themes.price(plateId)
+ if price then price=Deal.quote("faceplate",plateId,price,weekOf(ctx))end
  return UICopy.starsShort(if price then price-((ctx and ctx.wallet)or 0)else nil)
 end
 -- Server reply to a purchase.
@@ -600,7 +618,7 @@ function Shop:result(message)
  if message.status=="Retrying"then return false end
  local plateId=self.pending.plateId;self.pending=nil
  if message.status~="Saved"then
-  local reason=({NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled"})[message.reason]
+  local reason=({NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled",ShelfChanged="shop.reason.priceChanged",PriceChanged="shop.reason.priceChanged"})[message.reason]
   self.errorId,self.errorText,self.errorFit=plateId,UICopy.get(reason or "shop.failed.bought"),nil
   if message.reason=="NeedStars"then self.errorFit=Shop.shortText(plateId,self.ctx);self.errorText=self.errorFit[1]end
  else

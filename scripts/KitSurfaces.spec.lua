@@ -82,7 +82,10 @@ return function(client,parent)
    for index=1,#shop.tiles do
     local col,row=(index-1)%4,math.floor((index-1)/4)
     local b=shop.tiles[index].button
-    assert(b.Name=="Tile_"..Themes.Order[index]and b.Position==UDim2.fromOffset(R.grid[1]+col*(R.tile[1]+R.gap),R.grid[2]+row*(R.tile[2]+R.gap)))
+    -- 18 plates (overnight 2026-11-14) put the grid in Shop.ScrollGrid: origin 3,3 and its own row pitch.
+    local ox,oy,pitch=R.grid[1],R.grid[2],R.tile[2]+R.gap
+    if shop.grid then ox,oy,pitch=3,3,Shop.ScrollGrid.pitch end
+    assert(b.Name=="Tile_"..Themes.Order[index]and b.Position==UDim2.fromOffset(ox+col*(R.tile[1]+R.gap),oy+row*pitch))
     assert(b.Size==UDim2.fromOffset(R.tile[1],R.tile[2])and b.Selectable==false and b:GetAttribute("KitLip")==4)
    end
    assert(R.gap>=4+3,"the lip fits the grid gap with room to spare")

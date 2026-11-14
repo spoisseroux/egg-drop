@@ -5,6 +5,8 @@ return function(client,parent)
  local Cinematic=require(client.HatchCinematic)
  local Shot=require(client.PetGreetingShot)
  local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
+ -- An earned pet joins the greeting checks only once it has a rig (Blip waits behind FeatureFlags.SecondPet).
+ local Subjects={};for _,pet in ipairs(Pets.collection)do if not pet.earned or Pets.isActive(pet)then table.insert(Subjects,pet)end end
  local Art=require(client.DeckArt)
  local Gui=game:GetService("GuiService")
  local TextService=game:GetService("TextService")
@@ -51,9 +53,10 @@ return function(client,parent)
   end)
 
   test("all seven real subjects fit the rectangular viewport through every greeting frame",function()
+   -- An earned pet joins only once it has a rig (Blip waits behind FeatureFlags.SecondPet).
    for _,size in ipairs({Vector2.new(600,360),Vector2.new(338,420),Vector2.new(500,180)})do
     root.Size=UDim2.fromOffset(size.X,size.Y);settle()
-    for _,pet in ipairs(Pets.collection)do
+    for _,pet in ipairs(Subjects)do
      local c=make();c:play(packet(pet.id,pet.family~=nil),nil,{skipIntro=true});c:disconnectClock();settle();c:disconnectClock()
      assert(c.renderMode=="3D"and c.heroViewport and not c.heroViewport:FindFirstChildOfClass("UIGradient"))
      if c.landscapeLayout then assert(c.heroHost.Position.X.Offset+c.heroHost.Size.X.Offset<=c.heading.Position.X.Offset-11.9,"hero band crosses the text column")
@@ -109,7 +112,7 @@ return function(client,parent)
   end)
   test("all seven maximum simultaneous features and Ring fit the smallest swept greeting stage",function()
    root.Size=UDim2.fromOffset(484,203);settle()
-   for _,pet in ipairs(Pets.collection)do
+   for _,pet in ipairs(Subjects)do
     local c=make();c.compactLandscape=true
     c:play(packet(pet.id),nil,{skipIntro=true,appearance={charmVisible=true,charmShape="ring",featureStages={horns=5,claws=5,wings=5}}});c:disconnectClock();settle();c:disconnectClock()
     assert(c.heroVisual.featureStages.horns==5 and c.heroVisual.featureStages.claws==5 and c.heroVisual.featureStages.wings==5)

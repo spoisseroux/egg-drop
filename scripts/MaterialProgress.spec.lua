@@ -31,6 +31,25 @@ return function(server)
  local function buy(h,c)return command(h,c,"materialBuy",{poolVersion=C.PoolVersion,eligible=C.remaining(h.state.materialUnlocks)})end
  local function ack(h,c)return command(h,c,"materialAck",{resultId=h.state.pendingMaterialResult.id})end
  local function test(name,run)run();table.insert(cases,name)end
+ test("finish pools: pool 3 is data only, the selling pool stays 2, every pool sorted and kept",function()
+  assert(C.PoolVersion==2 and C.CatalogVersion==1 and C.Cost==16,"finish pool 3 must not sell until its templates are verified")
+  assert(table.concat(C.Pools[1],",")=="gloss,matte,metal"and table.concat(C.Pools[2],",")=="gloss,matte")
+  assert(table.concat(C.Pools[3],",")=="gloss,matte,pearl_edge,speckle_satin")
+  for version,pool in pairs(C.Pools)do
+   local previous=""
+   for _,id in ipairs(pool)do assert(C.known(id)and id~=C.Default and id>previous,"pool "..version.." unsorted at "..id);previous=id end
+  end
+  -- Nothing lists or sells the new finishes: available() still needs only Gloss and Matte.
+  assert(table.concat(C.PaidOrder,",")=="gloss,matte"and table.concat(C.Order,",")=="standard,gloss,matte,metal")
+  assert(C.ById.pearl_edge.name=="Pearl Edge"and C.ById.pearl_edge.profile=="BodyPearl"and C.ById.speckle_satin.name=="Speckle Satin"and C.ById.speckle_satin.profile=="BodySpeckle")
+  assert(#C.remaining({})==2 and #C.odds({})==2 and #C.remaining({},3)==4)
+  local pack=Instance.new("Folder")
+  for _,id in ipairs({"gloss","matte"})do
+   local surface=Instance.new("SurfaceAppearance");surface.Name=C.ById[id].profile
+   surface:SetAttribute("NativeVerified",true);surface:SetAttribute("MaterialVersion",1);surface:SetAttribute("MaterialProfile",C.ById[id].profile);surface.Parent=pack
+  end
+  assert(C.available(pack)==true,"available() must not need the pool 3 templates");pack:Destroy()
+ end)
  test("v6 migration preserves frozen Hue fields proofs and root siblings exactly",function()
   local h,db,c,a=fixture();assert(H.release(h));local old=db.player_1.hatching
   old.version=6;old.quests=nil;old.petWearables=nil;old.ballThemes,old.stats,old.stamps,old.book=nil,nil,nil,nil;old.contracts={day="20",progress={runs=0,chain=0,score=0},claimedMask=0};for _,k in ipairs({"toyUnlocks","petToys","toyReceipts","toyReceiptOrder","toyReservation","pendingToyResult","lastToyResult","featureStock","petFeatures","featureReceipts","featureReceiptOrder","featureReservation","pendingFeatureResult","lastFeatureResult","materialUnlocks","petMaterials","materialReceipts","materialReceiptOrder","pendingMaterialResult","materialReservation","lastMaterialResult"})do old[k]=nil end

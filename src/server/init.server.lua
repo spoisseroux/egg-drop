@@ -48,6 +48,7 @@ local BoardItems = require(script.BoardItems)
 local PaidRandomPolicy = require(script.PaidRandomPolicy)
 local BookCatalog = require(ReplicatedStorage.Shared.BookCatalog)
 local FeatureFlags = require(ReplicatedStorage.Shared.FeatureFlags)
+local EarnedPets = require(ReplicatedStorage.Shared.EarnedPets)
 local ParkDirector = require(script.ParkDirector)
 local ParkMount = require(script.ParkMount)
 
@@ -95,8 +96,10 @@ local function inventory(board)
 	return board.nursery.state.inventoryMask
 end
 
-local function hasPip(board)
-	return NurseryCatalog.isOwned(inventory(board), "pip")
+-- Slice E: "has a pet" is any owned pet that is active in this build (the Bear today, the
+-- Bear or Blip once SecondPet is on), never a literal id.
+local function hasPet(board)
+	return SessionProfile.hasActivePet(inventory(board))
 end
 
 local function canProgress(board)
@@ -349,9 +352,12 @@ local function publishNursery(board)
 	-- Quest rewards are shown with the player's 2x pass applied.
 	board.nursery.passMultiplier = StoreService.boost(board).multiplier
 	local state = Nursery.public(board.nursery)
-	if canProgress(board) and NurseryCatalog.isOwned(state.inventoryMask, "pip") then
-		if not NurseryCatalog.isOwned(state.inventoryMask, board.profile.companionId) then
-			Progress.equipCompanion(board.profile, Pets.byId.pip)
+	-- Slice E: a companion that is not owned, or an earned pet whose rig is not in this build,
+	-- falls back to the first owned active pet (never an unrenderable companion).
+	if canProgress(board) and not SessionProfile.usable(state.inventoryMask, board.profile.companionId) then
+		local fallback = SessionProfile.firstOwnedActive(state.inventoryMask)
+		if fallback then
+			Progress.equipCompanion(board.profile, Pets.byId[fallback])
 			publishCompanion(board)
 		end
 	end
@@ -481,7 +487,7 @@ end
 local function reset(board, preset, sameField)
 	board.folder:ClearAllChildren()
 	table.clear(board.parts)
-	local field = hasPip(board) and board.nursery.status == "Ready"
+	local field = hasPet(board) and board.nursery.status == "Ready"
 	board.heatGuided = field and guidedHeat(board)
 	-- A run's heat is frozen here, before its first drop.
 	board.runHeat = HeatRequest.runHeat(board.heatGuided, board.nextHeat)
@@ -518,8 +524,9 @@ local function reset(board, preset, sameField)
 	board.sim = Simulation.new(preset, board.sim and board.sim.serial, simOptions)
 	-- Belt, sequence and armed item never outlive their round (BUILD-PLAN item 3).
 	BoardItems.reset(board, itemsOn)
+	board.itemKinds = 0
 	-- The Welcome round (no field yet) is safe: the fill line never ends it (onboarding v1).
-	board.round = Round.new(if field then FieldRun.roundOptions(board.runHeat) elseif not hasPip(board) then { safe = true } else nil)
+	board.round = Round.new(if field then FieldRun.roundOptions(board.runHeat) elseif not hasPet(board) then { safe = true } else nil)
 	board.maxTier = 0
 	board.startBest = board.profile.bestScore
 	board.folder:SetAttribute("ResetId", board.sim.serial)
@@ -542,6 +549,52 @@ local function reset(board, preset, sameField)
 	publishHeat(board)
 	publishState(board)
 	syncVisuals(board)
+end
+
+-- Earned pets (slice E; SYSTEMS-SCOPE 1.3): one loop grants every pet EarnedPets.owed() names
+-- (Blip on the 7th stamp). Started after a daily claim, and on join / save reload as a repair
+-- for saves that passed the rule with the flag off or lost the write. Same shape as
+-- grantWelcome: busy-aware, one write at a time, retried every 2 s, stops on close. The
+-- ownership bit is the receipt, so a replay on any server converges; an ambiguous write is
+-- left to the background Nursery.retry loop. With SecondPet off, owed() is empty: no loop.
+local function grantEarned(player, board)
+	if board.earnedRunning or #EarnedPets.owed(board.nursery.state) == 0 then return end
+	board.earnedRunning = true
+	task.spawn(function()
+		local tries, attempted = 0, {}
+		local function logGranted()
+			for petId, logged in pairs(attempted) do
+				if not logged and NurseryCatalog.isOwned(inventory(board), petId) then
+					attempted[petId] = true
+					Economy.event(player, "PetEarned", 1, { petId })
+				end
+			end
+		end
+		while boards[player] == board and not board.closing and tries < 60 do
+			logGranted()
+			local owed = EarnedPets.owed(board.nursery.state)
+			if #owed == 0 then break end
+			-- A grant bumps the save revision: wait for a short quiet window after the last
+			-- command so the tap that follows a stamp never meets "RevisionChanged".
+			local quiet = os.clock() - (board.lastNurseryCommand or -math.huge) >= 3
+			if quiet and canProgress(board) and not board.nurseryBusy and not board.nursery.busy
+				and not board.nursery.pending and not board.payoutPending then
+				tries += 1
+				if attempted[owed[1]] == nil then attempted[owed[1]] = false end
+				board.nurseryBusy = true
+				local ok, reason = Nursery.grantEarnedPet(board.nursery, owed[1])
+				board.nurseryBusy = false
+				if boards[player] ~= board then break end
+				publishNursery(board)
+				publishState(board)
+				-- Disabled / NotEarned / UnknownPet can never succeed in this session.
+				if not ok and reason ~= "Retrying" and reason ~= "Busy" and reason ~= "Pending" and reason ~= "RevisionChanged" then break end
+			end
+			task.wait(2)
+		end
+		if boards[player] == board then logGranted() end
+		board.earnedRunning = false
+	end)
 end
 
 local function addPlayer(player)
@@ -581,7 +634,7 @@ local function addPlayer(player)
 	}
 	board.profileReady = SessionProfile.hydrate(profile, nursery)
 	if board.profileReady then board.firstSession = FirstSession.new(player, profile) end
-	board.mode = if NurseryCatalog.isOwned(nursery.state.inventoryMask, "pip") then "Room" else "Board"
+	board.mode = if hasPet(board) then "Room" else "Board"
 	boards[player] = board
 	board.passes = {}
 	board.nextHeat = if Config.validHeat(profile.lastHeat) then profile.lastHeat else Config.DefaultHeat
@@ -594,6 +647,8 @@ local function addPlayer(player)
 	reset(board, Config.DefaultPreset)
 	publishNursery(board)
 	publishPetAppearance(board)
+	-- Slice E repair-on-join: a pet already earned but not granted yet.
+	if board.profileReady then grantEarned(player, board) end
 	folder:SetAttribute("Mode", board.mode)
 	folder:SetAttribute("DeckThemeId", profile.theme)
 	folder:SetAttribute("DeckStickerId", profile.sticker)
@@ -692,7 +747,7 @@ local function closeBoard(board)
 		-- Code review: queued Play date / parkGames counts are saved once on leave (the flush loop
 		-- stops at closing), unless a write for them is still in flight or ambiguous.
 		if (board.parkPending or 0) > 0 and not board.parkInFlight and board.nursery and not board.nursery.pending then
-			pcall(Nursery.parkPlay, board.nursery, HttpService:GenerateGUID(false), board.parkPending)
+			pcall(Nursery.parkPlay, board.nursery, HttpService:GenerateGUID(false), board.parkPending, board.profile.companionId)
 		end
 		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout, {
 			profileFlush = function() return Progress.flushOnce(board.profile) end,
@@ -779,7 +834,9 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	if action=="petAppearance" then
 		local usable=if board.closing then "Closing"else canProgress(board)
 		local packet,changed=PetAppearance.request(board.petPreferences,board.profile,value,now,usable,
-			function(petId)return NurseryCatalog.isOwned(inventory(board),petId)end,Progress.setPetAppearance)
+			function(petId)return NurseryCatalog.isOwned(inventory(board),petId)end,Progress.setPetAppearance,
+			-- Slice D: earned charm shapes are checked against the save (stamps, book claims, stats, bond).
+			function(shape)return PetAppearance.earned(shape,board.nursery.state)end)
 		if changed then publishPetAppearance(board)end
 		if packet then petAppearanceResult:FireClient(player,packet)end
 		if packet and packet.status=="Applied"then Progress.requestFlush(board.profile)end
@@ -858,7 +915,8 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	if action == "family" then return end
 	if action == "companion" then
 		local pet = if typeof(value) == "string" then Pets.byId[value] else nil
-		if board.mode == "Room" and pet and NurseryCatalog.isOwned(inventory(board), pet.id)
+		-- Slice E: owned and renderable in this build (SessionProfile.usable).
+		if board.mode == "Room" and pet and SessionProfile.usable(inventory(board), pet.id)
 			and value ~= board.profile.companionId and now - board.lastCompanionChange >= 0.35 then
 			board.lastCompanionChange = now
 			gardenCareHost:switch(board,pet.id)
@@ -867,10 +925,10 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	end
 	if action == "mode" then
 		if now - board.lastModeChange < Config.ModeSwitchInterval or value == board.mode
-			or (value ~= "Board" and (value ~= "Room" or not hasPip(board))) then
+			or (value ~= "Board" and (value ~= "Room" or not hasPet(board))) then
 			return
 		end
-        if value=="Board"and board.round.over and hasPip(board)and RunReturn.classify(board,canProgress(board),true)=="Preserve"then return end
+        if value=="Board"and board.round.over and hasPet(board)and RunReturn.classify(board,canProgress(board),true)=="Preserve"then return end
 		board.lastModeChange = now
 		if value=="Board"then
 			local actor=garden.actors[player.UserId]
@@ -881,10 +939,10 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			end
 		end
 		if value == "Board" then
-            local refreshed=RunReturn.enter(board,canProgress(board),hasPip(board),reset)
+            local refreshed=RunReturn.enter(board,canProgress(board),hasPet(board),reset)
             -- A completed field can leave Room only after exact saved payout
             -- permits its fresh replacement. Active fields resume unchanged.
-            if board.round.over and hasPip(board)and not refreshed then return end
+            if board.round.over and hasPet(board)and not refreshed then return end
         end
 		board.mode = value
 		board.menuPaused = false
@@ -900,7 +958,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if action == "drop" then
-		if board.menuPaused or board.round.over or (hasPip(board) and board.nursery.status ~= "Ready")
+		if board.menuPaused or board.round.over or (hasPet(board) and board.nursery.status ~= "Ready")
 			or (board.field and (not board.field:canDrop(board.sim.drops) or not Simulation.canDrop(board.sim)))
 			or typeof(value) ~= "number" or not (value >= 0 and value <= 1)
 			or now - board.lastDrop < Config.DropInterval then
@@ -920,6 +978,8 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		local ok, result = BoardItems.request(board, value, { resetId = board.folder:GetAttribute("ResetId"),
 			ready = canProgress(board), now = now, budget = board.field and board.field.budget })
 		if ok then
+			-- Slice D (win_each_item): which item kinds this round used, as a 4-bit mask.
+			board.itemKinds = bit32.bor(board.itemKinds or 0, Nursery.itemKindBit(result.id))
 			local position = result.position
 			BoardItems.event(board, board.folder, { kind = "used", id = result.id, eggId = result.eggId,
 				x = position and position.X or nil, y = position and position.Y or nil, lostStar = result.lostStar ~= nil })
@@ -931,7 +991,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	elseif action == "restart" then
 		-- Pocket Menu restart: same field template, new seed; its own 3 s cooldown.
 		if now - board.lastReset < Config.ResetInterval or now - (board.lastRestart or -math.huge) < 3 then return end
-		if RunReturn.restart(board, canProgress(board), hasPip(board), value, function(target, preset) reset(target, preset, "template") end) then
+		if RunReturn.restart(board, canProgress(board), hasPet(board), value, function(target, preset) reset(target, preset, "template") end) then
 			board.lastReset, board.lastRestart = now, now
 			board.menuPaused = false
 		end
@@ -941,7 +1001,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			return
 		end
 		if action == "reset" then
-			if not RunReturn.retry(board, canProgress(board), hasPip(board), value, reset) then return end
+			if not RunReturn.retry(board, canProgress(board), hasPet(board), value, reset) then return end
 			board.lastReset = now
 			if board.firstSession then board.firstSession:record("FirstSessionRoundRetry") end
 			return
@@ -1129,11 +1189,17 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
 		board.nurseryBusy=true;publishNursery(board)
 		local walletBefore=board.nursery.state.nectar
-		local plateBefore=table.find(board.nursery.state.faceplates or {},BookCatalog.BookOnlyFaceplate)~=nil
+		-- Slice C: any book-only plate (Bookworm, Stargazer...) this claim grants or repairs.
+		local platesBefore=Nursery.bookPlatesOwned(board.nursery.state)
 		local ok,reason=Nursery.bookClaim(board.nursery,opId,milestone.id,if type(v.reward)=="number"then v.reward else nil)
 		if ok and board.nursery.state.nectar>walletBefore then paid=board.nursery.state.nectar-walletBefore;Economy.source(player,paid,board.nursery.state.nectar,"Gameplay","BookMilestone")end
 		if ok and reason~="AlreadySaved"and reason~="AlreadyClaimed"then Economy.event(player,"BookMilestone",1,{milestone.id})end
-		if ok and not plateBefore and table.find(board.nursery.state.faceplates or {},BookCatalog.BookOnlyFaceplate)then granted=BookCatalog.BookOnlyFaceplate end
+		if ok then
+			local platesAfter=Nursery.bookPlatesOwned(board.nursery.state)
+			for _,plateId in ipairs(Nursery.bookPlateIds())do
+				if platesAfter[plateId]and not platesBefore[plateId]then granted=plateId;break end
+			end
+		end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
 		reply(if ok then(if reason=="AlreadyClaimed"then "AlreadyClaimed"else "Saved")elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
@@ -1248,6 +1314,9 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 			Economy.event(player, "StampAdded", ((board.nursery.state.stamps - 1) % 7) + 1)
 		end
 	end
+	-- Slice E: the stamp that meets an earned pet's rule starts its grant (also covers a
+	-- claim whose write was ambiguous and committed later: owed() reads the saved stamps).
+	if action == "daily" then grantEarned(player, board) end
 	if isHue and reason=="Retrying"then board.hueWaiting=quote end
 	board.nurseryBusy = false
 	if boards[player] ~= board then return end
@@ -1272,9 +1341,14 @@ local function settleReward(player, board)
 		maxTier = math.clamp(board.maxTier or 0, 0, #Config.Tiers), goalsMet = board.field.outcome.rootStage,
 		templateId = board.field.descriptor.id,
 		-- Lifetime counters (play-forever F1): merges this round, accepted item uses (BoardItems).
-		merges = math.clamp(board.merges or 0, 0, 10000), itemsUsed = math.clamp(board.itemSeq or 0, 0, 64) }
+		merges = math.clamp(board.merges or 0, 0, 10000), itemsUsed = math.clamp(board.itemSeq or 0, 0, 64),
+		-- Slice D: item kinds used this round (bits swap 1, pop 2, bomb 4, magnet 8).
+		itemKinds = bit32.band(board.itemKinds or 0, 15) }
 	board.settledRounds = (board.settledRounds or 0) + 1
-	local boost = StoreService.boost(board)
+	-- Slice F: the companion at the end of the round earns the bond XP. It rides in a copy of
+	-- the boost table so the close-drain path (CloseProgress passes payout.boost) carries it too.
+	local passBoost = StoreService.boost(board)
+	local boost = { multiplier = passBoost.multiplier, bonus = passBoost.bonus, petId = board.profile.companionId }
 	board.earnedPayout = { sequence = board.runSequence, amount = amount, summary = summary, saved = false, boost = boost }
 	board.payoutPending, board.payoutRunning = true, true
 	board.folder:SetAttribute("RewardStatus", "Saving")
@@ -1283,7 +1357,7 @@ local function settleReward(player, board)
 		while boards[player] == board and not board.closing and board.payoutPending do
 			local wait = 2
 			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
-				local ok, reason = Nursery.award(board.nursery, board.runSequence, amount, summary, boost)
+				local ok, reason = Nursery.award(board.nursery, board.runSequence, amount, summary, boost, boost.petId)
 				if boards[player] ~= board then break end
 				publishNursery(board)
 				local outcome = RewardRetry.classify(ok, reason)
@@ -1325,10 +1399,10 @@ local function settleReward(player, board)
 end
 
 local function grantWelcome(player, board)
-	if board.starterRunning or hasPip(board) then return end
+	if board.starterRunning or hasPet(board) then return end
 	board.starterRunning = true
 	task.spawn(function()
-		while boards[player] == board and not board.closing and not hasPip(board) do
+		while boards[player] == board and not board.closing and not hasPet(board) do
 			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
 				local walletBefore = board.nursery.state.nectar
 				local ok = Nursery.grantStarter(board.nursery)
@@ -1347,7 +1421,7 @@ local function grantWelcome(player, board)
 			task.wait(2)
 		end
 		-- A grant that first reported Retrying and committed later still logs step 4 (idempotent).
-		if boards[player] == board and hasPip(board) and board.firstSession then board.firstSession:advance(4) end
+		if boards[player] == board and hasPet(board) and board.firstSession then board.firstSession:advance(4) end
 		board.starterRunning = false
 	end)
 end
@@ -1377,7 +1451,7 @@ local function flushParkGames(player, board)
 					board.parkInFlight = nextFlight
 					board.nurseryBusy = true; publishNursery(board)
 					local walletBefore = board.nursery.state.nectar
-					local ok, reason = Nursery.parkPlay(board.nursery, nextFlight.id, nextFlight.count)
+					local ok, reason = Nursery.parkPlay(board.nursery, nextFlight.id, nextFlight.count, board.profile.companionId)
 					board.nurseryBusy = false
 					if boards[player] ~= board then break end
 					if Nursery.parkCommitted(board.nursery, nextFlight.id) then
@@ -1439,7 +1513,7 @@ RunService.Heartbeat:Connect(function(dt)
 				Progress.recordScore(board.profile, board.round.score)
 				Progress.recordTrials(board.profile, board.chain, board.round.score, board.round.maxClears)
 				if board.field then board.field:observe(merge,{sequence=board.runSequence,ordinal=board.merges,chain=board.chain,playTime=board.playTime}) end
-				if not hasPip(board) and board.profile.rank < 1 then
+				if not hasPet(board) and board.profile.rank < 1 then
 					Progress.chargeHatch(board.profile, merge.tier)
 				end
 				if board.firstSession then
@@ -1459,7 +1533,7 @@ RunService.Heartbeat:Connect(function(dt)
 				board.sim.bursts = nil
 				publishState(board)
 			end
-			if board.profile.rank >= 1 and not hasPip(board) then grantWelcome(player, board) end
+			if board.profile.rank >= 1 and not hasPet(board) then grantWelcome(player, board) end
 			if board.field then
 				local oldPhase, oldStage = board.field.phase, board.field.rootStage
 				local expired=board.field:expireChain(board.playTime,board.lastMerge)
@@ -1541,7 +1615,7 @@ task.spawn(function()
 							board.folder:SetAttribute("SaveStatus", nil)
 							board.firstSession = board.firstSession or FirstSession.new(player, board.profile)
 							board.selectedFamily = NurseryCatalog.family(board.profile.companionId) or "pip"
-							board.mode = if hasPip(board) then "Room" else "Board"
+							board.mode = if hasPet(board) then "Room" else "Board"
 							reset(board, board.sim.preset)
 							board.folder:SetAttribute("Mode", board.mode)
 							if board.folder:GetAttribute("DeckThemeId")~=board.profile.theme
@@ -1557,6 +1631,8 @@ task.spawn(function()
 							Lounge.setMode(player.Character, player.UserId, board.mode, board.profile.theme)
 							Lounge.setAppearance(player.Character, board.profile.theme)
 							if board.firstSession then board.firstSession:advance(1) end
+							-- Slice E repair-on-reload: a pet already earned but not granted yet.
+							grantEarned(player, board)
 						elseif replacement.status == "Ready" then
 							-- Never enable play over a dirty/unhydrated provisional profile.
 							Nursery.release(replacement)

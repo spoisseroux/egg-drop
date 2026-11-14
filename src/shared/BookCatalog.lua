@@ -20,10 +20,14 @@ local Toys=require(Shared.ToyCatalog)
 local Finishes=require(Shared.MaterialCatalog)
 local Pets=require(Shared.PetCatalog)
 local Eggs=require(Shared.EggCatalog)
+local Daily=require(Shared.DailyContracts)
 local Objectives=require(Shared.FieldObjectives)
+local Park=require(Shared.ParkActivities)
 
 local Book={Version=1}
 Book.BookOnlyFaceplate="bookworm"
+Book.StargazerPlate="stargazer"
+Book.StargazerMilestone="discoveries.100"
 Book.Steps=table.freeze({25,50,75,100})
 Book.Rewards=table.freeze({[25]=5,[50]=5,[75]=10,[100]=15})
 Book.PagesForFaceplate=3
@@ -57,6 +61,22 @@ for _,heat in ipairs({"easy","medium","hard"})do
 	table.insert(discoveries,{id="win_"..heat,bit=heatBits[heat],heat=heat,
 		name="Win on "..string.upper(string.sub(heat,1,1))..string.sub(heat,2)})
 end
+-- Slice D (overnight 2026-11-14): six more, bits 11..16 (ids from VISUAL-BRIEF 3). These are
+-- derived from the save after any committed write (Book.stateBits), not from a round, so a
+-- player who already qualifies earns them on the next save. `state=true` marks them.
+Book.FullOutfitSlots=5
+Book.TidyWins=25
+Book.RoundsPlayed=100
+Book.ItemKindsMask=15 -- swap, pop, bomb, magnet (RoundItems): stats.itemWinKinds
+Book.NightFromHour,Book.NightUntilHour=20,6
+for _,entry in ipairs({
+	{id="pet_night",bit=11,name="Pet your pet at night"},
+	{id="play_date",bit=12,name="Finish a Play date"},
+	{id="full_outfit",bit=13,name="Wear a full outfit"},
+	{id="win_each_item",bit=14,name="Win with each item type"},
+	{id="tidy_25",bit=15,name="25 tidy wins"},
+	{id="rounds_100",bit=16,name="Play 100 rounds"},
+})do entry.state=true;table.insert(discoveries,entry)end
 do
 	local used={}
 	for _,entry in ipairs(discoveries)do
@@ -87,6 +107,64 @@ function Book.runBits(run,heat)
 	return bit32.band(mask,2^31-1)
 end
 
+-- The garden's real hour (0..24) at a unix time: the fixed world timezone the day clock
+-- uses (EggCatalog.DayOffsetSeconds, UTC-5; the same formula as the client's HollowClock.cycle).
+-- Real even while the DayNight flag locks the visuals to dusk (SYSTEMS-SCOPE 8 #9).
+function Book.hour(unix)
+	return ((if type(unix)=="number"and unix==unix then unix else 0)+Eggs.DayOffsetSeconds)/3600%24
+end
+function Book.isNight(unix)
+	local hour=Book.hour(unix)
+	return hour>=Book.NightFromHour or hour<Book.NightUntilHour
+end
+local function count(value)return if type(value)=="number"and value==value and value>=0 then value else 0 end
+-- Distinct wardrobe slots a pet wears (a pair counts once; ids this build does not sell count 0).
+function Book.outfitSlots(petId,equipped)
+	if type(petId)~="string"or type(equipped)~="table"then return 0 end
+	local byId=Wear.forPet(petId,math.huge).byId
+	local seen,total={},0
+	for _,itemId in pairs(equipped)do
+		local item=type(itemId)=="string"and byId[itemId]
+		if item and not seen[item.slot]then seen[item.slot]=true;total+=1 end
+	end
+	return total
+end
+-- Discovery bits the save itself has earned (slice D). Pure; call it on the state a write
+-- is about to commit, with the same `now` the write reads:
+--   Book.stateBits(state, now, signature?)
+-- `signature` is the transaction signature (optional). pet_night needs the pet write itself:
+-- with a signature it must start with "pet:"; without one the pet receipt must belong to
+-- this write (lastPetAward.sequence is operationSeq or operationSeq+1).
+function Book.stateBits(state,now,signature)
+	if type(state)~="table"then return 0 end
+	local mask=0
+	local function set(n)mask=bit32.bor(mask,bitOf(n))end
+	local receipt=state.lastPetAward
+	if type(receipt)=="table"and type(now)=="number"and now==now then
+		local fresh
+		if type(signature)=="string"then fresh=string.sub(signature,1,4)=="pet:"
+		else
+			local seq=count(state.operationSeq)
+			fresh=receipt.sequence==seq or receipt.sequence==seq+1
+		end
+		if fresh and receipt.day==Daily.dayOf(now)and Book.isNight(now)then set(11)end
+	end
+	local play=state.playDate
+	if type(play)=="table"and count(play.count)>=Park.PlayDate.Target then set(12)end
+	if type(state.petWearables)=="table"then
+		for petId,row in pairs(state.petWearables)do
+			if type(row)=="table"and Book.outfitSlots(petId,row.equipped)>=Book.FullOutfitSlots then set(13);break end
+		end
+	end
+	local stats=state.stats
+	if type(stats)=="table"then
+		if bit32.band(math.floor(count(stats.itemWinKinds)),Book.ItemKindsMask)==Book.ItemKindsMask then set(14)end
+		if count(stats.tidyWins)>=Book.TidyWins then set(15)end
+		if count(stats.rounds)>=Book.RoundsPlayed then set(16)end
+	end
+	return mask
+end
+
 -- Pages: each item is { id, name, ... }; `owns(state, item)` reads the save.
 local pages={}
 local function page(id,items,owns,extra)
@@ -104,13 +182,23 @@ end
 do
 	local items={}
 	for _,id in ipairs(Plates.Order)do if Plates.price(id)then table.insert(items,{id=id,name=Plates.ById[id].name})end end
-	page("faceplates",items,function(state,item)return listHas(state.faceplates,item.id)end,{bookOnly={Book.BookOnlyFaceplate}})
+	-- Book-only plates that exist in this build's DeckThemes (Stargazer joins with its art).
+	local bookOnly={}
+	for _,id in ipairs({Book.BookOnlyFaceplate,Book.StargazerPlate})do
+		if Plates.ById[id]~=nil and Plates.isBookOnly(id)then table.insert(bookOnly,id)end
+	end
+	page("faceplates",items,function(state,item)return listHas(state.faceplates,item.id)end,{bookOnly=bookOnly})
 end
 do
 	local items={}
 	for _,pet in ipairs(Pets.active)do
-		for _,item in ipairs(Wear.forPet(pet.id).order)do
-			table.insert(items,{id=pet.id..":"..item.id,name=item.name,petId=pet.id,itemId=item.id})
+		-- Recolour variants never count (SYSTEMS-SCOPE 8 #4): each weekly variant would
+		-- move 100% further away. Base items only. `math.huge` lists every released row, so
+		-- the page never depends on the clock.
+		for _,item in ipairs(Wear.forPet(pet.id,math.huge).order)do
+			if not item.variant then
+				table.insert(items,{id=pet.id..":"..item.id,name=item.name,petId=pet.id,itemId=item.id})
+			end
 		end
 	end
 	page("wardrobe",items,function(state,item)
@@ -204,6 +292,37 @@ function Book.faceplateEarned(claimed)
 	return count>=Book.PagesForFaceplate
 end
 
+-- Book-only plates (slice C): each is granted by the book claim that earns it, and repaired
+-- on any later claim. `earned(claimed)` reads only the claimed milestone list, which never
+-- shrinks, so a plate once earned is always earned.
+--   bookworm:  any three pages claimed at 100%
+--   stargazer: the Discoveries page claimed at 100% (SYSTEMS-SCOPE 8 #8)
+-- A plate is listed only when this build's DeckThemes has it as a book-only plate, so the
+-- server never grants an id the faceplate catalogue does not know.
+do
+	local plates={}
+	local rules={
+		{id=Book.BookOnlyFaceplate,rule="pages3",earned=Book.faceplateEarned},
+		{id=Book.StargazerPlate,rule=Book.StargazerMilestone,earned=function(claimed)
+			return type(claimed)=="table"and table.find(claimed,Book.StargazerMilestone)~=nil
+		end},
+	}
+	for _,plate in ipairs(rules)do
+		if Plates.ById[plate.id]~=nil and Plates.isBookOnly(plate.id)then table.insert(plates,table.freeze(plate))end
+	end
+	Book.BookOnlyPlates=table.freeze(plates)
+end
+-- Plate ids the save has earned and does not hold yet, in BookOnlyPlates order.
+function Book.platesOwed(state)
+	local owed={}
+	if type(state)~="table"then return owed end
+	local claimed=type(state.book)=="table"and state.book.claimed or nil
+	for _,plate in ipairs(Book.BookOnlyPlates)do
+		if plate.earned(claimed)and not listHas(state.faceplates,plate.id)then table.insert(owed,plate.id)end
+	end
+	return owed
+end
+
 -- Snapshot block (owner-private, via HatchProgress.public).
 function Book.public(state)
 	local set,progress=claimedSet(state),Book.progress(state)
@@ -221,7 +340,15 @@ function Book.public(state)
 	if type(state)=="table"and type(state.book)=="table"and type(state.book.claimed)=="table"then claimed=table.clone(state.book.claimed)end
 	return {pages=list,claimed=claimed,claimable=Book.claimable(state),
 		found=if type(state)=="table"and type(state.book)=="table"then state.book.found or 0 else 0,
-		faceplate=Book.BookOnlyFaceplate,faceplateEarned=Book.faceplateEarned(claimed)}
+		faceplate=Book.BookOnlyFaceplate,faceplateEarned=Book.faceplateEarned(claimed),
+		plates=(function()
+			local rows={}
+			for _,plate in ipairs(Book.BookOnlyPlates)do
+				table.insert(rows,{id=plate.id,rule=plate.rule,earned=plate.earned(claimed)==true,
+					owned=type(state)=="table"and listHas(state.faceplates,plate.id)})
+			end
+			return rows
+		end)()}
 end
 
 return table.freeze(Book)

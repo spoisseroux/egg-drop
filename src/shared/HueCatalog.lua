@@ -1,5 +1,5 @@
 -- Canonical paid pigments and free learned recipes. Stable IDs remain saved.
-local Hue={Cost=8,MaxRank=3,Supported={pip=true,puddle=true,wick=true,orbit=true,bloom_pip=true,foxfire_wick=true,eclipse_orbit=true},LegacySupported={pip=true,puddle=true},Weights={0,.65,.84,1},CatalogVersion="hue-items-v1",MaxDose=5,StackLimit=9007199254740000}
+local Hue={Cost=8,MaxRank=3,Supported={pip=true,puddle=true,wick=true,orbit=true,bloom_pip=true,foxfire_wick=true,eclipse_orbit=true,blip=true},LegacySupported={pip=true,puddle=true},Weights={0,.65,.84,1},CatalogVersion="hue-items-v1",MaxDose=5,StackLimit=9007199254740000}
 Hue.Order={
  {id="rose",name="Rose",direction="Rose",color=Color3.fromHex("#FF327A"),cost=8},
  {id="tide",name="Tide",direction="Tide",color=Color3.fromHex("#008DFF"),cost=8},

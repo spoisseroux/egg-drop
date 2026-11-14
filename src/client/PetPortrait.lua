@@ -79,10 +79,12 @@ function Portrait.apply(sprite,appearance)
 end
 function Portrait.create(parent,pet,unit,position,z,locked,appearance)
  local colors,color,definition=colorsFor(pet,locked,appearance)
- local sprite=Art.pixels(parent,"Portrait",sprites[pet.id],colors,unit,position,z)
+ -- An earned pet without its own sprite yet (Blip, overnight 2026-11-14) borrows the Bear's rows in its own colours.
+ local rows=sprites[pet.id]or sprites.pip
+ local sprite=Art.pixels(parent,"Portrait",rows,colors,unit,position,z)
  sprite.AnchorPoint=Vector2.new(.5,.5)
  local slots={};local nodes=sprite:GetChildren();local index=0
- for _,row in ipairs(sprites[pet.id])do
+ for _,row in ipairs(rows)do
   local x=1
   while x<=#row do
    local symbol=string.sub(row,x,x);local stop=x+1

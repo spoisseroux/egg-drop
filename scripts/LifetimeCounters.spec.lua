@@ -88,11 +88,19 @@ return function(server)
 		assert(h.state.book.found == bit(0) + bit(1) + bit(Book.DiscoveryById.win_lantern_chain.bit) + bit(Book.DiscoveryById.win_hard.bit))
 		assert(award(h, { success = true, clean = true, templateId = "nope", heat = "easy" }), "an unknown template still saves")
 		assert(bit32.band(h.state.book.found, bit(Book.DiscoveryById.win_easy.bit)) ~= 0)
-		-- Every discovery is reachable from a round, and the Discoveries page reads the bits.
+		-- Every round discovery is reachable from a round, and the Discoveries page reads the bits.
+		-- (Slice D's six `state` discoveries come from the save itself: Book.stateBits.)
 		for _, template in ipairs(require(Shared.FieldObjectives).Order) do assert(award(h, { success = true, templateId = template })) end
 		assert(award(h, { success = true, heat = "medium" }))
 		local page = Book.pageProgress(h.state, "discoveries")
-		assert(page.owned == page.total and page.percent == 100, page.owned .. "/" .. page.total)
+		local fromRounds = 0
+		for _, entry in ipairs(Book.Discoveries) do
+			if not entry.state then
+				fromRounds += 1
+				assert(bit32.band(h.state.book.found, bit(entry.bit)) ~= 0, "round discovery not found: " .. entry.id)
+			end
+		end
+		assert(fromRounds == 11 and page.total == #Book.Discoveries and page.owned >= fromRounds, page.owned .. "/" .. page.total)
 		for _, entry in ipairs(Book.Discoveries) do assert(entry.bit >= 0 and entry.bit <= 30, entry.id) end
 	end)
 

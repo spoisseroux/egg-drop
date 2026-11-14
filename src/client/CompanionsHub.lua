@@ -21,6 +21,7 @@ local Kit=require(script.Parent.DeckKit)
 local UICopy=require(Shared.UICopy)
 local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
+local BondPips=require(script.Parent.BondPips)
 local Hub={}
 Hub.__index=Hub
 Hub.Size=Vector2.new(848,608)
@@ -74,13 +75,22 @@ function Hub.summary(petId,appearance)
  local toy=ToyCatalog.ById[appearance.toyId or ToyCatalog.Default]or ToyCatalog.ById[ToyCatalog.Default]
  return{{"Wearing",wearing},{"Charm",charm},{"Finish",finish.name},{"Toy",toy.name}}
 end
--- Pure: owned pets as selector cards, the active one first in catalog order.
+-- Pure: owned pets as selector cards, in catalog order. Only pets that can be shown
+-- (Pets.isActive: a rig in this build) are listed, so an owned pet whose rig is not in
+-- the build (slice E: the second pet behind its flag) never becomes the companion.
 function Hub.petCards(state,activeId)
  local cards={}
  for _,pet in ipairs(Pets.collection)do
-  if Eggs.isOwned(state and state.inventoryMask or 0,pet.id)then table.insert(cards,{id=pet.id,name=pet.name,following=pet.id==activeId})end
+  if Pets.isActive(pet)and Eggs.isOwned(state and state.inventoryMask or 0,pet.id)then table.insert(cards,{id=pet.id,name=pet.name,following=pet.id==activeId})end
  end
  return cards
+end
+-- Pure (slice E): the pet the hub shows when no companion is set: the first owned
+-- active pet, else the first active pet (a fresh save's pane still has a pet to draw).
+function Hub.firstOwned(state)
+ local mask=state and state.inventoryMask or 0
+ for _,pet in ipairs(Pets.active)do if Eggs.isOwned(mask,pet.id)then return pet.id end end
+ return Pets.active[1]and Pets.active[1].id or Pets[1].id
 end
 -- Pure: focus movement. Hub rows are one column; the selector is a cols-wide grid.
 function Hub.step(index,dx,dy,count,cols)
@@ -125,14 +135,16 @@ end
 
 function Hub:petId()
  if self.focusPet then return self.focusPet end
- return self.ctx.activeId or "pip"
+ return self:activePet()
 end
+-- The companion, or the first owned active pet while none is set (slice E).
+function Hub:activePet()return self.ctx.activeId or Hub.firstOwned(self.ctx.state)end
 function Hub:appearanceOf(petId)
  return table.clone(self.callbacks.appearance and self.callbacks.appearance(petId)or {})
 end
 function Hub:cards()return Hub.petCards(self.ctx.state,self.ctx.activeId)end
 function Hub:statusCtx()
- local petId=self.ctx.activeId or "pip";local pet=Pets.byId[petId]
+ local petId=self:activePet();local pet=Pets.byId[petId]
  return{petName=pet and pet.name or "",owned=Hub.ownedCount(self.ctx.state,petId),newItems=Hub.newItems(self.ctx.state)}
 end
 
@@ -232,20 +244,34 @@ function Hub:build(view)
 end
 
 function Hub:buildHub(body,W,H,phone)
- local petId=self.ctx.activeId or "pip";local pet=Pets.byId[petId]
+ local petId=self:activePet();local pet=Pets.byId[petId]
  local pane=Kit.card(body,"PetPane",nil,{pad=16,seam=true})
+ -- Slice F: bond pips with the pet's name (nil while bond data is not in the snapshot).
+ local bond=BondPips.info(self.ctx.state and self.ctx.state.bond,petId)
+ self.pips=nil
  if phone then
   local ph=H-64-20
   pane.Position=UDim2.fromOffset(20,64);pane.Size=UDim2.fromOffset(200,ph)
   self:buildWell(pane,12,12,176,math.max(60,ph-80))
-  self.petName=txt(pane,"Title",pet and pet.name or "","text",12,ph-62,176,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
+  -- Phone: the pips sit beside the name (no room under it above "Following you").
+  local pipsW=if bond then BondPips.extent(BondPips.Size.compact)+8 else 0
+  self.petName=txt(pane,"Title",pet and pet.name or "","text",12,ph-62,176-pipsW,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
   self.following=txt(pane,"Small","Following you","soft",12,ph-34,176,18,{TextSize=12})
+  if bond then
+   self.pips=BondPips.new(pane,true);self.pips.root.Position=UDim2.fromOffset(12+176-self.pips.width,ph-62+2);self.pips.set(bond)
+  end
  else
   pane.Position=UDim2.fromOffset(24,84);pane.Size=UDim2.fromOffset(328,452)
-  self:buildWell(pane,16,16,296,248)
-  self.petName=txt(pane,"Title",pet and pet.name or "","text",16,276,190,32,{TextSize=24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
-  local chip=Kit.chip(pane,"Following",nil,26);chip.root.AnchorPoint=Vector2.new(1,.5);chip.root.Position=UDim2.fromOffset(312,292)
+  -- Desktop: the pips go under the name; the preview well gives up their 22 px.
+  local lift=if bond then 22 else 0
+  self:buildWell(pane,16,16,296,248-lift)
+  self.petName=txt(pane,"Title",pet and pet.name or "","text",16,276-lift,190,32,{TextSize=24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
+  local chip=Kit.chip(pane,"Following",nil,26);chip.root.AnchorPoint=Vector2.new(1,.5);chip.root.Position=UDim2.fromOffset(312,292-lift)
   Kit.paint(chip.label,"TextColor3","accent");self.followChip=chip
+  if bond then
+   self.pips=BondPips.new(pane,false);self.pips.root.Position=UDim2.fromOffset(16,288);self.pips.set(bond)
+   self.pipsLabel=txt(pane,"Small",BondPips.label(bond),"soft",16+self.pips.width+10,286,296-self.pips.width-10,20,{Name="BondLabel",TextSize=13,TextTruncate=Enum.TextTruncate.AtEnd})
+  end
   self.summaryLabels={}
   for i,pair in ipairs(Hub.summary(petId,self:appearanceOf(petId)))do
    local y=318+(i-1)*28
@@ -311,7 +337,14 @@ function Hub:buildSelector(body,W,H,phone)
  local wellH=math.max(60,ph-pad*2-actionH-(if phone then 56 else 92))
  self:buildWell(pane,pad,pad,pw-pad*2,wellH)
  local y=pad+wellH+(if phone then 6 else 12)
- self.paneName=txt(pane,"Title","","text",pad,y,pw-pad*2,if phone then 22 else 30,{TextSize=if phone then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
+ -- Slice F: the focused pet's bond pips sit at the right of its name.
+ local hasBond=BondPips.info(self.ctx.state and self.ctx.state.bond,self:activePet())~=nil
+ local pipsW=if hasBond then BondPips.extent(if phone then BondPips.Size.compact else BondPips.Size.regular)+8 else 0
+ self.paneName=txt(pane,"Title","","text",pad,y,pw-pad*2-pipsW,if phone then 22 else 30,{TextSize=if phone then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
+ self.pips=nil
+ if hasBond then
+  self.pips=BondPips.new(pane,phone);self.pips.root.Position=UDim2.fromOffset(pw-pad-self.pips.width,y+(if phone then 1 else 4))
+ end
  y+=if phone then 22 else 34
  self.paneLine=txt(pane,"Small","","soft",pad,y,pw-pad*2,18,{TextSize=if phone then 12 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
  local action,state=Kit.button(pane,"Action",{variant="primary",text="Follow",glyph="A",size=Vector2.new(pw-pad*2,actionH),textSize=if phone then 16 else nil,selectable=false})
@@ -340,7 +373,7 @@ function Hub:buildSelector(body,W,H,phone)
   end)
  end
  list.CanvasSize=UDim2.fromOffset(0,math.ceil(#cards/cols)*(cardH+gap)-gap+6)
- if #cards==0 then txt(list,"Body","No companion yet. Play your first rounds to meet your Bear.","soft",3,3,gw-6,48,{TextWrapped=true})end
+ if #cards==0 then txt(list,"Body",UICopy.get("e2.hub.none"),"soft",3,3,gw-6,48,{TextWrapped=true})end
 end
 
 function Hub:fit(size)
@@ -406,16 +439,19 @@ function Hub:refresh()
    Kit.tintIcon(entry.icon,if focused then "ink"else "text")
   end
   self.focusPet=nil
-  if self.visible then self:paintPreview(self.ctx.activeId or "pip")end
+  if self.visible then self:paintPreview(self:activePet())end
  end
  self.root:SetAttribute("FocusedRow",if self.page=="hub"then Hub.Rows[self.rowIndex].id else nil)
 end
 function Hub:paintSelectorPane()
  local entry=self.cardButtons[self.cardIndex]
  if not entry then
-  self.paneName.Text="";self.paneLine.Text="";self.action.Visible=false;return
+  self.paneName.Text="";self.paneLine.Text="";self.action.Visible=false
+  if self.pips then self.pips.set(nil)end
+  return
  end
  self.focusPet=entry.id
+ if self.pips then self.pips.set(BondPips.info(self.ctx.state and self.ctx.state.bond,entry.id))end
  local pet=Pets.byId[entry.id];local following=entry.id==self.ctx.activeId
  self.paneName.Text=pet.name
  self.action.Visible=true
@@ -485,7 +521,7 @@ function Hub:act()
   local row=Hub.Rows[self.rowIndex];if not row then return false end
   self.lastRow=self.rowIndex
   if row.id=="pets"then self:setPage("pets");return true end
-  if self.callbacks.open then return self.callbacks.open(row.id,self.ctx.activeId)==true end
+  if self.callbacks.open then return self.callbacks.open(row.id,self:activePet())==true end
   return false
  end
  local entry=self.cardButtons[self.cardIndex];if not entry then return false end

@@ -21,11 +21,17 @@ return function(client,parent)
    local on=Shop.liveOrder({Features=true});assert(on[2]=="feature"and #on==4)
   end)
   test("pure: odds rows come from OddsText.list (equal thirds read 34%, 33%, 33%)",function()
-   local toy=Shop.oddsRows("toy",{});assert(#toy.rows==3 and toy.per=="1 toy per egg")
+   -- Toy pool 2 (2026-11-14) has five toys: a fresh save reads five equal rows, and three
+   -- toys left still read as the rounded thirds.
+   local ToyPool=require(game.ReplicatedStorage.Shared.ToyCatalog)
+   local fresh=Shop.oddsRows("toy",{});assert(#fresh.rows==#ToyPool.Pools[ToyPool.PoolVersion]and #fresh.rows==5 and fresh.per=="1 toy per egg")
+   for _,r in ipairs(fresh.rows)do assert(r.value=="20%",r.value)end
+   local toy=Shop.oddsRows("toy",{toyUnlocks={ball=true,bone=true}});assert(#toy.rows==3 and toy.per=="1 toy per egg")
    local thirds=OddsText.list({1/3,1/3,1/3});assert(thirds[1]=="34%"and thirds[2]=="33%"and thirds[3]=="33%")
    for i,r in ipairs(toy.rows)do assert(r.value==thirds[i])end
    assert(OddsText.format(1/3)=="33%"and OddsText.format(.5)=="50%"and OddsText.format(.15)=="15%"and OddsText.format(.001)=="<1%")
-   assert(Shop.oddsRows("toy",{toyUnlocks={ball=true,bone=true,sparkler=true}}).empty=="All toys owned")
+   local everyToy={};for _,toyId in ipairs(ToyPool.Pools[ToyPool.PoolVersion])do everyToy[toyId]=true end
+   assert(Shop.oddsRows("toy",{toyUnlocks=everyToy}).empty=="All toys owned")
    local hue=Shop.oddsRows("hue",{});assert(#hue.rows==4);for _,r in ipairs(hue.rows)do assert(r.value=="25%"and r.id~="reset")end -- Reset Hue jar dropped 2026-11-13
    local material=Shop.oddsRows("material",{materialAvailable=true});assert(#material.rows>=1)
    for _,r in ipairs(material.rows)do assert(r.value:match("%%$"))end
@@ -58,8 +64,9 @@ return function(client,parent)
     for _,row in ipairs({"Recipe_toy","Recipe_material","Recipe_hue"})do assert(column[row].AbsoluteSize.Y>=44)end
     assert(view:selectRecipe("toy")or view.selected=="toy");frames()
     assert(view.shopPanel:GetAttribute("SelectedEgg")=="toy"and view.eggName.Text=="Toy Egg")
-    local odds=view.oddsHolder:GetChildren();assert(#odds==3)
-    local shown={};for _,row in ipairs(odds)do table.insert(shown,row:GetAttribute("OddsText"))end;table.sort(shown);assert(table.concat(shown,",")=="33%,33%,34%")
+    -- Five toys in pool 2: five equal rows on a fresh save.
+    local odds=view.oddsHolder:GetChildren();assert(#odds==5,#odds)
+    local shown={};for _,row in ipairs(odds)do table.insert(shown,row:GetAttribute("OddsText"))end;table.sort(shown);assert(table.concat(shown,",")=="20%,20%,20%,20%,20%",table.concat(shown,","))
     assert(view:selectRecipe("hue"));frames();assert(view.shopPanel:GetAttribute("OddsRows")==4 and view.eggName.Text=="Hue Egg")
     -- Keyboard W / S / Up / Down move the selection and clamp at the ends.
     assert(view:moveRecipe(-1)and view.selected=="material"and view:moveRecipe(-1)and view.selected=="toy"and not view:moveRecipe(-1))

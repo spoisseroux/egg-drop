@@ -241,11 +241,42 @@ local Table={
  -- Overnight 2026-11-14 (artifacts/overnight-2026-11-14/BUILD-PLAN.md): one block per slice; each lane
  -- writes only inside its own block. e2 = second pet (E), variants = recolours + new tabs (B),
  -- shelf = weekly shelf (C), pool3 = toys / charms / Discoveries (D), bond = bond levels (F).
- e2={},
- variants={},
- shelf={},
- pool3={},
- bond={},
+ e2={
+  -- Lane U (E-cli): the earned pet's arrival card (CoachCards, coach bit petArrived) and the
+  -- stamp card's tease (StampCardView). All hidden while EarnedPets.enabled("blip") is false.
+  arrived={title="A friend arrived!",line="{pet} came to stay in your garden.",sayHi="Say hi"},
+  tease={many="Someone's on the way… {count} more stamps",one="Someone's on the way… 1 more stamp",short="Someone's on the way…"},
+  hub={none="No companion yet. Play your first rounds to meet your Bear."},
+ },
+ variants={
+  -- Lane U (B-cli): the Wardrobe's new slot tabs and the recolour line on a variant's pane.
+  tab={eyewear="Eyewear",cheek="Cheek",wrist="Wrist",ankle="Ankle"},
+  note="A new colour of {item}",
+  slot={eyewear="Sits on the nose",cheek="A pair, one for each cheek",wrist="A pair, one for each wrist",ankle="A pair, one for each ankle"},
+ },
+ shelf={
+  -- Lane U (C-cli): the weekly shelf chip (shops) and the machine hub line. No countdown.
+  chip="This week −20%",chipShort="−20%",
+  line="This week: {item}",short="20% off this week",
+  status="On this week's shelf",
+  deluxe="Deluxe",
+ },
+ pool3={
+  -- Lane U (D-cli): earned charm shapes on the Customize Charm tab.
+  charm={
+   locked="Locked",earned="Earned",
+   heart={rule="Finish the Wardrobe page in the book"},
+   star={rule="Claim 4 weekly bonuses"},
+   leaf={rule="Collect 14 daily stamps"},
+   fallback={rule="Keep playing to earn this charm"},
+  },
+ },
+ bond={
+  -- Lane U (F-cli): bond pips, the level-up toast and the trick names (levels 1-5).
+  title="Bond",level="Bond level {count}",short="Lv {count}",max="Lv {count} · more soon",
+  levelUp="Bond level {count} · New trick: {name}",levelUpPlain="Bond level {count}",
+  trick={l1="Hello",l2="Sit",l3="Wiggle dance",l4="Big stretch",l5="Happy hop"},
+ },
 }
 
 local function freeze(node)

@@ -10,6 +10,7 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Themes=require(Shared.BallThemes)
 local Kit=require(script.Parent.DeckKit)
 local UICopy=require(Shared.UICopy)
+local Deal=require(script.Parent.ShelfDeal)
 local Sprite=require(script.Parent.JellySprite)
 local TweenService=game:GetService("TweenService")
 local Shop={}
@@ -18,9 +19,17 @@ Shop.ConfirmSeconds=3
 -- Desktop rects in panel units: the pane matches Faceplates; 2 columns of 222x122 cards.
 Shop.Regular={pane={24,144,328,392},grid={371,147},tile={222,122},gap=12,columns=2}
 Shop.TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
- rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")}}
+ rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")},
+ -- Slice C: the deluxe tier (160), in Stars gold.
+ deluxe={UICopy.get("shelf.deluxe"),Kit.Color.stars}}
+-- Slice C: the shelf week for a ctx. ctx.week wins (false = no shelf, for specs); without
+-- one the owner snapshot's day decides (ShelfDeal.week), as the server's check does.
+local function weekOf(ctx)
+ if ctx and ctx.week~=nil then return ctx.week end
+ return Deal.week()
+end
 Shop.Reasons={NeedStars=UICopy.get("shop.reason.needStars"),Busy=UICopy.get("shop.reason.busy"),Throttled=UICopy.get("shop.reason.throttled"),
- PriceChanged=UICopy.get("shop.reason.priceChanged"),Unowned=UICopy.get("shop.reason.unowned")}
+ PriceChanged=UICopy.get("shop.reason.priceChanged"),ShelfChanged=UICopy.get("shop.reason.priceChanged"),Unowned=UICopy.get("shop.reason.unowned")}
 -- The pane's small board: {tier, x, bottom} in pane-board units (0..1 across, px up from the floor).
 Shop.Pile={{4,.22,0},{3,.5,0},{5,.8,0},{2,.36,40},{1,.12,44},{2,.62,52},{1,.9,64}}
 
@@ -33,17 +42,19 @@ function Shop.status(id,ctx)
  -- QA v2 R3.5: the theme in use keeps the Use button, disabled, reading "In use".
  if(ctx.equipped or Themes.Default)==id then return{kind="inUse",text="In use",button=UICopy.get("r4.inUse"),enabled=false}end
  if Themes.owns(ctx.owned,id)then return{kind="owned",text="Owned",button="Use",enabled=true}end
- local price=entry.price;local wallet=ctx.wallet or 0
- if wallet>=price then return{kind="buy",text="You have enough Stars",button="★ Buy "..price,price=price,enabled=true}end
- return{kind="short",text=(price-wallet).." more Stars needed",button="★ Buy "..price,price=price,enabled=false}
+ local wallet=ctx.wallet or 0
+ -- Slice C: a theme on this week's shelf sells at the shelf price (`full` = the struck price).
+ local price,full=Deal.quote("ball",id,entry.price,weekOf(ctx))
+ if wallet>=price then return{kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
+ return{kind="short",text=(price-wallet).." more Stars needed",button="★ Buy "..price,price=price,full=full,enabled=false}
 end
 -- Pure: the card's status line and its colour role.
 function Shop.tileStatus(id,ctx)
  local s=Shop.status(id,ctx)
  if s.kind=="inUse"then return "IN USE","accent"end
  if s.kind=="owned"then return "✓ Owned","soft"end
- if s.kind=="buy"then return "★ "..s.price,"stars"end
- if s.kind=="short"then return "★ "..s.price,"dim"end
+ if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
+ if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
  return "","dim"
 end
 -- QA v2 R4.6 (193916): previews show the balls falling in, as a sample of the round.
@@ -117,6 +128,8 @@ function Shop:build(parent,view,grid)
   self:buildBoard(pane,12,10,pw-24,math.max(40,nameY-6-10),2)
   self.name=txt(pane,"Title","","text",12,nameY,pw-24-90,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd})
   self.chip=Kit.chip(pane,"RARE","sticker",22);self.chip.label.TextSize=12;self.chip.root.AnchorPoint=Vector2.new(1,.5);self.chip.root.Position=UDim2.fromOffset(pw-12,nameY+12)
+  -- Slice C: "THIS WEEK −20%" over the board's corner while the focused theme is on the shelf.
+  self.deal=Deal.chip(pane,22);self.deal.root.ZIndex=pane.ZIndex+20;self.deal.root.Position=UDim2.fromOffset(18,16);self.dealWidth=pw-36
   self:buildCircles(pane,12,circlesY,16,"in goals")
   self.pitch,self.statusLabel=nil,nil
   local action,state=Kit.button(pane,"Action",{variant="primary",text="Use",glyph="A",size=Vector2.new(pw-24,48),textSize=16,selectable=false})
@@ -141,6 +154,7 @@ function Shop:build(parent,view,grid)
   self:buildBoard(pane,16,16,296,172,3)
   self.name=txt(pane,"Title","","text",20,196,200,30,{TextTruncate=Enum.TextTruncate.AtEnd})
   self.chip=Kit.chip(pane,"RARE","sticker",26);self.chip.root.AnchorPoint=Vector2.new(1,.5);self.chip.root.Position=UDim2.fromOffset(308,211)
+  self.deal=Deal.chip(pane,22);self.deal.root.ZIndex=pane.ZIndex+20;self.deal.root.Position=UDim2.fromOffset(24,24);self.dealWidth=R.pane[3]-48
   self.pitch=txt(pane,"Small","","text",20,230,288,20,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
   self.statusLabel=txt(pane,"Small",UICopy.get("style.balls.pitch"),"soft",20,252,288,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   self:buildCircles(pane,20,282,22,"in goals and quests")
@@ -229,7 +243,7 @@ function Shop:refresh()
  for index,tile in ipairs(self.tiles)do
   local text,role=Shop.tileStatus(tile.id,self.ctx)
   if self.view and role=="dim"then role="soft"end
-  tile.status.Text=text
+  Deal.setPrice(tile.status,text)
   tile.status.FontFace=if role=="accent"then Kit.Type.Label[3]else Kit.Type.Counter[3]
   Kit.paint(tile.status,"TextColor3",function()return colorOf(role)end)
   local focused=index==self.index
@@ -246,6 +260,8 @@ function Shop:paintPane()
  local entry=Themes.ById[id]
  local s=Shop.status(id,self.ctx)
  self.name.Text=entry.name
+ if self.deal then self.deal.set(s.full~=nil,self.dealWidth)end
+ self.owner.root:SetAttribute("BallShelfPrice",if s.full then s.price else nil)
  local chip=Shop.TierChip[entry.tier]or Shop.TierChip.starter
  self.chip.set(chip[1],"sticker",chip[2]) -- T6: the tier is the detail card's sticker (ink on the tier colour)
  if self.pitch then self.pitch.Text=entry.pitch end
@@ -258,7 +274,7 @@ function Shop:paintPane()
  local note=if pending then "Buying…"
   elseif self.errorId==id and self.errorText then self.errorText else nil
  if self.statusLabel then
-  self.statusLabel.Text=note or(if s.kind=="short"then s.text else UICopy.get("style.balls.pitch"))
+  self.statusLabel.Text=note or(if s.kind=="short"then s.text elseif s.full then UICopy.get("shelf.status")else UICopy.get("style.balls.pitch"))
   if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.statusLabel,self.errorFit)end
  end
  self.action.Visible=s.button~=nil
@@ -358,7 +374,8 @@ function Shop:result(message)
   self.errorId,self.errorText,self.errorFit=done.themeId,Shop.Reasons[message.reason]or UICopy.get(if done.action=="ballThemeBuy"then "shop.failed.bought"else "shop.failed.applied"),nil
   if message.reason=="NeedStars"and done.action=="ballThemeBuy"then
    local entry=Themes.ById[done.themeId]
-   self.errorFit=UICopy.starsShort(if entry and entry.price then entry.price-(self.ctx.wallet or 0)else nil);self.errorText=self.errorFit[1]
+   local price=entry and entry.price and Deal.quote("ball",done.themeId,entry.price,weekOf(self.ctx))
+   self.errorFit=UICopy.starsShort(if price then price-(self.ctx.wallet or 0)else nil);self.errorText=self.errorFit[1]
   end
  else
   self.errorId,self.errorText=nil,nil

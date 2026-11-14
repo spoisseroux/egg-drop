@@ -5,8 +5,21 @@
 -- state.ballThemes = { owned = {themeId, ...}, equipped = themeId }
 -- Free themes (Smileys, Marbles) are always owned; `owned` also lists them from the
 -- upgrade so a later catalogue that prices one cannot take it away.
-local Themes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
+local Shared=game:GetService("ReplicatedStorage").Shared
+local Themes=require(Shared.BallThemes)
 local State={Limit=Themes.Limit}
+-- Weekly shelf (slice C): a purchase made in shelf week `week` pays the shelf price when the
+-- item is on that week's shelf, otherwise the catalogue price. The module is Lane K's; a
+-- build without it (or with FeatureFlags.WeeklyShelf off) simply always pays full price.
+local shelfModule=Shared:FindFirstChild("WeeklyShelf")
+local Shelf=if shelfModule then require(shelfModule)else nil
+local function expectedPrice(kind,id,base,week)
+	if Shelf==nil or week==nil or type(base)~="number"then return base end
+	local price=Shelf.price(kind,id,week)
+	-- A shelf price is only ever a discount: a whole number of Stars from 1 up to the base.
+	if type(price)=="number"and price==price and price%1==0 and price>=1 and price<=base then return price end
+	return base
+end
 
 local function validId(id)return type(id)=="string"and #id>0 and #id<=32 end
 local function copy(v)if type(v)~="table"then return v end;local r={};for k,x in pairs(v)do r[k]=copy(x)end;return r end
@@ -35,10 +48,12 @@ function State.equipped(state)
 	return if row and Themes.ById[row.equipped]then row.equipped else Themes.Default
 end
 
--- Pure check shared by the server's early refusal and the UpdateAsync callback.
-function State.check(state,themeId,price)
+-- Pure check shared by the server's early refusal and the UpdateAsync callback. `week` is
+-- the shelf week frozen in the purchase (nil = no shelf: the catalogue price).
+function State.check(state,themeId,price,week)
 	local expected=Themes.price(themeId)
 	if not expected then return false,"NotForSale"end
+	expected=expectedPrice("ball",themeId,expected,week)
 	if price~=nil and price~=expected then return false,"PriceChanged"end
 	if State.owns(state,themeId)then return false,"AlreadyOwned"end
 	if #((state.ballThemes or {}).owned or {})>=State.Limit then return false,"OwnedLimit"end
@@ -46,10 +61,10 @@ function State.check(state,themeId,price)
 	return true,nil,expected
 end
 
--- candidate = { themeId, price, operationId, equip }
+-- candidate = { themeId, price, operationId, equip, week }
 function State.applyBuy(state,candidate)
 	if type(candidate)~="table"or not validId(candidate.themeId)then return false,"InvalidBallTheme"end
-	local ok,why,price=State.check(state,candidate.themeId,candidate.price)
+	local ok,why,price=State.check(state,candidate.themeId,candidate.price,candidate.week)
 	if not ok then return false,why end
 	local row=copy(state.ballThemes or State.fresh())
 	table.insert(row.owned,candidate.themeId)

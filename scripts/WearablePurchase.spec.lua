@@ -39,24 +39,76 @@ return function(server)
 	local function fund(h, stars) assert(H.grantPurchase(h, "fund-" .. stars .. "-" .. h.state.revision, stars, false)) end
 	local function equipped(h) return W.equipped(h.state, "pip") end
 
-	test("the catalogue: 17 Bear items (slice A: Happy, Lash, Round Eyes, Kitty W) at fixed 15/30/60 prices across the seven shop slots", function()
-		local items = Catalog.forPet("pip").order
-		assert(#items == 17, #items)
+	test("the catalogue: every rig item (the 17 through slice A, plus slice B's) at fixed 15/30/60 prices, recolour variants after their base", function()
+		local all = Catalog.forPet("pip").order
+		-- Base items are the rig's own; recolour variants (slice B) are listed right after their base.
+		local items, variants = {}, {}
+		for _, item in ipairs(all) do table.insert(if item.variant then variants else items, item) end
+		local sold = 0
+		for _, raw in ipairs(Defs.pip.wearableItems) do if type(raw.price) == "number" and raw.price > 0 then sold += 1 end end
+		assert(#items == sold and #items >= 17, #items .. " of " .. sold)
 		local slots = {}
 		for _, item in ipairs(items) do
 			assert(item.price == Catalog.TierPrice[item.tier], item.id)
 			slots[item.slot] = (slots[item.slot] or 0) + 1
 		end
-		assert(slots.Hat == 3 and slots.Shirt == 2 and slots.Neck == 2 and slots.EarPiercing == 2 and slots.Eyes == 5 and slots.Mouth == 2 and slots.Tail == 1)
+		assert(slots.Hat >= 3 and slots.Shirt >= 2 and slots.Neck >= 2 and slots.EarPiercing == 2 and slots.Eyes >= 5 and slots.Mouth >= 2 and slots.Tail >= 1)
 		assert(Catalog.price("pip", "flowercrown") == 60 and Catalog.price("pip", "beanie") == 15 and Catalog.price("pip", "sparkle") == 30)
 		assert(Catalog.price("pip", "round") == 15 and Catalog.price("pip", "happy") == 15 and Catalog.price("pip", "lash") == 15 and Catalog.price("pip", "w") == 15)
 		assert(Catalog.item("pip", "smallwide") == nil, "Wide Eyes is not sold")
-		assert(items[14].id == "happy" and items[15].id == "lash" and items[16].id == "round" and items[17].id == "w", "appended after the old lineup")
+		-- The old lineup keeps its order (new rig items only ever join it).
+		local position = {}
+		for index, item in ipairs(items) do position[item.id] = index end
+		local last = 0
+		for _, id in ipairs({ "beanie", "sunhat", "flowercrown", "tee", "hoodie", "beads", "bellcollar", "ring", "starstud", "sparkle", "sleepy", "blep", "heart" }) do
+			assert(position[id] and position[id] > last, "old lineup moved: " .. id); last = position[id]
+		end
+		for _, id in ipairs({ "happy", "lash", "round", "w" }) do assert(position[id] and position[id] > last, "slice A item before the old lineup: " .. id) end
 		local ring = Catalog.item("pip", "ring"); assert(ring.keys[1] == "EarPiercingL" and ring.keys[2] == "EarPiercingR")
-		for _, tab in ipairs(Catalog.Tabs) do assert(#Catalog.inTab("pip", tab.slot) > 0, tab.id) end
+		-- The shop shows only tabs that sell something (the first seven always do).
+		local shown = {}
+		for _, tab in ipairs(Catalog.tabsFor("pip")) do assert(#Catalog.inTab("pip", tab.slot) > 0, tab.id); shown[tab.id] = true end
+		for _, id in ipairs({ "hat", "shirt", "neck", "ears", "eyes", "mouth", "tail" }) do assert(shown[id], id) end
+		for _, tab in ipairs(Catalog.Tabs) do assert((shown[tab.id] == true) == (#Catalog.inTab("pip", tab.slot) > 0), tab.id) end
+		assert(#variants == 10 and Catalog.OwnedLimit == 128 and W.Limit == 128)
 		-- Every sold item renders on the Bear rig.
 		local known = {}; for _, row in ipairs(Rules.items(Defs.pip)) do known[row.item] = true end
 		for _, item in ipairs(items) do assert(known[item.id], "no meshes for " .. item.id) end
+		for _, item in ipairs(variants) do assert(known[item.base] and not known[item.id], "variant meshes " .. item.id) end
+	end)
+
+	test("recolour variants: their own ids at the base price; owning the base does not own the variant; one hat at a time", function()
+		local h, db, c = fixture()
+		fund(h, 100)
+		local mint = Catalog.item("pip", "beanie_mint")
+		assert(mint and mint.variant and mint.base == "beanie" and mint.slot == "Hat" and mint.price == Catalog.price("pip", "beanie") and mint.color == "#7FE0CF")
+		-- What the server charges this week: the catalogue price, or the weekly shelf price (slice C)
+		-- when the item happens to be on the fixture week's shelf.
+		local function due(itemId)
+			if type(W.price) == "function" then return W.price("pip", itemId, Catalog.week(c.now)) end
+			return Catalog.price("pip", itemId)
+		end
+		assert(due("beanie_mint") <= mint.price and due("beanie") <= 15)
+		assert(H.buyWearable(h, "v-1", "pip", "beanie", due("beanie"), true))
+		assert(W.owns(h.state, "pip", "beanie") and not W.owns(h.state, "pip", "beanie_mint"), "the base bought the variant")
+		local ok, reason = H.equipWearable(h, "v-e0", "pip", "Hat", "beanie_mint")
+		assert(not ok and reason == "NotOwned", tostring(reason))
+		local before = h.state.nectar
+		local cost = due("beanie_mint")
+		ok, reason = H.buyWearable(h, "v-2", "pip", "beanie_mint", cost, true)
+		assert(ok and reason == "Saved", tostring(reason))
+		assert(h.state.nectar == before - cost and W.owns(h.state, "pip", "beanie_mint") and W.owns(h.state, "pip", "beanie"))
+		-- The variant took the Hat slot from its base (one item per slot), and the save holds the variant id.
+		assert(equipped(h).Hat == "beanie_mint" and db.player_1.hatching.petWearables.pip.equipped.Hat == "beanie_mint")
+		assert(H.equipWearable(h, "v-e1", "pip", "Hat", "beanie") and equipped(h).Hat == "beanie")
+		assert(H.equipWearable(h, "v-e2", "pip", "Hat", "beanie_mint") and equipped(h).Hat == "beanie_mint")
+		-- A wrong slot, and a colour the catalogue does not hold, are refused.
+		ok, reason = H.equipWearable(h, "v-e3", "pip", "Shirt", "beanie_mint"); assert(not ok and reason == "InvalidWearable", tostring(reason))
+		ok, reason = H.buyWearable(h, "v-3", "pip", "beanie_neon", 15, true); assert(not ok and reason == "NotForSale", tostring(reason))
+		-- Rendering maps the variant to its base meshes plus a tint.
+		local render = Catalog.renderMap("pip", equipped(h))
+		assert(render.mapped.Hat == "beanie" and render.tints.Hat.to == "#7FE0CF" and render.tints.Hat.item == "beanie")
+		assert(H.valid(h.state))
 	end)
 
 	test("buying debits the fixed price once, records ownership and equips", function()
@@ -94,7 +146,8 @@ return function(server)
 		assert(not W.owns(h.state, "pip", "sunhat") and h.state.nectar == balance and c.writes == writes)
 		-- The saved record's op signature carries the arguments, so another server holding a
 		-- stale snapshot is refused inside the callback too.
-		assert(db.player_1.hatching.lastOperation.digest == "buy:pip:beanie")
+		-- (Slice C appends the price paid: "buy:pip:beanie:15".)
+		assert(string.find(db.player_1.hatching.lastOperation.digest, "buy:pip:beanie", 1, true) == 1, db.player_1.hatching.lastOperation.digest)
 		local h2, db2 = fixture()
 		fund(h2, 100)
 		local stale = copy(h2.state)
@@ -218,10 +271,16 @@ return function(server)
 	end)
 
 	test("ownership and the equipped set survive a fresh session", function()
-		local h, _, _, adapter = fixture()
+		local h, _, c, adapter = fixture()
 		fund(h, 60)
-		assert(H.buyWearable(h, "s-1", "pip", "sparkle", 30, true))
-		assert(H.buyWearable(h, "s-2", "pip", "heart", 30, true))
+		-- The price due this week: the catalogue price, or the weekly shelf price (slice C) when
+		-- the item is on the fixture week's shelf.
+		local function due(itemId)
+			if type(W.price) == "function" then return W.price("pip", itemId, Catalog.week(c.now)) end
+			return Catalog.price("pip", itemId)
+		end
+		assert(H.buyWearable(h, "s-1", "pip", "sparkle", due("sparkle"), true))
+		assert(H.buyWearable(h, "s-2", "pip", "heart", due("heart"), true))
 		assert(H.release(h))
 		local again = H.load(1, { rank = 1 }, adapter)
 		assert(again.status == "Ready" and W.owns(again.state, "pip", "sparkle") and W.equipped(again.state, "pip").Eyes == "sparkle" and W.equipped(again.state, "pip").Tail == "heart")

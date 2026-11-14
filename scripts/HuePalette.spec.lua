@@ -52,6 +52,8 @@ return function(shared)
    assert((target==nil)==(total==0))
    if target then for _,n in ipairs({target.R,target.G,target.B})do assert(n==n and n>=0 and n<=1.000001)end end
    for pet in pairs(Hue.Supported)do
+    -- Slice E: the earned pet (blip) has no palette until its rig ships.
+    if Palette.original(pet)==nil then assert(pet=="blip","only the earned pet may lack a rig palette");continue end
     local original=Palette.resolve(pet);local main=Palette.resolve(pet,{mainDoses=counts,secondaryDoses=Hue.emptyCounts()})
     local secondary=Palette.resolve(pet,{mainDoses=Hue.emptyCounts(),secondaryDoses=counts})
     assert(main.secondary==original.secondary and secondary.body==original.body)

@@ -13,7 +13,13 @@
 -- Focus is owned here (arrows / WASD / d-pad move on the 3 x 2 grid, A / Enter opens,
 -- B / Backspace / Escape / Menu closes); the caller binds the keys and calls :input.
 local Kit=require(script.Parent.DeckKit)
-local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
+local Shared=game:GetService("ReplicatedStorage").Shared
+local UICopy=require(Shared.UICopy)
+local Pets=require(Shared.PetCatalog)
+local WearableCatalog=require(Shared.WearableCatalog)
+local DeckThemes=require(Shared.DeckThemes)
+local BallThemes=require(Shared.BallThemes)
+local Deal=require(script.Parent.ShelfDeal)
 local Hub={}
 Hub.__index=Hub
 Hub.Size=Vector2.new(848,608)
@@ -71,6 +77,30 @@ function Hub.status(id,ctx)
   if text then return{text=text,tone="stars",dot=true,locked=false}end
  end
  return{text="",tone="dim",dot=false,locked=false}
+end
+-- Slice C (weekly shelf): which shelf kinds a tile sells, and how an id reads as a name.
+Hub.ShelfKinds=table.freeze({style=table.freeze({"faceplate","ball"}),companions=table.freeze({"wearable"})})
+Hub.ShelfNames=table.freeze({
+ wearable=function(id)
+  for _,pet in ipairs(Pets.active)do
+   local item=WearableCatalog.item(pet.id,id)
+   if item then return item.name end
+  end
+  return nil
+ end,
+ faceplate=function(id)local theme=DeckThemes.ById[id];return theme and theme.name or nil end,
+ ball=function(id)local theme=BallThemes.ById[id];return theme and theme.name or nil end,
+})
+-- Pure: the shelf line for a tile, longest wording first ("This week: Mint Pom Beanie,
+-- Party Hat", then "20% off this week"); nil when the tile has nothing on this week's
+-- shelf, the tile is locked, or the shelf is off. No countdown (no FOMO).
+function Hub.shelfLines(id,ctx)
+ ctx=ctx or {}
+ local kinds=Hub.ShelfKinds[id]
+ if not kinds or Hub.locked(id,ctx.owned)then return nil end
+ local week=if ctx.week~=nil then ctx.week else Deal.week(type(ctx.state)=="table"and ctx.state or {})
+ if not week then return nil end
+ return Deal.lines(week,kinds,Hub.ShelfNames)
 end
 -- Pure: tile rects for a W x H screen (desktop: the 848 x 608 panel). Three columns,
 -- two rows. Desktop: under the 84 px header, above the hint bar at 566. Phone: under
@@ -213,7 +243,9 @@ function Hub:buildTiles(body,W,H,phone)
   local chev=Kit.icon(button,"chevron",if phone then 14 else 18,"soft");chev.AnchorPoint=Vector2.new(.5,.5)
   chev.Position=UDim2.fromOffset(r.w-(if phone then 16 else 24),pad+discSize/2)
   local entry={id=tile.id,tint=tile.tint,button=button,stroke=tileState.stroke,state=tileState,disc=disc,icon=icon,name=nameLabel,line=lineLabel,status=statusLabel,dot=dot,
-   chevron=chev,phone=phone,pad=pad}
+   chevron=chev,phone=phone,pad=pad,
+   -- The line label's room: one line on phones, two wrapped lines on desktop.
+   lineWidth=if phone then r.w-2*pad else math.floor((r.w-2*pad)*1.8)}
   self.tileViews[index]=entry
   button.Activated:Connect(function()
    if not self.visible then return end
@@ -249,6 +281,12 @@ function Hub:paintTiles()
   local tint=if s.locked then nil else Kit.tintColor(entry.tint)
   entry.disc.BackgroundColor3=tint or(if s.locked then Kit.Color.dim else Kit.Color.soft)
   entry.line.Text=if s.locked then UICopy.get("menu.subtitle.locked")else UICopy.get(Hub.Tiles[index].line)
+  -- Slice C: this week's shelf takes the line on the tiles that sell it, in Stars gold.
+  local shelf=Hub.shelfLines(entry.id,self.ctx)
+  if shelf then Kit.fitText(entry.line,shelf,entry.lineWidth)end
+  Kit.paint(entry.line,"TextColor3",function()return colorOf(if shelf then "stars"else "soft")end)
+  entry.button:SetAttribute("Shelf",shelf~=nil)
+  if not s.locked then entry.button:SetAttribute("AccessibleLabel",entry.name.Text..", "..entry.line.Text)end
   Kit.paint(entry.name,"TextColor3",function()return colorOf(if s.locked then "soft"else "text")end)
   Kit.paint(entry.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised")end)
   entry.stroke.Thickness=if focused then 2 else 1;entry.stroke.Transparency=if focused then 0 else Kit.Stroke.transparency

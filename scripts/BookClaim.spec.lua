@@ -82,7 +82,7 @@ return function(server)
 	end)
 
 	test("percent comes from the save; old saves see every reached milestone at once", function()
-		local h = fixture()
+		local h, db = fixture()
 		local book = H.public(h).book
 		local pages = {}; for _, row in ipairs(book.pages) do pages[row.id] = row end
 		assert(pages.balls.percent == 0 and pages.balls.owned == 0 and pages.balls.total == #Book.Pages.balls.items)
@@ -91,6 +91,12 @@ return function(server)
 		assert(H.buyBallTheme(h, "g-1", "gumdrops", 20, false))
 		local expected = math.floor(100 / #Book.Pages.balls.items)
 		assert(Book.pagePercent(h.state, "balls") == expected)
+		-- With five paid themes (Bubbles, 2026-11-14) one theme is 20%: own a second, straight in
+		-- the save, to stand between 25% and 50%.
+		if expected < 25 then
+			edit(h, db, function(st) table.insert(st.ballThemes.owned, "gems") end)
+			assert(Book.pagePercent(h.state, "balls") >= 25 and Book.pagePercent(h.state, "balls") < 50)
+		end
 		local before = h.state.nectar
 		local ok, reason = H.bookClaim(h, "c-1", "balls.25", 5)
 		assert(ok and reason == "Saved" and h.state.nectar == before + 5 and claimedCount(h, "balls.25") == 1, tostring(reason))
@@ -155,6 +161,7 @@ return function(server)
 		local h, db, _, adapter = fixture()
 		fund(h, 100)
 		assert(H.buyBallTheme(h, "g-2", "gumdrops", 20, false))
+		if Book.pagePercent(h.state, "balls") < 25 then edit(h, db, function(s) table.insert(s.ballThemes.owned, "gems") end) end
 		assert(H.bookClaim(h, "s-1", "balls.25", 5))
 		local balance = h.state.nectar
 		-- Same effect as a larger catalogue: the page now reads below the claimed 25%.
@@ -175,7 +182,10 @@ return function(server)
 		local h, db = fixture()
 		edit(h, db, function(s)
 			s.ballThemes.owned = allPaidBalls()
-			s.toyUnlocks = { ball = true, bone = true, sparkler = true }; s.materialUnlocks = { gloss = true, matte = true }
+			-- Every toy of the selling pool (pool 2 adds Wobble Top and Squeaky Carrot).
+			local toys = require(Shared.ToyCatalog)
+			s.toyUnlocks = {}; for _, toyId in ipairs(toys.Pools[toys.PoolVersion]) do s.toyUnlocks[toyId] = true end
+			s.materialUnlocks = { gloss = true, matte = true }
 			s.book.found = allFound()
 		end)
 		local before = h.state.nectar

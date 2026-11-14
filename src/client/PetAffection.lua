@@ -12,6 +12,26 @@ Affection.ChimeId=134977919634272
 Affection.ChimeVolume=.5
 Affection.ChimeSpeed=1.2
 Affection.BurstCount=22
+-- Bond level-up flourish (overnight 2026-11-14 slice F, VISUAL-BRIEF 5): six hearts burst
+-- from head height, rise 0.6 studs over 0.9 s, drift +-0.25, size 0.14 -> 0.20 -> 0 studs,
+-- in the pet's secondary colour lightened 20% toward white. Pooled (built on first use,
+-- never per burst); nothing shows under Reduced Effects (the pip and the toast carry it).
+-- The heart is the "♥" glyph until the 64 px heart PNG is uploaded (set BondHeartImage).
+Affection.BondHearts=6
+Affection.BondSeconds=.9
+Affection.BondRise=.6
+Affection.BondDrift=.25
+Affection.BondHeartImage=nil
+-- Pure: one bond heart at `t` (0..1): {rise (studs), size (studs), alpha (0 = solid)}.
+function Affection.bondHeart(t)
+ t=math.clamp(t,0,1)
+ local size=if t<.35 then .14+(.20-.14)*(t/.35)else .20*(1-(t-.35)/.65)
+ return{rise=Affection.BondRise*(1-(1-t)*(1-t)),size=math.max(0,size),alpha=if t<.7 then 0 else math.min(1,(t-.7)/.3)}
+end
+-- Pure: the burst colour: the secondary colour lightened 20% toward white.
+function Affection.bondColor(secondary)
+ return(if typeof(secondary)=="Color3"then secondary else Pico8.Heart):Lerp(Color3.new(1,1,1),.2)
+end
 function Affection.new(parent,onVariation)
  local folder=Instance.new("Folder");folder.Name="PetAffectionPresentation";folder.Parent=parent
  local self=setmetatable({folder=folder,petals={},elapsed=0,nextVariation=3,index=0,onVariation=onVariation},Affection)
@@ -65,7 +85,71 @@ function Affection.new(parent,onVariation)
 end
 function Affection:setPet(pet)
  if self.destroyed then return end
- self:clear();self:hideAward();self.pet=pet;self.award.Adornee=pet and pet.model.PrimaryPart or nil
+ self:clear();self:hideAward();self:hideBond();self.pet=pet;self.award.Adornee=pet and pet.model.PrimaryPart or nil
+end
+-- The bond hearts pool: six anchored parts, each with one billboard heart.
+function Affection:bondPool()
+ if self.bondHearts then return self.bondHearts end
+ local pool={}
+ for i=1,Affection.BondHearts do
+  local p=Instance.new("Part");p.Name="BondHeart";p.Size=Vector3.new(.05,.05,.05);p.Transparency=1
+  p.Anchored=true;p.CanCollide=false;p.CanTouch=false;p.CanQuery=false;p.CastShadow=false;p.Parent=self.folder
+  local gui=Instance.new("BillboardGui");gui.Name="Heart";gui.Size=UDim2.fromScale(.2,.2);gui.LightInfluence=0;gui.AlwaysOnTop=false
+  gui.MaxDistance=60;gui.Enabled=false;gui.Adornee=p;gui.Parent=p
+  local glyph
+  if Affection.BondHeartImage then
+   glyph=Instance.new("ImageLabel");glyph.Image=Affection.BondHeartImage
+  else
+   glyph=Instance.new("TextLabel");glyph.Text="♥";glyph.Font=Enum.Font.GothamBlack;glyph.TextScaled=true
+   glyph.TextStrokeColor3=Pico8[2];glyph.TextStrokeTransparency=.6
+  end
+  glyph.Name="Glyph";glyph.BackgroundTransparency=1;glyph.Size=UDim2.fromScale(1,1);glyph.Active=false;glyph.Selectable=false;glyph.Parent=gui
+  pool[i]={part=p,gui=gui,glyph=glyph}
+ end
+ self.bondHearts=pool
+ return pool
+end
+function Affection:hideBond()
+ self.bondAge=nil
+ for _,heart in ipairs(self.bondHearts or {})do heart.gui.Enabled=false end
+end
+-- Start the bond burst on the current pet. Returns the hearts shown (0 under Reduced
+-- Effects, or without a pet). `secondary` is the pet's secondary colour.
+function Affection:bondBurst(secondary,reduced)
+ if self.destroyed or reduced or not self.pet or not self.pet.model.Parent then return 0 end
+ local body=self.pet.model.PrimaryPart;if not body then return 0 end
+ local pool=self:bondPool()
+ local color=Affection.bondColor(secondary)
+ local scale=self.pet.worldScale or 1
+ self.bondAge=0;self.bondOrigin=body.Position+Vector3.new(0,1.1*scale,0);self.bondScale=scale
+ for i,heart in ipairs(pool)do
+  -- Evenly spread around the head, each with its own small drift (deterministic).
+  local angle=(i-1)/#pool*math.pi*2+.4
+  heart.drift=Vector3.new(math.cos(angle),0,math.sin(angle))*Affection.BondDrift*(.6+.4*((i*37)%10)/10)
+  heart.delay=((i*53)%10)/10*.12
+  if heart.glyph:IsA("ImageLabel")then heart.glyph.ImageColor3=color else heart.glyph.TextColor3=color end
+  heart.gui.Enabled=false
+ end
+ return #pool
+end
+function Affection:stepBond(dt)
+ if not self.bondAge then return end
+ self.bondAge+=dt
+ local pet=self.pet
+ if self.bondAge>=Affection.BondSeconds+.15 or not pet or not pet.model.Parent then self:hideBond();return end
+ local scale=self.bondScale or 1
+ for _,heart in ipairs(self.bondHearts)do
+  local t=(self.bondAge-heart.delay)/Affection.BondSeconds
+  local show=t>=0 and t<1
+  if heart.gui.Enabled~=show then heart.gui.Enabled=show end
+  if show then
+   local h=Affection.bondHeart(t)
+   heart.part.CFrame=CFrame.new(self.bondOrigin+heart.drift*scale*t+Vector3.new(0,h.rise*scale,0))
+   heart.gui.Size=UDim2.fromScale(math.max(.01,h.size*scale),math.max(.01,h.size*scale))
+   if heart.glyph:IsA("ImageLabel")then heart.glyph.ImageTransparency=h.alpha
+   else heart.glyph.TextTransparency=h.alpha;heart.glyph.TextStrokeTransparency=.6+.4*h.alpha end
+  end
+ end
 end
 function Affection:hideAward()
  if self.destroyed then return end
@@ -151,8 +235,9 @@ end
 function Affection:step(dt,active,reduced)
  if self.destroyed then return end
  local pet=self.pet
- if not pet or not pet.model.Parent then self:clear();self:hideAward();return end
+ if not pet or not pet.model.Parent then self:clear();self:hideAward();self:hideBond();return end
  dt=math.clamp(dt,0,.1)
+ self:stepBond(dt)
  if not active then self:clear();self:stepAward(dt,reduced);return end
  if active then
   self.cleared=false

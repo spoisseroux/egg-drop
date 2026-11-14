@@ -16,6 +16,8 @@ function Item.create(parent,result,position,size,z)
   local world=Instance.new("WorldModel");world.Parent=viewport
   local api=require(geometry)
   local handle=if result.toyId then api.create(world,id,1)else api.create(world,id,1,1,Color3.fromHex("#95CDB9"))
+  -- An id this build cannot draw (a toy from a later pool) shows the empty slot, never an error.
+  if not handle then return host end
   handle:pivot(CFrame.Angles(0,math.rad(-20),0))
   local box,extent=handle.model:GetBoundingBox();local half=math.tan(math.rad(15))
   local distance=math.max(extent.X,extent.Y)*.5/(half*.90)+extent.Z*.5+.02

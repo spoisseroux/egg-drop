@@ -14,7 +14,35 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Stamp=require(Shared.StampCard)
 local UICopy=require(Shared.UICopy)
 local Kit=require(script.Parent.DeckKit)
+local Eggs=require(Shared.EggCatalog)
 local View={}
+-- Slice E (overnight 2026-11-14): the 7th-stamp pet's tease. EarnedPets is lane S's gate;
+-- guarded, so without the module (or with its flag off) the card shows nothing new.
+-- View.Earned overrides the module (specs inject an `enabled`).
+View.Earned=nil
+local function earnedPets()
+ if View.Earned then return View.Earned end
+ local module=Shared:FindFirstChild("EarnedPets")
+ if not module then return nil end
+ local ok,value=pcall(require,module)
+ return if ok then value else nil
+end
+-- Pure: the tease for a snapshot: {petId, remaining} while an enabled earned pet is still
+-- ahead (not owned, its stamp count not reached); nil otherwise.
+function View.tease(state)
+ local earned=earnedPets()
+ if type(state)~="table"or type(earned)~="table"or type(earned.enabled)~="function"or type(earned.Rules)~="table"then return nil end
+ local stamps=if type(state.stamps)=="number"and state.stamps==state.stamps and state.stamps>=0 then math.floor(state.stamps)else 0
+ local mask=if type(state.inventoryMask)=="number"then state.inventoryMask else 0
+ for _,petId in ipairs(earned.Order or {})do
+  local rule=earned.Rules[petId]
+  if type(rule)=="table"and type(rule.stamps)=="number"and earned.enabled(petId)and not Eggs.isOwned(mask,petId)then
+   local remaining=rule.stamps-stamps
+   if remaining>0 then return{petId=petId,remaining=remaining}end
+  end
+ end
+ return nil
+end
 View.__index=View
 View.Length=Stamp.Length
 View.PopSeconds=1.2
@@ -55,7 +83,8 @@ function View.model(state)
  local full=not available and stamps>0 and onCard==0
  local filled=if full then Stamp.Length else onCard
  local nextIndex=if full then 1 else onCard+1
- return{rewards=rewards,filled=filled,nextIndex=nextIndex,available=available,full=full,reward=rewards[nextIndex],stamps=stamps}
+ return{rewards=rewards,filled=filled,nextIndex=nextIndex,available=available,full=full,reward=rewards[nextIndex],stamps=stamps,
+  tease=View.tease(state)}
 end
 -- Pure: one row per slot {index, reward, filled, next, today, big}.
 function View.slots(model)
@@ -67,12 +96,19 @@ function View.slots(model)
  end
  return out
 end
--- Pure: the line under the card.
-function View.line(model)
- if model.available then return UICopy.get("stamp.next",{reward=model.reward})end
- if model.full then return UICopy.get("stamp.full")end
- return UICopy.get("stamp.tomorrow",{reward=model.reward})
+-- Pure: the line under the card, longest wording first (the view keeps the first that
+-- fits). Slice E: while an earned pet is still ahead the line teases it ("Someone's on
+-- the way… 3 more stamps"); the claim button already says today's reward.
+function View.lines(model)
+ if model.tease then
+  local n=model.tease.remaining
+  return {if n==1 then UICopy.get("e2.tease.one")else UICopy.get("e2.tease.many",{count=n}),UICopy.get("e2.tease.short")}
+ end
+ if model.available then return {UICopy.get("stamp.next",{reward=model.reward})}end
+ if model.full then return {UICopy.get("stamp.full")}end
+ return {UICopy.get("stamp.tomorrow",{reward=model.reward})}
 end
+function View.line(model)return View.lines(model)[1]end
 -- Pure: the caller's claim button text.
 function View.buttonText(state)
  local model=View.model(state)
@@ -207,8 +243,9 @@ function View:paint()
   slot.frame:SetAttribute("Filled",row.filled);slot.frame:SetAttribute("Next",row.next);slot.frame:SetAttribute("Today",row.today)
   slot.frame:SetAttribute("Big",row.big);slot.frame:SetAttribute("Reward",row.reward)
  end
- self.lineLabel.Text=View.line(model)
- local lineTone=if model.available then "text"else "soft"
+ Kit.fitText(self.lineLabel,View.lines(model),self.width)
+ self.root:SetAttribute("Tease",model.tease~=nil)
+ local lineTone=if model.tease then "stars"elseif model.available then "text"else "soft"
  Kit.paint(self.lineLabel,"TextColor3",function()return Kit.Color[lineTone]end)
  self.root:SetAttribute("Filled",model.filled);self.root:SetAttribute("NextReward",model.reward)
  self.root:SetAttribute("AccessibleLabel",UICopy.get("stamp.title")..", "..model.filled.." of "..Stamp.Length..". "..self.lineLabel.Text)

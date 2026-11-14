@@ -1,5 +1,6 @@
 -- Per-owned-pet charm preference. No wallet, inventory or hatch mutation.
-local Appearance={Ids={"pip","puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit"}}
+-- Ids: every collection pet in saved order; "blip" appended for slice E (overnight 2026-11-14).
+local Appearance={Ids={"pip","puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit","blip"}}
 local Hue=require(game:GetService("ReplicatedStorage").Shared.HueCatalog)
 local Charms=require(game:GetService("ReplicatedStorage").Shared.PetCharmCatalog)
 local supported=Hue.Supported
@@ -70,7 +71,26 @@ end
 local function packet(state,profile,id,seq,status,reason)
  return{petId=id,visible=if supported[id]then Appearance.visible(profile,id)else false,shape=if supported[id]then Appearance.shape(profile,id)else Charms.Default,seq=seq,status=status,reason=reason,revision=state.revision,lastSeq=state.requests[id]and state.requests[id].seq or 0}
 end
-function Appearance.request(state,profile,value,now,usable,owns,apply)
+-- Earned charm shapes (slice D). `facts` is what PetCharmCatalog.earned reads: lifetime
+-- stamps, claimed book milestones, lifetime stats and bond XP. Every rule is monotonic, so
+-- the check is stateless: a shape once earned stays earned.
+function Appearance.facts(state)
+ state=if type(state)=="table"then state else {}
+ local book=state.book
+ return{stamps=if type(state.stamps)=="number"then state.stamps else 0,
+  claimed=if type(book)=="table"and type(book.claimed)=="table"then book.claimed else {},
+  stats=if type(state.stats)=="table"then state.stats else {},
+  bond=if type(state.bond)=="table"then state.bond else {}}
+end
+-- True when `shape` may be selected on this save. A catalogue without rules (or a shape
+-- without one) is free.
+function Appearance.earned(shape,state)
+ if type(Charms.earned)~="function"then return true end
+ return Charms.earned(shape,Appearance.facts(state))==true
+end
+-- `earned(shape)` (optional, after `apply`) gates a marked shape selection: a shape whose
+-- rule is not met yet is rejected as "Locked". Visibility-only requests never ask it.
+function Appearance.request(state,profile,value,now,usable,owns,apply,earned)
  if type(value)~="table"or not supported[value.petId]or type(value.visible)~="boolean"or(value.shape~=nil and not Charms.known(value.shape))or(value.shapeVersion~=nil and(value.shapeVersion~=Charms.Version or value.shape==nil))or type(value.seq)~="number"or value.seq~=value.seq or value.seq%1~=0 or value.seq<1 or value.seq>2147483647 then
   if now-state.lastMalformed<.25 then return nil,false end;state.lastMalformed=now
   return packet(state,profile,"",0,"Rejected","Malformed"),false
@@ -84,6 +104,7 @@ function Appearance.request(state,profile,value,now,usable,owns,apply)
  local selection=value.shapeVersion==Charms.Version
  if not reason and value.shape~=nil and value.shape~=Charms.Default and not selection then reason="ShapeVersionRequired"end
  if not reason and selection and not state.selectionsEnabled then reason="SelectionsDisabled"end
+ if not reason and selection and earned~=nil and earned(value.shape)~=true then reason="Locked"end
  -- v274 Hide/Show sent Dot unconditionally. Unmarked Dot/nil are visibility-only;
  -- only a marked selection may change the durable shape, including an explicit Dot.
  local selectedShape=if selection then value.shape else nil

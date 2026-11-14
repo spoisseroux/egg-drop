@@ -5,6 +5,9 @@ local Art = require(script.Parent.DeckArt)
 
 local SaveNotice=require(script.Parent.SaveNotice)
 local RigBounds=require(script.Parent.PetRigBounds)
+-- Slice F (overnight 2026-11-14): the focus card's bond pips (Kit card, BondPips row).
+local Kit=require(script.Parent.DeckKit)
+local BondPips=require(script.Parent.BondPips)
 local Focus = {}
 Focus.__index = Focus
 local serial = 0
@@ -125,6 +128,7 @@ function Focus.new(parentGui, callbacks)
 		hit = hit, glove = glove, helper = helper, hint = hint, callbacks = callbacks, connections = {},
 		actionPrefix = "EggDropPetFocus" .. serial, active = false, windowActive=true, heldTouches={},retiredTouches=setmetatable({},{__mode="k"}),retiredMouse=false, roamDock=parentGui:FindFirstChild("LoungeControls") }, Focus)
 	table.insert(self.connections, back.Activated:Connect(function()if self.active and self:canOwnInput()then callbacks.back()end end))
+	self:buildBondCard()
 	table.insert(self.connections,UserInputService.TouchStarted:Connect(function(input)self.heldTouches[input]=true end))
 	table.insert(self.connections,UserInputService.TouchEnded:Connect(function(input)self.heldTouches[input]=nil;self:endPointer(input)end))
 	table.insert(self.connections,hit.InputBegan:Connect(function(input)self:beginPointer(input)end))
@@ -145,12 +149,52 @@ function Focus.new(parentGui, callbacks)
  table.insert(self.connections,UserInputService.WindowFocused:Connect(function()self:gainWindowFocus()end))
 	table.insert(self.connections,UserInputService.GamepadDisconnected:Connect(function(kind)if self.openingADevice==kind then self.openingADevice=nil end;if self.heldGreet and self.heldGreet.device==kind then self:cancelPointer()end;if self.openingGreetDevice==kind then self.openingGreetDevice=nil end end))
 	table.insert(self.connections, parentGui.Destroying:Connect(function() self:destroy() end))
-	table.insert(self.connections,root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self.hintLayoutKey=nil;self.helperLayoutKey=nil;self:layoutRoamHint();self:layoutSaveHelper()end))
+	table.insert(self.connections,root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self.hintLayoutKey=nil;self.helperLayoutKey=nil;self:layoutRoamHint();self:layoutSaveHelper();if self.bondInfo then self:setBond(self.bondInfo)end end))
 	Art.watchTextPreference(gui,function()return self.hint.Visible or self.helper.Visible end,function()self.hintLayoutKey=nil;self.helperLayoutKey=nil;self:layoutRoamHint();self:layoutSaveHelper()end)
 	self:layoutRoamHint()
 	return self
 end
 
+-- Slice F: the focus card. The pet's name with five bond pips under it, top right of the
+-- focus view (clear of Back at the top left and the hint lane in the middle). It takes
+-- no input. Hidden until setBond gives it a pet (no bond data: no card).
+function Focus:buildBondCard()
+	local card=Kit.frame(self.panel,"BondCard","panel",UDim2.new(1,-12,0,12),UDim2.fromOffset(140,56),12)
+	card.AnchorPoint=Vector2.new(1,0);card.BackgroundTransparency=.08;card.Visible=false;card.Active=false;card.ZIndex=8
+	Kit.stroke(card)
+	self.bondCard=card
+	self.bondName=Kit.text(card,"Name","","text",{Name="PetName",Position=UDim2.fromOffset(12,6),Size=UDim2.new(1,-24,0,20),TextSize=16,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
+	self.bondLevel=Kit.text(card,"Small","","soft",{Name="BondLabel",TextSize=12,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
+	self.bondPips=nil
+	self.bondCompact=nil
+end
+-- info: {name, bond = BondPips.info(...)} or nil. animate: a level-up (the new pip pops).
+function Focus:setBond(info,animate)
+	if self.destroyed or not self.bondCard then return end
+	self.bondInfo=info
+	if not info or not info.bond then self.bondCard.Visible=false;return end
+	local size=self.root.AbsoluteSize
+	local compact=size.Y>0 and size.Y<420
+	if self.bondPips==nil or self.bondCompact~=compact then
+		if self.bondPips then self.bondPips.root:Destroy()end
+		self.bondPips=BondPips.new(self.bondCard,compact);self.bondCompact=compact
+		self.bondPips.root.ZIndex=self.bondCard.ZIndex+1
+		animate=false
+	end
+	local pips=self.bondPips
+	local label=BondPips.label(info.bond)
+	local labelW=math.ceil(Kit.measure(label,"Small",12).X)+4
+	local width=math.max(120,12+pips.width+10+labelW+12)
+	local nameH=if compact then 18 else 20
+	self.bondName.Text=info.name or "";self.bondName.Size=UDim2.new(1,-24,0,nameH);self.bondName.TextSize=if compact then 14 else 16
+	pips.root.Position=UDim2.fromOffset(12,6+nameH+4)
+	self.bondLevel.Text=label
+	self.bondLevel.Position=UDim2.fromOffset(12+pips.width+6,6+nameH+2);self.bondLevel.Size=UDim2.fromOffset(width-12-pips.width-6-12,pips.size+4)
+	self.bondCard.Size=UDim2.fromOffset(width,6+nameH+4+pips.height+8)
+	self.bondCard.Visible=true
+	pips.set(info.bond,animate==true)
+	self.bondCard:SetAttribute("BondLevel",info.bond.shown)
+end
 function Focus:now()return if self.clock then self.clock()else os.clock()end
 function Focus:retireFocusHint()
 	self.focusLessonRetired=true

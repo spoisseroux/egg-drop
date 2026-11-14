@@ -31,6 +31,18 @@ local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 local StampCard=require(ReplicatedStorage.Shared.StampCard)
 local BookCatalog=require(ReplicatedStorage.Shared.BookCatalog)
 local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
+-- Overnight 2026-11-14 (slices E, C, F): earned pets, the weekly shelf and bond XP.
+local EarnedPets=require(ReplicatedStorage.Shared.EarnedPets)
+local FeatureFlags=require(ReplicatedStorage.Shared.FeatureFlags)
+local Bond=require(script.Parent.BondState)
+-- Lane K's WeeklyShelf: a build without it (or with the flag off) has no shelf week, so
+-- every purchase pays the catalogue price and no boundary check runs.
+local shelfModule=ReplicatedStorage.Shared:FindFirstChild("WeeklyShelf")
+local Shelf=if shelfModule then require(shelfModule)else nil
+local function shelfWeek(now)
+	if Shelf==nil or FeatureFlags.WeeklyShelf~=true then return nil end
+	return Shelf.week(now)
+end
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
 -- Petting pays +1 Star up to this many times a day (QA v2 R5.5: 5 -> 10, alongside the faster
@@ -172,7 +184,8 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- lifetime fields (`stats` counters, `stamps`, collection `book` claims).
 -- Pet Park (K1): optional additive `playDate` on v11, valid when missing (no version bump).
 -- Onboarding (v1 track A): optional additive `coachMask` on v11, valid when missing (no version bump).
-local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+-- Bond levels (overnight 2026-11-14, slice F): optional additive `bond` on v11, valid when missing (no version bump).
+local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Bond.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -292,6 +305,8 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and state.playDate ~= nil then state.playDate = PlayDate.sanitize(state.playDate) end
 		-- A malformed coach mask is dropped (reads 0), never a failed load.
 		if type(state) == "table" and state.coachMask ~= nil then state.coachMask = Coach.sanitize(state.coachMask) end
+		-- Malformed bond XP is repaired (bad entries dropped), never a failed load.
+		if type(state) == "table" and state.bond ~= nil then state.bond = Bond.sanitize(state.bond) end
 		if not valid(state) then reason = "InvalidData"; return nil end
 		state = clone(state)
 		local now = adapter.now()
@@ -387,6 +402,11 @@ function Hatching.public(handle)
 	public.playDate = PlayDate.public(state, dayOf(handle.adapter.now()))
 	-- Onboarding: one-time coach cards already shown (0 when the field is missing).
 	public.coachMask = Coach.mask(state.coachMask)
+	-- Bond XP per pet (slice F): {} when the field is missing. Levels come from BondCatalog.
+	public.bond = Bond.public(state).bond
+	-- Weekly shelf (slice C): the week the server prices with (nil while the shelf is off).
+	-- The client may also derive it from dailyDay; this is the authoritative copy.
+	public.shelfWeek = shelfWeek(handle.adapter.now())
 	-- QA Q5: Stars from rounds saved today in this session (not saved; no daily cap).
 	public.todayEarned = Hatching.roundStarsToday(handle, dayOf(handle.adapter.now()))
 	public.restricted = handle.restricted == true
@@ -485,7 +505,9 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		local before = { nectar = state.nectar, inventoryMask = state.inventoryMask }
 		local allowed, failure = pending.apply(state, pending.candidate)
 		if not allowed then reason = failure; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"then root else nil end
-		Lifetime.record(before, state, pending.signature)
+		-- `now` is read here, inside the callback, so the state-derived Discoveries
+		-- (BookCatalog.stateBits) see the clock of this attempt.
+		Lifetime.record(before, state, pending.signature, handle.adapter.now())
 		state.revision += 1
 		state.operationSeq = pending.sequence
 		state.lastOperation = { id = pending.id, sequence = pending.sequence, digest = pending.digest }
@@ -711,6 +733,10 @@ local function itemCommand(handle,kind,action,value,revision)
   if revision~=handle.state.revision then return false,"RevisionChanged"end
   candidate={quote=clone(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1}
   if action==kind.."Buy"then
+   -- Slice D: a new Toy Egg purchase must quote the current pool (a stale client still on an
+   -- older pool is refused, like materialBuy). A reservation made before the pool bump
+   -- resumes above and settles on the pool it was quoted from.
+   if kind=="toy"and quote.poolVersion~=catalog.PoolVersion then return false,"LegacyPurchaseClosed"end
    local allowed,why=api.purchaseEligibility(handle.state,quote);if not allowed then return false,why end
    local awarded
    if isRestricted(handle)and kind=="toy"then awarded=catalog.fixedNext(quote.eligible)
@@ -759,6 +785,8 @@ function Hatching.awardPet(handle,candidate)
 		if state.nectar>=1000000000 then return false,"BalanceLimit"end
 		state.nectar+=1;state.petDay=current;state.petCount=count+1
 		state.lastPetAward={id=captured.id,sequence=state.operationSeq+1,day=current,petId=captured.petId}
+		-- Bond (slice F): +1 XP per paid pet, so at most PetDailyCap a day. Never fails.
+		Bond.add(state,captured.petId,Bond.XP.pet)
 		return true
 	end,fixed,fixed.id,"pet")
 end
@@ -853,6 +881,32 @@ function Hatching.grantStarter(handle)
 	end, { id = handle.adapter.guid() })
 end
 
+-- Earned pets (overnight 2026-11-14, slice E; SYSTEMS-SCOPE 1.3). Grants `petId` once its
+-- rule is met (Blip: 7 lifetime stamps). Flag, rule and ownership are re-checked inside
+-- UpdateAsync. The ownership bit is the idempotency receipt: a replayed callback, a retried
+-- write or a second server all converge, and "already owned" is a success with no write.
+-- Deliberately no `lastHatch`: a reveal receipt would block petting, awards and items behind
+-- RevealPending until an ack. The client shows the arrival card from coach bit `petArrived`.
+function Hatching.grantEarnedPet(handle, petId)
+	local rule = if type(petId) == "string" then EarnedPets.Rules[petId] else nil
+	if not rule or not Pets.byId[petId] then return false, "UnknownPet" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "earnedpet:" .. petId
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming and Catalog.isOwned(handle.state.inventoryMask, petId) then return true, "AlreadyOwned" end
+	local candidate = if resuming then handle.pending.candidate else table.freeze({ petId = petId })
+	local ok, reason = transact(handle, signature, handle.state.revision, function(state, captured)
+		local need = EarnedPets.Rules[captured.petId]
+		if not need or not EarnedPets.enabled(captured.petId) then return false, "Disabled" end
+		if Catalog.isOwned(state.inventoryMask, captured.petId) then return false, "AlreadyOwned" end
+		if (if integer(state.stamps) then state.stamps else 0) < need.stamps then return false, "NotEarned" end
+		state.inventoryMask = bit32.bor(state.inventoryMask, Catalog.bit(captured.petId))
+		return true
+	end, candidate, nil, nil, signature)
+	if not ok and reason == "AlreadyOwned" then return true, reason end
+	return ok, reason
+end
+
 -- One-time coach cards (onboarding v1): OR `bits` into the optional `coachMask`. Already saved
 -- is a success with no write. OR-only, so an ambiguous write retried later is harmless.
 function Hatching.coachMark(handle, bits)
@@ -881,6 +935,18 @@ function Hatching.grantPurchase(handle, purchaseId, stars, once)
 	return ok, reason
 end
 
+-- Weekly shelf (slice C; SYSTEMS-SCOPE 3.2). A Star purchase freezes the shelf week in its
+-- candidate; the price check inside the write uses that week. If the week rolled over
+-- between the request and this apply, the write is refused as ShelfChanged with no charge
+-- (the client re-reads the snapshot). transact checks committed() before apply, so a write
+-- that already landed still proves "Saved" after the boundary.
+local function shelfApply(handle, apply)
+	return function(state, captured)
+		if captured.week ~= nil and shelfWeek(handle.adapter.now()) ~= captured.week then return false, "ShelfChanged" end
+		return apply(state, captured)
+	end
+end
+
 -- Faceplate Star purchase. `operationId` (client-made, per press) is the
 -- idempotency key: a retry of the same id resumes the same pending operation,
 -- and owning the plate already is a success that never charges again.
@@ -890,11 +956,12 @@ function Hatching.buyFaceplate(handle, operationId, plateId, price)
 	local signature = "faceplate:" .. operationId
 	if Faceplates.owns(handle.state, plateId) and not (handle.pending and handle.pending.signature == signature) then return true, "AlreadyOwned" end
 	local candidate = handle.pending and handle.pending.signature == signature and handle.pending.candidate
-		or table.freeze({ plateId = plateId, price = price, operationId = operationId })
-	if candidate.plateId ~= plateId then return false, "OperationConflict" end
-	-- The digest binds the id to its plate, so a reused id for another plate is
-	-- refused as OperationConflict instead of matching lastOperation as "Saved".
-	local ok, reason = transact(handle, signature, handle.state.revision, Faceplates.apply, candidate, signature, nil, "plate:" .. candidate.plateId)
+		or table.freeze({ plateId = plateId, price = price, operationId = operationId, week = shelfWeek(handle.adapter.now()) })
+	if candidate.plateId ~= plateId or candidate.price ~= price then return false, "OperationConflict" end
+	-- The digest binds the id to its plate and price, so a reused id for another plate (or
+	-- at another price) is refused as OperationConflict instead of matching lastOperation as "Saved".
+	local digest = "plate:" .. candidate.plateId .. ":" .. tostring(candidate.price)
+	local ok, reason = transact(handle, signature, handle.state.revision, shelfApply(handle, Faceplates.apply), candidate, signature, nil, digest)
 	if not ok and reason == "AlreadyOwned" then return true, reason end
 	return ok, reason
 end
@@ -910,10 +977,11 @@ function Hatching.buyWearable(handle, operationId, petId, itemId, price, equip)
 	local resuming = handle.pending and handle.pending.signature == signature
 	if Wearables.owns(handle.state, petId, itemId) and not resuming then return true, "AlreadyOwned" end
 	local candidate = resuming and handle.pending.candidate
-		or table.freeze({ petId = petId, itemId = itemId, price = price, operationId = operationId, equip = equip == true })
-	if candidate.petId ~= petId or candidate.itemId ~= itemId then return false, "OperationConflict" end
-	local digest = "buy:" .. candidate.petId .. ":" .. candidate.itemId
-	local ok, reason = transact(handle, signature, handle.state.revision, Wearables.applyBuy, candidate, signature, nil, digest)
+		or table.freeze({ petId = petId, itemId = itemId, price = price, operationId = operationId, equip = equip == true,
+			week = shelfWeek(handle.adapter.now()) })
+	if candidate.petId ~= petId or candidate.itemId ~= itemId or candidate.price ~= price then return false, "OperationConflict" end
+	local digest = "buy:" .. candidate.petId .. ":" .. candidate.itemId .. ":" .. tostring(candidate.price)
+	local ok, reason = transact(handle, signature, handle.state.revision, shelfApply(handle, Wearables.applyBuy), candidate, signature, nil, digest)
 	if not ok and reason == "AlreadyOwned" then return true, reason end
 	return ok, reason
 end
@@ -950,10 +1018,11 @@ function Hatching.buyBallTheme(handle, operationId, themeId, price, equip)
 	local resuming = handle.pending and handle.pending.signature == signature
 	if BallThemes.owns(handle.state, themeId) and not resuming then return true, "AlreadyOwned" end
 	local candidate = resuming and handle.pending.candidate
-		or table.freeze({ themeId = themeId, price = price, operationId = operationId, equip = equip == true })
+		or table.freeze({ themeId = themeId, price = price, operationId = operationId, equip = equip == true,
+			week = shelfWeek(handle.adapter.now()) })
 	if candidate.themeId ~= themeId or candidate.price ~= price then return false, "OperationConflict" end
 	local digest = "ball:" .. candidate.themeId .. ":" .. tostring(candidate.price)
-	local ok, reason = transact(handle, signature, handle.state.revision, BallThemes.applyBuy, candidate, signature, nil, digest)
+	local ok, reason = transact(handle, signature, handle.state.revision, shelfApply(handle, BallThemes.applyBuy), candidate, signature, nil, digest)
 	if not ok and reason == "AlreadyOwned" then return true, reason end
 	return ok, reason
 end
@@ -977,17 +1046,54 @@ end
 -- catalogue ids only, capped 100); `book.claimed` is the double-pay guard; the
 -- book-only faceplate is granted here (never through Faceplates.apply, which charges
 -- and refuses unpriced plates) and re-checked on every claim so a missed grant repairs.
-local function bookFaceplateOwed(state)
-	local book = state.book
-	return type(book) == "table" and BookCatalog.faceplateEarned(book.claimed)
-		and not Faceplates.owns(state, BookCatalog.BookOnlyFaceplate)
+-- Slice C (overnight 2026-11-14): more than one book-only plate (Bookworm for any three
+-- pages, Stargazer for Discoveries 100%). The list and its rules are BookCatalog's
+-- (BookOnlyPlates / platesOwed, Lane K); a catalogue without them is the single Bookworm rule.
+local function bookPlateIds()
+	local ids = {}
+	if type(BookCatalog.BookOnlyPlates) == "table" then
+		for _, row in ipairs(BookCatalog.BookOnlyPlates) do
+			local id = if type(row) == "table" then row.id else row
+			if type(id) == "string" and #id >= 1 and #id <= 64 and not table.find(ids, id) then table.insert(ids, id) end
+		end
+	end
+	if #ids == 0 then table.insert(ids, BookCatalog.BookOnlyFaceplate) end
+	return ids
 end
+-- Book-only plates the save has earned and does not hold, in catalogue order. Only ids in
+-- bookPlateIds() can ever be returned, so this path never hands out a priced plate.
+local function bookPlatesOwed(state)
+	local owed = {}
+	local book = state.book
+	if type(book) ~= "table" then return owed end
+	local wanted = {}
+	if type(BookCatalog.platesOwed) == "function" then
+		local list = BookCatalog.platesOwed(state)
+		for _, id in ipairs(if type(list) == "table" then list else {}) do
+			if type(id) == "string" then wanted[id] = true end
+		end
+	elseif BookCatalog.faceplateEarned(book.claimed) then
+		wanted[BookCatalog.BookOnlyFaceplate] = true
+	end
+	for _, id in ipairs(bookPlateIds()) do
+		if wanted[id] and not Faceplates.owns(state, id) then table.insert(owed, id) end
+	end
+	return owed
+end
+local function bookFaceplateOwed(state)
+	return #bookPlatesOwed(state) > 0
+end
+-- Grants every owed plate that fits under the faceplate limit. True when one was added.
 local function grantBookFaceplate(state)
-	if not bookFaceplateOwed(state) or #(state.faceplates or {}) >= Faceplates.Limit then return false end
+	local owed = bookPlatesOwed(state)
+	if #owed == 0 then return false end
 	local owned = table.clone(state.faceplates or {})
-	table.insert(owned, BookCatalog.BookOnlyFaceplate)
-	state.faceplates = owned
-	return true
+	local granted = false
+	for _, id in ipairs(owed) do
+		if #owned < Faceplates.Limit then table.insert(owned, id); granted = true end
+	end
+	if granted then state.faceplates = owned end
+	return granted
 end
 -- candidate = { milestoneId, reward, operationId }
 local function applyBookClaim(state, candidate)
@@ -1030,13 +1136,31 @@ function Hatching.bookClaim(handle, operationId, milestoneId, reward)
 	return ok, why
 end
 Hatching.bookFaceplateOwed = bookFaceplateOwed
+Hatching.bookPlatesOwed = bookPlatesOwed
+Hatching.bookPlateIds = bookPlateIds
+-- Set of the book-only plates a state holds (the host diffs it around a claim).
+function Hatching.bookPlatesOwned(state)
+	local owned = {}
+	for _, id in ipairs(bookPlateIds()) do
+		if Faceplates.owns(state, id) then owned[id] = true end
+	end
+	return owned
+end
+-- Round-item kind bits for the award summary's `itemKinds` (slice D, win_each_item).
+Hatching.itemKindBit = Lifetime.itemKindBit
 
 -- boost = { multiplier = 1|2, bonus = 0|1 } from the player's game passes.
-function Hatching.award(handle, runSequence, amount, summary, boost)
+-- petId (slice F, optional): the companion that played the round; it earns bond XP in this
+-- same write (+2, or +3 on a win). Also read from boost.petId, so the close-drain path
+-- (CloseProgress passes payout.boost) carries it. Frozen in the candidate, never in the
+-- signature; an unknown or unowned pet simply earns nothing and the award is unaffected.
+function Hatching.award(handle, runSequence, amount, summary, boost, petId)
 	if not integer(runSequence) or runSequence < 1 or (amount ~= 0 and amount ~= 6 and amount ~= 8) then
 		return false, "InvalidReward"
 	end
 	boost = if type(boost) == "table" then boost else {}
+	if petId == nil then petId = boost.petId end
+	petId = if type(petId) == "string" and Pets.byId[petId] then petId else nil
 	local multiplier = if boost.multiplier == 2 then 2 else 1
 	local bonus = if boost.bonus == 1 then 1 else 0
 	if runSequence <= handle.state.lastAwardSeq then return true, "AlreadyAwarded" end
@@ -1059,6 +1183,8 @@ function Hatching.award(handle, runSequence, amount, summary, boost)
 			-- value is refused here rather than failing valid() inside every award.
 			or (summary.merges ~= nil and not integer(summary.merges, Lifetime.RunMerges))
 			or (summary.itemsUsed ~= nil and not integer(summary.itemsUsed, Lifetime.RunItems))
+			-- Slice D: item kinds used this round, a 4-bit mask (swap, pop, bomb, magnet).
+			or (summary.itemKinds ~= nil and not integer(summary.itemKinds, Lifetime.ItemKindsMask))
 			or amount ~= (if summary.success then (if summary.clean then 8 else 6) else 0) then
 			return false, "InvalidSummary"
 		end
@@ -1067,7 +1193,7 @@ function Hatching.award(handle, runSequence, amount, summary, boost)
 	local heat = if summary and summary.heat then summary.heat else BoardConfig.DefaultHeat
 	-- Copy once: the host's mutable board and day clock must never alter a
 	-- pending transaction when DataStore invokes its callback again later.
-	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()), multiplier = multiplier, bonus = bonus, userId = handle.userId }
+	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()), multiplier = multiplier, bonus = bonus, userId = handle.userId, petId = petId }
 	local signature = "award:" .. runSequence .. ":" .. amount .. ":" .. heat
 	return transact(handle, signature, handle.state.revision, function(state, captured)
 		if runSequence <= state.lastAwardSeq then return false, "AwardChanged" end
@@ -1095,6 +1221,9 @@ function Hatching.award(handle, runSequence, amount, summary, boost)
 		state.lastAwardSeq = runSequence
 		state.lastRunReward = { sequence = runSequence, base = amount, heat = heat, roundStars = roundStars, total = total, bonus = total - roundStars, missPay = missPay,
 			questAuto = credited, quests = moved, masteryPoints = marks, family = if run then run.family else nil, promotedTo = promoted }
+		-- Bond (slice F): a saved round finished with this companion. Ownership is checked
+		-- inside Bond.add against this snapshot; it can never fail the award.
+		if run then Bond.add(state, captured.petId, if run.success then Bond.XP.win else Bond.XP.round) end
 		return true
 	end, candidate)
 end
@@ -1118,7 +1247,9 @@ end
 -- moves today's playDate count (capped at 3) and pays +4 Stars once when it reaches 3. The
 -- signature is keyed by day (park:<day>); the caller's operation id is the idempotency key and
 -- playDate.op the proof the host reads to subtract exactly what committed.
-function Hatching.parkPlay(handle, operationId, count)
+-- petId (slice F, optional): the companion; it earns bond XP once, in the write whose count
+-- completes today's Play date. Not in the digest (playDate.op stays the proof).
+function Hatching.parkPlay(handle, operationId, count, petId)
 	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 100 or not integer(count, PlayDate.MaxBatch) or count < 1 then return false, "InvalidParkPlay" end
 	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
 	if PlayDate.committed(handle.state, operationId) then return true, "AlreadySaved" end
@@ -1126,9 +1257,15 @@ function Hatching.parkPlay(handle, operationId, count)
 	local signature = "park:" .. day
 	local pending = handle.pending
 	if pending and (pending.signature ~= signature or pending.id ~= operationId) then return false, "Pending" end
-	local candidate = if pending then pending.candidate else table.freeze({ id = operationId, day = day, count = count })
+	local candidate = if pending then pending.candidate else table.freeze({ id = operationId, day = day, count = count,
+		petId = if type(petId) == "string" and Pets.byId[petId] then petId else nil })
 	return transact(handle, signature, handle.state.revision, function(state, captured)
-		return PlayDate.apply(state, captured, dayOf(handle.adapter.now()))
+		local today = dayOf(handle.adapter.now())
+		local doneBefore = PlayDate.done(state, today)
+		local ok, why = PlayDate.apply(state, captured, today)
+		-- Bond (slice F): only the write that crosses the Play date target pays XP.
+		if ok and not doneBefore and PlayDate.done(state, today) then Bond.add(state, captured.petId, Bond.XP.playDate) end
+		return ok, why
 	end, candidate, operationId, nil, "park:" .. candidate.day .. ":" .. candidate.count)
 end
 function Hatching.parkCommitted(handle, operationId) return PlayDate.committed(handle.state, operationId) end

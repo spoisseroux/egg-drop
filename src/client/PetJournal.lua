@@ -205,6 +205,9 @@ function Journal:open(owned,trials,companionId,selected,tracked,inventoryMask,ma
 	for index,entry in ipairs(self.cards)do
 		local pet=Pets.collection[index];local unlocked=Pets.isUnlocked(pet,owned,trials,inventoryMask)
 		local active=Pets.isActive(pet);entry.Visible=active or unlocked
+		-- Overnight 2026-11-14 slice E: a pet that is neither active nor owned has a hidden row
+		-- and may have no portrait art at all (the second pet before its rig ships): build nothing.
+		if not entry.Visible then entry.Interactable,entry.Selectable=false,false;continue end
 		entry.Species.Text=if active then pet.name elseif unlocked then pet.name.." · Retained"else ""
 		local equipped=unlocked and pet.id==companionId
         local trackable=false

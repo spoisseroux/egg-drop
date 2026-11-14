@@ -1068,10 +1068,13 @@ do
  local wardrobeGui=make("ScreenGui","EggDropWardrobe",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=12,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,ClipToDeviceSafeArea=false},gui.Parent)
  local host=make("Frame","WardrobeHost",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},wardrobeGui)
  local function context(state)
-  local shop=clientUI.wardrobe;local petId=shop and shop.petId or "pip"
+  -- Slice E: the Wardrobe's own pet (no fallback pet here; WardrobeShop.open picks one).
+  local shop=clientUI.wardrobe;local petId=shop and shop.petId or ""
   local row=(state and state.petWearables or {})[petId]
   local features=(state and state.petFeatures or {})[petId]or {}
-  return {wallet=state and state.nectar or 0,row={owned=table.clone(row and row.owned or {}),equipped=table.clone(row and row.equipped or {})},
+  -- Slice C: the shelf week of this snapshot (its own dailyDay), so the price sent is the server's.
+  return {wallet=state and state.nectar or 0,week=require(script.ShelfDeal).week(state or {}),
+   row={owned=table.clone(row and row.owned or {}),equipped=table.clone(row and row.equipped or {})},
    stages={horns=features.horns and features.horns.visible or 0,wings=features.wings and features.wings.visible or 0}}
  end
  local function syncInsets()
@@ -1302,7 +1305,7 @@ gui.Destroying:Connect(function()clientUI.hueResult:Disconnect();clientUI.charmR
 board:GetAttributeChangedSignal("PetAppearance"):Connect(function()
  if nurseryView.state.lastHatch then nurseryView.cinematic:setAppearance(nurseryView.appearanceFor(nurseryView.state.lastHatch.petId))elseif nurseryView:isOpen()then nurseryView:renderBody()end
  if clientUI.isHueOpen()then clientUI.hueView:refresh()end
- if journal.shade.Visible then for i,p in ipairs(journal.portraits)do if p.sprite then require(script.PetPortrait).apply(p.sprite,nurseryView.appearanceFor(Pets.collection[i].id))end end end
+ if journal.shade.Visible then for i,p in pairs(journal.portraits)do if p.sprite then require(script.PetPortrait).apply(p.sprite,nurseryView.appearanceFor(Pets.collection[i].id))end end end
 end)
 nurseryView.ownsPresentation = function()
 	return not roomView.busy and not roomView.transition.shade.Visible and not modal.Visible
@@ -1926,7 +1929,7 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
   canLeave=owned>0,level=heat.index,questCount=clientUI.questCount(),canHatch=owned>0 and balance>=egg.cost,
   questDone=clientUI.finishedQuest(reward),
   tidy=success==true and reward~=nil and(reward.base or 0)>=Payout.TidyWin,eggName=egg.name,eggCost=egg.cost,
-  quest=quest,nudge=nudge,petName=(Pets.byId.pip and Pets.byId.pip.name)or "Bear",
+  quest=quest,nudge=nudge,petName=(Pets.byId[board:GetAttribute("CompanionId")or ""]or Pets.active[1]or Pets[1]).name,
   result={status=status,receiptPending=status=="Saved"and runReceipt==nil,reward=runReceipt,sequence=board:GetAttribute("RunSequence")}}
 end
 -- The view's back arrow: shown on every deck screen, hidden under sheets and the
@@ -2593,6 +2596,9 @@ do
  local coachRemote=remotes:WaitForChild("HatchRequest")
  clientUI.coach=CoachCards.new({gui=gui.Parent,boardParent=clientUI.deviceRoot,z=38,
   send=function(id)coachRemote:FireServer("coachMark",id)end,
+  -- Slice E: "Say hi" on the arrival card makes the new friend the companion (the
+  -- existing `companion` action; the server checks owned and active).
+  sayHi=function(petId)request:FireServer("companion",petId)end,
   learned=function(station)if clientUI.attract then clientUI.attract:learn(station)end end})
  clientUI.coach:place(viewport.Position,viewport.Size)
  local stopCoachSnapshot=clientUI.ownerSnapshot.subscribe(function(state)clientUI.coach:sync(state);clientUI.coach:learned()end)
@@ -2639,9 +2645,31 @@ do
    phase=board:GetAttribute("FieldPhase"),over=board:GetAttribute("RoundOver")==true,merges=board:GetAttribute("Merges")or 0,
    pressure=board:GetAttribute("OverflowPressure")or 0,belt=clientUI.coachBelt or 0,owned=board:GetAttribute("OwnedPets")or 0,
    input=clientUI.inputKind(),open=open,used=clientUI.attract and clientUI.attract.used or nil,pet=companion and companion.name or "Bear",
+   companionId=board:GetAttribute("CompanionId"),
    drops=board:GetAttribute("Drops")or 0,windowActive=cs.window,idleFor=os.clock()-cs.stillSince,awayFor=os.clock()-cs.inputAt})
  end)
  gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy();for _,link in ipairs(cs.links)do link:Disconnect()end end)
+end
+-- Overnight 2026-11-14 slice F: bond levels. The snapshot's `bond` ({petId = xp}) feeds the
+-- garden pet (focus card pips, tricks 1-2) and the level-up moment: a toast under the coach
+-- card and the flourish on the pet (RoomView.bondLevelUp). clientUI.bondSeen holds the last
+-- level seen per pet, so a level shows once; the first snapshot only sets the baseline.
+-- Without `bond` in the snapshot (or without Shared.BondCatalog) nothing here does anything.
+do
+ local BondPips=require(script.BondPips)
+ clientUI.bondSeen={}
+ local stopBondSnapshot=clientUI.ownerSnapshot.subscribe(function(state)
+  local bond=type(state)=="table"and state.bond or nil
+  roomView:setBond(bond)
+  if type(bond)~="table"then return end
+  for _,event in ipairs(BondPips.levelUps(clientUI.bondSeen,bond))do
+   if Pets.isActive(event.petId)then
+    roomView:bondLevelUp(event.petId,event.level)
+    clientUI.coach.toaster.show(BondPips.toastText(event.level))
+   end
+  end
+ end)
+ gui.Destroying:Connect(stopBondSnapshot)
 end
 function clientUI.itemsInRound()
  return board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not roomView.busy and not recap.visible

@@ -24,7 +24,17 @@
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
 local UICopy=require(Shared:WaitForChild("UICopy"))
+local Pets=require(Shared:WaitForChild("PetCatalog"))
+local Eggs=require(Shared:WaitForChild("EggCatalog"))
 local Kit=require(script.Parent.DeckKit)
+-- Slice E (overnight 2026-11-14): the earned-pet gate (lane S). Guarded: without the module
+-- the arrival card simply never shows.
+local function earnedPets()
+ local module=Shared:FindFirstChild("EarnedPets")
+ if not module then return nil end
+ local ok,value=pcall(require,module)
+ return if ok then value else nil
+end
 
 local Cards={}
 Cards.__index=Cards
@@ -35,6 +45,7 @@ Cards.AwaySeconds=20  -- no input for this long: the beat clock pauses (the card
 Cards.WelcomeSeconds=5 -- the Welcome pill's time on screen
 Cards.WelcomeFadeIn=.25;Cards.WelcomeFadeOut=.4
 Cards.BoardSeconds=6  -- fill-line and item cards on the board
+Cards.ArrivalSeconds=20 -- the "a friend arrived" card (it has a button, so it stays longer)
 Cards.Width=460
 Cards.Machines=table.freeze({"hatch","style","companions","quests","book"})
 -- Tint (Kit.Tint key) and icon per card.
@@ -44,6 +55,7 @@ Cards.Spec=table.freeze({
  fillLine={tint="hatch",icon="target"},item={tint="results",icon="sparkle"},questDone={tint="quests",icon="check"},
  hatch={tint="hatch",icon="egg"},style={tint="style",icon="faceplate"},companions={tint="companions",icon="paw"},
  quests={tint="quests",icon="quests"},book={tint="book",icon="book"},park={tint="companions",icon="paw"},
+ petArrived={tint="companions",icon="paw"},
 })
 
 -- ── Pure rules (spec-checked) ───────────────────────────────────────────────
@@ -55,7 +67,29 @@ function Cards.copy(id,vars)
   local key=if vars.input=="Gamepad"then "coach.hub.pad"elseif vars.input=="Touch"then "coach.hub.touch"else "coach.hub.key"
   return UICopy.get("coach.hub.title"),UICopy.get(key)
  end
+ if id=="petArrived"then return UICopy.get("e2.arrived.title",fill),UICopy.get("e2.arrived.line",fill)end
  return UICopy.get("coach."..id..".title",fill),UICopy.get("coach."..id..".line",fill)
+end
+-- Slice E: "a friend arrived". Which earned pet has arrived and not been greeted yet?
+-- ctx: {mask, seen, inventoryMask, earned = the EarnedPets module (default: Shared's)}.
+-- Shown once ever (coach bit petArrived), to veterans too (the 7th stamp is never a new
+-- player), and never while EarnedPets.enabled(pet) is false. Returns a pet id or nil.
+function Cards.arrivalDue(ctx)
+ ctx=ctx or {}
+ local earned=ctx.earned or earnedPets()
+ if type(earned)~="table"or type(earned.enabled)~="function"then return nil end
+ if Coach.Bits.petArrived==nil or Coach.has(ctx.mask,"petArrived")then return nil end
+ if type(ctx.seen)=="table"and ctx.seen.petArrived then return nil end
+ local mask=if type(ctx.inventoryMask)=="number"then ctx.inventoryMask else 0
+ for _,petId in ipairs(earned.Order or {})do
+  if Pets.byId[petId]and earned.enabled(petId)and Eggs.isOwned(mask,petId)then return petId end
+ end
+ return nil
+end
+-- May the arrival card show now? Only in the free garden, settled, with no reveal open.
+function Cards.arrivalReady(ctx,roomFor)
+ return ctx.mode=="Room"and Cards.gardenFree(ctx)and not ctx.revealPending and(roomFor or 0)>=Coach.GardenSettle
+  and(ctx.awayFor or 0)<Cards.AwaySeconds
 end
 -- Which one-time machine card is due? open = {hatch=bool,...}, used = attract.used (station ids).
 function Cards.machineDue(open,used,ctx)
@@ -110,7 +144,7 @@ end
 -- away; a beat also pauses while the garden is not free (it hides then).
 function Cards.clockRuns(ctx,kind)
  if ctx.windowActive==false or(ctx.awayFor or 0)>=Cards.AwaySeconds then return false end
- return kind~="beat"or Cards.gardenOpen(ctx)
+ return(kind~="beat"and kind~="arrival")or Cards.gardenOpen(ctx)
 end
 -- Welcome pill: the longest line that fits `width` px (Strong 13), then the shorter ones.
 function Cards.welcomeText(width)
@@ -175,6 +209,11 @@ function Cards.new(options)
   self.dots[i]=d
  end
  self.dotsRoot=dots
+ -- Slice E: the arrival card's "Say hi" (switches the companion). Hidden on every other card.
+ local sayHi=Kit.button(self.gardenView.root,"SayHi",{variant="primary",text=UICopy.get("e2.arrived.sayHi"),size=Vector2.new(150,40),textSize=16,selectable=false})
+ sayHi.Visible=false;sayHi.ZIndex=self.gardenView.root.ZIndex+3
+ sayHi.Activated:Connect(function()self:sayHi()end)
+ self.sayHiButton=sayHi
  -- Board cards: their own host over the board rect (like BoardHints), never take input.
  if options.boardParent then
   local boardHost=Kit.node("Frame",options.boardParent,{Name="CoachBoard",BackgroundTransparency=1,ZIndex=options.z or 38,Active=false,Size=UDim2.fromOffset(0,0)})
@@ -223,6 +262,7 @@ function Cards:sync(snapshot)
  if type(snapshot)~="table"then return end
  self.mask=Coach.merge(self.mask,Coach.mask(snapshot.coachMask))
  self.totalWins=type(snapshot.totalWins)=="number"and snapshot.totalWins or self.totalWins
+ if type(snapshot.inventoryMask)=="number"then self.inventoryMask=snapshot.inventoryMask end
  local hatch=snapshot.lastHatch
  self.revealPending=type(hatch)=="table"
  if type(hatch)=="table"and hatch.starter==true then
@@ -237,7 +277,7 @@ function Cards:sync(snapshot)
  self.synced=true
 end
 function Cards:ctx(extra)
- local ctx={mask=self.mask,seen=self.seen,totalWins=self.totalWins,owned=self.owned,revealPending=self.revealPending}
+ local ctx={mask=self.mask,seen=self.seen,totalWins=self.totalWins,owned=self.owned,revealPending=self.revealPending,inventoryMask=self.inventoryMask}
  if extra then for key,value in pairs(extra)do if ctx[key]==nil then ctx[key]=value end end end
  return ctx
 end
@@ -295,8 +335,18 @@ function Cards:showGarden(id,kind,vars,now,machine)
  self.skipLabel.Text=string.upper(if kind=="beat"then UICopy.get("coach.skip")else UICopy.get("coach.gotIt"))
  self.skip.Size=UDim2.fromOffset(math.ceil(Kit.measure(self.skipLabel.Text,"Label",13).X)+20,28)
  view.title.Size=UDim2.new(1,-80-self.skip.Size.X.Offset,0,24)
+ -- Slice E: the arrival card grows a button row under its line.
+ local arrival=kind=="arrival"
+ self.sayHiButton.Visible=arrival
+ if arrival then
+  local height=view.root.Size.Y.Offset
+  local buttonW=math.min(150,view.root.Size.X.Offset-66-16)
+  self.sayHiButton.Size=UDim2.fromOffset(buttonW,40);self.sayHiButton.Position=UDim2.fromOffset(66,height-12)
+  view.root.Size=UDim2.fromOffset(view.root.Size.X.Offset,height+40)
+ end
  view.root.Visible=true
- self.garden={id=id,kind=kind,shownAt=now,elapsed=0,duration=if kind=="beat"then Cards.BeatSeconds else Cards.Duration,machine=machine}
+ self.garden={id=id,kind=kind,shownAt=now,elapsed=0,machine=machine,petId=if arrival and type(vars)=="table"then vars.petId else nil,
+  duration=if kind=="beat"then Cards.BeatSeconds elseif arrival then Cards.ArrivalSeconds else Cards.Duration}
  if not Kit.reduced()then view.scale.Scale=.9;Kit.tween(view.scale,Kit.Motion.toastIn,{Scale=1})end
  view.root:SetAttribute("CoachCard",id)
 end
@@ -304,11 +354,28 @@ function Cards:hideGarden()
  self.garden=nil
  self.gardenView.root.Visible=false
  self.gardenView.root:SetAttribute("CoachCard",nil)
+ if self.sayHiButton then self.sayHiButton.Visible=false end
+end
+-- Slice E: "Say hi" on the arrival card: the new friend becomes the companion (the caller
+-- sends the existing `companion` action), then the card's bit is saved.
+function Cards:sayHi()
+ local current=self.garden
+ if not current or current.kind~="arrival"then return false end
+ self:hideGarden()
+ if self.options.sayHi and current.petId then self.options.sayHi(current.petId)end
+ self:mark("petArrived")
+ return true
 end
 -- A tap moves the garden step on; Skip ends it; a one-time card just closes.
 function Cards:dismiss(how)
  local current=self.garden
  if not current then return false end
+ -- The arrival card has its own button: a stray tap on the card keeps it; "Got it" closes
+ -- it for good without switching the companion.
+ if current.kind=="arrival"then
+  if how~="skip"then return false end
+  self:hideGarden();self:mark("petArrived");return true
+ end
  self:hideGarden()
  if current.kind=="beat"then
   if how=="skip"then self:finishGarden()else self:advance(current.id)end
@@ -347,12 +414,15 @@ function Cards:step(now,ctx)
   if Cards.clockRuns(ctx,current.kind)then current.elapsed+=dt end
   local elapsed=current.elapsed
   local gone=elapsed>=current.duration
-   or(current.kind=="beat"and not Cards.gardenOpen(ctx))
+   or((current.kind=="beat"or current.kind=="arrival")and not Cards.gardenOpen(ctx))
    or(current.machine and not(ctx.open and ctx.open[current.machine]))
   if gone then
    self:hideGarden()
    -- A beat that ran out moves on; one hidden by a menu shows again when the garden is free.
    if current.kind=="beat"and elapsed>=current.duration then self:advance(current.id)end
+   -- The arrival card that ran its full time is done (shown once ever); one hidden by a
+   -- menu comes back when the garden is free.
+   if current.kind=="arrival"and elapsed>=current.duration then self:mark("petArrived")end
   else
    self.gardenView.bar.Size=UDim2.new(math.clamp(1-elapsed/current.duration,0,1),-32,0,2)
   end
@@ -372,6 +442,12 @@ function Cards:step(now,ctx)
    if self.starterStars and not self.toldStars then
     self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars)
    end
+  elseif Cards.arrivalDue(base)~=nil and Cards.arrivalReady(base,roomFor)then
+   -- Slice E: a friend arrived (the 7th-stamp pet). Already the companion (the player
+   -- switched in Companions first): nothing to offer, just save the bit.
+   local petId=Cards.arrivalDue(base)
+   if ctx.companionId==petId then self:mark("petArrived")
+   else self:showGarden("petArrived","arrival",{pet=Pets.byId[petId].name,petId=petId},now)end
   elseif self.questToldPending and(ctx.mode~="Board"or ctx.over==true)then
    self.questToldPending=false
    if Coach.wants("questDone",base)then self:mark("questDone");self:showGarden("questDone","once",vars,now)end

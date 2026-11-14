@@ -125,7 +125,7 @@ return function(server)
 		local rolls = c.rolls
 		c.unit = .99
 		buyToy(h, c)
-		assert(h.state.toyUnlocks[Toys.Pools[Toys.PoolVersion][3]] == true, "a .99 roll takes the last eligible toy")
+		assert(h.state.toyUnlocks[Toys.Pools[Toys.PoolVersion][#Toys.Pools[Toys.PoolVersion]]] == true, "a .99 roll takes the last eligible toy")
 		buyFeature(h, c)
 		assert(h.state.featureStock.wings == 1, "a .99 roll is wings")
 		assert(c.rolls == rolls + 2)

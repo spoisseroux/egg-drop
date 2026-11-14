@@ -191,11 +191,42 @@ return function(client,parent)
     assert((left.part.Position-rest).Magnitude<1e-5,"wing moving under Reduced Effects")
    end
   end)
+  test("recolour variants render the base meshes with one colour override; the cache key follows the variant",function()
+   local Wear=require(Shared.WearableCatalog)
+   local v=make(Pets.byId.pip,appearance(0,0,{Hat="beanie",Neck="bellcollar",Shirt="tee"}))
+   local base=find(v,"Hat_Beanie");assert(shown(base)and base.part.Color==Color3.fromHex("#E9574C")and base.variantTint==nil)
+   local signature=v.featureSignature;assert(v.model:GetAttribute("WearableTints")=="")
+   local trim=find(v,"Hat_Beanie_Trim").part.Color;local band=find(v,"Neck_BellCollar").part.Color
+   v:applyAppearance(appearance(0,0,{Hat="beanie_mint",Neck="bellcollar_rose",Shirt="tee_forest"}));v:update(0)
+   assert(v.featureSignature~=signature,"beanie -> beanie_mint kept the cache key")
+   assert(v.model:GetAttribute("Wearables")=="Hat=beanie;Neck=bellcollar;Shirt=tee",v.model:GetAttribute("Wearables"))
+   assert(v.model:GetAttribute("WearableTints")=="Hat=beanie_mint;Neck=bellcollar_rose;Shirt=tee_forest",v.model:GetAttribute("WearableTints"))
+   -- Main own-colour pieces take the new colour and stay an "own" piece; secondary trim keeps its tint.
+   local mint=find(v,"Hat_Beanie");assert(shown(mint)and mint.part.Color==Color3.fromHex("#7FE0CF")and mint.colorRole=="own"and mint.color==mint.part.Color)
+   assert(find(v,"Hat_Beanie_Trim").part.Color==trim and find(v,"Hat_Beanie_Trim").colorRole=="wearSecondary","beanie trim changed")
+   -- The tee recolours torso and both sleeves (all the base's main colour); stripes stay secondary.
+   for _,name in ipairs({"Shirt_Tee_Torso","Shirt_Tee_SleeveL","Shirt_Tee_SleeveR"})do assert(find(v,name).part.Color==Color3.fromHex("#3F8F6B"),name)end
+   assert(find(v,"Shirt_Tee_Stripes").colorRole=="wearSecondary")
+   -- Bell Collar's main piece is the secondary band: the variant names the bell instead.
+   assert(find(v,"Neck_BellCollar_Bell").part.Color==Color3.fromHex("#F2A0A8")and find(v,"Neck_BellCollar").part.Color==band,"bell collar pieces")
+   -- A variant keeps its base's fit lift and exclusions (a full hat still hides horns).
+   assert(Wear.fitOffset(bear.id,Wear.renderMap("pip",{Hat="beanie_mint"}).mapped.Hat)==Wear.fitOffset(bear.id,"beanie"))
+   v:applyAppearance(appearance(3,0,{Hat="beanie_grape"}));v:update(0)
+   assert(v.attachmentState.blocked.Horns and find(v,"Hat_Beanie").part.Color==Color3.fromHex("#9B7BE8"))
+   -- Back to the base: the override is gone.
+   v:applyAppearance(appearance(0,0,{Hat="beanie"}));v:update(0)
+   assert(find(v,"Hat_Beanie").part.Color==Color3.fromHex("#E9574C")and find(v,"Hat_Beanie").variantTint==nil)
+  end)
   test("rules: normalise unknown items, one item per slot, a Back wearable hides wings, flags drive exclusions",function()
    assert(next(Rules.normalize(bear,{Hat="crown",Wings="beanie",Eyes="sparkle",EarPiercing="ring",Mouth="o",Tail="arrow"}))=="Eyes","placeholder ids must be gone")
    -- 3 hats, 2 shirts, 2 necklaces, 2 helix pairs x 2 sides, 6 eyes (round, smallwide [unsold], sparkle, sleepy, happy, lash), 2 mouths, 1 tail.
-   local items=Rules.items(bear);assert(#items==20,#items)
-   local sold=require(Shared.WearableCatalog).forPet("pip").order;assert(#sold==17,"manifest items "..#sold)
+   -- Slice B (2026-11-14) adds 7: blush, party hat, bow tail, acorn pendant, round specs, and the bands pair x 2 sides.
+   local items=Rules.items(bear);assert(#items==27,#items)
+   -- Sold items: the rig's own, plus recolour variants (slice B) that reuse a base item's meshes.
+   local all=require(Shared.WearableCatalog).forPet("pip").order;local sold={}
+   for _,item in ipairs(all)do if item.variant then assert(require(Shared.WearableCatalog).item("pip",item.base),"variant without a base "..item.id)else table.insert(sold,item)end end
+   local priced=0;for _,raw in ipairs(bear.wearableItems)do if type(raw.price)=="number"and raw.price>0 then priced+=1 end end
+   assert(#sold==priced and #sold>=17,"manifest items "..#sold)
    for _,item in ipairs(sold)do assert(item.price==({common=15,rare=30,showcase=60})[item.tier],item.id)end
    -- Real manifest flags: full hats hide horns; the Flower Crown is an open crown (horns and the centre charm stay) with a low brim.
 
@@ -215,7 +246,9 @@ return function(client,parent)
    r=Rules.resolve(bear,{horns=3},{});assert(r.charmLift==0)
   end)
   test("rigs without authored attachments, and the Bear's native fallback, keep procedural features and ignore wearables",function()
-   for _,pet in ipairs(Pets.collection)do
+   -- Collection pets that have a rig in this build (the earned pet Blip has none yet: slice E).
+   local rigged={};for _,pet in ipairs(Pets.collection)do if Defs[pet.id]then table.insert(rigged,pet)end end
+   for _,pet in ipairs(rigged)do
     local native=pet.id=="pip"
     local v=make(pet,appearance(3,3,{Hat="beanie"},3),native)
     assert(v.model:GetAttribute("FeatureBackend")=="Procedural",pet.id)

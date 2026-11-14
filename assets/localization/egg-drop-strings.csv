@@ -1,4 +1,14 @@
 Key,Source,Context,Example
+ui.bond.level,Bond level {count},,Menu text; e.g. Bond level 3; also ui.bond.levelUpPlain
+ui.bond.levelUp,Bond level {count} · New trick: {name},,Menu text; e.g. Bond level 3 · New trick: Pet Park
+ui.bond.max,Lv {count} · more soon,,Menu text; e.g. Lv 3 · more soon
+ui.bond.short,Lv {count},,Menu text; e.g. Lv 3
+ui.bond.title,Bond,,Menu text
+ui.bond.trick.l1,Hello,,Menu text
+ui.bond.trick.l2,Sit,,Menu text
+ui.bond.trick.l3,Wiggle dance,,Menu text
+ui.bond.trick.l4,Big stretch,,Menu text
+ui.bond.trick.l5,Happy hop,,Menu text
 ui.book.bookworm.count,{count}/3,,Collection book; e.g. 3/3
 ui.book.bookworm.done,Bookworm faceplate is yours,,Collection book
 ui.book.bookworm.line,Finish any three pages: Bookworm faceplate,,Collection book
@@ -76,6 +86,13 @@ ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.n
 ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
 ui.coach.welcome.title,Hatch your first friend,,First-round coaching; also ui.r1.welcomePill.mid
 ui.companions.wearing.none,Nothing yet,,Companions screen
+ui.e2.arrived.line,{pet} came to stay in your garden.,,Menu text; e.g. Bear came to stay in your garden.
+ui.e2.arrived.sayHi,Say hi,,Menu text
+ui.e2.arrived.title,A friend arrived!,,Menu text
+ui.e2.hub.none,No companion yet. Play your first rounds to meet your Bear.,,Menu text
+ui.e2.tease.many,Someone's on the way… {count} more stamps,,Menu text; e.g. Someone's on the way… 3 more stamps
+ui.e2.tease.one,Someone's on the way… 1 more stamp,,Menu text
+ui.e2.tease.short,Someone's on the way…,,Menu text
 ui.hatch.egg.feature.description,Something pointy is growing in here. Hatches one feature item to grow on any pet.,,Hatch eggs screen
 ui.hatch.egg.feature.line,"Horns, claws or wings",,Hatch eggs screen
 ui.hatch.egg.feature.per,1 item per egg,,Hatch eggs screen
@@ -122,6 +139,12 @@ ui.pet.capped,{pet}'s had plenty of pets today,,Petting reward; e.g. Bear's had 
 ui.pet.cappedSolo,Plenty of pets today,,Petting reward
 ui.pet.star,+1 ★,,Petting reward
 ui.phoneDeck.b.items,Items,,Menu text
+ui.pool3.charm.earned,Earned,,Menu text
+ui.pool3.charm.fallback.rule,Keep playing to earn this charm,,Menu text
+ui.pool3.charm.heart.rule,Finish the Wardrobe page in the book,,Menu text
+ui.pool3.charm.leaf.rule,Collect 14 daily stamps,,Menu text
+ui.pool3.charm.locked,Locked,,Menu text
+ui.pool3.charm.star.rule,Claim 4 weekly bonuses,,Menu text
 ui.quests.allDone,All done. {pet} is impressed.,,Quest log; e.g. All done. Bear is impressed.
 ui.quests.allDoneSolo,All done for today.,,Quest log
 ui.r1.hatchHints.hatch,Hatch,,Menu text
@@ -232,6 +255,12 @@ ui.results.saved.done,Tucked into your wallet,,Round results screen
 ui.results.today.label,TODAY,,Round results screen
 ui.results.today.line,★ {count} earned,,Round results screen; e.g. ★ 3 earned
 ui.results.today.short,Today: ★ {count},,Round results screen; e.g. Today: ★ 3
+ui.shelf.chip,This week −20%,,Menu text
+ui.shelf.chipShort,−20%,,Menu text
+ui.shelf.deluxe,Deluxe,,Menu text
+ui.shelf.line,This week: {item},,Menu text; e.g. This week: Squeaky Bone
+ui.shelf.short,20% off this week,,Menu text
+ui.shelf.status,On this week's shelf,,Menu text
 ui.shop.failed.applied,Not applied,,Shop status and errors
 ui.shop.failed.bought,Not bought,,Shop status and errors
 ui.shop.failed.saved,Not saved,,Shop status and errors
@@ -257,9 +286,25 @@ ui.style.balls.pitch,"Same sizes, same rules. Only cuter.",,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.balls,Just for looks. Never an advantage.,,Deck style screen
 ui.style.promise.faceplates,Fixed prices. No random plates.,,Deck style screen
+ui.variants.note,A new colour of {item},,Menu text; e.g. A new colour of Squeaky Bone
+ui.variants.slot.ankle,"A pair, one for each ankle",,Menu text
+ui.variants.slot.cheek,"A pair, one for each cheek",,Menu text
+ui.variants.slot.eyewear,Sits on the nose,,Menu text
+ui.variants.slot.wrist,"A pair, one for each wrist",,Menu text
+ui.variants.tab.ankle,Ankle,,Menu text; also catalog.WearableCatalog.Tabs.11.label
+ui.variants.tab.cheek,Cheek,,Menu text; also catalog.WearableCatalog.Tabs.9.label
+ui.variants.tab.eyewear,Eyewear,,Menu text; also catalog.WearableCatalog.Tabs.8.label
+ui.variants.tab.wrist,Wrist,,Menu text; also catalog.WearableCatalog.Tabs.10.label
 ui.wardrobe.empty,Nothing to wear yet. {pet} doesn't mind.,,Wardrobe screen; e.g. Nothing to wear yet. Bear doesn't mind.
 ui.wardrobe.emptySlot,Nothing for this slot yet.,,Wardrobe screen
 ui.wardrobe.emptySolo,Nothing to wear yet.,,Wardrobe screen
+catalog.BallThemes.ById.bubbles.name,Bubbles,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.5.name
+catalog.BallThemes.ById.bubbles.names.1,Sky,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubbles.names.2,Peach,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubbles.names.3,Melon,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubbles.names.4,Blossom,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubbles.names.5,Violet,,"Catalogue BallThemes (names); also catalog.BallThemes.ById.marbles.names.5, catalog.BallThemes.ById.smileys.names.5"
+catalog.BallThemes.ById.bubbles.pitch,Soft and shiny. Two little eyes.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.gems.name,Gems,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.2.name
 catalog.BallThemes.ById.gems.names.1,Sapphire,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.gems.names.2,Topaz,,Catalogue BallThemes (names)
@@ -286,7 +331,6 @@ catalog.BallThemes.ById.marbles.names.1,Blue,,Catalogue BallThemes (names); also
 catalog.BallThemes.ById.marbles.names.2,Orange,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.2
 catalog.BallThemes.ById.marbles.names.3,Green,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.3
 catalog.BallThemes.ById.marbles.names.4,Pink,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.4
-catalog.BallThemes.ById.marbles.names.5,Violet,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.5
 catalog.BallThemes.ById.marbles.pitch,No faces. Glossy with a pattern each.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.planets.name,Planets,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.3.name
 catalog.BallThemes.ById.planets.names.1,Moon,,Catalogue BallThemes (names)
@@ -303,6 +347,7 @@ catalog.DeckThemes.ById.bookworm.name,Bookworm,,Catalogue DeckThemes (name); als
 catalog.DeckThemes.ById.brick.name,Ember,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.brick.name
 catalog.DeckThemes.ById.copperleaf.name,Copperleaf,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.copperleaf.name
 catalog.DeckThemes.ById.gloaming.name,Gloaming,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.gloaming.name
+catalog.DeckThemes.ById.grape_soda.name,Grape Soda,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.grape_soda.name, catalog.BookCatalog.Pages.faceplates.items.9.name"
 catalog.DeckThemes.ById.honey.name,Honey,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.honey.name
 catalog.DeckThemes.ById.ice.name,Creek,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.ice.name, catalog.DeckBackgrounds.ById.creek.name"
 catalog.DeckThemes.ById.lime_gel.name,Lime Gel,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.lime_gel.name, catalog.BookCatalog.Pages.faceplates.items.2.name"
@@ -310,19 +355,24 @@ catalog.DeckThemes.ById.liquid_chrome.name,Liquid Chrome,,"Catalogue DeckThemes 
 catalog.DeckThemes.ById.moss.name,Canopy,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.moss.name, catalog.DeckBackgrounds.ById.canopy.name"
 catalog.DeckThemes.ById.night_orb.name,Night Orb,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.night_orb.name, catalog.BookCatalog.Pages.faceplates.items.8.name"
 catalog.DeckThemes.ById.prism_flare.name,Prism Flare,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.prism_flare.name, catalog.BookCatalog.Pages.faceplates.items.7.name"
+catalog.DeckThemes.ById.rose_chrome.name,Rose Chrome,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.rose_chrome.name, catalog.BookCatalog.Pages.faceplates.items.10.name"
 catalog.DeckThemes.ById.sherbet.name,Scout,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sherbet.name
 catalog.DeckThemes.ById.sorbet_sky.name,Sorbet Sky,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sorbet_sky.name, catalog.BookCatalog.Pages.faceplates.items.3.name"
 catalog.DeckThemes.ById.stone.name,Pebble,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name"
 catalog.DeckThemes.ById.tidepool.name,Tidepool,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.tidepool.name, catalog.BookCatalog.Pages.faceplates.items.5.name"
 catalog.DeckBackgrounds.ById.lantern.name,Lantern,,Catalogue DeckBackgrounds (name)
 catalog.DeckStickers.ById.none.name,Blank,,Catalogue DeckStickers (name)
-catalog.MaterialCatalog.ById.gloss.name,Gloss,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.4.name
-catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name
+catalog.MaterialCatalog.ById.gloss.name,Gloss,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.6.name
+catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name
 catalog.MaterialCatalog.ById.metal.name,Metal,,Catalogue MaterialCatalog (name)
+catalog.MaterialCatalog.ById.pearl_edge.name,Pearl Edge,,Catalogue MaterialCatalog (name)
+catalog.MaterialCatalog.ById.speckle_satin.name,Speckle Satin,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.standard.name,Standard,,Catalogue MaterialCatalog (name)
 catalog.ToyCatalog.ById.ball.name,Ball,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.1.name
 catalog.ToyCatalog.ById.bone.name,Bone,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.2.name
 catalog.ToyCatalog.ById.sparkler.name,Sparkler,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.3.name
+catalog.ToyCatalog.ById.squeaky_carrot.name,Squeaky Carrot,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.4.name
+catalog.ToyCatalog.ById.wobble_top.name,Wobble Top,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name
 catalog.HueCatalog.ById.citrus.name,Citrus,,Catalogue HueCatalog (name)
 catalog.HueCatalog.ById.iris.name,Iris,,Catalogue HueCatalog (name)
 catalog.HueCatalog.ById.tide.name,Tide,,Catalogue HueCatalog (name)
@@ -341,7 +391,10 @@ catalog.FeatureCatalog.ById.claws.name,Claws,,Catalogue FeatureCatalog (name)
 catalog.FeatureCatalog.ById.horns.name,Horn buds,,Catalogue FeatureCatalog (name)
 catalog.FeatureCatalog.ById.wings.name,Folded wings,,Catalogue FeatureCatalog (name)
 catalog.PetCharmCatalog.ById.dot.name,Snowflake,,Catalogue PetCharmCatalog (name)
+catalog.PetCharmCatalog.ById.heart.name,Heart,,Catalogue PetCharmCatalog (name)
 catalog.PetCharmCatalog.ById.ring.name,Ring,,Catalogue PetCharmCatalog (name)
+catalog.PetCharmCatalog.ById.star.name,Star,,Catalogue PetCharmCatalog (name)
+catalog.PetCharmCatalog.Reserved.leaf.name,Leaf,,Catalogue PetCharmCatalog (name)
 catalog.WearableCatalog.Tabs.1.label,Hat,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.2.label,Shirt,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.3.label,Neck,,Catalogue WearableCatalog (label)
@@ -349,6 +402,16 @@ catalog.WearableCatalog.Tabs.4.label,Ears,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.5.label,Eyes,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.6.label,Mouth,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.7.label,Tail,,Catalogue WearableCatalog (label)
+catalog.WearableCatalog.Variants.1.name,Mint Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.2.name,Butter Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.3.name,Grape Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.4.name,Berry Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.5.name,Forest Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.6.name,Tangerine Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.7.name,Silver Bell Collar,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.8.name,Rose Bell Collar,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.9.name,Cocoa Sun Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.10.name,Peach Sun Hat,,Catalogue WearableCatalog (name)
 catalog.RoundItems.ById.bomb.effect,Your next ball bursts on landing and clears a small circle.,,Catalogue RoundItems (effect)
 catalog.RoundItems.ById.bomb.name,Bomb,,Catalogue RoundItems (name)
 catalog.RoundItems.ById.bomb.short,Next ball clears a circle.,,Catalogue RoundItems (short)
@@ -428,6 +491,12 @@ catalog.BookCatalog.Discoveries.7.name,Win a Bank bounce field,,Catalogue BookCa
 catalog.BookCatalog.Discoveries.8.name,Win a Mirror marks field,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.8.name
 catalog.BookCatalog.Discoveries.9.name,Win on Easy,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.9.name
 catalog.BookCatalog.Discoveries.10.name,Win on Medium,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.10.name
+catalog.BookCatalog.Discoveries.12.name,Pet your pet at night,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.12.name
+catalog.BookCatalog.Discoveries.13.name,Finish a Play date,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.13.name
+catalog.BookCatalog.Discoveries.14.name,Wear a full outfit,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.14.name
+catalog.BookCatalog.Discoveries.15.name,Win with each item type,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.15.name
+catalog.BookCatalog.Discoveries.16.name,25 tidy wins,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.16.name
+catalog.BookCatalog.Discoveries.17.name,Play 100 rounds,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.17.name
 catalog.BookCatalog.Pages.discoveries.name,Discoveries,,Catalogue BookCatalog (name)
 catalog.BookCatalog.Pages.toys.name,Toys,,Catalogue BookCatalog (name)
 catalog.EggCatalog.ById.meadow.name,Mixed Meadow,,Catalogue EggCatalog (name)
@@ -436,6 +505,7 @@ catalog.PetCatalog.1.description,"Soft as a nap. Hugs first, asks questions neve
 catalog.PetCatalog.2.description,Hums to puddles. The puddles have started humming back.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.3.description,Ticks like a tiny clock. Always early for snacks.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.4.description,"Floats in slow circles, collecting quiet thoughts.",,Catalogue PetCatalog (description)
+catalog.PetCatalog.byId.blip.description,Fell off a toy shelf on a faraway moon. Likes it here.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.byId.bloom_pip.description,A bear in bloom. Smells faintly of tomorrow's picnic.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.byId.eclipse_orbit.description,Borrows the night sky and always gives it back.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.byId.foxfire_wick.description,"Glows when happy. Glows a lot, honestly.",,Catalogue PetCatalog (description)
@@ -454,5 +524,11 @@ catalog.WearableCatalog.pip.blep.name,Blep,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.pip.heart.name,Heart Tail,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.pip.happy.name,Happy Eyes,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.pip.lash.name,Lash Eyes,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.blush.name,Blush Stickers,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.partyhat.name,Party Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.bowtail.name,Bow Tail,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.acorn.name,Acorn Pendant,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.bands.name,Friendship Bands,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.pip.specs.name,Round Specs,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.pip.round.name,Round Eyes,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.pip.w.name,Kitty W,,Catalogue WearableCatalog (name)

@@ -10,7 +10,14 @@ return function(shared)
   bloom_pip={"#383342","#63434C","#FFF4DB","#DCA39D"},foxfire_wick={"#393044","#6B475C","#FFF4DB","#D9A3AB"},eclipse_orbit={"#363448","#645265","#FFF4DB","#C5A6AF"},
  }
  test("all seven saved IDs and ownership bits remain permanent while only the Bear (pip) is active",function()
-  assert(#Pets.collection==7 and #Pets.active==1 and Pets.active[1].id=="pip")
+  -- Slice E (2026-11-14): the earned pet Blip is collection index 8 (bit 0x80), after the
+  -- seven saved pets and outside the legacy `Pets` rank array. Active follows EarnedPets.enabled.
+  local Earned=require(shared.EarnedPets)
+  assert(#Pets.collection==8 and #Pets==4 and #Pets.rares==3 and Pets.collection[8]==Pets.byId.blip)
+  assert(Pets.byId.blip.index==8 and Eggs.bit("blip")==128 and Pets.byId.blip.earned==true and Eggs.mask({"blip"})==128)
+  assert(Pets.isActive("blip")==Earned.enabled("blip"),"active follows the shared gate")
+  assert(Earned.Rules.blip.stamps==7 and #Earned.owed({stamps=99,inventoryMask=1})==(if Earned.enabled("blip")then 1 else 0))
+  assert(#Pets.active==(if Earned.enabled("blip")then 2 else 1)and Pets.active[1].id=="pip")
   for i,id in ipairs(ids)do
    assert(Pets.collection[i]==Pets.byId[id]and Pets.byId[id].index==i and Eggs.bit(id)==2^(i-1))
    assert(Pets.isActive(id)==(i==1)and Pets.isActive(Pets.byId[id])==(i==1))
@@ -22,8 +29,12 @@ return function(shared)
   local retained=Eggs.bit("foxfire_wick")
   assert(Pets.ownedCount(0,0,retained)==1 and Pets.activeOwnedCount(0,0,retained)==0)
   assert(Pets.collectionSummary(0,0,retained)=="00/01 · 1 retained")
-  assert(Pets.activeOwnedCount(0,0,127)==1 and Pets.ownedCount(0,0,127)==7 and Pets.collectionSummary(0,0,127)=="01/01 · 6 retained")
-  assert(Pets.collectionSummary(0,0,Eggs.bit("pip"))=="01/01")
+  if #Pets.active==1 then
+   assert(Pets.activeOwnedCount(0,0,127)==1 and Pets.ownedCount(0,0,127)==7 and Pets.collectionSummary(0,0,127)=="01/01 · 6 retained")
+   assert(Pets.collectionSummary(0,0,Eggs.bit("pip"))=="01/01")
+   -- A mask with Blip's bit while he is not active: owned, retained, never counted as active.
+   assert(Pets.ownedCount(0,0,255)==8 and Pets.activeOwnedCount(0,0,255)==1)
+  end
  end)
  test("white Main and achromatic grey Secondary agree across canonical and direct definitions, protected colors stay exact",function()
   for _,id in ipairs(ids)do

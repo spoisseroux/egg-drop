@@ -21,6 +21,7 @@ local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
 local TabInk=require(script.Parent.TabInk)
 local HintLegend=require(script.Parent.HintLegend)
+local Deal=require(script.Parent.ShelfDeal)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
@@ -36,6 +37,7 @@ Shop.NoneId="none"
 -- Pure: the cards of one slot tab (None first, then the catalogue items). A slot
 -- with no items for this pet has no cards at all (the empty line shows instead).
 function Shop.tileList(petId,slot)
+ if not petId then return {}end -- before the first open there is no pet yet (slice E)
  local items=Catalog.inTab(petId,slot)
  if #items==0 then return {}end
  local list={{id=Shop.NoneId,none=true,slot=slot,name=UICopy.get("r4.wardrobe.none")}}
@@ -60,8 +62,10 @@ function Shop.status(petId,itemId,ctx)
  if owned and Catalog.equippedIn(petId,row.equipped,item.slot)==itemId then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
  if owned then return {kind="owned",text="",button="Wear",enabled=true}end
  local wallet=ctx.wallet or 0
- if wallet>=item.price then return {kind="buy",text="You have enough Stars",button="★ Buy "..item.price,price=item.price,enabled=true}end
- return {kind="short",text=(item.price-wallet).." more Stars needed",button="★ Buy "..item.price,price=item.price,enabled=false}
+ -- Slice C: an item on this week's shelf sells at the shelf price (`full` = the struck price).
+ local price,full=Deal.quote("wearable",itemId,item.price,ctx.week)
+ if wallet>=price then return {kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
+ return {kind="short",text=(price-wallet).." more Stars needed",button="★ Buy "..price,price=price,full=full,enabled=false}
 end
 function Shop.tileStatus(petId,itemId,ctx,slot)
  if itemId==Shop.NoneId then
@@ -71,9 +75,76 @@ function Shop.tileStatus(petId,itemId,ctx,slot)
  local s=Shop.status(petId,itemId,ctx)
  if s.kind=="equipped"then return "WEARING","accent"end
  if s.kind=="owned"then return "✓ Owned","soft"end
- if s.kind=="buy"then return "★ "..s.price,"stars"end
- if s.kind=="short"then return "★ "..s.price,"dim"end
+ if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
+ if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
  return "","dim"
+end
+-- Slice E: the pet the Wardrobe opens on when none (or one without wearables) is asked
+-- for: the first active pet that has items, else the first active pet.
+function Shop.firstPet()
+ for _,pet in ipairs(Pets.active)do if Catalog.hasItems(pet.id)then return pet.id end end
+ return Pets.active[1]and Pets.active[1].id or nil
+end
+-- Slice B: only slot tabs with at least one item for this pet are shown (Ankle stays
+-- hidden until an anklet exists). A pet with no wearables at all keeps every tab, so
+-- the screen still has a tab bar and the empty line.
+function Shop.tabsFor(petId)
+ local list={}
+ if petId then
+  for _,tab in ipairs(Catalog.Tabs)do if #Catalog.inTab(petId,tab.slot)>0 then table.insert(list,tab)end end
+ end
+ if #list==0 then for _,tab in ipairs(Catalog.Tabs)do table.insert(list,tab)end end
+ return list
+end
+function Shop.tabKey(tabs)
+ local ids={};for _,tab in ipairs(tabs)do table.insert(ids,tab.id)end
+ return table.concat(ids,",")
+end
+-- A tab's label: the UICopy string for the new tabs, the catalogue's label otherwise.
+function Shop.tabLabel(tab)
+ local key="variants.tab."..tostring(tab.id)
+ return if UICopy.has(key)then UICopy.get(key)else tab.label
+end
+-- Pure: the tab track for these labels in `width` px. Every segment holds its label with
+-- TabPad px to spare (plus translation headroom while Roblox auto-translates); when equal
+-- segments of `width` cannot, the track grows and the strip scrolls sideways.
+-- Returns {track, segment, scroll}.
+Shop.TabPad=16
+Shop.TabHeadroom=.35
+function Shop.tabStrip(labels,width,textSize,translating)
+ local widest=0
+ for _,label in ipairs(labels)do widest=math.max(widest,Kit.measure(label,"Strong",textSize).X)end
+ local need=math.ceil(widest*(if translating then 1+Shop.TabHeadroom else 1))+Shop.TabPad
+ local count=math.max(1,#labels)
+ local segment=(width-8)/count
+ if segment>=need then return{track=width,segment=segment,scroll=false}end
+ return{track=count*need+8,segment=need,scroll=true}
+end
+-- Pure: the strip's scroll x that brings tab `index` (and half a neighbour) into view.
+function Shop.tabReveal(index,plan,view,x)
+ local left=4+(index-1)*plan.segment;local right=left+plan.segment
+ local peek=plan.segment*.5
+ if left-peek<x then x=left-peek elseif right+peek>x+view then x=right+peek-view end
+ return math.clamp(x,0,math.max(0,plan.track-view))
+end
+-- Slice B: a recolour variant's own colour (nil for a base item or a bad hex).
+function Shop.variantColor(item)
+ if type(item)~="table"or item.variant~=true or type(item.color)~="string"then return nil end
+ local ok,color=pcall(Color3.fromHex,item.color)
+ return if ok then color else nil
+end
+-- Pure: the preview's wearables signature. Variant ids stay as worn (so beanie and
+-- beanie_mint differ); the rig check runs on their base ids (WearableCatalog.renderMap).
+function Shop.previewSignature(petId,wearables)
+ wearables=wearables or {}
+ local mapped=wearables
+ if type(Catalog.renderMap)=="function"then
+  local ok,render=pcall(Catalog.renderMap,petId,wearables)
+  if ok and type(render)=="table"and type(render.mapped)=="table"then mapped=render.mapped end
+ end
+ local kept={}
+ for key in pairs(Rules.normalize(Defs[petId],mapped))do kept[key]=wearables[key]end
+ return Rules.signature(kept)
 end
 -- Pure: the wearables shown on the preview pet: what is saved, with the focused item
 -- swapped into its slot (or the slot emptied when the focused item is the one worn).
@@ -92,7 +163,16 @@ function Shop.note(petId,itemId,stages)
  if item.slot=="Hat"and item.flags.openCrown then return if horns then "Open crown: your horns stay visible"else "Open crown: horns stay visible"end
  if item.slot=="Hat"and item.flags.coversHorns and horns then return "Hides your horns while worn"end
  if item.slot=="Mouth"and item.flags.neutralOnly then return "Shows on the neutral face; other moods keep their mouth"end
- return SlotNote[item.slot]or ""
+ -- Slice B: a recolour says which item it recolours; the new slots' notes are UICopy strings.
+ if item.variant==true and type(item.base)=="string"then
+  local base=Catalog.item(petId,item.base)
+  if base then return UICopy.get("variants.note",{item=base.name})end
+ end
+ if SlotNote[item.slot]then return SlotNote[item.slot]end
+ for _,tab in ipairs(Catalog.Tabs)do
+  if tab.slot==item.slot and UICopy.has("variants.slot."..tab.id)then return UICopy.get("variants.slot."..tab.id)end
+ end
+ return ""
 end
 function Shop.step(index,dx,dy,count,columns)
  local cols=math.max(1,columns or 2)
@@ -119,8 +199,9 @@ function Shop.viewKey(view)return if view then string.format("%dx%d:%d",view.W,v
 Shop.CardPreviewLive=12
 Shop.CardPreviewCache=24
 -- Pure: where a card preview's camera looks ("head", "body" or "tail") and its zoom.
+Shop.HeadSlots=table.freeze({Hat=true,Eyes=true,Mouth=true,EarPiercing=true,Eyewear=true,Cheek=true})
 function Shop.cardFraming(slot)
- if slot=="Hat"or slot=="Eyes"or slot=="Mouth"or slot=="EarPiercing"then return "head",.62 end
+ if Shop.HeadSlots[slot]then return "head",.62 end
  if slot=="Tail"then return "tail",.85 end
  return "body",.9
 end
@@ -140,8 +221,10 @@ local function txt(parent,role,content,color,x,y,w,h,props)
 end
 
 -- host: a full-screen Frame. callbacks: buy(order), equip(order), back(), appearance(petId) -> appearance.
+-- Slice E: no pet is named here. Until open(petId) the shop holds the first active pet that
+-- has wearables (Shop.firstPet), so it can be built and measured before it is opened.
 function Shop.new(host,callbacks)
- local self=setmetatable({host=host,callbacks=callbacks or {},tab=1,index=1,petId="pip",ctx={wallet=0,row={owned={},equipped={}}},
+ local self=setmetatable({host=host,callbacks=callbacks or {},tab=1,index=1,petId=Shop.firstPet(),tabList=Shop.tabsFor(Shop.firstPet()),ctx={wallet=0,row={owned={},equipped={}}},
   visible=false,pending=nil,confirmUntil=0,columns=2},Shop)
  -- QA Q2.1: one full-screen shade beside the panel (never its parent).
  local shade=Kit.modalShade(host,"WardrobeShade",40);self.shade=shade
@@ -155,8 +238,10 @@ function Shop.new(host,callbacks)
  return self
 end
 
-function Shop:items()return Catalog.inTab(self.petId,Catalog.Tabs[self.tab].slot)end
-function Shop:slot()return Catalog.Tabs[self.tab].slot end
+-- The visible tab list (slice B) and the tab in front.
+function Shop:tabInfo()return self.tabList[self.tab]or self.tabList[1]end
+function Shop:items()return if self.petId then Catalog.inTab(self.petId,self:tabInfo().slot)else {}end
+function Shop:slot()return self:tabInfo().slot end
 -- The pane status of a card (None included).
 function Shop:statusOf(id)
  if id==Shop.NoneId then return Shop.noneStatus(self.petId,self:slot(),self.ctx)end
@@ -177,6 +262,9 @@ function Shop:buildPane(pane,pw,ph,compact)
  viewport.CurrentCamera=camera
  self.viewport,self.world,self.camera=viewport,world,camera
  if self.visual then self.visual:destroy();self.visual=nil end
+ -- Slice C: "THIS WEEK −20%" in the well's corner while the focused item is on the shelf.
+ self.deal=Deal.chip(well,22);self.deal.root.ZIndex=well.ZIndex+3;self.deal.root.Position=UDim2.fromOffset(8,8)
+ self.dealWidth=pw-pad*2-16
  local y=pad+viewH+(if compact then 8 else 12)
  self.name=txt(pane,"Title","","text",pad,y,pw-pad*2-96,nameH,{TextSize=if compact then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
  self.tier=Kit.chip(pane,"RARE","sticker",if compact then 22 else 26);if compact then self.tier.label.TextSize=12 end
@@ -208,19 +296,54 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
    Kit.paint(swatch,"BackgroundColor3","well");Kit.stroke(swatch)
    local mark=Kit.icon(swatch,"none",math.floor(side*.5),"soft");mark.AnchorPoint=Vector2.new(.5,.5);mark.Position=UDim2.fromScale(.5,.5)
   else
-   swatch.BackgroundColor3=if item.primary then Color3.fromHex(item.primary)else Kit.Color.soft;Kit.stroke(swatch)
+   local variant=Shop.variantColor(item)
+   swatch.BackgroundColor3=variant or(if item.primary then Color3.fromHex(item.primary)else Kit.Color.soft);Kit.stroke(swatch)
    local tier=TierChip[item.tier]or TierChip.common
    local dot=Kit.frame(swatch,"TierDot",nil,UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.BackgroundColor3=tier[2];dot.ZIndex=swatch.ZIndex+3
+   -- Slice B: a recolour carries its colour as a dot over the card preview (cream ring).
+   if variant then
+    local chipSize=if side>=60 then 14 else 12
+    local colour=Kit.frame(swatch,"VariantDot",nil,UDim2.new(1,-chipSize-3,1,-chipSize-3),UDim2.fromOffset(chipSize,chipSize),999)
+    colour.BackgroundTransparency=0;colour.BackgroundColor3=variant;colour.ZIndex=swatch.ZIndex+3
+    Kit.node("UIStroke",colour,{Name="VariantRing",Thickness=1.5,Color=Kit.Sticker.cream,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+    tile:SetAttribute("Variant",true);tile:SetAttribute("VariantColor",variant:ToHex())
+   end
   end
   local tx=10+side+12
   local nameLabel=txt(tile,"Name",item.name,"text",tx,tileH/2-20,tileW-tx-8,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",tx,tileH/2+2,tileW-tx-8,18,{TextSize=13})
-  self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role,slot=item.slot,primary=item.primary,none=item.none}
+  self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role,slot=item.slot,primary=item.primary,none=item.none,
+   variantColor=Shop.variantColor(item)}
   tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
  end
  if #self.tiles==0 then txt(holder,"Body",UICopy.get("wardrobe.emptySlot"),"soft",x0,y0,300,24)end
 end
 
+-- The slot tabs: Kit.tabs, inside a sideways ScrollingFrame when the labels need more
+-- room than the bar has (slice B: up to ten tabs on a phone).
+function Shop:buildTabs(parent,labels,x,y,width,height,textSize)
+ local plan=Shop.tabStrip(labels,width,textSize,Kit.translating==true)
+ self.tabStripFrame=nil
+ if plan.scroll then
+  -- 44 px tall hits and a thin bar under the 36 / 44 px track.
+  local top=math.max(0,(44-height)/2)
+  local strip=Kit.node("ScrollingFrame",parent,{Name="TabStrip",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(x,y-top),
+   Size=UDim2.fromOffset(width,height+top+6),CanvasSize=UDim2.fromOffset(plan.track,0),ScrollBarThickness=3,ZIndex=parent.ZIndex+1,Selectable=false,
+   ScrollingDirection=Enum.ScrollingDirection.X,ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
+  self.tabStripFrame=strip
+  self.tabs=Kit.tabs(strip,labels,plan.track,height,textSize);self.tabs.root.Position=UDim2.fromOffset(0,top)
+ else
+  self.tabs=Kit.tabs(parent,labels,width,height,textSize);self.tabs.root.Position=UDim2.fromOffset(x,y)
+ end
+ self.tabPlan=plan
+ self.root:SetAttribute("TabsScroll",plan.scroll);self.root:SetAttribute("TabCount",#labels)
+end
+-- Keep the front tab in view on a scrolling strip.
+function Shop:revealTab(index)
+ local strip=self.tabStripFrame;if not strip or not self.tabPlan then return end
+ local view=strip.AbsoluteWindowSize.X;if view<=0 then view=strip.Size.X.Offset end
+ strip.CanvasPosition=Vector2.new(Shop.tabReveal(index,self.tabPlan,view,strip.CanvasPosition.X),0)
+end
 function Shop:build(view)
  self:detachPreviews()
  if self.content then self.content:Destroy()end
@@ -231,7 +354,11 @@ function Shop:build(view)
  Kit.setShadeAlpha(self.shade,if phone then 1 else Kit.ShadeAlpha)
  local content=Kit.frame(root,"Content",nil,UDim2.new(),if phone then UDim2.fromOffset(view.W,view.H)else UDim2.fromOffset(848,608));content.ZIndex=root.ZIndex+2
  self.content=content
- local labels={};for _,tab in ipairs(Catalog.Tabs)do table.insert(labels,tab.label)end
+ -- Slice B: the tabs this pet has items for; the front tab stays on its slot when it can.
+ local frontId=self.tabList and self.tabList[self.tab]and self.tabList[self.tab].id
+ self.tabList=Shop.tabsFor(self.petId);self.tabKey=Shop.tabKey(self.tabList)
+ self.tab=1;for i,tab in ipairs(self.tabList)do if tab.id==frontId then self.tab=i end end
+ local labels={};for _,tab in ipairs(self.tabList)do table.insert(labels,Shop.tabLabel(tab))end
  if phone then
   local W,H=view.W,view.H;local g=Shop.compactGrid(W,H);self.columns=g.cols;self.grid=g
   local sheet=Kit.sheet(content,W,H)
@@ -241,7 +368,7 @@ function Shop:build(view)
   self.title,self.wallet,self.backArrow=self.header.title,self.header.wallet,self.header.back
   local pane=Kit.card(body,"Preview",nil,{pad=12,seam=true});pane.Position=UDim2.fromOffset(W-20-g.pw,64);pane.Size=UDim2.fromOffset(g.pw,g.paneH)
   self:buildPane(pane,g.pw,g.paneH,true)
-  self.tabs=Kit.tabs(body,labels,g.gw,36,if g.gw<400 then 12 else 14);self.tabs.root.Position=UDim2.fromOffset(20,64)
+  self:buildTabs(body,labels,20,64,g.gw,36,if g.gw<400 then 12 else 14)
   local list=Kit.node("ScrollingFrame",body,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(20,112),
    Size=UDim2.fromOffset(g.gw,g.gridH),ScrollBarThickness=4,ZIndex=body.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
    ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
@@ -251,7 +378,7 @@ function Shop:build(view)
   self.header=Kit.header(content,{title="Wardrobe",eyebrow="Companions",tint="companions",width=848,onBack=function()self:back()end})
   Kit.halftone(content,"companions",false)
   self.title,self.wallet,self.backArrow=self.header.title,self.header.wallet,self.header.back
-  self.tabs=Kit.tabs(content,labels,800,44,16);self.tabs.root.Position=UDim2.fromOffset(24,84)
+  self:buildTabs(content,labels,24,84,800,44,16)
   local pane=Kit.card(content,"Preview",nil,{pad=16,seam=true});pane.Position=UDim2.fromOffset(24,144);pane.Size=UDim2.fromOffset(328,404)
   self:buildPane(pane,328,404,false)
   local list=Kit.node("ScrollingFrame",content,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(368,144),
@@ -269,7 +396,7 @@ function Shop:build(view)
  end
  TabInk.guard(self.tabs) -- R3.6: labels keep their ink across theme repaints
  self.tabs.changed=function(index)self:setTab(index)end
- self.tabs.select(self.tab)
+ self.tabs.select(self.tab);self:revealTab(self.tab)
  self.ring=Kit.focusRing(self.root)
  self:layoutTiles()
 end
@@ -353,6 +480,8 @@ function Shop:setContext(ctx)
   self.ctx.row={owned=ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self.equips)}
  end
  if ctx.stages then self.ctx.stages=ctx.stages end
+ -- Slice C: the shelf week (the snapshot's own day; ShelfDeal.week reads the owner snapshot).
+ if ctx.week~=nil then self.ctx.week=ctx.week else self.ctx.week=Deal.week()or self.ctx.week end
  if self.wallet then self.wallet.set(self.ctx.wallet)end
  if self.visible then self:refresh()end
 end
@@ -362,6 +491,7 @@ function Shop:focusedId()local tile=self.tiles[self.index];return tile and tile.
 -- Card previews (QA Q2.3).
 -- The card's own colour tile (the pet's palette colour for tinted items).
 function Shop:swatchColor(tile)
+ if tile.variantColor then return tile.variantColor end
  if tile.role then
   local palette=Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
   if palette and typeof(palette[tile.role])=="Color3"then return palette[tile.role]end
@@ -481,10 +611,10 @@ function Shop:refresh()
  -- Tinted items show this pet's own palette colour (its secondary, face...), not grey.
  local palette=Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
  for index,tile in ipairs(self.tiles)do
-  if tile.role and palette and typeof(palette[tile.role])=="Color3"and not tile.preview then tile.swatch.BackgroundColor3=palette[tile.role]end
+  if tile.role and not tile.variantColor and palette and typeof(palette[tile.role])=="Color3"and not tile.preview then tile.swatch.BackgroundColor3=palette[tile.role]end
   local text,role=Shop.tileStatus(self.petId,tile.id,self.ctx,self:slot())
   if self.view and role=="dim"then role="soft"end
-  tile.status.Text=text
+  Deal.setPrice(tile.status,text)
   tile.status.FontFace=if role=="accent"then Kit.Type.Label[3]else Kit.Type.Counter[3]
   Kit.paint(tile.status,"TextColor3",function()return colorOf(role)end)
   local focused=index==self.index
@@ -509,13 +639,13 @@ function Shop:paintPreview()
   if self.visual then self.visual:destroy()end
   self.visual=Factory.new(self.world,Vector3.zero,Pets.byId[self.petId],nil,base);self.visualPet=self.petId;self.cameraKey=nil
  end
- local slot=Catalog.Tabs[self.tab].slot
+ local slot=self:slot()
  -- The tail tab turns the pet round so the tail faces the viewer.
  self.visual.yaw=if slot=="Tail"then math.pi*.8 else -.25
  self.visual.reducedEffects=GuiService.ReducedMotionEnabled
  if self.visual.applyAppearance then self.visual:applyAppearance(base)end
  self.visual.poseDirty=true;self.visual:update(0)
- self.root:SetAttribute("PreviewWearables",Rules.signature(Rules.normalize(Defs[self.petId],base.wearables)))
+ self.root:SetAttribute("PreviewWearables",Shop.previewSignature(self.petId,base.wearables))
  self:fitCamera()
 end
 function Shop:fitCamera()
@@ -523,8 +653,8 @@ function Shop:fitCamera()
  local key=tostring(self.viewport.AbsoluteSize)..":"..tostring(v.rigRevision or 0)..":"..self.tab
  if self.cameraKey==key then return end;self.cameraKey=key
  local box,size=Bounds.get(v);local a=math.max(.1,self.viewport.AbsoluteSize.X/math.max(1,self.viewport.AbsoluteSize.Y));local half=math.tan(math.rad(self.camera.FieldOfView/2))
- local slot=Catalog.Tabs[self.tab].slot
- local zoom=if slot=="Hat"or slot=="Eyes"or slot=="Mouth"or slot=="EarPiercing"then .78 else 1
+ local slot=self:slot()
+ local zoom=if Shop.HeadSlots[slot]then .78 else 1
  local distance=(math.max(size.Y*.5/half,size.X*.5/(half*a))+size.Z*.5+.3)*zoom
  local center=box.Position+(if zoom<1 then Vector3.new(0,size.Y*.18,0)else Vector3.zero)
  self.camera.CFrame=CFrame.lookAt(center+Vector3.new(0,.12,distance*1.10),center)
@@ -534,7 +664,8 @@ function Shop:paintPane()
  local id=self:focusedId()
  if not id then
   self.name.Text="";self.note.Text="";self.status.Text="";self.action.Visible=false;self.tier.root.Visible=false
-  if self.visible then self:paintPreview()end;return
+  if self.deal then self.deal.set(false)end
+  if self.visible and self.petId then self:paintPreview()end;return
  end
  local item=Catalog.item(self.petId,id)
  if id==Shop.NoneId or not item then
@@ -546,6 +677,8 @@ function Shop:paintPane()
   self.note.Text=Shop.note(self.petId,id,self.ctx.stages)
  end
  local status=self:statusOf(id)
+ if self.deal then self.deal.set(status.full~=nil,self.dealWidth)end
+ self.root:SetAttribute("ShelfPrice",if status.full then status.price else nil)
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
  local pending=self.pending and self.pending.itemId==id and self.pending.action=="wearableBuy"
  self.status.Text=if pending then "Saving…"elseif self.errorId==id and self.errorText then self.errorText else status.text
@@ -557,7 +690,7 @@ function Shop:paintPane()
   Kit.setText(self.action,if pending then "Saving…"elseif confirming then "Confirm ★ "..status.price else status.button)
   Kit.setEnabled(self.action,status.enabled==true and not(self.pending and self.pending.action=="wearableBuy"))
  end
- self.root:SetAttribute("FocusedItem",id);self.root:SetAttribute("PaneState",status.kind);self.root:SetAttribute("Tab",Catalog.Tabs[self.tab].id)
+ self.root:SetAttribute("FocusedItem",id);self.root:SetAttribute("PaneState",status.kind);self.root:SetAttribute("Tab",self:tabInfo().id)
  if self.visible then self:paintPreview()end
 end
 
@@ -585,18 +718,18 @@ function Shop:move(dx,dy)
  self:focus(nextIndex);return true
 end
 function Shop:setTab(index)
- index=math.clamp(index,1,#Catalog.Tabs)
+ index=math.clamp(index,1,#self.tabList)
  if self.pending and self.pending.action=="wearableBuy"then self.tabs.select(self.tab);return false end
- self.tab=index;self.tabs.select(index);self.confirmId=nil;self.errorId=nil;self.cameraKey=nil
+ self.tab=index;self.tabs.select(index);self:revealTab(index);self.confirmId=nil;self.errorId=nil;self.cameraKey=nil
  self:layoutTiles()
  -- Land on the item worn in this slot, else the first card.
- local worn=Catalog.equippedIn(self.petId,self.ctx.row.equipped,Catalog.Tabs[index].slot);local landing=1
+ local worn=Catalog.equippedIn(self.petId,self.ctx.row.equipped,self.tabList[index].slot);local landing=1
  for i,tile in ipairs(self.tiles)do if tile.id==worn then landing=i end end
  self.index=landing;self:focus(landing,true);return true
 end
 function Shop:shiftTab(delta)
  if self.legend then self.legend.dismiss()end
- local index=math.clamp(self.tab+delta,1,#Catalog.Tabs)
+ local index=math.clamp(self.tab+delta,1,#self.tabList)
  if index==self.tab then return false end;return self:setTab(index)
 end
 
@@ -639,7 +772,7 @@ function Shop:act()
 end
 
 local Reasons={NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled",NotOwned="shop.reason.notOwned",
- PriceChanged="shop.reason.priceChanged",Retrying="shop.reason.retrying"}
+ PriceChanged="shop.reason.priceChanged",ShelfChanged="shop.reason.priceChanged",Retrying="shop.reason.retrying"}
 function Shop:result(message)
  if type(message)~="table"then return false end
  -- Equips: any in-flight order (an earlier one superseded by a quicker second tap still
@@ -670,7 +803,8 @@ function Shop:result(message)
   self.errorId,self.errorText,self.errorFit=order.itemId,UICopy.get(Reasons[message.reason]or "shop.failed.saved"),nil
   if message.reason=="NeedStars"then
    local item=Catalog.item(order.petId or self.petId,order.itemId)
-   self.errorFit=UICopy.starsShort(if item and item.price then item.price-(self.ctx.wallet or 0)else nil);self.errorText=self.errorFit[1]
+   local price=item and Deal.quote("wearable",order.itemId,item.price,self.ctx.week)
+   self.errorFit=UICopy.starsShort(if price then price-(self.ctx.wallet or 0)else nil);self.errorText=self.errorFit[1]
   end
  else self.errorId,self.errorText=nil,nil;if self.callbacks.done then self.callbacks.done(order)end end
  self:refresh();return true
@@ -678,10 +812,14 @@ end
 
 function Shop:isOpen()return self.visible end
 function Shop:open(petId,ctx)
- self.petId=if petId and Catalog.hasItems(petId)then petId else "pip"
+ -- Slice E: any pet with wearables; otherwise the first active pet that has some.
+ self.petId=if petId and Catalog.hasItems(petId)then petId else Shop.firstPet()
+ if not self.petId then return false end
  if ctx then self:setContext(ctx)end
  self.visible=true;self.root.Visible=true;self.confirmId,self.errorId=nil,nil
  Kit.shadeOpen(self,self.shade,function(covered)self.root.Visible=not covered end)
+ -- Slice B: another pet can have other tabs; rebuild the bar when the set changes.
+ if Shop.tabKey(Shop.tabsFor(self.petId))~=self.tabKey then self:build(self.view);self:relayout()end
  self:fit(self.host.AbsoluteSize)
  if self.visual and self.visualPet~=self.petId then self.visual:destroy();self.visual=nil end
  self:setTab(self.tab)

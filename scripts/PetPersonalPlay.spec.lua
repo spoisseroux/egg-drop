@@ -5,6 +5,9 @@ return function(client,parent)
  local Factory=require(client.PetFactory);local Play=require(client.PetPlayVisual)
  local Toys=require(client.PetToyGeometry);local Features=require(client.PetFeatureGeometry);local Bounds=require(client.PetRigBounds)
  local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
+ -- Collection pets that have a rig in this build (the earned pet Blip has none yet: slice E).
+ local RigDefs=require(game.ReplicatedStorage.Shared.PetRigDefinitions)
+ local rigged={};for _,pet in ipairs(Pets.collection)do if RigDefs[pet.id]then table.insert(rigged,pet)end end
  local root=Instance.new("Folder");root.Name="_PersonalPlay";root.Parent=parent or workspace
  local visuals,cases={},{};local function test(name,run)run();table.insert(cases,name)end
  local function appearance(stage,toy,generation)return{charmVisible=true,charmShape="dot",toyId=toy or "none",appearanceGeneration=generation or 1,featureStages={horns=stage,claws=stage,wings=stage}}end
@@ -15,8 +18,14 @@ return function(client,parent)
  local ok,problem=pcall(function()
   test("shared hero handles have exact bounded lifetimes without physics queries; only the sparkler tip lights and emits",function()
    assert(not Toys.create(root,"none")and not Features.create(root,"horns",0))
-   for _,id in ipairs({"sparkler","ball","bone"})do
-    local h=assert(Toys.create(root,id,1));assert(#h.parts<=8)
+   -- Every toy id the catalogue knows has a builder (slice D adds Wobble Top and Squeaky Carrot).
+   local ToyCatalog=require(game.ReplicatedStorage.Shared.ToyCatalog)
+   assert(not Toys.has("none")and not Toys.has("mini_plush")and not Toys.has(nil))
+   for _,id in ipairs(ToyCatalog.Order)do if id~=ToyCatalog.Default then assert(Toys.has(id)and Toys.Play[id],"no geometry for "..id)end end
+   assert(#assert(Toys.create(root,"wobble_top",1)).parts==5 and #assert(Toys.create(root,"squeaky_carrot",1)).parts==7)
+   for _,child in ipairs(root:GetChildren())do if child.Name=="PersonalToy_wobble_top"or child.Name=="PersonalToy_squeaky_carrot"then child:Destroy()end end
+   for _,id in ipairs({"sparkler","ball","bone","wobble_top","squeaky_carrot"})do
+    local h=assert(Toys.create(root,id,1));assert(#h.parts<=Toys.PartLimit and(#h.parts<=8 or id=="sparkler"),id.." parts "..#h.parts)
     h:pivot(CFrame.new(4,5,6));for _,p in ipairs(h.parts)do assert(p.Anchored and not p.CanQuery and not p.CanTouch and not p.CanCollide)end
     -- The sparkler's Neon tip now owns exactly one bounded emitter and one small light; other toys have none.
     if id=="sparkler"then
@@ -26,7 +35,7 @@ return function(client,parent)
     h:destroy();h:destroy();assert(not h.model.Parent)
    end
   end)
-  for _,native in ipairs({true,false})do for _,pet in ipairs(Pets.collection)do
+  for _,native in ipairs({true,false})do for _,pet in ipairs(rigged)do
    test(pet.id..(if native then " native"else " authored").." stages grow (procedural from fixed roots, authored as stage meshes) and replace idempotently",function()
     local v=make(pet,native);assert(v.backend==(if native then "NativeRecipe"else "AuthoredMesh"))
     -- Rigs with authored attachments (the Bear) grow mesh horns/wings: 2+2 parts, procedural claws 8.

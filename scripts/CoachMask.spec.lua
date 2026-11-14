@@ -167,5 +167,23 @@ return function(server)
 		assert(normal.over,"a normal round still overflows")
 	end)
 
+	-- Overnight 2026-11-14, slice E: the "a friend arrived" card for the earned pet is bit 10.
+	test("petArrived is bit 10: it saves, survives a reload and never disturbs the older bits",function()
+		assert(Coach.Bits.petArrived==10 and Coach.bit("petArrived")==1024 and Coach.validId("petArrived"))
+		assert(Coach.Order[#Coach.Order]=="petArrived","appended, never renumbered")
+		local h,db=fixture()
+		local quests=Coach.bit("questDone")
+		assert(H.coachMark(h,quests))
+		assert(H.coachMark(h,Coach.bit("petArrived")))
+		assert(h.state.coachMask==quests+1024 and Coach.has(H.public(h).coachMask,"petArrived")and Coach.has(H.public(h).coachMask,"questDone"))
+		local again=fixture(reseed(db,"coachMask",db.player_1.hatching.coachMask))
+		assert(again.status=="Ready"and again.state.coachMask==quests+1024 and H.valid(again.state))
+		local ok,reason=H.coachMark(again,1024)
+		assert(ok and reason=="AlreadySaved")
+		-- The card waits for a pet, like every other one-time card, and shows once.
+		assert(Coach.wants("petArrived",{mask=0,seen={},totalWins=0,owned=2}))
+		assert(not Coach.wants("petArrived",{mask=1024,seen={},totalWins=0,owned=2}))
+	end)
+
 	return cases
 end

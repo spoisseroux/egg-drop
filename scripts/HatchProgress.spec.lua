@@ -53,7 +53,10 @@ return function(Hatching, Catalog)
 	-- Meadow is retired, so it now offers no odds, no rare pool and cannot roll.
 	test("v1 roster is Zivvi only and the retired Meadow egg offers no odds", function()
 		local Pets=require(game.ReplicatedStorage.Shared.PetCatalog)
-		assert(#Pets.active==1 and Pets.active[1].id=="pip" and Pets.isActive("pip"))
+		-- Slice E (2026-11-14): Blip joins only when EarnedPets.enabled("blip") (flag + rig).
+		local blipOn=require(game.ReplicatedStorage.Shared.EarnedPets).enabled("blip")
+		assert(#Pets.active==(if blipOn then 2 else 1) and Pets.active[1].id=="pip" and Pets.isActive("pip"))
+		assert(Pets.byId.blip and Pets.byId.blip.index==8 and Pets.isActive("blip")==blipOn)
 		for _,id in ipairs({"puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit"})do assert(Pets.byId[id]and not Pets.isActive(id))end
 		assert(Catalog.ById.meadow.retired and Catalog.ById.sprout.retired)
 		assert(not Catalog.hasRarePool("meadow")and #Catalog.odds("sprout",7)==0)

@@ -33,7 +33,7 @@ return function(server,frozenSource,frozenDailySource)
   return q,r,receipt
  end
  local function buy(h,c,kind)
-  return command(h,c,kind,kind.."Buy",if kind=="toy"then{poolVersion=1,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1})
+  return command(h,c,kind,kind.."Buy",if kind=="toy"then{poolVersion=TC.PoolVersion,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1})
  end
  local function ack(h,c,kind)
   local p=h.state["pending"..kind:sub(1,1):upper()..kind:sub(2).."Result"];return command(h,c,kind,kind.."Ack",{resultId=p.id})
@@ -53,20 +53,41 @@ return function(server,frozenSource,frozenDailySource)
   assert(TC.Cost==8 and FC.Cost==32 and FC.StackLimit==99 and FC.MaxStage==5)
   assert(FC.roll(0)=="horns"and FC.roll(.49999)=="horns"and FC.roll(.5)=="claws"and FC.roll(.84999)=="claws"and FC.roll(.85)=="wings"and FC.roll(.99999)=="wings")
   for _,bad in ipairs({-1,1,math.huge})do assert(not FC.roll(bad)and not TC.roll({"ball"},bad))end
-  assert(not FC.roll(0/0));local odds=TC.odds({ball=true});assert(#odds==2 and odds[1].probability==.5 and odds[2].probability==.5)
+  assert(not FC.roll(0/0));local odds=TC.odds({ball=true,bone=true,sparkler=true});assert(#odds==2 and odds[1].probability==.5 and odds[2].probability==.5)
  end)
- test("new v8 profile neutral state and permanent uniform toy exhaustion costs24",function()
+ test("toy pools: sorted, pool 1 kept for stored receipts, new toys only join the fixed order at the end",function()
+  assert(TC.PoolVersion==2 and TC.CatalogVersion==1 and TC.Cost==8)
+  assert(table.concat(TC.Pools[1],",")=="ball,bone,sparkler","pool 1 must stay: stored receipts re-validate against it")
+  assert(table.concat(TC.Pools[2],",")=="ball,bone,sparkler,squeaky_carrot,wobble_top")
+  for version,pool in pairs(TC.Pools)do
+   local previous=""
+   for _,id in ipairs(pool)do assert(TC.known(id)and id~=TC.Default and id>previous,"pool "..version.." unsorted at "..id);previous=id end
+  end
+  -- Restricted players: the old toys first, in the old order.
+  assert(table.concat(TC.PaidOrder,",")=="ball,bone,sparkler,wobble_top,squeaky_carrot")
+  assert(TC.fixedNext(TC.remaining({}))=="ball"and TC.fixedNext(TC.remaining({ball=true,bone=true}))=="sparkler"and TC.fixedNext(TC.remaining({ball=true,bone=true,sparkler=true}))=="wobble_top")
+  assert(#TC.remaining({},1)==3 and #TC.remaining({})==5 and #TC.odds({ball=true,bone=true,sparkler=true})==2)
+  -- A quote from the old pool is still canonical, so a stored v1 receipt keeps validating.
+  local old=T.quote("toyBuy",{id="7:toy-old",catalogVersion=1,poolVersion=1,eligible={"ball","bone","sparkler"}},7);assert(old and old.poolVersion==1)
+  assert(T.quote("toyBuy",{id="7:toy-new",catalogVersion=1,poolVersion=2,eligible={"ball","bone","sparkler","squeaky_carrot","wobble_top"}},7))
+  assert(not T.quote("toyBuy",{id="7:toy-bad",catalogVersion=1,poolVersion=1,eligible={"ball","wobble_top"}},7),"a pool 2 toy in a pool 1 quote")
+  assert(not T.quote("toyBuy",{id="7:toy-bad",catalogVersion=1,poolVersion=2,eligible={"wobble_top","squeaky_carrot"}},7),"unsorted eligible")
+  assert(not T.quote("toyBuy",{id="7:toy-bad",catalogVersion=1,poolVersion=3,eligible={"ball"}},7),"an unknown pool")
+ end)
+ test("new v8 profile neutral state and permanent uniform toy exhaustion costs 8 a toy",function()
   local h,db,c=fixture();local before=h.state.nectar;assert(h.state.version==11 and db.player_1.custom=="preserved")
-  for _,id in ipairs({"ball","bone","sparkler"})do local _,_,r=buy(h,c,"toy");assert(r.toyId==id and r.cost==8 and h.state.toyUnlocks[id]);ack(h,c,"toy")end
-  assert(h.state.nectar==before-24 and c.rolls==3 and #TC.remaining(h.state.toyUnlocks)==0)
-  local q,r=quote(h,c,"toy",{poolVersion=1,eligible={"ball"}});local writes=c.writes;local ok,why=H.toyCommand(h,"toyBuy",q,r);assert(not ok and why=="AllUnlocked"and writes==c.writes and c.rolls==3)
+  local pool=TC.Pools[TC.PoolVersion]
+  for _,id in ipairs(pool)do local _,_,r=buy(h,c,"toy");assert(r.toyId==id and r.cost==8 and h.state.toyUnlocks[id]);ack(h,c,"toy")end
+  assert(h.state.nectar==before-8*#pool and c.rolls==#pool and #TC.remaining(h.state.toyUnlocks)==0)
+  local q,r=quote(h,c,"toy",{poolVersion=TC.PoolVersion,eligible={"ball"}});local writes=c.writes;local ok,why=H.toyCommand(h,"toyBuy",q,r);assert(not ok and why=="AllUnlocked"and writes==c.writes and c.rolls==#pool)
  end)
  test("all seven pet toy choices are independent free and require exact result ownership",function()
   local h,_,c=fixture();buy(h,c,"toy");local pending=h.state.pendingToyResult
   local q,r=quote(h,c,"toy",{petId="pip",toyId="ball",expectedToy="none"});local ok,why=H.toyCommand(h,"toyEquip",q,r);assert(not ok and why=="RevealPending")
   command(h,c,"toy","toyEquip",{petId="pip",toyId="ball",expectedToy="none",resultId=pending.id});assert(not h.state.pendingToyResult)
   local before=h.state.nectar
-  for _,pet in ipairs(Appearance.Ids)do if pet~="pip"then command(h,c,"toy","toyEquip",{petId=pet,toyId="ball",expectedToy="none"})end end
+  -- Slice E: Appearance.Ids also lists the earned pet (blip), which this fixture does not own.
+  for _,pet in ipairs(Appearance.Ids)do if pet~="pip"and pet~="blip"then command(h,c,"toy","toyEquip",{petId=pet,toyId="ball",expectedToy="none"})end end
   command(h,c,"toy","toyEquip",{petId="pip",toyId="none",expectedToy="ball"})
   assert(h.state.petToys.pip=="none"and h.state.petToys.eclipse_orbit=="ball"and h.state.nectar==before)
  end)
@@ -79,7 +100,7 @@ return function(server,frozenSource,frozenDailySource)
  test("both namespaces retain the exact roll across reservation and settlement reply loss",function()
   for _,kind in ipairs({"toy","feature"})do for _,phase in ipairs({"reserve","settle","before"})do
    local h,_,c=fixture();local before=h.state.nectar
-   local q,r=quote(h,c,kind,if kind=="toy"then{poolVersion=1,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1})
+   local q,r=quote(h,c,kind,if kind=="toy"then{poolVersion=TC.PoolVersion,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1})
    if phase=="reserve"then c.failAfter=true elseif phase=="settle"then c.failSettlement=true else c.failBefore=true end
    local ok,why=H[kind.."Command"](h,kind.."Buy",q,r);assert(not ok and why=="Retrying"and c.rolls==1)
    local candidate=copy(h.pending.candidate);c.unit=.99;assert(H[kind.."Command"](h,kind.."Buy",q,r))
@@ -90,7 +111,7 @@ return function(server,frozenSource,frozenDailySource)
  test("durable reservations rejoin without another roll in either namespace",function()
   for _,kind in ipairs({"toy","feature"})do
    local h,db,c,a=fixture();local before=h.state.nectar;c.blockSettlement=true
-   local q,r=quote(h,c,kind,if kind=="toy"then{poolVersion=1,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1})
+   local q,r=quote(h,c,kind,if kind=="toy"then{poolVersion=TC.PoolVersion,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1})
    assert(not H[kind.."Command"](h,kind.."Buy",q,r));local held=copy(db.player_1.hatching[kind.."Reservation"]);assert(held and db.player_1.hatching.nectar==before)
    assert(H.release(h));h=H.load(1,{},a);assert(h.status=="Ready"and c.rolls==1 and h.state.nectar==before-(if kind=="toy"then 8 else 32))
    assert(H[kind.."Command"](h,kind.."Buy",q,r));assert(h.state[kind.."Receipts"][q.id].operationId==held.operationId)
@@ -106,12 +127,12 @@ return function(server,frozenSource,frozenDailySource)
  test("feature growth consumes one stock shows earned stage and supports simultaneous features",function()
   local h,db,c=fixture();for _,id in ipairs(FC.Order)do h.state.featureStock[id]=35;db.player_1.hatching.featureStock[id]=35 end
   local before=h.state.nectar
-  for _,pet in ipairs(Appearance.Ids)do for _,id in ipairs(FC.Order)do for stage=0,4 do
+  for _,pet in ipairs(Appearance.Ids)do for _,id in ipairs(if pet=="blip"then {}else FC.Order)do for stage=0,4 do
    local _,_,r=command(h,c,"feature","featureUse",{petId=pet,featureId=id,expectedStage=stage})
    assert(r.earnedBefore==stage and r.earnedAfter==stage+1 and r.visibleAfter==stage+1 and r.inventoryAfter==r.inventoryBefore-1)
   end end end
   assert(h.state.nectar==before and h.state.featureStock.horns==0)
-  for _,pet in ipairs(Appearance.Ids)do for _,id in ipairs(FC.Order)do assert(h.state.petFeatures[pet][id].earned==5 and h.state.petFeatures[pet][id].visible==5)end end
+  for _,pet in ipairs(Appearance.Ids)do for _,id in ipairs(if pet=="blip"then {}else FC.Order)do assert(h.state.petFeatures[pet][id].earned==5 and h.state.petFeatures[pet][id].visible==5)end end
  end)
  test("feature free hidden display preserves earned stage and exact stale stage protection",function()
   local h,db,c=fixture();h.state.featureStock.horns=5;db.player_1.hatching.featureStock.horns=5
@@ -140,7 +161,7 @@ return function(server,frozenSource,frozenDailySource)
    q,r=quote(h,c,"material",{poolVersion=2,eligible={"gloss","matte"}});ok,why=H.materialCommand(h,"materialBuy",q,r);assert(not ok and why=="RevealPending")
    ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg"and h.state.nectar==before) -- v1: Meadow retired; ack below covers the Companion route.
    ok,why=H.command(h,"ack","wrong",h.state.revision);assert(not ok and why=="RevealPending"and h.state.nectar==before)
-   local other=if kind=="toy"then"feature"else"toy";q,r=quote(h,c,other,if other=="toy"then{poolVersion=1,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1});ok,why=H[other.."Command"](h,other.."Buy",q,r);assert(not ok and why=="RevealPending")
+   local other=if kind=="toy"then"feature"else"toy";q,r=quote(h,c,other,if other=="toy"then{poolVersion=TC.PoolVersion,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1});ok,why=H[other.."Command"](h,other.."Buy",q,r);assert(not ok and why=="RevealPending")
   end
  end)
  test("new families respect existing Hue Material and Companion pending results",function()
@@ -150,12 +171,12 @@ return function(server,frozenSource,frozenDailySource)
    if kind=="companion"then local ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg")
     db.player_1.hatching.lastHatch={id="saved-companion-reveal",petId="pip",duplicate=true,refund=0,family="pip",mastery=0,rare=false,recipe="meadow"};assert(H.renew(h)and h.state.lastHatch)
    else local q,r=quote(h,c,kind,if kind=="material"then{poolVersion=2,eligible={"gloss","matte"}}else{});assert(H[kind.."Command"](h,kind.."Buy",q,r))end
-   for _,new in ipairs({"toy","feature"})do local q,r=quote(h,c,new,if new=="toy"then{poolVersion=1,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1});local ok,why=H[new.."Command"](h,new.."Buy",q,r);assert(not ok and why=="RevealPending")end
+   for _,new in ipairs({"toy","feature"})do local q,r=quote(h,c,new,if new=="toy"then{poolVersion=TC.PoolVersion,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1});local ok,why=H[new.."Command"](h,new.."Buy",q,r);assert(not ok and why=="RevealPending")end
   end
  end)
  test("revision takeover expiry and callback reentry cannot double charge",function()
   for _,kind in ipairs({"toy","feature"})do for _,mode in ipairs({"revision","epoch","expiry","callback"})do
-   local h,db,c=fixture();local before=h.state.nectar;local q,r=quote(h,c,kind,if kind=="toy"then{poolVersion=1,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1})
+   local h,db,c=fixture();local before=h.state.nectar;local q,r=quote(h,c,kind,if kind=="toy"then{poolVersion=TC.PoolVersion,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1})
    if mode=="revision"then db.player_1.hatching.revision+=1 elseif mode=="epoch"then db.player_1.hatching.epoch+=1 elseif mode=="expiry"then c.now+=100 else c.callbackReplay=true end
    local ok=H[kind.."Command"](h,kind.."Buy",q,r)
    assert(if mode=="callback"then ok and db.player_1.hatching.nectar==before-(if kind=="toy"then 8 else 32)and c.rolls==1 else not ok and db.player_1.hatching.nectar==before)
@@ -174,7 +195,7 @@ return function(server,frozenSource,frozenDailySource)
  end)
  test("malformed namespace quote unknown ids stages and unowned recipients reject without mutation",function()
   local h,db,c=fixture();local q,r=quote(h,c,"feature",{petId="pip",featureId="horns",expectedStage=6});assert(not H.featureCommand(h,"featureUse",q,r))
-  q,r=quote(h,c,"toy",{poolVersion=1,eligible={"sparkler","ball"}});assert(not H.toyCommand(h,"toyBuy",q,r))
+  q,r=quote(h,c,"toy",{poolVersion=TC.PoolVersion,eligible={"sparkler","ball"}});assert(not H.toyCommand(h,"toyBuy",q,r))
   q,r=quote(h,c,"feature",{poolVersion=1});q.id=tostring(r)..":toy-forged";assert(not H.featureCommand(h,"featureBuy",q,r))
   h.state.inventoryMask=1;db.player_1.hatching.inventoryMask=1;q,r=quote(h,c,"feature",{petId="puddle",featureId="horns",expectedStage=0});local ok,why=H.featureCommand(h,"featureUse",q,r);assert(not ok and why=="Unowned")
  end)

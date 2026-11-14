@@ -18,8 +18,10 @@ local StampCardView=require(script.Parent.StampCardView)
 local UICopy=require(ReplicatedStorage.Shared.UICopy)
 local Menu = {}
 Menu.__index = Menu
+-- Slice E (overnight 2026-11-14): no pet named here; the fallback is the first active pet.
+local function firstPet()return Pets.active[1]or Pets[1]end
 local function familyName(id)
-	local pet=Pets.byId[id or "pip"]
+	local pet=Pets.byId[id or firstPet().id]
 	return if pet then pet.name else id
 end
 local function text(parent,name,content,role,color)
@@ -53,7 +55,7 @@ local function destinationArt(host, kind)
 	elseif kind=="settings"then
 		for i=1,3 do local y=.2+(i-1)*.25;decoration(host,"SettingRail",UDim2.fromScale(.12,y),UDim2.fromScale(.76,.06),"muted",2);decoration(host,"SettingKnob",UDim2.fromScale(if i==2 then .55 else .25,y-.06),UDim2.fromScale(.16,.18),Art.Amber,4)end
 	elseif kind == "pets" then
-		local portrait = Portrait.create(host, Pets.byId.pip, 4, UDim2.fromScale(.5, .5), host.ZIndex + 2)
+		local portrait = Portrait.create(host, firstPet(), 4, UDim2.fromScale(.5, .5), host.ZIndex + 2)
 		local scale = Instance.new("UIScale")
 		scale.Name, scale.Parent = "DisplayScale", portrait
 	else

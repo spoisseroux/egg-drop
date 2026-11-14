@@ -3,6 +3,7 @@ local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Players=game:GetService("Players")
 local Http=game:GetService("HttpService")
 local Activity=require(ReplicatedStorage.Shared.GardenActivity)
+local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog)
 local Garden={};Garden.__index=Garden
 local function visibleStage(n)return if type(n)=="number"and n==n and n%1==0 and n>=0 and n<=5 then n else 0 end
 function Garden.new(boards,options)
@@ -66,7 +67,7 @@ function Garden:appearance(board,petId)
     local item=cached.value[petId]
     local selected=board:GetAttribute("CompanionId")==petId
     local toy=selected and type(item)=="table"and item.toyId or "none"
-    if toy~="ball"and toy~="bone"and toy~="sparkler"then toy="none"end
+    if not ToyCatalog.known(toy)then toy=ToyCatalog.Default end
     local features=selected and type(item)=="table"and type(item.featureStages)=="table"and item.featureStages or {}
     -- Saved wearables (slot key -> item id) for the selected pet; unknown ids are dropped by the rig rules.
     local wearables={}

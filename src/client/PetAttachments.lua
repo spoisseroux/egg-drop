@@ -25,7 +25,9 @@ end
 local function handle(part)return {part=part,destroy=function()part:Destroy()end}end
 
 -- Adds one entry per shown attachment to v.pieces and returns the cleanup handles.
-function Attachments.build(v,resolved,source)
+-- tints (optional, WearableCatalog.renderMap(...).tints): slot key -> recolour for a variant;
+-- only the base item's main own-colour piece(s) change, the piece stays an "own" colour.
+function Attachments.build(v,resolved,source,tints)
  local marker=source:FindFirstChild("PawsOrigin")
  local pivot=if marker and marker:IsA("CFrameValue")then marker.Value else source:GetPivot()
  local handles={}
@@ -42,7 +44,8 @@ function Attachments.build(v,resolved,source)
   part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.CastShadow=true
   part.Material=Enum.Material.SmoothPlastic
   if a.texture and v.definition.attachmentTextures then part.TextureID=v.definition.attachmentTextures[a.texture]or part.TextureID end
-  local color=if a.colorRole=="own"then Color3.fromHex(a.color)else(v.colors[a.colorRole]or v.secondaryColor)
+  local tinted=if tints and a.item then Wearables.tintFor(tints[Wearables.attachmentKey(v.definition,a)],a)else nil
+  local color=if tinted then Color3.fromHex(tinted)elseif a.colorRole=="own"then Color3.fromHex(a.color)else(v.colors[a.colorRole]or v.secondaryColor)
   part.Color=color
   -- Piece colour roles: own colour, secondary-tinted, face ink. Wearables never glow at
   -- night (PET-STYLE-GUIDE 6), so a tinted wearable piece leaves the secondary glow group;
@@ -53,7 +56,7 @@ function Attachments.build(v,resolved,source)
   local fit=if a.item then Wearables.fitOffset(v.definition.id,a.item)else Vector3.zero
   local frame=CFrame.new((localCF.Position+fit)*v.scale)*localCF.Rotation
   local side=a.side
-  local entry={part=part,name=a.name,colorRole=role,piece=a.piece,item=a.item,neutralOnly=a.flags and a.flags.neutralOnly==true or nil,channel=a.channel,frame=frame,size=template.Size*v.scale,
+  local entry={part=part,name=a.name,colorRole=role,variantTint=tinted,piece=a.piece,item=a.item,neutralOnly=a.flags and a.flags.neutralOnly==true or nil,channel=a.channel,frame=frame,size=template.Size*v.scale,
    role=if a.feature then "feature"else "attachment",featureId=a.feature,slot=a.slot,attachment=a,color=color,faceBaseColor=color,faceBaseMaterial=part.Material,
    -- Piercings ride the ear flick; swapped tails wag; an alternate mouth gives way to the open "O".
    earSide=if a.slot=="EarPiercing"or a.slot=="Earring"then side else nil,tailWag=a.slot=="Tail"or nil,mouthAlt=a.slot=="Mouth"or nil,

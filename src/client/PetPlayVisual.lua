@@ -3,6 +3,8 @@ local Toys=require(script.Parent.PetToyGeometry)
 local Features=require(script.Parent.PetFeatureGeometry)
 local Attachments=require(script.Parent.PetAttachments)
 local Rules=require(game:GetService("ReplicatedStorage").Shared.PetAttachmentRules)
+local Wearables=require(game:GetService("ReplicatedStorage").Shared.WearableCatalog)
+local ToyCatalog=require(game:GetService("ReplicatedStorage").Shared.ToyCatalog)
 local Play={}
 local maps={
  pip={left="HandL",right="HandR"},puddle={left="CuffL",right="CuffR"},wick={left="HandL",right="HandR"},orbit={left="HandL",right="HandR"},
@@ -37,7 +39,7 @@ function Play.clearFeatures(v)
 end
 function Play.apply(v,appearance)
  local a=type(appearance)=="table"and appearance or {};local toy=a.toyId
- if toy~="ball"and toy~="bone"and toy~="sparkler"then toy="none"end
+ if not Toys.has(toy)then toy=ToyCatalog.Default end
  if v.personalToyId~=toy or v.personalAppearanceGeneration~=a.appearanceGeneration then Play.reset(v)end
  v.personalToyId,v.personalAppearanceGeneration=toy,a.appearanceGeneration
  local stages=type(a.featureStages)=="table"and a.featureStages or {}
@@ -45,8 +47,13 @@ function Play.apply(v,appearance)
  -- Authored rigs (the Bear) place horns, wings and wearables from their attachment template;
  -- any feature without authored meshes, and every rig without a template, stays procedural.
  local source=Attachments.template(v)
- local wear=if source then Rules.normalize(v.definition,Attachments.wearables(a))else {}
- local key=h..":"..c..":"..w..":"..v.secondaryColor:ToHex()..":"..(if source then "A"..Rules.signature(wear)else "P")
+ -- A recolour variant (beanie_mint) renders as its base item's meshes plus a tint, so the
+ -- rig rules see base ids and the cache key also carries the tints.
+ local render=if source then Wearables.renderMap(v.petId,Attachments.wearables(a))else nil
+ local wear=if render then Rules.normalize(v.definition,render.mapped)else {}
+ local tints={};if render then for slotKey,tint in pairs(render.tints)do if wear[slotKey]==tint.item then tints[slotKey]=tint end end end
+ local tintKey=Wearables.tintSignature(tints)
+ local key=h..":"..c..":"..w..":"..v.secondaryColor:ToHex()..":"..(if source then "A"..Rules.signature(wear).."~"..tintKey else "P")
  v.wearDebugRevision=Attachments.debug.revision
  if v.featureSignature==key then return end
  Play.clearFeatures(v);v.featureSignature=key;v.featureStages={horns=h,claws=c,wings=w}
@@ -58,7 +65,7 @@ function Play.apply(v,appearance)
   for id in pairs(v.definition.features or {})do authored[id]=Rules.hasFeature(v.definition,id)end
   for name in pairs(resolved.suppress)do for _,e in ipairs(v.pieces)do if e.name==name then e.suppressed=true end end end
   for name in pairs(resolved.neutral or {})do for _,e in ipairs(v.pieces)do if e.name==name then e.neutralSuppressed=true end end end
-  for _,part in ipairs(Attachments.build(v,resolved,source))do table.insert(v.featureHandles,part)end
+  for _,part in ipairs(Attachments.build(v,resolved,source,tints))do table.insert(v.featureHandles,part)end
   v.attachmentState=resolved
  end
  local width=head.size.X;local headCenter=head.frame.Position
@@ -95,6 +102,7 @@ function Play.apply(v,appearance)
  v.model:SetAttribute("VisibleHorns",shown.horns or h);v.model:SetAttribute("VisibleClaws",c);v.model:SetAttribute("VisibleWings",shown.wings or w)
  v.model:SetAttribute("FeatureBackend",if source then "AuthoredAttachments"else "Procedural")
  v.model:SetAttribute("Wearables",if source then Rules.signature(wear)else "")
+ v.model:SetAttribute("WearableTints",if source then tintKey else "")
 end
 local function eligible(v)
  return v.personalPlayEnabled==true and v.worldContext and v.personalToyId~="none"and not v.destroyed
@@ -126,7 +134,7 @@ function Play.sample(v,now)
  if not v.personalToy then return nil end
  v.personalToyActive=true;v.personalToyPhase=t
  local reach=if v.reducedEffects then .22 else math.sin(math.min(1,t/1.8)*math.pi)*.38
- return {phase=t,reach=reach,expression=if v.personalToyId=="bone"then "pleased"else "curious"}
+ return {phase=t,reach=reach,expression=if Toys.Play[v.personalToyId]=="chew"then "pleased"else "curious"}
 end
 
 function Play.render(v,root)
@@ -134,15 +142,23 @@ function Play.render(v,root)
  local seats=Play.seats(v);local hand=seats.right or seats.left;if not hand then Play.cancel(v);return end
  local size=v.personalToyHeight;local t=v.personalToyPhase or 0;local handFrame=hand.part.CFrame
  local cf=handFrame*CFrame.new(size*.035,0,size*.045)
- if v.personalToyId=="sparkler"then
+ -- Each toy names how it is played (PetToyGeometry.Play); a toy without one is simply held.
+ local play=Toys.Play[v.personalToyId]
+ if play=="wave"then
   local lift=if t<.38 then t/.38 elseif t<.95 then 1 else math.max(0,1-(t-.95)/.8)
   local arc=math.rad(32)*math.sin(math.clamp((t-.38)/.57,0,1)*math.pi)
   cf=CFrame.new(handFrame.Position+root:VectorToWorldSpace(Vector3.new(size*.08,size*.12*lift,0)))*root.Rotation*CFrame.Angles(0,0,-arc)
- elseif v.personalToyId=="ball"then
+ elseif play=="spin"then
+  -- Held out on the palm: it spins and its wobble settles. Reduced Motion holds it still.
+  local settle=math.max(0,1-t/1.8)
+  local spin=if v.reducedEffects then 0 else t*9
+  local wobble=if v.reducedEffects then 0 else math.sin(t*7)*.16*settle
+  cf=CFrame.new(handFrame.Position+root:VectorToWorldSpace(Vector3.new(size*.06,size*.10,size*.05)))*root.Rotation*CFrame.Angles(wobble,spin,0)
+ elseif play=="roll"then
   local roll=if t<.3 then 0 else math.sin(math.clamp((t-.3)/1.5,0,1)*math.pi)
   local localHand=root:PointToObjectSpace(handFrame.Position)
   cf=root*CFrame.new(localHand.X+roll*size*.32,size*.124,localHand.Z+size*.05)*CFrame.Angles(0,0,-roll*2)
- elseif seats.mouth then
+ elseif play=="chew"and seats.mouth then
   local sniff=if t<.20 then t/.20 elseif t<1.02 then 1 else math.max(0,1-(t-1.02)/.63)
   local bite=if t>=.58 and t<=1.02 then math.sin((t-.58)/.44*math.pi*4)*size*.014 else 0
   local mouth=seats.mouth.part.Position+root:VectorToWorldSpace(Vector3.new(size*.035,-size*.035,size*.045+bite))
