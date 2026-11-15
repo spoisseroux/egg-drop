@@ -62,6 +62,9 @@ end
 Screen.pocketGeometry=pocketGeometry
 Screen.PocketItems=POCKET_ITEMS
 -- Plate grip either side of a phone menu sheet (UI-SPEC-COMPACT-FRAME 4).
+-- QA v735 D1: the phone handheld's fit inside the root (px). `side` is the gap to the
+-- left, right and bottom edges, `crown` the plate above the glass, `chin` the plate under it.
+Screen.Fit={side=4,crown=16,chin=14}
 function Screen.gripMargin(W)return if W>=800 then 40 elseif W>=700 then 24 else 6 end
 function Screen.resolveCompact(W,H,aspect,kx,kh)
  kx=kx or 116;kh=kh or 58
@@ -69,13 +72,26 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  -- QA 2026-11-12: the glass starts under the Roblox controls (`top`), never behind them,
  -- and the shoulders are 18 px wider so the screen reads less wide.
  local SW=({124,112,98})[tier+1];local D=({88,80,68})[tier+1];local A=({92,82,70})[tier+1]
- -- QA v685 D1: the whole handheld sits below the Roblox top bar. The body's top edge is
- -- 16 px above the glass, so the glass starts 18 px under the bar and the case edge and
- -- the wordmark never pass behind Roblox's buttons.
- local top=kh+18
- local g={s=1,compact=false,phone=true,mode="Compact",W=W,H=H,kx=kx,kh=kh,aspect=aspect,tier=tier,SW=SW,D=D,A=A,
+ -- QA v735 D1 (the fit): the whole handheld sits inside the root, on every side.
+ -- Root cause of the phone deck "wrong size" reports: this function never fitted the
+ -- shell. The body was authored to run 32 px off the bottom of the root (H + 32) with
+ -- the glass 4 px from the screen edge, and the bumpers sit 12 design px above the body,
+ -- so they passed behind Roblox's buttons. It was not a timing fault: one input always
+ -- gave that one layout. Now the body is Fit.side px in from the sides and the bottom,
+ -- its bumpers start 2 px under the top bar, and the glass, the controls and MENU are
+ -- laid out against `B` (the layout bottom, Fit.chin px above the body's edge), not H.
+ -- Menu sheets still cover the whole root from `sheetTop`, 18 px under the bar.
+ local Fit=Screen.Fit
+ local bodyBottom=H-Fit.side
+ local rise=math.ceil(-L.shoulderL[2]*(bodyBottom-(kh+2))/L.size.Y)
+ local bodyTop=kh+2+rise
+ local top=bodyTop+Fit.crown
+ local sheetTop=kh+18
+ local rootH=H
+ H=bodyBottom-Fit.chin+RIM -- B: every rect below is laid out as if the root ended here
+ local g={s=1,compact=false,phone=true,mode="Compact",W=W,H=rootH,B=H,kx=kx,kh=kh,aspect=aspect,tier=tier,SW=SW,D=D,A=A,
   deck=rect(0,0,W,H),contentScale=1,pad=0}
- g.top=top
+ g.top=sheetTop;g.glassTop=top
  g.glass=rect(SW,top,W-2*SW,H-top-RIM)
  g.screen=rect(SW+BEZ,top+BEZ,W-2*SW-2*BEZ,H-top-RIM-2*BEZ)
  local x0,y0=SW+BEZ+PAD,top+BEZ+PAD
@@ -112,7 +128,7 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
    if tw>=64 then g.chain=rect(t0,y0,tw,44);g.chainIn="pill"else g.chainIn="goals"end
    g.score=rect(L0,y0+52,c,44);gy=y0+104
   end
-  g.goalsTop=gy;g.goals=rect(L0,gy,c,24+3*p+6)
+  g.goalsTop=gy;g.goals=rect(L0,gy,c,math.min(24+3*p+6,y1-gy))
   local qp=if H>=380 then 36 else 34;local qh=24+3*qp+8
   if layout=="wide"and y1-qh>=gy+24+3*p+6+GAP then g.quests=rect(L0,y1-qh,c,qh);g.questPitch=qp
   else g.handle=rect(L0,y1-44,c,44)end
@@ -165,7 +181,7 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
   g.dpadMenuLeft=rect(bx0,by0+rh,half,boxH-2*rh);g.dpadMenuRight=rect(bx0+half,by0+rh,bw0-half,boxH-2*rh)
  end
  local ww=SW-48
- local wordY=math.max(kh+12,top+12)
+ local wordY=math.max(kh+12,top+6) -- 6 px under the glass top: leaves the LED its gap above the d-pad
  g.wordmark=if ww>=48 and wordY+ww*16/41<=g.dpad.y-8 then rect(24,wordY,ww,math.floor(ww*16/41+.5))else nil
  g.back=rect(W-56,8,44,44)
  g.a=Vector2.new(W-cx,math.floor(H*.49+.5))
@@ -179,8 +195,7 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  -- the sides and 16 px above the glass and runs off the bottom edge (the board keeps
  -- H - 80), so the background pattern shows above and beside it. The shell sprites map
  -- the desktop 1600 x 800 layout onto the body; every rect is whole px.
- local bodyTop=math.max(4,top-16)
- local body=rect(4,bodyTop,W-8,H-bodyTop+32)
+ local body=rect(Fit.side,bodyTop,W-2*Fit.side,bodyBottom-bodyTop)
  local sx,sy=body.w/1600,body.h/800
  local function map(r)
   local mx=body.x+math.floor(r[1]*sx+.5);local my=body.y+math.floor(r[2]*sy+.5)
@@ -192,14 +207,14 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  local ls=math.max(8,math.floor(34*g.shellScale+.5))
  local ledTop=if g.wordmark then g.wordmark.y+g.wordmark.h else kh+4
  local ledGap=g.dpad.y-ledTop
- g.led=if ledGap>=ls+8 then rect(cx-math.floor(ls/2),ledTop+math.floor((ledGap-ls)/2),ls,ls)else nil
+ g.led=if ledGap>=ls+4 then rect(cx-math.floor(ls/2),ledTop+math.floor((ledGap-ls)/2),ls,ls)else nil
  -- Menu sheet (section 4): plate grips `mg` either side; v1 rules shift in by mg - 6.
  local mg=Screen.gripMargin(W)
  g.mg=mg;g.off=mg-6
  -- Sheets also sit under the Roblox controls: their content is padded down by `top`
  -- (Screen:placeOverlay), so in sheet coordinates there is no keep-out.
- local SH=H-top
- g.sheet=rect(mg+2,top,W-2*mg-4,SH-8);g.hx=mg+18
+ local SH=rootH-sheetTop
+ g.sheet=rect(mg+2,sheetTop,W-2*mg-4,SH-8);g.hx=mg+18
  g.cw=math.floor((W-2*mg-48)/3);g.ch=SH-140;g.actionY=SH-66
  g.pocket=pocketGeometry(g)
  return g
@@ -212,8 +227,10 @@ function Screen.resolve(root,aspect,keep)
  end
  local s=math.min((W-48)/1600,(H-48-12)/800,1)
  local compact=s<.75
- if compact then s=(H-8)/608 end
- local deck=rect((W-1600*s)/2,(H-800*s)/2+(if compact then 0 else 10),1600*s,800*s)
+ -- QA v735 D1: Small (tablets, small windows) fits the whole handheld too. It used to size
+ -- the LCD to the root's height ((H - 8) / 608), which pushed the body off every edge.
+ if compact then s=math.min((W-16)/1600,(H-16+L.shoulderL[2])/800)end
+ local deck=rect((W-1600*s)/2,(H-800*s)/2+(if compact then -L.shoulderL[2]*s/2 else 10),1600*s,800*s)
  local lcd=rect(deck.x+L.lcd[1]*s,deck.y+L.lcd[2]*s,L.lcd[3]*s,L.lcd[4]*s)
  local authored=if compact then Screen.Compact else Screen.Regular
  local scale=lcd.h/authored.Y
@@ -771,7 +788,7 @@ function Screen:layoutCompact(g)
  -- Item button under A (round items); its hit area is 8 px wider than the drawn disc.
  local ib=self.itemButton
  place(ib.holder,g.item);ib.hit.Size=UDim2.fromOffset(g.itemHit.w,g.itemHit.h)
- ib.glyph.TextSize=math.floor(g.item.w*.46);ib.caption.Visible=g.item.y+g.item.h+19<=g.H-2
+ ib.glyph.TextSize=math.floor(g.item.w*.46);ib.caption.Visible=g.item.y+g.item.h+19<=g.body.y+g.body.h-2
  -- QA v2 R6.1: the desktop B sprite under it (the disc keeps only its ring, glyph,
  -- icon and badge); the sprite's own letter and hit stay off (showShell).
  local B=self.buttons.B;local bd=g.item.w;B.diameter=bd

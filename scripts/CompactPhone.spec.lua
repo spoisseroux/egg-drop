@@ -108,12 +108,16 @@ return function(client,parent)
    -- starts 18 px under the Roblox bar (top = kh + 18 = 76), so every screen rect moved down
    -- 16 px and the board is 16 px shorter (and narrower at the sim aspect); the wordmark is
    -- the 70e0440 one (24, top + 12, SW - 48).
+   -- Regenerated 2026-11-15 after QA v735 D1 (the fit): the whole handheld is inside the root.
+   -- The body ends Fit.side (4) px above the bottom edge instead of 32 px past it, its bumpers
+   -- start 2 px under the bar, and the glass sits Fit.crown (16) under the body's top and
+   -- Fit.chin (14) above its bottom, so the screen is 19 to 20 px shorter than before.
    local want={
-    [844]={H=390,layout="wide",board={334,84,175,294},score={132,84,122,44},chain={262,84,64,44},goals={132,136,194,132},quests=nil,handle={132,334,194,44},next={517,84,195,64},eggs={517,156,195,44},difficulty={517,208,195,44},winPays={517,260,195,44},controls=nil,dpad={18,154,88,88},dpadLeft={4,126,58,144},dpadRight={62,126,58,144},menu={26,346,72,28},menuHit={20,338,84,44},a={782,191},aHit={732,141,100,100},wordmark={24,88,76,30},mg=40,cw=238,pocketCols=1,pocketFirst={272,149,300,44},pocketLast={272,305,300,44}},
-    [740]={H=360,layout="wide",board={291,84,157,264},score={120,84,91,44},chain={219,84,64,44},goals={120,136,163,132},quests=nil,handle={120,304,163,44},next={456,84,164,64},eggs={456,156,164,44},difficulty={456,208,164,44},winPays={456,260,164,44},controls=nil,dpad={16,143,80,80},dpadLeft={4,111,52,144},dpadRight={56,111,52,144},menu={20,316,72,28},menuHit={14,308,84,44},a={684,176},aHit={639,131,90,90},wordmark={24,88,64,25},mg=24,cw=214,pocketCols=1,pocketFirst={220,134,300,44},pocketLast={220,290,300,44}},
-    [932]={H=430,layout="wide",board={366,84,199,334},score={132,84,154,44},chain={294,84,64,44},goals={132,136,226,132},quests={132,278,226,140},handle=nil,next={573,84,227,64},eggs={573,156,227,44},difficulty={573,208,227,44},winPays={573,260,227,44},controls={573,332,227,86},dpad={18,174,88,88},dpadLeft={4,146,58,144},dpadRight={62,146,58,144},menu={26,386,72,28},menuHit={20,378,84,44},a={870,211},aHit={820,161,100,100},wordmark={24,88,76,30},mg=40,cw=268,pocketCols=1,pocketFirst={316,169,300,44},pocketLast={316,325,300,44}},
-    [568]={H=320,layout="narrow",board={217,84,133,224},score={106,136,103,44},chain={106,84,103,44},goals={106,188,103,108},quests=nil,handle={106,264,103,44},next={358,84,104,44},eggs={358,136,104,44},difficulty={358,188,104,44},winPays={358,240,104,44},controls=nil,dpad={15,129,68,68},dpadLeft={4,91,45,144},dpadRight={49,91,45,144},menu={13,276,72,28},menuHit={7,268,84,44},a={519,157},aHit={480,118,78,78},wordmark={24,88,50,20},mg=6,cw=169,pocketCols=2,pocketFirst={115,166,165,44},pocketLast={288,218,165,44}},
-    [667]={H=375,layout="narrow",board={250,84,166,279},score={120,136,122,44},chain={120,84,122,44},goals={120,188,122,132},quests=nil,handle={120,319,122,44},next={424,84,123,64},eggs={424,156,123,44},difficulty={424,208,123,44},winPays={424,260,123,44},controls=nil,dpad={16,150,80,80},dpadLeft={4,118,52,144},dpadRight={56,118,52,144},menu={20,331,72,28},menuHit={14,323,84,44},a={611,184},aHit={566,139,90,90},wordmark={24,88,64,25},mg=6,cw=202,pocketCols=1,pocketFirst={183,141,300,44},pocketLast={183,297,300,44}},
+    [844]={H=390,layout="wide",board={340,89,164,275},score={132,89,128,44},chain={268,89,64,44},goals={132,141,200,132},quests=nil,handle={132,320,200,44},next={512,89,200,64},eggs={512,161,200,44},difficulty={512,213,200,44},winPays={512,265,200,44},controls=nil,dpad={18,147,88,88},dpadLeft={4,119,58,144},dpadRight={62,119,58,144},menu={26,332,72,28},menuHit={20,324,84,44},a={782,184},aHit={732,134,100,100},wordmark={24,87,76,30},mg=40,cw=238,pocketCols=1,pocketFirst={272,144,300,44},pocketLast={272,300,300,44}},
+    [740]={H=360,layout="wide",board={297,89,146,245},score={120,89,97,44},chain={225,89,64,44},goals={120,141,169,132},quests=nil,handle={120,290,169,44},next={451,89,169,64},eggs={451,161,169,44},difficulty={451,213,169,44},winPays={451,265,169,44},controls=nil,dpad={16,136,80,80},dpadLeft={4,104,52,144},dpadRight={56,104,52,144},menu={20,302,72,28},menuHit={14,294,84,44},a={684,170},aHit={639,125,90,90},wordmark={24,87,64,25},mg=24,cw=214,pocketCols=2,pocketFirst={146,181,220,44},pocketLast={374,233,220,44}},
+    [932]={H=430,layout="wide",board={372,90,187,314},score={132,90,160,44},chain={300,90,64,44},goals={132,142,232,132},quests=nil,handle={132,360,232,44},next={567,90,233,64},eggs={567,162,233,44},difficulty={567,214,233,44},winPays={567,266,233,44},controls={567,318,233,86},dpad={18,167,88,88},dpadLeft={4,139,58,144},dpadRight={62,139,58,144},menu={26,372,72,28},menuHit={20,364,84,44},a={870,204},aHit={820,154,100,100},wordmark={24,88,76,30},mg=40,cw=268,pocketCols=1,pocketFirst={316,165,300,44},pocketLast={316,321,300,44}},
+    [568]={H=320,layout="narrow",board={222,88,123,206},score={106,140,108,44},chain={106,88,108,44},goals={106,192,108,102},quests=nil,handle={106,250,108,44},next={353,88,109,44},eggs={353,140,109,44},difficulty={353,192,109,44},winPays={353,244,109,44},controls=nil,dpad={15,122,68,68},dpadLeft={4,84,45,144},dpadRight={49,84,45,144},menu={13,262,72,28},menuHit={7,254,84,44},a={519,150},aHit={480,111,78,78},wordmark={24,86,50,20},mg=6,cw=169,pocketCols=2,pocketFirst={115,161,165,44},pocketLast={288,213,165,44}},
+    [667]={H=375,layout="narrow",board={256,89,155,260},score={120,141,128,44},chain={120,89,128,44},goals={120,193,128,132},quests=nil,handle={120,305,128,44},next={419,89,128,64},eggs={419,161,128,44},difficulty={419,213,128,44},winPays={419,265,128,44},controls=nil,dpad={16,143,80,80},dpadLeft={4,111,52,144},dpadRight={56,111,52,144},menu={20,317,72,28},menuHit={14,309,84,44},a={611,177},aHit={566,132,90,90},wordmark={24,87,64,25},mg=6,cw=202,pocketCols=1,pocketFirst={183,137,300,44},pocketLast={183,293,300,44}},
    }
    for _,size in ipairs(sizes)do
     local w=want[size.X];local W,H=size.X,size.Y
@@ -130,7 +134,7 @@ return function(client,parent)
     -- Structure: 4 px of plate above and below the glass; every card and the board in the screen;
     -- the d-pad, MENU, back and A on the shoulders; the board H - 24 high at the sim aspect.
     -- QA v685 D1: the glass starts 18 px under the Roblox controls (kh 58), the case edge 2 px under them.
-    assert(g.top==76 and g.glass.y==g.top and g.glass.y+g.glass.h==H-4 and g.glass.x==g.SW and g.glass.x+g.glass.w==W-g.SW,W.." glass rims")
+    assert(g.top==76 and g.glass.y==g.glassTop and g.glassTop==g.body.y+Screen.Fit.crown and g.glass.y+g.glass.h==H-Screen.Fit.side-Screen.Fit.chin and g.glass.x==g.SW and g.glass.x+g.glass.w==W-g.SW,W.." glass rims")
     local screen={x=g.x0,y=g.y0,w=g.LW,h=g.LH}
     for _,name in ipairs({"board","score","chain","goals","quests","handle","next","eggs","difficulty","winPays","controls"})do
      if g[name]then assert(inside(g[name],screen),W.." "..name.." outside the screen")end
@@ -138,7 +142,7 @@ return function(client,parent)
     end
     for _,name in ipairs({"dpad","menu","back"})do assert(apart(g[name],g.glass),W.." "..name.." on the glass")end
     assert(apart({x=g.a.X-g.A/2,y=g.a.Y-g.A/2,w=g.A,h=g.A},g.glass),W.." A on the glass")
-    assert(g.board.h==H-g.top-20 and math.abs(g.board.w-g.board.h*aspect)<=.5+1e-6,W.." board height and aspect")
+    assert(g.board.h==g.glass.h-16 and math.abs(g.board.w-g.board.h*aspect)<=.5+1e-6,W.." board height and aspect")
     assert(g.board.x-g.x0==g.x1-(g.board.x+g.board.w)or math.abs((g.board.x-g.x0)-(g.x1-g.board.x-g.board.w))<=1,W.." board centred")
     assert(g.quests==nil or g.layout=="wide",W.." quests card only in two text columns")
     assert(g.quests~=nil or g.handle~=nil,W.." a quests route on screen")
@@ -163,7 +167,7 @@ return function(client,parent)
     assert(ib.caption.Text=="Items"or not ib.caption.Visible,label.." B reads Items in a round")
     assert(not s.quadrants.Up.Visible and not s.quadrants.Down.Visible,label.." Up / Down off in a round")
     assert(s.menu.Visible and s.menuHit.AbsoluteSize.Y>=44,label.." MENU on the shoulder")
-    assert(s.lcd.AbsoluteSize.Y==size.Y-96,label.." board at H - 96 (18 px under the Roblox controls)")
+    assert(s.lcd.AbsoluteSize.Y==s.geometry.glass.h-16 and s.geometry.glass.y+s.geometry.glass.h==size.Y-18,label.." board fills the fitted glass (QA v735 D1)")
     assert(s.hud.questDot.Visible,label.." ready dot")
     assert(s.hud.goalsEyebrow.Text=="GOALS 1/3",label.." goals header")
     -- Narrow columns use icon goals; wide columns keep the words.
@@ -201,11 +205,11 @@ return function(client,parent)
     local W,H=size.X,size.Y;local label=tostring(size)
     local g=Screen.resolve(size,aspect,{kx=116,kh=58})
     assert(g.phone and g.mode=="Compact",label.." stays the Compact path (not Small)")
-    -- The LCD is the resolveCompact one: glass 18 px under the Roblox controls, board H - 96.
-    assert(g.glass.y==76 and g.glass.y+g.glass.h==H-4 and g.board.h==H-96,label.." LCD unchanged")
-    -- Body: 4 px in from the sides, 16 above the glass (2 px under the Roblox bar), off the bottom edge; whole px.
+    -- QA v735 D1: the LCD is the resolveCompact one, inside the fitted body (crown 16, chin 14).
+    assert(g.glass.y==g.body.y+16 and g.glass.y+g.glass.h==H-18 and g.board.h==g.glass.h-16,label.." LCD inside the body")
+    -- Body: 4 px in from the sides and the bottom, its bumpers 2 px under the Roblox bar; whole px.
     local b=g.body
-    assert(b.x==4 and b.y==60 and b.y==g.kh+2 and b.w==W-8 and b.y+b.h>H,label.." body "..show(b))
+    assert(b.x==4 and g.shell.shoulderL.y>=g.kh+1 and b.y>g.kh+2 and b.y<=g.kh+10 and b.w==W-8 and b.y+b.h==H-4,label.." body "..show(b))
     local p=g.shell.plate
     assert(inside(p,b)and p.x>b.x and p.y>b.y and p.y<g.glass.y and p.x<g.wordmark.x,label.." plate inside the band, above the glass "..show(p))
     for _,name in ipairs({"shadow","shoulderL","shoulderR","band","plate"})do
