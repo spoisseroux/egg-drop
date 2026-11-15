@@ -44,7 +44,7 @@ class NativeCollisionTests(unittest.TestCase):
         return result
 
     def test_current_real_checkpoint_passes_and_builder_is_byte_idempotent(self):
-        self.assertEqual(validate(self.root)["nativeBytes"], 325417)
+        self.assertEqual(validate(self.root)["nativeBytes"], 325532)  # QA v685 W2 lamp 3 pack
         self.run_builder(success=True)
 
     def test_binary_and_mount_tampering_refused_without_output_changes(self):
@@ -93,7 +93,7 @@ class NativeCollisionTests(unittest.TestCase):
 
     def proof(self):
         path = self.root / "readback.json"
-        proof = json.loads((ROOT / "artifacts/world-overlaps-2026-11-14/studio-upload-readback.json").read_text())
+        proof = json.loads((ROOT / "artifacts/qa-2026-11-14-v685/w2-lamp/upload-readback.json").read_text())
         proof["operationId"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         path.write_text(json.dumps(proof))
         return path
