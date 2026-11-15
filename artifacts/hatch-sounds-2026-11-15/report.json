@@ -1,0 +1,45 @@
+{
+ "sample_rate": 44100,
+ "hit_seconds": {
+  "common": 0.0,
+  "uncommon": 0.0,
+  "rare": 0.7
+ },
+ "suggested_gain": {
+  "common": 0.55,
+  "uncommon": 0.75,
+  "rare": 1.0
+ },
+ "tiers": {
+  "common": {
+   "seconds": 0.5,
+   "peak_dbfs": -6.19,
+   "rms_dbfs": -20.61,
+   "loudest_50ms_dbfs": -12.78,
+   "energy": 0.00434,
+   "centroid_hz": 984,
+   "above_4khz_share": 0.0001,
+   "hit_peak_at": 0.0137
+  },
+  "uncommon": {
+   "seconds": 1.25,
+   "peak_dbfs": -3.5,
+   "rms_dbfs": -18.65,
+   "loudest_50ms_dbfs": -11.22,
+   "energy": 0.01705,
+   "centroid_hz": 2076,
+   "above_4khz_share": 0.0272,
+   "hit_peak_at": 0.0117
+  },
+  "rare": {
+   "seconds": 2.7,
+   "peak_dbfs": -1.0,
+   "rms_dbfs": -19.94,
+   "loudest_50ms_dbfs": -10.7,
+   "energy": 0.02736,
+   "centroid_hz": 1676,
+   "above_4khz_share": 0.0346,
+   "hit_peak_at": 0.7084
+  }
+ }
+}
