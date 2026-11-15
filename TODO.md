@@ -29,6 +29,7 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 - [ ] **Phone texture-delivery check:** Companion Egg colour map `79542364257645` reported a missing-baseline representation during native capture although the patterned egg visibly rendered. Recheck standalone delivery in v685 before public launch; capture warning is recorded in native-review/private-v685.json. No unreviewed map substitution made.
 - [ ] **Release acceptance after Spencer's next QA:** actual music listening, physical devices, genuine two-account and published-service/rejoin/Creator Analytics checks. Private v685 is authorized and published for this QA pass; public release remains on hold. Older staged/pending notes below are historical; the current result above supersedes them.
 
+> **v1 ships with the Bear only (Spencer 2026-11-15); a second pet comes in an update. Refresh the store kit captures (`artifacts/store-listing/`, made from v600) before launch.**
 > **LAUNCH CHECKLIST (do not ship v1 without):** set `FeatureFlags.TestFreshSaves=false` (private builds wipe progress every publish while it is true; Spencer 2026-11-13), confirm `FeatureFlags.Park`, Creator Hub audience public, 12 players per server.
 
 Keep this list current: add an item when work starts, move it to done when it lands.
