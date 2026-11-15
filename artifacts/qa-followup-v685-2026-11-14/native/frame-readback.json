@@ -1,0 +1,146 @@
+[
+  {
+    "name": "hue-receipt",
+    "state": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"NativeReviewTime\":3.1,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"rose\",\"NativeReviewAge\":3.1,\"NativeReviewNonce\":6,\"NativeReviewReady\":true,\"NativeReviewKind\":\"hue\"}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "toy-before",
+    "state": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"NativeReviewTime\":0.7,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"wobble_top\",\"NativeReviewAge\":0.7,\"NativeReviewNonce\":8,\"NativeReviewReady\":true,\"NativeReviewKind\":\"toy\"}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "toy-first-visible",
+    "state": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"NativeReviewTime\":1.25,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"wobble_top\",\"NativeReviewAge\":1.25,\"NativeReviewNonce\":9,\"NativeReviewReady\":true,\"NativeReviewKind\":\"toy\"}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "toy-receipt",
+    "state": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"NativeReviewTime\":3.1,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"wobble_top\",\"NativeReviewAge\":3.1,\"NativeReviewNonce\":10,\"NativeReviewReady\":true,\"NativeReviewKind\":\"toy\"}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "material-before",
+    "state": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"NativeReviewTime\":0.7,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"jelly\",\"NativeReviewAge\":0.7,\"NativeReviewNonce\":12,\"NativeReviewReady\":true,\"NativeReviewKind\":\"material\"}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "material-first-visible",
+    "state": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"NativeReviewTime\":1.25,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"jelly\",\"NativeReviewAge\":1.25,\"NativeReviewNonce\":13,\"NativeReviewReady\":true,\"NativeReviewKind\":\"material\"}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "material-receipt",
+    "state": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"NativeReviewTime\":3.1,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"jelly\",\"NativeReviewAge\":3.1,\"NativeReviewNonce\":14,\"NativeReviewReady\":true,\"NativeReviewKind\":\"material\"}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "tide-jar",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"attributes\":{\"NativeReviewTime\":3.1,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"tide\",\"NativeReviewAge\":3.1,\"NativeReviewNonce\":16,\"NativeReviewReady\":true,\"NativeReviewKind\":\"hue\"},\"previews\":[]}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "citrus-jar",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"attributes\":{\"NativeReviewTime\":3.1,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"citrus\",\"NativeReviewAge\":3.1,\"NativeReviewNonce\":18,\"NativeReviewReady\":true,\"NativeReviewKind\":\"hue\"},\"previews\":[]}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "iris-jar",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"attributes\":{\"NativeReviewTime\":3.1,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"iris\",\"NativeReviewAge\":3.1,\"NativeReviewNonce\":20,\"NativeReviewReady\":true,\"NativeReviewKind\":\"hue\"},\"previews\":[]}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "gloss-swatch",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"attributes\":{\"NativeReviewTime\":3.1,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"gloss\",\"NativeReviewAge\":3.1,\"NativeReviewNonce\":22,\"NativeReviewReady\":true,\"NativeReviewKind\":\"material\"},\"previews\":{\"1\":{\"attributes\":{\"PreviewBackend\":\"ProductionPBR\",\"AccessibleLabel\":\"Gloss material sample\",\"FinishId\":\"gloss\",\"FinishProfile\":\"BodyGloss\",\"PreviewReadiness\":\"BoundVerifiedPBR\",\"PreviewMeshSource\":\"EggCore\",\"PreviewReady\":true},\"surfaces\":{\"1\":{\"mesh\":\"rbxassetid://97136732817875\",\"alpha\":0,\"attributes\":{\"MaterialProfile\":\"BodyGloss\",\"NativeVerified\":true,\"MaterialVersion\":1}}}}}}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "name": "matte-swatch",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"attributes\":{\"NativeReviewTime\":3.1,\"NativeReviewCommand\":\"seek\",\"NativeReviewValue\":\"matte\",\"NativeReviewAge\":3.1,\"NativeReviewNonce\":24,\"NativeReviewReady\":true,\"NativeReviewKind\":\"material\"},\"previews\":{\"1\":{\"attributes\":{\"PreviewBackend\":\"ProductionPBR\",\"AccessibleLabel\":\"Matte material sample\",\"FinishId\":\"matte\",\"FinishProfile\":\"BodyMatte\",\"PreviewReadiness\":\"BoundVerifiedPBR\",\"PreviewMeshSource\":\"EggCore\",\"PreviewReady\":true},\"surfaces\":{\"1\":{\"mesh\":\"rbxassetid://97136732817875\",\"alpha\":0,\"attributes\":{\"MaterialProfile\":\"BodyMatte\",\"NativeVerified\":true,\"MaterialVersion\":1}}}}}}"
+        }
+      ],
+      "isError": false
+    }
+  }
+]

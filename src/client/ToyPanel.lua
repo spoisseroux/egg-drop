@@ -2,6 +2,7 @@ local ReceiptLayout=require(script.Parent.ItemReceiptLayout)
 local Shared=game:GetService("ReplicatedStorage").Shared
 local OddsText=require(Shared.OddsText);local NextItem=require(script.Parent.NextItemText);local Catalog=require(Shared.ToyCatalog);local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
 local Reveal=require(script.Parent.HueItemReveal);local ItemArt=require(script.Parent.RewardItemArt)
+local Copy=require(Shared.UICopy)
 require(script.Parent.ToyTabIcon) -- registers the "toy" card icon (QA v2 R4.5)
 local Panel={};Panel.__index=Panel
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
@@ -17,7 +18,8 @@ function Panel.new(parent,intent,options)
  local self=setmetatable({root=root,intent=intent,options=options or {},rows={}},Panel)
  self.title=label(root,"Heading","Toys","Heading");self.note=label(root,"Description","Choose one toy for this pet.","Body")
  self.art=Art.frame(root,"ToyResultArt","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(140,140),root.ZIndex+1);self.art.BackgroundTransparency=1
- self.reveal=Reveal.new(self.art,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,recipeId="toy",resultBuilder=ItemArt.create})
+ self.reveal=Reveal.new(self.art,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,recipeId="toy",resultBuilder=ItemArt.create,
+  onIdentityReady=function()self:paintReceiptIdentity();if self.options.identityChanged then self.options.identityChanged()end end})
  self.pool=label(root,"AvailableOdds","","Body");self.status=label(root,"Status","","Body")
  self.useNow=button(root,"UseNow","Use now",function()self:useResult()end)
  self.shop=button(root,"ToyEggShop","Toy Egg · 8 Stars",function()if self.options.shop then self.options.shop()end end)
@@ -36,17 +38,26 @@ function Panel:useResult()
  if self.options.storeFirst and self.options.storeFirst(result)then return true end
  if self.options.useNow then self.options.useNow(result);return true end;return false
 end
+function Panel:paintReceiptIdentity()
+ local result=self.state and self.state.pendingToyResult;if self.mode~="receipt"or not result then return end
+ local ready=self.reveal:identityReady(result)
+ self.title.Text=if ready then Catalog.ById[result.toyId].name.." unlocked!"else Copy.get("hatch.display.wait")
+ self.note.Text=if ready then "Choose a pet for this toy."else Copy.get("hatch.display.line")
+ self.title:SetAttribute("AccessibleLabel",self.title.Text);self.title:SetAttribute("ResultIdentityReady",ready)
+ self.root:SetAttribute("ResultIdentityReady",ready)
+end
 function Panel:refresh(state,petId,mode,animate)
  self.state,self.petId,self.mode=state or {},petId,mode;self.root.Visible=mode~=nil
  self.useNow.Visible=mode=="receipt"and self.state.pendingToyResult~=nil
  if mode~="receipt"and self.reveal.resultId then self.reveal:clear()end
  if not mode then return end
  local receipt,buy=mode=="receipt",mode=="buy";local result=self.state.pendingToyResult
- self.title.Text=if receipt and result then Catalog.ById[result.toyId].name.." unlocked!"elseif buy then "Toy Egg"else "Toys"
- self.note.Text=if receipt then "Choose a pet for this toy."elseif buy then "8 Stars · one new toy. No duplicates."else "Choose one toy for this pet. Quiet garden play gives no rewards."
+ self.title.Text=if receipt then Copy.get("hatch.display.wait")elseif buy then "Toy Egg"else "Toys"
+ self.note.Text=if receipt then Copy.get("hatch.display.line")elseif buy then "8 Stars · one new toy. No duplicates."else "Choose one toy for this pet. Quiet garden play gives no rewards."
  self.art.Visible=receipt or buy
  if receipt and result then self.reveal:show(result,animate==true)
  elseif buy and not self.art:FindFirstChild("ToyEgg")then for _,n in ipairs(self.art:GetChildren())do n:Destroy()end;EggArt.create(self.art,"toy",UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.art.ZIndex+1,"ToyEgg")end
+ self:paintReceiptIdentity()
  local selected=(self.state.petToys or {})[petId]or Catalog.Default
  for id,n in pairs(self.rows)do
   local owned=Catalog.owns(self.state.toyUnlocks,id);n.Visible=not receipt and not buy and owned

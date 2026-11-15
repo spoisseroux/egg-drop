@@ -1,0 +1,29 @@
+[
+  {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"previews\":{\"1\":{\"attributes\":{\"PreviewBackend\":\"ProductionPBR\",\"PreviewEnvironmentReadiness\":\"BoundSixFaceSky\",\"PreviewEnvironmentReady\":true,\"PreviewReady\":true,\"PreviewReadiness\":\"BoundVerifiedPBR\",\"PreviewMeshSource\":\"EggCore\",\"PreviewEnvironmentSource\":\"WorldSky\",\"AccessibleLabel\":\"Gloss material sample\",\"FinishId\":\"gloss\",\"FinishProfile\":\"BodyGloss\"},\"surfaces\":{\"1\":{\"mesh\":\"rbxassetid://97136732817875\",\"alpha\":0,\"attributes\":{\"MaterialProfile\":\"BodyGloss\",\"NativeVerified\":true,\"MaterialVersion\":1}}}}},\"finish\":\"gloss\"}"
+      }
+    ],
+    "isError": false
+  },
+  {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"previews\":{\"1\":{\"attributes\":{\"PreviewBackend\":\"ProductionPBR\",\"PreviewEnvironmentReadiness\":\"BoundSixFaceSky\",\"PreviewEnvironmentReady\":true,\"PreviewReady\":true,\"PreviewReadiness\":\"BoundVerifiedPBR\",\"PreviewMeshSource\":\"EggCore\",\"PreviewEnvironmentSource\":\"WorldSky\",\"AccessibleLabel\":\"Matte material sample\",\"FinishId\":\"matte\",\"FinishProfile\":\"BodyMatte\"},\"surfaces\":{\"1\":{\"mesh\":\"rbxassetid://97136732817875\",\"alpha\":0,\"attributes\":{\"MaterialProfile\":\"BodyMatte\",\"NativeVerified\":true,\"MaterialVersion\":1}}}}},\"finish\":\"matte\"}"
+      }
+    ],
+    "isError": false
+  },
+  {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"previews\":{\"1\":{\"attributes\":{\"PreviewBackend\":\"ProductionPBR\",\"PreviewEnvironmentReadiness\":\"BoundSixFaceSky\",\"PreviewEnvironmentReady\":true,\"PreviewReady\":true,\"PreviewReadiness\":\"BoundVerifiedPBR\",\"PreviewMeshSource\":\"EggCore\",\"PreviewEnvironmentSource\":\"WorldSky\",\"AccessibleLabel\":\"Jelly material sample\",\"FinishId\":\"jelly\",\"FinishProfile\":\"BodyJelly\"},\"surfaces\":{\"1\":{\"mesh\":\"rbxassetid://97136732817875\",\"alpha\":0.15000000596046449,\"attributes\":{\"MaterialProfile\":\"BodyJelly\",\"NativeVerified\":true,\"Candidate\":\"Jelly-v2-approved-native-2026-11-14\",\"MaterialVersion\":1}}}}},\"finish\":\"jelly\"}"
+      }
+    ],
+    "isError": false
+  }
+]

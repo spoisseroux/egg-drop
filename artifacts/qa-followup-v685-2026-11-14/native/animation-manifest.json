@@ -1,0 +1,47 @@
+[
+  {
+    "kind": "toy",
+    "actual_renderer": true,
+    "time_stepped": true,
+    "synthetic_receipt": true,
+    "no_transaction": true,
+    "fps": 12,
+    "frames": 39,
+    "duration_seconds": 4.25,
+    "video": "toy-hatch-updated.mp4",
+    "sha256": "cb553e99472ca3f2e82aa047a52668bd9c42be43225323e1afac147ea624f0b5",
+    "gif": "toy-hatch-updated.gif",
+    "audio": "Matched offline PCM audition; not recorded Studio audio",
+    "visual_checkpoint": "Accepted visual subset with shared Sky; subsequent rarity hooks do not change choreography"
+  },
+  {
+    "kind": "hue",
+    "actual_renderer": true,
+    "time_stepped": true,
+    "synthetic_receipt": true,
+    "no_transaction": true,
+    "fps": 12,
+    "frames": 39,
+    "duration_seconds": 4.25,
+    "video": "hue-hatch-updated.mp4",
+    "sha256": "a17827b20a8a87f7ba5756976c9d5095422c297881aa80624d63ccecf84238c5",
+    "gif": "hue-hatch-updated.gif",
+    "audio": "Matched offline PCM audition; not recorded Studio audio",
+    "visual_checkpoint": "Accepted visual subset with shared Sky; subsequent rarity hooks do not change choreography"
+  },
+  {
+    "kind": "material",
+    "actual_renderer": true,
+    "time_stepped": true,
+    "synthetic_receipt": true,
+    "no_transaction": true,
+    "fps": 12,
+    "frames": 39,
+    "duration_seconds": 4.25,
+    "video": "material-hatch-updated.mp4",
+    "sha256": "257eff4cf1ad035ff82e3004340bae476cd43a0feb14910cb4fb3fba09435830",
+    "gif": "material-hatch-updated.gif",
+    "audio": "Matched offline PCM audition; not recorded Studio audio",
+    "visual_checkpoint": "Accepted visual subset with shared Sky; subsequent rarity hooks do not change choreography"
+  }
+]

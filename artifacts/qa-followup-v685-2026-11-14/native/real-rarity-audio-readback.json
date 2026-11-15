@@ -1,0 +1,20 @@
+{
+  "rare": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"NativeReviewCommand\":\"material\",\"NativeReviewValue\":\"jelly\",\"NativeRealAudioAsset\":\"rbxassetid://103058048084589\",\"NativeReviewReady\":true,\"NativeRealAudioEvents\":\"[{\\\"gain\\\":1,\\\"name\\\":\\\"hatch_display_material\\\",\\\"speed\\\":1,\\\"age\\\":0,\\\"accepted\\\":true},{\\\"gain\\\":0.035,\\\"name\\\":\\\"hatch_finish\\\",\\\"speed\\\":1,\\\"age\\\":2.32394961360842,\\\"accepted\\\":true},{\\\"gain\\\":0.035,\\\"name\\\":\\\"hatch_finish\\\",\\\"speed\\\":1.189207115002721,\\\"age\\\":2.4733595149591567,\\\"accepted\\\":true}]\",\"NativeRealAudioDuration\":0.07997732426303855,\"NativeReviewNonce\":1,\"NativeRealAudioReady\":true,\"NativeReviewKind\":\"material\",\"NativeReviewAge\":3.1}"
+      }
+    ],
+    "isError": false
+  },
+  "commonCumulative": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"NativeReviewCommand\":\"material\",\"NativeReviewValue\":\"gloss\",\"NativeRealAudioAsset\":\"rbxassetid://103058048084589\",\"NativeReviewReady\":true,\"NativeRealAudioEvents\":\"[{\\\"gain\\\":1,\\\"name\\\":\\\"hatch_display_material\\\",\\\"speed\\\":1,\\\"age\\\":0,\\\"accepted\\\":true},{\\\"gain\\\":0.035,\\\"name\\\":\\\"hatch_finish\\\",\\\"speed\\\":1,\\\"age\\\":2.32394961360842,\\\"accepted\\\":true},{\\\"gain\\\":0.035,\\\"name\\\":\\\"hatch_finish\\\",\\\"speed\\\":1.189207115002721,\\\"age\\\":2.4733595149591567,\\\"accepted\\\":true},{\\\"gain\\\":1,\\\"name\\\":\\\"hatch_display_material\\\",\\\"speed\\\":1,\\\"age\\\":0,\\\"accepted\\\":true}]\",\"NativeRealAudioDuration\":0.07997732426303855,\"NativeReviewNonce\":2,\"NativeRealAudioReady\":true,\"NativeReviewKind\":\"material\",\"NativeReviewAge\":3.1}"
+      }
+    ],
+    "isError": false
+  }
+}

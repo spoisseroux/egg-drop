@@ -47,7 +47,7 @@ Hue.ItemOrder={"rose","tide","citrus","iris","reset"}
 -- "Original colour" is free in Customize). "reset" stays in ItemOrder/Items so jars players
 -- already hold stay valid and usable; it is just never rolled or shown in the odds.
 Hue.RollOrder={"rose","tide","citrus","iris"}
-Hue.Items={};for _,h in ipairs(Hue.Order)do Hue.Items[h.id]={id=h.id,name=h.name.." fruit",color=h.color,weight=20}end
+Hue.Items={};for _,h in ipairs(Hue.Order)do Hue.Items[h.id]={id=h.id,name=h.name.." jar",color=h.color,weight=20}end
 Hue.Items.reset={id="reset",name="Reset Hue",color=Color3.fromHex("#D4F8FF"),weight=20}
 Hue.DoseWeights={0,.44,.65,.84,.93,1}
 function Hue.emptyCounts()return{rose=0,tide=0,citrus=0,iris=0}end

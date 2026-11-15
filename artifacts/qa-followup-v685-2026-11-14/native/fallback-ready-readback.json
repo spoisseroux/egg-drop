@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"1\":{\"name\":\"LoadingSample\",\"attributes\":{\"PreviewEnvironmentReady\":true,\"PreviewBackend\":\"ShadedFallback\",\"PreviewEnvironmentReadiness\":\"BoundSixFaceSky\",\"FinishId\":\"jelly\",\"PreviewReady\":false,\"PreviewReadiness\":\"RoundFallback\",\"AccessibleLabel\":\"Jelly material sample\",\"PreviewEnvironmentSource\":\"WorldSky\"}},\"2\":{\"name\":\"ReadySample\",\"attributes\":{\"PreviewBackend\":\"ProductionPBR\",\"PreviewEnvironmentReadiness\":\"BoundSixFaceSky\",\"PreviewEnvironmentReady\":true,\"PreviewReady\":true,\"PreviewReadiness\":\"BoundVerifiedPBR\",\"PreviewMeshSource\":\"EggCore\",\"PreviewEnvironmentSource\":\"WorldSky\",\"AccessibleLabel\":\"Jelly material sample\",\"FinishId\":\"jelly\",\"FinishProfile\":\"BodyJelly\"}}}"
+    }
+  ],
+  "isError": false
+}

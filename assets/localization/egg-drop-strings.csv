@@ -112,15 +112,16 @@ ui.hatch.display.firstFriend,Your first friend,,Hatch eggs screen
 ui.hatch.display.friend,New friend,,Hatch eggs screen
 ui.hatch.display.line,The display wakes up,,Hatch eggs screen
 ui.hatch.display.loading,Preparing your surprise…,,Hatch eggs screen
+ui.hatch.display.material,Material for your pet,,Hatch eggs screen
 ui.hatch.display.owned,Already owned,,Hatch eggs screen
 ui.hatch.display.refund,Already owned · {count} Stars back,,Hatch eggs screen; e.g. Already owned · 3 Stars back
 ui.hatch.display.wait,A little surprise,,Hatch eggs screen
 ui.hatch.egg.feature.description,Something pointy is growing in here. Hatches one feature item to grow on any pet.,,Hatch eggs screen
 ui.hatch.egg.feature.line,"Horns, claws or wings",,Hatch eggs screen
 ui.hatch.egg.feature.per,1 item per egg,,Hatch eggs screen
-ui.hatch.egg.hue.description,It smells like fruit. Hatches one colour fruit to feed your pet.,,Hatch eggs screen
-ui.hatch.egg.hue.line,Fruit that shifts colour,,Hatch eggs screen
-ui.hatch.egg.hue.per,1 fruit per egg,,Hatch eggs screen
+ui.hatch.egg.hue.description,Hatches one pigment jar to change your pet's colour.,,Hatch eggs screen
+ui.hatch.egg.hue.line,A jar of colour,,Hatch eggs screen
+ui.hatch.egg.hue.per,1 jar per egg,,Hatch eggs screen
 ui.hatch.egg.material.description,Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.,,Hatch eggs screen
 ui.hatch.egg.material.line,A fresh new coat,,Hatch eggs screen
 ui.hatch.egg.material.per,1 finish per egg,,Hatch eggs screen
@@ -212,7 +213,7 @@ ui.r3.help.companions.a.line,"Hearts show bond. Petting, rounds and Play dates g
 ui.r3.help.companions.a.title,Bond hearts,,Menu text
 ui.r3.help.companions.b.line,"Hats and bits to wear, bought with Stars. Looks only.",,Menu text
 ui.r3.help.companions.b.title,Wardrobe,,Menu text; also catalog.BookCatalog.Pages.wardrobe.name
-ui.r3.help.companions.c.line,"Feed colour fruit, add a charm, try a finish or hand over a toy.",,Menu text
+ui.r3.help.companions.c.line,"Use colour jars, add a charm, try a finish or hand over a toy.",,Menu text
 ui.r3.help.companions.c.title,Customize,,Menu text
 ui.r3.help.hatch.a.line,Rounds and quests earn Stars. Open Quests for your once-daily stamp.,,Menu text
 ui.r3.help.hatch.a.title,Earn Stars,,Menu text
@@ -434,11 +435,11 @@ catalog.ToyCatalog.ById.wobble_top.name,Wobble Top,,Catalogue ToyCatalog (name);
 catalog.HueCatalog.ById.citrus.name,Citrus,,Catalogue HueCatalog (name)
 catalog.HueCatalog.ById.iris.name,Iris,,Catalogue HueCatalog (name)
 catalog.HueCatalog.ById.tide.name,Tide,,Catalogue HueCatalog (name)
-catalog.HueCatalog.Items.citrus.name,Citrus fruit,,Catalogue HueCatalog (name)
-catalog.HueCatalog.Items.iris.name,Iris fruit,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Items.citrus.name,Citrus jar,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Items.iris.name,Iris jar,,Catalogue HueCatalog (name)
 catalog.HueCatalog.Items.reset.name,Reset Hue,,Catalogue HueCatalog (name)
-catalog.HueCatalog.Items.rose.name,Rose fruit,,Catalogue HueCatalog (name)
-catalog.HueCatalog.Items.tide.name,Tide fruit,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Items.rose.name,Rose jar,,Catalogue HueCatalog (name)
+catalog.HueCatalog.Items.tide.name,Tide jar,,Catalogue HueCatalog (name)
 catalog.HueCatalog.Mixes.citrus:iris.name,Citrus + Iris,,Catalogue HueCatalog (name)
 catalog.HueCatalog.Mixes.citrus:rose.name,Rose + Citrus,,Catalogue HueCatalog (name)
 catalog.HueCatalog.Mixes.citrus:tide.name,Tide + Citrus,,Catalogue HueCatalog (name)

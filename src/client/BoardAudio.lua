@@ -43,6 +43,8 @@ local placeholderIds = {
 	egg_select = 133779589657893,
 }
 for cue, id in pairs(placeholderIds) do assetIds[cue] = id end
+-- Dedicated voice pool reuses the existing80ms body; no new asset or loop.
+assetIds.hatch_finish=placeholderIds.goal_tick
 Audio.PlaceholderIds = placeholderIds
 local cues = {
 	"aim", "drop", "land", "bank", "merge_bubble", "merge_jelly", "merge_chain",
@@ -66,6 +68,7 @@ local cues = {
 -- (AUDIO-HANDOFF.md). They have no voice, so play() is a quiet no-op.
 Audio.PendingCues = {}
 local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_chain"}
+table.insert(cues,"hatch_finish")
 -- Only newly reviewed v3 timestamped SFX are eligible here. Rejected/held
 -- music and superseded 6s/4s bursts are never mapped by this owner.
 for _,kind in ipairs({"bear","toy","hue","material","feature"})do

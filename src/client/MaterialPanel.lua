@@ -3,6 +3,7 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local OddsText=require(Shared.OddsText);local NextItem=require(script.Parent.NextItemText);local Catalog=require(Shared.MaterialCatalog)
 local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
 local Reveal=require(script.Parent.HueItemReveal)
+local Copy=require(Shared.UICopy)
 local Panel={};Panel.__index=Panel
 local function place(node,x,y,w,h)node.Position,node.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function label(parent,name,copy,role)
@@ -17,7 +18,8 @@ function Panel.new(parent,intent,options)
  local self=setmetatable({root=root,intent=intent,options=options or {},rows={}},Panel)
  self.title=label(root,"Heading","Materials","Heading");self.note=label(root,"Description","Choose a material for this pet.","Body")
  self.art=Art.frame(root,"MaterialResultArt","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(100,100),root.ZIndex+1);self.art.BackgroundTransparency=1
- self.reveal=Reveal.new(self.art,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,recipeId="material",resultBuilder=require(script.Parent.MaterialFinishPreview).create})
+ self.reveal=Reveal.new(self.art,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,recipeId="material",resultBuilder=require(script.Parent.MaterialFinishPreview).create,
+  onIdentityReady=function()self:paintReceiptIdentity();if self.options.identityChanged then self.options.identityChanged()end end})
  self.pool=label(root,"AvailableOdds","","Body")
  self.status=label(root,"Status","","Body")
  self.useNow=button(root,"UseNow","Use now",function()self:useResult()end)
@@ -39,6 +41,14 @@ function Panel:useResult()
  if self.reveal:consumeSkipInput()or self.reveal:skip()then return false end
  if self.options.useNow then self.options.useNow(result);return true end;return false
 end
+function Panel:paintReceiptIdentity()
+ local result=self.state and self.state.pendingMaterialResult;if self.mode~="receipt"or not result then return end
+ local ready=self.reveal:identityReady(result)
+ self.title.Text=if ready then Catalog.ById[result.finishId].name.." unlocked!"else Copy.get("hatch.display.wait")
+ self.note.Text=if ready then Copy.get("hatch.display.material")else Copy.get("hatch.display.line")
+ self.title:SetAttribute("AccessibleLabel",self.title.Text);self.title:SetAttribute("ResultIdentityReady",ready)
+ self.root:SetAttribute("ResultIdentityReady",ready)
+end
 function Panel:refresh(state,petId,mode,animate)
  self.state,self.petId,self.mode=state or {},petId,mode
  self.root.Visible=mode~=nil
@@ -46,14 +56,15 @@ function Panel:refresh(state,petId,mode,animate)
  if mode~="receipt"and self.reveal.resultId then self.reveal:clear()end
  if not mode then return end
  local result=self.state.pendingMaterialResult;local receipt=mode=="receipt";local buy=mode=="buy"
- self.title.Text=if receipt and result then Catalog.ById[result.finishId].name.." unlocked!"elseif buy then "Material Egg"else "Materials"
- self.note.Text=if receipt then "Choose a pet for this material."elseif buy then require(script.Parent.MaterialDisclosure).note(self.state)else "Choose a material for this pet."
+ self.title.Text=if receipt then Copy.get("hatch.display.wait")elseif buy then "Material Egg"else "Materials"
+ self.note.Text=if receipt then Copy.get("hatch.display.line")elseif buy then require(script.Parent.MaterialDisclosure).note(self.state)else "Choose a material for this pet."
  self.art.Visible=receipt or buy
  if receipt and result then self.reveal:show(result,animate==true)
  elseif buy and not self.art:FindFirstChild("MaterialEgg")then
   for _,child in ipairs(self.art:GetChildren())do child:Destroy()end
   EggArt.create(self.art,"material",UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.art.ZIndex+1,"MaterialEgg")
  end
+ self:paintReceiptIdentity()
  self.shop.Visible=not receipt and not buy
  local selected=(self.state.petMaterials or {})[petId]or Catalog.Default
  for id,node in pairs(self.rows)do

@@ -36,7 +36,7 @@ local UICopy=require(Shared.UICopy)
 local View={};View.__index=View
 View.ClearConfirmSeconds=3
 local ids={"rose","tide","citrus","iris","reset"}
-local names={rose="Rose fruit",tide="Tide fruit",citrus="Citrus fruit",iris="Iris fruit",reset="Reset Hue"}
+local names={};for _,id in ipairs(Hues.ItemOrder)do names[id]=Hues.Items[id].name end
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function text(parent,name,copy,role)
  local n=Art.text(parent,name,copy,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),"text",16)
@@ -76,13 +76,14 @@ function View.new(parent,intent,options)
  self.eatingProof=EatingProof.new();self.fruitEating=FruitEating.new()
  self.toyIntent=self.options.toyIntent;self.featureIntent=self.options.featureIntent
  self.materialIntent=self.options.materialIntent
- self.materialPanel=MaterialPanel.new(body,self.materialIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="materials"and not self.confirmation and self.materialPanel.petId==self.petId and self:canCustomize()end,receiptOpen=function(result)return self.shade.Visible and self.page=="materialReceipt"and self.state.pendingMaterialResult and self.state.pendingMaterialResult.id==result.id end,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
+ local identityChanged=function()if not self.destroyed and self.shade.Visible then self:refresh()end end
+ self.materialPanel=MaterialPanel.new(body,self.materialIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="materials"and not self.confirmation and self.materialPanel.petId==self.petId and self:canCustomize()end,receiptOpen=function(result)return self.shade.Visible and self.page=="materialReceipt"and self.state.pendingMaterialResult and self.state.pendingMaterialResult.id==result.id end,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
   useNow=function(result)self.materialAssignment={resultId=result.id,finishId=result.finishId};self:landOnPets(result)end})
- self.toyPanel=ToyPanel.new(body,self.toyIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="toys"and not self.confirmation and self.toyPanel.petId==self.petId and self:canCustomize()end,
+ self.toyPanel=ToyPanel.new(body,self.toyIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="toys"and not self.confirmation and self.toyPanel.petId==self.petId and self:canCustomize()end,
   receiptOpen=function(result)return self.shade.Visible and self.page=="toyReceipt"and self.state.pendingToyResult and self.state.pendingToyResult.id==result.id end,
   shop=function()self:close("shop");if self.options.toyShop then self.options.toyShop()end end,
   useNow=function(result)self.toyAssignment={resultId=result.id,toyId=result.toyId};self:landOnPets(result)end})
- self.featurePanel=FeaturePanel.new(body,self.featureIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,canUse=function()return self.shade.Visible and self.page=="palette"and self.tab=="features"and not self.confirmation and self.featurePanel.petId==self.petId and self:canCustomize()end,
+ self.featurePanel=FeaturePanel.new(body,self.featureIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canUse=function()return self.shade.Visible and self.page=="palette"and self.tab=="features"and not self.confirmation and self.featurePanel.petId==self.petId and self:canCustomize()end,
   receiptOpen=function(result)return self.shade.Visible and self.page=="featureReceipt"and self.state.pendingFeatureResult and self.state.pendingFeatureResult.id==result.id end,
   canAssignReceipt=function(resultId,featureId)return self.shade.Visible and self.page=="palette"and self.tab=="features"and not self.confirmation and self.featurePanel.petId==self.petId and self:hasFeatureAssignment()and self.featureAssignment.resultId==resultId and self.featureAssignment.featureId==featureId end,
   binding=function()return tostring(self.lifecycleEpoch)..":"..self.petId..":"..self.page..":"..self.tab end,
@@ -104,7 +105,7 @@ function View.new(parent,intent,options)
  self.world=Instance.new("WorldModel");self.world.Parent=self.viewport;self.camera=Instance.new("Camera");self.camera.FieldOfView=30;self.camera.Parent=self.viewport;self.viewport.CurrentCamera=self.camera
  self.petName=text(card,"PetName","Bear","Action");self.petName.TextXAlignment=Enum.TextXAlignment.Center;self.petName.AutoLocalize=false
  self.channelTitle=text(body,"ChannelTitle","Main","Action")
- self.inspection=text(body,"HueInspection","Choose a color to use one fruit.","Body")
+ self.inspection=text(body,"HueInspection","Choose a colour to use one jar.","Body")
  for _,id in ipairs(ids)do if id~="reset"then
   local row=Art.frame(body,"Dose_"..id,"inset",UDim2.fromOffset(0,0),UDim2.fromOffset(200,44),23);Art.corner(row,8)
   local label=text(row,"Label",names[id],"Body");local value=text(row,"Count","0/5","Counter");value.TextXAlignment=Enum.TextXAlignment.Right
@@ -129,7 +130,7 @@ function View.new(parent,intent,options)
   local label=text(n,"ItemName",names[id],"Body");local quantity=text(n,"Quantity","×0","Counter");local reason=text(n,"Reason","","Supporting")
   self.jars[id]={button=n,art=art,label=label,quantity=quantity,reason=reason}
  end
- self.empty=text(body,"EmptyInventory","No jars yet. Find fixed-color fruit in Hue Eggs.","Body")
+ self.empty=text(body,"EmptyInventory","No jars yet. Find pigment jars in Hue Eggs.","Body")
  self.charmTitle=text(body,"CharmTitle","A floating Snowflake, colored by Secondary.","Body")
  self.eggsButton=button(body,"FindEggs","Eggs",function()self:close("shop");local open=self.options.eggs or self.options.shop;if open then open()end end)
  self.shapes={};self.shapeIcons={};self.gridPreviews={};self.scrollPositions={}
@@ -169,7 +170,7 @@ function View.new(parent,intent,options)
  end
  self.dot=self.shapes.dot
  self.receiptArt=Art.frame(body,"ResultJar","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(150,160),23);self.receiptArt.BackgroundTransparency=1
- self.itemReveal=ItemReveal.new(self.receiptArt,{audio=self.options.audio,reduceEffects=self.options.reduceEffects})
+ self.itemReveal=ItemReveal.new(self.receiptArt,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,onIdentityReady=identityChanged})
  self.receipt=text(body,"SavedReceipt","","Reward");self.receipt.TextXAlignment=Enum.TextXAlignment.Center
  self.receiptDetail=text(body,"ReceiptDetail","Added to your items.","Body")
  self.useNow=button(body,"UseNow","Use now",function()self:useResult()end)
@@ -181,7 +182,7 @@ function View.new(parent,intent,options)
  self.resultSwatch=Art.frame(body,"ResultSwatch",Art.Silver,UDim2.fromOffset(0,0),UDim2.fromOffset(32,32),24);Art.corner(self.resultSwatch,8);Art.stroke(self.resultSwatch,"line",0,1)
  self.status=text(body,"Status","","Body")
  self.migrationText=text(body,"MigrationReceipt","","Body")
- self.legacyTitle=text(body,"LegacyTitle","Your carried Hue Egg: choose its fixed fruit once.","Body")
+ self.legacyTitle=text(body,"LegacyTitle","Your carried Hue Egg: choose its colour jar once.","Body")
  self.legacyButtons={};for _,id in ipairs(ids)do if id~="reset"then self.legacyButtons[id]=button(body,"Redeem_"..id,names[id],function()self:requestLegacy(id)end)end end
  self.presetTitle=text(body,"LegacyPresetsTitle","Previous colors · available until the first new dose","Supporting");self.presetButtons={}
  shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()if shade.Visible then self:layout()end end)
@@ -197,6 +198,18 @@ function View:openWardrobe()
 end
 function View:canCustomize()
  return not self.options.canCustomize or self.options.canCustomize(if self.machine then self.machine.petId else self.petId)==true
+end
+function View:paintReceiptHeader()
+ local result,reveal,label
+ if self.page=="receipt"then result=self.state.pendingHueResult;reveal=self.itemReveal;label=result and names[result.itemId]
+ elseif self.page=="materialReceipt"then result=self.state.pendingMaterialResult;reveal=self.materialPanel.reveal;label=result and MaterialCatalog.ById[result.finishId].name.." unlocked!"
+ elseif self.page=="toyReceipt"then result=self.state.pendingToyResult;reveal=self.toyPanel.reveal;label=result and ToyCatalog.ById[result.toyId].name.." unlocked!"
+ elseif self.page=="featureReceipt"then result=self.state.pendingFeatureResult;reveal=self.featurePanel.reveal;label=result and FeatureCatalog.ById[result.featureId].name.." found!"end
+ if not result then return end
+ local ready=reveal:identityReady(result)
+ self.title.Text=if ready then label else UICopy.get("hatch.display.wait")
+ self.title:SetAttribute("AccessibleLabel",self.title.Text);self.title:SetAttribute("ResultIdentityReady",ready)
+ self.shade:SetAttribute("ResultIdentityReady",ready)
 end
 function View:hasHueAssignment()
  local result=self.state.pendingHueResult;local draft=self.assignment or self.confirmation
@@ -350,7 +363,7 @@ function View:compactSwatches()
 end
 function View:paintSwatches(visible)
  local counts=self:counts();local appearance=self:appearance()
- local compact=self:compactSwatches();local detail="Choose a color to use one fruit."
+ local compact=self:compactSwatches();local detail="Choose a colour to use one jar."
  self.inspection.Visible=visible
  self.inspection.Text=detail
  for id,bar in pairs(self.bars)do
@@ -735,18 +748,18 @@ function View:refresh()
   for _,pet in ipairs(Pets.collection)do local row=self.state.petHues and self.state.petHues[pet.id];local presets=self.state.legacyHuePresets and self.state.legacyHuePresets[pet.id]
    if row and presets and(#(presets.main or {})>0 or #(presets.secondary or {})>0)then
     table.insert(lines,pet.name..": Main Rose "..row.main.rose.."/5 · Tide "..row.main.tide.."/5 · Citrus "..row.main.citrus.."/5 · Iris "..row.main.iris.."/5")
-    table.insert(lines,"Previously earned choices: "..#(presets.main or {}).." Main · "..#(presets.secondary or {}).." Secondary. The first new fruit locks exchanges on that channel until a Reset Hue.")
+    table.insert(lines,"Previously earned choices: "..#(presets.main or {}).." Main · "..#(presets.secondary or {}).." Secondary. The first new jar locks exchanges on that channel until a Reset Hue.")
    end
   end
-  if self.state.legacyHueEgg then table.insert(lines,"Your carried Hue Egg still lets you choose one fixed fruit, with no charge.")end
+  if self.state.legacyHueEgg then table.insert(lines,"Your carried Hue Egg still lets you choose one colour jar, with no charge.")end
   self.migrationText.Text=table.concat(lines,"\n\n")
  end
  self.title.Text=if migration then "Your converted colors"elseif self.assignment then "Choose where to use"elseif confirming then if self.confirmation.itemId=="reset"then "Reset "..channelName(self.channel).." color?"elseif self.confirmation.itemId then "Use one "..names[self.confirmation.itemId].."?"else "Confirm choice"elseif self.page=="receipt"then "A jar for your garden"elseif self.page=="buy"then "Hue Egg"else "Companions"
- if self.page=="receipt"and r then self.title.Text=names[r.itemId]
- elseif self.page=="materialReceipt"and materialResult then self.title.Text=MaterialCatalog.ById[materialResult.finishId].name.." unlocked!"
+ if self.page=="receipt"and r then self.title.Text=UICopy.get("hatch.display.wait")
+ elseif self.page=="materialReceipt"and materialResult then self.title.Text=UICopy.get("hatch.display.wait")
  elseif self.page=="toyBuy"then self.title.Text="Toy Egg"elseif self.page=="featureBuy"then self.title.Text="Feature Egg"
- elseif self.page=="toyReceipt"and toyResult then self.title.Text=ToyCatalog.ById[toyResult.toyId].name.." unlocked!"
- elseif self.page=="featureReceipt"and featureResult then self.title.Text=FeatureCatalog.ById[featureResult.featureId].name.." found!"end
+ elseif self.page=="toyReceipt"and toyResult then self.title.Text=UICopy.get("hatch.display.wait")
+ elseif self.page=="featureReceipt"and featureResult then self.title.Text=UICopy.get("hatch.display.wait")end
  self.title:SetAttribute("AccessibleLabel",if customization then "Customize "..Pets.byId[self.petId].name else self.title.Text)
  if self.confirmation and self.confirmation.equipPetId then self.title.Text="Make "..Pets.byId[self.confirmation.equipPetId].name.." active?"end
  self.wallet.Text=tostring(self.state.nectar or 0).." Stars"
@@ -805,11 +818,15 @@ function View:refresh()
    local prior=self.state.legacyHuePresets and self.state.legacyHuePresets[self.petId]
    local row=self.state.petHues and self.state.petHues[self.petId]
    if item~="reset"and prior and #(prior[self.channel]or {})>0 and not(row and row.legacyLocked and row.legacyLocked[self.channel])then
-    self.quote.Text..="\nThis first new fruit locks previously earned exchanges on this channel until Reset Hue."
+    self.quote.Text..="\nThis first new jar locks previously earned exchanges on this channel until Reset Hue."
    end
   end
  elseif self.assignment then self.quote.Text=if self.tab=="pet"then "Choose a pet."else "Choose Main or Secondary."
- elseif self.page=="buy"then self.quote.Text="8 Stars · one saved jar\nRose fruit 20% · Tide fruit 20% · Citrus fruit 20% · Iris fruit 20% · Reset Hue 20%\nReset clears one channel. Store any result. Duplicate jars stack."end
+ elseif self.page=="buy"then
+  local Next=require(script.Parent.NextItemText);local odds={}
+  for _,id in ipairs(Hues.RollOrder)do table.insert(odds,names[id].." "..require(Shared.OddsText).format(1/#Hues.RollOrder))end
+  self.quote.Text=tostring(Hues.Cost).." Stars · one saved jar\n"..(if Next.restricted(self.state)then Next.line("hue",self.state)else table.concat(odds," · ")).."\nStore any result. Duplicate jars stack."
+ end
  local decision=confirming and q.itemId~=nil
  for _,node in ipairs({self.confirmTarget,self.confirmDelta,self.confirmStock,self.confirmWarning})do node.Visible=decision end
  if decision then
@@ -897,7 +914,7 @@ function View:refresh()
   for _,b in pairs(self.bars)do b.row.Visible=false end
   self.mainTab.Visible=false;self.secondaryTab.Visible=false
  end
- self:layout();self:updateGrid(0);self:paintPortrait()
+ self:paintReceiptHeader();self:layout();self:updateGrid(0);self:paintPortrait()
  if self.eatingReady and self.visual and self.portrait.Visible then
   self.fruitEating:start(self.visual,self.eatingReady,GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()))
   self.eatingReady=nil
@@ -1252,7 +1269,7 @@ function View:fitChrome(size)
   self.chromeScale.Scale=math.max(.1,math.min(1.2,(size.X-24)/848,(size.Y-24)/608))end
 end
 function View:focusIndex()return(self.chromeFocus and self.chromeFocus[self.tab])or 1 end
-local Promise={hue="One fruit, one step of colour.",charm="Charms are free.",materials="Finishes are free to switch.",toys="Toys are free to switch.",features="Grow and show features freely."}
+local Promise={hue="One jar, one step of colour.",charm="Charms are free.",materials="Finishes are free to switch.",toys="Toys are free to switch.",features="Grow and show features freely."}
 function View:layoutChrome()
  if self.layingOut then return end;self.layingOut=true
  self:fitChrome(self.shade.AbsoluteSize);self:showChrome(true)
@@ -1328,10 +1345,10 @@ function View:layoutChrome()
    local id=item.id;local counts2=counts;local reason=self:reason(id);local stock=(self.state.hueInventory or {})[id]or 0
    pane.name=names[id];pane.chip={"×"..stock,"plain"}
    pane.line=reason or(if id=="reset"then "Clears "..petName.."'s "..channelName(self.channel).." colour"else channelName(self.channel).." "..counts2[id].." of 5 → "..math.min(5,counts2[id]+1).." of 5")
-   pane.button=if id=="reset"then "Use Reset Hue"else "Use 1 fruit"
+   pane.button=if id=="reset"then "Use Reset Hue"else "Use 1 jar"
    pane.enabled=allowed and not self.intent.pending and reason==nil
   else
-   pane.line="No fruit yet. Hatch a Hue Egg."
+   pane.line="No jars yet. Hatch a Hue Egg."
   end
   if self.intent.status=="Retrying"then pane.button="Try again";pane.enabled=true end
  elseif self.tab=="charm"then
@@ -1496,7 +1513,7 @@ function View:layoutTransaction()
  local materialReceipt=self.page=="materialReceipt";local toyReceipt=self.page=="toyReceipt";local featureReceipt=self.page=="featureReceipt";local hueReceipt=self.page=="receipt";local paired=self.cancel.Visible or materialReceipt or toyReceipt or featureReceipt or hueReceipt
  local size=self.shade.AbsoluteSize;local width=math.max(1,math.min(if materialReceipt or(self.confirmation and not(size.Y<280))then 470 else 640,size.X-16));local short=size.Y<280;local pad=if short then 8 else 16;local w=width-pad*2
  local inlineHue=hueReceipt and size.Y<420
- if hueReceipt and self.state.pendingHueResult then self.title.Text=names[self.state.pendingHueResult.itemId]end
+ self:paintReceiptHeader()
  self.receiptDetail.Visible=false;self.receipt.TextXAlignment=if inlineHue then Enum.TextXAlignment.Left else Enum.TextXAlignment.Center
  Art.type(self.title,if short or inlineHue then "Body"else "Heading",short);Art.type(self.wallet,"Counter",short)
  local titleH=Art.textHeight(self.title,w-52,24);place(self.title,pad,5,w-52,titleH);place(self.closeButton,width-pad-44,4,44,44)

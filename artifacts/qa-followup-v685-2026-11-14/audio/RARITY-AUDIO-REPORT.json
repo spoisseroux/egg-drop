@@ -1,0 +1,317 @@
+{
+  "scope": "Matched actual Material body: Gloss/Matte Common versus Jelly Rare (active v1). Three matched actual Feature bodies: horns Common, claws Uncommon, wings Rare (authored tiers; feature flag remains off). Local comparisons only; no uploads.",
+  "model": "Existing PCM body speed1/gain1; actual goal_tick PCM sampled at constant runtime-equivalent PlaybackSpeed, mono centered. Linear interpolation models rate change; native resampler may differ.",
+  "opening_prefix": "Every original sample before existing receipt beat is bit exact; no final normalization.",
+  "loop_seam": "Not applicable: finite one-shot hatch cues, no looping or seam edit.",
+  "taste_limit": "Meters establish level and lifecycle compliance, not subjective listening approval.",
+  "active_tiers": {
+    "material": {
+      "jelly": "Rare",
+      "gloss": "Common",
+      "matte": "Common",
+      "standard": "Common",
+      "legacy_unknown": "Neutral"
+    },
+    "feature": {
+      "horns": "Common",
+      "claws": "Uncommon",
+      "wings": "Rare"
+    },
+    "hue_toy_unknown": "Neutral",
+    "companion": "Actual catalog base/rares only; earned/unknown Neutral"
+  },
+  "generator_sha256": "6ed87221cc3e43d85252b3c527a184de9dd9ae18ab19bf7518b9873d5c5dd6cf",
+  "policy_sha256": "55030231f19a309c1b5c0f71b999868c282900bf9243a704e3ee61d0a81ad6d7",
+  "source_sha256_unchanged": {
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-bear-v3-tightened-burst.wav": "5998797afeb0ebdbc9c9dab3740caba9f3845405355f085b0aa616087101f3c2",
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-toy-v3-tightened-burst.wav": "c41858a27077975886d37639a96721cb08b3d876a32c387d2561836d4772c8eb",
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-hue-v3-tightened-burst.wav": "4260f6bca6587f0b8ffbb823a9be5a9aa329dffa077964b1330df020b78a866a",
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-material-v3-tightened-burst.wav": "cd0d65aea7cdde9d876667277b9645b2be0366f82a6d19a3bbe5968feb903a13",
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-feature-v3-tightened-burst.wav": "c41858a27077975886d37639a96721cb08b3d876a32c387d2561836d4772c8eb",
+    "assets\\audio\\placeholder\\egg_drop_goal_tick.wav": "3b4ac78e541c435ada919a65bbab6fbe56e1fa2f938936d9b987bf3a9fbc89f1"
+  },
+  "measurements": {
+    "bear": {
+      "Common": {
+        "finish_sample_peak_dbfs": -17.217767604359494,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -17.217767604359494,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": []
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -17.217767604359494,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -17.217767604359494,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.75,
+            "speed": 1.122462048309373,
+            "gain": 0.026,
+            "sample_frames": 3421,
+            "end_seconds": 2.821270833333333
+          }
+        ]
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -17.217767604359494,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -17.217767604359494,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.77,
+            "speed": 1.0,
+            "gain": 0.035,
+            "sample_frames": 3839,
+            "end_seconds": 2.8499791666666665
+          },
+          {
+            "at_seconds": 2.91,
+            "speed": 1.189207115002721,
+            "gain": 0.035,
+            "sample_frames": 3229,
+            "end_seconds": 2.9772708333333333
+          }
+        ]
+      }
+    },
+    "toy": {
+      "Common": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": []
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.3000000000000003,
+            "speed": 1.122462048309373,
+            "gain": 0.026,
+            "sample_frames": 3421,
+            "end_seconds": 2.3712708333333334
+          }
+        ]
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.3200000000000003,
+            "speed": 1.0,
+            "gain": 0.035,
+            "sample_frames": 3839,
+            "end_seconds": 2.3999791666666668
+          },
+          {
+            "at_seconds": 2.46,
+            "speed": 1.189207115002721,
+            "gain": 0.035,
+            "sample_frames": 3229,
+            "end_seconds": 2.527270833333333
+          }
+        ]
+      }
+    },
+    "hue": {
+      "Common": {
+        "finish_sample_peak_dbfs": -14.927362956829981,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.926073238486792,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": []
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -14.927362956829981,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.926073238486792,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.3000000000000003,
+            "speed": 1.122462048309373,
+            "gain": 0.026,
+            "sample_frames": 3421,
+            "end_seconds": 2.3712708333333334
+          }
+        ]
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -14.927362956829981,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.926073238486792,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.3200000000000003,
+            "speed": 1.0,
+            "gain": 0.035,
+            "sample_frames": 3839,
+            "end_seconds": 2.3999791666666668
+          },
+          {
+            "at_seconds": 2.46,
+            "speed": 1.189207115002721,
+            "gain": 0.035,
+            "sample_frames": 3229,
+            "end_seconds": 2.527270833333333
+          }
+        ]
+      }
+    },
+    "material": {
+      "Common": {
+        "finish_sample_peak_dbfs": -15.326645452067913,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -15.325244441547841,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [],
+        "audition_true_peak_4x_dbfs": -4.767830051392476,
+        "audition_rms_dbfs": -21.099678369606615,
+        "mono_true_peak_4x_dbfs": -4.767830051392476,
+        "mono_max_rounding_error_lsb": 0.0
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -15.326645452067913,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -15.325244441547841,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.3000000000000003,
+            "speed": 1.122462048309373,
+            "gain": 0.026,
+            "sample_frames": 3421,
+            "end_seconds": 2.3712708333333334
+          }
+        ]
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -15.326645452067913,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -15.325244441547841,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.3200000000000003,
+            "speed": 1.0,
+            "gain": 0.035,
+            "sample_frames": 3839,
+            "end_seconds": 2.3999791666666668
+          },
+          {
+            "at_seconds": 2.46,
+            "speed": 1.189207115002721,
+            "gain": 0.035,
+            "sample_frames": 3229,
+            "end_seconds": 2.527270833333333
+          }
+        ],
+        "audition_true_peak_4x_dbfs": -4.767830051392476,
+        "audition_rms_dbfs": -21.099576378316804,
+        "mono_true_peak_4x_dbfs": -4.767830051392476,
+        "mono_max_rounding_error_lsb": 0.0
+      }
+    },
+    "feature": {
+      "Common": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [],
+        "audition_true_peak_4x_dbfs": -5.347879238611261,
+        "audition_rms_dbfs": -20.943349761812513,
+        "mono_true_peak_4x_dbfs": -5.347879238611261,
+        "mono_max_rounding_error_lsb": 0.0
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.3000000000000003,
+            "speed": 1.122462048309373,
+            "gain": 0.026,
+            "sample_frames": 3421,
+            "end_seconds": 2.3712708333333334
+          }
+        ],
+        "audition_true_peak_4x_dbfs": -5.347879238611261,
+        "audition_rms_dbfs": -20.94332491956105,
+        "mono_true_peak_4x_dbfs": -5.347879238611261,
+        "mono_max_rounding_error_lsb": 0.0
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "prefix_bit_exact": true,
+        "events": [
+          {
+            "at_seconds": 2.3200000000000003,
+            "speed": 1.0,
+            "gain": 0.035,
+            "sample_frames": 3839,
+            "end_seconds": 2.3999791666666668
+          },
+          {
+            "at_seconds": 2.46,
+            "speed": 1.189207115002721,
+            "gain": 0.035,
+            "sample_frames": 3229,
+            "end_seconds": 2.527270833333333
+          }
+        ],
+        "audition_true_peak_4x_dbfs": -5.347879238611261,
+        "audition_rms_dbfs": -20.943251289158983,
+        "mono_true_peak_4x_dbfs": -5.347879238611261,
+        "mono_max_rounding_error_lsb": 0.0
+      }
+    }
+  },
+  "output_sha256": {
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-common-matched.wav": "cd0d65aea7cdde9d876667277b9645b2be0366f82a6d19a3bbe5968feb903a13",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-common-matched-mono.wav": "951585cdd8f9f3f6ee3974db13506b6369163269f970f1dcaa9e68ac1db260ae",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-common-matched.mp3": "3c426e2916ef912709d50b89dfff450d82df2ea9471ba60dc3f311ed8f36a173",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-rare-matched.wav": "98d0804d4b4917de5a06a2b3fa5cfc70f6d50826e1b2b42584f435f179279161",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-rare-matched-mono.wav": "e5c684869b714e42ebe006b5dfd0ee83b35d82b5404cb46a2236239dcfc6dc91",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-rare-matched.mp3": "31d1a12dc9aa7cbc3380cc32a8c5de678f883c07b43d0588ec1318a1ed245d46",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-common-matched.wav": "c41858a27077975886d37639a96721cb08b3d876a32c387d2561836d4772c8eb",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-common-matched-mono.wav": "8110ee7b366230e51f1287dcfdf3d028c7535d0ed3c9295edcfebd82cda5e7ef",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-common-matched.mp3": "4e94fcc084beefcee2bb7b40e107066a79d05b2dd4340bae98e56a175c79ec0b",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-uncommon-matched.wav": "9db5d8ba620157b60746210dcfa860ac8cd5b392255b52fab9d70a5e005da1e4",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-uncommon-matched-mono.wav": "a5fffdcf6b30496e6bd6c794b2166253da6a163abda99141d7851a793651065b",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-uncommon-matched.mp3": "c6e1c2e38cb0c0f148616827050541dde6c0f3b0326719875d3c208ede3fc6bb",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-rare-matched.wav": "08c105d7cc590c69de6269c80e0879f8151f08e099bc830d3ee694633ddc53d7",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-rare-matched-mono.wav": "7408e00e24cb4de022be75cc7a87f9549c132bc1822de5bbc7596120e5ad9e03",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-rare-matched.mp3": "51d27a3fa229af3c45fd80a1c80735b8a97864caac9b21c0ee3d9a8c68938d59"
+  }
+}

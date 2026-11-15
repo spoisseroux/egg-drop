@@ -12,6 +12,7 @@ local IdleMotion=require(script.Parent.PetIdleMotion)
 local Factory=require(script.Parent.PetFactory)
 local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local DisplayPose=require(script.Parent.HatchDisplayPose)
+local RarityCue=require(script.Parent.HatchRarityCue)
 local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24;Cinematic.HeroDelay=.12
 local live=setmetatable({},{__mode="k"});local visibleOwner;local seen={};local seenOrder={};local drainInput
 Input.InputEnded:Connect(function(input)if drainInput==input then task.delay(.05,function()if drainInput==input then drainInput=nil end end)end end)
@@ -100,7 +101,13 @@ function Cinematic:watchAncestors()
 end
 function Cinematic:disconnectClock()if self.connection then self.connection:Disconnect();self.connection=nil end end
 function Cinematic:cue(name,pitch,volume)if self.audio and self:owned()and not self:reduced()then self.audio:play(name,pitch,volume,self.audioOwner)end end
-function Cinematic:stopAudio()if self.audio and self.audio.stopOwner and self.audioOwner then self.audio:stopOwner(self.audioOwner)end end
+function Cinematic:stopAudio()
+ if self.rarityState then self.rarityState:cancel()end
+ if self.audio and self.audio.stopOwner then
+  if self.audioOwner then self.audio:stopOwner(self.audioOwner)end
+  if self.accentOwner then self.audio:stopOwner(self.accentOwner)end
+ end
+end
 function Cinematic:clearHero()
  if self.heroVisual then self.heroVisual:destroy();self.heroVisual=nil end
  if self.heroViewport then self.heroViewport:Destroy();self.heroViewport=nil end
@@ -493,6 +500,14 @@ function Cinematic:step(dt)
   self.age+=math.max(0,dt);self.sampleAge=(self.sampleAge or 0)+dt
   if self.sampleAge>=1/30 then self.sampleAge=0;self:paint()end
   local sample=self.presentationSample
+  if self.rarityState then
+   local event=self.rarityState:step(self.age,sample and sample.receiptReady==true,
+    self.active and self.freshReveal and self.presented and not self:reduced()and not self.nativeFailed)
+   if event and self.audio and self:owned()then self.audio:play(RarityCue.Cue,event.speed,event.gain,self.accentOwner)end
+   if self.age>=self.rarityState.readyAt+RarityCue.AnswerEnd and not self.accentStopped then
+    self.accentStopped=true;if self.audio and self.audio.stopOwner then self.audio:stopOwner(self.accentOwner)end
+   end
+  end
   local epoch=self.epoch
   if sample and sample.receiptReady then self:complete();if self.epoch~=epoch then return end end
   if self.age>=(self.nativeEndAt or self.duration)then self:finishStatic()end
@@ -527,6 +542,9 @@ function Cinematic:play(result,onComplete,options)
  self.receiptKey=self.kind..":"..tostring(result.id);self.appearance=options.appearance;self.building=true;self.result=result;self.pet=Pets.byId[result.petId]or Pets.byId.pip
  self.splitAt=if result.rare then .95 else .75;self.duration=if result.rare then 1.70 else 1.50;self.age=0;self.sampleAge=0;self.onComplete=onComplete;self.onPresented=options.onPresented;self.audioOwner={}
  self.freshReveal=not options.skipIntro and not seen[self.receiptKey]
+ self.accentOwner={};self.accentStopped=nil
+ self.rarityState=if self.nativeDisplay then RarityCue.new(self.kind,result,if self.kind=="companion"then DisplayPose.BearReady else DisplayPose.ItemReady)else nil
+ self.frame:SetAttribute("HatchPresentationTier",if self.rarityState then self.rarityState.tier else "Neutral")
  self.reducedIntro=self.nativeDisplay and self.freshReveal and self:reduced()
  self.active=self.freshReveal and(not self:reduced()or self.reducedIntro);self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
  if not self.active then self.age=self.duration;self:paint();local epoch=self.epoch;self:handoff(true);if self.epoch~=epoch then return end end

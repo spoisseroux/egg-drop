@@ -53,14 +53,14 @@ return function(client,parent)
    local visual=view.visual;local body=visual.colors.body
    for stage=0,5 do
     assert(view:chooseNotch("rose",stage)and view.confirmation.itemId=="rose")
-    assert(view.confirmDelta.Text=="Rose 2 → 3"and view.title.Text=="Use one Rose fruit?"and view.action.Text=="Use one"and #sent==0)
+    assert(view.confirmDelta.Text=="Rose 2 → 3"and view.title.Text=="Use one Rose jar?"and view.action.Text=="Use one"and #sent==0)
     assert(view.visual==visual and visual.colors.body==body and state.petHues.pip.main.rose==2)
     local illustration=view.confirmJar;assert(illustration and illustration.Parent==view.body)
     assert(view:cancelConfirmation()and illustration.Parent==nil and not view.confirmJar)
    end
   end)
   test("No Items and Max do not send a use and zero never resets a full hue",function()
-   assert(view.bars.tide.value.Text=="No Tide fruit"and view.bars.iris.value.Text=="Iris is maxed")
+   assert(view.bars.tide.value.Text=="No Tide jar"and view.bars.iris.value.Text=="Iris is maxed")
    for stage=0,5 do assert(not view:chooseNotch("tide",stage)and not view:chooseNotch("iris",stage))end
    assert(#sent==0 and state.petHues.pip.main.iris==5)
   end)

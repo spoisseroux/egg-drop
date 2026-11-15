@@ -11,6 +11,12 @@ return function(client,parent,onlySize)
   return {revision=rev,status="Ready",nectar=32,inventoryMask=127,hues={},petHues=pets,hueInventory={rose=3,tide=2,citrus=1,iris=1,reset=2}}
  end
  local function settle()for _=1,3 do Run.Heartbeat:Wait()end end
+ local function settleReceipt()
+  local c=assert(view.itemReveal.cinematic);local deadline=os.clock()+12
+  repeat c:disconnectClock();Run.Heartbeat:Wait()until c.presented or os.clock()>deadline
+  assert(c.presented,"receipt layout needs actual ready geometry/fallback")
+  c:finishStatic();view:refresh();settle()
+ end
  local function visible(n)while n and n~=root do if n:IsA("GuiObject")and not n.Visible then return false end;n=n.Parent end;return n==root end
  local function fit(n)assert(n.TextFits,n:GetFullName().." text does not fit: "..n.Text)end
  local function check()
@@ -43,7 +49,7 @@ return function(client,parent,onlySize)
    end)
    test(tostring(size).." saved fixed jar receipt offers Store and Use now; no second grant",function()
     local s=state(i*1000+100);s.pendingHueResult={id="receipt-"..i,itemId="rose",quantity=1,inventoryAfter=3,revision=s.revision,catalogVersion=H.CatalogVersion}
-    view:open(s,"palette","puddle");settle();assert(view.page=="receipt"and view.receipt.Text:find("3 in inventory",1,true));assert(view.action.Text=="Store"and view.useNow.Visible)
+    view:open(s,"palette","puddle");settleReceipt();assert(view.page=="receipt"and view.receipt.Text:find("3 in inventory",1,true));assert(view.action.Text=="Store"and view.useNow.Visible)
     assert(view:useResult());settle();check();assert(view.assignment.pendingResultId==s.pendingHueResult.id);assert(view:choosePet("puddle")and view.action.Text=="Store");assert(view:chooseChannel("main"));settle();check();assert(view.confirmation.pendingResultId==s.pendingHueResult.id and view.action.Text=="Use one");view:cancelConfirmation();assert(view.page=="palette"and view.tab=="hue"and view.assignment.pendingResultId==s.pendingHueResult.id)
    end)
   end
@@ -56,12 +62,12 @@ return function(client,parent,onlySize)
    end
    root.Size=UDim2.fromOffset(900,720);settle();assert(view:chromeActive()and view.hueCards.rose:GetAttribute("CardStatus")=="0 of 5 · ×3")
   end)
-  test("short landscape Reset and fruit receipts keep name stock and adjacent Use now Store above the fold",function()
+  test("short landscape Reset and jar settled receipts keep name stock and adjacent Use now Store above the fold",function()
    root.Size=UDim2.fromOffset(733,307)
    for _,item in ipairs({"reset","rose"})do
     local s=state(4999);s.pendingHueResult={id="compact-receipt-"..item,itemId=item,quantity=1,inventoryAfter=3,revision=s.revision,catalogVersion=H.CatalogVersion}
-    view:open(s,"palette","puddle");settle();check()
-    assert(view.title.Text==(if item=="reset"then "Reset Hue"else "Rose fruit")and not view.receiptDetail.Visible)
+    view:open(s,"palette","puddle");settleReceipt();check()
+    assert(view.title.Text==(if item=="reset"then "Reset Hue"else "Rose jar")and not view.receiptDetail.Visible)
     assert(view.receipt.Text:find("in inventory",1,true)and view.receipt.AbsolutePosition.X>view.receiptArt.AbsolutePosition.X+view.receiptArt.AbsoluteSize.X)
     local jar=view.itemReveal.jar;assert(jar.AbsoluteSize.X>=63 and jar.AbsoluteSize.Y>=63)
     assert(view.useNow.Parent==view.card and view.useNow.AbsolutePosition.Y==view.action.AbsolutePosition.Y)

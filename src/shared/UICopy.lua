@@ -13,7 +13,7 @@ local Table={
  qa={coach={welcome="Match eggs. Hatch a friend.",sayHi="Say hi to {pet}"},shortfall="{count} more Stars needed",shortfallOne="{count} more Star needed",loading="Getting the preview ready…",retryPreview="Retry preview"},
  hatch={
   material={random="16 Stars · one unowned finish. No duplicates.",fixed="16 Stars · one guaranteed finish. No duplicates.",oddsPromise="No duplicates. Odds update with your collection.",nextPromise="No duplicates. Your next finish is shown above."},
-  display={wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
+  display={wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",material="Material for your pet",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
   footer={
    desktop="Give one a shake. The odds are on the label.",
    phone="The odds are on the label",
@@ -24,7 +24,7 @@ local Table={
   egg={
    toy={line="A toy to carry and chase",description="Something is rattling around in here. Hatches one toy your pet can carry and play with.",per="1 toy per egg"},
    material={line="A fresh new coat",description="Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.",per="1 finish per egg"},
-   hue={line="Fruit that shifts colour",description="It smells like fruit. Hatches one colour fruit to feed your pet.",per="1 fruit per egg"},
+   hue={line="A jar of colour",description="Hatches one pigment jar to change your pet's colour.",per="1 jar per egg"},
    feature={line="Horns, claws or wings",description="Something pointy is growing in here. Hatches one feature item to grow on any pet.",per="1 item per egg"},
   },
  },
@@ -202,7 +202,7 @@ local Table={
    companions={title="Companions",
     a={title="Bond hearts",line="Hearts show bond. Petting, rounds and Play dates grow it. Level up to unlock tricks."},
     b={title="Wardrobe",line="Hats and bits to wear, bought with Stars. Looks only."},
-    c={title="Customize",line="Feed colour fruit, add a charm, try a finish or hand over a toy."}},
+    c={title="Customize",line="Use colour jars, add a charm, try a finish or hand over a toy."}},
    quests={title="Quests",
     a={title="Daily quests",line="Three a day. Play rounds to fill the bars, then claim the Stars."},
     b={title="Stamp card",line="One stamp a day, just for stopping by. Each stamp pays Stars."},

@@ -3,6 +3,7 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local OddsText=require(Shared.OddsText);local NextItem=require(script.Parent.NextItemText);local Catalog=require(Shared.FeatureCatalog);local Pets=require(Shared.PetCatalog)
 local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
 local Reveal=require(script.Parent.HueItemReveal);local ItemArt=require(script.Parent.RewardItemArt)
+local Copy=require(Shared.UICopy)
 local Panel={};Panel.__index=Panel
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function label(parent,name,copy,role)
@@ -17,7 +18,8 @@ function Panel.new(parent,intent,options)
  local self=setmetatable({root=root,intent=intent,options=options or {},rows={},selected={}},Panel)
  self.title=label(root,"Heading","Features","Heading");self.note=label(root,"Description","Grow and show each feature independently.","Body")
  self.art=Art.frame(root,"FeatureResultArt","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(140,140),root.ZIndex+1);self.art.BackgroundTransparency=1
- self.reveal=Reveal.new(self.art,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,recipeId="feature",resultBuilder=ItemArt.create})
+ self.reveal=Reveal.new(self.art,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,recipeId="feature",resultBuilder=ItemArt.create,
+  onIdentityReady=function()self:paintReceiptIdentity();if self.options.identityChanged then self.options.identityChanged()end end})
  self.pool=label(root,"AvailableOdds","","Body");self.status=label(root,"Status","","Body")
  self.useNow=button(root,"UseNow","Use now",function()self:useResult()end)
  self.shop=button(root,"FeatureEggShop","Feature Egg · 32 Stars",function()if self.options.shop then self.options.shop()end end)
@@ -78,6 +80,14 @@ function Panel:useResult()
  if self.reveal:consumeSkipInput()or self.reveal:skip()then return false end
  if self.options.useNow then self.options.useNow(result);return true end;return false
 end
+function Panel:paintReceiptIdentity()
+ local result=self.state and self.state.pendingFeatureResult;if self.mode~="receipt"or not result then return end
+ local ready=self.reveal:identityReady(result)
+ self.title.Text=if ready then Catalog.ById[result.featureId].name.." found!"else Copy.get("hatch.display.wait")
+ self.note.Text=if ready then "Choose a pet to grow this feature."else Copy.get("hatch.display.line")
+ self.title:SetAttribute("AccessibleLabel",self.title.Text);self.title:SetAttribute("ResultIdentityReady",ready)
+ self.root:SetAttribute("ResultIdentityReady",ready)
+end
 function Panel:refresh(state,petId,mode,animate)
  if self.petId~=petId or self.mode~=mode then self.selected={};self.confirmation=nil end
  self.state,self.petId,self.mode=state or {},petId,mode;self.root.Visible=mode~=nil
@@ -86,11 +96,12 @@ function Panel:refresh(state,petId,mode,animate)
  if mode~="receipt"and self.reveal.resultId then self.reveal:clear()end
  if not mode then return end
  local receipt,buy=mode=="receipt",mode=="buy";local result=self.state.pendingFeatureResult;local confirming=self.confirmation~=nil
- self.title.Text=if receipt and result then Catalog.ById[result.featureId].name.." found!"elseif buy then "Feature Egg"else "Features"
- self.note.Text=if receipt then "Choose a pet to grow this feature."elseif buy then "32 Stars · one stored feature item. Fixed odds."else "Grown is what you earned. Shown is the size on this pet."
+ self.title.Text=if receipt then Copy.get("hatch.display.wait")elseif buy then "Feature Egg"else "Features"
+ self.note.Text=if receipt then Copy.get("hatch.display.line")elseif buy then "32 Stars · one stored feature item. Fixed odds."else "Grown is what you earned. Shown is the size on this pet."
  self.art.Visible=receipt or buy
  if receipt and result then self.reveal:show(result,animate==true)
  elseif buy and not self.art:FindFirstChild("FeatureEgg")then for _,n in ipairs(self.art:GetChildren())do n:Destroy()end;EggArt.create(self.art,"feature",UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.art.ZIndex+1,"FeatureEgg")end
+ self:paintReceiptIdentity()
  self.pool.Visible=buy;local odds={}
  for _,r in ipairs(Catalog.odds())do table.insert(odds,Catalog.ById[r.id].name.." · "..r.rarity.." · "..OddsText.format(r.probability))end
  -- Restricted players get the fixed next feature, never a roll (F1 policy): no odds list.
