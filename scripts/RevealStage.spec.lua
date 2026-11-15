@@ -83,6 +83,35 @@ return function(client,parent)
    assert(Pets.byId.pip.description=="Soft as a nap. Hugs first, asks questions never.")
    for _,pet in ipairs(Pets.collection)do assert(type(pet.description)=="string"and #pet.description>0 and utf8.len(pet.description)<=60,pet.id)end
   end)
+  test("QA R5: the pet is lit flat and bright with a soft glow behind it, and it waves every few seconds",function()
+   local L,W=Stage.Light,Stage.Wave
+   local function lum(c)return .2126*c.R+.7152*c.G+.0722*c.B end
+   assert(lum(L.ambient)>=.75 and lum(L.color)<=.45 and L.direction.Z<0 and math.abs(L.direction.Y)<math.abs(L.direction.Z),"a bright ambient and a soft light from the front, not a hard top light")
+   local rest=Stage.wavePose(-1,0,false);assert(rest.handR==W.rest and rest.handL==W.restL and not rest.waving,"at rest before the greeting")
+   local up=Stage.wavePose(W.raise+.01,5,false);assert(up.waving and up.handR>.9 and up.headRoll<0,"the arm goes up")
+   local lo,hi=math.huge,-math.huge
+   for t=W.raise,W.raise+W.wag,.01 do local pose=Stage.wavePose(t,t,false);lo=math.min(lo,pose.handR);hi=math.max(hi,pose.handR)end
+   assert(hi-lo>.35,"and the hand wags")
+   assert(not Stage.wavePose(W.raise+W.wag+W.lower+.1,0,false).waving and Stage.wavePose(W.period+W.raise+.01,0,false).waving,"it rests, then waves again")
+   local calm=Stage.wavePose(W.raise+.1,0,true);assert(not calm.waving and calm.handR==W.rest,"Reduced Motion holds the resting pose")
+   for t=0,8,.02 do
+    local pose=Stage.wavePose(t,t,false)
+    assert(pose.handR>=W.rest-.01 and pose.handR<=W.up+W.swing+.01 and pose.blink>0 and pose.blink<=1 and math.abs(pose.stretch)<.02 and pose.heroScale==1,"bounded at "..t)
+   end
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
+   local stage=Stage.show(host,{pet=Pets.byId.pip,tag="new",reduced=false,buttons={{id="meet",text="Meet Bear",primary=true}}})
+   table.insert(stages,stage);stage.connection:Disconnect();stage.connection=nil
+   assert(stage.viewport.Ambient==L.ambient and stage.viewport.LightColor==L.color and #stage.petGlow==L.glowDiscs,"the stage uses the soft light")
+   assert(not stage.petGlow[1].Visible or stage.petGlow[1].BackgroundTransparency==1,"no glow on the silhouette")
+   for _=1,6 do stage:step(.1)end
+   assert(stage.waveAt~=nil and stage.petGlow[1].Visible and stage.petGlow[1].BackgroundTransparency<1,"the glow comes up with the colour, and the wave starts on the greeting beat")
+   if stage.visual then
+    local waved=false
+    for _=1,60 do stage:step(.05);local pose=stage.visual.revealPose;if pose and pose.waving and pose.handR>.9 then waved=true end end
+    assert(waved,"the Bear waves on the stage")
+   end
+   stage:destroy();host:Destroy()
+  end)
   test("QA R4: a stage on screen leaves in its own gui (content into the dark, then the dark lifts); Play again's cover stays dark",function()
    local C=require(client.CelebrationKit)
    local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui

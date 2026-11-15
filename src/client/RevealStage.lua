@@ -58,6 +58,34 @@ end
 -- shell opens .95-1.18) before the entrance timeline starts. HatchDisplayPose.BearReady
 -- is LeadIn + InputAt, so the receipt unlocks as the buttons open.
 Stage.LeadIn=1.05;Stage.LeadOut=1.30
+-- QA R5 (2026-11-15): the pet is lit flat and bright from the front with a soft glow behind
+-- it, like in the garden (a hard top light under a dim ambient read as creepy), and it waves:
+-- one arm up, three little wags, every few seconds while the screen is up.
+Stage.Light={ambient=Color3.fromRGB(216,210,204),color=Color3.fromRGB(92,86,78),direction=Vector3.new(-.2,-.45,-1),glow=Color3.fromHex("#FFF3DA"),glowDiscs=14,glowAlpha=.34}
+-- (The hand turns about its own anchor: past about 1.8 it tucks behind the body, so the wave
+-- stays near 1.5 with the paw pad showing, the same right-hand fold the garden hello uses.)
+Stage.Wave={period=3.4,raise=.18,wag=.72,lower=.22,rest=.24,up=1.5,swing=.2,wags=3,restL=.16}
+-- Pure: the pet's reveal pose `t` seconds after its greeting beat (negative: not greeted
+-- yet) at stage clock `clock`. Reduced Motion holds the resting pose.
+function Stage.wavePose(t,clock,reduced)
+ local W=Stage.Wave
+ local pose={heroScale=1,stretch=0,eye=1,blink=1,headYaw=0,headRoll=0,handL=W.restL,handR=W.rest,ear=0,tail=0,waving=false}
+ if reduced or t==nil or t<0 then return pose end
+ local u=t%W.period;local lift,wag=0,0
+ if u<W.raise then local x=u/W.raise;lift=x*x*(3-2*x)
+ elseif u<W.raise+W.wag then lift=1;wag=math.sin((u-W.raise)/W.wag*math.pi*2*W.wags)
+ elseif u<W.raise+W.wag+W.lower then local x=1-(u-W.raise-W.wag)/W.lower;lift=x*x*(3-2*x)end
+ pose.waving=lift>0
+ pose.handR=W.rest+(W.up-W.rest)*lift+W.swing*wag*lift
+ pose.headRoll=-math.rad(6)*lift-math.rad(2)*wag*lift;pose.ear=math.rad(8)*lift;pose.eye=1-.06*lift
+ -- A breath and a blink, so the pet is never a statue between waves.
+ clock=clock or t
+ pose.stretch=.012*math.sin(clock*2.1)
+ local b=clock%3.7
+ if b<.15 then pose.blink=if b<.055 then 1-.94*(b/.055)elseif b<.09 then .06 else .06+.94*((b-.09)/.06)end
+ pose.tail=.10*math.sin(clock*9)*(.3+.7*lift)
+ return pose
+end
 -- QA R4 (2026-11-15): with an egg lead-in the stage opens by CelebrationKit's shared rule
 -- (the screen dims while the spotlight, the pool and the egg fade in), and stage:dismiss()
 -- leaves by it (the content sinks into the dark, then the dark lifts off the garden).
@@ -406,9 +434,14 @@ function Stage:build()
  for index=1,72 do
   local seg=fill(poolLayer,"Ring"..index,accent,0);seg.AnchorPoint=Vector2.new(.5,.5);seg.ZIndex+=2;self.ringSegs[index]=seg
  end
- -- Pet.
+ -- Pet, with a soft warm glow right behind it (nested discs, so no edge shows).
  local petLayer=layerFrame(root,"Pet",5)
  self.petLayer=petLayer
+ self.petGlow={}
+ for index=1,Stage.Light.glowDiscs do
+  local disc=fill(petLayer,"PetGlow"..index,Stage.Light.glow,1);disc.AnchorPoint=Vector2.new(.5,.5);disc.ZIndex=petLayer.ZIndex;Kit.corner(disc,999)
+  self.petGlow[index]=disc
+ end
  self:createPet()
  -- Sparkles: burst, idle twinkles and dust in the beam.
  local sparkLayer=layerFrame(root,"Sparkles",6)
@@ -502,7 +535,7 @@ function Stage:createPet()
  local holder=Kit.frame(self.petLayer,"PetHolder",nil,UDim2.new(),UDim2.fromOffset(10,10));holder.AnchorPoint=Vector2.new(.5,1)
  self.petHolder=holder
  local viewport=Kit.node("ViewportFrame",holder,{Name="PetHero3D",BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=holder.ZIndex+1,
-  Ambient=Color3.fromRGB(88,86,104),LightColor=Color3.fromRGB(255,240,212),LightDirection=Vector3.new(-.25,-1,-.4),ImageTransparency=1})
+  Ambient=Stage.Light.ambient,LightColor=Stage.Light.color,LightDirection=Stage.Light.direction,ImageTransparency=1})
  self.viewport=viewport;self.loaded=false
  local ok=pcall(function()
   local world=Instance.new("WorldModel");world.Name="PetStage";world.Parent=viewport;self.world=world
@@ -564,7 +597,7 @@ function Stage:placeCamera()
  local yaw,pitch=math.rad(shown),math.rad(8)
  local offset=Vector3.new(math.sin(yaw)*math.cos(pitch),math.sin(pitch),math.cos(yaw)*math.cos(pitch))*distance
  camera.CFrame=CFrame.lookAt(self.petCenter+offset,self.petCenter)
- self.viewport.LightDirection=CFrame.Angles(0,yaw,0):VectorToWorldSpace(Vector3.new(-.25,-1,-.4))
+ self.viewport.LightDirection=CFrame.Angles(0,yaw,0):VectorToWorldSpace(Stage.Light.direction)
 end
 
 function Stage:layout()
@@ -581,6 +614,11 @@ function Stage:layout()
  self:fitHeadline(L)
  -- Glow behind the pet.
  self.glow.Position=UDim2.fromOffset(L.petX,L.feet-L.petH*.5);self.glow.Size=UDim2.fromOffset(L.petBox*1.5,L.petBox*1.3)
+ for index,disc in ipairs(self.petGlow)do
+  local share=1-(index-1)/#self.petGlow*.84
+  disc.Position=UDim2.fromOffset(L.petX,L.feet-L.petH*.52);disc.Size=UDim2.fromOffset(L.petBox*1.18*share,L.petBox*1.12*share)
+ end
+ self.petGlowKey=nil
  -- Streak geometry (positions; the sweep moves the group).
  self.streaks.Size=UDim2.fromOffset(W*3,H*2)
  for _,part in ipairs(self.streakParts)do
@@ -873,6 +911,13 @@ function Stage:paint()
  local shade=if reduced then 1 else s.colour
  self.viewport.ImageColor3=Color3.new(0,0,0):Lerp(Color3.new(1,1,1),shade)
  if self.portrait then self.portrait.Visible=s.shown>0 end
+ -- The soft glow comes up as the silhouette takes its colour.
+ local glowKey=math.floor(shade*open*50+.5)
+ if self.petGlowKey~=glowKey then
+  self.petGlowKey=glowKey
+  local each=1-(1-Stage.Light.glowAlpha*glowKey/50)^(1/#self.petGlow)
+  for _,disc in ipairs(self.petGlow)do disc.BackgroundTransparency=1-each;disc.Visible=glowKey>0 end
+ end
  self.shownYaw=self.yaw+(if reduced then 0 else s.spinIn)
  self:placeCamera()
  -- Flash.
@@ -1037,6 +1082,7 @@ function Stage:step(dt)
   end
   if before<Stage.PopAt and self.age>=Stage.PopAt then self:pop()end
   if before<.56 and self.age>=.56 then
+   self.waveAt=self.clock
    if self.visual then pcall(function()self.visual:greet()end)end
    if self.options.voice~=false or self.lead then self:cue(self.pet.cue or "pet",1,.4)end
   end
@@ -1045,7 +1091,14 @@ function Stage:step(dt)
  self.sampleAge+=dt
  if self.visual and self.sampleAge>=1/30 then
   local elapsed=self.sampleAge;self.sampleAge=0
-  pcall(function()self.visual.reducedEffects=self:reduced();self.visual:update(elapsed)end)
+  -- The wave (QA R5): the visual's reveal pose, sampled on the stage clock.
+  if not self.waveAt and self:isSettled()then self.waveAt=self.clock end
+  pcall(function()
+   local reduced=self:reduced()
+   self.visual.reducedEffects=reduced
+   self.visual:setRevealPose(Stage.wavePose(if self.waveAt then self.clock-self.waveAt else -1,self.clock,reduced))
+   self.visual:update(elapsed)
+  end)
  end
  self:paint()
 end
@@ -1083,6 +1136,7 @@ function Stage:settle(quiet,pop)
  if self.lead then self:endLead()end
  self.age=math.max(self.age,if self.reducedStart then Stage.ReducedFade else Stage.Duration)
  if not was and self.visual then pcall(function()self.visual:greet()end)end
+ if not was then self.waveAt=self.clock end
  -- A skip past the colour burst still gets its popper (only an owned, first view).
  if not was and(not quiet or pop)then self:pop()end
  self:paint()
