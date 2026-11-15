@@ -13,7 +13,7 @@ return function(client)
 	local function test(name, run) run(); table.insert(cases, name) end
 
 	test("the card lists every wearable slot, then charm, finish and toy", function()
-		local rows = Inspect.rows("bear", nil)
+		local rows = Inspect.rows("pip", nil)
 		assert(#rows == #Wearables.Tabs + 3)
 		for index, tab in ipairs(Wearables.Tabs) do
 			assert(rows[index].key == tab.id and rows[index].label == tab.label and rows[index].empty and rows[index].value == UICopy.get("inspect.empty"))
@@ -22,11 +22,11 @@ return function(client)
 		assert(rows[#rows - 1].key == "finish" and rows[#rows - 1].value == "Standard")
 		assert(rows[#rows].key == "toy" and rows[#rows].empty)
 		-- A dressed pet: the first item the Bear sells shows by name in its slot.
-		local item = Wearables.forPet("bear").order[1]
+		local item = Wearables.forPet("pip").order[1]
 		assert(item, "the Bear sells no wearables")
 		local worn = {}
 		worn[item.keys[1]] = item.id
-		rows = Inspect.rows("bear", { wearables = worn, charmVisible = true, charmShape = "heart", finish = "gloss", toyId = "ball" })
+		rows = Inspect.rows("pip", { wearables = worn, charmVisible = true, charmShape = "heart", finish = "gloss", toyId = "ball" })
 		local seen = false
 		for index = 1, #Wearables.Tabs do
 			if rows[index].value == item.name and not rows[index].empty then seen = true end
@@ -35,7 +35,7 @@ return function(client)
 		assert(rows[#rows - 2].value == "Heart" and not rows[#rows - 2].empty)
 		assert(rows[#rows - 1].value == "Gloss" and rows[#rows].value == "Ball" and not rows[#rows].empty)
 		-- Unknown ids fall back, never error.
-		rows = Inspect.rows("bear", { wearables = { Hat = "no_such_hat" }, finish = "nope", toyId = "nope", charmShape = 5, charmVisible = true })
+		rows = Inspect.rows("pip", { wearables = { Hat = "no_such_hat" }, finish = "nope", toyId = "nope", charmShape = 5, charmVisible = true })
 		assert(rows[1].empty and rows[#rows - 1].value == "Standard" and rows[#rows].empty and rows[#rows - 2].value == "Snowflake")
 	end)
 

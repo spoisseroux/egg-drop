@@ -325,8 +325,8 @@ function Inspect:refresh()
  local player=identity.player
  local owner=if player.DisplayName~=player.Name then player.DisplayName.." @"..player.Name else "@"..player.Name
  local level=board:GetAttribute(Rules.BondAttribute)
- local line=UICopy.get("inspect.owner",{owner=owner})
- if type(level)=="number"then line=line.." · "..UICopy.get("inspect.bond",{level=level})end
+ local line=UICopy.get("inspect.owner",{name=owner})
+ if type(level)=="number"then line=line.." · "..UICopy.get("inspect.bond",{count=level})end
  if card.sub.Text~=line then card.sub.Text=line end
 end
 function Inspect:open(player)

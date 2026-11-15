@@ -322,7 +322,7 @@ local Table={
  -- QA v685 R6: another player's pet, as a read-only profile card, and the reward-free
  -- hello. The name slot shows the species until Names ships (v2).
  inspect={
-  prompt="Inspect",owner="{owner}'s pet",bond="Bond level {level}",
+  prompt="Inspect",owner="{name}'s pet",bond="Bond level {count}",
   slot={charm="Charm",finish="Finish",toy="Toy"},empty="Empty",hidden="Hidden",
   hello="Say hello",sent="Hello!",closer="Come closer",busy="Playing right now",off="Greetings off",wait="In a moment",
   gone="Pet moved on",close="Close",spin="Drag to turn",
