@@ -6,7 +6,7 @@ return function(client,parent)
     local view=Hatch.new(root,{play=function()end},function()return false end,function()error("no purchase or acknowledgment")end)
     local room=setmetatable({mode="Board",target="Room",shownPet={cue="pet"},audio={play=function()end},
         overlayOpen=function()return false end,updateControls=function()end,
-        transition={begin=function()return nil end,hide=function()end}},Room)
+        transition={begin=function()return nil end,hide=function()end,setContentCover=function()end}},Room)
     local covered=false
     view.ownsPresentation=function()return not room.busy end
     room.onPresentationOwnerChanged=function()view.cinematic:refreshOwner()end

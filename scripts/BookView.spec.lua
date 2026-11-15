@@ -150,7 +150,8 @@ return function(client,parent)
          assert(card.AbsolutePosition.X>=view.grid.AbsolutePosition.X-1 and card.AbsolutePosition.X+card.AbsoluteSize.X<=view.grid.AbsolutePosition.X+view.grid.AbsoluteSize.X+1,"card wider than the grid on "..entry.id)
          if cards then
           local picture=card:FindFirstChild("Picture");assert(picture and picture.AbsoluteSize.Y>=52,"48 px thumbnail well on "..entry.id)
-          assert(card:GetAttribute("Thumb")~=nil)
+          -- An item whose atlas cell is not uploaded yet (QA v685 R7: the Pocket Deck toy) draws its initial.
+          assert(card:GetAttribute("Thumb")~=nil or picture:FindFirstChild("Initial"),"a picture or the initial fallback on "..card.Name)
           if card:GetAttribute("Owned")then seenOwned=true else seenMissing=true;assert(card:GetAttribute("Thumb")=="atlas"or picture:FindFirstChild("Veil"),"missing items fade") end
           if card:GetAttribute("Thumb")=="atlas"then
            local thumb=picture:FindFirstChild("Thumb");assert(thumb and thumb.AbsoluteSize.X>=47,"atlas thumbnail is 48 px")

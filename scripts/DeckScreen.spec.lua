@@ -28,7 +28,7 @@ return function(client,parent)
   end)
   test("phone landscape 733x307 is the Compact phone layout; 1024x768 keeps the small scaled LCD",function()
    local g=Screen.resolve(Vector2.new(733,307),aspect)
-   assert(g.mode=="Compact"and g.phone and g.s==1 and g.board.h==307-80 and g.contentScale==1,"phone layout in real px (glass under the Roblox controls: H - 80)")
+   assert(g.mode=="Compact"and g.phone and g.s==1 and g.board.h==307-96 and g.contentScale==1,"phone layout in real px (glass under the Roblox controls: H - 96; QA v685 D1)")
    -- QA v2 R6.1: the phone handheld body around that LCD (the board size is unchanged).
    assert(g.body and g.body.x==4 and g.body.w==733-8 and g.body.y<g.glass.y and g.body.y+g.body.h>307,"phone handheld body")
    local small=Screen.resolve(Vector2.new(1024,768),aspect)

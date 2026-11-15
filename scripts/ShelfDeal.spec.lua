@@ -81,7 +81,7 @@ return function(client,parent)
        local text,tone=Wardrobe.tileStatus(pet,slot.id,rich,item.slot)
        assert(text==Deal.priceText(slot.price,item.price)and tone=="stars")
        local poor=Wardrobe.status(pet,slot.id,{wallet=slot.price-1,row={owned={},equipped={}},week=week})
-       assert(poor.kind=="short"and poor.price==slot.price and poor.text=="1 more Stars needed","the shortfall is against the shelf price")
+       assert(poor.kind=="short"and poor.price==slot.price and poor.text=="1 more Star needed","the shortfall is against the shelf price")
        local exact=Wardrobe.status(pet,slot.id,{wallet=slot.price,row={owned={},equipped={}},week=week});assert(exact.kind=="buy")
        -- Not this week (two weeks on the shelf never repeats in the same slot): full price.
        local off=Wardrobe.status(pet,slot.id,{wallet=1000,row={owned={},equipped={}},week=false})

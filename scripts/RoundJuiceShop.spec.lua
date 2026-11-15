@@ -14,10 +14,14 @@ return function(client,parent)
    local column=view.body.EggColumn;assert(column:GetAttribute("RecipeColumns")==1)
    assert(not column:FindFirstChild("Recipe_meadow"))
    local first=column.Recipe_toy;local g=view.shopGeom
+   -- QA v685 U3: phone rows shrink to fit the list window (never under 44 px), so the pitch
+   -- is read from the rows themselves and bounded by the authored one.
+   local pitch=if #order>1 then column["Recipe_"..order[2]].Position.Y.Offset-first.Position.Y.Offset else g.rowH+g.rowGap
+   assert(pitch>=first.Size.Y.Offset and pitch<=g.rowH+g.rowGap,"row pitch "..pitch)
    for index,id in ipairs(order)do
     local card=column["Recipe_"..id];fit(card.RecipeName);fit(card.Cost)
     assert(card.AbsoluteSize.X>=44 and card.AbsoluteSize.Y>=44)
-    assert(card.Position.Y.Offset==first.Position.Y.Offset+(index-1)*(g.rowH+g.rowGap),"rows keep one pitch")
+    assert(card.Position.Y.Offset==first.Position.Y.Offset+(index-1)*pitch,"rows keep one pitch")
     assert(card.Position.X.Offset+card.Size.X.Offset<=view.body.Size.X.Offset,"row border cropped")
     assert(card.Cost.Position.X.Offset+card.Cost.Size.X.Offset<=card.Size.X.Offset,"price outside row")
    end
