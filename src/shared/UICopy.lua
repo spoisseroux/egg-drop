@@ -14,6 +14,10 @@ local Table={
  hatch={
   material={random="16 Stars · one unowned finish. No duplicates.",fixed="16 Stars · one guaranteed finish. No duplicates.",oddsPromise="No duplicates. Odds update with your collection.",nextPromise="No duplicates. Your next finish is shown above."},
   display={wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",material="Material for your pet",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
+  -- Full-screen item reveal (QA v685 H2): the rarity banner over the item's name.
+  reveal={tier={Common="COMMON",Uncommon="UNCOMMON",Rare="RARE"},
+   kind={toy="TOY",hue="COLOUR JAR",material="FINISH",feature="FEATURE",item="ITEM"},
+   banner="{tier} {kind}",fresh="NEW {kind}",close="Close"},
   footer={
    desktop="Give one a shake. The odds are on the label.",
    phone="The odds are on the label",

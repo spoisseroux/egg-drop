@@ -28,8 +28,11 @@ return function(client,parent)
   for _,kind in ipairs({"toy","hue","material"})do
    test(kind.." headers and accessibility wait for the shared receipt beat",function()
     local s=state(kind,"disclosure-"..kind);view:open(s,kind,"pip");local reveal=adapter(kind);local c=reveal.cinematic;assert(c);waitPresented(c)
-    for _,age in ipairs({.7,1.25,2.15})do
+    -- The full-screen item stage follows the same beat: no name, no rarity word before it.
+    local stage=reveal.stage;assert(stage,"item reveal has no full-screen stage")
+    for _,age in ipairs({.7,1.25,1.6})do
      paint(c,age);assert(view.title.Text==Copy.get("hatch.display.wait")and view.title:GetAttribute("AccessibleLabel")==view.title.Text)
+     stage:step(0);assert(stage.name.Text==""and not stage.nameGroup.Visible and not stage.banner.Visible and stage.root:GetAttribute("ReceiptReady")==false,"stage disclosed early")
      assert(view.shade:GetAttribute("ResultIdentityReady")==false and reveal.parent:GetAttribute("ResultIdentityReady")==false)
      if kind~="hue"then local p=if kind=="toy"then view.toyPanel else view.materialPanel;assert(p.title.Text==view.title.Text)end
      local graphic=c:getItemGraphic();if graphic then for _,n in ipairs(graphic:GetDescendants())do
@@ -38,6 +41,9 @@ return function(client,parent)
     end
     c.age=2.2;c:paint();c:complete()
     assert(view.shade:GetAttribute("ResultIdentityReady")==true,"completion did not repaint outer title")
+    stage:step(0);stage:step(0)
+    assert(stage.name.Text==(if kind=="toy"then "BALL"elseif kind=="material"then "JELLY"else "ROSE JAR")and stage.nameGroup.Visible and stage.banner.Visible,"stage did not name the item at the receipt beat")
+    assert(stage.bannerText.Text==(if kind=="material"then "RARE FINISH"elseif kind=="toy"then "NEW TOY"else "NEW COLOUR JAR"))
     assert(view.title.Text==(if kind=="toy"then "Ball unlocked!"elseif kind=="material"then "Jelly unlocked!"else "Rose jar"))
     view:layoutTransaction();assert(view.title:GetAttribute("AccessibleLabel")==view.title.Text,"layout override lost title identity")
     view:close("fixture")

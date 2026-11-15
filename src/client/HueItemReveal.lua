@@ -1,5 +1,8 @@
 -- Item adapter for the same receipt-owned timeline used by companion hatches.
+-- QA v685 H2: when the host gives `options.stage` (HueEggView), the native scene plays on
+-- the full-screen HatchItemStage, which ends on the host's receipt actions.
 local Cinematic=require(script.Parent.HatchCinematic)
+local ItemStage=require(script.Parent.HatchItemStage)
 local JarArt=require(script.Parent.HueJarArt)
 local Identity=require(script.Parent.HatchIdentity)
 local Copy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
@@ -42,8 +45,32 @@ function Reveal:identityChanged()
  end
 end
 function Reveal:cancel()self.generation+=1;self:finish()end
+function Reveal:clearStage()
+ local stage=self.stage;self.stage=nil
+ if stage then
+  if self.cinematic and self.cinematic.borrowedStage==stage then self.cinematic.borrowedStage=nil end
+  stage:destroy()
+ end
+end
+-- Full-screen stage over the host. The cinematic keeps its one scene and clock; the stage
+-- borrows the scene and is painted from HatchCinematic:paint like the pet stage.
+function Reveal:openStage(recipe,result)
+ local host=self.options.stage;local c=self.cinematic
+ if not host or not c or not c.nativeScene or not host.parent or(self.options.stageFactory==nil and c.nativeScene.borrow==nil)then return false end
+ local ok,stage=pcall((self.options.stageFactory or ItemStage.show),host.parent,{
+  scene=c.nativeScene,kind=recipe,tier=if c.rarityState then c.rarityState.tier else "Neutral",result=result,instant=not c.active,
+  reduced=function()return c:reduced()end,owns=host.owns,cover=host.cover,zIndex=host.zIndex,
+  name=function()return if host.name then host.name(result)else nil end,
+  detail=function()return if host.detail then host.detail(result)else nil end,
+  actions=function()return if host.actions then host.actions(result)else {}end,
+  onSkip=function()self:skip()end,onClose=host.close,consumeSkipInput=function()return self:consumeSkipInput()end})
+ if not ok then warn("Item reveal stage could not open: "..tostring(stage));return false end
+ self.stage=stage;c.borrowedStage=stage
+ if c.presentationSample then stage:updateExternal(c.age,c.presentationSample)end
+ return true
+end
 function Reveal:clear()
- self.generation+=1;if self.cinematic then self.cinematic:destroy();self.cinematic=nil end
+ self.generation+=1;self:clearStage();if self.cinematic then self.cinematic:destroy();self.cinematic=nil end
  -- This dedicated illustration seat is exclusively owned by the adapter. It
  -- may still contain the preceding shop egg or sizing decoration when no
  -- cinematic has been built; retire those as well as the shared timeline.
@@ -67,6 +94,7 @@ function Reveal:show(result,animate)
  self.cinematic:play(presentation,function()if self.generation==generation and not self.destroyed then self.active=false;self:identityChanged()end end,
   {nativeDisplay=self.options.nativeDisplay~=false,kind=recipe,recipeId=recipe,hideLabels=true,resultBuilder=builder,skipIntro=not animate or not fresh,
    onPresented=function()if self.generation==generation and not self.destroyed then self:identityChanged()end end})
+ if self.options.nativeDisplay~=false then self:openStage(recipe,result)end
  self.showing=nil
  if self.options.nativeDisplay~=false and self.cinematic.getItemGraphic then
   self.jar=self.cinematic:getItemGraphic();self.whole,self.top,self.bottom,self.topArt,self.bottomArt=nil,nil,nil,nil,nil

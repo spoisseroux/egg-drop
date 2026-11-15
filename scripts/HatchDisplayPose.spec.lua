@@ -16,7 +16,10 @@ return function(client)
   end
  end)
  test("receipt unlock is separate from decorative tail and exact per payload",function()
-  for _,row in ipairs({{"companion",2.65,4.4},{"toy",2.2,3.1},{"hue",2.2,3.1}})do
+  -- 2026-11-15: the receipt unlocks with the name slam (pets 2.05 = RevealStage lead-in 1.05
+  -- + its 1.0 s input beat; items 1.65 = HatchItemStage's name slam).
+  assert(P.BearReady==require(client.RevealStage).LeadIn+require(client.RevealStage).InputAt)
+  for _,row in ipairs({{"companion",2.05,4.4},{"toy",1.65,3.1},{"hue",1.65,3.1}})do
    assert(not P.sample(row[2]-.001,row[1],false).receiptReady)
    local ready=P.sample(row[2],row[1],false)
    assert(ready.receiptReady and not ready.inputLocked and ready.decorativeActive)

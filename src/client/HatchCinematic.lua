@@ -501,9 +501,11 @@ function Cinematic:step(dt)
   if self.sampleAge>=1/30 then self.sampleAge=0;self:paint()end
   local sample=self.presentationSample
   if self.rarityState then
-   local event=self.rarityState:step(self.age,sample and sample.receiptReady==true,
-    self.active and self.freshReveal and self.presented and not self:reduced()and not self.nativeFailed)
-   if event and self.audio and self:owned()then self.audio:play(RarityCue.Cue,event.speed,event.gain,self.accentOwner)end
+   local liveCue=self.active and self.freshReveal and self.presented and not self:reduced()and not self.nativeFailed
+   -- Every note due this frame (the Rare burst is a shimmer and a fanfare together).
+   for _,event in ipairs(self.rarityState:due(self.age,sample and sample.receiptReady==true,liveCue))do
+    if self.audio and self:owned()then self.audio:play(event.cue or RarityCue.Cue,event.speed,event.gain,self.accentOwner)end
+   end
    if self.age>=self.rarityState.readyAt+RarityCue.AnswerEnd and not self.accentStopped then
     self.accentStopped=true;if self.audio and self.audio.stopOwner then self.audio:stopOwner(self.accentOwner)end
    end

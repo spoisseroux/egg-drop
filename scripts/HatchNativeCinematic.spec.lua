@@ -32,7 +32,11 @@ return function(client,parent)
    for _=1,14 do c:step(.2);c:disconnectClock()end
    local state=c:getPresentationState()
    assert(state.receiptReady and not state.inputLocked and state.decorativeActive and c.active)
-   assert(record.completed==1 and not c:skip()and stage:isSettled())
+   -- 2026-11-15: the pet stage is the full-screen RevealStage again. It holds its entrance
+   -- for the egg lead-in, then runs it on its own frame clock (1.14 s); step that here.
+   assert(stage.lead and stage.lead.done and stage:getStats().sharedScene and record.completed==1 and not c:skip())
+   for _=1,14 do stage:step(.1)end
+   assert(stage:isSettled())
    assert(not c:skipInputBegan({KeyCode=Enum.KeyCode.ButtonA})and not c:consumeSkipInput(),"ready A was incorrectly drained during decorative tail")
    assert(stage:confirm()and record.actions==1,"ready A/Enter did not activate exactly once")
    for _=1,10 do c:step(.2);c:disconnectClock()end

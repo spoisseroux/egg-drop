@@ -196,6 +196,66 @@ return function(client,parent)
    assert(view.ackIntent and view.ackIntent.intent=="exit"and view.ackIntent.starter==true)
    view:close("close");view.shade:Destroy();host:Destroy()
   end)
+  -- QA v685 H1 (2026-11-15): the native egg opening is the lead-in on this stage.
+  test("egg lead-in: the egg plays on the stage, the entrance waits, then runs; a skip settles with the popper",function()
+   local Pose=require(client.HatchDisplayPose)
+   assert(Stage.LeadIn+Stage.InputAt==Pose.BearReady,"the receipt unlocks as the buttons open")
+   local a,b,c=Stage.leadSample(0),Stage.leadSample(1.0),Stage.leadSample(Stage.LeadOut)
+   assert(a.glow==0 and a.flash==0 and a.egg==1 and not a.done and b.flash>.3 and b.egg==1 and not b.done and c.egg==0 and c.done and c.flash==0)
+   assert(Stage.leadSample(.5).glow<Stage.leadSample(.9).glow and Stage.leadSample(Stage.LeadIn).done)
+   local record={borrows=0,releases=0,bare=nil}
+   local function fakeScene()
+    local s={ready=true,root=Instance.new("Frame")}
+    function s:borrow(seat)record.borrows+=1;self.root.Parent=seat;return self end
+    function s:release(token)assert(token==self);record.releases+=1;self.root.Parent=nil end
+    function s:setBare(bare,hideHero)record.bare={bare,hideHero}end
+    function s:layout()end
+    function s:groundPoint()return Vector2.new(.5,.75)end
+    return s
+   end
+   local function open(extra)
+    local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
+    local options={pet=Pets.byId.pip,scene=fakeScene(),externalClock=true,owns=function()return true end,reduced=function()return false end,
+     buttons={{id="exit",text="Back"},{id="meet",text="Meet Bear",primary=true}}}
+    for key,value in pairs(extra or {})do options[key]=value end
+    local stage=Stage.show(host,options);table.insert(stages,stage)
+    if stage.connection then stage.connection:Disconnect();stage.connection=nil end
+    return stage,host
+   end
+   local skipped=0
+   local stage,host=open({onSkip=function()skipped+=1 end})
+   assert(record.borrows==1 and record.bare[1]==true and record.bare[2]==true,"the scene is borrowed bare with its own pet hidden")
+   local seat=stage.lead.seat;assert(seat.Visible and stage.root.BackgroundTransparency==0,"the egg sits on the black stage")
+   -- The egg's contact point lands on the floor pool under the spotlight.
+   local L=stage.L;local p,sz=seat.AbsolutePosition-host.AbsolutePosition,seat.AbsoluteSize
+   assert(near(p.X+sz.X*.5,L.petX,2)and near(p.Y+sz.Y*.75,L.feet,2),"egg seat off the pool")
+   for _=1,9 do stage:updateExternal(_*.1,{inputLocked=true,receiptReady=false});stage:step(.1)end
+   assert(stage.age==0 and not stage.lead.done and not stage:isSettled(),"the entrance ran during the lead-in")
+   assert(stage.cone[1].clip.Visible and stage.pool[1].node.Visible and stage.viewport.ImageTransparency==1,"spotlight and pool hold the egg; no pet yet")
+   stage:updateExternal(1.06,{inputLocked=true,receiptReady=false});assert(stage.lead.done)
+   stage:step(1/30);assert(stage.cone[1].clip.Visible and stage.pool[1].node.Visible,"the spotlight dropped out at the hand-off")
+   stage.loaded=true;stage:step(.1);stage:step(.1);assert(near(stage.age,.2+1/30,1e-6)and seat.Visible,"egg shells still clearing at 1.26")
+   stage:updateExternal(1.36,{inputLocked=true,receiptReady=false});stage:step(.1);assert(not seat.Visible)
+   for _=1,10 do stage:step(.1)end
+   assert(stage:isSettled()and stage.popAt~=nil and skipped==0,"natural run settles with its popper and no skip")
+   assert(stage.root:GetAttribute("InputLocked")==true)
+   stage:destroy();assert(record.releases==1,"destroy returns the scene")
+   -- A skip (the hatch clock jumps) lands settled, pops, and never calls onSkip back.
+   stage=open({onSkip=function()skipped+=1 end})
+   stage:updateExternal(.2,{inputLocked=true});stage:step(.1)
+   stage:updateExternal(4.4,{inputLocked=false,receiptReady=true})
+   assert(stage.lead.done and stage:isSettled()and stage.popAt~=nil and skipped==0 and not stage.lead.seat.Visible)
+   -- A press on the stage during the lead-in skips through the host once.
+   stage=open({onSkip=function()skipped+=1 end});stage:settle();assert(skipped==1 and stage:isSettled())
+   -- The press that skipped never also presses Meet.
+   local pressed=0;local draining=true
+   stage=open({consumeSkipInput=function()return draining end,onButton=function()pressed+=1 end});stage:settle(true)
+   assert(not stage:confirm()and pressed==0);draining=false;assert(stage:confirm()and pressed==1)
+   -- A reopen and Reduced Motion have no lead-in.
+   stage=open({instant=true});assert(stage.lead.done and not stage.lead.seat.Visible and stage:isSettled())
+   stage=open({reduced=function()return true end,fresh=true});stage:step(.05);assert(stage.lead.done and not stage.lead.seat.Visible)
+   stage:step(.2);assert(stage:isSettled()and stage.popAt==nil,"Reduced Motion has no popper")
+  end)
  end)
  for _,stage in ipairs(stages)do pcall(function()stage:destroy()end)end
  gui:Destroy()

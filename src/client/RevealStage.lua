@@ -16,6 +16,10 @@
 --   onButton(id) a settled button press; onSkip() a press that only settled
 --   audio, reduced() , owns(), instant (start settled), fresh (reduced first view)
 --   voice        false when the caller already played the pet voice
+--   scene        (QA v685 H1) the hatch's native egg scene (HatchDisplayScene) with
+--                externalClock: the egg wobbles, cracks and opens on this stage as the
+--                lead-in, then the stage's own entrance starts at Stage.LeadIn. The
+--                cinematic drives it through stage:updateExternal(age, sample).
 local RunService=game:GetService("RunService")
 local GuiService=game:GetService("GuiService")
 local Input=game:GetService("UserInputService")
@@ -33,6 +37,18 @@ Stage.Spin={degPerPixel=.5,phoneDegPerPixel=.6,cap=1080,tau=.55,stop=4,settleDel
  stick=360,flick=45,window=.08,whooshAt=360,whooshGap=.25}
 Stage.Headlines={new={"A NEW","LITTLE WONDER!"},rare={"RARE","DISCOVERY!"},owned={"ALREADY","OWNED!"},saved={"SAVED FOR","YOUR GARDEN!"}}
 Stage.BurstCount,Stage.TwinkleCount,Stage.DustCount=18,11,12
+-- Lead-in (QA v685 H1): seconds of the native egg opening (wobble .12-.94, crack .65,
+-- shell opens .95-1.18) before the entrance timeline starts. HatchDisplayPose.BearReady
+-- is LeadIn + InputAt, so the receipt unlocks as the buttons open.
+Stage.LeadIn=1.05;Stage.LeadOut=1.30
+-- Pure: the lead-in lanes at hatch age `t`. `glow` builds behind the egg, `flash` pops as
+-- the shell opens, `egg` is the egg scene's opacity (it leaves as the silhouette rises).
+function Stage.leadSample(t)
+ t=math.max(0,t or 0)
+ local glow=math.clamp(t/.95,0,1)
+ return {t=t,glow=glow*glow,flash=if t<.95 then 0 else .45*(1-math.clamp((t-.95)/.30,0,1)),
+  egg=1-math.clamp((t-1.12)/(Stage.LeadOut-1.12),0,1),done=t>=Stage.LeadIn}
+end
 
 local function ramp(t,start,duration)return math.clamp((t-start)/duration,0,1)end
 local function backOut(x)local c1=1.70158;local c3=c1+1;return 1+c3*(x-1)^3+c1*(x-1)^2 end
@@ -220,7 +236,6 @@ local function fill(parent,name,color,transparency)
 end
 
 function Stage.show(parent,options)
- if options and options.scene then return require(script.Parent.HatchReceiptStage).show(parent,options)end
  options=options or {}
  local pet=options.pet or Pets.byId.pip
  local self=setmetatable({options=options,parent=parent,pet=pet,age=0,yaw=Stage.Spin.home,omega=0,velocity=0,homed=true,
@@ -234,10 +249,13 @@ function Stage.show(parent,options)
  self.root=root
  self:build()
  self.reducedStart=self:reduced()
+ if options.scene then self:buildLead(options.scene)end
  -- A first view under Reduced Motion still gets its 150 ms cross-fade and cue;
  -- reopening or skipping lands on the settled frame without a sound.
  self.instant=options.instant==true and not(options.fresh==true and self.reducedStart)
  if self.instant then self.age=if self.reducedStart then Stage.ReducedFade else Stage.Duration end
+ -- No egg lead-in on a reopen, a skip or under Reduced Motion.
+ if self.lead and(self.instant or self.reducedStart)then self:endLead()end
  self:layout()
  table.insert(self.connections,root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end))
  self:bindInput()
@@ -245,13 +263,52 @@ function Stage.show(parent,options)
   if self.reducedStart then
    self:cue("reveal_shimmer",if self.kind=="rare"then 2^(3/12)else 1,.6*.72)
    if options.voice~=false then self:cue(pet.cue or "pet",1,.4)end
-  else self:cue("reveal_hush",1,.5)end
+  elseif not self.lead then self:cue("reveal_hush",1,.5)end
  end
  self:paint()
  self.connection=RunService.RenderStepped:Connect(function(dt)self:step(dt)end)
  return self
 end
 
+-- Lead-in: borrow the hatch's one native scene into a seat on this stage. The seat is
+-- placed so the egg's contact point sits on the floor pool, under the spotlight.
+function Stage:buildLead(scene)
+ local seat=Kit.frame(self.petLayer,"EggLeadIn",nil,UDim2.new(),UDim2.fromOffset(10,10))
+ seat.ZIndex=self.petLayer.ZIndex+3;seat.ClipsDescendants=false
+ self.lead={scene=scene,seat=seat,age=0,done=false,sample=Stage.leadSample(0)}
+ self.lead.token=scene:borrow(seat)
+ if scene.setBare then scene:setBare(true,true)end
+ table.insert(self.connections,seat:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:placeLead()end))
+end
+function Stage:placeLead()
+ local lead=self.lead;local L=self.L;if not lead or not L or lead.placing or self.destroyed then return end
+ lead.placing=true
+ -- The scene frames the whole hatch (the pet's hop and wave too), so the egg is small in
+ -- it; a seat larger than the pet box brings the egg up to about 60% of the pet's height.
+ local w,h=math.floor(L.petBox*2.4),math.floor(L.petBox*1.85)
+ lead.seat.Size=UDim2.fromOffset(w,h)
+ if lead.scene.layout then lead.scene:layout()end
+ local ground=if lead.scene.groundPoint then lead.scene:groundPoint()else Vector2.new(.5,.8)
+ lead.seat.Position=UDim2.fromOffset(math.floor(L.petX-ground.X*w),math.floor(L.feet-ground.Y*h))
+ lead.placing=false
+end
+function Stage:endLead()
+ local lead=self.lead;if not lead or lead.done then return end
+ lead.done=true;self.staticDone=false
+end
+-- The hatch clock. `sample` is HatchDisplayPose's; a jump (the hatch was skipped or lost
+-- its owner) lands on the settled frame.
+function Stage:updateExternal(age,sample)
+ local lead=self.lead;if self.destroyed or not lead then return end
+ local jumped=age-lead.age>.3 or(sample and sample.reduced==true)
+ lead.age=age;lead.sample=Stage.leadSample(age)
+ self.root:SetAttribute("InputLocked",sample~=nil and sample.inputLocked==true)
+ self.root:SetAttribute("ReceiptReady",sample~=nil and sample.receiptReady==true)
+ if not lead.done then
+  if jumped then self:settle(true,true)
+  elseif lead.sample.done then self:endLead();self:cue("reveal_hush",1,.5)end
+ elseif jumped and not self:isSettled()then self:settle(true,true)end
+end
 function Stage:reduced()
  local r=self.options.reduced
  if type(r)=="function"then return r()==true end
@@ -597,6 +654,7 @@ function Stage:layout()
   end
  end
  self:placeCamera()
+ self:placeLead()
  self:paint()
 end
 function Stage:fitHeadline(L)
@@ -719,19 +777,27 @@ function Stage:paint()
  if self.staticDone and not self.exiting and not self.boopAt and self:isSettled()then self:paintIdle();return end
  local s=self:currentSample();self.lastSample=s
  local reduced=s.reduced==true
+ -- Egg lead-in: the egg sits in a narrow spotlight on the black stage while it wobbles.
+ local lead=self.lead;local leading=lead~=nil and not lead.done
+ local ls=lead and lead.sample
+ if lead then
+  local show=not reduced and not self.instant and ls.egg>0 and not(lead.done and self:isSettled())
+  if lead.seat.Visible~=show then lead.seat.Visible=show end
+ end
  local idle=s.settled and not reduced and not self:reduced()
  local clock=self.clock
  local exit=self.exiting and math.clamp((clock-self.exiting.at)/.18,0,1)or 0
  local meetExit=self.exiting and self.exiting.kind=="meet"
  -- The stage fades to black over the egg scene (120 ms; 150 ms when reduced).
- self.root.BackgroundTransparency=1-(if reduced then s.fade else s.dark)
+ self.root.BackgroundTransparency=if lead then 0 else 1-(if reduced then s.fade else s.dark)
  -- "Play again" fades the stage out under the cover.
  local cover=if self.exiting and not meetExit then 1-exit else 1
  self.cover.BackgroundTransparency=cover;self.cover.Visible=cover<1
  -- Cone (25% -> 100% width) narrows on Meet; geometry is rewritten only when
  -- that width changes. Idle breathing is the group's UIScale (paintIdle).
  local width=(.25+.75*s.spot)*(1-.7*(if meetExit then exit else 0))
- local coneOn=s.t>=.12 or reduced
+ -- With an egg lead-in the spotlight and pool are already up, and stay up through the hand-off.
+ local coneOn=s.t>=.12 or reduced or lead~=nil
  local coneKey=if coneOn then math.floor(width*2000+.5)else -1
  local fade=if meetExit then .3*exit else 0
  if self.coneKey~=coneKey or self.coneFade~=fade then
@@ -742,7 +808,7 @@ function Stage:paint()
    half.light.BackgroundTransparency=math.min(1,half.base+fade)
   end
  end
- local poolOn=s.t>=.12 or reduced
+ local poolOn=s.t>=.12 or reduced or lead~=nil
  local poolKey=(if poolOn then 1 else 0)+(if s.colour<1 then 2 else 0)
  if self.poolKey~=poolKey then
   self.poolKey=poolKey
@@ -750,7 +816,7 @@ function Stage:paint()
   for _,entry in ipairs(self.shadow)do entry.node.Visible=poolOn end
   for _,seg in ipairs(self.ringSegs)do seg.Visible=poolOn;seg.BackgroundTransparency=if s.colour<1 then .5 else .05 end
  end
- self.glow.BackgroundTransparency=if s.colour>0 then .82-.08*s.colour else 1
+ self.glow.BackgroundTransparency=if s.colour>0 then .82-.08*s.colour elseif leading then 1-.2*ls.glow*(.8+.2*math.sin(clock*9))else 1
  -- Streaks sweep in from the left, three times brighter at first.
  self.streaks.Position=UDim2.fromOffset(L.petX-(1-s.streak)*L.W*1.4,L.feet-L.petH*.45)
  self.streaks.Visible=s.streak>0
@@ -775,7 +841,7 @@ function Stage:paint()
  self.shownYaw=self.yaw+(if reduced then 0 else s.spinIn)
  self:placeCamera()
  -- Flash.
- self.flash.BackgroundTransparency=1-s.flash
+ self.flash.BackgroundTransparency=1-math.max(s.flash,if lead and not reduced and not self.instant and not self:isSettled()then ls.flash else 0)
  self:paintConfetti()
  -- Burst sparkles.
  local cx,cy=L.petX,L.feet-L.petH*.55
@@ -866,9 +932,13 @@ function Stage:step(dt)
  if self.destroyed then return end
  if not self:owned()then
   if not self:isSettled()then self:settle(true)end
+  -- An unfocused window still fades the loaded pet in on the settled frame (no motion).
+  self.clock+=math.clamp(dt,0,.1);if not self.staticDone then self:paint()end
   return
  end
  dt=math.clamp(dt,0,.1);self.clock+=dt
+ -- The entrance waits at 0 while the egg lead-in plays (the hatch clock ends it).
+ if self.lead and not self.lead.done then self:paint();return end
  local before=self.age;self.age+=dt
  if not self.reducedStart and not self.instant then
   for _,beat in ipairs(Stage.Cues)do
@@ -881,7 +951,7 @@ function Stage:step(dt)
   if before<Stage.PopAt and self.age>=Stage.PopAt then self:pop()end
   if before<.56 and self.age>=.56 then
    if self.visual then pcall(function()self.visual:greet()end)end
-   if self.options.voice~=false then self:cue(self.pet.cue or "pet",1,.4)end
+   if self.options.voice~=false or self.lead then self:cue(self.pet.cue or "pet",1,.4)end
   end
  end
  if self:isSettled()then self:stepIdle(dt)end
@@ -920,13 +990,14 @@ function Stage:stepIdle(dt)
 end
 
 -- A press before the input opens jumps to the settled frame; it never acts.
-function Stage:settle(quiet)
+function Stage:settle(quiet,pop)
  if self.destroyed then return end
  local was=self:isSettled()
+ if self.lead then self:endLead()end
  self.age=math.max(self.age,if self.reducedStart then Stage.ReducedFade else Stage.Duration)
  if not was and self.visual then pcall(function()self.visual:greet()end)end
  -- A skip past the colour burst still gets its popper (only an owned, first view).
- if not was and not quiet then self:pop()end
+ if not was and(not quiet or pop)then self:pop()end
  self:paint()
  if not quiet and self.options.onSkip then self.options.onSkip()end
 end
@@ -980,6 +1051,8 @@ function Stage:bindInput()
    return
   end
   if key==Enum.KeyCode.Return or key==Enum.KeyCode.KeypadEnter or key==Enum.KeyCode.ButtonA then
+   -- The press that skipped the egg lead-in never also presses Meet.
+   if self.options.consumeSkipInput and self.options.consumeSkipInput()then return end
    if not self:isSettled()then self:settle();return end
    -- A selected stage button already receives the native gamepad press.
    if key==Enum.KeyCode.ButtonA and self:ownsSelection()then return end
@@ -1034,6 +1107,8 @@ function Stage:move(direction)
 end
 function Stage:activate(index,fromPointer)
  local entry=self.buttons[index];if not entry then return false end
+ -- The press that skipped the egg lead-in never also presses a button.
+ if self.options.consumeSkipInput and self.options.consumeSkipInput()then return false end
  if not self:isSettled()then self:settle();return false end
  if not entry.enabled then return false end
  if not fromPointer then Kit.pulse(entry.node)end
@@ -1077,7 +1152,8 @@ end
 -- Read-only QA view of the stage.
 function Stage:getStats()
  return{age=self.age,settled=self:isSettled(),yaw=self.yaw,omega=self.omega,renderMode=self.renderMode,loaded=self.loaded,
-  kind=self.kind,accent=self.accent,focus=self.focus,phone=self.L and self.L.phone,popped=self.popAt~=nil,confetti=self:confettiAlive()}
+  kind=self.kind,accent=self.accent,focus=self.focus,phone=self.L and self.L.phone,popped=self.popAt~=nil,confetti=self:confettiAlive(),
+  sharedScene=self.lead~=nil,externalClock=self.lead~=nil,leadDone=self.lead~=nil and self.lead.done,leadAge=self.lead and self.lead.age}
 end
 
 function Stage:destroy()
@@ -1089,6 +1165,7 @@ function Stage:destroy()
  local audio=self.options.audio;if audio and type(audio.stopOwner)=="function"then audio:stopOwner(self)end
  if self:ownsSelection()then GuiService.SelectedObject=nil end
  if self.visual then pcall(function()self.visual:destroy()end);self.visual=nil end
+ if self.lead then local lead=self.lead;self.lead=nil;if lead.scene and not lead.scene.destroyed then lead.scene:release(lead.token)end end
  if self.ring then self.ring.hide()end
  self.root:Destroy()
  if self.selectionNone then self.selectionNone:Destroy()end

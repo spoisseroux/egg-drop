@@ -174,6 +174,7 @@ function View.new(parent,intent,options)
  self.receipt=text(body,"SavedReceipt","","Reward");self.receipt.TextXAlignment=Enum.TextXAlignment.Center
  self.receiptDetail=text(body,"ReceiptDetail","Added to your items.","Body")
  self.useNow=button(body,"UseNow","Use now",function()self:useResult()end)
+ self:bindRevealStages()
  self.quote=text(body,"Confirmation","","Body")
  self.confirmTarget=text(body,"ConfirmTarget","","Action")
  self.confirmDelta=text(body,"ConfirmDelta","","Action")
@@ -189,6 +190,28 @@ function View.new(parent,intent,options)
  Art.watchTextPreference(shade,function()return shade.Visible end,function()self:layout()end)
  body:GetPropertyChangedSignal("CanvasPosition"):Connect(function()if self.shade.Visible then self:updateGrid(0)end end)
  shade.Destroying:Connect(function()self:destroy(true)end);return self
+end
+-- Full-screen item reveal (QA v685 H2 / H5). Each item reveal plays on HatchItemStage over
+-- this screen and ends on these same receipt buttons: the stage mirrors `source` and calls
+-- `act`, so the save, focus and first-toy rules below stay the only owners.
+function View:bindRevealStages()
+ local function hooks(kind,reveal,peer,usePeer,name,detail)
+  reveal.options.stage={parent=self.shade,owns=function()return not self.destroyed and self.shade.Visible end,
+   name=name,detail=detail,close=function()self:close("back")end,
+   actions=function(result)
+    -- The first Toy Egg offers "Give to <pet>" on the main button; otherwise Use now leads.
+    local give=kind=="toy"and self.options.firstToyReady~=nil and self.options.firstToyReady(result)==true
+    return {{source=peer(),primary=not give,act=usePeer},{source=self.action,primary=give,act=function()self:activate()end}}
+   end}
+ end
+ hooks("hue",self.itemReveal,function()return self.useNow end,function()self:useResult()end,
+  function(result)return names[result.itemId]end,function()return self.receipt.Text end)
+ hooks("toy",self.toyPanel.reveal,function()return self.toyPanel.useNow end,function()self.toyPanel:useResult()end,
+  function(result)local row=ToyCatalog.ById[result.toyId];return row and row.name end,function()return self.toyPanel.note.Text end)
+ hooks("material",self.materialPanel.reveal,function()return self.materialPanel.useNow end,function()self.materialPanel:useResult()end,
+  function(result)local row=MaterialCatalog.ById[result.finishId];return row and row.name end,function()return self.materialPanel.note.Text end)
+ hooks("feature",self.featurePanel.reveal,function()return self.featurePanel.useNow end,function()self.featurePanel:useResult()end,
+  function(result)local row=FeatureCatalog.ById[result.featureId];return row and row.name end,function()return self.featurePanel.note.Text end)
 end
 function View:isOpen()return self.shade.Visible end
 function View:openWardrobe()

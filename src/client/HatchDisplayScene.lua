@@ -141,7 +141,26 @@ function Scene:borrow(parent)
 end
 function Scene:release(token)
  if self.destroyed or token~=self.borrowToken then return false end
- self.borrowToken=nil;self.root.Parent=self.home;return true
+ self.borrowToken=nil;self.root.Parent=self.home;self:setBare(false);return true
+end
+-- A full-screen reveal stage (RevealStage for pets, HatchItemStage for items) draws its own
+-- backdrop, floor light and glow: `bare` drops this scene's panel, floor and cream pool, and
+-- `hideHero` keeps the emerging pet out (the stage owns the pet's silhouette entrance).
+function Scene:setBare(bare,hideHero)
+ if self.destroyed then return end
+ self.bare=bare==true;self.heroHidden=self.bare and hideHero==true
+ self.root.BackgroundTransparency=if self.bare then 1 else 0
+ self.floor.Transparency=if self.bare then 1 else 0;self.pool.Transparency=if self.bare then 1 else 0
+ self.root:SetAttribute("Bare",self.bare)
+ if self.sample then self:render(self.sample)end
+end
+-- Where the egg's contact point (the world origin) lands in this scene's rect, 0..1.
+function Scene:groundPoint()
+ local size=self.root.AbsoluteSize;local aspect=math.max(.4,size.X/math.max(1,size.Y))
+ local tangent=math.tan(math.rad(self.stageCamera.FieldOfView*.5))
+ local v=self.stageCamera.CFrame:PointToObjectSpace(Vector3.zero)
+ if v.Z>=0 then return Vector2.new(.5,.8)end
+ return Vector2.new(.5+v.X/(-v.Z*tangent*aspect*2),.5-v.Y/(-v.Z*tangent*2))
 end
 function Scene:layout()
  if self.destroyed then return end
@@ -267,7 +286,7 @@ function Scene:render(sample)
  if self.destroyed then return end
  self.sample=sample;self.age=sample.age
  local show=sample.heroAlpha
- self.heroView.ImageTransparency=1-show;self.itemGui.GroupTransparency=1-show
+ self.heroView.ImageTransparency=if self.heroHidden then 1 else 1-show;self.itemGui.GroupTransparency=1-show
  if self.visual then
   local visual=self.visual;visual:setRevealPose(sample);visual.origin=Vector3.zero;visual.greeting=2;visual:update(0)
   local ps={};for _,entry in ipairs(visual.pieces)do if entry.role~="charm"then table.insert(ps,entry.part)end end

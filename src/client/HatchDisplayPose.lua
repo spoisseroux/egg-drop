@@ -1,5 +1,8 @@
 -- Pure receipt display timing. One host clock; no tasks, assets or rewards.
-local Pose={BearDuration=4.4,ItemDuration=3.1,BearReady=2.65,ItemReady=2.2}
+-- 2026-11-15 reveal redesign: the receipt unlocks with the name slam. Pets hand off to the
+-- full-screen RevealStage at RevealStage.LeadIn (1.05) and its buttons open 1.0 s later; items
+-- slam their name at 1.65 (HatchItemStage). The authored 4.4 s / 3.1 s sounds are unchanged.
+local Pose={BearDuration=4.4,ItemDuration=3.1,BearReady=2.05,ItemReady=1.65}
 local function smooth(a,b,t)local u=math.clamp((t-a)/(b-a),0,1);return u*u*(3-2*u)end
 local function pulse(t,a,b)return if t>a and t<b then math.sin(math.pi*(t-a)/(b-a))else 0 end
 function Pose.sample(age,kind,reduced)
@@ -31,9 +34,9 @@ function Pose.sample(age,kind,reduced)
   shellAlpha=1-smooth(.98,1.18,t),capAlpha=1-smooth(.96,1.10,t),shellScale=1-.8*smooth(.95,1.18,t),opening=smooth(.95,1.18,t),
   rock=math.rad(-5)*pulse(t,.12,.31)+math.rad(8)*pulse(t,.34,.62)+math.rad(10)*pulse(t,.69,.94),
   crack=if t>=.65 and t<.95 then smooth(.65,.93,t)else 0,
-  receiptAlpha=smooth(if companion then 2.40 else 1.95,ready,t),
+  receiptAlpha=smooth(ready-.25,ready,t),
   toyTilt=math.rad(12)*math.exp(-u*2)*math.sin(u*math.pi*4)*(1-smooth(2.05,2.20,t)),toyYaw=math.rad(18)*smooth(1.50,2.20,t),
-  duck=t>=.95 and t<(if companion then 2.65 else 2.2),reduced=false}
+  duck=t>=.15 and t<ready+.45,reduced=false}
 end
 function Pose.settled(kind,reduced)return Pose.sample(if reduced then .15 elseif kind=="companion"then 4.4 else 3.1,kind,reduced)end
 return table.freeze(Pose)
