@@ -30,7 +30,9 @@ function Moonpond.new(parent,options)
 end
 function Moonpond:setZIndex(z)
  self.root.ZIndex=z
- for _,f in ipairs(self.root:GetDescendants())do if f:IsA("GuiObject")then f.ZIndex=z+1 end end
+ -- Board field (Global ZIndex): the pond shares the pattern's depth so it never rises above the balls.
+ local inner=if self.options.field then z else z+1
+ for _,f in ipairs(self.root:GetDescendants())do if f:IsA("GuiObject")then f.ZIndex=inner end end
 end
 -- caseRect is in this root's local physical pixels, not absolute screen pixels.
 function Moonpond:resize(size,caseRect)

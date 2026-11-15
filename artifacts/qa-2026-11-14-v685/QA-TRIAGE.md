@@ -9,7 +9,7 @@ Source: `notes.md` (copy of `obsidian-spencer/roblox qa pass nov 14 v2.md`) and 
    - He wants something far more exciting: Smash-like but different, or a loot-box-style reveal (rarity glow building up, a beam or colour by rarity, a card flip or burst, the item name slamming in, particles).
    - It must apply to Toy, Hue, Material and Feature items.
 3. **Rarity sounds.** Each rarity needs its own sound. Revision 2 of the audio (`3eb4be4`) is unconfirmed; he only heard that Common and Rare "are the same". Rework this as part of H2, so each rarity also gets its own colour, light and particles.
-4. **(225718) Remove the second hatch confirmation.** Hatch eggs → a "Toy Egg / Hatch · 8 Stars" popup is a new extra step that Codex added. **Remove it.** The Hatch button in Hatch eggs already shows the price. The popup also prints the egg name twice and its info line is clipped.
+4. **DONE (unpublished).** **(225718) Remove the second hatch confirmation.** Hatch eggs → a "Toy Egg / Hatch · 8 Stars" popup is a new extra step that Codex added. **Remove it.** The Hatch button in Hatch eggs already shows the price. The popup also prints the egg name twice and its info line is clipped.
 5. **(225745) Toy receipt.** "Squeaky Carrot unlocked!", then Store / Give to Bear. Fold this into H2's reveal so the reveal ends with the Give/Store buttons.
 
 ## D: Pocket Deck on phone (top priority)
@@ -18,7 +18,7 @@ Source: `notes.md` (copy of `obsidian-spencer/roblox qa pass nov 14 v2.md`) and 
    - The handheld is too big: the top edge and the POCKET DECK logo sit under Roblox's top-left buttons.
    - On first open the player camera is visible rotating behind the deck, and the camera sits inside the avatar's head.
 2. **(225303) The deck looks different on a later open.** A different scale or layout than the first open. **Use one layout every time.**
-3. **(225303) The "moon" theme.** The Moonpond background, from the Deck style background Codex added, covers the balls at the bottom of the board, which is a draw-order bug. Fix the layering; consider whether the theme should stay at all.
+3. **DONE (unpublished).** **(225303) The "moon" theme.** The Moonpond background, from the Deck style background Codex added, covers the balls at the bottom of the board, which is a draw-order bug. Fix the layering; consider whether the theme should stay at all.
 
 ## U: menus and HUD
 

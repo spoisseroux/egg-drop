@@ -272,7 +272,7 @@ function Board:configure(id,theme)
  local tone=Backdrop.boardTone(theme)
  if self.id==id and self.tone==tone then return false end
  self.id,self.tone=id,tone;self.size=nil
- if id=="moonpond"and not self.moonpond then self.moonpond=Moonpond.new(self.root,{field=true})end
+ if id=="moonpond"and not self.moonpond then self.moonpond=Moonpond.new(self.root,{field=true});self.moonpond:setZIndex(self.z or self.root.ZIndex)end
  if self.moonpond then self.moonpond.root.Visible=id=="moonpond"end
  local fill=1-Backdrop.BoardOpacity
  for _,p in ipairs(self.pieces)do
