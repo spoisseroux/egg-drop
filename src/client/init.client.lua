@@ -2777,7 +2777,7 @@ do
   return clientUI.firstSpend.stage=="receipt"and clientUI.firstSpend.proof~=nil and result~=nil and clientUI.firstSpend.proof.id==result.id
  end
  clientUI.hueView.options.firstToyGive=function()
-  return clientUI.firstSpend:give(board:GetAttribute("CompanionId")or "pip")
+  return clientUI.firstSpend:give(board:GetAttribute("CompanionId")or(Pets.active[1]or Pets[1]).id)
  end
  clientUI.hueView.toyPanel.options.storeFirst=function(result)
   if not clientUI.hueView.options.firstToyReady(result)then return false end

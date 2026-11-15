@@ -4,7 +4,9 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Toys=require(Shared.ToyCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Guide={};Guide.__index=Guide
-local function ownsStarter(state)return Eggs.isOwned(state.inventoryMask or 0,"pip")end
+local Pets=require(Shared.PetCatalog)
+-- The starter is the catalogue's first active pet (never a pet id written here).
+local function ownsStarter(state)return Eggs.isOwned(state.inventoryMask or 0,(Pets.active[1]or Pets[1]).id)end
 local function ownedToys(state)
 	local n=0;for _,id in ipairs(Toys.PaidOrder)do if Toys.owns(state.toyUnlocks,id)then n+=1 end end;return n
 end
