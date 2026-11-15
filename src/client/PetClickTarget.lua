@@ -29,6 +29,40 @@ function Target.attach(pet)
  return handle
 end
 
+-- QA v685 W1: a forgiving screen-space tap. The box above is still hard to hit at low
+-- angles and from far away, so a tap or click that lands within a radius of the pet's
+-- projected centre counts too. The radius is the box's on-screen size plus a margin,
+-- between TapMin and TapMax px. It follows the ClickDetector's gate: when the detector
+-- is off (MaxActivationDistance 0) or the avatar is out of its reach, nothing happens.
+Target.TapMin=56
+Target.TapMax=140
+Target.TapMargin=1.25
+-- Pure: the tap radius in px for a box that projects to `px` px of radius.
+function Target.tapRadius(px)return math.clamp((px or 0)*Target.TapMargin,Target.TapMin,Target.TapMax)end
+-- Pure: does a tap at `tap` (Vector2) hit a pet projected at `centre` (Vector2)?
+function Target.tapHits(tap,centre,px)return(tap-centre).Magnitude<=Target.tapRadius(px)end
+function Target.watch(handle,onTap)
+ local UserInputService=game:GetService("UserInputService")
+ local function try(x,y,processed)
+  if processed or handle.click.MaxActivationDistance<=0 or not handle.part.Parent then return end
+  local camera=workspace.CurrentCamera
+  local player=game:GetService("Players").LocalPlayer
+  local root=player and player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+  local centre=handle.part.Position
+  if not camera or not root or(root.Position-centre).Magnitude>handle.click.MaxActivationDistance then return end
+  local point,onScreen=camera:WorldToViewportPoint(centre)
+  if not onScreen or point.Z<=0 then return end
+  local px=handle.part.Size.Magnitude/2/point.Z*(camera.ViewportSize.Y/2)/math.tan(math.rad(camera.FieldOfView/2))
+  if Target.tapHits(Vector2.new(x,y),Vector2.new(point.X,point.Y),px)then onTap()end
+ end
+ local touch=UserInputService.TouchTapInWorld:Connect(function(position,processed)try(position.X,position.Y,processed)end)
+ local mouse=UserInputService.InputBegan:Connect(function(input,processed)
+  if input.UserInputType~=Enum.UserInputType.MouseButton1 then return end
+  local at=UserInputService:GetMouseLocation();try(at.X,at.Y,processed)
+ end)
+ handle.part.Destroying:Connect(function()touch:Disconnect();mouse:Disconnect()end)
+end
+
 local function snap(value)return math.floor(value/Target.Quantum+.5)*Target.Quantum end
 -- Pure: the box size for rig bounds of `size`.
 function Target.boxSize(size)

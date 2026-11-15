@@ -31,7 +31,7 @@ Source: `notes.md` (copy of `obsidian-spencer/roblox qa pass nov 14 v2.md`) and 
 
 ## W: world
 
-1. **(225909) Tapping the pet** is still hard at some places and angles. Widen the pick: a screen-space radius check around the pet's projected position, plus a bigger hit capsule.
+1. **DONE (unpublished).** **(225909) Tapping the pet** is still hard at some places and angles. Widen the pick: a screen-space radius check around the pet's projected position, plus a bigger hit capsule.
 2. **(230026) The lamppost** blocks the end of the first bridge. Move it off the path.
    - **Not done (2026-11-14 night).** Found: it is lamp 3, light at Studio (-9, 9, 23), 2 studs off the bridge centre line (bridge z = 21). The post is baked into the world v7 chunk meshes, so it cannot move at runtime. The fix is the existing mechanism: add lamp 3 to `LAMP_MOVES` in `scripts/build_world_v7_chunks.py` (about +4 studs in z onto the grass), move `HollowWorldLayout.Lamps[3]` with it, rebuild and re-upload the chunks. Left alone because those build scripts and the .blend hold uncommitted path-collision work.
 

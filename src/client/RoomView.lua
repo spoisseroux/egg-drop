@@ -461,7 +461,15 @@ function Room:showPet(pet)
 	-- not only the small body part; the box goes with the pet's model.
 	local target = PetClickTarget.attach(self.pet)
 	local click = target.click
-	click.MouseClick:Connect(function(who) if who == Players.LocalPlayer and self.petClick == click then self:interactPet() end end)
+	-- QA v685 W1: the detector and the screen-space tap radius share one guarded entry,
+	-- so a tap that lands on both counts once.
+	local lastTap=0
+	local function tapPet()
+		if self.petClick ~= click or os.clock()-lastTap<.35 then return end
+		lastTap=os.clock();self:interactPet()
+	end
+	click.MouseClick:Connect(function(who) if who == Players.LocalPlayer then tapPet() end end)
+	PetClickTarget.watch(target,tapPet)
 	self.petPrompt, self.petClick, self.petTarget = prompt, click, target
 	if not self.reduceEffects()and not dock then self.pet:greet() end
 	self.heading.Text = "Sprout Hollow · "..pet.name.." · "..Pets.collectionSummary(owned,trials,self.progress:GetAttribute("InventoryMask"))
