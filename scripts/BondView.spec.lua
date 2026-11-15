@@ -167,7 +167,11 @@ return function(client,parent)
    focus:setBond({name="Bear",bond=Pips.info({[petId]=50},petId,Catalog)})
    assert(focus.bondCard.Visible and focus.bondName.Text=="Bear"and focus.bondCard:GetAttribute("BondLevel")==2)
    assert(focus.bondLevel.Text==UICopy.get("bond.short",{count=2}))
-   assert(focus.bondCard.AnchorPoint==Vector2.new(1,0)and focus.bondCard.Active==false,"top right, takes no input")
+   -- Since 70e0440 the card sits in the shared 48 px focus row (FocusRow: Back on the left,
+   -- the bond card then the pick-up button on the right), placed from its top left corner.
+   local card=focus.bondCard
+   assert(card.Active==false and card.AnchorPoint==Vector2.zero and card.Position.Y.Offset==12 and card.Size.Y.Offset==48,"in the focus row, takes no input")
+   assert(card.Position.X.Offset+card.Size.X.Offset==focus.root.AbsoluteSize.X-12 and card.Position.X.Offset>=focus.back.Position.X.Offset+focus.back.Size.X.Offset+8,"top right, clear of Back")
    local pips=focus.bondPips
    assert(pips.root.Position.X.Offset+pips.width<=focus.bondCard.Size.X.Offset-12,"the pips are inside the card")
    assert(pips.root.Position.Y.Offset+pips.height<=focus.bondCard.Size.Y.Offset,"the bar is inside the card")

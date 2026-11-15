@@ -92,7 +92,9 @@ return function(client,parent)
    local depth=Kit.shadeDepth()
    assert(How.open("quests")and How.isOpen()and How.openId()=="quests");settle()
    local panel=How.panel();assert(panel and panel:GetAttribute("HelpId")=="quests")
-   assert(panel:FindFirstChild("Card_b")and panel.Card_b:FindFirstChild("StampSample"),"the stamp card is explained with a sample card")
+   -- Since 70e0440 the cards live in the panel's scrolling body ("Cards"), under a fixed footer.
+   local stampCard=panel:FindFirstChild("Card_b",true)
+   assert(stampCard and stampCard.Parent:IsA("ScrollingFrame")and stampCard:FindFirstChild("StampSample"),"the stamp card is explained with a sample card")
    assert(Kit.shadeDepth()==depth+1)
    for _,node in ipairs(panel:GetDescendants())do
     if node:IsA("TextLabel")and node.Visible and node.Text~=""then assert(node.TextSize>=12,"text floor: "..node:GetFullName())end

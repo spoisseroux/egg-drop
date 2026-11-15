@@ -73,7 +73,11 @@ return function(client,parent)
    local a,b=targets[i],targets[j]
    if not a:IsDescendantOf(b)and not b:IsDescendantOf(a)then
     local ap,as=clipped(a);local bp,bs=clipped(b)
-    local overlap=ap.X<bp.X+bs.X-.5 and bp.X<ap.X+as.X-.5 and ap.Y<bp.Y+bs.Y-.5 and bp.Y<ap.Y+as.Y-.5
+    -- A target clipped away entirely (a row scrolled wholly under the fold: the third quest
+    -- on a 568 x 320 phone since the sheets start 16 px lower, QA v685 D1) has no area left
+    -- to touch, so it cannot overlap anything.
+    local overlap=as.X>.5 and as.Y>.5 and bs.X>.5 and bs.Y>.5
+     and ap.X<bp.X+bs.X-.5 and bp.X<ap.X+as.X-.5 and ap.Y<bp.Y+bs.Y-.5 and bp.Y<ap.Y+as.Y-.5
     assert(not overlap,label..": targets overlap "..a.Name.." / "..b.Name)
    end
   end end
@@ -409,21 +413,32 @@ return function(client,parent)
     local grips=pick.overlay.rim:FindFirstChild("Grips")
     assert(grips and grips.Visible==(mg>=24),label.." grips")
     pick:hide()
+    -- Since 70e0440 phone results are drawn in place (DeckResultsInPlace): the device stays,
+    -- and the payout, goals and actions fill the LCD beside the board. The old 2.3 sheet
+    -- (s:view(): Leave / Replay along the bottom) is no longer what the client opens; the
+    -- client passes deck:resultsView(). Focus rules are pinned in InPlaceResults.spec.
     res:show({outcome="clear",title="Creek crossing",difficulty="Hard",earned=12,total=12,balance=140,rows={{name="Round win",amount=8},{name="Tidy stack",amount=2},{name="Hard ×1.5",amount=2}},
      goals={{text="Merge II in the centre",short="II centre",done=true},{text="Make III on RIGHT",short="III RIGHT",done=true},{text="Make a tier IV",short="Tier IV"}},
-     score=2340,best=2340,chain=4,newBest=true,level=3,questDone="Win 2 rounds",questCount="1/3"},s:view())
+     score=2340,best=2340,chain=4,newBest=true,level=3,questDone="Win 2 rounds",questCount="1/3",nextDifficulty="Hard",canLeave=true},s:resultsView())
     task.wait(.3)
-    audit(s.results,label.." results",116,58)
-    local o=s.results.AbsolutePosition
-    local leave=res.leave.AbsolutePosition-o;local replay=res.replay.AbsolutePosition-o
-    assert(leave.X==mg+14 and leave.Y==size.Y-66,label.." Leave bottom left at mg + 14 ("..leave.X..")")
-    assert(replay.X+res.replay.AbsoluteSize.X==size.X-mg-14 and replay.Y==size.Y-66,label.." Replay bottom right at W - mg - 14")
-    assert(res.difficulty.AbsoluteSize.X==48 and res.difficulty:GetAttribute("AccessibleLabel")=="Change difficulty",label.." change difficulty")
-    local picked=0;res:on("picker",function()picked+=1 end)
-    -- QA Q5: the results quest cell is display only (no shortcut), so Change difficulty steps straight to Leave.
-    res.focus=1;res:move(-1);assert(res.focus==3,"left of Replay is Change difficulty");res:move(-1);assert(res.focus==2,"then Leave (no quest shortcut)")
-    assert(res.questTarget==nil,"quest cell is display only")
-    res.focus=3;res:confirm();res:confirm();assert(picked>=1,"Change difficulty opens the picker")
+    local inPlace=res.inPlace;local rv=s:resultsView()
+    assert(inPlace and rv.inPlace and rv.phone,label.." results are in place")
+    local o=s.results.AbsolutePosition-root.AbsolutePosition
+    assert(o.X==rv.lcd.x and o.Y==rv.lcd.y and s.results.AbsoluteSize.X==rv.lcd.w and s.results.AbsoluteSize.Y==rv.lcd.h,label.." results fill the gameplay LCD")
+    audit(s.results,label.." results",116-o.X,58-o.Y)
+    local shownButtons=0
+    for id,button in pairs(inPlace.buttons)do
+     if button.Visible then
+      shownButtons+=1
+      local at=button.AbsolutePosition-s.results.AbsolutePosition
+      -- On short LCDs the four actions sit in a scrolling list (inPlace.scrollActions): the
+      -- later ones may start under its fold, but never outside the LCD sideways, and Replay
+      -- (the first) is always fully on screen.
+      assert(at.X>=-.5 and at.Y>=-.5 and at.X+button.AbsoluteSize.X<=rv.W+.5,label.." results action "..id.." outside the LCD")
+      assert(at.Y+button.AbsoluteSize.Y<=rv.H+.5 or(inPlace.scrollActions and id~=1 and button:FindFirstAncestorWhichIsA("ScrollingFrame")~=nil),label.." results action "..id.." under the LCD with no list to scroll")
+     end
+    end
+    assert(shownButtons>=3 and res.focus==1 and inPlace.buttons[1].Visible and inPlace.buttons[2].Visible,label.." Replay and Leave are offered, Replay focused")
     res:hide()
     log:show({day=10,week=2,resetIn=26000,weekResetIn=200000,rerollLeft=1,
      daily={{slot=1,id="a",title="Win 2 rounds",sub="Any difficulty",progress=2,target=2,reward=4,ready=true,pool="play"},{slot=2,id="b",title="Chain 4 merges",sub="In one round",progress=3,target=4,reward=4,pool="craft"},{slot=3,id="c",title="Make a tier IV on Hard",sub="Skill quest",progress=0,target=1,reward=4,canReroll=true,pool="skill"}},
@@ -435,7 +450,7 @@ return function(client,parent)
      audit(log.overlay.layer,label.." log "..tab,116,58)
     end
     -- Sheets start at g.top (76: 18 px under the Roblox controls, QA v685 D1).
-    local rh,_,tops=Log.compactRows(size.Y-60)
+    local rh,_,tops=Log.compactRows(size.Y-g.top)
     assert(log.rows[2].row.Position.Y.Offset==tops[2]-64 and log.rows[1].row.AbsoluteSize.Y==rh,label.." row pitch")
     assert(log.footer.AbsoluteSize.Y==44 and log.footer.AbsolutePosition.Y-log.overlay.layer.AbsolutePosition.Y==size.Y-62,label.." pinned footer")
     assert(log.footer.AbsolutePosition.X-log.overlay.layer.AbsolutePosition.X==mg+14,label.." log body edge at mg + 14")
@@ -445,7 +460,11 @@ return function(client,parent)
     shop:setContext({equipped="sherbet",wallet=128,facts={faceplates={}}});shop:open("sherbet");task.wait()
     local grid=Shop.compactGrid(size.X-2*off,size.Y-60)
     assert(shop.columns==grid.cols and shop.tiles[1].button.AbsoluteSize.X==grid.tileW and shop.tiles[1].button.AbsoluteSize.Y==64,label.." grid")
-    assert(shop.root.AbsolutePosition.Y-host.AbsolutePosition.Y==76,label.." shop sheet under the Roblox controls")
+    -- Deck style is a menu sheet, not part of the handheld: it keeps Shop:fit's own top
+    -- (keep-out + 2 = 60 here). Only the deck's sheets moved to g.top = 76 in QA v685 D1;
+    -- 04bab91 changed this line to 76 by mistake (the grid above is still measured from 60).
+    local _,liveKh=Kit.keepOut()
+    assert(shop.root.AbsolutePosition.Y-host.AbsolutePosition.Y==liveKh+2,label.." shop sheet under the Roblox controls")
     audit(shop.root,label.." shop",0,0,function(node)return node:IsDescendantOf(shop.grid)and(node.AbsolutePosition.Y<shop.grid.AbsolutePosition.Y or node.AbsolutePosition.Y+node.AbsoluteSize.Y>shop.grid.AbsolutePosition.Y+shop.grid.AbsoluteSize.Y)end)
     local action=shop.action.AbsolutePosition-host.AbsolutePosition
     assert(action.X+shop.action.AbsoluteSize.X==size.X-off-32 and action.Y+48==size.Y-18-12,label.." Buy / Equip pinned bottom right")

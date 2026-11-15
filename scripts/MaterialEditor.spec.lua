@@ -35,18 +35,20 @@ return function(client,parent)
    assert(sent[#sent].value.resultId=="material-paid"and sent[#sent].value.expectedFinish=="gloss"and view:activePet()=="pip")
    material:receive({id=sent[#sent].value.id,action="materialEquip",petId="puddle",status="Rejected",reason="Busy"});state.pendingMaterialResult=nil
   end)
-  test("Material receipt fits its round finish sample and adjacent measured actions without a blank footer gap",function()
+  test("Material receipt shows the finish worn by the Bear and fits its adjacent measured actions without a blank footer gap",function()
    for _,size in ipairs({Vector2.new(900,720),Vector2.new(749,381),Vector2.new(568,160),Vector2.new(350,703)})do
     root.Size=UDim2.fromOffset(size.X,size.Y)
     for _,id in ipairs({"gloss","matte","jelly"})do
      state.pendingMaterialResult={id="sample-"..id..tostring(size),finishId=id,revision=state.revision,catalogVersion=1}
      view:open(state,"materials","pip");frames()
-     local use=view.materialPanel.useNow;local keep=view.action;local sample=view.materialPanel.reveal.jar
-     assert(view.card.AbsoluteSize.X<=470 and sample and sample:FindFirstChild("FinishViewport")and sample:FindFirstChild("GroundShadow"))
-     local viewport=sample.FinishViewport
-     assert(viewport:IsA("ViewportFrame")and viewport.CurrentCamera and viewport:FindFirstChildWhichIsA("WorldModel"))
-     assert(math.abs(sample.AbsoluteSize.X-sample.AbsoluteSize.Y)<.1 and sample.AbsoluteSize.X<=view.materialPanel.art.AbsoluteSize.X+.1)
-     assert(sample:GetAttribute("FinishId")==id and sample:GetAttribute("PreviewBackend")~=nil)
+     -- QA R2 (169d309): a finish is shown worn by a Bear in the native hatch scene
+     -- (HatchDisplayItem "PetFinish"), so the receipt no longer builds the round 2D sample
+     -- (MaterialFinishPreview: FinishViewport + GroundShadow) and reveal.jar stays nil.
+     local use=view.materialPanel.useNow;local keep=view.action;local reveal=view.materialPanel.reveal
+     local scene=reveal.cinematic and reveal.cinematic.nativeScene;local worn=scene and scene.item
+     assert(view.card.AbsoluteSize.X<=470 and worn and worn.mode=="PetFinish"and reveal.jar==nil,"the finish is worn, not a sample sphere")
+     assert(worn.model and worn.model:IsDescendantOf(root)and #worn.entries>0 and reveal.result.finishId==id)
+     assert(root:FindFirstChild("FinishViewport",true)==nil,"no second 2D sample beside the Bear")
      assert(use.Parent==view.card and use.AbsolutePosition.Y==keep.AbsolutePosition.Y and use.AbsolutePosition.X+use.AbsoluteSize.X+7<=keep.AbsolutePosition.X)
      for _,node in ipairs({use,keep})do assert(node.TextFits and node.AbsoluteSize.X>=44 and node.AbsoluteSize.Y>=44)end
      if size.Y>=280 then
@@ -54,7 +56,7 @@ return function(client,parent)
       assert(math.abs(keep.AbsolutePosition.Y-contentBottom)<=16,"Receipt footer separated from measured result")
       assert(not view.body.ScrollingEnabled,"Unconstrained receipt kept a tall empty scroll sheet")
      end
-     view:close("forced");assert(not sample.Parent and not view.materialPanel.reveal.resultId,"Closed receipt retained its finish sample")
+     view:close("forced");assert(reveal.cinematic==nil and reveal.stage==nil and not reveal.resultId,"Closed receipt retained its finish Bear")
     end
    end
    state.pendingMaterialResult=nil
@@ -67,8 +69,8 @@ return function(client,parent)
    local grid=view.chromeGrid
    assert(panel.rows.gloss.AbsolutePosition.Y+panel.rows.gloss.AbsoluteSize.Y<=grid.AbsolutePosition.Y+grid.AbsoluteSize.Y)
    state.pendingMaterialResult={id="sample-retire-target",finishId="gloss",revision=state.revision,catalogVersion=1};view:open(state,"materials","pip");frames()
-   local sample=panel.reveal.jar;panel.options.useNow(state.pendingMaterialResult);frames()
-   assert(not sample.Parent and not panel.reveal.resultId and not panel.useNow.Visible)
+   local worn=panel.reveal.cinematic.nativeScene.item;panel.options.useNow(state.pendingMaterialResult);frames()
+   assert(worn.mode=="PetFinish"and panel.reveal.cinematic==nil and panel.reveal.stage==nil and not panel.reveal.resultId and not panel.useNow.Visible)
    state.pendingMaterialResult=nil;view:close("forced")
   end)
   test("Materials keeps its live pet fixed during right-pane scrolling at compact and portrait sizes",function()

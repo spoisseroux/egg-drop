@@ -85,7 +85,10 @@ return function(client,parent)
    local b,state=Kit.button(holder,"Probe",{text="Leave",glyph="B"})
    assert(b.AbsoluteSize.Y==48 and state.stroke.Thickness==1 and near(state.stroke.Transparency,.86,.01))
    Kit.setSelected(b,true);assert(state.stroke.Thickness==2 and state.stroke.Color==Art.uiTheme().ui.accent)
-   Kit.setEnabled(b,false);assert(not b.Active and not b.Interactable and state.label.TextTransparency>0)
+   -- Since 70e0440 a disabled button is an opaque muted face with a readable label (pinned
+   -- in GlobalUIBounds too), not the old 40% see-through one.
+   Kit.setEnabled(b,false);assert(not b.Active and not b.Interactable and state.label.TextTransparency==0 and state.label.TextColor3==Color3.fromHex("#AAB8B5"))
+   assert(state.fill.BackgroundColor3==Color3.fromHex("#344545")and state.fill.BackgroundTransparency==0 and state.stroke.Enabled and state.stroke.Color==Color3.fromHex("#60716E"),"disabled face and border")
    -- UI personality T2 (deliberate change): a secondary button now has a 4 px lip and
    -- the face (Fill + Content) drops onto it in 60 ms, instead of the content settling 2 px.
    Kit.setEnabled(b,true);state.pressed=true;Kit.paintButton(b);task.wait(.12)

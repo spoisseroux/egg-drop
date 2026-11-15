@@ -17,16 +17,19 @@ return function(client,parent)
  local exterior=Instance.new("Frame");exterior.Name="_BoardPatternExterior";exterior.Size=UDim2.fromOffset(812,354);exterior.BackgroundTransparency=1;exterior.Parent=parent
  local ok,problem=pcall(function()
   local root=Art.boardPattern(host);settle()
+  -- The root is a rounded CanvasGroup since 70e0440 (it clips to the well's corners), so it
+  -- also holds one UICorner: count and walk the motif Frames only.
+  local function motifs()local list={};for _,child in ipairs(root:GetChildren())do if child:IsA("Frame")then table.insert(list,child)end end;return list end
   test("registering twice reuses one bounded pool",function()
    assert(Art.boardPattern(host)==root and root.Name=="BoardPattern"and root.ClipsDescendants)
-   assert(#root:GetChildren()==Backdrop.BoardColumns*Backdrop.BoardRows)
+   assert(#motifs()==Backdrop.BoardColumns*Backdrop.BoardRows and root:IsA("CanvasGroup")and root:FindFirstChildOfClass("UICorner"))
   end)
   for _,id in ipairs({"canopy","creek","lantern"})do
    test(id.." is fed by Art.setBackground in one 6% tone",function()
     Art.setBackground(Instance.new("Frame"),id,theme);settle()
     local stats=Art.boardPatternStats(host);assert(root.Visible and stats.visible>20,"visible motifs="..tostring(stats.visible))
     local tone=Backdrop.boardTone(theme)
-    for _,motif in ipairs(root:GetChildren())do if motif.Visible then
+    for _,motif in ipairs(motifs())do if motif.Visible then
      assert(motif.BackgroundColor3==tone and motif.ZIndex==root.ZIndex)
      if id=="creek"then assert(motif.BackgroundTransparency==1 and motif.UIStroke.Enabled and math.abs(motif.UIStroke.Transparency-.94)<1e-6)
      else assert(math.abs(motif.BackgroundTransparency-.94)<1e-6 and not motif.UIStroke.Enabled)end
@@ -43,7 +46,7 @@ return function(client,parent)
     for _,id in ipairs({"canopy","creek","lantern"})do
      Art.setBackground(Instance.new("Frame"),id,theme);settle()
      local maxX,maxY=0,0
-     for _,motif in ipairs(root:GetChildren())do if motif.Visible then
+     for _,motif in ipairs(motifs())do if motif.Visible then
       maxX=math.max(maxX,motif.Position.X.Offset+motif.Size.X.Offset);maxY=math.max(maxY,motif.Position.Y.Offset+motif.Size.Y.Offset)
      end end
      local cell=Backdrop.boardCell(size.X)
@@ -53,7 +56,7 @@ return function(client,parent)
   end)
   test("depth follows the renderer and no geometry is written while nothing changes",function()
    Art.setBoardPatternDepth(host,3);assert(root.ZIndex==3)
-   for _,motif in ipairs(root:GetChildren())do assert(motif.ZIndex==3)end
+   for _,motif in ipairs(motifs())do assert(motif.ZIndex==3)end
    local writes=Art.boardPatternStats(host).writes
    for _=1,10 do Art.setBackground(Instance.new("Frame"),"lantern",theme)end;settle()
    assert(Art.boardPatternStats(host).writes==writes,"repeat background writes")

@@ -72,46 +72,67 @@ return function(client,parent)
    for key,value in pairs(extra or {})do ctx[key]=value end
    cards:step(now,ctx)
   end
-  test("the card shows once the garden is settled, with Say hi; Say hi switches and saves the bit",function()
+  -- Since 70e0440 the arrival notice is a line on the shared top-bar rail
+  -- (NotificationRail, "Say hi to {pet}"); a tap on it is Say hi. The old card and its
+  -- button stay built but hidden. The rail runs on real frames, so `shows` pumps them, and
+  -- the card's own clock only runs while the rail is drawing it.
+  local Rail=require(client.NotificationRail)
+  local RunService=game:GetService("RunService")
+  local sayHiLine=UICopy.get("qa.coach.sayHi",{pet=Pets.byId[earnedId].name})
+  local function railText()local _,capsule=Rail.view();return if capsule and capsule.Visible then capsule.Message.Text else nil end
+  local function shows(text)
+   local deadline=os.clock()+2
+   repeat if railText()==text then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
+   return false
+  end
+  local function quiet()
+   local deadline=os.clock()+2
+   repeat if railText()==nil then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
+   return false
+  end
+  test("the line shows once the garden is settled; Say hi switches and saves the bit",function()
    local cards,sent,greeted=build()
    cards:sync({coachMask=Coach.with(0,"gardenIntro"),totalWins=40,inventoryMask=every})
    step(cards,0);assert(cards.garden==nil,"not before the garden settles")
    step(cards,Coach.GardenSettle+.1)
    assert(cards.garden and cards.garden.id=="petArrived"and cards.garden.kind=="arrival"and cards.garden.petId==earnedId)
    local view=cards.gardenView
-   assert(view.root.Visible and view.root:GetAttribute("CoachCard")=="petArrived"and cards.sayHiButton.Visible)
-   assert(view.title.Text==UICopy.get("e2.arrived.title")and string.find(view.line.Text,Pets.byId[earnedId].name,1,true))
-   local button=cards.sayHiButton
-   assert(button.Size.Y.Offset>=40 and button.Position.Y.Offset+button.Size.Y.Offset<=view.root.Size.Y.Offset-8,"the button sits inside the card")
-   assert(button.Position.Y.Offset>=view.line.Position.Y.Offset+view.line.Size.Y.Offset,"under the line")
+   assert(not view.root.Visible and not cards.sayHiButton.Visible,"the old card stays hidden")
+   step(cards,Coach.GardenSettle+.2)
+   assert(shows(sayHiLine)and string.find(sayHiLine,Pets.byId[earnedId].name,1,true),"the rail names the new friend")
+   local _,capsule=Rail.view();assert(capsule.Active==true,"the line can be tapped")
    assert(#sent==0,"nothing is saved until the player answers")
-   assert(cards:dismiss("tap")==false and cards.garden~=nil,"a stray tap keeps the card")
+   assert(cards:dismiss("tap")==false and cards.garden~=nil,"a stray dismiss keeps it")
    assert(cards:sayHi()==true and greeted[1]==earnedId and #greeted==1)
-   assert(table.concat(sent,",")=="petArrived"and cards.garden==nil and not view.root.Visible and not button.Visible)
+   assert(table.concat(sent,",")=="petArrived"and cards.garden==nil and quiet(),"saved, and the line leaves the rail")
    assert(Coach.has(cards.mask,"petArrived"))
    step(cards,Coach.GardenSettle+5);step(cards,Coach.GardenSettle+10)
    assert(cards.garden==nil and #sent==1 and #greeted==1,"shown once")
    assert(cards:sayHi()==false)
    cards:destroy()
   end)
-  test("Got it saves the bit without switching; the full time saves it too; a menu only hides it",function()
+  test("a skip saves the bit without switching; the full time saves it too; a menu only hides it",function()
    local cards,sent,greeted=build()
    cards:sync({coachMask=Coach.with(0,"gardenIntro"),totalWins=40,inventoryMask=every})
    step(cards,0);step(cards,3)
    assert(cards.garden and cards.garden.kind=="arrival")
-   assert(cards:dismiss("skip")==true and #greeted==0 and table.concat(sent,",")=="petArrived","Got it: saved, companion unchanged")
+   assert(cards:dismiss("skip")==true and #greeted==0 and table.concat(sent,",")=="petArrived","skip: saved, companion unchanged")
    cards:destroy()
    -- A menu opens over it: hidden, nothing saved, back when the garden is free again.
    cards,sent,greeted=build()
    cards:sync({coachMask=Coach.with(0,"gardenIntro"),totalWins=40,inventoryMask=every})
    step(cards,0);step(cards,3);assert(cards.garden~=nil)
+   step(cards,3.1);assert(shows(sayHiLine))
    step(cards,4,{open={companions=true}})
-   assert(cards.garden==nil and #sent==0,"hidden under the menu, not saved")
+   assert(cards.garden==nil and #sent==0 and quiet(),"hidden under the menu, not saved")
    step(cards,5);step(cards,5+Coach.GardenSettle+.1)
    assert(cards.garden and cards.garden.kind=="arrival","it comes back")
-   -- Its full time on screen: gone, and saved (each card shows once ever).
-   local now=5+Coach.GardenSettle+.1
-   for _=1,Cards.ArrivalSeconds+2 do now+=1;step(cards,now)end
+   -- Its full time on the rail: gone, and saved (each card shows once ever).
+   local now=5+Coach.GardenSettle+.2
+   step(cards,now);assert(shows(sayHiLine))
+   local life=cards.garden.duration
+   now+=life-.5;step(cards,now);assert(cards.garden~=nil and #sent==0,"still up before its time")
+   now+=1;step(cards,now)
    assert(cards.garden==nil and table.concat(sent,",")=="petArrived"and #greeted==0)
    cards:destroy()
   end)

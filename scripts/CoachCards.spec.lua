@@ -102,63 +102,98 @@ return function(client,parent)
     for k,v in pairs(extra or {})do ctx[k]=v end
     cards:step(t,ctx)
    end
+   -- Since 70e0440 every coach notice is a line on the shared top-bar rail
+   -- (NotificationRail): the old card and pill instances stay built but hidden. The rail
+   -- runs on real frames, so `shows` pumps them; a card's own clock only runs while the
+   -- rail is drawing it.
+   local Rail=require(client.NotificationRail)
+   local RunService=game:GetService("RunService")
+   local function railText()local _,capsule=Rail.view();return if capsule and capsule.Visible then capsule.Message.Text else nil end
+   local function shows(text,seconds)
+    local deadline=os.clock()+(seconds or 2)
+    repeat if railText()==text then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
+    return false
+   end
+   local function quiet()
+    local deadline=os.clock()+2
+    repeat if railText()==nil then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
+    return false
+   end
+   local function garden()return cards.garden and cards.garden.id or nil end
+   local function legacyHidden()
+    return not cards.gardenView.root.Visible and not cards.boardView.root.Visible
+     and not(cards.welcomePill and cards.welcomePill.Visible)and not(cards.boardPill and cards.boardPill.Visible)
+   end
    -- Welcome round on the board.
    cards:sync({coachMask=0,totalWins=0,quests={daily={}}})
    step(0,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0})
-   local pill=cards.welcomePill
-   assert(pill.Visible and pill:GetAttribute("CoachCard")=="welcome"and not cards.boardView.root.Visible,"QA v2 R6.2: a pill, not the big card")
-   assert(string.find(cards.sticker.Text,tostring(Coach.WelcomeStars),1,true),"the Welcome pill shows its Stars")
-   assert(pill.AbsoluteSize.Y<=28 and pill.Position.Y.Offset<=8 and pill.AbsoluteSize.X<=400-16,"small, at the top, inside the board")
-   assert(cards.pillText.Text~=""and Kit.measure(cards.pillText.Text,"Strong",13).X<=cards.pillText.Size.X.Offset,"its line is never cut")
+   assert(cards.welcomeRail and legacyHidden(),"the Welcome line goes to the rail, not the big card or the old pill")
+   assert(shows(UICopy.get("qa.coach.welcome")),"the Welcome line is on the rail")
+   local railGui,capsule=Rail.view()
+   assert(railGui.DisplayOrder>cards.gui.DisplayOrder and capsule.AbsoluteSize.Y==40 and capsule.Message.TextBounds.X<=capsule.Message.AbsoluteSize.X+1,"one 40 px capsule above the menus, its line never cut")
+   assert(capsule.Active==false,"the Welcome line takes no input")
    step(1,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0,drops=1})
-   step(1.5,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0,drops=1})
-   assert(not pill.Visible,"fades away at the first drop")
+   assert(cards.welcomeRail==nil and quiet(),"it leaves at the first drop")
+   step(1.5,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0})
+   assert(cards.welcomeRail==nil,"once a session")
    -- Reveal open: no garden step yet.
    cards:sync({coachMask=0,totalWins=0,lastHatch={id="s",petId="pip",starter=true,stars=6},quests={daily={}}})
    step(10);step(14)
-   assert(not cards.gardenView.root.Visible,"waits for the reveal")
+   assert(garden()==nil,"waits for the reveal")
    cards:sync({coachMask=0,totalWins=0,quests={daily={}}})
-   step(20);assert(not cards.gardenView.root.Visible,"waits for the greeting to settle")
-   step(23);assert(cards.gardenView.root:GetAttribute("CoachCard")=="machines","beat 1: machines")
+   step(20);assert(garden()==nil,"waits for the greeting to settle")
+   step(23);assert(garden()=="machines"and cards.garden.kind=="beat"and legacyHidden(),"beat 1: machines")
+   -- The Welcome round's Stars are said once as the garden step opens; the rail shows one
+   -- line at a time, so the toast (a real notice) runs its time before the beat's line.
+   step(23.01);assert(shows(UICopy.get("coach.firstStars.toast").."  ★ +6"),"the Welcome Stars toast comes first")
+   assert(cards.garden.elapsed==0,"a queued beat's clock has not started")
+   assert(shows((Cards.copy("machines",{pet="Bear",input="Keyboard"})),6),"then the beat's title is the rail line")
+   assert(capsule.Active==true,"a tap on the line opens How it works")
    cards:dismiss("tap")
-   step(23.1);assert(cards.gardenView.root:GetAttribute("CoachCard")=="hub","beat 2: hub (a tap moves on)")
-   step(23.2,{canRoam=false});assert(not cards.gardenView.root.Visible,"a menu hides the beat")
+   step(23.1);assert(garden()=="hub","beat 2: hub (a tap moves on)")
+   step(23.2,{canRoam=false});assert(garden()==nil,"a menu hides the beat")
    step(23.3,{canRoam=false})
-   step(26);step(29);assert(cards.gardenView.root:GetAttribute("CoachCard")=="hub","the beat comes back after the menu")
-   step(29+Cards.BeatSeconds+.1);step(29+Cards.BeatSeconds+.2)
-   assert(cards.gardenView.root:GetAttribute("CoachCard")=="quest","beat 3: quest (moves on by itself)")
+   step(26);step(29);assert(garden()=="hub","the beat comes back after the menu")
+   step(29.01);assert(shows(UICopy.get("coach.hub.title")))
+   local life=cards.garden.duration
+   step(29.01+life+.1)
+   assert(garden()=="quest","beat 3: quest (moves on by itself after its time on the rail)")
    cards:dismiss("skip")
    assert(table.find(sent,"gardenIntro"),"the step is saved when it ends")
    step(60);step(64)
-   assert(not cards.gardenView.root.Visible,"the garden step never repeats")
+   assert(garden()==nil,"the garden step never repeats")
    -- QA v2 R1.6: replayable on request, under the same rules.
    assert(cards:replayGarden())
-   step(65,{idleFor=.2});step(68,{idleFor=.3});assert(not cards.gardenView.root.Visible,"waits while the player walks")
-   step(68.5,{idleFor=5});assert(cards.gardenView.root:GetAttribute("CoachCard")=="machines","replay starts from beat 1")
+   step(65,{idleFor=.2});step(68,{idleFor=.3});assert(garden()==nil,"waits while the player walks")
+   step(68.5,{idleFor=5});assert(garden()=="machines","replay starts from beat 1")
+   step(68.51,{idleFor=5});assert(shows((Cards.copy("machines",{pet="Bear",input="Keyboard"}))))
    step(80,{idleFor=5,awayFor=60});step(95,{idleFor=5,awayFor=60})
-   assert(cards.gardenView.root:GetAttribute("CoachCard")=="machines","the clock pauses while the player is away")
+   assert(garden()=="machines"and cards.garden.elapsed<life,"the clock pauses while the player is away")
+   assert(quiet(),"and the line leaves the rail meanwhile")
    step(96,{idleFor=5,windowActive=false});step(120,{idleFor=5,windowActive=false})
-   assert(cards.gardenView.root:GetAttribute("CoachCard")=="machines","and while the window is unfocused")
+   assert(garden()=="machines"and cards.garden.elapsed<life,"and while the window is unfocused")
    cards:dismiss("skip");step(121)
-   -- First visit to Hatch eggs, once.
+   -- First visit to Hatch eggs, once. The bit is saved when the rail presents the line.
    open.hatch=true;step(70)
-   assert(cards.gardenView.root:GetAttribute("CoachCard")=="hatch"and learned.Eggs,"first visit card; the station is learned")
-   open.hatch=false;step(71);assert(not cards.gardenView.root.Visible,"leaves with its screen")
-   open.hatch=true;step(72);assert(not cards.gardenView.root.Visible,"never twice")
+   assert(garden()=="hatch"and cards.garden.kind=="once"and not table.find(sent,"hatch"),"queued, not saved before it is seen")
+   step(70.01);assert(shows((Cards.copy("hatch",{pet="Bear",input="Keyboard"}))))
+   assert(table.find(sent,"hatch")and learned.Eggs,"first visit line; the station is learned")
+   open.hatch=false;step(71);assert(garden()==nil and quiet(),"leaves with its screen")
+   open.hatch=true;step(72);assert(garden()==nil,"never twice")
    open.hatch=false
    local counts={}
    for _,id in ipairs(sent)do counts[id]=(counts[id]or 0)+1 end
    for id,n in pairs(counts)do assert(n==1,id.." sent once")end
    -- A saved mask from the server (another device) suppresses the card here too.
    cards:sync({coachMask=Coach.with(0,"book"),totalWins=0,quests={daily={}}})
-   open.book=true;step(80);assert(cards.gardenView.root:GetAttribute("CoachCard")~="book","saved elsewhere: not shown")
+   open.book=true;step(80);assert(garden()~="book","saved elsewhere: not shown")
    open.book=false
    -- First quest done, on the results or in the garden.
    cards:sync({coachMask=0,totalWins=0,quests={daily={{ready=true}}}})
    step(90,{mode="Board",canRoam=false,presented=true,over=false,phase="Playing"})
-   assert(cards.gardenView.root:GetAttribute("CoachCard")~="questDone","not mid-round")
+   assert(garden()~="questDone","not mid-round")
    step(91,{mode="Board",canRoam=false,presented=true,over=true,phase="Complete"})
-   assert(cards.gardenView.root:GetAttribute("CoachCard")=="questDone")
+   assert(garden()=="questDone"and legacyHidden())
   end)
   cards:destroy();gui:Destroy()
   assert(ok,problem)
