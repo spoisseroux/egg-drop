@@ -16,7 +16,7 @@ return function(client,parent)
    -- The 7th stamp today: the card reads full until tomorrow, then starts again at 0.
    m=Chip.model({stamps=7,dailyAvailable=false});assert(m.done and m.count==7 and m.text=="✓ 7/7",m.text)
    m=Chip.model({stamps=7,dailyAvailable=true});assert(not m.done and m.count==0 and m.text=="0/7",m.text)
-   m=Chip.model({stamps=0,dailyAvailable=false});assert(m.done and m.count==0)
+   m=Chip.model({stamps=0,dailyAvailable=false});assert(m.done and m.count==0 and m.text=="0/7",m.text)
    for _,bad in ipairs({false,{},{stamps=-1},{stamps="x",dailyAvailable=1}})do m=Chip.model(bad);assert(m.done and m.count==0 and m.total==7)end
    assert(UICopy.has("stampChip.done")and UICopy.has("stampChip.open")and UICopy.has("stampChip.label"))
   end)

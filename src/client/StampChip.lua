@@ -20,7 +20,8 @@ function Chip.model(state)
  local card=StampCardView.model(state)
  local done=not card.available
  return{done=done,count=card.filled,total=StampCardView.Length,
-  text=UICopy.get(if done then "stampChip.done"else "stampChip.open",{count=card.filled,total=StampCardView.Length})}
+  -- A new save has no stamp yet and none waiting today: a plain "0/7", never "✓ 0/7".
+  text=UICopy.get(if done and card.filled>0 then "stampChip.done"else "stampChip.open",{count=card.filled,total=StampCardView.Length})}
 end
 -- Pure: the chip's rect in a header of geometry `g` (Kit.headerGeometry), or nil when a
 -- title `titleWidth` px wide starting at `left` would not fit beside it.
