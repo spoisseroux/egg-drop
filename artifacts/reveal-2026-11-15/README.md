@@ -1,3 +1,52 @@
+# Follow-ups R1 to R5 (2026-11-15, after Spencer's review)
+
+**Not published.** Commits `193f62c` (R1), `169d309` (R2), `02bd6f4` (R3), `afce386` (R4), `1a3a1da` (R5). The look and sounds Spencer approved are unchanged apart from the points below. Everything for this pass is in `r1-r5/`; the sections further down describe the first pass.
+
+**Nobody has watched this play live yet.** As before, the frames are real Studio Play renders of the real modules, stepped at fixed times by `scripts/RevealCaptureFixture.lua`. The live hatch clock needs a focused Studio window, which I did not have, so the motion (the wave, the turn, the fades) is checked by specs and still frames, not by eye.
+
+## Look here first
+
+| What | File |
+|---|---|
+| All four reveals, phone, six beats | `r1-r5/sheets/phone-all-four-sheet.jpg` |
+| The same as a GIF (beats held, not smooth motion) | `r1-r5/sequences/phone-all-four-beats.gif` |
+| Pet reveal on PC, the Bear waving in the new light | `r1-r5/frames/pc-1649x734/pet-bear-pc-t2.27-waving.jpg` |
+| Rare finish on PC: a Bear wearing Jelly on the violet backdrop | `r1-r5/frames/pc-1649x734/finish-rare-jelly-pc-t2.60.jpg` |
+| The old dark light, for comparison | `r1-r5/frames/phone-812x354/pet-bear/pet-bear-BEFORE-R5-dark-light.jpg` |
+
+## What changed
+
+- **R1, descriptions.** Every toy, finish, hue jar and feature has one line of 60 characters or fewer, under the name on the item reveal, with the game's own line ("Choose a pet for this toy.") beneath it in a dimmer colour. The strings are in `UICopy` (`hatch.reveal.describe.*`), 24 in all, including the new Pocket Deck toy. Read them there and change any you don't like.
+- **R2, 3D results.** A finish is shown worn by a Bear instead of a sphere on a slate tile. Toys, features and that Bear turn slowly once the name is out. The card is a lit backdrop per rarity: garden teal for Common and untiered items, leaf green for Uncommon, violet for Rare.
+- **R3, slanted plate.** The name plate's end is one clean triangle. The loose block was the corners of a rotated rectangle.
+- **R4, transitions.** In: the screen dims to the stage while the egg, spotlight and pool fade in and the egg eases up to size (0.18 s). Out: the content sinks into the dark, then the dark lifts off the menu or garden (0.30 s), instead of vanishing.
+- **R5, the Bear.** A bright flat light with a soft warm glow behind the pet, and it waves: paw up, three wags, every 3.4 s.
+
+## Decisions Spencer may want to reverse
+
+- **The finish is always shown on a plain white Bear**, not on the player's own pet in its colours.
+- **Common is teal, not cream.** A white Bear on a cream card had no contrast. The beam and banner stay cream.
+- **The wave is small.** The Bear's hand turns about its own anchor, so the paw comes up beside the cheek rather than over the head. It is the same hand motion as the garden hello. A bigger wave needs a change to the pet rig code.
+- **The leave is a quick dip to dark, then a fade**, not a cross-fade.
+
+## Verified
+
+- Hatch specs in Studio Play on the final code: 16 suites pass (HatchItemStage 12, RevealStage 17, HatchEggsList 17, HueEggView 15, HatchCinematic 10, HatchRarityCue 7, HueItemReveal 5, HatchRarityAudio 4, HatchDisclosure 4, HatchDisplayPose 4, HatchNativeItemFit 4, HatchIdentity 3, HatchAudioDuck 3, HatchNativeHost 3, HatchNativeCinematic 1, HatchNativeFrustum 1).
+- New or changed spec cases: descriptions (every catalogue id has its own line), backdrop and turn, the plate end, open and leave, light and wave, the Bear-in-finish scene. One existing RevealStage case was updated on purpose: the stage now dims in instead of starting black.
+- `init.client.lua` still has 219 column-0 locals. No save or server data changed.
+
+## Not done, or not clean
+
+- **`UICopy` spec fails** on `inspect.bond` ("Bond level {level}"): a string from the pet-inspect work whose placeholder is missing from the spec's sample table. Not from this pass; it passed before that string landed.
+- **`HatchActions` spec still fails** at its first case, as it did before the first pass.
+- **Hatch eggs item previews were not changed.** R2 asked for them "if cheap"; they use a separate preview and were left.
+- **A reopened saved receipt still appears at once** (no fade in). Only its exit is smooth.
+- **Uncommon, Hue and Feature were not captured** in this pass (same stage; Hue art is flat and does not turn).
+- At PC size the soft glow behind the pet shows faint rings.
+- Captures: phone 812x354 and PC 1649x734 only. No physical phone.
+
+---
+
 # Hatch reveal redesign, 2026-11-15 (QA v685 H1, H2, H3, H5)
 
 **Not published.** Branch `feat/egg-drop-arcade-polish`, commits `bdc573d`, `2ccd618` and the commit that adds this folder. Private v685 is unchanged.
