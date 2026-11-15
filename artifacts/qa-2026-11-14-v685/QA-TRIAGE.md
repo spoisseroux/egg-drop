@@ -72,3 +72,12 @@ Show Spencer real captures of H1 and H2 before calling them done.
 - `scripts/CompactPhone.spec.lua`: geometry tables regenerated from `Screen.resolve` for the 16 px shift (`b70d56b`); body top 60, board H - 96, sheets at 76; the plate overlay is expected off on phones (70e0440 hid it, the spec still wanted it drawn); new D2 determinism check. In Studio Edit (cloned client) it passes through the handheld test; the Pocket Menu case then stops at "wipe finished", a tween timing check that needs Play.
 - `scripts/HatchEggsList.spec.lua` line 37: the spec was stale, the code is right. Material pool 4 (lucky Jelly) shows odds only to a player the server marks unrestricted and in random mode; a bare `{materialAvailable=true}` snapshot reads the fixed "Next" row, whose value is empty, so `value:match("%%$")` failed. The spec now asks for the unrestricted random rows (they add up to 100), and pins the Next row and the "mode not confirmed" case. In Edit it passes that test and stops later at the 3D egg templates, which need Play.
 - Run in Play: `MachineHub`, `CompactPhone`, `HatchEggsList` (copies are in `src/client/ZZSpecs/`).
+
+## Spencer on the reveal captures (2026-11-15, ~05:30)
+
+Approved: "those sounds sound good and the hatch animations look good." Still to do before the next private build:
+
+- R1. **Fun descriptions** for every hatch result, mostly items: toys, finishes, hue jars and features. Use the warm, quirky garden voice of the pet descriptions in PetCatalog; one line of 60 characters or fewer. Shown on the reveal.
+- R2. **Exciting item previews.** On the item reveal and in the item previews, show Material and Toy results as a **rotating 3D model** like the Bear: the toy itself, and for finishes the Bear (or an egg) wearing the finish. Use a lit, coloured backdrop instead of the flat slate grey.
+- R3. **Pet reveal headline.** At the tip of the slanted name/headline box there's a disconnected clear block (see `shots/10-slant-tip.png`). Clean it up so the slant is one continuous shape.
+- R4. **Super smooth, satisfying transitions** into and out of the hatch screens (pet and items): no pops, a matched dim, easing, and a quick, polished exit back to the menu or garden.
