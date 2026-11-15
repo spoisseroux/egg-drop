@@ -31,6 +31,7 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 > **v1 ships with the Bear only (Spencer 2026-11-15); a second pet comes in an update. Refresh the store kit captures (`artifacts/store-listing/`, made from v600) before launch.**
 > **v2 (first update, Spencer 2026-11-15): Names Egg, funny two-piece pet names (`artifacts/pet-social-scope-2026-11-14/NAMES-EGG-SCOPE.md`); the inspect card's name slot uses it. Also the second pet.**
+> **Name: Pocket Pals; listing title "Pocket Pals: Pet Garden" (Spencer 2026-11-15). Rename the experience in Creator Hub at launch; player-facing text and store art switch in the 4am batch.**
 > **LAUNCH CHECKLIST (do not ship v1 without):** set `FeatureFlags.TestFreshSaves=false` (private builds wipe progress every publish while it is true; Spencer 2026-11-13), confirm `FeatureFlags.Park`, Creator Hub audience public, 12 players per server.
 
 Keep this list current: add an item when work starts, move it to done when it lands.

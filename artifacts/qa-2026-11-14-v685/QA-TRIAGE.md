@@ -103,3 +103,11 @@ Approved: "those sounds sound good and the hatch animations look good." Still to
   - Rebuild with `scripts/store_listing/build_store_listing_art.py` from real Studio captures. No AI art.
   - The wordmark follows the name decision. Keep "EGG DROP" unless Spencer picks another name.
   - Refresh all thumbnails from the final build.
+
+## Name decided (Spencer, 2026-11-15)
+
+The game is now **Pocket Pals**. Store listing title: **Pocket Pals: Pet Garden**.
+- The R11 icon and thumbnail wordmarks read **POCKET PALS**.
+- Update `artifacts/store-listing/LISTING.md` (name, hook, description) to match.
+- Change any player-visible "Egg Drop" text in the game (UICopy, the boot/title screen) to "Pocket Pals". The internal names stay as they are: repo, folders, DataStore keys and the place name for now.
+- Renaming the experience in Creator Hub happens at launch, together with the listing.
