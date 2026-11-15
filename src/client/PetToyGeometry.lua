@@ -29,10 +29,17 @@ builders.sparkler=function(h)
  glow.Range=math.max(2,s*3);glow.Brightness=.9;glow.Shadows=false;glow.Parent=tip
  h.tip,h.emitter,h.glow=tip,sparks,glow
 end
+-- Tennis ball (QA v735 H2): optic yellow-green felt and the white seam. The seam is two
+-- thin discs set off-centre and tipped toward the face, so each one breaks the surface as a
+-- curved white line: the two arcs bow toward each other from the front, as on a real ball,
+-- and still read as a seam from the back and while it rolls. 3 parts.
 builders.ball=function(h)
- h:add("CoralBall",Vector3.new(.24,.24,.24),CFrame.identity,Color3.fromHex("#EF786B"),"sphere")
- h:add("OffsetCreamEquator",Vector3.new(.244,.055,.244),CFrame.new(0,.018,0)*CFrame.Angles(0,0,.18),Color3.fromHex("#FFF0C9"),"sphere")
- h:add("TealDimple",Vector3.new(.048,.043,.012),CFrame.new(.045,.039,.116),Color3.fromHex("#327E83"),"sphere")
+ h:add("FeltBall",Vector3.new(.24,.24,.24),CFrame.identity,hex("#D0E83A"),"sphere")
+ local lean=CFrame.Angles(0,0,.2)
+ for _,side in ipairs({-1,1})do
+  local turn=lean*CFrame.Angles(0,-side*.3,0)*CFrame.Angles(0,0,-side*math.pi/2)
+  h:add("SeamArc"..(if side<0 then "L"else "R"),Vector3.new(.1944,.05,.1944),turn*CFrame.new(0,.075,0),hex("#FCFBEF"),"sphere")
+ end
 end
 builders.bone=function(h)
  h:add("OchreWaist",Vector3.new(.21,.061,.064),CFrame.identity,Color3.fromHex("#C9954A"),"sphere")

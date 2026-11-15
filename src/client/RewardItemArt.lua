@@ -25,9 +25,9 @@ function Item.create(parent,result,position,size,z)
   host.Destroying:Connect(function()handle:destroy()end);return host
  end
  if id=="ball"then
-  part(host,"CoralBall",.18,.18,.64,.64,"F16F65")
-  part(host,"CreamEquator",.23,.45,.54,.12,"FFF3D1",-18)
-  part(host,"TealDimple",.60,.30,.10,.10,"287C83")
+  part(host,"FeltBall",.18,.18,.64,.64,"D0E83A")
+  part(host,"SeamArcL",.33,.24,.05,.52,"FCFBEF",-10)
+  part(host,"SeamArcR",.62,.24,.05,.52,"FCFBEF",10)
  elseif id=="sparkler"then
   part(host,"IndigoGrip",.39,.55,.17,.32,"363459",-12)
   part(host,"BrassWire",.47,.27,.045,.36,"CCA348",-12)

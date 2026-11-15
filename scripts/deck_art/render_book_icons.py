@@ -174,6 +174,12 @@ ITEM_SCALE = {"blep": 2.2}
 # steps a chain of ("r", radians about the toy's facing axis) and ("t", x, y, z) in the game's axes
 # (Y up, +Z facing), exactly as the Luau CFrame chain reads.
 PRIMITIVE_TOYS = {
+    # Tennis ball (QA v735 H2). Replaces the modelled "Ball" in toys.blend for its book cell.
+    "Ball": [
+        ("FeltBall", (.24, .24, .24), [], "#D0E83A"),
+        ("SeamArcL", (.1944, .05, .1944), [("r", .2), ("ry", .3), ("r", math.pi / 2), ("t", 0, .075, 0)], "#FCFBEF"),
+        ("SeamArcR", (.1944, .05, .1944), [("r", .2), ("ry", -.3), ("r", -math.pi / 2), ("t", 0, .075, 0)], "#FCFBEF"),
+    ],
     "Wobble_Top": [
         ("TealBody", (.20, .15, .20), [("r", .18)], "#3FB7B0"),
         ("CreamEquator", (.205, .04, .205), [("r", .18), ("t", 0, .01, 0)], "#FFF0C9"),
@@ -295,13 +301,21 @@ def build_primitive_toys():
     bm.to_mesh(sphere)
     bm.free()
     for index, (gid, parts) in enumerate(PRIMITIVE_TOYS.items()):
+        old = bpy.data.objects.get(gid)
+        if old:     # a primitive toy takes over the modelled one of the same name
+            for child in list(old.children):
+                bpy.data.objects.remove(child)
+            bpy.data.objects.remove(old)
         root = bpy.data.objects.new(gid, None)
         root.location = (4.0 + index, 0.0, 0.2)
         bpy.context.scene.collection.objects.link(root)
         for name, size, steps, colour in parts:
             m = Matrix.Identity(4)
             for step in steps:
-                m = m @ (Matrix.Rotation(step[1], 4, "Z") if step[0] == "r" else Matrix.Translation(step[1:]))
+                if step[0] == "t":
+                    m = m @ Matrix.Translation(step[1:])
+                else:   # "r" turns about the facing axis (game Z), "ry" about game Y
+                    m = m @ Matrix.Rotation(step[1], 4, "Y" if step[0] == "ry" else "Z")
             ob = bpy.data.objects.new(gid + "_" + name, sphere.copy())
             ob.data.materials.append(flat("toyprim_" + colour.lstrip("#"), colour, rough=0.5))
             bpy.context.scene.collection.objects.link(ob)
@@ -328,7 +342,7 @@ def toys():
         extent = max(mx.x - mn.x, mx.y - mn.y, mx.z - mn.z)
         for o in objs:
             o.hide_render = False
-        yaw = {"Bone": -28, "Ball": -24, "Sparkler": -30, "Wobble_Top": -12, "Squeaky_Carrot": -10}.get(gid, -25)
+        yaw = {"Bone": -28, "Ball": -14, "Sparkler": -30, "Wobble_Top": -12, "Squeaky_Carrot": -10}.get(gid, -25)
         roll = {"Sparkler": -38, "Bone": 20}.get(gid, 0)        # long toys lie on the diagonal
         fit = {"Sparkler": 1.0, "Bone": 1.05, "Wobble_Top": 1.12, "Squeaky_Carrot": 1.08}.get(gid, 1.28)
         frame(cam, centre, extent * fit, yaw, 18, roll)
