@@ -83,6 +83,25 @@ return function(client,parent)
    assert(Pets.byId.pip.description=="Soft as a nap. Hugs first, asks questions never.")
    for _,pet in ipairs(Pets.collection)do assert(type(pet.description)=="string"and #pet.description>0 and utf8.len(pet.description)<=60,pet.id)end
   end)
+  test("QA R3: the name plate's slanted end is one triangle on the plate's own edges, with no loose block",function()
+   for _,h in ipairs({44,60,96,168})do
+    local w,rotation,from,to=Stage.slantEnd(h,2)
+    assert(math.abs(w-h*math.tan(math.rad(Stage.PlateSlant)))<=.5 and math.abs(rotation-Stage.PlateSlant)<1.5,"a 16 degree slant at "..h)
+    assert(from>0 and from<to and to<1 and to-from<.08 and math.abs((from+to)*.5-.5)<.06,"one sharp cut near the diagonal at "..h)
+   end
+   for _,size in ipairs({{812,354},{1920,1080}})do
+    local host=Instance.new("Frame");host.Size=UDim2.fromOffset(size[1],size[2]);host.BackgroundTransparency=1;host.Parent=gui
+    local stage=Stage.show(host,{pet=Pets.byId.pip,tag="new",reduced=false,instant=true,buttons={{id="meet",text="Meet Bear",primary=true}}})
+    table.insert(stages,stage);stage.connection:Disconnect();stage.connection=nil
+    local L=stage.L;local cut,body=stage.plateCut,stage.plateBody
+    assert(cut.Rotation==0 and cut.AnchorPoint==Vector2.zero and cut.BackgroundColor3==body.BackgroundColor3 and cut.BackgroundTransparency==0,"same colour, not a turned block")
+    assert(cut.Position.Y.Offset==0 and cut.Size.Y.Offset==L.plateH and body.Position.Y.Offset==0 and body.Size.Y.Offset==L.plateH,"the end shares the plate's top and bottom edges")
+    assert(cut.Position.X.Offset<0 and cut.Position.X.Offset+cut.Size.X.Offset>=1 and cut.Position.X.Offset+cut.Size.X.Offset<=3,"the end starts left of the plate and overlaps it, so no gap shows")
+    local keys=stage.plateCutGradient.Transparency.Keypoints
+    assert(#keys==4 and keys[1].Value==1 and keys[2].Value==1 and keys[3].Value==0 and keys[4].Value==0,"clear above the cut, solid below it")
+    stage:destroy();host:Destroy()
+   end
+  end)
   test("live stage: a press before the buttons settles without acting; then Meet and Play again act",function()
    local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
    local pressed,skips,cues={},0,{}

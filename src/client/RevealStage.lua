@@ -37,6 +37,23 @@ Stage.Spin={degPerPixel=.5,phoneDegPerPixel=.6,cap=1080,tau=.55,stop=4,settleDel
  stick=360,flick=45,window=.08,whooshAt=360,whooshGap=.25}
 Stage.Headlines={new={"A NEW","LITTLE WONDER!"},rare={"RARE","DISCOVERY!"},owned={"ALREADY","OWNED!"},saved={"SAVED FOR","YOUR GARDEN!"}}
 Stage.BurstCount,Stage.TwinkleCount,Stage.DustCount=18,11,12
+-- QA R3 (2026-11-15): the name plate's slanted end is one triangle that shares the plate's
+-- top and bottom edges, so the plate reads as one continuous shape. It was a rotated
+-- rectangle whose corners stuck out above and below the plate, like a loose block.
+-- Pure: a `h` px tall end slanted `Stage.PlateSlant` degrees, overlapping the plate by
+-- `overlap` px. Returns the frame width, the gradient rotation (degrees), and the gradient
+-- positions where the cut starts and ends (a one pixel ramp, so the edge is anti-aliased).
+Stage.PlateSlant=16
+function Stage.slantEnd(h,overlap)
+ h=math.max(1,h);overlap=overlap or 2
+ local w=math.max(1,math.floor(h*math.tan(math.rad(Stage.PlateSlant))+.5))
+ local hyp=math.sqrt(w*w+h*h)
+ -- The gradient runs square to the cut. Its length is the frame's extent along that line.
+ local length=((w+overlap)*h+h*w)/hyp
+ local cut=.5-(overlap*h/(2*hyp))/length
+ local half=.5/length
+ return w,math.deg(math.atan2(w,h)),math.clamp(cut-half,.001,.997),math.clamp(cut+half,.002,.998)
+end
 -- Lead-in (QA v685 H1): seconds of the native egg opening (wobble .12-.94, crack .65,
 -- shell opens .95-1.18) before the entrance timeline starts. HatchDisplayPose.BearReady
 -- is LeadIn + InputAt, so the receipt unlocks as the buttons open.
@@ -420,7 +437,10 @@ function Stage:build()
  local plate=Kit.frame(plateLayer,"NamePlate",nil,UDim2.new(),UDim2.fromOffset(10,10));plate.Rotation=-4;self.plate=plate
  self.plateSmear=fill(plate,"Smear",accent,.72)
  self.plateBody=fill(plate,"Plate",accent,0);self.plateBody.ZIndex+=1
- self.plateCut=fill(plate,"SlantedEnd",accent,0);self.plateCut.AnchorPoint=Vector2.new(.5,.5);self.plateCut.Rotation=16;self.plateCut.ZIndex+=1
+ -- The slanted end: a frame left of the plate whose gradient cuts it along its diagonal
+ -- (opaque below the cut), so its top and bottom edges are the plate's own.
+ self.plateCut=fill(plate,"SlantedEnd",accent,0);self.plateCut.ZIndex+=1
+ self.plateCutGradient=Kit.node("UIGradient",self.plateCut,{Name="Cut"})
  self.dots={}
  local dotColor=accent:Lerp(Color3.new(1,1,1),.45)
  for row=1,5 do for col=1,12 do
@@ -587,7 +607,13 @@ function Stage:layout()
  self.plate.Size=UDim2.fromOffset(plateW+L.plateH,L.plateH)
  self.plateBody.Size=UDim2.fromOffset(plateW+L.plateH,L.plateH)
  self.plateSmear.Size=self.plateBody.Size;self.plateSmear.Position=UDim2.fromOffset(L.plateH*.5,0)
- self.plateCut.Position=UDim2.fromOffset(0,L.plateH*.5);self.plateCut.Size=UDim2.fromOffset(L.plateH*.42,L.plateH*1.04)
+ do
+  local overlap=2
+  local w,rotation,from,to=Stage.slantEnd(L.plateH,overlap)
+  self.plateCut.Position=UDim2.fromOffset(-w,0);self.plateCut.Size=UDim2.fromOffset(w+overlap,L.plateH)
+  self.plateCutGradient.Rotation=rotation
+  self.plateCutGradient.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(from,1),NumberSequenceKeypoint.new(to,0),NumberSequenceKeypoint.new(1,0)})
+ end
  local dot=math.max(3,L.plateH*.075)
  for _,entry in ipairs(self.dots)do
   local x=plateW*.62+(entry.col-1)*(plateW*.38/12)+(if entry.row%2==0 then dot*.6 else 0)
