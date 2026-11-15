@@ -1,0 +1,59 @@
+{
+ "replaced": {
+  "rbxassetid://105394164311789": 3,
+  "rbxassetid://70661948546201": 2,
+  "rbxassetid://138678016112158": 10,
+  "rbxassetid://133573568684057": 5,
+  "rbxassetid://128753532351576": 14,
+  "rbxassetid://90417914553341": 2,
+  "rbxassetid://78952361344674": 10,
+  "rbxassetid://127743046933349": 2,
+  "rbxassetid://86225555674896": 2,
+  "rbxassetid://102384004107977": 10,
+  "rbxassetid://80031701749701": 10,
+  "rbxassetid://98997466675950": 6,
+  "rbxassetid://90984704485304": 1,
+  "rbxassetid://140659517311337": 1,
+  "rbxassetid://139261955138839": 2,
+  "rbxassetid://100875286949644": 2,
+  "rbxassetid://97090918613707": 1
+ },
+ "packsCleared": 30,
+ "chunksRewritten": [
+  "TextureContent",
+  "ColorMapContent",
+  "TexturePackContent"
+ ],
+ "chunks": 126,
+ "chunksIdentical": 123,
+ "mapping": {
+  "rbxassetid://100875286949644": "rbxassetid://100345065789325",
+  "rbxassetid://102384004107977": "rbxassetid://95896755980970",
+  "rbxassetid://105394164311789": "rbxassetid://104807740847343",
+  "rbxassetid://127743046933349": "rbxassetid://115946136102040",
+  "rbxassetid://128753532351576": "rbxassetid://89518320013489",
+  "rbxassetid://133573568684057": "rbxassetid://122324655251820",
+  "rbxassetid://138678016112158": "rbxassetid://104706195321565",
+  "rbxassetid://139261955138839": "rbxassetid://90819379749460",
+  "rbxassetid://140659517311337": "rbxassetid://79678594491030",
+  "rbxassetid://70661948546201": "rbxassetid://79678594491030",
+  "rbxassetid://78952361344674": "rbxassetid://109820826774624",
+  "rbxassetid://80031701749701": "rbxassetid://108238608141638",
+  "rbxassetid://86225555674896": "rbxassetid://117312121158874",
+  "rbxassetid://90417914553341": "rbxassetid://73826688135223",
+  "rbxassetid://90984704485304": "rbxassetid://113678904532434",
+  "rbxassetid://97090918613707": "rbxassetid://127589578773015",
+  "rbxassetid://98997466675950": "rbxassetid://80989149935634"
+ },
+ "idsNotInPack": [],
+ "old": {
+  "nativeBytes": 325532,
+  "nativeSha256": "1ea0749f9516f957f1c589e757e2729d63bb11c2bd9cf835a8d61b68106e9970"
+ },
+ "new": {
+  "nativeBytes": 325270,
+  "nativeSha256": "4f007fb7cb0067647cbef2fb49ea3add67650e5b9dc20cb3134931945ab3b33f"
+ },
+ "xmlLinesChanged": 83,
+ "luaChanged": true
+}

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "nativePath": "assets/world/WorldAssetsNative.rbxm",
-  "nativeBytes": 325532,
-  "nativeSha256": "1ea0749f9516f957f1c589e757e2729d63bb11c2bd9cf835a8d61b68106e9970",
-  "xmlSha256": "e6a90c0603f8991b5648849cf143d180edc64ba916a5812e6fb9740f95d99ef5",
-  "luaSha256": "a375dcbd69d62d7539ea057a87be342f2f2fb9161a887b8b36b47f68d87e7d3d",
+  "nativeBytes": 325270,
+  "nativeSha256": "4f007fb7cb0067647cbef2fb49ea3add67650e5b9dc20cb3134931945ab3b33f",
+  "xmlSha256": "093271d1480415b82cfdb8448cdefa33e4c780fde4eadd68e0ec25ab3060588e",
+  "luaSha256": "e9c381d252e661f6f62cd1f9b7e2992af176872d8fbe0efbfd27ab09374bc0de",
   "inputs": {
     "assets/world/world-v7-manifest.json": "9ad4b7af9abfd4df054ce053141ab54b4a35e92f86f4521b5d69af44011d6945",
     "assets/world/world-v7-walk.json": "39386b5ed9496b43eae94c9be5981a6529f5229e28fe5cdae34c386262ef369c",
     "assets/world/world-v7-studio-import.json": "70bdbc11688ea975f4e49c13c6cd89b79640f5e36c4a9989e34aa32f0001d046",
-    "assets/world/world-v7-uploads.json": "2b1822bfb3e7583b922d462dadbff7688d0a3fa8ab66ecc72573d226f7579c9e",
+    "assets/world/world-v7-uploads.json": "93fb64150fb3927f939ed1e7d65377d2c25a500e895bad4e190b4e7b081fa182",
     "assets/world/world-v7-collision.json": "51c36f34e45c9bf1649b903a7ce977e721d7469e890421d58bc34a821168e065",
     "assets/world/world-v7-collision-studio-import.json": "b9a0c8966a64aaab2b33062127b35a90e19fa1d6c64b73e1f5fb278807a31f44",
     "assets/world/world-v7-pending.json": "381c2c54bd8c000c82fc8db1484748d26a13d2c39fc98b9dd0d167caf1c7c24f",
@@ -719,7 +719,19 @@
     "protectedBuffersIdentical": 169,
     "uploadReadback": "artifacts/qa-2026-11-14-v685/w2-lamp/upload-readback.json",
     "evidence": "artifacts/qa-2026-11-14-v685/w2-lamp/native-promotion.json",
-    "note": "Deserialized round trip of this export probed in Studio Edit: post hit 12/12 at Studio (-9, 28), 0/12 at the old spot (-9, 23), 0/11 rays blocked across the bridge mouth. 169 of 170 collision buffers byte-identical to the previous pack; only W7_Stations__marble_smooth (the post) changed. Place not saved by this step."
+    "note": "Deserialized round trip of this export probed in Studio Edit: post hit 12/12 at Studio (-9, 28), 0/12 at the old spot (-9, 23), 0/11 rays blocked across the bridge mouth. 169 of 170 collision buffers byte-identical to the previous pack; only W7_Stations__marble_smooth (the post) changed. Place not saved by this step.",
+    "retexture": {
+      "previousNativeSha256": "1ea0749f9516f957f1c589e757e2729d63bb11c2bd9cf835a8d61b68106e9970",
+      "chunks": 126,
+      "chunksIdentical": 123,
+      "chunksRewritten": [
+        "TextureContent",
+        "ColorMapContent",
+        "TexturePackContent"
+      ],
+      "packsCleared": 30,
+      "note": "Texture ids only (scripts/retexture_world_native.py). Geometry, collision flags and PhysicalConfigData chunks byte-identical; not re-exported from Studio."
+    }
   },
-  "promotion": "Explicit W2 lamp-3 promotion (2026-11-15, artifacts/qa-2026-11-14-v685/w2-lamp/promote_native.py); validator never rewrites this manifest."
+  "promotion": "Explicit texture-only promotion (scripts/retexture_world_native.py); validator never rewrites this manifest."
 }

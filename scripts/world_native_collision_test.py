@@ -44,7 +44,7 @@ class NativeCollisionTests(unittest.TestCase):
         return result
 
     def test_current_real_checkpoint_passes_and_builder_is_byte_idempotent(self):
-        self.assertEqual(validate(self.root)["nativeBytes"], 325532)  # QA v685 W2 lamp 3 pack
+        self.assertEqual(validate(self.root)["nativeBytes"], 325270)  # QA v735 W1 grounded retexture
         self.run_builder(success=True)
 
     def test_binary_and_mount_tampering_refused_without_output_changes(self):
