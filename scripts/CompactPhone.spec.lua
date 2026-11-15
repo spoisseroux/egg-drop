@@ -100,12 +100,16 @@ return function(client,parent)
    assert(not Kit.compactRule(390,844)and not Kit.compactRule(600,520))
   end)
   test("frame geometry matches the spec tables at the five sizes",function()
+   -- Tables regenerated 2026-11-14 from Screen.resolve after QA v685 D1 (b70d56b): the glass
+   -- starts 18 px under the Roblox bar (top = kh + 18 = 76), so every screen rect moved down
+   -- 16 px and the board is 16 px shorter (and narrower at the sim aspect); the wordmark is
+   -- the 70e0440 one (24, top + 12, SW - 48).
    local want={
-    [844]={H=390,layout="wide",board={329,68,185,310},score={132,68,117,44},chain={257,68,64,44},goals={132,120,189,132},quests=nil,handle={132,334,189,44},next={522,68,190,64},eggs={522,140,190,44},difficulty={522,192,190,44},winPays={522,244,190,44},controls=nil,dpad={18,154,88,88},dpadLeft={4,126,58,144},dpadRight={62,126,58,144},menu={26,346,72,28},menuHit={20,338,84,44},a={782,191},aHit={732,141,100,100},wordmark={18,64,92,36},mg=40,cw=238,pocketCols=1,pocketFirst={272,141,300,44},pocketLast={272,297,300,44}},
-    [740]={H=360,layout="wide",board={286,68,167,280},score={120,68,86,44},chain={214,68,64,44},goals={120,120,158,132},quests=nil,handle={120,304,158,44},next={461,68,159,64},eggs={461,140,159,44},difficulty={461,192,159,44},winPays={461,244,159,44},controls=nil,dpad={16,143,80,80},dpadLeft={4,111,52,144},dpadRight={56,111,52,144},menu={20,316,72,28},menuHit={14,308,84,44},a={684,176},aHit={639,131,90,90},wordmark={18,64,80,31},mg=24,cw=214,pocketCols=1,pocketFirst={220,126,300,44},pocketLast={220,282,300,44}},
-    [932]={H=430,layout="wide",board={361,68,209,350},score={132,68,149,44},chain={289,68,64,44},goals={132,120,221,132},quests={132,278,221,140},handle=nil,next={578,68,222,64},eggs={578,140,222,44},difficulty={578,192,222,44},winPays={578,244,222,44},controls={578,304,222,114},dpad={18,174,88,88},dpadLeft={4,146,58,144},dpadRight={62,146,58,144},menu={26,386,72,28},menuHit={20,378,84,44},a={870,211},aHit={820,161,100,100},wordmark={18,64,92,36},mg=40,cw=268,pocketCols=1,pocketFirst={316,161,300,44},pocketLast={316,317,300,44}},
-    [568]={H=320,layout="narrow",board={212,68,143,240},score={106,120,98,44},chain={106,68,98,44},goals={106,172,98,108},quests=nil,handle={106,264,98,44},next={363,68,99,44},eggs={363,120,99,44},difficulty={363,172,99,44},winPays={363,224,99,44},controls=nil,dpad={15,129,68,68},dpadLeft={4,91,45,144},dpadRight={49,91,45,144},menu={13,276,72,28},menuHit={7,268,84,44},a={519,157},aHit={480,118,78,78},wordmark={18,64,66,26},mg=6,cw=169,pocketCols=2,pocketFirst={115,158,165,44},pocketLast={288,210,165,44}},
-    [667]={H=375,layout="narrow",board={245,68,176,295},score={120,120,117,44},chain={120,68,117,44},goals={120,172,117,132},quests=nil,handle={120,319,117,44},next={429,68,118,64},eggs={429,140,118,44},difficulty={429,192,118,44},winPays={429,244,118,44},controls=nil,dpad={16,150,80,80},dpadLeft={4,118,52,144},dpadRight={56,118,52,144},menu={20,331,72,28},menuHit={14,323,84,44},a={611,184},aHit={566,139,90,90},wordmark={18,64,80,31},mg=6,cw=202,pocketCols=1,pocketFirst={183,133,300,44},pocketLast={183,289,300,44}},
+    [844]={H=390,layout="wide",board={334,84,175,294},score={132,84,122,44},chain={262,84,64,44},goals={132,136,194,132},quests=nil,handle={132,334,194,44},next={517,84,195,64},eggs={517,156,195,44},difficulty={517,208,195,44},winPays={517,260,195,44},controls=nil,dpad={18,154,88,88},dpadLeft={4,126,58,144},dpadRight={62,126,58,144},menu={26,346,72,28},menuHit={20,338,84,44},a={782,191},aHit={732,141,100,100},wordmark={24,88,76,30},mg=40,cw=238,pocketCols=1,pocketFirst={272,149,300,44},pocketLast={272,305,300,44}},
+    [740]={H=360,layout="wide",board={291,84,157,264},score={120,84,91,44},chain={219,84,64,44},goals={120,136,163,132},quests=nil,handle={120,304,163,44},next={456,84,164,64},eggs={456,156,164,44},difficulty={456,208,164,44},winPays={456,260,164,44},controls=nil,dpad={16,143,80,80},dpadLeft={4,111,52,144},dpadRight={56,111,52,144},menu={20,316,72,28},menuHit={14,308,84,44},a={684,176},aHit={639,131,90,90},wordmark={24,88,64,25},mg=24,cw=214,pocketCols=1,pocketFirst={220,134,300,44},pocketLast={220,290,300,44}},
+    [932]={H=430,layout="wide",board={366,84,199,334},score={132,84,154,44},chain={294,84,64,44},goals={132,136,226,132},quests={132,278,226,140},handle=nil,next={573,84,227,64},eggs={573,156,227,44},difficulty={573,208,227,44},winPays={573,260,227,44},controls={573,332,227,86},dpad={18,174,88,88},dpadLeft={4,146,58,144},dpadRight={62,146,58,144},menu={26,386,72,28},menuHit={20,378,84,44},a={870,211},aHit={820,161,100,100},wordmark={24,88,76,30},mg=40,cw=268,pocketCols=1,pocketFirst={316,169,300,44},pocketLast={316,325,300,44}},
+    [568]={H=320,layout="narrow",board={217,84,133,224},score={106,136,103,44},chain={106,84,103,44},goals={106,188,103,108},quests=nil,handle={106,264,103,44},next={358,84,104,44},eggs={358,136,104,44},difficulty={358,188,104,44},winPays={358,240,104,44},controls=nil,dpad={15,129,68,68},dpadLeft={4,91,45,144},dpadRight={49,91,45,144},menu={13,276,72,28},menuHit={7,268,84,44},a={519,157},aHit={480,118,78,78},wordmark={24,88,50,20},mg=6,cw=169,pocketCols=2,pocketFirst={115,166,165,44},pocketLast={288,218,165,44}},
+    [667]={H=375,layout="narrow",board={250,84,166,279},score={120,136,122,44},chain={120,84,122,44},goals={120,188,122,132},quests=nil,handle={120,319,122,44},next={424,84,123,64},eggs={424,156,123,44},difficulty={424,208,123,44},winPays={424,260,123,44},controls=nil,dpad={16,150,80,80},dpadLeft={4,118,52,144},dpadRight={56,118,52,144},menu={20,331,72,28},menuHit={14,323,84,44},a={611,184},aHit={566,139,90,90},wordmark={24,88,64,25},mg=6,cw=202,pocketCols=1,pocketFirst={183,141,300,44},pocketLast={183,297,300,44}},
    }
    for _,size in ipairs(sizes)do
     local w=want[size.X];local W,H=size.X,size.Y
@@ -121,7 +125,7 @@ return function(client,parent)
     assert(#g.pocket.items==4 and g.pocket.cols==w.pocketCols and same(g.pocket.items[1],w.pocketFirst)and same(g.pocket.items[4],w.pocketLast),W.." pocket "..show(g.pocket.items[1]).." "..show(g.pocket.items[4]))
     -- Structure: 4 px of plate above and below the glass; every card and the board in the screen;
     -- the d-pad, MENU, back and A on the shoulders; the board H - 24 high at the sim aspect.
-    -- QA 2026-11-12: the glass starts 2 px under the Roblox controls (kh 58).
+    -- QA v685 D1: the glass starts 18 px under the Roblox controls (kh 58), the case edge 2 px under them.
     assert(g.top==76 and g.glass.y==g.top and g.glass.y+g.glass.h==H-4 and g.glass.x==g.SW and g.glass.x+g.glass.w==W-g.SW,W.." glass rims")
     local screen={x=g.x0,y=g.y0,w=g.LW,h=g.LH}
     for _,name in ipairs({"board","score","chain","goals","quests","handle","next","eggs","difficulty","winPays","controls"})do
@@ -155,7 +159,7 @@ return function(client,parent)
     assert(ib.caption.Text=="Items"or not ib.caption.Visible,label.." B reads Items in a round")
     assert(not s.quadrants.Up.Visible and not s.quadrants.Down.Visible,label.." Up / Down off in a round")
     assert(s.menu.Visible and s.menuHit.AbsoluteSize.Y>=44,label.." MENU on the shoulder")
-    assert(s.lcd.AbsoluteSize.Y==size.Y-80,label.." board at H - 80 (under the Roblox controls)")
+    assert(s.lcd.AbsoluteSize.Y==size.Y-96,label.." board at H - 96 (18 px under the Roblox controls)")
     assert(s.hud.questDot.Visible,label.." ready dot")
     assert(s.hud.goalsEyebrow.Text=="GOALS 1/3",label.." goals header")
     -- Narrow columns use icon goals; wide columns keep the words.
@@ -193,11 +197,11 @@ return function(client,parent)
     local W,H=size.X,size.Y;local label=tostring(size)
     local g=Screen.resolve(size,aspect,{kx=116,kh=58})
     assert(g.phone and g.mode=="Compact",label.." stays the Compact path (not Small)")
-    -- The LCD is the resolveCompact one: glass under the Roblox controls, board H - 80.
+    -- The LCD is the resolveCompact one: glass 18 px under the Roblox controls, board H - 96.
     assert(g.glass.y==76 and g.glass.y+g.glass.h==H-4 and g.board.h==H-96,label.." LCD unchanged")
-    -- Body: 4 px in from the sides, 16 above the glass, off the bottom edge; whole px.
+    -- Body: 4 px in from the sides, 16 above the glass (2 px under the Roblox bar), off the bottom edge; whole px.
     local b=g.body
-    assert(b.x==4 and b.y==44 and b.w==W-8 and b.y+b.h>H,label.." body "..show(b))
+    assert(b.x==4 and b.y==60 and b.y==g.kh+2 and b.w==W-8 and b.y+b.h>H,label.." body "..show(b))
     local p=g.shell.plate
     assert(inside(p,b)and p.x>b.x and p.y>b.y and p.y<g.glass.y and p.x<g.wordmark.x,label.." plate inside the band, above the glass "..show(p))
     for _,name in ipairs({"shadow","shoulderL","shoulderR","band","plate"})do
@@ -214,10 +218,30 @@ return function(client,parent)
     local root=frame(size)
     local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(size,aspect,{kx=116,kh=58});s:setVisible(true)
     s:setHud(hudData);task.wait()
-    for _,node in ipairs({s.shadow,s.shoulders[1],s.shoulders[2],s.band,s.plate,s.plateOverlay,s.wordmark,s.wordmarkShadow,s.led,s.boardBezel,s.screenPanel,s.dpad,s.buttons.A.holder,s.buttons.B.holder})do
+    for _,node in ipairs({s.shadow,s.shoulders[1],s.shoulders[2],s.band,s.plate,s.wordmark,s.wordmarkShadow,s.led,s.boardBezel,s.screenPanel,s.dpad,s.buttons.A.holder,s.buttons.B.holder})do
      assert(node.Visible,label.." "..node.Name.." drawn")
     end
     assert(not s.glass.Visible and not s.plateLip.Visible and not s.plateShade.Visible,label.." desktop glass and the old full-root lip are off")
+    -- 70e0440: the desktop plate overlay (its seats are authored for the desktop controls) is off on phones.
+    assert(not s.plateOverlay.Visible,label.." desktop plate overlay off")
+    -- QA v685 D2: one layout every time. The same input after a desktop layout, a different
+    -- phone size, a theme change and a second pass gives the same rects and visibility, and
+    -- the root says what it was resolved from.
+    local function snap()
+     local rows={}
+     for _,node in ipairs({s.root,s.shadow,s.shoulders[1],s.shoulders[2],s.band,s.plate,s.plateOverlay,s.finish,s.wordmark,s.wordmarkShadow,s.led,s.glass,s.boardBezel,s.glassLip,s.screenPanel,s.lcd,s.dpad,s.menu,s.buttons.A.holder,s.buttons.B.holder,s.itemButton.holder,s.wells.DPad,s.wells.A,s.back.root})do
+      table.insert(rows,if node.Visible then string.format("%s %s %s",node.Name,tostring(node.Position),tostring(node.Size))else node.Name.." hidden")
+     end
+     return table.concat(rows,"|")
+    end
+    local first=snap()
+    assert(s.root:GetAttribute("LayoutKey")==string.format("Compact:%dx%d:116:58",W,H),label.." layout key "..tostring(s.root:GetAttribute("LayoutKey")))
+    s:layout(Vector2.new(1920,1080),aspect,{kx=116,kh=58});assert(s.plateOverlay.Visible and s.glass.Visible and s.root:GetAttribute("LayoutKey")=="Regular:1920x1080:0:0",label.." desktop pass")
+    s:layout(Vector2.new(568,320),aspect,{kx=116,kh=58})
+    s:layout(Vector2.new(W,H),aspect,{kx=132,kh=44})
+    s:layout(size,aspect,{kx=116,kh=58});task.wait()
+    assert(snap()==first,label.." same layout after other layouts")
+    s:layout(size,aspect,{kx=116,kh=58});assert(snap()==first,label.." same layout on a second pass")
     local o=root.AbsolutePosition
     assert(s.band.AbsolutePosition-o==Vector2.new(b.x,b.y)and s.plate.AbsolutePosition-o==Vector2.new(p.x,p.y),label.." band / plate placed")
     assert(s.lcd.AbsoluteSize==Vector2.new(g.board.w,g.board.h),label.." board size kept")
@@ -410,7 +434,7 @@ return function(client,parent)
      log:setTab(tab);task.wait()
      audit(log.overlay.layer,label.." log "..tab,116,58)
     end
-    -- Sheets start 60 px down, under the Roblox controls (QA 2026-11-12).
+    -- Sheets start at g.top (76: 18 px under the Roblox controls, QA v685 D1).
     local rh,_,tops=Log.compactRows(size.Y-60)
     assert(log.rows[2].row.Position.Y.Offset==tops[2]-64 and log.rows[1].row.AbsoluteSize.Y==rh,label.." row pitch")
     assert(log.footer.AbsoluteSize.Y==44 and log.footer.AbsolutePosition.Y-log.overlay.layer.AbsolutePosition.Y==size.Y-62,label.." pinned footer")
@@ -421,7 +445,7 @@ return function(client,parent)
     shop:setContext({equipped="sherbet",wallet=128,facts={faceplates={}}});shop:open("sherbet");task.wait()
     local grid=Shop.compactGrid(size.X-2*off,size.Y-60)
     assert(shop.columns==grid.cols and shop.tiles[1].button.AbsoluteSize.X==grid.tileW and shop.tiles[1].button.AbsoluteSize.Y==64,label.." grid")
-    assert(shop.root.AbsolutePosition.Y-host.AbsolutePosition.Y==60,label.." shop sheet under the Roblox controls")
+    assert(shop.root.AbsolutePosition.Y-host.AbsolutePosition.Y==76,label.." shop sheet under the Roblox controls")
     audit(shop.root,label.." shop",0,0,function(node)return node:IsDescendantOf(shop.grid)and(node.AbsolutePosition.Y<shop.grid.AbsolutePosition.Y or node.AbsolutePosition.Y+node.AbsoluteSize.Y>shop.grid.AbsolutePosition.Y+shop.grid.AbsoluteSize.Y)end)
     local action=shop.action.AbsolutePosition-host.AbsolutePosition
     assert(action.X+shop.action.AbsoluteSize.X==size.X-off-32 and action.Y+48==size.Y-18-12,label.." Buy / Equip pinned bottom right")

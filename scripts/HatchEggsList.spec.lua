@@ -33,8 +33,22 @@ return function(client,parent)
    local everyToy={};for _,toyId in ipairs(ToyPool.Pools[ToyPool.PoolVersion])do everyToy[toyId]=true end
    assert(Shop.oddsRows("toy",{toyUnlocks=everyToy}).empty=="All toys owned")
    local hue=Shop.oddsRows("hue",{});assert(#hue.rows==4);for _,r in ipairs(hue.rows)do assert(r.value=="25%"and r.id~="reset")end -- Reset Hue jar dropped 2026-11-13
-   local material=Shop.oddsRows("material",{materialAvailable=true});assert(#material.rows>=1)
-   for _,r in ipairs(material.rows)do assert(r.value:match("%%$"))end
+   -- Material pool 4 (lucky Jelly, 2026-11-14): odds show only to a player the server marks
+   -- unrestricted and in random mode (MaterialDisclosure); they are weighted (45 / 10 / 45)
+   -- and add up to 100. Everyone else, and a snapshot that does not say, reads the fixed
+   -- "Next: <item>" row with no percentage. Older pools keep the plain odds list.
+   local Materials=require(game.ReplicatedStorage.Shared.MaterialCatalog)
+   local material=Shop.oddsRows("material",{materialAvailable=true,restricted=false,materialSelectionMode="random",materialUnlocks={}})
+   assert(#material.rows==#Materials.remaining({},Materials.PoolVersion)and #material.rows>=1 and not material.restricted and material.empty==nil,"material odds rows")
+   local sum=0
+   for _,r in ipairs(material.rows)do assert(r.value:match("%%$"),r.value);sum+=tonumber((r.value:gsub("%%$","")))or 0 end
+   assert(math.abs(sum-100)<1e-6,"material odds add up to 100: "..sum)
+   if Materials.PoolVersion==4 then
+    local fixed=Shop.oddsRows("material",{materialAvailable=true})
+    assert(#fixed.rows==1 and fixed.rows[1].id=="next"and fixed.rows[1].value==""and fixed.restricted==true,"pool 4 without an unrestricted snapshot reads Next")
+    local mismatch=Shop.oddsRows("material",{materialAvailable=true,restricted=false,materialSelectionMode="fixed"})
+    assert(mismatch.restricted==true and mismatch.empty=="Material Eggs are not ready yet.","a mode the server has not confirmed is never sold as random")
+   end
   end)
   test("pure: Hatch is disabled with N more Stars needed; receipts reopen first",function()
    local short=Shop.hatchAction("toy",{nectar=5});assert(not short.enabled and short.need=="3 more Stars needed"and short.text:find("Hatch"))

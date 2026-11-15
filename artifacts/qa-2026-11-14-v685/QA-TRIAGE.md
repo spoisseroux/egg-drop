@@ -62,3 +62,9 @@ H1, then H4 (quick), then D1/D2, then D3, then U3 and U4 (clipping), then U1, th
 Show Spencer real captures of H1 and H2 before calling them done.
 
 **No publish until Spencer says.** The handoff says v685 stays stable until he asks for a replacement build.
+
+## Stale specs (2026-11-14 late)
+
+- `scripts/CompactPhone.spec.lua`: geometry tables regenerated from `Screen.resolve` for the 16 px shift (`b70d56b`); body top 60, board H - 96, sheets at 76; the plate overlay is expected off on phones (70e0440 hid it, the spec still wanted it drawn); new D2 determinism check. In Studio Edit (cloned client) it passes through the handheld test; the Pocket Menu case then stops at "wipe finished", a tween timing check that needs Play.
+- `scripts/HatchEggsList.spec.lua` line 37: the spec was stale, the code is right. Material pool 4 (lucky Jelly) shows odds only to a player the server marks unrestricted and in random mode; a bare `{materialAvailable=true}` snapshot reads the fixed "Next" row, whose value is empty, so `value:match("%%$")` failed. The spec now asks for the unrestricted random rows (they add up to 100), and pins the Next row and the "mode not confirmed" case. In Edit it passes that test and stops later at the 3D egg templates, which need Play.
+- Run in Play: `MachineHub`, `CompactPhone`, `HatchEggsList` (copies are in `src/client/ZZSpecs/`).
