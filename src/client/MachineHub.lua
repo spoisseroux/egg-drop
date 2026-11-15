@@ -20,6 +20,8 @@ local WearableCatalog=require(Shared.WearableCatalog)
 local DeckThemes=require(Shared.DeckThemes)
 local BallThemes=require(Shared.BallThemes)
 local Deal=require(script.Parent.ShelfDeal)
+local HubArt=require(script.Parent.MachineHubArt)
+local Stamp=require(Shared.StampCard)
 local Hub={}
 Hub.__index=Hub
 Hub.Size=Vector2.new(848,608)
@@ -101,6 +103,89 @@ function Hub.shelfLines(id,ctx)
  local week=if ctx.week~=nil then ctx.week else Deal.week(type(ctx.state)=="table"and ctx.state or {})
  if not week then return nil end
  return Deal.lines(week,kinds,Hub.ShelfNames)
+end
+-- QA 2026-11-14 U2 (the hub felt empty): progress chips under each tile's line.
+-- Pure: today's daily quests finished (claimed, ready, or at their target) and how many there are.
+function Hub.questsDone(quests)
+ local rows=type(quests)=="table"and type(quests.daily)=="table"and quests.daily or {}
+ local done,total=0,0
+ for _,row in ipairs(rows)do
+  if type(row)=="table"then
+   total+=1
+   local progress,target=tonumber(row.progress),tonumber(row.target)
+   if row.claimed==true or row.ready==true or(progress and target and target>0 and progress>=target)then done+=1 end
+  end
+ end
+ return done,total
+end
+-- Pure: owned and total over the named book pages (every page when `ids` is nil).
+function Hub.bookCount(book,ids)
+ local owned,total=0,0
+ for _,page in ipairs(type(book)=="table"and type(book.pages)=="table"and book.pages or {})do
+  if type(page)=="table"and(ids==nil or table.find(ids,page.id))then
+   owned+=math.max(0,tonumber(page.owned)or 0);total+=math.max(0,tonumber(page.total)or 0)
+  end
+ end
+ return owned,total
+end
+-- Which book pages a machine's "owned / total" chip counts, and its wording.
+Hub.ChipPages=table.freeze({
+ hatch=table.freeze({pages=table.freeze({"toys"}),copy="hub.chip.toys"}),
+ style=table.freeze({pages=table.freeze({"faceplates","balls"}),copy="hub.chip.styles"}),
+ companions=table.freeze({pages=table.freeze({"wardrobe"}),copy="hub.chip.outfits"}),
+})
+-- Pure: a tile's chips, most important first: {{text, kind}} with kind "gold" once the
+-- thing is complete (all quests done, the whole book found), else "plain". None while
+-- locked, and none for a count the snapshot does not carry yet.
+function Hub.chips(id,ctx)
+ ctx=ctx or {}
+ if Hub.locked(id,ctx.owned)then return {}end
+ local state=type(ctx.state)=="table"and ctx.state or {}
+ local out={}
+ if id=="quests"then
+  local done,total=Hub.questsDone(state.quests)
+  if total>0 then table.insert(out,{text=UICopy.get("hub.chip.quests",{done=done,total=total}),kind=if done>=total then "gold"else "plain"})end
+  if type(state.stamps)=="number"and state.stamps==state.stamps and state.stamps>=0 then
+   table.insert(out,{text=UICopy.get("hub.chip.stamp",{count=Stamp.onCard(math.floor(state.stamps)),total=Stamp.Length}),kind="plain"})
+  end
+ elseif id=="book"then
+  local owned,total=Hub.bookCount(state.book)
+  if total>0 then
+   local percent=math.min(100,math.floor(owned*100/total))
+   table.insert(out,{text=UICopy.get("hub.chip.book",{percent=percent}),kind=if percent>=100 then "gold"else "plain"})
+  end
+ elseif Hub.ChipPages[id]then
+  local rule=Hub.ChipPages[id]
+  local owned,total=Hub.bookCount(state.book,rule.pages)
+  if total>0 then table.insert(out,{text=UICopy.get(rule.copy,{owned=owned,total=total}),kind=if owned>=total then "gold"else "plain"})end
+ end
+ return out
+end
+-- Pure: where a tile's parts sit, for a w x h tile. The art well takes the right side
+-- of a phone tile (a square) and the top-right of a desktop tile (beside the disc);
+-- the name, status, line and chips keep to the left of / under it. `line` and `chips`
+-- are nil when the tile is too short for them (the chips win over the line).
+function Hub.tileLayout(w,h,phone)
+ if phone then
+  local pad,disc=12,36
+  local tx=pad+disc+8
+  -- The well is a square on the right; a narrow tile (568-wide phones) shrinks it so the name keeps 56 px.
+  local side=math.max(36,math.min(h-20,76,w-18-tx-56))
+  local well={x=w-side-10,y=10,w=side,h=side}
+  local textW=well.x-8-pad
+  local out={pad=pad,disc=disc,well=well,name={x=tx,y=pad-2,w=well.x-8-tx,h=22},status={x=tx,y=pad+20,w=well.x-8-tx,h=16},textW=textW,chipH=24}
+  local lineY=pad+disc+6
+  if h>=lineY+18+2+24+6 then out.line={x=pad,y=lineY,w=textW,h=18};out.chips={x=pad,y=h-24-6,w=textW}
+  elseif h>=lineY+24+6 then out.chips={x=pad,y=lineY,w=textW}
+  elseif h>=lineY+18+4 then out.line={x=pad,y=lineY,w=textW,h=18}end
+  return out
+ end
+ local pad,disc=20,64
+ local wellX=pad+disc+12
+ local well={x=wellX,y=14,w=w-wellX-14,h=disc+10}
+ local textW=w-2*pad
+ return{pad=pad,disc=disc,well=well,name={x=pad,y=pad+disc+12,w=textW,h=28},line={x=pad,y=pad+disc+42,w=textW,h=40},
+  chips={x=pad,y=pad+disc+84,w=textW},status={x=pad,y=h-8-16,w=textW,h=16},textW=textW,chipH=24}
 end
 -- Pure: tile rects for a W x H screen (desktop: the 848 x 608 panel). Three columns,
 -- two rows. Desktop: under the 84 px header, above the hint bar at 566. Phone: under
@@ -221,31 +306,52 @@ function Hub:buildTiles(body,W,H,phone)
    position=UDim2.fromOffset(r.x,r.y),size=UDim2.fromOffset(r.w,r.h)})
   local name=UICopy.get(tile.name);local line=UICopy.get(tile.line)
   button:SetAttribute("AccessibleLabel",name..", "..line);button:SetAttribute("TileId",tile.id)
-  local discSize=if phone then 36 else 64
-  local pad=if phone then 12 else 20
+  local L=Hub.tileLayout(r.w,r.h,phone)
+  local discSize,pad=L.disc,L.pad
   local disc=Kit.frame(button,"IconDisc",nil,UDim2.fromOffset(pad,pad),UDim2.fromOffset(discSize,discSize),999);disc.BackgroundTransparency=0
   local icon=Kit.icon(disc,tile.icon,math.floor(discSize*.5),"ink");icon.AnchorPoint=Vector2.new(.5,.5);icon.Position=UDim2.fromScale(.5,.5)
+  -- U2: the glass art well (a live picture of the machine), with a sheen across its top
+  -- half, and the tile's own stitched seam where the card is tall enough for one.
+  local well=Kit.well(button,"ArtWell",UDim2.fromOffset(L.well.x,L.well.y),UDim2.fromOffset(L.well.w,L.well.h),if phone then 10 else 12)
+  well.ClipsDescendants=true;well.Active=false
+  local wellStroke=well:FindFirstChildOfClass("UIStroke")
+  local sheen=Kit.frame(well,"Sheen",nil,UDim2.new(),UDim2.new(1,0,.5,0),if phone then 10 else 12)
+  sheen.BackgroundTransparency=0;sheen.BackgroundColor3=Color3.new(1,1,1);sheen.ZIndex=well.ZIndex+6;sheen.Active=false
+  Kit.node("UIGradient",sheen,{Rotation=90,Transparency=NumberSequence.new(.9,1)})
+  Kit.seam(button)
   local nameLabel,lineLabel,statusLabel
   if phone then
-   local tx=pad+discSize+8
-   nameLabel=txt(button,"Name",name,"text",tx,pad-2,r.w-tx-8,22,{TextSize=16,TextTruncate=Enum.TextTruncate.AtEnd})
-   statusLabel=txt(button,"Label","","dim",tx,pad+20,r.w-tx-8,16,{Name="Status",TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
-   lineLabel=txt(button,"Small",line,"soft",pad,pad+discSize+6,r.w-2*pad,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
-   lineLabel.Visible=r.h>=pad+discSize+6+18+4
-   if tile.short then Kit.fitText(nameLabel,{name,UICopy.get(tile.short)},r.w-tx-8)end
+   nameLabel=txt(button,"Name",name,"text",L.name.x,L.name.y,L.name.w,L.name.h,{TextSize=16,TextTruncate=Enum.TextTruncate.AtEnd})
+   statusLabel=txt(button,"Label","","dim",L.status.x,L.status.y,L.status.w,L.status.h,{Name="Status",TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+   local lr=L.line or {x=pad,y=pad+discSize+6,w=L.textW,h=18}
+   lineLabel=txt(button,"Small",line,"soft",lr.x,lr.y,lr.w,lr.h,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+   lineLabel.Visible=L.line~=nil
+   Kit.fitText(nameLabel,if tile.short then {name,UICopy.get(tile.short)}else {name},L.name.w)
   else
-   nameLabel=txt(button,"Name",name,"text",pad,pad+discSize+14,r.w-2*pad,28,{TextSize=22,TextTruncate=Enum.TextTruncate.AtEnd})
-   lineLabel=txt(button,"Body",line,"soft",pad,pad+discSize+46,r.w-2*pad,44,{TextSize=15,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
-   statusLabel=txt(button,"Label","","dim",pad,r.h-pad-16,r.w-2*pad,16,{Name="Status",TextSize=12})
+   nameLabel=txt(button,"Name",name,"text",L.name.x,L.name.y,L.name.w,L.name.h,{TextSize=22,TextTruncate=Enum.TextTruncate.AtEnd})
+   lineLabel=txt(button,"Body",line,"soft",L.line.x,L.line.y,L.line.w,L.line.h,{TextSize=15,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
+   statusLabel=txt(button,"Label","","dim",L.status.x,L.status.y,L.status.w,L.status.h,{Name="Status",TextSize=12})
   end
   local dot=Kit.frame(button,"ReadyDot","stars",UDim2.new(),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.Visible=false
-  -- A chevron says "this opens a screen" (as on the Companions rows).
-  local chev=Kit.icon(button,"chevron",if phone then 14 else 18,"soft");chev.AnchorPoint=Vector2.new(.5,.5)
-  chev.Position=UDim2.fromOffset(r.w-(if phone then 16 else 24),pad+discSize/2)
-  local entry={id=tile.id,tint=tile.tint,button=button,stroke=tileState.stroke,state=tileState,disc=disc,icon=icon,name=nameLabel,line=lineLabel,status=statusLabel,dot=dot,
-   chevron=chev,phone=phone,pad=pad,
+  -- A chevron says "this opens a screen": a small raised badge on the well's lower right corner.
+  local badgeSize=if phone then 20 else 24
+  local badge=Kit.frame(button,"Go","raised",UDim2.fromOffset(L.well.x+L.well.w-badgeSize+4,L.well.y+L.well.h-badgeSize+4),UDim2.fromOffset(badgeSize,badgeSize),999)
+  badge.BackgroundTransparency=0;badge.ZIndex=well.ZIndex+8;badge.Active=false;Kit.stroke(badge)
+  local chev=Kit.icon(badge,"chevron",if phone then 12 else 14,"soft");chev.AnchorPoint=Vector2.new(.5,.5);chev.Position=UDim2.fromScale(.5,.5)
+  -- Progress chips (two at most) and the weekly shelf sticker over the well's top-right corner.
+  local chips={}
+  for slot=1,2 do
+   local chip=Kit.chip(button,"",nil,L.chipH);chip.label.TextSize=12;chip.root.Name="Chip"..slot;chip.root.Visible=false;chip.root.Active=false
+   chips[slot]=chip
+  end
+  local week=Kit.chip(button,UICopy.get("hub.week"),"sticker",22);week.label.TextSize=12
+  week.root.Name="WeekSticker";week.root.Visible=false;week.root.Active=false;week.root.ZIndex=well.ZIndex+9
+  week.set(UICopy.get("hub.week"),"sticker",Kit.Color.stars)
+  week.root.Position=UDim2.fromOffset(math.max(4,L.well.x+L.well.w-week.root.Size.X.Offset+2),L.well.y-6)
+  local entry={id=tile.id,iconName=tile.icon,tint=tile.tint,button=button,stroke=tileState.stroke,state=tileState,disc=disc,icon=icon,name=nameLabel,line=lineLabel,status=statusLabel,dot=dot,
+   chevron=chev,phone=phone,pad=pad,layout=L,well=well,wellStroke=wellStroke,chips=chips,week=week,
    -- The line label's room: one line on phones, two wrapped lines on desktop.
-   lineWidth=if phone then r.w-2*pad else math.floor((r.w-2*pad)*1.8)}
+   lineWidth=if phone then L.textW else math.floor(L.textW*1.8)}
   self.tileViews[index]=entry
   button.Activated:Connect(function()
    if not self.visible then return end
@@ -269,6 +375,7 @@ function Hub:paintTiles()
    local p=entry.status.Position
    if entry.phone then
     entry.status.Position=UDim2.fromOffset(entry.pad+36+8+14,p.Y.Offset)
+    entry.status.Size=UDim2.fromOffset(entry.layout.status.w-14,entry.layout.status.h)
     entry.dot.Position=UDim2.fromOffset(entry.pad+36+8,p.Y.Offset+4)
    else
     entry.status.Position=UDim2.fromOffset(entry.pad+14,p.Y.Offset)
@@ -276,6 +383,7 @@ function Hub:paintTiles()
    end
   else
    entry.status.Position=UDim2.fromOffset(if entry.phone then entry.pad+36+8 else entry.pad,entry.status.Position.Y.Offset)
+   entry.status.Size=UDim2.fromOffset(entry.layout.status.w,entry.layout.status.h)
   end
   -- Locked: the disc goes grey and the line says how it opens up.
   local tint=if s.locked then nil else Kit.tintColor(entry.tint)
@@ -286,6 +394,33 @@ function Hub:paintTiles()
   if shelf then Kit.fitText(entry.line,shelf,entry.lineWidth)end
   Kit.paint(entry.line,"TextColor3",function()return colorOf(if shelf then "stars"else "soft")end)
   entry.button:SetAttribute("Shelf",shelf~=nil)
+  -- U2: the art (rebuilt only when what it shows changes), the "this week" highlight
+  -- (gold sticker and a gold rim on the well) and the progress chips.
+  local key=HubArt.key(entry.id,self.ctx,s.locked)
+  if entry.artKey~=key or not entry.well:FindFirstChild("Art")then
+   entry.artKey=key
+   HubArt.fill(entry.well,entry.id,self.ctx,entry.layout.well.w,entry.layout.well.h,s.locked,entry.iconName)
+  end
+  entry.week.root.Visible=shelf~=nil
+  if entry.wellStroke then
+   entry.wellStroke.Thickness=if shelf then 2 else 1;entry.wellStroke.Transparency=if shelf then .15 else Kit.Stroke.transparency
+   entry.wellStroke.Color=if shelf then Kit.Color.stars else Kit.Stroke.color
+  end
+  local list=Hub.chips(entry.id,self.ctx)
+  local room=entry.layout.chips
+  local x=room and room.x or 0
+  local shown={}
+  for slot,chip in ipairs(entry.chips)do
+   local item=room and list[slot]
+   if item then chip.set(item.text,item.kind)end
+   local fits=item~=nil and x+chip.root.Size.X.Offset<=room.x+room.w
+   chip.root.Visible=fits
+   if fits then
+    chip.root.Position=UDim2.fromOffset(x,room.y);x+=chip.root.Size.X.Offset+6
+    table.insert(shown,chip.label.Text)
+   end
+  end
+  entry.button:SetAttribute("Chips",table.concat(shown,", "))
   if not s.locked then entry.button:SetAttribute("AccessibleLabel",entry.name.Text..", "..entry.line.Text)end
   Kit.paint(entry.name,"TextColor3",function()return colorOf(if s.locked then "soft"else "text")end)
   Kit.paint(entry.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised")end)

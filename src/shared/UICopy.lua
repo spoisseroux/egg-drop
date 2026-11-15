@@ -81,6 +81,10 @@ local Table={
    settings={name="Settings",line="Sound, music and motion"},
   },
   status={stamp="STAMP READY",locked="LOCKED"},
+  -- QA 2026-11-14 U2: progress chips on the hub tiles and the "this week" shelf sticker.
+  chip={quests="{done}/{total} today",stamp="Stamp {count}/{total}",book="{percent}% found",toys="{owned}/{total} toys",
+   styles="{owned}/{total} styles",outfits="{owned}/{total} outfits"},
+  week="This week",
  },
  pause={settings="Settings"},
  -- Empty states (T12, wired by P3 with the pet peek).

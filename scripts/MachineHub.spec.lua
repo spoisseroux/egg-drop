@@ -23,6 +23,11 @@ return function(client,parent)
  end
  local snapshot={nectar=128,dailyAvailable=true,quests={daily={{ready=true},{ready=false},{claimed=true,ready=true}},weekly={{ready=true}},bonusReady=false},
   book={claimable={"balls.25","eggs.25"}}}
+ -- QA 2026-11-14 U2: a fuller snapshot for the progress chips and the tile art.
+ local rich={nectar=40,stamps=10,dailyAvailable=true,
+  quests={daily={{progress=2,target=2,ready=true},{progress=1,target=3},{claimed=true}},weekly={}},
+  book={claimable={},pages={{id="balls",owned=3,total=10,ownedIds={}},{id="faceplates",owned=2,total=10,ownedIds={}},
+   {id="wardrobe",owned=5,total=20,ownedIds={}},{id="toys",owned=1,total=4,ownedIds={}},{id="discoveries",owned=0,total=6,ownedIds={}}}}}
  local ok,problem=xpcall(function()
   test("pure: six tiles in order, the machines first, house icons and tints",function()
    local ids,icons={},{}
@@ -78,6 +83,102 @@ return function(client,parent)
    assert(Hub.keyAction(K.ButtonA)=="open"and Hub.keyAction(K.Return)=="open"and Hub.keyAction(K.ButtonB)=="back"and Hub.keyAction(K.Escape)=="back")
    assert(Hub.keyAction(K.M)=="back"and Hub.keyAction(K.DPadLeft)=="left"and Hub.keyAction(K.S)=="down"and Hub.keyAction(K.Q)==nil)
   end)
+  test("U2 pure: progress chips (quests n/3, the stamp card, book %, owned counts)",function()
+   local Stamp=require(game:GetService("ReplicatedStorage").Shared.StampCard)
+   local done,total=Hub.questsDone(rich.quests);assert(done==2 and total==3,"ready and claimed count as done: "..done.."/"..total)
+   done,total=Hub.questsDone(nil);assert(done==0 and total==0)
+   local owned,all=Hub.bookCount(rich.book);assert(owned==11 and all==50,"whole book "..owned.."/"..all)
+   owned,all=Hub.bookCount(rich.book,{"faceplates","balls"});assert(owned==5 and all==20)
+   local ctx={owned=1,state=rich}
+   local q=Hub.chips("quests",ctx)
+   assert(#q==2 and q[1].text==UICopy.get("hub.chip.quests",{done=2,total=3})and q[1].kind=="plain","quests chip")
+   assert(q[2].text==UICopy.get("hub.chip.stamp",{count=Stamp.onCard(10),total=Stamp.Length}),"stamp chip")
+   local b=Hub.chips("book",ctx);assert(#b==1 and b[1].text==UICopy.get("hub.chip.book",{percent=22})and b[1].kind=="plain","book 22%")
+   assert(Hub.chips("hatch",ctx)[1].text==UICopy.get("hub.chip.toys",{owned=1,total=4}))
+   assert(Hub.chips("style",ctx)[1].text==UICopy.get("hub.chip.styles",{owned=5,total=20}))
+   assert(Hub.chips("companions",ctx)[1].text==UICopy.get("hub.chip.outfits",{owned=5,total=20}))
+   assert(#Hub.chips("settings",ctx)==0 and #Hub.chips("quests",{owned=0,state=rich})==0,"none on Settings, none while locked")
+   assert(#Hub.chips("book",{owned=1,state={}})==0 and #Hub.chips("quests",{owned=1,state={}})==0,"no count, no chip")
+   local full=Hub.chips("quests",{owned=1,state={quests={daily={{claimed=true},{ready=true}}}}})
+   assert(full[1].kind=="gold","all of today's quests done reads gold")
+   for _,key in ipairs({"hub.chip.quests","hub.chip.stamp","hub.chip.book","hub.chip.toys","hub.chip.styles","hub.chip.outfits","hub.week"})do assert(UICopy.has(key),key)end
+  end)
+  test("U2 pure: tile layout keeps the art well, text and chips inside the tile and apart",function()
+   for _,case in ipairs({{256,224,false},{252,105,true},{170,88,true},{290,113,true},{252,70,true}})do
+    local w,h,phone=case[1],case[2],case[3]
+    local L=Hub.tileLayout(w,h,phone)
+    local label=w.."x"..h
+    assert(L.well.x>=0 and L.well.y>=0 and L.well.x+L.well.w<=w-8 and L.well.y+L.well.h<=h-8,label.." well inside")
+    assert(L.well.w>=36 and L.well.h>=36,label.." well size")
+    assert(L.name.x+L.name.w<=w and L.name.w>=40,label.." name")
+    if phone then
+     assert(L.name.x+L.name.w<=L.well.x and L.status.x+L.status.w<=L.well.x,label.." text left of the well")
+     if L.line then assert(L.line.x+L.line.w<=L.well.x and L.line.y+L.line.h<=h,label.." line")end
+     if L.chips then assert(L.chips.x+L.chips.w<=L.well.x and L.chips.y+L.chipH<=h-3,label.." chips")end
+     if L.line and L.chips then assert(L.chips.y>=L.line.y+L.line.h,label.." chips under the line")end
+    else
+     assert(L.name.y>=L.well.y+L.well.h and L.line.y>=L.name.y+L.name.h,label.." text under the well")
+     assert(L.chips.y>=L.line.y+L.line.h and L.status.y>=L.chips.y+L.chipH and L.status.y+L.status.h<=h,label.." chips, then status")
+     assert(L.well.x>=L.pad+L.disc+8,label.." well beside the disc")
+    end
+   end
+   assert(Hub.tileLayout(252,105,true).line and Hub.tileLayout(252,105,true).chips,"812 x 354 shows the line and the chips")
+   assert(Hub.tileLayout(170,88,true).chips and not Hub.tileLayout(170,88,true).line,"a short tile keeps the chips")
+  end)
+  for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
+   test(tostring(size).." U2 built hub: art wells, chips and the weekly shelf highlight",function()
+    local Deal=require(client.ShelfDeal)
+    local Themes=require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
+    local plateId;for id in pairs(Themes.ById)do if plateId==nil or id<plateId then plateId=id end end
+    local before=Deal.override
+    Deal.override={slots=function(week)return if week==7 then {{kind="faceplate",id=plateId,full=40,price=32}}else {}end,
+     price=function()return nil end,weekOfDay=function()return 7 end}
+    local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
+    local hub=Hub.new(host,{})
+    local good,why=xpcall(function()
+     local state=table.clone(rich);state.shelfWeek=7
+     assert(hub:open({owned=1,wallet=40,state=state}));settle()
+     for i,entry in ipairs(hub.tileViews)do
+      local well=entry.button:FindFirstChild("ArtWell")
+      assert(well and inside(well,entry.button),"tile "..i.." art well inside the tile")
+      local art=well:FindFirstChild("Art")
+      assert(art and art:GetAttribute("TileId")==entry.id and art:GetAttribute("Locked")==false,"tile "..i.." art")
+      assert(#art:GetChildren()>0,"tile "..i.." art draws something")
+      assert(well:FindFirstChild("Sheen"),"tile "..i.." glass sheen")
+      assert(entry.button:FindFirstChild("Go")and inside(entry.button.Go,entry.button),"tile "..i.." chevron badge")
+      for _,chip in ipairs(entry.chips)do
+       if chip.root.Visible then
+        assert(inside(chip.root,entry.button)and chip.label.TextSize>=12,"tile "..i.." chip inside")
+        assert(chip.root.AbsolutePosition.X+chip.root.AbsoluteSize.X<=(if hub.view then well.AbsolutePosition.X else entry.button.AbsolutePosition.X+entry.button.AbsoluteSize.X)+1,"tile "..i.." chip clear of the well")
+       end
+      end
+      assert(entry.week.root.Visible==(entry.id=="style"),"tile "..i.." week sticker only on the shelf tile")
+      assert(entry.button:GetAttribute("Shelf")==(entry.id=="style"))
+     end
+     local seam=hub.tileViews[1].button:FindFirstChild("Seam")
+     if seam then assert(seam.Visible==(hub.view==nil),"seams only on tall (desktop) cards")end
+     assert(hub.tileViews[2].well.Art:GetAttribute("Shows")=="plate:"..plateId,"Deck style shows this week's shelf faceplate")
+     assert(hub.tileViews[2].wellStroke.Thickness==2 and hub.tileViews[1].wellStroke.Thickness==1,"gold rim on the shelf tile only")
+     assert(string.find(hub.tileViews[4].button:GetAttribute("Chips"),string.upper(UICopy.get("hub.chip.quests",{done=2,total=3})),1,true),"quests chip shown: "..tostring(hub.tileViews[4].button:GetAttribute("Chips")))
+     assert(string.find(hub.tileViews[5].button:GetAttribute("Chips"),"22%",1,true),"book chip shown")
+     assert(hub.tileViews[6].button:GetAttribute("Chips")=="","no chip on Settings")
+     -- A snapshot that moves nothing keeps the same art instance; a new stamp redraws Quests only.
+     local questArt,bookArt=hub.tileViews[4].well.Art,hub.tileViews[5].well.Art
+     hub:setContext({state=state});assert(hub.tileViews[4].well.Art==questArt and hub.tileViews[5].well.Art==bookArt,"art kept")
+     local next=table.clone(state);next.stamps=11
+     hub:setContext({state=next});settle()
+     assert(hub.tileViews[4].well.Art~=questArt and hub.tileViews[5].well.Art==bookArt,"only the stamp card redraws")
+     -- Locked (no pet yet): the art is the dimmed icon, no chips, no sticker.
+     hub:close("spec");hub:open({owned=0,wallet=0,state=state});settle()
+     assert(hub.tileViews[1].well.Art:GetAttribute("Locked")==true and hub.tileViews[1].well.Art:GetAttribute("Shows")=="icon")
+     assert(hub.tileViews[2].button:GetAttribute("Chips")==""and not hub.tileViews[2].week.root.Visible,"locked: no chips, no sticker")
+     assert(hub.tileViews[6].well.Art:GetAttribute("Locked")==false,"Settings keeps its sliders")
+    end,function(e)return tostring(e).." | "..debug.traceback()end)
+    Deal.override=before
+    hub:destroy();host:Destroy()
+    if not good then error(why,0)end
+   end)
+  end
   for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
    test(tostring(size).." built hub: house style, focus, opens through the caller, Back closes",function()
     local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
