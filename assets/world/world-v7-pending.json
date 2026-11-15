@@ -1,152 +1,40 @@
 {
- "note": "Verified world upload checkpoint; retain this file. Any changed geometry/import/file binding aborts runtime asset generation until a new upload is confirmed.",
+ "note": "Meshes changed by the last build_world_v7_chunks.py run. Upload world-v7-declutter.fbx, read back each MeshPart's MeshId and MeshSize into world-v7-studio-import.json, then run scripts/build_world_v7_assets.py --confirm-upload READBACK_JSON. Retain this pending file.",
  "changed": [
-  "W7_Architecture__marble",
-  "W7_Balustrades__marble",
-  "W7_Bridge__marble",
-  "W7_Landmarks__marble",
-  "W7_Rotunda__marble",
-  "W7_Stations__marble",
+  "W7_LampOrbs__glow_warm",
   "W7_Stations__marble_smooth",
-  "W7_Stations__palette",
-  "W7_Trunks__bark",
-  "W7_Vegetation__foliage",
-  "W7_Vegetation__foliage_blossom"
+  "W7_Stations__palette"
  ],
  "added": [],
  "dropped": [],
  "previous": {
-  "W7_Architecture__marble": {
-   "name": "W7_Architecture__marble",
-   "group": "Architecture__marble",
-   "material": "W1_marble",
-   "tris": 2676,
-   "collide": true,
-   "anim": null,
-   "region": "Architecture",
+  "W7_LampOrbs__glow_warm": {
+   "name": "W7_LampOrbs__glow_warm",
+   "group": "LampOrbs__glow_warm",
+   "material": "W1_glow_warm",
+   "tris": 140,
+   "collide": false,
+   "anim": "pulse",
+   "region": "LampOrbs",
    "center": [
-    -3.2581,
-    10.3038,
-    -8.2543
+    -0.175,
+    9.037,
+    3.985
    ],
    "size": [
-    188.6049,
-    17.0075,
-    145.7914
+    140.6875,
+    1.48,
+    96.9567
    ],
-   "top": 18.8075,
-   "hash": "8d2bfde93d7ee424"
-  },
-  "W7_Balustrades__marble": {
-   "name": "W7_Balustrades__marble",
-   "group": "Balustrades__marble",
-   "material": "W1_marble",
-   "tris": 3924,
-   "collide": true,
-   "anim": null,
-   "region": "Balustrades",
-   "center": [
-    2.0708,
-    5.5769,
-    28.4388
-   ],
-   "size": [
-    216.8779,
-    3.2336,
-    110.5057
-   ],
-   "top": 7.1937,
-   "hash": "81364ff645be87c8"
-  },
-  "W7_Bridge__marble": {
-   "name": "W7_Bridge__marble",
-   "group": "Bridge__marble",
-   "material": "W1_marble",
-   "tris": 372,
-   "collide": true,
-   "anim": null,
-   "region": "Bridge",
-   "center": [
-    4.0,
-    3.245,
-    21.0
-   ],
-   "size": [
-    25.2,
-    7.99,
-    7.4
-   ],
-   "top": 7.24,
-   "hash": "d755096c80d0d6e9"
-  },
-  "W7_Landmarks__marble": {
-   "name": "W7_Landmarks__marble",
-   "group": "Landmarks__marble",
-   "material": "W1_marble",
-   "tris": 180,
-   "collide": true,
-   "anim": null,
-   "region": "Landmarks",
-   "center": [
-    20.314,
-    7.3,
-    -47.8291
-   ],
-   "size": [
-    71.972,
-    7.2,
-    106.9901
-   ],
-   "top": 10.9,
-   "hash": "7ac082a1c345a5c5"
-  },
-  "W7_Rotunda__marble": {
-   "name": "W7_Rotunda__marble",
-   "group": "Rotunda__marble",
-   "material": "W1_marble",
-   "tris": 1250,
-   "collide": true,
-   "anim": null,
-   "region": "Rotunda",
-   "center": [
-    -51.3295,
-    13.4167,
-    38.4987
-   ],
-   "size": [
-    35.741,
-    19.3647,
-    41.4027
-   ],
-   "top": 23.099,
-   "hash": "74f5f89d2bd0878c"
-  },
-  "W7_Stations__marble": {
-   "name": "W7_Stations__marble",
-   "group": "Stations__marble",
-   "material": "W1_marble",
-   "tris": 1410,
-   "collide": true,
-   "anim": null,
-   "region": "Stations",
-   "center": [
-    18.472,
-    7.41,
-    17.5288
-   ],
-   "size": [
-    163.6559,
-    7.32,
-    105.5423
-   ],
-   "top": 11.07,
-   "hash": "6c420dc0bc030b43"
+   "top": 9.777,
+   "hash": "7b031524c7893aad",
+   "note": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
   },
   "W7_Stations__marble_smooth": {
    "name": "W7_Stations__marble_smooth",
    "group": "Stations__marble_smooth",
    "material": "W1_marble_smooth",
-   "tris": 984,
+   "tris": 978,
    "collide": true,
    "anim": null,
    "region": "Stations",
@@ -161,13 +49,13 @@
     96.89
    ],
    "top": 8.477,
-   "hash": "33497111ee97de8a"
+   "hash": "97d9f4e4544858a1"
   },
   "W7_Stations__palette": {
    "name": "W7_Stations__palette",
    "group": "Stations__palette",
    "material": "W1_palette",
-   "tris": 2030,
+   "tris": 2068,
    "collide": false,
    "anim": null,
    "region": "Stations",
@@ -182,192 +70,7 @@
     96.8707
    ],
    "top": 11.8,
-   "hash": "d4f371b0b896ae21"
-  },
-  "W7_Trunks__bark": {
-   "name": "W7_Trunks__bark",
-   "group": "Trunks__bark",
-   "material": "W1_bark",
-   "tris": 2164,
-   "collide": true,
-   "anim": null,
-   "region": "Trunks",
-   "center": [
-    -1.0969,
-    13.2474,
-    -3.0865
-   ],
-   "size": [
-    204.8081,
-    21.2147,
-    121.2968
-   ],
-   "top": 23.8547,
-   "hash": "4c67fd81454228b3"
-  },
-  "W7_Vegetation__foliage": {
-   "name": "W7_Vegetation__foliage",
-   "group": "Vegetation__foliage",
-   "material": "W1_foliage",
-   "tris": 3940,
-   "collide": false,
-   "anim": null,
-   "region": "Vegetation",
-   "center": [
-    12.273,
-    16.3707,
-    -9.8192
-   ],
-   "size": [
-    182.948,
-    25.0835,
-    141.3016
-   ],
-   "top": 28.9125,
-   "hash": "6e8e1a400245bb2c"
-  },
-  "W7_Vegetation__foliage_blossom": {
-   "name": "W7_Vegetation__foliage_blossom",
-   "group": "Vegetation__foliage_blossom",
-   "material": "W1_foliage_blossom",
-   "tris": 2260,
-   "collide": false,
-   "anim": null,
-   "region": "Vegetation",
-   "center": [
-    -15.1646,
-    12.8172,
-    -1.1917
-   ],
-   "size": [
-    185.0393,
-    17.6778,
-    128.7833
-   ],
-   "top": 21.6561,
-   "hash": "331654629fa058e5"
-  }
- },
- "confirmedImport": {
-  "W7_Architecture__marble": {
-   "hash": "86ce5ddaa49860a2",
-   "import": [
-    "112224834513733",
-    1781.0147705078125,
-    160.6041717529297,
-    1376.7222900390625
-   ]
-  },
-  "W7_Balustrades__marble": {
-   "hash": "740a59334ac0253d",
-   "import": [
-    "90370694053328",
-    2047.9998779296875,
-    30.535358428955078,
-    1043.51611328125
-   ]
-  },
-  "W7_Bridge__marble": {
-   "hash": "578e663df88a3816",
-   "import": [
-    "112550427460522",
-    237.9661102294922,
-    75.45037078857422,
-    69.87895202636719
-   ]
-  },
-  "W7_Landmarks__marble": {
-   "hash": "02d0997a261971b7",
-   "import": [
-    "111377172193133",
-    679.638916015625,
-    67.99016571044922,
-    1010.3182983398438
-   ]
-  },
-  "W7_Rotunda__marble": {
-   "hash": "9e6ff1efd7a82778",
-   "import": [
-    "119765879062476",
-    337.505859375,
-    182.86253356933594,
-    390.9696044921875
-   ]
-  },
-  "W7_Stations__marble": {
-   "hash": "0a55be270ebc0f77",
-   "import": [
-    "126589987182505",
-    1545.41943359375,
-    69.12351989746094,
-    996.6467895507812
-   ]
-  },
-  "W7_Stations__marble_smooth": {
-   "hash": "97d9f4e4544858a1",
-   "import": [
-    "119204983359532",
-    1327.4166259765625,
-    41.80475997924805,
-    914.9419555664062
-   ]
-  },
-  "W7_Stations__palette": {
-   "hash": "eaa342ed0545397a",
-   "import": [
-    "116040760150477",
-    1328.5496826171875,
-    69.78453063964844,
-    914.7593383789062
-   ]
-  },
-  "W7_Trunks__bark": {
-   "hash": "15ef81e15cb2f62c",
-   "import": [
-    "136929554219571",
-    1934.0234375,
-    200.33258056640625,
-    1145.417724609375
-   ]
-  },
-  "W7_Vegetation__foliage": {
-   "hash": "d193ab5cffb4fda3",
-   "import": [
-    "107244050589043",
-    1727.596435546875,
-    236.8658905029297,
-    1334.3248291015625
-   ]
-  },
-  "W7_Vegetation__foliage_blossom": {
-   "hash": "33c5209953f4b5a3",
-   "import": [
-    "136715169285013",
-    1747.3447265625,
-    166.93313598632812,
-    1216.1131591796875
-   ]
-  }
- },
- "upload": {
-  "assetId": "97399181362990",
-  "operationId": "25c9378b-cc5f-418f-8663-1dc9b3a348fd",
-  "checkpoint": {
-   "fbxSha256": "09aa885f05e0fb73be21379786403d33de26a82dfe0e388428c7e4c9e0c44e04",
-   "manifestSha256": "952100767ffed1c99e55ea1f06422045a4e19d6298d8b82d38f2e3cefec6828d",
-   "previousMeshIds": {
-    "W7_Architecture__marble": "111525815070510",
-    "W7_Balustrades__marble": "132004804505425",
-    "W7_Bridge__marble": "71683609399980",
-    "W7_Landmarks__marble": "132927533124516",
-    "W7_Rotunda__marble": "70893765710500",
-    "W7_Stations__marble": "132034112780999",
-    "W7_Stations__marble_smooth": "84761345601618",
-    "W7_Stations__palette": "71576879662786",
-    "W7_Trunks__bark": "90764302843268",
-    "W7_Vegetation__foliage": "118226242181820",
-    "W7_Vegetation__foliage_blossom": "111128518961406"
-   }
+   "hash": "eaa342ed0545397a"
   }
  }
 }

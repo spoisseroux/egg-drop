@@ -296,7 +296,9 @@ EXTRA_META = {}  # merged-mesh group key -> extra manifest fields (castle flag p
 
 # Lamps 1 and 2 stood on the Spawn-to-Hub dirt path: moved onto the grass just off the path edge
 # (Roblox studs dx, dy, dz; dy follows the ground). src/shared/HollowWorldLayout.lua Lamps moves with them.
-LAMP_MOVES = {1: (-0.35, -0.018, 1.97), 2: (-0.56, -0.014, -3.15)}
+# QA 2026-11-14 (W2): lamp 3 stood in the mouth of the first bridge (2 studs off its centre line); it moved 5 studs
+# along +z onto the lawn beside the left urn, clear of the bridge width.
+LAMP_MOVES = {1: (-0.35, -0.018, 1.97), 2: (-0.56, -0.014, -3.15), 3: (0.0, 0.15, 5.0)}
 
 
 def obj_named(sources, name):

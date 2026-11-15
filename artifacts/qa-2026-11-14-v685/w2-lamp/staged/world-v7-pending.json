@@ -1,0 +1,118 @@
+{
+ "note": "Verified world upload checkpoint; retain this file. Any changed geometry/import/file binding aborts runtime asset generation until a new upload is confirmed.",
+ "changed": [
+  "W7_LampOrbs__glow_warm",
+  "W7_Stations__marble_smooth",
+  "W7_Stations__palette"
+ ],
+ "added": [],
+ "dropped": [],
+ "previous": {
+  "W7_LampOrbs__glow_warm": {
+   "name": "W7_LampOrbs__glow_warm",
+   "group": "LampOrbs__glow_warm",
+   "material": "W1_glow_warm",
+   "tris": 140,
+   "collide": false,
+   "anim": "pulse",
+   "region": "LampOrbs",
+   "center": [
+    -0.175,
+    9.037,
+    3.985
+   ],
+   "size": [
+    140.6875,
+    1.48,
+    96.9567
+   ],
+   "top": 9.777,
+   "hash": "7b031524c7893aad",
+   "note": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
+  },
+  "W7_Stations__marble_smooth": {
+   "name": "W7_Stations__marble_smooth",
+   "group": "Stations__marble_smooth",
+   "material": "W1_marble_smooth",
+   "tris": 978,
+   "collide": true,
+   "anim": null,
+   "region": "Stations",
+   "center": [
+    -0.175,
+    6.2635,
+    3.985
+   ],
+   "size": [
+    140.57,
+    4.427,
+    96.89
+   ],
+   "top": 8.477,
+   "hash": "97d9f4e4544858a1"
+  },
+  "W7_Stations__palette": {
+   "name": "W7_Stations__palette",
+   "group": "Stations__palette",
+   "material": "W1_palette",
+   "tris": 2068,
+   "collide": false,
+   "anim": null,
+   "region": "Stations",
+   "center": [
+    -0.175,
+    8.105,
+    3.985
+   ],
+   "size": [
+    140.69,
+    7.39,
+    96.8707
+   ],
+   "top": 11.8,
+   "hash": "eaa342ed0545397a"
+  }
+ },
+ "confirmedImport": {
+  "W7_LampOrbs__glow_warm": {
+   "hash": "25783f4aa2eeafc9",
+   "import": [
+    "111376211885197",
+    2047.9639892578125,
+    21.543922424316406,
+    1411.3824462890625
+   ]
+  },
+  "W7_Stations__marble_smooth": {
+   "hash": "f514e8b97a68a632",
+   "import": [
+    "125972227162285",
+    2046.2532958984375,
+    64.44331359863281,
+    1410.410888671875
+   ]
+  },
+  "W7_Stations__palette": {
+   "hash": "02ca117510d52d42",
+   "import": [
+    "71188520415952",
+    2048.0,
+    107.57498168945312,
+    1410.1295166015625
+   ]
+  }
+ },
+ "upload": {
+  "assetId": "94799462047807",
+  "operationId": "ce9e44fa-4901-4d62-9c6d-7a2c2bbf0bdd",
+  "checkpoint": {
+   "fbxSha256": "bc84ef09792224f3efe41a946e71a7bad3da98e30857f180d753b9fba59a3520",
+   "manifestSha256": "9ad4b7af9abfd4df054ce053141ab54b4a35e92f86f4521b5d69af44011d6945",
+   "previousMeshIds": {
+    "W7_LampOrbs__glow_warm": "116409916215490",
+    "W7_Stations__marble_smooth": "119204983359532",
+    "W7_Stations__palette": "116040760150477"
+   }
+  }
+ }
+}
