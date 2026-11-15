@@ -4,9 +4,22 @@ return function(client, parent)
 	local root = Instance.new("Frame")
 	root.Name, root.Size, root.BackgroundTransparency, root.Parent = "_HatchActionsSpec", UDim2.fromOffset(360, 580), 1, parent
 	local cases, views = {}, {}
-	local function test(name, run) run(); table.insert(cases, name) end
+	local function test(name, body) body(); table.insert(cases, name) end
+	-- The 0.6 s retry timer is real time: wait for its effect (bounded), not a fixed sleep
+	-- that a slow frame under a full suite run can outlast.
+	local function waitFor(ready, seconds)
+		local deadline = os.clock() + (seconds or 5)
+		while not ready() and os.clock() < deadline do task.wait() end
+		return ready()
+	end
+	-- Determinism (2026-11-15): HatchCinematic remembers every presented receipt id in a
+	-- module-level table for the whole Play session, so a second run of this spec found its
+	-- fixed ids already "seen" and skipped the intros the cases below expect. Each run now
+	-- tags its ids.
+	local run = "#" .. game:GetService("HttpService"):GenerateGUID(false)
+	local function rid(name) return name .. run end
 	local function result(id, petId)
-		return { id = id or "fixture-reveal", petId = petId or "foxfire_wick", rare = true, family = "wick" }
+		return { id = rid(id or "fixture-reveal"), petId = petId or "foxfire_wick", rare = true, family = "wick" }
 	end
 	local function state(revision, hatch, status)
 		return { status = status or "Ready", revision = revision, lastHatch = hatch, nectar = 24, inventoryMask = 32 }
@@ -19,6 +32,13 @@ return function(client, parent)
 			if transport then transport(view, command, value, revision) end
 		end)
 		table.insert(views, view)
+		-- These cases pin the action / acknowledgement contract on the legacy 2D cinematic
+		-- (resultRoot, the 1.7 s rare split, a Reduced Motion result that is ready at once).
+		-- The native 3D display (70e0440) is presented by an asynchronous scene load and adds a
+		-- 0.15 s Reduced Motion intro, so the first action raced it: sometimes it acknowledged,
+		-- sometimes it was the skip. Native delegation has its own fixtures (HatchNativeHost,
+		-- HatchNativeCinematic); RevealStage.spec pins the legacy path the same way.
+		view.nativeDisplay = false
 		view.onClosed = function(reason, choice)
 			assert(view.ackIntent == nil, "intent must be dequeued before navigation")
 			table.insert(completed, { reason = reason, choice = choice })
@@ -31,7 +51,7 @@ return function(client, parent)
 		test("Meet acknowledges exact rare-only result and waits for advanced Ready", function()
 			local view, sent, completed = fixture()
 			view:chooseResult("meet"); view:chooseResult("play")
-			assert(#sent == 1 and sent[1].command == "ack" and sent[1].value == "fixture-reveal" and sent[1].revision == 10)
+			assert(#sent == 1 and sent[1].command == "ack" and sent[1].value == rid("fixture-reveal") and sent[1].revision == 10)
 			view:update(state(10, nil)); assert(#completed == 0 and view:isOpen())
 			view:update(state(11, nil, "Busy")); assert(#completed == 0)
 			view:update(state(11, nil)); view:update(state(12, nil))
@@ -77,10 +97,10 @@ return function(client, parent)
 			local attempts = 0
 			local view, sent, completed = fixture(result("throttled"), function(instance, command, value, revision)
 				attempts += 1
-				assert(command == "ack" and value == "throttled" and revision == 10)
+				assert(command == "ack" and value == rid("throttled") and revision == 10)
 				if attempts == 1 then instance:setError("One moment…") else instance:update(state(11, nil)) end
 			end)
-			view:chooseResult("meet"); task.wait(0.75)
+			view:chooseResult("meet"); waitFor(function() return #sent >= 2 end)
 			assert(#sent == 2 and #completed == 1 and completed[1].reason == "meet")
 		end)
 		test("Close cancels a scheduled pre-dispatch retry", function()
@@ -99,7 +119,7 @@ return function(client, parent)
 				end)
 				view:chooseResult("meet")
 				assert(view.ackRetryNeededToken and #sent == 1)
-				view:update(state(10, hatch)); task.wait(0.75)
+				view:update(state(10, hatch)); waitFor(function() return #sent >= 2 end)
 				assert(#sent == 2 and #completed == 1 and completed[1].reason == "meet")
 			end
 		end)
@@ -112,7 +132,7 @@ return function(client, parent)
 			view:chooseResult("play"); view:setError("One moment…")
 			view:update(state(10, hatch, "Busy")); task.wait(0.75)
 			assert(#sent == 1 and view.ackRetryNeededToken)
-			view:update(state(10, hatch)); task.wait(0.75)
+			view:update(state(10, hatch)); waitFor(function() return #sent >= 2 end)
 			assert(#sent == 2 and #completed == 1 and completed[1].reason == "afterHatch")
 		end)
 		test("Another pending transaction releases the captured ack on Ready", function()
@@ -127,7 +147,7 @@ return function(client, parent)
 				end
 			end)
 			view:chooseResult("meet"); assert(view.ackRetryNeededToken and #sent == 1)
-			view:update(state(11, hatch)); task.wait(0.75)
+			view:update(state(11, hatch)); waitFor(function() return #sent >= 2 end)
 			assert(#sent == 2 and sent[2].value == hatch.id and sent[2].revision == 10)
 			assert(view.ackIntent == nil and view.meetButton.Interactable and #completed == 0)
 			view:chooseResult("play"); assert(#sent == 3 and sent[3].revision == 11)
@@ -135,7 +155,7 @@ return function(client, parent)
 		end)
 		test("Repeated pre-dispatch locks are bounded and expose a user retry", function()
 			local view, sent, completed = fixture(result("bounded"), function(instance) instance:setError("One moment…") end)
-			view:chooseResult("play"); task.wait(2.1)
+			view:chooseResult("play"); waitFor(function() return #sent >= 4 and not view.pending end, 8); task.wait(0.75)
 			assert(#sent == 4 and #completed == 0 and not view.pending and view.ackIntent == nil)
 			assert(view.action.Interactable and view.action.Text == "Try again")
 			view:close()
@@ -191,7 +211,7 @@ return function(client, parent)
 			local hatch=result("retained-x");local view,sent,completed=fixture(hatch)
 			assert(view.closeButton.Text=="×" and view.closeButton:GetAttribute("AccessibleLabel")=="Close")
 			view:close("close");view:open(state(10,hatch))
-			assert(#sent==0 and #completed==1 and view.state.lastHatch.id=="retained-x")
+			assert(#sent==0 and #completed==1 and view.state.lastHatch.id==rid("retained-x"))
 			assert(view.closeButton.AbsoluteSize==Vector2.new(44,44))
 		end)
 		test("Mid-crack X and two reopens retain the result and show the quiet final scene", function()
@@ -265,9 +285,9 @@ return function(client, parent)
 			plays[1].complete(); plays[2].complete()
 			assert(selections == 1 and #sent == 0, "cancelled or duplicate completion reclaimed selection")
 			view:update(state(11, result("replacement", "pip")))
-			assert(not view.ackReady and view.lastPresentedId == "replacement")
+			assert(not view.ackReady and view.lastPresentedId == rid("replacement"))
 			plays[2].options.onPresented(); plays[2].complete()
-			assert(not view.ackReady and view.lastPresentedId == "replacement" and selections == 1)
+			assert(not view.ackReady and view.lastPresentedId == rid("replacement") and selections == 1)
 			plays[3].complete(); assert(view.ackReady and selections == 2)
 		end)
 		test("Fresh controller focus waits for Meet while a deliberate X remains selected", function()
