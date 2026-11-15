@@ -3496,6 +3496,17 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	end
 	roomView:setMode(mode)
 	clientUI.ambient:setRound(mode=="Board") -- W2: world ambience off, deck music on, during a round
+	-- QA v685 D2: every deck open lays the deck out again from the current screen size, safe
+	-- insets and top-bar keep-out (deferred, so an inset switch made for the round has
+	-- landed), and again once the frame after has settled. Nothing is kept from the last open.
+	if mode=="Board"then
+		task.defer(function()if board:GetAttribute("Mode")=="Board"then layout();updateHud()end end)
+		task.delay(.25,function()
+			-- Only if the screen or the keep-out moved after the first pass (a late safe-area inset).
+			local g=clientUI.deck.geometry;local size=backdrop.AbsoluteSize;local kx,kh=require(script.DeckKit).keepOut()
+			if board:GetAttribute("Mode")=="Board"and(not g or(g.phone and(g.W~=size.X or g.H~=size.Y or g.kx~=kx or g.kh~=kh)))then layout();updateHud()end
+		end)
+	end
 end)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
  for source in pairs(eggViews)do removeView(source)end

@@ -654,6 +654,9 @@ function Screen:layout(rootSize,aspect,keep)
 end
 function Screen:placeAll(rootSize,aspect,keep)
  local g=Screen.resolve(rootSize,aspect,keep);self.geometry=g
+ -- QA v685 D2: what this layout was resolved from, readable on the instance (a capture or
+ -- a spec can tell two layouts apart; one input always gives one layout).
+ self.root:SetAttribute("LayoutKey",string.format("%s:%dx%d:%d:%d",g.mode,math.floor(rootSize.X),math.floor(rootSize.Y),g.kx or 0,g.kh or 0))
  Kit.touchHidesFocus=g.phone==true
  self:showShell(true,g.phone==true)
  self:applyTransparency()
