@@ -1,3 +1,5 @@
+> RELEASE UPDATE: this checkpoint is now in **private v685**, published November14 with Spencer’s authorization. [Actual animations/Jelly/new visuals and release proof](native-review/README.md). Current v3 music retained by his choice. The no-publish statements below describe the original earlier checkpoint.
+
 # Unpublished QA checkpoint — 14 November 2026
 
 Follow-up review: [Spencer's 30 numbered pre-publish checks](PRE-PUBLISH-QA.md). The diagnostic two-item sizing image is not a proposed game screen. Spencer likes the v3 garden music direction but wants more melody and softer, more transformed samples; a separate [v4 local audition](audio/revision-4-melodic/README.md) is ready for listening. The checkpoint's v3 music is not accepted final music, and its runtime mapping is unchanged.

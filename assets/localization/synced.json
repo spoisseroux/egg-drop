@@ -307,6 +307,11 @@
    "context": "",
    "example": "Catalogue DeckBackgrounds (name)"
   },
+  "catalog.DeckBackgrounds.ById.moonpond.name": {
+   "source": "Moonpond",
+   "context": "",
+   "example": "Catalogue DeckBackgrounds (name)"
+  },
   "catalog.DeckStickers.ById.none.name": {
    "source": "Blank",
    "context": "",
@@ -512,10 +517,15 @@
    "context": "",
    "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.6.name"
   },
+  "catalog.MaterialCatalog.ById.jelly.name": {
+   "source": "Jelly",
+   "context": "",
+   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name"
+  },
   "catalog.MaterialCatalog.ById.matte.name": {
    "source": "Matte",
    "context": "",
-   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name"
+   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.8.name"
   },
   "catalog.MaterialCatalog.ById.metal.name": {
    "source": "Metal",
@@ -1360,7 +1370,7 @@
   "ui.book.pending": {
    "source": "Saving…",
    "context": "",
-   "example": "Collection book; also ui.results.saved.pending"
+   "example": "Collection book; also ui.onboarding.welcome.saving, ui.results.saved.pending"
   },
   "ui.book.promise": {
    "source": "Every page pays once. Nothing to buy.",
@@ -1477,6 +1487,41 @@
    "context": "",
    "example": "Collection book; e.g. Pet Park faceplate unlocked"
   },
+  "ui.care.notice.busy": {
+   "source": "Machine busy · keep carrying",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.care.notice.changed": {
+   "source": "Your pet changed · try again",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.care.notice.closer": {
+   "source": "Move closer to your pet or machine",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.care.notice.dry": {
+   "source": "Find a clear dry patch",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.care.notice.ended": {
+   "source": "Machine session ended",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.care.notice.retry": {
+   "source": "Couldn't complete · try again",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.care.notice.saving": {
+   "source": "Wait for your pet save",
+   "context": "",
+   "example": "Menu text"
+  },
   "ui.coach.book.line": {
    "source": "Fill the pages as you collect. Every page pays once.",
    "context": "",
@@ -1491,6 +1536,11 @@
    "source": "Companions",
    "context": "",
    "example": "First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name"
+  },
+  "ui.coach.effortPay": {
+   "source": "Good effort",
+   "context": "",
+   "example": "First-round coaching"
   },
   "ui.coach.fillLine.line": {
    "source": "Keep the pile under the line. Stay over it too long and the round ends.",
@@ -1525,7 +1575,7 @@
   "ui.coach.hatch.title": {
    "source": "Hatch eggs",
    "context": "",
-   "example": "First-round coaching; also ui.hub.tile.hatch.name, ui.r3.help.hatch.title, ui.r5.station.Eggs.name"
+   "example": "First-round coaching; also ui.hub.tile.hatch.name, ui.onboarding.spend.hatch, ui.r3.help.hatch.title, ui.r5.station.Eggs.name"
   },
   "ui.coach.hub.key": {
    "source": "Press M for every machine, any time.",
@@ -1600,7 +1650,7 @@
   "ui.coach.quest.title": {
    "source": "Quests",
    "context": "",
-   "example": "First-round coaching; also ui.coach.quests.title, ui.hub.tile.quests.name, ui.r3.help.quests.title, ui.r3.quests.eyebrow"
+   "example": "First-round coaching; also ui.coach.quests.title, ui.hub.quests.title, ui.hub.tile.quests.name, ui.r3.help.quests.title"
   },
   "ui.coach.questDone.line": {
    "source": "Claim its Stars in Quests, in the menu.",
@@ -1620,7 +1670,7 @@
   "ui.coach.skip": {
    "source": "Skip",
    "context": "",
-   "example": "First-round coaching"
+   "example": "First-round coaching; also ui.onboarding.welcome.skip"
   },
   "ui.coach.style.line": {
    "source": "Faceplates, backgrounds and balls. Looks only.",
@@ -1681,6 +1731,41 @@
    "source": "Someone's on the way…",
    "context": "",
    "example": "Menu text"
+  },
+  "ui.hatch.display.firstFriend": {
+   "source": "Your first friend",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.display.friend": {
+   "source": "New friend",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.display.line": {
+   "source": "The display wakes up",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.display.loading": {
+   "source": "Preparing your surprise…",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.display.owned": {
+   "source": "Already owned",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.display.refund": {
+   "source": "Already owned · {count} Stars back",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Already owned · 3 Stars back"
+  },
+  "ui.hatch.display.wait": {
+   "source": "A little surprise",
+   "context": "",
+   "example": "Hatch eggs screen"
   },
   "ui.hatch.egg.feature.description": {
    "source": "Something pointy is growing in here. Hatches one feature item to grow on any pet.",
@@ -1749,6 +1834,26 @@
   },
   "ui.hatch.footer.phone": {
    "source": "The odds are on the label",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.material.fixed": {
+   "source": "16 Stars · one guaranteed finish. No duplicates.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.material.nextPromise": {
+   "source": "No duplicates. Your next finish is shown above.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.material.oddsPromise": {
+   "source": "No duplicates. Odds update with your collection.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.material.random": {
+   "source": "16 Stars · one unowned finish. No duplicates.",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1882,15 +1987,115 @@
    "context": "",
    "example": "Pause menu"
   },
+  "ui.onboarding.spend.give": {
+   "source": "Give to {pet}",
+   "context": "",
+   "example": "First-round coaching; e.g. Give to Bear"
+  },
+  "ui.onboarding.spend.line": {
+   "source": "Choose a Toy Egg when you're ready.",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.onboarding.spend.ready": {
+   "source": "A toy for {pet}",
+   "context": "",
+   "example": "First-round coaching; e.g. A toy for Bear"
+  },
+  "ui.onboarding.spend.store": {
+   "source": "Store",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.onboarding.welcome.egg": {
+   "source": "Mystery egg",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.onboarding.welcome.friend": {
+   "source": "Hatch a friend",
+   "context": "",
+   "example": "First-round coaching; also ui.r1.welcomePill.narrow"
+  },
+  "ui.onboarding.welcome.gamepad": {
+   "source": "D-pad · A",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.onboarding.welcome.keyboard": {
+   "source": "← → · SPACE",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.onboarding.welcome.match": {
+   "source": "Match",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.onboarding.welcome.more": {
+   "source": "One more!",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.onboarding.welcome.static": {
+   "source": "↓",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.park.ballOut": {
+   "source": "Ball is out",
+   "context": "",
+   "example": "Pet Park chip"
+  },
   "ui.park.done": {
    "source": "+{reward} ★ today",
    "context": "",
    "example": "Pet Park chip; e.g. +5 ★ today"
   },
+  "ui.park.fetchUnavailable": {
+   "source": "The ball needs a clear lane.",
+   "context": "",
+   "example": "Pet Park chip"
+  },
+  "ui.park.fetchWait": {
+   "source": "Give them a moment.",
+   "context": "",
+   "example": "Pet Park chip"
+  },
+  "ui.park.fetching": {
+   "source": "They’re on it.",
+   "context": "",
+   "example": "Pet Park chip"
+  },
+  "ui.park.games": {
+   "source": "Games {count}/{target}",
+   "context": "",
+   "example": "Pet Park chip; e.g. Games 3/3"
+  },
   "ui.park.playDate": {
    "source": "Play date {count}/{target}",
    "context": "",
    "example": "Pet Park chip; e.g. Play date 3/3"
+  },
+  "ui.park.playing": {
+   "source": "Playing · {count}/{target}",
+   "context": "",
+   "example": "Pet Park chip; e.g. Playing · 3/3"
+  },
+  "ui.park.saving": {
+   "source": "Saving · {count}/{target}",
+   "context": "",
+   "example": "Pet Park chip; e.g. Saving · 3/3"
+  },
+  "ui.park.throw": {
+   "source": "Throw",
+   "context": "",
+   "example": "Pet Park chip"
+  },
+  "ui.park.waitIdle": {
+   "source": "Pets are playing",
+   "context": "",
+   "example": "Pet Park chip"
   },
   "ui.pet.capped": {
    "source": "{pet}'s had plenty of pets today",
@@ -1942,6 +2147,36 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.qa.coach.sayHi": {
+   "source": "Say hi to {pet}",
+   "context": "",
+   "example": "Menu text; e.g. Say hi to Bear"
+  },
+  "ui.qa.coach.welcome": {
+   "source": "Match eggs. Hatch a friend.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.qa.loading": {
+   "source": "Getting the preview ready…",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.qa.retryPreview": {
+   "source": "Retry preview",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.qa.shortfall": {
+   "source": "{count} more Stars needed",
+   "context": "",
+   "example": "Menu text; e.g. 3 more Stars needed"
+  },
+  "ui.qa.shortfallOne": {
+   "source": "{count} more Star needed",
+   "context": "",
+   "example": "Menu text; e.g. 3 more Star needed"
+  },
   "ui.quests.allDone": {
    "source": "All done. {pet} is impressed.",
    "context": "",
@@ -1954,11 +2189,6 @@
   },
   "ui.r1.hatchHints.hatch": {
    "source": "Hatch",
-   "context": "",
-   "example": "Menu text"
-  },
-  "ui.r1.welcomePill.narrow": {
-   "source": "Hatch a friend",
    "context": "",
    "example": "Menu text"
   },
@@ -2003,12 +2233,12 @@
    "example": "Menu text"
   },
   "ui.r3.help.companions.a.line": {
-   "source": "Everyone you hatch lives here. Visit them and swap who tags along.",
+   "source": "Hearts show bond. Petting, rounds and Play dates grow it. Level up to unlock tricks.",
    "context": "",
    "example": "Menu text"
   },
   "ui.r3.help.companions.a.title": {
-   "source": "Your pets",
+   "source": "Bond hearts",
    "context": "",
    "example": "Menu text"
   },
@@ -2033,7 +2263,7 @@
    "example": "Menu text"
   },
   "ui.r3.help.hatch.a.line": {
-   "source": "Win rounds, finish quests and stamp your card. Stars pay for eggs.",
+   "source": "Rounds and quests earn Stars. Open Quests for your once-daily stamp.",
    "context": "",
    "example": "Menu text"
   },
@@ -2446,6 +2676,26 @@
    "source": "Send again soon",
    "context": "",
    "example": "Bug report sheet"
+  },
+  "ui.results.inPlace.metrics": {
+   "source": "Score {score} · Best {best} · Chain ×{chain}",
+   "context": "",
+   "example": "Round results screen; e.g. Score {score} · Best {best} · Chain ×{chain}"
+  },
+  "ui.results.inPlace.noStars": {
+   "source": "No Stars this round",
+   "context": "",
+   "example": "Round results screen"
+  },
+  "ui.results.inPlace.replay": {
+   "source": "Replay",
+   "context": "",
+   "example": "Round results screen"
+  },
+  "ui.results.inPlace.total": {
+   "source": "Total  ★ {count}",
+   "context": "",
+   "example": "Round results screen; e.g. Total  ★ 3"
   },
   "ui.results.leave.mid": {
    "source": "Leave to garden",

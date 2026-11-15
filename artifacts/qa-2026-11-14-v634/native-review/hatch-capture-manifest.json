@@ -1,0 +1,50 @@
+[
+  {
+    "kind": "bear",
+    "actual_renderer": true,
+    "time_stepped": true,
+    "fps": 12,
+    "frames": 54,
+    "synthetic_receipt": true,
+    "no_transaction": true,
+    "video": "bear-hatch-native.mp4",
+    "sha256": "605be437e07b276201b42a690f005dde3153a952606f9f803675173ccd3c8c9a",
+    "gif": "bear-hatch-native.gif"
+  },
+  {
+    "kind": "toy",
+    "actual_renderer": true,
+    "time_stepped": true,
+    "fps": 12,
+    "frames": 39,
+    "synthetic_receipt": true,
+    "no_transaction": true,
+    "video": "toy-hatch-native.mp4",
+    "sha256": "e2ca7a67e9b46ed4e6cb25a2fe540d8e4b198dda9822fa6a5e60d489974e4019",
+    "gif": "toy-hatch-native.gif"
+  },
+  {
+    "kind": "hue",
+    "actual_renderer": true,
+    "time_stepped": true,
+    "fps": 12,
+    "frames": 39,
+    "synthetic_receipt": true,
+    "no_transaction": true,
+    "video": "hue-hatch-native.mp4",
+    "sha256": "a29ba293fc4d29a3da395415e6a3575167c61dab02fac4aaba06aad156457e6a",
+    "gif": "hue-hatch-native.gif"
+  },
+  {
+    "kind": "material",
+    "actual_renderer": true,
+    "time_stepped": true,
+    "fps": 12,
+    "frames": 39,
+    "synthetic_receipt": true,
+    "no_transaction": true,
+    "video": "material-hatch-native.mp4",
+    "sha256": "90eff22a01fcca8222903360cc9f376b0c1e6f03474cd4ee95de7f074ea3870e",
+    "gif": "material-hatch-native.gif"
+  }
+]

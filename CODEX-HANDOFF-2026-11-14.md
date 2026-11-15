@@ -1,3 +1,5 @@
+> CURRENT STATE: private **v685** published November14 after Spencer explicitly requested actual previews then private phone QA. Read PLAY-BUILD and native-review/README.md under artifacts/qa-2026-11-14-v634. Actual pet/item hatches and Jelly/new visuals shown; translations synced59add/update,4delete. Current72s v3 music retained by Spencer’s choice; v4 audition stays local. Public release held. Earlier no-publish/wait instructions below are historical and superseded for this private QA publish.
+
 > CURRENT CODEX UPDATE — November14, after Spencer's QA: implementation is complete in the unpublished working checkpoint. Read [UNPUBLISHED-RESULT.md](artifacts/qa-2026-11-14-v634/UNPUBLISHED-RESULT.md) and current TODO first.56server/36client suites pass; native collision persistence, first-toy callback ordering, hatch/Jelly/music/QA fixes are integrated. NO EXPERIENCE PUBLISH. Blip stays parked; Names Egg/visitor interactions are scopes only. The original handoff below is historical.
 
 # Codex handoff, 2026-11-14 (from Claude Code)

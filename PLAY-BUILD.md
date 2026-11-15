@@ -1,3 +1,15 @@
+# Private v685 — published November 14, 2026
+
+**Private phone-QA build.** Studio confirmed publish success and “Add publish notes to v685”; Open Cloud confirms PRIVATE with mobile/tablet enabled. Runtime matches reviewed `70e0440` (source checkpoint `00287c5` plus translation sync). Fresh saves remain enabled for private QA.
+
+Includes world/collision/second-park/shared-fetch fixes, November14 UI/onboarding/report/loss-payout changes, tightened reusable native pet/item hatches and timed SFX, lucky Jelly Material pool4, and Moonpond. Spencer chose the current72s v3 garden/Deck music; v4 remains local only. Blip stays disabled; Names/visitor Hello are scopes only.
+
+Verified before publish: 301 runtime sources match Studio; 498 script containers compile; zero capture helpers in Edit. Fresh preflight23pipeline tests/build/170native collision payloads pass; prior56server/36client suite history and20,920matching rays retained. **Translations synced (59 add/update, 4 delete)**; post-sync dryrun0/0. Actual phone/two-account/service acceptance is Spencer’s next pass, not claimed done.
+
+[Actual animations/Jelly/new visuals](artifacts/qa-2026-11-14-v634/native-review/README.md) · [Release evidence](artifacts/qa-2026-11-14-v634/native-review/private-v685.json) · [Phone QA walkthrough](artifacts/qa-2026-11-14-v634/PRE-PUBLISH-QA.md). Public release remains on hold.
+
+---
+
 ## Unpublished checkpoint — 2026-11-14
 
 No experience publish; published QA baseline remains private v634. World/garden/QA fixes, native hatch/SFX, lucky Jelly pool4 and sparse garden/deck working music are integrated. Native56server/36client suites pass across initial runs and targeted reruns; fresh full-build20,920collision rays match. Native Studio download copies preserve all170physical payloads. Local translation CSV regenerated:591strings; cloud sync deferred until an authorized publish. [Current result and evidence](artifacts/qa-2026-11-14-v634/UNPUBLISHED-RESULT.md).

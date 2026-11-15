@@ -1,0 +1,167 @@
+{
+  "placeId": 96451847774961,
+  "universeId": 10774758591,
+  "version": 685,
+  "published": true,
+  "visibility": "PRIVATE",
+  "mobileEnabled": true,
+  "tabletEnabled": true,
+  "sourceCheckpoint": "00287c5",
+  "runtimeReference": "70e0440",
+  "runtimeSourceFiles": 301,
+  "runtimeSourceMismatches": 0,
+  "compiledEditContainers": 498,
+  "compileErrors": 0,
+  "captureHelpersInEdit": [],
+  "translations": {
+    "entries": 591,
+    "addUpdate": 59,
+    "deleted": 4,
+    "postSyncDryRun": {
+      "addUpdate": 0,
+      "deleted": 0
+    }
+  },
+  "music": {
+    "gardenVersion": "v3",
+    "seconds": 72,
+    "gardenAsset": "73327108010209",
+    "deckAsset": "108432047352639",
+    "choice": "Spencer explicitly chose Current sparse v3 music (72-second loop) for phone QA",
+    "v4Mapped": false
+  },
+  "flags": {
+    "TestFreshSaves": true,
+    "Park": true,
+    "SecondPet": false,
+    "Features": false,
+    "DayNight": false,
+    "PseudoLocale": false
+  },
+  "studioOutput": {
+    "localTime": "2026-11-14 19:59:19",
+    "message": "Published new changes in Egg Drop to Roblox",
+    "quickLink": "Add publish notes to v685"
+  },
+  "observations": {
+    "phoneQa": false,
+    "twoAccountQa": false,
+    "cloudVmSourceReadback": false,
+    "actualRobloxRenderPreviews": true
+  },
+  "serverSize": 50,
+  "publicLaunchServerSizeTarget": 12,
+  "knownCaptureWarnings": [
+    "Legacy asset203785492 type mismatch",
+    "Companion Egg colorMap79542364257645 reported missing baseline representation during capture; visible patterned egg rendered. Recheck delivery in standalone phone QA."
+  ],
+  "engineering": {
+    "timestampUtc": "2026-11-15T00:36:16.114730+00:00",
+    "verdict": "GO for private publish after parent completes required actual media presentation and release steps",
+    "head": "00287c5ec58305b9d01f6ce3b2e3f2ecd9fb25bd",
+    "runtimeReference": "70e0440",
+    "runtimeAndWorldAssetsIdenticalToReference": true,
+    "noDirtyRuntimeOrMountedAssets": true,
+    "expectedPlaceId": 96451847774961,
+    "targetVerification": "Expected target from authorized task; root must verify connected Studio target. No Studio controls/observation by this worker.",
+    "flags": {
+      "Features": false,
+      "DayNight": false,
+      "Park": true,
+      "TestFreshSaves": true,
+      "PseudoLocale": false,
+      "SecondPet": false,
+      "WeeklyShelf": true
+    },
+    "activeAudio": {
+      "garden": "73327108010209",
+      "deck": "108432047352639",
+      "hatch": {
+        "hatch_bear": "94929788748319",
+        "hatch_toy": "140151371099628",
+        "hatch_hue": "135561195788984",
+        "hatch_material": "127019856465293",
+        "hatch_feature": "130641607051751"
+      },
+      "v4AuditionMapped": false,
+      "proof": "Runtime/audio files byte-identical to reviewed70e0440;00287c5 only local audition work"
+    },
+    "jelly": {
+      "poolVersion": 4,
+      "nativeVerifiedProfiles": [
+        "BodyJelly",
+        "BodyTwoToneJelly",
+        "BodyTwoToneGloss",
+        "BodyTwoToneMatte"
+      ],
+      "flagsReadback": {
+        "BodyJelly": true,
+        "BodyTwoToneGloss": true,
+        "BodyTwoToneMatte": true,
+        "BodyTwoToneJelly": true
+      }
+    },
+    "nativeCollision": {
+      "preflight": "PASS",
+      "pipelineTests": 23,
+      "allTestsPassed": true,
+      "fullFreshBuildPhysicalBuffers": 170,
+      "allHashesEqualApprovedExport": true,
+      "nativeSha256": "98a95633da48bdfb54af5a16311502a03f7f711d02814a4be83417e870890003"
+    },
+    "rojoBuild": {
+      "path": "build/private-publish-preflight.rbxlx",
+      "passed": true,
+      "sha256": "b3aeb0ac01d8f97ef81ddc162a130015cfa1f7f77089a3b2be88936973d03b60"
+    },
+    "runtimeCompile": {
+      "files": 301,
+      "errors": []
+    },
+    "unrelatedDirtyFilesPreserved": true,
+    "preservedDirtyFileSha256": {
+      "TODO.md": "0606e3977637a6d90fa909333c8499799d278d249c0c4de5899880f7356bf855",
+      "artifacts/localization/hardcoded-strings.csv": "8948fd10f8e3df7daa1f361b45790ec17bb5c71ad32a592a8e90a62998c10bbd",
+      "artifacts/scope-2026-11-12/raw/build-report.json": "a1181f57508702ccc41167a8b02f543b28917ac598b1c03255b74ed8fd00bb5a",
+      "artifacts/scope-2026-11-12/raw/raw-alt-back.png": "7734b13f74596a1e72cedfb1f520810f88c4c39cac5c7c85e431a43927fe3049",
+      "artifacts/scope-2026-11-12/raw/raw-alt-front.png": "e52fdb78da5672aeda05342f93f9fc9093b647ba3eb52b6e49666dbfdba97fef",
+      "artifacts/scope-2026-11-12/raw/raw-bare-back.png": "226424feee79c23a6e4bf994f9404a8972d24bd0e43e064a5f5de293f695af86",
+      "artifacts/scope-2026-11-12/raw/raw-bare-front.png": "89c26c8b3796b5c03cef3d826fcd64043ddddbe783e486712551a4cf7da1a596",
+      "artifacts/scope-2026-11-12/raw/raw-closeup-helix-hat.png": "75c70662a08b638c2ad7f9ec5ee6b1926f12d5f7465cac91c74ace5c428dfcfc",
+      "artifacts/scope-2026-11-12/raw/raw-dressed-backleft.png": "0eb11981392bd0da8495e3d27486ee8f218d81280e4f53725b76a85e5a120803",
+      "artifacts/scope-2026-11-12/raw/raw-dressed-front.png": "8b6ba79d2379367a9437f42d786e89a6c19ce14121486a88a44c0152c6dc333c",
+      "artifacts/scope-2026-11-12/raw/raw-horn-s1.png": "4713e5717203d9bde90b43a4c9992d12d9d7c3cc883b529cd7bdeec8c2ea0b82",
+      "artifacts/scope-2026-11-12/raw/raw-horn-s2.png": "8617d3282f1c9f9bc38ee52e343253d64773cf050dac73ab77880338cb3ddd65",
+      "artifacts/scope-2026-11-12/raw/raw-horn-s3.png": "187bb5bc0a0f4592505e85084b184cab2cf397575e64cddcfea5f9ed42db511a",
+      "artifacts/scope-2026-11-12/raw/raw-horn-s4.png": "058361b3aff40147ebdd9ee590d057684e5f21003c52ddad533ba636b49221b8",
+      "artifacts/scope-2026-11-12/raw/raw-horn-s5.png": "1893a2bcd7eeb75f0b197afcc35672c976c470acf1e2a808885ff4fda41ff715",
+      "assets/garden-babies/garden-babies.blend": "de86b93b97b3a62f1cd9b44816d50862a28c890299b87961a8975676130524cf",
+      "assets/localization/synced.json": "44fb52bdab40a5de295e346a2c360d15e2952f7580b6878b7f5b6faa229fb83b"
+    },
+    "noSourceEdits": true,
+    "noLocalizationSync": true,
+    "noStudioAction": true,
+    "noPublishAction": true,
+    "parentOwnedRemaining": [
+      "Show actualnative pet/item animation/Jelly/newchanges required by user",
+      "Confirm target place96451847774961 and private audience",
+      "Localization export/cloud sync and exact revision record",
+      "Actual private publication/versionreadback; no public launch"
+    ],
+    "limits": "Private QA GO only; TestFreshSavestrue intentional. Does not certify physical/public-launch acceptance.",
+    "preservedUntrackedExclusions": {
+      "assets\\garden-babies\\mouthTex.png": "bb23c734669e92117553ac0eec984e0a870567b11b62065a6183074dcc3af280"
+    }
+  },
+  "oldServerRollout": {
+    "request": "restartServers",
+    "placeIds": [
+      96451847774961
+    ],
+    "closeAllVersions": false,
+    "bleedOffServers": false,
+    "httpStatus": 200,
+    "response": {},
+    "note": "Requested restart of older versions only after private v685 publish; does not certify standalone server population."
+  }
+}
