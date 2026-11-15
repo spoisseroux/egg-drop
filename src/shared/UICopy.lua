@@ -317,6 +317,8 @@ local Table={
   -- The last level: nothing more is promised.
   top="Lv {count} · Best friends",
  },
+ -- QA v685 R10: the daily stamp chip on the Hatch eggs header (a counter; opens Quests).
+ stampChip={done="✓ {count}/{total}",open="{count}/{total}",label="Daily stamp"},
  -- QA v685 R6: another player's pet, as a read-only profile card, and the reward-free
  -- hello. The name slot shows the species until Names ships (v2).
  inspect={

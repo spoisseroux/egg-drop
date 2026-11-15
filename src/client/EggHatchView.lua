@@ -752,6 +752,8 @@ function View:buildShopChrome(view)
  self.shopBody=body
  self.shopHeader=Kit.header(body,{title="Hatch eggs",eyebrow="Garden",tint="hatch",compact=phone,width=g.W,left=24,onBack=function()self:close("close")end})
  self.shopBackButton=self.shopHeader.back.root;self.shopBackButton.Selectable=true
+ -- QA v685 R10: today's stamp at a glance (the card itself stays in Quests); opens Quests.
+ self.stampChip=require(script.Parent.StampChip).new(self.shopHeader,{compact=phone,onOpen=function()if self.onQuests then self.onQuests()end end})
  -- Pane: egg well, name + price chip, description, odds, need line, primary button.
  local pane=Kit.card(body,"EggPane",nil,{pad=g.pad,seam=not phone}) -- QA v685 U3: the stitched seam read as a broken border on the phone pane;pane.Position=UDim2.fromOffset(g.pane.x,g.pane.y);pane.Size=UDim2.fromOffset(g.pane.w,g.pane.h)
  self.shopPane=pane
@@ -1044,6 +1046,7 @@ function View:paintEggPane()
  Kit.setGlyphVisible(self.hatchButton,not phone or not Kit.lastInputTouch())
  self.shopHeader.setTitle(if self.headerTitle and self.headerTitle~="Hatch eggs"then self.headerTitle else "Hatch eggs")
  if self.shopHeader.wallet then self.shopHeader.wallet.set(self.state.nectar or 0)end
+ if self.stampChip then self.stampChip:set(self.state)end
  self.shopPanel:SetAttribute("SelectedEgg",id);self.shopPanel:SetAttribute("OddsRows",#odds.rows);self.shopPanel:SetAttribute("OddsRestricted",odds.restricted==true)
 end
 function View:sync3D()

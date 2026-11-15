@@ -1086,6 +1086,12 @@ do
  nurseryView.onOpenMaterial=function(purchase)open("material",purchase)end
  nurseryView.onOpenToy=function(purchase)open("toy",purchase)end
  nurseryView.onOpenFeature=function(purchase)open("feature",purchase)end
+ -- QA v685 R10: the Hatch eggs stamp chip opens Quests on the daily tab.
+ nurseryView.onQuests=function()
+  if not nurseryView:isOpen()then return end
+  nurseryView:close("quests")
+  task.defer(function()if not nurseryView:isOpen()then clientUI.openQuestLog("daily")end end)
+ end
  clientUI.syncDirectHatch=function()
   local kind=clientUI.directHatch;if not kind or not nurseryState then return end
   local k=kinds[kind];local intent=clientUI[k.intent]
