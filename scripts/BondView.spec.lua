@@ -227,7 +227,7 @@ return function(client,parent)
    -- playBeat never interrupts a running beat and refuses unknown beats.
    self,pet=room({[petId]=0});assert(self:playBeat("stretch")and pet.idleBeat.kind=="stretch"and not self:playBeat("wave")and not self:playBeat("nope"))
    -- A trick's sit is the short one.
-   self,pet=room({[petId]=0});assert(self:playBeat("sit")and pet.idleBeat.kind=="sit"and pet.idleBeat.duration==Beats.SitIn+Beats.SitHoldMin+Beats.SitOut)
+   self,pet=room({[petId]=0});assert(self:playBeat("sit")and pet.idleBeat.kind=="sit"and pet.idleBeat.duration==Beats.SitIn+Beats.TrickSitHold+Beats.SitOut)
   end)
   test("tricks 3-10: routines play beat by beat near a still owner, newest first, hearts where the unlock says so, and stop when the owner leaves",function()
    local Room=require(client.RoomView)

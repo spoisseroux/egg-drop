@@ -524,7 +524,7 @@ end
 function Room:playBeat(kind)
 	local pet=self.pet
 	-- A trick's sit is a short one: in, the shortest hold, out.
-	local duration=if kind=="sit"then PetIdleBeats.SitIn+PetIdleBeats.SitHoldMin+PetIdleBeats.SitOut else PetIdleBeats.Durations[kind]
+	local duration=if kind=="sit"then PetIdleBeats.SitIn+PetIdleBeats.TrickSitHold+PetIdleBeats.SitOut else PetIdleBeats.Durations[kind]
 	if not pet or pet.destroyed or not duration then return false end
 	local s=pet.idleBeat
 	if not s then s={idle=0,clock=0,last=-math.huge};pet.idleBeat=s end

@@ -319,7 +319,12 @@ function Garden:decide()
             local wanderTurn=self.options.sharedToyEnabled==false or self.options.validWander~=nil and ((actor.wanderCount or 0)%2==0 or not reachable or self.toy.ownerId~=nil)
             if now-actor.idleSince>=3.5 and now>=(actor.nextWanderAt or 0) and wanderTurn then
                 actor.nextWanderAt=now+7
-                if not self:wander(actor,input,now)then
+                if self.options.sharedToyEnabled==false and Layout.SitEvery and(actor.wanderCount or 0)%Layout.SitEvery==Layout.SitEvery-1 then
+                    -- R9: a long sit in place instead of this wander (Layout.SitRest). Only in the
+                    -- live garden (shared toy retired); the old toy/wander alternation is unchanged.
+                    actor.wanderCount=(actor.wanderCount or 0)+1
+                    self:transition(actor,"rest",position,Layout.SitRest,"settle")
+                elseif not self:wander(actor,input,now)then
                     actor.wanderCount=(actor.wanderCount or 0)+1
                     self:transition(actor,"rest",position,1.5,"wanderPause")
                 end

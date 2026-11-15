@@ -43,6 +43,12 @@ Layout.WalkSpeed=4
 Layout.CatchupSpeed=9
 Layout.LeashSpeed=18
 Layout.StrollSpeed=3
+-- QA v685 R9: pets sit for longer. An idle pet used to stand for at most 3.5 s between
+-- wanders, which cut every sit short; now every SitEvery-th idle turn it sits where it
+-- stands for SitRest seconds (a replicated "settle" rest, then the usual 5 s rest), so
+-- everyone sees the same long sit. The owner walking off still calls it at once.
+Layout.SitEvery=3
+Layout.SitRest=14
 Layout.ObserverDistance=72
 Layout.ObserverCap=6
 -- Ground under (x, z) plus the pet sole offset, and whether an anchor stands

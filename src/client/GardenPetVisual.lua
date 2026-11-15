@@ -264,14 +264,16 @@ function Visual:update(dt)
  local reactHop,reactExpression=Reactions.sample(self,os.clock())
  -- Idle personality beats (C3/C4), only for the owner's own garden pet.
  local beatEligible=self.idleBeatsEnabled==true and self.worldContext and not reduced and not self.focusPose and not self.gardenFocus and not self.focused
-  and not self.careState and not self.petting and not personal and toyReach==0 and reactExpression==nil
+  and not self.careState and not self.petting and reactExpression==nil
+  -- R9: a toy play no longer ends a running sit beat (the pet plays sitting down).
+  and((personal==nil and toyReach==0)or(personal~=nil and self.idleBeat~=nil and self.idleBeat.kind=="sit"))
   and self.gardenAction~="greet"and self.gardenAction~="shove"and self.gardenAction~="toyReturn"and self.gardenAction~="focus"
  local daylight=Face.daylight()
  local beat,beatPhase=IdleBeats.step(self,dt,beatEligible,self.ownerNearStill==true,(self.gaitWeight or 0)<.03 and not self.gardenPivot,daylight)
  local beatPitch,beatYaw,beatHandL,beatHandR,beatStretch,beatEye,beatMouth,beatExpression,beatRise,beatHip,beatWag=IdleBeats.pose(beat,beatPhase or 0,self.idleBeat and self.idleBeat.side)
  -- The cute sit (B3): idle beat, a resting activity, or the owner standing still nearby.
  local sitAllowed=self.worldContext and not self.focusPose and not self.gardenFocus and not self.focused and not self.careState and not self.petting
-  and not personal and toyReach==0 and reactExpression==nil and(self.gaitWeight or 0)<.03 and not self.gardenPivot
+  and(personal~=nil or toyReach==0)and reactExpression==nil and(self.gaitWeight or 0)<.03 and not self.gardenPivot
   and self.gardenAction~="greet"and self.gardenAction~="shove"and self.gardenAction~="toyReturn"and self.gardenAction~="focus"
  if not sitAllowed and(self.careState or self.focusPose or self.gardenFocus or self.petting)then self.sitBlend=0 end
  local sit=Sit.step(self,dt,sitAllowed and(self.activitySit==true or Sit.fromOwner(self.ownerStillNearFor,self.gaitWeight)),if beat=="sit"then IdleBeats.sitWeight(self.idleBeat)else 0)

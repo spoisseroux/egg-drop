@@ -11,8 +11,11 @@ Beats.IdleAfter = 5
 Beats.Gap = 7
 Beats.Kinds = { "look", "sit", "stretch", "wiggle", "wave", "yawn", "sneeze", "scratch" }
 Beats.Durations = { yawn = 2.4, stretch = 2.2, sneeze = 1.4, look = 2.8, wave = 1.8, wiggle = 1.2, scratch = 1.6 }
--- A sit is "in 0.35 s, hold 6 to 14 s, out 0.3 s" (B3); its length is rolled per sit.
-Beats.SitIn, Beats.SitOut, Beats.SitHoldMin, Beats.SitHoldMax = .35, .3, 6, 14
+-- A sit is "in 0.35 s, hold 12 to 24 s, out 0.3 s" (B3; QA v685 R9 doubled the hold from
+-- 6 to 14 s); its length is rolled per sit. A trick's sit (bond routines, RoomView.playBeat)
+-- keeps the old short hold.
+Beats.SitIn, Beats.SitOut, Beats.SitHoldMin, Beats.SitHoldMax = .35, .3, 12, 24
+Beats.TrickSitHold = 6
 Beats.DayWeights = { look = 28, sit = 16, stretch = 14, wiggle = 10, wave = 12, yawn = 10, sneeze = 5, scratch = 5 }
 Beats.NightWeights = { yawn = 30, sit = 25, look = 20, stretch = 10, wiggle = 5, sneeze = 4, scratch = 3, wave = 3 }
 Beats.Night = .3

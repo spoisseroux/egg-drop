@@ -27,7 +27,9 @@ return function(client, parent)
 		for _ = 1, 2000 do assert(Beats.pick(r, 1, nil, false) ~= "wave", "waved with nobody near") end
 	end)
 
-	test("beats start after 5 s idle, at least 7 s apart, with a sit that lasts 6.65 to 14.65 s", function()
+	test("beats start after 5 s idle, at least 7 s apart, with a sit that lasts 12.65 to 24.65 s", function()
+		-- QA v685 R9: the hold doubled (6..14 -> 12..24); a trick sit keeps the old 6 s.
+		assert(Beats.SitHoldMin == 12 and Beats.SitHoldMax == 24 and Beats.TrickSitHold == 6)
 		local v = { petId = "pip", cosmeticSeed = 11 };local t, starts, running, sits = 0, {}, false, 0
 		for _ = 1, 300 * 30 do
 			t += 1 / 30
