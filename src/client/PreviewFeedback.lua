@@ -1,6 +1,20 @@
 -- One main preview only. Existing renderer poses supply all geometry; this clock
 -- never touches the equipped world actor, card caches, rewards or audio.
 local Feedback={};Feedback.__index=Feedback
+local UserInputService=game:GetService("UserInputService")
+local touches,watching=0,false
+-- True while no mouse button and no finger is down. UserInputService has no touch list to
+-- read (GetTouches does not exist and threw every frame), so fingers are counted from the
+-- touch events; losing the window clears the count.
+function Feedback.pointerIdle()
+ if not watching then
+  watching=true
+  UserInputService.TouchStarted:Connect(function()touches+=1 end)
+  UserInputService.TouchEnded:Connect(function()touches=math.max(0,touches-1)end)
+  UserInputService.WindowFocusReleased:Connect(function()touches=0 end)
+ end
+ return touches==0 and not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+end
 function Feedback.new(random)
  return setmetatable({random=random or math.random,nextAt=nil},Feedback)
 end

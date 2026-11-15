@@ -832,8 +832,7 @@ function Shop:open(petId,ctx)
  self.clock=RunService.RenderStepped:Connect(function(dt)
   if self.visible then self:pumpPreviews()end
   local v=self.visual;if not self.visible or not v or v.destroyed then return end
-  local input=game:GetService("UserInputService")
-  local idle=not input:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)and #input:GetTouches()==0
+  local idle=require(script.Parent.PreviewFeedback).pointerIdle()
   self.previewFeedback:step(os.clock(),self.root.Visible and idle and not GuiService.ReducedMotionEnabled and not GuiService.MenuIsOpen,v)
   if GuiService.ReducedMotionEnabled then return end
   v.cosmeticTime=os.clock();v:update(math.min(dt,.1))

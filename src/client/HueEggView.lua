@@ -706,8 +706,7 @@ function View:syncPortraitClock()
   local visual=self.visual;if not self.portrait.Visible or not visual or visual.destroyed then return end
   self.previewFeedback=self.previewFeedback or require(script.Parent.PreviewFeedback).new()
   local reduced=GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()==true)or false
-  local input=game:GetService("UserInputService")
-  local idle=not input:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)and #input:GetTouches()==0
+  local idle=require(script.Parent.PreviewFeedback).pointerIdle()
   self.previewFeedback:step(os.clock(),idle and not reduced and not self.fruitEating.active,visual)
   if visual.reducedEffects~=reduced then visual.reducedEffects=reduced;visual.poseDirty=true;visual:update(0)end
   if not reduced then visual.cosmeticTime=os.clock();visual:update(math.min(dt,.1))end
