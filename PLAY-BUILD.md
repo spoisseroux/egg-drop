@@ -16,6 +16,25 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Private v735 Published 2026-11-15 — runtime 2208bab, committed and pushed; old servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v735".
+# Pocket Pals — Spencer's v685 QA fixes, new reveals, inspect card
+
+**New:**
+- Smash-style pet reveal is back (egg opening inside it; soft glowy Bear that waves).
+- Items get an exciting reveal: rarity glow and beam, burst, card flip, name slam, banner, a distinct sound per rarity, fun descriptions, and a turning 3D result on a coloured backdrop.
+- Smooth transitions in and out. No extra Hatch confirmation.
+- Pocket Deck fits below Roblox's top bar on phone, with a steady camera on open. Moon background stays behind the balls.
+- Hatch eggs and Companions clipping fixed; notification pill centred; fuller Pocket menu; Toys row in Companions; daily stamp chip on Hatch eggs.
+- Tap your pet more easily. Inspect other players' pets on a profile card (Say hello; turn greetings off in Settings).
+- New Pocket Deck toy (Toy Egg). Pets carry their toy and sit for longer.
+- Lamppost moved off the first bridge. The game is now called Pocket Pals.
+
+**Passed before publish:** server 56/56; client 126/140 (all 14 failures long-standing); world collision test 12/12; Code Reviewer GO (one fix applied); translations synced (82 add/update, 10 delete).
+
+**Not seen live yet:** Say hello with two accounts; the Pocket Deck toy in hand; the full hatch flow in motion on a phone.
+
+## Historical (earlier builds)
+
 **Private v634 Published 2026-11-14 — runtime f75cf12, committed and pushed. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v634".
 # Egg Drop — world flicker fix
 
