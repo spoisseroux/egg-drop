@@ -1,5 +1,5 @@
 Key,Source,Context,Example
-ui.bond.level,Bond level {count},,Menu text; e.g. Bond level 3; also ui.bond.levelUpPlain
+ui.bond.level,Bond level {count},,"Menu text; e.g. Bond level 3; also ui.bond.levelUpPlain, ui.inspect.bond"
 ui.bond.levelUp,Bond level {count} · New trick: {name},,Menu text; e.g. Bond level 3 · New trick: Pet Park
 ui.bond.max,Lv {count} · more soon,,Menu text; e.g. Lv 3 · more soon
 ui.bond.short,Lv {count},,Menu text; e.g. Lv 3
@@ -200,7 +200,6 @@ ui.input.action.tab,Switch tab,,Menu text
 ui.input.legend.gamepad,"D-pad moves, A picks, B goes back, LB and RB switch tabs.",,Menu text
 ui.input.legend.keyboard,"Arrows or WASD move, Enter picks, Backspace goes back, Q and E switch tabs.",,Menu text
 ui.input.legend.touch,Tap a card to pick it. The back arrow closes the screen.,,Menu text
-ui.inspect.bond,Bond level {level},,Menu text; e.g. Bond level {level}
 ui.inspect.busy,Playing right now,,Menu text
 ui.inspect.closer,Come closer,,Menu text
 ui.inspect.empty,Empty,,Menu text
@@ -208,7 +207,7 @@ ui.inspect.gone,Pet moved on,,Menu text
 ui.inspect.hello,Say hello,,Menu text
 ui.inspect.hidden,Hidden,,Menu text
 ui.inspect.off,Greetings off,,Menu text
-ui.inspect.owner,{owner}'s pet,,Menu text; e.g. {owner}'s pet
+ui.inspect.owner,{name}'s pet,,Menu text; e.g. Pet Park's pet
 ui.inspect.prompt,Inspect,,Menu text
 ui.inspect.sent,Hello!,,Menu text
 ui.inspect.setting.off,Pet greetings: Off,,Menu text

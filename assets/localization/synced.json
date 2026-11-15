@@ -297,11 +297,6 @@
    "context": "",
    "example": "Catalogue BookCatalog (name)"
   },
-  "catalog.BookCatalog.Pages.toys.name": {
-   "source": "Toys",
-   "context": "",
-   "example": "Catalogue BookCatalog (name)"
-  },
   "catalog.DeckBackgrounds.ById.lantern.name": {
    "source": "Lantern",
    "context": "",
@@ -458,12 +453,12 @@
    "example": "Catalogue HueCatalog (name)"
   },
   "catalog.HueCatalog.Items.citrus.name": {
-   "source": "Citrus fruit",
+   "source": "Citrus jar",
    "context": "",
    "example": "Catalogue HueCatalog (name)"
   },
   "catalog.HueCatalog.Items.iris.name": {
-   "source": "Iris fruit",
+   "source": "Iris jar",
    "context": "",
    "example": "Catalogue HueCatalog (name)"
   },
@@ -473,12 +468,12 @@
    "example": "Catalogue HueCatalog (name)"
   },
   "catalog.HueCatalog.Items.rose.name": {
-   "source": "Rose fruit",
+   "source": "Rose jar",
    "context": "",
    "example": "Catalogue HueCatalog (name)"
   },
   "catalog.HueCatalog.Items.tide.name": {
-   "source": "Tide fruit",
+   "source": "Tide jar",
    "context": "",
    "example": "Catalogue HueCatalog (name)"
   },
@@ -515,17 +510,17 @@
   "catalog.MaterialCatalog.ById.gloss.name": {
    "source": "Gloss",
    "context": "",
-   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.6.name"
+   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name"
   },
   "catalog.MaterialCatalog.ById.jelly.name": {
    "source": "Jelly",
    "context": "",
-   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name"
+   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.8.name"
   },
   "catalog.MaterialCatalog.ById.matte.name": {
    "source": "Matte",
    "context": "",
-   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.8.name"
+   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.9.name"
   },
   "catalog.MaterialCatalog.ById.metal.name": {
    "source": "Metal",
@@ -975,17 +970,17 @@
   "catalog.ToyCatalog.ById.sparkler.name": {
    "source": "Sparkler",
    "context": "",
-   "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.3.name"
+   "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.4.name"
   },
   "catalog.ToyCatalog.ById.squeaky_carrot.name": {
    "source": "Squeaky Carrot",
    "context": "",
-   "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.4.name"
+   "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name"
   },
   "catalog.ToyCatalog.ById.wobble_top.name": {
    "source": "Wobble Top",
    "context": "",
-   "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name"
+   "example": "Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.6.name"
   },
   "catalog.WearableCatalog.Tabs.1.label": {
    "source": "Hat",
@@ -1190,7 +1185,7 @@
   "ui.bond.level": {
    "source": "Bond level {count}",
    "context": "",
-   "example": "Menu text; e.g. Bond level 3; also ui.bond.levelUpPlain"
+   "example": "Menu text; e.g. Bond level 3; also ui.bond.levelUpPlain, ui.inspect.bond"
   },
   "ui.bond.levelUp": {
    "source": "Bond level {count} · New trick: {name}",
@@ -1692,6 +1687,16 @@
    "context": "",
    "example": "First-round coaching; also ui.r1.welcomePill.mid"
   },
+  "ui.companions.toys.line": {
+   "source": "Something to carry and chase",
+   "context": "",
+   "example": "Companions screen"
+  },
+  "ui.companions.toys.name": {
+   "source": "Toys",
+   "context": "",
+   "example": "Companions screen; also catalog.BookCatalog.Pages.toys.name"
+  },
   "ui.companions.wearing.none": {
    "source": "Nothing yet",
    "context": "",
@@ -1752,6 +1757,11 @@
    "context": "",
    "example": "Hatch eggs screen"
   },
+  "ui.hatch.display.material": {
+   "source": "Material for your pet",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
   "ui.hatch.display.owned": {
    "source": "Already owned",
    "context": "",
@@ -1783,17 +1793,17 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.egg.hue.description": {
-   "source": "It smells like fruit. Hatches one colour fruit to feed your pet.",
+   "source": "Hatches one pigment jar to change your pet's colour.",
    "context": "",
    "example": "Hatch eggs screen"
   },
   "ui.hatch.egg.hue.line": {
-   "source": "Fruit that shifts colour",
+   "source": "A jar of colour",
    "context": "",
    "example": "Hatch eggs screen"
   },
   "ui.hatch.egg.hue.per": {
-   "source": "1 fruit per egg",
+   "source": "1 jar per egg",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1877,6 +1887,216 @@
    "context": "",
    "example": "Hatch eggs screen"
   },
+  "ui.hatch.reveal.banner": {
+   "source": "{tier} {kind}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. {tier} {kind}"
+  },
+  "ui.hatch.reveal.close": {
+   "source": "Close",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.inspect.close, ui.r3.help.close"
+  },
+  "ui.hatch.reveal.describe.feature.claws": {
+   "source": "Tiny and fierce. Mostly used for back scratches.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.feature.horns": {
+   "source": "Two small buds. Big plans.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.feature.wings": {
+   "source": "Folded neat as a letter. They flutter when excited.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.hue.citrus": {
+   "source": "Sunshine, squeezed. Mind the pips.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.hue.iris": {
+   "source": "Dusk in a jar. Smells faintly of plums.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.hue.reset": {
+   "source": "Rinses a pet back to its very first colour.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.hue.rose": {
+   "source": "Pink as a cheek after a compliment.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.hue.tide": {
+   "source": "A jar of sea, caught on a calm day.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.material.gloss": {
+   "source": "Shiny enough to check your hair in. Pets check often.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.material.jelly": {
+   "source": "See-through and wobbly. Do not eat, however tempting.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.material.matte": {
+   "source": "Soft as chalk and twice as huggable.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.material.metal": {
+   "source": "Clinks politely. Surprisingly good at cuddles.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.material.pearl_edge": {
+   "source": "A pearly shimmer, borrowed from a very kind oyster.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.material.speckle_satin": {
+   "source": "Freckled like a robin's egg, smooth as a ribbon.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.other.feature": {
+   "source": "Something new to grow. Give it a little time.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.other.hue": {
+   "source": "A new colour, waiting for the right pet.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.other.item": {
+   "source": "A little something for your garden.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.other.material": {
+   "source": "A fresh new coat. Your pet feels very fancy.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.other.toy": {
+   "source": "Something new to carry, chase and lose under things.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.toy.ball": {
+   "source": "Round, bouncy, and never where you left it.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.toy.bone": {
+   "source": "Too good to bury. Carried everywhere instead.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.toy.pocket_deck": {
+   "source": "A tiny deck for tiny paws. High scores pending.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.toy.sparkler": {
+   "source": "Fizzes like a tiny birthday. Every day is one now.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.toy.squeaky_carrot": {
+   "source": "Squeaks when squeezed. Does not taste like carrot.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.toy.wobble_top": {
+   "source": "Spins, wobbles, never quite falls. A small miracle.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.fresh": {
+   "source": "NEW {kind}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. NEW {kind}"
+  },
+  "ui.hatch.reveal.kind.feature": {
+   "source": "FEATURE",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.kind.hue": {
+   "source": "COLOUR JAR",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.kind.item": {
+   "source": "ITEM",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.kind.material": {
+   "source": "FINISH",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.kind.toy": {
+   "source": "TOY",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.tier.Common": {
+   "source": "COMMON",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.tier.Rare": {
+   "source": "RARE",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.tier.Uncommon": {
+   "source": "UNCOMMON",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hub.chip.book": {
+   "source": "{percent}% found",
+   "context": "",
+   "example": "Pocket menu (machine hub); e.g. {percent}% found"
+  },
+  "ui.hub.chip.outfits": {
+   "source": "{owned}/{total} outfits",
+   "context": "",
+   "example": "Pocket menu (machine hub); e.g. 3/12 outfits"
+  },
+  "ui.hub.chip.quests": {
+   "source": "{done}/{total} today",
+   "context": "",
+   "example": "Pocket menu (machine hub); e.g. {done}/12 today"
+  },
+  "ui.hub.chip.stamp": {
+   "source": "Stamp {count}/{total}",
+   "context": "",
+   "example": "Pocket menu (machine hub); e.g. Stamp 3/12"
+  },
+  "ui.hub.chip.styles": {
+   "source": "{owned}/{total} styles",
+   "context": "",
+   "example": "Pocket menu (machine hub); e.g. 3/12 styles"
+  },
+  "ui.hub.chip.toys": {
+   "source": "{owned}/{total} toys",
+   "context": "",
+   "example": "Pocket menu (machine hub); e.g. 3/12 toys"
+  },
   "ui.hub.promise": {
    "source": "Every machine, one tap away.",
    "context": "",
@@ -1932,6 +2152,11 @@
    "context": "",
    "example": "Pocket menu (machine hub)"
   },
+  "ui.hub.week": {
+   "source": "This week",
+   "context": "",
+   "example": "Pocket menu (machine hub)"
+  },
   "ui.input.action.browse": {
    "source": "Browse",
    "context": "",
@@ -1959,6 +2184,91 @@
   },
   "ui.input.legend.touch": {
    "source": "Tap a card to pick it. The back arrow closes the screen.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.busy": {
+   "source": "Playing right now",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.closer": {
+   "source": "Come closer",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.empty": {
+   "source": "Empty",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.gone": {
+   "source": "Pet moved on",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.hello": {
+   "source": "Say hello",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.hidden": {
+   "source": "Hidden",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.off": {
+   "source": "Greetings off",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.owner": {
+   "source": "{name}'s pet",
+   "context": "",
+   "example": "Menu text; e.g. Pet Park's pet"
+  },
+  "ui.inspect.prompt": {
+   "source": "Inspect",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.sent": {
+   "source": "Hello!",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.setting.off": {
+   "source": "Pet greetings: Off",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.setting.on": {
+   "source": "Pet greetings: On",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.slot.charm": {
+   "source": "Charm",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.slot.finish": {
+   "source": "Finish",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.slot.toy": {
+   "source": "Toy",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.spin": {
+   "source": "Drag to turn",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.wait": {
+   "source": "In a moment",
    "context": "",
    "example": "Menu text"
   },
@@ -2227,11 +2537,6 @@
    "context": "",
    "example": "Menu text; also ui.r3.help.eyebrow"
   },
-  "ui.r3.help.close": {
-   "source": "Close",
-   "context": "",
-   "example": "Menu text"
-  },
   "ui.r3.help.companions.a.line": {
    "source": "Hearts show bond. Petting, rounds and Play dates grow it. Level up to unlock tricks.",
    "context": "",
@@ -2253,7 +2558,7 @@
    "example": "Menu text; also catalog.BookCatalog.Pages.wardrobe.name"
   },
   "ui.r3.help.companions.c.line": {
-   "source": "Feed colour fruit, add a charm, try a finish or hand over a toy.",
+   "source": "Use colour jars, add a charm, try a finish or hand over a toy.",
    "context": "",
    "example": "Menu text"
   },
@@ -2555,7 +2860,7 @@
   "ui.report.category.deck": {
    "source": "Pocket Deck",
    "context": "",
-   "example": "Bug report sheet"
+   "example": "Bug report sheet; also catalog.ToyCatalog.ById.pocket_deck.name, catalog.BookCatalog.Pages.toys.items.3.name"
   },
   "ui.report.category.menus": {
    "source": "Menus",
@@ -2876,6 +3181,21 @@
    "source": "Next stamp tomorrow: ★ {reward}",
    "context": "",
    "example": "Stamp card; e.g. Next stamp tomorrow: ★ 5"
+  },
+  "ui.stampChip.done": {
+   "source": "✓ {count}/{total}",
+   "context": "",
+   "example": "Menu text; e.g. ✓ 3/12"
+  },
+  "ui.stampChip.label": {
+   "source": "Daily stamp",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stampChip.open": {
+   "source": "{count}/{total}",
+   "context": "",
+   "example": "Menu text; e.g. 3/12"
   },
   "ui.style.balls.pitch": {
    "source": "Same sizes, same rules. Only cuter.",
