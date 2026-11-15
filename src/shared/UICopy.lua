@@ -17,7 +17,25 @@ local Table={
   -- Full-screen item reveal (QA v685 H2): the rarity banner over the item's name.
   reveal={tier={Common="COMMON",Uncommon="UNCOMMON",Rare="RARE"},
    kind={toy="TOY",hue="COLOUR JAR",material="FINISH",feature="FEATURE",item="ITEM"},
-   banner="{tier} {kind}",fresh="NEW {kind}",close="Close"},
+   banner="{tier} {kind}",fresh="NEW {kind}",close="Close",
+   -- QA R1 (2026-11-15): one fun line for every hatch result, shown under the name on the
+   -- item reveal. 60 characters at most, in the garden's warm and quirky voice (the pets'
+   -- lines are in PetCatalog). `other` covers an item that has no line of its own yet.
+   describe={
+    toy={ball="Round, bouncy, and never where you left it.",bone="Too good to bury. Carried everywhere instead.",
+     sparkler="Fizzes like a tiny birthday. Every day is one now.",wobble_top="Spins, wobbles, never quite falls. A small miracle.",
+     squeaky_carrot="Squeaks when squeezed. Does not taste like carrot.",pocket_deck="A tiny deck for tiny paws. High scores pending."},
+    material={gloss="Shiny enough to check your hair in. Pets check often.",matte="Soft as chalk and twice as huggable.",
+     jelly="See-through and wobbly. Do not eat, however tempting.",metal="Clinks politely. Surprisingly good at cuddles.",
+     pearl_edge="A pearly shimmer, borrowed from a very kind oyster.",speckle_satin="Freckled like a robin's egg, smooth as a ribbon."},
+    hue={rose="Pink as a cheek after a compliment.",tide="A jar of sea, caught on a calm day.",
+     citrus="Sunshine, squeezed. Mind the pips.",iris="Dusk in a jar. Smells faintly of plums.",
+     reset="Rinses a pet back to its very first colour."},
+    feature={horns="Two small buds. Big plans.",claws="Tiny and fierce. Mostly used for back scratches.",
+     wings="Folded neat as a letter. They flutter when excited."},
+    other={toy="Something new to carry, chase and lose under things.",material="A fresh new coat. Your pet feels very fancy.",
+     hue="A new colour, waiting for the right pet.",feature="Something new to grow. Give it a little time.",
+     item="A little something for your garden."}}},
   footer={
    desktop="Give one a shake. The odds are on the label.",
    phone="The odds are on the label",

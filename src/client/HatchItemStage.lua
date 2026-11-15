@@ -10,7 +10,9 @@
 --   scene       HatchDisplayScene (required); kind "toy"|"hue"|"material"|"feature"
 --   tier        "Common"|"Uncommon"|"Rare"|"Neutral" (HatchRarityCue.tier)
 --   name()      the item's name, read once the receipt is ready (never before)
---   detail()    one supporting line under the name
+--   detail()    the host's supporting line (where it went, what to do next)
+--   description() one fun line about the item (QA R1), drawn above the host's line;
+--               default Stage.describe(kind, result) from UICopy hatch.reveal.describe
 --   actions()   {{source=GuiButton, primary=bool, act=function}}: the host's receipt
 --               buttons. The stage mirrors their text / enabled / visible and calls `act`.
 --   onSkip()    a press before the receipt is ready; onClose() the corner close
@@ -78,6 +80,15 @@ function Stage.bannerText(tier,kind)
  local kindWord=Copy.get("hatch.reveal.kind."..(if Copy.has("hatch.reveal.kind."..tostring(kind))then kind else "item"))
  if tier=="Common"or tier=="Uncommon"or tier=="Rare"then return Copy.get("hatch.reveal.banner",{tier=Copy.get("hatch.reveal.tier."..tier),kind=kindWord})end
  return Copy.get("hatch.reveal.fresh",{kind=kindWord})
+end
+-- QA R1: the item's one fun line (60 characters at most), by kind and id; an item with no
+-- line of its own gets its kind's line. Pure: it never reads ownership.
+local idField={toy="toyId",material="finishId",hue="itemId",feature="featureId"}
+function Stage.describe(kind,result)
+ local id=type(result)=="table"and idField[kind]and result[idField[kind]]
+ local key=if type(id)=="string"then "hatch.reveal.describe."..kind.."."..id else nil
+ if key and Copy.has(key)then return Copy.get(key)end
+ return Copy.get("hatch.reveal.describe.other."..(if idField[kind]then kind else "item"))
 end
 local function luminance(c)
  local function lin(x)return if x<=.03928 then x/12.92 else((x+.055)/1.055)^2.4 end
@@ -243,8 +254,15 @@ function Stage:build()
  self.streak=Kit.frame(textLayer,"NameStreak",nil,UDim2.new(),UDim2.fromOffset(10,10));self.streak.BackgroundTransparency=.8;self.streak.BackgroundColor3=color
  self.streak.Rotation=-3;self.streak.ZIndex=textLayer.ZIndex;self.streak.Visible=false
  C.gradient(self.streak,0,{{0,1},{.08,.1},{.55,.55},{1,1}})
- self.detail=Kit.text(textLayer,"BodyMedium","","text",{Name="Detail",TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top})
- self.detail.TextColor3=Color3.fromHex("#E9E2D0");self.detail.Visible=false
+ -- The item's fun line (QA R1), then the host's line, stacked under the name.
+ self.lines=Kit.frame(textLayer,"Lines",nil,UDim2.new(),UDim2.fromOffset(10,10));self.lines.Visible=false
+ self.linesList=Kit.node("UIListLayout",self.lines,{FillDirection=Enum.FillDirection.Vertical,SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,4)})
+ self.describe=Kit.text(self.lines,"BodyMedium","","text",{Name="Description",TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,
+  AutomaticSize=Enum.AutomaticSize.Y,Size=UDim2.new(1,0,0,0),LayoutOrder=1})
+ self.describe.TextColor3=Color3.fromHex("#FFF6E4");self.describe.Visible=false
+ self.detail=Kit.text(self.lines,"BodyMedium","","text",{Name="Detail",TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,
+  AutomaticSize=Enum.AutomaticSize.Y,Size=UDim2.new(1,0,0,0),LayoutOrder=2})
+ self.detail.TextColor3=Color3.fromHex("#B9B4A6");self.detail.Visible=false
  -- A press anywhere before the receipt is ready skips to it; it never acts.
  self.skip=Kit.node("TextButton",root,{Name="SkipReveal",Text="",AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromScale(1,1),
   ZIndex=root.ZIndex+10,Selectable=false})
@@ -320,6 +338,9 @@ function Stage:pullText()
  end
  local detail=if self.options.detail then self.options.detail()else nil
  if type(detail)=="string"and self.detail.Text~=detail then self.detail.Text=detail end
+ local describe
+ if self.options.description then describe=self.options.description()else describe=Stage.describe(self.kind,self.options.result)end
+ if type(describe)=="string"and self.describe.Text~=describe then self.describe.Text=describe end
 end
 function Stage:paintFocus()
  if self.destroyed or not self.ring then return end
@@ -347,9 +368,10 @@ function Stage:layout()
  local bannerSize=math.floor(L.bannerSize);self.bannerText.TextSize=bannerSize
  local bw=C.measure(self.bannerText.Text,bannerSize).X+math.floor(bannerSize*1.6)
  self.bannerW=bw;self.banner.Size=UDim2.fromOffset(bw,math.floor(bannerSize*1.7))
- self.detail.TextSize=math.floor(L.detailSize)
- self.detail.Position=UDim2.fromOffset(L.textX,L.detailY);self.detail.Size=UDim2.fromOffset(L.textW,math.floor(L.detailSize*2.9))
- if not L.landscape then self.detail.TextXAlignment=Enum.TextXAlignment.Center else self.detail.TextXAlignment=Enum.TextXAlignment.Left end
+ self.describe.TextSize=math.floor(L.detailSize);self.detail.TextSize=math.max(12,math.floor(L.detailSize*.9))
+ self.lines.Position=UDim2.fromOffset(L.textX,L.detailY);self.lines.Size=UDim2.fromOffset(L.textW,math.floor(L.detailSize*4.4))
+ local align=if L.landscape then Enum.TextXAlignment.Left else Enum.TextXAlignment.Center
+ self.describe.TextXAlignment=align;self.detail.TextXAlignment=align
  local bwidth=math.floor((L.btnW-L.gap)/2);if not L.phone then bwidth=math.min(bwidth,math.floor(340*L.s)+40)end
  local right=L.btnX+L.btnW
  for index=2,1,-1 do
@@ -380,7 +402,7 @@ function Stage:layoutText()
  -- The name group is tilted 3 degrees about its centre, so its left end sits lower: the
  -- supporting line starts under that end.
  local sink=math.ceil(w*.5*math.sin(math.rad(3)))
- self.detail.Position=UDim2.fromOffset(L.textX,L.nameY+h+self.underlineH+sink+math.floor(L.detailSize*.5))
+ self.lines.Position=UDim2.fromOffset(L.textX,L.nameY+h+self.underlineH+sink+math.floor(L.detailSize*.5))
  self.streak.Size=UDim2.fromOffset(L.W,math.floor(h*1.25))
 end
 
@@ -480,7 +502,11 @@ function Stage:paint()
  self.streak.Visible=self.nameGroup.Visible and L.landscape
  self.streak.Position=UDim2.fromOffset(nameX-math.floor(L.nameSize*.5)+(1-math.clamp(s.name,0,1))*L.W*.4,L.nameY-math.floor((self.nameH or 0)*.06))
  self.streak.BackgroundTransparency=1-(.16+.10*look.beam)*nameAlpha
- self.detail.Visible=s.detail>0 and self.detail.Text~="";self.detail.TextTransparency=1-s.detail
+ -- The fun line arrives first, the host's line just behind it.
+ self.lines.Visible=s.detail>0
+ self.describe.Visible=s.detail>0 and self.describe.Text~="";self.describe.TextTransparency=1-s.detail
+ local late=if reduced then s.detail else math.clamp(s.detail*2-1,0,1)
+ self.detail.Visible=late>0 and self.detail.Text~="";self.detail.TextTransparency=1-late
  -- Actions rise in; the close sits in the top-right corner.
  local rise=(1-s.buttons)*12
  for _,entry in ipairs(self.buttons)do

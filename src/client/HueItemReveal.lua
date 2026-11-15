@@ -62,6 +62,7 @@ function Reveal:openStage(recipe,result)
   reduced=function()return c:reduced()end,owns=host.owns,cover=host.cover,zIndex=host.zIndex,
   name=function()return if host.name then host.name(result)else nil end,
   detail=function()return if host.detail then host.detail(result)else nil end,
+  description=function()return if host.description then host.description(result)else(ItemStage.describe or function()return nil end)(recipe,result)end,
   actions=function()return if host.actions then host.actions(result)else {}end,
   onSkip=function()self:skip()end,onClose=host.close,consumeSkipInput=function()return self:consumeSkipInput()end})
  if not ok then warn("Item reveal stage could not open: "..tostring(stage));return false end

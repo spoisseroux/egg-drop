@@ -113,6 +113,32 @@ return function(client,parent)
    -- The long name still fits its column on a phone.
    local L=stage.L;assert(stage.nameW<=L.textW+2 and stage.name.TextSize>=18)
   end)
+  test("QA R1: every hatch result has one fun line (60 characters at most), shown only with the name",function()
+   local Shared=game:GetService("ReplicatedStorage").Shared
+   local Copy=require(Shared.UICopy)
+   local Toys=require(Shared.ToyCatalog);local Materials=require(Shared.MaterialCatalog);local Hues=require(Shared.HueCatalog);local Features=require(Shared.FeatureCatalog)
+   local seen={}
+   local function check(kind,field,id)
+    local line=Stage.describe(kind,{[field]=id})
+    assert(type(line)=="string"and #line>0 and utf8.len(line)<=60,kind.." "..id.." line length")
+    assert(Copy.has("hatch.reveal.describe."..kind.."."..id),kind.." "..id.." has no line of its own")
+    assert(not seen[line],"two items share a line: "..line);seen[line]=true
+   end
+   for id in pairs(Toys.ById)do if id~=Toys.Default then check("toy","toyId",id)end end
+   for id in pairs(Materials.ById)do if id~=Materials.Default then check("material","finishId",id)end end
+   for _,id in ipairs(Hues.ItemOrder)do check("hue","itemId",id)end
+   for _,id in ipairs(Features.Order)do check("feature","featureId",id)end
+   for _,kind in ipairs({"toy","material","hue","feature","item"})do assert(utf8.len(Copy.get("hatch.reveal.describe.other."..kind))<=60)end
+   assert(Stage.describe("toy",{toyId="not_a_toy"})==Copy.get("hatch.reveal.describe.other.toy")and Stage.describe("mystery",nil)==Copy.get("hatch.reveal.describe.other.item"))
+   local stage=open(812,354,{result={toyId="squeaky_carrot"}})
+   at(stage,R-.02);assert(stage.describe.Text==""and not stage.describe.Visible,"the line waits for the receipt beat")
+   at(stage,R+.5);task.wait()
+   assert(stage.describe.Visible and stage.describe.Text==Copy.get("hatch.reveal.describe.toy.squeaky_carrot")and stage.detail.Visible,"the fun line, then the host's line")
+   assert(stage.describe.AbsolutePosition.Y<stage.detail.AbsolutePosition.Y and stage.detail.AbsolutePosition.Y+stage.detail.AbsoluteSize.Y<=stage.buttons[2].node.AbsolutePosition.Y,"lines stack above the buttons")
+   assert(stage.describe.TextSize>=12 and stage.detail.TextSize>=12)
+   local custom=open(812,354,{description=function()return "A host line."end})
+   at(custom,R+.5);assert(custom.describe.Text=="A host line.")
+  end)
   test("actions mirror the host's receipt buttons and call them only once the receipt is ready",function()
    local stage,record,use,keep=open(812,354)
    at(stage,.5);assert(not stage:activate(stage.buttons[2])and record.skips==1 and #record.acts==0,"an early press only skips")
