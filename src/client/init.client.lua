@@ -1627,6 +1627,7 @@ GuiService.MenuOpened:Connect(function() roomView.transition:refresh() end)
 
 local function updateClub()
 	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
+	picker:setGreetings(board:GetAttribute("GreetingsOff")~=true)
 	picker:updateClub(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0,
 		board:GetAttribute("PeakChain") or 0, board:GetAttribute("Score") or 0, sound,
 		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled(),nurseryState and nurseryState.totalWins,nurseryState and nurseryState.masteryRanks)
@@ -3464,6 +3465,7 @@ local function refreshMotion()
 	end
 end
 board:GetAttributeChangedSignal("ReducedEffects"):Connect(refreshMotion)
+board:GetAttributeChangedSignal("GreetingsOff"):Connect(function()picker:setGreetings(board:GetAttribute("GreetingsOff")~=true)end)
 GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"):Connect(refreshMotion)
 
 local hudQueued = false

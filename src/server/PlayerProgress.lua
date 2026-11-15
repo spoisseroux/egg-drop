@@ -98,6 +98,8 @@ local function decode(key, record, success)
 		trials = trials,
 		sound = if Settings.validSound(record.sound) then record.sound else Settings.DefaultSound,
 		reduced = record.reduced == true,
+		-- R6: "Let visitors greet my pet" turned off. Optional and additive: missing reads as on.
+		greetOff = record.greetOff == true,
 		-- Last difficulty played (picker focus). Never trusted for payout; the
 		-- run's own server-stored heat is.
 		lastHeat = if BoardConfig.validHeat(record.heat) then record.heat else BoardConfig.DefaultHeat,
@@ -179,6 +181,7 @@ flush=function(profile)
 	local companionFenced=true
 	local earnedTrials = profile.earnedTrials
 	local soundChange, motionChange, heatChange = profile.soundChange, profile.motionChange, profile.heatChange
+	local greetChange = profile.greetChange
 	local function merge(previous)
 		local record = if type(previous) == "table" then table.clone(previous) else {}
 		local previousRank = rankOf(record)
@@ -206,6 +209,7 @@ flush=function(profile)
 		end
 		mergeSetting("sound", soundChange)
 		mergeSetting("reduced", motionChange)
+		mergeSetting("greetOff", greetChange)
 		mergeSetting("heat", heatChange)
 		if next(petChanges)then record.petAppearance=PetAppearance.merge(record.petAppearance,petChanges)end
 		local previousTime = appearanceStamp(record.themeAt)
@@ -335,8 +339,11 @@ flush=function(profile)
 	if heatChange == profile.heatChange then
 		profile.heatChange = nil
 	end
+	if greetChange == profile.greetChange then
+		profile.greetChange = nil
+	end
 	if not (profile.earnedRank or profile.earnedBest or profile.themeAt or profile.companionAt or profile.companionChange
-		or profile.earnedTrials or profile.soundChange or profile.motionChange or profile.heatChange or next(profile.petAppearanceChanges or {})) then
+		or profile.earnedTrials or profile.soundChange or profile.motionChange or profile.heatChange or profile.greetChange or next(profile.petAppearanceChanges or {})) then
 		pending[profile] = nil
 	end
 	finishFlush(profile,not profile.saveFailed)
@@ -364,7 +371,7 @@ function Progress.setHeat(profile, heat)
 end
 
 function Progress.setSetting(profile, key, value)
-	local changeKey = if key == "sound" then "soundChange" else "motionChange"
+	local changeKey = if key == "sound" then "soundChange" elseif key == "greetOff" then "greetChange" else "motionChange"
 	profile[key] = value
 	profile[changeKey] = { value = value, at = DateTime.now().UnixTimestampMillis }
 	markDirty(profile)

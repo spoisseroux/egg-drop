@@ -5,6 +5,8 @@ local PetFollow = require(script.Parent.PetFollow)
 local PetPrestige = require(script.Parent.PetPrestige)
 local Layout = require(ReplicatedStorage.Shared.GardenLayout)
 local Flags = require(ReplicatedStorage.Shared.FeatureFlags)
+local HelloPose = require(script.Parent.PetHelloPose)
+local HelloRules = require(ReplicatedStorage.Shared.PetHelloRules)
 
 local Companions = {}
 Companions.__index = Companions
@@ -115,6 +117,9 @@ function Companions:update(dt,serverNow)
 		elseif entry.board:GetAttribute("Mode")=="Board"then PetFollow.rest(entry.visual)
 		else entry.followState = PetFollow.step(entry.visual, entry.root, step, entry.followState,self.reduceEffects())end
 		entry.visual.cosmeticTime=serverNow
+		-- R6: a visitor's hello on this pet renders every frame while it runs.
+		local hello=HelloPose.read(entry.board);entry.visual.hello=hello
+		if hello and serverNow-hello.at<HelloRules.Duration then entry.visual.poseDirty=true end
         entry.visual:update(step)
 		if entry.full~=false then PetPrestige.update(entry.visual, step, self.reduceEffects()) end
 	end

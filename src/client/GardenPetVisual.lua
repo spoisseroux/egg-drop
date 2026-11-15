@@ -18,6 +18,7 @@ local IdleBeats=require(script.Parent.PetIdleBeats)
 local Attachments=require(script.Parent.PetAttachments)
 local Sit=require(script.Parent.PetSitPose)
 local Look=require(script.Parent.PetLookAt)
+local HelloPose=require(script.Parent.PetHelloPose)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -275,7 +276,14 @@ function Visual:update(dt)
  if not sitAllowed and(self.careState or self.focusPose or self.gardenFocus or self.petting)then self.sitBlend=0 end
  local sit=Sit.step(self,dt,sitAllowed and(self.activitySit==true or Sit.fromOwner(self.ownerStillNearFor,self.gaitWeight)),if beat=="sit"then IdleBeats.sitWeight(self.idleBeat)else 0)
  if not sitAllowed and sit>0 and not self.reducedEffects then self.poseDirty=true end
- local expression=toyExpression or reactExpression or beatExpression or Expression.name(self)
+ -- A visitor's hello (R6): a glance and a wave; never over the owner's own play.
+ local helloYaw,helloHand,helloExpression=0,0,nil
+ if self.hello then
+  helloYaw,helloHand,helloExpression=HelloPose.sample(self,self.cosmeticTime or workspace:GetServerTimeNow(),
+   self.focusPose or self.gardenFocus or self.focused or self.careState or self.petting or personal~=nil or toyReach~=0 or(self.gaitWeight or 0)>.3)
+  if helloExpression then beatHandR+=helloHand end
+ end
+ local expression=toyExpression or reactExpression or helloExpression or beatExpression or Expression.name(self)
  if sit>.5 and not toyExpression and not reactExpression and not self.petting then expression=Sit.face(self.sitAge)or(if expression=="neutral"then "content"else expression)end
  local pose=Expression.get(expression)
  local reveal=if not self.worldContext then self.revealPose else nil
@@ -293,7 +301,7 @@ function Visual:update(dt)
  local eye=pose.eye*cooEye
  local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
  if beat then headPitch+=beatPitch;headYaw+=beatYaw;bodyStretch+=beatStretch;eye*=beatEye;if beatMouth then mouth="open"end end
- headYaw+=lookYaw;headPitch-=Sit.HeadUp*sit
+ headYaw+=lookYaw+helloYaw;headPitch-=Sit.HeadUp*sit
  -- Ears roll about their base anchors and the tail yaws about its anchor (C1).
  local wagBoost=self.wagBoost;if beatWag and beatWag>0 then self.wagBoost=math.max(wagBoost or 0,beatWag)end
  local earL,earR,tailYaw=Motion.appendages(self,expression,dt)

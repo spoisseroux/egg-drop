@@ -1,0 +1,480 @@
+-- Inspect another player's pet (QA v685 R6; VISITOR-PET-SCOPE 2026-11-14), as a
+-- profile card. Left: a live, spinnable 3D preview in the pet's real appearance. Right:
+-- the name slot (the species until Names ships in v2), the owner and bond level, a grid
+-- of every wearable slot with the equipped item or Empty, then charm, finish and toy,
+-- and Say hello.
+--
+-- Read-only, one card at a time. It reuses RoomCompanions (the rendered visitor pets)
+-- and GardenClient (identity and appearance): nothing here renders a second world pet,
+-- and the card reads only the board's public attributes (PetAppearance, CompanionId,
+-- PublicBond, GreetingsOff). Opens within 12 studs by a tap or click on the pet, or
+-- E / X on the quiet Inspect prompt. Closes on B / Escape / Backspace, the close button,
+-- walking away, a menu opening, or when the target leaves or changes.
+--
+-- Say hello sends one request (owner, pet, character and pet generation); the server
+-- decides. Reward-free. The wave itself arrives on the owner's board (PetHelloPose).
+local Players=game:GetService("Players")
+local ReplicatedStorage=game:GetService("ReplicatedStorage")
+local UserInputService=game:GetService("UserInputService")
+local ContextActionService=game:GetService("ContextActionService")
+local GuiService=game:GetService("GuiService")
+local Shared=ReplicatedStorage.Shared
+local Kit=require(script.Parent.DeckKit)
+local Bounds=require(script.Parent.PetRigBounds)
+local ClickTarget=require(script.Parent.PetClickTarget)
+local Rules=require(Shared.PetHelloRules)
+local UICopy=require(Shared.UICopy)
+local Wearables=require(Shared.WearableCatalog)
+local Toys=require(Shared.ToyCatalog)
+local Materials=require(Shared.MaterialCatalog)
+local Charms=require(Shared.PetCharmCatalog)
+
+local Inspect={};Inspect.__index=Inspect
+Inspect.Action="PetInspectClose"
+Inspect.Columns=3
+Inspect.GoneHold=1.2
+Inspect.SpinPerPixel=.012
+
+-- Pure: the card's rows for a pet and its public appearance.
+-- { {key, label, value, empty} ... }: every wearable slot in shop order, then charm,
+-- finish and toy. `value` is a display name; `empty` marks a slot with nothing in it.
+function Inspect.rows(petId,appearance)
+ appearance=type(appearance)=="table"and appearance or {}
+ local rows={}
+ local worn=type(appearance.wearables)=="table"and appearance.wearables or {}
+ for _,tab in ipairs(Wearables.Tabs)do
+  local id=Wearables.equippedIn(petId,worn,tab.slot)
+  local item=id and Wearables.item(petId,id)
+  table.insert(rows,{key=tab.id,label=tab.label,value=if item then item.name else UICopy.get("inspect.empty"),empty=item==nil})
+ end
+ local shape=Charms.ById[Charms.renderShape(appearance.charmShape)]
+ local shown=appearance.charmVisible==true
+ table.insert(rows,{key="charm",label=UICopy.get("inspect.slot.charm"),value=if shown and shape then shape.name else UICopy.get("inspect.hidden"),empty=not shown})
+ local finish=Materials.ById[appearance.finish]or Materials.ById[Materials.Default]
+ table.insert(rows,{key="finish",label=UICopy.get("inspect.slot.finish"),value=finish.name,empty=false})
+ local toy=Toys.known(appearance.toyId)and appearance.toyId or Toys.Default
+ table.insert(rows,{key="toy",label=UICopy.get("inspect.slot.toy"),value=if toy==Toys.Default then UICopy.get("inspect.empty")else Toys.ById[toy].name,empty=toy==Toys.Default})
+ return rows
+end
+-- Pure: the Say hello button's state. Returns a UICopy key and whether it can be pressed.
+function Inspect.helloState(facts)
+ if facts.off then return "inspect.off",false end
+ if facts.sent then return "inspect.sent",false end
+ if facts.cooling then return "inspect.wait",false end
+ if facts.distance==nil or facts.distance>Rules.HelloRange then return "inspect.closer",false end
+ if not facts.free then return "inspect.busy",false end
+ return "inspect.hello",true
+end
+-- Pure: card geometry for a screen. Compact = a phone-height screen.
+function Inspect.geometry(width,height)
+ local compact=height<500
+ local pad=if compact then 8 else 12
+ local W=math.min(if compact then 460 else 540,width-24)
+ local preview=if compact then 156 else 216
+ local rowH=if compact then 30 else 34
+ local gap=4
+ local rows=math.ceil((#Wearables.Tabs+3)/Inspect.Columns)
+ local head=if compact then 22 else 26
+ local sub=if compact then 16 else 18
+ local button=if compact then 38 else 44
+ local gridY=pad+head+sub+6
+ local gridH=rows*rowH+(rows-1)*gap
+ local H=gridY+gridH+8+button+pad+4
+ local x0=pad+preview+pad
+ return {compact=compact,pad=pad,W=W,H=H,preview=preview,rowH=rowH,gap=gap,rows=rows,head=head,sub=sub,button=button,gridY=gridY,gridH=gridH,x0=x0,rightW=W-x0-pad}
+end
+
+-- options:
+--   companions   RoomCompanions (active: player -> {visual, pet, board, root})
+--   garden       GardenClient (get, appearance, snapshot)
+--   createPreview(parent, origin, pet, scale, appearance): the card's viewport pet (default PetFactory.new)
+--   reduce()     Reduced Motion / Reduced Effects
+--   canOpen()    false while a menu, focus, the deck or anything modal owns the screen
+--   ownPet()     the local player's own garden pet visual (a tap nearer to it is not ours)
+--   remote       the PetHello RemoteEvent (default ReplicatedStorage.Remotes.PetHello)
+--   parent       where the ScreenGui goes (default PlayerGui)
+function Inspect.new(options)
+ local self=setmetatable({options=options,seq=0,connections={},spin=0},Inspect)
+ local gui=Instance.new("ScreenGui")
+ gui.Name="PetInspect";gui.ResetOnSpawn=false;gui.DisplayOrder=11;gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+ gui.Enabled=true;gui.Parent=options.parent or Players.LocalPlayer:WaitForChild("PlayerGui")
+ self.gui=gui
+ -- Kit parts take their ZIndex from a GuiObject parent, so cards live in one clear root frame.
+ local root=Instance.new("Frame")
+ root.Name="Root";root.BackgroundTransparency=1;root.BorderSizePixel=0;root.Size=UDim2.fromScale(1,1);root.Active=false;root.Parent=gui
+ self.root=root
+ -- The quiet prompt: one small chip over the nearest inspectable pet.
+ local chip=Instance.new("BillboardGui")
+ chip.Name="InspectPrompt";chip.Size=UDim2.fromOffset(104,28);chip.StudsOffsetWorldSpace=Vector3.new(0,2.1,0)
+ chip.AlwaysOnTop=true;chip.Active=true;chip.Enabled=false;chip.ResetOnSpawn=false;chip.MaxDistance=Rules.InspectLeave+8;chip.Parent=gui.Parent
+ local pill=Instance.new("TextButton")
+ pill.Name="Pill";pill.Text="";pill.AutoButtonColor=false;pill.Size=UDim2.fromScale(1,1);pill.BackgroundColor3=Color3.fromHex("#15171B");pill.BackgroundTransparency=.35
+ pill.BorderSizePixel=0;pill.Selectable=false;pill.Parent=chip;Kit.corner(pill,999)
+ local key=Kit.text(pill,"Strong","E","text",{Name="Key",Size=UDim2.fromOffset(22,22),Position=UDim2.fromOffset(4,3),TextXAlignment=Enum.TextXAlignment.Center,TextSize=13})
+ Kit.fixedText(key)
+ local word=Kit.text(pill,"Small",UICopy.get("inspect.prompt"),"soft",{Name="Word",Size=UDim2.new(1,-34,1,0),Position=UDim2.fromOffset(30,0),TextSize=13})
+ self.chip,self.chipKey,self.chipWord=chip,key,word
+ pill.Activated:Connect(function()if self.candidate then self:open(self.candidate)end end)
+ local function watch(signal,fn)table.insert(self.connections,signal:Connect(fn))end
+ local function tap(x,y,processed)
+  if processed or self.card or not self:allowed()then return end
+  local player=self:hit(Vector2.new(x,y))
+  if player then self:open(player)end
+ end
+ watch(UserInputService.TouchTapInWorld,function(position,processed)tap(position.X,position.Y,processed)end)
+ watch(UserInputService.InputBegan,function(input,processed)
+  if input.UserInputType~=Enum.UserInputType.MouseButton1 then return end
+  local at=UserInputService:GetMouseLocation();tap(at.X,at.Y,processed)
+ end)
+ local remote=options.remote or ReplicatedStorage:WaitForChild("Remotes"):FindFirstChild("PetHello")
+ self.remote=remote
+ if remote then watch(remote.OnClientEvent,function(result)self:onReply(result)end)end
+ watch(GuiService.MenuOpened,function()self:close("menu")end)
+ return self
+end
+function Inspect:allowed()
+ local canOpen=self.options.canOpen
+ return not self.destroyed and(canOpen==nil or canOpen()==true)and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()
+end
+local function localRoot()
+ local character=Players.LocalPlayer.Character
+ return character and character:FindFirstChild("HumanoidRootPart")
+end
+-- A visitor entry that can be inspected from `from`: rendered, in the garden, in range.
+function Inspect:reach(entry,from)
+ local visual=entry and entry.visual
+ if not visual or visual.destroyed or not entry.board or not entry.root or not entry.root.Parent then return nil end
+ local mode=entry.board:GetAttribute("Mode")
+ if mode~="Room"and mode~="Board"then return nil end
+ local d=visual.origin-from
+ if math.abs(d.Y)>Rules.HeightReach then return nil end
+ return Vector2.new(d.X,d.Z).Magnitude
+end
+-- The nearest inspectable visitor pet's owner, or nil.
+function Inspect:nearest()
+ local root=localRoot();if not root then return nil end
+ local best,bestDistance=nil,Rules.InspectRange
+ for player,entry in pairs(self.options.companions.active)do
+  local distance=self:reach(entry,root.Position)
+  if distance and distance<=bestDistance then best,bestDistance=player,distance end
+ end
+ return best,bestDistance
+end
+-- The owner whose pet a tap at `point` (screen px) lands on, or nil. The same forgiving
+-- screen-space radius as the owner's own pet (PetClickTarget); the nearer centre wins.
+function Inspect:hit(point)
+ local root=localRoot();local camera=workspace.CurrentCamera
+ if not root or not camera then return nil end
+ local function measure(visual)
+  local frame,size=Bounds.get(visual)
+  if not frame or not size then return nil end
+  local at,onScreen=camera:WorldToViewportPoint(frame.Position)
+  if not onScreen or at.Z<=0 then return nil end
+  local px=ClickTarget.boxSize(size).Magnitude/2/at.Z*(camera.ViewportSize.Y/2)/math.tan(math.rad(camera.FieldOfView/2))
+  local gap=(point-Vector2.new(at.X,at.Y)).Magnitude
+  return if gap<=ClickTarget.tapRadius(px)then gap else nil
+ end
+ local best,bestGap=nil,math.huge
+ for player,entry in pairs(self.options.companions.active)do
+  local distance=self:reach(entry,root.Position)
+  if distance and distance<=Rules.InspectRange then
+   local gap=measure(entry.visual)
+   if gap and gap<bestGap then best,bestGap=player,gap end
+  end
+ end
+ local own=self.options.ownPet and self.options.ownPet()
+ if best and own and not own.destroyed then
+  local gap=measure(own)
+  if gap and gap<=bestGap then return nil end
+ end
+ return best
+end
+-- Identity of the pet behind a card: any change closes it.
+function Inspect:identity(player)
+ local entry=self.options.companions.active[player]
+ local board=entry and entry.board
+ if not entry or not board then return nil end
+ local character=entry.root and entry.root.Parent
+ return {player=player,ownerId=player.UserId,petId=entry.pet.id,pet=entry.pet,board=board,
+  petGeneration=board:GetAttribute("CompanionGeneration")or 0,characterId=character and character:GetAttribute("GardenCharacterId")or 0}
+end
+local function deviceKey()
+ local last=UserInputService:GetLastInputType()
+ if last==Enum.UserInputType.Touch then return nil end
+ if last.Name:sub(1,7)=="Gamepad"then return "X"end
+ return "E"
+end
+function Inspect:setCandidate(player)
+ if self.candidate==player then return end
+ self.candidate=player
+ if self.prompt then self.prompt:Destroy();self.prompt=nil end
+ local entry=player and self.options.companions.active[player]
+ local body=entry and entry.visual.model and entry.visual.model.PrimaryPart
+ if not body then self.chip.Enabled=false;self.chip.Adornee=nil;return end
+ -- A custom-style prompt gives E / X and the engine's own one-prompt-per-key choice:
+ -- the owner's pet and the stations keep E whenever they are the nearer prompt.
+ local prompt=Instance.new("ProximityPrompt")
+ prompt.Name="PetInspectPrompt";prompt.ActionText=UICopy.get("inspect.prompt");prompt.ObjectText=entry.pet.name
+ prompt.Style=Enum.ProximityPromptStyle.Custom
+ prompt.KeyboardKeyCode,prompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
+ prompt.ClickablePrompt,prompt.RequiresLineOfSight,prompt.HoldDuration=true,false,0
+ prompt.MaxActivationDistance=Rules.InspectRange
+ prompt.Parent=body
+ prompt.PromptShown:Connect(function()if self.prompt==prompt then self.promptShown=true end end)
+ prompt.PromptHidden:Connect(function()if self.prompt==prompt then self.promptShown=false end end)
+ prompt.Triggered:Connect(function(who)
+  if(who==nil or who==Players.LocalPlayer)and self.prompt==prompt and self.candidate==player and self:allowed()then self:open(player)end
+ end)
+ self.prompt,self.promptShown=prompt,false
+ self.chip.Adornee=body
+end
+
+function Inspect:build(identity)
+ local camera=workspace.CurrentCamera
+ local view=camera and camera.ViewportSize or Vector2.new(1280,720)
+ local g=Inspect.geometry(view.X,view.Y)
+ local card=Kit.frame(self.root,"InspectCard","panel",nil,UDim2.fromOffset(g.W,g.H),14)
+ card.AnchorPoint=Vector2.new(.5,0);card.Active=true;Kit.stroke(card)
+ -- Phones: under the top bar, centred, clear of the thumbstick and jump corners.
+ -- Desktop: the right side, so the pet itself stays in view.
+ card.Position=if g.compact then UDim2.new(.5,0,0,6)else UDim2.new(1,-g.W/2-24,.5,-g.H/2)
+ local well=Kit.well(card,"Preview",UDim2.fromOffset(g.pad,g.pad),UDim2.fromOffset(g.preview,g.H-g.pad*2),12)
+ well.ClipsDescendants=true
+ local viewport=Instance.new("ViewportFrame")
+ viewport.Name="PetViewport";viewport.BackgroundTransparency=1;viewport.BorderSizePixel=0;viewport.Size=UDim2.fromScale(1,1)
+ viewport.Ambient=Color3.fromRGB(175,184,183);viewport.LightColor=Color3.fromRGB(255,250,231);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ viewport.ZIndex=well.ZIndex+1;viewport.Active=true;viewport.Parent=well
+ local world=Instance.new("WorldModel");world.Parent=viewport
+ local lens=Instance.new("Camera");lens.FieldOfView=30;lens.Parent=viewport;viewport.CurrentCamera=lens
+ local hint=Kit.text(well,"Small",UICopy.get("inspect.spin"),"dim",{Name="SpinHint",Size=UDim2.new(1,0,0,16),Position=UDim2.new(0,0,1,-20),TextXAlignment=Enum.TextXAlignment.Center,TextSize=12})
+ hint.ZIndex=viewport.ZIndex+1
+ -- Right column.
+ local name=Kit.text(card,"Name",identity.pet.name,"text",{Name="PetName",Position=UDim2.fromOffset(g.x0,g.pad),Size=UDim2.fromOffset(g.rightW-40,g.head),TextSize=if g.compact then 18 else 22,TextTruncate=Enum.TextTruncate.AtEnd})
+ Kit.fixedText(name)
+ local sub=Kit.text(card,"Small","","soft",{Name="Owner",Position=UDim2.fromOffset(g.x0,g.pad+g.head),Size=UDim2.fromOffset(g.rightW,g.sub),TextSize=if g.compact then 12 else 13,TextTruncate=Enum.TextTruncate.AtEnd})
+ Kit.fixedText(sub)
+ local close=Instance.new("TextButton")
+ close.Name="Close";close.Text="×";close.AutoButtonColor=false;close.AnchorPoint=Vector2.new(1,0)
+ close.Position=UDim2.new(1,-g.pad+4,0,g.pad-4);close.Size=UDim2.fromOffset(36,36);close.BackgroundTransparency=1
+ close.TextColor3=Kit.Color.soft;close.TextSize=24;close.FontFace=Kit.Type.Strong[3];close.ZIndex=card.ZIndex+3;close.AutoLocalize=false;close.Parent=card
+ close:SetAttribute("AccessibleLabel",UICopy.get("inspect.close"))
+ close.Activated:Connect(function()self:close("button")end)
+ local grid=Kit.frame(card,"Slots",nil,UDim2.fromOffset(g.x0,g.gridY),UDim2.fromOffset(g.rightW,g.gridH))
+ local cellW=math.floor((g.rightW-(Inspect.Columns-1)*g.gap)/Inspect.Columns)
+ local cells={}
+ for index,row in ipairs(Inspect.rows(identity.petId,nil))do
+  local col,line=(index-1)%Inspect.Columns,math.floor((index-1)/Inspect.Columns)
+  local cell=Kit.frame(grid,"Slot_"..row.key,"well",UDim2.fromOffset(col*(cellW+g.gap),line*(g.rowH+g.gap)),UDim2.fromOffset(cellW,g.rowH),8)
+  local half=math.floor((g.rowH-4)/2)
+  local label=Kit.text(cell,"Small",row.label,"dim",{Name="Slot",Position=UDim2.fromOffset(6,2),Size=UDim2.fromOffset(cellW-10,half),TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+  local value=Kit.text(cell,"Strong","","text",{Name="Item",Position=UDim2.fromOffset(6,2+half),Size=UDim2.fromOffset(cellW-10,half),TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+  cells[row.key]={cell=cell,label=label,value=value}
+ end
+ local hello=Kit.button(card,"SayHello",{variant="primary",text=UICopy.get("inspect.hello"),size=Vector2.new(g.rightW,g.button),textSize=if g.compact then 16 else 18})
+ hello.Position=UDim2.fromOffset(g.x0,g.gridY+g.gridH+8)
+ hello.Activated:Connect(function()self:hello()end)
+ hello.NextSelectionUp,hello.NextSelectionDown,hello.NextSelectionLeft,hello.NextSelectionRight=hello,hello,hello,hello
+ -- Spin: drag on the preview (mouse or touch); the thumbstick turns it too.
+ local drag=nil
+ viewport.InputBegan:Connect(function(input)
+  if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then drag={input=input,x=input.Position.X}end
+ end)
+ local moved=UserInputService.InputChanged:Connect(function(input)
+  if not drag then return end
+  if input.UserInputType==Enum.UserInputType.MouseMovement or input==drag.input then
+   self.spin+=(input.Position.X-drag.x)*Inspect.SpinPerPixel;drag.x=input.Position.X;hint.Visible=false
+  end
+ end)
+ local ended=UserInputService.InputEnded:Connect(function(input)
+  if drag and(input==drag.input or input.UserInputType==Enum.UserInputType.MouseButton1)then drag=nil end
+ end)
+ return {frame=card,geometry=g,viewport=viewport,world=world,lens=lens,name=name,sub=sub,cells=cells,hello=hello,hint=hint,inputs={moved,ended}}
+end
+function Inspect:fitCamera()
+ local card=self.card;local v=card and card.visual
+ if not v or v.destroyed then return end
+ local box,size=Bounds.get(v)
+ local key=(v.rigRevision or 0)*1000+math.floor(size.Y*100)
+ if card.cameraKey==key then return end
+ card.cameraKey=key
+ local half=math.tan(math.rad(card.lens.FieldOfView/2))
+ local aspect=card.viewport.AbsoluteSize.X/math.max(1,card.viewport.AbsoluteSize.Y)
+ -- Fit the widest turn of the pet (it spins), then the height.
+ local wide=math.max(size.X,size.Z)
+ local distance=math.max(size.Y*.5/half,wide*.5/(half*math.max(.2,aspect)))+wide*.5+.3
+ card.lens.CFrame=CFrame.lookAt(Vector3.new(0,box.Position.Y+size.Y*.06,distance*1.08),Vector3.new(0,box.Position.Y,0))
+end
+function Inspect:refresh()
+ local card=self.card;if not card then return end
+ local identity=card.identity;local board=identity.board
+ local appearance=self.options.garden:appearance(board,identity.petId)
+ local key=tostring(board:GetAttribute("PetAppearance")).."|"..tostring(board:GetAttribute("PetAppearanceRevision"))
+ if card.appearanceKey~=key then
+  card.appearanceKey=key
+  if card.visual and card.visual.applyAppearance then card.visual:applyAppearance(appearance)end
+  for _,row in ipairs(Inspect.rows(identity.petId,appearance))do
+   local cell=card.cells[row.key]
+   if cell then
+    cell.value.Text=row.value
+    cell.value.TextColor3=if row.empty then Kit.Color.dim else Kit.Color.text
+    cell.cell.BackgroundTransparency=if row.empty then .55 else 0
+   end
+  end
+  card.cameraKey=nil
+ end
+ local player=identity.player
+ local owner=if player.DisplayName~=player.Name then player.DisplayName.." @"..player.Name else "@"..player.Name
+ local level=board:GetAttribute(Rules.BondAttribute)
+ local line=UICopy.get("inspect.owner",{owner=owner})
+ if type(level)=="number"then line=line.." · "..UICopy.get("inspect.bond",{level=level})end
+ if card.sub.Text~=line then card.sub.Text=line end
+end
+function Inspect:open(player)
+ if self.destroyed or not self:allowed()then return false end
+ if self.card then
+  if self.card.identity.player==player then return true end
+  self:close("replace")
+ end
+ local identity=self:identity(player)
+ local root=localRoot()
+ local entry=self.options.companions.active[player]
+ if not identity or not root or not entry then return false end
+ local distance=self:reach(entry,root.Position)
+ if not distance or distance>Rules.InspectRange then return false end
+ local card=self:build(identity)
+ card.identity=identity
+ self.card=card;self.spin=0
+ -- A read-only local clone in the card's own viewport: the published appearance only.
+ local appearance=self.options.garden:appearance(identity.board,identity.petId)
+ local create=self.options.createPreview or require(script.Parent.PetFactory).new
+ local ok,visual=pcall(create,card.world,Vector3.zero,identity.pet,nil,appearance)
+ if ok and visual then
+  card.visual=visual;visual.cosmeticSeed=identity.ownerId;visual.yaw=0
+  visual.model:SetAttribute("InspectPreview",true)
+ end
+ self:refresh();self:fitCamera()
+ ContextActionService:BindActionAtPriority(Inspect.Action,function(_,state,input)
+  if state~=Enum.UserInputState.Begin then return Enum.ContextActionResult.Pass end
+  -- Escape also opens the Roblox menu, which closes the card by itself.
+  self:close("back")
+  return if input.KeyCode==Enum.KeyCode.Escape then Enum.ContextActionResult.Pass else Enum.ContextActionResult.Sink
+ end,false,3000,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,Enum.KeyCode.Escape)
+ if UserInputService:GetLastInputType().Name:sub(1,7)=="Gamepad"then
+  card.priorSelection=GuiService.SelectedObject;GuiService.SelectedObject=card.hello
+ end
+ self.chip.Enabled=false
+ if self.options.onOpen then self.options.onOpen(identity)end
+ return true
+end
+function Inspect:isOpen()return self.card~=nil end
+function Inspect:close(reason)
+ local card=self.card;if not card then return false end
+ self.card=nil
+ ContextActionService:UnbindAction(Inspect.Action)
+ for _,connection in ipairs(card.inputs)do connection:Disconnect()end
+ if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(card.frame)then
+  GuiService.SelectedObject=if card.priorSelection and card.priorSelection.Parent then card.priorSelection else nil
+ end
+ if card.visual and not card.visual.destroyed then pcall(function()card.visual:destroy()end)end
+ card.frame:Destroy()
+ if self.options.onClose then self.options.onClose(reason)end
+ return true
+end
+-- The target went away or changed: say so briefly, then close. Nothing stays interactive.
+function Inspect:gone()
+ local card=self.card
+ if not card or card.goneAt then return end
+ card.goneAt=os.clock()
+ card.name.Text=UICopy.get("inspect.gone")
+ Kit.setEnabled(card.hello,false)
+end
+function Inspect:hello()
+ local card=self.card
+ if not card or card.goneAt or not self.remote or not card.helloReady then return false end
+ local identity=card.identity
+ self.seq+=1
+ card.pendingSeq=self.seq;card.pendingAt=os.clock()
+ self.remote:FireServer({seq=self.seq,ownerId=identity.ownerId,petId=identity.petId,characterId=identity.characterId,petGeneration=identity.petGeneration})
+ return true
+end
+function Inspect:onReply(result)
+ local card=self.card
+ if type(result)~="table"or not card or result.seq~=card.pendingSeq then return end
+ card.pendingSeq=nil
+ local now=os.clock()
+ if result.status=="Accepted"then
+  card.sentUntil=now+Rules.Duration;card.coolUntil=now+Rules.PairCooldown
+ elseif result.reason=="Cooldown"then
+  card.coolUntil=now+(if type(result.retryIn)=="number"then math.clamp(result.retryIn,0,Rules.PairCooldown)else Rules.ViewerCooldown)
+ elseif result.reason=="Stale"then self:gone()
+ elseif result.reason=="Off"then card.offUntil=now+2
+ else card.busyUntil=now+1.5 end
+end
+-- Once a frame from RoomView (Room mode). `serverNow` times the preview's hello wave.
+function Inspect:step(dt,serverNow)
+ if self.destroyed then return end
+ local allowed=self:allowed()
+ local card=self.card
+ if card then
+  local now=os.clock()
+  if card.goneAt then
+   if now-card.goneAt>=Inspect.GoneHold then self:close("gone")end
+  elseif not allowed then self:close("covered")
+  else
+   local identity=card.identity
+   local current=self:identity(identity.player)
+   local entry=self.options.companions.active[identity.player]
+   local root=localRoot()
+   local distance=entry and root and self:reach(entry,root.Position)
+   if not current or current.petId~=identity.petId or current.petGeneration~=identity.petGeneration or current.characterId~=identity.characterId or not distance then self:gone()
+   elseif distance>Rules.InspectLeave then self:close("far")
+   else
+    self:refresh()
+    local board=identity.board
+    local actor=self.options.garden:get(identity.ownerId,identity.petId,entry.root.Parent)
+    local key,ready=Inspect.helloState({off=board:GetAttribute(Rules.OffAttribute)==true or now<(card.offUntil or 0),sent=now<(card.sentUntil or 0),
+     cooling=now<(card.coolUntil or 0)or(card.pendingSeq~=nil and now-(card.pendingAt or 0)<2),distance=distance,
+     free=actor~=nil and Rules.free(actor,serverNow)and now>=(card.busyUntil or 0)})
+    if card.helloKey~=key then card.helloKey=key;Kit.setText(card.hello,UICopy.get(key))end
+    if card.helloReady~=ready then card.helloReady=ready;Kit.setEnabled(card.hello,ready)end
+    -- The preview mirrors the real pet's hello.
+    if card.visual then card.visual.hello=entry.visual.hello;card.visual.helloTarget=Vector3.new(0,0,6)end
+   end
+  end
+  card=self.card
+  if card and card.visual and not card.visual.destroyed then
+   local v=card.visual
+   local stick=0
+   for _,input in ipairs(UserInputService:GetGamepadState(Enum.UserInputType.Gamepad1))do
+    if input.KeyCode==Enum.KeyCode.Thumbstick2 and math.abs(input.Position.X)>.2 then stick=input.Position.X end
+   end
+   self.spin+=stick*dt*2.4
+   v.reducedEffects=self.options.reduce and self.options.reduce()==true
+   v.yaw=self.spin;v.cosmeticTime=serverNow;v.poseDirty=true;v:update(dt)
+   self:fitCamera()
+  end
+ end
+ -- The quiet prompt, only with no card up.
+ local candidate=if allowed and not self.card then self:nearest()else nil
+ self:setCandidate(candidate)
+ local show=candidate~=nil and self.promptShown==true
+ local keyName=deviceKey()
+ if show then
+  if self.chipKeyName~=keyName then
+   self.chipKeyName=keyName
+   self.chipKey.Visible=keyName~=nil;self.chipKey.Text=keyName or ""
+   self.chipWord.Position=UDim2.fromOffset(if keyName then 30 else 0,0);self.chipWord.Size=UDim2.new(1,if keyName then -34 else 0,1,0)
+   self.chipWord.TextXAlignment=if keyName then Enum.TextXAlignment.Left else Enum.TextXAlignment.Center
+  end
+ end
+ if self.chip.Enabled~=show then self.chip.Enabled=show end
+end
+function Inspect:destroy()
+ if self.destroyed then return end
+ self:close("destroy");self.destroyed=true
+ self:setCandidate(nil)
+ for _,connection in ipairs(self.connections)do connection:Disconnect()end
+ table.clear(self.connections)
+ self.chip:Destroy();self.gui:Destroy()
+end
+return Inspect

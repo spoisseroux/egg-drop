@@ -152,6 +152,13 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
  -- Pet Park (K3): nil unless FeatureFlags.Park; companions drive their pets through it too.
  self.park=ParkClient.new({garden=self.garden,reduced=reduceEffects})
  self.companions.park=self.park
+ -- QA v685 R6: inspect and greet a visitor's pet (read-only card; PetInspect.lua).
+ self.inspect=require(script.Parent.PetInspect).new({companions=self.companions,garden=self.garden,reduce=reduceEffects,parent=gui.Parent,
+  ownPet=function()return self.pet end,
+  canOpen=function()
+   return not self.destroyed and self.mode=="Room"and self.target=="Room"and not self.focusing and not self.busy and not self.focusTransitioning
+    and not self.menuOpen and not self.overlayOpen()and(self.canRoam==nil or self.canRoam()==true)
+  end})
 	self.ambience=HollowAmbience.new()
  self.affection=PetAffection.new(workspace,function(index)
   if self.petContactActive and self:contactEligible(self.contactContext)then self.audio:play(self.shownPet.cue,if index%2==0 then .96 else 1.06,.26)end
@@ -284,12 +291,16 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
             -- Close-up petting (boop squash, fast wag, the 1 s pose change) renders every
             -- frame instead of the 15 Hz pose cadence. One focused pet only.
             if self.pet.petting or(self.pet.boopAt and os.clock()-self.pet.boopAt<.25)then self.pet.poseDirty=true end
+            -- R6: a visitor said hello to this pet (the board carries the accepted wave).
+            self.pet.hello=require(script.Parent.PetHelloPose).read(self.progress)
+            if self.pet.hello and serverNow-self.pet.hello.at<1.3 then self.pet.poseDirty=true end
             self.pet:update(dt)
 			self.pet.focused=self.focusing==true
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
 			if self.petTarget and self.petTarget.pet == self.pet then PetClickTarget.sync(self.petTarget) end
 		end
 		if self.mode=="Room"then self.companions:update(dt,serverNow);self:visitorBeats()end
+		if self.inspect then self.inspect:step(dt,serverNow)end
 		if self.park then
 			local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart")
 			local camera=workspace.CurrentCamera
@@ -1295,6 +1306,7 @@ function Room:destroy()
 	if self.toyPrompt then self.toyPrompt:destroy();self.toyPrompt=nil end
 	if self.garden then self.garden:destroy()end
  if self.park then self.park:destroy();self.park=nil end
+ if self.inspect then self.inspect:destroy();self.inspect=nil end
 	if self.gardenToy then self.gardenToy:destroy();self.gardenToy=nil end
  if self.affection then self.affection:destroy()end
 	if self.ambience then self.ambience:destroy();self.ambience=nil end

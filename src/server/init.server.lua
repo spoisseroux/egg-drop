@@ -256,9 +256,52 @@ local function gardenInputs()
 	for player,board in pairs(boards)do inputs[player.UserId]=gardenInput(board)end
 	return inputs
 end
+-- QA v685 R6: inspect and greet another player's pet (PetHello.lua). Reward-free; the
+-- board carries only a small public summary (bond level, greetings off) and the wave.
+local petHello={}
+do
+	local Rules=require(ReplicatedStorage.Shared.PetHelloRules)
+	local Bond=require(ReplicatedStorage.Shared.BondCatalog)
+	local remote=child("RemoteEvent","PetHello",remotes)
+	local function boardOf(userId)
+		local player=Players:GetPlayerByUserId(userId)
+		return player and boards[player]or nil
+	end
+	petHello.state=require(script.PetHello).new({now=function()return workspace:GetServerTimeNow()end,garden=garden,
+		viewer=function(userId)
+			local board=boardOf(userId);local character=board and not board.closing and board.player.Character
+			local root=character and character:FindFirstChild("HumanoidRootPart");local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+			return if root and humanoid and humanoid.Health>0 and character:IsDescendantOf(workspace)then root.Position else nil
+		end,
+		allowed=function(ownerId)local board=boardOf(ownerId);return board~=nil and not board.closing and board.profile.greetOff~=true end,
+		clear=function(from,to)
+			local scene=gardenScene();if not scene then return true end
+			local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={scene.room}
+			local target=to+Vector3.new(0,1,0)
+			return workspace:Raycast(from,target-from,params)==nil
+		end,
+		publish=function(ownerId,hello)
+			local board=boardOf(ownerId)
+			if board and board.folder.Parent then board.folder:SetAttribute(Rules.Attribute,if hello then HttpService:JSONEncode(hello)else nil)end
+		end})
+	-- The public summary on the owner's board: greetings off, and the selected pet's bond level.
+	function petHello.social(board)
+		board.folder:SetAttribute(Rules.OffAttribute,board.profile.greetOff==true)
+		local petId=board.profile.companionId
+		local bond=board.nursery and board.nursery.state and board.nursery.state.bond
+		board.folder:SetAttribute(Rules.BondAttribute,if petId then Bond.level(Bond.xpOf(bond,petId))else nil)
+	end
+	remote.OnServerEvent:Connect(function(player,packet)
+		local board=boards[player]
+		if not board or board.closing then return end
+		local result=petHello.state:request(player.UserId,packet)
+		if result then remote:FireClient(player,result)end
+	end)
+end
 local function publishPetAppearance(board)
 	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId,board.nursery.state.petWearables)))
 	board.folder:SetAttribute("PetAppearanceRevision",board.petPreferences.revision+board.nursery.state.revision)
+	petHello.social(board)
 end
 
 local function publishAppearance(board)
@@ -283,6 +326,7 @@ local function publishCompanion(board)
 	end
 	board.folder:SetAttribute("CompanionGeneration",board.companionGeneration or 0)
 	board.folder:SetAttribute("CompanionId",id)
+	petHello.social(board)
 end
 local gardenCareHost=require(script.GardenCareHost).new({garden=garden,boards=boards,progress=Progress,remotes=remotes,
  canProgress=canProgress,inventory=inventory,gardenInput=gardenInput,publishCompanion=publishCompanion,
@@ -763,6 +807,7 @@ local function closeBoard(board)
 	board.closing = true
 	if board.welcome then board.welcome:destroy()end
 	garden:remove(board.player.UserId)
+	petHello.state:remove(board.player.UserId)
 	if board.petContact then board.petContact:destroy()end
 	task.spawn(function()
 		-- Code review: queued Play date / parkGames counts are saved once on leave (the flush loop
@@ -924,6 +969,15 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		end
 		appearanceResult:FireClient(player,{slot="pair",seq=0,id="",revision=board.appearance.revision,
 			themeId=board.profile.theme,stickerId=board.profile.sticker,backgroundId=board.profile.background,status=if reason then "Rejected" else "Applied",reason=reason})
+		return
+	end
+	if action == "greetings" then
+		-- R6 Settings: "Let visitors greet my pet". Off withdraws a wave that is running.
+		if value ~= nil or not canProgress(board) then return end
+		local off = board.profile.greetOff ~= true
+		Progress.setSetting(board.profile, "greetOff", off)
+		petHello.social(board)
+		if off then petHello.state:cancel(player.UserId) end
 		return
 	end
 	if action == "sound" or action == "motion" then
@@ -1580,6 +1634,7 @@ local accumulator = 0
 local merged = {}
 RunService.Heartbeat:Connect(function(dt)
 	garden:step(dt,gardenInputs)
+	petHello.state:step()
 	accumulator = math.min(accumulator + dt, Config.FixedStep * 8)
 	while accumulator >= Config.FixedStep do
 		accumulator -= Config.FixedStep
@@ -1742,6 +1797,7 @@ task.spawn(function()
 							board.folder:SetAttribute("AppearanceRevision",board.appearance.revision)
 							board.folder:SetAttribute("SoundLevel", board.profile.sound)
 							board.folder:SetAttribute("ReducedEffects", board.profile.reduced)
+							petHello.social(board)
 							Lounge.setMode(player.Character, player.UserId, board.mode, board.profile.theme)
 							Lounge.setAppearance(player.Character, board.profile.theme)
 							if board.firstSession then board.firstSession:advance(1) end
