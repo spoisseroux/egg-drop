@@ -2,6 +2,9 @@
 -- The screen dims to a dark stage, the egg wobbles in a rarity-coloured beam that builds, the shell bursts
 -- (flash, rings, rays, shards), the item pops onto a card that flies to its seat, the name
 -- slams in under a rarity banner, and the reveal ends on the host's own receipt actions.
+-- QA R2 (2026-11-15): the card is a lit backdrop in the tier's colour (HatchRarityCue.Look
+-- back / backDeep), and a 3D result (a toy, a feature, the Bear wearing a finish) turns
+-- slowly on it once the name is out (HatchDisplayScene:setSpin).
 --   HatchItemStage.show(parent,{scene,kind,tier,...}) -> stage
 -- It borrows the hatch's one native scene (HatchDisplayScene) and follows the hatch's one
 -- clock through stage:updateExternal(age, sample); it owns no reward, receipt or asset.
@@ -29,6 +32,13 @@ local Stage={};Stage.__index=Stage
 -- ── Pure rules (specs cover these) ───────────────────────────────────────────
 Stage.BurstAt=Rarity.BurstAt;Stage.CardAt=1.06;Stage.SlideAt=1.26;Stage.SettleAfter=.50;Stage.ReducedFade=.15
 Stage.ShardLife=.95;Stage.RingLife=.50;Stage.EggScale=1.42;Stage.GlowDiscs=40
+Stage.SpinSpeed=math.rad(42);Stage.SpinEase=.8;Stage.BackLights=18
+-- Pure: the turn (radians) `t` seconds after the name landed: eases in, then a steady 42 deg/s.
+function Stage.spinAt(t)
+ if t<=0 then return 0 end
+ local e=Stage.SpinEase
+ return Stage.SpinSpeed*(if t<e then t*t/(2*e)else t-e*.5)
+end
 Stage.Dim=1;Stage.Backdrop=Color3.fromHex("#06070B");Stage.Card=Color3.fromHex("#141823");Stage.Ink=Color3.fromHex("#0E0F12")
 local function ramp(t,start,duration)return math.clamp((t-start)/duration,0,1)end
 local function smooth(a,b,t)local u=math.clamp((t-a)/(b-a),0,1);return u*u*(3-2*u)end
@@ -215,14 +225,28 @@ function Stage:build()
   local stroke=Kit.node("UIStroke",ring,{Color=if index==1 then color else look.second,Thickness=4,Transparency=1})
   self.rings[index]={node=ring,stroke=stroke};ring.Visible=false
  end
- -- Card: an ink plate with a tier-coloured rim, tilted a little; the item sits on it.
+ -- Card: a lit backdrop in the tier's colour with a tier-coloured rim, tilted a little; the
+ -- item stands on it. The colour runs light at the top to deep at the floor, and a soft
+ -- round light (nested discs, so no edge shows) sits behind the item.
  local cardLayer=layer(root,"CardLayer",5)
- self.card=fill(cardLayer,"ItemCard",Stage.Card,0);self.card.Rotation=-3;self.card.Visible=false
+ self.card=fill(cardLayer,"ItemCard",Color3.new(1,1,1),0);self.card.Rotation=-3;self.card.Visible=false
+ self.card:SetAttribute("BackdropTop",look.back);self.card:SetAttribute("BackdropFloor",look.backDeep)
  self.cardCorner=Kit.node("UICorner",self.card,{CornerRadius=UDim.new(0,18)})
  self.cardStroke=Kit.node("UIStroke",self.card,{Color=color,Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
- self.cardSheen=Kit.frame(self.card,"TierWash",nil,UDim2.new(),UDim2.fromScale(1,1));self.cardSheen.BackgroundTransparency=0;self.cardSheen.BackgroundColor3=color
- Kit.node("UICorner",self.cardSheen,{CornerRadius=UDim.new(0,18)})
- Kit.node("UIGradient",self.cardSheen,{Rotation=90,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.62),NumberSequenceKeypoint.new(.55,.94),NumberSequenceKeypoint.new(1,1)})})
+ self.cardBack=Kit.node("UIGradient",self.card,{Name="TierBackdrop",Rotation=90,Color=ColorSequence.new({
+  ColorSequenceKeypoint.new(0,look.back),ColorSequenceKeypoint.new(.62,look.back:Lerp(look.backDeep,.55)),ColorSequenceKeypoint.new(1,look.backDeep:Lerp(Color3.new(0,0,0),.18))})})
+ self.cardLights={}
+ for index=1,Stage.BackLights do
+  local share=1-(index-1)/Stage.BackLights*.86
+  local disc=Kit.frame(self.card,"BackLight"..index,nil,UDim2.fromScale(.5,.47),UDim2.fromScale(.94*share,.86*share))
+  disc.AnchorPoint=Vector2.new(.5,.5);disc.BackgroundColor3=Color3.new(1,1,1);disc.BackgroundTransparency=.968
+  Kit.node("UICorner",disc,{CornerRadius=UDim.new(.5,0)});self.cardLights[index]=disc
+ end
+ -- The floor the item stands on: a soft darker pool low on the card.
+ self.cardFloor=Kit.frame(self.card,"FloorPool",nil,UDim2.fromScale(.5,.815),UDim2.fromScale(.6,.09))
+ self.cardFloor.AnchorPoint=Vector2.new(.5,.5);self.cardFloor.BackgroundColor3=look.backDeep:Lerp(Color3.new(0,0,0),.5);self.cardFloor.BackgroundTransparency=.82
+ C.gradient(self.cardFloor,0,{{0,1},{.3,0},{.7,0},{1,1}})
+ Kit.node("UICorner",self.cardFloor,{CornerRadius=UDim.new(.5,0)})
  local seatLayer=layer(root,"SeatLayer",6)
  self.seat=Kit.frame(seatLayer,"NativeSceneSeat",nil,UDim2.new(),UDim2.fromOffset(10,10));self.seat.AnchorPoint=Vector2.new(.5,.5)
  local sparkLayer=layer(root,"Burst",7)
@@ -358,7 +382,6 @@ function Stage:layout()
  self.seat.Size=UDim2.fromOffset(L.seat,L.seat)
  self.card.Size=UDim2.fromOffset(L.cardW,L.cardH)
  local corner=math.max(10,math.floor(L.seat*.09));self.cardCorner.CornerRadius=UDim.new(0,corner)
- local washCorner=self.cardSheen:FindFirstChildOfClass("UICorner");if washCorner then washCorner.CornerRadius=UDim.new(0,corner)end
  self.cardStroke.Thickness=math.max(2,math.floor(L.seat*.014+.5))
  self.rayGroup.Size=UDim2.fromOffset(L.seat*3.2,L.seat*3.2)
  for index,ray in ipairs(self.rays)do
@@ -483,7 +506,7 @@ function Stage:paint()
  local card=if still then 1 else s.card
  self.card.Visible=card>.02
  self.card.Position=UDim2.fromOffset(cx,cy);self.card.Size=UDim2.fromOffset(math.max(2,L.cardW*math.abs(card)),L.cardH*(.86+.14*math.min(1,card)))
- self.card.BackgroundTransparency=.04
+ self.card.BackgroundTransparency=0
  -- Waiting line.
  local pre=if still then 0 else s.pre
  self.pre.Visible=pre>0;self.pre.TextTransparency=1-pre
@@ -518,6 +541,7 @@ function Stage:paint()
  self.close.Visible=s.input and self.options.onClose~=nil
  self.skip.Visible=not s.input;self.skip.Active=not s.input
  self.root:SetAttribute("InputLocked",not s.input);self.root:SetAttribute("ReceiptReady",s.input)
+ self:paintSpin(s)
  if s.settled then self.staticDone=true;self:paintFocus()end
 end
 function Stage:paintSparkles(s,still)
@@ -532,7 +556,20 @@ function Stage:paintSparkles(s,still)
   end
  end
 end
+-- QA R2: a 3D result turns slowly once its name is out. Never under Reduced Motion; a
+-- reopened receipt turns too (it is the idle, not the entrance).
+function Stage:paintSpin(s)
+ local scene=self.scene
+ if not scene or scene.destroyed or type(scene.setSpin)~="function"then return end
+ if s.reduced or self:reduced()or not s.named then
+  if self.spinning then self.spinning=false;self.spinFrom=nil;scene:setSpin(0)end
+  return
+ end
+ self.spinFrom=self.spinFrom or self.clock
+ self.spinning=scene:setSpin(Stage.spinAt(self.clock-self.spinFrom))
+end
 function Stage:paintIdle(s,still)
+ self:paintSpin(s)
  if s.reduced then return end
  if self.look.spin~=0 then self.rayGroup.Rotation=self.clock*self.look.spin end
  if #self.sparkles>0 then self:paintSparkles(s,still)end

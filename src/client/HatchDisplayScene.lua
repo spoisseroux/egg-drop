@@ -83,7 +83,14 @@ function Scene.new(parent,options)
     visual:setRevealPose(nil);self:measureEnvelope();self:render(self.sample or Pose.settled(self.kind,false));self:checkReady()
    end
   else self.failure="PetRendererUnavailable"end
- else self.item=require(script.Parent.HatchDisplayItem).create(self.heroWorld,self.itemGui,options.result,options.resultBuilder,self.height)end
+ else
+  self.item=require(script.Parent.HatchDisplayItem).create(self.heroWorld,self.itemGui,options.result,options.resultBuilder,self.height)
+  -- A worn finish (the Bear) can swap its rig once the authored meshes arrive.
+  self.item.onChanged=function()
+   if self.destroyed or self.measuring then return end
+   self:measureEnvelope();self:render(self.sample or Pose.settled(self.kind,false))
+  end
+ end
  self.floor=part(self.stageWorld,"DisplayFloor",Vector3.new(200,.02,200),CFrame.new(0,-.01,0),Color3.fromHex("#132F31"))
  self.pool=part(self.stageWorld,"CreamPool",Vector3.new(2.44,.004,1.34),CFrame.identity,Color3.fromHex("#C6B78B"),true)
  self.shadow=part(self.stageWorld,"ContactShadow",Vector3.new(.42,.002,.26),CFrame.new(0,.003,0),Color3.fromHex("#354134"),true);self.shadow.Transparency=.60
@@ -149,12 +156,37 @@ end
 function Scene:setBare(bare,hideHero)
  if self.destroyed then return end
  self.bare=bare==true;self.heroHidden=self.bare and hideHero==true
+ -- On a stage the item stands in the stage's own light: brighter and neutral, so it reads
+ -- as lit against the coloured backdrop (the panel's green-grey ambient is for the card).
+ for _,view in ipairs({self.stageView,self.heroView})do
+  view.Ambient=if self.bare then Color3.fromRGB(196,198,204)else Color3.fromRGB(155,181,164)
+ end
+ if not self.bare then self:setSpin(0)end
  self.root.BackgroundTransparency=if self.bare then 1 else 0
  self.floor.Transparency=if self.bare then 1 else 0;self.pool.Transparency=if self.bare then 1 else 0
  self.root:SetAttribute("Bare",self.bare)
  if self.sample then self:render(self.sample)end
 end
 -- Where the egg's contact point (the world origin) lands in this scene's rect, 0..1.
+-- QA R2: turn the shown item (toy, feature or the Bear wearing a finish) about its own
+-- upright axis, by orbiting the hero camera and its light: no part is rewritten. Flat item
+-- art (a Hue jar) does not turn. `radians` 0 restores the shared scene camera.
+function Scene:setSpin(radians)
+ if self.destroyed then return false end
+ radians=radians or 0
+ if not(self.item and self.item.entries)then radians=0 end
+ if self.spin==radians then return radians~=0 end
+ self.spin=radians;self:applySpin();return radians~=0
+end
+function Scene:applySpin()
+ local base=self.cameraBase;if not base then return end
+ local spin=self.spin or 0
+ if spin==0 then self.heroCamera.CFrame=base;self.heroView.LightDirection=Vector3.new(-1,-1.4,-3);return end
+ local pivot=self.itemPivot or Vector3.zero
+ local turn=CFrame.new(pivot)*CFrame.Angles(0,-spin,0)*CFrame.new(-pivot)
+ self.heroCamera.CFrame=turn*base
+ self.heroView.LightDirection=turn:VectorToWorldSpace(Vector3.new(-1,-1.4,-3))
+end
 function Scene:groundPoint()
  local size=self.root.AbsoluteSize;local aspect=math.max(.4,size.X/math.max(1,size.Y))
  local tangent=math.tan(math.rad(self.stageCamera.FieldOfView*.5))
@@ -196,12 +228,13 @@ function Scene:layout()
     local x,y=.5+p.X/(-p.Z*tangent*aspect*2),.5-p.Y/(-p.Z*tangent*2)
     lx,ly,hx,hy=math.min(lx,x),math.min(ly,y),math.max(hx,x),math.max(hy,y)
    end
-   local desired=distance*math.max(hx-lx,hy-ly)/.575
+   local desired=distance*math.max(hx-lx,hy-ly)/(self.item.extent or .575)
    distance=math.max(desired,fit(target,h*.1))
   end
  end
  local cf=CFrame.lookAt(target+direction*distance,target)
- self.stageCamera.CFrame=cf;self.heroCamera.CFrame=cf
+ self.stageCamera.CFrame=cf;self.heroCamera.CFrame=cf;self.cameraBase=cf
+ if(self.spin or 0)~=0 then self:applySpin()end
  self.cameraDistance=distance
  if self.floor then
   local span=math.max(200,distance*12)
@@ -237,9 +270,12 @@ function Scene:measureEnvelope()
    if age==4.4 then
     self.itemSettledPoints={}
     self.itemSettledContact=self.item.contact
+    local lo,hi=Vector3.one*math.huge,-Vector3.one*math.huge
     for _,p in ipairs(parts)do if p.Parent and p.Transparency<.99 then
-     for _,point in ipairs(require(script.Parent.HatchDisplayItem).surfacePoints(p))do table.insert(self.itemSettledPoints,point)end
+     for _,point in ipairs(require(script.Parent.HatchDisplayItem).surfacePoints(p))do table.insert(self.itemSettledPoints,point);lo=lo:Min(point);hi=hi:Max(point)end
     end end
+    -- The upright axis the settled item turns about (Scene:setSpin).
+    if lo.X<math.huge then self.itemPivot=Vector3.new((lo.X+hi.X)*.5,0,(lo.Z+hi.Z)*.5)end
    end
    -- Include the actual whole egg and visible clearing fragments, so item
    -- enlargement never buys its framing by cropping the intro geometry.

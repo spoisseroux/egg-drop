@@ -30,7 +30,60 @@ function Item.surfacePoints(part,padding)
  end
  return points
 end
+-- QA R2 (2026-11-15): a finish is shown worn, on a Bear in the garden's own renderer (the
+-- starter every player owns), instead of a sample sphere on a slate tile. It is a display
+-- model only: `result` is never read for ownership and no pet is awarded.
+local function finishBear(world,result,height)
+ local Shared=game:GetService("ReplicatedStorage").Shared
+ local Pets=require(Shared.PetCatalog)
+ if not Pets.byId.pip or not require(Shared.MaterialCatalog).known(result.finishId)then return nil end
+ local ok,visual=pcall(require(script.Parent.PetFactory).new,world,Vector3.zero,Pets.byId.pip,nil,{finish=result.finishId},{emissionEnabled=false})
+ if not ok or not visual then return nil end
+ visual.idleMotionFrozen=true;visual.expression="neutral";visual.greeting=2;visual.poseCadence=0
+ local self={visual=visual,model=visual.model,mode="PetFinish",entries={},fit=1,extent=.74}
+ local function body()
+  local low,high=math.huge,-math.huge;table.clear(self.entries)
+  for _,piece in ipairs(visual.pieces)do
+   local part=piece.part
+   if piece.role~="charm"and part.Parent and part.Transparency<.99 then
+    table.insert(self.entries,{part=part})
+    local cf,half=part.CFrame,part.Size*.5
+    for x=-1,1,2 do for y=-1,1,2 do for z=-1,1,2 do
+     local py=cf:PointToWorldSpace(half*Vector3.new(x,y,z)).Y;low=math.min(low,py);high=math.max(high,py)
+    end end end
+   end
+  end
+  return low,high
+ end
+ local function measure()
+  visual:setRevealPose({heroScale=1});visual.origin=Vector3.zero;visual.yaw=0;visual.poseDirty=true;visual:update(0)
+  local low,high=body()
+  if low<math.huge then self.fit=height*1.25/math.max(.01,high-low)end
+ end
+ measure()
+ visual.onRigChanged=function()
+  if self.destroyed then return end
+  measure();if self.onChanged then self.onChanged()end
+ end
+ function self:pose(sample)
+  local reveal={heroScale=self.fit*sample.heroScale,stretch=0,eye=1,blink=1,headYaw=0,headRoll=0,handL=.16,handR=.24,ear=0,tail=0}
+  visual:setRevealPose(reveal);visual.yaw=sample.toyYaw or 0;visual.origin=Vector3.zero;visual.greeting=2;visual.poseDirty=true;visual:update(0)
+  local low=body()
+  local lift=.0021+(sample.hop or 0)*height;local forward=(sample.forward or 0)*height
+  if low<math.huge then visual.origin=Vector3.new(0,lift-low,forward);visual.poseDirty=true;visual:update(0);body()end
+  self.minimum=lift;self.contact=Vector3.new(0,lift,forward)
+ end
+ function self:destroy()
+  if self.destroyed then return end;self.destroyed=true
+  pcall(function()visual:setRevealPose(nil);visual:destroy()end)
+ end
+ return self
+end
 function Item.create(world,gui,result,builder,height)
+ if result.finishId and not result.toyId and not result.featureId then
+  local bear=finishBear(world,result,height)
+  if bear then return bear end
+ end
  local api,id
  if result.toyId then api=require(script.Parent.PetToyGeometry);id=result.toyId
  elseif result.featureId then api=require(script.Parent.PetFeatureGeometry);id=result.featureId end

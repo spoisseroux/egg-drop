@@ -24,15 +24,17 @@ end
 -- Look per tier (HatchItemStage). Common is a soft cream-white, Uncommon green, Rare
 -- blue-violet; rarer tiers get a wider beam, more rays and shards, and a stronger flash.
 -- Neutral (an item with no authored tier) looks like Common and shows no tier word.
-local function look(color,second,beam,rays,shards,sparkles,rings,flash,shake,spin)
+-- back / backDeep (QA R2): the lit backdrop behind the item on its card, top to bottom:
+-- garden teal for Common, leaf green for Uncommon, violet for Rare.
+local function look(color,second,beam,rays,shards,sparkles,rings,flash,shake,spin,back,backDeep)
  return table.freeze({color=Color3.fromHex(color),second=Color3.fromHex(second),beam=beam,rays=rays,shards=shards,
-  sparkles=sparkles,rings=rings,flash=flash,shake=shake,spin=spin})
+  sparkles=sparkles,rings=rings,flash=flash,shake=shake,spin=spin,back=Color3.fromHex(back),backDeep=Color3.fromHex(backDeep)})
 end
 Policy.Look=table.freeze({
- Common=look("#FFF1D6","#FFFFFF",.55,6,10,0,1,.22,2,0),
- Neutral=look("#FFF1D6","#FFFFFF",.55,6,10,0,1,.22,2,0),
- Uncommon=look("#57E08A","#C8FFD9",.80,10,18,6,1,.40,4,6),
- Rare=look("#8E7CFF","#5CC8FF",1,16,30,12,2,.62,7,14),
+ Common=look("#FFF1D6","#FFFFFF",.55,6,10,0,1,.22,2,0,"#7FE3D4","#1E8C92"),
+ Neutral=look("#FFF1D6","#FFFFFF",.55,6,10,0,1,.22,2,0,"#7FE3D4","#1E8C92"),
+ Uncommon=look("#57E08A","#C8FFD9",.80,10,18,6,1,.40,4,6,"#A6F27E","#27A45A"),
+ Rare=look("#8E7CFF","#5CC8FF",1,16,30,12,2,.62,7,14,"#B9A9FF","#5340D8"),
 })
 -- Sound line per tier, in seconds on the hatch clock. `pre` notes play before the receipt
 -- unlocks (the build-up and the burst); the rest answer the name slam at `readyAt`.

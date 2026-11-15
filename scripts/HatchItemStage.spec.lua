@@ -15,6 +15,7 @@ return function(client,parent)
   function s:release(token)assert(token==self);record.releases+=1;self.root.Parent=nil end
   function s:setBare(bare,hideHero)record.bare={bare,hideHero}end
   function s:layout()record.layouts+=1 end
+  function s:setSpin(radians)record.spin=radians;record.spins=(record.spins or 0)+1;return radians~=0 end
   return s
  end
  local function open(w,h,extra)
@@ -112,6 +113,28 @@ return function(client,parent)
    at(stage,3.1);assert(stage:isSettled()and stage.nameScale.Scale==1 and not stage.skip.Visible)
    -- The long name still fits its column on a phone.
    local L=stage.L;assert(stage.nameW<=L.textW+2 and stage.name.TextSize>=18)
+  end)
+  test("QA R2: the card is a lit backdrop in the tier's colour, and a 3D result turns once it is named",function()
+   for _,tier in ipairs({"Common","Uncommon","Rare","Neutral"})do
+    local look=Rarity.Look[tier]
+    assert(typeof(look.back)=="Color3"and typeof(look.backDeep)=="Color3"and look.back~=look.backDeep,tier.." backdrop colours")
+    local _,s,v=look.back:ToHSV();assert(s>=.25 and v>=.85,tier.." backdrop is a lit colour, not grey")
+    local stage=open(812,354,{tier=tier,kind="material"})
+    assert(stage.card:GetAttribute("BackdropTop")==look.back and stage.card:GetAttribute("BackdropFloor")==look.backDeep)
+    assert(stage.cardBack.Color.Keypoints[1].Value==look.back and #stage.cardLights==Stage.BackLights and stage.cardStroke.Color==look.color)
+    at(stage,3.1);assert(stage.card.Visible and stage.card.BackgroundTransparency==0,"an opaque backdrop")
+   end
+   assert(Rarity.Look.Neutral.back==Rarity.Look.Common.back and Rarity.Look.Rare.back~=Rarity.Look.Common.back and Rarity.Look.Uncommon.back~=Rarity.Look.Common.back)
+   assert(Stage.spinAt(0)==0 and Stage.spinAt(-1)==0 and Stage.spinAt(.4)<Stage.SpinSpeed*.4 and math.abs((Stage.spinAt(3)-Stage.spinAt(2))-Stage.SpinSpeed)<1e-6,"the turn eases in, then holds a steady speed")
+   local stage,record=open(812,354)
+   at(stage,R-.05);assert((record.spin or 0)==0,"no turn before the name")
+   at(stage,R+.02);for _=1,30 do stage:step(1/30)end
+   local first=record.spin;assert(first and first>0,"the result turns once named")
+   for _=1,30 do stage:step(1/30)end;assert(record.spin>first,"and keeps turning while it idles")
+   local still,quiet=open(812,354,{reduced=function()return true end})
+   at(still,.2);for _=1,30 do still:step(1/30)end;assert((quiet.spin or 0)==0,"no turn under Reduced Motion")
+   local reopened,again=open(812,354,{instant=true})
+   reopened:step(1/30);for _=1,20 do reopened:step(1/30)end;assert((again.spin or 0)>0,"a reopened receipt idles with the turn")
   end)
   test("QA R1: every hatch result has one fun line (60 characters at most), shown only with the name",function()
    local Shared=game:GetService("ReplicatedStorage").Shared
