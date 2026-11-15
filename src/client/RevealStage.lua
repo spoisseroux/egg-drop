@@ -58,6 +58,9 @@ end
 -- shell opens .95-1.18) before the entrance timeline starts. HatchDisplayPose.BearReady
 -- is LeadIn + InputAt, so the receipt unlocks as the buttons open.
 Stage.LeadIn=1.05;Stage.LeadOut=1.30
+-- QA R4 (2026-11-15): with an egg lead-in the stage opens by CelebrationKit's shared rule
+-- (the screen dims while the spotlight, the pool and the egg fade in), and stage:dismiss()
+-- leaves by it (the content sinks into the dark, then the dark lifts off the garden).
 -- Pure: the lead-in lanes at hatch age `t`. `glow` builds behind the egg, `flash` pops as
 -- the shell opens, `egg` is the egg scene's opacity (it leaves as the silhouette rises).
 function Stage.leadSample(t)
@@ -266,6 +269,7 @@ function Stage.show(parent,options)
  self.root=root
  self:build()
  self.reducedStart=self:reduced()
+ self.openedAt=os.clock()
  if options.scene then self:buildLead(options.scene)end
  -- A first view under Reduced Motion still gets its 150 ms cross-fade and cue;
  -- reopening or skipping lands on the settled frame without a sound.
@@ -333,7 +337,7 @@ function Stage:reduced()
  return Kit.reduced()
 end
 function Stage:owned()
- if self.destroyed or not self.root.Parent then return false end
+ if self.destroyed or self.leaving or not self.root.Parent then return false end
  local node=self.root
  while node do
   if node:IsA("GuiObject")and not node.Visible then return false end
@@ -814,8 +818,13 @@ function Stage:paint()
  local clock=self.clock
  local exit=self.exiting and math.clamp((clock-self.exiting.at)/.18,0,1)or 0
  local meetExit=self.exiting and self.exiting.kind=="meet"
+ -- Opening with an egg lead-in (QA R4): the dim, the spotlight, the pool and the egg all
+ -- fade in together on real time (the hatch clock may still be waiting for its window).
+ local opening=if lead and not reduced and not self.instant then C.openSample(self.openElapsed or os.clock()-self.openedAt)else nil
+ local open=if opening then opening.dim else 1
+ if lead and lead.scene and type(lead.scene.setVeil)=="function"and not lead.scene.destroyed then lead.scene:setVeil(1-open)end
  -- The stage fades to black over the egg scene (120 ms; 150 ms when reduced).
- self.root.BackgroundTransparency=if lead then 0 else 1-(if reduced then s.fade else s.dark)
+ self.root.BackgroundTransparency=if lead then 1-open else 1-(if reduced then s.fade else s.dark)
  -- "Play again" fades the stage out under the cover.
  local cover=if self.exiting and not meetExit then 1-exit else 1
  self.cover.BackgroundTransparency=cover;self.cover.Visible=cover<1
@@ -826,21 +835,21 @@ function Stage:paint()
  local coneOn=s.t>=.12 or reduced or lead~=nil
  local coneKey=if coneOn then math.floor(width*2000+.5)else -1
  local fade=if meetExit then .3*exit else 0
- if self.coneKey~=coneKey or self.coneFade~=fade then
-  self.coneKey,self.coneFade=coneKey,fade
+ if self.coneKey~=coneKey or self.coneFade~=fade or self.coneOpen~=open then
+  self.coneKey,self.coneFade,self.coneOpen=coneKey,fade,open
   for _,half in ipairs(self.cone)do
    half.clip.Visible=coneOn
    if coneOn then self:placeConeHalf(half,width)end
-   half.light.BackgroundTransparency=math.min(1,half.base+fade)
+   half.light.BackgroundTransparency=1-(1-math.min(1,half.base+fade))*open
   end
  end
  local poolOn=s.t>=.12 or reduced or lead~=nil
- local poolKey=(if poolOn then 1 else 0)+(if s.colour<1 then 2 else 0)
+ local poolKey=(if poolOn then 1 else 0)+(if s.colour<1 then 2 else 0)+math.floor(open*100+.5)*4
  if self.poolKey~=poolKey then
   self.poolKey=poolKey
-  for _,entry in ipairs(self.pool)do entry.node.Visible=poolOn end
-  for _,entry in ipairs(self.shadow)do entry.node.Visible=poolOn end
-  for _,seg in ipairs(self.ringSegs)do seg.Visible=poolOn;seg.BackgroundTransparency=if s.colour<1 then .5 else .05 end
+  for _,entry in ipairs(self.pool)do entry.node.Visible=poolOn;entry.node.BackgroundTransparency=1-.2*open end
+  for _,entry in ipairs(self.shadow)do entry.node.Visible=poolOn;entry.node.BackgroundTransparency=1-.55*open end
+  for _,seg in ipairs(self.ringSegs)do seg.Visible=poolOn;seg.BackgroundTransparency=1-(if s.colour<1 then .5 else .95)*open end
  end
  self.glow.BackgroundTransparency=if s.colour>0 then .82-.08*s.colour elseif leading then 1-.2*ls.glow*(.8+.2*math.sin(clock*9))else 1
  -- Streaks sweep in from the left, three times brighter at first.
@@ -919,7 +928,53 @@ function Stage:paint()
  -- The first settled frame is the last full paint; idle frames take paintIdle.
  -- (Not before the pet has loaded and finished its fade-in.)
  local petDone=self.loaded and(not self.loadedAt or self.clock-self.loadedAt>=.25)
- if s.settled and not self.exiting and not self.boopAt and self.inputOpened and petDone and not self:confettiAlive()then self.staticDone=true end
+ if s.settled and not self.exiting and not self.boopAt and self.inputOpened and petDone and not self:confettiAlive()and(not opening or opening.done)then self.staticDone=true end
+end
+-- QA R4: leave instead of vanishing (see HatchItemStage:dismiss). The stage moves to its own
+-- top-level gui, stops taking input, its content sinks into the dark and the dark lifts off
+-- the garden or menu underneath. False when it was not on screen: the caller destroys it.
+function Stage:dismiss(after)
+ if self.destroyed or self.leaving then return false end
+ if not self.seenAt or os.clock()-self.seenAt>.1 then return false end
+ local gui=C.detach(self.root);if not gui then return false end
+ -- "Play again" may already have faded the cover in: the leave never brightens it again.
+ self.leaving={at=os.clock(),gui=gui,after=after,pet=self.petHolder.Size,cover=if self.cover.Visible then self.cover.BackgroundTransparency else 1}
+ if self.connection then self.connection:Disconnect();self.connection=nil end
+ for _,c in ipairs(self.connections)do c:Disconnect()end;table.clear(self.connections)
+ if self:ownsSelection()then GuiService.SelectedObject=nil end
+ if self.ring then self.ring.hide()end
+ -- The borrowed egg scene goes back now: its cinematic is being cancelled with this call.
+ if self.lead then
+  local lead=self.lead;self.lead=nil
+  if lead.seat then lead.seat.Visible=false end
+  if lead.scene and not lead.scene.destroyed then lead.scene:release(lead.token)end
+ end
+ self.root.Active=false;self.root.Interactable=false;self.pad.Visible=false
+ self.root:SetAttribute("Leaving",true)
+ self.cover.Visible=true;self.cover.BackgroundTransparency=self.leaving.cover
+ self.connection=RunService.RenderStepped:Connect(function()self:paintLeave()end)
+ self:paintLeave()
+ return true
+end
+function Stage:paintLeave(elapsed)
+ local leave=self.leaving;if not leave or self.destroyed then return end
+ local s=C.leaveSample(elapsed or os.clock()-leave.at)
+ if s.done then
+  local after=leave.after;self:destroy()
+  if after then after()end
+  return
+ end
+ if s.lift<=0 then
+  self.cover.BackgroundTransparency=math.min(leave.cover,1-s.content)
+  if not self:reduced()then self.petHolder.Size=UDim2.fromOffset(leave.pet.X.Offset*s.scale,leave.pet.Y.Offset*s.scale)end
+  return
+ end
+ if not leave.cleared then
+  leave.cleared=true
+  for _,child in ipairs(self.root:GetChildren())do if child:IsA("GuiObject")and child~=self.cover then child.Visible=false end end
+  self.root.BackgroundTransparency=1
+ end
+ self.cover.BackgroundTransparency=s.lift
 end
 -- Confetti popper (QA v2 R1.1).
 function Stage:pop()
@@ -955,7 +1010,8 @@ end
 
 -- Clock: entrance timeline, then idle (spin physics, self-turn, twinkles).
 function Stage:step(dt)
- if self.destroyed then return end
+ if self.destroyed or self.leaving then return end
+ if C.onScreen(self.root)then self.seenAt=os.clock()end
  if not self:owned()then
   -- The hatch has not started yet (its window is unfocused, so the hatch clock is waiting):
   -- hold on the egg. The lead-in and the entrance play together when the owner returns.
@@ -1137,7 +1193,7 @@ function Stage:move(direction)
  return true
 end
 function Stage:activate(index,fromPointer)
- local entry=self.buttons[index];if not entry then return false end
+ local entry=self.buttons[index];if not entry or self.leaving then return false end
  -- The press that skipped the egg lead-in never also presses a button.
  if self.options.consumeSkipInput and self.options.consumeSkipInput()then return false end
  if not self:isSettled()then self:settle();return false end
@@ -1199,6 +1255,7 @@ function Stage:destroy()
  if self.lead then local lead=self.lead;self.lead=nil;if lead.scene and not lead.scene.destroyed then lead.scene:release(lead.token)end end
  if self.ring then self.ring.hide()end
  self.root:Destroy()
+ if self.leaving and self.leaving.gui then self.leaving.gui:Destroy()end
  if self.selectionNone then self.selectionNone:Destroy()end
 end
 

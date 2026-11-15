@@ -336,4 +336,51 @@ function C.rewardButton(parent,name,text,size,textSize,glyph)
  return button,state
 end
 
+-- Stage transitions (QA R4, 2026-11-15): the hatch stages (RevealStage for pets,
+-- HatchItemStage for items) open and leave the same way, so nothing pops.
+--   open   the screen dims to the dark stage over OpenFade while the egg fades and eases up
+--   leave  LeaveTime: the stage's content sinks into its dark backdrop, then the backdrop
+--          lifts off whatever is underneath by then (the menu, or the garden)
+C.OpenFade=.18;C.LeaveTime=.30
+-- Pure: the open lanes `t` seconds after a stage appeared. `dim` is the backdrop and the
+-- content's opacity; `scale` eases the egg up to full size a little after.
+function C.openSample(t)
+ local u=math.clamp((t or 0)/C.OpenFade,0,1);local v=math.clamp((t or 0)/(C.OpenFade*1.6),0,1)
+ return {dim=1-(1-u)^2,scale=.9+.1*(1-(1-v)^3),done=v>=1}
+end
+-- Pure: the leave lanes `t` seconds after a dismiss. `content` 0..1 is how far the content
+-- has sunk into the dark (and `scale` its eased shrink); `lift` 0..1 is the dark backdrop
+-- fading off the world. `lift` only starts once `content` is 1, so nothing is cut.
+function C.leaveSample(t)
+ local u=math.clamp((t or 0)/C.LeaveTime,0,1)
+ local a=math.clamp(u/.45,0,1);a=1-(1-a)^2
+ local b=math.clamp((u-.45)/.55,0,1);b=b*b*(3-2*b)
+ return {u=u,content=a,scale=1-.06*a,lift=b,done=u>=1}
+end
+-- Move a full-screen stage root into a top-level gui of its own, at the same screen rect, so
+-- it can finish its leave after its host has closed, hidden or moved to another page.
+-- Returns the new ScreenGui (destroy it with the stage), or nil when the root is not on screen.
+function C.detach(root)
+ local gui=root:FindFirstAncestorWhichIsA("ScreenGui")
+ if not gui or not gui.Parent then return nil end
+ local position,size=root.AbsolutePosition-gui.AbsolutePosition,root.AbsoluteSize
+ if size.X<1 or size.Y<1 then return nil end
+ local out=Instance.new("ScreenGui");out.Name="RevealExit";out.ResetOnSpawn=false;out.DisplayOrder=gui.DisplayOrder+1
+ out.ZIndexBehavior=gui.ZIndexBehavior;out.ScreenInsets=gui.ScreenInsets;out.ClipToDeviceSafeArea=gui.ClipToDeviceSafeArea
+ out.SafeAreaCompatibility=gui.SafeAreaCompatibility;out.Parent=gui.Parent
+ root.AnchorPoint=Vector2.zero;root.Position=UDim2.fromOffset(position.X,position.Y);root.Size=UDim2.fromOffset(size.X,size.Y)
+ root.Visible=true;root.Parent=out
+ return out
+end
+-- True when `node` and every ancestor up to its ScreenGui would draw.
+function C.onScreen(node)
+ if not node or not node.Parent then return false end
+ while node do
+  if node:IsA("GuiObject")and not node.Visible then return false end
+  if node:IsA("ScreenGui")then return node.Enabled and node.Parent~=nil end
+  node=node.Parent
+ end
+ return false
+end
+
 return C

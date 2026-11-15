@@ -303,7 +303,8 @@ end
 function View:hideRevealStage()
 	local stage = self.reveal
 	self.reveal = nil
-	if stage then stage:destroy() end
+	-- QA R4: a stage on screen leaves smoothly in its own gui (RevealStage:dismiss).
+	if stage and not (type(stage.dismiss) == "function" and stage:dismiss()) then stage:destroy() end
 	if self.stageLayer then self.stageLayer.Visible = false end
 	if self.card then self.card.Interactable = true end
 end

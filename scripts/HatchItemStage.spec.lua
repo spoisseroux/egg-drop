@@ -16,6 +16,7 @@ return function(client,parent)
   function s:setBare(bare,hideHero)record.bare={bare,hideHero}end
   function s:layout()record.layouts+=1 end
   function s:setSpin(radians)record.spin=radians;record.spins=(record.spins or 0)+1;return radians~=0 end
+  function s:setVeil(amount)record.veil=amount end
   return s
  end
  local function open(w,h,extra)
@@ -113,6 +114,40 @@ return function(client,parent)
    at(stage,3.1);assert(stage:isSettled()and stage.nameScale.Scale==1 and not stage.skip.Visible)
    -- The long name still fits its column on a phone.
    local L=stage.L;assert(stage.nameW<=L.textW+2 and stage.name.TextSize>=18)
+  end)
+  test("QA R4: the stage opens eased, and one on screen leaves in its own gui: content sinks, then the dark lifts",function()
+   local C=require(client.CelebrationKit)
+   assert(C.openSample(0).dim==0 and C.openSample(C.OpenFade).dim==1 and C.openSample(C.OpenFade*.5).dim>.5,"the dim eases out")
+   assert(math.abs(C.openSample(0).scale-.9)<1e-6 and C.openSample(1).scale==1 and C.openSample(1).done and not C.openSample(C.OpenFade).done,"the egg eases up to size just after")
+   local last=-1
+   for t=0,C.LeaveTime+.02,.005 do
+    local x=C.leaveSample(t)
+    assert(x.content>=last-1e-9 and x.content<=1 and x.lift>=0 and x.lift<=1 and(x.lift==0 or x.content==1),"the dark lifts only after the content is gone, at "..t)
+    assert(x.scale<=1 and x.scale>=.93);last=x.content
+   end
+   assert(C.leaveSample(C.LeaveTime).done and not C.leaveSample(C.LeaveTime-.01).done and C.LeaveTime<=.35,"a quick exit")
+   -- A stage that never drew is destroyed by its caller as before.
+   local unseen=open(812,354);assert(unseen:dismiss()==false and not unseen.destroyed and not unseen.leaving)
+   local stage,record,_,_,host=open(812,354)
+   at(stage,.5);assert(record.veil==0,"the egg is fully in once the dim is up")
+   at(stage,3.1);assert(stage.seenAt~=nil and stage:isSettled())
+   local before=stage.root.AbsolutePosition;local size=stage.root.AbsoluteSize;local done=0
+   assert(stage:dismiss(function()done+=1 end)==true and stage.leaving and stage.root:GetAttribute("Leaving")==true)
+   if stage.connection then stage.connection:Disconnect();stage.connection=nil end
+   local out=stage.root.Parent
+   assert(out:IsA("ScreenGui")and out.Name=="RevealExit"and out~=gui and out.DisplayOrder==gui.DisplayOrder+1 and not host:FindFirstChild("ItemRevealStage"),"it leaves in a gui of its own, above its host")
+   task.wait();assert((stage.root.AbsolutePosition-before).Magnitude<1.5 and(stage.root.AbsoluteSize-size).Magnitude<1.5,"at the same place on screen")
+   assert(not stage:owned()and not stage:activate(stage.buttons[2])and #record.acts==0 and not stage.root.Interactable,"a leaving stage takes no input")
+   assert(stage:dismiss()==false,"one leave only")
+   stage:paintLeave(.06);assert(stage.cover.Visible and stage.cover.BackgroundTransparency<1 and stage.cover.BackgroundTransparency>0 and stage.root.BackgroundTransparency==0 and stage.card.Visible,"content sinks into the dark first")
+   assert(stage.seat.Size.X.Offset<stage.L.seat,"with an eased shrink")
+   stage:paintLeave(C.LeaveTime*.8);assert(stage.root.BackgroundTransparency==1 and not stage.card.Parent.Visible and stage.cover.BackgroundTransparency>.3 and stage.cover.BackgroundTransparency<1,"then the dark lifts off what is underneath")
+   assert(record.releases==0 and done==0,"the borrowed scene stays until the stage is gone")
+   stage:paintLeave(C.LeaveTime);assert(stage.destroyed and done==1 and record.releases==1 and out.Parent==nil,"gone, its gui with it, and the scene handed back")
+   -- Reduced Motion leaves by the same fade, without the shrink.
+   local calm=open(812,354,{reduced=function()return true end})
+   at(calm,.2);local seat=calm.seat.Size;assert(calm:dismiss()==true);if calm.connection then calm.connection:Disconnect();calm.connection=nil end
+   calm:paintLeave(.06);assert(calm.seat.Size==seat and calm.cover.BackgroundTransparency<1);calm:paintLeave(1);assert(calm.destroyed)
   end)
   test("QA R2: the card is a lit backdrop in the tier's colour, and a 3D result turns once it is named",function()
    for _,tier in ipairs({"Common","Uncommon","Rare","Neutral"})do

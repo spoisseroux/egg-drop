@@ -83,6 +83,34 @@ return function(client,parent)
    assert(Pets.byId.pip.description=="Soft as a nap. Hugs first, asks questions never.")
    for _,pet in ipairs(Pets.collection)do assert(type(pet.description)=="string"and #pet.description>0 and utf8.len(pet.description)<=60,pet.id)end
   end)
+  test("QA R4: a stage on screen leaves in its own gui (content into the dark, then the dark lifts); Play again's cover stays dark",function()
+   local C=require(client.CelebrationKit)
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
+   local function show()
+    local stage=Stage.show(host,{pet=Pets.byId.pip,tag="new",reduced=false,instant=true,buttons={{id="play",text="Play again"},{id="meet",text="Meet Bear",primary=true}}})
+    table.insert(stages,stage);stage.connection:Disconnect();stage.connection=nil;return stage
+   end
+   local unseen=show();assert(unseen:dismiss()==false and not unseen.destroyed,"a stage that never drew is destroyed by its caller");unseen:destroy()
+   local stage=show();stage:step(1/30);assert(stage.seenAt~=nil)
+   local before=stage.root.AbsolutePosition;local done=0
+   assert(stage:dismiss(function()done+=1 end)==true and stage.leaving and not stage:owned())
+   if stage.connection then stage.connection:Disconnect();stage.connection=nil end
+   local out=stage.root.Parent
+   assert(out:IsA("ScreenGui")and out.Name=="RevealExit"and out.DisplayOrder==gui.DisplayOrder+1 and not host:FindFirstChild("RevealStage"))
+   task.wait();assert((stage.root.AbsolutePosition-before).Magnitude<1.5,"at the same place on screen")
+   assert(stage:activate(2)==false,"a leaving stage takes no input")
+   local pet=stage.petHolder.Size
+   stage:paintLeave(.06);assert(stage.cover.Visible and stage.cover.BackgroundTransparency>0 and stage.cover.BackgroundTransparency<1 and stage.root.BackgroundTransparency==0)
+   assert(stage.petHolder.Size.X.Offset<pet.X.Offset,"the pet eases down a little as it goes")
+   stage:paintLeave(C.LeaveTime*.8);assert(stage.root.BackgroundTransparency==1 and not stage.petLayer.Visible and stage.cover.BackgroundTransparency>.3)
+   stage:paintLeave(C.LeaveTime);assert(stage.destroyed and done==1 and out.Parent==nil)
+   -- After "Play again" the cover is already dark: the leave must not flash the stage back.
+   local again=show();again:step(1/30);again:exit("play");again.clock+=.2;again:paint()
+   assert(again.cover.Visible and again.cover.BackgroundTransparency==0,"Play again fades the stage out under its cover")
+   assert(again:dismiss()==true);if again.connection then again.connection:Disconnect();again.connection=nil end
+   again:paintLeave(.01);assert(again.cover.BackgroundTransparency==0,"still dark");again:paintLeave(C.LeaveTime);assert(again.destroyed)
+   host:Destroy()
+  end)
   test("QA R3: the name plate's slanted end is one triangle on the plate's own edges, with no loose block",function()
    for _,h in ipairs({44,60,96,168})do
     local w,rotation,from,to=Stage.slantEnd(h,2)
@@ -244,7 +272,9 @@ return function(client,parent)
    local skipped=0
    local stage,host=open({onSkip=function()skipped+=1 end})
    assert(record.borrows==1 and record.bare[1]==true and record.bare[2]==true,"the scene is borrowed bare with its own pet hidden")
-   local seat=stage.lead.seat;assert(seat.Visible and stage.root.BackgroundTransparency==0,"the egg sits on the black stage")
+   -- QA R4: the stage dims in from the world (0.18 s of real time), with its spotlight and pool.
+   local seat=stage.lead.seat;assert(seat.Visible and stage.root.BackgroundTransparency>0 and stage.cone[1].light.BackgroundTransparency>stage.cone[1].base,"the stage opens from the world, not with a pop")
+   task.wait(.3);stage:step(0);assert(stage.root.BackgroundTransparency==0 and math.abs(stage.cone[1].light.BackgroundTransparency-stage.cone[1].base)<1e-4,"the egg sits on the black stage")
    -- The egg's contact point lands on the floor pool under the spotlight.
    local L=stage.L;local p,sz=seat.AbsolutePosition-host.AbsolutePosition,seat.AbsoluteSize
    assert(near(p.X+sz.X*.5,L.petX,2)and near(p.Y+sz.Y*.75,L.feet,2),"egg seat off the pool")

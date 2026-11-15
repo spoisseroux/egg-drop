@@ -2,6 +2,9 @@
 -- The screen dims to a dark stage, the egg wobbles in a rarity-coloured beam that builds, the shell bursts
 -- (flash, rings, rays, shards), the item pops onto a card that flies to its seat, the name
 -- slams in under a rarity banner, and the reveal ends on the host's own receipt actions.
+-- QA R4 (2026-11-15): it opens and leaves by CelebrationKit's shared rules. The screen dims
+-- to the stage while the egg fades and eases up; stage:dismiss() lets the content sink into
+-- the dark and the dark lift off the menu or garden underneath, in its own top-level gui.
 -- QA R2 (2026-11-15): the card is a lit backdrop in the tier's colour (HatchRarityCue.Look
 -- back / backDeep), and a 3D result (a toy, a feature, the Bear wearing a finish) turns
 -- slowly on it once the name is out (HatchDisplayScene:setSpin).
@@ -185,7 +188,7 @@ function Stage:reduced()
  return Kit.reduced()
 end
 function Stage:owned()
- if self.destroyed or not self.root.Parent then return false end
+ if self.destroyed or self.leaving or not self.root.Parent then return false end
  local node=self.root
  while node do
   if node:IsA("GuiObject")and not node.Visible then return false end
@@ -311,6 +314,9 @@ function Stage:build()
   if self:owned()and self:inputOpen()and self.options.onClose then self.options.onClose()end
  end))
  self.ring=Kit.focusRing(ui)
+ -- The leave cover: the stage's own dark, drawn over everything while it leaves.
+ self.cover=Kit.frame(root,"LeaveCover",nil,UDim2.new(),UDim2.fromScale(1,1));self.cover.ZIndex=root.ZIndex+20
+ self.cover.BackgroundColor3=Stage.Backdrop;self.cover.BackgroundTransparency=1;self.cover.Visible=false
 end
 
 function Stage:inputOpen()return self.lastSample~=nil and self.lastSample.input==true end
@@ -443,8 +449,12 @@ function Stage:paint()
  -- Idle path: only the slow turn and the twinkles move once settled.
  if self.staticDone and s.settled then self:paintIdle(s,still);return end
  -- The dim follows real time from the moment the stage opens (the egg may still be loading,
- -- or waiting for its window).
- local dim=if reduced then s.fade else math.min(1,math.max(os.clock()-self.openedAt,s.t)/.18)
+ -- or waiting for its window). The egg fades in with it and eases up to size (QA R4).
+ -- (`openElapsed` is a capture fixture's fixed clock.)
+ local opening=C.openSample(self.openElapsed or math.max(os.clock()-self.openedAt,s.t))
+ local dim=if reduced then s.fade else opening.dim
+ local openScale=if still then 1 else opening.scale
+ if self.scene and type(self.scene.setVeil)=="function"then self.scene:setVeil(if still then 0 else 1-opening.dim)end
  -- The screen dims all the way to a dark stage (the pet reveal's is black too), so the
  -- garden and the host's receipt card underneath never ghost through.
  self.root.BackgroundTransparency=1-Stage.Dim*(if self.instant then 1 else dim)
@@ -455,7 +465,7 @@ function Stage:paint()
  local cy=L.cy0+(L.cy1-L.cy0)*slide+math.cos(clock*39)*shake*.5
  self.cx,self.cy=cx,cy
  -- The egg plays large; the scene eases down to the card's size as the card flies.
- local seat=math.floor(L.seat*(1+(Stage.EggScale-1)*(1-slide))+.5)
+ local seat=math.floor(L.seat*(1+(Stage.EggScale-1)*(1-slide))*openScale+.5)
  self.seat.Position=UDim2.fromOffset(cx,cy);self.seat.Size=UDim2.fromOffset(seat,seat)
  -- Glow and beam: they build with the wobble, flare at the burst, then rest.
  local build=if still then 1 else s.build
@@ -509,7 +519,7 @@ function Stage:paint()
  self.card.BackgroundTransparency=0
  -- Waiting line.
  local pre=if still then 0 else s.pre
- self.pre.Visible=pre>0;self.pre.TextTransparency=1-pre
+ self.pre.Visible=pre>0;self.pre.TextTransparency=1-pre*(if still then 1 else opening.dim)
  -- Banner slides in from the right; the name slams (2.3x -> 1 with an overshoot).
  local banner=s.banner
  self.banner.Visible=banner>0 and s.named
@@ -542,7 +552,7 @@ function Stage:paint()
  self.skip.Visible=not s.input;self.skip.Active=not s.input
  self.root:SetAttribute("InputLocked",not s.input);self.root:SetAttribute("ReceiptReady",s.input)
  self:paintSpin(s)
- if s.settled then self.staticDone=true;self:paintFocus()end
+ if s.settled and opening.done then self.staticDone=true;self:paintFocus()end
 end
 function Stage:paintSparkles(s,still)
  local L=self.L;local on=(s.named or still)and not s.reduced
@@ -580,8 +590,52 @@ function Stage:updateExternal(age,sample)
  if self.destroyed then return end
  self.age=math.max(0,age or 0);self.poseSample=sample
 end
+-- QA R4: leave instead of vanishing. The stage moves to its own top-level gui (its host may
+-- hide or change page in the same frame), stops taking input, lets its content sink into the
+-- dark, then lifts the dark off whatever is underneath. `after` runs once it is gone (the
+-- reveal keeps the borrowed scene alive until then). False (and nothing done) when the stage
+-- was not on screen in the last moment: the caller destroys it as before.
+function Stage:dismiss(after)
+ if self.destroyed or self.leaving then return false end
+ if not self.seenAt or os.clock()-self.seenAt>.1 then return false end
+ local gui=C.detach(self.root);if not gui then return false end
+ self.leaving={at=os.clock(),gui=gui,after=after,seat=self.seat.Size,card=self.card.Size}
+ if self.connection then self.connection:Disconnect();self.connection=nil end
+ for _,c in ipairs(self.connections)do c:Disconnect()end;table.clear(self.connections)
+ if self.ring then self.ring.hide()end
+ self.root.Active=false;self.root.Interactable=false;self.skip.Visible=false
+ self.root:SetAttribute("Leaving",true)
+ self.cover.Visible=true
+ self.connection=RunService.RenderStepped:Connect(function()self:paintLeave()end)
+ self:paintLeave()
+ return true
+end
+function Stage:paintLeave(elapsed)
+ local leave=self.leaving;if not leave or self.destroyed then return end
+ local s=C.leaveSample(elapsed or os.clock()-leave.at)
+ if s.done then
+  local after=leave.after;self:destroy()
+  if after then after()end
+  return
+ end
+ if s.lift<=0 then
+  self.cover.BackgroundTransparency=1-s.content
+  if not self:reduced()then
+   self.seat.Size=UDim2.fromOffset(leave.seat.X.Offset*s.scale,leave.seat.Y.Offset*s.scale)
+   self.card.Size=UDim2.fromOffset(leave.card.X.Offset*s.scale,leave.card.Y.Offset*s.scale)
+  end
+  return
+ end
+ if not leave.cleared then
+  leave.cleared=true
+  for _,child in ipairs(self.root:GetChildren())do if child:IsA("GuiObject")and child~=self.cover then child.Visible=false end end
+  self.root.BackgroundTransparency=1
+ end
+ self.cover.BackgroundTransparency=s.lift
+end
 function Stage:step(dt)
- if self.destroyed then return end
+ if self.destroyed or self.leaving then return end
+ if C.onScreen(self.root)then self.seenAt=os.clock()end
  -- Without its owner (a hidden screen, an unfocused window) nothing animates, but the frame
  -- still follows the host's layout.
  if self:owned()then self.clock+=math.clamp(dt,0,.1)end
@@ -602,6 +656,7 @@ function Stage:destroy()
  local scene=self.scene;self.scene=nil
  if scene and not scene.destroyed then scene:release(self.borrowToken)end
  self.root:Destroy()
+ if self.leaving and self.leaving.gui then self.leaving.gui:Destroy()end
  if self.selectionNone then self.selectionNone:Destroy()end
 end
 return Stage

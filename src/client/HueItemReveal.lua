@@ -71,11 +71,25 @@ function Reveal:openStage(recipe,result)
  return true
 end
 function Reveal:clear()
- self.generation+=1;self:clearStage();if self.cinematic then self.cinematic:destroy();self.cinematic=nil end
+ self.generation+=1
+ -- QA R4: a stage that is on screen leaves smoothly (HatchItemStage:dismiss). It keeps the
+ -- cinematic's borrowed scene until it is gone, so the item never blinks out mid-fade; this
+ -- adapter is free for the next result at once.
+ local stage,cinematic,leaving=self.stage,self.cinematic,nil
+ if stage and cinematic and type(stage.dismiss)=="function"then
+  local frame=cinematic.frame
+  if stage:dismiss(function()cinematic:destroy()end)then
+   self.stage=nil;self.cinematic=nil;leaving=frame
+   if cinematic.borrowedStage==stage then cinematic.borrowedStage=nil end
+   if cinematic.stopAudio then cinematic:stopAudio()end
+   frame.Visible=false
+  end
+ end
+ self:clearStage();if self.cinematic then self.cinematic:destroy();self.cinematic=nil end
  -- This dedicated illustration seat is exclusively owned by the adapter. It
  -- may still contain the preceding shop egg or sizing decoration when no
  -- cinematic has been built; retire those as well as the shared timeline.
- for _,node in ipairs(self.parent:GetChildren())do node:Destroy()end
+ for _,node in ipairs(self.parent:GetChildren())do if node~=leaving then node:Destroy()end end
  self.jar,self.whole,self.top,self.bottom,self.topArt,self.bottomArt=nil,nil,nil,nil,nil,nil
  self.resultId=nil;self.result=nil;self.identityLabels=nil;self.identityNotified=nil;self.active=false
  self.parent:SetAttribute("ResultIdentityReady",false);self.parent:SetAttribute("ResultIdentityId",nil)

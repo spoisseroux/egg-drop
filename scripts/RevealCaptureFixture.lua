@@ -109,6 +109,8 @@ return function(client)
    task.wait()
   until all or os.clock()>deadline
   for _,entry in ipairs(Fx.entries)do if not entry.frozen then freeze(entry)end end
+  -- The open fade follows the fixture's clock too (QA R4), starting from the first frame.
+  for _,entry in ipairs(Fx.entries)do for _,stage in ipairs(entry.stages())do stage.openElapsed=0;stage:step(0)end end
   Fx.time=0
   return Fx.stats()
  end
@@ -121,7 +123,7 @@ return function(client)
     local c=entry.cinematic
     c.windowActive=true -- Studio is not the focused window during MCP captures
     if c.active then c:step(dt)end
-    for _,stage in ipairs(entry.stages())do stage:step(dt)end
+    for _,stage in ipairs(entry.stages())do stage.openElapsed=Fx.time;stage:step(dt)end
    end
   end
   return Fx.stats()
@@ -129,6 +131,28 @@ return function(client)
  function Fx.skip()
   for _,entry in ipairs(Fx.entries)do if entry.cinematic.active then entry.cinematic:finishStatic()end;for _,stage in ipairs(entry.stages())do stage:step(1/30)end end
   return Fx.stats()
+ end
+ -- QA R4: start every stage's leave (items through the real HueItemReveal:clear, pets through
+ -- RevealStage:dismiss), frozen, then Fx.leaveTo(t) paints it at `t` seconds into the leave.
+ function Fx.leave()
+  Fx.leaving={}
+  for _,entry in ipairs(Fx.entries)do
+   local stage=entry.stages()[1]
+   if stage then
+    stage.seenAt=os.clock()
+    if entry.reveal then entry.reveal:clear()else stage:dismiss(function()entry.dismissed=true end)end
+    if stage.leaving then
+     if stage.connection then stage.connection:Disconnect();stage.connection=nil end
+     table.insert(Fx.leaving,stage)
+    end
+   end
+  end
+  return #Fx.leaving
+ end
+ function Fx.leaveTo(t)
+  local alive=0
+  for _,stage in ipairs(Fx.leaving or {})do if not stage.destroyed then stage:paintLeave(t);if not stage.destroyed then alive+=1 end end end
+  return alive
  end
  function Fx.stats()
   local out={time=Fx.time}
@@ -140,6 +164,7 @@ return function(client)
   return out
  end
  function Fx.close()
+  if Fx.leaving then Fx.leaveTo(10);Fx.leaving=nil end
   for _,entry in ipairs(Fx.entries)do
    pcall(function()if entry.reveal then entry.reveal:destroy()elseif entry.cinematic then entry.cinematic:destroy()end end)
   end

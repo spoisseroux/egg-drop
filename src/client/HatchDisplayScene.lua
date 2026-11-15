@@ -148,7 +148,15 @@ function Scene:borrow(parent)
 end
 function Scene:release(token)
  if self.destroyed or token~=self.borrowToken then return false end
- self.borrowToken=nil;self.root.Parent=self.home;self:setBare(false);return true
+ self.borrowToken=nil;self.root.Parent=self.home;self:setBare(false);self:setVeil(0);return true
+end
+-- QA R4: a stage fades the whole scene in with its own dim (0 clear .. 1 hidden).
+function Scene:setVeil(amount)
+ if self.destroyed then return end
+ amount=math.clamp(amount or 0,0,1)
+ if self.veil==amount then return end
+ self.veil=amount;self.stageView.ImageTransparency=amount
+ if self.sample then self:render(self.sample)end
 end
 -- A full-screen reveal stage (RevealStage for pets, HatchItemStage for items) draws its own
 -- backdrop, floor light and glow: `bare` drops this scene's panel, floor and cream pool, and
@@ -322,7 +330,8 @@ function Scene:render(sample)
  if self.destroyed then return end
  self.sample=sample;self.age=sample.age
  local show=sample.heroAlpha
- self.heroView.ImageTransparency=if self.heroHidden then 1 else 1-show;self.itemGui.GroupTransparency=1-show
+ local veil=self.veil or 0
+ self.heroView.ImageTransparency=if self.heroHidden then 1 else math.max(1-show,veil);self.itemGui.GroupTransparency=math.max(1-show,veil)
  if self.visual then
   local visual=self.visual;visual:setRevealPose(sample);visual.origin=Vector3.zero;visual.greeting=2;visual:update(0)
   local ps={};for _,entry in ipairs(visual.pieces)do if entry.role~="charm"then table.insert(ps,entry.part)end end
