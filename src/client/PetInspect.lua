@@ -350,6 +350,7 @@ function Inspect:open(player)
  local ok,visual=pcall(create,card.world,Vector3.zero,identity.pet,nil,appearance)
  if ok and visual then
   card.visual=visual;visual.cosmeticSeed=identity.ownerId;visual.yaw=0
+  visual.holdToyAlways=true -- the card shows the toy in the pet's hand (R8)
   visual.model:SetAttribute("InspectPreview",true)
  end
  self:refresh();self:fitCamera()

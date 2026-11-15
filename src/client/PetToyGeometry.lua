@@ -86,6 +86,26 @@ end
 -- tap = held up to the face in both hands with little button presses.
 Toys.Play=table.freeze({sparkler="wave",ball="roll",bone="chew",wobble_top="spin",squeaky_carrot="chew",pocket_deck="tap"})
 Toys.PartLimit=12
+-- How each toy is carried between plays (QA v685 R8; PetPlayVisual.renderHeld): the pet
+-- always has its equipped toy in its right hand while it idles or walks. In pet body
+-- heights from the holding hand, in the pet's own frame (x to its right, y up, z forward);
+-- `turn` orients the toy and `fold` raises the holding arm (radians). Tuned per toy:
+--   sparkler        upright in the fist, tipped a little forward (unlit until it is played)
+--   ball            hugged in front of the hand, low against the tummy
+--   bone            across the body, one end up
+--   wobble_top      standing on the raised palm
+--   squeaky_carrot  leaves up, like a little bouquet
+--   pocket_deck     screen tipped up toward the face
+Toys.Hold=table.freeze({
+ sparkler=table.freeze({offset=Vector3.new(.03,.07,.045),turn=CFrame.Angles(.18,0,-.12),fold=.55}),
+ ball=table.freeze({offset=Vector3.new(-.03,-.005,.115),turn=CFrame.identity,fold=.5}),
+ bone=table.freeze({offset=Vector3.new(-.01,0,.07),turn=CFrame.Angles(0,.25,.3),fold=.4}),
+ wobble_top=table.freeze({offset=Vector3.new(0,.085,.06),turn=CFrame.identity,fold=.6}),
+ squeaky_carrot=table.freeze({offset=Vector3.new(0,.03,.065),turn=CFrame.Angles(0,0,.35),fold=.45}),
+ pocket_deck=table.freeze({offset=Vector3.new(-.05,.02,.075),turn=CFrame.Angles(-.4,-.2,0),fold=.5}),
+})
+Toys.DefaultHold=table.freeze({offset=Vector3.new(.035,0,.045),turn=CFrame.identity,fold=.4})
+function Toys.hold(id)return Toys.Hold[id]or Toys.DefaultHold end
 function Toys.has(id)return type(id)=="string"and builders[id]~=nil end
 function Toys.create(parent,id,scale)
  local build=type(id)=="string"and builders[id]

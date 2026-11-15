@@ -283,6 +283,8 @@ function Visual:update(dt)
    self.focusPose or self.gardenFocus or self.focused or self.careState or self.petting or personal~=nil or toyReach~=0 or(self.gaitWeight or 0)>.3)
   if helloExpression then beatHandR+=helloHand end
  end
+ -- The carried toy (R8): the holding arm stays a little raised between plays.
+ beatHandR+=PersonalPlay.holdFold(self,dt,personal~=nil)
  local expression=toyExpression or reactExpression or helloExpression or beatExpression or Expression.name(self)
  if sit>.5 and not toyExpression and not reactExpression and not self.petting then expression=Sit.face(self.sitAge)or(if expression=="neutral"then "content"else expression)end
  local pose=Expression.get(expression)
@@ -447,7 +449,9 @@ function Visual:update(dt)
 end
 function Visual:renderPersonalPlay(root)
  PersonalPlay.sample(self,self.cosmeticTime or self.time)
- PersonalPlay.render(self,root or CFrame.new(self.origin)*CFrame.Angles(0,self.yaw or 0,0))
+ root=root or CFrame.new(self.origin)*CFrame.Angles(0,self.yaw or 0,0)
+ PersonalPlay.render(self,root)
+ PersonalPlay.renderHeld(self,root)
 end
 function Visual:destroy()
  if self.destroyed then return end;self.destroyed=true;self.assetEpoch+=1

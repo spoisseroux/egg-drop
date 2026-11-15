@@ -25,10 +25,60 @@ local function hideToy(v)
  if v.personalToy then v.personalToy:destroy();v.personalToy=nil end
  v.personalToyActive=false;v.personalToyPhase=nil
 end
+-- ── The held toy (QA v685 R8) ────────────────────────────────────────────────
+-- Between plays the pet carries its equipped toy in its right hand: idling, walking,
+-- sitting, being petted. It is put down only where the pet's hands or body are needed:
+-- carried or in the care machine, on park equipment, and the shared garden toy. The
+-- play clip keeps its own prop (v.personalToy, unchanged); the held prop (v.heldToy)
+-- steps out of the model while a clip shows.
+local function dropHeld(v)
+ if v.heldToy then v.heldToy:destroy();v.heldToy=nil end
+ v.heldSeats=nil;v.heldSeatKey=nil
+end
+function Play.holds(v)
+ local id=v.personalToyId
+ return(v.worldContext or v.holdToyAlways==true)and not v.destroyed and id~=nil and id~="none"and Toys.has(id)
+  and not v.careState and not v.parkPose and not v.revealPose and v.gardenAction~="toyReturn"and v.gardenAction~="shove"
+end
+-- The holding arm's extra fold, eased so equipping, a play clip and a put-down never pop.
+function Play.holdFold(v,dt,playing)
+ local target=if not playing and Play.holds(v)then Toys.hold(v.personalToyId).fold else 0
+ local current=v.toyHoldFold or 0
+ if v.reducedEffects then current=target else current+=(target-current)*math.min(1,math.max(0,dt or 0)*8)end
+ if math.abs(target-current)<.001 then current=target end
+ v.toyHoldFold=current
+ return current
+end
+function Play.renderHeld(v,root)
+ if not Play.holds(v)then dropHeld(v);return end
+ local id=v.personalToyId
+ local held=v.heldToy
+ if held and(held.destroyed or held.id~=id)then dropHeld(v);held=nil end
+ if v.personalToyActive then
+  -- The clip's own prop is showing: the carried one waits outside the model.
+  if held and held.model.Parent then held.model.Parent=nil end
+  return
+ end
+ local key=(v.rigRevision or 0)*100000+(v.featureRevision or 0)*1000+#v.pieces
+ if v.heldSeatKey~=key then v.heldSeats=Play.seats(v);v.heldSeatKey=key end
+ local seats=v.heldSeats;local hand=seats.right or seats.left
+ if not hand or not hand.part or not hand.part.Parent then dropHeld(v);return end
+ if not held then
+  held=Toys.create(v.model,id,seats.height);if not held then return end
+  held.model.Name="HeldToy_"..id;held.height=seats.height
+  -- A carried sparkler is unlit: its sparks and light belong to the play clip.
+  if held.emitter then held.emitter.Enabled=false end
+  if held.glow then held.glow.Enabled=false end
+  v.heldToy=held
+ elseif not held.model.Parent then held.model.Parent=v.model end
+ local hold=Toys.hold(id);local size=held.height
+ held:pivot(CFrame.new(hand.part.Position+root:VectorToWorldSpace(hold.offset*size))*root.Rotation*hold.turn)
+end
 function Play.cancel(v)
  hideToy(v);v.personalQuietSince=nil;v.personalPlayStarted=nil;v.personalPlayToken=nil;v.personalClipDuration=nil
 end
 function Play.reset(v)
+ dropHeld(v)
  Play.cancel(v);v.personalPlayIdentity=nil;v.personalNextOpportunity=nil
 end
 function Play.clearFeatures(v)
@@ -195,5 +245,5 @@ function Play.render(v,root)
  end
  if toy.emitter then toy.emitter.Enabled=not v.reducedEffects end
 end
-function Play.destroy(v)Play.cancel(v);Play.clearFeatures(v)end
+function Play.destroy(v)dropHeld(v);Play.cancel(v);Play.clearFeatures(v)end
 return Play
