@@ -12,10 +12,13 @@ local font=Font.new("rbxasset://fonts/families/BuilderSans.json",Enum.FontWeight
 local function node(class,parent,props)
  local object=Instance.new(class);for k,v in pairs(props)do object[k]=v end;object.Parent=parent;return object
 end
+-- QA v685 U1: Roblox's top-bar buttons are 44 px tall with a 12 px top margin in the 58 px bar,
+-- so their centre line is 24 px above the bar's bottom edge, not the middle of the inset.
+-- The capsule centres on that line (older, shorter bars keep the plain middle).
 function Rail.geometry(width,height,textWidth)
  local desired=math.ceil(textWidth)+52
  local available=math.min(300,width-20)
- return{fits=height>=40 and desired<=available,width=math.max(0,math.min(desired,available)),height=40,x=8,y=math.max(0,(height-40)/2)}
+ return{fits=height>=40 and desired<=available,width=math.max(0,math.min(desired,available)),height=40,x=8,y=if height>=56 then height-44 else math.max(0,(height-40)/2)}
 end
 local function measure(data)
  local text=tostring(data.text or "")..(if data.amount~=nil then "  ★ +"..tostring(data.amount)else "")

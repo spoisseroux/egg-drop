@@ -22,7 +22,7 @@ Source: `notes.md` (copy of `obsidian-spencer/roblox qa pass nov 14 v2.md`) and 
 
 ## U: menus and HUD
 
-1. **(225459) The notification pill** ("✓ Machines") next to Roblox's top-left buttons isn't vertically centred with them. Align it to the Roblox top bar's centre line.
+1. **DONE (unpublished).** **(225459) The notification pill** ("✓ Machines") next to Roblox's top-left buttons isn't vertically centred with them. Align it to the Roblox top bar's centre line.
 2. **(225543) The Pocket menu** (six tiles) is too empty. Make it more exciting and filled out: tile art and illustrations, a live preview (for example the egg, the deck, the pet), progress chips, or a featured "this week" tile.
 3. **(225611) Hatch eggs.** The inner panel's borders are still clipped: the top-left corner and the right edge of the preview frame. The left list also cuts off "Get Stars" at the bottom.
 4. **(225929) Companions.**
