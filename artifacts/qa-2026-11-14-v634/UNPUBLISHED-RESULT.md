@@ -1,5 +1,7 @@
 # Unpublished QA checkpoint — 14 November 2026
 
+Follow-up review: [Spencer's 30 numbered pre-publish checks](PRE-PUBLISH-QA.md). The diagnostic two-item sizing image is not a proposed game screen. Spencer likes the v3 garden music direction but wants more melody and softer, more transformed samples; a separate [v4 local audition](audio/revision-4-melodic/README.md) is ready for listening. The checkpoint's v3 music is not accepted final music, and its runtime mapping is unchanged.
+
 Implementation and verification are complete for this checkpoint. **No experience publish.** The last published QA baseline remains private v634. This document supersedes earlier staged/pending statements in the working notes.
 
 ## Changes ready for QA

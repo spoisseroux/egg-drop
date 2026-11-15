@@ -1,0 +1,35 @@
+{
+  "description": "Four active egg types: existing approved WAVs, unchanged source gain, 0.6s silence between. No music. Check gameplay gain/ducking in Studio. Feature Egg is disabled and omitted. No original/runtime changes.",
+  "duration": 15.5,
+  "cues": [
+    {
+      "cue": "hatch_bear",
+      "start": 0.0,
+      "end": 4.4,
+      "source": "hatch-bear-v3-tightened-burst.wav",
+      "sha256": "5998797afeb0ebdbc9c9dab3740caba9f3845405355f085b0aa616087101f3c2"
+    },
+    {
+      "cue": "hatch_toy",
+      "start": 5.0,
+      "end": 8.1,
+      "source": "hatch-toy-v3-tightened-burst.wav",
+      "sha256": "c41858a27077975886d37639a96721cb08b3d876a32c387d2561836d4772c8eb"
+    },
+    {
+      "cue": "hatch_hue",
+      "start": 8.7,
+      "end": 11.8,
+      "source": "hatch-hue-v3-tightened-burst.wav",
+      "sha256": "4260f6bca6587f0b8ffbb823a9be5a9aa329dffa077964b1330df020b78a866a"
+    },
+    {
+      "cue": "hatch_material",
+      "start": 12.4,
+      "end": 15.5,
+      "source": "hatch-material-v3-tightened-burst.wav",
+      "sha256": "cd0d65aea7cdde9d876667277b9645b2be0366f82a6d19a3bbe5968feb903a13"
+    }
+  ],
+  "mp3_sha256": "1eb8bbc9f838695edb3cdabd72ebecc78fec8b0179a16ec4fcf3f82e65c6b023"
+}
