@@ -301,9 +301,9 @@ return function(client,parent)
    local skipped=0
    local stage,host=open({onSkip=function()skipped+=1 end})
    assert(record.borrows==1 and record.bare[1]==true and record.bare[2]==true,"the scene is borrowed bare with its own pet hidden")
-   -- QA R4: the stage dims in from the world (0.18 s of real time), with its spotlight and pool.
+   -- QA R4 / v735 H1: the stage dims in from the world (0.34 s of real time), then its spotlight and pool.
    local seat=stage.lead.seat;assert(seat.Visible and stage.root.BackgroundTransparency>0 and stage.cone[1].light.BackgroundTransparency>stage.cone[1].base,"the stage opens from the world, not with a pop")
-   task.wait(.3);stage:step(0);assert(stage.root.BackgroundTransparency==0 and math.abs(stage.cone[1].light.BackgroundTransparency-stage.cone[1].base)<1e-4,"the egg sits on the black stage")
+   task.wait(require(client.CelebrationKit).OpenSettle+.05);stage:step(0);assert(stage.root.BackgroundTransparency==0 and math.abs(stage.cone[1].light.BackgroundTransparency-stage.cone[1].base)<1e-4,"the egg sits on the black stage")
    -- The egg's contact point lands on the floor pool under the spotlight.
    local L=stage.L;local p,sz=seat.AbsolutePosition-host.AbsolutePosition,seat.AbsoluteSize
    assert(near(p.X+sz.X*.5,L.petX,2)and near(p.Y+sz.Y*.75,L.feet,2),"egg seat off the pool")

@@ -3,7 +3,7 @@
 -- (flash, rings, rays, shards), the item pops onto a card that flies to its seat, the name
 -- slams in under a rarity banner, and the reveal ends on the host's own receipt actions.
 -- QA R4 (2026-11-15): it opens and leaves by CelebrationKit's shared rules. The screen dims
--- to the stage while the egg fades and eases up; stage:dismiss() lets the content sink into
+-- to the stage, then the egg fades in and eases up (QA v735 H1: slower, eased both ways); stage:dismiss() lets the content sink into
 -- the dark and the dark lift off the menu or garden underneath, in its own top-level gui.
 -- QA R2 (2026-11-15): the card is a lit backdrop in the tier's colour (HatchRarityCue.Look
 -- back / backDeep), and a 3D result (a toy, a feature, the Bear wearing a finish) turns
@@ -454,7 +454,7 @@ function Stage:paint()
  local opening=C.openSample(self.openElapsed or math.max(os.clock()-self.openedAt,s.t))
  local dim=if reduced then s.fade else opening.dim
  local openScale=if still then 1 else opening.scale
- if self.scene and type(self.scene.setVeil)=="function"then self.scene:setVeil(if still then 0 else 1-opening.dim)end
+ if self.scene and type(self.scene.setVeil)=="function"then self.scene:setVeil(if still then 0 else 1-opening.content)end
  -- The screen dims all the way to a dark stage (the pet reveal's is black too), so the
  -- garden and the host's receipt card underneath never ghost through.
  self.root.BackgroundTransparency=1-Stage.Dim*(if self.instant then 1 else dim)
@@ -519,7 +519,7 @@ function Stage:paint()
  self.card.BackgroundTransparency=0
  -- Waiting line.
  local pre=if still then 0 else s.pre
- self.pre.Visible=pre>0;self.pre.TextTransparency=1-pre*(if still then 1 else opening.dim)
+ self.pre.Visible=pre>0;self.pre.TextTransparency=1-pre*(if still then 1 else opening.content)
  -- Banner slides in from the right; the name slams (2.3x -> 1 with an overshoot).
  local banner=s.banner
  self.banner.Visible=banner>0 and s.named

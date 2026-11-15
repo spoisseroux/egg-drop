@@ -338,15 +338,22 @@ end
 
 -- Stage transitions (QA R4, 2026-11-15): the hatch stages (RevealStage for pets,
 -- HatchItemStage for items) open and leave the same way, so nothing pops.
---   open   the screen dims to the dark stage over OpenFade while the egg fades and eases up
+--   open   the screen dims to the dark stage over OpenFade (eased in and out, so it neither
+--          snaps on nor lands hard); the egg, spotlight and pool follow OpenContentAt later,
+--          fading in and easing up to size, all settled by OpenSettle (QA v735 H1: the
+--          0.18 s version read as a cut on a phone)
 --   leave  LeaveTime: the stage's content sinks into its dark backdrop, then the backdrop
 --          lifts off whatever is underneath by then (the menu, or the garden)
-C.OpenFade=.18;C.LeaveTime=.30
--- Pure: the open lanes `t` seconds after a stage appeared. `dim` is the backdrop and the
--- content's opacity; `scale` eases the egg up to full size a little after.
+C.OpenFade=.34;C.OpenContentAt=.10;C.OpenSettle=.62;C.OpenScale=.86;C.LeaveTime=.30
+-- Pure: the open lanes `t` seconds after a stage appeared. `dim` is the dark backdrop over
+-- the world; `content` is the opacity of what stands on the stage (the egg, its light and
+-- pool), which starts once the dark is under way; `scale` eases the egg up to full size.
 function C.openSample(t)
- local u=math.clamp((t or 0)/C.OpenFade,0,1);local v=math.clamp((t or 0)/(C.OpenFade*1.6),0,1)
- return {dim=1-(1-u)^2,scale=.9+.1*(1-(1-v)^3),done=v>=1}
+ t=math.max(0,t or 0)
+ local u=math.clamp(t/C.OpenFade,0,1)
+ local c=math.clamp((t-C.OpenContentAt)/C.OpenFade,0,1)
+ local v=math.clamp((t-C.OpenContentAt)/(C.OpenSettle-C.OpenContentAt),0,1)
+ return {dim=u*u*(3-2*u),content=1-(1-c)^3,scale=C.OpenScale+(1-C.OpenScale)*(1-(1-v)^3),done=t>=C.OpenSettle}
 end
 -- Pure: the leave lanes `t` seconds after a dismiss. `content` 0..1 is how far the content
 -- has sunk into the dark (and `scale` its eased shrink); `lift` 0..1 is the dark backdrop

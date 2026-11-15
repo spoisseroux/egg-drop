@@ -859,10 +859,12 @@ function Stage:paint()
  -- Opening with an egg lead-in (QA R4): the dim, the spotlight, the pool and the egg all
  -- fade in together on real time (the hatch clock may still be waiting for its window).
  local opening=if lead and not reduced and not self.instant then C.openSample(self.openElapsed or os.clock()-self.openedAt)else nil
- local open=if opening then opening.dim else 1
+ -- `open` is the egg, spotlight and pool; the dark backdrop leads it (QA v735 H1).
+ local open=if opening then opening.content else 1
+ local openDim=if opening then opening.dim else 1
  if lead and lead.scene and type(lead.scene.setVeil)=="function"and not lead.scene.destroyed then lead.scene:setVeil(1-open)end
  -- The stage fades to black over the egg scene (120 ms; 150 ms when reduced).
- self.root.BackgroundTransparency=if lead then 1-open else 1-(if reduced then s.fade else s.dark)
+ self.root.BackgroundTransparency=if lead then 1-openDim else 1-(if reduced then s.fade else s.dark)
  -- "Play again" fades the stage out under the cover.
  local cover=if self.exiting and not meetExit then 1-exit else 1
  self.cover.BackgroundTransparency=cover;self.cover.Visible=cover<1

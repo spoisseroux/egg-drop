@@ -117,8 +117,19 @@ return function(client,parent)
   end)
   test("QA R4: the stage opens eased, and one on screen leaves in its own gui: content sinks, then the dark lifts",function()
    local C=require(client.CelebrationKit)
-   assert(C.openSample(0).dim==0 and C.openSample(C.OpenFade).dim==1 and C.openSample(C.OpenFade*.5).dim>.5,"the dim eases out")
-   assert(math.abs(C.openSample(0).scale-.9)<1e-6 and C.openSample(1).scale==1 and C.openSample(1).done and not C.openSample(C.OpenFade).done,"the egg eases up to size just after")
+   -- QA v735 H1: a slower open, eased in and out; the egg follows the dark.
+   assert(C.OpenFade>=.3 and C.OpenSettle<=.7,"long enough to read as a fade, short enough not to drag")
+   assert(C.openSample(0).dim==0 and C.openSample(C.OpenFade).dim==1 and math.abs(C.openSample(C.OpenFade*.5).dim-.5)<1e-6,"the dim eases in and out")
+   assert(C.openSample(.03).dim<.03 and 1-C.openSample(C.OpenFade-.03).dim<.03,"no snap at either end of the dim")
+   assert(C.openSample(C.OpenContentAt).content==0 and C.openSample(C.OpenContentAt+C.OpenFade).content==1,"the egg fades in after the dark starts")
+   assert(math.abs(C.openSample(0).scale-C.OpenScale)<1e-6 and C.openSample(1).scale==1 and C.openSample(1).done and not C.openSample(C.OpenFade).done,"the egg eases up to size just after")
+   local d,c,k=-1,-1,0
+   for t=0,C.OpenSettle+.02,.005 do
+    local x=C.openSample(t)
+    assert(x.dim>=d and x.content>=c and x.scale>=k and x.dim<=1 and x.content<=1 and x.scale<=1,"open lanes only rise, at "..t)
+    assert(x.dim-d<.06 or d<0,"no jump in the dim at "..t)
+    d,c,k=x.dim,x.content,x.scale
+   end
    local last=-1
    for t=0,C.LeaveTime+.02,.005 do
     local x=C.leaveSample(t)
