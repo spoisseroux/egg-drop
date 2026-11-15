@@ -2,7 +2,7 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Features=require(Shared.FeatureCatalog);local Materials=require(Shared.MaterialCatalog)
 local Toys=require(Shared.ToyCatalog);local Hues=require(Shared.HueCatalog);local Pets=require(Shared.PetCatalog)
-local Policy={Cue="hatch_finish",AnswerEnd=.45,MaxLateness=.10}
+local Policy={Cue="hatch_finish",AnswerEnd=.60,MaxLateness=.10}
 local Cue={};Cue.__index=Cue
 local valid={Common=true,Uncommon=true,Rare=true,Neutral=true}
 local materialTier=table.freeze({standard="Common",gloss="Common",matte="Common",jelly="Rare"})
@@ -20,8 +20,8 @@ function Policy.tier(kind,result)
 end
 function Policy.new(kind,result,readyAt)
  local classification=Policy.tier(kind,result);local events={}
- if classification=="Uncommon"then events={{at=readyAt+.10,speed=2^(2/12),gain=.026}}
- elseif classification=="Rare"then events={{at=readyAt+.12,speed=1,gain=.035},{at=readyAt+.26,speed=2^(3/12),gain=.035}}end
+ if classification=="Uncommon"then events={{at=readyAt+.24,speed=2^(2/12),gain=.22}}
+ elseif classification=="Rare"then events={{at=readyAt+.20,speed=2^(-2/12),gain=.35},{at=readyAt+.42,speed=2^(5/12),gain=.32}}end
  return setmetatable({tier=classification,events=events,cursor=1,lastAge=0,readyAt=readyAt},Cue)
 end
 function Cue:cancel()self.cancelled=true;self.cursor=#self.events+1 end

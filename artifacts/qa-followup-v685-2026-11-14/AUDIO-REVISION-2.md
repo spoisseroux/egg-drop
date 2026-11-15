@@ -1,0 +1,13 @@
+# Rarity audio revision 2 â€” source frozen
+
+User listening rejected revision1 as Common/Rare sounding the same. The earlier source/PCM GO did not establish perception. Astra's RARITY-AUDIO-REVISION-2-BRIEF and independent architect GO authorize this audio-only amendment. Published privatev685 and accepted visuals/world remain unchanged.
+
+Only runtime delta: HatchRarityCue AnswerEnd.45â†’.60; Rare events+.20/.42s, speeds2^(-2/12)/2^(5/12), gains.35/.32; Uncommon+.24s,+2st,gain.22. Existing HatchCinematic uses that constant, same audio owner/receipt clock/cancellation and canonical tier sources. No BoardAudio, base asset, UI, pose or timing edit. Native tests expectations and exactZZ mirrors updated.
+
+Primary audition: `audio/revision-2-audible/material-common-then-rare-comparison-revision-2.mp3` (alsoWAV/mono). Common3.1s â†’ .65s digital-silence gap â†’ Rare3.1s, exact same unchanged Material body/gain. Individual `material-common-matched-revision-2` and `material-rare-matched-revision-2` WAV/MP3/mono also available; Feature canonical three-tier examples remain labeled featureflag-off.
+
+Generator `scripts/qa20261114_rarity_audio.py` writes only new revisionfolder/files. New report `RARITY-AUDIO-REPORT-REVISION-2.json` hashes all18outputs, policy/generator and unchanged6sourceassets+all16previousaudiofiles. No normalization. Each old Common/opening sample is bit exact; complete newCommon equals sourcePCM. Models runtime constant playback-rate using actual approved goal_tickPCM; native resampling may differ.
+
+Actual Material first Rare support: accentâˆ’34.189dBFS RMS vs tailâˆ’39.558, contrast+5.3685dB. Explicit centered5ms RMS-envelope-active mask (>=1% of note envelope peak) yields+5.6356dB on identical indices. Second support body is digital silence; contrastnull, accentâˆ’34.9665dBFS RMS/âˆ’21.0550peak, not normalized against silence. First note ends2.48979s, second2.67992s, before ownerend2.8s. All5bodiesÃ—3patterns no clipping; combined full600ms sample/4xtruepeak maxgrowth0dB, but that number is not an audibility verdict. Material/comparison4xtruepeakâˆ’4.76783dBFS, safely belowâˆ’3dBTP preferred bound.
+
+Verification: actualcatalog offlinepolicy5PASS; runtime+canonical/mirroredspec5files compilePASS; bothZZ byteexact. Root nativepolicy5/owner3 and actualMaterial playback remain gates. Backlog independent code/PCM review GO: exact Material Rare/Common/prefix/comparison328800frames reconstructed; all22preserved+18outputhashes pass, same contrast/4xpeak independently confirmed. User listening remains acceptance; no hearing/taste approval claimed from metrics.

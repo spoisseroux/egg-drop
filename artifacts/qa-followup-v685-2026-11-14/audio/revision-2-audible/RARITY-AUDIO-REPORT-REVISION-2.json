@@ -1,0 +1,736 @@
+{
+  "scope": "Matched actual Material body: Gloss/Matte Common versus Jelly Rare (active v1). Three matched actual Feature bodies: horns Common, claws Uncommon, wings Rare (authored tiers; feature flag remains off). Local comparisons only; no uploads.",
+  "model": "Existing PCM body speed1/gain1; actual goal_tick PCM sampled at constant runtime-equivalent PlaybackSpeed, mono centered. Linear interpolation models rate change; native resampler may differ.",
+  "opening_prefix": "Every original sample before existing receipt beat is bit exact; no final normalization.",
+  "revision": 2,
+  "supersedes": "User rejected revision1 as indistinguishable. Old audition bytes preserved.",
+  "primary_comparison": {
+    "file": "material-common-then-rare-comparison-revision-2.mp3",
+    "order": "Common then Rare",
+    "common_seconds": 3.1,
+    "gap_seconds": 0.65,
+    "rare_seconds": 3.1,
+    "metrics": {
+      "audition_true_peak_4x_dbfs": -4.767830051392476,
+      "audition_rms_dbfs": -21.5278567236247,
+      "mono_true_peak_4x_dbfs": -4.767830051392476,
+      "mono_max_rounding_error_lsb": 0.0
+    }
+  },
+  "mask_definition": "Whole support uses every emitted note sample; active envelope uses centered5ms(240sample) RMS envelope >=1% of that note envelope peak (\u221240dB). Accent/body/mix measured on identical indices/channels. Silence contrast is null.",
+  "limits": {
+    "finish_window_seconds": 0.6,
+    "max_finish_peak_growth_db": 6,
+    "full_clip_true_peak_ceiling_dbfs": -3,
+    "first_material_rare_support_rms_contrast_target_db": [
+      3,
+      8
+    ]
+  },
+  "loop_seam": "Not applicable: finite one-shot hatch cues, no looping or seam edit.",
+  "taste_limit": "Meters establish level and lifecycle compliance, not subjective listening approval.",
+  "active_tiers": {
+    "material": {
+      "jelly": "Rare",
+      "gloss": "Common",
+      "matte": "Common",
+      "standard": "Common",
+      "legacy_unknown": "Neutral"
+    },
+    "feature": {
+      "horns": "Common",
+      "claws": "Uncommon",
+      "wings": "Rare"
+    },
+    "hue_toy_unknown": "Neutral",
+    "companion": "Actual catalog base/rares only; earned/unknown Neutral"
+  },
+  "generator_sha256": "2afa48e7df07a483d0a7571219471b113f8a370e31adafbf5230a758cab0b710",
+  "policy_sha256": "f30e675ebef057736bfc6a012e871a4b6f704ff919030dece9b46ce1fc974306",
+  "source_and_previous_audition_sha256_unchanged": {
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-bear-v3-tightened-burst.wav": "5998797afeb0ebdbc9c9dab3740caba9f3845405355f085b0aa616087101f3c2",
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-toy-v3-tightened-burst.wav": "c41858a27077975886d37639a96721cb08b3d876a32c387d2561836d4772c8eb",
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-hue-v3-tightened-burst.wav": "4260f6bca6587f0b8ffbb823a9be5a9aa329dffa077964b1330df020b78a866a",
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-material-v3-tightened-burst.wav": "cd0d65aea7cdde9d876667277b9645b2be0366f82a6d19a3bbe5968feb903a13",
+    "assets\\audio\\original-2026-11-14\\hatch-v3\\hatch-feature-v3-tightened-burst.wav": "c41858a27077975886d37639a96721cb08b3d876a32c387d2561836d4772c8eb",
+    "assets\\audio\\placeholder\\egg_drop_goal_tick.wav": "3b4ac78e541c435ada919a65bbab6fbe56e1fa2f938936d9b987bf3a9fbc89f1",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-common-matched-mono.wav": "8110ee7b366230e51f1287dcfdf3d028c7535d0ed3c9295edcfebd82cda5e7ef",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-common-matched.mp3": "4e94fcc084beefcee2bb7b40e107066a79d05b2dd4340bae98e56a175c79ec0b",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-common-matched.wav": "c41858a27077975886d37639a96721cb08b3d876a32c387d2561836d4772c8eb",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-rare-matched-mono.wav": "7408e00e24cb4de022be75cc7a87f9549c132bc1822de5bbc7596120e5ad9e03",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-rare-matched.mp3": "51d27a3fa229af3c45fd80a1c80735b8a97864caac9b21c0ee3d9a8c68938d59",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-rare-matched.wav": "08c105d7cc590c69de6269c80e0879f8151f08e099bc830d3ee694633ddc53d7",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-uncommon-matched-mono.wav": "a5fffdcf6b30496e6bd6c794b2166253da6a163abda99141d7851a793651065b",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-uncommon-matched.mp3": "c6e1c2e38cb0c0f148616827050541dde6c0f3b0326719875d3c208ede3fc6bb",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\feature-uncommon-matched.wav": "9db5d8ba620157b60746210dcfa860ac8cd5b392255b52fab9d70a5e005da1e4",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-common-matched-mono.wav": "951585cdd8f9f3f6ee3974db13506b6369163269f970f1dcaa9e68ac1db260ae",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-common-matched.mp3": "3c426e2916ef912709d50b89dfff450d82df2ea9471ba60dc3f311ed8f36a173",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-common-matched.wav": "cd0d65aea7cdde9d876667277b9645b2be0366f82a6d19a3bbe5968feb903a13",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-rare-matched-mono.wav": "e5c684869b714e42ebe006b5dfd0ee83b35d82b5404cb46a2236239dcfc6dc91",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-rare-matched.mp3": "31d1a12dc9aa7cbc3380cc32a8c5de678f883c07b43d0588ec1318a1ed245d46",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\material-rare-matched.wav": "98d0804d4b4917de5a06a2b3fa5cfc70f6d50826e1b2b42584f435f179279161",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\RARITY-AUDIO-REPORT.json": "def2abb7256f537ec62f1af6654b927bdd850f963889416c3bc4e5e21457c6f9"
+  },
+  "measurements": {
+    "bear": {
+      "Common": {
+        "finish_sample_peak_dbfs": -17.217767604359494,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -17.217767604359494,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.056431742764044,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": true,
+        "events": []
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -17.217767604359494,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -17.217767604359494,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.056431742764044,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.8899999999999997,
+            "speed": 1.122462048309373,
+            "gain": 0.22,
+            "sample_frames": 3421,
+            "end_seconds": 2.9612708333333333,
+            "whole_support": {
+              "frames": 3421,
+              "duration_seconds": 0.07127083333333334,
+              "accent_rms_dbfs": -38.22306310006645,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -38.223246981420445,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -24.388865312920913
+            },
+            "active_envelope": {
+              "frames": 3100,
+              "duration_seconds": 0.06458333333333334,
+              "accent_rms_dbfs": -37.79518088957015,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -37.79536478784229,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -24.388865312920913
+            }
+          }
+        ]
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -17.217767604359494,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -17.217767604359494,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.056431742764044,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.85,
+            "speed": 0.8908987181403393,
+            "gain": 0.35,
+            "sample_frames": 4310,
+            "end_seconds": 2.939791666666667,
+            "whole_support": {
+              "frames": 4310,
+              "duration_seconds": 0.08979166666666667,
+              "accent_rms_dbfs": -34.18899503816949,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.188909230659625,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -20.274124106634467
+            },
+            "active_envelope": {
+              "frames": 3886,
+              "duration_seconds": 0.08095833333333333,
+              "accent_rms_dbfs": -33.739292705078434,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -33.73920716180856,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -20.274124106634467
+            }
+          },
+          {
+            "at_seconds": 3.07,
+            "speed": 1.3348398541700344,
+            "gain": 0.32,
+            "sample_frames": 2876,
+            "end_seconds": 3.1299166666666665,
+            "whole_support": {
+              "frames": 2876,
+              "duration_seconds": 0.05991666666666667,
+              "accent_rms_dbfs": -34.966482976635604,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.96650394944625,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            },
+            "active_envelope": {
+              "frames": 2622,
+              "duration_seconds": 0.054625,
+              "accent_rms_dbfs": -34.56494459967399,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.56496541314175,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            }
+          }
+        ]
+      }
+    },
+    "toy": {
+      "Common": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.347879238611261,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": true,
+        "events": []
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.347879238611261,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.4400000000000004,
+            "speed": 1.122462048309373,
+            "gain": 0.22,
+            "sample_frames": 3421,
+            "end_seconds": 2.511270833333333,
+            "whole_support": {
+              "frames": 3421,
+              "duration_seconds": 0.07127083333333334,
+              "accent_rms_dbfs": -38.22306310006645,
+              "body_rms_dbfs": -40.319392529604954,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 2.09632942953851,
+              "mixed_rms_dbfs": -36.137541161607714,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -22.52567701190371
+            },
+            "active_envelope": {
+              "frames": 3100,
+              "duration_seconds": 0.06458333333333334,
+              "accent_rms_dbfs": -37.79518088957015,
+              "body_rms_dbfs": -40.159296626458485,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 2.364115736888335,
+              "mixed_rms_dbfs": -35.80992042867432,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -22.52567701190371
+            }
+          }
+        ]
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.347879238611261,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.4000000000000004,
+            "speed": 0.8908987181403393,
+            "gain": 0.35,
+            "sample_frames": 4310,
+            "end_seconds": 2.4897916666666666,
+            "whole_support": {
+              "frames": 4310,
+              "duration_seconds": 0.08979166666666667,
+              "accent_rms_dbfs": -34.18899503816949,
+              "body_rms_dbfs": -38.757505939359575,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 4.568510901190084,
+              "mixed_rms_dbfs": -32.88562981423446,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -18.980248855292952
+            },
+            "active_envelope": {
+              "frames": 3886,
+              "duration_seconds": 0.08095833333333333,
+              "accent_rms_dbfs": -33.739292705078434,
+              "body_rms_dbfs": -38.57494364444421,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 4.83565093936577,
+              "mixed_rms_dbfs": -32.50349525670944,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -18.980248855292952
+            }
+          },
+          {
+            "at_seconds": 2.62,
+            "speed": 1.3348398541700344,
+            "gain": 0.32,
+            "sample_frames": 2876,
+            "end_seconds": 2.6799166666666667,
+            "whole_support": {
+              "frames": 2876,
+              "duration_seconds": 0.05991666666666667,
+              "accent_rms_dbfs": -34.966482976635604,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.96650394944625,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            },
+            "active_envelope": {
+              "frames": 2622,
+              "duration_seconds": 0.054625,
+              "accent_rms_dbfs": -34.56494459967399,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.56496541314175,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            }
+          }
+        ]
+      }
+    },
+    "hue": {
+      "Common": {
+        "finish_sample_peak_dbfs": -14.927362956829981,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.926073238486792,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.013586408757052,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": true,
+        "events": []
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -14.927362956829981,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.926073238486792,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.013586408757052,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.4400000000000004,
+            "speed": 1.122462048309373,
+            "gain": 0.22,
+            "sample_frames": 3421,
+            "end_seconds": 2.511270833333333,
+            "whole_support": {
+              "frames": 3421,
+              "duration_seconds": 0.07127083333333334,
+              "accent_rms_dbfs": -38.22306310006645,
+              "body_rms_dbfs": -40.719197413648914,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 2.496134313582469,
+              "mixed_rms_dbfs": -36.28574797136212,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -22.60402505112996
+            },
+            "active_envelope": {
+              "frames": 3100,
+              "duration_seconds": 0.06458333333333334,
+              "accent_rms_dbfs": -37.79518088957015,
+              "body_rms_dbfs": -40.5591435458723,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 2.7639626563021533,
+              "mixed_rms_dbfs": -35.95243478346481,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -22.60402505112996
+            }
+          }
+        ]
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -14.927362956829981,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.926073238486792,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.013586408757052,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.4000000000000004,
+            "speed": 0.8908987181403393,
+            "gain": 0.35,
+            "sample_frames": 4310,
+            "end_seconds": 2.4897916666666666,
+            "whole_support": {
+              "frames": 4310,
+              "duration_seconds": 0.08979166666666667,
+              "accent_rms_dbfs": -34.18899503816949,
+              "body_rms_dbfs": -39.15732679779589,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 4.968331759626401,
+              "mixed_rms_dbfs": -32.985745100525435,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -19.037004121563736
+            },
+            "active_envelope": {
+              "frames": 3886,
+              "duration_seconds": 0.08095833333333333,
+              "accent_rms_dbfs": -33.739292705078434,
+              "body_rms_dbfs": -38.97475573759332,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 5.235463032514885,
+              "mixed_rms_dbfs": -32.59907073225679,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -19.037004121563736
+            }
+          },
+          {
+            "at_seconds": 2.62,
+            "speed": 1.3348398541700344,
+            "gain": 0.32,
+            "sample_frames": 2876,
+            "end_seconds": 2.6799166666666667,
+            "whole_support": {
+              "frames": 2876,
+              "duration_seconds": 0.05991666666666667,
+              "accent_rms_dbfs": -34.966482976635604,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.96650394944625,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            },
+            "active_envelope": {
+              "frames": 2622,
+              "duration_seconds": 0.054625,
+              "accent_rms_dbfs": -34.56494459967399,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.56496541314175,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            }
+          }
+        ]
+      }
+    },
+    "material": {
+      "Common": {
+        "finish_sample_peak_dbfs": -15.326645452067913,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -15.325244441547841,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -4.767830051392476,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": true,
+        "events": [],
+        "audition_true_peak_4x_dbfs": -4.767830051392476,
+        "audition_rms_dbfs": -21.099678369606615,
+        "mono_true_peak_4x_dbfs": -4.767830051392476,
+        "mono_max_rounding_error_lsb": 0.0
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -15.326645452067913,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -15.325244441547841,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -4.767830051392476,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.4400000000000004,
+            "speed": 1.122462048309373,
+            "gain": 0.22,
+            "sample_frames": 3421,
+            "end_seconds": 2.511270833333333,
+            "whole_support": {
+              "frames": 3421,
+              "duration_seconds": 0.07127083333333334,
+              "accent_rms_dbfs": -38.22306310006645,
+              "body_rms_dbfs": -41.11920365839205,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 2.896140558325608,
+              "mixed_rms_dbfs": -36.42550843543247,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -22.67586904747862
+            },
+            "active_envelope": {
+              "frames": 3100,
+              "duration_seconds": 0.06458333333333334,
+              "accent_rms_dbfs": -37.79518088957015,
+              "body_rms_dbfs": -40.95912156850572,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 3.163940678935571,
+              "mixed_rms_dbfs": -36.08662749370727,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -22.67586904747862
+            }
+          }
+        ]
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -15.326645452067913,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -15.325244441547841,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -4.767830051392476,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.4000000000000004,
+            "speed": 0.8908987181403393,
+            "gain": 0.35,
+            "sample_frames": 4310,
+            "end_seconds": 2.4897916666666666,
+            "whole_support": {
+              "frames": 4310,
+              "duration_seconds": 0.08979166666666667,
+              "accent_rms_dbfs": -34.18899503816949,
+              "body_rms_dbfs": -39.55750072947085,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 5.368505691301364,
+              "mixed_rms_dbfs": -33.07911922860275,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -19.08935758746965
+            },
+            "active_envelope": {
+              "frames": 3886,
+              "duration_seconds": 0.08095833333333333,
+              "accent_rms_dbfs": -33.739292705078434,
+              "body_rms_dbfs": -39.374918015119164,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 5.635625310040723,
+              "mixed_rms_dbfs": -32.68811461742904,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -19.08935758746965
+            }
+          },
+          {
+            "at_seconds": 2.62,
+            "speed": 1.3348398541700344,
+            "gain": 0.32,
+            "sample_frames": 2876,
+            "end_seconds": 2.6799166666666667,
+            "whole_support": {
+              "frames": 2876,
+              "duration_seconds": 0.05991666666666667,
+              "accent_rms_dbfs": -34.966482976635604,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.96650394944625,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            },
+            "active_envelope": {
+              "frames": 2622,
+              "duration_seconds": 0.054625,
+              "accent_rms_dbfs": -34.56494459967399,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.56496541314175,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            }
+          }
+        ],
+        "audition_true_peak_4x_dbfs": -4.767830051392476,
+        "audition_rms_dbfs": -21.09006276018053,
+        "mono_true_peak_4x_dbfs": -4.767830051392476,
+        "mono_max_rounding_error_lsb": 0.0
+      }
+    },
+    "feature": {
+      "Common": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.347879238611261,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": true,
+        "events": [],
+        "audition_true_peak_4x_dbfs": -5.347879238611261,
+        "audition_rms_dbfs": -20.943349761812513,
+        "mono_true_peak_4x_dbfs": -5.347879238611261,
+        "mono_max_rounding_error_lsb": 0.0
+      },
+      "Uncommon": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.347879238611261,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.4400000000000004,
+            "speed": 1.122462048309373,
+            "gain": 0.22,
+            "sample_frames": 3421,
+            "end_seconds": 2.511270833333333,
+            "whole_support": {
+              "frames": 3421,
+              "duration_seconds": 0.07127083333333334,
+              "accent_rms_dbfs": -38.22306310006645,
+              "body_rms_dbfs": -40.319392529604954,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 2.09632942953851,
+              "mixed_rms_dbfs": -36.137541161607714,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -22.52567701190371
+            },
+            "active_envelope": {
+              "frames": 3100,
+              "duration_seconds": 0.06458333333333334,
+              "accent_rms_dbfs": -37.79518088957015,
+              "body_rms_dbfs": -40.159296626458485,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 2.364115736888335,
+              "mixed_rms_dbfs": -35.80992042867432,
+              "accent_peak_dbfs": -24.390681263416255,
+              "mixed_peak_dbfs": -22.52567701190371
+            }
+          }
+        ],
+        "audition_true_peak_4x_dbfs": -5.347879238611261,
+        "audition_rms_dbfs": -20.941483536794706,
+        "mono_true_peak_4x_dbfs": -5.347879238611261,
+        "mono_max_rounding_error_lsb": 0.0
+      },
+      "Rare": {
+        "finish_sample_peak_dbfs": -14.527260397433784,
+        "increase_db_over_same_finish": 0.0,
+        "finish_true_peak_4x_dbfs": -14.525767539192877,
+        "finish_true_peak_increase_db": 0.0,
+        "full_clip_true_peak_4x_dbfs": -5.347879238611261,
+        "clipped_sample_count": 0,
+        "prefix_bit_exact": true,
+        "common_complete_pcm_bit_exact": null,
+        "events": [
+          {
+            "at_seconds": 2.4000000000000004,
+            "speed": 0.8908987181403393,
+            "gain": 0.35,
+            "sample_frames": 4310,
+            "end_seconds": 2.4897916666666666,
+            "whole_support": {
+              "frames": 4310,
+              "duration_seconds": 0.08979166666666667,
+              "accent_rms_dbfs": -34.18899503816949,
+              "body_rms_dbfs": -38.757505939359575,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 4.568510901190084,
+              "mixed_rms_dbfs": -32.88562981423446,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -18.980248855292952
+            },
+            "active_envelope": {
+              "frames": 3886,
+              "duration_seconds": 0.08095833333333333,
+              "accent_rms_dbfs": -33.739292705078434,
+              "body_rms_dbfs": -38.57494364444421,
+              "body_digital_silence": false,
+              "accent_minus_body_rms_db": 4.83565093936577,
+              "mixed_rms_dbfs": -32.50349525670944,
+              "accent_peak_dbfs": -20.27403553217855,
+              "mixed_peak_dbfs": -18.980248855292952
+            }
+          },
+          {
+            "at_seconds": 2.62,
+            "speed": 1.3348398541700344,
+            "gain": 0.32,
+            "sample_frames": 2876,
+            "end_seconds": 2.6799166666666667,
+            "whole_support": {
+              "frames": 2876,
+              "duration_seconds": 0.05991666666666667,
+              "accent_rms_dbfs": -34.966482976635604,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.96650394944625,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            },
+            "active_envelope": {
+              "frames": 2622,
+              "duration_seconds": 0.054625,
+              "accent_rms_dbfs": -34.56494459967399,
+              "body_rms_dbfs": null,
+              "body_digital_silence": true,
+              "accent_minus_body_rms_db": null,
+              "mixed_rms_dbfs": -34.56496541314175,
+              "accent_peak_dbfs": -21.055039947430508,
+              "mixed_peak_dbfs": -21.055050537160017
+            }
+          }
+        ],
+        "audition_true_peak_4x_dbfs": -5.347879238611261,
+        "audition_rms_dbfs": -20.934073351093204,
+        "mono_true_peak_4x_dbfs": -5.347879238611261,
+        "mono_max_rounding_error_lsb": 0.0
+      }
+    }
+  },
+  "output_sha256": {
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\material-common-matched-revision-2.wav": "cd0d65aea7cdde9d876667277b9645b2be0366f82a6d19a3bbe5968feb903a13",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\material-common-matched-revision-2-mono.wav": "951585cdd8f9f3f6ee3974db13506b6369163269f970f1dcaa9e68ac1db260ae",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\material-common-matched-revision-2.mp3": "3c426e2916ef912709d50b89dfff450d82df2ea9471ba60dc3f311ed8f36a173",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\material-rare-matched-revision-2.wav": "ca293dfb6d52a375a62460d0cc05cd4f52eb5532ace0600825e4a4a82cb14d51",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\material-rare-matched-revision-2-mono.wav": "005a808d762c23ecea1c55153caed53b24669abb2c67d1275658ceea5515593f",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\material-rare-matched-revision-2.mp3": "89651d71f85ed5021b0d2d9e46c0b7f52119d017080dd25f27df1cdeab4d89a2",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\feature-common-matched-revision-2.wav": "c41858a27077975886d37639a96721cb08b3d876a32c387d2561836d4772c8eb",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\feature-common-matched-revision-2-mono.wav": "8110ee7b366230e51f1287dcfdf3d028c7535d0ed3c9295edcfebd82cda5e7ef",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\feature-common-matched-revision-2.mp3": "4e94fcc084beefcee2bb7b40e107066a79d05b2dd4340bae98e56a175c79ec0b",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\feature-uncommon-matched-revision-2.wav": "344748c0bee7b6c6dc6f9e1d42334a0df2c27e7892673764d0defee0712fe02e",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\feature-uncommon-matched-revision-2-mono.wav": "70a89d44483d455acc83302aaa794d942f4901e9ca62fc571378fc4dcb83d6f9",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\feature-uncommon-matched-revision-2.mp3": "e1add278d90667424ca55dcb9e6a8139b3b5c1c646325ccf4ac0f4d456a96dde",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\feature-rare-matched-revision-2.wav": "389925ba31956e76f76a93989c777618b0a038fbbdca2f056b69125e7d893acb",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\feature-rare-matched-revision-2-mono.wav": "bd0fc094cfd98c8e4a3b80a9817f420cf67e3b9c5ca9abd999f3b84e8d55f541",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\feature-rare-matched-revision-2.mp3": "25bc37aa646540ea4cc83fe3828874afe8a65c9ed3344ad2b849323663bef395",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\material-common-then-rare-comparison-revision-2.wav": "7f51026c0a56e8a185dc43baf320210051e6aff0fcd8c5bb2113fd72da6e8119",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\material-common-then-rare-comparison-revision-2-mono.wav": "5565192897e49afa389f66c515d5e6be2e8f84f4531ae9bbd76caf267437f2bd",
+    "artifacts\\qa-followup-v685-2026-11-14\\audio\\revision-2-audible\\material-common-then-rare-comparison-revision-2.mp3": "3e018822675eb1d5c649d664410ee6c8468f42b5e81575a40e7ea8fa8bf3f66a"
+  }
+}

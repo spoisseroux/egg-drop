@@ -43,5 +43,20 @@
     "gif": "material-hatch-updated.gif",
     "audio": "Matched offline PCM audition; not recorded Studio audio",
     "visual_checkpoint": "Accepted visual subset with shared Sky; subsequent rarity hooks do not change choreography"
+  },
+  {
+    "kind": "material",
+    "revision": 2,
+    "actual_renderer": true,
+    "time_stepped": true,
+    "synthetic_receipt": true,
+    "no_transaction": true,
+    "fps": 12,
+    "frames": 39,
+    "duration_seconds": 4.25,
+    "video": "material-hatch-audible-revision-2.mp4",
+    "sha256": "f5cf266670a39be09c7f225081c6248c08a01f295a1c50cfd90ea5d297dfba34",
+    "audio": "Matched revision2 PCM audition, not Studio audio recording",
+    "note": "Reuses accepted visual frames; rarity revision changes audio only. Initial rare soundtrack was rejected as indistinguishable. Listening approval pending."
   }
 ]

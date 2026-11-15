@@ -1,5 +1,7 @@
 # Rarity finish audio source checkpoint
 
+> Revision1 audio below was rejected by user listening as indistinguishable. See AUDIO-REVISION-2.md and the new revision-2-audible files; these old auditions remain unchanged as evidence.
+
 Unpublished follow-up; private v685 and current music mappings unchanged. Runtime frozen pending independent review/native tests.
 
 Runtime: `HatchRarityCue.lua`, bounded `HatchCinematic.lua` glue, `BoardAudio.lua` dedicated `hatch_finish` voice alias to the existing approved goal_tick asset103058048084589. Original five approved hatch bodies remain speed1/gain1 with identical opening timing. Canonical Feature tiers and actual PetCatalog rare membership; explicit fixed material mapping Jelly Rare, Standard/Gloss/Matte Common, legacy/unknown Neutral. Toy/Hue with no canonical tier stay Neutral. No odds/ownership/duplicate inference.

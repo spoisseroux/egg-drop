@@ -1,0 +1,30 @@
+{
+  "tests": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"HatchRarityAudio\":{\"ok\":true,\"result\":{\"passed\":3,\"cases\":{\"1\":\"approved opening stays speed one and only post-receipt answers use their own stoppable voice\",\"3\":\"late preload starts at zero while focus device takeover and long frames drop pending accents\",\"2\":\"skip settled reopen reduced motion and replacement never play deferred answers\"}}},\"HatchRarityCue\":{\"ok\":true,\"result\":{\"passed\":5,\"cases\":{\"1\":\"tiers use canonical authored identities and ignore transient odds and rare booleans\",\"3\":\"uncommon has one faint answer while common and neutral retain the existing body\",\"2\":\"rare emits exactly two modest upward answers after receipt with fixed timing\",\"5\":\"owner loss cancel invalid age and backwards clock permanently consume pending answers\",\"4\":\"undisclosed crossed cues and large jumps never catch up on later frames\"}}}}"
+      }
+    ],
+    "isError": false
+  },
+  "rare": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"NativeReviewCommand\":\"material\",\"NativeReviewValue\":\"jelly\",\"NativeRealAudioAsset\":\"rbxassetid://103058048084589\",\"NativeReviewReady\":true,\"NativeRealAudioEvents\":\"[{\\\"gain\\\":1,\\\"name\\\":\\\"hatch_display_material\\\",\\\"speed\\\":1,\\\"age\\\":0,\\\"accepted\\\":true},{\\\"gain\\\":0.35,\\\"name\\\":\\\"hatch_finish\\\",\\\"speed\\\":0.8908987181403393,\\\"age\\\":2.400502096861601,\\\"accepted\\\":true},{\\\"gain\\\":0.32,\\\"name\\\":\\\"hatch_finish\\\",\\\"speed\\\":1.3348398541700344,\\\"age\\\":2.6338361985981466,\\\"accepted\\\":true}]\",\"NativeRealAudioDuration\":0.07997732426303855,\"NativeReviewNonce\":1,\"NativeRealAudioReady\":true,\"NativeReviewKind\":\"material\",\"NativeReviewAge\":3.1}"
+      }
+    ],
+    "isError": false
+  },
+  "commonCumulative": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"NativeReviewCommand\":\"material\",\"NativeReviewValue\":\"gloss\",\"NativeRealAudioAsset\":\"rbxassetid://103058048084589\",\"NativeReviewReady\":true,\"NativeRealAudioEvents\":\"[{\\\"gain\\\":1,\\\"name\\\":\\\"hatch_display_material\\\",\\\"speed\\\":1,\\\"age\\\":0,\\\"accepted\\\":true},{\\\"gain\\\":0.35,\\\"name\\\":\\\"hatch_finish\\\",\\\"speed\\\":0.8908987181403393,\\\"age\\\":2.400502096861601,\\\"accepted\\\":true},{\\\"gain\\\":0.32,\\\"name\\\":\\\"hatch_finish\\\",\\\"speed\\\":1.3348398541700344,\\\"age\\\":2.6338361985981466,\\\"accepted\\\":true},{\\\"gain\\\":1,\\\"name\\\":\\\"hatch_display_material\\\",\\\"speed\\\":1,\\\"age\\\":0,\\\"accepted\\\":true}]\",\"NativeRealAudioDuration\":0.07997732426303855,\"NativeReviewNonce\":2,\"NativeRealAudioReady\":true,\"NativeReviewKind\":\"material\",\"NativeReviewAge\":3.1}"
+      }
+    ],
+    "isError": false
+  },
+  "note": "First attempted preview remained unpresented while the game viewport lacked focus; a real viewport focus click started the ordinary owned cinematic. Final events below use actual audio at its normal clock."
+}

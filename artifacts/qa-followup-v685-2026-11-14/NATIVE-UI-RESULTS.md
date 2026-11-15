@@ -2,6 +2,8 @@
 
 Private phone QA remains **v685**. These source changes and captures have not been published. No server restart or cloud localization change was made for this follow-up.
 
+**Audio revision2 supersedes the first sound comparison.** Spencer found the first Common/Rare pair indistinguishable; its low-level notes were masked by the tail. Use the new [Common → gap → Rare comparison](audio/revision-2-audible/material-common-then-rare-comparison-revision-2.mp3) or [updated Jelly movie](native/material-hatch-audible-revision-2.mp4). Both have new filenames; the rejected initial media remain intact as history. This is a measured/native-tested revision, not a claim of Spencer's listening approval.
+
 ## Actual images
 
 - [Disclosure timing](native/disclosure-contact.png): actual Toy/Hue/Material renderer at 0.7s, 1.25s and 3.1s. Mystery headings precede the existing 2.2s item receipt beat; truthful names appear at receipt.
@@ -34,3 +36,7 @@ An ordinary LocalScript ran the actual BoardAudio and native Material hatch at i
 [Common Material audition](audio/material-common-matched.mp3) and [Rare Material audition](audio/material-rare-matched.mp3) share the same opening and body. The local report/review confirms exact source prefixes, unchanged original assets and bounded combined peaks. Feature Common/Uncommon/Rare auditions are also available, clearly labeled as examples for the currently disabled Feature Egg. Toy/Hue outcomes without authored rarity stay Neutral. Current garden/deck music remains v3.
 
 Local localization CSV regenerated with **592 strings** using a separate review-file output, preserving the unrelated existing hardcoded-strings CSV. Cloud sync remains for a future authorized publish.
+
+### Audible revision2 native follow-up
+
+Independent source/PCM review GO; the first Rare note is +5.37dB RMS over its simultaneous tail and the second follows in silence. Common and the original opening remain bit-exact; full comparison peak is −4.77dBTP. Fresh native policy **5** and owner/lifecycle **3** cases pass. The ordinary owned native hatch accepted the revised notes at ages **2.40050s** and **2.63384s**, gains0.35/0.32 and speeds0.890899/1.334840; Gloss produced only the body. [Native evidence](native/revision-2-native-audio.json), [revision report](AUDIO-REVISION-2.md), [independent review](RARITY-AUDIO-REVISION-2-CODE-REVIEW.md). Studio's game viewport was actually focused for the live playback; unfocused attempts correctly remained unpresented and silent.
