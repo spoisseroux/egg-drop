@@ -63,6 +63,10 @@ Show Spencer real captures of H1 and H2 before calling them done.
 
 **No publish until Spencer says.** The handoff says v685 stays stable until he asks for a replacement build.
 
+## Before save_place (2026-11-14 late)
+
+- **Destroy `ServerStorage.ZZ_Probe` in Edit first.** It is a temporary clone of the client and Shared folders used to run specs in Edit; Play was running when the cleanup was tried, so it is still there. Nothing else temporary was left (StarterGui and Workspace are clean).
+
 ## Stale specs (2026-11-14 late)
 
 - `scripts/CompactPhone.spec.lua`: geometry tables regenerated from `Screen.resolve` for the 16 px shift (`b70d56b`); body top 60, board H - 96, sheets at 76; the plate overlay is expected off on phones (70e0440 hid it, the spec still wanted it drawn); new D2 determinism check. In Studio Edit (cloned client) it passes through the handheld test; the Pocket Menu case then stops at "wipe finished", a tween timing check that needs Play.
