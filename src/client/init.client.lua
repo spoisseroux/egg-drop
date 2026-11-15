@@ -959,16 +959,16 @@ clientUI.hueIntent=clientUI.HueIntent.new({
  id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("hue")end,
  send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
- changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
+ changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.materialIntent=require(script.MaterialIntent).new({id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("material")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
- changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
+ changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.toyIntent=require(script.ToyIntent).new({id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("toy")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
- changed=function()if clientUI.syncFirstSpend then clientUI.syncFirstSpend(clientUI.toyIntent.state)end;if clientUI.hueView then clientUI.hueView:refresh()end end})
+ changed=function()if clientUI.syncFirstSpend then clientUI.syncFirstSpend(clientUI.toyIntent.state)end;if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.featureIntent=require(script.FeatureIntent).new({id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("feature")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
- changed=function()if clientUI.hueView then clientUI.hueView:refresh()end end})
+ changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  materialIntent=clientUI.materialIntent,toyIntent=clientUI.toyIntent,featureIntent=clientUI.featureIntent,
  wardrobe=function(petId)return clientUI.openWardrobe and clientUI.openWardrobe(petId)end,
@@ -1063,17 +1063,39 @@ end
 roomView.care.closeMachine=function()
  if clientUI.hueReturn=="machine"then clientUI.hueView:close("care");clientUI.hueView:setMachineSession(nil)end
 end
-nurseryView.onOpenHue=function(purchase)
- if clientUI.openHue("buy",nil,"eggs")and purchase and not nurseryState.pendingHueResult then clientUI.hueIntent:hatch()end
-end
-nurseryView.onOpenMaterial=function(purchase)
- if clientUI.openHue("materialBuy",nil,"eggs")and purchase and not nurseryState.pendingMaterialResult then clientUI.materialIntent:buy()end
-end
-nurseryView.onOpenToy=function(purchase)
- if clientUI.openHue("toyBuy",nil,"eggs")and purchase and not nurseryState.pendingToyResult then clientUI.toyIntent:buy()end
-end
-nurseryView.onOpenFeature=function(purchase)
- if clientUI.openHue("featureBuy",nil,"eggs")and purchase and not nurseryState.pendingFeatureResult then clientUI.featureIntent:buy()end
+do
+ -- QA v685 H4: Hatch in Hatch eggs buys straight away. The item view opens only once the
+ -- result lands (as the hatch reveal), so there is no second "Hatch" card. A refused or
+ -- stalled purchase still opens the buy page, which shows the reason or Try again.
+ local kinds={
+  hue={page="buy",intent="hueIntent",method="hatch",pending="pendingHueResult"},
+  material={page="materialBuy",intent="materialIntent",method="buy",pending="pendingMaterialResult"},
+  toy={page="toyBuy",intent="toyIntent",method="buy",pending="pendingToyResult"},
+  feature={page="featureBuy",intent="featureIntent",method="buy",pending="pendingFeatureResult"},
+ }
+ local function open(kind,purchase)
+  local k=kinds[kind];local intent=clientUI[k.intent]
+  if purchase and nurseryState and not nurseryState[k.pending]then
+   if clientUI.directHatch==kind and intent.pending then return end
+   if intent[k.method](intent)then clientUI.directHatch=kind;return end
+  end
+  clientUI.directHatch=nil
+  clientUI.openHue(k.page,nil,"eggs")
+ end
+ nurseryView.onOpenHue=function(purchase)open("hue",purchase)end
+ nurseryView.onOpenMaterial=function(purchase)open("material",purchase)end
+ nurseryView.onOpenToy=function(purchase)open("toy",purchase)end
+ nurseryView.onOpenFeature=function(purchase)open("feature",purchase)end
+ clientUI.syncDirectHatch=function()
+  local kind=clientUI.directHatch;if not kind or not nurseryState then return end
+  local k=kinds[kind];local intent=clientUI[k.intent]
+  if nurseryState[k.pending]then
+   clientUI.directHatch=nil;clientUI.hueView.directHatch=kind
+   if not clientUI.openHue(k.page,nil,"eggs")then clientUI.hueView.directHatch=nil end
+  elseif intent.status=="Retrying"or not intent.pending then
+   clientUI.directHatch=nil;clientUI.openHue(k.page,nil,"eggs")
+  end
+ end
 end
 journal:setColors(function(petId)clientUI.openHue("palette",petId,"journal")end)
 -- Wardrobe (pet wearables for Stars), opened from the Companions editor at the Care Cradle.
@@ -1406,6 +1428,7 @@ local function refreshNursery(state)
 	roomView.stations:refresh()
 	roomView.transition:refresh()
 	nurseryView:update(state)
+ if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end
  if clientUI.syncFirstSpend then clientUI.syncFirstSpend(state)end
 	local result = state.lastHatch
  if result and clientUI.isHueOpen()then clientUI.hueView:close("forced")end

@@ -1617,6 +1617,12 @@ function View:open(state,page,petId)
  if self.toyIntent then self.toyIntent:update(self.state)end;if self.featureIntent then self.featureIntent:update(self.state)end
  if self.state.lastHatch then if self.options.pendingHatch then self.options.pendingHatch()end;return false end
  self.page=if self.state.pendingHueResult then "receipt"elseif self.state.pendingMaterialResult then "materialReceipt"elseif self.state.pendingToyResult then "toyReceipt"elseif self.state.pendingFeatureResult then "featureReceipt"elseif page=="toyBuy"then "toyBuy"elseif page=="featureBuy"then "featureBuy"elseif page=="materialBuy"then "materialBuy"elseif page=="buy"then "buy"else "palette"
+ do -- QA v685 H4: opened by a direct Hatch from Hatch eggs, so the reveal plays as a fresh hatch.
+  local kind=self.directHatch;self.directHatch=nil
+  local field=if kind=="hue"then "purchaseInFlight"elseif kind then kind.."PurchaseInFlight"else nil
+  local result=if kind=="hue"then self.state.pendingHueResult elseif kind=="material"then self.state.pendingMaterialResult elseif kind=="toy"then self.state.pendingToyResult elseif kind=="feature"then self.state.pendingFeatureResult else nil
+  if field and result then self[field]=result.id end
+ end
  if self.state.hueMigrationId and self.state.hueMigrationAcknowledged==false then self.afterMigrationPage=self.page;self.page="migration"end
  self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"then "materials"elseif page=="toys"then "toys"elseif page=="features"then "features"elseif page=="pet"then "pet"else "hue";self.channel="main";self.inspected=nil;self.useMessage=nil;self.confirmation=nil;self.assignment=nil;self.selectTarget=false;self.body.CanvasPosition=Vector2.zero
  local p=self.intent.pending
