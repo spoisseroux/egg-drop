@@ -40,3 +40,14 @@ Source: `notes.md` and `shots/` (filenames are timestamps). Spencer: "after we d
 - **Move everything into eggs** (deck, customize, wardrobe, pet eggs)? Recommendation: no for v1. The Wardrobe and Deck style stay fixed-price direct buys, which are clearer and fairer and keep the paid-random rules simple. Eggs stay for collectibles (toys, finishes, hues, and Names in v2). Spencer to confirm.
 - **Do pets use their toys?** Yes: they carry the equipped toy, play with it in idle beats, and the park has shared fetch.
 - **v2:** **Cartridges**, different games for the Pocket Deck. Added to TODO.
+
+## P: price pass before v1 (decided 2026-11-15; Spencer: "up to you")
+
+- Wardrobe tiers move from 15/30/60 to **25/50/100**. Change `TIERS` in scripts/build_bear_wearables.py, then regenerate the manifest and rig, and update WearableCatalog.TierPrice. Recolours follow their base item.
+- Faceplates move from 20/40/80 to **30/60/120**.
+- Ball themes move from 20/40/40/120 to **30/60/60/160**.
+- Eggs are unchanged. The shelf stays at 20% off.
+- Update every spec that pins prices, the store-listing copy and the UICopy price strings.
+- After launch, tune with the SessionEndWallet data: if the median wallet is 300+ Stars on day 7, add sinks or raise prices.
+
+Do this **after** lanes D, H and W land, and before the publish.
