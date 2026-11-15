@@ -752,7 +752,7 @@ function View:buildShopChrome(view)
  self.shopHeader=Kit.header(body,{title="Hatch eggs",eyebrow="Garden",tint="hatch",compact=phone,width=g.W,left=24,onBack=function()self:close("close")end})
  self.shopBackButton=self.shopHeader.back.root;self.shopBackButton.Selectable=true
  -- Pane: egg well, name + price chip, description, odds, need line, primary button.
- local pane=Kit.card(body,"EggPane",nil,{pad=g.pad,seam=true});pane.Position=UDim2.fromOffset(g.pane.x,g.pane.y);pane.Size=UDim2.fromOffset(g.pane.w,g.pane.h)
+ local pane=Kit.card(body,"EggPane",nil,{pad=g.pad,seam=not phone}) -- QA v685 U3: the stitched seam read as a broken border on the phone pane;pane.Position=UDim2.fromOffset(g.pane.x,g.pane.y);pane.Size=UDim2.fromOffset(g.pane.w,g.pane.h)
  self.shopPane=pane
  local p=g.pad
  local wellR=if phone then {x=p,y=p,w=150,h=g.pane.h-p*2}else {x=p,y=p,w=g.pane.w-p*2,h=152}
@@ -925,6 +925,14 @@ function View:renderBody()
  left.Position=UDim2.fromOffset(0,0);left.Size=UDim2.fromOffset(g.list.w,1)
  left:SetAttribute("RecipeColumns",1)
  local y=3
+ -- QA v685 U3: on a phone the rows shrink (never under 44 px) so the eggs, the note and
+ -- Get Stars all fit the list window; a longer egg list still scrolls.
+ local rowH,rowGap,noteH,tail=g.rowH,g.rowGap,28,8
+ if phone then
+  rowGap,noteH,tail=6,22,2
+  local fixed=3+#liveOrder*rowGap+noteH+(if self.store then 44+tail else 0)+4
+  rowH=math.clamp(math.floor((View.listWindow(self.body)-fixed)/math.max(1,#liveOrder)),44,g.rowH)
+ end
  for _,id in ipairs(liveOrder)do
   local recipe=shopRecipe(id);local copy=View.EggCopy[id]or {}
   local n=left:FindFirstChild("Recipe_"..id)
@@ -941,7 +949,7 @@ function View:renderBody()
    local cost=Kit.text(n,"Counter","★ "..recipe.cost,"stars",{Name="Cost",TextXAlignment=Enum.TextXAlignment.Right})
    local _=name;_=line;_=cost
   end
-  local h=g.rowH
+  local h=rowH
   n.Position,n.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,h)
   Kit.setTileLip(n,Kit.tileLip(phone))
   local name,line,cost=n.RecipeName,n.RecipeLine,n.Cost
@@ -955,17 +963,17 @@ function View:renderBody()
   Kit.paint(stroke,"Color",function()return if selected then Kit.color("accent")else Color3.new(1,1,1)end)
   n.Interactable,n.Selectable=not self.pending,not self.pending;n:SetAttribute("Selected",selected)
   n:SetAttribute("AccessibleLabel",recipe.name..", "..(copy.line or "")..", "..recipe.cost.." Stars")
-  y+=h+g.rowGap
+  y+=h+rowGap
  end
  y+=if phone then 0 else 8
  local note=Kit.text(left,"Small",UICopy.get(if phone then "hatch.footer.phone"else "hatch.footer.desktop"),"soft",{Name="ListNote",Position=UDim2.fromOffset(8,y),Size=UDim2.fromOffset(w-8,20),TextSize=if phone then 12 else 14})
  local _=note
- y+=28
+ y+=noteH
  -- QA v2: the stamp card and the daily stamp button live in Quests now (R3). Seam: this
  -- list ends with the eggs, the note and Get Stars; nothing here reads daily state.
  if self.store then
   self.getStars.Parent=left;Art.type(self.getStars,"Action",phone)
-  local sh=math.max(44,Art.actionHeight(self.getStars,w));self.getStars.Position,self.getStars.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,sh);y+=sh+8
+  local sh=math.max(44,Art.actionHeight(self.getStars,w));self.getStars.Position,self.getStars.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,sh);y+=sh+tail
  end
  -- QA v2 R1.9: the list always scrolls (wheel, drag, pad focus) once it outgrows its
  -- window, so more eggs fit later. The window is measured in offset units: AbsoluteSize

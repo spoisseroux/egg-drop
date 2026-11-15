@@ -29,10 +29,12 @@ Hub.Rows=table.freeze({
  table.freeze({id="pets",icon="paw",name="Pets",line="Choose who follows you around the garden"}),
  table.freeze({id="wardrobe",icon="shirt",name="Wardrobe",line="Hats, shirts and more, bought with Stars"}),
  table.freeze({id="customize",icon="wand",name="Customize",line="Hue, charm, materials and toys"}),
+ -- QA v685 U4: toys get their own row; it opens Customize on the Toys tab.
+ table.freeze({id="toys",icon="toy",name=UICopy.get("companions.toys.name"),line=UICopy.get("companions.toys.line")}),
 })
 -- Row rects (the three-row sizes from before the play-forever build): desktop rows
 -- 140 high on a 156 pitch beside the pet pane; phone rows 64 high on a 73 pitch.
-Hub.RowPitch={regular=156,regularH=140,phone=73,phoneH=64}
+Hub.RowPitch={regular=116,regularH=104,phone=58,phoneH=52} -- four rows in the same 452 / phone window
 Hub.DefaultRow=3 -- Customize the first time (section 1, Behaviour).
 
 -- Pure: hatched items waiting to be used (one per pending receipt kind).
@@ -245,7 +247,7 @@ end
 
 function Hub:buildHub(body,W,H,phone)
  local petId=self:activePet();local pet=Pets.byId[petId]
- local pane=Kit.card(body,"PetPane",nil,{pad=16,seam=true})
+ local pane=Kit.card(body,"PetPane",nil,{pad=16,seam=not phone}) -- QA v685 U4: the seam read as a clipped border on phones
  -- Slice F: bond pips with the pet's name (nil while bond data is not in the snapshot).
  local bond=BondPips.info(self.ctx.state and self.ctx.state.bond,petId)
  self.pips=nil
@@ -285,7 +287,11 @@ function Hub:buildHub(body,W,H,phone)
  for index,row in ipairs(Hub.Rows)do
   local P=Hub.RowPitch
   local x,y,w,h=368,84+(index-1)*P.regular,456,P.regularH
-  if phone then x,y,w,h=232,64+(index-1)*P.phone,W-20-232,P.phoneH end
+  if phone then
+   -- Four rows share the sheet window (H - 84) with 6 px gaps; never under 44 px.
+   local rh=math.clamp(math.floor((H-84-(#Hub.Rows-1)*6)/#Hub.Rows),44,P.phoneH)
+   x,y,w,h=232,64+(index-1)*(rh+6),W-20-232,rh
+  end
   -- T2: pressable row with a lip (4 px in the 16 px desktop gap, 3 px in the 9 px phone gap).
   local button,tileState=Kit.tile(body,"Row_"..row.id,{selectable=false,radius=if phone then 12 else 14,compact=phone,
    position=UDim2.fromOffset(x,y),size=UDim2.fromOffset(w,h)})
@@ -297,13 +303,13 @@ function Hub:buildHub(body,W,H,phone)
   local name,line,status
   local s=Hub.status(row.id,ctx)
   if phone then
-   name=txt(button,"Strong",row.name,"text",tx,10,w-tx-160,22,{TextSize=16})
-   line=txt(button,"Small",row.line,"soft",tx,34,w-tx-170,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+   name=txt(button,"Strong",row.name,"text",tx,h/2-22,w-tx-160,22,{TextSize=16})
+   line=txt(button,"Small",row.line,"soft",tx,h/2+2,w-tx-170,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
    status=txt(button,"Label",s.text,s.tone,w-190,0,150,h,{Name="Status",TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
   else
-   name=txt(button,"Heading",row.name,"text",tx,32,w-tx-56,28,{TextSize=22})
-   line=txt(button,"Body",row.line,"soft",tx,62,w-tx-56,22,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
-   status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 14 else 0),90,w-tx-70,18,{Name="Status",TextSize=12})
+   name=txt(button,"Heading",row.name,"text",tx,h/2-38,w-tx-56,28,{TextSize=22})
+   line=txt(button,"Body",row.line,"soft",tx,h/2-8,w-tx-56,22,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
+   status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 14 else 0),h/2+20,w-tx-70,18,{Name="Status",TextSize=12})
   end
   Kit.paint(status,"TextColor3",function()return colorOf(s.tone)end)
   if row.id=="pets"then Kit.fixedText(status)end -- the pet's name (stays as named)
@@ -313,7 +319,7 @@ function Hub:buildHub(body,W,H,phone)
    if phone then
     local tw=TextService:GetTextSize(status.Text,12,Enum.Font.BuilderSansBold,Vector2.new(500,30)).X
     dot.Position=UDim2.fromOffset(w-40-tw-14,h/2-4)
-   else dot.Position=UDim2.fromOffset(tx,95)end
+   else dot.Position=UDim2.fromOffset(tx,h/2+25)end
   end
   chevron(button,w-(if phone then 26 else 36),h/2,if phone then 16 else 20)
   self.rows[index]={id=row.id,button=button,stroke=stroke,disc=d,icon=icon,name=name,line=line,status=status,dot=dot}
@@ -331,7 +337,7 @@ function Hub:buildSelector(body,W,H,phone)
   pw,ph,px,py=328,452,24,84;gx,gy,gw,gh=368,84,456,452;cols=2;gap=12;cardH=96;cardW=math.floor((gw-6-gap)/2)
  end
  self.cols=cols
- local pane=Kit.card(body,"PetPane",nil,{pad=16,seam=true});pane.Position=UDim2.fromOffset(px,py);pane.Size=UDim2.fromOffset(pw,ph)
+ local pane=Kit.card(body,"PetPane",nil,{pad=16,seam=not phone});pane.Position=UDim2.fromOffset(px,py);pane.Size=UDim2.fromOffset(pw,ph)
  local pad=if phone then 12 else 16
  local actionH=if phone then 44 else 56
  local wellH=math.max(60,ph-pad*2-actionH-(if phone then 56 else 92))

@@ -24,8 +24,8 @@ Source: `notes.md` (copy of `obsidian-spencer/roblox qa pass nov 14 v2.md`) and 
 
 1. **DONE (unpublished).** **(225459) The notification pill** ("✓ Machines") next to Roblox's top-left buttons isn't vertically centred with them. Align it to the Roblox top bar's centre line.
 2. **(225543) The Pocket menu** (six tiles) is too empty. Make it more exciting and filled out: tile art and illustrations, a live preview (for example the egg, the deck, the pet), progress chips, or a featured "this week" tile.
-3. **(225611) Hatch eggs.** The inner panel's borders are still clipped: the top-left corner and the right edge of the preview frame. The left list also cuts off "Get Stars" at the bottom.
-4. **(225929) Companions.**
+3. **DONE (unpublished).** **(225611) Hatch eggs.** The inner panel's borders are still clipped: the top-left corner and the right edge of the preview frame. The left list also cuts off "Get Stars" at the bottom.
+4. **DONE (unpublished).** **(225929) Companions.**
    - The pet preview on the left is clipped by its inner panel at some points.
    - Should Toys move to their own tab in Companions? They're currently inside "Customize: Hue, charm, materials and toys". **Recommendation: yes, a fourth row, "Toys".**
 

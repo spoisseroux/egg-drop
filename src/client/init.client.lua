@@ -1181,11 +1181,11 @@ do
   open=function(rowId,petId)
    petId=petId or board:GetAttribute("CompanionId")
    if rowId=="wardrobe"then return clientUI.openWardrobe and clientUI.openWardrobe(petId)or false end
-   if rowId=="customize"then
+   if rowId=="customize"or rowId=="toys"then
     clientUI.hub:close("customize")
     -- QA Q2.2: Customize slides in from the right, as the Pets page does.
     clientUI.hueView.slideFrom=Kit.SlideOffset
-    local opened=clientUI.openHue("palette",petId,"hub");clientUI.hueView.slideFrom=nil
+    local opened=clientUI.openHue(if rowId=="toys"then "toys"else "palette",petId,"hub");clientUI.hueView.slideFrom=nil
     if opened then return true end
     clientUI.openHub();return false
    end

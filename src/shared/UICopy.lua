@@ -87,7 +87,7 @@ local Table={
  -- `solo` lines are the no-pet versions (fresh save).
  quests={allDone="All done. {pet} is impressed.",allDoneSolo="All done for today."},
  wardrobe={empty="Nothing to wear yet. {pet} doesn't mind.",emptySolo="Nothing to wear yet.",emptySlot="Nothing for this slot yet."},
- companions={wearing={none="Nothing yet"}},
+ companions={wearing={none="Nothing yet"},toys={name="Toys",line="Something to carry and chase"}},
  -- QA Q2.7: petting pays +1 Star, five times a day.
  pet={star="+1 ★",capped="{pet}'s had plenty of pets today",cappedSolo="Plenty of pets today"},
  -- Play-forever F2: collection book, stamp card, restricted eggs.
