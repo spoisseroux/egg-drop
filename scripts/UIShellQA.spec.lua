@@ -84,7 +84,7 @@ return function(client,parent)
    Kit.shadeClose(owner)
    local How=require(client.HowItWorks)
    for _,id in ipairs(How.Order)do
-    local cards=How.cards(id);assert(#cards>=2 and #cards<=3,id.." has 2 or 3 cards")
+    local cards=How.cards(id);assert(#cards>=2 and #cards<=4,id.." has 2 to 4 cards")
     for _,card in ipairs(cards)do assert(card.title~=""and not string.find(card.title,"r3.",1,true)and card.line~="",id.." copy")end
    end
    assert(Kit.helpIdFor({tint="hatch"})=="hatch"and Kit.helpIdFor({tint="book"})=="book"and Kit.helpIdFor({tint=Kit.Sticker.cream})==nil

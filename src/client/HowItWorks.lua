@@ -1,6 +1,6 @@
 -- "How it works" cards (QA 2026-11-13 v2, R3.8). Every machine screen's header
--- carries a ? circle (Kit.header, from the screen's tint family) that opens two or
--- three short illustrated cards for that machine, side by side, in the house voice
+-- carries a ? circle (Kit.header, from the screen's tint family) that opens two to
+-- four short illustrated cards for that machine, side by side, in the house voice
 -- (UICopy `r3.help`). Replayable any time; nothing is saved. The stamp card is
 -- explained on the Quests set (what a stamp is, one a day, what a full card gives),
 -- with a live mini stamp card as its picture.
@@ -30,7 +30,9 @@ How.Sets=table.freeze({
  style=table.freeze({tint="style",cards=table.freeze({
   table.freeze({key="a",icon="faceplate"}),table.freeze({key="b",icon="pattern"}),table.freeze({key="c",icon="ball"})})}),
  companions=table.freeze({tint="companions",cards=table.freeze({
-  table.freeze({key="a",icon="paw"}),table.freeze({key="b",icon="shirt"}),table.freeze({key="c",icon="wand"})})}),
+  table.freeze({key="a",icon="paw"}),table.freeze({key="b",icon="shirt"}),table.freeze({key="c",icon="wand"}),
+  -- QA v735 H4: where the things Customize uses come from.
+  table.freeze({key="d",icon="egg"})})}),
  quests=table.freeze({tint="quests",cards=table.freeze({
   table.freeze({key="a",icon="quests"}),table.freeze({key="b",art="stamps"}),table.freeze({key="c",icon="trophy"})})}),
  book=table.freeze({tint="book",cards=table.freeze({
@@ -70,7 +72,7 @@ function How.layout(W,H,cards)
  local compact=Kit.compactRule(W,H)
  local n=math.max(1,#cards);local columns=if W<600 and H>420 then 1 else n
  local pad=if compact then 16 else 24;local gap=if compact then 10 else 16
- local panelW=math.floor(math.min(W-(if compact then 24 else 48),if n<=2 then 640 else 820))
+ local panelW=math.floor(math.min(W-(if compact then 24 else 48),if n<=2 then 640 elseif n==3 then 820 else 1000))
  local cardW=math.floor((panelW-pad*2-gap*(columns-1))/columns)
  local cardPad=if compact then 12 else 16;local inner=cardW-cardPad*2
  local titleSize=if compact then 15 else 18;local lineSize=if compact then 13 else 15
