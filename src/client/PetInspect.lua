@@ -126,7 +126,7 @@ function Inspect.new(options)
   if input.UserInputType~=Enum.UserInputType.MouseButton1 then return end
   local at=UserInputService:GetMouseLocation();tap(at.X,at.Y,processed)
  end)
- local remote=options.remote or ReplicatedStorage:WaitForChild("Remotes"):FindFirstChild("PetHello")
+ local remote=options.remote or ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("PetHello",5)
  self.remote=remote
  if remote then watch(remote.OnClientEvent,function(result)self:onReply(result)end)end
  watch(GuiService.MenuOpened,function()self:close("menu")end)
