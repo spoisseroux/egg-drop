@@ -81,3 +81,25 @@ Approved: "those sounds sound good and the hatch animations look good." Still to
 - R2. **Exciting item previews.** On the item reveal and in the item previews, show Material and Toy results as a **rotating 3D model** like the Bear: the toy itself, and for finishes the Bear (or an egg) wearing the finish. Use a lit, coloured backdrop instead of the flat slate grey.
 - R3. **Pet reveal headline.** At the tip of the slanted name/headline box there's a disconnected clear block (see `shots/10-slant-tip.png`). Clean it up so the slant is one continuous shape.
 - R4. **Super smooth, satisfying transitions** into and out of the hatch screens (pet and items): no pops, a matched dim, easing, and a quick, polished exit back to the menu or garden.
+
+## Spencer, 2026-11-15 ~06:00 (added to the 4am batch)
+
+- R5. **Pet reveal lighting.** The Bear looks "a bit creepy" under the spotlight (`shots/12-reveal-lighting.png`). Make it more unlit and glowy, like the Bear in the garden: a soft emissive or flat-lit look with fewer dark shadows. Have the Bear **wave** on the reveal screen.
+- R6. **Inspect other players' pets** (v1; scope `artifacts/pet-social-scope-2026-11-14/VISITOR-PET-SCOPE.md`).
+  - **Layout:** a profile card.
+    - Left: a live, spinnable 3D preview of their pet in its real appearance.
+    - Right: a name slot on top, then a grid of every wearable slot showing the equipped item, or empty.
+    - The name slot shows the species ("Bear") until Names ships in v2.
+    - Also show bond level, owner name, and the charm, finish and toy.
+  - **Say hello button:** the pet glances over and waves. The owner can turn greetings off in Settings.
+  - **Access:** inspect within 12 studs by tap, click or controller.
+  - **Read-only:** no rewards; nobody can change someone else's pet.
+- R7. **Pocket Deck toy.** A tiny Pocket Deck handheld as a pet toy, in the Toy Egg pool as pool 3 (keep pool 2 and sort).
+- R8. **Pets always hold their equipped toy:** in their hands while idling or walking, put down only for play beats that need it. Tune it per toy.
+- R9. **Pets sit for longer:** raise PetIdleBeats SitHoldMin, roughly double it.
+- R10. **Daily stamp on Hatch eggs.** The stamp card moved to Quests in QA v2 (R3.8) and stays there. Add a small stamp chip on the Hatch eggs header (today ✓, n/7) that opens Quests, so stamps are visible where you spend.
+- R11. **Store icon.**
+  - Layout: icon B (the garden Bear with the sparkler) holding the Pocket Deck toy, with a deck playing a round. Alternatively, B with a small Pocket Deck screen in the bottom-right corner.
+  - Rebuild with `scripts/store_listing/build_store_listing_art.py` from real Studio captures. No AI art.
+  - The wordmark follows the name decision. Keep "EGG DROP" unless Spencer picks another name.
+  - Refresh all thumbnails from the final build.
