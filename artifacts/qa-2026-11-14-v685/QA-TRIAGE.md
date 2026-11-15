@@ -14,7 +14,7 @@ Source: `notes.md` (copy of `obsidian-spencer/roblox qa pass nov 14 v2.md`) and 
 
 ## D: Pocket Deck on phone (top priority)
 
-1. **(225049) Deck sizing on first open.**
+1. **DONE (unpublished).** **(225049) Deck sizing on first open.**
    - The handheld is too big: the top edge and the POCKET DECK logo sit under Roblox's top-left buttons.
    - On first open the player camera is visible rotating behind the deck, and the camera sits inside the avatar's head.
 2. **(225303) The deck looks different on a later open.** A different scale or layout than the first open. **Use one layout every time.**
@@ -33,6 +33,7 @@ Source: `notes.md` (copy of `obsidian-spencer/roblox qa pass nov 14 v2.md`) and 
 
 1. **(225909) Tapping the pet** is still hard at some places and angles. Widen the pick: a screen-space radius check around the pet's projected position, plus a bigger hit capsule.
 2. **(230026) The lamppost** blocks the end of the first bridge. Move it off the path.
+   - **Not done (2026-11-14 night).** Found: it is lamp 3, light at Studio (-9, 9, 23), 2 studs off the bridge centre line (bridge z = 21). The post is baked into the world v7 chunk meshes, so it cannot move at runtime. The fix is the existing mechanism: add lamp 3 to `LAMP_MOVES` in `scripts/build_world_v7_chunks.py` (about +4 studs in z onto the grass), move `HollowWorldLayout.Lamps[3]` with it, rebuild and re-upload the chunks. Left alone because those build scripts and the .blend hold uncommitted path-collision work.
 
 ## Carried over from the handoff (open, not raised again)
 

@@ -69,7 +69,10 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  -- QA 2026-11-12: the glass starts under the Roblox controls (`top`), never behind them,
  -- and the shoulders are 18 px wider so the screen reads less wide.
  local SW=({124,112,98})[tier+1];local D=({88,80,68})[tier+1];local A=({92,82,70})[tier+1]
- local top=kh+2
+ -- QA v685 D1: the whole handheld sits below the Roblox top bar. The body's top edge is
+ -- 16 px above the glass, so the glass starts 18 px under the bar and the case edge and
+ -- the wordmark never pass behind Roblox's buttons.
+ local top=kh+18
  local g={s=1,compact=false,phone=true,mode="Compact",W=W,H=H,kx=kx,kh=kh,aspect=aspect,tier=tier,SW=SW,D=D,A=A,
   deck=rect(0,0,W,H),contentScale=1,pad=0}
  g.top=top

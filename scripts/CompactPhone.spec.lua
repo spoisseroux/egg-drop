@@ -122,7 +122,7 @@ return function(client,parent)
     -- Structure: 4 px of plate above and below the glass; every card and the board in the screen;
     -- the d-pad, MENU, back and A on the shoulders; the board H - 24 high at the sim aspect.
     -- QA 2026-11-12: the glass starts 2 px under the Roblox controls (kh 58).
-    assert(g.top==60 and g.glass.y==g.top and g.glass.y+g.glass.h==H-4 and g.glass.x==g.SW and g.glass.x+g.glass.w==W-g.SW,W.." glass rims")
+    assert(g.top==76 and g.glass.y==g.top and g.glass.y+g.glass.h==H-4 and g.glass.x==g.SW and g.glass.x+g.glass.w==W-g.SW,W.." glass rims")
     local screen={x=g.x0,y=g.y0,w=g.LW,h=g.LH}
     for _,name in ipairs({"board","score","chain","goals","quests","handle","next","eggs","difficulty","winPays","controls"})do
      if g[name]then assert(inside(g[name],screen),W.." "..name.." outside the screen")end
@@ -194,7 +194,7 @@ return function(client,parent)
     local g=Screen.resolve(size,aspect,{kx=116,kh=58})
     assert(g.phone and g.mode=="Compact",label.." stays the Compact path (not Small)")
     -- The LCD is the resolveCompact one: glass under the Roblox controls, board H - 80.
-    assert(g.glass.y==60 and g.glass.y+g.glass.h==H-4 and g.board.h==H-80,label.." LCD unchanged")
+    assert(g.glass.y==76 and g.glass.y+g.glass.h==H-4 and g.board.h==H-96,label.." LCD unchanged")
     -- Body: 4 px in from the sides, 16 above the glass, off the bottom edge; whole px.
     local b=g.body
     assert(b.x==4 and b.y==44 and b.w==W-8 and b.y+b.h>H,label.." body "..show(b))

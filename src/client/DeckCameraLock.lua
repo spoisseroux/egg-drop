@@ -58,6 +58,7 @@ end
 -- Puts the previous camera type back. A camera someone else has since taken over
 -- (its type is no longer the Scriptable we set) is left alone.
 function Lock:release()
+ self:unhold()
  if not self.frozen then return false end
  local camera,previous,home=self.camera,self.previous,self.home
  self.frozen,self.camera,self.previous,self.home=false,nil,nil,nil
@@ -78,6 +79,35 @@ function Lock:park(origin,hub)
  if not target then return false end
  self.home=camera.CFrame
  camera.CFrame=target
+ return true
+end
+
+-- QA v685 D1: on the first open the deck comes up before the avatar exists, so park() had
+-- nothing to aim from and the default camera scripts then took the camera back as the
+-- character spawned (a turning garden view that settled inside the avatar's head).
+-- hold() keeps the frozen camera Scriptable and parked on the avatar until it has been in
+-- place for HoldSeconds, then lets go of the per-frame work. origin() returns the avatar's
+-- root position, or nil while there is no avatar.
+Lock.HoldSeconds=2
+function Lock:unhold()
+ if self.holdConnection then self.holdConnection:Disconnect();self.holdConnection=nil end
+end
+function Lock:hold(origin,hub)
+ self:unhold()
+ local camera=self.camera
+ if not self.frozen or not camera then return false end
+ local parkedAt
+ self.holdConnection=game:GetService("RunService").RenderStepped:Connect(function()
+  if not self.frozen or self.camera~=camera then self:unhold();return end
+  if camera.CameraType~=Enum.CameraType.Scriptable then camera.CameraType=Enum.CameraType.Scriptable end
+  local at=origin()
+  local target=at and Lock.parkCFrame(at,hub,camera.CFrame.LookVector)
+  if not target then return end
+  if not self.home then self.home=camera.CFrame end
+  if(camera.CFrame.Position-target.Position).Magnitude>.05 then camera.CFrame=target end
+  parkedAt=parkedAt or os.clock()
+  if os.clock()-parkedAt>Lock.HoldSeconds then self:unhold()end
+ end)
  return true
 end
 

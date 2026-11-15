@@ -1180,6 +1180,8 @@ function Room:show(mode, animate)
 		-- (it used to sit behind the avatar against the invisible perimeter wall).
 		local _,parkRoot=self:cameraIdentity()
 		if parkRoot then self.boardCamera:park(parkRoot.Position,require(ReplicatedStorage.Shared.HollowWorldLayout).Hub)end
+		-- QA v685 D1: first open has no avatar yet; keep the camera ours until it is parked.
+		self.boardCamera:hold(function()local _,root=self:cameraIdentity();return root and root.Position end,require(ReplicatedStorage.Shared.HollowWorldLayout).Hub)
 	end
 	self.menuOpen = false
 	self:updateControls()
