@@ -755,7 +755,8 @@ function View:buildShopChrome(view)
  -- QA v685 R10: today's stamp at a glance (the card itself stays in Quests); opens Quests.
  self.stampChip=require(script.Parent.StampChip).new(self.shopHeader,{compact=phone,onOpen=function()if self.onQuests then self.onQuests()end end})
  -- Pane: egg well, name + price chip, description, odds, need line, primary button.
- local pane=Kit.card(body,"EggPane",nil,{pad=g.pad,seam=not phone}) -- QA v685 U3: the stitched seam read as a broken border on the phone pane;pane.Position=UDim2.fromOffset(g.pane.x,g.pane.y);pane.Size=UDim2.fromOffset(g.pane.w,g.pane.h)
+ -- QA v685 U3: the stitched seam read as a broken border on the phone pane.
+ local pane=Kit.card(body,"EggPane",nil,{pad=g.pad,seam=not phone});pane.Position=UDim2.fromOffset(g.pane.x,g.pane.y);pane.Size=UDim2.fromOffset(g.pane.w,g.pane.h)
  self.shopPane=pane
  local p=g.pad
  local wellR=if phone then {x=p,y=p,w=150,h=g.pane.h-p*2}else {x=p,y=p,w=g.pane.w-p*2,h=152}
