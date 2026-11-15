@@ -1,0 +1,56 @@
+{
+ "old": {
+  "nativeBytes": 325417,
+  "nativeSha256": "98a95633da48bdfb54af5a16311502a03f7f711d02814a4be83417e870890003",
+  "counts": {
+   "descendants": 202,
+   "meshParts": 170,
+   "surfaceAppearances": 30
+  }
+ },
+ "new": {
+  "nativeBytes": 325532,
+  "nativeSha256": "1ea0749f9516f957f1c589e757e2729d63bb11c2bd9cf835a8d61b68106e9970",
+  "counts": {
+   "descendants": 202,
+   "meshParts": 170,
+   "surfaceAppearances": 30
+  }
+ },
+ "meshIdChanged": {
+  "W7_LampOrbs__glow_warm": {
+   "from": "rbxassetid://116409916215490",
+   "to": "rbxassetid://111376211885197"
+  },
+  "W7_Stations__marble_smooth": {
+   "from": "rbxassetid://119204983359532",
+   "to": "rbxassetid://125972227162285"
+  },
+  "W7_Stations__palette": {
+   "from": "rbxassetid://116040760150477",
+   "to": "rbxassetid://71188520415952"
+  }
+ },
+ "collisionBufferChanged": {
+  "W7_Stations__marble_smooth": {
+   "from": {
+    "bytes": 2204,
+    "sha256": "63887a51afd06dad2fac3bc50e5dd9d767741c789cd3607e2be478a132a7d833"
+   },
+   "to": {
+    "bytes": 2241,
+    "sha256": "e638be162d70a58b8e8b40623bda98313f8cd9f00f505e5abe2c85886c61a601"
+   }
+  }
+ },
+ "protectedBuffersIdentical": 169,
+ "stagedXmlLinesChanged": [
+  1357,
+  1360,
+  1880,
+  1883,
+  1900,
+  1903
+ ],
+ "problems": []
+}

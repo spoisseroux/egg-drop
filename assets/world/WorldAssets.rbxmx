@@ -1354,10 +1354,10 @@
       <Item class="MeshPart" referent="W7P60">
         <Properties>
           <string name="Name">W7_LampOrbs__glow_warm</string>
-          <Content name="MeshId"><url>rbxassetid://116409916215490</url></Content>
+          <Content name="MeshId"><url>rbxassetid://111376211885197</url></Content>
           <Content name="TextureID"><url /></Content>
           <Vector3 name="Size"><X>140.6875</X><Y>1.48</Y><Z>96.9567</Z></Vector3>
-          <Vector3 name="InitialSize"><X>156.58397</X><Y>1.64721</Y><Z>107.91199</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2047.9639892578125</X><Y>21.543922424316406</Y><Z>1411.3824462890625</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-0.175</X><Y>9.037</Y><Z>3.985</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
@@ -1877,10 +1877,10 @@
       <Item class="MeshPart" referent="W7P83">
         <Properties>
           <string name="Name">W7_Stations__marble_smooth</string>
-          <Content name="MeshId"><url>rbxassetid://119204983359532</url></Content>
+          <Content name="MeshId"><url>rbxassetid://125972227162285</url></Content>
           <Content name="TextureID"><url>rbxassetid://105394164311789</url></Content>
           <Vector3 name="Size"><X>140.57</X><Y>4.427</Y><Z>96.89</Z></Vector3>
-          <Vector3 name="InitialSize"><X>1327.4166259765625</X><Y>41.80475997924805</Y><Z>914.9419555664062</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2046.2532958984375</X><Y>64.44331359863281</Y><Z>1410.410888671875</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-0.175</X><Y>6.2635</Y><Z>3.985</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1897,10 +1897,10 @@
       <Item class="MeshPart" referent="W7P84">
         <Properties>
           <string name="Name">W7_Stations__palette</string>
-          <Content name="MeshId"><url>rbxassetid://116040760150477</url></Content>
+          <Content name="MeshId"><url>rbxassetid://71188520415952</url></Content>
           <Content name="TextureID"><url>rbxassetid://99161618321835</url></Content>
           <Vector3 name="Size"><X>140.69</X><Y>7.39</Y><Z>96.8707</Z></Vector3>
-          <Vector3 name="InitialSize"><X>1328.5496826171875</X><Y>69.78453063964844</Y><Z>914.7593383789062</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2048.0</X><Y>107.57498168945312</Y><Z>1410.1295166015625</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-0.175</X><Y>8.105</Y><Z>3.985</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>

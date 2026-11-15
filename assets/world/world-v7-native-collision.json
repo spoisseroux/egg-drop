@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
   "nativePath": "assets/world/WorldAssetsNative.rbxm",
-  "nativeBytes": 325417,
-  "nativeSha256": "98a95633da48bdfb54af5a16311502a03f7f711d02814a4be83417e870890003",
-  "xmlSha256": "7804473c9d9c4e5d3539a4fb48fcf285890b24e7985b508028448e67d05263aa",
+  "nativeBytes": 325532,
+  "nativeSha256": "1ea0749f9516f957f1c589e757e2729d63bb11c2bd9cf835a8d61b68106e9970",
+  "xmlSha256": "e6a90c0603f8991b5648849cf143d180edc64ba916a5812e6fb9740f95d99ef5",
   "luaSha256": "a375dcbd69d62d7539ea057a87be342f2f2fb9161a887b8b36b47f68d87e7d3d",
   "inputs": {
-    "assets/world/world-v7-manifest.json": "952100767ffed1c99e55ea1f06422045a4e19d6298d8b82d38f2e3cefec6828d",
-    "assets/world/world-v7-walk.json": "872a161e73a38e6dbb93ac62f8013cf30e64a4836b4377ec25f8f9165b6c548b",
-    "assets/world/world-v7-studio-import.json": "33118e99282c80a573062b028b1493590b23433ad922a9855fbeded3c864ebe6",
+    "assets/world/world-v7-manifest.json": "9ad4b7af9abfd4df054ce053141ab54b4a35e92f86f4521b5d69af44011d6945",
+    "assets/world/world-v7-walk.json": "39386b5ed9496b43eae94c9be5981a6529f5229e28fe5cdae34c386262ef369c",
+    "assets/world/world-v7-studio-import.json": "70bdbc11688ea975f4e49c13c6cd89b79640f5e36c4a9989e34aa32f0001d046",
     "assets/world/world-v7-uploads.json": "2b1822bfb3e7583b922d462dadbff7688d0a3fa8ab66ecc72573d226f7579c9e",
     "assets/world/world-v7-collision.json": "51c36f34e45c9bf1649b903a7ce977e721d7469e890421d58bc34a821168e065",
     "assets/world/world-v7-collision-studio-import.json": "b9a0c8966a64aaab2b33062127b35a90e19fa1d6c64b73e1f5fb278807a31f44",
-    "assets/world/world-v7-pending.json": "7d4ff177f218087ac11f329ab65f8ebcc430e84d63b9c527fca7ea59f3c9603f",
+    "assets/world/world-v7-pending.json": "381c2c54bd8c000c82fc8db1484748d26a13d2c39fc98b9dd0d167caf1c7c24f",
     "assets/world/world-v7-palette.json": "7d00ea01fd910a4f2f99a8e83714dfc864996804ef5b264ce51514c4c86d77a9",
     "assets/world/world-dressing-manifest.json": "832ba41771a3e3c028d5042379ebcf0f220fac90f6c90591a06ff78c434f36b3",
     "assets/world/world-dressing-import.json": "10565b2ef1b558e59c56c0f16c3a9e735be188dbc9cd6ecd7890cf5df9dc3b92",
-    "assets/world/world-v7.fbx": "4ea2e02b002e94c8511449125237e36bdd6dce5e2c0b9fb1b3569f5e38fce214",
-    "assets/world/world-v7-declutter.fbx": "09aa885f05e0fb73be21379786403d33de26a82dfe0e388428c7e4c9e0c44e04",
+    "assets/world/world-v7.fbx": "8dbe44392dcad7e793833b136fd8edc8b08af7bf9c3417e0023686c86b3df995",
+    "assets/world/world-v7-declutter.fbx": "bc84ef09792224f3efe41a946e71a7bad3da98e30857f180d753b9fba59a3520",
     "assets/world/world-v7-collision.fbx": "3ebfb766d0d9fa0e5ee65b92a696dd756cd42e2e8a52a6e03d7d4ac807055ba8",
     "assets/world/world-dressing.fbx": "00bab0f2e37b7299f11593c056708e947b55329884fb9771c0416ceae09ad174",
     "assets/world/textures/palette-roblox.png": "702f605a8413c7f8228bd78bb9128ed05536fc756a624990963e98122bec4153"
@@ -352,8 +352,8 @@
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
     "W7_Stations__marble_smooth": {
-      "bytes": 2204,
-      "sha256": "63887a51afd06dad2fac3bc50e5dd9d767741c789cd3607e2be478a132a7d833"
+      "bytes": 2241,
+      "sha256": "e638be162d70a58b8e8b40623bda98313f8cd9f00f505e5abe2c85886c61a601"
     },
     "W7_Trunks__bark": {
       "bytes": 15323,
@@ -705,20 +705,21 @@
     }
   },
   "provenance": {
-    "source": "artifacts/world-overlaps-2026-11-14/WorldAssets-native-collision.rbxm",
-    "method": "Root Studio Server SerializationService.SerializeInstancesAsync current WorldAssets after native precise ApplyMesh rebuild",
+    "source": "artifacts/qa-2026-11-14-v685/w2-lamp/WorldAssetsNative-lamp3.rbxm",
+    "method": "Studio Edit SerializationService:SerializeInstancesAsync({ServerStorage.WorldAssets}) after ApplyMesh of the three lamp-3 parts (QA v685 W2)",
     "descendants": 202,
     "meshParts": 170,
     "surfaceAppearances": 30,
-    "coordinatorReportedRayComparison": {
-      "rays": 5184,
-      "nativeRoundtripHitMismatches": 0,
-      "nativeRoundtripMaxPositionDelta": 0,
-      "sourceOnlyHitMismatches": 4302,
-      "sourceOnlyMaxPositionDelta": 17.76,
-      "coverageLimitation": "Landmarks zero positive hits in original bbox grid; do not claim full mesh coverage"
-    },
-    "evidence": "artifacts/world-overlaps-2026-11-14/COLLISION-PORTABILITY-EVIDENCE.json"
+    "previousNativeSha256": "98a95633da48bdfb54af5a16311502a03f7f711d02814a4be83417e870890003",
+    "changedMeshParts": [
+      "W7_LampOrbs__glow_warm",
+      "W7_Stations__marble_smooth",
+      "W7_Stations__palette"
+    ],
+    "protectedBuffersIdentical": 169,
+    "uploadReadback": "artifacts/qa-2026-11-14-v685/w2-lamp/upload-readback.json",
+    "evidence": "artifacts/qa-2026-11-14-v685/w2-lamp/native-promotion.json",
+    "note": "Deserialized round trip of this export probed in Studio Edit: post hit 12/12 at Studio (-9, 28), 0/12 at the old spot (-9, 23), 0/11 rays blocked across the bridge mouth. 169 of 170 collision buffers byte-identical to the previous pack; only W7_Stations__marble_smooth (the post) changed. Place not saved by this step."
   },
-  "promotion": "Explicit root-coordinated native export checkpoint; validator never rewrites this manifest."
+  "promotion": "Explicit W2 lamp-3 promotion (2026-11-15, artifacts/qa-2026-11-14-v685/w2-lamp/promote_native.py); validator never rewrites this manifest."
 }
