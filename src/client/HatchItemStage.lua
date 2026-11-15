@@ -1,5 +1,5 @@
 -- Full-screen item reveal (QA v685 H2 / H3 / H5): Toy, Hue, Material and Feature eggs.
--- The screen dims, the egg wobbles in a rarity-coloured beam that builds, the shell bursts
+-- The screen dims to a dark stage, the egg wobbles in a rarity-coloured beam that builds, the shell bursts
 -- (flash, rings, rays, shards), the item pops onto a card that flies to its seat, the name
 -- slams in under a rarity banner, and the reveal ends on the host's own receipt actions.
 --   HatchItemStage.show(parent,{scene,kind,tier,...}) -> stage
@@ -26,8 +26,8 @@ local Stage={};Stage.__index=Stage
 
 -- ── Pure rules (specs cover these) ───────────────────────────────────────────
 Stage.BurstAt=Rarity.BurstAt;Stage.CardAt=1.06;Stage.SlideAt=1.26;Stage.SettleAfter=.50;Stage.ReducedFade=.15
-Stage.ShardLife=.95;Stage.RingLife=.50;Stage.EggScale=1.42;Stage.GlowDiscs=18
-Stage.Backdrop=Color3.fromHex("#06070B");Stage.Card=Color3.fromHex("#141823");Stage.Ink=Color3.fromHex("#0E0F12")
+Stage.ShardLife=.95;Stage.RingLife=.50;Stage.EggScale=1.42;Stage.GlowDiscs=40
+Stage.Dim=1;Stage.Backdrop=Color3.fromHex("#06070B");Stage.Card=Color3.fromHex("#141823");Stage.Ink=Color3.fromHex("#0E0F12")
 local function ramp(t,start,duration)return math.clamp((t-start)/duration,0,1)end
 local function smooth(a,b,t)local u=math.clamp((t-a)/(b-a),0,1);return u*u*(3-2*u)end
 local function backOut(x)local c1=1.70158;local c3=c1+1;return 1+c3*(x-1)^3+c1*(x-1)^2 end
@@ -93,9 +93,9 @@ function Stage.geometry(W,H)
  L.margin=if L.phone then 24 else math.floor(88*s)
  L.btnH=if L.phone then 48 else math.max(48,math.floor(72*s));L.gap=if L.phone then 10 else math.max(10,math.floor(16*s))
  L.btnText=if L.phone then 16 else math.max(16,math.floor(22*s))
- L.nameSize=if L.phone then math.max(24,38*s)else math.max(30,92*s)
- L.bannerSize=if L.phone then 12 else math.max(14,24*s)
- L.detailSize=if L.phone then 13 else math.max(14,24*s)
+ L.nameSize=if L.phone then math.max(24,38*s)else math.max(34,118*s)
+ L.bannerSize=if L.phone then 12 else math.max(14,28*s)
+ L.detailSize=if L.phone then 13 else math.max(14,28*s)
  L.preSize=if L.phone then 14 else math.max(16,26*s)
  if L.landscape then
   L.seat=math.floor(math.min(H*.64,W*.34,600))
@@ -145,6 +145,7 @@ function Stage.show(parent,options)
  if options.cover~=false then Kit.coverScreen(root)end
  self:build()
  self.reducedStart=self:reduced()
+ self.openedAt=os.clock()
  self.instant=options.instant==true
  if self.instant then self.age=Pose.ItemDuration end
  self.borrowToken=self.scene:borrow(self.seat)
@@ -396,8 +397,12 @@ function Stage:paint()
  local still=reduced or self.instant
  -- Idle path: only the slow turn and the twinkles move once settled.
  if self.staticDone and s.settled then self:paintIdle(s,still);return end
- local dim=math.min(1,math.max(clock,s.t)/.18)*(if reduced then s.fade else 1)
- self.root.BackgroundTransparency=1-.90*(if self.instant then 1 else dim)
+ -- The dim follows real time from the moment the stage opens (the egg may still be loading,
+ -- or waiting for its window).
+ local dim=if reduced then s.fade else math.min(1,math.max(os.clock()-self.openedAt,s.t)/.18)
+ -- The screen dims all the way to a dark stage (the pet reveal's is black too), so the
+ -- garden and the host's receipt card underneath never ghost through.
+ self.root.BackgroundTransparency=1-Stage.Dim*(if self.instant then 1 else dim)
  -- The showcase centre: the egg plays in the middle, then the card flies to its seat.
  local slide=if still then 1 else s.slide
  local shake=if still then 0 else s.shake*look.shake*math.max(.6,L.s)
@@ -514,8 +519,9 @@ function Stage:updateExternal(age,sample)
 end
 function Stage:step(dt)
  if self.destroyed then return end
- self.clock+=math.clamp(dt,0,.1)
- if not self:owned()then return end
+ -- Without its owner (a hidden screen, an unfocused window) nothing animates, but the frame
+ -- still follows the host's layout.
+ if self:owned()then self.clock+=math.clamp(dt,0,.1)end
  self:paint()
 end
 function Stage:getStats()

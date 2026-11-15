@@ -296,6 +296,9 @@ function Scene:render(sample)
  elseif self.item then self.item:pose(sample);self.minimum=self.item.minimum end
  self.shadow.Size=Vector3.new(.42+sample.hop,.002,.26+sample.hop*.65);self.shadow.Transparency=.60+sample.hop*1.4
  if self.item and self.item.contact then self.shadow.CFrame=CFrame.new(self.item.contact.X,.003,self.item.contact.Z)end
+ -- On a bare stage there is no floor pool: the pet stage draws its own shadow, and an item's
+ -- shadow (it sits where the item will land) only belongs once the shell has opened.
+ if self.bare and(self.heroHidden or sample.shellAlpha>.02)then self.shadow.Transparency=1 end
  local egg=CFrame.Angles(sample.rock*.25,0,sample.rock)
  for name,e in pairs(self.parts)do
   local p,spec=e.part,e.spec;local shellScale=sample.shellScale or 1

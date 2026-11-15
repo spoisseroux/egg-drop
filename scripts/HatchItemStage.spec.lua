@@ -125,6 +125,8 @@ return function(client,parent)
    assert(Kit.buttonState(primary.node).label.Text=="Give to Bear"and not stage:activate(secondary)and #record.acts==2,"a disabled host button stays disabled")
    keep.Visible=false;task.wait();stage:step(1/30);assert(not secondary.node.Visible)
    assert(stage.close.Visible);stage.options.onClose();assert(record.closes==1)
+   -- The dark stage hides the host's receipt card underneath.
+   assert(Stage.Dim==1 and stage.root.BackgroundTransparency==0 and stage.root.Active,"the receipt card shows through")
    -- The press that skipped never also presses an action.
    local draining=true
    local guarded,guardedRecord=open(812,354,{consumeSkipInput=function()return draining end});at(guarded,3.1)

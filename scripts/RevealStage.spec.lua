@@ -251,6 +251,15 @@ return function(client,parent)
    local pressed=0;local draining=true
    stage=open({consumeSkipInput=function()return draining end,onButton=function()pressed+=1 end});stage:settle(true)
    assert(not stage:confirm()and pressed==0);draining=false;assert(stage:confirm()and pressed==1)
+   -- An unfocused window: the hatch clock has not started, so the stage waits on the egg
+   -- and plays in step once its owner is back (never a silent settled screen).
+   local owned=false
+   stage=open({owns=function()return owned end});stage:step(.1);stage:step(.1)
+   assert(not stage:isSettled()and not stage.lead.done and stage.lead.seat.Visible and stage.age==0,"an unfocused hatch must wait on the egg")
+   owned=true;for i=1,5 do stage:updateExternal(i*.2,{inputLocked=true})end;stage:step(.1);assert(not stage.lead.done and stage.age==0)
+   stage:updateExternal(1.06,{inputLocked=true});stage:step(.1);assert(stage.lead.done and not stage:isSettled()and near(stage.age,.1,1e-6))
+   -- Losing the owner once the hatch is running lands on the settled frame.
+   owned=false;stage:step(.1);assert(stage:isSettled())
    -- A reopen and Reduced Motion have no lead-in.
    stage=open({instant=true});assert(stage.lead.done and not stage.lead.seat.Visible and stage:isSettled())
    stage=open({reduced=function()return true end,fresh=true});stage:step(.05);assert(stage.lead.done and not stage.lead.seat.Visible)

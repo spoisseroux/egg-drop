@@ -931,6 +931,11 @@ end
 function Stage:step(dt)
  if self.destroyed then return end
  if not self:owned()then
+  -- The hatch has not started yet (its window is unfocused, so the hatch clock is waiting):
+  -- hold on the egg. The lead-in and the entrance play together when the owner returns.
+  if self.lead and not self.lead.done and self.lead.age<=0 then
+   self.clock+=math.clamp(dt,0,.1);self:paint();return
+  end
   if not self:isSettled()then self:settle(true)end
   -- An unfocused window still fades the loaded pet in on the settled frame (no motion).
   self.clock+=math.clamp(dt,0,.1);if not self.staticDone then self:paint()end
