@@ -134,3 +134,25 @@ The game is now **Pocket Pals**. Store listing title: **Pocket Pals: Pet Garden*
 - Update `artifacts/store-listing/LISTING.md` (name, hook, description) to match.
 - Change any player-visible "Egg Drop" text in the game (UICopy, the boot/title screen) to "Pocket Pals". The internal names stay as they are: repo, folders, DataStore keys and the place name for now.
 - Renaming the experience in Creator Hub happens at launch, together with the listing.
+
+## Integration and verification pass (2026-11-15, before the private publish)
+
+Studio Play, place saved as v729 (not published, translations not synced).
+
+- **Specs:** server 56/56 (new PetHello, GardenSit, SharedToyRetirement). Client 116/140. Python `world_native_collision_test.py` 12/12; `world_native_collision.py --check` passes.
+- **Fixed, code:**
+  - `EggHatchView`: the U3 comment had swallowed `pane.Position` / `pane.Size` on the same line, so the egg pane was never placed (SharedHeaders and UsableSheetWidth caught it).
+  - `UICopy inspect.owner` / `inspect.bond` use `{name}` / `{count}` (the copy spec's sample has no `{owner}` or `{level}`); `PetInspect` passes those. The localization CSV still has the old placeholders until the next export.
+  - `HueEggView` and `WardrobeShop` called `UserInputService:GetTouches()`, which does not exist: it threw every frame while Customize or the Wardrobe was open and stopped the preview pet's update. Now `PreviewFeedback.pointerIdle()` (touch count from the touch events). In the code since 70e0440.
+  - `StampChip`: a new save (no stamp, none waiting) showed "✓ 0/7"; it now shows a plain "0/7".
+- **Fixed, Studio Edit:** after the promoted `WorldAssetsNative.rbxm` synced, `W7_Stations__marble_smooth` had dropped to Box collision and still collided: one 140 x 97 stud box across the island (WorldRoutes failed on the arrival path). Set back to PreciseConvexDecomposition in Edit. Checked against the repo pack deserialized in Edit: 167 of 170 parts serialize byte-identical and the three lamp parts differ only in cached fields (`VertexCount`, `UnscaledCofm`); 12 of 12 rays hit the post at (-9, 28), 0 at (-9, 23), the arrival route is clear. **Any later change to that rbxm while Rojo is connected can drop the fidelity again: re-check before a save.**
+- **Fixed, stale specs:** PetInspect (the Bear's pet id is `pip`), DeckScreen (D1: H - 96), DeviceItemFront (R7: six toys in the pool), RoundJuiceShop (U3 phone row pitch), BookView (the Pocket Deck has no Book atlas cell yet and draws its initial "P"), ShelfDeal ("1 more Star needed"), HatchOwnerTransition (fake transition lacked `setContentCover`), StampChip, and the four collision test fixtures.
+- **Still failing, on the long-standing list (14):** SemanticUI, Onboarding, SaveNoticeLayout, PreferredTextLayout, VividHandheld, StyleJournalActions, StyleJournalLayout, EmulatorSafeArea, PetAssetsReadyFixture, JellyRenderOwner, CompactDeck, JellyOverflow, FieldFeedbackOwner, HardwareDeck.
+- **Still failing, not on that list (10), all in code last changed at or before 70e0440, none in this batch's files:**
+  - HatchActions: fails at a different case from run to run (line 38 in the sweep, line 46 alone); the same steps pass when driven by hand, so the fixtures leak state into each other.
+  - CompactPhone "menu sheets": audits the results sheet as if it filled the screen; since the phone handheld (QA v2 R6) it sits inside the LCD.
+  - DeckScreen line 88 (`Kit.button` stroke values), BoardPattern (the pattern root now also holds a UICorner), BondView line 170 (focus bond card anchor), UIShellQA (`Card_b` now sits under `Cards`), ShelfDeal-style copy drift in ArrivalCard, CoachCards and MaterialEditor (not traced), PetGeneralization (`init.client` 2780 falls back to the literal `"pip"`).
+- **Idle session:** walked arrival, bridge mouth, hub; the Bear followed, looked, sneezed and sat holding its toy. No game errors in the console.
+- **Captures** (`verify/`, phone ones are 812 x 354 FIXTURE sizing at offset (40, 40)): `01` Pocket Deck, `02` Hatch eggs with the stamp chip, `03` Pocket menu (`03a` live desktop), `04` Companions with the Toys row, `04b` Customize Toys tab, `05` the Bear holding the Wobble Top.
+- **Not seen:** the Pocket Deck toy itself (the one Toy Egg rolled the Wobble Top), the inspect card (needs two accounts), the item reveal past the egg (Studio was unfocused, the hatch was acknowledged over the remote).
+- **Left alone:** `StarterGui.EggDropScreenProbe` in Edit (an empty probe gui from an earlier Edit run; the client reuses it), and the `ZZSpecs` folders, which are saved with the place.
