@@ -120,7 +120,7 @@ function Picker:build(view)
  self.phone=view~=nil
  if view then return self:buildCompact(view)end
  local root=self.overlay.content
- Kit.fixedText(txt(root,"Label","EGG DROP","dim",24,16,200,16)) -- the game's name
+ Kit.fixedText(txt(root,"Label","POCKET PALS","dim",24,16,200,16)) -- the game's name
  txt(root,"Title","Pick a difficulty","text",24,34,400,34)
  self.wallet=Kit.wallet(root,40);self.wallet.root.AnchorPoint=Vector2.new(1,0);self.wallet.root.Position=UDim2.fromOffset(824,24)
  for index,key in ipairs(Config.HeatOrder)do

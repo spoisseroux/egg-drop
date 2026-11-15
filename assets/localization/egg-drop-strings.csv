@@ -100,6 +100,8 @@ ui.coach.style.line,"Faceplates, backgrounds and balls. Looks only.",,First-roun
 ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.name, ui.r3.help.style.title, ui.r5.station.Customize.name"
 ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
 ui.coach.welcome.title,Hatch your first friend,,First-round coaching; also ui.r1.welcomePill.mid
+ui.companions.toys.line,Something to carry and chase,,Companions screen
+ui.companions.toys.name,Toys,,Companions screen; also catalog.BookCatalog.Pages.toys.name
 ui.companions.wearing.none,Nothing yet,,Companions screen
 ui.e2.arrived.line,{pet} came to stay in your garden.,,Menu text; e.g. Bear came to stay in your garden.
 ui.e2.arrived.sayHi,Say hi,,Menu text
@@ -138,6 +140,48 @@ ui.hatch.next.done,All collected,,Hatch eggs screen
 ui.hatch.next.label,Next item,,Hatch eggs screen
 ui.hatch.next.line,Next: {item},,Hatch eggs screen; e.g. Next: Squeaky Bone
 ui.hatch.promise,No surprises. The odds never change.,,Hatch eggs screen
+ui.hatch.reveal.banner,{tier} {kind},,Hatch eggs screen; e.g. {tier} {kind}
+ui.hatch.reveal.close,Close,,"Hatch eggs screen; also ui.inspect.close, ui.r3.help.close"
+ui.hatch.reveal.describe.feature.claws,Tiny and fierce. Mostly used for back scratches.,,Hatch eggs screen
+ui.hatch.reveal.describe.feature.horns,Two small buds. Big plans.,,Hatch eggs screen
+ui.hatch.reveal.describe.feature.wings,Folded neat as a letter. They flutter when excited.,,Hatch eggs screen
+ui.hatch.reveal.describe.hue.citrus,"Sunshine, squeezed. Mind the pips.",,Hatch eggs screen
+ui.hatch.reveal.describe.hue.iris,Dusk in a jar. Smells faintly of plums.,,Hatch eggs screen
+ui.hatch.reveal.describe.hue.reset,Rinses a pet back to its very first colour.,,Hatch eggs screen
+ui.hatch.reveal.describe.hue.rose,Pink as a cheek after a compliment.,,Hatch eggs screen
+ui.hatch.reveal.describe.hue.tide,"A jar of sea, caught on a calm day.",,Hatch eggs screen
+ui.hatch.reveal.describe.material.gloss,Shiny enough to check your hair in. Pets check often.,,Hatch eggs screen
+ui.hatch.reveal.describe.material.jelly,"See-through and wobbly. Do not eat, however tempting.",,Hatch eggs screen
+ui.hatch.reveal.describe.material.matte,Soft as chalk and twice as huggable.,,Hatch eggs screen
+ui.hatch.reveal.describe.material.metal,Clinks politely. Surprisingly good at cuddles.,,Hatch eggs screen
+ui.hatch.reveal.describe.material.pearl_edge,"A pearly shimmer, borrowed from a very kind oyster.",,Hatch eggs screen
+ui.hatch.reveal.describe.material.speckle_satin,"Freckled like a robin's egg, smooth as a ribbon.",,Hatch eggs screen
+ui.hatch.reveal.describe.other.feature,Something new to grow. Give it a little time.,,Hatch eggs screen
+ui.hatch.reveal.describe.other.hue,"A new colour, waiting for the right pet.",,Hatch eggs screen
+ui.hatch.reveal.describe.other.item,A little something for your garden.,,Hatch eggs screen
+ui.hatch.reveal.describe.other.material,A fresh new coat. Your pet feels very fancy.,,Hatch eggs screen
+ui.hatch.reveal.describe.other.toy,"Something new to carry, chase and lose under things.",,Hatch eggs screen
+ui.hatch.reveal.describe.toy.ball,"Round, bouncy, and never where you left it.",,Hatch eggs screen
+ui.hatch.reveal.describe.toy.bone,Too good to bury. Carried everywhere instead.,,Hatch eggs screen
+ui.hatch.reveal.describe.toy.pocket_deck,A tiny deck for tiny paws. High scores pending.,,Hatch eggs screen
+ui.hatch.reveal.describe.toy.sparkler,Fizzes like a tiny birthday. Every day is one now.,,Hatch eggs screen
+ui.hatch.reveal.describe.toy.squeaky_carrot,Squeaks when squeezed. Does not taste like carrot.,,Hatch eggs screen
+ui.hatch.reveal.describe.toy.wobble_top,"Spins, wobbles, never quite falls. A small miracle.",,Hatch eggs screen
+ui.hatch.reveal.fresh,NEW {kind},,Hatch eggs screen; e.g. NEW {kind}
+ui.hatch.reveal.kind.feature,FEATURE,,Hatch eggs screen
+ui.hatch.reveal.kind.hue,COLOUR JAR,,Hatch eggs screen
+ui.hatch.reveal.kind.item,ITEM,,Hatch eggs screen
+ui.hatch.reveal.kind.material,FINISH,,Hatch eggs screen
+ui.hatch.reveal.kind.toy,TOY,,Hatch eggs screen
+ui.hatch.reveal.tier.Common,COMMON,,Hatch eggs screen
+ui.hatch.reveal.tier.Rare,RARE,,Hatch eggs screen
+ui.hatch.reveal.tier.Uncommon,UNCOMMON,,Hatch eggs screen
+ui.hub.chip.book,{percent}% found,,Pocket menu (machine hub); e.g. {percent}% found
+ui.hub.chip.outfits,{owned}/{total} outfits,,Pocket menu (machine hub); e.g. 3/12 outfits
+ui.hub.chip.quests,{done}/{total} today,,Pocket menu (machine hub); e.g. {done}/12 today
+ui.hub.chip.stamp,Stamp {count}/{total},,Pocket menu (machine hub); e.g. Stamp 3/12
+ui.hub.chip.styles,{owned}/{total} styles,,Pocket menu (machine hub); e.g. 3/12 styles
+ui.hub.chip.toys,{owned}/{total} toys,,Pocket menu (machine hub); e.g. 3/12 toys
 ui.hub.promise,"Every machine, one tap away.",,Pocket menu (machine hub)
 ui.hub.status.locked,LOCKED,,Pocket menu (machine hub)
 ui.hub.status.stamp,STAMP READY,,Pocket menu (machine hub)
@@ -149,12 +193,31 @@ ui.hub.tile.settings.line,"Sound, music and motion",,Pocket menu (machine hub)
 ui.hub.tile.settings.name,Settings,,"Pocket menu (machine hub); also ui.pause.settings, ui.report.eyebrow"
 ui.hub.tile.style.line,"Faceplates, backgrounds and balls",,Pocket menu (machine hub); also ui.r5.station.Customize.line
 ui.hub.tile.style.short,Style,,Pocket menu (machine hub)
+ui.hub.week,This week,,Pocket menu (machine hub)
 ui.input.action.browse,Browse,,Menu text
 ui.input.action.confirm,Pick,,Menu text
 ui.input.action.tab,Switch tab,,Menu text
 ui.input.legend.gamepad,"D-pad moves, A picks, B goes back, LB and RB switch tabs.",,Menu text
 ui.input.legend.keyboard,"Arrows or WASD move, Enter picks, Backspace goes back, Q and E switch tabs.",,Menu text
 ui.input.legend.touch,Tap a card to pick it. The back arrow closes the screen.,,Menu text
+ui.inspect.bond,Bond level {level},,Menu text; e.g. Bond level {level}
+ui.inspect.busy,Playing right now,,Menu text
+ui.inspect.closer,Come closer,,Menu text
+ui.inspect.empty,Empty,,Menu text
+ui.inspect.gone,Pet moved on,,Menu text
+ui.inspect.hello,Say hello,,Menu text
+ui.inspect.hidden,Hidden,,Menu text
+ui.inspect.off,Greetings off,,Menu text
+ui.inspect.owner,{owner}'s pet,,Menu text; e.g. {owner}'s pet
+ui.inspect.prompt,Inspect,,Menu text
+ui.inspect.sent,Hello!,,Menu text
+ui.inspect.setting.off,Pet greetings: Off,,Menu text
+ui.inspect.setting.on,Pet greetings: On,,Menu text
+ui.inspect.slot.charm,Charm,,Menu text
+ui.inspect.slot.finish,Finish,,Menu text
+ui.inspect.slot.toy,Toy,,Menu text
+ui.inspect.spin,Drag to turn,,Menu text
+ui.inspect.wait,In a moment,,Menu text
 ui.items.note.empty,You have no items,,Round item notes
 ui.items.note.full,Belt's full. Use one first.,,Round item notes
 ui.menu.subtitle.empty,Round not started,,Pause menu
@@ -208,7 +271,6 @@ ui.r3.help.book.b.line,"Fill a page to 25, 50, 75 and 100% to claim Stars. Each 
 ui.r3.help.book.b.title,Milestones,,Menu text
 ui.r3.help.book.c.line,"Your best rounds and big totals, kept for good.",,Menu text
 ui.r3.help.button,How it works,,Menu text; also ui.r3.help.eyebrow
-ui.r3.help.close,Close,,Menu text
 ui.r3.help.companions.a.line,"Hearts show bond. Petting, rounds and Play dates grow it. Level up to unlock tricks.",,Menu text
 ui.r3.help.companions.a.title,Bond hearts,,Menu text
 ui.r3.help.companions.b.line,"Hats and bits to wear, bought with Stars. Looks only.",,Menu text
@@ -273,7 +335,7 @@ ui.r5.station.Eggs.line,Spend Stars on new eggs,,Menu text
 ui.r5.station.Journal.line,Dress up and care for your pets,,Menu text
 ui.r5.station.Park.line,Pets play here. Play dates pay Stars,,Menu text
 ui.report.about,What's it about?,,Bug report sheet
-ui.report.category.deck,Pocket Deck,,Bug report sheet
+ui.report.category.deck,Pocket Deck,,"Bug report sheet; also catalog.ToyCatalog.ById.pocket_deck.name, catalog.BookCatalog.Pages.toys.items.3.name"
 ui.report.category.menus,Menus,,Bug report sheet
 ui.report.category.other,Other,,Bug report sheet
 ui.report.category.pets,Pets,,Bug report sheet; also catalog.BookCatalog.Pages.pets.name
@@ -338,6 +400,9 @@ ui.stamp.landed,+{reward} Stars,,Stamp card; e.g. +5 Stars
 ui.stamp.next,Today's stamp: ★ {reward},,Stamp card; e.g. Today's stamp: ★ 5
 ui.stamp.promise,"No streaks. Miss a day, lose nothing.",,Stamp card
 ui.stamp.tomorrow,Next stamp tomorrow: ★ {reward},,Stamp card; e.g. Next stamp tomorrow: ★ 5
+ui.stampChip.done,✓ {count}/{total},,Menu text; e.g. ✓ 3/12
+ui.stampChip.label,Daily stamp,,Menu text
+ui.stampChip.open,{count}/{total},,Menu text; e.g. 3/12
 ui.style.balls.pitch,"Same sizes, same rules. Only cuter.",,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.balls,Just for looks. Never an advantage.,,Deck style screen
@@ -420,18 +485,18 @@ catalog.DeckThemes.ById.tidepool.name,Tidepool,,"Catalogue DeckThemes (name); al
 catalog.DeckBackgrounds.ById.lantern.name,Lantern,,Catalogue DeckBackgrounds (name)
 catalog.DeckBackgrounds.ById.moonpond.name,Moonpond,,Catalogue DeckBackgrounds (name)
 catalog.DeckStickers.ById.none.name,Blank,,Catalogue DeckStickers (name)
-catalog.MaterialCatalog.ById.gloss.name,Gloss,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.6.name
-catalog.MaterialCatalog.ById.jelly.name,Jelly,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name
-catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.8.name
+catalog.MaterialCatalog.ById.gloss.name,Gloss,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name
+catalog.MaterialCatalog.ById.jelly.name,Jelly,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.8.name
+catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.9.name
 catalog.MaterialCatalog.ById.metal.name,Metal,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.pearl_edge.name,Pearl Edge,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.speckle_satin.name,Speckle Satin,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.standard.name,Standard,,Catalogue MaterialCatalog (name)
 catalog.ToyCatalog.ById.ball.name,Ball,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.1.name
 catalog.ToyCatalog.ById.bone.name,Bone,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.2.name
-catalog.ToyCatalog.ById.sparkler.name,Sparkler,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.3.name
-catalog.ToyCatalog.ById.squeaky_carrot.name,Squeaky Carrot,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.4.name
-catalog.ToyCatalog.ById.wobble_top.name,Wobble Top,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name
+catalog.ToyCatalog.ById.sparkler.name,Sparkler,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.4.name
+catalog.ToyCatalog.ById.squeaky_carrot.name,Squeaky Carrot,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name
+catalog.ToyCatalog.ById.wobble_top.name,Wobble Top,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.6.name
 catalog.HueCatalog.ById.citrus.name,Citrus,,Catalogue HueCatalog (name)
 catalog.HueCatalog.ById.iris.name,Iris,,Catalogue HueCatalog (name)
 catalog.HueCatalog.ById.tide.name,Tide,,Catalogue HueCatalog (name)
@@ -557,7 +622,6 @@ catalog.BookCatalog.Discoveries.15.name,Win with each item type,,Catalogue BookC
 catalog.BookCatalog.Discoveries.16.name,25 tidy wins,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.16.name
 catalog.BookCatalog.Discoveries.17.name,Play 100 rounds,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.17.name
 catalog.BookCatalog.Pages.discoveries.name,Discoveries,,Catalogue BookCatalog (name)
-catalog.BookCatalog.Pages.toys.name,Toys,,Catalogue BookCatalog (name)
 catalog.EggCatalog.ById.meadow.name,Mixed Meadow,,Catalogue EggCatalog (name)
 catalog.EggCatalog.ById.sprout.name,Sprout Focused,,Catalogue EggCatalog (name)
 catalog.PetCatalog.1.description,"Soft as a nap. Hugs first, asks questions never.",,Catalogue PetCatalog (description)

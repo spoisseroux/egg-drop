@@ -269,7 +269,7 @@ make("UICorner", "RailCurve", { CornerRadius = UDim.new(0, 9) }, rail)
 -- An early passive child of the transparent rail draws above casing, below its data.
 local walletFace=Art.instrument(Art.frame(rail,"WalletInstrument",Art.Ink,UDim2.fromOffset(0,0),UDim2.fromOffset(180,32),rail.ZIndex))
 Art.frame(rail, "ReadoutDivider", Art.Line, UDim2.new(0, 6, 1, -2), UDim2.new(1, -12, 0, 1))
-local readout = label("TextLabel", "GameReadout", "EGG DROP", rail)
+local readout = label("TextLabel", "GameReadout", "POCKET PALS", rail)
 readout.AutoLocalize = false -- the game's name; later readouts are numbers
 readout.Font = Art.Font.Counter
 readout:SetAttribute("TypeRole","Counter")
@@ -517,7 +517,7 @@ for row = 0, 2 do
 		Art.corner(hole, 2)
 	end
 end
-Art.text(hardware, "MakerMark", "EGG DROP", UDim2.fromOffset(0, 0), UDim2.fromOffset(96, 16), Art.Ink, 12)
+Art.text(hardware, "MakerMark", "POCKET PALS", UDim2.fromOffset(0, 0), UDim2.fromOffset(112, 16), Art.Ink, 12)
 hardware.MakerMark.Font = Art.Font.Action
 hardware.MakerMark.AutoLocalize = false -- the game's name
 local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter, status)

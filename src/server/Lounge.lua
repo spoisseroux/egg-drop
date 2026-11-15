@@ -252,7 +252,7 @@ function Lounge.setMode(character, userId, mode, themeId)
 	local badge = Instance.new("BillboardGui")
 	badge.Name = "Playing"
 	badge.Adornee = screen
-	badge.Size = UDim2.fromOffset(145, 21)
+	badge.Size = UDim2.fromOffset(164, 21)
 	badge.StudsOffset = Vector3.new(0, 2.2, 0)
 	badge.MaxDistance = 25
 	badge.Parent = screen
@@ -261,7 +261,7 @@ function Lounge.setMode(character, userId, mode, themeId)
 	text.BackgroundColor3 = Palette.Ink
 	text.BackgroundTransparency = 0.18
 	text.BorderSizePixel = 0
-	text.Text = "PLAYING EGG DROP"
+	text.Text = "PLAYING POCKET PALS"
 	text.TextColor3 = Palette.Primary
 	text.Font = Enum.Font.Code
 	text.TextSize = 12

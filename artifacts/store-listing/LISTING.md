@@ -1,8 +1,8 @@
-# Egg Drop: Roblox listing kit (v1 launch)
+# Pocket Pals: Pet Garden. Roblox listing kit (v1 launch)
 
-13 November 2026. Draft for Spencer to edit. Nothing here is published, and nothing in `src/` changed.
+13 November 2026, updated 15 November 2026 for the name **Pocket Pals** (listing title **Pocket Pals: Pet Garden**, Spencer's decision). Draft for Spencer to edit. Nothing here is published. The repo, folders, DataStore keys and the place name stay "Egg Drop" for now; renaming the experience in Creator Hub happens at launch, with this listing.
 
-Every picture in this folder is a real Roblox Studio capture of the current build (Play mode, place 96451847774961) or is cropped from one. The only additions are a caption pill and an "EGG DROP" wordmark set in Roblox's own Fredoka One and Builder Extended fonts and the DeckKit palette. No AI images or video. To rebuild the art, run `python scripts/store_listing/build_store_listing_art.py`.
+Every picture in this folder is a real Roblox Studio capture of the current build (Play mode, place 96451847774961) or is cropped from one. The only additions are a caption pill and a "POCKET PALS" wordmark set in Roblox's own Fredoka One and Builder Extended fonts and the DeckKit palette. No AI images or video. To rebuild the art, run `python scripts/store_listing/build_store_listing_art.py`.
 
 ## 1. Name
 
@@ -10,10 +10,8 @@ The limit is 50 characters (the Studio and Creator Hub field counter is authorit
 
 | Option | Characters | Note |
 |---|---:|---|
-| **Egg Drop** | 8 | Recommended. Short and searchable, and it matches the place name. |
-| Egg Drop: Pocket Pets | 21 | Adds the pet hook for search. |
-| Egg Drop 🐻 Merge & Pets | 22 | An emoji helps it stand out in lists. Check how it reads on console and in search first. |
-| Egg Drop: Merge, Hatch, Dress Up | 32 | Lists the three verbs. Reads a little long on a phone tile. |
+| **Pocket Pals: Pet Garden** | 23 | **Decided (Spencer, 2026-11-15).** Names the pet and the garden, and "Pocket" ties to the Pocket Deck. |
+| Pocket Pals | 11 | The short name: the icon wordmark and the in-game name. |
 
 Don't add "[NEW]", "UPDATE" or hype words. Roblox treats them as clickbait and they go stale.
 
@@ -21,20 +19,20 @@ Don't add "[NEW]", "UPDATE" or hype words. Roblox treats them as clickbait and t
 
 Roblox shows about this much in search snippets and in the mobile app before "Read more". It is also the first line of the full description:
 
-> Merge balls on a pocket handheld to earn Stars, then spend them on your own baby Bear in a cosy garden where it is always dusk.
+> Hatch a baby Bear pal, play a merge game on your Pocket Deck to earn Stars, and dress, colour and play with your pet in a cosy garden.
 
-(127 characters)
+(134 characters)
 
 Shorter alternative for ads or social posts (85 characters):
 
-> Merge balls on your Pocket Deck, earn Stars, and dress up your baby Bear in the garden.
+> Hatch a Bear pal, merge on your Pocket Deck, and dress it up in the Pet Garden.
 
 ## 3. Full description
 
-953 characters, under the 1,000 limit. DevForum reports say text past about 980 characters can be cut, so recount after editing.
+About 990 characters with the new first line: recount in Creator Hub and trim a bullet if it is over 980. DevForum reports say text past about 980 characters can be cut, so recount after editing.
 
 ```
-Merge balls on a pocket handheld to earn Stars, then spend them on your own baby Bear in a cosy garden where it is always dusk.
+Hatch a baby Bear pal, play a merge game on your Pocket Deck to earn Stars, and dress, colour and play with your pet in a cosy garden.
 
 HOW IT PLAYS
 • Pocket Deck: drop balls, merge two of a kind into a bigger one and build chains. Finish the round's goals to win Stars.
@@ -56,7 +54,7 @@ Play on phone, tablet or computer.
 
 - "Cosmetics only, no paid advantage" is not quite true as written. The **2× Stars** pass (299 R$) and **Star packs** speed up earning Stars, and Stars buy eggs. The draft says what is true: nothing bought changes how the board plays, and purchases only add Stars. Don't write "no paid advantage" unless the passes change.
 - The Supporter pass description in `StoreCatalog.lua` is "+1 Star for every finished round". TODO.md still promises a Supporter deck shell and charm, which have not been built. If those ship, the line "passes only add Stars" needs updating.
-- "Always dusk" is true only while `FeatureFlags.DayNight=false`. If you turn the day/night cycle back on, change the hook.
+- The hook no longer says "always dusk" (the 15 November captures show a bright pink-sky garden). Thumbnail 4's caption still says "dusk garden": recapture or recaption it to match the build you publish.
 - "Pets pair up" needs another player in the park. One player sees their own pet use the equipment alone.
 - "Play on phone, tablet or computer" should match the devices you enable in Creator Hub. Gamepad focus exists in the UI, but console has not been tested, so I left it out.
 - Don't list keyboard controls. Roblox's description guidance says to teach controls in game, and the deck already shows them.
@@ -85,12 +83,14 @@ Roblox asks for a square image of at least 512 × 512. Some lists show it at abo
 
 | File | What it is | Verdict |
 |---|---|---|
-| `icon/icon-a-hatch-spotlight.png` | The Bear in the hatch-reveal spotlight (black and gold), with the EGG DROP wordmark | **Recommended.** It is the strongest silhouette at 150 px and shows the hatch moment. The dark background stands out among Roblox's bright icons. |
+| `icon/icon-b-garden-pocket-deck.png` | **Spencer's pick (QA R11): icon B.** The Bear (Pom Beanie) in the garden holding its Pocket Deck toy, with the POCKET PALS wordmark. Captured 15 November in Studio Play after really hatching the toy and giving it to the Bear. | Cute and on-name. The toy is small at 150 px; the wordmark covers part of the beanie. |
+| `icon/icon-b-garden-pocket-deck-screen-corner.png` | The same, with a real Pocket Deck round (13 November capture) on a tile in the bottom-right corner | The alternative layout from R11. Shows the merge game, but it is busy at 150 px. |
+| `icon/icon-a-hatch-spotlight.png` | The Bear in the hatch-reveal spotlight (black and gold), with the wordmark. **13 November capture: the reveal's light changed on 15 November (R5), so recapture before using it.** | The strongest silhouette at 150 px. |
 | `icon/icon-b-garden-sparkler.png` | The dressed Bear (Pom Beanie and Bell Collar) holding its Sparkler in the dusk garden | Warm and cute. The white bear on a light sky is low in contrast at 150 px. |
 | `icon/icon-c-pocket-deck-bear.png` | The Pocket Deck mid-round with a Bear sticker badge | Shows the merge game. The deck UI is too small to read at 150 px. |
-| `icon/*-notext.png` | The same three without the wordmark | For A/B testing, or if you'd rather keep text off the icon. |
+| `icon/*-notext.png` | The same without the wordmark | For A/B testing, or if you'd rather keep text off the icon. |
 
-The wordmark is set in Builder Extended Bold, the in-game celebration font ("TIDY WIN!", "LITTLE WONDER!"), with a cream fill, ink outline and a Stars-gold underline. The game has no Egg Drop logo of its own. Its only wordmark art is the **Pocket Deck** mark (`assets/deck/shell/wordmark.png`), which would mislabel the game on an icon, so I didn't use it.
+The wordmark is set in Builder Extended Bold, the in-game celebration font ("TIDY WIN!", "LITTLE WONDER!"), with a cream fill, ink outline and a Stars-gold underline. The game has no Pocket Pals logo of its own. Its only wordmark art is the **Pocket Deck** mark (`assets/deck/shell/wordmark.png`), which would mislabel the game on an icon, so I didn't use it.
 
 The in-game Bear currently renders **white** (its hue is "original", rank 0). The yellow-to-pink body in `pet-bear.blend` doesn't show in Studio, so the icon matches what players see. If the authored gradient is meant to ship, fix it in game first, then recapture.
 
@@ -102,7 +102,7 @@ The in-game Bear currently renders **white** (its hue is "original", rank 0). Th
 |---|---|---|---|
 | 1 | `01-pocket-deck-round.png` | Merge balls on your Pocket Deck | A round mid-merge: chain ×3, a pink merge just landed, goals 1/2 |
 | 2 | `02-results-stars.png` | Win rounds, earn Stars | TIDY WIN! results with the spinning 3D Star (**staged, see below**) |
-| 3 | `03-hatch-bear.png` | Hatch your own baby Bear | The welcome hatch reveal: "A new little wonder!", BEAR, Meet Bear |
+| 3 | `03-hatch-bear.png` | Hatch your own baby Bear | **Refreshed 15 November:** the new reveal (soft light, the Bear waving), BEAR, Meet Bear. A capture fixture running the real reveal modules, not a live hatch; the headline is cropped at the left edge. |
 | 4 | `04-garden-dusk.png` | Roam the dusk garden together | Avatar and Bear walking into the dusk garden: trees, gazebo, toy pads |
 | 5 | `05-pet-park.png` | Your pet plays in the Pet Park | The Bear at the bottom of the park slide, with the climbing tower and seesaw |
 | 6 | `06-dress-up.png` | Dress your Bear up | The Bear in Pom Beanie and Bell Collar beside the bear statue at sunset |
@@ -110,11 +110,16 @@ The in-game Bear currently renders **white** (its hue is "original", rank 0). Th
 | 8 | `08-deck-style.png` | Style your deck. Looks only. | Deck style faceplates with the Liquid Chrome preview |
 | 9 | `09-hatch-odds.png` | Odds shown before every hatch | Hatch eggs with Toy Egg odds of 34 / 33 / 33 % |
 | 10 | `10-ball-styles.png` | Ball styles: just for looks | The Balls tab with the Kittens preview |
+| 11 | `11-bear-pocket-deck.png` | Your Bear carries its favourite toy | **New 15 November:** the Bear in the garden holding its Pocket Deck toy (the icon's capture) |
+| 12 | `12-item-reveal.png` | Toys, finishes and colours to hatch | **New 15 November:** the item reveal, a Bear wearing the Rare Jelly finish (capture fixture, real modules) |
+
+Roblox takes up to 10: 11 and 12 are extras to swap in. **Only 3, 11 and 12 are from the 15 November build.** The other nine are the 13 November captures; those screens were not recaptured in this pass, so refresh them from the final build before launch.
 
 The suggested **order** leads with gameplay (1, 3, 4, 5), then dress-up and fairness. For **home-page personalization**, turn on 1, 3, 4 and 5 (Roblox needs at least two active).
 
 **Capture notes. Read these before uploading:**
 
+- **15 November captures** are 1649 × 734 (a smaller Studio viewport), so thumbnails 3, 11 and 12 are scaled up 1.47× and are softer than the rest.
 - **Resolution:** Studio's viewport is 2107 × 893 and the capture tool returns it at 1920 × 813. Each thumbnail is a 16:9 crop (1445 × 813) scaled up 1.33× with Lanczos and light sharpening, so they are a little soft. For crisp versions, play the published place at 1920 × 1080 and screenshot the same moments.
 - **Results screen (2) is staged.** Your account owns both passes in Studio, so the real screen showed a "+7" pass row and "★ 13". For the thumbnail I hid that row and set the text to what a player without passes earns for this round (Round win 5, Tidy +1, Total ★ 6, wallet 103), which is what `HeatPayout` computes. The unedited capture is `raw/results-tidy-win-WITH-CREATOR-PASSES.jpg`. Re-shoot it from an account without passes if you'd rather not use a staged screen.
 - **Win pays on the round (1):** for the same reason I held the board's `WinPays` attribute at the no-pass value (Easy 5–6) while capturing. Without that it showed 11–13.

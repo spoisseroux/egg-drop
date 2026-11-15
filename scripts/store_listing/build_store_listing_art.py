@@ -1,7 +1,9 @@
-"""Build the Roblox listing icon options and 1920x1080 thumbnails for Egg Drop.
+"""Build the Roblox listing icon options and 1920x1080 thumbnails for Pocket Pals
+(listing title "Pocket Pals: Pet Garden"; the repo and place keep the name Egg Drop).
 
 Inputs are only real Roblox Studio captures in artifacts/store-listing/raw/ (Play mode,
-place 96451847774961, 2026-11-13) and the game's own type (Builder Extended Bold and
+place 96451847774961, 2026-11-13; the Pocket Deck toy portrait and the two reveal
+captures are from 2026-11-15, at 1649x734) and the game's own type (Builder Extended Bold and
 Fredoka One, both shipped with Roblox) and UI palette (DeckKit.lua). No generated imagery.
 
 Studio returns captures at 1920x813 (the 2107x893 viewport scaled down), so each
@@ -28,6 +30,7 @@ STARS = (255, 193, 77)
 MINT = (118, 246, 176)
 PANEL = (21, 37, 37)
 CREAM = (255, 244, 220)
+NAME = "POCKET PALS"  # the wordmark (Spencer, 2026-11-15)
 
 
 def roblox_font(name):
@@ -46,7 +49,7 @@ SANS = roblox_font("BuilderSans-Bold.otf")
 THUMBS = [
     ("01-pocket-deck-round", "deck-round-chain3.jpg", 960, "Merge balls on your Pocket Deck"),
     ("02-results-stars", "results-tidy-win-STAGED-no-pass-rows.jpg", 960, "Win rounds, earn Stars"),
-    ("03-hatch-bear", "hatch-reveal-a.jpg", 1190, "Hatch your own baby Bear"),
+    ("03-hatch-bear", "hatch-reveal-pocket-pals-a.jpg", 985, "Hatch your own baby Bear"),
     ("04-garden-dusk", "garden-vista.jpg", 820, "Roam the dusk garden together"),
     ("05-pet-park", "park-slide-a.jpg", 723, "Your pet plays in the Pet Park"),
     ("06-dress-up", "garden-bear-dressed.jpg", 1120, "Dress your Bear up"),
@@ -54,6 +57,8 @@ THUMBS = [
     ("08-deck-style", "deck-style-faceplates.jpg", 960, "Style your deck. Looks only."),
     ("09-hatch-odds", "hatch-eggs-odds.jpg", 960, "Odds shown before every hatch"),
     ("10-ball-styles", "deck-style-balls-kittens.jpg", 960, "Ball styles: just for looks"),
+    ("11-bear-pocket-deck", "bear-portrait-pocket-deck-a.jpg", 825, "Your Bear carries its favourite toy"),
+    ("12-item-reveal", "item-reveal-jelly-a.jpg", 760, "Toys, finishes and colours to hatch"),
 ]
 
 
@@ -100,13 +105,13 @@ def build_thumbs():
 
 
 def wordmark(size_px, img, centre_y, max_w):
-    """'EGG DROP' set in Builder Extended Bold (the game's celebration face) as a tilted
+    """NAME set in Builder Extended Bold (the game's celebration face) as a tilted
     sticker: cream fill, ink outline, gold underline, like the in-game result banners."""
     font_size = size_px
     while True:
         font = ImageFont.truetype(EXTENDED, font_size)
         probe = ImageDraw.Draw(img)
-        bbox = probe.textbbox((0, 0), "EGG DROP", font=font, stroke_width=max(4, font_size // 9))
+        bbox = probe.textbbox((0, 0), NAME, font=font, stroke_width=max(4, font_size // 9))
         if bbox[2] - bbox[0] <= max_w or font_size < 20:
             break
         font_size -= 2
@@ -114,9 +119,9 @@ def wordmark(size_px, img, centre_y, max_w):
     w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
     layer = Image.new("RGBA", (w + 80, h + 80), (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
-    d.text((40 - bbox[0] + 5, 40 - bbox[1] + 7), "EGG DROP", font=font, fill=INK + (150,),
+    d.text((40 - bbox[0] + 5, 40 - bbox[1] + 7), NAME, font=font, fill=INK + (150,),
            stroke_width=stroke, stroke_fill=INK + (150,))
-    d.text((40 - bbox[0], 40 - bbox[1]), "EGG DROP", font=font, fill=CREAM,
+    d.text((40 - bbox[0], 40 - bbox[1]), NAME, font=font, fill=CREAM,
            stroke_width=stroke, stroke_fill=INK)
     uy = 40 + h + stroke + 4
     d.rounded_rectangle((44, uy, 40 + w - 4, uy + max(5, font_size // 10)), radius=4, fill=STARS,
@@ -145,6 +150,27 @@ def build_icons():
     b.save(os.path.join(OUT_ICON, "icon-b-garden-sparkler-notext.png"))
     wordmark(66, b.copy(), 62, 400).save(os.path.join(OUT_ICON, "icon-b-garden-sparkler.png"))
 
+    # B2 (QA R11): the Bear in the garden holding its Pocket Deck toy (2026-11-15 capture).
+    raw = Image.open(os.path.join(RAW, "bear-portrait-pocket-deck-a.jpg")).convert("RGB")
+    b2 = square(raw, 828, 384, 660).convert("RGBA")
+    b2.save(os.path.join(OUT_ICON, "icon-b-garden-pocket-deck-notext.png"))
+    wordmark(60, b2.copy(), 56, 430).save(os.path.join(OUT_ICON, "icon-b-garden-pocket-deck.png"))
+    # B2 with a real Pocket Deck round in the bottom-right corner (the alternative layout).
+    deck = Image.open(os.path.join(RAW, "deck-round-chain3.jpg")).convert("RGB")
+    screen = square(deck, 958, 440, 470).resize((176, 176), Image.LANCZOS)
+    smask = Image.new("L", screen.size, 0)
+    ImageDraw.Draw(smask).rounded_rectangle((0, 0, 175, 175), radius=26, fill=255)
+    tile = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
+    td = ImageDraw.Draw(tile)
+    td.rounded_rectangle((6, 10, 199, 199), radius=34, fill=(0, 0, 0, 110))
+    td.rounded_rectangle((0, 0, 191, 191), radius=34, fill=CREAM + (255,))
+    tile.paste(screen, (8, 8), smask)
+    tile = tile.rotate(-4, resample=Image.BICUBIC, expand=True)
+    b3 = b2.copy()
+    b3.alpha_composite(tile, (512 - tile.width - 4, 512 - tile.height - 2))
+    b3.save(os.path.join(OUT_ICON, "icon-b-garden-pocket-deck-screen-corner-notext.png"))
+    wordmark(60, b3.copy(), 56, 430).save(os.path.join(OUT_ICON, "icon-b-garden-pocket-deck-screen-corner.png"))
+
     # C: the Pocket Deck mid-round, with the Bear in a sticker badge (Kit.Sticker style).
     raw = Image.open(os.path.join(RAW, "deck-round-chain3.jpg")).convert("RGB")
     c = square(raw, 958, 440, 760).convert("RGBA")
@@ -163,8 +189,9 @@ def build_icons():
     wordmark(70, c.copy(), 66, 420).save(os.path.join(OUT_ICON, "icon-c-pocket-deck-bear.png"))
 
     # Preview sheet: each option at 512 and at the 150 px size Roblox uses in lists.
-    names = ["icon-a-hatch-spotlight", "icon-b-garden-sparkler", "icon-c-pocket-deck-bear"]
-    sheet = Image.new("RGB", (3 * 560 + 40, 512 + 220), PANEL)
+    names = ["icon-b-garden-pocket-deck", "icon-b-garden-pocket-deck-screen-corner", "icon-a-hatch-spotlight",
+             "icon-b-garden-sparkler", "icon-c-pocket-deck-bear"]
+    sheet = Image.new("RGB", (len(names) * 560 + 40, 512 + 220), PANEL)
     sd = ImageDraw.Draw(sheet)
     lab = ImageFont.truetype(SANS, 26)
     for i, n in enumerate(names):
@@ -173,7 +200,7 @@ def build_icons():
         sheet.paste(im, (x, 40))
         small = im.resize((150, 150), Image.LANCZOS)
         sheet.paste(small, (x, 40 + 512 + 20))
-        sd.text((x + 170, 40 + 512 + 30), n.replace("icon-", "").replace("-", " "), font=lab, fill=(255, 255, 255))
+        sd.text((x + 170, 40 + 512 + 30), n.replace("icon-", "").replace("-", " ")[:26], font=lab, fill=(255, 255, 255))
         sd.text((x + 170, 40 + 512 + 70), "150 px preview", font=lab, fill=(141, 190, 172))
     sheet.save(os.path.join(OUT_ICON, "icon-options-preview.png"))
 
