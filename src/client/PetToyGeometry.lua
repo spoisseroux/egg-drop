@@ -66,9 +66,25 @@ builders.squeaky_carrot=function(h)
  end
  h:add("SqueakerDot",Vector3.new(.03,.03,.03),axis*CFrame.new(0,.02,.034),cream,"sphere")
 end
+-- Pocket Deck (QA v685 R7): a tiny pill-shaped handheld in the deck's house colours. A
+-- cream shell with two round ends, a dark bezel with a mint screen, an indigo d-pad and
+-- coral and citrine buttons. 8 parts; the screen is the only Neon part (no emitter, no light).
+builders.pocket_deck=function(h)
+ local shell,ink,mint=hex("#F3E9D2"),hex("#1B2330"),hex("#76F6B0")
+ h:add("DeckShell",Vector3.new(.15,.105,.036),CFrame.identity,shell)
+ for _,side in ipairs({-1,1})do h:add("DeckEnd"..(if side<0 then "L"else "R"),Vector3.new(.105,.105,.036),CFrame.new(side*.075,0,0),shell,"sphere")end
+ h:add("DeckBezel",Vector3.new(.108,.074,.01),CFrame.new(0,.004,.0165),ink)
+ local screen=h:add("DeckScreen",Vector3.new(.092,.058,.006),CFrame.new(0,.004,.021),mint)
+ screen.Material=Enum.Material.Neon
+ h:add("DeckPad",Vector3.new(.03,.03,.014),CFrame.new(-.088,-.004,.016),indigo,"sphere")
+ h:add("DeckButtonA",Vector3.new(.022,.022,.014),CFrame.new(.098,.008,.016),coral,"sphere")
+ h:add("DeckButtonB",Vector3.new(.022,.022,.014),CFrame.new(.08,-.016,.016),citrine,"sphere")
+ h.screen=screen
+end
 -- How the pet plays with each toy (PetPlayVisual.render): wave = held up and swept,
--- roll = rolled along the ground, chew = brought to the mouth, spin = spun in the hand.
-Toys.Play=table.freeze({sparkler="wave",ball="roll",bone="chew",wobble_top="spin",squeaky_carrot="chew"})
+-- roll = rolled along the ground, chew = brought to the mouth, spin = spun in the hand,
+-- tap = held up to the face in both hands with little button presses.
+Toys.Play=table.freeze({sparkler="wave",ball="roll",bone="chew",wobble_top="spin",squeaky_carrot="chew",pocket_deck="tap"})
 Toys.PartLimit=12
 function Toys.has(id)return type(id)=="string"and builders[id]~=nil end
 function Toys.create(parent,id,scale)

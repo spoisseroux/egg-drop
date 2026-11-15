@@ -1,5 +1,6 @@
 -- Permanent account unlocks; a pet may freely select one unlocked personal toy.
 -- Pools (overnight 2026-11-14, slice D): PoolVersion 2 adds Wobble Top and Squeaky Carrot.
+-- PoolVersion 3 (QA v685 R7, 2026-11-15) adds the Pocket Deck handheld. Pools 1 and 2 stay.
 --   * Every pool is in strictly ascending id order (ToyState.poolValid and the eligible
 --     comparison in purchaseEligibility need it; an unsorted pool refuses every purchase).
 --   * Pools[1] stays forever: stored toy receipts re-validate their quote against the pool
@@ -7,13 +8,15 @@
 --   * CatalogVersion stays 1: stored receipts and quotes pin it.
 --   * A toy joins a pool only once PetToyGeometry can build it (client) and it has a name here.
 --   * PaidOrder is append-only: a restricted player's fixed next toy stays the old toys first.
-local Catalog={CatalogVersion=1,PoolVersion=2,Cost=8,Default="none",ReceiptLimit=32,
- Order=table.freeze({"none","sparkler","ball","bone","wobble_top","squeaky_carrot"}),
- PaidOrder=table.freeze({"ball","bone","sparkler","wobble_top","squeaky_carrot"}),
+local Catalog={CatalogVersion=1,PoolVersion=3,Cost=8,Default="none",ReceiptLimit=32,
+ Order=table.freeze({"none","sparkler","ball","bone","wobble_top","squeaky_carrot","pocket_deck"}),
+ PaidOrder=table.freeze({"ball","bone","sparkler","wobble_top","squeaky_carrot","pocket_deck"}),
  Pools=table.freeze({[1]=table.freeze({"ball","bone","sparkler"}),
-  [2]=table.freeze({"ball","bone","sparkler","squeaky_carrot","wobble_top"})}),
+  [2]=table.freeze({"ball","bone","sparkler","squeaky_carrot","wobble_top"}),
+  [3]=table.freeze({"ball","bone","pocket_deck","sparkler","squeaky_carrot","wobble_top"})}),
  ById=table.freeze({none=table.freeze({name="None"}),sparkler=table.freeze({name="Sparkler"}),ball=table.freeze({name="Ball"}),bone=table.freeze({name="Bone"}),
-  wobble_top=table.freeze({name="Wobble Top"}),squeaky_carrot=table.freeze({name="Squeaky Carrot"})})}
+  wobble_top=table.freeze({name="Wobble Top"}),squeaky_carrot=table.freeze({name="Squeaky Carrot"}),
+  pocket_deck=table.freeze({name="Pocket Deck"})})}
 for version,pool in pairs(Catalog.Pools)do
  local previous=""
  for _,id in ipairs(pool)do

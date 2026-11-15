@@ -165,6 +165,13 @@ function Play.render(v,root)
   local roll=if t<.3 then 0 else math.sin(math.clamp((t-.3)/1.5,0,1)*math.pi)
   local localHand=root:PointToObjectSpace(handFrame.Position)
   cf=root*CFrame.new(localHand.X+roll*size*.32,size*.124,localHand.Z+size*.05)*CFrame.Angles(0,0,-roll*2)
+ elseif play=="tap"then
+  -- The Pocket Deck: lifted in front of the chest, screen tipped up to the face, with
+  -- small jolts as the buttons are pressed. Reduced Motion holds it still.
+  local lift=if t<.3 then t/.3 elseif t<1.4 then 1 else math.max(0,1-(t-1.4)/.4)
+  local press=if v.reducedEffects or t<.4 or t>1.4 then 0 else math.abs(math.sin((t-.4)*math.pi*5))
+  local chest=root:PointToObjectSpace(handFrame.Position)
+  cf=root*CFrame.new(chest.X*(1-lift*.85),chest.Y+size*(.07*lift-.008*press),chest.Z+size*.07*lift)*CFrame.Angles(-.55*lift,0,(if v.reducedEffects then 0 else math.sin(t*9)*.05*lift))
  elseif play=="chew"and seats.mouth then
   local sniff=if t<.20 then t/.20 elseif t<1.02 then 1 else math.max(0,1-(t-1.02)/.63)
   local bite=if t>=.58 and t<=1.02 then math.sin((t-.58)/.44*math.pi*4)*size*.014 else 0
@@ -179,6 +186,8 @@ function Play.render(v,root)
    local squash=Vector3.new(1+roll*.05,1-roll*.12,1+roll*.05)
    p.Size=spec.size*squash;p.CFrame=cf*CFrame.new(spec.frame.Position*squash)*spec.frame.Rotation
   end
+  -- The Pocket Deck screen blinks as the round goes on (steady under Reduced Motion).
+  if p.Name=="DeckScreen"then p.Transparency=if v.reducedEffects then 0 elseif math.sin(t*14)>.82 then .45 else 0 end
   if p.Name=="GlowTip"then
    -- A gentle flicker; Reduced Motion keeps a steady glow and stops the sparks.
    p.Transparency=if v.reducedEffects then 0 else .12+math.sin(t*31+i)*.12

@@ -114,7 +114,7 @@ return function(_, shared)
 		for _, item in ipairs(Book.Pages.toys.items) do
 			if item.kind == "toy" then toys += 1 else finishes += 1; table.insert(finishIds, item.itemId) end
 		end
-		assert(toys == #Toys.Pools[Toys.PoolVersion] and toys == 5 and finishes == #Finishes.Pools[Finishes.PoolVersion] and finishes == 3)
+		assert(toys == #Toys.Pools[Toys.PoolVersion] and toys == 6 and finishes == #Finishes.Pools[Finishes.PoolVersion] and finishes == 3)
 		assert(Finishes.PoolVersion == 4 and table.concat(finishIds, ",") == "gloss,jelly,matte", "the Book must list the exact active pool4 finishes")
 		assert(table.concat(Finishes.Pools[2], ",") == "gloss,matte" and table.concat(Finishes.Pools[3], ",") == "gloss,matte,pearl_edge,speckle_satin", "historical pool data changed")
 		local owned = { toyUnlocks = { wobble_top = true, squeaky_carrot = true }, materialUnlocks = { metal = true, pearl_edge = true, speckle_satin = true } }

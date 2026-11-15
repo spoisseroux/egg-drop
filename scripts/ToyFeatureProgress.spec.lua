@@ -68,26 +68,31 @@ return function(server,frozenSource,frozenDailySource)
   assert(TC.Cost==8 and FC.Cost==32 and FC.StackLimit==99 and FC.MaxStage==5)
   assert(FC.roll(0)=="horns"and FC.roll(.49999)=="horns"and FC.roll(.5)=="claws"and FC.roll(.84999)=="claws"and FC.roll(.85)=="wings"and FC.roll(.99999)=="wings")
   for _,bad in ipairs({-1,1,math.huge})do assert(not FC.roll(bad)and not TC.roll({"ball"},bad))end
-  assert(not FC.roll(0/0));local odds=TC.odds({ball=true,bone=true,sparkler=true});assert(#odds==2 and odds[1].probability==.5 and odds[2].probability==.5)
+  assert(not FC.roll(0/0));local odds=TC.odds({ball=true,bone=true,sparkler=true,pocket_deck=true});assert(#odds==2 and odds[1].probability==.5 and odds[2].probability==.5)
  end)
  test("toy pools: sorted, pool 1 kept for stored receipts, new toys only join the fixed order at the end",function()
-  assert(TC.PoolVersion==2 and TC.CatalogVersion==1 and TC.Cost==8)
+  assert(TC.PoolVersion==3 and TC.CatalogVersion==1 and TC.Cost==8)
   assert(table.concat(TC.Pools[1],",")=="ball,bone,sparkler","pool 1 must stay: stored receipts re-validate against it")
-  assert(table.concat(TC.Pools[2],",")=="ball,bone,sparkler,squeaky_carrot,wobble_top")
+  assert(table.concat(TC.Pools[2],",")=="ball,bone,sparkler,squeaky_carrot,wobble_top","pool 2 must stay too")
+  -- Pool 3 (QA v685 R7): the Pocket Deck joins, in sorted place.
+  assert(table.concat(TC.Pools[3],",")=="ball,bone,pocket_deck,sparkler,squeaky_carrot,wobble_top"and TC.ById.pocket_deck.name=="Pocket Deck")
   for version,pool in pairs(TC.Pools)do
    local previous=""
    for _,id in ipairs(pool)do assert(TC.known(id)and id~=TC.Default and id>previous,"pool "..version.." unsorted at "..id);previous=id end
   end
   -- Restricted players: the old toys first, in the old order.
-  assert(table.concat(TC.PaidOrder,",")=="ball,bone,sparkler,wobble_top,squeaky_carrot")
+  assert(table.concat(TC.PaidOrder,",")=="ball,bone,sparkler,wobble_top,squeaky_carrot,pocket_deck")
+  assert(TC.fixedNext(TC.remaining({ball=true,bone=true,sparkler=true,wobble_top=true,squeaky_carrot=true}))=="pocket_deck")
   assert(TC.fixedNext(TC.remaining({}))=="ball"and TC.fixedNext(TC.remaining({ball=true,bone=true}))=="sparkler"and TC.fixedNext(TC.remaining({ball=true,bone=true,sparkler=true}))=="wobble_top")
-  assert(#TC.remaining({},1)==3 and #TC.remaining({})==5 and #TC.odds({ball=true,bone=true,sparkler=true})==2)
+  assert(#TC.remaining({},1)==3 and #TC.remaining({},2)==5 and #TC.remaining({})==6 and #TC.odds({ball=true,bone=true,sparkler=true})==3)
   -- A quote from the old pool is still canonical, so a stored v1 receipt keeps validating.
   local old=T.quote("toyBuy",{id="7:toy-old",catalogVersion=1,poolVersion=1,eligible={"ball","bone","sparkler"}},7);assert(old and old.poolVersion==1)
-  assert(T.quote("toyBuy",{id="7:toy-new",catalogVersion=1,poolVersion=2,eligible={"ball","bone","sparkler","squeaky_carrot","wobble_top"}},7))
+  assert(T.quote("toyBuy",{id="7:toy-new",catalogVersion=1,poolVersion=2,eligible={"ball","bone","sparkler","squeaky_carrot","wobble_top"}},7),"a stored pool 2 receipt keeps validating")
+  assert(T.quote("toyBuy",{id="7:toy-deck",catalogVersion=1,poolVersion=3,eligible={"ball","bone","pocket_deck","sparkler","squeaky_carrot","wobble_top"}},7))
+  assert(not T.quote("toyBuy",{id="7:toy-bad",catalogVersion=1,poolVersion=2,eligible={"ball","pocket_deck"}},7),"a pool 3 toy in a pool 2 quote")
   assert(not T.quote("toyBuy",{id="7:toy-bad",catalogVersion=1,poolVersion=1,eligible={"ball","wobble_top"}},7),"a pool 2 toy in a pool 1 quote")
   assert(not T.quote("toyBuy",{id="7:toy-bad",catalogVersion=1,poolVersion=2,eligible={"wobble_top","squeaky_carrot"}},7),"unsorted eligible")
-  assert(not T.quote("toyBuy",{id="7:toy-bad",catalogVersion=1,poolVersion=3,eligible={"ball"}},7),"an unknown pool")
+  assert(not T.quote("toyBuy",{id="7:toy-bad",catalogVersion=1,poolVersion=4,eligible={"ball"}},7),"an unknown pool")
  end)
  test("new v8 profile neutral state and permanent uniform toy exhaustion costs 8 a toy",function()
   local h,db,c=fixture();local before=h.state.nectar;assert(h.state.version==11 and db.player_1.custom=="preserved")

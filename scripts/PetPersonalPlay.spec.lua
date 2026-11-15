@@ -23,8 +23,10 @@ return function(client,parent)
    assert(not Toys.has("none")and not Toys.has("mini_plush")and not Toys.has(nil))
    for _,id in ipairs(ToyCatalog.Order)do if id~=ToyCatalog.Default then assert(Toys.has(id)and Toys.Play[id],"no geometry for "..id)end end
    assert(#assert(Toys.create(root,"wobble_top",1)).parts==5 and #assert(Toys.create(root,"squeaky_carrot",1)).parts==7)
-   for _,child in ipairs(root:GetChildren())do if child.Name=="PersonalToy_wobble_top"or child.Name=="PersonalToy_squeaky_carrot"then child:Destroy()end end
-   for _,id in ipairs({"sparkler","ball","bone","wobble_top","squeaky_carrot"})do
+   -- QA v685 R7: the Pocket Deck handheld (8 parts, one Neon screen, played with "tap").
+   local deck=assert(Toys.create(root,"pocket_deck",1));assert(#deck.parts==8 and deck.screen.Material==Enum.Material.Neon and Toys.Play.pocket_deck=="tap")
+   for _,child in ipairs(root:GetChildren())do if child.Name=="PersonalToy_wobble_top"or child.Name=="PersonalToy_squeaky_carrot"or child.Name=="PersonalToy_pocket_deck"then child:Destroy()end end
+   for _,id in ipairs({"sparkler","ball","bone","wobble_top","squeaky_carrot","pocket_deck"})do
     local h=assert(Toys.create(root,id,1));assert(#h.parts<=Toys.PartLimit and(#h.parts<=8 or id=="sparkler"),id.." parts "..#h.parts)
     h:pivot(CFrame.new(4,5,6));for _,p in ipairs(h.parts)do assert(p.Anchored and not p.CanQuery and not p.CanTouch and not p.CanCollide)end
     -- The sparkler's Neon tip now owns exactly one bounded emitter and one small light; other toys have none.

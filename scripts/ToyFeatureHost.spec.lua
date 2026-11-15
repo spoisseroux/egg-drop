@@ -4,7 +4,7 @@ return function(server,hostSource,kind)
  local title=kind:sub(1,1):upper()..kind:sub(2)
  local Catalog=require(game.ReplicatedStorage.Shared[title.."Catalog"])
  if kind=="toy"then
-  assert(Catalog.PoolVersion==2 and table.concat(Catalog.Pools[1],",")=="ball,bone,sparkler"and table.concat(Catalog.Pools[2],",")=="ball,bone,sparkler,squeaky_carrot,wobble_top","toy host fixture must exercise the current pool while retaining historical pool1")
+  assert(Catalog.PoolVersion==3 and table.concat(Catalog.Pools[1],",")=="ball,bone,sparkler"and table.concat(Catalog.Pools[2],",")=="ball,bone,sparkler,squeaky_carrot,wobble_top"and table.concat(Catalog.Pools[3],",")=="ball,bone,pocket_deck,sparkler,squeaky_carrot,wobble_top","toy host fixture must exercise the current pool while retaining historical pool1")
  else assert(Catalog.PoolVersion==1 and Catalog.Cost==32,"feature host pool contract changed")end
  assert(type(hostSource)=="string","pass current init.server source as argument two")
  local H=require(server.HatchProgress);local P=require(server.PlayerProgress)
