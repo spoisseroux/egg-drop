@@ -1,0 +1,276 @@
+{
+ "sampleRate": 48000,
+ "body": "assets/audio/original-2026-11-14/hatch-v3/hatch-material-v3-tightened-burst.wav",
+ "ready": 1.65,
+ "burst": 0.98,
+ "tiers": {
+  "common": {
+   "notes": [
+    {
+     "at": 0.34,
+     "cue": "egg_wobble",
+     "semitones": 0.0,
+     "gain": 0.4,
+     "noteLUFS": -26.1,
+     "bodyLUFSsameWindow": -28.6,
+     "noteOverBodyLU": 2.5
+    },
+    {
+     "at": 0.98,
+     "cue": "egg_crack_glint",
+     "semitones": 0.0,
+     "gain": 0.5,
+     "noteLUFS": -21.6,
+     "bodyLUFSsameWindow": -25.8,
+     "noteOverBodyLU": 4.2
+    },
+    {
+     "at": 1.65,
+     "cue": "name_slam",
+     "semitones": 0.0,
+     "gain": 0.9,
+     "noteLUFS": -19.3,
+     "bodyLUFSsameWindow": -14.4,
+     "noteOverBodyLU": -4.9
+    }
+   ],
+   "peakDBFS": -0.84,
+   "beats": {
+    "build 0.10-0.95": {
+     "mixLUFS": -27.3,
+     "bodyOnlyLUFS": -29.9,
+     "layerCentroidHz": 526,
+     "liftOverBodyLU": 2.6
+    },
+    "burst 0.95-1.60": {
+     "mixLUFS": -18.6,
+     "bodyOnlyLUFS": -19.6,
+     "layerCentroidHz": 4699,
+     "liftOverBodyLU": 1.0
+    },
+    "slam 1.60-2.10": {
+     "mixLUFS": -14.7,
+     "bodyOnlyLUFS": -15.5,
+     "layerCentroidHz": 2329,
+     "liftOverBodyLU": 0.8
+    },
+    "flourish 2.10-3.10": {
+     "mixLUFS": -28.2,
+     "bodyOnlyLUFS": -28.2,
+     "layerCentroidHz": 0,
+     "liftOverBodyLU": 0.0
+    }
+   }
+  },
+  "uncommon": {
+   "notes": [
+    {
+     "at": 0.3,
+     "cue": "star_land",
+     "semitones": 0.0,
+     "gain": 0.4,
+     "noteLUFS": -25.0,
+     "bodyLUFSsameWindow": -28.8,
+     "noteOverBodyLU": 3.8
+    },
+    {
+     "at": 0.62,
+     "cue": "star_land",
+     "semitones": 4.0,
+     "gain": 0.46,
+     "noteLUFS": -24.7,
+     "bodyLUFSsameWindow": -30.7,
+     "noteOverBodyLU": 6.0
+    },
+    {
+     "at": 0.98,
+     "cue": "reveal_shimmer",
+     "semitones": 0.0,
+     "gain": 0.55,
+     "noteLUFS": -17.1,
+     "bodyLUFSsameWindow": -25.8,
+     "noteOverBodyLU": 8.7
+    },
+    {
+     "at": 1.65,
+     "cue": "name_slam",
+     "semitones": 1.01,
+     "gain": 0.9,
+     "noteLUFS": -19.4,
+     "bodyLUFSsameWindow": -14.4,
+     "noteOverBodyLU": -5.0
+    },
+    {
+     "at": 2.1,
+     "cue": "quest_complete",
+     "semitones": 0.0,
+     "gain": 0.85,
+     "noteLUFS": -20.2,
+     "bodyLUFSsameWindow": -22.3,
+     "noteOverBodyLU": 2.1
+    }
+   ],
+   "peakDBFS": -1.47,
+   "beats": {
+    "build 0.10-0.95": {
+     "mixLUFS": -25.3,
+     "bodyOnlyLUFS": -29.9,
+     "layerCentroidHz": 2506,
+     "liftOverBodyLU": 4.6
+    },
+    "burst 0.95-1.60": {
+     "mixLUFS": -16.1,
+     "bodyOnlyLUFS": -19.6,
+     "layerCentroidHz": 3773,
+     "liftOverBodyLU": 3.5
+    },
+    "slam 1.60-2.10": {
+     "mixLUFS": -14.4,
+     "bodyOnlyLUFS": -15.5,
+     "layerCentroidHz": 2851,
+     "liftOverBodyLU": 1.1
+    },
+    "flourish 2.10-3.10": {
+     "mixLUFS": -18.6,
+     "bodyOnlyLUFS": -28.2,
+     "layerCentroidHz": 2775,
+     "liftOverBodyLU": 9.6
+    }
+   }
+  },
+  "rare": {
+   "notes": [
+    {
+     "at": 0.16,
+     "cue": "star_land",
+     "semitones": 0.0,
+     "gain": 0.36,
+     "noteLUFS": -25.9,
+     "bodyLUFSsameWindow": -29.7,
+     "noteOverBodyLU": 3.8
+    },
+    {
+     "at": 0.36,
+     "cue": "star_land",
+     "semitones": 4.0,
+     "gain": 0.4,
+     "noteLUFS": -25.9,
+     "bodyLUFSsameWindow": -28.6,
+     "noteOverBodyLU": 2.7
+    },
+    {
+     "at": 0.56,
+     "cue": "star_land",
+     "semitones": 7.0,
+     "gain": 0.46,
+     "noteLUFS": -25.4,
+     "bodyLUFSsameWindow": -31.6,
+     "noteOverBodyLU": 6.2
+    },
+    {
+     "at": 0.76,
+     "cue": "star_land",
+     "semitones": 12.0,
+     "gain": 0.52,
+     "noteLUFS": -24.7,
+     "bodyLUFSsameWindow": -29.7,
+     "noteOverBodyLU": 5.0
+    },
+    {
+     "at": 0.86,
+     "cue": "streak_whoosh",
+     "semitones": 0.0,
+     "gain": 0.55,
+     "noteLUFS": -21.1,
+     "bodyLUFSsameWindow": -31.3,
+     "noteOverBodyLU": 10.2
+    },
+    {
+     "at": 0.98,
+     "cue": "reveal_shimmer",
+     "semitones": 3.0,
+     "gain": 0.8,
+     "noteLUFS": -13.3,
+     "bodyLUFSsameWindow": -25.8,
+     "noteOverBodyLU": 12.5
+    },
+    {
+     "at": 1.04,
+     "cue": "new_best",
+     "semitones": 0.0,
+     "gain": 0.7,
+     "noteLUFS": -16.4,
+     "bodyLUFSsameWindow": -23.8,
+     "noteOverBodyLU": 7.4
+    },
+    {
+     "at": 1.65,
+     "cue": "name_slam",
+     "semitones": -1.07,
+     "gain": 1.0,
+     "noteLUFS": -18.3,
+     "bodyLUFSsameWindow": -14.4,
+     "noteOverBodyLU": -3.9
+    },
+    {
+     "at": 2.1,
+     "cue": "stars_total",
+     "semitones": 2.0,
+     "gain": 0.8,
+     "noteLUFS": -15.1,
+     "bodyLUFSsameWindow": -22.3,
+     "noteOverBodyLU": 7.2
+    }
+   ],
+   "peakDBFS": -0.53,
+   "beats": {
+    "build 0.10-0.95": {
+     "mixLUFS": -23.6,
+     "bodyOnlyLUFS": -29.9,
+     "layerCentroidHz": 3399,
+     "liftOverBodyLU": 6.3
+    },
+    "burst 0.95-1.60": {
+     "mixLUFS": -12.7,
+     "bodyOnlyLUFS": -19.6,
+     "layerCentroidHz": 4986,
+     "liftOverBodyLU": 6.9
+    },
+    "slam 1.60-2.10": {
+     "mixLUFS": -14.3,
+     "bodyOnlyLUFS": -15.5,
+     "layerCentroidHz": 3151,
+     "liftOverBodyLU": 1.2
+    },
+    "flourish 2.10-3.10": {
+     "mixLUFS": -18.2,
+     "bodyOnlyLUFS": -28.2,
+     "layerCentroidHz": 6690,
+     "liftOverBodyLU": 10.0
+    }
+   }
+  }
+ },
+ "differences": {
+  "build 0.10-0.95": {
+   "uncommonMinusCommonLU": 2.0,
+   "rareMinusUncommonLU": 1.7,
+   "rareMinusCommonLU": 3.7
+  },
+  "burst 0.95-1.60": {
+   "uncommonMinusCommonLU": 2.5,
+   "rareMinusUncommonLU": 3.4,
+   "rareMinusCommonLU": 5.9
+  },
+  "slam 1.60-2.10": {
+   "uncommonMinusCommonLU": 0.3,
+   "rareMinusUncommonLU": 0.1,
+   "rareMinusCommonLU": 0.4
+  },
+  "flourish 2.10-3.10": {
+   "uncommonMinusCommonLU": 9.6,
+   "rareMinusUncommonLU": 0.4,
+   "rareMinusCommonLU": 10.0
+  }
+ }
+}

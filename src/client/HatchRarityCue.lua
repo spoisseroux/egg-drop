@@ -5,7 +5,7 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Features=require(Shared.FeatureCatalog);local Materials=require(Shared.MaterialCatalog)
 local Toys=require(Shared.ToyCatalog);local Hues=require(Shared.HueCatalog);local Pets=require(Shared.PetCatalog)
-local Policy={Cue="hatch_finish",AnswerEnd=1.40,MaxLateness=.10,BurstAt=.98}
+local Policy={Cue="hatch_finish",AnswerEnd=1.45,MaxLateness=.10,BurstAt=.98,FlourishAfter=.45}
 local Cue={};Cue.__index=Cue
 local valid={Common=true,Uncommon=true,Rare=true,Neutral=true}
 local materialTier=table.freeze({standard="Common",gloss="Common",matte="Common",jelly="Rare"})
@@ -36,25 +36,26 @@ Policy.Look=table.freeze({
 })
 -- Sound line per tier, in seconds on the hatch clock. `pre` notes play before the receipt
 -- unlocks (the build-up and the burst); the rest answer the name slam at `readyAt`.
--- Gains are set against the hatch body sound, which is quiet (about -29 dBFS RMS) until
--- the shell opens and loud (about -15 dBFS) around the name slam; see
--- artifacts/reveal-2026-11-15/audio/LOUDNESS.md.
+-- Gains are set against the hatch body sound, which is quiet (about -29 LUFS) until the
+-- shell opens and loud (about -14 LUFS) from 1.5 to 2.0 s, right on the name slam. A note
+-- there is masked, so each tier's answering flourish waits `FlourishAfter` for the body to
+-- fall away; see artifacts/reveal-2026-11-15/audio/LOUDNESS.md.
 local function st(n)return 2^(n/12)end
 function Policy.events(classification,readyAt)
  local B=Policy.BurstAt
  if classification=="Uncommon"then return {
-  {at=.30,cue="star_land",speed=st(0),gain=.32,pre=true},{at=.62,cue="star_land",speed=st(4),gain=.38,pre=true},
+  {at=.30,cue="star_land",speed=st(0),gain=.40,pre=true},{at=.62,cue="star_land",speed=st(4),gain=.46,pre=true},
   {at=B,cue="reveal_shimmer",speed=1,gain=.55,pre=true},
-  {at=readyAt,cue="name_slam",speed=1.06,gain=.80},{at=readyAt+.10,cue="quest_complete",speed=1,gain=.60}}
+  {at=readyAt,cue="name_slam",speed=1.06,gain=.90},{at=readyAt+Policy.FlourishAfter,cue="quest_complete",speed=1,gain=.85}}
  elseif classification=="Rare"then return {
-  {at=.16,cue="star_land",speed=st(0),gain=.32,pre=true},{at=.36,cue="star_land",speed=st(4),gain=.36,pre=true},
-  {at=.56,cue="star_land",speed=st(7),gain=.40,pre=true},{at=.76,cue="star_land",speed=st(12),gain=.46,pre=true},
+  {at=.16,cue="star_land",speed=st(0),gain=.36,pre=true},{at=.36,cue="star_land",speed=st(4),gain=.40,pre=true},
+  {at=.56,cue="star_land",speed=st(7),gain=.46,pre=true},{at=.76,cue="star_land",speed=st(12),gain=.52,pre=true},
   {at=.86,cue="streak_whoosh",speed=1,gain=.55,pre=true},
   {at=B,cue="reveal_shimmer",speed=st(3),gain=.80,pre=true},{at=B+.06,cue="new_best",speed=1,gain=.70,pre=true},
-  {at=readyAt,cue="name_slam",speed=.94,gain=.90},{at=readyAt+.08,cue="stars_total",speed=st(2),gain=.80}}
+  {at=readyAt,cue="name_slam",speed=.94,gain=1},{at=readyAt+Policy.FlourishAfter,cue="stars_total",speed=st(2),gain=.80}}
  end
  return {{at=.34,cue="egg_wobble",speed=1,gain=.40,pre=true},{at=B,cue="egg_crack_glint",speed=1,gain=.50,pre=true},
-  {at=readyAt,cue="name_slam",speed=1,gain=.80}}
+  {at=readyAt,cue="name_slam",speed=1,gain=.90}}
 end
 function Policy.new(kind,result,readyAt)
  local classification=Policy.tier(kind,result)

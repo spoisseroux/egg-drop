@@ -39,8 +39,11 @@ return function(client,parent)
    for i=2,4 do assert(build[i].speed>build[i-1].speed,"rising notes must climb")end
    advance(1.2);assert(names(accents())=="star_land,star_land,star_land,star_land,streak_whoosh,reveal_shimmer,new_best")
    advance(R-.02);assert(#accents()==7,"an answer played before the receipt")
-   advance(R+.2);local notes=accents()
-   assert(#notes==9 and notes[8].cue=="name_slam"and notes[9].cue=="stars_total"and c:getPresentationState().receiptReady)
+   advance(R+.2);assert(#accents()==8 and accents()[8].cue=="name_slam"and c:getPresentationState().receiptReady)
+   -- The answering flourish waits for the loud hatch body to fall away (it would be masked).
+   advance(R+Policy.FlourishAfter-.03);assert(#accents()==8,"the flourish played under the body's peak")
+   advance(R+Policy.FlourishAfter+.1);local notes=accents()
+   assert(#notes==9 and notes[9].cue=="stars_total")
    for _,note in ipairs(notes)do assert(note.owner==c.accentOwner and note.owner~=calls[1].owner)end
    assert(not stops[c.accentOwner],"answer owner retired before its lifetime")
    advance(R+Policy.AnswerEnd+.05);assert(stops[c.accentOwner])

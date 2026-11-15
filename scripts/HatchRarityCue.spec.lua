@@ -49,7 +49,12 @@ return function(client)
     assert(e.pre==true or e.at>=R,"an undisclosed note sits before the receipt")
    end
   end
-  assert(Policy.AnswerEnd>=1.2,"the Rare total (1.0 s) must not be cut by the answer owner")
+  assert(Policy.AnswerEnd>=Policy.FlourishAfter+1.0,"the Rare total (1.0 s) must not be cut by the answer owner")
+  -- The hatch body peaks from 1.5 to 2.0 s; a flourish under it is masked (LOUDNESS.md).
+  for _,tier in ipairs({"Uncommon","Rare"})do
+   local events=Policy.events(tier,R);local last=events[#events]
+   assert(last.cue~="name_slam"and last.at>=2.05 and math.abs(last.at-(R+Policy.FlourishAfter))<1e-9,"flourish sits under the body's peak")
+  end
  end)
  test("looks differ by tier: colour, beam, rays, shards and flash all grow with rarity",function()
   local c,u,r,n=Policy.Look.Common,Policy.Look.Uncommon,Policy.Look.Rare,Policy.Look.Neutral
