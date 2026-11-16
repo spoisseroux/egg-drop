@@ -8,8 +8,12 @@
 --   over: amber haze above the line, chip "Stack too high / Merge to clear",
 --         the line drains from both ends toward the middle by GraceLeft / grace,
 --         red only in the last 0.35 s
--- One entry cue and one cleared chime; no repeating blip. Reduced Motion: no
+-- One entry cue and one cleared chime. Reduced Motion: no
 -- pulse, no haze fade, and the line shortens in steps once per second.
+-- G1 (QA 2026-11-16) heartbeat: the line's glow beats (lub-dub) while the stack is
+-- near the line, faster the closer it gets (1.1 s down to 0.6 s). Over the line the
+-- beat runs every 0.42 s, then 0.21 s in the red window, and each beat also plays a
+-- soft `danger_tick` whose pitch climbs as the grace drains. Near is silent.
 -- Pure helpers (classify, drain, lineColor, hazeAlpha, chipText) are exported for specs.
 local Danger={}
 Danger.__index=Danger
@@ -24,6 +28,24 @@ Danger.HazeFade,Danger.FlashTime,Danger.SafeHold=.2,.2,.6
 Danger.EnterCue,Danger.ClearCue="danger_enter","danger_clear"
 Danger.Dashes=18
 Danger.ChipHeight=40
+Danger.TickCue="danger_tick"
+Danger.BeatNearSlow,Danger.BeatNearFast,Danger.BeatOver,Danger.BeatRed=1.1,.6,.42,.21
+-- Seconds between heartbeats; nil when calm.
+function Danger.beatPeriod(state,pressure,graceLeft)
+ if state=="over"then return if Danger.isRed(state,graceLeft)then Danger.BeatRed else Danger.BeatOver end
+ if state=="near"then return Danger.BeatNearSlow+(Danger.BeatNearFast-Danger.BeatNearSlow)*math.clamp((pressure or 0)/.85,0,1)end
+ return nil
+end
+-- Pulse 0..1 for the phase 0..1 inside one beat: a thump, then a softer second thump.
+function Danger.beat(phase)
+ phase=math.clamp(phase or 0,0,1)
+ return math.max(math.exp(-9*phase),if phase>=.28 then .6*math.exp(-9*(phase-.28))else 0)
+end
+-- Tick pitch climbs from 1 to 1.35 as the grace drains; louder in the red window.
+function Danger.tickVoice(graceLeft,grace)
+ local spent=if grace and grace>0 then 1-math.clamp((graceLeft or 0)/grace,0,1)else 0
+ return 1+.35*spent,if (graceLeft or 0)>0 and graceLeft<=Danger.RedWindow then .34 else .26
+end
 
 function Danger.classify(pressure,graceLeft)
  if (graceLeft or 0)>0 then return "over" end
@@ -147,8 +169,21 @@ function Danger:update(pressure,published,now,reduced,audible,roundOver)
    if audible and self.audio then self.audio:play(Danger.ClearCue,1,.6)end
   end
   self.state=state
+  -- A new state starts a fresh beat, so the first tick lands one full beat after entry.
+  self.beatAt=now
  end
  if roundOver then self.safeUntil=0;self.flashUntil=0 end
+ -- Heartbeat (G1): visual pulse near and over; a tick per beat only over the line.
+ local period=if roundOver then nil else Danger.beatPeriod(state,pressure,shownLeft)
+ local pulse=0
+ if period then
+  if now-(self.beatAt or now)>=period then
+   self.beatAt=now;self.stats.beats=(self.stats.beats or 0)+1
+   if state=="over"and audible and self.audio then self.audio:play(Danger.TickCue,Danger.tickVoice(shownLeft,self.grace))end
+  end
+  if not reduced then pulse=Danger.beat((now-(self.beatAt or now))/period)end
+ end
+ self.pulse=pulse
  self.left=shownLeft
  local safe=now<self.safeUntil
  local flashing=now<self.flashUntil
@@ -162,12 +197,16 @@ function Danger:update(pressure,published,now,reduced,audible,roundOver)
  local thickness=if state=="over"then 4 else 3
  if self.fraction~=fraction or self.thickness~=thickness then
   self.fraction,self.thickness=fraction,thickness
-  self.bar.Size=UDim2.new(fraction,0,0,thickness);self.glow.Size=UDim2.new(fraction,0,0,thickness+8)
+  self.bar.Size=UDim2.new(fraction,0,0,thickness)
  end
- self:set(self.glow,"Visible",state=="over")
+ -- The glow carries the heartbeat: taller and brighter on each beat.
+ self:set(self.glow,"Size",UDim2.new(fraction,0,0,thickness+8+math.floor(10*pulse+.5)))
+ self:set(self.glow,"Visible",state=="over"or(state=="near"and not reduced))
  self:set(self.glow,"BackgroundColor3",color)
  if state=="over"then
-  self:set(self.glow,"BackgroundTransparency",if reduced then .72 else .72+.12*math.sin(now*math.pi*3))
+  self:set(self.glow,"BackgroundTransparency",if reduced then .72 else math.floor((.78-.38*pulse)*100+.5)/100)
+ elseif state=="near"then
+  self:set(self.glow,"BackgroundTransparency",math.floor((.9-.4*pulse)*100+.5)/100)
  end
  -- Tag.
  self:set(self.tag,"Visible",state~="over"and not safe)
