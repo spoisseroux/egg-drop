@@ -26,7 +26,7 @@ return function(client,parent)
     assert(card.Cost.Position.X.Offset+card.Cost.Size.X.Offset<=card.Size.X.Offset,"price outside row")
    end
    assert(view.hatchButton.AbsoluteSize.Y>=44 and view.shopBackButton.AbsoluteSize.Y>=44)
-   assert(not require(client.DeckKit).buttonState(view.hatchButton).enabled and view.needLine.Visible,"4 Stars cannot hatch an 8-Star egg")
+   assert(not require(client.DeckKit).buttonState(view.hatchButton).enabled and view.needLine.Visible,"4 Stars cannot hatch a 20-Star egg")
    table.insert(cases,tostring(size).." measured rows names prices borders and pane action fit")
    view:close()
   end

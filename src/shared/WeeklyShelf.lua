@@ -32,7 +32,7 @@ Shelf.Kinds=table.freeze({"wearable","faceplate","ball"})
 
 function Shelf.weekOfDay(day)return Rotation.week(tonumber(day)or 0)end
 function Shelf.week(now)return Shelf.weekOfDay(Daily.dayOf(if type(now)=="number"then now else os.time()))end
--- 20% off, rounded to the nearest Star: 15 -> 12, 30 -> 24, 60 -> 48, 20 -> 16, 40 -> 32.
+-- 20% off, rounded to the nearest Star: 40 -> 32, 100 -> 80, 250 -> 200.
 function Shelf.discounted(price)
  return price-math.floor(price*Shelf.Discount+.5)
 end

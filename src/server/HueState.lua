@@ -112,7 +112,7 @@ local function validReceipt(r)
  if r.outcome=="Refused"then return q.action=="hueBuy"and r.cost==0 and r.reason=="StackLimit"and r.resultId==nil and Hue.Items[r.itemId]~=nil and integer(r.inventoryBefore,Hue.StackLimit)and r.inventoryBefore==Hue.StackLimit and r.inventoryAfter==r.inventoryBefore end
  if r.outcome~="Applied"or r.reason~=nil then return false end
  if q.action=="hueBuy"or q.action=="hueLegacyRedeem"then
-  if r.cost~=(if q.action=="hueBuy"then Hue.Cost else 0)or not Hue.Items[r.itemId]or not integer(r.inventoryBefore,Hue.StackLimit-1)
+  if(if q.action=="hueBuy"then not Hue.charged(r.cost)else r.cost~=0)or not Hue.Items[r.itemId]or not integer(r.inventoryBefore,Hue.StackLimit-1)
    or r.inventoryAfter~=r.inventoryBefore+1 or r.resultId~=r.id then return false end
   if q.action=="hueLegacyRedeem"and(r.itemId~=q.itemId or r.token~=q.token or r.purchaseId~=q.purchaseId or r.migrationId~=q.migrationId)then return false end
  elseif q.action=="hueUse"then

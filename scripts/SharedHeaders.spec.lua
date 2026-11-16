@@ -57,7 +57,7 @@ return function(client,parent,rootSize)
     v:update(state(6));v:selectRecipe("hue");settle()
     for _,id in ipairs({"toy","hue"})do local r=v.body.EggColumn["Recipe_"..id];fit(r.RecipeName);fit(r.Cost)end
     local price=v.body.EggColumn.Recipe_hue.Cost
-    assert(price.Text:find("8",1,true)and v.action.Text:find("8",1,true)and v.needLine.Text=="2 more Stars needed","selected cost/shortfall missing CTA="..v.action.Text)
+    assert(price.Text:find("12",1,true)and v.action.Text:find("12",1,true)and v.needLine.Text=="6 more Stars needed","selected cost/shortfall missing CTA="..v.action.Text)
     assert(v.state.nectar==6 and sends==0)
     v:setError("Your hatch progress updated. Try again.");settle();shopHeader(v,6);assert(v.needLine.Visible and v.needLine.Text==v.errorMessage)
     local n=Notice.resolve("Retrying",{status="Ready"});v:setSaveNotice(n);settle();shopHeader(v,6);assert(v.needLine.Text==n.detail)

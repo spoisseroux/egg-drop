@@ -49,7 +49,7 @@ local function receiptValid(r)
  for _,key in ipairs({"featureId","petId","inventoryBefore","inventoryAfter","earnedBefore","earnedAfter","visibleBefore","visibleAfter","resultId","acknowledgedResultId","reason"})do if r[key]~=nil and not extra[key]then return false end end
  if r.outcome=="Refused"then return q.action=="featureBuy"and r.cost==0 and r.reason=="StackLimit"and Catalog.known(r.featureId)and r.inventoryBefore==Catalog.StackLimit and r.inventoryAfter==r.inventoryBefore and r.resultId==nil end
  if r.outcome~="Applied"or r.reason~=nil then return false end
- if q.action=="featureBuy"then return r.cost==Catalog.Cost and Catalog.known(r.featureId)and integer(r.inventoryBefore,Catalog.StackLimit-1)and r.inventoryAfter==r.inventoryBefore+1 and r.resultId==r.id end
+ if q.action=="featureBuy"then return Catalog.charged(r.cost)and Catalog.known(r.featureId)and integer(r.inventoryBefore,Catalog.StackLimit-1)and r.inventoryAfter==r.inventoryBefore+1 and r.resultId==r.id end
  if r.cost~=0 then return false end
  if q.action=="featureAck"then return r.acknowledgedResultId==q.resultId end
  if r.petId~=q.petId or r.featureId~=q.featureId or r.earnedBefore~=q.expectedStage or not integer(r.visibleBefore,r.earnedBefore)then return false end

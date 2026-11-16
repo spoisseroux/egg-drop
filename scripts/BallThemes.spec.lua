@@ -24,9 +24,9 @@ return function(client,parent)
 	local hues={{.52,.68},{.0,.12},{.27,.45},{.83,.99},{.69,.80}} -- blue, orange, green, pink, violet
 	local root=Instance.new("Frame");root.Name="_BallThemesSpec";root.Size=UDim2.fromOffset(300,200);root.BackgroundTransparency=1;root.Parent=parent
 	local ok,problem=pcall(function()
-		test("seven themes in shop order with fixed prices; Smileys default; Kittens 160; Bubbles 60",function()
+		test("seven themes in shop order with fixed prices; Smileys default; Kittens 250; Bubbles 100",function()
 			assert(table.concat(Themes.Order,",")=="smileys,marbles,gumdrops,gems,planets,kittens,bubbles")
-			local expect={smileys=0,marbles=0,gumdrops=30,gems=60,planets=60,kittens=160,bubbles=60}
+			local expect={smileys=0,marbles=0,gumdrops=40,gems=100,planets=100,kittens=250,bubbles=100}
 			for id,price in pairs(expect)do assert(Themes.ById[id].price==price,id)end
 			assert(Themes.get("unknown").id=="smileys"and Themes.Default=="smileys")
 		end)

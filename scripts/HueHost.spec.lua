@@ -21,7 +21,7 @@ return function(server,hostSource)
   if c.failAfter then c.failAfter=false;error("Expected fixture: Hue committed then response lost")end
   return copy(output)
  end
- local h=H.load(id,{rank=1,companionId="pip"},adapter);assert(H.award(h,1,8));local before=h.state.nectar
+ local h=H.load(id,{rank=1,companionId="pip"},adapter);assert(H.award(h,1,8));assert(H.award(h,2,8));local before=h.state.nectar
  local fixture=nativeInstance.new("Folder");fixture.Name="_HueHostFixture";fixture.Parent=server
  local replicated=nativeInstance.new("Folder");replicated.Parent=fixture
  local shared=realGame.ReplicatedStorage.Shared:Clone();shared.Parent=replicated
@@ -98,8 +98,8 @@ return function(server,hostSource)
   assert(h.pending==pending and h.state.nectar==before)
   c.now=3;resume(c.blocked)
   local saved=c.packets[#c.packets];assert(saved.status=="Saved"and saved.id==packet.id,"conflicting request cleared original waiter")
-  assert(h.status=="Ready"and not h.pending and h.state.nectar==before-8 and h.state.hueInventory.rose==1 and c.rolls==1)
-  c.now=3.01;assert(send(packet,revision).status=="Saved"and h.state.nectar==before-8)
+  assert(h.status=="Ready"and not h.pending and h.state.nectar==before-12 and h.state.hueInventory.rose==1 and c.rolls==1)
+  c.now=3.01;assert(send(packet,revision).status=="Saved"and h.state.nectar==before-12)
   local public=snapshot();assert(public.pendingHueResult.id==packet.id and public.pendingHueResult.itemId=="rose"and public.hueReservation==nil)
  end)
  test("lost use event recovers committed vectors, replay never consumes later stock and altered pending ID conflicts",function()
@@ -109,7 +109,7 @@ return function(server,hostSource)
   local current=snapshot();assert(current.lastHueResult.id==usage.id and current.nectar==balance and current.petHues.pip.main.rose==1 and current.hueInventory.rose==0 and not current.pendingHueResult)
   assert(current.hueItemReceipts==nil and current.hueReceipts==nil and current.lastHueResult.quote==nil)
   c.dropSaved=false;c.now=4.5;local replay=send(usage,rev,"hueUse");assert(replay.status=="Saved"and replay.receipt.cost==0)
-  assert(H.award(h,2,8));c.now=5;local nextRevision=h.state.revision
+  assert(H.award(h,3,8));c.now=5;local nextRevision=h.state.revision
   local nextBuy={id=tostring(nextRevision)..":host-next",catalogVersion=Hue.CatalogVersion};send(nextBuy,nextRevision)
   local newResult=h.state.pendingHueResult.id;local newBalance=h.state.nectar
   c.now=5.5;assert(send(usage,rev,"hueUse").status=="Saved"and h.state.hueInventory.rose==1 and h.state.pendingHueResult.id==newResult and h.state.nectar==newBalance)

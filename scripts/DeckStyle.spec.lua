@@ -49,13 +49,13 @@ return function(client,parent)
    assert(Backs.step(1,1,0,3,2)==2 and Backs.step(2,0,1,3,2)==3 and Backs.step(3,1,0,3,2)==3)
   end)
   test("pure: Balls cards and pane (IN USE, Owned, price, short), free themes always owned",function()
-   local ctx={owned={"smileys","marbles"},equipped="smileys",wallet=60}
+   local ctx={owned={"smileys","marbles"},equipped="smileys",wallet=100}
    assert(Balls.status("smileys",ctx).kind=="inUse"and Balls.status("smileys",ctx).button=="In use"and Balls.status("smileys",ctx).enabled==false)
    assert(Balls.status("marbles",ctx).kind=="owned"and Balls.status("marbles",ctx).button=="Use")
    assert(Balls.status("marbles",{owned={},equipped="smileys"}).kind=="owned","free themes need no purchase")
-   local gems=Balls.status("gems",ctx);assert(gems.kind=="buy"and gems.price==60 and gems.button=="★ Buy 60")
-   local kittens=Balls.status("kittens",ctx);assert(kittens.kind=="short"and kittens.price==160 and kittens.text=="100 more Stars needed")
-   assert(select(1,Balls.tileStatus("smileys",ctx))=="IN USE"and select(1,Balls.tileStatus("marbles",ctx))=="✓ Owned"and select(1,Balls.tileStatus("gumdrops",ctx))=="★ 30")
+   local gems=Balls.status("gems",ctx);assert(gems.kind=="buy"and gems.price==100 and gems.button=="★ Buy 100")
+   local kittens=Balls.status("kittens",ctx);assert(kittens.kind=="short"and kittens.price==250 and kittens.text=="150 more Stars needed")
+   assert(select(1,Balls.tileStatus("smileys",ctx))=="IN USE"and select(1,Balls.tileStatus("marbles",ctx))=="✓ Owned"and select(1,Balls.tileStatus("gumdrops",ctx))=="★ 40")
    assert(Balls.status("nope",ctx).kind=="invalid"and Balls.step(1,1,0,6,2)==2 and Balls.step(2,0,1,6,2)==4 and Balls.step(6,1,1,6,2)==6)
   end)
   for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
@@ -113,7 +113,7 @@ return function(client,parent)
    end)
    test(label.." Balls: Use equips an owned theme, Buy needs a confirm, replies update the cards",function()
     local f=picker(size);local v=f.v
-    v:setShopState(60,{},{owned={"smileys","marbles"},equipped="smileys"},7)
+    v:setShopState(100,{},{owned={"smileys","marbles"},equipped="smileys"},7)
     v.customizationEntry=true;v:open("sherbet","none","Balls");settle()
     local shop=v.shop;local balls=shop.balls
     local sent={};balls.callbacks.send=function(action,payload)table.insert(sent,{action,payload})end
@@ -129,14 +129,14 @@ return function(client,parent)
     assert(balls:focusId("smileys")and shop:act(false)and #sent==2 and balls.ctx.equipped=="smileys"and shown[1]=="smileys")
     -- The compact layout has no status line (statusLabel is nil there); check it only where it exists.
     assert(shop.root:GetAttribute("BallPaneState")=="inUse"and(balls.statusLabel==nil or not balls.statusLabel.Text:find("Applying",1,true)))
-    v:setShopState(60,{},{owned={"smileys","marbles"},equipped="marbles"},7);assert(balls.ctx.equipped=="smileys","snapshot during the save keeps the choice")
+    v:setShopState(100,{},{owned={"smileys","marbles"},equipped="marbles"},7);assert(balls.ctx.equipped=="smileys","snapshot during the save keeps the choice")
     assert(shop:result({kind="ballTheme",id=sent[2][2].id,status="Rejected",reason="Busy"})and balls.ctx.equipped=="marbles"and shown[2]=="marbles"and balls.errorId=="smileys")
     table.remove(sent,2);balls.callbacks.equipped=nil
     assert(#f.applied==0,"ball themes never go through the deck appearance slots")
     -- Buy: first press arms the confirm, the second sends theme + fixed price.
     assert(balls:focusId("gems")and shop.root:GetAttribute("BallPaneState")=="buy")
     assert(shop:act(false)and #sent==1 and balls.confirmId=="gems")
-    assert(shop:act(false)and #sent==2 and sent[2][1]=="ballThemeBuy"and sent[2][2].themeId=="gems"and sent[2][2].price==60 and sent[2][2].equip==true)
+    assert(shop:act(false)and #sent==2 and sent[2][1]=="ballThemeBuy"and sent[2][2].themeId=="gems"and sent[2][2].price==100 and sent[2][2].equip==true)
     assert(not shop:result({kind="ballTheme",id="other",status="Saved"}),"a reply for another press is ignored")
     assert(shop:result({kind="ballTheme",id=sent[2][2].id,status="Rejected",reason="NeedStars"})and balls.errorId=="gems")
     assert(shop:act(false)and shop:act(false)and #sent==3)

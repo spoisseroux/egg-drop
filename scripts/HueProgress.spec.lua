@@ -25,7 +25,7 @@ return function(server)
    if c.failSettlement and db[key].hatching.hueReservation then c.failSettlement=false;c.before=true end
    return copy(output)
   end
-  local h=H.load(1,{},a);assert(h.status=="Ready");assert(H.award(h,1,8));assert(H.award(h,2,8))
+  local h=H.load(1,{},a);assert(h.status=="Ready");for n=1,4 do assert(H.award(h,n,8))end -- 32 Stars: two Hue Eggs at 12 (fund() repeats 3 and 4 as AlreadyAwarded)
   currentDb=db
   return h,db,c,a
  end
@@ -81,9 +81,16 @@ return function(server)
  test("each 25-percent server roll stores exactly one item, one debit and no companion pity change",function()
   local h,_,c=fixture();fund(h);c.callbackReplay=true
   for _,item in ipairs(Hue.RollOrder)do local before=h.state.nectar;local misses=h.state.misses;local _,_,r=buy(h,c,item)
-   assert(h.state.nectar==before-8 and r.inventoryAfter==1 and h.state.hueInventory[item]==1 and h.state.misses==misses);store(h)
+   assert(h.state.nectar==before-Hue.Cost and Hue.Cost==12 and r.inventoryAfter==1 and h.state.hueInventory[item]==1 and h.state.misses==misses);store(h)
   end
   assert(c.rolls==4)
+ end)
+ test("a jar receipt saved at the old 8-Star price (to v760) stays a valid save",function()
+  local function reprice(r,cost)r.cost=cost;r.balanceAfter=r.balanceBefore-cost end
+  local h,_,c=fixture();local q=buy(h,c,"rose");local state=copy(h.state)
+  assert(state.hueItemReceipts[q.id].cost==Hue.Cost and Hue.charged(Hue.Cost)and Hue.charged(8)and not Hue.charged(9)and not Hue.charged(0))
+  reprice(state.hueItemReceipts[q.id],8);reprice(state.lastHueResult,8);assert(S.valid(state),"an 8-Star jar receipt is a valid save")
+  reprice(state.hueItemReceipts[q.id],9);reprice(state.lastHueResult,9);assert(not S.valid(state),"only the old and the current jar price validate")
  end)
  test("stored duplicates stack, pending results block new purchases and result use acknowledges once",function()
   local h,_,c=fixture();buy(h,c,"rose");local pending=h.state.pendingHueResult.id
@@ -106,14 +113,14 @@ return function(server)
   for _,phase in ipairs({"before","after","settlement"})do local h,_,c=fixture();local balance=h.state.nectar
    if phase=="settlement"then c.failSettlement=true else c[phase]=true end
    local q,r=request(h,{});local ok,why=H.hueCommand(h,"hueBuy",q,r);assert(not ok and why=="Retrying")
-   local rollCount=c.rolls;c.unit=.99;assert(H.retry(h));assert(c.rolls==rollCount and h.state.hueInventory.rose==1 and h.state.nectar==balance-8 and not h.state.hueReservation)
-   assert(H.hueCommand(h,"hueBuy",q,r));assert(c.rolls==rollCount and h.state.nectar==balance-8)
+   local rollCount=c.rolls;c.unit=.99;assert(H.retry(h));assert(c.rolls==rollCount and h.state.hueInventory.rose==1 and h.state.nectar==balance-12 and not h.state.hueReservation)
+   assert(H.hueCommand(h,"hueBuy",q,r));assert(c.rolls==rollCount and h.state.nectar==balance-12)
   end
  end)
  test("durable reservation survives writer takeover and settles its original result once",function()
   local h,db,c,a=fixture();c.failSettlement=true;local q,r=request(h,{});local balance=h.state.nectar
   assert(not H.hueCommand(h,"hueBuy",q,r));assert(db.player_1.hatching.hueReservation and db.player_1.hatching.hueInventory.rose==0)
-  c.now+=100;c.unit=.99;local joined=H.load(1,{},a);assert(joined.status=="Ready"and joined.state.hueInventory.rose==1 and joined.state.nectar==balance-8 and c.rolls==1)
+  c.now+=100;c.unit=.99;local joined=H.load(1,{},a);assert(joined.status=="Ready"and joined.state.hueInventory.rose==1 and joined.state.nectar==balance-12 and c.rolls==1)
   assert(H.hueCommand(joined,"hueBuy",q,r));assert(joined.state.hueInventory.rose==1)
   assert(not H.retry(h));assert(h.status=="SessionLost")
  end)

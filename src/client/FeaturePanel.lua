@@ -22,7 +22,7 @@ function Panel.new(parent,intent,options)
   onIdentityReady=function()self:paintReceiptIdentity();if self.options.identityChanged then self.options.identityChanged()end end})
  self.pool=label(root,"AvailableOdds","","Body");self.status=label(root,"Status","","Body")
  self.useNow=button(root,"UseNow","Use now",function()self:useResult()end)
- self.shop=button(root,"FeatureEggShop","Feature Egg · 32 Stars",function()if self.options.shop then self.options.shop()end end)
+ self.shop=button(root,"FeatureEggShop","Feature Egg · 40 Stars",function()if self.options.shop then self.options.shop()end end)
  self.confirmCopy=label(root,"ConfirmGrowth","","Body")
  self.confirm=button(root,"ConfirmGrowthAction","Use one",function()self:confirmUse()end)
  self.cancel=button(root,"CancelGrowth","Cancel",function()self:cancelUse()end)
@@ -97,7 +97,7 @@ function Panel:refresh(state,petId,mode,animate)
  if not mode then return end
  local receipt,buy=mode=="receipt",mode=="buy";local result=self.state.pendingFeatureResult;local confirming=self.confirmation~=nil
  self.title.Text=if receipt then Copy.get("hatch.display.wait")elseif buy then "Feature Egg"else "Features"
- self.note.Text=if receipt then Copy.get("hatch.display.line")elseif buy then "32 Stars · one stored feature item. Fixed odds."else "Grown is what you earned. Shown is the size on this pet."
+ self.note.Text=if receipt then Copy.get("hatch.display.line")elseif buy then "40 Stars · one stored feature item. Fixed odds."else "Grown is what you earned. Shown is the size on this pet."
  self.art.Visible=receipt or buy
  if receipt and result then self.reveal:show(result,animate==true)
  elseif buy and not self.art:FindFirstChild("FeatureEgg")then for _,n in ipairs(self.art:GetChildren())do n:Destroy()end;EggArt.create(self.art,"feature",UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.art.ZIndex+1,"FeatureEgg")end

@@ -1,10 +1,10 @@
 -- Canonical paid pigments and free learned recipes. Stable IDs remain saved.
-local Hue={Cost=8,MaxRank=3,Supported={pip=true,puddle=true,wick=true,orbit=true,bloom_pip=true,foxfire_wick=true,eclipse_orbit=true,blip=true},LegacySupported={pip=true,puddle=true},Weights={0,.65,.84,1},CatalogVersion="hue-items-v1",MaxDose=5,StackLimit=9007199254740000}
+local Hue={Cost=12,MaxRank=3,Supported={pip=true,puddle=true,wick=true,orbit=true,bloom_pip=true,foxfire_wick=true,eclipse_orbit=true,blip=true},LegacySupported={pip=true,puddle=true},Weights={0,.65,.84,1},CatalogVersion="hue-items-v1",MaxDose=5,StackLimit=9007199254740000}
 Hue.Order={
- {id="rose",name="Rose",direction="Rose",color=Color3.fromHex("#FF327A"),cost=8},
- {id="tide",name="Tide",direction="Tide",color=Color3.fromHex("#008DFF"),cost=8},
- {id="citrus",name="Citrus",direction="Citrus",color=Color3.fromHex("#FFCC00"),cost=8},
- {id="iris",name="Iris",direction="Iris",color=Color3.fromHex("#9350FF"),cost=8},
+ {id="rose",name="Rose",direction="Rose",color=Color3.fromHex("#FF327A"),cost=12},
+ {id="tide",name="Tide",direction="Tide",color=Color3.fromHex("#008DFF"),cost=12},
+ {id="citrus",name="Citrus",direction="Citrus",color=Color3.fromHex("#FFCC00"),cost=12},
+ {id="iris",name="Iris",direction="Iris",color=Color3.fromHex("#9350FF"),cost=12},
 }
 Hue.ById={};for _,item in ipairs(Hue.Order)do Hue.ById[item.id]=item end
 Hue.MixOrder={"rose:tide","citrus:rose","iris:rose","citrus:tide","iris:tide","citrus:iris"}
@@ -111,4 +111,6 @@ function Hue.presets(hues,petId)
  for _,key in ipairs(Hue.MixOrder)do local counts=Hue.mappedCounts(row,"main",key);if counts then table.insert(result.main,{id=key,name=Hue.Mixes[key].name,counts=counts})end end
  return result
 end
+-- Saved hueBuy receipts keep the price they were charged: 8 (to v760) or the current Cost.
+function Hue.charged(cost)return cost==Hue.Cost or cost==8 end
 return Hue

@@ -227,7 +227,7 @@ return function(client,parent)
    for _,item in ipairs(all)do if item.variant then assert(require(Shared.WearableCatalog).item("pip",item.base),"variant without a base "..item.id)else table.insert(sold,item)end end
    local priced=0;for _,raw in ipairs(bear.wearableItems)do if type(raw.price)=="number"and raw.price>0 then priced+=1 end end
    assert(#sold==priced and #sold>=17,"manifest items "..#sold)
-   for _,item in ipairs(sold)do assert(item.price==({common=25,rare=50,showcase=100})[item.tier],item.id)end
+   for _,item in ipairs(sold)do assert(item.price==({common=40,rare=100,showcase=250})[item.tier],item.id)end
    -- Real manifest flags: full hats hide horns; the Flower Crown is an open crown (horns and the centre charm stay) with a low brim.
 
    local r0=Rules.resolve(bear,{horns=3},{Hat="sunhat"});assert(r0.stages.horns==0 and r0.charmCenterHidden,"sun hat kept horns")

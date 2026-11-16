@@ -24,7 +24,7 @@ ROOT_NAME = "PetBlip" if "PetBlip" in D else "PetBear"
 PRE, MAT_PRE = ROOT_NAME + "__", ("petBlip" if ROOT_NAME == "PetBlip" else "petBear")
 HAS_EARS = ROOT_NAME == "PetBear"            # ear items need an outer ear; Blip has antennae
 root = D[ROOT_NAME]
-TIERS = {"common": 25, "rare": 50, "showcase": 100}   # suggested Star prices
+TIERS = {"common": 40, "rare": 100, "showcase": 250}   # suggested Star prices
 
 # item id -> shop data. Order is the lineup order.
 ITEMS = {

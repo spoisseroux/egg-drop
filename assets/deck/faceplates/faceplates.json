@@ -16,13 +16,13 @@
    "note": "the 8 existing deck styles; ids are the saved DeckThemes ids, unlock rules unchanged"
   },
   "common": {
-   "priceStars": 30
+   "priceStars": 40
   },
   "rare": {
-   "priceStars": 60
+   "priceStars": 100
   },
   "showcase": {
-   "priceStars": 120
+   "priceStars": 250
   },
   "book": {
    "priceStars": 0,

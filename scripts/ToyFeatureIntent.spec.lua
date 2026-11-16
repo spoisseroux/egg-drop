@@ -6,7 +6,7 @@ return function(client)
  test("Toy purchase uses sorted quote and waits for matching snapshot grant",function()
   local d,sent=deps();local intent=Toy.new(d);intent:update(state());assert(intent:buy()and #sent==1)
   local p=intent.pending;assert(p.value.id=="10:toy-intent-fixture"and table.concat(p.value.eligible,",")=="ball,bone,sparkler")
-  local r={id=p.value.id,action="toyBuy",catalogVersion=1,revision=11,cost=8,balanceBefore=64,balanceAfter=56,toyId="ball",resultId=p.value.id}
+  local r={id=p.value.id,action="toyBuy",catalogVersion=1,revision=11,cost=20,balanceBefore=64,balanceAfter=44,toyId="ball",resultId=p.value.id}
   assert(intent:receive({id=r.id,action=r.action,status="Saved",receipt=r})and intent.pending)
   local nextState=state();nextState.revision=11;intent:update(nextState);assert(intent.pending)
   nextState.toyUnlocks.ball=true;intent:update(nextState);assert(not intent.pending and intent.receipt==r)

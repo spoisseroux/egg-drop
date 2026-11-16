@@ -8,7 +8,7 @@
 --   * CatalogVersion stays 1: stored receipts and quotes pin it.
 --   * A toy joins a pool only once PetToyGeometry can build it (client) and it has a name here.
 --   * PaidOrder is append-only: a restricted player's fixed next toy stays the old toys first.
-local Catalog={CatalogVersion=1,PoolVersion=3,Cost=8,Default="none",ReceiptLimit=32,
+local Catalog={CatalogVersion=1,PoolVersion=3,Cost=20,Default="none",ReceiptLimit=32,
  Order=table.freeze({"none","sparkler","ball","bone","wobble_top","squeaky_carrot","pocket_deck"}),
  PaidOrder=table.freeze({"ball","bone","sparkler","wobble_top","squeaky_carrot","pocket_deck"}),
  Pools=table.freeze({[1]=table.freeze({"ball","bone","sparkler"}),
@@ -24,6 +24,8 @@ for version,pool in pairs(Catalog.Pools)do
   previous=id
  end
 end
+-- Saved toyBuy receipts keep the price they were charged: 8 (to v760) or the current Cost.
+function Catalog.charged(cost)return cost==Catalog.Cost or cost==8 end
 function Catalog.known(id)return type(id)=="string"and Catalog.ById[id]~=nil end
 function Catalog.owns(unlocks,id)return id==Catalog.Default or(Catalog.known(id)and type(unlocks)=="table"and unlocks[id]==true)end
 function Catalog.remaining(unlocks,version)

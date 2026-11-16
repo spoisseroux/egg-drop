@@ -88,7 +88,7 @@ return function(server)
 		assert(pages.balls.percent == 0 and pages.balls.owned == 0 and pages.balls.total == #Book.Pages.balls.items)
 		assert(pages.pets == nil and #book.claimable == 0, "no free Pets page with one pet: " .. table.concat(book.claimable, ","))
 		fund(h, 100)
-		assert(H.buyBallTheme(h, "g-1", "gumdrops", 30, false))
+		assert(H.buyBallTheme(h, "g-1", "gumdrops", 40, false))
 		local expected = math.floor(100 / #Book.Pages.balls.items)
 		assert(Book.pagePercent(h.state, "balls") == expected)
 		-- With five paid themes (Bubbles, 2026-11-14) one theme is 20%: own a second, straight in
@@ -160,7 +160,7 @@ return function(server)
 	test("claims survive a page dropping below them (catalogue growth); nothing is clawed back", function()
 		local h, db, _, adapter = fixture()
 		fund(h, 100)
-		assert(H.buyBallTheme(h, "g-2", "gumdrops", 30, false))
+		assert(H.buyBallTheme(h, "g-2", "gumdrops", 40, false))
 		if Book.pagePercent(h.state, "balls") < 25 then edit(h, db, function(s) table.insert(s.ballThemes.owned, "gems") end) end
 		assert(H.bookClaim(h, "s-1", "balls.25", 5))
 		local balance = h.state.nectar

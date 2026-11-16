@@ -52,7 +52,7 @@ local function receiptValid(r)
  if not exact(r,receiptFields)or not quoteValid(r.quote)or r.id~=r.quote.id or r.action~=r.quote.action or not opaque(r.operationId)or not integer(r.sequence)or r.sequence<1 or not integer(r.revision)or r.revision<=r.quote.revision or r.catalogVersion~=Catalog.CatalogVersion or not integer(r.balanceBefore)or not integer(r.balanceAfter)or not integer(r.cost)or r.balanceAfter~=r.balanceBefore-r.cost then return false end
  local q=r.quote
  if q.action=="toyBuy"then
-  return r.cost==Catalog.Cost and table.find(q.eligible,r.toyId)~=nil and r.resultId==r.id and r.petId==nil and r.selectedBefore==nil and r.selectedAfter==nil and r.acknowledgedResultId==nil
+  return Catalog.charged(r.cost)and table.find(q.eligible,r.toyId)~=nil and r.resultId==r.id and r.petId==nil and r.selectedBefore==nil and r.selectedAfter==nil and r.acknowledgedResultId==nil
  elseif q.action=="toyAck"then
   return r.cost==0 and r.acknowledgedResultId==q.resultId and r.toyId==nil and r.petId==nil and r.selectedBefore==nil and r.selectedAfter==nil and r.resultId==nil
  end

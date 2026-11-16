@@ -1,7 +1,9 @@
 -- Fixed disclosed odds. Full rolled stacks refuse durably without charging.
-local Catalog={CatalogVersion=1,PoolVersion=1,Cost=32,StackLimit=99,MaxStage=5,ReceiptLimit=32,
+local Catalog={CatalogVersion=1,PoolVersion=1,Cost=40,StackLimit=99,MaxStage=5,ReceiptLimit=32,
  Order=table.freeze({"horns","claws","wings"}),
  ById=table.freeze({horns=table.freeze({name="Horn buds",rarity="Common",probability=.5}),claws=table.freeze({name="Claws",rarity="Uncommon",probability=.35}),wings=table.freeze({name="Folded wings",rarity="Rare",probability=.15})})}
+-- Saved featureBuy receipts keep the price they were charged: 32 (to v760) or the current Cost.
+function Catalog.charged(cost)return cost==Catalog.Cost or cost==32 end
 function Catalog.known(id)return type(id)=="string"and Catalog.ById[id]~=nil end
 function Catalog.emptyStock()return{horns=0,claws=0,wings=0}end
 function Catalog.emptyRow()return{horns={earned=0,visible=0},claws={earned=0,visible=0},wings={earned=0,visible=0}}end

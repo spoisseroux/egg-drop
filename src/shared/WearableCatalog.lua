@@ -16,7 +16,7 @@ Catalog.Tabs=table.freeze({
  {id="tail",slot="Tail",label="Tail"},
  {id="eyewear",slot="Eyewear",label="Eyewear"},{id="cheek",slot="Cheek",label="Cheek"},
  {id="wrist",slot="Wrist",label="Wrist"},{id="ankle",slot="Ankle",label="Ankle"}})
-Catalog.TierPrice=table.freeze({common=25,rare=50,showcase=100})
+Catalog.TierPrice=table.freeze({common=40,rare=100,showcase=250})
 -- Recolour rows (WearableVariants), here so the localization export reads their names.
 Catalog.Variants=Variants.Rows
 Catalog.week=Variants.week
