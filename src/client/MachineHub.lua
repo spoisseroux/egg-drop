@@ -238,8 +238,41 @@ local function colorOf(role)
  return Kit.Color[role]or Kit.Color.text
 end
 
+-- QA v775 note 9: the machine tiles' art moves (MachineHubArt). One shared clock
+-- (PetPeek's, a single RenderStepped) steps the art only while this hub is open and on
+-- top; closed, covered by a machine's screen or destroyed, nothing runs. Under Reduced
+-- Effects (the OS setting or the game's own, `callbacks.reduced`) the art is posed once.
+function Hub:reducedMotion()
+ return Kit.reduced()or(self.callbacks.reduced~=nil and self.callbacks.reduced()==true)
+end
+function Hub:motionWanted()
+ return self.visible and not self.covered and self.content~=nil and not self.destroyed and not self:reducedMotion()
+end
+function Hub:syncMotion()
+ local Clock=require(script.Parent.PetPeek)
+ self.motionKey=self.motionKey or("MachineHubTiles:"..tostring(self))
+ local wanted=self:motionWanted()
+ if wanted==(self.motionOn==true)then return wanted end
+ self.motionOn=wanted
+ if wanted then
+  Clock.subscribe(self.motionKey,function(now,dt)
+   -- Reduced Effects switched on while open: stop on the resting frame.
+   if not self:motionWanted()then self:syncMotion();return end
+   for _,entry in ipairs(self.tileViews)do
+    local art=entry.art
+    if art and HubArt.Animated[entry.id]then HubArt.step(art,now,dt)end
+   end
+  end)
+ else
+  Clock.unsubscribe(self.motionKey)
+  for _,entry in ipairs(self.tileViews)do if entry.art then HubArt.still(entry.art)end end
+ end
+ self.root:SetAttribute("TileMotion",wanted)
+ return wanted
+end
+
 -- host: a full-screen Frame (its own ScreenGui). callbacks: open(id) -> bool,
--- locked(id), closed(reason).
+-- locked(id), closed(reason), reduced() -> bool (the game's Reduced Effects setting).
 function Hub.new(host,callbacks)
  local self=setmetatable({host=host,callbacks=callbacks or {},index=Hub.DefaultIndex,visible=false,covered=false,
   ctx={owned=0,wallet=0,state={}},tileViews={}},Hub)
@@ -399,7 +432,8 @@ function Hub:paintTiles()
   local key=HubArt.key(entry.id,self.ctx,s.locked)
   if entry.artKey~=key or not entry.well:FindFirstChild("Art")then
    entry.artKey=key
-   HubArt.fill(entry.well,entry.id,self.ctx,entry.layout.well.w,entry.layout.well.h,s.locked,entry.iconName)
+   entry.art=HubArt.fill(entry.well,entry.id,self.ctx,entry.layout.well.w,entry.layout.well.h,s.locked,entry.iconName)
+   if not self.motionOn then HubArt.still(entry.art)end
   end
   entry.week.root.Visible=shelf~=nil
   if entry.wellStroke then
@@ -513,6 +547,7 @@ function Hub:setCovered(covered)
  if not self.visible then return end
  self.covered=covered==true
  self.root.Visible=not self.covered
+ self:syncMotion()
  if self.covered then if self.ring then self.ring.hide()end;return end
  if self.body then Kit.slideIn(self.body,-Kit.SlideOffset,Kit.headerSkip(self.header))end
  self:focusTile(self.index,true)
@@ -530,6 +565,7 @@ function Hub:open(ctx,options)
  Kit.shadeOpen(self,self.shade,function(covered)self:setCovered(covered)end)
  self.key=nil;self:fit(self.host.AbsoluteSize)
  self:focusTile(self.index,true)
+ self:syncMotion()
  if options.slideFrom and self.body then Kit.slideIn(self.body,options.slideFrom,Kit.headerSkip(self.header))
  elseif not wasOpen and not self.view and not Kit.reduced()then
   -- Screen in: 160 ms with an 8 px rise (desktop); Reduced Motion is a cut.
@@ -541,12 +577,14 @@ function Hub:close(reason)
  if not self.visible then return false end
  self.lastIndex=self.index
  self.visible=false;self.covered=false;self.root.Visible=false;Kit.shadeClose(self)
+ self:syncMotion()
  if self.ring then self.ring.hide()end
  if self.callbacks.closed then self.callbacks.closed(reason or "close")end
  return true
 end
 function Hub:destroy()
  self:close("destroy")
+ self.destroyed=true;self:syncMotion()
  if self.sizeConnection then self.sizeConnection:Disconnect()end
  self.root:Destroy();self.shade:Destroy()
 end

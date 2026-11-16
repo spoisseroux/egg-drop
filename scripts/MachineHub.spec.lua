@@ -179,6 +179,81 @@ return function(client,parent)
     if not good then error(why,0)end
    end)
   end
+  test("QA v775 note 9: pure motion rules for the tile art",function()
+   local HubArt=require(client.MachineHubArt)
+   for _,id in ipairs({"hatch","style","companions","book"})do assert(HubArt.Animated[id],id.." moves")end
+   assert(not HubArt.Animated.quests and not HubArt.Animated.settings,"only the four machine tiles move")
+   -- The mini deck's ball: starts at the top, lands, bounces once, rests, fades before the loop.
+   local y0,a0,p0=HubArt.deckBall(0);assert(y0==0 and a0==0 and p0==0)
+   local last=-1
+   for step=1,34 do local y=HubArt.deckBall(step/100);assert(y>=last and y<=1,"falls");last=y end
+   local yb=HubArt.deckBall(.42);assert(yb<1 and yb>.7,"one small bounce")
+   local yr,ar=HubArt.deckBall(.7);assert(yr==1 and ar==1,"rests on the floor")
+   local _,af=HubArt.deckBall(.99);assert(af<.1,"fades out before it loops")
+   local _,_,press=HubArt.deckBall(.05);assert(press>.9,"A dips as the ball drops")
+   for step=0,100 do local y,alpha,dip=HubArt.deckBall(step/100);assert(y>=0 and y<=1 and alpha>=0 and alpha<=1 and dip>=0 and dip<=1)end
+   -- The wave clock: nothing for the first half second, then one wave every WaveEvery.
+   assert(HubArt.waveAt(10.2,10,.5)==nil and HubArt.waveAt(10.6,10,.5)==10.5)
+   assert(math.abs(HubArt.waveAt(10.5+HubArt.WaveEvery+.1,10,.5)-(10.5+HubArt.WaveEvery))<1e-9)
+   local Rules=require(game:GetService("ReplicatedStorage").Shared.PetHelloRules)
+   assert(HubArt.WaveEvery>Rules.Duration+1,"a rest between waves")
+   assert(HubArt.EggTurn>0 and HubArt.EggTurn<=1,"the eggs turn slowly")
+  end)
+  for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(750,344)})do
+   test(tostring(size).." note 9 built hub: tiles move only while the hub is open and on top; one viewport a tile; Reduced Effects stands still",function()
+    local HubArt=require(client.MachineHubArt);local Clock=require(client.PetPeek)
+    local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
+    local reducedNow=false
+    local hub=Hub.new(host,{reduced=function()return reducedNow end})
+    -- The Companions tile pictures the player's own pet: give this spec one.
+    local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
+    local source=Clock.getSource()
+    Clock.setSource(function()return Pets.collection[1].id,{}end)
+    local good,why=xpcall(function()
+     assert(hub:open({owned=1,wallet=40,state=rich}));settle()
+     assert(hub.tileViews[3].art:GetAttribute("Portrait")=="3d","Companions shows the pet in 3D")
+     local osReduced=Kit.reduced()
+     for _,entry in ipairs(hub.tileViews)do
+      assert(entry.art and entry.art.Parent==entry.well,"tile "..entry.id.." keeps its art root")
+      assert(HubArt.animated(entry.art)==(HubArt.Animated[entry.id]==true),"tile "..entry.id.." motion")
+      local viewports=0
+      for _,node in ipairs(entry.art:GetDescendants())do if node:IsA("ViewportFrame")then viewports+=1 end end
+      assert(viewports<=1,"tile "..entry.id.." has "..viewports.." viewports")
+     end
+     assert(hub:motionWanted()==not osReduced and hub.root:GetAttribute("TileMotion")==not osReduced)
+     assert(Clock.isSubscribed(hub.motionKey)==not osReduced,"steps while open")
+     if not osReduced then
+      -- The art really moves: the mini deck rocks and its ball travels.
+      local deck=hub.tileViews[2].art:FindFirstChild("MiniDeck");local ball=deck and deck:FindFirstChild("DemoBall",true)
+      if deck and ball then
+       local seen={}
+       for _=1,24 do settle();seen[ball.Position.Y.Offset]=true end
+       local n=0;for _ in pairs(seen)do n+=1 end
+       assert(n>=2,"the demo ball never moved")
+      end
+      -- Covered by a machine's screen: paused. Uncovered: running again.
+      hub:setCovered(true);assert(not Clock.isSubscribed(hub.motionKey)and hub.root:GetAttribute("TileMotion")==false,"paused while covered")
+      hub:setCovered(false);assert(Clock.isSubscribed(hub.motionKey),"resumes on top")
+      -- The game's Reduced Effects switched on while open: it stops on the next frame, on the resting pose.
+      reducedNow=true;settle()
+      assert(not Clock.isSubscribed(hub.motionKey)and not hub:motionWanted(),"Reduced Effects stops the motion")
+      if deck then assert(deck.Rotation==0,"the deck rests level")end
+      hub:close("spec");hub:open({owned=1,wallet=40,state=rich});settle()
+      assert(not Clock.isSubscribed(hub.motionKey),"Reduced Effects: never starts")
+      reducedNow=false;hub:close("spec");hub:open({owned=1,wallet=40,state=rich});settle()
+      assert(Clock.isSubscribed(hub.motionKey))
+     end
+     hub:close("spec");assert(not Clock.isSubscribed(hub.motionKey)and hub.root:GetAttribute("TileMotion")==false,"paused when the menu closes")
+     -- Locked tiles (no pet yet) show the dimmed icon and nothing moves in them.
+     hub:open({owned=0,wallet=0,state=rich});settle()
+     for _,entry in ipairs(hub.tileViews)do if entry.id~="settings"then assert(not HubArt.animated(entry.art),"locked "..entry.id.." stands still")end end
+    end,function(e)return tostring(e).." | "..debug.traceback()end)
+    Clock.setSource(source)
+    hub:destroy();host:Destroy()
+    assert(not Clock.isSubscribed(hub.motionKey),"nothing left running after destroy")
+    if not good then error(why,0)end
+   end)
+  end
   for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
    test(tostring(size).." built hub: house style, focus, opens through the caller, Back closes",function()
     local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
