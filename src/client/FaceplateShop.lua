@@ -339,7 +339,8 @@ function Shop:buildCompact(v)
  local plates=Kit.frame(body,"Faceplates",nil,UDim2.new(),UDim2.fromScale(1,1));self.plates=plates
  -- Preview pane (pinned).
  local pw,ph=grid.pw,grid.paneH
- local pane=Kit.card(plates,"Preview",nil,{pad=12,seam=true});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
+ -- QA v760: no stitched seam on a phone preview pane (the preview well sat on top of it, so it read as an occluded inner border)
+ local pane=Kit.card(plates,"Preview",nil,{pad=12,seam=false});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
  local deckW=if H<340 then 144 else pw-24
  self.preview=miniDeck(pane,deckW,UDim2.fromOffset((pw-deckW)/2,10))
  local nameY=10+deckW/2+16+9

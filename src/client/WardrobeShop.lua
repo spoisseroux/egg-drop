@@ -366,7 +366,8 @@ function Shop:build(view)
   -- Shared header (redesign 0.1): title, Stars capsule and back circle, 36 drawn.
   self.header=Kit.header(body,{title="Wardrobe",tint="companions",compact=true,width=W,left=view.hx,onBack=function()self:back()end})
   self.title,self.wallet,self.backArrow=self.header.title,self.header.wallet,self.header.back
-  local pane=Kit.card(body,"Preview",nil,{pad=12,seam=true});pane.Position=UDim2.fromOffset(W-20-g.pw,64);pane.Size=UDim2.fromOffset(g.pw,g.paneH)
+  -- QA v760: no stitched seam on a phone preview pane (the preview well sat on top of it, so it read as an occluded inner border)
+  local pane=Kit.card(body,"Preview",nil,{pad=12,seam=false});pane.Position=UDim2.fromOffset(W-20-g.pw,64);pane.Size=UDim2.fromOffset(g.pw,g.paneH)
   self:buildPane(pane,g.pw,g.paneH,true)
   self:buildTabs(body,labels,20,64,g.gw,36,if g.gw<400 then 12 else 14)
   local list=Kit.node("ScrollingFrame",body,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(20,112),

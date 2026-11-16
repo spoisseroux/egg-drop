@@ -115,7 +115,8 @@ function Shop:build(parent,view,grid)
  if view then
   local W=view.W;local g=grid
   local pw,ph=g.pw,g.paneH
-  local pane=Kit.card(body,"Preview",nil,{pad=12,seam=true});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
+  -- QA v760: no stitched seam on a phone preview pane (the preview well sat on top of it, so it read as an occluded inner border)
+  local pane=Kit.card(body,"Preview",nil,{pad=12,seam=false});pane.Position=UDim2.fromOffset(W-20-pw,64);pane.Size=UDim2.fromOffset(pw,ph)
   self.pane=pane
   local buttonY=ph-60
   local nameY=buttonY-6-18-24
