@@ -431,10 +431,12 @@ function Shop:fit(size,rect,top)
  -- Compact phone roots get their own layout at scale 1 (UI-SPEC-COMPACT 9).
  if not rect and Kit.compactRule(size.X,size.Y)then
   if not top then local _,kh=Kit.keepOut();top=kh+2 end
-  -- Compact v2 plate grips (UI-SPEC-COMPACT-FRAME 4): the sheet moves in by mg - 6,
-  -- and down under the Roblox controls (QA 2026-11-12), so it has no keep-out.
-  local W=math.floor(size.X);local mg=require(script.Parent.DeckScreen).gripMargin(W);local off=mg-6
-  local view={phone=true,W=W-2*off,H=math.floor(size.Y)-top,kx=0,kh=0,hx=mg+18-off,off=off}
+  -- The sheet sits under the Roblox controls (QA 2026-11-12), so it has no keep-out.
+  -- QA v760: it is the same rectangle as the Pocket menu, the whole root wide. It used
+  -- to move in by the old plate grips (gripMargin - 6 a side), which made Deck style
+  -- visibly narrower than the menu it opens from.
+  local W=math.floor(size.X);local off=0
+  local view={phone=true,W=W,H=math.floor(size.Y)-top,kx=0,kh=0,hx=24,off=off}
   self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.fromOffset(off,top);self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
   if self.key~=Shop.viewKey(view)then self:build(view);self:relayout()end
   return

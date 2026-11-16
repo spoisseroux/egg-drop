@@ -1586,7 +1586,9 @@ do
 	local handoff = overlayGui.DeckHandoff
 	local function alignSafeContent()
 		local origin = backdrop.AbsolutePosition - overlayGui.AbsolutePosition
-		local margin=if backdrop.AbsoluteSize.Y<280 then 0 else 8
+		-- QA v760: no margin on a phone, so the sheets hosted here (Hatch eggs, Deck style,
+		-- Customize) are the same rectangle as the Pocket menu, Companions and the Wardrobe.
+		local margin=if backdrop.AbsoluteSize.Y<280 or require(script.DeckKit).compactRule(backdrop.AbsoluteSize.X,backdrop.AbsoluteSize.Y)then 0 else 8
 		safeOverlays.Position = UDim2.fromOffset(origin.X+margin,origin.Y+margin)
 		safeOverlays.Size = UDim2.fromOffset(math.max(1,backdrop.AbsoluteSize.X-margin*2),math.max(1,backdrop.AbsoluteSize.Y-margin*2))
 	end

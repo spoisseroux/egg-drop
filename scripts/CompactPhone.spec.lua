@@ -468,7 +468,8 @@ return function(client,parent)
     local host=frame(size);host.Name="ShopHost"
     local shop=Shop.new(host,{});shop:fit(size)
     shop:setContext({equipped="sherbet",wallet=128,facts={faceplates={}}});shop:open("sherbet");task.wait()
-    local grid=Shop.compactGrid(size.X-2*off,size.Y-60)
+    -- QA v760: Deck style is the whole root wide, like the Pocket menu (no grip inset).
+    local grid=Shop.compactGrid(size.X,size.Y-60)
     assert(shop.columns==grid.cols and shop.tiles[1].button.AbsoluteSize.X==grid.tileW and shop.tiles[1].button.AbsoluteSize.Y==64,label.." grid")
     -- Deck style is a menu sheet, not part of the handheld: it keeps Shop:fit's own top
     -- (keep-out + 2 = 60 here). Only the deck's sheets moved to g.top = 76 in QA v685 D1;
@@ -477,7 +478,7 @@ return function(client,parent)
     assert(shop.root.AbsolutePosition.Y-host.AbsolutePosition.Y==liveKh+2,label.." shop sheet under the Roblox controls")
     audit(shop.root,label.." shop",0,0,function(node)return node:IsDescendantOf(shop.grid)and(node.AbsolutePosition.Y<shop.grid.AbsolutePosition.Y or node.AbsolutePosition.Y+node.AbsoluteSize.Y>shop.grid.AbsolutePosition.Y+shop.grid.AbsoluteSize.Y)end)
     local action=shop.action.AbsolutePosition-host.AbsolutePosition
-    assert(action.X+shop.action.AbsoluteSize.X==size.X-off-32 and action.Y+48==size.Y-18-12,label.." Buy / Equip pinned bottom right")
+    assert(action.X+shop.action.AbsoluteSize.X==size.X-32 and action.Y+48==size.Y-18-12,label.." Buy / Equip pinned bottom right")
     -- Deck style (redesign 0.1 / 4): shared header, 36 capsule and circle on one centre
     -- line, 44 hit; the icon tab row at y 64 over the grid at y 112; no ghost button.
     local top=shop.root.AbsolutePosition
