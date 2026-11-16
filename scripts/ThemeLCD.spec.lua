@@ -18,11 +18,15 @@ return function(client,parent)
   -- Redesigned well: no rail or rim rows. Every static role is one of the
   -- plate's derived tones (top shadow band, gradient bands, lighter bank).
   local tones=LCD.boardTones(Themes.ById[id].lcd);assert(v.tones.bank==tones.bank and v.guideColor==tones.guide)
-  for _,sample in ipairs({{0,0},{1,0},{LCD.Width-1,3},{3,7},{math.floor(LCD.Width/2),math.floor(LCD.Height/2)},{0,LCD.Height-1}})do
+  for _,sample in ipairs({{0,0},{1,0},{LCD.Width-1,3},{3,7},{math.floor(LCD.Width/2),math.floor(LCD.Height/2)}})do
    local offset=(sample[2]*LCD.Width+sample[1])*4
    assert(buffer.readu32(v.background,offset)==tones.bands[LCD.bandOfRow(sample[2])],id.." band sample ("..sample[1]..","..sample[2]..")")
   end
   assert(buffer.readu32(v.background,((LCD.Height-6)*LCD.Width+1)*4)==tones.bank,id.." bank sample")
+  -- QA v775 note 14: the rows under the floor are the tray's base, in the bank tone.
+  for _,x in ipairs({0,math.floor(LCD.Width/2),LCD.Width-1})do
+   assert(buffer.readu32(v.background,((LCD.Height-1)*LCD.Width+x)*4)==tones.bank,id.." base sample ("..x..","..(LCD.Height-1)..")")
+  end
   for _,offset in ipairs(guideOffsets)do assert(buffer.readu32(v.pixels,offset)==packed(Themes.ById[id].lcd.guide),"angled guide retained old palette")end
  end)end
  test("failed repaint is explicit sticky failure for existing cheap-owner bridge",function()

@@ -103,6 +103,41 @@ return function(client,parent,live,screenModule)
     assert(g.board.h>=170 and math.abs(g.board.w/g.board.h-aspect)<.02,label.." board keeps its aspect and a playable size")
    end end
   end)
+  test("QA v775 note 14: the board reaches the bottom row of the screen, level with the side cards, on a tidy rounded base",function()
+   -- Spencer's fixture (750x402) and two more phones: the board is the full height of the
+   -- screen's layout rows, so its bottom edge is on the same line as the HUD cards beside
+   -- it and 3 px (the screen's own padding) above the glass's inner edge; never higher.
+   for _,size in ipairs({Vector2.new(750,402),Vector2.new(844,390),Vector2.new(568,320)})do
+    local g=Screen.resolveCompact(size.X,size.Y,aspect,116,58)
+    local label=string.format("%dx%d",size.X,size.Y)
+    local bottom=g.board.y+g.board.h
+    assert(bottom==g.y1,string.format("%s board bottom %d is not the screen's last row %d",label,bottom,g.y1))
+    assert(g.board.y==g.y0,label.." board starts on the screen's first row")
+    local under=g.screen.y+g.screen.h-bottom
+    assert(under>=0 and under<=3,string.format("%s board stops %d px above the screen's bottom edge",label,under))
+    assert(math.abs((g.board.y-g.screen.y)-under)<=1,label.." board is centred down the screen")
+   end
+   -- The rows under the floor are the tray's base, in the banks' tone (not a dark strip).
+   local LCD=require(client.JellyLCD)
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(163,273);host.Parent=gui
+   local lcd=assert(LCD.new(host,{backend="span"}),"span board")
+   local function at(x,y)return buffer.readu32(lcd.background,(y*LCD.Width+x)*4)end
+   local mid=math.floor(LCD.Width/2)
+   assert(at(mid,LCD.Height-1)==lcd.tones.bank and at(0,LCD.Height-1)==lcd.tones.bank and at(LCD.Width-1,LCD.Height-1)==lcd.tones.bank,"the base under the floor is the bank tone, edge to edge")
+   assert(at(2,LCD.Height-4)==lcd.tones.bank,"the base joins the corner banks")
+   assert(at(mid,LCD.Height-4)~=lcd.tones.bank,"the well above the floor is not base")
+   assert(at(mid,0)~=lcd.tones.bank,"no lip along the top")
+   lcd:destroy()
+   -- The board's corner mask takes the colour of the screen around it.
+   local Art=require(client.DeckArt)
+   local mask=Art.lcdCorners(host,Color3.fromHex("#201D32"))
+   local panel=Color3.fromHex("#152525")
+   assert(Art.tintLcdCorners(mask,panel)and mask:GetAttribute("MaskColor")==panel:ToHex())
+   local strips=0
+   for _,strip in ipairs(mask:GetChildren())do strips+=1;assert(strip.BackgroundColor3==panel,"mask strip keeps the old bezel colour")end
+   assert(strips==48 and not Art.tintLcdCorners(nil,panel)and not Art.tintLcdCorners(mask,"red"))
+   host:Destroy()
+  end)
   test("tablet geometry: the whole handheld resolves inside the root",function()
    for _,size in ipairs(tablets)do
     local g=Screen.resolve(size,aspect,{kx=208,kh=58})

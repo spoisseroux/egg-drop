@@ -353,7 +353,13 @@ local function boardPixels(tones,regions)
 		local inWell = y + 0.5 <= floor
 		for x = 0, WIDTH - 1 do
 			local color = band
-			if inWell and inset > 0 and (x + 0.5 < leftWall + inset or x + 0.5 > rightWall - inset) then
+			-- QA v775 note 14: the rows under the floor are the tray's base, in the banks'
+			-- tone, so the two banks and the floor read as one lip the balls rest on. They
+			-- were the darkest band: a dark strip under the pile that made the board look
+			-- as if it stopped short of the bottom of the screen.
+			if not inWell then
+				color = tones.bank
+			elseif inWell and inset > 0 and (x + 0.5 < leftWall + inset or x + 0.5 > rightWall - inset) then
 				color = tones.bank
 			elseif inWell and regions and regions.enabled and y >= ceiling then
 				local function boundary(worldX)

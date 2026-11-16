@@ -857,6 +857,16 @@ function Art.lcdCorners(parent,color)
 	parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
 	resize();return root
 end
+-- QA v775 note 14: the strips take the colour of whatever surrounds the board (the deck's
+-- screen panel follows the faceplate). They kept the first bezel's navy, so on the deck
+-- they showed as dark notches at the board's four corners instead of rounding them.
+function Art.tintLcdCorners(root,color)
+	if not root or typeof(color)~="Color3"then return false end
+	if root:GetAttribute("MaskColor")==color:ToHex()then return true end
+	for _,strip in ipairs(root:GetChildren())do if strip:IsA("Frame")then strip.BackgroundColor3=color end end
+	root:SetAttribute("MaskColor",color:ToHex())
+	return true
+end
 -- Components from the deck spec (button, tab, card, toggle, progress, toast, list
 -- row, back arrow, focus ring) live in DeckKit, which builds on this module.
 return Art
