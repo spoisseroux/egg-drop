@@ -12,6 +12,14 @@ return function(client,parent)
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local root=Instance.new("Frame");root.Name="_HatchEggsList";root.BackgroundTransparency=1;root.Size=UDim2.fromOffset(1920,1080);root.Parent=parent
  local function frames()for _=1,3 do Run.Heartbeat:Wait()end end
+ -- The shop shade covers the screen through DeckKit's screen probe, which is found from a
+ -- ScreenGui ancestor. This fixture's root is a bare Frame, so the shade test passed only
+ -- when an earlier spec had already made the probe. Make it here (QA v751 P2 run).
+ do
+  local primer=Instance.new("ScreenGui");primer.Name="_HatchEggsListProbe";primer.Parent=parent
+  local anchor=Instance.new("Frame");anchor.Parent=primer
+  require(client.DeckKit).screenProbe(anchor);primer:Destroy()
+ end
  local sent={}
  local view=Shop.new(root,{play=function()end,stopOwner=function()end},function()return true end,function(command,value)table.insert(sent,{command,value})end)
  local ok,problem=xpcall(function()
