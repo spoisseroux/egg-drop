@@ -64,24 +64,11 @@ clientUI.ambient=require(script.AmbientAudio).new(audio)
 clientUI.JellyPalette=require(ReplicatedStorage.Shared.JellyPalette)
 clientUI.ItemCarousel=require(script.ItemCarousel);clientUI.RoundItems=require(ReplicatedStorage.Shared.RoundItems)
 clientUI.Pico8=require(ReplicatedStorage.Shared.Pico8)
-clientUI.uiSequence=0
-clientUI.accepted=function(kind)
- if GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox()then return end
- if os.clock()-(clientUI.lastAcceptedSound or -math.huge)<.06 then return end
- clientUI.lastAcceptedSound=os.clock();clientUI.uiSequence+=1;audio:ui(kind,clientUI.uiSequence)
-end
--- One quiet cue for an enabled logical press, including legacy/native menu buttons.
--- Existing accepted-action handlers share the same short dedupe window above.
-task.defer(function()
- local pg=player:WaitForChild("PlayerGui")
- local function bind(node)
-  if not node:IsA("GuiButton")or node:GetAttribute("EggDropClickBound")then return end
-  node:SetAttribute("EggDropClickBound",true)
-  node.Activated:Connect(function()if node.Interactable and node.Active and node.Visible then clientUI.accepted("confirm")end end)
- end
- for _,node in ipairs(pg:GetDescendants())do bind(node)end
- pg.DescendantAdded:Connect(bind)
-end)
+-- QA v775 note 12: one shared click helper (UIClick) owns every button's sound: it binds
+-- each GuiButton under PlayerGui and plays one cue per press (the owner's own kind wins).
+clientUI.click=require(script.UIClick)
+clientUI.accepted=clientUI.click.play
+task.defer(function()clientUI.click.start(audio,player:WaitForChild("PlayerGui"))end)
 clientUI.clock=HollowClock.start()
 clientUI.worldMotion=require(script.WorldMotion).start()
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
@@ -211,7 +198,12 @@ for _,side in ipairs({"Min","Max"})do
  local edge=Art.frame(clientUI.centerZone,side,Color3.fromHex("#466853"),UDim2.fromScale(if side=="Min"then 0 else 1,0),UDim2.new(0,2,1,0),2)
  edge.AnchorPoint=Vector2.new(.5,0);edge.BackgroundTransparency=.35;edge.Active=false;edge.Selectable=false
 end
-Art.lcdCorners(overlay,bezel.BackgroundColor3)
+clientUI.lcdMask=Art.lcdCorners(overlay,bezel.BackgroundColor3)
+-- QA v775 note 14: on the Pocket Deck the board's rounded corners match the deck screen.
+clientUI.syncLcdMask=function()
+ local deck=clientUI.deck
+ Art.tintLcdCorners(clientUI.lcdMask,if deck and deck.visible and deck.lcd then deck.lcd.BackgroundColor3 else bezel.BackgroundColor3)
+end
 local lcd = JellyLCD.new(overlay)
 -- The chosen deck background, drawn in the board well at 6% (UI-SPEC-REDESIGN-MENUS 5).
 Art.boardPattern(overlay)
@@ -569,6 +561,7 @@ clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(clientUI.re
 board:GetAttributeChangedSignal("Mode"):Connect(clientUI.refreshInsets)
 clientUI.refreshInsets()
 clientUI.deck=DeckScreen.new({parent=clientUI.deckHost,overlayParent=clientUI.deviceRoot,viewRoot=backdrop,audio=audio})
+clientUI.deck.lcd:GetPropertyChangedSignal("BackgroundColor3"):Connect(clientUI.syncLcdMask)
 clientUI.deckResults=require(script.DeckResults).new(clientUI.deck.resultsContent,{audio=audio,reduce=reduceEffects})
 -- Part 2b: difficulty picker, a full-LCD layer above the board.
 clientUI.heatCallbacks,clientUI.questCallbacks={}, {}
@@ -1209,11 +1202,11 @@ do
   open=function(rowId,petId)
    petId=petId or board:GetAttribute("CompanionId")
    if rowId=="wardrobe"then return clientUI.openWardrobe and clientUI.openWardrobe(petId)or false end
-   if rowId=="customize"or rowId=="toys"then
+   if rowId=="customize"then
     clientUI.hub:close("customize")
     -- QA Q2.2: Customize slides in from the right, as the Pets page does.
     clientUI.hueView.slideFrom=Kit.SlideOffset
-    local opened=clientUI.openHue(if rowId=="toys"then "toys"else "palette",petId,"hub");clientUI.hueView.slideFrom=nil
+    local opened=clientUI.openHue("palette",petId,"hub");clientUI.hueView.slideFrom=nil
     if opened then return true end
     clientUI.openHub();return false
    end
@@ -1507,6 +1500,7 @@ do
  end
  clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets);syncInsets()
  gameMenu=MachineHub.new(host,{
+  reduced=reduceEffects, -- QA v775 note 9: the tile art stands still under Reduced Effects
   open=function(id)return clientUI.openMachine(id)end,
   -- Before the first pet: the tile still takes the tap and says why (as the pause menu does).
   locked=function()
@@ -2473,6 +2467,7 @@ layout = function()
 		clientUI.deck:placeResults(l.shell)
 	end
 	clientUI.deck.back.root.Visible=clientUI.deck.backVisible~=false and backdrop.Visible
+	clientUI.syncLcdMask()
 	if clientUI.items then clientUI.items:place(viewport.Position,viewport.Size,clientUI.deck.geometry~=nil and clientUI.deck.geometry.phone==true and wide)end
 	if clientUI.boardHints then clientUI.boardHints:place(viewport.Position,viewport.Size)end
 	if clientUI.coach then clientUI.coach:place(viewport.Position,viewport.Size)end
