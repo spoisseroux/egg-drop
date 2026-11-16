@@ -23,7 +23,15 @@ function Panel.new(parent,intent,options)
  self.pool=label(root,"AvailableOdds","","Body");self.status=label(root,"Status","","Body")
  self.useNow=button(root,"UseNow","Use now",function()self:useResult()end)
  self.shop=button(root,"ToyEggShop","Toy Egg · "..Catalog.Cost.." Stars",function()if self.options.shop then self.options.shop()end end)
- for _,id in ipairs(Catalog.Order)do self.rows[id]=button(root,"Toy_"..id,Catalog.ById[id].name,function()self:choose(id)end)end
+ -- QA v775 note 8: in Customize a tap on a toy card first selects it (the pane's pet plays
+ -- with it), and a second tap or the pane's Wear button equips it, as Hue and Charm cards
+ -- do. `options.tap(id)` owns that; without it (or when it answers nil) a tap equips.
+ for _,id in ipairs(Catalog.Order)do
+  self.rows[id]=button(root,"Toy_"..id,Catalog.ById[id].name,function()
+   if self.options.tap and self.options.tap(id)~=nil then return end
+   self:choose(id)
+  end)
+ end
  return self
 end
 function Panel:choose(id)

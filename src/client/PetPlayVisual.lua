@@ -162,12 +162,35 @@ local function eligible(v)
   and((v.gardenBehavior==nil or v.gardenBehavior=="follow")and(v.gardenAction==nil or v.gardenAction=="follow")
    or(v.personalRestAllowed==true and v.gardenBehavior=="rest"and(v.gardenAction=="wanderPause"or v.gardenAction=="nookRest")))
 end
+-- Customize preview (QA v775 note 8): a pet in a preview viewport (`v.personalPreview`)
+-- plays with its toy on a loop: the garden's own clip (same phases, reach and expression),
+-- then a short rest with the toy still in hand. It needs no world, opportunity or
+-- schedule and awards nothing. Reduced Motion holds the clip's mid pose.
+Play.PreviewClip,Play.PreviewRest=1.8,.7
+function Play.previewPhase(elapsed,reduced)
+ if reduced then return .43 end
+ if type(elapsed)~="number"or elapsed~=elapsed or elapsed<0 then return 0 end
+ return math.min(elapsed%(Play.PreviewClip+Play.PreviewRest),Play.PreviewClip)
+end
+local function previewSample(v,now)
+ local id=v.personalToyId
+ if v.destroyed or id==nil or id=="none"or not Toys.has(id)then Play.cancel(v);v.personalPreviewStart=nil;return nil end
+ if v.personalPreviewToy~=id or not v.personalPreviewStart then v.personalPreviewToy=id;v.personalPreviewStart=now end
+ local t=Play.previewPhase(now-v.personalPreviewStart,v.reducedEffects)
+ if not v.personalToy then local seats=Play.seats(v);v.personalToy=Toys.create(v.model,id,seats.height);v.personalToyHeight=seats.height end
+ if not v.personalToy then return nil end
+ v.personalToyActive=true;v.personalToyPhase=t
+ local reach=if v.reducedEffects then .22 else math.sin(math.min(1,t/1.8)*math.pi)*.38
+ return {phase=t,reach=reach,expression=if Toys.Play[id]=="chew"then "pleased"else "curious"}
+end
 function Play.sample(v,now)
  local seed=math.abs(v.cosmeticSeed or 0)%997
  local identity=tostring(v.personalToyId)..":"..tostring(v.personalAppearanceGeneration)..":"..tostring(v.personalActorIdentity)
  if v.personalPlayIdentity~=identity then
   Play.reset(v);v.personalPlayIdentity=identity;v.personalNextOpportunity=now
  end
+ if v.personalPreview==true then return previewSample(v,now)end
+ v.personalPreviewStart=nil
  if not eligible(v)then Play.cancel(v);return nil end
  if v.personalOpportunityManaged and v.personalQuietToken~=v.personalOpportunityToken then
   Play.cancel(v);v.personalQuietToken=v.personalOpportunityToken

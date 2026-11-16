@@ -68,6 +68,35 @@ return function(client,parent)
    assert(c:card("Toy_ball"):GetAttribute("IsNew")==false and view.newItems["toys:ball"]==nil,"worn clears the mark")
    view:close("back")
   end)
+  test("QA v775 note 8: a tap on a toy card selects it and the pane's pet plays with it; the second tap wears it",function()
+   local c=fixture(function(s)s.pendingToyResult=nil;s.toyUnlocks={ball=true,bone=true};s.petToys={pip="bone"}end);local view=c.view
+   view:open(c.state,"toys","pip");c:update(c.state);settle()
+   assert(view.page=="palette"and view.tab=="toys","on the Toys cards")
+   local tap=assert(view.toyPanel.options.tap,"the toy cards have a tap owner")
+   assert(tap("ball")==true and #c.sent==0,"the first tap selects and sends nothing")
+   assert(view:focusedCardId()=="ball","the Ball card is focused")
+   settle()
+   local pet=assert(view.visual,"the pane's pet")
+   assert(pet.personalPreview==true and pet.personalToyId=="ball","the pane's pet previews the Ball")
+   pet.cosmeticTime=os.clock();pet:update(0)
+   assert(pet.personalToyActive and pet.personalToy and pet.personalToy.id=="ball","the play clip's toy is in its hands")
+   assert(view.portraitToy==nil or view.portraitToy.handle==nil,"no still copy stands at its feet")
+   -- Another card: the preview swaps toys at once. None previews no toy.
+   assert(tap("bone")==true and #c.sent==0);settle()
+   pet=view.visual;pet.cosmeticTime=os.clock();pet:update(0)
+   assert(pet.personalToyId=="bone"and pet.personalToy and pet.personalToy.id=="bone","the preview follows the focused card")
+   assert(tap("none")==true and #c.sent==0);settle()
+   pet=view.visual;pet.cosmeticTime=os.clock();pet:update(0)
+   assert(not pet.personalToy,"None previews no toy")
+   -- The second tap on the focused card wears it (Bone is already worn, so the Ball).
+   assert(tap("ball")==true and #c.sent==0,"select again")
+   assert(tap("ball")==true and #c.sent==1 and c.sent[1].action=="toyEquip"and c.sent[1].value.toyId=="ball","the second tap wears it")
+   -- Leaving the Toys tab ends the preview.
+   view:setTab("hue");settle()
+   pet=view.visual
+   if pet then pet.cosmeticTime=os.clock();pet:update(0);assert(pet.personalPreview~=true and not pet.personalToyActive,"no play clip on other tabs")end
+   view:close("back")
+  end)
   test("two waiting results are stored one request at a time",function()
    local finish=Materials.Order[2]or Materials.Order[1]
    local c=fixture(function(s)s.pendingMaterialResult={id="material-result",finishId=finish,revision=2,catalogVersion=Materials.CatalogVersion}end)

@@ -78,6 +78,34 @@ return function(client,parent)
    assert(a==Cache.key("pip","rose",{finish="gloss",mainDoses={tide=0,rose=1}}),"key ignores table order")
    assert(a~=Cache.key("pip","rose",{mainDoses={rose=2,tide=0},finish="gloss"}))
   end)
+  test("QA v775: a card preview destroyed with its card is dropped and built again, not re-parented",function()
+   -- The screen can be rebuilt under an attached preview (a resize, a rotation): the
+   -- viewport dies with its card. The cache used to re-parent the dead viewport on every
+   -- frame ("The Parent property of CardPreview is locked").
+   local cache=Cache.new({live=4,size=4})
+   local built=0
+   local function entry()
+    built+=1
+    local viewport=Instance.new("ViewportFrame");viewport.Name="CardPreview"
+    local e={viewport=viewport,camera=Instance.new("Camera")}
+    viewport.Destroying:Connect(function()e.dead=true end)
+    return e
+   end
+   local first=Instance.new("Frame");local second=Instance.new("Frame")
+   local function cards(holder)return {{holder=holder,key="toys:pip:ball",visible=true,build=entry}}end
+   cache:pump(cards(first));assert(built==1 and cache:liveCount()==1 and cache.count==1)
+   local old=cache.entries["toys:pip:ball"]
+   first:Destroy();assert(old.dead==true,"the preview died with its card")
+   local ok,problem=pcall(function()cache:pump(cards(second))end)
+   assert(ok,"pump raised on a dead preview: "..tostring(problem))
+   cache:pump(cards(second))
+   local fresh=cache.entries["toys:pip:ball"]
+   assert(fresh and fresh~=old and not fresh.dead and fresh.viewport.Parent==second and built==2,"a fresh preview replaces the dead one")
+   assert(cache.count==1 and cache:liveCount()==1,"the cache count stays true")
+   -- Detaching a dead preview drops it as well.
+   second:Destroy();cache:detachAll();assert(cache.count==0 and cache:liveCount()==0 and cache.entries["toys:pip:ball"]==nil)
+   cache:clear()
+  end)
   test("R4.5 / R3.5 pure: Toys get the bone icon; worn charm says Equipped",function()
    assert(View.tabList()[4].icon=="toy"and Kit.VectorIcons.toy~=nil)
    for _,k in ipairs(Toy.knobs())do assert(k.X>.1 and k.X<.9 and k.Y>.1 and k.Y<.9,"knobs inside the holder")end

@@ -58,6 +58,10 @@ function Cache.buildPet(pet,appearance,zoom,decorate)
  local ok,visual=pcall(Factory.new,world,Vector3.zero,pet,nil,appearance)
  if not ok or not visual then viewport:Destroy();return false end
  local entry={viewport=viewport,camera=camera,visual=visual,zoom=zoom}
+ -- A preview can die with its card (the screen is rebuilt under it: a resize, a rotation).
+ -- Its Parent is then locked; pump drops it and builds a fresh one instead of raising
+ -- "The Parent property of CardPreview is locked" on every frame.
+ viewport.Destroying:Connect(function()entry.dead=true end)
  if not pcall(frame,entry)then visual:destroy();viewport:Destroy();return false end
  if decorate then local ok2,handle=pcall(decorate,world,visual);if ok2 then entry.extra=handle end end
  return entry
@@ -73,11 +77,20 @@ function Cache:detach(holder)
  local key=self.attached[holder];if not key then return end
  self.attached[holder]=nil
  local entry=self.entries[key]
- if entry then entry.viewport.Parent=nil;entry.shownAt=os.clock();entry.holder=nil end
+ if entry and entry.dead then self:drop(key)
+ elseif entry then entry.viewport.Parent=nil;entry.shownAt=os.clock();entry.holder=nil end
  if holder.Parent then holder:SetAttribute("Preview",nil)end
  if self.onDetach then self.onDetach(holder)end
 end
 function Cache:detachAll()for holder in pairs(table.clone(self.attached))do self:detach(holder)end end
+-- Forget one entry whose viewport was destroyed from outside (see buildPet).
+function Cache:drop(key)
+ local entry=self.entries[key]
+ if not entry then return false end
+ for holder,attachedKey in pairs(table.clone(self.attached))do if attachedKey==key then self.attached[holder]=nil end end
+ destroyEntry(entry);self.entries[key]=nil;self.count=math.max(0,self.count-1)
+ return true
+end
 function Cache:evict()
  local oldestKey,oldest=nil,nil
  for key,entry in pairs(self.entries)do
@@ -109,6 +122,7 @@ function Cache:pump(cards,onAttach)
   if card.visible then
    local holder,key=card.holder,card.key
    local entry=self.entries[key]
+   if entry and entry.dead then self:drop(key);entry=nil end
    if self.attached[holder]==key then
     if entry then entry.shownAt=now
      local v=entry.visual

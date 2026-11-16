@@ -86,6 +86,27 @@ return function(client,parent)
     v:applyAppearance(appearance(0,"none",2));assert(not v.personalToy)
    end
   end)
+  test("QA v775: a preview pet loops the play clip with its toy, needs no world, and stops when the preview ends",function()
+   assert(Play.PreviewClip==1.8 and Play.PreviewRest>0 and Play.PreviewRest<=1,"a short loop")
+   assert(Play.previewPhase(0,false)==0 and math.abs(Play.previewPhase(.9,false)-.9)<1e-9 and Play.previewPhase(2.1,false)==1.8,"plays, then rests on the last frame")
+   assert(math.abs(Play.previewPhase(Play.PreviewClip+Play.PreviewRest+.5,false)-.5)<1e-9,"loops")
+   assert(Play.previewPhase(1,true)==.43 and Play.previewPhase(-1,false)==0 and Play.previewPhase(0/0,false)==0)
+   for _,id in ipairs({"ball","bone","sparkler","wobble_top","squeaky_carrot","pocket_deck"})do
+    local v=make(Pets.collection[1],true,0,id)
+    -- A viewport pet: no world context, never enabled for garden play.
+    v.worldContext=false;v.personalPlayEnabled=false;v.reducedEffects=false
+    v.cosmeticTime=50;v:update(0);assert(not v.personalToyActive and not v.personalToy,id.." plays outside a preview")
+    v.personalPreview=true;v.cosmeticTime=60;v:update(0)
+    assert(v.personalToyActive and v.personalToy and v.personalToy.id==id and v.personalToyPhase==0,id.." preview starts at once")
+    local first=v.personalToy.model:GetPivot()
+    v.cosmeticTime=60.9;v:update(0);assert(math.abs(v.personalToyPhase-.9)<1e-6,id.." phase")
+    assert((v.personalToy.model:GetPivot().Position-first.Position).Magnitude>1e-4 or v.personalToy.model:GetPivot().Rotation~=first.Rotation,id.." toy moves with the clip")
+    v.cosmeticTime=60+Play.PreviewClip+Play.PreviewRest+.4;v:update(0);assert(math.abs(v.personalToyPhase-.4)<1e-6 and v.personalToy,id.." loops with the toy still held")
+    v.reducedEffects=true;v:update(0);assert(v.personalToyPhase==.43,"Reduced Motion holds one pose")
+    v.personalPreview=false;v:update(0);assert(not v.personalToyActive and not v.personalToy,id.." toy leaves with the preview")
+   end
+   local none=make(Pets.collection[1],true,0,"none");none.personalPreview=true;none.cosmeticTime=5;none:update(0);assert(not none.personalToy,"None previews no toy")
+  end)
   test("matching owner and visitor seeds share phase without a prop network clock",function()
    local a=make(Pets.collection[1],true,0,"ball");local b=make(Pets.collection[1],true,0,"ball")
    for _,v in ipairs({a,b})do v.personalPlayEnabled=true;v.cosmeticSeed=42;v.greeting=2;v.reducedEffects=false;v.cosmeticTime=100;v:update(0);v.cosmeticTime=103.5;v:update(0)end

@@ -84,6 +84,7 @@ function View.new(parent,intent,options)
  self.toyPanel=ToyPanel.new(body,self.toyIntent,{isNew=function(id)return self:isNewItem("toys",id)end,audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="toys"and not self.confirmation and self.toyPanel.petId==self.petId and self:canCustomize()end,
   receiptOpen=function(result)return self.shade.Visible and self.page=="toyReceipt"and self.state.pendingToyResult and self.state.pendingToyResult.id==result.id end,
   shop=function()self:close("shop");if self.options.toyShop then self.options.toyShop()end end,
+  tap=function(id)if self.chromeActive and self:chromeActive()and self.tab=="toys"then return self:chromeTap("toys",id)end;return nil end,
   useNow=function(result)self.toyAssignment={resultId=result.id,toyId=result.toyId};self:landOnPets(result)end})
  self.featurePanel=FeaturePanel.new(body,self.featureIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canUse=function()return self.shade.Visible and self.page=="palette"and self.tab=="features"and not self.confirmation and self.featurePanel.petId==self.petId and self:canCustomize()end,
   receiptOpen=function(result)return self.shade.Visible and self.page=="featureReceipt"and self.state.pendingFeatureResult and self.state.pendingFeatureResult.id==result.id end,
@@ -658,7 +659,9 @@ function View.placeToy(world,visual,toyId)
  return handle
 end
 function View:placePortraitToy()
- local wanted=if self.visual and self.portrait.Visible and self:chromeActive()and self.tab=="toys"then self:focusedCardId()else nil
+ -- QA v775 note 8: the pane's pet plays with the focused toy (PetPlayVisual's preview
+ -- loop), so the toy is in its hands and no still copy stands at its feet.
+ local wanted=if self.visual and self.portrait.Visible and self:chromeActive()and self.tab=="toys"and self.visual.personalPreview~=true then self:focusedCardId()else nil
  local current=self.portraitToy
  local key=tostring(wanted)..":"..tostring(self.visual)..":"..tostring(self.visual and self.visual.rigRevision)
  if current and current.key==key then return end
@@ -688,6 +691,8 @@ function View:paintPortrait()
   visual.onRigChanged=function()if not self.destroyed and self.visual==visual then self:fitPortrait()end end
  end
  self.visual.reducedEffects=GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()==true)or false
+ -- QA v775 note 8: tapping a toy card previews the pet playing with it (a loop of the garden clip).
+ self.visual.personalPreview=self:chromeActive()and self.tab=="toys"and not self.fruitEating.active and not self.boundedEating
  if self.visual.applyAppearance then self.visual:applyAppearance(a)end;self.visual:update(0);self:fitPortrait();self:placePortraitToy();self:syncPortraitClock()
 end
 -- QA v2 R4.3: each visible Hue / Materials / Toys card shows the pet with that colour,
@@ -1538,7 +1543,11 @@ function View:chromeAct()
  if self.tab=="materials"and self.materialIntent and self.materialIntent.status=="Retrying"then return self.materialIntent:retry()end
  local item=(self.focusables or {})[self:focusIndex()]
  if not item or not self.chromeAction.Visible or not Kit.buttonState(self.chromeAction).enabled then return false end
- return item.act()==true
+ if item.act()~=true then return false end
+ -- QA v775 note 10: Use / Wear plays the equip sound; taking something off (None, the
+ -- original colour, Reset Hue) plays the unequip one.
+ require(script.Parent.UIClick).play(if item.id=="none"or item.id=="original"or item.id=="reset"then "unequip"else "equip")
+ return true
 end
 -- Charm: None sends charm(petId, false); a shape sends charm(petId, true, shape).
 -- Slice D: the card icon of a charm shape (Kit icon names; a star for the Star, the
