@@ -1,0 +1,130 @@
+{
+ "source": "scripts/build_customization_jars.py",
+ "note": "No mesh ids yet: renders first.",
+ "items": [
+  {
+   "id": "rose",
+   "label": "Rose jar",
+   "kind": "hue",
+   "colour": "#FF327A",
+   "triangles": 544,
+   "parts": {
+    "Jar_rose__Body": 180,
+    "Jar_rose__Lid": 132,
+    "Jar_rose__Topper": 216,
+    "Jar_rose__Shine": 16
+   },
+   "x": -6.0
+  },
+  {
+   "id": "tide",
+   "label": "Tide jar",
+   "kind": "hue",
+   "colour": "#008DFF",
+   "triangles": 408,
+   "parts": {
+    "Jar_tide__Body": 180,
+    "Jar_tide__Lid": 132,
+    "Jar_tide__Topper": 80,
+    "Jar_tide__Shine": 16
+   },
+   "x": -4.5
+  },
+  {
+   "id": "citrus",
+   "label": "Citrus jar",
+   "kind": "hue",
+   "colour": "#FFCC00",
+   "triangles": 412,
+   "parts": {
+    "Jar_citrus__Body": 180,
+    "Jar_citrus__Lid": 132,
+    "Jar_citrus__Topper": 84,
+    "Jar_citrus__Shine": 16
+   },
+   "x": -3.0
+  },
+  {
+   "id": "iris",
+   "label": "Iris jar",
+   "kind": "hue",
+   "colour": "#9350FF",
+   "triangles": 472,
+   "parts": {
+    "Jar_iris__Body": 180,
+    "Jar_iris__Lid": 132,
+    "Jar_iris__Topper": 144,
+    "Jar_iris__Shine": 16
+   },
+   "x": -1.5
+  },
+  {
+   "id": "reset",
+   "label": "Reset Hue",
+   "kind": "hue",
+   "colour": "#D4F8FF",
+   "triangles": 428,
+   "parts": {
+    "Jar_reset__Body": 180,
+    "Jar_reset__Lid": 132,
+    "Jar_reset__Topper": 100,
+    "Jar_reset__Shine": 16
+   },
+   "x": 0.0
+  },
+  {
+   "id": "gloss",
+   "label": "Gloss",
+   "kind": "finish",
+   "colour": "#58DDC2",
+   "triangles": 376,
+   "parts": {
+    "Jar_gloss__Body": 312,
+    "Jar_gloss__Topper": 32,
+    "Jar_gloss__Shine": 32
+   },
+   "x": 1.5
+  },
+  {
+   "id": "matte",
+   "label": "Matte",
+   "kind": "finish",
+   "colour": "#58DDC2",
+   "triangles": 432,
+   "parts": {
+    "Jar_matte__Body": 312,
+    "Jar_matte__Topper": 120
+   },
+   "x": 3.0
+  },
+  {
+   "id": "jelly",
+   "label": "Jelly",
+   "kind": "finish",
+   "colour": "#58DDC2",
+   "triangles": 520,
+   "parts": {
+    "Jar_jelly__Body": 192,
+    "Jar_jelly__Core": 180,
+    "Jar_jelly__Lid": 132,
+    "Jar_jelly__Shine": 16
+   },
+   "x": 4.5
+  },
+  {
+   "id": "charm",
+   "label": "Charm capsule",
+   "kind": "charm",
+   "colour": "#B79BFF",
+   "triangles": 340,
+   "parts": {
+    "Jar_charm__Base": 156,
+    "Jar_charm__Dome": 84,
+    "Jar_charm__Charm": 20,
+    "Jar_charm__Loop": 64,
+    "Jar_charm__Shine": 16
+   },
+   "x": 6.0
+  }
+ ]
+}
