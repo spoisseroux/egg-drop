@@ -34,8 +34,20 @@ local bindings={};local currentTheme;local paletteStats={nodes=0,applies=0,write
 -- default plate's glass); `currentTheme` stays for the hardware readers (getTheme).
 local Themes=require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
 local uiTheme=Themes.ById[Themes.Default]
-function Art.uiTheme()return uiTheme end
-function Art.paletteColor(role)return (uiTheme.ui and uiTheme.ui[role])or Art[roleNames[role]or role]end
+-- QA v760 (Spencer): the UI inside the game follows the equipped faceplate too. Anything
+-- under a root marked with the PlateSurface attribute (the Pocket Deck's screen: the round
+-- HUD, results, the difficulty picker, the pause menu) is painted from the equipped plate's
+-- own glass palette (DeckThemes `ui`); the garden menus keep the house palette. The scope
+-- is set only while one bound node is being painted, so Kit.color and Art.surfaceColor
+-- answer for that node without every caller passing it along.
+local scopeTheme
+local function plateOwner(object)
+ local n=object
+ while n do if n:GetAttribute("PlateSurface")==true then return true end;n=n.Parent end
+ return false
+end
+function Art.uiTheme()return scopeTheme or uiTheme end
+function Art.paletteColor(role)local theme=scopeTheme or uiTheme;return (theme.ui and theme.ui[role])or Art[roleNames[role]or role]end
 local contentDefaults={contentPanel=Color3.fromHex("#16201E"),contentRaised=Color3.fromHex("#232D2C"),contentInset=Color3.fromHex("#0C1311"),contentText=Color3.fromHex("#F3F4F6"),contentMuted=Color3.fromHex("#C3C8D0"),contentLine=Color3.fromHex("#69F4B3"),contentSelected=Color3.fromHex("#3A5249"),contentFocus=Color3.fromHex("#A3F4FF"),contentReward=Color3.fromHex("#FFC14D")}
 local scoped={panel="contentPanel",raised="contentRaised",inset="contentInset",text="contentText",muted="contentMuted",line="contentLine",selected="contentSelected",focus="contentFocus",reward="contentReward"}
 local function contentOwner(object)
@@ -56,13 +68,33 @@ end
 function Art.surfaceColor(object,role)
  if(role=="text"or role=="muted")and onPrimaryFill(object)then return Art.paletteColor("ink")end
  local mapped=contentOwner(object)and scoped[role]
- return if mapped then uiTheme.ui[mapped]or contentDefaults[mapped]else Art.paletteColor(role)
+ return if mapped then(scopeTheme or uiTheme).ui[mapped]or contentDefaults[mapped]else Art.paletteColor(role)
 end
-local function paintBinding(node,entry)
+local function paintProperties(node,entry)
  for property,role in pairs(entry.properties)do
   local value=if type(role)=="function"then role()else Art.surfaceColor(node,role)
   if node[property]~=value then node[property]=value;paletteStats.writes+=1 end
  end
+end
+-- Runs fn(...) with the palette that belongs to `node` (the plate's under a PlateSurface
+-- root, the house palette anywhere else). For paints that happen outside a binding:
+-- a button's hover, press and selection repaints, or a colour read while building.
+function Art.scoped(node,fn,...)
+ local outer=scopeTheme
+ scopeTheme=if currentTheme and currentTheme.ui and plateOwner(node)then currentTheme else nil
+ local result=table.pack(pcall(fn,...))
+ scopeTheme=outer
+ if not result[1]then error(result[2],0)end
+ return table.unpack(result,2,result.n)
+end
+local function paintBinding(node,entry)Art.scoped(node,paintProperties,node,entry)end
+-- Marks `root` as part of the game's own screen and repaints what is already bound under it.
+function Art.plateSurface(root)
+ root:SetAttribute("PlateSurface",true);Art.repaintUnder(root)
+end
+-- Nodes bound before they were parented under a PlateSurface root took the house colours.
+function Art.repaintUnder(root)
+ for object,entry in pairs(bindings)do if object==root or object:IsDescendantOf(root)then paintBinding(object,entry)end end
 end
 function Art.bind(object,properties)
  local entry=bindings[object]
@@ -162,8 +194,8 @@ function Art.control(button,primary,enabled)
 end
 function Art.tab(button,selected,enabled)
  Art.control(button,false,enabled)
- Art.bind(button,{BackgroundColor3=function()local t=uiTheme.ui;return if selected then t and t.tab or Art.Accent else Art.surfaceColor(button,"raised")end,
- TextColor3=function()local t=uiTheme.ui;return if selected then t and t.tabInk or Color3.fromHex("#0E0F12") else Art.surfaceColor(button,"text")end})
+ Art.bind(button,{BackgroundColor3=function()local t=Art.uiTheme().ui;return if selected then t and t.tab or Art.Accent else Art.surfaceColor(button,"raised")end,
+ TextColor3=function()local t=Art.uiTheme().ui;return if selected then t and t.tabInk or Color3.fromHex("#0E0F12") else Art.surfaceColor(button,"text")end})
  button:SetAttribute("SelectedTab",selected)
 
 end

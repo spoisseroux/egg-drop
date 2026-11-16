@@ -790,7 +790,7 @@ function Results:show(data,compact)
  -- Headline and subline.
  local headline,missed=Results.headline(data)
  headline=data.headline or headline
- local accent=Kit.color("accent");local grey=Color3.fromHex("#8C949D")
+ local accent=Kit.colorFor(self.host,"accent");local grey=Color3.fromHex("#8C949D")
  self.headline.set(headline,if missed then grey else accent,if missed then grey else accent)
  self.subline.Text=(data.title or "Round").."  ·  "..(data.difficulty or "Medium")
  self:paintRows(data)

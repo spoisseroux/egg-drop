@@ -853,6 +853,17 @@ local function paintDeck(id, stickerId,backgroundId)
   end
  end
  Art.setBackground(backing,backgroundId or "canopy",theme)
+ do -- QA v760: the board's area bands, lines and names take the plate's accent (they were mint on every plate).
+  local default=id==Themes.Default
+  local accent=if default then Color3.fromHex("#76F6B0")else theme.accent or Color3.fromHex("#76F6B0")
+  local line=if default then Color3.fromHex("#466853")else accent:Lerp(Color3.fromHex("#20242A"),.55)
+  for _,item in ipairs(fieldZones)do
+   item.band.BackgroundColor3=accent;item.node.BackgroundColor3=line
+   item.tag.TextColor3=if default then Color3.fromHex("#B8F5D0")else accent:Lerp(Color3.new(1,1,1),.5)
+  end
+  clientUI.centerZone.BackgroundColor3=line
+  for _,edge in ipairs(clientUI.centerZone:GetChildren())do if edge:IsA("Frame")then edge.BackgroundColor3=line end end
+ end
 	clientUI.deck:setTheme(id,theme)
 	Art.finish(shell,theme,"shell")
 	Art.finish(shell.Faceplate,theme,"face")

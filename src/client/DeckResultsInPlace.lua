@@ -13,9 +13,10 @@ local function text(parent,name,value,size,color)
  t.Size=UDim2.new(1,-16,0,24);return t
 end
 local function pane(parent,name,r)
- local clip=Instance.new("CanvasGroup");clip.Name=name;clip.BackgroundColor3=Kit.color("panel");clip.BackgroundTransparency=.05;clip.BorderSizePixel=0
+ local clip=Instance.new("CanvasGroup");clip.Name=name;clip.BackgroundTransparency=.05;clip.BorderSizePixel=0
  clip.Position=UDim2.fromOffset(r.x,r.y);clip.Size=UDim2.fromOffset(r.w,r.h);clip.ClipsDescendants=true;clip.ZIndex=parent.ZIndex+1;clip.Parent=parent
  Kit.corner(clip,10);Kit.stroke(clip,nil,1,.75)
+ Kit.paint(clip,"BackgroundColor3","panel") -- bound once parented, so it takes the plate's glass (QA v760)
  return clip
 end
 local function scroll(parent,name)
@@ -60,7 +61,7 @@ local function headline(parent,size)
 end
 function View.new(owner,v)
  local self=setmetatable({owner=owner,view=v,buttons={},opened=os.clock()},View)
- local root=Instance.new("Frame");root.Name="InPlaceResults";root.Size=UDim2.fromScale(1,1);root.BackgroundColor3=Kit.color("panel");root.BackgroundTransparency=1;root.BorderSizePixel=0;root.ClipsDescendants=true;root.ZIndex=50;root.Parent=owner.host;self.root=root
+ local root=Instance.new("Frame");root.Name="InPlaceResults";root.Size=UDim2.fromScale(1,1);root.BackgroundTransparency=1;root.BorderSizePixel=0;root.ClipsDescendants=true;root.ZIndex=50;root.Parent=owner.host;self.root=root;Kit.paint(root,"BackgroundColor3","panel")
  local l,r=v.left,v.right
  local m=if l.h==r.h and l.y==r.y then{x=v.center.x,y=l.y,w=v.center.w,h=l.h}else v.center
  self.regions={left=l,right=r,middle=m}

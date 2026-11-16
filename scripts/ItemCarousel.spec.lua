@@ -81,7 +81,9 @@ return function(client,parent)
     assert(ib.hit.AbsoluteSize.X>=44 and ib.hit.AbsoluteSize.Y>=44,label.." hit 44+")
     local a=s.buttons.A.hit;local top=ib.hit.AbsolutePosition.Y
     assert(top>=a.AbsolutePosition.Y+a.AbsoluteSize.Y,label.." below A's hit area")
-    assert(math.abs((ib.hit.AbsolutePosition.X+ib.hit.AbsoluteSize.X/2)-(a.AbsolutePosition.X+a.AbsoluteSize.X/2))<=1,label.." centred under A")
+    -- QA v760 (the handheld layout): B sits below and inside A (a diagonal, like the desktop deck), on the grip.
+    local ax,bx=a.AbsolutePosition.X+a.AbsoluteSize.X/2,ib.hit.AbsolutePosition.X+ib.hit.AbsoluteSize.X/2
+    assert(bx<=ax-8 and ib.hit.AbsolutePosition.X>=root.AbsolutePosition.X+g.glass.x+g.glass.w,label.." below and inside A, on the grip")
     assert(ib.hit.AbsolutePosition.Y+ib.hit.AbsoluteSize.Y<=root.AbsolutePosition.Y+size.Y,label.." on screen")
     assert(ib.glyph.Text=="B"and not ib.badge.Visible,label.." empty state")
     s:setItems(2,Items.ById.pop.glyph,Items.ById.pop.color)

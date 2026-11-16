@@ -75,7 +75,7 @@ local function paintCapsule(cap,id,lit)
  cap.glyph.TextColor3=item.color
  cap.ring.Color=item.color
  cap.ring.Transparency=if lit then 0 else .45
- cap.root.BackgroundColor3=Kit.color("raised"):Lerp(item.color,if lit then .22 else .08)
+ cap.root.BackgroundColor3=Kit.colorFor(cap.root,"raised"):Lerp(item.color,if lit then .22 else .08)
  cap.glyph.TextTransparency=if lit then 0 else .35
 end
 

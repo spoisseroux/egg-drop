@@ -46,6 +46,8 @@ local function paint(object,property,role)
  end
 end
 Kit.paint=paint
+-- A palette colour for `node`'s own surface (the equipped plate's inside the Pocket Deck).
+function Kit.colorFor(node,role)return Art.scoped(node,Kit.color,role)end
 function Kit.mix(color,toward,amount)return color:Lerp(toward,amount)end
 
 -- 2.2 Type. {regular size, compact size, face}
@@ -506,7 +508,13 @@ local function baseFill(state)
  if state.pressed then color=color:Lerp(Kit.Color.black,.08)end
  return color,transparency
 end
+-- QA v760: painted with the palette of the surface the button sits on (Art.scoped), on
+-- every state change and not only when a theme is applied.
+local paintButtonNow
 function Kit.paintButton(button)
+ if buttons[button]then Art.scoped(button,paintButtonNow,button)end
+end
+function paintButtonNow(button)
  local s=buttons[button];if not s then return end
  local color,transparency=baseFill(s)
  s.fill.BackgroundColor3,s.fill.BackgroundTransparency=color,transparency

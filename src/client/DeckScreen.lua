@@ -320,6 +320,8 @@ function Screen.new(options)
  local parent=options.parent
  local root=Kit.node("Frame",parent,{Name="PocketDeck",BackgroundTransparency=1,ZIndex=0,Active=false,Size=UDim2.fromOffset(1600,800)})
  self.root=root
+ -- QA v760: the deck's own UI is tinted by the equipped faceplate (DeckArt PlateSurface).
+ Art.plateSurface(root)
  local I=Assets.Image
  self.shadow=image(root,"Shadow",I.shadow,1,{ScaleType=Enum.ScaleType.Slice,SliceCenter=Rect.new(189,189,191,191)})
  self.shoulders={image(root,"ShoulderL",I.shoulder,2),image(root,"ShoulderR",I.shoulder,2)}
@@ -456,6 +458,7 @@ function Screen.new(options)
  -- The results screen is its own layer at the LCD rect, above the board.
  local results=Kit.frame(options.overlayParent or parent,"DeckResults","panel",UDim2.new(),UDim2.fromOffset(848,608),30)
  results.ZIndex=30;results.ClipsDescendants=true;results.Visible=false;results.Active=true
+ Art.plateSurface(results)
  local rtint=Kit.frame(results,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));rtint.BackgroundTransparency=0;rtint.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",rtint,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  local rcontent=Kit.frame(results,"Content",nil,UDim2.new(),UDim2.fromOffset(848,608));rcontent.ZIndex=results.ZIndex+2
@@ -486,6 +489,7 @@ function Screen:on(name,callback)self.callbacks[name]=callback end
 function Screen:addOverlay(name,z,options)
  local layer=Kit.frame(self.options.overlayParent or self.options.parent,name,"panel",UDim2.new(),UDim2.fromOffset(848,608),30)
  layer.ZIndex=z or 32;layer.ClipsDescendants=true;layer.Visible=false;layer.Active=true
+ Art.plateSurface(layer)
  local tint=Kit.frame(layer,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));tint.BackgroundTransparency=0;tint.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",tint,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  local content=Kit.frame(layer,"Content",nil,UDim2.new(),UDim2.fromOffset(848,608));content.ZIndex=layer.ZIndex+2
