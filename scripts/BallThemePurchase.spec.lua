@@ -1,6 +1,6 @@
 -- Ball theme Star purchases, equip and the hatching v11 save (BallThemeState +
 -- LifetimeState; batch 2026-11-13 R1, BUILD-PLAN architect change 1, play-forever
--- fields): fixed prices (Kittens 120), debit and ownership in one write, idempotent by
+-- fields): fixed prices (Kittens 160), debit and ownership in one write, idempotent by
 -- operation id bound to theme + price, free themes always owned, equip any owned
 -- theme, a v10 save upgrading to v11 (wallet, pets, quests, wearables kept; empty
 -- ballThemes / stats / stamps / book), v11 validation, quest cleanup on a v11 record,
@@ -38,12 +38,12 @@ return function(server)
 	end
 	local function fund(h, stars) assert(H.grantPurchase(h, "fund-" .. stars .. "-" .. h.state.revision, stars, false)) end
 
-	test("catalogue: six themes, Smileys default, fixed prices 0/0/20/40/40/120, no fruit", function()
+	test("catalogue: six themes, Smileys default, fixed prices 0/0/30/60/60/160, no fruit", function()
 		assert(Themes.Default == "smileys" and #Themes.Order == 7)
 		local prices = {}
 		for _, id in ipairs(Themes.Order) do prices[id] = Themes.ById[id].price end
-		assert(prices.smileys == 0 and prices.marbles == 0 and prices.gumdrops == 20 and prices.gems == 40 and prices.planets == 40 and prices.kittens == 120)
-		assert(Themes.price("smileys") == nil and Themes.price("kittens") == 120 and Themes.price("fruit") == nil)
+		assert(prices.smileys == 0 and prices.marbles == 0 and prices.gumdrops == 30 and prices.gems == 60 and prices.planets == 60 and prices.kittens == 160)
+		assert(Themes.price("smileys") == nil and Themes.price("kittens") == 160 and Themes.price("fruit") == nil)
 		assert(Themes.ById.marbles.face == "none" and Themes.ById.marbles.texture == "motif", "Marbles is today's look")
 	end)
 
@@ -59,25 +59,25 @@ return function(server)
 
 	test("buying debits the fixed price once, records ownership, equips and counts Stars spent", function()
 		local h, db, c = fixture()
-		fund(h, 200)
+		fund(h, 400)
 		local before, rolls, spent = h.state.nectar, c.rolls, h.state.stats.starsSpent
-		local ok, reason = H.buyBallTheme(h, "b-1", "kittens", 120, true)
+		local ok, reason = H.buyBallTheme(h, "b-1", "kittens", 160, true)
 		assert(ok and reason == "Saved", tostring(reason))
-		assert(h.state.nectar == before - 120 and db.player_1.hatching.nectar == before - 120)
+		assert(h.state.nectar == before - 160 and db.player_1.hatching.nectar == before - 160)
 		assert(B.owns(h.state, "kittens") and B.equipped(h.state) == "kittens")
 		assert(c.rolls == rolls, "a theme purchase drew a random number")
-		assert(h.state.stats.starsSpent == spent + 120, "starsSpent not counted")
-		assert(db.player_1.hatching.lastOperation.digest == "ball:kittens:120", "op id not bound to theme + price")
+		assert(h.state.stats.starsSpent == spent + 160, "starsSpent not counted")
+		assert(db.player_1.hatching.lastOperation.digest == "ball:kittens:160", "op id not bound to theme + price")
 	end)
 
 	test("the same operation id and an owned theme never charge twice; a free theme is never sold", function()
 		local h, _, c = fixture()
-		fund(h, 100)
-		assert(H.buyBallTheme(h, "b-2", "gems", 40, true))
+		fund(h, 200)
+		assert(H.buyBallTheme(h, "b-2", "gems", 60, true))
 		local balance, writes = h.state.nectar, c.writes
-		local ok, reason = H.buyBallTheme(h, "b-2", "gems", 40, true)
+		local ok, reason = H.buyBallTheme(h, "b-2", "gems", 60, true)
 		assert(ok and reason == "AlreadyOwned" and h.state.nectar == balance and c.writes == writes)
-		ok, reason = H.buyBallTheme(h, "b-3", "gems", 40, true)
+		ok, reason = H.buyBallTheme(h, "b-3", "gems", 60, true)
 		assert(ok and reason == "AlreadyOwned" and h.state.nectar == balance and c.writes == writes)
 		ok, reason = H.buyBallTheme(h, "b-4", "marbles", 0, true)
 		assert(ok and reason == "AlreadyOwned" and c.writes == writes, "a free theme wrote")
@@ -85,41 +85,41 @@ return function(server)
 
 	test("a reused operation id with another theme or price is OperationConflict, never a false Saved", function()
 		local h, db, c = fixture()
-		fund(h, 200)
-		assert(H.buyBallTheme(h, "b-r", "gumdrops", 20, true))
+		fund(h, 400)
+		assert(H.buyBallTheme(h, "b-r", "gumdrops", 30, true))
 		local balance, writes = h.state.nectar, c.writes
-		local ok, reason = H.buyBallTheme(h, "b-r", "planets", 40, true)
+		local ok, reason = H.buyBallTheme(h, "b-r", "planets", 60, true)
 		assert(not ok and reason == "OperationConflict", tostring(reason))
 		assert(not B.owns(h.state, "planets") and h.state.nectar == balance and c.writes == writes)
 		-- Another server holding a stale snapshot is refused inside the callback too.
 		local h2, db2 = fixture()
-		fund(h2, 200)
+		fund(h2, 400)
 		local stale = copy(h2.state)
-		assert(H.buyBallTheme(h2, "b-s", "gumdrops", 20, true))
+		assert(H.buyBallTheme(h2, "b-s", "gumdrops", 30, true))
 		local committed = copy(db2.player_1.hatching)
 		h2.state = stale
-		ok, reason = H.buyBallTheme(h2, "b-s", "gems", 40, true)
+		ok, reason = H.buyBallTheme(h2, "b-s", "gems", 60, true)
 		assert(not ok and reason == "OperationConflict", "callback: " .. tostring(reason))
 		assert(db2.player_1.hatching.nectar == committed.nectar and not B.owns(db2.player_1.hatching, "gems"))
-		assert(db.player_1.hatching.lastOperation.digest == "ball:gumdrops:20")
+		assert(db.player_1.hatching.lastOperation.digest == "ball:gumdrops:30")
 	end)
 
 	test("a replayed UpdateAsync callback and commit-then-error charge once", function()
 		local h, db, c = fixture()
-		fund(h, 60)
+		fund(h, 120)
 		local before = h.state.nectar
 		c.replay = true
-		assert(H.buyBallTheme(h, "b-5", "planets", 40, false))
+		assert(H.buyBallTheme(h, "b-5", "planets", 60, false))
 		c.replay = false
-		assert(db.player_1.hatching.nectar == before - 40 and B.equipped(h.state) == "smileys", "equip=false kept Smileys")
+		assert(db.player_1.hatching.nectar == before - 60 and B.equipped(h.state) == "smileys", "equip=false kept Smileys")
 		local h2, db2, c2 = fixture()
-		fund(h2, 60)
+		fund(h2, 120)
 		before = h2.state.nectar
 		c2.failAfter = true
-		local ok, reason = H.buyBallTheme(h2, "b-6", "gumdrops", 20, true)
-		assert(not ok and reason == "Retrying" and db2.player_1.hatching.nectar == before - 20)
-		ok = H.buyBallTheme(h2, "b-6", "gumdrops", 20, true)
-		assert(ok and h2.state.nectar == before - 20 and db2.player_1.hatching.nectar == before - 20)
+		local ok, reason = H.buyBallTheme(h2, "b-6", "gumdrops", 30, true)
+		assert(not ok and reason == "Retrying" and db2.player_1.hatching.nectar == before - 30)
+		ok = H.buyBallTheme(h2, "b-6", "gumdrops", 30, true)
+		assert(ok and h2.state.nectar == before - 30 and db2.player_1.hatching.nectar == before - 30)
 		local count = 0; for _, id in ipairs(h2.state.ballThemes.owned) do if id == "gumdrops" then count += 1 end end
 		assert(count == 1)
 	end)
@@ -127,13 +127,13 @@ return function(server)
 	test("refuses when short, at a wrong price or for an unknown theme, without writing", function()
 		local h, _, c = fixture()
 		local before, writes = h.state.nectar, c.writes
-		assert(before < 120, "fixture starts below the Kittens price")
-		local ok, reason = H.buyBallTheme(h, "b-7", "kittens", 120, true)
+		assert(before < 160, "fixture starts below the Kittens price")
+		local ok, reason = H.buyBallTheme(h, "b-7", "kittens", 160, true)
 		assert(not ok and reason == "NeedStars" and h.state.nectar == before and c.writes == writes)
-		fund(h, 200); writes = c.writes
+		fund(h, 400); writes = c.writes
 		ok, reason = H.buyBallTheme(h, "b-8", "kittens", 80, true); assert(not ok and reason == "PriceChanged", tostring(reason))
 		ok, reason = H.buyBallTheme(h, "b-9", "fruit", 20, true); assert(not ok and reason == "NotForSale")
-		ok, reason = H.buyBallTheme(h, "b-10", "kittens", "120", true); assert(not ok and reason == "InvalidBallTheme")
+		ok, reason = H.buyBallTheme(h, "b-10", "kittens", "160", true); assert(not ok and reason == "InvalidBallTheme")
 		assert(c.writes == writes, "a refusal wrote")
 	end)
 
@@ -144,7 +144,7 @@ return function(server)
 		local writes = c.writes
 		ok, reason = H.equipBallTheme(h, "e-3", "marbles"); assert(ok and reason == "NoChange" and c.writes == writes)
 		ok, reason = H.equipBallTheme(h, "e-4", "nope"); assert(not ok and reason == "InvalidBallTheme")
-		fund(h, 50); assert(H.buyBallTheme(h, "e-5", "gems", 40, false)); assert(B.equipped(h.state) == "marbles")
+		fund(h, 100); assert(H.buyBallTheme(h, "e-5", "gems", 60, false)); assert(B.equipped(h.state) == "marbles")
 		assert(H.equipBallTheme(h, "e-6", "gems") and B.equipped(h.state) == "gems")
 		ok, reason = H.equipBallTheme(h, "e-6", "smileys"); assert(not ok and reason == "OperationConflict", "equip id bound to theme")
 	end)
@@ -169,7 +169,7 @@ return function(server)
 
 	test("a v10 save upgrades to v11: wallet, pets, quests and wearables kept; never a failed load", function()
 		local h, db, _, adapter = fixture()
-		fund(h, 40)
+		fund(h, 80)
 		local balance = h.state.nectar
 		assert(H.release(h))
 		local old = copy(db.player_1.hatching)
@@ -186,7 +186,7 @@ return function(server)
 		local cleaned = H.load(1, { rank = 1 }, adapter)
 		assert(cleaned.status == "Ready" and cleaned.state.version == 11 and B.equipped(cleaned.state) == "smileys" and cleaned.state.stats.rounds == 0)
 		-- Ownership and the equipped theme survive a fresh session on v11.
-		fund(cleaned, 30); assert(H.buyBallTheme(cleaned, "v-1", "gumdrops", 20, true)); assert(H.release(cleaned))
+		fund(cleaned, 60); assert(H.buyBallTheme(cleaned, "v-1", "gumdrops", 30, true)); assert(H.release(cleaned))
 		local carried = H.load(1, { rank = 1 }, adapter)
 		assert(carried.status == "Ready" and B.owns(carried.state, "gumdrops") and B.equipped(carried.state) == "gumdrops")
 	end)
@@ -221,7 +221,7 @@ return function(server)
 		assert(s.bestChain == 6 and s.tierFive == 1, "bestChain/tierFive")
 		assert(s.starsEarned > earned, "starsEarned")
 		-- A Robux Star grant is not "earned".
-		local before = s.starsEarned; fund(h, 50); assert(h.state.stats.starsEarned == before, "a purchase counted as earned")
+		local before = s.starsEarned; fund(h, 100); assert(h.state.stats.starsEarned == before, "a purchase counted as earned")
 	end)
 
 	return cases

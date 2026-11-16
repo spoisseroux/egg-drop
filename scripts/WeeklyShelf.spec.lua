@@ -28,7 +28,7 @@ return function(_, shared)
 	end)
 
 	test("the price table: 20% off, rounded to the nearest Star", function()
-		for full, price in pairs({ [15] = 12, [30] = 24, [60] = 48, [20] = 16, [40] = 32, [80] = 64, [120] = 96 }) do
+		for full, price in pairs({ [25] = 20, [50] = 40, [100] = 80, [30] = 24, [60] = 48, [120] = 96, [160] = 128 }) do
 			assert(Shelf.discounted(full) == price, full .. " -> " .. Shelf.discounted(full))
 		end
 	end)

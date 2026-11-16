@@ -16,13 +16,13 @@
    "note": "the 8 existing deck styles; ids are the saved DeckThemes ids, unlock rules unchanged"
   },
   "common": {
-   "priceStars": 20
+   "priceStars": 30
   },
   "rare": {
-   "priceStars": 40
+   "priceStars": 60
   },
   "showcase": {
-   "priceStars": 80
+   "priceStars": 120
   },
   "book": {
    "priceStars": 0,
@@ -365,7 +365,7 @@
    "name": "Aqua Pop",
    "order": 9,
    "tier": "common",
-   "priceStars": 20,
+   "priceStars": 30,
    "texture": "aqua_pop.png",
    "finish": "glossy bubbles",
    "accent": "#6FE3FF",
@@ -409,7 +409,7 @@
    "name": "Lime Gel",
    "order": 10,
    "tier": "common",
-   "priceStars": 20,
+   "priceStars": 30,
    "texture": "lime_gel.png",
    "finish": "translucent gel",
    "accent": "#B6F24B",
@@ -453,7 +453,7 @@
    "name": "Sorbet Sky",
    "order": 11,
    "tier": "common",
-   "priceStars": 20,
+   "priceStars": 30,
    "texture": "sorbet_sky.png",
    "finish": "glossy gradient",
    "accent": "#FFB37A",
@@ -497,7 +497,7 @@
    "name": "Liquid Chrome",
    "order": 12,
    "tier": "rare",
-   "priceStars": 40,
+   "priceStars": 60,
    "texture": "liquid_chrome.png",
    "finish": "chrome",
    "accent": "#DCE6F5",
@@ -541,7 +541,7 @@
    "name": "Tidepool",
    "order": 13,
    "tier": "rare",
-   "priceStars": 40,
+   "priceStars": 60,
    "texture": "tidepool.png",
    "finish": "water overlay",
    "accent": "#5CD6E8",
@@ -585,7 +585,7 @@
    "name": "Aurora Glass",
    "order": 14,
    "tier": "rare",
-   "priceStars": 40,
+   "priceStars": 60,
    "texture": "aurora_glass.png",
    "finish": "aurora overlay",
    "accent": "#7CF5C4",
@@ -629,7 +629,7 @@
    "name": "Prism Flare",
    "order": 15,
    "tier": "showcase",
-   "priceStars": 80,
+   "priceStars": 120,
    "texture": "prism_flare.png",
    "finish": "holographic lens flare",
    "accent": "#F3B6FF",
@@ -673,7 +673,7 @@
    "name": "Night Orb",
    "order": 16,
    "tier": "showcase",
-   "priceStars": 80,
+   "priceStars": 120,
    "texture": "night_orb.png",
    "finish": "glass orbs and chrome rings",
    "accent": "#FF7AD9",
@@ -753,7 +753,7 @@
    "name": "Grape Soda",
    "order": 18,
    "tier": "common",
-   "priceStars": 20,
+   "priceStars": 30,
    "texture": "grape_soda.png",
    "finish": "glossy bubbles",
    "accent": "#C9A6FF",
@@ -797,7 +797,7 @@
    "name": "Rose Chrome",
    "order": 19,
    "tier": "rare",
-   "priceStars": 40,
+   "priceStars": 60,
    "texture": "rose_chrome.png",
    "finish": "rose chrome",
    "accent": "#FFC2D4",

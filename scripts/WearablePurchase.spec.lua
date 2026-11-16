@@ -39,7 +39,7 @@ return function(server)
 	local function fund(h, stars) assert(H.grantPurchase(h, "fund-" .. stars .. "-" .. h.state.revision, stars, false)) end
 	local function equipped(h) return W.equipped(h.state, "pip") end
 
-	test("the catalogue: every rig item (the 17 through slice A, plus slice B's) at fixed 15/30/60 prices, recolour variants after their base", function()
+	test("the catalogue: every rig item (the 17 through slice A, plus slice B's) at fixed 25/50/100 prices, recolour variants after their base", function()
 		local all = Catalog.forPet("pip").order
 		-- Base items are the rig's own; recolour variants (slice B) are listed right after their base.
 		local items, variants = {}, {}
@@ -53,8 +53,8 @@ return function(server)
 			slots[item.slot] = (slots[item.slot] or 0) + 1
 		end
 		assert(slots.Hat >= 3 and slots.Shirt >= 2 and slots.Neck >= 2 and slots.EarPiercing == 2 and slots.Eyes >= 5 and slots.Mouth >= 2 and slots.Tail >= 1)
-		assert(Catalog.price("pip", "flowercrown") == 60 and Catalog.price("pip", "beanie") == 15 and Catalog.price("pip", "sparkle") == 30)
-		assert(Catalog.price("pip", "round") == 15 and Catalog.price("pip", "happy") == 15 and Catalog.price("pip", "lash") == 15 and Catalog.price("pip", "w") == 15)
+		assert(Catalog.price("pip", "flowercrown") == 100 and Catalog.price("pip", "beanie") == 25 and Catalog.price("pip", "sparkle") == 50)
+		assert(Catalog.price("pip", "round") == 25 and Catalog.price("pip", "happy") == 25 and Catalog.price("pip", "lash") == 25 and Catalog.price("pip", "w") == 25)
 		assert(Catalog.item("pip", "smallwide") == nil, "Wide Eyes is not sold")
 		-- The old lineup keeps its order (new rig items only ever join it).
 		local position = {}
@@ -79,7 +79,7 @@ return function(server)
 
 	test("recolour variants: their own ids at the base price; owning the base does not own the variant; one hat at a time", function()
 		local h, db, c = fixture()
-		fund(h, 100)
+		fund(h, 200)
 		local mint = Catalog.item("pip", "beanie_mint")
 		assert(mint and mint.variant and mint.base == "beanie" and mint.slot == "Hat" and mint.price == Catalog.price("pip", "beanie") and mint.color == "#7FE0CF")
 		-- What the server charges this week: the catalogue price, or the weekly shelf price (slice C)
@@ -88,7 +88,7 @@ return function(server)
 			if type(W.price) == "function" then return W.price("pip", itemId, Catalog.week(c.now)) end
 			return Catalog.price("pip", itemId)
 		end
-		assert(due("beanie_mint") <= mint.price and due("beanie") <= 15)
+		assert(due("beanie_mint") <= mint.price and due("beanie") <= 25)
 		assert(H.buyWearable(h, "v-1", "pip", "beanie", due("beanie"), true))
 		assert(W.owns(h.state, "pip", "beanie") and not W.owns(h.state, "pip", "beanie_mint"), "the base bought the variant")
 		local ok, reason = H.equipWearable(h, "v-e0", "pip", "Hat", "beanie_mint")
@@ -104,7 +104,7 @@ return function(server)
 		assert(H.equipWearable(h, "v-e2", "pip", "Hat", "beanie_mint") and equipped(h).Hat == "beanie_mint")
 		-- A wrong slot, and a colour the catalogue does not hold, are refused.
 		ok, reason = H.equipWearable(h, "v-e3", "pip", "Shirt", "beanie_mint"); assert(not ok and reason == "InvalidWearable", tostring(reason))
-		ok, reason = H.buyWearable(h, "v-3", "pip", "beanie_neon", 15, true); assert(not ok and reason == "NotForSale", tostring(reason))
+		ok, reason = H.buyWearable(h, "v-3", "pip", "beanie_neon", 25, true); assert(not ok and reason == "NotForSale", tostring(reason))
 		-- Rendering maps the variant to its base meshes plus a tint.
 		local render = Catalog.renderMap("pip", equipped(h))
 		assert(render.mapped.Hat == "beanie" and render.tints.Hat.to == "#7FE0CF" and render.tints.Hat.item == "beanie")
@@ -113,11 +113,11 @@ return function(server)
 
 	test("buying debits the fixed price once, records ownership and equips", function()
 		local h, db, c = fixture()
-		fund(h, 100)
+		fund(h, 200)
 		local before, rolls = h.state.nectar, c.rolls
-		local ok, reason = H.buyWearable(h, "w-1", "pip", "flowercrown", 60, true)
+		local ok, reason = H.buyWearable(h, "w-1", "pip", "flowercrown", 100, true)
 		assert(ok and reason == "Saved", tostring(reason))
-		assert(h.state.nectar == before - 60 and db.player_1.hatching.nectar == before - 60)
+		assert(h.state.nectar == before - 100 and db.player_1.hatching.nectar == before - 100)
 		assert(W.owns(h.state, "pip", "flowercrown") and equipped(h).Hat == "flowercrown")
 		assert(c.rolls == rolls, "a wearable purchase drew a random number")
 		local public = H.public(h)
@@ -126,87 +126,87 @@ return function(server)
 
 	test("the same operation id and an owned item never charge twice", function()
 		local h, _, c = fixture()
-		fund(h, 100)
-		assert(H.buyWearable(h, "w-2", "pip", "sunhat", 30, true))
+		fund(h, 200)
+		assert(H.buyWearable(h, "w-2", "pip", "sunhat", 50, true))
 		local balance, writes = h.state.nectar, c.writes
-		local ok, reason = H.buyWearable(h, "w-2", "pip", "sunhat", 30, true)
+		local ok, reason = H.buyWearable(h, "w-2", "pip", "sunhat", 50, true)
 		assert(ok and reason == "AlreadyOwned" and h.state.nectar == balance and c.writes == writes)
-		ok, reason = H.buyWearable(h, "w-3", "pip", "sunhat", 30, true)
+		ok, reason = H.buyWearable(h, "w-3", "pip", "sunhat", 50, true)
 		assert(ok and reason == "AlreadyOwned" and h.state.nectar == balance and c.writes == writes)
 	end)
 
 	test("a reused operation id with different arguments is refused, never a false Saved", function()
 		local h, db, c = fixture()
-		fund(h, 100)
-		assert(H.buyWearable(h, "w-r", "pip", "beanie", 15, true))
+		fund(h, 200)
+		assert(H.buyWearable(h, "w-r", "pip", "beanie", 25, true))
 		local balance, writes = h.state.nectar, c.writes
 		-- Same id, another item: no charge, no item, and not "Saved".
-		local ok, reason = H.buyWearable(h, "w-r", "pip", "sunhat", 30, true)
+		local ok, reason = H.buyWearable(h, "w-r", "pip", "sunhat", 50, true)
 		assert(not ok and reason == "OperationConflict", tostring(ok) .. " " .. tostring(reason))
 		assert(not W.owns(h.state, "pip", "sunhat") and h.state.nectar == balance and c.writes == writes)
 		-- The saved record's op signature carries the arguments, so another server holding a
 		-- stale snapshot is refused inside the callback too.
-		-- (Slice C appends the price paid: "buy:pip:beanie:15".)
+		-- (Slice C appends the price paid: "buy:pip:beanie:25".)
 		assert(string.find(db.player_1.hatching.lastOperation.digest, "buy:pip:beanie", 1, true) == 1, db.player_1.hatching.lastOperation.digest)
 		local h2, db2 = fixture()
-		fund(h2, 100)
+		fund(h2, 200)
 		local stale = copy(h2.state)
-		assert(H.buyWearable(h2, "w-s", "pip", "beanie", 15, true))
+		assert(H.buyWearable(h2, "w-s", "pip", "beanie", 25, true))
 		local committedState = copy(db2.player_1.hatching)
 		h2.state = stale -- this session never saw the commit (as another server would)
-		ok, reason = H.buyWearable(h2, "w-s", "pip", "sunhat", 30, true)
+		ok, reason = H.buyWearable(h2, "w-s", "pip", "sunhat", 50, true)
 		assert(not ok and reason == "OperationConflict", "callback: " .. tostring(ok) .. " " .. tostring(reason))
 		assert(db2.player_1.hatching.nectar == committedState.nectar and not W.owns(db2.player_1.hatching, "pip", "sunhat"))
 		-- Equip ids are bound to their slot and item the same way.
-		assert(H.buyWearable(h, "w-t", "pip", "sunhat", 30, false))
+		assert(H.buyWearable(h, "w-t", "pip", "sunhat", 50, false))
 		assert(H.equipWearable(h, "e-r", "pip", "Hat", "sunhat"))
 		ok, reason = H.equipWearable(h, "e-r", "pip", "Hat", "beanie")
 		assert(not ok and reason == "OperationConflict" and equipped(h).Hat == "sunhat", tostring(reason))
 		-- The same id with the same arguments is still a quiet success.
-		ok, reason = H.buyWearable(h, "w-t", "pip", "sunhat", 30, false)
+		ok, reason = H.buyWearable(h, "w-t", "pip", "sunhat", 50, false)
 		assert(ok and reason == "AlreadyOwned")
 	end)
 
 	test("a replayed UpdateAsync callback and commit-then-error charge once", function()
 		local h, db, c = fixture()
-		fund(h, 60)
+		fund(h, 120)
 		local before = h.state.nectar
 		c.replay = true
-		assert(H.buyWearable(h, "w-4", "pip", "hoodie", 60, false))
+		assert(H.buyWearable(h, "w-4", "pip", "hoodie", 100, false))
 		c.replay = false
-		assert(db.player_1.hatching.nectar == before - 60)
+		assert(db.player_1.hatching.nectar == before - 100)
 		local h2, db2, c2 = fixture()
-		fund(h2, 60)
+		fund(h2, 120)
 		before = h2.state.nectar
 		c2.failAfter = true
-		local ok, reason = H.buyWearable(h2, "w-5", "pip", "beads", 15, true)
-		assert(not ok and reason == "Retrying" and db2.player_1.hatching.nectar == before - 15)
-		ok = H.buyWearable(h2, "w-5", "pip", "beads", 15, true)
-		assert(ok and h2.state.nectar == before - 15 and db2.player_1.hatching.nectar == before - 15)
+		local ok, reason = H.buyWearable(h2, "w-5", "pip", "beads", 25, true)
+		assert(not ok and reason == "Retrying" and db2.player_1.hatching.nectar == before - 25)
+		ok = H.buyWearable(h2, "w-5", "pip", "beads", 25, true)
+		assert(ok and h2.state.nectar == before - 25 and db2.player_1.hatching.nectar == before - 25)
 		assert(#W.row(h2.state, "pip").owned == 1)
 	end)
 
 	test("refuses when the wallet is short, a wrong price, an unknown item or an unowned pet, without writing", function()
 		local h, _, c = fixture()
 		local before, writes = h.state.nectar, c.writes
-		assert(before < 60, "fixture starts below the showcase price")
-		local ok, reason = H.buyWearable(h, "w-6", "pip", "flowercrown", 60, true)
+		assert(before < 100, "fixture starts below the showcase price")
+		local ok, reason = H.buyWearable(h, "w-6", "pip", "flowercrown", 100, true)
 		assert(not ok and reason == "NeedStars" and h.state.nectar == before and c.writes == writes)
 		assert(not W.owns(h.state, "pip", "flowercrown"))
-		fund(h, 100); writes = c.writes
+		fund(h, 200); writes = c.writes
 		ok, reason = H.buyWearable(h, "w-7", "pip", "beanie", 1, true); assert(not ok and reason == "PriceChanged")
-		ok, reason = H.buyWearable(h, "w-8", "pip", "crown", 15, true); assert(not ok and reason == "NotForSale")
-		ok, reason = H.buyWearable(h, "w-9", "puddle", "beanie", 15, true); assert(not ok and (reason == "Unowned" or reason == "NotForSale"), tostring(reason))
+		ok, reason = H.buyWearable(h, "w-8", "pip", "crown", 25, true); assert(not ok and reason == "NotForSale")
+		ok, reason = H.buyWearable(h, "w-9", "puddle", "beanie", 25, true); assert(not ok and (reason == "Unowned" or reason == "NotForSale"), tostring(reason))
 		assert(c.writes == writes, "a refusal wrote")
 	end)
 
 	test("equip and unequip per slot; a pair fills both ears; only owned items equip", function()
 		local h, _, c = fixture()
-		fund(h, 200)
+		fund(h, 400)
 		local ok, reason = H.equipWearable(h, "e-0", "pip", "Hat", "beanie"); assert(not ok and reason == "NotOwned")
-		assert(H.buyWearable(h, "b-1", "pip", "beanie", 15, false)); assert(equipped(h).Hat == nil)
-		assert(H.buyWearable(h, "b-2", "pip", "sunhat", 30, false))
-		assert(H.buyWearable(h, "b-3", "pip", "ring", 15, true))
+		assert(H.buyWearable(h, "b-1", "pip", "beanie", 25, false)); assert(equipped(h).Hat == nil)
+		assert(H.buyWearable(h, "b-2", "pip", "sunhat", 50, false))
+		assert(H.buyWearable(h, "b-3", "pip", "ring", 25, true))
 		assert(equipped(h).EarPiercingL == "ring" and equipped(h).EarPiercingR == "ring")
 		assert(H.equipWearable(h, "e-1", "pip", "Hat", "beanie")); assert(equipped(h).Hat == "beanie")
 		-- One item per slot: the sun hat replaces the beanie.
@@ -223,10 +223,10 @@ return function(server)
 
 	test("exclusions hide, never unequip: a full hat hides horns, the Flower Crown keeps them", function()
 		local h = fixture()
-		fund(h, 200)
-		assert(H.buyWearable(h, "x-1", "pip", "beanie", 15, true))
-		assert(H.buyWearable(h, "x-2", "pip", "flowercrown", 60, false))
-		assert(H.buyWearable(h, "x-3", "pip", "hoodie", 60, true))
+		fund(h, 400)
+		assert(H.buyWearable(h, "x-1", "pip", "beanie", 25, true))
+		assert(H.buyWearable(h, "x-2", "pip", "flowercrown", 100, false))
+		assert(H.buyWearable(h, "x-3", "pip", "hoodie", 100, true))
 		local r = Rules.resolve(Defs.pip, { horns = 4, wings = 2 }, equipped(h))
 		assert(r.stages.horns == 0 and r.charmCenterHidden and r.stages.wings == 2, "beanie must hide horns and keep wings")
 		assert(equipped(h).Hat == "beanie" and equipped(h).Shirt == "hoodie", "an exclusion unequipped something")
@@ -239,7 +239,7 @@ return function(server)
 
 	test("a v9 save migrates to v10: wallet, pets and quests kept, empty wearables, never a failed load", function()
 		local h, db, _, adapter = fixture()
-		fund(h, 40)
+		fund(h, 80)
 		local balance = h.state.nectar
 		assert(H.release(h))
 		local old = copy(db.player_1.hatching)
@@ -272,7 +272,7 @@ return function(server)
 
 	test("ownership and the equipped set survive a fresh session", function()
 		local h, _, c, adapter = fixture()
-		fund(h, 60)
+		fund(h, 120)
 		-- The price due this week: the catalogue price, or the weekly shelf price (slice C) when
 		-- the item is on the fixture week's shelf.
 		local function due(itemId)
@@ -288,9 +288,9 @@ return function(server)
 
 	test("replication: the public appearance carries the active pet's equipped wearables", function()
 		local h = fixture()
-		fund(h, 100)
-		assert(H.buyWearable(h, "r-1", "pip", "tee", 15, true))
-		assert(H.buyWearable(h, "r-2", "pip", "starstud", 30, true))
+		fund(h, 200)
+		assert(H.buyWearable(h, "r-1", "pip", "tee", 25, true))
+		assert(H.buyWearable(h, "r-2", "pip", "starstud", 50, true))
 		local s = h.state
 		local profile = { companionId = "pip", petAppearance = {}, petAppearanceSaved = {} }
 		local public = Appearance.public(profile, s.hues, s.petHues, s.petMaterials, s.petToys, s.petFeatures, "pip", s.petWearables)
