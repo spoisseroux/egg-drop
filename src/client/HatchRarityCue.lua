@@ -1,11 +1,22 @@
 -- Fixed authored presentation tiers. Never reads conditional odds or saved ownership.
 -- 2026-11-15 (QA v685 H2/H3): every tier has its own look (light colour, beam, burst size)
--- and its own sound line, so Common, Uncommon and Rare read apart by eye and by ear.
--- Sounds are existing uploaded cues only, varied by pitch, gain and layering.
+-- and its own sound, so Common, Uncommon and Rare read apart by eye and by ear.
+-- 2026-11-15 (QA v735 H3): the sound is one original sting per tier (rarity_common, a light
+-- pop; rarity_uncommon, a brighter pop with a chime and glitter; rarity_rare, a harp rise
+-- into a big chime), synthesised by scripts/synth_hatch_rarity.py. They replace the lines
+-- that were layered from older cues.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Features=require(Shared.FeatureCatalog);local Materials=require(Shared.MaterialCatalog)
 local Toys=require(Shared.ToyCatalog);local Hues=require(Shared.HueCatalog);local Pets=require(Shared.PetCatalog)
-local Policy={Cue="hatch_finish",AnswerEnd=1.45,MaxLateness=.10,BurstAt=.98,FlourishAfter=.45}
+local Policy={Cue="hatch_finish",AnswerEnd=1.45,MaxLateness=.10,BurstAt=.98}
+-- One sting per tier. `hit` is where the pop sits inside the file: the sting starts that
+-- long before the burst, so the pop lands on it (Rare's rise leads in for 0.70 s).
+-- `length` is the file's length; `gain` steps the tiers apart in loudness too.
+local function sting(cue,hit,length,gain)return table.freeze({cue=cue,hit=hit,length=length,gain=gain})end
+Policy.Sting=table.freeze({
+ Common=sting("rarity_common",0,.50,.55),Neutral=sting("rarity_common",0,.50,.55),
+ Uncommon=sting("rarity_uncommon",0,1.25,.75),Rare=sting("rarity_rare",.70,2.70,1),
+})
 local Cue={};Cue.__index=Cue
 local valid={Common=true,Uncommon=true,Rare=true,Neutral=true}
 local materialTier=table.freeze({standard="Common",gloss="Common",matte="Common",jelly="Rare"})
@@ -36,28 +47,14 @@ Policy.Look=table.freeze({
  Uncommon=look("#57E08A","#C8FFD9",.80,10,18,6,1,.40,4,6,"#A6F27E","#27A45A"),
  Rare=look("#8E7CFF","#5CC8FF",1,16,30,12,2,.62,7,14,"#B9A9FF","#5340D8"),
 })
--- Sound line per tier, in seconds on the hatch clock. `pre` notes play before the receipt
--- unlocks (the build-up and the burst); the rest answer the name slam at `readyAt`.
--- Gains are set against the hatch body sound, which is quiet (about -29 LUFS) until the
--- shell opens and loud (about -14 LUFS) from 1.5 to 2.0 s, right on the name slam. A note
--- there is masked, so each tier's answering flourish waits `FlourishAfter` for the body to
--- fall away; see artifacts/reveal-2026-11-15/audio/LOUDNESS.md.
-local function st(n)return 2^(n/12)end
+-- The tier's sound on the hatch clock: one event, `pre` (it plays before the receipt
+-- unlocks), at the burst less the sting's lead-in. Played at speed 1 always: the stings
+-- are tuned as one family. The hatch body is quiet (about -29 LUFS) until the shell opens,
+-- so the pop is clear at the burst; the Rare chime then rings through the body's own hit.
+-- The accent voice is stopped at readyAt + AnswerEnd, after the longest sting has ended.
 function Policy.events(classification,readyAt)
- local B=Policy.BurstAt
- if classification=="Uncommon"then return {
-  {at=.30,cue="star_land",speed=st(0),gain=.40,pre=true},{at=.62,cue="star_land",speed=st(4),gain=.46,pre=true},
-  {at=B,cue="reveal_shimmer",speed=1,gain=.55,pre=true},
-  {at=readyAt,cue="name_slam",speed=1.06,gain=.90},{at=readyAt+Policy.FlourishAfter,cue="quest_complete",speed=1,gain=.85}}
- elseif classification=="Rare"then return {
-  {at=.16,cue="star_land",speed=st(0),gain=.36,pre=true},{at=.36,cue="star_land",speed=st(4),gain=.40,pre=true},
-  {at=.56,cue="star_land",speed=st(7),gain=.46,pre=true},{at=.76,cue="star_land",speed=st(12),gain=.52,pre=true},
-  {at=.86,cue="streak_whoosh",speed=1,gain=.55,pre=true},
-  {at=B,cue="reveal_shimmer",speed=st(3),gain=.80,pre=true},{at=B+.06,cue="new_best",speed=1,gain=.70,pre=true},
-  {at=readyAt,cue="name_slam",speed=.94,gain=1},{at=readyAt+Policy.FlourishAfter,cue="stars_total",speed=st(2),gain=.80}}
- end
- return {{at=.34,cue="egg_wobble",speed=1,gain=.40,pre=true},{at=B,cue="egg_crack_glint",speed=1,gain=.50,pre=true},
-  {at=readyAt,cue="name_slam",speed=1,gain=.90}}
+ local s=Policy.Sting[classification]or Policy.Sting.Common
+ return {{at=Policy.BurstAt-s.hit,cue=s.cue,speed=1,gain=s.gain,pre=true}}
 end
 function Policy.new(kind,result,readyAt)
  local classification=Policy.tier(kind,result)

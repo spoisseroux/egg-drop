@@ -1,5 +1,6 @@
 -- Studio Client. Rarity presentation policy (QA v685 H2/H3, 2026-11-15): fixed authored
--- tiers, one look and one sound line per tier, built only from existing uploaded cues.
+-- tiers, one look and one sound per tier. QA v735 H3: the sound is one original sting per
+-- tier (rarity_common / rarity_uncommon / rarity_rare), timed so its pop lands on the burst.
 return function(client)
  local Policy=require(client.HatchRarityCue);local Audio=require(client.BoardAudio);local cases={}
  local R=require(client.HatchDisplayPose).ItemReady
@@ -18,43 +19,39 @@ return function(client)
   assert(Policy.tier("hue",{itemId="rose",rare=true})=="Neutral"and Policy.tier("toy",{toyId="wobble_top",rare=true})=="Neutral")
   assert(Policy.tier("companion",{petId="pip",rare=true})=="Common"and Policy.tier("material",{finishId="unknown",rare=true})=="Neutral")
  end)
- test("every tier has its own sound line: more notes, more layers and a different stinger as it gets rarer",function()
+ test("every tier has its own sting: one sound each, three different sounds, louder as it gets rarer",function()
   local common,uncommon,rare=line("material",{finishId="gloss"}),line("feature",{featureId="claws"}),line("material",{finishId="jelly"})
-  assert(#common==3 and #uncommon==5 and #rare==9,"note counts changed")
-  local function cues(list)local set,count={},0;for _,e in ipairs(list)do if not set[e.cue]then set[e.cue]=true;count+=1 end end;return set,count end
-  local c,u,r=cues(common),cues(uncommon),cues(rare)
-  -- Stinger at the burst: a soft crack for Common, a shimmer for Uncommon, a higher and louder shimmer plus a fanfare for Rare.
-  assert(c.egg_crack_glint and not c.reveal_shimmer and u.reveal_shimmer and r.reveal_shimmer and r.new_best and not u.new_best)
-  -- Answer to the name slam: nothing extra, a chime, a long rising total.
-  assert(not c.quest_complete and not c.stars_total and u.quest_complete and not u.stars_total and r.stars_total and not r.quest_complete)
-  local function shimmer(list)for _,e in ipairs(list)do if e.cue=="reveal_shimmer"then return e end end end
-  assert(shimmer(rare).speed>shimmer(uncommon).speed*1.15 and shimmer(rare).gain>=shimmer(uncommon).gain+.2)
-  local function slam(list)for _,e in ipairs(list)do if e.cue=="name_slam"then return e end end end
-  assert(slam(common).speed==1 and slam(uncommon).speed>1 and slam(rare).speed<1,"the three slams share a pitch")
+  assert(#common==1 and #uncommon==1 and #rare==1,"one sound per reveal")
+  assert(common[1].cue=="rarity_common"and uncommon[1].cue=="rarity_uncommon"and rare[1].cue=="rarity_rare")
+  assert(common[1].gain<uncommon[1].gain and uncommon[1].gain<rare[1].gain,"the tiers step up in loudness")
+  -- An untiered item sounds like Common, as it looks like Common.
+  local neutral=line("hue",{itemId="rose"});assert(#neutral==1 and neutral[1].cue=="rarity_common"and neutral[1].gain==common[1].gain)
+  assert(Policy.events("NoSuchTier",R)[1].cue=="rarity_common")
+  local S=Policy.Sting
+  assert(S.Common.length<S.Uncommon.length and S.Uncommon.length<S.Rare.length,"rarer tiers ring longer")
  end)
- test("rising notes climb: none for Common, two for Uncommon, four over an octave for Rare",function()
-  local function rising(list)local out={};for _,e in ipairs(list)do if e.cue=="star_land"then table.insert(out,e)end end;return out end
-  assert(#rising(line("material",{finishId="matte"}))==0 and #rising(line("hue",{itemId="rose"}))==0)
-  local two,four=rising(line("feature",{featureId="claws"})),rising(line("material",{finishId="jelly"}))
-  assert(#two==2 and two[2].speed>two[1].speed and two[2].gain>two[1].gain)
-  assert(#four==4 and math.abs(four[4].speed/four[1].speed-2)<1e-6)
-  for i=2,4 do assert(four[i].speed>four[i-1].speed and four[i].gain>four[i-1].gain and four[i].at>four[i-1].at)end
-  for _,e in ipairs(four)do assert(e.pre and e.at<Policy.BurstAt,"the build-up ends before the burst")end
+ test("the pop lands on the burst: Common and Uncommon start there, Rare leads in with its rise",function()
+  for _,tier in ipairs({"Common","Uncommon","Rare","Neutral"})do
+   local e=Policy.events(tier,R)[1];local s=Policy.Sting[tier]
+   assert(math.abs(e.at+s.hit-Policy.BurstAt)<1e-9,tier.." pop is off the burst")
+   assert(e.at>=.1,"it starts after the stage has opened")
+  end
+  assert(Policy.Sting.Common.hit==0 and Policy.Sting.Uncommon.hit==0 and Policy.Sting.Rare.hit==.70,"hit times match scripts/synth_hatch_rarity.py HIT")
+  assert(Policy.events("Rare",R)[1].at<Policy.events("Common",R)[1].at)
  end)
- test("every cue is an existing uploaded sound and every gain is audible, never clipped",function()
+ test("every cue is an uploaded sound, played at its own pitch, audible and never cut",function()
+  local ids={}
   for _,tier in ipairs({"Common","Uncommon","Rare","Neutral"})do
    for _,e in ipairs(Policy.events(tier,R))do
-    assert(Audio.uri(e.cue)~=nil,"no uploaded sound for "..tostring(e.cue))
-    assert(e.gain>=.3 and e.gain<=1 and e.speed>=.5 and e.speed<=2.01)
-    assert(e.pre==true or e.at>=R,"an undisclosed note sits before the receipt")
+    local uri=Audio.uri(e.cue);assert(uri~=nil,"no uploaded sound for "..tostring(e.cue))
+    if tier~="Neutral"then assert(not ids[uri],"two tiers share an asset");ids[uri]=true end
+    assert(e.gain>=.3 and e.gain<=1 and e.speed==1)
+    assert(e.pre==true,"the sting plays before the receipt unlocks")
+    -- The accent voice is stopped at R + AnswerEnd: the sting must have ended by then.
+    assert(e.at+Policy.Sting[tier].length<=R+Policy.AnswerEnd+1e-9,tier.." would be cut by the answer owner")
    end
   end
-  assert(Policy.AnswerEnd>=Policy.FlourishAfter+1.0,"the Rare total (1.0 s) must not be cut by the answer owner")
-  -- The hatch body peaks from 1.5 to 2.0 s; a flourish under it is masked (LOUDNESS.md).
-  for _,tier in ipairs({"Uncommon","Rare"})do
-   local events=Policy.events(tier,R);local last=events[#events]
-   assert(last.cue~="name_slam"and last.at>=2.05 and math.abs(last.at-(R+Policy.FlourishAfter))<1e-9,"flourish sits under the body's peak")
-  end
+  assert(Audio.uri("rarity_common")==Audio.uri("rarity_common")and Audio.uri("rarity_rare")~=Audio.uri("rarity_uncommon"))
  end)
  test("looks differ by tier: colour, beam, rays, shards and flash all grow with rarity",function()
   local c,u,r,n=Policy.Look.Common,Policy.Look.Uncommon,Policy.Look.Rare,Policy.Look.Neutral
@@ -69,11 +66,15 @@ return function(client)
  end)
  test("pets keep the reveal stage's sound line; items never backfill a crossed note",function()
   assert(#Policy.new("companion",{petId="pip"},2.05).events==0)
-  local c=Policy.new("material",{finishId="jelly"},R);advance(c,.5,false)
-  assert(#c:due(1.4,false,true)==0,"a jump over 0.25 s played what it crossed")
-  assert(#advance(c,3.1,true)==2,"the answers after the jump still play on time")
+  -- A jump over 0.25 s (a pause, a skip) consumes the sting it crossed; it is never played late.
+  local c=Policy.new("material",{finishId="jelly"},R);advance(c,.1,false)
+  assert(#c:due(.9,false,true)==0,"a jump over 0.25 s played what it crossed")
+  assert(#advance(c,3.1,true)==0,"a crossed sting was backfilled")
+  -- On the clock it plays once, before the receipt, whether or not the result is disclosed.
   c=Policy.new("material",{finishId="jelly"},R)
-  assert(#advance(c,R-.05,false)==7 and #advance(c,3.1,false)==2,"build-up notes are pre-receipt; answers follow the clock")
+  assert(#advance(c,R-.05,false)==1 and #advance(c,3.1,false)==0,"the sting is pre-receipt and plays once")
+  c=Policy.new("material",{finishId="gloss"},R)
+  assert(#advance(c,Policy.BurstAt-.02,false)==0 and #advance(c,Policy.BurstAt+.05,false)==1,"Common pops at the burst")
  end)
  test("owner loss cancel invalid age and backwards clock permanently consume pending notes",function()
   for _,mode in ipairs({"owner","cancel","nan","backwards"})do

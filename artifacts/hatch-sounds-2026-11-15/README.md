@@ -1,6 +1,6 @@
 # Hatch rarity sounds, redone from scratch (QA v735 H3)
 
-**Auditions only. Not uploaded, not wired in.** Nobody has listened to these yet: they were built and checked by measurement and spectrogram, not by ear. Spencer's ear is the test.
+**Approved by Spencer on 2026-11-15 and wired in.** Uploaded as Audio: Common `103455905961997`, Uncommon `121273502108143`, Rare `87043456244614`. Mapped in `BoardAudio` (`rarity_common`, `rarity_uncommon`, `rarity_rare`) and played by `HatchRarityCue.events`. Not yet heard in the game itself.
 
 ## Listen
 
@@ -18,7 +18,7 @@
 
 Each tier contains the one below it, all in C major pentatonic, so they sound like one family and climb: pop, then pop + chime + sparkle, then rise + pop + big chime + sparkle. Measurements are in `report.json` (length, loudness, brightness per tier).
 
-## If approved, the wiring
+## The wiring (done)
 
 - Upload the three masters (Open Cloud, Audio) and add `rarity_common`, `rarity_uncommon`, `rarity_rare` to `BoardAudio`.
 - `HatchRarityCue.events` becomes one sound per tier, replacing the lines built from old cues: Common and Uncommon start at the burst (0.98 s), Rare starts 0.70 s earlier (0.28 s) so its hit lands on the burst. Suggested gains 0.55, 0.75, 1.0.

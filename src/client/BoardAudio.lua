@@ -27,6 +27,11 @@ local assetIds = {
 	overflow = 101342613025976,
 	retry = 80753325038930,
 	menu = 74679010378287,
+	-- Hatch rarity stings (QA v735 H3, approved by Spencer 2026-11-15): synthesised from
+	-- scratch by scripts/synth_hatch_rarity.py; masters in assets/audio/custom/.
+	rarity_common = 103455905961997,
+	rarity_uncommon = 121273502108143,
+	rarity_rare = 87043456244614,
 }
 -- PLACEHOLDER sounds (assets/audio/placeholder/, uploaded 2026-11-13). Spencer's own
 -- audio replaces these; see assets/audio/placeholder/PLACEHOLDER-AUDIO.md.
@@ -60,6 +65,8 @@ local cues = {
 	"desc_tick", "spin_whoosh", "shimmer_loop", "reveal_out", "goal_tick", "row_flip", "star_land",
 	"stars_total", "new_best", "egg_ready", "meter_fill", "win", "lose",
 	"egg_wobble", "egg_crack_glint", "egg_select",
+	-- Item reveal: one sting per rarity tier (HatchRarityCue.events).
+	"rarity_common", "rarity_uncommon", "rarity_rare",
 	-- Results count-up: one very short blip per +1 Star, each cut by the next
 	-- (batch 2026-11-13 R1). No id yet; the coordinator uploads a placeholder.
 	"count_blip",
