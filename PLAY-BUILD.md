@@ -16,6 +16,31 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Private v760 Published 2026-11-16 — runtime 85ba59e, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v760".
+# Pocket Pals — deck fit, faster rounds, results polish
+
+**New:**
+- **Pocket Deck on phone:** the whole handheld is aspect-locked and centred, with at least 8 px of clearance below Roblox's top bar.
+- **Hatch:** opens straight into the full-screen stage, with no in-panel hatch.
+- **Results:**
+  - The difficulty button cycles Easy → Medium → Hard → Easy.
+  - The Star is rim-lit and reads as a Star while it spins.
+  - The Stars chip uses the 3D Star.
+- **Faster, punchier rounds:**
+  - The round clock runs at 1.3x.
+  - Drop cooldown is 0.2 s, and the next ball is ready in about 0.5 s.
+  - The settle takes 2.3 s.
+  - Merges are snappier, and the screen kick scales with tier and chain.
+  - The chain pitch climbs to an octave.
+  - The fill line has a heartbeat and a danger tick.
+  - A Medium round takes about 33 s.
+
+**Passed before publish:** server 58/58; client 134/149 (all failures long-standing); Code Reviewer GO (no blockers). Translations unchanged (0 add/update).
+
+**Not checked live:** a real phone; the screen kick and the new pitch, heard live.
+
+## Historical (earlier builds)
+
 **Private v751 Published 2026-11-16 — runtime 664c7e9, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v751".
 # Pocket Pals — v735 QA fixes, new sounds, world palette, v1 prices
 
