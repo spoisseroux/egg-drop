@@ -680,14 +680,16 @@ gui.Destroying:Connect(function()clientUI.attract:destroy();clientUI.ambient:des
 
 do
 	local handoff = gui.DeckHandoff
-	handoff.Parent = safeOverlays
+	-- QA v735 D2: one shade, the whole screen. It used to sit in the inset SafeContent
+	-- frame with a second full-screen curtain behind it, which read as two overlays.
+	handoff.Parent = overlayGui
 	local curtain = Art.frame(bleed, "HandoffBacking", Art.Backdrop, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 2)
 	local function updateBacking()
 		bleed.Enabled = gui.Enabled
 		clientUI.deckGui.Enabled = gui.Enabled and backdrop.Visible
 		overlayGui.Enabled = gui.Enabled
 		backing.Visible = backdrop.Visible
-		curtain.Visible = handoff.Visible and not backdrop.Visible
+		curtain.Visible = false
 		curtain.BackgroundTransparency = handoff.BackgroundTransparency
 	end
 	gui:GetPropertyChangedSignal("Enabled"):Connect(updateBacking)
@@ -1574,7 +1576,7 @@ roomView.onOpenMenu=function()if openMenu()then clientUI.accepted("confirm")end 
 picker.onAccepted=clientUI.accepted;journal.onAccepted=clientUI.accepted;gameMenu.onAccepted=clientUI.accepted;nurseryView.onAccepted=clientUI.accepted
 
 do
-	local handoff = safeOverlays.DeckHandoff
+	local handoff = overlayGui.DeckHandoff
 	local function alignSafeContent()
 		local origin = backdrop.AbsolutePosition - overlayGui.AbsolutePosition
 		local margin=if backdrop.AbsoluteSize.Y<280 then 0 else 8
@@ -1632,6 +1634,8 @@ end
 -- The Pocket Deck boot plays in the deck LCD on a real arrival (UI-SPEC section 6).
 roomView.transition.deckBoot=clientUI.deck.boot
 roomView.transition.deckVisible=function() return clientUI.deck.visible==true end
+-- QA v735 D2: the handheld has settled after its rise; lay it out at rest once.
+roomView.transition.onSettled=function() if layout then layout();updateHud() end end
 for _,name in ipairs({"RoundOver","ReducedEffects","Mode"}) do
 	board:GetAttributeChangedSignal(name):Connect(function() roomView.transition:refresh() end)
 end

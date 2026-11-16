@@ -15,6 +15,13 @@ Source: `notes.md` and `shots/` (filenames are timestamps). Spencer: "after we d
   - A full-screen overlay and a smaller overlay pop in, then animate roughly.
   - The power-on animation sometimes cuts off before it finishes.
   - Make the transition one smooth, satisfying motion (the shade fades in, the handheld rises and settles, the screen powers on fully every time), and the reverse on close.
+  - **FIXED 2026-11-15 (lane D).** What was wrong, measured frame by frame in Play:
+    - Two overlays: the handoff shade lived in the inset `SafeContent` frame (828x374 on an 844x390 root) with a second full-screen curtain behind it at the same alpha, so the inner rectangle read darker (shot 174105). It is now one full-screen shade (`EggDropOverlays.DeckHandoff`).
+    - Abrupt: 0.16 s fade, a hard swap, a 0.10 s fade back, and the HUD cut in on the frame the boot ended.
+    - The power-on cut off: any key, click or tap from 150 ms skipped it, and it also ended early whenever the boot's ownership test failed (a pending hatch, an overlay). On a phone the tap that opened the deck was often still landing.
+  - **Now (`DeckTransition.Timing`):** open = shade in 0.26 s, swap under it, the handheld rises from below with its screen dark and settles (0.46 s, a small overshoot) while the shade lifts (0.30 s), then the power-on plays all 24 frames (taps no longer skip it; only leaving the deck ends it) and its last frame fades onto the lit HUD over 0.22 s. Close = the screen shutters off (0.16 s), the handheld sinks as the shade comes in (0.30 s), swap, the shade lifts off the garden (0.32 s). The handheld's rest position is restored on every path, including a cancel.
+  - **Verified in Play at 844x390:** two open/close cycles traced per frame (rest y back to 20 after each; frames 0 to 23 all shown; no lit frame between the boot and the fade), and an open with five key presses during the boot (24 of 24 frames, `BootSkipped` false). `DeckBoot.spec` has a new case for hold, no-skip, linger and fade. Captures: `verify-D/D2-*.png` (the rise and the sink were taken with the Studio-only `DeckHandoffSlow` attribute).
+  - Cost to know about: the deck is playable about 2.6 s after the tap (it was about 0.5 s when the boot was skipped by a tap, 1.9 s when it was not).
 - D3. **The fill-line warning fires on every drop.** It should only warn when the pile is actually near the line.
 - D4. **The left and right area indicators are missing from rounds** (173936 shows the lines; check the goals' LEFT/RIGHT zones). Restore them.
 - D5 (173949). **The moon theme** that Codex added doesn't animate and doesn't match the others. Redo it like the rest of the deck backgrounds (animated, same style), or replace it.

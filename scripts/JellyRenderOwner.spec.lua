@@ -11,7 +11,7 @@ return function(gui,board,options)
 	assert(gui.Enabled and b.Visible and board:GetAttribute("Mode")=="Board","settled enabled Board required")
 	-- QA Q5: the garden menu is the machine hub (its own ScreenGui); DeckMenu is retired.
 	local hubShade=gui.Parent:WaitForChild("EggDropMachineHub"):WaitForChild("MachineHubHost"):WaitForChild("MachineHubShade")
-	local covers={hubShade,overlays.DeckPicker,overlays.PetJournal,overlays.EggHatchView,overlays.RoundCard,overlays.DeckHandoff}
+	local covers={hubShade,overlays.DeckPicker,overlays.PetJournal,overlays.EggHatchView,overlays.RoundCard,overlays.Parent.DeckHandoff}
 	for _,cover in ipairs(covers)do assert(not cover.Visible,"close presentation owners first: "..cover.Name)end
 	local existing={};for _,node in ipairs(trayOverlay:GetChildren())do existing[node]=true end
 	local source=Instance.new("Part");source.Name="_LocalRendererProbe";source.Anchored=true;source.CanCollide=false;source.CanQuery=false;source.CanTouch=false

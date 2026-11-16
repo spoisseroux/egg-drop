@@ -67,15 +67,17 @@ function Boot:cue(name)
  if self.audio and self.audio.play then self.audio:play(name,1,.72)end
 end
 
--- Ends the boot now. `skipped` fades deck_boot out over 60 ms.
-function Boot:finish(skipped)
+-- Ends the boot now. `skipped` fades deck_boot out over 60 ms. `ended` is the boot
+-- reaching its own end: with the `linger` play option the last frame then stays up for
+-- Boot:fade to take over (QA v735 D2).
+function Boot:finish(skipped,ended)
  if not self.playing then return false end
  self.playing=false;self.epoch+=1
  if self.connection then self.connection:Disconnect();self.connection=nil end
  if self.inputConnection then self.inputConnection:Disconnect();self.inputConnection=nil end
  if skipped and self.audio and self.audio.fadeCue then self.audio:fadeCue("deck_boot",.06)end
  self.skipped=skipped==true
- self.host.Visible=false;self.host:SetAttribute("BootFrame",-1)
+ self.host.Visible=ended==true and self.linger==true;self.host:SetAttribute("BootFrame",-1)
  self.host:SetAttribute("BootSkipped",skipped==true)
  local done=self.done;self.done=nil
  if done then done(skipped==true)end
@@ -88,10 +90,49 @@ function Boot:skip()
  return self:finish(true)
 end
 
--- options: reduced (bool), owns() -> bool (route ownership), done(skipped)
+-- QA v735 D2: the dark screen before the power-on (the handheld is still rising).
+function Boot:hold(color)
+ if self.playing then return end
+ self.fadeEpoch=(self.fadeEpoch or 0)+1
+ self.host.BackgroundColor3=color or Color3.new(0,0,0)
+ self.host.BackgroundTransparency=0;self.fixed.ImageTransparency=1;self.ink.ImageTransparency=1
+ self.held=true;self.host.Visible=true
+end
+function Boot:release()
+ if not self.held then return end
+ self.held=false;self.fixed.ImageTransparency=0;self.ink.ImageTransparency=0
+ self.host.BackgroundColor3=Color3.new(0,0,0)
+ if not self.playing then self.host.Visible=false end
+end
+-- After the last frame: the black screen fades off the lit HUD instead of cutting to it.
+-- Yields for `seconds`; a new play, a hold or `owns() == false` ends it at once.
+function Boot:fade(seconds,owns)
+ if self.playing then return false end
+ self.fadeEpoch=(self.fadeEpoch or 0)+1;local epoch=self.fadeEpoch
+ local host=self.host
+ -- The last frame and the black behind it fade together.
+ host.BackgroundTransparency=0;host.Visible=true
+ local started=self.clock()
+ while self.fadeEpoch==epoch and not self.playing and(not owns or owns())do
+  local t=math.clamp((self.clock()-started)/seconds,0,1)
+  local e=t*t*(3-2*t)
+  host.BackgroundTransparency=e;self.fixed.ImageTransparency=e;self.ink.ImageTransparency=e
+  if t>=1 then break end
+  RunService.Heartbeat:Wait()
+ end
+ if self.fadeEpoch~=epoch then return false end
+ if not self.playing then host.Visible=false end
+ host.BackgroundTransparency=0;self.fixed.ImageTransparency=0;self.ink.ImageTransparency=0
+ return true
+end
+
+-- options: reduced (bool), owns() -> bool (route ownership), done(skipped),
+-- noSkip (bool): inputs do not end it (the deck's own power-on, QA v735 D2).
 function Boot:play(options)
  options=options or {}
  if self.playing then self:finish(false)end
+ self.fadeEpoch=(self.fadeEpoch or 0)+1;self.held=false;self.linger=options.linger==true
+ self.host.BackgroundColor3=Color3.new(0,0,0);self.host.BackgroundTransparency=0;self.fixed.ImageTransparency=0;self.ink.ImageTransparency=0
  self.playing=true;self.epoch+=1;local epoch=self.epoch
  self.done=options.done;self.startedAt=self.clock();self.skipped=false
  local maxMs=if type(options.maxMs)=="number"then math.clamp(options.maxMs,400,Boot.TotalMs)elseif self.maxMs then self.maxMs else Boot.TotalMs
@@ -99,9 +140,11 @@ function Boot:play(options)
  self.host:SetAttribute("Boots",(self.host:GetAttribute("Boots")or 0)+1)
  local reduced=options.reduced==true
  local fired={}
- self.inputConnection=UserInputService.InputBegan:Connect(function(input)
-  if skipInputs[input.UserInputType]and not sticks[input.KeyCode]then self:skip()end
- end)
+ if not options.noSkip then
+  self.inputConnection=UserInputService.InputBegan:Connect(function(input)
+   if skipInputs[input.UserInputType]and not sticks[input.KeyCode]then self:skip()end
+  end)
+ end
  if reduced then
   -- Reduced Motion: the finished logo for 0.4 s; deck_boot at 0 ms.
   self:show(Boot.Reduced.frame);self:cue("deck_boot")
@@ -112,13 +155,13 @@ function Boot:play(options)
   if self.epoch~=epoch then return end
   if options.owns and not options.owns()then self:finish(false);return end
   local ms=self:elapsedMs()
-  if ms>=maxMs then self:finish(false);return end
+  if ms>=maxMs then self:finish(false,true);return end
   if reduced then
    if ms>=Boot.Reduced.holdMs then self:finish(false)end
    return
   end
   local index=Boot.frameAt(ms)
-  if not index then self:finish(false);return end
+  if not index then self:finish(false,true);return end
   if self.host:GetAttribute("BootFrame")~=index then self:show(index)end
   for i,sound in ipairs(Boot.Sounds)do
    if not fired[i]and ms>=sound.atMs then fired[i]=true;self:cue(sound.cue)end

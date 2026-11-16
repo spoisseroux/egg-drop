@@ -42,6 +42,27 @@ return function(client,parent)
    assert(not boot.playing and not host.Visible and done==true and host:GetAttribute("BootSkipped")==true)
    assert(cues[#cues].name=="fade:deck_boot")
   end)
+  -- QA v735 D2: the deck's own power-on (Transition:reveal) always reaches its last frame.
+  test("the deck power-on: dark while held, no input skips it, the last frame lingers into the fade",function()
+   table.clear(cues);now=0
+   boot:hold(Color3.new(.1,.1,.2))
+   assert(host.Visible and not boot.playing and boot.fixed.ImageTransparency==1 and host.BackgroundColor3==Color3.new(.1,.1,.2),"held: a dark screen, no sprite")
+   boot:release();assert(not host.Visible and boot.fixed.ImageTransparency==0 and host.BackgroundColor3==Color3.new(0,0,0),"released")
+   boot:hold();local done
+   boot:play({noSkip=true,linger=true,done=function(skipped)done={skipped=skipped}end})
+   assert(boot.playing and boot.inputConnection==nil and boot.fixed.ImageTransparency==0,"playing with no skip listener")
+   local seen={}
+   for _=1,34 do step(50);local f=host:GetAttribute("BootFrame");if f and f>=0 then seen[f]=true end end
+   for f=1,23 do assert(seen[f],"frame "..f.." was not shown")end
+   assert(not boot.playing and done and done.skipped==false and host:GetAttribute("BootSkipped")==false,"ended on its own")
+   assert(host.Visible,"the last frame stays up for the fade (no lit frame in between)")
+   local finished
+   task.spawn(function()finished=boot:fade(.2)end)
+   step(100);assert(host.Visible and host.BackgroundTransparency>.2 and host.BackgroundTransparency<.8 and boot.fixed.ImageTransparency==host.BackgroundTransparency,"fading together")
+   step(150);assert(finished==true and not host.Visible and host.BackgroundTransparency==0 and boot.fixed.ImageTransparency==0,"fade done; host reset for the next boot")
+   -- A plain play (no linger) still hides at once, and a cancel during a lingering boot hides too.
+   now=0;boot:play({noSkip=true,linger=true});step(300);boot:finish(false);assert(not host.Visible,"a cancelled power-on does not linger")
+  end)
   test("Reduced Motion: frame 21 for 0.4 s with deck_boot at 0 ms",function()
    table.clear(cues);now=0
    boot:play({reduced=true})
