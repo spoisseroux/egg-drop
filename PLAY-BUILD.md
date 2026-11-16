@@ -16,6 +16,17 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Private v775 Published 2026-11-16 — runtime f8d7e66, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v775".
+# Pocket Pals — v1 economy, new toys, Spencer's music, phone UI notes
+
+**New since v760:**
+- Phone UI notes 1 to 8 from the v760 pass: handheld composed around the mid line, "Skip tutorial" button, background motifs always on behind the deck, Hatch eggs / Deck style / Customize at the Pocket menu's size, in-game UI tinted by the faceplate, no stale "Hatch your first egg" pill, no preview seams, Customize shows NEW instead of replaying a receipt.
+- v1 economy: one ladder 40 / 100 / 250 (wardrobe, faceplates, balls); eggs Toy 20, Hue 12, Feature 40; Material Egg off for v1. Welcome round pays 14 Stars so the first Toy Egg is affordable. The Book's Toys page counts the 6 toys only (100% reachable).
+- New toy models (Fable): bone, ball and the rest rebuilt (model 134846528553129).
+- Spencer's own music: garden = lobby loop (70486364707324, vol 0.07), Pocket Deck = gameboy loop (107339572876342, vol 0.15).
+
+Verified before publish: server specs 59/59, client 140/154 (the 14 failures are the long-standing known set); Play has no script errors, held toy uses the new meshes, deck music plays; five new assets moderation Approved. Code review (4f963e7..HEAD): GO WITH CHANGES, both fixes applied in f8d7e66. **Translations synced (9 add/update, 3 delete).** Not checked: a real phone, garden music by ear in a focused window.
+
 **Private v760 Published 2026-11-16 — runtime 85ba59e, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v760".
 # Pocket Pals — deck fit, faster rounds, results polish
 
