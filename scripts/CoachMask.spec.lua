@@ -114,6 +114,7 @@ return function(server)
 		local writes
 		assert(H.grantStarter(h))
 		assert(h.state.nectar==before+Coach.WelcomeStars,"Bear and first Stars together")
+		assert(Coach.WelcomeStars==14 and h.state.nectar>=require(game:GetService("ReplicatedStorage").Shared.ToyCatalog).Cost,"a fresh save can afford its first Toy Egg after the Welcome round")
 		assert(h.state.lastHatch.starter and h.state.lastHatch.stars==Coach.WelcomeStars,"the reveal receipt carries the Stars")
 		assert(h.state.stats.starsEarned==Coach.WelcomeStars,"Welcome Stars are earned Stars")
 		local ok,reason=H.grantStarter(h)

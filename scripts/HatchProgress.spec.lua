@@ -166,8 +166,9 @@ return function(Hatching, Catalog)
 		local pendingId = h.pending.id
 		local hatchId = h.pending.candidate.id
 		assert(Hatching.retry(h))
-		-- Onboarding v1: the Welcome round's 6 Stars commit with the Bear (same transaction).
-		assert(h.status == "Ready" and h.pending == nil and h.state.nectar == nectar + 6)
+		-- Onboarding v1: the Welcome round's Stars commit with the Bear (same transaction).
+		-- 14 since the v1 economy cut (CoachMarks.WelcomeStars): a fresh 6 becomes the Toy Egg's 20.
+		assert(h.status == "Ready" and h.pending == nil and h.state.nectar == nectar + 14 and h.state.nectar >= 20)
 		nectar = h.state.nectar
 		assert(h.state.lastOperation.id == pendingId and h.state.lastHatch.id == hatchId and h.state.lastHatch.starter)
 		assert(h.state.lastHatch.petId == "pip" and h.state.mastery.pip == 0 and c.randomCalls == 0)

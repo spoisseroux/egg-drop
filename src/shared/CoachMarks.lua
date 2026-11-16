@@ -27,8 +27,9 @@ Coach.Order=table.freeze({"fillLine","gardenIntro","hatch","style","companions",
 Coach.Max=2^31-1 -- the stored range (bits 0..30); unknown bits from a later build are kept
 
 -- The Welcome round is the first Stars round: the starter grant pays this with the Bear,
--- in the same transaction (scope section 1, star budget: 6 welcome + 6 first round).
-Coach.WelcomeStars=6
+-- in the same transaction. 14 since the v1 economy cut (2026-11-16): a fresh save holds 6, so
+-- the Bear leaves it at 20, the price of the Toy Egg the first-egg guide points at.
+Coach.WelcomeStars=14
 -- The guided garden step: one beat each, in this order (scope section 1, beats 5-8).
 Coach.GardenBeats=table.freeze({"machines","hub","quest"})
 -- A save with this many wins has learned the game before coaching existed: no cards.
@@ -96,7 +97,7 @@ function Coach.wants(id,ctx)
 	return(ctx.owned or 0)>0
 end
 -- The first-session flow, in order: which step is the player on?
---   "welcome"  the Welcome round (no pet yet): merge to hatch the Bear, +6 Stars with it
+--   "welcome"  the Welcome round (no pet yet): merge to hatch the Bear, its Stars (WelcomeStars) with it
 --   "reveal"   the Bear is owned but its reveal is still open (lastHatch not acknowledged)
 --   "garden"   the guided garden step is due (gardenIntro bit unset)
 --   "free"     onboarding done: only the one-time cards remain
