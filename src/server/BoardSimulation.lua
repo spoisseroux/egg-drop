@@ -62,7 +62,7 @@ function Simulation.powerUpAt(board, lookahead)
 end
 
 function Simulation.canDrop(board)
-	if not board.contactGate or not board.fallingId or board.dropAge >= 1.8 then return true end
+	if not board.contactGate or not board.fallingId or board.dropAge >= Config.ContactGateSeconds then return true end
 	for _, egg in ipairs(board.eggs) do
 		if egg.id == board.fallingId then return egg.hasContact == true end
 	end

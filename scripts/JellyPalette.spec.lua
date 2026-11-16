@@ -26,7 +26,7 @@ return function(client,parent)
     assert(roles.mark==nil and roles.markShadow==nil and Palette.MarkMinRadius==nil,"tier "..tier.." still carries a numeral mark")
    end
    local color=Color3.fromHex("#35BCA8");assert(Palette.resolve(color)==Palette.resolve(color)and Palette.resolve(color).body==color)
-   assert(Config.DropInterval==.35 and Config.FixedStep==1/120 and Config.MaxEggs==32)
+   assert(Config.DropInterval==.2 and Config.Pace==1.3 and Config.FixedStep==1/120 and Config.MaxEggs==32)
   end)
   test("tiers use the vivid deep/body/light ramps of the redesign (tier V violet)",function()
    local Pico8=require(game.ReplicatedStorage.Shared.Pico8)

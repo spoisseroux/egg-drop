@@ -42,7 +42,7 @@ return function(server,sources)
  end)
  test("angle changes cannot dodge a blocked spawn or bypass contact gate and cap",function()
   local board=empty();assert(Simulation.drop(board,0));assert(not Simulation.drop(board,1));assert(board.drops==1)
-  board.contactGate=true;board.dropAge=.4;assert(not Simulation.canDrop(board));board.dropAge=1.8;assert(Simulation.canDrop(board))
+  board.contactGate=true;board.dropAge=.4;assert(not Simulation.canDrop(board));board.dropAge=Config.ContactGateSeconds;assert(Config.ContactGateSeconds==.6 and Simulation.canDrop(board))
   board=empty();for _=1,Config.MaxEggs do table.insert(board.eggs,{position=Vector2.zero,radius=.1})end
   assert(not Simulation.drop(board,.5)and board.drops==0)
  end)

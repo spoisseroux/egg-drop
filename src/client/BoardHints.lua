@@ -1,5 +1,6 @@
 -- Two small board notes over the Pocket Deck board (QA 2026-11-13 Q1 items 7, 11).
---  * Settling: after the last ball the server waits FieldRun.SettleSeconds (4 s)
+--  * Settling: after the last ball the server waits FieldRun.SettleSeconds (3
+--    simulation seconds, about 2.3 s real at BoardConfig.Pace)
 --    before it ends the round. The board now says so: a "Settling…" chip with a
 --    bar that fills over the wait and three soft ticks, so the wait never looks
 --    stuck. Client presentation only; the server rule is unchanged.
@@ -11,10 +12,11 @@
 local Kit=require(script.Parent.DeckKit)
 local Hints={}
 Hints.__index=Hints
-Hints.SettleSeconds=4 -- mirrors FieldRun.SettleSeconds (server)
+-- Real seconds: FieldRun.SettleSeconds (3, server, simulation time) / BoardConfig.Pace.
+Hints.SettleSeconds=3/require(game:GetService("ReplicatedStorage").Shared.BoardConfig).Pace
 Hints.IdleDelay=6
 Hints.TickCue="desc_tick"
-Hints.TickTimes={0,1,2,3}
+Hints.TickTimes={0,.75,1.5}
 Hints.SettleText="Settling…"
 
 -- ── Pure rules (spec-checked) ───────────────────────────────────────────────

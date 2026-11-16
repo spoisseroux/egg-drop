@@ -17,7 +17,14 @@ local Config = {
 	MaxEggs = 32,
 	OverflowY = 14.6,
 	OverflowGrace = 1.1,
-	DropInterval = 0.35,
+	-- G1 (QA 2026-11-16): the server's minimum real time between accepted drops.
+	DropInterval = 0.2,
+	-- G1: the whole round (physics, chain window, overflow grace, settle) runs this
+	-- many simulation seconds per real second. Same rules and trajectories, played faster.
+	Pace = 1.3,
+	-- G1: with the contact gate on, the next ball is ready when the last one has
+	-- touched something, or after this many simulation seconds (was 1.8).
+	ContactGateSeconds = 0.6,
 	ModeSwitchInterval = 0.45,
 	ResetInterval = 0.5,
 	FixedStep = 1 / 120,

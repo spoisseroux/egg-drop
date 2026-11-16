@@ -471,7 +471,7 @@ local function publishState(board)
 	board.folder:SetAttribute("SelectedFamily", board.selectedFamily or "pip")
 	board.folder:SetAttribute("DangerY", board.round.overflowY or Config.OverflowY)
 	board.folder:SetAttribute("OverflowPressure", if board.round.over then 0 else board.round.danger or 0)
-	board.folder:SetAttribute("OverflowGraceLeft", if board.round.over then 0 else board.round.graceLeft or 0)
+	board.folder:SetAttribute("OverflowGraceLeft", if board.round.over then 0 else (board.round.graceLeft or 0) / Config.Pace)
 	board.folder:SetAttribute("FieldPhase", board.field and board.field.phase or "Welcome")
 	board.folder:SetAttribute("FieldStage", board.field and board.field.rootStage or 0)
 	board.folder:SetAttribute("FieldBudget", board.field and board.field.budget or nil)
@@ -1635,14 +1635,17 @@ local merged = {}
 RunService.Heartbeat:Connect(function(dt)
 	garden:step(dt,gardenInputs)
 	petHello.state:step()
-	accumulator = math.min(accumulator + dt, Config.FixedStep * 8)
+	-- G1: the round runs Config.Pace simulation seconds per real second (same fixed
+	-- step, more steps). Everything stepped below is in simulation time; the Welcome
+	-- timers and the published grace are converted back to real seconds.
+	accumulator = math.min(accumulator + dt * Config.Pace, Config.FixedStep * 11)
 	while accumulator >= Config.FixedStep do
 		accumulator -= Config.FixedStep
 		for player, board in pairs(boards) do
 			if board.welcome and not hasPet(board)then
 				local welcome=board.welcome
 				local active=not board.closing and board.mode=="Board"and not board.round.over and not board.menuPaused and canProgress(board)and board.welcomeWindowActive==true
-				welcome:step(Config.FixedStep,active)
+				welcome:step(Config.FixedStep/Config.Pace,active)
 				if welcome:replayDue()then board.welcomeReplay=(board.welcomeReplay or 0)+1 end
 				if active and require(script.WelcomeSeed).needsRefresh(board.sim)then
 					board.sim=require(script.WelcomeSeed).refresh(Simulation,board.sim)
@@ -1728,7 +1731,7 @@ RunService.Heartbeat:Connect(function(dt)
 			board.lastPressurePublish = now
 			board.folder:SetAttribute("DangerY", board.round.overflowY or Config.OverflowY)
 			board.folder:SetAttribute("OverflowPressure", if board.round.over then 0 else board.round.danger or 0)
-			board.folder:SetAttribute("OverflowGraceLeft", if board.round.over then 0 else board.round.graceLeft or 0)
+			board.folder:SetAttribute("OverflowGraceLeft", if board.round.over then 0 else (board.round.graceLeft or 0) / Config.Pace)
 		end
 		local batch = {}
 		for id, impact in pairs(board.impacts) do

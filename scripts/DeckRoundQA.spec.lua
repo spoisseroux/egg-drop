@@ -202,7 +202,9 @@ return function(client,parent)
    assert(Hints.firstRun("Welcome",0)and not Hints.firstRun("Welcome",1)and not Hints.firstRun("Live",0))
    assert(not Hints.idleWanted({firstRun=true,live=true,idleFor=5.9})and Hints.idleWanted({firstRun=true,live=true,idleFor=6}))
    assert(not Hints.idleWanted({firstRun=true,live=true,idleFor=9,dropped=true})and not Hints.idleWanted({firstRun=false,live=true,idleFor=9}))
-   assert(Hints.settleProgress(2)==.5 and Hints.settleProgress(9)==1)
+   -- G1: the settle wait is 3 simulation seconds at BoardConfig.Pace (about 2.3 s real), three ticks.
+   assert(math.abs(Hints.SettleSeconds-3/require(game.ReplicatedStorage.Shared.BoardConfig).Pace)<1e-9 and Hints.SettleSeconds<2.5)
+   assert(math.abs(Hints.settleProgress(Hints.SettleSeconds/2)-.5)<1e-9 and Hints.settleProgress(9)==1)
    local t=Hints.ticksBetween(nil,0);assert(#t==1 and t[1]==1)
    t=Hints.ticksBetween(.5,2.1);assert(#t==2 and t[1]==2 and t[2]==3)
    local played={}
