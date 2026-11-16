@@ -21,3 +21,4 @@ Status key: [running] agent at work, [queued] next batch, [decided] Spencer's ca
 12. Every button gets click audio. The Pets tab under Companions makes no sound. [queued]
 13. Pocket Deck drops frames intermittently during play. [queued]
 14. The seam where the ball-drop board meets the bottom of the screen needs cleaning up and rounding off; the board may sit too high. [queued]
+15. Darken the Pet Park textures to match the world's new darker palette (v735 world pass: greyer marble, darker grass, browner path). [queued]
