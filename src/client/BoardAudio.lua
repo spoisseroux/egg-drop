@@ -74,6 +74,9 @@ local cues = {
 -- Cues named by the UI spec whose sound files are not delivered yet
 -- (AUDIO-HANDOFF.md). They have no voice, so play() is a quiet no-op.
 Audio.PendingCues = {}
+-- World music voice volume. Was 0.13 for the -38 LUFS v3 texture; Spencer's garden
+-- loop is mastered about 6 dB over the -24 dBFS RMS loop target, so it sits lower.
+Audio.MusicVolume = 0.07
 local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_chain"}
 table.insert(cues,"hatch_finish")
 -- Only newly reviewed v3 timestamped SFX are eligible here. Rejected/held
@@ -100,7 +103,8 @@ function Audio.new()
 	group.Parent = SoundService
 	local self = setmetatable({ voices = {}, indices = {}, group = group,
 		musicEnabled = true, deviceActive = true, ducks = {}, connections = {} }, Audio)
-	for name, id in pairs({ Music = 73327108010209, Purr = 80835586668229 }) do
+	-- Music: Spencer's original garden loop (assets/audio/music/garden-loop.wav, 2026-11-16).
+	for name, id in pairs({ Music = 70486364707324, Purr = 80835586668229 }) do
 		local loopGroup = Instance.new("SoundGroup")
 		loopGroup.Name, loopGroup.Volume, loopGroup.Parent = "EggDrop" .. name, 0, SoundService
 		local voice = Instance.new("Sound")
@@ -199,7 +203,7 @@ function Audio:refreshLoops()
 	self.purr.group.Volume = master
 	local music = self.music
 	if master > 0 and self.musicEnabled and self.deviceActive and music.ready then
-		music.voice.Volume = 0.13
+		music.voice.Volume = Audio.MusicVolume
 		-- QA Q2.6: back in focus, the world music carries on from where it paused.
 		if music.paused then music.paused = false; music.voice:Resume()
 		elseif not music.voice.IsPlaying then music.voice:Play() end

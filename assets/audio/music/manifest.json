@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-16",
+  "credit": "Spencer's original tracks. Uploaded unaltered (no normalization, trim or re-encode).",
+  "replaces": {
+    "garden": "73327108010209",
+    "pocket-deck": "108432047352639",
+    "note": "CC0-sourced sparse v3 loops, assets/audio/sparse-2026-11-14/manifest.json"
+  },
+  "assets": {
+    "garden": {
+      "file": "garden-loop.wav",
+      "source": "lobby[loop].wav",
+      "sha256": "d3b8605c8cfc51c39b29608aa27644ce048421f317debe6cbbf7981dd5d72202",
+      "bytes": 11579160,
+      "frames": 2894770,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16,
+      "seconds": 65.641,
+      "loop": true,
+      "measurements": {
+        "integrated_lufs": -17.6,
+        "peak_dbfs": -1.9,
+        "mean_dbfs": -18.0,
+        "loudness_range_lu": 2.3
+      },
+      "seam": {
+        "last_to_first_step": [
+          1198,
+          1271
+        ],
+        "p99_adjacent_step": [
+          2066,
+          2826
+        ],
+        "verdict": "wrap step is inside the track's normal sample-to-sample motion; no click expected"
+      },
+      "asset_id": "70486364707324",
+      "operation_id": "a877be5d-c719-4e3e-a698-08b186ae7006",
+      "moderation_state_at_upload": "Reviewing",
+      "runtime_owner": "src/client/BoardAudio.lua: Music",
+      "voice_volume": 0.07
+    },
+    "pocket-deck": {
+      "file": "pocket-deck-loop.wav",
+      "source": "gameboy[loop].wav",
+      "sha256": "7eee3e4a8fcfee4007db3ffe84176fdb90a9043115b373e192f4015d1484c9c0",
+      "bytes": 2894852,
+      "frames": 723693,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16,
+      "seconds": 16.41,
+      "loop": true,
+      "measurements": {
+        "integrated_lufs": -18.9,
+        "peak_dbfs": -5.2,
+        "mean_dbfs": -21.5,
+        "loudness_range_lu": 1.6
+      },
+      "seam": {
+        "last_to_first_step": [
+          303,
+          304
+        ],
+        "p99_adjacent_step": [
+          2037,
+          2662
+        ],
+        "verdict": "wrap step is inside the track's normal sample-to-sample motion; no click expected"
+      },
+      "asset_id": "107339572876342",
+      "operation_id": "73d2eb84-9d8e-4911-9630-5facc292b5eb",
+      "moderation_state_at_upload": "Reviewing",
+      "runtime_owner": "src/client/AmbientAudio.lua: deck_music",
+      "voice_volume": 0.15
+    }
+  }
+}

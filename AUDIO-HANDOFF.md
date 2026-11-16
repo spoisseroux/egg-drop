@@ -33,12 +33,12 @@ Egg Drop is a cozy Roblox game for all ages. Players hold a little handheld cons
 ## Runtime behaviour (so you can design for it)
 - **Merges climb in pitch:** each merge in a chain plays faster and higher (`BoardAudio:mergePitch`). Design merge pops to sound good shifted up by about an octave.
 - **Star count-up:** the recap ticks once per Star earned, each tick about 3% higher. One short coin tick is enough.
-- **Ducking:** hatch sounds duck the music to about 22% for about a second. The music loop plays at about 13% volume under gameplay.
+- **Ducking:** hatch sounds duck the music to about 22% for about a second. The music loop plays at about 7% volume under gameplay (Spencer's original garden loop, since 2026-11-16; it was 13% for the quieter earlier loops).
 - **Overflow warning:** repeats at most every 0.65 s while the board is in danger, so it must sit comfortably when looped like that.
 - **Petting:** the purr is a 2-second seamless loop that fades in and out while the player holds pet. Boops are one-shots on each tap.
 - **Device sounds stop** when a menu or recap covers the board.
 - Players can mute music separately from sound effects.
-- **Pocket Deck music** (`deck_music`): fades in over 1 s when a round starts and out over 0.6 s when it ends, at about 20% voice volume (the world music sits at 13%). The music mute and Sound setting apply to it. It replaces the world music and the garden ambience for the whole round, so it should be calm enough to hear for many minutes.
+- **Pocket Deck music** (`deck_music`): fades in over 1 s when a round starts and out over 0.6 s when it ends, at about 15% voice volume (the world music sits at 7%). The music mute and Sound setting apply to it. It replaces the world music and the garden ambience for the whole round, so it should be calm enough to hear for many minutes.
 
 ## Cue list (sorted by priority)
 - **Placeholder:** the game already plays a synthesised stand-in sound for this cue. Replacing it is welcome, but it isn't blocking.
@@ -69,7 +69,7 @@ Egg Drop is a cozy Roblox game for all ages. Players hold a little handheld cons
 | `bear_boop_1/2/3` | Tapping or booping the pet | Plush squeak, 3 variants | 0.1-0.3 s | **none** |
 | `bear_chirp` | Pet is happy or cheering after a good round | Tiny rising "mew-hm" hum | 0.3-0.6 s | **none** |
 | `purr (loop)` | Held petting | Warm purr or hum, seamless loop | 2.0 s loop | placeholder |
-| `deck_music` | **Pocket Deck music.** Plays only during a Pocket Deck round; the world music, brook, falls, birds and coos all fade out while it plays (Spencer, 2026-11-13) | Calm, loopable handheld-style tune: friendly, unhurried, never busy enough to fight the merge sounds. Stereo OK | 20-60 s seamless loop | placeholder (`egg_drop_deck_music.wav`, 84 BPM chip lullaby) |
+| `deck_music` | **Pocket Deck music.** Plays only during a Pocket Deck round; the world music, brook, falls, birds and coos all fade out while it plays (Spencer, 2026-11-13) | Calm, loopable handheld-style tune: friendly, unhurried, never busy enough to fight the merge sounds. Stereo OK | 20-60 s seamless loop | **Spencer's original track** (`assets/audio/music/pocket-deck-loop.wav`, 16.4 s loop, asset 107339572876342, 2026-11-16) |
 | `count_blip` | **Results count-up blip.** One per +1 while the Star total counts up on the results screen; each blip is cut off by the next, like collecting rings (Spencer, 2026-11-13) | Tiny bright chip blip, rising feel; must sound fine repeated 20+ times a second | 40-80 ms | placeholder (`egg_drop_count_blip.wav`, G6 to C7 hop) |
 
 ### Medium priority (nice for launch)
@@ -87,7 +87,7 @@ Egg Drop is a cozy Roblox game for all ages. Players hold a little handheld cons
 | `toy_squeak` | A pet bites the ball or bone toy | Rubber squeak | 0.15-0.3 s | **none** |
 | `ambience_day` | Garden in daytime | Gentle birds and light breeze (stereo loop) | 30-60 s loop | **none** |
 | `ambience_night` | Garden at night | Soft crickets and a faint wind chime (stereo loop) | 30-60 s loop | **none** |
-| `garden music` | Background in the garden | Calm, bright loopable track under everything at low volume | 1-2 min loop | placeholder (53 s procedural loop) |
+| `garden music` | Background in the garden | Calm, bright loopable track under everything at low volume | 1-2 min loop | **Spencer's original track** (`assets/audio/music/garden-loop.wav`, 65.6 s loop, asset 70486364707324, 2026-11-16) |
 
 ### Low priority (later)
 | Cue | When it plays | Sound | Length | Placeholder in game? |

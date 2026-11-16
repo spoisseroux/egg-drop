@@ -25,16 +25,18 @@ Ambient.Ids = {
 	bird_chirp_4 = 139852680764636, bird_chirp_5 = 107104950878309, bird_chirp_6 = 85365315991550,
 	pet_coo_1 = 133263306024551, pet_coo_2 = 95664039612347, pet_coo_3 = 136397644383191,
 	machine_attract = 75991665557379,
-	deck_music = 108432047352639,
+	-- Spencer's original Pocket Deck loop (assets/audio/music/pocket-deck-loop.wav, 2026-11-16).
+	deck_music = 107339572876342,
 }
 Ambient.OneShots = { "pet_coo_1", "pet_coo_2", "pet_coo_3", "machine_attract" }
 
 -- A3 brook bed: bed = 0.22 + 0.18 * smoothstep(1 - d / 45), sampled at 4 Hz, eased 0.5 s.
 Ambient.BedFloor, Ambient.BedPeak, Ambient.BedRange = .22, .40, 45
 Ambient.BedSample, Ambient.BedEase = .25, .5
--- A6: round fade out 0.6 s, back over 1.0 s. Deck music voice volume (world music is 0.13).
+-- A6: round fade out 0.6 s, back over 1.0 s. Deck music voice volume (world music is
+-- BoardAudio.MusicVolume, 0.07). Was .2 for the v3 texture; Spencer's loop is hotter.
 Ambient.RoundOut, Ambient.RoundIn = .6, 1.0
-Ambient.DeckMusicVolume = .2
+Ambient.DeckMusicVolume = .15
 Ambient.DeckDuck = "deckRound"
 -- A4 waterfall emitters. Positions come from WorldV7Data.beams.falls by name.
 Ambient.Falls = {
