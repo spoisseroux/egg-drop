@@ -1,7 +1,8 @@
 -- Companions hub (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 1) and its Pets selector.
 -- Opened from the Care Cradle and the garden machine hub's Companions tile. A pinned
 -- pet pane (who am I dressing) and three large rows: Pets, Wardrobe, Customize (QA
--- 2026-11-13 Q5: the Collection book moved to the machine hub). The Pets
+-- 2026-11-13 Q5: the Collection book moved to the machine hub; QA v775 note 7: the
+-- Toys row is gone again, toys are a tab of Customize). The Pets
 -- selector is the Wardrobe layout with pets as the items; receipts ("Use now" on a
 -- hatched material, toy, feature or jar) land on it in assign mode.
 -- Focus is owned here (as in WardrobeShop): arrows / WASD / d-pad move, A / Enter
@@ -29,12 +30,10 @@ Hub.Rows=table.freeze({
  table.freeze({id="pets",icon="paw",name="Pets",line="Choose who follows you around the garden"}),
  table.freeze({id="wardrobe",icon="shirt",name="Wardrobe",line="Hats, shirts and more, bought with Stars"}),
  table.freeze({id="customize",icon="wand",name="Customize",line="Hue, charm, materials and toys"}),
- -- QA v685 U4: toys get their own row; it opens Customize on the Toys tab.
- table.freeze({id="toys",icon="toy",name=UICopy.get("companions.toys.name"),line=UICopy.get("companions.toys.line")}),
 })
 -- Row rects (the three-row sizes from before the play-forever build): desktop rows
 -- 140 high on a 156 pitch beside the pet pane; phone rows 64 high on a 73 pitch.
-Hub.RowPitch={regular=116,regularH=104,phone=58,phoneH=52} -- four rows in the same 452 / phone window
+Hub.RowPitch={regular=156,regularH=140,phone=73,phoneH=64,phoneMax=80} -- three rows in the 452 / phone window
 Hub.DefaultRow=3 -- Customize the first time (section 1, Behaviour).
 
 -- Pure: hatched items waiting to be used (one per pending receipt kind).
@@ -288,9 +287,10 @@ function Hub:buildHub(body,W,H,phone)
   local P=Hub.RowPitch
   local x,y,w,h=368,84+(index-1)*P.regular,456,P.regularH
   if phone then
-   -- Four rows share the sheet window (H - 84) with 6 px gaps; never under 44 px.
-   local rh=math.clamp(math.floor((H-84-(#Hub.Rows-1)*6)/#Hub.Rows),44,P.phoneH)
-   x,y,w,h=232,64+(index-1)*(rh+6),W-20-232,rh
+   -- The rows share the sheet window (H - 84) with 9 px gaps, down to the pet pane's
+   -- bottom edge: 64 px on an 812 x 354 phone, up to 80 on a taller one; never under 44 px.
+   local rh=math.clamp(math.floor((H-84-(#Hub.Rows-1)*9)/#Hub.Rows),44,P.phoneMax)
+   x,y,w,h=232,64+(index-1)*(rh+9),W-20-232,rh
   end
   -- T2: pressable row with a lip (4 px in the 16 px desktop gap, 3 px in the 9 px phone gap).
   local button,tileState=Kit.tile(body,"Row_"..row.id,{selectable=false,radius=if phone then 12 else 14,compact=phone,
@@ -534,11 +534,12 @@ function Hub:act()
  if self.assign then
   local assign=self.assign;self.assign=nil
   local ok=assign.choose and assign.choose(entry.id)==true
+  if ok then require(script.Parent.UIClick).play("equip")end -- "Use now" lands on this pet
   self:close("assigned");return ok
  end
  if self.pendingFollow or entry.id==self.ctx.activeId then return false end
  if self.callbacks.follow and self.callbacks.follow(entry.id)==true then
-  self.pendingFollow=entry.id;self:refresh();return true
+  self.pendingFollow=entry.id;require(script.Parent.UIClick).play("equip");self:refresh();return true -- QA v775 note 10: Follow is an equip
  end
  return false
 end

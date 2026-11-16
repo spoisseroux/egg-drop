@@ -36,8 +36,9 @@ return function(client,parent)
    assert(Hub.backTarget("pets",false)=="hub"and Hub.backTarget("hub",false)=="close"and Hub.backTarget("pets",true)=="cancel")
    assert(Hub.DefaultRow==3 and Hub.Rows[3].id=="customize"and Hub.Rows[1].icon=="paw"and Hub.Rows[2].icon=="shirt"and Hub.Rows[3].icon=="wand")
    -- QA Q5: three rows again, at the sizes from before the play-forever build.
-   assert(#Hub.Rows==4 and Hub.Rows[4].id=="toys"and Hub.RowPitch.regular==116 and Hub.RowPitch.regularH==104 and Hub.RowPitch.phone==58 and Hub.RowPitch.phoneH==52)
-   for _,row in ipairs(Hub.Rows)do assert(row.id~="book","no book row")end
+   -- QA v775 note 7: no Toys row either (toys are a Customize tab).
+   assert(#Hub.Rows==3 and Hub.RowPitch.regular==156 and Hub.RowPitch.regularH==140 and Hub.RowPitch.phone==73 and Hub.RowPitch.phoneH==64)
+   for _,row in ipairs(Hub.Rows)do assert(row.id~="book"and row.id~="toys","no book or toys row")end
   end)
   for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
    test(tostring(size).." hub navigation: Customize first, d-pad focus, A opens, Pets selector, Back up a level",function()
@@ -48,14 +49,14 @@ return function(client,parent)
     local state={inventoryMask=127,nectar=128,pendingToyResult={id="t"},petWearables={pip={owned={"x"}}},book={claimable={"balls.25"}}}
     local active=Pets.collection[1].id
     assert(hub:open({wallet=128,state=state,activeId=active}));settle()
-    assert(hub:isOpen()and hub.page=="hub"and #hub.rows==4)
+    assert(hub:isOpen()and hub.page=="hub"and #hub.rows==3)
     assert(hub.root:GetAttribute("FocusedRow")=="customize","opens on Customize the first time")
     for _,row in ipairs(hub.rows)do assert(row.button.AbsoluteSize.Y>=44,"row target under 44 px")end
     assert(hub.rows[3].status.Text=="1 NEW ITEM"and hub.rows[3].dot~=nil)
     -- Every row stays inside the panel / sheet (three rows under the header), at the
     -- pre-play-forever rects: desktop 456 x 140 on a 156 pitch, phone 64 high on 73.
-    local h=if size.X>=1000 then 104 else 48 -- 812x354 phone sheet: four rows share H - 84
-    local pitch=if size.X>=1000 then 116 else 54
+    local h=if size.X>=1000 then 140 else 64 -- 812x354 phone sheet: three rows share H - 84
+    local pitch=if size.X>=1000 then 156 else 73
     local scale=hub.scale.Scale
     for i,row in ipairs(hub.rows)do
      assert(math.abs(row.button.AbsoluteSize.Y-h*scale)<=1,"row "..i.." height "..row.button.AbsoluteSize.Y)
@@ -70,10 +71,8 @@ return function(client,parent)
     hub:input(K.Return);assert(opened[#opened]=="wardrobe","A opens the Wardrobe through the caller")
     hub:input(K.S);assert(hub.root:GetAttribute("FocusedRow")=="customize")
     hub:input(K.ButtonA);assert(opened[#opened]=="customize")
-    hub:input(K.S);assert(hub.root:GetAttribute("FocusedRow")=="toys")
-    hub:input(K.ButtonA);assert(opened[#opened]=="toys","A opens Toys through the caller")
-    hub:input(K.S);assert(hub.root:GetAttribute("FocusedRow")=="toys","Toys is the last row")
-    hub:input(K.W);hub:input(K.W);hub:input(K.W);assert(hub.root:GetAttribute("FocusedRow")=="pets")
+    hub:input(K.S);assert(hub.root:GetAttribute("FocusedRow")=="customize","Customize is the last row")
+    hub:input(K.W);hub:input(K.W);assert(hub.root:GetAttribute("FocusedRow")=="pets")
     hub:input(K.Return);settle();assert(hub.page=="pets"and hub.header.title.Text=="Pets"and #hub.cardButtons>=1)
     assert(hub.root:GetAttribute("FocusedPet")==active,"selector lands on the pet that follows you")
     assert(hub.cardButtons[1].status.Text=="FOLLOWING")
