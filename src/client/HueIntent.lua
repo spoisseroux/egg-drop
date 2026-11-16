@@ -83,7 +83,7 @@ end
 function Intent:lookHatch()
  if self.state.pendingHueResult then self.message=messages.PendingResult;self:notify();return false end
  if(self.state.nectar or 0)<Look.Price then self.message=messages.Insufficient;self:notify();return false end
- if self.state.lookAvailable~=true then self.message=messages.NotReady;self:notify();return false end
+ if self.state.lookAvailable==false then self.message=messages.NotReady;self:notify();return false end
  return self:begin("lookBuy",nil,Intent.lookQuote(self.state))
 end
 local function finishRow(state,petId)

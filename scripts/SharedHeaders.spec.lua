@@ -54,25 +54,25 @@ return function(client,parent,rootSize)
      -- A 160 px tall emulator leaves a 100 px sheet: the list scrolls but cannot hold a full row.
      if size.Y>=200 then assert(v.body.AbsoluteSize.Y>=44,"list window under 44 px at "..tostring(size))end
     end
-    v:update(state(6));v:selectRecipe("hue");settle()
-    for _,id in ipairs({"toy","hue"})do local r=v.body.EggColumn["Recipe_"..id];fit(r.RecipeName);fit(r.Cost)end
-    local price=v.body.EggColumn.Recipe_hue.Cost
+    v:update(state(6));v:selectRecipe("look");settle()
+    for _,id in ipairs({"toy","look"})do local r=v.body.EggColumn["Recipe_"..id];fit(r.RecipeName);fit(r.Cost)end
+    local price=v.body.EggColumn.Recipe_look.Cost
     assert(price.Text:find("12",1,true)and v.action.Text:find("12",1,true)and v.needLine.Text=="6 more Stars needed","selected cost/shortfall missing CTA="..v.action.Text)
     assert(v.state.nectar==6 and sends==0)
     v:setError("Your hatch progress updated. Try again.");settle();shopHeader(v,6);assert(v.needLine.Visible and v.needLine.Text==v.errorMessage)
     local n=Notice.resolve("Retrying",{status="Ready"});v:setSaveNotice(n);settle();shopHeader(v,6);assert(v.needLine.Text==n.detail)
-    v:setSaveNotice(nil);v:update(state(6));settle();assert(v.selected=="hue"and sends==0);v:close()
+    v:setSaveNotice(nil);v:update(state(6));settle();assert(v.selected=="look"and sends==0);v:close()
    end)
   end
   if not rootSize then
    resize(Vector2.new(733,307))
    test("focused recipe row survives rebuild; focus selects it without a purchase",function()
-    local v=shop(24,true);local old=v.body.EggColumn.Recipe_hue;Gui.SelectedObject=old;settle()
-    assert(v.selected=="hue","gamepad focus moves the preview (redesign 3)")
-    v:layout();v:renderBody();settle();local fresh=v.body.EggColumn.Recipe_hue
+    local v=shop(24,true);local old=v.body.EggColumn.Recipe_look;Gui.SelectedObject=old;settle()
+    assert(v.selected=="look","gamepad focus moves the preview (redesign 3)")
+    v:layout();v:renderBody();settle();local fresh=v.body.EggColumn.Recipe_look
     assert(Gui.SelectedObject==fresh and fresh==old,"focused recipe replaced on reflow")
     assert(inside(fresh.RecipeName,v.body)and sends==0)
-    v:selectRecipe("hue");settle();assert(Gui.SelectedObject==v.body.EggColumn.Recipe_hue and sends==0);v:close()
+    v:selectRecipe("look");settle();assert(Gui.SelectedObject==v.body.EggColumn.Recipe_look and sends==0);v:close()
    end)
    test("QA v2: no daily stamp row on Hatch eggs (it lives in Quests); the back circle stays reachable",function()
     resize(Vector2.new(733,307));local v=shop(24,true)
@@ -82,7 +82,7 @@ return function(client,parent,rootSize)
    test("back circle and Hatch survive rebuild and detached GUI cannot reclaim focus",function()
     local v=shop(24,true)
     for _,target in ipairs({v.shopBackButton,v.hatchButton})do Gui.SelectedObject=target;v:renderBody();settle();assert(Gui.SelectedObject==target and sends==0)end
-    Gui.SelectedObject=v.body.EggColumn.Recipe_hue;local detached=Instance.new("ScreenGui");v.shade.Parent=detached;Gui.SelectedObject=nil;v:renderBody();settle()
+    Gui.SelectedObject=v.body.EggColumn.Recipe_look;local detached=Instance.new("ScreenGui");v.shade.Parent=detached;Gui.SelectedObject=nil;v:renderBody();settle()
     assert(Gui.SelectedObject==nil,"detached sheet reclaimed selection")
     Gui.SelectedObject=nil;v.shade.Parent=root;detached:Destroy();v:close()
    end)

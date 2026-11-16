@@ -17,7 +17,7 @@ return function(client,parent)
  local ok,problem=pcall(function()
   for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,210),Vector2.new(812,354)})do
    root.Size=UDim2.fromOffset(size.X,size.Y);frames()
-   for _,id in ipairs({"toy","hue"})do -- Feature Egg hidden by FeatureFlags
+   for _,id in ipairs({"toy","look"})do -- Feature Egg hidden by FeatureFlags
     Gui.SelectedObject=nil;view:open(state);frames();assert(view:selectRecipe(id));frames()
     local signature=view.shopKey;view:close();Gui.SelectedObject=nil
     view:open(state);Gui.SelectedObject=nil;frames()
@@ -28,7 +28,7 @@ return function(client,parent)
     view:close()
    end
   end
-  view:open(state);assert(view:selectRecipe("hue")or view.selected=="hue");view:queueSelectedRecipe();view:close()
+  view:open(state);assert(view:selectRecipe("look")or view.selected=="look");view:queueSelectedRecipe();view:close()
   view.body.CanvasPosition=Vector2.zero;frames();assert(view.body.CanvasPosition==Vector2.zero,"closed ownership epoch ran a stale recipe scroll")
   table.insert(cases,"close invalidates the queued opening scroll")
  end)

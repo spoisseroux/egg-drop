@@ -704,11 +704,17 @@ function View.lookOdds(state)
   else table.insert(rows,{id=row.id,name=lookName(row.id),value=row.percent.."%"})end
  end
  if #missing>0 then
-  table.insert(rows,{id="charm",name=UICopy.get("hatch.look.charmRow",{each=LookEgg.Tables[#missing].charm.."%",shapes=table.concat(shapes,", ")}),value=charmTotal.."%"})
+  table.insert(rows,{id="charm",name=UICopy.get("hatch.look.charmName"),value=charmTotal.."%",
+   label=UICopy.get("hatch.look.charmRow",{each=LookEgg.Tables[#missing].charm.."%",shapes=table.concat(shapes,", ")})})
  end
  local left=LookEgg.pityLeft(missing,misses)
  local note=if not left then UICopy.get("hatch.look.allCharms")elseif left<=1 then UICopy.get("hatch.look.pityOne")else UICopy.get("hatch.look.pity",{count=left})
- return{rows=rows,per=per,empty=empty,note=note}
+ local short=if not left then UICopy.get("hatch.look.allCharmsShort")elseif left<=1 then UICopy.get("hatch.look.pityOne")else UICopy.get("hatch.look.pityShort",{count=left})
+ -- The pity line is a row of its own (disclosed beside the odds); the missing shapes are named
+ -- under the egg's description (`shapes`).
+ table.insert(rows,{id="pity",name=short,label=note,value="",info=true})
+ local shapesLine=if #shapes>0 then UICopy.get("hatch.look.missing",{each=LookEgg.Tables[#missing].charm.."%",shapes=table.concat(shapes,", ")})else nil
+ return{rows=rows,per=per,empty=empty,note=note,shapes=shapesLine}
 end
 -- Pure: the primary button for the selected egg. With too few Stars it is disabled
 -- and `need` says how many more ("N more Stars needed").
@@ -723,7 +729,8 @@ function View.hatchAction(id,state)
  if state.pendingMaterialResult then return{text="Open saved material",enabled=true}end
  if id=="toy"and #ToyCatalog.remaining(state.toyUnlocks)==0 then return{text="All toys owned",enabled=false}end
  if id=="feature"and FeatureCatalog.full(state.featureStock or {})then return{text="All stacks full",enabled=false}end
- if id=="look"and state.lookAvailable~=true then return{text=UICopy.get("hatch.look.notReady"),enabled=false}end
+ -- The server always publishes lookAvailable; only an explicit false shows Not ready.
+ if id=="look"and state.lookAvailable==false then return{text=UICopy.get("hatch.look.notReady"),enabled=false}end
  if id=="material"then
   if #MaterialCatalog.remaining(state.materialUnlocks,state.materialPoolVersion)==0 then return{text="All materials owned",enabled=false}end
   if not state.materialAvailable or not require(script.Parent.MaterialDisclosure).ready(state)then return{text="Materials not ready",enabled=false}end
@@ -1011,7 +1018,9 @@ function View:renderBody()
   Kit.setTileLip(n,Kit.tileLip(phone))
   local name,line,cost=n.RecipeName,n.RecipeLine,n.Cost
   name.TextSize=if phone then 15 else 18;line.TextSize=if phone then 12 else 14;cost.TextSize=if phone then 15 else 18
+  -- "Customization Egg" is the list's longest name: it shrinks to fit (never below 11 px).
   name.Position,name.Size=UDim2.fromOffset(16,h/2-(if phone then 20 else 24)),UDim2.fromOffset(w-100,if phone then 20 else 24)
+  while name.TextSize>11 and Kit.measure(name.Text,"Name",name.TextSize).X>w-100 do name.TextSize-=1 end
   line.Position,line.Size=UDim2.fromOffset(16,h/2+(if phone then 2 else 2)),UDim2.fromOffset(w-100,18)
   cost.Position,cost.Size=UDim2.fromOffset(w-84,0),UDim2.fromOffset(68,h)
   local selected=self.selected==id
@@ -1066,6 +1075,7 @@ function View:paintEggPane()
  if promise then promise.Text=if id=="look"then View.lookOdds(self.state).note elseif id=="material"and(self.state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then require(script.Parent.MaterialDisclosure).promise(self.state)else UICopy.get("hatch.promise")end
  self.eggPrice.set("★ "..recipe.cost,"sticker") -- T6: the pane's one sticker
  self.eggDescription.Text=copy.description or ""
+ if id=="look"then local shapes=View.lookOdds(self.state).shapes;if shapes then self.eggDescription.Text..=" "..shapes end end
  local odds=View.oddsRows(id,self.state)
  self.oddsPer.Text=string.upper(odds.per)
  self.oddsLabel.Text=string.upper(if odds.restricted then UICopy.get("hatch.next.label")else "Odds")
@@ -1091,7 +1101,8 @@ function View:paintEggPane()
   Kit.text(row,"Body",r.name,"text",{Name="Name",Position=UDim2.fromOffset(inset,0),Size=UDim2.fromOffset(if odds.restricted then cw-inset*2 else math.max(12,cw-inset*2-valueWidth-8),rowH),TextSize=textSize,TextTruncate=Enum.TextTruncate.AtEnd})
   Kit.text(row,"Counter",r.value,"text",{Name="Value",Position=UDim2.fromOffset(cw-inset-valueWidth,0),Size=UDim2.fromOffset(valueWidth,rowH),TextSize=textSize,TextXAlignment=Enum.TextXAlignment.Right})
   row:SetAttribute("OddsText",r.value)
-  row:SetAttribute("AccessibleLabel",r.name.." "..r.value)
+  row:SetAttribute("AccessibleLabel",(r.label or r.name).." "..r.value)
+  if r.info then row:FindFirstChild("Name").Size=UDim2.fromOffset(cw-inset*2,rowH)end
  end
  self.oddsHolder.Size=UDim2.fromOffset(self.oddsW,perCol*pitch)
  self.needLine.Position=UDim2.fromOffset(self.oddsX,self.buttonY-20)

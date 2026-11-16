@@ -45,7 +45,8 @@ local Table={
   },
   promise="No surprises. The odds never change.",
   -- Customization Egg (plan 2026-11-16 §5.2, §6). Its odds move as charms are collected.
-  look={charmRow="Charm · {each} each: {shapes}",pity="A charm within {count} eggs",pityOne="The next egg is a charm",
+  look={charmRow="Charm · {each} each: {shapes}",charmShort="Charm · {each} each",charmName="Charms",charmOwned="Yours to keep. It floats in your pet's Secondary colour.",missing="Charms are {each} each. Still to find: {shapes}.",
+   pityShort="Charm within {count} eggs",allCharmsShort="All charms found",pity="A charm within {count} eggs",pityOne="Next egg: a charm",
    pityRule="If 14 eggs pass without a charm, the next one is a charm.",allCharms="All egg charms found",
    restrictedCharm="Charm in {count} eggs",notReady="Customization Eggs are not ready yet.",
    promise={random="The odds are on the label. They shift only as you collect charms.",fixed="No surprises. Your next item is shown above."},

@@ -59,7 +59,7 @@ return function(client,parent)
    end)
    test(tostring(size).." all egg rows and odds stay inside the list and pane",function()
     shop:open(snapshot());settle()
-    for _,recipe in ipairs({"toy","hue","material"})do
+    for _,recipe in ipairs({"toy","look","material"})do
      shop:selectRecipe(recipe);settle()
      for _,n in ipairs(shop.body.EggColumn:GetChildren())do if n:IsA("GuiObject")and n.Visible and n.Name:match("^Recipe_")then
       inside(n,shop.body);fit(n.RecipeName);fit(n.Cost)

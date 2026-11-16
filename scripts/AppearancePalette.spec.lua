@@ -48,12 +48,12 @@ return function(client,parent,onlySize)
   table.insert(cleanup,function()resultsHost:Destroy()end);table.insert(cleanup,function()focus:destroy()end)
   menu:update({status="Ready",nectar=24,inventoryMask=1,dailyAvailable=false},"pip","pip",0,0,0,"meadow");menu:open();menu:setPage("daily")
   picker:updateClub(1,0,0,0,"On",false,false,1,true,0,{pip=0});picker:open("sherbet","none")
-  journal:open(1,0,"pip",false,nil,1,{pip=0});shop:open({status="Ready",revision=4,nectar=24,inventoryMask=1});shop:selectRecipe("hue")
+  journal:open(1,0,"pip",false,nil,1,{pip=0});shop:open({status="Ready",revision=4,nectar=24,inventoryMask=1});shop:selectRecipe("look")
   local function resultsData(sequence)return{outcome="clear",title="Bank pair",rows={{name="Round win",amount=8},{name="Daily quests",amount=6}},total=14,earned=14,balance=20,goals={{text="Goal",done=true}}}end
   recap:show(resultsData(9),false)
   focus.panel.Visible=true;focus.back.Visible=true;focus.helper.Visible=true
   test(tostring(size).." open sheets keep the house palette under every faceplate (the plate tints only the deck and its background)",function()
-   local recipe=shop.body.EggColumn.Recipe_hue;local pending=shop.pending
+   local recipe=shop.body.EggColumn.Recipe_look;local pending=shop.pending
    -- QA v2 R1: the Hatch eggs card wallet is gone (the header WalletStar shows Stars).
    for _,id in ipairs(Themes.Order)do
     local plate=Themes.ById[id];Art.applyTheme(plate);settle()
@@ -70,14 +70,14 @@ return function(client,parent,onlySize)
     assert(shop.card.BackgroundColor3==t.ui.contentPanel and recipe.BackgroundColor3==Kit.color("selected")and recipe.RecipeName.TextColor3==Kit.Color.text and shop.shopPanel.BackgroundColor3==Kit.color("panel"),"egg shop (EggHatchView) card/recipe palette: card="..tostring(shop.card.BackgroundColor3).." recipe="..tostring(recipe.BackgroundColor3))
     assert(recap.payout.BackgroundColor3==t.ui.raised and recap.wallet.root.BackgroundColor3==t.ui.inset and recap.rows[1].name.TextColor3~=t.ui.accent,"results glass stays house; text stays neutral")
     assert(focus.back.BackgroundColor3==t.ui.panel and focus.helper.BackgroundColor3==t.ui.panel and focus.helper.TextColor3==t.ui.text)
-    assert(shop.selected=="hue"and shop.pending==pending and shop.body.EggColumn.Recipe_hue==recipe)
+    assert(shop.selected=="look"and shop.pending==pending and shop.body.EggColumn.Recipe_look==recipe)
     assert(Art.Surface==defaults[1]and Art.Ink==defaults[2]and Art.Silver==defaults[3]and Art.Focus==defaults[4],"public art constants changed")
    end
   end)
   test(tostring(size).." newly rebuilt recipe and receipt rows inherit active palette",function()
-   local plate=Themes.ById.copperleaf;Art.applyTheme(plate);local t=Art.uiTheme();local recipe=shop.body.EggColumn.Recipe_hue
+   local plate=Themes.ById.copperleaf;Art.applyTheme(plate);local t=Art.uiTheme();local recipe=shop.body.EggColumn.Recipe_look
    local before=shop.body.CanvasPosition;shop:layout();shop:renderBody();recap:show(resultsData(10),false);settle()
-   assert(shop.body.EggColumn.Recipe_hue==recipe and (recipe.RecipeName.TextColor3==t.ui.ink or recipe.RecipeName.TextColor3==t.ui.text)and shop.selected=="hue",
+   assert(shop.body.EggColumn.Recipe_look==recipe and (recipe.RecipeName.TextColor3==t.ui.ink or recipe.RecipeName.TextColor3==t.ui.text)and shop.selected=="look",
     "recipe name colour "..tostring(recipe.RecipeName.TextColor3).." vs ink "..tostring(t.ui.ink).." / text "..tostring(t.ui.text))
    assert(recap.payout.BackgroundColor3==t.ui.raised)
    -- Deck style tab hit frames are 44 in panel units; the regular screen scales as a whole (UIScale).
