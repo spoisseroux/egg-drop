@@ -37,12 +37,12 @@
    "label": "Citrus jar",
    "kind": "hue",
    "colour": "#FFCC00",
-   "triangles": 502,
+   "triangles": 566,
    "parts": {
     "Jar_citrus__Body": 180,
     "Jar_citrus__Liquid": 90,
     "Jar_citrus__Lid": 132,
-    "Jar_citrus__Symbol": 84,
+    "Jar_citrus__Symbol": 148,
     "Jar_citrus__Shine": 16
    },
    "x": -3.0

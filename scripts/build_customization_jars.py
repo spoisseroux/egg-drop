@@ -69,7 +69,9 @@ LID_TOP = 1.03
 FRAMES = {"hue": (.50, 1.36, 0), "gloss": (.88, 1.95, .08), "matte": (.74, 1.66, 0),
           "jelly": (.62, 1.56, .12), "charm": (.60, 1.42, 0)}
 # liquid behind the symbol where the plain pigment would not contrast with a pale symbol
-LIQUID = {"citrus": "#F59A00", "reset": "#4FB9CC"}
+LIQUID = {"citrus": "#FFCC00", "reset": "#4FB9CC"}
+# shade at the bottom of the liquid; the default purple shadow turns yellow to mustard
+DEEP = {"citrus": "#FFB81A"}
 TOPPER_SCALE = 1.55  # pass 2: toppers carry the read at 64 px, so they are big
 
 
@@ -252,11 +254,15 @@ def build():
         elif item == "tide":  # one fat droplet
             profile = [(0, 0), (.10, .015), (.165, .10), (.15, .20), (.085, .30), (.03, .37), (0, .40)]
             lathe(bm, profile, lambda co, c: mix(colour, (1, 1, 1), .10 + .35 * max(0, co.z - h - .2)), 8, up)
-        elif item == "citrus":  # a lemon lying down with one leaf
-            lemon = up @ Matrix.Translation((-.19, 0, .15)) @ Matrix.Rotation(math.radians(78), 4, "Y")
-            spindle(bm, .155, .40, mix(colour, (1, 1, 1), .08), lemon, segs=8, belly=.5)
-            leaf = up @ Matrix.Translation((.05, 0, .22)) @ Matrix.Rotation(math.radians(38), 4, "Y")
-            spindle(bm, .075, .22, hex_rgb(LEAF), leaf, segs=6, flat=.45)
+        elif item == "citrus":  # a whole lemon: fat middle, a nub at each end, one small leaf
+            tilt = math.radians(68)
+            axis = Vector((math.sin(tilt), 0, math.cos(tilt)))
+            start = Vector((0, 0, .20)) - axis * .23
+            lemon = up @ Matrix.Translation(start) @ Matrix.Rotation(tilt, 4, "Y")
+            profile = [(0, 0), (.04, .015), (.06, .05), (.135, .12), (.17, .23), (.135, .34), (.06, .41), (.04, .445), (0, .46)]
+            lathe(bm, profile, mix(colour, (1, 1, 1), .08), 8, lemon)
+            leaf = up @ Matrix.Translation((.06, -.02, .33)) @ Matrix.Rotation(math.radians(50), 4, "Y")
+            spindle(bm, .05, .15, hex_rgb(LEAF), leaf, segs=6, flat=.45)
         elif item == "iris":  # three pointed petals, fanned
             for angle, length in ((0, .40), (48, .30), (-48, .30)):
                 m = up @ Matrix.Rotation(math.radians(angle), 4, "Y")
@@ -314,7 +320,7 @@ def build():
             if item == "reset":
                 colour = mix(colour, (.36, .80, .88), .6)
             liquid = hex_rgb(LIQUID[item]) if item in LIQUID else mix(colour, (0, 0, 0), .12)
-            deep = mix(liquid, (.10, .05, .25), .25)
+            deep = hex_rgb(DEEP[item]) if item in DEEP else mix(liquid, (.10, .05, .25), .25)
             glass = mix(colour, (1, 1, 1), .72)
 
             def body_colour(co, centre):
