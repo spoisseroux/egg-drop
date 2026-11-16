@@ -71,7 +71,8 @@ return function(server)
 	end
 	local ruled
 	for _,id in ipairs(Charms.Order)do
-		if type(Charms.rule)=="function"and Charms.rule(id)then ruled=ruled or id end
+		-- An earned (rule-derived) shape; egg shapes are covered by CharmOwnership.
+		if type(Charms.rule)=="function"and Charms.rule(id)and Charms.rule(id).kind~="egg"then ruled=ruled or id end
 	end
 
 	test("facts come from the save: stamps, claimed milestones, stats, bond",function()
@@ -80,7 +81,10 @@ return function(server)
 		local empty=A.facts(nil)
 		assert(empty.stamps==0 and #empty.claimed==0 and next(empty.stats)==nil and next(empty.bond)==nil,"junk reads as nothing earned")
 		assert(A.facts({stamps="7",book=3,stats="x",bond=false}).stamps==0)
-		for _,id in ipairs({"dot","ring","pebble"})do assert(A.earned(id,{})==true,id.." is free")end
+		-- Customization Egg (2026-11-16): the egg shapes are no longer free; the save's charmUnlocks owns them.
+		for _,id in ipairs({"dot","ring","pebble"})do
+			assert(A.earned(id,{})==false and A.earned(id,{charmUnlocks={[id]=true}})==true,id.." is owned only through charmUnlocks")
+		end
 	end)
 
 	if ruled then

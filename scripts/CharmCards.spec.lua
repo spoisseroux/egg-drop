@@ -2,7 +2,9 @@
 -- Customize Charm tab (HueEggView). Pure rules only; the built tab is covered by
 -- CareMachineUI / CustomizeRedesign.
 --  * A shape with a rule shows "Locked" (with how to earn it, and progress for counted
---    rules) until PetCharmCatalog.earned says yes, then "Earned"; free shapes stay "Free".
+--    rules) until PetCharmCatalog.earned says yes, then "Earned". Customization Egg
+--    (2026-11-16): Snowflake, Ring and Pebble carry the egg rule and read the snapshot's
+--    charmUnlocks ("Rare in the Customization Egg"); no shape is free any more.
 --  * A locked card can be focused (it previews) but its pane button is disabled.
 --  * Without facts (older callers) every shape reads as free, as before.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.CharmCards)(PlayerScripts.Client, PlayerGui)
@@ -22,12 +24,19 @@ return function(client)
    if card.id~="none"and not card.wearing then assert(card.status=="Free",card.id)end
   end
  end)
- test("free shapes stay Free with facts; the pane offers Wear",function()
-  local cards=byId(View.charmCards({charmVisible=true,charmShape="ring"},true,none))
-  for _,id in ipairs({"dot","pebble"})do assert(cards[id].status=="Free"and not cards[id].locked and cards[id].rule==nil,id)end
-  assert(cards.ring.status=="WEARING"and cards.ring.wearing)
-  local pane=View.charmPane(cards.dot,"Bear",nil)
+ test("egg shapes are Locked without charmUnlocks and wearable once owned; a new pet has no charm",function()
+  local fresh=byId(View.charmCards({charmVisible=false},true,none))
+  assert(fresh.none.wearing and fresh.none.status=="WEARING","a new pet starts with no charm")
+  for _,id in ipairs({"dot","ring","pebble"})do
+   assert(fresh[id].locked and fresh[id].status==UICopy.get("pool3.charm.locked")and fresh[id].rule==UICopy.get("pool3.charm."..id..".rule"),id)
+   assert(View.charmPane(fresh[id],"Bear",nil).enabled==false,id.." cannot be worn")
+  end
+  local owned=byId(View.charmCards({charmVisible=false},true,{stamps=0,claimed={},stats={},bond={},charmUnlocks={ring=true}}))
+  assert(not owned.ring.locked and owned.ring.status==UICopy.get("pool3.charm.earned")and owned.dot.locked and owned.pebble.locked)
+  local pane=View.charmPane(owned.ring,"Bear",nil)
   assert(pane.button=="Wear"and pane.enabled==true)
+  local snapshot=Charms.facts({stamps=0,charmUnlocks={dot=true,ring=true,pebble=true}})
+  for _,id in ipairs({"dot","ring","pebble"})do assert(Charms.earned(id,snapshot),id.." owned by a legacy save")end
  end)
  if type(Charms.rule)~="function"or type(Charms.earned)~="function"then
   test("no earned shapes in this catalogue",function()end)
@@ -37,7 +46,7 @@ return function(client)
  for _,id in ipairs(Charms.Order)do if Charms.rule(id)then table.insert(ruled,id)end end
  test("a shape with a rule is Locked until earned, then Earned; its line says how",function()
   assert(#ruled>=1,"the catalogue has earned shapes")
-  local locked=byId(View.charmCards({charmVisible=true,charmShape="dot"},true,none))
+  local locked=byId(View.charmCards({charmVisible=false,charmShape="dot"},true,none))
   for _,id in ipairs(ruled)do
    local card=locked[id]
    assert(card.locked==true and card.status==UICopy.get("pool3.charm.locked")and card.tone=="dim",id.." locked")
@@ -48,12 +57,13 @@ return function(client)
    assert(View.charmPane(card,"Bear",{retry=false}).enabled==false,"never enabled while locked")
   end
   -- Facts that meet every rule: Earned, and wearable.
-  local facts={stamps=1000,claimed={},stats={},bond={}}
+  local facts={stamps=1000,claimed={},stats={},bond={},charmUnlocks={}}
   for _,id in ipairs(ruled)do
    local rule=Charms.rule(id)
-   if rule.kind=="claimed"then table.insert(facts.claimed,rule.id)elseif rule.kind=="stat"then facts.stats[rule.key]=rule.need end
+   if rule.kind=="claimed"then table.insert(facts.claimed,rule.id)elseif rule.kind=="stat"then facts.stats[rule.key]=rule.need
+   elseif rule.kind=="egg"then facts.charmUnlocks[id]=true end
   end
-  local earned=byId(View.charmCards({charmVisible=true,charmShape="dot"},true,facts))
+  local earned=byId(View.charmCards({charmVisible=false,charmShape="dot"},true,facts))
   for _,id in ipairs(ruled)do
    assert(Charms.earned(id,facts),id.." earned by the facts")
    local card=earned[id]

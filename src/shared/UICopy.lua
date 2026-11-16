@@ -315,6 +315,13 @@ local Table={
    star={rule="Claim 4 weekly bonuses"},
    leaf={rule="Collect 14 daily stamps"},
    fallback={rule="Keep playing to earn this charm"},
+   -- Customization Egg (plan 2026-11-16 §5.4): Snowflake, Ring and Pebble are rare egg drops.
+   dot={rule="Rare in the Customization Egg"},
+   ring={rule="Rare in the Customization Egg"},
+   pebble={rule="Rare in the Customization Egg"},
+   egg={rule="Rare in the Customization Egg"},
+   findInEggs="Find in eggs",
+   none="No charm yet. Charms are rare in the Customization Egg, or earned.",
   },
  },
  bond={

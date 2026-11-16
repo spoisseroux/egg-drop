@@ -23,7 +23,11 @@ function Appearance.visible(profile,id)
  return if entry then entry.charmVisible else false
 end
 function Appearance.shape(profile,id)return shape(profile.petAppearance and profile.petAppearance[id])end
-function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures,confirmedPetId,petWearables)
+-- `hatching` (the hatching save; plan 2026-11-16 §3.4, R2): a saved visible charm whose shape
+-- the save does not own is masked (charmVisible=false). This covers stale profile rows and rows
+-- an older server wrote during a rollout. The server always passes it; profile-only callers
+-- (specs) that omit it get the stored rows unmasked.
+function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures,confirmedPetId,petWearables,hatching)
  -- Public attributes and garden snapshots use only storage-confirmed choices.
  -- The desired map remains private while a write is pending or retrying.
  local result={}
@@ -32,6 +36,7 @@ function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures
   result[id]=Hue.appearance(hues,id,petHues)
   result[id].charmVisible=if valid(entry)then entry.charmVisible else false
   result[id].charmShape=if valid(entry)then shape(entry)else Charms.Default
+  if hatching~=nil and result[id].charmVisible and not Appearance.earned(result[id].charmShape,hatching)then result[id].charmVisible=false end
   result[id].finish=if type(petMaterials)=="table"then petMaterials[id]or "standard"else "standard"
   if id==(confirmedPetId or profile.companionId)then
   result[id].toyId=if type(petToys)=="table"then petToys[id]or "none"else "none"
@@ -71,25 +76,27 @@ end
 local function packet(state,profile,id,seq,status,reason)
  return{petId=id,visible=if supported[id]then Appearance.visible(profile,id)else false,shape=if supported[id]then Appearance.shape(profile,id)else Charms.Default,seq=seq,status=status,reason=reason,revision=state.revision,lastSeq=state.requests[id]and state.requests[id].seq or 0}
 end
--- Earned charm shapes (slice D). `facts` is what PetCharmCatalog.earned reads: lifetime
--- stamps, claimed book milestones, lifetime stats and bond XP. Every rule is monotonic, so
--- the check is stateless: a shape once earned stays earned.
+-- Charm shape ownership. `facts` is what PetCharmCatalog.usable reads: lifetime stamps,
+-- claimed book milestones, lifetime stats, bond XP (earned shapes, slice D, monotonic) and
+-- the save's charmUnlocks (egg shapes, Customization Egg).
 function Appearance.facts(state)
  state=if type(state)=="table"then state else {}
  local book=state.book
  return{stamps=if type(state.stamps)=="number"then state.stamps else 0,
   claimed=if type(book)=="table"and type(book.claimed)=="table"then book.claimed else {},
   stats=if type(state.stats)=="table"then state.stats else {},
-  bond=if type(state.bond)=="table"then state.bond else {}}
+  bond=if type(state.bond)=="table"then state.bond else {},
+  charmUnlocks=if type(state.charmUnlocks)=="table"then state.charmUnlocks else {}}
 end
--- True when `shape` may be selected on this save. A catalogue without rules (or a shape
--- without one) is free.
+-- True when `shape` may be worn on this save (an owned egg shape or a met earned rule).
 function Appearance.earned(shape,state)
  if type(Charms.earned)~="function"then return true end
  return Charms.earned(shape,Appearance.facts(state))==true
 end
--- `earned(shape)` (optional, after `apply`) gates a marked shape selection: a shape whose
--- rule is not met yet is rejected as "Locked". Visibility-only requests never ask it.
+-- `earned(shape)` (optional, after `apply`) is the ownership gate (plan 2026-11-16 §3.4, R2):
+-- a marked shape selection, and ANY request that would show a charm (visible=true, including the
+-- unmarked visibility-only path, which resolves to the stored shape or the Default), must name a
+-- shape the save may wear, or it is rejected as "Locked". Hiding (visible=false) never asks it.
 function Appearance.request(state,profile,value,now,usable,owns,apply,earned)
  if type(value)~="table"or not supported[value.petId]or type(value.visible)~="boolean"or(value.shape~=nil and not Charms.known(value.shape))or(value.shapeVersion~=nil and(value.shapeVersion~=Charms.Version or value.shape==nil))or type(value.seq)~="number"or value.seq~=value.seq or value.seq%1~=0 or value.seq<1 or value.seq>2147483647 then
   if now-state.lastMalformed<.25 then return nil,false end;state.lastMalformed=now
@@ -104,11 +111,11 @@ function Appearance.request(state,profile,value,now,usable,owns,apply,earned)
  local selection=value.shapeVersion==Charms.Version
  if not reason and value.shape~=nil and value.shape~=Charms.Default and not selection then reason="ShapeVersionRequired"end
  if not reason and selection and not state.selectionsEnabled then reason="SelectionsDisabled"end
- if not reason and selection and earned~=nil and earned(value.shape)~=true then reason="Locked"end
  -- v274 Hide/Show sent Dot unconditionally. Unmarked Dot/nil are visibility-only;
  -- only a marked selection may change the durable shape, including an explicit Dot.
  local selectedShape=if selection then value.shape else nil
  local requestedShape=selectedShape or Appearance.shape(profile,id)
+ if not reason and earned~=nil and(selection or value.visible==true)and earned(requestedShape)~=true then reason="Locked"end
  if not reason and now-state.lastAt<.25 then local result=packet(state,profile,id,seq,"Rejected","Throttled");result.retryAfter=.25-(now-state.lastAt);return result,false end
  local changed=false
  if not reason then

@@ -242,7 +242,8 @@ local function gardenInput(board)
 	local humanoid=character and character:FindFirstChildOfClass("Humanoid")
 	local petId=board.profile.companionId
 	local position=root and root.Position or Vector3.zero
-	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId,board.nursery.state.petWearables)
+	-- Charm ownership (Customization Egg): public() masks a saved charm the save does not own.
+	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId,board.nursery.state.petWearables,board.nursery.state)
 	return {petId=petId,owned=petId~=nil and NurseryCatalog.isOwned(inventory(board),petId),root=root,character=character,
 		carryPosition=root and(root.Position+root.CFrame.LookVector*1.2+Vector3.new(0,.3,0))or nil,
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
@@ -299,7 +300,7 @@ do
 	end)
 end
 local function publishPetAppearance(board)
-	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId,board.nursery.state.petWearables)))
+	board.folder:SetAttribute("PetAppearance",HttpService:JSONEncode(PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId,board.nursery.state.petWearables,board.nursery.state)))
 	board.folder:SetAttribute("PetAppearanceRevision",board.petPreferences.revision+board.nursery.state.revision)
 	petHello.social(board)
 end
@@ -933,7 +934,8 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		local usable=if board.closing then "Closing"else canProgress(board)
 		local packet,changed=PetAppearance.request(board.petPreferences,board.profile,value,now,usable,
 			function(petId)return NurseryCatalog.isOwned(inventory(board),petId)end,Progress.setPetAppearance,
-			-- Slice D: earned charm shapes are checked against the save (stamps, book claims, stats, bond).
+			-- Charm ownership (slice D earned rules, Customization Egg charmUnlocks) is checked against the
+			-- save for any request that would show a charm, including visibility-only (plan §3.4).
 			function(shape)return PetAppearance.earned(shape,board.nursery.state)end)
 		if changed then publishPetAppearance(board)end
 		if packet then petAppearanceResult:FireClient(player,packet)end

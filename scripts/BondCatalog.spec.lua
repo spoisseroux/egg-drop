@@ -73,12 +73,16 @@ return function(_, shared)
 		end
 	end)
 
-	test("charm shapes: three free; Heart, Star and Leaf earned by monotonic rules; nothing reserved", function()
+	test("charm shapes: three egg shapes owned through charmUnlocks; Heart, Star and Leaf earned by monotonic rules; nothing reserved", function()
 		assert(table.concat(Charms.Order, ",") == "dot,ring,pebble,heart,star,leaf" and Charms.Default == "dot" and Charms.Version == 2)
 		for _, id in ipairs(Charms.Order) do assert(Charms.known(id) and type(Charms.ById[id].name) == "string" and Charms.renderShape(id) == id, id) end
+		-- Customization Egg (2026-11-16): no free shapes; Snowflake, Ring and Pebble are rare egg drops.
+		assert(table.concat(Charms.EggShapes, ",") == "dot,ring,pebble")
 		for _, id in ipairs({ "dot", "ring", "pebble" }) do
-			assert(Charms.rule(id) == nil and Charms.earned(id, nil) and Charms.earned(id, {}) and Charms.progress(id, nil).earned, id)
+			assert(Charms.rule(id).kind == "egg" and Charms.isEggShape(id) and not Charms.earned(id, nil) and not Charms.earned(id, {}) and not Charms.progress(id, nil).earned, id)
+			assert(Charms.earned(id, { charmUnlocks = { [id] = true } }) and Charms.usable(id, {}, { [id] = true }) and not Charms.usable(id, { charmUnlocks = { [id] = true } }, {}), id)
 		end
+		assert(not Charms.isEggShape("heart") and not Charms.earned("ring", { charmUnlocks = { dot = true } }))
 		assert(Charms.known("leaf") and next(Charms.Reserved) == nil and Charms.ById.leaf.rule == "stamps14" and Charms.Rules.stamps14.need == 14)
 		assert(not Charms.earned("leaf", nil) and not Charms.earned("leaf", { stamps = 13 }) and Charms.earned("leaf", { stamps = 14 }) and Charms.progress("leaf", { stamps = 5 }).have == 5)
 		assert(Charms.renderShape("clover") == "dot" and Charms.validStored("clover") and not Charms.known("clover"), "a stored future shape survives and draws the default")
@@ -99,13 +103,14 @@ return function(_, shared)
 	end)
 
 	test("facts(state) reads a save or its snapshot: stamps, claimed, stats, bond", function()
-		local facts = Charms.facts({ stamps = 9, book = { claimed = { "wardrobe.100" }, found = 0 }, stats = { weeklyBonuses = 4 }, bond = { pip = 30 } })
+		local facts = Charms.facts({ stamps = 9, book = { claimed = { "wardrobe.100" }, found = 0 }, stats = { weeklyBonuses = 4 }, bond = { pip = 30 }, charmUnlocks = { ring = true } })
 		assert(facts.stamps == 9 and facts.claimed[1] == "wardrobe.100" and facts.stats.weeklyBonuses == 4 and facts.bond.pip == 30)
+		assert(Charms.earned("ring", facts) and not Charms.earned("dot", facts) and not Charms.earned("pebble", facts), "egg shapes read the snapshot's charmUnlocks")
 		assert(Charms.earned("heart", facts) and Charms.earned("star", facts))
 		for _, junk in ipairs({ false, 3, "x", {} }) do
 			local empty = Charms.facts(junk)
-			assert(empty.stamps == 0 and #empty.claimed == 0 and next(empty.stats) == nil and next(empty.bond) == nil)
-			assert(not Charms.earned("heart", empty) and not Charms.earned("star", empty) and Charms.earned("dot", empty))
+			assert(empty.stamps == 0 and #empty.claimed == 0 and next(empty.stats) == nil and next(empty.bond) == nil and next(empty.charmUnlocks) == nil)
+			assert(not Charms.earned("heart", empty) and not Charms.earned("star", empty) and not Charms.earned("dot", empty))
 		end
 		assert(Charms.facts(nil).stamps == 0 and Charms.facts({ stamps = "x", book = { claimed = 3 }, stats = 4, bond = 5 }).stamps == 0)
 	end)
