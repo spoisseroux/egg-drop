@@ -103,7 +103,7 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  local ox=math.floor((rootW-bodyW)/2)
  W=bodyW
  local tier=if bodyH>=305 then 0 elseif bodyH>=265 then 1 else 2
- local SW=({124,112,98})[tier+1];local D=({88,80,68})[tier+1];local A=({92,82,70})[tier+1]
+ local SW=({124,112,98})[tier+1];local D=({88,80,68})[tier+1];local A=({80,72,64})[tier+1]
  local top=bodyTop+Fit.crown
  local sheetTop=kh+18
  local rootH=H
@@ -180,21 +180,26 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  end
  g.chainInGoals=g.chainIn=="goals"
  g.board=rect(bx,by,bw,bh);g.lcd=g.board;g.boardLocal=rect(0,0,bw,bh);g.authored=Vector2.new(bw,bh)
- -- Shoulders: d-pad, MENU, wordmark and LED; A on the right at mid height, B (the item
- -- button) under it.
- local dcy=kh+math.floor((H-kh-52)/2);local cx=math.floor(SW/2)
- -- QA v751 P1: the wordmark sits 28 px in from the body's edge and 10 px under the glass
- -- top, clear of the body's corner curve. On a short body the d-pad moves down just far
- -- enough to leave the wordmark and the LED their room (never closer than 76 px to MENU's
- -- hit area, so its 144 px hit box holds); the wordmark then rides 6 px under the glass top.
+ -- Shoulders (QA v760, the handheld layout): both grips are composed around the body's
+ -- mid height, like the desktop deck. Left: the wordmark 15% of the body's height under
+ -- its top edge, the LED, the d-pad centred on the body, MENU at the bottom. Right: A
+ -- above and to the outside, B (the item button) below and to the inside, the pair
+ -- centred on the same mid line. A and B are a size smaller than before (92 / 58 at the
+ -- large tier), still well over 44 px with their hit areas.
+ local mid=math.floor((bodyTop+bodyBottom)/2);local cx=math.floor(SW/2)
  local ww=SW-56;local wh=math.floor(ww*16/41+.5)
- local wordY=math.max(kh+12,top+10)
+ -- The d-pad never comes closer than 76 px to MENU's hit area, so its 144 px hit box
+ -- holds; on a short body it then sits a little above the mid line. The wordmark gives
+ -- way next (never higher than 6 px under the glass top), then the d-pad moves down.
+ local lowest=H-52-4-72
+ local dcy=math.min(mid,lowest)
+ local wordY=math.max(kh+12,top+10,bodyTop+math.floor(bodyH*.15+.5))
  do
   local ledRoom=math.max(8,math.floor(34*math.min(bodyW/L.size.X,bodyH/L.size.Y)+.5))+4
-  local lowest=H-52-4-72
-  if dcy<wordY+wh+ledRoom+math.floor(D/2)then
-   if wordY+wh+ledRoom+math.floor(D/2)>lowest then wordY=math.max(kh+12,top+6)end
-   dcy=math.min(lowest,math.max(dcy,wordY+wh+ledRoom+math.floor(D/2)))
+  local need=wh+ledRoom+math.floor(D/2)
+  if wordY+need>dcy then
+   wordY=math.max(kh+12,top+6,dcy-need)
+   dcy=math.min(lowest,math.max(dcy,wordY+need))
   end
  end
  g.dpad=rect(cx-math.floor(D/2),dcy-math.floor(D/2),D,D)
@@ -217,13 +222,21 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
   g.dpadMenuLeft=rect(bx0,by0+rh,half,boxH-2*rh);g.dpadMenuRight=rect(bx0+half,by0+rh,bw0-half,boxH-2*rh)
  end
  g.wordmark=if ww>=40 and wordY+wh<=g.dpad.y-8 then rect(cx-math.floor(ww/2),wordY,ww,wh)else nil
- g.a=Vector2.new(W-cx,math.floor(H*.49+.5))
- g.aHit=rect(W-cx-math.floor((A+8)/2),g.a.Y-math.floor((A+8)/2),A+8,A+8)
- -- Round items (BUILD-PLAN 2026-11-13 item 4): the item button, always under A.
- local ib=({58,54,52})[tier+1]
- local iy=math.min(g.aHit.y+g.aHit.h+4+math.floor((ib+8)/2),H-6-math.floor((ib+8)/2))
- g.item=rect(W-cx-math.floor(ib/2),iy-math.floor(ib/2),ib,ib)
- g.itemHit=rect(W-cx-math.floor((ib+8)/2),iy-math.floor((ib+8)/2),ib+8,ib+8)
+ -- A and B sit on a diagonal, 12 px apart: A `ax` px outside the grip's centre line, B
+ -- `bxo` px inside it. `dy` is the drop from A's centre to B's that keeps that gap. The
+ -- pair (with room for B's caption) is centred on the mid line and kept inside the body.
+ local ib=({50,48,46})[tier+1]
+ local ax,bxo=math.floor(SW*.03+.5),math.floor(SW*.17+.5)
+ local apart=A/2+ib/2+12
+ local dy=math.ceil(math.sqrt(apart*apart-(ax+bxo)*(ax+bxo)))
+ local ay=mid-math.floor((dy+ib/2-A/2+10)/2)
+ ay=math.max(top+4+math.floor((A+8)/2),math.min(ay,H-6-math.floor((ib+8)/2)-dy))
+ g.a=Vector2.new(W-cx+ax,ay)
+ g.aHit=rect(g.a.X-math.floor((A+8)/2),g.a.Y-math.floor((A+8)/2),A+8,A+8)
+ -- Round items (BUILD-PLAN 2026-11-13 item 4): the item button, below and inside A.
+ local ix,iy=W-cx-bxo,ay+dy
+ g.item=rect(ix-math.floor(ib/2),iy-math.floor(ib/2),ib,ib)
+ g.itemHit=rect(ix-math.floor((ib+8)/2),iy-math.floor((ib+8)/2),ib+8,ib+8)
  -- QA v2 R6.1: the full handheld drawn around the same LCD. The body sits 4 px in from
  -- the sides and 16 px above the glass and runs off the bottom edge (the board keeps
  -- H - 80), so the background pattern shows above and beside it. The shell sprites map
