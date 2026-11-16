@@ -36,6 +36,18 @@ return function(client,parent)
  end
  local ok,problem=pcall(function()
   -- Pure rules.
+  test("QA v751 P3: a tap cycles Easy, Medium, Hard, Easy; the d-pad stops at the ends",function()
+   local order=require(game:GetService("ReplicatedStorage").Shared.BoardConfig).HeatOrder
+   local next=Results.nextDifficulty
+   assert(order[1]=="easy"and order[2]=="medium"and order[3]=="hard"and #order==3)
+   assert(next(order,"easy",1,true)=="medium"and next(order,"medium",1,true)=="hard"and next(order,"hard",1,true)=="easy","tap wraps Hard to Easy")
+   assert(next(order,"easy",-1,true)=="hard","wrap works backwards too")
+   assert(next(order,"hard",1,false)=="hard"and next(order,"easy",-1,false)=="easy"and next(order,"medium",-1)=="easy","d-pad clamps")
+   assert(next(order,"unknown",1,true)=="hard","an unknown key counts as Medium")
+   local key="easy";local seen={}
+   for _=1,6 do key=next(order,key,1,true);table.insert(seen,key)end
+   assert(table.concat(seen,",")=="medium,hard,easy,medium,hard,easy",table.concat(seen,","))
+  end)
   test("headline: first match wins (tidy, new best, Hard, win, missed, overflow)",function()
    assert(Results.headline({outcome="clear",tidy=true,newBest=true,level=3})=="TIDY WIN!")
    assert(Results.headline({outcome="clear",newBest=true,level=3})=="NEW BEST!")

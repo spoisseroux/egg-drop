@@ -1939,11 +1939,11 @@ function clientUI.resultsHeatName()
  local key=if choice then choice.key else confirmed
  return(Config.Heat[key]or Config.Heat[Config.DefaultHeat]).name
 end
-function clientUI.cycleResultsHeat(delta)
+function clientUI.cycleResultsHeat(delta,wrap)
  if not recap.visible or not recap.data or recap.data.pending then return false end
  local choice=clientUI.resultsHeat;local key=if choice and choice.sequence==board:GetAttribute("RunSequence")and os.clock()-choice.at<2 then choice.key else board:GetAttribute("NextHeat")or Config.DefaultHeat
- local index=table.find(Config.HeatOrder,key)or 2
- local nextKey=Config.HeatOrder[math.clamp(index+delta,1,#Config.HeatOrder)]
+ -- QA v751 P3: a tap cycles Easy, Medium, Hard, Easy (wrap); the d-pad still stops at the ends.
+ local nextKey=require(script.DeckResults).nextDifficulty(Config.HeatOrder,key,delta,wrap)
  if nextKey==key then return false end
  clientUI.resultsHeat={key=nextKey,sequence=board:GetAttribute("RunSequence"),at=os.clock()}
  request:FireServer("heat",nextKey);clientUI.accepted("tab");if updateHud then task.defer(updateHud)end
@@ -2690,7 +2690,7 @@ end)
 -- Compact results: change difficulty (the touch route for "Up on Replay") and the quest shortcut.
 recap:on("picker",function()
 	if recap.data and recap.data.pending then return end
-	if recap.inPlace then clientUI.cycleResultsHeat(1);return end
+	if recap.inPlace then clientUI.cycleResultsHeat(1,true);return end
  clientUI.keepHeatAfter=nil;clientUI.heatStarted=false;requestRetry()
 end)
 recap:on("heatShift",function(delta)clientUI.cycleResultsHeat(delta)end)

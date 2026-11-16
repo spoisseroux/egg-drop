@@ -48,6 +48,12 @@ function Results:on(name,callback)self.callbacks[name]=callback end
 
 -- ── Pure rules (specs cover these) ───────────────────────────────────────────
 -- 2.5 Headline: first match wins.
+-- Pure (QA v751 P3): the difficulty `delta` steps from `key` in `order`. A tap wraps
+-- (Easy, Medium, Hard, Easy); the d-pad (`wrap` false) stops at either end.
+function Results.nextDifficulty(order,key,delta,wrap)
+ local n=#order;local index=table.find(order,key)or math.min(2,n)
+ return order[if wrap then(index-1+delta)%n+1 else math.clamp(index+delta,1,n)]
+end
 function Results.headline(data)
  if data.outcome=="clear"then
   if data.tidy then return "TIDY WIN!",false end
