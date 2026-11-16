@@ -8,7 +8,7 @@ Bear.
 
 Usage (from the repo root):
   blender -b --factory-startup assets/art-source/pets/pet-bear-attachments.blend --python scripts/deck_art/render_book_icons.py -- bear
-  blender -b --factory-startup assets/art-source/toys/toys.blend --python scripts/deck_art/render_book_icons.py -- toys
+  blender -b --factory-startup assets/art-source/toys/toys-v2.blend --python scripts/deck_art/render_book_icons.py -- toys
   (after `bear`, optional ids limit the run: item ids from the manifest and/or `finishes`)
 Outputs: assets/ui/book/raw/<slot>.png (and <slot>-mask.png for wardrobe items)
 """
@@ -169,34 +169,11 @@ ALONE = {"beads": (0, 22, None), "bellcollar": (0, 16, None), "ring": (-72, 6, "
          "heart": (160, 10, None)}
 # Icon exaggeration: pieces too small to read at 48 px are drawn bigger (thumbnail only).
 ITEM_SCALE = {"blep": 2.2}
-# Toys built from the game's sphere primitives (PetToyGeometry builders, slice D toy pool 2). They are
-# mirrored here in memory for their book cell, not saved in toys.blend: (name, size, steps, colour) with
-# steps a chain of ("r", radians about the toy's facing axis) and ("t", x, y, z) in the game's axes
-# (Y up, +Z facing), exactly as the Luau CFrame chain reads.
-PRIMITIVE_TOYS = {
-    # Tennis ball (QA v735 H2). Replaces the modelled "Ball" in toys.blend for its book cell.
-    "Ball": [
-        ("FeltBall", (.24, .24, .24), [], "#D0E83A"),
-        ("SeamArcL", (.1944, .05, .1944), [("r", .2), ("ry", .3), ("r", math.pi / 2), ("t", 0, .075, 0)], "#FCFBEF"),
-        ("SeamArcR", (.1944, .05, .1944), [("r", .2), ("ry", -.3), ("r", -math.pi / 2), ("t", 0, .075, 0)], "#FCFBEF"),
-    ],
-    "Wobble_Top": [
-        ("TealBody", (.20, .15, .20), [("r", .18)], "#3FB7B0"),
-        ("CreamEquator", (.205, .04, .205), [("r", .18), ("t", 0, .01, 0)], "#FFF0C9"),
-        ("CoralFoot", (.05, .07, .05), [("r", .18), ("t", 0, -.09, 0)], "#EF786B"),
-        ("BrassStem", (.04, .10, .04), [("r", .18), ("t", 0, .11, 0)], "#C69A45"),
-        ("CitrineKnob", (.06, .06, .06), [("r", .18), ("t", 0, .17, 0)], "#F6D759"),
-    ],
-    "Squeaky_Carrot": [
-        ("CarrotTop", (.085, .11, .085), [("r", -.62), ("t", 0, .075, 0)], "#FF8A3C"),
-        ("CarrotMiddle", (.07, .10, .07), [("r", -.62)], "#FF8A3C"),
-        ("CarrotTip", (.05, .09, .05), [("r", -.62), ("t", 0, -.075, 0)], "#FF8A3C"),
-        ("LeafProng-1", (.03, .08, .03), [("r", -.62), ("t", -.018, .128, 0), ("r", .5), ("t", 0, .03, 0)], "#58B368"),
-        ("LeafProng0", (.03, .08, .03), [("r", -.62), ("t", 0, .128, 0), ("t", 0, .03, 0)], "#58B368"),
-        ("LeafProng1", (.03, .08, .03), [("r", -.62), ("t", .018, .128, 0), ("r", -.5), ("t", 0, .03, 0)], "#58B368"),
-        ("SqueakerDot", (.03, .03, .03), [("r", -.62), ("t", 0, .02, .034)], "#FFF0C9"),
-    ],
-}
+# Toys v2 (QA v760): every toy is modelled in toys-v2.blend (scripts/build_pet_toys.py), one Empty
+# per toy. This table stays for a toy that is ever built from sphere primitives again: (name, size,
+# steps, colour) with steps a chain of ("r", radians about the toy's facing axis), ("ry", about its up
+# axis) and ("t", x, y, z) in the game's axes (Y up, +Z facing), exactly as the Luau CFrame chain reads.
+PRIMITIVE_TOYS = {}
 REPLACES = {"Eyes": ["PetBear__EyeL", "PetBear__EyeR"], "Mouth": ["PetBear__Mouth"], "Tail": ["PetBear__Tail"]}
 
 
@@ -342,9 +319,9 @@ def toys():
         extent = max(mx.x - mn.x, mx.y - mn.y, mx.z - mn.z)
         for o in objs:
             o.hide_render = False
-        yaw = {"Bone": -28, "Ball": -14, "Sparkler": -30, "Wobble_Top": -12, "Squeaky_Carrot": -10}.get(gid, -25)
-        roll = {"Sparkler": -38, "Bone": 20}.get(gid, 0)        # long toys lie on the diagonal
-        fit = {"Sparkler": 1.0, "Bone": 1.05, "Wobble_Top": 1.12, "Squeaky_Carrot": 1.08}.get(gid, 1.28)
+        yaw = {"Bone": -18, "Ball": -14, "Sparkler": -16, "Wobble_Top": -12, "Squeaky_Carrot": -10, "Pocket_Deck": -14}.get(gid, -25)
+        roll = {"Sparkler": -30, "Bone": 24}.get(gid, 0)        # long toys lie on the diagonal
+        fit = {"Sparkler": 1.0, "Bone": 1.0, "Wobble_Top": 1.12, "Squeaky_Carrot": 1.08, "Pocket_Deck": 1.08}.get(gid, 1.28)
         frame(cam, centre, extent * fit, yaw, 18, roll)
         render(scene, os.path.join(RAW, "toy-" + gid.lower() + ".png"))
         for o in objs:
