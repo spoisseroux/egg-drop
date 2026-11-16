@@ -1533,6 +1533,20 @@ function clientUI.openMachine(id)
  end
  return true
 end
+-- QA v735 H5: where a notice card's button leads ("quests" | "hatch" | "companions" |
+-- "menu"). Only from the free garden with a pet (never mid-round or over another screen);
+-- it goes through the hub, so Back from the machine returns there as from a tile.
+function clientUI.noticeCanGo(target)
+ return type(target)=="string"and(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Room"
+  and roomView.canRoam()==true and not gameMenu:isOpen()
+end
+function clientUI.noticeGo(target)
+ if not clientUI.noticeCanGo(target)then return false end
+ if not openMenu({focus=if target=="menu"then nil else target})then return false end
+ clientUI.accepted("confirm")
+ if target=="menu"then return true end
+ return clientUI.openMachine(target)
+end
 -- Back from a machine opened at the hub: the hub again, sliding in from the left.
 function clientUI.returnToMachineHub(id)
  if clientUI.machineReturn~=id then return false end
@@ -1587,6 +1601,9 @@ do
 	clientUI.howItWorks=require(script.HowItWorks)
 	-- "Show tips again" (R1's coach replay, defined further down) from the cards and Settings.
 	clientUI.howItWorks.replayTips=function()if clientUI.replayCoachTips then clientUI.replayCoachTips()end end
+	-- QA v735 H5: a notice card's button ("Open Quests", "Open Hatch eggs", ...).
+	clientUI.howItWorks.canGo=function(target)return clientUI.noticeCanGo(target)end
+	clientUI.howItWorks.go=function(target)return clientUI.noticeGo(target)end
 	picker.onTips=function()
 		if not clientUI.replayCoachTips then return false end
 		picker:close("tips");task.defer(clientUI.replayCoachTips);return true
@@ -2668,7 +2685,10 @@ do
   -- Slice E: "Say hi" on the arrival card makes the new friend the companion (the
   -- existing `companion` action; the server checks owned and active).
   sayHi=function(petId)request:FireServer("companion",petId)end,
-  learned=function(station)if clientUI.attract then clientUI.attract:learn(station)end end})
+  learned=function(station)if clientUI.attract then clientUI.attract:learn(station)end end,
+  -- QA v735 H5: the garden step is the "Your garden" tour (machines, Quests and dailies,
+  -- customize, the Menu); closing it ends the step.
+  tour=function(done)return require(script.HowItWorks).open("garden",{onClosed=done})end})
  clientUI.coach:place(viewport.Position,viewport.Size)
  local stopCoachSnapshot=clientUI.ownerSnapshot.subscribe(function(state)clientUI.coach:sync(state);clientUI.coach:learned()end)
  local function beltCount()
@@ -2828,8 +2848,9 @@ do
   spendButton.Visible=false
   if canOffer then
    if not clientUI.firstSpendRail then
-    clientUI.firstSpendRail=require(script.NotificationRail).status(clientUI.coach.host,"firstSpend",{text=Copy.get("onboarding.spend.hatch"),priority=1,
-     activate=function()clientUI.firstSpend:openEggs()end})
+    clientUI.firstSpendRail=require(script.NotificationRail).status(clientUI.coach.host,"firstSpend",{text=Copy.get("notice.pill.firstSpend"),icon="★",priority=1,
+     -- QA v735 H5: a tap explains it first; the card's button opens Hatch eggs on the Toy Egg.
+     detail=require(script.NoticeCards).detail("firstSpend",nil,function()clientUI.firstSpend:openEggs()end)})
    end
    clientUI.firstSpendRail:update({active=true})
   elseif clientUI.firstSpendRail then clientUI.firstSpendRail:update({active=false})end
@@ -2871,7 +2892,7 @@ do
   for _,event in ipairs(BondPips.levelUps(clientUI.bondSeen,bond))do
    if Pets.isActive(event.petId)then
     roomView:bondLevelUp(event.petId,event.level)
-    clientUI.coach.toaster.show(BondPips.toastText(event.level))
+    clientUI.coach.toaster.show(BondPips.toastText(event.level),nil,nil,require(script.NoticeCards).detail("bond"))
    end
   end
  end)
@@ -3114,7 +3135,8 @@ end
 clientUI.pocketCallbacks.armed=function()audio:play("aim",.8,.4)end
 clientUI.pocketCallbacks.locked=function(id,state)
  clientUI.deck.toaster.show(if state.locked then "Win this round to meet your first pet"
-  elseif id=="restart"then(if state.empty then "The round has not started"elseif board:GetAttribute("RoundOver")==true then "The round is over"else "Restarting, one moment")else "Not available right now")
+  elseif id=="restart"then(if state.empty then "The round has not started"elseif board:GetAttribute("RoundOver")==true then "The round is over"else "Restarting, one moment")else "Not available right now",
+  nil,nil,if state.locked then require(script.NoticeCards).detail("locked")else nil)
  audio:play("aim",.6,.3)
 end
 clientUI.questCallbacks.claim=function(scope,slot,period)
@@ -3142,7 +3164,8 @@ clientUI.onQuests=function(state)
   local key=scope..":"..row.id
   ready[key]=row.ready==true or row.claimed==true
   if clientUI.questReady and row.ready and not clientUI.questReady[key]then
-   clientUI.deck.toaster.show("Quest done: "..row.title,row.reward);audio:play("quest_complete",1,.7)
+   -- QA v735 H5: a tap on the ticker says what it means and where to claim it.
+   clientUI.deck.toaster.show("Quest done: "..row.title,row.reward,nil,require(script.NoticeCards).detail("questReady",{quest=row.title,reward=row.reward}));audio:play("quest_complete",1,.7)
   end
  end end
  clientUI.questReady=ready
@@ -3152,7 +3175,7 @@ clientUI.questResultConnection=remotes:WaitForChild("QuestResult").OnClientEvent
  clientUI.questLog:result(message)
  if type(message)~="table"then return end
  if message.status=="Saved"and message.action=="questClaim"then
-  clientUI.deck.toaster.show("Quest claimed",message.stars);audio:play("quest_complete",1.1,.7)
+  clientUI.deck.toaster.show("Quest claimed",message.stars,nil,require(script.NoticeCards).detail("questClaimed",{reward=message.stars}));audio:play("quest_complete",1.1,.7)
  elseif message.status=="Saved"and message.action=="questReroll"then audio:play("retry",1.2,.5)
  elseif message.status=="Rejected"and message.reason~="AlreadyClaimed"then
   clientUI.deck.toaster.show(({NoReroll="No reroll left today",Started="Only unstarted quests can be rerolled",Busy="Saving, try again",Throttled="One moment…",NotComplete="Not finished yet",PeriodChanged="New quests arrived"})[message.reason]or "Try again")

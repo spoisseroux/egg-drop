@@ -1116,13 +1116,14 @@ end
 
 -- Compatibility adapter: all former per-screen queues now share the topbar rail.
 -- `placement` is accepted by old callers but deliberately cannot move this owner.
+-- `detail` (QA v735 H5) names the notice card a tap on the line opens (NoticeCards.detail).
 local toastSerial=0
 function Kit.toaster(host,rail)
  local Rail=rail or require(script.Parent.NotificationRail)
  local api={root=host}
- function api.show(message,stars,eventKey)
+ function api.show(message,stars,eventKey,detail)
   toastSerial+=1
-  return Rail.enqueue(host,if eventKey~=nil then eventKey else "toast:"..toastSerial,{text=message,amount=stars})
+  return Rail.enqueue(host,if eventKey~=nil then eventKey else "toast:"..toastSerial,{text=message,amount=stars,detail=detail})
  end
  return api
 end

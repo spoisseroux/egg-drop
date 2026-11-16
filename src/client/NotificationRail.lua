@@ -6,7 +6,19 @@ local RunService=game:GetService("RunService")
 local TextService=game:GetService("TextService")
 local Queue=require(script.Parent.NotificationQueue)
 local Rail={};local queue=Queue.new(24);local stopped=false;local connection
-local gui,root,pill,label,icon,shown
+local gui,root,pill,label,icon,shown,more
+-- QA v735 H5: a line that opens something on a tap (its own `activate`, or a notice card
+-- named by `detail`, see NoticeCards) shows a small chevron at its end, MoreWidth wide.
+Rail.MoreWidth=14
+function Rail.tappable(data)return type(data)=="table"and(data.activate~=nil or type(data.detail)=="table")end
+-- A tap on the line: its own action, else its notice card. True when something opened.
+function Rail.activate(data)
+ if type(data)~="table"then return false end
+ if data.activate then data.activate();return true end
+ local detail=data.detail
+ if type(detail)~="table"then return false end
+ return require(script.Parent.HowItWorks).openNotice(detail.id,{vars=detail.vars,run=detail.run})==true
+end
 local owners=setmetatable({},{__mode="k"})
 local font=Font.new("rbxasset://fonts/families/BuilderSans.json",Enum.FontWeight.Medium)
 local function node(class,parent,props)
@@ -15,8 +27,8 @@ end
 -- QA v685 U1: Roblox's top-bar buttons are 44 px tall with a 12 px top margin in the 58 px bar,
 -- so their centre line is 24 px above the bar's bottom edge, not the middle of the inset.
 -- The capsule centres on that line (older, shorter bars keep the plain middle).
-function Rail.geometry(width,height,textWidth)
- local desired=math.ceil(textWidth)+52
+function Rail.geometry(width,height,textWidth,tappable)
+ local desired=math.ceil(textWidth)+52+(if tappable then Rail.MoreWidth else 0)
  local available=math.min(300,width-20)
  return{fits=height>=40 and desired<=available,width=math.max(0,math.min(desired,available)),height=40,x=8,y=if height>=56 then height-44 else math.max(0,(height-40)/2)}
 end
@@ -41,9 +53,11 @@ local function ensure()
  label=node("TextLabel",pill,{Name="Message",BackgroundTransparency=1,Position=UDim2.fromOffset(40,0),Size=UDim2.new(1,-50,1,0),
   Text="",FontFace=font,TextSize=14,TextColor3=Color3.fromHex("#F3F4F6"),TextWrapped=false,TextTruncate=Enum.TextTruncate.None,
   TextXAlignment=Enum.TextXAlignment.Left,Active=false})
+ more=node("TextLabel",pill,{Name="More",BackgroundTransparency=1,AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-8,0,0),Size=UDim2.fromOffset(Rail.MoreWidth,40),
+  Text="›",FontFace=font,TextSize=20,TextColor3=Color3.fromHex("#8DBEAC"),Visible=false,Active=false})
  pill.InputBegan:Connect(function(input)
   if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-   local item=queue.current;if item and item.data.activate then item.data.activate()end
+   local item=queue.current;if item then Rail.activate(item.data)end
   end
  end)
  return true
@@ -77,7 +91,7 @@ function Rail.destroy()
  if connection then connection:Disconnect();connection=nil end
  for owner,c in pairs(owners)do c:Disconnect();owners[owner]=nil end
  queue.items={};queue.providers={};queue.current=nil
- if gui then gui:Destroy();gui,root,pill,label,icon=nil,nil,nil,nil,nil end
+ if gui then gui:Destroy();gui,root,pill,label,icon,more=nil,nil,nil,nil,nil,nil end
 end
 script.Destroying:Connect(Rail.destroy)
 connection=RunService.RenderStepped:Connect(function(dt)
@@ -86,14 +100,16 @@ connection=RunService.RenderStepped:Connect(function(dt)
  -- Convert through the measured GUI inset, then through this root's local origin.
  local inset=GuiService.TopbarInset
  local size=Vector2.new(inset.Width,inset.Height)
- local item=queue:step(dt,function(data)local _,w=measure(data);return Rail.geometry(size.X,size.Y,w).fits end)
+ local item=queue:step(dt,function(data)local _,w=measure(data);return Rail.geometry(size.X,size.Y,w,Rail.tappable(data)).fits end)
  if not item then pill.Visible=false;shown=nil;return end
- local text,width=measure(item.data);local g=Rail.geometry(size.X,size.Y,width)
+ local tappable=Rail.tappable(item.data)
+ local text,width=measure(item.data);local g=Rail.geometry(size.X,size.Y,width,tappable)
  local origin=root.AbsolutePosition
  local guiInset=GuiService:GetGuiInset()
  pill.Position=UDim2.fromOffset(inset.Min.X-guiInset.X-origin.X+g.x,inset.Min.Y-guiInset.Y-origin.Y+g.y);pill.Size=UDim2.fromOffset(g.width,g.height)
  label.Text=text;icon.Text=item.data.icon or(if item.data.amount~=nil then "★"else "✓")
- pill.Active=item.data.activate~=nil;pill.Visible=true
+ label.Size=UDim2.new(1,-50-(if tappable then Rail.MoreWidth else 0),1,0);more.Visible=tappable
+ pill.Active=tappable;pill.Visible=true
  local age=item.age;local duration=item.data.duration or 3.5
  pill.GroupTransparency=if item.persistent then 0 else 1-math.clamp(math.min(age/.18,(duration+.36-age)/.18),0,1)
  shown=item

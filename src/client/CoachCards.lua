@@ -21,12 +21,23 @@
 --  * The garden step is unmissable: a beat starts only when the player stands still in the
 --    free garden with no menu open and the window focused, and its clock pauses while the
 --    window is unfocused or the player is away (no input). `replayGarden()` runs it again.
+--
+-- QA v735 H5:
+--  * Every line on the rail can be tapped. A first-visit line ("Tip: Hatch eggs", with a ?)
+--    opens that machine's How it works cards; every other line opens its notice card
+--    (NoticeCards: what it means, what to do next, one button that goes there).
+--  * The garden step is a tour when the client gives one (`options.tour`): the "Your
+--    garden" cards open once, by themselves, under the same rules a beat starts by, and
+--    say where the machines are, where Quests and dailies are, how to customize and what
+--    the Menu does. Closing them ends the step. Without `tour` (specs, or the cards could
+--    not open) the three beat lines run as before, each one tappable.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
 local UICopy=require(Shared:WaitForChild("UICopy"))
 local Pets=require(Shared:WaitForChild("PetCatalog"))
 local Eggs=require(Shared:WaitForChild("EggCatalog"))
 local Kit=require(script.Parent.DeckKit)
+local Notices=require(script.Parent.NoticeCards)
 -- Slice E (overnight 2026-11-14): the earned-pet gate (lane S). Guarded: without the module
 -- the arrival card simply never shows.
 local function earnedPets()
@@ -69,6 +80,16 @@ function Cards.copy(id,vars)
  end
  if id=="petArrived"then return UICopy.get("e2.arrived.title",fill),UICopy.get("e2.arrived.line",fill)end
  return UICopy.get("coach."..id..".title",fill),UICopy.get("coach."..id..".line",fill)
+end
+-- QA v735 H5: what a garden line says on the rail, and what a tap on it opens.
+-- kind "once" on a machine with How it works cards: {text="Tip: <title>", icon="?", help=id}.
+-- Every other beat or one-time line: {text=<title>, icon="?", notice=<NoticeCards id>}.
+-- The arrival line keeps its own wording and action (Say hi).
+function Cards.railLine(id,kind,vars,hasHelp)
+ local title=Cards.copy(id,vars)
+ if kind=="arrival"then return{text=UICopy.get("qa.coach.sayHi",{pet=type(vars)=="table"and vars.pet or nil})}end
+ if kind=="once"and hasHelp then return{text=UICopy.get("notice.pill.tip",{title=title}),icon="?",help=id}end
+ return{text=title,icon="?",notice=if Notices.has(id)then id else nil}
 end
 -- Slice E: "a friend arrived". Which earned pet has arrived and not been greeted yet?
 -- ctx: {mask, seen, inventoryMask, earned = the EarnedPets module (default: Shared's)}.
@@ -332,13 +353,17 @@ function Cards:showGarden(id,kind,vars,now,machine)
  local current={id=id,kind=kind,shownAt=now,elapsed=0,machine=machine,
   petId=if kind=="arrival"and type(vars)=="table"then vars.petId else nil,duration=3.86}
  self.garden=current
- local helpId=if machine then machine elseif id=="park"then "park"elseif id=="questDone"then "quests"else "companions"
- local text=if kind=="arrival"then UICopy.get("qa.coach.sayHi",{pet=vars.pet})else title
- current.rail=Rail.enqueue(self.host,"garden:"..id,{text=text,priority=-1,active=false,
+ local How=require(script.Parent.HowItWorks)
+ local line=Cards.railLine(id,kind,vars,How.has(id))
+ current.line=line
+ current.rail=Rail.enqueue(self.host,"garden:"..id,{text=line.text,icon=line.icon,priority=-1,active=false,
   activate=function()
    if self.garden~=current then return end
-   if kind=="arrival"then self:sayHi()
-   else self:dismiss("tap");require(script.Parent.HowItWorks).open(helpId)end
+   if kind=="arrival"then self:sayHi();return end
+   -- The line stays its time on the rail (a beat still moves on by itself); the tap
+   -- only opens what explains it.
+   if line.help then How.open(line.help)
+   elseif line.notice then How.openNotice(line.notice,{vars={pet=type(vars)=="table"and vars.pet or nil}})end
   end,
   onShown=function()
    if self.garden==current then current.presented=true;if kind=="once"then self:mark(id)end end
@@ -395,6 +420,20 @@ function Cards:finishGarden()
  self.beat=nil;self.gardenDone=true;self.replaying=false
  self:mark("gardenIntro")
 end
+-- QA v735 H5: the garden step as a tour. `options.tour(done)` opens the "Your garden"
+-- cards and calls `done` when they close; true when they opened. Once the cards have been
+-- refused (no gui yet), or without the option, the beat lines run instead.
+function Cards:openTour()
+ local tour=self.options.tour
+ if type(tour)~="function"or self.tourFailed or self.beat then return false end
+ local opened=tour(function()
+  if not self.tourOpen then return end
+  self.tourOpen=false;self:finishGarden()
+ end)==true
+ if not opened then self.tourFailed=true;return false end
+ self.tourOpen=true
+ return true
+end
 -- Show the garden tips again (a "Show tips again" entry, e.g. R3's How it works, calls
 -- this). The beats start over from the first, under the same rules as the first time.
 function Cards:replayGarden()
@@ -440,12 +479,16 @@ function Cards:step(now,ctx)
   local roomFor=if self.roomSince then now-self.roomSince else 0
   if machine then
    self:showGarden(machine,"once",vars,now,if ctx.open and ctx.open[machine]then machine else nil)
+  elseif self.tourOpen then
+   -- The tour cards are up: nothing else starts until they close.
   elseif not self.gardenDone and Cards.beatMayStart(base,roomFor,self.replaying) then
-   self.beat=self.beat or Coach.nextBeat(nil)
-   if self.beat then self:showGarden(self.beat,"beat",vars,now)end
+   if not self:openTour()then
+    self.beat=self.beat or Coach.nextBeat(nil)
+    if self.beat then self:showGarden(self.beat,"beat",vars,now)end
+   end
    -- The Welcome round's Stars, said once as the garden step opens (under the card).
    if self.starterStars and not self.toldStars then
-    self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars)
+    self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
    end
   elseif Cards.arrivalDue(base)~=nil and Cards.arrivalReady(base,roomFor)then
    -- Slice E: a friend arrived (the 7th-stamp pet). Already the companion (the player
@@ -474,7 +517,7 @@ function Cards:stepWelcome(now,ctx,wanted)
  end
  if self.welcomeDone or self.welcomeRail then return end
  self.welcomeRail=require(script.Parent.NotificationRail).enqueue(self.host,"welcome",{
-  text=UICopy.get("qa.coach.welcome"),priority=-1,
+  text=UICopy.get("qa.coach.welcome"),priority=-1,detail=Notices.detail("welcome"),
   onShown=function()self.welcomeDone=true end})
 end
 function Cards:stepBoard(now,ctx,base)
@@ -489,8 +532,7 @@ function Cards:stepBoard(now,ctx,base)
  end
  if not due or due=="welcome"or self.boardRail or ctx.mode~="Board"or not ctx.presented then return end
  self.boardRail=require(script.Parent.NotificationRail).enqueue(self.host,"board:"..due,{
-  text=UICopy.get("coach."..due..".short"),priority=-1,
-  activate=function()require(script.Parent.HowItWorks).open("hatch")end,
+  text=UICopy.get("coach."..due..".short"),priority=-1,icon="?",detail=Notices.detail(due),
   onShown=function()self:mark(due)end,
   onDone=function()self.boardRail=nil end})
 end

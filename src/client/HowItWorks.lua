@@ -11,6 +11,12 @@
 -- Space is "Got it" (the button is also selected for gamepads), and a tap or click
 -- outside the panel closes too. Every other menu key is swallowed while it shows.
 --
+-- Notice cards (QA v735 H5): HowItWorks.openNotice(id, {vars, run, onClosed}) shows a
+-- NoticeCards entry in the same panel: two cards (what it means, what to do next) and,
+-- when the notice leads somewhere, one primary button that goes there (HowItWorks.go /
+-- canGo, set by init.client; `run` overrides them). A / Enter / Space take that button.
+-- The first-session tour is the `garden` set (CoachCards opens it once).
+--
 -- Hooks: HowItWorks.open(id, options) (options.onClosed), HowItWorks.close(),
 -- HowItWorks.isOpen(), HowItWorks.list() -> {{id, title}} in hub order, for a
 -- "Show tips again" row (Settings or the hub, R1) to replay any set.
@@ -21,6 +27,7 @@ local ContextActionService=game:GetService("ContextActionService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local UICopy=require(Shared.UICopy)
 local Kit=require(script.Parent.DeckKit)
+local Notices=require(script.Parent.NoticeCards)
 local How={}
 
 -- Card sets. `icon` is a Kit.icon name; `art` names a special picture ("stamps").
@@ -39,6 +46,11 @@ How.Sets=table.freeze({
   table.freeze({key="a",icon="book"}),table.freeze({key="b",icon="star"}),table.freeze({key="c",icon="trophy"})})}),
  park=table.freeze({tint="companions",cards=table.freeze({
   table.freeze({key="a",icon="paw"}),table.freeze({key="b",icon="smiley"})})}),
+ -- QA v735 H5: the first-session tour. Where the machines are, where Quests and dailies
+ -- are, how to customize, and the Menu. Not in Order: it is not a machine's ? set.
+ garden=table.freeze({tint="quests",cards=table.freeze({
+  table.freeze({key="a",icon="target"}),table.freeze({key="b",icon="quests"}),table.freeze({key="c",icon="wand"}),
+  table.freeze({key="d",icon="settings"})})}),
 })
 How.Order=table.freeze({"hatch","style","companions","quests","book","park"})
 How.DisplayOrder=40 -- above every menu ScreenGui (12 to 14) and the coach cards
@@ -94,7 +106,15 @@ function How.layout(W,H,cards)
 end
 
 -- ── Overlay ──────────────────────────────────────────────────────────────────
-local state={open=false,id=nil,gui=nil,root=nil,shade=nil,panel=nil,onClosed=nil,previous=nil,connections={},stamp=nil}
+local state={open=false,id=nil,gui=nil,root=nil,shade=nil,panel=nil,onClosed=nil,previous=nil,connections={},stamp=nil,notice=nil}
+-- May the open notice's button show? Its own `run`, or the client's route to the target.
+local function noticeGo()
+ local notice=state.notice
+ if not notice or not notice.go then return nil end
+ if notice.run then return notice.go end
+ if How.go and(How.canGo==nil or How.canGo(notice.go.target)==true)then return notice.go end
+ return nil
+end
 local owner={} -- the shade stack key
 
 local function make(class,parent,props)
@@ -130,10 +150,11 @@ function How.build()
  local root=state.root;if not root or not state.id then return nil end
  if state.panel then state.panel:Destroy();state.panel=nil end
  if state.stamp then state.stamp:destroy();state.stamp=nil end
- local cards=How.cards(state.id)
+ local notice=state.notice
+ local cards=if notice then Notices.cards(notice.id,notice.vars)else How.cards(state.id)
  local size=root.AbsoluteSize
  local g=How.layout(math.max(320,size.X),math.max(240,size.Y),cards)
- local set=How.Sets[state.id]
+ local set=if notice then Notices.ById[notice.id]else How.Sets[state.id]
  local panel=Kit.frame(root,"HowItWorks","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(g.panelW,g.panelH),if g.compact then 16 else 24)
  panel.AnchorPoint=Vector2.new(.5,.5);panel.Active=true;panel.ZIndex=20;Kit.stroke(panel)
  panel:SetAttribute("HelpId",state.id);panel:SetAttribute("Layout",if g.compact then "phone"else "regular")
@@ -143,7 +164,7 @@ function How.build()
   Size=UDim2.fromOffset(g.panelW-g.pad*2-56,16),Visible=not g.compact})
  Kit.tintEyebrow(eyebrow,set.tint)
  local titleY=if g.compact then 14 else 32
- local title=txt(panel,"Title",How.title(state.id),"text",{Name="Title",Position=UDim2.fromOffset(g.pad,titleY),Size=UDim2.fromOffset(g.panelW-g.pad*2-56,if g.compact then 24 else 30),
+ local title=txt(panel,"Title",if notice then Notices.title(notice.id,notice.vars)else How.title(state.id),"text",{Name="Title",Position=UDim2.fromOffset(g.pad,titleY),Size=UDim2.fromOffset(g.panelW-g.pad*2-56,if g.compact then 24 else 30),
   TextSize=if g.compact then 20 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
  Kit.squiggle(panel,title,set.tint)
  local close=Kit.backArrow(panel,g.compact,{header=true});close.root.AnchorPoint=Vector2.new(1,0)
@@ -188,13 +209,33 @@ function How.build()
  -- Footer: one line in voice and "Got it".
  local fy=g.panelH-g.footerH+(if g.compact then 10 else 16)
  local bw,bh=if g.compact then 140 else 180,if g.compact then 44 else 48
+ -- A notice that leads somewhere: its button is the primary one, "Got it" sits beside it.
+ local go=noticeGo()
+ state.goButton=nil
+ if go then
+  local gw=math.min(if g.compact then 190 else 230,g.panelW-g.pad*2-bw-12)
+  local button=Kit.button(panel,"Go",{variant="primary",text=go.text,glyph="A",size=Vector2.new(gw,bh),textSize=if g.compact then 15 else 17})
+  button.Position=UDim2.fromOffset(g.panelW-g.pad-gw,fy);button.ZIndex=panel.ZIndex+2
+  button:SetAttribute("GoTarget",go.target)
+  button.Activated:Connect(function()How.accept()end)
+  state.goButton=button
+  local done=Kit.button(panel,"GotIt",{variant="ghost",text=UICopy.get("r3.help.done"),size=Vector2.new(bw,bh),textSize=if g.compact then 14 else 15,selectable=true})
+  done.Position=UDim2.fromOffset(g.panelW-g.pad-gw-12-bw,fy);done.ZIndex=panel.ZIndex+2
+  done.Activated:Connect(function()How.close("done")end)
+  state.done=button
+  if not Kit.reduced()then
+   local scale=make("UIScale",panel,{Scale=.96})
+   Kit.tween(scale,Kit.Motion.screen,{Scale=1})
+  end
+  return panel
+ end
  local done=Kit.button(panel,"GotIt",{variant="primary",text=UICopy.get("r3.help.done"),glyph="A",size=Vector2.new(bw,bh),textSize=if g.compact then 15 else 17})
  done.Position=UDim2.fromOffset(g.panelW-g.pad-bw,fy);done.ZIndex=panel.ZIndex+2
  done.Activated:Connect(function()How.close("done")end)
  state.done=done
  local lineX=g.pad
  -- "Show tips again" (R1's coach-tip replay, set by init.client as How.replayTips).
- if How.replayTips then
+ if How.replayTips and not notice then
   local tw=if g.compact then 150 else 180
   local tips=Kit.button(panel,"ShowTips",{variant="ghost",text=UICopy.get("r3.tips"),size=Vector2.new(tw,bh),textSize=if g.compact then 14 else 15,selectable=true})
   tips.Position=UDim2.fromOffset(g.panelW-g.pad-bw-12-tw,fy);tips.ZIndex=panel.ZIndex+2
@@ -202,7 +243,7 @@ function How.build()
   state.tips=tips
   lineX=g.pad;bw+=12+tw
  end
- txt(panel,"Small",UICopy.get("r3.help.replay"),"dim",{Name="Replay",Position=UDim2.fromOffset(lineX,fy),Size=UDim2.fromOffset(math.max(0,g.panelW-g.pad*3-bw),bh),
+ txt(panel,"Small",if notice then "" else UICopy.get("r3.help.replay"),"dim",{Name="Replay",Position=UDim2.fromOffset(lineX,fy),Size=UDim2.fromOffset(math.max(0,g.panelW-g.pad*3-bw),bh),
   TextSize=if g.compact then 12 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
  if not Kit.reduced()then
   local scale=make("UIScale",panel,{Scale=.96})
@@ -229,8 +270,8 @@ local function bind()
   if key==Enum.KeyCode.Up or key==Enum.KeyCode.W or key==Enum.KeyCode.DPadUp then How.scroll(-1)
   elseif key==Enum.KeyCode.Down or key==Enum.KeyCode.S or key==Enum.KeyCode.DPadDown then How.scroll(1)
   elseif key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace then How.close("back")
-  elseif key==Enum.KeyCode.Return or key==Enum.KeyCode.Space or key==Enum.KeyCode.KeypadEnter then How.close("done")
-  elseif key==Enum.KeyCode.ButtonA then How.close("done")end
+  elseif key==Enum.KeyCode.Return or key==Enum.KeyCode.Space or key==Enum.KeyCode.KeypadEnter then How.accept()
+  elseif key==Enum.KeyCode.ButtonA then How.accept()end
   return Enum.ContextActionResult.Sink
  end,false,Enum.ContextActionPriority.High.Value+2000,
   Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,Enum.KeyCode.Return,Enum.KeyCode.Space,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,
@@ -240,13 +281,34 @@ local function bind()
   Enum.KeyCode.W,Enum.KeyCode.S,Enum.KeyCode.ButtonX,Enum.KeyCode.ButtonY)
 end
 
+-- The primary button: a notice's "go there" when it has one, else "Got it".
+function How.accept()
+ if not state.open then return false end
+ local go=noticeGo()
+ if not go then return How.close("done")end
+ local run=state.notice.run
+ How.close("go")
+ -- After the close, so the screen it opens is not under this overlay's shade or keys.
+ task.defer(function()
+  if run then run(go.target)elseif How.go then How.go(go.target)end
+ end)
+ return true
+end
+-- Opens the notice `id` (a NoticeCards id). options: vars (fills the copy), run (the
+-- button's own action; default HowItWorks.go(target)), onClosed. True when it shows.
+function How.openNotice(id,options)
+ if not Notices.has(id)then return false end
+ options=options or {}
+ return How.open("notice:"..id,{onClosed=options.onClosed,
+  notice={id=id,vars=options.vars,run=options.run,go=Notices.go(id)}})
+end
 -- Opens the set `id` (a HowItWorks.Sets key). Returns true when the cards show.
 function How.open(id,options)
- if not How.has(id)then return false end
- if not ensureGui()then return false end
  options=options or {}
- if state.open and state.id==id then return true end
- state.id=id;state.onClosed=options.onClosed
+ if not options.notice and not How.has(id)then return false end
+ if not ensureGui()then return false end
+ if state.open and state.id==id and not options.notice then return true end
+ state.id=id;state.onClosed=options.onClosed;state.notice=options.notice
  if not state.open then
   state.previous=GuiService.SelectedObject
   state.open=true
@@ -268,7 +330,7 @@ function How.close(reason)
  Kit.shadeClose(owner)
  if state.stamp then state.stamp:destroy();state.stamp=nil end
  if state.panel then state.panel:Destroy();state.panel=nil end
- state.done=nil;state.body=nil
+ state.done=nil;state.body=nil;state.goButton=nil;state.notice=nil
  local previous=state.previous;state.previous=nil
  if previous and previous.Parent and gamepad()then GuiService.SelectedObject=previous end
  local id,callback=state.id,state.onClosed
@@ -280,6 +342,13 @@ end
 
 function How.isOpen()return state.open end
 function How.openId()return state.id end
+-- The open notice's id (nil for a machine's set, or when closed).
+function How.noticeId()return if state.open and state.notice then state.notice.id else nil end
+-- Notice buttons (set by init.client): go(target) takes the player to "quests" | "hatch" |
+-- "companions" | "menu"; canGo(target) says whether that is possible right now (not in a
+-- round, not before the first pet). Without them a notice shows "Got it" only.
+How.go=nil
+How.canGo=nil
 -- Specs: the live panel (nil when closed).
 function How.panel()return state.panel end
 -- Optional notification hook (onOpened(id)); R1's onboarding may listen.
