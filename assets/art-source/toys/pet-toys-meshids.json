@@ -1,0 +1,24 @@
+{
+ "schema": 1,
+ "asset": 134846528553129,
+ "note": "pet-toys.fbx uploaded 2026-11-16 (Open Cloud, Model). Sizes are the imported MeshPart sizes in studs (100x the manifest). The import arrives turned half a turn about Y, so PetToyGeometry places every mesh with CFrame.Angles(0, pi, 0). FeltBall, SqueakerDot and CitrineKnob are in the FBX but the game draws them as sphere primitives.",
+ "meshes": {
+  "ball__Seam": ["rbxassetid://102329939674898", [21.27009, 21.27009, 21.74936]],
+  "bone__BoneBody": ["rbxassetid://137042441955734", [30.75702, 15.22335, 7.48992]],
+  "pocket_deck__DeckBezel": ["rbxassetid://123918361490939", [11.0, 7.6, 0.8]],
+  "pocket_deck__DeckButtonA": ["rbxassetid://123911422852662", [2.30002, 2.3, 1.1]],
+  "pocket_deck__DeckButtonB": ["rbxassetid://87382607179370", [2.30002, 2.3, 1.1]],
+  "pocket_deck__DeckPad": ["rbxassetid://138807671772266", [3.69998, 3.7, 1.0]],
+  "pocket_deck__DeckScreen": ["rbxassetid://136674259833613", [9.20001, 5.8, 0.6]],
+  "pocket_deck__DeckShell": ["rbxassetid://121290658538978", [25.5, 10.5, 3.6]],
+  "sparkler__BrassWire": ["rbxassetid://135226153244448", [5.75829, 18.5909, 5.8]],
+  "sparkler__IndigoGrip": ["rbxassetid://75806402366250", [6.18479, 15.68638, 4.8]],
+  "sparkler__SparkBurst": ["rbxassetid://90940228734119", [18.39999, 18.4, 12.0]],
+  "squeaky_carrot__CarrotBody": ["rbxassetid://126606412872656", [17.52634, 21.98496, 9.6]],
+  "squeaky_carrot__CarrotLeaves": ["rbxassetid://76365351419211", [8.98233, 9.99874, 2.94213]],
+  "wobble_top__BrassStem": ["rbxassetid://127207206867390", [5.05908, 9.07838, 4.8]],
+  "wobble_top__CoralFoot": ["rbxassetid://122695115582822", [3.79247, 4.91922, 3.70473]],
+  "wobble_top__CreamEquator": ["rbxassetid://114751455189964", [20.49104, 8.62464, 20.8]],
+  "wobble_top__TealBody": ["rbxassetid://106475586216672", [19.70396, 16.68116, 20.0]]
+ }
+}

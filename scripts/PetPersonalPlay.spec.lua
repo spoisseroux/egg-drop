@@ -22,9 +22,15 @@ return function(client,parent)
    local ToyCatalog=require(game.ReplicatedStorage.Shared.ToyCatalog)
    assert(not Toys.has("none")and not Toys.has("mini_plush")and not Toys.has(nil))
    for _,id in ipairs(ToyCatalog.Order)do if id~=ToyCatalog.Default then assert(Toys.has(id)and Toys.Play[id],"no geometry for "..id)end end
-   assert(#assert(Toys.create(root,"wobble_top",1)).parts==5 and #assert(Toys.create(root,"squeaky_carrot",1)).parts==7)
-   -- QA v685 R7: the Pocket Deck handheld (8 parts, one Neon screen, played with "tap").
-   local deck=assert(Toys.create(root,"pocket_deck",1));assert(#deck.parts==8 and deck.screen.Material==Enum.Material.Neon and Toys.Play.pocket_deck=="tap")
+   -- Toys v2 (QA v760): real meshes from ReplicatedStorage.PetToyAssets, one part per colour.
+   assert(game.ReplicatedStorage:FindFirstChild("PetToyAssets"),"Install the toy mesh pack (assets/toys/PetToyAssets.rbxmx)")
+   assert(#assert(Toys.create(root,"wobble_top",1)).parts==5 and #assert(Toys.create(root,"squeaky_carrot",1)).parts==3)
+   local bone=assert(Toys.create(root,"bone",1));assert(#bone.parts==1 and bone.model.PrimaryPart.Name=="BoneBody"and bone.model.PrimaryPart:IsA("MeshPart"),"the bone is one modelled mesh")
+   -- A classic dog bone: about twice as long as its knobbed ends are tall, and thin front to back.
+   local boneSize=bone.model.PrimaryPart.Size;assert(boneSize.X>boneSize.Y*1.8 and boneSize.Y>boneSize.Z*1.8 and math.abs(boneSize.X-.30757)<1e-4,"bone proportions")
+   bone:destroy()
+   -- QA v685 R7: the Pocket Deck handheld (6 parts, one Neon screen, played with "tap").
+   local deck=assert(Toys.create(root,"pocket_deck",1));assert(#deck.parts==6 and deck.screen.Name=="DeckScreen"and deck.screen.Material==Enum.Material.Neon and Toys.Play.pocket_deck=="tap")
    for _,child in ipairs(root:GetChildren())do if child.Name=="PersonalToy_wobble_top"or child.Name=="PersonalToy_squeaky_carrot"or child.Name=="PersonalToy_pocket_deck"then child:Destroy()end end
    for _,id in ipairs({"sparkler","ball","bone","wobble_top","squeaky_carrot","pocket_deck"})do
     local h=assert(Toys.create(root,id,1));assert(#h.parts<=Toys.PartLimit and(#h.parts<=8 or id=="sparkler"),id.." parts "..#h.parts)

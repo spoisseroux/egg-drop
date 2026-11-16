@@ -24,6 +24,9 @@
       },
       "PetCharmAssets": {
         "$path": "assets/pet-materials/PetCharmAssets.rbxmx"
+      },
+      "PetToyAssets": {
+        "$path": "assets/toys/PetToyAssets.rbxmx"
       }
     },
     "ServerStorage": {

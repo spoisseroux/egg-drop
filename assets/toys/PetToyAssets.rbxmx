@@ -1,0 +1,704 @@
+<roblox version="4">
+  <Item class="Folder" referent="PetToyAssets">
+    <Properties>
+      <string name="Name">PetToyAssets</string>
+    </Properties>
+    <Item class="MeshPart" referent="ball__Seam">
+      <Properties>
+        <string name="Name">ball__Seam</string>
+        <Content name="MeshId">
+          <url>rbxassetid://102329939674898</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>21.27009</X>
+          <Y>21.27009</Y>
+          <Z>21.74936</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>21.27009</X>
+          <Y>21.27009</Y>
+          <Z>21.74936</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="bone__BoneBody">
+      <Properties>
+        <string name="Name">bone__BoneBody</string>
+        <Content name="MeshId">
+          <url>rbxassetid://137042441955734</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>30.75702</X>
+          <Y>15.22335</Y>
+          <Z>7.48992</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>30.75702</X>
+          <Y>15.22335</Y>
+          <Z>7.48992</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="pocket_deck__DeckBezel">
+      <Properties>
+        <string name="Name">pocket_deck__DeckBezel</string>
+        <Content name="MeshId">
+          <url>rbxassetid://123918361490939</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>11.0</X>
+          <Y>7.6</Y>
+          <Z>0.8</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>11.0</X>
+          <Y>7.6</Y>
+          <Z>0.8</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="pocket_deck__DeckButtonA">
+      <Properties>
+        <string name="Name">pocket_deck__DeckButtonA</string>
+        <Content name="MeshId">
+          <url>rbxassetid://123911422852662</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>2.30002</X>
+          <Y>2.3</Y>
+          <Z>1.1</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>2.30002</X>
+          <Y>2.3</Y>
+          <Z>1.1</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="pocket_deck__DeckButtonB">
+      <Properties>
+        <string name="Name">pocket_deck__DeckButtonB</string>
+        <Content name="MeshId">
+          <url>rbxassetid://87382607179370</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>2.30002</X>
+          <Y>2.3</Y>
+          <Z>1.1</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>2.30002</X>
+          <Y>2.3</Y>
+          <Z>1.1</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="pocket_deck__DeckPad">
+      <Properties>
+        <string name="Name">pocket_deck__DeckPad</string>
+        <Content name="MeshId">
+          <url>rbxassetid://138807671772266</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>3.69998</X>
+          <Y>3.7</Y>
+          <Z>1.0</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>3.69998</X>
+          <Y>3.7</Y>
+          <Z>1.0</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="pocket_deck__DeckScreen">
+      <Properties>
+        <string name="Name">pocket_deck__DeckScreen</string>
+        <Content name="MeshId">
+          <url>rbxassetid://136674259833613</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>9.20001</X>
+          <Y>5.8</Y>
+          <Z>0.6</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>9.20001</X>
+          <Y>5.8</Y>
+          <Z>0.6</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="pocket_deck__DeckShell">
+      <Properties>
+        <string name="Name">pocket_deck__DeckShell</string>
+        <Content name="MeshId">
+          <url>rbxassetid://121290658538978</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>25.5</X>
+          <Y>10.5</Y>
+          <Z>3.6</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>25.5</X>
+          <Y>10.5</Y>
+          <Z>3.6</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="sparkler__BrassWire">
+      <Properties>
+        <string name="Name">sparkler__BrassWire</string>
+        <Content name="MeshId">
+          <url>rbxassetid://135226153244448</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>5.75829</X>
+          <Y>18.5909</Y>
+          <Z>5.8</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>5.75829</X>
+          <Y>18.5909</Y>
+          <Z>5.8</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="sparkler__IndigoGrip">
+      <Properties>
+        <string name="Name">sparkler__IndigoGrip</string>
+        <Content name="MeshId">
+          <url>rbxassetid://75806402366250</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>6.18479</X>
+          <Y>15.68638</Y>
+          <Z>4.8</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>6.18479</X>
+          <Y>15.68638</Y>
+          <Z>4.8</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="sparkler__SparkBurst">
+      <Properties>
+        <string name="Name">sparkler__SparkBurst</string>
+        <Content name="MeshId">
+          <url>rbxassetid://90940228734119</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>18.39999</X>
+          <Y>18.4</Y>
+          <Z>12.0</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>18.39999</X>
+          <Y>18.4</Y>
+          <Z>12.0</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="squeaky_carrot__CarrotBody">
+      <Properties>
+        <string name="Name">squeaky_carrot__CarrotBody</string>
+        <Content name="MeshId">
+          <url>rbxassetid://126606412872656</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>17.52634</X>
+          <Y>21.98496</Y>
+          <Z>9.6</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>17.52634</X>
+          <Y>21.98496</Y>
+          <Z>9.6</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="squeaky_carrot__CarrotLeaves">
+      <Properties>
+        <string name="Name">squeaky_carrot__CarrotLeaves</string>
+        <Content name="MeshId">
+          <url>rbxassetid://76365351419211</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>8.98233</X>
+          <Y>9.99874</Y>
+          <Z>2.94213</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>8.98233</X>
+          <Y>9.99874</Y>
+          <Z>2.94213</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="wobble_top__BrassStem">
+      <Properties>
+        <string name="Name">wobble_top__BrassStem</string>
+        <Content name="MeshId">
+          <url>rbxassetid://127207206867390</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>5.05908</X>
+          <Y>9.07838</Y>
+          <Z>4.8</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>5.05908</X>
+          <Y>9.07838</Y>
+          <Z>4.8</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="wobble_top__CoralFoot">
+      <Properties>
+        <string name="Name">wobble_top__CoralFoot</string>
+        <Content name="MeshId">
+          <url>rbxassetid://122695115582822</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>3.79247</X>
+          <Y>4.91922</Y>
+          <Z>3.70473</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>3.79247</X>
+          <Y>4.91922</Y>
+          <Z>3.70473</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="wobble_top__CreamEquator">
+      <Properties>
+        <string name="Name">wobble_top__CreamEquator</string>
+        <Content name="MeshId">
+          <url>rbxassetid://114751455189964</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>20.49104</X>
+          <Y>8.62464</Y>
+          <Z>20.8</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>20.49104</X>
+          <Y>8.62464</Y>
+          <Z>20.8</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="wobble_top__TealBody">
+      <Properties>
+        <string name="Name">wobble_top__TealBody</string>
+        <Content name="MeshId">
+          <url>rbxassetid://106475586216672</url>
+        </Content>
+        <Content name="TextureID">
+          <url />
+        </Content>
+        <Vector3 name="Size">
+          <X>19.70396</X>
+          <Y>16.68116</Y>
+          <Z>20.0</Z>
+        </Vector3>
+        <Vector3 name="InitialSize">
+          <X>19.70396</X>
+          <Y>16.68116</Y>
+          <Z>20.0</Z>
+        </Vector3>
+        <CoordinateFrame name="CFrame">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+  </Item>
+</roblox>

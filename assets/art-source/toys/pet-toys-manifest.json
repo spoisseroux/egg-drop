@@ -1,0 +1,359 @@
+{
+ "schema": 1,
+ "units": "pet body heights; +Y up, +Z facing",
+ "sparklerTip": [
+  0.02275,
+  0.18863,
+  0.0
+ ],
+ "parts": [
+  {
+   "toy": "bone",
+   "part": "BoneBody",
+   "mesh": "bone__BoneBody",
+   "colour": "#FFF1D6",
+   "tris": 1100,
+   "centre": [
+    2e-05,
+    5e-05,
+    0.0
+   ],
+   "size": [
+    0.30757,
+    0.15223,
+    0.0749
+   ]
+  },
+  {
+   "toy": "ball",
+   "part": "FeltBall",
+   "mesh": "ball__FeltBall",
+   "colour": "#D0E83A",
+   "tris": 840,
+   "centre": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "size": [
+    0.24,
+    0.24,
+    0.24
+   ]
+  },
+  {
+   "toy": "ball",
+   "part": "Seam",
+   "mesh": "ball__Seam",
+   "colour": "#FCFBEF",
+   "tris": 864,
+   "centre": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "size": [
+    0.2127,
+    0.2127,
+    0.21749
+   ]
+  },
+  {
+   "toy": "sparkler",
+   "part": "IndigoGrip",
+   "mesh": "sparkler__IndigoGrip",
+   "colour": "#333C78",
+   "tris": 256,
+   "centre": [
+    -0.01002,
+    -0.07843,
+    0.0
+   ],
+   "size": [
+    0.06185,
+    0.15686,
+    0.048
+   ]
+  },
+  {
+   "toy": "sparkler",
+   "part": "BrassWire",
+   "mesh": "sparkler__BrassWire",
+   "colour": "#C69A45",
+   "tris": 144,
+   "centre": [
+    -0.00048,
+    0.07781,
+    0.0
+   ],
+   "size": [
+    0.05758,
+    0.18591,
+    0.058
+   ]
+  },
+  {
+   "toy": "sparkler",
+   "part": "SparkBurst",
+   "mesh": "sparkler__SparkBurst",
+   "colour": "#F6D759",
+   "tris": 1152,
+   "centre": [
+    0.02275,
+    0.18863,
+    0.0
+   ],
+   "size": [
+    0.184,
+    0.184,
+    0.12
+   ]
+  },
+  {
+   "toy": "wobble_top",
+   "part": "TealBody",
+   "mesh": "wobble_top__TealBody",
+   "colour": "#3FB7B0",
+   "tris": 432,
+   "centre": [
+    -0.00157,
+    -0.00908,
+    0.0
+   ],
+   "size": [
+    0.19704,
+    0.16681,
+    0.2
+   ]
+  },
+  {
+   "toy": "wobble_top",
+   "part": "CreamEquator",
+   "mesh": "wobble_top__CreamEquator",
+   "colour": "#FFF0C9",
+   "tris": 336,
+   "centre": [
+    -0.00157,
+    0.00841,
+    0.0
+   ],
+   "size": [
+    0.20491,
+    0.08625,
+    0.208
+   ]
+  },
+  {
+   "toy": "wobble_top",
+   "part": "CoralFoot",
+   "mesh": "wobble_top__CoralFoot",
+   "colour": "#EF786B",
+   "tris": 112,
+   "centre": [
+    0.01763,
+    -0.1033,
+    0.0
+   ],
+   "size": [
+    0.03792,
+    0.04919,
+    0.03705
+   ]
+  },
+  {
+   "toy": "wobble_top",
+   "part": "BrassStem",
+   "mesh": "wobble_top__BrassStem",
+   "colour": "#C69A45",
+   "tris": 96,
+   "centre": [
+    -0.01386,
+    0.10442,
+    0.0
+   ],
+   "size": [
+    0.05059,
+    0.09078,
+    0.048
+   ]
+  },
+  {
+   "toy": "wobble_top",
+   "part": "CitrineKnob",
+   "mesh": "wobble_top__CitrineKnob",
+   "colour": "#F6D759",
+   "tris": 288,
+   "centre": [
+    -0.03008,
+    0.16529,
+    0.0
+   ],
+   "size": [
+    0.061,
+    0.05396,
+    0.062
+   ]
+  },
+  {
+   "toy": "squeaky_carrot",
+   "part": "CarrotBody",
+   "mesh": "squeaky_carrot__CarrotBody",
+   "colour": "#FF8A3C",
+   "tris": 640,
+   "centre": [
+    0.00617,
+    0.00029,
+    0.0
+   ],
+   "size": [
+    0.17526,
+    0.21985,
+    0.096
+   ]
+  },
+  {
+   "toy": "squeaky_carrot",
+   "part": "CarrotLeaves",
+   "mesh": "squeaky_carrot__CarrotLeaves",
+   "colour": "#58B368",
+   "tris": 420,
+   "centre": [
+    0.09636,
+    0.1315,
+    0.0
+   ],
+   "size": [
+    0.08982,
+    0.09999,
+    0.02942
+   ]
+  },
+  {
+   "toy": "squeaky_carrot",
+   "part": "SqueakerDot",
+   "mesh": "squeaky_carrot__SqueakerDot",
+   "colour": "#FFF0C9",
+   "tris": 196,
+   "centre": [
+    0.02615,
+    0.03662,
+    0.042
+   ],
+   "size": [
+    0.02466,
+    0.02466,
+    0.01365
+   ]
+  },
+  {
+   "toy": "pocket_deck",
+   "part": "DeckShell",
+   "mesh": "pocket_deck__DeckShell",
+   "colour": "#F3E9D2",
+   "tris": 540,
+   "centre": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "size": [
+    0.255,
+    0.105,
+    0.036
+   ]
+  },
+  {
+   "toy": "pocket_deck",
+   "part": "DeckBezel",
+   "mesh": "pocket_deck__DeckBezel",
+   "colour": "#1B2330",
+   "tris": 316,
+   "centre": [
+    0.0,
+    0.004,
+    0.0175
+   ],
+   "size": [
+    0.11,
+    0.076,
+    0.008
+   ]
+  },
+  {
+   "toy": "pocket_deck",
+   "part": "DeckScreen",
+   "mesh": "pocket_deck__DeckScreen",
+   "colour": "#76F6B0",
+   "tris": 252,
+   "centre": [
+    0.0,
+    0.004,
+    0.0215
+   ],
+   "size": [
+    0.092,
+    0.058,
+    0.006
+   ]
+  },
+  {
+   "toy": "pocket_deck",
+   "part": "DeckPad",
+   "mesh": "pocket_deck__DeckPad",
+   "colour": "#333C78",
+   "tris": 376,
+   "centre": [
+    -0.088,
+    -0.004,
+    0.02
+   ],
+   "size": [
+    0.037,
+    0.037,
+    0.01
+   ]
+  },
+  {
+   "toy": "pocket_deck",
+   "part": "DeckButtonA",
+   "mesh": "pocket_deck__DeckButtonA",
+   "colour": "#EF786B",
+   "tris": 252,
+   "centre": [
+    0.098,
+    0.008,
+    0.02
+   ],
+   "size": [
+    0.023,
+    0.023,
+    0.011
+   ]
+  },
+  {
+   "toy": "pocket_deck",
+   "part": "DeckButtonB",
+   "mesh": "pocket_deck__DeckButtonB",
+   "colour": "#F6D759",
+   "tris": 252,
+   "centre": [
+    0.078,
+    -0.016,
+    0.02
+   ],
+   "size": [
+    0.023,
+    0.023,
+    0.011
+   ]
+  }
+ ],
+ "tris": {
+  "bone": 1100,
+  "ball": 1704,
+  "sparkler": 1552,
+  "wobble_top": 1264,
+  "squeaky_carrot": 1256,
+  "pocket_deck": 1988
+ }
+}

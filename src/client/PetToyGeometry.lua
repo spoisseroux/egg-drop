@@ -1,19 +1,44 @@
 -- Original +Z-facing personal props, normalized to one pet body-height.
 -- One builder per toy id (slice D, toy pool 2). A toy ships only when its builder exists
 -- here AND its id is in ToyCatalog; Toys.has(id) is the render whitelist for every caller.
--- Sphere primitives only (PetPropGeometry), at most 12 parts a toy (VISUAL-BRIEF 3).
+-- Toys v2 (QA v760, "this does not look like a bone"): each toy is real meshes, one per
+-- colour, modelled in this same frame by scripts/build_pet_toys.py and cloned from
+-- ReplicatedStorage.PetToyAssets (assets/toys/PetToyAssets.rbxmx). The sizes and centres
+-- below are the manifest's (assets/art-source/toys/pet-toys-manifest.json). Round pieces
+-- stay sphere primitives (PetPropGeometry). At most 12 parts a toy.
 local Prop=require(script.Parent.PetPropGeometry)
+local Replicated=game:GetService("ReplicatedStorage")
 local Toys={}
-local indigo=Color3.fromHex("#333C78");local brass=Color3.fromHex("#C69A45");local citrine=Color3.fromHex("#F6D759")
 local hex=Color3.fromHex
+local indigo,brass,citrine=hex("#333C78"),hex("#C69A45"),hex("#F6D759")
 local coral,cream,teal=hex("#EF786B"),hex("#FFF0C9"),hex("#3FB7B0")
+-- The uploaded meshes arrive turned half a turn about Y; this faces them +Z again.
+local faceFront=CFrame.Angles(0,math.pi,0)
+-- One mesh part of a toy: `PetToyAssets.<toy id>__<name>` at `size`, centred on `at`.
+-- Registered exactly like Prop:add, so pivot, play, the reveal and destroy treat it the
+-- same. Without the asset pack the part falls back to a plain sphere of the same size.
+local function mesh(h,name,size,at,color)
+ local pack=Replicated:FindFirstChild("PetToyAssets");local source=pack and pack:FindFirstChild(h.id.."__"..name)
+ if not(source and source:IsA("MeshPart"))then return h:add(name,size,CFrame.new(at),color,"sphere")end
+ local p=source:Clone();p.Name=name
+ p.Anchored=true;p.CanCollide=false;p.CanTouch=false;p.CanQuery=false;p.CastShadow=false;p.Material=Enum.Material.SmoothPlastic
+ p.Color=color;p.Size=size*h.scale
+ local cf=CFrame.new(at*h.scale)*faceFront
+ p.CFrame=h.frame*cf;p.Parent=h.model
+ table.insert(h.parts,p);table.insert(h.specs,{part=p,frame=cf,size=p.Size})
+ if not h.model.PrimaryPart then h.model.PrimaryPart=p end
+ return p
+end
+local V=Vector3.new
 local builders={}
+-- Sparkler: an indigo grip with a pommel, a brass ferrule and wire, and a spiky citrine
+-- spark burst round the glowing tip. 4 parts.
 builders.sparkler=function(h)
- h:add("IndigoGrip",Vector3.new(.052,.17,.052),CFrame.new(0,-.065,0)*CFrame.Angles(0,0,-.10),indigo,"sphere")
- h:add("OffsetBrassWire",Vector3.new(.016,.12,.016),CFrame.new(.018,.074,0)*CFrame.Angles(0,0,-.24),brass,"sphere")
- for i=-1,1 do h:add("SeedProng"..i,Vector3.new(.025,.082,.025),CFrame.new(.025+i*.026,.145+math.abs(i)*-.015,0)*CFrame.Angles(0,0,-i*.55),citrine,"sphere")end
+ mesh(h,"IndigoGrip",V(.06185,.15686,.048),V(-.01002,-.07843,0),indigo)
+ mesh(h,"BrassWire",V(.05758,.18591,.058),V(-.00048,.07781,0),brass)
+ mesh(h,"SparkBurst",V(.184,.184,.12),V(.02275,.18863,0),citrine)
  -- A glowing tip throws real sparks: one bounded emitter and a small light.
- local tip=h:add("GlowTip",Vector3.new(.034,.034,.034),CFrame.new(.025,.19,0),Color3.fromHex("#FFF1B8"),"sphere")
+ local tip=h:add("GlowTip",V(.048,.048,.048),CFrame.new(.02275,.18863,0),hex("#FFF1B8"),"sphere")
  tip.Material=Enum.Material.Neon
  local s=h.scale
  local sparks=Instance.new("ParticleEmitter");sparks.Name="Sparks"
@@ -29,63 +54,46 @@ builders.sparkler=function(h)
  glow.Range=math.max(2,s*3);glow.Brightness=.9;glow.Shadows=false;glow.Parent=tip
  h.tip,h.emitter,h.glow=tip,sparks,glow
 end
--- Tennis ball (QA v735 H2): optic yellow-green felt and the white seam. The seam is two
--- thin discs set off-centre and tipped toward the face, so each one breaks the surface as a
--- curved white line: the two arcs bow toward each other from the front, as on a real ball,
--- and still read as a seam from the back and while it rolls. 3 parts.
+-- Tennis ball (QA v735 H2): optic yellow-green felt (a true sphere) and the real one-piece
+-- white seam, the closed curve that wraps the ball. From the front it shows as two arcs
+-- bowing toward each other, and it still reads as a seam from the back and while it
+-- rolls. 2 parts.
 builders.ball=function(h)
- h:add("FeltBall",Vector3.new(.24,.24,.24),CFrame.identity,hex("#D0E83A"),"sphere")
- local lean=CFrame.Angles(0,0,.2)
- for _,side in ipairs({-1,1})do
-  local turn=lean*CFrame.Angles(0,-side*.3,0)*CFrame.Angles(0,0,-side*math.pi/2)
-  h:add("SeamArc"..(if side<0 then "L"else "R"),Vector3.new(.1944,.05,.1944),turn*CFrame.new(0,.075,0),hex("#FCFBEF"),"sphere")
- end
+ h:add("FeltBall",V(.24,.24,.24),CFrame.identity,hex("#D0E83A"),"sphere")
+ mesh(h,"Seam",V(.2127,.2127,.21749),V(0,0,0),hex("#FCFBEF"))
 end
+-- Bone: the classic cartoon dog bone, a straight shaft with two round knobs on each end,
+-- in one soft cream skin. 1 part.
 builders.bone=function(h)
- h:add("OchreWaist",Vector3.new(.21,.061,.064),CFrame.identity,Color3.fromHex("#C9954A"),"sphere")
- for _,side in ipairs({-1,1})do for _,lobe in ipairs({-1,1})do
-  h:add("SeafoamLobe"..side..lobe,Vector3.new(.075,.065,.067),CFrame.new(side*.12,lobe*.026,0)*CFrame.Angles(0,0,side*lobe*.2),Color3.fromHex("#9CE0CC"),"sphere")
- end end
- h:add("OffcenterWrap",Vector3.new(.045,.074,.075),CFrame.new(.027,0,0)*CFrame.Angles(0,0,.16),Color3.fromHex("#E9D29A"),"sphere")
- h:add("WrapNotch",Vector3.new(.013,.018,.008),CFrame.new(.025,.018,.038),Color3.fromHex("#936B3B"),"sphere")
+ mesh(h,"BoneBody",V(.30757,.15223,.0749),V(0,0,0),hex("#FFF1D6"))
 end
--- Wobble Top (VISUAL-BRIEF 3): a fat teal body with a cream equator, a coral foot, a brass
+-- Wobble Top: a fat teal body that tapers to a coral point, a cream belly band, a brass
 -- stem and a citrine knob, the whole toy tilted 0.18 rad. 5 parts.
 builders.wobble_top=function(h)
- local tilt=CFrame.Angles(0,0,.18)
- h:add("TealBody",Vector3.new(.20,.15,.20),tilt,teal,"sphere")
- h:add("CreamEquator",Vector3.new(.205,.04,.205),tilt*CFrame.new(0,.01,0),cream,"sphere")
- h:add("CoralFoot",Vector3.new(.05,.07,.05),tilt*CFrame.new(0,-.09,0),coral,"sphere")
- h:add("BrassStem",Vector3.new(.04,.10,.04),tilt*CFrame.new(0,.11,0),brass,"sphere")
- h:add("CitrineKnob",Vector3.new(.06,.06,.06),tilt*CFrame.new(0,.17,0),citrine,"sphere")
+ mesh(h,"TealBody",V(.19704,.16681,.2),V(-.00157,-.00908,0),teal)
+ mesh(h,"CreamEquator",V(.20491,.08625,.208),V(-.00157,.00841,0),cream)
+ mesh(h,"CoralFoot",V(.03792,.04919,.03705),V(.01763,-.1033,0),coral)
+ mesh(h,"BrassStem",V(.05059,.09078,.048),V(-.01386,.10442,0),brass)
+ h:add("CitrineKnob",V(.062,.054,.062),CFrame.new(-.03008,.16529,0)*CFrame.Angles(0,0,.18),citrine,"sphere")
 end
--- Squeaky Carrot (VISUAL-BRIEF 3): three stacked orange spheres down a diagonal (centres
--- 0.075 apart), three leaf prongs fanned +-0.5 rad at the fat end and a cream squeaker dot
--- on the side. 7 parts.
+-- Squeaky Carrot: one plump tapered body with three shallow rings on a diagonal, a tuft
+-- of three leaves at the fat end and a cream squeaker button on its side. 3 parts.
 builders.squeaky_carrot=function(h)
- local orange,leaf=hex("#FF8A3C"),hex("#58B368")
- local axis=CFrame.Angles(0,0,-.62)
- h:add("CarrotTop",Vector3.new(.085,.11,.085),axis*CFrame.new(0,.075,0),orange,"sphere")
- h:add("CarrotMiddle",Vector3.new(.07,.10,.07),axis,orange,"sphere")
- h:add("CarrotTip",Vector3.new(.05,.09,.05),axis*CFrame.new(0,-.075,0),orange,"sphere")
- for i=-1,1 do
-  h:add("LeafProng"..i,Vector3.new(.03,.08,.03),axis*CFrame.new(i*.018,.128,0)*CFrame.Angles(0,0,-i*.5)*CFrame.new(0,.03,0),leaf,"sphere")
- end
- h:add("SqueakerDot",Vector3.new(.03,.03,.03),axis*CFrame.new(0,.02,.034),cream,"sphere")
+ mesh(h,"CarrotBody",V(.17526,.21985,.096),V(.00617,.00029,0),hex("#FF8A3C"))
+ mesh(h,"CarrotLeaves",V(.08982,.09999,.02942),V(.09636,.1315,0),hex("#58B368"))
+ h:add("SqueakerDot",V(.025,.025,.014),CFrame.new(.02615,.03662,.042),cream,"sphere")
 end
 -- Pocket Deck (QA v685 R7): a tiny pill-shaped handheld in the deck's house colours. A
--- cream shell with two round ends, a dark bezel with a mint screen, an indigo d-pad and
--- coral and citrine buttons. 8 parts; the screen is the only Neon part (no emitter, no light).
+-- cream shell, a dark bezel with a mint screen, an indigo plus d-pad and coral and
+-- citrine buttons. 6 parts; the screen is the only Neon part (no emitter, no light).
 builders.pocket_deck=function(h)
- local shell,ink,mint=hex("#F3E9D2"),hex("#1B2330"),hex("#76F6B0")
- h:add("DeckShell",Vector3.new(.15,.105,.036),CFrame.identity,shell)
- for _,side in ipairs({-1,1})do h:add("DeckEnd"..(if side<0 then "L"else "R"),Vector3.new(.105,.105,.036),CFrame.new(side*.075,0,0),shell,"sphere")end
- h:add("DeckBezel",Vector3.new(.108,.074,.01),CFrame.new(0,.004,.0165),ink)
- local screen=h:add("DeckScreen",Vector3.new(.092,.058,.006),CFrame.new(0,.004,.021),mint)
+ mesh(h,"DeckShell",V(.255,.105,.036),V(0,0,0),hex("#F3E9D2"))
+ mesh(h,"DeckBezel",V(.11,.076,.008),V(0,.004,.0175),hex("#1B2330"))
+ local screen=mesh(h,"DeckScreen",V(.092,.058,.006),V(0,.004,.0215),hex("#76F6B0"))
  screen.Material=Enum.Material.Neon
- h:add("DeckPad",Vector3.new(.03,.03,.014),CFrame.new(-.088,-.004,.016),indigo,"sphere")
- h:add("DeckButtonA",Vector3.new(.022,.022,.014),CFrame.new(.098,.008,.016),coral,"sphere")
- h:add("DeckButtonB",Vector3.new(.022,.022,.014),CFrame.new(.08,-.016,.016),citrine,"sphere")
+ mesh(h,"DeckPad",V(.037,.037,.01),V(-.088,-.004,.02),indigo)
+ mesh(h,"DeckButtonA",V(.023,.023,.011),V(.098,.008,.02),coral)
+ mesh(h,"DeckButtonB",V(.023,.023,.011),V(.078,-.016,.02),citrine)
  h.screen=screen
 end
 -- How the pet plays with each toy (PetPlayVisual.render): wave = held up and swept,
