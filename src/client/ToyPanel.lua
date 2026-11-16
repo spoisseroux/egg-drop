@@ -22,7 +22,7 @@ function Panel.new(parent,intent,options)
   onIdentityReady=function()self:paintReceiptIdentity();if self.options.identityChanged then self.options.identityChanged()end end})
  self.pool=label(root,"AvailableOdds","","Body");self.status=label(root,"Status","","Body")
  self.useNow=button(root,"UseNow","Use now",function()self:useResult()end)
- self.shop=button(root,"ToyEggShop","Toy Egg · 20 Stars",function()if self.options.shop then self.options.shop()end end)
+ self.shop=button(root,"ToyEggShop","Toy Egg · "..Catalog.Cost.." Stars",function()if self.options.shop then self.options.shop()end end)
  for _,id in ipairs(Catalog.Order)do self.rows[id]=button(root,"Toy_"..id,Catalog.ById[id].name,function()self:choose(id)end)end
  return self
 end
@@ -53,7 +53,7 @@ function Panel:refresh(state,petId,mode,animate)
  if not mode then return end
  local receipt,buy=mode=="receipt",mode=="buy";local result=self.state.pendingToyResult
  self.title.Text=if receipt then Copy.get("hatch.display.wait")elseif buy then "Toy Egg"else "Toys"
- self.note.Text=if receipt then Copy.get("hatch.display.line")elseif buy then "20 Stars · one new toy. No duplicates."else "Choose one toy for this pet. Quiet garden play gives no rewards."
+ self.note.Text=if receipt then Copy.get("hatch.display.line")elseif buy then Catalog.Cost.." Stars · one new toy. No duplicates."else "Choose one toy for this pet. Quiet garden play gives no rewards."
  self.art.Visible=receipt or buy
  if receipt and result then self.reveal:show(result,animate==true)
  elseif buy and not self.art:FindFirstChild("ToyEgg")then for _,n in ipairs(self.art:GetChildren())do n:Destroy()end;EggArt.create(self.art,"toy",UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.art.ZIndex+1,"ToyEgg")end
@@ -67,7 +67,7 @@ function Panel:refresh(state,petId,mode,animate)
  local odds={};for _,entry in ipairs(Catalog.odds(self.state.toyUnlocks))do table.insert(odds,Catalog.ById[entry.id].name.." · "..OddsText.format(entry.probability))end
  -- Restricted players get the fixed next toy, never a roll (F1 policy): no odds list.
  self.pool.Visible=buy;self.pool.Text=if NextItem.restricted(self.state)then NextItem.line("toy",self.state)elseif #odds==0 then "All toys owned"else table.concat(odds,"\n")
- self.shop.Visible=not receipt and not buy;self.shop.Text=if #odds==0 then "All toys owned"else "Toy Egg · 20 Stars"
+ self.shop.Visible=not receipt and not buy;self.shop.Text=if #odds==0 then "All toys owned"else "Toy Egg · "..Catalog.Cost.." Stars"
  self.shop.Interactable=#odds>0 and self.intent~=nil and not self.intent.pending;self.useNow.Interactable=self.intent~=nil and not self.intent.pending
  self.status.Text=self.intent and self.intent.message or "";self.status.Visible=self.status.Text~=""
 end

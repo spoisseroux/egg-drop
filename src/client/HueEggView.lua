@@ -1692,7 +1692,7 @@ function View:open(state,page,petId)
  self.intent:update(state);self.state=state or {}
  if self.materialIntent then self.materialIntent:update(self.state)end
  if self.toyIntent then self.toyIntent:update(self.state)end;if self.featureIntent then self.featureIntent:update(self.state)end
- if self.state.lastHatch then if self.options.pendingHatch then self.options.pendingHatch()end;return false end
+ if self.state.lastHatch then self.quietOpen=nil;if self.options.pendingHatch then self.options.pendingHatch()end;return false end
  -- QA v760: only a hatch flow (Hatch eggs, a direct hatch) lands on a receipt. Opened as
  -- Customize (the game sets `quietOpen` for the hub, Companions, the journal and the Care
  -- Cradle), it opens on the cards, on the tab of the item that is waiting (see storePending).
