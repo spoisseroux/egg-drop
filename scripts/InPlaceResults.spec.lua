@@ -64,6 +64,27 @@ return function(client,parent)
   end
   result:hide();result.inPlace:destroy();screen.root:Destroy();screen.results:Destroy()
  end)
+ -- QA v751 P1 follow-up: on Spencer's phone (750x402) both goals show above the action stack.
+ test("750x402 phone: two goals fit above the four-button stack, nothing under Replay",function()
+  local screen=Screen.new({parent=root,overlayParent=root,viewRoot=root})
+  screen:layout(Vector2.new(750,402),(Config.Width+.8)/(Config.Height+.8),{kx=116,kh=58})
+  local result=Results.new(screen.resultsContent,{starMesh=false,reduce=function()return true end})
+  local d=data(false);d.outcome="clear";d.earned=6;d.total=6
+  d.goals={{short="LEFT",done=true},{short="RIGHT",done=true}}
+  result:show(d,screen:resultsView());task.wait()
+  local view=result.inPlace
+  assert(not view.grid and not view.scrollActions,"this phone uses the plain four-button stack")
+  local top=view.actions.AbsolutePosition.Y
+  for i=1,2 do
+   local label=view.goalLabels[i]
+   assert(label.Visible and label.AbsolutePosition.Y+label.AbsoluteSize.Y<=top+.5,"goal "..i.." runs under the actions")
+   assert(label.AbsolutePosition.Y+label.AbsoluteSize.Y<=view.goals.AbsolutePosition.Y+view.goals.AbsoluteSize.Y+.5,"goal "..i.." is clipped by the goals pane")
+   assert(label.TextBounds.Y<=label.AbsoluteSize.Y+.5,"goal "..i.." text is taller than its row")
+  end
+  assert(view.goalLabels[1].AbsolutePosition.Y>=view.goalTitle.AbsolutePosition.Y+view.goalTitle.AbsoluteSize.Y-.5,"first goal overlaps the title")
+  for _,id in ipairs({1,3,5,2})do assert(view.buttons[id].AbsoluteSize.Y>=44,"action "..id.." under 44 px")end
+  result:hide();result.inPlace:destroy();screen.root:Destroy();screen.results:Destroy()
+ end)
  -- QA v735 D6: the results polish.
  test("results polish: full Star turn, display headline, eased entry, payout columns, wallet at the foot, 2 x 2 actions",function()
   local C=require(client.CelebrationKit)

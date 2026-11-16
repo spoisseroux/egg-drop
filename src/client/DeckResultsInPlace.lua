@@ -75,6 +75,10 @@ function View.new(owner,v)
   self.actions.Name="ResultActions";self.actions.BackgroundTransparency=1;self.actions.BorderSizePixel=0;self.actions.ZIndex=self.right.ZIndex+2;self.actions.Parent=self.right
   self.actions.Position=UDim2.fromOffset(6,r.h-actionHeight-6);self.actions.Size=UDim2.fromOffset(r.w-12,actionHeight)
   self.goals.Size=UDim2.new(1,0,0,r.h-actionHeight-12)
+  -- QA v751 P1 follow-up: the fitted phone shell left this pane 14 px shorter (263 px on a
+  -- 750x402 phone), which cut the second goal off above the four-button stack. A pane with
+  -- room for under two full rows closes the title and row spacing so both goals show.
+  self.tightGoals=r.h-actionHeight-12<78
  else
   self.goals.Size=UDim2.new(1,0,0,math.min(64,r.h*.35))
   self.actions.Position=UDim2.new(0,0,0,math.min(64,r.h*.35)+4);self.actions.Size=UDim2.new(1,0,1,-math.min(64,r.h*.35)-4)
@@ -98,7 +102,7 @@ function View.new(owner,v)
  self.wallet=Kit.wallet(self.left,28);self.wallet.root.AnchorPoint=Vector2.new(0,1);self.wallet.root.Position=UDim2.fromOffset(pad,l.h-4)
  -- Goals.
  self.goalLabels={}
- self.goalTitle=labelAt(self.goals,"GoalTitle","Goals",12,"soft",pad,8,r.w-2*pad,16)
+ self.goalTitle=labelAt(self.goals,"GoalTitle","Goals",12,"soft",pad,if self.tightGoals then 4 else 8,r.w-2*pad,16)
  for i=1,3 do self.goalLabels[i]=labelAt(self.goals,"Goal"..i,"",13,"text",pad,28+(i-1)*24,r.w-2*pad,22)end
  self.metrics=labelAt(self.goals,"Metrics","",12,"soft",pad,104,r.w-2*pad,32)
  local names={[1]="Replay",[3]="Difficulty",[5]="Hatch eggs",[2]="Back to garden"}
@@ -167,7 +171,8 @@ function View:paint(data)
  self.total.Position=UDim2.fromOffset(pad,y+8);self.total.Text=Copy.get("results.inPlace.total",{count=if data.pending then "…"else data.total or data.earned or 0})
  self.today.Position=UDim2.fromOffset(pad,y+36);self.today.Text=Copy.get("results.today.line",{count=data.todayEarned or 0})
  local rw=self.view.right.w
- local gy=28;local done,count=0,0
+ local tight=self.tightGoals==true
+ local gy=if tight then 21 else 28;local done,count=0,0
  for i,label in ipairs(self.goalLabels)do
   local goal=data.goals and data.goals[i]
   label.Visible=goal~=nil
@@ -177,8 +182,8 @@ function View:paint(data)
    label.Text=(goal.done and "✓ "or "○ ")..tostring(goal.short or goal.text or goal.title or goal.name or "")
    -- A goal still open reads softer than one that is done.
    label.TextTransparency=if goal.done then 0 else .25
-   local height=math.max(22,math.ceil(Kit.measure(Balls.strip(label.Text),"BodyMedium",label.TextSize,rw-2*pad).Y*label.LineHeight)+4)
-   label.Size=UDim2.fromOffset(rw-2*pad,height);Kit.localizeRich(label);gy+=height+6
+   local height=math.max(if tight then 20 else 22,math.ceil(Kit.measure(Balls.strip(label.Text),"BodyMedium",label.TextSize,rw-2*pad).Y*label.LineHeight)+(if tight then 2 else 4))
+   label.Size=UDim2.fromOffset(rw-2*pad,height);Kit.localizeRich(label);gy+=height+(if tight then 2 else 6)
   end
  end
  self.goalTitle.Text=if count>0 then string.format("Goals  %d/%d",done,count)else "Goals"
