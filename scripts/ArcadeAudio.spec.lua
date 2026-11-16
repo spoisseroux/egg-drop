@@ -35,6 +35,20 @@ return function(client)
 		assert(not a:ui("hover",1)and not a:ui("confirm",nil)and not a:ui("tab",0/0))
 		a.destroyed=true;assert(not a:ui("back",2)and v.plays==0)
 	end)
+	test("QA v775: equip and unequip are their own sounds, with a repitched click as the fallback",function()
+		local function voice()local x={plays=0,IsLoaded=true};function x:Play()self.plays+=1 end;return x end
+		local a,v=fixture(1)
+		local pop,tick,flip=voice(),voice(),voice()
+		a.voices.egg_select={pop};a.voices.goal_tick={tick};a.voices.row_flip={flip}
+		local later={};a.schedule=function(delay,run)table.insert(later,{delay,run})end
+		assert(a:ui("equip",1)and pop.plays==1 and v.plays==0 and #later==1 and later[1][1]==.07,"equip is the pop, then a tick")
+		later[1][2]();assert(tick.plays==1 and tick.PlaybackSpeed==1.26)
+		assert(a:ui("unequip",2)and flip.plays==1 and flip.PlaybackSpeed==.84 and pop.plays==1 and #later==1,"unequip is the lower flip, no tick")
+		assert(not a:ui("equip",2),"one token, one sound")
+		local b,w=fixture(1)
+		assert(b:ui("equip",1)and w.plays==1 and w.PlaybackSpeed==1.3,"no pop loaded: a high click")
+		assert(b:ui("unequip",2)and w.plays==2 and w.PlaybackSpeed==.72,"no flip loaded: a low click")
+	end)
 	test("all six SFX/music choices preserve semantic master behavior",function()
 		for _,master in ipairs({1,.4,0})do for _,music in ipairs({true,false})do
 			local a,v=fixture(master);a.musicEnabled=music

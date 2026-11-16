@@ -419,7 +419,12 @@ end
 -- but never hover/layout/server-ack handlers. Muted actions are consumed too.
 function Audio:ui(kind,token)
 	if self.destroyed then return false end
-	local variants={confirm={1.06,.65},tab={1.12,.52},back={.84,.35}}
+	-- QA v775 note 10: equip is a soft rising pop with a bright tick landing on it (the
+	-- thing snaps into place); unequip is a lower, softer card flip. Both reuse loaded cues
+	-- ({cue, pitch, volume}); without their cue they fall back to the menu click, repitched.
+	local variants={confirm={1.06,.65},tab={1.12,.52},back={.84,.35},
+		equip={1.3,.6,cue={"egg_select",1,.62},tail={"goal_tick",1.26,.3,.07}},
+		unequip={.72,.4,cue={"row_flip",.84,.55}}}
 	local variant=variants[kind]
 	local validToken=(type(token)=="string"and #token>0 and #token<=128)
 		or(type(token)=="number"and token==token and token%1==0 and token>=0 and token<math.huge)
@@ -432,6 +437,15 @@ function Audio:ui(kind,token)
 	if self.deviceActive==false or self.group.Volume==0 or not self.voices.menu then return false end
 	-- Drop unavailable cues now; never replay them when preload later finishes.
 	if self.voices.menu[1].IsLoaded==false then return false end
+	local own=variant.cue
+	if own and self.voices[own[1]]and self:play(own[1],own[2],own[3])then
+		local tail=variant.tail
+		if tail and self.voices[tail[1]]then
+			local schedule=self.schedule or task.delay
+			schedule(tail[4],function()if not self.destroyed then self:play(tail[1],tail[2],tail[3])end end)
+		end
+		return true
+	end
 	self:play("menu",variant[1],variant[2])
 	return true
 end

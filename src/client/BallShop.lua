@@ -341,6 +341,7 @@ function Shop:act()
   self.ctx.equipped=id;self.errorId,self.errorText=nil,nil
   self:send("ballThemeEquip",{id=self.pending.id,themeId=id})
   if self.callbacks.equipped then self.callbacks.equipped(id)end
+  require(script.Parent.UIClick).play("equip") -- QA v775 note 10
   self:refresh();return true
  elseif s.kind=="buy"then
   if self.pending then return false end -- let an equip's save land first

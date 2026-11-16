@@ -278,7 +278,7 @@ function Shop:act()
  local id=self:focusedId();if not id then return false end
  local s=Shop.status(id,self.ctx)
  if s.kind=="retry"then if self.callbacks.retry then self.callbacks.retry()end;return true end
- if s.kind=="earned"then if self.callbacks.use then self.callbacks.use(id)end;return true end
+ if s.kind=="earned"then if self.callbacks.use then self.callbacks.use(id)end;require(script.Parent.UIClick).play("equip");return true end -- QA v775 note 10
  return false
 end
 -- Shown when the Backgrounds tab is selected; lands on the background in use.

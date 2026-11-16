@@ -613,7 +613,8 @@ function Shop:act(fromPane)
   if self.callbacks.retry then self.callbacks.retry("theme")end;return true
  end
  if status.kind=="owned"then
-  if self.callbacks.equip then self.callbacks.equip(id)end;return true
+  if self.callbacks.equip then self.callbacks.equip(id)end
+  require(script.Parent.UIClick).play("equip");return true -- QA v775 note 10
  elseif status.kind=="buy"then
   if self.confirmId==id and os.clock()<self.confirmUntil then
    self.confirmId=nil

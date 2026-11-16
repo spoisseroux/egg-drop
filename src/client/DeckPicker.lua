@@ -93,7 +93,7 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
  Art.watchTextPreference(shade,function()return shade.Visible end,function()self.safeTop=nil;self:layout()end)
  self.shop=Shop.new(shade,{
-  equip=function(id)if self.shade.Visible and self.onApply then self.onApply("theme",id);if self.onAccepted then self.onAccepted("confirm")end end end,
+  equip=function(id)if self.shade.Visible and self.onApply then self.onApply("theme",id);if self.onAccepted then self.onAccepted("equip")end end end,
   buy=function(order)if self.onBuy then self.onBuy(order)end;if self.onAccepted then self.onAccepted("confirm")end end,
   bought=function(id)if self.onBought then self.onBought(id)end end,
   back=function()self:back()end,

@@ -755,6 +755,7 @@ function Shop:act()
   self.ctx.row={owned=self.ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self.equips)}
   self.errorId,self.errorText=nil,nil
   if self.callbacks.equip then self.callbacks.equip(self.pending)end
+  require(script.Parent.UIClick).play(if wear then "equip"else "unequip") -- QA v775 note 10
   self:refresh();return true
  elseif status.kind=="buy"then
   if self.pending then return false end -- let an equip's save land first

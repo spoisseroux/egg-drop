@@ -930,7 +930,7 @@ function Kit.tabs(parent,labels,width,height,textSize,icons)
  for index,text in ipairs(labels)do
   local hitH=math.max(44,height-8)
   local b=node("TextButton",track,{Name="Tab"..index,Text="",AutoButtonColor=false,BackgroundTransparency=1,Position=UDim2.fromOffset(4+(index-1)*segment,(height-hitH)/2),Size=UDim2.fromOffset(segment,hitH),ZIndex=pill.ZIndex+1})
-  b:SetAttribute("AccessibleLabel",text)
+  b:SetAttribute("AccessibleLabel",text);b:SetAttribute("ClickSound","tab") -- UIClick: a tab's own cue
   local label
   if withIcons then
    local w=math.ceil(Kit.measure(text,"Strong",textSize).X)
@@ -1375,6 +1375,7 @@ function Kit.header(parent,options)
   api.layout()
  end
  if options.onBack then back.root.Activated:Connect(options.onBack)end
+ back.root:SetAttribute("ClickSound","back") -- UIClick: Back's own cue
  holder:SetAttribute("HeaderCompact",compact)
  api.layout()
  return api
