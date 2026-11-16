@@ -28,7 +28,7 @@ return function(client,parent)
   test("pure: four icon tabs, no Features while flagged, Features joins with the flag on",function()
    local tabs=View.tabList()
    assert(Flags.Features==false,"this build ships with Features hidden")
-   assert(#tabs==4 and tabs[1].id=="hue"and tabs[2].id=="charm"and tabs[3].id=="materials"and tabs[4].id=="toys")
+   assert(#tabs==4 and tabs[1].id=="hue"and tabs[2].id=="charm"and tabs[3].id=="finish"and tabs[4].id=="toys") -- Customization Egg slice 3: Finish replaces Materials
    assert(tabs[1].icon=="drop"and tabs[2].icon=="sparkle"and tabs[3].icon=="sphere"and tabs[4].icon=="toy")
    local on=View.tabList({Features=true});assert(#on==5 and on[5].id=="features")
    for _,t in ipairs(tabs)do assert(t.id~="pet"and t.id~="wardrobe")end
@@ -61,12 +61,12 @@ return function(client,parent)
    assert(view:open(state,"charm","pip"));frames()
    assert(view.chromeRoot.Visible and not view.card.Visible and view:chromeActive())
    assert(view.header.title.Text=="Customize"and view.header.root:FindFirstChild("BackArrow"))
-   assert(view.editorTabs.hue and view.editorTabs.charm and view.editorTabs.materials and view.editorTabs.toys and view.editorTabs.features==nil)
+   assert(view.editorTabs.hue and view.editorTabs.charm and view.editorTabs.finish and view.editorTabs.materials==nil and view.editorTabs.toys and view.editorTabs.features==nil)
    assert(view.chromeTabs.root:GetAttribute("TabIcons")==true,"icons fit at 800 wide")
    assert(not view:setTab("features")and view.tab=="charm")
-   for _,id in ipairs({"hue","materials","toys","charm"})do assert(view:setTab(id));frames();assert(view.chromePanel:GetAttribute("Tab")==id)
+   for _,id in ipairs({"hue","finish","toys","charm"})do assert(view:setTab(id));frames();assert(view.chromePanel:GetAttribute("Tab")==id)
     -- The Material Egg is off for v1 (MaterialCatalog.EnablePurchases): owned finishes stay, the "more from eggs" hint goes.
-    if id=="materials"then assert(view.moreLine==nil or not view.moreLine.Visible,"no Material Egg hint while it is not sold")end
+    if id=="finish"then assert(view.finishPanel.root.Visible and view.finishPanel.cards.gloss.Visible,"the Finish tab shows its jar cards")end
    end
    assert(view:getControllerFocus()==nil,"the chrome owns its focus")
   end)

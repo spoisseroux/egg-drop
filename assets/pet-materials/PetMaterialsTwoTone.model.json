@@ -139,6 +139,174 @@
         "TwoTone": true
       },
       "name": "BodyTwoToneJelly"
+    },
+    {
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://132217078330162",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneSheenM3",
+        "MaterialVersion": 1,
+        "SheenRoughness": 255,
+        "TwoTone": true,
+        "SheenStop": -3
+      },
+      "name": "BodyTwoToneSheenM3"
+    },
+    {
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://92365609759658",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneSheenM2",
+        "MaterialVersion": 1,
+        "SheenRoughness": 196,
+        "TwoTone": true,
+        "SheenStop": -2
+      },
+      "name": "BodyTwoToneSheenM2"
+    },
+    {
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://120564601211764",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneSheenM1",
+        "MaterialVersion": 1,
+        "SheenRoughness": 138,
+        "TwoTone": true,
+        "SheenStop": -1
+      },
+      "name": "BodyTwoToneSheenM1"
+    },
+    {
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://86635947744588",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneSheenP1",
+        "MaterialVersion": 1,
+        "SheenRoughness": 58,
+        "TwoTone": true,
+        "SheenStop": 1
+      },
+      "name": "BodyTwoToneSheenP1"
+    },
+    {
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://101362074171738",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneSheenP2",
+        "MaterialVersion": 1,
+        "SheenRoughness": 36,
+        "TwoTone": true,
+        "SheenStop": 2
+      },
+      "name": "BodyTwoToneSheenP2"
+    },
+    {
+      "className": "SurfaceAppearance",
+      "properties": {
+        "AlphaMode": "Overlay",
+        "ColorMap": "rbxassetid://112903053450684",
+        "MetalnessMap": "rbxassetid://114363080604088",
+        "RoughnessMap": "rbxassetid://81891796644340",
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveTint": [
+          1,
+          1,
+          1
+        ],
+        "EmissiveStrength": 0
+      },
+      "attributes": {
+        "MaterialProfile": "BodyTwoToneSheenP3",
+        "MaterialVersion": 1,
+        "SheenRoughness": 14,
+        "TwoTone": true,
+        "SheenStop": 3
+      },
+      "name": "BodyTwoToneSheenP3"
     }
   ]
 }

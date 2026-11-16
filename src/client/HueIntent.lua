@@ -2,10 +2,15 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Hues=require(Shared.HueCatalog)
 local Eggs=require(Shared.EggCatalog)
+local Look=require(Shared.LookEggCatalog)
+local Copy=require(Shared.UICopy)
 local Intent={};Intent.__index=Intent
 local messages={RevisionChanged="Your inventory changed. Review the updated counts.",Stale="Your inventory changed. Review the updated counts.",NeedStars="You need more Stars.",Insufficient="You need more Stars.",NotOwned="Choose a pet you own.",Unowned="Choose a pet you own.",Unsupported="This pet cannot use this item yet.",PendingHatch="Finish your pending companion hatch first.",RevealPending="Finish your pending companion hatch first.",PendingResult="Store or use your pending item first.",EmptyStock="There are no jars of this item left.",NoStock="There are no jars of this item left.",Capped="This hue is already 5/5 on this channel.",NoChange="This channel is already original.",SessionLost="Reconnect to confirm your saved items and colors.",Unavailable="Saving is unavailable. Your confirmed items are safe."}
 messages.EmptyStock,messages.NoStock,messages.Capped,messages.NoChange="No Items","No Items","Max","Original"
 messages.AlreadyOriginal="Original"
+-- Customization Egg (slices 3 and 4). PoolChanged/PolicyChanged are not errors: the panel
+-- re-renders from the latest snapshot and the next tap sends a fresh quote (plan R8).
+for _,reason in ipairs({"PoolChanged","PolicyChanged","MaxSheen","MaxJelly","FinishChanged","Locked","NotReady"})do messages[reason]=Copy.get("hatch.look.reason."..reason)end
 function Intent.new(d)return setmetatable({d=d,state={},status="Ready"},Intent)end
 function Intent:notify()if self.d.changed then self.d.changed(self)end end
 function Intent:record()return self.state.lastHueResult end
@@ -62,6 +67,38 @@ function Intent:clear(petId,channel)
  local counts=table.clone(record and record[channel]or Hues.emptyCounts())
  if Hues.doseStrength(counts)==0 then self.message=messages.AlreadyOriginal;self:notify();return false end
  return self:begin("hueClear",petId,{channel=channel,counts=counts})
+end
+-- Customization Egg: the quote binds the odds the player saw (pool, price, selection mode,
+-- missing charms, pity counter, and the named item for restricted accounts). Rebuilt from the
+-- latest snapshot on every tap.
+function Intent.lookQuote(state)
+ state=state or {}
+ local missing=Look.missing(state.charmUnlocks)
+ local misses=if Look.validMisses(state.lookCharmMisses)then state.lookCharmMisses else 0
+ local mode=state.lookSelectionMode or Look.selectionMode(state.restricted)
+ local value={poolVersion=state.lookPoolVersion or Look.PoolVersion,price=Look.Price,selectionMode=mode,missingCharms=missing,charmMisses=misses}
+ if mode=="fixed"then value.fixedItemId=Look.fixedNext(missing,misses,state.hueInventory,state.finishInventory)end
+ return value
+end
+function Intent:lookHatch()
+ if self.state.pendingHueResult then self.message=messages.PendingResult;self:notify();return false end
+ if(self.state.nectar or 0)<Look.Price then self.message=messages.Insufficient;self:notify();return false end
+ if self.state.lookAvailable~=true then self.message=messages.NotReady;self:notify();return false end
+ return self:begin("lookBuy",nil,Intent.lookQuote(self.state))
+end
+local function finishRow(state,petId)
+ local row=state.petFinish and state.petFinish[petId]
+ return {sheen=row and row.sheen or 0,jelly=row and row.jelly or 0}
+end
+function Intent:finishUse(petId,itemId,resultId)
+ if Look.kind(itemId)~="finish"then return false end
+ return self:begin("finishUse",petId,{itemId=itemId,finish=finishRow(self.state,petId),pendingResultId=resultId})
+end
+function Intent:finishClear(petId,axis)
+ if axis~="sheen"and axis~="jelly"then return false end
+ local row=finishRow(self.state,petId)
+ if row[axis]==0 then self.message=messages.AlreadyOriginal;self:notify();return false end
+ return self:begin("finishClear",petId,{axis=axis,finish=row})
 end
 function Intent:ackMigration()return self:begin("hueMigrationAck",nil,{migrationId=self.state.hueMigrationId})end
 function Intent:legacyRedeem(itemId)

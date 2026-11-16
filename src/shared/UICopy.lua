@@ -13,10 +13,10 @@ local Table={
  qa={coach={welcome="Match eggs. Hatch a friend.",sayHi="Say hi to {pet}"},shortfall="{count} more Stars needed",shortfallOne="{count} more Star needed",loading="Getting the preview ready…",retryPreview="Retry preview"},
  hatch={
   material={random="16 Stars · one unowned finish. No duplicates.",fixed="16 Stars · one guaranteed finish. No duplicates.",oddsPromise="No duplicates. Odds update with your collection.",nextPromise="No duplicates. Your next finish is shown above."},
-  display={wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",material="Material for your pet",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
+  display={charm="A charm for your pet",finish="A finish for your pet",wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",material="Material for your pet",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
   -- Full-screen item reveal (QA v685 H2): the rarity banner over the item's name.
   reveal={tier={Common="COMMON",Uncommon="UNCOMMON",Rare="RARE"},
-   kind={toy="TOY",hue="COLOUR JAR",material="FINISH",feature="FEATURE",item="ITEM"},
+   kind={toy="TOY",hue="COLOUR JAR",material="FINISH",feature="FEATURE",item="ITEM",finish="FINISH JAR",charm="CHARM"},
    banner="{tier} {kind}",fresh="NEW {kind}",close="Close",
    -- QA R1 (2026-11-15): one fun line for every hatch result, shown under the name on the
    -- item reveal. 60 characters at most, in the garden's warm and quirky voice (the pets'
@@ -33,6 +33,9 @@ local Table={
      reset="Rinses a pet back to its very first colour."},
     feature={horns="Two small buds. Big plans.",claws="Tiny and fierce. Mostly used for back scratches.",
      wings="Folded neat as a letter. They flutter when excited."},
+    -- Customization Egg (2026-11-16): finish jars and the rare egg charms.
+    finishJar={gloss="One shine closer to a mirror.",matte="A soft, chalky hush for any coat.",jelly="Wobbly, see-through, and very proud of it."},
+    charm={dot="A tiny snowflake that never melts.",ring="A little ring that floats in its own orbit.",pebble="A lucky pebble, smoothed by a very old river."},
     other={toy="Something new to carry, chase and lose under things.",material="A fresh new coat. Your pet feels very fancy.",
      hue="A new colour, waiting for the right pet.",feature="Something new to grow. Give it a little time.",
      item="A little something for your garden."}}},
@@ -41,12 +44,24 @@ local Table={
    phone="The odds are on the label",
   },
   promise="No surprises. The odds never change.",
+  -- Customization Egg (plan 2026-11-16 §5.2, §6). Its odds move as charms are collected.
+  look={charmRow="Charm · {each} each: {shapes}",pity="A charm within {count} eggs",pityOne="The next egg is a charm",
+   pityRule="If 14 eggs pass without a charm, the next one is a charm.",allCharms="All egg charms found",
+   restrictedCharm="Charm in {count} eggs",notReady="Customization Eggs are not ready yet.",
+   promise={random="The odds are on the label. They shift only as you collect charms.",fixed="No surprises. Your next item is shown above."},
+   openSaved={charm="Open saved charm",finish="Open saved finish"},
+   wear="Wear it",wearOn="Wear on {pet}",worn="Wearing it",wearRetry="Try wearing it again",later="Later",useNow="Use now",
+   jar={gloss="Gloss jar",matte="Matte jar",jelly="Jelly jar"},
+   reason={PoolChanged="Your odds just changed. Check them and tap again.",PolicyChanged="Your odds just changed. Check them and tap again.",
+    MaxSheen="This sheen is as far as it goes.",MaxJelly="This pet is as jelly as it gets.",FinishChanged="This pet's finish changed. Check it and tap again.",
+    Locked="Find this charm first.",NotReady="Customization Eggs are not ready yet."}},
   -- Restricted players (paid random items): the fixed next item instead of the odds.
   next={label="Next item",line="Next: {item}",done="All collected"},
   egg={
    toy={line="A toy to carry and chase",description="Something is rattling around in here. Hatches one toy your pet can carry and play with.",per="1 toy per egg"},
    material={line="A fresh new coat",description="Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.",per="1 finish per egg"},
    hue={line="A jar of colour",description="Hatches one pigment jar to change your pet's colour.",per="1 jar per egg"},
+   look={name="Customization Egg",line="Colours, finishes and the odd charm",description="Hatches one jar of colour or finish. Now and then, a rare charm.",per="1 item per egg"},
    feature={line="Horns, claws or wings",description="Something pointy is growing in here. Hatches one feature item to grow on any pet.",per="1 item per egg"},
   },
  },
@@ -282,7 +297,15 @@ local Table={
   hue={original="Original colour",free="Free",currentChip="CURRENT",current="Current colour",reset="Reset colour",
    confirmReset="Confirm reset",confirmLine="Press again to reset. It's free.",
    originalMain="{pet}'s first Main colour. Free, any time.",originalSecondary="{pet}'s first Secondary colour. Free, any time."},
-  customize={newBadge="NEW",moreMaterials="More finishes hatch from Material Eggs.",moreToys="More toys hatch from Toy Eggs."},
+  customize={newBadge="NEW",moreMaterials="More finishes hatch from Customization Eggs.",moreToys="More toys hatch from Toy Eggs.",
+   moreFinishes="More finish jars hatch from Customization Eggs.",moreHues="More colour jars hatch from Customization Eggs.",
+   -- Customization Egg slice 3: the Finish tab (sheen notches, Jelly pips, Original per axis).
+   finish={title="Finish",look="Look: {look}",original="Original",sheenAxis="Sheen",jellyAxis="Jelly",
+    already="Already original",clearLine="Back to original from {look}. Free.",empty="Find finish jars in the Customization Egg.",
+    kept="Kept: {finish}",useJar="Use a {item} jar",maxSheen="This sheen is as far as it goes.",maxJelly="This pet is as jelly as it gets.",
+    mix="{jelly} {sheen}",jar={gloss="Gloss",matte="Matte",jelly="Jelly"},
+    sheen={m3="Chalky",m2="Matte",m1="Soft",zero="Original",p1="Satin",p2="Glossy",p3="Glassy"},
+    jelly={s1="Misty",s2="Jelly",s3="Clear Jelly"}}},
  },
  -- Overnight 2026-11-14 (artifacts/overnight-2026-11-14/BUILD-PLAN.md): one block per slice; each lane
  -- writes only inside its own block. e2 = second pet (E), variants = recolours + new tabs (B),

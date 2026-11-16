@@ -1,0 +1,27 @@
+{
+  "className": "SurfaceAppearance",
+  "properties": {
+    "AlphaMode": "Overlay",
+    "ColorMap": "rbxassetid://132217078330162",
+    "MetalnessMap": "rbxassetid://114363080604088",
+    "RoughnessMap": "rbxassetid://86635947744588",
+    "Color": [
+      1,
+      1,
+      1
+    ],
+    "EmissiveTint": [
+      1,
+      1,
+      1
+    ],
+    "EmissiveStrength": 0,
+    "EmissiveMaskContent": "rbxassetid://132217078330162"
+  },
+  "attributes": {
+    "MaterialProfile": "BodySheenP1",
+    "MaterialVersion": 1,
+    "SheenRoughness": 58,
+    "SheenStop": 1
+  }
+}

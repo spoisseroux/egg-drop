@@ -13,8 +13,11 @@ return function(client,parent)
   for _,d in ipairs(egg:GetDescendants())do if d:IsA("GuiObject")then assert(not d.Active and not d.Selectable)end end
  end
  table.insert(cases,"all five registered owned shells use square Fit with one continuous ovoid load fallback and detached shadow")
- for i,id in ipairs({"rose","tide","citrus","iris","reset"})do
-  local n=add(Jar.create(parent,id,UDim2.fromOffset(i*50,80),UDim2.fromOffset(44,52),10));assert(n:FindFirstChild("Rim1")and n:FindFirstChild("Rim2")and n:FindFirstChild("ShoulderReflection")and n.Fruit)
+ for i,id in ipairs({"rose","tide","citrus","iris","reset","gloss","matte","jelly","charm_ring"})do
+  -- Slice 3 (2026-11-16): the 3D paint-pot jar when its meshes are in the place, else the flat jar.
+  local n=add(Jar.create(parent,id,UDim2.fromOffset(i*50,80),UDim2.fromOffset(44,52),10))
+  if n:GetAttribute("JarArt")=="model"then local vp=n:FindFirstChild("JarViewport");assert(vp and vp.CurrentCamera and vp:FindFirstChildOfClass("Model"),id.." 3D jar")
+  else assert(n:GetAttribute("JarArt")=="flat"and n:FindFirstChild("Rim1")and n:FindFirstChild("Rim2")and n:FindFirstChild("ShoulderReflection"),id.." flat jar")end
   for _,d in ipairs(n:GetDescendants())do if d:IsA("GuiObject")then assert(not d.Active and not d.Selectable)end end
  end
  table.insert(cases,"all five jars carry readable distinct fruit silhouettes and no input")

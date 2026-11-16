@@ -100,9 +100,16 @@ return function(server,progressSource)
  end)
  test("known forms save with visibility while legacy missing shape decodes to Dot",function()
   local f=fixture()
+  -- Star is a known shape since slice D (2026-11-14): an unmarked Star needs the shape version,
+  -- a marked Star is Locked unless the save owns it, and only a truly unknown id is Malformed.
   local packet=Appearance.request(f.state,f.profile,{petId="wick",visible=false,shape="star",seq=1},1,true,function()return true end,f.api.setPetAppearance)
-  assert(packet.status=="Rejected"and packet.reason=="Malformed"and f.profile.petAppearanceChanges.wick==nil)
-  packet=Appearance.request(f.state,f.profile,{petId="wick",visible=true,shape="dot",shapeVersion=2,seq=1},2,true,function()return true end,f.api.setPetAppearance)
+  assert(packet.status=="Rejected"and packet.reason=="ShapeVersionRequired"and f.profile.petAppearanceChanges.wick==nil)
+  local unowned=function()return false end
+  packet=Appearance.request(f.state,f.profile,{petId="wick",visible=false,shape="star",shapeVersion=2,seq=2},1.5,true,function()return true end,f.api.setPetAppearance,unowned)
+  assert(packet.status=="Rejected"and packet.reason=="Locked"and f.profile.petAppearanceChanges.wick==nil,"Star stays locked unless owned")
+  packet=Appearance.request(f.state,f.profile,{petId="wick",visible=false,shape="future_kite",seq=3},1.6,true,function()return true end,f.api.setPetAppearance)
+  assert(packet.status=="Rejected"and packet.reason=="Malformed")
+  packet=Appearance.request(f.state,f.profile,{petId="wick",visible=true,shape="dot",shapeVersion=2,seq=4},2,true,function()return true end,f.api.setPetAppearance)
   assert(packet.status=="Applied"and packet.shape=="dot");assert(f.api.flushOnce(f.profile))
   assert(f.db.petAppearance.wick.charmShape=="dot"and f.db.petAppearance.wick.charmVisible==true and Appearance.public(f.profile).wick.charmShape=="dot")
   local old=Appearance.decode({pip={charmVisible=false,at=7,writer="legacy"}});assert(old.pip.charmShape=="dot"and not old.pip.charmVisible)

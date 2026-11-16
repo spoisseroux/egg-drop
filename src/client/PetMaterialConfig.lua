@@ -27,5 +27,7 @@ return table.freeze({
   Muzzle=.08,Belly=.08,BellyPatch=.08,EarInnerL=.08,EarInnerR=.08,CuffTrimL=.08,CuffTrimR=.08,
   MittenTipL=.08,MittenTipR=.08,HipFlapL=.08,HipFlapR=.08,CheekFold=.08,BrowFold=.08,
   FinnedCheekL=.08,FinnedCheekR=.08,Cowl=.08,LidFold=.08}),
+ -- Customization Egg (slice 3): a Jelly stage scales JellyAlphaByPart. [PLACEHOLDER] values.
+ JellyStageAlpha=table.freeze({[0]=0,[1]=.45,[2]=.75,[3]=1}),
  LoadTimeout=12,
 })

@@ -22,6 +22,8 @@ local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
 local MaterialCatalog=require(Shared.MaterialCatalog)
 local MaterialPanel=require(script.Parent.MaterialPanel)
+-- Customization Egg slice 3: the Finish tab (sheen and Jelly doses) replaces Materials.
+local FinishPanel=require(script.Parent.FinishPanel)
 local ToyCatalog=require(Shared.ToyCatalog);local FeatureCatalog=require(Shared.FeatureCatalog)
 local ToyPanel=require(script.Parent.ToyPanel);local FeaturePanel=require(script.Parent.FeaturePanel)
 local Kit=require(script.Parent.DeckKit);local Cards=require(script.Parent.CustomizeCards)
@@ -37,6 +39,10 @@ local View={};View.__index=View
 View.ClearConfirmSeconds=3
 local ids={"rose","tide","citrus","iris","reset"}
 local names={};for _,id in ipairs(Hues.ItemOrder)do names[id]=Hues.Items[id].name end
+-- Customization Egg results (slice 4): finish jars and egg charms share the Hue receipt.
+local LookEgg=require(Shared.LookEggCatalog)
+for _,id in ipairs(LookEgg.FinishItems)do names[id]=UICopy.get("hatch.look.jar."..id)end
+for _,shape in ipairs(LookEgg.EggShapes)do names["charm_"..shape]=CharmCatalog.ById[shape].name.." charm"end
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function text(parent,name,copy,role)
  local n=Art.text(parent,name,copy,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),"text",16)
@@ -81,6 +87,8 @@ function View.new(parent,intent,options)
  local identityChanged=function()if not self.destroyed and self.shade.Visible then self:refresh()end end
  self.materialPanel=MaterialPanel.new(body,self.materialIntent,{isNew=function(id)return self:isNewItem("materials",id)end,audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="materials"and not self.confirmation and self.materialPanel.petId==self.petId and self:canCustomize()end,receiptOpen=function(result)return self.shade.Visible and self.page=="materialReceipt"and self.state.pendingMaterialResult and self.state.pendingMaterialResult.id==result.id end,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
   useNow=function(result)self.materialAssignment={resultId=result.id,finishId=result.finishId};self:landOnPets(result)end})
+ self.finishPanel=FinishPanel.new(body,self.intent,{isNew=function(id)return self:isNewItem("finish",id)end,
+  canUse=function()return self.shade.Visible and self.page=="palette"and self.tab=="finish"and not self.confirmation and self:canCustomize()end})
  self.toyPanel=ToyPanel.new(body,self.toyIntent,{isNew=function(id)return self:isNewItem("toys",id)end,audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="toys"and not self.confirmation and self.toyPanel.petId==self.petId and self:canCustomize()end,
   receiptOpen=function(result)return self.shade.Visible and self.page=="toyReceipt"and self.state.pendingToyResult and self.state.pendingToyResult.id==result.id end,
   shop=function()self:close("shop");if self.options.toyShop then self.options.toyShop()end end,
@@ -227,7 +235,7 @@ end
 -- stored quietly, one request at a time, and its card carries a small NEW badge until it
 -- is tapped (or worn). The receipt still shows where it belongs: straight after a hatch
 -- from Hatch eggs. The badge set is kept on this client only; nothing new is saved.
-View.NewKinds={{"hue","pendingHueResult","itemId"},{"materials","pendingMaterialResult","finishId"},{"toys","pendingToyResult","toyId"}}
+View.NewKinds={{"hue","pendingHueResult","itemId"},{"finish","pendingHueResult","itemId"},{"materials","pendingMaterialResult","finishId"},{"toys","pendingToyResult","toyId"}}
 function View:noteNewItems()
  local state=self.state or {}
  for _,kind in ipairs(View.NewKinds)do
@@ -312,6 +320,7 @@ function View:appearance()
  local p=self.state.petHues and self.state.petHues[self.petId]
  if p then appearance.mainDoses=countsCopy(p.main);appearance.secondaryDoses=countsCopy(p.secondary)end
  appearance.finish=(self.state.petMaterials or {})[self.petId]or appearance.finish or MaterialCatalog.Default
+ local dose=(self.state.petFinish or {})[self.petId];appearance.sheen=dose and dose.sheen or 0;appearance.jellyStage=dose and dose.jelly or 0
  appearance.toyId=(self.state.petToys or {})[self.petId]or ToyCatalog.Default
  appearance.featureStages={};local features=(self.state.petFeatures or {})[self.petId]or FeatureCatalog.emptyRow()
  for _,id in ipairs(FeatureCatalog.Order)do appearance.featureStages[id]=(features[id]or {}).visible or 0 end
@@ -406,7 +415,7 @@ function View:setTab(tab)
  if self.options.routeChanged then self.options.routeChanged("tab")end
  if not self:canCustomize()and not(self:hasHueAssignment()and(tab=="pet"or tab=="hue"))and not((self:hasMaterialAssignment()or self:hasToyAssignment()or self:hasFeatureAssignment())and tab=="pet")then return false end
  if tab=="features"and not FeatureFlags.Features then return false end
- if self.intent.pending or self.confirmation or(self.assignment and tab~="pet"and tab~="hue")or(tab~="pet"and tab~="hue"and tab~="charm"and tab~="materials"and tab~="toys"and tab~="features")then return false end
+ if self.intent.pending or self.confirmation or(self.assignment and tab~="pet"and tab~="hue")or(tab~="pet"and tab~="hue"and tab~="charm"and tab~="materials"and tab~="finish"and tab~="toys"and tab~="features")then return false end
  self.scrollPositions[self.tab..":"..self.channel]=self.body.CanvasPosition
  if tab~="pet"then self.materialAssignment=nil;self.toyAssignment=nil;self.featureAssignment=nil end
  self.featurePreview=nil;self.fruitEating:cancel();self.eatingProof:cancel()
@@ -501,6 +510,21 @@ function View:useResult()
  if self.itemReveal:consumeSkipInput()or self.itemReveal:skip()then return false end
  self.itemReveal:clear()
  local r=self.state.pendingHueResult;if not r or self.intent.pending then return false end
+ local kind=LookEgg.kind(r.itemId)
+ if kind=="finish"then
+  -- Use now: one jar on the pet being customized, straight from the result; land on Finish.
+  self.page="palette";self.tab="finish";self.epoch+=1
+  local ok=self.intent:finishUse(self.petId,r.itemId,r.id);self:refresh();return ok
+ elseif kind=="charm"then
+  -- Wear on {pet}: the charm is already owned (saved with the egg). Two writes: the wear is a
+  -- plain preference that can be retried, and the store acknowledges the result (plan R9).
+  local shape=LookEgg.shape(r.itemId)
+  if not self:canCustomize()or not self:shapeSelectionsEnabled()then return false end
+  self.page="palette";self.tab="charm";self.epoch+=1
+  self:requestCharm(true,shape)
+  local ok=self.intent:store(r.id);if ok then self.storeOperation=self.intent.pending.value.id end
+  self:refresh();return ok
+ end
  self.page="palette";self.tab="pet";self.selectTarget=true;self.body.CanvasPosition=Vector2.zero;self.epoch+=1
  self.assignment={itemId=r.itemId,pendingResultId=r.id};self.confirmation=nil;self:refresh()
  self:openPetsSelector(names[r.itemId]);return true
@@ -636,6 +660,12 @@ function View.previewAppearance(base,tab,id,channel)
   elseif Hues.ById[id]then counts[id]=math.min(5,counts[id]+1)end
   a[key]=counts
  elseif tab=="materials"and MaterialCatalog.known(id)then a.finish=id
+ elseif tab=="finish"then
+  -- Preview one more jar (or Original on an axis) on the pet; nothing is saved.
+  local row={sheen=a.sheen or 0,jelly=a.jellyStage or 0}
+  if id=="originalSheen"then row.sheen=0 elseif id=="originalJelly"then row.jelly=0
+  else local after=require(Shared.LookEggCatalog).step(row,id);if after then row=after end end
+  a.sheen,a.jellyStage=row.sheen,row.jelly
  elseif tab=="toys"and ToyCatalog.known(id)then a.toyId=id end
  return a
 end
@@ -680,7 +710,7 @@ function View:paintPortrait()
   if self.charmFocusId=="none"then a.charmVisible=false else a.charmVisible=true;a.charmShape=self.charmFocusId end
  end
  -- QA v2 R4.3: so does a colour, finish or toy card (not while a fruit is being eaten).
- if self:chromeActive()and(self.tab=="hue"or self.tab=="materials"or self.tab=="toys")and not self.fruitEating.active and not self.eatingReady and not self.intent.pending then
+ if self:chromeActive()and(self.tab=="hue"or self.tab=="materials"or self.tab=="finish"or self.tab=="toys")and not self.fruitEating.active and not self.eatingReady and not self.intent.pending then
   local id=self:focusedCardId()
   if id then a=View.previewAppearance(a,self.tab,id,self.channel)end
  end
@@ -869,7 +899,11 @@ function View:refresh()
  end
  self.receipt.Visible=self.page=="receipt";self.receiptArt.Visible=self.receipt.Visible;self.receiptDetail.Visible=self.receipt.Visible;self.useNow.Visible=self.receipt.Visible
  if r and self.receipt.Visible then
-  self.receipt.Text=tostring((self.state.hueInventory or {})[r.itemId]or r.inventoryAfter or 1).." in inventory · choose a pet and channel"..(if r.itemId=="reset"then " to reset."else ".")
+  local lookKind=LookEgg.kind(r.itemId);local petName=Pets.byId[self.petId]and Pets.byId[self.petId].name or "your pet"
+  self.receipt.Text=if lookKind=="charm"then UICopy.get("hatch.display.charm")..". "..UICopy.get("pool3.charm.earned")
+   elseif lookKind=="finish"then tostring(r.inventoryAfter or 1).." in inventory · "..UICopy.get("hatch.display.finish")
+   else tostring((self.state.hueInventory or {})[r.itemId]or r.inventoryAfter or 1).." in inventory · choose a pet and channel"..(if r.itemId=="reset"then " to reset."else ".")
+  self.useNow.Text=if lookKind=="charm"then UICopy.get("hatch.look.wearOn",{pet=petName})else UICopy.get("hatch.look.useNow")
   self.itemReveal:show(r,self.purchaseInFlight==r.id);self.purchaseInFlight=nil
  end
  self.legacyTitle.Visible=self:canCustomize()and self.state.legacyHueEgg~=nil and not confirming and self.tab=="hue"
@@ -942,6 +976,7 @@ function View:refresh()
  if not hasOwned and self.targetTitle.Visible then self.targetTitle.Text="No companion yet. Play your first rounds to meet your Bear."end
  local materialMode=if self.page=="materialReceipt"then "receipt"elseif self.page=="materialBuy"then "buy"elseif customization and self.tab=="materials"and not confirming then "choices"else nil
  self.materialPanel:refresh(self.state,self.petId,materialMode,materialResult and self.materialPurchaseInFlight==materialResult.id)
+ self.finishPanel:refresh(self.state,self.petId,customization and self.tab=="finish"and not confirming and self.page=="palette")
  if materialMode=="receipt"then self.materialPurchaseInFlight=nil end
  if materialMode then
   self.status.Visible=self.saveNotice~=nil
@@ -1025,6 +1060,7 @@ function View:updateGrid(dt)
     local doses=self.state.petHues and self.state.petHues[id]
     if doses then appearance.mainDoses=countsCopy(doses.main);appearance.secondaryDoses=countsCopy(doses.secondary)end
     appearance.finish=(self.state.petMaterials or {})[id]or appearance.finish or MaterialCatalog.Default
+    local dose=(self.state.petFinish or {})[id];appearance.sheen=dose and dose.sheen or 0;appearance.jellyStage=dose and dose.jelly or 0
     local key=id..":"..game:GetService("HttpService"):JSONEncode(appearance)
     if key~=entry.key then
     if entry.visual then entry.visual:destroy()end
@@ -1139,7 +1175,9 @@ end
 function View.tabList(flags)
  flags=flags or FeatureFlags
  -- QA v2 R4.5: Toys draw a chew bone (ToyTabIcon), no longer the Ring charm's ball.
- local tabs={{id="hue",label="Hue",icon="drop"},{id="charm",label="Charm",icon="sparkle"},{id="materials",label="Materials",icon="sphere"},{id="toys",label="Toys",icon="toy"}}
+ -- Customization Egg slice 3: Finish (sheen and Jelly doses) replaces Materials; a saved
+ -- legacy finish still renders and shows as Kept on the Finish tab.
+ local tabs={{id="hue",label="Hue",icon="drop"},{id="charm",label="Charm",icon="sparkle"},{id="finish",label="Finish",icon="sphere"},{id="toys",label="Toys",icon="toy"}}
  if flags.Features then table.insert(tabs,{id="features",label="Features",icon="pattern"})end
  return tabs
 end
@@ -1222,7 +1260,7 @@ function View:showChrome(on)
  if not self.chromeRoot then return end
  self.chromeRoot.Visible=on;self.card.Visible=not on
  local target=if on then self.gridContent else self.body
- for _,node in ipairs({self.materialPanel.root,self.toyPanel.root,self.featurePanel.root,self.empty,self.legacyTitle,self.presetTitle})do node.Parent=target end
+ for _,node in ipairs({self.materialPanel.root,self.finishPanel.root,self.toyPanel.root,self.featurePanel.root,self.empty,self.legacyTitle,self.presetTitle})do node.Parent=target end
  for _,node in pairs(self.legacyButtons)do node.Parent=target end
  for _,node in pairs(self.presetButtons)do node.Parent=target end
  -- QA v2 R4.3: the overlay gui sorts ZIndex globally, so the docked portrait (made at
@@ -1344,7 +1382,7 @@ function View:fitChrome(size)
   self.chromeScale.Scale=math.max(.1,math.min(1.2,(size.X-24)/848,(size.Y-24)/608))end
 end
 function View:focusIndex()return(self.chromeFocus and self.chromeFocus[self.tab])or 1 end
-local Promise={hue="One jar, one step of colour.",charm="Charms are free.",materials="Finishes are free to switch.",toys="Toys are free to switch.",features="Grow and show features freely."}
+local Promise={hue="One jar, one step of colour.",charm="Charms are free.",materials="Finishes are free to switch.",finish="One jar, one step of finish. Original is free.",toys="Toys are free to switch.",features="Grow and show features freely."}
 function View:layoutChrome()
  if self.layingOut then return end;self.layingOut=true
  self:fitChrome(self.shade.AbsoluteSize);self:showChrome(true)
@@ -1397,6 +1435,7 @@ function View:layoutChrome()
     local swatch=if id=="reset"then Hues.Items.reset.color else Hues.ById[id].color
     local status=(if id=="reset"then "Clears "..channelName(self.channel)else counts[id].." of 5").." · ×"..stock
     Cards.dress(b,{name=names[id],status=status,tone=if reason then "dim"else "soft",swatch=swatch,focused=i==index,compact=compact,isNew=self:isNewItem("hue",id)})
+    JarArt.badge(b,id) -- slice 3: the new jar beside the pet preview
     table.insert(focus,{button=b,id=id,act=function()return self:chooseItem(id)end})
    end
   end
@@ -1453,6 +1492,19 @@ function View:layoutChrome()
   local s=View.charmPane(c,petName,self.charmRequests[self.petId],self.charmMessage)
   pane.name=c.name;pane.line=s.line;pane.status=s.status;pane.button=s.button;pane.enabled=s.enabled and allowed
   pane.chip=if c.locked then {UICopy.get("pool3.charm.locked"),"plain"}elseif c.rule then {UICopy.get("pool3.charm.earned"),"accent"}else {"Free","accent"}
+ elseif self.tab=="finish"then
+  local panel=self.finishPanel
+  if panel.root.Visible then
+   local h,list=panel:layoutCards(gw,g.cols,g.cardH,g.gap,index,compact)
+   panel.root.Position=UDim2.fromOffset(0,y-3);y+=h-3
+   focus=list;index=math.clamp(index,1,math.max(1,#list))
+   local item=list[index]
+   if item then
+    pane.name=item.name;pane.line=item.card.line;pane.button=item.card.button;pane.enabled=item.card.enabled and allowed
+    pane.chip=if item.card.free then {UICopy.get("r4.hue.free"),"accent"}else {item.card.status,"plain"}
+    pane.status=self.intent.message or ""
+   end
+  end
  else
   local panel=if self.tab=="materials"then self.materialPanel elseif self.tab=="toys"then self.toyPanel else self.featurePanel
   if panel.root.Visible then
@@ -1470,7 +1522,7 @@ function View:layoutChrome()
   end
  end
  -- QA v2 R4.5: "More from eggs" under the Materials / Toys cards.
- local more=if self.boundedEating then nil elseif self.tab=="materials"then(if MaterialCatalog.EnablePurchases then "r4.customize.moreMaterials"else nil)elseif self.tab=="toys"then "r4.customize.moreToys"else nil
+ local more=if self.boundedEating then nil elseif self.tab=="finish"then "r4.customize.moreFinishes"elseif self.tab=="materials"then(if MaterialCatalog.EnablePurchases then "r4.customize.moreMaterials"else nil)elseif self.tab=="toys"then "r4.customize.moreToys"else nil
  self.moreLine.Visible=more~=nil
  if more then self.moreLine.Text=UICopy.get(more);self.moreLine.Position=UDim2.fromOffset(3,y);self.moreLine.Size=UDim2.fromOffset(gw-6,20);y+=28 end
  self.chromeFocus[self.tab]=index;self.focusables=focus
@@ -1717,7 +1769,7 @@ function View:open(state,page,petId)
   if field and result then self[field]=result.id end
  end
  if self.state.hueMigrationId and self.state.hueMigrationAcknowledged==false then self.afterMigrationPage=self.page;self.page="migration"end
- self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"then "materials"elseif page=="toys"then "toys"elseif page=="features"then "features"elseif page=="pet"then "pet"else "hue"
+ self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"or page=="finish"then "finish"elseif page=="toys"then "toys"elseif page=="features"then "features"elseif page=="pet"then "pet"else "hue"
  if self.quietStore and(page==nil or page=="palette")and not self.state.pendingHueResult then
   if self.state.pendingToyResult then self.tab="toys"elseif self.state.pendingMaterialResult then self.tab="materials"end
  end
@@ -1797,6 +1849,6 @@ end
 function View:destroy(fromSignal)
  if self.destroyed then return end
  if self.materialPanel then self.materialPanel:destroy()end
- if self.destroyed then return end;self.destroyed=true;self:stopPortraitClock();self.cardPreviews:clear();self.itemReveal:destroy();self.materialPanel:destroy();self.toyPanel:destroy();self.featurePanel:destroy();if self.chromeRoot then self.chromeRoot:Destroy()end;self.fruitEating:destroy();for _,entry in pairs(self.gridPreviews)do if entry.visual then entry.visual:destroy();entry.visual=nil end end;if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end;if self.visual then self.visual:destroy();self.visual=nil end;if not fromSignal then self.shade:Destroy()end
+ if self.destroyed then return end;self.destroyed=true;self:stopPortraitClock();self.cardPreviews:clear();self.itemReveal:destroy();self.materialPanel:destroy();self.finishPanel:destroy();self.toyPanel:destroy();self.featurePanel:destroy();if self.chromeRoot then self.chromeRoot:Destroy()end;self.fruitEating:destroy();for _,entry in pairs(self.gridPreviews)do if entry.visual then entry.visual:destroy();entry.visual=nil end end;if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=nil end;if self.visual then self.visual:destroy();self.visual=nil end;if not fromSignal then self.shade:Destroy()end
 end
 return View

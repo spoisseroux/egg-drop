@@ -1,0 +1,592 @@
+<roblox version="4">
+  <Item class="Folder" referent="JarAssets">
+    <Properties>
+      <string name="Name">JarAssets</string>
+    </Properties>
+    <Item class="MeshPart" referent="Jar_charm__Base">
+      <Properties>
+        <string name="Name">Jar_charm__Base</string>
+        <Content name="MeshId"><url>rbxassetid://138659109794190</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>109.0</X><Y>54.50001</Y><Z>109.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>109.0</X><Y>54.50001</Y><Z>109.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_charm__Charm">
+      <Properties>
+        <string name="Name">Jar_charm__Charm</string>
+        <Content name="MeshId"><url>rbxassetid://118814087718459</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>51.35706</X><Y>48.84346</Y><Z>20.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>51.35706</X><Y>48.84346</Y><Z>20.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_charm__Dome">
+      <Properties>
+        <string name="Name">Jar_charm__Dome</string>
+        <Content name="MeshId"><url>rbxassetid://130473946169465</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>100.0</X><Y>50.00001</Y><Z>100.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>100.0</X><Y>50.00001</Y><Z>100.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_charm__Loop">
+      <Properties>
+        <string name="Name">Jar_charm__Loop</string>
+        <Content name="MeshId"><url>rbxassetid://131218367428273</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>24.4</X><Y>24.4</Y><Z>6.4</Z></Vector3>
+        <Vector3 name="InitialSize"><X>24.4</X><Y>24.4</Y><Z>6.4</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_charm__Shine">
+      <Properties>
+        <string name="Name">Jar_charm__Shine</string>
+        <Content name="MeshId"><url>rbxassetid://82105897380252</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>20.30553</X><Y>26.0</Y><Z>20.39861</Z></Vector3>
+        <Vector3 name="InitialSize"><X>20.30553</X><Y>26.0</Y><Z>20.39861</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_citrus__Body">
+      <Properties>
+        <string name="Name">Jar_citrus__Body</string>
+        <Content name="MeshId"><url>rbxassetid://86941718760937</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_citrus__Lid">
+      <Properties>
+        <string name="Name">Jar_citrus__Lid</string>
+        <Content name="MeshId"><url>rbxassetid://82628557662224</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_citrus__Liquid">
+      <Properties>
+        <string name="Name">Jar_citrus__Liquid</string>
+        <Content name="MeshId"><url>rbxassetid://98278030856719</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <Vector3 name="InitialSize"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_citrus__Shine">
+      <Properties>
+        <string name="Name">Jar_citrus__Shine</string>
+        <Content name="MeshId"><url>rbxassetid://111899612329447</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <Vector3 name="InitialSize"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_citrus__Symbol">
+      <Properties>
+        <string name="Name">Jar_citrus__Symbol</string>
+        <Content name="MeshId"><url>rbxassetid://127054626238317</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>49.29562</X><Y>45.1714</Y><Z>39.1</Z></Vector3>
+        <Vector3 name="InitialSize"><X>49.29562</X><Y>45.1714</Y><Z>39.1</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_gloss__Body">
+      <Properties>
+        <string name="Name">Jar_gloss__Body</string>
+        <Content name="MeshId"><url>rbxassetid://121486496584757</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>105.99999</X><Y>103.5</Y><Z>106.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>105.99999</X><Y>103.5</Y><Z>106.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_gloss__Shine">
+      <Properties>
+        <string name="Name">Jar_gloss__Shine</string>
+        <Content name="MeshId"><url>rbxassetid://104048716725869</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>23.81191</X><Y>80.0</Y><Z>20.52681</Z></Vector3>
+        <Vector3 name="InitialSize"><X>23.81191</X><Y>80.0</Y><Z>20.52681</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_gloss__Topper">
+      <Properties>
+        <string name="Name">Jar_gloss__Topper</string>
+        <Content name="MeshId"><url>rbxassetid://98922767353962</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>88.34999</X><Y>86.8</Y><Z>24.8</Z></Vector3>
+        <Vector3 name="InitialSize"><X>88.34999</X><Y>86.8</Y><Z>24.8</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_iris__Body">
+      <Properties>
+        <string name="Name">Jar_iris__Body</string>
+        <Content name="MeshId"><url>rbxassetid://80774052283573</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_iris__Lid">
+      <Properties>
+        <string name="Name">Jar_iris__Lid</string>
+        <Content name="MeshId"><url>rbxassetid://82628557662224</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_iris__Liquid">
+      <Properties>
+        <string name="Name">Jar_iris__Liquid</string>
+        <Content name="MeshId"><url>rbxassetid://83709567890166</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <Vector3 name="InitialSize"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_iris__Shine">
+      <Properties>
+        <string name="Name">Jar_iris__Shine</string>
+        <Content name="MeshId"><url>rbxassetid://111899612329447</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <Vector3 name="InitialSize"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_iris__Symbol">
+      <Properties>
+        <string name="Name">Jar_iris__Symbol</string>
+        <Content name="MeshId"><url>rbxassetid://129586146091613</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>51.277</X><Y>46.21457</Y><Z>20.8725</Z></Vector3>
+        <Vector3 name="InitialSize"><X>51.277</X><Y>46.21457</Y><Z>20.8725</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_jelly__Body">
+      <Properties>
+        <string name="Name">Jar_jelly__Body</string>
+        <Content name="MeshId"><url>rbxassetid://132022045577015</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>109.3145</X><Y>103.0</Y><Z>106.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>109.3145</X><Y>103.0</Y><Z>106.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_jelly__Core">
+      <Properties>
+        <string name="Name">Jar_jelly__Core</string>
+        <Content name="MeshId"><url>rbxassetid://90230088909824</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>52.3923</X><Y>55.65001</Y><Z>44.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>52.3923</X><Y>55.65001</Y><Z>44.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_jelly__Lid">
+      <Properties>
+        <string name="Name">Jar_jelly__Lid</string>
+        <Content name="MeshId"><url>rbxassetid://114985735730513</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>87.10594</X><Y>44.58683</Y><Z>88.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>87.10594</X><Y>44.58683</Y><Z>88.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_jelly__Shine">
+      <Properties>
+        <string name="Name">Jar_jelly__Shine</string>
+        <Content name="MeshId"><url>rbxassetid://123531160130370</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>11.7784</X><Y>32.0</Y><Z>14.88831</Z></Vector3>
+        <Vector3 name="InitialSize"><X>11.7784</X><Y>32.0</Y><Z>14.88831</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_matte__Body">
+      <Properties>
+        <string name="Name">Jar_matte__Body</string>
+        <Content name="MeshId"><url>rbxassetid://126589483782095</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>105.99999</X><Y>103.5</Y><Z>106.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>105.99999</X><Y>103.5</Y><Z>106.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_matte__Topper">
+      <Properties>
+        <string name="Name">Jar_matte__Topper</string>
+        <Content name="MeshId"><url>rbxassetid://123028916876906</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>77.37381</X><Y>52.7</Y><Z>52.7</Z></Vector3>
+        <Vector3 name="InitialSize"><X>77.37381</X><Y>52.7</Y><Z>52.7</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_reset__Body">
+      <Properties>
+        <string name="Name">Jar_reset__Body</string>
+        <Content name="MeshId"><url>rbxassetid://82970185534820</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_reset__Lid">
+      <Properties>
+        <string name="Name">Jar_reset__Lid</string>
+        <Content name="MeshId"><url>rbxassetid://82628557662224</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_reset__Liquid">
+      <Properties>
+        <string name="Name">Jar_reset__Liquid</string>
+        <Content name="MeshId"><url>rbxassetid://72927897637331</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <Vector3 name="InitialSize"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_reset__Shine">
+      <Properties>
+        <string name="Name">Jar_reset__Shine</string>
+        <Content name="MeshId"><url>rbxassetid://111899612329447</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <Vector3 name="InitialSize"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_reset__Symbol">
+      <Properties>
+        <string name="Name">Jar_reset__Symbol</string>
+        <Content name="MeshId"><url>rbxassetid://97082976854729</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>45.5</X><Y>43.27307</Y><Z>11.12737</Z></Vector3>
+        <Vector3 name="InitialSize"><X>45.5</X><Y>43.27307</Y><Z>11.12737</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_rose__Body">
+      <Properties>
+        <string name="Name">Jar_rose__Body</string>
+        <Content name="MeshId"><url>rbxassetid://89892972855079</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_rose__Lid">
+      <Properties>
+        <string name="Name">Jar_rose__Lid</string>
+        <Content name="MeshId"><url>rbxassetid://82628557662224</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_rose__Liquid">
+      <Properties>
+        <string name="Name">Jar_rose__Liquid</string>
+        <Content name="MeshId"><url>rbxassetid://138252231412850</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <Vector3 name="InitialSize"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_rose__Shine">
+      <Properties>
+        <string name="Name">Jar_rose__Shine</string>
+        <Content name="MeshId"><url>rbxassetid://111899612329447</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <Vector3 name="InitialSize"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_rose__Symbol">
+      <Properties>
+        <string name="Name">Jar_rose__Symbol</string>
+        <Content name="MeshId"><url>rbxassetid://95436894733545</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>46.86309</X><Y>47.77217</Y><Z>26.08867</Z></Vector3>
+        <Vector3 name="InitialSize"><X>46.86309</X><Y>47.77217</Y><Z>26.08867</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_tide__Body">
+      <Properties>
+        <string name="Name">Jar_tide__Body</string>
+        <Content name="MeshId"><url>rbxassetid://119197288620554</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>105.99999</X><Y>80.00002</Y><Z>106.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_tide__Lid">
+      <Properties>
+        <string name="Name">Jar_tide__Lid</string>
+        <Content name="MeshId"><url>rbxassetid://82628557662224</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <Vector3 name="InitialSize"><X>88.0</X><Y>27.50001</Y><Z>88.0</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_tide__Liquid">
+      <Properties>
+        <string name="Name">Jar_tide__Liquid</string>
+        <Content name="MeshId"><url>rbxassetid://130403183826789</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <Vector3 name="InitialSize"><X>98.57999</X><Y>74.40001</Y><Z>49.29</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_tide__Shine">
+      <Properties>
+        <string name="Name">Jar_tide__Shine</string>
+        <Content name="MeshId"><url>rbxassetid://111899612329447</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <Vector3 name="InitialSize"><X>10.74592</X><Y>32.0</Y><Z>9.20414</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="Jar_tide__Symbol">
+      <Properties>
+        <string name="Name">Jar_tide__Symbol</string>
+        <Content name="MeshId"><url>rbxassetid://77392171072286</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>37.95</X><Y>46.0</Y><Z>37.95</Z></Vector3>
+        <Vector3 name="InitialSize"><X>37.95</X><Y>46.0</Y><Z>37.95</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CastShadow">false</bool>
+        <token name="CollisionFidelity">1</token>
+      </Properties>
+    </Item>
+  </Item>
+</roblox>

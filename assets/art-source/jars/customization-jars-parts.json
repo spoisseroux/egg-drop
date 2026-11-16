@@ -1,0 +1,513 @@
+{
+ "schema": 1,
+ "source": "scripts/export_customization_jars.py (run through the live Blender, appended into a temporary scene)",
+ "parts": [
+  {
+   "name": "Jar_charm__Base",
+   "item": "charm",
+   "part": "Base",
+   "colour": "#D3C2E3",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.2925
+   ],
+   "material": "Jar_Satin"
+  },
+  {
+   "name": "Jar_charm__Charm",
+   "item": "charm",
+   "part": "Charm",
+   "colour": "#FFCB3D",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.68578
+   ],
+   "material": "Charm_Gold"
+  },
+  {
+   "name": "Jar_charm__Dome",
+   "item": "charm",
+   "part": "Dome",
+   "colour": "#DFD2FF",
+   "alpha": 0.34,
+   "centre": [
+    0.0,
+    0.0,
+    0.77
+   ],
+   "material": "Capsule_Clear"
+  },
+  {
+   "name": "Jar_charm__Loop",
+   "item": "charm",
+   "part": "Loop",
+   "colour": "#FFF3D6",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    1.08
+   ],
+   "material": "Jar_Lid"
+  },
+  {
+   "name": "Jar_charm__Shine",
+   "item": "charm",
+   "part": "Shine",
+   "colour": "#FFFFFF",
+   "alpha": 1.0,
+   "centre": [
+    -0.26947,
+    -0.31553,
+    0.79
+   ],
+   "material": "Jar_Shine"
+  },
+  {
+   "name": "Jar_citrus__Body",
+   "item": "citrus",
+   "part": "Body",
+   "colour": "#FFE280",
+   "alpha": 0.36,
+   "centre": [
+    0.0,
+    0.0,
+    0.4
+   ],
+   "material": "Jar_Glass"
+  },
+  {
+   "name": "Jar_citrus__Lid",
+   "item": "citrus",
+   "part": "Lid",
+   "colour": "#FFF3D6",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.8975
+   ],
+   "material": "Jar_Lid"
+  },
+  {
+   "name": "Jar_citrus__Liquid",
+   "item": "citrus",
+   "part": "Liquid",
+   "colour": "#FFD478",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.24645,
+    0.397
+   ],
+   "material": "Jar_Satin"
+  },
+  {
+   "name": "Jar_citrus__Shine",
+   "item": "citrus",
+   "part": "Shine",
+   "colour": "#FFFFFF",
+   "alpha": 1.0,
+   "centre": [
+    -0.32815,
+    -0.4169,
+    0.34
+   ],
+   "material": "Jar_Shine"
+  },
+  {
+   "name": "Jar_citrus__Symbol",
+   "item": "citrus",
+   "part": "Symbol",
+   "colour": "#E3EFD0",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.33452
+   ],
+   "material": "Jar_Symbol"
+  },
+  {
+   "name": "Jar_gloss__Body",
+   "item": "gloss",
+   "part": "Body",
+   "colour": "#63D7C1",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.5175
+   ],
+   "material": "Finish_Gloss"
+  },
+  {
+   "name": "Jar_gloss__Shine",
+   "item": "gloss",
+   "part": "Shine",
+   "colour": "#FFFFFF",
+   "alpha": 1.0,
+   "centre": [
+    -0.30107,
+    -0.40207,
+    0.56
+   ],
+   "material": "Jar_Shine"
+  },
+  {
+   "name": "Jar_gloss__Topper",
+   "item": "gloss",
+   "part": "Topper",
+   "colour": "#FFE56B",
+   "alpha": 1.0,
+   "centre": [
+    0.05425,
+    0.0,
+    1.444
+   ],
+   "material": "Jar_Shine"
+  },
+  {
+   "name": "Jar_iris__Body",
+   "item": "iris",
+   "part": "Body",
+   "colour": "#C4A2FF",
+   "alpha": 0.36,
+   "centre": [
+    0.0,
+    0.0,
+    0.4
+   ],
+   "material": "Jar_Glass"
+  },
+  {
+   "name": "Jar_iris__Lid",
+   "item": "iris",
+   "part": "Lid",
+   "colour": "#FFF3D6",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.8975
+   ],
+   "material": "Jar_Lid"
+  },
+  {
+   "name": "Jar_iris__Liquid",
+   "item": "iris",
+   "part": "Liquid",
+   "colour": "#A88DDF",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.24645,
+    0.397
+   ],
+   "material": "Jar_Satin"
+  },
+  {
+   "name": "Jar_iris__Shine",
+   "item": "iris",
+   "part": "Shine",
+   "colour": "#FFFFFF",
+   "alpha": 1.0,
+   "centre": [
+    -0.32815,
+    -0.4169,
+    0.34
+   ],
+   "material": "Jar_Shine"
+  },
+  {
+   "name": "Jar_iris__Symbol",
+   "item": "iris",
+   "part": "Symbol",
+   "colour": "#F8E7E2",
+   "alpha": 1.0,
+   "centre": [
+    -0.0,
+    -0.02789,
+    0.29893
+   ],
+   "material": "Jar_Symbol"
+  },
+  {
+   "name": "Jar_jelly__Body",
+   "item": "jelly",
+   "part": "Body",
+   "colour": "#7DDFCD",
+   "alpha": 0.72,
+   "centre": [
+    0.01131,
+    -0.03511,
+    0.515
+   ],
+   "material": "Finish_Jelly"
+  },
+  {
+   "name": "Jar_jelly__Core",
+   "item": "jelly",
+   "part": "Core",
+   "colour": "#E8F0F0",
+   "alpha": 1.0,
+   "centre": [
+    0.00134,
+    -0.03,
+    0.39675
+   ],
+   "material": "Jar_Satin"
+  },
+  {
+   "name": "Jar_jelly__Lid",
+   "item": "jelly",
+   "part": "Lid",
+   "colour": "#FFF3D6",
+   "alpha": 1.0,
+   "centre": [
+    0.19986,
+    0.0,
+    1.02292
+   ],
+   "material": "Jar_Lid"
+  },
+  {
+   "name": "Jar_jelly__Shine",
+   "item": "jelly",
+   "part": "Shine",
+   "colour": "#FFFFFF",
+   "alpha": 1.0,
+   "centre": [
+    -0.33212,
+    -0.41593,
+    0.36
+   ],
+   "material": "Jar_Shine"
+  },
+  {
+   "name": "Jar_matte__Body",
+   "item": "matte",
+   "part": "Body",
+   "colour": "#9DE7D9",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.5175
+   ],
+   "material": "Finish_Matte"
+  },
+  {
+   "name": "Jar_matte__Topper",
+   "item": "matte",
+   "part": "Topper",
+   "colour": "#B4F0E4",
+   "alpha": 1.0,
+   "centre": [
+    -0.00671,
+    0.0,
+    1.2425
+   ],
+   "material": "Finish_Matte"
+  },
+  {
+   "name": "Jar_reset__Body",
+   "item": "reset",
+   "part": "Body",
+   "colour": "#C0ECF5",
+   "alpha": 0.36,
+   "centre": [
+    0.0,
+    0.0,
+    0.4
+   ],
+   "material": "Jar_Glass"
+  },
+  {
+   "name": "Jar_reset__Lid",
+   "item": "reset",
+   "part": "Lid",
+   "colour": "#FFF3D6",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.8975
+   ],
+   "material": "Jar_Lid"
+  },
+  {
+   "name": "Jar_reset__Liquid",
+   "item": "reset",
+   "part": "Liquid",
+   "colour": "#9AC6D4",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.24645,
+    0.397
+   ],
+   "material": "Jar_Satin"
+  },
+  {
+   "name": "Jar_reset__Shine",
+   "item": "reset",
+   "part": "Shine",
+   "colour": "#FFFFFF",
+   "alpha": 1.0,
+   "centre": [
+    -0.32815,
+    -0.4169,
+    0.34
+   ],
+   "material": "Jar_Shine"
+  },
+  {
+   "name": "Jar_reset__Symbol",
+   "item": "reset",
+   "part": "Symbol",
+   "colour": "#FFF3D6",
+   "alpha": 1.0,
+   "centre": [
+    -0.0,
+    0.0,
+    0.291
+   ],
+   "material": "Jar_Symbol"
+  },
+  {
+   "name": "Jar_rose__Body",
+   "item": "rose",
+   "part": "Body",
+   "colour": "#FF94B7",
+   "alpha": 0.36,
+   "centre": [
+    0.0,
+    0.0,
+    0.4
+   ],
+   "material": "Jar_Glass"
+  },
+  {
+   "name": "Jar_rose__Lid",
+   "item": "rose",
+   "part": "Lid",
+   "colour": "#FFF3D6",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.8975
+   ],
+   "material": "Jar_Lid"
+  },
+  {
+   "name": "Jar_rose__Liquid",
+   "item": "rose",
+   "part": "Liquid",
+   "colour": "#DC84A0",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.24645,
+    0.397
+   ],
+   "material": "Jar_Satin"
+  },
+  {
+   "name": "Jar_rose__Shine",
+   "item": "rose",
+   "part": "Shine",
+   "colour": "#FFFFFF",
+   "alpha": 1.0,
+   "centre": [
+    -0.32815,
+    -0.4169,
+    0.34
+   ],
+   "material": "Jar_Shine"
+  },
+  {
+   "name": "Jar_rose__Symbol",
+   "item": "rose",
+   "part": "Symbol",
+   "colour": "#FFE8E2",
+   "alpha": 1.0,
+   "centre": [
+    -0.0,
+    0.04735,
+    0.29533
+   ],
+   "material": "Jar_Symbol"
+  },
+  {
+   "name": "Jar_tide__Body",
+   "item": "tide",
+   "part": "Body",
+   "colour": "#80C1FF",
+   "alpha": 0.36,
+   "centre": [
+    0.0,
+    0.0,
+    0.4
+   ],
+   "material": "Jar_Glass"
+  },
+  {
+   "name": "Jar_tide__Lid",
+   "item": "tide",
+   "part": "Lid",
+   "colour": "#FFF3D6",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.8975
+   ],
+   "material": "Jar_Lid"
+  },
+  {
+   "name": "Jar_tide__Liquid",
+   "item": "tide",
+   "part": "Liquid",
+   "colour": "#77A5DF",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.24645,
+    0.397
+   ],
+   "material": "Jar_Satin"
+  },
+  {
+   "name": "Jar_tide__Shine",
+   "item": "tide",
+   "part": "Shine",
+   "colour": "#FFFFFF",
+   "alpha": 1.0,
+   "centre": [
+    -0.32815,
+    -0.4169,
+    0.34
+   ],
+   "material": "Jar_Shine"
+  },
+  {
+   "name": "Jar_tide__Symbol",
+   "item": "tide",
+   "part": "Symbol",
+   "colour": "#E9F5FF",
+   "alpha": 1.0,
+   "centre": [
+    0.0,
+    0.0,
+    0.3
+   ],
+   "material": "Jar_Symbol"
+  }
+ ]
+}

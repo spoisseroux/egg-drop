@@ -2,6 +2,8 @@
 -- Immutable maps are authored in the mounted pack; runtime writes only tint/strength.
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Config=require(script.Parent.PetMaterialConfig)
+-- Customization Egg finish doses (slice 3): sheen stops and Jelly stages per pet.
+local Look=require(ReplicatedStorage.Shared.LookEggCatalog)
 local Materials={};local Owner={};Owner.__index=Owner
 local white=Color3.new(1,1,1)
 local function release(entry)
@@ -77,8 +79,47 @@ function Owner:jellyReady(visual)
  end
  return true
 end
+-- The dose look (appearance.sheen -3..3, appearance.jellyStage 0..3). Out-of-cap stored values
+-- clamp to the display stops (plan R6). Zero on both axes means no dose look (legacy finish).
+function Materials.dose(appearance)
+ if type(appearance)~="table"then return 0,0 end
+ local sheen=if type(appearance.sheen)=="number"and appearance.sheen==appearance.sheen then math.clamp(math.round(appearance.sheen),-Look.SheenStops,Look.SheenStops)else 0
+ local jelly=if type(appearance.jellyStage)=="number"and appearance.jellyStage==appearance.jellyStage then math.clamp(math.round(appearance.jellyStage),0,Look.JellyStops)else 0
+ return sheen,jelly
+end
+local function twoToneName(key)
+ return Config.TwoToneProfiles[key]or(if string.sub(key,1,9)=="BodySheen"then "BodyTwoTone"..string.sub(key,5)else nil)
+end
+-- The one-colour template key for a dose look: an unverified sheen stop falls back to the
+-- nearest verified stop toward 0 (never the wrong direction, never an error). A Jelly stage at
+-- sheen 0 wears the verified Jelly surface.
+function Materials.doseProfile(pack,sheen,jelly,allowUnverified)
+ local stop=sheen
+ while stop~=0 do
+  local name=Look.SheenProfiles[stop]
+  if validTemplate(Materials.template(pack,name),name,allowUnverified)then return name end
+  stop-=if stop>0 then 1 else -1
+ end
+ if jelly>0 and validTemplate(Materials.template(pack,"BodyJelly"),"BodyJelly",allowUnverified)then return "BodyJelly"end
+ return "Body"
+end
 local definitionPieces=setmetatable({},{__mode="k"})
+local function piecesOf(definition)
+ local pieces=definitionPieces[definition]
+ if not pieces then
+  pieces={};for _,piece in ipairs(definition.pieces or {})do pieces[piece.name]=true end;definitionPieces[definition]=pieces
+ end
+ return pieces
+end
 function Materials.jellyAlpha(entry,visual)
+ -- Dose look: the Jelly stage scales the per-part alpha on any bound body surface.
+ local _,stage=Materials.dose(visual and visual.appearance)
+ if stage>0 then
+  if visual.materialsEnabled==false or entry.role~=nil or entry.faceRole~=nil or(entry.colorRole~="body"and entry.colorRole~="secondary")then return 0 end
+  local surface=entry.materialSurface
+  if entry.materialFailure~=nil or typeof(surface)~="Instance"or surface.Parent~=entry.part or not visual.definition then return 0 end
+  return if piecesOf(visual.definition)[entry.name]then(Config.JellyAlphaByPart[entry.name]or 0)*(Config.JellyStageAlpha[stage]or 0)else 0
+ end
  if not visual or not visual.appearance or visual.appearance.finish~="jelly"or visual.materialsEnabled==false
   or entry.role~=nil or entry.faceRole~=nil or(entry.colorRole~="body"and entry.colorRole~="secondary")
   or(entry.materialProfile~="BodyJelly"and entry.materialProfile~="BodyTwoToneJelly")then return 0 end
@@ -86,10 +127,7 @@ function Materials.jellyAlpha(entry,visual)
  if entry.materialFailure~=nil or typeof(surface)~="Instance"or surface.Parent~=entry.part
   or not validTemplate(surface,entry.materialProfile,visual.allowUnverifiedFinish)then return 0 end
  local definition=visual.definition;if not definition then return 0 end
- local pieces=definitionPieces[definition]
- if not pieces then
-  pieces={};for _,piece in ipairs(definition.pieces or {})do pieces[piece.name]=true end;definitionPieces[definition]=pieces
- end
+ local pieces=piecesOf(definition)
  return if pieces[entry.name]then Config.JellyAlphaByPart[entry.name]or 0 else 0
 end
 function Materials.transparency(entry,visual,hidden)
@@ -106,7 +144,11 @@ function Owner:paint(entry,visual,daylight)
  if not key or entry.materialFailure or not entry.part:IsA("MeshPart")then return false end
  local pack=if self.templates then self.templates else ReplicatedStorage:FindFirstChild("PetMaterials")
  local templateKey=key
- if key=="Body"then
+ local sheen,jelly=Materials.dose(visual.appearance)
+ if key=="Body"and(sheen~=0 or jelly~=0)then
+  -- A pet's dose look wins over a legacy permanent finish (plan §4).
+  templateKey=Materials.doseProfile(pack,sheen,jelly,visual.allowUnverifiedFinish)
+ elseif key=="Body"then
   local finish=visual.appearance and visual.appearance.finish or "standard"
   if finish=="jelly"and(entry.role~=nil or not self:jellyReady(visual))then finish="standard"end
   local candidate=Config.FinishProfiles[finish]
@@ -121,7 +163,7 @@ function Owner:paint(entry,visual,daylight)
  local twoTone=false
  if key=="Body"and visual.twoTone==true and entry.colorRole=="body"then
   local twoPack=if self.twoToneTemplates then self.twoToneTemplates else ReplicatedStorage:FindFirstChild("PetMaterialsTwoTone")
-  local name=Config.TwoToneProfiles[templateKey]
+  local name=twoToneName(templateKey)
   local candidate=name and Materials.template(twoPack,name)
   if candidate and name~="BodyTwoTone"and candidate:GetAttribute("NativeVerified")~=true and visual.allowUnverifiedFinish~=true then
    name="BodyTwoTone";candidate=Materials.template(twoPack,name)

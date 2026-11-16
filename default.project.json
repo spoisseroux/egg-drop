@@ -17,6 +17,24 @@
         "$path": "assets/pet-materials/PetMaterials.rbxm",
         "BodyJelly": {
           "$path": "assets/pet-materials/BodyJelly.model.json"
+        },
+        "BodySheenM3": {
+          "$path": "assets/pet-materials/BodySheenM3.model.json"
+        },
+        "BodySheenM2": {
+          "$path": "assets/pet-materials/BodySheenM2.model.json"
+        },
+        "BodySheenM1": {
+          "$path": "assets/pet-materials/BodySheenM1.model.json"
+        },
+        "BodySheenP1": {
+          "$path": "assets/pet-materials/BodySheenP1.model.json"
+        },
+        "BodySheenP2": {
+          "$path": "assets/pet-materials/BodySheenP2.model.json"
+        },
+        "BodySheenP3": {
+          "$path": "assets/pet-materials/BodySheenP3.model.json"
         }
       },
       "PetMaterialsTwoTone": {
@@ -27,6 +45,9 @@
       },
       "PetToyAssets": {
         "$path": "assets/toys/PetToyAssets.rbxmx"
+      },
+      "JarAssets": {
+        "$path": "assets/jars/JarAssets.rbxmx"
       }
     },
     "ServerStorage": {
