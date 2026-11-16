@@ -2,6 +2,19 @@
 local Effects={};Effects.__index=Effects
 local Pico8=require(game:GetService("ReplicatedStorage").Shared.Pico8)
 Effects.PopDuration=.7
+-- G1 (QA 2026-11-16) merge juice. Everything below scales with the merged tier.
+Effects.PunchTime=.1 -- "+N" and the chain counter land from PunchScale to 1 in this long
+Effects.PunchScale=1.45
+Effects.CaptionHold=.5 -- chain counter lifetime (was .30)
+Effects.White=Color3.fromHex("#F4F8E9")
+-- Text size `u` (0..1, eased) of the way through the punch: PunchScale x size down to size.
+function Effects.punchSize(size,u)return math.floor(size*(Effects.PunchScale+(1-Effects.PunchScale)*u)+.5)end
+-- Chain counter size: bigger with every chain step, capped for the phone tray.
+function Effects.chainTextSize(chain)return 16+2*math.clamp(chain or 2,2,7)end
+-- Merge ring lifetime and reach, and how far the fragments fly (in ball radii).
+function Effects.mergeDuration(tier)return .22+.02*math.clamp(tier or 1,1,5)end
+function Effects.ringReach(tier)return .42+.08*math.clamp(tier or 1,1,5)end
+function Effects.fragmentReach(tier)return 1.1+.2*math.clamp(tier or 1,1,5)end
 local function node(parent,name)
 	local frame=Instance.new("Frame");frame.Name=name;frame.BorderSizePixel=0;frame.BackgroundTransparency=1
 	frame.Active,frame.Selectable=false,false;frame.AnchorPoint=Vector2.new(.5,.5);frame.ZIndex=5;frame.Visible=false;frame.Parent=parent
@@ -72,7 +85,9 @@ function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,clear
 	end
 	chosen.active,chosen.priority,chosen.start=true,priority,now
 	chosen.point,chosen.radius,chosen.kind=point,math.max(3,radius),kind
-	chosen.duration=if self.reduced then .18 elseif kind=="merge"then .28 elseif kind=="impact"then .22 else .18
+	chosen.duration=if self.reduced then .18 elseif kind=="merge"then Effects.mergeDuration(tier) elseif kind=="impact"then .22 else .18
+	chosen.tier=tier or 1
+	put(self,chosen.stroke,"Thickness",if kind=="merge"then 1.5+.5*math.clamp(tier or 1,1,5)else 1.5)
 	chosen.normal=normal or Vector2.new(0,-1)
  put(self,chosen.ring,"Rotation",if kind=="impact"then math.deg(math.atan2(chosen.normal.X,chosen.normal.Y))else 0)
 	put(self,chosen.ring,"Position",UDim2.fromOffset(point.X,point.Y));put(self,chosen.ring,"Visible",true)
@@ -83,22 +98,37 @@ function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,clear
   local text=if cleared then "MAX CLEAR +100 pts"else "×"..tostring(chain)
   put(self,label,"TextColor3",if cleared then Pico8[7] else Pico8.ChainRamp[math.clamp((chain or 2)-1,1,3)])
   local service=game:GetService("TextService")
-  local bounds=service:GetTextSize(text,14,Enum.Font.GothamBold,Vector2.new(width,10000))
+  -- The chain counter grows with the chain and lands with a punch; the box is sized
+  -- for the punch peak so the text never clips. MAX CLEAR keeps its measured 14 px.
+  local size=if cleared then 14 else Effects.chainTextSize(chain)
+  local peak=if cleared or self.reduced then size else Effects.punchSize(size,0)
+  self.captionSize,self.captionPunch=size,peak>size
+  put(self,label,"TextSize",peak)
+  local bounds=service:GetTextSize(text,peak,Enum.Font.GothamBold,Vector2.new(width,10000))
   if cleared and bounds.Y+4>maxH then text="MAX\n+100\npts";bounds=service:GetTextSize(text,14,Enum.Font.GothamBold,Vector2.new(width,10000))end
   local h=math.min(maxH,math.ceil(bounds.Y)+4)
   put(self,label,"Text",text);put(self,label,"Size",UDim2.fromOffset(width,h))
   put(self,label,"Position",UDim2.fromOffset(4,math.clamp(point.Y-radius-h-4,4,math.max(4,self.root.AbsoluteSize.Y-h-4))))
   put(self,label,"TextTransparency",0);put(self,label,"Visible",true)
-  self.captionStart,self.captionUntil=now,now+.30
+  self.captionStart,self.captionUntil=now,now+Effects.CaptionHold
  end
-	for _,fragment in ipairs(chosen.fragments)do put(self,fragment,"BackgroundColor3",color);put(self,fragment,"Visible",not self.reduced and kind=="merge")end
+	-- Every other fragment is a near-white sparkle so the burst reads on any ball colour.
+	for j,fragment in ipairs(chosen.fragments)do put(self,fragment,"BackgroundColor3",if j%2==0 then color:Lerp(Effects.White,.7)else color);put(self,fragment,"Visible",not self.reduced and kind=="merge")end
 	self.stats.accepted+=1;self:update(now);return true
 end
 function Effects:update(now)
 	if self.destroyed or not self.visible then return end
  if self.captionUntil then
   if now>=self.captionUntil then put(self,self.caption,"Visible",false);self.captionUntil=nil
-  else put(self,self.caption,"TextTransparency",math.clamp((now-self.captionStart)/.30,0,1)*.8)end
+  else
+   local age=now-self.captionStart
+   -- Opaque through the punch and a short hold, then fades.
+   put(self,self.caption,"TextTransparency",math.clamp((age-.2)/(Effects.CaptionHold-.2),0,1)*.85)
+   if self.captionPunch then
+    local u=math.clamp(age/Effects.PunchTime,0,1);u=1-(1-u)*(1-u)
+    put(self,self.caption,"TextSize",Effects.punchSize(self.captionSize,u))
+   end
+  end
  end
  self:updatePops(now)
 	local active=0
@@ -108,14 +138,18 @@ function Effects:update(now)
 			slot.active=false;put(self,slot.ring,"Visible",false)
 			for _,fragment in ipairs(slot.fragments)do put(self,fragment,"Visible",false)end
 		else
-			active+=1;local r=slot.radius*(if self.reduced then 1.04 else 1+.42*t)
+			local merge=slot.kind=="merge"
+			-- A merge bursts out fast and eases to rest (ease-out); other rings stay linear.
+			local out=if merge then 1-(1-t)*(1-t)else t
+			active+=1;local r=slot.radius*(if self.reduced then 1.04 elseif merge then 1+Effects.ringReach(slot.tier)*out else 1+.42*t)
 			put(self,slot.ring,"Size",UDim2.fromOffset(r*2,r*(if slot.kind=="impact"then .65 elseif slot.kind=="drop"then .8+1.2*t else 2)))
-			put(self,slot.stroke,"Transparency",.45+.55*t)
-			if not self.reduced and slot.kind=="merge"then for j,fragment in ipairs(slot.fragments)do
-				local angle=j*math.pi/3+.35;local distance=slot.radius*(.8+t*.9)
+			-- A merge ring starts as a bright flash, then fades.
+			put(self,slot.stroke,"Transparency",if merge and not self.reduced then .08+.92*t else .45+.55*t)
+			if not self.reduced and merge then for j,fragment in ipairs(slot.fragments)do
+				local angle=j*math.pi/3+.35;local distance=slot.radius*(.8+out*Effects.fragmentReach(slot.tier))
 				put(self,fragment,"Position",UDim2.fromOffset(slot.point.X+math.cos(angle)*distance,slot.point.Y+math.sin(angle)*distance))
-				local size=math.max(2,slot.radius*.12)*(1-t*.45);put(self,fragment,"Size",UDim2.fromOffset(size,size))
-				put(self,fragment,"BackgroundTransparency",.25+.75*t)
+				local size=math.max(2.5,slot.radius*.16)*(1-t*.5);put(self,fragment,"Size",UDim2.fromOffset(size,size))
+				put(self,fragment,"BackgroundTransparency",.1+.9*t*t)
 			end end
 		end
 	end end
@@ -129,7 +163,8 @@ function Effects:pop(point,radius,color,score,now)
  if not chosen then for _,pop in ipairs(self.pops)do if not chosen or pop.start<chosen.start then chosen=pop end end;self.stats.popEvicted=(self.stats.popEvicted or 0)+1 end
  chosen.active,chosen.start,chosen.x,chosen.y=true,now,point.X,math.max(9,point.Y-radius*.4)
  local label=chosen.label
- put(self,label,"Text","+"..tostring(score));put(self,label,"TextColor3",color);put(self,label,"TextSize",math.clamp(math.floor(radius*.5),15,24))
+ put(self,label,"Text","+"..tostring(score));put(self,label,"TextColor3",color);chosen.size=math.clamp(math.floor(radius*.5),15,24)
+ put(self,label,"TextSize",if self.reduced then chosen.size else Effects.punchSize(chosen.size,0))
  put(self,label,"Position",UDim2.fromOffset(chosen.x,chosen.y));put(self,label,"TextTransparency",0);put(self,label,"TextStrokeTransparency",.1)
  put(self,label,"Visible",true)
  self.stats.pops=(self.stats.pops or 0)+1
@@ -141,7 +176,11 @@ function Effects:updatePops(now)
   else
    local fade=math.clamp((t-.45)/.55,0,1)
    put(self,pop.label,"TextTransparency",fade);put(self,pop.label,"TextStrokeTransparency",.1+.9*fade)
-   if not self.reduced then put(self,pop.label,"Position",UDim2.fromOffset(pop.x,pop.y-18*math.sin(math.min(t,1)*math.pi*.5)))end
+   if not self.reduced then
+    put(self,pop.label,"Position",UDim2.fromOffset(pop.x,pop.y-18*math.sin(math.min(t,1)*math.pi*.5)))
+    local u=math.clamp((now-pop.start)/Effects.PunchTime,0,1);u=1-(1-u)*(1-u)
+    put(self,pop.label,"TextSize",Effects.punchSize(pop.size,u))
+   end
   end
  end end
 end

@@ -3486,8 +3486,9 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  mergeBurst=if now-lastMerge<.08 then math.min(mergeBurst+1,2)else 0;lastMerge=now
  clientUI.ballFaces:merged(id,now)
  audio:play(if tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(chain,id),.56*.68^mergeBurst)
- if(chain>1 or cleared)and now-lastChainAccent>=.18 then
-  lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),.30)
+ -- G1: every chain step pings (0.09 s guard, was 0.18), one note higher and a little louder.
+ if(chain>1 or cleared)and now-lastChainAccent>=.09 then
+  lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))
  end
  local reduced=reduceEffects()
  if lcdEnabled()and not cleared and not reduced then
@@ -3498,7 +3499,12 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  end
  rendererPresentation.setFieldOwner(true,serial,reduced)
  rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,tier,chain,serial,now,nil,cleared,Config.mergeScore(tier,chain,cleared))
+ -- G1: the kick is sized for a 420 px board and shrinks with a smaller (phone) one.
+ rendererPresentation.jolt.scale=viewport.AbsoluteSize.Y/420
  rendererPresentation.jolt:emit(serial,id,tier,chain,cleared,now)
+ -- G1: the new ball lands with a squash that grows with its tier. Under the LCD the
+ -- merge blob plays first and hands over when it ends (render loop below).
+ if not reduced and not cleared and not lcdEnabled()and viewsById[id]then viewsById[id]:impact(Vector2.yAxis,6+2*tier)end
  -- Big moments reach the resting pet behind the see-through deck.
  if tier>=3 or chain>=3 then roomView:cheerPet("cheer")end
 end))
@@ -3727,6 +3733,8 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			lcd:beginFrame()
 			for index = #pixelMerges, 1, -1 do
 				if now - pixelMerges[index].start >= JellyLCD.MergeDuration then
+					local born = viewsById[pixelMerges[index].id]
+					if born and not reduced then born:impact(Vector2.yAxis, 6 + 2 * pixelMerges[index].tier) end
 					table.remove(pixelMerges, index)
 				end
 			end

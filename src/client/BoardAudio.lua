@@ -432,11 +432,19 @@ function Audio:ui(kind,token)
 	return true
 end
 
+-- G1 (QA 2026-11-16): every chain step climbs one note of a major scale, up to an
+-- octave at chain 8 (was 0 / +3 / +5 and flat from chain 3). Same cues, pitched.
+Audio.ChainSemitones=table.freeze({0,2,4,5,7,9,11,12})
 function Audio:mergePitch(chain,id)
 	chain=if type(chain)=="number"and chain==chain and chain<math.huge then math.max(1,math.floor(chain))else 1
 	id=if type(id)=="number"and id==id and math.abs(id)<math.huge then math.floor(id)else 0
-	local semitones=if chain>=3 then 5 elseif chain==2 then 3 else 0
+	local semitones=Audio.ChainSemitones[math.min(chain,#Audio.ChainSemitones)]
 	return 2^(semitones/12)*(1+(id%5)*.0025)
+end
+-- G1: the chain accent gets louder with the chain (0.30 at chain 2, 0.50 from chain 7).
+function Audio.chainAccentVolume(chain)
+	chain=if type(chain)=="number"and chain==chain then chain else 1
+	return math.clamp(.30+.04*(chain-2),.30,.50)
 end
 
 function Audio:setVolume(volume)

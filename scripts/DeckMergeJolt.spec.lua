@@ -25,22 +25,30 @@ return function(client,parent)
   end)
   test("accepted serial and merge ID debounce a single bounded held curve",function()
    local j=make();assert(j:emit(1,10,4,1,false,0)and not j:emit(1,10,4,1,false,0))
-   for i=0,100 do j:update(i*.001);assert(j.offset.Magnitude<=7.000001)end
+   for i=0,100 do j:update(i*.001);assert(j.offset.Magnitude<=10.000001)end
    assert(not j:emit(0,11,5,2,true,.11))
   end)
-  test("clear and chains cap at twelve pixels without adding or erasing stronger recoil",function()
+  test("clear and chains cap at sixteen pixels without adding or erasing stronger recoil",function()
    local j=make();assert(j:emit(1,1,5,5,true,0));assert(not j:emit(1,2,2,1,false,.01))
-   assert(j.active.amplitude==12);j:update(.22*.16);assert(math.abs(j.offset.Magnitude-12)<.00001)
-   assert(j:emit(1,3,5,2,true,.04)and j.active.amplitude==12)
+   assert(j.active.amplitude==16);j:update(.24*.16);assert(math.abs(j.offset.Magnitude-16)<.00001)
+   assert(j:emit(1,3,5,2,true,.04)and j.active.amplitude==16)
   end)
-  test("all tier peaks and durations match the accepted recipe",function()
-   for _,recipe in ipairs({{2,false,3,.11},{3,false,5,.14},{4,false,7,.17},{5,false,9,.19},{5,true,12,.22}})do
+  test("G1: the kick grows with every chain step and shrinks on a small phone board",function()
+   local a2=Jolt.amplitude(2,1,false);local last=a2
+   assert(a2==4 and Jolt.amplitude(3,1,false)==7 and Jolt.amplitude(4,1,false)==10 and Jolt.amplitude(5,1,false)==13)
+   for chain=2,5 do local a=Jolt.amplitude(2,chain,false);assert(a>last,"chain "..chain);last=a end
+   assert(Jolt.amplitude(2,5,false)==Jolt.amplitude(2,40,false)and math.abs(last-4*1.48)<.00001,"chain boost stops at +48%")
+   assert(Jolt.amplitude(5,9,true)==16 and Jolt.amplitude(5,9,true,.6)==16*.6 and Jolt.amplitude(5,9,true,.1)==8,"phone scale, floor one half")
+   local j=make();j.scale=.75;assert(j:emit(1,1,4,1,false,0)and j.active.amplitude==7.5)
+  end)
+  test("all tier peaks and durations match the G1 kick table",function()
+   for _,recipe in ipairs({{2,false,4,.11},{3,false,7,.14},{4,false,10,.17},{5,false,13,.2},{5,true,16,.24}})do
     local j,shell=make();local base=shell.Position
     assert(j:emit(1,1,recipe[1],1,recipe[2],0))
     assert(j.active.amplitude==recipe[3]and j.active.duration==recipe[4])
     j:update(recipe[4]*.16);assert(math.abs(j.offset.Magnitude-recipe[3])<.00001)
     j:update(recipe[4]);assert(shell.Position==base and j.offset==Vector2.zero)
-    j:emit(1,2,recipe[1],2,recipe[2],1);assert(math.abs(j.active.amplitude-math.min(12,recipe[3]*1.12))<.00001)
+    j:emit(1,2,recipe[1],2,recipe[2],1);assert(math.abs(j.active.amplitude-math.min(16,recipe[3]*1.12))<.00001)
    end
   end)
   test("exterior tint and underlays flatten once while BoardBacking is transparent",function()

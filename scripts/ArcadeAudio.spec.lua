@@ -41,11 +41,14 @@ return function(client)
 			assert(a:ui("confirm",1)==(master>0));assert(v.plays==(if master>0 then 1 else 0))
 		end end
 	end)
-	test("chain contour is bounded to the approved zero third and fourth intervals",function()
+	test("G1 chain contour: one major-scale note per chain step, an octave at chain 8, bounded",function()
 		local a=fixture(1)
-		assert(a:mergePitch(1,0)==1 and a:mergePitch(2,0)==2^(3/12)and a:mergePitch(3,0)==2^(5/12))
-		for chain=1,100 do local pitch=a:mergePitch(chain,4);assert(pitch>=1 and pitch<=1.36)end
+		assert(a:mergePitch(1,0)==1 and a:mergePitch(2,0)==2^(2/12)and a:mergePitch(3,0)==2^(4/12)and a:mergePitch(8,0)==2)
+		local last=0
+		for chain=1,8 do local pitch=a:mergePitch(chain,0);assert(pitch>last,"chain "..chain.." does not rise");last=pitch end
+		for chain=1,100 do local pitch=a:mergePitch(chain,4);assert(pitch>=1 and pitch<=2.03)end
 		assert(a:mergePitch(0/0,math.huge)==1)
+		assert(Audio.chainAccentVolume(2)==.30 and Audio.chainAccentVolume(1)==.30 and math.abs(Audio.chainAccentVolume(4)-.38)<1e-9 and Audio.chainAccentVolume(40)==.50)
 	end)
 	test("unloaded merge and drop are discarded before playback state and never replay on readiness",function()
 		local a,v=fixture(1);v.IsLoaded=false

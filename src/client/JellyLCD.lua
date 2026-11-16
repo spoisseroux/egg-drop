@@ -21,7 +21,10 @@ local LCD = {}
 LCD.__index = LCD
 LCD.Width = 64
 LCD.Height = math.round(LCD.Width * (Config.Height + 0.8) / (Config.Width + 0.8))
-LCD.MergeDuration = 0.32
+-- G1 (QA 2026-11-16): a snappier merge (was 0.32 s) that lands MergePop bigger than
+-- the result ball; the host then hands over to the ball's own squash wobble.
+LCD.MergeDuration = 0.22
+LCD.MergePop = 0.1
 -- Bloom: each egg throws its own colour onto the well (1.28 r, about 30%); the
 -- egg that matches the held one throws its light colour further and stronger.
 LCD.BloomReach, LCD.BloomAlpha = 1.28, 0.3
@@ -616,12 +619,12 @@ local function mergeBlob(self, first, second, target, radius, resultRadius, colo
 	t = t * t * (3 - 2 * t)
 	local a, b = first:Lerp(target, t), second:Lerp(target, t)
 	local lobe = radius * (0.90 - 0.70 * t)
-	local core = radius * 0.42 * (1 - t) + resultRadius * t
+	local core = radius * 0.42 * (1 - t) + resultRadius * t * (1 + LCD.MergePop * t)
 	local neck = radius * (0.22 + 0.12 * t)
 	local blend = math.max(0.5, radius * 0.22 * (1 - t))
 	local lightRadiusX=math.max(core,math.abs(a.X-target.X)+lobe,math.abs(b.X-target.X)+lobe)+blend
 	local lightRadiusY=math.max(core,math.abs(a.Y-target.Y)+lobe,math.abs(b.Y-target.Y)+lobe)+blend
-	local margin = math.max(radius, resultRadius) + blend + 1
+	local margin = math.max(radius, resultRadius * (1 + LCD.MergePop)) + blend + 1
 	local tones = if tier then themeTones(self.theme or BallThemes.get(BallThemes.Default), tier) else palette(color)
 	raster(self, math.min(a.X, b.X, target.X) - margin, math.min(a.Y, b.Y, target.Y) - margin,
 		math.max(a.X, b.X, target.X) + margin, math.max(a.Y, b.Y, target.Y) + margin,

@@ -1,6 +1,18 @@
 -- One signed presentation translation. Input targets inherit it; simulation stays fixed.
 local Recipe=require(script.Parent.CareFeedbackData).jolt
 local Jolt={};Jolt.__index=Jolt
+-- G1 (QA 2026-11-16): a harder screen kick that scales with the merged tier and
+-- with every chain step. {peak pixels, seconds}; these supersede the amplitudes in
+-- the care-feedback recipe (its key curve is still used). `scale` (set by the host)
+-- shrinks the kick on a small phone board.
+Jolt.Kick={tierII={4,.11},tierIII={7,.14},tierIV={10,.17},tierV={13,.2},clear={16,.24}}
+Jolt.PeakPixels=16
+Jolt.ChainStep,Jolt.ChainSteps=.12,4 -- +12% per chain step after the first, up to +48%
+function Jolt.amplitude(tier,chain,cleared,scale)
+ local entry=if cleared then Jolt.Kick.clear elseif tier>=5 then Jolt.Kick.tierV elseif tier==4 then Jolt.Kick.tierIV elseif tier==3 then Jolt.Kick.tierIII else Jolt.Kick.tierII
+ local boost=1+Jolt.ChainStep*math.clamp((chain or 1)-1,0,Jolt.ChainSteps)
+ return math.min(Jolt.PeakPixels,entry[1]*boost)*math.clamp(scale or 1,.5,1),entry[2]
+end
 local dropKeys={{0,0,0},{.2,0,2},{.6,0,-.7},{1,0,0}}
 local peak=0;for _,key in ipairs(Recipe.keys)do peak=math.max(peak,Vector2.new(key[2],key[3]).Magnitude)end
 function Jolt.new(nodes)
@@ -25,10 +37,9 @@ function Jolt:emit(serial,id,tier,chain,cleared,now)
  if self.destroyed or not self.visible or self.serial~=serial or self.reduced or(type(id)~="number"and type(id)~="string")or self.seen[id]then return false end
  self.cursor=self.cursor%64+1;local old=self.ring[self.cursor];if old~=nil then self.seen[old]=nil end
  self.ring[self.cursor],self.seen[id]=id,true
- local entry=if cleared then Recipe.clear elseif tier>=5 then Recipe.tierV elseif tier==4 then Recipe.tierIV elseif tier==3 then Recipe.tierIII else Recipe.tierII
- local amplitude=math.min(Recipe.peakPixels,entry[1]*(if chain>1 then Recipe.chainScale else 1))
+ local amplitude,duration=Jolt.amplitude(tier,chain,cleared,self.scale)
  if self.active and now-self.active.at<self.active.duration and amplitude<self.active.amplitude then return false end
- self.active={kind="merge",at=now,duration=entry[2],amplitude=amplitude};return true
+ self.active={kind="merge",at=now,duration=duration,amplitude=amplitude};return true
 end
 -- Accepted replication only; a merge always retains the stronger shared owner.
 function Jolt:drop(serial,id,now)
