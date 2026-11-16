@@ -7,18 +7,20 @@ Status key: [running] agent at work, [queued] next batch, [decided] Spencer's ca
 3. Materials missing from the Hue Egg: they were switched off for v1 by the economy cut. [decided] Pull the v1.1 Look Egg into v1 as a **Customization Egg**: hues, finishes (with stages and mixing), and charms as a rare drop. The Toy Egg stays separate and the Wardrobe stays direct-buy. [running: architect plan]
 4. Charms: rare egg drop, not a default. [decided] New pets start with no charm. Snowflake, Ring and Pebble become rare drops; Heart, Star and Leaf stay earned; owned charms are kept.
 5. New icons or models for the hue jars. [running: Fable, Blender, renders first]
-6. The waterfall is too loud from far away (rolloff). [queued]
-7. The Toys tab on the Companions screen is redundant with Customize. Remove it. [queued]
-8. Tapping a toy in the menu previews the pet playing with it. [queued]
+6. The waterfall is too loud from far away (rolloff). [done in source, unpublished, not heard: InverseTapered 9 / 64 and 6 / 42 studs, silent from the lawn]
+7. The Toys tab on the Companions screen is redundant with Customize. Remove it. [done in source, unpublished: three rows again]
+8. Tapping a toy in the menu previews the pet playing with it. [done in source, unpublished: first tap selects and the pane's pet loops the play clip; second tap or Wear equips]
 9. Pocket menu tiles should be animated instead of using sprites:
    - Companions: a pet model waving in a portrait
    - Book: animate the pink picture
    - Deck style: loop an animation
    - Hatch eggs: rotating eggs
-   [queued]
-10. "Use" on an item plays an equip sound. [queued]
-11. The hatch screen's X sits too far into the top-right corner. [queued]
-12. Every button gets click audio. The Pets tab under Companions makes no sound. [queued]
+   [done in source, unpublished: paused while the menu is closed or covered, still under Reduced Effects]
+10. "Use" on an item plays an equip sound. [done in source, unpublished, not heard: equip and a different unequip, from existing cues]
+11. The hatch screen's X sits too far into the top-right corner. [done in source, unpublished: 24 / 16 px inside the device safe area; real insets not seen]
+12. Every button gets click audio. The Pets tab under Companions makes no sound. [done in source, unpublished, not heard: one shared helper (UIClick) and a spec that walks the menus]
 13. Pocket Deck drops frames intermittently during play. [queued]
-14. The seam where the ball-drop board meets the bottom of the screen needs cleaning up and rounding off; the board may sit too high. [queued]
-15. Darken the Pet Park textures to match the world's new darker palette (v735 world pass: greyer marble, darker grass, browner path). [queued]
+14. The seam where the ball-drop board meets the bottom of the screen needs cleaning up and rounding off; the board may sit too high. [done in source, unpublished: a rounded tray base and matching corners; the board rect did not move]
+15. Darken the Pet Park textures to match the world's new darker palette (v735 world pass: greyer marble, darker grass, browner path). [done in source, unpublished: park palette graded with the v735 world numbers, new Image 86494931505767]
+
+Batch 6 to 12, 14, 15: captures, critique and what was not verified are in `ui-batch/README.md`.
