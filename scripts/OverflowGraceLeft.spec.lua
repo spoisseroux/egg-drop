@@ -42,6 +42,30 @@ return function(server)
 		r:step(above, 0.5, 10)
 		assert(near(r.graceLeft, 2.5) and r.grace == 3)
 	end)
+	-- QA v735 D3: the warning fired on every drop, because a falling ball crosses the
+	-- warning band (the 2 units under the line) on its way down.
+	test("a ball still falling through the warning band is not pressure; the pile is", function()
+		local function falling(top) return { position = Vector3.new(0, top - 1, 0), radius = 1, roundAge = 0.3, enteredTray = true } end
+		local r = Round.new()
+		r:step({ falling(Config.OverflowY - 0.5) }, 0.1, 99)
+		assert(r.danger == 0 and r.graceLeft == 0, "a falling ball warned: danger=" .. r.danger)
+		local landed = falling(Config.OverflowY - 0.5); landed.hasContact = true
+		r:step({ landed }, 0.1, 99)
+		assert(r.danger > 0, "a ball resting near the line must warn")
+		-- A calm pile with a ball falling past it stays calm; a high pile still warns.
+		local low = egg(Config.OverflowY - 4)
+		r = Round.new(); r:step({ low, falling(Config.OverflowY - 0.2) }, 0.1, 99)
+		assert(r.danger == 0, "calm pile + falling ball warned")
+		r = Round.new(); r:step({ egg(Config.OverflowY - 0.5), falling(Config.OverflowY - 1.5) }, 0.1, 99)
+		assert(r.danger > 0, "high pile must warn while a ball falls")
+		-- The rules are unchanged: a ball over the line that has entered the tray still runs the grace.
+		r = Round.new(); r:step({ falling(Config.OverflowY + 0.5) }, 0.1, 99)
+		assert(near(r.graceLeft, Config.OverflowGrace - 0.1) and r.overflowTime > 0, "overflow rule changed")
+		-- A ball that never touches anything still counts after 1.4 s.
+		local stuck = falling(Config.OverflowY - 0.5); stuck.roundAge = 1.5
+		r = Round.new(); r:step({ stuck }, 0.1, 99)
+		assert(r.danger > 0, "an old ball must count")
+	end)
 	test("the server publishes it beside OverflowPressure", function()
 		local source = server:FindFirstChild("init") or server
 		assert(Config.OverflowGrace == 1.1, "default grace changed")

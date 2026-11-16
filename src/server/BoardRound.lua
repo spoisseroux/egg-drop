@@ -13,7 +13,7 @@ end
 
 function Round:step(eggs, dt, drops)
 	if self.over then return end
-	local overflowing, maximum = false, 0
+	local overflowing, maximum, resting = false, 0, 0
 	for _, egg in ipairs(eggs) do
 		egg.roundAge = (egg.roundAge or 0) + dt
 		local top = egg.position.Y + egg.radius
@@ -23,13 +23,17 @@ function Round:step(eggs, dt, drops)
 		if egg.enteredTray or egg.roundAge >= 1.4 then
 			maximum = math.max(maximum, top)
 			if top >= self.overflowY then overflowing = true end
+			-- QA v735 D3: the near-line warning is about the pile. A ball that is still
+			-- falling passes through the warning band on every drop, so it only counts
+			-- once it has touched the tray or another ball (or has been in play 1.4 s).
+			if egg.hasContact or egg.roundAge >= 1.4 then resting = math.max(resting, top) end
 		end
 	end
 	self.settledHeight = maximum
 	local armed = (drops or 0) >= self.armAfterDrops or maximum >= Config.SpawnY - 1
 	self.overflowTime = if armed and overflowing then self.overflowTime + dt else 0
 	self.danger = if not armed then 0 else math.max(self.overflowTime / self.grace,
-		math.clamp((maximum - self.overflowY + self.warningMargin) / self.warningMargin, 0, 0.85))
+		math.clamp((resting - self.overflowY + self.warningMargin) / self.warningMargin, 0, 0.85))
 	-- Welcome cannot lose. Simulation still enforces its resource cap; the host
 	-- refreshes a full/blocked Welcome tray with charge/run/demo state retained.
 	if self.safe then self.overflowTime, self.danger = 0, 0 end
