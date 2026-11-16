@@ -68,7 +68,7 @@ function Panel.new(parent,intent,options)
   local p=Instance.new("Frame");p.Name="Pip"..stage;p.BorderSizePixel=0;p.ZIndex=bar.ZIndex+1;p.Parent=bar
   Instance.new("UICorner",p).CornerRadius=UDim.new(1,0);self.pips[stage]=p
  end
- self.kept=Art.text(bar,"Kept","",UDim2.fromOffset(0,0),UDim2.fromOffset(120,18),"soft",12);self.kept.TextXAlignment=Enum.TextXAlignment.Right
+ self.kept=Art.text(bar,"Kept","",UDim2.fromOffset(0,0),UDim2.fromOffset(120,18),"muted",12);self.kept.TextXAlignment=Enum.TextXAlignment.Right
  return self
 end
 function Panel:refresh(state,petId,visible)
@@ -108,7 +108,7 @@ function Panel:layoutCards(width,cols,cardH,gap,focusIndex,compact)
  end
  for stage=1,3 do
   local p=self.pips[stage];local on=stage<=row.jelly;p.Visible=stage<=Look.JellyStops
-  p.Size=UDim2.fromOffset(12,12);p.Position=UDim2.fromOffset(span+40+(stage-1)*18,24+(if compact then -4 else 0))
+  p.Size=UDim2.fromOffset(12,12);p.Position=UDim2.fromOffset(span+64+(stage-1)*18,24+(if compact then -4 else 0))
   p.BackgroundColor3=if on then accent else soft
  end
  local legacy=(self.state.petMaterials or {})[self.petId]

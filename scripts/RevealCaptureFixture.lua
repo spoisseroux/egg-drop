@@ -72,7 +72,7 @@ return function(client)
   if kind=="material"then result.finishId=spec.id;name=require(Shared.MaterialCatalog).ById[spec.id].name;detail=Copy.get("hatch.display.material");primaryText,secondaryText="Use now","Keep"
   elseif kind=="toy"then result.toyId=spec.id;name=require(Shared.ToyCatalog).ById[spec.id].name;detail="Choose a pet for this toy.";primaryText,secondaryText=if spec.give then "Give to Bear"else "Use now","Store"
   elseif kind=="feature"then result.featureId=spec.id;name=require(Shared.FeatureCatalog).ById[spec.id].name;detail="Grows on any pet.";primaryText,secondaryText="Use now","Store"
-  else result.itemId=spec.id;name=require(Shared.HueCatalog).Items[spec.id].name;detail="1 in inventory · choose a pet and channel.";primaryText,secondaryText="Use now","Store"end
+  else result.itemId=spec.id;local row=require(Shared.HueCatalog).Items[spec.id];name=spec.name or(row and row.name)or spec.id;detail=spec.detail or "1 in inventory · choose a pet and channel.";primaryText,secondaryText=spec.primary or "Use now",spec.secondary or "Store"end -- spec.name/detail/primary: Customization Egg results
   -- Stand-ins for the host's receipt buttons (HueEggView's Action and Use now).
   local primary=node("TextButton",host,{Name="FixtureUseNow",Text=primaryText,Size=UDim2.fromOffset(10,10),Position=UDim2.fromOffset(-50,-50)})
   local secondary=node("TextButton",host,{Name="FixtureAction",Text=secondaryText,Size=UDim2.fromOffset(10,10),Position=UDim2.fromOffset(-50,-50)})

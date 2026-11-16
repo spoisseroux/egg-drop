@@ -141,7 +141,7 @@ function View.new(parent,intent,options)
   local label=text(n,"ItemName",names[id],"Body");local quantity=text(n,"Quantity","×0","Counter");local reason=text(n,"Reason","","Supporting")
   self.jars[id]={button=n,art=art,label=label,quantity=quantity,reason=reason}
  end
- self.empty=text(body,"EmptyInventory","No jars yet. Find pigment jars in Hue Eggs.","Body")
+ self.empty=text(body,"EmptyInventory","No jars yet. Find colour jars in Customization Eggs.","Body")
  self.charmTitle=text(body,"CharmTitle","A floating Snowflake, colored by Secondary.","Body")
  self.eggsButton=button(body,"FindEggs","Eggs",function()self:close("shop");local open=self.options.eggs or self.options.shop;if open then open()end end)
  self.shapes={};self.shapeIcons={};self.gridPreviews={};self.scrollPositions={}
@@ -900,7 +900,7 @@ function View:refresh()
  self.receipt.Visible=self.page=="receipt";self.receiptArt.Visible=self.receipt.Visible;self.receiptDetail.Visible=self.receipt.Visible;self.useNow.Visible=self.receipt.Visible
  if r and self.receipt.Visible then
   local lookKind=LookEgg.kind(r.itemId);local petName=Pets.byId[self.petId]and Pets.byId[self.petId].name or "your pet"
-  self.receipt.Text=if lookKind=="charm"then UICopy.get("hatch.display.charm")..". "..UICopy.get("pool3.charm.earned")
+  self.receipt.Text=if lookKind=="charm"then UICopy.get("hatch.look.charmOwned")
    elseif lookKind=="finish"then tostring(r.inventoryAfter or 1).." in inventory · "..UICopy.get("hatch.display.finish")
    else tostring((self.state.hueInventory or {})[r.itemId]or r.inventoryAfter or 1).." in inventory · choose a pet and channel"..(if r.itemId=="reset"then " to reset."else ".")
   self.useNow.Text=if lookKind=="charm"then UICopy.get("hatch.look.wearOn",{pet=petName})else UICopy.get("hatch.look.useNow")
@@ -1462,7 +1462,7 @@ function View:layoutChrome()
    pane.button=if id=="reset"then "Use Reset Hue"else "Use 1 jar"
    pane.enabled=allowed and not self.intent.pending and reason==nil
   else
-   pane.line="No jars yet. Hatch a Hue Egg."
+   pane.line="No jars yet. Hatch a Customization Egg."
   end
   if self.intent.status=="Retrying"then pane.button="Try again";pane.enabled=true end
  elseif self.tab=="charm"then
@@ -1769,7 +1769,7 @@ function View:open(state,page,petId)
   if field and result then self[field]=result.id end
  end
  if self.state.hueMigrationId and self.state.hueMigrationAcknowledged==false then self.afterMigrationPage=self.page;self.page="migration"end
- self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"or page=="finish"then "finish"elseif page=="toys"then "toys"elseif page=="features"then "features"elseif page=="pet"then "pet"else "hue"
+ self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"then "materials"elseif page=="finish"then "finish"elseif page=="toys"then "toys"elseif page=="features"then "features"elseif page=="pet"then "pet"else "hue"
  if self.quietStore and(page==nil or page=="palette")and not self.state.pendingHueResult then
   if self.state.pendingToyResult then self.tab="toys"elseif self.state.pendingMaterialResult then self.tab="materials"end
  end

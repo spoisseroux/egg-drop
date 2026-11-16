@@ -164,7 +164,9 @@
         "MaterialVersion": 1,
         "SheenRoughness": 255,
         "TwoTone": true,
-        "SheenStop": -3
+        "SheenStop": -3,
+        "NativeVerified": true,
+        "Candidate": "Opus native Studio check 2026-11-16 (01-sheen-stops-native.jpg); Fable phone approval pending"
       },
       "name": "BodyTwoToneSheenM3"
     },
@@ -192,7 +194,9 @@
         "MaterialVersion": 1,
         "SheenRoughness": 196,
         "TwoTone": true,
-        "SheenStop": -2
+        "SheenStop": -2,
+        "NativeVerified": true,
+        "Candidate": "Opus native Studio check 2026-11-16 (01-sheen-stops-native.jpg); Fable phone approval pending"
       },
       "name": "BodyTwoToneSheenM2"
     },
@@ -220,7 +224,9 @@
         "MaterialVersion": 1,
         "SheenRoughness": 138,
         "TwoTone": true,
-        "SheenStop": -1
+        "SheenStop": -1,
+        "NativeVerified": true,
+        "Candidate": "Opus native Studio check 2026-11-16 (01-sheen-stops-native.jpg); Fable phone approval pending"
       },
       "name": "BodyTwoToneSheenM1"
     },
@@ -248,7 +254,9 @@
         "MaterialVersion": 1,
         "SheenRoughness": 58,
         "TwoTone": true,
-        "SheenStop": 1
+        "SheenStop": 1,
+        "NativeVerified": true,
+        "Candidate": "Opus native Studio check 2026-11-16 (01-sheen-stops-native.jpg); Fable phone approval pending"
       },
       "name": "BodyTwoToneSheenP1"
     },
@@ -276,7 +284,9 @@
         "MaterialVersion": 1,
         "SheenRoughness": 36,
         "TwoTone": true,
-        "SheenStop": 2
+        "SheenStop": 2,
+        "NativeVerified": true,
+        "Candidate": "Opus native Studio check 2026-11-16 (01-sheen-stops-native.jpg); Fable phone approval pending"
       },
       "name": "BodyTwoToneSheenP2"
     },
@@ -304,7 +314,9 @@
         "MaterialVersion": 1,
         "SheenRoughness": 14,
         "TwoTone": true,
-        "SheenStop": 3
+        "SheenStop": 3,
+        "NativeVerified": true,
+        "Candidate": "Opus native Studio check 2026-11-16 (01-sheen-stops-native.jpg); Fable phone approval pending"
       },
       "name": "BodyTwoToneSheenP3"
     }

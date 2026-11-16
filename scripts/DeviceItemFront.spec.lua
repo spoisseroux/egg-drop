@@ -23,7 +23,7 @@ return function(client,parent)
    root.Size=UDim2.fromOffset(size.X,size.Y);settle()
    test(tostring(size).." Customize icon tabs reachable both directions, Features hidden by the flag",function()
     allowed=true;assert(view:open(state(),"hue","pip"));settle()
-    for _,order in ipairs({{"hue","charm","materials","toys"},{"toys","materials","charm","hue"}})do for _,id in ipairs(order)do
+    for _,order in ipairs({{"hue","charm","finish","toys"},{"toys","finish","charm","hue"}})do for _,id in ipairs(order)do
      view:setTab(id);settle();assert(view.tab==id,"tab not reached: "..id);local tab=view.editorTabs[id]
      assert(tab and tab.Visible,"tab missing: "..id)
      -- Portrait windows scale the 848 desktop panel down; 44 px targets hold in landscape.
@@ -40,7 +40,7 @@ return function(client,parent)
     -- v1: the Material Egg is not sold (MaterialCatalog.EnablePurchases), so its row is gone.
     local sold=require(game.ReplicatedStorage.Shared.MaterialCatalog).EnablePurchases
     if not sold then assert(not shop:selectRecipe("material")and shop.body.EggColumn:FindFirstChild("Recipe_material")==nil,"the Material Egg row must be hidden while it is not sold")end
-    for _,id in ipairs(if sold then {"hue","material","toy"}else {"hue","toy"})do assert(shop:selectRecipe(id));settle();local card=shop.body.EggColumn["Recipe_"..id];assert(card and card.AbsoluteSize.X>=44);fit(card.RecipeName);fit(card.Cost)end
+    for _,id in ipairs(if sold then {"look","material","toy"}else {"look","toy"})do assert(shop:selectRecipe(id));settle();local card=shop.body.EggColumn["Recipe_"..id];assert(card and card.AbsoluteSize.X>=44);fit(card.RecipeName);fit(card.Cost)end
     -- Redesign 3: odds render once, in the pane; the Feature Egg row is hidden by the flag.
     shop:selectRecipe("toy");settle();local odds=shop.oddsHolder;assert(not odds:FindFirstChild("Odds_ball")and odds.Odds_bone:GetAttribute("OddsText")=="50%"and odds.Odds_sparkler:GetAttribute("OddsText")=="50%")
     assert(not shop:selectRecipe("feature")and shop.body.EggColumn:FindFirstChild("Recipe_feature")==nil)

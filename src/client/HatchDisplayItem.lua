@@ -91,7 +91,7 @@ function Item.create(world,gui,result,builder,height)
  if api then handle=if result.toyId then api.create(world,id,1)else api.create(world,id,1,1,Color3.fromHex("#95CDB9"))
  elseif result.itemId then
   -- Slice 3 (2026-11-16): hue jars, finish jars and the charm capsule turn in 3D like toys.
-  local model=require(script.Parent.JarModel).build(result.itemId,1)
+  local model=require(script.Parent.JarModel).build(result.itemId,1,{turn=false})
   if model then model.Parent=world;handle={model=model,destroy=function()model:Destroy()end}end
  end
  do

@@ -11,11 +11,11 @@ return table.freeze({Asset=111754744827256,Items=table.freeze({
   table.freeze({name="Jar_charm__Shine",part="Shine",size=v(20.3055,26,20.3986),position=v(26.9467,79,-31.5533),color="#FFFFFF",transparency=0.15,material="SmoothPlastic",reflectance=0}),
  }),
  citrus=table.freeze({
-  table.freeze({name="Jar_citrus__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#FFE280",transparency=0.55,material="SmoothPlastic",reflectance=0}),
+  table.freeze({name="Jar_citrus__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#FFE280",transparency=0.72,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_citrus__Lid",part="Lid",size=v(88,27.5,88),position=v(0,89.75,2e-05),color="#FFF3D6",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_citrus__Liquid",part="Liquid",size=v(98.58,74.4,49.29),position=v(0,39.7,24.645),color="#FFB300",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_citrus__Shine",part="Shine",size=v(10.7459,32,9.20414),position=v(32.8147,34,-41.6897),color="#FFFFFF",transparency=0.15,material="SmoothPlastic",reflectance=0}),
-  table.freeze({name="Jar_citrus__Symbol",part="Symbol",size=v(49.2956,45.1714,39.1),position=v(0,33.4524,0),color="#FFFCEB",transparency=0,material="SmoothPlastic",reflectance=0}),
+  table.freeze({name="Jar_citrus__Symbol",part="Symbol",size=v(49.2956,45.1714,39.1),position=v(0,33.4524,0),color="#FFFFFF",transparency=0,material="SmoothPlastic",reflectance=0}),
  }),
  gloss=table.freeze({
   table.freeze({name="Jar_gloss__Body",part="Body",size=v(106,103.5,106),position=v(0,51.75,1e-05),color="#58DDC2",transparency=0,material="SmoothPlastic",reflectance=0.3}),
@@ -23,7 +23,7 @@ return table.freeze({Asset=111754744827256,Items=table.freeze({
   table.freeze({name="Jar_gloss__Topper",part="Topper",size=v(88.35,86.8,24.8),position=v(-5.425,144.4,2e-05),color="#FFE56B",transparency=0,material="SmoothPlastic",reflectance=0}),
  }),
  iris=table.freeze({
-  table.freeze({name="Jar_iris__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#C4A2FF",transparency=0.55,material="SmoothPlastic",reflectance=0}),
+  table.freeze({name="Jar_iris__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#C4A2FF",transparency=0.72,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_iris__Lid",part="Lid",size=v(88,27.5,88),position=v(0,89.75,2e-05),color="#FFF3D6",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_iris__Liquid",part="Liquid",size=v(98.58,74.4,49.29),position=v(0,39.7,24.645),color="#9350FF",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_iris__Shine",part="Shine",size=v(10.7459,32,9.20414),position=v(32.8147,34,-41.6897),color="#FFFFFF",transparency=0.15,material="SmoothPlastic",reflectance=0}),
@@ -40,21 +40,21 @@ return table.freeze({Asset=111754744827256,Items=table.freeze({
   table.freeze({name="Jar_matte__Topper",part="Topper",size=v(77.3738,52.7,52.7),position=v(0.67117,124.25,2e-05),color="#E9FFF9",transparency=0,material="Sand",reflectance=0}),
  }),
  reset=table.freeze({
-  table.freeze({name="Jar_reset__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#C0ECF5",transparency=0.55,material="SmoothPlastic",reflectance=0}),
+  table.freeze({name="Jar_reset__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#C0ECF5",transparency=0.72,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_reset__Lid",part="Lid",size=v(88,27.5,88),position=v(0,89.75,2e-05),color="#FFF3D6",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_reset__Liquid",part="Liquid",size=v(98.58,74.4,49.29),position=v(0,39.7,24.645),color="#4FB9CC",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_reset__Shine",part="Shine",size=v(10.7459,32,9.20414),position=v(32.8147,34,-41.6897),color="#FFFFFF",transparency=0.15,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_reset__Symbol",part="Symbol",size=v(45.5,43.2731,11.1274),position=v(0,29.1,0),color="#FFF3D6",transparency=0,material="SmoothPlastic",reflectance=0}),
  }),
  rose=table.freeze({
-  table.freeze({name="Jar_rose__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#FF94B7",transparency=0.55,material="SmoothPlastic",reflectance=0}),
+  table.freeze({name="Jar_rose__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#FF94B7",transparency=0.72,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_rose__Lid",part="Lid",size=v(88,27.5,88),position=v(0,89.75,2e-05),color="#FFF3D6",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_rose__Liquid",part="Liquid",size=v(98.58,74.4,49.29),position=v(0,39.7,24.645),color="#FF327A",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_rose__Shine",part="Shine",size=v(10.7459,32,9.20414),position=v(32.8147,34,-41.6897),color="#FFFFFF",transparency=0.15,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_rose__Symbol",part="Symbol",size=v(46.8631,47.7722,26.0887),position=v(0,29.5329,4.73529),color="#FFE8E2",transparency=0,material="SmoothPlastic",reflectance=0}),
  }),
  tide=table.freeze({
-  table.freeze({name="Jar_tide__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#80C1FF",transparency=0.55,material="SmoothPlastic",reflectance=0}),
+  table.freeze({name="Jar_tide__Body",part="Body",size=v(106,80,106),position=v(0,40,1e-05),color="#80C1FF",transparency=0.72,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_tide__Lid",part="Lid",size=v(88,27.5,88),position=v(0,89.75,2e-05),color="#FFF3D6",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_tide__Liquid",part="Liquid",size=v(98.58,74.4,49.29),position=v(0,39.7,24.645),color="#008DFF",transparency=0,material="SmoothPlastic",reflectance=0}),
   table.freeze({name="Jar_tide__Shine",part="Shine",size=v(10.7459,32,9.20414),position=v(32.8147,34,-41.6897),color="#FFFFFF",transparency=0.15,material="SmoothPlastic",reflectance=0}),

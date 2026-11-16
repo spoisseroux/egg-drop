@@ -45,9 +45,9 @@ return function(client,parent)
   end)
   scene:destroy();root:Destroy();assert(ok,problem);count+=1
   local flatRoot=Instance.new("Frame");flatRoot.Size=UDim2.fromOffset(200,200);flatRoot.Parent=parent
-  local flat=Scene.new(flatRoot,{kind="hue",result={id="item-fit-rose",itemId="rose"},resultBuilder=function(gui)local f=Instance.new("Frame");f.Parent=gui;return f end})
+  local flat=Scene.new(flatRoot,{kind="hue",result={id="item-fit-mystery",itemId="mystery"},resultBuilder=function(gui)local f=Instance.new("Frame");f.Parent=gui;return f end})
   local ok2,problem2=pcall(function()
-   assert(flat.item.mode=="NativeItemArt"and not flat:setSpin(1)and flat.spin==0,"flat jar art does not turn")
+   assert(flat.item.mode=="NativeItemArt"and not flat:setSpin(1)and flat.spin==0,"flat item art (no jar model) does not turn")
   end)
   flat:destroy();flatRoot:Destroy();assert(ok2,problem2);count+=1
  end

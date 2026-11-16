@@ -21,7 +21,7 @@ OUT_LUA = os.path.join(ROOT, "src", "client", "JarModelData.lua")
 PIGMENT = {"rose": "#FF327A", "tide": "#008DFF", "citrus": "#FFB300", "iris": "#9350FF", "reset": "#4FB9CC"}
 # part -> (transparency, material, reflectance); colour from the Blender mean unless overridden
 LOOK = {
-    "Body": (.55, "SmoothPlastic", 0),
+    "Body": (.72, "SmoothPlastic", 0),
     "Liquid": (0, "SmoothPlastic", 0),
     "Symbol": (0, "SmoothPlastic", 0),
     "Lid": (0, "SmoothPlastic", 0),
@@ -38,7 +38,7 @@ SPECIAL = {
     ("matte", "Body"): ("#7FD8C6", 0, "Sand", 0),
     ("matte", "Topper"): ("#E9FFF9", 0, "Sand", 0),
     ("jelly", "Body"): ("#58DDC2", .3, "SmoothPlastic", .05),
-    ("citrus", "Symbol"): ("#FFFCEB", 0, "SmoothPlastic", 0),  # stronger contrast on yellow
+    ("citrus", "Symbol"): ("#FFFFFF", 0, "SmoothPlastic", 0),  # stronger contrast on yellow (QA 2026-11-16c)
     ("charm", "Charm"): ("#FFCB3D", 0, "SmoothPlastic", 0),
 }
 PART = """    <Item class="MeshPart" referent="{name}">

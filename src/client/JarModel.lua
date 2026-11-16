@@ -26,16 +26,20 @@ function Jar.ready(itemId)
  return true
 end
 -- `scale` maps studs-in-data to studs (default .01: one unit is one Blender unit).
-function Jar.build(itemId,scale)
+-- options.turn=false keeps the imported facing (the 3D reveal stage looks from the other side).
+function Jar.build(itemId,scale,options)
  local art=Jar.artId(itemId);if not art or not Jar.ready(itemId)then return nil end
  scale=scale or .01
  local model=Instance.new("Model");model.Name="Jar_"..art;model:SetAttribute("ItemId",itemId)
+ local facing=if options and options.turn==false then CFrame.identity else turn
  for _,row in ipairs(Data.Items[art])do
   local part=template(row.name):Clone()
-  part.Name=row.part;part.Size=row.size*scale;part.CFrame=turn*CFrame.new(row.position*scale)
+  part.Name=row.part;part.Size=row.size*scale;part.CFrame=facing*CFrame.new(row.position*scale)
   part.Color=Color3.fromHex(row.color);part.Transparency=row.transparency;part.Reflectance=row.reflectance
   part.Material=Enum.Material[row.material]or Enum.Material.SmoothPlastic
   part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.CastShadow=false
+  -- The pigment and jelly cores are half shells seen from their open side through the glass.
+  if row.part=="Liquid"or row.part=="Core"then part.DoubleSided=true end
   part.Parent=model
  end
  return model
@@ -53,7 +57,7 @@ function Jar.viewport(host,itemId,options)
  model.Parent=frame
  local cf,size=model:GetBoundingBox()
  local radius=math.max(size.X,size.Y,size.Z)*.5
- local distance=radius/math.tan(math.rad(camera.FieldOfView*.5))*(options.zoom or 1.05)
+ local distance=radius/math.tan(math.rad(camera.FieldOfView*.5))*(options.zoom or 1.3)
  local target=cf.Position
  camera.CFrame=CFrame.lookAt(target+Vector3.new(0,radius*.35,distance),target)
  frame.Parent=host

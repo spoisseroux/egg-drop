@@ -22,6 +22,8 @@
     "MaterialProfile": "BodySheenP3",
     "MaterialVersion": 1,
     "SheenRoughness": 14,
-    "SheenStop": 3
+    "SheenStop": 3,
+    "NativeVerified": true,
+    "Candidate": "Opus native Studio check 2026-11-16 (01-sheen-stops-native.jpg); Fable phone approval pending"
   }
 }

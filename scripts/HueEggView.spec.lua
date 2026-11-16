@@ -69,12 +69,12 @@ return function(client,parent,onlySize)
     view:open(s,"palette","puddle");settleReceipt();check()
     assert(view.title.Text==(if item=="reset"then "Reset Hue"else "Rose jar")and not view.receiptDetail.Visible)
     assert(view.receipt.Text:find("in inventory",1,true)and view.receipt.AbsolutePosition.X>view.receiptArt.AbsolutePosition.X+view.receiptArt.AbsoluteSize.X)
-    local jar=view.itemReveal.jar;assert(jar.AbsoluteSize.X>=63 and jar.AbsoluteSize.Y>=63)
+    local graphic=view.itemReveal.jar;local jar=graphic or view.receiptArt;assert(jar.AbsoluteSize.X>=63 and jar.AbsoluteSize.Y>=63) -- slice 3: the 3D jar has no flat graphic
     assert(view.useNow.Parent==view.card and view.useNow.AbsolutePosition.Y==view.action.AbsolutePosition.Y)
     assert(view.useNow.AbsolutePosition.X+view.useNow.AbsoluteSize.X+7<=view.action.AbsolutePosition.X)
     assert(view.receipt.AbsolutePosition.Y+view.receipt.AbsoluteSize.Y<=view.body.AbsolutePosition.Y+view.body.AbsoluteSize.Y and not view.body.ScrollingEnabled)
     for _,node in ipairs({view.useNow,view.action})do assert(node.TextFits and node.AbsoluteSize.Y>=44 and node.AbsolutePosition.Y+node.AbsoluteSize.Y<=view.card.AbsolutePosition.Y+view.card.AbsoluteSize.Y)end
-    assert(view.action.Text=="Store"and view:useResult());settle();assert(not jar.Parent and not view.itemReveal.resultId)
+    assert(view.action.Text=="Store"and view:useResult());settle();assert(not(graphic and graphic.Parent)and not view.itemReveal.resultId)
    end
   end)
   test("confirm sends once to unequipped selected pet and preserves exact result association",function()
