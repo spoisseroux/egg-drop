@@ -5,6 +5,7 @@ local View={};View.__index=View
 local CREAM=Color3.fromHex("#FFF0D2")
 local MINT=Color3.fromHex("#94DFB7")
 local INK=Color3.fromHex("#24313B")
+local PILL=Color3.fromHex("#2F404C")
 local function node(class,parent,name,properties)
 	local n=Instance.new(class);n.Name=name
 	for key,value in pairs(properties or {})do n[key]=value end
@@ -61,10 +62,19 @@ function View.new(hosts,d)
 	self.glyph=node("TextLabel",gh,"WelcomeInputGlyph",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1),
 		Text="",TextColor3=CREAM,TextSize=16,Font=Enum.Font.BuilderSansBold,TextWrapped=true,Active=false,Selectable=false,ZIndex=gh.ZIndex+5,Visible=false})
 	local sh=hosts.skip
-	self.skip=node("TextButton",sh,"WelcomeSkip",{Size=UDim2.fromOffset(72,48),AnchorPoint=Vector2.new(1,.5),Position=UDim2.fromScale(1,.5),
-		Text="",TextColor3=CREAM,TextSize=14,TextWrapped=true,Font=Enum.Font.BuilderSansBold,BackgroundColor3=INK,BackgroundTransparency=.12,
-		BorderSizePixel=0,Visible=false,ZIndex=sh.ZIndex+6,AutoButtonColor=true})
-	round(self.skip,.25)
+	-- QA v760: a bare "Skip" on the card read as stray text. It is now a small outlined
+	-- button, "Skip tutorial", as wide as its well; the 48 px tall TextButton is the hit
+	-- area and the 34 px pill inside it is what is drawn.
+	self.skip=node("TextButton",sh,"WelcomeSkip",{Size=UDim2.new(1,0,0,48),AnchorPoint=Vector2.new(1,.5),Position=UDim2.fromScale(1,.5),
+		Text="",BackgroundTransparency=1,BorderSizePixel=0,Visible=false,ZIndex=sh.ZIndex+6,AutoButtonColor=false})
+	self.skipPill=frame(self.skip,"SkipPill",UDim2.fromScale(.5,.5),UDim2.new(1,0,0,34),PILL,sh.ZIndex+7)
+	self.skipPill.AnchorPoint=Vector2.new(.5,.5);round(self.skipPill,.5)
+	self.skipStroke=node("UIStroke",self.skipPill,"Outline",{Color=CREAM,Transparency=.5,Thickness=1,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+	self.skipLabel=node("TextLabel",self.skipPill,"Label",{BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Text="",TextColor3=CREAM,TextSize=14,
+		Font=Enum.Font.BuilderSansBold,Active=false,Selectable=false,ZIndex=sh.ZIndex+8})
+	table.insert(self.links,self.skip.MouseButton1Down:Connect(function()self.skipPill.BackgroundColor3=PILL:Lerp(CREAM,.16)end))
+	table.insert(self.links,self.skip.MouseButton1Up:Connect(function()self.skipPill.BackgroundColor3=PILL end))
+	table.insert(self.links,self.skip.MouseLeave:Connect(function()self.skipPill.BackgroundColor3=PILL end))
 	table.insert(self.links,self.skip.Activated:Connect(function()self:requestSkip()end))
 	return self
 end
@@ -80,13 +90,15 @@ function View:paint()
 	-- UDim offsets quantize to integer layout pixels. Round the authored hit
 	-- size UP before the ancestor UIScale, so .77 scale cannot turn 48px into
 	-- 47.74px. Egg bounds round down to preserve their physical inset instead.
-	self.skip.Size=UDim2.fromOffset(math.ceil(72/scale),math.ceil(48/scale));self.skip.TextSize=14/scale
+	self.skip.Size=UDim2.new(1,0,0,math.ceil(48/scale))
+	self.skipPill.Size=UDim2.new(1,0,0,math.ceil(34/scale));self.skipLabel.TextSize=14/scale
 	self.egg.Visible=wanted
 	for index,crack in ipairs(self.cracks)do crack.Visible=wanted and index<=(self.stage or 0)end
 	self.skip.Visible=wanted and s.skipReady==true and self.hosts.skip.AbsoluteSize.X>=71.999 and self.hosts.skip.AbsoluteSize.Y>=47.999
 	self.skip:SetAttribute("LayoutBlocked",wanted and s.skipReady==true and not self.skip.Visible)
 	self.skip.Interactable=not self.pending and not s.grantPending
-	self.skip.Text=self:copy(if self.pending or s.grantPending then "onboarding.welcome.saving"else "onboarding.welcome.skip")
+	self.skipLabel.Text=self:copy(if self.pending or s.grantPending then "onboarding.welcome.saving"else "onboarding.welcome.skip")
+	self.skipLabel.TextTransparency=if self.skip.Interactable then 0 else .4;self.skipStroke.Transparency=if self.skip.Interactable then .5 else .8
 	local input=wanted and(s.drops or 0)==0 and not self.interacted
 	local reduced=s.reduced==true
 	local touch=s.device=="Touch"

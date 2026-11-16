@@ -137,7 +137,7 @@ local Table={
  park={waitIdle="Pets are playing",count="Pets playing {count}/{capacity}",full="Park full · {count}/{capacity}",otherHasRoom="The other park has room",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
  onboarding={
-  welcome={friend="Hatch a friend",match="Match",more="One more!",skip="Skip",saving="Saving…",static="↓",gamepad="D-pad · A",keyboard="← → · SPACE",egg="Mystery egg"},
+  welcome={friend="Hatch a friend",match="Match",more="One more!",skip="Skip tutorial",saving="Saving…",static="↓",gamepad="D-pad · A",keyboard="← → · SPACE",egg="Mystery egg"},
   spend={hatch="Hatch eggs",give="Give to {pet}",store="Store",ready="A toy for {pet}",line="Choose a Toy Egg when you're ready."},
  },
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).
