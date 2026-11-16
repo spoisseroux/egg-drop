@@ -64,14 +64,15 @@ Screen.PocketItems=POCKET_ITEMS
 -- Plate grip either side of a phone menu sheet (UI-SPEC-COMPACT-FRAME 4).
 -- QA v735 D1: the phone handheld's fit inside the root (px). `side` is the gap to the
 -- left, right and bottom edges, `crown` the plate above the glass, `chin` the plate under it.
-Screen.Fit={side=4,crown=16,chin=14}
+-- QA v751 P1: `margin` is the clear gap kept on every side of the whole shell (bumpers and
+-- rounded corners included) and under the Roblox top bar; `aspect` is the body's locked
+-- width / height on a phone. The shell is the largest one of that shape that fits, centred.
+Screen.Fit={margin=8,aspect=2.3,crown=16,chin=14}
 function Screen.gripMargin(W)return if W>=800 then 40 elseif W>=700 then 24 else 6 end
 function Screen.resolveCompact(W,H,aspect,kx,kh)
  kx=kx or 116;kh=kh or 58
- local tier=if H>=380 then 0 elseif H>=340 then 1 else 2
  -- QA 2026-11-12: the glass starts under the Roblox controls (`top`), never behind them,
  -- and the shoulders are 18 px wider so the screen reads less wide.
- local SW=({124,112,98})[tier+1];local D=({88,80,68})[tier+1];local A=({92,82,70})[tier+1]
  -- QA v735 D1 (the fit): the whole handheld sits inside the root, on every side.
  -- Root cause of the phone deck "wrong size" reports: this function never fitted the
  -- shell. The body was authored to run 32 px off the bottom of the root (H + 32) with
@@ -81,10 +82,28 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  -- its bumpers start 2 px under the top bar, and the glass, the controls and MENU are
  -- laid out against `B` (the layout bottom, Fit.chin px above the body's edge), not H.
  -- Menu sheets still cover the whole root from `sheetTop`, 18 px under the bar.
+ -- QA v751 P1 (real phone, 874x402 logical under a 58 px top bar): that fit stretched the
+ -- body to whatever the root was and kept only 4 px at the sides and bottom and 2 px under
+ -- the bar, which a phone's rounded screen corners and the bar's own buttons swallow. The
+ -- shell is now one locked shape (Fit.aspect), the largest that leaves Fit.margin clear on
+ -- all four sides of the safe area under the top bar, centred in it. Everything is laid
+ -- out in body coordinates (x from the body's left edge) and shifted by `ox` at the end;
+ -- only the menu sheets, which cover the root, and the back button stay in root px.
  local Fit=Screen.Fit
- local bodyBottom=H-Fit.side
- local rise=math.ceil(-L.shoulderL[2]*(bodyBottom-(kh+2))/L.size.Y)
- local bodyTop=kh+2+rise
+ local rootW=W
+ local riseRatio=-L.shoulderL[2]/L.size.Y
+ local availW,availH=W-2*Fit.margin,H-kh-2*Fit.margin
+ local bodyH=math.floor(availH/(1+riseRatio))
+ local bodyW=math.min(availW,math.floor(bodyH*Fit.aspect+.5))
+ bodyH=math.min(bodyH,math.floor(bodyW/Fit.aspect+.5))
+ local rise=math.ceil(riseRatio*bodyH)
+ if bodyH+rise>availH then bodyH=availH-rise end
+ local bodyTop=kh+Fit.margin+rise+math.floor((availH-bodyH-rise)/2)
+ local bodyBottom=bodyTop+bodyH
+ local ox=math.floor((rootW-bodyW)/2)
+ W=bodyW
+ local tier=if bodyH>=305 then 0 elseif bodyH>=265 then 1 else 2
+ local SW=({124,112,98})[tier+1];local D=({88,80,68})[tier+1];local A=({92,82,70})[tier+1]
  local top=bodyTop+Fit.crown
  local sheetTop=kh+18
  local rootH=H
@@ -134,7 +153,10 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
   else g.handle=rect(L0,y1-44,c,44)end
   local nh=if H>=340 then 64 else 44
   g.next=rect(R0,y0,rc,nh)
-  g.eggs=rect(R0,y0+nh+GAP,rc,44);g.difficulty=rect(R0,y0+nh+GAP+52,rc,44);g.winPays=rect(R0,y0+nh+GAP+104,rc,44)
+  -- Three 44 px rows 52 apart; a short screen (the fitted shell on a 320 px phone) closes
+  -- the pitch so Win pays still ends inside the screen.
+  local ry=y0+nh+GAP;local rp=math.min(52,math.floor((y1-ry-44)/2))
+  g.eggs=rect(R0,ry,rc,44);g.difficulty=rect(R0,ry+rp,rc,44);g.winPays=rect(R0,ry+2*rp,rc,44)
   local top=y0+nh+GAP+156
   local rows=math.min(3,math.floor((y1-top-30)/28))
   if rows>=2 then g.controls=rect(R0,y1-(30+rows*28),rc,30+rows*28);g.controlRows=rows else g.controlRows=0 end
@@ -161,6 +183,20 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  -- Shoulders: d-pad, MENU, wordmark and LED; A on the right at mid height, B (the item
  -- button) under it.
  local dcy=kh+math.floor((H-kh-52)/2);local cx=math.floor(SW/2)
+ -- QA v751 P1: the wordmark sits 28 px in from the body's edge and 10 px under the glass
+ -- top, clear of the body's corner curve. On a short body the d-pad moves down just far
+ -- enough to leave the wordmark and the LED their room (never closer than 76 px to MENU's
+ -- hit area, so its 144 px hit box holds); the wordmark then rides 6 px under the glass top.
+ local ww=SW-56;local wh=math.floor(ww*16/41+.5)
+ local wordY=math.max(kh+12,top+10)
+ do
+  local ledRoom=math.max(8,math.floor(34*math.min(bodyW/L.size.X,bodyH/L.size.Y)+.5))+4
+  local lowest=H-52-4-72
+  if dcy<wordY+wh+ledRoom+math.floor(D/2)then
+   if wordY+wh+ledRoom+math.floor(D/2)>lowest then wordY=math.max(kh+12,top+6)end
+   dcy=math.min(lowest,math.max(dcy,wordY+wh+ledRoom+math.floor(D/2)))
+  end
+ end
  g.dpad=rect(cx-math.floor(D/2),dcy-math.floor(D/2),D,D)
  local mw,mh=math.min(72,SW-16),math.min(84,SW-8)
  g.menuHit=rect(cx-math.floor(mh/2),H-52,mh,44);g.menu=rect(cx-math.floor(mw/2),H-44,mw,28)
@@ -180,10 +216,7 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
   g.dpadUp=rect(bx0,by0,bw0,rh);g.dpadDown=rect(bx0,by0+boxH-rh,bw0,rh)
   g.dpadMenuLeft=rect(bx0,by0+rh,half,boxH-2*rh);g.dpadMenuRight=rect(bx0+half,by0+rh,bw0-half,boxH-2*rh)
  end
- local ww=SW-48
- local wordY=math.max(kh+12,top+6) -- 6 px under the glass top: leaves the LED its gap above the d-pad
- g.wordmark=if ww>=48 and wordY+ww*16/41<=g.dpad.y-8 then rect(24,wordY,ww,math.floor(ww*16/41+.5))else nil
- g.back=rect(W-56,8,44,44)
+ g.wordmark=if ww>=40 and wordY+wh<=g.dpad.y-8 then rect(cx-math.floor(ww/2),wordY,ww,wh)else nil
  g.a=Vector2.new(W-cx,math.floor(H*.49+.5))
  g.aHit=rect(W-cx-math.floor((A+8)/2),g.a.Y-math.floor((A+8)/2),A+8,A+8)
  -- Round items (BUILD-PLAN 2026-11-13 item 4): the item button, always under A.
@@ -195,7 +228,7 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  -- the sides and 16 px above the glass and runs off the bottom edge (the board keeps
  -- H - 80), so the background pattern shows above and beside it. The shell sprites map
  -- the desktop 1600 x 800 layout onto the body; every rect is whole px.
- local body=rect(Fit.side,bodyTop,W-2*Fit.side,bodyBottom-bodyTop)
+ local body=rect(0,bodyTop,W,bodyBottom-bodyTop)
  local sx,sy=body.w/1600,body.h/800
  local function map(r)
   local mx=body.x+math.floor(r[1]*sx+.5);local my=body.y+math.floor(r[2]*sy+.5)
@@ -208,6 +241,24 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  local ledTop=if g.wordmark then g.wordmark.y+g.wordmark.h else kh+4
  local ledGap=g.dpad.y-ledTop
  g.led=if ledGap>=ls+4 then rect(cx-math.floor(ls/2),ledTop+math.floor((ledGap-ls)/2),ls,ls)else nil
+ -- Body coordinates to root coordinates: every rect, point and column edge moves by ox.
+ if ox~=0 then
+  local moved={}
+  local function shift(r)
+   if moved[r]then return end
+   moved[r]=true;r.x+=ox
+  end
+  for key,value in pairs(g)do
+   if type(value)=="table"and key~="deck"and key~="boardLocal"then
+    if value.x and value.w then shift(value)else for _,r in pairs(value)do if type(r)=="table"and r.x and r.w then shift(r)end end end
+   end
+  end
+  for _,key in ipairs({"x0","x1","L0","L1","R0","R1","t0"})do if g[key]then g[key]+=ox end end
+  g.toast+=Vector2.new(ox,0);g.a+=Vector2.new(ox,0)
+ end
+ g.ox=ox;g.bodyW=bodyW
+ W=rootW;g.W=W;g.deck=rect(0,0,W,H)
+ g.back=rect(W-56,8,44,44)
  -- Menu sheet (section 4): plate grips `mg` either side; v1 rules shift in by mg - 6.
  local mg=Screen.gripMargin(W)
  g.mg=mg;g.off=mg-6
