@@ -16,6 +16,28 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Private v751 Published 2026-11-16 — runtime 664c7e9, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v751".
+# Pocket Pals — v735 QA fixes, new sounds, world palette, v1 prices
+
+**New:**
+- **Pocket Deck on phone:** it fits the safe area on every open. Cause: the compact layout drew the body 32 px past the bottom; the DeckFit spec now guards it at 5 sizes.
+- **Deck animation:** opening and closing are smooth, and the power-on always finishes.
+- **Rounds:** the fill-line warning only fires near the line, and the left/right areas are back.
+- **Deck style:** Moonpond animates.
+- **Results:** the Star spins all the way round again, the headline uses the display font, and the entry eases in.
+- **Hatch:** a softer entry and brand-new synthesized rarity sounds (Common / Uncommon / Rare).
+- **Toys:** the Ball is now a tennis ball.
+- **Help:** the Companions How it works has a Hatch eggs card. The top pills open explanation cards, and the first-session tour is four cards.
+- **World:** greyer marble, darker grass, bluer water, a brown path.
+- **Park:** "Pets playing n/9" above the buttons, and "Park full" when it's full.
+- **Prices:** Wardrobe 25/50/100, faceplates 30/60/120, balls 30/60/60/160. Eggs are unchanged.
+
+**Passed before publish:** server 56/56; client 133/147 (the failures are long-standing, plus one fixture); world collision 12/12; all solid world meshes precise; Code Reviewer GO WITH CHANGES (the tour/notice fix applied). Translations synced (59 add/update). The rarity sounds were approved by moderation.
+
+**Not seen live:** a real phone; the new sound inside a live hatch; a real tap on a notice pill.
+
+## Historical (earlier builds)
+
 **Private v735 Published 2026-11-15 — runtime 2208bab, committed and pushed; old servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v735".
 # Pocket Pals — Spencer's v685 QA fixes, new reveals, inspect card
 
