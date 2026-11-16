@@ -1478,6 +1478,7 @@ function View:layoutChrome()
    Cards.dress(b,{name=c.name,status=c.status,tone=c.tone,icon=if c.locked then "lock"else View.charmIcon(c.id),
     iconColor=if c.id=="none"or c.locked then Kit.Color.soft else tint,focused=i==index,compact=compact})
    b:SetAttribute("Wearing",c.wearing);b:SetAttribute("Locked",c.locked==true)
+   if c.id~="none"then JarArt.charmCard(b,c.id,c.locked==true)end -- the shape itself on its card
    local cardId=c.id
    table.insert(focus,{button=b,id=c.id,act=function()return self:wearCharm(cardId)end})
   end

@@ -16,7 +16,9 @@ return function(client,parent)
    -- Redesign 2.1: Kit.tabs segments (Hue / Charm / Materials / Toys), no rail, no Pet or Wardrobe tab.
    for _,tab in pairs(view.editorTabs)do assert(tab.Visible and tab.AbsoluteSize.X>=44 and tab.AbsoluteSize.Y>=44)end
    assert(view.editorTabs.pet==nil and view.editorTabs.wardrobe==nil and view.tabRail==nil)
-   assert(view.tab=="materials"and view.chromeTabs.selected==3 and view.chromeRoot.Visible and not view.card.Visible)
+   -- Customization Egg slice 3: Finish replaced Materials on the tab bar; a saved legacy finish
+   -- still opens its Materials pane (receipts, "Use now"), with no tab segment of its own.
+   assert(view.tab=="materials"and view.editorTabs.materials==nil and view.chromeRoot.Visible and not view.card.Visible)
    assert(view.materialPanel.root.Visible and view.portrait.Visible and view:appearance().finish=="standard"and #sent==0 and equips==0)
    assert(view.materialPanel.rows.standard.Visible and view.materialPanel.rows.gloss.Visible and not view.materialPanel.rows.metal.Visible)
   end)
@@ -76,8 +78,8 @@ return function(client,parent)
   test("Materials keeps its live pet fixed during right-pane scrolling at compact and portrait sizes",function()
    for _,size in ipairs({Vector2.new(733,307),Vector2.new(568,160),Vector2.new(812,354)})do
     root.Size=UDim2.fromOffset(size.X,size.Y);view:open(state,"materials","pip");frames();local p=view.portrait.AbsolutePosition
-    local tab=view.editorTabs.materials
-    assert(tab and tab.AbsoluteSize.Y>=44,"Materials tab under 44 px at "..tostring(size))
+    local tab=view.editorTabs.finish -- the Finish segment sits where Materials was (slice 3)
+    assert(tab and tab.AbsoluteSize.Y>=44,"Finish tab under 44 px at "..tostring(size))
     assert(view.chromeGrid.Active,"card grid must claim native wheel input")
     view.chromeGrid.CanvasPosition=Vector2.new(0,100);frames();assert(view.portrait.AbsolutePosition==p,"pinned portrait moved with the grid at "..tostring(size))
     for id,node in pairs(view.materialPanel.rows)do if node.Visible then assert(node.CardParts.CardName.TextFits and node.AbsoluteSize.Y>=44,id.." card clipped at "..tostring(size))end end

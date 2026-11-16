@@ -51,4 +51,32 @@ function Jar.badge(button,id)
  local host=Jar.create(button,id,UDim2.new(1,-side-6,1,-side-4),UDim2.fromOffset(side,side),button.ZIndex+3)
  host.Name="JarBadge";return host
 end
+-- A charm shape on its own in a ViewportFrame (Book Charms page, Customize charm cards).
+function Jar.charmView(parent,shape,position,size,z)
+ local Shape=require(script.Parent.CharmShapeModel)
+ local model=Shape.build(shape,Color3.fromHex("#FFCB3D"));if not model then return nil end
+ local frame=Instance.new("ViewportFrame");frame.Name="CharmShapeView";frame.BackgroundTransparency=1;frame.Position=position;frame.Size=size
+ frame.Active=false;frame.Selectable=false;frame.ZIndex=z or parent.ZIndex+1;frame:SetAttribute("CharmShape",shape)
+ frame.Ambient=Color3.fromRGB(170,170,180);frame.LightDirection=Vector3.new(-.4,-1,-.6)
+ local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=frame;frame.CurrentCamera=camera
+ Shape.fit(model,CFrame.identity,1);model.Parent=frame
+ camera.CFrame=CFrame.lookAt(Vector3.new(0,.15,2.6),Vector3.zero)
+ frame.Parent=parent
+ return frame
+end
+-- The charm shape itself on a Customize charm card (inside the card's swatch). A locked shape
+-- shows faded under its lock.
+function Jar.charmCard(button,shape,locked)
+ local parts=button:FindFirstChild("CardParts");local swatch=parts and parts:FindFirstChild("Swatch")
+ if not swatch then return nil end
+ local frame=swatch:FindFirstChild("CharmShapeView")
+ if not frame or frame:GetAttribute("CharmShape")~=shape then
+  if frame then frame:Destroy()end
+  frame=Jar.charmView(swatch,shape,UDim2.new(),UDim2.fromScale(1,1),swatch.ZIndex+1)
+  if not frame then return nil end
+ end
+ frame.ImageTransparency=if locked then .55 else 0
+ for _,child in ipairs(swatch:GetChildren())do if child.Name:match("^Icon_")then child.Visible=locked==true;child.ZIndex=frame.ZIndex+1 end end
+ return frame
+end
 return Jar

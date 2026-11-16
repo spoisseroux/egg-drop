@@ -39,8 +39,19 @@ function Jar.build(itemId,scale,options)
   part.Material=Enum.Material[row.material]or Enum.Material.SmoothPlastic
   part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.CastShadow=false
   -- The pigment and jelly cores are half shells seen from their open side through the glass.
-  if row.part=="Liquid"or row.part=="Core"then part.DoubleSided=true end
+  if row.part=="Liquid"or row.part=="Core"or row.part=="Dome"then part.DoubleSided=true end
   part.Parent=model
+ end
+ -- A charm drop shows what was won: the real charm shape replaces the capsule's gold star.
+ local shape=string.match(itemId,"^charm_(.+)$")
+ local star=model:FindFirstChild("Charm")
+ if shape and star then
+  local inner=require(script.Parent.CharmShapeModel).build(shape)
+  if inner then
+   require(script.Parent.CharmShapeModel).fit(inner,star.CFrame,math.max(star.Size.X,star.Size.Y)*.85)
+   for _,part in ipairs(inner:GetChildren())do part.Parent=model end
+   inner:Destroy();star:Destroy()
+  end
  end
  return model
 end
