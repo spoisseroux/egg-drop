@@ -7,7 +7,8 @@ return function(client,parent)
  view=View.new(root,intent,{shapeSelectionsEnabled=function()return true end,activePet=function()return active end,
   equipPet=function(id)table.insert(calls,id);return true end,
   dismissMachine=function(binding,done)pickups+=1;pickupDone=done;return true end})
- local zero={rose=0,tide=0,citrus=0,iris=0};local state={status="Ready",revision=1,nectar=25,inventoryMask=127,hues={},petHues={pip={main=zero,secondary=zero},puddle={main=zero,secondary=zero}},hueInventory={rose=3,reset=1}}
+ local zero={rose=0,tide=0,citrus=0,iris=0};local state={status="Ready",revision=1,nectar=25,inventoryMask=127,hues={},petHues={pip={main=zero,secondary=zero},puddle={main=zero,secondary=zero}},hueInventory={rose=3,reset=1},
+  charmUnlocks={dot=true,ring=true,pebble=true}} -- Customization Egg: a save from before the egg owns the three egg shapes
  local function frames()for _=1,3 do Run.Heartbeat:Wait()end end
  local function test(name,run)run();table.insert(cases,name)end
  local function inside(node,host)local p,s,q,t=node.AbsolutePosition,node.AbsoluteSize,host.AbsolutePosition,host.AbsoluteSize;return p.X>=q.X-.5 and p.Y>=q.Y-.5 and p.X+s.X<=q.X+t.X+.5 and p.Y+s.Y<=q.Y+t.Y+.5 end
@@ -78,7 +79,7 @@ return function(client,parent)
     assert(view.charmCards[shape]:GetAttribute("CardStatus")=="WEARING"and view.charmCards.none:GetAttribute("CardStatus")=="No charm","saved "..shape.." not marked")
    end
    view.options.appearance=function()return {charmVisible=false,charmShape="ring"}end;view:refresh();frames()
-   assert(view.charmCards.none:GetAttribute("CardStatus")=="WEARING"and view.charmCards.ring:GetAttribute("CardStatus")=="Free")
+   assert(view.charmCards.none:GetAttribute("CardStatus")=="WEARING"and view.charmCards.ring:GetAttribute("CardStatus")==require(game.ReplicatedStorage.Shared.UICopy).get("pool3.charm.earned"))
    view.options.appearance=appearance;view:refresh()
   end)
   test("owned live grid is bounded and closes visible model generations",function()

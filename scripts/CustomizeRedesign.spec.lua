@@ -21,7 +21,8 @@ return function(client,parent)
   shapeSelectionsEnabled=function()return true end,delay=function()end,
   charm=function(petId,visible,shape)serial+=1;table.insert(sent,{petId=petId,visible=visible,shape=shape});return{seq=serial}end,
   petsSelector=function(assign)table.insert(selector,assign);return true end})
- local state={status="Ready",revision=1,nectar=128,inventoryMask=127,petHues={},hueInventory={rose=2},materialAvailable=true,materialUnlocks={gloss=true},petMaterials={},toyUnlocks={ball=true},petToys={}}
+ local state={status="Ready",revision=1,nectar=128,inventoryMask=127,petHues={},hueInventory={rose=2},materialAvailable=true,materialUnlocks={gloss=true},petMaterials={},toyUnlocks={ball=true},petToys={},
+  charmUnlocks={dot=true,ring=true,pebble=true}} -- Customization Egg: a save from before the egg owns the three egg shapes
  for _,pet in ipairs(Pets.collection)do state.petHues[pet.id]={main=H.emptyCounts(),secondary=H.emptyCounts()}end
  local ok,problem=xpcall(function()
   test("pure: four icon tabs, no Features while flagged, Features joins with the flag on",function()

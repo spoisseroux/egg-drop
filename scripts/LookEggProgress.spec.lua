@@ -198,7 +198,9 @@ return function(server)
    g=copy(f);for k,v in pairs(bad)do g[k]=v end;refused(g,"InvalidHue")
   end
   g=copy(f);g.selectionMode="fixed";g.fixedItemId="charm_star";refused(g,"InvalidHue")
-  look(h,c,"rose");store(h);look(h,c,"tide");store(h);rolls=c.rolls
+  look(h,c,"rose");store(h);rolls=c.rolls
+  -- Leave less than one egg's price (awards may be boosted in Studio, so set it directly).
+  h.state.nectar=LE.Price-1;db.player_1.hatching.nectar=LE.Price-1
   refused(lookFields(h),"NeedStars")
  end)
 
@@ -256,7 +258,7 @@ return function(server)
   h.state.hueInventory.rose=Hue.StackLimit;db.player_1.hatching.hueInventory.rose=Hue.StackLimit
   local balance=h.state.nectar;c.unit=unitFor(h.state,"rose");local _,_,receipt=command(h,"lookBuy",lookFields(h))
   assert(receipt.outcome=="Refused"and receipt.reason=="StackLimit"and receipt.cost==0 and h.state.nectar==balance)
-  assert(not h.state.pendingHueResult and not h.state.hueReservation and h.state.lookCharmMisses==0)
+  assert(not h.state.pendingHueResult and not h.state.hueReservation and LS.misses(h.state)==0 and receipt.missesAfter==receipt.missesBefore)
  end)
 
  test("corrupt Customization Egg receipts and reservations fail validation",function()
