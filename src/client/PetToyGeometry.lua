@@ -16,10 +16,12 @@ local coral,cream,teal=hex("#EF786B"),hex("#FFF0C9"),hex("#3FB7B0")
 local faceFront=CFrame.Angles(0,math.pi,0)
 -- One mesh part of a toy: `PetToyAssets.<toy id>__<name>` at `size`, centred on `at`.
 -- Registered exactly like Prop:add, so pivot, play, the reveal and destroy treat it the
--- same. Without the asset pack the part falls back to a plain sphere of the same size.
+-- same. Without the asset pack, or while a template has no mesh yet (a MeshPart that Rojo
+-- live sync created in Studio arrives with an empty MeshId until it is filled in Edit),
+-- the part falls back to a plain sphere of the same size.
 local function mesh(h,name,size,at,color)
  local pack=Replicated:FindFirstChild("PetToyAssets");local source=pack and pack:FindFirstChild(h.id.."__"..name)
- if not(source and source:IsA("MeshPart"))then return h:add(name,size,CFrame.new(at),color,"sphere")end
+ if not(source and source:IsA("MeshPart")and source.MeshId~="")then return h:add(name,size,CFrame.new(at),color,"sphere")end
  local p=source:Clone();p.Name=name
  p.Anchored=true;p.CanCollide=false;p.CanTouch=false;p.CanQuery=false;p.CastShadow=false;p.Material=Enum.Material.SmoothPlastic
  p.Color=color;p.Size=size*h.scale
