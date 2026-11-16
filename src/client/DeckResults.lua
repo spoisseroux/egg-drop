@@ -29,9 +29,15 @@ function Results.new(host,options)
 end
 -- Star spin (QA 2026-11-13): one constant turn about +Y, measured from the moment
 -- the results open (`spinOrigin`), so no repaint, touch or data update resets it.
-Results.SpinRate=45 -- degrees a second
+-- QA v751 P4: the turn is eased, not constant. It lingers face-on (front and back) and
+-- whips through edge-on: yaw = turn - SpinEase * sin(2 * turn). The speed is
+-- (1 - 2 * SpinEase) of the mean face-on and (1 + 2 * SpinEase) edge-on, so the Star
+-- spends under a tenth of the turn within 15 degrees of edge-on (a sixth when constant).
+Results.SpinRate=45 -- mean degrees a second
+Results.SpinEase=.42 -- radians; under .5 keeps the turn always moving forward
 function Results.spinYaw(elapsed)
- return((math.max(0,elapsed or 0)*Results.SpinRate)%360)
+ local turn=math.rad((math.max(0,elapsed or 0)*Results.SpinRate)%360)
+ return math.deg(turn-Results.SpinEase*math.sin(2*turn))%360
 end
 -- Pure: does the Star wear its missed-round (silver) look? Known from the outcome
 -- even while the save is pending, so the first frame already has the final colour.

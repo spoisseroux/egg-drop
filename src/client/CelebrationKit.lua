@@ -226,6 +226,10 @@ function C.star(parent,size,options)
   part.Color=if glass then C.StarSilver elseif options and options.cleanMaterial then C.Gold else Color3.new(1,1,1)
   part.Transparency=0
   part.Material=Enum.Material.SmoothPlastic
+  -- QA v751 P4 (rim shading): the gold Star is lit from the front with a lower ambient, so
+  -- its faces stay bright and its rim falls a shade darker. Silver keeps the neutral light.
+  local light=if glass then C.StarLightSilver else C.StarLight
+  viewport.Ambient=light.ambient;viewport.LightColor=light.color;viewport.LightDirection=light.direction
  end
  function api.setMode(mode)
   api.mode=mode
@@ -264,6 +268,9 @@ function C.star(parent,size,options)
    -- Paint (mode colour, texture) and pose before the part is parented, so the
    -- first frame it renders in is already the final look.
    local part=template:Clone();part.CFrame=CFrame.Angles(0,math.rad(api.wantYaw or 0),0)
+   -- QA v751 P4: the hero is a coin, not a pillow. At the mesh's own 0.45 depth the turned
+   -- Star was all side wall (a yellow blob from about 55 degrees on).
+   part.Size=Vector3.new(Models.size.X,Models.size.Y,C.StarDepth)
    api.part,api.texture=part,Models.colorMap
    paintPart()
    part.Parent=viewport
@@ -288,6 +295,10 @@ function C.star(parent,size,options)
  return api
 end
 C.StarSilver=Color3.fromHex("#C9D3DA")
+-- QA v751 P4: hero Star depth (studs; the mesh is 0.45 deep) and its two lights.
+C.StarDepth=.24
+C.StarLight=table.freeze({ambient=Color3.fromRGB(165,135,88),color=Color3.fromRGB(255,246,225),direction=Vector3.new(-.4,-.7,-1)})
+C.StarLightSilver=table.freeze({ambient=Color3.fromRGB(196,186,168),color=Color3.fromRGB(255,244,224),direction=Vector3.new(-.6,-1,-1.6)})
 C.StarFade=.25
 -- Boot preload (QA 2026-11-13): build the one StarToken template early so the
 -- results Star never pops in a second late. Safe to call more than once.

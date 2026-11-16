@@ -48,6 +48,20 @@ return function(client,parent)
    for _=1,6 do key=next(order,key,1,true);table.insert(seen,key)end
    assert(table.concat(seen,",")=="medium,hard,easy,medium,hard,easy",table.concat(seen,","))
   end)
+  test("QA v751 P4: the Star's turn lingers face-on and hurries through edge-on",function()
+   local rate=Results.SpinRate;local period=360/rate
+   assert(Results.spinYaw(0)==0 and math.abs(Results.spinYaw(period/4)-90)<1e-6 and math.abs(Results.spinYaw(period/2)-180)<1e-6,"quarter turns land on time")
+   local edge,face,steps,last=0,0,3600,-1
+   for i=0,steps-1 do
+    local yaw=Results.spinYaw(i/steps*period)
+    assert(yaw>last,"the turn never runs backwards at step "..i);last=yaw
+    local fromEdge=math.abs((yaw%180)-90)
+    if fromEdge<=15 then edge+=1 end
+    if fromEdge>=50 then face+=1 end
+   end
+   assert(edge/steps<.10,string.format("%.1f%% of the turn is within 15 degrees of edge-on",edge/steps*100))
+   assert(face/steps>.60,string.format("only %.1f%% of the turn is within 40 degrees of face-on",face/steps*100))
+  end)
   test("headline: first match wins (tidy, new best, Hard, win, missed, overflow)",function()
    assert(Results.headline({outcome="clear",tidy=true,newBest=true,level=3})=="TIDY WIN!")
    assert(Results.headline({outcome="clear",newBest=true,level=3})=="NEW BEST!")
@@ -165,7 +179,9 @@ return function(client,parent)
    view:hide();view:show(data(913,6),false);view:confirm();task.wait()
    if C.starMeshState()=="ready"then
     assert(view.star.has3D and view.star.viewport.Visible and not view.star.body.Visible,"3D Star replaces the glyph")
-    assert(view.star.part and view.star.part.Size==require(game.ReplicatedStorage.Shared.EggModels).Star.size,"StarToken sized from EggModels")
+    local model=require(game.ReplicatedStorage.Shared.EggModels).Star.size
+    assert(view.star.part and view.star.part.Size==Vector3.new(model.X,model.Y,C.StarDepth)and C.StarDepth<model.Z and C.StarDepth>=.2,"StarToken sized from EggModels, a coin-deep hero (QA v751 P4)")
+    assert(view.star.viewport.Ambient==C.StarLight.ambient and view.star.viewport.LightDirection==C.StarLight.direction,"gold Star uses the rim-shading light")
     view.star.setSpin(45,30);assert(view.star.root.Rotation==0,"3D spins about +Y, not in-plane")
     view:hide();view:show(data(914,0,{outcome="missed",loss=true,rows={},result=receipt(914,0)}),false)
     -- QA 2026-11-13: an opaque silver token (no Glass, no transparency: no doubled side band).
