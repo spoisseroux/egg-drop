@@ -1355,7 +1355,7 @@
   "ui.book.missing": {
    "source": "Not yet",
    "context": "",
-   "example": "Collection book"
+   "example": "Collection book; also ui.notice.locked.title"
   },
   "ui.book.owned": {
    "source": "{owned}/{total}",
@@ -1540,7 +1540,7 @@
   "ui.coach.fillLine.line": {
    "source": "Keep the pile under the line. Stay over it too long and the round ends.",
    "context": "",
-   "example": "First-round coaching"
+   "example": "First-round coaching; also ui.notice.fillLine.what"
   },
   "ui.coach.fillLine.short": {
    "source": "Keep the pile under the line",
@@ -1550,7 +1550,7 @@
   "ui.coach.fillLine.title": {
    "source": "Fill line",
    "context": "",
-   "example": "First-round coaching"
+   "example": "First-round coaching; also ui.notice.fillLine.title"
   },
   "ui.coach.firstStars.toast": {
    "source": "First round cleared",
@@ -1570,7 +1570,7 @@
   "ui.coach.hatch.title": {
    "source": "Hatch eggs",
    "context": "",
-   "example": "First-round coaching; also ui.hub.tile.hatch.name, ui.onboarding.spend.hatch, ui.r3.help.hatch.title, ui.r5.station.Eggs.name"
+   "example": "First-round coaching; also ui.hub.tile.hatch.name, ui.onboarding.spend.hatch, ui.r3.help.companions.d.title, ui.r3.help.hatch.title"
   },
   "ui.coach.hub.key": {
    "source": "Press M for every machine, any time.",
@@ -1585,7 +1585,7 @@
   "ui.coach.hub.title": {
    "source": "Pocket menu",
    "context": "",
-   "example": "First-round coaching; also ui.hub.title"
+   "example": "First-round coaching; also ui.hub.title, ui.notice.hub.title, ui.r3.help.garden.d.title"
   },
   "ui.coach.hub.touch": {
    "source": "Tap Menu for every machine, any time.",
@@ -1605,7 +1605,7 @@
   "ui.coach.item.title": {
    "source": "An item!",
    "context": "",
-   "example": "First-round coaching"
+   "example": "First-round coaching; also ui.notice.item.title"
   },
   "ui.coach.machines.line": {
    "source": "Walk up to a glowing machine to use it.",
@@ -1615,7 +1615,7 @@
   "ui.coach.machines.title": {
    "source": "Machines",
    "context": "",
-   "example": "First-round coaching"
+   "example": "First-round coaching; also ui.notice.machines.title, ui.r3.help.garden.a.title"
   },
   "ui.coach.missPay": {
    "source": "Goal met",
@@ -1655,7 +1655,7 @@
   "ui.coach.questDone.title": {
    "source": "Quest done!",
    "context": "",
-   "example": "First-round coaching"
+   "example": "First-round coaching; also ui.notice.questDone.title, ui.notice.questReady.title"
   },
   "ui.coach.quests.line": {
    "source": "Three a day, three a week. Each one pays Stars.",
@@ -2297,6 +2297,211 @@
    "context": "",
    "example": "Pause menu"
   },
+  "ui.notice.bond.next": {
+   "source": "Keep petting, playing rounds and going on Play dates. The hearts are in Companions.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.bond.title": {
+   "source": "Bond grew",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.bond.what": {
+   "source": "Hearts show how close you and {pet} are. Each new level unlocks a trick.",
+   "context": "",
+   "example": "Menu text; e.g. Hearts show how close you and Bear are. Each new level unlocks a trick."
+  },
+  "ui.notice.customize.next": {
+   "source": "Open Companions and pick Customize or Wardrobe. New pieces hatch from eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.customize.title": {
+   "source": "Customize your pet",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.customize.what": {
+   "source": "Colour jars, finishes, charms, toys and outfits change how {pet} looks. Looks only.",
+   "context": "",
+   "example": "Menu text; e.g. Colour jars, finishes, charms, toys and outfits change how Bear looks. Looks only."
+  },
+  "ui.notice.fillLine.next": {
+   "source": "Merge to make room, and drop each egg next to its match.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.firstSpend.next": {
+   "source": "Open Hatch eggs and choose the Toy Egg. The odds are on every label.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.firstSpend.title": {
+   "source": "Your first egg",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.firstSpend.what": {
+   "source": "You have enough Stars for an egg. A Toy Egg hatches a toy for {pet} to carry and play with.",
+   "context": "",
+   "example": "Menu text; e.g. You have enough Stars for an egg. A Toy Egg hatches a toy for Bear to carry and play with."
+  },
+  "ui.notice.firstStars.next": {
+   "source": "Spend Stars on eggs at Hatch eggs. The Menu lists every machine.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.firstStars.title": {
+   "source": "Your first Stars",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.firstStars.what": {
+   "source": "Stars are the one wallet. Rounds, quests and the daily stamp all pay them.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.go.companions": {
+   "source": "Open Companions",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.go.hatch": {
+   "source": "Open Hatch eggs",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.go.menu": {
+   "source": "Open the Menu",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.go.quests": {
+   "source": "Open Quests",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.hub.next": {
+   "source": "Open it any time: tap Menu, press M, or press Y on a gamepad.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.hub.what": {
+   "source": "The Menu lists every machine, with Quests, the Collection book and Settings.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.item.next": {
+   "source": "Tap Items to use one when the pile gets tight.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.item.what": {
+   "source": "Power-up merges earn items. They wait for you on the item button.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.label.next": {
+   "source": "What to do next",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.label.what": {
+   "source": "What it means",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.locked.next": {
+   "source": "Win this round to hatch your first friend.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.locked.what": {
+   "source": "The garden and its machines open once you have a pet.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.machines.next": {
+   "source": "Walk up to a machine to use it, or open the Menu to jump to any of them.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.machines.what": {
+   "source": "Each glowing machine in the garden does one job: Hatch eggs, Deck style, Companions and the Pocket Deck.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.pill.firstSpend": {
+   "source": "Hatch your first egg",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.pill.tip": {
+   "source": "Tip: {title}",
+   "context": "",
+   "example": "Menu text; e.g. Tip: {title}"
+  },
+  "ui.notice.quest.next": {
+   "source": "Open the Menu and pick Quests. Stamp the card each day and claim every finished quest.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.quest.title": {
+   "source": "Quests and dailies",
+   "context": "",
+   "example": "Menu text; also ui.r3.help.garden.b.title"
+  },
+  "ui.notice.quest.what": {
+   "source": "Three daily quests, three weekly ones and a once-a-day stamp. They all pay Stars.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.questClaimed.next": {
+   "source": "Spend Stars at Hatch eggs, or save up. New daily quests arrive every day.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.questClaimed.title": {
+   "source": "Quest claimed",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.questClaimed.what": {
+   "source": "★ {reward} went into your wallet.",
+   "context": "",
+   "example": "Menu text; e.g. ★ 5 went into your wallet."
+  },
+  "ui.notice.questDone.next": {
+   "source": "Open Quests and press Claim. Stars buy eggs at Hatch eggs.",
+   "context": "",
+   "example": "Menu text; also ui.notice.questReady.next"
+  },
+  "ui.notice.questDone.what": {
+   "source": "You finished a quest. Its Stars are waiting to be claimed.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.questReady.what": {
+   "source": "{quest} is finished. It pays ★ {reward} when you claim it.",
+   "context": "",
+   "example": "Menu text; e.g. {quest} is finished. It pays ★ 5 when you claim it."
+  },
+  "ui.notice.welcome.next": {
+   "source": "Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.welcome.title": {
+   "source": "Your first round",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.welcome.what": {
+   "source": "Drop eggs into the deck. Two of the same kind merge into a bigger one.",
+   "context": "",
+   "example": "Menu text"
+  },
   "ui.onboarding.spend.give": {
    "source": "Give to {pet}",
    "context": "",
@@ -2357,6 +2562,11 @@
    "context": "",
    "example": "Pet Park chip"
   },
+  "ui.park.count": {
+   "source": "Pets playing {count}/{capacity}",
+   "context": "",
+   "example": "Pet Park chip; e.g. Pets playing 3/{capacity}"
+  },
   "ui.park.done": {
    "source": "+{reward} ★ today",
    "context": "",
@@ -2377,10 +2587,20 @@
    "context": "",
    "example": "Pet Park chip"
   },
+  "ui.park.full": {
+   "source": "Park full · {count}/{capacity}",
+   "context": "",
+   "example": "Pet Park chip; e.g. Park full · 3/{capacity}"
+  },
   "ui.park.games": {
    "source": "Games {count}/{target}",
    "context": "",
    "example": "Pet Park chip; e.g. Games 3/3"
+  },
+  "ui.park.otherHasRoom": {
+   "source": "The other park has room",
+   "context": "",
+   "example": "Pet Park chip"
   },
   "ui.park.playDate": {
    "source": "Play date {count}/{target}",
@@ -2564,6 +2784,36 @@
   },
   "ui.r3.help.companions.c.title": {
    "source": "Customize",
+   "context": "",
+   "example": "Menu text; also ui.r3.help.garden.c.title"
+  },
+  "ui.r3.help.companions.d.line": {
+   "source": "Toys, finishes, colour jars and features all hatch from eggs. Spend Stars at Hatch eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.garden.a.line": {
+   "source": "Walk up to a glowing machine to use it: Hatch eggs, Deck style, Companions, the Pocket Deck.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.garden.b.line": {
+   "source": "Open the Menu and pick Quests. Three daily quests and a once-a-day stamp pay Stars.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.garden.c.line": {
+   "source": "Open Companions to recolour and dress your pet. New pieces hatch from eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.garden.d.line": {
+   "source": "The Menu button opens every machine, from anywhere.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.garden.title": {
+   "source": "Your garden",
    "context": "",
    "example": "Menu text"
   },

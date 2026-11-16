@@ -33,7 +33,7 @@ ui.book.hint.back,Back,,"Collection book; also ui.input.action.back, ui.phoneDec
 ui.book.hint.claim,Claim,,Collection book
 ui.book.hint.move,Move,,Collection book
 ui.book.hint.pages,Pages,,Collection book
-ui.book.missing,Not yet,,Collection book
+ui.book.missing,Not yet,,Collection book; also ui.notice.locked.title
 ui.book.owned,{owned}/{total},,Collection book; e.g. 3/12
 ui.book.pending,Saving…,,"Collection book; also ui.onboarding.welcome.saving, ui.results.saved.pending"
 ui.book.promise,Every page pays once. Nothing to buy.,,Collection book
@@ -70,22 +70,22 @@ ui.coach.book.line,Fill the pages as you collect. Every page pays once.,,First-r
 ui.coach.companions.line,"Dress up {pet}, swap pets and customize.",,"First-round coaching; e.g. Dress up Bear, swap pets and customize."
 ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name"
 ui.coach.effortPay,Good effort,,First-round coaching
-ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and the round ends.,,First-round coaching
+ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and the round ends.,,First-round coaching; also ui.notice.fillLine.what
 ui.coach.fillLine.short,Keep the pile under the line,,First-round coaching
-ui.coach.fillLine.title,Fill line,,First-round coaching
+ui.coach.fillLine.title,Fill line,,First-round coaching; also ui.notice.fillLine.title
 ui.coach.firstStars.toast,First round cleared,,First-round coaching
 ui.coach.gotIt,Got it,,First-round coaching; also ui.r3.help.done
 ui.coach.hatch.line,Spend Stars on eggs. The odds are on every label.,,First-round coaching
-ui.coach.hatch.title,Hatch eggs,,"First-round coaching; also ui.hub.tile.hatch.name, ui.onboarding.spend.hatch, ui.r3.help.hatch.title, ui.r5.station.Eggs.name"
+ui.coach.hatch.title,Hatch eggs,,"First-round coaching; also ui.hub.tile.hatch.name, ui.onboarding.spend.hatch, ui.r3.help.companions.d.title, ui.r3.help.hatch.title"
 ui.coach.hub.key,"Press M for every machine, any time.",,First-round coaching
 ui.coach.hub.pad,"Press Y for every machine, any time.",,First-round coaching
-ui.coach.hub.title,Pocket menu,,First-round coaching; also ui.hub.title
+ui.coach.hub.title,Pocket menu,,"First-round coaching; also ui.hub.title, ui.notice.hub.title, ui.r3.help.garden.d.title"
 ui.coach.hub.touch,"Tap Menu for every machine, any time.",,First-round coaching
 ui.coach.item.line,Power-up merges earn items. Use one from the item button.,,First-round coaching
 ui.coach.item.short,Item earned! Use it from Items,,First-round coaching
-ui.coach.item.title,An item!,,First-round coaching
+ui.coach.item.title,An item!,,First-round coaching; also ui.notice.item.title
 ui.coach.machines.line,Walk up to a glowing machine to use it.,,First-round coaching
-ui.coach.machines.title,Machines,,First-round coaching
+ui.coach.machines.title,Machines,,"First-round coaching; also ui.notice.machines.title, ui.r3.help.garden.a.title"
 ui.coach.missPay,Goal met,,First-round coaching
 ui.coach.next,Next,,First-round coaching
 ui.coach.park.line,{pet} plays here. Three play dates a day pay +4 ★.,,First-round coaching; e.g. Bear plays here. Three play dates a day pay +4 ★.
@@ -93,7 +93,7 @@ ui.coach.park.title,Pet Park,,"First-round coaching; also ui.park.name, ui.r3.he
 ui.coach.quest.line,Today's quests pay Stars. Find them in the menu.,,First-round coaching
 ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, ui.hub.quests.title, ui.hub.tile.quests.name, ui.r3.help.quests.title"
 ui.coach.questDone.line,"Claim its Stars in Quests, in the menu.",,First-round coaching
-ui.coach.questDone.title,Quest done!,,First-round coaching
+ui.coach.questDone.title,Quest done!,,"First-round coaching; also ui.notice.questDone.title, ui.notice.questReady.title"
 ui.coach.quests.line,"Three a day, three a week. Each one pays Stars.",,First-round coaching
 ui.coach.skip,Skip,,First-round coaching; also ui.onboarding.welcome.skip
 ui.coach.style.line,"Faceplates, backgrounds and balls. Looks only.",,First-round coaching
@@ -222,6 +222,47 @@ ui.items.note.full,Belt's full. Use one first.,,Round item notes
 ui.menu.subtitle.empty,Round not started,,Pause menu
 ui.menu.subtitle.locked,Win a round and this opens up,,Pause menu
 ui.menu.subtitle.paused,Round paused,,Pause menu
+ui.notice.bond.next,"Keep petting, playing rounds and going on Play dates. The hearts are in Companions.",,Menu text
+ui.notice.bond.title,Bond grew,,Menu text
+ui.notice.bond.what,Hearts show how close you and {pet} are. Each new level unlocks a trick.,,Menu text; e.g. Hearts show how close you and Bear are. Each new level unlocks a trick.
+ui.notice.customize.next,Open Companions and pick Customize or Wardrobe. New pieces hatch from eggs.,,Menu text
+ui.notice.customize.title,Customize your pet,,Menu text
+ui.notice.customize.what,"Colour jars, finishes, charms, toys and outfits change how {pet} looks. Looks only.",,"Menu text; e.g. Colour jars, finishes, charms, toys and outfits change how Bear looks. Looks only."
+ui.notice.fillLine.next,"Merge to make room, and drop each egg next to its match.",,Menu text
+ui.notice.firstSpend.next,Open Hatch eggs and choose the Toy Egg. The odds are on every label.,,Menu text
+ui.notice.firstSpend.title,Your first egg,,Menu text
+ui.notice.firstSpend.what,You have enough Stars for an egg. A Toy Egg hatches a toy for {pet} to carry and play with.,,Menu text; e.g. You have enough Stars for an egg. A Toy Egg hatches a toy for Bear to carry and play with.
+ui.notice.firstStars.next,Spend Stars on eggs at Hatch eggs. The Menu lists every machine.,,Menu text
+ui.notice.firstStars.title,Your first Stars,,Menu text
+ui.notice.firstStars.what,"Stars are the one wallet. Rounds, quests and the daily stamp all pay them.",,Menu text
+ui.notice.go.companions,Open Companions,,Menu text
+ui.notice.go.hatch,Open Hatch eggs,,Menu text
+ui.notice.go.menu,Open the Menu,,Menu text
+ui.notice.go.quests,Open Quests,,Menu text
+ui.notice.hub.next,"Open it any time: tap Menu, press M, or press Y on a gamepad.",,Menu text
+ui.notice.hub.what,"The Menu lists every machine, with Quests, the Collection book and Settings.",,Menu text
+ui.notice.item.next,Tap Items to use one when the pile gets tight.,,Menu text
+ui.notice.item.what,Power-up merges earn items. They wait for you on the item button.,,Menu text
+ui.notice.label.next,What to do next,,Menu text
+ui.notice.label.what,What it means,,Menu text
+ui.notice.locked.next,Win this round to hatch your first friend.,,Menu text
+ui.notice.locked.what,The garden and its machines open once you have a pet.,,Menu text
+ui.notice.machines.next,"Walk up to a machine to use it, or open the Menu to jump to any of them.",,Menu text
+ui.notice.machines.what,"Each glowing machine in the garden does one job: Hatch eggs, Deck style, Companions and the Pocket Deck.",,Menu text
+ui.notice.pill.firstSpend,Hatch your first egg,,Menu text
+ui.notice.pill.tip,Tip: {title},,Menu text; e.g. Tip: {title}
+ui.notice.quest.next,Open the Menu and pick Quests. Stamp the card each day and claim every finished quest.,,Menu text
+ui.notice.quest.title,Quests and dailies,,Menu text; also ui.r3.help.garden.b.title
+ui.notice.quest.what,"Three daily quests, three weekly ones and a once-a-day stamp. They all pay Stars.",,Menu text
+ui.notice.questClaimed.next,"Spend Stars at Hatch eggs, or save up. New daily quests arrive every day.",,Menu text
+ui.notice.questClaimed.title,Quest claimed,,Menu text
+ui.notice.questClaimed.what,★ {reward} went into your wallet.,,Menu text; e.g. ★ 5 went into your wallet.
+ui.notice.questDone.next,Open Quests and press Claim. Stars buy eggs at Hatch eggs.,,Menu text; also ui.notice.questReady.next
+ui.notice.questDone.what,You finished a quest. Its Stars are waiting to be claimed.,,Menu text
+ui.notice.questReady.what,{quest} is finished. It pays ★ {reward} when you claim it.,,Menu text; e.g. {quest} is finished. It pays ★ 5 when you claim it.
+ui.notice.welcome.next,"Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars.",,Menu text
+ui.notice.welcome.title,Your first round,,Menu text
+ui.notice.welcome.what,Drop eggs into the deck. Two of the same kind merge into a bigger one.,,Menu text
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
 ui.onboarding.spend.ready,A toy for {pet},,First-round coaching; e.g. A toy for Bear
@@ -234,11 +275,14 @@ ui.onboarding.welcome.match,Match,,First-round coaching
 ui.onboarding.welcome.more,One more!,,First-round coaching
 ui.onboarding.welcome.static,↓,,First-round coaching
 ui.park.ballOut,Ball is out,,Pet Park chip
+ui.park.count,Pets playing {count}/{capacity},,Pet Park chip; e.g. Pets playing 3/{capacity}
 ui.park.done,+{reward} ★ today,,Pet Park chip; e.g. +5 ★ today
 ui.park.fetchUnavailable,The ball needs a clear lane.,,Pet Park chip
 ui.park.fetchWait,Give them a moment.,,Pet Park chip
 ui.park.fetching,They’re on it.,,Pet Park chip
+ui.park.full,Park full · {count}/{capacity},,Pet Park chip; e.g. Park full · 3/{capacity}
 ui.park.games,Games {count}/{target},,Pet Park chip; e.g. Games 3/3
+ui.park.otherHasRoom,The other park has room,,Pet Park chip
 ui.park.playDate,Play date {count}/{target},,Pet Park chip; e.g. Play date 3/3
 ui.park.playing,Playing · {count}/{target},,Pet Park chip; e.g. Playing · 3/3
 ui.park.saving,Saving · {count}/{target},,Pet Park chip; e.g. Saving · 3/3
@@ -275,7 +319,13 @@ ui.r3.help.companions.a.title,Bond hearts,,Menu text
 ui.r3.help.companions.b.line,"Hats and bits to wear, bought with Stars. Looks only.",,Menu text
 ui.r3.help.companions.b.title,Wardrobe,,Menu text; also catalog.BookCatalog.Pages.wardrobe.name
 ui.r3.help.companions.c.line,"Use colour jars, add a charm, try a finish or hand over a toy.",,Menu text
-ui.r3.help.companions.c.title,Customize,,Menu text
+ui.r3.help.companions.c.title,Customize,,Menu text; also ui.r3.help.garden.c.title
+ui.r3.help.companions.d.line,"Toys, finishes, colour jars and features all hatch from eggs. Spend Stars at Hatch eggs.",,Menu text
+ui.r3.help.garden.a.line,"Walk up to a glowing machine to use it: Hatch eggs, Deck style, Companions, the Pocket Deck.",,Menu text
+ui.r3.help.garden.b.line,Open the Menu and pick Quests. Three daily quests and a once-a-day stamp pay Stars.,,Menu text
+ui.r3.help.garden.c.line,Open Companions to recolour and dress your pet. New pieces hatch from eggs.,,Menu text
+ui.r3.help.garden.d.line,"The Menu button opens every machine, from anywhere.",,Menu text
+ui.r3.help.garden.title,Your garden,,Menu text
 ui.r3.help.hatch.a.line,Rounds and quests earn Stars. Open Quests for your once-daily stamp.,,Menu text
 ui.r3.help.hatch.a.title,Earn Stars,,Menu text
 ui.r3.help.hatch.b.line,Each egg hatches one kind of thing. The odds are on the label.,,Menu text
