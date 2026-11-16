@@ -1065,6 +1065,8 @@ roomView.care.openFree=function()
 end
 roomView.care.isMachineOpen=function(claimId)return clientUI.hueReturn=="machine"and clientUI.hueView.shade.Visible and clientUI.hueView.machine and clientUI.hueView.machine.claimId==claimId end
 roomView.care.openMachine=function(actor)
+ -- QA v760: Customize never replays a hatch receipt; only the Hatch eggs pages do.
+ clientUI.hueView.quietOpen=not purchasePage
  if clientUI.hueView.shade.Visible and clientUI.hueReturn~="machine"then return end
  if not clientUI.hueView.shade.Visible then clientUI.openHue("palette",actor.petId,"machine")end
  clientUI.hueView:setMachineSession({claimId=actor.care.claimId,petId=actor.petId,characterId=actor.characterId,petGeneration=actor.petGeneration,actorGeneration=actor.generation})

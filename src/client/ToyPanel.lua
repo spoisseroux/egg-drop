@@ -100,7 +100,7 @@ function Panel:layoutCards(width,cols,cardH,gap,focusIndex,compact)
  for i,id in ipairs(live)do
   local node=self.rows[id];Cards.place(node,rects[i])
   local wearing=selected==id
-  Cards.dress(node,{name=Catalog.ById[id].name,status=if wearing then "WEARING"else "Owned",tone=if wearing then "accent"else "soft",icon=if id=="none"then "none"else "toy",focused=i==focusIndex,compact=compact})
+  Cards.dress(node,{name=Catalog.ById[id].name,status=if wearing then "WEARING"else "Owned",tone=if wearing then "accent"else "soft",icon=if id=="none"then "none"else "toy",focused=i==focusIndex,compact=compact,isNew=self.options.isNew~=nil and self.options.isNew(id)==true and not wearing})
   table.insert(focus,{button=node,id=id,wearing=wearing,name=Catalog.ById[id].name,act=function()return self:choose(id)end})
  end
  local y=h+12

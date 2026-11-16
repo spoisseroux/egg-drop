@@ -280,7 +280,7 @@ local Table={
   hue={original="Original colour",free="Free",currentChip="CURRENT",current="Current colour",reset="Reset colour",
    confirmReset="Confirm reset",confirmLine="Press again to reset. It's free.",
    originalMain="{pet}'s first Main colour. Free, any time.",originalSecondary="{pet}'s first Secondary colour. Free, any time."},
-  customize={moreMaterials="More finishes hatch from Material Eggs.",moreToys="More toys hatch from Toy Eggs."},
+  customize={newBadge="NEW",moreMaterials="More finishes hatch from Material Eggs.",moreToys="More toys hatch from Toy Eggs."},
  },
  -- Overnight 2026-11-14 (artifacts/overnight-2026-11-14/BUILD-PLAN.md): one block per slice; each lane
  -- writes only inside its own block. e2 = second pet (E), variants = recolours + new tabs (B),

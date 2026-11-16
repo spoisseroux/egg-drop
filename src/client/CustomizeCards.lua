@@ -4,6 +4,7 @@
 -- accent stroke on the focused card. `dress` restyles an existing TextButton in
 -- place (panels keep their own buttons, names and Activated handlers).
 local Kit=require(script.Parent.DeckKit)
+local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
 local Cards={}
 
 -- Pure: card rectangles for n cards in `cols` columns, 3 px in from the scroll edges
@@ -46,7 +47,8 @@ function Cards.new(parent,name)
 end
 
 -- spec: {name, status, tone, swatch (Color3 or nil), icon (vector icon name or nil),
--- iconColor (Color3 or nil), focused, compact}
+-- iconColor (Color3 or nil), focused, compact, isNew (QA v760: a small NEW sticker at the
+-- top right until the card is tapped)}
 function Cards.dress(button,spec)
  local tile=Kit.tileState(button)
  button.Text="";button.AutoButtonColor=false;button.BackgroundTransparency=if tile then 1 else 0
@@ -87,7 +89,18 @@ function Cards.dress(button,spec)
  name.TextSize=if spec.compact then 14 else 16;status.TextSize=if spec.compact then 12 else 14
  local wearing=spec.tone=="accent"
  status.FontFace=if wearing then Kit.Type.Label[3]else Kit.Type.Small[3]
- name.Position=UDim2.fromOffset(tx,h/2-20);name.Size=UDim2.fromOffset(math.max(1,w-tx-8),20)
+ local badge=parts:FindFirstChild("NewBadge")
+ if spec.isNew and not badge then
+  badge=Kit.frame(parts,"NewBadge",nil,UDim2.new(),UDim2.fromOffset(36,16),8)
+  badge.BackgroundTransparency=0;badge.BackgroundColor3=Kit.Color.stars;badge.ZIndex=parts.ZIndex+2
+  local text=Instance.new("TextLabel");text.Name="Text";text.BackgroundTransparency=1;text.Size=UDim2.fromScale(1,1)
+  text.FontFace=Kit.Type.Label[3];text.TextSize=10;text.TextColor3=Kit.Color.ink;text.Text=UICopy.get("r4.customize.newBadge")
+  text.Active=false;text.ZIndex=badge.ZIndex+1;text.Parent=badge
+ end
+ if badge then badge.Visible=spec.isNew==true;badge.Position=UDim2.fromOffset(w-6-36,6)end
+ button:SetAttribute("IsNew",spec.isNew==true)
+ local nameRoom=if spec.isNew then 40 else 0
+ name.Position=UDim2.fromOffset(tx,h/2-20);name.Size=UDim2.fromOffset(math.max(1,w-tx-8-nameRoom),20)
  status.Position=UDim2.fromOffset(tx,h/2+2);status.Size=UDim2.fromOffset(math.max(1,w-tx-8),18)
  Kit.paint(status,"TextColor3",function()return colorOf(spec.tone or "soft")end)
  local focused=spec.focused==true

@@ -76,10 +76,12 @@ function View.new(parent,intent,options)
  self.eatingProof=EatingProof.new();self.fruitEating=FruitEating.new()
  self.toyIntent=self.options.toyIntent;self.featureIntent=self.options.featureIntent
  self.materialIntent=self.options.materialIntent
+ -- QA v760: items the player has not tapped yet ("hue:rose", "toys:bone"); this session only.
+ self.newItems={};self.quietStored={}
  local identityChanged=function()if not self.destroyed and self.shade.Visible then self:refresh()end end
- self.materialPanel=MaterialPanel.new(body,self.materialIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="materials"and not self.confirmation and self.materialPanel.petId==self.petId and self:canCustomize()end,receiptOpen=function(result)return self.shade.Visible and self.page=="materialReceipt"and self.state.pendingMaterialResult and self.state.pendingMaterialResult.id==result.id end,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
+ self.materialPanel=MaterialPanel.new(body,self.materialIntent,{isNew=function(id)return self:isNewItem("materials",id)end,audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="materials"and not self.confirmation and self.materialPanel.petId==self.petId and self:canCustomize()end,receiptOpen=function(result)return self.shade.Visible and self.page=="materialReceipt"and self.state.pendingMaterialResult and self.state.pendingMaterialResult.id==result.id end,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
   useNow=function(result)self.materialAssignment={resultId=result.id,finishId=result.finishId};self:landOnPets(result)end})
- self.toyPanel=ToyPanel.new(body,self.toyIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="toys"and not self.confirmation and self.toyPanel.petId==self.petId and self:canCustomize()end,
+ self.toyPanel=ToyPanel.new(body,self.toyIntent,{isNew=function(id)return self:isNewItem("toys",id)end,audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="toys"and not self.confirmation and self.toyPanel.petId==self.petId and self:canCustomize()end,
   receiptOpen=function(result)return self.shade.Visible and self.page=="toyReceipt"and self.state.pendingToyResult and self.state.pendingToyResult.id==result.id end,
   shop=function()self:close("shop");if self.options.toyShop then self.options.toyShop()end end,
   useNow=function(result)self.toyAssignment={resultId=result.id,toyId=result.toyId};self:landOnPets(result)end})
@@ -218,6 +220,50 @@ function View:openWardrobe()
  if not self.shade.Visible or self.page~="palette"or self.confirmation or self.intent.pending or not self:canCustomize()then return false end
  if not WearableCatalog.hasItems(self.petId)or not self.options.wardrobe then return false end
  return self.options.wardrobe(self.petId)==true
+end
+-- QA v760 (Customize, new item): opening Customize never replays a hatch receipt (the
+-- full-screen result with Store / Give). A result still waiting when Customize opens is
+-- stored quietly, one request at a time, and its card carries a small NEW badge until it
+-- is tapped (or worn). The receipt still shows where it belongs: straight after a hatch
+-- from Hatch eggs. The badge set is kept on this client only; nothing new is saved.
+View.NewKinds={{"hue","pendingHueResult","itemId"},{"materials","pendingMaterialResult","finishId"},{"toys","pendingToyResult","toyId"}}
+function View:noteNewItems()
+ local state=self.state or {}
+ for _,kind in ipairs(View.NewKinds)do
+  local result=state[kind[2]]
+  if type(result)=="table"and result[kind[3]]~=nil then self.newItems[kind[1]..":"..tostring(result[kind[3]])]=true end
+ end
+end
+function View:isNewItem(tab,id)
+ local key=tab..":"..tostring(id)
+ if not self.newItems[key]then return false end
+ local state=self.state or {}
+ local worn=if tab=="toys"then state.petToys elseif tab=="materials"then state.petMaterials else nil
+ for _,value in pairs(worn or {})do if value==id then self.newItems[key]=nil;return false end end
+ if tab=="hue"then
+  local waiting=state.pendingHueResult
+  if((state.hueInventory or {})[id]or 0)<1 and not(waiting and waiting.itemId==id)then return false end
+ end
+ return true
+end
+function View:seenItem(tab,id)
+ local key=tab..":"..tostring(id)
+ if not self.newItems[key]then return false end
+ self.newItems[key]=nil;return true
+end
+function View:storePending()
+ if not self.quietStore or not self.shade.Visible or self.page~="palette"or self.confirmation or self:hasReceiptAssignment()then return end
+ local state=self.state or {}
+ local jobs={{self.intent,state.pendingHueResult,"store"},{self.materialIntent,state.pendingMaterialResult,"ack"},
+  {self.toyIntent,state.pendingToyResult,"ack"},{self.featureIntent,state.pendingFeatureResult,"ack"}}
+ for _,job in ipairs(jobs)do if job[1]and job[1].pending then return end end
+ for _,job in ipairs(jobs)do
+  local intent,result=job[1],job[2]
+  if intent and result and not self.quietStored[result.id]and intent.status~="Retrying"then
+   if intent[job[3]](intent,result.id)then self.quietStored[result.id]=true end
+   return
+  end
+ end
 end
 function View:canCustomize()
  return not self.options.canCustomize or self.options.canCustomize(if self.machine then self.machine.petId else self.petId)==true
@@ -745,7 +791,9 @@ function View:refresh()
   if self.migrationOperation==receipt.id then self.migrationOperation=nil;self.page=if self.state.pendingHueResult then "receipt"else self.afterMigrationPage or "palette"end
   if self.storeOperation==receipt.id then self.storeOperation=nil;self:close("stored");return end
  end
+ self:noteNewItems()
  if not self.shade.Visible then return end
+ self:storePending()
  local r=self.state.pendingHueResult
  local materialResult=self.state.pendingMaterialResult;local toyResult=self.state.pendingToyResult;local featureResult=self.state.pendingFeatureResult
  if self.toyAssignment and not self:hasToyAssignment()then self.toyAssignment=nil end
@@ -1343,7 +1391,7 @@ function View:layoutChrome()
     -- it shows the real result of one more fruit.
     local swatch=if id=="reset"then Hues.Items.reset.color else Hues.ById[id].color
     local status=(if id=="reset"then "Clears "..channelName(self.channel)else counts[id].." of 5").." · ×"..stock
-    Cards.dress(b,{name=names[id],status=status,tone=if reason then "dim"else "soft",swatch=swatch,focused=i==index,compact=compact})
+    Cards.dress(b,{name=names[id],status=status,tone=if reason then "dim"else "soft",swatch=swatch,focused=i==index,compact=compact,isNew=self:isNewItem("hue",id)})
     table.insert(focus,{button=b,id=id,act=function()return self:chooseItem(id)end})
    end
   end
@@ -1417,7 +1465,7 @@ function View:layoutChrome()
   end
  end
  -- QA v2 R4.5: "More from eggs" under the Materials / Toys cards.
- local more=if self.boundedEating then nil elseif self.tab=="materials"then "r4.customize.moreMaterials"elseif self.tab=="toys"then "r4.customize.moreToys"else nil
+ local more=if self.boundedEating then nil elseif self.tab=="materials"then(if MaterialCatalog.EnablePurchases then "r4.customize.moreMaterials"else nil)elseif self.tab=="toys"then "r4.customize.moreToys"else nil
  self.moreLine.Visible=more~=nil
  if more then self.moreLine.Text=UICopy.get(more);self.moreLine.Position=UDim2.fromOffset(3,y);self.moreLine.Size=UDim2.fromOffset(gw-6,20);y+=28 end
  self.chromeFocus[self.tab]=index;self.focusables=focus
@@ -1451,7 +1499,13 @@ function View:chromeTap(tab,id)
  if not self:chromeActive()or self.tab~=tab then return false end
  for i,item in ipairs(self.focusables or {})do
   if item.id==id then
-   if i==self:focusIndex()then return self:chromeAct()end
+   -- QA v760: the first tap on a card clears its NEW badge.
+   local seen=self:seenItem(tab,id)
+   if i==self:focusIndex()then
+    local acted=self:chromeAct()
+    if seen and self.shade.Visible then self:layout()end
+    return acted or seen
+   end
    self:chromeFocusAt(i);return true
   end
  end
@@ -1460,6 +1514,7 @@ end
 function View:chromeFocusAt(index)
  if index~=self:focusIndex()then self.clearConfirm=nil end
  self.chromeFocus[self.tab]=index;self.epoch+=1
+ do local item=(self.focusables or {})[index];if item then self:seenItem(self.tab,item.id)end end
  if self.tab=="charm"then self.charmMessage=nil end
  self:layout();self:paintPortrait()
 end
@@ -1638,7 +1693,14 @@ function View:open(state,page,petId)
  if self.materialIntent then self.materialIntent:update(self.state)end
  if self.toyIntent then self.toyIntent:update(self.state)end;if self.featureIntent then self.featureIntent:update(self.state)end
  if self.state.lastHatch then if self.options.pendingHatch then self.options.pendingHatch()end;return false end
- self.page=if self.state.pendingHueResult then "receipt"elseif self.state.pendingMaterialResult then "materialReceipt"elseif self.state.pendingToyResult then "toyReceipt"elseif self.state.pendingFeatureResult then "featureReceipt"elseif page=="toyBuy"then "toyBuy"elseif page=="featureBuy"then "featureBuy"elseif page=="materialBuy"then "materialBuy"elseif page=="buy"then "buy"else "palette"
+ -- QA v760: only a hatch flow (Hatch eggs, a direct hatch) lands on a receipt. Opened as
+ -- Customize (the game sets `quietOpen` for the hub, Companions, the journal and the Care
+ -- Cradle), it opens on the cards, on the tab of the item that is waiting (see storePending).
+ local fromEggs=self.directHatch~=nil or page=="buy"or page=="materialBuy"or page=="toyBuy"or page=="featureBuy"
+ local quiet=self.quietOpen==true;self.quietOpen=nil
+ self.petId=petId or self.petId
+ self.quietStore=quiet and not fromEggs and self:canCustomize();self.quietStored={};self:noteNewItems()
+ self.page=if self.quietStore then "palette"elseif self.state.pendingHueResult then "receipt"elseif self.state.pendingMaterialResult then "materialReceipt"elseif self.state.pendingToyResult then "toyReceipt"elseif self.state.pendingFeatureResult then "featureReceipt"elseif page=="toyBuy"then "toyBuy"elseif page=="featureBuy"then "featureBuy"elseif page=="materialBuy"then "materialBuy"elseif page=="buy"then "buy"else "palette"
  do -- QA v685 H4: opened by a direct Hatch from Hatch eggs, so the reveal plays as a fresh hatch.
   local kind=self.directHatch;self.directHatch=nil
   local field=if kind=="hue"then "purchaseInFlight"elseif kind then kind.."PurchaseInFlight"else nil
@@ -1646,7 +1708,11 @@ function View:open(state,page,petId)
   if field and result then self[field]=result.id end
  end
  if self.state.hueMigrationId and self.state.hueMigrationAcknowledged==false then self.afterMigrationPage=self.page;self.page="migration"end
- self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"then "materials"elseif page=="toys"then "toys"elseif page=="features"then "features"elseif page=="pet"then "pet"else "hue";self.channel="main";self.inspected=nil;self.useMessage=nil;self.confirmation=nil;self.assignment=nil;self.selectTarget=false;self.body.CanvasPosition=Vector2.zero
+ self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"then "materials"elseif page=="toys"then "toys"elseif page=="features"then "features"elseif page=="pet"then "pet"else "hue"
+ if self.quietStore and(page==nil or page=="palette")and not self.state.pendingHueResult then
+  if self.state.pendingToyResult then self.tab="toys"elseif self.state.pendingMaterialResult then self.tab="materials"end
+ end
+ self.channel="main";self.inspected=nil;self.useMessage=nil;self.confirmation=nil;self.assignment=nil;self.selectTarget=false;self.body.CanvasPosition=Vector2.zero
  local p=self.intent.pending
  if p and p.action=="hueUse"then self.page="palette";self.petId=p.value.petId;self.channel=p.value.channel;self.confirmation={itemId=p.value.itemId,petId=p.value.petId,channel=p.value.channel,pendingResultId=p.value.pendingResultId};self.submitted=p.value.id end
  local draft=self.resultDraft
