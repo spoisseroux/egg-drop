@@ -186,10 +186,17 @@ return function(server)
 			local toys = require(Shared.ToyCatalog)
 			s.toyUnlocks = {}; for _, toyId in ipairs(toys.Pools[toys.PoolVersion]) do s.toyUnlocks[toyId] = true end
 			s.materialUnlocks = { gloss = true, matte = true }
-			assert(Book.pagePercent(s, "toys") < 100, "the old two-finish collection must not complete active pool4")
 			local finishes = require(Shared.MaterialCatalog)
-			for _, finishId in ipairs(finishes.Pools[finishes.PoolVersion]) do s.materialUnlocks[finishId] = true end
-			assert(Book.pagePercent(s, "toys") == 100, "all active toys and finishes must complete the page")
+			if finishes.EnablePurchases then
+				assert(Book.pagePercent(s, "toys") < 100, "the old two-finish collection must not complete active pool4")
+				for _, finishId in ipairs(finishes.Pools[finishes.PoolVersion]) do s.materialUnlocks[finishId] = true end
+				assert(Book.pagePercent(s, "toys") == 100, "all active toys and finishes must complete the page")
+			else
+				-- v1: the Material Egg is not sold, so finishes are not Book items and the toys alone finish the page.
+				assert(Book.pageProgress(s, "toys").total == #toys.Pools[toys.PoolVersion], "finishes nobody can buy must not count")
+				assert(Book.pagePercent(s, "toys") == 100, "every toy must complete the page while the Material Egg is off")
+				assert(Book.pagePercent({ toyUnlocks = s.toyUnlocks }, "toys") == 100, "the page must not need a finish while the Material Egg is off")
+			end
 			s.book.found = allFound()
 		end)
 		local before = h.state.nectar

@@ -209,7 +209,12 @@ end
 do
 	local items={}
 	for _,id in ipairs(Toys.Pools[Toys.PoolVersion]or {})do table.insert(items,{id="toy:"..id,name=Toys.ById[id].name,kind="toy",itemId=id})end
-	for _,id in ipairs(Finishes.Pools[Finishes.PoolVersion]or {})do table.insert(items,{id="finish:"..id,name=Finishes.ById[id].name,kind="finish",itemId=id})end
+	-- Finishes are Book items only while the Material Egg sells them (v1: EnablePurchases=false).
+	-- A page nobody can finish would lock its 75% and 100% milestones. The save is untouched:
+	-- materialUnlocks and claimed milestones stay, and the finishes count again when the egg returns.
+	if Finishes.EnablePurchases==true then
+		for _,id in ipairs(Finishes.Pools[Finishes.PoolVersion]or {})do table.insert(items,{id="finish:"..id,name=Finishes.ById[id].name,kind="finish",itemId=id})end
+	end
 	page("toys",items,function(state,item)
 		local unlocks=if item.kind=="toy"then state.toyUnlocks else state.materialUnlocks
 		return type(unlocks)=="table"and unlocks[item.itemId]==true
