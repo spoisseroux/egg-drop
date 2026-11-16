@@ -21,7 +21,10 @@ local function build(Park)
 local Catalog=require(script.Parent.ParkActivities)
 local Data={}
 Data.Delay=.12 -- the shared presentation delay PetFollow.activity samples with
-Data.Texture="rbxassetid://132276058524122"
+-- QA v775 note 15: the park palette graded to the v735 world palette (greyer marble, deeper
+-- greens, browner wood; scripts/build_park_grounded_palette.py, assets/park/palette-park-grounded.png).
+-- The dusk palette it replaces was rbxassetid://132276058524122.
+Data.Texture="rbxassetid://86494931505767"
 Data.ModelAsset="136546082248550"
 
 local function v(x,y,z)return Vector3.new(x,y,z)end

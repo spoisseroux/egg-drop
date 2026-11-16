@@ -1,7 +1,9 @@
 {
  "note": "Open Cloud upload 2026-11-13: model 136546082248550 (MeshSize reads back at 100x the authored studs; set Size from park-manifest.json). One palette TextureID for every mesh.",
  "model": "136546082248550",
- "texture": "rbxassetid://132276058524122",
+ "texture": "rbxassetid://86494931505767",
+ "textureSource": "assets/park/palette-park-grounded.png (scripts/build_park_grounded_palette.py, QA v775 note 15; uploaded 2026-11-16)",
+ "texturePrevious": "rbxassetid://132276058524122",
  "meshes": {
   "Park_BallA": "rbxassetid://74693775529293",
   "Park_BallB": "rbxassetid://81950708061275",
