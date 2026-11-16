@@ -10,6 +10,22 @@ local function ownsStarter(state)return Eggs.isOwned(state.inventoryMask or 0,(P
 local function ownedToys(state)
 	local n=0;for _,id in ipairs(Toys.PaidOrder)do if Toys.owns(state.toyUnlocks,id)then n+=1 end end;return n
 end
+-- QA v760: the "Hatch your first egg" pill showed after a Hue or Material Egg, because
+-- only an owned toy ended the guide. Any earlier hatch (or any Stars spent) ends it now.
+local function hatchedBefore(state)
+	local stats=state.stats
+	if type(stats)=="table"and(tonumber(stats.starsSpent)or 0)>0 then return true end
+	if state.lastHueResult or state.lastMaterialResult or state.lastFeatureResult then return true end
+	for _,value in pairs(type(state.materialUnlocks)=="table"and state.materialUnlocks or {})do if value then return true end end
+	for _,count in pairs(type(state.hueInventory)=="table"and state.hueInventory or {})do if(tonumber(count)or 0)>0 then return true end end
+	for _,count in pairs(type(state.featureStock)=="table"and state.featureStock or {})do if(tonumber(count)or 0)>0 then return true end end
+	for _,record in pairs(type(state.petHues)=="table"and state.petHues or {})do
+		for _,channel in pairs(type(record)=="table"and record or {})do
+			for _,count in pairs(type(channel)=="table"and channel or {})do if(tonumber(count)or 0)>0 then return true end end
+		end
+	end
+	return false
+end
 local function purchaseProof(state)
 	local pending,receipt=state.pendingToyResult,state.lastToyResult
 	if type(pending)~="table"or type(receipt)~="table"then return nil end
@@ -31,7 +47,7 @@ function Guide.stage(state,context)
 		local proof=purchaseProof(state)
 		if proof then return "receipt",proof end
 	end
-	if count>0 then return "done"end
+	if count>0 or hatchedBefore(state)then return "done"end
 	if state.pendingHueResult or state.pendingMaterialResult or state.pendingFeatureResult then return "free"end
 	return if(state.nectar or 0)>=Toys.Cost then "purchase"else "earn"
 end
@@ -111,4 +127,5 @@ function Guide:step(context)
 end
 function Guide:destroy()self:routeChanged();self.alive=false end
 Guide.purchaseProof=purchaseProof
+Guide.hatchedBefore=hatchedBefore
 return Guide

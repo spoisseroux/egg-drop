@@ -1,0 +1,13 @@
+QA v760 item 6, "Hatch your first egg" pill after an egg was already hatched.
+Studio Play, real server snapshots (Remotes.NurserySnapshot), FirstSpendGuide.stage(snapshot, {eligible=true}).
+The pill shows only while the stage is "purchase".
+
+1. Fresh save, Bear hatched, 152 Stars (test grant), no egg hatched:      stage = purchase  (pill offered, as intended)
+2. Hue Egg hatched over the real remote (hueBuy), result waiting:          stage = done
+3. That jar stored (hueStore): hueInventory rose=1, stats.starsSpent=12,
+   no toy owned, 140 Stars left (Spencer's case):                          stage = done      (no pill)
+4. The same snapshot with the hatch evidence removed (what the old rule
+   looked at: only toys owned):                                            stage = purchase  (the bug)
+
+Spec: scripts/FirstSpendGuide.spec.lua, 6 cases pass (new case "QA v760: any earlier hatch ends the first-egg offer").
+Not seen: the pill itself. The rail only runs while the Studio window has focus, which this session never had.

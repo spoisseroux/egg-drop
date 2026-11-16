@@ -25,6 +25,17 @@ return function(client,shared,modules)
 		state=purchased();state.pendingToyResult=nil;state.lastToyResult=nil
 		assert(Guide.stage(state,{eligible=true})=="done","old ownership survives bounded receipt eviction")
 	end)
+	test("QA v760: any earlier hatch ends the first-egg offer, not only an owned toy",function()
+		local function offered(change)local state=fresh();change(state);return Guide.stage(state,{eligible=true})end
+		assert(offered(function()end)=="purchase","a fresh save with enough Stars is still offered its first egg")
+		assert(offered(function(s)s.stats={starsSpent=0};s.hueInventory={rose=0};s.materialUnlocks={};s.petHues={pip={main={rose=0},secondary={rose=0}}};s.featureStock={horns=0}end)=="purchase","empty records are not a hatch")
+		assert(offered(function(s)s.hueInventory={rose=1}end)=="done","a stored colour jar")
+		assert(offered(function(s)s.petHues={pip={main={rose=1},secondary={rose=0}}}end)=="done","a used colour jar")
+		assert(offered(function(s)s.materialUnlocks={gloss=true}end)=="done","a Material Egg finish")
+		assert(offered(function(s)s.lastMaterialResult={id="m"}end)=="done","a material receipt")
+		assert(offered(function(s)s.stats={starsSpent=8}end)=="done","Stars already spent")
+		assert(offered(function(s)s.pendingHueResult={id="h"}end)=="free","a waiting result still frees the player")
+	end)
 	local function fixture()
 		local c={entered=0,played=0,opens=0,serial=0}
 		c.intent={status="Ready",equip=function(self,petId,toyId,resultId)
