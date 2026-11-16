@@ -298,6 +298,9 @@ end
 -- button's own action; default HowItWorks.go(target)), onClosed. True when it shows.
 function How.openNotice(id,options)
  if not Notices.has(id)then return false end
+ -- A tour or How it works set is already showing: leave it alone, so its onClosed (the
+ -- garden tour's done step) is never overwritten (review, 2026-11-16).
+ if state.open and not state.notice then return false end
  options=options or {}
  return How.open("notice:"..id,{onClosed=options.onClosed,
   notice={id=id,vars=options.vars,run=options.run,go=Notices.go(id)}})
