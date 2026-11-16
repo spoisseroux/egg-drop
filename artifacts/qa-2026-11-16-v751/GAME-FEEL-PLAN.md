@@ -2,6 +2,8 @@
 
 Spencer, 2026-11-16 (v751): "we need to do a pass to make the egg drop game more fast and exciting".
 
+Status: compiled and run in Studio Play on 2026-11-16 (see "Play verification" at the end), place saved v760, not published. The paragraph below is the state before that run.
+
 Status: implemented and pushed on `feat/egg-drop-arcade-polish`. **Not compiled or run in Studio** (Studio was in Play for another agent the whole session, so the Edit compile check could not run). Not published. All numbers are `[PLACEHOLDER]` until the Play tests at the bottom pass and Spencer plays it on a phone.
 
 ## What the player should feel
@@ -146,3 +148,30 @@ Run after a Play restart (Rojo changes reach Play only then).
 - Kick: `DeckMergeJolt.Kick` and `ChainStep`; phone size via the 420 px reference in `init.client`.
 - Heartbeat: `BoardDanger.BeatNearSlow / BeatNearFast / BeatOver / BeatRed`, tick volume in `tickVoice`.
 - Chain pitch: `BoardAudio.ChainSemitones`.
+
+## Play verification (2026-11-16, Studio Play, 750x402 phone fixture)
+
+No number was changed. One spec was re-pinned: `OverflowGraceLeft.spec` now expects the grace published as `graceLeft / Config.Pace`.
+
+| Test | Result |
+|---|---|
+| Compile | Server and client start clean on two Play starts. |
+| Specs | Server 58/58. Client 134 of 149; the 15 failures are the long-standing ones. |
+| Ten fast drops | 10 drops in 4.25 s, one every 0.465 s. Dispenser never stuck. No position jump; longest gap between position updates 36 ms. |
+| Merge ladder | Tier II to V merges in live rounds. Burst and score pop scale (ring up to 118 px, 18 fragments). |
+| Reduced Motion | No fragments, no punch on the score pop or chain counter, no kick. |
+| Chain | Live chains up to x9. Counter 20 px at x2, +2 px per step, lands from 1.45x. |
+| Fill line | Near: glow beats every 0.95 s at pressure 0.3. Over: first beat 0.45 s after entry, then 0.43 s, 0.22 s in red. Overflow end: line at zero 0.03 s before the round ended (Easy and Medium). |
+| Round end | Settling to results 2.33 s. |
+| Welcome round | Skip ready at 3.1 s, replay at 8.1 s, demo at 25.1 s; the demo ball merged 0.67 s later. |
+| Benchmark (`heats`, 6 seeds) | Easy 33/36 (was 33), Medium 35/36 (was 34), Hard 17/36 (was 16). `mediumMatchesToday` true. |
+| Medium round | 33.0 s from first drop to results, one drop every 1.25 s, a win. Floor with drop spam: about 13.5 s. |
+
+**Checked on the real modules, not in the live game** (Studio had no window focus, and the game mutes sound and the kick without it):
+- Kick on the phone board (273 px tall, scale 0.65): II 2.0 px, III 4.1, IV 6.3, V 7.3, cap 9.5 px. Desktop: 3.2 / 6.3 / 9.5 / 12.6 px.
+- `merge_chain` plays at 1.00, 1.12, 1.26, 1.33, 1.50, 1.68, 1.89, 2.00x for chain 1 to 8, volume 0.30 to 0.50. `danger_tick` 1.00 to 1.34x, 0.26 then 0.34.
+- Nobody has listened to it. "Nothing shrill" is still open for Spencer.
+
+**One rule change to know about.** The settle wait went from 4 to 3 simulation seconds, and the overflow grace did not change (3.0 / 2.4 / 2.0). A stack that goes over the line after the last ball now usually reaches the settle before the grace runs out on Easy and Medium, so the round ends on its goals with the line still partly lit (seen once: 0.39 s left). Before G1 that was an overflow loss. It is kinder, and it is why the benchmark gained one win on Medium and Hard. To restore the old rule, set `FieldRun.SettleSeconds` back to 4 (3.1 s real).
+
+Captures: `verify/G1-fast-round-750x402-01..06-FIXTURE.png` and `verify/G1-fast-round-750x402-FIXTURE.gif` (six frames 0.75 s apart, chain x3 to x5).
