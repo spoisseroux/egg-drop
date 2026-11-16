@@ -10,6 +10,20 @@ local gui,root,pill,label,icon,shown,more
 -- QA v735 H5: a line that opens something on a tap (its own `activate`, or a notice card
 -- named by `detail`, see NoticeCards) shows a small chevron at its end, MoreWidth wide.
 Rail.MoreWidth=14
+-- QA v775: the rail is calm. After a line leaves, the rail stays empty this long before the
+-- next one (NotificationQueue `gap`); while a tip or notice card is open (How it works, a
+-- notice, the garden tour) the rail holds: no clock runs and nothing appears or changes.
+Rail.Gap=3
+local How -- HowItWorks, required on first use (it requires DeckKit, which uses this rail)
+queue.gap=Rail.Gap
+function Rail.held()
+ if How==nil then
+  local module=script.Parent:FindFirstChild("HowItWorks")
+  local ok,value=pcall(require,module)
+  How=if module and ok and type(value)=="table"then value else false
+ end
+ return How~=false and How.isOpen()==true
+end
 function Rail.tappable(data)return type(data)=="table"and(data.activate~=nil or type(data.detail)=="table")end
 -- A tap on the line: its own action, else its notice card. True when something opened.
 function Rail.activate(data)
@@ -57,7 +71,8 @@ local function ensure()
   Text="›",FontFace=font,TextSize=20,TextColor3=Color3.fromHex("#8DBEAC"),Visible=false,Active=false})
  pill.InputBegan:Connect(function(input)
   if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-   local item=queue.current;if item then Rail.activate(item.data)end
+   -- A tap that opened a card: the line holds under it and ends when the card closes.
+   local item=queue.current;if item and Rail.activate(item.data)and Rail.held()then item.tapped=true end
   end
  end)
  return true
@@ -100,7 +115,7 @@ connection=RunService.RenderStepped:Connect(function(dt)
  -- Convert through the measured GUI inset, then through this root's local origin.
  local inset=GuiService.TopbarInset
  local size=Vector2.new(inset.Width,inset.Height)
- local item=queue:step(dt,function(data)local _,w=measure(data);return Rail.geometry(size.X,size.Y,w,Rail.tappable(data)).fits end)
+ local item=queue:step(dt,function(data)local _,w=measure(data);return Rail.geometry(size.X,size.Y,w,Rail.tappable(data)).fits end,Rail.held())
  if not item then pill.Visible=false;shown=nil;return end
  local tappable=Rail.tappable(item.data)
  local text,width=measure(item.data);local g=Rail.geometry(size.X,size.Y,width,tappable)

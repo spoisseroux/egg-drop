@@ -46,11 +46,12 @@ How.Sets=table.freeze({
   table.freeze({key="a",icon="book"}),table.freeze({key="b",icon="star"}),table.freeze({key="c",icon="trophy"})})}),
  park=table.freeze({tint="companions",cards=table.freeze({
   table.freeze({key="a",icon="paw"}),table.freeze({key="b",icon="smiley"})})}),
- -- QA v735 H5: the first-session tour. Where the machines are, where Quests and dailies
- -- are, how to customize, and the Menu. Not in Order: it is not a machine's ? set.
+ -- QA v735 H5: the first-session tour. Where the machines and the Menu are, how to say hi
+ -- to your pet (QA v775: `input` picks the line for touch, keys or a gamepad), where Quests
+ -- and dailies are, and how to customize. Not in Order: it is not a machine's ? set.
  garden=table.freeze({tint="quests",cards=table.freeze({
-  table.freeze({key="a",icon="target"}),table.freeze({key="b",icon="quests"}),table.freeze({key="c",icon="wand"}),
-  table.freeze({key="d",icon="settings"})})}),
+  table.freeze({key="a",icon="target"}),table.freeze({key="e",icon="paw",input=true}),table.freeze({key="b",icon="quests"}),
+  table.freeze({key="c",icon="wand"})})}),
 })
 How.Order=table.freeze({"hatch","style","companions","quests","book","park"})
 How.DisplayOrder=40 -- above every menu ScreenGui (12 to 14) and the coach cards
@@ -61,13 +62,21 @@ How.StampSample=table.freeze({stamps=3,dailyAvailable=true})
 -- ── Pure ─────────────────────────────────────────────────────────────────────
 function How.has(id)return How.Sets[id]~=nil end
 function How.title(id)return UICopy.get("r3.help."..id..".title")end
--- The cards of a set: {{key, icon, art, title, line}}.
-function How.cards(id)
+-- "Touch" | "Gamepad" | "Keyboard", by the same rule as the pet's own prompts (PetFocusUI).
+function How.inputKind()
+ if string.match(UserInputService:GetLastInputType().Name,"^Gamepad")then return "Gamepad"end
+ return if UserInputService.TouchEnabled then "Touch"else "Keyboard"
+end
+How.InputLine=table.freeze({Touch="lineTouch",Gamepad="linePad",Keyboard="line"})
+-- The cards of a set: {{key, icon, art, title, line}}. input (default How.inputKind())
+-- picks the line of a card that names a key or a tap.
+function How.cards(id,input)
  local set=How.Sets[id];if not set then return {}end
  local out={}
  for _,card in ipairs(set.cards)do
+  local lineKey=if card.input then How.InputLine[input or How.inputKind()]or "line" else "line"
   table.insert(out,{key=card.key,icon=card.icon,art=card.art,
-   title=UICopy.get("r3.help."..id.."."..card.key..".title"),line=UICopy.get("r3.help."..id.."."..card.key..".line")})
+   title=UICopy.get("r3.help."..id.."."..card.key..".title"),line=UICopy.get("r3.help."..id.."."..card.key.."."..lineKey)})
  end
  return out
 end

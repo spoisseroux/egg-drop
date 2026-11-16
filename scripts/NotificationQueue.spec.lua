@@ -19,5 +19,26 @@ return function(client)
  q:add(a,"two",{text="Two"});q:add(a,"three",{text="Three"})
  assert(q:add(a,"overflow",{text="Overflow"})==nil,"bounded queue")
  q:cancelOwner(a);assert(q:step(0,fits)==nil and #q.items==0 and #q.providers==0,"destroy cancels queue and fallback")
- return{passed=8}
+ -- QA v775, the calm rail: a gap after a line leaves, and a hold while a card is open.
+ local c=Queue.new(8);c.gap=3;local o={};local ended=0
+ local one=c:add(o,"one",{text="One",onDone=function()ended+=1 end});local two=c:add(o,"two",{text="Two"})
+ assert(c:step(0,fits)==one)
+ assert(c:step(100,fits,true)==one and one.age==0 and not two.shown and ended==0,"held: its clock stops and nothing replaces it")
+ assert(c:step(3.9,fits)==nil and ended==1 and not two.shown,"its time ran out: the rail is empty, not the next line")
+ assert(c:step(2.9,fits)==nil and not two.shown,"the gap is still running")
+ assert(c:step(100,fits,true)==nil and not two.shown,"held: the gap does not run and nothing appears")
+ assert(c:step(2.9,fits)==nil and not two.shown,"the card closed: the gap starts over")
+ assert(c:step(.2,fits)==two and two.shown,"one new line once the gap has passed")
+ two.tapped=true
+ assert(c:step(50,fits,true)==two and two.age==0,"a tapped line stays under its card")
+ assert(c:step(0,fits)==nil and two.cancelled,"and ends when the card closes (tapped through)")
+ local three=c:add(o,"three",{text="Three"})
+ assert(c:step(2.9,fits)==nil and c:step(.2,fits)==three,"the next line waits out the gap again")
+ local status2=c:add(o,"status",{text="Status",active=true},true)
+ c:cancel(three);assert(c:step(1,fits)==nil and c:step(2.1,fits)==status2,"a status line waits for the gap too")
+ status2.tapped=true;c:step(9,fits,true);assert(c:step(0,fits)==status2 and not status2.tapped,"a tapped status line just stays")
+ local four=c:add(o,"four",{text="Four"})
+ assert(c:step(2.9,fits)==status2 and not four.shown,"its card just closed: a new notice waits out the gap")
+ assert(c:step(.2,fits)==four,"then the notice takes the status line's place")
+ return{passed=19}
 end

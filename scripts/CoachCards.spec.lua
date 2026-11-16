@@ -110,7 +110,8 @@ return function(client,parent)
    local RunService=game:GetService("RunService")
    local function railText()local _,capsule=Rail.view();return if capsule and capsule.Visible then capsule.Message.Text else nil end
    local function shows(text,seconds)
-    local deadline=os.clock()+(seconds or 2)
+    -- QA v775: after a line leaves, the rail rests Rail.Gap seconds before the next one.
+    local deadline=os.clock()+(seconds or 2)+Rail.Gap+.5
     repeat if railText()==text then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
     return false
    end
@@ -199,6 +200,88 @@ return function(client,parent)
   end)
   cards:destroy();gui:Destroy()
   assert(ok,problem)
+ end)
+
+ -- QA v775, "the tips change randomly": a line ran out under the card the player had
+ -- opened from it and the next line (or the tour) took its place.
+ test("QA v775: a card is open: the garden side stands still (pure clock)",function()
+  local gui=Instance.new("ScreenGui");gui.Name="_CoachHoldSpec";gui.Parent=parent
+  local sent,opened={},0
+  local cards=Cards.new({gui=parent,send=function(id)table.insert(sent,id)end,tour=function()opened+=1;return true end})
+  local ok,problem=pcall(function()
+   local open={}
+   local function step(t,extra)
+    local ctx={mode="Room",canRoam=true,presented=false,owned=1,input="Keyboard",open=open,used={},pet="Bear",idleFor=5,cardOpen=false}
+    for k,v in pairs(extra or {})do ctx[k]=v end
+    cards:step(t,ctx)
+   end
+   cards:sync({coachMask=0,totalWins=0,quests={daily={}}})
+   -- The garden step is due, but a notice card is open: the tour never opens over it.
+   step(0);step(10,{cardOpen=true});step(60,{cardOpen=true})
+   assert(opened==0 and cards.garden==nil and not cards.tourOpen,"no tour and no line over an open card")
+   step(61);assert(opened==0,"after the card closes the garden settles again first")
+   step(61+Coach.GardenSettle+.1);assert(opened==1 and cards.tourOpen,"then the tour opens")
+   -- A first-visit line whose card is open: its clock stops, it never leaves, nothing else starts.
+   cards.tourOpen=false;cards:finishGarden()
+   open.hatch=true;step(70)
+   assert(cards.garden and cards.garden.id=="hatch")
+   cards.garden.elapsed=1
+   open.hatch=false;open.book=true
+   step(71,{cardOpen=true});step(500,{cardOpen=true,used={Park=true}})
+   assert(cards.garden and cards.garden.id=="hatch"and cards.garden.elapsed==1,"held: not timed out, not replaced, not closed with its screen")
+   step(500.1)
+   assert(cards.garden and cards.garden.id=="book","once the card closes the next line is queued (the rail rests before it shows)")
+  end)
+  cards:destroy();gui:Destroy();assert(ok,problem)
+ end)
+
+ test("QA v775 live: the rail never advances or replaces a line while a card is open, and rests between lines",function()
+  local Rail=require(client.NotificationRail);local How=require(client.HowItWorks)
+  local RunService=game:GetService("RunService")
+  local gui=Instance.new("ScreenGui");gui.Name="_CoachCalmSpec";gui.Parent=parent
+  local cards=Cards.new({gui=parent,send=function()end})
+  local ok,problem=pcall(function()
+   local open={};local clock=0
+   local function railText()local _,capsule=Rail.view();return if capsule and capsule.Visible then capsule.Message.Text else nil end
+   -- Real frames for up to `seconds`: the cards step on the real dt; returns every rail text seen.
+   local function run(seconds,stop)
+    local seen={};local deadline=os.clock()+seconds
+    repeat
+     clock+=RunService.RenderStepped:Wait()
+     cards:step(clock,{mode="Room",canRoam=true,presented=false,owned=1,input="Keyboard",open=open,used={},pet="Bear",idleFor=5})
+     seen[railText()or "-"]=true
+    until os.clock()>deadline or(stop and stop())
+    return seen
+   end
+   local function only(seen,allowed)
+    for text in pairs(seen)do if not table.find(allowed,text)then return false,text end end
+    return true
+   end
+   cards:sync({coachMask=Coach.with(0,"gardenIntro"),totalWins=0,quests={daily={}}})
+   local hatch=Cards.railLine("hatch","once",{pet="Bear",input="Keyboard"},true).text
+   local book=Cards.railLine("book","once",{pet="Bear",input="Keyboard"},true).text
+   open.hatch=true
+   run(4+Rail.Gap,function()return railText()==hatch end)
+   assert(railText()==hatch,"the first-visit line shows")
+   -- The player opens its card and reads it for longer than the line's whole time.
+   assert(How.open("hatch")and Rail.held(),"a card is open: the rail holds")
+   local elapsed=cards.garden.elapsed
+   open.book=true -- another line is due meanwhile
+   local seen=run(cards.garden.duration+1.5)
+   local fine,other=only(seen,{hatch})
+   assert(fine,"the rail changed under the open card: "..tostring(other))
+   assert(cards.garden and cards.garden.id=="hatch"and cards.garden.elapsed==elapsed,"no clock ran")
+   assert(How.isOpen()and How.openId()=="hatch","the card the player opened stays until they close it")
+   How.close("fixture");open.hatch=false
+   -- The line leaves with its screen; the rail rests, then shows one new line.
+   local t0=os.clock()
+   seen=run(Rail.Gap+4,function()return railText()==book end)
+   assert(railText()==book,"the next line shows")
+   assert(os.clock()-t0>=Rail.Gap-.25,"but only after the calm gap")
+   fine,other=only(seen,{"-",hatch,book})
+   assert(fine,"a stray line showed: "..tostring(other))
+  end)
+  How.close("fixture");cards:destroy();gui:Destroy();assert(ok,problem)
  end)
 
  return{passed=#cases,cases=cases}

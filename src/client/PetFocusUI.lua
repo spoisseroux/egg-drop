@@ -106,7 +106,7 @@ function Focus.new(parentGui, callbacks)
 	Art.bind(helper,{BackgroundColor3="panel",TextColor3="text"});Art.corner(helper, 10)
 	local hint = helper:Clone()
 	hint.Name, hint.AnchorPoint, hint.Position = "RoamPetHint", Vector2.new(1, 0), UDim2.new(1, -12, 0, 64)
-	hint.Size, hint.TextSize, hint.Text, hint.Visible, hint.Parent = UDim2.fromOffset(180, 22), 11, "Tap your pet to say hi", false, root
+	hint.Size, hint.TextSize, hint.Text, hint.Visible, hint.Parent = UDim2.fromOffset(180, 22), 11, "", false, root
 	Art.bind(hint,{BackgroundColor3="panel",TextColor3="text"})
  local hit = Instance.new("TextButton")
 	hit.Name, hit.Text, hit.BackgroundTransparency, hit.BorderSizePixel = "PettingArea", "", 1, 0
@@ -371,16 +371,30 @@ function Focus:layoutRoamHint()
 	local size=self.root.AbsoluteSize
 	local dock=self.roamDock
 	local dockBottom=if dock and dock.Parent then dock.AbsolutePosition.Y+dock.AbsoluteSize.Y-self.root.AbsolutePosition.Y+8 else 64
-	-- QA v2 R2.6: the dock moved to the lower right (clear of Roblox's player list); the hint sits just above it.
+	-- QA v2 R2.6: the dock moved to the lower right (clear of Roblox's player list).
+	-- QA v775: the lane above the dock belongs to the park's Throw button and "Pets playing"
+	-- counter, so the line (a save notice or feedback; the always-on "say hi" hint is gone,
+	-- it lives in the Your garden guide) sits on the dock's own row, to its left.
 	local dockTop=if dock and dock.Parent then dock.AbsolutePosition.Y-self.root.AbsolutePosition.Y else nil
 	local dockLow=dockTop~=nil and dockTop>size.Y/2
-	local key=self.hint.Text..tostring(size)..tostring(dockBottom)..tostring(dockLow)..GuiService.PreferredTextSize.Name
+	local dockLeft=if dockLow then dock.AbsolutePosition.X-self.root.AbsolutePosition.X else size.X
+	local key=self.hint.Text..tostring(size)..tostring(dockBottom)..tostring(dockLow)..tostring(dockLeft)..GuiService.PreferredTextSize.Name
 	if self.hintLayoutKey==key then return end;self.hintLayoutKey=key
 	Art.type(self.hint,if self.saveNotice then "Body"else "Supporting",size.Y<280)
+	self.hint.AnchorPoint=Vector2.zero
+	if dockLow then
+		local room=math.max(1,dockLeft-8-12)
+		local width=math.min(room,math.max(math.min(180,room),math.min(if self.saveNotice then room else 360,Art.textWidth(self.hint)+16)))
+		local height=Art.textHeight(self.hint,width,24)+8
+		local dockHeight=dock.AbsoluteSize.Y
+		-- Centred on the dock's row; a tall (wrapped) line grows up from the dock's bottom edge.
+		local y=if height<=dockHeight then dockTop+(dockHeight-height)/2 else dockTop+dockHeight-height
+		self.hint.Position,self.hint.Size=UDim2.fromOffset(math.max(8,dockLeft-8-width),math.max(8,math.floor(y))),UDim2.fromOffset(width,height)
+		return
+	end
 	local width=math.min(math.max(1,size.X-24),math.max(180,math.min(if self.saveNotice then math.max(1,size.X-24)else 360,Art.textWidth(self.hint)+16)))
 	local height=Art.textHeight(self.hint,width,24)+8
-	local y=if dockLow then math.max(8,math.floor(dockTop-height-8))else math.max(8,math.min(dockBottom,math.max(8,size.Y-height-8)))
-	self.hint.AnchorPoint=Vector2.zero
+	local y=math.max(8,math.min(dockBottom,math.max(8,size.Y-height-8)))
 	self.hint.Position,self.hint.Size=UDim2.fromOffset(math.max(8,size.X-width-12),y),UDim2.fromOffset(width,height)
 end
 
@@ -409,7 +423,7 @@ function Focus:setSaveNotice(notice)
 	self.saveNotice=notice;self.hintLayoutKey=nil;self.helperLayoutKey=nil
 	if notice then self.hint.Text=notice.detail;self.helper.Text=notice.detail else
 		local pad=string.match(UserInputService:GetLastInputType().Name,"^Gamepad")
-		self.hint.Text=if pad then "X  Say hi to your pet"elseif UserInputService.TouchEnabled then "Tap your pet to say hi"else "E  Say hi to your pet"
+		self.hint.Text=""
 		self.helper.Text=if pad then "X  Pet    B  Back"else "Tap or rub to pet"
 	end
 	self:layoutRoamHint();self:layoutSaveHelper();return true
@@ -422,10 +436,11 @@ function Focus:update(camera, pet, roamHint)
 	self.panel.Visible = self.active and ownsInput
 	self.gui.DisplayOrder = if self.panel.Visible then 40 else 9
 	local feedback=(self.feedbackUntil or 0)>os.clock()
-	self.hint.Visible = not self.active and ownsInput and (feedback or(roamHint==true and not self.roamHintRetired)or self.saveNotice~=nil)
+	-- QA v775: no always-on "say hi" hint (it covered the park's "Pets playing" counter; the
+	-- Your garden guide teaches it). The line only carries a save notice or short feedback.
+	self.hint.Visible = not self.active and ownsInput and (feedback or self.saveNotice~=nil)
 	local kind = UserInputService:GetLastInputType()
-	self.hint.Text = if self.saveNotice then self.saveNotice.detail elseif feedback then self.feedbackText elseif string.match(kind.Name, "^Gamepad") then "X  Say hi to your pet"
-		elseif UserInputService.TouchEnabled then "Tap your pet to say hi" else "E  Say hi to your pet"
+	self.hint.Text = if self.saveNotice then self.saveNotice.detail elseif feedback then self.feedbackText else ""
 	self:layoutRoamHint()
 	if not self.active then return end
 	self.helper.Text = if self.saveNotice then self.saveNotice.detail elseif string.match(kind.Name, "^Gamepad") then "Hold X to pet · B Back" else "Tap or rub · hold E to pet"

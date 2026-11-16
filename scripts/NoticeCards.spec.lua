@@ -110,16 +110,24 @@ return function(client,parent)
      local g=How.layout(size.X,size.Y,Notices.cards(id,{pet="Bear",quest="Merge 10 eggs",reward=3}))
      assert(g.columns==2 and g.panelW<=size.X and g.panelH<=size.Y and g.cardH<=g.viewportH,id.." at "..tostring(size))
     end
-    local g=How.layout(size.X,size.Y,How.cards("garden"))
-    assert(g.columns==4 and g.panelW<=size.X and g.panelH<=size.Y and g.cardH<=g.viewportH,"garden tour at "..tostring(size))
+    for _,input in ipairs({"Touch","Keyboard","Gamepad"})do
+     local g=How.layout(size.X,size.Y,How.cards("garden",input))
+     assert(g.columns==4 and g.panelW<=size.X and g.panelH<=size.Y and g.cardH<=g.viewportH,"garden tour ("..input..") at "..tostring(size))
+    end
    end
   end)
-  test("the garden tour: four cards that teach machines, Quests and dailies, customize and the Menu",function()
+  test("the garden tour: four cards that teach machines and the Menu, saying hi, Quests and dailies, and customize",function()
    local cards=How.cards("garden");assert(#cards==4 and not table.find(How.Order,"garden"),"a tour, not a machine's ? set")
    local text=""
    for _,card in ipairs(cards)do assert(card.title~=""and card.line~=""and not card.title:find("r3.",1,true));text..=card.title.." "..card.line.." "end
    for _,word in ipairs({"machine","Quests","stamp","Menu","Companions","eggs"})do assert(text:find(word,1,true),"the tour never says "..word)end
-   assert(How.open("garden")and How.openId()=="garden"and How.panel():FindFirstChild("Card_d",true));How.close("fixture")
+   -- QA v775: "say hi to your pet" lives here (it was an always-on hint in the garden), second,
+   -- and names the tap, the key or the button.
+   assert(cards[2].key=="e"and cards[2].title==UICopy.get("r3.help.garden.e.title")and cards[2].title:find("Say hi",1,true))
+   local touch,key,pad=How.cards("garden","Touch")[2].line,How.cards("garden","Keyboard")[2].line,How.cards("garden","Gamepad")[2].line
+   assert(touch:find("Tap your pet",1,true)and key:find("press E",1,true)and pad:find("press X",1,true)and touch~=key and key~=pad)
+   assert(table.find({touch,key,pad},cards[2].line),"the live line follows the input in use")
+   assert(How.open("garden")and How.openId()=="garden"and How.panel():FindFirstChild("Card_e",true)and not How.panel():FindFirstChild("Card_d",true));How.close("fixture")
   end)
   test("coach: with a tour the garden step opens it once, by the beat rules, and closing it saves the step",function()
    local gui=Instance.new("ScreenGui");gui.Name="_NoticeTourSpec";gui.Parent=parent

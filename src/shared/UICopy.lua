@@ -237,10 +237,12 @@ local Table={
    -- QA v735 H5: the first-session tour (CoachCards opens it once, in the garden; Show
    -- tips again replays it). Not a machine, so it has no ? and is not in HowItWorks.Order.
    garden={title="Your garden",
-    a={title="Machines",line="Walk up to a glowing machine to use it: Hatch eggs, Deck style, Companions, the Pocket Deck."},
+    a={title="Machines",line="Walk up to a glowing machine to use it, or tap Menu to open any of them from anywhere."},
+    -- QA v775: how to say hi (it was an always-on hint in the garden). One line per input.
+    e={title="Say hi to your pet",line="Walk up to your pet and press E to say hi, then hold E to pet it.",
+     linePad="Walk up to your pet and press X to say hi, then hold X to pet it.",lineTouch="Tap your pet to say hi, then rub to pet it."},
     b={title="Quests and dailies",line="Open the Menu and pick Quests. Three daily quests and a once-a-day stamp pay Stars."},
-    c={title="Customize",line="Open Companions to recolour and dress your pet. New pieces hatch from eggs."},
-    d={title="Pocket menu",line="The Menu button opens every machine, from anywhere."}},
+    c={title="Customize",line="Open Companions to recolour and dress your pet. New pieces hatch from eggs."}},
    book={title="Collection book",
     a={title="Collect",line="Every ball, plate, outfit and toy you own gets a spot in the book."},
     b={title="Milestones",line="Fill a page to 25, 50, 75 and 100% to claim Stars. Each pays once."},

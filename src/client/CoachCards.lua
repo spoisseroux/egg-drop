@@ -31,6 +31,15 @@
 --    say where the machines are, where Quests and dailies are, how to customize and what
 --    the Menu does. Closing them ends the step. Without `tour` (specs, or the cards could
 --    not open) the three beat lines run as before, each one tappable.
+--
+-- QA v775 (calm rail): "the tips change randomly". A line used to run out under the card
+-- the player had opened from it, and the next line, or the garden tour, took its place.
+--  * While a tip or notice card is open (`ctx.cardOpen`, default HowItWorks.isOpen()) the
+--    garden side stands still: no clock runs, no line leaves, nothing new starts, and the
+--    tour never opens over a card (step returns before it). The rail itself holds too (NotificationRail.held).
+--  * A line tapped through ends when its card closes; a beat then moves on.
+--  * One line at a time, in a fixed order (first visit, the garden step, a friend arrived,
+--    first quest done, the park), and after a line leaves the rail rests Rail.Gap seconds.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
 local UICopy=require(Shared:WaitForChild("UICopy"))
@@ -451,6 +460,15 @@ function Cards:step(now,ctx)
  self.owned=ctx.owned or self.owned
  local base=self:ctx(ctx)
  local dt=math.max(0,now-(self.lastNow or now));self.lastNow=now
+ -- A tip or notice card is open (How it works, a notice, the garden tour): the garden
+ -- side stands still until the player closes it, then waits for the garden to settle again.
+ local cardOpen=ctx.cardOpen
+ if cardOpen==nil then cardOpen=require(script.Parent.HowItWorks).isOpen()end
+ if cardOpen then
+  self.roomSince=nil
+  if self.boardView then self:stepBoard(now,ctx,base)end
+  return
+ end
  -- Garden ----------------------------------------------------------------
  local current=self.garden
  if current then

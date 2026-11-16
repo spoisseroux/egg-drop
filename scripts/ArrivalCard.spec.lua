@@ -81,7 +81,8 @@ return function(client,parent)
   local sayHiLine=UICopy.get("qa.coach.sayHi",{pet=Pets.byId[earnedId].name})
   local function railText()local _,capsule=Rail.view();return if capsule and capsule.Visible then capsule.Message.Text else nil end
   local function shows(text)
-   local deadline=os.clock()+2
+   -- QA v775: after a line leaves, the rail rests Rail.Gap seconds before the next one.
+   local deadline=os.clock()+2+Rail.Gap+.5
    repeat if railText()==text then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
    return false
   end
