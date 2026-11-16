@@ -35,6 +35,12 @@ Source: `notes.md` and `shots/` (filenames are timestamps). Spencer: "after we d
   - the "WIN" / "TIDY WIN!" headline uses the old display font
   - a smoother entry animation
   - general cleanup: column spacing, the Payout list, the 20-Star wallet chip, and the Goals list readability
+  - **DONE 2026-11-15 (lane D), `DeckResultsInPlace.lua`:**
+    - **Star:** turns all the way round again, 45 degrees a second from the moment the results open (`Results.spinYaw`, the old rule). It had been swapped for a 20 degree sway. The face rides the front and hides while the back shows. Traced in Play: yaw 0, 34, 67, 101, 136, 169, -156 ... 16 over 8.4 s.
+    - **Headline:** the display face (Builder Extended, the banner font) with its gold drop shadow and 3 degree slant, 24 px on a phone. The phone column is too narrow for the banner's speed lines (the words shrank to 11 px), so the phone draws the same headline without them.
+    - **Entry:** the dim eases in over 0.22 s (it stepped from 45% to opaque at 0.12 s), the Star column rises, the Payout and Goals panes slide in from their edges 0.08 s and 0.14 s later, the headline lands (1.5x to 1 with a small overshoot) and the Star pops. Traced per frame: no jump in any value.
+    - **Cleanup:** the three panes share one top and height (the middle one was the taller board rect); Payout rows have a right-hand amount column, a rule and the total; the wallet chip moved from on top of the headline to the foot of Payout, where it counts up; Goals show every goal with a done count, above a 2 x 2 action grid (the 4-high stack left room for one goal: RIGHT was hidden behind Replay in the v735 shot once the screen got shorter).
+  - **Verified in Play** on a real round end at 844x390 and 812x354: no text overflow, every target 44 px or more and inside its pane (`verify-D/D6-*.png`, with the before capture). `InPlaceResults.spec` has a new case (full turn, display font, payout columns, wallet, grid, eased entry); DeckResults, DeckRoundQA, CompactPhone pass.
 
 ## H: hatch, sounds, onboarding text (Fable lane H, Edit only plus offline audio)
 - H1 (174207). **Smoother transition into the hatch screen.** It's currently a bit abrupt; otherwise good.

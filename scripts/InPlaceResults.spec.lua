@@ -64,6 +64,52 @@ return function(client,parent)
   end
   result:hide();result.inPlace:destroy();screen.root:Destroy();screen.results:Destroy()
  end)
+ -- QA v735 D6: the results polish.
+ test("results polish: full Star turn, display headline, eased entry, payout columns, wallet at the foot, 2 x 2 actions",function()
+  local C=require(client.CelebrationKit)
+  local screen=Screen.new({parent=root,overlayParent=root,viewRoot=root})
+  screen:layout(Vector2.new(812,354),(Config.Width+.8)/(Config.Height+.8),{kx=116,kh=58})
+  local result=Results.new(screen.resultsContent,{starMesh=false,reduce=function()return false end})
+  local d=data(false);d.outcome="clear";d.tidy=true;d.earned=13;d.total=13
+  d.rows={{name="Round win",amount=5},{name="Tidy stack",amount=1,signed=true},{name="Supporter",amount=7,signed=true}}
+  d.goals={{short="LEFT",done=true},{short="RIGHT",done=false}}
+  result:show(d,screen:resultsView())
+  local view=result.inPlace;local R=view.regions
+  -- The three panes share one top and height.
+  assert(R.middle.y==R.left.y and R.middle.h==R.left.h and R.right.h==R.left.h,"panes are not level")
+  -- Headline: the display face, slanted, the words at 24 px or fitted, never under 15.
+  assert(view.title.Text=="TIDY WIN!"and view.title.FontFace==C.displayFont(),"headline is not the display font")
+  assert(view.title.TextSize*(view.headlineFit or 1)>=15,"headline shrank under 15 px")
+  -- Payout: names left, amounts in their own right-aligned column; the wallet chip at the pane's foot.
+  assert(view.rows[2].Text=="Tidy stack"and view.amounts[2].Text=="+1"and view.amounts[1].Text=="5","payout columns")
+  assert(view.amounts[2].TextXAlignment==Enum.TextXAlignment.Right and view.amounts[2].Position.X.Offset>view.rows[2].Position.X.Offset+view.rows[2].Size.X.Offset,"amount column right of the names")
+  assert(view.wallet.root.Parent==view.left,"wallet chip is not in the payout pane")
+  -- Goals: all rows above the actions, the count in the title.
+  assert(view.goalTitle.Text=="Goals  1/2","goal count "..view.goalTitle.Text)
+  assert(view.grid,"2 x 2 actions expected at this width")
+  local b1,b3,b5,b2=view.buttons[1],view.buttons[3],view.buttons[5],view.buttons[2]
+  assert(b1.Position.Y.Offset==b3.Position.Y.Offset and b5.Position.Y.Offset==b2.Position.Y.Offset and b5.Position.Y.Offset>b1.Position.Y.Offset,"grid rows")
+  for _,button in ipairs({b1,b3,b5,b2})do assert(button.Size.X.Offset>=44 and button.Size.Y.Offset>=44,"target under 44")end
+  local goalsBottom=view.goalLabels[2].Position.Y.Offset+view.goalLabels[2].Size.Y.Offset
+  assert(goalsBottom<=view.goals.Size.Y.Offset,"a goal row sits under the actions")
+  -- Entry: nothing shown on the first frame, everything at rest by 1 s, no jump in the dim.
+  view.opened=os.clock();view.settled=nil;view:step()
+  assert(view.root.BackgroundTransparency>.95 and view.middle.GroupTransparency>.95 and view.left.GroupTransparency==1 and view.right.GroupTransparency==1,"entry does not start hidden")
+  view.opened=os.clock()-.11;view:step();local a=view.root.BackgroundTransparency
+  view.opened=os.clock()-.13;view:step();local b=view.root.BackgroundTransparency
+  assert(math.abs(a-b)<.2,"the dim jumps (was .45 to 0 at 0.12 s)")
+  view.opened=os.clock()-1.2;view:step()
+  assert(view.root.BackgroundTransparency==0 and view.left.GroupTransparency==0 and view.right.GroupTransparency==0 and view.middle.GroupTransparency==0,"entry not finished by 1 s")
+  assert(view.left.Position==UDim2.fromOffset(R.left.x,R.left.y)and view.right.Position==UDim2.fromOffset(R.right.x,R.right.y)and view.middle.Position==UDim2.fromOffset(R.middle.x,R.middle.y),"panes not at rest")
+  assert(math.abs(view.star.scale.Scale-1)<1e-6 and view.headline.root.Rotation==-3,"Star and headline not at rest")
+  -- The Star turns all the way round at 45 degrees a second; the face hides on the back.
+  local function at(seconds)view.opened=os.clock()-seconds;view:step();return view.star.wantYaw end
+  assert(math.abs(at(2)-90)<2 and not view.face.face.Visible,"quarter turn")
+  assert(math.abs(at(4)-180)<2 and not view.face.face.Visible,"back")
+  assert(math.abs(at(6)-270)<2,"three quarters")
+  local front=at(8.02);assert(front<3 and view.face.face.Visible,"front again after a full turn, got "..front)
+  result:hide();result.inPlace:destroy();screen.root:Destroy();screen.results:Destroy()
+ end)
  test("positive loss receipt is gold and zero receipt is silver",function()
   assert(not Results.missLook({outcome="missed",loss=false,earned=1,pending=false}))
   assert(Results.missLook({outcome="missed",loss=true,earned=0,pending=false}))
