@@ -209,7 +209,8 @@ function View:actPrimary()
         elseif (current.nectar or 0) < shopRecipe(self.selected).cost then
 			self:close("earn")
 		else
-			if self.egg3D then self.egg3D:hatch()end
+			-- QA v751 P2: the panel's egg no longer plays its own hatch pop here. The full-screen
+			-- stage owns the one hatch the player sees; the panel only waits for the result.
 			-- QA v2 R1.8: the pet peeking into the egg preview gets excited (a hop and a cheer).
 			Peek.hop()
 			if self.selected=="toy"then if self.onOpenToy then self.onOpenToy(true)end elseif self.selected=="feature"then if self.onOpenFeature then self.onOpenFeature(true)end elseif self.selected=="material"then if self.onOpenMaterial then self.onOpenMaterial(true)end elseif self.selected=="hue"then if self.onOpenHue then self.onOpenHue(true)end else self:send("hatch",self.selected)end

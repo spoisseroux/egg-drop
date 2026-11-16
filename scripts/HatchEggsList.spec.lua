@@ -157,6 +157,19 @@ return function(client,parent)
    Preview.createMesh=real;Preview.resetCache()
    assert(okCase,why)
   end)
+  test("QA v751 P2: Hatch sends the purchase with no in-panel hatch pop before the full-screen stage",function()
+   view:open({status="Ready",revision=4,nectar=128,toyUnlocks={},materialUnlocks={},materialAvailable=true});frames()
+   view:selectRecipe("toy");frames()
+   local egg=view.egg3D;assert(egg,"the pane has its egg preview")
+   local pops,opened=0,nil
+   egg.hatch=function()pops+=1;return true end
+   local was=view.onOpenToy;view.onOpenToy=function(purchase)opened=purchase end
+   view:actPrimary()
+   view.onOpenToy=was;egg.hatch=nil
+   assert(opened==true,"Hatch sends the purchase")
+   assert(pops==0 and egg.hatchStart==nil,"the panel egg played its own hatch before the full-screen stage")
+   view:close("close");frames();frames() -- let the shared shade leave the stack before the next open
+  end)
   test("reveal stage: B falls through and Play again becomes Close when play is unavailable",function()
    local stage={backs=0,buttons=nil}
    function stage:back()self.backs+=1;return true end
