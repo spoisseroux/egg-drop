@@ -195,7 +195,14 @@ for index,side in ipairs({-1,1})do
 	local tint=Color3.fromHex("#466853")
 	local zone=Art.frame(zoneLayer,if side==-1 then "LeftThreshold"else"RightThreshold",tint,UDim2.fromScale(0,0),UDim2.new(0,2,1,-8),2)
 	zone.BackgroundTransparency=.35;zone.Active=false;zone.Selectable=false
-	fieldZones[index]={node=zone,side=side}
+	-- QA v735 D4: the LEFT and RIGHT areas themselves are marked (a faint band from the wall
+	-- to the threshold with its name at the top), not only their inner edge. The goal's
+	-- own area is the brighter one (updateHud); the bands sit under the balls like the lines.
+	local band=Art.frame(zoneLayer,if side==-1 then "LeftZone"else "RightZone",Color3.fromHex("#76F6B0"),UDim2.fromScale(0,.025),UDim2.fromScale(.2,.95),2)
+	band.BackgroundTransparency=.94;band.Active=false;band.Selectable=false
+	local tag=Art.text(band,"Tag",string.upper(if side==-1 then "left"else "right"),UDim2.fromOffset(0,4),UDim2.new(1,0,0,16),Color3.fromHex("#B8F5D0"),12,Art.Font.Heading)
+	tag.TextXAlignment=Enum.TextXAlignment.Center;tag.TextTransparency=.45
+	fieldZones[index]={node=zone,side=side,band=band,tag=tag}
 end
 
 clientUI.centerZone=Art.frame(zoneLayer,"CenterGoalRegion",Color3.fromHex("#466853"),UDim2.fromScale(.4,.025),UDim2.fromScale(.2,.95),2)
@@ -2118,6 +2125,10 @@ updateHud = function()
  for _,item in ipairs(fieldZones)do
   item.node.Visible=nurseryActive and owned>0
   item.node.BackgroundTransparency=if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then .15 else .45
+  -- QA v735 D4: the area bands follow the lines; the current goal's area is lit.
+  item.band.Visible=item.node.Visible
+  item.band.BackgroundTransparency=if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then .84 else .94
+  item.tag.TextTransparency=if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then 0 else .45
  end
  clientUI.centerZone.Visible=nurseryActive and owned>0 and clientUI.fieldCopy.zone=="center"
  if clientUI.centerZone.Visible then
@@ -2377,6 +2388,21 @@ layout = function()
   item.node.AnchorPoint=Vector2.new(.5,0)
   item.node.Position=UDim2.fromScale(.5+item.side*zoneBound/(Config.Width+.8),.025)
   item.node.Size=UDim2.new(0,2,.95,0)
+  -- QA v735 D4: the band runs from the wall (0.4 units in, like the fill line) to the
+  -- threshold. Its name reads across when it fits, else down the wall.
+  local wallEdge=.4/(Config.Width+.8)
+  local span=math.max(0,.5-zoneBound/(Config.Width+.8)-wallEdge)
+  item.band.Position=UDim2.fromScale(if item.side==-1 then wallEdge else 1-wallEdge-span,.025)
+  item.band.Size=UDim2.fromScale(span,.95)
+  -- Both names turn together: the wider one decides.
+  local tagWidth=math.max(Art.textWidth(fieldZones[1].tag),Art.textWidth(fieldZones[2].tag))
+  if span*viewport.Size.X.Offset>=tagWidth then
+   item.tag.Rotation=0;item.tag.AnchorPoint=Vector2.zero
+   item.tag.Position=UDim2.fromOffset(0,4);item.tag.Size=UDim2.new(1,0,0,16)
+  else
+   item.tag.Rotation=if item.side==-1 then -90 else 90;item.tag.AnchorPoint=Vector2.new(.5,.5)
+   item.tag.Position=UDim2.new(.5,0,0,6+tagWidth/2);item.tag.Size=UDim2.fromOffset(tagWidth,16)
+  end
  end
 	modal.Position=UDim2.fromScale(.5,.5)
 	restoreLegacySaveParents()
