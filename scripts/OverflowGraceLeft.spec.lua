@@ -72,7 +72,9 @@ return function(server)
 		-- Source scan is only possible in Studio with the script loaded; skip quietly otherwise.
 		local ok, text = pcall(function() return source.Source end)
 		if ok and type(text) == "string" and #text > 0 then
-			local _, count = string.gsub(text, 'SetAttribute%("OverflowGraceLeft", if board%.round%.over then 0 else board%.round%.graceLeft or 0%)', "")
+			-- G1: published in real seconds (simulation grace / Config.Pace), so the draining line ends with the round.
+			assert(Config.Pace > 0, "Config.Pace must be positive")
+			local _, count = string.gsub(text, 'SetAttribute%("OverflowGraceLeft", if board%.round%.over then 0 else %(board%.round%.graceLeft or 0%) / Config%.Pace%)', "")
 			-- Zero once the round is over (code review: the warning stuck after a field-ended round).
 			assert(count == 2, "OverflowGraceLeft publish sites=" .. count)
 		end
