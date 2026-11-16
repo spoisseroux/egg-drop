@@ -46,10 +46,11 @@ return function(server)
 	local function allPaidBalls() local owned = { "smileys", "marbles" }; for _, id in ipairs(Balls.Order) do if Balls.price(id) then table.insert(owned, id) end end; return owned end
 	local function allFound() local mask = 0; for _, entry in ipairs(Book.Discoveries) do mask = bit32.bor(mask, bit32.lshift(1, entry.bit)) end; return mask end
 
-	test("catalogue: five pages while the Bear is the only pet, 20 milestones paying 5/5/10/15 (175), fixed discovery bits", function()
+	test("catalogue: six pages while the Bear is the only pet, 24 milestones paying 5/5/10/15 (210), fixed discovery bits", function()
 		-- The Pets page opens with a second pet (Book.PetsPageMin); its ids stay reserved.
-		assert(table.concat(Book.PageOrder, ",") == "balls,faceplates,wardrobe,toys,discoveries")
-		assert(#Book.Milestones == 20 and Book.totalReward() == 175 and Book.milestone("pets.25") == nil)
+		-- Customization Egg slice 5: the Charms page follows Toys & finishes (ids charms.25 ...).
+		assert(table.concat(Book.PageOrder, ",") == "balls,faceplates,wardrobe,toys,charms,discoveries")
+		assert(#Book.Milestones == 24 and Book.totalReward() == 210 and Book.milestone("pets.25") == nil and Book.milestone("charms.100").reward == 15)
 		for _, page in ipairs(Book.PageOrder) do
 			assert(Book.milestone(page .. ".25").reward == 5 and Book.milestone(page .. ".50").reward == 5
 				and Book.milestone(page .. ".75").reward == 10 and Book.milestone(page .. ".100").reward == 15, page)
@@ -193,9 +194,12 @@ return function(server)
 				assert(Book.pagePercent(s, "toys") == 100, "all active toys and finishes must complete the page")
 			else
 				-- v1: the Material Egg is not sold, so finishes are not Book items and the toys alone finish the page.
-				assert(Book.pageProgress(s, "toys").total == #toys.Pools[toys.PoolVersion], "finishes nobody can buy must not count")
-				assert(Book.pagePercent(s, "toys") == 100, "every toy must complete the page while the Material Egg is off")
-				assert(Book.pagePercent({ toyUnlocks = s.toyUnlocks }, "toys") == 100, "the page must not need a finish while the Material Egg is off")
+				-- Customization Egg: the page is Toys & finishes; the three finish jars count once found.
+				local jars = require(Shared.LookEggCatalog)
+				local extra = if jars.EnablePurchases then #jars.FinishItems else 0
+				assert(Book.pageProgress(s, "toys").total == #toys.Pools[toys.PoolVersion] + extra, "legacy finishes nobody can buy must not count")
+				s.lookFound = 0; for _, id in ipairs(jars.FinishItems) do s.lookFound = bit32.bor(s.lookFound, jars.bit(id)) end
+				assert(Book.pagePercent(s, "toys") == 100, "every toy and finish jar completes the page")
 			end
 			s.book.found = allFound()
 		end)

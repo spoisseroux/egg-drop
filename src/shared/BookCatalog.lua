@@ -23,6 +23,10 @@ local Eggs=require(Shared.EggCatalog)
 local Daily=require(Shared.DailyContracts)
 local Objectives=require(Shared.FieldObjectives)
 local Park=require(Shared.ParkActivities)
+-- Customization Egg (slice 5, plan 2026-11-16 §5.6): finish jars on the Toys & finishes page,
+-- and a Charms page.
+local LookEgg=require(Shared.LookEggCatalog)
+local Charms=require(Shared.PetCharmCatalog)
 
 local Book={Version=1}
 Book.BookOnlyFaceplate="bookworm"
@@ -36,10 +40,12 @@ Book.MaxBit=30 -- LifetimeState caps `found` at 2^31-1 (architect change 4).
 -- 100% for everyone past onboarding, a free 35 Stars and a free step toward Bookworm.
 -- Its milestone ids ("pets.25" ...) are reserved for then and never reused.
 Book.PetsPageMin=2
+-- Customization Egg (slice 5): "charms" follows "toys"; its milestone ids ("charms.25" ...) are
+-- new and never reused. The Toys page keeps its id ("toys.25" ...) and is named Toys & finishes.
 Book.PageOrder=table.freeze(if #Pets.active>=Book.PetsPageMin
-	then {"balls","faceplates","wardrobe","toys","pets","discoveries"}
-	else {"balls","faceplates","wardrobe","toys","discoveries"})
-local names={balls="Balls",faceplates="Faceplates",wardrobe="Wardrobe",toys="Toys",pets="Pets",discoveries="Discoveries"}
+	then {"balls","faceplates","wardrobe","toys","charms","pets","discoveries"}
+	else {"balls","faceplates","wardrobe","toys","charms","discoveries"})
+local names={balls="Balls",faceplates="Faceplates",wardrobe="Wardrobe",toys="Toys & finishes",charms="Charms",pets="Pets",discoveries="Discoveries"}
 
 -- Discoveries: fixed bit numbers, never renumbered. Set only inside the round award
 -- (LifetimeState.recordRun). A field template is the round's goal type; its bit is
@@ -215,10 +221,31 @@ do
 	if Finishes.EnablePurchases==true then
 		for _,id in ipairs(Finishes.Pools[Finishes.PoolVersion]or {})do table.insert(items,{id="finish:"..id,name=Finishes.ById[id].name,kind="finish",itemId=id})end
 	end
+	-- Finish jars (Customization Egg): found once any egg has given one (lookFound bits), while
+	-- the egg sells them. A page that grows can drop below a claimed milestone; claims stay.
+	if LookEgg.EnablePurchases==true then
+		for _,id in ipairs(LookEgg.FinishItems)do
+			table.insert(items,{id="finishJar:"..id,name=string.upper(string.sub(id,1,1))..string.sub(id,2).." jar",kind="finishJar",itemId=id,bit=LookEgg.bit(id)})
+		end
+	end
 	page("toys",items,function(state,item)
+		if item.kind=="finishJar"then
+			local found=state.lookFound
+			return type(found)=="number"and found==found and found>=0 and bit32.band(math.floor(found),item.bit)~=0
+		end
 		local unlocks=if item.kind=="toy"then state.toyUnlocks else state.materialUnlocks
 		return type(unlocks)=="table"and unlocks[item.itemId]==true
 	end)
+end
+do
+	-- Charms: the egg shapes count once owned (charmUnlocks), the earned shapes once their rule
+	-- is met. Every shape is reachable, so 100% is too. `how` says how each one is found.
+	local items={}
+	for _,shape in ipairs(Charms.Order)do
+		local rule=Charms.rule(shape)
+		table.insert(items,{id="charm:"..shape,name=Charms.ById[shape].name,shape=shape,how=if rule and rule.kind=="egg"then "egg"else "earned"})
+	end
+	page("charms",items,function(state,item)return Charms.usable(item.shape,Charms.facts(state))end)
 end
 do
 	local items={}

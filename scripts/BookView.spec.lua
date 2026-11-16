@@ -142,7 +142,10 @@ return function(client,parent)
      for index,entry in ipairs(View.pageEntries(snap.book))do
       if not entry.records then
        view:openPage(index,true);view.builtPage=nil;view:paint();settle()
-       local cards=entry.id=="balls"or entry.id=="faceplates"or atlas
+       -- Customization Egg slice 5: finish jars and charm shapes draw 3D thumbnails, so Toys &
+       -- finishes and Charms use cards even before the atlas is uploaded.
+       local live=entry.id=="charms"or(entry.id=="toys"and require(game.ReplicatedStorage.Shared.LookEggCatalog).EnablePurchases)
+       local cards=entry.id=="balls"or entry.id=="faceplates"or atlas or live
        assert(view.root:GetAttribute("ItemLayout")==(if cards then "cards"else "chips"),entry.id.." layout")
        local seenOwned,seenMissing=false,false
        for _,card in ipairs(view.grid:GetChildren())do

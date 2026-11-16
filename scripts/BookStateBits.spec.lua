@@ -110,19 +110,27 @@ return function(_, shared)
 		local state = { petWearables = { pip = { owned = { "beanie_mint", "tee_berry", "sunhat_peach" }, equipped = {} } } }
 		assert(Book.pageProgress(state, "wardrobe").owned == 0)
 		table.insert(state.petWearables.pip.owned, "beanie"); assert(Book.pageProgress(state, "wardrobe").owned == 1)
-		local toys, finishes, finishIds = 0, 0, {}
+		local toys, finishes, jars, finishIds = 0, 0, 0, {}
 		for _, item in ipairs(Book.Pages.toys.items) do
-			if item.kind == "toy" then toys += 1 else finishes += 1; table.insert(finishIds, item.itemId) end
+			if item.kind == "toy" then toys += 1 elseif item.kind == "finishJar" then jars += 1 else finishes += 1; table.insert(finishIds, item.itemId) end
 		end
 		assert(toys == #Toys.Pools[Toys.PoolVersion] and toys == 6)
+		local Look = require(Shared.LookEggCatalog)
+		assert(jars == (if Look.EnablePurchases then 3 else 0), "the three finish jars are on Toys & finishes while the Customization Egg sells")
 		if not Finishes.EnablePurchases then
-			-- v1: the Material Egg is off, so no finish is a Book item and owned finishes move nothing.
-			assert(finishes == 0 and #Book.Pages.toys.items == 6, "finishes nobody can buy must not be on the Toys page")
+			-- v1: the Material Egg is off, so legacy finishes are not Book items and move nothing.
+			assert(finishes == 0 and #Book.Pages.toys.items == 6 + jars, "finishes nobody can buy must not be on the Toys page")
 			local all = { toyUnlocks = {}, materialUnlocks = { gloss = true, matte = true, jelly = true } }
-			assert(Book.pageProgress(all, "toys").owned == 0, "an owned finish must not count while the Material Egg is off")
+			assert(Book.pageProgress(all, "toys").owned == 0, "an owned legacy finish must not count while the Material Egg is off")
 			for _, toyId in ipairs(Toys.Pools[Toys.PoolVersion]) do all.toyUnlocks[toyId] = true end
-			assert(Book.pagePercent(all, "toys") == 100 and Book.pagePercent({ toyUnlocks = all.toyUnlocks }, "toys") == 100, "six toys finish the page")
-			assert(table.find(Book.claimable(all), "toys.100"), "the Toys page can reach its 100% milestone in v1")
+			assert(Book.pageProgress(all, "toys").owned == 6)
+			all.lookFound = bit32.bor(Look.bit("gloss"), Look.bit("matte"), Look.bit("jelly"), Look.bit("rose"))
+			assert(Book.pagePercent(all, "toys") == 100, "six toys and three finish jars finish the page")
+			assert(table.find(Book.claimable(all), "toys.100"), "Toys & finishes can reach its 100% milestone")
+			-- Charms: egg shapes through charmUnlocks, earned shapes through their rules; 100% is reachable.
+			local charms = { charmUnlocks = { dot = true, ring = true, pebble = true }, stamps = 14, stats = { weeklyBonuses = 4 }, book = { claimed = { "wardrobe.100" }, found = 0 } }
+			assert(#Book.Pages.charms.items == 6 and Book.pagePercent(charms, "charms") == 100 and table.find(Book.claimable(charms), "charms.100"))
+			assert(Book.pageProgress({ charmUnlocks = { ring = true } }, "charms").owned == 1 and Book.pageProgress({}, "charms").owned == 0)
 			return
 		end
 		assert(finishes == #Finishes.Pools[Finishes.PoolVersion] and finishes == 3)

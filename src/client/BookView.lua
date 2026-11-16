@@ -150,7 +150,8 @@ function View.items(pageId,ownedIds)
   elseif pageId=="faceplates"then
    local theme=DeckThemes.ById[item.id];color=theme and toColor(theme.accent)
   end
-  table.insert(out,{id=item.id,name=item.name,owned=owned[item.id]==true,color=color,discovery=pageId=="discoveries"})
+  table.insert(out,{id=item.id,name=item.name,owned=owned[item.id]==true,color=color,discovery=pageId=="discoveries",
+   jar=if item.kind=="finishJar"then item.itemId else nil,shape=item.shape,how=item.how})
  end
  return out
 end
@@ -176,6 +177,9 @@ function View.thumbKind(pageId,item)
  if type(item)~="table"then return nil end
  if pageId=="balls"then return if BallThemes.ById[item.id]then "ball"else nil end
  if pageId=="faceplates"then return if DeckThemes.ById[item.id]then "plate"else nil end
+ -- Customization Egg (slice 5): finish jars and charm shapes draw their own 3D art.
+ if item.jar then return "jar"end
+ if pageId=="charms"and item.shape then return "charm"end
  return if View.atlasRect(item.id,true)then "atlas"else nil
 end
 -- Pure: true when every item on the page has a thumbnail (cards), else name chips.
@@ -484,6 +488,8 @@ function View:buildCards(entry,items)
   if kind=="ball"then ballThumb(well,item.id,wellW,wellH,item.owned)
   elseif kind=="plate"then plateThumb(well,item.id,wellW,wellH)
   elseif kind=="atlas"then atlasThumb(well,item.id,item.owned,wellW,wellH)
+  elseif kind=="jar"then require(script.Parent.HueJarArt).create(well,item.jar,UDim2.fromScale(.1,0),UDim2.fromScale(.8,1),well.ZIndex+1)
+  elseif kind=="charm"then require(script.Parent.HueJarArt).charmView(well,item.shape,UDim2.fromScale(.1,0),UDim2.fromScale(.8,1),well.ZIndex+1)
   else
    local initial=txt(well,"Small",utf8.char(utf8.codepoint(item.name or "?",1)),if item.owned then "text"else "soft",0,0,wellW,wellH,
     {TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.floor(wellH*.55)})
