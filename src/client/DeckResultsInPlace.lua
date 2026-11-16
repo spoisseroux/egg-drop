@@ -93,7 +93,9 @@ function View.new(owner,v)
  self.rule=Kit.frame(self.payout,"Rule","text",UDim2.fromOffset(pad,134),UDim2.fromOffset(l.w-2*pad,1));self.rule.BackgroundTransparency=.8
  self.total=labelAt(self.payout,"Total","",16,"stars",pad,140,l.w-2*pad,24)
  self.today=labelAt(self.payout,"Today","",12,"soft",pad,166,l.w-2*pad,18)
- self.wallet=Kit.wallet(self.left,20);self.wallet.root.AnchorPoint=Vector2.new(0,1);self.wallet.root.Position=UDim2.fromOffset(pad,l.h-8)
+ -- QA v751 P5: the 28 px chip (Kit.WalletSpec[28]) carries the 3D WalletStar; the 20 px one
+ -- had an 11 px Star, under WalletStar.MinSize, so it stayed a flat glyph.
+ self.wallet=Kit.wallet(self.left,28);self.wallet.root.AnchorPoint=Vector2.new(0,1);self.wallet.root.Position=UDim2.fromOffset(pad,l.h-4)
  -- Goals.
  self.goalLabels={}
  self.goalTitle=labelAt(self.goals,"GoalTitle","Goals",12,"soft",pad,8,r.w-2*pad,16)

@@ -1019,7 +1019,9 @@ end
 -- Wallet pill (Stars capsule). The shared header heights (redesign 0.1): 44 with
 -- star 22, Counter 18 and padding 18; 36 (compact) with star 18, Counter 15 and
 -- padding 15. Other heights keep the older proportions their screens were built with.
-Kit.WalletSpec={[44]={star=22,text=18,pad=18},[36]={star=18,text=15,pad=15}}
+-- QA v751 P5: 28 is the phone results chip. Its Star is 16 px, WalletStar.MinSize, so the
+-- chip shows the same turning 3D Star as every other Stars counter.
+Kit.WalletSpec={[44]={star=22,text=18,pad=18},[36]={star=18,text=15,pad=15},[28]={star=16,text=14,pad=10}}
 function Kit.wallet(parent,height)
  height=height or 44
  local spec=Kit.WalletSpec[height]

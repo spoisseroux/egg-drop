@@ -68,7 +68,10 @@ return function(client,parent)
  test("results polish: full Star turn, display headline, eased entry, payout columns, wallet at the foot, 2 x 2 actions",function()
   local C=require(client.CelebrationKit)
   local screen=Screen.new({parent=root,overlayParent=root,viewRoot=root})
-  screen:layout(Vector2.new(812,354),(Config.Width+.8)/(Config.Height+.8),{kx=116,kh=58})
+  -- 999x460: the widest phone root. Since QA v751 P1 (aspect-locked shell) the right pane is
+  -- 176 px or wider, the 2 x 2 grid's minimum, only from about there up; narrower phones
+  -- (Spencer's 750x402 has a 141 px pane) use the four-button stack.
+  screen:layout(Vector2.new(999,460),(Config.Width+.8)/(Config.Height+.8),{kx=116,kh=58})
   local result=Results.new(screen.resultsContent,{starMesh=false,reduce=function()return false end})
   local d=data(false);d.outcome="clear";d.tidy=true;d.earned=13;d.total=13
   d.rows={{name="Round win",amount=5},{name="Tidy stack",amount=1,signed=true},{name="Supporter",amount=7,signed=true}}
@@ -84,6 +87,15 @@ return function(client,parent)
   assert(view.rows[2].Text=="Tidy stack"and view.amounts[2].Text=="+1"and view.amounts[1].Text=="5","payout columns")
   assert(view.amounts[2].TextXAlignment==Enum.TextXAlignment.Right and view.amounts[2].Position.X.Offset>view.rows[2].Position.X.Offset+view.rows[2].Size.X.Offset,"amount column right of the names")
   assert(view.wallet.root.Parent==view.left,"wallet chip is not in the payout pane")
+  -- QA v751 P5: the chip uses the 3D WalletStar like every other Stars counter.
+  do
+   local Kit=require(client.DeckKit);local WalletStar=require(client.WalletStar)
+   local spec=Kit.WalletSpec[view.wallet.height]
+   assert(spec and spec.star>=WalletStar.MinSize and view.wallet.star.Size.X.Offset>=WalletStar.MinSize,"results wallet Star is under WalletStar.MinSize")
+   assert(view.wallet.star3D and view.wallet.star3D.state~="2D","results wallet did not ask for the 3D Star (state "..tostring(view.wallet.star3D and view.wallet.star3D.state)..")")
+   local chip=view.wallet.root
+   assert(chip.AbsolutePosition.Y+chip.AbsoluteSize.Y<=view.left.AbsolutePosition.Y+view.left.AbsoluteSize.Y+.5 and chip.AbsolutePosition.Y>=view.payout.AbsolutePosition.Y+view.payout.AbsoluteSize.Y-.5,"wallet chip sits in the pane's foot, under the payout rows")
+  end
   -- Goals: all rows above the actions, the count in the title.
   assert(view.goalTitle.Text=="Goals  1/2","goal count "..view.goalTitle.Text)
   assert(view.grid,"2 x 2 actions expected at this width")
