@@ -99,6 +99,25 @@ return function(client,parent)
    assert(live(common)==10 and live(rare)==30 and rare.flash.BackgroundTransparency<common.flash.BackgroundTransparency,"the Rare burst is bigger and brighter")
    assert(rare.beamWide.AbsoluteSize.X>common.beamWide.AbsoluteSize.X,"the Rare beam is wider")
   end)
+  test("QA v775: the corner close keeps a thumb-safe inset from the safe area and the top bar",function()
+   local size=Stage.CloseSize;assert(size>=44,"44 px target")
+   -- Spencer's phone: 874 x 402 logical with 62 px side insets and a 21 px home bar.
+   local x,y=Stage.closeRect(874,402,true,{l=62,t=0,r=62,b=21},{maxX=874,height=58})
+   assert(874-62-(x+size)>=24 and y>=16,"inside the safe area: "..x..","..y)
+   assert(874-(x+size)>=62+24,"clear of the rounded corner")
+   -- No insets (an emulator, a small phone): still 24 / 16 px in, never the old 12 / 10.
+   x,y=Stage.closeRect(568,320,true,nil,nil);assert(568-(x+size)==24 and y==16,"568x320 "..x..","..y)
+   assert(Stage.geometry(568,320).margin==24,"the close lines up with the stage margin (the buttons' right edge)")
+   -- Roblox controls on the right of the top bar: the close goes under the bar.
+   x,y=Stage.closeRect(812,354,true,{l=0,t=0,r=0,b=0},{maxX=700,height=58});assert(y==66 and x==812-24-size,"under the bar "..x..","..y)
+   x,y=Stage.closeRect(812,354,true,{l=0,t=0,r=0,b=0},{maxX=812,height=58});assert(y==16,"free strip keeps the top row")
+   -- Desktop: a wider inset; a tiny stage never pushes it off screen.
+   x,y=Stage.closeRect(1920,1080,false,nil,nil);assert(1920-(x+size)==32 and y==28)
+   x,y=Stage.closeRect(40,40,true,{r=200,t=200},nil);assert(x==0 and y==0)
+   local stage=open(812,354);task.wait()
+   local p,s,r=stage.close.AbsolutePosition,stage.close.AbsoluteSize,stage.root
+   assert(r.AbsolutePosition.X+r.AbsoluteSize.X-(p.X+s.X)>=20 and p.Y-r.AbsolutePosition.Y>=16,"built stage close inset")
+  end)
   test("the reward stays undisclosed until the receipt beat, then the name slams under its banner",function()
    local stage,record=open(812,354)
    assert(record.borrows==1 and record.bare[1]==true and record.bare[2]==false,"the scene is borrowed bare; the item stays visible")

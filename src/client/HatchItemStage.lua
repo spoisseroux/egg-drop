@@ -109,6 +109,41 @@ local function luminance(c)
 end
 function Stage.inkOn(color)return if(luminance(color)+.05)/(luminance(Stage.Ink)+.05)>=4.5 then Stage.Ink else Color3.new(1,1,1)end
 
+-- QA v775 note 11: the corner close sat 12 px from the physical screen corner (the stage
+-- covers the whole screen, so on a phone that is the rounded corner, outside the safe area).
+-- Pure: its top-left and size. `safe` = {l, t, r, b}, how far the device safe area sits
+-- inside the stage; `bar` = {maxX, height}, the right end and height of the free strip of
+-- Roblox's top bar in stage px (GuiService.TopbarInset). The close keeps Stage.CloseInset
+-- to the safe area's right and top edges, and drops under the top bar when Roblox draws
+-- its own controls where it would sit.
+Stage.CloseSize=44
+Stage.CloseInset=table.freeze({phone=table.freeze({x=24,y=16}),regular=table.freeze({x=32,y=28})}) -- phone x = the stage margin: level with the buttons' right edge
+function Stage.closeRect(W,H,phone,safe,bar)
+ safe=safe or {}
+ local size=Stage.CloseSize
+ local inset=if phone then Stage.CloseInset.phone else Stage.CloseInset.regular
+ local x=W-math.max(0,safe.r or 0)-inset.x-size
+ local y=math.max(0,safe.t or 0)+inset.y
+ if bar and bar.height and bar.maxX and bar.height>y and bar.maxX<x+size then y=bar.height+8 end
+ x=math.clamp(x,0,math.max(0,W-size));y=math.clamp(y,0,math.max(0,H-size))
+ return math.floor(x),math.floor(y),size
+end
+-- The device safe area (the ScreenInsets.DeviceSafeInsets probe gui) and the top bar's free
+-- strip, both in `root` px. No probe (a spec fixture): no insets.
+function Stage.safeArea(root)
+ local safe={l=0,t=0,r=0,b=0}
+ local holder=root:FindFirstAncestorOfClass("PlayerGui")
+ local probe=holder and holder:FindFirstChild("EggDropInsetProbe")
+ if not(probe and probe:IsA("GuiBase2d"))or root:GetAttribute("CoversScreen")~=true then return safe,nil end
+ local rp,rs,pp,ps=root.AbsolutePosition,root.AbsoluteSize,probe.AbsolutePosition,probe.AbsoluteSize
+ if ps.X<=0 or ps.Y<=0 then return safe,nil end
+ safe.l=math.max(0,pp.X-rp.X);safe.t=math.max(0,pp.Y-rp.Y)
+ safe.r=math.max(0,rp.X+rs.X-pp.X-ps.X);safe.b=math.max(0,rp.Y+rs.Y-pp.Y-ps.Y)
+ local inset=GuiService.TopbarInset
+ local bar=if inset.Height>0 and inset.Width>0 then {maxX=inset.Max.X,height=inset.Height}else nil
+ return safe,bar
+end
+
 -- Layout. Landscape (phone and PC): the egg plays at the centre, then the card flies to
 -- the left third and the name, banner and actions take the right. Portrait stacks them.
 function Stage.geometry(W,H)
@@ -409,7 +444,9 @@ function Stage:layout()
   local state=Kit.buttonState(entry.node);if state then state.label.TextSize=L.btnText;state.label.Size=UDim2.fromOffset(0,L.btnH)end
   right-=bwidth;entry.x=right;right-=L.gap
  end
- self.close.Position=UDim2.fromOffset(W-44-(if L.phone then 12 else L.margin*.5),if L.phone then 10 else L.margin*.5)
+ local safe,bar=Stage.safeArea(self.root)
+ local closeX,closeY=Stage.closeRect(W,H,L.phone,safe,bar)
+ self.close.Position=UDim2.fromOffset(closeX,closeY)
  self:layoutText()
  if self.scene and not self.scene.destroyed then self.scene:layout()end
  self:paint()
