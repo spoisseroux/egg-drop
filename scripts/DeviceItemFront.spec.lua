@@ -37,7 +37,10 @@ return function(client,parent)
    test(tostring(size).." five egg families disclose actual pool and full feature odds",function()
     -- Four of pool 3's six toys owned (QA v685 R7 added the Pocket Deck), so two remain at 50% each.
     local s=state();s.toyUnlocks={ball=true,squeaky_carrot=true,wobble_top=true,pocket_deck=true};shop:open(s);settle()
-    for _,id in ipairs({"hue","material","toy"})do assert(shop:selectRecipe(id));settle();local card=shop.body.EggColumn["Recipe_"..id];assert(card and card.AbsoluteSize.X>=44);fit(card.RecipeName);fit(card.Cost)end
+    -- v1: the Material Egg is not sold (MaterialCatalog.EnablePurchases), so its row is gone.
+    local sold=require(game.ReplicatedStorage.Shared.MaterialCatalog).EnablePurchases
+    if not sold then assert(not shop:selectRecipe("material")and shop.body.EggColumn:FindFirstChild("Recipe_material")==nil,"the Material Egg row must be hidden while it is not sold")end
+    for _,id in ipairs(if sold then {"hue","material","toy"}else {"hue","toy"})do assert(shop:selectRecipe(id));settle();local card=shop.body.EggColumn["Recipe_"..id];assert(card and card.AbsoluteSize.X>=44);fit(card.RecipeName);fit(card.Cost)end
     -- Redesign 3: odds render once, in the pane; the Feature Egg row is hidden by the flag.
     shop:selectRecipe("toy");settle();local odds=shop.oddsHolder;assert(not odds:FindFirstChild("Odds_ball")and odds.Odds_bone:GetAttribute("OddsText")=="50%"and odds.Odds_sparkler:GetAttribute("OddsText")=="50%")
     assert(not shop:selectRecipe("feature")and shop.body.EggColumn:FindFirstChild("Recipe_feature")==nil)

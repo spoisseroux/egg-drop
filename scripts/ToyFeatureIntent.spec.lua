@@ -5,7 +5,7 @@ return function(client)
  local function state()return {status="Ready",revision=10,nectar=64,inventoryMask=127,toyUnlocks={},petToys={},featureStock={horns=2,claws=0,wings=0},petFeatures={pip={horns={earned=0,visible=0},claws={earned=0,visible=0},wings={earned=0,visible=0}}}}end
  test("Toy purchase uses sorted quote and waits for matching snapshot grant",function()
   local d,sent=deps();local intent=Toy.new(d);intent:update(state());assert(intent:buy()and #sent==1)
-  local p=intent.pending;assert(p.value.id=="10:toy-intent-fixture"and table.concat(p.value.eligible,",")=="ball,bone,sparkler")
+  local p=intent.pending;assert(p.value.id=="10:toy-intent-fixture"and table.concat(p.value.eligible,",")=="ball,bone,pocket_deck,sparkler,squeaky_carrot,wobble_top")
   local r={id=p.value.id,action="toyBuy",catalogVersion=1,revision=11,cost=20,balanceBefore=64,balanceAfter=44,toyId="ball",resultId=p.value.id}
   assert(intent:receive({id=r.id,action=r.action,status="Saved",receipt=r})and intent.pending)
   local nextState=state();nextState.revision=11;intent:update(nextState);assert(intent.pending)
@@ -14,7 +14,7 @@ return function(client)
  test("Toy retries preserve exact quote and all-owned or cross-kind results block purchase",function()
   local d,sent=deps();local intent=Toy.new(d);local s=state();intent:update(s);intent:buy();local p=intent.pending
   intent:receive({id=p.value.id,action=p.action,status="Retrying"});assert(intent:retry()and sent[2].value==sent[1].value and sent[2].revision==10)
-  local other=Toy.new(d);s.pendingFeatureResult={id="held"};other:update(s);assert(not other:buy());s.pendingFeatureResult=nil;s.toyUnlocks={ball=true,bone=true,sparkler=true};other:update(s);assert(not other:buy())
+  local other=Toy.new(d);s.pendingFeatureResult={id="held"};other:update(s);assert(not other:buy());s.pendingFeatureResult=nil;s.toyUnlocks={ball=true,bone=true,sparkler=true,wobble_top=true,squeaky_carrot=true,pocket_deck=true};other:update(s);assert(not other:buy())
  end)
  test("Feature growth requires exact stage stock visibility and committed snapshot",function()
   local d,sent=deps();local intent=Feature.new(d);intent:update(state());assert(intent:use("pip","horns"))

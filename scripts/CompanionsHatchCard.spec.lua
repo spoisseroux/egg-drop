@@ -12,7 +12,9 @@ return function(client)
    local cards=How.cards("companions");assert(#cards==4,"cards "..#cards)
    local last=cards[4];assert(last.key=="d"and last.icon=="egg")
    assert(last.title==UICopy.get("r3.help.companions.d.title")and last.title==UICopy.get("r3.help.hatch.title"),"named like the machine")
-   for _,word in ipairs({"Toys","finishes","colour","features","eggs"})do assert(string.find(last.line,word,1,true),"line names "..word)end
+   -- v1 (economy cut 2026-11-16): the Material Egg and the Feature Egg are not sold, so the line names neither.
+   for _,word in ipairs({"Toys","colour","eggs","Stars"})do assert(string.find(last.line,word,1,true),"line names "..word)end
+   if not require(game:GetService("ReplicatedStorage").Shared.MaterialCatalog).EnablePurchases then assert(not string.find(last.line,"finish",1,true),"the line must not promise finishes while the Material Egg is off")end
    assert(cards[1].key=="a"and cards[2].key=="b"and cards[3].key=="c","the first three cards are unchanged")
   end)
   test("layout: four across on a landscape phone and on desktop, inside the screen",function()
