@@ -6,14 +6,16 @@ spheres with one toy "paint pot" family. Original shapes, modelled here from cod
 
 Design rules (art lead):
   * One shared pot: squat, round, 12-sided lathe, smooth shaded. Cream lid.
-  * Every item has its own TOPPER silhouette, so it reads without colour:
-      rose = flower, tide = droplet, citrus = lemon + leaf, iris = three-petal fan,
-      reset = ring, gloss = sparkle star, matte = powder puff, jelly = wobbly dome.
-  * Hue jars: pigment colour from HueCatalog, pale "glass" band above the fill line,
-    one white highlight (house icon rule: one highlight).
+  * Every item has its own SYMBOL, so it reads without colour.
+  * Hue jars (pass 3, Spencer): the symbol floats INSIDE the see-through pot in a pale
+    shade of the pigment, and the cream lid is plain. rose = flower, tide = droplet,
+    citrus = lemon + leaf, iris = three-petal fan, reset = ring. Pigment colour from
+    HueCatalog, pale band above the fill line, one white highlight.
+  * Finish jars carry theirs on the lid: gloss = sparkle star, matte = powder puff.
   * Finish jars are one colour all over (the default pet mint) so the SURFACE is the
     message: gloss = big crisp highlight + sparkle, matte = no highlight at all + chalk
-    puff, jelly = see-through, leaning, lobed, with bubbles and a lid sliding off.
+    puff, jelly = the same pot gone see-through, lobed and leaning, bubbles inside,
+    jelly bulging out of the neck and the lid tipped askew on top.
   * Charm capsule: a ball, not a pot. Clear dome, gold star inside, loop on top.
   * Colour is stored in the "Col" corner attribute, so the meshes need no textures.
   * Budget: 300-800 triangles per item (the manifest lists the real counts).
@@ -63,6 +65,11 @@ FILL = 0.56  # pigment fill line on the pot
 POT = [(0, 0), (.30, 0), (.44, .05), (.52, .20), (.53, .38), (.48, FILL), (.39, .68), (.345, .74), (.345, .80)]
 LID = [(.36, .76), (.425, .78), (.44, .84), (.44, .93), (.38, 1.00), (.20, 1.03), (0, 1.035)]
 LID_TOP = 1.03
+# solo render framing: camera target height, ortho scale, x nudge
+FRAMES = {"hue": (.50, 1.36, 0), "gloss": (.88, 1.95, .08), "matte": (.74, 1.66, 0),
+          "jelly": (.62, 1.56, .12), "charm": (.60, 1.42, 0)}
+# liquid behind the symbol where the plain pigment would not contrast with a pale symbol
+LIQUID = {"citrus": "#F59A00", "reset": "#4FB9CC"}
 TOPPER_SCALE = 1.55  # pass 2: toppers carry the read at 64 px, so they are big
 
 
@@ -130,6 +137,8 @@ def build():
 
     M = {
         "jar": material("Jar_Satin", rough=.32, coat=.35),
+        "glass": material("Jar_Glass", rough=.1, coat=.6, alpha=.36, emit=.3),
+        "symbol": material("Jar_Symbol", rough=.5, emit=.55),
         "lid": material("Jar_Lid", rough=.55),
         "shine": material("Jar_Shine", rough=1, emit=1.0, spec=0),
         "gloss": material("Finish_Gloss", rough=.04, coat=1.0, spec=.9),
@@ -230,9 +239,8 @@ def build():
         return sum(len(p.vertices) - 2 for p in obj.data.polygons)
 
     # ---- toppers (each sits on the lid at height `h`)
-    def topper(bm, item, colour, h):
-        up = Matrix.Translation((0, 0, h)) @ Matrix.Scale(TOPPER_SCALE, 4)
-        k = TOPPER_SCALE  # balls are placed by point, so their radius is scaled here
+    def topper(bm, item, colour, h, k=TOPPER_SCALE):
+        up = Matrix.Translation((0, 0, h)) @ Matrix.Scale(k, 4)  # balls are placed by point, so their radius is scaled here
         if item == "rose":  # five round petals and a cream heart, facing the camera
             tilt = Matrix.Rotation(math.radians(-14), 4, "X")
             centre = Vector((0, 0, .19))
@@ -305,23 +313,30 @@ def build():
         if kind == "hue":
             if item == "reset":
                 colour = mix(colour, (.36, .80, .88), .6)
-            deep = mix(colour, (.10, .05, .25), .22)
+            liquid = hex_rgb(LIQUID[item]) if item in LIQUID else mix(colour, (0, 0, 0), .12)
+            deep = mix(liquid, (.10, .05, .25), .25)
             glass = mix(colour, (1, 1, 1), .72)
 
             def body_colour(co, centre):
                 if centre.z > FILL:
                     return glass
-                return mix(deep, mix(colour, (1, 1, 1), .10), min(1, co.z / FILL))
+                return mix(deep, liquid, min(1, co.z / FILL))
 
             bm = bmesh.new()
-            lathe(bm, POT, body_colour)
-            parts.append(finish(f"Jar_{item}__Body", root, bm, M["jar"]))
+            lathe(bm, POT, lambda co, c: glass if c.z > FILL else mix(colour, (1, 1, 1), .25))
+            parts.append(finish(f"Jar_{item}__Body", root, bm, M["glass"]))
+            # Opaque back half of the liquid, behind the symbol: keeps the pigment vivid on any
+            # background and gives the pale symbol something deep to sit against.
+            bm = bmesh.new()
+            faces = lathe(bm, POT, body_colour, matrix=Matrix.Translation((0, 0, .025)) @ Matrix.Diagonal((.93, .93, .93, 1)))
+            bmesh.ops.delete(bm, geom=[f for f in faces if f.calc_center_median().y < .02], context="FACES")
+            parts.append(finish(f"Jar_{item}__Liquid", root, bm, M["jar"]))
             bm = bmesh.new()
             lathe(bm, LID, hex_rgb(CREAM))
             parts.append(finish(f"Jar_{item}__Lid", root, bm, M["lid"]))
-            bm = bmesh.new()
-            topper(bm, item, colour, LID_TOP - .02)
-            parts.append(finish(f"Jar_{item}__Topper", root, bm, M["jar"]))
+            bm = bmesh.new()  # the symbol floats in the colour, pale so it reads through the glass
+            topper(bm, item, mix(colour, (1, 1, 1), .9), .07, k=1.3 if item == "reset" else 1.15)
+            parts.append(finish(f"Jar_{item}__Symbol", root, bm, M["symbol"]))
             bm = bmesh.new()
             shine(bm, POT, -38, .18, .40, 7)
             parts.append(finish(f"Jar_{item}__Shine", root, bm, M["shine"]))
@@ -346,26 +361,25 @@ def build():
         elif item == "jelly":
             def wobble(co):  # three soft lobes, and the whole thing leans
                 a = math.atan2(co.x, -co.y)
-                k = 1 + .075 * math.sin(3 * a + co.z * 5)
-                return Vector((co.x * k + .16 * co.z * co.z, co.y * k, co.z * .96))
+                k = 1 + .07 * math.sin(3 * a + co.z * 5)
+                return Vector((co.x * k + .11 * co.z * co.z, co.y * k, co.z))
 
-            jelly_pot = [(0, 0), (.33, 0), (.48, .06), (.56, .22), (.55, .42), (.47, .60), (.40, .72), (.34, .86), (.22, .96), (0, 1.0)]
-            pale = mix(colour, (1, 1, 1), .25)
+            jelly_pot = POT[:-1] + [(.37, .80), (.41, .87), (.37, .95), (.22, 1.01), (0, 1.03)]
             bm = bmesh.new()
             lathe(bm, jelly_pot, lambda co, c: mix(mix(colour, (.0, .45, .5), .12), mix(colour, (1, 1, 1), .4), min(1, co.z)), warp=wobble)
             parts.append(finish(f"Jar_{item}__Body", root, bm, M["jelly"]))
             bm = bmesh.new()  # bubbles and a darker heart, seen through the jelly
-            ball(bm, .20, mix(colour, (.0, .30, .42), .4), (.05, .0, .32), scale=(1.15, 1, .85))
-            for cx, cz, r in ((-.20, .52, .07), (.20, .40, .05), (.04, .70, .055), (-.12, .22, .04)):
+            ball(bm, .19, mix(colour, (.0, .30, .42), .4), (.03, .0, .28), scale=(1.15, 1, .85))
+            for cx, cz, r in ((-.20, .46, .07), (.22, .36, .05), (.06, .62, .055), (-.12, .20, .04)):
                 ball(bm, r, (1, 1, 1), (cx, -.18, cz))
             parts.append(finish(f"Jar_{item}__Core", root, bm, M["jar"]))
-            bm = bmesh.new()  # the lid is sliding off
-            slide = (Matrix.Translation((.27, 0, 1.0)) @ Matrix.Rotation(math.radians(24), 4, "Y")
-                     @ Matrix.Translation((0, 0, -.90)) @ Matrix.Diagonal((.85, .85, .85, 1)))
+            bm = bmesh.new()  # the lid sits askew on the jelly bulging out of the neck
+            slide = (Matrix.Translation((.20, 0, 1.02)) @ Matrix.Rotation(math.radians(17), 4, "Y")
+                     @ Matrix.Translation((0, 0, -.88)))
             lathe(bm, LID, hex_rgb(CREAM), matrix=slide)
             parts.append(finish(f"Jar_{item}__Lid", root, bm, M["lid"]))
             bm = bmesh.new()
-            shine(bm, jelly_pot, -40, .22, .44, 10, lift=.02, warp=wobble)
+            shine(bm, jelly_pot, -40, .20, .42, 9, lift=.035, warp=wobble)
             parts.append(finish(f"Jar_{item}__Shine", root, bm, M["shine"]))
 
         else:  # charm capsule
@@ -507,7 +521,8 @@ def build():
             hidden = r.name != "Jar_" + row["id"]
             for child in r.children:
                 child.hide_render = hidden
-        aim((row["x"] + (.06 if row["id"] == "jelly" else 0), 0, .82 if row["kind"] != "charm" else .62), 1.9)
+        centre, scale, dx = FRAMES.get(row["id"], FRAMES["hue"])
+        aim((row["x"] + dx, 0, centre), scale)
         scene.render.filepath = os.path.join(OUT, row["id"] + ".png")
         bpy.ops.render.render(write_still=True)
     print("RENDERED", OUT)
