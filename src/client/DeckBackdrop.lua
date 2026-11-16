@@ -105,32 +105,56 @@ function Backdrop:resize()
  local pitch=if size.X>=1000 then 64 else 46
  local motif=if size.X>=1000 then 28 else 22
  self.stats.pitch,self.stats.motifWidth=pitch,motif
- -- Reuse 64 motifs per layer: 32 at the side gutters, 16 above and
- -- 16 below the actual case. Large displays relax pitch instead of adding nodes.
- local case=self.case
- if self.root.Parent~=self.home then case=nil end
- if not case and self.root.Parent==self.home then
-  local ch=math.min(724,math.max(1,size.Y-24));local cw=math.min(size.X-24,ch*1.52)
-  case={x=(size.X-cw)/2,y=(size.Y-ch)/2,w=cw,h=ch}
+ -- QA v760: the exterior pattern is always there. Each layer's 64 motifs sit on one even
+ -- grid over the whole surface (the second layer half a cell across and down), the
+ -- handheld simply sits on top of them, and nothing is switched off for being behind it.
+ -- They used to be packed into the gutters around the case and hidden whenever a drift
+ -- carried one over the case's rectangle, so they popped in and out beside the deck.
+ -- To keep the print as dense as before where it shows, the cells deep under the case
+ -- (56 px or more inside it) keep one motif in nine: enough that the pattern is still
+ -- there while the handheld rises into place. The grid is the finest one that fits.
+ local exterior=self.root.Parent==self.home
+ local cells
+ if exterior then
+  local case=self.case
+  if not case then
+   local ch=math.min(724,math.max(1,size.Y-24));local cw=math.min(size.X-24,ch*1.52)
+   case={x=(size.X-cw)/2,y=(size.Y-ch)/2,w=cw,h=ch}
+  end
+  local inset=56
+  local step=pitch-2
+  repeat
+   step+=2
+   cells={{},{}}
+   local cols,rows=math.ceil(size.X/step),math.ceil(size.Y/step)
+   local fits=true
+   for layer=1,2 do
+    local shift=if layer==2 then .5 else 0
+    for row=0,rows-1 do for col=0,cols-1 do
+     local x,y=(col+.25+shift)*step,(row+.25+shift)*step
+     local deep=x>case.x+inset and x<case.x+case.w-inset and y>case.y+inset and y<case.y+case.h-inset
+     if x<size.X+motif and y<size.Y+motif and(not deep or(col%3==0 and row%3==0))then table.insert(cells[layer],{x,y})end
+    end end
+    if #cells[layer]>64 then fits=false;break end
+   end
+  until fits or step>=400
+  self.stats.pitch=step
+ else
+  pitch=math.max(pitch,size.X/32,size.Y/16);self.stats.pitch=pitch
  end
- pitch=math.max(pitch,size.X/32,size.Y/16);self.stats.pitch=pitch
  for _,b in ipairs(self.bands)do
   assign(self,b.host,"Position",UDim2.fromOffset(0,0),"geometryWrites");assign(self,b.host,"Size",UDim2.fromOffset(size.X,size.Y),"geometryWrites")
   assign(self,b.canvas,"Size",UDim2.fromOffset(size.X*2,size.Y),"geometryWrites");b.top=0
   for _,p in ipairs(b.pieces)do
    local index=(b.row-1)*8+p.tile*2+p.mark-1;local x,y
-   if not case then
+   p.unused=false
+   if not exterior then
     x=10+(index%8)*pitch+(if b.layer==2 then pitch*.5 else 0);y=8+math.floor(index/8)*pitch
-   elseif index<32 then
-    local side=math.floor(index/16);local column=index%2;local row=math.floor((index%16)/2)
-    local gutter=if side==0 then case.x else size.X-case.x-case.w
-    local inset=(column*2+b.layer-.5)*gutter/4
-    x=if side==0 then inset-motif/2 else size.X-inset-motif/2
-    y=12+row*pitch*2+(b.layer-1)*pitch
+   elseif cells[b.layer][index+1]then
+    local cell=cells[b.layer][index+1]
+    x=cell[1]-motif/2;y=cell[2]-motif/2
    else
-    local lower=index>=48;local column=(index-32)%16
-    x=16+column*pitch*2+(b.layer-1)*pitch
-    y=if lower then case.y+case.h+12+(b.layer-1)*pitch else 12+(b.layer-1)*pitch
+    p.unused=true;x,y=-2*motif,-2*motif
    end
    local w=if self.id=="creek"then motif elseif self.id=="canopy"then motif*.56 elseif self.id=="moonpond"then(if b.layer==1 then motif*.74 else motif*.26)else motif*.72
    local h=if self.id=="creek"then motif*.4 elseif self.id=="canopy"then motif*.86 elseif self.id=="moonpond"then w else motif*.85
@@ -146,22 +170,14 @@ function Backdrop:setCase(rect)
  self.case=rect;self.size=nil
 end
 function Backdrop:pose(phase)
- local size=self.size
  for _,b in ipairs(self.bands)do
   local amplitude=if b.layer==1 then 13 else 20
   local direction=if self.id=="lantern"and b.row%2==0 then -1 else 1
   local offset=math.sin(phase*math.pi*2*b.layer+b.row*.56)*amplitude*direction
   local dy=math.sin(phase*math.pi*2+b.row*.7)*(if b.layer==1 then 8 else 12)
   assign(self,b.canvas,"Position",UDim2.fromOffset(offset,dy),"poseWrites")
-  for _,piece in ipairs(b.pieces)do
-   local r=piece.bounds;local c=self.case
-   local visible=true
-   if r and c and self.root.Parent==self.home then
-    local margin=math.max(r.w,r.h)*.8+2 -- rotated motif/highlight extends beyond its nominal box
-    visible=r.x+r.w+offset+margin<=c.x or r.x+offset-margin>=c.x+c.w or r.y+r.h+dy+margin<=c.y or r.y+dy-margin>=c.y+c.h
-   end
-   assign(self,piece.body,"Visible",visible,"visibilityWrites")
-  end
+  -- Every motif in use stays on (QA v760): the handheld covers the ones behind it.
+  for _,piece in ipairs(b.pieces)do assign(self,piece.body,"Visible",not piece.unused,"visibilityWrites")end
  end
  self.stats.ticks+=1
 end

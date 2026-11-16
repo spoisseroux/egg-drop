@@ -9,7 +9,8 @@ return function(client,parent)
  local function geometry()
   local size=surface.root.AbsoluteSize
   assert(surface.root.ClipsDescendants,"only exterior print must clip")
-  assert(surface.stats.pitch>=36 and surface.stats.pitch<=80)
+  -- QA v760: one even grid over the whole surface; the cell grows with the surface (128 motifs).
+  assert(surface.stats.pitch>=36 and surface.stats.pitch<=math.max(80,size.X/10),"pitch "..tostring(surface.stats.pitch))
   assert(surface.stats.motifWidth>=10 and surface.stats.motifWidth<=32)
   for _,b in ipairs(surface.bands)do
    assert(not b.host.ClipsDescendants and b.canvas.Size.X.Offset>=size.X*2-.1)
@@ -66,7 +67,7 @@ return function(client,parent)
    assert(surface.root.Parent==owner and surface.bands[1].host==first and #surface.root:GetDescendants()+1==count)
    local writes=surface.stats.writes;surface:update(owner,81,true,true);assert(surface.stats.writes==writes)
   end
-  root.Size=UDim2.fromOffset(1649,971);settle();surface:update(root,81,true,true);geometry();assert(surface.stats.pitch==64 and surface.stats.motifWidth==28)
+  root.Size=UDim2.fromOffset(1649,971);settle();surface:update(root,81,true,true);geometry();assert(surface.stats.pitch>=64 and surface.stats.motifWidth==28)
   root.Size=UDim2.fromOffset(568,160);settle();surface:update(root,82,true,true);geometry()
   local writes=surface.stats.writes;surface:update(root,83,true,true);assert(surface.stats.writes==writes)
  end)
@@ -74,6 +75,31 @@ return function(client,parent)
   surface:update(root,84,true,false);surface:update(root,85,true,false);local phase=surface.elapsed
   surface:update(preview,86,true,false);surface:update(preview,90,true,false)
   surface:update(root,91,true,false);assert(surface.elapsed==phase,"preview consumed confirmed phase")
+ end)
+ -- QA v760: the motifs are always there. None is switched off for drifting behind the
+ -- case, they cover the whole surface (under the case too) and no pose hides one.
+ test("QA v760: motifs cover the whole surface and stay on behind the case",function()
+  root.Size=UDim2.fromOffset(874,402);settle()
+  local case={x=80,y=66,w=713,h=328};surface:setCase(case)
+  surface:configure("canopy",Themes.ById.ice);surface:update(root,100,true,false)
+  local used,behind,left,right,above,below=0,0,0,0,0,0
+  for _,b in ipairs(surface.bands)do for _,p in ipairs(b.pieces)do
+   if not p.unused then
+    used+=1;local r=p.bounds
+    if r.x>case.x and r.x<case.x+case.w and r.y>case.y and r.y<case.y+case.h then behind+=1 end
+    if r.x<case.x then left+=1 elseif r.x>case.x+case.w then right+=1 end
+    if r.y<case.y then above+=1 elseif r.y>case.y+case.h then below+=1 end
+   end
+  end end
+  assert(used>=96,"most of the 128 motifs are in use, got "..used)
+  assert(behind>=20,"motifs sit behind the case too, got "..behind)
+  assert(left>=4 and right>=4 and above>=8,"motifs on every open side: "..left.." "..right.." "..above.." "..below)
+  for i=1,96 do
+   surface:update(root,100+i*.25,true,false)
+   for _,b in ipairs(surface.bands)do for _,p in ipairs(b.pieces)do
+    assert(p.body.Visible==not p.unused,"a motif was switched off while it drifted (step "..i..")")
+   end end
+  end
  end)
  test("destroy removes all bands and stays idempotent",function()surface:destroy();surface:destroy();assert(not first.Parent and not surface.root.Parent)end)
  end)
