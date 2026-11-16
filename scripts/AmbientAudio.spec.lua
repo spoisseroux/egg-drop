@@ -27,6 +27,23 @@ return function(client, parent)
 		assert(Ambient.bedGain(Ambient.streamDistance(Vector3.new(96, 4, 66), World.beams.stream)) < .25, "arrival dais is far")
 	end)
 
+	test("QA v775: each waterfall is silent from the spawn lawn and at its own max", function()
+		local World = require(game.ReplicatedStorage.Shared.WorldV7Data)
+		local seen = 0
+		for _, beam in ipairs(World.beams.falls) do
+			local spec = Ambient.Falls[beam.name]
+			if spec then
+				seen += 1
+				local at = beam[spec.anchor]
+				local lawn = (Vector3.new(at[1], at[2] + spec.lift, at[3]) - Vector3.new(0, 6, 0)).Magnitude
+				assert(spec.min <= 10 and spec.max <= 70, beam.name .. " carries too far: " .. spec.min .. " / " .. spec.max)
+				assert(spec.max < lawn - 15, beam.name .. " is heard from the lawn (" .. math.floor(lawn) .. " studs, max " .. spec.max .. ")")
+				assert(spec.volume <= .6, beam.name .. " volume")
+			end
+		end
+		assert(seen == 2, "both falls have emitters")
+	end)
+
 	test("round mix fades out over 0.6 s and back over 1.0 s", function()
 		local mix = 1
 		for _ = 1, 18 do mix = Ambient.mixToward(mix, true, 1 / 30) end
