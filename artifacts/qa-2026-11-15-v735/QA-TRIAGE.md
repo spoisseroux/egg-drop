@@ -39,6 +39,17 @@ Source: `notes.md` and `shots/` (filenames are timestamps). Spencer: "after we d
   - Bring back "Pets are playing" with a live count, for example "Pets playing 3/9".
   - Place it **above** the Menu and Pocket Deck buttons, not to their left.
   - When the park is full, show "Park full · 9/9", and point to the other park if it has room.
+- **W1 landed in source (lane W, 2026-11-15; not checked in Studio, Play was lane D's).**
+  - `scripts/build_world_v7_grounded_textures.py` grades the dusk set a second time into `assets/world/textures/grounded/`: marble mid-light grey (mean 234 to about 175), grass (9,164,46) to (28,114,54), water (84,223,250) to (58,147,225), dirt path (216,165,108) to (129,93,65); rock, bark, wood, pebbles, foliage and the vertex-tinted ground map drop a step; more contrast and a faint tileable mottle everywhere. Palette props (rails, urns, `ph_white`) are unchanged: the palette PNG is a bound native input.
+  - 16 Images uploaded; ids in `world-v7-uploads.json` (old file kept as `verify-W/world-v7-uploads-previous.json`). Pool and stream now use the W1_water id. `W1_waterfall_sky` and `W1_far_peak` were not re-graded (no source in the dusk set).
+  - Native pack: `scripts/retexture_world_native.py` swapped ids in `TextureContent` and `ColorMapContent` and cleared the 30 compiled `TexturePackContent` entries; 123 of 126 chunks byte-identical (report `verify-W/W1-native-retexture.json`), so geometry and collision did not move. `world_native_collision.py --check` and the 12 collision tests pass.
+  - Renders: `verify-W/W1-compare-*.png` (Blender, the real world mesh, before left and after right, with a white Bear stand-in on the hub marble) and `W1-swatches-before-top-after-bottom.png`. Plain sun and sky, not Roblox lighting.
+  - **Coordinator, before a save:** once Rojo has synced the pack in Edit, confirm the lawn, marble and water show the new maps (if a SurfaceAppearance still shows the old colour, its compiled texture pack is stale: re-set its ColorMap in Edit), and re-check that no MeshPart's CollisionFidelity changed (a synced pack dropped one to Box on 2026-11-15).
+- **W2 landed in source (lane W, 2026-11-15; spec written, not run: no Play).**
+  - `src/client/ParkCounter.lua` (pure census and layout) and `ParkThrowControl.lua`: a counter pill, "Pets playing 3/9", shows while the owner is inside a park, stacked above the Menu + Deck dock on its right edge. Count = pets whose garden-snapshot `parkId` is this park (ParkDirector membership); capacity = the site's 9 slots.
+  - Full: "Park full · 9/9", amber, plus a second line "The other park has room" when the other site is under 9. The server does not cap membership, so a 10th pet still joins and idles; the counter reads 9/9.
+  - The Throw button moved from the dock's left to the row above the dock and now shows only when it can be pressed or the ball is out; its old disabled "Pets are playing" state is what the counter replaces (`park.waitIdle` is unused but kept).
+  - Strings: `park.count`, `park.full`, `park.otherHasRoom` in UICopy (translations not synced). Spec: `scripts/ParkCounter.spec.lua` (client).
 
 ## Answered in chat / decisions
 - **Move everything into eggs** (deck, customize, wardrobe, pet eggs)? Recommendation: no for v1. The Wardrobe and Deck style stay fixed-price direct buys, which are clearer and fairer and keep the paid-random rules simple. Eggs stay for collectibles (toys, finishes, hues, and Names in v2). Spencer to confirm.

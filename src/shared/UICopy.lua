@@ -134,7 +134,7 @@ local Table={
    starsEarned="Stars earned",starsSpent="Stars spent",stamps="Stamps collected"},
  },
  -- Pet Park K3: the park chip (shown only while the owner is inside the kerb).
- park={waitIdle="Pets are playing",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
+ park={waitIdle="Pets are playing",count="Pets playing {count}/{capacity}",full="Park full · {count}/{capacity}",otherHasRoom="The other park has room",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
  onboarding={
   welcome={friend="Hatch a friend",match="Match",more="One more!",skip="Skip",saving="Saving…",static="↓",gamepad="D-pad · A",keyboard="← → · SPACE",egg="Mystery egg"},

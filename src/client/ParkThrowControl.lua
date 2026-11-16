@@ -1,11 +1,15 @@
 -- One optional Throw action. Keyboard F / gamepad R2 and the same touch button send
 -- bounded intent; no aiming overlay, joins or secondary Call controls.
+-- QA v735 W2: the same gui carries the park counter ("Pets playing 3/9", "Park full · 9/9").
+-- Both stack above the Menu + Deck dock; the Throw button shows only while it can be pressed
+-- or the ball is out, and the counter says the rest.
 local Players=game:GetService("Players")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Input=game:GetService("UserInputService")
 local Copy=require(ReplicatedStorage.Shared.UICopy)
 local Park=require(ReplicatedStorage.Shared.ParkLayout)
 local Rail=require(script.Parent.NotificationRail)
+local Counter=require(script.Parent.ParkCounter)
 local Control={};Control.__index=Control
 function Control.new(parkClient,options)
 	local self=setmetatable({park=parkClient,garden=options.garden,guiParent=options.gui,connections={},seq=0},Control)
@@ -36,13 +40,18 @@ function Control:makeGui()
 	local parent=self.guiParent or Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
 	if not parent then return false end
 	local gui=Instance.new("ScreenGui");gui.Name="EggDropParkThrow";gui.ResetOnSpawn=false;gui.IgnoreGuiInset=true;gui.DisplayOrder=4;gui.Enabled=false
-	local button=Instance.new("TextButton");button.Name="Throw";button.Size=UDim2.fromOffset(92,48);button.AnchorPoint=Vector2.one
+	local button=Instance.new("TextButton");button.Name="Throw";button.Size=UDim2.fromOffset(104,Counter.ThrowHeight);button.AnchorPoint=Vector2.one
 	button.BackgroundColor3=Color3.fromHex("#213C42");button.BackgroundTransparency=.12;button.TextColor3=Color3.fromHex("#BBF7D0")
 	button.Font=Enum.Font.FredokaOne;button.TextSize=16;button.TextWrapped=true;button.Text=Copy.get("park.throw");button.Selectable=true;button.Parent=gui
 	local corner=Instance.new("UICorner");corner.CornerRadius=UDim.new(0,14);corner.Parent=button
 	local stroke=Instance.new("UIStroke");stroke.Color=Color3.fromHex("#759D95");stroke.Transparency=.45;stroke.Parent=button
 	table.insert(self.connections,button.Activated:Connect(function()self:throw()end))
-	gui.Parent=parent;self.gui,self.button=gui,button
+	local count=Instance.new("TextLabel");count.Name="ParkCount";count.AnchorPoint=Vector2.one;count.Size=UDim2.fromOffset(0,Counter.LineHeight);count.AutomaticSize=Enum.AutomaticSize.X
+	count.BackgroundColor3=button.BackgroundColor3;count.BackgroundTransparency=.12;count.TextColor3=Color3.fromHex("#E6F4EE")
+	count.Font=Enum.Font.GothamMedium;count.TextSize=14;count.LineHeight=1.05;count.Text="";count.Visible=false;count.Parent=gui
+	corner:Clone().Parent=count;stroke:Clone().Parent=count
+	local pad=Instance.new("UIPadding");pad.PaddingLeft=UDim.new(0,Counter.Pad);pad.PaddingRight=UDim.new(0,Counter.Pad);pad.Parent=count
+	gui.Parent=parent;self.gui,self.button,self.count=gui,button,count
 	return true
 end
 function Control:throw()
@@ -63,20 +72,32 @@ function Control:step(_,context)
 	local child=site and self.park.sites[site.Id]
 	local block=child and child:block()
 	local fetch=block and block.fetch
-	local show=context.active==true and site~=nil and fetch~=nil and(fetch.laneReady==true or fetch.ready==true or fetch.stage~="idle")
+	local inPark=context.active==true and site~=nil
 	local ownerId=self.garden and self.garden.playerId
 	local available=fetch and(if type(fetch.availableOwners)=="table"then fetch.availableOwners[tostring(ownerId)]==true else fetch.ready==true)
+	-- The button is for throwing (or says the ball is out). While the pets are busy the counter speaks.
+	local show=inPark and fetch~=nil and(fetch.stage~="idle"or available==true)
 	self.enabled=show and fetch.stage=="idle"and available==true
-	if not show then
+	if not show then self.pending=nil end
+	if not inPark then
 		if self.gui then self.gui.Enabled=false end
-		self.pending=nil;return
+		return
 	end
 	if not self.gui and not self:makeGui()then return end
 	self.gui.Enabled=true
-	local dock=context.dockPosition or UDim2.new(1,-16,1,-16)
-	self.button.Position=UDim2.new(1,-132,dock.Y.Scale,dock.Y.Offset)
+	local snapshot=self.garden and self.garden.snapshot
+	local status=Counter.status(snapshot and snapshot.actors,site,Park.Sites)
+	local throwAt,countAt,height=Counter.layout(context.dockPosition or UDim2.new(1,-16,1,-16),show,status.lines)
+	if self.count.Text~=status.text then
+		self.count.Text=status.text;self.count.Size=UDim2.fromOffset(0,height)
+		self.count.TextColor3=Color3.fromHex(if status.full then "#FDE68A"else "#E6F4EE")
+	end
+	self.count.Position=countAt;self.count.Visible=true
+	self.button.Visible=show
+	if not show then return end
+	self.button.Position=throwAt
 	self.button.Active=self.enabled and not self.pending;self.button.AutoButtonColor=self.button.Active
-	self.button.Text=Copy.get(if fetch.stage~="idle"then "park.ballOut"elseif not available then "park.waitIdle"else "park.throw")
+	self.button.Text=Copy.get(if fetch.stage~="idle"then "park.ballOut"else "park.throw")
 	self.button.TextTransparency=if self.button.Active then 0 else .35
 	local now=os.clock()
 	if self.pending and now-self.pending.at>2 then
