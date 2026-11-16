@@ -15,3 +15,4 @@
   - chain and combo feedback (counter pops, rising pitch)
   - faster settle and round pacing, with near-overflow tension
   - keep it readable and fair on phone
+- **P5. Results wallet chip** ("★ 18") uses the 3D WalletStar like every other menu (Spencer, 2026-11-16).
