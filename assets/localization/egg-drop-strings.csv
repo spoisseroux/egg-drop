@@ -95,7 +95,7 @@ ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, 
 ui.coach.questDone.line,"Claim its Stars in Quests, in the menu.",,First-round coaching
 ui.coach.questDone.title,Quest done!,,"First-round coaching; also ui.notice.questDone.title, ui.notice.questReady.title"
 ui.coach.quests.line,"Three a day, three a week. Each one pays Stars.",,First-round coaching
-ui.coach.skip,Skip,,First-round coaching; also ui.onboarding.welcome.skip
+ui.coach.skip,Skip,,First-round coaching
 ui.coach.style.line,"Faceplates, backgrounds and balls. Looks only.",,First-round coaching
 ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.name, ui.r3.help.style.title, ui.r5.station.Customize.name"
 ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
@@ -227,7 +227,7 @@ ui.notice.bond.title,Bond grew,,Menu text
 ui.notice.bond.what,Hearts show how close you and {pet} are. Each new level unlocks a trick.,,Menu text; e.g. Hearts show how close you and Bear are. Each new level unlocks a trick.
 ui.notice.customize.next,Open Companions and pick Customize or Wardrobe. New pieces hatch from eggs.,,Menu text
 ui.notice.customize.title,Customize your pet,,Menu text
-ui.notice.customize.what,"Colour jars, finishes, charms, toys and outfits change how {pet} looks. Looks only.",,"Menu text; e.g. Colour jars, finishes, charms, toys and outfits change how Bear looks. Looks only."
+ui.notice.customize.what,"Colour jars, charms, toys and outfits change how {pet} looks. Looks only.",,"Menu text; e.g. Colour jars, charms, toys and outfits change how Bear looks. Looks only."
 ui.notice.fillLine.next,"Merge to make room, and drop each egg next to its match.",,Menu text
 ui.notice.firstSpend.next,Open Hatch eggs and choose the Toy Egg. The odds are on every label.,,Menu text
 ui.notice.firstSpend.title,Your first egg,,Menu text
@@ -273,6 +273,7 @@ ui.onboarding.welcome.gamepad,D-pad · A,,First-round coaching
 ui.onboarding.welcome.keyboard,← → · SPACE,,First-round coaching
 ui.onboarding.welcome.match,Match,,First-round coaching
 ui.onboarding.welcome.more,One more!,,First-round coaching
+ui.onboarding.welcome.skip,Skip tutorial,,First-round coaching
 ui.onboarding.welcome.static,↓,,First-round coaching
 ui.park.ballOut,Ball is out,,Pet Park chip
 ui.park.count,Pets playing {count}/{capacity},,Pet Park chip; e.g. Pets playing 3/{capacity}
@@ -318,9 +319,9 @@ ui.r3.help.companions.a.line,"Hearts show bond. Petting, rounds and Play dates g
 ui.r3.help.companions.a.title,Bond hearts,,Menu text
 ui.r3.help.companions.b.line,"Hats and bits to wear, bought with Stars. Looks only.",,Menu text
 ui.r3.help.companions.b.title,Wardrobe,,Menu text; also catalog.BookCatalog.Pages.wardrobe.name
-ui.r3.help.companions.c.line,"Use colour jars, add a charm, try a finish or hand over a toy.",,Menu text
+ui.r3.help.companions.c.line,"Use colour jars, add a charm or hand over a toy.",,Menu text
 ui.r3.help.companions.c.title,Customize,,Menu text; also ui.r3.help.garden.c.title
-ui.r3.help.companions.d.line,"Toys, finishes, colour jars and features all hatch from eggs. Spend Stars at Hatch eggs.",,Menu text
+ui.r3.help.companions.d.line,Toys and colour jars hatch from eggs. Spend Stars at Hatch eggs.,,Menu text
 ui.r3.help.garden.a.line,"Walk up to a glowing machine to use it: Hatch eggs, Deck style, Companions, the Pocket Deck.",,Menu text
 ui.r3.help.garden.b.line,Open the Menu and pick Quests. Three daily quests and a once-a-day stamp pay Stars.,,Menu text
 ui.r3.help.garden.c.line,Open Companions to recolour and dress your pet. New pieces hatch from eggs.,,Menu text
@@ -364,6 +365,7 @@ ui.r3.quests.weekly.title,Weekly bonus,,Menu text
 ui.r3.tips,Show tips again,,Menu text
 ui.r4.customize.moreMaterials,More finishes hatch from Material Eggs.,,Menu text
 ui.r4.customize.moreToys,More toys hatch from Toy Eggs.,,Menu text
+ui.r4.customize.newBadge,NEW,,Menu text
 ui.r4.equipped,Equipped,,Menu text
 ui.r4.hue.confirmLine,Press again to reset. It's free.,,Menu text
 ui.r4.hue.confirmReset,Confirm reset,,Menu text
@@ -534,9 +536,9 @@ catalog.DeckThemes.ById.tidepool.name,Tidepool,,"Catalogue DeckThemes (name); al
 catalog.DeckBackgrounds.ById.lantern.name,Lantern,,Catalogue DeckBackgrounds (name)
 catalog.DeckBackgrounds.ById.moonpond.name,Moonpond,,Catalogue DeckBackgrounds (name)
 catalog.DeckStickers.ById.none.name,Blank,,Catalogue DeckStickers (name)
-catalog.MaterialCatalog.ById.gloss.name,Gloss,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name
-catalog.MaterialCatalog.ById.jelly.name,Jelly,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.8.name
-catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.9.name
+catalog.MaterialCatalog.ById.gloss.name,Gloss,,Catalogue MaterialCatalog (name)
+catalog.MaterialCatalog.ById.jelly.name,Jelly,,Catalogue MaterialCatalog (name)
+catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.metal.name,Metal,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.pearl_edge.name,Pearl Edge,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.speckle_satin.name,Speckle Satin,,Catalogue MaterialCatalog (name)

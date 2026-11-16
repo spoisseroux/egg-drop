@@ -510,17 +510,17 @@
   "catalog.MaterialCatalog.ById.gloss.name": {
    "source": "Gloss",
    "context": "",
-   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.7.name"
+   "example": "Catalogue MaterialCatalog (name)"
   },
   "catalog.MaterialCatalog.ById.jelly.name": {
    "source": "Jelly",
    "context": "",
-   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.8.name"
+   "example": "Catalogue MaterialCatalog (name)"
   },
   "catalog.MaterialCatalog.ById.matte.name": {
    "source": "Matte",
    "context": "",
-   "example": "Catalogue MaterialCatalog (name); also catalog.BookCatalog.Pages.toys.items.9.name"
+   "example": "Catalogue MaterialCatalog (name)"
   },
   "catalog.MaterialCatalog.ById.metal.name": {
    "source": "Metal",
@@ -1665,7 +1665,7 @@
   "ui.coach.skip": {
    "source": "Skip",
    "context": "",
-   "example": "First-round coaching; also ui.onboarding.welcome.skip"
+   "example": "First-round coaching"
   },
   "ui.coach.style.line": {
    "source": "Faceplates, backgrounds and balls. Looks only.",
@@ -2323,9 +2323,9 @@
    "example": "Menu text"
   },
   "ui.notice.customize.what": {
-   "source": "Colour jars, finishes, charms, toys and outfits change how {pet} looks. Looks only.",
+   "source": "Colour jars, charms, toys and outfits change how {pet} looks. Looks only.",
    "context": "",
-   "example": "Menu text; e.g. Colour jars, finishes, charms, toys and outfits change how Bear looks. Looks only."
+   "example": "Menu text; e.g. Colour jars, charms, toys and outfits change how Bear looks. Looks only."
   },
   "ui.notice.fillLine.next": {
    "source": "Merge to make room, and drop each egg next to its match.",
@@ -2549,6 +2549,11 @@
   },
   "ui.onboarding.welcome.more": {
    "source": "One more!",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.onboarding.welcome.skip": {
+   "source": "Skip tutorial",
    "context": "",
    "example": "First-round coaching"
   },
@@ -2778,7 +2783,7 @@
    "example": "Menu text; also catalog.BookCatalog.Pages.wardrobe.name"
   },
   "ui.r3.help.companions.c.line": {
-   "source": "Use colour jars, add a charm, try a finish or hand over a toy.",
+   "source": "Use colour jars, add a charm or hand over a toy.",
    "context": "",
    "example": "Menu text"
   },
@@ -2788,7 +2793,7 @@
    "example": "Menu text; also ui.r3.help.garden.c.title"
   },
   "ui.r3.help.companions.d.line": {
-   "source": "Toys, finishes, colour jars and features all hatch from eggs. Spend Stars at Hatch eggs.",
+   "source": "Toys and colour jars hatch from eggs. Spend Stars at Hatch eggs.",
    "context": "",
    "example": "Menu text"
   },
@@ -3004,6 +3009,11 @@
   },
   "ui.r4.customize.moreToys": {
    "source": "More toys hatch from Toy Eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.newBadge": {
+   "source": "NEW",
    "context": "",
    "example": "Menu text"
   },
