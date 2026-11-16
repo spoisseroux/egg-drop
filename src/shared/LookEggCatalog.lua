@@ -12,7 +12,8 @@
 --    Price) are never used to validate a save, so retuning them can never reject an old save.
 --  * Retuning Tables or PityAt is a new PoolVersion (append it to PoolVersions).
 --  * Prices only grows: a stored receipt keeps the price it was charged.
--- EnablePurchases=false: nothing sells until slice 4 (the server refuses lookBuy with NotReady).
+-- EnablePurchases=true (slice 4): on sale, but only while every finish template is NativeVerified
+-- (Catalog.available); otherwise the whole egg is "Not ready" (plan R7).
 local Shared=script.Parent
 local Hue=require(Shared.HueCatalog)
 local Charms=require(Shared.PetCharmCatalog)
@@ -22,7 +23,7 @@ local Catalog={
 	PoolVersions=table.freeze({[1]=true}),
 	Price=12, -- [PLACEHOLDER] Stars
 	Prices=table.freeze({[12]=true}),
-	EnablePurchases=false,
+	EnablePurchases=true,
 	PityAt=15, -- [PLACEHOLDER] while charms are missing, the 15th egg after 14 misses is a charm
 	RestrictedCharmEvery=12, -- [PLACEHOLDER] restricted accounts: every 12th egg is the next charm
 	MissesLimit=63, -- frozen stored bound for lookCharmMisses and quote.charmMisses

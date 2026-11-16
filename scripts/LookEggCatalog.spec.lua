@@ -17,7 +17,7 @@ return function()
 		assert(C.kind("rose")=="hue"and C.kind("gloss")=="finish"and C.kind("jelly")=="finish"and C.kind("charm_ring")=="charm")
 		assert(C.kind("heart")==nil and C.kind("charm_heart")==nil and C.kind("charm_star")==nil and C.kind("reset")==nil,"Heart, Star, Leaf and Reset are never in the pool")
 		assert(C.shape("charm_dot")=="dot"and C.charmItem("pebble")=="charm_pebble"and C.charmItem("heart")==nil)
-		assert(C.EnablePurchases==false,"slice 1: nothing on sale")
+		assert(C.EnablePurchases==true,"slice 4: on sale, gated by verified templates")
 	end)
 
 	test("every table has integer cells and sums to exactly 100",function()
@@ -107,7 +107,7 @@ return function()
 		assert(C.selectionMode(false)=="random"and C.selectionMode(true)=="fixed"and C.selectionMode(nil)=="fixed","unknown policy fails closed")
 	end)
 
-	test("the egg is not available while the switch is off, even with verified templates",function()
+	test("the egg is available only when every sheen stop and the Jelly pair are verified",function()
 		local pack=Instance.new("Folder");local two=Instance.new("Folder")
 		local function add(folder,name)
 			local s=Instance.new("SurfaceAppearance");s.Name=name;s:SetAttribute("NativeVerified",true);s:SetAttribute("MaterialVersion",1);s:SetAttribute("MaterialProfile",name);s.Parent=folder
@@ -119,7 +119,9 @@ return function()
 		end
 		assert(not C.capable(pack,two),"Jelly templates still missing")
 		add(pack,C.JellyProfile);add(two,C.JellyTwoToneProfile)
-		assert(C.capable(pack,two)and not C.available(pack,two),"capable, but not on sale")
+		assert(C.capable(pack,two)and C.available(pack,two),"capable and on sale")
+		pack:FindFirstChild(C.SheenProfiles[-1]):SetAttribute("NativeVerified",false)
+		assert(not C.available(pack,two),"one unverified stop closes the whole egg")
 		pack:Destroy();two:Destroy()
 	end)
 

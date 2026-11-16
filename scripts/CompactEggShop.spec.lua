@@ -8,18 +8,20 @@ return function(client,parent)
  local function settle()for _=1,3 do Run.Heartbeat:Wait()end end
  local ok,err=pcall(function()
   for _,size in ipairs({Vector2.new(1649,971),Vector2.new(812,354),Vector2.new(568,210)})do
-   root.Size=UDim2.fromOffset(size.X,size.Y);settle();view:open({status="Ready",revision=10,nectar=24,inventoryMask=3,misses=0});settle()
+   root.Size=UDim2.fromOffset(size.X,size.Y);settle();view:open({status="Ready",revision=10,nectar=24,inventoryMask=3,misses=0,lookAvailable=true});settle()
    local list=view.body.EggColumn;assert(not list:FindFirstChild("Recipe_meadow")and not list:FindFirstChild("Recipe_sprout")and not list:FindFirstChild("Recipe_feature")and not list:FindFirstChild("Recipe_material"))
-   for _,id in ipairs({"toy","hue"})do local n=list["Recipe_"..id];assert(n.AbsoluteSize.X>=44 and n.AbsoluteSize.Y>=44 and n.RecipeName.TextFits and n.Cost.TextFits)end
+   for _,id in ipairs({"toy","look"})do local n=list["Recipe_"..id];assert(n.AbsoluteSize.X>=44 and n.AbsoluteSize.Y>=44 and n.RecipeName.TextFits and n.Cost.TextFits)end
    -- The desktop panel scales up to 1.2, so the back hit frame is 44 or larger.
    assert(view.hatchButton.AbsoluteSize.Y>=44,"Hatch button under 44 px at "..tostring(size))
    assert(view.shopBackButton.AbsoluteSize.X>=43.9 and view.shopBackButton.AbsoluteSize.Y>=43.9,"back hit frame under 44 px at "..tostring(size))
-   assert(view:selectRecipe("hue"));settle()
-   for _,id in ipairs({"rose","tide","citrus","iris"})do assert(view.oddsHolder["Odds_"..id]:GetAttribute("OddsText")=="25%")end;assert(not view.oddsHolder:FindFirstChild("Odds_reset"),"Reset Hue jar dropped 2026-11-13")
+   assert(view:selectRecipe("look"));settle()
+   -- Customization Egg: whole-number odds straight from the table (M = 3 missing charms).
+   for _,id in ipairs({"rose","tide","citrus","iris"})do assert(view.oddsHolder["Odds_"..id]:GetAttribute("OddsText")=="17%")end;assert(not view.oddsHolder:FindFirstChild("Odds_reset"),"Reset Hue jar dropped 2026-11-13")
+   assert(view.oddsHolder.Odds_gloss:GetAttribute("OddsText")=="10%"and view.oddsHolder.Odds_jelly:GetAttribute("OddsText")=="6%"and view.oddsHolder.Odds_charm:GetAttribute("OddsText")=="6%")
    assert(view.action.Text:find("12",1,true));assert(not view:selectRecipe("sprout")and not view:selectRecipe("material"));table.insert(cases,tostring(size).." list, exact price and four disclosed item chances")
   end
   -- The retired Companion Egg cannot be selected and no companion odds or pity promise appear.
-  view:update({status="Ready",revision=11,nectar=16,inventoryMask=3,misses=7});assert(not view:selectRecipe("meadow")and view.selected=="hue");settle()
+  view:update({status="Ready",revision=11,nectar=16,inventoryMask=3,misses=7,lookAvailable=true});assert(not view:selectRecipe("meadow")and view.selected=="look");settle()
   local list=view.body.EggColumn;assert(not list:FindFirstChild("RareProtection")and not list:FindFirstChild("PoolNote")and not list:FindFirstChild("Recipe_meadow"))
   for _,id in ipairs({"pip","puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit"})do assert(not view.oddsHolder:FindFirstChild("Odds_"..id))end
   table.insert(cases,"retired Companion Egg cannot be selected and shows no companion odds at stored misses7")

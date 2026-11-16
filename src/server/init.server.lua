@@ -1431,6 +1431,8 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	if ok and reason ~= "AlreadySaved" then
 		Economy.command(player, action, walletBefore, board.nursery.state.nectar, board.nursery.state)
 		if action == "hueBuy" then Economy.eggOpened(player, "hue", receipt) end
+		-- Customization Egg (slice 4): the day-7 wallet check reads this sink.
+		if action == "lookBuy" then Economy.eggOpened(player, "look", receipt) end
 		if action == "daily" and type(board.nursery.state.stamps) == "number" and board.nursery.state.stamps > 0 then
 			Economy.event(player, "StampAdded", ((board.nursery.state.stamps - 1) % 7) + 1)
 		end

@@ -30,7 +30,17 @@ local C=require(script.Parent.CelebrationKit)
 local Pose=require(script.Parent.HatchDisplayPose)
 local Rarity=require(script.Parent.HatchRarityCue)
 local Copy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
+local Look=require(game:GetService("ReplicatedStorage").Shared.LookEggCatalog)
 local Stage={};Stage.__index=Stage
+-- Customization Egg (slice 4): a Hue-route result can be a finish jar or a charm; the banner
+-- and the fun line say which ("RARE CHARM", "UNCOMMON FINISH JAR").
+function Stage.resultKind(kind,result)
+ if kind=="hue"and type(result)=="table"then
+  local k=Look.kind(result.itemId)
+  if k=="finish"or k=="charm"then return k end
+ end
+ return kind
+end
 
 -- ── Pure rules (specs cover these) ───────────────────────────────────────────
 Stage.BurstAt=Rarity.BurstAt;Stage.CardAt=1.06;Stage.SlideAt=1.26;Stage.SettleAfter=.50;Stage.ReducedFade=.15
@@ -98,6 +108,9 @@ end
 -- line of its own gets its kind's line. Pure: it never reads ownership.
 local idField={toy="toyId",material="finishId",hue="itemId",feature="featureId"}
 function Stage.describe(kind,result)
+ local lookKind=Stage.resultKind(kind,result)
+ if lookKind=="finish"then return Copy.get("hatch.reveal.describe.finishJar."..result.itemId)end
+ if lookKind=="charm"then return Copy.get("hatch.reveal.describe.charm."..Look.shape(result.itemId))end
  local id=type(result)=="table"and idField[kind]and result[idField[kind]]
  local key=if type(id)=="string"then "hatch.reveal.describe."..kind.."."..id else nil
  if key and Copy.has(key)then return Copy.get(key)end
@@ -194,7 +207,7 @@ end
 function Stage.show(parent,options)
  assert(options and options.scene,"HatchItemStage needs the hatch's native scene")
  local tier=if Rarity.Look[options.tier]then options.tier else "Neutral"
- local self=setmetatable({options=options,scene=options.scene,tier=tier,look=Rarity.Look[tier],kind=options.kind or "item",
+ local self=setmetatable({options=options,scene=options.scene,tier=tier,look=Rarity.Look[tier],kind=Stage.resultKind(options.kind or "item",options.result),
   age=0,clock=0,connections={},buttons={},watched={},shards={},rays={},rings={},sparkles={}},Stage)
  local root=Kit.frame(parent,"ItemRevealStage",nil,UDim2.new(),UDim2.fromScale(1,1))
  root.ZIndex=options.zIndex or 80;root.BackgroundColor3=Stage.Backdrop;root.BackgroundTransparency=1;root.Active=true;root.ClipsDescendants=true

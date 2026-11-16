@@ -8,6 +8,10 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Features=require(Shared.FeatureCatalog);local Materials=require(Shared.MaterialCatalog)
 local Toys=require(Shared.ToyCatalog);local Hues=require(Shared.HueCatalog);local Pets=require(Shared.PetCatalog)
+local Look=require(Shared.LookEggCatalog)
+-- Customization Egg tiers [PLACEHOLDER] (plan §5.5): hue jars Common, Gloss and Matte
+-- Uncommon, Jelly and every charm Rare.
+local lookTier=table.freeze({hue="Common",gloss="Uncommon",matte="Uncommon",jelly="Rare",charm="Rare"})
 local Policy={Cue="hatch_finish",AnswerEnd=1.45,MaxLateness=.10,BurstAt=.98}
 -- One sting per tier. `hit` is where the pop sits inside the file: the sting starts that
 -- long before the burst, so the pop lands on it (Rare's rise leads in for 0.70 s).
@@ -28,7 +32,12 @@ function Policy.tier(kind,result)
  if kind=="material"then return if Materials.known(result.finishId)then materialTier[result.finishId]or "Neutral"else "Neutral"end
  if kind=="feature"then return tier(Features.ById[result.featureId])end
  if kind=="toy"then return tier(Toys.ById[result.toyId])end
- if kind=="hue"then return tier(Hues.Items[result.itemId])end
+ if kind=="hue"then
+  local k=Look.kind(result.itemId)
+  if k=="finish"then return lookTier[result.itemId]end
+  if k=="charm"then return lookTier.charm end
+  return tier(Hues.Items[result.itemId])
+ end
  if kind=="companion"then return if rarePets[result.petId]then "Rare"elseif basePets[result.petId]then "Common"else "Neutral"end
  return "Neutral"
 end

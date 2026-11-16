@@ -63,14 +63,15 @@ return function(server)
  end
  local function mutate(state,id,f)f(state.hueItemReceipts[id]);if state.lastHueResult and state.lastHueResult.id==id then f(state.lastHueResult)end end
 
- test("a fresh save starts with no egg charm, publishes the look fields and sells nothing",function()
+ test("a fresh save starts with no egg charm, publishes the look fields and refuses a closed egg",function()
   local h,db,c=fixture()
   local saved=db.player_1.hatching.charmUnlocks;assert(type(saved)=="table"and next(saved)==nil,"fresh save: charmUnlocks = {}")
   local p=H.public(h)
-  assert(p.lookAvailable==false and p.lookSelectionMode=="random"and p.lookPoolVersion==LE.PoolVersion and p.lookCharmMisses==0 and p.lookFound==0)
+  assert(p.lookAvailable==H.lookAvailable(h)and p.lookSelectionMode=="random"and p.lookPoolVersion==LE.PoolVersion and p.lookCharmMisses==0 and p.lookFound==0)
   assert(next(p.charmUnlocks)==nil and p.finishInventory.gloss==0 and p.finishInventory.jelly==0 and p.petFinish.pip.sheen==0 and p.petFinish.pip.jelly==0)
   assert(p.nextFixed.look=="rose")
   local balance,rolls,updates=h.state.nectar,c.rolls,c.updates
+  h.lookAvailable=false -- templates not verified, or the switch off: the whole egg is Not ready
   refuse(h,"lookBuy",lookFields(h),"NotReady")
   assert(h.state.nectar==balance and c.rolls==rolls and c.updates==updates and not db.player_1.hatching.hueReservation,"refused before any write or roll")
  end)
@@ -158,7 +159,8 @@ return function(server)
   local ok,why=H.hueCommand(h,"lookBuy",q,r);assert(not ok and why=="Retrying")
   assert(db.player_1.hatching.hueReservation and db.player_1.hatching.hueReservation.itemId=="iris"and db.player_1.hatching.hueInventory.iris==0)
   c.now+=100;c.unit=.99
-  local joined=H.load(1,{},a);assert(H.lookAvailable(joined)==false,"this build's switch is off")
+  -- Settlement runs inside load, before any availability is read: it never checks the switch.
+  local joined=H.load(1,{},a)
   assert(joined.status=="Ready"and joined.state.hueInventory.iris==1 and joined.state.nectar==balance-LE.Price and not joined.state.hueReservation and c.rolls==1)
   assert(joined.state.pendingHueResult.itemId=="iris"and RawH.valid(joined.state))
   ok,why=H.hueCommand(joined,"lookBuy",q,r);assert(ok and why=="AlreadySaved"and joined.state.hueInventory.iris==1)

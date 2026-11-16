@@ -1084,6 +1084,9 @@ do
  -- stalled purchase still opens the buy page, which shows the reason or Try again.
  local kinds={
   hue={page="buy",intent="hueIntent",method="hatch",pending="pendingHueResult"},
+  -- Customization Egg (slice 4): buys through the Hue intent; a refusal stays on Hatch eggs,
+  -- which re-renders from the latest snapshot (no buy page of its own).
+  look={page=nil,intent="hueIntent",method="lookHatch",pending="pendingHueResult"},
   material={page="materialBuy",intent="materialIntent",method="buy",pending="pendingMaterialResult"},
   toy={page="toyBuy",intent="toyIntent",method="buy",pending="pendingToyResult"},
   feature={page="featureBuy",intent="featureIntent",method="buy",pending="pendingFeatureResult"},
@@ -1095,9 +1098,10 @@ do
    if intent[k.method](intent)then clientUI.directHatch=kind;return end
   end
   clientUI.directHatch=nil
-  clientUI.openHue(k.page,nil,"eggs")
+  if k.page or not purchase then clientUI.openHue(k.page or "buy",nil,"eggs")end
  end
  nurseryView.onOpenHue=function(purchase)open("hue",purchase)end
+ nurseryView.onOpenLook=function(purchase)open("look",purchase)end
  nurseryView.onOpenMaterial=function(purchase)open("material",purchase)end
  nurseryView.onOpenToy=function(purchase)open("toy",purchase)end
  nurseryView.onOpenFeature=function(purchase)open("feature",purchase)end
@@ -1112,9 +1116,9 @@ do
   local k=kinds[kind];local intent=clientUI[k.intent]
   if nurseryState[k.pending]then
    clientUI.directHatch=nil;clientUI.hueView.directHatch=kind
-   if not clientUI.openHue(k.page,nil,"eggs")then clientUI.hueView.directHatch=nil end
+   if not clientUI.openHue(k.page or "buy",nil,"eggs")then clientUI.hueView.directHatch=nil end
   elseif intent.status=="Retrying"or not intent.pending then
-   clientUI.directHatch=nil;clientUI.openHue(k.page,nil,"eggs")
+   clientUI.directHatch=nil;if k.page then clientUI.openHue(k.page,nil,"eggs")end
   end
  end
 end

@@ -31,11 +31,16 @@ local HintGlyphs=require(script.Parent.HintGlyphs)
 -- Egg is hidden with the Features tab (Shared.FeatureFlags); a pending feature hatch
 -- still opens through "Open saved feature". The Material Egg is off for v1
 -- (MaterialCatalog.EnablePurchases); a pending finish still opens through "Open saved material".
-local liveOrder={"toy","hue"}
+-- Customization Egg (slice 4, 2026-11-16): it replaces the Hue Egg on the list. A saved Hue
+-- Egg result still opens through "Open saved jar". Its art reuses the Hue Egg's until the new
+-- egg art lands (LookArt).
+local LookEgg=require(game:GetService("ReplicatedStorage").Shared.LookEggCatalog)
+local liveOrder={"toy","look"}
 if MaterialCatalog.EnablePurchases then table.insert(liveOrder,2,"material")end
 if FeatureFlags.Features then table.insert(liveOrder,2,"feature")end
 local function shopRecipe(id)
  if id=="hue"then return {id="hue",name="Hue Egg",cost=HueCatalog.Cost}end
+ if id=="look"then return {id="look",name=UICopy.get("hatch.egg.look.name"),cost=LookEgg.Price}end
  if id=="toy"then return {id="toy",name="Toy Egg",cost=ToyCatalog.Cost}end
  if id=="feature"then return {id="feature",name="Feature Egg",cost=FeatureCatalog.Cost}end
  if id=="material"then return {id="material",name="Material Egg",cost=MaterialCatalog.Cost}end
@@ -87,7 +92,7 @@ local function eggGraphic(parent, recipeId, color, y)
 		Art.leaf(scene, "Leaf", UDim2.new(0.5, side * 35 - 8, 0.5, 9),
 			UDim2.fromOffset(14, 31), Art.Leaf, side * 48)
 	end
-	EggArt.create(scene, recipeId, UDim2.new(0.5, -32, 0.5, -44), UDim2.fromOffset(64, 82), scene.ZIndex + 2)
+	EggArt.create(scene, if recipeId == "look" then "hue" else recipeId, UDim2.new(0.5, -32, 0.5, -44), UDim2.fromOffset(64, 82), scene.ZIndex + 2)
 end
 
 function View.new(parent, audio, reduceEffects, sendCommand)
@@ -215,7 +220,7 @@ function View:actPrimary()
 			-- stage owns the one hatch the player sees; the panel only waits for the result.
 			-- QA v2 R1.8: the pet peeking into the egg preview gets excited (a hop and a cheer).
 			Peek.hop()
-			if self.selected=="toy"then if self.onOpenToy then self.onOpenToy(true)end elseif self.selected=="feature"then if self.onOpenFeature then self.onOpenFeature(true)end elseif self.selected=="material"then if self.onOpenMaterial then self.onOpenMaterial(true)end elseif self.selected=="hue"then if self.onOpenHue then self.onOpenHue(true)end else self:send("hatch",self.selected)end
+			if self.selected=="toy"then if self.onOpenToy then self.onOpenToy(true)end elseif self.selected=="feature"then if self.onOpenFeature then self.onOpenFeature(true)end elseif self.selected=="material"then if self.onOpenMaterial then self.onOpenMaterial(true)end elseif self.selected=="hue"then if self.onOpenHue then self.onOpenHue(true)end elseif self.selected=="look"then if self.onOpenLook then self.onOpenLook(true)end else self:send("hatch",self.selected)end
 		end
 	end
 
@@ -633,7 +638,7 @@ View.EggCopy=UICopy.section("hatch.egg")
 function View.liveOrder(flags)
  flags=flags or FeatureFlags
  local material=flags.MaterialEgg;if material==nil then material=MaterialCatalog.EnablePurchases end
- local order={"toy","hue"}
+ local order={"toy","look"}
  if material then table.insert(order,2,"material")end
  if flags.Features then table.insert(order,2,"feature")end
  return order
@@ -646,6 +651,7 @@ end
 function View.oddsRows(id,state)
  state=state or {}
  if id=="material"and(state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then return require(script.Parent.MaterialDisclosure).rows(state)end
+ if id=="look"then return View.lookOdds(state)end
  if NextItem.restricted(state)then
   local notReady=id=="material"and not state.materialAvailable and NextItem.itemId("material",state)~=nil
   return{rows={{id="next",name=NextItem.line(id,state),value=""}},per=(View.EggCopy[id]or {}).per or "",
@@ -667,16 +673,57 @@ function View.oddsRows(id,state)
  for index,text in ipairs(OddsText.list(chances))do rows[index].value=text end
  return{rows=rows,per=(View.EggCopy[id]or {}).per or "",empty=empty}
 end
+-- Pure: the Customization Egg's odds (plan §5.2). Values come straight from the integer
+-- table (LookEggCatalog.odds), never OddsText.list, so the label is the real odds. One Charm
+-- row carries the charm total and names the missing shapes. `note` is the pity line.
+-- Restricted: the named next item and the charm countdown.
+local function lookName(itemId)
+ local kind=LookEgg.kind(itemId)
+ if kind=="hue"then return HueCatalog.ById[itemId].name end
+ if kind=="finish"then return UICopy.get("hatch.look.jar."..itemId)end
+ if kind=="charm"then return require(game:GetService("ReplicatedStorage").Shared.PetCharmCatalog).ById[LookEgg.shape(itemId)].name.." charm"end
+ return tostring(itemId)
+end
+View.lookName=lookName
+function View.lookOdds(state)
+ state=state or {}
+ local Charms=require(game:GetService("ReplicatedStorage").Shared.PetCharmCatalog)
+ local missing=LookEgg.missing(state.charmUnlocks)
+ local misses=if LookEgg.validMisses(state.lookCharmMisses)then state.lookCharmMisses else 0
+ local per=(View.EggCopy.look or {}).per or ""
+ local empty=if state.lookAvailable==false then UICopy.get("hatch.look.notReady")else nil
+ if NextItem.restricted(state)then
+  local fixed=LookEgg.fixedNext(missing,misses,state.hueInventory,state.finishInventory)
+  local rows={{id="next",name=UICopy.get("hatch.next.line",{item=lookName(fixed)}),value=""}}
+  if #missing>0 then table.insert(rows,{id="charmCountdown",name=UICopy.get("hatch.look.restrictedCharm",{count=math.max(1,LookEgg.RestrictedCharmEvery-misses)}),value=""})end
+  return{rows=rows,per=per,empty=empty,restricted=true,note=UICopy.get("hatch.look.promise.fixed")}
+ end
+ local rows,charmTotal,shapes={},0,{}
+ for _,row in ipairs(LookEgg.odds(missing)or {})do
+  if LookEgg.kind(row.id)=="charm"then charmTotal+=row.percent;table.insert(shapes,Charms.ById[LookEgg.shape(row.id)].name)
+  else table.insert(rows,{id=row.id,name=lookName(row.id),value=row.percent.."%"})end
+ end
+ if #missing>0 then
+  table.insert(rows,{id="charm",name=UICopy.get("hatch.look.charmRow",{each=LookEgg.Tables[#missing].charm.."%",shapes=table.concat(shapes,", ")}),value=charmTotal.."%"})
+ end
+ local left=LookEgg.pityLeft(missing,misses)
+ local note=if not left then UICopy.get("hatch.look.allCharms")elseif left<=1 then UICopy.get("hatch.look.pityOne")else UICopy.get("hatch.look.pity",{count=left})
+ return{rows=rows,per=per,empty=empty,note=note}
+end
 -- Pure: the primary button for the selected egg. With too few Stars it is disabled
 -- and `need` says how many more ("N more Stars needed").
 function View.hatchAction(id,state)
  state=state or {}
- if state.pendingHueResult then return{text="Open saved jar",enabled=true}end
+ if state.pendingHueResult then
+  local kind=LookEgg.kind(state.pendingHueResult.itemId)
+  return{text=if kind=="charm"then UICopy.get("hatch.look.openSaved.charm")elseif kind=="finish"then UICopy.get("hatch.look.openSaved.finish")else "Open saved jar",enabled=true}
+ end
  if state.pendingToyResult then return{text="Open saved toy",enabled=true}end
  if state.pendingFeatureResult then return{text="Open saved feature",enabled=true}end
  if state.pendingMaterialResult then return{text="Open saved material",enabled=true}end
  if id=="toy"and #ToyCatalog.remaining(state.toyUnlocks)==0 then return{text="All toys owned",enabled=false}end
  if id=="feature"and FeatureCatalog.full(state.featureStock or {})then return{text="All stacks full",enabled=false}end
+ if id=="look"and state.lookAvailable~=true then return{text=UICopy.get("hatch.look.notReady"),enabled=false}end
  if id=="material"then
   if #MaterialCatalog.remaining(state.materialUnlocks,state.materialPoolVersion)==0 then return{text="All materials owned",enabled=false}end
   if not state.materialAvailable or not require(script.Parent.MaterialDisclosure).ready(state)then return{text="Materials not ready",enabled=false}end
@@ -1002,10 +1049,11 @@ function View:paintEggPane()
  if not self.shopPane then return end
  local id=self.selected;local recipe=shopRecipe(id);local copy=View.EggCopy[id]or {}
  local g=self.shopGeom;local phone=g.phone
- if self.egg3D and self.egg3D.type~=id then self.egg3D:setType(id)end
+ local artId=if id=="look"then "hue"else id
+ if self.egg3D and self.egg3D.type~=artId then self.egg3D:setType(artId)end
  if self.eggArtId~=id then
   for _,child in ipairs(self.eggHolder:GetChildren())do child:Destroy()end
-  self.eggArt=EggArt.create(self.eggHolder,id,UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.eggHolder.ZIndex+1)
+  self.eggArt=EggArt.create(self.eggHolder,if id=="look"then "hue"else id,UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.eggHolder.ZIndex+1)
   self.eggArtId=id
   if not self:eggReduced()then
    local scale=self.eggHolder:FindFirstChildOfClass("UIScale")or Kit.node("UIScale",self.eggHolder,{Scale=1.04})
@@ -1015,7 +1063,7 @@ function View:paintEggPane()
  end
  self.eggName.Text=recipe.name
  local promise=self.shopRoot and self.shopRoot:FindFirstChild("Promise",true)
- if promise then promise.Text=if id=="material"and(self.state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then require(script.Parent.MaterialDisclosure).promise(self.state)else UICopy.get("hatch.promise")end
+ if promise then promise.Text=if id=="look"then View.lookOdds(self.state).note elseif id=="material"and(self.state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then require(script.Parent.MaterialDisclosure).promise(self.state)else UICopy.get("hatch.promise")end
  self.eggPrice.set("★ "..recipe.cost,"sticker") -- T6: the pane's one sticker
  self.eggDescription.Text=copy.description or ""
  local odds=View.oddsRows(id,self.state)
