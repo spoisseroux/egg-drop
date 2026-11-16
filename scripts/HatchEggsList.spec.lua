@@ -1,5 +1,6 @@
 -- Studio Client. Hatch eggs (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 3): a text-only
--- egg list without the Feature Egg while Features is flagged off, odds rows rendered
+-- egg list without the Feature Egg while Features is flagged off and without the Material
+-- Egg while it is not sold (MaterialCatalog.EnablePurchases, off for v1), odds rows rendered
 -- once in the pane through OddsText.list (whole percentages summing to 100), the disabled Hatch button with "N more
 -- Stars needed", the "something inside" egg beat, a pending feature hatch still
 -- opening through "Open saved feature", and the reveal-stage exit when Play again is
@@ -23,10 +24,15 @@ return function(client,parent)
  local sent={}
  local view=Shop.new(root,{play=function()end,stopOwner=function()end},function()return true end,function(command,value)table.insert(sent,{command,value})end)
  local ok,problem=xpcall(function()
-  test("pure: list order drops the Feature Egg while flagged and keeps it with the flag on",function()
+  test("pure: list order drops the Feature Egg while flagged and the Material Egg while it is not sold",function()
+   local Materials=require(game.ReplicatedStorage.Shared.MaterialCatalog)
+   assert(Materials.EnablePurchases==false,"v1 ships without the Material Egg")
    local order=Shop.liveOrder()
-   assert(#order==3 and order[1]=="toy"and order[2]=="material"and order[3]=="hue")
-   local on=Shop.liveOrder({Features=true});assert(on[2]=="feature"and #on==4)
+   assert(#order==2 and order[1]=="toy"and order[2]=="hue")
+   local on=Shop.liveOrder({Features=true});assert(on[2]=="feature"and #on==3 and not table.find(on,"material"))
+   local sold=Shop.liveOrder({MaterialEgg=true});assert(#sold==3 and sold[2]=="material"and sold[3]=="hue")
+   local both=Shop.liveOrder({Features=true,MaterialEgg=true});assert(table.concat(both,",")=="toy,feature,material,hue")
+   assert(#Shop.liveOrder({MaterialEgg=false})==2)
   end)
   test("pure: odds rows come from OddsText.list (equal thirds read 34%, 33%, 33%)",function()
    -- Toy pool 3 (2026-11-15, the Pocket Deck) has six toys: a fresh save reads six rows that
@@ -59,9 +65,13 @@ return function(client,parent)
    end
   end)
   test("pure: Hatch is disabled with N more Stars needed; receipts reopen first",function()
-   local short=Shop.hatchAction("toy",{nectar=5});assert(not short.enabled and short.need=="3 more Stars needed"and short.text:find("Hatch"))
-   local one=Shop.hatchAction("toy",{nectar=7});assert(one.need=="1 more Star needed")
-   assert(Shop.hatchAction("toy",{nectar=8}).enabled)
+   local short=Shop.hatchAction("toy",{nectar=5});assert(not short.enabled and short.need=="15 more Stars needed"and short.text:find("Hatch"))
+   local one=Shop.hatchAction("toy",{nectar=19});assert(one.need=="1 more Star needed")
+   assert(Shop.hatchAction("toy",{nectar=20}).enabled and Shop.hatchAction("hue",{nectar=12}).enabled and not Shop.hatchAction("hue",{nectar=11}).enabled)
+   -- The Material Egg is off for v1, but a finish hatched before still opens, and the server's
+   -- materialAvailable=false keeps the egg itself unsellable.
+   local finish=Shop.hatchAction("toy",{nectar=0,pendingMaterialResult={id="m"}});assert(finish.text=="Open saved material"and finish.enabled)
+   assert(not Shop.hatchAction("material",{nectar=999,materialAvailable=false,materialUnlocks={}}).enabled)
    local feature=Shop.hatchAction("toy",{nectar=0,pendingFeatureResult={id="f"}});assert(feature.text=="Open saved feature"and feature.enabled)
   end)
   test("pure: the egg beat tilts 6-9 degrees, squashes 4% and hops, then rests",function()
@@ -75,15 +85,16 @@ return function(client,parent)
    assert(Shop.revealExit(false,false)=="wait"and Shop.revealExit(true,true)=="play"and Shop.revealExit(true,false)=="close")
   end)
   for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
-   test(tostring(size).." built list: no Feature Egg row, odds in the pane, selection swaps the preview",function()
+   test(tostring(size).." built list: no Feature or Material Egg row, odds in the pane, selection swaps the preview",function()
     root.Size=UDim2.fromOffset(size.X,size.Y);frames()
     view:open({status="Ready",revision=1,nectar=128,toyUnlocks={},materialUnlocks={},materialAvailable=true});frames()
     assert(view.shopRoot.Visible and not view.card.Visible)
     local column=view.body:FindFirstChild("EggColumn")
-    assert(column and column:FindFirstChild("Recipe_toy")and column:FindFirstChild("Recipe_material")and column:FindFirstChild("Recipe_hue"))
+    assert(column and column:FindFirstChild("Recipe_toy")and column:FindFirstChild("Recipe_hue"))
     assert(column:FindFirstChild("Recipe_feature")==nil,"Feature Egg row is hidden by the flag")
-    assert(not view:selectRecipe("feature"))
-    for _,row in ipairs({"Recipe_toy","Recipe_material","Recipe_hue"})do assert(column[row].AbsoluteSize.Y>=44)end
+    assert(column:FindFirstChild("Recipe_material")==nil,"Material Egg row is hidden while it is not sold (v1)")
+    assert(not view:selectRecipe("feature")and not view:selectRecipe("material"))
+    for _,row in ipairs({"Recipe_toy","Recipe_hue"})do assert(column[row].AbsoluteSize.Y>=44)end
     assert(view:selectRecipe("toy")or view.selected=="toy");frames()
     assert(view.shopPanel:GetAttribute("SelectedEgg")=="toy"and view.eggName.Text=="Toy Egg")
     -- Six toys in pool 3: six rows on a fresh save.
@@ -91,8 +102,8 @@ return function(client,parent)
     local shown={};for _,row in ipairs(odds)do table.insert(shown,row:GetAttribute("OddsText"))end;table.sort(shown);assert(table.concat(shown,",")=="16%,16%,17%,17%,17%,17%",table.concat(shown,","))
     assert(view:selectRecipe("hue"));frames();assert(view.shopPanel:GetAttribute("OddsRows")==4 and view.eggName.Text=="Hue Egg")
     -- Keyboard W / S / Up / Down move the selection and clamp at the ends.
-    assert(view:moveRecipe(-1)and view.selected=="material"and view:moveRecipe(-1)and view.selected=="toy"and not view:moveRecipe(-1))
-    assert(view:moveRecipe(1)and view.selected=="material")
+    assert(view:moveRecipe(-1)and view.selected=="toy"and not view:moveRecipe(-1))
+    assert(view:moveRecipe(1)and view.selected=="hue"and not view:moveRecipe(1))
     view:close("close")
    end)
   end
@@ -126,7 +137,7 @@ return function(client,parent)
    root.Size=UDim2.fromOffset(1920,1080);frames()
    view:open({status="Ready",revision=1,nectar=3,toyUnlocks={},materialUnlocks={},materialAvailable=true});frames()
    view:selectRecipe("toy");frames()
-   assert(not view.action.Interactable and view.needLine.Visible and view.needLine.Text=="5 more Stars needed")
+   assert(not view.action.Interactable and view.needLine.Visible and view.needLine.Text=="17 more Stars needed")
    local before=#sent;view:actPrimary();assert(#sent==before)
    view:close("close")
   end)

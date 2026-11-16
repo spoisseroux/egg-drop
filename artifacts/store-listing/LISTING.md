@@ -111,7 +111,7 @@ The in-game Bear currently renders **white** (its hue is "original", rank 0). Th
 | 9 | `09-hatch-odds.png` | Odds shown before every hatch | Hatch eggs with Toy Egg odds of 34 / 33 / 33 % |
 | 10 | `10-ball-styles.png` | Ball styles: just for looks | The Balls tab with the Kittens preview |
 | 11 | `11-bear-pocket-deck.png` | Your Bear carries its favourite toy | **New 15 November:** the Bear in the garden holding its Pocket Deck toy (the icon's capture) |
-| 12 | `12-item-reveal.png` | Toys, finishes and colours to hatch | **New 15 November:** the item reveal, a Bear wearing the Rare Jelly finish (capture fixture, real modules) |
+| 12 | `12-item-reveal.png` | Toys, finishes and colours to hatch | **New 15 November:** the item reveal, a Bear wearing the Rare Jelly finish (capture fixture, real modules). **Do not use for v1 (16 November):** the Material Egg is off for v1, so no player can hatch a finish. Recapture with a toy or a colour jar and caption it "Toys and colours to hatch", or hold it for the v1.1 Look Egg. |
 
 Roblox takes up to 10: 11 and 12 are extras to swap in. **Only 3, 11 and 12 are from the 15 November build.** The other nine are the 13 November captures; those screens were not recaptured in this pass, so refresh them from the final build before launch.
 
@@ -202,10 +202,11 @@ From TODO.md's LAUNCH CHECKLIST and the v1 public launch section, plus what this
 - ☐ Confirm **`Park=true`** with Spencer for the public build (the flag comment says confirm before any public publish).
 - ☐ Confirm `DayNight=false` (always dusk) is intended, because the hook says "always dusk".
 - ☐ `Features=false` hides the Feature Egg. Confirm that's intended for v1.
+- ☑ `MaterialCatalog.EnablePurchases=false` (16 November, approved v1 economy cut): the Material Egg is not sold in v1. Hatch eggs lists the Toy Egg (20 Stars) and the Hue Egg (12 Stars) only. Finishes return in the v1.1 Look Egg.
 
 **Policy:**
-- ☐ Paid random items: odds as percentages summing to 100 % on every egg. The Toy Egg shows 34/33/33 % today. Check Material and Hue too.
-- ☐ Every outcome gives something: check what a **duplicate** item-egg result grants (companions refund 50 %; Toy, Material and Hue duplicates are unverified).
+- ☐ Paid random items: odds as percentages summing to 100 % on every egg. The Toy Egg shows 34/33/33 % today. Check Hue too (the Material Egg is off for v1).
+- ☐ Every outcome gives something: check what a **duplicate** item-egg result grants (companions refund 50 %; Toy and Hue duplicates are unverified; the Material Egg is off for v1).
 - ☐ `ArePaidRandomItemsRestricted` players can't buy Star packs, and TODO says to gate **egg purchases** too where required.
 - ☐ Maturity questionnaire filled in (section 9), including paid random items.
 

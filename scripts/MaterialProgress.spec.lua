@@ -52,15 +52,17 @@ return function(server)
    local surface=Instance.new("SurfaceAppearance");surface.Name=C.ById[id].profile
    surface:SetAttribute("NativeVerified",true);surface:SetAttribute("MaterialVersion",1);surface:SetAttribute("MaterialProfile",C.ById[id].profile);surface.Parent=pack
   end
-  assert(not C.available(pack,two),"one-color only cannot activate paired material capability")
+  assert(not C.capable(pack,two),"one-color only cannot activate paired material capability")
   for _,id in ipairs(C.PaidOrder)do
    local name=C.ById[id].twoToneProfile or("BodyTwoTone"..string.sub(C.ById[id].profile,5))
    local surface=Instance.new("SurfaceAppearance");surface.Name=name;surface:SetAttribute("NativeVerified",true);surface:SetAttribute("MaterialVersion",1);surface:SetAttribute("MaterialProfile",name);surface.Parent=two
   end
-  assert(C.available(pack,two),"verified current3 pairs should enable pool4 without future pool3 templates")
+  assert(C.capable(pack,two),"verified current3 pairs should enable pool4 without future pool3 templates")
+  -- v1 (economy scope 2026-11-16): the Material Egg is not sold. Capability stays, the sale switch is off.
+  assert(C.EnablePurchases==false and not C.available(pack,two)and not C.available(pack,nil,2),"v1: capable finishes are still not for sale")
   pack.BodyJelly:SetAttribute("NativeVerified",false)
-  assert(not C.available(pack,two),"unverified Jelly must hold current capability")
-  assert(C.available(pack,nil,2),"historical pool2 capability remains independent of two-tone profiles")
+  assert(not C.capable(pack,two),"unverified Jelly must hold current capability")
+  assert(C.capable(pack,nil,2),"historical pool2 capability remains independent of two-tone profiles")
   pack:Destroy();two:Destroy()
  end)
  test("v6 migration preserves frozen Hue fields proofs and root siblings exactly",function()

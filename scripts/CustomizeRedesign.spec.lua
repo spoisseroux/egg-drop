@@ -63,7 +63,10 @@ return function(client,parent)
    assert(view.editorTabs.hue and view.editorTabs.charm and view.editorTabs.materials and view.editorTabs.toys and view.editorTabs.features==nil)
    assert(view.chromeTabs.root:GetAttribute("TabIcons")==true,"icons fit at 800 wide")
    assert(not view:setTab("features")and view.tab=="charm")
-   for _,id in ipairs({"hue","materials","toys","charm"})do assert(view:setTab(id));frames();assert(view.chromePanel:GetAttribute("Tab")==id)end
+   for _,id in ipairs({"hue","materials","toys","charm"})do assert(view:setTab(id));frames();assert(view.chromePanel:GetAttribute("Tab")==id)
+    -- The Material Egg is off for v1 (MaterialCatalog.EnablePurchases): owned finishes stay, the "more from eggs" hint goes.
+    if id=="materials"then assert(view.moreLine==nil or not view.moreLine.Visible,"no Material Egg hint while it is not sold")end
+   end
    assert(view:getControllerFocus()==nil,"the chrome owns its focus")
   end)
   test("Charm None first, focus previews, Wear sends charm(pet,false) / charm(pet,true,shape)",function()

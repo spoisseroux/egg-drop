@@ -53,14 +53,15 @@ return function(client,parent)
 			local shop=Shop.new(root,{play=function()end},function()return true end,function()error("browse cannot send")end)
 			table.insert(views,shop.shade);shop:open(state());shop:selectRecipe("hue");settle()
 			test("733x"..height.." Hatch eggs list shows the item eggs, odds in the pane and the exact shortfall",function()
-				-- Redesign 3: text-only rows (no egg picture), Feature Egg hidden by the flag.
+				-- Redesign 3: text-only rows (no egg picture), Feature Egg hidden by the flag; the
+				-- Material Egg is off for v1 (MaterialCatalog.EnablePurchases), so its row is gone too.
 				local list=shop.body.EggColumn
-				assert(not list:FindFirstChild("Recipe_meadow")and not list:FindFirstChild("Recipe_feature")and inside(list.Recipe_hue,shop.body))
-				for _,id in ipairs({"toy","material","hue"})do
+				assert(not list:FindFirstChild("Recipe_meadow")and not list:FindFirstChild("Recipe_feature")and not list:FindFirstChild("Recipe_material")and inside(list.Recipe_hue,shop.body))
+				for _,id in ipairs({"toy","hue"})do
 					local row=list["Recipe_"..id]
 					assert(row.AbsoluteSize.Y>=44 and row.RecipeName.TextFits and row.Cost.TextFits)
 				end
-				assert(shop.selected=="hue"and shop.needLine.Text=="2 more Stars needed"and shop.hatchButton.AbsoluteSize.Y>=44)
+				assert(shop.selected=="hue"and shop.needLine.Text=="6 more Stars needed"and shop.hatchButton.AbsoluteSize.Y>=44)
 				assert(inside(shop.hatchButton,shop.shopPane))
 				assert(shop.oddsHolder.Odds_rose:GetAttribute("OddsText")=="20%"and shop.oddsHolder.Odds_reset:GetAttribute("OddsText")=="20%")
 			end)
@@ -72,7 +73,7 @@ return function(client,parent)
 			assert(not shop.compactShop)
 			resize(733,307);settle()
 			assert(shop.compactShop and shop.selected=="hue"and inside(shop.body.EggColumn.Recipe_hue,shop.body))
-			assert(shop.body.EggColumn.Recipe_hue.Cost.Text:find("8",1,true)and shop.needLine.Text:find("2",1,true))
+			assert(shop.body.EggColumn.Recipe_hue.Cost.Text:find("12",1,true)and shop.needLine.Text:find("6",1,true))
 			resize(1400,900);settle();assert(not shop.compactShop and shop.selected=="hue");shop:close()
 		end)
 		test("roomy desktop menu and shop retain their illustrated layouts",function()

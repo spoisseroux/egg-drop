@@ -25,6 +25,16 @@ return function(server,hostSource)
  local fixture=nativeInstance.new("Folder");fixture.Name="_MaterialHostFixture";fixture.Parent=server
  local replicated=nativeInstance.new("Folder");replicated.Parent=fixture
  local shared=realGame.ReplicatedStorage.Shared:Clone();shared.Parent=replicated
+ -- v1 ships with MaterialCatalog.EnablePurchases=false (economy scope 2026-11-16). The host under
+ -- test reads this cloned catalogue, so its sale switch becomes a fixture toggle: off for the
+ -- shipped state, on for the purchase machinery (kept covered for the v1.1 return).
+ do
+  local module=shared.MaterialCatalog
+  local patched,count=module.Source:gsub("return Catalog%.EnablePurchases==true and ","return script:GetAttribute(\"SpecSell\")==true and ",1)
+  assert(count==1,"MaterialCatalog.available changed shape");module.Source=patched;module:SetAttribute("SpecSell",false)
+ end
+ local sell=false
+ local function setSell(on)sell=on;shared.MaterialCatalog:SetAttribute("SpecSell",on)end
  local materials=nativeInstance.new("Folder");materials.Name="PetMaterials";materials.Parent=replicated
  local twoMaterials=nativeInstance.new("Folder");twoMaterials.Name="PetMaterialsTwoTone";twoMaterials.Parent=replicated
  local MaterialCatalog=realRequire(realGame.ReplicatedStorage.Shared.MaterialCatalog)
@@ -53,7 +63,7 @@ return function(server,hostSource)
  function profile.flushOnce()return true end
  for _,name in ipairs({"equip","equipCompanion","setSetting","recordScore","recordTrials","chargeHatch"})do profile[name]=function()error("Unexpected profile mutation "..name)end end
  local hatch={};for k,v in pairs(H)do hatch[k]=v end;function hatch.load()return h end
- function hatch.public(handle)local public=H.public(handle);public.materialAvailable=MaterialCatalog.available(materials,twoMaterials);return public end
+ function hatch.public(handle)local public=H.public(handle);public.materialAvailable=sell and MaterialCatalog.capable(materials,twoMaterials);return public end
  local events={};local instanceShim={new=function(class)
   if class~="RemoteEvent"then return nativeInstance.new(class)end
   local event={OnServerEvent=signal()}
@@ -89,13 +99,19 @@ return function(server,hostSource)
  local function snapshot()assert(board:GetAttribute("HatchState")==nil,"private state leaked on replicated board");return copy(c.snapshot)end
  local revision=h.state.revision;local packet={id=tostring(revision)..":host-material",catalogVersion=1,poolVersion=MaterialCatalog.PoolVersion,eligible=MaterialCatalog.remaining(h.state.materialUnlocks),price=16,selectionMode="random"}
  test("unverified profiles reject new purchases before any roll write or debit",function()
-  c.now=1;local writes=c.writes;local response=send(packet,revision)
+  setSell(true);c.now=1;local writes=c.writes;local response=send(packet,revision)
   assert(response.status=="Rejected"and response.reason=="MaterialsUnavailable"and c.writes==writes and not c.rolls and h.state.nectar==before)
   assert(snapshot().materialAvailable==false)
   for _,surface in ipairs(materials:GetChildren())do surface:SetAttribute("NativeVerified",true)end
   c.now=1.5;response=send(packet,revision)
   assert(response.status=="Rejected"and response.reason=="MaterialsUnavailable"and c.writes==writes and not c.rolls,"unverified paired finish must block before RNG")
   for _,surface in ipairs(twoMaterials:GetChildren())do surface:SetAttribute("NativeVerified",true)end
+ end)
+ test("v1 sale switch off: verified finishes still refuse a new purchase before any roll write or debit",function()
+  assert(MaterialCatalog.EnablePurchases==false and MaterialCatalog.capable(materials,twoMaterials)and not MaterialCatalog.available(materials,twoMaterials),"shipped catalogue: capable, not sold")
+  setSell(false);c.now=1.75;local writes=c.writes;local response=send(packet,revision)
+  assert(response.status=="Rejected"and response.reason=="MaterialsUnavailable"and c.writes==writes and not c.rolls and h.state.nectar==before and not h.pending)
+  setSell(true)
  end)
  test("durable lost-response reservation keeps exact waiter and same-pending throttle retryable",function()
   c.now=2;c.failAfter=true;local response=send(packet,revision)

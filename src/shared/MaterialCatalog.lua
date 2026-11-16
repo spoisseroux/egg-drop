@@ -1,7 +1,11 @@
 -- Permanent finish unlocks and per-pet selections. Historical pools are immutable.
 -- Pool3 stays data-only. Pool4 Lucky Jelly requires verified one/two-tone assets;
 -- capability remains closed until native proof and coherent rollout are complete.
-local Catalog={CatalogVersion=1,PoolVersion=4,StagedPoolVersion=4,Cost=16,Default="standard",ReceiptLimit=32,EnablePurchases=true,
+-- EnablePurchases=false for v1 (economy scope 2026-11-16): the Material Egg is not sold. Its row
+-- leaves Hatch eggs (EggHatchView.liveOrder), `available` is false so the server refuses a new
+-- materialBuy, and no odds show. Owned finishes, receipts and a saved pending result stay valid
+-- and keep rendering. Finishes return in the v1.1 Look Egg (TODO.md).
+local Catalog={CatalogVersion=1,PoolVersion=4,StagedPoolVersion=4,Cost=16,Default="standard",ReceiptLimit=32,EnablePurchases=false,
  Order=table.freeze({"standard","gloss","matte","metal","jelly"}),PaidOrder=table.freeze({"gloss","matte","jelly"}),
  Pools=table.freeze({[1]=table.freeze({"gloss","matte","metal"}),[2]=table.freeze({"gloss","matte"}),
   [3]=table.freeze({"gloss","matte","pearl_edge","speckle_satin"}),[4]=table.freeze({"gloss","jelly","matte"})}),
@@ -62,8 +66,10 @@ local function verified(pack,name)
  end
  return false
 end
-function Catalog.available(pack,twoTonePack,poolVersion)
- if not Catalog.EnablePurchases or not pack then return false end
+-- Asset capability alone: every finish of the pool has a verified template. `available` adds the
+-- sale switch; the server and the client sell only through `available`.
+function Catalog.capable(pack,twoTonePack,poolVersion)
+ if not pack then return false end
  local version=poolVersion or Catalog.PoolVersion;if not Catalog.Pools[version]then return false end
  local rules=Catalog.PoolRules[version]
  local order=if rules then rules.fixedOrder else Catalog.Pools[version]
@@ -73,5 +79,8 @@ function Catalog.available(pack,twoTonePack,poolVersion)
   if version>=4 and not verified(twoTonePack,Catalog.ById[id].twoToneProfile or("BodyTwoTone"..string.sub(profile,5)))then return false end
  end
  return true
+end
+function Catalog.available(pack,twoTonePack,poolVersion)
+ return Catalog.EnablePurchases==true and Catalog.capable(pack,twoTonePack,poolVersion)
 end
 return table.freeze(Catalog)

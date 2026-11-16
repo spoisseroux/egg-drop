@@ -29,8 +29,10 @@ local HintGlyphs=require(script.Parent.HintGlyphs)
 -- daily state; `send("daily", day)` stays the server action the quest screen sends.
 -- v1 sells item eggs only; the Companion Egg is retired (one pet, Zivvi). The Feature
 -- Egg is hidden with the Features tab (Shared.FeatureFlags); a pending feature hatch
--- still opens through "Open saved feature".
-local liveOrder={"toy","material","hue"}
+-- still opens through "Open saved feature". The Material Egg is off for v1
+-- (MaterialCatalog.EnablePurchases); a pending finish still opens through "Open saved material".
+local liveOrder={"toy","hue"}
+if MaterialCatalog.EnablePurchases then table.insert(liveOrder,2,"material")end
 if FeatureFlags.Features then table.insert(liveOrder,2,"feature")end
 local function shopRecipe(id)
  if id=="hue"then return {id="hue",name="Hue Egg",cost=HueCatalog.Cost}end
@@ -626,10 +628,13 @@ end
 -- Pure: one line and a two-line description per egg.
 -- The lines live in Shared.UICopy (hatch.egg.<id>), already frozen.
 View.EggCopy=UICopy.section("hatch.egg")
--- Pure: the eggs on the list, in order. The Feature Egg joins only with Features on.
+-- Pure: the eggs on the list, in order. The Feature Egg joins only with Features on, the
+-- Material Egg only while it is sold (flags.MaterialEgg, default MaterialCatalog.EnablePurchases).
 function View.liveOrder(flags)
  flags=flags or FeatureFlags
- local order={"toy","material","hue"}
+ local material=flags.MaterialEgg;if material==nil then material=MaterialCatalog.EnablePurchases end
+ local order={"toy","hue"}
+ if material then table.insert(order,2,"material")end
  if flags.Features then table.insert(order,2,"feature")end
  return order
 end
