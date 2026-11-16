@@ -77,8 +77,12 @@ end
 function Appearance.new(options)
  return{revision=0,requests={},lastAt=-math.huge,lastMalformed=-math.huge,selectionsEnabled=if options and options.selectionsEnabled~=nil then options.selectionsEnabled==true else Charms.SelectionsEnabled==true}
 end
+-- `state.usable` (the last ownership callback `request` was given) masks the reply too: a packet
+-- never says visible=true for a charm the save does not own (code review 2026-11-16).
 local function packet(state,profile,id,seq,status,reason)
- return{petId=id,visible=if supported[id]then Appearance.visible(profile,id)else false,shape=if supported[id]then Appearance.shape(profile,id)else Charms.Default,seq=seq,status=status,reason=reason,revision=state.revision,lastSeq=state.requests[id]and state.requests[id].seq or 0}
+ local visible=supported[id]==true and Appearance.visible(profile,id)
+ if visible and state.usable~=nil and state.usable(Appearance.shape(profile,id))~=true then visible=false end
+ return{petId=id,visible=visible,shape=if supported[id]then Appearance.shape(profile,id)else Charms.Default,seq=seq,status=status,reason=reason,revision=state.revision,lastSeq=state.requests[id]and state.requests[id].seq or 0}
 end
 -- Charm shape ownership. `facts` is what PetCharmCatalog.usable reads: lifetime stamps,
 -- claimed book milestones, lifetime stats, bond XP (earned shapes, slice D, monotonic) and
@@ -106,6 +110,7 @@ function Appearance.request(state,profile,value,now,usable,owns,apply,earned)
   if now-state.lastMalformed<.25 then return nil,false end;state.lastMalformed=now
   return packet(state,profile,"",0,"Rejected","Malformed"),false
  end
+ if earned~=nil then state.usable=earned end
  local id,seq=value.petId,value.seq;local previous=state.requests[id]
  if previous and seq<=previous.seq then
   if seq==previous.seq and value.visible==previous.visible and value.shape==previous.wireShape and value.shapeVersion==previous.wireShapeVersion then return previous.result,false end

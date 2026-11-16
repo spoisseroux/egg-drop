@@ -304,8 +304,13 @@ function Hatching.load(userId, profile, adapter)
 	local function acquire(previous)
 		local root = if type(previous) == "table" then clone(previous) else legacyRecord(profile)
 		local state = root.hatching
-		-- Customization Egg (plan §2.2, R3): this acquire creates the save when it has no hatching yet.
-		local fresh = state == nil
+		-- Customization Egg (plan §2.2, R3): this acquire creates the save when it has no hatching
+		-- yet. A record with no hatching but signs of play under the old charm rules (a saved charm
+		-- choice or a best score) counts as legacy (code review 2026-11-16): those players owned the
+		-- three shapes. The public launch starts on a fresh DataStore, so this only reaches testers.
+		local priorPlay = type(previous) == "table" and ((type(previous.petAppearance) == "table" and next(previous.petAppearance) ~= nil)
+			or (type(previous.bestScore) == "number" and previous.bestScore > 0))
+		local fresh = state == nil and not priorPlay
 		state = upgrade(if state == nil then migrate(root, adapter.now()) else state, adapter.now(), userId)
 		-- Malformed or old-catalogue quests become a fresh draw; never a failed load.
 		if type(state) == "table" and type(state.version) == "number" and state.version >= 10 then state.quests = QuestState.sanitize(state.quests, dayOf(adapter.now()), userId) end

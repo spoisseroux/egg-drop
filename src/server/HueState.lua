@@ -175,7 +175,8 @@ function State.validHistorical(state)
   local r=state.hueItemReceipts[id]
   if not opaque(id)or not r or not validReceipt(r)or r.id~=id or r.sequence<=sequence or r.sequence>state.operationSeq or r.revision>state.revision
    or Legacy.find(oldView(state),r.quote)then return false end
-  if r.petId and not Eggs.isOwned(state.inventoryMask,r.petId)then return false end
+  -- Customization Egg receipts never re-check ownership at load (see LookState.validPetId).
+  if r.petId and not Look.isAction(r.action)and not Eggs.isOwned(state.inventoryMask,r.petId)then return false end
   if r.action=="hueLegacyPreset"then
    local expected=Hue.mappedCounts(Hue.get(state.hues,r.petId),r.channel,r.presetId)
    if not state.hueMigrationId or r.migrationId~=state.hueMigrationId or not expected or not equal(expected,r.countsAfter)then return false end

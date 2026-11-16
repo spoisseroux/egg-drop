@@ -62,6 +62,12 @@ return function(server)
 		r=s.ask(true,nil,false);assert(r.status=="Saved"and A.visible(s.profile,"pip")and A.shape(s.profile,"pip")=="ring","show resolves to the owned stored shape")
 		local stale=session(save,{petAppearance={pip={charmVisible=false,charmShape="dot",at=1,writer="old"}}})
 		r=stale.ask(true,nil,false);assert(r.reason=="Locked","a stored Snowflake row is not owned here")
+		-- The reply never claims a charm is showing when the save does not own it (code review).
+		local maskedReply=stale.ask(false,nil,false);assert(maskedReply.status=="Saved"and maskedReply.visible==false)
+		local staleShown=session(save,{petAppearance={pip={charmVisible=true,charmShape="dot",at=1,writer="v775"}}})
+		r=staleShown.ask(true,"ring",true);assert(r.status=="Saved"and r.visible==true and r.shape=="ring","owned shape: visible")
+		local stuck=session({charmUnlocks={}},{petAppearance={pip={charmVisible=true,charmShape="dot",at=1,writer="v775"}}})
+		r=stuck.ask(true,nil,false);assert(r.reason=="Locked"and r.visible==false,"a stale visible row is reported hidden")
 		local legacy=session({charmUnlocks={dot=true,ring=true,pebble=true}})
 		r=legacy.ask(true,nil,false);assert(r.status=="Saved"and A.shape(legacy.profile,"pip")=="dot","a legacy save keeps its Snowflake")
 		-- Callers without the ownership callback (pure specs) behave as before.

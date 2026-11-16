@@ -13,7 +13,8 @@ return function(server)
  local function copy(x)if type(x)~="table"then return x end;local r={};for k,v in pairs(x)do r[k]=copy(v)end;return r end
  local currentDb
  local function fixture()
-  local db={player_1={rank=4,trials=31,custom="kept",petAppearance={pip={charmVisible=false,at=1,writer="old"}}}}
+  -- No saved charm choice or best score: this record is a new player (HatchProgress priorPlay).
+  local db={player_1={rank=4,trials=31,custom="kept"}}
   local c={now=1000,n=0,rolls=0,unit=.01,updates=0}
   local a={now=function()return c.now end,guid=function()c.n+=1;return"server-"..c.n end,random=function()c.rolls+=1;return c.unit end,wait=function()end}
   a.update=function(key,transform)
@@ -79,7 +80,7 @@ return function(server)
  test("a save from before this build keeps Snowflake, Ring and Pebble and its charm choice",function()
   local h,db,_,a=fixture();assert(H.release(h))
   local old=db.player_1.hatching;old.charmUnlocks=nil
-  db.player_1.petAppearance.pip={charmVisible=true,charmShape="ring",at=2,writer="old"}
+  db.player_1.petAppearance={pip={charmVisible=true,charmShape="ring",at=2,writer="old"}}
   h=H.load(1,{},a);assert(h.status=="Ready")
   local u=db.player_1.hatching.charmUnlocks;assert(u.dot==true and u.ring==true and u.pebble==true,"legacy grant written once")
   assert(db.player_1.petAppearance.pip.charmShape=="ring"and db.player_1.petAppearance.pip.charmVisible==true,"profile choice untouched")
@@ -87,6 +88,9 @@ return function(server)
   assert(H.release(h));h=H.load(1,{},a);assert(h.status=="Ready"and h.state.charmUnlocks.pebble==true)
   -- A field already written is never reinterpreted: an empty set stays empty.
   assert(H.release(h));db.player_1.hatching.charmUnlocks={};h=H.load(1,{},a);assert(next(h.state.charmUnlocks)==nil)
+  -- A record with signs of play but no hatching record yet counts as legacy too; a bare one does not.
+  db.player_2={bestScore=420,rank=1};local played=H.load(2,{},a);assert(played.status=="Ready"and played.state.charmUnlocks.ring==true,"prior play keeps the egg shapes")
+  db.player_3={rank=1};local newcomer=H.load(3,{},a);assert(newcomer.status=="Ready"and next(newcomer.state.charmUnlocks)==nil,"a new record starts with none")
  end)
 
  test("temporary and failed loads hold no egg charm and write nothing",function()
@@ -107,13 +111,17 @@ return function(server)
   assert(RawH.valid((function()local s=copy(h.state);s.finishInventory=nil;s.petFinish=nil;s.lookCharmMisses=nil;s.lookFound=nil;return s end)()),"each field is optional")
   local bad={
    {"finishInventory",{gloss=-1}},{"finishInventory",{gloss=1.5}},{"finishInventory",{shine=1}},{"finishInventory","x"},
-   {"petFinish",{blip={sheen=0,jelly=0}}},{"petFinish",{pip={sheen=4,jelly=0}}},{"petFinish",{pip={sheen=0}}},{"petFinish",{pip={sheen=0,jelly=0,gloss=1}}},{"petFinish",{nope={sheen=0,jelly=0}}},
+   {"petFinish",{pip={sheen=4,jelly=0}}},{"petFinish",{pip={sheen=0}}},{"petFinish",{pip={sheen=0,jelly=0,gloss=1}}},{"petFinish",{["bad id!"]={sheen=0,jelly=0}}},{"petFinish",{[""]={sheen=0,jelly=0}}},
    {"charmUnlocks",{heart=true}},{"charmUnlocks",{dot=1}},{"charmUnlocks","all"},
    {"lookCharmMisses",64},{"lookCharmMisses",-1},{"lookCharmMisses",1.5},{"lookFound",1024},{"lookFound",-1},
   }
   for _,case in ipairs(bad)do
    local s=copy(h.state);s[case[1]]=case[2];assert(not RawH.valid(s),case[1].." accepted a malformed value")
   end
+  -- Pet ids are never checked against the tunable roster or ownership at load: a retired pet's
+  -- row stays a valid save (code review 2026-11-16).
+  local retired=copy(h.state);retired.petFinish={retired_pet={sheen=1,jelly=0},blip={sheen=0,jelly=2}};assert(RawH.valid(retired),"a retired or unowned pet's finish row still loads")
+  assert(S.quote("finishClear",{id=tostring(h.state.revision)..":x",catalogVersion=Hue.CatalogVersion,petId="retired_pet",axis="sheen",finish={sheen=1,jelly=0}},h.state.revision),"a quote names any short pet id")
   assert(H.release(h));local saved=copy(db.player_1.hatching);db.player_1.hatching.charmUnlocks={heart=true}
   local refused=H.load(1,{},a);assert(refused.status=="InvalidData"and db.player_1.hatching.charmUnlocks.heart==true,"fail closed, nothing written")
   db.player_1.hatching=saved

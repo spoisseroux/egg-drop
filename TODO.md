@@ -52,6 +52,7 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 > **v2 (first update, Spencer 2026-11-15): Names Egg, funny two-piece pet names (`artifacts/pet-social-scope-2026-11-14/NAMES-EGG-SCOPE.md`); the inspect card's name slot uses it. Also the second pet.**
 > **Name: Pocket Pals; listing title "Pocket Pals: Pet Garden" (Spencer 2026-11-15). Rename the experience in Creator Hub at launch; player-facing text and store art switch in the 4am batch.**
 > **LAUNCH CHECKLIST (do not ship v1 without):** set `FeatureFlags.TestFreshSaves=false` (private builds wipe progress every publish while it is true; Spencer 2026-11-13), confirm `FeatureFlags.Park`, Creator Hub audience public, 12 players per server.
+> **LAUNCH CHECKLIST, Customization Egg (code review 2026-11-16):** close the `hueBuy` server path after the specs move off it (HueProgress, HueClear, HueHost, RestrictedEggs still buy Hue Eggs; the client no longer offers it). Rollback floor: the Customization Egg ships with `LookEggCatalog.EnablePurchases=true`, and v775 and older servers reject `lookBuy`/`finishUse`/`finishClear` receipts (InvalidData). The public launch uses a fresh DataStore, so nothing rolls back below the launch build; but never roll the private place back past v806 without first flipping `EnablePurchases=false` and publishing that.
 
 Keep this list current: add an item when work starts, move it to done when it lands.
 

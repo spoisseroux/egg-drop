@@ -35,6 +35,10 @@ State.Wire={
  finishClear={id=true,catalogVersion=true,petId=true,axis=true,finish=true},
 }
 function State.isAction(action)return extras[action]~=nil end
+-- A stored pet id: any short id string. Saves and quotes are never checked against the tunable
+-- roster (Hue.Supported) or the ownership bits, so retiring or renaming a pet can never turn an
+-- old save into InvalidData (code review 2026-11-16). Writes still require an owned pet.
+function State.validPetId(id)return type(id)=="string"and #id>=1 and #id<=64 and string.match(id,"^[%w_]+$")~=nil end
 
 -- Reads (a missing field reads as empty).
 function State.inventory(state,itemId)
@@ -67,9 +71,9 @@ function State.validQuote(q)
   if q.selectionMode=="fixed"then return State.validDraw(q,q.fixedItemId)end
   return q.fixedItemId==nil
  elseif q.action=="finishUse"then
-  return Hue.Supported[q.petId]==true and Look.kind(q.itemId)=="finish"and Look.validFinish(q.finish)and(q.pendingResultId==nil or opaque(q.pendingResultId))
+  return State.validPetId(q.petId)and Look.kind(q.itemId)=="finish"and Look.validFinish(q.finish)and(q.pendingResultId==nil or opaque(q.pendingResultId))
  elseif q.action=="finishClear"then
-  return Hue.Supported[q.petId]==true and(q.axis=="sheen"or q.axis=="jelly")and Look.validFinish(q.finish)
+  return State.validPetId(q.petId)and(q.axis=="sheen"or q.axis=="jelly")and Look.validFinish(q.finish)
  end
  return false
 end
@@ -117,11 +121,12 @@ function State.valid(state)
  local p=state.petFinish
  if p~=nil then
   if type(p)~="table"then return false end
-  for pet,row in pairs(p)do if not Hue.Supported[pet]or not Eggs.isOwned(state.inventoryMask,pet)or not Look.validFinish(row)then return false end end
+  for pet,row in pairs(p)do if not State.validPetId(pet)or not Look.validFinish(row)then return false end end
  end
  local u=state.charmUnlocks
  if u~=nil then
   if type(u)~="table"then return false end
+  -- Keys are egg shape ids (PetCharmCatalog.EggShapes, a list that only ever grows).
   for shape,value in pairs(u)do if table.find(Look.EggShapes,shape)==nil or value~=true then return false end end
  end
  if state.lookCharmMisses~=nil and not Look.validMisses(state.lookCharmMisses)then return false end
