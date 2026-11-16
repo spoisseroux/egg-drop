@@ -11,6 +11,9 @@ local QuestRotation = require(ReplicatedStorage.Shared.QuestRotation)
 local LegacyContracts = { { id = "runs", target = 2 }, { id = "chain", target = 3 }, { id = "score", target = 500 } }
 local function legacyContracts(day) return { day = day, progress = { runs = 0, chain = 0, score = 0 }, claimedMask = 0 } end
 local HueState=require(script.Parent.HueState)
+-- Customization Egg (plan 2026-11-16): optional v11 fields and the lookBuy rules.
+local LookState=require(script.Parent.LookState)
+local LookEgg=require(ReplicatedStorage.Shared.LookEggCatalog)
 local MaterialState=require(script.Parent.MaterialState)
 local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
 
@@ -185,6 +188,8 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- Pet Park (K1): optional additive `playDate` on v11, valid when missing (no version bump).
 -- Onboarding (v1 track A): optional additive `coachMask` on v11, valid when missing (no version bump).
 -- Bond levels (overnight 2026-11-14, slice F): optional additive `bond` on v11, valid when missing (no version bump).
+-- Customization Egg (2026-11-16): optional additive finishInventory, petFinish, charmUnlocks,
+-- lookCharmMisses and lookFound on v11 (LookState.valid, run inside HueState.valid).
 local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Bond.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
@@ -291,6 +296,7 @@ function Hatching.load(userId, profile, adapter)
 	if profile and profile.loadFailed then
 		handle.state = upgrade(migrate(legacyRecord(profile), adapter.now()), adapter.now(), userId)
 		handle.state.nectar = 0
+		handle.state.charmUnlocks = {}
 		handle.status = "Temporary"
 		return handle
 	end
@@ -298,6 +304,8 @@ function Hatching.load(userId, profile, adapter)
 	local function acquire(previous)
 		local root = if type(previous) == "table" then clone(previous) else legacyRecord(profile)
 		local state = root.hatching
+		-- Customization Egg (plan §2.2, R3): this acquire creates the save when it has no hatching yet.
+		local fresh = state == nil
 		state = upgrade(if state == nil then migrate(root, adapter.now()) else state, adapter.now(), userId)
 		-- Malformed or old-catalogue quests become a fresh draw; never a failed load.
 		if type(state) == "table" and type(state.version) == "number" and state.version >= 10 then state.quests = QuestState.sanitize(state.quests, dayOf(adapter.now()), userId) end
@@ -307,6 +315,12 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and state.coachMask ~= nil then state.coachMask = Coach.sanitize(state.coachMask) end
 		-- Malformed bond XP is repaired (bad entries dropped), never a failed load.
 		if type(state) == "table" and state.bond ~= nil then state.bond = Bond.sanitize(state.bond) end
+		-- "No default charm" (plan §2.2): a save written before this build has no charmUnlocks and
+		-- keeps Snowflake, Ring and Pebble (everyone owned them under the old rules); a save this
+		-- acquire creates starts with none. Written once here, so every later reader sees one form.
+		if type(state) == "table" and state.charmUnlocks == nil then
+			state.charmUnlocks = if fresh then {} else Hatching.legacyCharms()
+		end
 		if not valid(state) then reason = "InvalidData"; return nil end
 		state = clone(state)
 		local now = adapter.now()
@@ -340,6 +354,7 @@ function Hatching.load(userId, profile, adapter)
 	else
 		handle.state = upgrade(migrate(legacyRecord(profile), adapter.now()), adapter.now(), userId)
 		handle.state.nectar = 0
+		handle.state.charmUnlocks = {}
 		handle.status = if ok then reason else "Unavailable"
 		if not ok then warn("Egg Drop hatching load failed:", record) end
 	end
@@ -361,9 +376,25 @@ function Hatching.nextFixed(state)
 		material = MaterialCatalog.fixedNext(MaterialCatalog.remaining(state.materialUnlocks)),
 		hue = HueCatalog.fixedNext(state.hueInventory),
 		feature = FeatureCatalog.fixedNext(state.featureStock),
+		look = LookState.fixedNext(state),
 	}
 end
 local function isRestricted(handle) return handle.restricted ~= false end
+-- Every egg shape: what a save written before the Customization Egg build keeps.
+function Hatching.legacyCharms()
+	local unlocks = {}
+	for _, shape in ipairs(LookEgg.EggShapes) do unlocks[shape] = true end
+	return unlocks
+end
+-- Customization Egg sale gate (switch plus verified finish templates). `handle.lookAvailable`
+-- is a spec seam only; the host never sets it.
+function Hatching.lookAvailable(handle)
+	if handle and handle.lookAvailable ~= nil then return handle.lookAvailable == true end
+	return LookEgg.available(ReplicatedStorage:FindFirstChild("PetMaterials"), ReplicatedStorage:FindFirstChild("PetMaterialsTwoTone"))
+end
+local function lookContext(handle)
+	return { available = Hatching.lookAvailable(handle), selectionMode = LookEgg.selectionMode(handle.restricted) }
+end
 
 function Hatching.public(handle)
 	local state = handle.state
@@ -421,6 +452,11 @@ function Hatching.public(handle)
 	for key,value in pairs(BallThemes.public(state))do public[key]=value end
 	public.materialAvailable=MaterialCatalog.available(ReplicatedStorage:FindFirstChild("PetMaterials"),ReplicatedStorage:FindFirstChild("PetMaterialsTwoTone"))
  public.materialSelectionMode=MaterialCatalog.selectionMode(handle.restricted)
+	-- Customization Egg (slice 1, nothing on sale): owned finish jars, finish looks, egg charm
+	-- shapes, pity counter, found items, the sale gate and the selection mode.
+	for key,value in pairs(LookState.public(state))do public[key]=value end
+	public.lookAvailable=Hatching.lookAvailable(handle)
+	public.lookSelectionMode=LookEgg.selectionMode(handle.restricted)
 	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
 	return public
 end
@@ -563,6 +599,8 @@ function Hatching.resumeHueReservation(handle)
 end
 function Hatching.reserveHue(handle,candidate)
 	if handle.busy then return false,"Busy"end
+	-- Live lookBuy checks (switch, policy, pool) run here, at reserve time only (plan R4).
+	local context=if candidate.quote.action=="lookBuy"then lookContext(handle)else nil
 	handle.busy=true
 	local reason="Unavailable"
 	local ok,record=pcall(handle.adapter.update,handle.key,function(previous)
@@ -575,8 +613,11 @@ function Hatching.reserveHue(handle,candidate)
 			return root
 		end
 		if state.revision~=candidate.quote.revision or state.operationSeq+1~=candidate.sequence then reason="RevisionChanged";return root end
-		local allowed,why=HueState.purchaseEligibility(state);if not allowed then reason=why;return root end
-		state.hueReservation=clone(candidate);return root
+		local allowed,why=HueState.purchaseEligibility(state,candidate.quote,context);if not allowed then reason=why;return root end
+		state.hueReservation=clone(candidate)
+		-- Never write a reservation this build could not load again.
+		if not valid(state)then reason="InvalidData";return previous end
+		return root
 	end)
 	handle.busy=false
 	if not ok then handle.status="Retrying";warn("Egg Drop Hue reservation failed:",record);return false,"Retrying"end
@@ -608,9 +649,18 @@ function Hatching.hueCommand(handle,action,value,revision)
 		if revision~=handle.state.revision then return false,"RevisionChanged"end
 		if quote.catalogVersion==nil then return false,"LegacyPurchaseClosed"end
 		candidate={quote=clone(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1}
-		if action=="hueBuy"then
-			local allowed,why=HueState.purchaseEligibility(handle.state);if not allowed then return false,why end
-			candidate.itemId=if isRestricted(handle)then HueCatalog.fixedNext(handle.state.hueInventory)else HueCatalog.roll(handle.adapter.random());if not candidate.itemId then return false,"InvalidRoll"end
+		if action=="hueBuy"or action=="lookBuy"then
+			if action=="lookBuy"then
+				-- Customization Egg: a stale pool version is closed; the switch, policy, price and
+				-- bound pool are checked against this handle (NotReady, PolicyChanged, PoolChanged).
+				if quote.poolVersion~=LookEgg.PoolVersion then return false,"LegacyPurchaseClosed"end
+				local allowed,why=HueState.purchaseEligibility(handle.state,quote,lookContext(handle));if not allowed then return false,why end
+				candidate.itemId=if quote.selectionMode=="fixed"then quote.fixedItemId else LookEgg.roll(handle.adapter.random(),quote.missingCharms,quote.charmMisses)
+			else
+				local allowed,why=HueState.purchaseEligibility(handle.state);if not allowed then return false,why end
+				candidate.itemId=if isRestricted(handle)then HueCatalog.fixedNext(handle.state.hueInventory)else HueCatalog.roll(handle.adapter.random())
+			end
+			if not candidate.itemId then return false,"InvalidRoll"end
 			handle.pending={kind="hue",signature=signature,id=candidate.operationId,sequence=candidate.sequence,revision=revision,apply=HueState.apply,candidate=candidate,phase="reserve"}
 			local ok,why=Hatching.reserveHue(handle,candidate)
 			local saved=if ok then HueState.find(handle.state,quote)else nil

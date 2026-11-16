@@ -23,6 +23,9 @@ Catalog.Rules=table.freeze({
  weekly4=table.freeze({kind="stat",key="weeklyBonuses",need=4}),
  stamps14=table.freeze({kind="stamps",need=14}),
 })
+-- Customization Egg (plan 2026-11-16 §2.3): the shapes the egg can drop, in published order
+-- (Snowflake, Ring, Pebble). Owned ones are saved in the hatching `charmUnlocks`.
+Catalog.EggShapes=table.freeze({"dot","ring","pebble"})
 -- Shapes held back until their art ships: rule ids reserved, never selectable.
 Catalog.Reserved=table.freeze({})
 function Catalog.known(id)return type(id)=="string"and Catalog.ById[id]~=nil end

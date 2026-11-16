@@ -4,6 +4,8 @@ local Hue=require(Shared.HueCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Legacy=require(script.Parent.LegacyHueState)
 local Guard=require(script.Parent.HatchGuard)
+-- Customization Egg actions (lookBuy, finishUse, finishClear) share this namespace (plan 2026-11-16 §3).
+local Look=require(script.Parent.LookState)
 local State={ReceiptLimit=64}
 local function copy(v)if type(v)~="table"then return v end;local r={};for k,x in pairs(v)do r[k]=copy(x)end;return r end
 local function integer(n,maximum)return type(n)=="number"and n==n and n%1==0 and n>=0 and n<=(maximum or 1000000000)end
@@ -46,6 +48,7 @@ local wire={
  -- QA v2 R4.4: free "back to the original colour" for one channel (no jar, no Stars).
  hueClear={id=true,catalogVersion=true,petId=true,channel=true,counts=true},
 }
+for action,keys in pairs(Look.Wire)do wire[action]=keys end
 local retired={hue=true,hueApply=true,hueEquip=true,hueMix=true,hueReset=true}
 function State.isAction(action)return wire[action]~=nil or retired[action]==true end
 function State.quote(action,value,revision)
@@ -61,6 +64,7 @@ function State.quote(action,value,revision)
  if action=="hueLegacyRedeem"then
   return if opaque(q.migrationId)and opaque(q.token)and opaque(q.purchaseId)and Hue.ById[q.itemId]then q else nil
  end
+ if Look.isAction(action)then return if Look.validQuote(q)then q else nil end
  if not Hue.Supported[q.petId]or(q.channel~="main"and q.channel~="secondary")or not Hue.validCounts(q.counts)then return nil end
  if action=="hueUse"then
   if not Hue.Items[q.itemId]or(q.pendingResultId~=nil and not opaque(q.pendingResultId))then return nil end
@@ -91,13 +95,15 @@ function State.proof(state,candidate)
 end
 local receiptKeys={id=true,action=true,quote=true,operationId=true,sequence=true,revision=true,catalogVersion=true,cost=true,balanceBefore=true,balanceAfter=true,
  outcome=true,reason=true,petId=true,itemId=true,channel=true,countsBefore=true,countsAfter=true,inventoryBefore=true,inventoryAfter=true,
- resultId=true,acknowledgedResultId=true,presetId=true,migrationId=true,token=true,purchaseId=true}
+ resultId=true,acknowledgedResultId=true,presetId=true,migrationId=true,token=true,purchaseId=true,
+ missesBefore=true,missesAfter=true,finishBefore=true,finishAfter=true,axis=true,substitutedFrom=true}
 local function validReceipt(r)
  if not exact(r,receiptKeys)or not quoteValid(r.quote)or r.id~=r.quote.id or r.action~=r.quote.action or not opaque(r.operationId)
   or not integer(r.sequence)or r.sequence<1 or not integer(r.revision)or r.revision<=r.quote.revision
   or r.catalogVersion~=Hue.CatalogVersion or not integer(r.balanceBefore)or not integer(r.balanceAfter)
   or not integer(r.cost)or r.balanceAfter~=r.balanceBefore-r.cost then return false end
  local q=r.quote
+ if Look.isAction(q.action)then return Look.validReceipt(r)end
  local extra={}
  if q.action=="hueBuy"then extra={itemId=true,inventoryBefore=true,inventoryAfter=true,resultId=true,reason=true}
  elseif q.action=="hueLegacyRedeem"then extra={itemId=true,inventoryBefore=true,inventoryAfter=true,resultId=true,migrationId=true,token=true,purchaseId=true}
@@ -106,7 +112,7 @@ local function validReceipt(r)
  elseif q.action=="hueLegacyPreset"then extra={petId=true,channel=true,countsBefore=true,countsAfter=true,presetId=true,migrationId=true}
  elseif q.action=="hueClear"then extra={petId=true,channel=true,countsBefore=true,countsAfter=true}end
  if q.action=="hueMigrationAck"then extra={migrationId=true}end
- for _,key in ipairs({"reason","petId","itemId","channel","countsBefore","countsAfter","inventoryBefore","inventoryAfter","resultId","acknowledgedResultId","presetId","migrationId","token","purchaseId"})do
+ for _,key in ipairs({"reason","petId","itemId","channel","countsBefore","countsAfter","inventoryBefore","inventoryAfter","resultId","acknowledgedResultId","presetId","migrationId","token","purchaseId","missesBefore","missesAfter","finishBefore","finishAfter","axis","substitutedFrom"})do
   if r[key]~=nil and not extra[key]then return false end
  end
  if r.outcome=="Refused"then return q.action=="hueBuy"and r.cost==0 and r.reason=="StackLimit"and r.resultId==nil and Hue.Items[r.itemId]~=nil and integer(r.inventoryBefore,Hue.StackLimit)and r.inventoryBefore==Hue.StackLimit and r.inventoryAfter==r.inventoryBefore end
@@ -191,17 +197,18 @@ function State.validHistorical(state)
  if p then
   if not exact(p,{id=true,itemId=true,quantity=true,inventoryAfter=true,catalogVersion=true,revision=true})or p.quantity~=1 or p.catalogVersion~=Hue.CatalogVersion then return false end
   local r=state.hueItemReceipts[p.id]
-  if not r or r.outcome~="Applied"or(r.action~="hueBuy"and r.action~="hueLegacyRedeem")or r.resultId~=p.id or r.itemId~=p.itemId or r.inventoryAfter~=p.inventoryAfter or r.revision~=p.revision then return false end
+  if not r or r.outcome~="Applied"or(r.action~="hueBuy"and r.action~="hueLegacyRedeem"and r.action~="lookBuy")or r.resultId~=p.id or r.itemId~=p.itemId or r.inventoryAfter~=p.inventoryAfter or r.revision~=p.revision then return false end
  end
  local reservation=state.hueReservation
  if reservation then
-  if not exact(reservation,{quote=true,operationId=true,sequence=true,itemId=true})or not quoteValid(reservation.quote)or reservation.quote.action~="hueBuy"
-   or not opaque(reservation.operationId)or not Hue.Items[reservation.itemId]or reservation.sequence~=state.operationSeq+1
+  if not exact(reservation,{quote=true,operationId=true,sequence=true,itemId=true})or not quoteValid(reservation.quote)or(reservation.quote.action~="hueBuy"and reservation.quote.action~="lookBuy")
+   or not opaque(reservation.operationId)or not(if reservation.quote.action=="lookBuy"then Look.validReservation(reservation)else Hue.Items[reservation.itemId]~=nil)or reservation.sequence~=state.operationSeq+1
    or reservation.quote.revision>state.revision or state.hueItemReceipts[reservation.quote.id]or state.pendingHueResult or state.lastHatch then return false end
  end
  return true
 end
 function State.valid(state)
+ if not Look.valid(state)then return false end
  if state.version==8 or state.version==9 or state.version==10 or state.version==11 then state=table.clone(state);state.version=7 end
  return State.validHistorical(state)
 end
@@ -213,10 +220,12 @@ local function saveReceipt(state,r)
  end
  state.lastHueResult=r
 end
-function State.purchaseEligibility(state)
+-- `quote` and `context` ({available, selectionMode}) apply to a lookBuy; a hueBuy passes neither.
+function State.purchaseEligibility(state,quote,context)
  if Guard.other(state,"hue")or state.pendingHueResult then return false,"RevealPending"end
  local owned=false;for pet in pairs(Hue.Supported)do if Eggs.isOwned(state.inventoryMask,pet)then owned=true;break end end
  if not owned then return false,"MeetPipFirst"end
+ if quote and quote.action=="lookBuy"then return Look.eligibility(state,quote,context)end
  if state.nectar<Hue.Cost then return false,"NeedStars"end
  return true
 end
@@ -227,7 +236,16 @@ function State.apply(state,candidate)
  if Guard.other(state,"hue")then return false,"RevealPending"end
  local r={id=q.id,action=q.action,quote=copy(q),operationId=candidate.operationId,sequence=candidate.sequence,revision=state.revision+1,
   catalogVersion=Hue.CatalogVersion,cost=0,balanceBefore=state.nectar,balanceAfter=state.nectar,outcome="Applied"}
- if q.action=="hueBuy"or q.action=="hueLegacyRedeem"then
+ if q.action=="lookBuy"then
+  -- Total settlement (plan R4): only the saved candidate is checked, never live conditions.
+  if not state.hueReservation or not equal(state.hueReservation,candidate)then return false,"MissingReservation"end
+  if not quoteValid(q)or not Look.validReservation(candidate)then return false,"InvalidHue"end
+  Look.settle(state,candidate,r);state.hueReservation=nil
+ elseif q.action=="finishUse"or q.action=="finishClear"then
+  local ok,why
+  if q.action=="finishUse"then ok,why=Look.finishUse(state,q,r)else ok,why=Look.finishClear(state,q,r)end
+  if not ok then return false,why end
+ elseif q.action=="hueBuy"or q.action=="hueLegacyRedeem"then
   if state.pendingHueResult then return false,"RevealPending"end
   local itemId=candidate.itemId
   if q.action=="hueBuy"then
