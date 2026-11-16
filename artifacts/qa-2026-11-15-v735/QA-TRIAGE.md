@@ -86,4 +86,4 @@ Source: `notes.md` and `shots/` (filenames are timestamps). Spencer: "after we d
 - Update every spec that pins prices, the store-listing copy and the UICopy price strings.
 - After launch, tune with the SessionEndWallet data: if the median wallet is 300+ Stars on day 7, add sinks or raise prices.
 
-Do this **after** lanes D, H and W land, and before the publish.
+Do this **after** lanes D, H and W land, and before the publish. **Done 2026-11-15 (final pre-publish pass, place saved v750, unpublished):** sources, generated rig data and every price-pinning spec updated; the store listing names no prices.
