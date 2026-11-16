@@ -23,7 +23,7 @@ return function(client,parent)
  settle();surface:configure("creek",Themes.ById.ice);surface:update(root,0,true,false);settle();surface:update(root,0,true,false)
  local count=#surface.root:GetDescendants()+1;local first=surface.bands[1].host
  test("one16-band545-instance surface includes256 actual motif frames",function()assert(#surface.bands==16 and surface.stats.primitives==256 and count==545 and surface.stats.created==count);geometry()end)
- for _,id in ipairs({"canopy","creek","lantern"})do test(id.." full period is closed and covers edges",function()
+ for _,id in ipairs({"canopy","creek","lantern","moonpond"})do test(id.." full period is closed and covers edges",function()
   surface:configure(id,Themes.ById.ice);surface:update(root,0,true,false)
   -- New pattern lease begins at zero; sample full exact period with integer harmonics.
   local before={};for i,b in ipairs(surface.bands)do before[i]=b.canvas.Position end
@@ -31,6 +31,27 @@ return function(client,parent)
   for i,b in ipairs(surface.bands)do assert((b.canvas.Position.X.Offset-before[i].X.Offset)^2<1e-7,"loop endpoint jumped")end
   assert(#surface.root:GetDescendants()+1==count and surface.bands[1].host==first)
  end)end
+ -- QA v735 D5: Moonpond animates like the rest (it was a separate static renderer).
+ test("moonpond drifts and twinkles on the shared bands: crescents, stars, no extra instances",function()
+  surface:configure("moonpond",Themes.ById.ice);surface:update(root,0,true,false)
+  assert(not surface.root:FindFirstChild("Moonpond"),"the old static renderer was built")
+  assert(#surface.root:GetDescendants()+1==count,"moonpond added instances")
+  local moon,star
+  for _,band in ipairs(surface.bands)do if band.layer==1 and not moon then moon=band elseif band.layer==2 and not star then star=band end end
+  -- A crescent: a disc with a floor-coloured disc inside it; a star: a much smaller dot.
+  local m,st=moon.pieces[1],star.pieces[1]
+  assert(m.body.Visible~=nil and m.curve.CornerRadius==UDim.new(.5,0)and m.core.BackgroundColor3==Themes.ById.ice.backdrop and m.core.BackgroundTransparency==0 and m.core.Size==UDim2.fromScale(.78,.78),"crescent")
+  assert(m.body.Size.X.Offset==m.body.Size.Y.Offset and st.body.Size.X.Offset<m.body.Size.X.Offset*.5,"moons are round and stars are small")
+  local positions={};local colours={}
+  for i=0,48 do
+   surface:update(root,i*.5,true,false)
+   positions[tostring(moon.canvas.Position)]=true;colours[tostring(st.body.BackgroundColor3)]=true
+  end
+  local moved,twinkled=0,0
+  for _ in pairs(positions)do moved+=1 end;for _ in pairs(colours)do twinkled+=1 end
+  assert(moved>=20,"moonpond does not drift (distinct poses "..moved..")")
+  assert(twinkled>=6,"moonpond stars do not twinkle (distinct tones "..twinkled..")")
+ end)
  test("same-clock updates cap15Hz and hidden/reduced steady writes are zero",function()
   surface:update(root,30,true,false);local ticks=surface.stats.ticks
   surface:update(root,30.001,true,false);surface:update(root,30.002,true,false);assert(surface.stats.ticks==ticks)

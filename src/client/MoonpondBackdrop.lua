@@ -1,3 +1,5 @@
+-- RETIRED 2026-11-15 (QA v735 D5): the game no longer builds this. Moonpond is drawn by
+-- DeckBackdrop's shared, animated motif bands. Kept for scripts/QAPreviewBounds.spec.lua.
 -- Astra's Moonpond: original native GUI geometry, static in every motion mode.
 -- Six broken oval arcs / five edge fireflies maximum; no uploaded bitmap asset.
 local Moonpond={};Moonpond.__index=Moonpond

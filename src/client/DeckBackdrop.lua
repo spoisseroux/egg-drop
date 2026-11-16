@@ -1,5 +1,8 @@
 -- One bounded exterior/preview surface: 16 bands, no instance churn after new().
-local Moonpond=require(script.Parent.MoonpondBackdrop)
+-- QA v735 D5: Moonpond is one of these patterns now (crescent moons on the first layer,
+-- small stars on the second, drifting and twinkling in the plate's colours like Canopy,
+-- Creek and Lantern). It used to be a separate static renderer (MoonpondBackdrop: arcs,
+-- five dots and its own navy palette) that opted out of every pose and colour tick.
 local Backdrop={};Backdrop.__index=Backdrop
 Backdrop.Period=24;Backdrop.Step=1/15
 Backdrop.MotifOpacity=.88
@@ -47,9 +50,6 @@ end
 function Backdrop:configure(id,theme)
  if self.id==id and self.theme==theme then return false end
  self.id,self.theme=id,theme;self.bucket=nil;self.colorBucket=nil;self.resting=false
- if id=="moonpond"and not self.moonpond then self.moonpond=Moonpond.new(self.root)end
- if self.moonpond then self.moonpond.root.Visible=id=="moonpond"end
- for _,band in ipairs(self.bands)do band.host.Visible=id~="moonpond"end
  self:floor();assign(self,self.root,"BackgroundColor3",theme.backdrop,"colorWrites")
  self.colorsApplied=false
  for _,b in ipairs(self.bands)do for _,p in ipairs(b.pieces)do
@@ -60,12 +60,18 @@ function Backdrop:configure(id,theme)
   elseif id=="canopy"then
    assign(self,p.body,"Rotation",if p.mark==1 then -32 else 28,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(.5,0),"styleWrites")
    assign(self,p.core,"Position",UDim2.fromScale(.88,.2),"geometryWrites");assign(self,p.core,"Size",UDim2.fromScale(.65,.9),"geometryWrites");assign(self,p.inset,"CornerRadius",UDim.new(.5,0),"styleWrites")
+  elseif id=="moonpond"then
+   -- Layer 1, a crescent: a disc with a smaller disc in the floor's colour inside it,
+   -- touching its rim (what is left is the moon). Layer 2, a star: a dot with a bright centre.
+   assign(self,p.body,"Rotation",if layer==1 then(if p.mark==1 then -28 else 22)else 0,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(.5,0),"styleWrites")
+   assign(self,p.core,"Position",if layer==1 then UDim2.fromScale(.21,.03)else UDim2.fromScale(.25,.25),"geometryWrites")
+   assign(self,p.core,"Size",if layer==1 then UDim2.fromScale(.78,.78)else UDim2.fromScale(.5,.5),"geometryWrites");assign(self,p.inset,"CornerRadius",UDim.new(.5,0),"styleWrites")
   else
    assign(self,p.body,"Rotation",45,"geometryWrites");assign(self,p.curve,"CornerRadius",UDim.new(0,2),"styleWrites")
    assign(self,p.core,"Position",UDim2.fromScale(.25,.25),"geometryWrites");assign(self,p.core,"Size",UDim2.fromScale(.5,.5),"geometryWrites");assign(self,p.inset,"CornerRadius",UDim.new(0,1),"styleWrites")
   end
   assign(self,p.body,"BackgroundTransparency",1-(if layer==1 then .66 else .45)*Backdrop.MotifOpacity,"styleWrites")
-  assign(self,p.core,"BackgroundTransparency",1-(if id=="creek"then .88 else .78)*Backdrop.MotifOpacity,"styleWrites")
+  assign(self,p.core,"BackgroundTransparency",if id=="moonpond"and layer==1 then 0 else 1-(if id=="creek"then .88 else .78)*Backdrop.MotifOpacity,"styleWrites")
  end end
  self.size=nil;self:colors(.2);return true
 end
@@ -74,8 +80,21 @@ function Backdrop:floor()
  assign(self,self.root,"BackgroundTransparency",if seeThrough then (1-Backdrop.ExteriorOpacity)*math.clamp(game:GetService("GuiService").PreferredTransparency,0,1) else 0,"styleWrites")
 end
 function Backdrop:colors(phase)
- if self.id=="moonpond"then return end
  if self.id=="creek"and self.colorsApplied then return end;self.colorsApplied=true
+ if self.id=="moonpond"then
+  -- Moons keep one pale tone; the stars twinkle between the plate's face colour and its
+  -- highlight, each row a little out of step (one colour tick a second, like Lantern's glow).
+  local moon=self.theme.face:Lerp(self.theme.highlight,.9)
+  for _,b in ipairs(self.bands)do
+   local twinkle=(math.sin(phase*math.pi*2*3+b.row*1.9)+1)/2
+   local star=self.theme.face:Lerp(self.theme.highlight,.2+.8*twinkle)
+   for _,p in ipairs(b.pieces)do
+    assign(self,p.body,"BackgroundColor3",if b.layer==1 then moon else star,"colorWrites")
+    assign(self,p.core,"BackgroundColor3",if b.layer==1 then self.theme.backdrop else self.theme.highlight:Lerp(Color3.new(1,1,1),.5),"colorWrites")
+   end
+  end
+  return
+ end
  for _,b in ipairs(self.bands)do
   local tone=if self.id=="lantern"then self.theme.buttons:Lerp(self.theme.trim,(math.sin(phase*math.pi*2*b.layer)+1)/2)else self.theme.face:Lerp(self.theme.highlight,if b.layer==1 then .55 else .9)
   for _,p in ipairs(b.pieces)do assign(self,p.body,"BackgroundColor3",tone,"colorWrites");assign(self,p.core,"BackgroundColor3",if self.id=="creek"then self.theme.backdrop else self.theme.trim,"colorWrites") end
@@ -83,11 +102,6 @@ function Backdrop:colors(phase)
 end
 function Backdrop:resize()
  local size=self.root.AbsoluteSize;if self.size==size then return end;self.size=size;self.resting=false
- if self.id=="moonpond"and self.moonpond then
-  local c=self.case
-  local excluded=if c and self.exterior and self.root.Parent==self.home then Rect.new(c.x,c.y,c.x+c.w,c.y+c.h)else false
-  self.moonpond:resize(size,excluded);return
- end
  local pitch=if size.X>=1000 then 64 else 46
  local motif=if size.X>=1000 then 28 else 22
  self.stats.pitch,self.stats.motifWidth=pitch,motif
@@ -118,8 +132,8 @@ function Backdrop:resize()
     x=16+column*pitch*2+(b.layer-1)*pitch
     y=if lower then case.y+case.h+12+(b.layer-1)*pitch else 12+(b.layer-1)*pitch
    end
-   local w=if self.id=="creek"then motif elseif self.id=="canopy"then motif*.56 else motif*.72
-   local h=if self.id=="creek"then motif*.4 elseif self.id=="canopy"then motif*.86 else motif*.85
+   local w=if self.id=="creek"then motif elseif self.id=="canopy"then motif*.56 elseif self.id=="moonpond"then(if b.layer==1 then motif*.74 else motif*.26)else motif*.72
+   local h=if self.id=="creek"then motif*.4 elseif self.id=="canopy"then motif*.86 elseif self.id=="moonpond"then w else motif*.85
    p.bounds={x=x,y=y,w=w,h=h}
    assign(self,p.body,"Position",UDim2.fromOffset(x,y),"geometryWrites");assign(self,p.body,"Size",UDim2.fromOffset(w,h),"geometryWrites")
   end
@@ -132,7 +146,6 @@ function Backdrop:setCase(rect)
  self.case=rect;self.size=nil
 end
 function Backdrop:pose(phase)
- if self.id=="moonpond"then return end
  local size=self.size
  for _,b in ipairs(self.bands)do
   local amplitude=if b.layer==1 then 13 else 20
@@ -160,7 +173,6 @@ function Backdrop:setOwner(owner)
  self.layerOwner,self.ownerZ=owner,owner.ZIndex
  local base=owner.ZIndex+(if owner==self.home then self.homeOffset else 1)
  for _,entry in ipairs(self.layers)do assign(self,entry.node,"ZIndex",base+entry.offset,"layerWrites")end
- if self.moonpond then self.moonpond:setZIndex(base+1)end
 end
 function Backdrop:releaseOwner(owner)
  if self.destroyed or self.root.Parent~=owner or not self.home.Parent then return end
@@ -198,18 +210,26 @@ function Backdrop.thumbnail(host,id,theme)
   for i=1,2 do local body=frame(root,"Body"..i);frame(body,"Core");local c=Instance.new("UICorner");c.Parent=body;local inner=Instance.new("UICorner");inner.Parent=body.Core end
  end
  root.BackgroundTransparency=0;root.BackgroundColor3=theme.backdrop
- local moon=root:FindFirstChild("Moonpond")
+ root.Body1.Visible=true;root.Body2.Visible=true
  if id=="moonpond"then
-  if not moon then
-   local renderer=Moonpond.new(root,{thumbnail=true})
-   root:SetAttribute("MoonpondThumbnail",true)
-  else moon.Visible=true end
-  root.Body1.Visible=false;root.Body2.Visible=false
+  -- A crescent and a star, the same two pieces the surface drifts.
+  local moon,star=root.Body1,root.Body2
+  moon.BackgroundTransparency=.1;moon.BackgroundColor3=theme.face:Lerp(theme.highlight,.9)
+  moon.AnchorPoint=Vector2.new(.5,.5);moon.Position=UDim2.fromScale(.36,.48);moon.Size=UDim2.fromScale(.5,.5);moon.SizeConstraint=Enum.SizeConstraint.RelativeYY;moon.Rotation=-28
+  moon:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(.5,0)
+  moon.Core.Position,moon.Core.Size=UDim2.fromScale(.21,.03),UDim2.fromScale(.78,.78)
+  moon.Core.BackgroundTransparency=0;moon.Core.BackgroundColor3=theme.backdrop
+  moon.Core:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(.5,0)
+  star.BackgroundTransparency=.2;star.BackgroundColor3=theme.highlight
+  star.AnchorPoint=Vector2.new(.5,.5);star.Position=UDim2.fromScale(.74,.32);star.Size=UDim2.fromScale(.16,.16);star.SizeConstraint=Enum.SizeConstraint.RelativeYY;star.Rotation=0
+  star:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(.5,0)
+  star.Core.Position,star.Core.Size=UDim2.fromScale(.25,.25),UDim2.fromScale(.5,.5)
+  star.Core.BackgroundTransparency=0;star.Core.BackgroundColor3=theme.highlight:Lerp(Color3.new(1,1,1),.5)
+  star.Core:FindFirstChildOfClass("UICorner").CornerRadius=UDim.new(.5,0)
   return root
  end
- if moon then moon.Visible=false end
- root.Body1.Visible=true;root.Body2.Visible=true
  for i=1,2 do
+  root["Body"..i].AnchorPoint=Vector2.zero;root["Body"..i].SizeConstraint=Enum.SizeConstraint.RelativeXY
   local body=root["Body"..i];body.BackgroundTransparency=if i==1 then .25 else .55
   body.BackgroundColor3=if id=="lantern"then theme.buttons else theme.trim
   body.Position=UDim2.fromScale(if i==1 then .12 else .56,if i==1 then .2 else .55)
@@ -223,7 +243,7 @@ function Backdrop.thumbnail(host,id,theme)
  end
  return root
 end
-function Backdrop:destroy()if self.destroyed then return end;self.destroyed=true;if self.moonpond then self.moonpond:destroy()end;self.root:Destroy()end
+function Backdrop:destroy()if self.destroyed then return end;self.destroyed=true;self.root:Destroy()end
 
 -- In-board pattern (UI-SPEC-REDESIGN-MENUS 5): the chosen background drawn in
 -- the board well in one tone (plate accent 25% toward white) at 6%. One bounded
@@ -263,7 +283,6 @@ end
 -- gel spans (the caller picks the depth per renderer backend).
 function Board:setZIndex(z)
  if self.destroyed or self.z==z then return end;self.z=z
- if self.moonpond then self.moonpond:setZIndex(z)end
  assign(self,self.root,"ZIndex",z,"layerWrites")
  for _,p in ipairs(self.pieces)do assign(self,p.shape,"ZIndex",z,"layerWrites")end
 end
@@ -272,11 +291,13 @@ function Board:configure(id,theme)
  local tone=Backdrop.boardTone(theme)
  if self.id==id and self.tone==tone then return false end
  self.id,self.tone=id,tone;self.size=nil
- if id=="moonpond"and not self.moonpond then self.moonpond=Moonpond.new(self.root,{field=true});self.moonpond:setZIndex(self.z or self.root.ZIndex)end
- if self.moonpond then self.moonpond.root.Visible=id=="moonpond"end
  local fill=1-Backdrop.BoardOpacity
  for _,p in ipairs(self.pieces)do
-  local creek=id=="creek"
+  -- Creek: ripple arcs. Moonpond: every other cell is a moon, drawn the same way (a ring
+  -- whose far side fades out leaves a crescent); the cells between are star dots.
+  local moon=id=="moonpond"and Board.isMoon(p.col,p.row)
+  local creek=id=="creek"or moon
+  assign(self,p.gradient,"Rotation",if moon then 0 else 90,"styleWrites")
   assign(self,p.shape,"BackgroundColor3",tone,"colorWrites");assign(self,p.stroke,"Color",tone,"colorWrites")
   assign(self,p.shape,"BackgroundTransparency",if creek then 1 else fill,"styleWrites")
   assign(self,p.stroke,"Enabled",creek,"styleWrites");assign(self,p.gradient,"Enabled",creek,"styleWrites")
@@ -286,10 +307,15 @@ function Board:configure(id,theme)
  end
  self:layout();return true
 end
--- Canopy: paired seeds; Creek: staggered ripple arcs; Lantern: small lanterns.
+-- Canopy: paired seeds; Creek: staggered ripple arcs; Lantern: small lanterns;
+-- Moonpond: crescents and star dots on alternate cells.
+function Board.isMoon(col,row)return(col+row)%2==0 end
 function Board.place(id,col,row,cell)
  local stagger=if row%2==1 then cell*.5 else 0
- if id=="creek"then
+ if id=="moonpond"then
+  if Board.isMoon(col,row)then return col*cell+cell*.26,row*cell+cell*.24,cell*.48,cell*.48 end
+  return col*cell+cell*.42,row*cell+cell*.42,cell*.16,cell*.16
+ elseif id=="creek"then
   return col*cell+stagger+cell*.18,row*cell*.85+cell*.2,cell*.64,cell*.64
  elseif id=="lantern"then
   return col*cell+stagger+cell*.36,row*cell+cell*.3,cell*.28,cell*.38
@@ -302,10 +328,6 @@ function Board:layout()
  if self.destroyed or not self.id then return end
  local size=self.root.AbsoluteSize
  if self.size==size then return end;self.size=size
- if self.id=="moonpond"and self.moonpond then
-  for _,piece in ipairs(self.pieces)do piece.shape.Visible=false end
-  self.moonpond:resize(size,false);self.stats.visible=0;return
- end
  local cell=Backdrop.boardCell(size.X);self.stats.cell=cell
  local thickness=math.max(1,math.floor(cell*.06+.5))
  local shown=0
@@ -315,7 +337,7 @@ function Board:layout()
   if visible then
    assign(self,p.shape,"Position",UDim2.fromOffset(math.floor(x+.5),math.floor(y+.5)),"geometryWrites")
    assign(self,p.shape,"Size",UDim2.fromOffset(math.floor(w+.5),math.floor(h+.5)),"geometryWrites")
-   assign(self,p.stroke,"Thickness",thickness,"styleWrites");shown+=1
+   assign(self,p.stroke,"Thickness",if self.id=="moonpond"then math.max(2,math.floor(cell*.11+.5))else thickness,"styleWrites");shown+=1
   end
   assign(self,p.shape,"Visible",visible,"visibilityWrites")
  end
@@ -325,5 +347,5 @@ function Board:setVisible(visible)
  if self.destroyed then return end
  assign(self,self.root,"Visible",visible==true and self.id~=nil,"visibilityWrites")
 end
-function Board:destroy()if self.destroyed then return end;self.destroyed=true;if self.connection then self.connection:Disconnect();self.connection=nil end;if self.moonpond then self.moonpond:destroy()end;self.root:Destroy()end
+function Board:destroy()if self.destroyed then return end;self.destroyed=true;if self.connection then self.connection:Disconnect();self.connection=nil end;self.root:Destroy()end
 return Backdrop
