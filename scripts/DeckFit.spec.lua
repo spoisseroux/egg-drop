@@ -103,21 +103,18 @@ return function(client,parent,live,screenModule)
     assert(g.board.h>=170 and math.abs(g.board.w/g.board.h-aspect)<.02,label.." board keeps its aspect and a playable size")
    end end
   end)
-  test("UI-SPEC-v816 1: A and B are a Game Boy Micro pair (one size, a diagonal, split hit areas)",function()
+  test("v833 (Spencer): A big and B smaller as before, the pair nudged left and down off the far edge",function()
    for _,size in ipairs(phones)do for _,keep in ipairs(keeps)do
     local g=Screen.resolveCompact(size.X,size.Y,aspect,keep[1],keep[2])
     local label=string.format("%dx%d keep %dx%d",size.X,size.Y,keep[1],keep[2])
-    local bodyH=g.body.h;local btn=math.clamp(math.floor(.16*bodyH+.5),44,52)
-    assert(g.A==btn and g.item.w==btn and g.item.h==btn,label.." both buttons "..btn.." px, got A "..g.A.." B "..g.item.w)
+    local A=({80,72,64})[g.tier+1];local ib=({50,48,46})[g.tier+1]
+    assert(g.A==A and g.item.w==ib and g.A>g.item.w,label.." A "..g.A.." and B "..g.item.w.." are the pre-v816 sizes")
     local bx,by=g.item.x+g.item.w/2,g.item.y+g.item.h/2
-    local dx,dy=g.a.X-bx,by-g.a.Y
-    assert(dx>0 and dy>0,label.." A is the outer, upper one")
-    local deg=math.deg(math.atan2(dy,dx))
-    assert(deg>=33 and deg<=46,label.." pair angle "..deg)
-    assert(math.abs(math.sqrt(dx*dx+dy*dy)-(btn+math.max(8,math.floor(.03*bodyH+.5))))<=1.5,label.." centre distance is btn + gap")
+    assert(g.a.X>bx and g.a.Y<by,label.." A is the outer, upper one")
+    assert(g.pairNudge.X>=3 and g.pairNudge.Y>=5,label.." the pair is nudged left and down")
     local right=g.body.x+g.body.w;local screenEdge=g.glass.x+g.glass.w
-    assert(g.a.X+btn/2<=right-8+.5 and g.item.x>=screenEdge+8-.5,label.." the pair fits the wing with 8 px to spare")
-    assert(right-bx<=100 and right-g.a.X<=100,label.." both within thumb reach of the body's edge")
+    assert(g.a.X+g.A/2<=right-12,label.." A clear of the far-right edge")
+    assert(g.item.x>=screenEdge+4,label.." B stays on the grip, off the screen")
     for _,r in ipairs({g.aHit,g.itemHit})do assert(r.w>=44 and r.h>=44,label.." hit under 44 px")end
     assert(g.itemHit.x+g.itemHit.w<=g.aHit.x or g.itemHit.y>=g.aHit.y+g.aHit.h,label.." the hit areas do not overlap")
    end end

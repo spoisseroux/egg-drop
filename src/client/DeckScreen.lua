@@ -222,34 +222,29 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
   g.dpadMenuLeft=rect(bx0,by0+rh,half,boxH-2*rh);g.dpadMenuRight=rect(bx0+half,by0+rh,bw0-half,boxH-2*rh)
  end
  g.wordmark=if ww>=40 and wordY+wh<=g.dpad.y-8 then rect(cx-math.floor(ww/2),wordY,ww,wh)else nil
- -- A and B (UI-SPEC-v816 1, the Game Boy Micro pair): one size for both, on a diagonal
- -- that mirrors the d-pad. The pair's midpoint is the d-pad centre mirrored about the
- -- screen (W - cx, dcy); A is the outer, upper one, B the inner, lower one, 35 degrees
- -- apart, steepened in 5 degree steps (to 45) until A clears the wing's outer edge and B
- -- the screen edge by 8 px. Hit areas are btn + 8 squares, cut at the midpoint between the
- -- centres where they overlap, so neither steals the other's taps.
- local btn=math.clamp(math.floor(.16*bodyH+.5),44,52)
- local pairGap=math.max(8,math.floor(.03*bodyH+.5))
- local apart=btn+pairGap
- local dx,dy,deg=0,0,35
- while true do
-  local r=math.rad(deg);dx=math.floor(apart*math.cos(r)+.5);dy=math.floor(apart*math.sin(r)+.5)
-  local aOuter=W-cx+math.floor(dx/2)+btn/2;local bInner=W-cx-(dx-math.floor(dx/2))-btn/2
-  if(aOuter<=W-8 and bInner>=W-SW+8)or deg>=45 then break end
-  deg+=5
- end
- g.A=btn;g.pairAngle=deg
- local ay=dcy-math.floor(dy/2)
- -- Kept inside the body: A's hit below the glass top, B's caption above the body's bottom.
- ay=math.max(top+4+math.floor((btn+8)/2),math.min(ay,H-6-math.floor((btn+8)/2)-dy))
- local axc,ixc=W-cx+math.floor(dx/2),W-cx-(dx-math.floor(dx/2))
+ -- A and B (Spencer after v833: "I don't want A and B the same size, make it like before"):
+ -- A big, B (the item button) a size smaller, on the v760 diagonal: A `ax` px outside the
+ -- grip's centre line, B `bxo` px inside it, 12 px apart, centred on the mid line. The
+ -- v816 Micro pair (one size, 35-45 degrees about the mirrored d-pad) does not fit with A
+ -- at full size (A would run off the body), so only its fixes stay: the pair sits `nx` px
+ -- further left and `ny` px lower, off the far-right edge (his v775 note), and the hit
+ -- areas are still cut at the midpoint should they ever overlap.
+ local ib=({50,48,46})[tier+1]
+ local ax,bxo=math.floor(SW*.03+.5),math.floor(SW*.17+.5)
+ local nx=math.max(0,math.min(math.floor(SW*.05+.5),SW-cx-bxo-math.ceil(ib/2)-6))
+ local ny=math.floor(bodyH*.025+.5)
+ local apart=A/2+ib/2+12
+ local dy=math.ceil(math.sqrt(apart*apart-(ax+bxo)*(ax+bxo)))
+ local ay=mid-math.floor((dy+ib/2-A/2+10)/2)+ny
+ ay=math.max(top+4+math.floor((A+8)/2),math.min(ay,H-6-math.floor((ib+8)/2)-dy))
+ g.pairNudge=Vector2.new(nx,ny)
+ local axc,ixc=W-cx+ax-nx,W-cx-bxo-nx
  g.a=Vector2.new(axc,ay)
- local hs=btn+8;local half=math.floor(hs/2)
- local aHit=rect(axc-half,ay-half,hs,hs)
+ local aHit=rect(axc-math.floor((A+8)/2),ay-math.floor((A+8)/2),A+8,A+8)
  -- Round items (BUILD-PLAN 2026-11-13 item 4): the item button is B, below and inside A.
  local iy=ay+dy
- g.item=rect(ixc-math.floor(btn/2),iy-math.floor(btn/2),btn,btn)
- local itemHit=rect(ixc-half,iy-half,hs,hs)
+ g.item=rect(ixc-math.floor(ib/2),iy-math.floor(ib/2),ib,ib)
+ local itemHit=rect(ixc-math.floor((ib+8)/2),iy-math.floor((ib+8)/2),ib+8,ib+8)
  if itemHit.x+itemHit.w>aHit.x and itemHit.y<aHit.y+aHit.h then
   local cut=math.floor((axc+ixc)/2)
   itemHit.w=cut-itemHit.x;local aRight=aHit.x+aHit.w;aHit.x=cut;aHit.w=aRight-cut
