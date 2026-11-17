@@ -219,8 +219,9 @@ function View:bindRevealStages()
   reveal.options.stage={parent=self.shade,owns=function()return not self.destroyed and self.shade.Visible end,
    name=name,detail=detail,close=function()self:close("back")end,
    actions=function(result)
-    -- v850: a toy always offers "Give to <pet>" (the main button) and "Store"; other items
-    -- keep Use now in front.
+    -- v850: a toy offers "Give to <pet>" (the main button) and "Store"; with no pet to give
+    -- it to, Store alone (review of 7466c0b). Other items keep Use now in front.
+    if kind=="toy"and not self:toyGiveTarget(result)then return {{source=peer(),primary=true,act=usePeer}}end
     local give=kind=="toy"
     return {{source=peer(),primary=not give,act=usePeer},{source=self.action,primary=give,act=function()self:activate()end}}
    end}
@@ -609,7 +610,7 @@ function View:activate()
    return if self.toyIntent and self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.options.firstToyGive(r)
   end
   if self.toyIntent and self.toyIntent.status=="Retrying"then return self.toyIntent:retry()end
-  local pet=self:activePet()
+  local pet=self:toyGiveTarget(r)
   return self.toyIntent~=nil and r~=nil and pet~=nil and self.toyIntent:equip(pet,r.toyId,r.id)or false
  end
  if self.page=="toyBuy"then return self.toyIntent and(if self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.toyIntent:buy())or false end
@@ -1034,9 +1035,12 @@ function View:refresh()
    -- "Store" and nothing set it back, so the next toy showed Store twice. Every toy receipt
    -- now sets both: "Give to <pet>" gives it to the active pet at once, "Store" keeps it.
    if kind=="toy"and mode=="receipt"then
-    local pet=Pets.byId[self:activePet()or ""]or Pets.byId.pip
-    self.action.Text=if intent and intent.status=="Retrying"then "Try again"else UICopy.get("onboarding.spend.give",{pet=pet.name})
+    local target=self:toyGiveTarget(result)
+    local pet=target and Pets.byId[target]
+    self.action.Text=if intent and intent.status=="Retrying"then "Try again"elseif pet then UICopy.get("onboarding.spend.give",{pet=pet.name})else ""
     panel.useNow.Text=UICopy.get("onboarding.spend.store")
+    -- No pet to give it to: no Give button (it would name a pet and do nothing); Store stays.
+    if not pet and not(intent and intent.status=="Retrying")then self.action.Visible=false end
    elseif kind~="toy"or mode~="receipt"then panel.useNow.Text="Use now"end
    self.action.Interactable=intent~=nil and intent:ready()and(mode~="buy"or(self.state.nectar or 0)>=catalog.Cost)
    if mode=="buy"and kind=="toy"and #catalog.remaining(self.state.toyUnlocks)==0 then self.action.Text="All toys owned";self.action.Interactable=false end
@@ -1291,6 +1295,14 @@ end
 -- without it, a player with one pet gives it straight to that pet, otherwise this view closes;
 -- backing out of the selector closes it too (the result stays saved, "Open saved ..." on
 -- Hatch eggs).
+-- The pet a toy receipt's Give button gives to: the active pet when it is owned and drawable;
+-- the first-toy flow keeps its own target (the companion or the first pet). nil: Store only.
+function View:toyGiveTarget(result)
+ if result and self.options.firstToyReady and self.options.firstToyReady(result)then return self:activePet()or(Pets.active[1]and Pets.active[1].id)end
+ local pet=self:activePet()
+ if pet and Pets.byId[pet]and self:owned(pet)then return pet end
+ return nil
+end
 function View:landOnPets(result)
  self.page="palette";self.tab="pet";self.body.CanvasPosition=Vector2.zero;self.selectorOwnsPick=true;self:refresh()
  local name=if result.finishId then MaterialCatalog.ById[result.finishId].name elseif result.toyId then ToyCatalog.ById[result.toyId].name
