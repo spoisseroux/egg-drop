@@ -1,5 +1,7 @@
 # Egg Drop trailer: shot list (45–55 s)
 
+> **Outdated (17 November 2026):** written for "Egg Drop" before v1. The rules and setup below still apply; rebuild the shots from `LISTING.md` section 6 (no Material/Hue Egg, Jelly, old deck layout or old names).
+
 For Spencer to record and upload. This file only plans the shots, so nothing has been recorded yet. Use real gameplay only: OBS, or Roblox's own recorder (Esc menu → Record → Record Video on Windows). Don't use AI video, and don't use footage or art from outside the game.
 
 ## Roblox video rules (Creator Hub, read 13 November 2026)

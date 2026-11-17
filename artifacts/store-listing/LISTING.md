@@ -1,228 +1,214 @@
-# Pocket Pals: Pet Garden. Roblox listing kit (v1 launch)
+# Pocket Pals: Pet Garden. Roblox listing kit (v1 public launch)
 
-13 November 2026, updated 15 November 2026 for the name **Pocket Pals** (listing title **Pocket Pals: Pet Garden**, Spencer's decision). Draft for Spencer to edit. Nothing here is published. The repo, folders, DataStore keys and the place name stay "Egg Drop" for now; renaming the experience in Creator Hub happens at launch, with this listing.
+Rewritten 17 November 2026 for v1 (source at `d7e5c3f`, private v859 published, v865 saved in Studio). It replaces the 13 and 15 November "Egg Drop" kit. Nothing here is published or uploaded. Universe **10774758591**, start place **96451847774961**. The repo, DataStore keys and folder names stay "Egg Drop".
 
-Every picture in this folder is a real Roblox Studio capture of the current build (Play mode, place 96451847774961) or is cropped from one. The only additions are a caption pill and a "POCKET PALS" wordmark set in Roblox's own Fredoka One and Builder Extended fonts and the DeckKit palette. No AI images or video. To rebuild the art, run `python scripts/store_listing/build_store_listing_art.py`.
+**Everything already in `icon/`, `thumbnails/` and `raw/` is outdated.** Recapture from the shot plans in sections 6 and 7 before uploading anything.
 
 ## 1. Name
 
-The limit is 50 characters (the Studio and Creator Hub field counter is authoritative).
+| Field | Text | Chars | Limit |
+|---|---|---:|---|
+| **Experience name** | **Pocket Pals: Pet Garden** | 23 | 50 (Studio's Basic Info counter; not in Roblox's docs, so check the counter) |
+| In-game and icon wordmark | Pocket Pals | 11 | |
 
-| Option | Characters | Note |
-|---|---:|---|
-| **Pocket Pals: Pet Garden** | 23 | **Decided (Spencer, 2026-11-15).** Names the pet and the garden, and "Pocket" ties to the Pocket Deck. |
-| Pocket Pals | 11 | The short name: the icon wordmark and the in-game name. |
+No "[NEW]", "UPDATE", emoji or hype words.
 
-Don't add "[NEW]", "UPDATE" or hype words. Roblox treats them as clickbait and they go stale.
+## 2. Hook (first line, 155 characters)
 
-## 2. Hook (first ~160 characters)
+Roblox says the first ~160 characters show in search snippets and on mobile before the description expands.
 
-Roblox shows about this much in search snippets and in the mobile app before "Read more". It is also the first line of the full description:
+> Pocket Pals is a cozy merge game with a pet to look after. Merge balls on your Pocket Deck to earn Stars, then spoil your plush Bear in a garden you share.
 
-> Hatch a baby Bear pal, play a merge game on your Pocket Deck to earn Stars, and dress, colour and play with your pet in a cosy garden.
+Short line for ads and social posts (71 characters): *Merge balls on your Pocket Deck, earn Stars, and spoil your plush Bear.*
 
-(134 characters)
+## 3. Description (942 characters, limit 1,000)
 
-Shorter alternative for ads or social posts (85 characters):
-
-> Hatch a Bear pal, merge on your Pocket Deck, and dress it up in the Pet Garden.
-
-## 3. Full description
-
-About 990 characters with the new first line: recount in Creator Hub and trim a bullet if it is over 980. DevForum reports say text past about 980 characters can be cut, so recount after editing.
+Roblox's descriptions page gives a 1,000-character count. A DevForum report says some fields cut text past ~980, so this stays under 950. Recount after any edit.
 
 ```
-Hatch a baby Bear pal, play a merge game on your Pocket Deck to earn Stars, and dress, colour and play with your pet in a cosy garden.
+Pocket Pals is a cozy merge game with a pet to look after. Merge balls on your Pocket Deck to earn Stars, then spoil your plush Bear in a garden you share.
 
 HOW IT PLAYS
-• Pocket Deck: drop balls, merge two of a kind into a bigger one and build chains. Finish the round's goals to win Stars.
-• Your Bear: meet it in your first few minutes. It follows you around the garden, reacts when you pet it and plays with its toys.
-• Dress up: hats, collars and more from the Wardrobe at fixed Star prices.
-• Pet Park: your pet heads for the slide, swings and sandbox. When other players are there, pets pair up and play together.
-• Style your deck: faceplates, backgrounds and ball styles. Looks only.
-• Daily and weekly quests, a stamp card and a collection book to fill.
+• Pocket Deck: drop balls and merge two of a kind into a bigger one. Finish the goals to win. Easy, Medium or Hard.
+• Rounds, daily and weekly quests and a daily stamp all pay Stars.
+• Your Bear follows you, reacts when you pet it, and learns tricks as your bond grows.
+• Toy Egg: one of 6 toys your Bear plays with. Customization Egg: colour and material jars, and now and then a rare charm.
+• Hats, collars, deck faceplates and ball themes at fixed Star prices.
+• Pet Park: pets play together on the slide, swings and seesaw. Say hello to other players' pets.
+• Fill the collection book as you go.
 
 FAIR PLAY
-• Every egg shows its odds as percentages before you hatch it.
-• Nothing you buy changes how the board plays. Optional Star packs and passes only add Stars.
+• Every egg shows its odds before you hatch it.
+• Optional Robux Star packs and passes only add Stars. Nothing you buy changes how the board plays.
 • No trading.
-
-Play on phone, tablet or computer.
 ```
 
-**Honesty notes for Spencer** (check each line against the build you publish):
+**Check before pasting:**
+- **Spelling:** "cozy" is US spelling, because that is what players search. "Colour" matches the in-game text (UICopy). Pick one style if the mix bothers you.
+- **Bond levels:** the brief says 1 to 5, but `BondCatalog.MaxLevelShipped` is **10** in source (levels 6 to 10 were added 14 November). The copy says "learns tricks as your bond grows" with no number, so it is right either way.
+- **Passes:** the 2× Stars pass (299 R$) and Star packs speed up earning, and Stars buy eggs. So don't write "no paid advantage". The draft says only what is true. Round items (Swap, Pop, Bomb, Magnet) drop in the round and are never sold.
+- **Supporter:** the pass gives +1 Star per finished round. The Supporter deck shell and charm in TODO are not built, so don't mention them.
+- **Not in v1, so left out:** Blip or any second pet, the Names Egg, cartridges, the Material Egg (off), the Feature Egg (`Features=false`), the Hue Egg (replaced), and the weekly shelf discount (no "% off" claims).
+- **Restricted accounts:** players under `ArePaidRandomItemsRestricted` see a fixed next item, not odds. "Shows its odds" holds for everyone who gets a random roll.
+- No controls in the description. Roblox's guidance says to teach them in game.
 
-- "Cosmetics only, no paid advantage" is not quite true as written. The **2× Stars** pass (299 R$) and **Star packs** speed up earning Stars, and Stars buy eggs. The draft says what is true: nothing bought changes how the board plays, and purchases only add Stars. Don't write "no paid advantage" unless the passes change.
-- The Supporter pass description in `StoreCatalog.lua` is "+1 Star for every finished round". TODO.md still promises a Supporter deck shell and charm, which have not been built. If those ship, the line "passes only add Stars" needs updating.
-- The hook no longer says "always dusk" (the 15 November captures show a bright pink-sky garden). Thumbnail 4's caption still says "dusk garden": recapture or recaption it to match the build you publish.
-- "Pets pair up" needs another player in the park. One player sees their own pet use the equipment alone.
-- "Play on phone, tablet or computer" should match the devices you enable in Creator Hub. Gamepad focus exists in the UI, but console has not been tested, so I left it out.
-- Don't list keyboard controls. Roblox's description guidance says to teach controls in game, and the deck already shows them.
+## 4. Genre and keywords
 
-## 4. Genre and subgenre
+The genre can be changed **once every three months**.
 
-The genre can only be changed **once every three months**, so choose carefully.
-
-| | Recommendation | Why |
+| | Pick | Why |
 |---|---|---|
-| **Genre** | **Puzzle** | Roblox assigns genre by the core game loop, and the loop is the merge board. Rounds are where Stars come from. |
-| **Subgenre** | **Match & Merge** | This is the exact mechanic. Players browsing merge games are the audience most likely to stay. |
-| Alternative | Roleplay & avatar sim → Pet Care | Choose this if soft-launch data shows players spend most of their time in the garden and park instead of on the deck. It is a larger, more crowded browse category. |
+| **Genre › subgenre** | **Puzzle › Match & Merge** | Roblox sorts by the core loop. Rounds are where all Stars come from, and Match & Merge is a smaller, closer-fitting shelf. |
+| Alternative | Roleplay & avatar sim › Pet Care | Choose this if early analytics show sessions are mostly garden and park. The name already carries "Pet Garden", so pet searchers still find the game. |
 
-Current Roblox genres for reference: Action, Adventure, Education, Entertainment, Obby & platformer, Party & casual, Puzzle (Escape Room, Match & Merge, Word), RPG, Roleplay & avatar sim (Animal Sim, Dress Up, Life, Morph Roleplay, Pet Care), Shooter, Shopping, Simulation, Social, Sports & racing, Strategy, Survival, Utility & other.
+**Keywords** (Roblox doesn't rank tags or hashtags, so keep them out of the description; use them for ad targeting and update notes): merge, merge game, ball merge, drop and merge, puzzle, pocket, handheld, pet, cute pet, plush, teddy bear, bear, pet care, pet park, garden, cozy, dress up, hatch, egg, toys, collection, chill, all ages.
 
-## 5. Keywords
+## 5. Icon brief (512 × 512) — new concept
 
-Roblox does not use tags or hashtags for ranking, and they use up description characters, so keep them **out of the description**. The words below are already worked into the name, hook and body. Use them for Sponsored ads targeting or when writing update notes:
+**All 11 files in `icon/` are outdated.** They show the old held pose from before the v850 garden grip, the Pom Beanie over the wordmark, and the hatch light from before R5. Don't upload them.
 
-merge, merge game, ball merge, puzzle, pet, cute pet, baby bear, teddy bear, dress up, pet care, garden, cozy, handheld, pocket, hatch, egg, collection, playground, pet park, chill
+**Concept, "Bear and its deck":** the plush Bear fills about 70% of the frame in a three-quarter front view. It holds its **Pocket Deck toy** in the two-paw hold, tilted so the green shell and A button face the camera. Behind it is a soft warm cream-peach background (the reveal card colour from v850) with a slightly blurred garden. Large shapes only: Bear head, deck, two paws. At about 150 px it should read as "a bear holding a little game".
 
-## 6. Icon (512 × 512)
+**Variants for A/B testing** (Roblox shows one icon per locale; swap it by hand and compare click-through in Analytics):
+- **A (lead):** no text.
+- **B:** "POCKET PALS" in Builder Extended Bold with a cream fill and ink outline, along the bottom 20% and clear of the deck.
+- **C:** the same as A with a Rose hue jar applied (a 17% outcome, common enough to be fair).
 
-Roblox asks for a square image of at least 512 × 512. Some lists show it at about 150 × 150, so check every option at that size. `icon/icon-options-preview.png` shows each option at both sizes.
+**Shot plan (coordinator, Studio Play, nothing saved):**
+1. Use a fresh test save. Fund it with `EggDropStoreTestGrant` (Studio only). Hatch Toy Eggs until the Pocket Deck toy comes out, then **Give to Bear**. Leave the Bear **unhued** (what new players see), with no wardrobe items.
+2. Hide every ScreenGui, the player avatar and nameplates. Use `Lighting` as published (DayNight=false, dusk). Add a temporary `DepthOfFieldEffect` (FocusDistance on the Bear, InFocusRadius ~4, FarIntensity ~0.6).
+3. Scripted camera: FOV 30, 6–8 studs from the Bear, lens at the Bear's chest height and pitched up 5°. Turn the Bear 25–30° off camera.
+4. Wait for the idle hold pose, not a play beat. Capture at least 1080 px tall, crop a centred square, and downscale to 512 (and 1024 as a spare) with Lanczos.
+5. Check at 150 × 150 next to three Pet Care top icons. If the white Bear sinks into the cream background, darken it toward peach (`#F2C9A8`) or lift the rim light. Don't recolour the Bear.
+6. Restore everything and stop Play.
 
-| File | What it is | Verdict |
-|---|---|---|
-| `icon/icon-b-garden-pocket-deck.png` | **Spencer's pick (QA R11): icon B.** The Bear (Pom Beanie) in the garden holding its Pocket Deck toy, with the POCKET PALS wordmark. Captured 15 November in Studio Play after really hatching the toy and giving it to the Bear. | Cute and on-name. The toy is small at 150 px; the wordmark covers part of the beanie. |
-| `icon/icon-b-garden-pocket-deck-screen-corner.png` | The same, with a real Pocket Deck round (13 November capture) on a tile in the bottom-right corner | The alternative layout from R11. Shows the merge game, but it is busy at 150 px. |
-| `icon/icon-a-hatch-spotlight.png` | The Bear in the hatch-reveal spotlight (black and gold), with the wordmark. **13 November capture: the reveal's light changed on 15 November (R5), so recapture before using it.** | The strongest silhouette at 150 px. |
-| `icon/icon-b-garden-sparkler.png` | The dressed Bear (Pom Beanie and Bell Collar) holding its Sparkler in the dusk garden | Warm and cute. The white bear on a light sky is low in contrast at 150 px. |
-| `icon/icon-c-pocket-deck-bear.png` | The Pocket Deck mid-round with a Bear sticker badge | Shows the merge game. The deck UI is too small to read at 150 px. |
-| `icon/*-notext.png` | The same without the wordmark | For A/B testing, or if you'd rather keep text off the icon. |
+No AI images. Only add the wordmark (variant B) on top of a real capture.
 
-The wordmark is set in Builder Extended Bold, the in-game celebration font ("TIDY WIN!", "LITTLE WONDER!"), with a cream fill, ink outline and a Stars-gold underline. The game has no Pocket Pals logo of its own. Its only wordmark art is the **Pocket Deck** mark (`assets/deck/shell/wordmark.png`), which would mislabel the game on an icon, so I didn't use it.
+## 6. Thumbnails (1920 × 1080, up to 10) — new shot list
 
-The in-game Bear currently renders **white** (its hue is "original", rank 0). The yellow-to-pink body in `pet-bear.blend` doesn't show in Studio, so the icon matches what players see. If the authored gradient is meant to ship, fix it in game first, then recapture.
+**Retire the whole current `thumbnails/` set.** These must not ship under any circumstances:
 
-## 7. Thumbnails (1920 × 1080, up to 10)
+| Old file | Why |
+|---|---|
+| `09-hatch-odds.png` | Shows the **Material Egg** and **Hue Egg** (neither is sold in v1), the Toy Egg at 8 Stars, and 3 toys |
+| `12-item-reveal.png` | Shows the **Jelly finish** from the Material Egg |
+| `02-results-stars.png` | Staged numbers on an old results screen |
+| `01`, `08`, `10` | The deck layout from before v834 (A/B, wings and controls panel all changed). `10` also shows Kittens before the monotone themes. |
+| `03`, `11` | The old reveal light, the old held pose, and a capture fixture |
+| `04`–`07` | 13 November captures. `04`'s caption is out of date, and wardrobe prices before the 40/100/250 ladder are unverified |
+| `raw/results-tidy-win-WITH-CREATOR-PASSES.jpg` | Shows the creator's pass rows. Never use it. |
 
-`thumbnails/` holds the captioned versions. `thumbnails/originals/` holds each one without a caption (`NN-name.png`) and the untouched Studio capture it came from (`NN-name__studio-capture.jpg`). All files are under 3 MB. Roblox doesn't publish rules for text on thumbnails, so captions are one short line in the game's own pill style, kept at the top because player-count metadata can cover the bottom edge. Video rules forbid ads and subjective claims, and the captions follow that rule too.
+**Setup for every shot.** Studio Test, **Local Server**, 1 or 2 players. Local test players shouldn't own the passes; confirm there are no pass rows on results, otherwise stop and don't stage numbers. Device emulator: a custom **1920 × 1080 touch device**, so captures are native 16:9 and show the phone UI, not the keyboard hints. If the capture tool still returns letterboxed frames, crop to 16:9 and note the scale factor. Fund with `EggDropStoreTestGrant`. Put the caption pill in the **top third**, because player counts cover the bottom edge. Captions describe what is on screen only, with no claims. Keep each file under 3 MB (PNG or JPG). Don't save or publish the place.
 
-| # | File | Caption | Shows |
+| # | Caption | Exactly what shows | Camera / setup |
 |---|---|---|---|
-| 1 | `01-pocket-deck-round.png` | Merge balls on your Pocket Deck | A round mid-merge: chain ×3, a pink merge just landed, goals 1/2 |
-| 2 | `02-results-stars.png` | Win rounds, earn Stars | TIDY WIN! results with the spinning 3D Star (**staged, see below**) |
-| 3 | `03-hatch-bear.png` | Hatch your own baby Bear | **Refreshed 15 November:** the new reveal (soft light, the Bear waving), BEAR, Meet Bear. A capture fixture running the real reveal modules, not a live hatch; the headline is cropped at the left edge. |
-| 4 | `04-garden-dusk.png` | Roam the dusk garden together | Avatar and Bear walking into the dusk garden: trees, gazebo, toy pads |
-| 5 | `05-pet-park.png` | Your pet plays in the Pet Park | The Bear at the bottom of the park slide, with the climbing tower and seesaw |
-| 6 | `06-dress-up.png` | Dress your Bear up | The Bear in Pom Beanie and Bell Collar beside the bear statue at sunset |
-| 7 | `07-wardrobe.png` | Hats, collars and more, at fixed prices | Wardrobe, Hat tab, Pom Beanie preview |
-| 8 | `08-deck-style.png` | Style your deck. Looks only. | Deck style faceplates with the Liquid Chrome preview |
-| 9 | `09-hatch-odds.png` | Odds shown before every hatch | Hatch eggs with Toy Egg odds of 34 / 33 / 33 % |
-| 10 | `10-ball-styles.png` | Ball styles: just for looks | The Balls tab with the Kittens preview |
-| 11 | `11-bear-pocket-deck.png` | Your Bear carries its favourite toy | **New 15 November:** the Bear in the garden holding its Pocket Deck toy (the icon's capture) |
-| 12 | `12-item-reveal.png` | Toys, finishes and colours to hatch | **New 15 November:** the item reveal, a Bear wearing the Rare Jelly finish (capture fixture, real modules). **Do not use for v1 (16 November):** the Material Egg is off for v1, so no player can hatch a finish. Recapture with a toy or a colour jar and caption it "Toys and colours to hatch", or hold it for the v1.1 Look Egg. |
+| 1 | Merge balls on your Pocket Deck | A Medium round on the v859 deck: a merge just landing (pop and score tick), chain ×3 or more, goals 1 of 2 ticked, Win pays visible. Default faceplate, Smileys balls. | Deck camera as the game sets it. Play 8–12 drops first, then capture on the merge frame. No tutorial or coach card on screen. |
+| 2 | Your Bear, your pocket pal | The Bear in the garden holding its Pocket Deck toy (garden grip), the avatar beside it, and the dusk trees behind. | GUIs hidden. Scripted camera, FOV 40, 10 studs, at Bear height. Same staging as the icon (section 5). |
+| 3 | A garden full of pets | Two players' Bears in the shared garden, one wearing a hat, the avatars walking toward the toy lawn. | **2 players.** GUIs hidden. A high three-quarter shot (FOV 50, about 25 studs back, 12 up) over the gazebo path. |
+| 4 | Pets play together in the Pet Park | Two Bears on the park equipment at once: one at the bottom of the slide, one on the swing or seesaw. The park chip "Pets playing 2/…" in the corner is fine. | **2 players**, both inside the park kerb. Wait for a paired activity. Wide shot, FOV 45, from the park entrance. |
+| 5 | Odds shown before every hatch | Hatch eggs with **Toy Egg (20 Stars)** and **Customization Egg (12 Stars)** only, the Customization Egg selected, its odds table as the build shows it (hues 17% each, Gloss and Matte jars, Jelly jar 6%, 2% per missing charm) and the pity line. | Fresh save, so charms are still missing and the pity row shows. Hatch eggs open at full size. Capture **after** the Toy Egg odds fix (checklist, Policy). |
+| 6 | Hatch toys for your Bear | A Toy Egg reveal: one toy (Wobble Top or Squeaky Carrot) on the warm cream reveal card with **Give to Bear** and **Store** buttons. | A live hatch from the Hatch eggs screen, not a fixture. Capture once the toy has settled. |
+| 7 | Colours and materials | Customize with the Bear wearing the **Tide or Citrus** hue and the **Gloss** material, and the jar cards visible. | Hatch Customization Eggs until you have one hue and Gloss. **Don't show Jelly or a charm here.** They are rare outcomes (6% and 2%), and this flag comes from the brief. |
+| 8 | Dress up at fixed Star prices | The Wardrobe Hat tab with an item previewed on the Bear and its price pill on the 40/100/250 ladder. | Wardrobe open. Preview only; buying isn't needed. |
+| 9 | Style your deck | Deck style › Balls with a monotone theme previewed (Midnight or Deep Sea) and the price shown. | Deck style open from the Pocket menu. |
+| 10 | Fill your collection book | A Book page partly filled (Toys or Wardrobe), with its page milestone visible. | Own 2–3 toys and one wardrobe item so the page isn't empty. |
 
-Roblox takes up to 10: 11 and 12 are extras to swap in. **Only 3, 11 and 12 are from the 15 November build.** The other nine are the 13 November captures; those screens were not recaptured in this pass, so refresh them from the final build before launch.
+**Order:** 1, 2, 4, 3, 5, 6, 7, 8, 9, 10. **Home-page personalization:** activate 1, 2, 4 and 3 (Roblox needs at least 2 and suggests 2 to 5).
+**Alternate for slot 10:** the Bear doing a bond trick with its level-up toast ("Happy hop"). Stage the bond XP in Studio only.
 
-The suggested **order** leads with gameplay (1, 3, 4, 5), then dress-up and fairness. For **home-page personalization**, turn on 1, 3, 4 and 5 (Roblox needs at least two active).
+**Video:** `VIDEO-SHOTLIST.md` predates v1. Its rules and setup still apply, but rebuild its shots from the table above. Roblox allows 3 uploads a month, rejected ones count, and no voice or lyrics are allowed.
 
-**Capture notes. Read these before uploading:**
+## 7. Maturity and compliance questionnaire
 
-- **15 November captures** are 1649 × 734 (a smaller Studio viewport), so thumbnails 3, 11 and 12 are scaled up 1.47× and are softer than the rest.
-- **Resolution:** Studio's viewport is 2107 × 893 and the capture tool returns it at 1920 × 813. Each thumbnail is a 16:9 crop (1445 × 813) scaled up 1.33× with Lanczos and light sharpening, so they are a little soft. For crisp versions, play the published place at 1920 × 1080 and screenshot the same moments.
-- **Results screen (2) is staged.** Your account owns both passes in Studio, so the real screen showed a "+7" pass row and "★ 13". For the thumbnail I hid that row and set the text to what a player without passes earns for this round (Round win 5, Tidy +1, Total ★ 6, wallet 103), which is what `HeatPayout` computes. The unedited capture is `raw/results-tidy-win-WITH-CREATOR-PASSES.jpg`. Re-shoot it from an account without passes if you'd rather not use a staged screen.
-- **Win pays on the round (1):** for the same reason I held the board's `WinPays` attribute at the no-pass value (Easy 5–6) while capturing. Without that it showed 11–13.
-- **Pet Park (5)** shows one pet. Studio Play has one client, so pets pairing up wasn't captured (see the video shot list).
-- The Pocket Deck shots are the guided **Easy** first round on the default Scout faceplate with Smileys balls.
-- Studio-only staging: GUIs hidden for the world shots, a scripted camera, my avatar hidden for the Bear portrait, 140 test Stars from `EggDropStoreTestGrant`, and a Pom Beanie, Bell Collar, Toy Egg (Sparkler) and Liquid Chrome preview bought or previewed with those Stars. Everything was restored and Play was stopped. The place was not saved or published.
-- More raw captures (pocket menu, companions, collection book, park wide shot, more garden angles) are in `raw/`.
-
-## 8. Video
-
-Roblox videos must be uploaded by you. Uploads are free, limited to 3 a month, and each one is reviewed. See `VIDEO-SHOTLIST.md`.
-
-## 9. Maturity and compliance questionnaire
-
-Answer for the **most mature content a player can see**, and only for content you made (not players' avatar items). Target rating: **Minimal**, which keeps Kids (5–8) and Select (9–15) open, subject to their requirements below.
-
-The first question decides whether you get "Content May Vary" (16+ only) or fill in the full questionnaire. **Take the full questionnaire**, because an all-ages audience needs a Minimal or Mild rating.
+Answer for the most mature content a player can meet, counting only content you made. Target: **Minimal**, which is open to Kids (5–8) and Select (9–15) once the extra requirements in section 8 are met. Take the full questionnaire, not "Content May Vary" (16+).
 
 **Part 1, app type:** Game.
 
-**Part 2, IARC questions:**
-
-| Topic | Answer | Basis |
-|---|---|---|
-| Violence | No | No combat. Balls merge, nothing is hurt. |
-| Blood and gore | No | |
-| Fear | No | Nothing scary. The dusk garden is calm. |
-| Sexuality, suggestiveness or dating | No | |
-| Gambling (playable or unplayable) | No | Paid random items are **not** gambling here. They are disclosed under purchases. |
-| Language | No | No profanity. Players' chat is Roblox's own and filtered. |
-| Controlled substances | No | |
-| Crude humour | No | |
-| **Digital purchases** | **Yes**: developer products (Star packs), game passes (2× Stars, Supporter) and **randomized items** | Eggs cost Stars, and Stars can be bought with Robux, so every egg counts as a paid random item. Answer yes, and make sure the items meet the Randomized Virtual Items Policy (see checklist). |
-| Cash-convertible rewards or NFTs | No | |
-| Player-to-player communication | Yes | Default Roblox text chat in the garden and park. |
-| Blocking, reporting, chat moderation | Yes | Roblox provides these. |
-| Invite-only access | Yes only if you turn on **private servers**, otherwise No | |
-| Shares precise location | No | |
-| Prohibited content (extremist symbols, criminal techniques and the rest) | No | |
-
-**Part 3, Roblox questions:**
+**Part 2, IARC:**
 
 | Question | Answer | Basis |
 |---|---|---|
-| Social hangout (primary activity is chatting) | No | The core is the deck and pet care. Chat is secondary. |
-| Free-form user creation (drawing or writing on surfaces) | No | |
-| Sensitive social, political or religious issues | No | |
-| Cross-experience content | No | |
-| AI interaction (players talk to generative AI) | No | |
-| Media sharing with in-game tools | No | There is no in-game capture or share feature. |
-| Continuous media feed or autoplay | No | Background music isn't a media feed. Re-check if you ever add a video or feed. |
+| Violence, blood, fear, sexual content, language, controlled substances, crude humour | No | Balls merge, pets play. Chat is Roblox's own, filtered. |
+| Gambling (real or simulated) | No | No wagering. Paid random items are declared under purchases instead. |
+| **Users can buy digital goods** | **Yes** | Developer products (Star packs) and passes (2× Stars, Supporter) |
+| **Purchases can include random items the buyer doesn't know in advance** | **Yes** | The **Toy Egg** (20 Stars) and **Customization Egg** (12 Stars) roll a random item. Stars can be bought with Robux, so both are **paid random items** under Roblox's policy. |
+| Cash-convertible rewards or NFTs | No | Roblox doesn't support them. |
+| Users interact or exchange content | Yes | Default Roblox text chat. No trading. |
+| Blocking, reporting, chat moderation | Yes | Roblox's own |
+| Interaction limited to invited friends | No, unless you turn private servers on (then Yes) | |
+| Shares location | No | |
 
-If an update changes any answer, update the questionnaire and resubmit.
+**Part 3, Roblox:** social hangout No; free-form creation No; sensitive issues No; cross-experience content No; generative AI interaction No; media sharing No; continuous media feed No.
 
-## 10. What you must do in Creator Hub
+**How the eggs meet the paid random items policy (verified in source):**
 
-Creator Dashboard → Egg Drop (universe 10774758591):
+| Rule (paid random items page) | Toy Egg | Customization Egg |
+|---|---|---|
+| Every outcome with odds as a %, before purchase, summing to 100% | Equal odds over the toys you don't own yet (no duplicates). **Gap:** 6 toys show 17/17/17/17/16/16% (whole-percent rounding by `OddsText.list`). The policy allows rounding only to 4+ places past the first non-zero digit, with a "may not total 100%" note. **Show 16.67% (and 33.33% with 3 left) plus the note.** | Exact integer table that sums to 100: hues 17% each, Gloss/Matte 10–13%, Jelly 6%, 2% per missing charm. Compliant. |
+| Update odds as the remaining outcomes change | Yes (the pool shrinks as you collect) | Yes (charm rows only for missing charms) |
+| Explain pity before purchase and update odds while it's active | n/a | Explained: "If 14 eggs pass without a charm, the next one is a charm", plus a countdown row. **Gap:** on the pity egg the rows still show 2% per charm. Show the guaranteed split (100% ÷ missing charms) on that egg. |
+| `ArePaidRandomItemsRestricted` | Fixed next toy in a published order (`ToyCatalog.PaidOrder`), shown before purchase | Fixed order (`fixedNext`): the jar held fewest, with a charm on every 12th egg, shown before purchase |
+| Star packs for restricted players | Hidden. `PaidRandomPolicy` fails closed if PolicyService doesn't answer. | Same |
+| Trading of outcomes | No trading in the game | Same |
 
-1. **Configure → Basic info:** name, description (section 3), genre and subgenre (section 4). Choose the genre carefully, since it is locked for 3 months.
-2. **Icon:** upload one option from section 6. It goes through moderation before others see it.
-3. **Thumbnails:** upload up to 10 in the order from section 7. Activate 2 to 5 of them for home-page personalization.
-4. **Video:** record and upload yourself (`VIDEO-SHOTLIST.md`). It counts toward the monthly quota of 3, and rejected videos count too.
-5. **Maturity and compliance questionnaire:** section 9.
-6. **Places → Start place → Settings:** set **max players to 12** (Pet Park scope recommendation) and leave server fill on Roblox's default (fill servers before opening new ones).
-7. **Devices:** Computer, Phone and Tablet. Leave Console off until a gamepad pass is done. VR off.
-8. **Communication:** keep default text chat. No voice chat is needed.
-9. **Private servers:** decide. Off is simplest. If on, answer "invite-only: yes" in the questionnaire.
-10. **Social links:** optional (YouTube, Discord, X and so on). I couldn't confirm the current rules for who sees social links in this pass. Check the Creator Hub field notes before adding a community link aimed at kids.
-11. **Localization:** turn on **automatic translation** (text capture and auto-translate) for the top languages, and translate the name and description in the experience's Localization page. TODO.md also says to check that longer strings don't clip in the UI first.
-12. **Monetization:** pass and product icons. The passes still use Roblox's default image (TODO). Decide on Managed Pricing, which means accepting its terms.
-13. **Audience → Public:** switch from private or friends to public at launch. **This step is the launch.**
-14. **Kids and Select (if you want under-13s to find it):** a Minimal or Mild rating, an age-verified account (government ID if you're 18+), 2FA on, and either 2 consecutive months of Roblox Plus or Premium or the refundable 1,000 Robux fee per game, then pass the evaluation. These rules changed during 2026, so read the live page before starting.
+Resubmit the questionnaire whenever an update changes any answer, for example a new egg, trading or voice.
 
-## 11. Launch checklist
+## 8. Creator Hub steps for Spencer (in order)
 
-From TODO.md's LAUNCH CHECKLIST and the v1 public launch section, plus what this pass found. ☐ = not done or not verified.
+**Spencer** = only he can do it (his account, consent, terms or moderation). **Coordinator** = can do it through Open Cloud with an API key and Spencer's explicit go-ahead for that call.
 
-**Build flags (src/shared/FeatureFlags.lua). Today they read `{Features=false, DayNight=false, Park=true, TestFreshSaves=true}`:**
-- ☐ **`TestFreshSaves=false`**. While true, every publish wipes progress. This must be off before going public.
-- ☐ Confirm **`Park=true`** with Spencer for the public build (the flag comment says confirm before any public publish).
-- ☐ Confirm `DayNight=false` (always dusk) is intended, because the hook says "always dusk".
-- ☐ `Features=false` hides the Feature Egg. Confirm that's intended for v1.
-- ☑ `MaterialCatalog.EnablePurchases=false` (16 November, approved v1 economy cut): the Material Egg is not sold in v1. Hatch eggs lists the Toy Egg (20 Stars) and the Hue Egg (12 Stars) only. Finishes return in the v1.1 Look Egg.
+| # | Step | Who |
+|---|---|---|
+| 1 | Finish the launch checklist (section 9) and publish the launch build | Coordinator (with Spencer's go) |
+| 2 | **Maturity and compliance questionnaire** (section 7) | **Spencer** |
+| 3 | **Name and description:** Configure › Basic info, or Studio Experience Settings › Basic Info | Spencer, or coordinator (see note) |
+| 4 | **Genre and subgenre** (section 4; locked for 3 months) | **Spencer** (Creator Hub only, as far as I could find) |
+| 5 | **Icon upload** (Places › start place › Icon; goes through moderation) | **Spencer** |
+| 6 | **Thumbnails upload**, in order; activate 2 to 5 | **Spencer** |
+| 7 | Video (optional; 3 a month) | **Spencer** |
+| 8 | Max players **12** | Coordinator: Place `serverSize`, scope `universe.place:write` |
+| 9 | Devices: Computer, Phone and Tablet on; Console and VR off | Coordinator: Universe `desktopEnabled`/`mobileEnabled`/`tabletEnabled`/`consoleEnabled`/`vrEnabled`, scope `universe:write` |
+| 10 | Voice chat off; text chat default | Coordinator: `voiceChatEnabled=false` |
+| 11 | Private servers: off (the simplest questionnaire answer) | Coordinator: a `privateServerPriceRobux` mask clears it (the docs say this closes active private servers) |
+| 12 | Localization: auto-translate on; translate the name and description | Coordinator for the strings table (the `sync_localization.py` flow); **Spencer** for any toggle that needs terms |
+| 13 | **Managed Pricing decision** (a one-time opt-in; regional prices 30–100% of base, automatic price tests) | **Spencer.** Before saying yes: the shop shows hard-coded prices (`StoreCatalog.price` → `StoreView`), and Roblox asks you to fix hard-coded prices first. So enabling it needs a code change to read live prices. Simplest for launch: leave it **off**. |
+| 14 | Pass icons (passes still use the default image) | **Spencer** uploads; art is open work |
+| 15 | **Audience › Public.** This is the launch. | **Spencer** |
+| 16 | Kids and Select (optional, later) | **Spencer:** age-checked and verified account (ID if 18+), 2FA, a refundable per-game fee or 2+ consecutive months of Roblox Plus/Premium, then an evaluation (250 unique plays from highly engaged players in 60 days, plus a safety review). The live page didn't state the fee; the old kit's 1,000 R$ is unconfirmed. |
 
-**Policy:**
-- ☐ Paid random items: odds as percentages summing to 100 % on every egg. The Toy Egg shows 34/33/33 % today. Check Hue too (the Material Egg is off for v1).
-- ☐ Every outcome gives something: check what a **duplicate** item-egg result grants (companions refund 50 %; Toy and Hue duplicates are unverified; the Material Egg is off for v1).
-- ☐ `ArePaidRandomItemsRestricted` players can't buy Star packs, and TODO says to gate **egg purchases** too where required.
-- ☐ Maturity questionnaire filled in (section 9), including paid random items.
+**Name and description through Open Cloud:** the v2 **Universe** resource's `displayName` and `description` **can't be set directly**. The docs say each is "updated by updating the root place's name/description". So the route is `PATCH /cloud/v2/universes/10774758591/places/96451847774961` with `displayName`/`description` and scope **`universe.place:write`**. The Place docs don't mark those fields read-only, but they don't explicitly confirm that a write works either. Test it once with Spencer's go, or have him paste them in Basic Info, which is safer. **Visibility** (`universe:write`) could technically go public by API, but going public stays Spencer's step.
 
-**Server and save:**
-- ☐ 12 players per server in Creator Hub.
-- ☐ Live save and rejoin on the published place with a signed-in standalone player.
-- ☐ Live purchase test of each pass and pack.
-- ☐ Two-player garden and Pet Park duo test with a second account.
-- ☐ Physical iPhone and Android: touch, frame rate, heat, text size, first session to first hatch.
-- ☐ Studio-only leftovers: delete or keep `ServerStorage.Baseplate_RetiredByGreybox`. Make sure no greybox or `ZZSpecs` content ships. The Studio test hooks are already gated by `IsStudio()`.
+## 9. Launch checklist
 
-**Listing:**
-- ☐ Name, description, genre, icon, thumbnails, video.
-- ☐ Automatic translation on, and strings checked for clipping.
-- ☐ Audience public. Soft launch, then read D1 and D7 retention in the Creator Dashboard.
+☐ = open. Reconciled with TODO.md's LAUNCH CHECKLIST lines and its "v1 public launch" section.
 
-## Sources
+**Build and save**
+- ☐ **`FeatureFlags.TestFreshSaves=false`**. It is `true` today, and while it is on every publish wipes progress and Robux purchases.
+- ☐ Launch namespace: with the flag off the game uses `EggDropLaunchV1`. Confirm it is empty, or that its old test records are acceptable. No wipe is authorized.
+- ☐ Confirm the flags: `Park=true`, `DayNight=false` (dusk), `Features=false`, `SecondPet=false`, `PseudoLocale=false`, `MaterialCatalog.EnablePurchases=false`, `LookEggCatalog.EnablePurchases=true`.
+- ☐ **No ZZSpecs or test content ships.** `src/server/ZZSpecs` and `src/client/ZZSpecs` are in the Rojo tree (not ignored in `default.project.json`). Remove or exclude them from the launch place, along with the Studio spec copies, `ServerStorage.Baseplate_RetiredByGreybox`, any greybox and capture helpers. Test grants stay `IsStudio()`-gated; confirm that.
+- ☐ **Close the `hueBuy` server path** (`HatchProgress.lua:657` still accepts it). First move HueProgress, HueClear, HueHost and RestrictedEggs off it. Keep `HueState` able to read old receipts.
+- ☐ **Rollback floor:** the launch uses a fresh DataStore, so nothing rolls back below the launch build. Never roll the private place back past **v806** without first publishing `LookEggCatalog.EnablePurchases=false` (v775 and older servers reject `lookBuy`/`finishUse`/`finishClear` receipts).
+- ☐ Shard the bug-report day keys (`day_<n>_<k>`) before public traffic.
 
-Roblox Creator Hub docs, read 13 November 2026: [thumbnails and videos](https://create.roblox.com/docs/production/publishing/thumbnails), [experience icons](https://create.roblox.com/docs/production/publishing/experience-icons), [genres](https://create.roblox.com/docs/production/publishing/experience-genres), [descriptions](https://create.roblox.com/docs/production/publishing/descriptions), [content maturity](https://create.roblox.com/docs/production/promotion/content-maturity), [publish experiences](https://create.roblox.com/docs/production/publishing/publish-experiences-and-places), [Kids and Select](https://create.roblox.com/docs/production/publishing/kids-and-select). The 50 and 1,000 character limits come from third-party summaries of the Creator Hub fields ([example](https://rolearn.dev/guidance/roblox-game-seo-title-description-tags)). Confirm them against the live field counters.
+**Policy**
+- ☐ **Toy Egg odds precision:** 16.67% / 33.33% plus the "may not total 100%" note (section 7). **Blocker.**
+- ☐ Customization Egg pity: show the guaranteed charm split on the pity egg.
+- ☐ Questionnaire submitted with paid random items = Yes.
+
+**Server and live tests** (published place, signed-in players)
+- ☐ **12 players** per server.
+- ☐ **Real-purchase test:** each pass and each Star pack once with real Robux. Starter can only be bought once. Stars land after a rejoin. Analytics events fire.
+- ☐ **Second-account test:** shared garden, Pet Park pairing, Say hello, and a restricted-style check where possible.
+- ☐ **Mobile-data test:** a real phone on cellular (not Wi-Fi). Check the deck feel with the ghost ball, joining, the first session through to the first hatch, heat and text size. iPhone and Android.
+- ☐ Live save and rejoin, plus a toy test with two players.
+- ☐ All SFX and music load in the published place.
+
+**Listing**
+- ☐ Name, description, genre, icon, thumbnails (new captures only), translations synced, then audience public, then soft launch. Watch D1 and D7.
+
+## Sources (checked live 17 November 2026)
+
+[Paid random items](https://create.roblox.com/docs/production/monetization/paid-random-items) (odds format, rounding, pity, restricted users) · [Randomized virtual items policy](https://create.roblox.com/docs/production/monetization/randomized-virtual-items-policy) · [Content maturity](https://create.roblox.com/docs/production/promotion/content-maturity) · [Kids and Select](https://create.roblox.com/docs/production/publishing/kids-and-select) · [Descriptions](https://create.roblox.com/docs/production/publishing/descriptions) · [Genres](https://create.roblox.com/docs/production/publishing/experience-genres) · [Thumbnails and videos](https://create.roblox.com/docs/production/publishing/thumbnails) · [Icons](https://create.roblox.com/docs/production/publishing/experience-icons) · [Managed Pricing](https://create.roblox.com/docs/production/monetization/managed-pricing) · [Open Cloud Universes](https://create.roblox.com/docs/cloud/reference/features/universes) · [Open Cloud Places](https://create.roblox.com/docs/cloud/reference/features/places).
+
+**Not verified:** the 50-character name limit (only a third-party summary; use the field counter); the Kids and Select fee amount; whether a Place PATCH really renames the universe; whether genre can be set by API; whether the questionnaire wording in Creator Hub matches the docs exactly; and how "Minimal" is assigned until it is submitted. The docs pages show no last-updated dates.
