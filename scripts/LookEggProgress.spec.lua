@@ -148,8 +148,8 @@ return function(server)
   assert(table.concat(LE.missing(h.state.charmUnlocks),",")=="dot,pebble"and #LE.odds(LE.missing(h.state.charmUnlocks))==9)
   local found=bit32.bor(LE.bit("tide"),LE.bit("gloss"),LE.bit("charm_ring"));assert(h.state.lookFound==found)
   look(h,c,"jelly");store(h);assert(h.state.finishInventory.jelly==1)
-  -- The Hue Egg still sells beside it, with its own price and roll.
-  c.unit=.01;local _,_,hueReceipt=command(h,"hueBuy",{});assert(hueReceipt.itemId=="rose"and hueReceipt.cost==Hue.Cost);store(h)
+  -- v1 launch: the retired Hue Egg no longer sells beside it (a new hueBuy is closed).
+  local hq,hr=request(h,{});local ok,why=H.hueCommand(h,"hueBuy",hq,hr);assert(not ok and why=="LegacyPurchaseClosed","hueBuy "..tostring(why))
   local p=H.public(h);assert(p.charmUnlocks.ring==true and p.finishInventory.jelly==1 and p.petFinish.pip.sheen==1 and p.lookFound==bit32.bor(found,LE.bit("jelly")))
  end)
 

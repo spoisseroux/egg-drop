@@ -175,7 +175,9 @@ return function(server,frozenSource,frozenDailySource)
  test("toy and feature pending results block old Hue Material Companion routes symmetrically",function()
   for _,kind in ipairs({"toy","feature"})do
    local h,_,c=fixture();buy(h,c,kind);local before=h.state.nectar
-   local q,r=quote(h,c,"hue",{});local ok,why=H.hueCommand(h,"hueBuy",q,r);assert(not ok and why=="RevealPending")
+   -- v1 launch: the jar route is the Customization Egg (lookBuy); the Hue Egg is closed.
+   local LE=require(game.ReplicatedStorage.Shared.LookEggCatalog);h.lookAvailable=true
+   local q,r=quote(h,c,"hue",{poolVersion=LE.PoolVersion,price=LE.Price,selectionMode="random",missingCharms=LE.missing(h.state.charmUnlocks),charmMisses=require(server.LookState).misses(h.state)});local ok,why=H.hueCommand(h,"lookBuy",q,r);assert(not ok and why=="RevealPending","lookBuy "..tostring(why))
    q,r=quote(h,c,"hue",{itemId="rose",petId="pip",channel="main",counts={rose=0,tide=0,citrus=0,iris=0}});ok,why=H.hueCommand(h,"hueUse",q,r);assert(not ok and why=="RevealPending")
    q,r=quote(h,c,"material",{petId="pip",finishId="standard",expectedFinish="standard"});ok,why=H.materialCommand(h,"materialEquip",q,r);assert(not ok and why=="RevealPending")
    q,r=quote(h,c,"material",materialFields(h));ok,why=H.materialCommand(h,"materialBuy",q,r);assert(not ok and why=="RevealPending")

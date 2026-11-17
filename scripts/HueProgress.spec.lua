@@ -1,9 +1,11 @@
 -- v6 item inventory, immutable legacy rights, durable roll reservation. Isolated stores only.
 return function(server)
  local RawH=require(server.HatchProgress);local H={};for key,value in pairs(RawH)do H[key]=value end
- function H.load(...)local handle=RawH.load(...);handle.restricted=false;return handle end -- explicit allowed random fixture
- local S=require(server.HueState);local L=require(server.LegacyHueState)
- local Shared=game.ReplicatedStorage.Shared;local Hue=require(Shared.HueCatalog);local Palette=require(Shared.PetPalette)
+ -- v1 launch: the Hue Egg (hueBuy) is closed; new jars come from the Customization Egg (lookBuy),
+ -- which these fixtures sell (lookAvailable). Saved hueBuy receipts still replay.
+ function H.load(...)local handle=RawH.load(...);handle.restricted=false;handle.lookAvailable=true;return handle end -- explicit allowed random fixture
+ local S=require(server.HueState);local L=require(server.LegacyHueState);local LS=require(server.LookState)
+ local Shared=game.ReplicatedStorage.Shared;local Hue=require(Shared.HueCatalog);local Palette=require(Shared.PetPalette);local LE=require(Shared.LookEggCatalog)
  local cases={};local function test(name,f)f();table.insert(cases,name)end
  -- Slice E (2026-11-14): Hue.Supported also lists the earned pet (blip), which these
  -- fixtures never own; the seven saved pets are the ones without `earned`.
@@ -36,9 +38,27 @@ return function(server)
   local q,r=request(h,fields);local ok,why,receipt=H.hueCommand(h,action,q,r);assert(ok,why);assert(S.valid(h.state),"invalid state after "..action);return q,r,receipt
  end
  local function store(h)return command(h,"hueStore",{resultId=h.state.pendingHueResult.id})end
- local function buy(h,c,id)
+ -- A Customization Egg quote for this state (random selection).
+ local function lookFields(h)
+  local s=h.state;return{poolVersion=LE.PoolVersion,price=LE.Price,selectionMode="random",missingCharms=LE.missing(s.charmUnlocks),charmMisses=LS.misses(s)}
+ end
+ -- The unit that rolls `itemId` from the Customization Egg's table (no pity in these fixtures).
+ local function unitFor(s,itemId)
+  local missing=LE.missing(s.charmUnlocks);local cumulative=0
+  assert(not LE.pityDue(missing,LS.misses(s)),"fixture reached the charm pity")
+  for _,row in ipairs(LE.odds(missing))do if row.id==itemId then return(cumulative+row.percent/2)/100 end;cumulative+=row.percent end
+  error("not in the pool: "..itemId)
+ end
+ -- An old Hue Egg jar, made through the real hueBuy path behind the spec-only fixture seam, so the
+ -- saved-receipt checks cover the receipts players already hold.
+ local function oldJar(h,c,id)
   local index=table.find(Hue.RollOrder,id or"rose");c.unit=(index-.5)/#Hue.RollOrder
-  local q,r,receipt=command(h,"hueBuy",{});assert(receipt.itemId==(id or"rose"));return q,r,receipt
+  h.hueBuyFixture=true;local q,r,receipt=command(h,"hueBuy",{});h.hueBuyFixture=nil
+  assert(receipt.itemId==(id or"rose"));return q,r,receipt
+ end
+ local function buy(h,c,id)
+  c.unit=unitFor(h.state,id or"rose")
+  local q,r,receipt=command(h,"lookBuy",lookFields(h));assert(receipt.itemId==(id or"rose"));return q,r,receipt
  end
  -- Reset Hue jars no longer roll (2026-11-13); a held jar from an older egg still works.
  local function grantJar(h)
@@ -78,23 +98,32 @@ return function(server)
   for pet in pairs(Hue.Supported)do if saved(pet)then assert(Palette.resolve(pet,{mainDoses=Hue.emptyCounts(),secondaryDoses=Hue.emptyCounts()}))end end
   assert(Hue.Supported.blip==true,"slice E: the earned pet can be dyed once owned")
  end)
- test("each 25-percent server roll stores exactly one item, one debit and no companion pity change",function()
+ test("each jar roll stores exactly one item, one debit and no companion pity change",function()
   local h,_,c=fixture();fund(h);c.callbackReplay=true
   for _,item in ipairs(Hue.RollOrder)do local before=h.state.nectar;local misses=h.state.misses;local _,_,r=buy(h,c,item)
-   assert(h.state.nectar==before-Hue.Cost and Hue.Cost==12 and r.inventoryAfter==1 and h.state.hueInventory[item]==1 and h.state.misses==misses);store(h)
+   assert(h.state.nectar==before-LE.Price and r.inventoryAfter==1 and h.state.hueInventory[item]==1 and h.state.misses==misses);store(h)
   end
   assert(c.rolls==4)
  end)
+ test("v1 launch: a new hueBuy is closed; nothing is debited or rolled",function()
+  local h,_,c=fixture();local before,rolls=h.state.nectar,c.rolls
+  local q,r=request(h,{});local ok,why=H.hueCommand(h,"hueBuy",q,r)
+  assert(not ok and why=="LegacyPurchaseClosed"and h.state.nectar==before and c.rolls==rolls and not h.state.hueReservation)
+  -- A jar a player already bought through the Hue Egg still replays its saved receipt.
+  local old,oldRevision=oldJar(h,c,"tide");rolls=c.rolls
+  local again,why2,receipt=H.hueCommand(h,"hueBuy",old,oldRevision)
+  assert(again and why2=="AlreadySaved"and receipt.itemId=="tide"and c.rolls==rolls,"a saved hueBuy receipt no longer replays")
+ end)
  test("a jar receipt saved at the old 8-Star price (to v760) stays a valid save",function()
   local function reprice(r,cost)r.cost=cost;r.balanceAfter=r.balanceBefore-cost end
-  local h,_,c=fixture();local q=buy(h,c,"rose");local state=copy(h.state)
-  assert(state.hueItemReceipts[q.id].cost==Hue.Cost and Hue.charged(Hue.Cost)and Hue.charged(8)and not Hue.charged(9)and not Hue.charged(0))
+  local h,_,c=fixture();local q=oldJar(h,c,"rose");local state=copy(h.state)
+  assert(state.hueItemReceipts[q.id].action=="hueBuy"and state.hueItemReceipts[q.id].cost==Hue.Cost and Hue.charged(Hue.Cost)and Hue.charged(8)and not Hue.charged(9)and not Hue.charged(0))
   reprice(state.hueItemReceipts[q.id],8);reprice(state.lastHueResult,8);assert(S.valid(state),"an 8-Star jar receipt is a valid save")
   reprice(state.hueItemReceipts[q.id],9);reprice(state.lastHueResult,9);assert(not S.valid(state),"only the old and the current jar price validate")
  end)
  test("stored duplicates stack, pending results block new purchases and result use acknowledges once",function()
   local h,_,c=fixture();buy(h,c,"rose");local pending=h.state.pendingHueResult.id
-  local q,r=request(h,{});assert(not H.hueCommand(h,"hueBuy",q,r));store(h);buy(h,c,"rose");assert(h.state.hueInventory.rose==2)
+  local q,r=request(h,lookFields(h));assert(not H.hueCommand(h,"lookBuy",q,r));store(h);buy(h,c,"rose");assert(h.state.hueInventory.rose==2)
   local before=h.state.nectar;local useQ,useRev=use(h,"rose","puddle","secondary",true)
   assert(h.state.hueInventory.rose==1 and h.state.petHues.puddle.secondary.rose==1 and h.state.nectar==before and not h.state.pendingHueResult)
   assert(H.hueCommand(h,"hueUse",useQ,useRev));assert(h.state.hueInventory.rose==1)
@@ -112,16 +141,16 @@ return function(server)
  test("reservation and settlement retry the frozen draw before and after ambiguous writes",function()
   for _,phase in ipairs({"before","after","settlement"})do local h,_,c=fixture();local balance=h.state.nectar
    if phase=="settlement"then c.failSettlement=true else c[phase]=true end
-   local q,r=request(h,{});local ok,why=H.hueCommand(h,"hueBuy",q,r);assert(not ok and why=="Retrying")
+   local q,r=request(h,lookFields(h));local ok,why=H.hueCommand(h,"lookBuy",q,r);assert(not ok and why=="Retrying")
    local rollCount=c.rolls;c.unit=.99;assert(H.retry(h));assert(c.rolls==rollCount and h.state.hueInventory.rose==1 and h.state.nectar==balance-12 and not h.state.hueReservation)
-   assert(H.hueCommand(h,"hueBuy",q,r));assert(c.rolls==rollCount and h.state.nectar==balance-12)
+   assert(H.hueCommand(h,"lookBuy",q,r));assert(c.rolls==rollCount and h.state.nectar==balance-12)
   end
  end)
  test("durable reservation survives writer takeover and settles its original result once",function()
-  local h,db,c,a=fixture();c.failSettlement=true;local q,r=request(h,{});local balance=h.state.nectar
-  assert(not H.hueCommand(h,"hueBuy",q,r));assert(db.player_1.hatching.hueReservation and db.player_1.hatching.hueInventory.rose==0)
+  local h,db,c,a=fixture();c.failSettlement=true;local q,r=request(h,lookFields(h));local balance=h.state.nectar
+  assert(not H.hueCommand(h,"lookBuy",q,r));assert(db.player_1.hatching.hueReservation and db.player_1.hatching.hueInventory.rose==0)
   c.now+=100;c.unit=.99;local joined=H.load(1,{},a);assert(joined.status=="Ready"and joined.state.hueInventory.rose==1 and joined.state.nectar==balance-12 and c.rolls==1)
-  assert(H.hueCommand(joined,"hueBuy",q,r));assert(joined.state.hueInventory.rose==1)
+  assert(H.hueCommand(joined,"lookBuy",q,r));assert(joined.state.hueInventory.rose==1)
   assert(not H.retry(h));assert(h.status=="SessionLost")
  end)
  test("v5 grades map exactly, frozen receipts replay after reset, presets lock only after new pigment",function()
@@ -167,10 +196,12 @@ return function(server)
   for _=1,40 do buy(h,c,"tide");store(h)end
   assert(#h.state.hueReceiptOrder==S.ReceiptLimit and S.valid(h.state))
   h.state.hueInventory.iris=Hue.StackLimit -- next write uses fixture DB below in separate case
-  local h2,db,c2=fixture();db.player_1.hatching.hueInventory.iris=Hue.StackLimit;h2.state.hueInventory.iris=Hue.StackLimit;c2.unit=.9 -- iris (4 rolls since 2026-11-13)
-  local balance=h2.state.nectar;local q,r,receipt=command(h2,"hueBuy",{})
-  assert(receipt.outcome=="Refused"and receipt.reason=="StackLimit"and h2.state.nectar==balance and not h2.state.pendingHueResult)
-  local rolls=c2.rolls;assert(H.hueCommand(h2,"hueBuy",q,r));assert(c2.rolls==rolls and h2.state.nectar==balance)
+  -- A Customization Egg jar at the stack limit never goes past it (hueBuy used to save a Refused
+  -- receipt; the Customization Egg refuses or settles without growing the stack).
+  local h2,db,c2=fixture();db.player_1.hatching.hueInventory.iris=Hue.StackLimit;h2.state.hueInventory.iris=Hue.StackLimit;c2.unit=unitFor(h2.state,"iris")
+  local balance=h2.state.nectar;local q,r=request(h2,lookFields(h2));local ok=H.hueCommand(h2,"lookBuy",q,r)
+  assert(h2.state.hueInventory.iris==Hue.StackLimit and S.valid(h2.state),"no jar past the stack limit")
+  assert(ok or h2.state.nectar==balance,"a refused jar debits nothing")
  end)
  test("malformed vectors, stale stock and unknown payload fields do not block genuine subsequent operation",function()
   local h,_,c=fixture();buy(h,c,"rose");store(h)

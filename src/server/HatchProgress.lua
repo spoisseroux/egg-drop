@@ -653,6 +653,12 @@ function Hatching.hueCommand(handle,action,value,revision)
 	if not handle.pending then
 		if revision~=handle.state.revision then return false,"RevisionChanged"end
 		if quote.catalogVersion==nil then return false,"LegacyPurchaseClosed"end
+		-- v1 launch: the Hue Egg is retired (the Customization Egg sells hue jars). A new hueBuy
+		-- is closed; a saved hueBuy receipt still replays above (HueState.find) and a reservation
+		-- already in flight still settles (the pending branches below), so old saves keep working.
+		-- `handle.hueBuyFixture` is spec-only (never set from a request), like `lookAvailable`: the
+		-- old-receipt specs make a real hueBuy receipt through it.
+		if action=="hueBuy"and handle.hueBuyFixture~=true then return false,"LegacyPurchaseClosed"end
 		candidate={quote=clone(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1}
 		if action=="hueBuy"or action=="lookBuy"then
 			if action=="lookBuy"then

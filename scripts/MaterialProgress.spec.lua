@@ -139,8 +139,10 @@ return function(server)
  end)
  test("pending Material result blocks Hue/Companion purchases and compaction retains referenced proof",function()
   local h,_,c=fixture();local q=buy(h,c);local id=q.id
-  local hue,r=quote(h,c,{});hue.catalogVersion=require(game.ReplicatedStorage.Shared.HueCatalog).CatalogVersion
-  local ok,why=H.hueCommand(h,"hueBuy",hue,r);assert(not ok and why=="RevealPending")
+  -- v1 launch: the jar route is the Customization Egg (lookBuy); the Hue Egg is closed.
+  local LE=require(game.ReplicatedStorage.Shared.LookEggCatalog);h.lookAvailable=true
+  local hue,r=quote(h,c,{poolVersion=LE.PoolVersion,price=LE.Price,selectionMode="random",missingCharms=LE.missing(h.state.charmUnlocks),charmMisses=require(server.LookState).misses(h.state)});hue.catalogVersion=require(game.ReplicatedStorage.Shared.HueCatalog).CatalogVersion
+  local ok,why=H.hueCommand(h,"lookBuy",hue,r);assert(not ok and why=="RevealPending","lookBuy "..tostring(why))
   local nectar=h.state.nectar;ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg"and h.state.nectar==nectar) -- v1: Meadow retired; the Hue route above covers the pending block.
   for i=1,40 do command(h,c,"materialEquip",{petId="pip",finishId=if i%2==1 then "gloss"else "standard",expectedFinish=if i%2==1 then "standard"else "gloss"})end
   assert(#h.state.materialReceiptOrder==32 and h.state.materialReceipts[id]and h.state.pendingMaterialResult.id==id)

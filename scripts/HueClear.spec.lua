@@ -5,9 +5,10 @@
 -- Usage: require(ServerScriptService.Server.ZZSpecs.HueClear)(ServerScriptService.Server)
 return function(server)
  local RawH=require(server.HatchProgress);local H={};for key,value in pairs(RawH)do H[key]=value end
- function H.load(...)local handle=RawH.load(...);handle.restricted=false;return handle end -- explicit allowed random fixture
- local S=require(server.HueState)
- local Hue=require(game.ReplicatedStorage.Shared.HueCatalog)
+ -- v1 launch: jars come from the Customization Egg (lookBuy); the Hue Egg (hueBuy) is closed.
+ function H.load(...)local handle=RawH.load(...);handle.restricted=false;handle.lookAvailable=true;return handle end -- explicit allowed random fixture
+ local S=require(server.HueState);local LS=require(server.LookState)
+ local Hue=require(game.ReplicatedStorage.Shared.HueCatalog);local LE=require(game.ReplicatedStorage.Shared.LookEggCatalog)
  local cases={};local function test(name,f)f();table.insert(cases,name)end
  local function copy(x)if type(x)~="table"then return x end;local r={};for k,v in pairs(x)do r[k]=copy(v)end;return r end
  local function fixture()
@@ -25,7 +26,10 @@ return function(server)
   local q,r=request(h,fields);local ok,why,receipt=H.hueCommand(h,action,q,r);assert(ok,why);assert(S.valid(h.state),"invalid state after "..action);return q,r,receipt
  end
  local function dose(h,c,item,pet,channel)
-  c.unit=(table.find(Hue.RollOrder,item)-.5)/#Hue.RollOrder;command(h,"hueBuy",{})
+  local s=h.state;local missing=LE.missing(s.charmUnlocks);local cumulative=0;c.unit=nil
+  for _,row in ipairs(LE.odds(missing))do if row.id==item then c.unit=(cumulative+row.percent/2)/100;break end;cumulative+=row.percent end
+  assert(c.unit and not LE.pityDue(missing,LS.misses(s)),"jar roll for "..item)
+  command(h,"lookBuy",{poolVersion=LE.PoolVersion,price=LE.Price,selectionMode="random",missingCharms=missing,charmMisses=LS.misses(s)})
   command(h,"hueUse",{itemId=item,petId=pet,channel=channel,counts=S.row(h.state,pet)[channel],pendingResultId=h.state.pendingHueResult.id})
  end
  test("clears one channel for free: no Stars, no jars, the other channel kept",function()

@@ -12,6 +12,8 @@ return function(server)
 	local Toys = require(Shared.ToyCatalog)
 	local Finishes = require(Shared.MaterialCatalog)
 	local Hue = require(Shared.HueCatalog)
+	local LE = require(Shared.LookEggCatalog)
+	local LS = require(server.LookState)
 	local Features = require(Shared.FeatureCatalog)
 	local Eggs = require(Shared.EggCatalog)
 	local cases = {}
@@ -61,7 +63,18 @@ return function(server)
 		command(h, c, "material", "materialBuy", fields)
 		command(h, c, "material", "materialAck", { resultId = h.state.pendingMaterialResult.id })
 	end
-	local function buyFruit(h, c) command(h, c, "hue", "hueBuy", {}); command(h, c, "hue", "hueStore", { resultId = h.state.pendingHueResult.id }) end
+	-- v1 launch: jars come from the Customization Egg (lookBuy); the Hue Egg (hueBuy) is closed.
+	local function fixedJar(h)
+		local s = h.state
+		return LE.fixedNext(LE.missing(s.charmUnlocks), LS.misses(s), s.hueInventory, s.finishInventory)
+	end
+	local function buyJar(h, c)
+		local s = h.state
+		local mode = LE.selectionMode(h.restricted)
+		local fields = { poolVersion = LE.PoolVersion, price = LE.Price, selectionMode = mode, missingCharms = LE.missing(s.charmUnlocks), charmMisses = LS.misses(s) }
+		if mode == "fixed" then fields.fixedItemId = fixedJar(h) end
+		command(h, c, "hue", "lookBuy", fields); command(h, c, "hue", "hueStore", { resultId = h.state.pendingHueResult.id })
+	end
 	local function buyFeature(h, c) command(h, c, "feature", "featureBuy", { poolVersion = Features.PoolVersion }); command(h, c, "feature", "featureAck", { resultId = h.state.pendingFeatureResult.id }) end
 
 	test("policy read fails closed: restricted unless the policy says false", function()
@@ -109,16 +122,22 @@ return function(server)
 		assert(c.rolls == rolls, "a restricted purchase drew a random number")
 	end)
 
-	test("restricted fruit and features give the item held fewest of, in published order", function()
+	test("restricted Customization Egg jars and features give the item held fewest of, in published order", function()
 		local h, _, c = fixture(true)
+		h.lookAvailable = true
 		local rolls = c.rolls
-		for _, id in ipairs(Hue.RollOrder) do
-			assert(H.public(h).nextFixed.hue == id)
-			local before = h.state.hueInventory[id]
-			buyFruit(h, c)
-			assert(h.state.hueInventory[id] == before + 1, "expected fruit " .. id)
+		for _, id in ipairs(LE.JarOrder) do
+			assert(fixedJar(h) == id, "next jar " .. tostring(fixedJar(h)) .. ", expected " .. id)
+			local stock = if LE.kind(id) == "hue" then "hueInventory" else "finishInventory"
+			local before = (h.state[stock] or {})[id] or 0
+			buyJar(h, c)
+			assert(h.state[stock][id] == before + 1, "expected jar " .. id)
 		end
-		assert(H.public(h).nextFixed.hue == Hue.RollOrder[1], "the order starts over")
+		assert(fixedJar(h) == LE.JarOrder[1], "the order starts over")
+		-- The retired Hue Egg is closed for restricted players too.
+		local value, revision = quote(h, c, "hue", {})
+		local ok, why = H.hueCommand(h, "hueBuy", value, revision)
+		assert(not ok and why == "LegacyPurchaseClosed", "hueBuy " .. tostring(why))
 		for _, id in ipairs({ "horns", "claws", "wings", "horns" }) do
 			assert(H.public(h).nextFixed.feature == id)
 			local before = h.state.featureStock[id]
