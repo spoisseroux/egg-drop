@@ -3504,6 +3504,7 @@ clientUI.boardContentGate=require(script.BoardContentGate)
 
 local function addView(source)
 	if rendererPresentation.destroyed then return end
+	if eggViews[source] then return end -- one view per ball (content gate, clock and handoff can all ask)
 	if clientUI.netTapShown and (source.Parent==board or source.Name:sub(1,6)=="Ghost_") then clientUI.netTapShown() end
 	local tier = source:GetAttribute("Tier")
 	local id = source:GetAttribute("EggId")
@@ -3528,7 +3529,10 @@ local function removeView(source)
 end
 roomView.boardContentReady=function(previousSerial)
  if not clientUI.boardContentGate.ready(board,previousSerial)then return false end
- for _,source in ipairs(board:GetChildren())do if not eggViews[source]then addView(source)end end
+ -- A server ball held for a ghost's handoff gets its view at the handoff, not here.
+ for _,source in ipairs(board:GetChildren())do
+  if not eggViews[source]and not(clientUI.ghosts and clientUI.ghosts:holding(source))then addView(source)end
+ end
  return true
 end
 -- Deck network S2b (deck-network-plan.md): with the snapshot clock on, a ball's view
@@ -3584,6 +3588,7 @@ if clientUI.dropIntent and require(ReplicatedStorage.Shared.FeatureFlags).DeckNe
   canShow=function()return board:GetAttribute("Mode")=="Board"and backdrop.Visible and gui.Enabled and not GuiService.MenuIsOpen end,
   add=function(source)addView(source)end,
   remove=function(source)removeView(source)end,
+  hasView=function(eggId)return viewsById[eggId]~=nil end,
   rebind=function(source,eggId)
    local view=eggViews[source];if not view then return end
    viewsById[view.id]=nil;view.id=eggId;view.faceInput.id=eggId;viewsById[eggId]=view.gel

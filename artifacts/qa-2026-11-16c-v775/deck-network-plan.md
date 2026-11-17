@@ -386,3 +386,21 @@ Until S2b, S2a draws positions about one render delay (50-200 ms) behind the mer
 - JellyOverflow and FieldFeedbackOwner pass with (gui, board).
 - Console: fixture noise only.
 - `DeckNetGhost` is on by default.
+
+### S5 review changes (GO WITH CHANGES, 2026-11-17, place v859)
+
+1. **Late ack.** If the server ball is already drawn when the ack arrives (`viewsById[eggId]` exists), the ghost fades instead of binding (`stats.late`).
+2. **Held balls.**
+   - `boardContentReady` skips a server Part held for a ghost handoff (`Ghosts:holding`).
+   - `addView` now returns early for a ball that already has a view, so the content gate, the clock and the handoff can never draw it twice.
+3. **Nit.** `Ghosts:spawn` refuses an unknown tier.
+4. **Found while verifying.** Render-step names are shared by every Luau VM in the client. A spec's `Ghosts:destroy()` unbound the game's own `EggDropDeckGhosts` step, so after a spec run the game's ghosts never stepped (0 handoffs in 12 drops). Each instance now binds a unique name.
+
+New `GhostDrops` spec: 6 cases (late ack, held-until-handoff, merge before handoff, unknown tier, refusal and clear, two hosts stepping independently).
+
+**Verification.**
+- Specs: GhostDrops 6, GhostFlight 9, DropIntent 12, BoardSnapshots 13, all run in Play before the measurement.
+- Jitter (150-250 ms), 12 drops: tap to ball 0 ms; next tap 466 ms; 0 refusals; 9 handoffs plus 3 merged before the handoff; gap mean 0.40 stud; 0 late acks.
+- Client suite: 147 of 166 pass, the known set plus argument misses. MachineHub fails only inside the full suite and passes alone twice (14/14).
+- Server suite: 64 of 64 runs.
+- Console: fixture noise only.

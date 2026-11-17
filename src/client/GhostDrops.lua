@@ -21,14 +21,18 @@ Ghosts.RenderAction="EggDropDeckGhosts"
 -- resetId(), onContact(token), canShow()}
 function Ghosts.new(host)
  local self=setmetatable({host=host,list={},byToken={},byEgg={},obstacles={},
-  stats={spawned=0,handoffs=0,refused=0,timeouts=0,cleared=0,gapMax=0,gapSum=0,blendMaxStep=0}},Ghosts)
- RunService:BindToRenderStep(Ghosts.RenderAction,Enum.RenderPriority.First.Value+1,function()self:step(os.clock())end)
+  stats={spawned=0,handoffs=0,refused=0,timeouts=0,cleared=0,late=0,gone=0,held=0,gapMax=0,gapSum=0,blendMaxStep=0}},Ghosts)
+ -- A name per instance: render-step names are shared across every Luau VM in the client,
+ -- and a spec's ghosts unbinding the game's (same name) stopped the game's ghosts stepping.
+ Ghosts.instances=(Ghosts.instances or 0)+1
+ self.renderAction=Ghosts.RenderAction.."_"..Ghosts.instances.."_"..tostring(math.random(1,1e9))
+ RunService:BindToRenderStep(self.renderAction,Enum.RenderPriority.First.Value+1,function()self:step(os.clock())end)
  return self
 end
 
 function Ghosts:destroy()
  self:clear()
- pcall(function()RunService:UnbindFromRenderStep(Ghosts.RenderAction)end)
+ pcall(function()RunService:UnbindFromRenderStep(self.renderAction)end)
 end
 
 function Ghosts:isGhost(source)
@@ -41,11 +45,13 @@ function Ghosts:count()return #self.list end
 function Ghosts:spawn(token,aim,tier,now,look)
  if not self.host.canShow()then return nil end
  local c=self.host.constants
- local radius=c.Tiers[tier].radius
+ local spec=type(tier)=="number"and c.Tiers[tier]
+ if not spec then return nil end
+ local radius=spec.radius
  local vx,vy=Flight.launchVelocity(c,aim)
  local source=Instance.new("Part")
  source.Name="Ghost_"..token;source.Anchored=true;source.CanCollide=false;source.CanQuery=false;source.CanTouch=false
- source.Size=Vector3.one*radius*2;source.Color=c.Tiers[tier].color;source.Position=Vector3.new(0,c.SpawnY,0)
+ source.Size=Vector3.one*radius*2;source.Color=spec.color;source.Position=Vector3.new(0,c.SpawnY,0)
  source:SetAttribute("Tier",tier);source:SetAttribute("EggId",-token);source:SetAttribute("BoardSerial",self.host.resetId())
  if look then source:SetAttribute("PowerUp",look.star==true);source:SetAttribute("ItemMark",look.mark)end
  local ghost={token=token,source=source,flight=Flight.new(c,vx,vy,radius),radius=radius,born=now,state="flying"}
@@ -59,6 +65,9 @@ end
 function Ghosts:ack(token,ok,eggId)
  local g=self.byToken[token];if not g then return end
  if not ok or type(eggId)~="number"then self.stats.refused+=1;self:fade(g);return end
+ -- A late ack: the server ball is already drawn (its Part and stream sample beat the
+ -- ack). Binding now would point its id at the ghost and draw the ball twice.
+ if self.host.hasView and self.host.hasView(eggId)then self.stats.late+=1;self:fade(g);return end
  g.eggId,g.boundAt=eggId,os.clock()
  self.byEgg[eggId]=g
  self.host.rebind(g.source,eggId)
@@ -70,13 +79,20 @@ function Ghosts:holdSpawn(eggId,source,show)
  local g=self.byEgg[eggId]
  if not g or g.state=="fading"then return false end
  g.server,g.show,g.serverAt=source,show,os.clock()
+ self.stats.held+=1
  return true
 end
 function Ghosts:holds(eggId)return self.byEgg[eggId]~=nil end
+-- Is this server Part waiting for a ghost's handoff (its view must not be added yet)?
+function Ghosts:holding(source)
+ for _,g in ipairs(self.list)do if g.server==source and g.show then return true end end
+ return false
+end
 
 -- The server ball left before the handoff (a quick merge): the ghost goes with it.
 function Ghosts:serverGone(eggId)
  local g=self.byEgg[eggId];if not g then return false end
+ self.stats.gone+=1
  g.show=nil;self:finish(g,false)
  return true
 end
