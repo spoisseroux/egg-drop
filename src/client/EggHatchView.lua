@@ -646,7 +646,7 @@ function View.liveOrder(flags)
  return order
 end
 -- Pure: the odds block for one egg. Values always come from OddsText.list, so the
--- whole percentages of one egg add up to 100% (equal thirds read 34%, 33%, 33%).
+-- shares of one egg add up to 100% and equal shares read the same (1/6 each: "1 in 6").
 -- Returns {rows = {{id, name, value}}, per = "1 toy per egg", empty = text or nil}.
 -- Restricted players (snapshot `restricted`, F1 policy) never roll: the block is one
 -- "Next: <item>" row (or "All collected") from `nextFixed`, and `restricted` is true.
