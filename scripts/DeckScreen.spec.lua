@@ -102,8 +102,17 @@ return function(client,parent)
   test("focus ring sits 4 px outside its target and hides with it",function()
    local holder=Instance.new("Frame");holder.Size=UDim2.fromOffset(400,200);holder.Position=UDim2.fromOffset(10,10);holder.Parent=gui
    local b=Kit.button(holder,"Target",{text="Replay"});b.Position=UDim2.fromOffset(40,30)
+   -- v887 QA: gamepad only. Studio's last input is mouse or keyboard, so it stays hidden...
    local ring=Kit.focusRing(holder);task.wait();ring.attach(b,12);task.wait()
-   assert(near(ring.root.AbsolutePosition.X,b.AbsolutePosition.X-4,1)and near(ring.root.AbsoluteSize.X,b.AbsoluteSize.X+8,1)and ring.root.Visible)
+   assert(Kit.ringGamepadOnly and not Kit.lastInputGamepad()and not ring.root.Visible,"no white ring for mouse, keyboard or touch")
+   -- ...and with the gamepad rule lifted the ring's geometry is unchanged.
+   Kit.ringGamepadOnly=false
+   local okRing,ringProblem=pcall(function()
+    ring.attach(nil);ring.attach(b,12);task.wait()
+    assert(near(ring.root.AbsolutePosition.X,b.AbsolutePosition.X-4,1)and near(ring.root.AbsoluteSize.X,b.AbsoluteSize.X+8,1)and ring.root.Visible)
+   end)
+   Kit.ringGamepadOnly=true
+   assert(okRing,ringProblem)
    ring.hide();assert(not ring.root.Visible);holder:Destroy()
   end)
  end)

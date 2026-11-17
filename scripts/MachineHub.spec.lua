@@ -290,7 +290,7 @@ return function(client,parent)
     hub:input(K.ButtonA);assert(opened[1]=="settings","ButtonA opens the focused tile")
     hub:input(K.A);hub:input(K.A);assert(hub.root:GetAttribute("FocusedTile")=="quests","A on the keyboard moves left")
     hub:input(K.Return);assert(opened[2]=="quests")
-    assert(hub.ring.root.Visible and hub.ring.target==hub.tileViews[4].button,"the focus ring sits on Quests")
+    assert(hub.ring.target==hub.tileViews[4].button and hub.ring.root.Visible==require(client.DeckKit).lastInputGamepad(),"the focus ring sits on Quests (drawn for a gamepad only)")
     -- A tap focuses and opens in one go (the tile's Activated handler).
     hub:focusTile(5);hub:act();assert(opened[3]=="book")
     -- Back closes; the shade leaves the stack.

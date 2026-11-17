@@ -23,7 +23,9 @@ LCD.Width = 64
 LCD.Height = math.round(LCD.Width * (Config.Height + 0.8) / (Config.Width + 0.8))
 -- G1 (QA 2026-11-16): a snappier merge (was 0.32 s) that lands MergePop bigger than
 -- the result ball; the host then hands over to the ball's own squash wobble.
-LCD.MergeDuration = 0.22
+-- v887 QA (2026-11-17): 0.16 s and an ease-out (was smoothstep, 0.22 s). The smoothstep's
+-- slow start held the two balls apart for about 60 ms and read as a pause before the merge.
+LCD.MergeDuration = 0.16
 LCD.MergePop = 0.1
 -- Bloom: each egg throws its own colour onto the well (1.28 r, about 30%); the
 -- egg that matches the held one throws its light colour further and stronger.
@@ -623,7 +625,7 @@ end
 local function mergeBlob(self, first, second, target, radius, resultRadius, color, age, tier)
 	if self.failed or radius <= 0 then return end
 	local t = math.clamp(age / LCD.MergeDuration, 0, 1)
-	t = t * t * (3 - 2 * t)
+	t = 1 - (1 - t) ^ 3 -- ease-out: the balls start moving together on the first frame
 	local a, b = first:Lerp(target, t), second:Lerp(target, t)
 	local lobe = radius * (0.90 - 0.70 * t)
 	local core = radius * 0.42 * (1 - t) + resultRadius * t * (1 + LCD.MergePop * t)

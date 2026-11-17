@@ -122,6 +122,10 @@ local UserInputService=game:GetService("UserInputService")
 function Kit.lastInputTouch()return UserInputService:GetLastInputType()==Enum.UserInputType.Touch end
 -- Compact screens hide the focus ring and glyph chips after touch input (UI-SPEC-COMPACT 2.5).
 Kit.touchHidesFocus=false
+-- v887 QA (2026-11-17): the white focus ring shows for a gamepad only. Mouse, keyboard
+-- and touch rely on each screen's own selected state (the green card edge).
+Kit.ringGamepadOnly=true
+function Kit.lastInputGamepad()return UserInputService:GetLastInputType().Name:sub(1,7)=="Gamepad"end
 function Kit.tween(object,time,goal,style)
  if Kit.reduced()then for key,value in pairs(goal)do object[key]=value end;return end
  TweenService:Create(object,TweenInfo.new(time,style or Enum.EasingStyle.Quad,Enum.EasingDirection.Out),goal):Play()
@@ -1099,6 +1103,12 @@ function Kit.listRow(parent,time,title,reward)
  return row
 end
 
+-- Rings follow the input device: one listener re-places every live ring on a switch
+-- (weak keys: a destroyed screen's ring drops out).
+local liveRings=setmetatable({},{__mode="k"})
+UserInputService.LastInputTypeChanged:Connect(function()
+ for api in pairs(liveRings)do if api.target and api.root.Parent then api.place(true)end end
+end)
 -- Shared focus ring: 2.5 px white, 4 px outside, radius + 4, soft glow behind.
 -- One instance per host; it slides to its next target in 90 ms.
 function Kit.focusRing(host)
@@ -1112,6 +1122,7 @@ function Kit.focusRing(host)
  local function place(instant)
   local t=api.target;if not t or not t.Parent or not t.Visible then ring.Visible=false;return end
   if Kit.touchHidesFocus and Kit.lastInputTouch()then ring.Visible=false;return end
+  if Kit.ringGamepadOnly and not Kit.lastInputGamepad()then ring.Visible=false;return end
   local origin=host.AbsolutePosition
   -- A padded host (the phone sheets' plate-grip inset) shifts its children's origin.
   local pad=host:FindFirstChildOfClass("UIPadding")
@@ -1134,6 +1145,8 @@ function Kit.focusRing(host)
   place(not moved)
  end
  function api.hide()if connection then connection:Disconnect();connection=nil end;api.target=nil;ring.Visible=false end
+ api.place=place
+ liveRings[api]=true
  return api
 end
 
