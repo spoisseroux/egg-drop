@@ -1,0 +1,91 @@
+{
+  "name": "egg-drop",
+  "globIgnorePaths": [
+    "**/ZZSpecs",
+    "**/ZZSpecs/**"
+  ],
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "Remotes": {
+        "$className": "Folder"
+      },
+      "PetAssets": {
+        "$path": "assets/garden-babies/PetAssets.rbxmx"
+      },
+      "PetMaterials": {
+        "$path": "assets/pet-materials/PetMaterials.rbxm",
+        "BodyJelly": {
+          "$path": "assets/pet-materials/BodyJelly.model.json"
+        },
+        "BodySheenM3": {
+          "$path": "assets/pet-materials/BodySheenM3.model.json"
+        },
+        "BodySheenM2": {
+          "$path": "assets/pet-materials/BodySheenM2.model.json"
+        },
+        "BodySheenM1": {
+          "$path": "assets/pet-materials/BodySheenM1.model.json"
+        },
+        "BodySheenP1": {
+          "$path": "assets/pet-materials/BodySheenP1.model.json"
+        },
+        "BodySheenP2": {
+          "$path": "assets/pet-materials/BodySheenP2.model.json"
+        },
+        "BodySheenP3": {
+          "$path": "assets/pet-materials/BodySheenP3.model.json"
+        }
+      },
+      "PetMaterialsTwoTone": {
+        "$path": "assets/pet-materials/PetMaterialsTwoTone.model.json"
+      },
+      "PetCharmAssets": {
+        "$path": "assets/pet-materials/PetCharmAssets.rbxmx"
+      },
+      "PetToyAssets": {
+        "$path": "assets/toys/PetToyAssets.rbxmx"
+      },
+      "JarAssets": {
+        "$path": "assets/jars/JarAssets.rbxmx"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "WorldAssets": {
+        "$path": "assets/world/WorldAssetsNative.rbxm"
+      },
+      "PocketDeckSlim": {
+        "$path": "assets/deck/PocketDeckSlim.rbxmx"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "DevCameraOcclusionMode": "Zoom"
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "FilteringEnabled": true
+      }
+    }
+  }
+}
