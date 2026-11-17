@@ -101,7 +101,7 @@ ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.n
 ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
 ui.coach.welcome.title,Hatch your first friend,,First-round coaching; also ui.r1.welcomePill.mid
 ui.companions.toys.line,Something to carry and chase,,Companions screen
-ui.companions.toys.name,Toys,,Companions screen
+ui.companions.toys.name,Toys,,Companions screen; also ui.r4.customize.toys.title
 ui.companions.wearing.none,Nothing yet,,Companions screen
 ui.e2.arrived.line,{pet} came to stay in your garden.,,Menu text; e.g. Bear came to stay in your garden.
 ui.e2.arrived.sayHi,Say hi,,Menu text
@@ -111,7 +111,7 @@ ui.e2.tease.many,Someone's on the way… {count} more stamps,,Menu text; e.g. So
 ui.e2.tease.one,Someone's on the way… 1 more stamp,,Menu text
 ui.e2.tease.short,Someone's on the way…,,Menu text
 ui.hatch.display.charm,A charm for your pet,,Hatch eggs screen
-ui.hatch.display.finish,A finish for your pet,,Hatch eggs screen
+ui.hatch.display.finish,A material for your pet,,Hatch eggs screen
 ui.hatch.display.firstFriend,Your first friend,,Hatch eggs screen
 ui.hatch.display.friend,New friend,,Hatch eggs screen
 ui.hatch.display.line,The display wakes up,,Hatch eggs screen
@@ -126,12 +126,12 @@ ui.hatch.egg.feature.per,1 item per egg,,Hatch eggs screen; also ui.hatch.egg.lo
 ui.hatch.egg.hue.description,Hatches one pigment jar to change your pet's colour.,,Hatch eggs screen
 ui.hatch.egg.hue.line,A jar of colour,,Hatch eggs screen
 ui.hatch.egg.hue.per,1 jar per egg,,Hatch eggs screen
-ui.hatch.egg.look.description,"Hatches one jar of colour or finish. Now and then, a rare charm.",,Hatch eggs screen
-ui.hatch.egg.look.line,"Colours, finishes and the odd charm",,Hatch eggs screen
+ui.hatch.egg.look.description,"Hatches one jar of colour or material. Now and then, a rare charm.",,Hatch eggs screen
+ui.hatch.egg.look.line,"Colours, materials and the odd charm",,Hatch eggs screen
 ui.hatch.egg.look.name,Customization Egg,,Hatch eggs screen
-ui.hatch.egg.material.description,Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.,,Hatch eggs screen
+ui.hatch.egg.material.description,Smooth and heavy. Hatches one material that changes how your pet's body catches the light.,,Hatch eggs screen
 ui.hatch.egg.material.line,A fresh new coat,,Hatch eggs screen
-ui.hatch.egg.material.per,1 finish per egg,,Hatch eggs screen
+ui.hatch.egg.material.per,1 material per egg,,Hatch eggs screen
 ui.hatch.egg.toy.description,Something is rattling around in here. Hatches one toy your pet can carry and play with.,,Hatch eggs screen
 ui.hatch.egg.toy.line,A toy to carry and chase,,Hatch eggs screen
 ui.hatch.egg.toy.per,1 toy per egg,,Hatch eggs screen
@@ -150,17 +150,17 @@ ui.hatch.look.later,Later,,Hatch eggs screen
 ui.hatch.look.missing,Charms are {each} each. Still to find: {shapes}.,,Hatch eggs screen; e.g. Charms are {each} each. Still to find: {shapes}.
 ui.hatch.look.notReady,Customization Eggs are not ready yet.,,Hatch eggs screen; also ui.hatch.look.reason.NotReady
 ui.hatch.look.openSaved.charm,Open saved charm,,Hatch eggs screen
-ui.hatch.look.openSaved.finish,Open saved finish,,Hatch eggs screen
+ui.hatch.look.openSaved.finish,Open saved material,,Hatch eggs screen
 ui.hatch.look.pity,A charm within {count} eggs,,Hatch eggs screen; e.g. A charm within 3 eggs
 ui.hatch.look.pityOne,Next egg: a charm,,Hatch eggs screen
 ui.hatch.look.pityRule,"If 14 eggs pass without a charm, the next one is a charm.",,Hatch eggs screen
 ui.hatch.look.pityShort,Charm within {count} eggs,,Hatch eggs screen; e.g. Charm within 3 eggs
 ui.hatch.look.promise.fixed,No surprises. Your next item is shown above.,,Hatch eggs screen
 ui.hatch.look.promise.random,The odds are on the label. They shift only as you collect charms.,,Hatch eggs screen
-ui.hatch.look.reason.FinishChanged,This pet's finish changed. Check it and tap again.,,Hatch eggs screen
+ui.hatch.look.reason.FinishChanged,This pet's material changed. Check it and tap again.,,Hatch eggs screen
 ui.hatch.look.reason.Locked,Find this charm first.,,Hatch eggs screen
 ui.hatch.look.reason.MaxJelly,This pet is as jelly as it gets.,,Hatch eggs screen; also ui.r4.customize.finish.maxJelly
-ui.hatch.look.reason.MaxSheen,This sheen is as far as it goes.,,Hatch eggs screen; also ui.r4.customize.finish.maxSheen
+ui.hatch.look.reason.MaxSheen,This shine is as far as it goes.,,Hatch eggs screen; also ui.r4.customize.finish.maxSheen
 ui.hatch.look.reason.PolicyChanged,Your odds just changed. Check them and tap again.,,Hatch eggs screen; also ui.hatch.look.reason.PoolChanged
 ui.hatch.look.restrictedCharm,Charm in {count} eggs,,Hatch eggs screen; e.g. Charm in 3 eggs
 ui.hatch.look.useNow,Use now,,Hatch eggs screen
@@ -168,10 +168,10 @@ ui.hatch.look.wear,Wear it,,Hatch eggs screen
 ui.hatch.look.wearOn,Wear on {pet},,Hatch eggs screen; e.g. Wear on Bear
 ui.hatch.look.wearRetry,Try wearing it again,,Hatch eggs screen
 ui.hatch.look.worn,Wearing it,,Hatch eggs screen
-ui.hatch.material.fixed,16 Stars · one guaranteed finish. No duplicates.,,Hatch eggs screen
-ui.hatch.material.nextPromise,No duplicates. Your next finish is shown above.,,Hatch eggs screen
+ui.hatch.material.fixed,16 Stars · one guaranteed material. No duplicates.,,Hatch eggs screen
+ui.hatch.material.nextPromise,No duplicates. Your next material is shown above.,,Hatch eggs screen
 ui.hatch.material.oddsPromise,No duplicates. Odds update with your collection.,,Hatch eggs screen
-ui.hatch.material.random,16 Stars · one unowned finish. No duplicates.,,Hatch eggs screen
+ui.hatch.material.random,16 Stars · one unowned material. No duplicates.,,Hatch eggs screen
 ui.hatch.next.done,All collected,,Hatch eggs screen
 ui.hatch.next.label,Next item,,Hatch eggs screen
 ui.hatch.next.line,Next: {item},,Hatch eggs screen; e.g. Next: Squeaky Bone
@@ -212,10 +212,10 @@ ui.hatch.reveal.describe.toy.wobble_top,"Spins, wobbles, never quite falls. A sm
 ui.hatch.reveal.fresh,NEW {kind},,Hatch eggs screen; e.g. NEW {kind}
 ui.hatch.reveal.kind.charm,CHARM,,Hatch eggs screen
 ui.hatch.reveal.kind.feature,FEATURE,,Hatch eggs screen
-ui.hatch.reveal.kind.finish,FINISH JAR,,Hatch eggs screen
+ui.hatch.reveal.kind.finish,MATERIAL JAR,,Hatch eggs screen
 ui.hatch.reveal.kind.hue,COLOUR JAR,,Hatch eggs screen
 ui.hatch.reveal.kind.item,ITEM,,Hatch eggs screen
-ui.hatch.reveal.kind.material,FINISH,,Hatch eggs screen
+ui.hatch.reveal.kind.material,MATERIAL,,Hatch eggs screen
 ui.hatch.reveal.kind.toy,TOY,,Hatch eggs screen
 ui.hatch.reveal.tier.Common,COMMON,,Hatch eggs screen
 ui.hatch.reveal.tier.Rare,RARE,,Hatch eggs screen
@@ -257,7 +257,7 @@ ui.inspect.sent,Hello!,,Menu text
 ui.inspect.setting.off,Pet greetings: Off,,Menu text
 ui.inspect.setting.on,Pet greetings: On,,Menu text
 ui.inspect.slot.charm,Charm,,Menu text
-ui.inspect.slot.finish,Finish,,Menu text; also ui.r4.customize.finish.title
+ui.inspect.slot.finish,Material,,Menu text; also ui.r4.customize.finish.title
 ui.inspect.slot.toy,Toy,,Menu text
 ui.inspect.spin,Drag to turn,,Menu text
 ui.inspect.wait,In a moment,,Menu text
@@ -307,7 +307,7 @@ ui.notice.questReady.what,{quest} is finished. It pays ★ {reward} when you cla
 ui.notice.welcome.next,"Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars.",,Menu text
 ui.notice.welcome.title,Your first round,,Menu text
 ui.notice.welcome.what,Drop eggs into the deck. Two of the same kind merge into a bigger one.,,Menu text
-ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear
+ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
 ui.onboarding.spend.ready,A toy for {pet},,First-round coaching; e.g. A toy for Bear
 ui.onboarding.spend.store,Store,,First-round coaching
@@ -415,28 +415,41 @@ ui.r3.quests.weekly.title,Weekly bonus,,Menu text
 ui.r3.tips,Show tips again,,Menu text
 ui.r4.customize.finish.already,Already original,,Menu text
 ui.r4.customize.finish.clearLine,Back to original from {look}. Free.,,Menu text; e.g. Back to original from {look}. Free.
-ui.r4.customize.finish.empty,Find finish jars in the Customization Egg.,,Menu text
+ui.r4.customize.finish.eggLink,Find jars in the Customization Egg ›,,Menu text
+ui.r4.customize.finish.empty,Find material jars in the Customization Egg.,,Menu text
+ui.r4.customize.finish.helper,"Use Gloss jars to add shine, Matte jars to soften.",,Menu text
 ui.r4.customize.finish.jar.gloss,Gloss,,Menu text; also catalog.MaterialCatalog.ById.gloss.name
 ui.r4.customize.finish.jar.jelly,Jelly,,"Menu text; also ui.r4.customize.finish.jelly.s2, ui.r4.customize.finish.jellyAxis, catalog.MaterialCatalog.ById.jelly.name"
 ui.r4.customize.finish.jar.matte,Matte,,"Menu text; also ui.r4.customize.finish.sheen.m2, catalog.MaterialCatalog.ById.matte.name"
 ui.r4.customize.finish.jelly.s1,Misty,,Menu text
 ui.r4.customize.finish.jelly.s3,Clear Jelly,,Menu text
+ui.r4.customize.finish.jellyCount,{count}/{total},,Menu text; e.g. 3/12; also ui.stampChip.open
 ui.r4.customize.finish.kept,Kept: {finish},,Menu text; e.g. Kept: {finish}
 ui.r4.customize.finish.look,Look: {look},,Menu text; e.g. Look: {look}
 ui.r4.customize.finish.mix,{jelly} {sheen},,Menu text; e.g. {jelly} {sheen}
+ui.r4.customize.finish.noJars,No {item} jars,,Menu text; e.g. No Squeaky Bone jars
 ui.r4.customize.finish.original,Original,,Menu text; also ui.r4.customize.finish.sheen.zero
+ui.r4.customize.finish.pill.max,Max,,Menu text
+ui.r4.customize.finish.pill.none,×0,,Menu text
+ui.r4.customize.finish.pill.use,Use,,Menu text
+ui.r4.customize.finish.reset,Back to original,,Menu text
 ui.r4.customize.finish.sheen.m1,Soft,,Menu text
 ui.r4.customize.finish.sheen.m3,Chalky,,Menu text
 ui.r4.customize.finish.sheen.p1,Satin,,Menu text
 ui.r4.customize.finish.sheen.p2,Glossy,,Menu text
 ui.r4.customize.finish.sheen.p3,Glassy,,Menu text
-ui.r4.customize.finish.sheenAxis,Sheen,,Menu text
+ui.r4.customize.finish.sheenAxis,Shine,,Menu text; also ui.r4.customize.finish.shine
+ui.r4.customize.finish.stop,{item} {count}/{total},,Menu text; e.g. Squeaky Bone 3/12
 ui.r4.customize.finish.useJar,Use a {item} jar,,Menu text; e.g. Use a Squeaky Bone jar
-ui.r4.customize.moreFinishes,More finish jars hatch from Customization Eggs.,,Menu text
+ui.r4.customize.moreFinishes,More material jars hatch from Customization Eggs.,,Menu text
 ui.r4.customize.moreHues,More colour jars hatch from Customization Eggs.,,Menu text
-ui.r4.customize.moreMaterials,More finishes hatch from Customization Eggs.,,Menu text
+ui.r4.customize.moreMaterials,More materials hatch from Customization Eggs.,,Menu text
 ui.r4.customize.moreToys,More toys hatch from Toy Eggs.,,Menu text
 ui.r4.customize.newBadge,NEW,,Menu text
+ui.r4.customize.subtitle,"Hue, charm and material",,Menu text
+ui.r4.customize.toys.owned,{count} OWNED,,Menu text; e.g. 3 OWNED
+ui.r4.customize.toys.playing,Playing with {pet},,Menu text; e.g. Playing with Bear
+ui.r4.customize.toys.row,Pick a toy and watch your pet play,,Menu text
 ui.r4.equipped,Equipped,,Menu text
 ui.r4.hue.confirmLine,Press again to reset. It's free.,,Menu text
 ui.r4.hue.confirmReset,Confirm reset,,Menu text
@@ -524,7 +537,6 @@ ui.stamp.promise,"No streaks. Miss a day, lose nothing.",,Stamp card
 ui.stamp.tomorrow,Next stamp tomorrow: ★ {reward},,Stamp card; e.g. Next stamp tomorrow: ★ 5
 ui.stampChip.done,✓ {count}/{total},,Menu text; e.g. ✓ 3/12
 ui.stampChip.label,Daily stamp,,Menu text
-ui.stampChip.open,{count}/{total},,Menu text; e.g. 3/12
 ui.style.balls.pitch,"Same sizes, same rules. Only cuter.",,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.balls,Just for looks. Never an advantage.,,Deck style screen
@@ -741,7 +753,7 @@ catalog.BookCatalog.Discoveries.15.name,Win with each item type,,Catalogue BookC
 catalog.BookCatalog.Discoveries.16.name,25 tidy wins,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.16.name
 catalog.BookCatalog.Discoveries.17.name,Play 100 rounds,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.17.name
 catalog.BookCatalog.Pages.discoveries.name,Discoveries,,Catalogue BookCatalog (name)
-catalog.BookCatalog.Pages.toys.name,Toys & finishes,,Catalogue BookCatalog (name)
+catalog.BookCatalog.Pages.toys.name,Toys & materials,,Catalogue BookCatalog (name)
 catalog.EggCatalog.ById.meadow.name,Mixed Meadow,,Catalogue EggCatalog (name)
 catalog.EggCatalog.ById.sprout.name,Sprout Focused,,Catalogue EggCatalog (name)
 catalog.PetCatalog.1.description,"Soft as a nap. Hugs first, asks questions never.",,Catalogue PetCatalog (description)

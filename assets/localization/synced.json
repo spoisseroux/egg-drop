@@ -298,7 +298,7 @@
    "example": "Catalogue BookCatalog (name)"
   },
   "catalog.BookCatalog.Pages.toys.name": {
-   "source": "Toys & finishes",
+   "source": "Toys & materials",
    "context": "",
    "example": "Catalogue BookCatalog (name)"
   },
@@ -1685,7 +1685,7 @@
   "ui.companions.toys.name": {
    "source": "Toys",
    "context": "",
-   "example": "Companions screen"
+   "example": "Companions screen; also ui.r4.customize.toys.title"
   },
   "ui.companions.wearing.none": {
    "source": "Nothing yet",
@@ -1733,7 +1733,7 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.display.finish": {
-   "source": "A finish for your pet",
+   "source": "A material for your pet",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1808,12 +1808,12 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.egg.look.description": {
-   "source": "Hatches one jar of colour or finish. Now and then, a rare charm.",
+   "source": "Hatches one jar of colour or material. Now and then, a rare charm.",
    "context": "",
    "example": "Hatch eggs screen"
   },
   "ui.hatch.egg.look.line": {
-   "source": "Colours, finishes and the odd charm",
+   "source": "Colours, materials and the odd charm",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1823,7 +1823,7 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.egg.material.description": {
-   "source": "Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.",
+   "source": "Smooth and heavy. Hatches one material that changes how your pet's body catches the light.",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1833,7 +1833,7 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.egg.material.per": {
-   "source": "1 finish per egg",
+   "source": "1 material per egg",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1928,7 +1928,7 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.look.openSaved.finish": {
-   "source": "Open saved finish",
+   "source": "Open saved material",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1963,7 +1963,7 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.look.reason.FinishChanged": {
-   "source": "This pet's finish changed. Check it and tap again.",
+   "source": "This pet's material changed. Check it and tap again.",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1978,7 +1978,7 @@
    "example": "Hatch eggs screen; also ui.r4.customize.finish.maxJelly"
   },
   "ui.hatch.look.reason.MaxSheen": {
-   "source": "This sheen is as far as it goes.",
+   "source": "This shine is as far as it goes.",
    "context": "",
    "example": "Hatch eggs screen; also ui.r4.customize.finish.maxSheen"
   },
@@ -2018,12 +2018,12 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.material.fixed": {
-   "source": "16 Stars · one guaranteed finish. No duplicates.",
+   "source": "16 Stars · one guaranteed material. No duplicates.",
    "context": "",
    "example": "Hatch eggs screen"
   },
   "ui.hatch.material.nextPromise": {
-   "source": "No duplicates. Your next finish is shown above.",
+   "source": "No duplicates. Your next material is shown above.",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -2033,7 +2033,7 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.material.random": {
-   "source": "16 Stars · one unowned finish. No duplicates.",
+   "source": "16 Stars · one unowned material. No duplicates.",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -2238,7 +2238,7 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.reveal.kind.finish": {
-   "source": "FINISH JAR",
+   "source": "MATERIAL JAR",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -2253,7 +2253,7 @@
    "example": "Hatch eggs screen"
   },
   "ui.hatch.reveal.kind.material": {
-   "source": "FINISH",
+   "source": "MATERIAL",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -2463,7 +2463,7 @@
    "example": "Menu text"
   },
   "ui.inspect.slot.finish": {
-   "source": "Finish",
+   "source": "Material",
    "context": "",
    "example": "Menu text; also ui.r4.customize.finish.title"
   },
@@ -2715,7 +2715,7 @@
   "ui.onboarding.spend.give": {
    "source": "Give to {pet}",
    "context": "",
-   "example": "First-round coaching; e.g. Give to Bear"
+   "example": "First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give"
   },
   "ui.onboarding.spend.line": {
    "source": "Choose a Toy Egg when you're ready.",
@@ -3252,8 +3252,18 @@
    "context": "",
    "example": "Menu text; e.g. Back to original from {look}. Free."
   },
+  "ui.r4.customize.finish.eggLink": {
+   "source": "Find jars in the Customization Egg ›",
+   "context": "",
+   "example": "Menu text"
+  },
   "ui.r4.customize.finish.empty": {
-   "source": "Find finish jars in the Customization Egg.",
+   "source": "Find material jars in the Customization Egg.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.helper": {
+   "source": "Use Gloss jars to add shine, Matte jars to soften.",
    "context": "",
    "example": "Menu text"
   },
@@ -3282,6 +3292,11 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.r4.customize.finish.jellyCount": {
+   "source": "{count}/{total}",
+   "context": "",
+   "example": "Menu text; e.g. 3/12; also ui.stampChip.open"
+  },
   "ui.r4.customize.finish.kept": {
    "source": "Kept: {finish}",
    "context": "",
@@ -3297,10 +3312,35 @@
    "context": "",
    "example": "Menu text; e.g. {jelly} {sheen}"
   },
+  "ui.r4.customize.finish.noJars": {
+   "source": "No {item} jars",
+   "context": "",
+   "example": "Menu text; e.g. No Squeaky Bone jars"
+  },
   "ui.r4.customize.finish.original": {
    "source": "Original",
    "context": "",
    "example": "Menu text; also ui.r4.customize.finish.sheen.zero"
+  },
+  "ui.r4.customize.finish.pill.max": {
+   "source": "Max",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.pill.none": {
+   "source": "×0",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.pill.use": {
+   "source": "Use",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.reset": {
+   "source": "Back to original",
+   "context": "",
+   "example": "Menu text"
   },
   "ui.r4.customize.finish.sheen.m1": {
    "source": "Soft",
@@ -3328,9 +3368,14 @@
    "example": "Menu text"
   },
   "ui.r4.customize.finish.sheenAxis": {
-   "source": "Sheen",
+   "source": "Shine",
    "context": "",
-   "example": "Menu text"
+   "example": "Menu text; also ui.r4.customize.finish.shine"
+  },
+  "ui.r4.customize.finish.stop": {
+   "source": "{item} {count}/{total}",
+   "context": "",
+   "example": "Menu text; e.g. Squeaky Bone 3/12"
   },
   "ui.r4.customize.finish.useJar": {
    "source": "Use a {item} jar",
@@ -3338,7 +3383,7 @@
    "example": "Menu text; e.g. Use a Squeaky Bone jar"
   },
   "ui.r4.customize.moreFinishes": {
-   "source": "More finish jars hatch from Customization Eggs.",
+   "source": "More material jars hatch from Customization Eggs.",
    "context": "",
    "example": "Menu text"
   },
@@ -3348,7 +3393,7 @@
    "example": "Menu text"
   },
   "ui.r4.customize.moreMaterials": {
-   "source": "More finishes hatch from Customization Eggs.",
+   "source": "More materials hatch from Customization Eggs.",
    "context": "",
    "example": "Menu text"
   },
@@ -3359,6 +3404,26 @@
   },
   "ui.r4.customize.newBadge": {
    "source": "NEW",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.subtitle": {
+   "source": "Hue, charm and material",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.toys.owned": {
+   "source": "{count} OWNED",
+   "context": "",
+   "example": "Menu text; e.g. 3 OWNED"
+  },
+  "ui.r4.customize.toys.playing": {
+   "source": "Playing with {pet}",
+   "context": "",
+   "example": "Menu text; e.g. Playing with Bear"
+  },
+  "ui.r4.customize.toys.row": {
+   "source": "Pick a toy and watch your pet play",
    "context": "",
    "example": "Menu text"
   },
@@ -3796,11 +3861,6 @@
    "source": "Daily stamp",
    "context": "",
    "example": "Menu text"
-  },
-  "ui.stampChip.open": {
-   "source": "{count}/{total}",
-   "context": "",
-   "example": "Menu text; e.g. 3/12"
   },
   "ui.style.balls.pitch": {
    "source": "Same sizes, same rules. Only cuter.",
