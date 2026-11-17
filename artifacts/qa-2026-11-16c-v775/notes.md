@@ -33,3 +33,35 @@ Batch 6 to 12, 14, 15: captures, critique and what was not verified are in `ui-b
 19. The Material tab is confusing: unlabelled dots at the top, nothing to tap, and Original appears twice. Redesign it with labelled Shine and Jelly meters and a clear empty state. [Fable spec, then build]
 20. The Pocket Deck still stutters on the phone. Is it server sync? It should be async. [investigating the network path]
 21. The wallet 3D Star shows as a thin orange sliver in Customize, but looks fine in Companions. [check]
+
+## Overnight plan (2026-11-17, Spencer asleep)
+
+1. **Implementer** (Studio e25b344b-bee1-403a-931a-4c897f05e944):
+   - Verify the launch build b157d5d..b2f668e: TestFreshSaves=false, launch.project.json without ZZSpecs, hueBuy closed, the pity-egg odds, Toy Egg at 16.67%.
+   - Fix the Book `toy:pocket_deck` art slot.
+   - Set the play mode back to Test.
+   - save_place.
+2. **Coordinator:**
+   - Run a quick review.
+   - Sync translations; the rounding-note string is new.
+   - Run the strip-test-content report.
+   - Publish privately and restart the servers.
+   - Record it in PLAY-BUILD.
+3. **Capture agent:** finish the store thumbnails.
+   - 01: Pocket Deck round mid-merge.
+   - 02: Bear as the hero, holding the ball (not the deck).
+   - 03: garden pets.
+   - 04: Pet Park.
+   - Redo 08 (hat bigger), 09 (no clipping) and 10 (Book, after the art fix).
+4. **Morning, Spencer:**
+   - Pick icon A or B and which thumbnails to use. The coordinator uploads them via Studio Game Settings.
+   - Test pass: a real purchase, rejoin, a second account, mobile data.
+   - Release publicly.
+
+**Done tonight:**
+- Universe name: Pocket Pals: Pet Garden.
+- Description, voice off, VR off.
+- Private servers at 50 R$.
+- Server size 12.
+- Questionnaire submitted.
+- Kids & Select fee deferred.
