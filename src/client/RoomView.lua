@@ -1155,6 +1155,8 @@ end
 
 function Room:show(mode, animate)
 	self.welcome.Visible = false
+	-- v834: the deck's safe-area insets follow the shown mode (set under the shade, at the swap).
+	if self.onShowMode then self.onShowMode(mode) end
 	-- QA 2026-11-13 Q1: the world camera is frozen while the deck is up (DeckCameraLock);
 	-- the Room path lets go first so the roam camera below starts from a Custom camera.
 	if mode == "Room" and self.boardCamera then self.boardCamera:release() end
@@ -1192,15 +1194,23 @@ function Room:show(mode, animate)
 		end
   if self.affection then self.affection:setPet(nil)end
 		self.petPrompt, self.petClick, self.petTarget, self.focusMotion = nil, nil, nil, nil
+		-- v834 phone notes: while roaming, savedCamera still held the view from when the
+		-- player last came back to the garden, and restoreCamera snapped the camera back to
+		-- it as the deck opened (8+ studs). Only a pet focus or greeting shot, which we
+		-- drive, goes back to its saved view; a roaming camera stays exactly where it is.
+		if not(self.focusing or self.greetingCamera or self.focusTransitioning)then self.savedCamera=nil end
 		self:restoreCamera()
 		self.boardCamera = self.boardCamera or require(script.Parent.DeckCameraLock).new()
 		self.boardCamera:freeze(workspace.CurrentCamera)
-		-- Follow-up 2026-11-14: park the frozen camera on a clean view across the garden
-		-- (it used to sit behind the avatar against the invisible perimeter wall).
+		-- v834 phone notes: the world behind the see-through deck stays exactly where the
+		-- player opened it. The frozen camera keeps its view; it is no longer parked over the
+		-- avatar (the 2026-11-14 follow-up), which read as the camera jumping on open.
+		-- QA v685 D1: only the first open, before the avatar exists, has no view worth
+		-- keeping; then the camera is parked on the avatar once it spawns and held there.
 		local _,parkRoot=self:cameraIdentity()
-		if parkRoot then self.boardCamera:park(parkRoot.Position,require(ReplicatedStorage.Shared.HollowWorldLayout).Hub)end
-		-- QA v685 D1: first open has no avatar yet; keep the camera ours until it is parked.
-		self.boardCamera:hold(function()local _,root=self:cameraIdentity();return root and root.Position end,require(ReplicatedStorage.Shared.HollowWorldLayout).Hub)
+		if not parkRoot then
+			self.boardCamera:hold(function()local _,root=self:cameraIdentity();return root and root.Position end,require(ReplicatedStorage.Shared.HollowWorldLayout).Hub)
+		end
 	end
 	self.menuOpen = false
 	self:updateControls()

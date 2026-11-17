@@ -122,6 +122,9 @@ return function(client,parent)
    end
    local capped=Screen.capCircles('Match <font color="#1" size="21">●</font> + <font color="#2" size="9">●</font>',16)
    assert(capped:find('size="16"',1,true)and capped:find('size="9"',1,true)and not capped:find('size="21"',1,true))
+   -- v834: deck rows draw every circle at the label's size, so all of them sit centred on the row.
+   local even=Screen.evenCircles('Match <font color="#1" size="21">●</font> + <font color="#2" size="9">●</font>',16)
+   local _,n=string.gsub(even,'size="16"','');assert(n==2 and not even:find('size="9"',1,true)and not even:find('size="21"',1,true))
    local root=Instance.new("Frame");root.Size=UDim2.fromOffset(1920,1080);root.BackgroundTransparency=1;root.Parent=gui
    local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(Vector2.new(1920,1080),aspect);settle()
    local BallThemes=require(game.ReplicatedStorage.Shared.BallThemes)

@@ -36,9 +36,10 @@ return function(client, parent)
 				seen += 1
 				local at = beam[spec.anchor]
 				local lawn = (Vector3.new(at[1], at[2] + spec.lift, at[3]) - Vector3.new(0, 6, 0)).Magnitude
-				assert(spec.min <= 10 and spec.max <= 70, beam.name .. " carries too far: " .. spec.min .. " / " .. spec.max)
+				-- v834: halved and tightened again (Spencer: still too loud).
+				assert(spec.min <= 6 and spec.max <= 44, beam.name .. " carries too far: " .. spec.min .. " / " .. spec.max)
 				assert(spec.max < lawn - 15, beam.name .. " is heard from the lawn (" .. math.floor(lawn) .. " studs, max " .. spec.max .. ")")
-				assert(spec.volume <= .6, beam.name .. " volume")
+				assert(spec.volume <= .3, beam.name .. " volume")
 			end
 		end
 		assert(seen == 2, "both falls have emitters")

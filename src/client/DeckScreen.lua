@@ -966,6 +966,14 @@ function Screen.capCircles(text,size)
  size=math.floor(size or 16)
  return(string.gsub(text,'size="(%d+)"',function(n)return 'size="'..math.min(tonumber(n)or size,size)..'"' end))
 end
+-- v834 phone notes: rich text sits every glyph on one baseline, so circles of stepped sizes
+-- in one line could not all be centred on their row (the small ones sat low). On the deck's
+-- Goals and Quests rows every ball circle is the label's own size; the colour names the ball.
+function Screen.evenCircles(text,size)
+ if type(text)~="string"then return text end
+ size=math.floor(size or 16)
+ return(string.gsub(text,'size="(%d+)"','size="'..size..'"'))
+end
 -- Goal rows on the regular Goals card (244 high, rows from y 40 to 230): each row is
 -- its text block (one or two 20 px lines, centred), a 6 px bar 6 px under it and the
 -- count beside the bar; the check is centred on the text block. Rows are spaced
@@ -1418,7 +1426,7 @@ function Screen:setHud(data)
   if goal then
    if goal.done then done+=1 end
    slot.check.set(goal.done)
-   slot.text.RichText=true;slot.text.Text=Screen.capCircles(if compact then goal.short or goal.text else goal.text,slot.text.TextSize);Kit.localizeRich(slot.text)
+   slot.text.RichText=true;slot.text.Text=Screen.evenCircles(if compact then goal.short or goal.text else goal.text,slot.text.TextSize);Kit.localizeRich(slot.text)
    slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
    if slot.bar then slot.bar.set(if goal.done then 1 else goal.progress or 0,if goal.done then 1 else math.max(1,goal.target or 1),false,true)end
    if slot.count then slot.count.Text=if goal.done then string.format("%d/%d",goal.target or 1,goal.target or 1)else string.format("%d/%d",goal.progress or 0,goal.target or 1)end
@@ -1436,7 +1444,7 @@ function Screen:setHud(data)
   for index,slot in ipairs(h.daily)do
    local q=data.daily and data.daily[index]
    slot.name.Visible,slot.count.Visible,slot.bar.root.Visible=q~=nil,q~=nil,q~=nil
-   if q then slot.name.RichText=true;slot.name.Text=BallThemes.questText(q.title,slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target);slot.bar.set(q.progress,q.target,q.done,true)end;Kit.localizeRich(slot.name)
+   if q then slot.name.RichText=true;slot.name.Text=Screen.evenCircles(BallThemes.questText(q.title,slot.name.TextSize),slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target);slot.bar.set(q.progress,q.target,q.done,true)end;Kit.localizeRich(slot.name)
   end
  end
  for index,slot in ipairs(h.next)do eggPaint(slot,data.next and data.next[index])end
@@ -1516,7 +1524,7 @@ function Screen:setCompactHud(data)
     slot.egg.circle.BackgroundTransparency=if goal.done then .45 else 0
    else
     slot.check.set(goal.done)
-    slot.text.RichText=true;slot.text.Text=Screen.capCircles(goal.short or goal.text,slot.text.TextSize);Kit.localizeRich(slot.text)
+    slot.text.RichText=true;slot.text.Text=Screen.evenCircles(goal.short or goal.text,slot.text.TextSize);Kit.localizeRich(slot.text)
     slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
     slot.count.Text=count
    end
@@ -1547,7 +1555,7 @@ function Screen:setCompactHud(data)
   local q=daily[index]
   slot.name.Visible,slot.count.Visible,slot.bar.root.Visible=q~=nil,q~=nil,q~=nil
   if q then
-   slot.name.RichText=true;slot.name.Text=BallThemes.questText(q.title,slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target);Kit.localizeRich(slot.name)
+   slot.name.RichText=true;slot.name.Text=Screen.evenCircles(BallThemes.questText(q.title,slot.name.TextSize),slot.name.TextSize);slot.count.Text=string.format("%d/%d",math.min(q.progress,q.target),q.target);Kit.localizeRich(slot.name)
    slot.count.TextColor3=if q.done then Kit.Color.stars else Kit.Color.soft
    slot.bar.set(q.progress,q.target,q.done,true)
   end

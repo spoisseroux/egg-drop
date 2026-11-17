@@ -1,6 +1,6 @@
 -- Companions hub (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 1) and its Pets selector.
 -- Opened from the Care Cradle and the garden machine hub's Companions tile. A pinned
--- pet pane (who am I dressing) and four large rows: Pets, Wardrobe, Toys, Customize (QA
+-- pet pane (who am I dressing) and four large rows: Pets, Wardrobe, Customize, Toys (QA
 -- 2026-11-13 Q5: the Collection book moved to the machine hub; UI-SPEC-v816 3: Toys are
 -- their own screen again, Customize keeps Hue, Charm and Material). The Pets
 -- selector is the Wardrobe layout with pets as the items; receipts ("Use now" on a
@@ -29,13 +29,14 @@ Hub.Size=Vector2.new(848,608)
 Hub.Rows=table.freeze({
  table.freeze({id="pets",icon="paw",name="Pets",line="Choose who follows you around the garden"}),
  table.freeze({id="wardrobe",icon="shirt",name="Wardrobe",line="Hats, shirts and more, bought with Stars"}),
- table.freeze({id="toys",icon="toy",name="Toys",line=UICopy.get("r4.customize.toys.row")}),
  table.freeze({id="customize",icon="wand",name="Customize",line=UICopy.get("r4.customize.subtitle")}),
+ -- v834 phone notes: Toys moved to the bottom (Pets, Wardrobe, Customize, Toys).
+ table.freeze({id="toys",icon="toy",name="Toys",line=UICopy.get("r4.customize.toys.row")}),
 })
 -- Row rects (UI-SPEC-v816 3, four rows): desktop rows 104 high on a 116 pitch beside the
 -- pet pane; phone rows 59 high with 7 px gaps, the icon disc 37 (was 44).
 Hub.RowPitch={regular=116,regularH=104,phone=66,phoneH=59,phoneMax=59,phoneGap=7,phoneDisc=37} -- four rows in the 452 / phone window
-Hub.DefaultRow=4 -- Customize the first time (section 1, Behaviour).
+Hub.DefaultRow=3 -- Customize the first time (section 1, Behaviour).
 
 -- Pure: hatched items waiting to be used (one per pending receipt kind).
 function Hub.newItems(state)

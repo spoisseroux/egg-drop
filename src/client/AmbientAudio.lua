@@ -43,8 +43,10 @@ Ambient.Falls = {
 	-- QA v775 note 6: the falls carried across the whole garden (tumble min 18 / max 150 was
 	-- still a sixth of full volume at the spawn lawn, 110 studs off). InverseTapered now halves
 	-- by 2x min and is silent at max, so each fall is heard only on its own bank.
-	W7_Water__waterfall_tumble = { anchor = "bottom", lift = 5.8, volume = .60, min = 9, max = 64, speed = .92, offset = 0 },
-	W7_Water__waterfall_sky = { anchor = "top", lift = -.75, volume = .42, min = 6, max = 42, speed = 1.08, offset = 3.7 },
+	-- v834 phone notes: still too loud. Volume halved (.60 / .42 -> .30 / .21) and the
+	-- rolloff tightened about a third (min 9 / 6 -> 6 / 4, max 64 / 42 -> 44 / 30).
+	W7_Water__waterfall_tumble = { anchor = "bottom", lift = 5.8, volume = .30, min = 6, max = 44, speed = .92, offset = 0 },
+	W7_Water__waterfall_sky = { anchor = "top", lift = -.75, volume = .21, min = 4, max = 30, speed = 1.08, offset = 3.7 },
 }
 -- A5 birds.
 Ambient.BirdVoices, Ambient.BirdReach, Ambient.BirdChoices = 3, 70, 6

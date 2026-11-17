@@ -552,7 +552,10 @@ end
 clientUI.insetProbe=make("ScreenGui","EggDropInsetProbe",{ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.DeviceSafeInsets,Enabled=true,DisplayOrder=0},gui.Parent)
 function clientUI.refreshInsets()
  local size=clientUI.insetProbe.AbsoluteSize
- local want=if board:GetAttribute("Mode")=="Board"and size.X>0 and require(script.DeckKit).compactRule(size.X,size.Y)
+ -- v834 phone notes: follow the mode RoomView has shown, not the replicated attribute. The
+ -- attribute flips to Room before the close animation, so the deck shrank to the Roblox UI
+ -- insets first and then sank; now the insets change under the opaque shade, at the swap.
+ local want=if(clientUI.shownMode or board:GetAttribute("Mode"))=="Board"and size.X>0 and require(script.DeckKit).compactRule(size.X,size.Y)
   then Enum.ScreenInsets.DeviceSafeInsets else Enum.ScreenInsets.CoreUISafeInsets
  if gui.ScreenInsets~=want then gui.ScreenInsets=want end
  if clientUI.deckGui.ScreenInsets~=want then clientUI.deckGui.ScreenInsets=want end
@@ -636,6 +639,7 @@ end, function()
 end, function()
 	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
 end, reduceEffects, function() if openNursery then openNursery() end end)
+roomView.onShowMode=function(mode)clientUI.shownMode=mode;clientUI.refreshInsets()end
 clientUI.petContactRemote=remotes:WaitForChild("PetContact")
 roomView.petContactIntent=clientUI.PetContactIntent.new({now=os.clock,
  send=function(actionName,payload)clientUI.petContactRemote:FireServer(actionName,payload)end,
