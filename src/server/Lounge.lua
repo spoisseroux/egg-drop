@@ -92,8 +92,11 @@ end
 local ServerStorage = game:GetService("ServerStorage")
 local AssetService = game:GetService("AssetService")
 -- Mesh ids of the uploaded pocket-deck-slim.fbx (model asset 96845902742297).
--- Rojo's live sync cannot write MeshPart.MeshId, so a template part without a
--- mesh is rebuilt once with CreateMeshPartAsync and cached.
+-- Every template part is rebuilt once with CreateMeshPartAsync and cached. v887
+-- phone QA (2026-11-17): a synced template part carries its MeshId but not the
+-- mesh's real initial size, so a plain Clone drew the mesh at its raw export
+-- scale: the Shell and FrontPlate became a ~180-stud pink slab on the holder that
+-- every player saw. A part whose mesh cannot be built is left out, never cloned.
 local SlimMeshes = {
 	Shell = 115225104888385, FrontPlate = 79518867373692, Bezel = 111898830930565, Screen = 70629451066803,
 	AimRocker = 97228572660844, Confirm = 107899862395983, Back = 96763978132853, Customize = 95398375566470,
@@ -110,25 +113,30 @@ local function slimTemplate()
 	local model = Instance.new("Model")
 	model.Name = "PocketDeckSlimResolved"
 	for _, piece in ipairs(source:GetChildren()) do
-		if piece:IsA("MeshPart") then
-			local resolved = piece
-			if piece.MeshId == "" and SlimMeshes[piece.Name] then
-				local ok, made = pcall(AssetService.CreateMeshPartAsync, AssetService, "rbxassetid://" .. SlimMeshes[piece.Name])
-				if ok and made then
-					made.Name, made.Size, made.CFrame = piece.Name, piece.Size, piece.CFrame
-					resolved = made
-				else
-					warn("Egg Drop: deck mesh", piece.Name, made)
-				end
+		local id = piece:IsA("MeshPart") and SlimMeshes[piece.Name]
+		if id then
+			local ok, made = pcall(AssetService.CreateMeshPartAsync, AssetService, "rbxassetid://" .. id)
+			if ok and made then
+				made.Name, made.Size, made.CFrame = piece.Name, piece.Size, piece.CFrame
+				made.Color, made.Material, made.MaterialVariant = piece.Color, piece.Material, piece.MaterialVariant
+				made.Reflectance, made.Transparency, made.CastShadow = piece.Reflectance, piece.Transparency, piece.CastShadow
+				made.TextureID = piece.TextureID
+				for key, value in pairs(piece:GetAttributes()) do made:SetAttribute(key, value) end
+				for _, child in ipairs(piece:GetChildren()) do child:Clone().Parent = made end
+				made.Parent = model
+			else
+				warn("Egg Drop: deck mesh", piece.Name, made)
 			end
-			local copy = if resolved == piece then piece:Clone() else resolved
-			copy.Parent = model
+		elseif piece:IsA("MeshPart") then
+			warn("Egg Drop: deck part without a known mesh id is left out:", piece.Name)
 		end
 	end
 	slimBuilding = false
 	slimCache = model
 	return model
 end
+-- Spec seam (DeckHeldScale): the resolved, cached held-deck template.
+Lounge.slimTemplate = slimTemplate
 local function weldPiece(piece, torso, offset)
 	piece.CFrame = torso.CFrame * offset
 	piece.Anchored = false

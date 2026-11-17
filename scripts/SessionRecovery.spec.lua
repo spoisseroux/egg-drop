@@ -62,7 +62,7 @@ return function(server, profileSource, sessionSource)
 				if service == "ReplicatedStorage" then return game:GetService(service) end
 				if service == "RunService" then return { IsStudio = function() return false end } end
 				if service == "DataStoreService" then return { GetDataStore = function(_, name)
-					assert(name == "EggDropLaunchV1"); return fakeStore
+					assert(name == "EggDropLaunchV2"); return fakeStore
 				end } end
 				error("Unexpected sandbox service: " .. service)
 			end

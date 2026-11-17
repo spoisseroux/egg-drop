@@ -7,7 +7,7 @@
 -- two-account test build (2026-11-13); confirm with Spencer before any public publish.
 -- TestFreshSaves (TEST ONLY, Spencer 2026-11-13): true gives each private publish a fresh progress
 -- store keyed by PlaceVersion (ProgressStore). v1 launch build (2026-11-17): false, so every
--- save persists in "EggDropLaunchV1" across updates. Never turn it back on in a public build.
+-- save persists in "EggDropLaunchV2" across updates. Never turn it back on in a public build.
 -- PseudoLocale=true (v1 track C, text-fit check): UICopy.get returns every string ~35% longer
 -- with accented letters in [brackets]. Studio only (UICopy ignores it outside Studio); keep false.
 -- SecondPet=false (overnight 2026-11-14, slice E): Blip exists in data (collection bit 8) but is never
