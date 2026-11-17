@@ -23,7 +23,7 @@ Phone check at 150 px: the ball and face read in A and B. C reads, but its backg
 
 | File | Shows |
 |---|---|
-| `01-merge-pocket-deck.png` | An Easy round on the v875 deck just after a merge: chain ×3, score 260, a fresh pink ball, 12/24 eggs left, Smileys balls and the Scout faceplate. **Problem:** "WIN PAYS 11–13" includes Studio's grant of Spencer's 2× and Supporter passes. A player without passes sees 5–6. Goals are 0/2. |
+| `01-merge-pocket-deck.png` | An Easy round on the Scout deck with a merge popping (+20), chain ×1, score 270, goals 0/2. "WIN PAYS 5–6" is the real base value: in Studio, Spencer's passes are granted, so the board's WinPays was overwritten with the no-pass range for this capture. |
 | `02-bear-pocket-pal.png` | The Bear holding its Ball toy in pet focus, close and low, as the hero. The avatar is cropped to its legs on the right. Garden dusk behind. |
 | `03-garden.png` | A wide, high establishing shot of the garden: the path through the arch, trees, cliffs and the Pet Park on the left. The avatar is on the path with five Bears around it: the player's own and four extra pet models built with the game's own `PetFactory` and real appearances (Rose with Pom Beanie, Tide with Bell Collar, Citrus with Gloss and Sun Hat, Iris with Jelly and Flower Crown). The extras exist only on the client and nothing was saved. |
 | `04-pet-park.png` | The Bear mid-slide in the Pet Park (live park activity, not staged), with the swings and seesaw behind. Same one-pet limit as 03. |
@@ -34,6 +34,8 @@ Phone check at 150 px: the ball and face read in A and B. C reads, but its backg
 | `09-style-deck.png` | Deck style › Faceplates: Night Orb (SHOWCASE) previewed, "Buy 250", with all 16 faceplate tiles drawn. Studio's warmup gives each image only 1.2 s, so the tiles were made visible after their images had loaded. |
 | `10-collection-book.png` | Book › Toys & materials at 6/9: six toys drawn in 3D (the Pocket Deck included), two milestones to claim. The controller focus ring and mouse cursor were hidden. |
 | `11-make-it-yours.png` | Four Bears, each in a real game pose, colour and outfit (client-only clones from `PetFactory`, nothing saved). Rose Bear in a Party Hat and Berry Tee playing with the Wobble Top (the toy-play preview). Tide Bear with Gloss, Sun Hat, Specs and Bell Collar doing the idle-beat wave (held at its peak). Iris Bear with Jelly, Grape Pom Beanie and Hoodie in the sleepy resting sit. Citrus Bear with Flower Crown, Pearl Beads, Blush and Happy eyes in the deck "win" hop. |
+| `12-merge-lead.png` | **Lead deck shot.** The same round later: a chain ×2 merge with +20/+40 pops, the left goal ticked (1/2), score 350, 8/24 eggs, base \"Win pays 5–6\". |
+| `13-customize-deck.png` | The same round on the **Night Orb** faceplate (250) with **Midnight** balls (250), bought with test Stars: a chain ×3 merge with +30/+50/+70 pops, both goals ticked (2/2), score 500. Every deck image was preloaded with PreloadAsync before capture. |
 
 ## Phone-size critique
 
@@ -42,5 +44,6 @@ Phone check at 150 px: the ball and face read in A and B. C reads, but its backg
 - **03:** an establishing shot. The Bears are small but readable as colour dots.
 - **11:** reads at phone size. The play, sleepy and cheer poses are clear. The wave is the game's own small paw-to-cheek wave, so it's the subtlest of the four.
 - **Icon D:** at 150 px it reads as well as the 13 Nov icon. The Bear is a little smaller in the frame and the background is greener.
-- **01:** the deck reads, but it is small in the frame. Don't upload it until it is recaptured on an account without passes (a Server & Clients test), because "Win pays" shows pass-boosted numbers.
+- **01 and 12** are near-duplicates (same Scout round); use 12 as the lead and drop 01 if you need the slot.
+- **13:** strongest deck shot; the Night Orb shell and the ×3 merge burst read at phone size, though the Midnight tiers are all purple so ball sizes matter more than colour.
 - **All:** the Stars balances in the headers (284, 300, 232) come from test grants. The menus show desktop keyboard hints (WASD, ENTER, BKSP) because the touch emulator was not used. Captures are 1920×777 or 1649×734, cropped to 16:9 and scaled up about 1.39–1.47× with Lanczos.
