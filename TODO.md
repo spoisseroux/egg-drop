@@ -4,6 +4,9 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 ## Now working on
 
+- [x] **v890 QA (2026-11-17): published private v898 (7662362).** Slow-link ghosts (token handoff, longer backstops, tier fix, 0.8 s queue), loading screen with world preload, hatch prewarm and longer budget, deck music -3 dB. Merge pause: needs Option B (client-run board, `client-sim-plan.md`), Spencer to decide before or after launch.
+- [ ] Loading screen strings ("Pocket Pals", "Pet Garden", status lines, Skip) into UICopy and the localization table.
+
 - [x] **v889 follow-up (2026-11-17): published private v890 (6b12cbf).** Held Pocket Deck was a ~184-stud pink slab every player saw (cloned synced mesh parts); rebuilt from mesh ids. Save store now `EggDropLaunchV2` so every tester replays the onboarding. Next: Spencer's phone pass on v890 (fresh onboarding on both accounts, deck seen from the second account), then Release publicly.
 
 - [x] **v887 phone QA (2026-11-17): published private v889 (b3e8f20).** Pink wall = backdrop clouds' low LOD on phones, now Precise in the pack; white focus ring gamepad-only; merge blob 0.16 s ease-out. Difficulty picker is guided-skipped until the first saved win (by design). Next: Spencer's phone pass on v889, then Release publicly.
