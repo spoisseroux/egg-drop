@@ -69,6 +69,13 @@ return function(client,gui)
   while g2:count()>0 and os.clock()-t<1 do game:GetService("RunService").RenderStepped:Wait()end
   assert(g2:count()==0 and not h2.views[ghost.source],"the survivor's render step still runs")
  end)
+ test("at most MaxLive ghosts at once; the next tap shows no ghost",function()
+  local h=host();local g=ghosts(h)
+  for token=20,19+Ghosts.MaxLive do assert(g:spawn(token,.5,1,os.clock()))end
+  assert(g:spawn(99,.5,1,os.clock())==nil and g:count()==Ghosts.MaxLive and g.stats.capped==1)
+  g:clear()
+ end)
+
  test("an unknown tier spawns nothing",function()
    local h=host();local g=ghosts(h)
    assert(g:spawn(4,.5,99,os.clock())==nil and g:spawn(5,.5,nil,os.clock())==nil and #h.added==0)

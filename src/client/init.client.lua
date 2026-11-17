@@ -3594,10 +3594,16 @@ if clientUI.dropIntent and require(ReplicatedStorage.Shared.FeatureFlags).DeckNe
    viewsById[view.id]=nil;view.id=eggId;view.faceInput.id=eggId;viewsById[eggId]=view.gel
   end,
   obstacles=function(out)
-   table.clear(out)
+   -- Reused entries: no tables per frame (phone GC).
+   local n=0
    for source,view in pairs(eggViews)do
-    if view.id>=0 and not clientUI.ghosts:isGhost(source)then table.insert(out,{source.Position.X,source.Position.Y,source.Size.X/2,false,source,view.tier})end
+    if view.id>=0 and not clientUI.ghosts:isGhost(source)then
+     n+=1;local o=out[n];if not o then o={};out[n]=o end
+     local p=source.Position
+     o[1],o[2],o[3],o[4],o[5],o[6]=p.X,p.Y,source.Size.X/2,false,source,view.tier
+    end
    end
+   for i=#out,n+1,-1 do out[i]=nil end
   end,
   onContact=function(token)clientUI.dropIntent:contact(token)end,
  })

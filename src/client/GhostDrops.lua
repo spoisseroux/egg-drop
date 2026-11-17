@@ -17,6 +17,7 @@ Ghosts.SwapDistance=.25  -- x radius: close enough to swap with no blend
 Ghosts.SettleSpeed=.6    -- studs/s: the drawn server ball has settled
 Ghosts.SettleSeconds=.12
 Ghosts.RiseStep=.04      -- studs per frame: the most a blend may lift the ball
+Ghosts.MaxLive=6          -- ghosts drawn at once (one lives up to ~2.5 s; taps come every 0.47 s)
 Ghosts.SlideStep=.25     -- studs per frame: the most a blend moves the ball
 Ghosts.TraceSeconds=.8   -- Studio: how long the shown ball is traced after the handoff
 Ghosts.FadeSeconds=.15
@@ -28,7 +29,7 @@ Ghosts.RenderAction="EggDropDeckGhosts"
 -- host: {add(source), remove(source), rebind(source, eggId), obstacles(out), constants,
 -- resetId(), onContact(token), canShow()}
 function Ghosts.new(host)
- local self=setmetatable({host=host,list={},byToken={},byEgg={},obstacles={},studio=RunService:IsStudio(),traces={},
+ local self=setmetatable({host=host,list={},byToken={},byEgg={},obstacles={},previousObstacles={},studio=RunService:IsStudio(),traces={},
   stats={spawned=0,handoffs=0,refused=0,timeouts=0,cleared=0,late=0,gone=0,held=0,gapMax=0,gapSum=0,blendMaxStep=0,swaps=0,settles=0,drops={}}},Ghosts)
  -- A name per instance: render-step names are shared across every Luau VM in the client,
  -- and a spec's ghosts unbinding the game's (same name) stopped the game's ghosts stepping.
@@ -52,6 +53,8 @@ function Ghosts:count()return #self.list end
 -- A tap: tier, colour and launch from the deck's own state at the tap.
 function Ghosts:spawn(token,aim,tier,now,look)
  if not self.host.canShow()then return nil end
+ -- A bound on the work: past MaxLive ghosts the drop simply shows the server ball.
+ if #self.list>=Ghosts.MaxLive then self.stats.capped=(self.stats.capped or 0)+1;return nil end
  local c=self.host.constants
  local spec=type(tier)=="number"and c.Tiers[tier]
  if not spec then return nil end
@@ -186,13 +189,20 @@ function Ghosts:step(now)
  local obstacles=self.obstacles
  self.host.obstacles(obstacles)
  -- Mark drawn balls that moved since the last frame (over 1 stud/s).
- local previous=self.previousObstacles or {};local seen={}
+ -- One reused entry per drawn ball (no tables per frame on phones).
+ local previous=self.previousObstacles
+ self.frame=(self.frame or 0)+1
+ local frame=self.frame
  for _,o in ipairs(obstacles)do
-  local key=o[5];local last=key and previous[key]
-  o[4]=last~=nil and dt>0 and math.sqrt((o[1]-last[1])^2+(o[2]-last[2])^2)/dt>1
-  if key then seen[key]={o[1],o[2]}end
+  local key=o[5]
+  if key then
+   local last=previous[key]
+   o[4]=last~=nil and dt>0 and math.sqrt((o[1]-last[1])^2+(o[2]-last[2])^2)/dt>1
+   if not last then last={};previous[key]=last end
+   last[1],last[2],last[3]=o[1],o[2],frame
+  else o[4]=false end
  end
- self.previousObstacles=seen
+ for key,last in pairs(previous)do if last[3]~=frame then previous[key]=nil end end
  for index=#self.list,1,-1 do
   local g=self.list[index]
   local flight=g.flight
@@ -234,7 +244,7 @@ function Ghosts:step(now)
      g.source.Position=sp;self:finish(g,true);continue
     end
     -- 2) Both settled apart (the pile moved under one of them): a short blend.
-    if g.state~="blend"and not g.legacy and(g.state=="resting"and not flight.merging and(g.serverStill or 0)>=Ghosts.SettleSeconds)or now-g.serverAt>Ghosts.HandoffTimeout then
+    if g.state~="blend"and not g.legacy and((g.state=="resting"and not flight.merging and(g.serverStill or 0)>=Ghosts.SettleSeconds)or now-g.serverAt>Ghosts.HandoffTimeout)then
      g.state,g.blendAt,g.fromX,g.fromY="blend",now,x,y
      g.handoffJump=gap;self.stats.settles+=1
      g.endedBy=if now-g.serverAt>Ghosts.HandoffTimeout then "timeout" else "settle"

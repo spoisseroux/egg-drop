@@ -111,6 +111,13 @@ return function(client,_,modules)
   assert(f.contact=="ball","met the ball, not the floor")
  end)
 
+ test("a frame hitch costs at most MaxStepsPerFrame fixed steps",function()
+  local vx,vy=Flight.launchVelocity(c,.5)
+  local f=Flight.new(c,vx,vy,.72)
+  f:step(.1,{})
+  assert(f.steps<=Flight.MaxStepsPerFrame,"steps "..f.steps)
+ end)
+
  test("resting is final, and motion is bounded in time",function()
   local f=settle(.5,{})
   local x,y=f.x,f.y

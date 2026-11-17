@@ -14,6 +14,7 @@ local Diagonal=1/math.sqrt(2)
 Flight.RestSpeed=.35   -- studs/s: below this while touching, the ghost is settling
 Flight.RestSeconds=.2  -- settled this long: resting
 Flight.MaxSeconds=3    -- real seconds of motion at most (a bound, not a rule)
+Flight.MaxStepsPerFrame=8 -- 156 steps/s: enough for 20 fps (7.8), never a hitch's 15+
 Flight.PushStep=.04    -- studs per fixed step: the most a drawn ball pushes the ghost out
 
 -- constants: {Width,Height,Bank,Gravity,MaxSpeed,FixedStep,Pace,SpawnY,bounce}
@@ -62,6 +63,9 @@ function Flight:step(dt,obstacles)
  dt=math.min(dt,.1)
  self.realTime+=dt
  self.accumulator+=dt*c.Pace
+ -- After a frame hitch, at most MaxStepsPerFrame fixed steps (the rest is dropped: the
+ -- ghost slows a touch rather than spending a hitch's worth of work in one frame).
+ self.accumulator=math.min(self.accumulator,c.FixedStep*Flight.MaxStepsPerFrame)
  local first
  while self.accumulator>=c.FixedStep do
   self.accumulator-=c.FixedStep
