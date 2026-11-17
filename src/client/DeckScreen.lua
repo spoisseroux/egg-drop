@@ -222,21 +222,39 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
   g.dpadMenuLeft=rect(bx0,by0+rh,half,boxH-2*rh);g.dpadMenuRight=rect(bx0+half,by0+rh,bw0-half,boxH-2*rh)
  end
  g.wordmark=if ww>=40 and wordY+wh<=g.dpad.y-8 then rect(cx-math.floor(ww/2),wordY,ww,wh)else nil
- -- A and B sit on a diagonal, 12 px apart: A `ax` px outside the grip's centre line, B
- -- `bxo` px inside it. `dy` is the drop from A's centre to B's that keeps that gap. The
- -- pair (with room for B's caption) is centred on the mid line and kept inside the body.
- local ib=({50,48,46})[tier+1]
- local ax,bxo=math.floor(SW*.03+.5),math.floor(SW*.17+.5)
- local apart=A/2+ib/2+12
- local dy=math.ceil(math.sqrt(apart*apart-(ax+bxo)*(ax+bxo)))
- local ay=mid-math.floor((dy+ib/2-A/2+10)/2)
- ay=math.max(top+4+math.floor((A+8)/2),math.min(ay,H-6-math.floor((ib+8)/2)-dy))
- g.a=Vector2.new(W-cx+ax,ay)
- g.aHit=rect(g.a.X-math.floor((A+8)/2),g.a.Y-math.floor((A+8)/2),A+8,A+8)
- -- Round items (BUILD-PLAN 2026-11-13 item 4): the item button, below and inside A.
- local ix,iy=W-cx-bxo,ay+dy
- g.item=rect(ix-math.floor(ib/2),iy-math.floor(ib/2),ib,ib)
- g.itemHit=rect(ix-math.floor((ib+8)/2),iy-math.floor((ib+8)/2),ib+8,ib+8)
+ -- A and B (UI-SPEC-v816 1, the Game Boy Micro pair): one size for both, on a diagonal
+ -- that mirrors the d-pad. The pair's midpoint is the d-pad centre mirrored about the
+ -- screen (W - cx, dcy); A is the outer, upper one, B the inner, lower one, 35 degrees
+ -- apart, steepened in 5 degree steps (to 45) until A clears the wing's outer edge and B
+ -- the screen edge by 8 px. Hit areas are btn + 8 squares, cut at the midpoint between the
+ -- centres where they overlap, so neither steals the other's taps.
+ local btn=math.clamp(math.floor(.16*bodyH+.5),44,52)
+ local pairGap=math.max(8,math.floor(.03*bodyH+.5))
+ local apart=btn+pairGap
+ local dx,dy,deg=0,0,35
+ while true do
+  local r=math.rad(deg);dx=math.floor(apart*math.cos(r)+.5);dy=math.floor(apart*math.sin(r)+.5)
+  local aOuter=W-cx+math.floor(dx/2)+btn/2;local bInner=W-cx-(dx-math.floor(dx/2))-btn/2
+  if(aOuter<=W-8 and bInner>=W-SW+8)or deg>=45 then break end
+  deg+=5
+ end
+ g.A=btn;g.pairAngle=deg
+ local ay=dcy-math.floor(dy/2)
+ -- Kept inside the body: A's hit below the glass top, B's caption above the body's bottom.
+ ay=math.max(top+4+math.floor((btn+8)/2),math.min(ay,H-6-math.floor((btn+8)/2)-dy))
+ local axc,ixc=W-cx+math.floor(dx/2),W-cx-(dx-math.floor(dx/2))
+ g.a=Vector2.new(axc,ay)
+ local hs=btn+8;local half=math.floor(hs/2)
+ local aHit=rect(axc-half,ay-half,hs,hs)
+ -- Round items (BUILD-PLAN 2026-11-13 item 4): the item button is B, below and inside A.
+ local iy=ay+dy
+ g.item=rect(ixc-math.floor(btn/2),iy-math.floor(btn/2),btn,btn)
+ local itemHit=rect(ixc-half,iy-half,hs,hs)
+ if itemHit.x+itemHit.w>aHit.x and itemHit.y<aHit.y+aHit.h then
+  local cut=math.floor((axc+ixc)/2)
+  itemHit.w=cut-itemHit.x;local aRight=aHit.x+aHit.w;aHit.x=cut;aHit.w=aRight-cut
+ end
+ g.aHit,g.itemHit=aHit,itemHit
  -- QA v2 R6.1: the full handheld drawn around the same LCD. The body sits 4 px in from
  -- the sides and 16 px above the glass and runs off the bottom edge (the board keeps
  -- H - 80), so the background pattern shows above and beside it. The shell sprites map
@@ -359,7 +377,7 @@ function Screen.new(options)
  self.screenPanel=screenPanel
  -- Dark wells the d-pad and A sit in (diameter + 10), as on desktop.
  self.wells={}
- for _,id in ipairs({"DPad","A"})do
+ for _,id in ipairs({"DPad","A","B"})do -- v816: B gets A's recessed well too
   local w=phoneNode(Kit.frame(root,id.."Well",nil,UDim2.new(),UDim2.new(),999));w.ZIndex=8
   w.BackgroundTransparency=.66;w.BackgroundColor3=Color3.new(0,0,0);Kit.stroke(w,nil,1.5,.7)
   self.wells[id]=w
@@ -429,11 +447,12 @@ function Screen.new(options)
   local ring=Kit.node("UIStroke",disc,{Name="Ring",Thickness=2.5,Color=Color3.new(1,1,1),Transparency=.55,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
   local glyph=Kit.text(disc,"Title","B",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,FontFace=Kit.Type.Heading[3]})
   local icon=ItemIcons.new(disc,nil,nil);icon.Size=UDim2.fromScale(.6,.6)
-  local badge=Kit.frame(holder,"Badge",nil,UDim2.new(1,-4,0,4),UDim2.fromOffset(20,20),999)
+  -- v816: the count badge sits at B's top-left (top-right pointed into the gap towards A).
+  local badge=Kit.frame(holder,"Badge",nil,UDim2.new(0,4,0,4),UDim2.fromOffset(20,20),999)
   badge.AnchorPoint=Vector2.new(.5,.5);badge.BackgroundTransparency=0;badge.BackgroundColor3=Kit.Color.ink;badge.ZIndex=disc.ZIndex+3;badge.Visible=false
   Kit.stroke(badge,nil,1.5,.3)
   local count=Kit.text(badge,"Label","",nil,{Name="Count",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextColor3=Kit.Color.text})
-  local caption=Kit.text(holder,"Label",UICopy.get("phoneDeck.b.items"),"soft",{Name="Caption",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,1,2),Size=UDim2.new(1,24,0,17),TextXAlignment=Enum.TextXAlignment.Center})
+  local caption=Kit.text(holder,"Label",UICopy.get("phoneDeck.b.items"),"soft",{Name="Caption",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,1,4),Size=UDim2.new(1,24,0,17),TextXAlignment=Enum.TextXAlignment.Center})
   local hit=Kit.node("TextButton",holder,{Name="Hit",Text="",BackgroundTransparency=1,AutoButtonColor=false,AnchorPoint=Vector2.new(.5,.5),
    Position=UDim2.fromScale(.5,.5),ZIndex=disc.ZIndex+5,Selectable=false})
   hit:SetAttribute("AccessibleLabel","Items")
@@ -851,12 +870,20 @@ function Screen:layoutCompact(g)
  local A=self.buttons.A;local dia=g.A;A.diameter=dia
  A.holder.Position=UDim2.fromOffset(g.a.X-dia/2,g.a.Y-dia/2);A.holder.Size=UDim2.fromOffset(dia,dia*1.07)
  A.letter.TextSize=math.floor(.46*dia);A.letter.Size=UDim2.fromOffset(dia,dia);A.letter.Position=UDim2.new(.5,0,0,dia/2)
- A.hit.Size=UDim2.fromOffset(g.aHit.w,g.aHit.h);A.hit.Position=UDim2.new(.5,0,0,dia/2)
+ -- v816: the hit rects are cut where A and B overlap, so they are placed by their own centre.
+ local ax0,ay0=g.a.X-dia/2,g.a.Y-dia/2
+ A.hit.Size=UDim2.fromOffset(g.aHit.w,g.aHit.h);A.hit.Position=UDim2.fromOffset(g.aHit.x+g.aHit.w/2-ax0,g.aHit.y+g.aHit.h/2-ay0)
  place(self.wells.A,rect(g.a.X-dia/2-5,g.a.Y-dia/2-3,dia+10,dia+10))
- -- Item button under A (round items); its hit area is 8 px wider than the drawn disc.
+ -- B (the item button, round items): the same size as A, its hit 8 px wider, cut at the midpoint.
  local ib=self.itemButton
  place(ib.holder,g.item);ib.hit.Size=UDim2.fromOffset(g.itemHit.w,g.itemHit.h)
- ib.glyph.TextSize=math.floor(g.item.w*.46);ib.caption.Visible=g.item.y+g.item.h+19<=g.body.y+g.body.h-2
+ ib.hit.Position=UDim2.fromOffset(g.itemHit.x+g.itemHit.w/2-g.item.x,g.itemHit.y+g.itemHit.h/2-g.item.y)
+ place(self.wells.B,rect(g.item.x-5,g.item.y-3,g.item.w+10,g.item.w+10))
+ -- "Items" 4 px under B, never wider than the wing beside the screen.
+ local screenEdge=g.glass.x+g.glass.w;local itemCx=g.item.x+g.item.w/2
+ local capW=math.min(g.item.w+24,math.floor(2*(itemCx-screenEdge))-2)
+ ib.caption.Size=UDim2.fromOffset(math.max(1,capW),17)
+ ib.glyph.TextSize=math.floor(g.item.w*.46);ib.caption.Visible=g.item.y+g.item.h+21<=g.body.y+g.body.h-2
  -- QA v2 R6.1: the desktop B sprite under it (the disc keeps only its ring, glyph,
  -- icon and badge); the sprite's own letter and hit stay off (showShell).
  local B=self.buttons.B;local bd=g.item.w;B.diameter=bd

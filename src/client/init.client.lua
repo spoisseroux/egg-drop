@@ -1019,7 +1019,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   if actor.care.state~="Docked"then return false end
   return care:request("carePickup",nil,done)
  end,
- shop=function()if openNursery then openNursery();nurseryView:selectRecipe("hue")end end,
+ shop=function()if openNursery then openNursery();nurseryView:selectRecipe("look")end end, -- v816: the Material tab's egg link (the Hue Egg is retired)
  eggs=function()if openNursery then openNursery();nurseryView:selectRecipe("toy")end end,
  materialShop=function()if openNursery then openNursery();nurseryView:selectRecipe("material")end end,
  toyShop=function()if openNursery then openNursery();nurseryView:selectRecipe("toy")end end,
@@ -1206,11 +1206,12 @@ do
   open=function(rowId,petId)
    petId=petId or board:GetAttribute("CompanionId")
    if rowId=="wardrobe"then return clientUI.openWardrobe and clientUI.openWardrobe(petId)or false end
-   if rowId=="customize"then
+   -- UI-SPEC-v816 3: Toys is its own screen (the Customize view on its Toys page).
+   if rowId=="customize"or rowId=="toys"then
     clientUI.hub:close("customize")
     -- QA Q2.2: Customize slides in from the right, as the Pets page does.
     clientUI.hueView.slideFrom=Kit.SlideOffset
-    local opened=clientUI.openHue("palette",petId,"hub");clientUI.hueView.slideFrom=nil
+    local opened=clientUI.openHue(if rowId=="toys"then "toys"else "palette",petId,"hub");clientUI.hueView.slideFrom=nil
     if opened then return true end
     clientUI.openHub();return false
    end

@@ -103,6 +103,25 @@ return function(client,parent,live,screenModule)
     assert(g.board.h>=170 and math.abs(g.board.w/g.board.h-aspect)<.02,label.." board keeps its aspect and a playable size")
    end end
   end)
+  test("UI-SPEC-v816 1: A and B are a Game Boy Micro pair (one size, a diagonal, split hit areas)",function()
+   for _,size in ipairs(phones)do for _,keep in ipairs(keeps)do
+    local g=Screen.resolveCompact(size.X,size.Y,aspect,keep[1],keep[2])
+    local label=string.format("%dx%d keep %dx%d",size.X,size.Y,keep[1],keep[2])
+    local bodyH=g.body.h;local btn=math.clamp(math.floor(.16*bodyH+.5),44,52)
+    assert(g.A==btn and g.item.w==btn and g.item.h==btn,label.." both buttons "..btn.." px, got A "..g.A.." B "..g.item.w)
+    local bx,by=g.item.x+g.item.w/2,g.item.y+g.item.h/2
+    local dx,dy=g.a.X-bx,by-g.a.Y
+    assert(dx>0 and dy>0,label.." A is the outer, upper one")
+    local deg=math.deg(math.atan2(dy,dx))
+    assert(deg>=33 and deg<=46,label.." pair angle "..deg)
+    assert(math.abs(math.sqrt(dx*dx+dy*dy)-(btn+math.max(8,math.floor(.03*bodyH+.5))))<=1.5,label.." centre distance is btn + gap")
+    local right=g.body.x+g.body.w;local screenEdge=g.glass.x+g.glass.w
+    assert(g.a.X+btn/2<=right-8+.5 and g.item.x>=screenEdge+8-.5,label.." the pair fits the wing with 8 px to spare")
+    assert(right-bx<=100 and right-g.a.X<=100,label.." both within thumb reach of the body's edge")
+    for _,r in ipairs({g.aHit,g.itemHit})do assert(r.w>=44 and r.h>=44,label.." hit under 44 px")end
+    assert(g.itemHit.x+g.itemHit.w<=g.aHit.x or g.itemHit.y>=g.aHit.y+g.aHit.h,label.." the hit areas do not overlap")
+   end end
+  end)
   test("QA v775 note 14: the board reaches the bottom row of the screen, level with the side cards, on a tidy rounded base",function()
    -- Spencer's fixture (750x402) and two more phones: the board is the full height of the
    -- screen's layout rows, so its bottom edge is on the same line as the HUD cards beside

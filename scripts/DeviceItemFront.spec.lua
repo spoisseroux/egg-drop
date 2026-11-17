@@ -23,7 +23,7 @@ return function(client,parent)
    root.Size=UDim2.fromOffset(size.X,size.Y);settle()
    test(tostring(size).." Customize icon tabs reachable both directions, Features hidden by the flag",function()
     allowed=true;assert(view:open(state(),"hue","pip"));settle()
-    for _,order in ipairs({{"hue","charm","finish","toys"},{"toys","finish","charm","hue"}})do for _,id in ipairs(order)do
+    for _,order in ipairs({{"hue","charm","finish"},{"finish","charm","hue"}})do for _,id in ipairs(order)do -- v816: Toys is its own screen
      view:setTab(id);settle();assert(view.tab==id,"tab not reached: "..id);local tab=view.editorTabs[id]
      assert(tab and tab.Visible,"tab missing: "..id)
      -- Portrait windows scale the 848 desktop panel down; 44 px targets hold in landscape.

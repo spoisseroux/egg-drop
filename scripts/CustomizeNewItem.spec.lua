@@ -68,7 +68,7 @@ return function(client,parent)
    assert(c:card("Toy_ball"):GetAttribute("IsNew")==false and view.newItems["toys:ball"]==nil,"worn clears the mark")
    view:close("back")
   end)
-  test("QA v775 note 8: a tap on a toy card selects it and the pane's pet plays with it; the second tap wears it",function()
+  test("QA v775 note 8 / v816: a tap on a toy card selects it and the pane's pet plays with it; only the pane button gives it",function()
    local c=fixture(function(s)s.pendingToyResult=nil;s.toyUnlocks={ball=true,bone=true};s.petToys={pip="bone"}end);local view=c.view
    view:open(c.state,"toys","pip");c:update(c.state);settle()
    assert(view.page=="palette"and view.tab=="toys","on the Toys cards")
@@ -88,9 +88,13 @@ return function(client,parent)
    assert(tap("none")==true and #c.sent==0);settle()
    pet=view.visual;pet.cosmeticTime=os.clock();pet:update(0)
    assert(not pet.personalToy,"None previews no toy")
-   -- The second tap on the focused card wears it (Bone is already worn, so the Ball).
+   -- v816: a second tap still only selects; the pane button reads "Give to …" and gives it.
    assert(tap("ball")==true and #c.sent==0,"select again")
-   assert(tap("ball")==true and #c.sent==1 and c.sent[1].action=="toyEquip"and c.sent[1].value.toyId=="ball","the second tap wears it")
+   assert(tap("ball")==true and #c.sent==0,"the second tap does not equip")
+   local give=false;for _,d in ipairs(view.chromeAction:GetDescendants())do if d:IsA("TextLabel")and string.find(d.Text,"Give to",1,true)then give=true end end
+   assert(give,"the pane button reads Give to …")
+   assert(view:chromeAct()and #c.sent==1 and c.sent[1].action=="toyEquip"and c.sent[1].value.toyId=="ball","the pane button gives it")
+   assert(view.header.title.Text=="Toys"and view.paneAside.Text:find("Playing with",1,true),"Toys screen header and the Playing with line")
    -- Leaving the Toys tab ends the preview.
    view:setTab("hue");settle()
    pet=view.visual

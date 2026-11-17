@@ -107,7 +107,7 @@ return function(client,parent)
    cache:clear()
   end)
   test("R4.5 / R3.5 pure: Toys get the bone icon; worn charm says Equipped",function()
-   assert(View.tabList()[4].icon=="toy"and Kit.VectorIcons.toy~=nil)
+   assert(Kit.VectorIcons.toy~=nil) -- v816: the bone draws the Companions Toys row (the tab left Customize)
    for _,k in ipairs(Toy.knobs())do assert(k.X>.1 and k.X<.9 and k.Y>.1 and k.Y<.9,"knobs inside the holder")end
    local p=View.charmPane({id="ring",wearing=true},"Bear",nil);assert(p.button=="Equipped"and not p.enabled)
    assert(UICopy.has("r4.customize.moreMaterials")and UICopy.has("r4.customize.moreToys"))

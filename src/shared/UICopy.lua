@@ -12,11 +12,11 @@ local Table={
  care={notice={busy="Machine busy · keep carrying",dry="Find a clear dry patch",closer="Move closer to your pet or machine",changed="Your pet changed · try again",ended="Machine session ended",saving="Wait for your pet save",retry="Couldn't complete · try again"}},
  qa={coach={welcome="Match eggs. Hatch a friend.",sayHi="Say hi to {pet}"},shortfall="{count} more Stars needed",shortfallOne="{count} more Star needed",loading="Getting the preview ready…",retryPreview="Retry preview"},
  hatch={
-  material={random="16 Stars · one unowned finish. No duplicates.",fixed="16 Stars · one guaranteed finish. No duplicates.",oddsPromise="No duplicates. Odds update with your collection.",nextPromise="No duplicates. Your next finish is shown above."},
-  display={charm="A charm for your pet",finish="A finish for your pet",wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",material="Material for your pet",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
+  material={random="16 Stars · one unowned material. No duplicates.",fixed="16 Stars · one guaranteed material. No duplicates.",oddsPromise="No duplicates. Odds update with your collection.",nextPromise="No duplicates. Your next material is shown above."},
+  display={charm="A charm for your pet",finish="A material for your pet",wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",material="Material for your pet",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
   -- Full-screen item reveal (QA v685 H2): the rarity banner over the item's name.
   reveal={tier={Common="COMMON",Uncommon="UNCOMMON",Rare="RARE"},
-   kind={toy="TOY",hue="COLOUR JAR",material="FINISH",feature="FEATURE",item="ITEM",finish="FINISH JAR",charm="CHARM"},
+   kind={toy="TOY",hue="COLOUR JAR",material="MATERIAL",feature="FEATURE",item="ITEM",finish="MATERIAL JAR",charm="CHARM"},
    banner="{tier} {kind}",fresh="NEW {kind}",close="Close",
    -- QA R1 (2026-11-15): one fun line for every hatch result, shown under the name on the
    -- item reveal. 60 characters at most, in the garden's warm and quirky voice (the pets'
@@ -33,7 +33,7 @@ local Table={
      reset="Rinses a pet back to its very first colour."},
     feature={horns="Two small buds. Big plans.",claws="Tiny and fierce. Mostly used for back scratches.",
      wings="Folded neat as a letter. They flutter when excited."},
-    -- Customization Egg (2026-11-16): finish jars and the rare egg charms.
+    -- Customization Egg (2026-11-16): material jars (finishJar keys) and the rare egg charms.
     finishJar={gloss="One shine closer to a mirror.",matte="A soft, chalky hush for any coat.",jelly="Wobbly, see-through, and very proud of it."},
     charm={dot="A tiny snowflake that never melts.",ring="A little ring that floats in its own orbit.",pebble="A lucky pebble, smoothed by a very old river."},
     other={toy="Something new to carry, chase and lose under things.",material="A fresh new coat. Your pet feels very fancy.",
@@ -50,19 +50,19 @@ local Table={
    pityRule="If 14 eggs pass without a charm, the next one is a charm.",allCharms="All egg charms found",
    restrictedCharm="Charm in {count} eggs",notReady="Customization Eggs are not ready yet.",
    promise={random="The odds are on the label. They shift only as you collect charms.",fixed="No surprises. Your next item is shown above."},
-   openSaved={charm="Open saved charm",finish="Open saved finish"},
+   openSaved={charm="Open saved charm",finish="Open saved material"},
    wear="Wear it",wearOn="Wear on {pet}",worn="Wearing it",wearRetry="Try wearing it again",later="Later",useNow="Use now",
    jar={gloss="Gloss jar",matte="Matte jar",jelly="Jelly jar"},
    reason={PoolChanged="Your odds just changed. Check them and tap again.",PolicyChanged="Your odds just changed. Check them and tap again.",
-    MaxSheen="This sheen is as far as it goes.",MaxJelly="This pet is as jelly as it gets.",FinishChanged="This pet's finish changed. Check it and tap again.",
+    MaxSheen="This shine is as far as it goes.",MaxJelly="This pet is as jelly as it gets.",FinishChanged="This pet's material changed. Check it and tap again.",
     Locked="Find this charm first.",NotReady="Customization Eggs are not ready yet."}},
   -- Restricted players (paid random items): the fixed next item instead of the odds.
   next={label="Next item",line="Next: {item}",done="All collected"},
   egg={
    toy={line="A toy to carry and chase",description="Something is rattling around in here. Hatches one toy your pet can carry and play with.",per="1 toy per egg"},
-   material={line="A fresh new coat",description="Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.",per="1 finish per egg"},
+   material={line="A fresh new coat",description="Smooth and heavy. Hatches one material that changes how your pet's body catches the light.",per="1 material per egg"},
    hue={line="A jar of colour",description="Hatches one pigment jar to change your pet's colour.",per="1 jar per egg"},
-   look={name="Customization Egg",line="Colours, finishes and the odd charm",description="Hatches one jar of colour or finish. Now and then, a rare charm.",per="1 item per egg"},
+   look={name="Customization Egg",line="Colours, materials and the odd charm",description="Hatches one jar of colour or material. Now and then, a rare charm.",per="1 item per egg"},
    feature={line="Horns, claws or wings",description="Something pointy is growing in here. Hatches one feature item to grow on any pet.",per="1 item per egg"},
   },
  },
@@ -298,12 +298,18 @@ local Table={
   hue={original="Original colour",free="Free",currentChip="CURRENT",current="Current colour",reset="Reset colour",
    confirmReset="Confirm reset",confirmLine="Press again to reset. It's free.",
    originalMain="{pet}'s first Main colour. Free, any time.",originalSecondary="{pet}'s first Secondary colour. Free, any time."},
-  customize={newBadge="NEW",moreMaterials="More finishes hatch from Customization Eggs.",moreToys="More toys hatch from Toy Eggs.",
-   moreFinishes="More finish jars hatch from Customization Eggs.",moreHues="More colour jars hatch from Customization Eggs.",
-   -- Customization Egg slice 3: the Finish tab (sheen notches, Jelly pips, Original per axis).
-   finish={title="Finish",look="Look: {look}",original="Original",sheenAxis="Sheen",jellyAxis="Jelly",
-    already="Already original",clearLine="Back to original from {look}. Free.",empty="Find finish jars in the Customization Egg.",
-    kept="Kept: {finish}",useJar="Use a {item} jar",maxSheen="This sheen is as far as it goes.",maxJelly="This pet is as jelly as it gets.",
+  customize={newBadge="NEW",moreMaterials="More materials hatch from Customization Eggs.",moreToys="More toys hatch from Toy Eggs.",
+   moreFinishes="More material jars hatch from Customization Eggs.",moreHues="More colour jars hatch from Customization Eggs.",
+   -- UI-SPEC-v816 3: Toys are their own Companions screen; Customize keeps Hue, Charm and Material.
+   toys={title="Toys",row="Pick a toy and watch your pet play",playing="Playing with {pet}",give="Give to {pet}",owned="{count} OWNED"},
+   subtitle="Hue, charm and material",
+   -- The Material tab (was Finish; UI-SPEC-v816 2): a read-only Shine / Jelly meter, jar cards
+   -- with Use / Max / ×0 pills, the egg link and one Back to original. Keys keep "finish".
+   finish={title="Material",look="Look: {look}",original="Original",sheenAxis="Shine",jellyAxis="Jelly",shine="Shine",
+    stop="{item} {count}/{total}",jellyCount="{count}/{total}",helper="Use Gloss jars to add shine, Matte jars to soften.",
+    pill={use="Use",max="Max",none="×0"},eggLink="Find jars in the Customization Egg ›",noJars="No {item} jars",reset="Back to original",
+    already="Already original",clearLine="Back to original from {look}. Free.",empty="Find material jars in the Customization Egg.",
+    kept="Kept: {finish}",useJar="Use a {item} jar",maxSheen="This shine is as far as it goes.",maxJelly="This pet is as jelly as it gets.",
     mix="{jelly} {sheen}",jar={gloss="Gloss",matte="Matte",jelly="Jelly"},
     sheen={m3="Chalky",m2="Matte",m1="Soft",zero="Original",p1="Satin",p2="Glossy",p3="Glassy"},
     jelly={s1="Misty",s2="Jelly",s3="Clear Jelly"}}},
@@ -364,7 +370,7 @@ local Table={
  -- hello. The name slot shows the species until Names ships (v2).
  inspect={
   prompt="Inspect",owner="{name}'s pet",bond="Bond level {count}",
-  slot={charm="Charm",finish="Finish",toy="Toy"},empty="Empty",hidden="Hidden",
+  slot={charm="Charm",finish="Material",toy="Toy"},empty="Empty",hidden="Hidden",
   hello="Say hello",sent="Hello!",closer="Come closer",busy="Playing right now",off="Greetings off",wait="In a moment",
   gone="Pet moved on",close="Close",spin="Drag to turn",
   setting={on="Pet greetings: On",off="Pet greetings: Off"},

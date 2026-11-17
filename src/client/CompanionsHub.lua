@@ -1,8 +1,8 @@
 -- Companions hub (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 1) and its Pets selector.
 -- Opened from the Care Cradle and the garden machine hub's Companions tile. A pinned
--- pet pane (who am I dressing) and three large rows: Pets, Wardrobe, Customize (QA
--- 2026-11-13 Q5: the Collection book moved to the machine hub; QA v775 note 7: the
--- Toys row is gone again, toys are a tab of Customize). The Pets
+-- pet pane (who am I dressing) and four large rows: Pets, Wardrobe, Toys, Customize (QA
+-- 2026-11-13 Q5: the Collection book moved to the machine hub; UI-SPEC-v816 3: Toys are
+-- their own screen again, Customize keeps Hue, Charm and Material). The Pets
 -- selector is the Wardrobe layout with pets as the items; receipts ("Use now" on a
 -- hatched material, toy, feature or jar) land on it in assign mode.
 -- Focus is owned here (as in WardrobeShop): arrows / WASD / d-pad move, A / Enter
@@ -29,18 +29,25 @@ Hub.Size=Vector2.new(848,608)
 Hub.Rows=table.freeze({
  table.freeze({id="pets",icon="paw",name="Pets",line="Choose who follows you around the garden"}),
  table.freeze({id="wardrobe",icon="shirt",name="Wardrobe",line="Hats, shirts and more, bought with Stars"}),
- table.freeze({id="customize",icon="wand",name="Customize",line="Hue, charm, materials and toys"}),
+ table.freeze({id="toys",icon="toy",name="Toys",line=UICopy.get("r4.customize.toys.row")}),
+ table.freeze({id="customize",icon="wand",name="Customize",line=UICopy.get("r4.customize.subtitle")}),
 })
--- Row rects (the three-row sizes from before the play-forever build): desktop rows
--- 140 high on a 156 pitch beside the pet pane; phone rows 64 high on a 73 pitch.
-Hub.RowPitch={regular=156,regularH=140,phone=73,phoneH=64,phoneMax=80} -- three rows in the 452 / phone window
-Hub.DefaultRow=3 -- Customize the first time (section 1, Behaviour).
+-- Row rects (UI-SPEC-v816 3, four rows): desktop rows 104 high on a 116 pitch beside the
+-- pet pane; phone rows 59 high with 7 px gaps, the icon disc 37 (was 44).
+Hub.RowPitch={regular=116,regularH=104,phone=66,phoneH=59,phoneMax=59,phoneGap=7,phoneDisc=37} -- four rows in the 452 / phone window
+Hub.DefaultRow=4 -- Customize the first time (section 1, Behaviour).
 
 -- Pure: hatched items waiting to be used (one per pending receipt kind).
 function Hub.newItems(state)
  state=state or {}
  local n=0
- for _,key in ipairs({"pendingHueResult","pendingMaterialResult","pendingToyResult","pendingFeatureResult"})do if state[key]~=nil then n+=1 end end
+ for _,key in ipairs({"pendingHueResult","pendingMaterialResult","pendingFeatureResult"})do if state[key]~=nil then n+=1 end end
+ return n
+end
+-- Pure (v816): toys owned, not counting None.
+function Hub.toysOwned(state)
+ local n=0
+ for id,owned in pairs(state and state.toyUnlocks or {})do if owned==true and id~=ToyCatalog.Default and ToyCatalog.known(id)then n+=1 end end
  return n
 end
 -- Pure: wearables owned for one pet.
@@ -53,6 +60,12 @@ function Hub.status(rowId,ctx)
  ctx=ctx or {}
  if rowId=="pets"then return{text=string.upper(ctx.petName or ""),tone="dim"}end
  if rowId=="wardrobe"then return{text=tostring(ctx.owned or 0).." OWNED",tone="dim"}end
+ if rowId=="toys"then
+  local text=UICopy.get("r4.customize.toys.owned",{count=ctx.toys or 0})
+  -- A hatched toy waiting to be seen: the NEW badge (the Stars dot).
+  if ctx.newToy then return{text=UICopy.get("r4.customize.newBadge").." · "..text,tone="stars",dot=true}end
+  return{text=text,tone="dim"}
+ end
  if rowId=="customize"then
   local n=ctx.newItems or 0
   if n>0 then return{text=n..(if n==1 then " NEW ITEM"else " NEW ITEMS"),tone="stars",dot=true}end
@@ -60,7 +73,7 @@ function Hub.status(rowId,ctx)
  end
  return{text="",tone="dim"}
 end
--- Pure: the read-only pane rows (Wearing, Charm, Finish, Toy) for one appearance.
+-- Pure: the read-only pane rows (Wearing, Charm, Material, Toy) for one appearance.
 function Hub.summary(petId,appearance)
  appearance=appearance or {}
  local worn,seen={},{}
@@ -72,9 +85,15 @@ function Hub.summary(petId,appearance)
  table.sort(worn)
  local wearing=if #worn==0 then UICopy.get("companions.wearing.none")elseif #worn==1 then worn[1]else worn[1].." +"..(#worn-1)
  local charm=if appearance.charmVisible==false then "None"else(CharmCatalog.ById[CharmCatalog.renderShape(appearance.charmShape or CharmCatalog.Default)]or CharmCatalog.ById[CharmCatalog.Default]).name
- local finish=MaterialCatalog.ById[appearance.finish or MaterialCatalog.Default]or MaterialCatalog.ById[MaterialCatalog.Default]
+ -- v816: the Material row names the jar look ("Glossy", "Jelly Satin"); with no jars used, a
+ -- legacy material keeps its name and the rest read Original.
+ local material
+ local sheen,jelly=appearance.sheen or 0,appearance.jellyStage or 0
+ if sheen~=0 or jelly~=0 then material=require(script.Parent.FinishPanel).lookName({sheen=sheen,jelly=jelly})
+ elseif appearance.finish and appearance.finish~=MaterialCatalog.Default and MaterialCatalog.ById[appearance.finish]then material=MaterialCatalog.ById[appearance.finish].name
+ else material=UICopy.get("r4.customize.finish.sheen.zero")end
  local toy=ToyCatalog.ById[appearance.toyId or ToyCatalog.Default]or ToyCatalog.ById[ToyCatalog.Default]
- return{{"Wearing",wearing},{"Charm",charm},{"Finish",finish.name},{"Toy",toy.name}}
+ return{{"Wearing",wearing},{"Charm",charm},{"Material",material},{"Toy",toy.name}}
 end
 -- Pure: owned pets as selector cards, in catalog order. Only pets that can be shown
 -- (Pets.isActive: a rig in this build) are listed, so an owned pet whose rig is not in
@@ -146,7 +165,8 @@ end
 function Hub:cards()return Hub.petCards(self.ctx.state,self.ctx.activeId)end
 function Hub:statusCtx()
  local petId=self:activePet();local pet=Pets.byId[petId]
- return{petName=pet and pet.name or "",owned=Hub.ownedCount(self.ctx.state,petId),newItems=Hub.newItems(self.ctx.state)}
+ return{petName=pet and pet.name or "",owned=Hub.ownedCount(self.ctx.state,petId),newItems=Hub.newItems(self.ctx.state),
+  toys=Hub.toysOwned(self.ctx.state),newToy=self.ctx.state~=nil and self.ctx.state.pendingToyResult~=nil}
 end
 
 -- Preview well: a ViewportFrame with the pet (same set-up as the Wardrobe pane).
@@ -287,19 +307,19 @@ function Hub:buildHub(body,W,H,phone)
   local P=Hub.RowPitch
   local x,y,w,h=368,84+(index-1)*P.regular,456,P.regularH
   if phone then
-   -- The rows share the sheet window (H - 84) with 9 px gaps, down to the pet pane's
-   -- bottom edge: 64 px on an 812 x 354 phone, up to 80 on a taller one; never under 44 px.
-   local rh=math.clamp(math.floor((H-84-(#Hub.Rows-1)*9)/#Hub.Rows),44,P.phoneMax)
-   x,y,w,h=232,64+(index-1)*(rh+9),W-20-232,rh
+   -- v816: four rows share the sheet window (H - 84) with 7 px gaps, 59 px at most;
+   -- never under 44 px.
+   local rh=math.clamp(math.floor((H-84-(#Hub.Rows-1)*P.phoneGap)/#Hub.Rows),44,P.phoneMax)
+   x,y,w,h=232,64+(index-1)*(rh+P.phoneGap),W-20-232,rh
   end
   -- T2: pressable row with a lip (4 px in the 16 px desktop gap, 3 px in the 9 px phone gap).
   local button,tileState=Kit.tile(body,"Row_"..row.id,{selectable=false,radius=if phone then 12 else 14,compact=phone,
    position=UDim2.fromOffset(x,y),size=UDim2.fromOffset(w,h)})
   local stroke=tileState.stroke
   button:SetAttribute("AccessibleLabel",row.name..", "..row.line)
-  local discSize=if phone then 44 else 72
+  local discSize=if phone then math.min(P.phoneDisc,h-8)else math.min(72,h-24)
   local d,icon=disc(button,row.icon,if phone then 16 else 24,(h-discSize)/2,discSize)
-  local tx=if phone then 72 else 116
+  local tx=if phone then 16+discSize+12 else 24+discSize+20
   local name,line,status
   local s=Hub.status(row.id,ctx)
   if phone then

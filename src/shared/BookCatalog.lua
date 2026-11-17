@@ -41,11 +41,11 @@ Book.MaxBit=30 -- LifetimeState caps `found` at 2^31-1 (architect change 4).
 -- Its milestone ids ("pets.25" ...) are reserved for then and never reused.
 Book.PetsPageMin=2
 -- Customization Egg (slice 5): "charms" follows "toys"; its milestone ids ("charms.25" ...) are
--- new and never reused. The Toys page keeps its id ("toys.25" ...) and is named Toys & finishes.
+-- new and never reused. The Toys page keeps its id ("toys.25" ...) and is named Toys & materials (v816).
 Book.PageOrder=table.freeze(if #Pets.active>=Book.PetsPageMin
 	then {"balls","faceplates","wardrobe","toys","charms","pets","discoveries"}
 	else {"balls","faceplates","wardrobe","toys","charms","discoveries"})
-local names={balls="Balls",faceplates="Faceplates",wardrobe="Wardrobe",toys="Toys & finishes",charms="Charms",pets="Pets",discoveries="Discoveries"}
+local names={balls="Balls",faceplates="Faceplates",wardrobe="Wardrobe",toys="Toys & materials",charms="Charms",pets="Pets",discoveries="Discoveries"}
 
 -- Discoveries: fixed bit numbers, never renumbered. Set only inside the round award
 -- (LifetimeState.recordRun). A field template is the round's goal type; its bit is

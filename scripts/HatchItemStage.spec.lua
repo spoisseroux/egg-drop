@@ -65,7 +65,7 @@ return function(client,parent)
    for i=1,30 do local x,y=Stage.shard(i,30,Stage.ShardLife);assert(math.abs(x)<2 and y<2.6 and y>-1.6)end
   end)
   test("banner words: tier and kind; an untiered item says NEW",function()
-   assert(Stage.bannerText("Rare","material")=="RARE FINISH"and Stage.bannerText("Common","material")=="COMMON FINISH")
+   assert(Stage.bannerText("Rare","material")=="RARE MATERIAL"and Stage.bannerText("Common","material")=="COMMON MATERIAL")
    assert(Stage.bannerText("Uncommon","feature")=="UNCOMMON FEATURE"and Stage.bannerText("Neutral","toy")=="NEW TOY"and Stage.bannerText("Neutral","hue")=="NEW COLOUR JAR")
    assert(Stage.bannerText(nil,"mystery")=="NEW ITEM")
    for _,tier in ipairs({"Common","Uncommon","Rare"})do

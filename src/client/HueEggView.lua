@@ -1,7 +1,9 @@
 -- Customize (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 2) and saved item receipts.
 -- The palette page is the Kit screen family: shared header, icon tabs Hue / Charm /
--- Materials / Toys (Features behind Shared.FeatureFlags), a card grid and a pinned
--- preview pane with one primary action. Pet and Wardrobe are rows on the Companions
+-- Material (Features behind Shared.FeatureFlags), a card grid and a pinned preview pane
+-- with one primary action. UI-SPEC-v816 3: the Toys tab is its own Companions screen
+-- (header "Toys", no tab bar, a bigger preview well): the same view with tab "toys",
+-- opened with page "toys". Pet and Wardrobe are rows on the Companions
 -- hub now; receipts' "Use now" lands on the hub's Pets selector (options.petsSelector),
 -- with the in-editor recipient page kept underneath as the fallback. Confirmations,
 -- receipts, migration and buy pages keep the transaction card.
@@ -88,7 +90,9 @@ function View.new(parent,intent,options)
  self.materialPanel=MaterialPanel.new(body,self.materialIntent,{isNew=function(id)return self:isNewItem("materials",id)end,audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="materials"and not self.confirmation and self.materialPanel.petId==self.petId and self:canCustomize()end,receiptOpen=function(result)return self.shade.Visible and self.page=="materialReceipt"and self.state.pendingMaterialResult and self.state.pendingMaterialResult.id==result.id end,shop=function()self:close("shop");if self.options.materialShop then self.options.materialShop()end end,
   useNow=function(result)self.materialAssignment={resultId=result.id,finishId=result.finishId};self:landOnPets(result)end})
  self.finishPanel=FinishPanel.new(body,self.intent,{isNew=function(id)return self:isNewItem("finish",id)end,
-  canUse=function()return self.shade.Visible and self.page=="palette"and self.tab=="finish"and not self.confirmation and self:canCustomize()end})
+  canUse=function()return self.shade.Visible and self.page=="palette"and self.tab=="finish"and not self.confirmation and self:canCustomize()end,
+  tap=function(id)if self:chromeActive()and self.tab=="finish"then return self:chromeTap("finish",id)end;return false end,
+  openEgg=function()self:close("shop");if self.options.shop then self.options.shop()end end})
  self.toyPanel=ToyPanel.new(body,self.toyIntent,{isNew=function(id)return self:isNewItem("toys",id)end,audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canEquip=function()return self.shade.Visible and self.page=="palette"and self.tab=="toys"and not self.confirmation and self.toyPanel.petId==self.petId and self:canCustomize()end,
   receiptOpen=function(result)return self.shade.Visible and self.page=="toyReceipt"and self.state.pendingToyResult and self.state.pendingToyResult.id==result.id end,
   shop=function()self:close("shop");if self.options.toyShop then self.options.toyShop()end end,
@@ -661,9 +665,10 @@ function View.previewAppearance(base,tab,id,channel)
   a[key]=counts
  elseif tab=="materials"and MaterialCatalog.known(id)then a.finish=id
  elseif tab=="finish"then
-  -- Preview one more jar (or Original on an axis) on the pet; nothing is saved.
+  -- Preview one more jar (or Back to original: both axes) on the pet; nothing is saved.
   local row={sheen=a.sheen or 0,jelly=a.jellyStage or 0}
-  if id=="originalSheen"then row.sheen=0 elseif id=="originalJelly"then row.jelly=0
+  if id=="original"then row.sheen,row.jelly=0,0
+  elseif id=="originalSheen"then row.sheen=0 elseif id=="originalJelly"then row.jelly=0
   else local after=require(Shared.LookEggCatalog).step(row,id);if after then row=after end end
   a.sheen,a.jellyStage=row.sheen,row.jelly
  elseif tab=="toys"and ToyCatalog.known(id)then a.toyId=id end
@@ -1175,9 +1180,10 @@ end
 function View.tabList(flags)
  flags=flags or FeatureFlags
  -- QA v2 R4.5: Toys draw a chew bone (ToyTabIcon), no longer the Ring charm's ball.
- -- Customization Egg slice 3: Finish (sheen and Jelly doses) replaces Materials; a saved
- -- legacy finish still renders and shows as Kept on the Finish tab.
- local tabs={{id="hue",label="Hue",icon="drop"},{id="charm",label="Charm",icon="sparkle"},{id="finish",label="Finish",icon="sphere"},{id="toys",label="Toys",icon="toy"}}
+ -- Customization Egg slice 3: the jar doses (id "finish") replace Materials; a saved legacy
+ -- material still renders. UI-SPEC-v816: the tab reads Material and Toys left for their own
+ -- screen (tab "toys", no tab bar), so Customize keeps three equal segments.
+ local tabs={{id="hue",label="Hue",icon="drop"},{id="charm",label="Charm",icon="sparkle"},{id="finish",label=UICopy.get("r4.customize.finish.title"),icon="sphere"}}
  if flags.Features then table.insert(tabs,{id="features",label="Features",icon="pattern"})end
  return tabs
 end
@@ -1228,7 +1234,19 @@ function View.charmPane(card,petName,pending,message)
  return{button="Wear",enabled=true,line=line,status=message or "Trying it on. Not saved yet."}
 end
 -- Pure: chrome geometry for a W x H screen (panel units on desktop, pixels on phones).
-function View.chromeGeometry(W,H,phone)
+-- `toys` (v816): the Toys screen. No tab bar; the grid and pane start where the tabs were and
+-- the pane is wider with a much bigger well (phone 299 x ~278 x 166, about 2.5x the old area).
+function View.chromeGeometry(W,H,phone,toys)
+ if toys then
+  if phone then
+   local pw=math.clamp(W-20-12-20-200,232,299);local gw=W-20-pw-12-20;local ph=H-64-16
+   local well=math.clamp(ph-12*2-44-22-18-12,86,166)
+   return{phone=true,toys=true,W=W,H=H,tabs={x=20,y=64,w=gw,h=36},pane={x=W-20-pw,y=64,w=pw,h=ph},grid={x=20,y=64,w=gw,h=H-64-16},
+    cols=if gw>=380 then 2 else 1,cardH=64,gap=8,pad=12,well=well,actionH=44}
+  end
+  return{phone=false,toys=true,W=848,H=608,tabs={x=24,y=84,w=800,h=44},pane={x=24,y=84,w=328,h=452},grid={x=368,y=84,w=456,h=452},
+   cols=2,cardH=96,gap=12,pad=16,well=270,actionH=56}
+ end
  if phone then
   local pw=232;local gw=W-20-pw-12-20
   return{phone=true,W=W,H=H,tabs={x=20,y=64,w=gw,h=36},pane={x=W-20-pw,y=64,w=pw,h=H-84},grid={x=20,y=108,w=gw,h=H-108-16},
@@ -1285,8 +1303,9 @@ function View:buildChrome(view)
   self.rebuildingChrome=true;self:showChrome(false);self.rebuildingChrome=nil;self.chromeRoot:Destroy()
  end
  local phone=view~=nil
- local g=View.chromeGeometry(if phone then view.W else 848,if phone then view.H else 608,phone)
- self.chromeGeom=g;self.chromeKey=if phone then string.format("%dx%d",view.W,view.H)else "regular"
+ local toys=self.tab=="toys"
+ local g=View.chromeGeometry(if phone then view.W else 848,if phone then view.H else 608,phone,toys)
+ self.chromeGeom=g;self.chromeKey=(if phone then string.format("%dx%d",view.W,view.H)else "regular")..(if toys then ":toys"else "")
  local root=Kit.frame(self.shade,"Customize",nil,UDim2.new(),UDim2.fromScale(1,1));root.ZIndex=self.shade.ZIndex+1;root.Visible=false
  self.chromeRoot=root
  local dim=Kit.frame(root,"Shade",nil,UDim2.new(),UDim2.fromScale(1,1));dim.BackgroundTransparency=if phone then 1 else .35;dim.BackgroundColor3=Color3.new(0,0,0);dim.Active=true
@@ -1304,7 +1323,7 @@ function View:buildChrome(view)
   Kit.node("UIGradient",gradient,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  end
  self.chromeBody=body
- self.header=Kit.header(body,{title="Customize",eyebrow="Companions",tint="companions",compact=phone,width=g.W,left=if phone then 24 else 24,onBack=function()self:close("back")end})
+ self.header=Kit.header(body,{title=if toys then UICopy.get("r4.customize.toys.title")else "Customize",eyebrow="Companions",tint="companions",compact=phone,width=g.W,left=if phone then 24 else 24,onBack=function()self:close("back")end})
  local tabs=View.tabList();local labels,icons={},{}
  for _,t in ipairs(tabs)do table.insert(labels,t.label);table.insert(icons,t.icon)end
  self.chromeTabs=Kit.tabs(body,labels,g.tabs.w,g.tabs.h,if phone then 14 else 16,icons);self.chromeTabs.root.Position=UDim2.fromOffset(g.tabs.x,g.tabs.y)
@@ -1325,6 +1344,10 @@ function View:buildChrome(view)
  local nameH=if phone then 22 else 30
  self.paneName=Kit.text(pane,"Title","","text",{Name="PaneName",Position=UDim2.fromOffset(p,y),Size=UDim2.fromOffset(iw-80,nameH),TextSize=if phone then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
  self.paneChip=Kit.chip(pane,"Free",nil,if phone then 22 else 26);self.paneChip.root.AnchorPoint=Vector2.new(1,.5);self.paneChip.root.Position=UDim2.fromOffset(p+iw,y+nameH/2)
+ -- Toys (v816): the toy's name left, "Playing with Bear" right on the same row.
+ self.paneAside=Kit.text(pane,"Small","","soft",{Name="PaneAside",Position=UDim2.fromOffset(p+math.floor(iw*.45),y),Size=UDim2.fromOffset(iw-math.floor(iw*.45),nameH),
+  TextSize=if phone then 12 else 15,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd,Visible=toys})
+ if toys then self.paneName.Size=UDim2.fromOffset(math.floor(iw*.45)-4,nameH)end
  y+=nameH+(if phone then 0 else 4)
  self.paneLine=Kit.text(pane,"Small","","soft",{Name="PaneLine",Position=UDim2.fromOffset(p,y),Size=UDim2.fromOffset(iw,20),TextSize=if phone then 12 else 15,TextTruncate=Enum.TextTruncate.AtEnd})
  y+=if phone then 18 else 24
@@ -1374,7 +1397,7 @@ function View:fitChrome(size)
  local view=nil
  -- QA v2 R3.2 (follow-up 2026-11-14): the phone sheet starts at Kit.sheetTop, so an inset host is not pushed down twice.
  if phone then local top=Kit.sheetTop(self.shade);view={W=math.floor(size.X),H=math.max(1,math.floor(size.Y)-top),top=top}end
- local key=if view then string.format("%dx%d",view.W,view.H)else "regular"
+ local key=(if view then string.format("%dx%d",view.W,view.H)else "regular")..(if self.tab=="toys"then ":toys"else "")
  if self.chromeKey~=key or not self.chromeRoot then self:buildChrome(view);self.chromeRoot.Visible=true;self.card.Visible=false;self:showChrome(true)end
  local panel=self.chromePanel
  if view then panel.AnchorPoint=Vector2.zero;panel.Position=UDim2.fromOffset(0,view.top);panel.Size=UDim2.fromOffset(view.W,view.H);self.chromeScale.Scale=1
@@ -1382,7 +1405,7 @@ function View:fitChrome(size)
   self.chromeScale.Scale=math.max(.1,math.min(1.2,(size.X-24)/848,(size.Y-24)/608))end
 end
 function View:focusIndex()return(self.chromeFocus and self.chromeFocus[self.tab])or 1 end
-local Promise={hue="One jar, one step of colour.",charm="Charms are free.",materials="Finishes are free to switch.",finish="One jar, one step of finish. Original is free.",toys="Toys are free to switch.",features="Grow and show features freely."}
+local Promise={hue="One jar, one step of colour.",charm="Charms are free.",materials="Materials are free to switch.",finish="One jar, one step of material. Original is free.",toys="Toys are free to switch.",features="Grow and show features freely."}
 function View:layoutChrome()
  if self.layingOut then return end;self.layingOut=true
  self:fitChrome(self.shade.AbsoluteSize);self:showChrome(true)
@@ -1392,9 +1415,11 @@ function View:layoutChrome()
  for i,t in ipairs(tabs)do if t.id==self.tab and self.chromeTabs.selected~=i then self.chromeTabs.select(i)end end
  self.header.root.Visible=true
  if self.header.wallet then self.header.wallet.set(self.state.nectar or 0)end
- self.header.setTitle("Customize",if self.machine then "Care Cradle"else "Companions")
+ local toysScreen=g.toys==true
+ self.header.setTitle(if toysScreen then UICopy.get("r4.customize.toys.title")else "Customize",if self.machine then "Care Cradle"else "Companions")
  local allowed=self:canCustomize()
- self.chromeTabs.root.Visible=not self.boundedEating and(allowed or self:hasHueAssignment())
+ self.chromeTabs.root.Visible=not toysScreen and not self.boundedEating and(allowed or self:hasHueAssignment())
+ self.paneAside.Visible=toysScreen
  for _,b in pairs(self.chromeTabs.buttons)do b.Interactable=not self.intent.pending end
  local grid=self.chromeGrid;local gw=g.grid.w-4 -- the 4 px scrollbar never covers the right column
  for _,b in pairs(self.hueCards)do b.Visible=false end
@@ -1505,6 +1530,7 @@ function View:layoutChrome()
     pane.chip=if item.card.free then {UICopy.get("r4.hue.free"),"accent"}else {item.card.status,"plain"}
     pane.status=self.intent.message or ""
    end
+   self.moreHidden=true -- v816: the footer's egg link (no jars) replaces the "more from eggs" line
   end
  else
   local panel=if self.tab=="materials"then self.materialPanel elseif self.tab=="toys"then self.toyPanel else self.featurePanel
@@ -1519,17 +1545,24 @@ function View:layoutChrome()
     -- QA v2 R3.5: worn = the Wear button, disabled, reading "Equipped".
     pane.button=if item.wearing then UICopy.get("r4.equipped")else "Wear";pane.enabled=not item.wearing and allowed
     pane.status=panel.status.Visible and panel.status.Text or ""
+    if toysScreen then
+     -- v816: the pane gives the toy ("Give to Bear"); the row says who is playing.
+     pane.line="";pane.aside=UICopy.get("r4.customize.toys.playing",{pet=petName})
+     if not item.wearing then pane.button=UICopy.get("r4.customize.toys.give",{pet=petName})end
+    end
    else pane.line="Hatch eggs to find more."end
   end
  end
  -- QA v2 R4.5: "More from eggs" under the Materials / Toys cards.
- local more=if self.boundedEating then nil elseif self.tab=="finish"then "r4.customize.moreFinishes"elseif self.tab=="materials"then(if MaterialCatalog.EnablePurchases then "r4.customize.moreMaterials"else nil)elseif self.tab=="toys"then "r4.customize.moreToys"else nil
+ local more=if self.boundedEating then nil elseif self.tab=="finish"then(if self.moreHidden then nil else "r4.customize.moreFinishes")elseif self.tab=="materials"then(if MaterialCatalog.EnablePurchases then "r4.customize.moreMaterials"else nil)elseif self.tab=="toys"then "r4.customize.moreToys"else nil
  self.moreLine.Visible=more~=nil
  if more then self.moreLine.Text=UICopy.get(more);self.moreLine.Position=UDim2.fromOffset(3,y);self.moreLine.Size=UDim2.fromOffset(gw-6,20);y+=28 end
  self.chromeFocus[self.tab]=index;self.focusables=focus
  grid.CanvasSize=UDim2.fromOffset(0,y+6)
  -- Pane.
+ self.moreHidden=nil
  self.paneName.Text=pane.name or ""
+ self.paneAside.Text=pane.aside or ""
  self.paneChip.root.Visible=pane.chip~=nil
  if pane.chip then self.paneChip.set(pane.chip[1],pane.chip[2]);if pane.chip[2]=="accent"then Kit.paint(self.paneChip.label,"TextColor3","accent")end end
  local status=pane.status or ""
@@ -1538,7 +1571,7 @@ function View:layoutChrome()
  self.chromeAction.Visible=pane.button~=nil
  if pane.button then Kit.setText(self.chromeAction,pane.button);Kit.setEnabled(self.chromeAction,pane.enabled==true)end
  Kit.setGlyphVisible(self.chromeAction,not compact or not Kit.lastInputTouch())
- if self.legend then self.legend.setLabel("confirm",if self.tab=="hue"then "Use"else "Wear")end
+ if self.legend then self.legend.setLabel("confirm",if self.tab=="hue"or self.tab=="finish"then "Use"elseif toysScreen then "Give"else "Wear")end
  if self.hintPromise then self.hintPromise.Text=Promise[self.tab]or ""end
  self.chromePanel:SetAttribute("Tab",self.tab);self.chromePanel:SetAttribute("FocusedCard",focus[index]and focus[index].id or nil)
  -- Focus ring on the focused card.
@@ -1559,6 +1592,11 @@ function View:chromeTap(tab,id)
   if item.id==id then
    -- QA v760: the first tap on a card clears its NEW badge.
    local seen=self:seenItem(tab,id)
+   -- v816: on the Toys screen a tap only selects and previews; the pane button gives it.
+   if i==self:focusIndex()and tab=="toys"then
+    if seen and self.shade.Visible then self:layout()end
+    return true
+   end
    if i==self:focusIndex()then
     local acted=self:chromeAct()
     if seen and self.shade.Visible then self:layout()end
@@ -1583,6 +1621,7 @@ function View:chromeMove(dx,dy)
  self:chromeFocusAt(nextIndex);return true
 end
 function View:shiftTab(delta)
+ if self.tab=="toys"then return false end -- the Toys screen has no tab bar
  local tabs=View.tabList();local at=1
  for i,t in ipairs(tabs)do if t.id==self.tab then at=i end end
  local nextIndex=math.clamp(at+delta,1,#tabs)

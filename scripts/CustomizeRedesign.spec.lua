@@ -25,13 +25,18 @@ return function(client,parent)
   charmUnlocks={dot=true,ring=true,pebble=true}} -- Customization Egg: a save from before the egg owns the three egg shapes
  for _,pet in ipairs(Pets.collection)do state.petHues[pet.id]={main=H.emptyCounts(),secondary=H.emptyCounts()}end
  local ok,problem=xpcall(function()
-  test("pure: four icon tabs, no Features while flagged, Features joins with the flag on",function()
+  test("pure: three icon tabs (Hue, Charm, Material), no Features while flagged, Features joins with the flag on",function()
    local tabs=View.tabList()
    assert(Flags.Features==false,"this build ships with Features hidden")
-   assert(#tabs==4 and tabs[1].id=="hue"and tabs[2].id=="charm"and tabs[3].id=="finish"and tabs[4].id=="toys") -- Customization Egg slice 3: Finish replaces Materials
-   assert(tabs[1].icon=="drop"and tabs[2].icon=="sparkle"and tabs[3].icon=="sphere"and tabs[4].icon=="toy")
-   local on=View.tabList({Features=true});assert(#on==5 and on[5].id=="features")
-   for _,t in ipairs(tabs)do assert(t.id~="pet"and t.id~="wardrobe")end
+   -- UI-SPEC-v816: Toys left for their own Companions screen; the jar tab reads Material.
+   assert(#tabs==3 and tabs[1].id=="hue"and tabs[2].id=="charm"and tabs[3].id=="finish"and tabs[3].label=="Material")
+   assert(tabs[1].icon=="drop"and tabs[2].icon=="sparkle"and tabs[3].icon=="sphere")
+   local on=View.tabList({Features=true});assert(#on==4 and on[4].id=="features")
+   for _,t in ipairs(tabs)do assert(t.id~="pet"and t.id~="wardrobe"and t.id~="toys")end
+   -- The Toys screen: no tab bar, a much bigger well (about 2.5x the old 209 x 87 phone well).
+   local old=View.chromeGeometry(874,360,true);local toys=View.chromeGeometry(874,360,true,true)
+   assert(toys.toys and toys.pane.w==299 and toys.cols==2,"toys phone pane "..toys.pane.w.." cols "..toys.cols)
+   assert((toys.pane.w-24)*toys.well>=2.2*(old.pane.w-24)*old.well,"the toys well is not much bigger")
   end)
   test("pure: Charm cards put None first; WEARING follows the saved state",function()
    local cards=View.charmCards({charmVisible=true,charmShape="ring"},true)
@@ -61,13 +66,27 @@ return function(client,parent)
    assert(view:open(state,"charm","pip"));frames()
    assert(view.chromeRoot.Visible and not view.card.Visible and view:chromeActive())
    assert(view.header.title.Text=="Customize"and view.header.root:FindFirstChild("BackArrow"))
-   assert(view.editorTabs.hue and view.editorTabs.charm and view.editorTabs.finish and view.editorTabs.materials==nil and view.editorTabs.toys and view.editorTabs.features==nil)
+   assert(view.editorTabs.hue and view.editorTabs.charm and view.editorTabs.finish and view.editorTabs.materials==nil and view.editorTabs.toys==nil and view.editorTabs.features==nil)
+   assert(view.editorTabs.finish.Name=="Tab_finish")
    assert(view.chromeTabs.root:GetAttribute("TabIcons")==true,"icons fit at 800 wide")
    assert(not view:setTab("features")and view.tab=="charm")
-   for _,id in ipairs({"hue","finish","toys","charm"})do assert(view:setTab(id));frames();assert(view.chromePanel:GetAttribute("Tab")==id)
-    -- The Material Egg is off for v1 (MaterialCatalog.EnablePurchases): owned finishes stay, the "more from eggs" hint goes.
-    if id=="finish"then assert(view.finishPanel.root.Visible and view.finishPanel.cards.gloss.Visible,"the Finish tab shows its jar cards")end
+   for _,id in ipairs({"hue","finish","charm"})do assert(view:setTab(id));frames();assert(view.chromePanel:GetAttribute("Tab")==id)
+    if id=="finish"then
+     local p=view.finishPanel
+     assert(p.root.Visible and p.cards.gloss.Visible and p.meter.Visible,"the Material tab shows its meter and jar cards")
+     assert(p.meter:GetAttribute("ReadOnly")==true and p.meter:FindFirstChildWhichIsA("GuiButton",true)==nil,"the meter has no hit areas")
+     assert(p.cards.gloss:GetAttribute("PillState")=="none"and p.link.Visible,"no jars: ×0 pills and the egg link")
+     assert(not p.resetButton.Visible,"Back to original hides on the original look")
+     assert(p.cards.originalSheen==nil and p.cards.originalJelly==nil,"no duplicate Original cards")
+    end
    end
+   assert(view.chromeTabs.root.Visible and view.header.title.Text=="Customize")
+   -- The Toys screen: the same view on tab "toys"; header Toys, no tab bar, the bigger well.
+   assert(view:setTab("toys"));frames()
+   assert(view.chromePanel:GetAttribute("Tab")=="toys"and view.header.title.Text=="Toys"and not view.chromeTabs.root.Visible)
+   assert(view.chromeGeom.toys and view.chromeWell.AbsoluteSize.Y>=200,"toys well "..tostring(view.chromeWell.AbsoluteSize))
+   assert(not view:shiftTab(1)and view.tab=="toys","no tab bar to step through")
+   assert(view:setTab("charm"));frames();assert(view.header.title.Text=="Customize"and view.chromeTabs.root.Visible)
    assert(view:getControllerFocus()==nil,"the chrome owns its focus")
   end)
   test("Charm None first, focus previews, Wear sends charm(pet,false) / charm(pet,true,shape)",function()

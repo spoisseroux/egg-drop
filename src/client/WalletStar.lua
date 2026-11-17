@@ -5,12 +5,12 @@
 -- wallet), a ViewportFrame with that Star replaces the icon in exactly the icon's
 -- rect, so the capsule, the number and their positions never move.
 --
--- Motion, one 6 s cycle: a gentle sway (eyes on, front-facing) for 4.4 s, then one
--- eased full turn in 1.6 s; as it lands, a four-point sparkle twinkles on the upper
--- tip and the Star brightens for 0.6 s. A soft gold glow and a light from behind
--- give the rim its gold. The eyes slide and narrow with the yaw and hide past 40
--- degrees (as on the results hero). Reduced Motion: a still front-facing Star, no
--- sway, turn or sparkle. If the mesh cannot be created the 2D Star stays.
+-- Motion (UI-SPEC-v816 4, phone QA: the spinning Star was caught edge-on as a thin
+-- orange sliver): the Star faces the camera and holds still on every screen. Once
+-- per 6 s cycle a four-point sparkle twinkles on the upper tip and the Star
+-- brightens for 0.6 s. A soft gold glow and a light from behind give the rim its
+-- gold. Reduced Motion: the same still Star with no sparkle. If the mesh cannot be
+-- created the 2D Star stays.
 --
 -- One shared clock for every wallet: PetPeek's RenderStepped subscriber list (key
 -- "WalletStar"), only while a 3D wallet is in the DataModel. A tick allocates
@@ -36,14 +36,12 @@ Star.SpinStep=3 -- degrees per cached spin frame
 Star.ClockKey="WalletStar"
 
 -- ── Pure ─────────────────────────────────────────────────────────────────────
--- Yaw (degrees, 0..360) and glint phase (0..1, or nil) at time t.
+-- Yaw (degrees, always 0: front-facing) and glint phase (0..1, or nil) at time t.
+-- v816: no sway and no turn, so no screen can ever catch the Star edge-on.
 function Star.pose(t)
  local u=t%Star.Cycle
- local yaw
- if u<Star.SwayTime then yaw=Star.SwayDegrees*math.sin(u/Star.SwayTime*math.pi*2)
- else local s=(u-Star.SwayTime)/(Star.Cycle-Star.SwayTime);yaw=360*s*s*(3-2*s)end
  local glint=if u<Star.GlintTime then u/Star.GlintTime else nil
- return yaw%360,glint
+ return 0,glint
 end
 -- The face turn (-180..180) for a yaw, or nil when the face hides.
 function Star.faceTurn(yaw)
@@ -141,7 +139,10 @@ step=function(now)
   local w=wallets[index]
   if w then
    if now>=w.visibleAt then w.visible=onScreen(w.holder);w.visibleAt=now+Star.VisibilityRecheck end
-   if w.visible then
+   if not w.visible then
+    -- Parked facing front while hidden, so a wallet shown again never opens edge-on.
+    if w.spin~=0 then apply(w,0,nil)end
+   else
     if still then apply(w,0,nil)else
      local yaw,glint=Star.pose(now)
      apply(w,yaw,glint)
