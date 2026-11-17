@@ -33,14 +33,14 @@ Phone check at 150 px: the ball and face read in A and B. C reads, but its backg
 | `08-dress-up.png` | Wardrobe › Hat: Grape Pom Beanie previewed large on the Bear ("Buy 40"), with 40 and 100 prices in the grid. The Pom Beanie tile shows the weekly 32/~~40~~ price. |
 | `09-style-deck.png` | Deck style › Faceplates: Night Orb (SHOWCASE) previewed, "Buy 250", with all 16 faceplate tiles drawn. Studio's warmup gives each image only 1.2 s, so the tiles were made visible after their images had loaded. |
 | `10-collection-book.png` | Book › Toys & materials at 6/9: six toys drawn in 3D (the Pocket Deck included), two milestones to claim. The controller focus ring and mouse cursor were hidden. |
-| `11-make-it-yours.png` | Four Bears side by side in the garden, made with `PetFactory` and the game's own appearance data: Rose (5 doses), Tide (5), Citrus with Gloss (sheen 3) and Iris with Jelly (stage 3). Client-only; nothing saved. |
+| `11-make-it-yours.png` | Four Bears, each in a real game pose, colour and outfit (client-only clones from `PetFactory`, nothing saved). Rose Bear in a Party Hat and Berry Tee playing with the Wobble Top (the toy-play preview). Tide Bear with Gloss, Sun Hat, Specs and Bell Collar doing the idle-beat wave (held at its peak). Iris Bear with Jelly, Grape Pom Beanie and Hoodie in the sleepy resting sit. Citrus Bear with Flower Crown, Pearl Beads, Blush and Happy eyes in the deck "win" hop. |
 
 ## Phone-size critique
 
 - **Strong:** 02, 04, 06 and 10.
 - **Fine:** 05, 07, 08 and 09. The UI text is small at phone size, but the panels read.
 - **03:** an establishing shot. The Bears are small but readable as colour dots.
-- **11:** strong; four colours and both materials read at phone size.
+- **11:** reads at phone size. The play, sleepy and cheer poses are clear. The wave is the game's own small paw-to-cheek wave, so it's the subtlest of the four.
 - **Icon D:** at 150 px it reads as well as the 13 Nov icon. The Bear is a little smaller in the frame and the background is greener.
 - **01:** the deck reads, but it is small in the frame. Don't upload it until it is recaptured on an account without passes (a Server & Clients test), because "Win pays" shows pass-boosted numbers.
 - **All:** the Stars balances in the headers (284, 300, 232) come from test grants. The menus show desktop keyboard hints (WASD, ENTER, BKSP) because the touch emulator was not used. Captures are 1920×777 or 1649×734, cropped to 16:9 and scaled up about 1.39–1.47× with Lanczos.
