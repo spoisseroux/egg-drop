@@ -555,13 +555,22 @@ function clientUI.refreshInsets()
  -- v834 phone notes: follow the mode RoomView has shown, not the replicated attribute. The
  -- attribute flips to Room before the close animation, so the deck shrank to the Roblox UI
  -- insets first and then sank; now the insets change under the opaque shade, at the swap.
- local want=if(clientUI.shownMode or board:GetAttribute("Mode"))=="Board"and size.X>0 and require(script.DeckKit).compactRule(size.X,size.Y)
+ -- Code review: a shown mode that has disagreed with the attribute for longer than any
+ -- handoff (InsetGrace) is stale, and the attribute wins; a removed character clears it.
+ local mode=board:GetAttribute("Mode");local shown=clientUI.shownMode
+ if shown~=mode and os.clock()-(clientUI.modeChangedAt or 0)>clientUI.InsetGrace then shown=nil end
+ local want=if(shown or mode)=="Board"and size.X>0 and require(script.DeckKit).compactRule(size.X,size.Y)
   then Enum.ScreenInsets.DeviceSafeInsets else Enum.ScreenInsets.CoreUISafeInsets
  if gui.ScreenInsets~=want then gui.ScreenInsets=want end
  if clientUI.deckGui.ScreenInsets~=want then clientUI.deckGui.ScreenInsets=want end
 end
 clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(clientUI.refreshInsets)
-board:GetAttributeChangedSignal("Mode"):Connect(clientUI.refreshInsets)
+clientUI.InsetGrace=2.5 -- s: a close is about 0.5 s to the swap, an open waits under the shade
+board:GetAttributeChangedSignal("Mode"):Connect(function()
+ clientUI.modeChangedAt=os.clock();clientUI.refreshInsets()
+ task.delay(clientUI.InsetGrace+.1,clientUI.refreshInsets)
+end)
+player.CharacterRemoving:Connect(function()clientUI.shownMode=nil;clientUI.refreshInsets()end)
 clientUI.refreshInsets()
 clientUI.deck=DeckScreen.new({parent=clientUI.deckHost,overlayParent=clientUI.deviceRoot,viewRoot=backdrop,audio=audio})
 clientUI.deck.lcd:GetPropertyChangedSignal("BackgroundColor3"):Connect(clientUI.syncLcdMask)
