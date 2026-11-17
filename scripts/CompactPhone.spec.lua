@@ -179,7 +179,9 @@ return function(client,parent)
     assert(math.abs(hit.AbsolutePosition.X-root.AbsolutePosition.X-g.aHit.x)<=1 and math.abs(hit.AbsoluteSize.X-g.aHit.w)<=1,label.." A's hit is its cut rect")
     -- QA v2 R6.1: the B sprite sits under the item button, whose hit is the one target.
     local B=s.buttons.B;local ib=s.itemButton
-    assert(B.holder.Visible and not B.hit.Visible and not B.letter.Visible,label.." B sprite drawn, its own hit and letter off")
+    -- v859 (Spencer): the phone B is the desktop B, sprite and letter; only its hit stays off.
+    assert(B.holder.Visible and not B.hit.Visible and B.letter.Visible,label.." B sprite and letter drawn, its own hit off")
+    assert(not ib.glyph.Visible and ib.ring.Transparency==1,label.." no item face over B")
     assert(B.holder.AbsolutePosition==ib.holder.AbsolutePosition and ib.hit.AbsoluteSize.X>=44,label.." B under the item button")
     assert(ib.caption.Text=="Items"or not ib.caption.Visible,label.." B reads Items in a round")
     assert(not s.quadrants.Up.Visible and not s.quadrants.Down.Visible,label.." Up / Down off in a round")

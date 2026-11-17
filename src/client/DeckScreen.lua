@@ -73,6 +73,9 @@ Screen.PairAngle=55 -- DECK-LAYOUT-SPEC-v834 row 6: A-to-B line, degrees from ho
 -- the wing width, applied after the 55 degree placement (the line ends up about 60-64 degrees).
 -- Where the closer pair would cut B's hit under 44 px, B drops until the hits clear instead.
 Screen.PairNudge=table.freeze({aLeft=.04,bRight=.02,bDown=.035})
+-- The paw-print speaker (plate-overlay.png, 57 x 43 px box): hole centres as box shares, hole size.
+Screen.SpeakerHoles=table.freeze({{.115,.36},{.29,.78},{.5,.21},{.71,.78},{.885,.36}})
+Screen.SpeakerHole=Vector2.new(.21,.42)
 function Screen.gripMargin(W)return if W>=800 then 40 elseif W>=700 then 24 else 6 end
 -- DECK-LAYOUT-SPEC-v834 1: the wings are a share of the body (0.19, a Game Boy Micro
 -- proportion), and every control is a share of its wing. `wingShare` is internal: when the
@@ -299,6 +302,27 @@ function Screen.resolveCompact(W,H,aspect,kx,kh,wingShare)
  local ledTop=if g.wordmark then g.wordmark.y+g.wordmark.h else kh+4
  local ledGap=g.dpad.y-ledTop
  g.led=if ledGap>=ls+4 then rect(cx-math.floor(ls/2),ledTop+math.floor((ledGap-ls)/2),ls,ls)else nil
+ -- v859 (Spencer: "look like that model in game even on mobile"): the desktop's paw-print
+ -- speaker, under A and right of B as on the desktop plate, only where it clears A, B, the
+ -- Items caption and the body's rounded corner.
+ do
+  local sw=math.max(26,math.floor(.9*ib+.5));local shh=math.floor(sw*.75+.5)
+  local right,bottom=body.x+body.w,body.y+body.h
+  local scx=math.min(axc+math.floor(.34*A+.5),right-14-math.floor(sw/2))
+  local scy=math.min(iy+math.floor(.62*ib+.5),bottom-10-math.floor(shh/2))
+  local sp=rect(scx-math.floor(sw/2),scy-math.floor(shh/2),sw,shh)
+  local function clear(r,pad)return sp.x+sp.w+pad<=r.x or r.x+r.w+pad<=sp.x or sp.y+sp.h+pad<=r.y or r.y+r.h+pad<=sp.y end
+  local capW=ib+24
+  local caption=rect(ixc-math.floor(capW/2),iy+math.floor(ib/2)+4,capW,17)
+  local aRect=rect(axc-math.floor(A/2),ay-math.floor(A/2),A,A)
+  local ok=clear(g.item,4)and clear(caption,2)and clear(aRect,4)and sp.x>=g.glass.x+g.glass.w+6
+  -- The body's corner: treat it as a radius of 0.2 of the body height.
+  local r=math.floor(.2*body.h+.5);local ccx,ccy=right-r,bottom-r
+  if ok and sp.x+sp.w>ccx and sp.y+sp.h>ccy then
+   ok=math.sqrt((sp.x+sp.w-ccx)^2+(sp.y+sp.h-ccy)^2)<=r-6
+  end
+  g.speaker=if ok then sp else nil
+ end
  -- Body coordinates to root coordinates: every rect, point and column edge moves by ox.
  if ox~=0 then
   local moved={}
@@ -497,6 +521,21 @@ function Screen.new(options)
   end)
   self.itemButton={holder=holder,disc=disc,ring=ring,glyph=glyph,icon=icon,badge=badge,count=count,caption=caption,hit=hit}
  end
+ -- v859: the desktop plate's paw-print speaker, drawn on the phone (the plate overlay that
+ -- carries it on desktop is off there). Five holes measured from plate-overlay.png.
+ do
+  local holder=phoneNode(Kit.node("Frame",root,{Name="Speaker",BackgroundTransparency=1,ZIndex=7}))
+  local holes=Kit.node("Frame",holder,{Name="Holes",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=7})
+  for index,at in ipairs(Screen.SpeakerHoles)do
+   local lip=Kit.node("Frame",holes,{Name="Lip"..index,BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.78,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),
+    Position=UDim2.new(at[1],0,at[2],1),Size=UDim2.fromScale(Screen.SpeakerHole.X,Screen.SpeakerHole.Y),ZIndex=7})
+   Kit.node("UICorner",lip,{CornerRadius=UDim.new(.5,0)})
+   local hole=Kit.node("Frame",holes,{Name="Hole"..index,BackgroundColor3=Color3.fromRGB(9,10,14),BackgroundTransparency=.16,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),
+    Position=UDim2.fromScale(at[1],at[2]),Size=UDim2.fromScale(Screen.SpeakerHole.X,Screen.SpeakerHole.Y),ZIndex=8})
+   Kit.node("UICorner",hole,{CornerRadius=UDim.new(.5,0)})
+  end
+  self.speaker={holder=holder,holes=holes}
+ end
  -- Board well behind the board renderer. No border (UI-SPEC-REDESIGN-MENUS 6.1):
  -- the well reads as a recess from the LCD gradient, not from a stroke.
  self.well=Kit.frame(content,"BoardWell","well",UDim2.new(),UDim2.new(),14)
@@ -685,13 +724,13 @@ function Screen:setItems(count,glyph,color,id)
  -- puts the belt back when the menu closes.
  if self.controlMode=="menu"then count=0 end
  count=count or 0
- local drawn=count>0 and id~=nil and ItemIcons.source(id)~=nil
- ItemIcons.set(ib.icon,if drawn then id else nil)
- ib.glyph.Visible=not drawn
+ -- v859 (Spencer): B keeps the desktop B face (the sprite's letter); the belt shows only as
+ -- the count badge. The glyph text still names the front item for callers and specs.
+ ItemIcons.set(ib.icon,nil)
+ ib.glyph.Visible=false
  ib.glyph.Text=if count>0 and glyph then glyph else "B"
  ib.glyph.TextColor3=if count>0 and color then color else Kit.Color.soft
- ib.ring.Color=if count>0 and color then color else Color3.new(1,1,1)
- ib.ring.Transparency=if count>0 then 0 else .55
+ ib.ring.Transparency=1
  ib.badge.Visible=count>0;ib.count.Text=tostring(count)
  ib.hit:SetAttribute("AccessibleLabel",if self.controlMode=="menu"then "B: "..UICopy.get("phoneDeck.b.back")elseif count>0 then "Items: "..count else "Items: none")
 end
@@ -853,7 +892,9 @@ function Screen:showShell(on,phone)
  self.quadrants.Up.Visible=on and not phone;self.quadrants.Down.Visible=on and not phone
  -- Phone B: the B sprite under the item button, whose hit area is the target.
  local B=self.buttons.B
- B.holder.Visible=on;B.letter.Visible=not phone;B.hit.Visible=not phone
+ -- v859 (Spencer): the phone B is the desktop B (dark glossy sprite and its letter); the
+ -- item count is a small badge on it, never a replacement face.
+ B.holder.Visible=on;B.letter.Visible=on;B.hit.Visible=not phone
  if on then self.wordmark.Visible=true;Kit.corner(self.well,14)end
  self.plate.ImageRectOffset=if on then Vector2.zero else PlateCrop.offset
  self.plate.ImageRectSize=if on then Vector2.zero else PlateCrop.size
@@ -926,6 +967,9 @@ function Screen:layoutCompact(g)
  B.holder.Position=UDim2.fromOffset(g.item.x,g.item.y);B.holder.Size=UDim2.fromOffset(bd,math.floor(bd*1.07+.5))
  B.letter.TextSize=math.floor(.46*bd);B.letter.Size=UDim2.fromOffset(bd,bd);B.letter.Position=UDim2.new(.5,0,0,math.floor(bd/2))
  ib.disc.BackgroundTransparency=1
+ -- v859: the speaker under A where it fits (resolveCompact's g.speaker).
+ if g.speaker then place(self.speaker.holder,g.speaker)end
+ self.speaker.holes.Visible=g.speaker~=nil
  -- Glare on the board only; results and sheets cover the root; the boot plays in the screen.
  place(self.glare,b)
  place(self.results,g.screen);Kit.corner(self.results,11)

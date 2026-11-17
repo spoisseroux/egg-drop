@@ -456,7 +456,8 @@ function Art.dockCircle(button,kind)
 	-- v859 phone notes: Art.button's inner focus keyline is a 4 px-radius square; on press it
 	-- drew a dark box inside these round icons. The round outer ring is the press/focus cue here.
 	local keyline=button:FindFirstChild("FocusKeyline");if keyline then keyline.Visible=false end
-	local glyph=Art.frame(button,"DockGlyph","text",UDim2.new(.5,-12,.5,-12),UDim2.fromOffset(24,24),button.ZIndex+1);glyph.BackgroundTransparency=1
+	-- v859: anchored on its centre, so any scale (UIScale, a larger dock) keeps it centred.
+	local glyph=Art.frame(button,"DockGlyph","text",UDim2.fromScale(.5,.5),UDim2.fromOffset(24,24),button.ZIndex+1);glyph.BackgroundTransparency=1;glyph.AnchorPoint=Vector2.new(.5,.5)
 	if kind=="menu"then
 		for index=0,2 do local bar=Art.frame(glyph,"Bar","text",UDim2.fromOffset(2,4+index*7),UDim2.fromOffset(20,2),glyph.ZIndex);Art.corner(bar,1)end
 	else

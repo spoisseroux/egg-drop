@@ -128,6 +128,14 @@ return function(client,parent,live,screenModule)
     end
     assert(g.menu.h==24 and g.menuHit.h==44,label.." MENU pill")
     for _,r in ipairs({g.aHit,g.itemHit})do assert(r.w>=44 and r.h>=44,label.." hit under 44 px")end
+    -- v859: the paw-print speaker, when drawn, clears A, B and the glass and sits on the body.
+    if g.speaker then
+     local sp=g.speaker
+     local function apart(r,o,pad)return r.x+r.w+pad<=o.x or o.x+o.w+pad<=r.x or r.y+r.h+pad<=o.y or o.y+o.h+pad<=r.y end
+     assert(apart(sp,g.item,4)and apart(sp,{x=g.a.X-g.A/2,y=g.a.Y-g.A/2,w=g.A,h=g.A},4)and sp.x>=glassR+6,label.." speaker crowds A or B")
+     assert(sp.x+sp.w<=right-12 and sp.y+sp.h<=g.body.y+g.body.h-8,label.." speaker off the body")
+    end
+    if size.X==750 and size.Y==402 then assert(g.speaker,label.." the 750x402 phone has room for the speaker")end
     assert(g.itemHit.x+g.itemHit.w<=g.aHit.x or g.itemHit.y>=g.aHit.y+g.aHit.h,label.." the hit areas do not overlap")
    end end
   end)

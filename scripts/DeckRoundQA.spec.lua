@@ -195,8 +195,10 @@ return function(client,parent)
    local root=Instance.new("Frame");root.Size=UDim2.fromOffset(844,390);root.BackgroundTransparency=1;root.Parent=gui
    local s=Screen.new({parent=root,overlayParent=root,viewRoot=root});s:layout(Vector2.new(844,390),aspect,{kx=116,kh=58});s:setVisible(true)
    s:setItems(2,Items.ById.pop.glyph,Items.ById.pop.color,"pop")
-   assert(s.itemButton.icon:GetAttribute("ItemId")=="pop"and not s.itemButton.glyph.Visible and s.itemButton.glyph.Text==Items.ById.pop.glyph,"phone button icon")
-   s:setItems(0);assert(s.itemButton.glyph.Visible and s.itemButton.glyph.Text=="B","empty belt: plain B")
+   -- v859 (Spencer): B keeps its desktop face; the belt is the count badge only.
+   assert(not s.itemButton.glyph.Visible and s.itemButton.icon:GetAttribute("ItemId")==nil and s.itemButton.badge.Visible and s.itemButton.count.Text=="2","phone B: count badge, no item face")
+   assert(s.buttons.B.letter.Visible,"phone B shows its letter")
+   s:setItems(0);assert(not s.itemButton.badge.Visible and s.itemButton.glyph.Text=="B","empty belt: no badge")
    root:Destroy();host:Destroy()
   end)
   test("settle feedback and the first-drop idle hint: rules, ticks, device glyphs, first drop hides it, Reduced Motion is static",function()
