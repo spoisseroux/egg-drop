@@ -17,6 +17,7 @@
 -- sim tick on board events (S0, presentation data only); Stream sends the owner a 30 Hz snapshot
 -- and runs the client clock in shadow (S1); Render draws the deck from it and moves the shared
 -- Parts at 8 Hz (S2, needs Stream); Drop answers a tap at once and acks it, with a one-deep server
--- drop queue (S4); Ghost (S5) is not built. Off = today's path. The server stays authoritative.
+-- drop queue (S4); Ghost (S5) shows the tapped ball at once and lets the next tap go on its local
+-- touch-down (needs Drop; off until verified in Studio). Off = today's path. The server stays authoritative.
 return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=true,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=false})

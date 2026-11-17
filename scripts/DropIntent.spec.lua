@@ -71,5 +71,33 @@ return function(client,_,modules)
   assert(i:shownDrops(7)==7 and i.predicted==nil)
  end)
 
+ test("ghost gate: the touch-down opens the latch without waiting for FieldReady",function()
+  local i=Intent.new();i.ghostGate=true
+  local token=i:send(0,1)
+  assert(not i:allow(.25),"in flight")
+  i:contact(token)
+  assert(i:allow(.3),"touched down locally")
+ end)
+
+ test("ghost gate: the gate time opens it too; an older token's contact does not",function()
+  local i=Intent.new();i.ghostGate=true
+  local first=i:send(0,1);i:ack(first,true,false)
+  i:fieldReady(true)
+  local second=i:send(1,2)
+  i:contact(first)
+  assert(not i:allow(1.25),"the old ghost's touch-down is not this drop's")
+  assert(i:allow(1+Intent.GateSeconds+.01),"the contact gate's time has passed")
+ end)
+
+ test("readyAhead: only for our own recent drop, only with the ghost gate",function()
+  local i=Intent.new()
+  assert(not i:readyAhead(0),"no ghost gate: never")
+  i.ghostGate=true
+  assert(not i:readyAhead(0),"no drop sent yet")
+  local token=i:send(0,1);i:contact(token)
+  assert(i:readyAhead(.3),"our drop's gate, already open")
+  assert(not i:readyAhead(Intent.AheadSeconds+.1),"too long ago: FieldReady=false means something else")
+ end)
+
  return {passed=#cases,cases=cases}
 end

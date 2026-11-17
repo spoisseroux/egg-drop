@@ -11,6 +11,14 @@ local Intent={};Intent.__index=Intent
 Intent.DropInterval=.2
 Intent.LatchTimeout=1.5
 Intent.TapSoundWindow=1.5
+-- S5: the server's contact gate in real seconds (BoardConfig.ContactGateSeconds / Pace).
+-- With a ghost, the next drop may go when the ghost touches down, or this long after the
+-- tap, without waiting a round trip for FieldReady (the server's drop queue absorbs the
+-- jitter between the ghost's touch-down and the server ball's).
+Intent.GateSeconds=.6/1.3
+-- How long after a sent drop a stale replicated FieldReady=false is taken to be that
+-- drop's own contact gate (a round trip plus the gate), not another reason to wait.
+Intent.AheadSeconds=1.5
 
 function Intent.new()
  return setmetatable({lastSend=-math.huge,token=0,pending={},latched=false,latchAt=-math.huge,tapSounds={},
@@ -19,6 +27,8 @@ end
 
 -- Can a tap send now? (canPlay() already checked the replicated FieldReady.)
 function Intent:allow(now)
+ -- S5 ghost gate: the ghost's touch-down, or the gate time, opens the latch.
+ if self.latched and self.ghostGate and(self.contacted or now-self.latchAt>=Intent.GateSeconds)then self.latched=false end
  if self.latched and now-self.latchAt>=Intent.LatchTimeout then
   -- A lost ack: open the latch and stop showing the tap's predicted count.
   self.latched,self.predicted=false,nil;self.stats.timeouts+=1
@@ -34,6 +44,7 @@ function Intent:send(now,predicted)
  self.predicted=predicted
  self.token=self.token%65535+1
  self.lastSend,self.latched,self.latchAt=now,true,now
+ self.contacted=false
  self.pending[self.token]=now
  table.insert(self.tapSounds,now)
  self.stats.sent+=1
@@ -69,6 +80,19 @@ function Intent:consumeTapSound(now)
  while self.tapSounds[1]and now-self.tapSounds[1]>Intent.TapSoundWindow do table.remove(self.tapSounds,1)end
  if self.tapSounds[1]then table.remove(self.tapSounds,1);return true end
  return false
+end
+
+-- S5: the newest drop's ghost touched down (its local contact gate).
+function Intent:contact(token)
+ if token==self.token then self.contacted=true end
+end
+
+-- S5: with the ghost gate on, a replicated FieldReady=false soon after our own drop is
+-- that drop's contact gate seen a round trip late. True when the tap may go anyway (the
+-- caller still checks the budget, the phase and every other canPlay condition).
+function Intent:readyAhead(now)
+ if not self.ghostGate or now-self.lastSend>Intent.AheadSeconds then return false end
+ return self:allow(now)
 end
 
 -- A reset, a mode change or the round ending: forget pending taps.

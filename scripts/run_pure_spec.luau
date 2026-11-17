@@ -23,9 +23,10 @@ local modules={
  Codec=require("../src/shared/BoardSnapshotCodec"),
  Random=Random,
  DropIntent=require("../src/client/DropIntent"),
+ GhostFlight=require("../src/client/GhostFlight"),
 }
 local failures=0
-for _,name in ipairs({"BoardSnapshots","DropIntent"})do
+for _,name in ipairs({"BoardSnapshots","DropIntent","GhostFlight"})do
  local spec=require("./"..name..".spec")
  local ok,result=pcall(spec,nil,nil,modules)
  if ok then

@@ -2497,7 +2497,15 @@ local function aimFromScreen(x)
 end
 
 local function dropEgg()
-	if canPlay() and not drag then
+ -- S5: with the ghost gate, a stale FieldReady=false right after our own drop is that
+ -- drop's contact gate a round trip late; the ghost's touch-down (or the gate time) lets
+ -- the next tap go. Budget, phase, round end and every other canPlay rule still hold.
+ local intent=clientUI.dropIntent
+ local ahead=intent~=nil and intent.ghostGate==true and not canPlay()and canAim()and not isPickerOpen()and not roomView.busy
+  and not GuiService.MenuIsOpen and board:GetAttribute("FieldReady")==false and board:GetAttribute("FieldPhase")~="Settling"
+  and board:GetAttribute("RoundOver")~=true and intent:shownDrops(board:GetAttribute("Drops")or 0)<(board:GetAttribute("FieldBudget")or 24)
+  and intent:readyAhead(os.clock())
+	if (canPlay() or ahead) and not drag then
   if clientUI.welcomeInput then clientUI.welcomeInput()end
   -- Deck network S4: with DeckNetDrop the tap answers at once (drop sound, dispenser kick)
   -- under the client's own throttle and not-ready latch; the server's ack settles it.
@@ -2506,8 +2514,14 @@ local function dropEgg()
   local now=os.clock()
   if not intent:allow(now)then return end
   local drops,budget=(board:GetAttribute("Drops")or 0)+1,board:GetAttribute("FieldBudget")or 24
-  request:FireServer("drop", aim, intent:send(now,drops))
+  local token=intent:send(now,drops)
+  request:FireServer("drop", aim, token)
   audio:play("drop",1,.48)
+  -- S5: the ball itself, this frame.
+  if clientUI.ghosts then
+   local armed=board:GetAttribute("ItemArmed")
+   clientUI.ghosts:spawn(token,aim,nextTier(),now,{star=board:GetAttribute("NextPowerUp")==true,mark=if armed~=""then armed else nil})
+  end
   dispenser:update(board:GetAttribute("ResetId"),drops,budget,(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	end
 end
@@ -2519,7 +2533,8 @@ do
   task.spawn(function()
    local ackRemote=remotes:WaitForChild("BoardDropAck",30)
    if not ackRemote then warn("DeckNet: BoardDropAck missing; drops fall back to the latch timeout");return end
-   ackRemote.OnClientEvent:Connect(function(token,ok)
+   ackRemote.OnClientEvent:Connect(function(token,ok,eggId)
+    if clientUI.ghosts then clientUI.ghosts:ack(token,ok,eggId)end
     local result=clientUI.dropIntent:ack(token,ok,board:GetAttribute("FieldReady"))
     if result=="refused"then
      audio:play("aim",.6,.3) -- the soft "no" (the item belt's full note)
@@ -2529,7 +2544,7 @@ do
   end)
   board:GetAttributeChangedSignal("FieldReady"):Connect(function()clientUI.dropIntent:fieldReady(board:GetAttribute("FieldReady"))end)
   for _,name in ipairs({"ResetId","Mode","RoundOver"})do
-   board:GetAttributeChangedSignal(name):Connect(function()clientUI.dropIntent:clear()end)
+   board:GetAttributeChangedSignal(name):Connect(function()clientUI.dropIntent:clear();if clientUI.ghosts then clientUI.ghosts:clear()end end)
   end
  end
 end
@@ -3500,12 +3515,48 @@ function clientUI.netHudKick()
  task.defer(function()clientUI.netHudQueued=false;updateHud()end)
 end
 table.insert(rendererPresentation.connections,board.ChildAdded:Connect(function(source)
- clientUI.boardNet.afterSpawn(source,function()if source.Parent==board then addView(source)end end)
+ clientUI.boardNet.afterSpawn(source,function()
+  if source.Parent~=board then return end
+  -- S5: a ball this client predicted waits for its ghost's handoff.
+  local show=function()if source.Parent==board then addView(source)end end
+  if clientUI.ghosts and clientUI.ghosts:holdSpawn(source:GetAttribute("EggId"),source,show)then return end
+  show()
+ end)
 end))
 table.insert(rendererPresentation.connections,board.ChildRemoved:Connect(function(source)
  if source:GetAttribute("BoardSerial")~=board:GetAttribute("ResetId")then removeView(source);return end
- clientUI.boardNet.afterRemoval(source,function()removeView(source)end)
+ clientUI.boardNet.afterRemoval(source,function()
+  if clientUI.ghosts then clientUI.ghosts:serverGone(source:GetAttribute("EggId"))end
+  removeView(source)
+ end)
 end))
+-- S5 ghost ball (FeatureFlags.DeckNetGhost, needs DeckNetDrop): drawn as one more view.
+if clientUI.dropIntent and require(ReplicatedStorage.Shared.FeatureFlags).DeckNetGhost==true then
+ local constants=setmetatable({},{__index=function(_,key)
+  if key=="bounce"then return(Config.Presets[board:GetAttribute("Preset")or ""]or Config.Presets[Config.DefaultPreset]).bounce end
+  return Config[key]
+ end})
+ clientUI.dropIntent.ghostGate=true
+ clientUI.ghosts=require(script.GhostDrops).new({
+  constants=constants,
+  resetId=function()return board:GetAttribute("ResetId")end,
+  canShow=function()return board:GetAttribute("Mode")=="Board"and backdrop.Visible and gui.Enabled and not GuiService.MenuIsOpen end,
+  add=function(source)addView(source)end,
+  remove=function(source)removeView(source)end,
+  rebind=function(source,eggId)
+   local view=eggViews[source];if not view then return end
+   viewsById[view.id]=nil;view.id=eggId;view.faceInput.id=eggId;viewsById[eggId]=view.gel
+  end,
+  obstacles=function(out)
+   table.clear(out)
+   for source,view in pairs(eggViews)do
+    if view.id>=0 and not clientUI.ghosts:isGhost(source)then table.insert(out,{source.Position.X,source.Position.Y,source.Size.X/2})end
+   end
+  end,
+  onContact=function(token)clientUI.dropIntent:contact(token)end,
+ })
+ gui.Destroying:Connect(function()clientUI.ghosts:destroy()end)
+end
 if RunService:IsStudio() then
 	gui:GetAttributeChangedSignal("MeshPreview"):Connect(function()
 		for _, source in ipairs(board:GetChildren()) do

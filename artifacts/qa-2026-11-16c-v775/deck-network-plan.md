@@ -325,3 +325,31 @@ Until S2b, S2a draws positions about one render delay (50-200 ms) behind the mer
 - Client suite: 144 of 163 pass. The 18 failures are the known set plus argument misses. CustomizeNewItem (line 46, "lands on the Toys cards, got palette / hue") now fails after the UI agent's db7b23e changed HueEggView and that spec; it is not deck-net code and is not touched here.
 - JellyOverflow and FieldFeedbackOwner pass with (gui, board).
 - Console: only fixture noise from the specs.
+
+### Settle waits and S5, code only (2026-11-16, Studio owned by another agent)
+
+**What gates the next drop.**
+- **The server's contact gate** (`Simulation.canDrop`, `contactGate=true` in field rounds and Welcome): the next ball is ready when the falling ball first touches the floor, a bank or a ball, or after `ContactGateSeconds` = 0.6 sim-s (0.46 s real). This is a tuned game rule (610b6e9, benchmarked against fast random play), so it stays.
+- **The network on top of it.** The client could tap again only once `FieldReady` came back true, which is the server's touch-down plus the downlink. The S4 latch also wanted the ack and then a newer `FieldReady`. Every drop therefore waited one extra round trip after the ball had already landed.
+- **Neither a game rule.** The dispenser has no settle wait, and the server queue only holds a drop for up to 150 ms.
+
+**S5** (`FeatureFlags.DeckNetGhost`, off until it is checked in Studio; needs `DeckNetDrop`):
+- `src/client/GhostFlight.lua`, pure. It flies the shared free flight on numbers at the server's fixed step and Pace. It bounces off the side walls like the server ball, and rests on its first touch of the floor, a bank or a drawn ball.
+- `src/client/GhostDrops.lua`. On the tap frame it adds a fake source Part with the next tier and its star or armed mark, drawn by the deck renderer like any ball, at `RenderPriority.First+1` after the snapshot driver.
+  - On ack ok it takes the server ball's id, so the server's impact finds it: the landing plop is the server's, and the ghost makes no sounds of its own.
+  - The server ball's view waits (`holdSpawn`) until that ball, as drawn, reaches the resting ghost. The ghost then blends to it over 120 ms and the real view takes over.
+  - A refused ack, no ack within 1.5 s, or no server ball within 2 s: the ghost shrinks and is removed over 150 ms.
+  - A server ball that merges before the handoff takes the ghost with it.
+  - A reset, mode change, round end, menu or a hidden deck clears every ghost. A rejoin is a new client, so no ghost carries over.
+  - The server's Welcome demo drop has no token, so it gets no ghost.
+- **The ghost gate** (`DropIntent`). The latch opens at the ghost's local touch-down, or `GateSeconds` (0.46 s) after the tap, without waiting for `FieldReady`.
+  - `dropEgg` lets the tap through a stale `FieldReady=false` only for our own drop within 1.5 s, and only with drops left, not Settling and not round over.
+  - The server queue (150 ms) absorbs the jitter between the ghost's touch-down and the server ball's.
+  - Double taps still respect the 0.2 s throttle and the one-ghost-per-gate latch.
+- **Specs, offline** (`run_pure_spec.luau`): GhostFlight 8 (in Studio it also checks bit-for-bit parity with `BoardConfig.advanceFlight` and `launchVelocity`), DropIntent 12 (ghost gate, older-token contact, readyAhead), BoardSnapshots 13.
+
+**To measure when Studio is free.**
+- Tap to visible ball and tap to next tap allowed, at 0 ms and 150-250 ms jitter, ghost off and on.
+- Refused drops: the fizzle rate.
+- The handoff (no visible jump).
+- A profile of a round for the remaining client frame drops.
