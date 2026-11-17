@@ -1,19 +1,18 @@
 {
  "schema": 1,
- "source": "scripts/export_customization_jars.py (run through the live Blender, appended into a temporary scene)",
+ "source": "scripts/export_customization_jars.py",
  "parts": [
   {
    "name": "Jar_charm__Base",
    "item": "charm",
    "part": "Base",
-   "colour": "#D3C2E3",
+   "colour": "#D0BEE6",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    6.0,
     0.0,
     0.2925
-   ],
-   "material": "Jar_Satin"
+   ]
   },
   {
    "name": "Jar_charm__Charm",
@@ -22,11 +21,10 @@
    "colour": "#FFCB3D",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    6.0,
     0.0,
     0.68578
-   ],
-   "material": "Charm_Gold"
+   ]
   },
   {
    "name": "Jar_charm__Dome",
@@ -35,11 +33,10 @@
    "colour": "#DFD2FF",
    "alpha": 0.34,
    "centre": [
-    0.0,
+    6.0,
     0.0,
     0.77
-   ],
-   "material": "Capsule_Clear"
+   ]
   },
   {
    "name": "Jar_charm__Loop",
@@ -48,11 +45,10 @@
    "colour": "#FFF3D6",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    6.0,
     0.0,
     1.08
-   ],
-   "material": "Jar_Lid"
+   ]
   },
   {
    "name": "Jar_charm__Shine",
@@ -61,11 +57,10 @@
    "colour": "#FFFFFF",
    "alpha": 1.0,
    "centre": [
-    -0.26947,
+    5.73053,
     -0.31553,
     0.79
-   ],
-   "material": "Jar_Shine"
+   ]
   },
   {
    "name": "Jar_citrus__Body",
@@ -74,11 +69,10 @@
    "colour": "#FFE280",
    "alpha": 0.36,
    "centre": [
-    0.0,
+    -3.0,
     0.0,
     0.4
-   ],
-   "material": "Jar_Glass"
+   ]
   },
   {
    "name": "Jar_citrus__Lid",
@@ -87,24 +81,22 @@
    "colour": "#FFF3D6",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    -3.0,
     0.0,
     0.8975
-   ],
-   "material": "Jar_Lid"
+   ]
   },
   {
    "name": "Jar_citrus__Liquid",
    "item": "citrus",
    "part": "Liquid",
-   "colour": "#FFD478",
-   "alpha": 1.0,
+   "colour": "#FFC94A",
+   "alpha": 0.68,
    "centre": [
+    -3.0,
     0.0,
-    0.24645,
-    0.397
-   ],
-   "material": "Jar_Satin"
+    0.31
+   ]
   },
   {
    "name": "Jar_citrus__Shine",
@@ -113,11 +105,10 @@
    "colour": "#FFFFFF",
    "alpha": 1.0,
    "centre": [
-    -0.32815,
+    -3.32815,
     -0.4169,
     0.34
-   ],
-   "material": "Jar_Shine"
+   ]
   },
   {
    "name": "Jar_citrus__Symbol",
@@ -126,11 +117,10 @@
    "colour": "#E3EFD0",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    -3.0,
     0.0,
     0.33452
-   ],
-   "material": "Jar_Symbol"
+   ]
   },
   {
    "name": "Jar_gloss__Body",
@@ -139,11 +129,10 @@
    "colour": "#63D7C1",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    1.5,
     0.0,
     0.5175
-   ],
-   "material": "Finish_Gloss"
+   ]
   },
   {
    "name": "Jar_gloss__Shine",
@@ -152,11 +141,10 @@
    "colour": "#FFFFFF",
    "alpha": 1.0,
    "centre": [
-    -0.30107,
-    -0.40207,
+    1.48427,
+    -0.00953,
     0.56
-   ],
-   "material": "Jar_Shine"
+   ]
   },
   {
    "name": "Jar_gloss__Topper",
@@ -165,11 +153,10 @@
    "colour": "#FFE56B",
    "alpha": 1.0,
    "centre": [
-    0.05425,
-    0.0,
+    1.50775,
+    0.00775,
     1.444
-   ],
-   "material": "Jar_Shine"
+   ]
   },
   {
    "name": "Jar_iris__Body",
@@ -178,11 +165,10 @@
    "colour": "#C4A2FF",
    "alpha": 0.36,
    "centre": [
-    0.0,
+    -1.5,
     0.0,
     0.4
-   ],
-   "material": "Jar_Glass"
+   ]
   },
   {
    "name": "Jar_iris__Lid",
@@ -191,24 +177,22 @@
    "colour": "#FFF3D6",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    -1.5,
     0.0,
     0.8975
-   ],
-   "material": "Jar_Lid"
+   ]
   },
   {
    "name": "Jar_iris__Liquid",
    "item": "iris",
    "part": "Liquid",
-   "colour": "#A88DDF",
-   "alpha": 1.0,
+   "colour": "#8A64D4",
+   "alpha": 0.68,
    "centre": [
+    -1.5,
     0.0,
-    0.24645,
-    0.397
-   ],
-   "material": "Jar_Satin"
+    0.31
+   ]
   },
   {
    "name": "Jar_iris__Shine",
@@ -217,24 +201,22 @@
    "colour": "#FFFFFF",
    "alpha": 1.0,
    "centre": [
-    -0.32815,
+    -1.82815,
     -0.4169,
     0.34
-   ],
-   "material": "Jar_Shine"
+   ]
   },
   {
    "name": "Jar_iris__Symbol",
    "item": "iris",
    "part": "Symbol",
-   "colour": "#F8E7E2",
+   "colour": "#F7EAEC",
    "alpha": 1.0,
    "centre": [
-    -0.0,
-    -0.02789,
-    0.29893
-   ],
-   "material": "Jar_Symbol"
+    -1.5,
+    0.0,
+    0.2825
+   ]
   },
   {
    "name": "Jar_jelly__Body",
@@ -243,24 +225,22 @@
    "colour": "#7DDFCD",
    "alpha": 0.72,
    "centre": [
-    0.01131,
+    4.51131,
     -0.03511,
     0.515
-   ],
-   "material": "Finish_Jelly"
+   ]
   },
   {
    "name": "Jar_jelly__Core",
    "item": "jelly",
    "part": "Core",
-   "colour": "#E8F0F0",
+   "colour": "#EFF5F4",
    "alpha": 1.0,
    "centre": [
-    0.00134,
-    -0.03,
-    0.39675
-   ],
-   "material": "Jar_Satin"
+    4.49635,
+    0.008,
+    0.39425
+   ]
   },
   {
    "name": "Jar_jelly__Lid",
@@ -269,11 +249,10 @@
    "colour": "#FFF3D6",
    "alpha": 1.0,
    "centre": [
-    0.19986,
+    4.69986,
     0.0,
     1.02292
-   ],
-   "material": "Jar_Lid"
+   ]
   },
   {
    "name": "Jar_jelly__Shine",
@@ -282,11 +261,10 @@
    "colour": "#FFFFFF",
    "alpha": 1.0,
    "centre": [
-    -0.33212,
+    4.16788,
     -0.41593,
     0.36
-   ],
-   "material": "Jar_Shine"
+   ]
   },
   {
    "name": "Jar_matte__Body",
@@ -295,11 +273,10 @@
    "colour": "#9DE7D9",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    3.0,
     0.0,
     0.5175
-   ],
-   "material": "Finish_Matte"
+   ]
   },
   {
    "name": "Jar_matte__Topper",
@@ -308,11 +285,10 @@
    "colour": "#B4F0E4",
    "alpha": 1.0,
    "centre": [
-    -0.00671,
+    3.0,
     0.0,
-    1.2425
-   ],
-   "material": "Finish_Matte"
+    1.23475
+   ]
   },
   {
    "name": "Jar_reset__Body",
@@ -324,8 +300,7 @@
     0.0,
     0.0,
     0.4
-   ],
-   "material": "Jar_Glass"
+   ]
   },
   {
    "name": "Jar_reset__Lid",
@@ -337,21 +312,19 @@
     0.0,
     0.0,
     0.8975
-   ],
-   "material": "Jar_Lid"
+   ]
   },
   {
    "name": "Jar_reset__Liquid",
    "item": "reset",
    "part": "Liquid",
-   "colour": "#9AC6D4",
-   "alpha": 1.0,
+   "colour": "#6EB1C4",
+   "alpha": 0.68,
    "centre": [
     0.0,
-    0.24645,
-    0.397
-   ],
-   "material": "Jar_Satin"
+    0.0,
+    0.31
+   ]
   },
   {
    "name": "Jar_reset__Shine",
@@ -363,8 +336,7 @@
     -0.32815,
     -0.4169,
     0.34
-   ],
-   "material": "Jar_Shine"
+   ]
   },
   {
    "name": "Jar_reset__Symbol",
@@ -373,11 +345,10 @@
    "colour": "#FFF3D6",
    "alpha": 1.0,
    "centre": [
-    -0.0,
     0.0,
-    0.291
-   ],
-   "material": "Jar_Symbol"
+    0.0,
+    0.29
+   ]
   },
   {
    "name": "Jar_rose__Body",
@@ -386,11 +357,10 @@
    "colour": "#FF94B7",
    "alpha": 0.36,
    "centre": [
-    0.0,
+    -6.0,
     0.0,
     0.4
-   ],
-   "material": "Jar_Glass"
+   ]
   },
   {
    "name": "Jar_rose__Lid",
@@ -399,24 +369,22 @@
    "colour": "#FFF3D6",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    -6.0,
     0.0,
     0.8975
-   ],
-   "material": "Jar_Lid"
+   ]
   },
   {
    "name": "Jar_rose__Liquid",
    "item": "rose",
    "part": "Liquid",
-   "colour": "#DC84A0",
-   "alpha": 1.0,
+   "colour": "#D0577E",
+   "alpha": 0.68,
    "centre": [
+    -6.0,
     0.0,
-    0.24645,
-    0.397
-   ],
-   "material": "Jar_Satin"
+    0.31
+   ]
   },
   {
    "name": "Jar_rose__Shine",
@@ -425,24 +393,22 @@
    "colour": "#FFFFFF",
    "alpha": 1.0,
    "centre": [
-    -0.32815,
+    -6.32815,
     -0.4169,
     0.34
-   ],
-   "material": "Jar_Shine"
+   ]
   },
   {
    "name": "Jar_rose__Symbol",
    "item": "rose",
    "part": "Symbol",
-   "colour": "#FFE8E2",
+   "colour": "#FFEDF3",
    "alpha": 1.0,
    "centre": [
-    -0.0,
-    0.04735,
-    0.29533
-   ],
-   "material": "Jar_Symbol"
+    -6.0,
+    0.0,
+    0.31432
+   ]
   },
   {
    "name": "Jar_tide__Body",
@@ -451,11 +417,10 @@
    "colour": "#80C1FF",
    "alpha": 0.36,
    "centre": [
-    0.0,
+    -4.5,
     0.0,
     0.4
-   ],
-   "material": "Jar_Glass"
+   ]
   },
   {
    "name": "Jar_tide__Lid",
@@ -464,24 +429,22 @@
    "colour": "#FFF3D6",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    -4.5,
     0.0,
     0.8975
-   ],
-   "material": "Jar_Lid"
+   ]
   },
   {
    "name": "Jar_tide__Liquid",
    "item": "tide",
    "part": "Liquid",
-   "colour": "#77A5DF",
-   "alpha": 1.0,
+   "colour": "#4985D4",
+   "alpha": 0.68,
    "centre": [
+    -4.5,
     0.0,
-    0.24645,
-    0.397
-   ],
-   "material": "Jar_Satin"
+    0.31
+   ]
   },
   {
    "name": "Jar_tide__Shine",
@@ -490,11 +453,10 @@
    "colour": "#FFFFFF",
    "alpha": 1.0,
    "centre": [
-    -0.32815,
+    -4.82815,
     -0.4169,
     0.34
-   ],
-   "material": "Jar_Shine"
+   ]
   },
   {
    "name": "Jar_tide__Symbol",
@@ -503,11 +465,10 @@
    "colour": "#E9F5FF",
    "alpha": 1.0,
    "centre": [
-    0.0,
+    -4.5,
     0.0,
     0.3
-   ],
-   "material": "Jar_Symbol"
+   ]
   }
  ]
 }

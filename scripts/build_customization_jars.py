@@ -19,6 +19,16 @@ Design rules (art lead):
   * Charm capsule: a ball, not a pot. Clear dome, gold star inside, loop on top.
   * Colour is stored in the "Col" corner attribute, so the meshes need no textures.
   * Budget: 300-800 triangles per item (the manifest lists the real counts).
+  * Pass 4 (QA 2026-11-16c, "the jars look weird when rotating"): the reveal spins the jar, so
+    every jar reads from every side. The pigment is a closed, rounded, see-through volume
+    inside a slightly larger glass pot (no half shells), and the symbol inside is 3D: the rose
+    and iris are two crossed copies so the flower or fan silhouette holds at 0/90/180/270
+    degrees, the droplet and lemon are lathes, the ring is a fat torus. Toppers, bubbles and
+    the capsule star are built the same way round; the gloss jar has a second highlight
+    opposite the first and the capsule base is capped.
+  * blender --background assets/art-source/jars/customization-jars.blend --python
+    scripts/render_customization_jars_turntable.py renders the in-game look (one flat colour
+    per part, Roblox transparency, back faces culled) at 0/90/180/270 degrees.
 
 Two ways to run it:
   blender --background --factory-startup --python scripts/build_customization_jars.py
@@ -70,6 +80,8 @@ FRAMES = {"hue": (.50, 1.36, 0), "gloss": (.88, 1.95, .08), "matte": (.74, 1.66,
           "jelly": (.62, 1.56, .12), "charm": (.60, 1.42, 0)}
 # liquid behind the symbol where the plain pigment would not contrast with a pale symbol
 LIQUID = {"citrus": "#FFCC00", "reset": "#4FB9CC"}
+# pass 4: the closed pigment volume, (radius, height) bottom pole to top pole, inside POT
+LIQUID_VOLUME = [(0, .035), (.32, .042), (.46, .13), (.49, .30), (.45, .48), (.33, .565), (0, .585)]
 # shade at the bottom of the liquid; the default purple shadow turns yellow to mustard
 DEEP = {"citrus": "#FFB81A"}
 TOPPER_SCALE = 1.55  # pass 2: toppers carry the read at 64 px, so they are big
@@ -139,6 +151,7 @@ def build():
 
     M = {
         "jar": material("Jar_Satin", rough=.32, coat=.35),
+        "liquid": material("Jar_Liquid", rough=.18, coat=.5, alpha=.68),
         "glass": material("Jar_Glass", rough=.1, coat=.6, alpha=.36, emit=.3),
         "symbol": material("Jar_Symbol", rough=.5, emit=.55),
         "lid": material("Jar_Lid", rough=.55),
@@ -253,7 +266,7 @@ def build():
             ball(bm, .075 * k, hex_rgb(GOLD), up @ tilt @ (centre + Vector((0, -.06, 0))), scale=(1, .8, 1))
         elif item == "tide":  # one fat droplet
             profile = [(0, 0), (.10, .015), (.165, .10), (.15, .20), (.085, .30), (.03, .37), (0, .40)]
-            lathe(bm, profile, lambda co, c: mix(colour, (1, 1, 1), .10 + .35 * max(0, co.z - h - .2)), 8, up)
+            lathe(bm, profile, lambda co, c: mix(colour, (1, 1, 1), .10 + .35 * max(0, co.z - h - .2)), 10, up)
         elif item == "citrus":  # a whole lemon: fat middle, a nub at each end, one small leaf
             tilt = math.radians(68)
             axis = Vector((math.sin(tilt), 0, math.cos(tilt)))
@@ -286,24 +299,67 @@ def build():
                     faces.append(bm.faces.new((a[j], a[k], b[k], b[j])))
             paint(bm, faces, hex_rgb(CREAM))
         elif item == "gloss":  # a four-point sparkle, kept faceted on purpose, and a small one
-            for cx, cz, R in ((0, .25, .25), (.22, .46, .10)):
-                ring = []
-                for i in range(8):
-                    a = math.pi / 2 + i * math.pi / 4
-                    rad = R if i % 2 == 0 else R * .34
-                    ring.append(bm.verts.new(up @ Vector((cx + rad * math.cos(a), 0, cz + rad * math.sin(a)))))
-                front = bm.verts.new(up @ Vector((cx, -R * .32, cz)))
-                back = bm.verts.new(up @ Vector((cx, R * .32, cz)))
-                faces = []
-                for i in range(8):
-                    faces.append(bm.faces.new((ring[i], ring[(i + 1) % 8], front)))
-                    faces.append(bm.faces.new((ring[(i + 1) % 8], ring[i], back)))
-                paint(bm, faces, hex_rgb("#FFE56B"), smooth=False)
-        elif item == "matte":  # a chalky powder puff: three soft lumps
+            # pass 4: each sparkle is two crossed stars, so it never turns edge-on
+            for cx, cz, R in ((0, .25, .25), (.16, .46, .10)):
+                for spin in (0, 90):
+                    turn = Matrix.Rotation(math.radians(spin), 4, "Z")
+                    ring = []
+                    for i in range(8):
+                        a = math.pi / 2 + i * math.pi / 4
+                        rad = R if i % 2 == 0 else R * .34
+                        ring.append(bm.verts.new(up @ turn @ Vector((cx + rad * math.cos(a), 0, cz + rad * math.sin(a)))))
+                    front = bm.verts.new(up @ turn @ Vector((cx, -R * .32, cz)))
+                    back = bm.verts.new(up @ turn @ Vector((cx, R * .32, cz)))
+                    faces = []
+                    for i in range(8):
+                        faces.append(bm.faces.new((ring[i], ring[(i + 1) % 8], front)))
+                        faces.append(bm.faces.new((ring[(i + 1) % 8], ring[i], back)))
+                    paint(bm, faces, hex_rgb("#FFE56B"), smooth=False)
+        elif item == "matte":  # a chalky powder puff: a soft dome ringed by four lumps
             pale = mix(colour, (1, 1, 1), .55)
             ball(bm, .17 * k, pale, up @ Vector((0, 0, .15)), segs=8)
-            ball(bm, .12 * k, pale, up @ Vector((-.15, 0, .10)), segs=6)
-            ball(bm, .11 * k, pale, up @ Vector((.15, 0, .09)), segs=6)
+            for i, r in enumerate((.12, .11, .12, .11)):
+                a = math.radians(45 + 90 * i)
+                ball(bm, r * k, pale, up @ Vector((.15 * math.cos(a), .15 * math.sin(a), .09)), segs=6)
+
+    # ---- hue jar symbols (pass 4): solid from every side, centred on the jar axis
+    def symbol(bm, item, colour):
+        if item == "rose":  # two crossed five-petal flowers: the silhouette holds front and side
+            centre, d, r = Vector((0, 0, .30)), .15, .11
+            for plane in ("XZ", "YZ"):
+                for i in range(5):
+                    if plane == "YZ" and i == 0:
+                        continue  # the top petal is shared
+                    a = math.radians(90 + 72 * i)
+                    off, sq = Vector((d * math.cos(a), 0, d * math.sin(a))), (1, .8, 1)
+                    if plane == "YZ":
+                        off, sq = Vector((0, off.x, off.z)), (.8, 1, 1)
+                    ball(bm, r, mix(colour, (1, 1, 1), .12), centre + off, scale=sq)
+        elif item == "iris":  # two crossed three-petal fans sharing the tall middle petal
+            up = Matrix.Translation((0, 0, .07)) @ Matrix.Scale(1.15, 4)
+            for axis, angle, length in (("Y", 0, .40), ("Y", 48, .30), ("Y", -48, .30), ("X", 48, .30), ("X", -48, .30)):
+                m = up @ Matrix.Rotation(math.radians(angle), 4, axis)
+                spindle(bm, .095, length, mix(colour, (1, 1, 1), .14), m, segs=6, flat=.7 if axis == "Y" else 1.0)
+            ball(bm, .065, hex_rgb(GOLD), (0, 0, .10))
+        elif item == "reset":  # a fat ring: edge-on it is still a solid pale bar, never gone
+            R, r, h = .17, .07, .29
+            faces, rows = [], []
+            for i in range(12):
+                a = 2 * math.pi * i / 12
+                row = []
+                for j in range(6):
+                    b = 2 * math.pi * j / 6
+                    row.append(bm.verts.new(Vector(((R + r * math.cos(b)) * math.cos(a), r * math.sin(b),
+                                                    h + (R + r * math.cos(b)) * math.sin(a)))))
+                rows.append(row)
+            for i in range(12):
+                a, b = rows[i], rows[(i + 1) % 12]
+                for j in range(6):
+                    k = (j + 1) % 6
+                    faces.append(bm.faces.new((a[j], a[k], b[k], b[j])))
+            paint(bm, faces, hex_rgb(CREAM))
+        else:  # tide droplet and citrus lemon are already round solids
+            topper(bm, item, colour, .07, k=1.15)
 
     # ---- one item
     def make(index, item, label, kind, hex_colour):
@@ -331,17 +387,16 @@ def build():
             bm = bmesh.new()
             lathe(bm, POT, lambda co, c: glass if c.z > FILL else mix(colour, (1, 1, 1), .25))
             parts.append(finish(f"Jar_{item}__Body", root, bm, M["glass"]))
-            # Opaque back half of the liquid, behind the symbol: keeps the pigment vivid on any
-            # background and gives the pale symbol something deep to sit against.
+            # Pass 4: the pigment is one closed, rounded, see-through volume, so it reads the
+            # same from every side and the pale symbol inside shows through it all the way round.
             bm = bmesh.new()
-            faces = lathe(bm, POT, body_colour, matrix=Matrix.Translation((0, 0, .025)) @ Matrix.Diagonal((.93, .93, .93, 1)))
-            bmesh.ops.delete(bm, geom=[f for f in faces if f.calc_center_median().y < .02], context="FACES")
-            parts.append(finish(f"Jar_{item}__Liquid", root, bm, M["jar"]))
+            lathe(bm, LIQUID_VOLUME, body_colour)
+            parts.append(finish(f"Jar_{item}__Liquid", root, bm, M["liquid"]))
             bm = bmesh.new()
             lathe(bm, LID, hex_rgb(CREAM))
             parts.append(finish(f"Jar_{item}__Lid", root, bm, M["lid"]))
-            bm = bmesh.new()  # the symbol floats in the colour, pale so it reads through the glass
-            topper(bm, item, mix(colour, (1, 1, 1), .9), .07, k=1.3 if item == "reset" else 1.15)
+            bm = bmesh.new()  # the symbol floats in the colour, pale and 3D so it reads from every side
+            symbol(bm, item, mix(colour, (1, 1, 1), .9))
             parts.append(finish(f"Jar_{item}__Symbol", root, bm, M["symbol"]))
             bm = bmesh.new()
             shine(bm, POT, -38, .18, .40, 7)
@@ -362,6 +417,7 @@ def build():
                 bm = bmesh.new()
                 shine(bm, POT, -36, .16, .46, 15)
                 shine(bm, LID, -36, .82, .86, 12, lift=.01)
+                shine(bm, POT, 144, .20, .40, 10)  # pass 4: the back catches light too
                 parts.append(finish(f"Jar_{item}__Shine", root, bm, M["shine"]))
 
         elif item == "jelly":
@@ -376,8 +432,10 @@ def build():
             parts.append(finish(f"Jar_{item}__Body", root, bm, M["jelly"]))
             bm = bmesh.new()  # bubbles and a darker heart, seen through the jelly
             ball(bm, .19, mix(colour, (.0, .30, .42), .4), (.03, .0, .28), scale=(1.15, 1, .85))
-            for cx, cz, r in ((-.20, .46, .07), (.22, .36, .05), (.06, .62, .055), (-.12, .20, .04)):
-                ball(bm, r, (1, 1, 1), (cx, -.18, cz))
+            # pass 4: bubbles all the way round, not just in front
+            for az, cz, r in ((-40, .46, .07), (50, .36, .05), (150, .58, .06), (-140, .30, .055), (100, .20, .045), (-95, .62, .05)):
+                a = math.radians(az)
+                ball(bm, r, (1, 1, 1), (.26 * math.sin(a), -.26 * math.cos(a), cz))
             parts.append(finish(f"Jar_{item}__Core", root, bm, M["jar"]))
             bm = bmesh.new()  # the lid sits askew on the jelly bulging out of the neck
             slide = (Matrix.Translation((.20, 0, 1.02)) @ Matrix.Rotation(math.radians(17), 4, "Y")
@@ -394,7 +452,7 @@ def build():
             upper = [(R * math.sin(math.pi * k / 8), cz - R * math.cos(math.pi * k / 8)) for k in range(4, 9)]
             deep = mix(colour, (.2, .1, .5), .25)
             bm = bmesh.new()
-            lathe(bm, lower, lambda co, c: mix(deep, colour, min(1, co.z / cz)))
+            lathe(bm, lower + [(0, cz)], lambda co, c: mix(deep, colour, min(1, co.z / cz)))  # capped: no see-through hole
             band = [(R, cz - .045), (R + .045, cz - .03), (R + .045, cz + .03), (R, cz + .045)]
             lathe(bm, band, hex_rgb(CREAM))
             parts.append(finish(f"Jar_{item}__Base", root, bm, M["jar"]))
@@ -402,18 +460,20 @@ def build():
             lathe(bm, upper, mix(colour, (1, 1, 1), .55))
             parts.append(finish(f"Jar_{item}__Dome", root, bm, M["clear"]))
             bm = bmesh.new()  # the prize: a fat five-point star, standing in the capsule
-            ring = []
-            for i in range(10):
-                a = math.pi / 2 + i * math.pi / 5
-                rad = .27 if i % 2 == 0 else .135
-                ring.append(bm.verts.new(Vector((rad * math.cos(a), 0, cz + .14 + rad * math.sin(a)))))
-            front = bm.verts.new(Vector((0, -.10, cz + .14)))
-            back = bm.verts.new(Vector((0, .10, cz + .14)))
-            faces = []
-            for i in range(10):
-                faces.append(bm.faces.new((ring[i], ring[(i + 1) % 10], front)))
-                faces.append(bm.faces.new((ring[(i + 1) % 10], ring[i], back)))
-            paint(bm, faces, hex_rgb(GOLD), smooth=False)
+            for spin in (0, 90):  # pass 4: two crossed stars, a star from every side
+                turn = Matrix.Rotation(math.radians(spin), 4, "Z")
+                ring = []
+                for i in range(10):
+                    a = math.pi / 2 + i * math.pi / 5
+                    rad = .27 if i % 2 == 0 else .135
+                    ring.append(bm.verts.new(turn @ Vector((rad * math.cos(a), 0, cz + .14 + rad * math.sin(a)))))
+                front = bm.verts.new(turn @ Vector((0, -.10, cz + .14)))
+                back = bm.verts.new(turn @ Vector((0, .10, cz + .14)))
+                faces = []
+                for i in range(10):
+                    faces.append(bm.faces.new((ring[i], ring[(i + 1) % 10], front)))
+                    faces.append(bm.faces.new((ring[(i + 1) % 10], ring[i], back)))
+                paint(bm, faces, hex_rgb(GOLD), smooth=False)
             parts.append(finish(f"Jar_{item}__Charm", root, bm, M["gold"]))
             bm = bmesh.new()  # hanging loop on top
             rows, faces = [], []

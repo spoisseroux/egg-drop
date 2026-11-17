@@ -38,7 +38,9 @@ function Jar.build(itemId,scale,options)
   part.Color=Color3.fromHex(row.color);part.Transparency=row.transparency;part.Reflectance=row.reflectance
   part.Material=Enum.Material[row.material]or Enum.Material.SmoothPlastic
   part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.CastShadow=false
-  -- The pigment and jelly cores are half shells seen from their open side through the glass.
+  -- Pass 4: the pigment is a closed see-through volume; drawn double-sided it is two layers
+  -- deep round the symbol (vivid on any background) and one layer in front of it (symbol shows).
+  -- The jelly core gets the same, and the capsule dome is an open shell.
   if row.part=="Liquid"or row.part=="Core"or row.part=="Dome"then part.DoubleSided=true end
   part.Parent=model
  end

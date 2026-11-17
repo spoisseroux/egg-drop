@@ -1,9 +1,9 @@
 -- Run in Studio Edit (Studio MCP execute_luau, Edit datamodel) after Rojo syncs
 -- assets/jars/JarAssets.rbxmx. Rojo live sync creates MeshParts with an empty MeshId, so
 -- JarModel falls back to the flat jar until this fills them from the uploaded Model.
--- Idempotent. Ids: assets/art-source/jars/customization-jars-meshids.json (Model 111754744827256).
+-- Idempotent. Ids: assets/art-source/jars/customization-jars-meshids.json (Model 81983006633272, pass 4: closed liquid, 3D symbols).
 local pack=assert(game:GetService("ReplicatedStorage"):FindFirstChild("JarAssets"),"JarAssets is not synced yet")
-local source=game:GetService("InsertService"):LoadAsset(111754744827256)
+local source=game:GetService("InsertService"):LoadAsset(81983006633272)
 local byName={};for _,d in ipairs(source:GetDescendants())do if d:IsA("MeshPart")then byName[d.Name]=d end end
 local filled,kept=0,0
 for _,part in ipairs(pack:GetChildren())do

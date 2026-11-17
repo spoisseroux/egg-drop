@@ -7,12 +7,12 @@
    "label": "Rose jar",
    "kind": "hue",
    "colour": "#FF327A",
-   "triangles": 634,
+   "triangles": 772,
    "parts": {
     "Jar_rose__Body": 180,
-    "Jar_rose__Liquid": 90,
+    "Jar_rose__Liquid": 120,
     "Jar_rose__Lid": 132,
-    "Jar_rose__Symbol": 216,
+    "Jar_rose__Symbol": 324,
     "Jar_rose__Shine": 16
    },
    "x": -6.0
@@ -22,12 +22,12 @@
    "label": "Tide jar",
    "kind": "hue",
    "colour": "#008DFF",
-   "triangles": 498,
+   "triangles": 548,
    "parts": {
     "Jar_tide__Body": 180,
-    "Jar_tide__Liquid": 90,
+    "Jar_tide__Liquid": 120,
     "Jar_tide__Lid": 132,
-    "Jar_tide__Symbol": 80,
+    "Jar_tide__Symbol": 100,
     "Jar_tide__Shine": 16
    },
    "x": -4.5
@@ -37,10 +37,10 @@
    "label": "Citrus jar",
    "kind": "hue",
    "colour": "#FFCC00",
-   "triangles": 566,
+   "triangles": 596,
    "parts": {
     "Jar_citrus__Body": 180,
-    "Jar_citrus__Liquid": 90,
+    "Jar_citrus__Liquid": 120,
     "Jar_citrus__Lid": 132,
     "Jar_citrus__Symbol": 148,
     "Jar_citrus__Shine": 16
@@ -52,12 +52,12 @@
    "label": "Iris jar",
    "kind": "hue",
    "colour": "#9350FF",
-   "triangles": 562,
+   "triangles": 664,
    "parts": {
     "Jar_iris__Body": 180,
-    "Jar_iris__Liquid": 90,
+    "Jar_iris__Liquid": 120,
     "Jar_iris__Lid": 132,
-    "Jar_iris__Symbol": 144,
+    "Jar_iris__Symbol": 216,
     "Jar_iris__Shine": 16
    },
    "x": -1.5
@@ -67,12 +67,12 @@
    "label": "Reset Hue",
    "kind": "hue",
    "colour": "#D4F8FF",
-   "triangles": 518,
+   "triangles": 592,
    "parts": {
     "Jar_reset__Body": 180,
-    "Jar_reset__Liquid": 90,
+    "Jar_reset__Liquid": 120,
     "Jar_reset__Lid": 132,
-    "Jar_reset__Symbol": 100,
+    "Jar_reset__Symbol": 144,
     "Jar_reset__Shine": 16
    },
    "x": 0.0
@@ -82,11 +82,11 @@
    "label": "Gloss",
    "kind": "finish",
    "colour": "#58DDC2",
-   "triangles": 376,
+   "triangles": 424,
    "parts": {
     "Jar_gloss__Body": 312,
-    "Jar_gloss__Topper": 32,
-    "Jar_gloss__Shine": 32
+    "Jar_gloss__Topper": 64,
+    "Jar_gloss__Shine": 48
    },
    "x": 1.5
   },
@@ -95,10 +95,10 @@
    "label": "Matte",
    "kind": "finish",
    "colour": "#58DDC2",
-   "triangles": 432,
+   "triangles": 504,
    "parts": {
     "Jar_matte__Body": 312,
-    "Jar_matte__Topper": 120
+    "Jar_matte__Topper": 192
    },
    "x": 3.0
   },
@@ -107,10 +107,10 @@
    "label": "Jelly",
    "kind": "finish",
    "colour": "#58DDC2",
-   "triangles": 592,
+   "triangles": 664,
    "parts": {
     "Jar_jelly__Body": 264,
-    "Jar_jelly__Core": 180,
+    "Jar_jelly__Core": 252,
     "Jar_jelly__Lid": 132,
     "Jar_jelly__Shine": 16
    },
@@ -121,11 +121,11 @@
    "label": "Charm capsule",
    "kind": "charm",
    "colour": "#B79BFF",
-   "triangles": 340,
+   "triangles": 372,
    "parts": {
-    "Jar_charm__Base": 156,
+    "Jar_charm__Base": 168,
     "Jar_charm__Dome": 84,
-    "Jar_charm__Charm": 20,
+    "Jar_charm__Charm": 40,
     "Jar_charm__Loop": 64,
     "Jar_charm__Shine": 16
    },
