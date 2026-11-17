@@ -19,7 +19,10 @@ end
 
 -- Can a tap send now? (canPlay() already checked the replicated FieldReady.)
 function Intent:allow(now)
- if self.latched and now-self.latchAt>=Intent.LatchTimeout then self.latched=false;self.stats.timeouts+=1 end
+ if self.latched and now-self.latchAt>=Intent.LatchTimeout then
+  -- A lost ack: open the latch and stop showing the tap's predicted count.
+  self.latched,self.predicted=false,nil;self.stats.timeouts+=1
+ end
  if self.latched then self.stats.latched+=1;return false,"Latched"end
  if now-self.lastSend<Intent.DropInterval then self.stats.throttled+=1;return false,"Throttled"end
  return true

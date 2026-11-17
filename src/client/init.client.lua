@@ -2528,12 +2528,17 @@ do
  -- S4 wiring: acks, FieldReady and run changes feed the drop intent (flag DeckNetDrop).
  if require(ReplicatedStorage.Shared.FeatureFlags).DeckNetDrop==true then
   clientUI.dropIntent=require(script.DropIntent).new()
-  remotes:WaitForChild("BoardDropAck").OnClientEvent:Connect(function(token,ok)
-   local result=clientUI.dropIntent:ack(token,ok,board:GetAttribute("FieldReady"))
-   if result=="refused"then
-    audio:play("aim",.6,.3) -- the soft "no" (the item belt's full note)
-    if clientUI.netHudKick then clientUI.netHudKick()else task.defer(updateHud)end -- dispenser back to the real count
-   end
+  -- Never block init on the remote: without it the latch timeout keeps taps working.
+  task.spawn(function()
+   local ackRemote=remotes:WaitForChild("BoardDropAck",30)
+   if not ackRemote then warn("DeckNet: BoardDropAck missing; drops fall back to the latch timeout");return end
+   ackRemote.OnClientEvent:Connect(function(token,ok)
+    local result=clientUI.dropIntent:ack(token,ok,board:GetAttribute("FieldReady"))
+    if result=="refused"then
+     audio:play("aim",.6,.3) -- the soft "no" (the item belt's full note)
+     if clientUI.netHudKick then clientUI.netHudKick()else task.defer(updateHud)end -- dispenser back to the real count
+    end
+   end)
   end)
   board:GetAttributeChangedSignal("FieldReady"):Connect(function()clientUI.dropIntent:fieldReady(board:GetAttribute("FieldReady"))end)
   for _,name in ipairs({"ResetId","Mode","RoundOver"})do
@@ -3501,6 +3506,7 @@ end
 -- appears when the clock reaches its first sample and leaves when it passes its last,
 -- not when the reliable Part happens to arrive or leave. Clock off: at once, as before.
 clientUI.boardNet=require(script.BoardNetClient)
+board:GetAttributeChangedSignal("ResetId"):Connect(function()clientUI.netChain=nil end)
 function clientUI.netHudKick()
  if clientUI.netHudQueued then return end
  clientUI.netHudQueued=true

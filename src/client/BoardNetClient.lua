@@ -132,7 +132,8 @@ function Net.start(board,options)
  if not remote then return nil end
  options=options or {}
  state={board=board,buffer=Snapshots.new(),ids={},xs={},ys={},random=Random.new(),lost=0,malformed=0,
-  shadow=options.shadow~=false,drawn={},partSeen=setmetatable({},{__mode="k"}),partHitches=0,maxStep=0,fallbackFrames=0,
+  -- Shadow stats walk the board every frame: Studio (the harness) only, unless asked.
+  shadow=if options.shadow~=nil then options.shadow==true else RunService:IsStudio(),drawn={},partSeen=setmetatable({},{__mode="k"}),partHitches=0,maxStep=0,fallbackFrames=0,
   queue={},views={},lingering={},frameDt=0,studio=RunService:IsStudio()}
  state.connection=remote.OnClientEvent:Connect(receive)
  -- First in the render step, before the deck's RenderStepped loop reads the Parts.

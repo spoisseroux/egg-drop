@@ -48,8 +48,13 @@ function Net.dropToken(value)
  return value
 end
 -- Answer a tokened drop: ok, the new ball's id and the tick it was spawned on, or a reason.
+Net.AckBudget=20 -- acks per player per second (drops are 0.2 s apart; this only bounds spam)
 function Net.ack(board,player,token,ok,reason)
  if not token or not Net.ackRemote then return end
+ local now=os.clock()
+ if not board.ackWindow or now-board.ackWindow>=1 then board.ackWindow,board.ackCount=now,0 end
+ if board.ackCount>=Net.AckBudget then return end
+ board.ackCount+=1
  Net.ackRemote:FireClient(player,token,ok==true,if ok then board.sim.fallingId else nil,board.simTick or 0,if ok then nil else reason)
 end
 

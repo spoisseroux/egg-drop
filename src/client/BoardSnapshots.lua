@@ -62,10 +62,15 @@ end
 function Snapshots:push(arrival,resetId,tick,flags,ids,xs,ys,count)
  self.stats.packets+=1
  if resetId~=self.resetId then
-  -- A packet from the previous run arriving late is older than everything kept; a new
-  -- ResetId with any tick starts over (ticks never reset, so this is unambiguous).
-  if self.resetId~=nil and self.newestTick and tick<=self.newestTick then self.stats.stale+=1;return false end
-  if self.resetId~=nil then self.stats.resets+=1 end
+  -- A run already left never comes back (a late packet of it is stale). A new ResetId
+  -- starts over when its tick is newer, or equal on a paused board (reset while the board
+  -- did not step: the new run's first packet carries the same tick).
+  local retired=self.retired or {};self.retired=retired
+  local paused=bit32.band(flags,Snapshots.PausedFlag)~=0
+  if retired[resetId]or(self.resetId~=nil and self.newestTick and(tick<self.newestTick or(tick==self.newestTick and not paused)))then
+   self.stats.stale+=1;return false
+  end
+  if self.resetId~=nil then self.stats.resets+=1;retired[self.resetId]=true end
   self:reset(resetId)
  end
  if self.newestTick then

@@ -6,5 +6,7 @@ local Players=game:GetService("Players")
 local Flags=require(ReplicatedStorage.Shared.FeatureFlags)
 if Flags.DeckNetStream~=true then return end
 local Net=require(script.Parent.BoardNetClient)
-local board=ReplicatedStorage:WaitForChild("EggDropBoards"):WaitForChild(tostring(Players.LocalPlayer.UserId))
+local trays=ReplicatedStorage:WaitForChild("EggDropBoards",30)
+local board=trays and trays:WaitForChild(tostring(Players.LocalPlayer.UserId),30)
+if not board then warn("DeckNet: no board folder; the deck draws replicated Parts");return end
 Net.start(board)

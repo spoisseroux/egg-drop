@@ -300,3 +300,28 @@ Until S2b, S2a draws positions about one render delay (50-200 ms) behind the mer
 - Server Heartbeat time with 8 boards.
 - An `audio:play` count per merge across a jittered round.
 - The 20 fps longest freeze (216 ms) is still high.
+
+### Code review changes (GO WITH CHANGES, 2026-11-16, place v832)
+
+1. **Waits.** `init.client.lua` waits for `BoardDropAck` inside `task.spawn` (30 s timeout, with a warning; the 1.5 s latch timeout keeps taps working without it). `DeckNet.client.lua` waits for the board folder with 30 s timeouts and falls back to the replicated Parts.
+2. **A reset on a paused board.**
+   - `BoardSnapshots:push` now accepts a new ResetId at the same tick when the packet is Paused.
+   - Run ids already left are retired, so a late packet of the old run cannot switch back.
+   - Same tick without Paused is still dropped.
+   - New spec case; BoardSnapshots now has 13 cases.
+3. **Silent refusals.**
+   - The server acks tokened drops refused while closing (`Closing`), by `canProgress` (`Unavailable`) and outside Board (`NotBoard`).
+   - Acks are capped at 20 per player per second (checked: 30 spammed drops gave 20 acks, plus 1 `NotBoard` from Room).
+   - The `DropIntent` latch timeout also drops the predicted count, with a spec assert.
+4. **Shadow stats** are on only in Studio unless asked, so production has no per-frame `GetChildren` for stats.
+
+**Nits.**
+- `clientUI.netChain` clears on ResetId.
+- `FireClient` copies the buffer at call time. A Studio check fired 11 to 15 and overwrote the buffer with 99 after each call; the client received 11, 12, 13, 14, 15.
+
+**Verification.**
+- Jitter run with 150-250 ms lag: 0 freeze snaps, 1 hitch, longest freeze 84 ms (no regression).
+- Server suite: 64 of 64 runs pass with their own arguments (63 specs, ToyFeatureHost run as toy and as feature).
+- Client suite: 144 of 163 pass. The 18 failures are the known set plus argument misses. CustomizeNewItem (line 46, "lands on the Toys cards, got palette / hue") now fails after the UI agent's db7b23e changed HueEggView and that spec; it is not deck-net code and is not touched here.
+- JellyOverflow and FieldFeedbackOwner pass with (gui, board).
+- Console: only fixture noise from the specs.

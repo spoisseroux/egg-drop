@@ -979,13 +979,18 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if board.closing then
+		if action=="drop" then BoardNet.ack(board,player,BoardNet.dropToken(sticker),false,"Closing") end
 		if action=="appearance" then appearanceResult:FireClient(player,{slot="pair",seq=0,id="",status="Rejected",
 			reason="Closing",revision=board.appearance.revision,themeId=board.profile.theme,stickerId=board.profile.sticker,backgroundId=board.profile.background}) end
 		return
 	end
 	if (action == "sound" or action == "motion" or action == "companion"
 		or action == "family" or action == "drop" or action == "reset" or action == "preset" or action == "restart" or action == "item")
-		and not canProgress(board) then return end
+		and not canProgress(board) then
+		-- Deck network S4: a refused tokened drop is answered, so the client's latch opens.
+		if action == "drop" then BoardNet.ack(board,player,BoardNet.dropToken(sticker),false,"Unavailable") end
+		return
+	end
 	if action == "appearance" then
 		-- Compatibility for the previous full-pair client; new clients send slots.
 		local reason=if not canProgress(board) then "Unavailable" elseif typeof(value)~="string" or typeof(sticker)~="string" then "Malformed"
@@ -1117,6 +1122,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if board.mode ~= "Board" then
+		if action == "drop" then BoardNet.ack(board,player,BoardNet.dropToken(sticker),false,"NotBoard") end
 		return
 	end
 	if action == "drop" then
