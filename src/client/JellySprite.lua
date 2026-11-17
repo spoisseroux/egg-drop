@@ -30,14 +30,26 @@ function Sprite.new(parent,source,options)
 	-- colour on top and the deep shade along the lower third.
 	local tier=source:GetAttribute("Tier")
 	local palette=if options.themeId and tier then JellyPalette.forTheme(options.themeId,tier)else JellyPalette.resolve(source.Color)
-	local color,deep=palette.body,palette.deep
-	local body=frame(parent,source.Name,deep).node;body.BackgroundTransparency=1;body.AnchorPoint=Vector2.new(.5,.5)
+	local body=frame(parent,source.Name,palette.deep).node;body.BackgroundTransparency=1;body.AnchorPoint=Vector2.new(.5,.5)
 	local gridWidth=options.gridWidth or Sprite.GridWidth
 	local gridHeight=math.round(gridWidth*(Config.Height+.8)/(Config.Width+.8))
 	local radius=source.Size.X/2
 	local bands=math.clamp(math.round(radius*gridWidth/(Config.Width+.8)),5,9)
 	local self=setmetatable({body=body,radius=radius,position=source.Position,axis=Vector2.yAxis,strength=.16,age=0,
 		phase=source:GetAttribute("EggId")*.73,gridWidth=gridWidth,gridHeight=gridHeight,bandCount=bands,rims={},fills={},fillBounds={}},Sprite)
+	-- Perf (v775): while the LCD draws the board these frames are never painted, so a
+	-- `lazy` gel builds its bands on its first painted frame (the LCD failure hand-over)
+	-- instead of making ~30 Instances for every ball that drops or merges.
+	self.palette=palette
+	if options.lazy then body.Visible=true;return self end
+	self:build()
+	return self
+end
+function Sprite:build()
+	if self.built then return end
+	self.built=true
+	local body,palette,bands=self.body,self.palette,self.bandCount
+	local color,deep=palette.body,palette.deep
 	for index=1,bands do
 		self.rims[index]=frame(body,"Rim"..index,if index>bands*.65 then deep else color)
 		local upper=index<=bands*.45
@@ -50,7 +62,6 @@ function Sprite.new(parent,source,options)
 	end
 	self.glints={frame(body,"Glint",palette.glint),frame(body,"GlintStep",palette.glint)}
 	self.glint=self.glints[1].node;body.Visible=true
-	return self
 end
 function Sprite:impact(normal,speed)
 	self.axis=normal;self.strength=math.clamp(speed/34,.16,.48);self.age=0
@@ -119,6 +130,7 @@ function Sprite:render(position,dt,now,project,drawSprite,reduced)
 	local height=math.clamp(1-squeeze+breathe,.56,1.48)
 	local angle=if reduced then 0 else math.atan2(self.axis.X,self.axis.Y)+math.sin(self.age*19)*wave*.44
 	if drawSprite then
+		if not self.built then self:build()end
 		local point,pixels=project(Vector2.new(center.X,center.Y))
 		local cellX=pixels*(Config.Width+.8)/self.gridWidth
 		local cellY=self.body.Parent.AbsoluteSize.Y/self.gridHeight

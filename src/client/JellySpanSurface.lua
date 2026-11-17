@@ -45,11 +45,12 @@ function Surface.new(parent,background,width,height,limit)
 	for y=1,height do
 		-- Shared integer edges already bound each span. Nested row clipping can
 		-- introduce compositor seams at device scaling; the outer tray stays clipped.
+		-- The rows carry the shared row edges only; spans sit on the root (no reparents).
 		local row=frame(root,"PixelRow"..y,4);row.BackgroundTransparency=1;row.ClipsDescendants=false;row.Visible=true
 		self.rowHosts[y]=row;self.rowSlots[y]=table.create(width)
 	end
 	for index=1,limit do
-		self.pool[index]={node=frame(self.stash,"GelSpan"..index,4),visible=false};self.free[index]=index
+		self.pool[index]={node=frame(root,"GelSpan"..index,4),visible=false};self.free[index]=index
 	end
 	self.stats.rowHosts=height
 	self.connection=root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self.dirty=true end)
@@ -63,6 +64,7 @@ end
 -- stay distinct. No static or dynamic Instance is replaced on theme changes.
 function Surface:setBackground(background,replacements)
  if self.failed or not replacements[self.base]then return false end
+ self.scanned=nil -- a pending scan was of the old background
  for _,r in ipairs(self.rectangles)do if not replacements[r.c]then return false end end
  self.base=replacements[self.base];self.root.BackgroundColor3=color(self.base)
  for i,r in ipairs(self.rectangles)do r.c=replacements[r.c];self.static[i].BackgroundColor3=color(r.c)end
@@ -115,30 +117,44 @@ function Surface:demand(pixels)
 	end
 	return count
 end
-function Surface:paint(pixels)
-	if self.failed then return false end
-	local stats=self.stats;stats.propertyWrites=0
+-- Perf (v775): the run scan `paint` commits, done once. JellyLCD's span-budget
+-- pre-count calls this instead of `demand`, and the following `paint` of the same
+-- unchanged pixels commits these runs instead of scanning the frame a second time.
+function Surface:scan(pixels)
+	local stats=self.stats
 	local scanStarted=os.clock()
 	local count=0
+	local width,background=self.width,self.background
+	local xs,ys,ws,colors,limit=self.xs,self.ys,self.ws,self.colors,self.limit
 	for y=0,self.height-1 do
 		local startCount=count;self.rowStarts[y+1]=count+1
 		local x=0
-		while x<self.width do
-			local offset=(y*self.width+x)*4;local c=buffer.readu32(pixels,offset)
-			if c==buffer.readu32(self.background,offset)then x+=1 else
+		while x<width do
+			local offset=(y*width+x)*4;local c=buffer.readu32(pixels,offset)
+			if c==buffer.readu32(background,offset)then x+=1 else
 				local start=x;x+=1
-				while x<self.width do
-					local nextOffset=(y*self.width+x)*4
-					if buffer.readu32(pixels,nextOffset)~=c or c==buffer.readu32(self.background,nextOffset)then break end
+				while x<width do
+					local nextOffset=(y*width+x)*4
+					if buffer.readu32(pixels,nextOffset)~=c or c==buffer.readu32(background,nextOffset)then break end
 					x+=1
 				end
 				count+=1
-				if count<=self.limit then self.xs[count],self.ys[count],self.ws[count],self.colors[count]=start,y,x-start,c end
+				if count<=limit then xs[count],ys[count],ws[count],colors[count]=start,y,x-start,c end
 			end
 		end
 		self.rowCounts[y+1]=count-startCount
 	end
 	stats.scanMs=(os.clock()-scanStarted)*1000
+	self.scanned,self.scanCount=pixels,count
+	return count
+end
+function Surface:paint(pixels)
+	if self.failed then return false end
+	local stats=self.stats;stats.propertyWrites=0
+	local count
+	-- A scan of these same pixels this frame (the LCD pre-count) is consumed once.
+	if self.scanned==pixels and self.scanCount then count=self.scanCount else count=self:scan(pixels)end
+	self.scanned,self.scanCount=nil,nil
 	stats.lastDemand=count;stats.peakDemand=math.max(stats.peakDemand,count)
 	if count>self.limit then
 		self.failed=true;stats.failure="span-cap";stats.spansUsed=0;stats.visibleSpans=0;self.root.Visible=false
@@ -159,23 +175,26 @@ function Surface:paint(pixels)
 	local visible=0
 	for y=1,self.height do
 		local slots=self.rowSlots[y]
+		-- Spans live directly under the root at the row's shared integer edges, so a
+		-- span that changes rows costs a Position/Size write, never a reparent.
+		local top,rowH=self.edgesY[y-1],self.edgesY[y]-self.edgesY[y-1]
 		for k=1,self.rowCounts[y]do
 			local index=slots[k]
 			if not index then index=self.free[self.freeCount];self.freeCount-=1;slots[k]=index end
 			local slot=self.pool[index];local node=slot.node
-			if slot.row~=y then node.Parent=self.rowHosts[y];slot.row=y;stats.propertyWrites+=1 end
+			slot.row=y
 			local run=self.rowStarts[y]+k-1
 			local x=self.edgesX[self.xs[run]]
 			local w=self.edgesX[self.xs[run]+self.ws[run]]-x
-			if slot.x~=x then node.Position=UDim2.fromOffset(x,0);slot.x=x;stats.propertyWrites+=1 end
-			if slot.w~=w then node.Size=UDim2.new(0,w,1,0);slot.w=w;stats.propertyWrites+=1 end
+			if slot.x~=x or slot.y~=top then node.Position=UDim2.fromOffset(x,top);slot.x,slot.y=x,top;stats.propertyWrites+=1 end
+			if slot.w~=w or slot.h~=rowH then node.Size=UDim2.fromOffset(w,rowH);slot.w,slot.h=w,rowH;stats.propertyWrites+=1 end
 			local c=self.colors[run]
 			if slot.c~=c then
 				local tint=self.colorCache[c]
 				if not tint then tint=color(c);if (self.colorCount or 0)<256 then self.colorCache[c]=tint;self.colorCount=(self.colorCount or 0)+1 end end
 				node.BackgroundColor3=tint;slot.c=c;stats.propertyWrites+=1
 			end
-			local shown=w>0 and self.edgesY[y]>self.edgesY[y-1]
+			local shown=w>0 and rowH>0
 			if slot.visible~=shown then node.Visible=shown;slot.visible=shown;stats.propertyWrites+=1 end
 			if shown then visible+=1 end
 		end
@@ -183,10 +202,7 @@ function Surface:paint(pixels)
 	end
 	for k=1,retiredCount do
 		local slot=self.pool[self.retired[k]]
-		if not slot.row then
-			slot.node.Parent=self.stash;stats.propertyWrites+=1
-			if slot.visible then slot.node.Visible=false;slot.visible=false;stats.propertyWrites+=1 end
-		end
+		if not slot.row and slot.visible then slot.node.Visible=false;slot.visible=false;stats.propertyWrites+=1 end
 	end
 	stats.spansUsed,stats.visibleSpans=count,visible
 	stats.commitMs=(os.clock()-commitStarted)*1000

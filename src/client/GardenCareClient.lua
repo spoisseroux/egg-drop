@@ -117,11 +117,12 @@ function Client:step()
  if wasVisible~=self.pickup.Visible then room.focusUI:layoutFocusRow()end
  local pickupPending,setDownPending=false,false
  for _,operation in pairs(self.operations)do if operation.packet.kind=="carePickup"then pickupPending=true elseif operation.packet.kind=="careSetDown"then setDownPending=true end end
- self.pickup.Interactable=self.pickup.Visible and not pickupPending
+ -- Perf (v775): Art.control below owns Interactable (enabled = not pending), which is
+ -- where both buttons always ended each frame. Writing Interactable here first made
+ -- DeckArt's Interactable watcher restyle each button off and back on every frame.
  self.pickup:SetAttribute("AccessibleLabel",if pickupPending then "Picking up companion…"else "Pick up companion")
  self.pickup:SetAttribute("Pending",pickupPending)
  self.setDown.Visible=state=="Carried"and room.mode=="Room"and not room.busy and not room.menuOpen and not room.overlayOpen()
- self.setDown.Interactable=self.setDown.Visible and not setDownPending
  self.setDown:SetAttribute("AccessibleLabel",if setDownPending then "Setting companion down…"else "Set companion down")
  self.setDown:SetAttribute("Pending",setDownPending)
  Art.control(self.pickup,pickupPending,not pickupPending);Art.control(self.setDown,setDownPending,not setDownPending)

@@ -505,6 +505,7 @@ function LCD:beginFrame()
 	if self.guidePixels then table.clear(self.guidePixels)else self.guidePixels={}end
 	self.rasterStarted=os.clock()
 	self.commandCount=0;self.frameFaces=false
+	if self.surface then self.surface.scanned=nil end
 	buffer.copy(self.pixels, 0, self.background)
 end
 
@@ -659,6 +660,7 @@ end
 -- `bare`: last resort, draw every ball with no face at all (code review 2026-11-13).
 local function replay(self, bare)
 	self.replaying, self.simple = true, true
+	if self.surface then self.surface.scanned=nil end
 	if self.guidePixels then table.clear(self.guidePixels) end
 	buffer.copy(self.pixels, 0, self.background)
 	local face = self.replayFace or {}
@@ -687,7 +689,9 @@ function LCD:finishFrame()
 		-- Pre-count (architect change 2): over SimplifyAbove re-raster with simpler
 		-- faces; only a frame still over the cap reaches the sticky failure below.
 		local stats = self.surface.stats
-		local demand = self.surface:demand(self.pixels)
+		-- Perf (v775): `scan` keeps its runs, so the paint below commits them without
+		-- scanning the same pixels again (a replay rescans what it redraws).
+		local demand = self.surface:scan(self.pixels)
 		stats.preDemand = demand
 		stats.peakPreDemand = math.max(stats.peakPreDemand or 0, demand)
 		if demand > LCD.SimplifyAbove then
@@ -695,9 +699,10 @@ function LCD:finishFrame()
 			stats.simplifiedFrames = (stats.simplifiedFrames or 0) + 1
 			-- Still over the cap with simple faces: drop faces for this frame rather
 			-- than take the sticky failure path (the board would stay hidden).
-			if self.surface:demand(self.pixels) > self.surface.limit then
+			if self.surface:scan(self.pixels) > self.surface.limit then
 				replay(self, true)
 				stats.barefacedFrames = (stats.barefacedFrames or 0) + 1
+				self.surface:scan(self.pixels)
 			end
 		end
 	end

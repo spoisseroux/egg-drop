@@ -399,7 +399,7 @@ local function layoutDropMeter()
 		cell.Size=UDim2.fromOffset(width,6)
 	end
 end
-meter:GetPropertyChangedSignal("AbsoluteSize"):Connect(layoutDropMeter)
+meter:GetPropertyChangedSignal("AbsoluteSize"):Connect(layoutDropMeter);layoutDropMeter()
 local meterText = label("TextLabel", "MeterText", "", meter)
 meterText.Font = Art.Font.Counter
 meterText:SetAttribute("TypeRole","Counter")
@@ -2105,34 +2105,35 @@ updateHud = function()
 	local hatchName = if hatchPet then hatchPet.name else nil
 	local budget = board:GetAttribute("FieldBudget") or 24
 	local remaining = math.max(0, budget - drops)
+	-- Perf (v775): the old cell meter is always hidden (the dispenser shows the count).
+	-- Keep its colours current, but never flip 24 cells visible and hidden again or
+	-- re-lay them out (an AbsoluteSize read mid-refresh); the meter's own
+	-- AbsoluteSize signal runs layoutDropMeter.
 	for index, cell in ipairs(segments) do
-		cell.Visible = owned > 0 and index <= budget
-		cell.Position = UDim2.new((index - 1) / budget, 1, .5, -3)
-		cell.Size = UDim2.new(1 / budget, -2, 0, 6)
-		cell.BackgroundColor3 = if index <= remaining then Art.Leaf else Art.Line
+		local color = if index <= remaining then Art.Leaf else Art.Line
+		if cell.BackgroundColor3 ~= color then cell.BackgroundColor3 = color end
+		if cell.Visible then cell.Visible = false end
 	end
-	layoutDropMeter()
 	dispenser:setTheme(Themes.ById[board:GetAttribute("DeckThemeId")]or Themes.ById[Themes.Default])
 	dispenser:update(board:GetAttribute("ResetId"),drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
-	for _,cell in ipairs(segments)do cell.Visible=false end
 	meterText.Visible=owned==0
 	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("%s %d/%d", Pets.byId.pip.name, charge, nextPet and nextPet.charge or 6)
 	eggGoal.Visible = not backdrop:GetAttribute("CompactLandscape") and not backdrop:GetAttribute("SideGoalLayout") and owned > 0 and shell.AbsoluteSize.Y >= 260
-	eggGoalText.Text = Stars.format("MEADOW EGG\n%d/18 Stars", nurseryState and nurseryState.nectar or 0)
+	-- Perf (v775): eggGoalText belongs to the render loop, which rewrote this before
+	-- every paint; writing a different string here only re-fitted the label twice.
 	rareGoal.Visible = false
-	local rareProgress = 0
-	if nextRare then
+	-- Perf (v775): one write of the final text (the field instruction wins), not two.
+	if nurseryActive and owned>0 then
+		rareGoal.Text=clientUI.FieldQuestText.describe(clientUI.fieldView,board:GetAttribute("FieldPhase")).instruction
+	elseif nextRare then
 		local goal = nextRare.trial
-		rareProgress = math.min(if goal == Trials.HighRoller then score
+		local rareProgress = math.min(if goal == Trials.HighRoller then score
 			elseif goal == Trials.Fivefold then peakChain else maxClears, goal.target)
 		rareGoal.Text = string.format("%s%s\n%s %d/%d", if trackedRare then "★ " else "",
 			nextRare.name, goal.readout, rareProgress, goal.target)
 	else
 		rareGoal.Text = string.format("Beat your best\n%d pts", best)
 	end
- if nurseryActive and owned>0 then
-  rareGoal.Text=clientUI.FieldQuestText.describe(clientUI.fieldView,board:GetAttribute("FieldPhase")).instruction
- end
  local mode=board:GetAttribute("Mode")
  clientUI.fieldCopy=clientUI.FieldQuestText.describe(clientUI.fieldView,board:GetAttribute("FieldPhase"))
  for _,item in ipairs(fieldZones)do
@@ -3429,7 +3430,7 @@ local function addView(source)
 		return
 	end
 	local gel = if RunService:IsStudio() and gui:GetAttribute("MeshPreview")
-		then Jelly.new(scene, source) else Sprite.new(sprites, source,{gridWidth=JellyLCD.Width,themeId=clientUI.equippedBallTheme()})
+		then Jelly.new(scene, source) else Sprite.new(sprites, source,{gridWidth=JellyLCD.Width,themeId=clientUI.equippedBallTheme(),lazy=lcd~=nil})
 	-- No tier numerals (batch R1): size, colour and the ball's face carry the tier.
 	eggViews[source] = { gel = gel, id = id, tier = tier, radius = Config.Tiers[tier].radius, faceInput = { id = id, tier = tier, x = 0, y = 0, radius = Config.Tiers[tier].radius }, face = { tier = tier, expr = "idle", dx = 0 } }
 	viewsById[id] = gel
@@ -3548,8 +3549,14 @@ board:GetAttributeChangedSignal("GreetingsOff"):Connect(function()picker:setGree
 GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"):Connect(refreshMotion)
 
 local hudQueued = false
-board.AttributeChanged:Connect(function()
+-- Perf (v775): the server republishes the overflow pressure and grace (and Welcome
+-- telemetry) up to 10 times a second while the pile is near the line. The HUD reads
+-- none of them (the danger cues, faces and coach read them every frame), so they no
+-- longer queue a full HUD refresh each.
+clientUI.hudQuietAttributes={OverflowPressure=true,OverflowGraceLeft=true,WelcomeActiveSeconds=true,WelcomeInputEpoch=true}
+board.AttributeChanged:Connect(function(name)
  if rendererPresentation.roundEnd then rendererPresentation.roundEnd:observe()end
+ if clientUI.hudQuietAttributes[name] then return end
 	if not hudQueued then
 		hudQueued = true
 		task.defer(function()
@@ -3653,7 +3660,13 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	firstHatchGuide:fieldStep(0, 1, false)
 	rail.Interactable = canAim() and not isPickerOpen() and not roomView.busy
 	local recipe = EggCatalog.ById[nurseryView.selected] or EggCatalog.ById.meadow
-	eggGoalText.Text = Stars.format("%s\n%d/%d Stars", recipe.name, nurseryState and nurseryState.nectar or 0, recipe.cost)
+	-- Perf (v775): format only when the egg, the wallet or the label text changed,
+	-- not a new string every frame.
+	local eggGoalCache,nectar=clientUI.eggGoalCache,nurseryState and nurseryState.nectar or 0
+	if not eggGoalCache or eggGoalCache.recipe~=recipe or eggGoalCache.nectar~=nectar or eggGoalText.Text~=eggGoalCache.text then
+		eggGoalCache={recipe=recipe,nectar=nectar,text=Stars.format("%s\n%d/%d Stars", recipe.name, nectar, recipe.cost)}
+		clientUI.eggGoalCache=eggGoalCache;eggGoalText.Text=eggGoalCache.text
+	end
 	if canAim() and not isPickerOpen() and not drag and not UserInputService:GetFocusedTextBox() then
 		local direction = 0
 		for _, value in pairs(heldAim) do
@@ -3692,9 +3705,11 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
   local jolt=rendererPresentation.jolt
   clientUI.deck:setShake(if jolt.active and jolt.active.kind=="merge"then jolt.offset else nil,reduced)
   local phase=board:GetAttribute("FieldPhase")
-  clientUI.boardHints:step(now,{presented=presented,settling=phase=="Settling"and board:GetAttribute("RoundOver")~=true,
-   live=canPlay()and not isPickerOpen(),firstRun=clientUI.boardHints.firstRun(phase,board:GetAttribute("Drops")),
-   input=clientUI.inputKind(),reduced=reduced})
+  local hintState=clientUI.hintState or {};clientUI.hintState=hintState -- reused, no table per frame
+  hintState.presented,hintState.settling=presented,phase=="Settling"and board:GetAttribute("RoundOver")~=true
+  hintState.live,hintState.firstRun=canPlay()and not isPickerOpen(),clientUI.boardHints.firstRun(phase,board:GetAttribute("Drops"))
+  hintState.input,hintState.reduced=clientUI.inputKind(),reduced
+  clientUI.boardHints:step(now,hintState)
  end
  -- The danger cues only play on a presented board, never under a menu, modal or hidden deck.
  clientUI.danger:update(pressure, graceLeft, now, reduced, presented, board:GetAttribute("RoundOver") == true)
