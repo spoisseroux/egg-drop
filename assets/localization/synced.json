@@ -2,6 +2,76 @@
  "schema": 1,
  "universeId": 10774758591,
  "entries": {
+  "catalog.BallThemes.ById.amber.name": {
+   "source": "Amber",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.8.name"
+  },
+  "catalog.BallThemes.ById.amber.names.1": {
+   "source": "Ember",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.DeckThemes.ById.brick.name, catalog.DeckThemes.Plates.brick.name"
+  },
+  "catalog.BallThemes.ById.amber.names.2": {
+   "source": "Rust",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.amber.names.3": {
+   "source": "Flame",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.amber.names.4": {
+   "source": "Honey",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.DeckThemes.ById.honey.name, catalog.DeckThemes.Plates.honey.name"
+  },
+  "catalog.BallThemes.ById.amber.names.5": {
+   "source": "Spark",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.amber.pitch": {
+   "source": "Warm embers that glow as they grow.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BallThemes.ById.bubblegum.name": {
+   "source": "Bubblegum",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.10.name"
+  },
+  "catalog.BallThemes.ById.bubblegum.names.1": {
+   "source": "Berry",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.bubblegum.names.2": {
+   "source": "Rose",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.BallThemes.ById.gumdrops.names.4, catalog.HueCatalog.ById.rose.name"
+  },
+  "catalog.BallThemes.ById.bubblegum.names.3": {
+   "source": "Candy",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.bubblegum.names.4": {
+   "source": "Blush",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.bubblegum.names.5": {
+   "source": "Puff",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.bubblegum.pitch": {
+   "source": "One pink, five strengths.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
   "catalog.BallThemes.ById.bubbles.name": {
    "source": "Bubbles",
    "context": "",
@@ -10,7 +80,7 @@
   "catalog.BallThemes.ById.bubbles.names.1": {
    "source": "Sky",
    "context": "",
-   "example": "Catalogue BallThemes (names)"
+   "example": "Catalogue BallThemes (names); also catalog.BallThemes.ById.deep_sea.names.4"
   },
   "catalog.BallThemes.ById.bubbles.names.2": {
    "source": "Peach",
@@ -34,6 +104,36 @@
   },
   "catalog.BallThemes.ById.bubbles.pitch": {
    "source": "Soft and shiny. Two little eyes.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BallThemes.ById.deep_sea.name": {
+   "source": "Deep Sea",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.9.name"
+  },
+  "catalog.BallThemes.ById.deep_sea.names.1": {
+   "source": "Trench",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.deep_sea.names.2": {
+   "source": "Tide",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.HueCatalog.ById.tide.name"
+  },
+  "catalog.BallThemes.ById.deep_sea.names.3": {
+   "source": "Wave",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.deep_sea.names.5": {
+   "source": "Foam",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.deep_sea.pitch": {
+   "source": "From the trench up to the foam.",
    "context": "",
    "example": "Catalogue BallThemes (pitch)"
   },
@@ -92,15 +192,10 @@
    "context": "",
    "example": "Catalogue BallThemes (names)"
   },
-  "catalog.BallThemes.ById.gumdrops.names.4": {
-   "source": "Rose",
-   "context": "",
-   "example": "Catalogue BallThemes (names); also catalog.HueCatalog.ById.rose.name"
-  },
   "catalog.BallThemes.ById.gumdrops.names.5": {
    "source": "Lilac",
    "context": "",
-   "example": "Catalogue BallThemes (names)"
+   "example": "Catalogue BallThemes (names); also catalog.BallThemes.ById.midnight.names.4"
   },
   "catalog.BallThemes.ById.gumdrops.pitch": {
    "source": "Pastel candy with a sugar skirt.",
@@ -135,7 +230,7 @@
   "catalog.BallThemes.ById.kittens.names.5": {
    "source": "Plum",
    "context": "",
-   "example": "Catalogue BallThemes (names)"
+   "example": "Catalogue BallThemes (names); also catalog.BallThemes.ById.midnight.names.2"
   },
   "catalog.BallThemes.ById.kittens.pitch": {
    "source": "Pointed ears and a pink nose.",
@@ -172,6 +267,66 @@
    "context": "",
    "example": "Catalogue BallThemes (pitch)"
   },
+  "catalog.BallThemes.ById.midnight.name": {
+   "source": "Midnight",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.11.name"
+  },
+  "catalog.BallThemes.ById.midnight.names.1": {
+   "source": "Dusk",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.midnight.names.3": {
+   "source": "Iris",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.HueCatalog.ById.iris.name"
+  },
+  "catalog.BallThemes.ById.midnight.names.5": {
+   "source": "Star",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.PetCharmCatalog.ById.star.name, catalog.BookCatalog.Pages.charms.items.5.name"
+  },
+  "catalog.BallThemes.ById.midnight.pitch": {
+   "source": "Dark balls with glowing eyes.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BallThemes.ById.pea_soup.name": {
+   "source": "Pea Soup",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.6.name"
+  },
+  "catalog.BallThemes.ById.pea_soup.names.1": {
+   "source": "Pea",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.pea_soup.names.2": {
+   "source": "Sprout",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.pea_soup.names.3": {
+   "source": "Leaf",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.PetCharmCatalog.ById.leaf.name, catalog.BookCatalog.Pages.charms.items.6.name"
+  },
+  "catalog.BallThemes.ById.pea_soup.names.4": {
+   "source": "Lime",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.pea_soup.names.5": {
+   "source": "Glow",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.pea_soup.pitch": {
+   "source": "Old handheld green, dark to bright.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
   "catalog.BallThemes.ById.planets.name": {
    "source": "Planets",
    "context": "",
@@ -204,6 +359,41 @@
   },
   "catalog.BallThemes.ById.planets.pitch": {
    "source": "Craters, bands and a ring. They doze.",
+   "context": "",
+   "example": "Catalogue BallThemes (pitch)"
+  },
+  "catalog.BallThemes.ById.pocket_grey.name": {
+   "source": "Pocket Grey",
+   "context": "",
+   "example": "Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.7.name"
+  },
+  "catalog.BallThemes.ById.pocket_grey.names.1": {
+   "source": "Pebble",
+   "context": "",
+   "example": "Catalogue BallThemes (names); also catalog.DeckThemes.ById.stone.name, catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name, catalog.BookCatalog.Pages.charms.items.3.name"
+  },
+  "catalog.BallThemes.ById.pocket_grey.names.2": {
+   "source": "Slate",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.pocket_grey.names.3": {
+   "source": "Stone",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.pocket_grey.names.4": {
+   "source": "Cloud",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.pocket_grey.names.5": {
+   "source": "Pearl",
+   "context": "",
+   "example": "Catalogue BallThemes (names)"
+  },
+  "catalog.BallThemes.ById.pocket_grey.pitch": {
+   "source": "Grey pebbles. Size is the tell.",
    "context": "",
    "example": "Catalogue BallThemes (pitch)"
   },
@@ -332,11 +522,6 @@
    "context": "",
    "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.bookworm.name"
   },
-  "catalog.DeckThemes.ById.brick.name": {
-   "source": "Ember",
-   "context": "",
-   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.brick.name"
-  },
   "catalog.DeckThemes.ById.copperleaf.name": {
    "source": "Copperleaf",
    "context": "",
@@ -351,11 +536,6 @@
    "source": "Grape Soda",
    "context": "",
    "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.grape_soda.name, catalog.BookCatalog.Pages.faceplates.items.9.name"
-  },
-  "catalog.DeckThemes.ById.honey.name": {
-   "source": "Honey",
-   "context": "",
-   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.honey.name"
   },
   "catalog.DeckThemes.ById.ice.name": {
    "source": "Creek",
@@ -407,11 +587,6 @@
    "context": "",
    "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stargazer.name"
   },
-  "catalog.DeckThemes.ById.stone.name": {
-   "source": "Pebble",
-   "context": "",
-   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name, catalog.BookCatalog.Pages.charms.items.3.name"
-  },
   "catalog.DeckThemes.ById.tidepool.name": {
    "source": "Tidepool",
    "context": "",
@@ -444,16 +619,6 @@
   },
   "catalog.HueCatalog.ById.citrus.name": {
    "source": "Citrus",
-   "context": "",
-   "example": "Catalogue HueCatalog (name)"
-  },
-  "catalog.HueCatalog.ById.iris.name": {
-   "source": "Iris",
-   "context": "",
-   "example": "Catalogue HueCatalog (name)"
-  },
-  "catalog.HueCatalog.ById.tide.name": {
-   "source": "Tide",
    "context": "",
    "example": "Catalogue HueCatalog (name)"
   },
@@ -582,20 +747,10 @@
    "context": "",
    "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.4.name"
   },
-  "catalog.PetCharmCatalog.ById.leaf.name": {
-   "source": "Leaf",
-   "context": "",
-   "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.6.name"
-  },
   "catalog.PetCharmCatalog.ById.ring.name": {
    "source": "Ring",
    "context": "",
    "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.2.name"
-  },
-  "catalog.PetCharmCatalog.ById.star.name": {
-   "source": "Star",
-   "context": "",
-   "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.5.name"
   },
   "catalog.QuestCatalog.ById.d_chain3.sub": {
    "source": "In one round",

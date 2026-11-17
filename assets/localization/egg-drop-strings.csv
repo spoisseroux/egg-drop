@@ -553,13 +553,33 @@ ui.variants.tab.wrist,Wrist,,Menu text; also catalog.WearableCatalog.Tabs.10.lab
 ui.wardrobe.empty,Nothing to wear yet. {pet} doesn't mind.,,Wardrobe screen; e.g. Nothing to wear yet. Bear doesn't mind.
 ui.wardrobe.emptySlot,Nothing for this slot yet.,,Wardrobe screen
 ui.wardrobe.emptySolo,Nothing to wear yet.,,Wardrobe screen
+catalog.BallThemes.ById.amber.name,Amber,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.8.name
+catalog.BallThemes.ById.amber.names.1,Ember,,"Catalogue BallThemes (names); also catalog.DeckThemes.ById.brick.name, catalog.DeckThemes.Plates.brick.name"
+catalog.BallThemes.ById.amber.names.2,Rust,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.amber.names.3,Flame,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.amber.names.4,Honey,,"Catalogue BallThemes (names); also catalog.DeckThemes.ById.honey.name, catalog.DeckThemes.Plates.honey.name"
+catalog.BallThemes.ById.amber.names.5,Spark,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.amber.pitch,Warm embers that glow as they grow.,,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.bubblegum.name,Bubblegum,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.10.name
+catalog.BallThemes.ById.bubblegum.names.1,Berry,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubblegum.names.2,Rose,,"Catalogue BallThemes (names); also catalog.BallThemes.ById.gumdrops.names.4, catalog.HueCatalog.ById.rose.name"
+catalog.BallThemes.ById.bubblegum.names.3,Candy,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubblegum.names.4,Blush,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubblegum.names.5,Puff,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubblegum.pitch,"One pink, five strengths.",,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.bubbles.name,Bubbles,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.5.name
-catalog.BallThemes.ById.bubbles.names.1,Sky,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubbles.names.1,Sky,,Catalogue BallThemes (names); also catalog.BallThemes.ById.deep_sea.names.4
 catalog.BallThemes.ById.bubbles.names.2,Peach,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.bubbles.names.3,Melon,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.bubbles.names.4,Blossom,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.bubbles.names.5,Violet,,"Catalogue BallThemes (names); also catalog.BallThemes.ById.marbles.names.5, catalog.BallThemes.ById.smileys.names.5"
 catalog.BallThemes.ById.bubbles.pitch,Soft and shiny. Two little eyes.,,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.deep_sea.name,Deep Sea,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.9.name
+catalog.BallThemes.ById.deep_sea.names.1,Trench,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.deep_sea.names.2,Tide,,Catalogue BallThemes (names); also catalog.HueCatalog.ById.tide.name
+catalog.BallThemes.ById.deep_sea.names.3,Wave,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.deep_sea.names.5,Foam,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.deep_sea.pitch,From the trench up to the foam.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.gems.name,Gems,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.2.name
 catalog.BallThemes.ById.gems.names.1,Sapphire,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.gems.names.2,Topaz,,Catalogue BallThemes (names)
@@ -571,15 +591,14 @@ catalog.BallThemes.ById.gumdrops.name,Gumdrops,,Catalogue BallThemes (name); als
 catalog.BallThemes.ById.gumdrops.names.1,Blueberry,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.gumdrops.names.2,Apricot,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.gumdrops.names.3,Mint,,Catalogue BallThemes (names)
-catalog.BallThemes.ById.gumdrops.names.4,Rose,,Catalogue BallThemes (names); also catalog.HueCatalog.ById.rose.name
-catalog.BallThemes.ById.gumdrops.names.5,Lilac,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.gumdrops.names.5,Lilac,,Catalogue BallThemes (names); also catalog.BallThemes.ById.midnight.names.4
 catalog.BallThemes.ById.gumdrops.pitch,Pastel candy with a sugar skirt.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.kittens.name,Kittens,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.4.name
 catalog.BallThemes.ById.kittens.names.1,Blue kitten,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.kittens.names.2,Ginger,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.kittens.names.3,Matcha,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.kittens.names.4,Sakura,,Catalogue BallThemes (names)
-catalog.BallThemes.ById.kittens.names.5,Plum,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.kittens.names.5,Plum,,Catalogue BallThemes (names); also catalog.BallThemes.ById.midnight.names.2
 catalog.BallThemes.ById.kittens.pitch,Pointed ears and a pink nose.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.marbles.name,Marbles,,Catalogue BallThemes (name)
 catalog.BallThemes.ById.marbles.names.1,Blue,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.1
@@ -587,6 +606,18 @@ catalog.BallThemes.ById.marbles.names.2,Orange,,Catalogue BallThemes (names); al
 catalog.BallThemes.ById.marbles.names.3,Green,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.3
 catalog.BallThemes.ById.marbles.names.4,Pink,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.4
 catalog.BallThemes.ById.marbles.pitch,No faces. Glossy with a pattern each.,,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.midnight.name,Midnight,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.11.name
+catalog.BallThemes.ById.midnight.names.1,Dusk,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.midnight.names.3,Iris,,Catalogue BallThemes (names); also catalog.HueCatalog.ById.iris.name
+catalog.BallThemes.ById.midnight.names.5,Star,,"Catalogue BallThemes (names); also catalog.PetCharmCatalog.ById.star.name, catalog.BookCatalog.Pages.charms.items.5.name"
+catalog.BallThemes.ById.midnight.pitch,Dark balls with glowing eyes.,,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.pea_soup.name,Pea Soup,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.6.name
+catalog.BallThemes.ById.pea_soup.names.1,Pea,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.pea_soup.names.2,Sprout,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.pea_soup.names.3,Leaf,,"Catalogue BallThemes (names); also catalog.PetCharmCatalog.ById.leaf.name, catalog.BookCatalog.Pages.charms.items.6.name"
+catalog.BallThemes.ById.pea_soup.names.4,Lime,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.pea_soup.names.5,Glow,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.pea_soup.pitch,"Old handheld green, dark to bright.",,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.planets.name,Planets,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.3.name
 catalog.BallThemes.ById.planets.names.1,Moon,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.planets.names.2,Mars,,Catalogue BallThemes (names)
@@ -594,16 +625,21 @@ catalog.BallThemes.ById.planets.names.3,Terra,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.planets.names.4,Giant,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.planets.names.5,Nebula,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.planets.pitch,"Craters, bands and a ring. They doze.",,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.pocket_grey.name,Pocket Grey,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.7.name
+catalog.BallThemes.ById.pocket_grey.names.1,Pebble,,"Catalogue BallThemes (names); also catalog.DeckThemes.ById.stone.name, catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name, catalog.BookCatalog.Pages.charms.items.3.name"
+catalog.BallThemes.ById.pocket_grey.names.2,Slate,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.pocket_grey.names.3,Stone,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.pocket_grey.names.4,Cloud,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.pocket_grey.names.5,Pearl,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.pocket_grey.pitch,Grey pebbles. Size is the tell.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.smileys.name,Smileys,,Catalogue BallThemes (name)
 catalog.BallThemes.ById.smileys.pitch,Crude little faces. The default.,,Catalogue BallThemes (pitch)
 catalog.DeckThemes.ById.aqua_pop.name,Aqua Pop,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aqua_pop.name, catalog.BookCatalog.Pages.faceplates.items.1.name"
 catalog.DeckThemes.ById.aurora_glass.name,Aurora Glass,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aurora_glass.name, catalog.BookCatalog.Pages.faceplates.items.6.name"
 catalog.DeckThemes.ById.bookworm.name,Bookworm,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.bookworm.name
-catalog.DeckThemes.ById.brick.name,Ember,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.brick.name
 catalog.DeckThemes.ById.copperleaf.name,Copperleaf,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.copperleaf.name
 catalog.DeckThemes.ById.gloaming.name,Gloaming,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.gloaming.name
 catalog.DeckThemes.ById.grape_soda.name,Grape Soda,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.grape_soda.name, catalog.BookCatalog.Pages.faceplates.items.9.name"
-catalog.DeckThemes.ById.honey.name,Honey,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.honey.name
 catalog.DeckThemes.ById.ice.name,Creek,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.ice.name, catalog.DeckBackgrounds.ById.creek.name"
 catalog.DeckThemes.ById.lime_gel.name,Lime Gel,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.lime_gel.name, catalog.BookCatalog.Pages.faceplates.items.2.name"
 catalog.DeckThemes.ById.liquid_chrome.name,Liquid Chrome,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.liquid_chrome.name, catalog.BookCatalog.Pages.faceplates.items.4.name"
@@ -614,7 +650,6 @@ catalog.DeckThemes.ById.rose_chrome.name,Rose Chrome,,"Catalogue DeckThemes (nam
 catalog.DeckThemes.ById.sherbet.name,Scout,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sherbet.name
 catalog.DeckThemes.ById.sorbet_sky.name,Sorbet Sky,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sorbet_sky.name, catalog.BookCatalog.Pages.faceplates.items.3.name"
 catalog.DeckThemes.ById.stargazer.name,Stargazer,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stargazer.name
-catalog.DeckThemes.ById.stone.name,Pebble,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name, catalog.BookCatalog.Pages.charms.items.3.name"
 catalog.DeckThemes.ById.tidepool.name,Tidepool,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.tidepool.name, catalog.BookCatalog.Pages.faceplates.items.5.name"
 catalog.DeckBackgrounds.ById.lantern.name,Lantern,,Catalogue DeckBackgrounds (name)
 catalog.DeckBackgrounds.ById.moonpond.name,Moonpond,,Catalogue DeckBackgrounds (name)
@@ -629,8 +664,6 @@ catalog.ToyCatalog.ById.sparkler.name,Sparkler,,Catalogue ToyCatalog (name); als
 catalog.ToyCatalog.ById.squeaky_carrot.name,Squeaky Carrot,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name
 catalog.ToyCatalog.ById.wobble_top.name,Wobble Top,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.6.name
 catalog.HueCatalog.ById.citrus.name,Citrus,,Catalogue HueCatalog (name)
-catalog.HueCatalog.ById.iris.name,Iris,,Catalogue HueCatalog (name)
-catalog.HueCatalog.ById.tide.name,Tide,,Catalogue HueCatalog (name)
 catalog.HueCatalog.Items.citrus.name,Citrus jar,,Catalogue HueCatalog (name)
 catalog.HueCatalog.Items.iris.name,Iris jar,,Catalogue HueCatalog (name)
 catalog.HueCatalog.Items.reset.name,Reset Hue,,Catalogue HueCatalog (name)
@@ -647,9 +680,7 @@ catalog.FeatureCatalog.ById.horns.name,Horn buds,,Catalogue FeatureCatalog (name
 catalog.FeatureCatalog.ById.wings.name,Folded wings,,Catalogue FeatureCatalog (name)
 catalog.PetCharmCatalog.ById.dot.name,Snowflake,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.1.name
 catalog.PetCharmCatalog.ById.heart.name,Heart,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.4.name
-catalog.PetCharmCatalog.ById.leaf.name,Leaf,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.6.name
 catalog.PetCharmCatalog.ById.ring.name,Ring,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.2.name
-catalog.PetCharmCatalog.ById.star.name,Star,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.5.name
 catalog.WearableCatalog.Tabs.1.label,Hat,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.2.label,Shirt,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.3.label,Neck,,Catalogue WearableCatalog (label)
