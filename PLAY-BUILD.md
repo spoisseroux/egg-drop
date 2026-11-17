@@ -16,6 +16,17 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Private v833 Published 2026-11-16 — runtime 0892a89, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v833".
+# Pocket Pals — smooth Pocket Deck networking, Toys screen, Material tab
+
+**New since v816 (v816 phone notes 16-21):**
+- Pocket Deck networking (deck-network-plan.md, architect-reviewed, slices S0-S4 on, S5 ghost ball off): owner-only 30 Hz snapshot stream, client render clock with interpolation, merges/score/sounds on the render clock, drop ack + one-deep server queue, tap sound and dispenser kick on the tap frame, shared Parts at 8 Hz. Studio with 150-250 ms jitter: hitches 27-31 -> 1-3, longest freeze ~400 ms -> 84-183 ms.
+- Toys are their own Companions row and screen (tap previews, Give to Bear equips); Customize is Hue, Charm, Material. Finish renamed Material; Material tab redesigned (Shine and Jelly meters, jar cards, empty state, Back to original).
+- Pocket Deck A/B in Game Boy Micro layout; wallet 3D Star held still.
+- The first-play popover under the Roblox menu is Roblox's own top-bar tip, not ours.
+
+Verified before publish: server 63/63 (64 with the BoardNet spec), client 149/162 (13 known); code review GO WITH CHANGES, all six fixes in (131e0ae, db7b23e, 23f00e8). **Translations synced (34 add/update, 20 delete).** Not checked: a real phone on mobile data, bandwidth with several players, any audio by ear.
+
 **Private v816 Published 2026-11-16 — runtime a63f95d, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v816".
 # Pocket Pals — Customization Egg, UI juice, deck performance
 
