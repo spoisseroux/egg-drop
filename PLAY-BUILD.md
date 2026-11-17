@@ -16,6 +16,17 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Private v816 Published 2026-11-16 — runtime a63f95d, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v816".
+# Pocket Pals — Customization Egg, UI juice, deck performance
+
+**New since v775 (Spencer's v775 phone notes, `artifacts/qa-2026-11-16c-v775/notes.md`):**
+- Tips never replace an open card; the always-on "Tap your pet to say hi" hint is gone (now in Your garden guide).
+- Customization Egg replaces the Hue Egg: hue jars, Gloss/Matte/Jelly finishes (7 sheen stops, Jelly stages), rare charms (2% each, pity at 15, restricted accounts get a fixed order). New pets start with no charm; existing saves keep Snowflake/Ring/Pebble. New jar art (symbols inside the jars). Book: "Toys & finishes" page and a Charms page.
+- UI: click audio on every button, equip/unequip sounds, hatch X inset, Toys row removed from Companions, toy preview in Customize (tap previews, tap again equips), animated Pocket menu tiles, waterfall rolloff, deck board bottom cleanup, darker Pet Park.
+- Pocket Deck performance: script time per frame 1.30 -> 0.68 ms, >20 ms frames 27 -> 7 in scripted rounds (`deck-perf.md`).
+
+Verified before publish: server specs 63/63, client 142/165 (the rest are the known list, argument-mismatch specs and perf harnesses); console clean of new errors; code review GO WITH CHANGES, fixes in d85e7db. **Translations synced (85 add/update, 6 delete).** Not checked: a real phone, any audio by ear, the garden pet wearing a charm and finish.
+
 **Private v775 Published 2026-11-16 — runtime f8d7e66, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v775".
 # Pocket Pals — v1 economy, new toys, Spencer's music, phone UI notes
 
