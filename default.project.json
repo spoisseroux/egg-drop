@@ -2,6 +2,10 @@
   "name": "egg-drop",
   "tree": {
     "$className": "DataModel",
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "$path": "src/first"
+    },
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
       "Shared": {

@@ -46,6 +46,17 @@ local function loadHalves(done)
  end)
  return ticket
 end
+-- v890 QA: on a slow join the egg meshes, split shells and egg texture missed the 1.2 s
+-- budget and the hatch showed its settled pose with no animation. The budget is longer and
+-- prewarm() (called once at startup) fetches everything a hatch needs before the first one.
+Scene.AssetTimeout=3.5
+function Scene.prewarm()
+ EggPreview.loadTemplates(function()end)
+ loadHalves(function()end)
+ local maps={}
+ for _,typ in pairs(Models.Types)do if typ.colorMap then table.insert(maps,typ.colorMap)end end
+ if #maps>0 then Warmup.shared:request(maps,function()end,1)end
+end
 local function lowBound(parts)
  local low=math.huge;local high=-math.huge
  for _,p in ipairs(parts)do if p.Parent and p.Transparency<.99 then
@@ -122,7 +133,7 @@ function Scene.new(parent,options)
   if ok then for name,spec in pairs(Assets.Halves)do self:eggPart(name,halves[name]:Clone(),spec,typ)end;self.halvesReady=true
   else self.failure="SplitShellUnavailable"end;self:checkReady()
  end)
- task.delay(1.2,function()
+ task.delay(Scene.AssetTimeout,function()
   if self.destroyed or self.ready then return end
   self.timedOut=true;self.failure=self.failure or "DisplayAssetsTimeout";self.ready=true
   self:detachLoads()

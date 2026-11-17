@@ -4044,4 +4044,6 @@ roomView:startPresentation(board:GetAttribute("Mode"))
 -- Launch candidate: warm the Deck style art and the 3D preview folders in the background,
 -- once the garden has loaded (StylePreload waits for it; small batches, low priority).
 require(script.StylePreload).start()
+-- v890 QA: the first hatch has its egg meshes, split shells and egg textures ready.
+task.defer(function()pcall(require(script.HatchDisplayScene).prewarm)end)
 clientUI.ambient:setRound(board:GetAttribute("Mode")=="Board")

@@ -36,7 +36,8 @@ Ambient.BedSample, Ambient.BedEase = .25, .5
 -- A6: round fade out 0.6 s, back over 1.0 s. Deck music voice volume (world music is
 -- BoardAudio.MusicVolume, 0.07). Was .2 for the v3 texture; Spencer's loop is hotter.
 Ambient.RoundOut, Ambient.RoundIn = .6, 1.0
-Ambient.DeckMusicVolume = .15
+-- v890 QA (2026-11-17): "turn down the game drop music a bit": .15 -> .105 (about -3 dB).
+Ambient.DeckMusicVolume = .105
 Ambient.DeckDuck = "deckRound"
 -- A4 waterfall emitters. Positions come from WorldV7Data.beams.falls by name.
 Ambient.Falls = {

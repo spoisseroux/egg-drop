@@ -17,6 +17,8 @@ function Preview.createMesh(uri)
  return game:GetService("AssetService"):CreateMeshPartAsync(Content.fromUri(uri))
 end
 local templates,loadState,waiters,generation={},"idle",{},0
+local failedAt
+Preview.RetrySeconds=10
 function Preview.resetCache()templates={};loadState="idle";waiters={};generation+=1 end
 function Preview.loadState()return loadState end
 -- Borrow immutable ready prototypes without another loader or callback. The
@@ -29,6 +31,9 @@ function Preview.cloneTemplates()
 end
 -- Loads the three templates once; `done(ok)` runs (deferred) when they are ready or failed.
 function Preview.loadTemplates(done)
+ -- v890 QA: a failure on a slow join is retried after RetrySeconds instead of lasting the session
+ -- (it left every later hatch without its egg animation).
+ if loadState=="failed"and os.clock()-(failedAt or 0)>=Preview.RetrySeconds then loadState="idle"end
  if loadState=="ready"or loadState=="failed"then local ok=loadState=="ready";task.defer(done,ok);return end
  table.insert(waiters,done)
  if loadState=="loading"then return end
@@ -44,6 +49,7 @@ function Preview.loadTemplates(done)
   end
   if ok then for key,part in pairs(found)do templates[key]=part end end
   loadState=if ok then "ready"else "failed"
+  if not ok then failedAt=os.clock()end
   local list=waiters;waiters={}
   for _,fn in ipairs(list)do task.spawn(fn,ok)end
  end)
