@@ -24,3 +24,12 @@ Status key: [running] agent at work, [queued] next batch, [decided] Spencer's ca
 15. Darken the Pet Park textures to match the world's new darker palette (v735 world pass: greyer marble, darker grass, browner path). [done in source, unpublished: park palette graded with the v735 world numbers, new Image 86494931505767]
 
 Batch 6 to 12, 14, 15: captures, critique and what was not verified are in `ui-batch/README.md`.
+
+## v816 phone notes (2026-11-16, later)
+
+16. On first play, a black popover with an X and an empty blue button sits under the Roblox menu and covers the POCKET DECK wordmark. [investigating]
+17. A and B are still awkward and too far right. Use Game Boy Micro placement: a same-size diagonal pair, centred on the d-pad's height. [Fable spec, then build]
+18. Toys get their own category: a Companions row, not a Customize tab. Rename Finish to **Material**. [decided]
+19. The Material tab is confusing: unlabelled dots at the top, nothing to tap, and Original appears twice. Redesign it with labelled Shine and Jelly meters and a clear empty state. [Fable spec, then build]
+20. The Pocket Deck still stutters on the phone. Is it server sync? It should be async. [investigating the network path]
+21. The wallet 3D Star shows as a thin orange sliver in Customize, but looks fine in Companions. [check]
