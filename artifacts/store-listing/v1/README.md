@@ -18,22 +18,25 @@ Phone check at 150 px: the ball and face read in A and B. C reads, but its backg
 
 ## Thumbnails (`thumbnails/`, 1920×1080)
 
-Per Spencer, slots 01, 02, 03 and 04 were cut. 01 would show "Win pays" boosted by the creator's passes, and 03 and 04 need a two-player Local Server. The numbers below follow the shot list.
+05–07 are from 17 Nov (place before v875). 01–04 and 08–10 are from the v875 launch candidate (Rojo off, nothing saved), with a fresh Studio save funded by 3 test grants.
 
 | File | Shows |
 |---|---|
-| `05-odds-before-hatch.png` | Hatch eggs with only the Toy Egg (20) and Customization Egg (12), the Customization Egg selected. Its odds table is as built (hues 17%, Gloss and Matte 10%, Jelly 6%, Charms 6%, "Charm within 15 eggs"). Fresh save, 300 test Stars. |
+| `01-merge-pocket-deck.png` | An Easy round on the v875 deck just after a merge: chain ×3, score 260, a fresh pink ball, 12/24 eggs left, Smileys balls and the Scout faceplate. **Problem:** "WIN PAYS 11–13" includes Studio's grant of Spencer's 2× and Supporter passes. A player without passes sees 5–6. Goals are 0/2. |
+| `02-bear-pocket-pal.png` | The Bear holding its Ball toy in pet focus, close and low, as the hero. The avatar is cropped to its legs on the right. Garden dusk behind. |
+| `03-garden.png` | A high three-quarter shot of the garden: the avatar walking through the arch and the Bear following on the path, with the park, trees and cliffs behind. One pet only: no Studio helper spawns extra pets, so none were faked. |
+| `04-pet-park.png` | The Bear mid-slide in the Pet Park (live park activity, not staged), with the swings and seesaw behind. Same one-pet limit as 03. |
+| `05-odds-before-hatch.png` | Hatch eggs with only the Toy Egg (20) and Customization Egg (12), the Customization Egg selected. Its odds table is as built (hues 17%, Gloss and Matte 10%, Jelly 6%, Charms 6%, "Charm within 15 eggs"). |
 | `06-hatch-toys.png` | A live Toy Egg reveal: Wobble Top on the warm cream card, with **Store** and **Give to Bear**. 37 px of the reveal's own dark edge rows were added top and bottom to fit 16:9. |
-| `07-colours-materials.png` | Customize › Hue › Main: the Citrus jar selected (3 of 5, "Use 1 jar"), the jar cards, and the Bear preview in Citrus with Gloss applied. |
-| `08-dress-up.png` | Wardrobe › Hat: Tiny Sun Hat previewed on the Citrus Bear, "Buy 100", with 40, 100 and 250 prices in the grid. Scrolled so the discounted weekly Pom Beanie is out of frame. |
-| `09-style-deck.png` | Deck style › Balls: Deep Sea (RARE) previewed, "Buy 100". |
-| `10-collection-book.png` | Book › Wardrobe page at 2/23 with its four milestone pills (25/50/75/100%). |
+| `07-colours-materials.png` | Customize › Hue › Main: Citrus jar selected (3 of 5), the jar cards, and the Bear preview in Citrus with Gloss applied. |
+| `08-dress-up.png` | Wardrobe › Hat: Grape Pom Beanie previewed large on the Bear ("Buy 40"), with 40 and 100 prices in the grid. The Pom Beanie tile shows the weekly 32/~~40~~ price. |
+| `09-style-deck.png` | Deck style › Faceplates: Night Orb (SHOWCASE) previewed, "Buy 250". The whole 4×4 grid is visible with nothing clipped. |
+| `10-collection-book.png` | Book › Toys & materials at 7/9: six toys drawn in 3D (the Pocket Deck now included), the Gloss jar, and three milestones ready to claim. |
 
-## Critique and known issues
+## Phone-size critique
 
-- **06** is the strongest. **05**, **07** and **09** read well at phone size.
-- **08:** the Tiny Sun Hat is small on the preview Bear.
-- **09:** the bottom row of ball tiles is clipped by the panel edge at this viewport height.
-- **10 is weak.** The page is mostly empty silhouettes. The Toys page (8/9) would be stronger, but it shows the Pocket Deck as a "P" placeholder because `BookView.Art.slots` has no `toy:pocket_deck` entry, and it shows the Jelly jar.
-- **Stars balances** in the headers (300, 232, 52) come from test grants.
-- **07–10 show desktop keyboard hints** (WASD, ENTER, BKSP) because the touch-device emulator was not used. 07–10 come from the first session (smaller viewport, about 1.47× upscale). 05, 06 and the icons come from the larger second session (about 1.39×).
+- **Strong:** 02, 04, 06 and 10.
+- **Fine:** 05, 07, 08 and 09. The UI text is small at phone size, but the panels read.
+- **03:** the vista reads well, but the Bear is small.
+- **01:** the deck reads, but it is small in the frame. Don't upload it until it is recaptured on an account without passes (a Server & Clients test), because "Win pays" shows pass-boosted numbers.
+- **All:** the Stars balances in the headers (284, 300, 232) come from test grants. The menus show desktop keyboard hints (WASD, ENTER, BKSP) because the touch emulator was not used. Captures are 1920×777 or 1649×734, cropped to 16:9 and scaled up about 1.39–1.47× with Lanczos.
