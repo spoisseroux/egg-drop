@@ -38,14 +38,20 @@ return function(client,parent)
   return c
  end
  local ok,problem=pcall(function()
-  test("opened as Customize: the cards, the item's tab, one quiet ack, a NEW badge; no receipt",function()
+  test("opened as Customize: the cards, one quiet ack, a NEW badge on the Toys screen; no receipt",function()
    local c=fixture();local view=c.view
    view.quietOpen=true
    assert(view:open(c.state,"palette","pip")~=false and view.shade.Visible,"Customize opens")
    settle()
-   assert(view.page=="palette"and view.tab=="toys","lands on the Toys cards, got "..tostring(view.page).." / "..tostring(view.tab))
+   -- Code review a9960c4 (5): a waiting toy no longer turns Customize into the Toys screen,
+   -- which has no tab bar and so no way back to Hue, Charm or Material.
+   assert(view.page=="palette"and view.tab=="hue","Customize stays on Hue, got "..tostring(view.page).." / "..tostring(view.tab))
+   assert(view.chromeTabs.root.Visible and view.header.title.Text=="Customize","the tab bar is there")
    assert(#c.sent==1 and c.sent[1].action=="toyAck"and c.sent[1].value.resultId=="toy-result","one quiet toyAck, got "..#c.sent)
    assert(view.quietOpen==nil,"the mark is used once")
+   -- The toy waits on the Toys screen, marked NEW.
+   assert(view:setTab("toys"));settle()
+   assert(view.header.title.Text=="Toys"and not view.chromeTabs.root.Visible)
    local card=c:card("Toy_ball");assert(card and card:GetAttribute("IsNew")==true,"the Ball card is NEW")
    local badge=card:FindFirstChild("NewBadge",true);assert(badge and badge.Visible and badge.Text.Text=="NEW","badge drawn")
    -- The save lands: the result is gone, the toy is owned, the badge stays until a tap.
@@ -85,6 +91,9 @@ return function(client,parent)
    assert(tap("bone")==true and #c.sent==0);settle()
    pet=view.visual;pet.cosmeticTime=os.clock();pet:update(0)
    assert(pet.personalToyId=="bone"and pet.personalToy and pet.personalToy.id=="bone","the preview follows the focused card")
+   -- Reduced Effects (this fixture): the switch is a cut and the clip holds its play pose.
+   assert(view.viewport.ImageTransparency==0 and view.viewport:GetAttribute("ToyFade")==false,"a cut under Reduced Effects")
+   assert(require(game.Players.LocalPlayer.PlayerScripts.Client.PetPlayVisual).previewPhase(5,true)==.43,"a still play pose")
    assert(tap("none")==true and #c.sent==0);settle()
    pet=view.visual;pet.cosmeticTime=os.clock();pet:update(0)
    assert(not pet.personalToy,"None previews no toy")

@@ -7,7 +7,7 @@
 --  * Reveal: tiers and banner kinds for finish jars and charms; every item has jar art.
 --  * Render: the dose look clamps to the display stops and falls back toward 0.
 -- Usage (Client): require(PlayerScripts.Client.ZZSpecs.LookEggClient)(PlayerScripts.Client, gui)
-return function(client)
+return function(client,gui)
  local Shared=game:GetService("ReplicatedStorage").Shared
  local Look=require(Shared.LookEggCatalog);local Copy=require(Shared.UICopy)
  local Shop=require(client.EggHatchView);local Intent=require(client.HueIntent);local Finish=require(client.FinishPanel)
@@ -74,6 +74,33 @@ return function(client)
   assert(Finish.shineWords(0)=="Original"and Finish.shineWords(2)=="Gloss 2/3"and Finish.shineWords(-1)=="Matte 1/3"and Finish.jellyWords(0)=="0/3")
   assert(Finish.noJars({finishInventory={gloss=0,matte=0,jelly=0}})and not Finish.noJars(state))
   assert(not Finish.card("jelly",state,"pip",false).enabled,"never while busy")
+ end)
+ test("Back to original: Shine then Jelly, and a refused first clear ends it (code review a9960c4, 6)",function()
+  local holder=Instance.new("Frame");holder.Parent=gui
+  local function rig(status)
+   local sent={}
+   local intent={status="Ready",pending=nil}
+   function intent:finishClear(petId,axis)table.insert(sent,axis);self.pending={action="finishClear"};return true end
+   local panel=Finish.new(holder,intent,{canUse=function()return true end})
+   local off={petFinish={pip={sheen=2,jelly=1}},finishInventory={}}
+   panel:refresh(off,"pip",true)
+   assert(panel:act("original")and #sent==1 and sent[1]=="sheen","Shine goes first")
+   panel:refresh(off,"pip",true);task.wait();assert(#sent==1,"nothing more while the first is pending")
+   intent.pending=nil;intent.status=status
+   return panel,sent,intent
+  end
+  local panel,sent=rig("Rejected")
+  panel:refresh({petFinish={pip={sheen=2,jelly=1}},finishInventory={}},"pip",true);task.wait();task.wait()
+  assert(#sent==1 and panel.resetQueue==nil,"a refused Shine clear must not clear Jelly")
+  panel:destroy()
+  local panel2,sent2=rig("Ready")
+  panel2:refresh({petFinish={pip={sheen=2,jelly=1}},finishInventory={}},"pip",true);task.wait();task.wait()
+  assert(#sent2==1 and panel2.resetQueue==nil,"a Shine clear that did not land ends the reset")
+  panel2:destroy()
+  local panel3,sent3=rig("Ready")
+  panel3:refresh({petFinish={pip={sheen=0,jelly=1}},finishInventory={}},"pip",true);task.wait();task.wait()
+  assert(#sent3==2 and sent3[2]=="jelly"and panel3.resetQueue==nil,"Jelly follows a landed Shine clear")
+  panel3:destroy();holder:Destroy()
  end)
  test("reveal: finish jars and charms get their tier, banner kind, line and jar art",function()
   assert(Cue.tier("hue",{itemId="gloss"})=="Uncommon"and Cue.tier("hue",{itemId="matte"})=="Uncommon")

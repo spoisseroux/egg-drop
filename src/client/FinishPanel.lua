@@ -151,19 +151,18 @@ end
 -- Back to original: Shine, then Jelly once the first request settles (each axis once).
 function Panel:pumpReset()
  local q=self.resetQueue
- if not q or self.intent==nil or self.intent.pending then return end
- if q.petId~=self.petId then self.resetQueue=nil;return end
+ if not q or self.intent==nil or self.intent.pending or self.intent.status=="Retrying"then return end
+ self.resetQueue=nil -- one step only, whatever happens next
+ if q.petId~=self.petId then return end
  local row=Panel.row(self.state,q.petId)
- while #q.axes>0 do
-  local axis=table.remove(q.axes,1)
-  if row[axis]~=0 then
-   if #q.axes==0 then self.resetQueue=nil end
-   -- Deferred: refresh runs inside the intent's own change notification.
-   task.defer(function()if self.root.Parent and self.intent and not self.intent.pending then self.intent:finishClear(q.petId,axis)end end)
-   return
-  end
+ -- Code review a9960c4: the first clear must have landed. A refused or failed one ends the
+ -- reset here, so Back to original never half-applies by clearing only the second axis.
+ if self.intent.status=="Rejected"or row[q.first]~=0 then return end
+ local axis=q.axes[1]
+ if axis and row[axis]~=0 then
+  -- Deferred: refresh runs inside the intent's own change notification.
+  task.defer(function()if self.root.Parent and self.intent and not self.intent.pending then self.intent:finishClear(q.petId,axis)end end)
  end
- self.resetQueue=nil
 end
 function Panel:act(id)
  if not self.root.Visible or not self:ready()then return false end
@@ -174,7 +173,7 @@ function Panel:act(id)
   local axes={};if row.sheen~=0 then table.insert(axes,"sheen")end;if row.jelly~=0 then table.insert(axes,"jelly")end
   local first=table.remove(axes,1)
   if not first then return false end
-  self.resetQueue=if #axes>0 then {petId=self.petId,axes=axes}else nil
+  self.resetQueue=if #axes>0 then {petId=self.petId,first=first,axes=axes}else nil
   local ok=self.intent:finishClear(self.petId,first)
   if not ok then self.resetQueue=nil end
   return ok

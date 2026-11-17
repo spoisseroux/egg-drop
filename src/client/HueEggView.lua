@@ -39,6 +39,7 @@ local HintLegend=require(script.Parent.HintLegend);require(script.Parent.ToyTabI
 local UICopy=require(Shared.UICopy)
 local View={};View.__index=View
 View.ClearConfirmSeconds=3
+View.ToyFadeTime=.15 -- UI-SPEC-v816 3: switching toys on the Toys screen
 local ids={"rose","tide","citrus","iris","reset"}
 local names={};for _,id in ipairs(Hues.ItemOrder)do names[id]=Hues.Items[id].name end
 -- Customization Egg results (slice 4): finish jars and egg charms share the Hue receipt.
@@ -728,6 +729,17 @@ function View:paintPortrait()
  self.visual.reducedEffects=GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()==true)or false
  -- QA v775 note 8: tapping a toy card previews the pet playing with it (a loop of the garden clip).
  self.visual.personalPreview=self:chromeActive()and self.tab=="toys"and not self.fruitEating.active and not self.boundedEating
+ -- v816 Toys screen: switching toys fades the playing pet back in over 0.15 s (a cut under
+ -- Reduced Motion, where the clip already holds its play pose as a still).
+ local toyKey=if self.visual.personalPreview then tostring(self:focusedCardId())else nil
+ if toyKey~=self.previewToyKey then
+  local switched=self.previewToyKey~=nil and toyKey~=nil;self.previewToyKey=toyKey
+  if switched and not(GuiService.ReducedMotionEnabled or self.visual.reducedEffects==true)then
+   self.viewport.ImageTransparency=.7
+   game:GetService("TweenService"):Create(self.viewport,TweenInfo.new(View.ToyFadeTime,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageTransparency=0}):Play()
+  else self.viewport.ImageTransparency=0 end
+  self.viewport:SetAttribute("ToyFade",switched)
+ end
  if self.visual.applyAppearance then self.visual:applyAppearance(a)end;self.visual:update(0);self:fitPortrait();self:placePortraitToy();self:syncPortraitClock()
 end
 -- QA v2 R4.3: each visible Hue / Materials / Toys card shows the pet with that colour,
@@ -1811,7 +1823,10 @@ function View:open(state,page,petId)
  if self.state.hueMigrationId and self.state.hueMigrationAcknowledged==false then self.afterMigrationPage=self.page;self.page="migration"end
  self.petId=petId or self.petId;self.tab=if page=="charm"then "charm"elseif page=="materials"then "materials"elseif page=="finish"then "finish"elseif page=="toys"then "toys"elseif page=="features"then "features"elseif page=="pet"then "pet"else "hue"
  if self.quietStore and(page==nil or page=="palette")and not self.state.pendingHueResult then
-  if self.state.pendingToyResult then self.tab="toys"elseif self.state.pendingMaterialResult then self.tab="materials"end
+  -- Code review a9960c4: a waiting toy no longer turns Customize into the Toys screen (no tab
+  -- bar, no way back to Hue / Charm / Material). It is still stored quietly here and waits,
+  -- marked NEW, on the Companions Toys row and screen.
+  if self.state.pendingMaterialResult then self.tab="materials"end
  end
  self.channel="main";self.inspected=nil;self.useMessage=nil;self.confirmation=nil;self.assignment=nil;self.selectTarget=false;self.body.CanvasPosition=Vector2.zero
  local p=self.intent.pending
