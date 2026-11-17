@@ -98,7 +98,7 @@ local function step()
  if not tick then return end
  if s.shadow then shadow(s,board,tick)end
  if Net.rendering()then
-  for _,part in ipairs(board:GetChildren())do
+  local function drive(part)
    local eggId=part:GetAttribute("EggId")
    if eggId then
     local x,y=s.buffer:sample(Codec.wireId(eggId),tick)
@@ -108,8 +108,12 @@ local function step()
     end
    end
   end
+  for _,part in ipairs(board:GetChildren())do drive(part)end
+  -- Parts already removed by replication whose view still waits for its removal tick.
+  for part in pairs(s.lingering)do drive(part)end
  end
  Net.runDue(tick)
+ Net.runViews(now)
  -- Studio: publish the stats for the harness (it runs in another Luau VM).
  if s.studio and now-(s.statsAt or 0)>=.5 then
   s.statsAt=now
@@ -129,7 +133,7 @@ function Net.start(board,options)
  options=options or {}
  state={board=board,buffer=Snapshots.new(),ids={},xs={},ys={},random=Random.new(),lost=0,malformed=0,
   shadow=options.shadow~=false,drawn={},partSeen=setmetatable({},{__mode="k"}),partHitches=0,maxStep=0,fallbackFrames=0,
-  queue={},frameDt=0,studio=RunService:IsStudio()}
+  queue={},views={},lingering={},frameDt=0,studio=RunService:IsStudio()}
  state.connection=remote.OnClientEvent:Connect(receive)
  -- First in the render step, before the deck's RenderStepped loop reads the Parts.
  RunService:BindToRenderStep(Net.RenderAction,Enum.RenderPriority.First.Value,step)
@@ -189,6 +193,50 @@ function Net.flush()
  local s=state;if not s then return end
  local queue=s.queue;s.queue={}
  for _,entry in ipairs(queue)do pcall(entry.fn,math.huge)end
+ local views=s.views;s.views={}
+ for _,entry in ipairs(views)do s.lingering[entry.part]=nil;pcall(entry.fn)end
+end
+
+-- S2b view lifetime. A Part (reliable) and its first stream sample (unreliable) can
+-- arrive in either order, and a removal arrives about one render delay before the
+-- clock reaches it. `afterSpawn` runs fn once the clock shows the ball (or at once
+-- when the clock is off); `afterRemoval` keeps the Part driven and runs fn once the
+-- clock passes the ball's last sample. ViewTimeout bounds both.
+Net.ViewTimeout=.6
+function Net.afterSpawn(part,fn)
+ local s=state
+ local eggId=part:GetAttribute("EggId")
+ if not s or not Net.active()or not eggId then fn();return false end
+ local _,_,where=s.buffer:sample(Codec.wireId(eggId))
+ if where=="live"then fn();return false end
+ table.insert(s.views,{part=part,id=Codec.wireId(eggId),fn=fn,at=os.clock(),want="spawn"})
+ return true
+end
+function Net.afterRemoval(part,fn)
+ local s=state
+ local eggId=part:GetAttribute("EggId")
+ if not s or not Net.active()or not eggId then fn();return false end
+ local _,_,where=s.buffer:sample(Codec.wireId(eggId))
+ if where==nil or where=="gone"then fn();return false end
+ s.lingering[part]=true
+ table.insert(s.views,{part=part,id=Codec.wireId(eggId),fn=fn,at=os.clock(),want="removal"})
+ return true
+end
+function Net.runViews(now)
+ local s=state;if not s or #s.views==0 then return end
+ local index=1
+ while index<=#s.views do
+  local entry=s.views[index]
+  local _,_,where=s.buffer:sample(entry.id)
+  -- A spawn with no sample yet waits (the Part beat the stream); a removal of an id the
+  -- buffer no longer knows is done.
+  local done=now-entry.at>Net.ViewTimeout
+   or(entry.want=="spawn"and where~=nil and where~="early")or(entry.want=="removal"and(where==nil or where=="gone"))
+  if done then
+   table.remove(s.views,index);s.lingering[entry.part]=nil
+   local ok,problem=pcall(entry.fn);if not ok then warn("DeckNet view: "..tostring(problem))end
+  else index+=1 end
+ end
 end
 
 function Net.stats()

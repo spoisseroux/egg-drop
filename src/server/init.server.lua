@@ -493,14 +493,17 @@ local function publishState(board)
 end
 
 local function syncVisuals(board)
-	local live = {}
-	local contentIds={}
+	-- Deck network S3: no tables, sort or string per Heartbeat. `live` is a reused
+	-- scratch set and the content list is rebuilt only when a ball joins or leaves.
+	local live = board.syncLive or {}
+	board.syncLive = live
+	table.clear(live)
+	local membershipChanged = false
  -- Simulation.serial allocates ball IDs on drops/merges. ResetId alone is
  -- the stable presentation generation of this run.
  local runSerial=board.folder:GetAttribute("ResetId")
 	for _, egg in ipairs(board.sim.eggs) do
 		live[egg.id] = true
-		table.insert(contentIds,egg.id)
 		local part = board.parts[egg.id]
 		local created = part == nil
 		if not part then
@@ -518,6 +521,7 @@ local function syncVisuals(board)
 			part:SetAttribute("Tier", egg.tier)
 			part:SetAttribute("EggId", egg.id)
 			board.parts[egg.id] = part
+			membershipChanged = true
 		end
 		if part:GetAttribute("BoardSerial")~=runSerial then part:SetAttribute("BoardSerial",runSerial)end
 		-- Round items (R1 renders): PowerUp = a star ball; ItemMark = an armed Bomb, or a Magnet still pulling.
@@ -538,8 +542,13 @@ local function syncVisuals(board)
 		if not live[id] then
 			part:Destroy()
 			board.parts[id] = nil
+			membershipChanged = true
 		end
 	end
+	if not membershipChanged and board.contentSerial == runSerial then return end
+	board.contentSerial = runSerial
+	local contentIds = {}
+	for id in pairs(live) do table.insert(contentIds, id) end
 	table.sort(contentIds)
 	local signature=tostring(runSerial)..":"..table.concat(contentIds,",")
  if board.contentSignature~=signature then
@@ -551,6 +560,7 @@ end
 -- `sameField` rebuilds the current fresh field (no drops yet) with the newly
 -- chosen heat, keeping its template and seed instead of advancing the rotation.
 local function reset(board, preset, sameField)
+	board.pendingDrop = nil -- a queued drop never carries into a new run (deck network S4)
 	board.folder:ClearAllChildren()
 	table.clear(board.parts)
 	local field = hasPet(board) and board.nursery.status == "Ready"
@@ -934,6 +944,16 @@ local function acceptedDrop(board,value,now,isDemo)
 	return true
 end
 
+-- Deck network S4: a drop refused only by the drop interval or the contact gate may wait
+-- (BoardNet.QueueSeconds, one deep); every other refusal is final. Same checks as
+-- acceptedDrop, so the rate stays bounded.
+local function dropRetryable(board,value,now)
+	if board.closing or board.mode~="Board"or board.menuPaused or board.round.over or not canProgress(board)
+		or typeof(value)~="number"or not(value>=0 and value<=1)or #board.sim.eggs>=Config.MaxEggs then return false end
+	if board.field and not board.field:canDrop(board.sim.drops)then return false end
+	return now-board.lastDrop<Config.DropInterval or not Simulation.canDrop(board.sim)
+end
+
 request.OnServerEvent:Connect(function(player, action, value, sticker)
 	local board = boards[player]
 	if not board then return end
@@ -1101,7 +1121,11 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	end
 	if action == "drop" then
 		if board.welcome then board.welcome:input()end
-		acceptedDrop(board,value,now,false)
+		local token=BoardNet.dropToken(sticker)
+		if acceptedDrop(board,value,now,false) then BoardNet.ack(board,player,token,true)
+		elseif token and not board.pendingDrop and dropRetryable(board,value,now) then
+			board.pendingDrop={aim=value,token=token,expires=now+BoardNet.QueueSeconds}
+		else BoardNet.ack(board,player,token,false,if board.pendingDrop then "Busy"else "Refused") end
 	elseif action == "item" then
 		-- Round items: accepted while paused (the carousel freezes the round).
 		local ok, result = BoardItems.request(board, value, { resetId = board.folder:GetAttribute("ResetId"),
@@ -1738,6 +1762,13 @@ RunService.Heartbeat:Connect(function(dt)
 	local now = os.clock()
 	for player, board in pairs(boards) do
 		if board.petContact then board.petContact:update()end
+		local pendingDrop=board.pendingDrop
+		if pendingDrop then
+			if acceptedDrop(board,pendingDrop.aim,now,false) then board.pendingDrop=nil;BoardNet.ack(board,player,pendingDrop.token,true)
+			elseif now>pendingDrop.expires or not dropRetryable(board,pendingDrop.aim,now) then
+				board.pendingDrop=nil;BoardNet.ack(board,player,pendingDrop.token,false,"Refused")
+			end
+		end
 		BoardNet.beginParts(board, now)
 		syncVisuals(board)
 		BoardNet.endParts(board)

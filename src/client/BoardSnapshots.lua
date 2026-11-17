@@ -6,14 +6,15 @@
 -- The server stamps each snapshot with an integer sim tick (TickRate per second while the
 -- board steps). The clock maps ticks to local time with the smallest (arrival - tick/rate)
 -- seen over the last Window seconds (the least-delayed packet), then renders Delay behind
--- it, Delay being the p95 arrival jitter clamped to [DelayMin, DelayMax]. The render tick
+-- it, Delay being the worst arrival jitter in the window plus one send interval (and a
+-- small starvation margin), clamped to [DelayMin, DelayMax]. The render tick
 -- eases toward that target at 0.95-1.05x, re-syncs hard past ResyncSeconds, never runs
 -- backwards, extrapolates at most ExtrapolateSeconds past the newest sample and freezes on
 -- a paused stream (same tick, Paused flag).
 local Snapshots={};Snapshots.__index=Snapshots
 Snapshots.TickRate=156 -- 120 fixed steps per sim second x Pace 1.3
 Snapshots.Window=2
-Snapshots.DelayMin,Snapshots.DelayMax=.05,.2
+Snapshots.DelayMin,Snapshots.DelayMax=.05,.25
 Snapshots.ExtrapolateSeconds=.05
 Snapshots.ResyncSeconds=.25
 Snapshots.RateMin,Snapshots.RateMax=.95,1.05
@@ -44,6 +45,11 @@ function Snapshots:reset(resetId)
  self.pausedTick=nil
  self.lastArrival=nil
  self.lastNow=nil
+ self.previousTick=nil
+ self.spacing=nil
+ self.interval=nil
+ self.baseDelay=nil
+ self.margin=0
 end
 
 local function percentile(values,p)
@@ -86,7 +92,21 @@ function Snapshots:push(arrival,resetId,tick,flags,ids,xs,ys,count)
  self.base=base
  local jitter={}
  for _,entry in ipairs(self.offsets)do table.insert(jitter,entry[2]-base)end
- self.delay=math.clamp(percentile(jitter,.95),self.DelayMin,self.DelayMax)
+ -- The clock must stay one send interval behind the newest sample as well as above the
+ -- jitter, or it renders past the data between packets (measured in Studio: at 0 lag a
+ -- jitter-only delay starved 21% of frames). Interval = median tick spacing.
+ if self.previousTick then
+  local spacing=self.spacing or {}
+  self.spacing=spacing
+  table.insert(spacing,(tick-self.previousTick)/self.TickRate)
+  if #spacing>30 then table.remove(spacing,1)end
+  self.interval=math.min(percentile(spacing,.5),.25)
+ end
+ self.previousTick=tick
+ -- The worst arrival lateness in the window (not p95): a late packet the clock has
+ -- already passed is a visible stall, while a few more ms of delay are not.
+ self.baseDelay=percentile(jitter,1)+(self.interval or 0)*1.25
+ self.delay=math.clamp(self.baseDelay+(self.margin or 0),self.DelayMin,self.DelayMax)
  -- Samples. Every packet lists every live ball: an id missing from it left at this tick.
  local seen=self.seen or {};self.seen=seen;table.clear(seen)
  for i=1,count do
@@ -122,6 +142,9 @@ function Snapshots:advance(now)
  local dt=if self.lastNow then math.max(0,now-self.lastNow)else 0
  self.lastNow=now
  self.stats.frames+=1
+ -- Starvation feedback: frames that run past the newest sample add a little delay (the
+ -- arrival pattern was burstier than the window's jitter showed); it decays again slowly.
+ self.delay=math.clamp((self.baseDelay or self.DelayMin)+(self.margin or 0),self.DelayMin,self.DelayMax)
  local target=(now-self.base-self.delay)*self.TickRate
  local previous=self.renderTick
  local tick
@@ -141,7 +164,11 @@ function Snapshots:advance(now)
  if self.pausedTick and tick>=self.pausedTick then tick=self.pausedTick;self.stats.paused+=1
  else
   local limit=self.newestTick+self.ExtrapolateSeconds*self.TickRate
-  if tick>self.newestTick then self.stats.starved+=1 end
+  if tick>self.newestTick+1 then
+   self.stats.starved+=1
+   -- Only while packets still flow: a silent stream (a stall, a lost link) is not jitter.
+   if self.lastArrival and now-self.lastArrival<.1 then self.margin=math.min(.1,(self.margin or 0)+.004)end
+  else self.margin=math.max(0,(self.margin or 0)-.0002*dt*60)end
   if tick>limit then tick=limit end
  end
  if previous and tick<previous then tick=previous end

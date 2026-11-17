@@ -5,6 +5,9 @@
 --      rounds. Merges, impact batches, item events and RoundOverTick carry it.
 --   S1 (DeckNetStream): the owner gets a 30 Hz snapshot of the board on an
 --      UnreliableRemoteEvent (4 Hz with the paused flag while the board is not stepping).
+--   S4 (DeckNetDrop): a reliable BoardDropAck answers every drop that carried a token, and
+--      a drop refused only by the 0.2 s interval or the contact gate waits up to
+--      QueueSeconds (one deep) instead of being refused: jitter can bunch two taps.
 --   S2 (DeckNetRender): Part.Position, which every client replicates (other players'
 --      handhelds sample it at 8 Hz), is written at most 8 Hz plus once at creation.
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
@@ -16,14 +19,18 @@ local Net={}
 Net.StreamInterval=1/30
 Net.PausedInterval=1/4
 Net.PartInterval=1/8
+Net.QueueSeconds=.15
 
 function Net.ticks()return Flags.DeckNetTicks==true end
 function Net.stream()return Flags.DeckNetStream==true end
 function Net.render()return Flags.DeckNetRender==true and Flags.DeckNetStream==true end
+function Net.drops()return Flags.DeckNetDrop==true end
 
 function Net.setup(remotes)
  local snapshot=Instance.new("UnreliableRemoteEvent");snapshot.Name="BoardSnapshot";snapshot.Parent=remotes
  Net.remote=snapshot
+ local ack=Instance.new("RemoteEvent");ack.Name="BoardDropAck";ack.Parent=remotes
+ Net.ackRemote=ack
  -- Studio-only echo: the harness times a round trip through each remote kind to check
  -- what Studio's IncomingReplicationLag delays (architect review section 6).
  if RunService:IsStudio()then
@@ -33,6 +40,17 @@ function Net.setup(remotes)
   unreliable.OnServerEvent:Connect(function(player,stamp)if type(stamp)=="number"then unreliable:FireClient(player,stamp)end end)
  end
  return snapshot
+end
+
+-- A client drop token: an integer 1-65535, or nil. Never used to validate anything.
+function Net.dropToken(value)
+ if not Net.drops()or type(value)~="number"or value~=value or value%1~=0 or value<1 or value>65535 then return nil end
+ return value
+end
+-- Answer a tokened drop: ok, the new ball's id and the tick it was spawned on, or a reason.
+function Net.ack(board,player,token,ok,reason)
+ if not token or not Net.ackRemote then return end
+ Net.ackRemote:FireClient(player,token,ok==true,if ok then board.sim.fallingId else nil,board.simTick or 0,if ok then nil else reason)
 end
 
 -- One fixed simulation step of this board ran.

@@ -245,3 +245,57 @@ Until S2b, S2a draws positions about one render delay (50-200 ms) behind the mer
 - Whether `BindToRenderStep` at `First` runs before the deck's `RenderStepped:Connect` loop. If it does not, move the position write to `RunService.PreRender` with an earlier connection, or to the end of `Heartbeat`.
 - Whether the lag setting covers remotes (`H.echo`).
 - The before/after `H.net` numbers with lag, jitter and loss.
+
+### S2b, S3 and S4, measured in Studio (2026-11-16, place v823 and later)
+
+**The lag setting covers remotes.** `H.echo`: the RemoteEvent round trip is 49 ms at 0 lag and 451 ms at 200 ms; the UnreliableRemoteEvent is 49 ms and 448 ms. `IncomingReplicationLag` delays both, in both directions, so the remote numbers below are real.
+
+**What changed.**
+- **S2b** (`init.client.lua`, still 219 column-0 locals):
+  - Merges, impacts and power-up grants are scheduled on the render clock with `BoardNetClient.schedule`. An event more than 250 ms late keeps its face state but skips the juice.
+  - The HUD score holds back queued merges (`pending("score")`), and chain follows the last merge shown.
+  - The recap waits for `RoundOverTick`.
+  - Ball views appear at the clock's first sample (`afterSpawn`) and leave at its last (`afterRemoval`, with the Part still driven).
+  - Clock fixes from the measurement:
+    - The delay is now the worst jitter in the window plus 1.25 send intervals, with a small feedback margin that grows only while starved. A jitter-only delay starved 21% of frames at 0 lag: the clock ran past the data between 30 Hz packets.
+    - `DelayMax` is 0.25 s.
+- **S3**: `syncVisuals` reuses its `live` set and rebuilds the content list, sort and signature only when a ball joins or leaves (or the run changes).
+- **S4**:
+  - New `BoardDropAck(token, ok, eggId, tick, reason)`, and a one-deep server queue (150 ms) for drops refused only by the interval or the contact gate. `reset` clears it.
+  - `DropIntent` on the client: its own 0.2 s throttle, a not-ready latch (cleared by the ack plus FieldReady, or after 1.5 s), and the drop sound and dispenser kick at the tap. The Drops attribute no longer replays the tap's sound, and a refusal plays the soft "aim" note and resets the dispenser.
+  - The Welcome demo drop has no token and is unchanged.
+- **Flags on by default**: `DeckNetTicks`, `DeckNetStream`, `DeckNetRender` and `DeckNetDrop`. `DeckNetGhost` (S5) is not built and stays off.
+
+**Measurements.** `H.draw`, 14 drop attempts per round. The draw is read at `RenderPriority.Last`, after the driver at `First`; both run before the deck's RenderStepped loop (order checked in Studio).
+- A **freeze snap** is a moving ball that freezes for 50 ms or more and then jumps more than 0.08 stud: a late update caught up.
+- Hitches over 50 ms also include balls at rest being pushed again (the physics floor).
+- Off = `DeckNetRender` off with the stream on, which is today's 30 Hz Parts.
+- The fps rows burn CPU per frame (Studio has no fps cap through MCP); the runs measured about 36 and 21 fps.
+
+| Network, client | Off: snaps / hitches / longest freeze | On: snaps / hitches / longest freeze |
+|---|---|---|
+| 0 ms | 0 / 3 / 150 ms | 0 / 0 / 50 ms |
+| 200 ms | 0 / 5 / 234 ms | 1 / 1 / 100 ms |
+| 150-250 ms jitter | 10-11 / 27-31 / 316-399 ms | 2 / 3 / 183 ms |
+| jitter + 15% stream loss | (no loss knob for replication) | 1 / 8 / 166 ms |
+| jitter, about 36 fps | 26 / 46 / 369 ms | 0 / 9 / 274 ms |
+| jitter, about 21 fps | 10 / 21 / 257 ms | 0 / 1 / 216 ms |
+
+**Drop response.**
+- The sound and dispenser kick now play in the tap's own frame (0 ms, built into the tap handler, not measured; the harness cannot press the game's own button).
+- The ball still appears after the round trip: 230-450 ms at 200 ms lag and with jitter (S5 is the ghost ball).
+
+**Server drop queue under jitter**: of 5 pairs of tokened taps 0.21 s apart, all first taps landed and 1 second tap landed. The other second taps fell inside the 0.46 s contact gate, which the client latch now stops before they are sent.
+
+**Specs.**
+- `BoardSnapshots` 12 and `DropIntent` 9 pass, offline and in Play.
+- Deck and live specs pass, including JellyOverflow and FieldFeedbackOwner with (gui, board).
+- Client suite: 145 of 163 pass. The 18 failures are the 14 known plus 4 that need other arguments.
+- Server suite: 60 of 63 pass with their own arguments. The 3 failures: ParkMount (a garden ground ray, unrelated), and PersonalToyGardenTimeline and ToyFeatureProgress (they need client modules and fixtures).
+
+**Still to check**:
+- A real phone on LTE.
+- `Stats.DataReceiveKbps` with a 4-client server.
+- Server Heartbeat time with 8 boards.
+- An `audio:play` count per merge across a jittered round.
+- The 20 fps longest freeze (216 ms) is still high.

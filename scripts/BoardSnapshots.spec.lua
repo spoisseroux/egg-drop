@@ -62,7 +62,7 @@ return function(client,_,modules)
    local tick=buffer:advance(now)
    local resetId=buffer.resetId
    local x,y,where=buffer:sample(if resetId==2 then 7 else 1)
-   table.insert(frames,{now=now,tick=tick,x=x,y=y,where=where})
+   table.insert(frames,{now=now,tick=tick,x=x,y=y,where=where,starved=tick~=nil and buffer.newestTick~=nil and tick>buffer.newestTick+1,streaming=packets[p]~=nil})
   end
   return frames,buffer
  end
@@ -124,7 +124,11 @@ return function(client,_,modules)
   assert(m.nonMonotonic==0 and m.backwards==0,"monotonic: nonMonotonic="..m.nonMonotonic.." backwards="..m.backwards)
   assert(m.hitches==0,"hitches "..m.hitches)
   assert(m.maxStep<=nominal*1.1,"max step "..m.maxStep.." nominal "..nominal)
-  assert(buffer.delay>=Snapshots.DelayMin-1e-9 and buffer.delay<=Snapshots.DelayMin+.01,"delay stays at the floor without jitter: "..buffer.delay)
+  -- One send interval (about 33 ms) above the jitter, so the clock never runs past the data.
+  assert(buffer.delay>=Snapshots.DelayMin-1e-9 and buffer.delay<=.07,"delay without jitter: "..buffer.delay)
+  local starved,live=0,0
+  for _,f in ipairs(frames)do if f.streaming and f.tick and f.now>.6 then live+=1;if f.starved then starved+=1 end end end
+  assert(starved<=live*.02,"starved "..starved.." of "..live.." streaming frames")
  end)
 
  test("150-250 ms jitter with reordering and duplicates: no hitch, no backwards motion",function()

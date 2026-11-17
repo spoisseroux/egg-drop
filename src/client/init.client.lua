@@ -2069,6 +2069,11 @@ updateHud = function()
 	local peakChain = board:GetAttribute("PeakChain") or 0
 	local maxClears = board:GetAttribute("MaxClears") or 0
 	local score = board:GetAttribute("Score") or 0
+	-- S2b: show what the drawn board has earned; merges still ahead of the clock wait.
+	if clientUI.boardNet and clientUI.boardNet.active()then
+		local held=clientUI.boardNet.pending("score")
+		if held>0 then score=math.max(0,score-held);chain=clientUI.netChain or chain end
+	end
 	local best = board:GetAttribute("BestScore") or 0
 	local charge = board:GetAttribute("HatchCharge") or 0
 	local owned = board:GetAttribute("OwnedPets") or 0
@@ -2116,7 +2121,7 @@ updateHud = function()
 		if cell.Visible then cell.Visible = false end
 	end
 	dispenser:setTheme(Themes.ById[board:GetAttribute("DeckThemeId")]or Themes.ById[Themes.Default])
-	dispenser:update(board:GetAttribute("ResetId"),drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
+	dispenser:update(board:GetAttribute("ResetId"),if clientUI.dropIntent then clientUI.dropIntent:shownDrops(drops)else drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	meterText.Visible=owned==0
 	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("%s %d/%d", Pets.byId.pip.name, charge, nextPet and nextPet.charge or 6)
 	eggGoal.Visible = not backdrop:GetAttribute("CompactLandscape") and not backdrop:GetAttribute("SideGoalLayout") and owned > 0 and shell.AbsoluteSize.Y >= 260
@@ -2156,6 +2161,18 @@ updateHud = function()
     end
 	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
+	-- S2b: the recap waits for the clock to reach the round's last tick (its last merge).
+	if over and clientUI.boardNet and clientUI.boardNet.active()then
+		local endTick=board:GetAttribute("RoundOverTick")
+		local shown=clientUI.boardNet.renderTick()
+		if type(endTick)=="number"and shown and shown<endTick then
+			over=false
+			if clientUI.netRoundWait~=endTick then
+				clientUI.netRoundWait=endTick
+				clientUI.boardNet.schedule(endTick,function()clientUI.netRoundWait=nil;clientUI.netHudKick()end)
+			end
+		end
+	end
 	local wasVisible = modal.Visible
 	local sheetOpen=isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen() or gameMenu.shade.Visible
 	modal.Visible = showHatch and not over and not sheetOpen
@@ -2495,8 +2512,34 @@ end
 local function dropEgg()
 	if canPlay() and not drag then
   if clientUI.welcomeInput then clientUI.welcomeInput()end
-		request:FireServer("drop", aim)
+  -- Deck network S4: with DeckNetDrop the tap answers at once (drop sound, dispenser kick)
+  -- under the client's own throttle and not-ready latch; the server's ack settles it.
+  local intent=clientUI.dropIntent
+  if not intent then request:FireServer("drop", aim);return end
+  local now=os.clock()
+  if not intent:allow(now)then return end
+  local drops,budget=(board:GetAttribute("Drops")or 0)+1,board:GetAttribute("FieldBudget")or 24
+  request:FireServer("drop", aim, intent:send(now,drops))
+  audio:play("drop",1,.48)
+  dispenser:update(board:GetAttribute("ResetId"),drops,budget,(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	end
+end
+do
+ -- S4 wiring: acks, FieldReady and run changes feed the drop intent (flag DeckNetDrop).
+ if require(ReplicatedStorage.Shared.FeatureFlags).DeckNetDrop==true then
+  clientUI.dropIntent=require(script.DropIntent).new()
+  remotes:WaitForChild("BoardDropAck").OnClientEvent:Connect(function(token,ok)
+   local result=clientUI.dropIntent:ack(token,ok,board:GetAttribute("FieldReady"))
+   if result=="refused"then
+    audio:play("aim",.6,.3) -- the soft "no" (the item belt's full note)
+    if clientUI.netHudKick then clientUI.netHudKick()else task.defer(updateHud)end -- dispenser back to the real count
+   end
+  end)
+  board:GetAttributeChangedSignal("FieldReady"):Connect(function()clientUI.dropIntent:fieldReady(board:GetAttribute("FieldReady"))end)
+  for _,name in ipairs({"ResetId","Mode","RoundOver"})do
+   board:GetAttributeChangedSignal(name):Connect(function()clientUI.dropIntent:clear()end)
+  end
+ end
 end
 
 local function moveAim(delta)
@@ -3001,7 +3044,10 @@ board:GetAttributeChangedSignal("ItemEvent"):Connect(function()
  if not ok or type(event)~="table"or event.resetId~=board:GetAttribute("ResetId")then return end
  local item=clientUI.RoundItems.ById[event.id or ""]
  if event.kind=="full"then clientUI.items:showNote(clientUI.ItemCarousel.FullNote);audio:play("aim",.6,.3)
- elseif event.kind=="granted"and item then clientUI.items:showGrant(event.id);audio:play("quest_complete",1.2,.5)
+ elseif event.kind=="granted"and item then
+  -- S2b: a power-up grant follows its merge on the snapshot clock.
+  local function grant()clientUI.items:showGrant(event.id);audio:play("quest_complete",1.2,.5)end
+  if clientUI.boardNet then clientUI.boardNet.schedule(event.tick,grant)else grant()end
  elseif event.kind=="refused"then
   clientUI.items:showNote(({Budget="No ball left for that",Empty="Nothing to pop",Armed="An item is already armed",NotLive="Not right now"})[event.reason]or "Not right now")
  end
@@ -3451,8 +3497,22 @@ roomView.boardContentReady=function(previousSerial)
  for _,source in ipairs(board:GetChildren())do if not eggViews[source]then addView(source)end end
  return true
 end
-table.insert(rendererPresentation.connections,board.ChildAdded:Connect(addView))
-table.insert(rendererPresentation.connections,board.ChildRemoved:Connect(removeView))
+-- Deck network S2b (deck-network-plan.md): with the snapshot clock on, a ball's view
+-- appears when the clock reaches its first sample and leaves when it passes its last,
+-- not when the reliable Part happens to arrive or leave. Clock off: at once, as before.
+clientUI.boardNet=require(script.BoardNetClient)
+function clientUI.netHudKick()
+ if clientUI.netHudQueued then return end
+ clientUI.netHudQueued=true
+ task.defer(function()clientUI.netHudQueued=false;updateHud()end)
+end
+table.insert(rendererPresentation.connections,board.ChildAdded:Connect(function(source)
+ clientUI.boardNet.afterSpawn(source,function()if source.Parent==board then addView(source)end end)
+end))
+table.insert(rendererPresentation.connections,board.ChildRemoved:Connect(function(source)
+ if source:GetAttribute("BoardSerial")~=board:GetAttribute("ResetId")then removeView(source);return end
+ clientUI.boardNet.afterRemoval(source,function()removeView(source)end)
+end))
 if RunService:IsStudio() then
 	gui:GetAttributeChangedSignal("MeshPreview"):Connect(function()
 		for _, source in ipairs(board:GetChildren()) do
@@ -3473,8 +3533,11 @@ rendererPresentation.canPresent=function(serial)
   and not roomView.busy and not roomView.transition.shade.Visible
 end
 table.insert(rendererPresentation.connections,overlay:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()rendererPresentation.fx:clear()end))
-table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(function(batch,serial)
+table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(function(batch,serial,tick)
  if not rendererPresentation.canPresent(serial)then return end
+ -- S2b: squash and plop when the drawn balls touch (the snapshot clock), not on arrival.
+ clientUI.boardNet.schedule(tick,function(late)
+ if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then return end
  local strongest,contact,normal,contactSource=0,nil,nil,nil
  for _,impact in ipairs(batch)do
   local gel=viewsById[impact[1]]
@@ -3495,9 +3558,17 @@ table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(func
   rendererPresentation.fx:emit("impact",project(contact),radius*viewport.AbsoluteSize.X/(Config.Width+.8),contactSource.Color,contactSource:GetAttribute("Tier"),1,serial,now,normal)
   audio:play(if normal.Y<.78 then "bank"else "land",math.clamp(.82+strongest/100,.9,1.2),math.clamp(strongest/70,.24,.55))
  end
+ end)
 end))
-table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(function(position,tier,chain,first,second,id,cleared,serial)
+table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(function(position,tier,chain,first,second,id,cleared,serial,tick)
  if not rendererPresentation.canPresent(serial)then return end
+ -- S2b: the merge (blob, jolt, sounds, faces, cheer) plays when the snapshot clock
+ -- reaches its tick, where the balls visibly meet; the HUD holds its score until then.
+ -- Too late (a retransmit): keep the face state, skip the juice.
+ clientUI.boardNet.schedule(tick,function(late)
+ clientUI.netChain=chain
+ if clientUI.boardNet.active()then clientUI.netHudKick()end
+ if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then clientUI.ballFaces:merged(id,os.clock());return end
  local now=os.clock()
  mergeBurst=if now-lastMerge<.08 then math.min(mergeBurst+1,2)else 0;lastMerge=now
  clientUI.ballFaces:merged(id,now)
@@ -3523,6 +3594,7 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  if not reduced and not cleared and not lcdEnabled()and viewsById[id]then viewsById[id]:impact(Vector2.yAxis,6+2*tier)end
  -- Big moments reach the resting pet behind the see-through deck.
  if tier>=3 or chain>=3 then roomView:cheerPet("cheer")end
+ end,{score=Config.mergeScore(tier,chain,cleared)})
 end))
 
 local function applySound()
@@ -3616,7 +3688,8 @@ board:GetAttributeChangedSignal("Drops"):Connect(function()
  if count>0 and clientUI.boardHints then clientUI.boardHints:noteDrop()end
  local accepted=rendererPresentation.fx:observeDrop(serial,count)
  if accepted and rendererPresentation.canPresent(serial)then
-  audio:play("drop",1,.48)
+  -- S4: a tap already played this drop's sound.
+  if not(clientUI.dropIntent and clientUI.dropIntent:consumeTapSound(os.clock()))then audio:play("drop",1,.48)end
   rendererPresentation.setFieldOwner(true,serial,reduceEffects())
   rendererPresentation.jolt:drop(serial,count,os.clock())
   -- The neutral physical dispenser owns compression; NextTier may already be advanced.

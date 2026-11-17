@@ -22,9 +22,10 @@ local modules={
  Snapshots=require("../src/client/BoardSnapshots"),
  Codec=require("../src/shared/BoardSnapshotCodec"),
  Random=Random,
+ DropIntent=require("../src/client/DropIntent"),
 }
 local failures=0
-for _,name in ipairs({"BoardSnapshots"})do
+for _,name in ipairs({"BoardSnapshots","DropIntent"})do
  local spec=require("./"..name..".spec")
  local ok,result=pcall(spec,nil,nil,modules)
  if ok then

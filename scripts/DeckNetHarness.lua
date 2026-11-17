@@ -159,6 +159,82 @@ function H.net(label,attempts,interval,lag,hooks)
   label,type(lag)=="table"and(lag[1].."-"..lag[2])or tostring(lag or 0),frames,lm,lx,dm,dx,moving,stalls,moving>0 and stalls*100/moving or 0,maxStall*1000,tostring(board:GetAttribute("Drops"))).."\n  stream "..stream
 end
 
+
+-- What the deck actually draws: every ball Part's Position read at the end of the render
+-- step (after BoardNetClient's First-priority driver, before the deck's RenderStepped
+-- loop draws it). A hitch is a moving ball that shows no new position for 50 ms or more;
+-- a freeze snap is a hitch that ends in a visible jump (over 0.08 stud, about half an LCD
+-- pixel: the catch-up of a late update; a ball pushed from rest starts small instead);
+-- a jump is a frame step over 3x the ball's previous step (a catch-up snap). Steps under
+-- 0.01 stud (sub-pixel settling) do not count as motion.
+-- hooks: {loss=0-1 (stream only), delay=s (stream only), burn=ms per frame (slow device)}.
+function H.draw(label,attempts,interval,lag,hooks)
+ local p,board,req=parts()
+ hooks=hooks or {}
+ for _=1,3 do
+  if not board:GetAttribute("RoundOver") and (board:GetAttribute("Drops") or 0)==0 then break end
+  local seq=board:GetAttribute("RunSequence")
+  req:FireServer(if board:GetAttribute("RoundOver") then "reset" else "restart",seq)
+  local t=os.clock() while os.clock()-t<4 and board:GetAttribute("RunSequence")==seq and (board:GetAttribute("Drops") or 0)>0 do task.wait(.1) end
+  task.wait(1.5)
+ end
+ local net=settings().Network
+ local running=true
+ if type(lag)=="number" then net.IncomingReplicationLag=lag
+ elseif type(lag)=="table" then
+  task.spawn(function()local r=Random.new(7) while running do net.IncomingReplicationLag=r:NextNumber(lag[1],lag[2]);task.wait(r:NextNumber(.05,.15)) end end)
+ else net.IncomingReplicationLag=0 end
+ p.PlayerGui:SetAttribute("DeckNetLoss",hooks.loss);p.PlayerGui:SetAttribute("DeckNetDelay",hooks.delay)
+ p.PlayerGui:SetAttribute("DeckNetResetStats",true)
+ task.wait(1)
+ local seen={}
+ local hitches,jumps,frames,longest,slow,snaps=0,0,0,0,0,0
+ local last=os.clock()
+ RS:BindToRenderStep("DeckNetHarnessDraw",Enum.RenderPriority.Last.Value,function()
+  local now=os.clock();local dt=now-last;last=now;frames+=1
+  if dt>.04 then slow+=1 end
+  if hooks.burn then local t=os.clock() while os.clock()-t<hooks.burn/1000 do end end
+  for _,part in ipairs(board:GetChildren())do
+   if part:IsA("BasePart")then
+    local pos=part.Position;local e=seen[part]
+    if not e then seen[part]={pos=pos,moving=false,still=0,step=0}
+    else
+     local step=(pos-e.pos).Magnitude
+     -- 0.01 stud is about 1/18 of an LCD pixel: settling micro-motion is not motion.
+     if step>.01 then
+      if e.moving and e.still>=.05 then hitches+=1;if step>.08 then snaps+=1 end end
+      if e.still>longest and e.moving then longest=e.still end
+      if e.moving and e.step>1e-3 and e.still<1e-6 and step>3*e.step and step>.05 then jumps+=1 end
+      e.moving,e.still,e.step=true,0,step
+     elseif e.moving then
+      e.still+=dt;if e.still>.4 then e.moving=false;e.step=0 end
+     end
+     e.pos=pos
+    end
+   end
+  end
+ end)
+ local lat={}
+ for i=1,attempts do
+  local t=os.clock() while board:GetAttribute("FieldReady")~=true and os.clock()-t<3 do task.wait() end
+  if board:GetAttribute("RoundOver") then break end
+  local sent=os.clock();local got
+  local a=board.ChildAdded:Connect(function()if not got then got=os.clock()end end)
+  req:FireServer("drop",math.sin(i*1.7)*0.85)
+  local w=os.clock() while os.clock()-w<interval do task.wait() end
+  a:Disconnect()
+  if got then table.insert(lat,(got-sent)*1000)end
+ end
+ task.wait(2)
+ RS:UnbindFromRenderStep("DeckNetHarnessDraw")
+ running=false;net.IncomingReplicationLag=0
+ p.PlayerGui:SetAttribute("DeckNetLoss",nil);p.PlayerGui:SetAttribute("DeckNetDelay",nil)
+ table.sort(lat)
+ return string.format("%s lag=%s frames=%d slowFrames=%d freezeSnaps=%d hitches>=50ms=%d jumps=%d longestFreeze=%.0fms dropToPart=%.0fms drops=%s merges=%s\n  stream %s",
+  label,type(lag)=="table"and(lag[1].."-"..lag[2])or tostring(lag or 0),frames,slow,snaps,hitches,jumps,longest*1000,lat[math.max(1,#lat//2)]or -1,
+  tostring(board:GetAttribute("Drops")),tostring(board:GetAttribute("Merges")),tostring(p.PlayerGui:GetAttribute("DeckNetStats")))
+end
+
 -- Round trip through the Studio-only echo remotes (server BoardNet.setup), with the given
 -- IncomingReplicationLag. Compare against lag 0: if the RTT does not grow, Studio's lag
 -- setting does not cover remotes and the harness must inject its own delay.

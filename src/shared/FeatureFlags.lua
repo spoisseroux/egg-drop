@@ -16,6 +16,7 @@
 -- DeckNet* (deck network rework, artifacts/qa-2026-11-16c-v775/deck-network-plan.md): Ticks stamps the
 -- sim tick on board events (S0, presentation data only); Stream sends the owner a 30 Hz snapshot
 -- and runs the client clock in shadow (S1); Render draws the deck from it and moves the shared
--- Parts at 8 Hz (S2, needs Stream). Off = today's path. The server stays authoritative throughout.
+-- Parts at 8 Hz (S2, needs Stream); Drop answers a tap at once and acks it, with a one-deep server
+-- drop queue (S4); Ghost (S5) is not built. Off = today's path. The server stays authoritative.
 return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=true,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
- DeckNetTicks=true,DeckNetStream=false,DeckNetRender=false})
+ DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=false})
