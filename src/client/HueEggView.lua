@@ -734,11 +734,12 @@ function View:paintPortrait()
  local toyKey=if self.visual.personalPreview then tostring(self:focusedCardId())else nil
  if toyKey~=self.previewToyKey then
   local switched=self.previewToyKey~=nil and toyKey~=nil;self.previewToyKey=toyKey
-  if switched and not(GuiService.ReducedMotionEnabled or self.visual.reducedEffects==true)then
+  local fade=switched and not(GuiService.ReducedMotionEnabled or self.visual.reducedEffects==true)
+  if fade then
    self.viewport.ImageTransparency=.7
    game:GetService("TweenService"):Create(self.viewport,TweenInfo.new(View.ToyFadeTime,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageTransparency=0}):Play()
   else self.viewport.ImageTransparency=0 end
-  self.viewport:SetAttribute("ToyFade",switched)
+  self.viewport:SetAttribute("ToyFade",fade)
  end
  if self.visual.applyAppearance then self.visual:applyAppearance(a)end;self.visual:update(0);self:fitPortrait();self:placePortraitToy();self:syncPortraitClock()
 end
