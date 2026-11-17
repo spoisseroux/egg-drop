@@ -203,3 +203,45 @@ Each slice sits behind a `FeatureFlags.DeckNet*` flag and falls back to today's 
 6. **S5, the ghost ball.** Local-present flight, stop on contact against drawn balls, ack binding, blend at the render-tick contact, fade on refusal.
 
 S0-S2 fix the stutter Spencer reported. S4 fixes most of the "nothing happens when I tap". S5 is polish and the highest risk, so it ships last and can slip without blocking the rest.
+
+## Build log
+
+### S0-S2, code only (2026-11-16, Studio not yet available)
+
+All of it is behind `FeatureFlags.DeckNetTicks` (on: stamps only), `DeckNetStream` (off) and `DeckNetRender` (off).
+
+- **S0, ticks.**
+  - `src/server/BoardNet.lua`: `board.simTick`, one per fixed step, never reset across rounds.
+  - `BoardMerge` gains a 9th argument (the tick) and `BoardImpact` a 3rd; `ItemEvent` JSON gains `tick`; `RoundOverTick` is set with `RoundOver`.
+  - Old clients ignore the extra arguments.
+  - Studio-only echo remotes: `DeckNetEcho` and `DeckNetEchoUnreliable`.
+  - `scripts/DeckNetHarness.lua`: `H.echo(lag)` checks whether `IncomingReplicationLag` delays remotes. `H.net(...)` reports drop latency, Part hitches and the stream stats, with loss and delay hooks.
+- **S1, shadow stream.**
+  - `src/shared/BoardSnapshotCodec.lua`: the buffer format of section 5.
+  - Server `BoardNet.publish`: 30 Hz to the owner only, 4 Hz with the paused flag, only in Board mode.
+  - `src/client/BoardSnapshots.lua`: pure. It holds the ring buffer, the min-offset clock, the p95 delay, ease plus hard re-sync, the pause freeze, a 50 ms extrapolation cap and removal at the ball's own tick.
+  - `src/client/BoardNetClient.lua`: receiver with the Studio loss and delay hooks (`PlayerGui` attributes `DeckNetLoss` and `DeckNetDelay`). It runs the clock and keeps shadow stats (stream max step, today's Part hitches), published to the `PlayerGui` attribute `DeckNetStats` in Studio.
+  - It is started by a separate LocalScript, `src/client/DeckNet.client.lua`, so `init.client.lua` stays untouched.
+- **S2a, draw from snapshots.**
+  - With `DeckNetRender`, `BoardNetClient` binds a render step at `RenderPriority.First`. It moves this board's Parts locally to their interpolated position before the deck's render loop, so the LCD, sprites, faces and match hints all draw the clock's positions without any change to the renderer.
+  - No packet for 1 s: it stops writing and the Parts fall back to replication.
+  - Server `syncVisuals` writes `Part.Position` at most 8 Hz plus at creation (the 8 Hz window opens per Heartbeat).
+- **Specs.**
+  - `scripts/BoardSnapshots.spec.lua` runs in Studio as `(client, gui)` and offline with `build/luau-cli/luau.exe scripts/run_pure_spec.luau`. It passes all 12 cases: the codec; constant lag; 150-250 ms jitter with reorder and duplicates; 5, 15 and 30% loss; a 1 s spike then a burst; a pause; a ResetId change mid-buffer; early and gone balls; a stream with no Parts.
+  - A control case proves the hitch metric catches today's draw-as-it-lands path (5 or more hitches on the same schedule).
+
+**S2b, still to wire (needs `init.client.lua`, which has another agent's uncommitted edits).** `BoardNetClient` already provides `schedule(tick, fn, fields)`, `pending(key)`, `flush()`, `renderTick()` and `active()`. Wiring, with no new column-0 locals (`clientUI.boardNet`):
+
+1. The merge handler: wrap its body in `clientUI.boardNet.schedule(tick, function(late) ... end, {score=Config.mergeScore(tier,chain,cleared)})`. With `late > LateLimit`, skip the audio and fx but keep `ballFaces:merged`.
+2. The impact handler: schedule by its tick, and drop it if late.
+3. `ItemEvent`: schedule by `event.tick`.
+4. `updateHud`: show `score - clientUI.boardNet.pending("score")`; do the same for chain.
+5. `RoundOver` / recap: open `recap:show` once `renderTick() >= RoundOverTick`; poll in the render loop while waiting.
+6. `addView` and `removeView`: create on `ChildAdded` only once `sample(id)` is not `"early"`. On `ChildRemoved`, keep the view drawn until the clock passes the ball's removal tick, then destroy it.
+
+Until S2b, S2a draws positions about one render delay (50-200 ms) behind the merge, impact and removal moments, which still arrive on receipt. That is why `DeckNetRender` stays off until S2b is wired and measured.
+
+**Studio checks before turning the flags on.**
+- Whether `BindToRenderStep` at `First` runs before the deck's `RenderStepped:Connect` loop. If it does not, move the position write to `RunService.PreRender` with an earlier connection, or to the end of `Heartbeat`.
+- Whether the lag setting covers remotes (`H.echo`).
+- The before/after `H.net` numbers with lag, jitter and loss.

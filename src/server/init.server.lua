@@ -502,6 +502,7 @@ local function syncVisuals(board)
 		live[egg.id] = true
 		table.insert(contentIds,egg.id)
 		local part = board.parts[egg.id]
+		local created = part == nil
 		if not part then
 			part = Instance.new("Part")
 			part.Name = "Egg_" .. egg.id
@@ -525,7 +526,8 @@ local function syncVisuals(board)
 		local mark=if egg.mark=="magnet"and egg.hasContact and(egg.magnetLeft or 0)<=0 then nil else egg.mark
 		if part:GetAttribute("ItemMark")~=mark then part:SetAttribute("ItemMark",mark)end
 		local position = Vector3.new(egg.position.X, egg.position.Y, 0)
-		if part.Position ~= position then
+		-- S2: with the owner on the snapshot stream, the shared Parts move at 8 Hz.
+		if part.Position ~= position and BoardNet.writePosition(board, created) then
 			part.Position = position
 		end
 		if not part.Parent then
@@ -1736,7 +1738,9 @@ RunService.Heartbeat:Connect(function(dt)
 	local now = os.clock()
 	for player, board in pairs(boards) do
 		if board.petContact then board.petContact:update()end
+		BoardNet.beginParts(board, now)
 		syncVisuals(board)
+		BoardNet.endParts(board)
 		BoardNet.publish(board, player, now)
 		if now - (board.lastPressurePublish or 0) >= .1 then
 			publishWelcome(board)

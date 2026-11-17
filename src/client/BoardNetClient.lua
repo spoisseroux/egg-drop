@@ -97,6 +97,18 @@ local function step()
  local tick=s.buffer:advance(now)
  if not tick then return end
  if s.shadow then shadow(s,board,tick)end
+ if Net.rendering()then
+  for _,part in ipairs(board:GetChildren())do
+   local eggId=part:GetAttribute("EggId")
+   if eggId then
+    local x,y=s.buffer:sample(Codec.wireId(eggId),tick)
+    if x then
+     local position=Vector3.new(x,y,0)
+     if part.Position~=position then part.Position=position end
+    end
+   end
+  end
+ end
  Net.runDue(tick)
  -- Studio: publish the stats for the harness (it runs in another Luau VM).
  if s.studio and now-(s.statsAt or 0)>=.5 then

@@ -64,4 +64,20 @@ function Net.publish(board,player,now)
  return true
 end
 
+-- syncVisuals asks before writing a Part's Position. Always for a new Part.
+function Net.writePosition(board,created,now)
+ if created or not Net.render()then return true end
+ return board.netPartWindow==true
+end
+-- Opens the 8 Hz Part-position window for this Heartbeat (call before syncVisuals).
+function Net.beginParts(board,now)
+ if not Net.render()then board.netPartWindow=true;return end
+ board.netPartWindow=not board.netPartAt or now-board.netPartAt>=Net.PartInterval-1e-3
+ if board.netPartWindow then board.netPartAt=now end
+end
+-- Closes it again, so syncVisuals calls from request handlers only place new Parts.
+function Net.endParts(board)
+ board.netPartWindow=not Net.render()
+end
+
 return Net
