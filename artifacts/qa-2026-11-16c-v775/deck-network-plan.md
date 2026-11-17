@@ -291,7 +291,8 @@ Until S2b, S2a draws positions about one render delay (50-200 ms) behind the mer
 - `BoardSnapshots` 12 and `DropIntent` 9 pass, offline and in Play.
 - Deck and live specs pass, including JellyOverflow and FieldFeedbackOwner with (gui, board).
 - Client suite: 145 of 163 pass. The 18 failures are the 14 known plus 4 that need other arguments.
-- Server suite: 60 of 63 pass with their own arguments. The 3 failures: ParkMount (a garden ground ray, unrelated), and PersonalToyGardenTimeline and ToyFeatureProgress (they need client modules and fixtures).
+- Server suite: 63 of 63 pass with their own arguments. A first run showed 60 because of harness argument mistakes, not the deck-net code. ParkMount got `ReplicatedStorage.Shared` as its `parent`, so its room was built outside Workspace and the ground rays missed. PersonalToyGardenTimeline got Shared as `client` ("PetFollow is not a valid member of ... Shared"). ToyFeatureProgress had no fixture ("pass exact fixtures/FrozenV370HatchProgress.lua as argument two").
+  - Re-run correctly, all three pass: `(server)`, `(server, StarterPlayerScripts.Client)`, and `(server, FixtureFrozenV370, FixtureFrozenDaily)`.
 
 **Still to check**:
 - A real phone on LTE.
