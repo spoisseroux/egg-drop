@@ -45,6 +45,7 @@ end
 -- ── Pure rules (specs cover these) ───────────────────────────────────────────
 Stage.BurstAt=Rarity.BurstAt;Stage.CardAt=1.06;Stage.SlideAt=1.26;Stage.SettleAfter=.50;Stage.ReducedFade=.15
 Stage.ShardLife=.95;Stage.RingLife=.50;Stage.EggScale=1.42;Stage.GlowDiscs=40
+Stage.CardShare=.78 -- the tilted card behind the item, as a share of its seat (was 1.04; v842)
 Stage.SpinSpeed=math.rad(42);Stage.SpinEase=.8;Stage.BackLights=18
 -- Pure: the turn (radians) `t` seconds after the name landed: eases in, then a steady 42 deg/s.
 function Stage.spinAt(t)
@@ -191,7 +192,8 @@ function Stage.geometry(W,H)
   L.btnY=H-L.btnH-math.max(24,L.margin);L.btnX=L.margin;L.btnW=W-L.margin*2
   L.preY=L.cy0+L.seat*.5+L.preSize
  end
- L.cardW,L.cardH=math.floor(L.seat*1.04),math.floor(L.seat*1.04)
+ -- v842 phone notes: the tilted card behind the item is 75% of its old size (1.04 of the seat).
+ L.cardW,L.cardH=math.floor(L.seat*Stage.CardShare),math.floor(L.seat*Stage.CardShare)
  return L
 end
 

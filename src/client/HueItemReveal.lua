@@ -105,6 +105,10 @@ function Reveal:show(result,animate)
  self.cinematic.frame.BackgroundTransparency=1
  local fresh=not self.seen[result.id];self.seen[result.id]=true
  local generation=self.generation
+ -- v842: what played, for the end-to-end hatch spec (HatchFlowE2E) and captures.
+ self.parent:SetAttribute("HatchIntro",animate==true and fresh)
+ self.parent:SetAttribute("RevealRecipe",recipe)
+ self.parent:SetAttribute("RevealItem",result.itemId or result.toyId or result.finishId or result.featureId)
  self.showing=true
  self.cinematic:play(presentation,function()if self.generation==generation and not self.destroyed then self.active=false;self:identityChanged()end end,
   {nativeDisplay=self.options.nativeDisplay~=false,kind=recipe,recipeId=recipe,hideLabels=true,resultBuilder=builder,skipIntro=not animate or not fresh,

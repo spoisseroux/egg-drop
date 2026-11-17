@@ -39,6 +39,7 @@ return function(client,parent)
     if id=="sparkler"then
      local lights,emitters=0,0;for _,d in ipairs(h.model:GetDescendants())do if d:IsA("Light")then lights+=1 elseif d:IsA("ParticleEmitter")then emitters+=1 end end
      assert(lights==1 and emitters==1 and h.emitter.Parent==h.tip and h.glow.Parent==h.tip and h.tip.Material==Enum.Material.Neon)
+     assert(not h.model:FindFirstChild("SparkBurst",true),"v842: the mesh star sparkle is gone; the sparks are particles")
     else assert(not h.model:FindFirstChildWhichIsA("PointLight",true)and not h.model:FindFirstChildWhichIsA("ParticleEmitter",true))end
     h:destroy();h:destroy();assert(not h.model.Parent)
    end

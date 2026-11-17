@@ -438,7 +438,7 @@ function Screen.new(options)
   local base=image(holder,"Base",I.buttonBase,10,{Size=UDim2.fromScale(1,1)})
   local gloss=image(holder,"Gloss",I.buttonGloss,11,{Size=UDim2.fromScale(1,1)})
   local letter=Kit.text(holder,"Title",id,nil,{Name="Letter",ZIndex=12,AnchorPoint=Vector2.new(.5,.5),TextXAlignment=Enum.TextXAlignment.Center,
-   FontFace=Font.new("rbxasset://fonts/families/BuilderSans.json",Enum.FontWeight.ExtraBold)})
+   FontFace=Font.new("rbxasset://fonts/families/BuilderSans.json",Enum.FontWeight.ExtraBold),LineHeight=1})
   letter.TextColor3=if id=="A"then Kit.Color.ink else Kit.Color.soft
   if id=="B"then base.ImageColor3=Color3.fromHex("#3A3E47")end
   local hit=Kit.node("TextButton",holder,{Name="Hit",Text="",BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),ZIndex=13,Selectable=false})
@@ -461,7 +461,9 @@ function Screen.new(options)
   local holder=phoneNode(Kit.node("Frame",root,{Name="ButtonItem",BackgroundTransparency=1,ZIndex=11}))
   local disc=Kit.frame(holder,"Disc","raised",UDim2.new(),UDim2.fromScale(1,1),999);disc.BackgroundTransparency=0
   local ring=Kit.node("UIStroke",disc,{Name="Ring",Thickness=2.5,Color=Color3.new(1,1,1),Transparency=.55,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
-  local glyph=Kit.text(disc,"Title","B",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,FontFace=Kit.Type.Heading[3]})
+  -- v842 phone notes: LineHeight 1 so the letter's line box is the glyph's own, centred in
+  -- the disc (Kit's text line height pushed it off centre).
+  local glyph=Kit.text(disc,"Title","B",nil,{Name="Glyph",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,FontFace=Kit.Type.Heading[3],LineHeight=1})
   local icon=ItemIcons.new(disc,nil,nil);icon.Size=UDim2.fromScale(.6,.6)
   -- v816: the count badge sits at B's top-left (top-right pointed into the gap towards A).
   local badge=Kit.frame(holder,"Badge",nil,UDim2.new(0,4,0,4),UDim2.fromOffset(20,20),999)

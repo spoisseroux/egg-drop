@@ -40,7 +40,12 @@ return function(client,parent)
      assert((held.model.PrimaryPart.Position-hand.part.Position).Magnitude<=seats.height*.45,id.." is not by the hand")
      assert(v.toyHoldFold==Toys.hold(id).fold,id.." arm is not raised")
      assert(not v.personalToy and not v.personalToyActive,"carrying is not a play clip")
-     if id=="sparkler"then assert(held.emitter.Enabled==false and held.glow.Enabled==false,"a carried sparkler is unlit")end
+     -- v842 phone notes: a carried sparkler sparks in the paw too, and Reduced Effects stops it.
+     if id=="sparkler"then
+      assert(held.emitter.Enabled==(not v.reducedEffects),"a carried sparkler sparks unless effects are reduced")
+      local Toys2=require(client.PetToyGeometry);Toys2.setSparks(held,false);assert(not held.emitter.Enabled and not held.glow.Enabled)
+      assert(Toys2.SparkRate<=40 and held.emitter.Lifetime.Max<=.35,"sparks stay small and short-lived")
+     end
     end
    end
   end)

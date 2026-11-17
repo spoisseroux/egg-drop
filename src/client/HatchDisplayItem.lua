@@ -79,7 +79,7 @@ local function finishBear(world,result,height)
  end
  return self
 end
-function Item.create(world,gui,result,builder,height)
+function Item.create(world,gui,result,builder,height,reduced)
  if result.finishId and not result.toyId and not result.featureId then
   local bear=finishBear(world,result,height)
   if bear then return bear end
@@ -89,6 +89,8 @@ function Item.create(world,gui,result,builder,height)
  elseif result.featureId then api=require(script.Parent.PetFeatureGeometry);id=result.featureId end
  local handle
  if api then handle=if result.toyId then api.create(world,id,1)else api.create(world,id,1,1,Color3.fromHex("#95CDB9"))
+  -- v842: the Sparkler's sparks in the reveal follow Reduced Effects.
+  if handle and result.toyId and api.setSparks then api.setSparks(handle,not reduced and not game:GetService("GuiService").ReducedMotionEnabled)end
  elseif result.itemId then
   -- Slice 3 (2026-11-16): hue jars, finish jars and the charm capsule turn in 3D like toys.
   local model=require(script.Parent.JarModel).build(result.itemId,1,{turn=false})

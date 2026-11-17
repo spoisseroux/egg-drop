@@ -205,14 +205,16 @@ function View:actPrimary()
 		local current = self.state
 		if current.lastHatch then
 			self:chooseResult(View.secondaryIntent(current.lastHatch))
-		elseif current.pendingHueResult then
-            if self.onOpenHue then self.onOpenHue(false)end
-        elseif current.pendingToyResult then
-            if self.onOpenToy then self.onOpenToy(false)end
-        elseif current.pendingFeatureResult then
-            if self.onOpenFeature then self.onOpenFeature(false)end
-        elseif current.pendingMaterialResult then
-            if self.onOpenMaterial then self.onOpenMaterial(false)end
+		-- v842 phone bug: only the selected egg's own saved result opens here. A result from
+		-- another egg (the Customization jar) no longer turns the Toy Egg's Hatch into "Open
+		-- saved jar"; HatchFlow stores that result quietly, then hatches the egg tapped.
+		elseif View.ownPending(self.selected,current)then
+			local _,s=View.ownPending(self.selected,current)
+			if s=="look"then if self.onOpenLook then self.onOpenLook(false)end
+			elseif s=="hue"then if self.onOpenHue then self.onOpenHue(false)end
+			elseif s=="toy"then if self.onOpenToy then self.onOpenToy(false)end
+			elseif s=="feature"then if self.onOpenFeature then self.onOpenFeature(false)end
+			elseif s=="material"then if self.onOpenMaterial then self.onOpenMaterial(false)end end
         elseif (current.nectar or 0) < shopRecipe(self.selected).cost then
 			self:close("earn")
 		else
@@ -718,15 +720,31 @@ function View.lookOdds(state)
 end
 -- Pure: the primary button for the selected egg. With too few Stars it is disabled
 -- and `need` says how many more ("N more Stars needed").
+-- Pure (v842): the saved result that belongs to egg `id` (the Customization and Hue eggs share
+-- the Hue result), or nil. Another egg's result never takes this egg's button.
+-- A result whose egg is not on the list (the Feature Egg behind its flag, the Material Egg
+-- while it is not sold) has no button of its own, so it still opens from any egg.
+local ownField={hue="pendingHueResult",look="pendingHueResult",toy="pendingToyResult",feature="pendingFeatureResult",material="pendingMaterialResult"}
+local fieldKind={pendingHueResult="look",pendingToyResult="toy",pendingFeatureResult="feature",pendingMaterialResult="material"}
+function View.ownPending(id,state)
+ if not state then return nil end
+ local field=ownField[id]
+ if field and state[field]then return state[field],if id=="hue"then "hue"else fieldKind[field]end
+ for f,kind in pairs(fieldKind)do
+  if state[f]and not table.find(liveOrder,kind)and not(kind=="look"and table.find(liveOrder,"hue"))then return state[f],kind end
+ end
+ return nil
+end
 function View.hatchAction(id,state)
  state=state or {}
- if state.pendingHueResult then
-  local kind=LookEgg.kind(state.pendingHueResult.itemId)
+ local own,ownKind=View.ownPending(id,state)
+ if own and(ownKind=="look"or ownKind=="hue")then
+  local kind=LookEgg.kind(own.itemId)
   return{text=if kind=="charm"then UICopy.get("hatch.look.openSaved.charm")elseif kind=="finish"then UICopy.get("hatch.look.openSaved.finish")else "Open saved jar",enabled=true}
  end
- if state.pendingToyResult then return{text="Open saved toy",enabled=true}end
- if state.pendingFeatureResult then return{text="Open saved feature",enabled=true}end
- if state.pendingMaterialResult then return{text="Open saved material",enabled=true}end
+ if own and ownKind=="toy"then return{text="Open saved toy",enabled=true}end
+ if own and ownKind=="feature"then return{text="Open saved feature",enabled=true}end
+ if own and ownKind=="material"then return{text="Open saved material",enabled=true}end
  if id=="toy"and #ToyCatalog.remaining(state.toyUnlocks)==0 then return{text="All toys owned",enabled=false}end
  if id=="feature"and FeatureCatalog.full(state.featureStock or {})then return{text="All stacks full",enabled=false}end
  -- The server always publishes lookAvailable; only an explicit false shows Not ready.

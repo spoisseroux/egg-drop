@@ -84,7 +84,14 @@ function Scene.new(parent,options)
    end
   else self.failure="PetRendererUnavailable"end
  else
-  self.item=require(script.Parent.HatchDisplayItem).create(self.heroWorld,self.itemGui,options.result,options.resultBuilder,self.height)
+  self.item=require(script.Parent.HatchDisplayItem).create(self.heroWorld,self.itemGui,options.result,options.resultBuilder,self.height,options.reduced==true)
+  -- v842 phone notes: the Sparkler sparks in the reveal. A ViewportFrame draws no particles,
+  -- so its sparks are 2D (UISparks) thrown from the tip's projected position.
+  local tip=options.result and options.result.toyId=="sparkler"and self.item and self.item.model and self.item.model:FindFirstChild("GlowTip",true)
+  if tip then
+   self.sparkTip=tip;self.sparks=require(script.Parent.UISparks).new(self.root,48)
+   self.sparkClock=game:GetService("RunService").RenderStepped:Connect(function(dt)self:stepSparks(dt)end)
+  end
   -- A worn finish (the Bear) can swap its rig once the authored meshes arrive.
   self.item.onChanged=function()
    if self.destroyed or self.measuring then return end
@@ -374,8 +381,27 @@ function Scene:setAppearance(appearance)
  end
  return true
 end
+function Scene:stepSparks(dt)
+ local tip,sparks=self.sparkTip,self.sparks;if not tip or not sparks or self.destroyed then return end
+ local size=self.root.AbsoluteSize
+ if size.X<1 or not tip.Parent then sparks:hide();return end
+ local aspect=math.max(.4,size.X/math.max(1,size.Y));local tangent=math.tan(math.rad(self.heroCamera.FieldOfView*.5))
+ local function project(point)
+  local v=self.heroCamera.CFrame:PointToObjectSpace(point)
+  if v.Z>=-.01 then return nil end
+  return Vector2.new((.5+v.X/(-v.Z*tangent*aspect*2))*size.X,(.5-v.Y/(-v.Z*tangent*2))*size.Y)
+ end
+ local at=project(tip.Position);local edge=project(tip.Position+self.heroCamera.CFrame.RightVector*tip.Size.X*.5)
+ -- One spark unit is about 3.5% of the stage (a 4-6 px spark thrown 15-40 px), never under 5 px.
+ local unit=math.max(5,size.Y*.035);local _=edge
+ local on=at~=nil and self.itemGui.GroupTransparency<.5 and not self.heroHidden and self.options.reduced~=true
+  and not game:GetService("GuiService").ReducedMotionEnabled
+ sparks:step(dt,at,unit,on)
+end
 function Scene:destroy()
  if self.destroyed then return end;self.destroyed=true;self.epoch+=1
+ if self.sparkClock then self.sparkClock:Disconnect();self.sparkClock=nil end
+ if self.sparks then self.sparks:destroy();self.sparks=nil end
  self:detachLoads()
  if self.visual then self.visual:setRevealPose(nil);self.visual:destroy();self.visual=nil end
  if self.item then self.item:destroy();self.item=nil end

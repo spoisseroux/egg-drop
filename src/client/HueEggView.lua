@@ -1814,11 +1814,23 @@ function View:open(state,page,petId)
  local quiet=self.quietOpen==true;self.quietOpen=nil
  self.petId=petId or self.petId
  self.quietStore=quiet and not fromEggs and self:canCustomize();self.quietStored={};self:noteNewItems()
- self.page=if self.quietStore then "palette"elseif self.state.pendingHueResult then "receipt"elseif self.state.pendingMaterialResult then "materialReceipt"elseif self.state.pendingToyResult then "toyReceipt"elseif self.state.pendingFeatureResult then "featureReceipt"elseif page=="toyBuy"then "toyBuy"elseif page=="featureBuy"then "featureBuy"elseif page=="materialBuy"then "materialBuy"elseif page=="buy"then "buy"else "palette"
+ -- v842 phone bug: the egg being hatched owns the receipt. A Customization Egg jar still
+ -- waiting to be stored (pendingHueResult) used to win over the Toy Egg's own fresh result,
+ -- so tapping Hatch on the Toy Egg reopened the old jar. The other result waits its turn.
+ local dk=self.directHatch
+ local own=if self.quietStore then nil
+  elseif(dk=="toy"or page=="toyBuy")and self.state.pendingToyResult then "toyReceipt"
+  elseif(dk=="material"or page=="materialBuy")and self.state.pendingMaterialResult then "materialReceipt"
+  elseif(dk=="feature"or page=="featureBuy")and self.state.pendingFeatureResult then "featureReceipt"
+  elseif(dk=="hue"or dk=="look")and self.state.pendingHueResult then "receipt"
+  else nil
+ self.page=if self.quietStore then "palette"elseif own then own elseif self.state.pendingHueResult then "receipt"elseif self.state.pendingMaterialResult then "materialReceipt"elseif self.state.pendingToyResult then "toyReceipt"elseif self.state.pendingFeatureResult then "featureReceipt"elseif page=="toyBuy"then "toyBuy"elseif page=="featureBuy"then "featureBuy"elseif page=="materialBuy"then "materialBuy"elseif page=="buy"then "buy"else "palette"
  do -- QA v685 H4: opened by a direct Hatch from Hatch eggs, so the reveal plays as a fresh hatch.
   local kind=self.directHatch;self.directHatch=nil
-  local field=if kind=="hue"then "purchaseInFlight"elseif kind then kind.."PurchaseInFlight"else nil
-  local result=if kind=="hue"then self.state.pendingHueResult elseif kind=="material"then self.state.pendingMaterialResult elseif kind=="toy"then self.state.pendingToyResult elseif kind=="feature"then self.state.pendingFeatureResult else nil
+  -- v842: the Customization Egg buys through the Hue intent, so its result is the Hue one
+  -- (it was neither, so its reveal never played as a fresh hatch: no egg, no sound).
+  local field=if kind=="hue"or kind=="look"then "purchaseInFlight"elseif kind then kind.."PurchaseInFlight"else nil
+  local result=if kind=="hue"or kind=="look"then self.state.pendingHueResult elseif kind=="material"then self.state.pendingMaterialResult elseif kind=="toy"then self.state.pendingToyResult elseif kind=="feature"then self.state.pendingFeatureResult else nil
   if field and result then self[field]=result.id end
  end
  if self.state.hueMigrationId and self.state.hueMigrationAcknowledged==false then self.afterMigrationPage=self.page;self.page="migration"end

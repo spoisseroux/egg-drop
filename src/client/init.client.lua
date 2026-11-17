@@ -1092,27 +1092,10 @@ roomView.care.closeMachine=function()
  if clientUI.hueReturn=="machine"then clientUI.hueView:close("care");clientUI.hueView:setMachineSession(nil)end
 end
 do
- -- QA v685 H4: Hatch in Hatch eggs buys straight away. The item view opens only once the
- -- result lands (as the hatch reveal), so there is no second "Hatch" card. A refused or
- -- stalled purchase still opens the buy page, which shows the reason or Try again.
- local kinds={
-  hue={page="buy",intent="hueIntent",method="hatch",pending="pendingHueResult"},
-  -- Customization Egg (slice 4): buys through the Hue intent; a refusal stays on Hatch eggs,
-  -- which re-renders from the latest snapshot (no buy page of its own).
-  look={page=nil,intent="hueIntent",method="lookHatch",pending="pendingHueResult"},
-  material={page="materialBuy",intent="materialIntent",method="buy",pending="pendingMaterialResult"},
-  toy={page="toyBuy",intent="toyIntent",method="buy",pending="pendingToyResult"},
-  feature={page="featureBuy",intent="featureIntent",method="buy",pending="pendingFeatureResult"},
- }
- local function open(kind,purchase)
-  local k=kinds[kind];local intent=clientUI[k.intent]
-  if purchase and nurseryState and not nurseryState[k.pending]then
-   if clientUI.directHatch==kind and intent.pending then return end
-   if intent[k.method](intent)then clientUI.directHatch=kind;return end
-  end
-  clientUI.directHatch=nil
-  if k.page or not purchase then clientUI.openHue(k.page or "buy",nil,"eggs")end
- end
+ -- QA v685 H4 / v842: direct hatch from Hatch eggs (HatchFlow, shared with the hatch spec).
+ local flow=require(script.HatchFlow).new({intents=clientUI,state=function()return nurseryState end,view=clientUI.hueView,openHue=function(...)return clientUI.openHue(...)end})
+ clientUI.hatchFlow=flow
+ local function open(kind,purchase)flow:open(kind,purchase)end
  nurseryView.onOpenHue=function(purchase)open("hue",purchase)end
  nurseryView.onOpenLook=function(purchase)open("look",purchase)end
  nurseryView.onOpenMaterial=function(purchase)open("material",purchase)end
@@ -1124,16 +1107,7 @@ do
   nurseryView:close("quests")
   task.defer(function()if not nurseryView:isOpen()then clientUI.openQuestLog("daily")end end)
  end
- clientUI.syncDirectHatch=function()
-  local kind=clientUI.directHatch;if not kind or not nurseryState then return end
-  local k=kinds[kind];local intent=clientUI[k.intent]
-  if nurseryState[k.pending]then
-   clientUI.directHatch=nil;clientUI.hueView.directHatch=kind
-   if not clientUI.openHue(k.page or "buy",nil,"eggs")then clientUI.hueView.directHatch=nil end
-  elseif intent.status=="Retrying"or not intent.pending then
-   clientUI.directHatch=nil;if k.page then clientUI.openHue(k.page,nil,"eggs")end
-  end
- end
+ clientUI.syncDirectHatch=function()flow:sync()end
 end
 journal:setColors(function(petId)clientUI.openHue("palette",petId,"journal")end)
 -- Wardrobe (pet wearables for Stars), opened from the Companions editor at the Care Cradle.

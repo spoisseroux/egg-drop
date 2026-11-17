@@ -66,11 +66,10 @@ function Play.renderHeld(v,root)
  if not held then
   held=Toys.create(v.model,id,seats.height);if not held then return end
   held.model.Name="HeldToy_"..id;held.height=seats.height
-  -- A carried sparkler is unlit: its sparks and light belong to the play clip.
-  if held.emitter then held.emitter.Enabled=false end
-  if held.glow then held.glow.Enabled=false end
   v.heldToy=held
  elseif not held.model.Parent then held.model.Parent=v.model end
+ -- v842 phone notes: a carried sparkler sparks in the pet's paw too (off under Reduced Effects).
+ Toys.setSparks(held,not v.reducedEffects)
  local hold=Toys.hold(id);local size=held.height
  held:pivot(CFrame.new(hand.part.Position+root:VectorToWorldSpace(hold.offset*size))*root.Rotation*hold.turn)
 end

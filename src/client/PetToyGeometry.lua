@@ -33,28 +33,37 @@ local function mesh(h,name,size,at,color)
 end
 local V=Vector3.new
 local builders={}
--- Sparkler: an indigo grip with a pommel, a brass ferrule and wire, and a spiky citrine
--- spark burst round the glowing tip. 4 parts.
+-- Sparkler: an indigo grip with a pommel, a brass ferrule and wire, and a small glowing tip
+-- that throws real sparks. v842 phone notes: the spiky citrine mesh star at the tip is gone;
+-- the sparks are a ParticleEmitter, small, warm and short-lived, in the reveal and in the
+-- pet's paw in the garden. Reduced Effects (or Reduced Motion) switches them off
+-- (Toys.setSparks). 3 parts.
+Toys.SparkRate=34
 builders.sparkler=function(h)
  mesh(h,"IndigoGrip",V(.06185,.15686,.048),V(-.01002,-.07843,0),indigo)
  mesh(h,"BrassWire",V(.05758,.18591,.058),V(-.00048,.07781,0),brass)
- mesh(h,"SparkBurst",V(.184,.184,.12),V(.02275,.18863,0),citrine)
- -- A glowing tip throws real sparks: one bounded emitter and a small light.
- local tip=h:add("GlowTip",V(.048,.048,.048),CFrame.new(.02275,.18863,0),hex("#FFF1B8"),"sphere")
+ local tip=h:add("GlowTip",V(.036,.036,.036),CFrame.new(.0040,.17,0),hex("#FFE7A0"),"sphere")
  tip.Material=Enum.Material.Neon
  local s=h.scale
  local sparks=Instance.new("ParticleEmitter");sparks.Name="Sparks"
  sparks.Texture="rbxasset://textures/particles/sparkles_main.dds"
- sparks.Rate=40;sparks.Lifetime=NumberRange.new(.25,.55);sparks.Speed=NumberRange.new(s*.8,s*1.8)
- sparks.SpreadAngle=Vector2.new(180,180);sparks.Acceleration=Vector3.new(0,-s*7,0);sparks.Drag=2.5
- sparks.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,s*.14),NumberSequenceKeypoint.new(1,0)})
- sparks.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,.6)})
- sparks.Color=ColorSequence.new(Color3.fromHex("#FFF6C8"),Color3.fromHex("#FFA640"))
+ sparks.Rate=Toys.SparkRate;sparks.Lifetime=NumberRange.new(.12,.3);sparks.Speed=NumberRange.new(s*.5,s*1.3)
+ sparks.SpreadAngle=Vector2.new(180,180);sparks.Acceleration=Vector3.new(0,-s*6,0);sparks.Drag=3
+ sparks.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,s*.07),NumberSequenceKeypoint.new(.4,s*.05),NumberSequenceKeypoint.new(1,0)})
+ sparks.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,.7)})
+ sparks.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromHex("#FFF4C8")),ColorSequenceKeypoint.new(.5,Color3.fromHex("#FFB547")),ColorSequenceKeypoint.new(1,Color3.fromHex("#FF7A2A"))})
  sparks.LightEmission=1;sparks.LightInfluence=0;sparks.Rotation=NumberRange.new(0,360);sparks.ZOffset=.2
+ sparks.Enabled=not game:GetService("GuiService").ReducedMotionEnabled
  sparks.Parent=tip
- local glow=Instance.new("PointLight");glow.Name="SparkGlow";glow.Color=Color3.fromHex("#FFD27A")
- glow.Range=math.max(2,s*3);glow.Brightness=.9;glow.Shadows=false;glow.Parent=tip
+ local glow=Instance.new("PointLight");glow.Name="SparkGlow";glow.Color=Color3.fromHex("#FFC874")
+ glow.Range=math.max(1.5,s*2);glow.Brightness=.6;glow.Shadows=false;glow.Enabled=sparks.Enabled;glow.Parent=tip
  h.tip,h.emitter,h.glow=tip,sparks,glow
+end
+-- Sparks on or off (Reduced Effects); a toy without sparks ignores it.
+function Toys.setSparks(handle,on)
+ if not handle then return end
+ if handle.emitter and handle.emitter.Enabled~=(on==true)then handle.emitter.Enabled=on==true end
+ if handle.glow and handle.glow.Enabled~=(on==true)then handle.glow.Enabled=on==true end
 end
 -- Tennis ball (QA v735 H2): optic yellow-green felt (a true sphere) and the real one-piece
 -- white seam, the closed curve that wraps the ball. From the front it shows as two arcs

@@ -70,9 +70,14 @@ return function(client,parent)
    assert(Shop.hatchAction("toy",{nectar=20}).enabled and Shop.hatchAction("hue",{nectar=12}).enabled and not Shop.hatchAction("hue",{nectar=11}).enabled)
    -- The Material Egg is off for v1, but a finish hatched before still opens, and the server's
    -- materialAvailable=false keeps the egg itself unsellable.
-   local finish=Shop.hatchAction("toy",{nectar=0,pendingMaterialResult={id="m"}});assert(finish.text=="Open saved material"and finish.enabled)
+   -- v842: only an egg's own saved result takes its button; another egg's never does.
+   local finish=Shop.hatchAction("material",{nectar=0,pendingMaterialResult={id="m"}});assert(finish.text=="Open saved material"and finish.enabled)
+   -- An egg that is not on the list (the Material Egg while it is not sold) has no button, so its result still opens from any egg.
+   assert(Shop.hatchAction("toy",{nectar=20,pendingMaterialResult={id="m"}}).text=="Open saved material")
+   assert(Shop.hatchAction("toy",{nectar=20,pendingHueResult={id="h",itemId="rose"}}).text:find("Hatch",1,true),"a Customization jar no longer takes the Toy Egg's Hatch")
+   assert(Shop.hatchAction("look",{nectar=0,pendingHueResult={id="h",itemId="rose"}}).text=="Open saved jar")
    assert(not Shop.hatchAction("material",{nectar=999,materialAvailable=false,materialUnlocks={}}).enabled)
-   local feature=Shop.hatchAction("toy",{nectar=0,pendingFeatureResult={id="f"}});assert(feature.text=="Open saved feature"and feature.enabled)
+   local feature=Shop.hatchAction("feature",{nectar=0,pendingFeatureResult={id="f"}});assert(feature.text=="Open saved feature"and feature.enabled)
   end)
   test("pure: the egg beat tilts 6-9 degrees, squashes 4% and hops, then rests",function()
    assert(select(1,Shop.eggBeat(0))==0 and select(1,Shop.eggBeat(Shop.BeatLength))==0)
