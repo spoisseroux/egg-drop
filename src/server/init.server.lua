@@ -1737,6 +1737,7 @@ RunService.Heartbeat:Connect(function(dt)
 	for player, board in pairs(boards) do
 		if board.petContact then board.petContact:update()end
 		syncVisuals(board)
+		BoardNet.publish(board, player, now)
 		if now - (board.lastPressurePublish or 0) >= .1 then
 			publishWelcome(board)
 			board.lastPressurePublish = now

@@ -10,6 +10,7 @@
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local RunService=game:GetService("RunService")
 local Flags=require(ReplicatedStorage.Shared.FeatureFlags)
+local Codec=require(ReplicatedStorage.Shared.BoardSnapshotCodec)
 
 local Net={}
 Net.StreamInterval=1/30
@@ -21,6 +22,8 @@ function Net.stream()return Flags.DeckNetStream==true end
 function Net.render()return Flags.DeckNetRender==true and Flags.DeckNetStream==true end
 
 function Net.setup(remotes)
+ local snapshot=Instance.new("UnreliableRemoteEvent");snapshot.Name="BoardSnapshot";snapshot.Parent=remotes
+ Net.remote=snapshot
  -- Studio-only echo: the harness times a round trip through each remote kind to check
  -- what Studio's IncomingReplicationLag delays (architect review section 6).
  if RunService:IsStudio()then
@@ -29,7 +32,7 @@ function Net.setup(remotes)
   echo.OnServerEvent:Connect(function(player,stamp)if type(stamp)=="number"then echo:FireClient(player,stamp)end end)
   unreliable.OnServerEvent:Connect(function(player,stamp)if type(stamp)=="number"then unreliable:FireClient(player,stamp)end end)
  end
- return nil
+ return snapshot
 end
 
 -- One fixed simulation step of this board ran.
@@ -37,5 +40,28 @@ function Net.stepped(board)
  board.simTick=(board.simTick or 0)+1
 end
 function Net.tick(board)return board.simTick or 0 end
+
+-- Called once per server Heartbeat per board, after syncVisuals.
+function Net.publish(board,player,now)
+ if not Net.stream()or not Net.remote or board.closing or board.mode~="Board"then return false end
+ local tick=board.simTick or 0
+ local moving=board.netSentTick~=tick
+ local interval=if moving then Net.StreamInterval else Net.PausedInterval
+ if board.netSentAt and now-board.netSentAt<interval-1e-3 then return false end
+ local scratch=board.netScratch
+ if not scratch then scratch={ids={},xs={},ys={}};board.netScratch=scratch end
+ local count=0
+ for _,egg in ipairs(board.sim.eggs)do
+  if count>=Codec.MaxBalls then break end
+  count+=1
+  scratch.ids[count]=Codec.wireId(egg.id);scratch.xs[count]=egg.position.X;scratch.ys[count]=egg.position.Y
+ end
+ local flags=if moving then 0 else Codec.Paused
+ local payload=Codec.encode(board.folder:GetAttribute("ResetId")or 0,tick,flags,scratch.ids,scratch.xs,scratch.ys,count,board.netBuffer)
+ board.netBuffer=payload
+ board.netSentAt,board.netSentTick=now,tick
+ Net.remote:FireClient(player,payload)
+ return true
+end
 
 return Net
