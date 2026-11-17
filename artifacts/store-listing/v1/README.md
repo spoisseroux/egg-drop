@@ -13,7 +13,6 @@ The Bear holds its **Ball** toy (Spencer's pick). The Pocket Deck was tried firs
 | `icon-A-notext-*` | **A (lead).** Unhued white Bear with the yellow ball against the warm peach dusk sky and lawn. No text. |
 | `icon-B-title-*` | **B.** The A frame with "POCKET PALS" along the bottom 20%. It covers the feet, not the ball. |
 | `icon-C-rose-*` | **C.** Same pose with one Rose jar (Main, step 1 of 5), shot against the garden's tree and fence. Step 1 is a pale tint, so the pink is subtle at 150 px. |
-
 | `icon-D-notext-*`, `icon-D-title-*` | **D (13 Nov layout).** A close-up of the Bear's face and chest in three-quarter view, with the red Pom Beanie, the Bell Collar and the Ball, in front of the soft-focus pink garden. The title version puts POCKET PALS across the top (Builder Extended Bold, cream with an ink outline and a gold underline, tilted 4°). The Sparkler was tried first, but its sparks are a 0.1-stud dot and don't read in a still frame. The pink castle from the old icon is no longer near the garden in v1, so it's absent. |
 
 Phone check at 150 px: the ball and face read in A and B. C reads, but its background is busier and the pink is faint.
