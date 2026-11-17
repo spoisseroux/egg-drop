@@ -297,6 +297,11 @@
    "context": "",
    "example": "Catalogue BookCatalog (name)"
   },
+  "catalog.BookCatalog.Pages.toys.name": {
+   "source": "Toys & finishes",
+   "context": "",
+   "example": "Catalogue BookCatalog (name)"
+  },
   "catalog.DeckBackgrounds.ById.lantern.name": {
    "source": "Lantern",
    "context": "",
@@ -405,7 +410,7 @@
   "catalog.DeckThemes.ById.stone.name": {
    "source": "Pebble",
    "context": "",
-   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name"
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name, catalog.BookCatalog.Pages.charms.items.3.name"
   },
   "catalog.DeckThemes.ById.tidepool.name": {
    "source": "Tidepool",
@@ -507,21 +512,6 @@
    "context": "",
    "example": "Catalogue HueCatalog (name)"
   },
-  "catalog.MaterialCatalog.ById.gloss.name": {
-   "source": "Gloss",
-   "context": "",
-   "example": "Catalogue MaterialCatalog (name)"
-  },
-  "catalog.MaterialCatalog.ById.jelly.name": {
-   "source": "Jelly",
-   "context": "",
-   "example": "Catalogue MaterialCatalog (name)"
-  },
-  "catalog.MaterialCatalog.ById.matte.name": {
-   "source": "Matte",
-   "context": "",
-   "example": "Catalogue MaterialCatalog (name)"
-  },
   "catalog.MaterialCatalog.ById.metal.name": {
    "source": "Metal",
    "context": "",
@@ -585,27 +575,27 @@
   "catalog.PetCharmCatalog.ById.dot.name": {
    "source": "Snowflake",
    "context": "",
-   "example": "Catalogue PetCharmCatalog (name)"
+   "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.1.name"
   },
   "catalog.PetCharmCatalog.ById.heart.name": {
    "source": "Heart",
    "context": "",
-   "example": "Catalogue PetCharmCatalog (name)"
+   "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.4.name"
   },
   "catalog.PetCharmCatalog.ById.leaf.name": {
    "source": "Leaf",
    "context": "",
-   "example": "Catalogue PetCharmCatalog (name)"
+   "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.6.name"
   },
   "catalog.PetCharmCatalog.ById.ring.name": {
    "source": "Ring",
    "context": "",
-   "example": "Catalogue PetCharmCatalog (name)"
+   "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.2.name"
   },
   "catalog.PetCharmCatalog.ById.star.name": {
    "source": "Star",
    "context": "",
-   "example": "Catalogue PetCharmCatalog (name)"
+   "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.5.name"
   },
   "catalog.QuestCatalog.ById.d_chain3.sub": {
    "source": "In one round",
@@ -1585,7 +1575,7 @@
   "ui.coach.hub.title": {
    "source": "Pocket menu",
    "context": "",
-   "example": "First-round coaching; also ui.hub.title, ui.notice.hub.title, ui.r3.help.garden.d.title"
+   "example": "First-round coaching; also ui.hub.title, ui.notice.hub.title"
   },
   "ui.coach.hub.touch": {
    "source": "Tap Menu for every machine, any time.",
@@ -1695,7 +1685,7 @@
   "ui.companions.toys.name": {
    "source": "Toys",
    "context": "",
-   "example": "Companions screen; also catalog.BookCatalog.Pages.toys.name"
+   "example": "Companions screen"
   },
   "ui.companions.wearing.none": {
    "source": "Nothing yet",
@@ -1736,6 +1726,16 @@
    "source": "Someone's on the way…",
    "context": "",
    "example": "Menu text"
+  },
+  "ui.hatch.display.charm": {
+   "source": "A charm for your pet",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.display.finish": {
+   "source": "A finish for your pet",
+   "context": "",
+   "example": "Hatch eggs screen"
   },
   "ui.hatch.display.firstFriend": {
    "source": "Your first friend",
@@ -1790,7 +1790,7 @@
   "ui.hatch.egg.feature.per": {
    "source": "1 item per egg",
    "context": "",
-   "example": "Hatch eggs screen"
+   "example": "Hatch eggs screen; also ui.hatch.egg.look.per"
   },
   "ui.hatch.egg.hue.description": {
    "source": "Hatches one pigment jar to change your pet's colour.",
@@ -1804,6 +1804,21 @@
   },
   "ui.hatch.egg.hue.per": {
    "source": "1 jar per egg",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.look.description": {
+   "source": "Hatches one jar of colour or finish. Now and then, a rare charm.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.look.line": {
+   "source": "Colours, finishes and the odd charm",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.look.name": {
+   "source": "Customization Egg",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1844,6 +1859,161 @@
   },
   "ui.hatch.footer.phone": {
    "source": "The odds are on the label",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.allCharms": {
+   "source": "All egg charms found",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.allCharmsShort": {
+   "source": "All charms found",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.charmName": {
+   "source": "Charms",
+   "context": "",
+   "example": "Hatch eggs screen; also catalog.BookCatalog.Pages.charms.name"
+  },
+  "ui.hatch.look.charmOwned": {
+   "source": "Yours to keep. It floats in your pet's Secondary colour.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.charmRow": {
+   "source": "Charm · {each} each: {shapes}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Charm · {each} each: {shapes}"
+  },
+  "ui.hatch.look.charmShort": {
+   "source": "Charm · {each} each",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Charm · {each} each"
+  },
+  "ui.hatch.look.jar.gloss": {
+   "source": "Gloss jar",
+   "context": "",
+   "example": "Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.7.name"
+  },
+  "ui.hatch.look.jar.jelly": {
+   "source": "Jelly jar",
+   "context": "",
+   "example": "Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.9.name"
+  },
+  "ui.hatch.look.jar.matte": {
+   "source": "Matte jar",
+   "context": "",
+   "example": "Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.8.name"
+  },
+  "ui.hatch.look.later": {
+   "source": "Later",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.missing": {
+   "source": "Charms are {each} each. Still to find: {shapes}.",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Charms are {each} each. Still to find: {shapes}."
+  },
+  "ui.hatch.look.notReady": {
+   "source": "Customization Eggs are not ready yet.",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.hatch.look.reason.NotReady"
+  },
+  "ui.hatch.look.openSaved.charm": {
+   "source": "Open saved charm",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.openSaved.finish": {
+   "source": "Open saved finish",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.pity": {
+   "source": "A charm within {count} eggs",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. A charm within 3 eggs"
+  },
+  "ui.hatch.look.pityOne": {
+   "source": "Next egg: a charm",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.pityRule": {
+   "source": "If 14 eggs pass without a charm, the next one is a charm.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.pityShort": {
+   "source": "Charm within {count} eggs",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Charm within 3 eggs"
+  },
+  "ui.hatch.look.promise.fixed": {
+   "source": "No surprises. Your next item is shown above.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.promise.random": {
+   "source": "The odds are on the label. They shift only as you collect charms.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.reason.FinishChanged": {
+   "source": "This pet's finish changed. Check it and tap again.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.reason.Locked": {
+   "source": "Find this charm first.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.reason.MaxJelly": {
+   "source": "This pet is as jelly as it gets.",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.r4.customize.finish.maxJelly"
+  },
+  "ui.hatch.look.reason.MaxSheen": {
+   "source": "This sheen is as far as it goes.",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.r4.customize.finish.maxSheen"
+  },
+  "ui.hatch.look.reason.PolicyChanged": {
+   "source": "Your odds just changed. Check them and tap again.",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.hatch.look.reason.PoolChanged"
+  },
+  "ui.hatch.look.restrictedCharm": {
+   "source": "Charm in {count} eggs",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Charm in 3 eggs"
+  },
+  "ui.hatch.look.useNow": {
+   "source": "Use now",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.wear": {
+   "source": "Wear it",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.wearOn": {
+   "source": "Wear on {pet}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Wear on Bear"
+  },
+  "ui.hatch.look.wearRetry": {
+   "source": "Try wearing it again",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.look.worn": {
+   "source": "Wearing it",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -1897,6 +2067,21 @@
    "context": "",
    "example": "Hatch eggs screen; also ui.inspect.close, ui.r3.help.close"
   },
+  "ui.hatch.reveal.describe.charm.dot": {
+   "source": "A tiny snowflake that never melts.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.charm.pebble": {
+   "source": "A lucky pebble, smoothed by a very old river.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.charm.ring": {
+   "source": "A little ring that floats in its own orbit.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
   "ui.hatch.reveal.describe.feature.claws": {
    "source": "Tiny and fierce. Mostly used for back scratches.",
    "context": "",
@@ -1909,6 +2094,21 @@
   },
   "ui.hatch.reveal.describe.feature.wings": {
    "source": "Folded neat as a letter. They flutter when excited.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.finishJar.gloss": {
+   "source": "One shine closer to a mirror.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.finishJar.jelly": {
+   "source": "Wobbly, see-through, and very proud of it.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.describe.finishJar.matte": {
+   "source": "A soft, chalky hush for any coat.",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -2027,8 +2227,18 @@
    "context": "",
    "example": "Hatch eggs screen; e.g. NEW {kind}"
   },
+  "ui.hatch.reveal.kind.charm": {
+   "source": "CHARM",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
   "ui.hatch.reveal.kind.feature": {
    "source": "FEATURE",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.kind.finish": {
+   "source": "FINISH JAR",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -2255,7 +2465,7 @@
   "ui.inspect.slot.finish": {
    "source": "Finish",
    "context": "",
-   "example": "Menu text"
+   "example": "Menu text; also ui.r4.customize.finish.title"
   },
   "ui.inspect.slot.toy": {
    "source": "Toy",
@@ -2652,6 +2862,11 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.pool3.charm.dot.rule": {
+   "source": "Rare in the Customization Egg",
+   "context": "",
+   "example": "Menu text; also ui.pool3.charm.egg.rule, ui.pool3.charm.pebble.rule, ui.pool3.charm.ring.rule"
+  },
   "ui.pool3.charm.earned": {
    "source": "Earned",
    "context": "",
@@ -2659,6 +2874,11 @@
   },
   "ui.pool3.charm.fallback.rule": {
    "source": "Keep playing to earn this charm",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.pool3.charm.findInEggs": {
+   "source": "Find in eggs",
    "context": "",
    "example": "Menu text"
   },
@@ -2674,6 +2894,11 @@
   },
   "ui.pool3.charm.locked": {
    "source": "Locked",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.pool3.charm.none": {
+   "source": "No charm yet. Charms are rare in the Customization Egg, or earned.",
    "context": "",
    "example": "Menu text"
   },
@@ -2798,7 +3023,7 @@
    "example": "Menu text"
   },
   "ui.r3.help.garden.a.line": {
-   "source": "Walk up to a glowing machine to use it: Hatch eggs, Deck style, Companions, the Pocket Deck.",
+   "source": "Walk up to a glowing machine to use it, or tap Menu to open any of them from anywhere.",
    "context": "",
    "example": "Menu text"
   },
@@ -2812,8 +3037,23 @@
    "context": "",
    "example": "Menu text"
   },
-  "ui.r3.help.garden.d.line": {
-   "source": "The Menu button opens every machine, from anywhere.",
+  "ui.r3.help.garden.e.line": {
+   "source": "Walk up to your pet and press E to say hi, then hold E to pet it.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.garden.e.linePad": {
+   "source": "Walk up to your pet and press X to say hi, then hold X to pet it.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.garden.e.lineTouch": {
+   "source": "Tap your pet to say hi, then rub to pet it.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r3.help.garden.e.title": {
+   "source": "Say hi to your pet",
    "context": "",
    "example": "Menu text"
   },
@@ -3002,8 +3242,113 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.r4.customize.finish.already": {
+   "source": "Already original",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.clearLine": {
+   "source": "Back to original from {look}. Free.",
+   "context": "",
+   "example": "Menu text; e.g. Back to original from {look}. Free."
+  },
+  "ui.r4.customize.finish.empty": {
+   "source": "Find finish jars in the Customization Egg.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.jar.gloss": {
+   "source": "Gloss",
+   "context": "",
+   "example": "Menu text; also catalog.MaterialCatalog.ById.gloss.name"
+  },
+  "ui.r4.customize.finish.jar.jelly": {
+   "source": "Jelly",
+   "context": "",
+   "example": "Menu text; also ui.r4.customize.finish.jelly.s2, ui.r4.customize.finish.jellyAxis, catalog.MaterialCatalog.ById.jelly.name"
+  },
+  "ui.r4.customize.finish.jar.matte": {
+   "source": "Matte",
+   "context": "",
+   "example": "Menu text; also ui.r4.customize.finish.sheen.m2, catalog.MaterialCatalog.ById.matte.name"
+  },
+  "ui.r4.customize.finish.jelly.s1": {
+   "source": "Misty",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.jelly.s3": {
+   "source": "Clear Jelly",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.kept": {
+   "source": "Kept: {finish}",
+   "context": "",
+   "example": "Menu text; e.g. Kept: {finish}"
+  },
+  "ui.r4.customize.finish.look": {
+   "source": "Look: {look}",
+   "context": "",
+   "example": "Menu text; e.g. Look: {look}"
+  },
+  "ui.r4.customize.finish.mix": {
+   "source": "{jelly} {sheen}",
+   "context": "",
+   "example": "Menu text; e.g. {jelly} {sheen}"
+  },
+  "ui.r4.customize.finish.original": {
+   "source": "Original",
+   "context": "",
+   "example": "Menu text; also ui.r4.customize.finish.sheen.zero"
+  },
+  "ui.r4.customize.finish.sheen.m1": {
+   "source": "Soft",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.sheen.m3": {
+   "source": "Chalky",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.sheen.p1": {
+   "source": "Satin",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.sheen.p2": {
+   "source": "Glossy",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.sheen.p3": {
+   "source": "Glassy",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.sheenAxis": {
+   "source": "Sheen",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.finish.useJar": {
+   "source": "Use a {item} jar",
+   "context": "",
+   "example": "Menu text; e.g. Use a Squeaky Bone jar"
+  },
+  "ui.r4.customize.moreFinishes": {
+   "source": "More finish jars hatch from Customization Eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.customize.moreHues": {
+   "source": "More colour jars hatch from Customization Eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
   "ui.r4.customize.moreMaterials": {
-   "source": "More finishes hatch from Material Eggs.",
+   "source": "More finishes hatch from Customization Eggs.",
    "context": "",
    "example": "Menu text"
   },

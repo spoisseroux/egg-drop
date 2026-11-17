@@ -79,7 +79,7 @@ ui.coach.hatch.line,Spend Stars on eggs. The odds are on every label.,,First-rou
 ui.coach.hatch.title,Hatch eggs,,"First-round coaching; also ui.hub.tile.hatch.name, ui.onboarding.spend.hatch, ui.r3.help.companions.d.title, ui.r3.help.hatch.title"
 ui.coach.hub.key,"Press M for every machine, any time.",,First-round coaching
 ui.coach.hub.pad,"Press Y for every machine, any time.",,First-round coaching
-ui.coach.hub.title,Pocket menu,,"First-round coaching; also ui.hub.title, ui.notice.hub.title, ui.r3.help.garden.d.title"
+ui.coach.hub.title,Pocket menu,,"First-round coaching; also ui.hub.title, ui.notice.hub.title"
 ui.coach.hub.touch,"Tap Menu for every machine, any time.",,First-round coaching
 ui.coach.item.line,Power-up merges earn items. Use one from the item button.,,First-round coaching
 ui.coach.item.short,Item earned! Use it from Items,,First-round coaching
@@ -101,7 +101,7 @@ ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.n
 ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
 ui.coach.welcome.title,Hatch your first friend,,First-round coaching; also ui.r1.welcomePill.mid
 ui.companions.toys.line,Something to carry and chase,,Companions screen
-ui.companions.toys.name,Toys,,Companions screen; also catalog.BookCatalog.Pages.toys.name
+ui.companions.toys.name,Toys,,Companions screen
 ui.companions.wearing.none,Nothing yet,,Companions screen
 ui.e2.arrived.line,{pet} came to stay in your garden.,,Menu text; e.g. Bear came to stay in your garden.
 ui.e2.arrived.sayHi,Say hi,,Menu text
@@ -110,6 +110,8 @@ ui.e2.hub.none,No companion yet. Play your first rounds to meet your Bear.,,Menu
 ui.e2.tease.many,Someone's on the way… {count} more stamps,,Menu text; e.g. Someone's on the way… 3 more stamps
 ui.e2.tease.one,Someone's on the way… 1 more stamp,,Menu text
 ui.e2.tease.short,Someone's on the way…,,Menu text
+ui.hatch.display.charm,A charm for your pet,,Hatch eggs screen
+ui.hatch.display.finish,A finish for your pet,,Hatch eggs screen
 ui.hatch.display.firstFriend,Your first friend,,Hatch eggs screen
 ui.hatch.display.friend,New friend,,Hatch eggs screen
 ui.hatch.display.line,The display wakes up,,Hatch eggs screen
@@ -120,10 +122,13 @@ ui.hatch.display.refund,Already owned · {count} Stars back,,Hatch eggs screen; 
 ui.hatch.display.wait,A little surprise,,Hatch eggs screen
 ui.hatch.egg.feature.description,Something pointy is growing in here. Hatches one feature item to grow on any pet.,,Hatch eggs screen
 ui.hatch.egg.feature.line,"Horns, claws or wings",,Hatch eggs screen
-ui.hatch.egg.feature.per,1 item per egg,,Hatch eggs screen
+ui.hatch.egg.feature.per,1 item per egg,,Hatch eggs screen; also ui.hatch.egg.look.per
 ui.hatch.egg.hue.description,Hatches one pigment jar to change your pet's colour.,,Hatch eggs screen
 ui.hatch.egg.hue.line,A jar of colour,,Hatch eggs screen
 ui.hatch.egg.hue.per,1 jar per egg,,Hatch eggs screen
+ui.hatch.egg.look.description,"Hatches one jar of colour or finish. Now and then, a rare charm.",,Hatch eggs screen
+ui.hatch.egg.look.line,"Colours, finishes and the odd charm",,Hatch eggs screen
+ui.hatch.egg.look.name,Customization Egg,,Hatch eggs screen
 ui.hatch.egg.material.description,Smooth and heavy. Hatches one finish that changes how your pet's body catches the light.,,Hatch eggs screen
 ui.hatch.egg.material.line,A fresh new coat,,Hatch eggs screen
 ui.hatch.egg.material.per,1 finish per egg,,Hatch eggs screen
@@ -132,6 +137,37 @@ ui.hatch.egg.toy.line,A toy to carry and chase,,Hatch eggs screen
 ui.hatch.egg.toy.per,1 toy per egg,,Hatch eggs screen
 ui.hatch.footer.desktop,Give one a shake. The odds are on the label.,,Hatch eggs screen
 ui.hatch.footer.phone,The odds are on the label,,Hatch eggs screen
+ui.hatch.look.allCharms,All egg charms found,,Hatch eggs screen
+ui.hatch.look.allCharmsShort,All charms found,,Hatch eggs screen
+ui.hatch.look.charmName,Charms,,Hatch eggs screen; also catalog.BookCatalog.Pages.charms.name
+ui.hatch.look.charmOwned,Yours to keep. It floats in your pet's Secondary colour.,,Hatch eggs screen
+ui.hatch.look.charmRow,Charm · {each} each: {shapes},,Hatch eggs screen; e.g. Charm · {each} each: {shapes}
+ui.hatch.look.charmShort,Charm · {each} each,,Hatch eggs screen; e.g. Charm · {each} each
+ui.hatch.look.jar.gloss,Gloss jar,,Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.7.name
+ui.hatch.look.jar.jelly,Jelly jar,,Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.9.name
+ui.hatch.look.jar.matte,Matte jar,,Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.8.name
+ui.hatch.look.later,Later,,Hatch eggs screen
+ui.hatch.look.missing,Charms are {each} each. Still to find: {shapes}.,,Hatch eggs screen; e.g. Charms are {each} each. Still to find: {shapes}.
+ui.hatch.look.notReady,Customization Eggs are not ready yet.,,Hatch eggs screen; also ui.hatch.look.reason.NotReady
+ui.hatch.look.openSaved.charm,Open saved charm,,Hatch eggs screen
+ui.hatch.look.openSaved.finish,Open saved finish,,Hatch eggs screen
+ui.hatch.look.pity,A charm within {count} eggs,,Hatch eggs screen; e.g. A charm within 3 eggs
+ui.hatch.look.pityOne,Next egg: a charm,,Hatch eggs screen
+ui.hatch.look.pityRule,"If 14 eggs pass without a charm, the next one is a charm.",,Hatch eggs screen
+ui.hatch.look.pityShort,Charm within {count} eggs,,Hatch eggs screen; e.g. Charm within 3 eggs
+ui.hatch.look.promise.fixed,No surprises. Your next item is shown above.,,Hatch eggs screen
+ui.hatch.look.promise.random,The odds are on the label. They shift only as you collect charms.,,Hatch eggs screen
+ui.hatch.look.reason.FinishChanged,This pet's finish changed. Check it and tap again.,,Hatch eggs screen
+ui.hatch.look.reason.Locked,Find this charm first.,,Hatch eggs screen
+ui.hatch.look.reason.MaxJelly,This pet is as jelly as it gets.,,Hatch eggs screen; also ui.r4.customize.finish.maxJelly
+ui.hatch.look.reason.MaxSheen,This sheen is as far as it goes.,,Hatch eggs screen; also ui.r4.customize.finish.maxSheen
+ui.hatch.look.reason.PolicyChanged,Your odds just changed. Check them and tap again.,,Hatch eggs screen; also ui.hatch.look.reason.PoolChanged
+ui.hatch.look.restrictedCharm,Charm in {count} eggs,,Hatch eggs screen; e.g. Charm in 3 eggs
+ui.hatch.look.useNow,Use now,,Hatch eggs screen
+ui.hatch.look.wear,Wear it,,Hatch eggs screen
+ui.hatch.look.wearOn,Wear on {pet},,Hatch eggs screen; e.g. Wear on Bear
+ui.hatch.look.wearRetry,Try wearing it again,,Hatch eggs screen
+ui.hatch.look.worn,Wearing it,,Hatch eggs screen
 ui.hatch.material.fixed,16 Stars · one guaranteed finish. No duplicates.,,Hatch eggs screen
 ui.hatch.material.nextPromise,No duplicates. Your next finish is shown above.,,Hatch eggs screen
 ui.hatch.material.oddsPromise,No duplicates. Odds update with your collection.,,Hatch eggs screen
@@ -142,9 +178,15 @@ ui.hatch.next.line,Next: {item},,Hatch eggs screen; e.g. Next: Squeaky Bone
 ui.hatch.promise,No surprises. The odds never change.,,Hatch eggs screen
 ui.hatch.reveal.banner,{tier} {kind},,Hatch eggs screen; e.g. {tier} {kind}
 ui.hatch.reveal.close,Close,,"Hatch eggs screen; also ui.inspect.close, ui.r3.help.close"
+ui.hatch.reveal.describe.charm.dot,A tiny snowflake that never melts.,,Hatch eggs screen
+ui.hatch.reveal.describe.charm.pebble,"A lucky pebble, smoothed by a very old river.",,Hatch eggs screen
+ui.hatch.reveal.describe.charm.ring,A little ring that floats in its own orbit.,,Hatch eggs screen
 ui.hatch.reveal.describe.feature.claws,Tiny and fierce. Mostly used for back scratches.,,Hatch eggs screen
 ui.hatch.reveal.describe.feature.horns,Two small buds. Big plans.,,Hatch eggs screen
 ui.hatch.reveal.describe.feature.wings,Folded neat as a letter. They flutter when excited.,,Hatch eggs screen
+ui.hatch.reveal.describe.finishJar.gloss,One shine closer to a mirror.,,Hatch eggs screen
+ui.hatch.reveal.describe.finishJar.jelly,"Wobbly, see-through, and very proud of it.",,Hatch eggs screen
+ui.hatch.reveal.describe.finishJar.matte,"A soft, chalky hush for any coat.",,Hatch eggs screen
 ui.hatch.reveal.describe.hue.citrus,"Sunshine, squeezed. Mind the pips.",,Hatch eggs screen
 ui.hatch.reveal.describe.hue.iris,Dusk in a jar. Smells faintly of plums.,,Hatch eggs screen
 ui.hatch.reveal.describe.hue.reset,Rinses a pet back to its very first colour.,,Hatch eggs screen
@@ -168,7 +210,9 @@ ui.hatch.reveal.describe.toy.sparkler,Fizzes like a tiny birthday. Every day is 
 ui.hatch.reveal.describe.toy.squeaky_carrot,Squeaks when squeezed. Does not taste like carrot.,,Hatch eggs screen
 ui.hatch.reveal.describe.toy.wobble_top,"Spins, wobbles, never quite falls. A small miracle.",,Hatch eggs screen
 ui.hatch.reveal.fresh,NEW {kind},,Hatch eggs screen; e.g. NEW {kind}
+ui.hatch.reveal.kind.charm,CHARM,,Hatch eggs screen
 ui.hatch.reveal.kind.feature,FEATURE,,Hatch eggs screen
+ui.hatch.reveal.kind.finish,FINISH JAR,,Hatch eggs screen
 ui.hatch.reveal.kind.hue,COLOUR JAR,,Hatch eggs screen
 ui.hatch.reveal.kind.item,ITEM,,Hatch eggs screen
 ui.hatch.reveal.kind.material,FINISH,,Hatch eggs screen
@@ -213,7 +257,7 @@ ui.inspect.sent,Hello!,,Menu text
 ui.inspect.setting.off,Pet greetings: Off,,Menu text
 ui.inspect.setting.on,Pet greetings: On,,Menu text
 ui.inspect.slot.charm,Charm,,Menu text
-ui.inspect.slot.finish,Finish,,Menu text
+ui.inspect.slot.finish,Finish,,Menu text; also ui.r4.customize.finish.title
 ui.inspect.slot.toy,Toy,,Menu text
 ui.inspect.spin,Drag to turn,,Menu text
 ui.inspect.wait,In a moment,,Menu text
@@ -293,11 +337,14 @@ ui.pet.capped,{pet}'s had plenty of pets today,,Petting reward; e.g. Bear's had 
 ui.pet.cappedSolo,Plenty of pets today,,Petting reward
 ui.pet.star,+1 ★,,Petting reward
 ui.phoneDeck.b.items,Items,,Menu text
+ui.pool3.charm.dot.rule,Rare in the Customization Egg,,"Menu text; also ui.pool3.charm.egg.rule, ui.pool3.charm.pebble.rule, ui.pool3.charm.ring.rule"
 ui.pool3.charm.earned,Earned,,Menu text
 ui.pool3.charm.fallback.rule,Keep playing to earn this charm,,Menu text
+ui.pool3.charm.findInEggs,Find in eggs,,Menu text
 ui.pool3.charm.heart.rule,Finish the Wardrobe page in the book,,Menu text
 ui.pool3.charm.leaf.rule,Collect 14 daily stamps,,Menu text
 ui.pool3.charm.locked,Locked,,Menu text
+ui.pool3.charm.none,"No charm yet. Charms are rare in the Customization Egg, or earned.",,Menu text
 ui.pool3.charm.star.rule,Claim 4 weekly bonuses,,Menu text
 ui.qa.coach.sayHi,Say hi to {pet},,Menu text; e.g. Say hi to Bear
 ui.qa.coach.welcome,Match eggs. Hatch a friend.,,Menu text
@@ -322,10 +369,13 @@ ui.r3.help.companions.b.title,Wardrobe,,Menu text; also catalog.BookCatalog.Page
 ui.r3.help.companions.c.line,"Use colour jars, add a charm or hand over a toy.",,Menu text
 ui.r3.help.companions.c.title,Customize,,Menu text; also ui.r3.help.garden.c.title
 ui.r3.help.companions.d.line,Toys and colour jars hatch from eggs. Spend Stars at Hatch eggs.,,Menu text
-ui.r3.help.garden.a.line,"Walk up to a glowing machine to use it: Hatch eggs, Deck style, Companions, the Pocket Deck.",,Menu text
+ui.r3.help.garden.a.line,"Walk up to a glowing machine to use it, or tap Menu to open any of them from anywhere.",,Menu text
 ui.r3.help.garden.b.line,Open the Menu and pick Quests. Three daily quests and a once-a-day stamp pay Stars.,,Menu text
 ui.r3.help.garden.c.line,Open Companions to recolour and dress your pet. New pieces hatch from eggs.,,Menu text
-ui.r3.help.garden.d.line,"The Menu button opens every machine, from anywhere.",,Menu text
+ui.r3.help.garden.e.line,"Walk up to your pet and press E to say hi, then hold E to pet it.",,Menu text
+ui.r3.help.garden.e.linePad,"Walk up to your pet and press X to say hi, then hold X to pet it.",,Menu text
+ui.r3.help.garden.e.lineTouch,"Tap your pet to say hi, then rub to pet it.",,Menu text
+ui.r3.help.garden.e.title,Say hi to your pet,,Menu text
 ui.r3.help.garden.title,Your garden,,Menu text
 ui.r3.help.hatch.a.line,Rounds and quests earn Stars. Open Quests for your once-daily stamp.,,Menu text
 ui.r3.help.hatch.a.title,Earn Stars,,Menu text
@@ -363,7 +413,28 @@ ui.r3.quests.status.toGo,{count} to go,,Menu text; e.g. 3 to go
 ui.r3.quests.weekly.line,Clear all three this week for a bonus.,,Menu text
 ui.r3.quests.weekly.title,Weekly bonus,,Menu text
 ui.r3.tips,Show tips again,,Menu text
-ui.r4.customize.moreMaterials,More finishes hatch from Material Eggs.,,Menu text
+ui.r4.customize.finish.already,Already original,,Menu text
+ui.r4.customize.finish.clearLine,Back to original from {look}. Free.,,Menu text; e.g. Back to original from {look}. Free.
+ui.r4.customize.finish.empty,Find finish jars in the Customization Egg.,,Menu text
+ui.r4.customize.finish.jar.gloss,Gloss,,Menu text; also catalog.MaterialCatalog.ById.gloss.name
+ui.r4.customize.finish.jar.jelly,Jelly,,"Menu text; also ui.r4.customize.finish.jelly.s2, ui.r4.customize.finish.jellyAxis, catalog.MaterialCatalog.ById.jelly.name"
+ui.r4.customize.finish.jar.matte,Matte,,"Menu text; also ui.r4.customize.finish.sheen.m2, catalog.MaterialCatalog.ById.matte.name"
+ui.r4.customize.finish.jelly.s1,Misty,,Menu text
+ui.r4.customize.finish.jelly.s3,Clear Jelly,,Menu text
+ui.r4.customize.finish.kept,Kept: {finish},,Menu text; e.g. Kept: {finish}
+ui.r4.customize.finish.look,Look: {look},,Menu text; e.g. Look: {look}
+ui.r4.customize.finish.mix,{jelly} {sheen},,Menu text; e.g. {jelly} {sheen}
+ui.r4.customize.finish.original,Original,,Menu text; also ui.r4.customize.finish.sheen.zero
+ui.r4.customize.finish.sheen.m1,Soft,,Menu text
+ui.r4.customize.finish.sheen.m3,Chalky,,Menu text
+ui.r4.customize.finish.sheen.p1,Satin,,Menu text
+ui.r4.customize.finish.sheen.p2,Glossy,,Menu text
+ui.r4.customize.finish.sheen.p3,Glassy,,Menu text
+ui.r4.customize.finish.sheenAxis,Sheen,,Menu text
+ui.r4.customize.finish.useJar,Use a {item} jar,,Menu text; e.g. Use a Squeaky Bone jar
+ui.r4.customize.moreFinishes,More finish jars hatch from Customization Eggs.,,Menu text
+ui.r4.customize.moreHues,More colour jars hatch from Customization Eggs.,,Menu text
+ui.r4.customize.moreMaterials,More finishes hatch from Customization Eggs.,,Menu text
 ui.r4.customize.moreToys,More toys hatch from Toy Eggs.,,Menu text
 ui.r4.customize.newBadge,NEW,,Menu text
 ui.r4.equipped,Equipped,,Menu text
@@ -531,14 +602,11 @@ catalog.DeckThemes.ById.rose_chrome.name,Rose Chrome,,"Catalogue DeckThemes (nam
 catalog.DeckThemes.ById.sherbet.name,Scout,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sherbet.name
 catalog.DeckThemes.ById.sorbet_sky.name,Sorbet Sky,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sorbet_sky.name, catalog.BookCatalog.Pages.faceplates.items.3.name"
 catalog.DeckThemes.ById.stargazer.name,Stargazer,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stargazer.name
-catalog.DeckThemes.ById.stone.name,Pebble,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name"
+catalog.DeckThemes.ById.stone.name,Pebble,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stone.name, catalog.PetCharmCatalog.ById.pebble.name, catalog.BookCatalog.Pages.charms.items.3.name"
 catalog.DeckThemes.ById.tidepool.name,Tidepool,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.tidepool.name, catalog.BookCatalog.Pages.faceplates.items.5.name"
 catalog.DeckBackgrounds.ById.lantern.name,Lantern,,Catalogue DeckBackgrounds (name)
 catalog.DeckBackgrounds.ById.moonpond.name,Moonpond,,Catalogue DeckBackgrounds (name)
 catalog.DeckStickers.ById.none.name,Blank,,Catalogue DeckStickers (name)
-catalog.MaterialCatalog.ById.gloss.name,Gloss,,Catalogue MaterialCatalog (name)
-catalog.MaterialCatalog.ById.jelly.name,Jelly,,Catalogue MaterialCatalog (name)
-catalog.MaterialCatalog.ById.matte.name,Matte,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.metal.name,Metal,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.pearl_edge.name,Pearl Edge,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.speckle_satin.name,Speckle Satin,,Catalogue MaterialCatalog (name)
@@ -565,11 +633,11 @@ catalog.HueCatalog.Mixes.rose:tide.name,Rose + Tide,,Catalogue HueCatalog (name)
 catalog.FeatureCatalog.ById.claws.name,Claws,,Catalogue FeatureCatalog (name)
 catalog.FeatureCatalog.ById.horns.name,Horn buds,,Catalogue FeatureCatalog (name)
 catalog.FeatureCatalog.ById.wings.name,Folded wings,,Catalogue FeatureCatalog (name)
-catalog.PetCharmCatalog.ById.dot.name,Snowflake,,Catalogue PetCharmCatalog (name)
-catalog.PetCharmCatalog.ById.heart.name,Heart,,Catalogue PetCharmCatalog (name)
-catalog.PetCharmCatalog.ById.leaf.name,Leaf,,Catalogue PetCharmCatalog (name)
-catalog.PetCharmCatalog.ById.ring.name,Ring,,Catalogue PetCharmCatalog (name)
-catalog.PetCharmCatalog.ById.star.name,Star,,Catalogue PetCharmCatalog (name)
+catalog.PetCharmCatalog.ById.dot.name,Snowflake,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.1.name
+catalog.PetCharmCatalog.ById.heart.name,Heart,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.4.name
+catalog.PetCharmCatalog.ById.leaf.name,Leaf,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.6.name
+catalog.PetCharmCatalog.ById.ring.name,Ring,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.2.name
+catalog.PetCharmCatalog.ById.star.name,Star,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.5.name
 catalog.WearableCatalog.Tabs.1.label,Hat,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.2.label,Shirt,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.3.label,Neck,,Catalogue WearableCatalog (label)
@@ -673,6 +741,7 @@ catalog.BookCatalog.Discoveries.15.name,Win with each item type,,Catalogue BookC
 catalog.BookCatalog.Discoveries.16.name,25 tidy wins,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.16.name
 catalog.BookCatalog.Discoveries.17.name,Play 100 rounds,,Catalogue BookCatalog (name); also catalog.BookCatalog.Pages.discoveries.items.17.name
 catalog.BookCatalog.Pages.discoveries.name,Discoveries,,Catalogue BookCatalog (name)
+catalog.BookCatalog.Pages.toys.name,Toys & finishes,,Catalogue BookCatalog (name)
 catalog.EggCatalog.ById.meadow.name,Mixed Meadow,,Catalogue EggCatalog (name)
 catalog.EggCatalog.ById.sprout.name,Sprout Focused,,Catalogue EggCatalog (name)
 catalog.PetCatalog.1.description,"Soft as a nap. Hugs first, asks questions never.",,Catalogue PetCatalog (description)
