@@ -453,6 +453,9 @@ function Art.glassTransparency(base)return base*math.clamp(game:GetService("GuiS
 function Art.dockCircle(button,kind)
 	button.Text=if kind=="menu"then "Menu"else "Open deck";button.TextTransparency=1;Art.bind(button,{BackgroundColor3="panel"});Art.corner(button,24)
 	button:SetAttribute("AccessibleLabel",if kind=="menu"then "Menu"else "Deck")
+	-- v859 phone notes: Art.button's inner focus keyline is a 4 px-radius square; on press it
+	-- drew a dark box inside these round icons. The round outer ring is the press/focus cue here.
+	local keyline=button:FindFirstChild("FocusKeyline");if keyline then keyline.Visible=false end
 	local glyph=Art.frame(button,"DockGlyph","text",UDim2.new(.5,-12,.5,-12),UDim2.fromOffset(24,24),button.ZIndex+1);glyph.BackgroundTransparency=1
 	if kind=="menu"then
 		for index=0,2 do local bar=Art.frame(glyph,"Bar","text",UDim2.fromOffset(2,4+index*7),UDim2.fromOffset(20,2),glyph.ZIndex);Art.corner(bar,1)end

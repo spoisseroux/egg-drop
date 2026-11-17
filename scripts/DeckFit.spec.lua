@@ -112,7 +112,9 @@ return function(client,parent,live,screenModule)
     assert(g.A>g.item.w and g.item.w>=44 and g.A>=64 and g.D>=68,label.." A "..g.A.." B "..g.item.w)
     local bx,by=g.item.x+g.item.w/2,g.item.y+g.item.h/2
     local deg=math.deg(math.atan2(by-g.a.Y,g.a.X-bx))
-    assert(deg>=50 and deg<=60,label.." pair angle "..deg)
+    -- v859: Spencer moved A left and B down-right, so the 55 degree line steepens a little.
+    assert(deg>=54 and deg<=68,label.." pair angle "..deg)
+    assert(math.abs(deg-g.pairAngle)<2,label.." pairAngle "..g.pairAngle.." vs drawn "..deg)
     -- Acceptance 1 (the spec's L and S sizes, body 296 px and up): no well (button + 10)
     -- closer than 10 px to the glass or the body's edge. Smaller phones hit the A 64 / B 44
     -- floors, so there the wells only have to stay on the wing.

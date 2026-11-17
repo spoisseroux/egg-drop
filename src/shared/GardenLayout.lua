@@ -42,6 +42,12 @@ Layout.DecisionInterval=.5
 Layout.WalkSpeed=4
 Layout.CatchupSpeed=9
 Layout.LeashSpeed=18
+-- v859 phone notes: pets wandered too far from their owners. Past LeashRadius studs from the
+-- owner a garden pet ends whatever it is doing (toy play, a greeting, a wander) and walks back;
+-- trips that start an activity keep LeashMargin inside it so they never trip the leash midway.
+-- Pet Park pets are bounded by the park kerb instead (ParkDirector).
+Layout.LeashRadius=19
+Layout.LeashMargin=3
 Layout.StrollSpeed=3
 -- QA v685 R9: pets sit for longer. An idle pet used to stand for at most 3.5 s between
 -- wanders, which cut every sit short; now every SitEvery-th idle turn it sits where it

@@ -57,6 +57,18 @@ return function(server)
         assert(a.mode=="Focus"and a.action=="focus"and not a.pairId and not b.pairId and b.action~="greet")
         assert(next(c.garden.pairs)==nil)
     end)
+    test("v859 leash: past LeashRadius from its owner a pet ends a greeting and walks back",function()
+        local c=fixture(2);local a,b=c.garden.actors[1],c.garden.actors[2]
+        assert(a.pairId and b.pairId)
+        -- The owner is far away without a fresh owner-moved release (sync's .65 stud rule).
+        local far=c.inputs[1].position+Vector3.new(Layout.LeashRadius+3,0,0)
+        c.inputs[1].position=far;c.inputs[1].anchor=Vector3.new(far.X,4.025,far.Z);a.lastOwner=far
+        c:step(.5);c:step(.5)
+        assert(not a.pairId and not b.pairId and next(c.garden.pairs)==nil,"the greeting outlived the leash")
+        assert(a.behavior=="follow"and(Activity.vector(a.to)-c.inputs[1].anchor).Magnitude<.5,"the pet did not head back")
+        -- A trip toward the shared toy only starts when every waypoint is inside the leash margin.
+        assert(Layout.LeashRadius>=18 and Layout.LeashRadius<=20 and Layout.LeashMargin>0)
+    end)
     test("Board is observable and cannot acquire focus, toy or an automatic reward",function()
         local c=fixture(1);c.inputs[1].mode="Board"
         for _=1,60 do c:step(.5)end

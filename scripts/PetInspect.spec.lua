@@ -109,5 +109,34 @@ return function(client)
 		board:Destroy()
 	end)
 
+	test("v859: Say hello does not flicker with the pet's busy/free steps", function()
+		local memo = {}
+		assert(Inspect.stableFree(memo, true, 0) == true)
+		assert(Inspect.stableFree(memo, false, .1) == true, "one busy step flips the button")
+		assert(Inspect.stableFree(memo, true, .3) == true and memo.since == nil)
+		assert(Inspect.stableFree(memo, false, 1) == true)
+		assert(Inspect.stableFree(memo, false, 1 + Inspect.FreeHold - .01) == true)
+		assert(Inspect.stableFree(memo, false, 1 + Inspect.FreeHold) == false, "a held change lands")
+		assert(Inspect.stableFree(memo, true, 3) == false and Inspect.stableFree(memo, true, 3 + Inspect.FreeHold) == true)
+	end)
+
+	test("v859: Drag to turn keeps a fixed orbit on the spin axis", function()
+		local viewport = Instance.new("ViewportFrame"); viewport.Size = UDim2.fromOffset(156, 300)
+		local lens = Instance.new("Camera"); lens.FieldOfView = 30
+		local visual = { rigRevision = 1, rigBoundsFrame = CFrame.new(.09, 1.03, 0), rigBoundsSize = Vector3.new(1.37, 2.06, 1.34) }
+		local probe = setmetatable({ spin = 0, card = { visual = visual, lens = lens, viewport = viewport } }, { __index = Inspect })
+		probe:fitCamera()
+		local first = lens.CFrame
+		assert(math.abs(first.X) < 1e-6, "camera off the spin axis")
+		-- Turned 45 degrees with an arm up: the box widens to 1.85 and rises a little.
+		probe.spin = math.rad(45); visual.rigBoundsSize = Vector3.new(1.85, 2.2, 1.85); visual.rigBoundsFrame = CFrame.new(.03, 1.1, .03)
+		probe:fitCamera()
+		assert((lens.CFrame.Position - first.Position).Magnitude < 1e-6, "the orbit moved while turning")
+		-- A new rig (appearance) at a turned angle never zooms out from the turn alone.
+		visual.rigRevision = 2; probe:fitCamera()
+		assert(lens.CFrame.Z <= first.Z * 1.08 + 1e-3, ("orbit zoomed out %.2f -> %.2f"):format(first.Z, lens.CFrame.Z))
+		viewport:Destroy(); lens:Destroy()
+	end)
+
 	return cases
 end

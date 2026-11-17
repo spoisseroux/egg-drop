@@ -65,6 +65,17 @@ function Inspect.helloState(facts)
  if not facts.free then return "inspect.busy",false end
  return "inspect.hello",true
 end
+-- v859 phone notes: the button flickered between "Say hello" and "Playing right now" as the
+-- pet's garden actor stepped between follow, wander pauses and play. The free/busy fact is now
+-- debounced: a change has to hold for FreeHold seconds before the button follows it.
+Inspect.FreeHold=1.2
+function Inspect.stableFree(memo,raw,now)
+ if memo.free==nil then memo.free,memo.since=raw,nil;return raw end
+ if raw==memo.free then memo.since=nil;return memo.free end
+ memo.since=memo.since or now
+ if now-memo.since>=Inspect.FreeHold then memo.free,memo.since=raw,nil end
+ return memo.free
+end
 -- Pure: card geometry for a screen. Compact = a phone-height screen.
 function Inspect.geometry(width,height)
  local compact=height<500
@@ -290,19 +301,33 @@ function Inspect:build(identity)
  end)
  return {frame=card,geometry=g,viewport=viewport,world=world,lens=lens,name=name,sub=sub,cells=cells,hello=hello,hint=hint,inputs={moved,ended}}
 end
+-- v859 phone notes: "Drag to turn" made the pet drift away. The fit re-ran whenever the
+-- animated height moved a hundredth, and the axis-aligned width of a turned pet grows up to
+-- ~1.4x at 45 degrees, so each refit mid-spin zoomed out. The orbit is now fixed: measured
+-- once per rig (and on a real height change past FitSlack), on the spin axis (x=z=0).
+Inspect.FitSlack=.15
 function Inspect:fitCamera()
  local card=self.card;local v=card and card.visual
  if not v or v.destroyed then return end
  local box,size=Bounds.get(v)
- local key=(v.rigRevision or 0)*1000+math.floor(size.Y*100)
- if card.cameraKey==key then return end
- card.cameraKey=key
+ local rig=v.rigRevision or 0
+ local fit=card.fit
+ if card.cameraKey==rig and fit and math.abs(size.Y-fit.height)<=fit.height*Inspect.FitSlack then return end
+ if card.cameraKey~=rig or not fit then
+  -- Width from the unturned pose when the card is fresh; a rig change mid-spin keeps the old
+  -- width unless the new one is clearly wider (never a zoom-out from the turn itself).
+  local wide=math.max(size.X,size.Z)
+  if fit and math.abs(self.spin or 0)%(math.pi/2)>.05 then wide=math.max(fit.wide,wide/math.sqrt(2))end
+  fit={wide=wide}
+ end
+ card.cameraKey=rig;card.fit=fit
+ fit.height,fit.centre=size.Y,box.Position.Y
  local half=math.tan(math.rad(card.lens.FieldOfView/2))
  local aspect=card.viewport.AbsoluteSize.X/math.max(1,card.viewport.AbsoluteSize.Y)
  -- Fit the widest turn of the pet (it spins), then the height.
- local wide=math.max(size.X,size.Z)
+ local wide=fit.wide
  local distance=math.max(size.Y*.5/half,wide*.5/(half*math.max(.2,aspect)))+wide*.5+.3
- card.lens.CFrame=CFrame.lookAt(Vector3.new(0,box.Position.Y+size.Y*.06,distance*1.08),Vector3.new(0,box.Position.Y,0))
+ card.lens.CFrame=CFrame.lookAt(Vector3.new(0,fit.centre+size.Y*.06,distance*1.08),Vector3.new(0,fit.centre,0))
 end
 function Inspect:refresh()
  local card=self.card;if not card then return end
@@ -343,7 +368,7 @@ function Inspect:open(player)
  if not distance or distance>Rules.InspectRange then return false end
  local card=self:build(identity)
  card.identity=identity
- self.card=card;self.spin=0
+ card.freeMemo={};self.card=card;self.spin=0
  -- A read-only local clone in the card's own viewport: the published appearance only.
  local appearance=self.options.garden:appearance(identity.board,identity.petId)
  local create=self.options.createPreview or require(script.Parent.PetFactory).new
@@ -435,7 +460,7 @@ function Inspect:step(dt,serverNow)
     local actor=self.options.garden:get(identity.ownerId,identity.petId,entry.root.Parent)
     local key,ready=Inspect.helloState({off=board:GetAttribute(Rules.OffAttribute)==true or now<(card.offUntil or 0),sent=now<(card.sentUntil or 0),
      cooling=now<(card.coolUntil or 0)or(card.pendingSeq~=nil and now-(card.pendingAt or 0)<2),distance=distance,
-     free=actor~=nil and Rules.free(actor,serverNow)and now>=(card.busyUntil or 0)})
+     free=Inspect.stableFree(card.freeMemo,actor~=nil and Rules.free(actor,serverNow),now)and now>=(card.busyUntil or 0)})
     if card.helloKey~=key then card.helloKey=key;Kit.setText(card.hello,UICopy.get(key))end
     if card.helloReady~=ready then card.helloReady=ready;Kit.setEnabled(card.hello,ready)end
     -- The preview mirrors the real pet's hello.

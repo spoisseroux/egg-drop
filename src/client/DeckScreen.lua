@@ -69,6 +69,10 @@ Screen.PocketItems=POCKET_ITEMS
 -- width / height on a phone. The shell is the largest one of that shape that fits, centred.
 Screen.Fit={margin=8,aspect=2.3,crown=16,chin=14}
 Screen.PairAngle=55 -- DECK-LAYOUT-SPEC-v834 row 6: A-to-B line, degrees from horizontal
+-- v859 phone notes (Spencer): A "a bit more left", B a little down and to the right. Shares of
+-- the wing width, applied after the 55 degree placement (the line ends up about 60-64 degrees).
+-- Where the closer pair would cut B's hit under 44 px, B drops until the hits clear instead.
+Screen.PairNudge=table.freeze({aLeft=.04,bRight=.02,bDown=.035})
 function Screen.gripMargin(W)return if W>=800 then 40 elseif W>=700 then 24 else 6 end
 -- DECK-LAYOUT-SPEC-v834 1: the wings are a share of the body (0.19, a Game Boy Micro
 -- proportion), and every control is a share of its wing. `wingShare` is internal: when the
@@ -253,11 +257,18 @@ function Screen.resolveCompact(W,H,aspect,kx,kh,wingShare)
  local dx,dy=math.floor(apart*math.cos(math.rad(Screen.PairAngle))+.5),math.floor(apart*math.sin(math.rad(Screen.PairAngle))+.5)
  local boxW=ib/2+dx+A/2
  local ixc=math.floor(W-cx-boxW/2-.015*SW+ib/2+.5)
- local axc=ixc+dx
+ local nudge=Screen.PairNudge
+ local nA,nB=math.floor(nudge.aLeft*SW+.5),math.floor(nudge.bRight*SW+.5)
+ dy+=math.floor(nudge.bDown*SW+.5)
+ -- Closer in x, the hits would be cut at the midpoint below B's 44 px; there B drops a few
+ -- more px until the two hits clear each other vertically, so A still gets its whole move.
+ if dx-nA-nB<2*(44-math.floor((ib+8)/2))+2 then dy=math.max(dy,math.ceil((A+8)/2)+math.floor((ib+8)/2))end
+ local axc=ixc+dx-nA
+ ixc+=nB;dx-=nA+nB
  local massH=A/2+dy+ib/2+4+17
  local ay=math.floor(optical-massH/2+A/2+.5)
  ay=math.max(top+4+math.floor((A+8)/2),math.min(ay,H-6-math.floor((ib+8)/2)-dy))
- g.pairAngle=Screen.PairAngle
+ g.pairAngle=math.deg(math.atan2(dy,dx))
  g.a=Vector2.new(axc,ay)
  local aHit=rect(axc-math.floor((A+8)/2),ay-math.floor((A+8)/2),A+8,A+8)
  -- Round items (BUILD-PLAN 2026-11-13 item 4): the item button is B, below and inside A.

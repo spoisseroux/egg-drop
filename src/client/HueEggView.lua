@@ -1836,6 +1836,13 @@ function View:layoutTransaction()
  for _,node in ipairs(self.body:GetChildren())do if node:IsA("GuiObject")and node.Visible then node.Position+=UDim2.fromOffset(origin,0)end end
  self.body.CanvasSize=UDim2.fromOffset(0,y+6);self.body.ScrollingEnabled=y+6>bodyH
  self.body.CanvasPosition=Vector2.new(0,math.clamp(self.body.CanvasPosition.Y,0,math.max(0,y+6-bodyH)));self.layingOut=false;self:fitPortrait()
+ -- v859 phone notes: the stage's dark fades in over its first moments, so this receipt card
+ -- (the old window) ghosted through before the hatch. While a reveal stage is up the card is
+ -- hidden; its buttons stay the stage's sources (the stage reads their own Visible).
+ local stageReveal=if hueReceipt then self.itemReveal elseif toyReceipt then self.toyPanel.reveal elseif materialReceipt then self.materialPanel.reveal elseif featureReceipt then self.featurePanel.reveal else nil
+ -- The cinematic follows the stage's visibility while the stage borrows its scene.
+ if stageReveal and stageReveal.stage then self.card.Visible=false;self.stageHidCard=true
+ elseif self.stageHidCard then self.stageHidCard=nil;if not(self.chromeRoot and self.chromeRoot.Visible)then self.card.Visible=true end end
 end
 function View:setSaveNotice(notice)self.saveNotice=notice;if self.shade.Visible then self:refresh()end end
 function View:open(state,page,petId)

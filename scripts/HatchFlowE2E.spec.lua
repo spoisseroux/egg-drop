@@ -88,6 +88,8 @@ return function(client,parent)
 			local reveal=if expectPage=="toyReceipt"then view.toyPanel.reveal else view.itemReveal
 			if reveal.cinematic then reveal.cinematic.windowActive=true end -- the Studio window may be in the background
 			assert(art:GetAttribute("HatchIntro")==true,label..": the reveal skipped the egg (a still receipt, the v842 bug)")
+			frames(1)
+			assert(not view.card.Visible,label..": the old receipt card shows under the opening stage (v859)")
 			assert(art:GetAttribute("RevealItem")==expectItem,label..": the reveal shows "..tostring(art:GetAttribute("RevealItem")).." not "..expectItem)
 			assert(art:GetAttribute("RevealRecipe")==(if egg=="toy"then "toy"else "hue"),label..": wrong egg on the stage")
 			if egg=="toy"then

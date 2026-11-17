@@ -6,7 +6,10 @@
 local Backdrop={};Backdrop.__index=Backdrop
 Backdrop.Period=24;Backdrop.Step=1/15
 Backdrop.MotifOpacity=.88
-Backdrop.ExteriorOpacity=.68 -- About 32% of the garden shows through the exterior floor.
+-- v859 phone notes: the 68% floor read as an opaque green wall around the deck. Now a light
+-- tint: about 78% of the garden shows through, the motifs (MotifOpacity) stay on top of it.
+-- Reduce transparency (GuiService.PreferredTransparency 0) still makes it opaque.
+Backdrop.ExteriorOpacity=.22
 -- The floor carries it directly (CanvasGroup GroupTransparency did not render in
 -- Studio captures). Borrowed previews and plain surfaces keep an opaque floor.
 local function frame(parent,name)

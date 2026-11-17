@@ -79,6 +79,10 @@ end
 function Cinematic:reduced()return if type(self.reduceEffects)=="function"then self.reduceEffects()==true else self.reduceEffects==true end
 function Cinematic:visible()
  local node=self.frame
+ -- v859: a full-screen stage that borrowed the scene is what is on screen; the host card
+ -- (this frame's ancestor) is hidden under it, so the stage's own chain decides.
+ local stage=self.borrowedStage
+ if stage and typeof(stage.root)=="Instance"and stage.root.Parent then node=stage.root end
  while node do
   if node:IsA("GuiObject")and not node.Visible then return false end
   if node:IsA("ScreenGui")and not node.Enabled then return false end

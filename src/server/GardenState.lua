@@ -303,18 +303,24 @@ function Garden:decide()
             if distance(self:position(actor,now),input.anchor)>.4 then self:transition(actor,"rest",input.anchor,.5) end
             continue
         end
+        local position=self:position(actor,now)
+        -- v859 leash: too far from the owner ends any play or interaction (release frees a toy
+        -- return, a greeting partner, a rest nook) and the pet walks back.
+        if distance(position,input.position)>Layout.LeashRadius and(actor.behavior~="follow"or actor.toyActionId~=nil or actor.pairId~=nil
+            or distance(Activity.vector(actor.to),input.anchor)>.2)then
+            self:release(actor);actor.idleSince=now;self:transition(actor,"follow",input.anchor,.6)
+            continue
+        end
         if actor.toyActionId then continue end
         if actor.pairId then
             if now>=actor.endTime then local prior=self:release(actor);self:resume(actor,input,prior)end
             continue
         end
-        local position=self:position(actor,now)
-        if distance(position,input.position)>22 and(actor.behavior~="follow"or distance(Activity.vector(actor.to),input.anchor)>.2)then self:release(actor);self:transition(actor,"follow",input.anchor,.6)
-        elseif actor.behavior=="follow" then
+        if actor.behavior=="follow" then
             local target=if actor.ownerId%2==0 then Layout.ToyWest else Layout.ToyEast
             local reachable=true
             for _,waypoint in ipairs({Layout.Lawn,target,Layout.Rest})do
-                if distance(input.position,waypoint)>20 then reachable=false;break end
+                if distance(input.position,waypoint)>Layout.LeashRadius-Layout.LeashMargin then reachable=false;break end
             end
             local wanderTurn=self.options.sharedToyEnabled==false or self.options.validWander~=nil and ((actor.wanderCount or 0)%2==0 or not reachable or self.toy.ownerId~=nil)
             if now-actor.idleSince>=3.5 and now>=(actor.nextWanderAt or 0) and wanderTurn then
