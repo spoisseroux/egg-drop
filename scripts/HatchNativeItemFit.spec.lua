@@ -1,7 +1,7 @@
 return function(client,parent)
  local Scene=require(client.HatchDisplayScene);local Pose=require(client.HatchDisplayPose)
  local Run=game:GetService("RunService");local count=0
- for _,id in ipairs({"wobble_top","ball"})do
+ for _,id in ipairs({"wobble_top","ball","pocket_deck"})do
   local root=Instance.new("Frame");root.Size=UDim2.fromOffset(200,200);root.Parent=parent
   local scene=Scene.new(root,{kind="toy",result={id="item-fit-"..id,toyId=id}})
   local ok,problem=pcall(function()
@@ -14,7 +14,10 @@ return function(client,parent)
    end
    local lo,hi,contact=scene:itemProjectionBounds();local span=math.max(hi.X-lo.X,hi.Y-lo.Y)
    assert(span>=.55 and span<=.60,string.format("settled%s longest %.1fpx",id,span*200))
-   assert(contact and contact.Y>=.78 and contact.Y<=.82,string.format("settled%s contactline %.3f",id,contact and contact.Y or -1))
+   -- v850 phone notes: every item sits centred in the reveal card (it used to stand on a
+   -- fixed contact line, so a flat Pocket Deck sat low).
+   local middle=(lo.Y+hi.Y)*.5;local _=contact
+   assert(math.abs(middle-.5)<=.03,string.format("settled%s vertical middle %.3f",id,middle))
   end)
   scene:destroy();root:Destroy();assert(ok,problem);count+=1
  end

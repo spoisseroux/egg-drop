@@ -6,7 +6,9 @@ return function(client,parent)
  local function changed()if view then view:refresh()end end
  local hue=Hue.new({id=function()return "unused"end,send=function()error("material UI sent a hue operation")end,changed=changed})
  local material=Material.new({id=function()serial+=1;return "material-ui-"..serial end,send=function(action,value,revision)table.insert(sent,{action=action,value=value,revision=revision})end,changed=changed})
- view=View.new(root,hue,{materialIntent=material,activePet=function()return "pip"end,equipPet=function()equips+=1;return true end,appearance=function()return{charmVisible=false}end})
+ -- v850: the styled Pets selector stands in (without one, a one-pet save gives straight away).
+ view=View.new(root,hue,{materialIntent=material,activePet=function()return "pip"end,equipPet=function()equips+=1;return true end,appearance=function()return{charmVisible=false}end,
+  petsSelector=function()return true end})
  local state={revision=1,status="Ready",inventoryMask=127,nectar=64,hueInventory={},petHues={},materialAvailable=true,materialPoolVersion=Catalog.PoolVersion,restricted=false,materialSelectionMode="random",materialUnlocks={gloss=true},petMaterials={pip="standard",puddle="gloss"}}
  local function frames()for _=1,3 do Run.Heartbeat:Wait()end end
  local function test(name,run)run();table.insert(cases,name)end

@@ -83,20 +83,20 @@ return function(client,parent)
    assert(view:focusedCardId()=="ball","the Ball card is focused")
    settle()
    local pet=assert(view.visual,"the pane's pet")
-   assert(pet.personalPreview==true and pet.personalToyId=="ball","the pane's pet previews the Ball")
-   pet.cosmeticTime=os.clock();pet:update(0)
-   assert(pet.personalToyActive and pet.personalToy and pet.personalToy.id=="ball","the play clip's toy is in its hands")
+   -- v850: the pane's pet holds the toy with the garden grip (no play clip inside its body).
+   assert(pet.holdToyAlways==true and pet.personalPreview~=true and pet.personalToyId=="ball","the pane's pet previews the Ball")
+   pet.cosmeticTime=os.clock();pet.poseDirty=true;pet:update(0)
+   assert(pet.heldToy and pet.heldToy.id=="ball"and not pet.personalToyActive,"the Ball is in its paw with the garden grip")
    assert(view.portraitToy==nil or view.portraitToy.handle==nil,"no still copy stands at its feet")
    -- Another card: the preview swaps toys at once. None previews no toy.
    assert(tap("bone")==true and #c.sent==0);settle()
-   pet=view.visual;pet.cosmeticTime=os.clock();pet:update(0)
-   assert(pet.personalToyId=="bone"and pet.personalToy and pet.personalToy.id=="bone","the preview follows the focused card")
+   pet=view.visual;pet.cosmeticTime=os.clock();pet.poseDirty=true;pet:update(0)
+   assert(pet.personalToyId=="bone"and pet.heldToy and pet.heldToy.id=="bone","the preview follows the focused card")
    -- Reduced Effects (this fixture): the switch is a cut and the clip holds its play pose.
    assert(view.viewport.ImageTransparency==0 and view.viewport:GetAttribute("ToyFade")==false,"a cut under Reduced Effects")
-   assert(require(game.Players.LocalPlayer.PlayerScripts.Client.PetPlayVisual).previewPhase(5,true)==.43,"a still play pose")
    assert(tap("none")==true and #c.sent==0);settle()
-   pet=view.visual;pet.cosmeticTime=os.clock();pet:update(0)
-   assert(not pet.personalToy,"None previews no toy")
+   pet=view.visual;pet.cosmeticTime=os.clock();pet.poseDirty=true;pet:update(0)
+   assert(not pet.personalToy and not pet.heldToy,"None previews no toy")
    -- v816: a second tap still only selects; the pane button reads "Give to …" and gives it.
    assert(tap("ball")==true and #c.sent==0,"select again")
    assert(tap("ball")==true and #c.sent==0,"the second tap does not equip")
@@ -107,7 +107,7 @@ return function(client,parent)
    -- Leaving the Toys tab ends the preview.
    view:setTab("hue");settle()
    pet=view.visual
-   if pet then pet.cosmeticTime=os.clock();pet:update(0);assert(pet.personalPreview~=true and not pet.personalToyActive,"no play clip on other tabs")end
+   if pet then pet.cosmeticTime=os.clock();pet.poseDirty=true;pet:update(0);assert(pet.holdToyAlways~=true and not pet.personalToyActive,"no held preview toy on other tabs")end
    view:close("back")
   end)
   test("two waiting results are stored one request at a time",function()

@@ -98,7 +98,11 @@ function View.new(parent,intent,options)
   receiptOpen=function(result)return self.shade.Visible and self.page=="toyReceipt"and self.state.pendingToyResult and self.state.pendingToyResult.id==result.id end,
   shop=function()self:close("shop");if self.options.toyShop then self.options.toyShop()end end,
   tap=function(id)if self.chromeActive and self:chromeActive()and self.tab=="toys"then return self:chromeTap("toys",id)end;return nil end,
-  useNow=function(result)self.toyAssignment={resultId=result.id,toyId=result.toyId};self:landOnPets(result)end})
+  -- v850: a toy receipt's second button is Store (the first gives it to the active pet).
+  useNow=function(result)
+   if not self.toyIntent then return end
+   if self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.toyIntent:ack(result.id)end
+  end})
  self.featurePanel=FeaturePanel.new(body,self.featureIntent,{audio=self.options.audio,reduceEffects=self.options.reduceEffects,identityChanged=identityChanged,canUse=function()return self.shade.Visible and self.page=="palette"and self.tab=="features"and not self.confirmation and self.featurePanel.petId==self.petId and self:canCustomize()end,
   receiptOpen=function(result)return self.shade.Visible and self.page=="featureReceipt"and self.state.pendingFeatureResult and self.state.pendingFeatureResult.id==result.id end,
   canAssignReceipt=function(resultId,featureId)return self.shade.Visible and self.page=="palette"and self.tab=="features"and not self.confirmation and self.featurePanel.petId==self.petId and self:hasFeatureAssignment()and self.featureAssignment.resultId==resultId and self.featureAssignment.featureId==featureId end,
@@ -215,8 +219,9 @@ function View:bindRevealStages()
   reveal.options.stage={parent=self.shade,owns=function()return not self.destroyed and self.shade.Visible end,
    name=name,detail=detail,close=function()self:close("back")end,
    actions=function(result)
-    -- The first Toy Egg offers "Give to <pet>" on the main button; otherwise Use now leads.
-    local give=kind=="toy"and self.options.firstToyReady~=nil and self.options.firstToyReady(result)==true
+    -- v850: a toy always offers "Give to <pet>" (the main button) and "Store"; other items
+    -- keep Use now in front.
+    local give=kind=="toy"
     return {{source=peer(),primary=not give,act=usePeer},{source=self.action,primary=give,act=function()self:activate()end}}
    end}
  end
@@ -603,7 +608,9 @@ function View:activate()
   if self.options.firstToyGive and r and self.options.firstToyReady and self.options.firstToyReady(r)then
    return if self.toyIntent and self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.options.firstToyGive(r)
   end
-  return self.toyIntent and r and(if self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.toyIntent:ack(r.id))or false
+  if self.toyIntent and self.toyIntent.status=="Retrying"then return self.toyIntent:retry()end
+  local pet=self:activePet()
+  return self.toyIntent~=nil and r~=nil and pet~=nil and self.toyIntent:equip(pet,r.toyId,r.id)or false
  end
  if self.page=="toyBuy"then return self.toyIntent and(if self.toyIntent.status=="Retrying"then self.toyIntent:retry()else self.toyIntent:buy())or false end
  if self.page=="featureReceipt"then local r=self.state.pendingFeatureResult;return self.featureIntent and r and(if self.featureIntent.status=="Retrying"then self.featureIntent:retry()else self.featureIntent:ack(r.id))or false end
@@ -697,7 +704,7 @@ end
 function View:placePortraitToy()
  -- QA v775 note 8: the pane's pet plays with the focused toy (PetPlayVisual's preview
  -- loop), so the toy is in its hands and no still copy stands at its feet.
- local wanted=if self.visual and self.portrait.Visible and self:chromeActive()and self.tab=="toys"and self.visual.personalPreview~=true then self:focusedCardId()else nil
+ local wanted=if self.visual and self.portrait.Visible and self:chromeActive()and self.tab=="toys"and self.visual.personalPreview~=true and self.visual.holdToyAlways~=true then self:focusedCardId()else nil
  local current=self.portraitToy
  local key=tostring(wanted)..":"..tostring(self.visual)..":"..tostring(self.visual and self.visual.rigRevision)
  if current and current.key==key then return end
@@ -728,10 +735,13 @@ function View:paintPortrait()
  end
  self.visual.reducedEffects=GuiService.ReducedMotionEnabled or(self.options.reduceEffects and self.options.reduceEffects()==true)or false
  -- QA v775 note 8: tapping a toy card previews the pet playing with it (a loop of the garden clip).
- self.visual.personalPreview=self:chromeActive()and self.tab=="toys"and not self.fruitEating.active and not self.boundedEating
+ -- v850 phone notes: the play clip put the toy inside the pet's body. The Toys screen now
+ -- shows the pet holding the focused toy with the garden's own grip (Play.renderHeld).
+ local holding=self:chromeActive()and self.tab=="toys"and not self.fruitEating.active and not self.boundedEating
+ self.visual.personalPreview=false;self.visual.holdToyAlways=holding
  -- v816 Toys screen: switching toys fades the playing pet back in over 0.15 s (a cut under
  -- Reduced Motion, where the clip already holds its play pose as a still).
- local toyKey=if self.visual.personalPreview then tostring(self:focusedCardId())else nil
+ local toyKey=if holding then tostring(self:focusedCardId())else nil
  if toyKey~=self.previewToyKey then
   local switched=self.previewToyKey~=nil and toyKey~=nil;self.previewToyKey=toyKey
   local fade=switched and not(GuiService.ReducedMotionEnabled or self.visual.reducedEffects==true)
@@ -1020,11 +1030,14 @@ function View:refresh()
   if mode then
    self.action.Visible=mode=="receipt"or mode=="buy"or(intent and intent.status=="Retrying")or false
    self.action.Text=if intent and intent.status=="Retrying"then "Try again"elseif mode=="receipt"then "Store"else "Hatch · "..catalog.Cost.." Stars"
-   if kind=="toy"and mode=="receipt"and self.options.firstToyReady and self.options.firstToyReady(result)then
+   -- v850 phone bug: both toy buttons read "Store". The first-toy flow relabelled Use now as
+   -- "Store" and nothing set it back, so the next toy showed Store twice. Every toy receipt
+   -- now sets both: "Give to <pet>" gives it to the active pet at once, "Store" keeps it.
+   if kind=="toy"and mode=="receipt"then
     local pet=Pets.byId[self:activePet()or ""]or Pets.byId.pip
     self.action.Text=if intent and intent.status=="Retrying"then "Try again"else UICopy.get("onboarding.spend.give",{pet=pet.name})
     panel.useNow.Text=UICopy.get("onboarding.spend.store")
-   end
+   elseif kind~="toy"or mode~="receipt"then panel.useNow.Text="Use now"end
    self.action.Interactable=intent~=nil and intent:ready()and(mode~="buy"or(self.state.nectar or 0)>=catalog.Cost)
    if mode=="buy"and kind=="toy"and #catalog.remaining(self.state.toyUnlocks)==0 then self.action.Text="All toys owned";self.action.Interactable=false end
    if mode=="buy"and kind=="feature"and catalog.full(self.state.featureStock or {})then self.action.Text="All stacks full";self.action.Interactable=false end
@@ -1132,6 +1145,8 @@ end
 -- The in-editor recipient page (tab "pet"): kept under the hub's Pets selector so
 -- receipts and jars can still choose a pet when the selector is backed out of.
 function View:layoutPetPage()
+ -- v850: while the styled Pets selector owns the pick, the legacy recipient card stays hidden.
+ if self.selectorOwnsPick then self.card.Visible=false;return end
  if self.layingOut then return end;self.layingOut=true
  local size=self.shade.AbsoluteSize;local short=size.Y<220;local pad=if short then 4 else 12
  local width=math.max(1,math.min(900,size.X-16));local height=math.max(1,math.min(760,size.Y-(if short then 8 else 16)));self.card.Size=UDim2.fromOffset(width,height)
@@ -1272,18 +1287,26 @@ function View:chromeActive()
  return self.shade.Visible and self.page=="palette"and not self.confirmation and self.tab~="pet"
 end
 -- Receipts' "Use now" (material, toy, feature): pick the pet on the hub's Pets selector.
+-- v850: the old in-editor recipient page never shows. The styled Pets selector picks the pet;
+-- without it, a player with one pet gives it straight to that pet, otherwise this view closes;
+-- backing out of the selector closes it too (the result stays saved, "Open saved ..." on
+-- Hatch eggs).
 function View:landOnPets(result)
- self.page="palette";self.tab="pet";self.body.CanvasPosition=Vector2.zero;self:refresh()
+ self.page="palette";self.tab="pet";self.body.CanvasPosition=Vector2.zero;self.selectorOwnsPick=true;self:refresh()
  local name=if result.finishId then MaterialCatalog.ById[result.finishId].name elseif result.toyId then ToyCatalog.ById[result.toyId].name
   elseif result.featureId then FeatureCatalog.ById[result.featureId].name else "it"
- self:openPetsSelector(name)
+ if not self:openPetsSelector(name)then
+  local only,count=nil,0
+  for _,pet in ipairs(Pets.active)do if self:owned(pet.id)then count+=1;only=pet.id end end
+  if not(count==1 and self:choosePet(only))then self.selectorOwnsPick=nil;self:close("back")end
+ end
 end
 function View:openPetsSelector(itemName)
  if not self.options.petsSelector then return false end
  local lifecycle=self.lifecycleEpoch
  return self.options.petsSelector({line="Use "..itemName.." on this pet",button="Use here",
   choose=function(id)return not self.destroyed and self.shade.Visible and self.lifecycleEpoch==lifecycle and self:choosePet(id)==true end,
-  cancel=function()end})==true
+  cancel=function()if not self.destroyed and self.shade.Visible and self.lifecycleEpoch==lifecycle then self.selectorOwnsPick=nil;self:close("back")end end})==true
 end
 -- Docks the nodes the chrome borrows from the transaction card (panels, legacy rows,
 -- the portrait) into the chrome, or back to the card's body.
@@ -1298,7 +1321,9 @@ function View:showChrome(on)
  -- 23/24 for the card) drew under the chrome's well: the pane preview was blank.
  if on then self.portrait.Parent=self.chromeWell;self.portrait.Position=UDim2.new();self.portrait.Size=UDim2.fromScale(1,1)
   self.portrait.ZIndex=self.chromeWell.ZIndex+1;self.viewport.ZIndex=self.portrait.ZIndex+1
- elseif self.portrait.Parent==self.chromeWell then self.portrait.Parent=self.card;self.portrait.ZIndex=23;self.viewport.ZIndex=24 end
+  -- v850: the pane's warm well shows through (the portrait's own inset fill was the dark teal).
+  self.portrait.BackgroundTransparency=1
+ elseif self.portrait.Parent==self.chromeWell then self.portrait.Parent=self.card;self.portrait.ZIndex=23;self.viewport.ZIndex=24;self.portrait.BackgroundTransparency=0 end
  if not on and self.chromeRing then self.chromeRing.hide()end
  -- QA Q2.1: the chrome's dim joins the shared shade stack (one dim at a time); a
  -- screen opened over Customize (Wardrobe, Pets selector) hides this panel.
@@ -1352,7 +1377,8 @@ function View:buildChrome(view)
  local pane=Kit.card(body,"Preview",nil,{pad=g.pad});pane.Position=UDim2.fromOffset(g.pane.x,g.pane.y);pane.Size=UDim2.fromOffset(g.pane.w,g.pane.h)
  self.chromePane=pane
  local p=g.pad;local iw=g.pane.w-p*2
- local _,well=Kit.previewWell(pane,"PreviewWell",UDim2.fromOffset(p,p),UDim2.fromOffset(iw,g.well),12);self.chromeWell=well
+ local wellOuter,well=Kit.previewWell(pane,"PreviewWell",UDim2.fromOffset(p,p),UDim2.fromOffset(iw,g.well),12);self.chromeWell=well
+ Kit.warmWell(wellOuter) -- v850: warm house backdrop, never the dark teal
  local y=p+g.well+(if phone then 6 else 12)
  local nameH=if phone then 22 else 30
  self.paneName=Kit.text(pane,"Title","","text",{Name="PaneName",Position=UDim2.fromOffset(p,y),Size=UDim2.fromOffset(iw-80,nameH),TextSize=if phone then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
@@ -1855,6 +1881,7 @@ function View:open(state,page,petId)
   else self.confirmation={equipPetId=self.equipTargetId};self.machineSwitching=nil end
  end
  if self.page=="palette"and not self:canCustomize()and not self:hasReceiptAssignment()then return false end
+ self.selectorOwnsPick=nil
  self.lifecycleEpoch=(self.lifecycleEpoch or 0)+1;self.previousSelection=GuiService.SelectedObject;self.epoch+=1;self.shade:SetAttribute("ControllerEpoch",self.epoch);self.shade.Visible=true;self:refresh()
  -- QA Q2.2: opened from the Companions hub, the page slides in from the right (Pets move).
  local from=self.slideFrom;self.slideFrom=nil
@@ -1863,6 +1890,7 @@ function View:open(state,page,petId)
  return true
 end
 function View:close(reason,reconciled)
+ self.selectorOwnsPick=nil
  self.fruitEating:cancel();self.eatingProof:cancel();self.eatingReady=nil;self.boundedEating=nil
  self:stopPortraitClock()
  if not self.shade.Visible then return end

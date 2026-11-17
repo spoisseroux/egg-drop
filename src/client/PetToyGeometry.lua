@@ -121,14 +121,15 @@ Toys.PartLimit=12
 --   bone            across the body, one end up
 --   wobble_top      standing on the raised palm
 --   squeaky_carrot  leaves up, like a little bouquet
---   pocket_deck     screen tipped up toward the face
+--   pocket_deck     (v850) both paws, held out in front at chest height, screen turned to the
+--                   pet and tipped up toward its face, 1.5x so it reads (`twoHands`, `scale`)
 Toys.Hold=table.freeze({
  sparkler=table.freeze({offset=Vector3.new(.03,.07,.045),turn=CFrame.Angles(.18,0,-.12),fold=.55}),
  ball=table.freeze({offset=Vector3.new(-.03,-.005,.115),turn=CFrame.identity,fold=.5}),
  bone=table.freeze({offset=Vector3.new(-.01,0,.07),turn=CFrame.Angles(0,.25,.3),fold=.4}),
  wobble_top=table.freeze({offset=Vector3.new(0,.085,.06),turn=CFrame.identity,fold=.6}),
  squeaky_carrot=table.freeze({offset=Vector3.new(0,.03,.065),turn=CFrame.Angles(0,0,.35),fold=.45}),
- pocket_deck=table.freeze({offset=Vector3.new(-.05,.02,.075),turn=CFrame.Angles(-.4,-.2,0),fold=.5}),
+ pocket_deck=table.freeze({offset=Vector3.new(0,.03,.11),turn=CFrame.Angles(0,math.pi,0)*CFrame.Angles(.55,0,0),fold=.55,twoHands=true,scale=1.5}),
 })
 Toys.DefaultHold=table.freeze({offset=Vector3.new(.035,0,.045),turn=CFrame.identity,fold=.4})
 function Toys.hold(id)return Toys.Hold[id]or Toys.DefaultHold end

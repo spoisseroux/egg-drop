@@ -52,6 +52,11 @@ return function(client,parent)
 				local id=value.eligible[1];S.nectar-=Toys.Cost;S.toyUnlocks[id]=true
 				S.pendingToyResult={id=value.id,toyId=id,revision=r,catalogVersion=Toys.CatalogVersion}
 				S.lastToyResult={id=value.id,action="toyBuy",resultId=value.id,toyId=id,revision=r,catalogVersion=Toys.CatalogVersion,cost=Toys.Cost,balanceBefore=before,balanceAfter=S.nectar}
+			elseif action=="toyEquip"then
+				local beforeToy=S.petToys[value.petId]or Toys.Default
+				S.pendingToyResult=nil;S.petToys[value.petId]=value.toyId
+				S.lastToyResult={id=value.id,action="toyEquip",revision=r,catalogVersion=Toys.CatalogVersion,cost=0,petId=value.petId,toyId=value.toyId,
+					selectedBefore=beforeToy,selectedAfter=value.toyId,acknowledgedResultId=value.resultId,balanceBefore=before,balanceAfter=before}
 			elseif action=="toyAck"then
 				S.pendingToyResult=nil
 				S.lastToyResult={id=value.id,action="toyAck",revision=r,catalogVersion=Toys.CatalogVersion,cost=0,acknowledgedResultId=value.resultId,balanceBefore=before,balanceAfter=before}
@@ -85,6 +90,10 @@ return function(client,parent)
 			assert(art:GetAttribute("HatchIntro")==true,label..": the reveal skipped the egg (a still receipt, the v842 bug)")
 			assert(art:GetAttribute("RevealItem")==expectItem,label..": the reveal shows "..tostring(art:GetAttribute("RevealItem")).." not "..expectItem)
 			assert(art:GetAttribute("RevealRecipe")==(if egg=="toy"then "toy"else "hue"),label..": wrong egg on the stage")
+			if egg=="toy"then
+				-- v850: a toy always offers Give to <pet> and Store (it was "Store" twice).
+				assert(view.action.Text:find("Give to",1,true)and view.toyPanel.useNow.Text=="Store",label..": toy buttons read "..view.action.Text.." / "..view.toyPanel.useNow.Text)
+			end
 			t=os.clock();while #cues==0 and os.clock()-t<4 do frames(1)end
 			assert(#cues>0,label..": the hatch asked for no sound")
 			view:close("back");frames()
@@ -99,6 +108,23 @@ return function(client,parent)
 			hatch("toy","toyReceipt",firstToy,"Toy")
 			assert(table.find(log,"hueStore")and table.find(log,"hueStore")<table.find(log,"toyBuy"),"the jar was stored before the toy was bought: "..table.concat(log,","))
 			assert(S.hueInventory.rose==1 and not S.pendingHueResult,"the jar is in the inventory, not lost")
+		end)
+		test("the saved toy reopens with Give to <pet> and Store; Give hands it over; a second toy keeps both labels",function()
+			local before=#log
+			nursery:open(copy(S));frames();nursery:selectRecipe("toy");frames()
+			assert(Shop.hatchAction("toy",S).text=="Open saved toy","the first toy is still saved")
+			nursery:actPrimary()
+			local w=os.clock();while not(view.shade.Visible and view.page=="toyReceipt")and os.clock()-w<3 do frames(1)end
+			assert(view.page=="toyReceipt","the saved toy reopens")
+			assert(view.action.Text:find("Give to",1,true)and view.toyPanel.useNow.Text=="Store","reopened toy buttons read "..view.action.Text.." / "..view.toyPanel.useNow.Text)
+			assert(view:activate(),"Give to <pet> acts")
+			w=os.clock();while S.pendingToyResult and os.clock()-w<3 do frames(1)end
+			local found=false;for i=before+1,#log do if log[i]=="toyEquip"then found=true end end
+			assert(found and not S.pendingToyResult,"Give sent a toyEquip for the active pet: "..table.concat(log,","))
+			assert(not(view.shade.Visible and view.page=="palette"and view.tab=="pet"),"the old pet picker never shows")
+			view:close("back");frames()
+			local t=(function()local e=Toys.remaining(S.toyUnlocks);table.sort(e);return e[1]end)()
+			hatch("toy","toyReceipt",t,"Toy 2")
 		end)
 		test("Customization Egg again: the waiting toy is acknowledged first, then a fresh jar hatch",function()
 			hatch("look","receipt","tide","Customization 2")

@@ -460,7 +460,8 @@ function Hub:refresh()
  else
   self.rowIndex=math.clamp(self.rowIndex,1,#Hub.Rows)
   for index,entry in ipairs(self.rows)do
-   local focused=index==self.rowIndex
+   -- v850: opened by touch, no row is highlighted; the ring is for gamepad and keyboard.
+   local focused=index==self.rowIndex and not self.touchMode
    paintRowFocus(entry,focused)
    Kit.paint(entry.disc,"BackgroundColor3",function()return if focused then Kit.color("accent")else Kit.Color.ink end)
    Kit.tintIcon(entry.icon,if focused then "ink"else "text")
@@ -500,6 +501,7 @@ end
 function Hub:focusRow(index,instant)
  self.rowIndex=math.clamp(index,1,#Hub.Rows);self:refresh()
  local entry=self.rows[self.rowIndex]
+ if self.touchMode and self.page=="hub"then if self.ring then self.ring.hide()end;return end
  if entry and self.ring then self.ring.attach(entry.button,if self.view then 12 else 14)end
  if instant and self.ring then self.ring.root.Visible=self.visible and self.ring.root.Visible end
 end
@@ -577,6 +579,10 @@ end
 -- Keyboard / gamepad (bound by the caller, as the Wardrobe's ContextAction is).
 function Hub:input(key)
  local K=Enum.KeyCode
+ -- The first gamepad / keyboard press after a touch open shows the focus again.
+ if self.touchMode then self.touchMode=false;self:refocus()
+  if key==K.Left or key==K.A or key==K.DPadLeft or key==K.Right or key==K.D or key==K.DPadRight or key==K.Up or key==K.W or key==K.DPadUp or key==K.Down or key==K.S or key==K.DPadDown then return end
+ end
  if key==K.Left or key==K.A or key==K.DPadLeft then self:move(-1,0)
  elseif key==K.Right or key==K.D or key==K.DPadRight then self:move(1,0)
  elseif key==K.Up or key==K.W or key==K.DPadUp then self:move(0,-1)
@@ -607,6 +613,7 @@ function Hub:open(ctx,options)
  self.assign=options.assign;self.pendingFollow=nil
  self.page=options.page or "hub";self.key=nil;self.slideFrom=nil
  self.rowIndex=self.lastRow or Hub.DefaultRow
+ self.touchMode=if options.touch~=nil then options.touch==true else Kit.lastInputTouch()
  self.visible=true;self.covered=false;self.root.Visible=true
  Kit.shadeOpen(self,self.shade,function(covered)self:setCovered(covered)end)
  if self.page=="pets"then

@@ -300,6 +300,8 @@ function Stage:build()
  self.cardFloor.AnchorPoint=Vector2.new(.5,.5);self.cardFloor.BackgroundColor3=look.backDeep:Lerp(Color3.new(0,0,0),.5);self.cardFloor.BackgroundTransparency=.82
  C.gradient(self.cardFloor,0,{{0,1},{.3,0},{.7,0},{1,1}})
  Kit.node("UICorner",self.cardFloor,{CornerRadius=UDim.new(.5,0)})
+ -- v850: items are centred in the card now, so a floor pool low on it read as a stray band.
+ self.cardFloor.Visible=false
  local seatLayer=layer(root,"SeatLayer",6)
  self.seat=Kit.frame(seatLayer,"NativeSceneSeat",nil,UDim2.new(),UDim2.fromOffset(10,10));self.seat.AnchorPoint=Vector2.new(.5,.5)
  local sparkLayer=layer(root,"Burst",7)

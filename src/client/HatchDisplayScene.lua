@@ -236,6 +236,14 @@ function Scene:layout()
    local v=contact.Z-target.Z;local k=.6*tangent
    local u=(v*math.sin(math.rad(8))+k*v*math.cos(math.rad(8))-k*distance)/(math.cos(math.rad(8))-k*math.sin(math.rad(8)))
    target=Vector3.new(target.X,contact.Y-u,target.Z)
+   -- v850 phone notes: a flat item (the Pocket Deck) sat low in the reveal card, because the
+   -- camera put the floor contact on a fixed line. The aim is now the settled item's own
+   -- vertical middle, so every item is centred in the card.
+   do
+    local lowY,highY=math.huge,-math.huge
+    for _,point in ipairs(self.itemSettledPoints)do lowY=math.min(lowY,point.Y);highY=math.max(highY,point.Y)end
+    if lowY<math.huge then target=Vector3.new(target.X,(lowY+highY)*.5,target.Z)end
+   end
    local camera=CFrame.lookAt(target+direction*distance,target)
    local lx,ly,hx,hy=math.huge,math.huge,-math.huge,-math.huge
    for _,point in ipairs(self.itemSettledPoints)do

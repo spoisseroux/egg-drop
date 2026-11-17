@@ -101,6 +101,14 @@ return function(client,parent)
     local cancelled=false
     hub:open({state=state,activeId=active},{page="pets",assign={choose=function()return true end,cancel=function()cancelled=true end}});settle()
     hub:input(K.Backspace);assert(cancelled and not hub:isOpen(),"Back in assign mode cancels")
+    -- v850: opened by touch, no row is highlighted and no ring shows; the first arrow
+    -- press brings the focus back (on the remembered row) without moving it.
+    hub:open({wallet=1,state=state,activeId=active},{touch=true});settle()
+    for _,row in ipairs(hub.rows)do assert(row.stroke.Thickness==1,"a row is highlighted on a touch open")end
+    assert(not hub.ring.root.Visible,"the focus ring shows on a touch open")
+    local was=hub.rowIndex;hub:input(K.Down);settle()
+    assert(hub.rowIndex==was and hub.rows[was].stroke.Thickness==2,"the first key shows the focus where it was")
+    hub:input(K.ButtonB)
     hub:destroy();host:Destroy()
    end)
   end

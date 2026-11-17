@@ -105,14 +105,16 @@ return function(client,parent)
    assert(view.charmCards.none:GetAttribute("CardStatus")=="WEARING")
    saved={charmVisible=true,charmShape="dot"};view:refresh()
   end)
-  test("material, toy and feature Use now land on the hub's Pets selector",function()
-   for _,case in ipairs({{view.materialPanel,{id="m1",finishId="gloss"},"Gloss"},{view.toyPanel,{id="t1",toyId="ball"},"Ball"},{view.featurePanel,{id="f1",featureId="horns"},nil}})do
+  -- v850: a toy receipt gives to the active pet or stores; it never opens a pet picker.
+  test("material and feature Use now land on the hub's Pets selector; the legacy recipient card stays hidden",function()
+   for _,case in ipairs({{view.materialPanel,{id="m1",finishId="gloss"},"Gloss"},{view.featurePanel,{id="f1",featureId="horns"},nil}})do
     local before=#selector
     view.page="materialReceipt";view.tab="materials"
     case[1].options.useNow(case[2]);frames()
     assert(#selector==before+1,"Use now did not open the Pets selector")
     local assign=selector[#selector]
     assert(view.page=="palette"and view.tab=="pet"and assign.button=="Use here"and type(assign.choose)=="function")
+    assert(view.selectorOwnsPick and not view.card.Visible,"the old recipient card shows under the selector")
     if case[3]then assert(assign.line:find(case[3]),assign.line)end
     view.materialAssignment=nil;view.toyAssignment=nil;view.featureAssignment=nil
    end

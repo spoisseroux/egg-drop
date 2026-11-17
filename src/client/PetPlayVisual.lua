@@ -41,6 +41,8 @@ function Play.holds(v)
   and not v.careState and not v.parkPose and not v.revealPose and v.gardenAction~="toyReturn"and v.gardenAction~="shove"
 end
 -- The holding arm's extra fold, eased so equipping, a play clip and a put-down never pop.
+-- v850: true while the carried toy wants both paws (the Pocket Deck): both arms raise.
+function Play.holdsTwo(v)return Play.holds(v)and Toys.hold(v.personalToyId).twoHands==true end
 function Play.holdFold(v,dt,playing)
  local target=if not playing and Play.holds(v)then Toys.hold(v.personalToyId).fold else 0
  local current=v.toyHoldFold or 0
@@ -64,14 +66,18 @@ function Play.renderHeld(v,root)
  local seats=v.heldSeats;local hand=seats.right or seats.left
  if not hand or not hand.part or not hand.part.Parent then dropHeld(v);return end
  if not held then
-  held=Toys.create(v.model,id,seats.height);if not held then return end
+  held=Toys.create(v.model,id,seats.height*(Toys.hold(id).scale or 1));if not held then return end
   held.model.Name="HeldToy_"..id;held.height=seats.height
   v.heldToy=held
  elseif not held.model.Parent then held.model.Parent=v.model end
  -- v842 phone notes: a carried sparkler sparks in the pet's paw too (off under Reduced Effects).
  Toys.setSparks(held,not v.reducedEffects)
  local hold=Toys.hold(id);local size=held.height
- held:pivot(CFrame.new(hand.part.Position+root:VectorToWorldSpace(hold.offset*size))*root.Rotation*hold.turn)
+ -- v850: a two-paw toy (the Pocket Deck) is held between both hands, out in front.
+ local anchor=hand.part.Position
+ local other=seats.left
+ if hold.twoHands and other and other.part and other.part.Parent and seats.right and seats.right.part then anchor=(seats.right.part.Position+other.part.Position)*.5 end
+ held:pivot(CFrame.new(anchor+root:VectorToWorldSpace(hold.offset*size))*root.Rotation*hold.turn)
 end
 function Play.cancel(v)
  hideToy(v);v.personalQuietSince=nil;v.personalPlayStarted=nil;v.personalPlayToken=nil;v.personalClipDuration=nil

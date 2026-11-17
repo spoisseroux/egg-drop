@@ -639,6 +639,19 @@ end
 
 -- Border stays outside a single rounded compositor mask. Unlike a Frame corner,
 -- CanvasGroup's rounded mask clips descendant viewports/images at the corners.
+-- v850: the warm house backdrop for item and pet previews (cream to peach, the Common
+-- reveal colours): Customize / Toys pane wells use it instead of the dark teal well.
+Kit.WarmWell=table.freeze({top=Color3.fromHex("#FFE2B8"),floor=Color3.fromHex("#E9946A")})
+function Kit.warmWell(frame)
+ -- A fill of its own over the themed well colour (theme repaints never reach it).
+ local fill=frame:FindFirstChild("WarmFill")or node("Frame",frame,{Name="WarmFill",BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=frame.ZIndex,Active=false})
+ fill.BackgroundColor3=Color3.new(1,1,1);fill.BackgroundTransparency=0
+ local corner=frame:FindFirstChildOfClass("UICorner");if corner then node("UICorner",fill,{CornerRadius=corner.CornerRadius})end
+ local g=fill:FindFirstChild("WarmGradient")or node("UIGradient",fill,{Name="WarmGradient"})
+ g.Rotation=90;g.Color=ColorSequence.new(Kit.WarmWell.top,Kit.WarmWell.floor:Lerp(Kit.WarmWell.top,.15))
+ frame:SetAttribute("WarmWell",true)
+ return fill
+end
 function Kit.previewWell(parent,name,position,size,radius)
  radius=radius or 12
  local outer=Kit.frame(parent,name,"well",position,size,radius);Kit.stroke(outer)

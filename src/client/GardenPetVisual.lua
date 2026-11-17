@@ -286,7 +286,9 @@ function Visual:update(dt)
   if helloExpression then beatHandR+=helloHand end
  end
  -- The carried toy (R8): the holding arm stays a little raised between plays.
- beatHandR+=PersonalPlay.holdFold(self,dt,personal~=nil)
+ local holdFold=PersonalPlay.holdFold(self,dt,personal~=nil)
+ beatHandR+=holdFold
+ if PersonalPlay.holdsTwo(self)then beatHandL+=holdFold end -- v850: two paws on the Pocket Deck
  local expression=toyExpression or reactExpression or helloExpression or beatExpression or Expression.name(self)
  if sit>.5 and not toyExpression and not reactExpression and not self.petting then expression=Sit.face(self.sitAge)or(if expression=="neutral"then "content"else expression)end
  local pose=Expression.get(expression)
