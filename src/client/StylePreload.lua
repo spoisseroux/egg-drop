@@ -69,6 +69,7 @@ function Preload:run()
 	local waited = 0
 	while not self.gardenReady() and waited < Preload.GardenWait and not self.stopped do waited += self.wait(0.5) or 0.5 end
 	self.wait(Preload.Settle)
+	self:report("StylePreloadStartedAt", os.clock())
 	local index = 1
 	while index <= #self.images and not self.stopped do
 		local pending = 0
@@ -78,6 +79,7 @@ function Preload:run()
 			self.warm:request({ id }, function(ok)
 				pending -= 1
 				if ok then self.ready[id] = true else self.failed[id] = true end
+				self:progress()
 			end, 0)
 		end
 		index += Preload.Batch
@@ -94,6 +96,15 @@ function Preload:run()
 		self.wait(Preload.Gap)
 	end
 	self.done = true
+	self:report("StylePreloadDoneAt", os.clock())
+end
+-- QA readout (live progress, readable from outside this module): attributes on `reportTo`
+-- (the shared preload uses the PlayerGui). Specs pass no target.
+function Preload:report(name, value) if self.reportTo then pcall(self.reportTo.SetAttribute, self.reportTo, name, value) end end
+function Preload:progress()
+	local n = 0
+	for _ in pairs(self.ready) do n += 1 end
+	self:report("StylePreloadReady", n); self:report("StylePreloadTotal", #self.images)
 end
 
 -- Just in time (Deck style opens): every style image not warm yet goes to the queue at the
@@ -106,6 +117,7 @@ function Preload:warmNow()
 			self.warm:request({ id }, function(ok)
 				self.boosted[id] = nil
 				if ok then self.ready[id] = true else self.failed[id] = true end
+				self:progress()
 			end, 1)
 		end
 	end
@@ -120,6 +132,7 @@ function Preload.start()
 	local player = Players.LocalPlayer
 	if not player then return nil end
 	Preload.shared = Preload.new()
+	Preload.shared.reportTo = player:FindFirstChildOfClass("PlayerGui")
 	task.spawn(function() Preload.shared:run() end)
 	return Preload.shared
 end

@@ -140,6 +140,9 @@ local function miniDeck(parent,width,position)
  local function show(on)
   placeholder.Visible=not on
   if on then shimmer.stop()elseif shimmer.stopped then shimmer=Shimmer.attach(placeholder)end
+  -- The LCD is a plain frame (no image to wait for): it waits with the sprites, or the
+  -- loading tile showed a dark screen-shaped box (Spencer, launch candidate).
+  lcd.Visible=on
   for _,image in ipairs(root:GetDescendants())do if image:IsA("ImageLabel")then image.Visible=on and(image~=finish or overlayWanted)end end
  end
  root.Destroying:Connect(function()epoch+=1;if ticket then ticket:cancel()end end)
