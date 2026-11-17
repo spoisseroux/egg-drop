@@ -42,3 +42,18 @@ Ship Option A now (v1). Build Option B as v1.1 behind a flag, with a determinism
 2. Option B: is the input-horizon lockstep (the server never steps past the client's reported tick) safe against stalling and speed-up exploits, and against the server's other per-board work (Welcome timers, field objectives, overflow grace, pause by menus)?
 3. Option B determinism: float32 Vector2 and FMA on ARM. Is hash plus rollback enough, or should the sim move to plain Luau numbers (doubles) for positions?
 4. Anything that makes A or B break in production that this plan misses?
+
+## Option B, revised after the architect review (Spencer 2026-11-17: "Before launch, now")
+
+Behind `FeatureFlags.DeckClientSim` (off until B5 passes). The Welcome round stays on today's path. Its demo drops and refresh are server-timed, and it is played once.
+
+| Slice | What | Done when |
+|---|---|---|
+| B0 Determinism | Move `BoardSimulation` and the physics parts of `BoardItems` to `ReplicatedStorage.Shared`. Use plain Luau numbers (no Vector2) and a literal launch table (no `math.sin/cos`). Add `Sim.hash(board)`. Add a harness that replays one input log on the server and the client and compares hashes per tick. | Studio, server and client: same hash for 3 logged rounds. Spencer's phone: same hash as the server. |
+| B1 Inputs | Everything that changes or pauses the board becomes a tick-stamped input: drop (aim), swap, pop, arm, menu pause/resume. The drop interval is counted in ticks. The nursery-save wait holds rewards, not the board. The step cap moves to the client clock. | Server replay of a logged round reproduces the round, score and payout of today's path. |
+| B2 Lockstep | The client sends `{tick, inputs}` plus a 10 Hz heartbeat. The server steps the board only to the client's tick. Clock guards: no faster than wall time +5%, lead at most 1 s, more than 3 s behind pauses the board. Tiers are revealed 4 ahead, not the seed. | Exploit specs: speed-up, stall and replay refused. |
+| B3 Client render | The client steps the shared sim and draws it, so merges, bounces and items show at once. The score shows provisionally and the server's value settles it. Own-board ghosts and the snapshot stream retire. Other players' held decks are unchanged. | Lag 0, 0.6 s and jitter: merge pause 0, no fades, no jumps. |
+| B4 Verify and rollback | The server sends a state hash every 0.25 s. On a mismatch it sends the full state, and the client restores it and replays its logged inputs, spread over frames. Desync counter. | Forced desync recovers within 0.5 s, no visible pop above 0.5 studs. |
+| B5 Soak and flip | Studio soak under loss and jitter. Spencer's phone and PC test. Flag on, publish. | Spencer's QA. |
+
+Estimate: B0 1 session, B1 1, B2 1, B3 1 to 2, B4 1, B5 0.5.
