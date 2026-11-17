@@ -5,9 +5,9 @@
 -- Park=false (Pet Park K1, 2026-11-13) leaves GardenState without a ParkDirector: no playground
 -- membership, slots or Play date, and the garden snapshot exactly as before. ON for the private
 -- two-account test build (2026-11-13); confirm with Spencer before any public publish.
--- TestFreshSaves=true (TEST ONLY, Spencer 2026-11-13): each private publish uses a fresh progress
--- store keyed by PlaceVersion (ProgressStore), so testers start over every build. MUST be false
--- for the public launch, or every update would wipe players' progress.
+-- TestFreshSaves (TEST ONLY, Spencer 2026-11-13): true gives each private publish a fresh progress
+-- store keyed by PlaceVersion (ProgressStore). v1 launch build (2026-11-17): false, so every
+-- save persists in "EggDropLaunchV1" across updates. Never turn it back on in a public build.
 -- PseudoLocale=true (v1 track C, text-fit check): UICopy.get returns every string ~35% longer
 -- with accented letters in [brackets]. Studio only (UICopy ignores it outside Studio); keep false.
 -- SecondPet=false (overnight 2026-11-14, slice E): Blip exists in data (collection bit 8) but is never
@@ -19,5 +19,5 @@
 -- Parts at 8 Hz (S2, needs Stream); Drop answers a tap at once and acks it, with a one-deep server
 -- drop queue (S4); Ghost (S5) shows the tapped ball at once and lets the next tap go on its local
 -- touch-down (needs Drop; off until verified in Studio). Off = today's path. The server stays authoritative.
-return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=true,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
+return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})
