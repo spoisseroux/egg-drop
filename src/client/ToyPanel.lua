@@ -72,7 +72,10 @@ function Panel:refresh(state,petId,mode,animate)
   n.Text=(if selected==id then "✓ "else "")..Catalog.ById[id].name;n.Interactable=self.intent~=nil and not self.intent.pending and selected~=id
   Art.tab(n,selected==id,n.Interactable)
  end
- local odds={};for _,entry in ipairs(Catalog.odds(self.state.toyUnlocks))do table.insert(odds,Catalog.ById[entry.id].name.." · "..OddsText.format(entry.probability))end
+ local odds,rounded={},false
+ for _,entry in ipairs(Catalog.odds(self.state.toyUnlocks))do local text,r=OddsText.format(entry.probability);rounded=rounded or r==true;table.insert(odds,Catalog.ById[entry.id].name.." · "..text)end
+ -- Paid random items: rounded odds say so (LISTING.md section 7).
+ if rounded then table.insert(odds,require(game:GetService("ReplicatedStorage").Shared.UICopy).get("hatch.odds.rounded"))end
  -- Restricted players get the fixed next toy, never a roll (F1 policy): no odds list.
  self.pool.Visible=buy;self.pool.Text=if NextItem.restricted(self.state)then NextItem.line("toy",self.state)elseif #odds==0 then "All toys owned"else table.concat(odds,"\n")
  self.shop.Visible=not receipt and not buy;self.shop.Text=if #odds==0 then "All toys owned"else "Toy Egg · "..Catalog.Cost.." Stars"

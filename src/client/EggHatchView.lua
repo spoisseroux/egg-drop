@@ -672,8 +672,11 @@ function View.oddsRows(id,state)
  elseif id=="feature"then
   for _,r in ipairs(FeatureCatalog.odds())do add(r.id,FeatureCatalog.ById[r.id].name,r.probability)end
  end
- for index,text in ipairs(OddsText.list(chances))do rows[index].value=text end
- return{rows=rows,per=(View.EggCopy[id]or {}).per or "",empty=empty}
+ local texts,rounded=OddsText.list(chances)
+ for index,text in ipairs(texts)do rows[index].value=text end
+ -- Paid random items: a rounded table says so under the odds (an info row, like the pity line).
+ if rounded and #rows>0 then table.insert(rows,{id="rounded",name=UICopy.get("hatch.odds.rounded"),value="",info=true})end
+ return{rows=rows,per=(View.EggCopy[id]or {}).per or "",empty=empty,rounded=rounded==true}
 end
 -- Pure: the Customization Egg's odds (plan §5.2). Values come straight from the integer
 -- table (LookEggCatalog.odds), never OddsText.list, so the label is the real odds. One Charm
@@ -701,13 +704,17 @@ function View.lookOdds(state)
   return{rows=rows,per=per,empty=empty,restricted=true,note=UICopy.get("hatch.look.promise.fixed")}
  end
  local rows,charmTotal,shapes={},0,{}
+ -- The pity egg (LISTING.md section 7): this egg is always a charm, so the jars read 0% and the
+ -- charm row 100%, split evenly over the missing shapes (100% / missing each).
+ local due=LookEgg.pityDue(missing,misses)
  for _,row in ipairs(LookEgg.odds(missing)or {})do
   if LookEgg.kind(row.id)=="charm"then charmTotal+=row.percent;table.insert(shapes,Charms.ById[LookEgg.shape(row.id)].name)
-  else table.insert(rows,{id=row.id,name=lookName(row.id),value=row.percent.."%"})end
+  else table.insert(rows,{id=row.id,name=lookName(row.id),value=if due then "0%"else row.percent.."%"})end
  end
+ local each=if due then(OddsText.equalShare(math.max(1,#missing)))else LookEgg.Tables[#missing].charm.."%"
  if #missing>0 then
-  table.insert(rows,{id="charm",name=UICopy.get("hatch.look.charmName"),value=charmTotal.."%",
-   label=UICopy.get("hatch.look.charmRow",{each=LookEgg.Tables[#missing].charm.."%",shapes=table.concat(shapes,", ")})})
+  table.insert(rows,{id="charm",name=UICopy.get("hatch.look.charmName"),value=if due then "100%"else charmTotal.."%",
+   label=UICopy.get("hatch.look.charmRow",{each=each,shapes=table.concat(shapes,", ")})})
  end
  local left=LookEgg.pityLeft(missing,misses)
  local note=if not left then UICopy.get("hatch.look.allCharms")elseif left<=1 then UICopy.get("hatch.look.pityOne")else UICopy.get("hatch.look.pity",{count=left})
@@ -715,7 +722,7 @@ function View.lookOdds(state)
  -- The pity line is a row of its own (disclosed beside the odds); the missing shapes are named
  -- under the egg's description (`shapes`).
  table.insert(rows,{id="pity",name=short,label=note,value="",info=true})
- local shapesLine=if #shapes>0 then UICopy.get("hatch.look.missing",{each=LookEgg.Tables[#missing].charm.."%",shapes=table.concat(shapes,", ")})else nil
+ local shapesLine=if #shapes>0 then UICopy.get("hatch.look.missing",{each=each,shapes=table.concat(shapes,", ")})else nil
  return{rows=rows,per=per,empty=empty,note=note,shapes=shapesLine}
 end
 -- Pure: the primary button for the selected egg. With too few Stars it is disabled

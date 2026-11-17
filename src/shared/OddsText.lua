@@ -1,21 +1,28 @@
 -- Odds disclosure text (PLAY-FOREVER BUILD-PLAN F1, architect change 6). One value rounds
 -- to a whole percent; a tiny non-zero chance reads "<1%" so it never shows as 0%. `list`
 -- rounds an unequal table by largest remainder so the percentages add up to 100%; an equal
--- table reads OddsText.equalShare on every row (1/3 each: "1 in 3", never 34/33/33).
+-- table reads OddsText.equalShare on every row (1/3 each: 33.33%, never 34/33/33). `list` and
+-- `preciseList` also return whether any shown value was rounded (show OddsText.RoundedNote).
 local OddsText={}
 
 local function valid(p)return type(p)=="number"and p==p and p>0 and p<math.huge end
 
 -- v859 listing audit (launch blocker): equal shares must read equal. Six equal toys read
--- 17/17/17/17/16/16% under largest remainder. One of n equal shares reads a whole percent
--- when exact (25%), one decimal when exact (12.5%), otherwise "1 in n" (the old rule: 1/3,
--- 1/6), so every row of an equal table shows the same text.
+-- 17/17/17/17/16/16% under largest remainder. Roblox's paid random items rules want every
+-- outcome as a percentage, rounded no coarser than four significant digits, with a "may not
+-- total 100%" note when rounded (LISTING.md section 7). One of n equal shares reads a whole
+-- percent when exact (25%), one decimal when exact (12.5%), otherwise four significant
+-- digits (16.67%, 33.33%, 8.333%); the second result says whether it was rounded.
+function OddsText.precise(percent)
+ if math.abs(percent-math.round(percent))<1e-9 then return string.format("%d%%",math.round(percent)),false end
+ if math.abs(percent*10-math.round(percent*10))<1e-7 then return string.format("%.1f%%",percent),false end
+ local places=math.max(2,3-math.floor(math.log10(percent)))
+ return string.format("%."..places.."f%%",percent),true
+end
 function OddsText.equalShare(n)
  assert(type(n)=="number"and n%1==0 and n>=1,"OddsText.equalShare: n must be a whole number")
- if n==1 then return "100%"end
- if 100%n==0 then return string.format("%d%%",100//n)end
- if 1000%n==0 then return string.format("%.1f%%",100/n)end
- return "1 in "..n
+ if n==1 then return "100%",false end
+ return OddsText.precise(100/n)
 end
 -- The number of valid entries when they are all equal (2 or more), else nil.
 local function equalCount(probabilities)
@@ -35,7 +42,7 @@ function OddsText.format(probability)
  if probability>=1 then return "100%"end
  local percent=probability*100
  if percent<.5 then return "<1%"end
- -- A share of exactly 1/n (one of n equal outcomes) follows equalShare.
+ -- A share of exactly 1/n (one of n equal outcomes) follows equalShare (text, rounded).
  local n=math.round(1/probability)
  if n>1 and math.abs(probability*n-1)<1e-9 then return OddsText.equalShare(n)end
  return string.format("%d%%",math.clamp(math.floor(percent+.5),1,99))
@@ -49,9 +56,9 @@ function OddsText.list(probabilities)
  if total<=0 then for i=1,#probabilities do out[i]="0%"end;return out end
  local equal=equalCount(probabilities)
  if equal then
-  local text=OddsText.equalShare(equal)
+  local text,rounded=OddsText.equalShare(equal)
   for i,p in ipairs(probabilities)do out[i]=if valid(p)then text else "0%"end
-  return out
+  return out,rounded
  end
  local whole,rest,used={}, {},0
  for i,p in ipairs(probabilities)do
@@ -65,11 +72,13 @@ function OddsText.list(probabilities)
  for _,i in ipairs(order)do if left<=0 then break end;if valid(probabilities[i])then whole[i]+=1;left-=1 end end
  -- With more than one possible outcome none reads 100% (a tiny other chance still exists).
  local count=0;for _,p in ipairs(probabilities)do if valid(p)then count+=1 end end
+ local rounded=false
  for i,p in ipairs(probabilities)do
   local shown=if count>1 then math.min(whole[i],99)else whole[i]
   out[i]=if not valid(p)then "0%"elseif shown<1 then "<1%"else string.format("%d%%",shown)
+  if valid(p)and rest[i]>1e-9 then rounded=true end
  end
- return out
+ return out,rounded
 end
 
 -- Material pool4 needs actual conditional fractions (18.1818%,81.8182%).
@@ -82,9 +91,9 @@ function OddsText.preciseList(probabilities,places)
  local result={};if total<=0 then for i=1,#probabilities do result[i]="0%"end;return result end
  local equal=equalCount(probabilities)
  if equal then
-  local text=OddsText.equalShare(equal)
+  local text,rounded=OddsText.equalShare(equal)
   for i,p in ipairs(probabilities)do result[i]=if valid(p)then text else "0%"end
-  return result
+  return result,rounded
  end
  local units,remainder,order,used={},{},{},0
  for i,p in ipairs(probabilities)do

@@ -8,7 +8,7 @@
 -- Usage: require(PlayerScripts.Client.ZZSpecs.HatchEggsList)(PlayerScripts.Client, PlayerGui)
 return function(client,parent)
  local Shop=require(client.EggHatchView)
- local OddsText=require(game.ReplicatedStorage.Shared.OddsText)
+ local OddsText=require(game.ReplicatedStorage.Shared.OddsText);local UICopy=require(game.ReplicatedStorage.Shared.UICopy)
  local Run=game:GetService("RunService")
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local root=Instance.new("Frame");root.Name="_HatchEggsList";root.BackgroundTransparency=1;root.Size=UDim2.fromOffset(1920,1080);root.Parent=parent
@@ -34,19 +34,22 @@ return function(client,parent)
    local both=Shop.liveOrder({Features=true,MaterialEgg=true});assert(table.concat(both,",")=="toy,feature,material,look")
    assert(#Shop.liveOrder({MaterialEgg=false})==2)
   end)
-  test("pure: odds rows come from OddsText.list (equal shares read the same: 1 in 6, 1 in 3)",function()
-   -- Toy pool 3 (2026-11-15, the Pocket Deck) has six toys: a fresh save reads six rows that
-   -- add up to 100%, and three toys left still read as the rounded thirds.
+  test("pure: odds rows come from OddsText.list (equal shares read the same: 16.67%, 33.33%, with the rounding note)",function()
+   -- Toy pool 3 (2026-11-15, the Pocket Deck) has six toys: a fresh save reads six rows of
+   -- 16.67% and the "may not add up to exactly 100%" note (paid random items, LISTING.md s7).
    local ToyPool=require(game.ReplicatedStorage.Shared.ToyCatalog)
-   local fresh=Shop.oddsRows("toy",{});assert(#fresh.rows==#ToyPool.Pools[ToyPool.PoolVersion]and #fresh.rows==6 and fresh.per=="1 toy per egg")
-   local sixths=OddsText.list({1,1,1,1,1,1});for i,r in ipairs(fresh.rows)do assert(r.value==sixths[i]and r.value=="1 in 6",r.value)end
-   local toy=Shop.oddsRows("toy",{toyUnlocks={ball=true,bone=true,pocket_deck=true}});assert(#toy.rows==3 and toy.per=="1 toy per egg")
+   local fresh=Shop.oddsRows("toy",{});local note=fresh.rows[#fresh.rows]
+   assert(#fresh.rows==#ToyPool.Pools[ToyPool.PoolVersion]+1 and #fresh.rows==7 and fresh.per=="1 toy per egg"and fresh.rounded)
+   assert(note.id=="rounded"and note.info and note.value==""and note.name==UICopy.get("hatch.odds.rounded"),"the rounding note row")
+   local sixths=OddsText.list({1,1,1,1,1,1});for i=1,6 do local r=fresh.rows[i];assert(r.value==sixths[i]and r.value=="16.67%",r.value)end
+   local toy=Shop.oddsRows("toy",{toyUnlocks={ball=true,bone=true,pocket_deck=true}});assert(#toy.rows==4 and toy.per=="1 toy per egg"and toy.rows[4].id=="rounded")
    -- v859 listing audit: equal shares never read unequal (no more 34/33/33 or 17/16).
-   local thirds=OddsText.list({1/3,1/3,1/3});assert(thirds[1]=="1 in 3"and thirds[2]=="1 in 3"and thirds[3]=="1 in 3")
+   local thirds,rounded=OddsText.list({1/3,1/3,1/3});assert(thirds[1]=="33.33%"and thirds[2]=="33.33%"and thirds[3]=="33.33%"and rounded)
+   assert(not select(2,OddsText.list({1,1,1,1}))and OddsText.list({1,1,1,1,1,1,1,1,1,1,1,1})[1]=="8.333%","exact quarters are not rounded; twelfths keep four digits")
    assert(OddsText.list({1,1,1,1})[1]=="25%"and OddsText.list({1,1,1,1,1,1,1,1})[1]=="12.5%"and OddsText.list({2,1,1})[1]=="50%")
    local mixed=OddsText.list({1,2});assert(mixed[1]=="33%"and mixed[2]=="67%","unequal tables still round by largest remainder")
-   for i,r in ipairs(toy.rows)do assert(r.value==thirds[i])end
-   assert(OddsText.format(1/3)=="1 in 3"and OddsText.format(1/6)=="1 in 6"and OddsText.format(.5)=="50%"and OddsText.format(.15)=="15%"and OddsText.format(.001)=="<1%")
+   for i=1,3 do assert(toy.rows[i].value==thirds[i])end
+   assert(OddsText.format(1/3)=="33.33%"and OddsText.format(1/6)=="16.67%"and OddsText.format(.5)=="50%"and OddsText.format(.15)=="15%"and OddsText.format(.001)=="<1%")
    local everyToy={};for _,toyId in ipairs(ToyPool.Pools[ToyPool.PoolVersion])do everyToy[toyId]=true end
    assert(Shop.oddsRows("toy",{toyUnlocks=everyToy}).empty=="All toys owned")
    local hue=Shop.oddsRows("hue",{});assert(#hue.rows==4);for _,r in ipairs(hue.rows)do assert(r.value=="25%"and r.id~="reset")end -- Reset Hue jar dropped 2026-11-13
@@ -105,9 +108,11 @@ return function(client,parent)
     for _,row in ipairs({"Recipe_toy","Recipe_look"})do assert(column[row].AbsoluteSize.Y>=44)end
     assert(view:selectRecipe("toy")or view.selected=="toy");frames()
     assert(view.shopPanel:GetAttribute("SelectedEgg")=="toy"and view.eggName.Text=="Toy Egg")
-    -- Six toys in pool 3: six rows on a fresh save.
-    local odds=view.oddsHolder:GetChildren();assert(#odds==6,#odds)
-    local shown={};for _,row in ipairs(odds)do table.insert(shown,row:GetAttribute("OddsText"))end;table.sort(shown);assert(table.concat(shown,",")=="1 in 6,1 in 6,1 in 6,1 in 6,1 in 6,1 in 6",table.concat(shown,","))
+    -- Six toys in pool 3: six rows of 16.67% on a fresh save, then the rounding note.
+    local odds=view.oddsHolder:GetChildren();assert(#odds==7,#odds)
+    local shown={};for _,row in ipairs(odds)do if row.Name~="Odds_rounded"then table.insert(shown,row:GetAttribute("OddsText"))end end;table.sort(shown)
+    assert(table.concat(shown,",")=="16.67%,16.67%,16.67%,16.67%,16.67%,16.67%",table.concat(shown,","))
+    assert(view.oddsHolder:FindFirstChild("Odds_rounded"),"the rounding note shows under the Toy Egg odds")
     assert(not view:selectRecipe("hue"),"the Hue Egg is retired from the list")
     assert(view:selectRecipe("look"));frames();assert(view.shopPanel:GetAttribute("OddsRows")==9 and view.eggName.Text=="Customization Egg","seven jars, one Charm row and the pity line")
     -- Keyboard W / S / Up / Down move the selection and clamp at the ends.

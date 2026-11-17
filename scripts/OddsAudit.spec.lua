@@ -59,9 +59,14 @@ return function(client)
 			local shown = OddsText.list(list)
 			for i = 2, n do assert(shown[i] == shown[1], n .. " equal shares read unequal") end
 			assert(shown[1] == OddsText.equalShare(n) and OddsText.format(1 / n) == shown[1], n .. " shares: list and format differ")
-			local p = percent(shown[1]); assert(math.abs(p * n - 100) < 1e-6, n .. " shares do not add up")
+			assert(shown[1]:match("^[%d%.]+%%$"), n .. " shares are not a percentage: " .. shown[1])
+			local p = percent(shown[1]); assert(math.abs(p * n - 100) < 0.05, n .. " shares do not add up")
+			-- Paid random items: rounded values keep four significant digits.
+			local digits = shown[1]:gsub("%%", ""):gsub("%.", ""):gsub("^0+", "")
+			local _, rounded = OddsText.list(list)
+			assert(not rounded or #digits >= 4, n .. " shares rounded to fewer than four digits: " .. shown[1])
 		end
-		assert(OddsText.equalShare(6) == "1 in 6" and OddsText.equalShare(4) == "25%" and OddsText.equalShare(8) == "12.5%")
+		assert(OddsText.equalShare(6) == "16.67%" and OddsText.equalShare(3) == "33.33%" and OddsText.equalShare(4) == "25%" and OddsText.equalShare(8) == "12.5%")
 		local precise = OddsText.preciseList({ 1, 1, 1 }, 4); assert(precise[1] == precise[3], "preciseList equal thirds unequal")
 	end)
 
@@ -78,9 +83,10 @@ return function(client)
 			for _, entry in ipairs(Toys.odds(owned)) do table.insert(panel, { label = entry.id, value = OddsText.format(entry.probability), probability = entry.probability }) end
 			audit("Toy panel (owned mask " .. mask .. ")", panel)
 		end)
-		-- The reported case: a fresh save, six toys.
+		-- The reported case: a fresh save, six toys, each 16.67% with the rounding note.
 		local fresh = Shop.oddsRows("toy", {})
-		for _, row in ipairs(fresh.rows) do assert(row.value == fresh.rows[1].value, "fresh Toy Egg reads " .. row.value .. " and " .. fresh.rows[1].value) end
+		for i = 1, 6 do assert(fresh.rows[i].value == "16.67%", "fresh Toy Egg reads " .. fresh.rows[i].value) end
+		assert(fresh.rounded and fresh.rows[7].id == "rounded", "rounded odds carry the note")
 	end)
 
 	test("Material Egg: every pool and owned subset (whole and precise disclosure)", function()
@@ -114,6 +120,20 @@ return function(client)
 				end
 			end
 			audit("Customization Egg (charms owned mask " .. mask .. ")", rows)
+			-- The pity egg: every missing-charm count, this egg is a charm (jars 0%, charms split evenly).
+			if #missing > 0 then
+				local pity = Shop.lookOdds({ charmUnlocks = owned, lookCharmMisses = LookEgg.PityAt - 1 })
+				local pityRows = {}
+				for _, row in ipairs(pity.rows) do
+					if row.value ~= "" then
+						table.insert(pityRows, { label = row.id, value = row.value, probability = if row.id == "charm" then 1 else 0 })
+					end
+				end
+				audit("Customization Egg pity egg (charms owned mask " .. mask .. ")", pityRows)
+				local charm
+				for _, row in ipairs(pity.rows) do if row.id == "charm" then charm = row end end
+				assert(charm and charm.value == "100%" and charm.label:find(OddsText.equalShare(#missing), 1, true), "pity egg charm split: " .. tostring(charm and charm.label))
+			end
 		end)
 	end)
 

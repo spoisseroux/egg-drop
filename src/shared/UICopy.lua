@@ -44,6 +44,8 @@ local Table={
    phone="The odds are on the label",
   },
   promise="No surprises. The odds never change.",
+  -- Paid random items (LISTING.md section 7): shown under odds rounded to four significant digits.
+  odds={rounded="Rounded, so the odds may not add up to exactly 100%."},
   -- Customization Egg (plan 2026-11-16 §5.2, §6). Its odds move as charms are collected.
   look={charmRow="Charm · {each} each: {shapes}",charmShort="Charm · {each} each",charmName="Charms",charmOwned="Yours to keep. It floats in your pet's Secondary colour.",missing="Charms are {each} each. Still to find: {shapes}.",
    pityShort="Charm within {count} eggs",allCharmsShort="All charms found",pity="A charm within {count} eggs",pityOne="Next egg: a charm",
