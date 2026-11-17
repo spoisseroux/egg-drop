@@ -175,6 +175,7 @@ ui.hatch.material.random,16 Stars · one unowned material. No duplicates.,,Hatch
 ui.hatch.next.done,All collected,,Hatch eggs screen
 ui.hatch.next.label,Next item,,Hatch eggs screen
 ui.hatch.next.line,Next: {item},,Hatch eggs screen; e.g. Next: Squeaky Bone
+ui.hatch.odds.rounded,"Rounded, so the odds may not add up to exactly 100%.",,Hatch eggs screen
 ui.hatch.promise,No surprises. The odds never change.,,Hatch eggs screen
 ui.hatch.reveal.banner,{tier} {kind},,Hatch eggs screen; e.g. {tier} {kind}
 ui.hatch.reveal.close,Close,,"Hatch eggs screen; also ui.inspect.close, ui.r3.help.close"

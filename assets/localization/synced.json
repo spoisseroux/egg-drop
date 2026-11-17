@@ -2207,6 +2207,11 @@
    "context": "",
    "example": "Hatch eggs screen; e.g. Next: Squeaky Bone"
   },
+  "ui.hatch.odds.rounded": {
+   "source": "Rounded, so the odds may not add up to exactly 100%.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
   "ui.hatch.promise": {
    "source": "No surprises. The odds never change.",
    "context": "",
