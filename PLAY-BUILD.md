@@ -16,6 +16,8 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Private v842 Published 2026-11-16 — runtime 812685b, pushed; servers restarted. FRESH SAVES.** v834 phone notes: deck close no longer shrinks first (insets change under the shade), world behind the deck stays put (stale camera restore removed), waterfalls halved with tighter rolloff, Toys row last in Companions, goal/quest circles centred. Fable deck layout pass (DECK-LAYOUT-SPEC-v834.md): wider wings, A 76 / B 48 on a 55 degree diagonal, larger wordmark, smaller MENU; every phone uses icon goals. Six monotone ball themes (Pea Soup, Pocket Grey 40; Amber, Deep Sea, Bubblegum 100; Midnight 250). Specs: client 148/162 (14 known), server 63/63; quick review GO WITH CHANGES (non-blocking). Translations synced (42 add/update, 8 delete). Not checked: real phone insets on close, sounds by ear.
+
 **Private v834 Published 2026-11-16 — runtime 510d78c, pushed; servers restarted via Open Cloud. FRESH SAVES.** Spencer: A and B back to their pre-v816 sizes (A 80, B 50 on most phones) on the old diagonal, nudged 6 px left (3 on small phones) and ~8 px down off the right edge. DeckFit, CompactPhone, ItemCarousel pass. No new strings (no translation sync needed). Everything else as v833.
 
 **Private v833 Published 2026-11-16 — runtime 0892a89, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v833".
