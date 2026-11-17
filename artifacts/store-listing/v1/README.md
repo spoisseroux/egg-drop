@@ -33,7 +33,7 @@ Phone check at 150 px: the ball and face read in A and B. C reads, but its backg
 | `08-dress-up.png` | Wardrobe › Hat: Grape Pom Beanie previewed large on the Bear ("Buy 40"), with 40 and 100 prices in the grid. The Pom Beanie tile shows the weekly 32/~~40~~ price. |
 | `09-style-deck.png` | Deck style › Faceplates: Night Orb (SHOWCASE) previewed, "Buy 250", with all 16 faceplate tiles drawn. Studio's warmup gives each image only 1.2 s, so the tiles were made visible after their images had loaded. |
 | `10-collection-book.png` | Book › Toys & materials at 6/9: six toys drawn in 3D (the Pocket Deck included), two milestones to claim. The controller focus ring and mouse cursor were hidden. |
-| `11-make-it-yours.png` | Four Bears, each in a real game pose, colour and outfit (client-only clones from `PetFactory`, nothing saved). Rose Bear in a Party Hat and Berry Tee playing with the Wobble Top (the toy-play preview). Tide Bear with Gloss, Sun Hat, Specs and Bell Collar doing the idle-beat wave (held at its peak). Iris Bear with Jelly, Grape Pom Beanie and Hoodie in the sleepy resting sit. Citrus Bear with Flower Crown, Pearl Beads, Blush and Happy eyes in the deck "win" hop. |
+| `11-make-it-yours.png` | Four Bears closer together and larger in frame, each in a real game pose, colour and outfit (client-only `PetFactory` clones, nothing saved). Rose Bear in a Party Hat and Berry Tee playing with the Wobble Top. Tide Bear with Gloss, Sun Hat and Bell Collar, normal eyes, waving. Iris Bear with Jelly, Grape Pom Beanie and Hoodie holding the lit Sparkler up, normal eyes. Citrus Bear with Flower Crown, Pearl Beads, Blush and Happy eyes in the "win" hop. |
 | `12-merge-lead.png` | **Lead deck shot.** The same round later: a chain ×2 merge with +20/+40 pops, the left goal ticked (1/2), score 350, 8/24 eggs, base \"Win pays 5–6\". |
 | `13-customize-deck.png` | The same round on the **Night Orb** faceplate (250) with **Midnight** balls (250), bought with test Stars: a chain ×3 merge with +30/+50/+70 pops, both goals ticked (2/2), score 500. Every deck image was preloaded with PreloadAsync before capture. |
 
@@ -42,7 +42,7 @@ Phone check at 150 px: the ball and face read in A and B. C reads, but its backg
 - **Strong:** 02, 04, 06 and 10.
 - **Fine:** 05, 07, 08 and 09. The UI text is small at phone size, but the panels read.
 - **03:** an establishing shot. The Bears are small but readable as colour dots.
-- **11:** reads at phone size. The play, sleepy and cheer poses are clear. The wave is the game's own small paw-to-cheek wave, so it's the subtlest of the four.
+- **11:** reads at phone size. The rig's wave lifts the paw to chin height; the Bear rig has no overhead-arm pose.
 - **Icon D:** at 150 px it reads as well as the 13 Nov icon. The Bear is a little smaller in the frame and the background is greener.
 - **01 and 12** are near-duplicates (same Scout round); use 12 as the lead and drop 01 if you need the slot.
 - **13:** strongest deck shot; the Night Orb shell and the ×3 merge burst read at phone size, though the Midnight tiers are all purple so ball sizes matter more than colour.
