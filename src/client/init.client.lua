@@ -4035,4 +4035,7 @@ gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
 layout()
 updateHud()
 roomView:startPresentation(board:GetAttribute("Mode"))
+-- Launch candidate: warm the Deck style art and the 3D preview folders in the background,
+-- once the garden has loaded (StylePreload waits for it; small batches, low priority).
+require(script.StylePreload).start()
 clientUI.ambient:setRound(board:GetAttribute("Mode")=="Board")

@@ -1,0 +1,126 @@
+-- Launch candidate (Spencer, 2026-11-17): Deck style tiles showed dark or empty until their
+-- textures loaded, for players too. After the garden has loaded, this warms every image the
+-- Deck style screen draws (the mini deck's shell sprites, each faceplate texture and finish
+-- overlay) through the shared UIAssetWarmup queue at background priority 0, a few at a time.
+-- The tiles ask the same queue at priority 1 when Deck style opens, so anything still
+-- missing jumps ahead (just in time), and anything already warm answers at once.
+-- The 3D preview grids (Customize jars, Toys, charms, Wardrobe pets and wearables, material
+-- templates) draw meshes and textures, not images: their asset folders get one low-priority
+-- ContentProvider:PreloadAsync after the images. Ball themes are drawn from frames (no assets).
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ContentProvider = game:GetService("ContentProvider")
+
+local Preload = {}
+Preload.Batch = 3 -- images handed to the queue per step
+Preload.Gap = 0.4 -- seconds between batches
+Preload.Settle = 4 -- seconds after the garden appears before the first batch
+Preload.GardenWait = 30 -- give up waiting for the garden after this long and warm anyway
+-- 3D preview folders (ReplicatedStorage), in the order players meet them.
+Preload.Folders = table.freeze({ "PetToyAssets", "JarAssets", "PetCharmAssets", "PetMaterials", "PetMaterialsTwoTone", "PetAssets" })
+
+-- Pure: every image id the Deck style screen draws, deduplicated, in a stable order (the
+-- equipped look's shell first, then faceplates in their published order).
+function Preload.styleImages(assets, themes)
+	assets = assets or require(script.Parent.DeckAssets)
+	themes = themes or require(ReplicatedStorage.Shared.DeckThemes)
+	local out, seen = {}, {}
+	local function add(id) if type(id) == "string" and id ~= "" and not seen[id] then seen[id] = true; table.insert(out, id) end end
+	for _, key in ipairs({ "band", "plateOverlay", "glass", "dpadDisc", "dpadArrows", "buttonBase", "wordmark" }) do add(assets.Image[key]) end
+	local ordered = {}
+	for id, theme in pairs(themes.ById) do table.insert(ordered, { id = id, order = theme.order or math.huge }) end
+	table.sort(ordered, function(a, b) if a.order ~= b.order then return a.order < b.order end; return a.id < b.id end)
+	for _, entry in ipairs(ordered) do
+		local theme = themes.ById[entry.id]
+		add(assets.Faceplate[entry.id] or theme.texture)
+		if type(theme.overlay) == "table" then add(theme.overlay.image) end
+	end
+	return out
+end
+
+-- Pure: the queue's id form, so callers can ask "is this one warm?".
+local function canonical(uri)
+	local id = type(uri) == "string" and (uri:match("^rbxassetid://(%d+)$") or uri:match("^(%d+)$"))
+	return if id then "rbxassetid://" .. id else uri
+end
+Preload.canonical = canonical
+
+-- options (specs): warm (UIAssetWarmup instance), wait, gardenReady(), preload(items), folders.
+function Preload.new(options)
+	options = options or {}
+	local self = {
+		warm = options.warm or require(script.Parent.UIAssetWarmup).shared,
+		wait = options.wait or task.wait,
+		gardenReady = options.gardenReady or function() return workspace:FindFirstChild("EggDropLounge") ~= nil end,
+		preload = options.preload or function(items) ContentProvider:PreloadAsync(items) end,
+		folders = options.folders,
+		images = options.images or Preload.styleImages(),
+		ready = {}, failed = {}, boosted = {}, started = false, done = false, stopped = false,
+	}
+	return setmetatable(self, { __index = Preload })
+end
+function Preload:isReady(uri) return self.ready[canonical(uri)] == true end
+function Preload:stop() self.stopped = true end
+-- Background pass: wait for the game and the garden, then warm in small batches.
+function Preload:run()
+	if self.started then return end
+	self.started = true
+	if not game:IsLoaded() then game.Loaded:Wait() end
+	local waited = 0
+	while not self.gardenReady() and waited < Preload.GardenWait and not self.stopped do waited += self.wait(0.5) or 0.5 end
+	self.wait(Preload.Settle)
+	local index = 1
+	while index <= #self.images and not self.stopped do
+		local pending = 0
+		for i = index, math.min(#self.images, index + Preload.Batch - 1) do
+			local id = canonical(self.images[i])
+			pending += 1
+			self.warm:request({ id }, function(ok)
+				pending -= 1
+				if ok then self.ready[id] = true else self.failed[id] = true end
+			end, 0)
+		end
+		index += Preload.Batch
+		-- Never more than one batch ahead of the queue: the deck tiles (priority 1) and the
+		-- garden's own loads keep the engine slots.
+		local spent = 0
+		repeat spent += self.wait(Preload.Gap) or Preload.Gap until pending <= 0 or spent > 6 or self.stopped
+	end
+	-- 3D preview folders: one engine call each, after the images.
+	for _, name in ipairs(self.folders or Preload.Folders) do
+		if self.stopped then break end
+		local folder = if typeof(name) == "Instance" then name else ReplicatedStorage:FindFirstChild(name)
+		if folder then pcall(self.preload, { folder }) end
+		self.wait(Preload.Gap)
+	end
+	self.done = true
+end
+
+-- Just in time (Deck style opens): every style image not warm yet goes to the queue at the
+-- tiles' priority. Safe before start() (it only asks the shared queue).
+function Preload:warmNow()
+	for _, uri in ipairs(self.images) do
+		local id = canonical(uri)
+		if not self.ready[id] and not self.boosted[id] then
+			self.boosted[id] = true
+			self.warm:request({ id }, function(ok)
+				self.boosted[id] = nil
+				if ok then self.ready[id] = true else self.failed[id] = true end
+			end, 1)
+		end
+	end
+end
+function Preload.boost()
+	local shared = Preload.shared or Preload.start()
+	if shared then shared:warmNow() end
+end
+-- Started once from the client entry (no top-level local there).
+function Preload.start()
+	if Preload.shared then return Preload.shared end
+	local player = Players.LocalPlayer
+	if not player then return nil end
+	Preload.shared = Preload.new()
+	task.spawn(function() Preload.shared:run() end)
+	return Preload.shared
+end
+return Preload

@@ -131,11 +131,15 @@ local function miniDeck(parent,width,position)
  buttonB.ImageColor3=Color3.fromHex("#3A3E47")
  local wordmark=img("Wordmark",I.wordmark,L.wordmark,4);wordmark.ResampleMode=Enum.ResamplerMode.Pixelated
  local epoch,ticket,lastId,ready,retryAt=0,nil,nil,false,0
- local placeholder=Kit.frame(root,"LoadingOutline","well",UDim2.new(0,2,0,2),UDim2.new(1,-4,1,-4),math.max(3,math.floor(width*.04)))
- placeholder.ZIndex=root.ZIndex;Kit.stroke(placeholder,"dim",1,.35)
+ -- Launch candidate: a soft raised well with a gentle sweep while the art loads (it was a dark
+ -- outline). StylePreload warms these images in the background, so most tiles never show it.
+ local placeholder=Kit.frame(root,"LoadingOutline","raised",UDim2.new(0,2,0,2),UDim2.new(1,-4,1,-4),math.max(3,math.floor(width*.04)))
+ placeholder.ZIndex=root.ZIndex;Kit.stroke(placeholder,"dim",1,.55)
+ local Shimmer=require(script.Parent.LoadingShimmer);local shimmer=Shimmer.attach(placeholder)
  local overlayWanted=false
  local function show(on)
   placeholder.Visible=not on
+  if on then shimmer.stop()elseif shimmer.stopped then shimmer=Shimmer.attach(placeholder)end
   for _,image in ipairs(root:GetDescendants())do if image:IsA("ImageLabel")then image.Visible=on and(image~=finish or overlayWanted)end end
  end
  root.Destroying:Connect(function()epoch+=1;if ticket then ticket:cancel()end end)
@@ -661,6 +665,8 @@ function Shop:isOpen()return self.visible end
 -- `keepFocus` (back from an inner page) keeps the cards that were focused.
 function Shop:open(equipped,tab,keepFocus)
  self.visible=true;self.root.Visible=true
+ -- Launch candidate: anything the background preload has not warmed yet jumps the queue now.
+ require(script.Parent.StylePreload).boost()
  local index=if keepFocus then self.index else table.find(self.plateOrder or Themes.Order,equipped or self.ctx.equipped)or 1
  self.ctx.equipped=equipped or self.ctx.equipped
  self.confirmId,self.errorId=nil,nil
