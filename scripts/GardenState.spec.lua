@@ -80,9 +80,10 @@ return function(server)
             validWander=function(_,candidate)return candidate+Vector3.new(Layout.LeashRadius,0,0)end})
         for _=1,60 do c.now+=.5;c.garden:step(.5,c.inputs);assert(c.garden.actors[1].action~="wander"and c.garden.actors[1].action~="nookApproach","a far wander started")end
         -- A far pet with no stored heading walks back instead of erroring.
-        local actor=c.garden.actors[1];actor.to=nil;actor.behavior="follow"
+        local actor=c.garden.actors[1];c.garden:release(actor)
+        actor.to=nil;actor.behavior,actor.action="follow",nil;actor.idleSince,actor.nextWanderAt=c.now,c.now+100
         c.inputs[1].position=Vector3.new(40,7,-2);c.inputs[1].anchor=Vector3.new(40,4.025,-2);actor.lastOwner=c.inputs[1].position
-        c.now+=.5;c.garden:step(.5,c.inputs)
+        c.now+=.5;c.garden:step(.5,c.inputs);c.now+=.5;c.garden:step(.5,c.inputs)
         assert(actor.behavior=="follow"and Activity.vector(actor.to)~=nil,"no walk back without a heading")
     end)
     test("Board is observable and cannot acquire focus, toy or an automatic reward",function()
