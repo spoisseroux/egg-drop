@@ -404,3 +404,42 @@ New `GhostDrops` spec: 6 cases (late ack, held-until-handoff, merge before hando
 - Client suite: 147 of 166 pass, the known set plus argument misses. MachineHub fails only inside the full suite and passes alone twice (14/14).
 - Server suite: 64 of 64 runs.
 - Console: fixture noise only.
+
+### v880 QA: "balls jumping after hitting the bottom" (2026-11-17, place v884)
+
+**Cause.** The v880 ghost stopped dead on its first touch and waited, hidden server ball and all, until the drawn server ball (a render delay plus a round trip behind) reached that point. Then the real ball took over and did its own bounce. On screen that was a landing, a pause, then a second bounce. The blend could also lift the ball, because the server ball was still higher or bounced on.
+
+**Fix, beyond the three options.** Options A and C do not remove the second bounce, and B cannot work at 200 ms: the flight is shorter than the lag. Instead the ghost now plays the whole motion locally (`GhostFlight`): fall, the server's tray bounce rule, the server's equal-mass pair impulse against the balls as drawn, rolling and settling.
+- A same-tier touch stops it, because the server merges there.
+- The real view takes over where the two meet, in one of two ways:
+  - Going the same way: a swap with no blend, only if the server ball is not above the ghost.
+  - Once both have settled: a blend that never lifts the ball more than 0.04 stud per frame or moves it more than 0.25 stud per frame.
+- A drawn ball that appears or moves into the ghost pushes it at most 0.04 stud per fixed step (no teleports).
+- Studio-only `PlayerGui.DeckNetGhostLegacy` replays the v880 ghost for these numbers.
+
+**Measured** (`H.taps`, about 10 drops per row; "rest then rise" means the shown ball sat still for 3 or more frames and then rose, which is the complaint):
+
+| | Upward handoff jumps | Rest then rise | Largest frame step | Largest handoff gap |
+|---|---|---|---|---|
+| v880 ghost, 0 ms | 2 | 1 | 0.62 | 5.0* |
+| v880 ghost, 100 ms | 4 | 2 | 0.89 | 3.3* |
+| v880 ghost, 150-250 ms jitter | 4-5 | 1-3 | 0.62 | 0.49-1.74 |
+| new, 0 ms | 0 | 0 | 0.72 | 0.04 |
+| new, 100 ms | 0 | 0 | 0.62 | 0.04 |
+| new, jitter (2 runs) | 0 | 0 | 0.68-0.70 | 4.3-6.0 (a timeout slide) |
+
+\* includes merges.
+- 0.62 stud per frame is falling at full speed. Bounce reversals per drop match the server ball's own (about 1.3-2.0 against 1.3-1.7), so a landing reads as one motion.
+- Tap to ball 0 ms, next tap about 466 ms, 0 refusals throughout.
+
+**Still visible, both versions.**
+- When the server ball merges, or rests far from where the ghost settled (the ghost's pile is a render delay old and its pair response is an approximation), the ghost goes and the merge or real ball shows elsewhere. Merge gaps reach 3-6 studs. A rest that diverges is now a slide of at most 0.25 stud per frame instead of a 0.1 s snap.
+- Not tried on a phone.
+
+**Specs.**
+- GhostFlight 10 (bounces, pair impulse, same-tier stop, movingBall), GhostDrops 6, DropIntent 12, BoardSnapshots 13.
+- Client suite: 150 of 168 pass (the known 14 plus 4 argument misses; MachineHub passes).
+- Server suite: 65 of 65 runs.
+- Console: fixture noise only.
+
+**Studio notes.** Rojo was live but its ZZSpecs had been stripped, so this run used copies (`src/*/ZZSpecsRun`, git-excluded), renamed to ZZSpecs in Studio.

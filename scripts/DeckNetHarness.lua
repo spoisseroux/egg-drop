@@ -257,6 +257,14 @@ function H.taps(label,drops,lag)
  pg:SetAttribute("DeckNetQuery",os.clock());task.wait(.1)
  local before=game:GetService("HttpService"):JSONDecode(pg:GetAttribute("DeckNetReport")or"{}")
  local toBall,toNext={},{}
+ -- The shown dropped ball, traced here when there is no ghost (the server ball alone):
+ -- same report as GhostDrops (largest frame step, direction reversals).
+ local traces={}
+ local addConn=board.ChildAdded:Connect(function(part)if part:IsA("BasePart")then table.insert(traces,{part=part,t={},untilAt=os.clock()+1.6})end end)
+ RS:BindToRenderStep("DeckNetHarnessShown",Enum.RenderPriority.Last.Value,function()
+  local now=os.clock()
+  for _,tr in ipairs(traces)do if tr.part.Parent and now<tr.untilAt then local q=tr.part.Position;table.insert(tr.t,{q.X,q.Y})end end
+ end)
  local function tap(i)
   pg:SetAttribute("DeckNetTestAim",.5+.4*math.sin(i*1.7))
   pg:SetAttribute("DeckNetTestTap",(pg:GetAttribute("DeckNetTestTap")or 0)+1)
@@ -285,6 +293,17 @@ function H.taps(label,drops,lag)
  end
  task.wait(2)
  running=false;net.IncomingReplicationLag=0
+ addConn:Disconnect();RS:UnbindFromRenderStep("DeckNetHarnessShown")
+ local offMax,offRev,offN=0,0,0
+ for _,tr in ipairs(traces)do
+  local t=tr.t;if #t>5 then
+   offN+=1;local lastDy=0
+   for k=2,#t do local dx,dy=t[k][1]-t[k-1][1],t[k][2]-t[k-1][2];local st=math.sqrt(dx*dx+dy*dy)
+    if st>offMax then offMax=st end
+    if lastDy<-.01 and dy>.01 then offRev+=1 end
+    if math.abs(dy)>.01 then lastDy=dy end end
+  end
+ end
  pg:SetAttribute("DeckNetQuery",os.clock());task.wait(.1)
  local after=game:GetService("HttpService"):JSONDecode(pg:GetAttribute("DeckNetReport")or"{}")
  local function med(t)if #t==0 then return -1,-1 end local c=table.clone(t);table.sort(c);return c[math.ceil(#c/2)],c[#c]end
@@ -292,8 +311,16 @@ function H.taps(label,drops,lag)
  local sent=(after.intent and after.intent.sent or 0)-(before.intent and before.intent.sent or 0)
  local refused=(after.intent and after.intent.refused or 0)-(before.intent and before.intent.refused or 0)
  local g=after.ghost or {}
+ local shown=""
+ if g.drops and #g.drops>0 then
+  local maxStep,up,rev,jumps,swaps=0,0,0,{},0
+  for _,d in ipairs(g.drops)do maxStep=math.max(maxStep,d.maxStep);up+=d.upJumps;rev+=d.reversals;table.insert(jumps,d.jump);if d.swap then swaps+=1 end end
+  table.sort(jumps)
+  shown=string.format("\n  shown(ghost): drops=%d maxFrameStep=%.2f upJumps=%d reversals/drop=%.2f handoffJump median=%.2f max=%.2f swaps=%d",#g.drops,maxStep,up,rev/#g.drops,jumps[math.ceil(#jumps/2)],jumps[#jumps],swaps)
+ end
+ shown..=string.format("\n  shown(parts): balls=%d maxFrameStep=%.2f reversals/ball=%.2f",offN,offMax,offN>0 and offRev/offN or 0)
  return string.format("%s lag=%s sent=%d refused=%d tapToBall median=%.0f max=%.0f ms tapToNextTap median=%.0f max=%.0f ms ghost handoffs=%s gapMean=%.2f gapMax=%.2f blendMaxStep=%.3f timeouts=%s drops=%s",
-  label,type(lag)=="table"and(lag[1].."-"..lag[2])or tostring(lag or 0),sent,refused,bm,bx,nm,nx,tostring(g.handoffs),(g.gapSum or 0)/math.max(1,g.handoffs or 0),g.gapMax or 0,g.blendMaxStep or 0,tostring(g.timeouts),tostring(board:GetAttribute("Drops")))
+  label,type(lag)=="table"and(lag[1].."-"..lag[2])or tostring(lag or 0),sent,refused,bm,bx,nm,nx,tostring(g.handoffs),(g.gapSum or 0)/math.max(1,g.handoffs or 0),g.gapMax or 0,g.blendMaxStep or 0,tostring(g.timeouts),tostring(board:GetAttribute("Drops")))..shown
 end
 
 -- Round trip through the Studio-only echo remotes (server BoardNet.setup), with the given

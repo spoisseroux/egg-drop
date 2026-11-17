@@ -3596,7 +3596,7 @@ if clientUI.dropIntent and require(ReplicatedStorage.Shared.FeatureFlags).DeckNe
   obstacles=function(out)
    table.clear(out)
    for source,view in pairs(eggViews)do
-    if view.id>=0 and not clientUI.ghosts:isGhost(source)then table.insert(out,{source.Position.X,source.Position.Y,source.Size.X/2,false,source})end
+    if view.id>=0 and not clientUI.ghosts:isGhost(source)then table.insert(out,{source.Position.X,source.Position.Y,source.Size.X/2,false,source,view.tier})end
    end
   end,
   onContact=function(token)clientUI.dropIntent:contact(token)end,
