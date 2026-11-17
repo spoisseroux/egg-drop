@@ -16,6 +16,8 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Private v834 Published 2026-11-16 — runtime 510d78c, pushed; servers restarted via Open Cloud. FRESH SAVES.** Spencer: A and B back to their pre-v816 sizes (A 80, B 50 on most phones) on the old diagonal, nudged 6 px left (3 on small phones) and ~8 px down off the right edge. DeckFit, CompactPhone, ItemCarousel pass. No new strings (no translation sync needed). Everything else as v833.
+
 **Private v833 Published 2026-11-16 — runtime 0892a89, pushed; servers restarted via Open Cloud. FRESH SAVES (TestFreshSaves).** Quick Links "Add publish notes to v833".
 # Pocket Pals — smooth Pocket Deck networking, Toys screen, Material tab
 
