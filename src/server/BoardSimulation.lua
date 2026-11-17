@@ -158,6 +158,8 @@ local function merge(board, firstIndex, secondIndex, preset)
 	return {
 		position = position, tier = if result then result.tier else first.tier,
 		from = first.position, other = second.position, id = if result then result.id else nil,
+		-- v890 QA: the client matches a predicted merge by its two balls.
+		firstId = first.id, secondId = second.id,
 		cleared = cleared, powerUp = first.powerUp or second.powerUp, powerUps = powerUps,
 	}
 end

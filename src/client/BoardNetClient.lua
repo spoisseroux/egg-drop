@@ -240,6 +240,11 @@ function Net.runViews(now)
  end
 end
 
+-- The newest server tick received on the stream (nil before any): predicted merges time out
+-- against it (GhostDrops), so a slow or jittery link never undoes one early.
+function Net.newestTick()
+ local s=state;return s and s.buffer.newestTick or nil
+end
 function Net.stats()
  local s=state;if not s then return nil end
  local b=s.buffer

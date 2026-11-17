@@ -2519,8 +2519,12 @@ local function dropEgg()
   audio:play("drop",1,.48)
   -- S5: the ball itself, this frame.
   if clientUI.ghosts then
-   local armed=board:GetAttribute("ItemArmed")
-   clientUI.ghosts:spawn(token,aim,nextTier(),now,{star=board:GetAttribute("NextPowerUp")==true,mark=if armed~=""then armed else nil})
+   -- v890 QA: taps inside one round trip read stale NextTier / NextPowerUp / ItemArmed;
+   -- an earlier drop still in flight moves this one down the queue (and took the item).
+   local pending=clientUI.ghosts:pending()
+   local tier=if pending==0 then nextTier()elseif pending==1 then board:GetAttribute("PreviewTier1")or 1 else board:GetAttribute("PreviewTier2")or 1
+   local armed=if pending==0 then board:GetAttribute("ItemArmed")else nil
+   clientUI.ghosts:spawn(token,aim,tier,now,{star=pending==0 and board:GetAttribute("NextPowerUp")==true,mark=if armed and armed~=""then armed else nil})
   end
   dispenser:update(board:GetAttribute("ResetId"),drops,budget,(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	end
@@ -2559,8 +2563,8 @@ do
   task.spawn(function()
    local ackRemote=remotes:WaitForChild("BoardDropAck",30)
    if not ackRemote then warn("DeckNet: BoardDropAck missing; drops fall back to the latch timeout");return end
-   ackRemote.OnClientEvent:Connect(function(token,ok,eggId)
-    if clientUI.ghosts then clientUI.ghosts:ack(token,ok,eggId)end
+   ackRemote.OnClientEvent:Connect(function(token,ok,eggId,tick)
+    if clientUI.ghosts then clientUI.ghosts:ack(token,ok,eggId,tick)end
     local result=clientUI.dropIntent:ack(token,ok,board:GetAttribute("FieldReady"))
     if result=="refused"then
      audio:play("aim",.6,.3) -- the soft "no" (the item belt's full note)
@@ -3505,6 +3509,8 @@ clientUI.boardContentGate=require(script.BoardContentGate)
 local function addView(source)
 	if rendererPresentation.destroyed then return end
 	if eggViews[source] then return end -- one view per ball (content gate, clock and handoff can all ask)
+	-- v890 QA: a drawn ball a predicted merge took stays hidden until it is confirmed or undone.
+	if clientUI.ghosts and clientUI.ghosts.predictedPartner[source] then return end
 	if clientUI.netTapShown and (source.Parent==board or source.Name:sub(1,6)=="Ghost_") then clientUI.netTapShown() end
 	local tier = source:GetAttribute("Tier")
 	local id = source:GetAttribute("EggId")
@@ -3569,6 +3575,7 @@ table.insert(rendererPresentation.connections,board.ChildAdded:Connect(function(
  end)
 end))
 table.insert(rendererPresentation.connections,board.ChildRemoved:Connect(function(source)
+ if clientUI.ghosts then clientUI.ghosts:partnerGone(source)end
  if source:GetAttribute("BoardSerial")~=board:GetAttribute("ResetId")then removeView(source);return end
  clientUI.boardNet.afterRemoval(source,function()
   if clientUI.ghosts then clientUI.ghosts:serverGone(source:GetAttribute("EggId"))end
@@ -3600,12 +3607,37 @@ if clientUI.dropIntent and require(ReplicatedStorage.Shared.FeatureFlags).DeckNe
     if view.id>=0 and not clientUI.ghosts:isGhost(source)then
      n+=1;local o=out[n];if not o then o={};out[n]=o end
      local p=source.Position
-     o[1],o[2],o[3],o[4],o[5],o[6]=p.X,p.Y,source.Size.X/2,false,source,view.tier
+     o[1],o[2],o[3],o[4],o[5],o[6],o[7]=p.X,p.Y,source.Size.X/2,false,source,view.tier,view.id
     end
    end
    for i=#out,n+1,-1 do out[i]=nil end
   end,
   onContact=function(token)clientUI.dropIntent:contact(token)end,
+  newestTick=function()return clientUI.boardNet.newestTick()end,
+  -- v890 QA: a predicted merge plays now (blob, burst, jolt, sound); the score popup and the
+  -- chain accent wait for the server's event (the chain is the server's).
+  predictMerge=function(P)
+   removeView(P.partner)
+   local serial=board:GetAttribute("ResetId")
+   if not rendererPresentation.canPresent(serial)then return end
+   local now,id,reduced=os.clock(),-P.result.token,reduceEffects()
+   audio:play(if P.tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(1,id),.56)
+   if lcdEnabled()and not reduced then
+    if #pixelMerges>=6 then table.remove(pixelMerges,1)end
+    table.insert(pixelMerges,{first=pixelPoint(Vector2.new(P.fromX,P.fromY)),second=pixelPoint(Vector2.new(P.otherX,P.otherY)),point=pixelPoint(Vector2.new(P.x,P.y)),
+     radius=Config.Tiers[P.tier-1].radius*JellyLCD.Width/(Config.Width+.8),resultRadius=Config.Tiers[P.tier].radius*JellyLCD.Width/(Config.Width+.8),
+     color=clientUI.JellyPalette.byTier[P.tier].body,tier=P.tier,start=now,id=id})
+   end
+   rendererPresentation.setFieldOwner(true,serial,reduced)
+   rendererPresentation.fx:emit("merge",project(Vector2.new(P.x,P.y)),Config.Tiers[P.tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[P.tier].body,P.tier,1,serial,now,nil,false,nil)
+   rendererPresentation.jolt.scale=viewport.AbsoluteSize.Y/420
+   rendererPresentation.jolt:emit(serial,id,P.tier,1,false,now)
+  end,
+  undoMerge=function(P)
+   local id=-P.result.token
+   for index=#pixelMerges,1,-1 do if pixelMerges[index].id==id then table.remove(pixelMerges,index)end end
+   if P.partner.Parent==board then addView(P.partner)end
+  end,
  })
  gui.Destroying:Connect(function()clientUI.ghosts:destroy()end)
 end
@@ -3656,16 +3688,29 @@ table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(func
  end
  end)
 end))
-table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(function(position,tier,chain,first,second,id,cleared,serial,tick)
+table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(function(position,tier,chain,first,second,id,cleared,serial,tick,firstId,secondId)
+ -- v890 QA: confirm (or undo) a predicted merge as soon as the event arrives, not on its tick.
+ local predicted=clientUI.ghosts~=nil and serial==board:GetAttribute("ResetId")and clientUI.ghosts:confirm(firstId,secondId,id)
  if not rendererPresentation.canPresent(serial)then return end
  -- S2b: the merge (blob, jolt, sounds, faces, cheer) plays when the snapshot clock
  -- reaches its tick, where the balls visibly meet; the HUD holds its score until then.
  -- Too late (a retransmit): keep the face state, skip the juice.
  clientUI.boardNet.schedule(tick,function(late)
+ if clientUI.ghosts then clientUI.ghosts:mergedAway(firstId,secondId)end
  clientUI.netChain=chain
  if clientUI.boardNet.active()then clientUI.netScoreKick()end
  if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then clientUI.ballFaces:merged(id,os.clock());return end
  local now=os.clock()
+ if predicted then
+  -- The blob, burst, jolt and merge sound played at the prediction: only the score popup
+  -- and the chain accent (the server's chain) remain.
+  clientUI.ballFaces:merged(id,now)
+  if(chain>1 or cleared)and now-lastChainAccent>=.09 then
+   lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))
+  end
+  rendererPresentation.fx:pop(project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,Config.mergeScore(tier,chain,cleared),now)
+  return
+ end
  mergeBurst=if now-lastMerge<.08 then math.min(mergeBurst+1,2)else 0;lastMerge=now
  clientUI.ballFaces:merged(id,now)
  audio:play(if tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(chain,id),.56*.68^mergeBurst)

@@ -520,6 +520,7 @@ local function syncVisuals(board)
 			part.CastShadow = false
 			part:SetAttribute("Tier", egg.tier)
 			part:SetAttribute("EggId", egg.id)
+			if egg.dropToken then part:SetAttribute("DropToken", egg.dropToken) end
 			board.parts[egg.id] = part
 			membershipChanged = true
 		end
@@ -928,12 +929,15 @@ local function settledWelcomeStatus(board,sequence)
 	if board.welcome.grantPending then return "Retrying"end
 	return nil
 end
-local function acceptedDrop(board,value,now,isDemo)
+-- token (optional): the client's drop token, stamped on the new ball (Part attribute DropToken)
+-- so the client can hand its ghost to that Part even when the Part beats the ack (v890 QA).
+local function acceptedDrop(board,value,now,isDemo,token)
 	if board.closing or board.mode~="Board"or board.menuPaused or board.round.over or not canProgress(board)
 		or(board.field and(not board.field:canDrop(board.sim.drops)or not Simulation.canDrop(board.sim)))
 		or typeof(value)~="number"or not(value>=0 and value<=1)or now-board.lastDrop<Config.DropInterval then return false end
 	board.lastDrop=now
 	if not Simulation.drop(board.sim,value)then return false end
+	if token then local dropped=board.sim.eggs[#board.sim.eggs];if dropped and dropped.id==board.sim.fallingId then dropped.dropToken=token end end
 	board.runDay=RunDay.onDrop(board.runDay,board.sim.drops,Daily.dayOf(board.nursery.adapter.now()))
 	if board.welcome and not isDemo then board.welcome:acceptedDrop()end
 	publishState(board)
@@ -1139,7 +1143,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	if action == "drop" then
 		if board.welcome then board.welcome:input()end
 		local token=BoardNet.dropToken(sticker)
-		if acceptedDrop(board,value,now,false) then BoardNet.ack(board,player,token,true)
+		if acceptedDrop(board,value,now,false,token) then BoardNet.ack(board,player,token,true)
 		elseif token and not board.pendingDrop and dropRetryable(board,value,now) then
 			board.pendingDrop={aim=value,token=token,expires=now+BoardNet.QueueSeconds}
 		else BoardNet.ack(board,player,token,false,if board.pendingDrop then "Busy"else dropRefusal(board,value,now)) end
@@ -1744,7 +1748,7 @@ RunService.Heartbeat:Connect(function(dt)
 				if board.firstSession then
 					board.firstSession:advance(3)
 				end
-				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared, board.folder:GetAttribute("ResetId"), BoardNet.tick(board))
+				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared, board.folder:GetAttribute("ResetId"), BoardNet.tick(board), merge.firstId, merge.secondId)
 				for _, id in ipairs(merge.powerUps or {}) do
 					local granted = BoardItems.grant(board, id)
 					if granted then BoardItems.event(board, board.folder, { kind = granted, id = id, x = merge.position.X, y = merge.position.Y }) end
@@ -1781,7 +1785,7 @@ RunService.Heartbeat:Connect(function(dt)
 		if board.petContact then board.petContact:update()end
 		local pendingDrop=board.pendingDrop
 		if pendingDrop then
-			if acceptedDrop(board,pendingDrop.aim,now,false) then board.pendingDrop=nil;BoardNet.ack(board,player,pendingDrop.token,true)
+			if acceptedDrop(board,pendingDrop.aim,now,false,pendingDrop.token) then board.pendingDrop=nil;BoardNet.ack(board,player,pendingDrop.token,true)
 			elseif now>pendingDrop.expires or not dropRetryable(board,pendingDrop.aim,now) then
 				board.pendingDrop=nil;BoardNet.ack(board,player,pendingDrop.token,false,"Queue"..dropRefusal(board,pendingDrop.aim,now))
 			end

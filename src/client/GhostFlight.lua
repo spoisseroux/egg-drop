@@ -80,6 +80,7 @@ function Flight:step(dt,obstacles)
   if plane(self,-Diagonal,Diagonal,(half-self.x+self.y-c.Bank)*Diagonal)then kind="bank"end
   if obstacles then
    for _,o in ipairs(obstacles)do
+    if o[8]and o[8].flight==self then continue end -- itself (GhostDrops lists the ghosts too)
     local dx,dy=self.x-o[1],self.y-o[2]
     local distance=math.sqrt(dx*dx+dy*dy)
     local reach=self.radius+o[3]
@@ -97,6 +98,7 @@ function Flight:step(dt,obstacles)
       -- Same tier: the server merges here. Stop and let the merge (on the snapshot
       -- clock) take the ghost.
       self.merging,self.resting=true,true;self.vx,self.vy=0,0
+      self.partner=o -- the drawn ball touched (GhostDrops predicts the merge with it)
       kind="merge"
      else
       -- The server's pair impulse (equal masses), the drawn ball held still.
