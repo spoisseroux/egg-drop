@@ -353,3 +353,36 @@ Until S2b, S2a draws positions about one render delay (50-200 ms) behind the mer
 - Refused drops: the fizzle rate.
 - The handoff (no visible jump).
 - A profile of a round for the remaining client frame drops.
+
+### S5 measured in Studio, the ghost flag on (2026-11-17, place v857)
+
+`H.taps` taps through the game's own `dropEgg` (a Studio-only `PlayerGui` hook) and mashes every frame after each sent drop until the next one goes. Each round has 10 or 12 sent drops.
+
+| | Ghost off, 0 ms | Ghost off, 150-250 ms jitter | Ghost on, 0 ms | Ghost on, jitter | Ghost on, jitter + 15% stream loss |
+|---|---|---|---|---|---|
+| Tap to the ball on screen (median / max) | 101 / 117 ms | 548 / 616 ms | 0 / 0 ms (the tap frame) | 0 / 0 ms | 0 / 0 ms |
+| Tap to the next tap allowed (median / max) | 499 / 501 ms | 885 / 934 ms | 466 / 467 ms | 466 / 468 ms | 467 / 469 ms |
+| Refused drops | 0 / 10 | 0 / 10 | 0 / 12 | 0 / 12 | 0 / 12 |
+| Handoff gap, mean / max (closed over 120 ms) | none | none | 0.34 / 0.68 stud | 0.32 / 1.32 stud | 0.36 / 1.99 stud |
+
+0.34 stud is about 2 LCD pixels. Next-tap time is now the server's contact gate (0.46 s) at any lag; off, it was the gate plus a round trip.
+
+**Fixes the measurement asked for.**
+- **A tap allowed too early was refused.** Resting the ghost on a drawn ball that was still moving opened the next tap early; on the server that ball had not touched anything yet. A moving drawn ball now reports `movingBall`, which stops the ghost but leaves the next tap to the gate time (GhostFlight spec case added; 9 cases).
+- **The server queue was too short.** It is now 0.3 s: a drop that was itself queued shifted the server gate later. At 0.15 s, 1 in 10 drops at 0 lag expired as `QueueGate`.
+- **Specific refusal reasons.** Acks now say Aim, RoundOver, Budget, Full, Interval, Gate, Spawn or Queue*, instead of "Refused".
+- **The handoff trigger.** Waiting for the server ball to settle gave 4.4-stud blends, because the Springy ball bounces on past the first contact. The handoff stays at the drawn ball's first contact with the ghost's touch-down.
+
+**Frame profile with every flag on** (probes, 30-drop-attempt round, desktop):
+- Script time per frame: mean 0.77 ms, p99 2.30 ms.
+- Steady costs: LCD finish 0.25 ms per frame, the snapshot driver 0.08 ms per frame.
+- The top per-event cost was `updateHud` at 1.2-2.3 ms, now run about 3 times per drop. Each merge played on the clock ran a full refresh.
+- Fix: a played merge refreshes only score and chain (`Screen:setScore`, deferred and coalesced). `updateHud` calls dropped from 47 to 39 per round and its total from 57 to 50 ms; p99 is unchanged at 2.3 ms.
+
+**Specs.**
+- Offline: GhostFlight 9, DropIntent 12, BoardSnapshots 13. In Play, GhostFlight also matches `BoardConfig.advanceFlight` exactly.
+- Client suite: 146 of 165 pass (the known 14 plus argument misses). MachineHub failed once ("the demo ball never moved"); it is a timing-sensitive art spec and passed 14/14 on a rerun at 61 fps. CustomizeNewItem passes again.
+- Server suite: 64 of 64 runs.
+- JellyOverflow and FieldFeedbackOwner pass with (gui, board).
+- Console: fixture noise only.
+- `DeckNetGhost` is on by default.

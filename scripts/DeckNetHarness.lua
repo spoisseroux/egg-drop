@@ -235,6 +235,67 @@ function H.draw(label,attempts,interval,lag,hooks)
   tostring(board:GetAttribute("Drops")),tostring(board:GetAttribute("Merges")),tostring(p.PlayerGui:GetAttribute("DeckNetStats")))
 end
 
+-- Taps through the game's own dropEgg (Studio hook in init.client.lua), mashing every frame
+-- after each sent drop until the next one goes. Reports tap -> first ball view, tap -> next
+-- tap allowed, refusals and the ghost handoff gap.
+function H.taps(label,drops,lag)
+ local p,board,req=parts()
+ local pg=p.PlayerGui
+ for _=1,3 do
+  if not board:GetAttribute("RoundOver") and (board:GetAttribute("Drops") or 0)==0 then break end
+  local seq=board:GetAttribute("RunSequence")
+  req:FireServer(if board:GetAttribute("RoundOver") then "reset" else "restart",seq)
+  local t=os.clock() while os.clock()-t<4 and board:GetAttribute("RunSequence")==seq and (board:GetAttribute("Drops") or 0)>0 do task.wait(.1) end
+  task.wait(1.5)
+ end
+ local net=settings().Network
+ local running=true
+ if type(lag)=="table" then
+  task.spawn(function()local r=Random.new(7) while running do net.IncomingReplicationLag=r:NextNumber(lag[1],lag[2]);task.wait(r:NextNumber(.05,.15)) end end)
+ else net.IncomingReplicationLag=lag or 0 end
+ task.wait(1)
+ pg:SetAttribute("DeckNetQuery",os.clock());task.wait(.1)
+ local before=game:GetService("HttpService"):JSONDecode(pg:GetAttribute("DeckNetReport")or"{}")
+ local toBall,toNext={},{}
+ local function tap(i)
+  pg:SetAttribute("DeckNetTestAim",.5+.4*math.sin(i*1.7))
+  pg:SetAttribute("DeckNetTestTap",(pg:GetAttribute("DeckNetTestTap")or 0)+1)
+ end
+ local sentBefore=pg:GetAttribute("DeckNetTapSent")or 0
+ local lastSentAt
+ local i=0
+ local deadline=os.clock()+40
+ while (pg:GetAttribute("DeckNetTapSent")or 0)-sentBefore<drops and os.clock()<deadline and not board:GetAttribute("RoundOver")do
+  i+=1
+  local sent=pg:GetAttribute("DeckNetTapSent")or 0
+  tap(i)
+  RS.Heartbeat:Wait()
+  if (pg:GetAttribute("DeckNetTapSent")or 0)>sent then
+   local at=pg:GetAttribute("DeckNetTapAt")
+   if lastSentAt then table.insert(toNext,(at-lastSentAt)*1000)end
+   lastSentAt=at
+   -- wait for its first ball view (ghost: this frame)
+   local t=os.clock()
+   while os.clock()-t<1.5 do
+    local shown=pg:GetAttribute("DeckNetBallShownAt")
+    if shown and shown>=at then table.insert(toBall,(shown-at)*1000);break end
+    RS.Heartbeat:Wait()
+   end
+  end
+ end
+ task.wait(2)
+ running=false;net.IncomingReplicationLag=0
+ pg:SetAttribute("DeckNetQuery",os.clock());task.wait(.1)
+ local after=game:GetService("HttpService"):JSONDecode(pg:GetAttribute("DeckNetReport")or"{}")
+ local function med(t)if #t==0 then return -1,-1 end local c=table.clone(t);table.sort(c);return c[math.ceil(#c/2)],c[#c]end
+ local bm,bx=med(toBall);local nm,nx=med(toNext)
+ local sent=(after.intent and after.intent.sent or 0)-(before.intent and before.intent.sent or 0)
+ local refused=(after.intent and after.intent.refused or 0)-(before.intent and before.intent.refused or 0)
+ local g=after.ghost or {}
+ return string.format("%s lag=%s sent=%d refused=%d tapToBall median=%.0f max=%.0f ms tapToNextTap median=%.0f max=%.0f ms ghost handoffs=%s gapMean=%.2f gapMax=%.2f blendMaxStep=%.3f timeouts=%s drops=%s",
+  label,type(lag)=="table"and(lag[1].."-"..lag[2])or tostring(lag or 0),sent,refused,bm,bx,nm,nx,tostring(g.handoffs),(g.gapSum or 0)/math.max(1,g.handoffs or 0),g.gapMax or 0,g.blendMaxStep or 0,tostring(g.timeouts),tostring(board:GetAttribute("Drops")))
+end
+
 -- Round trip through the Studio-only echo remotes (server BoardNet.setup), with the given
 -- IncomingReplicationLag. Compare against lag 0: if the RTT does not grow, Studio's lag
 -- setting does not cover remotes and the harness must inject its own delay.

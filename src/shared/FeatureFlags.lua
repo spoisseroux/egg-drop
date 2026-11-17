@@ -20,4 +20,4 @@
 -- drop queue (S4); Ghost (S5) shows the tapped ball at once and lets the next tap go on its local
 -- touch-down (needs Drop; off until verified in Studio). Off = today's path. The server stays authoritative.
 return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=true,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
- DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=false})
+ DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})

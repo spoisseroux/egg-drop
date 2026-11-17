@@ -45,8 +45,9 @@ local function plane(self,nx,ny,d)
  return true
 end
 
--- Advance by real seconds `dt` against `obstacles` ({x, y, r} for each drawn ball).
--- Returns the contact kind on the step that touched ("floor", "bank", "ball"), else nil.
+-- Advance by real seconds `dt` against `obstacles` ({x, y, r, moving} for each drawn ball).
+-- Returns the contact kind on the step that touched ("floor", "bank", "ball", or
+-- "movingBall" for a drawn ball that is itself moving), else nil.
 function Flight:step(dt,obstacles)
  if self.resting then return nil end
  local c=self.c
@@ -71,7 +72,9 @@ function Flight:step(dt,obstacles)
      -- Rest touching the drawn ball, on the side the ghost came from.
      if distance<1e-6 then dx,dy,distance=0,1,1 end
      self.x,self.y=o[1]+dx/distance*reach,o[2]+dy/distance*reach
-     kind="ball"
+     -- A drawn ball still moving (in flight on the snapshot clock, which runs behind the
+     -- server) stops the ghost but is no proof the server ball has touched anything.
+     kind=if o[4]then "movingBall"else "ball"
      break
     end
    end

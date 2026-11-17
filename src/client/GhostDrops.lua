@@ -21,7 +21,7 @@ Ghosts.RenderAction="EggDropDeckGhosts"
 -- resetId(), onContact(token), canShow()}
 function Ghosts.new(host)
  local self=setmetatable({host=host,list={},byToken={},byEgg={},obstacles={},
-  stats={spawned=0,handoffs=0,refused=0,timeouts=0,cleared=0}},Ghosts)
+  stats={spawned=0,handoffs=0,refused=0,timeouts=0,cleared=0,gapMax=0,gapSum=0,blendMaxStep=0}},Ghosts)
  RunService:BindToRenderStep(Ghosts.RenderAction,Enum.RenderPriority.First.Value+1,function()self:step(os.clock())end)
  return self
 end
@@ -111,12 +111,26 @@ function Ghosts:step(now)
  if not self.host.canShow()then self:clear();return end
  local obstacles=self.obstacles
  self.host.obstacles(obstacles)
+ -- Mark drawn balls that moved since the last frame (over 1 stud/s).
+ local previous=self.previousObstacles or {};local seen={}
+ for _,o in ipairs(obstacles)do
+  local key=o[5];local last=key and previous[key]
+  o[4]=last~=nil and dt>0 and math.sqrt((o[1]-last[1])^2+(o[2]-last[2])^2)/dt>1
+  if key then seen[key]={o[1],o[2]}end
+ end
+ self.previousObstacles=seen
  for index=#self.list,1,-1 do
   local g=self.list[index]
   local flight=g.flight
   if g.state=="flying"then
    local kind=flight:step(dt,obstacles)
-   if kind then g.state="resting";g.restAt=now;self.host.onContact(g.token,kind)end
+   if kind then
+    g.state="resting";g.restAt=now
+    -- Only a touch the server ball will also have made opens the next tap early; resting
+    -- on a drawn ball that is still moving leaves it to the gate time (measured: an early
+    -- open on a falling ball was refused after the server queue's 150 ms).
+    if kind~="movingBall"then self.host.onContact(g.token,kind)end
+   end
   end
   local x,y=flight.x,flight.y
   if g.state=="fading"then
@@ -127,13 +141,24 @@ function Ghosts:step(now)
    -- Hand over once the server ball, as drawn, has reached the ghost: at or below it,
    -- close to it, or the ghost was already blending.
    local sp=g.server.Position
+   -- Hand over when the drawn server ball comes down to the ghost's touch-down (its own
+   -- first contact on the snapshot clock), not when it settles: the server ball bounces
+   -- on (Springy) and can end far from the first contact (measured: waiting for it to
+   -- settle gave 4.4-stud blends; at first contact the gap is a few tenths).
    local close=(Vector2.new(sp.X,sp.Y)-Vector2.new(x,y)).Magnitude<=g.radius*.5
    if g.state~="blend"and(close or(g.state=="resting"and sp.Y<=y+.05)or now-g.serverAt>Ghosts.HandoffTimeout)then
     g.state,g.blendAt,g.fromX,g.fromY="blend",now,x,y
+    -- How far the drawn ball is from the ghost when the blend starts (it closes over
+    -- BlendSeconds, about 7 frames): the handoff's visible size.
+    local gap=(Vector2.new(sp.X,sp.Y)-Vector2.new(x,y)).Magnitude
+    self.stats.gapSum+=gap;if gap>self.stats.gapMax then self.stats.gapMax=gap end
    end
    if g.state=="blend"then
     local t=math.min(1,(now-g.blendAt)/Ghosts.BlendSeconds)
     x,y=lerp(g.fromX,sp.X,t),lerp(g.fromY,sp.Y,t)
+    local last=g.source.Position
+    local step=(Vector2.new(x,y)-Vector2.new(last.X,last.Y)).Magnitude
+    if step>self.stats.blendMaxStep then self.stats.blendMaxStep=step end
     if t>=1 then g.source.Position=Vector3.new(x,y,0);self:finish(g,true);continue end
    end
   elseif g.eggId then

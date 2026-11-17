@@ -19,7 +19,7 @@ local Net={}
 Net.StreamInterval=1/30
 Net.PausedInterval=1/4
 Net.PartInterval=1/8
-Net.QueueSeconds=.15
+Net.QueueSeconds=.3 -- one deep; covers a drop that was itself queued (measured: 1 in 10 expired at 0.15 s)
 
 function Net.ticks()return Flags.DeckNetTicks==true end
 function Net.stream()return Flags.DeckNetStream==true end

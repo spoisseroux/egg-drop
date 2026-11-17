@@ -1531,6 +1531,19 @@ local function paintIconGoal(slot,goal)
  end
  slot.row:SetAttribute("AccessibleLabel",goal.spoken or BallThemes.strip(goal.text or goal.short or ""))
 end
+-- Deck network S2b: the score and chain alone, for a merge played on the snapshot clock
+-- (the rest of the HUD did not change). Same text as setHud / setCompactHud write.
+function Screen:setScore(score,chain)
+ local h=self.hud;if not h or not h.score then return false end
+ if h.phone then
+  h.score.Text=commas(score)
+  if h.chain then h.chain.Text=(if h.chainInGoals and h.layout~="narrow"then "CHAIN ×"else "×")..tostring(chain or 0)end
+ else
+  h.score.Text=tostring(score or 0)
+  h.chain.Text="×"..tostring(chain or 0);h.chainBar.set(math.min(5,chain or 0))
+ end
+ return true
+end
 function Screen:setCompactHud(data)
  local h=self.hud;local g=h.geometry
  h.score.Text=commas(data.score)

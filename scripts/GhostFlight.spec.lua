@@ -64,6 +64,11 @@ return function(client,_,modules)
   assert(math.abs(d-(.72+1.04))<1e-6 and f.y>5,"touching from above: "..d)
  end)
 
+ test("a drawn ball still moving stops the ghost but reports movingBall",function()
+  local f,kind=run(.5,{{0,5,1.04,true}})
+  assert(f.resting and kind=="movingBall",tostring(kind))
+ end)
+
  test("side walls bounce (no contact), the ghost never leaves the tray",function()
   local vx=30
   local f=Flight.new(c,vx,0,.72)

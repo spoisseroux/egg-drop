@@ -954,6 +954,17 @@ local function dropRetryable(board,value,now)
 	return now-board.lastDrop<Config.DropInterval or not Simulation.canDrop(board.sim)
 end
 
+-- Why a drop was refused, for the ack (presentation and the harness; never a rule).
+local function dropRefusal(board,value,now)
+	if typeof(value)~="number"or not(value>=0 and value<=1)then return "Aim"end
+	if board.round.over then return "RoundOver"end
+	if board.field and not board.field:canDrop(board.sim.drops)then return "Budget"end
+	if #board.sim.eggs>=Config.MaxEggs then return "Full"end
+	if now-board.lastDrop<Config.DropInterval then return "Interval"end
+	if not Simulation.canDrop(board.sim)then return "Gate"end
+	return "Spawn" -- a ball rests in the spawn space
+end
+
 request.OnServerEvent:Connect(function(player, action, value, sticker)
 	local board = boards[player]
 	if not board then return end
@@ -1131,7 +1142,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		if acceptedDrop(board,value,now,false) then BoardNet.ack(board,player,token,true)
 		elseif token and not board.pendingDrop and dropRetryable(board,value,now) then
 			board.pendingDrop={aim=value,token=token,expires=now+BoardNet.QueueSeconds}
-		else BoardNet.ack(board,player,token,false,if board.pendingDrop then "Busy"else "Refused") end
+		else BoardNet.ack(board,player,token,false,if board.pendingDrop then "Busy"else dropRefusal(board,value,now)) end
 	elseif action == "item" then
 		-- Round items: accepted while paused (the carousel freezes the round).
 		local ok, result = BoardItems.request(board, value, { resetId = board.folder:GetAttribute("ResetId"),
@@ -1772,7 +1783,7 @@ RunService.Heartbeat:Connect(function(dt)
 		if pendingDrop then
 			if acceptedDrop(board,pendingDrop.aim,now,false) then board.pendingDrop=nil;BoardNet.ack(board,player,pendingDrop.token,true)
 			elseif now>pendingDrop.expires or not dropRetryable(board,pendingDrop.aim,now) then
-				board.pendingDrop=nil;BoardNet.ack(board,player,pendingDrop.token,false,"Refused")
+				board.pendingDrop=nil;BoardNet.ack(board,player,pendingDrop.token,false,"Queue"..dropRefusal(board,pendingDrop.aim,now))
 			end
 		end
 		BoardNet.beginParts(board, now)

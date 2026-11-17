@@ -2525,6 +2525,32 @@ local function dropEgg()
   dispenser:update(board:GetAttribute("ResetId"),drops,budget,(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	end
 end
+-- Studio only (deck network harness): PlayerGui attribute DeckNetTestTap (a counter) taps
+-- the real dropEgg at DeckNetTestAim; DeckNetTapSent counts the taps that sent a drop and
+-- DeckNetTapAt / DeckNetBallShownAt time the tap and the first ball view after it.
+if RunService:IsStudio()then
+ local playerGui=player:WaitForChild("PlayerGui")
+ playerGui:GetAttributeChangedSignal("DeckNetTestTap"):Connect(function()
+  local wanted=playerGui:GetAttribute("DeckNetTestAim")
+  if type(wanted)=="number"then aim=math.clamp(wanted,0,1)end
+  local before=clientUI.dropIntent and clientUI.dropIntent.stats.sent
+  local tapAt=os.clock()
+  clientUI.netTapPending=true -- a ghost is drawn inside dropEgg itself
+  dropEgg()
+  if clientUI.dropIntent and clientUI.dropIntent.stats.sent~=before then
+   playerGui:SetAttribute("DeckNetTapAt",tapAt)
+   playerGui:SetAttribute("DeckNetTapSent",(playerGui:GetAttribute("DeckNetTapSent")or 0)+1)
+  elseif clientUI.netTapPending then clientUI.netTapPending=false end
+ end)
+ playerGui:GetAttributeChangedSignal("DeckNetQuery"):Connect(function()
+  playerGui:SetAttribute("DeckNetReport",HttpService:JSONEncode({ghost=clientUI.ghosts and clientUI.ghosts.stats or false,
+   intent=clientUI.dropIntent and clientUI.dropIntent.stats or false}))
+ end)
+ clientUI.netTapShown=function()
+  if not clientUI.netTapPending then return end
+  clientUI.netTapPending=false;playerGui:SetAttribute("DeckNetBallShownAt",os.clock())
+ end
+end
 do
  -- S4 wiring: acks, FieldReady and run changes feed the drop intent (flag DeckNetDrop).
  if require(ReplicatedStorage.Shared.FeatureFlags).DeckNetDrop==true then
@@ -3478,6 +3504,7 @@ clientUI.boardContentGate=require(script.BoardContentGate)
 
 local function addView(source)
 	if rendererPresentation.destroyed then return end
+	if clientUI.netTapShown and (source.Parent==board or source.Name:sub(1,6)=="Ghost_") then clientUI.netTapShown() end
 	local tier = source:GetAttribute("Tier")
 	local id = source:GetAttribute("EggId")
 	if not tier or not id or source:GetAttribute("BoardSerial")~=board:GetAttribute("ResetId")then
@@ -3509,6 +3536,20 @@ end
 -- not when the reliable Part happens to arrive or leave. Clock off: at once, as before.
 clientUI.boardNet=require(script.BoardNetClient)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()clientUI.netChain=nil end)
+-- Measured (v854 profile): a full updateHud per merge played on the clock was the top
+-- per-event client cost (1.2-2.3 ms). A played merge changes only score and chain.
+function clientUI.netScoreKick()
+ if clientUI.netScoreQueued then return end
+ clientUI.netScoreQueued=true
+ task.defer(function()
+  clientUI.netScoreQueued=false
+  if(board:GetAttribute("OwnedPets")or 0)==0 or not clientUI.deck.setScore then updateHud();return end
+  local score,chain=board:GetAttribute("Score")or 0,board:GetAttribute("Chain")or 0
+  local held=clientUI.boardNet.pending("score")
+  if held>0 then score=math.max(0,score-held);chain=clientUI.netChain or chain end
+  if not clientUI.deck:setScore(score,chain)then updateHud()end
+ end)
+end
 function clientUI.netHudKick()
  if clientUI.netHudQueued then return end
  clientUI.netHudQueued=true
@@ -3550,7 +3591,7 @@ if clientUI.dropIntent and require(ReplicatedStorage.Shared.FeatureFlags).DeckNe
   obstacles=function(out)
    table.clear(out)
    for source,view in pairs(eggViews)do
-    if view.id>=0 and not clientUI.ghosts:isGhost(source)then table.insert(out,{source.Position.X,source.Position.Y,source.Size.X/2})end
+    if view.id>=0 and not clientUI.ghosts:isGhost(source)then table.insert(out,{source.Position.X,source.Position.Y,source.Size.X/2,false,source})end
    end
   end,
   onContact=function(token)clientUI.dropIntent:contact(token)end,
@@ -3611,7 +3652,7 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  -- Too late (a retransmit): keep the face state, skip the juice.
  clientUI.boardNet.schedule(tick,function(late)
  clientUI.netChain=chain
- if clientUI.boardNet.active()then clientUI.netHudKick()end
+ if clientUI.boardNet.active()then clientUI.netScoreKick()end
  if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then clientUI.ballFaces:merged(id,os.clock());return end
  local now=os.clock()
  mergeBurst=if now-lastMerge<.08 then math.min(mergeBurst+1,2)else 0;lastMerge=now
