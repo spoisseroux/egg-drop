@@ -105,6 +105,17 @@ return function(client,parent)
 			hatch("look","receipt","rose","Customization 1")
 			assert(S.pendingHueResult and S.pendingHueResult.itemId=="rose","the jar waits to be stored (closed without storing)")
 		end)
+		test("v859 review: a stage that goes (even failing) gives the hidden receipt card back",function()
+			local reveal=view.itemReveal
+			assert(type(reveal.options.stage.gone)=="function","the stage host has no gone hook")
+			view.card.Visible=false;view.stageHidCard=true
+			reveal.stage={destroy=function()error("fixture: stage destroy failed")end}
+			reveal:clearStage()
+			assert(reveal.stage==nil and not view.stageHidCard,"the hidden-card flag outlived the stage")
+			assert(view.card.Visible or(view.chromeRoot and view.chromeRoot.Visible),"the card stayed hidden after its stage went")
+			-- open() also clears a flag left by a stage that never reported back.
+			view.stageHidCard=true;view:releaseStageCard();assert(not view.stageHidCard)
+		end)
 		test("Toy Egg after it: the waiting jar is stored first, then the Toy Egg hatches its own toy",function()
 			local firstToy=(function()local e=Toys.remaining(S.toyUnlocks);table.sort(e);return e[1]end)()
 			hatch("toy","toyReceipt",firstToy,"Toy")

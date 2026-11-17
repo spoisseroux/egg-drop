@@ -45,11 +45,19 @@ function Reveal:identityChanged()
  end
 end
 function Reveal:cancel()self.generation+=1;self:finish()end
+-- v859 review: the host hides its receipt card while a stage is up; it hears every way the
+-- stage goes (cleared, dismissed, failed) so the card never stays hidden.
+function Reveal:stageGone()
+ local host=self.options.stage
+ if host and type(host.gone)=="function"then host.gone()end
+end
 function Reveal:clearStage()
  local stage=self.stage;self.stage=nil
  if stage then
   if self.cinematic and self.cinematic.borrowedStage==stage then self.cinematic.borrowedStage=nil end
-  stage:destroy()
+  local ok,problem=pcall(function()stage:destroy()end)
+  self:stageGone()
+  if not ok then warn("Item reveal stage could not close: "..tostring(problem))end
  end
 end
 -- Full-screen stage over the host. The cinematic keeps its one scene and clock; the stage
@@ -79,7 +87,7 @@ function Reveal:clear()
  if stage and cinematic and type(stage.dismiss)=="function"then
   local frame=cinematic.frame
   if stage:dismiss(function()cinematic:destroy()end)then
-   self.stage=nil;self.cinematic=nil;leaving=frame
+   self.stage=nil;self.cinematic=nil;leaving=frame;self:stageGone()
    if cinematic.borrowedStage==stage then cinematic.borrowedStage=nil end
    if cinematic.stopAudio then cinematic:stopAudio()end
    frame.Visible=false

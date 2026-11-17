@@ -217,7 +217,7 @@ end
 function View:bindRevealStages()
  local function hooks(kind,reveal,peer,usePeer,name,detail)
   reveal.options.stage={parent=self.shade,owns=function()return not self.destroyed and self.shade.Visible end,
-   name=name,detail=detail,close=function()self:close("back")end,
+   name=name,detail=detail,close=function()self:close("back")end,gone=function()self:releaseStageCard()end,
    actions=function(result)
     -- v850: a toy offers "Give to <pet>" (the main button) and "Store"; with no pet to give
     -- it to, Store alone (review of 7466c0b). Other items keep Use now in front.
@@ -236,6 +236,12 @@ function View:bindRevealStages()
   function(result)local row=FeatureCatalog.ById[result.featureId];return row and row.name end,function()return self.featurePanel.note.Text end)
 end
 function View:isOpen()return self.shade.Visible end
+-- v859 review: the card hidden under a reveal stage comes back whenever that stage goes.
+function View:releaseStageCard()
+ if not self.stageHidCard then return end
+ self.stageHidCard=nil
+ if not(self.chromeRoot and self.chromeRoot.Visible)and not self.selectorOwnsPick then self.card.Visible=true end
+end
 function View:openWardrobe()
  if not self.shade.Visible or self.page~="palette"or self.confirmation or self.intent.pending or not self:canCustomize()then return false end
  if not WearableCatalog.hasItems(self.petId)or not self.options.wardrobe then return false end
@@ -1842,11 +1848,12 @@ function View:layoutTransaction()
  local stageReveal=if hueReceipt then self.itemReveal elseif toyReceipt then self.toyPanel.reveal elseif materialReceipt then self.materialPanel.reveal elseif featureReceipt then self.featurePanel.reveal else nil
  -- The cinematic follows the stage's visibility while the stage borrows its scene.
  if stageReveal and stageReveal.stage then self.card.Visible=false;self.stageHidCard=true
- elseif self.stageHidCard then self.stageHidCard=nil;if not(self.chromeRoot and self.chromeRoot.Visible)then self.card.Visible=true end end
+ else self:releaseStageCard()end
 end
 function View:setSaveNotice(notice)self.saveNotice=notice;if self.shade.Visible then self:refresh()end end
 function View:open(state,page,petId)
  if self.options.routeChanged then self.options.routeChanged("open")end
+ self:releaseStageCard()
  self.materialAssignment=nil;self.toyAssignment=nil;self.featureAssignment=nil;self.featurePreview=nil
  self.intent:update(state);self.state=state or {}
  if self.materialIntent then self.materialIntent:update(self.state)end

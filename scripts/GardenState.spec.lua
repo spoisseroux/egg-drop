@@ -69,6 +69,22 @@ return function(server)
         -- A trip toward the shared toy only starts when every waypoint is inside the leash margin.
         assert(Layout.LeashRadius>=18 and Layout.LeashRadius<=20 and Layout.LeashMargin>0)
     end)
+    test("v859 review: wander targets stay inside the leash margin; a missing heading cannot error",function()
+        local input={position=Vector3.new(0,7,0),anchor=Vector3.new(0,4.025,0)}
+        assert(Garden.insideLeash(input,Vector3.new(Layout.LeashRadius-Layout.LeashMargin-.1,4,0)))
+        assert(not Garden.insideLeash(input,Vector3.new(Layout.LeashRadius-Layout.LeashMargin+.1,4,0)))
+        assert(not Garden.insideLeash(input,nil))
+        -- validWander pushing every candidate far away: the pet never starts that wander.
+        local c={now=0,inputs={{petId="pip",owned=true,alive=true,characterId=1,mode="Room",position=Vector3.new(0,7,-2),anchor=Vector3.new(0,4.025,-2),yaw=0,charmVisible=true}}}
+        c.garden=Garden.new({now=function()return c.now end,publish=function()end,validFocus=function()return true end,sharedToyEnabled=false,
+            validWander=function(_,candidate)return candidate+Vector3.new(Layout.LeashRadius,0,0)end})
+        for _=1,60 do c.now+=.5;c.garden:step(.5,c.inputs);assert(c.garden.actors[1].action~="wander"and c.garden.actors[1].action~="nookApproach","a far wander started")end
+        -- A far pet with no stored heading walks back instead of erroring.
+        local actor=c.garden.actors[1];actor.to=nil;actor.behavior="follow"
+        c.inputs[1].position=Vector3.new(40,7,-2);c.inputs[1].anchor=Vector3.new(40,4.025,-2);actor.lastOwner=c.inputs[1].position
+        c.now+=.5;c.garden:step(.5,c.inputs)
+        assert(actor.behavior=="follow"and Activity.vector(actor.to)~=nil,"no walk back without a heading")
+    end)
     test("Board is observable and cannot acquire focus, toy or an automatic reward",function()
         local c=fixture(1);c.inputs[1].mode="Board"
         for _=1,60 do c:step(.5)end

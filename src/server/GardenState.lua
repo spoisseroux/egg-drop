@@ -215,6 +215,11 @@ function Garden:greetPair(first,second,now)
     return token
 end
 
+-- v859 review: every wander or nook target stays LeashMargin inside the leash, so a target
+-- validWander moved (or a far anchor) can never start a wander -> leash -> wander loop.
+function Garden.insideLeash(input,target)
+    return typeof(target)=="Vector3"and distance(target,input.position)<=Layout.LeashRadius-Layout.LeashMargin
+end
 -- Bounded authoritative choices reuse the same planner and decision cadence.
 function Garden:wander(actor,input,now)
     if not self.options.validWander or(actor.park and actor.park.session)then return false end
@@ -240,7 +245,7 @@ function Garden:wander(actor,input,now)
             end
             if occupied then continue end
             local target=self.options.validWander(input,rest.position,from)
-            if typeof(target)~="Vector3"or(target-rest.position).Magnitude>=.1 then continue end
+            if typeof(target)~="Vector3"or(target-rest.position).Magnitude>=.1 or not Garden.insideLeash(input,target)then continue end
             -- Preflight before changing actor identity/state. A blocked rest
             -- must not become a phantom arrival or consume its cooldown.
             local sample=Activity.sample(actor,now)
@@ -263,7 +268,7 @@ function Garden:wander(actor,input,now)
         local candidate=input.anchor+Vector3.new(math.cos(angle)*radius,0,math.sin(angle)*radius)
         if distance(candidate,Layout.Toy)<3 or distance(candidate,Layout.Rest)<2 then continue end
         local target=self.options.validWander(input,candidate,from)
-        if typeof(target)=="Vector3"and distance(target,input.anchor)<=4.1 and math.abs(target.Y-input.anchor.Y)<=.7 then
+        if typeof(target)=="Vector3"and distance(target,input.anchor)<=4.1 and math.abs(target.Y-input.anchor.Y)<=.7 and Garden.insideLeash(input,target)then
             self:transition(actor,"investigate",target,0,"wander")
             actor.wanderCount=(actor.wanderCount or 0)+1
             return true
@@ -306,8 +311,9 @@ function Garden:decide()
         local position=self:position(actor,now)
         -- v859 leash: too far from the owner ends any play or interaction (release frees a toy
         -- return, a greeting partner, a rest nook) and the pet walks back.
+        local heading=Activity.vector(actor.to)
         if distance(position,input.position)>Layout.LeashRadius and(actor.behavior~="follow"or actor.toyActionId~=nil or actor.pairId~=nil
-            or distance(Activity.vector(actor.to),input.anchor)>.2)then
+            or heading==nil or distance(heading,input.anchor)>.2)then
             self:release(actor);actor.idleSince=now;self:transition(actor,"follow",input.anchor,.6)
             continue
         end
@@ -339,7 +345,7 @@ function Garden:decide()
                 self.toy={kind="solo",position=Activity.pack(Layout.Toy),ownerId=actor.ownerId,reservation=self:token()}
                 actor.toyReservation=self.toy.reservation
                 self:transition(actor,"investigate",target,duration,nil,nil,Layout.Lawn)
-            elseif distance(Activity.vector(actor.to),input.anchor)>.2 then self:transition(actor,"follow",input.anchor,.5)
+            elseif heading==nil or distance(heading,input.anchor)>.2 then self:transition(actor,"follow",input.anchor,.5)
             elseif not reachable and now-actor.idleSince>=5 then self:transition(actor,"rest",position,2,"wanderPause")end
         elseif now>=actor.endTime then
             if actor.action=="nookApproach"then
