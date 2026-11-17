@@ -92,12 +92,13 @@ return function(server)
 		assert(H.buyBallTheme(h, "g-1", "gumdrops", 40, false))
 		local expected = math.floor(100 / #Book.Pages.balls.items)
 		assert(Book.pagePercent(h.state, "balls") == expected)
-		-- With five paid themes (Bubbles, 2026-11-14) one theme is 20%: own a second, straight in
-		-- the save, to stand between 25% and 50%.
-		if expected < 25 then
-			edit(h, db, function(st) table.insert(st.ballThemes.owned, "gems") end)
-			assert(Book.pagePercent(h.state, "balls") >= 25 and Book.pagePercent(h.state, "balls") < 50)
+		-- With more paid themes (Bubbles 2026-11-14, six monotone ones v834) one theme is under
+		-- 25%: own more, straight in the save, until the page stands between 25% and 50%.
+		for _, id in ipairs({ "gems", "planets", "bubbles", "pea_soup" }) do
+			if Book.pagePercent(h.state, "balls") >= 25 then break end
+			edit(h, db, function(st) table.insert(st.ballThemes.owned, id) end)
 		end
+		assert(Book.pagePercent(h.state, "balls") >= 25 and Book.pagePercent(h.state, "balls") < 50)
 		local before = h.state.nectar
 		local ok, reason = H.bookClaim(h, "c-1", "balls.25", 5)
 		assert(ok and reason == "Saved" and h.state.nectar == before + 5 and claimedCount(h, "balls.25") == 1, tostring(reason))
@@ -162,7 +163,10 @@ return function(server)
 		local h, db, _, adapter = fixture()
 		fund(h, 100)
 		assert(H.buyBallTheme(h, "g-2", "gumdrops", 40, false))
-		if Book.pagePercent(h.state, "balls") < 25 then edit(h, db, function(s) table.insert(s.ballThemes.owned, "gems") end) end
+		for _, id in ipairs({ "gems", "planets", "bubbles", "pea_soup" }) do
+			if Book.pagePercent(h.state, "balls") >= 25 then break end
+			edit(h, db, function(s) table.insert(s.ballThemes.owned, id) end)
+		end
 		assert(H.bookClaim(h, "s-1", "balls.25", 5))
 		local balance = h.state.nectar
 		-- Same effect as a larger catalogue: the page now reads below the claimed 25%.

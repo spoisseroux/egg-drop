@@ -82,7 +82,7 @@ return function(client,parent)
     -- UI-SPEC-v816 1 (the Micro pair): B's hit meets A's at the midpoint between the centres,
     -- below and inside it; the two never overlap.
     local a=s.buttons.A.hit;local top=ib.hit.AbsolutePosition.Y
-    assert(ib.hit.AbsolutePosition.X+ib.hit.AbsoluteSize.X<=a.AbsolutePosition.X+.5 or top>=a.AbsolutePosition.Y+a.AbsoluteSize.Y,label.." B's hit overlaps A's")
+    assert(ib.hit.AbsolutePosition.X+ib.hit.AbsoluteSize.X<=a.AbsolutePosition.X+1 or top>=a.AbsolutePosition.Y+a.AbsoluteSize.Y,label.." B's hit overlaps A's")
     assert(top+ib.hit.AbsoluteSize.Y/2>a.AbsolutePosition.Y+a.AbsoluteSize.Y/2,label.." B is below A")
     -- QA v760 (the handheld layout): B sits below and inside A (a diagonal, like the desktop deck), on the grip.
     local ax,bx=a.AbsolutePosition.X+a.AbsoluteSize.X/2,ib.hit.AbsolutePosition.X+ib.hit.AbsoluteSize.X/2

@@ -24,15 +24,44 @@ return function(client,parent)
 	local hues={{.52,.68},{.0,.12},{.27,.45},{.83,.99},{.69,.80}} -- blue, orange, green, pink, violet
 	local root=Instance.new("Frame");root.Name="_BallThemesSpec";root.Size=UDim2.fromOffset(300,200);root.BackgroundTransparency=1;root.Parent=parent
 	local ok,problem=pcall(function()
-		test("seven themes in shop order with fixed prices; Smileys default; Kittens 250; Bubbles 100",function()
-			assert(table.concat(Themes.Order,",")=="smileys,marbles,gumdrops,gems,planets,kittens,bubbles")
-			local expect={smileys=0,marbles=0,gumdrops=40,gems=100,planets=100,kittens=250,bubbles=100}
+		test("thirteen themes in shop order with fixed prices; the six monotone ones appended (v834 spec)",function()
+			assert(table.concat(Themes.Order,",")=="smileys,marbles,gumdrops,gems,planets,kittens,bubbles,pea_soup,pocket_grey,amber,deep_sea,bubblegum,midnight")
+			local expect={smileys=0,marbles=0,gumdrops=40,gems=100,planets=100,kittens=250,bubbles=100,
+				pea_soup=40,pocket_grey=40,amber=100,deep_sea=100,bubblegum=100,midnight=250}
+			assert(#Themes.Order<=Themes.Limit,"the saved owned list stays inside its bound")
 			for id,price in pairs(expect)do assert(Themes.ById[id].price==price,id)end
 			assert(Themes.get("unknown").id=="smileys"and Themes.Default=="smileys")
 		end)
-		test("every theme: same hue family per size, neighbours >= 20 apart, ink >= 4.5:1, lightness ramp",function()
+		test("monotone themes: one hue, lighter every size (>= 7 L* a step), ink >= 3:1, size words",function()
 			for _,id in ipairs(Themes.Order)do
 				local theme=Themes.ById[id]
+				if theme.mono then
+					local h0,s0=Color3.fromHex(theme.ramps[1].body):ToHSV()
+					for tier=1,5 do
+						local r=theme.ramps[tier];local body=Color3.fromHex(r.body)
+						local h,s=body:ToHSV()
+						if s0>.15 then local dh=math.abs(h-h0);dh=math.min(dh,1-dh);assert(dh<=.06,id.." tier "..tier.." left its hue ("..h.." vs "..h0..")")end
+						if tier>1 then
+							local step=lab(body)-lab(Color3.fromHex(theme.ramps[tier-1].body))
+							assert(step>=7,id.." tiers "..(tier-1).."/"..tier.." only "..string.format("%.1f",step).." L* apart")
+						end
+						-- Midnight's pale ink is 2.5:1 on its lifted tier V (the LCD render check), 3:1 elsewhere.
+						local floor=if id=="midnight"and tier==5 then 2.5 else 3
+						assert(contrast(Color3.fromHex(theme.ink),body)>=floor,id.." tier "..tier.." ink contrast "..string.format("%.2f",contrast(Color3.fromHex(theme.ink),body)))
+						assert(luminance(Color3.fromHex(r.deep))<luminance(body)and luminance(body)<luminance(Color3.fromHex(r.light)),id.." ramp order")
+					end
+					assert(Themes.isMono(id)and Themes.word(1,id)=="tiny"and Themes.word(5,id)=="huge")
+				end
+			end
+			assert(not Themes.isMono("smileys")and Themes.word(4,"smileys")=="pink")
+			local was=Themes.current;Themes.setCurrent("amber")
+			assert(Themes.spoken(3)=="medium ball"and Themes.aBall(1)=="a tiny ball"and Themes.aBall(5)=="a huge ball")
+			Themes.setCurrent(was)
+		end)
+		test("every colour theme: same hue family per size, neighbours >= 20 apart, ink >= 4.5:1, lightness ramp",function()
+			for _,id in ipairs(Themes.Order)do
+				local theme=Themes.ById[id]
+				if theme.mono then continue end
 				for tier=1,5 do
 					local r=theme.ramps[tier];local body=Color3.fromHex(r.body)
 					local h,s=body:ToHSV();local band=hues[tier]

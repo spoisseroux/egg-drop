@@ -119,9 +119,13 @@ return function(client,parent)
   end
   -- Goals: all rows above the actions, the count in the title.
   assert(view.goalTitle.Text=="Goals  1/2","goal count "..view.goalTitle.Text)
-  assert(view.grid,"2 x 2 actions expected at this width")
+  -- DECK-LAYOUT-SPEC-v834: the wider wings narrow the screen, so even this root's right pane
+  -- is under the grid's 176 px now; the grid stays for any pane that has the room.
   local b1,b3,b5,b2=view.buttons[1],view.buttons[3],view.buttons[5],view.buttons[2]
-  assert(b1.Position.Y.Offset==b3.Position.Y.Offset and b5.Position.Y.Offset==b2.Position.Y.Offset and b5.Position.Y.Offset>b1.Position.Y.Offset,"grid rows")
+  if R.right.w>=176 then
+   assert(view.grid,"2 x 2 actions expected at this width")
+   assert(b1.Position.Y.Offset==b3.Position.Y.Offset and b5.Position.Y.Offset==b2.Position.Y.Offset and b5.Position.Y.Offset>b1.Position.Y.Offset,"grid rows")
+  else assert(not view.grid,"a pane under 176 px keeps the four-button stack")end
   for _,button in ipairs({b1,b3,b5,b2})do assert(button.Size.X.Offset>=44 and button.Size.Y.Offset>=44,"target under 44")end
   local goalsBottom=view.goalLabels[2].Position.Y.Offset+view.goalLabels[2].Size.Y.Offset
   assert(goalsBottom<=view.goals.Size.Y.Offset,"a goal row sits under the actions")

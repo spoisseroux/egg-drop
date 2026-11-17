@@ -4,10 +4,14 @@
 -- Smileys is the default; Marbles is today's glossy look with motifs (free, no
 -- faces). The server reads only `price` and `ById` (BallThemeState); the client
 -- renderer (JellyLCD) and the UI colour circles read the rest.
--- Every theme keeps the hue family per size: blue, orange, green, pink, violet.
+-- The first seven themes keep the hue family per size: blue, orange, green, pink, violet.
+-- The six monotone themes (DECK-LAYOUT-SPEC-v834 2, `mono = true`) are one hue stepped in
+-- value, smallest darkest; with one of them equipped a ball's word is its size.
 local Themes={Default="smileys",Limit=64}
 -- Bubbles (slice C, overnight 2026-11-14) is appended so the saved order of the first six never moves.
-Themes.Order={"smileys","marbles","gumdrops","gems","planets","kittens","bubbles"}
+-- The six monotone themes are appended after it for the same reason.
+Themes.Order={"smileys","marbles","gumdrops","gems","planets","kittens","bubbles",
+ "pea_soup","pocket_grey","amber","deep_sea","bubblegum","midnight"}
 -- Icon circles step in size inside a fixed slot so colour is never the only cue
 -- (scope B5/B6: blue and violet look alike without red-green vision).
 Themes.CircleScale=table.freeze({.52,.64,.76,.88,1})
@@ -17,6 +21,7 @@ local function ramp(body,deep,light)return table.freeze({body=body,deep=deep,lig
 local vivid={ramp("#2E8BFF","#0A3FD6","#8FE1FF"),ramp("#FF8A1A","#E0400A","#FFD45C"),ramp("#22E06A","#04963F","#B4FF7A"),
  ramp("#FF4DA6","#C4126F","#FFB0DC"),ramp("#A66BFF","#5B21D6","#E3C8FF")}
 local colourWords={"blue","orange","green","pink","violet"}
+local sizeWords={"tiny","small","medium","large","huge"}
 
 -- face: smiley | none | happy | dots | sleepy | cat. texture: none | motif | sugar | facet | planet.
 -- earsFrom: first tier that wears cat ears (nil = no ears).
@@ -46,6 +51,35 @@ Themes.ById={
   ramps={ramp("#8FD0FF","#4A9BE8","#F0FAFF"),ramp("#FFC48A","#F08A4A","#FFF1DC"),ramp("#9FF0C0","#3FC486","#EFFFF2"),
    ramp("#FFA8D0","#E85FA0","#FFEAF4"),ramp("#CDB0FF","#8B5FE8","#F5ECFF")},
   pitch="Soft and shiny. Two little eyes.",names={"Sky","Peach","Melon","Blossom","Violet"}},
+ -- Monotone themes (DECK-LAYOUT-SPEC-v834 2): tier I darkest to tier V lightest, about
+ -- 10 L* a step; the radius steps too, so no size relies on hue.
+ pea_soup={name="Pea Soup",tier="common",price=40,face="smiley",texture="none",ink="#0F1A08",mono=true,
+  ramps={ramp("#5F7F2A","#3F5A1A","#A8C66A"),ramp("#7A9A34","#56741F","#C2DC78"),ramp("#97B63F","#6E8F28","#D9EE8E"),
+   ramp("#B5D15A","#8BAA3A","#ECF9B0"),ramp("#D6EC8A","#AFCB5E","#F7FFD6")},
+  pitch="Old handheld green, dark to bright.",names={"Pea","Sprout","Leaf","Lime","Glow"}},
+ pocket_grey={name="Pocket Grey",tier="common",price=40,face="dots",texture="none",ink="#14161C",mono=true,
+  ramps={ramp("#6B7280","#474D59","#A3AAB6"),ramp("#8A919E","#636A78","#BFC5CF"),ramp("#A9B0BB","#808795","#D8DDE4"),
+   ramp("#C8CED6","#9EA5B1","#EDF0F4"),ramp("#E8ECF0","#C0C6CF","#FFFFFF")},
+  pitch="Grey pebbles. Size is the tell.",names={"Pebble","Slate","Stone","Cloud","Pearl"}},
+ amber={name="Amber",tier="rare",price=100,face="happy",texture="none",ink="#2A0E04",mono=true,
+  ramps={ramp("#B5541A","#7E3410","#E89A5A"),ramp("#D4701F","#A04C14","#FFB866"),ramp("#EE8F2A","#C0661A","#FFD080"),
+   ramp("#FFB347","#E08A2A","#FFE3A6"),ramp("#FFD98A","#F2B85C","#FFF4D6")},
+  pitch="Warm embers that glow as they grow.",names={"Ember","Rust","Flame","Honey","Spark"}},
+ deep_sea={name="Deep Sea",tier="rare",price=100,face="sleepy",texture="none",ink="#081430",mono=true,
+  ramps={ramp("#2F6FD0","#1B4A9E","#7FB0F5"),ramp("#4A8CE6","#2C66BE","#9CC8FF"),ramp("#6BA9F5","#4283D6","#BFDDFF"),
+   ramp("#96C6FF","#6AA2EC","#DCEEFF"),ramp("#C8E2FF","#9CC4F5","#F4FAFF")},
+  pitch="From the trench up to the foam.",names={"Trench","Tide","Wave","Sky","Foam"}},
+ bubblegum={name="Bubblegum",tier="rare",price=100,face="happy",texture="sugar",ink="#2B0A1C",mono=true,
+  ramps={ramp("#C2357A","#8A1E55","#EE86B6"),ramp("#DE5596","#AE346F","#FFA6CC"),ramp("#F27BB0","#CC548C","#FFC4DD"),
+   ramp("#FFA3CB","#E87BAC","#FFDDEB"),ramp("#FFD0E4","#F5A8C8","#FFF2F7")},
+  pitch="One pink, five strengths.",names={"Berry","Rose","Candy","Blush","Puff"}},
+ -- Render check (v834 spec): tier I (#3A2A78) sank into the dark LCD, so the ramp is lifted
+ -- one step as the spec allows (old I dropped, #A894FA added as V). Ink is white, not
+ -- #F6F2FF: 3:1 or better on tiers I-IV, 2.5:1 on the lifted V.
+ midnight={name="Midnight",tier="showcase",price=250,face="dots",texture="none",ink="#FFFFFF",mono=true,
+  ramps={ramp("#4E3A9A","#34266E","#9280E6"),ramp("#6650BE","#48388E","#AA98F5"),ramp("#8169DC","#5E4CAE","#C2B4FF"),
+   ramp("#9480EE","#7462CC","#DCD2FF"),ramp("#A894FA","#8C78E6","#EEE8FF")},
+  pitch="Dark balls with glowing eyes.",names={"Dusk","Plum","Iris","Lilac","Star"}},
 }
 for index,id in ipairs(Themes.Order)do
  local entry=Themes.ById[id];entry.id=id;entry.order=index
@@ -75,8 +109,14 @@ function Themes.ramp(tier,id)return Themes.get(id or Themes.current).ramps[clamp
 function Themes.color(tier,id)return Color3.fromHex(Themes.ramp(tier,id).body)end
 function Themes.lightColor(tier,id)return Color3.fromHex(Themes.ramp(tier,id).light)end
 -- Plain words, for screen readers and labels that cannot draw a circle. The hue
--- family is the same in every theme, so the word is the same too.
-function Themes.word(tier)return colourWords[clampTier(tier)]end
+-- family is the same in every colour theme, so the word is the same too; with a
+-- monotone theme (`mono`) every ball is one hue, so the word is its size.
+Themes.SizeWords=sizeWords
+function Themes.isMono(id)return Themes.get(id or Themes.current).mono==true end
+function Themes.word(tier,id)
+ if Themes.isMono(id)then return sizeWords[clampTier(tier)]end
+ return colourWords[clampTier(tier)]
+end
 function Themes.spoken(tier)return Themes.word(tier).." ball"end
 -- "a blue ball", "an orange ball".
 function Themes.aBall(tier)local word=Themes.word(tier);return(if string.find(word,"^[aeiou]")then "an "else "a ")..word.." ball"end

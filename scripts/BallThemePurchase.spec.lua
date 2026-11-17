@@ -39,7 +39,7 @@ return function(server)
 	local function fund(h, stars) assert(H.grantPurchase(h, "fund-" .. stars .. "-" .. h.state.revision, stars, false)) end
 
 	test("catalogue: six themes, Smileys default, fixed prices 0/0/40/100/100/250, no fruit", function()
-		assert(Themes.Default == "smileys" and #Themes.Order == 7)
+		assert(Themes.Default == "smileys" and #Themes.Order == 13) -- v834: six monotone themes appended
 		local prices = {}
 		for _, id in ipairs(Themes.Order) do prices[id] = Themes.ById[id].price end
 		assert(prices.smileys == 0 and prices.marbles == 0 and prices.gumdrops == 40 and prices.gems == 100 and prices.planets == 100 and prices.kittens == 250)

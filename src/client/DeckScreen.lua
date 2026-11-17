@@ -68,8 +68,18 @@ Screen.PocketItems=POCKET_ITEMS
 -- rounded corners included) and under the Roblox top bar; `aspect` is the body's locked
 -- width / height on a phone. The shell is the largest one of that shape that fits, centred.
 Screen.Fit={margin=8,aspect=2.3,crown=16,chin=14}
+Screen.PairAngle=55 -- DECK-LAYOUT-SPEC-v834 row 6: A-to-B line, degrees from horizontal
 function Screen.gripMargin(W)return if W>=800 then 40 elseif W>=700 then 24 else 6 end
-function Screen.resolveCompact(W,H,aspect,kx,kh)
+-- DECK-LAYOUT-SPEC-v834 1: the wings are a share of the body (0.19, a Game Boy Micro
+-- proportion), and every control is a share of its wing. `wingShare` is internal: when the
+-- HUD would drop to one column at 0.19, the layout retries at the spec's fallback 0.175.
+Screen.WingShare,Screen.WingFallback=.19,.175
+function Screen.resolveCompact(W,H,aspect,kx,kh,wingShare)
+ if wingShare==nil then
+  local g=Screen.resolveCompact(W,H,aspect,kx,kh,Screen.WingShare)
+  if g.layout=="one"or(g.column or 0)<96 then g=Screen.resolveCompact(W,H,aspect,kx,kh,Screen.WingFallback)end
+  return g
+ end
  kx=kx or 116;kh=kh or 58
  -- QA 2026-11-12: the glass starts under the Roblox controls (`top`), never behind them,
  -- and the shoulders are 18 px wider so the screen reads less wide.
@@ -103,12 +113,16 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  local ox=math.floor((rootW-bodyW)/2)
  W=bodyW
  local tier=if bodyH>=305 then 0 elseif bodyH>=265 then 1 else 2
- local SW=({124,112,98})[tier+1];local D=({88,80,68})[tier+1];local A=({80,72,64})[tier+1]
+ -- Spec rows 1-4: wing, d-pad, A and B as fractions (tier stays for everything else).
+ local SW=math.floor(wingShare*bodyW+.5)
+ local D=math.max(68,math.floor(.62*SW+.5));local A=math.max(64,math.floor(.54*SW+.5))
+ -- Spec row 15 (BEZ 0.018 of the body) is not applied: the extra px cost the phone results
+ -- screen its second goal row at 750x402 (InPlaceResults). The border stays 5.
  local top=bodyTop+Fit.crown
  local sheetTop=kh+18
  local rootH=H
  H=bodyBottom-Fit.chin+RIM -- B: every rect below is laid out as if the root ended here
- local g={s=1,compact=false,phone=true,mode="Compact",W=W,H=rootH,B=H,kx=kx,kh=kh,aspect=aspect,tier=tier,SW=SW,D=D,A=A,
+ local g={s=1,compact=false,phone=true,mode="Compact",W=W,H=rootH,B=H,kx=kx,kh=kh,aspect=aspect,tier=tier,SW=SW,D=D,A=A,wingShare=wingShare,bez=BEZ,
   deck=rect(0,0,W,H),contentScale=1,pad=0}
  g.top=sheetTop;g.glassTop=top
  g.glass=rect(SW,top,W-2*SW,H-top-RIM)
@@ -187,13 +201,20 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  -- centred on the same mid line. A and B are a size smaller than before (92 / 58 at the
  -- large tier), still well over 44 px with their hit areas.
  local mid=math.floor((bodyTop+bodyBottom)/2);local cx=math.floor(SW/2)
- local ww=SW-56;local wh=math.floor(ww*16/41+.5)
+ -- Spec rows 9-12: one optical line at mid + 0.03 body, the wordmark 60% of the wing and
+ -- 13% down the body, a small quiet MENU pill centred 86% down the body.
+ local optical=mid+math.floor(.03*bodyH+.5)
+ -- (the wordmark keeps 26 px from the body's rounded corner on narrow wings: DeckFit)
+ local ww=math.min(math.floor(.60*SW+.5),SW-52);local wh=math.floor(ww*16/41+.5)
+ local menuCy=bodyTop+math.floor(.86*bodyH+.5)
+ local mhit=math.min(84,SW-8)
+ g.menuHit=rect(cx-math.floor(mhit/2),menuCy-22,mhit,44)
  -- The d-pad never comes closer than 76 px to MENU's hit area, so its 144 px hit box
  -- holds; on a short body it then sits a little above the mid line. The wordmark gives
  -- way next (never higher than 6 px under the glass top), then the d-pad moves down.
- local lowest=H-52-4-72
- local dcy=math.min(mid,lowest)
- local wordY=math.max(kh+12,top+10,bodyTop+math.floor(bodyH*.15+.5))
+ local lowest=g.menuHit.y-4-72
+ local dcy=math.min(optical,lowest)
+ local wordY=math.max(kh+12,top+10,bodyTop+math.floor(bodyH*.13+.5))
  do
   local ledRoom=math.max(8,math.floor(34*math.min(bodyW/L.size.X,bodyH/L.size.Y)+.5))+4
   local need=wh+ledRoom+math.floor(D/2)
@@ -203,8 +224,8 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
   end
  end
  g.dpad=rect(cx-math.floor(D/2),dcy-math.floor(D/2),D,D)
- local mw,mh=math.min(72,SW-16),math.min(84,SW-8)
- g.menuHit=rect(cx-math.floor(mh/2),H-52,mh,44);g.menu=rect(cx-math.floor(mw/2),H-44,mw,28)
+ local mw=math.floor(.45*SW+.5)
+ g.menu=rect(cx-math.floor(mw/2),menuCy-12,mw,24)
  -- QA v2 R2.4 (phone d-pad hit areas): one box over the d-pad, the shoulder's width less
  -- 4 px a side, up to 144 high, clear of the keep-out above and of MENU below.
  -- Rounds: Left / Right are the box's two tall halves (Up / Down are off).
@@ -222,23 +243,21 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
   g.dpadMenuLeft=rect(bx0,by0+rh,half,boxH-2*rh);g.dpadMenuRight=rect(bx0+half,by0+rh,bw0-half,boxH-2*rh)
  end
  g.wordmark=if ww>=40 and wordY+wh<=g.dpad.y-8 then rect(cx-math.floor(ww/2),wordY,ww,wh)else nil
- -- A and B (Spencer after v833: "I don't want A and B the same size, make it like before"):
- -- A big, B (the item button) a size smaller, on the v760 diagonal: A `ax` px outside the
- -- grip's centre line, B `bxo` px inside it, 12 px apart, centred on the mid line. The
- -- v816 Micro pair (one size, 35-45 degrees about the mirrored d-pad) does not fit with A
- -- at full size (A would run off the body), so only its fixes stay: the pair sits `nx` px
- -- further left and `ny` px lower, off the far-right edge (his v775 note), and the hit
- -- areas are still cut at the midpoint should they ever overlap.
- local ib=({50,48,46})[tier+1]
- local ax,bxo=math.floor(SW*.03+.5),math.floor(SW*.17+.5)
- local nx=math.max(0,math.min(math.floor(SW*.05+.5),SW-cx-bxo-math.ceil(ib/2)-6))
- local ny=math.floor(bodyH*.025+.5)
- local apart=A/2+ib/2+12
- local dy=math.ceil(math.sqrt(apart*apart-(ax+bxo)*(ax+bxo)))
- local ay=mid-math.floor((dy+ib/2-A/2+10)/2)+ny
+ -- A and B (spec rows 3-8): A 0.54 of the wing, B 0.63 of A (Spencer: "A big, B smaller"),
+ -- 0.10 of the wing apart on a 55 degree diagonal, A up and out, B down and in. The pair's
+ -- box (B's left edge to A's right edge) is centred on the wing, then 1.5% of the wing
+ -- towards the glass, off the rounded far edge; its visual mass (A's top to the Items
+ -- caption's bottom) is centred on the same optical line as the d-pad.
+ local ib=math.max(44,math.floor(.63*A+.5))
+ local apart=A/2+ib/2+math.floor(.10*SW+.5)
+ local dx,dy=math.floor(apart*math.cos(math.rad(Screen.PairAngle))+.5),math.floor(apart*math.sin(math.rad(Screen.PairAngle))+.5)
+ local boxW=ib/2+dx+A/2
+ local ixc=math.floor(W-cx-boxW/2-.015*SW+ib/2+.5)
+ local axc=ixc+dx
+ local massH=A/2+dy+ib/2+4+17
+ local ay=math.floor(optical-massH/2+A/2+.5)
  ay=math.max(top+4+math.floor((A+8)/2),math.min(ay,H-6-math.floor((ib+8)/2)-dy))
- g.pairNudge=Vector2.new(nx,ny)
- local axc,ixc=W-cx+ax-nx,W-cx-bxo-nx
+ g.pairAngle=Screen.PairAngle
  g.a=Vector2.new(axc,ay)
  local aHit=rect(axc-math.floor((A+8)/2),ay-math.floor((A+8)/2),A+8,A+8)
  -- Round items (BUILD-PLAN 2026-11-13 item 4): the item button is B, below and inside A.
@@ -247,7 +266,9 @@ function Screen.resolveCompact(W,H,aspect,kx,kh)
  local itemHit=rect(ixc-math.floor((ib+8)/2),iy-math.floor((ib+8)/2),ib+8,ib+8)
  if itemHit.x+itemHit.w>aHit.x and itemHit.y<aHit.y+aHit.h then
   local cut=math.floor((axc+ixc)/2)
-  itemHit.w=cut-itemHit.x;local aRight=aHit.x+aHit.w;aHit.x=cut;aHit.w=aRight-cut
+  -- 1 px apart (taken from A's larger hit): odd button sizes put the drawn hits on half
+  -- pixels, which would touch.
+  itemHit.w=cut-itemHit.x;local aRight=aHit.x+aHit.w;aHit.x=cut+1;aHit.w=aRight-cut-1
  end
  g.aHit,g.itemHit=aHit,itemHit
  -- QA v2 R6.1: the full handheld drawn around the same LCD. The body sits 4 px in from
@@ -878,6 +899,13 @@ function Screen:layoutCompact(g)
  local screenEdge=g.glass.x+g.glass.w;local itemCx=g.item.x+g.item.w/2
  local capW=math.min(g.item.w+24,math.floor(2*(itemCx-screenEdge))-2)
  ib.caption.Size=UDim2.fromOffset(math.max(1,capW),17)
+ -- Spec rows 13-14: the caption is a quiet label (12 pt at 60%; the spec's 11 at the small
+ -- tier would break the 12 px text floor CompactPhone audits); the count badge is 0.40 of
+ -- B, centred on B's rim at 135 degrees (upper-left).
+ ib.caption.TextSize=12;ib.caption.TextTransparency=.4
+ local badgeD=math.floor(.40*g.item.w+.5);local rimAt=math.floor(g.item.w/2*(1-math.cos(math.rad(45)))+.5)
+ ib.badge.Size=UDim2.fromOffset(badgeD,badgeD);ib.badge.Position=UDim2.fromOffset(rimAt,rimAt)
+ ib.count.TextSize=math.max(10,math.floor(badgeD*.6))
  ib.glyph.TextSize=math.floor(g.item.w*.46);ib.caption.Visible=g.item.y+g.item.h+21<=g.body.y+g.body.h-2
  -- QA v2 R6.1: the desktop B sprite under it (the disc keeps only its ring, glyph,
  -- icon and badge); the sprite's own letter and hit stay off (showShell).

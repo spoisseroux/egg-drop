@@ -103,18 +103,28 @@ return function(client,parent,live,screenModule)
     assert(g.board.h>=170 and math.abs(g.board.w/g.board.h-aspect)<.02,label.." board keeps its aspect and a playable size")
    end end
   end)
-  test("v833 (Spencer): A big and B smaller as before, the pair nudged left and down off the far edge",function()
+  test("DECK-LAYOUT-SPEC-v834: wide wings, A big and B smaller on a 55 degree diagonal, an even left wing",function()
    for _,size in ipairs(phones)do for _,keep in ipairs(keeps)do
     local g=Screen.resolveCompact(size.X,size.Y,aspect,keep[1],keep[2])
     local label=string.format("%dx%d keep %dx%d",size.X,size.Y,keep[1],keep[2])
-    local A=({80,72,64})[g.tier+1];local ib=({50,48,46})[g.tier+1]
-    assert(g.A==A and g.item.w==ib and g.A>g.item.w,label.." A "..g.A.." and B "..g.item.w.." are the pre-v816 sizes")
+    local bw=g.body.w
+    assert(g.SW==math.floor(g.wingShare*bw+.5)and(g.wingShare==.19 or g.wingShare==.175),label.." wing "..g.SW)
+    assert(g.A>g.item.w and g.item.w>=44 and g.A>=64 and g.D>=68,label.." A "..g.A.." B "..g.item.w)
     local bx,by=g.item.x+g.item.w/2,g.item.y+g.item.h/2
-    assert(g.a.X>bx and g.a.Y<by,label.." A is the outer, upper one")
-    assert(g.pairNudge.X>=3 and g.pairNudge.Y>=5,label.." the pair is nudged left and down")
-    local right=g.body.x+g.body.w;local screenEdge=g.glass.x+g.glass.w
-    assert(g.a.X+g.A/2<=right-12,label.." A clear of the far-right edge")
-    assert(g.item.x>=screenEdge+4,label.." B stays on the grip, off the screen")
+    local deg=math.deg(math.atan2(by-g.a.Y,g.a.X-bx))
+    assert(deg>=50 and deg<=60,label.." pair angle "..deg)
+    -- Acceptance 1 (the spec's L and S sizes, body 296 px and up): no well (button + 10)
+    -- closer than 10 px to the glass or the body's edge. Smaller phones hit the A 64 / B 44
+    -- floors, so there the wells only have to stay on the wing.
+    local right=g.body.x+g.body.w;local glassR=g.glass.x+g.glass.w
+    local full=g.body.h>=290;local clear=if full then 10 else 0
+    assert(g.a.X+g.A/2+5<=right-clear and g.item.x-5>=glassR+clear,label.." A or B well within "..clear.." px of an edge")
+    -- Acceptance 2: wordmark-to-d-pad and d-pad-to-MENU gaps within 6 px.
+    if g.wordmark and full then
+     local above=g.dpad.y-(g.wordmark.y+g.wordmark.h);local below=g.menu.y-(g.dpad.y+g.dpad.h)
+     assert(math.abs(above-below)<=6,label.." left wing gaps "..above.." / "..below)
+    end
+    assert(g.menu.h==24 and g.menuHit.h==44,label.." MENU pill")
     for _,r in ipairs({g.aHit,g.itemHit})do assert(r.w>=44 and r.h>=44,label.." hit under 44 px")end
     assert(g.itemHit.x+g.itemHit.w<=g.aHit.x or g.itemHit.y>=g.aHit.y+g.aHit.h,label.." the hit areas do not overlap")
    end end
