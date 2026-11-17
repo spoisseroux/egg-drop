@@ -107,6 +107,22 @@ return function(client,parent)
    assert(#items==#Book.Pages.balls.items and items[1].owned and(items[2]==nil or not items[2].owned))
    assert(View.stepPage(1,-1,6)==1 and View.stepPage(6,1,6)==6 and View.stepPage(2,1,6)==3)
   end)
+  test("v870: every toy and charm on the Book has a picture (no initial placeholder)",function()
+   local Toys=require(Shared.ToyCatalog)
+   local toyItems=View.items("toys",{})
+   for _,id in ipairs(Toys.Pools[Toys.PoolVersion])do
+    local found
+    for _,item in ipairs(toyItems)do if item.id=="toy:"..id then found=item end end
+    assert(found,"toy "..id.." is not on the Toys page")
+    local kind=View.thumbKind("toys",found);assert(kind=="atlas"or kind=="toy","toy "..id.." draws "..tostring(kind))
+   end
+   local deck;for _,item in ipairs(toyItems)do if item.id=="toy:pocket_deck"then deck=item end end
+   assert(deck and View.thumbKind("toys",deck)=="toy","the Pocket Deck draws its 3D model")
+   for _,item in ipairs(toyItems)do assert(View.thumbKind("toys",item)~=nil,"Toys page item "..item.id.." has no picture")end
+   if Book.Pages.charms then
+    for _,item in ipairs(View.items("charms",{}))do assert(View.thumbKind("charms",item)=="charm","charm "..item.id.." has no picture")end
+   end
+  end)
   test("pure: thumbnails (live balls and plates; atlas slots only once uploaded, silhouettes below)",function()
    local savedAtlas=View.Art.atlas
    View.Art.atlas=nil

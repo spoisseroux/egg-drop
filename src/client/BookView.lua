@@ -151,7 +151,7 @@ function View.items(pageId,ownedIds)
    local theme=DeckThemes.ById[item.id];color=theme and toColor(theme.accent)
   end
   table.insert(out,{id=item.id,name=item.name,owned=owned[item.id]==true,color=color,discovery=pageId=="discoveries",
-   jar=if item.kind=="finishJar"then item.itemId else nil,shape=item.shape,how=item.how})
+   jar=if item.kind=="finishJar"then item.itemId else nil,toy=if item.kind=="toy"then item.itemId else nil,shape=item.shape,how=item.how})
  end
  return out
 end
@@ -180,7 +180,11 @@ function View.thumbKind(pageId,item)
  -- Customization Egg (slice 5): finish jars and charm shapes draw their own 3D art.
  if item.jar then return "jar"end
  if pageId=="charms"and item.shape then return "charm"end
- return if View.atlasRect(item.id,true)then "atlas"else nil
+ if View.atlasRect(item.id,true)then return "atlas"end
+ -- v870 overnight: a toy with no atlas cell (the Pocket Deck, pool 3) draws its own 3D model
+ -- (RewardItemArt, as on the hatch receipt) instead of the "P" initial.
+ if item.toy then return "toy"end
+ return nil
 end
 -- Pure: true when every item on the page has a thumbnail (cards), else name chips.
 -- Overnight 2026-11-14: per-item fallback. Cards as soon as any item has a picture; an item
@@ -490,6 +494,7 @@ function View:buildCards(entry,items)
   elseif kind=="atlas"then atlasThumb(well,item.id,item.owned,wellW,wellH)
   elseif kind=="jar"then require(script.Parent.HueJarArt).create(well,item.jar,UDim2.fromScale(.1,0),UDim2.fromScale(.8,1),well.ZIndex+1)
   elseif kind=="charm"then require(script.Parent.HueJarArt).charmView(well,item.shape,UDim2.fromScale(.1,0),UDim2.fromScale(.8,1),well.ZIndex+1)
+  elseif kind=="toy"then require(script.Parent.RewardItemArt).create(well,{toyId=item.toy},UDim2.fromScale(.1,0),UDim2.fromScale(.8,1),well.ZIndex+1)
   else
    local initial=txt(well,"Small",utf8.char(utf8.codepoint(item.name or "?",1)),if item.owned then "text"else "soft",0,0,wellW,wellH,
     {TextXAlignment=Enum.TextXAlignment.Center,TextSize=math.floor(wellH*.55)})

@@ -30,9 +30,13 @@ local function looksLikeFixture(name)
 	return false
 end
 -- Names that look like test content but are production: reported for review, never removed.
+-- Whole camel-case words only ("FaceplateState" holds "test" across a word boundary).
+local suspectWords = { greybox = true, test = true, debug = true, capture = true, spec = true }
 local function looksSuspicious(name)
-	local lower = name:lower()
-	return lower:find("greybox") ~= nil or lower:find("test") ~= nil or lower:find("debug") ~= nil or lower:find("capture") ~= nil
+	for word in name:gsub("(%l)(%u)", "%1 %2"):gsub("[_%-%d]", " "):gmatch("%a+") do
+		if suspectWords[word:lower()] then return true end
+	end
+	return false
 end
 
 local roots = {

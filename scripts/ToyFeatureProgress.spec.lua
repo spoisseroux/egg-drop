@@ -192,7 +192,12 @@ return function(server,frozenSource,frozenDailySource)
    -- v1: Meadow is retired, so a saved Companion reveal receipt replaces the hatch fixture.
    if kind=="companion"then local ok,why=H.command(h,"hatch","meadow",h.state.revision);assert(not ok and why=="RetiredEgg")
     db.player_1.hatching.lastHatch={id="saved-companion-reveal",petId="pip",duplicate=true,refund=0,family="pip",mastery=0,rare=false,recipe="meadow"};assert(H.renew(h)and h.state.lastHatch)
-   else local q,r=quote(h,c,kind,if kind=="material"then materialFields(h)else{});assert(H[kind.."Command"](h,kind.."Buy",q,r))end
+   elseif kind=="hue"then
+    -- v1 launch: the pending jar comes from the Customization Egg (lookBuy); hueBuy is closed.
+    local LE=require(game.ReplicatedStorage.Shared.LookEggCatalog);h.lookAvailable=true
+    local q,r=quote(h,c,"hue",{poolVersion=LE.PoolVersion,price=LE.Price,selectionMode="random",missingCharms=LE.missing(h.state.charmUnlocks),charmMisses=require(server.LookState).misses(h.state)})
+    assert(H.hueCommand(h,"lookBuy",q,r))
+   else local q,r=quote(h,c,kind,materialFields(h));assert(H[kind.."Command"](h,kind.."Buy",q,r))end
    for _,new in ipairs({"toy","feature"})do local q,r=quote(h,c,new,if new=="toy"then{poolVersion=TC.PoolVersion,eligible=TC.remaining(h.state.toyUnlocks)}else{poolVersion=1});local ok,why=H[new.."Command"](h,new.."Buy",q,r);assert(not ok and why=="RevealPending")end
   end
  end)
