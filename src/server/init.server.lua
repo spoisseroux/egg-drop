@@ -63,6 +63,10 @@ local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = child("RemoteEvent", "BoardRequest", remotes)
 local feedback = child("RemoteEvent", "BoardMerge", remotes)
 local impactsRemote = child("RemoteEvent", "BoardImpact", remotes)
+-- Deck network rework (deck-network-plan.md): sim ticks, the owner snapshot stream and
+-- the 8 Hz shared Part positions, each behind its FeatureFlags.DeckNet* flag.
+local BoardNet = require(script.BoardNet)
+BoardNet.setup(remotes)
 local nurseryRequest = child("RemoteEvent", "HatchRequest", remotes)
 local nurseryFeedback = child("RemoteEvent", "HatchFeedback", remotes)
 local nurserySnapshot = child("RemoteEvent", "NurserySnapshot", remotes)
@@ -468,6 +472,8 @@ local function publishState(board)
 	board.folder:SetAttribute("InventoryMask", inventory(board))
 	publishCompanion(board)
 	board.folder:SetAttribute("RoundOver", board.round.over)
+	-- S0: the tick the round ended on, so presentation can finish the last merge first.
+	if BoardNet.ticks() then board.folder:SetAttribute("RoundOverTick", if board.round.over then BoardNet.tick(board) else nil) end
 	board.folder:SetAttribute("RunFamily", board.runFamily or "pip")
 	board.folder:SetAttribute("SelectedFamily", board.selectedFamily or "pip")
 	board.folder:SetAttribute("DangerY", board.round.overflowY or Config.OverflowY)
@@ -1673,6 +1679,7 @@ RunService.Heartbeat:Connect(function(dt)
 			local wasReady = Simulation.canDrop(board.sim)
 			table.clear(merged)
 			Simulation.step(board.sim, Config.FixedStep, merged, board.impacts)
+			BoardNet.stepped(board)
 			board.round:step(board.sim.eggs, Config.FixedStep, board.sim.drops)
 			for _, merge in ipairs(merged) do
 				if board.welcome then require(script.WelcomeSeed).afterMerge(board.sim)end
@@ -1694,7 +1701,7 @@ RunService.Heartbeat:Connect(function(dt)
 				if board.firstSession then
 					board.firstSession:advance(3)
 				end
-				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared, board.folder:GetAttribute("ResetId"))
+				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared, board.folder:GetAttribute("ResetId"), BoardNet.tick(board))
 				for _, id in ipairs(merge.powerUps or {}) do
 					local granted = BoardItems.grant(board, id)
 					if granted then BoardItems.event(board, board.folder, { kind = granted, id = id, x = merge.position.X, y = merge.position.Y }) end
@@ -1745,7 +1752,7 @@ RunService.Heartbeat:Connect(function(dt)
 			end
 		end
 		if #batch > 0 then
-			impactsRemote:FireClient(player, batch, board.folder:GetAttribute("ResetId"))
+			impactsRemote:FireClient(player, batch, board.folder:GetAttribute("ResetId"), BoardNet.tick(board))
 		end
 		table.clear(board.impacts)
 	end

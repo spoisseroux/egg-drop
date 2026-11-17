@@ -98,6 +98,8 @@ function BoardItems.event(board, folder, packet)
 	board.itemEventCount = (board.itemEventCount or 0) + 1
 	packet.n = board.itemEventCount
 	packet.resetId = folder:GetAttribute("ResetId")
+	-- Deck network S0: the sim tick the event happened on (presentation clock only).
+	packet.tick = board.simTick
 	folder:SetAttribute("ItemEvent", game:GetService("HttpService"):JSONEncode(packet))
 end
 

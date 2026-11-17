@@ -13,4 +13,9 @@
 -- SecondPet=false (overnight 2026-11-14, slice E): Blip exists in data (collection bit 8) but is never
 -- granted or shown until his rig ships; EarnedPets.enabled() also needs PetRigDefinitions.blip.
 -- WeeklyShelf=true (slice C): the Monday-reset spotlight shelf with 20% off; false hides it.
-return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=true,PseudoLocale=false,SecondPet=false,WeeklyShelf=true})
+-- DeckNet* (deck network rework, artifacts/qa-2026-11-16c-v775/deck-network-plan.md): Ticks stamps the
+-- sim tick on board events (S0, presentation data only); Stream sends the owner a 30 Hz snapshot
+-- and runs the client clock in shadow (S1); Render draws the deck from it and moves the shared
+-- Parts at 8 Hz (S2, needs Stream). Off = today's path. The server stays authoritative throughout.
+return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=true,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
+ DeckNetTicks=true,DeckNetStream=false,DeckNetRender=false})
