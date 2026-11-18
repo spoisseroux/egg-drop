@@ -47,6 +47,8 @@ local HeatRequest = require(script.HeatRequest)
 local BoardItems = require(script.BoardItems)
 -- B1 parity (Studio only, off unless ServerStorage.RoundRecorder): records field rounds as tick-stamped logs.
 local roundRecorder = if RunService:IsStudio() then require(script.RoundRecorder) else nil
+-- B2 client-run board (FeatureFlags.DeckClientSim, Studio override ServerStorage.DeckClientSim): lockstep field rounds.
+local ClientSim = require(script.ClientSimHost)
 local PaidRandomPolicy = require(script.PaidRandomPolicy)
 local BookCatalog = require(ReplicatedStorage.Shared.BookCatalog)
 local FeatureFlags = require(ReplicatedStorage.Shared.FeatureFlags)
@@ -94,6 +96,7 @@ remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharm
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
+ClientSim.mount(remotes,function(player)return boards[player]end)
 local loading = {}
 local closing = {}
 local nextSlot = 0
@@ -604,10 +607,11 @@ local function reset(board, preset, sameField)
 	end
 	if board.welcome then board.welcome:destroy();board.welcome=nil end
 	if not field and not hasPet(board)then
+		ClientSim.begin(board) -- code review: a Welcome reset never keeps a lockstep round
 		board.sim=require(script.WelcomeSeed).create(Simulation,preset,board.sim and board.sim.serial)
 		board.welcome=require(script.WelcomeState).new(board.runSequence)
 		board.welcomeReplay=0;board.welcomeWindowActive=false
-	else board.sim=Simulation.new(preset,board.sim and board.sim.serial,simOptions)end
+	else board.sim=ClientSim.begin(board,preset,board.sim and board.sim.serial,field and descriptor or nil,itemsOn)or Simulation.new(preset,board.sim and board.sim.serial,simOptions)end
 	-- Belt, sequence and armed item never outlive their round (BUILD-PLAN item 3).
 	BoardItems.reset(board, itemsOn)
 	board.itemKinds = 0
@@ -632,7 +636,7 @@ local function reset(board, preset, sameField)
 	board.folder:SetAttribute("MasteryAward", 0)
 	board.folder:SetAttribute("RewardStatus", "")
 	board.folder:SetAttribute("ItemEvent", "")
-	if roundRecorder then roundRecorder.begin(board) end
+	if roundRecorder and not board.lockstep then roundRecorder.begin(board) end
 	publishHeat(board)
 	publishState(board)
 	syncVisuals(board)
@@ -826,10 +830,18 @@ local function addPlayer(player)
 	end
 end
 
+local settleReward
 local function closeBoard(board)
 	if board.closing then return end
 	closing[board] = true
 	board.closing = true
+	-- B2: a lockstep round's reward held for the save is settled now, so CloseProgress.drain saves it.
+	if board.lockstep and board.lockstep.rewardHeld then
+		board.lockstep.rewardHeld = false
+		Progress.recordScore(board.profile, board.round.score)
+		Progress.recordTrials(board.profile, board.peakChain, board.round.score, board.round.maxClears)
+		settleReward(board.player, board)
+	end
 	if board.welcome then board.welcome:destroy()end
 	garden:remove(board.player.UserId)
 	petHello.state:remove(board.player.UserId)
@@ -1151,6 +1163,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if action == "drop" then
+		if board.lockstep then BoardNet.ack(board,player,BoardNet.dropToken(sticker),false,"ClientSim");return end
 		if board.welcome then board.welcome:input()end
 		local token=BoardNet.dropToken(sticker)
 		if acceptedDrop(board,value,now,false,token) then BoardNet.ack(board,player,token,true)
@@ -1158,6 +1171,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			board.pendingDrop={aim=value,token=token,expires=now+BoardNet.QueueSeconds}
 		else BoardNet.ack(board,player,token,false,if board.pendingDrop then "Busy"else dropRefusal(board,value,now)) end
 	elseif action == "item" then
+		if board.lockstep then return end -- B2: items are inputs on the BoardClientSim remote
 		-- Round items: accepted while paused (the carousel freezes the round).
 		local ok, result = BoardItems.request(board, value, { resetId = board.folder:GetAttribute("ResetId"),
 			ready = canProgress(board), now = now, budget = board.field and board.field.budget })
@@ -1516,7 +1530,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	if not ok then nurseryFeedback:FireClient(player, "error", messages[reason] or reason) end
 end)
 
-local function settleReward(player, board)
+settleReward = function(player, board)
 	if board.payoutRunning then return end
 	local amount = board.field.outcome.reward
 	board.folder:SetAttribute("FieldSuccess", board.field.outcome.success)
@@ -1698,6 +1712,54 @@ ParkDirector.attach(garden, { enabled = FeatureFlags.Park == true,
 		flushParkGames(player, board)
 	end })
 
+-- B2 client-run board (B2-plan.md): a lockstep round's authoritative events feed the same
+-- consumers as the merge loop below. Progress (best score, trials) is written only while the save
+-- is usable, and once more with the round's final values at settle (both only rise).
+local lockstepHooks
+lockstepHooks = {
+	drop = function(player, board, drops)
+		board.runDay=RunDay.onDrop(board.runDay,drops,Daily.dayOf(board.nursery.adapter.now()))
+		if board.firstSession then
+			board.firstSession:advance(2)
+			if drops==1 then board.firstSession:roundStarted()end
+		end
+	end,
+	item = function(player, board, result)
+		BoardItems.event(board, board.folder, { kind = "used", id = result.id, eggId = result.eggId,
+			x = result.x, y = result.y, lostStar = result.lostStar ~= nil })
+	end,
+	merge = function(player, board, merge, score, chain, clears)
+		if canProgress(board) then
+			Progress.recordScore(board.profile, score)
+			Progress.recordTrials(board.profile, chain, score, clears)
+		end
+		if board.firstSession then board.firstSession:advance(3) end
+		feedback:FireClient(player, Vector2.new(merge.x, merge.y), merge.tier, chain, Vector2.new(merge.fromX, merge.fromY),
+			Vector2.new(merge.otherX, merge.otherY), merge.id, merge.cleared, board.folder:GetAttribute("ResetId"), BoardNet.tick(board), merge.firstId, merge.secondId)
+		for _, grant in ipairs(merge.grants or {}) do
+			BoardItems.event(board, board.folder, { kind = grant.kind, id = grant.id, x = merge.x, y = merge.y })
+		end
+	end,
+	bursts = function(player, board, bursts)
+		for _, burst in ipairs(bursts) do
+			BoardItems.event(board, board.folder, { kind = "burst", id = "bomb", x = burst.x, y = burst.y, count = #burst.ids })
+		end
+	end,
+	over = function(player, board)
+		local lockstep = board.lockstep
+		if not canProgress(board) then
+			-- Held until the save is usable (Heartbeat above); the board itself never waits.
+			lockstep.rewardHeld = true
+			board.payoutPending = true
+			board.folder:SetAttribute("RewardStatus", "Saving")
+			return
+		end
+		Progress.recordScore(board.profile, board.round.score)
+		Progress.recordTrials(board.profile, board.peakChain, board.round.score, board.round.maxClears)
+		settleReward(player, board)
+	end,
+}
+
 local accumulator = 0
 local merged = {}
 RunService.Heartbeat:Connect(function(dt)
@@ -1710,6 +1772,7 @@ RunService.Heartbeat:Connect(function(dt)
 	while accumulator >= Config.FixedStep do
 		accumulator -= Config.FixedStep
 		for player, board in pairs(boards) do
+			if board.lockstep then continue end -- B2: stepped once per Heartbeat below, to the client's tick
 			if board.welcome and not hasPet(board)then
 				local welcome=board.welcome
 				local active=not board.closing and board.mode=="Board"and not board.round.over and not board.menuPaused and canProgress(board)and board.welcomeWindowActive==true
@@ -1797,6 +1860,14 @@ RunService.Heartbeat:Connect(function(dt)
 	local now = os.clock()
 	for player, board in pairs(boards) do
 		if board.petContact then board.petContact:update()end
+		local lockstep=board.lockstep
+		if lockstep then
+			if ClientSim.advance(board,now,dt,lockstepHooks)then publishState(board)end
+			-- The nursery-save wait holds the reward only, never the board.
+			if lockstep.rewardHeld and board.lockstep==lockstep and canProgress(board)and not board.closing then
+				lockstep.rewardHeld=false;lockstepHooks.over(player,board)
+			end
+		end
 		local pendingDrop=board.pendingDrop
 		if pendingDrop then
 			if acceptedDrop(board,pendingDrop.aim,now,false,pendingDrop.token) then board.pendingDrop=nil;BoardNet.ack(board,player,pendingDrop.token,true)
@@ -1912,6 +1983,7 @@ if RunService:IsStudio() then
 	hook.OnInvoke = function(player, action, value)
 		local board = boards[player]
 		if not board or board.round.over then return nil, "NoRound" end
+		if board.lockstep then return nil, "ClientSim" end -- B2: the client's host must see every change
 		-- itemsOn/grant also work in the Welcome round (no field) so the belt chip and
 		-- carousel can be checked on a fresh Studio save; using an item still needs a
 		-- field (BoardItems.request refuses NotLive), and `star` needs the field queue.

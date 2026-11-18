@@ -389,6 +389,23 @@ local function fieldStep(host, tick)
 	host.over, host.overTick = true, tick
 end
 
+-- B2 timeout (B2-plan.md): the server ends a round that never ends (no progress for
+-- BoardLockstep.IdleSeconds in Board mode while drops are left). Never a win: success false,
+-- reward 0, so stalling can never trade the overflow risk for a payout. Returns false when over.
+function RoundSim.finish(host)
+	if host.over then return false end
+	local maxHeight = 0
+	for _, egg in ipairs(host.board.eggs) do
+		local top = egg.y + egg.radius
+		if top > maxHeight then maxHeight = top end
+	end
+	host.phase = "Complete"
+	host.outcome = { success = false, reward = 0, rootStage = host.stage, maxHeight = maxHeight,
+		reason = host.title .. " incomplete", timedOut = true }
+	host.over, host.overTick = true, host.board.tick
+	return true
+end
+
 -- One fixed step. Returns nil while paused or over, else an events table:
 -- { tick, merges = {merge records + tick, chain, points, observed, grants}, bursts, over }.
 -- Merge records are BoardSim's (x, y, tier, id, firstId, secondId, cleared, powerUps, ...).

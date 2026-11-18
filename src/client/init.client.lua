@@ -46,6 +46,8 @@ local Stars=require(script.StarText)
 local clientUI={HueIntent=require(script.HueIntent),HueEggView=require(script.HueEggView),PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent),FieldQuestText=require(script.FieldQuestText),fieldCache={},PetContactIntent=require(script.PetContactIntent)}
 -- Client-run board B0: owner-only sim determinism check after the loading screen (FeatureFlags.SimCheck).
 pcall(function()require(script.SimCheckClient).start()end)
+-- B2 client-run board: a lockstep field round's taps, items and pauses go to the driver (nil = today's path).
+pcall(function()clientUI.clientSim=require(script.ClientRoundDriver).start()end)
 -- Ball themes + faces (batch 2026-11-13 R1): the equipped theme comes from the nursery snapshot.
 clientUI.BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
 clientUI.ballFaces=require(script.BallFaces).new();clientUI.faceList={};clientUI.heldFace={}
@@ -1922,9 +1924,12 @@ end
 function clientUI.syncPause()
  if clientUI.syncItemChip then clientUI.syncItemChip()end
  -- The item carousel is the third deck owner (BUILD-PLAN 2026-11-13 item 6).
- request:FireServer("pause",clientUI.ItemCarousel.pauseWanted({modal=modalShade.Visible,questLog=clientUI.questLog.visible and board:GetAttribute("Mode")=="Board",
+ local wanted=clientUI.ItemCarousel.pauseWanted({modal=modalShade.Visible,questLog=clientUI.questLog.visible and board:GetAttribute("Mode")=="Board",
   pocketMenu=clientUI.pocketMenu.visible,carousel=clientUI.items~=nil and clientUI.items.isOpen,roundOver=board:GetAttribute("RoundOver")==true,
-  book=clientUI.book~=nil and clientUI.book:isOpen()and board:GetAttribute("Mode")=="Board"}))
+  book=clientUI.book~=nil and clientUI.book:isOpen()and board:GetAttribute("Mode")=="Board"})
+ request:FireServer("pause",wanted)
+ -- B2: a lockstep round pauses as a tick-stamped input on the client's own host.
+ if clientUI.clientSim then clientUI.clientSim.pause(wanted)end
 end
 function clientUI.pocketShouldClose()
  return recap.visible or modalShade.Visible or board:GetAttribute("Mode")~="Board"or board:GetAttribute("RoundOver")==true or roomView.busy
@@ -2509,6 +2514,10 @@ local function dropEgg()
   and intent:readyAhead(os.clock())
 	if (canPlay() or ahead) and not drag then
   if clientUI.welcomeInput then clientUI.welcomeInput()end
+  if clientUI.clientSim then
+   local taken=clientUI.clientSim.drop(aim)
+   if taken~=nil then if taken then audio:play("drop",1,.48)end;return end
+  end
   -- Deck network S4: with DeckNetDrop the tap answers at once (drop sound, dispenser kick)
   -- under the client's own throttle and not-ready latch; the server's ack settles it.
   local intent=clientUI.dropIntent
@@ -3054,6 +3063,7 @@ end
 function clientUI.useItem()
  local id=clientUI.items:selected()
  if not id then return false end
+ if clientUI.clientSim and clientUI.clientSim.item(id)~=nil then clientUI.closeItems(true);clientUI.accepted("confirm");return true end
  request:FireServer("item",{resetId=board:GetAttribute("ResetId"),seq=board:GetAttribute("ItemSeq")or 0,id=id})
  clientUI.closeItems(true);clientUI.accepted("confirm")
  return true

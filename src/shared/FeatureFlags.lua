@@ -23,7 +23,9 @@
 -- only (anyone in Studio), the client replays three logged rounds through the shared BoardSim after
 -- the loading screen and the server says whether its hashes match (one rail line). Proves a real
 -- phone steps the shared sim to the server's bits. No board, save or other player is touched.
--- DeckClientSim (client-run board, B3+; unused in B0): the owner's client steps the shared BoardSim
--- and the server verifies by replaying its inputs. False = today's server-run BoardSimulation.
+-- DeckClientSim (client-run board, B2-plan.md): field rounds run in lockstep on BoardRoundSim, stepped to
+-- the owner's reported tick (ClientSimHost / ClientRoundDriver); the deck still draws the server's Parts
+-- until B3. Studio only: ServerStorage attribute DeckClientSim = true turns it on at the next round reset.
+-- False = today's server-run BoardSimulation.
 return table.freeze({SimCheck=true,DeckClientSim=false,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})
