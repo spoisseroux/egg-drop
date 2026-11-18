@@ -45,6 +45,8 @@ local Economy = require(script.EconomyAnalytics)
 local HeatPayout = require(ReplicatedStorage.Shared.HeatPayout)
 local HeatRequest = require(script.HeatRequest)
 local BoardItems = require(script.BoardItems)
+-- B1 parity (Studio only, off unless ServerStorage.RoundRecorder): records field rounds as tick-stamped logs.
+local roundRecorder = if RunService:IsStudio() then require(script.RoundRecorder) else nil
 local PaidRandomPolicy = require(script.PaidRandomPolicy)
 local BookCatalog = require(ReplicatedStorage.Shared.BookCatalog)
 local FeatureFlags = require(ReplicatedStorage.Shared.FeatureFlags)
@@ -630,6 +632,7 @@ local function reset(board, preset, sameField)
 	board.folder:SetAttribute("MasteryAward", 0)
 	board.folder:SetAttribute("RewardStatus", "")
 	board.folder:SetAttribute("ItemEvent", "")
+	if roundRecorder then roundRecorder.begin(board) end
 	publishHeat(board)
 	publishState(board)
 	syncVisuals(board)
@@ -939,6 +942,7 @@ local function acceptedDrop(board,value,now,isDemo,token)
 		or typeof(value)~="number"or not(value>=0 and value<=1)or now-board.lastDrop<Config.DropInterval then return false end
 	board.lastDrop=now
 	if not Simulation.drop(board.sim,value)then return false end
+	if roundRecorder then roundRecorder.drop(board,value)end
 	if token then local dropped=board.sim.eggs[#board.sim.eggs];if dropped and dropped.id==board.sim.fallingId then dropped.dropToken=token end end
 	board.runDay=RunDay.onDrop(board.runDay,board.sim.drops,Daily.dayOf(board.nursery.adapter.now()))
 	if board.welcome and not isDemo then board.welcome:acceptedDrop()end
@@ -1073,7 +1077,10 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if action == "pause" then
-		if typeof(value) == "boolean" then board.menuPaused = value end
+		if typeof(value) == "boolean" then
+			if roundRecorder and board.menuPaused ~= value then roundRecorder.pause(board, value) end
+			board.menuPaused = value
+		end
 		return
 	end
 	-- Difficulty (plan section 1). Validated and stored here; applied at reset.
@@ -1129,6 +1136,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
             if board.round.over and hasPet(board)and not refreshed then return end
         end
 		board.mode = value
+		if roundRecorder and board.menuPaused then roundRecorder.pause(board, false) end
 		board.menuPaused = false
 		Lounge.setMode(player.Character, player.UserId, value, board.profile.theme)
 		board.folder:SetAttribute("Mode", value)
@@ -1156,6 +1164,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		if ok then
 			-- Slice D (win_each_item): which item kinds this round used, as a 4-bit mask.
 			board.itemKinds = bit32.bor(board.itemKinds or 0, Nursery.itemKindBit(result.id))
+			if roundRecorder then roundRecorder.item(board, result.id) end
 			local position = result.position
 			BoardItems.event(board, board.folder, { kind = "used", id = result.id, eggId = result.eggId,
 				x = position and position.X or nil, y = position and position.Y or nil, lostStar = result.lostStar ~= nil })
@@ -1741,6 +1750,7 @@ RunService.Heartbeat:Connect(function(dt)
 					board.round.maxClears += 1
 				end
 				board.round.score += Config.mergeScore(merge.tier, board.chain, merge.cleared)
+				if roundRecorder then roundRecorder.merge(board, merge, board.chain) end
 				Progress.recordScore(board.profile, board.round.score)
 				Progress.recordTrials(board.profile, board.chain, board.round.score, board.round.maxClears)
 				if board.field then board.field:observe(merge,{sequence=board.runSequence,ordinal=board.merges,chain=board.chain,playTime=board.playTime}) end
@@ -1758,6 +1768,7 @@ RunService.Heartbeat:Connect(function(dt)
 			end
 			-- Bomb bursts happen inside the step, outside `merged`: nothing scores.
 			if board.sim.bursts then
+				if roundRecorder then roundRecorder.burst(board, #board.sim.bursts) end
 				for _, burst in ipairs(board.sim.bursts) do
 					BoardItems.event(board, board.folder, { kind = "burst", id = "bomb", x = burst.position.X, y = burst.position.Y, count = #burst.ids })
 				end
@@ -1771,6 +1782,7 @@ RunService.Heartbeat:Connect(function(dt)
 				local result = board.field:step(board.sim.eggs, Config.FixedStep, board.sim.drops, board.round.over)
 				if result then
 					board.round.over = true
+					if roundRecorder then roundRecorder.finish(board) end
 					settleReward(player, board)
 				end
 				if expired or oldPhase ~= board.field.phase or oldStage ~= board.field.rootStage then publishState(board) end

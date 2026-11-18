@@ -66,7 +66,7 @@ local function addEgg(board, x, y, tier, vx, vy)
 end
 
 -- options (same keys as BoardSimulation.new): seed, bag, powerUps (heat key), contactGate,
--- kick, bounce, starter.
+-- kick, bounce, starter; or queue (tiers) + stars (false | item id per slot) as data instead of seed.
 function Sim.new(preset, serial, options)
 	options = options or {}
 	local physics = assert(Config.Presets[preset], "Unknown preset")
@@ -78,7 +78,12 @@ function Sim.new(preset, serial, options)
 		reach = physics.reach,
 		queue = nil, stars = nil, seed = nil, bursts = nil,
 	}
-	if options.seed ~= nil then
+	if options.queue ~= nil then
+		-- B1: the round host passes the queue and star slots as data (made once on the server,
+		-- BoardRoundSim.plan), so no side depends on Random matching across engine builds.
+		board.queue = table.clone(options.queue)
+		board.stars = if options.stars then table.clone(options.stars) else nil
+	elseif options.seed ~= nil then
 		local random = Random.new(options.seed)
 		board.queue = {}
 		for _ = 1, 4 do

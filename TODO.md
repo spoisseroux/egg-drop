@@ -4,6 +4,7 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 ## Now working on
 
+- [x] **B1 client-run board inputs (2026-11-17), landed (flag off):** shared round host `BoardRoundSim` (ticks, belt, score, chain, overflow, goals, round over, payout inputs), Studio `RoundRecorder`. 12 live rounds: log on today's sim = live 12/12, host = today's rules on BoardSim 12/12, live vs host full result 5/12 (float32 drift); Server = Client hashes (`bb0570e589372cea`, recorded `9053cdbec6bb8e2d`). Next: B2 lockstep. Plan and results: `artifacts/qa-2026-11-17-v887/B1-plan.md`.
 - [x] **B0 client-run board determinism (2026-11-17), landed:** Studio server = client, 164 hashes, digest 05a4e5ecb8ad2f44; owner check says match. Next: Spencer's phone (owner join shows "Sim check: match") after the next private publish, then B1. shared plain-number `BoardSim`, literal launch table, hash/snapshot/replay, Studio server-vs-client harness, owner phone check (`FeatureFlags.SimCheck`). Plan and results: `artifacts/qa-2026-11-17-v887/B0-plan.md`.
 - [x] **v890 QA (2026-11-17): published private v898 (7662362).** Slow-link ghosts (token handoff, longer backstops, tier fix, 0.8 s queue), loading screen with world preload, hatch prewarm and longer budget, deck music -3 dB. Merge pause: needs Option B (client-run board, `client-sim-plan.md`), Spencer to decide before or after launch.
 - [ ] Loading screen strings ("Pocket Pals", "Pet Garden", status lines, Skip) into UICopy and the localization table.
