@@ -16,6 +16,8 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**PUBLIC LAUNCH 2026-11-17 (~22:21 ET):** Spencer released Pocket Pals: Pet Garden publicly on v933 (runtime a80ed37). Open Cloud confirms universe 10774758591 `visibility: PUBLIC`. Age rating still reads unspecified in the API.
+
 **Private v933 Published 2026-11-17 — LAUNCH BUILD, runtime a80ed37, servers restarted. FRESH SAVE STORE `EggDropLaunchV3`.** Client-run Pocket Deck ON for everyone (`DeckClientSim=true`; Welcome round on today's path). Sim check off. Includes v931 (hatch x stores) and everything since v898. Studio soak: fresh save -> Welcome -> pet -> 3 lockstep rounds at lag 0 / 0.6 s / jitter: all ended, 0 refused, 0 stalls, 0 resyncs, final hash equal, payout matched and saved. Specs LaunchFlags 3, SessionRecovery 8, DeckHeldScale 3, WorldBackdropFidelity 2. Translations: no table changes (loading screen copy is hard-coded, English only). Test content stripped. Next: Spencer clicks Manage audience -> Release publicly.
 
 **Private v931 Published 2026-11-17 — runtime 5339ee6, servers restarted. SAVES PERSIST (`EggDropLaunchV2`).** v929 plus: the hatch reveal's corner x stores the result like Store (Spencer: after x, the next egg opened the stored result instead of hatching). HatchFlowE2E 7, CustomizeNewItem 5, HatchActions 29, HatchItemStage 13. Client-run deck still ON only for Spencer's test accounts. Test content stripped.
