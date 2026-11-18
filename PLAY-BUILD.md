@@ -16,6 +16,8 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**PUBLIC v935 Published 2026-11-18 — runtime ff28ba9, servers restarted (Spencer: "Publish + restart").** v933 plus readable phone goal rows (Merges / Chain / ball with up arrow and LEFT, RIGHT, MID instead of pictograms) and three Hard goals ending above the Quest handle. CompactPhone 12, DeckFit 5, DeckScreen 8, DeckRoundQA 10, ItemCarousel 8; capture `artifacts/qa-2026-11-17-v933/hard-three-goals-844x390.png`. Translations: no table changes ("Merges", "Chain", LEFT/RIGHT/MID are hard-coded). Test content stripped.
+
 **PUBLIC LAUNCH 2026-11-17 (~22:21 ET):** Spencer released Pocket Pals: Pet Garden publicly on v933 (runtime a80ed37). Open Cloud confirms universe 10774758591 `visibility: PUBLIC`. Age rating still reads unspecified in the API.
 
 **Private v933 Published 2026-11-17 — LAUNCH BUILD, runtime a80ed37, servers restarted. FRESH SAVE STORE `EggDropLaunchV3`.** Client-run Pocket Deck ON for everyone (`DeckClientSim=true`; Welcome round on today's path). Sim check off. Includes v931 (hatch x stores) and everything since v898. Studio soak: fresh save -> Welcome -> pet -> 3 lockstep rounds at lag 0 / 0.6 s / jitter: all ended, 0 refused, 0 stalls, 0 resyncs, final hash equal, payout matched and saved. Specs LaunchFlags 3, SessionRecovery 8, DeckHeldScale 3, WorldBackdropFidelity 2. Translations: no table changes (loading screen copy is hard-coded, English only). Test content stripped. Next: Spencer clicks Manage audience -> Release publicly.
