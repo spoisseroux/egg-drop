@@ -19,5 +19,11 @@
 -- Parts at 8 Hz (S2, needs Stream); Drop answers a tap at once and acks it, with a one-deep server
 -- drop queue (S4); Ghost (S5) shows the tapped ball at once and lets the next tap go on its local
 -- touch-down (needs Drop; off until verified in Studio). Off = today's path. The server stays authoritative.
-return table.freeze({Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
+-- SimCheck (client-run board B0, artifacts/qa-2026-11-17-v887/B0-plan.md): for the experience creator
+-- only (anyone in Studio), the client replays three logged rounds through the shared BoardSim after
+-- the loading screen and the server says whether its hashes match (one rail line). Proves a real
+-- phone steps the shared sim to the server's bits. No board, save or other player is touched.
+-- DeckClientSim (client-run board, B3+; unused in B0): the owner's client steps the shared BoardSim
+-- and the server verifies by replaying its inputs. False = today's server-run BoardSimulation.
+return table.freeze({SimCheck=true,DeckClientSim=false,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})

@@ -86,6 +86,8 @@ local welcomeResult = child("RemoteEvent", "WelcomeResult", remotes)
 local petAppearanceResult = child("RemoteEvent", "PetAppearanceResult", remotes)
 -- v1 track B: bug reports / suggestions (remote BugReport, owner tool ServerStorage.EggDropReportsTool).
 do local ok,problem=pcall(function()require(script.BugReportStore).mount(remotes)end);if not ok then warn("[EggDropReport] not mounted: "..tostring(problem))end end
+-- Client-run board B0: owner-only sim determinism check (FeatureFlags.SimCheck, remote SimCheck).
+do local ok,problem=pcall(function()require(script.SimCheckHost).mount(remotes)end);if not ok then warn("[SimCheck] not mounted: "..tostring(problem))end end
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)

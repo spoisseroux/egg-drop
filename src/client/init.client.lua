@@ -44,6 +44,8 @@ local Art = require(script.DeckArt)
 local DeckLayout = require(script.DeckLayout)
 local Stars=require(script.StarText)
 local clientUI={HueIntent=require(script.HueIntent),HueEggView=require(script.HueEggView),PresentationPolicy=require(script.PresentationPolicy),SaveNotice=require(script.SaveNotice),ControllerFocus=require(script.ControllerFocus),AppearanceIntent=require(script.AppearanceIntent),FieldQuestText=require(script.FieldQuestText),fieldCache={},PetContactIntent=require(script.PetContactIntent)}
+-- Client-run board B0: owner-only sim determinism check after the loading screen (FeatureFlags.SimCheck).
+pcall(function()require(script.SimCheckClient).start()end)
 -- Ball themes + faces (batch 2026-11-13 R1): the equipped theme comes from the nursery snapshot.
 clientUI.BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
 clientUI.ballFaces=require(script.BallFaces).new();clientUI.faceList={};clientUI.heldFace={}
