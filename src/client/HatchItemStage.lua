@@ -179,8 +179,10 @@ function Stage.geometry(W,H)
   local block=bannerH+nameH+math.floor(L.detailSize*3.2)
   L.bannerY=math.max(if L.phone then 56 else 0,math.floor((H-L.btnH-L.margin-block)*.5))
   L.nameY=L.bannerY+bannerH+math.floor(L.nameSize*.14);L.detailY=L.nameY+nameH+math.floor(L.detailSize*.9)
-  L.btnY=H-L.btnH-(if L.phone then 16 else math.floor(112*s))
-  L.btnX=L.textX;L.btnW=L.textW
+  -- v922 phone QA: the buttons sat 16 px off the bottom and ran into the side inset; up 24 px
+  -- and 48 px in from the right (they are right-aligned, so both move left).
+  L.btnY=H-L.btnH-(if L.phone then 40 else math.floor(112*s))
+  L.btnX=L.textX;L.btnW=if L.phone then math.max(200,L.textW-48)else L.textW
   L.preY=math.min(H-L.preSize*2,L.cy0+L.seat*.5+L.preSize*.4)
  else
   L.seat=math.floor(math.min(W*.62,H*.36))

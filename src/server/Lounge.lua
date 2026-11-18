@@ -257,23 +257,7 @@ function Lounge.setMode(character, userId, mode, themeId)
 	end
 	device.PrimaryPart = shell
 	paintDevice(device, themeId)
-	local badge = Instance.new("BillboardGui")
-	badge.Name = "Playing"
-	badge.Adornee = screen
-	badge.Size = UDim2.fromOffset(164, 21)
-	badge.StudsOffset = Vector3.new(0, 2.2, 0)
-	badge.MaxDistance = 25
-	badge.Parent = screen
-	local text = Instance.new("TextLabel")
-	text.Size = UDim2.fromScale(1, 1)
-	text.BackgroundColor3 = Palette.Ink
-	text.BackgroundTransparency = 0.18
-	text.BorderSizePixel = 0
-	text.Text = "PLAYING POCKET PALS"
-	text.TextColor3 = Palette.Primary
-	text.Font = Enum.Font.Code
-	text.TextSize = 12
-	text.Parent = badge
+	-- v922 QA (Spencer): no "PLAYING POCKET PALS" badge over the holder; the held deck shows it.
 	device.Parent = character
 	CollectionService:AddTag(device, "EggDropHandheld")
 	for _, side in ipairs({ "Left", "Right" }) do
