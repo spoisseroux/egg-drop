@@ -216,15 +216,30 @@ end
 -- `act`, so the save, focus and first-toy rules below stay the only owners.
 function View:bindRevealStages()
  local function hooks(kind,reveal,peer,usePeer,name,detail)
+  local function actions(result)
+   -- v850: a toy offers "Give to <pet>" (the main button) and "Store"; with no pet to give
+   -- it to, Store alone (review of 7466c0b). Other items keep Use now in front.
+   if kind=="toy"and not self:toyGiveTarget(result)then return {{source=peer(),primary=true,act=usePeer}}end
+   local give=kind=="toy"
+   return {{source=peer(),primary=not give,act=usePeer},{source=self.action,primary=give,act=function()self:activate()end}}
+  end
+  -- v929 QA: the corner × stores the result like Store. Closing left it pending, and the next
+  -- egg opened on that stored result instead of a new hatch. No Store on offer (a retry, a
+  -- first toy given at once): × closes as before.
+  local pendingKey={hue="pendingHueResult",toy="pendingToyResult",material="pendingMaterialResult",feature="pendingFeatureResult"}
+  local function close()
+   local result=self.state and self.state[pendingKey[kind]]
+   if result then
+    for _,entry in ipairs(actions(result))do
+     local button=entry.source
+     -- Same rule as the stage's own buttons (HatchItemStage: shown and interactable).
+     if button and button.Text=="Store"and button.Visible and button.Interactable then entry.act();return end
+    end
+   end
+   self:close("back")
+  end
   reveal.options.stage={parent=self.shade,owns=function()return not self.destroyed and self.shade.Visible end,
-   name=name,detail=detail,close=function()self:close("back")end,gone=function()self:releaseStageCard()end,
-   actions=function(result)
-    -- v850: a toy offers "Give to <pet>" (the main button) and "Store"; with no pet to give
-    -- it to, Store alone (review of 7466c0b). Other items keep Use now in front.
-    if kind=="toy"and not self:toyGiveTarget(result)then return {{source=peer(),primary=true,act=usePeer}}end
-    local give=kind=="toy"
-    return {{source=peer(),primary=not give,act=usePeer},{source=self.action,primary=give,act=function()self:activate()end}}
-   end}
+   name=name,detail=detail,close=close,gone=function()self:releaseStageCard()end,actions=actions}
  end
  hooks("hue",self.itemReveal,function()return self.useNow end,function()self:useResult()end,
   function(result)return names[result.itemId]end,function()return self.receipt.Text end)

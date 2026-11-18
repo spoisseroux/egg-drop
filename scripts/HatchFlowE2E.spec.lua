@@ -155,6 +155,23 @@ return function(client,parent)
 			hatch("look","receipt","tide","Customization 2")
 			assert(table.find(log,"toyAck"),"the toy was acknowledged before the second egg: "..table.concat(log,","))
 		end)
+		test("v929 QA: the stage's corner x stores the waiting jar like Store, so the next egg hatches fresh",function()
+			assert(S.pendingHueResult,"a jar waits (closed with close(\"back\") above)")
+			local before=#log
+			nursery:open(copy(S));frames();nursery:selectRecipe("look");frames();nursery:actPrimary()
+			local w=os.clock();while not(view.shade.Visible and view.page=="receipt")and os.clock()-w<3 do frames(1)end
+			assert(view.page=="receipt","the waiting jar reopens")
+			local close=view.itemReveal.options.stage and view.itemReveal.options.stage.close
+			assert(type(close)=="function","the stage has a close hook")
+			close();frames()
+			w=os.clock();while S.pendingHueResult and os.clock()-w<3 do frames(1)end
+			local stored=false;for i=before+1,#log do if log[i]=="hueStore"then stored=true end end
+			assert(stored and not S.pendingHueResult,"x stored the jar: "..table.concat(log,","))
+			if view.shade.Visible then view:close("back");frames()end
+			nursery:open(copy(S));frames();nursery:selectRecipe("look");frames()
+			assert(Shop.hatchAction("look",S).text:find("Hatch",1,true),"the Customization Egg reads Hatch again ("..Shop.hatchAction("look",S).text..")")
+			nursery:close("spec")
+		end)
 	end,function(e)return tostring(e).." | "..debug.traceback()end)
 	pcall(function()view:destroy()end);pcall(function()nursery:close("spec")end)
 	gui:Destroy()
