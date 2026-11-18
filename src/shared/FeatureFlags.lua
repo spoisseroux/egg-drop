@@ -29,5 +29,7 @@
 -- False = today's server-run BoardSimulation.
 -- DeckClientSimTesters (2026-11-17): lockstep rounds for Spencer's test accounts only (SimCheck.isOwner), so he
 -- can feel the client-run deck on his phone before B4/B5 and the flag flip. Everyone else: today's path.
-return table.freeze({SimCheck=true,DeckClientSim=false,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
+-- SimCheck off for launch (Spencer 2026-11-17): phone and PC matched the server on v903; the
+-- owner-only check has done its job. True again re-runs it for SimCheck.isOwner accounts.
+return table.freeze({SimCheck=false,DeckClientSim=false,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})
