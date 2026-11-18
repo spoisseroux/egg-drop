@@ -206,12 +206,14 @@ def build_layers():
     bg = ImageEnhance.Brightness(bg).enhance(1.04)
     L["bg"] = bg
 
-    # Pocket Deck at the frozen CHAIN x4 frame (difference matte; the shell's own soft shadow
-    # is kept). Crop leaves out Studio's back-arrow button at top right.
-    deck = matte("deck-chain4-black.jpg", "deck-chain4-white.jpg", box=(270, 60, 1650, 777))
-    rgb = load("deck-chain4-black.jpg")[490:668, 835:1102]
-    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
-    lcd = (g >= np.maximum(r, b) - 4) & (rgb.max(2) < 140)
+    # Pocket Deck on the Prism Flare faceplate (showcase tier, bought in Studio with test
+    # Stars), frozen mid-round on a x3 chain merge (11 eggs left, no "Settling" pill).
+    # Difference matte; the shell's own soft shadow is kept. The crop leaves out Studio's
+    # back-arrow button at top right.
+    deck = matte("deck-prism-chain3-black.jpg", "deck-prism-chain3-white.jpg", box=(270, 60, 1650, 777))
+    rgb = load("deck-prism-chain3-black.jpg")[515:668, 840:1102]
+    sat = rgb.max(2) - rgb.min(2)
+    lcd = (rgb.max(2) < 100) & (sat < 36)  # the LCD is dark and grey-violet; the balls are not
     a = Image.fromarray(np.where(lcd, 0, 255).astype(np.uint8), "L").filter(ImageFilter.MedianFilter(5))
     pop = Image.fromarray(rgb.astype(np.uint8), "RGB").convert("RGBA")
     pop.putalpha(a)
@@ -219,30 +221,17 @@ def build_layers():
     L["deck"] = deck  # untrimmed: layer coords = capture coords - (270, 60)
 
     # Bears (PetFactory clones, frozen poses): white plush Bear in Pom Beanie, Bell Collar,
-    # Happy eyes and Blush holding its Ball; Tide (blue) Bear with Gloss, Sun Hat, Specs,
-    # Beads and the "w" mouth, waving.
+    # Happy eyes and Blush holding its Ball; Tide (blue) Bear with Gloss, Sun Hat, Sparkle
+    # eyes, Beads and the "w" mouth, waving (shot over black and 50% grey Neon: white Neon
+    # glows into the edges).
     L["bear_white"] = trim(matte("bear-white-black.jpg", "bear-white-white.jpg"))
-    L["bear_tide"] = trim(matte("bear-tide-black.jpg", "bear-tide-white.jpg"))
+    L["bear_tide"] = trim(matte("bear-tide-sparkle-black.jpg", "bear-tide-sparkle-grey.jpg"))
 
-    # Egg crack (real hatch cinematic through RevealCaptureFixture at t=0.97 s, white flash
-    # and streaks hidden). Solid shell from the matte; the warm light from the black frame.
-    egg = matte("egg-crack-black.jpg", "egg-crack-white.jpg", box=(400, 0, 1200, 592))
-    # The reveal's light is drawn over the shell, so the matte only gives the shape; the
-    # shell colour comes from the black frame (it already carries the warm light).
-    shape = keep_solid(egg, threshold=120, grow=2).getchannel("A").point(lambda v: 255 if v > 90 else 0)
-    shape = shape.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(1.2))
-    shell = Image.open(os.path.join(RAW, "egg-crack-black.jpg")).convert("RGBA").crop((400, 0, 1200, 592))
-    oval = Image.new("L", shell.size, 0)
-    ImageDraw.Draw(oval).ellipse((285, 300, 540, 600), fill=255)  # the egg only, not the beam
-    shell.putalpha(ImageChops.multiply(shape, oval.filter(ImageFilter.GaussianBlur(2))))
-    shell = ImageEnhance.Contrast(shell).enhance(1.15)
-    L["egg_solid"] = trim(shell, 2)
-    glow = Image.open(os.path.join(RAW, "egg-crack-black.jpg")).convert("RGB").crop((400, 0, 1200, 777))
-    # Fade out the floor ring and plinth under the egg.
-    fade = Image.linear_gradient("L").resize((glow.width, glow.height))
-    fade = fade.point(lambda v: 255 if v < 150 else max(0, 255 - (v - 150) * 4))
-    glow = Image.composite(glow, Image.new("RGB", glow.size, (0, 0, 0)), fade)
-    L["egg_light"] = glow
+    # Egg: the game's own egg meshes and Companion Egg texture (Shared.EggModels), built in
+    # the 3D stage in its hatch pose: top shell lifted 0.16 and tipped 14 degrees over the
+    # glowing Neon core, as EggPreview3D poses it. Black and 50% grey Neon backdrops.
+    eggs = matte("eggs3d-black.jpg", "eggs3d-grey.jpg")
+    L["egg_solid"] = trim(keep_solid(eggs.crop((790, 110, 1120, 560)), threshold=150, grow=3), 2)
 
     # Stars: the game's 3D StarToken (CelebrationKit.star) captured over black and white.
     stars = matte("stars-black.jpg", "stars-white.jpg", bg_probe=(1880, 700, 1915, 770))
@@ -316,34 +305,21 @@ def compose(L, variant="A"):
     dark = Image.new("RGBA", (W, H), (60, 18, 40, 255))
     canvas = Image.composite(canvas, dark, vign.point(lambda v: int(140 + v * 115 / 255)))
 
-    # ---- Egg (behind everything else), centre-right, cracking with its light beam.
-    egg_f = 1.0
-    light = scale(L["egg_light"], egg_f)
-    ex, ey = 1660, -110
-    m = Image.new("L", light.size, 0)
-    ImageDraw.Draw(m).ellipse((60, 20, light.width - 60, light.height - 10), fill=255)
-    m = m.filter(ImageFilter.GaussianBlur(90))
-    boosted = ImageEnhance.Brightness(light).enhance(1.6)
-    screen(canvas, boosted, ex - light.width // 2, ey, m)
-    egg = scale(L["egg_solid"], 1.1)
-    egg_c = (ex + 12, ey + 455)
-    screen(canvas, radial((W, H), egg_c, 260, (255, 200, 120), peak=220, power=1.5), 0, 0)
-    rim = outline(padded(egg, 14), 11, (120, 60, 40))
-    place(canvas, rim, egg_c, with_shadow=(16, (8, 14), 0.4))
-    place(canvas, outline(padded(egg, 14), 6, (255, 250, 232)), egg_c)
-    # Warm light pouring out of the crack (over the shell's dark gap).
-    gap = (egg_c[0] - 2, egg_c[1] + 40)
-    gm = Image.new("L", (W, H), 0)
-    ex0, ey0 = egg_c
-    ImageDraw.Draw(gm).polygon([(ex0 - 22, ey0 - 4), (ex0 + 20, ey0 - 4), (ex0 + 6, ey0 + 160), (ex0 - 10, ey0 + 160)], fill=255)
-    gm = gm.filter(ImageFilter.GaussianBlur(5))
-    canvas.paste(Image.new("RGBA", (W, H), (255, 214, 130, 255)), (0, 0), gm)
-    screen(canvas, radial((W, H), (gap[0], gap[1] + 10), 120, (255, 205, 120), peak=110, power=1.8), 0, 0)
-    # Extra warm bloom from the crack.
-    screen(canvas, radial((W, H), (egg_c[0] - 6, egg_c[1] + 150), 170, (255, 200, 120), peak=150, power=2.2), 0, 0)
+    # ---- Egg, upper right behind the Bears: warm halo, then the clean cracking egg.
+    egg_c = (1665, 300)
+    screen(canvas, radial((W, H), egg_c, 330, (255, 196, 110), peak=235, power=1.4), 0, 0)
+    screen(canvas, rays((W, H), egg_c, 420, (255, 214, 140), rotation=0), 0, 0)
+    egg = scale(L["egg_solid"], 0.92).rotate(-8, resample=Image.BICUBIC, expand=True)
+    rim = outline(padded(egg, 14), 10, (120, 56, 52))
+    place(canvas, rim, egg_c, with_shadow=(16, (8, 14), 0.45))
+    place(canvas, outline(padded(egg, 14), 5, (255, 250, 232)), egg_c)
 
     # ---- Pocket Deck, big on the left, tilted toward the viewer (left edge nearer).
-    deck = L["deck"]
+    # The pastel holographic shell sinks into the pink sky: lift its colour a little.
+    deck = L["deck"].copy()
+    dalpha = deck.getchannel("A")
+    deck = ImageEnhance.Color(deck.convert("RGB")).enhance(1.35).convert("RGBA")
+    deck.putalpha(dalpha)
     dw, dh = deck.size
     s = 1.0
     quad = [(-60, 400), (dw * s - 90, 320), (dw * s - 60, 320 + dh * s * 0.93), (-140, 400 + dh * s * 1.04)]
@@ -353,6 +329,12 @@ def compose(L, variant="A"):
 
     # Merge burst: the results Star's rays and a hot glow behind the merge (drawn on the deck
     # layer before the deck so the rays fan out from behind the shell, and again over the LCD).
+    # Ink rim around the shell (solid part only, not its soft shadow), like the Bears' rims.
+    solid = deck_w.getchannel("A").point(lambda v: 255 if v > 200 else 0)
+    ring = solid.filter(ImageFilter.MaxFilter(15)).filter(ImageFilter.GaussianBlur(1.5))
+    rim_layer = Image.new("RGBA", (W, H), (70, 34, 78, 0))
+    rim_layer.putalpha(ring)
+    canvas.alpha_composite(rim_layer)
     canvas.alpha_composite(deck_w)
 
     # Where the frozen merge sits on the warped deck (big purple ball + pink ball, x4 label).
@@ -371,7 +353,7 @@ def compose(L, variant="A"):
                     best, bd = (xx, yy), dd
         return best
 
-    merge = deck_pt(1030 - 270 + 0, 585 - 60)  # purple ball in the capture
+    merge = deck_pt(975 - 270, 600 - 60)  # the green x3 cluster in the capture
     glow = radial((W, H), merge, 260, (255, 236, 170), peak=210, power=2.0)
     m2 = Image.new("L", (W, H), 0)
     ImageDraw.Draw(m2).ellipse((merge[0] - 300, merge[1] - 300, merge[0] + 300, merge[1] + 300), fill=255)
