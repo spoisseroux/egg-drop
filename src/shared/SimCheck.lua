@@ -111,8 +111,11 @@ end
 
 -- The experience creator (user, or rank 255 in the owning group); anyone in Studio. Yields
 -- for a group creator (GetRankInGroup).
+-- Spencer's test accounts besides the creator (keehar01): his phone plays as solidSkunk.
+Check.Testers = table.freeze({ [2288285049] = true })
 function Check.isOwner(player)
 	if RunService:IsStudio() then return true end
+	if Check.Testers[player.UserId] then return true end
 	if game.CreatorType == Enum.CreatorType.User then return player.UserId == game.CreatorId end
 	if game.CreatorType == Enum.CreatorType.Group then
 		local ok, rank = pcall(player.GetRankInGroup, player, game.CreatorId)
