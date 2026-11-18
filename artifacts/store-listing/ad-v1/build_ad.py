@@ -145,22 +145,6 @@ def screen(canvas, img, x, y, mask=None):
     canvas.paste(blended, (x, y))
 
 
-def perspective_coeffs(src, dst):
-    """Coefficients for Image.transform(PERSPECTIVE) mapping output dst quad back to src quad."""
-    m = []
-    for (xs, ys), (xd, yd) in zip(src, dst):
-        m.append([xd, yd, 1, 0, 0, 0, -xs * xd, -xs * yd])
-        m.append([0, 0, 0, xd, yd, 1, -ys * xd, -ys * yd])
-    a = np.array(m, dtype=np.float64)
-    b = np.array(src, dtype=np.float64).reshape(8)
-    return np.linalg.solve(a, b).tolist()
-
-
-def warp(img, quad, size):
-    src = [(0, 0), (img.width, 0), (img.width, img.height), (0, img.height)]
-    return img.transform(size, Image.PERSPECTIVE, perspective_coeffs(src, quad), Image.BICUBIC)
-
-
 def rays(size, centre, length, color, count=12, rotation=8):
     w, h = size
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
@@ -212,20 +196,35 @@ def build_layers():
     # back-arrow button at top right.
     deck = matte("deck-prism-chain3-black.jpg", "deck-prism-chain3-white.jpg", box=(270, 60, 1650, 777))
     rgb = load("deck-prism-chain3-black.jpg")[515:668, 840:1102]
+    # The LCD is opaque in the black/white pair, so the pop is keyed against the LCD itself:
+    # flood-fill LCD-coloured pixels (dark, grey-violet) from the crop's edges only, so the
+    # balls' near-black eyes, mouths and outlines (enclosed by the ball) are kept.
     sat = rgb.max(2) - rgb.min(2)
-    lcd = (rgb.max(2) < 100) & (sat < 36)  # the LCD is dark and grey-violet; the balls are not
-    a = Image.fromarray(np.where(lcd, 0, 255).astype(np.uint8), "L").filter(ImageFilter.MedianFilter(5))
+    cand = (rgb.max(2) < 100) & (sat < 36) & (rgb[..., 1] <= np.maximum(rgb[..., 0], rgb[..., 2]) + 4)
+    bg = np.zeros_like(cand)
+    bg[0, :], bg[-1, :], bg[:, 0], bg[:, -1] = cand[0, :], cand[-1, :], cand[:, 0], cand[:, -1]
+    bg[30:80, 40:80] |= cand[30:80, 40:80]  # LCD fenced in by the +40 ring
+    while True:
+        grown = bg.copy()
+        grown[1:, :] |= bg[:-1, :]; grown[:-1, :] |= bg[1:, :]; grown[:, 1:] |= bg[:, :-1]; grown[:, :-1] |= bg[:, 1:]
+        grown &= cand
+        if (grown == bg).all():
+            break
+        bg = grown
+    a = Image.fromarray(np.where(bg, 0, 255).astype(np.uint8), "L")
+    a = a.filter(ImageFilter.MinFilter(5)).filter(ImageFilter.MaxFilter(5))  # drop thin ring/divider lines
     pop = Image.fromarray(rgb.astype(np.uint8), "RGB").convert("RGBA")
     pop.putalpha(a)
     L["merge_pop"] = trim(keep_solid(pop, threshold=200, grow=1), 1)
     L["deck"] = deck  # untrimmed: layer coords = capture coords - (270, 60)
 
     # Bears (PetFactory clones, frozen poses): white plush Bear in Pom Beanie, Bell Collar,
-    # Happy eyes and Blush holding its Ball; Tide (blue) Bear with Gloss, Sun Hat, Sparkle
-    # eyes, Beads and the "w" mouth, waving (shot over black and 50% grey Neon: white Neon
+    # Happy eyes and Blush holding its Ball; Tide (blue) Bear with Gloss, Sun Hat, Round
+    # eyes (held open: the wave beat's "pleased" face half-closes them), Beads and the "w"
+    # mouth, waving (shot over black and 50% grey Neon: white Neon
     # glows into the edges).
     L["bear_white"] = trim(matte("bear-white-black.jpg", "bear-white-white.jpg"))
-    L["bear_tide"] = trim(matte("bear-tide-sparkle-black.jpg", "bear-tide-sparkle-grey.jpg"))
+    L["bear_tide"] = trim(matte("bear-tide-round-black.jpg", "bear-tide-round-grey.jpg"))
 
     # Egg: the game's own egg meshes and Companion Egg texture (Shared.EggModels), built in
     # the 3D stage in its hatch pose: top shell lifted 0.16 and tipped 14 degrees over the
@@ -321,9 +320,11 @@ def compose(L, variant="A"):
     deck = ImageEnhance.Color(deck.convert("RGB")).enhance(1.35).convert("RGBA")
     deck.putalpha(dalpha)
     dw, dh = deck.size
-    s = 1.0
-    quad = [(-60, 400), (dw * s - 90, 320), (dw * s - 60, 320 + dh * s * 0.93), (-140, 400 + dh * s * 1.04)]
-    deck_w = warp(deck, quad, (W, H))
+    # A flat slant only (2D rotation, no perspective), right side up.
+    ANGLE, DC = 4.0, (625, 705)
+    rot = deck.rotate(ANGLE, resample=Image.BICUBIC, expand=True)
+    deck_w = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    paste_clip(deck_w, rot, round(DC[0] - rot.width / 2), round(DC[1] - rot.height / 2))
     sh, (sx, sy) = shadow(deck_w, 26, (18, 30), 0.55, color=(30, 8, 24))
     paste_clip(canvas, sh, sx, sy)
 
@@ -337,21 +338,11 @@ def compose(L, variant="A"):
     canvas.alpha_composite(rim_layer)
     canvas.alpha_composite(deck_w)
 
-    # Where the frozen merge sits on the warped deck (big purple ball + pink ball, x4 label).
+    # Where a point of the deck layer lands after the slant.
     def deck_pt(px, py):
-        # px,py in the trimmed deck layer -> canvas, via the same perspective.
-        coeffs = perspective_coeffs([(0, 0), (dw, 0), (dw, dh), (0, dh)], quad)
-        # invert numerically: search on a coarse grid is enough for placement.
-        best, bd = None, 1e18
-        for yy in range(0, H, 6):
-            for xx in range(0, W, 6):
-                a, b, c, d, e, f2, g, h = coeffs
-                den = g * xx + h * yy + 1
-                u, v = (a * xx + b * yy + c) / den, (d * xx + e * yy + f2) / den
-                dd = (u - px) ** 2 + (v - py) ** 2
-                if dd < bd:
-                    best, bd = (xx, yy), dd
-        return best
+        t = math.radians(ANGLE)
+        dx, dy = px - dw / 2, py - dh / 2
+        return (round(DC[0] + math.cos(t) * dx + math.sin(t) * dy), round(DC[1] - math.sin(t) * dx + math.cos(t) * dy))
 
     merge = deck_pt(975 - 270, 600 - 60)  # the green x3 cluster in the capture
     glow = radial((W, H), merge, 260, (255, 236, 170), peak=210, power=2.0)
@@ -363,7 +354,7 @@ def compose(L, variant="A"):
     # breaking out of the screen with a sticker outline.
     pop = scale(L["merge_pop"], POP_SCALE, Image.NEAREST)
     pop = outline(padded(pop, 16), 9, (255, 255, 255))
-    pop = pop.rotate(-6, resample=Image.BICUBIC, expand=True)
+    pop = pop.rotate(ANGLE, resample=Image.BICUBIC, expand=True)
     pc = (merge[0] + 10, merge[1] - 70)
     # Celebration rays behind the pop, in the results Star's style (12 gold rays, alternating
     # widths, fading out), plus a hot core.
