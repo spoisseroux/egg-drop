@@ -16,6 +16,8 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Ads 2026-11-18:** Sponsored campaign "Pocket Pals launch test" (id 140d5d57-ccec-4266-815f-ab115eff4fa4), approved by Spencer in chat ("A, yes $5/day x3"): objective PLAYS, $5/day DAILY budget, 3 days (2026-11-18 06:20Z to 2026-11-21 04:59Z), card (Visa ending 8632, billing account ebcd19bc-...), devices phone/tablet/desktop, all players, automated bid. Creative: ad image A (`artifacts/store-listing/ad-v1/ad-v1-1920x1080.png`, asset 97803040112547), ad review APPROVED. Read results via Analytics SponsoredAdsClicks/Impressions/SpendUsd.
+
 **PUBLIC v935 Published 2026-11-18 — runtime ff28ba9, servers restarted (Spencer: "Publish + restart").** v933 plus readable phone goal rows (Merges / Chain / ball with up arrow and LEFT, RIGHT, MID instead of pictograms) and three Hard goals ending above the Quest handle. CompactPhone 12, DeckFit 5, DeckScreen 8, DeckRoundQA 10, ItemCarousel 8; capture `artifacts/qa-2026-11-17-v933/hard-three-goals-844x390.png`. Translations: no table changes ("Merges", "Chain", LEFT/RIGHT/MID are hard-coded). Test content stripped.
 
 **PUBLIC LAUNCH 2026-11-17 (~22:21 ET):** Spencer released Pocket Pals: Pet Garden publicly on v933 (runtime a80ed37). Open Cloud confirms universe 10774758591 `visibility: PUBLIC`. Age rating still reads unspecified in the API.
