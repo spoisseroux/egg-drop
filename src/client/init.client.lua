@@ -1881,8 +1881,13 @@ function clientUI.deckGoals(view,stage)
   local done=if stage then index<=stage else(view.complete==true or index<(view.step or 1))
   local current=not stage and index==view.step and not view.complete
   local zone=type(goal.zone)=="table"and goal.zone.kind or "any"
+  -- v933 QA (narrow phone rows): a word label, same wording as the wide rows ("or bigger" is an up
+  -- arrow; the zone is a word, not the mini tray that read as a toggle).
+  local tier=goal.tier or goal.minTier or 1
+  local tiny=if goal.kind=="count"then "Merges"elseif goal.kind=="chain"then "Chain"
+   else clientUI.BallThemes.circle(tier,13)..(if goal.minTier then "↑"else "")..(({left=" LEFT",right=" RIGHT",center=" MID"})[zone]or "")
   goals[index]={text=full,short=candidates[1]or full,spoken=(clientUI.FieldQuestText.goal(goal)),done=done,progress=if current then view.progress or 0 else 0,target=goal.target or 1,
-   icon={kind=goal.kind or "merge",tier=goal.tier or goal.minTier or 1,plus=goal.minTier~=nil,zone=zone}}
+   tiny=tiny,icon={kind=goal.kind or "merge",tier=tier,plus=goal.minTier~=nil,zone=zone}}
  end
  return goals
 end

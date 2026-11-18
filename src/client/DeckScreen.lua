@@ -167,11 +167,23 @@ function Screen.resolveCompact(W,H,aspect,kx,kh,wingShare)
    -- Narrow (decision 5): Chain in the first row beside the Roblox controls, Score under it.
    if tw>=64 then g.chain=rect(t0,y0,tw,44);g.chainIn="pill"else g.chainIn="goals"end
    g.score=rect(L0,y0+52,c,44);gy=y0+104
+   -- v933 QA: a short phone (568 x 320) has no room for three goals above the quest handle.
+   -- There the chain moves into the Goals header and Score takes the first row.
+   if tw>=64 and(y1-44-GAP)-gy<24+3*20+6 then
+    g.chain=nil;g.chainIn="goals";g.score=rect(t0,y0,tw,44);gy=y0+52
+   end
   end
   g.goalsTop=gy;g.goals=rect(L0,gy,c,math.min(24+3*p+6,y1-gy))
   local qp=if H>=380 then 36 else 34;local qh=24+3*qp+8
   if layout=="wide"and y1-qh>=gy+24+3*p+6+GAP then g.quests=rect(L0,y1-qh,c,qh);g.questPitch=qp
   else g.handle=rect(L0,y1-44,c,44)end
+  -- v933 QA: three goals (Hard) must end above the quest handle; the row pitch closes to fit.
+  if g.handle then
+   local room=g.handle.y-GAP-gy
+   local fit=math.floor((room-30)/3)
+   if fit<p then p=math.max(20,fit);g.goalPitch=p end
+   g.goals=rect(L0,gy,c,math.min(24+3*p+6,room))
+  end
   local nh=if H>=340 then 64 else 44
   g.next=rect(R0,y0,rc,nh)
   -- Three 44 px rows 52 apart; a short screen (the fitted shell on a 320 px phone) closes
@@ -1235,7 +1247,8 @@ function Screen:buildCompactHud(g)
    local zone=zoneGlyph(row,42,math.floor((p-12)/2))
    local count=txt(row,"Counter","","soft",gw-10-40,0,40,p,13,right)
    local check=Kit.check(row,20);check.root.Position=UDim2.fromOffset(gw-30,math.floor((p-20)/2))
-   h.goals[index]={row=row,egg=mark,glyph=glyph,plus=plus,zone=zone,count=count,check=check,icon=true}
+   local label=txt(row,"BodyMedium","","text",8,0,gw-8-10-40,p,13,{RichText=true,TextTruncate=Enum.TextTruncate.AtEnd,Visible=false})
+   h.goals[index]={row=row,egg=mark,glyph=glyph,plus=plus,zone=zone,count=count,check=check,label=label,icon=true}
   else
    local check=Kit.check(row,20);check.root.Position=UDim2.fromOffset(8,math.floor((p-20)/2))
    local text=txt(row,"BodyMedium","","text",34,0,gw-34-50,p,14,{TextTruncate=Enum.TextTruncate.AtEnd})
@@ -1568,6 +1581,17 @@ local compactRows={
 Screen.compactControlRows=compactRows
 local zoneThird={left=0,center=1,right=2}
 local function paintIconGoal(slot,goal)
+ -- v933 QA: a word label when the goal has one ("Merges", "Chain", a ball with up arrow and LEFT).
+ local worded=slot.label~=nil and type(goal.tiny)=="string"and goal.tiny~=""
+ if slot.label then
+  slot.label.Visible=worded
+  if worded then slot.label.Text=Screen.evenCircles(goal.tiny,slot.label.TextSize);Kit.localizeRich(slot.label)end
+ end
+ if worded then
+  slot.egg.ball.Visible=false;slot.glyph.Visible=false;slot.plus.Visible=false;slot.zone.root.Visible=false
+  slot.row:SetAttribute("AccessibleLabel",goal.spoken or BallThemes.strip(goal.text or goal.short or ""))
+  return
+ end
  local icon=goal.icon or {}
  local kind=icon.kind or "merge"
  local tier=math.clamp(icon.tier or 1,1,#Config.Tiers)
@@ -1620,6 +1644,7 @@ function Screen:setCompactHud(data)
     slot.check.root.Visible=goal.done==true;slot.check.set(true)
     slot.count.Visible=not goal.done;slot.count.Text=count
     slot.egg.circle.BackgroundTransparency=if goal.done then .45 else 0
+    if slot.label then slot.label.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text end
    else
     slot.check.set(goal.done)
     slot.text.RichText=true;slot.text.Text=Screen.evenCircles(goal.short or goal.text,slot.text.TextSize);Kit.localizeRich(slot.text)
