@@ -286,7 +286,7 @@ end
 function Driver.start()
 	if started then return Driver end
 	started = true
-	if not (Flags.DeckClientSim == true or studio) then return Driver end
+	if not (Flags.DeckClientSim == true or Flags.DeckClientSimTesters == true or studio) then return Driver end
 	task.spawn(function()
 		local player = Players.LocalPlayer
 		remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild(L.RemoteName, 60)

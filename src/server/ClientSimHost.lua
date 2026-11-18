@@ -28,8 +28,11 @@ local TPS = L.TicksPerSecond
 local remote = nil
 local studio = RunService:IsStudio()
 
-function Host.enabled()
+-- player (optional): with FeatureFlags.DeckClientSimTesters, Spencer's test accounts
+-- (SimCheck.isOwner) play lockstep rounds in a published build before the flag goes on for all.
+function Host.enabled(player)
 	if Flags.DeckClientSim == true then return true end
+	if Flags.DeckClientSimTesters == true and player and require(Shared.SimCheck).isOwner(player) then return true end
 	return studio and ServerStorage:GetAttribute("DeckClientSim") == true
 end
 
@@ -62,7 +65,7 @@ function Host.begin(board, preset, serial, descriptor, itemsOn, fallback)
 		if not old.closed then send(board, "stop", { resetId = old.resetId, run = old.run, reason = "Reset" }) end
 	end
 	board.lockstep = nil
-	if not descriptor or not Host.enabled() then return nil end
+	if not descriptor or not Host.enabled(board.player) then return nil end
 	local spec = RoundSim.fieldSpec(preset, serial, descriptor, board.runHeat, itemsOn)
 	local host, why = RoundSim.new(spec)
 	if not host or spec.budget > #spec.queue then
@@ -424,7 +427,7 @@ end
 
 -- The remote exists only in Studio or with the flag on. boardOf(player) -> the player's board.
 function Host.mount(remotes, boardOf)
-	if not (studio or Flags.DeckClientSim == true) then return nil end
+	if not (studio or Flags.DeckClientSim == true or Flags.DeckClientSimTesters == true) then return nil end
 	remote = remotes:FindFirstChild(L.RemoteName) or Instance.new("RemoteEvent")
 	remote.Name = L.RemoteName
 	remote.Parent = remotes
