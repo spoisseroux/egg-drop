@@ -10,6 +10,8 @@
 --   * `value(name)` serves the round's published attributes from the host (provisional HUD values);
 --     the deck reads them through clientUI.attr. The replicated folder is never written. When the
 --     server's RoundOver arrives the server's values stand again (compared first: Studio counter).
+-- B4: after a rollback (the driver swapped in the server-corrected host) drawn balls ease to the
+-- corrected positions (`rollback`); replayed steps never play juice.
 -- Presentation only: nothing here is sent to the server or decides an outcome. Flag off (no lockstep
 -- round ever starts) the mirror owns nothing and every hook in init.client.lua falls through.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -19,6 +21,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared.BoardConfig)
 local Items = require(Shared.RoundItems)
 local Sim = require(Shared.BoardSim)
+local L = require(Shared.BoardLockstep)
 
 local Mirror = {}
 Mirror.__index = Mirror
@@ -55,6 +58,8 @@ local function newStats()
 		impacts = 0, grants = 0, drops = 0, tapToBallMs = {}, tapToBallFrames = {}, mergeDelayMs = {},
 		mergeDelayFrames = {}, settle = { checked = 0, diffs = {}, notOver = 0 }, mergeChecked = 0,
 		mergeDiffs = 0, mergeMissing = 0, viewRetries = 0,
+		-- B4 rollback: corrections, the largest timeline offset, the largest per-frame ease, pops.
+		corrections = 0, offsetMax = 0, corrMaxFrame = 0, easing = 0, popAdded = 0, popRemoved = 0, popFar = 0, replayedMerges = 0,
 	}
 end
 
@@ -75,6 +80,8 @@ function Mirror.new(o)
 		afterStep = function(state, events, impacts) self:afterStep(state, events, impacts) end,
 		input = function(state, input, ok, result) self:input(state, input, ok, result) end,
 		stop = function(state, reason) if state == self.state then self:release(reason or "Stop") end end,
+		rollback = function(state, oldHost) self:rollback(state, oldHost) end,
+		replayed = function(state, events) self:replayed(state, events) end,
 		stats = function() return self:publicStats() end,
 		resetStats = function() self:resetStats() end,
 	})
@@ -242,6 +249,58 @@ function Mirror:input(state, input, ok, result)
 	end
 end
 
+-- ── B4: rollback ──────────────────────────────────────────────────────────
+
+-- The driver swapped a corrected host in (same tick as the old one). Every ball both hosts have
+-- keeps drawing where the old host had it: a visual offset (old - new) that sync eases away, at most
+-- L.MaxCorrection studs a frame. A ball the new host does not have (or with another tier: a
+-- different merge) is redrawn at once, as is one corrected farther than L.PopDistance (counted pops).
+function Mirror:rollback(state, oldHost)
+	if state ~= self.state then return end
+	local stats = self.stats
+	stats.corrections += 1
+	local board = state.host.board
+	local now, before = {}, {}
+	for _, egg in ipairs(board.eggs) do now[egg.id] = egg end
+	for _, egg in ipairs(oldHost and oldHost.board.eggs or {}) do before[egg.id] = egg end
+	local prevX, prevY = self.prevX, self.prevY
+	table.clear(prevX)
+	table.clear(prevY)
+	for id, egg in pairs(now) do prevX[id], prevY[id] = egg.x, egg.y end
+	for id, record in pairs(self.parts) do
+		local egg = now[id]
+		if not egg or egg.tier ~= record.tier then
+			self.o.remove(record.part)
+			record.part:Destroy()
+			self.parts[id] = nil
+			stats.popRemoved += 1
+		else
+			local old = before[id]
+			local ox = (if old then old.x else record.x) - egg.x + (record.ox or 0)
+			local oy = (if old then old.y else record.y) - egg.y + (record.oy or 0)
+			local distance = math.sqrt(ox * ox + oy * oy)
+			if distance > stats.offsetMax then stats.offsetMax = distance end
+			if distance > L.PopDistance then
+				ox, oy = 0, 0
+				stats.popFar += 1
+			end
+			if distance > 0 then record.ox, record.oy = ox, oy else record.ox, record.oy = nil, nil end
+		end
+	end
+	for id in pairs(now) do
+		if not before[id] then stats.popAdded += 1 end
+	end
+end
+
+-- A replay step's merges (never played: their juice belongs to the past) for the Studio merge log.
+function Mirror:replayed(state, events)
+	if state ~= self.state then return end
+	for _, merge in ipairs(events.merges) do
+		self.mergeLog[pairKey(merge.firstId, merge.secondId)] = merge
+		self.stats.replayedMerges += 1
+	end
+end
+
 -- ── Server events (init.client.lua) ───────────────────────────────────────
 
 -- The server's BoardMerge for an owned round: compared with the local merge (Studio counter).
@@ -367,7 +426,7 @@ local function makePart(self, egg, state)
 	part:SetAttribute("Tier", egg.tier)
 	part:SetAttribute("EggId", egg.id)
 	part:SetAttribute("BoardSerial", state.resetId)
-	local record = { part = part, x = egg.x, y = egg.y, star = false, mark = nil }
+	local record = { part = part, x = egg.x, y = egg.y, star = false, mark = nil, tier = egg.tier }
 	self.parts[egg.id] = record
 	self.mine[part] = true
 	return record
@@ -401,6 +460,24 @@ function Mirror:sync()
 		local record = self.parts[id] or makePart(self, egg, state)
 		local px, py = prevX[id] or egg.x, prevY[id] or egg.y
 		local x, y = px + (egg.x - px) * alpha, py + (egg.y - py) * alpha
+		-- B4: a rollback's offset, eased away (at most L.MaxCorrection studs this frame).
+		local ox, oy = record.ox, record.oy
+		if ox then
+			local distance = math.sqrt(ox * ox + oy * oy)
+			local step = math.min(L.MaxCorrection, math.max(distance * 0.35, 0.02))
+			local stats = self.stats
+			if distance <= step then
+				record.ox, record.oy = nil, nil
+			else
+				local keep = (distance - step) / distance
+				record.ox, record.oy = ox * keep, oy * keep
+				x += record.ox
+				y += record.oy
+				stats.easing += 1
+			end
+			local applied = math.min(step, distance)
+			if applied > stats.corrMaxFrame then stats.corrMaxFrame = applied end
+		end
 		local part = record.part
 		if record.x ~= x or record.y ~= y then
 			record.x, record.y = x, y
@@ -528,6 +605,8 @@ function Mirror:publicStats()
 		mergeDelayMs = summary(s.mergeDelayMs), mergeDelayFrames = summary(s.mergeDelayFrames),
 		settle = { checked = s.settle.checked, notOver = s.settle.notOver, diffs = table.clone(s.settle.diffs), last = s.settle.last },
 		mergeChecked = s.mergeChecked, mergeDiffs = s.mergeDiffs, mergeMissing = s.mergeMissing,
+		corrections = s.corrections, offsetMax = s.offsetMax, corrMaxFrame = s.corrMaxFrame, easing = s.easing,
+		popAdded = s.popAdded, popRemoved = s.popRemoved, popFar = s.popFar, replayedMerges = s.replayedMerges,
 	}
 end
 

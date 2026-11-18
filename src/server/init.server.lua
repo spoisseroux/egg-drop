@@ -1170,7 +1170,8 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		return
 	end
 	if action == "drop" then
-		if board.lockstep then BoardNet.ack(board,player,BoardNet.dropToken(sticker),false,"ClientSim");return end
+		-- B4: after a desync fallback the server runs the round: today's drop becomes a host input.
+		if board.lockstep then if not ClientSim.serverInput(board,"drop",value,BoardNet.dropToken(sticker))then BoardNet.ack(board,player,BoardNet.dropToken(sticker),false,"ClientSim")end;return end
 		if board.welcome then board.welcome:input()end
 		local token=BoardNet.dropToken(sticker)
 		if acceptedDrop(board,value,now,false,token) then BoardNet.ack(board,player,token,true)
@@ -1178,7 +1179,8 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			board.pendingDrop={aim=value,token=token,expires=now+BoardNet.QueueSeconds}
 		else BoardNet.ack(board,player,token,false,if board.pendingDrop then "Busy"else dropRefusal(board,value,now)) end
 	elseif action == "item" then
-		if board.lockstep then return end -- B2: items are inputs on the BoardClientSim remote
+		-- B2: items are inputs on the BoardClientSim remote (B4: or host inputs on a server-run round).
+		if board.lockstep then ClientSim.serverInput(board,"item",type(value)=="table"and BoardItems.safeId(value.id)or nil);return end
 		-- Round items: accepted while paused (the carousel freezes the round).
 		local ok, result = BoardItems.request(board, value, { resetId = board.folder:GetAttribute("ResetId"),
 			ready = canProgress(board), now = now, budget = board.field and board.field.budget })
@@ -1741,8 +1743,11 @@ lockstepHooks = {
 			Progress.recordTrials(board.profile, chain, score, clears)
 		end
 		if board.firstSession then board.firstSession:advance(3) end
-		feedback:FireClient(player, Vector2.new(merge.x, merge.y), merge.tier, chain, Vector2.new(merge.fromX, merge.fromY),
-			Vector2.new(merge.otherX, merge.otherY), merge.id, merge.cleared, board.folder:GetAttribute("ResetId"), BoardNet.tick(board), merge.firstId, merge.secondId)
+		-- B4: on a live session the owner's mirror played this merge; the event is Studio-only there.
+		if ClientSim.mergeEvents(board) then
+			feedback:FireClient(player, Vector2.new(merge.x, merge.y), merge.tier, chain, Vector2.new(merge.fromX, merge.fromY),
+				Vector2.new(merge.otherX, merge.otherY), merge.id, merge.cleared, board.folder:GetAttribute("ResetId"), BoardNet.tick(board), merge.firstId, merge.secondId)
+		end
 		for _, grant in ipairs(merge.grants or {}) do
 			BoardItems.event(board, board.folder, { kind = grant.kind, id = grant.id, x = merge.x, y = merge.y })
 		end

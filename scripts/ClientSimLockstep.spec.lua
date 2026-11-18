@@ -340,4 +340,7 @@ function S.run(list, seed)
 	return (allPass and "ALL PASS" or "SOME FAILED") .. "\n" .. table.concat(lines, "\n")
 end
 
+-- B4 (ClientSimRollback.spec.lua) reuses the round player and the verdict.
+S.play, S.verdict, S.setLag, S.tap = play, verdict, setLag, tap
+
 return S
