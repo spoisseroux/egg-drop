@@ -7,7 +7,7 @@
 -- two-account test build (2026-11-13); confirm with Spencer before any public publish.
 -- TestFreshSaves (TEST ONLY, Spencer 2026-11-13): true gives each private publish a fresh progress
 -- store keyed by PlaceVersion (ProgressStore). v1 launch build (2026-11-17): false, so every
--- save persists in "EggDropLaunchV2" across updates. Never turn it back on in a public build.
+-- save persists in "EggDropLaunchV3" across updates. Never turn it back on in a public build.
 -- PseudoLocale=true (v1 track C, text-fit check): UICopy.get returns every string ~35% longer
 -- with accented letters in [brackets]. Studio only (UICopy ignores it outside Studio); keep false.
 -- SecondPet=false (overnight 2026-11-14, slice E): Blip exists in data (collection bit 8) but is never
@@ -31,5 +31,5 @@
 -- can feel the client-run deck on his phone before B4/B5 and the flag flip. Everyone else: today's path.
 -- SimCheck off for launch (Spencer 2026-11-17): phone and PC matched the server on v903; the
 -- owner-only check has done its job. True again re-runs it for SimCheck.isOwner accounts.
-return table.freeze({SimCheck=false,DeckClientSim=false,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
+return table.freeze({SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})

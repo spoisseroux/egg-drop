@@ -14,8 +14,8 @@ return function(server)
 		assert(require(Shared.MaterialCatalog).EnablePurchases == false, "MaterialCatalog.EnablePurchases")
 		assert(require(Shared.LookEggCatalog).EnablePurchases == true, "LookEggCatalog.EnablePurchases")
 	end)
-	test("launch store: progress saves under EggDropLaunchV2", function()
-		assert(require(server.ProgressStore).Name == "EggDropLaunchV2", "progress store name")
+	test("launch store: progress saves under EggDropLaunchV3", function()
+		assert(require(server.ProgressStore).Name == "EggDropLaunchV3", "progress store name")
 	end)
 	return { passed = #cases, cases = cases }
 end

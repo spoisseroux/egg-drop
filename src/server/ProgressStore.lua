@@ -7,7 +7,8 @@ local DataStoreService = if RunService:IsStudio() then nil else game:GetService(
 -- v2 (Spencer 2026-11-17, before release): a fresh start for the private testers so the
 -- onboarding (Welcome round, first hatch, garden intro) can be checked on real accounts.
 -- "EggDropLaunchV1" saves are kept, not read; switching the name back restores them.
-local Store = { Name = "EggDropLaunchV2" }
+-- v3 (Spencer 2026-11-17, the public launch build): launch starts clean; testers replay the onboarding.
+local Store = { Name = "EggDropLaunchV3" }
 -- TEST ONLY (Spencer 2026-11-13): FeatureFlags.TestFreshSaves gives every published version its own
 -- store ("EggDropTest_v<PlaceVersion>"), so each private publish starts every player fresh. Old
 -- saves are not deleted, just not read. MUST be false before the public launch (TODO launch list).
