@@ -9,6 +9,11 @@
 -- counters, so it never reaches the server or the hash. Every message carries all inputs the server
 -- has not acked yet (at most BoardLockstep.MaxBatchInputs), so a refused or lost message loses nothing.
 -- Leaving Board mode pauses the host (an input), as the server froze the board there before.
+--
+-- B3 (B3-plan.md): the deck's mirror (ClientBoardMirror) attaches as the view: it gets every step
+-- (beforeStep / afterStep with the step's events and impacts), every applied input and the stop,
+-- and draws this host. Drops wait for the server's hello ack (so a no-hello fallback never takes a
+-- ball the player saw), and taps after the local round end are refused here, never sent on today's path.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -26,6 +31,8 @@ local studio = RunService:IsStudio()
 local started = false
 local remote, folder = nil, nil
 local round = nil -- the live lockstep round, or nil
+local view = nil -- B3: the deck's mirror (step, input and stop hooks), or nil
+local impacts = {} -- B3: reused per step, only while a view is attached
 local menuPaused = false -- the deck's own pause wish (menus, carousel)
 -- Studio test knobs (exploit specs): rate multiplies the clock; freeze stops stepping and sending;
 -- hold buffers outgoing messages (a send blackout) until released.
@@ -79,6 +86,7 @@ local function submit(state, input)
 	state.stats.sent += 1
 	table.insert(state.unacked, input)
 	sendNow()
+	if view and view.input then view.input(state, input, ok, result) end
 	return ok, result
 end
 
@@ -86,11 +94,20 @@ local function active()
 	return round ~= nil and not round.host.over
 end
 
+-- B3: a round exists but cannot take this tap (over, or no hello yet): refused here, never sent on
+-- today's path. Nil when no lockstep round runs.
+local function closedTap(state)
+	if not state then return nil end
+	if state.host.over then return refuseLocal(state, "RoundOver") end
+	return nil
+end
+
 -- ── Public: the deck's taps (init.client.lua). nil = no lockstep round (use today's path). ──
 
 function Driver.drop(aim)
 	local state = round
-	if not active() then return nil end
+	if not active() then return closedTap(state) end
+	if not state.hello then return refuseLocal(state, "Hello") end
 	local index = Sim.aimIndex(aim)
 	if not index then return refuseLocal(state, "Aim") end
 	-- The ball's queue slot must be revealed (the server reveals a few ahead of its drops).
@@ -100,7 +117,8 @@ end
 
 function Driver.item(id)
 	local state = round
-	if not active() then return nil end
+	if not active() then return closedTap(state) end
+	if not state.hello then return refuseLocal(state, "Hello") end
 	if id == "swap" then
 		if state.host.board.drops + 2 > state.revealed then return refuseLocal(state, "Unrevealed") end
 		return submit(state, { kind = "swap" })
@@ -123,6 +141,21 @@ function Driver.pause(paused)
 end
 
 function Driver.isActive() return active() end
+
+-- ── B3: the deck's view ───────────────────────────────────────────────────
+
+-- hooks: beforeStep(state), afterStep(state, events, impacts), input(state, input, ok, result),
+-- stop(state, reason). One view; attach(nil) detaches.
+function Driver.attach(hooks) view = hooks end
+function Driver.round() return round end
+-- The fraction of a fixed step the clock has run past the last step (render interpolation);
+-- 1 while paused or over (the last step is the drawn state).
+function Driver.alpha()
+	local state = round
+	if not state or state.host.paused or state.host.over or test.freeze then return 1 end
+	return math.clamp(state.acc / FIXED, 0, 1)
+end
+function Driver.sentCount() return lastStats.sent end
 
 -- ── Server messages ───────────────────────────────────────────────────────
 
@@ -152,6 +185,7 @@ local function onMessage(kind, packet)
 		state.revealed = L.applyReveal(state.host, state.revealed, packet)
 	elseif kind == "ack" then
 		state.stats.acks += 1
+		state.hello = true
 		local n = packet.n
 		if type(n) == "number" then
 			while state.unacked[1] and state.unacked[1].n <= n do table.remove(state.unacked, 1) end
@@ -159,6 +193,7 @@ local function onMessage(kind, packet)
 	elseif kind == "stop" then
 		state.stats.stopped = packet.reason
 		round = nil
+		if view and view.stop then view.stop(state, packet.reason) end
 	end
 end
 
@@ -172,8 +207,13 @@ local function onHeartbeat(dt)
 	if not host.over then
 		state.acc = math.min(state.acc + dt * Config.Pace * test.rate, FIXED * MAX_FRAME_STEPS * math.max(1, test.rate))
 		while state.acc >= FIXED do
-			local events = RoundSim.step(host)
+			if view then view.beforeStep(state) end
+			local events = RoundSim.step(host, if view then impacts else nil)
 			if not events then state.acc = 0; break end
+			if view then
+				view.afterStep(state, events, impacts)
+				table.clear(impacts)
+			end
 			state.acc -= FIXED
 			state.stats.steps += 1
 			if host.board.tick % 60 == 0 and studio then state.stats.hashes[tostring(host.board.tick)] = L.hash(host) end
@@ -195,11 +235,13 @@ local function stats()
 	local state = round
 	local out = table.clone(lastStats)
 	out.active = state ~= nil
+	if view and view.stats then out.mirror = view.stats() end
 	if state then
 		local host = state.host
 		out.resetId, out.run, out.tick, out.revealed, out.lastN = state.resetId, state.run, host.board.tick, state.revealed, host.lastN
 		out.unacked, out.paused, out.over, out.drops = #state.unacked, host.paused, host.over, host.board.drops
 		out.belt, out.armed, out.final, out.result = table.clone(host.belt), host.board.armed, state.final, state.result
+		out.hello = state.hello
 		out.hash = L.hash(host)
 		out.wallSeconds = os.clock() - state.startedAt
 	end
@@ -215,6 +257,9 @@ local function mountTest(player)
 		elseif action == "drop" then return Driver.drop(a)
 		elseif action == "item" then return Driver.item(a)
 		elseif action == "pause" then Driver.pause(a); return true
+		elseif action == "mirrorReset" then
+			if view and view.resetStats then view.resetStats() end
+			return true
 		elseif action == "rate" then test.rate = if type(a) == "number" then a else 1; return test.rate
 		elseif action == "freeze" then test.freeze = a == true; return test.freeze
 		elseif action == "hold" then

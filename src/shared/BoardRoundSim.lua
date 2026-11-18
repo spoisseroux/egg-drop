@@ -409,12 +409,14 @@ end
 -- One fixed step. Returns nil while paused or over, else an events table:
 -- { tick, merges = {merge records + tick, chain, points, observed, grants}, bursts, over }.
 -- Merge records are BoardSim's (x, y, tier, id, firstId, secondId, cleared, powerUps, ...).
-function RoundSim.step(host)
+-- `impacts` (optional, B3 presentation): receives BoardSim's strongest impact per ball id this
+-- step. Write-only: it never feeds back into the state or the hash.
+function RoundSim.step(host, impacts)
 	if host.paused or host.over then return nil end
 	local board = host.board
 	local before = board.tick
 	host.playTime += FIXED
-	local merged = Sim.step(board, {}, nil)
+	local merged = Sim.step(board, {}, impacts)
 	local tick = board.tick
 	-- Balls made during this step (merge results) start their age here.
 	for _, egg in ipairs(board.eggs) do

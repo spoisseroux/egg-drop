@@ -54,7 +54,8 @@ end
 
 -- Called from reset() in place of Simulation.new. `descriptor` is nil for a round that is not a
 -- field (Welcome, no save): today's path. Returns the mirror board, or nil for today's path.
-function Host.begin(board, preset, serial, descriptor, itemsOn)
+-- `fallback(serial)` (B3) puts today's board in place (board.sim) when the client never answers.
+function Host.begin(board, preset, serial, descriptor, itemsOn, fallback)
 	local old = board.lockstep
 	if old then
 		serial = old.host.board.serial
@@ -76,6 +77,7 @@ function Host.begin(board, preset, serial, descriptor, itemsOn)
 	local state = {
 		host = host, spec = spec, view = view, views = {}, live = {},
 		resetId = spec.serial, run = board.runSequence, closed = false, serverDriven = false,
+		hello = false, fallback = fallback,
 		pending = {}, head = 1, tail = 0, lastN = 0, lastTick = 0, reported = 0, queuedDrops = 0,
 		allow = 0, wall = 0, revealed = 0, tokens = L.MessageBurst, tokensAt = now,
 		lastProgressAt = now, lastReportAt = now, stalledAt = nil, ackedN = 0, overHandled = false,
@@ -140,7 +142,11 @@ function Host.receive(board, packet, now)
 	state.stats.batches += 1
 	state.stats.inputs += #fresh
 	state.stats.resent += resent
-	if #fresh > 0 or (resent > 0 and state.ackedN < state.lastN) then
+	-- B3: the first accepted message is the client's hello (its host and deck run this round); the
+	-- ack answers it even with no inputs, and the client drops only after it.
+	local hello = not state.hello
+	state.hello = true
+	if hello or #fresh > 0 or (resent > 0 and state.ackedN < state.lastN) then
 		state.ackedN = state.lastN
 		send(board, "ack", { resetId = state.resetId, run = state.run, n = state.lastN, tick = serverTick })
 	end
@@ -247,6 +253,19 @@ local function events(board, state, stepped, hooks)
 	if stepped.bursts and hooks.bursts then hooks.bursts(board.player, board, stepped.bursts) end
 end
 
+-- B3: the client never answered the start (no driver, no host, still loading): the round has not
+-- moved (tick 0, nothing queued), so today's board takes its place and the round plays on today's
+-- path. The client's late messages are then refused (NoRound).
+local function fallBack(board, state, now)
+	state.closed = true
+	state.stats.takeover = "NoHello"
+	if studio then Host.publishStats(board, now, true) end
+	send(board, "stop", { resetId = state.resetId, run = state.run, reason = "Fallback" })
+	board.lockstep = nil
+	state.fallback(state.spec.serial)
+	return true
+end
+
 -- Once per server Heartbeat. Steps the host toward the client's reported tick (or to the end when
 -- the server drives), applying queued inputs at their ticks. Returns true when published state
 -- changed (init.server.lua then calls publishState).
@@ -255,6 +274,10 @@ function Host.advance(board, now, dt, hooks)
 	if not state or board.closing then return false end
 	local host = state.host
 	local hb = host.board
+	if not state.hello and not state.closed and state.fallback and hb.tick == 0 and state.head > state.tail
+		and now - state.stats.startedAt >= L.HelloSeconds then
+		return fallBack(board, state, now)
+	end
 	-- What publishState shows (fixed length: hb.armed may be nil).
 	local before = { hb.drops, host.merges, host.phase, host.stage, host.progress, Sim.canDrop(hb), host.itemSeq, #host.belt, hb.armed or "", host.paused, host.over }
 	-- Clock guards. `wall`: the wall-clock estimate of the client's tick (running time x 156, only
@@ -349,6 +372,13 @@ function Host.advance(board, now, dt, hooks)
 	return changed
 end
 
+-- B3: the owner's snapshot stream (BoardNet.publish) is off while its client draws its own host
+-- (an open session that has said hello); on today's path, before the hello and after a takeover it runs.
+function Host.streaming(board)
+	local state = board.lockstep
+	return not (state and state.hello and not state.closed)
+end
+
 -- ── Studio stats (specs read the board folder attribute ClientSimStats) ──
 
 function Host.stats(board)
@@ -359,7 +389,7 @@ function Host.stats(board)
 	out.resetId, out.run, out.tick, out.reported, out.allow = state.resetId, state.run, host.board.tick, state.reported, state.allow
 	out.wall = state.wall
 	out.revealed, out.lastN, out.pending = state.revealed, state.lastN, state.tail - state.head + 1
-	out.paused = host.paused
+	out.paused, out.hello = host.paused, state.hello
 	local nextInput = state.pending[state.head]
 	out.nextInput = nextInput and (nextInput.kind .. "@" .. nextInput.tick .. "#" .. nextInput.n) or nil
 	out.over, out.final, out.result, out.closed = host.over, state.final, state.result, state.closed

@@ -611,7 +611,14 @@ local function reset(board, preset, sameField)
 		board.sim=require(script.WelcomeSeed).create(Simulation,preset,board.sim and board.sim.serial)
 		board.welcome=require(script.WelcomeState).new(board.runSequence)
 		board.welcomeReplay=0;board.welcomeWindowActive=false
-	else board.sim=ClientSim.begin(board,preset,board.sim and board.sim.serial,field and descriptor or nil,itemsOn)or Simulation.new(preset,board.sim and board.sim.serial,simOptions)end
+	else
+		-- B3: today's board for this round, put in place when the client never answers the lockstep start.
+		local function todaysBoard(serial)
+			board.sim=Simulation.new(preset,serial,simOptions)
+			if roundRecorder then roundRecorder.begin(board) end
+		end
+		board.sim=ClientSim.begin(board,preset,board.sim and board.sim.serial,field and descriptor or nil,itemsOn,todaysBoard)or Simulation.new(preset,board.sim and board.sim.serial,simOptions)
+	end
 	-- Belt, sequence and armed item never outlive their round (BUILD-PLAN item 3).
 	BoardItems.reset(board, itemsOn)
 	board.itemKinds = 0
@@ -1878,7 +1885,8 @@ RunService.Heartbeat:Connect(function(dt)
 		BoardNet.beginParts(board, now)
 		syncVisuals(board)
 		BoardNet.endParts(board)
-		BoardNet.publish(board, player, now)
+		-- B3: a lockstep owner draws its own host; its snapshot stream rests while the session is live.
+		if ClientSim.streaming(board) then BoardNet.publish(board, player, now) end
 		if now - (board.lastPressurePublish or 0) >= .1 then
 			publishWelcome(board)
 			board.lastPressurePublish = now

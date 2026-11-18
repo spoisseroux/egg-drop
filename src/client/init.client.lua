@@ -88,6 +88,17 @@ HandheldScreens.start(trays, Config)
 local function reduceEffects()
 	return GuiService.ReducedMotionEnabled or board:GetAttribute("ReducedEffects") == true
 end
+-- B3 client-run board: on a lockstep round the deck reads the round's published values from its own
+-- host (ClientBoardMirror, provisional until the server's round end); otherwise the folder's.
+function clientUI.attr(name)
+ local mirror=clientUI.mirror
+ if mirror then local value,served=mirror:value(name);if served then return value end end
+ return board:GetAttribute(name)
+end
+-- The same reader for modules that take the board folder only to read attributes.
+clientUI.boardView={GetAttribute=function(_,name)return clientUI.attr(name)end}
+-- True while the mirror draws this serial (the server's events for it were already played locally).
+function clientUI.mirrorOwns(serial)return clientUI.mirror~=nil and clientUI.mirror:owns(serial)end
 
 local function make(class, name, properties, parent)
 	local instance = Instance.new(class)
@@ -217,7 +228,7 @@ local pixelMerges = {}
 local rendererPresentation={visible=false,connections={}}
 rendererPresentation.jolt=require(script.DeckMergeJolt).new({clientUI.deviceRoot})
 rendererPresentation.fx=require(script.FieldEffects).new(effects)
-rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),board:GetAttribute("Drops")or 0)
+rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),clientUI.attr("Drops")or 0)
 rendererPresentation.setFieldOwner=function(visible,serial,reduced)
  rendererPresentation.jolt:setOwner(visible,serial,reduced)
  if rendererPresentation.fx:setOwner(visible,serial,reduced)then audio:stopField();if rendererPresentation.dispenser then rendererPresentation.dispenser:cancel()end end
@@ -903,13 +914,13 @@ end
 local function canAim()
 	return board:GetAttribute("Mode") == "Board" and not modal.Visible and not roomView.busy
 		and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
-		and not (nurseryView and nurseryView:isOpen()) and not clientUI.isHueOpen() and board:GetAttribute("FieldPhase") ~= "Settling"
+		and not (nurseryView and nurseryView:isOpen()) and not clientUI.isHueOpen() and clientUI.attr("FieldPhase") ~= "Settling"
 		and not board:GetAttribute("RoundOver") and not clientUI.deckOverlayOpen()
 end
 
 local function canPlay()
 	return canAim() and not isPickerOpen() and not roomView.busy and not GuiService.MenuIsOpen
-		and board:GetAttribute("FieldReady") ~= false
+		and clientUI.attr("FieldReady") ~= false
 end
 
 picker = DeckPicker.new(safeOverlays, make, label, function()end, function(reason)
@@ -1655,7 +1666,7 @@ GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"):Connect(function() r
 -- The resting pet answers the round's end: a double hop for a win, startled then
 -- sleepy for a loss. Local presentation; the Welcome hatch round is left alone.
 board:GetAttributeChangedSignal("RoundOver"):Connect(function()
- if board:GetAttribute("RoundOver")~=true or board:GetAttribute("Mode")~="Board"or board:GetAttribute("FieldPhase")=="Welcome"then return end
+ if board:GetAttribute("RoundOver")~=true or board:GetAttribute("Mode")~="Board"or clientUI.attr("FieldPhase")=="Welcome"then return end
  local serial=board:GetAttribute("ResetId")
  task.defer(function()
   if board:GetAttribute("ResetId")~=serial or board:GetAttribute("RoundOver")~=true then return end
@@ -1668,7 +1679,7 @@ local function updateClub()
 	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
 	picker:setGreetings(board:GetAttribute("GreetingsOff")~=true)
 	picker:updateClub(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0,
-		board:GetAttribute("PeakChain") or 0, board:GetAttribute("Score") or 0, sound,
+		clientUI.attr("PeakChain") or 0, clientUI.attr("Score") or 0, sound,
 		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled(),nurseryState and nurseryState.totalWins,nurseryState and nurseryState.masteryRanks)
 	if nurseryState then picker:setShopState(nurseryState.nectar,nurseryState.faceplates,nurseryState.ballThemes,nurseryState.revision)end
 end
@@ -1803,7 +1814,7 @@ do
 end
 
 local function nextTier()
-	return board:GetAttribute("NextTier") or 1
+	return clientUI.attr("NextTier") or 1
 end
 
 local function project(position)
@@ -1832,11 +1843,11 @@ local function drawAim()
 	ghost.Text = ""
 	ghost.BackgroundColor3 = clientUI.JellyPalette.byTier[tier].body
 	-- No numerals (batch R1): the size's colour word.
-	nextReadout.Text = clientUI.BallThemes.word(tier) .. " · " .. clientUI.BallThemes.word(board:GetAttribute("PreviewTier1") or 1)
-		.. " · " .. clientUI.BallThemes.word(board:GetAttribute("PreviewTier2") or 1)
+	nextReadout.Text = clientUI.BallThemes.word(tier) .. " · " .. clientUI.BallThemes.word(clientUI.attr("PreviewTier1") or 1)
+		.. " · " .. clientUI.BallThemes.word(clientUI.attr("PreviewTier2") or 1)
 	nextReadout.TextColor3 = clientUI.JellyPalette.byTier[tier].body
 	if queuePieces then
-		for index,piece in ipairs(queuePieces)do local t=if index==1 then tier else (board:GetAttribute("PreviewTier1") or 1);Art.jellyPreview(piece,t,piece.Mark);piece.Mark.Text=clientUI.BallThemes.word(t)
+		for index,piece in ipairs(queuePieces)do local t=if index==1 then tier else (clientUI.attr("PreviewTier1") or 1);Art.jellyPreview(piece,t,piece.Mark);piece.Mark.Text=clientUI.BallThemes.word(t)
 			if queueHost:GetAttribute("InlineTiers") then piece.Parent.Caption.Text=(if index==1 then "Now " else "Next ")..piece.Mark.Text;piece.Parent.Caption.TextColor3=clientUI.JellyPalette.byTier[t].body end
 		end
 		if queueHost:GetAttribute("CombinedTiers") then
@@ -1852,7 +1863,7 @@ local lastTrialMask = board:GetAttribute("TrialMask") or 0
 
 local function shouldCoachField()
 	return nurseryState and nurseryState.status == "Ready" and (board:GetAttribute("OwnedPets") or 0) > 0
-		and board:GetAttribute("FieldPhase") == "Playing" and canAim() and not isPickerOpen() and not roomView.busy
+		and clientUI.attr("FieldPhase") == "Playing" and canAim() and not isPickerOpen() and not roomView.busy
 end
 
 -- Deck HUD/results data. Presentation only: every number is a replicated board
@@ -2054,17 +2065,17 @@ function clientUI.leaveDeck()
 end
 
 updateHud = function()
- clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
+ clientUI.fieldView=clientUI.FieldQuestText.read(clientUI.boardView,clientUI.fieldCache)
  if rendererPresentation.roundEnd then rendererPresentation.roundEnd:observe()end
  local final=rendererPresentation.roundEnd and rendererPresentation.roundEnd.frozen
-	local drops = board:GetAttribute("Drops") or 0
-	local merges = board:GetAttribute("Merges") or 0
-	local chain = board:GetAttribute("Chain") or 0
-	local peakChain = board:GetAttribute("PeakChain") or 0
-	local maxClears = board:GetAttribute("MaxClears") or 0
-	local score = board:GetAttribute("Score") or 0
+	local drops = clientUI.attr("Drops") or 0
+	local merges = clientUI.attr("Merges") or 0
+	local chain = clientUI.attr("Chain") or 0
+	local peakChain = clientUI.attr("PeakChain") or 0
+	local maxClears = clientUI.attr("MaxClears") or 0
+	local score = clientUI.attr("Score") or 0
 	-- S2b: show what the drawn board has earned; merges still ahead of the clock wait.
-	if clientUI.boardNet and clientUI.boardNet.active()then
+	if clientUI.boardNet and clientUI.boardNet.active()and not clientUI.mirrorOwns(board:GetAttribute("ResetId"))then
 		local held=clientUI.boardNet.pending("score")
 		if held>0 then score=math.max(0,score-held);chain=clientUI.netChain or chain end
 	end
@@ -2124,7 +2135,7 @@ updateHud = function()
 	rareGoal.Visible = false
 	-- Perf (v775): one write of the final text (the field instruction wins), not two.
 	if nurseryActive and owned>0 then
-		rareGoal.Text=clientUI.FieldQuestText.describe(clientUI.fieldView,board:GetAttribute("FieldPhase")).instruction
+		rareGoal.Text=clientUI.FieldQuestText.describe(clientUI.fieldView,clientUI.attr("FieldPhase")).instruction
 	elseif nextRare then
 		local goal = nextRare.trial
 		local rareProgress = math.min(if goal == Trials.HighRoller then score
@@ -2135,7 +2146,7 @@ updateHud = function()
 		rareGoal.Text = string.format("Beat your best\n%d pts", best)
 	end
  local mode=board:GetAttribute("Mode")
- clientUI.fieldCopy=clientUI.FieldQuestText.describe(clientUI.fieldView,board:GetAttribute("FieldPhase"))
+ clientUI.fieldCopy=clientUI.FieldQuestText.describe(clientUI.fieldView,clientUI.attr("FieldPhase"))
  for _,item in ipairs(fieldZones)do
   item.node.Visible=nurseryActive and owned>0
   item.node.BackgroundTransparency=if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then .15 else .45
@@ -2156,7 +2167,7 @@ updateHud = function()
 	local showHatch = hatchPet ~= nil and mode == "Board"
 	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
 	-- S2b: the recap waits for the clock to reach the round's last tick (its last merge).
-	if over and clientUI.boardNet and clientUI.boardNet.active()then
+	if over and clientUI.boardNet and clientUI.boardNet.active()and not clientUI.mirrorOwns(board:GetAttribute("ResetId"))then
 		local endTick=board:GetAttribute("RoundOverTick")
 		local shown=clientUI.boardNet.renderTick()
 		if type(endTick)=="number"and shown and shown<endTick then
@@ -2182,7 +2193,7 @@ updateHud = function()
 	local fieldCoaching = false
 	firstHatchGuide:fieldStep(0, 1, false)
 	local fieldActive = nurseryActive and owned > 0
-	questHUD:update(board:GetAttribute("FieldStage") or 0,board:GetAttribute("FieldPhase"),fieldActive,backdrop:GetAttribute("CompactInstruction")==true,clientUI.fieldView or false)
+	questHUD:update(clientUI.attr("FieldStage") or 0,clientUI.attr("FieldPhase"),fieldActive,backdrop:GetAttribute("CompactInstruction")==true,clientUI.fieldView or false)
 	status.ClipsDescendants = true
 	status.BackgroundTransparency = if lesson or fieldCoaching or fieldActive then 0.08 else 1
 	status.TextColor3 = if lesson or fieldCoaching then Art.Silver else title.TextColor3
@@ -2223,11 +2234,11 @@ updateHud = function()
 	end
 	rail.Interactable = canAim() and not isPickerOpen()
 	action.Interactable = canPlay()
-	dropCaption.Text = if board:GetAttribute("FieldPhase") == "Settling" then "SETTLE"
+	dropCaption.Text = if clientUI.attr("FieldPhase") == "Settling" then "SETTLE"
 		elseif nurseryState and nurseryState.status ~= "Ready" then
 			(if nurseryState.status=="Busy" or nurseryState.status=="Retrying" or nurseryState.status=="Pending" then "SAVING"
 				elseif nurseryState.status=="SessionLost" then "REJOIN" else "SAVE WAIT")
-		elseif board:GetAttribute("FieldReady") == false then "FALLING" else "DROP"
+		elseif clientUI.attr("FieldReady") == false then "FALLING" else "DROP"
 	layoutDropCaption(dropCaptionLayout)
 	if dropCaption:GetAttribute("BlockedCaption") then
 		local candidates=if dropCaption.Text=="SETTLE" then {"Settling…","Settling","Wait"}
@@ -2248,9 +2259,9 @@ updateHud = function()
 	-- In-LCD HUD (wide deck) and the view's back arrow.
 	local blocked=dropCaption:GetAttribute("BlockedCaption")
 	clientUI.deck:setHud({score=score,best=best,chain=chain,goals=if fieldActive then clientUI.deckGoals(clientUI.fieldView)else {},
-		welcome=owned==0 and board:GetAttribute("FieldPhase")=="Welcome",
+		welcome=owned==0 and clientUI.attr("FieldPhase")=="Welcome",
 		message=if not fieldActive then status.Text else nil,statusLabel=if blocked then status.Text else nil,daily=clientUI.dailyRows(),
-		next={nextTier(),board:GetAttribute("PreviewTier1")or 1,board:GetAttribute("PreviewTier2")or 1},
+		next={nextTier(),clientUI.attr("PreviewTier1")or 1,clientUI.attr("PreviewTier2")or 1},
 		eggsLeft=remaining,budget=budget,difficulty=clientUI.heatInfo(board:GetAttribute("Heat")).name,multiplier=select(2,clientUI.heatInfo(board:GetAttribute("Heat"))),
 		winPays=board:GetAttribute("WinPays")or "…",input=clientUI.inputKind()})
 	if clientUI.refreshDeckOverlays then clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)end
@@ -2298,7 +2309,7 @@ layout = function()
 	local walletH=math.ceil(TextService:GetTextSize("0",if screen.X>=1000 and screen.Y>=650 then 20 else 18,Art.Font.Counter,Vector2.new(1000,100)).Y)+4
 	local l=DeckLayout.resolve(screen,ratio,{utilityWidth=utilityW,utilityHeight=math.max(44,math.ceil(TextService:GetTextSize("Lounge",capSize,Art.Font.Action,Vector2.new(1000,100)).Y)+8),queueHeight=math.max((if short then lineH else roomyQueueCaptionH)+markD+10,lineH*2+8),lineHeight=lineH,walletLineHeight=walletH,countWidth=TextService:GetTextSize("24/24",12,Art.Font.Counter,Vector2.new(1000,100)).X+4})
  questHUD.roomy=l.roomy;dispenser.roomy=l.roomy
- clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
+ clientUI.fieldView=clientUI.FieldQuestText.read(clientUI.boardView,clientUI.fieldCache)
 	local instructionCompact=l.short or l.dense or l.quest.h<60
 	if (board:GetAttribute("OwnedPets")or 0)>0 then
 		-- Field content only; welcome retains the exact pre-existing coaching band.
@@ -2509,14 +2520,15 @@ local function dropEgg()
  -- the next tap go. Budget, phase, round end and every other canPlay rule still hold.
  local intent=clientUI.dropIntent
  local ahead=intent~=nil and intent.ghostGate==true and not canPlay()and canAim()and not isPickerOpen()and not roomView.busy
-  and not GuiService.MenuIsOpen and board:GetAttribute("FieldReady")==false and board:GetAttribute("FieldPhase")~="Settling"
-  and board:GetAttribute("RoundOver")~=true and intent:shownDrops(board:GetAttribute("Drops")or 0)<(board:GetAttribute("FieldBudget")or 24)
+  and not GuiService.MenuIsOpen and clientUI.attr("FieldReady")==false and clientUI.attr("FieldPhase")~="Settling"
+  and board:GetAttribute("RoundOver")~=true and intent:shownDrops(clientUI.attr("Drops")or 0)<(board:GetAttribute("FieldBudget")or 24)
   and intent:readyAhead(os.clock())
 	if (canPlay() or ahead) and not drag then
   if clientUI.welcomeInput then clientUI.welcomeInput()end
   if clientUI.clientSim then
+   -- B3: the mirror plays the drop (sound, jolt) the frame it draws the ball; without one, here.
    local taken=clientUI.clientSim.drop(aim)
-   if taken~=nil then if taken then audio:play("drop",1,.48)end;return end
+   if taken~=nil then if taken and not clientUI.mirror then audio:play("drop",1,.48)end;return end
   end
   -- Deck network S4: with DeckNetDrop the tap answers at once (drop sound, dispenser kick)
   -- under the client's own throttle and not-ready latch; the server's ack settles it.
@@ -2524,7 +2536,7 @@ local function dropEgg()
   if not intent then request:FireServer("drop", aim);return end
   local now=os.clock()
   if not intent:allow(now)then return end
-  local drops,budget=(board:GetAttribute("Drops")or 0)+1,board:GetAttribute("FieldBudget")or 24
+  local drops,budget=(clientUI.attr("Drops")or 0)+1,board:GetAttribute("FieldBudget")or 24
   local token=intent:send(now,drops)
   request:FireServer("drop", aim, token)
   audio:play("drop",1,.48)
@@ -2533,9 +2545,9 @@ local function dropEgg()
    -- v890 QA: taps inside one round trip read stale NextTier / NextPowerUp / ItemArmed;
    -- an earlier drop still in flight moves this one down the queue (and took the item).
    local pending=clientUI.ghosts:pending()
-   local tier=if pending==0 then nextTier()elseif pending==1 then board:GetAttribute("PreviewTier1")or 1 else board:GetAttribute("PreviewTier2")or 1
-   local armed=if pending==0 then board:GetAttribute("ItemArmed")else nil
-   clientUI.ghosts:spawn(token,aim,tier,now,{star=pending==0 and board:GetAttribute("NextPowerUp")==true,mark=if armed and armed~=""then armed else nil})
+   local tier=if pending==0 then nextTier()elseif pending==1 then clientUI.attr("PreviewTier1")or 1 else clientUI.attr("PreviewTier2")or 1
+   local armed=if pending==0 then clientUI.attr("ItemArmed")else nil
+   clientUI.ghosts:spawn(token,aim,tier,now,{star=pending==0 and clientUI.attr("NextPowerUp")==true,mark=if armed and armed~=""then armed else nil})
   end
   dispenser:update(board:GetAttribute("ResetId"),drops,budget,(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	end
@@ -2549,10 +2561,11 @@ if RunService:IsStudio()then
   local wanted=playerGui:GetAttribute("DeckNetTestAim")
   if type(wanted)=="number"then aim=math.clamp(wanted,0,1)end
   local before=clientUI.dropIntent and clientUI.dropIntent.stats.sent
+  local simBefore=clientUI.clientSim and clientUI.clientSim.sentCount and clientUI.clientSim.sentCount()
   local tapAt=os.clock()
   clientUI.netTapPending=true -- a ghost is drawn inside dropEgg itself
   dropEgg()
-  if clientUI.dropIntent and clientUI.dropIntent.stats.sent~=before then
+  if(clientUI.dropIntent and clientUI.dropIntent.stats.sent~=before)or(simBefore~=nil and clientUI.clientSim.sentCount()~=simBefore)then
    playerGui:SetAttribute("DeckNetTapAt",tapAt)
    playerGui:SetAttribute("DeckNetTapSent",(playerGui:GetAttribute("DeckNetTapSent")or 0)+1)
   elseif clientUI.netTapPending then clientUI.netTapPending=false end
@@ -2576,14 +2589,14 @@ do
    if not ackRemote then warn("DeckNet: BoardDropAck missing; drops fall back to the latch timeout");return end
    ackRemote.OnClientEvent:Connect(function(token,ok,eggId,tick)
     if clientUI.ghosts then clientUI.ghosts:ack(token,ok,eggId,tick)end
-    local result=clientUI.dropIntent:ack(token,ok,board:GetAttribute("FieldReady"))
+    local result=clientUI.dropIntent:ack(token,ok,clientUI.attr("FieldReady"))
     if result=="refused"then
      audio:play("aim",.6,.3) -- the soft "no" (the item belt's full note)
      if clientUI.netHudKick then clientUI.netHudKick()else task.defer(updateHud)end -- dispenser back to the real count
     end
    end)
   end)
-  board:GetAttributeChangedSignal("FieldReady"):Connect(function()clientUI.dropIntent:fieldReady(board:GetAttribute("FieldReady"))end)
+  board:GetAttributeChangedSignal("FieldReady"):Connect(function()clientUI.dropIntent:fieldReady(clientUI.attr("FieldReady"))end)
   for _,name in ipairs({"ResetId","Mode","RoundOver"})do
    board:GetAttributeChangedSignal(name):Connect(function()clientUI.dropIntent:clear();if clientUI.ghosts then clientUI.ghosts:clear()end end)
   end
@@ -2829,7 +2842,7 @@ do
  clientUI.coach:place(viewport.Position,viewport.Size)
  local stopCoachSnapshot=clientUI.ownerSnapshot.subscribe(function(state)clientUI.coach:sync(state);clientUI.coach:learned()end)
  local function beltCount()
-  local ok,belt=pcall(clientUI.RoundItems.decodeBelt,board:GetAttribute("ItemBelt"))
+  local ok,belt=pcall(clientUI.RoundItems.decodeBelt,clientUI.attr("ItemBelt"))
   clientUI.coachBelt=if ok and type(belt)=="table"then #belt else 0
  end
  board:GetAttributeChangedSignal("ItemBelt"):Connect(beltCount);beltCount()
@@ -2868,11 +2881,11 @@ do
   local companion=Pets.byId[board:GetAttribute("CompanionId")or ""]or Pets.byId.pip
   clientUI.coach:step(os.clock(),{mode=mode,canRoam=roomView.canRoam(),
    presented=backdrop.Visible and rendererPresentation.canPresent~=nil and rendererPresentation.canPresent(board:GetAttribute("ResetId")),
-   phase=board:GetAttribute("FieldPhase"),over=board:GetAttribute("RoundOver")==true,merges=board:GetAttribute("Merges")or 0,
-   pressure=board:GetAttribute("OverflowPressure")or 0,belt=clientUI.coachBelt or 0,owned=board:GetAttribute("OwnedPets")or 0,
+   phase=clientUI.attr("FieldPhase"),over=board:GetAttribute("RoundOver")==true,merges=clientUI.attr("Merges")or 0,
+   pressure=clientUI.attr("OverflowPressure")or 0,belt=clientUI.coachBelt or 0,owned=board:GetAttribute("OwnedPets")or 0,
    input=clientUI.inputKind(),open=open,used=clientUI.attract and clientUI.attract.used or nil,pet=companion and companion.name or "Bear",
    companionId=board:GetAttribute("CompanionId"),
-   drops=board:GetAttribute("Drops")or 0,windowActive=cs.window,idleFor=os.clock()-cs.stillSince,awayFor=os.clock()-cs.inputAt})
+   drops=clientUI.attr("Drops")or 0,windowActive=cs.window,idleFor=os.clock()-cs.stillSince,awayFor=os.clock()-cs.inputAt})
  end)
  gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy();for _,link in ipairs(cs.links)do link:Disconnect()end end)
 end
@@ -2956,15 +2969,15 @@ do
   if pending~=nil then clientUI.deck:welcomeResult(pending);legacy:setSkipPending(pending)end
  end))
  local function updateWelcome()
-  local welcome=(board:GetAttribute("OwnedPets")or 0)==0 and board:GetAttribute("FieldPhase")=="Welcome"
+  local welcome=(board:GetAttribute("OwnedPets")or 0)==0 and clientUI.attr("FieldPhase")=="Welcome"
   local active=welcome and canAim()and not isPickerOpen()and focused and audio.deviceActive~=false and not GuiService.MenuIsOpen
    and not UserInputService:GetFocusedTextBox()and not roomView.transition.shade.Visible
   local generation=board:GetAttribute("RunSequence")
   if welcome and(lastActive~=active or lastGeneration~=generation)then lastActive,lastGeneration=active,generation;request:FireServer("welcomeActive",active)
   elseif not welcome then lastActive,lastGeneration=nil,nil end
   context.generation=board:GetAttribute("RunSequence");context.charge=board:GetAttribute("HatchCharge")or 0
-  context.threshold=Pets.byId.pip.charge;context.owned=board:GetAttribute("OwnedPets")or 0;context.phase=board:GetAttribute("FieldPhase")
-  context.drops=board:GetAttribute("Drops")or 0;context.skipReady=board:GetAttribute("WelcomeSkipReady")==true
+  context.threshold=Pets.byId.pip.charge;context.owned=board:GetAttribute("OwnedPets")or 0;context.phase=clientUI.attr("FieldPhase")
+  context.drops=clientUI.attr("Drops")or 0;context.skipReady=board:GetAttribute("WelcomeSkipReady")==true
   context.grantPending=board:GetAttribute("WelcomeGrantPending")==true;context.revealPending=nurseryState and nurseryState.lastHatch~=nil
   context.device=clientUI.inputKind();context.reduced=reduceEffects()
   context.active=active and clientUI.deck.visible==true
@@ -3063,8 +3076,16 @@ end
 function clientUI.useItem()
  local id=clientUI.items:selected()
  if not id then return false end
- if clientUI.clientSim and clientUI.clientSim.item(id)~=nil then clientUI.closeItems(true);clientUI.accepted("confirm");return true end
- request:FireServer("item",{resetId=board:GetAttribute("ResetId"),seq=board:GetAttribute("ItemSeq")or 0,id=id})
+ if clientUI.clientSim then
+  local taken,why=clientUI.clientSim.item(id)
+  if taken~=nil then
+   clientUI.closeItems(true);clientUI.accepted("confirm")
+   -- B3: the round host refused it here: the same notes as the server's refusals.
+   if taken==false then clientUI.items:showNote(({Budget="No ball left for that",Empty="Nothing to pop",Armed="An item is already armed",NotLive="Not right now"})[why]or "Not right now")end
+   return true
+  end
+ end
+ request:FireServer("item",{resetId=board:GetAttribute("ResetId"),seq=clientUI.attr("ItemSeq")or 0,id=id})
  clientUI.closeItems(true);clientUI.accepted("confirm")
  return true
 end
@@ -3078,7 +3099,7 @@ function clientUI.syncItemChip()
  clientUI.items:setChipVisible(board:GetAttribute("ItemsOn")==true and clientUI.itemsInRound())
 end
 function clientUI.refreshItems()
- local belt=clientUI.RoundItems.decodeBelt(board:GetAttribute("ItemBelt"))
+ local belt=clientUI.RoundItems.decodeBelt(clientUI.attr("ItemBelt"))
  clientUI.items:setBelt(belt)
  local front=clientUI.RoundItems.ById[belt[1]or ""]
  clientUI.deck:setItems(#belt,front and front.glyph,front and front.color,belt[1])
@@ -3091,6 +3112,8 @@ end
 board:GetAttributeChangedSignal("ItemEvent"):Connect(function()
  local ok,event=pcall(function()return HttpService:JSONDecode(board:GetAttribute("ItemEvent")or "")end)
  if not ok or type(event)~="table"or event.resetId~=board:GetAttribute("ResetId")then return end
+ -- B3: the mirror showed this round's grants (and full notes) at the merge.
+ if(event.kind=="granted"or event.kind=="full")and clientUI.mirror and clientUI.mirror:grantPlayed(event.resetId)then return end
  local item=clientUI.RoundItems.ById[event.id or ""]
  if event.kind=="full"then clientUI.items:showNote(clientUI.ItemCarousel.FullNote);audio:play("aim",.6,.3)
  elseif event.kind=="granted"and item then
@@ -3221,7 +3244,7 @@ end
 function clientUI.pocketState()
  local owned=(board:GetAttribute("OwnedPets")or 0)>0
  local over=board:GetAttribute("RoundOver")==true
- return{empty=(board:GetAttribute("Drops")or 0)==0,locked=not owned,canRestart=owned and not over and(board:GetAttribute("FieldPhase")or "Welcome")~="Welcome",
+ return{empty=(clientUI.attr("Drops")or 0)==0,locked=not owned,canRestart=owned and not over and(clientUI.attr("FieldPhase")or "Welcome")~="Welcome",
   canQuit=owned,canSettings=true}
 end
 -- focusId (optional): the row to focus (Back from Settings returns to "settings").
@@ -3253,7 +3276,7 @@ end
 clientUI.pocketCallbacks.resume=function()clientUI.closePocketMenu()end
 clientUI.pocketCallbacks.restart=function()
  local sequence=board:GetAttribute("RunSequence")
- local empty=(board:GetAttribute("Drops")or 0)==0
+ local empty=(clientUI.attr("Drops")or 0)==0
  clientUI.closePocketMenu(true);clientUI.accepted("confirm")
  -- An empty board is already a fresh round: Restart just resumes it.
  if type(sequence)=="number"and not empty then
@@ -3523,7 +3546,9 @@ local function addView(source)
 	if eggViews[source] then return end -- one view per ball (content gate, clock and handoff can all ask)
 	-- v890 QA: a drawn ball a predicted merge took stays hidden until it is confirmed or undone.
 	if clientUI.ghosts and clientUI.ghosts.predictedPartner[source] then return end
-	if clientUI.netTapShown and (source.Parent==board or source.Name:sub(1,6)=="Ghost_") then clientUI.netTapShown() end
+	-- B3: on a round the mirror draws, the server's Parts get no view (the mirror's do).
+	if clientUI.mirror and clientUI.mirror:hides(source) then return end
+	if clientUI.netTapShown and (source.Parent==board or source.Name:sub(1,6)=="Ghost_" or source.Name:sub(1,7)=="Mirror_") then clientUI.netTapShown() end
 	local tier = source:GetAttribute("Tier")
 	local id = source:GetAttribute("EggId")
 	if not tier or not id or source:GetAttribute("BoardSerial")~=board:GetAttribute("ResetId")then
@@ -3566,8 +3591,8 @@ function clientUI.netScoreKick()
  task.defer(function()
   clientUI.netScoreQueued=false
   if(board:GetAttribute("OwnedPets")or 0)==0 or not clientUI.deck.setScore then updateHud();return end
-  local score,chain=board:GetAttribute("Score")or 0,board:GetAttribute("Chain")or 0
-  local held=clientUI.boardNet.pending("score")
+  local score,chain=clientUI.attr("Score")or 0,clientUI.attr("Chain")or 0
+  local held=if clientUI.mirrorOwns(board:GetAttribute("ResetId"))then 0 else clientUI.boardNet.pending("score")
   if held>0 then score=math.max(0,score-held);chain=clientUI.netChain or chain end
   if not clientUI.deck:setScore(score,chain)then updateHud()end
  end)
@@ -3653,6 +3678,47 @@ if clientUI.dropIntent and require(ReplicatedStorage.Shared.FeatureFlags).DeckNe
  })
  gui.Destroying:Connect(function()clientUI.ghosts:destroy()end)
 end
+-- B3 client-run board (B3-plan.md): on a lockstep round the deck draws the client's own round
+-- host through ClientBoardMirror (local Parts into addView, local merges / impacts / drops /
+-- grants through the same juice as the server's events, provisional HUD values via clientUI.attr).
+-- Flag off it never owns a serial and every hook above falls through to today's path.
+if clientUI.clientSim and clientUI.clientSim.attach then
+ xpcall(function()
+  clientUI.mirror=require(script.ClientBoardMirror).new({
+   board=board,driver=clientUI.clientSim,
+   add=function(source)addView(source)end,
+   remove=function(source)removeView(source)end,
+   hasView=function(source)return eggViews[source]~=nil end,
+   -- Adoption: every other view leaves first (views are keyed by ball id in viewsById).
+   hideServer=function()for source in pairs(eggViews)do if not clientUI.mirror:isMine(source)then removeView(source)end end end,
+   released=function()for _,source in ipairs(board:GetChildren())do addView(source)end end,
+   merge=function(m,serial,late)
+    if late or not rendererPresentation.canPresent(serial)then clientUI.ballFaces:merged(m.id,os.clock());return end
+    clientUI.playMerge(Vector2.new(m.x,m.y),m.tier,m.chain,Vector2.new(m.fromX,m.fromY),Vector2.new(m.otherX,m.otherY),m.id,m.cleared,serial)
+   end,
+   impacts=function(batch,serial)if rendererPresentation.canPresent(serial)then clientUI.playImpacts(batch,serial)end end,
+   drop=function(count,serial)
+    if count>0 and clientUI.boardHints then clientUI.boardHints:noteDrop()end
+    rendererPresentation.fx:observeDrop(serial,count)
+    if rendererPresentation.canPresent(serial)then
+     audio:play("drop",1,.48)
+     rendererPresentation.setFieldOwner(true,serial,reduceEffects())
+     rendererPresentation.jolt:drop(serial,count,os.clock())
+    end
+   end,
+   grant=function(kind,id,serial,late)
+    if kind=="full"then clientUI.items:showNote(clientUI.ItemCarousel.FullNote);audio:play("aim",.6,.3)
+    elseif kind=="granted"and clientUI.RoundItems.ById[id]then clientUI.items:showGrant(id);audio:play("quest_complete",1.2,.5)end
+   end,
+   changed=function(hud,score,belt,objective)
+    if belt and clientUI.refreshItems then clientUI.refreshItems()end
+    if objective then clientUI.fieldView=clientUI.FieldQuestText.read(clientUI.boardView,clientUI.fieldCache);if layout then layout()end end
+    if hud or objective then clientUI.netHudKick()elseif score then clientUI.netScoreKick()end
+   end,
+  })
+ end,function(problem)warn("[ClientBoardMirror] not started (the deck draws the server's Parts): "..tostring(problem))end)
+ gui.Destroying:Connect(function()if clientUI.mirror then clientUI.mirror:destroy()end end)
+end
 if RunService:IsStudio() then
 	gui:GetAttributeChangedSignal("MeshPreview"):Connect(function()
 		for _, source in ipairs(board:GetChildren()) do
@@ -3673,11 +3739,9 @@ rendererPresentation.canPresent=function(serial)
   and not roomView.busy and not roomView.transition.shade.Visible
 end
 table.insert(rendererPresentation.connections,overlay:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()rendererPresentation.fx:clear()end))
-table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(function(batch,serial,tick)
- if not rendererPresentation.canPresent(serial)then return end
- -- S2b: squash and plop when the drawn balls touch (the snapshot clock), not on arrival.
- clientUI.boardNet.schedule(tick,function(late)
- if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then return end
+-- B3: the impact juice (squash, plop, ring), shared by the server's BoardImpact batches on the
+-- snapshot clock and the mirror's local impacts. batch = {{ballId, normal (Vector2), speed}, ...}.
+function clientUI.playImpacts(batch,serial)
  local strongest,contact,normal,contactSource=0,nil,nil,nil
  for _,impact in ipairs(batch)do
   local gel=viewsById[impact[1]]
@@ -3690,7 +3754,8 @@ table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(func
   end
  end
  local now=os.clock()
- if strongest>=9 and now-lastPlop>=.13 and contactSource and contactSource.Parent then
+ -- A mirror Part is unparented: it counts as drawn (today's path keeps its Parent check).
+ if strongest>=9 and now-lastPlop>=.13 and contactSource and(contactSource.Parent or(clientUI.mirror~=nil and clientUI.mirror:isMine(contactSource)))then
   lastPlop=now
   local radius=contactSource.Size.X/2
   contact=Vector2.new(contactSource.Position.X,contactSource.Position.Y)-normal*radius
@@ -3698,31 +3763,20 @@ table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(func
   rendererPresentation.fx:emit("impact",project(contact),radius*viewport.AbsoluteSize.X/(Config.Width+.8),contactSource.Color,contactSource:GetAttribute("Tier"),1,serial,now,normal)
   audio:play(if normal.Y<.78 then "bank"else "land",math.clamp(.82+strongest/100,.9,1.2),math.clamp(strongest/70,.24,.55))
  end
+end
+table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(function(batch,serial,tick)
+ if clientUI.mirrorOwns(serial)then return end -- B3: the mirror plays its own impacts
+ if not rendererPresentation.canPresent(serial)then return end
+ -- S2b: squash and plop when the drawn balls touch (the snapshot clock), not on arrival.
+ clientUI.boardNet.schedule(tick,function(late)
+ if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then return end
+ clientUI.playImpacts(batch,serial)
  end)
 end))
-table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(function(position,tier,chain,first,second,id,cleared,serial,tick,firstId,secondId)
- -- v890 QA: confirm (or undo) a predicted merge as soon as the event arrives, not on its tick.
- local predicted=clientUI.ghosts~=nil and serial==board:GetAttribute("ResetId")and clientUI.ghosts:confirm(firstId,secondId,id)
- if not rendererPresentation.canPresent(serial)then return end
- -- S2b: the merge (blob, jolt, sounds, faces, cheer) plays when the snapshot clock
- -- reaches its tick, where the balls visibly meet; the HUD holds its score until then.
- -- Too late (a retransmit): keep the face state, skip the juice.
- clientUI.boardNet.schedule(tick,function(late)
- if clientUI.ghosts then clientUI.ghosts:mergedAway(firstId,secondId)end
- clientUI.netChain=chain
- if clientUI.boardNet.active()then clientUI.netScoreKick()end
- if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then clientUI.ballFaces:merged(id,os.clock());return end
+-- B3: the merge juice (blob, burst, score popup, jolt, merge and chain sounds, faces, pet cheer),
+-- shared by the server's BoardMerge events on the snapshot clock and the mirror's local merges.
+function clientUI.playMerge(position,tier,chain,first,second,id,cleared,serial)
  local now=os.clock()
- if predicted then
-  -- The blob, burst, jolt and merge sound played at the prediction: only the score popup
-  -- and the chain accent (the server's chain) remain.
-  clientUI.ballFaces:merged(id,now)
-  if(chain>1 or cleared)and now-lastChainAccent>=.09 then
-   lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))
-  end
-  rendererPresentation.fx:pop(project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,Config.mergeScore(tier,chain,cleared),now)
-  return
- end
  mergeBurst=if now-lastMerge<.08 then math.min(mergeBurst+1,2)else 0;lastMerge=now
  clientUI.ballFaces:merged(id,now)
  audio:play(if tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(chain,id),.56*.68^mergeBurst)
@@ -3747,6 +3801,35 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  if not reduced and not cleared and not lcdEnabled()and viewsById[id]then viewsById[id]:impact(Vector2.yAxis,6+2*tier)end
  -- Big moments reach the resting pet behind the see-through deck.
  if tier>=3 or chain>=3 then roomView:cheerPet("cheer")end
+end
+table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(function(position,tier,chain,first,second,id,cleared,serial,tick,firstId,secondId)
+ -- B3: a round the mirror draws played this merge locally; the server's copy is only compared.
+ if clientUI.mirrorOwns(serial)then clientUI.mirror:serverMerge(tier,chain,id,cleared,firstId,secondId);return end
+ -- B3 code review: after a takeover the server replays merges the mirror already played.
+ if clientUI.mirror and clientUI.mirror:alreadyPlayed(serial,firstId,secondId)then return end
+ -- v890 QA: confirm (or undo) a predicted merge as soon as the event arrives, not on its tick.
+ local predicted=clientUI.ghosts~=nil and serial==board:GetAttribute("ResetId")and clientUI.ghosts:confirm(firstId,secondId,id)
+ if not rendererPresentation.canPresent(serial)then return end
+ -- S2b: the merge (blob, jolt, sounds, faces, cheer) plays when the snapshot clock
+ -- reaches its tick, where the balls visibly meet; the HUD holds its score until then.
+ -- Too late (a retransmit): keep the face state, skip the juice.
+ clientUI.boardNet.schedule(tick,function(late)
+ if clientUI.ghosts then clientUI.ghosts:mergedAway(firstId,secondId)end
+ clientUI.netChain=chain
+ if clientUI.boardNet.active()then clientUI.netScoreKick()end
+ if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then clientUI.ballFaces:merged(id,os.clock());return end
+ local now=os.clock()
+ if predicted then
+  -- The blob, burst, jolt and merge sound played at the prediction: only the score popup
+  -- and the chain accent (the server's chain) remain.
+  clientUI.ballFaces:merged(id,now)
+  if(chain>1 or cleared)and now-lastChainAccent>=.09 then
+   lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))
+  end
+  rendererPresentation.fx:pop(project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,Config.mergeScore(tier,chain,cleared),now)
+  return
+ end
+ clientUI.playMerge(position,tier,chain,first,second,id,cleared,serial)
  end,{score=Config.mergeScore(tier,chain,cleared)})
 end))
 
@@ -3783,6 +3866,8 @@ clientUI.hudQuietAttributes={OverflowPressure=true,OverflowGraceLeft=true,Welcom
 board.AttributeChanged:Connect(function(name)
  if rendererPresentation.roundEnd then rendererPresentation.roundEnd:observe()end
  if clientUI.hudQuietAttributes[name] then return end
+ -- B3: a lagged server write of a value the mirror serves changes nothing shown (it notifies its own).
+ if clientUI.mirror and clientUI.mirror:serves(name)then return end
 	if not hudQueued then
 		hudQueued = true
 		task.defer(function()
@@ -3825,7 +3910,8 @@ end)
 board:GetAttributeChangedSignal("ResetId"):Connect(function()
  for source in pairs(eggViews)do removeView(source)end
  for _,source in ipairs(board:GetChildren())do addView(source)end
- rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),board:GetAttribute("Drops")or 0)
+ if clientUI.mirror then clientUI.mirror:reattach()end
+ rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),clientUI.attr("Drops")or 0)
  rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
 	recap.feedback:cancel()
 	clearPlayInputs()
@@ -3837,7 +3923,8 @@ board:GetAttributeChangedSignal("ResetId"):Connect(function()
 	lastChainAccent = -math.huge
 end)
 board:GetAttributeChangedSignal("Drops"):Connect(function()
- local count,serial=board:GetAttribute("Drops")or 0,board:GetAttribute("ResetId")
+ local count,serial=clientUI.attr("Drops")or 0,board:GetAttribute("ResetId")
+ if clientUI.mirrorOwns(serial)then return end -- B3: the mirror plays its own drops
  if count>0 and clientUI.boardHints then clientUI.boardHints:noteDrop()end
  local accepted=rendererPresentation.fx:observeDrop(serial,count)
  if accepted and rendererPresentation.canPresent(serial)then
@@ -3857,7 +3944,9 @@ end)
 -- Terminal sounds belong to matching Saved RecapFeedback only.
 for _,attribute in ipairs({"FieldObjective","RunSequence"})do
  board:GetAttributeChangedSignal(attribute):Connect(function()
-  clientUI.fieldView=clientUI.FieldQuestText.read(board,clientUI.fieldCache)
+  -- B3: the mirror lays out its own goal progress; the server's lagged copy changes nothing shown.
+  if attribute=="FieldObjective"and clientUI.mirror and clientUI.mirror:serves(attribute)then return end
+  clientUI.fieldView=clientUI.FieldQuestText.read(clientUI.boardView,clientUI.fieldCache)
   layout();updateHud()
  end)
 end
@@ -3913,8 +4002,8 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 		rendererPresentation.visible=false;lcdElapsed=lcdStep
 		return
 	end
-	local pressure = board:GetAttribute("OverflowPressure") or 0
-	local graceLeft = board:GetAttribute("OverflowGraceLeft") or 0
+	local pressure = clientUI.attr("OverflowPressure") or 0
+	local graceLeft = clientUI.attr("OverflowGraceLeft") or 0
 	local mood = if reduced then "idle" elseif now - lastMerge < 0.24 then "happy" elseif now % 3.8 < 0.13 then "blink" else "idle"
 	if mood ~= mascotMood then
 		mascotMood = mood
@@ -3931,10 +4020,10 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
  do
   local jolt=rendererPresentation.jolt
   clientUI.deck:setShake(if jolt.active and jolt.active.kind=="merge"then jolt.offset else nil,reduced)
-  local phase=board:GetAttribute("FieldPhase")
+  local phase=clientUI.attr("FieldPhase")
   local hintState=clientUI.hintState or {};clientUI.hintState=hintState -- reused, no table per frame
   hintState.presented,hintState.settling=presented,phase=="Settling"and board:GetAttribute("RoundOver")~=true
-  hintState.live,hintState.firstRun=canPlay()and not isPickerOpen(),clientUI.boardHints.firstRun(phase,board:GetAttribute("Drops"))
+  hintState.live,hintState.firstRun=canPlay()and not isPickerOpen(),clientUI.boardHints.firstRun(phase,clientUI.attr("Drops"))
   hintState.input,hintState.reduced=clientUI.inputKind(),reduced
   clientUI.boardHints:step(now,hintState)
  end
@@ -3963,7 +4052,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	table.clear(clientUI.faceList)
 	for source,view in pairs(eggViews)do local input=view.faceInput;input.x,input.y=source.Position.X,source.Position.Y;table.insert(clientUI.faceList,input)end
 	clientUI.ballFaces:update(now,clientUI.faceList,faceMood)
-	if clientUI.deck.stepNext then clientUI.deck:stepNext(now,faceMood,ballTheme,board)end
+	if clientUI.deck.stepNext then clientUI.deck:stepNext(now,faceMood,ballTheme,clientUI.boardView)end
 	local guide = (board:GetAttribute("OwnedPets") or 0) == 0 and canPlay()
 	local flightTarget = Config.flightPoint(aim,.8)
 	local drawLCD = false
@@ -3998,7 +4087,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			local color = clientUI.JellyPalette.byTier[tier].body
 			local center = pixelPoint(Config.launchPosition())
 			lcd:drawGuide(aim)
-			local held=clientUI.heldFace;held.tier=tier;held.expr,held.dx=clientUI.ballFaces.preview(0,now,faceMood);held.star=board:GetAttribute("NextPowerUp")==true;held.mark=nil
+			local held=clientUI.heldFace;held.tier=tier;held.expr,held.dx=clientUI.ballFaces.preview(0,now,faceMood);held.star=clientUI.attr("NextPowerUp")==true;held.mark=nil
 			lcd:draw(center, radius, radius, 0, color, 0, nil, held)
 		end
 	elseif lcd then

@@ -28,6 +28,9 @@ L.StallSeconds = 3 -- no new reported tick this long while running = stalled (li
 L.StallTicks = math.floor(3 * L.TicksPerSecond) -- the allowance never banks more than 3 s past the reports
 L.AheadTicks = math.floor(3 * L.TicksPerSecond) -- a report beyond allowance + lead + 3 s is refused
 L.SettleTakeoverSeconds = 3 -- stalled this long in Settling: the server finishes the settle itself
+-- B3: no accepted client message this long after the start (host still at tick 0, nothing queued):
+-- the server plays the round on today's path (a client whose driver or mirror cannot start).
+L.HelloSeconds = 5
 L.IdleSeconds = 300 -- stalled (not paused) this long in Board mode: the round ends (RoundSim.finish, pays 0)
 L.PausedIdleSeconds = 1800 -- paused in Board mode this long: the same (a menu left open)
 L.Reveal = 5 -- Next plus 4 more queue slots ahead of the drops
