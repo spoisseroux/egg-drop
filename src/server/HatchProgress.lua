@@ -1313,7 +1313,8 @@ end
 -- playDate.op the proof the host reads to subtract exactly what committed.
 -- petId (slice F, optional): the companion; it earns bond XP once, in the write whose count
 -- completes today's Play date. Not in the digest (playDate.op stays the proof).
-function Hatching.parkPlay(handle, operationId, count, petId)
+-- fetches (v2 S0, optional): how many of `count` are park fetches (0..count), saved to stats.fetches.
+function Hatching.parkPlay(handle, operationId, count, petId, fetches)
 	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 100 or not integer(count, PlayDate.MaxBatch) or count < 1 then return false, "InvalidParkPlay" end
 	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
 	if PlayDate.committed(handle.state, operationId) then return true, "AlreadySaved" end
@@ -1322,7 +1323,8 @@ function Hatching.parkPlay(handle, operationId, count, petId)
 	local pending = handle.pending
 	if pending and (pending.signature ~= signature or pending.id ~= operationId) then return false, "Pending" end
 	local candidate = if pending then pending.candidate else table.freeze({ id = operationId, day = day, count = count,
-		petId = if type(petId) == "string" and Pets.byId[petId] then petId else nil })
+		petId = if type(petId) == "string" and Pets.byId[petId] then petId else nil,
+		fetches = if integer(fetches, count) and fetches > 0 then fetches else nil })
 	return transact(handle, signature, handle.state.revision, function(state, captured)
 		local today = dayOf(handle.adapter.now())
 		local doneBefore = PlayDate.done(state, today)
@@ -1330,7 +1332,7 @@ function Hatching.parkPlay(handle, operationId, count, petId)
 		-- Bond (slice F): only the write that crosses the Play date target pays XP.
 		if ok and not doneBefore and PlayDate.done(state, today) then Bond.add(state, captured.petId, Bond.XP.playDate) end
 		return ok, why
-	end, candidate, operationId, nil, "park:" .. candidate.day .. ":" .. candidate.count)
+	end, candidate, operationId, nil, "park:" .. candidate.day .. ":" .. candidate.count .. ":" .. (candidate.fetches or 0))
 end
 function Hatching.parkCommitted(handle, operationId) return PlayDate.committed(handle.state, operationId) end
 function Hatching.parkCompletion(handle, operationId) return PlayDate.completion(handle.state, operationId) end

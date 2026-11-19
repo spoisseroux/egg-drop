@@ -4,6 +4,9 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 ## Now working on
 
+- [ ] **v2 S0 (2026-11-19, Spencer approved "lets start"): count fetches and quest claims (daily/weekly) in the live build, no UI.** Optional Lifetime counters; fetches ride the park batch write. Built and committed (architect + code review GO; 19 save specs pass in Studio). Needs a publish to reach players (ask first).
+- [ ] **v2 second pet + 3D Stat Snacks fed to the pet + stats menu entry (Fable scoping, 2026-11-19).** Webkinz feel, house style; snack feeding with server-owned result.
+
 - [ ] **v2 scope (2026-11-19, Fable): `V2-SCOPE-2026-11-19.md` written, awaiting Spencer's approval. Nothing built.** Revision 2: Champion Capes at 99 (petal hem, star clasp, Back slot, twirl emote; Garden Star Cape + Kite at 594), Stat Eggs are XP boosts on training (2x/3x for next 50-120 XP, no timer). Revision 1: simple names (Heart, Power, Energy, Jump, Speed, Smarts), stats get jobs in future pet competitions (fair groups, max ~25% edge, Pocket Deck stays stat-free), XP pops, fanfare, stat guide. Six pet stats to 99, total level, Stat Eggs (Stars, shown odds, restricted order), level gates on new items only, stats on the inspect card, Champion Kites, ranked v2 list. Mockups and curve script: `artifacts/v2-scope-2026-11-19/`. Open questions in section 12; the urgent one is slice S0 (count fetches and quest claims in the live build now: they cannot be backfilled).
 
 - [x] **Launch publish checklist (Spencer 2026-11-17), done in v933:** switch `ProgressStore` to a fresh store (V3) in the final launch build so launch starts clean and both test accounts see onboarding; run the HatchItemStage spec (9858e8b button move) and check the hatch screen on a phone-size capture before publishing.

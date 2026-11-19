@@ -165,5 +165,38 @@ return function(server)
 		assert(board.parkInFlight==nil,"best-effort analytics never blocks saves")
 	end)
 
+	-- v2 S0: fetches ride the park write (stats.fetches, optional counter).
+	test("fetches are saved with the park batch, once across an ambiguous retry, never more than count",function()
+		local h,db,c=fixture()
+		assert(h.state.stats.fetches==nil and H.valid(h.state),"a save without the key is valid")
+		assert(H.parkPlay(h,"f1",3,nil,2))
+		assert(h.state.stats.parkGames==3 and h.state.stats.fetches==2 and db.player_1.hatching.stats.fetches==2)
+		assert(H.parkPlay(h,"f2",1)and h.state.stats.fetches==2,"no fetches argument: unchanged")
+		assert(H.parkPlay(h,"f3",2,nil,0)and h.state.stats.fetches==2,"zero fetches: unchanged")
+		c.failNext="after"
+		assert(not H.parkPlay(h,"amb",2,nil,2))
+		assert(H.retry(h)and H.parkCommitted(h,"amb"))
+		assert(h.state.stats.fetches==4 and db.player_1.hatching.stats.fetches==4,"the ambiguous write counted once")
+		assert(H.parkPlay(h,"f4",1,nil,5)and h.state.stats.fetches==4,"more fetches than count are dropped by the caller check")
+		local s=copy(h.state);s.stats.parkGames=0
+		local ok,why=P.apply(s,{id="x",day=Daily.dayOf(c.now),count=1,fetches=2},Daily.dayOf(c.now))
+		assert(not ok and why=="InvalidParkPlay","apply refuses fetches above count")
+		ok,why=P.apply(s,{id="y",day=Daily.dayOf(c.now),count=2,fetches=1.5},Daily.dayOf(c.now))
+		assert(not ok and why=="InvalidParkPlay")
+		assert(H.valid(h.state))
+	end)
+
+	test("ParkGameCommit subtracts the flight's fetches and keeps fetch pending within park pending",function()
+		local C=require(server.ParkGameCommit)
+		local nursery={parkCommitted=function()return true end,parkCompletion=function()return nil end}
+		local board={nursery={state={}},parkPending=5,parkFetchPending=3}
+		local flight={id="a",count=4,fetches=2};board.parkInFlight=flight
+		assert(C.finish(board,flight,nursery,{now=function()return 1 end}))
+		assert(board.parkPending==1 and board.parkFetchPending==1)
+		local old={id="b",count=1};board.parkInFlight=old -- a flight from before S0 has no fetches
+		assert(C.finish(board,old,nursery,{now=function()return 2 end}))
+		assert(board.parkPending==0 and board.parkFetchPending==0)
+	end)
+
 	return {passed=#cases,cases=cases}
 end

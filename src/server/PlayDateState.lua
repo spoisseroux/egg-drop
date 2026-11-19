@@ -47,14 +47,17 @@ function State.committed(state,operationId)
 	return type(entry)=="table"and entry.op~=nil and entry.op==operationId
 end
 
--- candidate = {id, day, count}; today = the current day string at apply time.
+-- candidate = {id, day, count, fetches?}; today = the current day string at apply time.
+-- fetches (v2 S0, optional): how many of `count` were park fetches; adds stats.fetches.
 -- An expired candidate (day changed before it saved) still counts parkGames but not Play date.
 function State.apply(state,candidate,today)
 	if type(state.stats)~="table"then return false,"InvalidData"end
 	if type(candidate)~="table"or type(candidate.id)~="string"or not canonicalDay(candidate.day)or not integer(candidate.count,State.MaxBatch)or candidate.count<1 then
 		return false,"InvalidParkPlay"
 	end
+	if candidate.fetches~=nil and not integer(candidate.fetches,candidate.count)then return false,"InvalidParkPlay"end
 	Lifetime.add(state,"parkGames",candidate.count)
+	if candidate.fetches and candidate.fetches>0 then Lifetime.add(state,"fetches",candidate.fetches)end
 	local current=State.sanitize(state.playDate)
 	if current and tonumber(current.day)>tonumber(today)then
 		-- Clock rollback: leave the newer day alone; only record the proof.

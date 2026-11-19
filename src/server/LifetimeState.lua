@@ -16,7 +16,11 @@ State.RunItems=64
 -- required `Counters` list: a save without them is valid and reads 0, so no old save fails.
 --   weeklyBonuses  weekly bonus quests claimed (slot 0); counts from this build on, no backfill
 --   itemWinKinds   OR of the round-item kinds used in won rounds (bits: swap 1, pop 2, bomb 4, magnet 8)
-State.Optional={"weeklyBonuses","itemWinKinds"}
+-- v2 slice S0 (V2-SCOPE-2026-11-19 section 10.3): counted from this build on, for the stats backfill.
+--   questsDaily    daily quests claimed (any slot)
+--   questsWeekly   weekly quests claimed (any slot, the bonus included)
+--   fetches        park fetches finished (written with the park batch, PlayDateState.apply)
+State.Optional={"weeklyBonuses","itemWinKinds","questsDaily","questsWeekly","fetches"}
 State.ItemKindsMask=2^#RoundItems.Order-1
 local known={};for _,key in ipairs(State.Counters)do known[key]=true end
 for _,key in ipairs(State.Optional)do known[key]=true end
@@ -88,6 +92,9 @@ function State.record(before,after,signature,now)
 	-- Weekly bonus quest claimed (signature quest:weekly:<period>:0; slot 0 is the bonus)
 	-- and paid: the Star charm counts these. No QuestState change needed.
 	if delta>0 and string.match(signature,"^quest:weekly:.+:0$")then State.add(after,"weeklyBonuses",1)end
+	-- S0: every committed quest claim, paid or not (a repeat never commits: AlreadyClaimed).
+	if string.match(signature,"^quest:daily:")then State.add(after,"questsDaily",1)
+	elseif string.match(signature,"^quest:weekly:")then State.add(after,"questsWeekly",1)end
 	-- Discoveries the save itself has earned (BookCatalog.stateBits, Lane K). pet_night belongs
 	-- to the pet write alone: its bit is dropped for every other signature, whatever the
 	-- catalogue returns.

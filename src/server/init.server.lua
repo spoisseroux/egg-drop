@@ -857,7 +857,8 @@ local function closeBoard(board)
 		-- Code review: queued Play date / parkGames counts are saved once on leave (the flush loop
 		-- stops at closing), unless a write for them is still in flight or ambiguous.
 		if (board.parkPending or 0) > 0 and not board.parkInFlight and board.nursery and not board.nursery.pending then
-			pcall(Nursery.parkPlay, board.nursery, HttpService:GenerateGUID(false), board.parkPending, board.profile.companionId)
+			pcall(Nursery.parkPlay, board.nursery, HttpService:GenerateGUID(false), board.parkPending, board.profile.companionId,
+				math.min(board.parkFetchPending or 0, board.parkPending))
 		end
 		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout, {
 			profileFlush = function() return Progress.flushOnce(board.profile) end,
@@ -1687,17 +1688,18 @@ local function flushParkGames(player, board)
 				local quiet = Nursery.playDateDone(board.nursery) and os.clock() - (board.parkSavedAt or -math.huge) < 60
 				if (board.parkPending or 0) > 0 and not quiet and canProgress(board) and not board.nurseryBusy and not board.nursery.busy
 					and not board.nursery.pending and not board.payoutPending then
-					local nextFlight = { id = HttpService:GenerateGUID(false), count = board.parkPending }
+					local nextFlight = { id = HttpService:GenerateGUID(false), count = board.parkPending,
+						fetches = math.min(board.parkFetchPending or 0, board.parkPending) }
 					board.parkInFlight = nextFlight
 					board.nurseryBusy = true; publishNursery(board)
-					local ok, reason = Nursery.parkPlay(board.nursery, nextFlight.id, nextFlight.count, board.profile.companionId)
+					local ok, reason = Nursery.parkPlay(board.nursery, nextFlight.id, nextFlight.count, board.profile.companionId, nextFlight.fetches)
 					board.nurseryBusy = false
 					if boards[player] ~= board then break end
 					if Nursery.parkCommitted(board.nursery, nextFlight.id) then
 						finishParkFlight(player, board, nextFlight)
 					elseif not ok and reason ~= "Retrying" then
 						board.parkInFlight = nil
-						if reason == "InvalidParkPlay" or reason == "InvalidData" then board.parkPending = 0;board.folder:SetAttribute("ParkGamesPending",0)end
+						if reason == "InvalidParkPlay" or reason == "InvalidData" then board.parkPending = 0;board.parkFetchPending = 0;board.folder:SetAttribute("ParkGamesPending",0)end
 					end
 					publishNursery(board); publishState(board)
 				elseif quiet then pause = 5 end
@@ -1713,10 +1715,12 @@ ParkDirector.attach(garden, { enabled = FeatureFlags.Park == true,
 		local player = Players:GetPlayerByUserId(ownerId); local board = player and boards[player]
 		return board ~= nil and board.petContact ~= nil and board.petContact.lease ~= nil
 	end,
-	finished = function(ownerId)
+	finished = function(ownerId, activityId)
 		local player = Players:GetPlayerByUserId(ownerId); local board = player and boards[player]
 		if not board or board.closing then return end
 		board.parkPending = (board.parkPending or 0) + 1
+		-- v2 S0: fetches are counted apart (stats.fetches), riding the same park write.
+		if activityId == "fetch" then board.parkFetchPending = math.min(board.parkPending, (board.parkFetchPending or 0) + 1) end
 		board.folder:SetAttribute("ParkGamesPending",board.parkPending)
 		flushParkGames(player, board)
 	end })

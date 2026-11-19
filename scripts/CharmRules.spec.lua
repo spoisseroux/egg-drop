@@ -126,6 +126,24 @@ return function(server)
 	else skip("charm rule cases (no charm shape carries a rule in this build's catalogue)")end
 
 	-- ── Optional lifetime counters ──────────────────────────────────────────
+	test("v2 S0: questsDaily and questsWeekly count every committed claim, nothing else",function()
+		local function state()return {nectar=10,inventoryMask=1,stats=L.freshStats(),stamps=0,book=L.freshBook()}end
+		local function claim(signature,gain)
+			local after=state();after.nectar+=gain
+			L.record({nectar=10,inventoryMask=1},after,signature,1700000000)
+			return after.stats.questsDaily,after.stats.questsWeekly
+		end
+		local d,w=claim("quest:daily:19675:1",5);assert(d==1 and w==nil)
+		d,w=claim("quest:weekly:2811:0",15);assert(d==nil and w==1,"the weekly bonus counts as a weekly quest too")
+		d,w=claim("quest:weekly:2811:2",0);assert(w==1,"an unpaid claim still counts")
+		d,w=claim("reroll:19675:1",0);assert(d==nil and w==nil)
+		d,w=claim("park:19675",4);assert(d==nil and w==nil)
+		local after=state();after.stats.questsDaily=9
+		L.record({nectar=10,inventoryMask=1},after,"quest:daily:19676:0",1700000000)
+		assert(after.stats.questsDaily==10 and L.valid(after))
+		assert(table.find(L.Counters,"questsDaily")==nil and table.find(L.Optional,"fetches")~=nil,"optional, never required")
+	end)
+
 	test("weeklyBonuses counts only a paid weekly bonus claim; a save without the key is valid",function()
 		local function state()return {nectar=10,inventoryMask=1,stats=L.freshStats(),stamps=0,book=L.freshBook()}end
 		local function claim(signature,gain)
