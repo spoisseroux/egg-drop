@@ -14,7 +14,8 @@ Images are in `artifacts/v2-pet-redesign-2026-11-19/`:
 
 | File | What it shows |
 |---|---|
-| `01-bunny-turnaround.png` | Front, three-quarter, side, back next to the Bear; phone-size silhouettes; hat test; colours |
+| `01-bunny-turnaround.png` | Front, three-quarter, side, back next to the Bear, **in white and grey**; phone-size silhouettes; hat test; colours |
+| `01b-bunny-turnaround-peach-dyed-example.png` | The first turnaround, in "Peach Milk". Kept as a dyed example |
 | `02-before-after-kitten-vs-bunny.png` | The old Kitten next to the Bunny at the same scale |
 | `03-bunny-face-measured.png` | The face with the rule numbers drawn on it |
 | `04-bear-tweaks.png` | The live Bear next to a tweaked copy (a study only) |
@@ -24,7 +25,7 @@ All geometry is original, built in Blender by script. No generated models, no im
 
 ## 1. The pick
 
-**A Bunny.** Long round ears, one of them flopped. Peach body, cream socks, cotton tail.
+**A Bunny.** Long round ears, one of them flopped. White body, soft grey socks and ear insides, cotton tail. (First shown in peach. Spencer, 2026-11-19: "the bunny is great... the bunny needs to start as white and grey too".)
 
 ### The shortlist
 
@@ -69,19 +70,30 @@ Everything below is on the blockout and measured in `bunny-report.json`.
 
 **Triangles, honestly.** The blockout is 5,600 triangles because I smoothed the Bear's parts by blunt subdivision. That is over the 4,000 ceiling and is not shippable. A real retopology lands at about **3,000** (head 1,200, body and limbs 900, ears 500, tail and face 400), which is over the style guide's 1,800 target. The eyes, catchlights, blush and mouth become textures on small patches, like the Bear's.
 
-## 3. Colours: "Peach Milk"
+## 3. Colours: starts white and grey
+
+Changed 2026-11-19 on Spencer's call: the Bunny starts undyed, exactly like the Bear, and players dye it. The first pass started it in "Peach Milk"; that is now a dyed example.
 
 | Part | Colour | Note |
 |---|---|---|
-| Primary | `#FFC6B8` | Head, ears, upper body. Saturation 28%, value 100% (rule C1) |
-| Secondary | `#FFF6EC` | Socks, belly, ear insides, snout pad, tail, charms |
+| Primary | `#FFFFFF` | Head, ears, upper body. Undyed (`PetBaseColors`), the same as the Bear |
+| Secondary | `#A8A5AE` | Socks, belly, ear insides, snout pad, tail, charms. The Bear's soft grey |
 | Nose | `#F58CA5` | Fixed |
 | Blush | `#FFB0BC` | Fixed; shifts warmer on yellow and orange dyes |
 | Eye | `#2B1A20` | Fixed; warm near-black with white catchlights |
 
-- Peach is warm, reads as "soft toy", and sits opposite the garden's greens, so the pet pops on the lawn without being loud.
-- It is clearly not the white Bear, even at phone size.
-- Both body colours can still be dyed with Hue jars. The two-colour gradient system is unchanged.
+Checked on the white and grey render (`01-bunny-turnaround.png`):
+
+- **Value.** The body is at full value. The eyes, nose and blush carry the face on their own.
+- **Ear insides.** Grey on white is a stronger contrast than cream on peach was, so the ears read better, from the front and at 96 px.
+- **Blush.** Pink on white reads clearly at garden size and at phone size.
+- **Snout pad.** It turns grey, like the Bear's muzzle. The pink nose and the "w" mouth still read on it.
+- **Telling it from the Bear.** Both are now white, so colour no longer separates them. The ears do, from every side (the silhouette row on the sheet).
+- **Rules.** White and grey do not meet the pastel rules C1 to C3 in `CUTE-DESIGN-RULES.md`; those now describe dyed palettes. Every other grade is unchanged.
+
+**Dyed example: "Peach Milk"** (`01b-bunny-turnaround-peach-dyed-example.png`): primary `#FFC6B8` (saturation 28%, value 100%), secondary `#FFF6EC`. Warm, reads as "soft toy", and sits opposite the garden's greens. Use it for store art and as a suggested dye, not as the start.
+
+Both body colours are dyed with Hue jars. The two-colour gradient system is unchanged.
 
 ## 4. Wearables
 
@@ -143,6 +155,8 @@ New animation work: two bones per ear (the ears carry the acting), a nose twitch
 
 ## 9. Bear tweaks (a note, not a change)
 
+**Update 2026-11-19:** Spencer asked for the Bear in this style. The production candidate is `assets/art-source/pets/pet-bear-v2-cute.blend` (1,628 triangles, every wearable measured to fit); sheets and the build script are in `artifacts/v2-bear-restyle-2026-11-19/`. It is not exported and not live. The study below was the first sketch of it.
+
 The rules show the Bear's body is right and its face is a little off. `04-bear-tweaks.png` compares the live Bear with a copy that has four edits:
 
 1. **Sparkle eyes, no white ring.** The ring is invisible on the white Bear and becomes a stare on every dyed Bear.
@@ -156,9 +170,9 @@ I think the tweaked Bear is clearly cuter and the two pets look like a family wi
 
 1. **Bunny, yes or no?** If you would rather keep a cat, I can build a round one to the same rules; it scored second.
 2. **The flopped ear:** keep it, or two straight ears? I would keep it. It could also become a Personality roll later (left, right, both, neither).
-3. **Peach Milk** as the starting colour?
+3. ~~**Peach Milk** as the starting colour?~~ Answered 2026-11-19: no. The Bunny starts white and grey like the Bear; Peach Milk is a dyed example.
 4. **Triangle budget:** may a pet go to 3,000? The round outline needs it. The 4,000 ceiling stays. Note this pulls against your 2026-11-12 call to lower the Bear to about 1,200 for the Dreamcast look (the smoother `pet-bear-smooth.blend` was set aside then). If you want to keep that look, the Bunny can ship at about 1,900 with a ten-sided head like the Bear's; it loses rule S1 and keeps every other rule.
-5. **Eye ring:** drop the white ring on the Bunny only, or on the Bear too (section 9)?
+5. ~~**Eye ring:** drop the white ring on the Bunny only, or on the Bear too (section 9)?~~ Answered 2026-11-19: the Bear too, as a candidate for a private beta first.
 6. **Gloss:** roughness 0.5 on big forms instead of 0.35, so highlights stay soft?
 7. **Ear tip-out for hats:** fine as shown, or should hats sit in front of the ears?
 8. **Name:** "Bunny" as the species name, like "Bear"?

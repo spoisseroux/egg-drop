@@ -39,7 +39,8 @@ def set_palette(group, primary, secondary):
 
 # ---------- palettes ----------
 BEAR = ("#FFFFFF", "#A8A5AE")          # undyed Bear (PetBaseColors)
-BUNNY = ("#FFC6B8", "#FFF6EC")         # "Peach Milk": HSV S 28%, V 100% / cream
+BUNNY = ("#FFFFFF", "#A8A5AE")         # undyed, the same as the Bear (Spencer, 2026-11-19): white with a soft grey secondary
+PEACH = ("#FFC6B8", "#FFF6EC")         # "Peach Milk", now a dyed example: HSV S 28%, V 100% / cream
 HONEY = ("#FFD98A", "#FFB9B0")         # a dyed Bear, for the Bear-tweak comparison only
 bear_group = bpy.data.node_groups["PetPalette"]; set_palette(bear_group, *BEAR)
 def palette_copy(name, cols):
@@ -281,6 +282,10 @@ for name, deg in VIEWS:
     yaw(deg)
     show(bear_root); shot("solo-bear-" + name, 840, 840, 840 / PPU, 0, 1.0)
     show(bun.root); shot("solo-bunny-" + name, 840, 840, 840 / PPU, 0, 1.0)
+set_palette(g_bun, *PEACH)                                         # the dyed example
+for name, deg in (("front", 0), ("threeq", -35)):
+    yaw(deg); show(bun.root); shot("solo-bunny-peach-" + name, 840, 840, 840 / PPU, 0, 1.0)
+set_palette(g_bun, *BUNNY)
 yaw(0); show(bun.root); shot("face-bunny-front", 1200, 1200, 1.5, 0, 1.12)
 yaw(-30); shot("face-bunny-threeq", 1200, 1200, 1.5, 0, 1.12)
 yaw(-20); show(bun.root, hat_on=True); shot("hat-fit", 900, 900, 900 / PPU, 0, 1.0)
@@ -321,7 +326,7 @@ report = {
         "bear_eye_line_up_the_head": round((1.029 - HEAD_BOTTOM) / head_h, 3),
         "bear_muzzle_width_over_head_width": round(.328 / HEAD_W, 3),
     },
-    "palette": {"primary": BUNNY[0], "secondary": BUNNY[1], "nose": "#F58CA5", "blush": "#FFB0BC", "eye": "#2B1A20"},
+    "palette": {"primary": BUNNY[0], "secondary": BUNNY[1], "dyed_example_peach_milk": list(PEACH), "nose": "#F58CA5", "blush": "#FFB0BC", "eye": "#2B1A20"},
     "pixels_per_stud_solo": PPU,
 }
 with open(os.path.join(HERE, "bunny-report.json"), "w") as f: json.dump(report, f, indent=1)

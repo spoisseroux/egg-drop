@@ -4,6 +4,8 @@ Spencer approved this on 2026-11-12. The **plush Bear** is the reference pet. Ev
 
 Reference art: `assets/art-source/pets/pet-bear.blend` (root `PetBear`). Renders: `artifacts/pet-bear/`.
 
+**Cute style (2026-11-19).** Spencer approved the cute rules in "Make it cute" below. They change three older rules on this page: the eyes (no white ring, lower on the head), the gloss (roughness 0.5, was 0.35) and the roundness of the head and body. Each changed line is marked. The Bear restyled to them is a candidate, `assets/art-source/pets/pet-bear-v2-cute.blend` (sheets in `artifacts/v2-bear-restyle-2026-11-19/`). The live Bear is unchanged until Spencer has tested the candidate in a private beta.
+
 ## The idea
 
 Pets are **baby stuffed animals**: a teddy bear, a puppy, a kitten, and so on. They should feel chunky, huggable and toy-like, as if you could pick one up off a shelf. Use real plush toys (teddy bears, Webkinz-style plushies) as references for mood and proportions only. Never copy a brand's character.
@@ -12,10 +14,81 @@ Keep every pet generic enough that its customisable parts (eyes, mouth, tail, ch
 
 **Not this:** anything that reads as a Sonic Adventure Chao. Avoid a teardrop head with a single point, and avoid the Chao's look and name. A charm floating above the head is fine on a design that clearly isn't a Chao, like the Bear.
 
+## Make it cute
+
+Spencer approved the cute style on 2026-11-19 ("the bunny is great. lets tweak the bear too, to this new style"). Every new pet follows these rules. The sources and the reasoning are in [CUTE-DESIGN-RULES.md](CUTE-DESIGN-RULES.md); this section is the short version to model from.
+
+How to measure: head height is chin to crown without ears; head width is the widest point; "eye" means the dark part you see; everything is checked in a straight front view.
+
+**The rules, with numbers**
+
+| Area | Rule |
+|---|---|
+| Proportion | Head 50 to 60% of the height to the crown. Head 1.5 to 1.7 times the body width, and wider than tall (1.2 to 1.35). No neck; arms under half the head height |
+| Long parts | Ears and tails may be long only if thick: width at least 22% of length |
+| Eye line | **38 to 46% up the head.** Never above the middle |
+| Eye size | Each eye 14 to 18% of head width, taller than wide (1.2 to 1.35) |
+| Eye spacing | Centres 44 to 50% of head width apart |
+| Eye look | One warm near-black shape (`#2B1A20`), **no white ring**, **two catchlights** (big upper left, small lower right, same side on both eyes). Left and right match within 0.01 |
+| Face | Everything in the lower 55% of the head. Nose 7% of head width or less. Mouth 10% or less, no teeth |
+| Snout pad | 25% of head width or less, and low (aim for 0.05 studs; see the Bear's score below) |
+| Blush | Two soft ovals, about 16% of head width each, outside and just below the eyes (`#FFB0BC`) |
+| Part count | Eyes, nose, mouth, blush, one pad. Nothing else: no whiskers, brows, lashes or tufts by default |
+| Round | No silhouette corner over 25 degrees on the head and body: at least 16 segments round. Smooth shading does not hide a 10-sided outline |
+| Tips | No points. Every tip ends in a round cap of radius 0.04 or more. Build from balls, eggs and capsules; no cones, no boxes |
+| Silhouette | Named from its black silhouette at 96 px, front and back. One species feature does that job |
+| Restraint | One species feature and one charm point; at most 3 new shapes on the shared body. One small imperfection is welcome (a flopped ear), never in the eyes |
+| Finish | No faceted highlights. Roughness 0.45 to 0.55 on big forms |
+| Colour | Starts white and grey (below). At most 4 colour families: primary, secondary, pink, eye dark |
+
+**The checklist (grade every pet before showing it)**
+
+Measure, do not eyeball. Write the number next to each line. A pet should pass at least 16 of 18.
+
+1. Head 50 to 60% of height
+2. Head 1.5 to 1.7 times body width
+3. Long parts are thick (22%)
+4. Eye 14 to 18% of head width
+5. Eye line 38 to 46%
+6. Eye centres 44 to 50% apart
+7. No white ring
+8. Two catchlights
+9. Nose 7% or less
+10. Snout pad 25% or less, and low
+11. Blush present
+12. Face part count (five kinds, nothing else)
+13. No corner over 25 degrees
+14. No points
+15. Balls, eggs and capsules only
+16. Reads as a black silhouette at 96 px
+17. No faceted highlights
+18. Inside the triangle budget
+
+Line 18 replaces the old "starting saturation" grade, now that every pet starts white and grey. Scores so far: the 2026-11-19 Kitten 3, the live Bear 9, the Bunny blockout 17, the Bear v2 candidate 15 clean passes. The Bear v2 misses three, all on purpose: its snout pad sticks out 0.10 (kept so mouth items still sit on it), its hands and feet still show facets (kept so sleeves and bands fit), and its head is 1.71 times the body width (the rounder body is a little slimmer).
+
+**The Kitten and Bunny lesson**
+
+The Kitten was built by adding parts to the Bear: cone ears, four cheek tufts, whisker pads, a thin tail, a reshaped head, a loud orange. It had seven sharp points and eleven face parts, and Spencer called it "too ugly". The Bunny was built by taking parts away: the Bear's head left alone, one feature (the ears) made of round forms, five face parts, eyes moved down and made dark. **Cute comes from removing, rounding and lowering, not from adding.** If a pet is not cute yet, do not add detail. Check the eye line, the eye ring and the points first.
+
+**Starting colours: white and grey**
+
+Every pet starts undyed, the same as the Bear: primary `#FFFFFF`, secondary `#A8A5AE` (`PetBaseColors`). Players dye both with Hue jars. A pet may have a showcase palette for store art and sheets (the Bunny's "Peach Milk"), but it is a dyed example, never the start. Before a pet is approved, check it in white and grey:
+
+- the species feature still reads (grey ear insides on white ears);
+- the blush and nose read on white;
+- nothing depends on a body colour to look right.
+
+The pastel rules in CUTE-DESIGN-RULES.md section 5 (saturation 15 to 35%, warm hues, a lighter secondary) now describe a good dyed or showcase palette, not the starting one.
+
+**Fit comes first on a shared body**
+
+A restyle must not break wearables. Keep the body, hands and feet, and every anchor the wearables use. When a head or body is re-meshed rounder, keep the new surface inside the live one (0.005 studs outside at most) and measure every wearable against it; `artifacts/v2-bear-restyle-2026-11-19/build_bear_v2.py` does both. If the eye line moves, the eye anchors (`EyeL`, `EyeR`, `EyeLine`, `FaceBridge`) move with it so eye items and glasses follow. No other anchor moves.
+
 ## Shape and polygon style
 
-- The look is **low poly but organic**, like Dreamcast or GameCube characters. The silhouette shows its facets, but the shading stays **smooth**. Avoid flat-shaded faceting (v2 was rejected for that) and avoid high-poly smoothness.
-- Budget: about **1,200–1,800 triangles** for a pet's visible pieces. The hard ceiling is 4,000.
+- The look is **low poly but organic**, like Dreamcast or GameCube characters, with **smooth** shading. Avoid flat-shaded faceting (v2 was rejected for that) and avoid high-poly smoothness.
+- *Changed 2026-11-19:* the head and body outlines no longer show their facets. They need at least 16 segments round ("Make it cute"). The old rule was "the silhouette shows its facets". Small parts may stay coarser.
+- Budget: about **1,200–1,800 triangles** for a pet's visible pieces (the Bear v2 candidate is 1,628). A pet with a long species feature, like the Bunny's ears, may go to **3,000**. The hard ceiling is 4,000.
 - Chibi proportions: the head is about as big as the body. Stubby arms and legs, big feet, a short tail.
 - The Bear's shared body, hands and feet are the base. A new animal changes its **head pieces** (ears, muzzle, nose) and its **tail**, not the body.
 
@@ -37,15 +110,16 @@ Every pet's body uses **one primary and one secondary colour**, nothing more:
 
 ## Finish
 
-- Moderate gloss: soft highlights, not mirror-shiny. In Blender that means roughness about 0.35 and a light clear coat (about 0.1).
+- Moderate gloss: soft highlights, not mirror-shiny. In Blender that means roughness about **0.5** on the body and secondary materials and a light clear coat (about 0.1). *Changed 2026-11-19, was 0.35:* at 0.35 the highlights broke into flat patches.
 - Optional finishes (Gloss, Matte, Metal) are separate cosmetics.
 - No glow by day; a soft glow fades in at night. See "Colour and night glow" under Character creation.
 
 ## Face
 
-- **Eyes:** tall ovals with a white ring and a dark pupil (eye texture), slightly large and set wide for cuteness. The Bear's eyes were scaled up 20% from the first pass. Keep one or two alternate eye shapes as hidden variants.
+- **Eyes:** *changed 2026-11-19.* Tall dark ovals with two catchlights and **no white ring**, 38 to 46% up the head (see "Make it cute"). The eye is a small domed patch with a 128 px texture (`artifacts/v2-bear-restyle-2026-11-19/bear-eye-cute.png`). The old rule was "a white ring and a dark pupil"; the ring vanished on a white pet and became a stare on every dyed one. The live Bear keeps the ringed eye until the v2 candidate is approved. Keep one or two alternate eye shapes as hidden variants.
+- **Blush:** two soft pink decals under the eyes (64 px texture with a soft edge, `pet-blush.png` in the same folder). New for every pet.
 - **Mouth:** a small "v" drawn by an alpha texture on its own patch. Use **Closest** (pixel) filtering for a crisp retro edge. Keep transparent pixels the same colour as the ink so no light fringe shows. Alternates (such as "w") are hidden variants.
-- **Nose:** a small dark rounded piece on the muzzle.
+- **Nose:** a small rounded piece on the snout pad, 7% of head width or less. Dark on the Bear, pink on the Bunny.
 
 ## What a pet starts with, and what comes from eggs
 
@@ -293,8 +367,8 @@ The `bear_` prefix is historical; it does not mean the cue is only for the Bear.
 ### 8. Making a new pet, step by step
 
 1. **Copy the Bear.** Duplicate `assets/art-source/pets/pet-bear-attachments.blend` to `pet-<name>.blend` and rename the root and every object from `PetBear` to `Pet<Name>`.
-2. **Swap the head pieces and the tail.** Replace the ears, inner ears, muzzle and nose, and the tail. Keep the shared body, hands and feet exactly as they are. Stay inside 1,200 to 1,800 triangles for the visible pieces.
-3. **Set the palette.** Edit the `PetPalette` node group. Check the gradient on the new head pieces: UV v = 0 is fully secondary, v ≥ 0.64 fully primary.
+2. **Swap the head pieces and the tail.** Replace the ears, inner ears, muzzle and nose, and the tail. Keep the shared body, hands and feet exactly as they are. Stay inside the triangle budget in "Shape and polygon style". Grade the pet with the "Make it cute" checklist before going further.
+3. **Set the palette.** The pet starts white and grey; check it that way first. Edit the `PetPalette` node group to try dyes. Check the gradient on the new head pieces: UV v = 0 is fully secondary, v ≥ 0.64 fully primary.
 4. **Re-place the anchors.**
    - Body, limb and root anchors do not move, because the body is shared.
    - Head anchors move with the new head: project HatCrown, HornL/R, EyeL/R, CheekL/R, FaceBridge, Forehead, Nose and Mouth onto the new surface, and place HelixL/R and LobeL/R from each ear's own outline.

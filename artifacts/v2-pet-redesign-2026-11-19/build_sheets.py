@@ -37,7 +37,7 @@ VIEWS = [("front", "FRONT"), ("threeq", "THREE-QUARTER"), ("side", "SIDE"), ("ba
 
 def turnaround():
     W, H = 2400, 2230; s, d = sheet(W, H)
-    title(d, 60, 40, "Bunny blockout next to the Bear", "Same body, hands, feet and head size as the Bear. New: long round ears (one flopped), sparkle eyes, blush, snout pad, pink nose, cotton tail.")
+    title(d, 60, 40, "Bunny blockout next to the Bear", "Same body, hands, feet and head size as the Bear. Both start white and grey. New: long round ears (one flopped), sparkle eyes, blush, snout pad, pink nose, cotton tail.")
     for i, (name, label) in enumerate(VIEWS):
         x, y = 40 + (i % 2) * 1170, 150 + (i // 2) * 740
         card(d, (x, y, x + 1150, y + 720))
@@ -58,15 +58,17 @@ def turnaround():
     lines(d, 60, y0 + 342, ["Ears sit on the EarL/R swap anchors, 13 degrees out.", "With a hat on they tip to 40 degrees, so a Bear-sized", "cap sits on the Bear's HatCrown anchor, unchanged."])
     hat = cut(raw("hat-fit")); hat = hat.resize((round(hat.width * .36), round(hat.height * .36)), Image.LANCZOS); place(s, hat, 820, H - 40)
     px = 1340
-    d.text((px, y0), "Starting colours: \"Peach Milk\"", font=black(30), fill=INK)
-    for i, (hexc, name, use) in enumerate((("#FFC6B8", "Primary  #FFC6B8", "head, ears, upper body (saturation 28%, value 100%)"), ("#FFF6EC", "Secondary  #FFF6EC", "socks, belly, ear insides, snout pad, tail, charms"),
-                                           ("#F58CA5", "Nose  #F58CA5   Blush  #FFB0BC", "fixed, like the eyes and mouth"), ("#2B1A20", "Eye  #2B1A20 + two white catchlights", "no white ring; warm near-black, never pure black"))):
+    d.text((px, y0), "Starting colours: white and grey, like the Bear", font=black(30), fill=INK)
+    for i, (hexc, name, use) in enumerate((("#FFFFFF", "Primary  #FFFFFF", "head, ears, upper body. Undyed; players dye it with Hue jars"), ("#A8A5AE", "Secondary  #A8A5AE", "socks, belly, ear insides, snout pad, tail, charms"),
+                                           ("#F58CA5", "Nose  #F58CA5   Blush  #FFB0BC", "fixed, like the eyes and mouth; both read on white"), ("#2B1A20", "Eye  #2B1A20 + two white catchlights", "no white ring; warm near-black, never pure black"))):
         yy = y0 + 62 + i * 78
         d.rounded_rectangle((px, yy, px + 64, yy + 64), 16, fill=hexc, outline=LINE, width=2)
         d.text((px + 84, yy + 4), name, font=black(24), fill=INK); d.text((px + 84, yy + 36), use, font=bold(20), fill=SOFT)
-    lines(d, px, y0 + 390, ["Both body colours can still be dyed with Hue jars, like the Bear's.",
-                            "Blockout only: 5,600 triangles by blunt subdivision. Production target: 3,000 or fewer.",
-                            "Original geometry built in Blender by script (build_bunny.py). No generated or imported models."], bold(20), 30)
+    d.text((px, y0 + 384), "Dyed example: \"Peach Milk\"", font=black(24), fill=INK)
+    lines(d, px, y0 + 420, ["#FFC6B8 over #FFF6EC.", "One Hue jar away;", "no longer the start."], bold(20), 28)
+    for i, name in enumerate(("front", "threeq")):
+        im = cut(raw("solo-bunny-peach-" + name)); im = im.resize((round(im.width * .26), round(im.height * .26)), Image.LANCZOS); place(s, im, px + 400 + i * 190, H - 30)
+    lines(d, px + 690, y0 + 384, ["Blockout only: 5,600 triangles.", "Production target: 3,000 or fewer.", "Original geometry built in Blender", "by script (build_bunny.py).", "No generated or imported models."], bold(20), 28)
     s.convert("RGB").save(os.path.join(HERE, "01-bunny-turnaround.png"))
 
 def before_after():
@@ -74,7 +76,7 @@ def before_after():
     title(d, 60, 40, "Before and after: the Kitten and the Bunny", "Same view, same scale, same shared Bear body. The Kitten frames are the 2026-11-19 originals.")
     for i, (label, col, tag, folder, notes) in enumerate((
         ("BEFORE: Kitten blockout", BAD, "kitten", OLD, ["Pointed cone ears, four cheek spikes, a thin kinked tail: 7 sharp points", "White eye ring on orange: a startled stare", "Orange at 58% saturation", "Faceted highlights on a low-poly head", "Eye line above the middle of the head"]),
-        ("AFTER: Bunny blockout", GOOD, "bunny", RAW, ["Every tip is a round cap: 0 sharp points", "Dark eyes with two catchlights, no ring", "Peach at 28% saturation, cream socks", "Head and body smoothed one level", "Eye line 41% up the head, blush under the eyes"]))):
+        ("AFTER: Bunny blockout", GOOD, "bunny", RAW, ["Every tip is a round cap: 0 sharp points", "Dark eyes with two catchlights, no ring", "Starts white and grey like the Bear; dyes are pastels", "Head and body smoothed one level", "Eye line 41% up the head, blush under the eyes"]))):
         x = 40 + i * 1170; card(d, (x, 150, x + 1150, 1450))
         d.text((x + 28, 172), label, font=black(30), fill=col)
         a, b = grounded(raw("solo-%s-front" % tag, folder)), grounded(raw("solo-%s-threeq" % tag, folder))

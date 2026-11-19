@@ -62,6 +62,8 @@ Children spend about 46% of their looking time on the eyes of a face, human or a
 
 ## 5. Colour
 
+**Update 2026-11-19 (Spencer):** every pet starts white (`#FFFFFF`) with a soft grey secondary (`#A8A5AE`), like the Bear, and players dye it. C1 to C3 below now describe a good dyed or showcase palette, not the starting one, and C5's "nothing pure white" does not apply to an undyed body. See "Make it cute" in `PET-STYLE-GUIDE.md`.
+
 | # | Rule | Source |
 |---|---|---|
 | C1 | Starting body colour: HSV **saturation 15 to 35%, value 90% or more**. A pastel. | Brighter colours were picked as more kawaii for every hue: [Ohkura et al., kawaii colours](https://link.springer.com/chapter/10.1007/978-3-642-21793-7_12) (read from the abstract only). The saturation cap is a house number: the same study favours more saturation, but on a body this size 58% read as loud in our render. |
@@ -85,6 +87,8 @@ Cuteness is not only a still picture; it also pulls on careful, gentle behaviour
 | M7 | A little clumsy: a small wobble on landing, a head tilt of 8 to 12 degrees when curious. | Lorenz's baby schema is usually said to include clumsy movement; I did not check the original, so treat this as a house rule. |
 
 ## 7. Where this differs from PET-STYLE-GUIDE.md
+
+**Update 2026-11-19:** Spencer approved the cute style. The style guide now carries these rules in its "Make it cute" section and has taken all three changes below. The Bear restyled to them is the candidate `assets/art-source/pets/pet-bear-v2-cute.blend` (1,628 triangles).
 
 1. **Eyes.** The style guide says "tall ovals with a white ring". E4 says no ring on a coloured body. Needs Spencer's call (see Bear tweaks).
 2. **Triangles.** The style guide targets 1,200 to 1,800. S1 needs a rounder head, which costs about 900 more. The 4,000 ceiling still holds. Spencer chose the low-poly Dreamcast look on 2026-11-12, so S1 is the rule most likely to be overruled; every other rule works at the current budget.

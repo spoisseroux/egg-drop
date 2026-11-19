@@ -48,8 +48,12 @@
   "bear_muzzle_width_over_head_width": 0.333
  },
  "palette": {
-  "primary": "#FFC6B8",
-  "secondary": "#FFF6EC",
+  "primary": "#FFFFFF",
+  "secondary": "#A8A5AE",
+  "dyed_example_peach_milk": [
+   "#FFC6B8",
+   "#FFF6EC"
+  ],
   "nose": "#F58CA5",
   "blush": "#FFB0BC",
   "eye": "#2B1A20"
