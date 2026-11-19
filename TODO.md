@@ -4,7 +4,7 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 ## Now working on
 
-- [ ] **v2 S0 (2026-11-19, Spencer approved "lets start"): count fetches and quest claims (daily/weekly) in the live build, no UI.** Optional Lifetime counters; fetches ride the park batch write. Built and committed (architect + code review GO; 19 save specs pass in Studio). Needs a publish to reach players (ask first).
+- [ ] **v2 S0 (2026-11-19, Spencer approved "lets start"): count fetches and quest claims (daily/weekly) in the live build, no UI.** Optional Lifetime counters; fetches ride the park batch write. Built and committed (architect + code review GO; 19 save specs pass in Studio). PUBLIC in v942 (2026-11-19), servers not restarted.
 - [ ] **v2 second pet + snacks + stats entry (Fable, 2026-11-19), awaiting Spencer.** Kitten rejected ("too ugly"); now a **Bunny** built to `CUTE-DESIGN-RULES.md` (`V2-PET-REDESIGN-2026-11-19.md`). Snacks/pouch/entry: `V2-PET-AND-SNACKS-SCOPE-2026-11-19.md`. Rune stone icons (Elder Futhark), drag-to-feed, eating FX + synthesized SFX (unheard), 9 tips: `V2-FEEDING-RUNES-ONBOARDING-2026-11-19.md`.
 - [ ] **Bear v2 cute candidate + white-and-grey Bunny (Fable, 2026-11-19), awaiting Spencer's beta test.** `assets/art-source/pets/pet-bear-v2-cute.blend` (1,628 tris, 78 of 78 wearable meshes measured to fit, 4 eye anchors moved down 0.058). Not exported, no src change. Sheets: `artifacts/v2-bear-restyle-2026-11-19/`. To ship it: export, Studio import, rebuild `BearRigDefinition.lua`, drop the Round and Small Wide eye swaps 0.058. Style guide has a new "Make it cute" section.
 - [ ] **Second colour from white + free White option (Spencer 2026-11-19, "Yes, do all three").** Shade Drops dropped. Built (architect + code review GO; HuePalette 7, NeutralPetRoster 7 pass). Not clicked end to end (Studio test save has no pet): try White on / Original off / White on a dyed second colour in the beta. Not published.
@@ -268,6 +268,9 @@ Updated 2026-11-13 ~12:10 (clock). Batch B+C DONE: committed 0cc2c3a, pushed, pl
 - [x] Onboarding doc for new collaborators: [ONBOARDING.md](ONBOARDING.md) (2026-11-11).
 - **Spencer:** add the new collaborator to the GitHub repo and as a Roblox collaborator on universe 10774758591.
 - **Spencer:** Blender template + test cube, then horns/claws/wings ([ART-HANDOFF.md](ART-HANDOFF.md)).
+
+- [ ] **v2.1 (next version, Spencer 2026-11-19): pet slots and adoption.** Stats stay per pet. When eggs can hatch more pets / duplicates: pet slots, "put up for adoption" to release a pet (strong confirm, maybe a short come-back window; decide what happens to its wearables, stats and cape), and extra slots sold for Robux. Not in v2 (one Bear + one Bunny max). Scope with Fable + game designer.
+- [ ] **v2 hatch screen (Spencer 2026-11-19 on V2-HATCH-REDESIGN):** really rare must be INSANE visually and in sound; more vibrant item preview background; very smooth, crisp, satisfying hatch animation; smooth transitions into and out of the hatch screen. Fable revising.
 
 ## v1 public launch
 
