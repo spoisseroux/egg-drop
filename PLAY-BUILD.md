@@ -16,6 +16,8 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**Store page v2 2026-11-19 (live):** icon C (pink Sparkle Eyes Bear with the Prism Flare deck, `artifacts/store-listing/v2/icon/icon-C-bear-deck-1024.png`) saved in Creator Hub; the 8 v1 Experience Detail thumbnails deleted (Spencer approved; copies in `artifacts/store-listing/v1/UPLOAD-THESE/`) and the 6 v2 thumbnails uploaded in order 1 lead, 3 dress up, 4 merge chains, 2 hatch, 5 friends, 6 decks. Checked on the public game page.
+
 **Ads 2026-11-18:** Sponsored campaign "Pocket Pals launch test" (id 140d5d57-ccec-4266-815f-ab115eff4fa4), approved by Spencer in chat ("A, yes $5/day x3"): objective PLAYS, $5/day DAILY budget, 3 days (2026-11-18 06:20Z to 2026-11-21 04:59Z), card (Visa ending 8632, billing account ebcd19bc-...), devices phone/tablet/desktop, all players, automated bid. Creative: ad image A (`artifacts/store-listing/ad-v1/ad-v1-1920x1080.png`, asset 97803040112547), ad review APPROVED. Read results via Analytics SponsoredAdsClicks/Impressions/SpendUsd.
 
 **PUBLIC v935 Published 2026-11-18 — runtime ff28ba9, servers restarted (Spencer: "Publish + restart").** v933 plus readable phone goal rows (Merges / Chain / ball with up arrow and LEFT, RIGHT, MID instead of pictograms) and three Hard goals ending above the Quest handle. CompactPhone 12, DeckFit 5, DeckScreen 8, DeckRoundQA 10, ItemCarousel 8; capture `artifacts/qa-2026-11-17-v933/hard-three-goals-844x390.png`. Translations: no table changes ("Merges", "Chain", LEFT/RIGHT/MID are hard-coded). Test content stripped.
