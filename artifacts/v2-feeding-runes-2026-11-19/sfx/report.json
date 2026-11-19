@@ -1,0 +1,237 @@
+{
+ "sample_rate": 44100,
+ "suggested_gain": {
+  "sniff": 0.45,
+  "nom_a": 0.7,
+  "nom_b": 0.7,
+  "nom_c": 0.7,
+  "crunch_feast": 0.85,
+  "gulp": 0.5,
+  "happy_squeak": 0.6,
+  "happy_coo": 0.65,
+  "boost_sparkle": 0.7,
+  "refuse_hm": 0.55
+ },
+ "timeline_seconds_from_receipt": {
+  "nibble": [
+   [
+    "nom_a",
+    0.6
+   ],
+   [
+    "nom_b",
+    0.92
+   ],
+   [
+    "gulp",
+    1.25
+   ],
+   [
+    "happy_squeak",
+    1.4
+   ],
+   [
+    "boost_sparkle",
+    1.65
+   ]
+  ],
+  "snack": [
+   [
+    "nom_a",
+    0.6
+   ],
+   [
+    "nom_b",
+    0.92
+   ],
+   [
+    "nom_c",
+    1.24
+   ],
+   [
+    "gulp",
+    1.57
+   ],
+   [
+    "happy_coo",
+    1.72
+   ],
+   [
+    "boost_sparkle",
+    2.1
+   ]
+  ],
+  "feast": [
+   [
+    "crunch_feast",
+    0.6
+   ],
+   [
+    "nom_b",
+    1.08
+   ],
+   [
+    "nom_c",
+    1.4
+   ],
+   [
+    "nom_a",
+    1.72
+   ],
+   [
+    "gulp",
+    2.05
+   ],
+   [
+    "happy_coo",
+    2.2
+   ],
+   [
+    "happy_squeak",
+    2.66
+   ],
+   [
+    "boost_sparkle",
+    2.8
+   ]
+  ],
+  "feast-favourite": [
+   [
+    "crunch_feast",
+    0.6
+   ],
+   [
+    "nom_b",
+    1.08
+   ],
+   [
+    "nom_c",
+    1.4
+   ],
+   [
+    "nom_a",
+    1.72
+   ],
+   [
+    "gulp",
+    2.05
+   ],
+   [
+    "happy_coo",
+    2.2
+   ],
+   [
+    "happy_squeak",
+    2.66
+   ],
+   [
+    "boost_sparkle",
+    2.8
+   ],
+   [
+    "happy_squeak",
+    3.05
+   ],
+   [
+    "happy_coo",
+    3.22
+   ],
+   [
+    "boost_sparkle",
+    3.45
+   ]
+  ]
+ },
+ "sounds": {
+  "sniff": {
+   "seconds": 0.4,
+   "peak_dbfs": -12.94,
+   "rms_dbfs": -28.71,
+   "loudest_50ms_dbfs": -24.1,
+   "energy": 0.00054,
+   "centroid_hz": 2448,
+   "above_4khz_share": 0.1902
+  },
+  "nom_a": {
+   "seconds": 0.25,
+   "peak_dbfs": -6.1,
+   "rms_dbfs": -15.32,
+   "loudest_50ms_dbfs": -12.03,
+   "energy": 0.00734,
+   "centroid_hz": 718,
+   "above_4khz_share": 0.0022
+  },
+  "nom_b": {
+   "seconds": 0.23,
+   "peak_dbfs": -6.1,
+   "rms_dbfs": -16.29,
+   "loudest_50ms_dbfs": -12.93,
+   "energy": 0.00541,
+   "centroid_hz": 685,
+   "above_4khz_share": 0.003
+  },
+  "nom_c": {
+   "seconds": 0.26,
+   "peak_dbfs": -6.1,
+   "rms_dbfs": -15.22,
+   "loudest_50ms_dbfs": -11.46,
+   "energy": 0.00782,
+   "centroid_hz": 715,
+   "above_4khz_share": 0.0017
+  },
+  "crunch_feast": {
+   "seconds": 0.5,
+   "peak_dbfs": -3.41,
+   "rms_dbfs": -19.54,
+   "loudest_50ms_dbfs": -13.45,
+   "energy": 0.00555,
+   "centroid_hz": 636,
+   "above_4khz_share": 0.0259
+  },
+  "gulp": {
+   "seconds": 0.16,
+   "peak_dbfs": -12.02,
+   "rms_dbfs": -17.35,
+   "loudest_50ms_dbfs": -15.75,
+   "energy": 0.00295,
+   "centroid_hz": 441,
+   "above_4khz_share": 0.0
+  },
+  "happy_squeak": {
+   "seconds": 0.22,
+   "peak_dbfs": -8.44,
+   "rms_dbfs": -16.21,
+   "loudest_50ms_dbfs": -12.76,
+   "energy": 0.00526,
+   "centroid_hz": 1255,
+   "above_4khz_share": 0.0001
+  },
+  "happy_coo": {
+   "seconds": 0.52,
+   "peak_dbfs": -7.74,
+   "rms_dbfs": -14.61,
+   "loudest_50ms_dbfs": -11.16,
+   "energy": 0.01799,
+   "centroid_hz": 656,
+   "above_4khz_share": 0.0
+  },
+  "boost_sparkle": {
+   "seconds": 1.0,
+   "peak_dbfs": -6.1,
+   "rms_dbfs": -20.78,
+   "loudest_50ms_dbfs": -14.14,
+   "energy": 0.00836,
+   "centroid_hz": 2060,
+   "above_4khz_share": 0.0473
+  },
+  "refuse_hm": {
+   "seconds": 0.26,
+   "peak_dbfs": -11.19,
+   "rms_dbfs": -16.35,
+   "loudest_50ms_dbfs": -14.46,
+   "energy": 0.00602,
+   "centroid_hz": 487,
+   "above_4khz_share": 0.0
+  }
+ }
+}
