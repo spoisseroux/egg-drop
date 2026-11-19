@@ -1052,6 +1052,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  materialShop=function()if openNursery then openNursery();nurseryView:selectRecipe("material")end end,
  toyShop=function()if openNursery then openNursery();nurseryView:selectRecipe("toy")end end,
  featureShop=function()if openNursery then openNursery();nurseryView:selectRecipe("feature")end end,
+ whiteSecond=function(petId,on)request:FireServer("whiteSecond",{petId=petId,on=on})end,
  charm=function(petId,visible,shape,seq,shapeVersion)
   if not seq then clientUI.charmSeq=(clientUI.charmSeq or 0)+1;seq=clientUI.charmSeq end
   request:FireServer("petAppearance",{petId=petId,visible=visible,shape=shape,shapeVersion=shapeVersion,seq=seq})

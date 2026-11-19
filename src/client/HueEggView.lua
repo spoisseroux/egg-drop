@@ -347,8 +347,17 @@ end
 function View.drawable(id)return type(id)=="string"and require(Shared.PetRigDefinitions)[id]~=nil end
 function View:owned(id)return View.drawable(id)and Eggs.isOwned(self.state.inventoryMask or 0,id)end
 function View:counts()local p=self.state.petHues and self.state.petHues[self.petId];return countsCopy(p and p[self.channel])end
+-- Free White second colour (Spencer 2026-11-19): the choice the player just made shows at once,
+-- until the public appearance (server, profile save) catches up or 5 s pass.
+function View:whiteChoice(petId)
+ local pending=self.whitePending and self.whitePending[petId]
+ if pending and os.clock()-pending.at<5 then return pending.on end
+ local a=self.options.appearance and self.options.appearance(petId)
+ return type(a)=="table"and a.secondaryWhite==true
+end
 function View:appearance()
  local appearance=table.clone(self.options.appearance and self.options.appearance(self.petId)or {})
+ appearance.secondaryWhite=self:whiteChoice(self.petId)
  local p=self.state.petHues and self.state.petHues[self.petId]
  if p then appearance.mainDoses=countsCopy(p.main);appearance.secondaryDoses=countsCopy(p.secondary)end
  appearance.finish=(self.state.petMaterials or {})[self.petId]or appearance.finish or MaterialCatalog.Default
@@ -690,9 +699,11 @@ function View.previewAppearance(base,tab,id,channel)
  if tab=="hue"then
   local key=if channel=="secondary"then "secondaryDoses"else "mainDoses"
   local counts=if Hues.validCounts(a[key])then table.clone(a[key])else Hues.emptyCounts()
-  if id=="original"or id=="reset"then counts=Hues.emptyCounts()
+  if id=="original"or id=="reset"or id=="white"then counts=Hues.emptyCounts()
   elseif Hues.ById[id]then counts[id]=math.min(5,counts[id]+1)end
   a[key]=counts
+  if channel=="secondary"and id=="original"then a.secondaryWhite=false
+  elseif channel=="secondary"and id=="white"then a.secondaryWhite=true end
  elseif tab=="materials"and MaterialCatalog.known(id)then a.finish=id
  elseif tab=="finish"then
   -- Preview one more jar (or Back to original: both axes) on the pet; nothing is saved.
@@ -804,13 +815,39 @@ function View:pumpCardPreviews()
 end
 -- QA v2 R4.4: the free "Original colour" card. The first press arms it (3 s), the
 -- second sends the server-validated hueClear for this pet and channel.
+function View:sendWhite(petId,on)
+ local token={on=on,at=os.clock()}
+ self.whitePending=self.whitePending or {};self.whitePending[petId]=token;self.whiteSentAt=token.at
+ self.options.whiteSecond(petId,on)
+ -- Redraw when the optimistic choice expires, so the chip shows the saved state.
+ local delay=self.options.delay or task.delay
+ delay(5.05,function()if self.whitePending and self.whitePending[petId]==token and not self.destroyed and self.shade.Visible then self:layout()end end)
+end
+function View:chooseWhite(on)
+ if not self:canCustomize()or self.intent.pending or not self.options.whiteSecond then return false end
+ local petId=self.petId
+ if self:whiteChoice(petId)==on and not(on and nonzero(self:counts()))then return false end
+ -- Code review: the server drops a request inside 0.25 s without a reply, so throttle here too.
+ if self.whiteSentAt and os.clock()-self.whiteSentAt<.3 then return false end
+ -- White on a dyed second colour clears the jars first (the free Original colour action).
+ if on and nonzero(self:counts())then
+  self.clearConfirm=nil
+  if not self.intent:clear(petId,"secondary")then return false end
+ end
+ self:sendWhite(petId,on)
+ self:layout();return true
+end
 function View:clearColour()
  if not self:canCustomize()or self.intent.pending then return false end
+ if self.channel=="secondary"and not nonzero(self:counts())and self:whiteChoice(self.petId)then return self:chooseWhite(false)end
  if not nonzero(self:counts())then return false end
  local armed=self.clearConfirm
  if armed and armed.petId==self.petId and armed.channel==self.channel and os.clock()<armed.untilTime then
   self.clearConfirm=nil
   local ok=self.intent:clear(self.petId,self.channel)
+  if ok and self.channel=="secondary"and self:whiteChoice(self.petId)and self.options.whiteSecond then
+   self:sendWhite(self.petId,false)
+  end
   self:layout();return ok
  end
  local token={petId=self.petId,channel=self.channel,untilTime=os.clock()+View.ClearConfirmSeconds}
@@ -1436,7 +1473,7 @@ function View:buildChrome(view)
  self.channelTabs.root.Name="ChannelTabs";TabInk.guard(self.channelTabs)
  self.channelTabs.changed=function(index)if not self:chooseChannel(if index==1 then "main"else "secondary")then self:layout()end end
  self.hueCards={}
- for _,id in ipairs({"original",table.unpack(ids)})do local itemId=id
+ for _,id in ipairs({"original","white",table.unpack(ids)})do local itemId=id
   local b=Cards.new(grid,"HueCard_"..id);self.hueCards[id]=b
   b.Activated:Connect(function()self:chromeTap("hue",itemId)end)
  end
@@ -1511,9 +1548,13 @@ function View:layoutChrome()
   if not self.assignment then
    for _,id in ipairs(ids)do local stock=(self.state.hueInventory or {})[id]or 0;if id~="reset"or stock>0 then table.insert(live,id)end end
    -- QA v2 R4.4: "Original colour" last (free; the fruit keep the first rows).
+   -- Spencer 2026-11-19: the second colour also offers a free White, just before it.
+   if self.channel=="secondary"then table.insert(live,"white")end
    table.insert(live,"original")
   end
-  local original=not nonzero(counts)
+  local white=self.channel=="secondary"and self:whiteChoice(self.petId)
+  local original=not nonzero(counts)and not white
+  local whiteCurrent=not nonzero(counts)and white
   local armed=self.clearConfirm~=nil and self.clearConfirm.petId==self.petId and self.clearConfirm.channel==self.channel and os.clock()<self.clearConfirm.untilTime
   local rects,h=Cards.rects(#live,gw,g.cols,g.cardH,g.gap,y)
   index=math.clamp(index,1,math.max(1,#live))
@@ -1525,6 +1566,11 @@ function View:layoutChrome()
     Cards.dress(b,{name=UICopy.get("r4.hue.original"),status=if original then UICopy.get("r4.hue.currentChip")else UICopy.get("r4.hue.free"),
      tone=if original then "accent"else "soft",swatch=resolved[if self.channel=="main"then "body"else "secondary"],focused=i==index,compact=compact})
     table.insert(focus,{button=b,id=id,act=function()return self:clearColour()end})
+   elseif id=="white"then
+    local resolved=Palette.resolve(self.petId,View.previewAppearance(a,"hue","white","secondary"))
+    Cards.dress(b,{name=UICopy.get("r4.hue.white"),status=if whiteCurrent then UICopy.get("r4.hue.currentChip")else UICopy.get("r4.hue.free"),
+     tone=if whiteCurrent then "accent"else "soft",swatch=resolved.secondary,focused=i==index,compact=compact})
+    table.insert(focus,{button=b,id=id,act=function()return self:chooseWhite(true)end})
    else
     local stock=(self.state.hueInventory or {})[id]or 0;local reason=self:reason(id)
     -- QA v2 R4.4: the tile shows the fruit's own (saturated) colour; the pet preview on

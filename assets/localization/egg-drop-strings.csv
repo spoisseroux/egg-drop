@@ -461,6 +461,7 @@ ui.r4.hue.original,Original colour,,Menu text
 ui.r4.hue.originalMain,"{pet}'s first Main colour. Free, any time.",,"Menu text; e.g. Bear's first Main colour. Free, any time."
 ui.r4.hue.originalSecondary,"{pet}'s first Secondary colour. Free, any time.",,"Menu text; e.g. Bear's first Secondary colour. Free, any time."
 ui.r4.hue.reset,Reset colour,,Menu text
+ui.r4.hue.white,White,,Menu text
 ui.r4.inUse,In use,,Menu text
 ui.r4.wardrobe.buyOrWear,Buy or wear,,Menu text
 ui.r4.wardrobe.none,None,,Menu text; also catalog.ToyCatalog.ById.none.name

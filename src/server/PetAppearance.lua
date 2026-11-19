@@ -38,6 +38,9 @@ function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures
   result[id].charmShape=if valid(entry)then shape(entry)else Charms.Default
   if hatching~=nil and result[id].charmVisible and not Appearance.earned(result[id].charmShape,hatching)then result[id].charmVisible=false end
   result[id].finish=if type(petMaterials)=="table"then petMaterials[id]or "standard"else "standard"
+  -- Free White second colour (profile, Spencer 2026-11-19). Published as soon as it is chosen,
+  -- not only once saved like the charm: it is cosmetic, and a lost write just shows grey again.
+  result[id].secondaryWhite=type(profile.whiteSecond)=="table"and profile.whiteSecond[id]==true
   -- Customization Egg finish doses (slice 3): sheen -3..3 and Jelly stage 0..3 from the save.
   local dose=type(hatching)=="table"and type(hatching.petFinish)=="table"and hatching.petFinish[id]
   result[id].sheen=if type(dose)=="table"and type(dose.sheen)=="number"then dose.sheen else 0

@@ -297,7 +297,7 @@ local Table={
  r4={
   equipped="Equipped",inUse="In use",
   wardrobe={none="None",takeOff="Take off",noneNote="Nothing in this slot",slot="Slot",buyOrWear="Buy or wear"},
-  hue={original="Original colour",free="Free",currentChip="CURRENT",current="Current colour",reset="Reset colour",
+  hue={original="Original colour",white="White",free="Free",currentChip="CURRENT",current="Current colour",reset="Reset colour",
    confirmReset="Confirm reset",confirmLine="Press again to reset. It's free.",
    originalMain="{pet}'s first Main colour. Free, any time.",originalSecondary="{pet}'s first Secondary colour. Free, any time."},
   customize={newBadge="NEW",moreMaterials="More materials hatch from Customization Eggs.",moreToys="More toys hatch from Toy Eggs.",

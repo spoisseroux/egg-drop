@@ -75,5 +75,26 @@ return function(shared)
   end
   for _,bad in ipairs({{rose=6,tide=0,citrus=0,iris=0},{rose=1/0,tide=0,citrus=0,iris=0},{rose=0,tide=0,citrus=0,iris=0,unknown=0}})do assert(not Hue.validCounts(bad)and Hue.resolveTarget(bad)==nil)end
  end)
+ test("second colour mixes from white when dyed, grey when undyed, white with the free White option",function()
+  local white,grey=Color3.fromHex("#FFFFFF"),Color3.fromHex("#A8A5AE")
+  for _,pet in ipairs({"pip"})do
+   for _,id in ipairs({"rose","tide","citrus","iris"})do for n=1,5 do
+    local counts=Hue.emptyCounts();counts[id]=n
+    local p=Palette.resolve(pet,{mainDoses=Hue.emptyCounts(),secondaryDoses=counts})
+    local expected=Palette.tint(white,Hue.resolveTarget(counts),Hue.doseStrength(counts))
+    assert(close(p.secondary.R,expected.R)and close(p.secondary.G,expected.G)and close(p.secondary.B,expected.B),"from white: "..id..n)
+    local flagged=Palette.resolve(pet,{secondaryDoses=counts,secondaryWhite=true})
+    assert(flagged.secondary==p.secondary,"the White flag never changes a dyed second colour")
+   end end
+   assert(Palette.resolve(pet,{secondaryDoses=Hue.emptyCounts()}).secondary==grey,"undyed is grey")
+   assert(Palette.resolve(pet).secondary==grey)
+   assert(Palette.resolve(pet,{secondaryDoses=Hue.emptyCounts(),secondaryWhite=true}).secondary==white,"White option")
+   assert(Palette.resolve(pet,{secondaryWhite=true}).secondary==white)
+   assert(Palette.resolve(pet,{secondaryWhite=false}).secondary==grey)
+   local main=Hue.emptyCounts();main.rose=2
+   local p=Palette.resolve(pet,{mainDoses=main,secondaryWhite=true})
+   assert(p.body==Palette.resolve(pet,{mainDoses=main}).body,"the White option leaves the body alone")
+  end
+ end)
  return cases
 end

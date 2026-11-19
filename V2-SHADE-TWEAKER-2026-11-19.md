@@ -1,5 +1,7 @@
 # V2 shade tweaker: Shade Drops (2026-11-19)
 
+> **Dropped (Spencer, 2026-11-19): "Yes, do all three".** Sun and Moon Drops will not be built. Instead the second colour mixes from white whenever a jar is on it (grey only when undyed), and Customize gets a free **White** option for the second colour. Fewer jars already give a lighter colour, and the cute rules keep pets out of dark shades. See the hue mixing sheet, `artifacts/v2-hue-mix-2026-11-19/hue-mix-contact-sheet.png`. The rest of this doc is kept as a record.
+
 Written by Fable (as Astra). A proposal for Spencer to approve and Sol to build. Nothing here is built, and no `src/` file was changed.
 
 Spencer's ask: "we need a shade color tweaker, so something we can get from eggs that lets us lighten or darken the color, for both first and secondary colors."

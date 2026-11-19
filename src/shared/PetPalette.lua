@@ -26,9 +26,17 @@ function Palette.resolve(petId,appearance)
  local hue=Hue.Mixes[token.bodyMix]or Hue.ById[token.body];local rank=token.bodyRank
  if hue and type(rank)=="number"and rank%1==0 and rank>=1 and rank<=3 then result.body=Palette.tint(result.body,hue.color,Hue.Weights[rank+1])end
  local secondary=Hue.ById[token.secondary];if secondary then result.secondary=secondary.color end
+ -- Spencer 2026-11-19: the second colour mixes from white whenever a jar is on it (clean pastels,
+ -- like the body); it is grey only when undyed, or white when the free White option is chosen.
+ local secondaryBase=if token.secondaryWhite==true then BaseColors.body else nil
+ if secondaryBase and not Hue.ById[token.secondary]then result.secondary=secondaryBase end
  for _,channel in ipairs({{"mainDoses","body"},{"secondaryDoses","secondary"}})do
   local counts=token[channel[1]]
-  if Hue.validCounts(counts)then local original=Palette.original(petId)[channel[2]];local target=Hue.resolveTarget(counts);result[channel[2]]=if target then Palette.tint(original,target,Hue.doseStrength(counts))else original end
+  if Hue.validCounts(counts)then
+   local original=Palette.original(petId)[channel[2]];local target=Hue.resolveTarget(counts)
+   local from=if channel[2]=="secondary"then BaseColors.body else original
+   result[channel[2]]=if target then Palette.tint(from,target,Hue.doseStrength(counts))else(if channel[2]=="secondary"and secondaryBase then secondaryBase else original)
+  end
  end
  return table.freeze(result)
 end

@@ -1047,6 +1047,22 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 			themeId=board.profile.theme,stickerId=board.profile.sticker,backgroundId=board.profile.background,status=if reason then "Rejected" else "Applied",reason=reason})
 		return
 	end
+	if action == "whiteSecond" then
+		-- Free White second colour (Spencer 2026-11-19), saved in the profile record. Only pets this
+		-- build draws (PetRigDefinitions); never on a profile that failed to load (the write would be lost).
+		if type(value) ~= "table" or type(value.petId) ~= "string" or type(value.on) ~= "boolean" then return end
+		if not canProgress(board) or board.closing or board.profile.loadFailed then return end
+		if not require(ReplicatedStorage.Shared.PetRigDefinitions)[value.petId] or not NurseryCatalog.isOwned(inventory(board), value.petId) then return end
+		if board.whiteSecondAt and now - board.whiteSecondAt < .25 then return end
+		board.whiteSecondAt = now
+		local map = table.clone(board.profile.whiteSecond or {})
+		if (map[value.petId] == true) == value.on then return end
+		map[value.petId] = if value.on then true else nil
+		Progress.setSetting(board.profile, "whiteSecond", map)
+		publishPetAppearance(board)
+		Progress.requestFlush(board.profile)
+		return
+	end
 	if action == "greetings" then
 		-- R6 Settings: "Let visitors greet my pet". Off withdraws a wave that is running.
 		if value ~= nil or not canProgress(board) then return end
