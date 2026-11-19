@@ -1,0 +1,58 @@
+{
+ "bunny": {
+  "tris_blockout": 5600,
+  "tris_shared_smoothed": 3304,
+  "tris_new_pieces": 2296,
+  "size_xyz": [
+   1.092,
+   0.902,
+   1.846
+  ],
+  "new_pieces": [
+   "PetBunny__BlushL",
+   "PetBunny__BlushR",
+   "PetBunny__EarInnerL",
+   "PetBunny__EarInnerR",
+   "PetBunny__EarL",
+   "PetBunny__EarR",
+   "PetBunny__EyeL",
+   "PetBunny__EyeLSpark1",
+   "PetBunny__EyeLSpark2",
+   "PetBunny__EyeR",
+   "PetBunny__EyeRSpark1",
+   "PetBunny__EyeRSpark2",
+   "PetBunny__Mouth",
+   "PetBunny__Nose",
+   "PetBunny__SnoutPad",
+   "PetBunny__Tail"
+  ]
+ },
+ "bear": {
+  "tris": 1302,
+  "size_xyz": [
+   0.99,
+   0.963,
+   1.479
+  ]
+ },
+ "measures": {
+  "head_height_over_height_to_crown": 0.547,
+  "head_width_over_body_width": 1.63,
+  "eye_width_over_head_width": 0.161,
+  "eye_line_up_the_head": 0.414,
+  "eye_centre_spacing_over_head_width": 0.472,
+  "gap_between_eyes_in_eye_widths": 1.94,
+  "nose_width_over_head_width": 0.061,
+  "mouth_width_over_head_width": 0.085,
+  "bear_eye_line_up_the_head": 0.525,
+  "bear_muzzle_width_over_head_width": 0.333
+ },
+ "palette": {
+  "primary": "#FFC6B8",
+  "secondary": "#FFF6EC",
+  "nose": "#F58CA5",
+  "blush": "#FFB0BC",
+  "eye": "#2B1A20"
+ },
+ "pixels_per_stud_solo": 350
+}
