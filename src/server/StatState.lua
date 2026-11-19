@@ -1,0 +1,241 @@
+-- Pet stats XP (v2 slice S1, V2-SCOPE-2026-11-19 sections 3 and 10). Optional, additive fields on
+-- the hatching save (v11, no version bump), the BondState pattern:
+--   petStats  = { [petId] = { [statId] = xp } }       per pet, XP only (levels come from StatCatalog)
+--   statBonus = { day = "<day>", left = { [statId] = n } }   player-wide Bonus XP still to double
+--   statsSeed = 1                                       the seed version that credited past play once
+-- Missing is valid (every save before this build). A malformed field is repaired at load
+-- (sanitize), never a failed load. XP is written only inside transactions that already exist,
+-- through `grant`, which never fails.
+--
+-- Architect review (2026-11-19):
+--  * Storage limits in `valid` are hard-coded constants, never the tuning values, so lowering a
+--    tuning value can never make an older or newer save invalid on another server.
+--  * Well-formed unknown pet and stat ids are kept (a later build may add them), under a count limit.
+--  * The seed runs once: a save counts as seeded when statsSeed >= 1 or petStats exists. It reads
+--    only the snapshot (no clock), so a retried load callback seeds identically.
+--  * The bonus day never moves backward (servers' clocks differ).
+local Shared=game:GetService("ReplicatedStorage").Shared
+local Catalog=require(Shared.StatCatalog)
+local Eggs=require(Shared.EggCatalog)
+local Pets=require(Shared.PetCatalog)
+
+local State={}
+-- Frozen storage bounds (never tie these to tuning values).
+State.StoredMaxXP=2000000000
+State.StoredMaxLeft=100000
+State.PetLimit=32 -- frozen: the bit32 inventory mask allows 32 pets (code review)
+State.StatLimit=16
+State.IdLength=40
+State.SeedVersion=1
+State.SeedPet="pip" -- the only pet before stats; past play is credited to it
+
+local function integer(value,maximum)
+	return type(value)=="number"and value==value and value%1==0 and value>=0 and value<=maximum
+end
+local function id(value)return type(value)=="string"and #value>=1 and #value<=State.IdLength end
+local function canonicalDay(value)
+	local number=if type(value)=="string"then tonumber(value)else nil
+	return number~=nil and number==math.floor(number)and math.abs(number)<=1000000000 and tostring(number)==value
+end
+local function count(t)local n=0;for _ in pairs(t)do n+=1 end;return n end
+
+local function validStats(stats)
+	if type(stats)~="table"or count(stats)>State.StatLimit then return false end
+	for stat,xp in pairs(stats)do if not id(stat)or not integer(xp,State.StoredMaxXP)then return false end end
+	return true
+end
+
+-- Tolerant: every field may be missing.
+function State.valid(state)
+	local petStats=state.petStats
+	if petStats~=nil then
+		if type(petStats)~="table"or count(petStats)>State.PetLimit then return false end
+		for pet,stats in pairs(petStats)do if not id(pet)or not validStats(stats)then return false end end
+	end
+	local bonus=state.statBonus
+	if bonus~=nil then
+		if type(bonus)~="table"or not canonicalDay(bonus.day)or type(bonus.left)~="table"or count(bonus.left)>State.StatLimit then return false end
+		for stat,n in pairs(bonus.left)do if not id(stat)or not integer(n,State.StoredMaxLeft)then return false end end
+	end
+	if state.statsSeed~=nil and not integer(state.statsSeed,1000)then return false end
+	return true
+end
+
+-- Load-time repair: keep well-formed entries (XP clamped to the stored bound), drop the rest.
+-- Known ids first (catalogue order), then unknown well-formed ones, so the result is stable.
+-- Known ids first (catalogue order), then unknown ones sorted (code review: sanitize must not
+-- drop known pets or stats in favour of unknown ones).
+local knownRank={}
+for i,pet in ipairs(Pets.collection)do knownRank[pet.id]=i end
+for i,stat in ipairs(Catalog.Order)do knownRank[stat]=knownRank[stat]or i end
+local function sortedKeys(t)
+	local keys={};for k in pairs(t)do if type(k)=="string"then table.insert(keys,k)end end
+	table.sort(keys,function(a,b)
+		local ra,rb=knownRank[a],knownRank[b]
+		if ra and rb then return ra<rb end
+		if ra or rb then return ra~=nil end
+		return a<b
+	end)
+	return keys
+end
+local function cleanStats(value)
+	if type(value)~="table"then return nil end
+	local result,n={},0
+	for _,stat in ipairs(sortedKeys(value))do
+		local xp=value[stat]
+		if n<State.StatLimit and id(stat)and type(xp)=="number"and xp==xp and xp>=0 and xp~=math.huge then
+			result[stat]=math.min(math.floor(xp),State.StoredMaxXP);n+=1
+		end
+	end
+	return result
+end
+function State.sanitizePetStats(value)
+	if type(value)~="table"then return nil end
+	local result,n={},0
+	for _,pet in ipairs(sortedKeys(value))do
+		local stats=id(pet)and cleanStats(value[pet])
+		if stats and n<State.PetLimit then result[pet]=stats;n+=1 end
+	end
+	return result
+end
+function State.sanitizeBonus(value)
+	if type(value)~="table"or not canonicalDay(value.day)or type(value.left)~="table"then return nil end
+	local left,n={},0
+	for _,stat in ipairs(sortedKeys(value.left))do
+		local v=value.left[stat]
+		if n<State.StatLimit and id(stat)and type(v)=="number"and v==v and v>=0 and v~=math.huge then
+			left[stat]=math.min(math.floor(v),State.StoredMaxLeft);n+=1
+		end
+	end
+	return {day=value.day,left=left}
+end
+function State.sanitize(state)
+	if type(state)~="table"then return end
+	if state.petStats~=nil then state.petStats=State.sanitizePetStats(state.petStats)end
+	if state.statBonus~=nil then state.statBonus=State.sanitizeBonus(state.statBonus)end
+	if state.statsSeed~=nil and not integer(state.statsSeed,1000)then state.statsSeed=nil end
+end
+
+function State.xp(state,petId,statId)
+	local stats=type(state)=="table"and type(state.petStats)=="table"and state.petStats[petId]
+	local xp=type(stats)=="table"and stats[statId]
+	return if integer(xp,State.StoredMaxXP)then xp else 0
+end
+
+-- Bonus XP still to double for `stat` on `today`: refills Daily per elapsed day, banked to
+-- BonusMax. Never moves backward when `today` is before the saved day.
+local function bonusLeft(bonus,stat,today)
+	local daily,max=Catalog.Bonus.Daily,Catalog.BonusMax
+	if not bonus then return daily end
+	local saved=if type(bonus.left)=="table"and integer(bonus.left[stat],State.StoredMaxLeft)then bonus.left[stat]else nil
+	local elapsed=tonumber(today)-tonumber(bonus.day)
+	if saved==nil then return daily end -- a stat not seen yet: today's share
+	if elapsed<=0 then return math.min(saved,max)end
+	return math.min(max,saved+daily*elapsed)
+end
+
+-- Adds XP for an owned pet: `amount` plus Bonus XP (the first `left` XP today count double)
+-- unless `noBonus`. Copy-on-write; clamped to MaxXP. Never fails; returns the XP added (0 on a
+-- no-op). `today` must come from the transaction's candidate (stable across retries).
+function State.grant(state,petId,statId,amount,today,noBonus)
+	if type(state)~="table"or type(petId)~="string"or Pets.byId[petId]==nil or Catalog.ById[statId]==nil then return 0 end
+	if type(amount)~="number"or amount~=amount or amount<=0 or amount==math.huge then return 0 end
+	if not Eggs.isOwned(state.inventoryMask or 0,petId)then return 0 end
+	amount=math.floor(amount);if amount<=0 then return 0 end
+	-- Code review: never grow past the storage limits (a 33rd pet or 17th stat would make the save
+	-- invalid and fail the whole transaction), and never lower XP above MaxXP.
+	local current=State.sanitizePetStats(state.petStats)or {}
+	if current[petId]==nil and count(current)>=State.PetLimit then return 0 end
+	if current[petId]~=nil and current[petId][statId]==nil and count(current[petId])>=State.StatLimit then return 0 end
+	if(current[petId]and current[petId][statId]or 0)>=Catalog.MaxXP then return 0 end
+	local gained=amount
+	if not noBonus and canonicalDay(today)then
+		local bonus=State.sanitizeBonus(state.statBonus)
+		if bonus and tonumber(today)<tonumber(bonus.day)then
+			-- Clock rollback: no bonus, and the saved day stays.
+		else
+			local left=bonusLeft(bonus,statId,today)
+			local doubled=math.min(left,amount)
+			gained+=doubled
+			local nextLeft=if bonus then table.clone(bonus.left)else {}
+			-- Roll every known stat's bank to today so the day can move forward.
+			if bonus and bonus.day~=today then
+				for _,stat in ipairs(Catalog.Order)do nextLeft[stat]=bonusLeft(bonus,stat,today)end
+			end
+			nextLeft[statId]=left-doubled
+			if count(nextLeft)<=State.StatLimit then state.statBonus={day=today,left=nextLeft}else gained-=doubled end
+		end
+	end
+	local petStats=current
+	local stats=petStats[petId]or {}
+	local before=stats[statId]or 0
+	stats[statId]=math.max(before,math.min(Catalog.MaxXP,before+gained))
+	petStats[petId]=stats
+	state.petStats=petStats
+	return stats[statId]-before
+end
+
+local function bits(mask)
+	local n=0
+	mask=if type(mask)=="number"and mask==mask and mask>=0 and mask~=math.huge then math.floor(mask)else 0
+	while mask>0 do n+=mask%2;mask=math.floor(mask/2)end
+	return n
+end
+-- One-time credit for play before stats (section 10.3), to the Bear if owned. Reads only the
+-- snapshot. No Bonus XP. Marks the save seeded either way.
+function State.seededAlready(state)
+	return (type(state.statsSeed)=="number"and state.statsSeed>=1)or state.petStats~=nil
+end
+function State.seedAmounts(state)
+	local s=type(state.stats)=="table"and state.stats or {}
+	local function n(key)local v=s[key];return if type(v)=="number"and v==v and v>=0 and v~=math.huge then math.floor(v)else 0 end
+	local book=type(state.book)=="table"and state.book or {}
+	local claimed=type(book.claimed)=="table"and #book.claimed or 0
+	local bond=type(state.bond)=="table"and type(state.bond[State.SeedPet])=="number"and state.bond[State.SeedPet]or 0
+	local stamps=if type(state.stamps)=="number"and state.stamps==state.stamps and state.stamps>=0 then math.floor(state.stamps)else 0
+	local XP=Catalog.XP
+	local amounts={
+		power=n("merges")*XP.merge+n("tierFive")*XP.topTier,
+		energy=n("rounds")*XP.round+n("winsEasy")*XP.winEasy+n("winsMedium")*XP.winMedium+n("winsHard")*XP.winHard+n("tidyWins")*XP.tidy,
+		heart=math.max(0,math.floor(bond))*4,
+		jump=math.max(0,n("parkGames")-n("fetches"))*XP.park,
+		speed=n("fetches")*XP.fetch,
+		smarts=n("questsDaily")*XP.questDaily+n("questsWeekly")*XP.questWeekly+stamps*XP.stamp+bits(book.found)*XP.discovery+claimed*XP.milestone,
+	}
+	for stat,v in pairs(amounts)do amounts[stat]=math.clamp(v,0,Catalog.MaxXP)end
+	return amounts
+end
+function State.seed(state)
+	if type(state)~="table"or State.seededAlready(state)then return false end
+	if Eggs.isOwned(state.inventoryMask or 0,State.SeedPet)then
+		local stats={}
+		for stat,v in pairs(State.seedAmounts(state))do if v>0 then stats[stat]=v end end
+		state.petStats={[State.SeedPet]=stats}
+	end
+	state.statsSeed=State.SeedVersion
+	return true
+end
+
+-- For the client: per owned pet, XP and level per stat and the total level; Bonus XP left today.
+function State.public(state,today)
+	local result={pets={},bonus={}}
+	local petStats=type(state)=="table"and State.sanitizePetStats(state.petStats)or {}
+	for _,pet in ipairs(Pets.collection)do
+		if Eggs.isOwned(state.inventoryMask or 0,pet.id)then
+			local stats=petStats[pet.id]or {}
+			local entry={xp={},level={},total=0}
+			for _,stat in ipairs(Catalog.Order)do
+				local xp=stats[stat]or 0
+				entry.xp[stat]=xp;entry.level[stat]=Catalog.levelFor(xp);entry.total+=entry.level[stat]
+			end
+			result.pets[pet.id]=entry
+		end
+	end
+	local bonus=type(state)=="table"and State.sanitizeBonus(state.statBonus)or nil
+	for _,stat in ipairs(Catalog.Order)do
+		result.bonus[stat]=if canonicalDay(today)and(not bonus or tonumber(today)>=tonumber(bonus.day))then bonusLeft(bonus,stat,today)elseif bonus then(bonus.left[stat]or 0)else Catalog.Bonus.Daily
+	end
+	return result
+end
+
+return State

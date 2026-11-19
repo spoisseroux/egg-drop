@@ -38,6 +38,16 @@ local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
 local EarnedPets=require(ReplicatedStorage.Shared.EarnedPets)
 local FeatureFlags=require(ReplicatedStorage.Shared.FeatureFlags)
 local Bond=require(script.Parent.BondState)
+-- v2 pet stats (S1): optional petStats / statBonus / statsSeed fields, the BondState pattern.
+local Stats=require(script.Parent.StatState)
+local StatXP=require(game:GetService("ReplicatedStorage").Shared.StatCatalog).XP
+local StatCaps=require(game:GetService("ReplicatedStorage").Shared.StatCatalog).Caps
+-- v2 S2: the pet that earns XP for actions with no pet of their own (quests, the daily stamp,
+-- book milestones). The host sets handle.statPetOf; read once per call, so retries are stable.
+local function statPet(handle)
+	local ok,petId=pcall(function()return handle.statPetOf and handle.statPetOf()end)
+	return if ok and type(petId)=="string"and Pets.byId[petId]then petId else nil
+end
 -- Lane K's WeeklyShelf: a build without it (or with the flag off) has no shelf week, so
 -- every purchase pays the catalogue price and no boundary check runs.
 local shelfModule=ReplicatedStorage.Shared:FindFirstChild("WeeklyShelf")
@@ -190,7 +200,7 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- Bond levels (overnight 2026-11-14, slice F): optional additive `bond` on v11, valid when missing (no version bump).
 -- Customization Egg (2026-11-16): optional additive finishInventory, petFinish, charmUnlocks,
 -- lookCharmMisses and lookFound on v11 (LookState.valid, run inside HueState.valid).
-local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Bond.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Bond.valid(state)and Stats.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -320,6 +330,8 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and state.coachMask ~= nil then state.coachMask = Coach.sanitize(state.coachMask) end
 		-- Malformed bond XP is repaired (bad entries dropped), never a failed load.
 		if type(state) == "table" and state.bond ~= nil then state.bond = Bond.sanitize(state.bond) end
+		-- v2 stats (S1): malformed stat fields are repaired, never a failed load.
+		if type(state) == "table" then Stats.sanitize(state) end
 		-- "No default charm" (plan §2.2): a save written before this build has no charmUnlocks and
 		-- keeps Snowflake, Ring and Pebble (everyone owned them under the old rules); a save this
 		-- acquire creates starts with none. Written once here, so every later reader sees one form.
@@ -327,6 +339,11 @@ function Hatching.load(userId, profile, adapter)
 			state.charmUnlocks = if fresh then {} else Hatching.legacyCharms()
 		end
 		if not valid(state) then reason = "InvalidData"; return nil end
+		-- v2 stats (S1, architect review): credit play from before stats once, after the save is
+		-- known valid. Reads only the snapshot, so a retried callback seeds identically.
+		Stats.seed(state)
+		-- Code review: a seed problem must never lock a player out; drop the stats instead.
+		if not Stats.valid(state) then state.petStats = nil end
 		state = clone(state)
 		local now = adapter.now()
 		-- A timed-out acquire may already have committed. Retry the same token
@@ -440,6 +457,8 @@ function Hatching.public(handle)
 	public.coachMask = Coach.mask(state.coachMask)
 	-- Bond XP per pet (slice F): {} when the field is missing. Levels come from BondCatalog.
 	public.bond = Bond.public(state).bond
+	-- v2 stats (S1): per owned pet XP, levels and total; Bonus XP left today per stat.
+	public.petStats = Stats.public(state, dayOf(handle.adapter.now()))
 	-- Weekly shelf (slice C): the week the server prices with (nil while the shelf is off).
 	-- The client may also derive it from dailyDay; this is the authoritative copy.
 	public.shelfWeek = shelfWeek(handle.adapter.now())
@@ -851,11 +870,14 @@ function Hatching.awardPet(handle,candidate)
 		state.lastPetAward={id=captured.id,sequence=state.operationSeq+1,day=current,petId=captured.petId}
 		-- Bond (slice F): +1 XP per paid pet, so at most PetDailyCap a day. Never fails.
 		Bond.add(state,captured.petId,Bond.XP.pet)
+		-- v2 S2: Heart for an accepted petting pulse (already capped by PetDailyCap).
+		Stats.grant(state,captured.petId,"heart",StatXP.pet,current)
 		return true
 	end,fixed,fixed.id,"pet")
 end
 
 function Hatching.command(handle, action, value, expectedRevision)
+	local dailyPet = if action == "daily" then statPet(handle) else nil
 	if type(action) ~= "string" or type(value) ~= "string" or #value > 100
 		or not integer(expectedRevision) then return false, "InvalidCommand" end
 	local signature = action .. ":" .. value .. ":" .. expectedRevision
@@ -896,6 +918,8 @@ function Hatching.command(handle, action, value, expectedRevision)
 			state.nectar += reward
 			state.stamps = stamps + 1
 			state.dailyClaimDay = day
+			-- v2 S2: Smarts for the stamp, to the pet that is out.
+			if dailyPet then Stats.grant(state, dailyPet, "smarts", StatXP.stamp, day) end
 			return true
 		elseif action == "hatch" then
 			local recipe = Catalog.ById[value]
@@ -1193,9 +1217,17 @@ function Hatching.bookClaim(handle, operationId, milestoneId, reward)
 		return true, "AlreadyClaimed"
 	end
 	local candidate = if resuming then handle.pending.candidate
-		else table.freeze({ milestoneId = milestone.id, reward = milestone.reward, operationId = operationId })
+		else table.freeze({ milestoneId = milestone.id, reward = milestone.reward, operationId = operationId,
+			-- v2 S2 (code review): the pet and day are frozen with the operation, stable on resume.
+			statPet = statPet(handle), day = dayOf(handle.adapter.now()) })
 	local digest = "book:" .. candidate.milestoneId .. ":" .. tostring(candidate.reward)
-	local ok, why = transact(handle, signature, handle.state.revision, applyBookClaim, candidate, "bookop:" .. operationId, nil, digest)
+	-- v2 S2: Smarts for a book milestone, to the pet that is out.
+	local ok, why = transact(handle, signature, handle.state.revision, function(state, c)
+		local wasClaimed = table.find(state.book.claimed, c.milestoneId) ~= nil
+		local applied, reason = applyBookClaim(state, c)
+		if applied and c.statPet and c.day and not wasClaimed then Stats.grant(state, c.statPet, "smarts", StatXP.milestone, c.day) end
+		return applied, reason
+	end, candidate, "bookop:" .. operationId, nil, digest)
 	if not ok and why == "AlreadyClaimed" then return true, why end
 	return ok, why
 end
@@ -1288,6 +1320,23 @@ function Hatching.award(handle, runSequence, amount, summary, boost, petId)
 		-- Bond (slice F): a saved round finished with this companion. Ownership is checked
 		-- inside Bond.add against this snapshot; it can never fail the award.
 		if run then Bond.add(state, captured.petId, if run.success then Bond.XP.win else Bond.XP.round) end
+		-- v2 S2: pet stats from this round (never fails the award). Power from merges, chains and
+		-- top tiers (capped per round); Energy from finishing, winning, tidy and goals; Heart +1.
+		if run and captured.petId then
+			local pid, day, gains = captured.petId, captured.day, {}
+			local power = (run.merges or 0) * StatXP.merge + math.max(0, (run.chain or 0) - 1) * StatXP.chainLink
+				+ (if run.maxTier == 5 then StatXP.topTier else 0) + (run.clears or 0) * StatXP.topClear
+			power = math.min(power, StatCaps.powerPerRound)
+			local energy = StatXP.round + (run.goalsMet or 0) * StatXP.goal
+			if run.success then
+				energy += if heat == "easy" then StatXP.winEasy elseif heat == "hard" then StatXP.winHard else StatXP.winMedium
+				if run.clean then energy += StatXP.tidy end
+			end
+			gains.power = Stats.grant(state, pid, "power", power, day)
+			gains.energy = Stats.grant(state, pid, "energy", energy, day)
+			gains.heart = Stats.grant(state, pid, "heart", StatXP.roundWithPet, day)
+			state.lastRunReward.stats = gains
+		end
 		return true
 	end, candidate)
 end
@@ -1302,7 +1351,16 @@ function Hatching.questClaim(handle, scope, slot, period, boost)
 	local candidate = if handle.pending and handle.pending.signature == signature then handle.pending.candidate
 		else table.freeze({ scope = scope, slot = slot, period = period, day = dayOf(handle.adapter.now()), userId = handle.userId,
 			multiplier = if type(boost) == "table" and boost.multiplier == 2 then 2 else 1 })
-	local ok, reason = transact(handle, signature, handle.state.revision, QuestState.claim, candidate)
+	-- v2 S2: Smarts for the claim, to the pet that is out (read once here, stable on retries).
+	local pid = statPet(handle)
+	local ok, reason = transact(handle, signature, handle.state.revision, function(state, c)
+		local claimed, why = QuestState.claim(state, c)
+		if claimed and pid then
+			local xp = if c.scope == "daily" then StatXP.questDaily else StatXP.questWeekly + (if c.slot == 0 then StatXP.questAllWeekly else 0)
+			Stats.grant(state, pid, "smarts", xp, c.day)
+		end
+		return claimed, why
+	end, candidate)
 	if not ok and reason == "AlreadyClaimed" then return true, reason end
 	return ok, reason
 end
@@ -1331,6 +1389,13 @@ function Hatching.parkPlay(handle, operationId, count, petId, fetches)
 		local ok, why = PlayDate.apply(state, captured, today)
 		-- Bond (slice F): only the write that crosses the Play date target pays XP.
 		if ok and not doneBefore and PlayDate.done(state, today) then Bond.add(state, captured.petId, Bond.XP.playDate) end
+		-- v2 S2: Jump for park activities (and today's Play date), Speed for fetches.
+		if ok and captured.petId then
+			local fetches = captured.fetches or 0
+			Stats.grant(state, captured.petId, "jump", math.max(0, captured.count - fetches) * StatXP.park, captured.day)
+			if fetches > 0 then Stats.grant(state, captured.petId, "speed", fetches * StatXP.fetch, captured.day) end
+			if not doneBefore and PlayDate.done(state, today) then Stats.grant(state, captured.petId, "jump", StatXP.playDate, captured.day) end
+		end
 		return ok, why
 	end, candidate, operationId, nil, "park:" .. candidate.day .. ":" .. candidate.count .. ":" .. (candidate.fetches or 0))
 end

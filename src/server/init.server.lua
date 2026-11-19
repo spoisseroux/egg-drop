@@ -704,6 +704,8 @@ local function addPlayer(player)
 	loading[player] = true
 	local profile = Progress.load(player.UserId)
 	local nursery = Nursery.load(player.UserId, profile)
+	-- v2 S2: the pet that earns stat XP for quests, stamps and book milestones.
+	nursery.statPetOf = function() return profile.companionId end
 	-- Fail closed until PolicyService answers: restricted players get fixed-order eggs.
 	nursery.restricted = PaidRandomPolicy.cached(player)
 	loading[player] = nil
@@ -1963,6 +1965,7 @@ task.spawn(function()
 						local candidateProfile = board.profile
 						if candidateProfile.loadFailed then candidateProfile = Progress.load(player.UserId) end
 						local replacement = Nursery.load(player.UserId, candidateProfile)
+						replacement.statPetOf = function() return board.profile.companionId end
 						replacement.restricted = PaidRandomPolicy.cached(player)
 						if boards[player] ~= board or board.closing then Nursery.release(replacement); return end
 						board.nursery = replacement
