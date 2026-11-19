@@ -1,0 +1,1886 @@
+{
+ "asset": "bunny",
+ "export": "bunny.fbx",
+ "sourceBlend": "assets/art-source/pets/pet-bunny.blend",
+ "builtBy": "assets/art-source/pets/build_bunny.py",
+ "axes": "axis_forward=-Z axis_up=Y (same as bear.fbx). Blender pet-local: front -Y, up +Z, L = -X, paws at z = 0, 1 unit = 1 stud.",
+ "conversions": {
+  "blenderToRuntime": "(x, y, z) -> (x, z, -y)",
+  "blenderToStudioTemplate": "(x, y, z) -> (-x, z, y)"
+ },
+ "textures": {
+  "EyeL": "bunny-textures/bunny-eye.png",
+  "EyeR": "bunny-textures/bunny-eye.png",
+  "MouthSmile": "bunny-textures/bunny-mouth.png (cut-out; Closest filtering)",
+  "BlushL": "bunny-textures/bunny-blush.png",
+  "BlushR": "bunny-textures/bunny-blush.png"
+ },
+ "note": "Body, HandL, HandR, FootL and FootR are the Bear v2 candidate's meshes, unchanged. Wings, horns, wearables and the other charm shapes are the Bear's assets.",
+ "triangles": 2508,
+ "objects": [
+  {
+   "name": "Bunny__Body",
+   "source": "PetBunny__Body",
+   "centerBlender": [
+    0.0,
+    -0.08202,
+    0.45458
+   ],
+   "sizeBlender": [
+    0.56802,
+    0.62405,
+    0.57574
+   ],
+   "triangles": 224,
+   "channel": "Body",
+   "material": "petBunny__body",
+   "parentAnchor": "Body"
+  },
+  {
+   "name": "Bunny__Head",
+   "source": "PetBunny__Head",
+   "centerBlender": [
+    0.0,
+    -0.03054,
+    1.01062
+   ],
+   "sizeBlender": [
+    0.97155,
+    0.87227,
+    0.74837
+   ],
+   "triangles": 528,
+   "channel": "Head",
+   "material": "petBunny__body",
+   "parentAnchor": "Head"
+  },
+  {
+   "name": "Bunny__EarL",
+   "source": "PetBunny__EarL",
+   "centerBlender": [
+    -0.32337,
+    0.06251,
+    1.52601
+   ],
+   "sizeBlender": [
+    0.32455,
+    0.13843,
+    0.6302
+   ],
+   "triangles": 336,
+   "channel": "Head",
+   "material": "petBunny__body",
+   "parentAnchor": "EarL"
+  },
+  {
+   "name": "Bunny__EarR",
+   "source": "PetBunny__EarR",
+   "centerBlender": [
+    0.37824,
+    0.00979,
+    1.47118
+   ],
+   "sizeBlender": [
+    0.43428,
+    0.20732,
+    0.52052
+   ],
+   "triangles": 336,
+   "channel": "Head",
+   "material": "petBunny__body",
+   "parentAnchor": "EarR"
+  },
+  {
+   "name": "Bunny__EarInnerL",
+   "source": "PetBunny__EarInnerL",
+   "centerBlender": [
+    -0.32386,
+    0.01756,
+    1.55562
+   ],
+   "sizeBlender": [
+    0.1972,
+    0.06435,
+    0.45773
+   ],
+   "triangles": 72,
+   "channel": "Head",
+   "material": "petBunny__secondary",
+   "parentAnchor": "EarL"
+  },
+  {
+   "name": "Bunny__EarInnerR",
+   "source": "PetBunny__EarInnerR",
+   "centerBlender": [
+    0.302,
+    -0.00437,
+    1.44439
+   ],
+   "sizeBlender": [
+    0.16901,
+    0.02498,
+    0.23527
+   ],
+   "triangles": 72,
+   "channel": "Head",
+   "material": "petBunny__secondary",
+   "parentAnchor": "EarR"
+  },
+  {
+   "name": "Bunny__Muzzle",
+   "source": "PetBunny__Muzzle",
+   "centerBlender": [
+    0.0,
+    -0.41381,
+    0.84339
+   ],
+   "sizeBlender": [
+    0.20951,
+    0.09576,
+    0.13528
+   ],
+   "triangles": 112,
+   "channel": "Head",
+   "material": "petBunny__secondary",
+   "parentAnchor": "Head"
+  },
+  {
+   "name": "Bunny__Nose",
+   "source": "PetBunny__Nose",
+   "centerBlender": [
+    0.0,
+    -0.45585,
+    0.8741
+   ],
+   "sizeBlender": [
+    0.05706,
+    0.036,
+    0.0378
+   ],
+   "triangles": 60,
+   "channel": "Head",
+   "material": "petBunny__nose",
+   "parentAnchor": "Head"
+  },
+  {
+   "name": "Bunny__MouthSmile",
+   "source": "PetBunny__Mouth",
+   "centerBlender": [
+    0.0,
+    -0.44317,
+    0.82933
+   ],
+   "sizeBlender": [
+    0.1025,
+    0.04064,
+    0.05193
+   ],
+   "triangles": 16,
+   "channel": "Head",
+   "material": "petBunny__mouth",
+   "parentAnchor": "Head"
+  },
+  {
+   "name": "Bunny__EyeL",
+   "source": "PetBunny__EyeL",
+   "centerBlender": [
+    -0.23369,
+    -0.39603,
+    0.9446
+   ],
+   "sizeBlender": [
+    0.15872,
+    0.09454,
+    0.20257
+   ],
+   "triangles": 72,
+   "channel": "Head",
+   "material": "petBunny__eye",
+   "parentAnchor": "Head"
+  },
+  {
+   "name": "Bunny__EyeR",
+   "source": "PetBunny__EyeR",
+   "centerBlender": [
+    0.23369,
+    -0.39616,
+    0.9446
+   ],
+   "sizeBlender": [
+    0.15872,
+    0.09312,
+    0.20257
+   ],
+   "triangles": 72,
+   "channel": "Head",
+   "material": "petBunny__eye",
+   "parentAnchor": "Head"
+  },
+  {
+   "name": "Bunny__BlushL",
+   "source": "PetBunny__BlushL",
+   "centerBlender": [
+    -0.33678,
+    -0.25722,
+    0.84341
+   ],
+   "sizeBlender": [
+    0.17504,
+    0.21179,
+    0.10272
+   ],
+   "triangles": 36,
+   "channel": "Head",
+   "material": "petBunny__blush",
+   "parentAnchor": "Head"
+  },
+  {
+   "name": "Bunny__BlushR",
+   "source": "PetBunny__BlushR",
+   "centerBlender": [
+    0.33678,
+    -0.25747,
+    0.84341
+   ],
+   "sizeBlender": [
+    0.17504,
+    0.21283,
+    0.10272
+   ],
+   "triangles": 36,
+   "channel": "Head",
+   "material": "petBunny__blush",
+   "parentAnchor": "Head"
+  },
+  {
+   "name": "Bunny__Tail",
+   "source": "PetBunny__Tail",
+   "centerBlender": [
+    0.0,
+    0.3,
+    0.34
+   ],
+   "sizeBlender": [
+    0.27,
+    0.25,
+    0.26
+   ],
+   "triangles": 224,
+   "channel": "Body",
+   "material": "petBunny__secondary",
+   "parentAnchor": "Tail"
+  },
+  {
+   "name": "Bunny__HandL",
+   "source": "PetBunny__HandL",
+   "centerBlender": [
+    -0.33317,
+    -0.11055,
+    0.52984
+   ],
+   "sizeBlender": [
+    0.27781,
+    0.21948,
+    0.34831
+   ],
+   "triangles": 72,
+   "channel": "HandL",
+   "material": "petBunny__body",
+   "parentAnchor": "HandL"
+  },
+  {
+   "name": "Bunny__HandR",
+   "source": "PetBunny__HandR",
+   "centerBlender": [
+    0.3342,
+    -0.11282,
+    0.53162
+   ],
+   "sizeBlender": [
+    0.27575,
+    0.22358,
+    0.34466
+   ],
+   "triangles": 72,
+   "channel": "HandR",
+   "material": "petBunny__body",
+   "parentAnchor": "HandR"
+  },
+  {
+   "name": "Bunny__FootL",
+   "source": "PetBunny__FootL",
+   "centerBlender": [
+    -0.165,
+    -0.08,
+    0.10749
+   ],
+   "sizeBlender": [
+    0.30139,
+    0.53,
+    0.21502
+   ],
+   "triangles": 84,
+   "channel": "FootL",
+   "material": "petBunny__body",
+   "parentAnchor": "FootL"
+  },
+  {
+   "name": "Bunny__FootR",
+   "source": "PetBunny__FootR",
+   "centerBlender": [
+    0.165,
+    -0.08,
+    0.10749
+   ],
+   "sizeBlender": [
+    0.30139,
+    0.53,
+    0.21502
+   ],
+   "triangles": 84,
+   "channel": "FootR",
+   "material": "petBunny__body",
+   "parentAnchor": "FootR"
+  },
+  {
+   "name": "Bunny__CharmDot",
+   "source": "PetBunny__CharmDot",
+   "centerBlender": [
+    -0.00304,
+    -0.03244,
+    1.71274
+   ],
+   "sizeBlender": [
+    0.25899,
+    0.10547,
+    0.24141
+   ],
+   "triangles": 48,
+   "channel": "Charm",
+   "material": "petBunny__secondary",
+   "parentAnchor": "CharmAnchor"
+  }
+ ],
+ "anchorsBlender": {
+  "AnkleL": [
+   -0.165,
+   -0.01,
+   0.17
+  ],
+  "AnkleR": [
+   0.165,
+   -0.01,
+   0.17
+  ],
+  "Back": [
+   0.0,
+   0.21521,
+   0.52
+  ],
+  "Body": [
+   0.0,
+   -0.05,
+   0.455
+  ],
+  "CharmAnchor": [
+   0.0,
+   -0.03,
+   1.7
+  ],
+  "CharmCenter": [
+   0.0,
+   -0.16,
+   1.4
+  ],
+  "CharmFloat": [
+   0.0,
+   -0.03,
+   1.7
+  ],
+  "CharmLeft": [
+   -0.6,
+   -0.12,
+   1.47
+  ],
+  "CharmRight": [
+   0.68,
+   -0.12,
+   1.47
+  ],
+  "CheekL": [
+   -0.36,
+   -0.27925,
+   0.853
+  ],
+  "CheekR": [
+   0.36,
+   -0.27858,
+   0.853
+  ],
+  "Chest": [
+   0.0,
+   -0.39631,
+   0.5
+  ],
+  "ClawL": [
+   -0.39041,
+   -0.13897,
+   0.38773
+  ],
+  "ClawR": [
+   0.3859,
+   -0.13202,
+   0.38904
+  ],
+  "EarL": [
+   -0.25,
+   0.03,
+   1.24
+  ],
+  "EarR": [
+   0.25,
+   0.03,
+   1.24
+  ],
+  "EyeL": [
+   -0.232,
+   -0.40437,
+   0.945
+  ],
+  "EyeLine": [
+   0.0,
+   -0.46614,
+   0.945
+  ],
+  "EyeR": [
+   0.232,
+   -0.4042,
+   0.945
+  ],
+  "FaceBridge": [
+   0.0,
+   -0.46056,
+   0.955
+  ],
+  "FootL": [
+   -0.165,
+   -0.08,
+   0.1
+  ],
+  "FootR": [
+   0.165,
+   -0.08,
+   0.1
+  ],
+  "Forehead": [
+   0.0,
+   -0.3688,
+   1.24
+  ],
+  "Ground": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "HandCatch": [
+   0.0,
+   -0.47,
+   0.45
+  ],
+  "HandL": [
+   -0.225,
+   -0.06,
+   0.655
+  ],
+  "HandR": [
+   0.225,
+   -0.06,
+   0.655
+  ],
+  "HatCrown": [
+   0.0,
+   -0.03,
+   1.3824
+  ],
+  "Head": [
+   0.0,
+   -0.02,
+   0.7
+  ],
+  "HelixL": [
+   -0.43722,
+   0.05236,
+   1.42629
+  ],
+  "HelixR": [
+   0.43628,
+   0.05176,
+   1.42134
+  ],
+  "HornL": [
+   -0.175,
+   -0.1,
+   1.35446
+  ],
+  "HornR": [
+   0.175,
+   -0.1,
+   1.35446
+  ],
+  "LobeL": [
+   -0.39437,
+   0.04234,
+   1.3333
+  ],
+  "LobeR": [
+   0.39437,
+   0.04234,
+   1.3333
+  ],
+  "Mouth": [
+   0.0,
+   -0.45691,
+   0.836
+  ],
+  "Neck": [
+   0.0,
+   -0.07,
+   0.63
+  ],
+  "Nose": [
+   0.0,
+   -0.46766,
+   0.872
+  ],
+  "Tail": [
+   0.0,
+   0.24,
+   0.33
+  ],
+  "ToeL": [
+   -0.165,
+   -0.325,
+   0.08
+  ],
+  "ToeR": [
+   0.165,
+   -0.325,
+   0.08
+  ],
+  "Torso": [
+   0.0,
+   -0.05,
+   0.455
+  ],
+  "WingL": [
+   -0.11,
+   0.17,
+   0.54
+  ],
+  "WingR": [
+   0.11,
+   0.17,
+   0.54
+  ],
+  "WristL": [
+   -0.32756,
+   -0.10896,
+   0.4893
+  ],
+  "WristR": [
+   0.32476,
+   -0.10465,
+   0.4901
+  ]
+ },
+ "anchors": [
+  {
+   "name": "AnkleL",
+   "channel": "FootL",
+   "slot": "Ankle",
+   "kind": "swap",
+   "positionBlender": [
+    -0.165,
+    -0.01,
+    0.17
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "AnkleR",
+   "channel": "FootR",
+   "slot": "Ankle",
+   "kind": "swap",
+   "positionBlender": [
+    0.165,
+    -0.01,
+    0.17
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "Back",
+   "channel": "Body",
+   "slot": "Back",
+   "kind": "face",
+   "positionBlender": [
+    0.0,
+    0.21521,
+    0.52
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "Body",
+   "channel": "Body",
+   "slot": null,
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "CharmAnchor",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    -0.03,
+    1.7
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "CharmCenter",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    -0.16,
+    1.4
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "CharmFloat",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    -0.03,
+    1.7
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "CharmLeft",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "positionBlender": [
+    -0.6,
+    -0.12,
+    1.47
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "CharmRight",
+   "channel": "Root",
+   "slot": "Charm",
+   "kind": "swap",
+   "positionBlender": [
+    0.68,
+    -0.12,
+    1.47
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "CheekL",
+   "channel": "Head",
+   "slot": "Cheek",
+   "kind": "face",
+   "positionBlender": [
+    -0.36,
+    -0.27925,
+    0.853
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "CheekR",
+   "channel": "Head",
+   "slot": "Cheek",
+   "kind": "face",
+   "positionBlender": [
+    0.36,
+    -0.27858,
+    0.853
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "Chest",
+   "channel": "Body",
+   "slot": "Chest",
+   "kind": "face",
+   "positionBlender": [
+    0.0,
+    -0.39631,
+    0.5
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "ClawL",
+   "channel": "HandL",
+   "slot": "Claws",
+   "kind": "surface",
+   "positionBlender": [
+    -0.39041,
+    -0.13897,
+    0.38773
+   ],
+   "axesBlender": {
+    "x": [
+     -0.85032,
+     0.0,
+     0.52627
+    ],
+    "y": [
+     -0.12824,
+     0.96986,
+     -0.2072
+    ],
+    "z": [
+     -0.51041,
+     -0.24367,
+     -0.82469
+    ]
+   }
+  },
+  {
+   "name": "ClawR",
+   "channel": "HandR",
+   "slot": "Claws",
+   "kind": "surface",
+   "positionBlender": [
+    0.3859,
+    -0.13202,
+    0.38904
+   ],
+   "axesBlender": {
+    "x": [
+     -0.85561,
+     0.0,
+     -0.51761
+    ],
+    "y": [
+     0.11683,
+     0.97419,
+     -0.19313
+    ],
+    "z": [
+     0.50426,
+     -0.22572,
+     -0.83353
+    ]
+   }
+  },
+  {
+   "name": "EarL",
+   "channel": "Head",
+   "slot": null,
+   "kind": "swap",
+   "positionBlender": [
+    -0.25,
+    0.03,
+    1.24
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "EarR",
+   "channel": "Head",
+   "slot": null,
+   "kind": "swap",
+   "positionBlender": [
+    0.25,
+    0.03,
+    1.24
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "EyeL",
+   "channel": "Head",
+   "slot": "Eyes",
+   "kind": "face",
+   "positionBlender": [
+    -0.232,
+    -0.40437,
+    0.945
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "EyeLine",
+   "channel": "Head",
+   "slot": null,
+   "kind": "face",
+   "positionBlender": [
+    0.0,
+    -0.46614,
+    0.945
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "EyeR",
+   "channel": "Head",
+   "slot": "Eyes",
+   "kind": "face",
+   "positionBlender": [
+    0.232,
+    -0.4042,
+    0.945
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "FaceBridge",
+   "channel": "Head",
+   "slot": "Eyewear",
+   "kind": "face",
+   "positionBlender": [
+    0.0,
+    -0.46056,
+    0.955
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "FootL",
+   "channel": "FootL",
+   "slot": null,
+   "kind": "swap",
+   "positionBlender": [
+    -0.165,
+    -0.08,
+    0.1
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "FootR",
+   "channel": "FootR",
+   "slot": null,
+   "kind": "swap",
+   "positionBlender": [
+    0.165,
+    -0.08,
+    0.1
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "Forehead",
+   "channel": "Head",
+   "slot": "Forehead",
+   "kind": "face",
+   "positionBlender": [
+    0.0,
+    -0.3688,
+    1.24
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "Ground",
+   "channel": "Root",
+   "slot": "Aura",
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "HandCatch",
+   "channel": "Root",
+   "slot": null,
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    -0.47,
+    0.45
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "HandL",
+   "channel": "HandL",
+   "slot": "Sleeve",
+   "kind": "swap",
+   "positionBlender": [
+    -0.225,
+    -0.06,
+    0.655
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "HandR",
+   "channel": "HandR",
+   "slot": "Sleeve",
+   "kind": "swap",
+   "positionBlender": [
+    0.225,
+    -0.06,
+    0.655
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "HatCrown",
+   "channel": "Head",
+   "slot": "Hat",
+   "kind": "surface",
+   "positionBlender": [
+    0.0,
+    -0.03,
+    1.3824
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "Head",
+   "channel": "Head",
+   "slot": null,
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    -0.02,
+    0.7
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "HelixL",
+   "channel": "Head",
+   "slot": "EarPiercing",
+   "kind": "surface",
+   "positionBlender": [
+    -0.43722,
+    0.05236,
+    1.42629
+   ],
+   "axesBlender": {
+    "x": [
+     -0.22495,
+     0.0,
+     0.97437
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     -0.97437,
+     0.0,
+     -0.22495
+    ]
+   }
+  },
+  {
+   "name": "HelixR",
+   "channel": "Head",
+   "slot": "EarPiercing",
+   "kind": "surface",
+   "positionBlender": [
+    0.43628,
+    0.05176,
+    1.42134
+   ],
+   "axesBlender": {
+    "x": [
+     -0.25978,
+     0.0,
+     -0.96567
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.96567,
+     0.0,
+     -0.25978
+    ]
+   }
+  },
+  {
+   "name": "HornL",
+   "channel": "Head",
+   "slot": "Horns",
+   "kind": "surface",
+   "positionBlender": [
+    -0.175,
+    -0.1,
+    1.35446
+   ],
+   "axesBlender": {
+    "x": [
+     0.95635,
+     0.0,
+     0.29221
+    ],
+    "y": [
+     -0.04064,
+     0.99028,
+     0.13302
+    ],
+    "z": [
+     -0.28937,
+     -0.13909,
+     0.94706
+    ]
+   }
+  },
+  {
+   "name": "HornR",
+   "channel": "Head",
+   "slot": "Horns",
+   "kind": "surface",
+   "positionBlender": [
+    0.175,
+    -0.1,
+    1.35446
+   ],
+   "axesBlender": {
+    "x": [
+     0.95635,
+     0.0,
+     -0.29221
+    ],
+    "y": [
+     0.04064,
+     0.99028,
+     0.13302
+    ],
+    "z": [
+     0.28937,
+     -0.13909,
+     0.94706
+    ]
+   }
+  },
+  {
+   "name": "LobeL",
+   "channel": "Head",
+   "slot": "Earring",
+   "kind": "surface",
+   "positionBlender": [
+    -0.39437,
+    0.04234,
+    1.3333
+   ],
+   "axesBlender": {
+    "x": [
+     -0.22495,
+     0.0,
+     0.97437
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     -0.97437,
+     0.0,
+     -0.22495
+    ]
+   }
+  },
+  {
+   "name": "LobeR",
+   "channel": "Head",
+   "slot": "Earring",
+   "kind": "surface",
+   "positionBlender": [
+    0.39437,
+    0.04234,
+    1.3333
+   ],
+   "axesBlender": {
+    "x": [
+     -0.22495,
+     0.0,
+     -0.97437
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.97437,
+     0.0,
+     -0.22495
+    ]
+   }
+  },
+  {
+   "name": "Mouth",
+   "channel": "Head",
+   "slot": "Mouth",
+   "kind": "face",
+   "positionBlender": [
+    0.0,
+    -0.45691,
+    0.836
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "Neck",
+   "channel": "Body",
+   "slot": "Neck",
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    -0.07,
+    0.63
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "Nose",
+   "channel": "Head",
+   "slot": "Nose",
+   "kind": "face",
+   "positionBlender": [
+    0.0,
+    -0.46766,
+    0.872
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "Tail",
+   "channel": "Body",
+   "slot": "Tail",
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    0.24,
+    0.33
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "ToeL",
+   "channel": "FootL",
+   "slot": "Claws",
+   "kind": "surface",
+   "positionBlender": [
+    -0.165,
+    -0.325,
+    0.08
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     0.19612,
+     0.98058
+    ],
+    "z": [
+     0.0,
+     -0.98058,
+     0.19612
+    ]
+   }
+  },
+  {
+   "name": "ToeR",
+   "channel": "FootR",
+   "slot": "Claws",
+   "kind": "surface",
+   "positionBlender": [
+    0.165,
+    -0.325,
+    0.08
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     0.19612,
+     0.98058
+    ],
+    "z": [
+     0.0,
+     -0.98058,
+     0.19612
+    ]
+   }
+  },
+  {
+   "name": "Torso",
+   "channel": "Body",
+   "slot": "Shirt",
+   "kind": "swap",
+   "positionBlender": [
+    0.0,
+    -0.05,
+    0.455
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "WingL",
+   "channel": "Body",
+   "slot": "Back",
+   "kind": "swap",
+   "positionBlender": [
+    -0.11,
+    0.17,
+    0.54
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "WingR",
+   "channel": "Body",
+   "slot": "Back",
+   "kind": "swap",
+   "positionBlender": [
+    0.11,
+    0.17,
+    0.54
+   ],
+   "axesBlender": {
+    "x": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "z": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "WristL",
+   "channel": "HandL",
+   "slot": "Wrist",
+   "kind": "surface",
+   "positionBlender": [
+    -0.32756,
+    -0.10896,
+    0.4893
+   ],
+   "axesBlender": {
+    "x": [
+     0.85032,
+     0.0,
+     -0.52627
+    ],
+    "y": [
+     -0.12824,
+     0.96986,
+     -0.2072
+    ],
+    "z": [
+     0.51041,
+     0.24367,
+     0.82469
+    ]
+   }
+  },
+  {
+   "name": "WristR",
+   "channel": "HandR",
+   "slot": "Wrist",
+   "kind": "surface",
+   "positionBlender": [
+    0.32476,
+    -0.10465,
+    0.4901
+   ],
+   "axesBlender": {
+    "x": [
+     0.85561,
+     0.0,
+     0.51762
+    ],
+    "y": [
+     0.11683,
+     0.97419,
+     -0.19313
+    ],
+    "z": [
+     -0.50426,
+     0.22572,
+     0.83353
+    ]
+   }
+  }
+ ]
+}
