@@ -434,11 +434,11 @@ def stat_egg_level_up():
     tx = 392
     # chip
     c.d.polygon([(S(tx), S(72)), (S(tx + 132), S(68)), (S(tx + 134), S(88)), (S(tx + 2), S(92))], fill=rgb(col))
-    c.text((tx + 67, 80), "STAT TREAT  ·  SNACK", xbold(8.5), INK, "mm")
+    c.text((tx + 67, 80), "BOOST TREAT  ·  SNACK", xbold(8.5), INK, "mm")
     c.text((tx, 98), "POWER SNACK", black(32), TEXT)
     c.line([(tx, 142), (tx + 196, 138)], col, 2.5)
     c.text((tx, 152), "Bear ate it in two bites.", bold(12), TEXT)
-    c.text((tx, 170), "+100 Power XP", mono(11), col)
+    c.text((tx, 170), "2x Power XP for your next 120 XP", mono(11), col)
 
     # the stat row: bar runs to the end, level ticks over
     ry = 196
@@ -446,21 +446,19 @@ def stat_egg_level_up():
     stat_chip(c, "pop", tx + 12, ry + 12, 30)
     c.text((tx + 52, ry + 10), "Power", black(14), TEXT)
     c.text((tx + 52, ry + 29), "SEEDLING", xbold(7.5), col)
-    pill(c, 800, ry + 11, "LEVEL UP", black(9), ACCENT, INK, padx=9, h=19, anchor="r")
-    c.text((tx + 190, ry + 20), "14", mono(17), DIM, "mm")
-    c.line([(tx + 208, ry + 20), (tx + 226, ry + 20)], SOFT, 1.6); c.line([(tx + 221, ry + 16), (tx + 226, ry + 20), (tx + 221, ry + 24)], SOFT, 1.6)
-    c.text((tx + 250, ry + 19), "15", mono(24), TEXT, "mm")
-    bar(c, (tx + 12, ry + 52, 800, ry + 61), 22 / (xp(16) - xp(15)), col, track=mix("#0B0A18", "#000000", .3))
-    c.text((tx + 12, ry + 73), f"22 / {xp(16) - xp(15)} XP to 16", mono(8.5), SOFT, "lm")
-    c.text((800, ry + 73), "Unlocked: Fizz merge pop", bold(9.5), TEXT, "rm")
-    lock_x = 800 - c.width("Unlocked: Fizz merge pop", bold(9.5)) - 12
+    pill(c, 800, ry + 11, "2x BOOST", black(9), ACCENT, INK, padx=9, h=19, anchor="r")
+    c.text((tx + 250, ry + 19), "14", mono(24), TEXT, "mm")
+    bar(c, (tx + 12, ry + 52, 800, ry + 61), 22 / (xp(15) - xp(14)), col, track=mix("#0B0A18", "#000000", .3))
+    c.text((tx + 12, ry + 73), f"Boost: 120 XP left  ·  22 / {xp(15) - xp(14)} XP to 15", mono(8.5), SOFT, "lm")
+    c.text((800, ry + 73), "Play a round to use it", bold(9.5), TEXT, "rm")
+    lock_x = 800 - c.width("Play a round to use it", bold(9.5)) - 12
     sparkle(c, lock_x, ry + 73, 5, col)
 
     # actions
     secondary(c, (tx, 306, tx + 196, 350), "")
     c.text((tx + 28, 328), "Hatch another", black(12), TEXT, "lm")
     star(c, tx + 142, 327.5, 6); c.text((tx + 152, 328), "15", mono(12), STARS, "lm")
-    primary(c, (tx + 208, 306, 812, 350), "Nice!")
+    primary(c, (tx + 208, 306, 812, 350), "Play a round")
     # bottom-left: the promise, as on the live reveal
     c.rr((26, 348, 268, 368), 10, fill=mix("#0B0A18", "#FFFFFF", .06), outline=mix("#0B0A18", "#FFFFFF", .18))
     c.text((36, 358), "NEXT", xbold(7.5), DIM, "lm")
