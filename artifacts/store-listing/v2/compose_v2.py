@@ -384,16 +384,15 @@ def icon_b(L, tinted=True):
 
 
 def icon_c(L):
-    """C. Pet + merge: the pink Bear with Sparkle Eyes over a row of smiling merge balls and
-    a Star, on mint-to-teal. Warm subject, cool field. No text."""
-    c = backdrop((S, S), (40, 200, 190), (30, 110, 200), (512, 450), burst_color=(220, 255, 236), ray_color=(214, 255, 240), ray_len=950, texture=0.2, vignette=0.7, count=14)
-    balls = L["pop_smileys"].crop((0, 24, L["pop_smileys"].width, L["pop_smileys"].height))  # without the x3 tag
-    put(c, sticker(L["close_rose"], 1.3, white=12, ink=8), (512, 470), sh=(24, (12, 22), 0.5))
-    pop = sticker(balls, 3.3, white=11, ink=7, rot=3, resample=Image.NEAREST)
-    put(c, pop, (480, 850), sh=(18, (8, 16), 0.5))
-    star = sticker(L["star_b"], 0.8, white=8, ink=6, rot=-14)
-    put(c, star, (880, 700), sh=(14, (8, 14), 0.45))
-    sparkles(c, [(110, 170, 40), (920, 220, 34), (90, 560, 24)])
+    """C. Pet + deck (Spencer, 2026-11-19: "with a pocket deck at the bottom instead of the
+    balls"): the pink Bear with Sparkle Eyes holding the Prism Flare Pocket Deck mid-chain,
+    a Star at its ear, on mint-to-teal. Warm subject, cool field. No text."""
+    c = backdrop((S, S), (40, 200, 190), (30, 110, 200), (512, 420), burst_color=(220, 255, 236), ray_color=(214, 255, 240), ray_len=950, texture=0.2, vignette=0.7, count=14)
+    put(c, sticker(L["close_rose"], 1.04, white=12, ink=8), (512, 412), sh=(24, (12, 22), 0.5))
+    deck = L["deck_prism"]
+    put(c, sticker(deck, 1010 / deck.width, white=12, ink=8, rot=5), (512, 836), sh=(22, (10, 20), 0.5))
+    put(c, sticker(L["star_b"], 0.62, white=8, ink=6, rot=-14), (880, 310), sh=(14, (8, 14), 0.45))
+    sparkles(c, [(110, 170, 40), (920, 200, 34), (90, 520, 24)])
     return grade(c, 1.06, 1.12)
 
 
@@ -443,7 +442,7 @@ def main(L):
     os.makedirs(os.path.join(HERE, "icon"), exist_ok=True)
     os.makedirs(os.path.join(HERE, "thumbnails"), exist_ok=True)
     icons = {"A": icon_a(L), "B": icon_b(L), "C": icon_c(L)}
-    names = {"A": "icon-A-bear-title", "B": "icon-B-hatch", "C": "icon-C-merge-pal"}
+    names = {"A": "icon-A-bear-title", "B": "icon-B-hatch", "C": "icon-C-bear-deck"}
     for k, im in icons.items():
         im.save(os.path.join(HERE, "icon", names[k] + "-1024.png"), optimize=True)
         im.resize((150, 150), Image.LANCZOS).save(os.path.join(HERE, "icon", names[k] + "-150.png"))
