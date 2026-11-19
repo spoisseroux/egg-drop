@@ -1,0 +1,47 @@
+{
+ "sample_rate": 44100,
+ "hit_seconds_in_layer": 1.05,
+ "stamp_seconds_after_hit": 0.58,
+ "burst_on_hatch_clock": 1.72,
+ "start_layer_at_hatch_clock": 0.67,
+ "start_rare_sting_at_hatch_clock": 1.02,
+ "suggested_gain": {
+  "rare": 0.8,
+  "jackpot": 0.72
+ },
+ "layer": {
+  "seconds": 3.45,
+  "peak_dbfs": -3.85,
+  "rms_dbfs": -22.95,
+  "loudest_50ms_dbfs": -15.09,
+  "energy": 0.01748,
+  "centroid_hz": 1601,
+  "above_4khz_share": 0.1019,
+  "hit_peak_at": 1.0589,
+  "gap_rms_dbfs_0.95_to_1.04": -44.74,
+  "riser_rms_dbfs_0.60_to_0.90": -21.68,
+  "impact_rms_dbfs_1.05_to_1.25": -13.34
+ },
+ "calm_layer": {
+  "seconds": 3.45,
+  "peak_dbfs": -9.85,
+  "rms_dbfs": -26.94,
+  "loudest_50ms_dbfs": -19.7,
+  "energy": 0.00699,
+  "centroid_hz": 1679,
+  "above_4khz_share": 0.0976
+ },
+ "mix": {
+  "rare_sting_offset_in_mix": 0.35,
+  "raw_sum_peak_dbfs": -0.93,
+  "clips_at_suggested_gains": false,
+  "audition_scaled_by_db": -0.07,
+  "seconds": 3.5,
+  "peak_dbfs": -1.0,
+  "rms_dbfs": -19.66,
+  "loudest_50ms_dbfs": -10.38,
+  "energy": 0.03781,
+  "centroid_hz": 1584,
+  "above_4khz_share": 0.0658
+ }
+}
