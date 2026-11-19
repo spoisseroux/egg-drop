@@ -14,12 +14,12 @@ def level(points):
 FRESH = 100   # first 100 XP per stat per day counts double
 # XP per day in ONE stat before the Fresh bonus, by player type (see scope section 3.4)
 RATES = {  # stat: (casual 5 rounds + 5 min, daily 10 rounds + 10 min, engaged 15 rounds + 15 min)
-    "Pop":    (125, 250, 375),
-    "Poise":  ( 90, 210, 375),
+    "Power":    (125, 250, 375),
+    "Energy":  ( 90, 210, 375),
     "Heart":  ( 40,  80, 120),
-    "Tumble": ( 40,  90, 140),
-    "Fetch":  ( 30,  70, 110),
-    "Wonder": ( 90, 150, 220),
+    "Jump": ( 40,  90, 140),
+    "Speed":  ( 30,  70, 110),
+    "Smarts": ( 90, 150, 220),
 }
 def days(target, per_day):
     return math.ceil(target / (per_day + min(per_day, FRESH)))
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     for i, name in enumerate(("casual", "daily", "engaged")):
         print(f"  {name}: {max(days(xp(CAP), r[i]) for r in RATES.values())} play days")
     print("\nFirst session (Welcome round + 4 rounds, a pet, one park game, one fetch):")
-    first = {"Pop": 110, "Poise": 70, "Heart": 20, "Tumble": 12, "Fetch": 8, "Wonder": 40}
+    first = {"Power": 110, "Energy": 70, "Heart": 20, "Jump": 12, "Speed": 8, "Smarts": 40}
     total = 0
     for stat, raw in first.items():
         got = raw + min(raw, FRESH); l = level(got); total += l

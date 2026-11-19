@@ -23,8 +23,8 @@ TEXT, SOFT, DIM, INK = "#F3F4F6", "#C3C8D0", "#959BA5", "#0E0F12"
 ACCENT, ACCENT_EDGE = "#77F6B1", "#4A996A"
 STARS, DANGER, PINK = "#FFC14D", "#FF5A6E", "#F99DC2"
 STAT = {  # proposed stat colours (never tinted by the faceplate, like Stars)
-    "heart": ("Heart", "#FF86A8"), "pop": ("Pop", "#FF9D4D"), "poise": ("Poise", "#6CCBFF"),
-    "tumble": ("Tumble", "#B9EE5A"), "fetch": ("Fetch", "#8FA8FF"), "wonder": ("Wonder", "#E58CFF"),
+    "heart": ("Heart", "#FF86A8"), "pop": ("Power", "#FF9D4D"), "poise": ("Energy", "#6CCBFF"),
+    "tumble": ("Jump", "#B9EE5A"), "fetch": ("Speed", "#8FA8FF"), "wonder": ("Smarts", "#E58CFF"),
 }
 ORDER = ["heart", "pop", "poise", "tumble", "fetch", "wonder"]
 
@@ -303,16 +303,16 @@ def stats_panel():
         c.text((x1 - 12, y0 + 6), str(lvl), mono(24), TEXT, "ra")
         bar(c, (x0 + 10, y0 + 46, x1 - 96, y0 + 53), frac, color, track=mix(WELL, PANEL, .2))
         c.text((x1 - 12, y0 + 50), f"{left} XP to {lvl + 1}", mono(8), SOFT, "rm")
-        # Fresh XP marker: a dew drop, filled while today's double is still waiting
+        # Bonus XP marker: a dew drop, filled while today's double is still waiting
         dx = x0 + 48 + c.width(tier_name(lvl), xbold(7.5)) + 8
         if fresh[k]:
-            pill(c, dx, y0 + 25.5, "2x FRESH", xbold(7), mix(RAISED, ACCENT, .2), ACCENT, padx=6, h=13)
+            pill(c, dx, y0 + 25.5, "2x BONUS", xbold(7), mix(RAISED, ACCENT, .2), ACCENT, padx=6, h=13)
 
     # selected stat: what it is, how to train, what is next
     dy0 = gy0 + 3 * th + 2 * gap + 8
     c.card((gx0, dy0, gx1, 344), 12, fill=mix(PANEL, RAISED, .6))
     stat_chip(c, sel, gx0 + 12, dy0 + 11, 22)
-    c.text((gx0 + 42, dy0 + 9), "Pop  ·  merges and chains on the Pocket Deck", black(11), TEXT)
+    c.text((gx0 + 42, dy0 + 9), "Power  ·  merges and chains on the Pocket Deck", black(11), TEXT)
     c.text((gx0 + 42, dy0 + 26), "Every merge is 1 XP. Chains and a top-tier clear add more.", bold(9), SOFT)
     # next unlock chip
     ux = gx0 + 12; uy = dy0 + 46
@@ -414,7 +414,7 @@ def stat_egg_level_up():
         cd.line([(S(12), y), (S(238), y)], fill=mix(mix(col, "#FFFFFF", .28), mix(col, "#7A2E10", .45), t))
     cd.rounded_rectangle((S(6), S(6), S(244), S(244)), S(22), outline=mix(col, "#FFFFFF", .6), width=S(3))
     sub = Canvas.__new__(Canvas); sub.im = card; sub.d = cd
-    # the treat: a round biscuit stamped with the Pop mark (drawn, placeholder for the model)
+    # the treat: a round biscuit stamped with the Power mark (drawn, placeholder for the model)
     cx, cy = 125, 128
     sub.ellipse((cx - 62, cy + 52, cx + 62, cy + 70), fill=mix(col, "#3A1406", .55))
     sub.ellipse((cx - 66, cy - 60, cx + 66, cy + 66), fill=rgb("#C98A45"))
@@ -435,16 +435,16 @@ def stat_egg_level_up():
     # chip
     c.d.polygon([(S(tx), S(72)), (S(tx + 132), S(68)), (S(tx + 134), S(88)), (S(tx + 2), S(92))], fill=rgb(col))
     c.text((tx + 67, 80), "STAT TREAT  ·  SNACK", xbold(8.5), INK, "mm")
-    c.text((tx, 98), "POP SNACK", black(32), TEXT)
+    c.text((tx, 98), "POWER SNACK", black(32), TEXT)
     c.line([(tx, 142), (tx + 196, 138)], col, 2.5)
     c.text((tx, 152), "Bear ate it in two bites.", bold(12), TEXT)
-    c.text((tx, 170), "+100 Pop XP", mono(11), col)
+    c.text((tx, 170), "+100 Power XP", mono(11), col)
 
     # the stat row: bar runs to the end, level ticks over
     ry = 196
     c.rr((tx, ry, 812, ry + 86), 14, fill=mix("#0B0A18", "#FFFFFF", .07), outline=mix("#0B0A18", "#FFFFFF", .2))
     stat_chip(c, "pop", tx + 12, ry + 12, 30)
-    c.text((tx + 52, ry + 10), "Pop", black(14), TEXT)
+    c.text((tx + 52, ry + 10), "Power", black(14), TEXT)
     c.text((tx + 52, ry + 29), "SEEDLING", xbold(7.5), col)
     pill(c, 800, ry + 11, "LEVEL UP", black(9), ACCENT, INK, padx=9, h=19, anchor="r")
     c.text((tx + 190, ry + 20), "14", mono(17), DIM, "mm")
@@ -495,7 +495,7 @@ def locked_item():
     ry = dy0 + 146
     c.rr((dx0 + 10, ry, dx1 - 10, ry + 46), 10, fill=WELL, outline=mix(WELL, STAT["tumble"][1], .45))
     stat_chip(c, "tumble", dx0 + 18, ry + 8, 30)
-    c.text((dx0 + 56, ry + 7), "Needs Tumble 30", black(11), TEXT)
+    c.text((dx0 + 56, ry + 7), "Needs Jump 30", black(11), TEXT)
     bar(c, (dx0 + 56, ry + 28, dx1 - 72, ry + 35), 22 / 30, STAT["tumble"][1], track=mix(WELL, "#FFFFFF", .08))
     c.text((dx1 - 18, ry + 31.5), "22 / 30", mono(9), SOFT, "rm")
     # action: go train, never a dead end
