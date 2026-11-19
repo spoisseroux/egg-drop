@@ -4,6 +4,8 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 ## Now working on
 
+- [ ] **v2 scope (2026-11-19, Fable): `V2-SCOPE-2026-11-19.md` written, awaiting Spencer's approval. Nothing built.** Six pet stats to 99 (Heart, Pop, Poise, Tumble, Fetch, Wonder), total level, Stat Eggs (Stars, shown odds, restricted order), level gates on new items only, stats on the inspect card, Mastery Kites, ranked v2 list. Mockups and curve script: `artifacts/v2-scope-2026-11-19/`. Open questions in section 12; the urgent one is slice S0 (count fetches and quest claims in the live build now: they cannot be backfilled).
+
 - [x] **Launch publish checklist (Spencer 2026-11-17), done in v933:** switch `ProgressStore` to a fresh store (V3) in the final launch build so launch starts clean and both test accounts see onboarding; run the HatchItemStage spec (9858e8b button move) and check the hatch screen on a phone-size capture before publishing.
 
 - [x] **B4 client-run board verify + rollback + rejoin (2026-11-17), landed (flag off; testers and Studio on):** server checkpoint hash every 32 ticks and at the round end; on a mismatch the client restores the server state and replays its log (48 steps a frame), drawn balls ease at most 0.5 studs/frame; rejoin by join request; after 3 resyncs the server runs the round (today's requests as inputs); owner BoardMerge Studio-only on live sessions. Studio: forced desync recovers in 199 ms at lag 0 (2.6 s at 0.6 s: two round trips), repeated desync falls back with payout match, rejoin continues hash-equal, 7 soak rounds with loss spikes 0 mismatches; B2/B3/B0/B1 specs unchanged. Next: B5 Spencer's phone/PC. Plan and results: `artifacts/qa-2026-11-17-v887/B4-plan.md`.
