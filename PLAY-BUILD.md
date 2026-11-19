@@ -16,6 +16,8 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
+**BETA 2026-11-19: first build in the private Pocket Pals Beta** (place 107705084891479, universe 10777916361; Publish As from the dev window, live place not saved or changed). Runtime 6a5e61d: live v935 plus S0 counters (5834b05) and the second colour from white + free White option (b9c90ed). Test content (ZZSpecs) left in. Own saves (fresh), no Robux products. Collaborators: keehar01 (owner), solidSkunk (Edit). Translations: not synced for the beta.
+
 **Store page v2 2026-11-19 (live):** icon C (pink Sparkle Eyes Bear with the Prism Flare deck, `artifacts/store-listing/v2/icon/icon-C-bear-deck-1024.png`) saved in Creator Hub; the 8 v1 Experience Detail thumbnails deleted (Spencer approved; copies in `artifacts/store-listing/v1/UPLOAD-THESE/`) and the 6 v2 thumbnails uploaded in order 1 lead, 3 dress up, 4 merge chains, 2 hatch, 5 friends, 6 decks. Checked on the public game page.
 
 **Ads 2026-11-18:** Sponsored campaign "Pocket Pals launch test" (id 140d5d57-ccec-4266-815f-ab115eff4fa4), approved by Spencer in chat ("A, yes $5/day x3"): objective PLAYS, $5/day DAILY budget, 3 days (2026-11-18 06:20Z to 2026-11-21 04:59Z), card (Visa ending 8632, billing account ebcd19bc-...), devices phone/tablet/desktop, all players, automated bid. Creative: ad image A (`artifacts/store-listing/ad-v1/ad-v1-1920x1080.png`, asset 97803040112547), ad review APPROVED. Read results via Analytics SponsoredAdsClicks/Impressions/SpendUsd.
