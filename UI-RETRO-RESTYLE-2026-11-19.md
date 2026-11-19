@@ -211,3 +211,120 @@ Steps 1 to 4 change most of what Spencer sees. Ship 0 to 5 as one private build 
 2. **Green stays the action colour, as saturated go instead of pastel mint?** Recommended: yes. It keeps "green means go" and matches the A button on the default plate.
 3. **Does the deck LCD go navy too?** Recommended: yes for the HUD and results around the board; no change to the board itself.
 4. **Checker, or plainer?** If the checker feels busy on a phone, keep it in the header band only. Nothing else depends on it.
+
+## Revision 1 (2026-11-19): deck-matched colour, 18 palettes, the moving grid
+
+Spencer: *"i think toy shell. can we make the color change depending on the color of pocket deck we have selected? or should it be a separate ui theming option? and can we make the grid background pattern like seamlessly uv translating diagonally."* Direction A is chosen. This section replaces "fixed, never tinted by the faceplate" in 3.1, the last sentence of section 6, and open questions 1 and 4. Nothing is built; `src/` is untouched. Generator: `python artifacts/v2-ui-restyle-2026-11-19/build_revision1.py` (it reuses `build_mockups.py` unedited).
+
+### R1.1 Recommendation: match the deck by default, Classic Shell as a Settings choice
+
+**Settings > Menu colours: "Match my deck" (default) / "Classic Shell".** Not a separate theme picker.
+
+- Today's menus already follow the deck (`Plates[id].ui`). A fixed blue would take away something players have now, and would make an 18-plate shop feel smaller.
+- It gives every faceplate a second payoff: buy Night Orb and the whole game turns violet. A separate theme list would be a second thing to unlock, explain and store.
+- Classic Shell is the blue from sections 3 to 5, unchanged, for players who want one fixed look. One saved key (proposed `menuColours = "deck" | "classic"`), default `deck`. The Deck style shop should preview a plate's shell on focus, so the colour is seen before buying.
+- Book-only plates (Bookworm, Stargazer) are not in `Themes.Order` and are not drawn here; until they get a row they fall back to Classic.
+
+### R1.2 How each palette is made
+
+![18 deck palettes and Classic](artifacts/v2-ui-restyle-2026-11-19/06-toy-shell-18-deck-palettes.png)
+
+1. **Hue and saturation by hand, per plate**, from its `deep`, face and `accent` (notes are in the Lua comments).
+2. **Brightness is solved, not picked.** Each role is set to one fixed WCAG luminance on every deck: shell 0.131, tray 0.058, trough 0.042, LCD well 0.0105, ink 0.009, soft ink 0.080, soft text 0.80. Contrast is therefore the same on all 18 decks by construction, and a new plate needs only a hue, a saturation and a tag.
+3. **Fixed on every deck:** cream tiles `#FFF4DC`, white text, selected lemon `#FFE14D`, go `#43DB5F`, tomato, and Stars gold `#FFC14D`. Selected stays lemon everywhere: it is the one constant "you are here", and it clears every shell by more than 4:1.
+4. **Mint stays retired.** Scout and Aurora Glass have mint accents, so their tags move to spring green and aurora green.
+5. **No teal behind previews, on any deck.** Every 3D preview and reveal sits on a fixed warm **stage**: berry `#4A1D3A`, dots `#7A3458`, apricot `#FFB26B` for the reveal sunburst and light pool. This replaces the navy preview well in 3.2 and is never deck-tinted. The dark `well` is now only LCD glass for counters (the wallet); on green and cyan decks (hue 140 to 200) it is navy, so no grey-teal glass remains.
+
+Plates that needed special handling:
+| Plate | Problem | Handling |
+|---|---|---|
+| Honey | Yellow cannot hold white text at 4.5:1 | Shell is caramel `#945709`; tag is orange, not gold, so nothing imitates Stars |
+| Pebble (`stone`) | Grey-green, reads dull | Sage, saturation raised from .31 to .40; brighter lime tag |
+| Liquid Chrome | Grey plate, no hue | Steel blue shell at saturation .40; the tag stays silver on purpose |
+| Rose Chrome | Pale pink accent | Dusty rose shell at full depth; the pale pink is the tag |
+| Night Orb | `deep` is near black | Lifted to violet `#7A3CE7`; hot pink tag |
+| Aurora Glass | Navy `deep`, mint accent | Lifted to indigo, kept off Classic blue; tag is aurora green |
+| Scout (`sherbet`) | Accent is the retired mint | Jade shell, spring green tag |
+| Ember, Copperleaf, Sorbet Sky | Three reds | Hue 356 red, 16 copper, 338 raspberry. Tomato danger keys keep their ink outline |
+
+### R1.3 Contrast (computed by `build_revision1.py`: WCAG relative luminance, 18 pairs x 19 palettes = 342 checks, 0 failures)
+
+| Pair | Job | Floor | 18 decks, min to max | Lowest deck | Classic |
+|---|---|---:|---:|---|---:|
+| white on shell | Titles and body on the shell | 4.5 | 5.74 to 5.80 | moss | 5.90 |
+| soft on shell | Hint text on the bare shell | 4.5 | 4.66 to 4.73 | ice | 4.69 |
+| white on tray | Body in trays | 4.5 | 9.62 to 9.72 | gloaming | 9.86 |
+| soft on tray | Secondary text in trays | 4.5 | 7.83 to 7.91 | ice | 7.84 |
+| white on lip | Inactive tab labels in the trough | 4.5 | 11.29 to 11.41 | aqua_pop | 10.88 |
+| stars on tray | Gold digits in a tray | 4.5 | 5.95 to 6.01 | gloaming | 6.10 |
+| stars on well | Wallet digits on the LCD | 4.5 | 10.66 to 10.73 | liquid_chrome | 11.04 |
+| white on well | Text on the LCD | 4.5 | 17.24 to 17.34 | liquid_chrome | 17.85 |
+| inkSoft on cream | Body on cream tiles | 4.5 | 7.33 to 7.39 | stone | 7.73 |
+| inkSoft on lemon | Body on a selected tile | 4.5 | 6.15 to 6.20 | stone | 6.48 |
+| ink on tag | Header plate and label tags | 4.5 | 7.65 to 14.13 | night_orb | 8.33 |
+| outline on shell | Ink outline against the shell (non-text) | 3.0 | 3.05 to 3.09 | stone | 2.98 |
+| lemon on shell | Selected key against the shell (non-text) | 3.0 | 4.41 to 4.45 | moss | 4.53 |
+
+Fixed pairs, the same on every deck: ink on go 9.7, white on stage 13.7, Stars gold on stage 8.5; ink on cream and on lemon are 16 and 13.5 or better. Classic is the approved blue, unchanged: its ornamental outline measures 2.98 against the 3.0 non-text floor (reported, not altered, and excluded from the failure count). Per-deck figures: `artifacts/v2-ui-restyle-2026-11-19/toy-shell-palettes.json`. Rule 1 of section 4 holds on every deck: body text is ink on cream or lemon, or white or soft on shell, tray, well or stage.
+
+### R1.4 Lua table for the implementer (proposed `toyShell` field per plate in `DeckThemes.Plates`)
+
+Shared, not per plate: `Toy.Fixed={cream="#FFF4DC",creamLip="#D6C196",onShell="#FFFFFF",selected="#FFE14D",selectedLip="#D9A31C",stars="#FFC14D",go="#43DB5F",goLip="#1C8F3C",tomato="#FF5A4D",tomatoText="#B3261E",stage="#4A1D3A",stageDot="#7A3458",stageGlow="#FFB26B"}`. `tag` is the header plate and label-tag fill (ink text); `shellLip` is also the tab trough. Classic Shell is the 3.1 table with `tag="#FF8FC0"`. Same text in `artifacts/v2-ui-restyle-2026-11-19/toy-shell-palettes.lua.txt`.
+
+```lua
+ sherbet={shell="#0E735B",shellHi="#5BB19D",shellLip="#054334",tray="#084E3D",well="#0F1A32",wellDot="#27385D",ink="#0A1B17",inkSoft="#34574E",onShellSoft="#CDEFE7",tag="#A4F57C",tagLip="#69A256"}, -- jade from deep; accent is the retired mint, so the tag moves to spring green
+ stone={shell="#426F51",shellHi="#85AB91",shellLip="#25402E",tray="#2C4B36",well="#0F1A32",wellDot="#27385D",ink="#0A1C10",inkSoft="#355840",onShellSoft="#CEF0D9",tag="#C9F08A",tagLip="#809F5C"}, -- grey-green plate: saturation raised .31 to .40 (sage), tag saturation raised
+ ice={shell="#186F84",shellHi="#67ACBD",shellLip="#0B404D",tray="#0F4B59",well="#0F1A32",wellDot="#27385D",ink="#0B1A1E",inkSoft="#37555C",onShellSoft="#D1ECF3",tag="#70ECFF",tagLip="#4A9CAA"}, -- cyan side of the three blues
+ brick={shell="#BE2E37",shellHi="#E7878D",shellLip="#71171D",tray="#831D24",well="#320F11",wellDot="#5E272B",ink="#2A1011",inkSoft="#714447",onShellSoft="#FFE0E2",tag="#FF9B70",tagLip="#AE664C"}, -- red from face and deep
+ moss={shell="#23752E",shellHi="#6DB176",shellLip="#124318",tray="#164F1E",well="#091F0C",wellDot="#1B4020",ink="#0A1C0D",inkSoft="#355839",onShellSoft="#CEF0D2",tag="#BCF57B",tagLip="#78A351"}, -- leaf green, pushed off jade
+ honey={shell="#945709",shellHi="#C79A60",shellLip="#563201",tray="#643B04",well="#23190B",wellDot="#47361E",ink="#1F170C",inkSoft="#5E4E38",onShellSoft="#F4E6D2",tag="#FF9838",tagLip="#AA6727"}, -- yellow cannot hold white text, so the shell is caramel; tag is orange, not gold (Stars)
+ gloaming={shell="#5A5ABC",shellHi="#9D9DDB",shellLip="#33336F",tray="#3D3D81",well="#141443",wellDot="#313173",ink="#141435",inkSoft="#4B4B7D",onShellSoft="#E6E6FF",tag="#92ECE6",tagLip="#629AA3"}, -- dusk periwinkle
+ copperleaf={shell="#A54B2B",shellHi="#D2937C",shellLip="#602A16",tray="#70321B",well="#2A150D",wellDot="#533023",ink="#24140E",inkSoft="#68493E",onShellSoft="#FCE2D8",tag="#FFBC90",tagLip="#AC7C5F"}, -- copper from face, not the maroon deep
+ aqua_pop={shell="#0E69AB",shellHi="#69A9D6",shellLip="#033D65",tray="#074774",well="#0C1C27",wellDot="#213B4E",ink="#0D1A22",inkSoft="#3B5363",onShellSoft="#D6EBF9",tag="#6FE3FF",tagLip="#4A97AB"}, -- azure
+ lime_gel={shell="#37730E",shellHi="#7DB05B",shellLip="#1E4305",tray="#244E08",well="#111E09",wellDot="#293F1A",ink="#111B0A",inkSoft="#415633",onShellSoft="#DAEECC",tag="#B6F24B",tagLip="#77A032"}, -- lime from deep
+ sorbet_sky={shell="#B63363",shellHi="#E087A8",shellLip="#6C1A38",tray="#7D2143",well="#310F1B",wellDot="#5C273A",ink="#291019",inkSoft="#6F4353",onShellSoft="#FEE0EB",tag="#FFB37A",tagLip="#AE7555"}, -- raspberry from deep, peach tag
+ liquid_chrome={shell="#526689",shellHi="#93A3BD",shellLip="#2E3B50",tray="#37455C",well="#0E1B30",wellDot="#263959",ink="#0F1827",inkSoft="#41516C",onShellSoft="#DDE8FB",tag="#DCE6F5",tagLip="#8E98A7"}, -- grey plate: steel blue shell, the tag stays silver on purpose
+ tidepool={shell="#1C62C9",shellHi="#78A4E4",shellLip="#0C3879",tray="#11428A",well="#0E1B2E",wellDot="#253957",ink="#0F1827",inkSoft="#40516A",onShellSoft="#DAE9FE",tag="#5CD6E8",tagLip="#3F8E9F"}, -- ocean blue
+ aurora_glass={shell="#5246FB",shellHi="#9D97F9",shellLip="#2D259A",tray="#372EAE",well="#171441",wellDot="#343071",ink="#161433",inkSoft="#4E4B7C",onShellSoft="#E6E5FE",tag="#A8F27A",tagLip="#719E5F"}, -- navy deep lifted to indigo (kept off Classic blue); mint accent moved to aurora green
+ prism_flare={shell="#96459C",shellHi="#C88ECD",shellLip="#58265B",tray="#662E6A",well="#2C0E2F",wellDot="#562559",ink="#260F27",inkSoft="#6A426D",onShellSoft="#FBDFFD",tag="#F3B6FF",tagLip="#A577AD"}, -- orchid
+ night_orb={shell="#7A3CE7",shellHi="#B490F2",shellLip="#471F8C",tray="#5327A0",well="#21123A",wellDot="#432C69",ink="#1D1230",inkSoft="#594877",onShellSoft="#EDE3FD",tag="#FF7AD9",tagLip="#A95299"}, -- near-black deep lifted to violet; hot pink tag
+ grape_soda={shell="#8A46B7",shellHi="#BD91DB",shellLip="#51266D",tray="#5E2E7D",well="#271035",wellDot="#4C2962",ink="#21112C",inkSoft="#614573",onShellSoft="#F1E2FB",tag="#C9A6FF",tagLip="#896DAF"}, -- grape
+ rose_chrome={shell="#994C72",shellHi="#C992AE",shellLip="#592B42",tray="#68334D",well="#300F1F",wellDot="#5C2641",ink="#29101C",inkSoft="#6F4359",onShellSoft="#FEDFEE",tag="#FFC2D4",tagLip="#AE7E8E"}, -- pale plate: dusty rose shell at full depth, pink tag
+```
+
+### R1.5 Mockups: Customize in seven decks and Classic
+
+![Customize in deck colours](artifacts/v2-ui-restyle-2026-11-19/07-customize-deck-colours.png)
+
+Scout, Ember, Honey, Pebble, Night Orb, Liquid Chrome, Rose Chrome and Classic; singles are `07-customize-<id>.png`. Same rects as section 5. Drawings, not Studio captures; the pet and jars are the capture's own.
+
+### R1.6 The moving grid
+
+![Scrolling preview](artifacts/v2-ui-restyle-2026-11-19/08-grid-scroll-preview.gif)
+Preview: `08-grid-scroll-preview.gif` and `.mp4` (60 frames, 15 fps, 4 s; the script checks that frame 60 is pixel-identical to frame 0). Tile: `toy-checker-tile-32@2x.png`, drawn by script.
+
+| | Spec |
+|---|---|
+| Tile | 32 x 32 px: two 16 px squares each way (up from 12 px, so the motion reads on a phone). The image is 64 x 64 (2x), white squares on transparent, tinted by `ImageColor3`. **One** tiled ImageLabel per surface |
+| Speed and direction | 8 px/s on each axis, down and to the right (11.3 px/s on the diagonal). One tile every 4 s. Constant, linear, no easing |
+| Opacity | 9% white over the shell (`ImageTransparency` 0.91). The top-to-bottom fade to 35% stays, as a **static** shell-coloured gradient frame above the pattern, so the fade does not travel |
+| Gets it | The sheet background (the shell). Stage wells: the existing 6 px dot grid drifts the same way at 3 px/s per axis |
+| Never | Cream tiles, trays, header plates, anything with a sentence on it, the board, the deck LCD HUD, scrolling list content |
+| Reduced Motion | Profile key `reduced` (or `Kit.reduced()`): no tween is created and the pattern rests at offset 0. It is still drawn, only still |
+| Hidden | Pause the tween when the sheet's `Visible` is false or its ScreenGui is disabled; resume on show; cancel on destroy |
+
+**Seamless method (recommended):** a holder Frame with `ClipsDescendants = true`, sized to the sheet inside its outline. Inside it, one ImageLabel with `ScaleType = Tile`, `TileSize = UDim2.fromOffset(32, 32)` and `Size = UDim2.new(1, 32, 1, 32)` (one tile larger on each axis). Its `Position` runs from `fromOffset(-32, -32)` to `fromOffset(0, 0)`; the travel is exactly one tile, so the jump back cannot be seen. Drive it with **one linear `TweenService` tween, 4 s, `RepeatCount = -1`**: no per-frame Lua. The same thing by hand: `offset = (t * 8) % 32` on both axes, `Position = fromOffset(offset - 32, offset - 32)`. **Alternative, not verified in Studio:** keep the label still and animate `ImageRectOffset` across a 128 px image with a 64 px `ImageRectSize`. Use it only if the spike shows it tiles cleanly.
+
+Risks for the step 0 spike:
+1. `ClipsDescendants` clips to the rectangle, not to `UICorner`, so the pattern would show in the sheet's four rounded corners. The toy frame image must cover them, or four small corner masks. Do **not** fix this with a CanvasGroup (see the performance note).
+2. GUI positions land on whole pixels, so at 8 px/s the pattern steps 1 px every 125 ms. That is intended (it reads as retro). If it looks jittery on a device, 16 px/s halves the step time.
+
+**Phone performance:** one tiled ImageLabel is one image draw whatever its size, and the tween runs in the engine. Budget: at most one moving sheet and two moving wells on screen. Never put a moving pattern inside a CanvasGroup, which would be redrawn every frame; that is also why the fade is a separate static frame. If a low-end phone still drops frames, wells go static first, then the sheet. None of this has been measured on a device yet.
+
+### R1.7 Migration changes
+
+- Step 1: `Kit.Color` reads `theme.toyShell` merged over `Toy.Fixed`, or the Classic table when `menuColours == "classic"`. The existing `Plates[id].ui` palette stays until step 9 so nothing breaks part-way.
+- Step 3: `Kit.previewWell` takes the fixed stage colours; `Kit.well` keeps the per-deck LCD colour.
+- Step 4: `Kit.sheet` builds the holder, tile, fade frame and tween, and owns pause, resume and Reduced Motion.
+- One new asset to upload (the tile). One new Settings row, whose strings go through the localization sync.
+- Still open: whether the deck LCD HUD (section 5, screen 1) also follows the deck. Recommended yes, with the same tray and well tokens; the board stays untouched.
