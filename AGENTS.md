@@ -7,6 +7,7 @@ Spencer's standing instruction, 8 November 2026:
 - The primary agent coordinates integration, actual Studio controls, tests, evidence and release checkpoints. Follow the review-driven-build skill for substantial implementation changes.
 - **Same roles in Claude Code (2026-11-14):** Fable = Astra (creative, art, UI look, critique of renders), Opus = Sol (implementation code, architect and code reviews). Briefs written by either tool's agents carry over: Fable docs are Astra's lane, Opus docs are Sol's.
 - **Current handoff: read `CODEX-HANDOFF-2026-11-14.md` first.** It holds the state at private v634, what's left, the proven workflows, and Spencer's taste and rules. First step: wait for Spencer's QA pass on v634 before building.
+- **Private beta (2026-11-19):** "Pocket Pals Beta", place 107705084891479, universe 10777916361. Test v2 builds there first; it has its own saves and no Robux products. Live stays 96451847774961.
 - Work in this Egg Drop repository on the authorized branch. Studio target is place **96451847774961**; never modify the other `roblox_suica_collector` project/place.
 
 Keep `TODO.md` current while working: update **Now working on** when a task starts, check items off when they land, and add new findings as they come up. Do not wait until the end of a session.
