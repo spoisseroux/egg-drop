@@ -1,0 +1,53 @@
+{
+ "bear": {
+  "tris": 1302,
+  "size_xyz": [
+   0.99,
+   0.963,
+   1.479
+  ]
+ },
+ "kitten": {
+  "tris": 2032,
+  "new_piece_tris": 1360,
+  "size_xyz": [
+   1.418,
+   1.106,
+   1.608
+  ],
+  "new_pieces": [
+   "PetKitten__CheekTuftAL",
+   "PetKitten__CheekTuftAR",
+   "PetKitten__CheekTuftBL",
+   "PetKitten__CheekTuftBR",
+   "PetKitten__EarInnerL",
+   "PetKitten__EarInnerR",
+   "PetKitten__EarL",
+   "PetKitten__EarR",
+   "PetKitten__Head",
+   "PetKitten__Nose",
+   "PetKitten__Tail",
+   "PetKitten__WhiskerPadL",
+   "PetKitten__WhiskerPadR"
+  ]
+ },
+ "snacks": {
+  "nibble": {
+   "diameter": 0.2,
+   "tris": 280
+  },
+  "snack": {
+   "diameter": 0.25,
+   "tris": 492
+  },
+  "feast": {
+   "diameter": 0.3,
+   "tris": 992
+  }
+ },
+ "feet_z": -0.0,
+ "palette": {
+  "kitten_primary": "#FFB86B",
+  "kitten_secondary": "#FFF2DD"
+ }
+}
