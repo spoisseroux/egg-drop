@@ -16,7 +16,7 @@ No experience publish; published QA baseline remains private v634. World/garden/
 
 ## Published baseline and history
 
-**PUBLIC v942 Published 2026-11-19 — runtime 5834b05 (v935 + S0 counters only), servers NOT restarted (old servers keep v935 until they empty).** Spencer: "you can publish those counters now". Built from a separate checkout of 5834b05 served by Rojo (launch.project.json), so the White second colour (b9c90ed) is NOT live. All 8 files that differ from HEAD verified byte-equal to 5834b05 in Studio before publish; Rojo disconnected; strip script: 0 removed (ZZSpecs absent). Adds optional save counters questsDaily, questsWeekly, fetches (no UI). Translations: no string changes.
+**PUBLIC v942 Published 2026-11-19 — runtime 5834b05 (v935 + S0 counters only), servers restarted (Spencer: "Yes, restart"; Open Cloud restartServers 200 OK).** Spencer: "you can publish those counters now". Built from a separate checkout of 5834b05 served by Rojo (launch.project.json), so the White second colour (b9c90ed) is NOT live. All 8 files that differ from HEAD verified byte-equal to 5834b05 in Studio before publish; Rojo disconnected; strip script: 0 removed (ZZSpecs absent). Adds optional save counters questsDaily, questsWeekly, fetches (no UI). Translations: no string changes.
 
 **BETA 2026-11-19: first build in the private Pocket Pals Beta** (place 107705084891479, universe 10777916361; Publish As from the dev window, live place not saved or changed). Runtime 6a5e61d: live v935 plus S0 counters (5834b05) and the second colour from white + free White option (b9c90ed). Test content (ZZSpecs) left in. Own saves (fresh), no Robux products. Collaborators: keehar01 (owner), solidSkunk (Edit). Translations: not synced for the beta.
 
