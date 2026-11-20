@@ -1,15 +1,16 @@
 -- v2 Stat Snacks: the 3D snack (V2-PET-AND-SNACKS-SCOPE 2.1). Size is the number of layers (a
 -- child can count it); the stat is the rune on the icing, never only the colour.
 --
--- ART HOOK: Model.build is the one place a snack model is made. It builds placeholder geometry
--- (stacked rounded discs: biscuit, cream, stat-colour icing, a rune decal, sugar pearls on the
--- Feast). The production models (Fable, commit eafef32) are in assets/art-source/snacks/export/
--- (snack-{nibble,snack,feast}.fbx, biscuit.png, rune-decal-<stat>-256.png, the manifest): pieces
--- biscuit (shared texture), icing (Color = stat colour, rune decal on its top via UVs) and pearls
--- (Feast only, #FFF6E9); 1 unit = 1 stud, origin at the centre. To swap them in, upload the FBX
--- and textures, keep the MeshParts in a ReplicatedStorage pack like PetAssets, and clone them here
--- with the same contract: a Model, PrimaryPart at the centre, attributes Layers / StatId / SizeId,
--- parts named Layer<n> (bitten top down by SnackEating), all non-colliding and anchored.
+-- Model.build is the one place a snack model is made. Production (2026-11-19, Sol): Fable's meshes
+-- (commit eafef32, assets/art-source/snacks/export/) are uploaded and kept in
+-- ReplicatedStorage.SnackAssets (assets/snacks/SnackAssets.rbxmx, built by
+-- scripts/build_bunny_assets.py): one Model per size with pieces Biscuit (biscuit.png on its UVs,
+-- every layer in one mesh), Icing (Color = the stat colour, the stat's rune as a Decal on its UVs:
+-- the top fills the image, the cream ring sits in a clear corner) and Pearls (Feast only, #FFF6E9);
+-- 1 unit = 1 stud at the template's size, origin at the centre. If the pack or a mesh resource is
+-- missing, the placeholder discs below stand in. The contract for both: a Model, its pivot at the
+-- centre, attributes Layers / StatId / SizeId / SnackBackend, parts carrying SnackLayer (bitten top
+-- down by SnackEating: icing and pearls first, the biscuit last), all non-colliding and anchored.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local K=require(Shared.StatEggCatalog)
 local Stats=require(Shared.StatCatalog)
@@ -17,6 +18,10 @@ local Model={}
 Model.Biscuit=Color3.fromHex("#E9B97C")
 Model.Cream=Color3.fromHex("#FFF6E9")
 Model.Atlas="rbxassetid://99900642594866"
+-- Rune decals for the production icing (image ids behind the uploaded Decals).
+Model.RuneDecal={heart="rbxassetid://132451464498773",power="rbxassetid://122552653854171",energy="rbxassetid://91572311309275",
+	jump="rbxassetid://124268037204793",speed="rbxassetid://140671684960162",smarts="rbxassetid://70427672535772"}
+Model.PearlColor=Color3.fromHex("#FFF6E9")
 Model.Rune={heart=Vector2.new(8,8),power=Vector2.new(80,8),energy=Vector2.new(152,8),jump=Vector2.new(224,8),speed=Vector2.new(296,8),smarts=Vector2.new(368,8)}
 
 local function disc(model,name,diameter,height,y,color,layer)
@@ -33,14 +38,111 @@ local function disc(model,name,diameter,height,y,color,layer)
 	return part
 end
 
+-- Mesh resources by size and piece (assets/snacks/snack-studio-import.json). Rojo live sync can
+-- create the pack's MeshParts without their mesh resource; then the client makes its own copy of
+-- each piece once with AssetService:CreateMeshPartAsync (Model.warm) and clones that.
+Model.MeshIds={
+	nibble={Biscuit="rbxassetid://123522428105057",Icing="rbxassetid://105538924874011"},
+	snack={Biscuit="rbxassetid://121232393235156",Icing="rbxassetid://113816195081338"},
+	feast={Biscuit="rbxassetid://72678333941841",Icing="rbxassetid://77911324217998",Pearls="rbxassetid://140176400239898"},
+}
+Model.BiscuitTexture="rbxassetid://76061535908073"
+local function healthy(part)return part~=nil and part:IsA("MeshPart")and part.MeshId~=""and part.MeshSize.X>0 end
+local warmed,warming,lastWarm={},false,-math.huge
+-- Builds the runtime copies of any template piece without its resource, in the background. One
+-- pass at a time; a size that failed (a mesh download error) is tried again on a later call.
+function Model.warm()
+	-- At most one pass every 10 s, so a failing download is never retried per snack built.
+	if warming or os.clock()-lastWarm<10 then return end
+	warming,lastWarm=true,os.clock()
+	task.spawn(function()
+		local pack=game:GetService("ReplicatedStorage"):FindFirstChild("SnackAssets")
+		local AssetService=game:GetService("AssetService")
+		for sizeId,pieces in pairs(Model.MeshIds)do
+			local size=K.size(sizeId);local template=pack and pack:FindFirstChild(size.name)
+			local made={}
+			for piece,id in pairs(pieces)do
+				local source=template and template:FindFirstChild(piece)
+				if warmed[sizeId]or not source then
+					-- Ready already, or no template piece to size it by: nothing to fetch.
+				elseif healthy(source)then made[piece]=source
+				else
+					local ok,part=pcall(function()return AssetService:CreateMeshPartAsync(Content.fromUri(id),{CollisionFidelity=Enum.CollisionFidelity.Box,RenderFidelity=Enum.RenderFidelity.Automatic})end)
+					if ok and part then
+						part.Name=piece;part.Size=source.Size;part.CFrame=source.CFrame
+						if piece=="Biscuit"then part.TextureID=Model.BiscuitTexture end
+						made[piece]=part
+					end
+				end
+			end
+			local complete=not warmed[sizeId];for piece in pairs(pieces)do if not made[piece]then complete=false end end
+			if complete then warmed[sizeId]=made end
+		end
+		warming=false
+	end)
+end
+
+-- The production pieces for a size ({Biscuit=, Icing=, Pearls=} MeshParts at template size), only
+-- when every piece has its mesh resource; nil while they load (the placeholder stands in).
+function Model.template(sizeId)
+	local size=K.size(sizeId);if not size or not Model.MeshIds[size.id]then return nil end
+	if warmed[size.id]then return warmed[size.id]end
+	local pack=game:GetService("ReplicatedStorage"):FindFirstChild("SnackAssets")
+	local template=pack and pack:FindFirstChild(size.name)
+	local pieces={}
+	for piece in pairs(Model.MeshIds[size.id])do
+		local part=template and template:FindFirstChild(piece)
+		if not healthy(part)then Model.warm();return nil end
+		pieces[piece]=part
+	end
+	warmed[size.id]=pieces
+	return pieces
+end
+local function production(template,size,statId,color,width)
+	local model=Instance.new("Model");model.Name="StatSnack_"..size.id
+	local biscuit=template.Biscuit
+	-- Template biscuits are the catalogue widths (0.20 / 0.25 / 0.30); scale to the asked width.
+	local scale=width/math.max(biscuit.Size.X,1e-3)
+	local base
+	for _,source in pairs(template)do
+		do
+			local part=source:Clone()
+			part.Size=source.Size*scale;part.CFrame=CFrame.new(source.Position*scale)*source.CFrame.Rotation
+			part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.CastShadow=false;part.Massless=true
+			part.Material=Enum.Material.SmoothPlastic
+			if part.Name=="Biscuit"then part.Color=Color3.new(1,1,1);part:SetAttribute("SnackLayer",1);base=part
+			elseif part.Name=="Icing"then
+				part.Color=color;part:SetAttribute("SnackLayer",size.layers)
+				local rune=Model.RuneDecal[statId]
+				if rune then
+					local decal=Instance.new("Decal");decal.Name="Mark";decal.Texture=rune;decal.Face=Enum.NormalId.Top;decal.Parent=part
+				end
+			else part.Color=Model.PearlColor;part:SetAttribute("SnackLayer",size.layers)end
+			part.Parent=model
+		end
+	end
+	model.PrimaryPart=base
+	base.PivotOffset=base.CFrame:Inverse()
+	model:SetAttribute("SnackBackend","Production")
+	return model
+end
+
 -- sizeId: nibble | snack | feast; statId: a StatCatalog id; width (studs, default the catalogue's).
-function Model.build(sizeId,statId,width)
+-- options.placeholder forces the disc stand-in (specs).
+function Model.build(sizeId,statId,width,options)
 	local size=K.size(sizeId)or K.Sizes.nibble
 	local stat=Stats.ById[statId]
 	local color=if stat then stat.color else Color3.fromHex("#FFFFFF")
 	width=width or size.width
+	local template=not(options and options.placeholder)and Model.template(size.id)or nil
+	if template then
+		local made=production(template,size,statId,color,width)
+		made:SetAttribute("Layers",size.layers);made:SetAttribute("StatId",statId);made:SetAttribute("SizeId",size.id)
+		return made
+	end
 	local model=Instance.new("Model");model.Name="StatSnack_"..size.id
 	model:SetAttribute("Layers",size.layers);model:SetAttribute("StatId",statId);model:SetAttribute("SizeId",size.id)
+	model:SetAttribute("SnackBackend","Placeholder")
 	local h=width*.2
 	local y=-(size.layers*h+(size.layers-1)*h*.45)/2+h/2
 	local base
@@ -102,4 +204,6 @@ function Model.viewport(parent,sizeId,statId,props)
 	api.step(0)
 	return api
 end
+-- Ready the production meshes early so the first snack shown is already the real one.
+if game:GetService("RunService"):IsRunning()then task.defer(function()for id in pairs(Model.MeshIds)do Model.template(id)end end)end
 return Model

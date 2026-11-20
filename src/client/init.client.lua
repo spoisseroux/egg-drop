@@ -12,7 +12,7 @@ local HttpService = game:GetService("HttpService")
 -- reveal drew the Bear as stretched boxes, then untextured, while they downloaded).
 task.delay(3,function()
 	local assets={}
-	for _,name in ipairs({"PetAssets","PetMaterials","PetMaterialsTwoTone","PetCharmAssets","PetToyAssets"})do
+	for _,name in ipairs({"PetAssets","PetMaterials","PetMaterialsTwoTone","PetCharmAssets","PetToyAssets","SnackAssets"})do
 		local folder=ReplicatedStorage:FindFirstChild(name)
 		if folder then table.insert(assets,folder)end
 	end

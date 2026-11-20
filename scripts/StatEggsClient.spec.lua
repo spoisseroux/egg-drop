@@ -13,6 +13,7 @@ return function(client)
 	local SnackModel=require(client.SnackModel)
 	local Shop=require(client.EggHatchView)
 	local K=require(game:GetService("ReplicatedStorage").Shared.StatEggCatalog)
+	local Stats=require(game:GetService("ReplicatedStorage").Shared.StatCatalog)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local all={"heart","power","energy","jump","speed","smarts"}
@@ -120,9 +121,26 @@ return function(client)
 
 	test("the snack model: layers by size, rune on the icing, pearls on the Feast",function()
 		for size,layers in pairs({nibble=1,snack=2,feast=3})do
-			local m=SnackModel.build(size,"heart",.3)
+			local m=SnackModel.build(size,"heart",.3,{placeholder=true})
+			assert(m:GetAttribute("SnackBackend")=="Placeholder")
 			assert(m:GetAttribute("Layers")==layers and m.PrimaryPart and m:FindFirstChild("Layer"..layers)and m:FindFirstChild("Icing"))
 			assert((m:FindFirstChild("Pearl1")~=nil)==(size=="feast"))
+			for _,part in ipairs(m:GetDescendants())do if part:IsA("BasePart")then assert(not part.CanCollide and part.Anchored)end end
+			m:Destroy()
+		end
+		-- Production meshes (ReplicatedStorage.SnackAssets, or their runtime copies): same contract.
+		SnackModel.warm()
+		local deadline=os.clock()+8
+		while not(SnackModel.template("nibble")and SnackModel.template("snack")and SnackModel.template("feast"))and os.clock()<deadline do task.wait(.2)end
+		for size,layers in pairs({nibble=1,snack=2,feast=3})do
+			local m=SnackModel.build(size,"jump",.3)
+			assert(m:GetAttribute("SnackBackend")=="Production","production snack "..size)
+			assert(m:GetAttribute("Layers")==layers and m:GetAttribute("StatId")=="jump"and m:GetAttribute("SizeId")==size and m.PrimaryPart)
+			local biscuit,icing=m:FindFirstChild("Biscuit"),m:FindFirstChild("Icing")
+			assert(biscuit and icing and biscuit:GetAttribute("SnackLayer")==1 and icing:GetAttribute("SnackLayer")==layers)
+			assert(icing.Color==Stats.ById.jump.color and icing:FindFirstChild("Mark")and icing.Mark.Texture==SnackModel.RuneDecal.jump,"the rune decal on the stat-colour icing")
+			assert((m:FindFirstChild("Pearls")~=nil)==(size=="feast"))
+			assert(math.abs(m:GetExtentsSize().X-.3)<.02,"scaled to the asked width")
 			for _,part in ipairs(m:GetDescendants())do if part:IsA("BasePart")then assert(not part.CanCollide and part.Anchored)end end
 			m:Destroy()
 		end
