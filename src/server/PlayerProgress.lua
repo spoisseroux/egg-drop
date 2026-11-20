@@ -110,6 +110,9 @@ local function decode(key, record, success)
 		reduced = record.reduced == true,
 		-- R6: "Let visitors greet my pet" turned off. Optional and additive: missing reads as on.
 		greetOff = record.greetOff == true,
+		-- Toy Shell R1.1: Settings > Menu colours "Classic Shell". Optional and additive:
+		-- missing reads as "Match my deck".
+		menuClassic = record.menuClassic == true,
 		whiteSecond = whiteSecondOf(record.whiteSecond),
 		-- Last difficulty played (picker focus). Never trusted for payout; the
 		-- run's own server-stored heat is.
@@ -193,6 +196,7 @@ flush=function(profile)
 	local earnedTrials = profile.earnedTrials
 	local soundChange, motionChange, heatChange = profile.soundChange, profile.motionChange, profile.heatChange
 	local greetChange = profile.greetChange
+	local menuChange = profile.menuChange
 	local whiteChange = profile.whiteChange
 	local function merge(previous)
 		local record = if type(previous) == "table" then table.clone(previous) else {}
@@ -222,6 +226,7 @@ flush=function(profile)
 		mergeSetting("sound", soundChange)
 		mergeSetting("reduced", motionChange)
 		mergeSetting("greetOff", greetChange)
+		mergeSetting("menuClassic", menuChange)
 		mergeSetting("whiteSecond", whiteChange)
 		mergeSetting("heat", heatChange)
 		if next(petChanges)then record.petAppearance=PetAppearance.merge(record.petAppearance,petChanges)end
@@ -355,11 +360,14 @@ flush=function(profile)
 	if greetChange == profile.greetChange then
 		profile.greetChange = nil
 	end
+	if menuChange == profile.menuChange then
+		profile.menuChange = nil
+	end
 	if whiteChange == profile.whiteChange then
 		profile.whiteChange = nil
 	end
 	if not (profile.earnedRank or profile.earnedBest or profile.themeAt or profile.companionAt or profile.companionChange
-		or profile.earnedTrials or profile.soundChange or profile.motionChange or profile.heatChange or profile.greetChange or profile.whiteChange or next(profile.petAppearanceChanges or {})) then
+		or profile.earnedTrials or profile.soundChange or profile.motionChange or profile.heatChange or profile.greetChange or profile.menuChange or profile.whiteChange or next(profile.petAppearanceChanges or {})) then
 		pending[profile] = nil
 	end
 	finishFlush(profile,not profile.saveFailed)
@@ -388,6 +396,7 @@ end
 
 function Progress.setSetting(profile, key, value)
 	local changeKey = if key == "sound" then "soundChange" elseif key == "greetOff" then "greetChange"
+		elseif key == "menuClassic" then "menuChange"
 		elseif key == "whiteSecond" then "whiteChange" else "motionChange"
 	profile[key] = value
 	profile[changeKey] = { value = value, at = DateTime.now().UnixTimestampMillis }

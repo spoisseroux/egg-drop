@@ -85,6 +85,8 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  self.motion=button(scroll,"MotionSetting","Motion: Full",function()self:changeSetting("motion")end)
  -- QA v685 R6: "Let visitors greet my pet" (a brief wave, no rewards). On by default.
  self.greet=button(scroll,"GreetSetting",require(Shared.UICopy).get("inspect.setting.on"),function()self:changeSetting("greetings")end)
+ -- Toy Shell R1.1: "Menu colours: Match my deck / Classic Shell" (a saved profile setting).
+ self.menuColours=button(scroll,"MenuColoursSetting",require(Shared.UICopy).get("inspect.menuColours.deck"),function()self:changeSetting("menuColours")end)
  -- v1 track B: opens the bug report / suggestion sheet (init.client sets `onReport`).
  self.reportButton=button(scroll,"ReportSetting",require(Shared.UICopy).get("report.entry"),function()self:openReport()end)
  -- QA v2 R3.8: "Show tips again" (init.client sets `onTips`: R1's coach-tip replay).
@@ -169,7 +171,7 @@ function Picker:layout()
    local h=Art.textHeight(self.saveDetail,bodyW-8,24)
    place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
   end
-  for _,control in ipairs({self.sound,self.music,self.motion,self.greet,self.reportButton,self.tipsButton})do
+  for _,control in ipairs({self.sound,self.music,self.motion,self.greet,self.menuColours,self.reportButton,self.tipsButton})do
    if control==self.tipsButton and not control.Visible then continue end
    styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
    place(control,4,y,bodyW-8,h);y+=h+8
@@ -235,6 +237,7 @@ function Picker:showTab(active)
  local settings=active=="Settings"
  self.sound.Visible,self.music.Visible,self.motion.Visible=settings,settings,settings
  self.greet.Visible=settings
+ self.menuColours.Visible=settings
  self.reportButton.Visible=settings and self.onReport~=nil
  self.tipsButton.Visible=settings and self.onTips~=nil
  self.scroll.CanvasPosition=Vector2.zero;self:layout()
@@ -289,7 +292,7 @@ function Picker:replayTips()
  if self.onAccepted then self.onAccepted("confirm")end;return true
 end
 function Picker:changeSetting(key)
- local control=if key=="sound"then self.sound elseif key=="music"then self.music elseif key=="motion"then self.motion elseif key=="greetings"then self.greet else nil
+ local control=if key=="sound"then self.sound elseif key=="music"then self.music elseif key=="motion"then self.motion elseif key=="greetings"then self.greet elseif key=="menuColours"then self.menuColours else nil
  if not self.shade.Visible or self.active~="Settings"or not control or not control.Interactable then return false end
  self.onSetting(key);if self.onAccepted then self.onAccepted("confirm")end;return true
 end
@@ -335,6 +338,11 @@ function Picker:refreshAppearance()
  self.shop:setContext({equipped=shown.theme or Themes.Default,facts=self.facts,chosen=self.themeId or false,note=themeNote or false,retry=themeRetry})
  self.shop.backgrounds:setContext({confirmed=shown.background or Backgrounds.Default,facts=self.facts or {},themeId=shown.theme or Themes.Default,
   chosen=self.backgroundId or false,note=backgroundNote or false,retry=backgroundRetry})
+end
+-- Toy Shell R1.1: the menu colours setting (the owner's board attribute MenuColours).
+function Picker:setMenuColours(mode)
+ local text=require(Shared.UICopy).get(if mode=="classic"then "inspect.menuColours.classic"else "inspect.menuColours.deck")
+ if self.menuColours.Text~=text then self.menuColours.Text=text;if self.shade.Visible and self.active=="Settings"then self:layout()end end
 end
 -- R6: the visitor-greetings setting (the owner's board attribute GreetingsOff, inverted).
 function Picker:setGreetings(on)

@@ -424,6 +424,8 @@ local Table={
   hello="Say hello",sent="Hello!",closer="Come closer",busy="Playing right now",off="Greetings off",wait="In a moment",
   gone="Pet moved on",close="Close",spin="Drag to turn",
   setting={on="Pet greetings: On",off="Pet greetings: Off"},
+  -- Toy Shell R1.1: Settings > Menu colours (menus follow the equipped deck, or Classic Shell).
+  menuColours={deck="Menu colours: Match my deck",classic="Menu colours: Classic Shell"},
   -- v2 S4: the Stats tab (default) beside the Outfit grid, and Compare.
   tab={stats="Stats",outfit="Outfit"},compare="Compare",you="You {count}",
   statsPrivate="Levels only. XP, Stars and history stay private.",statsNone="No stats to show yet.",

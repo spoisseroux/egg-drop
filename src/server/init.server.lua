@@ -800,6 +800,7 @@ local function addPlayer(player)
 	folder:SetAttribute("AppearanceRevision",board.appearance.revision)
 	folder:SetAttribute("SoundLevel", profile.sound)
 	folder:SetAttribute("ReducedEffects", profile.reduced)
+	folder:SetAttribute("MenuColours", if profile.menuClassic then "classic" else "deck")
 	folder:SetAttribute("SaveStatus", if profile.loadFailed then "Temporary" else nil)
 	profile.onSaveFailed = function(failed)
 		if boards[player] == board and folder.Parent then
@@ -1104,6 +1105,14 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		Progress.setSetting(board.profile, "whiteSecond", map)
 		publishPetAppearance(board)
 		Progress.requestFlush(board.profile)
+		return
+	end
+	if action == "menuColours" then
+		-- Toy Shell R1.1 Settings: "Menu colours: Match my deck / Classic Shell" (client paint only).
+		if value ~= nil or not canProgress(board) then return end
+		local classic = board.profile.menuClassic ~= true
+		Progress.setSetting(board.profile, "menuClassic", classic)
+		board.folder:SetAttribute("MenuColours", if classic then "classic" else "deck")
 		return
 	end
 	if action == "greetings" then
@@ -2108,6 +2117,7 @@ task.spawn(function()
 							board.folder:SetAttribute("AppearanceRevision",board.appearance.revision)
 							board.folder:SetAttribute("SoundLevel", board.profile.sound)
 							board.folder:SetAttribute("ReducedEffects", board.profile.reduced)
+							board.folder:SetAttribute("MenuColours", if board.profile.menuClassic then "classic" else "deck")
 							petHello.social(board)
 							Lounge.setMode(player.Character, player.UserId, board.mode, board.profile.theme)
 							Lounge.setAppearance(player.Character, board.profile.theme)
