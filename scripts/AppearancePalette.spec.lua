@@ -71,7 +71,7 @@ return function(client,parent,onlySize)
     -- Hatch eggs is a Kit panel; the selected row is lemon with ink text (Toy Shell 3.4).
     local Kit=require(client.DeckKit)
     assert(shop.card.BackgroundColor3==t.shell and recipe.BackgroundColor3==Kit.color("selected")and recipe.RecipeName.TextColor3==t.ink and shop.shopPanel.BackgroundColor3==Kit.color("panel"),"egg shop (EggHatchView) card/recipe palette: card="..tostring(shop.card.BackgroundColor3).." recipe="..tostring(recipe.BackgroundColor3))
-    assert(recap.payout.BackgroundColor3==t.tray and recap.wallet.root.BackgroundColor3==t.well and recap.rows[1].name.TextColor3~=t.go,"results: trays and the LCD wallet; text stays neutral")
+    assert(recap.payout.BackgroundColor3==t.tray and recap.wallet.medal.BackgroundColor3==t.well and recap.rows[1].name.TextColor3~=t.go,"results: trays and the wallet medallion in well glass; text stays neutral")
     assert(focus.back.BackgroundColor3==t.shell and focus.helper.BackgroundColor3==t.shell and focus.helper.TextColor3==t.onShell)
     Art.setMenuColours("classic");settle()
     assert(menu.card.BackgroundColor3==Themes.ToyClassic.shell and picker.card.BackgroundColor3==Themes.ToyClassic.shell,"Classic Shell ignores the plate")

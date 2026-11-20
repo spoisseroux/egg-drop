@@ -138,7 +138,7 @@ return function(client)
 			assert(m:GetAttribute("Layers")==layers and m:GetAttribute("StatId")=="jump"and m:GetAttribute("SizeId")==size and m.PrimaryPart)
 			local biscuit,icing=m:FindFirstChild("Biscuit"),m:FindFirstChild("Icing")
 			assert(biscuit and icing and biscuit:GetAttribute("SnackLayer")==1 and icing:GetAttribute("SnackLayer")==layers)
-			assert(icing.Color==Stats.ById.jump.color and icing:FindFirstChild("Mark")and icing.Mark.Texture==SnackModel.IconDecal.jump,"the icon decal on the stat-colour icing")
+			assert(icing.Color==Stats.ById.jump.color and icing.Parent:FindFirstChild("Topper")and icing.Parent.Topper.Mark.Texture==SnackModel.IconDecal.jump,"the icon topper on the stat-colour icing")
 			assert((m:FindFirstChild("Pearls")~=nil)==(size=="feast"))
 			assert(math.abs(m:GetExtentsSize().X-.3)<.02,"scaled to the asked width")
 			for _,part in ipairs(m:GetDescendants())do if part:IsA("BasePart")then assert(not part.CanCollide and part.Anchored)end end

@@ -1,5 +1,5 @@
 -- v2 pet names, client side: NameScreen's pure rules (tabs, keys, slots, the Names Egg card),
--- PetNameText (own and other players' names) and PetNameplates' show rule.
+-- PetNameText (own and other players' names).
 -- Run (Client): require(game.Players.LocalPlayer.PlayerScripts.Client.ZZSpecs.NameScreen)(game.Players.LocalPlayer.PlayerScripts.Client)
 return function(client)
 	local Shared=game:GetService("ReplicatedStorage").Shared
@@ -7,7 +7,6 @@ return function(client)
 	local UICopy=require(Shared.UICopy)
 	local Screen=require(client.NameScreen)
 	local Text=require(client.PetNameText)
-	local Plates=require(client.PetNameplates)
 	local HttpService=game:GetService("HttpService")
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
@@ -77,13 +76,6 @@ return function(client)
 		board:SetAttribute(Names.Attribute,"[]");assert(select(2,Text.ofBoard(board,"pip"))==false)
 		board:SetAttribute(Names.Attribute,"not json");assert(Text.ofBoard(board,"pip")=="Bear")
 		board:Destroy()
-	end)
-
-	test("nameplates: other players' tags only when named, near and in the garden; width fits the longest name",function()
-		assert(Plates.showOther(true,10,"Room")and not Plates.showOther(true,Plates.NearRange+1,"Room"))
-		assert(not Plates.showOther(false,5,"Room")and not Plates.showOther(true,5,"Board"))
-		local w=Plates.width("Thunderbun Afterparty")
-		assert(w>Plates.width("Hmm")and w<260)
 	end)
 
 	test("every names.* copy key the screen reads exists",function()

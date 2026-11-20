@@ -1319,24 +1319,64 @@ function Kit.formatStars(value)
  end
  return tostring(value)
 end
--- Wallet pill (Stars capsule). The shared header heights (redesign 0.1): 44 with
--- star 22, Counter 18 and padding 18; 36 (compact) with star 18, Counter 15 and
--- padding 15. Other heights keep the older proportions their screens were built with.
--- QA v751 P5: 28 is the phone results chip. Its Star is 16 px, WalletStar.MinSize, so the
--- chip shows the same turning 3D Star as every other Stars counter.
-Kit.WalletSpec={[44]={star=22,text=18,pad=18},[36]={star=18,text=15,pad=15},[28]={star=16,text=14,pad=10}}
+-- Stars capsule, the "Star Bank" (Astra, artifacts/v2-stars-counter-2026-11-20/STARS-COUNTER-SPEC.md).
+-- Spencer 2026-11-20: the dark LCD pill read dull and dated beside the cream keys, so it is a
+-- Toy Shell token: a cream face on a gold coin-edge lip, ink digits in the display face, and the
+-- Star in a dark medallion that pops out of the left end (4 px past the slot). Not pressable.
+-- Per height: lip, face, disc (medallion), star, text (digit size), pad (right), eyes, glint.
+-- Other heights scale from 44.
+Kit.WalletSpec={
+ [44]={lip=4,disc=48,star=28,text=22,pad=14,eyes=true,glint=true},
+ [40]={lip=4,disc=44,star=26,text=20,pad=13,eyes=true,glint=true},
+ [36]={lip=3,disc=40,star=22,text=18,pad=12,eyes=true,glint=true},
+ [32]={lip=3,disc=34,star=20,text=16,pad=10,eyes=true,glint=true},
+ [28]={lip=2,disc=30,star=16,text=15,pad=9,eyes=false,glint=false},
+}
+Kit.WalletGold=Color3.fromHex("#D9A31C")
+Kit.WalletFace=table.freeze({Color3.fromHex("#FFF4DC"),Color3.fromHex("#FFE7B0")})
+function Kit.walletSpec(height)
+ local spec=Kit.WalletSpec[height]
+ if spec then return spec end
+ local k=height/44
+ -- The Star keeps the older .55 share below the table, so tiny capsules stay a plain 2D Star.
+ return {lip=math.max(2,math.floor(4*k+.5)),disc=math.floor(48*k+.5),star=math.floor(height*.55),text=math.max(12,math.floor(22*k+.5)),
+  pad=math.max(8,math.floor(14*k+.5)),eyes=height>=32,glint=height>=32}
+end
+-- Pure: the capsule's width for a digit width `textW` (the medallion overhangs 4 px of it).
+function Kit.walletWidth(height,textW)
+ local spec=Kit.walletSpec(height)
+ return math.ceil((spec.disc-4)+6+textW+spec.pad)
+end
 function Kit.wallet(parent,height)
  height=height or 44
- local spec=Kit.WalletSpec[height]
- -- Toy Shell 3.6: an LCD counter, the deck's well glass with gold mono digits.
- local pill=Kit.frame(parent,"Wallet","well",UDim2.new(),UDim2.fromOffset(110,height),999);Kit.stroke(pill);Kit.setSurface(pill,"dark")
- local star=Kit.icon(pill,"star",if spec then spec.star else math.floor(height*.55));star.AnchorPoint=Vector2.new(0,.5)
- star.Position=UDim2.new(0,if spec then spec.pad else math.floor(height*.45),.5,0)
- -- T9: the Star gets two eyes from 20 px up and stays plain below. The uploaded
- -- eyes cell (DeckAssets.Personality.starFace, right half) when there is one, else
- -- two ink dots; a missing id creates no ImageLabel.
+ local spec=Kit.walletSpec(height)
+ local faceH=height-spec.lip
+ local root=Kit.frame(parent,"Wallet",nil,UDim2.new(),UDim2.fromOffset(110,height));root.ClipsDescendants=false
+ local z=root.ZIndex
+ local edge=Kit.frame(root,"Edge",nil,UDim2.new(),UDim2.fromScale(1,1),999);edge.BackgroundTransparency=0;edge.BackgroundColor3=Kit.WalletGold;edge.ZIndex=z+1
+ Kit.stroke(edge,"ink",2,0)
+ local face=Kit.frame(root,"Face",nil,UDim2.new(),UDim2.new(1,0,0,faceH),999);face.BackgroundTransparency=0;face.BackgroundColor3=Color3.new(1,1,1);face.ZIndex=z+2
+ node("UIGradient",face,{Name="FaceShade",Rotation=90,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Kit.WalletFace[1]),
+  ColorSequenceKeypoint.new(.45,Kit.WalletFace[1]),ColorSequenceKeypoint.new(1,Kit.WalletFace[2])})})
+ Kit.stroke(face,"ink",2,0);Kit.setSurface(face,"light");Kit.setSurface(root,"light")
+ if spec.glint then local g=Kit.glint(face,999);g.Position=UDim2.fromOffset(spec.disc-2,4);g.Size=UDim2.new(1,-(spec.disc-2)-14,0,2)end
+ local flash=Kit.frame(face,"Flash",nil,UDim2.new(),UDim2.fromScale(1,1),999);flash.BackgroundColor3=Kit.Color.lemon;flash.BackgroundTransparency=1;flash.ZIndex=z+2
+ -- The medallion: deck well glass, ink ring, its own ink drop, a thin Stars-gold inner ring.
+ local medalPos=UDim2.fromOffset(-4,math.floor(faceH/2))
+ local drop=Kit.frame(root,"MedalDrop","ink",medalPos+UDim2.fromOffset(0,2),UDim2.fromOffset(spec.disc,spec.disc),999);drop.BackgroundTransparency=0;drop.AnchorPoint=Vector2.new(0,.5);drop.ZIndex=z+3
+ local medal=Kit.frame(root,"Medal","well",medalPos,UDim2.fromOffset(spec.disc,spec.disc),999);medal.BackgroundTransparency=0;medal.AnchorPoint=Vector2.new(0,.5);medal.ZIndex=z+4
+ Kit.stroke(medal,"ink",2,0)
+ if height>28 then
+  local ring=Kit.frame(medal,"MedalRing",nil,UDim2.fromOffset(3,3),UDim2.new(1,-6,1,-6),999);ring.ZIndex=z+5
+  node("UIStroke",ring,{Color=Kit.Color.stars,Thickness=1.5,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+ end
+ -- The Star sits on the root (WalletStar puts its 3D Star beside the icon), centred on the medallion.
+ local star=Kit.icon(root,"star",spec.star);star.AnchorPoint=Vector2.new(.5,.5);star.ZIndex=z+6
+ star.Position=UDim2.fromOffset(-4+spec.disc/2,math.floor(faceH/2)+1)
+ -- T9: the Star gets two eyes from 20 px up and stays plain below. The uploaded eyes cell
+ -- (DeckAssets.Personality.starFace, right half) when there is one, else two ink dots.
  local starSize=star.Size.X.Offset
- if starSize>=20 then
+ if spec.eyes and starSize>=20 then
   local faceId=Assets.Personality and Assets.Personality.starFace
   if faceId then
    node("ImageLabel",star,{Name="StarFace",BackgroundTransparency=1,Image=faceId,ImageRectOffset=Vector2.new(128,0),ImageRectSize=Vector2.new(128,128),
@@ -1351,19 +1391,35 @@ function Kit.wallet(parent,height)
   end
   star:SetAttribute("StarFace",true)
  end
- -- From WalletStar.MinSize (16 px, R3.3) up the icon gives way to a small front-facing 3D Star (v816: still, glints) in the same rect
+ -- From WalletStar.MinSize (16 px, R3.3) up the icon gives way to a small front-facing 3D Star
  -- once the StarToken mesh loads (WalletStar); the 2D Star stays as the fallback.
- local star3D=require(script.Parent.WalletStar).attach(pill,star,starSize)
- local amount=Kit.text(pill,"Counter","0","stars",{Name="Amount",AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-(if spec then spec.pad else 18),.5,0),Size=UDim2.fromOffset(60,height),TextXAlignment=Enum.TextXAlignment.Right})
- if spec then amount.TextSize=spec.text elseif height<40 then amount.TextSize=15 end
- local api={root=pill,amount=amount,height=height,star=star,star3D=star3D}
+ local star3D=require(script.Parent.WalletStar).attach(root,star,starSize)
+ local amount=Kit.text(face,"Counter","0","ink",{Name="Amount",AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-spec.pad,.5,-1),
+  Size=UDim2.fromOffset(60,faceH),TextXAlignment=Enum.TextXAlignment.Right,FontFace=Kit.DisplayFace,TextSize=spec.text})
+ amount.ZIndex=z+3
+ local pop=node("UIScale",amount,{Name="Pop"})
+ local api={root=root,amount=amount,height=height,star=star,star3D=star3D,face=face,medal=medal}
+ local shown
+ local TweenService=game:GetService("TweenService")
+ -- Earn juice (spec: number goes up only): the digits pop and the face flashes lemon. The text itself changes at once (screens and specs read it straight after set).
+ local function earn()
+  if not root:IsDescendantOf(game)then return end
+  flash.BackgroundTransparency=.15
+  TweenService:Create(flash,TweenInfo.new(.32,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,.12),{BackgroundTransparency=1}):Play()
+  if game:GetService("GuiService").ReducedMotionEnabled then return end
+  pop.Scale=1
+  local up=TweenService:Create(pop,TweenInfo.new(.08,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1.25})
+  up.Completed:Once(function()TweenService:Create(pop,TweenInfo.new(.16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=1}):Play()end)
+  up:Play()
+ end
  function api.set(value)
+  local before=shown;shown=value
   amount.Text=Kit.formatStars(value)
-  local w=game:GetService("TextService"):GetTextSize(amount.Text,amount.TextSize,Enum.Font.RobotoMono,Vector2.new(500,50)).X
-  amount.Size=UDim2.fromOffset(math.ceil(w)+2,height)
-  pill.Size=if spec then UDim2.fromOffset(math.ceil(spec.pad+spec.star+8+w+spec.pad),height)
-   else UDim2.fromOffset(math.ceil(w+height*.45+height*.55+12+18),height)
-  pill:SetAttribute("AccessibleLabel",require(script.Parent.StarText).amount(value))
+  local w=game:GetService("TextService"):GetTextSize(amount.Text,spec.text,Enum.Font.FredokaOne,Vector2.new(500,50)).X
+  amount.Size=UDim2.fromOffset(math.ceil(w)+2,faceH)
+  root.Size=UDim2.fromOffset(Kit.walletWidth(height,w),height)
+  root:SetAttribute("AccessibleLabel",require(script.Parent.StarText).amount(value))
+  if type(before)=="number"and type(value)=="number"and value>before then earn()end
  end
  api.set(0);return api
 end

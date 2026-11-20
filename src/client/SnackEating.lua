@@ -180,6 +180,9 @@ local function biteSnack(self,index,count)
 		if part:IsA("BasePart")then
 			local layer=part:GetAttribute("SnackLayer")
 			if layer and layer>keep then part.Transparency=1 end
+		elseif part:IsA("Decal")and part.Parent and part.Parent:IsA("BasePart")then
+			-- The topper's icon: a decal still draws on a hidden part, so it follows its plate.
+			part.Transparency=part.Parent.Transparency
 		end
 	end
 	local scale=.62+.38*left
@@ -277,7 +280,10 @@ function Eating:step(dt)
 		toMouth=0
 		if self.snack then
 			local fade=math.clamp(t/.25,0,1)
-			for _,part in ipairs(self.snack:GetDescendants())do if part:IsA("BasePart")then part.Transparency=math.max(part.Transparency,fade)end end
+			for _,part in ipairs(self.snack:GetDescendants())do
+				if part:IsA("BasePart")then part.Transparency=math.max(part.Transparency,fade)
+				elseif part:IsA("Decal")then part.Transparency=math.max(part.Transparency,fade)end
+			end
 		end
 		if t>.6 then finish(self,false);return false end
 	else

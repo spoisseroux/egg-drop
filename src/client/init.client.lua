@@ -1368,7 +1368,7 @@ do
  gui.Destroying:Connect(function()clientUI.stats.destroy()end)
 end
 -- v2 pet names: the naming screen (Companions → pet → Name), the Names Egg card and its reveal on
--- the Pop-Out Stage, and the name tags in the garden (RoomView.nameplates reads nameState).
+-- the Pop-Out Stage, and the name on the petting card (RoomView.shownName reads nameState).
 do
  local Kit=require(script.DeckKit)
  local Rail=require(script.NotificationRail)

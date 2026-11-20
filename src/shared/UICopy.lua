@@ -397,7 +397,7 @@ local Table={
   swap="Swap",clear="Clear",
   slots={empty="Pick a piece",hint="One piece or two. No typing, ever."},
   tab={all="All",starter="Starter",egg="Names Egg",stat="Stats",book="Book"},
-  shows={title="Shows",where="Over your pet\nOn its card and stats",own="Each pet has its own name."},
+  shows={title="Shows",where="When you pet it\nOn its card and stats",own="Each pet has its own name."},
   footer={free="Renaming is free, any time.",account="A piece you unlock is yours for every pet."},
   lock={stat="{stat} {level}",total="TOTAL {count}",anyLevel="ANY STAT {level}",book="BOOK {count}",egg="NAMES EGG"},
   hint={stat="Reach {stat} {level} on any pet to unlock it.",total="Reach a total level of {count} on one pet to unlock it.",

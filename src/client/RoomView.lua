@@ -32,6 +32,7 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 -- the level-up flourish and tricks 1-2).
 local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
 local BondPips=require(script.Parent.BondPips)
+local NameText=require(script.Parent.PetNameText)
 local PetIdleBeats=require(script.Parent.PetIdleBeats)
 
 local Room = {}
@@ -160,8 +161,6 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
     and not self.menuOpen and not self.overlayOpen()and(self.canRoam==nil or self.canRoam()==true)
   end})
 	self.ambience=HollowAmbience.new()
- -- v2 pet names: name tags over your pet and nearby named pets (PetNameplates; nameState set by the client entry).
- self.nameplates=require(script.Parent.PetNameplates).new(Players.LocalPlayer:FindFirstChildOfClass("PlayerGui"))
  self.affection=PetAffection.new(workspace,function(index)
   if self.petContactActive and self:contactEligible(self.contactContext)then self.audio:play(self.shownPet.cue,if index%2==0 then .96 else 1.06,.26)end
  end)
@@ -311,10 +310,12 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		-- v2 Stat Snacks: eating poses on top of this frame's pet poses.
 		if self.snackStep then self.snackStep(dt)end
 		if self.inspect then self.inspect:step(dt,serverNow)end
-		if self.nameplates then
-			local character=Players.LocalPlayer.Character
-			self.nameplates:step(dt,{own={visual=self.pet,petId=self.shownPet and self.shownPet.id,state=if self.nameState then self.nameState()else nil,mode=self.mode},
-				others=if self.mode=="Room"then self.companions.active else nil,localRoot=character and character:FindFirstChild("HumanoidRootPart")})
+		-- v2 pet names (Spencer 2026-11-20): no floating name tags in the garden. The pet's name
+		-- shows on the petting card (here) and on inspect cards; re-read it a few times a second.
+		self.nameClock=(self.nameClock or 0)-dt
+		if self.nameClock<=0 then
+			self.nameClock=.25
+			if self:shownName()~=self.bondNameShown then self:syncBond(false)end
 		end
 		if self.park then
 			local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart")
@@ -532,7 +533,13 @@ end
 function Room:syncBond(animate)
 	if not self.focusUI or not self.focusUI.setBond then return end
 	local info=self:bondInfo()
-	self.focusUI:setBond(if info and self.shownPet then {name=self.shownPet.name,bond=info}else nil,animate)
+	local name=self:shownName();self.bondNameShown=name
+	self.focusUI:setBond(if info and self.shownPet then {name=name,bond=info}else nil,animate)
+end
+-- The shown pet's given name (v2 pet names), or its species name without one.
+function Room:shownName()
+	if not self.shownPet then return nil end
+	return (NameText.own(if self.nameState then self.nameState()else nil,self.shownPet.id))
 end
 -- Start an idle beat now (tricks and the level-up stretch). The pet's own scheduler
 -- carries it on; it ends at once when the pet is not free to play a beat.
@@ -1332,7 +1339,6 @@ function Room:destroy()
 	if self.garden then self.garden:destroy()end
  if self.park then self.park:destroy();self.park=nil end
  if self.inspect then self.inspect:destroy();self.inspect=nil end
- if self.nameplates then self.nameplates:destroy();self.nameplates=nil end
 	if self.gardenToy then self.gardenToy:destroy();self.gardenToy=nil end
  if self.affection then self.affection:destroy()end
 	if self.ambience then self.ambience:destroy();self.ambience=nil end

@@ -377,7 +377,7 @@ ui.names.save,Save name,,Menu text
 ui.names.saved,Name saved,,Menu text
 ui.names.shows.own,Each pet has its own name.,,Menu text
 ui.names.shows.title,Shows,,Menu text
-ui.names.shows.where,"Over your pet
+ui.names.shows.where,"When you pet it
 On its card and stats",,Menu text
 ui.names.slots.empty,Pick a piece,,Menu text
 ui.names.slots.hint,"One piece or two. No typing, ever.",,Menu text

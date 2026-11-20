@@ -139,6 +139,18 @@ function Hub.firstOwned(state)
  for _,pet in ipairs(Pets.active)do if Eggs.isOwned(mask,pet.id)then return pet.id end end
  return Pets.active[1]and Pets.active[1].id or Pets[1].id
 end
+-- Pure: the button band across the top of the preview well (well width `w`). Returns
+-- {y, h, band, text, statsX, statsW, nameX?, nameW?}; the preview starts at `band`.
+function Hub.wellBand(w,phone,withName)
+ -- 44 px tall on every screen: the touch target floor.
+ local m,gap,h=if phone then 6 else 8,if phone then 6 else 10,44
+ local inner=w-2*m
+ local statsW=if withName then math.floor((inner-gap)*.56)else math.min(inner,if phone then 120 else 160)
+ local L={y=m,h=h,band=m+h+m+4,text=if phone then 14 else 17,statsX=m,statsW=statsW}
+ if withName then L.nameX=m+statsW+gap;L.nameW=inner-statsW-gap end
+ return L
+end
+
 -- Pure (v2 S3): a pet's total stat level from the snapshot, or nil without stats.
 function Hub.totalLevel(state,petId)
  local stats=state and state.petStats
@@ -236,7 +248,9 @@ function Hub:paintPreview(petId)
   self.cameraKey=key
   local box,size=Bounds.get(v);local a=math.max(.1,self.viewport.AbsoluteSize.X/math.max(1,self.viewport.AbsoluteSize.Y));local half=math.tan(math.rad(self.camera.FieldOfView/2))
   local distance=math.max(size.Y*.5/half,size.X*.5/(half*a))+size.Z*.5+.3
-  self.camera.CFrame=CFrame.lookAt(box.Position+Vector3.new(0,.12,distance*1.10),box.Position)
+  -- Under the Stats / Name band the preview is shorter, so the pet is framed tighter.
+  local pad=if self.viewport.Position.Y.Offset>0 then .98 else 1.10
+  self.camera.CFrame=CFrame.lookAt(box.Position+Vector3.new(0,.12,distance*pad),box.Position)
  end
 end
 
@@ -338,27 +352,31 @@ function Hub:buildHub(body,W,H,phone)
    self.summaryLabels[pair[1]]=value;local _=name
   end
  end
- -- v2 S3: Stats, over the preview well's top left (left of the rows for the d-pad).
- self.statsButton=nil
+ -- v2 S3 + names: Stats (left) and Name (right) share a band across the well's top, and the
+ -- pet preview sits below the band. Spencer 2026-11-20: the Stats button covered the pet's
+ -- head, so the buttons never overlap the preview (Left from the rows reaches them on a pad).
+ self.statsButton=nil;self.nameButton=nil
  if self.callbacks.stats~=false and self.viewport then
+  local well=self.viewport.Parent
+  local L=Hub.wellBand(well.Size.X.Offset,phone,self.callbacks.names~=false)
+  local function place(b,x)
+   b.Position=UDim2.fromOffset(well.Position.X.Offset+x,well.Position.Y.Offset+L.y);b.ZIndex=pane.ZIndex+8
+   for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=8 end end
+  end
   local total=Hub.totalLevel(self.ctx.state,petId)
   local label=if total then UICopy.get("stats.open").." · "..total else UICopy.get("stats.open")
-  local b=Kit.button(pane,"StatsButton",{text=label,size=Vector2.new(if phone then 104 else 132,if phone then 40 else 44),textSize=if phone then 15 else 17,selectable=false})
-  b.Position=UDim2.fromOffset(if phone then 18 else 24,if phone then 18 else 24);b.ZIndex=pane.ZIndex+8
-  for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=8 end end
+  local b=Kit.button(pane,"StatsButton",{text=label,size=Vector2.new(L.statsW,L.h),textSize=L.text,selectable=false})
+  place(b,L.statsX)
   b.Activated:Connect(function()self.statsFocus=true;self.paneKey="stats";self:act()end)
   self.statsButton=b
- end
- -- v2 pet names: Name, in the well's bottom left corner (Down from Stats reaches it on a pad).
- self.nameButton=nil
- if self.callbacks.names~=false and self.viewport and self.statsButton then
-  local b=Kit.button(pane,"NameButton",{text=UICopy.get("names.open"),size=Vector2.new(if phone then 104 else 132,if phone then 40 else 44),textSize=if phone then 15 else 17,selectable=false})
-  local well=self.viewport.Parent
-  local bh=if phone then 40 else 44
-  b.Position=UDim2.fromOffset(well.Position.X.Offset+(if phone then 6 else 8),well.Position.Y.Offset+well.Size.Y.Offset-bh-(if phone then 8 else 10));b.ZIndex=pane.ZIndex+8
-  for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=8 end end
-  b.Activated:Connect(function()self.statsFocus=true;self.paneKey="name";self:act()end)
-  self.nameButton=b
+  if L.nameW then
+   local n=Kit.button(pane,"NameButton",{text=UICopy.get("names.open"),size=Vector2.new(L.nameW,L.h),textSize=L.text,selectable=false})
+   place(n,L.nameX)
+   n.Activated:Connect(function()self.statsFocus=true;self.paneKey="name";self:act()end)
+   self.nameButton=n
+  end
+  Kit.capButtonLabel(b);if self.nameButton then Kit.capButtonLabel(self.nameButton)end
+  self.viewport.Position=UDim2.fromOffset(0,L.band);self.viewport.Size=UDim2.new(1,0,1,-L.band)
  end
  local ctx=self:statusCtx()
  for index,row in ipairs(Hub.Rows)do
@@ -603,16 +621,16 @@ function Hub:move(dx,dy)
   if nextIndex==self.cardIndex then return false end
   self:focusCard(nextIndex);return true
  end
- -- v2 S3: Left from the rows reaches the Stats button; Right or Up / Down returns.
+ -- v2 S3: Left from the rows reaches the Stats button. Stats and Name sit side by side over
+ -- the preview: Right from Stats reaches Name; Right from the last one returns to the rows.
  if self.statsFocus then
-  if dx<0 then return false end
-  -- v2 pet names: Up / Down move between Stats and Name; Right returns to the rows.
-  if dx==0 and dy~=0 and self.nameButton then
-   local key=if dy>0 then "name"else "stats"
-   if key==self.paneKey then return false end
-   self.paneKey=key
-   if self.ring then self.ring.attach(if key=="name"then self.nameButton else self.statsButton,12)end
-   return true
+  if dy~=0 then return false end
+  if dx<0 then
+   if self.paneKey~="name"then return false end
+   self.paneKey="stats";if self.ring then self.ring.attach(self.statsButton,12)end;return true
+  end
+  if self.paneKey=="stats"and self.nameButton then
+   self.paneKey="name";if self.ring then self.ring.attach(self.nameButton,12)end;return true
   end
   self.statsFocus=false;self:focusRow(self.rowIndex);return true
  end

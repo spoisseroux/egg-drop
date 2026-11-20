@@ -5,8 +5,8 @@
 -- (commit eafef32, assets/art-source/snacks/export/) are uploaded and kept in
 -- ReplicatedStorage.SnackAssets (assets/snacks/SnackAssets.rbxmx, built by
 -- scripts/build_bunny_assets.py): one Model per size with pieces Biscuit (biscuit.png on its UVs,
--- every layer in one mesh), Icing (Color = the stat colour, the stat's Pocket Buddies icon as a Decal on its UVs:
--- the top fills the image, the cream ring sits in a clear corner) and Pearls (Feast only, #FFF6E9);
+-- every layer in one mesh), Icing (Color = the stat colour, the stat's Pocket Buddies icon on a sugar
+-- topper, Model.topper) and Pearls (Feast only, #FFF6E9);
 -- 1 unit = 1 stud at the template's size, origin at the centre. If the pack or a mesh resource is
 -- missing, the placeholder discs below stand in. The contract for both: a Model, its pivot at the
 -- centre, attributes Layers / StatId / SizeId / SnackBackend, parts carrying SnackLayer (bitten top
@@ -18,10 +18,6 @@ local Model={}
 Model.Biscuit=Color3.fromHex("#E9B97C")
 Model.Cream=Color3.fromHex("#FFF6E9")
 Model.Atlas="rbxassetid://113812710946093" -- the Pocket Buddies atlas (StatsPanel.Atlas)
--- Pocket Buddies icon decals for the production icing (assets/art-source/snacks/export/
--- icon-decal-<stat>-256.png, Image assets uploaded 2026-11-20; ids in assets/ui/stat-icons/asset-ids.json).
-Model.IconDecal={heart="rbxassetid://129048015089227",power="rbxassetid://80599387426424",energy="rbxassetid://86725484809476",
-	jump="rbxassetid://81760178125384",speed="rbxassetid://102860653332242",smarts="rbxassetid://109890466035862"}
 Model.PearlColor=Color3.fromHex("#FFF6E9")
 Model.Icon={heart=Vector2.new(8,8),power=Vector2.new(80,8),energy=Vector2.new(152,8),jump=Vector2.new(224,8),speed=Vector2.new(296,8),smarts=Vector2.new(368,8)}
 
@@ -37,6 +33,23 @@ local function disc(model,name,diameter,height,y,color,layer)
 	part:SetAttribute("SnackLayer",layer)
 	part.Parent=model
 	return part
+end
+
+-- Spencer 2026-11-20: the piped icon read too faint on the icing, so the stat sits on a sugar
+-- topper: a cream disc with an ink rim on the icing's crown, the stat's Pocket Buddies icon decal
+-- on it (dark icon on cream reads on every icing colour). Real parts, not a SurfaceGui: a
+-- ViewportFrame (the reveal, the pouch) does not draw SurfaceGuis. Bitten with the icing.
+Model.IconDecal={heart="rbxassetid://129048015089227",power="rbxassetid://80599387426424",energy="rbxassetid://86725484809476",
+	jump="rbxassetid://81760178125384",speed="rbxassetid://102860653332242",smarts="rbxassetid://109890466035862"}
+Model.TopperScale=.62
+Model.Ink=Color3.fromHex("#15143A")
+function Model.topper(model,topY,icingWidth,statId,layer)
+	local mark=Model.IconDecal[statId];if not mark then return nil end
+	local d=icingWidth*Model.TopperScale;local t=math.max(d*.07,.004)
+	local rim=disc(model,"TopperRim",d*1.12,t*.8,topY+t*.2,Model.Ink,layer)
+	local plate=disc(model,"Topper",d,t,topY+t*.45,Model.Cream,layer)
+	local decal=Instance.new("Decal");decal.Name="Mark";decal.Texture=mark;decal.Face=Enum.NormalId.Right;decal.Parent=plate
+	return plate,rim
 end
 
 -- Mesh resources by size and piece (assets/snacks/snack-studio-import.json). Rojo live sync can
@@ -104,7 +117,7 @@ local function production(template,size,statId,color,width)
 	local biscuit=template.Biscuit
 	-- Template biscuits are the catalogue widths (0.20 / 0.25 / 0.30); scale to the asked width.
 	local scale=width/math.max(biscuit.Size.X,1e-3)
-	local base
+	local base,icing
 	for _,source in pairs(template)do
 		do
 			local part=source:Clone()
@@ -114,14 +127,12 @@ local function production(template,size,statId,color,width)
 			if part.Name=="Biscuit"then part.Color=Color3.new(1,1,1);part:SetAttribute("SnackLayer",1);base=part
 			elseif part.Name=="Icing"then
 				part.Color=color;part:SetAttribute("SnackLayer",size.layers)
-				local mark=Model.IconDecal[statId]
-				if mark then
-					local decal=Instance.new("Decal");decal.Name="Mark";decal.Texture=mark;decal.Face=Enum.NormalId.Top;decal.Parent=part
-				end
+				icing=part
 			else part.Color=Model.PearlColor;part:SetAttribute("SnackLayer",size.layers)end
 			part.Parent=model
 		end
 	end
+	if icing then Model.topper(model,icing.Position.Y+icing.Size.Y/2,math.min(icing.Size.X,icing.Size.Z),statId,size.layers)end
 	model.PrimaryPart=base
 	base.PivotOffset=base.CFrame:Inverse()
 	model:SetAttribute("SnackBackend","Production")
@@ -157,13 +168,7 @@ function Model.build(sizeId,statId,width,options)
 	end
 	local icing=disc(model,"Icing",width*.86,h*.3,y+h*.6,color,size.layers)
 	-- The icon on top of the icing (the cylinder's +X face points up after the turn).
-	if stat and Model.Icon[statId]then
-		local gui=Instance.new("SurfaceGui");gui.Name="Mark";gui.Face=Enum.NormalId.Right;gui.LightInfluence=0
-		gui.CanvasSize=Vector2.new(64,64);gui.SizingMode=Enum.SurfaceGuiSizingMode.FixedSize;gui.Parent=icing
-		local image=Instance.new("ImageLabel");image.BackgroundTransparency=1;image.Image=Model.Atlas
-		image.ImageRectOffset=Model.Icon[statId];image.ImageRectSize=Vector2.new(64,64)
-		image.AnchorPoint=Vector2.new(.5,.5);image.Position=UDim2.fromScale(.5,.5);image.Size=UDim2.fromScale(.78,.78);image.Parent=gui
-	end
+	if stat then Model.topper(model,icing.Position.Y+h*.15,width*.86,statId,size.layers)end
 	if size.id=="feast"then
 		for i=1,8 do
 			local a=(i-1)/8*math.pi*2
@@ -193,13 +198,14 @@ function Model.viewport(parent,sizeId,statId,props)
 	local model=Model.build(sizeId,statId,1)
 	model.Parent=world
 	local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera
-	camera.CFrame=CFrame.lookAt(Vector3.new(0,1.6,2.9),Vector3.new(0,.02,0))
+	-- Spencer 2026-11-20: a higher camera and the top tipped toward it, so the topper reads.
+	camera.CFrame=CFrame.lookAt(Vector3.new(0,2.05,2.6),Vector3.new(0,.02,0))
 	local angle=0
 	local api={viewport=viewport,model=model}
 	function api.step(dt)
 		if not model.Parent then return end
 		angle+=dt*1.2
-		model:PivotTo(CFrame.Angles(math.rad(-12),angle,0))
+		model:PivotTo(CFrame.Angles(math.rad(16),angle,0))
 	end
 	function api.destroy()viewport:Destroy()end
 	api.step(0)

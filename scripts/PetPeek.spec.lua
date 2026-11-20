@@ -134,13 +134,13 @@ return function(client,parent)
    assert(Results.faceTurn(41)==nil and Results.faceTurn(180)==nil and Results.faceTurn(-90)==nil)
    assert(Results.faceTurn(720+10)==10 and Results.faceTurn(355)==-5)
    local h=host("WalletFace",300,100)
-   local big=Kit.wallet(h,44);local small=Kit.wallet(h,36)
+   local big=Kit.wallet(h,44);local small=Kit.wallet(h,28)
    local function face(w)
     local star=w.root:FindFirstChild("Icon_star")
     return star and(star:FindFirstChild("StarEye")~=nil or star:FindFirstChild("StarFace")~=nil)
    end
    assert(face(big),"44 high wallet (22 px Star) has eyes")
-   assert(not face(small),"36 high wallet (18 px Star) stays plain")
+   assert(not face(small),"28 high wallet (16 px Star) stays plain")
    local Assets=require(client.DeckAssets)
    if not Assets.Personality.starFace then
     for _,d in ipairs(h:GetDescendants())do assert(not(d:IsA("ImageLabel")and d.Name=="StarFace"),"a missing face id creates no ImageLabel")end

@@ -57,6 +57,15 @@ return function(client,parent)
     assert(fl=="7 stamps: yours for free"and fb=="Take home free"and fe,"free with an empty wallet")
    end
   end)
+  test("pure: Stats and Name share a 44 px band above the preview, inside the well",function()
+   for _,c in ipairs({{176,true},{296,false}})do
+    local w,phone=c[1],c[2]
+    local L=Hub.wellBand(w,phone,true)
+    assert(L.h>=44 and L.band>=L.y+L.h,"touch-size buttons above the preview")
+    assert(L.statsX>=0 and L.nameX>L.statsX+L.statsW and L.nameX+L.nameW<=w,"side by side inside the well")
+    local solo=Hub.wellBand(w,phone,false);assert(solo.nameW==nil and solo.statsW<=w)
+   end
+  end)
   test("pure: focus steps clamp, Back goes up one level",function()
    assert(Hub.step(3,0,-1,3,1)==2 and Hub.step(1,0,-1,3,1)==1 and Hub.step(3,0,1,3,1)==3)
    assert(Hub.step(1,1,0,3,2)==2 and Hub.step(2,0,1,3,2)==3)
