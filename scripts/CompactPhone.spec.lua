@@ -540,13 +540,13 @@ return function(client,parent)
    probe:Destroy();follower:Destroy()
    assert(live<=1,"live follower flipped "..live.." times")
   end)
-  test("danger text is the lighter #FF8090 on results and 4.5:1 on raised",function()
-   assert(Kit.Color.dangerText==Color3.fromHex("#FF8090"))
+  test("danger text is the lighter #FFA3A8 on results and 4.5:1 on every deck's tray (Toy Shell)",function()
+   assert(Kit.Color.dangerText==Color3.fromHex("#FFA3A8"))
    local function lum(c)local function ch(v)return if v<=.03928 then v/12.92 else((v+.055)/1.055)^2.4 end;return .2126*ch(c.R)+.7152*ch(c.G)+.0722*ch(c.B)end
    local function contrast(a,b)local x,y=lum(a),lum(b);return(math.max(x,y)+.05)/(math.min(x,y)+.05)end
    for _,theme in ipairs(require(game.ReplicatedStorage.Shared.DeckThemes).Order)do
     local t=require(game.ReplicatedStorage.Shared.DeckThemes).ById[theme]
-    assert(contrast(Kit.Color.dangerText,t.ui.raised)>=4.5,theme.." dangerText on raised")
+    assert(contrast(Kit.Color.dangerText,t.toy.tray)>=4.5,theme.." dangerText on the tray")
    end
   end)
  end,function(e)return tostring(e).." | "..debug.traceback()end)

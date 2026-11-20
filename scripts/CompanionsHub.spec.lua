@@ -149,10 +149,12 @@ return function(client,parent)
     -- v850: opened by touch, no row is highlighted and no ring shows; the first arrow
     -- press brings the focus back (on the remembered row) without moving it.
     hub:open({wallet=1,state=state,activeId=active},{touch=true});settle()
-    for _,row in ipairs(hub.rows)do assert(row.stroke.Thickness==1,"a row is highlighted on a touch open")end
+    -- Toy Shell: rows rest at a 2 px ink outline (Kit.TileRest) and the focused one is lemon and 3 px.
+    local Kit=require(client.DeckKit)
+    for _,row in ipairs(hub.rows)do assert(row.stroke.Thickness==Kit.TileRest,"a row is highlighted on a touch open")end
     assert(not hub.ring.root.Visible,"the focus ring shows on a touch open")
     local was=hub.rowIndex;hub:input(K.Down);settle()
-    assert(hub.rowIndex==was and hub.rows[was].stroke.Thickness==2,"the first key shows the focus where it was")
+    assert(hub.rowIndex==was and hub.rows[was].stroke.Thickness==3,"the first key shows the focus where it was")
     hub:input(K.ButtonB)
     hub:destroy();host:Destroy()
    end)

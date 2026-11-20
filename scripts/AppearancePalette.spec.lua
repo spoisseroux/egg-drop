@@ -14,6 +14,8 @@ return function(client,parent,onlySize)
  local function contrast(a,b)a,b=channel(a),channel(b);return(math.max(a,b)+.05)/(math.min(a,b)+.05)end
  local function shade(c,f)return Color3.new(c.R*f,c.G*f,c.B*f)end
  local function result(seq)return{sequence=seq,status="Saved",success=true,stage=2,reason="Completed",award=8,daily=0,balance=10,recipe=game.ReplicatedStorage.Shared.EggCatalog and require(game.ReplicatedStorage.Shared.EggCatalog).ById.meadow,reward={sequence=seq,total=8,base=8,daily=0,family="pip",masteryPoints=1,promotedTo=0,contracts={}}}end
+ -- Toy Shell R1.1: menus follow the deck by default (Settings > Menu colours).
+ local savedMenu=Art.MenuColours;Art.setMenuColours("deck")
  local ok,err=pcall(function()
  test("all8 palettes keep body supporting and LCD ink readable",function()
   for _,id in ipairs(Themes.Order)do local t=Themes.ById[id]
@@ -52,34 +54,38 @@ return function(client,parent,onlySize)
   local function resultsData(sequence)return{outcome="clear",title="Bank pair",rows={{name="Round win",amount=8},{name="Daily quests",amount=6}},total=14,earned=14,balance=20,goals={{text="Goal",done=true}}}end
   recap:show(resultsData(9),false)
   focus.panel.Visible=true;focus.back.Visible=true;focus.helper.Visible=true
-  test(tostring(size).." open sheets keep the house palette under every faceplate (the plate tints only the deck and its background)",function()
+  test(tostring(size).." open sheets take the equipped plate's Toy Shell under every faceplate (R1.1), and Classic ignores it",function()
    local recipe=shop.body.EggColumn.Recipe_look;local pending=shop.pending
    -- QA v2 R1: the Hatch eggs card wallet is gone (the header WalletStar shows Stars).
    for _,id in ipairs(Themes.Order)do
     local plate=Themes.ById[id];Art.applyTheme(plate);settle()
-    -- Batch 2026-11-13: menus never take the plate's glass; the hardware still reads the plate.
-    local t=Art.uiTheme();assert(Art.getTheme()==plate and t==Themes.ById[Themes.Default])
-    assert(menu.card.BackgroundColor3==t.ui.contentPanel and menu.tabs.daily.BackgroundColor3==t.ui.tab and menu.tabs.daily.TextColor3==t.ui.tabInk)
-    assert(shop.action.BackgroundColor3==t.ui.accent and shop.action.TextColor3==t.ui.ink,"actual refreshed shop CTA retained fixed reward color")
+    -- Toy Shell R1.1: menus follow the deck; the hardware still reads the plate.
+    local t=plate.toy;assert(Art.getTheme()==plate and Art.toyPalette()==t)
+    assert(menu.card.BackgroundColor3==t.shell and menu.tabs.daily.BackgroundColor3==t.selected and menu.tabs.daily.TextColor3==t.ink)
+    assert(shop.action.BackgroundColor3==t.go and shop.action.TextColor3==t.ink,"actual refreshed shop CTA: go with ink")
     assert(menu.card:FindFirstChildOfClass("UIGradient").Rotation==100 and menu.nectar.Font==Art.Font.Counter)
-    -- The Deck style screen and the Settings / Trials card are Kit panels (plate glass).
-    assert(picker.card.BackgroundColor3==t.ui.panel and picker.shop.root.BackgroundColor3==t.ui.panel)
-    assert(journal.card.BackgroundColor3==t.ui.contentPanel and journal.cards[1].BackgroundColor3==t.ui.contentRaised and journal.cards[1].Species.TextColor3==t.ui.contentText)
-    -- Redesign 3: Hatch eggs is a Kit panel; the selected row takes the plate's `selected` glass, its text stays neutral.
+    -- The Deck style screen and the Settings / Trials card are Kit panels (the shell).
+    assert(picker.card.BackgroundColor3==t.shell and picker.shop.root.BackgroundColor3==t.shell)
+    -- Journal pet cards are Art buttons: cream keys with ink copy (code review: no white on cream).
+    assert(journal.card.BackgroundColor3==t.shell and journal.cards[1].BackgroundColor3==t.cream and journal.cards[1].Species.TextColor3==t.ink)
+    -- Hatch eggs is a Kit panel; the selected row is lemon with ink text (Toy Shell 3.4).
     local Kit=require(client.DeckKit)
-    assert(shop.card.BackgroundColor3==t.ui.contentPanel and recipe.BackgroundColor3==Kit.color("selected")and recipe.RecipeName.TextColor3==Kit.Color.text and shop.shopPanel.BackgroundColor3==Kit.color("panel"),"egg shop (EggHatchView) card/recipe palette: card="..tostring(shop.card.BackgroundColor3).." recipe="..tostring(recipe.BackgroundColor3))
-    assert(recap.payout.BackgroundColor3==t.ui.raised and recap.wallet.root.BackgroundColor3==t.ui.inset and recap.rows[1].name.TextColor3~=t.ui.accent,"results glass stays house; text stays neutral")
-    assert(focus.back.BackgroundColor3==t.ui.panel and focus.helper.BackgroundColor3==t.ui.panel and focus.helper.TextColor3==t.ui.text)
+    assert(shop.card.BackgroundColor3==t.shell and recipe.BackgroundColor3==Kit.color("selected")and recipe.RecipeName.TextColor3==t.ink and shop.shopPanel.BackgroundColor3==Kit.color("panel"),"egg shop (EggHatchView) card/recipe palette: card="..tostring(shop.card.BackgroundColor3).." recipe="..tostring(recipe.BackgroundColor3))
+    assert(recap.payout.BackgroundColor3==t.tray and recap.wallet.root.BackgroundColor3==t.well and recap.rows[1].name.TextColor3~=t.go,"results: trays and the LCD wallet; text stays neutral")
+    assert(focus.back.BackgroundColor3==t.shell and focus.helper.BackgroundColor3==t.shell and focus.helper.TextColor3==t.onShell)
+    Art.setMenuColours("classic");settle()
+    assert(menu.card.BackgroundColor3==Themes.ToyClassic.shell and picker.card.BackgroundColor3==Themes.ToyClassic.shell,"Classic Shell ignores the plate")
+    Art.setMenuColours("deck")
     assert(shop.selected=="look"and shop.pending==pending and shop.body.EggColumn.Recipe_look==recipe)
     assert(Art.Surface==defaults[1]and Art.Ink==defaults[2]and Art.Silver==defaults[3]and Art.Focus==defaults[4],"public art constants changed")
    end
   end)
   test(tostring(size).." newly rebuilt recipe and receipt rows inherit active palette",function()
-   local plate=Themes.ById.copperleaf;Art.applyTheme(plate);local t=Art.uiTheme();local recipe=shop.body.EggColumn.Recipe_look
+   local plate=Themes.ById.copperleaf;Art.applyTheme(plate);local t=plate.toy;local recipe=shop.body.EggColumn.Recipe_look
    local before=shop.body.CanvasPosition;shop:layout();shop:renderBody();recap:show(resultsData(10),false);settle()
-   assert(shop.body.EggColumn.Recipe_look==recipe and (recipe.RecipeName.TextColor3==t.ui.ink or recipe.RecipeName.TextColor3==t.ui.text)and shop.selected=="look",
-    "recipe name colour "..tostring(recipe.RecipeName.TextColor3).." vs ink "..tostring(t.ui.ink).." / text "..tostring(t.ui.text))
-   assert(recap.payout.BackgroundColor3==t.ui.raised)
+   assert(shop.body.EggColumn.Recipe_look==recipe and recipe.RecipeName.TextColor3==t.ink and shop.selected=="look",
+    "recipe name colour "..tostring(recipe.RecipeName.TextColor3).." vs ink "..tostring(t.ink))
+   assert(recap.payout.BackgroundColor3==t.tray)
    -- Deck style tab hit frames are 44 in panel units; the regular screen scales as a whole (UIScale).
    for _,tab in pairs(picker.tabs)do assert(tab.Size.Y.Offset>=44);fit(tab)end
    assert(picker.tabs.Background:GetAttribute("AccessibleLabel")=="Background patterns")
@@ -87,7 +93,7 @@ return function(client,parent,onlySize)
   end)
  end
  end)
- for _,close in ipairs(cleanup)do close()end;root:Destroy();Art.applyTheme(old or Themes.ById[Themes.Default])
+ for _,close in ipairs(cleanup)do close()end;root:Destroy();Art.applyTheme(old or Themes.ById[Themes.Default]);Art.setMenuColours(savedMenu)
  -- onClose callbacks are intentionally counted, not mistaken for appearance requests.
  assert(ok,err);return{passed=#cases,cases=cases}
 end

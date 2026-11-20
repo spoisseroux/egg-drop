@@ -69,34 +69,47 @@ return function(client,parent)
    assert(h.goalsEyebrow.Text=="SETTLING…")
    root:Destroy()
   end)
-  test("text roles keep 4.5:1 on every starter plate's glass; ink keeps 4.5:1 on the accent",function()
-   for _,id in ipairs(Themes.Order)do
-    local t=Themes.ById[id]
-    for _,surface in ipairs({t.ui.panel,t.ui.raised,t.ui.inset})do
-     for _,role in ipairs({"text","soft","dim"})do assert(contrast(Kit.Color[role],surface)>=4.5,id.." "..role)end
-     assert(contrast(Kit.Color.stars,surface)>=4.5,id.." stars")
+  -- Toy Shell (UI-RETRO-RESTYLE R1.3): every deck's menu palette and Classic keep body
+  -- text at 4.5:1: white / soft on shell, tray and well; ink / soft ink on cream and lemon.
+  test("Toy Shell text roles keep 4.5:1 on every deck palette and Classic; ink keeps 4.5:1 on go",function()
+   local palettes={Themes.ToyClassic}
+   for _,id in ipairs(Themes.Order)do table.insert(palettes,Themes.ById[id].toy)end
+   for index,t in ipairs(palettes)do
+    local id=if index==1 then "classic"else Themes.Order[index-1]
+    for _,surface in ipairs({t.shell,t.tray,t.well,t.shellLip})do assert(contrast(t.onShell,surface)>=4.5,id.." white")end
+    -- Gold digits only ever sit on a tray or the LCD well (rule 3 of section 4).
+    for _,surface in ipairs({t.tray,t.well})do assert(contrast(Kit.Color.stars,surface)>=4.5,id.." stars")end
+    for _,surface in ipairs({t.shell,t.tray})do assert(contrast(t.onShellSoft,surface)>=4.5,id.." soft")end
+    for _,surface in ipairs({t.cream,t.selected})do
+     assert(contrast(t.ink,surface)>=4.5 and contrast(t.inkSoft,surface)>=4.5,id.." ink on cream / lemon")
     end
-    assert(contrast(t.ui.ink,t.ui.accent)>=4.5,id.." ink on accent")
+    assert(contrast(t.ink,t.go)>=4.5 and contrast(t.ink,t.tag)>=4.5 and contrast(t.onShell,t.stage)>=4.5,id.." ink on go and tag, white on stage")
    end
   end)
   test("button states: selected 2 px accent, disabled leaves the selection tree, press drops onto the lip",function()
    Art.applyTheme(Themes.ById.ice)
    local holder=Instance.new("Frame");holder.Size=UDim2.fromOffset(400,200);holder.Parent=gui
    local b,state=Kit.button(holder,"Probe",{text="Leave",glyph="B"})
-   assert(b.AbsoluteSize.Y==48 and state.stroke.Thickness==1 and near(state.stroke.Transparency,.86,.01))
-   Kit.setSelected(b,true);assert(state.stroke.Thickness==2 and state.stroke.Color==Art.uiTheme().ui.accent)
+   -- Toy Shell 3.4: a cream key with a 2 px ink outline; selected is lemon and 3 px.
+   assert(b.AbsoluteSize.Y==48 and state.stroke.Thickness==2 and state.stroke.Transparency==0 and state.stroke.Color==Kit.color("ink"))
+   assert(state.fill.BackgroundColor3==Kit.color("cream")and state.label.TextColor3==Kit.color("ink")and state.edge.BackgroundColor3==Kit.color("creamLip"))
+   Kit.setSelected(b,true);assert(state.stroke.Thickness==3 and state.fill.BackgroundColor3==Kit.color("selected"))
    -- Since 70e0440 a disabled button is an opaque muted face with a readable label (pinned
    -- in GlobalUIBounds too), not the old 40% see-through one.
-   Kit.setEnabled(b,false);assert(not b.Active and not b.Interactable and state.label.TextTransparency==0 and state.label.TextColor3==Color3.fromHex("#AAB8B5"))
-   assert(state.fill.BackgroundColor3==Color3.fromHex("#344545")and state.fill.BackgroundTransparency==0 and state.stroke.Enabled and state.stroke.Color==Color3.fromHex("#60716E"),"disabled face and border")
+   Kit.setEnabled(b,false);assert(not b.Active and not b.Interactable and state.label.TextTransparency==0 and state.label.TextColor3==Kit.Disabled.text)
+   assert(state.fill.BackgroundColor3==Kit.Disabled.face and state.fill.BackgroundTransparency==0 and state.stroke.Enabled and state.edge.BackgroundColor3==Kit.Disabled.lip,"disabled face, lip and border")
    -- UI personality T2 (deliberate change): a secondary button now has a 4 px lip and
    -- the face (Fill + Content) drops onto it in 60 ms, instead of the content settling 2 px.
    Kit.setEnabled(b,true);state.pressed=true;Kit.paintButton(b);task.wait(.12)
    assert(state.lip==4 and state.ledge==4 and state.edge.Visible and state.content.Position.Y.Offset==4 and state.fill.Position.Y.Offset==4,"secondary press drops the face onto its 4 px lip")
    state.pressed=false;Kit.paintButton(b)
    local p,ps=Kit.button(holder,"Primary",{variant="primary",text="Replay",glyph="A"})
-   assert(ps.fill.BackgroundColor3==Art.uiTheme().ui.accent and ps.label.TextColor3==Kit.Color.ink and ps.edge.Visible,"primary accent fill, ink label, lower edge")
-   Art.applyTheme(Themes.ById.brick);assert(ps.fill.BackgroundColor3==Art.uiTheme().ui.accent,"a plate change leaves menu buttons on the house palette")
+   assert(ps.fill.BackgroundColor3==Kit.color("go")and ps.label.TextColor3==Kit.color("ink")and ps.edge.Visible and ps.edge.BackgroundColor3==Kit.color("goLip"),"primary go fill, ink label, go lip")
+   -- R1.1: menus follow the deck (its tray, ink and well); go and cream are the same on every deck.
+   local was=Art.MenuColours;Art.setMenuColours("deck")
+   Art.applyTheme(Themes.ById.brick);assert(Kit.color("raised")==Themes.ById.brick.toy.tray and ps.fill.BackgroundColor3==Kit.color("go"),"a plate change repaints menus to its Toy Shell")
+   Art.setMenuColours("classic");assert(Kit.color("raised")==Themes.ToyClassic.tray,"Classic Shell ignores the plate")
+   Art.setMenuColours(was)
    holder:Destroy()
   end)
   test("focus ring sits 4 px outside its target and hides with it",function()
