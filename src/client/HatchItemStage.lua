@@ -29,7 +29,7 @@
 --               on the state after this hatch (the egg card's own rows); wonId the cell to light
 --   pity()      {line, sub}: the pity line and the stock line beside Hatch another
 --   again()     {text, enabled, reason, pending, act}: Hatch another (nil hides the key)
---   stoneColors() the confetti stones' colours after the burst (a stat's runes)
+--   stoneColors() the confetti stones' colours after the burst (a stat's colour)
 --   ready()     false while the scene is still loading (the lid stays shut, the egg bobs)
 --   lid         false: no lid (Hatch another, a reopen); skippable() may the hatch be skipped
 --   onSkip(), onClose(), owns(), reduced(), instant, consumeSkipInput(), cover, zIndex
@@ -510,7 +510,7 @@ function Stage:build()
   local o=image(root,"Orbit"..index,if sparkle then "sparkle"else "pebble",z+6,{Visible=false,ImageColor3=if sparkle then Color3.new(1,1,1)else look.color})
   self.orbit[index]=o
  end
- -- Confetti: rune stones and four-point sparkles (never Stars gold, never a five-point star).
+ -- Confetti: stat-colour pebbles and four-point sparkles (never Stars gold, never a five-point star).
  for index=1,Stage.Pool.burst do
   local o=image(root,"Confetti"..index,"pebble",z+7,{Visible=false});self.pieces[index]=o
  end

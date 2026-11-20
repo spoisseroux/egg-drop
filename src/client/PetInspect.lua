@@ -12,7 +12,7 @@
 -- walking away, a menu opening, or when the target leaves or changes.
 --
 -- v2 S4 (V2-SCOPE-2026-11-19 section 6): two tabs over the right column. Stats (default): six
--- level tiles with rune chips (Heart, Power, Energy / Jump, Speed, Smarts), a tier word from 25
+-- level tiles with stat icon chips (Heart, Power, Energy / Jump, Speed, Smarts), a tier word from 25
 -- up, the total level and the Keeper tier chip, read from the board's public PublicStats
 -- attribute (levels only; XP, Stars and history stay private). Outfit: the slot grid above.
 -- Compare shows the local player's own pet that is out ("You 41") beside each number.
@@ -374,13 +374,13 @@ function Inspect.wireSelection(card)
  local selected=GuiService.SelectedObject
  if(selected==hello and not helloOn)or(selected==compare and not compareOn)then GuiService.SelectedObject=tab1 end
 end
--- v2 S4: the Stats tab. Six tiles (rune chip, name, level, tier word or "You 41"), the summary
+-- v2 S4: the Stats tab. Six tiles (stat icon chip, name, level, tier word or "You 41"), the summary
 -- strip (total level / 594, You, Keeper chip), the privacy line, and a line for no stats.
 function Inspect:buildStats(card,g)
  local compact=g.compact
  local pane=Kit.frame(card,"StatsPane",nil,UDim2.fromOffset(g.x0,g.gridY),UDim2.fromOffset(g.rightW,g.statsH))
  local tileW=math.floor((g.rightW-(Inspect.Columns-1)*g.gap)/Inspect.Columns)
- local runeSize=if compact then 18 else 22
+ local iconSize=if compact then 18 else 22
  local levelH=if compact then 20 else 26
  local levelW=if compact then 28 else 36
  local tiles={}
@@ -388,8 +388,8 @@ function Inspect:buildStats(card,g)
   local col,line=(index-1)%Inspect.Columns,math.floor((index-1)/Inspect.Columns)
   local tile=Kit.frame(pane,"Stat_"..id,"well",UDim2.fromOffset(col*(tileW+g.gap),line*(g.tileH+g.gap)),UDim2.fromOffset(tileW,g.tileH),10)
   Kit.stroke(tile)
-  local rune=StatsPanel.rune(tile,id,runeSize);rune.Position=UDim2.fromOffset(5,4)
-  Kit.text(tile,"Label",StatsPanel.statName(id),"soft",{Name="StatName",Position=UDim2.fromOffset(5+runeSize+4,4),Size=UDim2.fromOffset(tileW-runeSize-14,runeSize),
+  local icon=StatsPanel.icon(tile,id,iconSize);icon.Position=UDim2.fromOffset(5,4)
+  Kit.text(tile,"Label",StatsPanel.statName(id),"soft",{Name="StatName",Position=UDim2.fromOffset(5+iconSize+4,4),Size=UDim2.fromOffset(tileW-iconSize-14,iconSize),
    TextSize=if compact then 10 else 12,TextTruncate=Enum.TextTruncate.AtEnd})
   local y=g.tileH-levelH-3
   local level=Kit.text(tile,"CounterL","1","text",{Name="Level",Position=UDim2.fromOffset(6,y),Size=UDim2.fromOffset(levelW,levelH),TextSize=if compact then 20 else 26})

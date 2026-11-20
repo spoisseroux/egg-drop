@@ -119,7 +119,7 @@ return function(client)
 		assert(Host.revealPill({statEgg={mode="random",misses=4}},"pip"):find("4"))
 	end)
 
-	test("the snack model: layers by size, rune on the icing, pearls on the Feast",function()
+	test("the snack model: layers by size, icon on the icing, pearls on the Feast",function()
 		for size,layers in pairs({nibble=1,snack=2,feast=3})do
 			local m=SnackModel.build(size,"heart",.3,{placeholder=true})
 			assert(m:GetAttribute("SnackBackend")=="Placeholder")
@@ -138,7 +138,7 @@ return function(client)
 			assert(m:GetAttribute("Layers")==layers and m:GetAttribute("StatId")=="jump"and m:GetAttribute("SizeId")==size and m.PrimaryPart)
 			local biscuit,icing=m:FindFirstChild("Biscuit"),m:FindFirstChild("Icing")
 			assert(biscuit and icing and biscuit:GetAttribute("SnackLayer")==1 and icing:GetAttribute("SnackLayer")==layers)
-			assert(icing.Color==Stats.ById.jump.color and icing:FindFirstChild("Mark")and icing.Mark.Texture==SnackModel.RuneDecal.jump,"the rune decal on the stat-colour icing")
+			assert(icing.Color==Stats.ById.jump.color and icing:FindFirstChild("Mark")and icing.Mark.Texture==SnackModel.IconDecal.jump,"the icon decal on the stat-colour icing")
 			assert((m:FindFirstChild("Pearls")~=nil)==(size=="feast"))
 			assert(math.abs(m:GetExtentsSize().X-.3)<.02,"scaled to the asked width")
 			for _,part in ipairs(m:GetDescendants())do if part:IsA("BasePart")then assert(not part.CanCollide and part.Anchored)end end

@@ -54,7 +54,7 @@ M_PEARL = material("snack__pearl", PEARL_HEX, .3, .2)
 def icing_material(stat, hexcol):
     """Preview only: the stat tint with the rune decal laid over it, as a Decal does in Roblox."""
     m = material("preview__icing_" + stat, hexcol, .35, .15); nt = m.node_tree
-    tex = nt.nodes.new("ShaderNodeTexImage"); tex.image = image(os.path.join(EXPORT, "rune-decal-%s-256.png" % stat)); tex.extension = "EXTEND"
+    tex = nt.nodes.new("ShaderNodeTexImage"); tex.image = image(os.path.join(EXPORT, "icon-decal-%s-256.png" % stat)); tex.extension = "EXTEND"
     mixn = nt.nodes.new("ShaderNodeMix"); mixn.data_type = "RGBA"
     col_in = [s for s in mixn.inputs if s.type == "RGBA"]; col_in[0].default_value = lin(hexcol)
     nt.links.new(tex.outputs["Alpha"], mixn.inputs[0]); nt.links.new(tex.outputs["Color"], col_in[1])
@@ -241,9 +241,9 @@ manifest = {
     "axes": "axis_forward=-Z axis_up=Y (same as bear.fbx). Blender: front -Y, up +Z, 1 unit = 1 stud. Every piece's origin is the middle of its snack.",
     "pieceNames": ["biscuit", "icing", "pearls"],
     "textures": {"biscuit": "biscuit.png (256 px, shared by all three sizes)"},
-    "runeDecals": {stat: "rune-decal-%s-256.png" % stat for stat, _ in STATS},
+    "iconDecals": {stat: "icon-decal-%s-256.png" % stat for stat, _ in STATS},
     "statColors": {stat: col for stat, col in STATS},
-    "decalNote": "Put the rune as a Decal on the icing MeshPart. The icing top's UVs fill the whole image (the rune's top is the snack's back, Blender +Y); "
+    "decalNote": "Put the stat icon as a Decal on the icing MeshPart. The icing top's UVs fill the whole image (the icon's top is the snack's back, Blender +Y); "
                  "the cream ring's UVs sit in a clear corner, so the decal shows only on top. The decal is dark cocoa on clear; do not tint it.",
     "sizes": manifest_sizes,
     "cheekCheck": {"bearHeadWidth": round(head_w, 3), "feastWidth": feast_w, "ratio": round(feast_w / head_w, 3), "limit": "under one third"},

@@ -22,11 +22,12 @@ local Panel={}
 Panel.__index=Panel
 Panel.Cols=3
 Panel.Order=Catalog.Order -- Heart, Power, Energy / Jump, Speed, Smarts
--- Rune stone art (assets/ui/stat-runes, asset-ids.json and rune-atlas-512x128.json).
-Panel.Atlas="rbxassetid://99900642594866"
+-- Pocket Buddies stat icons (assets/ui/stat-icons, asset-ids.json and icon-atlas-512x128.json; same
+-- rects as the retired rune atlas).
+Panel.Atlas="rbxassetid://113812710946093"
 Panel.Tag2x="rbxassetid://91664096410906"
-Panel.Rune={heart=Vector2.new(8,8),power=Vector2.new(80,8),energy=Vector2.new(152,8),jump=Vector2.new(224,8),speed=Vector2.new(296,8),smarts=Vector2.new(368,8)}
-Panel.RuneSmall={heart=Vector2.new(8,80),power=Vector2.new(40,80),energy=Vector2.new(72,80),jump=Vector2.new(104,80),speed=Vector2.new(136,80),smarts=Vector2.new(168,80)}
+Panel.Icon={heart=Vector2.new(8,8),power=Vector2.new(80,8),energy=Vector2.new(152,8),jump=Vector2.new(224,8),speed=Vector2.new(296,8),smarts=Vector2.new(368,8)}
+Panel.IconSmall={heart=Vector2.new(8,80),power=Vector2.new(40,80),energy=Vector2.new(72,80),jump=Vector2.new(104,80),speed=Vector2.new(136,80),smarts=Vector2.new(168,80)}
 local TierKey={Seedling="seedling",Sprout="sprout",Bloom="bloom",["Full Bloom"]="fullBloom",Starbloom="starbloom"}
 
 -- Pure: localised stat name, tier word and Keeper tier.
@@ -87,11 +88,11 @@ end
 local function txt(parent,role,content,color,x,y,w,h,props)
  local t=Kit.text(parent,role,content,color,props);t.Position=UDim2.fromOffset(x,y);t.Size=UDim2.fromOffset(w,h);return t
 end
--- A rune stone (64 px sprite, or the 24 px chip at 24 px and under).
-function Panel.rune(parent,id,size)
+-- A stat icon (64 px sprite, or the 24 px chip at 24 px and under).
+function Panel.icon(parent,id,size)
  local small=size<=24
- local image=Kit.node("ImageLabel",parent,{Name="Rune_"..id,BackgroundTransparency=1,Image=Panel.Atlas,
-  ImageRectOffset=(if small then Panel.RuneSmall else Panel.Rune)[id]or Vector2.zero,ImageRectSize=if small then Vector2.new(24,24)else Vector2.new(64,64),
+ local image=Kit.node("ImageLabel",parent,{Name="Icon_"..id,BackgroundTransparency=1,Image=Panel.Atlas,
+  ImageRectOffset=(if small then Panel.IconSmall else Panel.Icon)[id]or Vector2.zero,ImageRectSize=if small then Vector2.new(24,24)else Vector2.new(64,64),
   Size=UDim2.fromOffset(size,size),ZIndex=parent.ZIndex+1,Active=false})
  return image
 end
@@ -225,12 +226,12 @@ function Panel:buildGrid(body,W,H,phone)
   button:SetAttribute("StatId",id)
   local e={id=id,button=button,state=state,color=color}
   local p=if phone then 10 else 14
-  local runeSize=if phone then 28 else 34
-  e.rune=Panel.rune(button,id,runeSize);e.rune.Position=UDim2.fromOffset(p-2,p-4)
+  local iconSize=if phone then 28 else 34
+  e.icon=Panel.icon(button,id,iconSize);e.icon.Position=UDim2.fromOffset(p-2,p-4)
   local levelW=if phone then 46 else 62
   e.level=txt(button,"CounterL","","text",tileW-p-levelW,p-6,levelW,if phone then 30 else 40,{Name="Level",TextSize=if phone then 24 else 32,TextXAlignment=Enum.TextXAlignment.Right})
   if phone then
-   local nx=p+runeSize+6
+   local nx=p+iconSize+6
    e.name=txt(button,"Strong",Panel.statName(id),"text",nx,p-4,tileW-nx-levelW-p,20,{Name="StatName",TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
    -- Toy Shell 3.8: stat tiles are cream keys; the stat's colour stays on its stone and bar,
    -- and words on cream are soft ink (stat colours never carry text on cream).
@@ -255,17 +256,17 @@ function Panel:buildGrid(body,W,H,phone)
   self.tiles[index]=e
   button.Activated:Connect(function()self:select(index,true)end)
  end
- -- Detail strip: the selected stat's rune, name and what trains it.
+ -- Detail strip: the selected stat's icon, name and what trains it.
  local strip=Kit.card(body,"Detail",nil,{pad=12});strip.Position=UDim2.fromOffset(gx,detailY);strip.Size=UDim2.fromOffset(gw,detailH)
  self.detail=strip
  local snackW=if phone then 92 else 140
  if phone then
-  self.detailRune=nil;self.detailRuneAt={x=10,y=11,size=24}
+  self.detailIcon=nil;self.detailIconAt={x=10,y=11,size=24}
   self.detailName=txt(strip,"Strong","","text",42,3,180,20,{Name="DetailName",TextSize=14})
   self.detailBonus=txt(strip,"Small","","accent",200,3,gw-210-snackW,20,{Name="DetailBonus",TextSize=11,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
   self.detailLine=txt(strip,"Small","","soft",42,21,gw-52-snackW,30,{Name="DetailLine",TextSize=11,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,TextTruncate=Enum.TextTruncate.AtEnd})
  else
-  self.detailRuneAt={x=16,y=16,size=44}
+  self.detailIconAt={x=16,y=16,size=44}
   self.detailName=txt(strip,"Heading","","text",72,14,240,26,{Name="DetailName",TextSize=20})
   self.detailBonus=txt(strip,"Small","","accent",260,16,gw-276-snackW,22,{Name="DetailBonus",TextSize=13,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
   self.detailLine=txt(strip,"Body","","soft",72,44,gw-88-snackW,detailH-52,{Name="DetailLine",TextSize=15,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
@@ -406,9 +407,9 @@ function Panel:paintSelection()
  for index,e in ipairs(self.tiles)do e.state.setSelected(index==self.index,false)end
  local m=self.lastModel or self:viewModel()
  local s=m.stats[self.index];local id=s.id
- if self.detailRune then self.detailRune:Destroy()end
- local at=self.detailRuneAt
- self.detailRune=Panel.rune(self.detail,id,at.size);self.detailRune.Position=UDim2.fromOffset(at.x,at.y)
+ if self.detailIcon then self.detailIcon:Destroy()end
+ local at=self.detailIconAt
+ self.detailIcon=Panel.icon(self.detail,id,at.size);self.detailIcon.Position=UDim2.fromOffset(at.x,at.y)
  self.detailName.Text=Panel.statName(id);Kit.paint(self.detailName,"TextColor3","text") -- Toy Shell 3.8: the stone beside it carries the colour (Heart pink measured 4.3:1 on a tray)
  self.detailLine.Text=UICopy.get("stats.train."..id)
  self.detailBonus.Text=if s.need<=0 then ""elseif s.bonus>0 then UICopy.get("stats.bonusLeft",{count=s.bonus})else UICopy.get("stats.bonusUsed")

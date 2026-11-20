@@ -14,13 +14,13 @@
  "textures": {
   "biscuit": "biscuit.png (256 px, shared by all three sizes)"
  },
- "runeDecals": {
-  "heart": "rune-decal-heart-256.png",
-  "power": "rune-decal-power-256.png",
-  "energy": "rune-decal-energy-256.png",
-  "jump": "rune-decal-jump-256.png",
-  "speed": "rune-decal-speed-256.png",
-  "smarts": "rune-decal-smarts-256.png"
+ "iconDecals": {
+  "heart": "icon-decal-heart-256.png",
+  "power": "icon-decal-power-256.png",
+  "energy": "icon-decal-energy-256.png",
+  "jump": "icon-decal-jump-256.png",
+  "speed": "icon-decal-speed-256.png",
+  "smarts": "icon-decal-smarts-256.png"
  },
  "statColors": {
   "heart": "#FF86A8",
@@ -30,7 +30,7 @@
   "speed": "#8FA8FF",
   "smarts": "#E58CFF"
  },
- "decalNote": "Put the rune as a Decal on the icing MeshPart. The icing top's UVs fill the whole image (the rune's top is the snack's back, Blender +Y); the cream ring's UVs sit in a clear corner, so the decal shows only on top. The decal is dark cocoa on clear; do not tint it.",
+ "decalNote": "Put the stat icon as a Decal on the icing MeshPart. The icing top's UVs fill the whole image (the icon's top is the snack's back, Blender +Y); the cream ring's UVs sit in a clear corner, so the decal shows only on top. The decal is dark cocoa on clear; do not tint it.",
  "sizes": [
   {
    "id": "nibble",

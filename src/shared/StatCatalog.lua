@@ -16,12 +16,12 @@ Catalog.MaxXP=2000000
 -- Display data. Names go through UICopy (stats.<id>) when shown; these are the English
 -- fallbacks. Colours are fixed (the faceplate never tints them).
 Catalog.ById=table.freeze({
-	heart={id="heart",name="Heart",color=Color3.fromHex("#FF86A8"),rune="wunjo"},
-	power={id="power",name="Power",color=Color3.fromHex("#FF9D4D"),rune="uruz"},
-	energy={id="energy",name="Energy",color=Color3.fromHex("#6CCBFF"),rune="dagaz"},
-	jump={id="jump",name="Jump",color=Color3.fromHex("#B9EE5A"),rune="ehwaz"},
-	speed={id="speed",name="Speed",color=Color3.fromHex("#8FA8FF"),rune="raidho"},
-	smarts={id="smarts",name="Smarts",color=Color3.fromHex("#E58CFF"),rune="ansuz"},
+	heart={id="heart",name="Heart",color=Color3.fromHex("#FF86A8"),icon="heart"},
+	power={id="power",name="Power",color=Color3.fromHex("#FF9D4D"),icon="paw"},
+	energy={id="energy",name="Energy",color=Color3.fromHex("#6CCBFF"),icon="bolt"},
+	jump={id="jump",name="Jump",color=Color3.fromHex("#B9EE5A"),icon="spring"},
+	speed={id="speed",name="Speed",color=Color3.fromHex("#8FA8FF"),icon="sneaker"},
+	smarts={id="smarts",name="Smarts",color=Color3.fromHex("#E58CFF"),icon="bulb"},
 })
 
 -- xp(L) = floor(n^3/40 + 2n^2 + 12n), n = L-1, in exact integer form.

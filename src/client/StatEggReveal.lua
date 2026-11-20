@@ -1,5 +1,5 @@
 -- v2 Stat Eggs: the hatch, on the v2 Pop-Out Stage (V2-HATCH-REDESIGN-2026-11-19 2.4, H4).
--- The egg (a cream shell with a belt of six rune stones) shakes, cracks and bursts in the
+-- The egg (a cream shell with a belt of six stat stones) shakes, cracks and bursts in the
 -- tier's well (Nibble Common, Snack Uncommon, Feast Rare: a Feast is a jackpot), and the 3D
 -- Stat Snack pops with its stat's stones as the confetti. The result card names the snack,
 -- its boost, the odds and the Feast promise in the open, and ends on two buttons: Feed now

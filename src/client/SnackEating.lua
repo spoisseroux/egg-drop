@@ -5,7 +5,7 @@
 --
 -- offer(): the client-only part before the server answers (the snack at the cheek, a sniff).
 -- eat(): only after a server receipt (or another player's public beat): bites with crumbs, a
--- gulp, a happy wiggle (a spin on a Feast) and a burst of the stat's rune stones.
+-- gulp, a happy wiggle (a spin on a Feast) and a burst of the stat's icons.
 -- refuse(): the server said no: a head tilt, "hm?", the snack goes away.
 -- Reduced Motion: one bite, the gulp, no wiggle or burst (the line and sound still show it).
 local Players=game:GetService("Players")
@@ -22,12 +22,12 @@ Eating.Timeline=table.freeze({
 	feast=table.freeze({bites={.6,1.1,1.4,1.7},stones=12,happy={"snack_happy_coo","snack_happy_squeak"},spin=true,length=4.0}),
 })
 Eating.Reduced=table.freeze({bites={.2},length=.9})
--- The rune burst sheet (assets/ui/stat-runes/levelup-burst-8x128.json): 8 frames of 128 px, 16 fps.
-Eating.Burst="rbxassetid://88505572459516"
+-- The Pocket Buddies burst sheet (assets/ui/stat-icons/levelup-burst-8x128.json): 8 frames of 128 px, 16 fps.
+Eating.Burst="rbxassetid://98905350966594"
 Eating.BurstFrames=8
 Eating.BurstFps=16
 Eating.Atlas=SnackModel.Atlas
-Eating.Rune=SnackModel.Rune
+Eating.Icon=SnackModel.Icon
 Eating.Noms={"snack_nom_a","snack_nom_b","snack_nom_c"}
 
 local function smooth(x)x=math.clamp(x,0,1);return 1-(1-x)^3 end
@@ -186,7 +186,7 @@ local function biteSnack(self,index,count)
 	pcall(function()snack:ScaleTo(scale)end)
 end
 
--- The 2D or world rune burst: the 8-frame sheet plus a ring of the stat's stones.
+-- The 2D or world burst: the 8-frame sheet plus a ring of the stat's icons.
 local function startBurst(self)
 	self:clearBurst()
 	local info,visual=self.info,self.visual
@@ -216,7 +216,7 @@ local function startBurst(self)
 	local count=(Eating.Timeline[info.size]or Eating.Timeline.nibble).stones
 	for i=1,count do
 		local stone=Instance.new("ImageLabel");stone.Name="Stone";stone.BackgroundTransparency=1;stone.Image=Eating.Atlas
-		stone.ImageRectOffset=Eating.Rune[info.stat]or Vector2.zero;stone.ImageRectSize=Vector2.new(64,64)
+		stone.ImageRectOffset=Eating.Icon[info.stat]or Vector2.zero;stone.ImageRectSize=Vector2.new(64,64)
 		stone.AnchorPoint=Vector2.new(.5,.5);stone.Size=UDim2.fromScale(.16,.16);stone.ZIndex=z+2;stone.Parent=holder
 		local ring=if count>8 and i>count/2 then 2 else 1
 		table.insert(self.burstStones,{image=stone,angle=(i-1)/math.max(1,if ring==2 then count/2 else math.min(count,8))*math.pi*2+(ring-1)*.4,ring=ring})

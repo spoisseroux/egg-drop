@@ -69,7 +69,7 @@ function Tray.inside(point,position,size)
 	return math.abs(point.X-c.X)<=w/2 and math.abs(point.Y-c.Y)<=h/2
 end
 
--- A layered snack icon (2D): 1 to 3 biscuit bars with the stat's icing and its rune.
+-- A layered snack icon (2D): 1 to 3 biscuit bars with the stat's icing and its icon.
 local function icon(parent,g,s)
 	local holder=Kit.frame(parent,"Icon",nil,UDim2.fromOffset(0,0),UDim2.fromOffset(s,s))
 	local size=K.size(g.size)
@@ -83,9 +83,9 @@ local function icon(parent,g,s)
 	local top=s-barH*layers-(layers-1)*2-2-barH
 	local icing=Kit.frame(holder,"Icing",nil,UDim2.fromOffset(math.floor(s*.16),top),UDim2.fromOffset(math.floor(s*.68),barH),4)
 	icing.BackgroundTransparency=0;icing.BackgroundColor3=color
-	local rune=Kit.node("ImageLabel",holder,{Name="Rune",BackgroundTransparency=1,Image=SnackModel.Atlas,ImageRectOffset=SnackModel.Rune[g.stat]or Vector2.zero,
+	local mark=Kit.node("ImageLabel",holder,{Name="Mark",BackgroundTransparency=1,Image=SnackModel.Atlas,ImageRectOffset=SnackModel.Icon[g.stat]or Vector2.zero,
 		ImageRectSize=Vector2.new(64,64),Size=UDim2.fromOffset(math.floor(s*.56),math.floor(s*.56)),Position=UDim2.fromOffset(math.floor(s*.22),math.max(0,top-math.floor(s*.5))),ZIndex=holder.ZIndex+2})
-	local _=rune
+	local _=mark
 	return holder
 end
 

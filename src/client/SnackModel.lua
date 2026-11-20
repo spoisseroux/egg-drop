@@ -1,11 +1,11 @@
 -- v2 Stat Snacks: the 3D snack (V2-PET-AND-SNACKS-SCOPE 2.1). Size is the number of layers (a
--- child can count it); the stat is the rune on the icing, never only the colour.
+-- child can count it); the stat is the icon on the icing, never only the colour.
 --
 -- Model.build is the one place a snack model is made. Production (2026-11-19, Sol): Fable's meshes
 -- (commit eafef32, assets/art-source/snacks/export/) are uploaded and kept in
 -- ReplicatedStorage.SnackAssets (assets/snacks/SnackAssets.rbxmx, built by
 -- scripts/build_bunny_assets.py): one Model per size with pieces Biscuit (biscuit.png on its UVs,
--- every layer in one mesh), Icing (Color = the stat colour, the stat's rune as a Decal on its UVs:
+-- every layer in one mesh), Icing (Color = the stat colour, the stat's Pocket Buddies icon as a Decal on its UVs:
 -- the top fills the image, the cream ring sits in a clear corner) and Pearls (Feast only, #FFF6E9);
 -- 1 unit = 1 stud at the template's size, origin at the centre. If the pack or a mesh resource is
 -- missing, the placeholder discs below stand in. The contract for both: a Model, its pivot at the
@@ -17,12 +17,13 @@ local Stats=require(Shared.StatCatalog)
 local Model={}
 Model.Biscuit=Color3.fromHex("#E9B97C")
 Model.Cream=Color3.fromHex("#FFF6E9")
-Model.Atlas="rbxassetid://99900642594866"
--- Rune decals for the production icing (image ids behind the uploaded Decals).
-Model.RuneDecal={heart="rbxassetid://132451464498773",power="rbxassetid://122552653854171",energy="rbxassetid://91572311309275",
-	jump="rbxassetid://124268037204793",speed="rbxassetid://140671684960162",smarts="rbxassetid://70427672535772"}
+Model.Atlas="rbxassetid://113812710946093" -- the Pocket Buddies atlas (StatsPanel.Atlas)
+-- Pocket Buddies icon decals for the production icing (assets/art-source/snacks/export/
+-- icon-decal-<stat>-256.png, Image assets uploaded 2026-11-20; ids in assets/ui/stat-icons/asset-ids.json).
+Model.IconDecal={heart="rbxassetid://129048015089227",power="rbxassetid://80599387426424",energy="rbxassetid://86725484809476",
+	jump="rbxassetid://81760178125384",speed="rbxassetid://102860653332242",smarts="rbxassetid://109890466035862"}
 Model.PearlColor=Color3.fromHex("#FFF6E9")
-Model.Rune={heart=Vector2.new(8,8),power=Vector2.new(80,8),energy=Vector2.new(152,8),jump=Vector2.new(224,8),speed=Vector2.new(296,8),smarts=Vector2.new(368,8)}
+Model.Icon={heart=Vector2.new(8,8),power=Vector2.new(80,8),energy=Vector2.new(152,8),jump=Vector2.new(224,8),speed=Vector2.new(296,8),smarts=Vector2.new(368,8)}
 
 local function disc(model,name,diameter,height,y,color,layer)
 	local part=Instance.new("Part")
@@ -113,9 +114,9 @@ local function production(template,size,statId,color,width)
 			if part.Name=="Biscuit"then part.Color=Color3.new(1,1,1);part:SetAttribute("SnackLayer",1);base=part
 			elseif part.Name=="Icing"then
 				part.Color=color;part:SetAttribute("SnackLayer",size.layers)
-				local rune=Model.RuneDecal[statId]
-				if rune then
-					local decal=Instance.new("Decal");decal.Name="Mark";decal.Texture=rune;decal.Face=Enum.NormalId.Top;decal.Parent=part
+				local mark=Model.IconDecal[statId]
+				if mark then
+					local decal=Instance.new("Decal");decal.Name="Mark";decal.Texture=mark;decal.Face=Enum.NormalId.Top;decal.Parent=part
 				end
 			else part.Color=Model.PearlColor;part:SetAttribute("SnackLayer",size.layers)end
 			part.Parent=model
@@ -155,12 +156,12 @@ function Model.build(sizeId,statId,width,options)
 		end
 	end
 	local icing=disc(model,"Icing",width*.86,h*.3,y+h*.6,color,size.layers)
-	-- The rune on top of the icing (the cylinder's +X face points up after the turn).
-	if stat and Model.Rune[statId]then
+	-- The icon on top of the icing (the cylinder's +X face points up after the turn).
+	if stat and Model.Icon[statId]then
 		local gui=Instance.new("SurfaceGui");gui.Name="Mark";gui.Face=Enum.NormalId.Right;gui.LightInfluence=0
 		gui.CanvasSize=Vector2.new(64,64);gui.SizingMode=Enum.SurfaceGuiSizingMode.FixedSize;gui.Parent=icing
 		local image=Instance.new("ImageLabel");image.BackgroundTransparency=1;image.Image=Model.Atlas
-		image.ImageRectOffset=Model.Rune[statId];image.ImageRectSize=Vector2.new(64,64)
+		image.ImageRectOffset=Model.Icon[statId];image.ImageRectSize=Vector2.new(64,64)
 		image.AnchorPoint=Vector2.new(.5,.5);image.Position=UDim2.fromScale(.5,.5);image.Size=UDim2.fromScale(.78,.78);image.Parent=gui
 	end
 	if size.id=="feast"then
