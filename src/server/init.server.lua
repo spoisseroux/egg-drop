@@ -88,6 +88,11 @@ local gardenToyResult = child("RemoteEvent", "GardenToyResult", remotes)
 local parkResult = child("RemoteEvent", "ParkResult", remotes)
 local welcomeResult = child("RemoteEvent", "WelcomeResult", remotes)
 local petAppearanceResult = child("RemoteEvent", "PetAppearanceResult", remotes)
+-- v2 Stat Eggs: the owner's buy/feed replies, and the public "ate a snack" beat other players see.
+local snackResult = child("RemoteEvent", "SnackResult", remotes)
+local snackBeat = child("RemoteEvent", "SnackBeat", remotes)
+local StatEggCatalog = require(ReplicatedStorage.Shared.StatEggCatalog)
+local StatEggState = require(script.StatEggState)
 -- v1 track B: bug reports / suggestions (remote BugReport, owner tool ServerStorage.EggDropReportsTool).
 do local ok,problem=pcall(function()require(script.BugReportStore).mount(remotes)end);if not ok then warn("[EggDropReport] not mounted: "..tostring(problem))end end
 -- Client-run board B0: owner-only sim determinism check (FeatureFlags.SimCheck, remote SimCheck).
@@ -1384,6 +1389,58 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+	end
+
+	-- v2 Stat Eggs (V2-PET-AND-SNACKS-SCOPE 2.4, V2-FEEDING-RUNES 2.5): buy and hatch one egg into the
+	-- pouch, or feed one snack. Idempotent by the client's op id (keep it across Retrying and
+	-- timeouts); a saved receipt replays read-only. The live checks (pet out, no round, park, care
+	-- or carry, the 1.5 s feed cooldown) are here; the save checks are in StatEggState.
+	if action=="statEggBuy"or action=="snackFeed"then
+		local v=if type(value)=="table"then value else {}
+		local opId=if type(v.id)=="string"and #v.id>=1 and #v.id<=80 then v.id else nil
+		local petId=if type(v.petId)=="string"and #v.petId<=32 then v.petId else nil
+		local function reply(status,reason,receipt)snackResult:FireClient(player,{id=opId,action=action,status=status,reason=reason,receipt=receipt,revision=board.nursery.state.revision})end
+		if not opId or not petId then reply("Rejected","InvalidSnack");return end
+		local saved=StatEggState.receipt(board.nursery.state,opId)
+		if saved then
+			-- Read-only proof; Hatching checks the digest (same request or OperationConflict).
+			local ok,reason,receipt
+			if action=="statEggBuy"then ok,reason,receipt=Nursery.statEggBuy(board.nursery,opId,petId,v.free==true,if type(v.quote)=="string"then v.quote else "")
+			else ok,reason,receipt=Nursery.snackFeed(board.nursery,opId,v.snackId,petId)end
+			reply(if ok then "Saved"else "Rejected",reason,receipt);return
+		end
+		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then reply("Rejected","Throttled");return end
+		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
+		if petId~=board.profile.companionId then reply("Rejected","PetNotOut");return end
+		if action=="snackFeed"then
+			if board.mode~="Room"then reply("Rejected","InRound");return end
+			local actor=garden.actors[player.UserId]
+			if actor and(actor.park or actor.care or actor.toyReservation)then reply("Rejected","PetBusy");return end
+			if os.clock()-(board.lastFeedAt or -math.huge)<StatEggCatalog.FeedCooldown then reply("Rejected","Throttled");return end
+		end
+		board.lastHatchRequest=os.clock()
+		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
+		local ok,reason,receipt
+		if action=="statEggBuy"then
+			if type(v.free)~="boolean"or type(v.quote)~="string"or #v.quote>64 then ok,reason=false,"InvalidStatEgg"
+			else ok,reason,receipt=Nursery.statEggBuy(board.nursery,opId,petId,v.free,v.quote)end
+			if ok and reason~="AlreadySaved"then
+				Economy.command(player,"StatEgg",walletBefore,board.nursery.state.nectar,board.nursery.state)
+				Economy.event(player,"EggOpened_stat",1,{receipt and receipt.stat,receipt and receipt.size,if v.free then "free"else "paid"})
+			end
+		else
+			ok,reason,receipt=Nursery.snackFeed(board.nursery,opId,v.snackId,petId)
+			if ok and reason~="AlreadySaved"then
+				board.lastFeedAt=os.clock()
+				Economy.event(player,"SnackFed",1,{receipt and receipt.stat,receipt and receipt.size})
+				-- Everyone (the owner included) gets the public beat; other clients play the bites on this pet.
+				if receipt then snackBeat:FireAllClients(player.UserId,{petId=petId,stat=receipt.stat,size=receipt.size,id=receipt.snackId})end
+			end
+		end
+		board.nurseryBusy=false;if boards[player]~=board then return end
+		publishNursery(board);publishState(board)
+		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,receipt);return
 	end
 
 	-- One-time coach cards (onboarding v1): the client names a card it has shown; the bit

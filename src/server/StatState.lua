@@ -18,6 +18,7 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Catalog=require(Shared.StatCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Pets=require(Shared.PetCatalog)
+local EggRules=require(Shared.StatEggCatalog)
 
 local State={}
 -- Frozen storage bounds (never tie these to tuning values).
@@ -114,6 +115,94 @@ function State.sanitize(state)
 	if state.petStats~=nil then state.petStats=State.sanitizePetStats(state.petStats)end
 	if state.statBonus~=nil then state.statBonus=State.sanitizeBonus(state.statBonus)end
 	if state.statsSeed~=nil and not integer(state.statsSeed,1000)then state.statsSeed=nil end
+	if state.petBoosts~=nil then
+		state.petBoosts=State.sanitizeBoosts(state.petBoosts)
+		if state.petBoosts~=nil and next(state.petBoosts)==nil then state.petBoosts=nil end
+	end
+end
+
+-- Stat Snack boosts (v2 Stat Eggs; V2-SCOPE 5.1). Optional, additive, its own valid/sanitize so a
+-- bad boost field never drops petStats (architect review 2026-11-19):
+--   petBoosts = { [petId] = { [statId] = { {mult=2, left=50}, ... } } }   a queue per stat, head first
+-- Frozen stored bounds: queue 16, mult 1..10 (use is capped at StatEggCatalog.MaxMult), left 0..StoredMaxLeft.
+State.BoostQueueStored=16
+State.BoostMultStored=10
+local function validQueue(queue)
+	if type(queue)~="table"or #queue>State.BoostQueueStored or count(queue)~=#queue then return false end
+	for _,boost in ipairs(queue)do
+		if type(boost)~="table"or not integer(boost.mult,State.BoostMultStored)or boost.mult<1 or not integer(boost.left,State.StoredMaxLeft)then return false end
+	end
+	return true
+end
+function State.validBoosts(state)
+	local boosts=state.petBoosts
+	if boosts==nil then return true end
+	if type(boosts)~="table"or count(boosts)>State.PetLimit then return false end
+	for pet,stats in pairs(boosts)do
+		if not id(pet)or type(stats)~="table"or count(stats)>State.StatLimit then return false end
+		for stat,queue in pairs(stats)do if not id(stat)or not validQueue(queue)then return false end end
+	end
+	return true
+end
+function State.sanitizeBoosts(value)
+	if type(value)~="table"then return nil end
+	local result,pets={},0
+	for _,pet in ipairs(sortedKeys(value))do
+		local stats=value[pet]
+		if pets<State.PetLimit and id(pet)and type(stats)=="table"then
+			local clean,n={},0
+			for _,stat in ipairs(sortedKeys(stats))do
+				local queue=stats[stat]
+				if n<State.StatLimit and id(stat)and type(queue)=="table"then
+					local kept={}
+					for _,boost in ipairs(queue)do
+						if #kept<State.BoostQueueStored and type(boost)=="table"and type(boost.mult)=="number"and type(boost.left)=="number"
+							and boost.mult==boost.mult and boost.left==boost.left and boost.mult>=1 and boost.left>=1 and boost.left~=math.huge then
+							table.insert(kept,{mult=math.min(math.floor(boost.mult),State.BoostMultStored),left=math.min(math.floor(boost.left),State.StoredMaxLeft)})
+						end
+					end
+					if #kept>0 then clean[stat]=kept;n+=1 end
+				end
+			end
+			if n>0 then result[pet]=clean;pets+=1 end
+		end
+	end
+	return result
+end
+-- The queue for one pet and stat (a copy; empty when none).
+function State.boosts(state,petId,statId)
+	local all=type(state)=="table"and State.sanitizeBoosts(state.petBoosts)or {}
+	return(all[petId]and all[petId][statId])or {}
+end
+-- Queues one boost. Copy-on-write; false (nothing written) when it would pass a stored bound.
+function State.queueBoost(state,petId,statId,mult,left)
+	if type(state)~="table"or not id(petId)or not id(statId)or not integer(mult,State.BoostMultStored)or mult<1
+		or not integer(left,State.StoredMaxLeft)or left<1 then return false end
+	local all=State.sanitizeBoosts(state.petBoosts)or {}
+	if all[petId]==nil and count(all)>=State.PetLimit then return false end
+	local stats=all[petId]or {}
+	if stats[statId]==nil and count(stats)>=State.StatLimit then return false end
+	local queue=stats[statId]or {}
+	if #queue>=State.BoostQueueStored then return false end
+	table.insert(queue,{mult=mult,left=left})
+	stats[statId]=queue;all[petId]=stats;state.petBoosts=all
+	return true
+end
+-- The boost XP `rest` plain XP earns from `queue` (consumed head first, one multiplier per XP,
+-- capped at MaxMult). Returns the extra XP and the queue left.
+local function applyBoosts(queue,rest)
+	local extra,kept=0,{}
+	for _,boost in ipairs(queue)do
+		if rest>0 then
+			local take=math.min(rest,boost.left)
+			extra+=take*(math.min(boost.mult,EggRules.MaxMult)-1)
+			rest-=take
+			if boost.left-take>0 then table.insert(kept,{mult=boost.mult,left=boost.left-take})end
+		else
+			table.insert(kept,boost)
+		end
+	end
+	return extra,kept
 end
 
 function State.xp(state,petId,statId)
@@ -135,8 +224,10 @@ local function bonusLeft(bonus,stat,today)
 end
 
 -- Adds XP for an owned pet: `amount` plus Bonus XP (the first `left` XP today count double)
--- unless `noBonus`. Copy-on-write; clamped to MaxXP. Never fails; returns the XP added (0 on a
--- no-op). `today` must come from the transaction's candidate (stable across retries).
+-- unless `noBonus`, then Stat Snack boosts on the XP the bonus did not double (so the most any XP
+-- counts is MaxMult, the Feast's 3x). Copy-on-write; clamped to MaxXP (reaching it clears that
+-- stat's boosts). Never fails; returns the XP added (0 on a no-op) and the part of it a boost
+-- added. `today` must come from the transaction's candidate (stable across retries).
 function State.grant(state,petId,statId,amount,today,noBonus)
 	if type(state)~="table"or type(petId)~="string"or Pets.byId[petId]==nil or Catalog.ById[statId]==nil then return 0 end
 	if type(amount)~="number"or amount~=amount or amount<=0 or amount==math.huge then return 0 end
@@ -148,7 +239,7 @@ function State.grant(state,petId,statId,amount,today,noBonus)
 	if current[petId]==nil and count(current)>=State.PetLimit then return 0 end
 	if current[petId]~=nil and current[petId][statId]==nil and count(current[petId])>=State.StatLimit then return 0 end
 	if(current[petId]and current[petId][statId]or 0)>=Catalog.MaxXP then return 0 end
-	local gained=amount
+	local gained,doubledUsed=amount,0
 	if not noBonus and canonicalDay(today)then
 		local bonus=State.sanitizeBonus(state.statBonus)
 		if bonus and tonumber(today)<tonumber(bonus.day)then
@@ -163,8 +254,14 @@ function State.grant(state,petId,statId,amount,today,noBonus)
 				for _,stat in ipairs(Catalog.Order)do nextLeft[stat]=bonusLeft(bonus,stat,today)end
 			end
 			nextLeft[statId]=left-doubled
-			if count(nextLeft)<=State.StatLimit then state.statBonus={day=today,left=nextLeft}else gained-=doubled end
+			if count(nextLeft)<=State.StatLimit then state.statBonus={day=today,left=nextLeft};doubledUsed=doubled else gained-=doubled end
 		end
+	end
+	-- Boosts (architect review): only the XP the bonus did not actually double earns a boost.
+	local boostExtra,keptQueue,queue=0,nil,nil
+	if not noBonus then
+		queue=State.boosts(state,petId,statId)
+		if #queue>0 then boostExtra,keptQueue=applyBoosts(queue,amount-doubledUsed);gained+=boostExtra end
 	end
 	local petStats=current
 	local stats=petStats[petId]or {}
@@ -172,7 +269,17 @@ function State.grant(state,petId,statId,amount,today,noBonus)
 	stats[statId]=math.max(before,math.min(Catalog.MaxXP,before+gained))
 	petStats[petId]=stats
 	state.petStats=petStats
-	return stats[statId]-before
+	local added=stats[statId]-before
+	if keptQueue or(queue and #queue>0 and stats[statId]>=Catalog.MaxXP)then
+		-- Use up boosts only for XP actually added: a clamp at MaxXP clears the stat's queue.
+		if stats[statId]>=Catalog.MaxXP then keptQueue={}end
+		local all=State.sanitizeBoosts(state.petBoosts)or {}
+		local row=all[petId]or {}
+		row[statId]=if #keptQueue>0 then keptQueue else nil
+		all[petId]=if next(row)then row else nil
+		state.petBoosts=if next(all)then all else nil
+	end
+	return added,math.min(boostExtra,added)
 end
 
 local function bits(mask)
@@ -220,13 +327,20 @@ end
 function State.public(state,today)
 	local result={pets={},bonus={}}
 	local petStats=type(state)=="table"and State.sanitizePetStats(state.petStats)or {}
+	local allBoosts=type(state)=="table"and State.sanitizeBoosts(state.petBoosts)or {}
 	for _,pet in ipairs(Pets.collection)do
 		if Eggs.isOwned(state.inventoryMask or 0,pet.id)then
 			local stats=petStats[pet.id]or {}
-			local entry={xp={},level={},total=0}
+			-- boosts[stat] = {mult, left} of the head boost, plus the XP and count queued in all.
+			local entry={xp={},level={},total=0,boosts={}}
 			for _,stat in ipairs(Catalog.Order)do
 				local xp=stats[stat]or 0
 				entry.xp[stat]=xp;entry.level[stat]=Catalog.levelFor(xp);entry.total+=entry.level[stat]
+				local queue=allBoosts[pet.id]and allBoosts[pet.id][stat]
+				if queue and #queue>0 then
+					local queued=0;for _,boost in ipairs(queue)do queued+=boost.left end
+					entry.boosts[stat]={mult=math.min(queue[1].mult,EggRules.MaxMult),left=queue[1].left,queued=queued,count=#queue}
+				end
 			end
 			result.pets[pet.id]=entry
 		end

@@ -42,6 +42,9 @@ local Bond=require(script.Parent.BondState)
 local Stats=require(script.Parent.StatState)
 local StatXP=require(game:GetService("ReplicatedStorage").Shared.StatCatalog).XP
 local StatCaps=require(game:GetService("ReplicatedStorage").Shared.StatCatalog).Caps
+-- v2 Stat Eggs: optional snackPouch / statEgg fields (StatEggState) and petBoosts (StatState).
+local StatEggs=require(script.Parent.StatEggState)
+local StatEggCatalog=require(ReplicatedStorage.Shared.StatEggCatalog)
 -- v2 S2: the pet that earns XP for actions with no pet of their own (quests, the daily stamp,
 -- book milestones). The host sets handle.statPetOf; read once per call, so retries are stable.
 local function statPet(handle)
@@ -200,7 +203,7 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- Bond levels (overnight 2026-11-14, slice F): optional additive `bond` on v11, valid when missing (no version bump).
 -- Customization Egg (2026-11-16): optional additive finishInventory, petFinish, charmUnlocks,
 -- lookCharmMisses and lookFound on v11 (LookState.valid, run inside HueState.valid).
-local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Bond.valid(state)and Stats.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -332,6 +335,12 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and state.bond ~= nil then state.bond = Bond.sanitize(state.bond) end
 		-- v2 stats (S1): malformed stat fields are repaired, never a failed load.
 		if type(state) == "table" then Stats.sanitize(state) end
+		-- v2 Stat Eggs: the pouch, egg counters and receipts are repaired one subfield at a time.
+		if type(state) == "table" then StatEggs.sanitize(state) end
+		-- Never a failed load (architect review): a field that still does not validate is dropped on its
+		-- own, never with petStats beside it. Unreachable while sanitize is complete; logged if hit.
+		if type(state) == "table" and not Stats.validBoosts(state) then warn("Egg Drop: dropped petBoosts at load"); state.petBoosts = nil end
+		if type(state) == "table" and not StatEggs.valid(state) then warn("Egg Drop: dropped statEgg/snackPouch at load"); state.statEgg = nil; state.snackPouch = nil end
 		-- "No default charm" (plan §2.2): a save written before this build has no charmUnlocks and
 		-- keeps Snowflake, Ring and Pebble (everyone owned them under the old rules); a save this
 		-- acquire creates starts with none. Written once here, so every later reader sees one form.
@@ -459,6 +468,8 @@ function Hatching.public(handle)
 	public.bond = Bond.public(state).bond
 	-- v2 stats (S1): per owned pet XP, levels and total; Bonus XP left today per stat.
 	public.petStats = Stats.public(state, dayOf(handle.adapter.now()))
+	-- v2 Stat Eggs: pouch, eggs left today, free eggs, the Feast promise and per pet quote keys.
+	public.statEgg = StatEggs.public(state, dayOf(handle.adapter.now()), StatEggCatalog.selectionMode(handle.restricted))
 	-- Weekly shelf (slice C): the week the server prices with (nil while the shelf is off).
 	-- The client may also derive it from dailyDay; this is the authoritative copy.
 	public.shelfWeek = shelfWeek(handle.adapter.now())
@@ -1337,6 +1348,8 @@ function Hatching.award(handle, runSequence, amount, summary, boost, petId)
 			gains.heart = Stats.grant(state, pid, "heart", StatXP.roundWithPet, day)
 			state.lastRunReward.stats = gains
 		end
+		-- v2 Stat Eggs: the first finished round each day brings a free Stat Egg (never fails the award).
+		if run and StatEggs.grantDaily(state, captured.day) then state.lastRunReward.freeStatEgg = true end
 		return true
 	end, candidate)
 end
@@ -1412,6 +1425,61 @@ function Hatching.questReroll(handle, slot, day, boost)
 		else table.freeze({ slot = slot, period = day, day = dayOf(handle.adapter.now()), userId = handle.userId,
 			multiplier = if type(boost) == "table" and boost.multiplier == 2 then 2 else 1 })
 	return transact(handle, signature, handle.state.revision, QuestState.reroll, candidate)
+end
+
+-- v2 Stat Eggs (StatEggState). Both are idempotent by the client's operation id: the pending
+-- candidate is resumed on a retry (same frozen roll), a saved receipt with the same digest is
+-- "AlreadySaved" with that receipt, and the id reused for anything else is "OperationConflict".
+-- No reservation is needed (architect review 2026-11-19): no result reaches the client before the
+-- write is proven, and a roll that never committed was never shown or charged.
+local function snackOperation(handle, signature, operationId, digest, makeCandidate, apply)
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming then
+		local saved = StatEggs.receipt(handle.state, operationId)
+		if saved then
+			if saved.digest == digest then return true, "AlreadySaved", StatEggs.publicReceipt(saved) end
+			return false, "OperationConflict"
+		end
+	end
+	local candidate = if resuming then handle.pending.candidate else makeCandidate()
+	if candidate.digest ~= digest then return false, "OperationConflict" end
+	local ok, reason = transact(handle, signature, handle.state.revision, apply, candidate, signature, nil, digest)
+	local saved = StatEggs.receipt(handle.state, operationId)
+	if saved and saved.digest == digest and (ok or reason == "AlreadySaved") then return true, if ok then reason else "AlreadySaved", StatEggs.publicReceipt(saved) end
+	return ok, reason
+end
+
+-- Buy and hatch one Stat Egg for `petId` (the pet that is out; the host checks that), paid with
+-- Stars or, when `free`, one banked free egg. `quoteKey` is the key the player's card showed
+-- (StatEggCatalog.quoteKey): any change to the pool, price, mode, promise or position is
+-- "PoolChanged" with no charge. A restricted (or unknown) policy draws no random number.
+function Hatching.statEggBuy(handle, operationId, petId, free, quoteKey)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(petId) ~= "string" or #petId > 32
+		or not Pets.byId[petId] or type(free) ~= "boolean" or type(quoteKey) ~= "string" or #quoteKey > 64 then return false, "InvalidStatEgg" end
+	local signature = "statEgg:" .. operationId
+	local digest = "egg:" .. petId .. ":" .. (if free then "1" else "0") .. ":" .. quoteKey
+	return snackOperation(handle, signature, operationId, digest, function()
+		local mode = StatEggCatalog.selectionMode(handle.restricted)
+		local random = mode == "random"
+		return table.freeze({ op = operationId, digest = digest, petId = petId, free = free, quoteKey = quoteKey, mode = mode,
+			day = dayOf(handle.adapter.now()),
+			unitStat = if random then handle.adapter.random() else nil, unitSize = if random then handle.adapter.random() else nil })
+	end, function(state, c)
+		return StatEggs.buy(state, c, dayOf(handle.adapter.now()))
+	end)
+end
+
+-- Feed one snack from the pouch to `petId`. The host checks the live conditions first (the pet is
+-- out, no round, park, care or carry, the feed cooldown); this checks the save (StatEggState.feed).
+function Hatching.snackFeed(handle, operationId, snackId, petId)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(petId) ~= "string" or #petId > 32
+		or not Pets.byId[petId] or not integer(snackId, StatEggCatalog.SerialLimit) or snackId < 1 then return false, "InvalidSnack" end
+	local signature = "snack:" .. operationId
+	local digest = "feed:" .. snackId .. ":" .. petId
+	return snackOperation(handle, signature, operationId, digest, function()
+		return table.freeze({ op = operationId, digest = digest, snackId = snackId, petId = petId })
+	end, StatEggs.feed)
 end
 
 local function maintain(handle, releasing)
