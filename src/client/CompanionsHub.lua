@@ -162,10 +162,8 @@ end
 local function txt(parent,role,content,color,x,y,w,h,props)
  local t=Kit.text(parent,role,content,color,props);t.Position=UDim2.fromOffset(x,y);t.Size=UDim2.fromOffset(w,h);return t
 end
-local function colorOf(role)
- if role=="accent"or role=="selected"or role=="raised"or role=="well"or role=="panel"then return Kit.color(role)end
- return Kit.Color[role]or Kit.Color.text
-end
+-- Toy Shell: a role read on `object`'s own surface (ink on cream tiles, white on trays).
+local function colorOf(role,object,property)return Kit.roleOn(object,role,property)end
 
 -- host: a full-screen Frame. callbacks: open(rowId, petId) -> bool, follow(petId) -> bool,
 -- appearance(petId) -> appearance, back(), closed(reason).
@@ -207,7 +205,7 @@ end
 
 -- Preview well: a ViewportFrame with the pet (same set-up as the Wardrobe pane).
 function Hub:buildWell(parent,x,y,w,h)
- local well=Kit.frame(parent,"PreviewWell","well",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12);Kit.stroke(well)
+ local well=Kit.frame(parent,"PreviewWell","stage",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12);Kit.stroke(well);Kit.stage(well)
  local viewport=Kit.node("ViewportFrame",well,{Name="PetPreview",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex+1,
   Ambient=Color3.fromRGB(175,184,183),LightColor=Color3.fromRGB(255,250,231),LightDirection=Vector3.new(-1,-1.4,-3)})
  local world=Kit.node("WorldModel",viewport,{});local camera=Kit.node("Camera",viewport,{FieldOfView=30})
@@ -246,7 +244,7 @@ end
 -- Icon disc: the focused row's disc turns accent with an ink icon.
 local function disc(parent,icon,x,y,size)
  local d=Kit.frame(parent,"IconDisc",nil,UDim2.fromOffset(x,y),UDim2.fromOffset(size,size),999);d.BackgroundTransparency=0
- d.BackgroundColor3=Kit.Color.ink
+ d.BackgroundColor3=Kit.Color.ink;Kit.setSurface(d,"dark") -- an ink disc on a cream row: its icon stays white
  local i=Kit.icon(d,icon,math.floor(size*.42),"text");i.AnchorPoint=Vector2.new(.5,.5);i.Position=UDim2.fromScale(.5,.5)
  return d,i
 end
@@ -378,7 +376,7 @@ function Hub:buildHub(body,W,H,phone)
    line=txt(button,"Body",row.line,"soft",tx,h/2-8,w-tx-56,22,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
    status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 14 else 0),h/2+20,w-tx-70,18,{Name="Status",TextSize=12})
   end
-  Kit.paint(status,"TextColor3",function()return colorOf(s.tone)end)
+  Kit.paint(status,"TextColor3",function()return colorOf(s.tone,status,"TextColor3")end)
   if row.id=="pets"then Kit.fixedText(status)end -- the pet's name (stays as named)
   local dot
   if s.dot then
@@ -495,9 +493,9 @@ function Hub:setContext(ctx)
 end
 
 local function paintRowFocus(entry,focused)
- Kit.paint(entry.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised")end)
+ Kit.paint(entry.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised",entry.button,"BackgroundColor3")end)
  entry.stroke.Thickness=if focused then 2 else 1;entry.stroke.Transparency=if focused then 0 else .86
- Kit.paint(entry.stroke,"Color",function()return if focused then Kit.color("accent")else Color3.new(1,1,1)end)
+ Kit.paint(entry.stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
 end
 function Hub:refresh()
  if self.page=="pets"then
@@ -512,7 +510,7 @@ function Hub:refresh()
    local tone=if following then "accent"else "soft"
    if card and card.adopt then text,tone=UICopy.get(if card.free then "v2.adopt.freeStatus"else "v2.adopt.status",{price=card.price}),"accent"end
    if self.pendingFollow==entry.id then text,tone="SAVING…","soft"end
-   entry.status.Text=text;Kit.paint(entry.status,"TextColor3",function()return colorOf(tone)end)
+   entry.status.Text=text;Kit.paint(entry.status,"TextColor3",function()return colorOf(tone,entry.status,"TextColor3")end)
    entry.button:SetAttribute("Following",card~=nil and card.following==true)
   end
   self:paintSelectorPane()

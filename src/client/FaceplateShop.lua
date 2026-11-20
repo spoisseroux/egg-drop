@@ -173,10 +173,8 @@ end
 Shop.miniDeck=miniDeck
 
 -- Colour by role, resolved at paint time so a re-tint repaints correctly.
-local function colorOf(role)
- if role=="accent"or role=="selected"or role=="raised"or role=="well"or role=="panel"then return Kit.color(role)end
- return Kit.Color[role]or Kit.Color.text
-end
+-- Toy Shell: a role read on `object`'s own surface (ink on cream tiles, white on trays).
+local function colorOf(role,object,property)return Kit.roleOn(object,role,property)end
 local function txt(parent,role,content,color,x,y,w,h,props)
  local t=Kit.text(parent,role,content,color,props);t.Position=UDim2.fromOffset(x,y);t.Size=UDim2.fromOffset(w,h);return t
 end
@@ -485,12 +483,12 @@ function Shop:refresh()
   if self.view and role=="dim"then role="soft"end
   Deal.setPrice(tile.status,text)
   tile.status.FontFace=if role=="accent"then Kit.Type.Label[3]else Kit.Type.Counter[3]
-  Kit.paint(tile.status,"TextColor3",function()return colorOf(role)end)
+  Kit.paint(tile.status,"TextColor3",function()return colorOf(role,tile.status,"TextColor3")end)
   local focused=index==self.index
-  Kit.paint(tile.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised")end)
+  Kit.paint(tile.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised",tile.button,"BackgroundColor3")end)
   tile.stroke.Thickness=if focused then 2 else 1
   tile.stroke.Transparency=if focused then 0 else .86
-  Kit.paint(tile.stroke,"Color",function()return if focused then Kit.color("accent")else Color3.new(1,1,1)end)
+  Kit.paint(tile.stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
  end
  self:paintPane()
 end
@@ -518,7 +516,7 @@ function Shop:paintPane()
  self.status.Text=if pending then "Buying…"elseif self.errorId==id and self.errorText then self.errorText elseif note then note else status.text
  if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.status,self.errorFit)end
  local tone=if status.kind=="equipped"and not retry then "accent"elseif retry or status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
- Kit.paint(self.status,"TextColor3",function()return colorOf(tone)end)
+ Kit.paint(self.status,"TextColor3",function()return colorOf(tone,self.status,"TextColor3")end)
  self.action.Visible=status.button~=nil or retry
  if retry then
   Kit.setText(self.action,"Retry");Kit.setEnabled(self.action,true)

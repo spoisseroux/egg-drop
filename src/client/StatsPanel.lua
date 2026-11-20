@@ -232,20 +232,22 @@ function Panel:buildGrid(body,W,H,phone)
   if phone then
    local nx=p+runeSize+6
    e.name=txt(button,"Strong",Panel.statName(id),"text",nx,p-4,tileW-nx-levelW-p,20,{Name="StatName",TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
-   e.tier=txt(button,"Label","",color,nx,p+16,tileW-nx-p,14,{Name="Tier",TextSize=11})
+   -- Toy Shell 3.8: stat tiles are cream keys; the stat's colour stays on its stone and bar,
+   -- and words on cream are soft ink (stat colours never carry text on cream).
+   e.tier=txt(button,"Label","","soft",nx,p+16,tileW-nx-p,14,{Name="Tier",TextSize=11})
    e.tierX,e.tierY,e.tagH=nx,p+14,18
    -- Short phones (under 84 px tiles): the tier word gives its row to the bar.
    e.tier.Visible=tileH>=84
   else
    e.name=txt(button,"Heading",Panel.statName(id),"text",p,p+36,tileW-p*2,24,{Name="StatName",TextSize=19,TextTruncate=Enum.TextTruncate.AtEnd})
-   e.tier=txt(button,"Label","",color,p,p+62,tileW-p*2,16,{Name="Tier",TextSize=12})
+   e.tier=txt(button,"Label","","soft",p,p+62,tileW-p*2,16,{Name="Tier",TextSize=12})
    e.tierX,e.tierY,e.tagH=p,p+59,22
   end
   e.bonus,e.bonusWord=bonusTag(button,e.tagH);e.bonus.Visible=false
   -- The boost line ("2x · 80 XP left") with its small flame, in the stat's colour. Phones show
   -- it in the tier word's place.
   if not phone then
-   e.boostLine=txt(button,"Label","",color,p,p+82,tileW-p*2,16,{Name="Boost",TextSize=12,Visible=false,TextTruncate=Enum.TextTruncate.AtEnd})
+   e.boostLine=txt(button,"Label","","soft",p,p+82,tileW-p*2,16,{Name="Boost",TextSize=12,Visible=false,TextTruncate=Enum.TextTruncate.AtEnd})
   end
   e.tileW,e.tileH,e.pad,e.phone=tileW,tileH,p,phone
   e.bar=bar(button,p,tileH-(if phone then 32 else 40),tileW-p*2,if phone then 7 else 9,color)
@@ -407,7 +409,7 @@ function Panel:paintSelection()
  if self.detailRune then self.detailRune:Destroy()end
  local at=self.detailRuneAt
  self.detailRune=Panel.rune(self.detail,id,at.size);self.detailRune.Position=UDim2.fromOffset(at.x,at.y)
- self.detailName.Text=Panel.statName(id);Kit.paint(self.detailName,"TextColor3",Catalog.ById[id].color)
+ self.detailName.Text=Panel.statName(id);Kit.paint(self.detailName,"TextColor3","text") -- Toy Shell 3.8: the stone beside it carries the colour (Heart pink measured 4.3:1 on a tray)
  self.detailLine.Text=UICopy.get("stats.train."..id)
  self.detailBonus.Text=if s.need<=0 then ""elseif s.bonus>0 then UICopy.get("stats.bonusLeft",{count=s.bonus})else UICopy.get("stats.bonusUsed")
  Kit.paint(self.detailBonus,"TextColor3",if s.bonus>0 then "accent"else "dim")

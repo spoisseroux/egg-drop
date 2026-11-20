@@ -55,10 +55,8 @@ function Shop.step(index,dx,dy,count,columns)
  return math.max(1,math.min(count,row*cols+col+1))
 end
 
-local function colorOf(role)
- if role=="accent"or role=="selected"or role=="raised"or role=="well"or role=="panel"then return Kit.color(role)end
- return Kit.Color[role]or Kit.Color.text
-end
+-- Toy Shell: a role read on `object`'s own surface (ink on cream tiles, white on trays).
+local function colorOf(role,object,property)return Kit.roleOn(object,role,property)end
 local function txt(parent,role,content,color,x,y,w,h,props)
  local t=Kit.text(parent,role,content,color,props);t.Position=UDim2.fromOffset(x,y);t.Size=UDim2.fromOffset(w,h);return t
 end
@@ -205,11 +203,11 @@ function Shop:refresh()
   if self.view and role=="dim"then role="soft"end
   tile.status.Text=text
   tile.status.FontFace=if role=="accent"then Kit.Type.Label[3]else Kit.Type.Small[3]
-  Kit.paint(tile.status,"TextColor3",function()return colorOf(role)end)
+  Kit.paint(tile.status,"TextColor3",function()return colorOf(role,tile.status,"TextColor3")end)
   local focused=index==self.index
-  Kit.paint(tile.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised")end)
+  Kit.paint(tile.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised",tile.button,"BackgroundColor3")end)
   tile.stroke.Thickness=if focused then 2 else 1;tile.stroke.Transparency=if focused then 0 else .86
-  Kit.paint(tile.stroke,"Color",function()return if focused then Kit.color("accent")else Color3.new(1,1,1)end)
+  Kit.paint(tile.stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
   tile.button:SetAttribute("TileState",Shop.status(tile.id,self.ctx).kind)
  end
  self:paintPane()
@@ -229,7 +227,7 @@ function Shop:paintPane()
   self.status.Text=s.text
  end
  local tone=if s.kind=="retry"then "dangerText"elseif s.kind=="inUse"then "accent"else "soft"
- Kit.paint(self.status,"TextColor3",function()return colorOf(tone)end)
+ Kit.paint(self.status,"TextColor3",function()return colorOf(tone,self.status,"TextColor3")end)
  self.action.Visible=s.button~=nil
  if s.button then Kit.setText(self.action,s.button);Kit.setEnabled(self.action,s.enabled==true)end
  self.owner.root:SetAttribute("FocusedBackground",id);self.owner.root:SetAttribute("BackgroundPaneState",s.kind)

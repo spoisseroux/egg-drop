@@ -201,10 +201,8 @@ function View.stepPage(index,delta,count)return math.clamp(index+delta,1,math.ma
 local function txt(parent,role,content,color,x,y,w,h,props)
  local t=Kit.text(parent,role,content,color,props);t.Position=UDim2.fromOffset(x,y);t.Size=UDim2.fromOffset(w,h);return t
 end
-local function colorOf(role)
- if role=="accent"or role=="selected"or role=="raised"or role=="well"or role=="panel"then return Kit.color(role)end
- return Kit.Color[role]or Kit.Color.text
-end
+-- Toy Shell: a role read on `object`'s own surface (ink on cream tiles, white on trays).
+local function colorOf(role,object,property)return Kit.roleOn(object,role,property)end
 -- Hint glyph letters keep the 12 px floor (Kit.glyph draws 22 px caps at 11 px).
 local function glyph12(glyph)
  for _,label in ipairs(glyph:GetDescendants())do if label:IsA("TextLabel")and label.TextSize<12 then label.TextSize=12 end end
@@ -634,7 +632,7 @@ function View:paintPane()
    if look.kind=="button"then Kit.setText(cell.button,look.text);Kit.setEnabled(cell.button,look.enabled==true)
    else
     cell.chipText.Text=look.text
-    Kit.paint(cell.chipText,"TextColor3",function()return colorOf(look.tone)end)
+    Kit.paint(cell.chipText,"TextColor3",function()return colorOf(look.tone,cell.chipText,"TextColor3")end)
    end
    cell.holder:SetAttribute("MilestoneId",m.id);cell.holder:SetAttribute("State",state)
    cell.button:SetAttribute("AccessibleLabel",tostring(m.percent).."%, "..look.text)

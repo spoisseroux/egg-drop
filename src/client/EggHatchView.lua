@@ -1068,7 +1068,7 @@ function View:renderBody()
   local selected=self.selected==id
   Kit.paint(n,"BackgroundColor3",if selected then "selected"else "raised")
   local stroke=Kit.tileState(n).stroke;stroke.Thickness=if selected then 2 else 1;stroke.Transparency=if selected then 0 else .86
-  Kit.paint(stroke,"Color",function()return if selected then Kit.color("accent")else Color3.new(1,1,1)end)
+  Kit.paint(stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
   n.Interactable,n.Selectable=not self.pending,not self.pending;n:SetAttribute("Selected",selected)
   n:SetAttribute("AccessibleLabel",recipe.name..", "..(copy.line or "")..", "..recipe.cost.." Stars")
   y+=h+rowGap

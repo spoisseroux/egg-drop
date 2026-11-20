@@ -433,7 +433,9 @@ function Screen.new(options)
  self.boardBezel.BackgroundTransparency=0;self.boardBezel.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",self.boardBezel,{Rotation=90,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromHex("#16181D")),ColorSequenceKeypoint.new(.5,Color3.fromHex("#08090B")),ColorSequenceKeypoint.new(1,Color3.fromHex("#020203"))})})
  Kit.stroke(self.boardBezel,nil,1,.82)
- local screenPanel=phoneNode(Kit.frame(root,"Screen","panel",UDim2.new(),UDim2.new(),11));screenPanel.ZIndex=7
+ -- Toy Shell 6 / R1.7: the LCD around the board is the deck's well glass (navy on most
+ -- decks), its cards trays; the board itself keeps its own colours.
+ local screenPanel=phoneNode(Kit.frame(root,"Screen","well",UDim2.new(),UDim2.new(),11));screenPanel.ZIndex=7
  local stint=Kit.frame(screenPanel,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1),11);stint.BackgroundTransparency=0;stint.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",stint,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  Kit.stroke(screenPanel,nil,1,.91)
@@ -446,7 +448,7 @@ function Screen.new(options)
   self.wells[id]=w
  end
  self.rims={}
- local lcd=Kit.frame(root,"LCD","panel",UDim2.new(),UDim2.fromOffset(848,608),30);lcd.ZIndex=8;lcd.ClipsDescendants=true
+ local lcd=Kit.frame(root,"LCD","well",UDim2.new(),UDim2.fromOffset(848,608),30);lcd.ZIndex=8;lcd.ClipsDescendants=true
  local tint=Kit.frame(lcd,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));tint.BackgroundTransparency=0;tint.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",tint,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  self.lcd=lcd
@@ -555,7 +557,7 @@ function Screen.new(options)
  -- The overlay parent uses Global ZIndex (board renderer at 1 to 8, its corner mask at 100).
  self.glare=image(options.overlayParent or parent,"LCDGlare",I.glare,120,{ImageTransparency=.15})
  -- The results screen is its own layer at the LCD rect, above the board.
- local results=Kit.frame(options.overlayParent or parent,"DeckResults","panel",UDim2.new(),UDim2.fromOffset(848,608),30)
+ local results=Kit.frame(options.overlayParent or parent,"DeckResults","well",UDim2.new(),UDim2.fromOffset(848,608),30) -- Toy Shell: LCD glass under the result trays
  results.ZIndex=30;results.ClipsDescendants=true;results.Visible=false;results.Active=true
  Art.plateSurface(results)
  local rtint=Kit.frame(results,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));rtint.BackgroundTransparency=0;rtint.BackgroundColor3=Color3.new(1,1,1)
@@ -1317,7 +1319,7 @@ function Screen:closeDrawer()return false end
 
 function Screen:buildHud(g)
  if self.hudRoot then self.hudRoot:Destroy()end
- if g.phone then return self:buildCompactHud(g)end
+ if g.phone then self:buildCompactHud(g);Kit.hudTabs(self.hudRoot);return end
  self.builtMode=g.mode;local compact=g.compact
  local host=Kit.frame(self.content,"HUD",nil,UDim2.new(),UDim2.fromScale(1,1));self.hudRoot=host
  local h={};self.hud=h
@@ -1425,6 +1427,8 @@ function Screen:buildHud(g)
   local star=Kit.icon(pays,"star",18);star.Position=UDim2.fromOffset(8,30)
   h.pays=txt(pays,"Counter","6–8","stars",30,26,col-36,26,{TextSize=17})
  end
+ -- Toy Shell 3.5: the caps labels sit on coloured tabs.
+ Kit.hudTabs(host)
  -- A rebuilt HUD has empty control rows; repaint them on the next setHud.
  self.lastHud=nil;self.controlsKey=nil
 end
@@ -1436,6 +1440,9 @@ function Screen.paintEyebrow(h,statusOn,tint)
  local state=if statusOn then "status"elseif tint then "tint"else "dim"
  if h.eyebrowState==state then return end
  h.eyebrowState=state
+ -- Toy Shell 3.5: a tabbed eyebrow keeps its ink text; the tab turns Stars gold for a status.
+ local tab=Kit.hudTabOf(h.goalsEyebrow)
+ if tab then tab:SetAttribute("FixedTab",true);tab.BackgroundColor3=if statusOn then Kit.Color.stars else Kit.HudTabColors.GOALS;return end
  local color=if statusOn then Kit.Color.stars else(tint and Kit.tintColor(tint))or Kit.Color.dim
  Kit.paint(h.goalsEyebrow,"TextColor3",function()return color end)
 end

@@ -1429,6 +1429,7 @@ function View:buildChrome(view)
   panel.AnchorPoint=Vector2.new(.5,.5);panel.ClipsDescendants=true;Kit.stroke(panel)
   local gradient=Kit.frame(panel,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));gradient.BackgroundTransparency=0;gradient.BackgroundColor3=Color3.new(1,1,1)
   Kit.node("UIGradient",gradient,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
+  Kit.shellPattern(panel) -- Toy Shell 3.3: the shell's moving checker (phones get it from Kit.sheet)
  end
  self.chromeBody=body
  self.header=Kit.header(body,{title=if toys then UICopy.get("r4.customize.toys.title")else "Customize",eyebrow="Companions",tint="companions",compact=phone,width=g.W,left=if phone then 24 else 24,onBack=function()self:close("back")end})
@@ -1469,7 +1470,7 @@ function View:buildChrome(view)
   Size=UDim2.fromOffset(g.grid.w,g.grid.h),ScrollBarThickness=4,ZIndex=body.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
   ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6,Active=true})
  self.chromeGrid=grid;self.gridContent=grid
- self.channelTabs=Kit.tabs(grid,{"Main","Secondary"},g.grid.w-6,if phone then 36 else 40,if phone then 14 else 15)
+ self.channelTabs=Kit.tabs(grid,{"Main","Secondary"},g.grid.w-6,if phone then 36 else 40,if phone then 14 else 15,nil,{level=2})
  self.channelTabs.root.Name="ChannelTabs";TabInk.guard(self.channelTabs)
  self.channelTabs.changed=function(index)if not self:chooseChannel(if index==1 then "main"else "secondary")then self:layout()end end
  self.hueCards={}

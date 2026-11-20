@@ -292,7 +292,7 @@ function Inspect:build(identity)
  -- Desktop: the right side, so the pet itself stays in view.
  card.Position=if g.compact then UDim2.new(.5,0,0,6)else UDim2.new(1,-g.W/2-24,.5,-g.H/2)
  local well=Kit.well(card,"Preview",UDim2.fromOffset(g.pad,g.pad),UDim2.fromOffset(g.preview,g.H-g.pad*2),12)
- well.ClipsDescendants=true
+ well.ClipsDescendants=true;Kit.stage(well) -- Toy Shell R1.2.5: the pet on the berry stage
  local viewport=Instance.new("ViewportFrame")
  viewport.Name="PetViewport";viewport.BackgroundTransparency=1;viewport.BorderSizePixel=0;viewport.Size=UDim2.fromScale(1,1)
  viewport.Ambient=Color3.fromRGB(175,184,183);viewport.LightColor=Color3.fromRGB(255,250,231);viewport.LightDirection=Vector3.new(-1,-1.4,-3)

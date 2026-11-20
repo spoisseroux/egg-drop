@@ -9,30 +9,86 @@ local Art=require(script.Parent.DeckArt)
 local Assets=require(script.Parent.DeckAssets)
 local Kit={}
 
--- 2.1 Colour. `dim` is #959BA5 rather than the spec's #8A909A so 13 px labels keep
--- 4.5:1 on every plate's `raised` card (#8A909A measures 4.1:1 on Scout).
-Kit.Color={text=Color3.fromHex("#F3F4F6"),soft=Color3.fromHex("#C3C8D0"),dim=Color3.fromHex("#959BA5"),
- ink=Color3.fromHex("#0E0F12"),stars=Color3.fromHex("#FFC14D"),danger=Color3.fromHex("#FF5A6E"),dangerText=Color3.fromHex("#FF8090"),
- good=Color3.fromHex("#7BE495"),focus=Color3.fromHex("#FFFFFF"),white=Color3.new(1,1,1),black=Color3.new(0,0,0)}
-local fallback={panel=Color3.fromHex("#152525"),raised=Color3.fromHex("#213335"),well=Color3.fromHex("#0D1818"),
- selected=Color3.fromHex("#2D4E46"),line=Color3.fromHex("#8DBEAC"),accent=Color3.fromHex("#76F6B0"),ink=Color3.fromHex("#0E0F12")}
--- Glass layers and the accent come from the house palette (the default plate):
--- the equipped faceplate tints only the deck and its background (batch 2026-11-13).
+-- 2.1 Colour: the Toy Shell (UI-RETRO-RESTYLE-2026-11-19). Plastic is bright and
+-- outlined, screens are dark and dotted. These constants are the Classic Shell values;
+-- the bound roles below follow the equipped deck (Art.toyPalette) or Classic.
+Kit.Color={text=Color3.fromHex("#FFFFFF"),soft=Color3.fromHex("#DCE5FF"),dim=Color3.fromHex("#DCE5FF"),
+ ink=Color3.fromHex("#15143A"),stars=Color3.fromHex("#FFC14D"),danger=Color3.fromHex("#FF5A4D"),dangerText=Color3.fromHex("#FFA3A8"),
+ good=Color3.fromHex("#43DB5F"),focus=Color3.fromHex("#FFFFFF"),white=Color3.new(1,1,1),black=Color3.new(0,0,0),
+ cream=Color3.fromHex("#FFF4DC"),lemon=Color3.fromHex("#FFE14D"),go=Color3.fromHex("#43DB5F"),tomato=Color3.fromHex("#FF5A4D"),
+ tomatoText=Color3.fromHex("#B3261E"),inkSoft=Color3.fromHex("#4A4972")}
+-- Kit role -> Toy Shell palette role (3.1). `panel` is the shell (sheets), `raised` the
+-- sunk tray (things you read), `well` the LCD glass, `tile` the cream key (things you
+-- press), `selected` lemon on every deck, `accent` the one primary action (go).
+Kit.ToyRole=table.freeze({panel="shell",raised="tray",well="well",inset="well",selected="selected",line="onShellSoft",accent="go",ink="ink",
+ tile="cream",tileLip="creamLip",selectedLip="selectedLip",shell="shell",shellHi="shellHi",shellLip="shellLip",tray="tray",
+ wellDot="wellDot",tag="tag",tagLip="tagLip",stage="stage",stageDot="stageDot",stageGlow="stageGlow",inkSoft="inkSoft",
+ cream="cream",creamLip="creamLip",lemon="selected",go="go",goLip="goLip",tomato="tomato",tomatoText="tomatoText",
+ text="onShell",soft="onShellSoft",dim="onShellSoft",onShell="onShell",onShellSoft="onShellSoft"})
+local fallback={}
+for role in pairs(Kit.ToyRole)do fallback[role]=true end
+-- Text roles read the surface they sit on: ink on cream and lemon (things you press),
+-- white or soft on shell, tray and well (rule 1 of section 4).
+Kit.SurfaceRoles=table.freeze({text="ink",soft="inkSoft",dim="inkSoft",stars="ink",accent="ink",good="ink",danger="tomatoText",dangerText="tomatoText"})
 function Kit.color(role)
- local theme=Art.uiTheme();local ui=theme and theme.ui
- if ui then
-  local value=if role=="well"then ui.inset else ui[role]
-  if value then return value end
+ local toy=Art.toyPalette()
+ local key=Kit.ToyRole[role]
+ return(key and toy[key])or Kit.Color[role]or Kit.Color.text
+end
+-- "light" (cream / lemon keys and tiles) or "dark" (shell, tray, well, stage): the nearest
+-- ancestor that says, else dark.
+function Kit.surfaceOf(object)
+ local n=object
+ while n and not n:IsA("LayerCollector")do
+  local surface=n:GetAttribute("ToySurface")
+  if surface then return surface end
+  n=n.Parent
  end
- return fallback[role]or Kit.Color[role]or Kit.Color.text
+ return "dark"
+end
+-- A role read for `object` (screens that paint with their own role helpers): `raised`
+-- on a Kit tile is its cream face, text roles follow the surface, the rest as Kit.color.
+function Kit.roleOn(object,role,property)
+ if object and role=="raised"and property=="BackgroundColor3"and object:GetAttribute("KitTile")then role="tile"end
+ if object and Kit.SurfaceRoles[role]then return Kit.onSurface(object,role,property or "TextColor3")end
+ if Kit.ToyRole[role]then return Kit.color(role)end
+ return Kit.Color[role]or Kit.Color.text
+end
+function Kit.setSurface(object,surface)object:SetAttribute("ToySurface",surface);return object end
+-- A text-role colour for `object` on its surface. `property` keeps Stars gold and the
+-- go accent as shapes (an icon or fill) and only moves text off them on cream.
+function Kit.onSurface(object,role,property)
+ local light=Kit.SurfaceRoles[role]
+ if light and Kit.surfaceOf(object)=="light"then
+  if(role=="stars"or role=="accent"or role=="good")and property~="TextColor3"then return Kit.color(role)end
+  return Kit.color(light)
+ end
+ return Kit.color(role)
 end
 -- QA v2 R3.6 (asked by R4): a fixed colour painted over a property that Kit bound to
 -- a theme role earlier must replace that binding, or the next theme apply (equipping a
 -- faceplate) repaints the old role (once-selected tab labels went ink-dark and
 -- vanished). Kit remembers which properties it bound and pins those to the constant.
 local kitBound=setmetatable({},{__mode="k"})
+-- A binding that steps aside once a caller sets the property by hand (the value is no
+-- longer the one it painted). Text roles and the default outline were constants before
+-- the Toy Shell, so screens that recolour them by hand keep their colour.
+local function softBind(object,property,fn)
+ local last=fn()
+ object[property]=last
+ Art.bind(object,{[property]=function()
+  if object[property]~=last then return object[property]end
+  last=fn();return last
+ end})
+ local set=kitBound[object] or {};set[property]=true;kitBound[object]=set
+end
+Kit.softBind=softBind
 local function paint(object,property,role)
- if type(role)=="string"and(fallback[role]~=nil)then
+ -- A Kit tile painted `raised` by its screen is a cream key in the Toy Shell (3.2).
+ if role=="raised"and property=="BackgroundColor3"and object:GetAttribute("KitTile")then role="tile"end
+ if type(role)=="string"and Kit.SurfaceRoles[role]then
+  softBind(object,property,function()return Kit.onSurface(object,role,property)end)
+ elseif type(role)=="string"and(fallback[role]~=nil)then
   object[property]=Kit.color(role);Art.bind(object,{[property]=function()return Kit.color(role)end})
   local set=kitBound[object] or {};set[property]=true;kitBound[object]=set
  elseif type(role)=="function"then
@@ -113,7 +169,9 @@ end
 -- 2.3 Spacing, radius, border.
 Kit.Space={4,8,12,16,24,32}
 Kit.Radius={button=12,card=14,row=10,tile=12,well=14,chip=999}
-Kit.Stroke={color=Color3.new(1,1,1),transparency=.86,thickness=1}
+-- Toy Shell 3.2: every piece has an opaque ink outline drawn inside its rect (2 px; 3 on
+-- sheets), so no rect, gap or 44 px target changes.
+Kit.Stroke={color=Color3.fromHex("#15143A"),transparency=0,thickness=2,sheet=3}
 -- 2.4 Motion (seconds).
 Kit.Motion={screen=.16,focus=.09,pressDown=.06,pressUp=.10,hover=.08,tab=.14,toggle=.11,progress=.45,toastIn=.24,toastHold=2.4,toastOut=.16}
 
@@ -141,11 +199,16 @@ function Kit.corner(parent,radius)
  local c=parent:FindFirstChildOfClass("UICorner")or node("UICorner",parent,{})
  c.CornerRadius=if radius>=999 then UDim.new(.5,0)else UDim.new(0,radius);return c
 end
--- One 1 px white 14% border on every card, row, track and pill.
+-- The ink outline on every card, row, track and pill (inside the rect).
+function Kit.inner(stroke)
+ pcall(function()stroke.BorderStrokePosition=Enum.BorderStrokePosition.Inner end)
+ return stroke
+end
 function Kit.stroke(parent,color,thickness,transparency)
  local s=parent:FindFirstChild("KitStroke")or node("UIStroke",parent,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
  s.Thickness=thickness or Kit.Stroke.thickness;s.Transparency=transparency or(if color then 0 else Kit.Stroke.transparency)
- if color then paint(s,"Color",color)else s.Color=Kit.Stroke.color end
+ Kit.inner(s)
+ if color then paint(s,"Color",color)else softBind(s,"Color",function()return Kit.color("ink")end)end
  return s
 end
 
@@ -405,10 +468,11 @@ function Kit.chip(parent,content,kind,height)
   if sticker then return sticker end
   local z=chip.ZIndex
   local shadow=Kit.frame(chip,"StickerShadow",nil,UDim2.fromOffset(1,2),UDim2.fromScale(1,1),999)
-  shadow.BackgroundTransparency=Kit.Sticker.shadow;shadow.BackgroundColor3=Kit.Color.black;shadow.ZIndex=z
+  shadow.BackgroundTransparency=0;shadow.BackgroundColor3=Kit.Color.ink;shadow.ZIndex=z
   local face=Kit.frame(chip,"StickerFace",nil,UDim2.new(),UDim2.fromScale(1,1),999)
   face.BackgroundTransparency=0;face.ZIndex=z+1
-  node("UIStroke",face,{Name="StickerBorder",Thickness=Kit.Sticker.border,Color=Kit.Sticker.cream,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+  -- 3.5: a cream edge over an ink drop (the shadow turns into the sticker's ink lip).
+  Kit.inner(node("UIStroke",face,{Name="StickerBorder",Thickness=Kit.Sticker.border,Color=Kit.Sticker.cream,ApplyStrokeMode=Enum.ApplyStrokeMode.Border}))
   sticker={shadow=shadow,face=face}
   return sticker
  end
@@ -430,11 +494,16 @@ function Kit.chip(parent,content,kind,height)
    if lastKind~="sticker"then plainSize=label.TextSize end
    label.TextSize=math.max(12,label.TextSize)
   elseif lastKind=="sticker"and plainSize then label.TextSize=plainSize end
-  if kind=="gold"then paint(chip,"BackgroundColor3",function()return Kit.color("well"):Lerp(Kit.Color.stars,.14)end);paint(label,"TextColor3","stars")
-  elseif kind=="danger"then paint(chip,"BackgroundColor3",function()return Kit.color("well"):Lerp(Kit.Color.danger,.18)end);paint(label,"TextColor3","danger")
+  -- Toy Shell 3.5: count chips are a solid ink pill with cream caps; state chips
+  -- (accent) go with ink caps; quantity (lemon) a lemon pill; gold an LCD capsule with
+  -- gold digits; danger a tomato pill. Every kind keeps the ink outline.
+  if kind=="gold"then paint(chip,"BackgroundColor3","well");paint(label,"TextColor3",Kit.Color.stars)
+  elseif kind=="danger"then paint(chip,"BackgroundColor3","tomato");paint(label,"TextColor3","ink")
+  elseif kind=="accent"then paint(chip,"BackgroundColor3","go");paint(label,"TextColor3","ink")
+  elseif kind=="lemon"then paint(chip,"BackgroundColor3","selected");paint(label,"TextColor3","ink")
   elseif isSticker then
    sticker.face.BackgroundColor3=Kit.tintColor(stickerColor)or Kit.Color.stars;paint(label,"TextColor3","ink")
-  else paint(chip,"BackgroundColor3","well");paint(label,"TextColor3","soft")end
+  else paint(chip,"BackgroundColor3","ink");paint(label,"TextColor3","cream")end
   local width=Kit.measure(label.Text,role,label.TextSize).X+20
   chip.Size=UDim2.fromOffset(math.ceil(width),height)
   -- The sticker lands (120 ms overshoot) when it appears or its text changes.
@@ -483,15 +552,19 @@ function Kit.glyph(parent,letter,onAccent,size,cap)
   follow()
   chip:SetAttribute("GlyphCap",kind)
  end
+ Kit.inner(stroke)
+ -- Toy Shell 3.4: on a button (`accent`: any filled key) the cap is a white disc with an
+ -- ink ring; in hint bars A is a go cap and the rest grey caps, each with its lip.
  local function repaint(accent)
+  local ink=Kit.color("ink")
   if kind=="a"then
-   chip.BackgroundColor3,chip.BackgroundTransparency=Kit.color("accent"),0;stroke.Transparency=1;text.TextColor3=Kit.Color.ink
-   lip.BackgroundColor3=Kit.color("accent"):Lerp(Kit.Color.black,.38)
+   chip.BackgroundColor3,chip.BackgroundTransparency=Kit.color("go"),0;stroke.Color,stroke.Thickness,stroke.Transparency=ink,1.5,0;text.TextColor3=ink
+   lip.BackgroundColor3=Kit.color("goLip")
   elseif kind=="grey"then
-   chip.BackgroundColor3,chip.BackgroundTransparency=Kit.CapGrey,0;stroke.Color,stroke.Transparency=Kit.Color.white,.82;text.TextColor3=Kit.Color.text
+   chip.BackgroundColor3,chip.BackgroundTransparency=Kit.CapGrey,0;stroke.Color,stroke.Thickness,stroke.Transparency=ink,1.5,0;text.TextColor3=Kit.Color.text
    lip.BackgroundColor3=Kit.CapGrey:Lerp(Kit.Color.black,.45)
-  elseif accent then chip.BackgroundColor3,chip.BackgroundTransparency=Kit.Color.ink,.82;stroke.Color,stroke.Transparency=Kit.Color.ink,.65;text.TextColor3=Kit.Color.ink
-  else chip.BackgroundColor3,chip.BackgroundTransparency=Kit.Color.white,.88;stroke.Color,stroke.Transparency=Kit.Color.white,.73;text.TextColor3=Kit.Color.text end
+  elseif accent then chip.BackgroundColor3,chip.BackgroundTransparency=Kit.Color.white,0;stroke.Color,stroke.Thickness,stroke.Transparency=ink,1.5,0;text.TextColor3=ink
+  else chip.BackgroundColor3,chip.BackgroundTransparency=Kit.Color.white,.86;stroke.Color,stroke.Thickness,stroke.Transparency=Kit.Color.white,1,.6;text.TextColor3=Kit.Color.text end
  end
  repaint(onAccent);return chip,repaint
 end
@@ -500,18 +573,31 @@ end
 -- The TextButton is the hit rect; Edge + Fill + Content draw it. Content settles
 -- 2 px on press while the hit rect stays put.
 local buttons=setmetatable({},{__mode="k"})
+-- Toy Shell 3.4 states. Primary is go, every other key cream, reward Stars gold, danger a
+-- tomato key; all with ink text. Selected is lemon. Hover lifts the face 22% to white,
+-- press drops it onto the lip 10% darker, disabled is grey-lilac.
+Kit.Disabled=table.freeze({face=Color3.fromHex("#B9B6C9"),lip=Color3.fromHex("#8C89A3"),text=Color3.fromHex("#5A5878")})
+local function restFill(state)
+ local v=state.variant
+ if v=="primary"then return Kit.color("go"),Kit.color("goLip")end
+ if v=="reward"then return Kit.Color.stars,Kit.Color.stars:Lerp(Color3.fromHex("#7A4A00"),.45)end
+ if v=="destructive"then return Kit.color("tomato"),Kit.color("tomato"):Lerp(Kit.Color.black,.35)end
+ if state.selected then return Kit.color("selected"),Kit.color("selectedLip")end
+ return Kit.color("cream"),Kit.color("creamLip")
+end
 local function baseFill(state)
  local v=state.variant
- if not state.enabled then return Color3.fromHex("#344545"),0 end
- local color=if v=="primary"then Kit.color("accent")elseif v=="reward"then Kit.Color.stars
-  elseif v=="destructive"then Kit.color("raised"):Lerp(Kit.Color.danger,.10)
-  elseif state.selected then Kit.color("selected")else Kit.color("raised")
- local transparency=if v=="ghost"and not state.hover then 1 else 0
- if v=="ghost"and state.hover then return Kit.Color.white,.94 end
- if state.hover then color=color:Lerp(Kit.Color.white,.06)end
- if state.pressed then color=color:Lerp(Kit.Color.black,.08)end
- return color,transparency
+ if not state.enabled then return Kit.Disabled.face,0,Kit.Disabled.lip end
+ if v=="ghost"then
+  if state.hover then return Kit.Color.white,.88,Kit.Color.white end
+  return Kit.Color.white,1,Kit.Color.white
+ end
+ local color,lip=restFill(state)
+ if state.hover then color=color:Lerp(Kit.Color.white,.22)end
+ if state.pressed then color=color:Lerp(Kit.Color.black,.10)end
+ return color,0,lip
 end
+Kit.buttonFill=baseFill
 -- QA v760: painted with the palette of the surface the button sits on (Art.scoped), on
 -- every state change and not only when a theme is applied.
 local paintButtonNow
@@ -520,21 +606,25 @@ function Kit.paintButton(button)
 end
 function paintButtonNow(button)
  local s=buttons[button];if not s then return end
- local color,transparency=baseFill(s)
+ local color,transparency,lip=baseFill(s)
  s.fill.BackgroundColor3,s.fill.BackgroundTransparency=color,transparency
- local accent=s.enabled and(s.variant=="primary"or s.variant=="reward")
+ local ghost=s.variant=="ghost"
+ local filled=s.enabled and not ghost
+ local ink=Kit.color("ink")
  -- T2: every enabled button with a ledge shows its darker lip; on press the face
  -- (Fill + Content) drops onto it, so the lip stays covered rather than hidden.
- s.edge.Visible=s.ledge>0;s.edge.BackgroundColor3=if s.enabled then color:Lerp(Kit.Color.black,.38)else Color3.fromHex("#1F3030")
- s.sheen.Visible=accent
- s.stroke.Enabled=not s.enabled or(s.variant~="ghost"and s.variant~="primary"and s.variant~="reward")or s.selected
- if not s.enabled then s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Color3.fromHex("#60716E"),1,0
- elseif s.selected then s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Kit.color("accent"),2,0
- elseif s.variant=="destructive"then s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Kit.Color.danger,1.5,0
- else s.stroke.Color,s.stroke.Thickness,s.stroke.Transparency=Kit.Color.white,1,.86 end
- local ink=if accent then Kit.Color.ink elseif s.variant=="destructive"then Kit.Color.danger elseif s.enabled then Kit.Color.text else Kit.Color.dim
- s.label.TextColor3=if s.enabled then ink else Color3.fromHex("#AAB8B5");s.label.TextTransparency=0
- if s.repaintGlyph then s.repaintGlyph(accent)end
+ s.edge.Visible=s.ledge>0 and not ghost;s.edge.BackgroundColor3=lip
+ -- The glint: one light line along the top (keys 20 px and taller, not pressed, not disabled).
+ local h=if s.button.Size.Y.Scale==0 then s.button.Size.Y.Offset else s.button.AbsoluteSize.Y
+ s.sheen.Visible=filled and not s.pressed and h>=20
+ s.stroke.Enabled=not ghost or s.selected
+ s.stroke.Color,s.stroke.Transparency=ink,0
+ s.stroke.Thickness=if s.selected then 3 else 2
+ s.edgeStroke.Enabled=s.edge.Visible
+ s.label.TextColor3=if not s.enabled then Kit.Disabled.text elseif ghost then Kit.onSurface(s.button,"text","TextColor3")else ink
+ s.label.TextTransparency=0
+ -- Every key (disabled too) carries its cap as a white disc with an ink ring; ghosts keep the glass cap.
+ if s.repaintGlyph then s.repaintGlyph(not ghost)end
  if s.glyph then s.glyph.Visible=s.showGlyph==true end
  if s.cap then Kit.capButtonLabel(button)end
  -- Press: 60 ms down, 100 ms up; only when the pressed state changes (never per paint).
@@ -546,6 +636,36 @@ function paintButtonNow(button)
   if s.ledge>0 then Kit.tween(s.fill,time,{Position=UDim2.fromOffset(0,drop)})end
  end
 end
+-- Glint (3.2): one 2 px line of light along the top of a key, with a 3 px break and a
+-- 2 px dot at its right end. Inside the outline; pieces under 20 px tall skip it.
+Kit.GlintTransparency=.45
+function Kit.glint(face,radius)
+ radius=math.min(radius or 12,16)
+ local left=math.max(8,math.floor(radius*.75))
+ local holder=node("Frame",face,{Name="Sheen",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(left,4),
+  Size=UDim2.new(1,-left*2,0,2),ZIndex=face.ZIndex,Active=false,Selectable=false})
+ local line=node("Frame",holder,{Name="Line",BorderSizePixel=0,BackgroundColor3=Kit.Color.white,BackgroundTransparency=Kit.GlintTransparency,
+  Size=UDim2.new(1,-7,1,0),ZIndex=face.ZIndex,Active=false,Selectable=false})
+ Kit.corner(line,999)
+ local dot=node("Frame",holder,{Name="Dot",BorderSizePixel=0,BackgroundColor3=Kit.Color.white,BackgroundTransparency=Kit.GlintTransparency,
+  AnchorPoint=Vector2.new(1,0),Position=UDim2.fromScale(1,0),Size=UDim2.fromOffset(2,2),ZIndex=face.ZIndex,Active=false,Selectable=false})
+ Kit.corner(dot,999)
+ face:GetPropertyChangedSignal("ZIndex"):Connect(function()holder.ZIndex=face.ZIndex;line.ZIndex=face.ZIndex;dot.ZIndex=face.ZIndex end)
+ return holder
+end
+-- The lip colour under a face colour: the Toy Shell's own lips for its fixed faces,
+-- else the face 38% toward black.
+function Kit.lipFor(color)
+ local toy=Art.toyPalette()
+ if color==toy.cream then return toy.creamLip end
+ if color==toy.selected then return toy.selectedLip end
+ if color==toy.go then return toy.goLip end
+ if color==toy.tag then return toy.tagLip end
+ if color==toy.shell then return toy.shellLip end
+ if color==Kit.Disabled.face then return Kit.Disabled.lip end
+ return color:Lerp(Kit.Color.black,.38)
+end
+
 -- T2 lips. options.ledge: the darker lip under the face (primary 6; secondary,
 -- destructive and reward 4, or 3 on phones; ghost none). options.lip: how far the
 -- face drops on press (the ledge, or 2 px for ghost buttons). `options.compact`
@@ -580,11 +700,12 @@ function Kit.button(parent,name,options)
  local defaultLedge,defaultLip=Kit.buttonLip(variant,compact)
  local ledge=options.ledge or defaultLedge
  local edge=Kit.frame(button,"Edge",nil,UDim2.fromOffset(0,ledge),UDim2.fromScale(1,1),radius);edge.BackgroundTransparency=0
+ local edgeStroke=Kit.inner(node("UIStroke",edge,{Name="EdgeStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2,Color=Kit.Color.ink}))
  local fill=Kit.frame(button,"Fill",nil,UDim2.new(),UDim2.new(1,0,1,0),radius);fill.BackgroundTransparency=0;fill.ZIndex=edge.ZIndex+1
- local sheen=Kit.frame(fill,"Sheen",nil,UDim2.new(),UDim2.fromScale(1,.5),radius)
- sheen.BackgroundColor3,sheen.BackgroundTransparency=Kit.Color.white,0
- node("UIGradient",sheen,{Rotation=90,Transparency=NumberSequence.new(.82,1)})
- local stroke=node("UIStroke",fill,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=1})
+ -- Glint (3.2): a 2 px light line along the top, with a break and a dot at its right end.
+ local sheen=Kit.glint(fill,radius)
+ local stroke=Kit.inner(node("UIStroke",fill,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2}))
+ if variant~="ghost"then Kit.setSurface(button,"light")end
  local content=Kit.frame(button,"Content",nil,UDim2.new(),UDim2.fromScale(1,1));content.ZIndex=fill.ZIndex+2
  local list=node("UIListLayout",content,{FillDirection=Enum.FillDirection.Horizontal,HorizontalAlignment=Enum.HorizontalAlignment.Center,
   VerticalAlignment=Enum.VerticalAlignment.Center,Padding=UDim.new(0,10),SortOrder=Enum.SortOrder.LayoutOrder})
@@ -595,7 +716,7 @@ function Kit.button(parent,name,options)
  local label=Kit.text(content,"Button",options.text or name,nil,{Name="Label",AutomaticSize=Enum.AutomaticSize.X,Size=UDim2.fromOffset(0,size.Y),LayoutOrder=2,TextXAlignment=Enum.TextXAlignment.Center,
   TextSize=options.textSize or(if variant=="reward"then Kit.Type.Strong[1]else Kit.Type.Button[1])})
  local state={variant=variant,enabled=true,hover=false,pressed=false,selected=false,showGlyph=options.showGlyph~=false,lip=options.lip or(if options.ledge then options.ledge else defaultLip),ledge=ledge,drop=0,
-  fill=fill,edge=edge,sheen=sheen,stroke=stroke,content=content,label=label,glyph=glyph,repaintGlyph=repaintGlyph,list=list}
+  fill=fill,edge=edge,edgeStroke=edgeStroke,sheen=sheen,stroke=stroke,content=content,label=label,glyph=glyph,repaintGlyph=repaintGlyph,list=list,button=button}
  buttons[button]=state
  if Kit.translating then
   state.cap=node("UISizeConstraint",label,{Name="TranslateCap"});label.TextTruncate=Enum.TextTruncate.AtEnd
@@ -627,11 +748,33 @@ function Kit.pulse(button)
  task.delay(Kit.Motion.pressDown+Kit.Motion.pressUp,function()s.pressed=false;Kit.paintButton(button)end)
 end
 
--- Card: radius 14, raised, 1 px stroke; label row first.
+-- Tray (3.2): the dark pane you read. Sunk: a 3 px shadow under its top edge, no lip.
+-- One full-size overlay whose gradient keeps the shadow 3 px deep at any height.
+Kit.SinkDepth=3
+function Kit.sink(frame,depth)
+ depth=depth or Kit.SinkDepth
+ local shade=frame:FindFirstChild("TraySink")or node("Frame",frame,{Name="TraySink",BorderSizePixel=0,BackgroundColor3=Kit.Color.black,
+  BackgroundTransparency=0,Size=UDim2.fromScale(1,1),ZIndex=frame.ZIndex,Active=false,Selectable=false})
+ local corner=frame:FindFirstChildOfClass("UICorner")
+ if corner and not shade:FindFirstChildOfClass("UICorner")then node("UICorner",shade,{CornerRadius=corner.CornerRadius})end
+ local g=shade:FindFirstChildOfClass("UIGradient")or node("UIGradient",shade,{Rotation=90})
+ local function fit()
+  local h=frame.AbsoluteSize.Y
+  if h<depth*3 then g.Transparency=NumberSequence.new(1);return end
+  local a=math.clamp(depth/h,.001,.5)
+  g.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.62),NumberSequenceKeypoint.new(a,1),NumberSequenceKeypoint.new(1,1)})
+ end
+ frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
+ fit()
+ return shade
+end
+-- Card: radius 14, a tray with the ink outline; label row first.
 function Kit.card(parent,name,label,options)
  options=options or {}
  local card=Kit.frame(parent,name,options.role or "raised",UDim2.new(),UDim2.fromOffset(100,100),options.radius or Kit.Radius.card)
  Kit.stroke(card)
+ Kit.setSurface(card,"dark")
+ if(options.role or "raised")=="raised"then Kit.sink(card)end
  -- options.seam (T2): the stitched seam 6 px inside the edge (information panes only;
  -- no seam asset = no instance; hidden on cards under 150 px tall).
  if options.seam then card:SetAttribute("KitSeam",true);Kit.seam(card)end
@@ -643,22 +786,30 @@ end
 
 -- Border stays outside a single rounded compositor mask. Unlike a Frame corner,
 -- CanvasGroup's rounded mask clips descendant viewports/images at the corners.
--- v850: the warm house backdrop for item and pet previews (cream to peach, the Common
--- reveal colours): Customize / Toys pane wells use it instead of the dark teal well.
-Kit.WarmWell=table.freeze({top=Color3.fromHex("#FFE2B8"),floor=Color3.fromHex("#E9946A")})
+-- Toy Shell R1.2.5: every 3D preview sits on the fixed warm berry stage (never deck
+-- tinted, never teal), lifted a little toward apricot at the top.
+Kit.WarmWell=table.freeze({top=Color3.fromHex("#4A1D3A"):Lerp(Color3.fromHex("#FFB26B"),.16),floor=Color3.fromHex("#4A1D3A")})
 function Kit.warmWell(frame)
  -- A fill of its own over the themed well colour (theme repaints never reach it).
  local fill=frame:FindFirstChild("WarmFill")or node("Frame",frame,{Name="WarmFill",BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=frame.ZIndex,Active=false})
  fill.BackgroundColor3=Color3.new(1,1,1);fill.BackgroundTransparency=0
  local corner=frame:FindFirstChildOfClass("UICorner");if corner then node("UICorner",fill,{CornerRadius=corner.CornerRadius})end
  local g=fill:FindFirstChild("WarmGradient")or node("UIGradient",fill,{Name="WarmGradient"})
- g.Rotation=90;g.Color=ColorSequence.new(Kit.WarmWell.top,Kit.WarmWell.floor:Lerp(Kit.WarmWell.top,.15))
- frame:SetAttribute("WarmWell",true)
+ g.Rotation=90;g.Color=ColorSequence.new(Kit.WarmWell.top,Kit.WarmWell.floor)
+ frame:SetAttribute("WarmWell",true);Kit.setSurface(frame,"dark")
  return fill
+end
+-- A stage: the berry preview backdrop with its dot grid (R1.2.5), for 3D previews.
+function Kit.stage(frame)
+ paint(frame,"BackgroundColor3","stage");frame.BackgroundTransparency=0
+ Kit.setSurface(frame,"dark");frame:SetAttribute("ToyStage",true)
+ Kit.dotGrid(frame,"stageDot")
+ return frame
 end
 function Kit.previewWell(parent,name,position,size,radius)
  radius=radius or 12
- local outer=Kit.frame(parent,name,"well",position,size,radius);Kit.stroke(outer)
+ local outer=Kit.frame(parent,name,"stage",position,size,radius);Kit.stroke(outer)
+ Kit.stage(outer)
  local clip=Kit.node("CanvasGroup",outer,{Name="RoundedContent",BackgroundTransparency=1,BorderSizePixel=0,
   Position=UDim2.fromOffset(2,2),Size=UDim2.new(1,-4,1,-4),ClipsDescendants=true,GroupTransparency=0,
   ZIndex=outer.ZIndex+1,Active=false,Selectable=false})
@@ -707,7 +858,10 @@ local function cardHeight(card)
  if card.Size.Y.Scale==0 then return card.Size.Y.Offset end
  return card.AbsoluteSize.Y
 end
+-- Toy Shell step 3: the stitched seam is retired (trays are sunk instead); nothing is made.
+Kit.SeamRetired=true
 function Kit.seam(card)
+ if Kit.SeamRetired then return nil end
  local image=Assets.Personality and Assets.Personality.seam
  if not(image and card)then return nil end
  local existing=card:FindFirstChild("Seam")
@@ -774,10 +928,37 @@ function Kit.setTileLip(tile,depth)
  tile:SetAttribute("KitLip",depth)
 end
 
--- Tile (T2): a pressable card (radius 12, 1 px stroke) with the lip. options:
--- position, size, radius, role ("raised"), lip (px; 0 = none), compact (3 px lip),
--- selectable. Returns the TextButton (the hit rect) and its state {lip, face,
--- lipFrame, stroke, setSelected(on, animate)}.
+-- Pure: a tile outline for a screen's thickness (old rest 1 -> 2, old selected 2 -> 3).
+-- Rest is stored as 2.25 (it draws as 2 px) so a screen setting 2 for "selected" always
+-- changes the value and is seen.
+Kit.TileRest=2.25
+function Kit.tileStrokeFor(thickness)
+ if thickness<1.5 then return Kit.TileRest end
+ if thickness<2.1 then return Kit.Stroke.thickness+1 end
+ return thickness
+end
+-- WCAG relative luminance (pure).
+function Kit.luminance(c)
+ local function ch(v)return if v<=.03928 then v/12.92 else((v+.055)/1.055)^2.4 end
+ return .2126*ch(c.R)+.7152*ch(c.G)+.0722*ch(c.B)
+end
+function Kit.contrast(a,b)
+ local x,y=Kit.luminance(a),Kit.luminance(b)
+ return(math.max(x,y)+.05)/(math.min(x,y)+.05)
+end
+-- A face this light takes ink text (cream, lemon, go, white); darker faces take white.
+Kit.LightFace=.3
+function Kit.surfaceForColor(color)return if Kit.luminance(color)>=Kit.LightFace then "light"else "dark"end
+-- Follows a face colour: marks `object` light or dark and repaints the text under it
+-- when that flips (a screen that paints its own tile face keeps readable text).
+function Kit.followSurface(object,color)
+ local want=Kit.surfaceForColor(color)
+ if object:GetAttribute("ToySurface")~=want then object:SetAttribute("ToySurface",want);Art.repaintDescendants(object)end
+end
+-- Tile (T2, Toy Shell 3.2): a pressable cream key (radius 12) with the ink outline,
+-- glint and lip. options: position, size, radius, role ("tile": cream; "raised" also
+-- means cream), lip (px; 0 = none), compact (3 px lip), selectable. Returns the
+-- TextButton (the hit rect) and its state {lip, face, lipFrame, stroke, setSelected(on, animate)}.
 function Kit.tile(parent,name,options)
  options=options or {}
  local radius=options.radius or Kit.Radius.tile
@@ -788,22 +969,40 @@ function Kit.tile(parent,name,options)
  local lipFrame=node("Frame",tile,{Name="TileLip",BorderSizePixel=0,BackgroundTransparency=if lip>0 then 0 else 1,Position=UDim2.fromOffset(0,lip),
   Size=UDim2.fromScale(1,1),ZIndex=tile.ZIndex-1,Active=false,Selectable=false})
  Kit.corner(lipFrame,radius)
+ Kit.inner(node("UIStroke",lipFrame,{Name="LipStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2,Color=Kit.Color.ink}))
  local face=node("Frame",tile,{Name="TileFace",BorderSizePixel=0,BackgroundTransparency=0,Size=UDim2.fromScale(1,1),ZIndex=tile.ZIndex,Active=false,Selectable=false})
  Kit.corner(face,radius)
  local stroke=Kit.stroke(face)
+ -- The outline stays opaque ink whatever the screen sets (it used to fade the hairline),
+ -- and a screen's old 1 px / 2 px (rest / selected) read as 2 px / 3 px: selected is lemon
+ -- and a thicker outline, so colour is never the only signal.
+ stroke:GetPropertyChangedSignal("Transparency"):Connect(function()if stroke.Transparency~=0 then stroke.Transparency=0 end end)
+ local mapping=false
+ stroke:GetPropertyChangedSignal("Thickness"):Connect(function()
+  if mapping then return end
+  local want=Kit.tileStrokeFor(stroke.Thickness)
+  if want~=stroke.Thickness then mapping=true;stroke.Thickness=want;mapping=false end
+ end)
+ stroke.Thickness=Kit.TileRest
+ local glint=Kit.glint(face,radius)
+ local role=if options.role==nil or options.role=="raised"then "tile"else options.role
  local pad=node("UIPadding",tile,{Name="PressPad"})
  local state={lip=lip,selected=false,stroke=stroke,face=face,lipFrame=lipFrame,pad=pad,pressed=false}
  tiles[tile]=state
  local function mirror()
   face.BackgroundColor3=tile.BackgroundColor3
-  lipFrame.BackgroundColor3=tile.BackgroundColor3:Lerp(Kit.Color.black,.38)
+  lipFrame.BackgroundColor3=Kit.lipFor(tile.BackgroundColor3)
+  Kit.followSurface(tile,tile.BackgroundColor3)
+  glint.Visible=tile.AbsoluteSize.Y>=20 or tile.Size.Y.Offset>=20
  end
  tile:GetPropertyChangedSignal("BackgroundColor3"):Connect(mirror)
  -- A caller that changes the hit rect's ZIndex keeps the lip and face under its children.
  tile:GetPropertyChangedSignal("ZIndex"):Connect(function()lipFrame.ZIndex=tile.ZIndex-1;face.ZIndex=tile.ZIndex end)
- paint(tile,"BackgroundColor3",options.role or "raised")
+ tile:SetAttribute("KitTile",true)
+ Kit.setSurface(tile,if role=="tile"then "light"else "dark")
+ paint(tile,"BackgroundColor3",role)
  mirror()
- tile:SetAttribute("KitTile",true);tile:SetAttribute("KitLip",lip)
+ tile:SetAttribute("KitLip",lip)
  if lip>0 then
   tile.MouseButton1Down:Connect(function()if tile.Interactable then pressTile(state,true)end end)
   tile.MouseButton1Up:Connect(function()pressTile(state,false)end)
@@ -817,9 +1016,10 @@ function Kit.tile(parent,name,options)
  function state.setSelected(on,animate)
   local was=state.selected
   state.selected=on==true
-  paint(tile,"BackgroundColor3",if state.selected then "selected"else(options.role or "raised"))
-  stroke.Thickness=if state.selected then 2 else 1;stroke.Transparency=if state.selected then 0 else Kit.Stroke.transparency
-  paint(stroke,"Color",if state.selected then "accent"else function()return Kit.Stroke.color end)
+  paint(tile,"BackgroundColor3",if state.selected then "selected"else role)
+  -- Selected: lemon and a thicker outline (colour is never the only signal).
+  stroke.Thickness=if state.selected then 2 else 1;stroke.Transparency=0 -- mapped to 3 / 2 (Kit.tileStrokeFor)
+  paint(stroke,"Color","ink")
   if animate and state.selected and not was then Kit.boing(tile)end
  end
  return tile,state
@@ -828,21 +1028,28 @@ end
 -- Well (T7): an inset preview window. Wells that show an egg, a board or a row of
 -- balls carry a 6 px LCD dot grid at about 6% white under the art (tiled image,
 -- Assets.Personality.dotGrid); with no id nothing extra is created.
-Kit.DotGridTransparency=.94
-function Kit.dotGrid(well)
+-- Toy Shell 3.3: the dots are the visible `wellDot` (or the stage's `stageDot`).
+Kit.DotGridTransparency=.25
+function Kit.dotGrid(well,role)
  local image=Assets.Personality and Assets.Personality.dotGrid
  if not(image and well)then return nil end
  local existing=well:FindFirstChild("DotGrid")
- if existing then return existing end
+ if existing then if role then paint(existing,"ImageColor3",role)end;return existing end
  local grid=node("ImageLabel",well,{Name="DotGrid",BackgroundTransparency=1,Image=image,ImageTransparency=Kit.DotGridTransparency,ScaleType=Enum.ScaleType.Tile,
   TileSize=UDim2.fromOffset(6,6),Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex,Active=false,Selectable=false})
+ -- Dots inside a preview stage (its rounded content) take the stage's own dot colour.
+ if not role then
+  local n=well
+  while n and not n:IsA("LayerCollector")do if n:GetAttribute("ToyStage")then role="stageDot";break end;n=n.Parent end
+ end
+ paint(grid,"ImageColor3",role or "wellDot")
  local corner=well:FindFirstChildOfClass("UICorner")
  if corner then node("UICorner",grid,{CornerRadius=corner.CornerRadius})end
  return grid
 end
 function Kit.well(parent,name,position,size,radius)
  local well=Kit.frame(parent,name or "Well","well",position,size,radius or Kit.Radius.well)
- Kit.stroke(well)
+ Kit.stroke(well);Kit.setSurface(well,"dark")
  Kit.dotGrid(well)
  return well
 end
@@ -912,7 +1119,7 @@ function Kit.toggle(parent,name)
  local api={root=button,on=false}
  function api.set(on,enabled)
   api.on=on==true
-  paint(button,"BackgroundColor3",if api.on then "accent"else "well");stroke.Enabled=not api.on
+  paint(button,"BackgroundColor3",if api.on then "accent"else "well");stroke.Enabled=true
   knob.BackgroundColor3=if api.on then Kit.Color.ink else Kit.Color.soft
   Kit.tween(knob,Kit.Motion.toggle,{Position=UDim2.fromOffset(if api.on then 26 else 4,4)})
   button.BackgroundTransparency=if enabled==false then .53 else 0;button.Active=enabled~=false
@@ -935,11 +1142,19 @@ function Kit.tabIconsFit(labels,icons,segment,textSize)
  end
  return true
 end
-function Kit.tabs(parent,labels,width,height,textSize,icons)
+-- Toy Shell 3.5: the bar is a sunk trough (shellLip, ink outline), the active tab a
+-- raised lemon key (cream with options.level 2) with its own lip; inactive labels white.
+function Kit.tabs(parent,labels,width,height,textSize,icons,options)
  width=width or 520;height=height or 44;textSize=textSize or 17
- local track=Kit.frame(parent,"Tabs","well",UDim2.new(),UDim2.fromOffset(width,height),999);Kit.stroke(track)
+ local level2=options~=nil and options.level==2
+ local track=Kit.frame(parent,"Tabs","shellLip",UDim2.new(),UDim2.fromOffset(width,height),999);Kit.stroke(track);Kit.setSurface(track,"dark")
+ Kit.sink(track,4)
  local segment=(width-8)/#labels
- local pill=Kit.frame(track,"Pill","accent",UDim2.fromOffset(4,4),UDim2.fromOffset(segment,height-8),999)
+ local pill=Kit.frame(track,"Pill",if level2 then "creamLip"else "selectedLip",UDim2.fromOffset(4,4),UDim2.fromOffset(segment,height-8),999)
+ Kit.stroke(pill)
+ local pillFace=Kit.frame(pill,"Face",if level2 then "cream"else "selected",UDim2.new(),UDim2.new(1,0,1,-2),999)
+ pillFace.ZIndex=pill.ZIndex
+ Kit.inner(node("UIStroke",pillFace,{Name="FaceStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2,Color=Kit.Color.ink}))
  local api={root=track,buttons={},selected=1,labels={},icons={}}
  local withIcons=Kit.tabIconsFit(labels,icons,segment,textSize)
  local iconSize=textSize+4
@@ -952,11 +1167,11 @@ function Kit.tabs(parent,labels,width,height,textSize,icons)
   if withIcons then
    local w=math.ceil(Kit.measure(text,"Strong",textSize).X)
    local x=math.floor((segment-(iconSize+Kit.TabIconGap+w))/2)
-   local icon=Kit.icon(b,icons[index],iconSize,"soft");icon.AnchorPoint=Vector2.new(0,.5);icon.Position=UDim2.new(0,x,.5,0)
+   local icon=Kit.icon(b,icons[index],iconSize,"text");icon.AnchorPoint=Vector2.new(0,.5);icon.Position=UDim2.new(0,x,.5,0)
    api.icons[index]=icon
-   label=Kit.text(b,"Strong",text,"soft",{Position=UDim2.fromOffset(x+iconSize+Kit.TabIconGap,0),Size=UDim2.new(0,w+2,1,0),TextSize=textSize})
+   label=Kit.text(b,"Strong",text,"text",{Position=UDim2.fromOffset(x+iconSize+Kit.TabIconGap,0),Size=UDim2.new(0,w+2,1,0),TextSize=textSize})
   else
-   label=Kit.text(b,"Strong",text,"soft",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=textSize})
+   label=Kit.text(b,"Strong",text,"text",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=textSize})
   end
   local dot=Kit.frame(b,"ClaimDot","stars",UDim2.new(.5,0,.5,-11),UDim2.fromOffset(8,8),999);dot.Visible=false
   api.buttons[index],api.labels[index]=b,label;b:SetAttribute("ClaimDot",false)
@@ -1017,8 +1232,8 @@ function Kit.tabs(parent,labels,width,height,textSize,icons)
    end
   end
   for i,label in ipairs(api.labels)do
-   paint(label,"TextColor3",if i==index then "ink"else "soft")
-   if api.icons[i]then Kit.tintIcon(api.icons[i],if i==index then "ink"else "soft")end
+   paint(label,"TextColor3",if i==index then "ink"else "text")
+   if api.icons[i]then Kit.tintIcon(api.icons[i],if i==index then "ink"else "text")end
   end
   track:SetAttribute("Selected",index)
  end
@@ -1031,6 +1246,69 @@ function Kit.tabs(parent,labels,width,height,textSize,icons)
   else dot.Position=UDim2.new(.5,w/2+(if textSize<17 then 4 else 9),.5,dy)end
  end
  api.select(1);return api
+end
+
+-- HUD label tabs (3.5): on the deck LCD a card's caps label sits on a small coloured
+-- plate with an ink edge and ink text. Same text, same place: the plate is a sibling
+-- just under the label, sized to its text (4 px each side) and kept in step with it.
+Kit.HudTabColors=table.freeze({CHAIN=Color3.fromHex("#FF5A4D"),SCORE=Color3.fromHex("#FFE14D"),GOALS=Color3.fromHex("#43DB5F"),
+ NEXT=Color3.fromHex("#7FD4FF"),THEN=Color3.fromHex("#7FD4FF"),EGGS=Color3.fromHex("#FF9838"),WIN=Color3.fromHex("#FFC14D"),
+ DAILY=Color3.fromHex("#FF8FC0"),QUESTS=Color3.fromHex("#FF8FC0"),CONTROLS=Color3.fromHex("#A98BFF")})
+-- Pure: the tab colour for a label's text (by its first word), or nil.
+function Kit.hudTabColor(text)
+ local word=string.match(string.upper(text or ""),"^%s*(%u+)")
+ return word and Kit.HudTabColors[word]or nil
+end
+local hudTabOf=setmetatable({},{__mode="k"})
+function Kit.hudTabOf(label)return hudTabOf[label]end
+function Kit.hudLabel(label,color)
+ local tab=hudTabOf[label]
+ if tab and tab.Parent then tab.BackgroundColor3=color;return tab end
+ tab=node("Frame",label.Parent,{Name=label.Name.."Tab",BorderSizePixel=0,BackgroundColor3=color,ZIndex=label.ZIndex,Active=false,Selectable=false})
+ hudTabOf[label]=tab;label:SetAttribute("HudTab",true)
+ Kit.corner(tab,4)
+ Kit.inner(node("UIStroke",tab,{Name="TabStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=1.5,Color=Kit.Color.ink}))
+ label.ZIndex+=1
+ paint(label,"TextColor3","ink")
+ local function place()
+  local text=label.Text
+  -- The tab colour follows the label's first word (a status line or NEXT / THEN swap).
+  local want=Kit.hudTabColor(text)
+  if want and tab.BackgroundColor3~=want and tab:GetAttribute("FixedTab")~=true then tab.BackgroundColor3=want end
+  local w=if text=="" then 0 else math.ceil(Kit.measure(text,label:GetAttribute("KitRole")or "Label",label.TextSize).X)+8
+  -- The label's drawn box (a scale-sized eyebrow measures from its AbsoluteSize).
+  local box=label.AbsoluteSize
+  local lw=if label.Size.X.Scale==0 then label.Size.X.Offset else box.X
+  local lh=if label.Size.Y.Scale==0 then label.Size.Y.Offset else box.Y
+  local h=math.min(lh,label.TextSize+4)
+  w=math.min(w,lw+8)
+  local ax=label.TextXAlignment
+  local lx=label.Position.X.Offset-label.AnchorPoint.X*lw
+  local x=if ax==Enum.TextXAlignment.Right then lx+lw-w+4 elseif ax==Enum.TextXAlignment.Center then lx+math.floor((lw-w)/2)else lx-4
+  local y=label.Position.Y.Offset-label.AnchorPoint.Y*lh+math.floor((lh-h)/2)
+  tab.Position=UDim2.new(label.Position.X.Scale,x,label.Position.Y.Scale,y)
+  tab.Size=UDim2.fromOffset(w,h)
+  tab.Visible=label.Visible and w>0
+ end
+ for _,property in ipairs({"Text","Position","Size","Visible","TextSize","AbsoluteSize"})do label:GetPropertyChangedSignal(property):Connect(place)end
+ -- The tab follows its label only (a card that hides or shows its children by hand never
+ -- leaves a visible label without its tab).
+ tab:GetPropertyChangedSignal("Visible"):Connect(function()if tab.Visible~=(label.Visible and label.Text~="")then place()end end)
+ label.Destroying:Connect(function()tab:Destroy()end)
+ place()
+ return tab
+end
+-- Every caps label under `root` whose first word has a tab colour gets its tab.
+function Kit.hudTabs(root)
+ if not root then return 0 end
+ local n=0
+ for _,d in ipairs(root:GetDescendants())do
+  if d:IsA("TextLabel")and d:GetAttribute("KitRole")=="Label"then
+   local color=Kit.hudTabColor(d.Text)
+   if color then Kit.hudLabel(d,color);n+=1 end
+  end
+ end
+ return n
 end
 
 -- Stars with thousands separators ("1,280"); the accessible label keeps the raw number.
@@ -1050,7 +1328,8 @@ Kit.WalletSpec={[44]={star=22,text=18,pad=18},[36]={star=18,text=15,pad=15},[28]
 function Kit.wallet(parent,height)
  height=height or 44
  local spec=Kit.WalletSpec[height]
- local pill=Kit.frame(parent,"Wallet","well",UDim2.new(),UDim2.fromOffset(110,height),999);Kit.stroke(pill)
+ -- Toy Shell 3.6: an LCD counter, the deck's well glass with gold mono digits.
+ local pill=Kit.frame(parent,"Wallet","well",UDim2.new(),UDim2.fromOffset(110,height),999);Kit.stroke(pill);Kit.setSurface(pill,"dark")
  local star=Kit.icon(pill,"star",if spec then spec.star else math.floor(height*.55));star.AnchorPoint=Vector2.new(0,.5)
  star.Position=UDim2.new(0,if spec then spec.pad else math.floor(height*.45),.5,0)
  -- T9: the Star gets two eyes from 20 px up and stays plain below. The uploaded
@@ -1075,7 +1354,7 @@ function Kit.wallet(parent,height)
  -- From WalletStar.MinSize (16 px, R3.3) up the icon gives way to a small front-facing 3D Star (v816: still, glints) in the same rect
  -- once the StarToken mesh loads (WalletStar); the 2D Star stays as the fallback.
  local star3D=require(script.Parent.WalletStar).attach(pill,star,starSize)
- local amount=Kit.text(pill,"Counter","0","text",{Name="Amount",AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-(if spec then spec.pad else 18),.5,0),Size=UDim2.fromOffset(60,height),TextXAlignment=Enum.TextXAlignment.Right})
+ local amount=Kit.text(pill,"Counter","0","stars",{Name="Amount",AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-(if spec then spec.pad else 18),.5,0),Size=UDim2.fromOffset(60,height),TextXAlignment=Enum.TextXAlignment.Right})
  if spec then amount.TextSize=spec.text elseif height<40 then amount.TextSize=15 end
  local api={root=pill,amount=amount,height=height,star=star,star3D=star3D}
  function api.set(value)
@@ -1115,6 +1394,10 @@ function Kit.focusRing(host)
  local ring=node("Frame",host,{Name="FocusRing",BackgroundTransparency=1,Visible=false,ZIndex=200,Active=false,Selectable=false})
  local corner=Kit.corner(ring,16)
  node("UIStroke",ring,{Name="Ring",Thickness=2.5,Color=Kit.Color.focus,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+ -- 3.4: a 1.5 px ink hairline outside the white ring, so it reads on cream and lemon too.
+ local hair=node("Frame",ring,{Name="InkHairline",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(-2,-2),Size=UDim2.new(1,4,1,4),ZIndex=200,Active=false,Selectable=false})
+ local hairCorner=node("UICorner",hair,{})
+ node("UIStroke",hair,{Name="Hair",Thickness=1.5,Color=Kit.Color.ink,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
  local glow=node("ImageLabel",ring,{Name="Glow",BackgroundTransparency=1,Image=Assets.Image.focusGlow,ImageTransparency=.35,
   ScaleType=Enum.ScaleType.Slice,SliceCenter=Rect.new(40,40,56,56),Position=UDim2.fromOffset(-20,-20),Size=UDim2.new(1,40,1,40),ZIndex=199})
  local api={root=ring,target=nil}
@@ -1140,6 +1423,7 @@ function Kit.focusRing(host)
   if connection then connection:Disconnect();connection=nil end
   local moved=target~=api.target;api.target=target
   corner.CornerRadius=if(radius or 12)>=999 then UDim.new(.5,0)else UDim.new(0,(radius or 12)+4)
+  hairCorner.CornerRadius=if(radius or 12)>=999 then UDim.new(.5,0)else UDim.new(0,(radius or 12)+6)
   glow.Visible=not Kit.reduced()
   if target then connection=target:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()place(true)end)end
   place(not moved)
@@ -1172,6 +1456,26 @@ function Kit.backArrowSizes(compact,header)
  local drawn=if header then(if compact then 36 else 44)elseif compact then 44 else 56
  return drawn,math.max(44,drawn)
 end
+-- Round keys (back, help): cream with the ink outline and a 2 px lip under them (in a
+-- header, where the hit frame holds the disc). Hover goes white, press 10% darker.
+Kit.RoundLip=2
+function Kit.roundKeyLip(button,disc)
+ if disc==button then return nil end
+ local lip=node("Frame",button,{Name="KeyLip",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(.5,0,.5,Kit.RoundLip),Size=disc.Size,
+  BorderSizePixel=0,BackgroundColor3=Kit.Color.cream,ZIndex=button.ZIndex-1,Active=false,Selectable=false})
+ Kit.corner(lip,999)
+ Kit.inner(node("UIStroke",lip,{Name="LipStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2,Color=Kit.Color.ink}))
+ disc:GetPropertyChangedSignal("Size"):Connect(function()lip.Size=disc.Size end)
+ button:GetPropertyChangedSignal("ZIndex"):Connect(function()lip.ZIndex=button.ZIndex-1 end)
+ return lip
+end
+function Kit.paintRoundKey(disc,stroke,lip,enabled,hover,pressed)
+ local face=if not enabled then Kit.Disabled.face elseif hover then Kit.Color.white else Kit.color("cream")
+ if pressed then face=face:Lerp(Kit.Color.black,.10)end
+ disc.BackgroundColor3,disc.BackgroundTransparency=face,0
+ stroke.Color,stroke.Transparency=Kit.color("ink"),0
+ if lip then lip.BackgroundColor3=if enabled then Kit.color("creamLip")else Kit.Disabled.lip;lip.LipStroke.Color=Kit.color("ink")end
+end
 function Kit.backArrow(parent,compact,options)
  local header=options and options.header==true
  local drawn,hit=Kit.backArrowSizes(compact,header)
@@ -1188,20 +1492,22 @@ function Kit.backArrow(parent,compact,options)
   end)
  end
  Kit.corner(disc,999)
- local stroke=node("UIStroke",disc,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=1.5,Color=Kit.Color.white,Transparency=.76})
+ local stroke=node("UIStroke",disc,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2,Color=Kit.Color.ink,Transparency=0})
+ Kit.inner(stroke)
+ -- Toy Shell 3.6: a cream round key; the old glow shadow stays as an instance, hidden.
  local shadow=node("ImageLabel",disc,{Name="Shadow",BackgroundTransparency=1,Image=Assets.Image.focusGlow,ImageColor3=Kit.Color.black,ImageTransparency=.55,
-  ScaleType=Enum.ScaleType.Slice,SliceCenter=Rect.new(40,40,56,56),Position=UDim2.fromOffset(-14,-9),Size=UDim2.new(1,28,1,28),ZIndex=59})
+  ScaleType=Enum.ScaleType.Slice,SliceCenter=Rect.new(40,40,56,56),Position=UDim2.fromOffset(-14,-9),Size=UDim2.new(1,28,1,28),ZIndex=59,Visible=false})
+ local keyLip=Kit.roundKeyLip(button,disc)
+ Kit.setSurface(disc,"light")
  local iconSize=if drawn>=56 then 26 elseif drawn>=44 then 22 else 18
  local icon=Kit.icon(disc,"back",iconSize,"text");icon.AnchorPoint,icon.Position=Vector2.new(.5,.5),UDim2.fromScale(.5,.5)
- local api={root=button,disc=disc,enabled=true,size=hit,drawn=drawn,header=header}
+ local api={root=button,disc=disc,enabled=true,size=hit,drawn=drawn,header=header,lip=keyLip}
  local hover,pressed=false,false
  local function repaint()
-  disc.BackgroundColor3=if hover and api.enabled then Color3.fromHex("#282B32")else Color3.fromHex("#15171B")
-  disc.BackgroundTransparency=if not api.enabled then .65 elseif hover then .22 else .28
-  if pressed then disc.BackgroundColor3=disc.BackgroundColor3:Lerp(Kit.Color.black,.08)end
+  Kit.paintRoundKey(disc,stroke,keyLip,api.enabled,hover,pressed)
   icon.Position=UDim2.new(.5,0,.5,if pressed then 2 else 0)
-  icon.ImageTransparency=if api.enabled then 0 else .65;stroke.Transparency=if api.enabled then .76 else .9
-  shadow.Visible=not Kit.reduced()
+  icon.ImageTransparency=if api.enabled then 0 else .45
+  shadow.Visible=false
  end
  button.MouseEnter:Connect(function()hover=true;repaint()end)
  button.MouseLeave:Connect(function()hover=false;pressed=false;repaint()end)
@@ -1224,8 +1530,10 @@ end
 -- only action colour; gold marks only Stars (the results family).
 -- Collection book (play-forever F2) = mint-teal #7FE0C8, kept apart from the action
 -- mint: 10.1:1 on the panel, 8.4:1 on raised cards, ink on it 12.2:1.
-Kit.Tint={hatch=Color3.fromHex("#FFA98F"),style=Color3.fromHex("#C9A7FF"),companions=Color3.fromHex("#FF9EC4"),
- quests=Color3.fromHex("#8CC8FF"),results=Kit.Color.stars,book=Color3.fromHex("#7FE0C8")}
+-- Toy Shell 3.1: the screen tints are saturated toy colours, worn by the header plate
+-- (ink title on them, 6.6:1 and up). Garden is go.
+Kit.Tint={hatch=Color3.fromHex("#FF8A5C"),style=Color3.fromHex("#A98BFF"),companions=Color3.fromHex("#FF8FC0"),
+ quests=Color3.fromHex("#7FD4FF"),results=Kit.Color.stars,book=Color3.fromHex("#3FD9B4"),garden=Color3.fromHex("#43DB5F")}
 local function tintColor(tint)
  if typeof(tint)=="Color3"then return tint end
  return Kit.Tint[tint]
@@ -1233,8 +1541,12 @@ end
 Kit.tintColor=tintColor
 -- Dot + eyebrow: the eyebrow text takes the tint and moves 14 px right inside its
 -- own rect (a UIPadding), with an 8 px dot where the text used to start.
+-- Toy Shell 3.6: the header plate carries the tint; the eyebrow dot is retired, so the
+-- eyebrow keeps its soft text and only records the tint.
+Kit.TintDotRetired=true
 function Kit.tintEyebrow(eyebrow,tint)
  local color=tintColor(tint);if not(eyebrow and color)then return nil end
+ if Kit.TintDotRetired then eyebrow:SetAttribute("Tint",color:ToHex());return nil end
  paint(eyebrow,"TextColor3",function()return color end)
  local pad=eyebrow:FindFirstChild("TintPad")or node("UIPadding",eyebrow,{Name="TintPad"})
  pad.PaddingLeft=UDim.new(0,14)
@@ -1248,7 +1560,9 @@ end
 -- Squiggle under a title (tiled image, 12 x 6 per wave). Width follows the title's
 -- text: about 62% of it, at least 24 px, never past the title rect. Missing asset:
 -- nothing is created and nil is returned.
+-- Retired by the header plate (3.6): nothing is made.
 function Kit.squiggle(parent,title,tint)
+ if Kit.TintDotRetired then return nil end
  local color,image=tintColor(tint),Assets.Personality and Assets.Personality.squiggle
  if not(color and image and title)then return nil end
  local line=node("ImageLabel",parent,{Name="TintSquiggle",BackgroundTransparency=1,Image=image,ImageColor3=color,
@@ -1268,7 +1582,15 @@ function Kit.squiggle(parent,title,tint)
 end
 -- Halftone dot fade along `panel`'s bottom edge, behind the hint bar, at about 10%.
 -- Phones (compact) and a missing asset create nothing.
+-- Toy Shell 3.3: the halftone fade is retired (no pattern behind text). Desktop menu
+-- panels that called it get the shell's moving checker instead (Kit.shellPattern); the
+-- deck's results never do. Returns the pattern controller or nil.
+Kit.HalftoneRetired=true
 function Kit.halftone(panel,tint,compact,height)
+ if Kit.HalftoneRetired then
+  if compact or not panel or tint=="results"then return nil end
+  return Kit.shellPattern(panel)
+ end
  local color,image=tintColor(tint),Assets.Personality and Assets.Personality.halftone
  if compact or not(color and image and panel)then return nil end
  height=height or 48
@@ -1340,12 +1662,15 @@ function Kit.helpButton(parent,compact,id)
  local disc=node("Frame",button,{Name="Disc",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(drawn,drawn),
   BorderSizePixel=0,BackgroundColor3=Color3.fromHex("#15171B"),BackgroundTransparency=.28,ZIndex=button.ZIndex,Active=false})
  Kit.corner(disc,999)
- node("UIStroke",disc,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=1.5,Color=Kit.Color.white,Transparency=.76})
+ local stroke=Kit.inner(node("UIStroke",disc,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2,Color=Kit.Color.ink,Transparency=0}))
+ local keyLip=Kit.roundKeyLip(button,disc)
+ Kit.setSurface(disc,"light")
  local mark=Kit.fixedText(Kit.text(disc,"Title","?","text",{Name="Mark",Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=if compact then 18 else 22}))
  mark.ZIndex=button.ZIndex+1
  button:GetPropertyChangedSignal("ZIndex"):Connect(function()disc.ZIndex=button.ZIndex;mark.ZIndex=button.ZIndex+1 end)
- local api={root=button,disc=disc,mark=mark,id=id}
- local function repaint(hover)disc.BackgroundColor3=if hover then Color3.fromHex("#282B32")else Color3.fromHex("#15171B");disc.BackgroundTransparency=if hover then .22 else .28 end
+ local api={root=button,disc=disc,mark=mark,id=id,lip=keyLip}
+ local function repaint(hover)Kit.paintRoundKey(disc,stroke,keyLip,true,hover,false)end
+ repaint(false)
  button.MouseEnter:Connect(function()repaint(true)end)
  button.MouseLeave:Connect(function()repaint(false)end)
  button.Activated:Connect(function()Kit.openHelp(id)end)
@@ -1358,6 +1683,8 @@ end
 -- default from the tint key). Returns {root, title, eyebrow,
 -- wallet = {root, amount, set}, back = Kit.backArrow api, help = {root, id} or nil,
 -- layout(W, left), setTitle}.
+Kit.PlatePad=9
+Kit.PlateLip=2
 function Kit.header(parent,options)
  options=options or {}
  local compact=options.compact==true
@@ -1366,6 +1693,43 @@ function Kit.header(parent,options)
  api.root=holder
  api.eyebrow=Kit.text(holder,"Label",options.eyebrow or "","dim",{Name="Eyebrow",TextTruncate=Enum.TextTruncate.AtEnd})
  api.title=Kit.text(holder,"Title",options.title or "","text",{Name="Title",TextSize=if compact then 20 else 26,TextTruncate=Enum.TextTruncate.AtEnd})
+ -- Toy Shell 3.6: a header plate behind the title in the screen's tint (the deck's tag
+ -- without one): ink outline, 2 px lip, ink title and a four-point sparkle after it. The
+ -- title keeps its rect; the plate follows the text and stops where the title stops.
+ local tint=if options.tint then tintColor(options.tint)else nil
+ local plate=Kit.frame(holder,"TitlePlate",nil,UDim2.new(),UDim2.fromOffset(10,10),10)
+ plate.BackgroundTransparency=0;plate.ZIndex=api.title.ZIndex;api.title.ZIndex=plate.ZIndex+2
+ local plateFace=Kit.frame(plate,"Face",nil,UDim2.new(),UDim2.new(1,0,1,-Kit.PlateLip),10)
+ plateFace.BackgroundTransparency=0;plateFace.ZIndex=plate.ZIndex
+ Kit.stroke(plate)
+ Kit.inner(node("UIStroke",plateFace,{Name="FaceStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2,Color=Kit.Color.ink}))
+ if tint then
+  paint(plateFace,"BackgroundColor3",function()return tint end)
+  paint(plate,"BackgroundColor3",function()return tint:Lerp(Kit.color("ink"),.32)end)
+ else paint(plateFace,"BackgroundColor3","tag");paint(plate,"BackgroundColor3","tagLip")end
+ local sparkle=Kit.icon(plate,"sparkle",if compact then 11 else 13,"ink");sparkle.AnchorPoint=Vector2.new(1,.5);sparkle.ZIndex=plate.ZIndex+1
+ for _,part in ipairs(sparkle:GetDescendants())do if part:IsA("GuiObject")then part.ZIndex=plate.ZIndex+1 end end
+ paint(api.title,"TextColor3","ink")
+ api.plate=plate
+ local function placePlate()
+  local g=api.geometry;if not g then return end
+  local text=api.title.Text
+  local textW=if text=="" then 0 else math.ceil(Kit.measure(text,"Title",api.title.TextSize).X)
+  local pad=Kit.PlatePad
+  local spark=sparkle.Size.X.Offset
+  local h=if compact then 30 else 38
+  local room=g.title.w+pad
+  local withSpark=textW+pad*2+spark+4<=room+pad
+  local w=math.min(textW+pad*2+(if withSpark then spark+4 else 0),room)
+  plate.Position=UDim2.fromOffset(g.title.x-pad,math.floor(g.title.y+g.title.h/2-h/2+.5))
+  plate.Size=UDim2.fromOffset(math.max(0,w),h)
+  plate.Visible=api.title.Visible and textW>0 and w>=pad*2
+  sparkle.Visible=withSpark
+  sparkle.Position=UDim2.new(1,-pad+2,.5,-1)
+ end
+ api.title:GetPropertyChangedSignal("Text"):Connect(placePlate)
+ api.title:GetPropertyChangedSignal("Visible"):Connect(placePlate)
+ api.title:GetPropertyChangedSignal("TextSize"):Connect(placePlate)
  local inner
  if options.wallet~=false then inner=Kit.wallet(holder,if compact then 36 else 44);inner.root.AnchorPoint=Vector2.zero end
  local back=Kit.backArrow(holder,compact,{header=true});back.root.AnchorPoint=Vector2.zero;back.root.ZIndex=holder.ZIndex+5
@@ -1386,6 +1750,7 @@ function Kit.header(parent,options)
   if api.help and g.helpHit then api.help.root.Position=UDim2.fromOffset(g.helpHit.x,g.helpHit.y)end
   back.root.Position=UDim2.fromOffset(g.backHit.x,g.backHit.y)
   if api.squiggle then api.squiggle.update()end
+  placePlate()
   return g
  end
  -- options.tint: a Kit.Tint key or Color3 (T5). Dot + eyebrow and the squiggle.
@@ -1414,10 +1779,11 @@ end
 function Kit.island(parent,name,r,radius,role,bezel)
  bezel=bezel or 3;radius=radius or 12
  local outer=Kit.frame(parent,name,nil,UDim2.fromOffset(r.x-bezel,r.y-bezel),UDim2.fromOffset(r.w+bezel*2,r.h+bezel*2),radius+bezel)
- outer.BackgroundTransparency=0;outer.BackgroundColor3=Color3.fromHex("#090A0C")
- Kit.stroke(outer,nil,1,.82).Color=Color3.new(1,1,1)
+ -- Toy Shell: the bezel is the ink rim around the glass.
+ outer.BackgroundTransparency=0;paint(outer,"BackgroundColor3","ink")
+ Kit.stroke(outer,"ink",1,0)
  local inner=Kit.frame(outer,"Glass",role or "panel",UDim2.fromOffset(bezel,bezel),UDim2.fromOffset(r.w,r.h),radius)
- Kit.stroke(inner)
+ Kit.stroke(inner);Kit.setSurface(inner,"dark")
  return inner,outer
 end
 -- Chevron from two short bars; direction "up" or "down".
@@ -1432,18 +1798,138 @@ function Kit.chevron(parent,size,direction,color)
  end
  return holder
 end
--- Menu sheet (section 5) in a root of W x H: rim 0..6 (whatever is behind),
--- bezel at 6, the panel sheet at 8 with its gradient and stroke, header hairline at y 60.
+-- Menu sheet (section 5) in a root of W x H: rim 0..6 (whatever is behind), the bezel
+-- at 6 (Toy Shell: the shell's darker lip, 4 px deeper at the bottom inside the rim), the
+-- shell sheet at 8 with its 3 px ink outline and the moving checker, header hairline at y 60.
+Kit.SheetLip=4
 function Kit.sheet(parent,W,H)
- local bezel=Kit.frame(parent,"SheetBezel",nil,UDim2.fromOffset(6,6),UDim2.fromOffset(W-12,H-12),18)
- bezel.BackgroundTransparency=0;bezel.BackgroundColor3=Color3.fromHex("#090A0C")
- local sheet=Kit.frame(parent,"Sheet","panel",UDim2.fromOffset(8,8),UDim2.fromOffset(W-16,H-16),16);Kit.stroke(sheet)
- local tint=Kit.frame(sheet,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1),16);tint.BackgroundTransparency=0;tint.BackgroundColor3=Color3.new(1,1,1)
+ local bezel=Kit.frame(parent,"SheetBezel",nil,UDim2.fromOffset(6,6),UDim2.fromOffset(W-12,H-12+Kit.SheetLip),18)
+ bezel.BackgroundTransparency=0;paint(bezel,"BackgroundColor3","shellLip");Kit.stroke(bezel,"ink",2,0)
+ local sheet=Kit.frame(parent,"Sheet","panel",UDim2.fromOffset(8,8),UDim2.fromOffset(W-16,H-16),16);Kit.stroke(sheet,nil,Kit.Stroke.sheet)
+ Kit.setSurface(sheet,"dark")
+ local tint=Kit.frame(sheet,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1),16);tint.BackgroundTransparency=1;tint.BackgroundColor3=Color3.new(1,1,1)
  node("UIGradient",tint,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
+ Kit.shellPattern(sheet,16)
  local hair=Kit.frame(parent,"HeaderHairline",nil,UDim2.fromOffset(20,60),UDim2.fromOffset(W-40,1))
- hair.BackgroundTransparency=.93;hair.BackgroundColor3=Color3.new(1,1,1);hair.ZIndex=sheet.ZIndex+3
+ hair.BackgroundTransparency=1;hair.BackgroundColor3=Color3.new(1,1,1);hair.ZIndex=sheet.ZIndex+3
  return sheet,bezel
 end
+
+-- ── The moving checker (3.3, R1.6) ─────────────────────────────────────────
+-- One tiled ImageLabel per shell surface: a 32 px two-tone checker (white on transparent,
+-- 9% over the shell) drifting 8 px/s down and to the right, one tile every 4 s, by one
+-- linear looping tween in the engine (no per-frame Lua). It sits in a rectangular clip
+-- holder inset ceil(r * (1 - 1/sqrt 2)) px: ClipsDescendants ignores UICorner (step 0
+-- spike), and that inset keeps the rectangle inside the rounded corners, so the pattern
+-- never shows past them and no CanvasGroup is needed. A static shell-coloured fade above
+-- it takes the pattern from full strength at the top to 35% at the bottom; tiles, trays
+-- and text above cover it. Still (resting at offset 0) under Reduced Motion or the game's
+-- Motion: Low; paused while the surface or its ScreenGui is hidden; gone with it.
+Kit.Checker=table.freeze({image="rbxassetid://71708936221007",tile=32,period=4,transparency=.91,fadeTo=.35})
+Kit.reducedEffects=false
+local patterns=setmetatable({},{__mode="k"})
+function Kit.patternStill()return Kit.reduced()or Kit.reducedEffects==true end
+-- The game's own Motion setting (board attribute ReducedEffects); init.client keeps it.
+function Kit.setReducedEffects(on)
+ Kit.reducedEffects=on==true
+ for ctl in pairs(patterns)do ctl.sync()end
+end
+-- Roblox's Reduced Motion turned on or off mid-session stops or restarts every live checker.
+GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"):Connect(function()for ctl in pairs(patterns)do ctl.sync()end end)
+function Kit.patternInset(radius)return math.ceil((radius or 0)*(1-1/math.sqrt(2)))end
+local function cornerOffset(frame)
+ local c=frame and frame:FindFirstChildOfClass("UICorner")
+ if not c then return nil end
+ if c.CornerRadius.Scale>0 then return math.floor(math.min(frame.AbsoluteSize.X,frame.AbsoluteSize.Y)*c.CornerRadius.Scale)end
+ return c.CornerRadius.Offset
+end
+-- Pure-ish: is `node` part of the Pocket Deck's own screen (a PlateSurface root)?
+function Kit.onDeckScreen(node)
+ local n=node
+ while n do if n:GetAttribute("PlateSurface")==true then return true end;n=n.Parent end
+ return false
+end
+function Kit.shellPattern(surface,radius)
+ -- Never on the deck's LCD (its results, picker and pause sheets): R1.6 "Never".
+ if not surface or Kit.onDeckScreen(surface)then return nil end
+ local existing=surface:FindFirstChild("ShellPattern")
+ if existing then for ctl in pairs(patterns)do if ctl.holder==existing then return ctl end end end
+ -- A transparent content frame over a menu root takes the root's corner and outline.
+ local root=if surface.BackgroundTransparency>=1 and surface.Parent and surface.Parent:IsA("GuiObject")then surface.Parent else surface
+ radius=radius or cornerOffset(surface)or cornerOffset(root)or 16
+ local rootStroke=root:FindFirstChild("KitStroke")
+ if rootStroke then rootStroke.Thickness=Kit.Stroke.sheet end
+ local C=Kit.Checker
+ local pad=Kit.patternInset(radius)
+ -- Lowest of its siblings in a Sibling gui (cards, text and wells all draw over it); the
+ -- fade above the checker inside the holder. A Global gui keeps the surface's own layer.
+ local gui=surface:FindFirstAncestorWhichIsA("LayerCollector")
+ local sibling=gui==nil or gui.ZIndexBehavior==Enum.ZIndexBehavior.Sibling
+ local z=surface.ZIndex
+ if sibling then
+  -- Below the surface's own layer and every child it has, so children made later (at the
+  -- usual parent + 1, or even the parent's own ZIndex) all draw over it.
+  z=surface.ZIndex-1
+  for _,child in ipairs(surface:GetChildren())do if child:IsA("GuiObject")and child.ZIndex<=z then z=child.ZIndex-1 end end
+ end
+ local holder=node("Frame",surface,{Name="ShellPattern",BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,
+  Position=UDim2.fromOffset(pad,pad),Size=UDim2.new(1,-pad*2,1,-pad*2),ZIndex=z,Active=false,Selectable=false})
+ local tile=node("ImageLabel",holder,{Name="Checker",BackgroundTransparency=1,Image=C.image,ImageTransparency=C.transparency,
+  ImageColor3=Kit.Color.white,ScaleType=Enum.ScaleType.Tile,TileSize=UDim2.fromOffset(C.tile,C.tile),
+  Size=UDim2.new(1,C.tile,1,C.tile),Position=UDim2.fromOffset(-C.tile,-C.tile),ZIndex=z,Active=false,Selectable=false})
+ local fade=node("Frame",holder,{Name="Fade",BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=if sibling then z+1 else z,Active=false,Selectable=false})
+ paint(fade,"BackgroundColor3","shell")
+ node("UIGradient",fade,{Rotation=90,Transparency=NumberSequence.new(1,C.fadeTo)})
+ holder:SetAttribute("ShellPattern",true)
+ local ctl={holder=holder,tile=tile,fade=fade,running=false}
+ local tween,links=nil,{}
+ local function shown()
+  local n=holder
+  while n and not n:IsA("LayerCollector")do
+   if n:IsA("GuiObject")and not n.Visible then return false end
+   n=n.Parent
+  end
+  return n~=nil and(not n:IsA("ScreenGui")or n.Enabled)
+ end
+ function ctl.sync()
+  if not holder.Parent then return end
+  local still=Kit.patternStill()
+  local run=not still and shown()
+  if still then
+   if tween then tween:Cancel();tween=nil end
+   tile.Position=UDim2.fromOffset(-C.tile,-C.tile)
+  elseif run then
+   if not tween then
+    tile.Position=UDim2.fromOffset(-C.tile,-C.tile)
+    tween=TweenService:Create(tile,TweenInfo.new(C.period,Enum.EasingStyle.Linear,Enum.EasingDirection.In,-1),{Position=UDim2.fromOffset(0,0)})
+   end
+   tween:Play()
+  elseif tween then tween:Pause()end
+  ctl.running=run
+  holder:SetAttribute("PatternRunning",run)
+ end
+ local function unwire()for _,link in ipairs(links)do link:Disconnect()end;table.clear(links)end
+ local function wire()
+  unwire()
+  local n=holder.Parent
+  while n and not n:IsA("LayerCollector")do
+   if n:IsA("GuiObject")then table.insert(links,n:GetPropertyChangedSignal("Visible"):Connect(ctl.sync))end
+   n=n.Parent
+  end
+  if n and n:IsA("ScreenGui")then table.insert(links,n:GetPropertyChangedSignal("Enabled"):Connect(ctl.sync))end
+ end
+ function ctl.destroy()
+  unwire();patterns[ctl]=nil
+  if tween then tween:Cancel();tween=nil end
+ end
+ holder.AncestryChanged:Connect(function()if holder.Parent then patterns[ctl]=true;wire();ctl.sync()else ctl.destroy()end end)
+ holder.Destroying:Connect(ctl.destroy)
+ patterns[ctl]=true
+ wire();ctl.sync()
+ return ctl
+end
+-- Live moving patterns (budget: one sheet on screen at a time).
+function Kit.patternCount()local n=0;for ctl in pairs(patterns)do if ctl.holder.Parent and ctl.running then n+=1 end end;return n end
 -- Keep-out for the Roblox controls (section 1.1): kx = TopbarInset.Min.X,
 -- kh = TopbarInset.Height; 116 x 58 when the API returns an empty rect.
 function Kit.keepOut()

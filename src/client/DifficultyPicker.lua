@@ -177,7 +177,7 @@ function Picker:focus(index)
   local on=i==self.index
   Kit.paint(card.button,"BackgroundColor3",if on then "selected"else "raised")
   card.stroke.Thickness=if on then 2 else 1;card.stroke.Transparency=if on then 0 else .86
-  Kit.paint(card.stroke,"Color",function()return if on then Kit.color("accent")else Color3.new(1,1,1)end)
+  Kit.paint(card.stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
  end
  if self.visible then self.ring.attach(self.cards[self.index].button,14)end
  self.overlay.layer:SetAttribute("SelectedHeat",self.cards[self.index].key)

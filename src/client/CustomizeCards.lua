@@ -30,10 +30,8 @@ function Cards.step(index,dx,dy,count,cols)
  return math.clamp(row*cols+col+1,1,count)
 end
 
-local function colorOf(role)
- if role=="accent"or role=="selected"or role=="raised"or role=="well"or role=="panel"then return Kit.color(role)end
- return Kit.Color[role]or Kit.Color.text
-end
+-- Toy Shell: a role read on `object`'s own surface (ink on cream tiles, white on trays).
+local function colorOf(role,object,property)return Kit.roleOn(object,role,property)end
 Cards.colorOf=colorOf
 
 function Cards.place(node,r)node.Position=UDim2.fromOffset(r.x,r.y);node.Size=UDim2.fromOffset(r.w,r.h)end
@@ -71,7 +69,9 @@ function Cards.dress(button,spec)
  local side=math.max(28,h-20)
  local swatch=parts.Swatch
  swatch.Position=UDim2.fromOffset(10,(h-side)/2);swatch.Size=UDim2.fromOffset(side,side)
- if spec.swatch then swatch.BackgroundColor3=spec.swatch;swatch:SetAttribute("Painted",true)
+ -- Kit.paint with a colour replaces the "well" binding, so a deck change (menus follow the
+ -- deck) never repaints a hue swatch dark.
+ if spec.swatch then Kit.paint(swatch,"BackgroundColor3",spec.swatch);swatch:SetAttribute("Painted",true)
  else Kit.paint(swatch,"BackgroundColor3","well")end
  local iconKey=tostring(spec.icon)..":"..side
  if swatch:GetAttribute("IconKey")~=iconKey then
@@ -102,11 +102,11 @@ function Cards.dress(button,spec)
  local nameRoom=if spec.isNew then 40 else 0
  name.Position=UDim2.fromOffset(tx,h/2-20);name.Size=UDim2.fromOffset(math.max(1,w-tx-8-nameRoom),20)
  status.Position=UDim2.fromOffset(tx,h/2+2);status.Size=UDim2.fromOffset(math.max(1,w-tx-8),18)
- Kit.paint(status,"TextColor3",function()return colorOf(spec.tone or "soft")end)
+ Kit.paint(status,"TextColor3",function()return colorOf(spec.tone or "soft",status,"TextColor3")end)
  local focused=spec.focused==true
- Kit.paint(button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised")end)
+ Kit.paint(button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised",button,"BackgroundColor3")end)
  stroke.Thickness=if focused then 2 else 1;stroke.Transparency=if focused then 0 else .86
- Kit.paint(stroke,"Color",function()return if focused then Kit.color("accent")else Color3.new(1,1,1)end)
+ Kit.paint(stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
  button:SetAttribute("CardStatus",spec.status or "");button:SetAttribute("Focused",focused)
  button:SetAttribute("AccessibleLabel",(spec.name or "")..(if spec.status and spec.status~=""then " · "..spec.status else ""))
  return button

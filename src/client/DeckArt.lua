@@ -47,7 +47,34 @@ local function plateOwner(object)
  return false
 end
 function Art.uiTheme()return scopeTheme or uiTheme end
-function Art.paletteColor(role)local theme=scopeTheme or uiTheme;return (theme.ui and theme.ui[role])or Art[roleNames[role]or role]end
+-- Toy Shell disabled controls (3.4): grey-lilac face and lip, 3.4:1 text by design.
+Art.ToyDisabled=table.freeze({face=Color3.fromHex("#B9B6C9"),lip=Color3.fromHex("#8C89A3"),text=Color3.fromHex("#5A5878")})
+-- Toy Shell (UI-RETRO-RESTYLE R1.1): menus follow the equipped faceplate ("deck", the
+-- default) or the fixed Classic Shell ("classic", Settings > Menu colours). The Pocket
+-- Deck's own screen (a PlateSurface root) always follows the deck it is drawn on.
+Art.MenuColours="deck"
+function Art.menuTheme()
+ if scopeTheme then return scopeTheme end
+ if Art.MenuColours=="classic"then return nil end
+ return currentTheme or uiTheme
+end
+-- The Toy Shell palette (DeckThemes.toyPalette Color3s) for the node being painted.
+function Art.toyPalette()
+ local theme=Art.menuTheme()
+ return theme and theme.toy or Themes.ToyClassic
+end
+-- The older Art roles read the Toy Shell's dark surfaces, so every Art-built pane keeps
+-- white text on shell, tray or well (rule 1 of section 4).
+local artToy={panel="shell",raised="tray",inset="well",selected="shellLip",ink="ink",line="onShellSoft",muted="onShellSoft",
+ text="onShell",focus="onShell",accent="go",reward="stars",tab="go",tabInk="ink",
+ contentPanel="shell",contentRaised="tray",contentInset="well",contentText="onShell",contentMuted="onShellSoft",
+ contentLine="onShellSoft",contentSelected="shellLip",contentFocus="onShell",contentReward="stars"}
+Art.ToyRoles=artToy
+function Art.paletteColor(role)
+ local toy=artToy[role]
+ if toy then return Art.toyPalette()[toy]end
+ local theme=scopeTheme or uiTheme;return (theme.ui and theme.ui[role])or Art[roleNames[role]or role]
+end
 local contentDefaults={contentPanel=Color3.fromHex("#16201E"),contentRaised=Color3.fromHex("#232D2C"),contentInset=Color3.fromHex("#0C1311"),contentText=Color3.fromHex("#F3F4F6"),contentMuted=Color3.fromHex("#C3C8D0"),contentLine=Color3.fromHex("#69F4B3"),contentSelected=Color3.fromHex("#3A5249"),contentFocus=Color3.fromHex("#A3F4FF"),contentReward=Color3.fromHex("#FFC14D")}
 local scoped={panel="contentPanel",raised="contentRaised",inset="contentInset",text="contentText",muted="contentMuted",line="contentLine",selected="contentSelected",focus="contentFocus",reward="contentReward"}
 local function contentOwner(object)
@@ -55,20 +82,29 @@ local function contentOwner(object)
  while n do if n:GetAttribute("ContentSurface")==true then return true end;n=n.Parent end
  return false
 end
--- Copy sitting on a filled primary control (a selected card, the main action)
--- reads in ink, like the control's own label, whatever surface it lives on.
-local function onPrimaryFill(object)
+-- Copy sitting on a filled control reads like the control's own label (Toy Shell): ink on
+-- a light face (go, cream, lemon), the disabled grey on a disabled one, else the surface's.
+local function luminance(c)
+ local function ch(v)return if v<=.03928 then v/12.92 else((v+.055)/1.055)^2.4 end
+ return .2126*ch(c.R)+.7152*ch(c.G)+.0722*ch(c.B)
+end
+local function fillInk(object)
  local n=object.Parent
  while n and not n:IsA("LayerCollector")do
-  if n:IsA("GuiButton")then return n:GetAttribute("PrimaryAction")==true and n:GetAttribute("ActionEnabled")==true end
+  if n:IsA("GuiButton")then
+   if n:GetAttribute("ActionEnabled")==false then return Art.ToyDisabled.text end
+   if n.BackgroundTransparency<.5 and luminance(n.BackgroundColor3)>=.3 then return Art.paletteColor("ink")end
+   return nil
+  end
   n=n.Parent
  end
- return false
+ return nil
 end
+Art.fillInk=fillInk
 function Art.surfaceColor(object,role)
- if(role=="text"or role=="muted")and onPrimaryFill(object)then return Art.paletteColor("ink")end
+ if role=="text"or role=="muted"then local ink=fillInk(object);if ink then return ink end end
  local mapped=contentOwner(object)and scoped[role]
- return if mapped then(scopeTheme or uiTheme).ui[mapped]or contentDefaults[mapped]else Art.paletteColor(role)
+ return if mapped then Art.paletteColor(mapped)or contentDefaults[mapped]else Art.paletteColor(role)
 end
 local function paintProperties(node,entry)
  for property,role in pairs(entry.properties)do
@@ -115,6 +151,24 @@ function Art.applyTheme(theme)
  paletteStats.applies+=1;paletteStats.writes=0
  for object,entry in pairs(bindings)do paintBinding(object,entry)end
  return true
+end
+-- Settings > Menu colours: "deck" (default) or "classic". Repaints every bound node once.
+function Art.setMenuColours(mode)
+ mode=if mode=="classic"then "classic"else "deck"
+ if Art.MenuColours==mode then return false end
+ Art.MenuColours=mode
+ paletteStats.applies+=1;paletteStats.writes=0
+ for object,entry in pairs(bindings)do paintBinding(object,entry)end
+ return true
+end
+-- Repaints what is bound under `root` (not `root` itself): text that follows its surface.
+function Art.repaintDescendants(root)
+ for object,entry in pairs(bindings)do if object~=root and object:IsDescendantOf(root)then paintBinding(object,entry)end end
+end
+-- Repaints one bound node (a label moved onto a different surface after it was built).
+function Art.repaintNode(object)
+ local entry=bindings[object]
+ if entry then paintBinding(object,entry)end
 end
 
 local function node(class, parent, properties)
@@ -175,18 +229,19 @@ function Art.control(button,primary,enabled)
  button:SetAttribute("PrimaryAction",primary);button:SetAttribute("ActionEnabled",enabled)
  button.BackgroundTransparency=0;button.AutoButtonColor=false
  button.Interactable=enabled;button.Active=enabled
- Art.bind(button,{BackgroundColor3=function()return if not enabled then Color3.fromHex("#344545")elseif primary then Art.paletteColor("accent")else Art.surfaceColor(button,"raised")end,
-  TextColor3=function()return if not enabled then Color3.fromHex("#AAB8B5")elseif primary then Art.paletteColor("ink")else Art.surfaceColor(button,"text")end})
+ Art.bind(button,{BackgroundColor3=function()return if not enabled then Art.ToyDisabled.face elseif primary then Art.paletteColor("accent")else Art.toyPalette().cream end,
+  TextColor3=function()return if not enabled then Art.ToyDisabled.text else Art.paletteColor("ink")end})
  local lip=button:FindFirstChild("DisabledLip")
  if not enabled and not lip then
-  lip=Art.frame(button,"DisabledLip",Color3.fromHex("#1F3030"),UDim2.new(0,1,1,-4),UDim2.new(1,-2,0,3),button.ZIndex+1)
+  lip=Art.frame(button,"DisabledLip",Art.ToyDisabled.lip,UDim2.new(0,1,1,-4),UDim2.new(1,-2,0,3),button.ZIndex+1)
   lip.Active,lip.Selectable=false,false
  end
  if lip then lip.Visible=not enabled end
  local border=button:FindFirstChildOfClass("UIStroke")
  if border then
-  Art.bind(border,{Color=function()return if not enabled then Color3.fromHex("#60716E")elseif button==game:GetService("GuiService").SelectedObject then Art.surfaceColor(button,"focus")else Color3.new(1,1,1)end})
-  border.Transparency=if enabled then .86 else 0
+  Art.bind(border,{Color=function()return if not enabled then Art.ToyDisabled.lip elseif button==game:GetService("GuiService").SelectedObject then Art.surfaceColor(button,"focus")else Art.paletteColor("ink")end})
+  border.Transparency=0;border.Thickness=math.max(border.Thickness,2)
+  pcall(function()border.BorderStrokePosition=Enum.BorderStrokePosition.Inner end)
  end
  Art.surfaceGradient(button,if primary and enabled then "primary"else "raised")
  -- Labels inside the control follow its fill.
@@ -194,8 +249,9 @@ function Art.control(button,primary,enabled)
 end
 function Art.tab(button,selected,enabled)
  Art.control(button,false,enabled)
- Art.bind(button,{BackgroundColor3=function()local t=Art.uiTheme().ui;return if selected then t and t.tab or Art.Accent else Art.surfaceColor(button,"raised")end,
- TextColor3=function()local t=Art.uiTheme().ui;return if selected then t and t.tabInk or Color3.fromHex("#0E0F12") else Art.surfaceColor(button,"text")end})
+ -- Toy Shell 3.5: the active tab is a raised lemon key with ink text (lemon on every deck).
+ Art.bind(button,{BackgroundColor3=function()return if selected then Art.toyPalette().selected else Art.surfaceColor(button,"raised")end,
+ TextColor3=function()return if selected then Art.toyPalette().ink else Art.surfaceColor(button,"text")end})
  button:SetAttribute("SelectedTab",selected)
 
 end
@@ -725,26 +781,30 @@ function Art.button(button, radius)
 	button.AutoButtonColor = false
 	Art.corner(button, radius)
 	local border = Art.stroke(button,"line",0.22)
+ pcall(function()border.BorderStrokePosition=Enum.BorderStrokePosition.Inner end)
+ -- Toy Shell 3.4: an Art button is a cream key with ink text and an ink outline (until a
+ -- caller makes it a primary or a tab through Art.control / Art.tab).
+ Art.bind(button,{BackgroundColor3=function()return Art.toyPalette().cream end,TextColor3=function()return Art.toyPalette().ink end})
  Art.surfaceGradient(button,"raised")
  local keyline=Art.frame(button,"FocusKeyline",Art.Ink,UDim2.fromOffset(2,2),UDim2.new(1,-4,1,-4),button.ZIndex)
  keyline.BackgroundTransparency=1;keyline.Active,keyline.Selectable=false,false;Art.corner(keyline,math.max(1,radius-2))
  local inner=Art.stroke(keyline,"ink",1,1)
- border.Transparency=.86
- Art.bind(border,{Color=function()return if button==game:GetService("GuiService").SelectedObject then Art.surfaceColor(button,"focus")else Color3.new(1,1,1) end})
+ border.Transparency=0;border.Thickness=2
+ Art.bind(border,{Color=function()return Art.paletteColor("ink")end})
 	button.MouseButton1Down:Connect(function()
 		if button.Interactable then
-			border.Color = Art.surfaceColor(button,"focus")
-   border.Thickness=button:GetAttribute("FocusThickness")or 2.5;border.Transparency=0;inner.Transparency=0
+			border.Color=Art.paletteColor("ink")
+   border.Thickness=3;border.Transparency=0;inner.Transparency=1
 		end
 	end)
 	local function focusPaint(focused)
   if button:GetAttribute("ActionEnabled")==false then
-   border.Color=Color3.fromHex("#60716E");border.Transparency=0;border.Thickness=1;inner.Transparency=1;return
+   border.Color=Art.ToyDisabled.lip;border.Transparency=0;border.Thickness=2;inner.Transparency=1;return
   end
-  -- Focus: the 2.5 px white ring; rest: the 1 px white 14% border.
-  border.Thickness=if focused then button:GetAttribute("FocusThickness")or 2.5 else 1;inner.Transparency=if focused then 0 else 1
-		border.Transparency=if focused then 0 else .86
-		border.Color = if focused then Art.surfaceColor(button,"focus")else Color3.new(1,1,1)
+  -- Toy Shell: the ink outline thickens to 3 px on focus (the white ring reads on blue, not on cream).
+  border.Thickness=if focused then 3 else 2;inner.Transparency=1
+		border.Transparency=0
+		border.Color=Art.paletteColor("ink")
 	end
 	local function restore()focusPaint(button==game:GetService("GuiService").SelectedObject)end
  button.MouseButton1Up:Connect(restore)

@@ -36,7 +36,7 @@ Hub.Tiles=table.freeze({
  table.freeze({id="settings",icon="settings",tint=nil,name="hub.tile.settings.name",line="hub.tile.settings.line"}),
 })
 Hub.Count=#Hub.Tiles
-Hub.Tint=Kit.Sticker.cream -- the hub's own header tint: the house cream, not a machine's
+Hub.Tint=Kit.Tint.garden -- the hub's own header tint (Toy Shell 3.1: Garden is go), not a machine's
 Hub.DefaultIndex=1
 
 -- Pure: is this tile locked for a player who owns `owned` pets? Everything but
@@ -233,10 +233,8 @@ Hub.Keys={Enum.KeyCode.Left,Enum.KeyCode.Right,Enum.KeyCode.Up,Enum.KeyCode.Down
 local function txt(parent,role,content,color,x,y,w,h,props)
  local t=Kit.text(parent,role,content,color,props);t.Position=UDim2.fromOffset(x,y);t.Size=UDim2.fromOffset(w,h);return t
 end
-local function colorOf(role)
- if role=="accent"or role=="selected"or role=="raised"or role=="well"or role=="panel"then return Kit.color(role)end
- return Kit.Color[role]or Kit.Color.text
-end
+-- Toy Shell: a role read on `object`'s own surface (ink on cream tiles, white on trays).
+local function colorOf(role,object,property)return Kit.roleOn(object,role,property)end
 
 -- QA v775 note 9: the machine tiles' art moves (MachineHubArt). One shared clock
 -- (PetPeek's, a single RenderStepped) steps the art only while this hub is open and on
@@ -347,6 +345,7 @@ function Hub:buildTiles(body,W,H,phone)
   -- half, and the tile's own stitched seam where the card is tall enough for one.
   local well=Kit.well(button,"ArtWell",UDim2.fromOffset(L.well.x,L.well.y),UDim2.fromOffset(L.well.w,L.well.h),if phone then 10 else 12)
   well.ClipsDescendants=true;well.Active=false
+  Kit.stage(well) -- Toy Shell R1.2.5: live previews sit on the berry stage
   local wellStroke=well:FindFirstChildOfClass("UIStroke")
   local sheen=Kit.frame(well,"Sheen",nil,UDim2.new(),UDim2.new(1,0,.5,0),if phone then 10 else 12)
   sheen.BackgroundTransparency=0;sheen.BackgroundColor3=Color3.new(1,1,1);sheen.ZIndex=well.ZIndex+6;sheen.Active=false
@@ -368,8 +367,8 @@ function Hub:buildTiles(body,W,H,phone)
   local dot=Kit.frame(button,"ReadyDot","stars",UDim2.new(),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.Visible=false
   -- A chevron says "this opens a screen": a small raised badge on the well's lower right corner.
   local badgeSize=if phone then 20 else 24
-  local badge=Kit.frame(button,"Go","raised",UDim2.fromOffset(L.well.x+L.well.w-badgeSize+4,L.well.y+L.well.h-badgeSize+4),UDim2.fromOffset(badgeSize,badgeSize),999)
-  badge.BackgroundTransparency=0;badge.ZIndex=well.ZIndex+8;badge.Active=false;Kit.stroke(badge)
+  local badge=Kit.frame(button,"Go","cream",UDim2.fromOffset(L.well.x+L.well.w-badgeSize+4,L.well.y+L.well.h-badgeSize+4),UDim2.fromOffset(badgeSize,badgeSize),999)
+  badge.BackgroundTransparency=0;badge.ZIndex=well.ZIndex+8;badge.Active=false;Kit.stroke(badge);Kit.setSurface(badge,"light")
   local chev=Kit.icon(badge,"chevron",if phone then 12 else 14,"soft");chev.AnchorPoint=Vector2.new(.5,.5);chev.Position=UDim2.fromScale(.5,.5)
   -- Progress chips (two at most) and the weekly shelf sticker over the well's top-right corner.
   local chips={}
@@ -401,7 +400,7 @@ function Hub:paintTiles()
   local s=Hub.status(entry.id,self.ctx)
   local focused=index==self.index
   entry.status.Text=string.upper(s.text)
-  Kit.paint(entry.status,"TextColor3",function()return colorOf(s.tone)end)
+  Kit.paint(entry.status,"TextColor3",function()return colorOf(s.tone,entry.status,"TextColor3")end)
   entry.button:SetAttribute("Locked",s.locked);entry.button:SetAttribute("Ready",s.dot)
   entry.dot.Visible=s.dot and s.text~=""
   if entry.dot.Visible then
@@ -425,7 +424,7 @@ function Hub:paintTiles()
   -- Slice C: this week's shelf takes the line on the tiles that sell it, in Stars gold.
   local shelf=Hub.shelfLines(entry.id,self.ctx)
   if shelf then Kit.fitText(entry.line,shelf,entry.lineWidth)end
-  Kit.paint(entry.line,"TextColor3",function()return colorOf(if shelf then "stars"else "soft")end)
+  Kit.paint(entry.line,"TextColor3",function()return colorOf(if shelf then "stars"else "soft",entry.line,"TextColor3")end)
   entry.button:SetAttribute("Shelf",shelf~=nil)
   -- U2: the art (rebuilt only when what it shows changes), the "this week" highlight
   -- (gold sticker and a gold rim on the well) and the progress chips.
@@ -456,10 +455,10 @@ function Hub:paintTiles()
   end
   entry.button:SetAttribute("Chips",table.concat(shown,", "))
   if not s.locked then entry.button:SetAttribute("AccessibleLabel",entry.name.Text..", "..entry.line.Text)end
-  Kit.paint(entry.name,"TextColor3",function()return colorOf(if s.locked then "soft"else "text")end)
-  Kit.paint(entry.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised")end)
+  Kit.paint(entry.name,"TextColor3",function()return colorOf(if s.locked then "soft"else "text",entry.name,"TextColor3")end)
+  Kit.paint(entry.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised",entry.button,"BackgroundColor3")end)
   entry.stroke.Thickness=if focused then 2 else 1;entry.stroke.Transparency=if focused then 0 else Kit.Stroke.transparency
-  Kit.paint(entry.stroke,"Color",function()return if focused then Kit.color("accent")else Kit.Stroke.color end)
+  Kit.paint(entry.stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
  end
  local focusedTile=Hub.Tiles[self.index]
  self.root:SetAttribute("FocusedTile",focusedTile and focusedTile.id or nil)

@@ -12,7 +12,8 @@ local TabInk={}
 
 -- Pure: the colour a tab label (or icon) should have.
 function TabInk.colorFor(selected)
- return if selected then Kit.color("ink")else Kit.Color.soft
+ -- Toy Shell 3.5: inactive labels are white on the trough.
+ return if selected then Kit.color("ink")else Kit.color("text")
 end
 
 -- Repaint every label / icon of a Kit.tabs api as bound functions for `index`.
