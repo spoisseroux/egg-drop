@@ -26,6 +26,7 @@ local valid={Common=true,Uncommon=true,Rare=true,Neutral=true}
 local materialTier=table.freeze({standard="Common",gloss="Common",matte="Common",jelly="Rare"})
 local rarePets={};for _,pet in ipairs(Pets.rares)do rarePets[pet.id]=true end
 local basePets={};for _,pet in ipairs(Pets)do basePets[pet.id]=true end
+local statTier=table.freeze({nibble="Common",snack="Uncommon",feast="Rare"})
 local function tier(row)return if row and valid[row.rarity]then row.rarity else "Neutral"end
 function Policy.tier(kind,result)
  result=result or {}
@@ -39,6 +40,8 @@ function Policy.tier(kind,result)
   return tier(Hues.Items[result.itemId])
  end
  if kind=="companion"then return if rarePets[result.petId]then "Rare"elseif basePets[result.petId]then "Common"else "Neutral"end
+ -- v2 Stat Egg: the snack's size is its tier (Nibble Common, Snack Uncommon, Feast Rare).
+ if kind=="stat"then return statTier[result.size]or "Neutral"end
  return "Neutral"
 end
 -- Look per tier (HatchItemStage). Common is a soft cream-white, Uncommon green, Rare
@@ -57,19 +60,85 @@ Policy.Look=table.freeze({
  Uncommon=look("#57E08A","#C8FFD9",.80,10,18,6,1,.40,4,6,"#A6F27E","#27A45A"),
  Rare=look("#8E7CFF","#5CC8FF",1,16,30,12,2,.62,7,14,"#B9A9FF","#5340D8"),
 })
+-- v2 Pop-Out Stage (R1.2, 2.3): the vibrant preview stage per tier, never deck-tinted.
+-- core/edge: the radial fill; ray: the 12 light rays; floor: the light pool; deep: the 30%
+-- vignette; pattern: the edge pattern (dots, stripes, diamonds). spin: ray turn (deg/s).
+-- stones/sparkles: burst confetti (Common stays inside the well); escape: share that leaves
+-- the well; bloom: the one bloom's peak opacity inside the well; checker: px/s at the burst.
+local function stage(core,edge,ray,floor,deep,pattern,spin,stones,sparkles,escape,bloom,checker,push,tip,pull)
+ return table.freeze({core=Color3.fromHex(core),edge=Color3.fromHex(edge),ray=Color3.fromHex(ray),floor=Color3.fromHex(floor),
+  deep=Color3.fromHex(deep),pattern=pattern,spin=spin,stones=stones,sparkles=sparkles,escape=escape,bloom=bloom,checker=checker,push=push,tip=tip,pull=pull})
+end
+Policy.Stage=table.freeze({
+ Common=stage("#FF9A2E","#F0541E","#FFBC47","#FFF3C4","#A8300E","dots",0,4,2,0,.20,8,.04,0,0),
+ Neutral=stage("#FF9A2E","#F0541E","#FFBC47","#FFF3C4","#A8300E","dots",0,4,2,0,.20,8,.04,0,0),
+ Uncommon=stage("#58C92F","#16994A","#9BE23A","#F6FFC4","#0B6B36","stripes",18,8,6,.5,.35,16,.04,2,.06),
+ Rare=stage("#E845C8","#6B3BEA","#FF79D9","#FFE9F8","#3B1FA0","diamonds",12,20,10,1,.60,48,.04,2,.10),
+})
 -- The tier's sound on the hatch clock: one event, `pre` (it plays before the receipt
 -- unlocks), at the burst less the sting's lead-in. Played at speed 1 always: the stings
 -- are tuned as one family. The hatch body is quiet (about -29 LUFS) until the shell opens,
 -- so the pop is clear at the burst; the Rare chime then rings through the body's own hit.
 -- The accent voice is stopped at readyAt + AnswerEnd, after the longest sting has ended.
-function Policy.events(classification,readyAt)
+-- v2 hatch (V2-HATCH-REDESIGN-2026-11-19 R1.1, R1.4): one clock per tier. Common, Uncommon
+-- and untiered items keep today's beats (burst 0.98, name 1.65); a Rare item is a jackpot: a
+-- wind-up and a freeze move its burst to 1.72, and the cannons and the "RARE!" stamp move its
+-- name to 3.15. Pets keep their clock (the Bear is Common; the legacy rares are never hatched
+-- in v2). Reduced Motion: a 0.6 s cross-fade (Rare 0.9 s) whose sting still plays; the clock
+-- runs on (decorative only) until the sound has rung out.
+Policy.Base=table.freeze({burst=.98,ready=1.65,duration=3.1,petReady=2.05,petDuration=4.4})
+Policy.Jackpot=table.freeze({windup=.95,freeze=1.60,burst=1.72,pop=1.80,cannonL=1.95,cannonR=2.07,stamp=2.30,seat=2.80,seatEnd=3.14,
+ name=3.15,duration=4.6,layerAt=.67,stingAt=1.02,stingGain=.80,layerGain=.72,layerLength=3.45,reducedReady=.9,reducedStamp=.45,reducedDuration=3.5})
+Policy.Reduced=table.freeze({ready=.6,stingAt=.30,duration=1.6,crack=.15,fadeFrom=.30,fadeTo=.45})
+-- Pure: the hatch clock for one result. {burst, ready, duration, quiet (accent voice stops),
+-- bodyAt (the hatch body sound starts; its own pop sits 0.98 s in), jackpot, reduced}.
+local timingCache={}
+local timingOf
+function Policy.timing(tier,kind,reduced)
+ local pet=kind=="companion"
+ local key=(if tier=="Rare"then "R"else "o")..(if pet then "p"else "i")..(if reduced then "r"else "f")
+ local hit=timingCache[key]
+ if hit then return hit end
+ hit=timingOf(tier,pet,reduced);timingCache[key]=hit
+ return hit
+end
+function timingOf(tier,pet,reduced)
+ local jackpot=tier=="Rare"and not pet
+ local B,J,R=Policy.Base,Policy.Jackpot,Policy.Reduced
+ if reduced then
+  if pet then return table.freeze({burst=0,ready=.15,duration=.15,quiet=.15,bodyAt=0,jackpot=false,reduced=true})end
+  local ready=if jackpot then J.reducedReady else R.ready
+  local duration=if jackpot then J.reducedDuration else R.duration
+  return table.freeze({burst=R.fadeFrom,ready=ready,duration=duration,quiet=duration,bodyAt=0,jackpot=jackpot,reduced=true})
+ end
+ if pet then return table.freeze({burst=B.burst,ready=B.petReady,duration=B.petDuration,quiet=B.petReady+Policy.AnswerEnd,bodyAt=0,jackpot=false,reduced=false})end
+ if jackpot then return table.freeze({burst=J.burst,ready=J.name,duration=J.duration,quiet=J.duration,bodyAt=J.burst-B.burst,jackpot=true,reduced=false})end
+ return table.freeze({burst=B.burst,ready=B.ready,duration=B.duration,quiet=B.ready+Policy.AnswerEnd,bodyAt=0,jackpot=false,reduced=false})
+end
+function Policy.burstAt(tier,kind)return Policy.timing(tier,kind,false).burst end
+-- The jackpot's two voices (uploaded 2026-11-19 from artifacts/v2-hatch-redesign-2026-11-19/audio):
+-- hatch_jackpot plays under the approved Rare sting, hatch_jackpot_calm under Reduced Motion.
+Policy.JackpotCue="hatch_jackpot";Policy.JackpotCalmCue="hatch_jackpot_calm"
+function Policy.events(classification,readyAt,reduced,kind)
  local s=Policy.Sting[classification]or Policy.Sting.Common
+ local J=Policy.Jackpot
+ local jackpot=classification=="Rare"and kind~="companion"
+ if reduced then
+  -- Sound is not motion: the tier's sting still plays (R1.1). The calm layer leads the
+  -- Rare; the others pop on the cross-fade.
+  if jackpot then return {{at=0,cue=Policy.JackpotCalmCue,speed=1,gain=J.layerGain,pre=true},{at=0,cue=s.cue,speed=1,gain=J.stingGain,pre=true}}end
+  return {{at=Policy.Reduced.stingAt,cue=s.cue,speed=1,gain=s.gain,pre=true}}
+ end
+ if jackpot then
+  -- Both hits land on the burst (1.72) and the fanfare chord on the stamp (2.30).
+  return {{at=J.layerAt,cue=Policy.JackpotCue,speed=1,gain=J.layerGain,pre=true},{at=J.stingAt,cue=s.cue,speed=1,gain=J.stingGain,pre=true}}
+ end
  return {{at=Policy.BurstAt-s.hit,cue=s.cue,speed=1,gain=s.gain,pre=true}}
 end
-function Policy.new(kind,result,readyAt)
+function Policy.new(kind,result,readyAt,reduced)
  local classification=Policy.tier(kind,result)
  -- Pets keep the reveal stage's own sound line (RevealStage.Cues); items get the tier line.
- local events=if kind=="companion"then {}else Policy.events(classification,readyAt)
+ local events=if kind=="companion"then {}else Policy.events(classification,readyAt,reduced,kind)
  return setmetatable({tier=classification,events=events,cursor=1,lastAge=0,readyAt=readyAt},Cue)
 end
 function Cue:cancel()self.cancelled=true;self.cursor=#self.events+1 end

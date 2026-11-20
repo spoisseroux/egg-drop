@@ -370,11 +370,14 @@ function Scene:render(sample)
  -- On a bare stage there is no floor pool: the pet stage draws its own shadow, and an item's
  -- shadow (it sits where the item will land) only belongs once the shell has opened.
  if self.bare and(self.heroHidden or sample.shellAlpha>.02)then self.shadow.Transparency=1 end
- local egg=CFrame.Angles(sample.rock*.25,0,sample.rock)
+ -- v2 (R1.3): the Rare lift and shiver, and a volume-keeping squash pivoted at the foot.
+ local shiver=(sample.shiver or 0)*math.rad(1.6)*math.sin((sample.age or 0)*71)
+ local egg=CFrame.new(0,(sample.eggLift or 0)*self.height*.06,0)*CFrame.Angles(sample.rock*.25,0,sample.rock+shiver)
+ local squash=Vector3.new(sample.eggSX or 1,sample.eggSY or 1,sample.eggSX or 1)
  for name,e in pairs(self.parts)do
   local p,spec=e.part,e.spec;local shellScale=sample.shellScale or 1
-  p.Size=spec.size*shellScale
-  local cf=egg*CFrame.new(spec.center*shellScale)
+  p.Size=spec.size*shellScale*squash
+  local cf=egg*CFrame.new(spec.center*shellScale*squash)
   p.Transparency=1-sample.shellAlpha
   if name=="Core"then p.Transparency=1
   elseif name=="TopShell"then

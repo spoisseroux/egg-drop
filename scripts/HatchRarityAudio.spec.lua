@@ -32,42 +32,49 @@ return function(client,parent)
  end
  local function names(list)local out={};for _,call in ipairs(list)do table.insert(out,call.cue)end;return table.concat(out,",")end
  local ok,err=pcall(function()
-  test("the body stays speed one; the Rare sting leads in to the burst on its own stoppable voice",function()
-   local c,play,advance,calls,accents,stops=make();play();assert(#calls==1 and calls[1].cue=="hatch_display_material"and calls[1].speed==1 and calls[1].gain==1)
-   local sting=Policy.Sting.Rare;local startAt=Policy.BurstAt-sting.hit
-   advance(startAt-.03);assert(#accents()==0,"the Rare sting started early")
-   advance(startAt+.05);local notes=accents()
-   assert(#notes==1 and notes[1].cue=="rarity_rare"and notes[1].speed==1 and notes[1].gain==sting.gain,"Rare line was "..names(notes))
-   assert(notes[1].owner==c.accentOwner and notes[1].owner~=calls[1].owner,"the sting has its own voice, apart from the body")
-   -- One sound for the whole reveal: nothing more at the burst, the receipt or after it.
-   advance(R+.2);assert(#accents()==1 and c:getPresentationState().receiptReady,"a second note played")
+  test("the body stays speed one; the Rare jackpot leads in to the burst on its own stoppable voice",function()
+   -- v2 (R1.1): a Rare item's body starts 0.74 s late so its pop lands on the 1.72 burst; the
+   -- jackpot layer starts at 0.67 and the approved sting at 1.02, both on the accent voice.
+   local T=Policy.timing("Rare","material");local J=Policy.Jackpot
+   local c,play,advance,calls,accents,stops=make();play();assert(#calls==0,"the Rare body waits for its offset")
+   advance(J.layerAt-.03);assert(#accents()==0,"the jackpot started early")
+   advance(T.bodyAt-.03);for _,call in ipairs(calls)do assert(call.cue~="hatch_display_material","the body started before its offset")end
+   advance(T.bodyAt+.02);local body;for _,call in ipairs(calls)do if call.cue=="hatch_display_material"then body=call end end
+   assert(body and body.cue=="hatch_display_material"and body.speed==1 and body.gain==1,"the body starts at its offset")
+   advance(J.stingAt+.05);local notes=accents()
+   assert(#notes==2 and notes[1].cue==Policy.JackpotCue and notes[2].cue=="rarity_rare"and notes[2].speed==1 and notes[2].gain==J.stingGain,"Rare line was "..names(notes))
+   assert(notes[1].owner==c.accentOwner and notes[2].owner==c.accentOwner and notes[1].owner~=body.owner,"the jackpot has its own voice, apart from the body")
+   advance(T.ready+.2);assert(#accents()==2 and c:getPresentationState().receiptReady,"a third note played")
    -- It rings to its end before its voice is retired.
-   advance(startAt+sting.length+.02);assert(#accents()==1 and not stops[c.accentOwner],"the Rare chime was cut")
-   advance(R+Policy.AnswerEnd+.05);assert(stops[c.accentOwner])
+   advance(J.layerAt+J.layerLength+.02);assert(#accents()==2 and not stops[c.accentOwner],"the jackpot was cut")
    c:cancel();assert(stops[c.audioOwner]and stops[c.accentOwner])
   end)
   test("Common, Uncommon and Rare are three different sounds on the real owner clock",function()
-   local _,playCommon,advanceCommon,_,commonNotes=make();playCommon({id="rarity-common-"..os.clock(),finishId="gloss"});advanceCommon(3.1)
-   local _,playRare,advanceRare,_,rareNotes=make();playRare();advanceRare(3.1)
+   local _,playCommon,advanceCommon,calls,commonNotes=make();playCommon({id="rarity-common-"..os.clock(),finishId="gloss"});assert(#calls==1,"a Common body starts at once")
+   advanceCommon(3.1)
+   local _,playRare,advanceRare,_,rareNotes=make();playRare();advanceRare(4.6)
    local common,rare=commonNotes(),rareNotes()
    assert(names(common)=="rarity_common","Common line was "..names(common))
-   assert(names(rare)=="rarity_rare","Rare line was "..names(rare))
-   assert(common[1].gain<rare[1].gain and common[1].speed==1 and rare[1].speed==1,"Rare is louder; both at their own pitch")
+   assert(names(rare)==Policy.JackpotCue..",rarity_rare","Rare line was "..names(rare))
+   assert(common[1].gain<rare[2].gain and common[1].speed==1 and rare[2].speed==1,"Rare is louder; both at their own pitch")
    local seen={}
    for _,tier in ipairs({"Common","Uncommon","Rare"})do
     local cue=Policy.Sting[tier].cue;assert(not seen[cue],"two tiers share "..cue);seen[cue]=true
    end
   end)
   test("skip settled reopen reduced motion and replacement never play deferred notes",function()
-   local c,play,advance,_,accents=make();play();advance(.4);local before=#accents();assert(before==1 and c:skip());advance(3.1);assert(#accents()==before)
+   local c,play,advance,_,accents=make();play();advance(1.1);local before=#accents();assert(before==2 and c:skip());advance(4.6);assert(#accents()==before)
    play(c.result);advance(3.1);assert(#accents()==before and not c.active,"same saved receipt must not replay")
-   c.reduceEffects=true;play();advance(3.1);assert(#accents()==before)
+   -- v2 (section 4): Reduced Motion keeps the rarity sound (the calm layer and the sting), once.
+   c.reduceEffects=true;play();advance(3.6);local calm=accents()
+   assert(#calm==before+2 and calm[before+1].cue==Policy.JackpotCalmCue and calm[before+2].cue=="rarity_rare","Reduced Motion line was "..names(calm))
+   before=#calm
    -- Replaced before its own sting starts: only the replacement's Common pop is heard.
    c.reduceEffects=false;play();advance(.2);local mid=#accents();assert(mid==before);play({id="replacement-"..os.clock(),finishId="matte"});advance(3.1)
    local after=accents();assert(#after==mid+1 and after[#after].cue=="rarity_common","the replacement plays only its own Common sting")
   end)
   test("late preload starts at zero while focus device takeover and long frames drop pending notes",function()
-   local c,play,advance,calls,accents,_,setOwner,getScene,audio=make(false);play();assert(not c.presented and #calls==0)
+   local c,play,advance,calls,accents,_,setOwner,getScene,audio=make(false);play({id="late-"..os.clock(),finishId="gloss"});assert(not c.presented and #calls==0)
    getScene().ready=true;c:refreshOwner();c:disconnectClock();assert(c.age==0 and #calls==1)
    advance(1.2);local count=#accents();setOwner(false);setOwner(true);advance(3.1);assert(#accents()==count)
    play();advance(1.2);count=#accents();audio.deviceEpoch+=1;c:step(1/60);c:disconnectClock();assert(#accents()==count)

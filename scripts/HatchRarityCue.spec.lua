@@ -20,10 +20,14 @@ return function(client)
   assert(Policy.tier("companion",{petId="pip",rare=true})=="Common"and Policy.tier("material",{finishId="unknown",rare=true})=="Neutral")
  end)
  test("every tier has its own sting: one sound each, three different sounds, louder as it gets rarer",function()
-  local common,uncommon,rare=line("material",{finishId="gloss"}),line("feature",{featureId="claws"}),line("material",{finishId="jelly"})
-  assert(#common==1 and #uncommon==1 and #rare==1,"one sound per reveal")
-  assert(common[1].cue=="rarity_common"and uncommon[1].cue=="rarity_uncommon"and rare[1].cue=="rarity_rare")
-  assert(common[1].gain<uncommon[1].gain and uncommon[1].gain<rare[1].gain,"the tiers step up in loudness")
+  local common,uncommon=line("material",{finishId="gloss"}),line("feature",{featureId="claws"})
+  local rare=advance(Policy.new("material",{finishId="jelly"},Policy.timing("Rare","material").ready),4.6,true)
+  assert(#common==1 and #uncommon==1,"one sound per Common and Uncommon reveal")
+  -- v2 jackpot (R1.1): the Rare sting plays with the jackpot layer under it.
+  assert(#rare==2 and rare[1].cue==Policy.JackpotCue and rare[2].cue=="rarity_rare","Rare: the layer, then the sting")
+  assert(common[1].cue=="rarity_common"and uncommon[1].cue=="rarity_uncommon")
+  assert(common[1].gain<uncommon[1].gain and uncommon[1].gain<rare[2].gain,"the tiers step up in loudness")
+  assert(rare[2].gain==Policy.Jackpot.stingGain and rare[1].gain==Policy.Jackpot.layerGain and rare[1].gain+rare[2].gain<1.6,"suggested gains (no clip)")
   -- An untiered item sounds like Common, as it looks like Common.
   local neutral=line("hue",{itemId="rose"});assert(#neutral==1 and neutral[1].cue=="rarity_common"and neutral[1].gain==common[1].gain)
   assert(Policy.events("NoSuchTier",R)[1].cue=="rarity_common")
@@ -31,24 +35,32 @@ return function(client)
   assert(S.Common.length<S.Uncommon.length and S.Uncommon.length<S.Rare.length,"rarer tiers ring longer")
  end)
  test("the pop lands on the burst: Common and Uncommon start there, Rare leads in with its rise",function()
+  local function sting(tier)for _,e in ipairs(Policy.events(tier,R))do if e.cue==Policy.Sting[tier].cue then return e end end end
   for _,tier in ipairs({"Common","Uncommon","Rare","Neutral"})do
-   local e=Policy.events(tier,R)[1];local s=Policy.Sting[tier]
-   assert(math.abs(e.at+s.hit-Policy.BurstAt)<1e-9,tier.." pop is off the burst")
+   local e=sting(tier);local s=Policy.Sting[tier]
+   assert(math.abs(e.at+s.hit-Policy.burstAt(tier,"material"))<1e-9,tier.." pop is off the burst")
    assert(e.at>=.1,"it starts after the stage has opened")
   end
   assert(Policy.Sting.Common.hit==0 and Policy.Sting.Uncommon.hit==0 and Policy.Sting.Rare.hit==.70,"hit times match scripts/synth_hatch_rarity.py HIT")
-  assert(Policy.events("Rare",R)[1].at<Policy.events("Common",R)[1].at)
+  -- The jackpot layer's impact (1.05 s in) lands on the Rare burst, its chord on the stamp.
+  local layer=Policy.events("Rare",R)[1];local J=Policy.Jackpot
+  assert(math.abs(layer.at+1.05-J.burst)<1e-9 and math.abs(layer.at+1.05+.58-J.stamp)<1e-9,"layer report.json timing")
  end)
  test("every cue is an uploaded sound, played at its own pitch, audible and never cut",function()
-  local ids={}
+  local ids={};local J=Policy.Jackpot
+  assert(Audio.uri(Policy.JackpotCue)~=nil and Audio.uri(Policy.JackpotCalmCue)~=nil,"the jackpot layers are uploaded")
+  -- Reduced Motion keeps the sting (sound is not motion); a Rare plays the calm layer.
+  local calm=Policy.events("Rare",R,true);assert(#calm==2 and calm[1].cue==Policy.JackpotCalmCue and calm[2].cue=="rarity_rare")
+  assert(Policy.events("Common",R,true)[1].cue=="rarity_common")
   for _,tier in ipairs({"Common","Uncommon","Rare","Neutral"})do
    for _,e in ipairs(Policy.events(tier,R))do
     local uri=Audio.uri(e.cue);assert(uri~=nil,"no uploaded sound for "..tostring(e.cue))
     if tier~="Neutral"then assert(not ids[uri],"two tiers share an asset");ids[uri]=true end
     assert(e.gain>=.3 and e.gain<=1 and e.speed==1)
     assert(e.pre==true,"the sting plays before the receipt unlocks")
-    -- The accent voice is stopped at R + AnswerEnd: the sting must have ended by then.
-    assert(e.at+Policy.Sting[tier].length<=R+Policy.AnswerEnd+1e-9,tier.." would be cut by the answer owner")
+    -- The accent voice is stopped at timing.quiet: every sound must have ended by then.
+    local length=if e.cue==Policy.JackpotCue then J.layerLength else Policy.Sting[tier].length
+    assert(e.at+length<=Policy.timing(tier,"material").quiet+1e-9,tier.." would be cut by the answer owner")
    end
   end
   assert(Audio.uri("rarity_common")==Audio.uri("rarity_common")and Audio.uri("rarity_rare")~=Audio.uri("rarity_uncommon"))
@@ -67,18 +79,19 @@ return function(client)
  test("pets keep the reveal stage's sound line; items never backfill a crossed note",function()
   assert(#Policy.new("companion",{petId="pip"},2.05).events==0)
   -- A jump over 0.25 s (a pause, a skip) consumes the sting it crossed; it is never played late.
-  local c=Policy.new("material",{finishId="jelly"},R);advance(c,.1,false)
-  assert(#c:due(.9,false,true)==0,"a jump over 0.25 s played what it crossed")
-  assert(#advance(c,3.1,true)==0,"a crossed sting was backfilled")
+  local RR=Policy.timing("Rare","material").ready
+  local c=Policy.new("material",{finishId="jelly"},RR);advance(c,.1,false)
+  assert(#c:due(1.2,false,true)==0,"a jump over 0.25 s played what it crossed")
+  assert(#advance(c,4.6,true)==0,"a crossed sting was backfilled")
   -- On the clock it plays once, before the receipt, whether or not the result is disclosed.
-  c=Policy.new("material",{finishId="jelly"},R)
-  assert(#advance(c,R-.05,false)==1 and #advance(c,3.1,false)==0,"the sting is pre-receipt and plays once")
+  c=Policy.new("material",{finishId="jelly"},RR)
+  assert(#advance(c,RR-.05,false)==2 and #advance(c,4.6,false)==0,"the jackpot is pre-receipt and plays once")
   c=Policy.new("material",{finishId="gloss"},R)
   assert(#advance(c,Policy.BurstAt-.02,false)==0 and #advance(c,Policy.BurstAt+.05,false)==1,"Common pops at the burst")
  end)
  test("owner loss cancel invalid age and backwards clock permanently consume pending notes",function()
   for _,mode in ipairs({"owner","cancel","nan","backwards"})do
-   local c=Policy.new("material",{finishId="jelly"},R);advance(c,.5,true)
+   local c=Policy.new("material",{finishId="jelly"},R);advance(c,.3,true)
    if mode=="owner"then c:due(.51,true,false)elseif mode=="cancel"then c:cancel()elseif mode=="nan"then c:due(0/0,true,true)else c:due(.2,true,true)end
    assert(c.cancelled and #c:due(1.0,true,true)==0 and not c:step(R,true,true))
   end

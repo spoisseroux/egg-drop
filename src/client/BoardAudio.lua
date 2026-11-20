@@ -32,6 +32,10 @@ local assetIds = {
 	rarity_common = 103455905961997,
 	rarity_uncommon = 121273502108143,
 	rarity_rare = 87043456244614,
+	-- v2 Rare jackpot layer, under the Rare sting (scripts/synth_hatch_jackpot.py, uploaded
+	-- 2026-11-19; V2-HATCH-REDESIGN R1.1). The calm layer plays under Reduced Motion.
+	hatch_jackpot = 125080180187325,
+	hatch_jackpot_calm = 125229335467544,
 }
 -- PLACEHOLDER sounds (assets/audio/placeholder/, uploaded 2026-11-13). Spencer's own
 -- audio replaces these; see assets/audio/placeholder/PLACEHOLDER-AUDIO.md.
@@ -78,7 +82,7 @@ local cues = {
 	"stars_total", "new_best", "egg_ready", "meter_fill", "win", "lose",
 	"egg_wobble", "egg_crack_glint", "egg_select",
 	-- Item reveal: one sting per rarity tier (HatchRarityCue.events).
-	"rarity_common", "rarity_uncommon", "rarity_rare",
+	"rarity_common", "rarity_uncommon", "rarity_rare", "hatch_jackpot", "hatch_jackpot_calm",
 	-- Results count-up: one very short blip per +1 Star, each cut by the next
 	-- (batch 2026-11-13 R1). No id yet; the coordinator uploads a placeholder.
 	"count_blip",

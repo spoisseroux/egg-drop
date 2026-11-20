@@ -306,8 +306,9 @@ end
 function Cinematic:buildScene()
  if self.nativeDisplay then
   local epoch=self.epoch
-  self.duration=if self.kind=="companion"then DisplayPose.BearDuration else DisplayPose.ItemDuration
-  self.nativeEndAt=if self.reducedIntro then .15 else self.duration
+  -- v2: the clock is per tier (HatchRarityCue.timing); a Rare item runs the jackpot.
+  self.duration=self.timing.duration
+  self.nativeEndAt=if self.reducedIntro then RarityCue.timing(self.tier,self.kind,true).duration else self.duration
   local create=self.displaySceneFactory or require(script.Parent.HatchDisplayScene).new
   self.nativeScene=create(self.frame,{pet=self.pet,result=self.result,kind=self.kind,
    appearance=self.appearance,resultBuilder=self.itemBuilder,reduced=self:reduced(),onReady=function(ok)
@@ -360,7 +361,7 @@ function Cinematic:publishDiagnostics(phase)
 end
 function Cinematic:paint()
  if self.nativeScene then
-  local sample=DisplayPose.sample(self.age,self.kind,self:reduced());self.presentationSample=sample
+  local sample=DisplayPose.sample(self.age,self.kind,self:reduced(),self.tier);self.presentationSample=sample
   self.nativeScene:render(sample)
   if self.borrowedStage then self.borrowedStage:updateExternal(self.age,sample)end
   if self.skipButton then self.skipButton.Visible=sample.inputLocked and not self.borrowedStage;self.skipButton.Active=sample.inputLocked end
@@ -447,7 +448,7 @@ end
 
 function Cinematic:finishStatic()
  if self.nativeScene then
-  self.active=false;self:disconnectClock();self.age=if self:reduced()then .15 else self.duration
+  self.active=false;self:disconnectClock();self.age=if self:reduced()then RarityCue.timing(self.tier,self.kind,true).duration else self.duration
   self:stopAudio();self:paint();self:complete();return
  end
  if not self.resultRoot then return end
@@ -467,7 +468,11 @@ function Cinematic:refreshOwner()
    if self.receiptKey and not seen[self.receiptKey]then
     seen[self.receiptKey]=true;table.insert(seenOrder,self.receiptKey);if #seenOrder>64 then seen[table.remove(seenOrder,1)]=nil end
    end
-   if self.active and not self:reduced()and not self.nativeFailed then self:cue("hatch_display_"..(if self.kind=="companion"then "bear"else self.kind),1,1)end
+   -- v2: the hatch body starts at timing.bodyAt (a Rare item's 0.74 s later, so its own pop
+   -- lands on the jackpot burst) and never while a stage holds the clock for its lid.
+   if self.active and not self:reduced()and not self.nativeFailed then
+    self.bodyPending=true;self:playBody()
+   end
   end
   if self.nativeFailed or(self:reduced()and not self.reducedIntro)or(self.reducedIntro and not self:reduced())or not self.active then self:finishStatic();return end
   if not self.connection then
@@ -496,21 +501,31 @@ function Cinematic:refreshOwner()
  if not self.connection then self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0;self.connection=RunService.RenderStepped:Connect(function(dt)if self.epoch==epoch then self:step(dt)end end)end
  self:publishDiagnostics("clockReady")
 end
+-- A host stage holding the clock (its toy lid is still closing, or it waits for the scene).
+function Cinematic:held()return self.clockHold~=nil and self.clockHold()==true end
+function Cinematic:playBody()
+ if not self.bodyPending or self:held()or self.age<(self.timing and self.timing.bodyAt or 0)then return end
+ self.bodyPending=false
+ self:cue("hatch_display_"..(if self.kind=="companion"then "bear"else self.kind),1,1)
+end
 function Cinematic:step(dt)
  if self.nativeScene then
   if not self.active then self:disconnectClock();return end
   if not self:owned()or(self:reduced()and not self.reducedIntro)or(self.reducedIntro and not self:reduced())then self:refreshOwner();return end
   if dt>.25 or(self.audio and self.deviceEpoch~=(self.audio.deviceEpoch or 0))then self:finishStatic();return end
+  if self:held()then self:paint();return end
   self.age+=math.max(0,dt);self.sampleAge=(self.sampleAge or 0)+dt
-  if self.sampleAge>=1/30 then self.sampleAge=0;self:paint()end
+  -- v2 (R1.3 "one clock"): every frame is sampled, so the jackpot's fast beats never stair-step.
+  self.sampleAge=0;self:paint()
+  self:playBody()
   local sample=self.presentationSample
   if self.rarityState then
-   local liveCue=self.active and self.freshReveal and self.presented and not self:reduced()and not self.nativeFailed
+   local liveCue=self.active and self.freshReveal and self.presented and(not self:reduced()or self.reducedIntro==true)and not self.nativeFailed
    -- Every note due this frame (the Rare burst is a shimmer and a fanfare together).
    for _,event in ipairs(self.rarityState:due(self.age,sample and sample.receiptReady==true,liveCue))do
     if self.audio and self:owned()then self.audio:play(event.cue or RarityCue.Cue,event.speed,event.gain,self.accentOwner)end
    end
-   if self.age>=self.rarityState.readyAt+RarityCue.AnswerEnd and not self.accentStopped then
+   if self.age>=self.timing.quiet and not self.accentStopped then
     self.accentStopped=true;if self.audio and self.audio.stopOwner then self.audio:stopOwner(self.accentOwner)end
    end
   end
@@ -549,15 +564,22 @@ function Cinematic:play(result,onComplete,options)
  self.splitAt=if result.rare then .95 else .75;self.duration=if result.rare then 1.70 else 1.50;self.age=0;self.sampleAge=0;self.onComplete=onComplete;self.onPresented=options.onPresented;self.audioOwner={}
  self.freshReveal=not options.skipIntro and not seen[self.receiptKey]
  self.accentOwner={};self.accentStopped=nil
- self.rarityState=if self.nativeDisplay then RarityCue.new(self.kind,result,if self.kind=="companion"then DisplayPose.BearReady else DisplayPose.ItemReady)else nil
- self.frame:SetAttribute("HatchPresentationTier",if self.rarityState then self.rarityState.tier else "Neutral")
+ self.nativeDisplay=options.nativeDisplay==true
  self.reducedIntro=self.nativeDisplay and self.freshReveal and self:reduced()
+ self.tier=RarityCue.tier(self.kind,result);self.bodyPending=false
+ self.timing=RarityCue.timing(self.tier,self.kind,false)
+ local T=RarityCue.timing(self.tier,self.kind,self.reducedIntro)
+ self.rarityState=if self.nativeDisplay then RarityCue.new(self.kind,result,T.ready,self.reducedIntro)else nil
+ if self.reducedIntro then self.timing=T end
+ self.frame:SetAttribute("HatchPresentationTier",if self.rarityState then self.rarityState.tier else "Neutral")
  self.active=self.freshReveal and(not self:reduced()or self.reducedIntro);self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
  if not self.active then self.age=self.duration;self:paint();local epoch=self.epoch;self:handoff(true);if self.epoch~=epoch then return end end
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end
 function Cinematic:skip()
  if self.nativeScene and self.presentationSample and self.presentationSample.receiptReady then return false end
+ -- v2 (2.2): the first hatch of each egg type plays in full; the host says (canSkip).
+ if self.canSkip and not self.canSkip()then return false end
  if not self.active or not self:owned()then return false end;self:finishStatic();return true
 end
 function Cinematic:skipInputBegan(input)
@@ -574,7 +596,7 @@ function Cinematic:releaseSkipInput(input)
 end
 function Cinematic:getPresentationState()
  if self.nativeScene then
-  local sample=self.presentationSample or DisplayPose.sample(self.age,self.kind,self:reduced())
+  local sample=self.presentationSample or DisplayPose.sample(self.age,self.kind,self:reduced(),self.tier)
   return {inputLocked=sample.inputLocked,receiptReady=sample.receiptReady,decorativeActive=sample.decorativeActive and self.active==true,age=self.age,resultId=self.result and self.result.id}
  end
  return {inputLocked=self.active==true,receiptReady=self.result~=nil and not self.active,decorativeActive=self.active==true,age=self.age,resultId=self.result and self.result.id}

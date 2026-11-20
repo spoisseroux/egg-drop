@@ -32,10 +32,29 @@ return function(client)
   assert(P.sample(1.73,"companion",false).blink==1)
  end)
  test("reduced effects has one bounded fade and no hop or shell movement",function()
-  for _,kind in ipairs({"companion","toy"})do
-   local s=P.sample(.15,kind,true)
-   assert(s.receiptReady and not s.decorativeActive and s.heroAlpha==1 and s.heroScale==1)
-   assert(s.hop==0 and s.rock==0 and s.shellAlpha==0 and s.blink==1 and s.toyTilt==0)
+  -- Pets keep their 150 ms fade; items cross-fade at 0.30 to 0.45 and name at 0.6 (v2, section 4).
+  local s=P.sample(.15,"companion",true)
+  assert(s.receiptReady and not s.decorativeActive and s.heroAlpha==1 and s.heroScale==1)
+  assert(s.hop==0 and s.rock==0 and s.shellAlpha==0 and s.blink==1 and s.toyTilt==0)
+  local early,ready=P.sample(.15,"toy",true),P.sample(.6,"toy",true)
+  assert(not early.receiptReady and early.crack==1 and early.shellAlpha==1,"the egg shows its crack already drawn")
+  assert(ready.receiptReady and ready.heroAlpha==1 and ready.shellAlpha==0 and ready.hop==0 and ready.rock==0 and ready.toyTilt==0)
+  assert(P.sample(.89,"toy",true,"Rare").receiptReady==false and P.sample(.9,"toy",true,"Rare").receiptReady,"a Rare under Reduced Motion names at 0.9")
+ end)
+ test("v2 jackpot: a Rare item holds through the wind-up, bursts at 1.72 and names at 3.15",function()
+  local Rarity=require(client.HatchRarityCue)
+  local T=Rarity.timing("Rare","toy",false);assert(T.burst==1.72 and T.ready==3.15 and T.jackpot and T.bodyAt>.73 and T.bodyAt<.75)
+  assert(Rarity.timing("Common","toy",false).burst==.98 and Rarity.timing("Uncommon","hue",false).ready==1.65,"Common and Uncommon keep today's clock")
+  assert(not Rarity.timing("Rare","companion",false).jackpot,"pets keep their clock")
+  -- The egg holds its crack through the wind-up; the shell opens only at the burst.
+  for _,t in ipairs({.95,1.2,1.5,1.69})do local s=P.sample(t,"toy",false,"Rare");assert(s.opening==0 and s.shellAlpha==1 and s.heroAlpha==0,"opened early at "..t)end
+  local lift=P.sample(1.3,"toy",false,"Rare");assert(lift.eggLift>.9 and lift.shiver>0,"lifted and shivering in the wind-up")
+  local freeze=P.sample(1.71,"toy",false,"Rare");assert(freeze.eggSY<.9 and freeze.eggSX>1.1,"the freeze squashes the egg")
+  assert(P.sample(2.0,"toy",false,"Rare").opening>.9 and P.sample(2.5,"toy",false,"Rare").heroAlpha==1)
+  assert(not P.sample(3.149,"toy",false,"Rare").receiptReady and P.sample(3.15,"toy",false,"Rare").receiptReady)
+  -- Squash keeps volume (within 3%) at every frame, every tier.
+  for _,tier in ipairs({"Common","Uncommon","Rare"})do
+   for i=0,280 do local s=P.sample(i/60,"toy",false,tier);assert(math.abs(s.eggSX*s.eggSY-1)<.03,"volume at "..i/60)end
   end
  end)
  return{passed=#cases,cases=cases}
