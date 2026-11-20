@@ -271,7 +271,7 @@ function Screen:buildSlots(body,g)
 		x+=slotW+gap
 		if i==1 then
 			local swap=Kit.button(tray,"Swap",{text=UICopy.get("names.swap"),size=Vector2.new(swapW,h),textSize=if g.phone then 14 else 16,selectable=false})
-			swap.Position=UDim2.fromOffset(x,6);swap.Activated:Connect(function()self:swap()end)
+			swap.Position=UDim2.fromOffset(x,6);swap.Activated:Connect(function()self:swapSlots()end)
 			self.swapButton=swap
 			x+=swapW+gap
 		end
@@ -506,7 +506,7 @@ end
 function Screen:tapSlot(i)
 	if self.slots[i]then table.remove(self.slots,i);self:paint()end
 end
-function Screen:swap()
+function Screen:swapSlots()
 	if #self.slots<2 then return end
 	self.slots=Screen.swap(self.slots);self:paint()
 end
@@ -623,7 +623,7 @@ function Screen:input(key)
 		local i=table.find(Screen.Tabs,self.tab)or 1;self:setTab(Screen.Tabs[math.max(1,i-1)])
 	elseif key==K.ButtonR1 or key==K.E then
 		local i=table.find(Screen.Tabs,self.tab)or 1;self:setTab(Screen.Tabs[math.min(#Screen.Tabs,i+1)])
-	elseif key==K.ButtonX or key==K.X then self:swap()
+	elseif key==K.ButtonX or key==K.X then self:swapSlots()
 	elseif key==K.ButtonY or key==K.Y then self:openEgg()
 	elseif key==K.ButtonStart then self:save()
 	elseif key==K.ButtonB or key==K.Backspace or key==K.Escape then self:back()

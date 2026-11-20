@@ -13,7 +13,9 @@ return function(client,parent)
   -- v2 Stat Eggs and Stat Snacks.
   stat="Jump",size="Snack",mult=2,left=80,more=120,names="Heart, Power, Energy",
   -- v2 Bunny adoption.
-  price=400,need=7,stamps=3}
+  price=400,need=7,stamps=3,
+  -- v2 pet names.
+  piece="Velvet",level=25}
  local function width(text,role,size)
   local params=Instance.new("GetTextBoundsParams")
   params.Text=text;params.Font=Kit.faceFor(role,size);params.Size=size;params.Width=10000
