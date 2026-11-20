@@ -1,0 +1,6 @@
+{
+  "uploaded": "2026-11-20",
+  "creatorUserId": 10716920546,
+  "atlas": {"file": "icon-atlas-512x128.png", "assetId": 113812710946093, "rects": "icon-atlas-512x128.json", "replaces": "rune atlas 99900642594866"},
+  "levelUpBurst": {"file": "levelup-burst-8x128.png", "assetId": 98905350966594, "frames": "levelup-burst-8x128.json", "replaces": "rune burst 88505572459516"}
+}
