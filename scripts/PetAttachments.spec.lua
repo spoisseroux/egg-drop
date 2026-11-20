@@ -245,9 +245,42 @@ return function(client,parent)
    r=Rules.resolve(bear,{horns=4},{});assert(r.charmLift==.1)
    r=Rules.resolve(bear,{horns=3},{});assert(r.charmLift==0)
   end)
+  test("v2 Bunny: wears the Bear's meshes, carried by its moved anchors; a full hat tips the ears out",function()
+   local bunny=Defs.blip;local Attach=require(client.PetAttachments)
+   assert(bunny.id=="bunny"and bunny.fitFrom=="pip"and bunny.attachments==bear.attachments and bunny.wearableItems==bear.wearableItems,"inherits the Bear's tables")
+   local fits=Attach.anchorFit(bunny)
+   for anchor,delta in pairs(bunny.anchorDeltaFromBear)do
+    local fit=assert(fits[anchor],"no fit for "..anchor)
+    local moved=fit*Rules.anchorFrame(bear,anchor,1)
+    assert((moved.Position-Rules.anchorFrame(bunny,anchor,1).Position).Magnitude<1e-4,anchor.." does not land on the Bunny anchor")
+    local d=delta.offset;local own=bunny.anchors[anchor];local from=bear.anchors[anchor]
+    for i=1,3 do assert(math.abs(own[i]-from[i]-d[i])<2e-3,anchor.." delta "..i)end
+   end
+   assert(fits.HatCrown==nil and fits.Torso==nil and fits.Neck==nil,"unmoved anchors keep the Bear's frame")
+   assert(next(Attach.anchorFit(bear))==nil,"the Bear wears its own meshes")
+   -- Round Eyes, Small Wide Eyes and Kitty W ride the moved eye and mouth anchors.
+   local face={}
+   for _,a in ipairs(bunny.attachments)do if a.item=="round"or a.item=="smallwide"or a.item=="w"then face[a.anchor]=true end end
+   assert(face.EyeL and face.EyeR and face.Mouth and fits.EyeL and fits.EyeR and fits.Mouth)
+   -- Hat ear pose: any hat but the open Flower Crown.
+   local function pose(item)return Attach.hatEarPose(bunny,Rules.resolve(bunny,{},{Hat=item}))end
+   assert(pose("beanie")and pose("sunhat")and pose("partyhat")and pose("beanie").EarL.zDeg>0 and pose("beanie").EarR.zDeg<0)
+   assert(pose("flowercrown")==nil and pose(nil)==nil and Attach.hatEarPose(bear,Rules.resolve(bear,{},{Hat="beanie"}))==nil)
+   -- In the garden: the authored Bunny, the moved Round Eyes and W mouth, the ears tipped under a hat.
+   local v=make(Pets.byId.blip,appearance(0,0,{Hat="beanie",Eyes="round",Mouth="w",Shirt="hoodie"}))
+   assert(v.model:GetAttribute("RigId")=="bunny"and v.model:GetAttribute("RigBackend")=="AuthoredMesh",tostring(v.model:GetAttribute("RigBackend")))
+   assert(shown(find(v,"Hat_Beanie"))and shown(find(v,"EyeL_AltRound"))and shown(find(v,"Mouth_AltW"))and v.hatEarPose~=nil)
+   assert(not shown(find(v,"EyeL"))and not shown(find(v,"MouthSmile")),"the swaps hide the Bunny's own eyes and mouth")
+   local eye=find(v,"EyeL_AltRound")
+   assert(eye.frame.Position.Y<(1.03-.05)*v.scale,"Round Eyes moved down to the Bunny's eye line")
+   local plain=make(Pets.byId.blip,appearance(0,0,{Eyes="round"}))
+   assert(plain.hatEarPose==nil,"no hat, ears at rest")
+   assert(plain.colors.nose and find(plain,"Nose").part.Color==plain.colors.nose,"the fixed pink nose role")
+  end)
   test("rigs without authored attachments, and the Bear's native fallback, keep procedural features and ignore wearables",function()
-   -- Collection pets that have a rig in this build (the earned pet Blip has none yet: slice E).
-   local rigged={};for _,pet in ipairs(Pets.collection)do if Defs[pet.id]then table.insert(rigged,pet)end end
+   -- Collection pets with a rig in this build and no authored attachments (the Bunny in the
+   -- earned slot wears the Bear's: covered above), plus the Bear on its native fallback.
+   local rigged={};for _,pet in ipairs(Pets.collection)do if Defs[pet.id]and(pet.id=="pip"or Defs[pet.id].attachmentTemplate==nil)then table.insert(rigged,pet)end end
    for _,pet in ipairs(rigged)do
     local native=pet.id=="pip"
     local v=make(pet,appearance(3,3,{Hat="beanie"},3),native)

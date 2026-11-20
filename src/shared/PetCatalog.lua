@@ -26,9 +26,13 @@ end
 -- saved bit above are unchanged. Blip is collection index 8 (bit 0x80), granted on the 7th
 -- stamp once EarnedPets.enabled("blip"). `ownPalette` keeps his showcase green as the undyed
 -- base (SYSTEMS-SCOPE 8 #3) instead of the neutral white pass below.
+-- v2 (2026-11-19, Sol; V2-PET-REDESIGN): the never-granted Blip slot now holds the Bunny. The account
+-- id stays "blip" (bit 0x80) so live servers, which already know that id in every save namespace,
+-- keep loading a Bunny owner's save; the rig id is "bunny" (as `pip` renders the Bear). It starts
+-- undyed white and grey like the Bear. favouriteStat: +10% XP in that stat (StatState.grant).
 Pets.earned = {
-	{ id = "blip", name = "Blip", cue = "pet", earned = true, ownPalette = true,
-		color = Color3.fromHex("#7BD88F"), accent = Color3.fromHex("#D6F5E3") },
+	{ id = "blip", name = "Bunny", cue = "pet", earned = true, favouriteStat = "jump",
+		color = Color3.fromHex("#FFFFFF") },
 }
 for _, pet in ipairs(Pets.earned) do
 	table.insert(Pets.collection, pet)
@@ -43,7 +47,7 @@ local descriptions = {
 	bloom_pip = "A bear in bloom. Smells faintly of tomorrow's picnic.",
 	foxfire_wick = "Glows when happy. Glows a lot, honestly.",
 	eclipse_orbit = "Borrows the night sky and always gives it back.",
-	blip = "Fell off a toy shelf on a faraway moon. Likes it here.",
+	blip = "Shy for a second, then bouncy for the rest of the day.",
 }
 Pets.byId = {}
 for index, pet in ipairs(Pets.collection) do

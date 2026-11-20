@@ -10,8 +10,9 @@
 -- save persists in "EggDropLaunchV3" across updates. Never turn it back on in a public build.
 -- PseudoLocale=true (v1 track C, text-fit check): UICopy.get returns every string ~35% longer
 -- with accented letters in [brackets]. Studio only (UICopy ignores it outside Studio); keep false.
--- SecondPet=false (overnight 2026-11-14, slice E): Blip exists in data (collection bit 8) but is never
--- granted or shown until his rig ships; EarnedPets.enabled() also needs PetRigDefinitions.blip.
+-- SecondPet (overnight 2026-11-14, slice E): the earned pet in collection bit 8 (account id `blip`).
+-- ON since 2026-11-19 (v2 Bunny wiring, Sol): the slot now holds the Bunny (BunnyRigDefinition), free on
+-- the 7th stamp or adopted for 400 Stars (EarnedPets.Rules). EarnedPets.enabled() also needs the rig.
 -- WeeklyShelf=true (slice C): the Monday-reset spotlight shelf with 20% off; false hides it.
 -- DeckNet* (deck network rework, artifacts/qa-2026-11-16c-v775/deck-network-plan.md): Ticks stamps the
 -- sim tick on board events (S0, presentation data only); Stream sends the owner a 30 Hz snapshot
@@ -31,5 +32,5 @@
 -- can feel the client-run deck on his phone before B4/B5 and the flag flip. Everyone else: today's path.
 -- SimCheck off for launch (Spencer 2026-11-17): phone and PC matched the server on v903; the
 -- owner-only check has done its job. True again re-runs it for SimCheck.isOwner accounts.
-return table.freeze({SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=false,WeeklyShelf=true,
+return table.freeze({SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})

@@ -90,7 +90,7 @@ function Play.clearFeatures(v)
  if v.featureHandles then for _,h in ipairs(v.featureHandles)do h:destroy()end end
  v.featureHandles={}
  for i=#v.pieces,1,-1 do local e=v.pieces[i];e.suppressed=nil;e.neutralSuppressed=nil;if e.role=="feature"or e.role=="attachment"then table.remove(v.pieces,i)end end
- v.attachmentState=nil
+ v.attachmentState=nil;v.hatEarPose=nil
 end
 function Play.apply(v,appearance)
  local a=type(appearance)=="table"and appearance or {};local toy=a.toyId
@@ -122,6 +122,8 @@ function Play.apply(v,appearance)
   for name in pairs(resolved.neutral or {})do for _,e in ipairs(v.pieces)do if e.name==name then e.neutralSuppressed=true end end end
   for _,part in ipairs(Attachments.build(v,resolved,source,tints))do table.insert(v.featureHandles,part)end
   v.attachmentState=resolved
+  -- v2 Bunny: a full hat tips the long ears out (definition.earPose.hat; GardenPetVisual).
+  v.hatEarPose=Attachments.hatEarPose(v.definition,resolved)
  end
  local width=head.size.X;local headCenter=head.frame.Position
  local function attach(id,n,side,frame,channel)

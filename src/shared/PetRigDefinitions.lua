@@ -5,6 +5,16 @@ for id,definition in pairs(require(script.Parent.NewBabyRigDefinitions))do defin
 -- The Zivvi definition above stays for reference only.
 definitions.zivvi_legacy=definitions.pip
 definitions.pip=require(script.Parent.BearRigDefinition)
+-- v2 (2026-11-19): the earned slot `blip` renders the Bunny. It wears the Bear's attachment meshes:
+-- the keys in inheritFromBear (attachments, slots, wearableItems, ...) are the Bear's own tables,
+-- so the wardrobe sells the same items and the server validates against the same list.
+do
+ local bunny=require(script.Parent.BunnyRigDefinition)
+ for _,key in ipairs(bunny.inheritFromBear or {})do
+  if bunny[key]==nil then bunny[key]=definitions.pip[key]end
+ end
+ definitions.blip=bunny
+end
 local neutral=require(script.Parent.PetBaseColors)
 for _,definition in pairs(definitions)do
  neutral.applyDefinition(definition)

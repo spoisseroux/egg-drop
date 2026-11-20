@@ -97,6 +97,9 @@ end
 -- Keyed by base item id: a variant renders as its base, so it takes the same lift.
 Catalog.Fit=table.freeze({
  bear=table.freeze({sunhat=Vector3.new(0,.03,0),beanie=Vector3.new(0,.015,0)}),
+ -- v2 Bunny: same crown (HatCrown unmoved, head within 0.01 of the Bear's: bunny-report.json),
+ -- so the same lifts. Its moved face and ear anchors are carried by PetAttachments.anchorFit.
+ bunny=table.freeze({sunhat=Vector3.new(0,.03,0),beanie=Vector3.new(0,.015,0)}),
 })
 function Catalog.fitOffset(rigId,itemId)
  local rig=type(rigId)=="string"and Catalog.Fit[rigId]

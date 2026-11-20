@@ -174,6 +174,7 @@ function Visual:commitReadyRig()
  self.charmRingBound=candidate.charmRingBound
  self.featureHandles,self.featureSignature,self.featureStages=candidate.featureHandles,candidate.featureSignature,candidate.featureStages
  self.featureHaloLift,self.featureRevision=candidate.featureHaloLift,candidate.featureRevision;self.careBoundsKey=nil
+ self.attachmentState,self.hatEarPose=candidate.attachmentState,candidate.hatEarPose
  for _,child in ipairs(candidate.model:GetChildren())do child.Parent=self.model end
  -- Feature/attachment attributes were published on the candidate model.
  for key,value in pairs(candidate.model:GetAttributes())do self.model:SetAttribute(key,value)end
@@ -373,7 +374,9 @@ function Visual:update(dt)
    -- Ear pieces and anything pierced through an ear roll about the ear's base anchor.
    local left=(entry.earSide or string.sub(name,-1))=="L";local hinge=if left then hinges.EarL else hinges.EarR
    -- Positive pose perks the ear toward the crown; negative droops it outward.
-   if hinge then cf=head*CFrame.new(hinge)*CFrame.Angles(0,0,if left then -earL else earR)*CFrame.new(-hinge)*entry.frame end
+   -- v2 Bunny: with a full hat on, earPose.hat tips each ear out about the same hinge (+Z roll).
+   local hat=self.hatEarPose;local tip=if hat then math.rad((hat[if left then "EarL"else "EarR"]or {}).zDeg or 0)else 0
+   if hinge then cf=head*CFrame.new(hinge)*CFrame.Angles(0,0,(if left then -earL else earR)+tip)*CFrame.new(-hinge)*entry.frame end
   elseif(name=="Tail"or entry.tailWag)and hinges.Tail and tailYaw~=0 then
    cf=upper*CFrame.new(0,hop,0)*CFrame.new(hinges.Tail)*CFrame.Angles(0,tailYaw,0)*CFrame.new(-hinges.Tail)*entry.frame
   elseif entry.wingSide then
@@ -404,7 +407,7 @@ function Visual:update(dt)
   end
   local size=entry.size;local hidden=not Charms.isVisible(self,entry)or entry.suppressed==true
   if channel=="Body"then
-   local squash=if self.petId=="pip"then math.cos((self.gaitPhase or 0)*2)*gait*.018 else 0
+   local squash=if self.petId=="pip"or self.petId=="blip"then math.cos((self.gaitPhase or 0)*2)*gait*.018 else 0
    size=Vector3.new(size.X*(1+squash*.35+boop*.07),size.Y*(1+bodyStretch-squash-boop*.14),size.Z*(1+squash*.35+boop*.07))
   end
   if entry.role=="charm"then
