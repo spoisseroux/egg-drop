@@ -122,7 +122,7 @@ return function(client)
   local stat=require(Shared.StatCatalog).ById[receipt.stat]
   local stage=ItemStage.show(entry.host,{scene=scene,kind="stat",tier=tier,result=receipt,cover=false,zIndex=80,lid=spec.lid~=false,
    reduced=function()return reduced end,owns=function()return true end,
-   name=function()return words.name end,effect=function()return words.boost end,description=function()return words.forPet end,
+   name=function()return words.name end,effect=function()return words.boost end,description=function()return ""end,
    sticker=function()return ItemStage.bannerText(tier,"stat")end,stoneColors=function()return {stat.color}end,
    odds=function()return Odds.rows(state,"pip")end,wonId=receipt.size,
    pity=function()return {line=require(client.SnackHost).revealPill(state,"pip"),sub=Odds.stockLine(state)}end,
