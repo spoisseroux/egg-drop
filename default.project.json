@@ -52,6 +52,9 @@
       },
       "JarAssets": {
         "$path": "assets/jars/JarAssets.rbxmx"
+      },
+      "SnackAssets": {
+        "$path": "assets/snacks/SnackAssets.rbxmx"
       }
     },
     "ServerStorage": {

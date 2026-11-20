@@ -1,0 +1,15 @@
+{
+ "note": "Open Cloud upload 2026-11-19 (Sol): snack-{nibble,snack,feast}.fbx as Models, loaded in Studio Edit with InsertService:LoadAsset. ms = raw 100x MeshSize; pos = template-space position x100 (pivot at the snack's centre). Textures are the image ids behind the uploaded Decals.",
+ "models": {"nibble": "75436342668637", "snack": "121306233575041", "feast": "96932047109346"},
+ "decals": {"biscuit": "103467188702132", "heart": "70885771736683", "power": "126077353730004", "energy": "112404397734834", "jump": "97500240157646", "speed": "112127925729218", "smarts": "103091956214835"},
+ "textures": {"biscuit": "rbxassetid://76061535908073", "heart": "rbxassetid://132451464498773", "power": "rbxassetid://122552653854171", "energy": "rbxassetid://91572311309275", "jump": "rbxassetid://124268037204793", "speed": "rbxassetid://140671684960162", "smarts": "rbxassetid://70427672535772"},
+ "parts": {
+  "StatSnack_Nibble__Biscuit": {"id": "rbxassetid://123522428105057", "ms": [20, 4.800002574920654, 19.021129608154298], "pos": [0, -0.8159999251365662, 0]},
+  "StatSnack_Nibble__Icing": {"id": "rbxassetid://105538924874011", "ms": [16.599998474121095, 2.040001153945923, 16.599998474121095], "pos": [0, 2.1959991455078127, 0]},
+  "StatSnack_Snack__Biscuit": {"id": "rbxassetid://121232393235156", "ms": [25, 14.040002822875977, 23.77641487121582], "pos": [0, -1.0199992656707764, 0]},
+  "StatSnack_Snack__Icing": {"id": "rbxassetid://113816195081338", "ms": [21.5, 10.80000114440918, 21.5], "pos": [0, 2.6399993896484377, 0]},
+  "StatSnack_Feast__Biscuit": {"id": "rbxassetid://72678333941841", "ms": [30.000001907348634, 26.496002197265626, 28.53169631958008], "pos": [0, -1.2240004539489747, 0]},
+  "StatSnack_Feast__Icing": {"id": "rbxassetid://77911324217998", "ms": [25.799999237060548, 22.608001708984376, 24.899999618530275], "pos": [0, 3.167998790740967, 0]},
+  "StatSnack_Feast__Pearls": {"id": "rbxassetid://140176400239898", "ms": [28.084991455078126, 1.8900041580200196, 29.530303955078126], "pos": [-1.482506275177002, 10.448999404907227, 0]}
+ }
+}
