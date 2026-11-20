@@ -14,6 +14,7 @@ local TextService=game:GetService("TextService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Pets=require(Shared.PetCatalog)
 local Eggs=require(Shared.EggCatalog)
+local Earned=require(Shared.EarnedPets)
 local CharmCatalog=require(Shared.PetCharmCatalog)
 local MaterialCatalog=require(Shared.MaterialCatalog)
 local ToyCatalog=require(Shared.ToyCatalog)
@@ -99,12 +100,35 @@ end
 -- Pure: owned pets as selector cards, in catalog order. Only pets that can be shown
 -- (Pets.isActive: a rig in this build) are listed, so an owned pet whose rig is not in
 -- the build (slice E: the second pet behind its flag) never becomes the companion.
+-- v2 Bunny: an active earned pet you do not own yet follows as an adopt card (`adopt`, its fixed
+-- Star `price`, and the stamp rule: free at `need` stamps, `stamps` so far; `free` once earned).
 function Hub.petCards(state,activeId)
  local cards={}
+ local mask=state and state.inventoryMask or 0
  for _,pet in ipairs(Pets.collection)do
-  if Pets.isActive(pet)and Eggs.isOwned(state and state.inventoryMask or 0,pet.id)then table.insert(cards,{id=pet.id,name=pet.name,following=pet.id==activeId})end
+  if Pets.isActive(pet)and Eggs.isOwned(mask,pet.id)then table.insert(cards,{id=pet.id,name=pet.name,following=pet.id==activeId})end
+ end
+ for _,petId in ipairs(Earned.Order)do
+  local pet,rule=Pets.byId[petId],Earned.Rules[petId]
+  if pet and rule and type(rule.stars)=="number"and Pets.isActive(pet)and not Eggs.isOwned(mask,petId)then
+   local stamps=if state and type(state.stamps)=="number"then state.stamps else 0
+   table.insert(cards,{id=petId,name=pet.name,adopt=true,price=rule.stars,need=rule.stamps,stamps=stamps,free=stamps>=rule.stamps})
+  end
  end
  return cards
+end
+-- Pure: the adopt pane's line, button text and whether the button can be pressed.
+-- confirming: the first press arms a 3 s confirm, as the Wardrobe's buy does. An earned card
+-- (`free`: the stamps are there, the grant has not landed yet) takes it home with no Stars.
+function Hub.adoptPane(card,wallet,pending,confirming)
+ if card.free then
+  return UICopy.get("v2.adopt.freeLine",{need=card.need or 0}),UICopy.get(if pending then "v2.adopt.saving"else "v2.adopt.free"),not pending
+ end
+ local line=UICopy.get("v2.adopt.line",{need=card.need or 0,stamps=math.min(card.stamps or 0,card.need or 0),price=card.price})
+ if pending then return line,UICopy.get("v2.adopt.saving"),false end
+ if(wallet or 0)<card.price then return line,UICopy.get("v2.adopt.short",{price=card.price}),false end
+ if confirming then return line,UICopy.get("v2.adopt.confirm",{price=card.price}),true end
+ return line,UICopy.get("v2.adopt.button",{price=card.price}),true
 end
 -- Pure (slice E): the pet the hub shows when no companion is set: the first owned
 -- active pet, else the first active pet (a fresh save's pane still has a pet to draw).
@@ -169,7 +193,12 @@ function Hub:activePet()return self.ctx.activeId or Hub.firstOwned(self.ctx.stat
 function Hub:appearanceOf(petId)
  return table.clone(self.callbacks.appearance and self.callbacks.appearance(petId)or {})
 end
-function Hub:cards()return Hub.petCards(self.ctx.state,self.ctx.activeId)end
+function Hub:cards()
+ local cards=Hub.petCards(self.ctx.state,self.ctx.activeId)
+ -- Assign mode (a receipt's "Use now") lists only pets you own.
+ if self.assign then for i=#cards,1,-1 do if cards[i].adopt then table.remove(cards,i)end end end
+ return cards
+end
 function Hub:statusCtx()
  local petId=self:activePet();local pet=Pets.byId[petId]
  return{petName=pet and pet.name or "",owned=Hub.ownedCount(self.ctx.state,petId),newItems=Hub.newItems(self.ctx.state),
@@ -439,6 +468,18 @@ end
 function Hub:refocus()
  if self.page=="pets"then self:focusCard(self.cardIndex,true)else self:focusRow(self.rowIndex,true)end
 end
+-- The server's petAdopt answer (FaceplateResult kind "adopt"). Saved: the snapshot that follows
+-- moves the pet into the owned cards. Returns a toast line for the caller, or nil.
+function Hub:adoptResult(message)
+ if type(message)~="table"or message.petId~=self.pendingAdopt then return nil end
+ -- Only the answer to the press in flight (a late reply to an older press is ignored).
+ if self.pendingAdoptId~=nil and message.id~=self.pendingAdoptId then return nil end
+ self.pendingAdopt,self.pendingAdoptId=nil,nil;self:refresh()
+ local pet=Pets.byId[message.petId]
+ if message.status=="Saved"then return UICopy.get("v2.adopt.done",{pet=pet and pet.name or ""})end
+ if message.status=="Retrying"then return UICopy.get("v2.adopt.retry")end
+ return UICopy.get("v2.adopt.failed")
+end
 function Hub:setContext(ctx)
  if ctx.wallet then self.ctx.wallet=ctx.wallet end
  if ctx.state then self.ctx.state=ctx.state end
@@ -469,6 +510,7 @@ function Hub:refresh()
    local following=card~=nil and card.following==true
    local text=if following then "FOLLOWING"elseif self.assign then "CHOOSE"else "FOLLOW"
    local tone=if following then "accent"else "soft"
+   if card and card.adopt then text,tone=UICopy.get(if card.free then "v2.adopt.freeStatus"else "v2.adopt.status",{price=card.price}),"accent"end
    if self.pendingFollow==entry.id then text,tone="SAVING…","soft"end
    entry.status.Text=text;Kit.paint(entry.status,"TextColor3",function()return colorOf(tone)end)
    entry.button:SetAttribute("Following",card~=nil and card.following==true)
@@ -496,11 +538,18 @@ function Hub:paintSelectorPane()
   return
  end
  self.focusPet=entry.id
- if self.pips then self.pips.set(BondPips.info(self.ctx.state and self.ctx.state.bond,entry.id))end
+ local card=self:cards()[self.cardIndex]
+ -- An adopt card has no bond yet: no hearts until the pet is yours.
+ local adopting=card~=nil and card.id==entry.id and card.adopt==true
+ if self.pips then self.pips.set(if adopting then nil else BondPips.info(self.ctx.state and self.ctx.state.bond,entry.id))end
  local pet=Pets.byId[entry.id];local following=entry.id==self.ctx.activeId
  self.paneName.Text=pet.name
  self.action.Visible=true
- if self.assign then
+ if card and card.id==entry.id and card.adopt then
+  local confirming=self.confirmAdopt~=nil and self.confirmAdopt.id==entry.id and os.clock()<self.confirmAdopt.untilAt
+  local line,button,enabled=Hub.adoptPane(card,self.ctx.wallet,self.pendingAdopt~=nil,confirming)
+  self.paneLine.Text=line;Kit.setText(self.action,button);Kit.setEnabled(self.action,enabled and not self.assign)
+ elseif self.assign then
   self.paneLine.Text=self.assign.line or("Use it on "..pet.name)
   Kit.setText(self.action,self.assign.button or "Choose");Kit.setEnabled(self.action,true)
  elseif self.pendingFollow then
@@ -585,6 +634,27 @@ function Hub:act()
   return false
  end
  local entry=self.cardButtons[self.cardIndex];if not entry then return false end
+ local card=self:cards()[self.cardIndex]
+ if card and card.id==entry.id and card.adopt then
+  -- v2 Bunny: 400 Stars is a big spend, so the first press arms a 3 s confirm and the second sends.
+  -- An earned (free) card sends at once: nothing is spent.
+  if self.assign or self.pendingAdopt or(not card.free and(self.ctx.wallet or 0)<card.price)then return false end
+  if not card.free and not(self.confirmAdopt and self.confirmAdopt.id==card.id and os.clock()<self.confirmAdopt.untilAt)then
+   self.confirmAdopt={id=card.id,untilAt=os.clock()+3};self:refresh()
+   task.delay(3.05,function()if self.visible and self.confirmAdopt and os.clock()>=self.confirmAdopt.untilAt then self.confirmAdopt=nil;self:refresh()end end)
+   return true
+  end
+  self.confirmAdopt=nil
+  local sent=self.callbacks.adopt and self.callbacks.adopt(card.id,card.price)
+  if sent then
+   -- The callback returns the operation id (or true); replies and the timeout match on it.
+   local opId=if type(sent)=="string"then sent else nil
+   self.pendingAdopt,self.pendingAdoptId=card.id,opId;require(script.Parent.UIClick).play("equip");self:refresh()
+   task.delay(12,function()if self.pendingAdopt==card.id and self.pendingAdoptId==opId then self.pendingAdopt,self.pendingAdoptId=nil,nil;self:refresh()end end)
+   return true
+  end
+  return false
+ end
  if self.assign then
   local assign=self.assign;self.assign=nil
   local ok=assign.choose and assign.choose(entry.id)==true
@@ -641,7 +711,7 @@ function Hub:open(ctx,options)
   if ctx.state then self.ctx.state=ctx.state end
   if ctx.activeId~=nil then self.ctx.activeId=ctx.activeId end
  end
- self.assign=options.assign;self.pendingFollow=nil;self.statsFocus=false
+ self.assign=options.assign;self.pendingFollow=nil;self.statsFocus=false;self.confirmAdopt=nil
  self.page=options.page or "hub";self.key=nil;self.slideFrom=nil
  self.rowIndex=self.lastRow or Hub.DefaultRow
  self.touchMode=if options.touch~=nil then options.touch==true else Kit.lastInputTouch()

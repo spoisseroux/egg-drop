@@ -223,6 +223,16 @@ local function bonusLeft(bonus,stat,today)
 	return math.min(max,saved+daily*elapsed)
 end
 
+-- The favourite-stat extra for one grant: PetCatalog `favouriteStat` names the species' stat; it
+-- earns FavouriteBonus (10%) more of the base amount, rounded half up. Pure; 0 for anything else.
+State.FavouriteBonus=.1
+function State.favouriteExtra(petId,statId,amount)
+	local pet=type(petId)=="string"and Pets.byId[petId]or nil
+	if not pet or pet.favouriteStat==nil or pet.favouriteStat~=statId then return 0 end
+	if type(amount)~="number"or amount~=amount or amount<=0 or amount==math.huge then return 0 end
+	return math.floor(math.floor(amount)*State.FavouriteBonus+.5)
+end
+
 -- Adds XP for an owned pet: `amount` plus Bonus XP (the first `left` XP today count double)
 -- unless `noBonus`, then Stat Snack boosts on the XP the bonus did not double (so the most any XP
 -- counts is MaxMult, the Feast's 3x). Copy-on-write; clamped to MaxXP (reaching it clears that
@@ -263,6 +273,10 @@ function State.grant(state,petId,statId,amount,today,noBonus)
 		queue=State.boosts(state,petId,statId)
 		if #queue>0 then boostExtra,keptQueue=applyBoosts(queue,amount-doubledUsed);gained+=boostExtra end
 	end
+	-- Favourite stat (v2 Bunny: Jump): +10% of the base amount, rounded half up, added after the
+	-- Bonus XP and boost maths so it never spends the daily bank or a snack boost faster and never
+	-- multiplies with them (architect review 2026-11-19). Grants of 4 XP or less round to +0.
+	gained+=State.favouriteExtra(petId,statId,amount)
 	local petStats=current
 	local stats=petStats[petId]or {}
 	local before=stats[statId]or 0

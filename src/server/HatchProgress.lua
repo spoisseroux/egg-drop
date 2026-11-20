@@ -1006,6 +1006,52 @@ function Hatching.grantEarnedPet(handle, petId)
 	return ok, reason
 end
 
+-- Star adoption of an earned pet (v2 Bunny, V2-PET-AND-SNACKS-SCOPE 1.7): a fixed price from
+-- EarnedPets.Rules[petId].stars, never random, never Robux. Shaped like buyFaceplate: the client's
+-- operation id is the idempotency key, the digest binds it to the pet and price (a reused id for
+-- another pet or price is OperationConflict), and the debit and the ownership bit commit in one
+-- UpdateAsync. Owning the pet already (the 7th-stamp grant won the race, or another server) is a
+-- success with no charge ("AlreadyOwned"); the apply re-checks the gate, the price and the wallet.
+-- A save that has earned the pet (stamps at the rule) is never charged: the adopt becomes the free
+-- grant (code review 2026-11-19: the grant loop waits for a quiet window, so a paid adopt could
+-- otherwise land first).
+local function earnedFree(state, rule)
+	return (if integer(state.stamps) then state.stamps else 0) >= rule.stamps
+end
+local function adoptApply(state, candidate)
+	local rule = EarnedPets.Rules[candidate.petId]
+	if not rule or type(rule.stars) ~= "number" or not EarnedPets.enabled(candidate.petId) then return false, "Disabled" end
+	if Catalog.isOwned(state.inventoryMask, candidate.petId) then return false, "AlreadyOwned" end
+	if earnedFree(state, rule) then return false, "EarnedFree" end
+	if candidate.price ~= rule.stars then return false, "PriceChanged" end
+	if not integer(state.nectar) or state.nectar < candidate.price then return false, "NotEnoughStars" end
+	state.nectar -= candidate.price
+	state.inventoryMask = bit32.bor(state.inventoryMask, Catalog.bit(candidate.petId))
+	return true
+end
+function Hatching.adoptPet(handle, operationId, petId, price)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(petId) ~= "string" or #petId > 32
+		or EarnedPets.Rules[petId] == nil or not Pets.byId[petId] then return false, "InvalidAdopt" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "adopt:" .. operationId
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming and Catalog.isOwned(handle.state.inventoryMask, petId) then return true, "AlreadyOwned" end
+	-- Earned already: hand it over through the free grant ("EarnedFree" on success, no Stars).
+	local function free()
+		local ok, reason = Hatching.grantEarnedPet(handle, petId)
+		if ok then return true, (if reason == "AlreadyOwned" then reason else "EarnedFree") end
+		return false, reason
+	end
+	if not resuming and earnedFree(handle.state, EarnedPets.Rules[petId]) then return free() end
+	local candidate = if resuming then handle.pending.candidate else table.freeze({ petId = petId, price = price, operationId = operationId })
+	if candidate.petId ~= petId or candidate.price ~= price then return false, "OperationConflict" end
+	local digest = "adopt:" .. candidate.petId .. ":" .. tostring(candidate.price)
+	local ok, reason = transact(handle, signature, handle.state.revision, adoptApply, candidate, signature, nil, digest)
+	if not ok and reason == "AlreadyOwned" then return true, reason end
+	if not ok and reason == "EarnedFree" then return free() end
+	return ok, reason
+end
+
 -- One-time coach cards (onboarding v1): OR `bits` into the optional `coachMask`. Already saved
 -- is a success with no write. OR-only, so an ambiguous write retried later is harmless.
 function Hatching.coachMark(handle, bits)

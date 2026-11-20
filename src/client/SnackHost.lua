@@ -18,7 +18,12 @@ local Reveal=require(script.Parent.StatEggReveal)
 local Odds=require(script.Parent.StatEggOdds)
 local Rail=require(script.Parent.NotificationRail)
 local Host={}
-Host.FavouriteStat={pip="heart"} -- the Bear's favourite (a show of feeling only)
+-- The favourite stat a fed snack cheers for: the Bear's Heart is a show of feeling only; a species
+-- with PetCatalog `favouriteStat` (the Bunny: Jump, +10% XP in StatState.grant) adds its own.
+Host.FavouriteStat={pip="heart"}
+for _,pet in ipairs(require(game:GetService("ReplicatedStorage").Shared.PetCatalog).collection)do
+	if type(pet.favouriteStat)=="string"then Host.FavouriteStat[pet.id]=pet.favouriteStat end
+end
 
 -- Pure: the plain line for a refused feed or buy.
 function Host.reasonText(reason,petName,statId,buying)

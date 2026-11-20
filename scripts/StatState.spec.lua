@@ -197,5 +197,31 @@ return function(server)
 		assert(next(S.publicLevels({inventoryMask=pip,petStats="bad"}).pets.pip.levels)~=nil)
 	end)
 
+	test("v2 Bunny: the favourite stat earns +10% of the base amount, after Bonus XP and boosts",function()
+		local blip=Eggs.bit("blip")
+		assert(S.FavouriteBonus==.1)
+		-- Pure helper: species and stat must match; rounded half up on the whole base amount.
+		assert(S.favouriteExtra("blip","jump",10)==1 and S.favouriteExtra("blip","jump",15)==2 and S.favouriteExtra("blip","jump",14)==1)
+		assert(S.favouriteExtra("blip","jump",4)==0 and S.favouriteExtra("blip","jump",5)==1,"4 XP or less rounds to +0")
+		assert(S.favouriteExtra("blip","jump",100.9)==10,"the floored amount")
+		assert(S.favouriteExtra("blip","power",100)==0 and S.favouriteExtra("pip","jump",100)==0 and S.favouriteExtra("pip","heart",100)==0,
+			"other stats, and the Bear's Heart (a show of feeling only)")
+		for _,bad in ipairs({0,-10,0/0,math.huge,"10",nil})do assert(S.favouriteExtra("blip","jump",bad)==0)end
+		assert(S.favouriteExtra(nil,"jump",10)==0 and S.favouriteExtra("nope","jump",10)==0 and S.favouriteExtra({},"jump",10)==0)
+		-- In grant: Bonus XP doubles the base, the favourite adds 10% of the base on top, once.
+		local state={inventoryMask=pip+blip}
+		assert(S.grant(state,"blip","jump",60,"100")==60+60+6,"doubled 60, plus 6")
+		assert(state.statBonus.left.jump==40,"the favourite never spends the daily bank")
+		assert(S.grant(state,"blip","jump",60,"100")==60+40+6,"40 doubled, plus 6")
+		assert(S.grant(state,"blip","jump",10,"100",true)==11,"noBonus grants still get the favourite")
+		assert(S.grant(state,"blip","power",10,"100")==20,"another stat: Bonus XP only")
+		assert(S.grant(state,"pip","jump",10,"100",true)==10,"the Bear has no Jump favourite")
+		-- Not owned: nothing, favourite or not.
+		assert(S.grant({inventoryMask=pip},"blip","jump",100,"100")==0)
+		-- Clamped at MaxXP like any grant.
+		local high={inventoryMask=blip,petStats={blip={jump=C.MaxXP-3}}}
+		assert(S.grant(high,"blip","jump",100,"5",true)==3 and S.xp(high,"blip","jump")==C.MaxXP)
+	end)
+
 	return {passed=#cases,cases=cases}
 end

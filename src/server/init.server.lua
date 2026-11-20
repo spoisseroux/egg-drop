@@ -1367,6 +1367,40 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		publishNursery(board);publishState(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
 	end
+	-- v2 Bunny: adopt an earned pet for its fixed Star price (EarnedPets.Rules[petId].stars), from
+	-- the Companions Pets page. Idempotent by the client's operation id; owning it already (the
+	-- 7th-stamp grant got there first) is "AlreadyOwned" with no charge; a save that has earned it
+	-- gets it free ("EarnedFree", the grant). Replies ride FaceplateResult with kind="adopt".
+	-- "Pending" (another write holds the save, maybe an earlier adopt) answers "Retrying", never
+	-- "nothing was spent".
+	if action=="petAdopt"then
+		local v=if type(value)=="table"then value else {}
+		local opId=if type(v.id)=="string"and #v.id>=1 and #v.id<=80 then v.id else nil
+		local petId=if type(v.petId)=="string"and #v.petId<=32 then v.petId else nil
+		local price=if type(v.price)=="number"then v.price else nil
+		local function reply(status,reason)faceplateResult:FireClient(player,{kind="adopt",id=opId,petId=petId,status=status,reason=reason,revision=board.nursery.state.revision})end
+		if not opId or not petId or not price then reply("Rejected","InvalidAdopt");return end
+		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then reply("Rejected","Throttled");return end
+		board.lastHatchRequest=os.clock()
+		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
+		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
+		local ok,reason=Nursery.adoptPet(board.nursery,opId,petId,price)
+		if reason=="Pending"then reason="Retrying"end
+		-- Analytics name the species (the account id "blip" is the Bunny's slot); logged before the
+		-- leave check, as faceplateBuy does.
+		local species=string.lower(Pets.byId[petId]and Pets.byId[petId].name or petId)
+		if ok and reason=="Saved"then
+			Economy.command(player,"Adopt_"..species,walletBefore,board.nursery.state.nectar,board.nursery.state)
+			Economy.event(player,"PetAdopted",1,{species})
+		elseif ok and reason=="EarnedFree"and not board.earnedRunning then
+			-- (A running grant loop logs PetEarned itself.)
+			Economy.event(player,"PetEarned",1,{petId})
+		end
+		board.nurseryBusy=false;if boards[player]~=board then return end
+		publishNursery(board);publishState(board)
+		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+	end
 	-- Pet wearables (hatching v10): fixed Star price, server-validated, idempotent by
 	-- the client's operation id; equip/unequip one slot. Public appearance replicates.
 	if action=="wearableBuy"or action=="wearableEquip"then

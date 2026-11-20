@@ -35,6 +35,28 @@ return function(client,parent)
    assert(Hub.summary("pip",{sheen=2,jellyStage=0})[3][2]=="Glossy","the jar look names the Material row")
    assert(Hub.summary("pip",{charmVisible=true,charmShape="ring"})[2][2]=="Ring")
   end)
+  test("pure (v2 Bunny): an active earned pet you do not own is an adopt card at its fixed price",function()
+   local Earned=require(game.ReplicatedStorage.Shared.EarnedPets)
+   local cards=Hub.petCards({inventoryMask=1,stamps=3},"pip")
+   local adopt=cards[#cards]
+   if Pets.isActive("blip")then
+    assert(#cards==2 and cards[1].id=="pip"and adopt.id=="blip"and adopt.adopt and adopt.price==Earned.Rules.blip.stars and adopt.need==7 and adopt.stamps==3)
+   else assert(#cards==1)end
+   local owned=Hub.petCards({inventoryMask=1+128},"pip");for _,c in ipairs(owned)do assert(not c.adopt)end
+   local card={need=7,stamps=9,price=400}
+   local line,button,enabled=Hub.adoptPane(card,500,false,false)
+   assert(line=="Free at 7 stamps (7/7), or adopt now"and button=="Adopt for ★ 400"and enabled)
+   assert(select(2,Hub.adoptPane(card,500,false,true))=="Press again to adopt for ★ 400")
+   local _,short,can=Hub.adoptPane(card,399,false,false);assert(short=="Needs ★ 400"and not can)
+   local _,saving,can2=Hub.adoptPane(card,500,true,false);assert(saving=="Adopting…"and not can2)
+   -- Earned (7 stamps, the grant not landed yet): free, no Stars needed, no confirm.
+   if Pets.isActive("blip")then
+    local earned=Hub.petCards({inventoryMask=1,stamps=7},"pip");local f=earned[#earned]
+    assert(f.adopt and f.free and not Hub.petCards({inventoryMask=1,stamps=6},"pip")[2].free)
+    local fl,fb,fe=Hub.adoptPane(f,0,false,false)
+    assert(fl=="7 stamps: yours for free"and fb=="Take home free"and fe,"free with an empty wallet")
+   end
+  end)
   test("pure: focus steps clamp, Back goes up one level",function()
    assert(Hub.step(3,0,-1,3,1)==2 and Hub.step(1,0,-1,3,1)==1 and Hub.step(3,0,1,3,1)==3)
    assert(Hub.step(1,1,0,3,2)==2 and Hub.step(2,0,1,3,2)==3)
@@ -48,9 +70,10 @@ return function(client,parent)
   for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354)})do
    test(tostring(size).." hub navigation: Customize first, d-pad focus, A opens, Pets selector, Back up a level",function()
     local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
-    local opened,follows,backs={},{},0
+    local opened,follows,backs,adopts={},{},0,{}
     local hub=Hub.new(host,{appearance=function()return{charmVisible=true}end,
-     open=function(id)table.insert(opened,id);return true end,follow=function(id)table.insert(follows,id);return true end,back=function()backs+=1 end})
+     open=function(id)table.insert(opened,id);return true end,follow=function(id)table.insert(follows,id);return true end,back=function()backs+=1 end,
+     adopt=function(id,price)table.insert(adopts,{id,price});return true end})
     local state={inventoryMask=127,nectar=128,pendingToyResult={id="t"},petWearables={pip={owned={"x"}}},book={claimable={"balls.25"}}}
     local active=Pets.collection[1].id
     assert(hub:open({wallet=128,state=state,activeId=active}));settle()
@@ -89,7 +112,16 @@ return function(client,parent)
     assert(hub.cardButtons[1].status.Text=="FOLLOWING")
     local before=#follows
     hub:input(K.Return);assert(#follows==before,"Follow is disabled on the pet already following")
-    if #hub.cardButtons>1 then hub:input(K.Right);hub:input(K.Return);assert(#follows==before+1 and hub.pendingFollow~=nil)end
+    local second=Hub.petCards(state,active)[2]
+    if second and not second.adopt then hub:input(K.Right);hub:input(K.Return);assert(#follows==before+1 and hub.pendingFollow~=nil)end
+    -- v2 Bunny: the earned pet you do not own is an adopt card; 128 Stars is short of 400.
+    if second and second.adopt then
+     hub:input(K.Right);settle()
+     assert(hub.root:GetAttribute("FocusedPet")=="blip"and hub.cardButtons[2].status.Text=="ADOPT ★ 400")
+     assert(string.find(tostring(hub.action:GetAttribute("AccessibleLabel")),"Needs",1,true),"short of Stars: "..tostring(hub.action:GetAttribute("AccessibleLabel")))
+     hub:input(K.Return);hub:input(K.Return);assert(#adopts==0 and #follows==before,"no adopt when short, never a follow")
+     hub:input(K.Left);settle()
+    end
     hub:input(K.Backspace);settle();assert(hub.page=="hub"and hub:isOpen(),"Back from Pets returns to the hub")
     assert(hub.root:GetAttribute("FocusedRow")=="pets")
     hub:input(K.ButtonB);assert(not hub:isOpen()and backs==1,"Back from the hub closes it")
@@ -97,7 +129,20 @@ return function(client,parent)
     local chosen
     assert(hub:open({wallet=1,state=state,activeId=active},{page="pets",assign={line="Use Gloss on this pet",button="Use here",choose=function(id)chosen=id;return true end}}));settle()
     assert(hub.page=="pets"and hub.root:GetAttribute("Assigning")==true and hub.action.Visible)
+    assert(#hub.cardButtons==#Hub.petCards(state,active)-(if Hub.petCards(state,active)[2]and Hub.petCards(state,active)[2].adopt then 1 else 0),"assign mode lists owned pets only")
     hub:act();assert(chosen==active and not hub:isOpen(),"assign mode chooses the focused pet and closes")
+    -- v2 Bunny adopt: the first press arms a 3 s confirm, the second sends; the answer clears it.
+    if Pets.isActive("blip")then
+     hub:open({wallet=500,state=state,activeId=active},{page="pets"});settle()
+     hub:input(K.Right);settle();assert(hub.root:GetAttribute("FocusedPet")=="blip")
+     assert(string.find(tostring(hub.action:GetAttribute("AccessibleLabel")),"Adopt for",1,true),tostring(hub.action:GetAttribute("AccessibleLabel")))
+     hub:input(K.Return);settle();assert(#adopts==0 and string.find(tostring(hub.action:GetAttribute("AccessibleLabel")),"Press again",1,true),"armed: "..tostring(hub.action:GetAttribute("AccessibleLabel")))
+     hub:input(K.Return);settle();assert(#adopts==1 and adopts[1][1]=="blip"and adopts[1][2]==400 and hub.pendingAdopt=="blip")
+     hub:input(K.Return);settle();assert(#adopts==1,"one request while saving")
+     assert(hub:adoptResult({kind="adopt",petId="pip",status="Saved"})==nil,"another pet's answer is ignored")
+     assert(hub:adoptResult({kind="adopt",petId="blip",status="Saved"})=="Bunny came home with you!"and hub.pendingAdopt==nil)
+     hub:input(K.ButtonB);hub:input(K.ButtonB)
+    end
     local cancelled=false
     hub:open({state=state,activeId=active},{page="pets",assign={choose=function()return true end,cancel=function()cancelled=true end}});settle()
     hub:input(K.Backspace);assert(cancelled and not hub:isOpen(),"Back in assign mode cancels")

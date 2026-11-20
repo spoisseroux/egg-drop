@@ -464,6 +464,14 @@ local Table={
   bond={title="Bond grew",what="Hearts show how close you and {pet} are. Each new level unlocks a trick.",
    next="Keep petting, playing rounds and going on Play dates. The hearts are in Companions."},
  },
+ -- v2 Bunny (2026-11-19, Sol): adopting the second pet on the Companions Pets page. Free at the
+ -- stamp count, or a fixed Star price (never random, never Robux).
+ v2={
+  adopt={status="ADOPT ★ {price}",line="Free at {need} stamps ({stamps}/{need}), or adopt now",
+   button="Adopt for ★ {price}",confirm="Press again to adopt for ★ {price}",short="Needs ★ {price}",saving="Adopting…",
+   done="{pet} came home with you!",retry="Still saving… try again in a moment.",failed="Couldn't adopt right now. No Stars were spent.",
+   freeStatus="FREE",freeLine="{need} stamps: yours for free",free="Take home free"},
+ },
 }
 
 local function freeze(node)

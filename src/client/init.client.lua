@@ -1223,6 +1223,12 @@ do
    return false
   end,
   follow=function(petId)request:FireServer("companion",petId);return true end,
+  -- v2 Bunny: adopt an earned pet for its fixed Star price (server: HatchRequest "petAdopt").
+  adopt=function(petId,price)
+   local id=HttpService:GenerateGUID(false)
+   nurseryRequest:FireServer("petAdopt",{id=id,petId=petId,price=price},nurseryState and nurseryState.revision or 0)
+   return id
+  end,
   -- QA Q5: opened from the machine hub's Companions tile, Back returns there; Customize
   -- keeps the way back (it reopens this hub), any other close forgets it.
   closed=function(reason)
@@ -2883,6 +2889,15 @@ end
 local faceplateResultConnection=remotes:WaitForChild("FaceplateResult").OnClientEvent:Connect(function(message)
 	-- Collection book claims share the remote (play-forever F1/F2).
 	if type(message)=="table"and message.kind=="book"then if clientUI.book then clientUI.book:result(message)end;return end
+	-- v2 Bunny adoption answers (CompanionsHub Pets page).
+	if type(message)=="table"and message.kind=="adopt"then
+		local line=clientUI.hub and clientUI.hub:adoptResult(message)
+		if line and clientUI.hub:isOpen()then
+			clientUI.adoptToaster=clientUI.adoptToaster or require(script.DeckKit).toaster(clientUI.hub.shade)
+			clientUI.adoptToaster.show(line)
+		end
+		return
+	end
 	picker.shop:result(message)
 end)
 gui.Destroying:Connect(function()faceplateResultConnection:Disconnect();ContextActionService:UnbindAction("EggDropFaceplateShop")end)

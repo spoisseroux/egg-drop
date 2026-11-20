@@ -2,7 +2,9 @@
 -- server grants with it, the client reads the same gate, so the two can never disagree about
 -- whether an earned pet exists in this build.
 --
---   Rules[petId] = { stamps = N }   the pet is owed once the save holds N lifetime stamps
+--   Rules[petId] = { stamps = N, stars = P }   owed once the save holds N lifetime stamps, or
+--                                              adopted at once for a fixed P Stars (never random,
+--                                              never Robux; HatchProgress.adoptPet)
 --   enabled(petId)                  FeatureFlags.SecondPet and a rig definition for the pet
 --   owed(state)                     enabled pets whose rule is met and that are not owned yet
 --
@@ -15,7 +17,7 @@
 local Flags=require(script.Parent.FeatureFlags)
 local Earned={}
 Earned.Order=table.freeze({"blip"})
-Earned.Rules=table.freeze({blip=table.freeze({stamps=7})})
+Earned.Rules=table.freeze({blip=table.freeze({stamps=7,stars=400})})
 
 function Earned.enabled(petId)
 	if Flags.SecondPet~=true or type(petId)~="string"or Earned.Rules[petId]==nil then return false end

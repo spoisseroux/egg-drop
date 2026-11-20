@@ -181,5 +181,130 @@ return function(server)
 		assert(not ok and reason=="Disabled"and h.pending==nil and bit32.band(h.state.inventoryMask,BLIP)==0)
 	end)
 
+	-- v2 Bunny (2026-11-19): the earned slot can also be adopted at once for a fixed Star price
+	-- (Hatching.adoptPet). Idempotent by the operation id, never charges an owner, and races the
+	-- 7th-stamp grant without ever charging for a pet the grant gave free.
+	local PRICE=Earned.Rules.blip.stars
+	test("adopt: the price is fixed at 400 Stars and refused below it with no write",function()
+		assert(PRICE==400 and Pets.byId.blip.name=="Bunny"and Pets.byId.blip.favouriteStat=="jump")
+		withBlip(function()
+			local _,db=fixture()
+			local h,db2,c=fixture(reseed(db,{nectar=PRICE-1,stamps=2}))
+			local writes=c.writes
+			local ok,reason=H.adoptPet(h,"adopt-1","blip",PRICE)
+			assert(not ok and reason=="NotEnoughStars"and c.writes==writes and h.pending==nil,tostring(reason))
+			assert(h.state.nectar==PRICE-1 and bit32.band(h.state.inventoryMask,BLIP)==0 and db2.player_1.hatching.nectar==PRICE-1)
+			-- The client never sets the price, and junk never reaches the store.
+			local h2,_,c2=fixture(reseed(db,{nectar=1000}))
+			local w2=c2.writes
+			local okP,whyP=H.adoptPet(h2,"adopt-2","blip",1);assert(not okP and whyP=="PriceChanged","a lower price is refused")
+			local okH,whyH=H.adoptPet(h2,"adopt-3","blip",PRICE+1);assert(not okH and whyH=="PriceChanged","any other price is refused")
+			for _,args in ipairs({{nil,"blip",PRICE},{"","blip",PRICE},{string.rep("x",81),"blip",PRICE},{"a","pip",PRICE},{"a","nope",PRICE},{"a",nil,PRICE}})do
+				local okJ,whyJ=H.adoptPet(h2,args[1],args[2],args[3]);assert(not okJ and whyJ=="InvalidAdopt",tostring(whyJ))
+			end
+			local okN,whyN=H.adoptPet(h2,"adopt-4","blip",nil);assert(not okN and whyN=="PriceChanged")
+			assert(c2.writes==w2 and h2.state.nectar==1000 and h2.pending==nil)
+		end)
+	end)
+
+	test("adopt: 400 Stars buys the pet once; any replay is AlreadyOwned with no charge",function()
+		withBlip(function()
+			local _,db=fixture()
+			local h,db2,c=fixture(reseed(db,{nectar=PRICE+50,stamps=3}))
+			local pets=h.state.stats.pets
+			local ok,reason=H.adoptPet(h,"adopt-1","blip",PRICE)
+			assert(ok and reason=="Saved",tostring(reason))
+			assert(h.state.nectar==50 and db2.player_1.hatching.nectar==50,"exactly 400 Stars")
+			assert(bit32.band(h.state.inventoryMask,BLIP)==BLIP and bit32.band(db2.player_1.hatching.inventoryMask,BLIP)==BLIP)
+			assert(h.state.stats.pets==pets+1 and h.state.lastHatch==nil and H.valid(h.state),"counts a pet, writes no reveal")
+			assert(#Earned.owed(h.state)==0,"nothing owed once owned")
+			local writes=c.writes
+			local again,why=H.adoptPet(h,"adopt-1","blip",PRICE)
+			assert(again and why=="AlreadyOwned"and c.writes==writes and h.state.nectar==50,"same id: no write, no charge")
+			local other,why2=H.adoptPet(h,"adopt-2","blip",PRICE)
+			assert(other and why2=="AlreadyOwned"and c.writes==writes and h.state.nectar==50,"new id: still no charge")
+			-- The 7th stamp later grants nothing more (the bit is the receipt).
+			local okG,whyG=H.grantEarnedPet(h,"blip")
+			assert(okG and whyG=="AlreadyOwned"and h.state.stats.pets==pets+1)
+			-- A second server loading the save agrees: owned, nothing charged.
+			local h2,_,c2=fixture(reseed(db2,{}))
+			local w2=c2.writes
+			local ok3,why3=H.adoptPet(h2,"adopt-9","blip",PRICE)
+			assert(ok3 and why3=="AlreadyOwned"and c2.writes==w2 and h2.state.nectar==50)
+		end)
+	end)
+
+	test("adopt: an ambiguous write resumes by its id and charges exactly once",function()
+		withBlip(function()
+			local _,db=fixture()
+			local h,db2,c=fixture(reseed(db,{nectar=PRICE}))
+			c.failNext="after"
+			local ok,reason=H.adoptPet(h,"adopt-1","blip",PRICE)
+			assert(not ok and reason=="Retrying"and h.pending and h.pending.signature=="adopt:adopt-1")
+			assert(db2.player_1.hatching.nectar==0,"the write landed")
+			-- The pending id is bound to its pet and price.
+			local okC,whyC=H.adoptPet(h,"adopt-1","blip",PRICE-100);assert(not okC and whyC=="OperationConflict")
+			local okO,whyO=H.adoptPet(h,"adopt-2","blip",PRICE);assert(not okO and whyO=="Pending","another id waits")
+			local ok2,reason2=H.adoptPet(h,"adopt-1","blip",PRICE)
+			assert(ok2 and reason2=="Saved"and h.pending==nil and h.state.nectar==0 and db2.player_1.hatching.nectar==0,tostring(reason2))
+			-- A write that never landed is retried from the same operation.
+			local h3,db3,c3=fixture(reseed(db,{nectar=PRICE}))
+			c3.failNext="before"
+			local ok4,reason4=H.adoptPet(h3,"adopt-7","blip",PRICE)
+			assert(not ok4 and reason4=="Retrying"and db3.player_1.hatching.nectar==PRICE)
+			assert(H.retry(h3))
+			assert(h3.state.nectar==0 and db3.player_1.hatching.nectar==0 and bit32.band(h3.state.inventoryMask,BLIP)==BLIP)
+		end)
+	end)
+
+	test("adopt never charges a save that has earned the pet; it races the grant without a double spend",function()
+		withBlip(function()
+			local _,db=fixture()
+			-- 7 stamps, grant not run yet (the loop waits for a quiet window): the adopt is the free grant.
+			local h0,db0,c0=fixture(reseed(db,{nectar=1000,stamps=7}))
+			local pets=h0.state.stats.pets
+			local ok0,why0=H.adoptPet(h0,"adopt-0","blip",PRICE)
+			assert(ok0 and why0=="EarnedFree",tostring(why0))
+			assert(h0.state.nectar==1000 and db0.player_1.hatching.nectar==1000 and bit32.band(h0.state.inventoryMask,BLIP)==BLIP,"free, no Stars")
+			assert(h0.state.stats.pets==pets+1)
+			local w0=c0.writes
+			local again,whyAgain=H.adoptPet(h0,"adopt-0","blip",PRICE)
+			assert(again and whyAgain=="AlreadyOwned"and c0.writes==w0)
+			-- The free grant is mid-write when the adopt arrives: the adopt resumes it, costs nothing.
+			local h,db2,c=fixture(reseed(db,{nectar=PRICE+100,stamps=7}))
+			c.failNext="after"
+			local okG,whyG=H.grantEarnedPet(h,"blip")
+			assert(not okG and whyG=="Retrying"and h.pending)
+			local ok,why=H.adoptPet(h,"adopt-1","blip",PRICE)
+			assert(ok and why=="EarnedFree"and h.pending==nil,tostring(why))
+			assert(h.state.nectar==PRICE+100 and db2.player_1.hatching.nectar==PRICE+100,"free pet, no charge")
+			assert(h.state.stats.pets==pets+1,"counted once")
+			-- Bought at 6 stamps and still mid-write when the grant loop runs: the grant waits, then
+			-- adds nothing; the 400 Stars are spent exactly once.
+			local h3,db3,c3=fixture(reseed(db,{nectar=PRICE+100,stamps=6}))
+			c3.failNext="after"
+			local ok3,why3=H.adoptPet(h3,"adopt-2","blip",PRICE)
+			assert(not ok3 and why3=="Retrying")
+			local okG2,whyG2=H.grantEarnedPet(h3,"blip")
+			assert(not okG2 and(whyG2=="Pending"or whyG2=="NotEarned"),tostring(whyG2))
+			assert(H.retry(h3))
+			local okG3,whyG3=H.grantEarnedPet(h3,"blip")
+			assert(okG3 and whyG3=="AlreadyOwned"and h3.state.nectar==100 and db3.player_1.hatching.nectar==100,"charged once")
+			assert(h3.state.stats.pets==pets+1)
+			-- Owned inside the write (the grant committed after the local check): refused in the
+			-- write as AlreadyOwned, so the debit never commits.
+			local h4,db4=fixture(reseed(db,{nectar=PRICE,stamps=2}))
+			local root=db4.player_1.hatching
+			root.inventoryMask=bit32.bor(root.inventoryMask,BLIP)
+			local ok5,why5=H.adoptPet(h4,"adopt-3","blip",PRICE)
+			assert(ok5==true and why5=="AlreadyOwned",tostring(why5))
+			assert(db4.player_1.hatching.nectar==PRICE,"no debit was written")
+			-- Earned inside the write (the 7th stamp saved after the local check): no debit either.
+			local h5,db5=fixture(reseed(db,{nectar=PRICE,stamps=6}))
+			db5.player_1.hatching.stamps=7
+			local ok6,why6=H.adoptPet(h5,"adopt-4","blip",PRICE)
+			assert(db5.player_1.hatching.nectar==PRICE and bit32.band(db5.player_1.hatching.inventoryMask,BLIP)==0,"no debit for an earned pet: "..tostring(ok6).." "..tostring(why6))
+		end)
+	end)
 	return cases
 end
