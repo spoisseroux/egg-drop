@@ -35,7 +35,7 @@ ui.book.hint.move,Move,,Collection book
 ui.book.hint.pages,Pages,,Collection book
 ui.book.missing,Not yet,,Collection book; also ui.notice.locked.title
 ui.book.owned,{owned}/{total},,Collection book; e.g. 3/12
-ui.book.pending,Saving…,,"Collection book; also ui.onboarding.welcome.saving, ui.results.saved.pending"
+ui.book.pending,Saving…,,"Collection book; also ui.names.saving, ui.onboarding.welcome.saving, ui.results.saved.pending"
 ui.book.promise,Every page pays once. Nothing to buy.,,Collection book
 ui.book.records.empty,Play a round and your records start here.,,Collection book
 ui.book.records.line,Your lifetime numbers,,Collection book
@@ -68,7 +68,7 @@ ui.care.notice.retry,Couldn't complete · try again,,Menu text
 ui.care.notice.saving,Wait for your pet save,,Menu text
 ui.coach.book.line,Fill the pages as you collect. Every page pays once.,,First-round coaching
 ui.coach.companions.line,"Dress up {pet}, swap pets and customize.",,"First-round coaching; e.g. Dress up Bear, swap pets and customize."
-ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name, ui.stats.eyebrow"
+ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.names.eyebrow, ui.r3.help.companions.title, ui.r5.station.Journal.name"
 ui.coach.effortPay,Good effort,,First-round coaching
 ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and the round ends.,,First-round coaching; also ui.notice.fillLine.what
 ui.coach.fillLine.short,Keep the pile under the line,,First-round coaching
@@ -87,7 +87,7 @@ ui.coach.item.title,An item!,,First-round coaching; also ui.notice.item.title
 ui.coach.machines.line,Walk up to a glowing machine to use it.,,First-round coaching
 ui.coach.machines.title,Machines,,"First-round coaching; also ui.notice.machines.title, ui.r3.help.garden.a.title"
 ui.coach.missPay,Goal met,,First-round coaching
-ui.coach.next,Next,,First-round coaching
+ui.coach.next,Next,,First-round coaching; also ui.names.egg.nextValue
 ui.coach.park.line,{pet} plays here. Three play dates a day pay +4 ★.,,First-round coaching; e.g. Bear plays here. Three play dates a day pay +4 ★.
 ui.coach.park.title,Pet Park,,"First-round coaching; also ui.park.name, ui.r3.help.park.title, ui.r5.station.Park.name, ui.report.category.park"
 ui.coach.quest.line,Today's quests pay Stars. Find them in the menu.,,First-round coaching
@@ -132,6 +132,10 @@ ui.hatch.egg.look.name,Customization Egg,,Hatch eggs screen
 ui.hatch.egg.material.description,Smooth and heavy. Hatches one material that changes how your pet's body catches the light.,,Hatch eggs screen
 ui.hatch.egg.material.line,A fresh new coat,,Hatch eggs screen
 ui.hatch.egg.material.per,1 material per egg,,Hatch eggs screen
+ui.hatch.egg.stat.description,Hatches one Stat Snack. Feed it to your pet: the next XP it earns in that stat counts extra.,,Hatch eggs screen
+ui.hatch.egg.stat.line,A snack that speeds up training,,Hatch eggs screen
+ui.hatch.egg.stat.name,Stat Egg,,Hatch eggs screen
+ui.hatch.egg.stat.per,1 snack per egg,,Hatch eggs screen
 ui.hatch.egg.toy.description,Something is rattling around in here. Hatches one toy your pet can carry and play with.,,Hatch eggs screen
 ui.hatch.egg.toy.line,A toy to carry and chase,,Hatch eggs screen
 ui.hatch.egg.toy.per,1 toy per egg,,Hatch eggs screen
@@ -161,7 +165,7 @@ ui.hatch.look.reason.FinishChanged,This pet's material changed. Check it and tap
 ui.hatch.look.reason.Locked,Find this charm first.,,Hatch eggs screen
 ui.hatch.look.reason.MaxJelly,This pet is as jelly as it gets.,,Hatch eggs screen; also ui.r4.customize.finish.maxJelly
 ui.hatch.look.reason.MaxSheen,This shine is as far as it goes.,,Hatch eggs screen; also ui.r4.customize.finish.maxSheen
-ui.hatch.look.reason.PolicyChanged,Your odds just changed. Check them and tap again.,,Hatch eggs screen; also ui.hatch.look.reason.PoolChanged
+ui.hatch.look.reason.PolicyChanged,Your odds just changed. Check them and tap again.,,"Hatch eggs screen; also ui.hatch.look.reason.PoolChanged, ui.hatch.stat.reason.PoolChanged"
 ui.hatch.look.restrictedCharm,Charm in {count} eggs,,Hatch eggs screen; e.g. Charm in 3 eggs
 ui.hatch.look.useNow,Use now,,Hatch eggs screen
 ui.hatch.look.wear,Wear it,,Hatch eggs screen
@@ -172,13 +176,27 @@ ui.hatch.material.fixed,16 Stars · one guaranteed material. No duplicates.,,Hat
 ui.hatch.material.nextPromise,No duplicates. Your next material is shown above.,,Hatch eggs screen
 ui.hatch.material.oddsPromise,No duplicates. Odds update with your collection.,,Hatch eggs screen
 ui.hatch.material.random,16 Stars · one unowned material. No duplicates.,,Hatch eggs screen
-ui.hatch.next.done,All collected,,Hatch eggs screen
+ui.hatch.next.done,All collected,,Hatch eggs screen; also ui.hatch.result.allFound
 ui.hatch.next.label,Next item,,Hatch eggs screen
 ui.hatch.next.line,Next: {item},,Hatch eggs screen; e.g. Next: Squeaky Bone
 ui.hatch.odds.rounded,"Rounded, so the odds may not add up to exactly 100%.",,Hatch eggs screen
 ui.hatch.promise,No surprises. The odds never change.,,Hatch eggs screen
+ui.hatch.result.again,Hatch another,,Hatch eggs screen
+ui.hatch.result.againPrice,Hatch another  ★ {count},,Hatch eggs screen; e.g. Hatch another  ★ 3
+ui.hatch.result.allToys,Every toy found,,Hatch eggs screen
+ui.hatch.result.hatching,Hatching…,,Hatch eggs screen; also ui.names.egg.hatching
+ui.hatch.result.inThisEgg,IN THIS EGG,,Hatch eggs screen
+ui.hatch.result.more,+{count} more,,Hatch eggs screen; e.g. +3 more
+ui.hatch.result.need,{count} more Stars needed,,Hatch eggs screen; e.g. 3 more Stars needed; also ui.qa.shortfall
+ui.hatch.result.pouchFull,Pouch is full. Feed a snack first.,,Hatch eggs screen
+ui.hatch.result.soldOut,Back tomorrow,,Hatch eggs screen; also ui.hatch.stat.soldOut
+ui.hatch.result.stamp.rare,RARE!,,Hatch eggs screen
+ui.hatch.result.stockNest,{count} left in today's nest,,Hatch eggs screen; e.g. 3 left in today's nest
+ui.hatch.result.stockToys,{count} toys left to find,,Hatch eggs screen; e.g. 3 toys left to find
+ui.hatch.result.tapToSkip,Tap to skip,,Hatch eggs screen
+ui.hatch.result.youGot,YELLOW = YOU GOT,,Hatch eggs screen
 ui.hatch.reveal.banner,{tier} {kind},,Hatch eggs screen; e.g. {tier} {kind}
-ui.hatch.reveal.close,Close,,"Hatch eggs screen; also ui.inspect.close, ui.r3.help.close"
+ui.hatch.reveal.close,Close,,"Hatch eggs screen; also ui.inspect.close, ui.names.egg.close, ui.r3.help.close"
 ui.hatch.reveal.describe.charm.dot,A tiny snowflake that never melts.,,Hatch eggs screen
 ui.hatch.reveal.describe.charm.pebble,"A lucky pebble, smoothed by a very old river.",,Hatch eggs screen
 ui.hatch.reveal.describe.charm.ring,A little ring that floats in its own orbit.,,Hatch eggs screen
@@ -217,10 +235,48 @@ ui.hatch.reveal.kind.finish,MATERIAL JAR,,Hatch eggs screen
 ui.hatch.reveal.kind.hue,COLOUR JAR,,Hatch eggs screen
 ui.hatch.reveal.kind.item,ITEM,,Hatch eggs screen
 ui.hatch.reveal.kind.material,MATERIAL,,Hatch eggs screen
+ui.hatch.reveal.kind.name,NAME PIECE,,Hatch eggs screen
+ui.hatch.reveal.kind.stat,STAT SNACK,,Hatch eggs screen; also ui.hatch.stat.reveal.kind
 ui.hatch.reveal.kind.toy,TOY,,Hatch eggs screen
 ui.hatch.reveal.tier.Common,COMMON,,Hatch eggs screen
 ui.hatch.reveal.tier.Rare,RARE,,Hatch eggs screen
 ui.hatch.reveal.tier.Uncommon,UNCOMMON,,Hatch eggs screen
+ui.hatch.stat.allMaxed,Every stat is at 99,,Hatch eggs screen
+ui.hatch.stat.cycle,"Sizes follow a ten-egg cycle: 6 Nibble, 3 Snack, 1 Feast.",,Hatch eggs screen
+ui.hatch.stat.each,Each stat,,Hatch eggs screen
+ui.hatch.stat.eachLabel,"One of {count} stats, {each} each: {names}",,"Hatch eggs screen; e.g. One of 3 stats, {each} each: {names}"
+ui.hatch.stat.free,Open free egg ({count}),,Hatch eggs screen; e.g. Open free egg (3)
+ui.hatch.stat.freeLine,{count} free eggs to open,,Hatch eggs screen; e.g. 3 free eggs to open
+ui.hatch.stat.hatch,★ Hatch {count},,Hatch eggs screen; e.g. ★ Hatch 3
+ui.hatch.stat.next,Next: {stat} {size},,Hatch eggs screen; e.g. Next: {stat} {size}
+ui.hatch.stat.noPet,Hatch a pet first,,Hatch eggs screen
+ui.hatch.stat.notReady,Stat Eggs are not ready yet.,,Hatch eggs screen; also ui.hatch.stat.reason.Disabled
+ui.hatch.stat.pity,A Feast within {count} eggs,,Hatch eggs screen; e.g. A Feast within 3 eggs
+ui.hatch.stat.pityOne,Next egg: a Feast,,Hatch eggs screen
+ui.hatch.stat.pityRule,"If 7 eggs pass without a Feast, the 8th is a Feast.",,Hatch eggs screen
+ui.hatch.stat.pouchFull,Pouch full · feed a snack,,Hatch eggs screen
+ui.hatch.stat.promise.fixed,No surprises. Your next snack is shown above.,,Hatch eggs screen
+ui.hatch.stat.promise.random,The odds are on the label. A Feast within 8 eggs.,,Hatch eggs screen
+ui.hatch.stat.reason.AllMaxed,Every stat is at 99.,,Hatch eggs screen
+ui.hatch.stat.reason.Busy,Finishing your last save…,,Hatch eggs screen
+ui.hatch.stat.reason.ClockRollback,"One moment, then try again.",,Hatch eggs screen
+ui.hatch.stat.reason.ExpiredDay,A new day just started. Tap again.,,Hatch eggs screen
+ui.hatch.stat.reason.NeedStars,You need more Stars.,,Hatch eggs screen
+ui.hatch.stat.reason.NoFreeEgg,No free egg to open.,,Hatch eggs screen
+ui.hatch.stat.reason.PetNotOut,Bring your pet out first.,,Hatch eggs screen
+ui.hatch.stat.reason.PouchFull,Your pouch is full. Feed a snack first.,,Hatch eggs screen
+ui.hatch.stat.reason.Retrying,Still saving… your egg will show here.,,Hatch eggs screen; also ui.hatch.stat.reason.Timeout
+ui.hatch.stat.reason.SoldOut,Today's nest is empty. Back tomorrow.,,Hatch eggs screen
+ui.hatch.stat.reason.Throttled,One moment…,,Hatch eggs screen; also ui.stats.snacks.reason.Busy
+ui.hatch.stat.reveal.boost,{mult}x for your next {count} XP,,Hatch eggs screen; e.g. {mult}x for your next 3 XP; also ui.stats.snacks.card
+ui.hatch.stat.reveal.feed,Feed now,,Hatch eggs screen
+ui.hatch.stat.reveal.keep,Keep,,Hatch eggs screen
+ui.hatch.stat.reveal.kept,In your pouch,,Hatch eggs screen
+ui.hatch.stat.reveal.name,{stat} {size},,Hatch eggs screen; e.g. {stat} {size}; also ui.stats.snacks.name
+ui.hatch.stat.size.feast,Feast · 3x 120 XP,,Hatch eggs screen
+ui.hatch.stat.size.nibble,Nibble · 2x 50 XP,,Hatch eggs screen
+ui.hatch.stat.size.snack,Snack · 2x 120 XP,,Hatch eggs screen
+ui.hatch.stat.today,{count} of {total} left in today's nest,,Hatch eggs screen; e.g. 3 of 12 left in today's nest
 ui.hub.chip.book,{percent}% found,,Pocket menu (machine hub); e.g. {percent}% found
 ui.hub.chip.outfits,{owned}/{total} outfits,,Pocket menu (machine hub); e.g. 3/12 outfits
 ui.hub.chip.quests,{done}/{total} today,,Pocket menu (machine hub); e.g. {done}/12 today
@@ -230,7 +286,7 @@ ui.hub.chip.toys,{owned}/{total} toys,,Pocket menu (machine hub); e.g. 3/12 toys
 ui.hub.promise,"Every machine, one tap away.",,Pocket menu (machine hub)
 ui.hub.status.locked,LOCKED,,Pocket menu (machine hub)
 ui.hub.status.stamp,STAMP READY,,Pocket menu (machine hub)
-ui.hub.tile.book.short,Book,,Pocket menu (machine hub)
+ui.hub.tile.book.short,Book,,Pocket menu (machine hub); also ui.names.tab.book
 ui.hub.tile.companions.line,"Pets, wardrobe and customize",,Pocket menu (machine hub)
 ui.hub.tile.hatch.line,"Eggs, odds and today's stamp",,Pocket menu (machine hub)
 ui.hub.tile.quests.line,Daily and weekly quests,,Pocket menu (machine hub)
@@ -252,6 +308,8 @@ ui.inspect.empty,Empty,,Menu text
 ui.inspect.gone,Pet moved on,,Menu text
 ui.inspect.hello,Say hello,,Menu text
 ui.inspect.hidden,Hidden,,Menu text
+ui.inspect.menuColours.classic,Menu colours: Classic Shell,,Menu text
+ui.inspect.menuColours.deck,Menu colours: Match my deck,,Menu text
 ui.inspect.off,Greetings off,,Menu text
 ui.inspect.owner,{name}'s pet,,Menu text; e.g. Pet Park's pet
 ui.inspect.prompt,Inspect,,Menu text
@@ -265,7 +323,7 @@ ui.inspect.spin,Drag to turn,,Menu text
 ui.inspect.statsNone,No stats to show yet.,,Menu text
 ui.inspect.statsPrivate,"Levels only. XP, Stars and history stay private.",,Menu text
 ui.inspect.tab.outfit,Outfit,,Menu text
-ui.inspect.tab.stats,Stats,,"Menu text; also ui.stats.open, ui.stats.results.label"
+ui.inspect.tab.stats,Stats,,"Menu text; also ui.names.tab.stat, ui.stats.open, ui.stats.results.label, ui.stats.snacks.back"
 ui.inspect.wait,In a moment,,Menu text
 ui.inspect.you,You {count},,Menu text; e.g. You 3
 ui.items.note.empty,You have no items,,Round item notes
@@ -273,6 +331,60 @@ ui.items.note.full,Belt's full. Use one first.,,Round item notes
 ui.menu.subtitle.empty,Round not started,,Pause menu
 ui.menu.subtitle.locked,Win a round and this opens up,,Pause menu
 ui.menu.subtitle.paused,Round paused,,Pause menu
+ui.names.clear,Clear,,Menu text
+ui.names.egg.again,Hatch another · {price},,Menu text; e.g. Hatch another · {price}
+ui.names.egg.all,All name pieces collected,,Menu text; also ui.names.reason.AllOwned
+ui.names.egg.allShort,All pieces collected,,Menu text
+ui.names.egg.buy,Hatch for {price} Stars,,Menu text; e.g. Hatch for {price} Stars
+ui.names.egg.each,"Each piece left: 1 in {count}, {each}",,"Menu text; e.g. Each piece left: 1 in 3, {each}"
+ui.names.egg.fixedLine,No surprises. Your next piece is shown above.,,Menu text
+ui.names.egg.key,Names Egg · {price} Stars,,Menu text; e.g. Names Egg · {price} Stars
+ui.names.egg.left,{count} pieces left to find,,Menu text; e.g. 3 pieces left to find
+ui.names.egg.line,One new name piece every time. Never a duplicate.,,Menu text
+ui.names.egg.next,Next: {piece},,Menu text; e.g. Next: {piece}
+ui.names.egg.notReady,The Names Egg is not ready yet.,,Menu text
+ui.names.egg.order,"Pieces come in a fixed order, shown before you buy.",,Menu text
+ui.names.egg.per,1 name piece per egg,,Menu text
+ui.names.egg.randomLine,Every piece still to find is equally likely.,,Menu text
+ui.names.egg.title,Names Egg,,Menu text; also ui.names.tab.egg
+ui.names.footer.account,A piece you unlock is yours for every pet.,,Menu text
+ui.names.footer.free,"Renaming is free, any time.",,Menu text; also ui.names.reveal.yours
+ui.names.hint.anyLevel,Reach level {level} in any stat to unlock it.,,Menu text; e.g. Reach level {level} in any stat to unlock it.
+ui.names.hint.book,Claim {count} collection book rewards to unlock it.,,Menu text; e.g. Claim 3 collection book rewards to unlock it.
+ui.names.hint.egg,This one hatches from the Names Egg.,,Menu text
+ui.names.hint.stat,Reach {stat} {level} on any pet to unlock it.,,Menu text; e.g. Reach {stat} {level} on any pet to unlock it.
+ui.names.hint.total,Reach a total level of {count} on one pet to unlock it.,,Menu text; e.g. Reach a total level of 3 on one pet to unlock it.
+ui.names.lock.anyLevel,ANY STAT {level},,Menu text; e.g. ANY STAT {level}
+ui.names.lock.book,BOOK {count},,Menu text; e.g. BOOK 3
+ui.names.lock.egg,NAMES EGG,,Menu text
+ui.names.lock.stat,{stat} {level},,Menu text; e.g. {stat} {level}
+ui.names.lock.total,TOTAL {count},,Menu text; e.g. TOTAL 3
+ui.names.open,Name,,Menu text
+ui.names.reason.Busy,"One moment, then try again",,Menu text; also ui.names.reason.Throttled
+ui.names.reason.NeedStars,Not enough Stars yet,,Menu text
+ui.names.reason.NotOwned,Unlock that piece first,,Menu text
+ui.names.reason.PoolChanged,The egg just changed. Check it and tap again.,,Menu text
+ui.names.reason.Retrying,Still saving. Try again in a moment.,,Menu text
+ui.names.reason.SamePiece,Pick two different pieces,,Menu text
+ui.names.reason.Timeout,No answer yet. Try again.,,Menu text
+ui.names.reason.default,Couldn't save. Try again.,,Menu text
+ui.names.reveal.done,Done,,Menu text
+ui.names.reveal.line,Yours for every pet,,Menu text
+ui.names.reveal.sticker,NEW NAME PIECE,,Menu text
+ui.names.reveal.use,Use it,,Menu text
+ui.names.save,Save name,,Menu text
+ui.names.saved,Name saved,,Menu text
+ui.names.shows.own,Each pet has its own name.,,Menu text
+ui.names.shows.title,Shows,,Menu text
+ui.names.shows.where,"Over your pet
+On its card and stats",,Menu text
+ui.names.slots.empty,Pick a piece,,Menu text
+ui.names.slots.hint,"One piece or two. No typing, ever.",,Menu text
+ui.names.swap,Swap,,Menu text; also catalog.RoundItems.ById.swap.name
+ui.names.tab.all,All,,Menu text
+ui.names.tab.starter,Starter,,Menu text
+ui.names.title,Name your {pet},,Menu text; e.g. Name your Bear
+ui.names.unlocked,New name piece: {piece},,Menu text; e.g. New name piece: {piece}
 ui.notice.bond.next,"Keep petting, playing rounds and going on Play dates. The hearts are in Companions.",,Menu text
 ui.notice.bond.title,Bond grew,,Menu text
 ui.notice.bond.what,Hearts show how close you and {pet} are. Each new level unlocks a trick.,,Menu text; e.g. Hearts show how close you and Bear are. Each new level unlocks a trick.
@@ -357,7 +469,6 @@ ui.qa.coach.sayHi,Say hi to {pet},,Menu text; e.g. Say hi to Bear
 ui.qa.coach.welcome,Match eggs. Hatch a friend.,,Menu text
 ui.qa.loading,Getting the preview ready…,,Menu text
 ui.qa.retryPreview,Retry preview,,Menu text
-ui.qa.shortfall,{count} more Stars needed,,Menu text; e.g. 3 more Stars needed
 ui.qa.shortfallOne,{count} more Star needed,,Menu text; e.g. 3 more Star needed
 ui.quests.allDone,All done. {pet} is impressed.,,Quest log; e.g. All done. Bear is impressed.
 ui.quests.allDoneSolo,All done for today.,,Quest log
@@ -430,7 +541,7 @@ ui.r4.customize.finish.jar.jelly,Jelly,,"Menu text; also ui.r4.customize.finish.
 ui.r4.customize.finish.jar.matte,Matte,,"Menu text; also ui.r4.customize.finish.sheen.m2, catalog.MaterialCatalog.ById.matte.name"
 ui.r4.customize.finish.jelly.s1,Misty,,Menu text
 ui.r4.customize.finish.jelly.s3,Clear Jelly,,Menu text
-ui.r4.customize.finish.jellyCount,{count}/{total},,Menu text; e.g. 3/12; also ui.stampChip.open
+ui.r4.customize.finish.jellyCount,{count}/{total},,"Menu text; e.g. 3/12; also ui.stampChip.open, ui.stats.snacks.count"
 ui.r4.customize.finish.kept,Kept: {finish},,Menu text; e.g. Kept: {finish}
 ui.r4.customize.finish.look,Look: {look},,Menu text; e.g. Look: {look}
 ui.r4.customize.finish.mix,{jelly} {sheen},,Menu text; e.g. {jelly} {sheen}
@@ -548,6 +659,8 @@ ui.stampChip.label,Daily stamp,,Menu text
 ui.stats.bonus,BONUS,,Menu text
 ui.stats.bonusLeft,2x bonus: {count} XP left today,,Menu text; e.g. 2x bonus: 3 XP left today
 ui.stats.bonusUsed,Today's 2x bonus is used. Back tomorrow.,,Menu text
+ui.stats.boost,{mult}x · {count} XP left,,Menu text; e.g. {mult}x · 3 XP left
+ui.stats.boostMore,{mult}x · {count} XP left · +{more},,Menu text; e.g. {mult}x · 3 XP left · +{more}
 ui.stats.chip,Total {count},,Menu text; e.g. Total 3
 ui.stats.footer,"Levels never go down. Miss a day, lose nothing.",,Menu text
 ui.stats.gardenStar,Garden Star,,Menu text
@@ -566,6 +679,31 @@ ui.stats.none,Hatch a pet to start its stats.,,Menu text
 ui.stats.of,/ {total},,Menu text; e.g. / 12
 ui.stats.results.gain,{name} +{count},,Menu text; e.g. Pet Park +3
 ui.stats.results.up,{name} +{count} (Lv {target}!),,Menu text; e.g. Pet Park +3 (Lv 3!)
+ui.stats.snacks.cardBoost,{stat} has {mult}x · {left} XP left,,Menu text; e.g. {stat} has {mult}x · {left} XP left
+ui.stats.snacks.drop,Let go to feed {pet},,Menu text; e.g. Let go to feed Bear
+ui.stats.snacks.eggs,Go to Hatch eggs,,Menu text
+ui.stats.snacks.empty,No snacks yet. Hatch a Stat Egg.,,Menu text
+ui.stats.snacks.favourite,{pet}'s favourite!,,Menu text; e.g. Bear's favourite!
+ui.stats.snacks.feed,Feed,,Menu text
+ui.stats.snacks.line,{name} boost: {mult}x for your next {count} XP,,Menu text; e.g. Pet Park boost: {mult}x for your next 3 XP
+ui.stats.snacks.open,Snacks,,Menu text
+ui.stats.snacks.reason.InRound,{pet} can't eat during a round,,Menu text; e.g. Bear can't eat during a round
+ui.stats.snacks.reason.NoSnack,That snack is gone,,Menu text
+ui.stats.snacks.reason.PetBusy,{pet} is busy playing,,Menu text; e.g. Bear is busy playing
+ui.stats.snacks.reason.PetNotOut,Bring {pet} out first,,Menu text; e.g. Bring Bear out first
+ui.stats.snacks.reason.QueueFull,{stat} is already full of boosts,,Menu text; e.g. {stat} is already full of boosts
+ui.stats.snacks.reason.Retrying,Still saving… check your pouch in a moment.,,Menu text; also ui.stats.snacks.reason.Timeout
+ui.stats.snacks.reason.RevealPending,Open your egg first,,Menu text
+ui.stats.snacks.reason.StatMaxed,{stat} is at the top,,Menu text; e.g. {stat} is at the top
+ui.stats.snacks.reason.Throttled,One bite at a time,,Menu text
+ui.stats.snacks.reason.UnknownSnack,This snack is from a newer update,,Menu text
+ui.stats.snacks.reason.other,Couldn't feed right now,,Menu text
+ui.stats.snacks.size.feast,Feast,,Menu text
+ui.stats.snacks.size.nibble,Nibble,,Menu text
+ui.stats.snacks.size.snack,Snack,,Menu text
+ui.stats.snacks.tapHint,"Tap a snack, then Feed.",,Menu text
+ui.stats.snacks.tile,"{stat} {size}, {count}",,"Menu text; e.g. {stat} {size}, 3"
+ui.stats.snacks.title,Snack pouch,,Menu text
 ui.stats.tier.bloom,Bloom,,Menu text
 ui.stats.tier.fullBloom,Full Bloom,,Menu text
 ui.stats.tier.seedling,Seedling,,Menu text
@@ -585,6 +723,18 @@ ui.style.balls.pitch,"Same sizes, same rules. Only cuter.",,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.balls,Just for looks. Never an advantage.,,Deck style screen
 ui.style.promise.faceplates,Fixed prices. No random plates.,,Deck style screen
+ui.v2.adopt.button,Adopt for ★ {price},,Menu text; e.g. Adopt for ★ {price}
+ui.v2.adopt.confirm,Press again to adopt for ★ {price},,Menu text; e.g. Press again to adopt for ★ {price}
+ui.v2.adopt.done,{pet} came home with you!,,Menu text; e.g. Bear came home with you!
+ui.v2.adopt.failed,Couldn't adopt right now. No Stars were spent.,,Menu text
+ui.v2.adopt.free,Take home free,,Menu text
+ui.v2.adopt.freeLine,{need} stamps: yours for free,,Menu text; e.g. {need} stamps: yours for free
+ui.v2.adopt.freeStatus,FREE,,Menu text
+ui.v2.adopt.line,"Free at {need} stamps ({stamps}/{need}), or adopt now",,"Menu text; e.g. Free at {need} stamps ({stamps}/{need}), or adopt now"
+ui.v2.adopt.retry,Still saving… try again in a moment.,,Menu text
+ui.v2.adopt.saving,Adopting…,,Menu text
+ui.v2.adopt.short,Needs ★ {price},,Menu text; e.g. Needs ★ {price}
+ui.v2.adopt.status,ADOPT ★ {price},,Menu text; e.g. ADOPT ★ {price}
 ui.variants.note,A new colour of {item},,Menu text; e.g. A new colour of Squeaky Bone
 ui.variants.slot.ankle,"A pair, one for each ankle",,Menu text
 ui.variants.slot.cheek,"A pair, one for each cheek",,Menu text
@@ -750,7 +900,6 @@ catalog.RoundItems.ById.pop.effect,Removes the highest ball. No points.,,Catalog
 catalog.RoundItems.ById.pop.name,Pop,,Catalogue RoundItems (name)
 catalog.RoundItems.ById.pop.short,Removes the top ball.,,Catalogue RoundItems (short)
 catalog.RoundItems.ById.swap.effect,Next and Then trade places.,,Catalogue RoundItems (effect)
-catalog.RoundItems.ById.swap.name,Swap,,Catalogue RoundItems (name)
 catalog.RoundItems.ById.swap.short,Next and Then swap.,,Catalogue RoundItems (short)
 catalog.QuestCatalog.ById.d_chain3.sub,In one round,,"Catalogue QuestCatalog (sub); also catalog.QuestCatalog.ById.d_chain4.sub, catalog.QuestCatalog.ById.d_chain5.sub, catalog.QuestCatalog.ById.d_score400.sub, catalog.QuestCatalog.ById.d_score600.sub"
 catalog.QuestCatalog.ById.d_chain3.title,Chain 3 merges,,Catalogue QuestCatalog (title)
@@ -833,7 +982,7 @@ catalog.PetCatalog.1.description,"Soft as a nap. Hugs first, asks questions neve
 catalog.PetCatalog.2.description,Hums to puddles. The puddles have started humming back.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.3.description,Ticks like a tiny clock. Always early for snacks.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.4.description,"Floats in slow circles, collecting quiet thoughts.",,Catalogue PetCatalog (description)
-catalog.PetCatalog.byId.blip.description,Fell off a toy shelf on a faraway moon. Likes it here.,,Catalogue PetCatalog (description)
+catalog.PetCatalog.active.2.description,"Shy for a second, then bouncy for the rest of the day.",,Catalogue PetCatalog (description)
 catalog.PetCatalog.byId.bloom_pip.description,A bear in bloom. Smells faintly of tomorrow's picnic.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.byId.eclipse_orbit.description,Borrows the night sky and always gives it back.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.byId.foxfire_wick.description,"Glows when happy. Glows a lot, honestly.",,Catalogue PetCatalog (description)
