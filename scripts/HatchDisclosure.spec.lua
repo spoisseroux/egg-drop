@@ -32,18 +32,18 @@ return function(client,parent)
     local stage=reveal.stage;assert(stage,"item reveal has no full-screen stage")
     for _,age in ipairs({.7,1.25,1.6})do
      paint(c,age);assert(view.title.Text==Copy.get("hatch.display.wait")and view.title:GetAttribute("AccessibleLabel")==view.title.Text)
-     stage:step(0);assert(stage.name.Text==""and not stage.nameGroup.Visible and not stage.banner.Visible and stage.root:GetAttribute("ReceiptReady")==false,"stage disclosed early")
+     stage:step(0);assert(stage.name.Text==""and not stage.nameGroup.Visible and not stage.sticker.Visible and not stage.tray.Visible and stage.root:GetAttribute("ReceiptReady")==false,"stage disclosed early")
      assert(view.shade:GetAttribute("ResultIdentityReady")==false and reveal.parent:GetAttribute("ResultIdentityReady")==false)
      if kind~="hue"then local p=if kind=="toy"then view.toyPanel else view.materialPanel;assert(p.title.Text==view.title.Text)end
      local graphic=c:getItemGraphic();if graphic then for _,n in ipairs(graphic:GetDescendants())do
       local label=n:GetAttribute("AccessibleLabel");if label then assert(label==Copy.get("hatch.display.wait"),"art accessible identity leaked")end
      end end
     end
-    c.age=2.2;c:paint();c:complete()
+    c.age=4.0;c:paint();c:complete() -- v2: a Rare (the jelly) names at 3.15
     assert(view.shade:GetAttribute("ResultIdentityReady")==true,"completion did not repaint outer title")
     stage:step(0);stage:step(0)
-    assert(stage.name.Text==(if kind=="toy"then "BALL"elseif kind=="material"then "JELLY"else "ROSE JAR")and stage.nameGroup.Visible and stage.banner.Visible,"stage did not name the item at the receipt beat")
-    assert(stage.bannerText.Text==(if kind=="material"then "RARE MATERIAL"elseif kind=="toy"then "NEW TOY"else "NEW COLOUR JAR"))
+    assert(stage.name.Text==(if kind=="toy"then "BALL"elseif kind=="material"then "JELLY"else "ROSE JAR")and stage.nameGroup.Visible and stage.sticker.Visible,"stage did not name the item at the receipt beat")
+    assert(stage.stickerText.Text==(if kind=="material"then "RARE MATERIAL"elseif kind=="toy"then "NEW TOY"else "NEW COLOUR JAR"))
     assert(view.title.Text==(if kind=="toy"then "Ball unlocked!"elseif kind=="material"then "Jelly unlocked!"else "Rose jar"))
     view:layoutTransaction();assert(view.title:GetAttribute("AccessibleLabel")==view.title.Text,"layout override lost title identity")
     view:close("fixture")

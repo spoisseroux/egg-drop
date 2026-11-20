@@ -1024,6 +1024,9 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  appearance=nurseryView.appearanceFor,
  activePet=function()return board:GetAttribute("CompanionId")end,
  audio=audio,reduceEffects=reduceEffects,
+ -- v2 Hatch another on the result card (HatchFlow:again).
+ hatchAgain=function(kind)return clientUI.hatchFlow~=nil and clientUI.hatchFlow:again(kind)end,
+ againPending=function()return clientUI.hatchFlow~=nil and clientUI.hatchFlow:againPending()end,
  careAction=function(kind)if roomView.care then roomView.care:request(kind)end end,
  equipPet=function(id)
   if not clientUI.hueView.machine then

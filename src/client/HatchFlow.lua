@@ -39,6 +39,8 @@ end
 -- Hatch (purchase=true) or open (false) the egg `kind` from Hatch eggs.
 function Flow:open(kind,purchase)
  local k=Flow.Kinds[kind];if not k then return false end
+ -- One request at a time: a Hatch another waiting on its store takes no second purchase.
+ if purchase and self.againKind then return false end
  local intent=self:intent(kind);local state=self.d.state()
  if purchase and state and not state[k.pending]and intent then
   -- v842: another egg's result is waiting; store it, then hatch this egg (sync).
@@ -56,9 +58,43 @@ function Flow:open(kind,purchase)
  if k.page or not purchase then return self.d.openHue(k.page or "buy",nil,"eggs")==true end
  return false
 end
+-- v2 Hatch another (V2-HATCH-REDESIGN 2.5): the result card stores its result, then the same
+-- egg hatches again once that store has landed. One press is one request: a second press while
+-- one is waiting is refused, and a refused store (or 10 s without an answer) gives up.
+Flow.AgainTimeout=10
+function Flow:again(kind)
+ if not Flow.Kinds[kind]or self:againPending()or self.direct or self.queued then return false end
+ self.againKind=kind;self.againAt=os.clock();return true
+end
+-- True while a Hatch another is waiting for its store, or its hatch is in flight (the result
+-- card keeps its shell up until then). A store that never answers gives up after the timeout.
+function Flow:againPending()
+ if self.againKind and os.clock()-(self.againAt or 0)>Flow.AgainTimeout then self.againKind=nil end
+ if self.againDirect and self.direct~=self.againDirect then self.againDirect=nil end
+ return self.againKind~=nil or self.againDirect~=nil
+end
+function Flow:cancelAgain()self.againKind=nil;self.againDirect=nil end
+function Flow:syncAgain(state)
+ local kind=self.againKind;if not kind then return false end
+ local k=Flow.Kinds[kind];local intent=self:intent(kind)
+ if not self:againPending()then return false end
+ if not state or state[k.pending]then
+  if intent and not intent.pending and intent.status=="Rejected"then self.againKind=nil end
+  return false
+ end
+ if intent and(intent.pending or(intent.state and intent.state[k.pending]))then return false end
+ self.againKind=nil
+ local opened=self:open(kind,true)
+ if opened and self.direct==kind then self.againDirect=kind end
+ return opened
+end
 -- After every snapshot / intent change: once the hatched result lands, open its reveal.
 function Flow:sync()
  local state=self.d.state()
+ if self.againKind then
+  local opened=self:syncAgain(state)
+  if self.againKind or opened then return opened end
+ end
  if self.queued and state then
   local queued=self.queued
   local other=Flow.otherPending(queued,state)

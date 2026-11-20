@@ -72,9 +72,21 @@ function Reveal:openStage(recipe,result)
   detail=function()return if host.detail then host.detail(result)else nil end,
   description=function()return if host.description then host.description(result)else(ItemStage.describe or function()return nil end)(recipe,result)end,
   actions=function()return if host.actions then host.actions(result)else {}end,
+  -- v2 result card (2.5): the odds and pity in the open, and Hatch another.
+  odds=if host.odds then function()return host.odds(result)end else nil,wonId=if host.wonId then host.wonId(result)else nil,
+  pity=if host.pity then function()return host.pity(result)end else nil,
+  again=if host.again then function()return host.again(result)end else nil,
+  effect=if host.effect then function()return host.effect(result)end else nil,
+  sticker=if host.sticker then function()return host.sticker(result)end else nil,
+  stoneColors=if host.stoneColors then function()return host.stoneColors(result)end else nil,
+  ready=function()return c.nativeScene~=nil and c.nativeScene.ready==true end,lid=c.active==true,
   onSkip=function()self:skip()end,onClose=host.close,consumeSkipInput=function()return self:consumeSkipInput()end})
  if not ok then warn("Item reveal stage could not open: "..tostring(stage));return false end
  self.stage=stage;c.borrowedStage=stage
+ -- The stage's lid holds the hatch clock until its iris is open; its first-of-type rule
+ -- decides whether a press may skip.
+ c.clockHold=function()return self.stage==stage and stage.holdsClock~=nil and stage:holdsClock()end
+ c.canSkip=function()return self.stage~=stage or stage.skippable~=false end
  if c.presentationSample then stage:updateExternal(c.age,c.presentationSample)end
  return true
 end
@@ -86,8 +98,12 @@ function Reveal:clear()
  local stage,cinematic,leaving=self.stage,self.cinematic,nil
  if stage and cinematic and type(stage.dismiss)=="function"then
   local frame=cinematic.frame
-  if stage:dismiss(function()cinematic:destroy()end)then
-   self.stage=nil;self.cinematic=nil;leaving=frame;self:stageGone()
+  -- Hatch another (2.5): the stage stays up, unchanged, until the next egg's stage takes over.
+  local next=self.handoverNext;self.handoverNext=nil
+  local handover=type(next)=="table"and os.clock()-next.at<ItemStage.HandoverTimeout
+  self.leavingFrames=self.leavingFrames or {}
+  if stage:dismiss(function()self.leavingFrames[frame]=nil;cinematic:destroy()end,{handover=handover,pending=if handover then next.pending else nil})then
+   self.stage=nil;self.cinematic=nil;leaving=frame;self.leavingFrames[frame]=true;self:stageGone()
    if cinematic.borrowedStage==stage then cinematic.borrowedStage=nil end
    if cinematic.stopAudio then cinematic:stopAudio()end
    frame.Visible=false
@@ -97,7 +113,9 @@ function Reveal:clear()
  -- This dedicated illustration seat is exclusively owned by the adapter. It
  -- may still contain the preceding shop egg or sizing decoration when no
  -- cinematic has been built; retire those as well as the shared timeline.
- for _,node in ipairs(self.parent:GetChildren())do if node~=leaving then node:Destroy()end end
+ -- (A stage still leaving, or kept up for Hatch another, keeps its cinematic's frame.)
+ local keep=self.leavingFrames or {}
+ for _,node in ipairs(self.parent:GetChildren())do if node~=leaving and not keep[node]then node:Destroy()end end
  self.jar,self.whole,self.top,self.bottom,self.topArt,self.bottomArt=nil,nil,nil,nil,nil,nil
  self.resultId=nil;self.result=nil;self.identityLabels=nil;self.identityNotified=nil;self.active=false
  self.parent:SetAttribute("ResultIdentityReady",false);self.parent:SetAttribute("ResultIdentityId",nil)

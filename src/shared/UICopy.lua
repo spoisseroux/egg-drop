@@ -16,7 +16,7 @@ local Table={
   display={charm="A charm for your pet",finish="A material for your pet",wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",material="Material for your pet",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
   -- Full-screen item reveal (QA v685 H2): the rarity banner over the item's name.
   reveal={tier={Common="COMMON",Uncommon="UNCOMMON",Rare="RARE"},
-   kind={toy="TOY",hue="COLOUR JAR",material="MATERIAL",feature="FEATURE",item="ITEM",finish="MATERIAL JAR",charm="CHARM"},
+   kind={toy="TOY",hue="COLOUR JAR",material="MATERIAL",feature="FEATURE",item="ITEM",finish="MATERIAL JAR",charm="CHARM",stat="STAT SNACK"},
    banner="{tier} {kind}",fresh="NEW {kind}",close="Close",
    -- QA R1 (2026-11-15): one fun line for every hatch result, shown under the name on the
    -- item reveal. 60 characters at most, in the garden's warm and quirky voice (the pets'
@@ -58,6 +58,12 @@ local Table={
    reason={PoolChanged="Your odds just changed. Check them and tap again.",PolicyChanged="Your odds just changed. Check them and tap again.",
     MaxSheen="This shine is as far as it goes.",MaxJelly="This pet is as jelly as it gets.",FinishChanged="This pet's material changed. Check it and tap again.",
     Locked="Find this charm first.",NotReady="Customization Eggs are not ready yet."}},
+  -- v2 hatch result card (V2-HATCH-REDESIGN-2026-11-19 2.5, R1.1): the odds tray, Hatch
+  -- another, the pity tray, the skip chip and the Rare stamp.
+  result={inThisEgg="IN THIS EGG",youGot="YELLOW = YOU GOT",again="Hatch another",againPrice="Hatch another  ★ {count}",
+   hatching="Hatching…",more="+{count} more",tapToSkip="Tap to skip",stamp={rare="RARE!"},
+   need="{count} more Stars needed",soldOut="Back tomorrow",pouchFull="Pouch is full. Feed a snack first.",allToys="Every toy found",
+   allFound="All collected",stockToys="{count} toys left to find",stockNest="{count} left in today's nest"},
   -- Restricted players (paid random items): the fixed next item instead of the odds.
   next={label="Next item",line="Next: {item}",done="All collected"},
   egg={

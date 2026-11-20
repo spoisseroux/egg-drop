@@ -215,6 +215,7 @@ end
 -- this screen and ends on these same receipt buttons: the stage mirrors `source` and calls
 -- `act`, so the save, focus and first-toy rules below stay the only owners.
 function View:bindRevealStages()
+ local eggOf={hue="look",toy="toy",material="material",feature="feature"}
  local function hooks(kind,reveal,peer,usePeer,name,detail)
   local function actions(result)
    -- v850: a toy offers "Give to <pet>" (the main button) and "Store"; with no pet to give
@@ -238,8 +239,66 @@ function View:bindRevealStages()
    end
    self:close("back")
   end
+  -- v2 result card (V2-HATCH-REDESIGN 2.5): the egg card's own odds and pity, on the state
+  -- after this hatch, and Hatch another (stores this result, then hatches the same egg).
+  local egg=eggOf[kind]
+  local function eggs()return require(script.Parent.EggHatchView)end
+  local function after(result)
+   local st=table.clone(self.state or {});st[pendingKey[kind]]=nil;return st
+  end
+  local function storeEntry(result)
+   for _,entry in ipairs(actions(result))do
+    local button=entry.source
+    if button and button.Text=="Store"and button.Visible and button.Interactable then return entry end
+   end
+   return nil
+  end
+  local function odds(result)
+   local ok,rows=pcall(function()return eggs().oddsRows(egg,after(result),self.petId)end)
+   return if ok then rows else nil
+  end
+  local function pity(result)
+   local st=after(result)
+   if egg=="look"then
+    local ok,rows=pcall(function()return eggs().lookOdds(st)end)
+    if not ok or not rows then return nil end
+    for _,row in ipairs(rows.rows or {})do if row.id=="pity"then return {line=row.name,sub=""}end end
+    return nil
+   end
+   if egg=="toy"then
+    local left=#ToyCatalog.remaining(st.toyUnlocks)
+    return {line=if left>0 then UICopy.get("hatch.result.stockToys",{count=left})else UICopy.get("hatch.result.allToys"),sub=""}
+   end
+   return nil
+  end
+  local function again(result)
+   if not self.options.hatchAgain or not storeEntry(result)then return nil end
+   local ok,action=pcall(function()return eggs().hatchAction(egg,after(result),self.petId)end)
+   if not ok or type(action)~="table"then return nil end
+   local cost=tonumber(string.match(tostring(action.text or ""),"(%d+)"))
+   local text=if cost then UICopy.get("hatch.result.againPrice",{count=cost})else UICopy.get("hatch.result.again")
+   local reason=nil
+   if not action.enabled then
+    reason=if type(action.need)=="string"and action.need~=""then action.need elseif egg=="toy"then UICopy.get("hatch.result.allToys")else action.text
+   end
+   local pending=self.options.againPending and self.options.againPending()==true
+   return {text=text,enabled=action.enabled==true,reason=reason,pending=pending,act=function()
+    local entry=storeEntry(result);if not entry then return false end
+    if not self.options.hatchAgain(egg)then return false end
+    -- The card keeps its shell up while the store and the next hatch are in flight.
+    reveal.handoverNext={at=os.clock(),pending=self.options.againPending}
+    entry.act()
+    return true
+   end}
+  end
+  local won={hue="itemId",toy="toyId",material="finishId",feature="featureId"}
+  local function wonId(result)
+   if kind=="hue"and LookEgg.kind(result.itemId)=="charm"then return "charm"end
+   return result[won[kind]]
+  end
   reveal.options.stage={parent=self.shade,owns=function()return not self.destroyed and self.shade.Visible end,
-   name=name,detail=detail,close=close,gone=function()self:releaseStageCard()end,actions=actions}
+   name=name,detail=detail,close=close,gone=function()self:releaseStageCard()end,actions=actions,
+   odds=odds,pity=pity,again=again,wonId=wonId}
  end
  hooks("hue",self.itemReveal,function()return self.useNow end,function()self:useResult()end,
   function(result)return names[result.itemId]end,function()return self.receipt.Text end)
