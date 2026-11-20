@@ -20,9 +20,13 @@ return function(client,parent)
  local function good(callback)callback(template)end
  local function failing(callback)task.defer(callback,nil)end
  local ok,problem=xpcall(function()
-  test("pure: v816 the Star faces the camera at every moment of the cycle; the glint still twinkles",function()
+  test("pure: 2026-11-20 the Star sways but never edge-on; an earn spin is one Quad Out turn; the glint still twinkles",function()
    local yaw,glint=Star.pose(0);assert(yaw==0 and glint==0)
-   for t=0,2*Star.Cycle,.05 do local y=Star.pose(t);assert(y==0,"Star turned at "..t)end
+   local moved=false
+   for t=0,2*Star.Cycle,.05 do local y=Star.pose(t);assert(Star.faceTurn(y)~=nil,"edge-on at "..t);if math.abs(y)>5 then moved=true end end
+   assert(moved,"the Star never swayed")
+   assert(Star.spinYaw(1,nil)==0 and Star.spinYaw(1,1)==0 and Star.spinYaw(1+Star.SpinTime,1)==0)
+   assert(math.abs(Star.spinYaw(1+Star.SpinTime/2,1)-270)<.01)
    assert(select(2,Star.pose(Star.GlintTime/2))==.5 and select(2,Star.pose(2))==nil)
    assert(Star.faceTurn(40)==40 and Star.faceTurn(-40)==-40 and Star.faceTurn(41)==nil and Star.faceTurn(355)==-5)
   end)
@@ -97,8 +101,8 @@ return function(client,parent)
    frames(60)
    c:Disconnect();m:Disconnect()
    assert(added==0,"instances created per frame: "..added)
-   assert(moves==0,"the shown Star turned ("..moves.." CFrame writes in 60 frames)")
-   for t=0,Star.Cycle,.2 do Star._step(Star.Cycle*3+t);assert(rec.spin==0 and rec.face.Visible,"edge-on or faceless at "..t)end
+   assert(moves>0,"the shown Star never swayed in 60 frames")
+   for t=0,Star.Cycle,.2 do Star._step(Star.Cycle*3+t);assert(rec.face.Visible,"edge-on or faceless at "..t)end
    Star._step(Star.Cycle*4+Star.GlintTime+.5)
    assert(not rec.sparkle.Visible,"sparkle off between glints")
    Star._step(Star.Cycle*5+Star.GlintTime/2)

@@ -1,6 +1,6 @@
 -- Companions hub (UI-SPEC-REDESIGN-MENUS-2026-11-12 section 1) and its Pets selector.
 -- Opened from the Care Cradle and the garden machine hub's Companions tile. A pinned
--- pet pane (who am I dressing) and four large rows: Pets, Wardrobe, Customize, Toys (QA
+-- pet pane (who am I dressing) and a 2 x 3 grid of tiles: Pets, Stats, Name, Wardrobe, Customize, Toys (QA
 -- 2026-11-13 Q5: the Collection book moved to the machine hub; UI-SPEC-v816 3: Toys are
 -- their own screen again, Customize keeps Hue, Charm and Material). The Pets
 -- selector is the Wardrobe layout with pets as the items; receipts ("Use now" on a
@@ -26,11 +26,17 @@ local Bounds=require(script.Parent.PetRigBounds)
 local BondPips=require(script.Parent.BondPips)
 -- v2 pet names: an owned pet shows its chosen name (the species while it has none).
 local NameText=require(script.Parent.PetNameText)
+-- Spencer 2026-11-20: pet cards show a headshot of the pet instead of the same paw on every card.
+local Headshot=require(script.Parent.PetHeadshot)
 local Hub={}
 Hub.__index=Hub
 Hub.Size=Vector2.new(848,608)
+-- Spencer 2026-11-20: Stats and Name are their own tiles, not buttons over the preview, so the
+-- hub is a 2 x 3 grid (row-major: Pets, Stats / Name, Wardrobe / Customize, Toys).
 Hub.Rows=table.freeze({
  table.freeze({id="pets",icon="paw",name="Pets",line="Choose who follows you around the garden"}),
+ table.freeze({id="stats",icon="bars",name=UICopy.get("stats.open"),line=UICopy.get("stats.row")}),
+ table.freeze({id="name",icon="tag",name=UICopy.get("names.open"),line=UICopy.get("names.row")}),
  table.freeze({id="wardrobe",icon="shirt",name="Wardrobe",line="Hats, shirts and more, bought with Stars"}),
  table.freeze({id="customize",icon="wand",name="Customize",line=UICopy.get("r4.customize.subtitle")}),
  -- v834 phone notes: Toys moved to the bottom (Pets, Wardrobe, Customize, Toys).
@@ -38,8 +44,36 @@ Hub.Rows=table.freeze({
 })
 -- Row rects (UI-SPEC-v816 3, four rows): desktop rows 104 high on a 116 pitch beside the
 -- pet pane; phone rows 59 high with 7 px gaps, the icon disc 37 (was 44).
-Hub.RowPitch={regular=116,regularH=104,phone=66,phoneH=59,phoneMax=59,phoneGap=7,phoneDisc=37} -- four rows in the 452 / phone window
-Hub.DefaultRow=3 -- Customize the first time (section 1, Behaviour).
+Hub.RowPitch={regular=116,regularH=104,phone=66,phoneH=59,phoneMax=59,phoneGap=7,phoneDisc=37} -- (pre-grid; kept for callers)
+Hub.Cols=2
+Hub.Grid={x=368,y=84,w=456,h=452,gap=12,phoneX=232,phoneY=64,phoneGap=7,disc=56,phoneDisc=37}
+Hub.DefaultRow=5 -- Customize the first time (section 1, Behaviour).
+
+-- Pure: the tiles this hub shows (Stats / Name drop out when their callback is switched off).
+function Hub.rowsFor(callbacks)
+ callbacks=callbacks or {}
+ local out={}
+ for _,row in ipairs(Hub.Rows)do
+  if not(row.id=="stats"and callbacks.stats==false)and not(row.id=="name"and callbacks.names==false)then table.insert(out,row)end
+ end
+ return out
+end
+-- Pure: tile rect {x, y, w, h} for tile `index` of `count` in the hub grid (body size W x H).
+function Hub.tileRect(index,count,W,H,phone)
+ local G=Hub.Grid
+ local x0,y0,w,h,gap=G.x,G.y,G.w,G.h,G.gap
+ if phone then x0,y0,w,h,gap=G.phoneX,G.phoneY,W-20-G.phoneX,H-84,G.phoneGap end
+ local rows=math.max(1,math.ceil(count/Hub.Cols))
+ local tw=math.floor((w-(Hub.Cols-1)*gap)/Hub.Cols)
+ local th=math.max(44,math.floor((h-(rows-1)*gap)/rows))
+ local col,row=(index-1)%Hub.Cols,math.floor((index-1)/Hub.Cols)
+ return{x=x0+col*(tw+gap),y=y0+row*(th+gap),w=tw,h=th}
+end
+-- Pure: the default tile index for a row list (Customize, else the first).
+function Hub.defaultIndex(rows)
+ for i,row in ipairs(rows)do if row.id=="customize"then return i end end
+ return 1
+end
 
 -- Pure: hatched items waiting to be used (one per pending receipt kind).
 function Hub.newItems(state)
@@ -63,6 +97,11 @@ end
 function Hub.status(rowId,ctx)
  ctx=ctx or {}
  if rowId=="pets"then return{text=string.upper(ctx.petName or ""),tone="dim"}end
+ if rowId=="stats"then
+  if ctx.totalLevel then return{text=string.upper(UICopy.get("stats.chip",{count=ctx.totalLevel})),tone="dim"}end
+  return{text="",tone="dim"}
+ end
+ if rowId=="name"then return{text=if ctx.named then string.upper(ctx.shownName or ctx.petName or "")else string.upper(UICopy.get("names.rowUnnamed")),tone=if ctx.named then "dim"else "stars",dot=not ctx.named}end
  if rowId=="wardrobe"then return{text=tostring(ctx.owned or 0).." OWNED",tone="dim"}end
  if rowId=="toys"then
   local text=UICopy.get("r4.customize.toys.owned",{count=ctx.toys or 0})
@@ -139,17 +178,6 @@ function Hub.firstOwned(state)
  for _,pet in ipairs(Pets.active)do if Eggs.isOwned(mask,pet.id)then return pet.id end end
  return Pets.active[1]and Pets.active[1].id or Pets[1].id
 end
--- Pure: the button band across the top of the preview well (well width `w`). Returns
--- {y, h, band, text, statsX, statsW, nameX?, nameW?}; the preview starts at `band`.
-function Hub.wellBand(w,phone,withName)
- -- 44 px tall on every screen: the touch target floor.
- local m,gap,h=if phone then 6 else 8,if phone then 6 else 10,44
- local inner=w-2*m
- local statsW=if withName then math.floor((inner-gap)*.56)else math.min(inner,if phone then 120 else 160)
- local L={y=m,h=h,band=m+h+m+4,text=if phone then 14 else 17,statsX=m,statsW=statsW}
- if withName then L.nameX=m+statsW+gap;L.nameW=inner-statsW-gap end
- return L
-end
 
 -- Pure (v2 S3): a pet's total stat level from the snapshot, or nil without stats.
 function Hub.totalLevel(state,petId)
@@ -192,6 +220,7 @@ function Hub.new(host,callbacks)
  local gradient=Kit.frame(root,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1));gradient.BackgroundTransparency=0;gradient.BackgroundColor3=Color3.new(1,1,1)
  Kit.node("UIGradient",gradient,{Rotation=90,Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(0,0,0)),Transparency=NumberSequence.new(.97,.88)})
  self.gradient=gradient;self.root=root
+ self.rowDefs=Hub.rowsFor(self.callbacks);self.rowIndex=Hub.defaultIndex(self.rowDefs)
  self.scale=Kit.node("UIScale",root,{Scale=1})
  return self
 end
@@ -214,7 +243,9 @@ end
 function Hub:statusCtx()
  local petId=self:activePet();local pet=Pets.byId[petId]
  return{petName=pet and pet.name or "",owned=Hub.ownedCount(self.ctx.state,petId),newItems=Hub.newItems(self.ctx.state),
-  toys=Hub.toysOwned(self.ctx.state),newToy=self.ctx.state~=nil and self.ctx.state.pendingToyResult~=nil}
+  toys=Hub.toysOwned(self.ctx.state),newToy=self.ctx.state~=nil and self.ctx.state.pendingToyResult~=nil,
+  totalLevel=Hub.totalLevel(self.ctx.state,petId),named=select(2,NameText.own(self.ctx.state,petId)),
+  shownName=(NameText.own(self.ctx.state,petId))}
 end
 
 -- Preview well: a ViewportFrame with the pet (same set-up as the Wardrobe pane).
@@ -248,8 +279,7 @@ function Hub:paintPreview(petId)
   self.cameraKey=key
   local box,size=Bounds.get(v);local a=math.max(.1,self.viewport.AbsoluteSize.X/math.max(1,self.viewport.AbsoluteSize.Y));local half=math.tan(math.rad(self.camera.FieldOfView/2))
   local distance=math.max(size.Y*.5/half,size.X*.5/(half*a))+size.Z*.5+.3
-  -- Under the Stats / Name band the preview is shorter, so the pet is framed tighter.
-  local pad=if self.viewport.Position.Y.Offset>0 then .98 else 1.10
+  local pad=1.10
   self.camera.CFrame=CFrame.lookAt(box.Position+Vector3.new(0,.12,distance*pad),box.Position)
  end
 end
@@ -352,72 +382,45 @@ function Hub:buildHub(body,W,H,phone)
    self.summaryLabels[pair[1]]=value;local _=name
   end
  end
- -- v2 S3 + names: Stats (left) and Name (right) share a band across the well's top, and the
- -- pet preview sits below the band. Spencer 2026-11-20: the Stats button covered the pet's
- -- head, so the buttons never overlap the preview (Left from the rows reaches them on a pad).
  self.statsButton=nil;self.nameButton=nil
- if self.callbacks.stats~=false and self.viewport then
-  local well=self.viewport.Parent
-  local L=Hub.wellBand(well.Size.X.Offset,phone,self.callbacks.names~=false)
-  local function place(b,x)
-   b.Position=UDim2.fromOffset(well.Position.X.Offset+x,well.Position.Y.Offset+L.y);b.ZIndex=pane.ZIndex+8
-   for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=8 end end
-  end
-  local total=Hub.totalLevel(self.ctx.state,petId)
-  local label=if total then UICopy.get("stats.open").." · "..total else UICopy.get("stats.open")
-  local b=Kit.button(pane,"StatsButton",{text=label,size=Vector2.new(L.statsW,L.h),textSize=L.text,selectable=false})
-  place(b,L.statsX)
-  b.Activated:Connect(function()self.statsFocus=true;self.paneKey="stats";self:act()end)
-  self.statsButton=b
-  if L.nameW then
-   local n=Kit.button(pane,"NameButton",{text=UICopy.get("names.open"),size=Vector2.new(L.nameW,L.h),textSize=L.text,selectable=false})
-   place(n,L.nameX)
-   n.Activated:Connect(function()self.statsFocus=true;self.paneKey="name";self:act()end)
-   self.nameButton=n
-  end
-  Kit.capButtonLabel(b);if self.nameButton then Kit.capButtonLabel(self.nameButton)end
-  self.viewport.Position=UDim2.fromOffset(0,L.band);self.viewport.Size=UDim2.new(1,0,1,-L.band)
- end
  local ctx=self:statusCtx()
- for index,row in ipairs(Hub.Rows)do
-  local P=Hub.RowPitch
-  local x,y,w,h=368,84+(index-1)*P.regular,456,P.regularH
-  if phone then
-   -- v816: four rows share the sheet window (H - 84) with 7 px gaps, 59 px at most;
-   -- never under 44 px.
-   local rh=math.clamp(math.floor((H-84-(#Hub.Rows-1)*P.phoneGap)/#Hub.Rows),44,P.phoneMax)
-   x,y,w,h=232,64+(index-1)*(rh+P.phoneGap),W-20-232,rh
-  end
-  -- T2: pressable row with a lip (4 px in the 16 px desktop gap, 3 px in the 9 px phone gap).
+ local defs=self.rowDefs
+ for index,row in ipairs(defs)do
+  local R=Hub.tileRect(index,#defs,W,H,phone)
+  local x,y,w,h=R.x,R.y,R.w,R.h
+  -- T2: pressable tile with a lip (in the grid gap).
   local button,tileState=Kit.tile(body,"Row_"..row.id,{selectable=false,radius=if phone then 12 else 14,compact=phone,
    position=UDim2.fromOffset(x,y),size=UDim2.fromOffset(w,h)})
   local stroke=tileState.stroke
-  button:SetAttribute("AccessibleLabel",row.name..", "..row.line)
-  local discSize=if phone then math.min(P.phoneDisc,h-8)else math.min(72,h-24)
-  local d,icon=disc(button,row.icon,if phone then 16 else 24,(h-discSize)/2,discSize)
-  local tx=if phone then 16+discSize+12 else 24+discSize+20
-  local name,line,status
   local s=Hub.status(row.id,ctx)
+  -- Spencer 2026-11-20: the Name tile reads "Name your Bear" (the species, as the screen's title).
+  local title=if row.id=="name"then UICopy.get("names.title",{pet=NameText.species(self:activePet())})else row.name
+  local name,line,status,d,icon,dot
+  button:SetAttribute("AccessibleLabel",title..", "..row.line)
   if phone then
-   name=txt(button,"Strong",row.name,"text",tx,h/2-22,w-tx-160,22,{TextSize=16})
-   line=txt(button,"Small",row.line,"soft",tx,h/2+2,w-tx-170,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
-   status=txt(button,"Label",s.text,s.tone,w-190,0,150,h,{Name="Status",TextSize=12,TextXAlignment=Enum.TextXAlignment.Right})
+   -- Phone tile (about 290 x 88): disc left, name, one line, status under it.
+   local discSize=math.min(Hub.Grid.phoneDisc,h-8)
+   d,icon=disc(button,row.icon,12,(h-discSize)/2,discSize)
+   local tx=12+discSize+10
+   local roomy=h>=70
+   name=txt(button,"Strong",title,"text",tx,if roomy then h/2-30 else h/2-20,w-tx-28,22,{TextSize=16})
+   line=txt(button,"Small",row.line,"soft",tx,h/2-7,w-tx-28,16,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd,Visible=roomy})
+   status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 12 else 0),if roomy then h/2+12 else h/2+2,w-tx-40,16,{Name="Status",TextSize=11,TextTruncate=Enum.TextTruncate.AtEnd})
+   if s.dot then dot=Kit.frame(button,"NewDot","stars",UDim2.fromOffset(tx,(if roomy then h/2+12 else h/2+2)+4),UDim2.fromOffset(8,8),999)end
+   chevron(button,w-16,h/2,14)
   else
-   name=txt(button,"Heading",row.name,"text",tx,h/2-38,w-tx-56,28,{TextSize=22})
-   line=txt(button,"Body",row.line,"soft",tx,h/2-8,w-tx-56,22,{TextSize=15,TextTruncate=Enum.TextTruncate.AtEnd})
-   status=txt(button,"Label",s.text,s.tone,tx+(if s.dot then 14 else 0),h/2+20,w-tx-70,18,{Name="Status",TextSize=12})
+   -- Desktop tile (222 x 142): disc top left, the name under it, two lines of copy, status at the foot.
+   local discSize=math.min(44,h-90)
+   d,icon=disc(button,row.icon,16,14,discSize)
+   local ny=14+discSize+6
+   name=txt(button,"Heading",title,"text",16,ny,w-32,24,{TextSize=20,TextTruncate=Enum.TextTruncate.AtEnd})
+   line=txt(button,"Body",row.line,"soft",16,ny+26,w-32,32,{TextSize=14,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,TextTruncate=Enum.TextTruncate.AtEnd})
+   status=txt(button,"Label",s.text,s.tone,16+(if s.dot then 14 else 0),h-22,w-32-(if s.dot then 14 else 0),16,{Name="Status",TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+   if s.dot then dot=Kit.frame(button,"NewDot","stars",UDim2.fromOffset(16,h-18),UDim2.fromOffset(8,8),999)end
+   chevron(button,w-22,14+discSize/2,18)
   end
   Kit.paint(status,"TextColor3",function()return colorOf(s.tone,status,"TextColor3")end)
-  if row.id=="pets"then Kit.fixedText(status)end -- the pet's name (stays as named)
-  local dot
-  if s.dot then
-   dot=Kit.frame(button,"NewDot","stars",UDim2.new(),UDim2.fromOffset(8,8),999)
-   if phone then
-    local tw=TextService:GetTextSize(status.Text,12,Enum.Font.BuilderSansBold,Vector2.new(500,30)).X
-    dot.Position=UDim2.fromOffset(w-40-tw-14,h/2-4)
-   else dot.Position=UDim2.fromOffset(tx,h/2+25)end
-  end
-  chevron(button,w-(if phone then 26 else 36),h/2,if phone then 16 else 20)
+  if row.id=="pets"or row.id=="name"then Kit.fixedText(status)end -- the pet's name (stays as named)
   self.rows[index]={id=row.id,button=button,stroke=stroke,disc=d,icon=icon,name=name,line=line,status=status,dot=dot}
   button.Activated:Connect(function()self:focusRow(index);self:act()end)
  end
@@ -425,6 +428,13 @@ end
 
 function Hub:buildSelector(body,W,H,phone)
  local cards=self:cards()
+ self.headshots={}
+ if not self.shotCache then
+  self.shotCache=Headshot.newCache()
+  self.shotCache.onDetach=function(holder)
+   for _,h in ipairs(self.headshots or {})do if h.holder==holder and h.paw.Parent then h.paw.Visible=true end end
+  end
+ end
  local pw,ph,px,py,gx,gy,gw,gh,cardW,cardH,cols,gap
  if phone then
   pw=232;ph=H-84;px,py=W-20-pw,64;gx,gy=20,64;gw=W-52-pw;gh=H-84
@@ -465,7 +475,16 @@ function Hub:buildSelector(body,W,H,phone)
   b:SetAttribute("AccessibleLabel",card.name);b:SetAttribute("PetId",card.id)
   local side=cardH-20
   local swatch=Kit.frame(b,"Swatch","well",UDim2.fromOffset(10,10),UDim2.fromOffset(side,side),10);Kit.stroke(swatch)
+  swatch.ClipsDescendants=true
+  local appearance=if card.adopt then nil else self:appearanceOf(card.id)
+  local backdrop=if card.adopt then Kit.color("tray")else Headshot.backdrop(card.id,appearance)
+  Kit.paint(swatch,"BackgroundColor3",function()return if card.adopt then Kit.color("tray")else backdrop end)
   local paw=Kit.icon(swatch,"paw",math.floor(side*.5),"soft");paw.AnchorPoint=Vector2.new(.5,.5);paw.Position=UDim2.fromScale(.5,.5)
+  if card.adopt then
+   local lock=Kit.icon(b,"lock",14,"soft");lock.Name="Lock";lock.AnchorPoint=Vector2.new(1,1);lock.Position=UDim2.fromOffset(10+side-3,10+side-3);lock.ZIndex=swatch.ZIndex+4
+  end
+  self.headshots=self.headshots or {}
+  table.insert(self.headshots,{holder=swatch,paw=paw,petId=card.id,appearance=appearance,locked=card.adopt==true})
   local tx=10+side+12
   local nameLabel=txt(b,"Name",card.name,"text",tx,cardH/2-20,cardW-tx-8,20,{TextSize=if phone then 14 else 16,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
   local status=txt(b,"Label","","soft",tx,cardH/2+2,cardW-tx-8,18,{Name="Status",TextSize=12})
@@ -476,6 +495,23 @@ function Hub:buildSelector(body,W,H,phone)
  end
  list.CanvasSize=UDim2.fromOffset(0,math.ceil(#cards/cols)*(cardH+gap)-gap+6)
  if #cards==0 then txt(list,"Body",UICopy.get("e2.hub.none"),"soft",3,3,gw-6,48,{TextWrapped=true})end
+end
+
+-- Headshots on the visible pet cards (at most one new render per frame).
+function Hub:pumpHeadshots()
+ if not self.shotCache then return end
+ local list=if self.page=="pets"then self.list else nil
+ local cards={}
+ for _,h in ipairs(if list then self.headshots or {}else {})do
+  if h.holder.Parent then
+   local y=h.holder.AbsolutePosition.Y-list.AbsolutePosition.Y
+   local visible=y+h.holder.AbsoluteSize.Y>=-8 and y<=list.AbsoluteSize.Y+8
+   table.insert(cards,Headshot.card(h.holder,h.petId,h.appearance,h.locked,visible))
+  end
+ end
+ self.shotCache:pump(cards,function(holder)
+  for _,h in ipairs(self.headshots or {})do if h.holder==holder then h.paw.Visible=false end end
+ end)
 end
 
 function Hub:fit(size)
@@ -546,10 +582,10 @@ function Hub:refresh()
   end
   self:paintSelectorPane()
  else
-  self.rowIndex=math.clamp(self.rowIndex,1,#Hub.Rows)
+  self.rowIndex=math.clamp(self.rowIndex,1,#self.rowDefs)
   for index,entry in ipairs(self.rows)do
    -- v850: opened by touch, no row is highlighted; the ring is for gamepad and keyboard.
-   local focused=index==self.rowIndex and not self.touchMode and not self.statsFocus
+   local focused=index==self.rowIndex and not self.touchMode
    paintRowFocus(entry,focused)
    Kit.paint(entry.disc,"BackgroundColor3",function()return if focused then Kit.color("accent")else Kit.Color.ink end)
    Kit.tintIcon(entry.icon,if focused then "ink"else "text")
@@ -557,7 +593,7 @@ function Hub:refresh()
   self.focusPet=nil
   if self.visible then self:paintPreview(self:activePet())end
  end
- self.root:SetAttribute("FocusedRow",if self.page=="hub"then Hub.Rows[self.rowIndex].id else nil)
+ self.root:SetAttribute("FocusedRow",if self.page=="hub"then self.rowDefs[self.rowIndex].id else nil)
 end
 function Hub:paintSelectorPane()
  local entry=self.cardButtons[self.cardIndex]
@@ -594,7 +630,7 @@ function Hub:paintSelectorPane()
 end
 
 function Hub:focusRow(index,instant)
- self.rowIndex=math.clamp(index,1,#Hub.Rows);self.statsFocus=false;self:refresh()
+ self.rowIndex=math.clamp(index,1,#self.rowDefs);self:refresh()
  local entry=self.rows[self.rowIndex]
  if self.touchMode and self.page=="hub"then if self.ring then self.ring.hide()end;return end
  if entry and self.ring then self.ring.attach(entry.button,if self.view then 12 else 14)end
@@ -621,23 +657,7 @@ function Hub:move(dx,dy)
   if nextIndex==self.cardIndex then return false end
   self:focusCard(nextIndex);return true
  end
- -- v2 S3: Left from the rows reaches the Stats button. Stats and Name sit side by side over
- -- the preview: Right from Stats reaches Name; Right from the last one returns to the rows.
- if self.statsFocus then
-  if dy~=0 then return false end
-  if dx<0 then
-   if self.paneKey~="name"then return false end
-   self.paneKey="stats";if self.ring then self.ring.attach(self.statsButton,12)end;return true
-  end
-  if self.paneKey=="stats"and self.nameButton then
-   self.paneKey="name";if self.ring then self.ring.attach(self.nameButton,12)end;return true
-  end
-  self.statsFocus=false;self:focusRow(self.rowIndex);return true
- end
- if dx<0 and self.statsButton then
-  self.statsFocus=true;self.paneKey="stats";self:refresh();if self.ring then self.ring.attach(self.statsButton,12)end;return true
- end
- local nextIndex=Hub.step(self.rowIndex,0,dy,#Hub.Rows,1)
+ local nextIndex=Hub.step(self.rowIndex,dx,dy,#self.rowDefs,Hub.Cols)
  if nextIndex==self.rowIndex then return false end
  self:focusRow(nextIndex);return true
 end
@@ -658,13 +678,7 @@ end
 function Hub:act()
  if not self.visible then return false end
  if self.page=="hub"then
-  if self.statsFocus then
-   local ok=self.callbacks.open~=nil and self.callbacks.open(if self.paneKey=="name"then "name"else "stats",self:activePet())==true
-   if not ok and self.visible then self:focusRow(self.rowIndex)end
-   self.statsFocus=false
-   return ok
-  end
-  local row=Hub.Rows[self.rowIndex];if not row then return false end
+  local row=self.rowDefs[self.rowIndex];if not row then return false end
   self.lastRow=self.rowIndex
   if row.id=="pets"then self:setPage("pets");return true end
   if self.callbacks.open then return self.callbacks.open(row.id,self:activePet())==true end
@@ -748,9 +762,9 @@ function Hub:open(ctx,options)
   if ctx.state then self.ctx.state=ctx.state end
   if ctx.activeId~=nil then self.ctx.activeId=ctx.activeId end
  end
- self.assign=options.assign;self.pendingFollow=nil;self.statsFocus=false;self.confirmAdopt=nil
+ self.assign=options.assign;self.pendingFollow=nil;self.confirmAdopt=nil
  self.page=options.page or "hub";self.key=nil;self.slideFrom=nil
- self.rowIndex=self.lastRow or Hub.DefaultRow
+ self.rowIndex=self.lastRow or Hub.defaultIndex(self.rowDefs)
  self.touchMode=if options.touch~=nil then options.touch==true else Kit.lastInputTouch()
  self.visible=true;self.covered=false;self.root.Visible=true
  Kit.shadeOpen(self,self.shade,function(covered)self:setCovered(covered)end)
@@ -767,6 +781,7 @@ function Hub:open(ctx,options)
  end
  if self.clock then self.clock:Disconnect()end
  self.clock=RunService.RenderStepped:Connect(function(dt)
+  if self.visible then self:pumpHeadshots()end
   local v=self.visual;if not self.visible or not v or v.destroyed then return end
   if GuiService.ReducedMotionEnabled then return end
   v.cosmeticTime=os.clock();v:update(math.min(dt,.1))
@@ -779,6 +794,7 @@ function Hub:close(reason)
  self.visible=false;self.covered=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end
  if self.clock then self.clock:Disconnect();self.clock=nil end
  if self.visual then self.visual:destroy();self.visual=nil end
+ if self.shotCache then self.shotCache:clear()end
  if reason~="assigned"and reason~="cancel"then self.assign=nil end
  if self.callbacks.closed then self.callbacks.closed(reason)end
  return true

@@ -5,6 +5,17 @@ local Policy = require(script.Parent.PresentationPolicy)
 local Transition = {}
 Transition.__index = Transition
 
+-- Spencer 2026-11-20: the handoff shade was the old teal backdrop. It is the menu shell colour of
+-- the Toy Shell palette now (the equipped deck, or Classic Shell), repainted on a deck change.
+function Transition.shadeColor()
+	local toy = Art.toyPalette()
+	return (toy and toy.shell) or Art.Backdrop
+end
+local function shellPaint(object)
+	object.BackgroundColor3 = Transition.shadeColor()
+	Art.bind(object, { BackgroundColor3 = function() return Transition.shadeColor() end })
+end
+
 local function tween(object, seconds, properties, style, direction)
 	local motion = TweenService:Create(object, TweenInfo.new(seconds, style or Enum.EasingStyle.Quad, direction or Enum.EasingDirection.InOut), properties)
 	motion:Play()
@@ -36,7 +47,7 @@ function Transition.new(gui, tray, audio, reduceEffects)
 	local shade = Instance.new("Frame")
 	shade.Name = "DeckHandoff"
 	shade.Size = UDim2.fromScale(1, 1)
-	shade.BackgroundColor3 = Art.Backdrop
+	shellPaint(shade)
 	shade.BorderSizePixel = 0
 	shade.BackgroundTransparency = 1
 	shade.Active = true
@@ -103,7 +114,7 @@ end
 -- reveal an old generation while independent replication events are settling.
 function Transition:setContentCover(covered)
  if not self.contentCover then
-  local node=Instance.new("Frame");node.Name="BoardContentBarrier";node.BackgroundColor3=Art.Backdrop;node.BorderSizePixel=0
+  local node=Instance.new("Frame");node.Name="BoardContentBarrier";shellPaint(node);node.BorderSizePixel=0
   node.Size=UDim2.fromScale(1,1);node.ZIndex=60;node.Active=true;node.Visible=false;node.Parent=self.shade.Parent;self.contentCover=node
  end
  self.contentCover.Visible=covered==true

@@ -178,13 +178,18 @@ function Screen:geometry(view)
 		local rx=20+leftW+12
 		local rw=W-20-rx
 		return {phone=true,W=W,H=H,left={x=20,y=64,w=leftW,h=H-84},rx=rx,rw=rw,trayY=64,trayH=52,tabsY=124,tabsH=36,
-			gridY=166,gridH=H-166-58,cols=if rw>=520 then 4 else 3,keyH=40,bottomY=H-50,bottomH=40}
+			gridY=166,gridH=H-166-66,cols=if rw>=520 then 4 else 3,keyH=40,bottomY=H-58,bottomH=40}
 	end
 	return {phone=false,W=848,H=608,left={x=24,y=84,w=272,h=452},rx=312,rw=512,trayY=84,trayH=84,tabsY=180,tabsH=40,
 		gridY=232,gridH=244,cols=3,keyH=50,bottomY=488,bottomH=48}
 end
 
+-- The waiting-slot pulses loop forever: stop them before their strokes go.
+function Screen:stopPulses()
+	for _,s in ipairs(self.slotKeys or {})do if s.pulse then s.pulse:Cancel();s.pulse=nil end end
+end
 function Screen:build(view)
+	self:stopPulses()
 	if self.content then self.content:Destroy()end
 	if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
 	if self.visual then self.visual:destroy();self.visual=nil end
@@ -267,7 +272,12 @@ function Screen:buildSlots(body,g)
 		number.BackgroundTransparency=0;Kit.setSurface(number,"dark")
 		Kit.text(number,"Counter",tostring(i),"text",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=13})
 		key.Activated:Connect(function()self:tapSlot(i)end)
-		self.slotKeys[i]={key=key,state=state,label=label,number=number}
+		-- Spencer 2026-11-20: show which slot the next piece goes into. A lemon ring around the
+		-- slot waiting for a pick (pulsing; still under Reduced Motion).
+		local ring=Kit.frame(tray,"Pending"..i,nil,UDim2.fromOffset(x-4,2),UDim2.fromOffset(slotW+8,h+8),14)
+		ring.BackgroundTransparency=1;ring.ZIndex=key.ZIndex+6;ring.Visible=false
+		local ringStroke=Kit.node("UIStroke",ring,{Name="Ring",Thickness=3,Color=Kit.color("selected"),ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+		self.slotKeys[i]={key=key,state=state,label=label,number=number,ring=ring,ringStroke=ringStroke}
 		x+=slotW+gap
 		if i==1 then
 			local swap=Kit.button(tray,"Swap",{text=UICopy.get("names.swap"),size=Vector2.new(swapW,h),textSize=if g.phone then 14 else 16,selectable=false})
@@ -298,7 +308,10 @@ function Screen:buildGrid(body,g)
 		Size=UDim2.fromOffset(g.rw,g.gridH),ScrollBarThickness=6,ScrollingDirection=Enum.ScrollingDirection.Y,CanvasSize=UDim2.new(),
 		AutomaticCanvasSize=Enum.AutomaticSize.None,ZIndex=body.ZIndex+1,ScrollBarImageColor3=Kit.Color.cream,Selectable=false})
 	self.grid=scroll
-	self.keys={}
+	-- A rebuilt screen (reopen, resize) has a new, empty grid: forget the old signature, or
+	-- paintGrid skips the rebuild and indexes keys that do not exist (Spencer 2026-11-20: the
+	-- second open stopped before the pet preview was drawn).
+	self.keys={};self.gridSignature=nil
 end
 
 function Screen:buildBottom(body,g)
@@ -448,10 +461,22 @@ function Screen:paint()
 	self.tagLabel.Text=display or species
 	local tw=math.ceil(Kit.measure(self.tagLabel.Text,"Strong",self.tagLabel.TextSize).X)+28
 	self.tag.Size=UDim2.fromOffset(math.min(tw,self.previewWell.Size.X.Offset-12),self.tag.Size.Y.Offset)
+	local nextSlot=if #self.slots<Names.MaxPieces then #self.slots+1 else nil
 	for i,s in ipairs(self.slotKeys)do
 		local id=self.slots[i]
 		s.state.setSelected(id~=nil)
-		s.label.Text=if id then Names.text(id)or "?"else UICopy.get("names.slots.empty")
+		local waiting=i==nextSlot
+		s.label.Text=if id then Names.text(id)or "?"elseif waiting then UICopy.get("names.slots.empty")else UICopy.get("names.slots.optional")
+		Kit.paint(s.label,"TextColor3",if id or waiting then "text"else "soft")
+		s.key:SetAttribute("Waiting",waiting)
+		if s.ring then
+			s.ring.Visible=waiting
+			if waiting and not s.pulse and not Kit.reduced()then
+				s.ringStroke.Transparency=0
+				s.pulse=game:GetService("TweenService"):Create(s.ringStroke,TweenInfo.new(.7,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{Transparency=.65})
+				s.pulse:Play()
+			elseif not waiting and s.pulse then s.pulse:Cancel();s.pulse=nil;s.ringStroke.Transparency=0 end
+		end
 		s.label.AutoLocalize=id==nil
 		s.number.Visible=id~=nil
 		if s.mark then s.mark:Destroy();s.mark=nil end
@@ -683,6 +708,7 @@ end
 function Screen:close(reason)
 	if not self.visible then return false end
 	self.visible=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end
+	self:stopPulses()
 	self:closeEgg()
 	if self.clock then self.clock:Disconnect();self.clock=nil end
 	if self.visual then self.visual:destroy();self.visual=nil end

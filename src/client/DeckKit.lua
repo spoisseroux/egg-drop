@@ -366,6 +366,12 @@ function Vector.paw(h)
  ink(h,"Pad",.5,.68,S(.46,.36),0,999)
  for i,p in ipairs({{.24,.4},{.5,.26},{.76,.4}})do ink(h,"Toe"..i,p[1],p[2],S(.18,.22),0,999)end
 end
+-- Name tag (Companions Name tile, 2026-11-20): a tag tilted up to the left, a pointed end and its string loop.
+function Vector.tag(h,s,t)
+ ink(h,"Body",.58,.56,S(.5,.38),-35,3)
+ ink(h,"Tip",.38,.42,S(.27,.27),10,2)
+ outline(h,"Loop",.22,.26,S(.2,.2),t,999)
+end
 function Vector.shirt(h)
  ink(h,"Body",.5,.58,S(.44,.6),0,3)
  ink(h,"SleeveL",.24,.36,S(.3,.18),-28,3);ink(h,"SleeveR",.76,.36,S(.3,.18),28,3)
@@ -1407,6 +1413,7 @@ function Kit.wallet(parent,height)
   flash.BackgroundTransparency=.15
   TweenService:Create(flash,TweenInfo.new(.32,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,.12),{BackgroundTransparency=1}):Play()
   if game:GetService("GuiService").ReducedMotionEnabled then return end
+  require(script.Parent.WalletStar).celebrate(star3D)
   pop.Scale=1
   local up=TweenService:Create(pop,TweenInfo.new(.08,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1.25})
   up.Completed:Once(function()TweenService:Create(pop,TweenInfo.new(.16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=1}):Play()end)
@@ -1493,13 +1500,16 @@ end
 -- Compatibility adapter: all former per-screen queues now share the topbar rail.
 -- `placement` is accepted by old callers but deliberately cannot move this owner.
 -- `detail` (QA v735 H5) names the notice card a tap on the line opens (NoticeCards.detail).
+-- `activate` (optional, v2 tickets) is the caller's own opener for a tap (it wins over the
+-- detail card); it should do nothing when its menu is already open (no second copy).
 local toastSerial=0
 function Kit.toaster(host,rail)
  local Rail=rail or require(script.Parent.NotificationRail)
  local api={root=host}
- function api.show(message,stars,eventKey,detail)
+ function api.show(message,stars,eventKey,detail,activate)
   toastSerial+=1
-  return Rail.enqueue(host,if eventKey~=nil then eventKey else "toast:"..toastSerial,{text=message,amount=stars,detail=detail})
+  return Rail.enqueue(host,if eventKey~=nil then eventKey else "toast:"..toastSerial,{text=message,amount=stars,detail=detail,
+   activate=if type(activate)=="function"then activate else nil})
  end
  return api
 end

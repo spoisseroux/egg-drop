@@ -1367,6 +1367,8 @@ do
  roomView.openStats=clientUI.openStats
  gui.Destroying:Connect(function()clientUI.stats.destroy()end)
 end
+-- Spencer 2026-11-20: small soft fades on the edges of every scrolling list (ScrollFades).
+pcall(function()require(script.ScrollFades).start(gui.Parent)end)
 -- v2 pet names: the naming screen (Companions → pet → Name), the Names Egg card and its reveal on
 -- the Pop-Out Stage, and the name on the petting card (RoomView.shownName reads nameState).
 do

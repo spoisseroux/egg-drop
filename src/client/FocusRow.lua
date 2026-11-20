@@ -1,27 +1,30 @@
 -- Coordinates are local to the CoreUISafeInsets focus root, in physical pixels.
 local Row={}
--- v2 S3 `stats`: a 112 px Stats button left of the card, when the row has room for it
--- beside Back (otherwise row.stats is nil and the button hides).
+-- v2 S3 / Stat Snacks: Stats and Snacks buttons. Spencer 2026-11-20: they sit at the bottom left,
+-- stacked (Snacks at the bottom, Stats above it), out of the top row and clear of the snack tray,
+-- which opens bottom centre. Given the root `height`; without it (or with no room) they hide.
 Row.StatsWidth=112
--- v2 Stat Snacks: a Snacks button left of Stats, when there is room for both.
 Row.SnacksWidth=112
-function Row.layout(width,bondWidth,pickup,stats,snacks)
- local height,gap,edge=48,8,12
- local maximum=math.max(150,math.min(190,width-edge*2-height-gap-(if pickup then height+gap else 0)))
+function Row.layout(width,bondWidth,pickup,stats,snacks,height)
+ local h,gap,edge=48,8,12
+ local maximum=math.max(150,math.min(190,width-edge*2-h-gap-(if pickup then h+gap else 0)))
  local cardW=math.clamp(math.ceil(bondWidth or 150),150,maximum)
  local right=width-edge
- local pickupX=right-height
+ local pickupX=right-h
  local cardRight=if pickup then pickupX-gap else right
  local cardX=cardRight-cardW
- local statsRect
- if stats and cardX-gap-Row.StatsWidth>=edge+height+gap then statsRect={x=cardX-gap-Row.StatsWidth,y=edge,w=Row.StatsWidth,h=height}end
- local snacksRect
- if snacks then
-  local right=if statsRect then statsRect.x else cardX
-  if right-gap-Row.SnacksWidth>=edge+height+gap then snacksRect={x=right-gap-Row.SnacksWidth,y=edge,w=Row.SnacksWidth,h=height}end
+ local statsRect,snacksRect
+ if type(height)=="number"then
+  -- Below the Back key's row, with room for both stacked.
+  local bottom=height-edge
+  local top=edge+h+gap
+  local y=bottom-h
+  if snacks and y>=top then snacksRect={x=edge,y=y,w=Row.SnacksWidth,h=h};y-=h+gap end
+  if stats and y>=top then statsRect={x=edge,y=y,w=Row.StatsWidth,h=h}end
  end
- return{height=height,back={x=edge,y=edge,w=height,h=height},
-  pickup={x=pickupX,y=edge,w=height,h=height},
-  bond={x=cardX,y=edge,w=cardW,h=height},stats=statsRect,snacks=snacksRect,gap=gap}
+ return{height=h,back={x=edge,y=edge,w=h,h=h},
+  pickup={x=pickupX,y=edge,w=h,h=h},
+  bond={x=cardX,y=edge,w=cardW,h=h},stats=statsRect,snacks=snacksRect,gap=gap,
+  leftColumn=if statsRect or snacksRect then edge+math.max(statsRect and statsRect.w or 0,snacksRect and snacksRect.w or 0)else 0}
 end
 return Row

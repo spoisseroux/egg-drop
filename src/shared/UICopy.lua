@@ -394,8 +394,9 @@ local Table={
  -- in NameCatalog, shown the same to every viewer (never in this table, never translated).
  names={
   title="Name your {pet}",eyebrow="Companions",open="Name",save="Save name",saving="Saving…",saved="Name saved",
+  row="Pick name pieces for your pet",rowUnnamed="Not named yet",
   swap="Swap",clear="Clear",
-  slots={empty="Pick a piece",hint="One piece or two. No typing, ever."},
+  slots={empty="Pick a piece",optional="Optional",hint="One piece or two. No typing, ever."},
   tab={all="All",starter="Starter",egg="Names Egg",stat="Stats",book="Book"},
   shows={title="Shows",where="When you pet it\nOn its card and stats",own="Each pet has its own name."},
   footer={free="Renaming is free, any time.",account="A piece you unlock is yours for every pet."},
@@ -416,7 +417,7 @@ local Table={
    Retrying="Still saving. Try again in a moment.",Timeout="No answer yet. Try again.",default="Couldn't save. Try again."},
  },
  stats={
-  title="{pet}'s stats",eyebrow="Companions",open="Stats",chip="Total {count}",
+  title="{pet}'s stats",eyebrow="Companions",open="Stats",chip="Total {count}",row="Levels, Bonus XP and snacks",
   total="Total level",of="/ {total}",nextKeeper="{name} at {count}",topKeeper="Every stat at the top",
   toNext="{count} XP to {target}",max="Top level",bonus="BONUS",
   bonusLeft="2x bonus: {count} XP left today",bonusUsed="Today's 2x bonus is used. Back tomorrow.",
@@ -435,7 +436,7 @@ local Table={
   levelUp="{name} {count}",levelUpMore="{name} {count} +{target}",
   -- v2 Stat Snacks: the boost on a tile, the pouch and feeding (V2-FEEDING-RUNES 2 and 3).
   boost="{mult}x · {count} XP left",boostMore="{mult}x · {count} XP left · +{more}",
-  snacks={open="Snacks",title="Snack pouch",count="{count}/{total}",empty="No snacks yet. Hatch a Stat Egg.",feed="Feed",back="Stats",
+  snacks={open="Snacks",close="Close",title="Snack pouch",count="{count}/{total}",empty="No snacks yet. Hatch a Stat Egg.",feed="Feed",back="Stats",
    name="{stat} {size}",tile="{stat} {size}, {count}",card="{mult}x for your next {count} XP",cardBoost="{stat} has {mult}x · {left} XP left",
    drop="Let go to feed {pet}",tapHint="Tap a snack, then Feed.",eggs="Go to Hatch eggs",
    line="{name} boost: {mult}x for your next {count} XP",favourite="{pet}'s favourite!",

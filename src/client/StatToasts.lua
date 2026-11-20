@@ -4,7 +4,10 @@
 -- into one line ("Power 15, Energy 12") while that line is queued or showing. During a
 -- round (`held`) nothing shows; the lines wait for the results screen. The first snapshot
 -- (and a pet seen for the first time) only records levels. A tap on the line opens the
--- stats panel on that stat (`open(statId)`).
+-- stats panel on that stat (`open(statId)`); when the panel is already open, `focus`
+-- (optional) switches it to that stat instead, so no second panel opens. Without `focus`
+-- the open call is refused by the host (StatsHost.open returns false while open) and the
+-- ticket just dismisses.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Catalog=require(Shared.StatCatalog)
 local UICopy=require(Shared.UICopy)
@@ -94,20 +97,25 @@ function Toasts.capped(levels,fits)
  if others==0 then return text,first end
  return UICopy.get("stats.levelUpMore",{name=UICopy.get("stats.name."..first),count=levels[first],target=others}),first
 end
--- The rail's own width rule (NotificationRail.geometry) for a tappable line.
+-- The rail's own width rule (NotificationRail.geometry) for a tappable line: the whole line
+-- shows on its ticket (`full`; a longer one would be truncated at the end).
 local function railFits(rail)
  local GuiService=game:GetService("GuiService")
  local TextService=game:GetService("TextService")
  return function(text)
   local inset=GuiService.TopbarInset
   local width=TextService:GetTextSize(text,14,Enum.Font.BuilderSansMedium,Vector2.new(10000,40)).X
-  return rail.geometry(inset.Width,inset.Height,width,true).fits
+  local g=rail.geometry(inset.Width,inset.Height,width,true)
+  if g.full==nil then return g.fits end
+  return g.full
  end
 end
 Toasts.MaxWait=20 -- a queued line that never showed in this long is retired
 
 -- deps: rail (NotificationRail), owner (Instance), held() -> bool, open(statId, petId),
--- fits(text) -> bool (optional; the rail's width rule by default), now() (optional clock)
+-- focus(statId, petId) -> bool (optional: the panel is already open, switch it to that stat;
+-- false when it is not open), fits(text) -> bool (optional; the rail's width rule by
+-- default), now() (optional clock)
 function Toasts.new(deps)
  return setmetatable({deps=deps,seen=nil,pending=nil,pendingPet=nil,handle=nil,serial=0,
   fits=deps.fits or(if deps.rail and deps.rail.geometry then railFits(deps.rail)else nil)},Toasts)
@@ -152,7 +160,10 @@ function Toasts:flush(now)
  local deps=self.deps
  -- Same key: the rail updates the queued or showing line in place.
  live.item=deps.rail.enqueue(deps.owner,live.key,{text=text,icon="▲",duration=Toasts.Duration,
-  activate=if deps.open then function()deps.open(first,live.petId)end else nil,
+  activate=if deps.open then function()
+   if deps.focus and deps.focus(first,live.petId)then return true end
+   return deps.open(first,live.petId)
+  end else nil,
   onShown=function()live.shown=true end,onDone=function()live.done=true end})
  return text
 end

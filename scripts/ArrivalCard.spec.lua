@@ -75,20 +75,23 @@ return function(client,parent)
   -- Since 70e0440 the arrival notice is a line on the shared top-bar rail
   -- (NotificationRail, "Say hi to {pet}"); a tap on it is Say hi. The old card and its
   -- button stay built but hidden. The rail runs on real frames, so `shows` pumps them, and
-  -- the card's own clock only runs while the rail is drawing it.
+  -- the card's own clock only runs while the rail is drawing it. v2 tickets: several lines
+  -- can show side by side, so these look for this line's ticket among them.
   local Rail=require(client.NotificationRail)
   local RunService=game:GetService("RunService")
   local sayHiLine=UICopy.get("qa.coach.sayHi",{pet=Pets.byId[earnedId].name})
-  local function railText()local _,capsule=Rail.view();return if capsule and capsule.Visible then capsule.Message.Text else nil end
+  local function ticketOf(text)
+   for _,entry in ipairs(Rail.shown())do if entry.text==text then return entry.ticket end end
+   return nil
+  end
   local function shows(text)
-   -- QA v775: after a line leaves, the rail rests Rail.Gap seconds before the next one.
-   local deadline=os.clock()+2+Rail.Gap+.5
-   repeat if railText()==text then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
+   local deadline=os.clock()+2.5
+   repeat if ticketOf(text)then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
    return false
   end
-  local function quiet()
+  local function quiet(text)
    local deadline=os.clock()+2
-   repeat if railText()==nil then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
+   repeat if not ticketOf(text)then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
    return false
   end
   test("the line shows once the garden is settled; Say hi switches and saves the bit",function()
@@ -101,11 +104,11 @@ return function(client,parent)
    assert(not view.root.Visible and not cards.sayHiButton.Visible,"the old card stays hidden")
    step(cards,Coach.GardenSettle+.2)
    assert(shows(sayHiLine)and string.find(sayHiLine,Pets.byId[earnedId].name,1,true),"the rail names the new friend")
-   local _,capsule=Rail.view();assert(capsule.Active==true,"the line can be tapped")
+   local ticket=ticketOf(sayHiLine);assert(ticket and ticket.Active==true,"the line can be tapped")
    assert(#sent==0,"nothing is saved until the player answers")
    assert(cards:dismiss("tap")==false and cards.garden~=nil,"a stray dismiss keeps it")
    assert(cards:sayHi()==true and greeted[1]==earnedId and #greeted==1)
-   assert(table.concat(sent,",")=="petArrived"and cards.garden==nil and quiet(),"saved, and the line leaves the rail")
+   assert(table.concat(sent,",")=="petArrived"and cards.garden==nil and quiet(sayHiLine),"saved, and the line leaves the rail")
    assert(Coach.has(cards.mask,"petArrived"))
    step(cards,Coach.GardenSettle+5);step(cards,Coach.GardenSettle+10)
    assert(cards.garden==nil and #sent==1 and #greeted==1,"shown once")
@@ -125,7 +128,7 @@ return function(client,parent)
    step(cards,0);step(cards,3);assert(cards.garden~=nil)
    step(cards,3.1);assert(shows(sayHiLine))
    step(cards,4,{open={companions=true}})
-   assert(cards.garden==nil and #sent==0 and quiet(),"hidden under the menu, not saved")
+   assert(cards.garden==nil and #sent==0 and quiet(sayHiLine),"hidden under the menu, not saved")
    step(cards,5);step(cards,5+Coach.GardenSettle+.1)
    assert(cards.garden and cards.garden.kind=="arrival","it comes back")
    -- Its full time on the rail: gone, and saved (each card shows once ever).

@@ -277,6 +277,13 @@ function Stage.closeRect(W,H,phone,safe,bar)
  x=math.clamp(x,0,math.max(0,W-size));y=math.clamp(y,0,math.max(0,H-size))
  return math.floor(x),math.floor(y),size
 end
+-- Pure: how much of the top to keep clear: the top bar (with the notification row in it) plus
+-- 6 px, or the safe-area top when that is larger.
+function Stage.topClear(safe,bar)
+ local t=math.max(0,(safe and safe.t)or 0)
+ if bar and bar.height and bar.height>0 then t=math.max(t,bar.height+6)end
+ return t
+end
 function Stage.safeArea(root)
  local safe={l=0,t=0,r=0,b=0}
  local holder=root:FindFirstAncestorOfClass("PlayerGui")
@@ -295,8 +302,18 @@ end
 -- (PC: centred in a band, at most 1.35x); portrait stacks the well on top.
 -- Rects are {x, y, w, h} in stage px. All whole pixels.
 local function rect(x,y,w,h)return {x=math.floor(x+.5),y=math.floor(y+.5),w=math.floor(w+.5),h=math.floor(h+.5)}end
-function Stage.geometry(W,H)
- local L={W=W,H=H,landscape=W>=H*1.15,phone=Kit.compactRule(W,H)or W<760}
+-- `top` (optional): rows kept clear at the top for Roblox's top bar and the notification row
+-- (Spencer 2026-11-20: the hatch content sat under them). The layout uses the area below and
+-- every rect moves down by `top`; the stage backdrop still fills the whole screen.
+function Stage.geometry(W,H,top)
+ top=math.max(0,math.floor(top or 0))
+ if top>0 and H-top>=200 then
+  local L=Stage.geometry(W,H-top)
+  for _,r in pairs(L)do if type(r)=="table"and r.y and r.h then r.y+=top end end
+  L.H=H;L.top=top
+  return L
+ end
+ local L={W=W,H=H,landscape=W>=H*1.15,phone=Kit.compactRule(W,H)or W<760,top=0}
  if L.landscape then
   local s=math.min(W/844,H/390,1.35);L.s=s
   local ox=math.floor((W-844*s)*.5);local oy=math.floor((H-390*s)*.5)
@@ -744,7 +761,8 @@ end
 function Stage:layout()
  if self.destroyed then return end
  local size=self.root.AbsoluteSize;local W,H=math.max(1,size.X),math.max(1,size.Y)
- local L=Stage.geometry(W,H);self.L=L;self.staticDone=false
+ local safe,bar=Stage.safeArea(self.root)
+ local L=Stage.geometry(W,H,Stage.topClear(safe,bar));self.L=L;self.staticDone=false
  local tx=L.text
  self.stickerText.TextSize=tx.sticker
  self.name.TextSize=tx.name;self.nameStroke.Thickness=math.max(2,math.floor(3*L.s+.5))
@@ -766,7 +784,6 @@ function Stage:layout()
  local pad=math.floor(12*L.s)
  self.pityLine.Position=UDim2.fromOffset(pad,math.floor(L.pityTray.h*.12));self.pityLine.Size=UDim2.fromOffset(L.pityTray.w-pad*2,math.floor(L.pityTray.h*.42))
  self.pitySub.Position=UDim2.fromOffset(pad,math.floor(L.pityTray.h*.52));self.pitySub.Size=UDim2.fromOffset(L.pityTray.w-pad*2,math.floor(L.pityTray.h*.38))
- local safe,bar=Stage.safeArea(self.root)
  local closeX,closeY=Stage.closeRect(W,H,L.phone,safe,bar)
  self.close.Position=UDim2.fromOffset(closeX,closeY)
  self.skipChip.Size=UDim2.fromOffset(math.floor(110*L.s),math.floor(24*L.s));self.skipChip.Position=UDim2.fromOffset(math.floor(W/2),H-math.floor(10*L.s))

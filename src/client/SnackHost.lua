@@ -63,6 +63,8 @@ function Host.mount(deps)
 	local reveal=Reveal.new(deps.playerGui,deps.audio)
 	local owner=Instance.new("Folder");owner.Name="SnackRailOwner";owner.Parent=deps.playerGui
 	api.intent,api.reveal=intent,reveal
+	-- Declared before intent.onLate below, which uses it (it was a nil global there).
+	local notify
 	-- A buy or feed the server settled after the client gave up waiting: show it now.
 	intent.onLate=function(action,message)
 		if message.status~="Saved"or type(message.receipt)~="table"then return end
@@ -70,9 +72,9 @@ function Host.mount(deps)
 		if action=="statEggBuy"then
 			local petId=deps.activeId()
 			reveal:show(receipt,api.revealInfo(petId),{
-				feed=function(r)api.feedNow(r.snackId)end,keep=function()notify(UICopy.get("hatch.stat.reveal.kept"))end})
+				feed=function(r)api.feedNow(r.snackId)end,keep=function()notify(UICopy.get("hatch.stat.reveal.kept"),true)end})
 		else
-			notify(Host.boostLine(receipt))
+			notify(Host.boostLine(receipt),true)
 		end
 		if api.onChanged then api.onChanged()end
 	end
@@ -81,8 +83,25 @@ function Host.mount(deps)
 	api.panel=Eating.new(deps.audio)
 	api.others={} -- [userId] = {eating, visual}
 	local function reduced()return GuiService.ReducedMotionEnabled end
-	local function notify(text)
-		if text and text~=""then Rail.enqueue(owner,"snack:"..text,{text=text,icon="•",duration=2.6})end
+	-- The snack pouch, for a tap on a snack line: the tray in pet focus (Focus:openSnacks is
+	-- idempotent: an open tray just refreshes), else the stats panel's Snacks view. A panel
+	-- already open refuses a second copy (StatsHost.open returns false) and the ticket just
+	-- dismisses; it does not switch that panel to its Snacks view.
+	local function openPouch()
+		local room=deps.roomView
+		if room and room.focusing and room.focusUI and room.focusUI.openSnacks then return room.focusUI:openSnacks()==true end
+		if deps.inRound and deps.inRound()then return false end
+		if deps.openStats then return deps.openStats({from="rail",snacks=true})==true end
+		return false
+	end
+	api.openPouch=openPouch
+	-- A rail line. `pouch`: a snack was fed or kept (an info line that opens the pouch on a
+	-- tap); otherwise a refusal (a warning line, nothing to open).
+	function notify(text,pouch)
+		if text and text~=""then
+			Rail.enqueue(owner,"snack:"..text,{text=text,icon=if pouch then "•"else "!",duration=2.6,
+				activate=if pouch then openPouch else nil})
+		end
 	end
 	api.notify=notify
 
@@ -120,7 +139,7 @@ function Host.mount(deps)
 				local receipt=message.receipt
 				reveal:show(receipt,api.revealInfo(petId),{
 					feed=function(r)api.feedNow(r.snackId)end,
-					keep=function()notify(UICopy.get("hatch.stat.reveal.kept"))end})
+					keep=function()notify(UICopy.get("hatch.stat.reveal.kept"),true)end})
 			else
 				reveal.againPressed=nil
 				notify(Host.reasonText(message.reason,nil,nil,true))
@@ -156,7 +175,7 @@ function Host.mount(deps)
 					if options.onBusy then options.onBusy(false)end
 					local line=Host.boostLine(receipt)
 					if favourite then line..="  "..UICopy.get("stats.snacks.favourite",{pet=name})end
-					notify(line)
+					notify(line,true)
 					if api.onChanged then api.onChanged()end
 				end
 				if visual and(message.reason~="AlreadySaved"or eating:busy())then

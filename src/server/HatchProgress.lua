@@ -1084,6 +1084,31 @@ function Hatching.coachMark(handle, bits)
 	end, candidate, nil, nil, "coach:" .. bits)
 end
 
+-- Private beta only (Spencer 2026-11-20: "give me stars to buy the bunny"): a one-time Star
+-- top-up for the owner's test save. `grantId` goes in the purchase id ledger so it lands once on
+-- any server, but it is not a purchase: no starter flag, no purchase count, no lastPurchase.
+-- The caller gates it to the beta place and the owner; this refuses any other place too.
+Hatching.BetaPlaceId = 107705084891479
+function Hatching.betaGrantStars(handle, grantId, stars)
+	if game.PlaceId ~= Hatching.BetaPlaceId then return false, "BetaOnly" end
+	if type(grantId) ~= "string" or #grantId < 1 or #grantId > 100 then return false, "InvalidGrant" end
+	if type(stars) ~= "number" or stars < 1 or stars > 100000 or stars % 1 ~= 0 then return false, "InvalidGrant" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	if Purchases.granted(handle.state, grantId) then return true, "AlreadyGranted" end
+	local candidate = table.freeze({ id = grantId, stars = stars })
+	return transact(handle, "beta:" .. grantId, handle.state.revision, function(state, c)
+		if Purchases.granted(state, c.id) then return false, "AlreadyGranted" end
+		if state.nectar + c.stars > 1000000000 then return false, "BalanceLimit" end
+		local p = state.purchases or { ids = {}, total = 0 }
+		p = { ids = table.clone(p.ids), starter = p.starter, total = p.total }
+		table.insert(p.ids, c.id)
+		while #p.ids > Purchases.Limit do table.remove(p.ids, 1) end
+		state.purchases = p
+		state.nectar += c.stars
+		return true
+	end, candidate)
+end
+
 -- Robux purchase grant. The purchase id is the durable idempotency key, so a
 -- repeated ProcessReceipt on any server can never grant twice.
 function Hatching.grantPurchase(handle, purchaseId, stars, once)

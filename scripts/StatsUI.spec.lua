@@ -62,9 +62,13 @@ return function(req)
   local show,word=Panel.bonusFit(70,24,80);assert(show and word)
   show,word=Panel.bonusFit(70,24,40);assert(show and not word)
   show=Panel.bonusFit(70,24,20);assert(not show)
-  local wide=Row.layout(1600,150,false,true);assert(wide.stats and wide.stats.x+wide.stats.w+wide.gap==wide.bond.x)
-  local narrow=Row.layout(330,150,true,true);assert(narrow.stats==nil,"no room beside Back")
-  assert(Row.layout(1600,150,false).stats==nil,"no button asked for")
+  -- Spencer 2026-11-20: Stats and Snacks stack at the bottom left (Snacks lowest).
+  local wide=Row.layout(1600,150,false,true,true,900)
+  assert(wide.snacks and wide.snacks.x==12 and wide.snacks.y+wide.snacks.h==900-12,"Snacks at the bottom left")
+  assert(wide.stats and wide.stats.x==12 and wide.stats.y+wide.stats.h+wide.gap==wide.snacks.y,"Stats just above Snacks")
+  local short=Row.layout(844,150,false,true,true,130);assert(short.snacks and short.stats==nil,"no room for both")
+  assert(Row.layout(1600,150,false,true,true).stats==nil,"no height: hidden")
+  assert(Row.layout(1600,150,false,nil,nil,900).stats==nil,"no button asked for")
  end)
  return cases
 end

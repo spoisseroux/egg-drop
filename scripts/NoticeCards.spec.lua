@@ -13,6 +13,8 @@ return function(client,parent)
  local savedGo,savedCan=How.go,How.canGo
  How.close("fixture")
  local function railWidth(text)return TextService:GetTextSize(text,14,Enum.Font.BuilderSansMedium,Vector2.new(10000,40)).X end
+ -- v2 tickets: a Stars line's "+N" is its own label after the text (Rail.measure).
+ local function lineWidth(text,amount)local _,_,_,_,content=Rail.measure({text=text,amount=amount});return content end
  local ok,problem=pcall(function()
   test("every notice has a title, the two cards and filled copy; its button names a real place",function()
    assert(#Notices.Order>=12)
@@ -42,11 +44,19 @@ return function(client,parent)
    assert(Rail.tappable({activate=function()end})and Rail.tappable({detail={id="quest"}})and not Rail.tappable({text="x"})and not Rail.tappable(nil))
    local plain,tap=Rail.geometry(320,58,100),Rail.geometry(320,58,100,true)
    assert(tap.width==plain.width+Rail.MoreWidth and tap.fits,"room for the chevron")
-   local lines={UICopy.get("notice.pill.firstSpend"),UICopy.get("qa.coach.welcome"),UICopy.get("coach.firstStars.toast").."  ★ +6",
-    UICopy.get("coach.fillLine.short"),UICopy.get("coach.item.short"),"Quest claimed  ★ +12"}
-   for _,id in ipairs({"hatch","style","companions","quests","book","park"})do table.insert(lines,Cards.railLine(id,"once",{pet="Bear"},true).text)end
-   for _,id in ipairs({"machines","hub","quest","questDone"})do table.insert(lines,Cards.railLine(id,"beat",{pet="Bear"},false).text)end
-   for _,text in ipairs(lines)do assert(Rail.geometry(320,58,railWidth(text),true).fits,"a tappable line does not fit the rail: "..text)end
+   -- Spec 1 widths: 96..260 (220 on a free bar under 600 px); hidden under a 32 px bar.
+   assert(Rail.geometry(1280,58,0).width==Rail.MinWidth and Rail.geometry(1280,58,900).width==Rail.MaxWidth and Rail.geometry(320,58,900).width==Rail.NarrowMaxWidth)
+   assert(Rail.geometry(1280,58,10).height==40 and Rail.geometry(1280,40,10).height==32 and not Rail.geometry(1280,30,10).fits,"40 / 32 / hidden by bar height")
+   local lines={{UICopy.get("notice.pill.firstSpend")},{UICopy.get("qa.coach.welcome")},{UICopy.get("coach.firstStars.toast"),6},
+    {UICopy.get("coach.fillLine.short")},{UICopy.get("coach.item.short")},{"Quest claimed",12}}
+   for _,id in ipairs({"hatch","style","companions","quests","book","park"})do table.insert(lines,{Cards.railLine(id,"once",{pet="Bear"},true).text})end
+   for _,id in ipairs({"machines","hub","quest","questDone"})do table.insert(lines,{Cards.railLine(id,"beat",{pet="Bear"},false).text})end
+   -- Every tappable coach line shows on a phone bar and reads whole on a desktop one.
+   for _,line in ipairs(lines)do
+    local width=lineWidth(line[1],line[2])
+    assert(Rail.geometry(320,58,width,true).fits and Rail.geometry(1280,58,width,true).full,"a tappable line does not fit the rail: "..line[1])
+   end
+   assert(railWidth("x")>0)
   end)
   test("coach lines: a first visit is a tip that opens the machine's cards; the rest open their notice",function()
    local tip=Cards.railLine("hatch","once",{pet="Bear"},true)

@@ -196,7 +196,7 @@ ui.hatch.result.stockToys,{count} toys left to find,,Hatch eggs screen; e.g. 3 t
 ui.hatch.result.tapToSkip,Tap to skip,,Hatch eggs screen
 ui.hatch.result.youGot,YELLOW = YOU GOT,,Hatch eggs screen
 ui.hatch.reveal.banner,{tier} {kind},,Hatch eggs screen; e.g. {tier} {kind}
-ui.hatch.reveal.close,Close,,"Hatch eggs screen; also ui.inspect.close, ui.names.egg.close, ui.r3.help.close"
+ui.hatch.reveal.close,Close,,"Hatch eggs screen; also ui.inspect.close, ui.names.egg.close, ui.r3.help.close, ui.stats.snacks.close"
 ui.hatch.reveal.describe.charm.dot,A tiny snowflake that never melts.,,Hatch eggs screen
 ui.hatch.reveal.describe.charm.pebble,"A lucky pebble, smoothed by a very old river.",,Hatch eggs screen
 ui.hatch.reveal.describe.charm.ring,A little ring that floats in its own orbit.,,Hatch eggs screen
@@ -373,6 +373,8 @@ ui.names.reveal.done,Done,,Menu text
 ui.names.reveal.line,Yours for every pet,,Menu text
 ui.names.reveal.sticker,NEW NAME PIECE,,Menu text
 ui.names.reveal.use,Use it,,Menu text
+ui.names.row,Pick name pieces for your pet,,Menu text
+ui.names.rowUnnamed,Not named yet,,Menu text
 ui.names.save,Save name,,Menu text
 ui.names.saved,Name saved,,Menu text
 ui.names.shows.own,Each pet has its own name.,,Menu text
@@ -381,6 +383,7 @@ ui.names.shows.where,"When you pet it
 On its card and stats",,Menu text
 ui.names.slots.empty,Pick a piece,,Menu text
 ui.names.slots.hint,"One piece or two. No typing, ever.",,Menu text
+ui.names.slots.optional,Optional,,Menu text
 ui.names.swap,Swap,,Menu text; also catalog.RoundItems.ById.swap.name
 ui.names.tab.all,All,,Menu text
 ui.names.tab.starter,Starter,,Menu text
@@ -680,6 +683,7 @@ ui.stats.none,Hatch a pet to start its stats.,,Menu text
 ui.stats.of,/ {total},,Menu text; e.g. / 12
 ui.stats.results.gain,{name} +{count},,Menu text; e.g. Pet Park +3
 ui.stats.results.up,{name} +{count} (Lv {target}!),,Menu text; e.g. Pet Park +3 (Lv 3!)
+ui.stats.row,"Levels, Bonus XP and snacks",,Menu text
 ui.stats.snacks.cardBoost,{stat} has {mult}x · {left} XP left,,Menu text; e.g. {stat} has {mult}x · {left} XP left
 ui.stats.snacks.drop,Let go to feed {pet},,Menu text; e.g. Let go to feed Bear
 ui.stats.snacks.eggs,Go to Hatch eggs,,Menu text

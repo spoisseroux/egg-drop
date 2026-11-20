@@ -39,6 +39,8 @@ end
 
 local function frame(entry)
  local v=entry.visual;if not v or v.destroyed then return end
+ -- PetHeadshot entries keep their head framing when the rig changes.
+ if entry.head then require(script.Parent.PetHeadshot).frame(entry.camera,v);entry.rig=v.rigRevision;return end
  v.yaw=-.35;v.reducedEffects=true;v.poseDirty=true;v:update(0)
  entry.rig=v.rigRevision
  local box,size=Bounds.get(v)

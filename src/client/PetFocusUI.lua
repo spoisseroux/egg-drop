@@ -187,9 +187,9 @@ end
 function Focus:buildSnacks()
 	if not self.callbacks.snackModel then return end
 	local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
-	local b=Kit.button(self.panel,"SnacksButton",{text=UICopy.get("stats.snacks.open"),glyph="X",showGlyph=false,size=Vector2.new(112,48),textSize=17,selectable=false})
+	local b,bState=Kit.button(self.panel,"SnacksButton",{text=UICopy.get("stats.snacks.open"),glyph="X",showGlyph=false,size=Vector2.new(112,48),textSize=17,selectable=false})
 	b.ZIndex=8;for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=7 end end
-	self.snacksButton=b
+	self.snacksButton,self.snacksState=b,bState
 	table.insert(self.connections,b.Activated:Connect(function()if self.active and self:canOwnInput()then self:toggleSnacks()end end))
 	local card=Kit.card(self.panel,"SnackTrayCard",nil,{pad=12});card.AnchorPoint=Vector2.new(.5,1);card.Position=UDim2.new(.5,0,1,-12)
 	card.Size=UDim2.fromOffset(440,150);card.Visible=false;card.Active=true;card.ZIndex=12
@@ -201,7 +201,11 @@ function Focus:buildSnacks()
 		onCarry=function(kind,group)if self.callbacks.snackCarry then self.callbacks.snackCarry(kind,group)end end,
 		onSelect=function(group)if self.callbacks.snackCarry then self.callbacks.snackCarry("pick",group)end end,
 		onFeed=function(group)
-			return self.callbacks.snackFeed(group.ids[1],function(busy)if self.tray then self.tray:setBusy(busy)end end)==true
+			local sent=self.callbacks.snackFeed(group.ids[1],function(busy)if self.tray then self.tray:setBusy(busy)end end)==true
+			-- Spencer 2026-11-20: the pouch closes on Feed so the pet can be seen eating.
+			-- "fed": hide the tray without the carry "close" (that cancels the eating it just started).
+			if sent then task.defer(function()self:closeSnacks("fed")end)end
+			return sent
 		end})
 end
 function Focus:snacksOpen()return self.trayCard~=nil and self.trayCard.Visible end
@@ -218,20 +222,42 @@ function Focus:openSnacks(snackId)
 	self:refreshSnacks(snackId)
 	self:layoutTray()
 	self:bindTray(self.active)
+	self:paintSnacksKey()
 	return true
 end
-function Focus:closeSnacks()
-	if self.tray then self.tray:cancelCarry()end
+-- Spencer 2026-11-20: while the pouch is open the Snacks key is lit (lemon, thick outline) and reads
+-- "Close", so it is clear a second press closes it.
+function Focus:paintSnacksKey()
+	local b,state=self.snacksButton,self.snacksState
+	if not b or not state then return end
+	local open=self:snacksOpen()
+	local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
+	state.selected=open
+	Kit.setText(b,UICopy.get(if open then "stats.snacks.close"else "stats.snacks.open"))
+	b:SetAttribute("Open",open)
+	Kit.paintButton(b)
+end
+function Focus:closeSnacks(reason)
+	if self.tray and reason~="fed"then self.tray:cancelCarry()end
 	if not self.trayCard or not self.trayCard.Visible then return end
 	self.trayCard.Visible=false
 	self:bindTray(false)
-	if self.callbacks.snackCarry then self.callbacks.snackCarry("close")end
+	self:paintSnacksKey()
+	if self.callbacks.snackCarry and reason~="fed"then self.callbacks.snackCarry("close")end
 end
 function Focus:toggleSnacks()if self:snacksOpen()then self:closeSnacks()else self:openSnacks()end end
+-- Bottom centre, clear of the Stats / Snacks column on the left (FocusRow). Tall enough for the
+-- tiles and the Feed key with its lip (Spencer 2026-11-20: Feed hung out of the card).
+Focus.TrayHeight=158
 function Focus:layoutTray()
 	if not self.trayCard then return end
 	local size=self.root.AbsoluteSize
-	self.trayCard.Size=UDim2.fromOffset(math.min(440,math.max(200,size.X-24)),if size.Y<420 then 132 else 150)
+	local left=(self.leftColumn or 0)+(if self.leftColumn and self.leftColumn>0 then 10 else 12)
+	local w=math.min(440,math.max(200,size.X-left-12))
+	local cx=math.max(size.X/2,left+w/2)
+	self.trayCard.AnchorPoint=Vector2.new(.5,1)
+	self.trayCard.Position=UDim2.new(0,math.floor(cx),1,-12)
+	self.trayCard.Size=UDim2.fromOffset(w,Focus.TrayHeight)
 end
 function Focus:bindTray(on)
 	local name=self.actionPrefix.."Tray"
@@ -286,7 +312,8 @@ function Focus:bindPickup(pickup)
 end
 function Focus:layoutFocusRow()
  if not self.bondCard then return end
- local row=require(script.Parent.FocusRow).layout(self.root.AbsoluteSize.X,self.bondWidth,self.pickupButton~=nil and self.pickupButton.Visible,self.statsButton~=nil,self.snacksButton~=nil)
+ local row=require(script.Parent.FocusRow).layout(self.root.AbsoluteSize.X,self.bondWidth,self.pickupButton~=nil and self.pickupButton.Visible,self.statsButton~=nil,self.snacksButton~=nil,self.root.AbsoluteSize.Y)
+ self.leftColumn=row.leftColumn
  if self.statsButton then self.statsButton.Visible=row.stats~=nil end
  if self.snacksButton then self.snacksButton.Visible=row.snacks~=nil end
  self:layoutTray()

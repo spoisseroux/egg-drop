@@ -105,19 +105,27 @@ return function(client,parent)
    -- Since 70e0440 every coach notice is a line on the shared top-bar rail
    -- (NotificationRail): the old card and pill instances stay built but hidden. The rail
    -- runs on real frames, so `shows` pumps them; a card's own clock only runs while the
-   -- rail is drawing it.
+   -- rail is drawing it. v2 tickets: several lines can show side by side, so these look
+   -- for one line's ticket among them; `quiet` waits for every coach line to leave.
    local Rail=require(client.NotificationRail)
    local RunService=game:GetService("RunService")
-   local function railText()local _,capsule=Rail.view();return if capsule and capsule.Visible then capsule.Message.Text else nil end
+   local function ticketOf(text)
+    for _,entry in ipairs(Rail.shown())do if entry.text==text then return entry end end
+    return nil
+   end
    local function shows(text,seconds)
-    -- QA v775: after a line leaves, the rail rests Rail.Gap seconds before the next one.
-    local deadline=os.clock()+(seconds or 2)+Rail.Gap+.5
-    repeat if railText()==text then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
+    local deadline=os.clock()+(seconds or 2)+.5
+    repeat if ticketOf(text)then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
     return false
    end
    local function quiet()
     local deadline=os.clock()+2
-    repeat if railText()==nil then return true end;RunService.RenderStepped:Wait()until os.clock()>deadline
+    repeat
+     local any=false
+     for _,entry in ipairs(Rail.shown())do if entry.item and entry.item.owner==cards.host then any=true end end
+     if not any then return true end
+     RunService.RenderStepped:Wait()
+    until os.clock()>deadline
     return false
    end
    local function garden()return cards.garden and cards.garden.id or nil end
@@ -130,10 +138,16 @@ return function(client,parent)
    step(0,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0})
    assert(cards.welcomeRail and legacyHidden(),"the Welcome line goes to the rail, not the big card or the old pill")
    assert(shows(UICopy.get("qa.coach.welcome")),"the Welcome line is on the rail")
-   local railGui,capsule=Rail.view()
-   assert(railGui.DisplayOrder>cards.gui.DisplayOrder and capsule.AbsoluteSize.Y==40 and capsule.Message.TextBounds.X<=capsule.Message.AbsoluteSize.X+1,"one 40 px capsule above the menus, its line never cut")
+   local railGui=Rail.view()
+   local welcome=ticketOf(UICopy.get("qa.coach.welcome"))
+   -- Its entrance (fade, UIScale 0.9 to 1) settles before it is measured.
+   local settle=os.clock()+1
+   while welcome.ticket:FindFirstChildOfClass("UIScale").Scale~=1 and os.clock()<settle do RunService.RenderStepped:Wait()end
+   local cardH=if game:GetService("GuiService").TopbarInset.Height>=56 then 40 else 32
+   assert(railGui.DisplayOrder>cards.gui.DisplayOrder and welcome.card.AbsoluteSize.Y==cardH
+    and welcome.ticket:GetAttribute("Truncated")~=true,"one 40 px ticket above the menus, its line never cut")
    -- QA v735 H5: every line can be tapped; this one opens its notice card.
-   assert(capsule.Active==true and capsule.More.Visible,"a tap on the Welcome line opens its notice card")
+   assert(welcome.ticket.Active==true and welcome.ticket:FindFirstChild("More",true).Visible,"a tap on the Welcome line opens its notice card")
    step(1,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0,drops=1})
    assert(cards.welcomeRail==nil and quiet(),"it leaves at the first drop")
    step(1.5,{mode="Board",canRoam=false,presented=true,owned=0,phase="Welcome",merges=0})
@@ -145,12 +159,15 @@ return function(client,parent)
    cards:sync({coachMask=0,totalWins=0,quests={daily={}}})
    step(20);assert(garden()==nil,"waits for the greeting to settle")
    step(23);assert(garden()=="machines"and cards.garden.kind=="beat"and legacyHidden(),"beat 1: machines")
-   -- The Welcome round's Stars are said once as the garden step opens; the rail shows one
-   -- line at a time, so the toast (a real notice) runs its time before the beat's line.
-   step(23.01);assert(shows(UICopy.get("coach.firstStars.toast").."  ★ +6"),"the Welcome Stars toast comes first")
+   -- The Welcome round's Stars are said once as the garden step opens. The toast (priority 0)
+   -- is admitted before the beat (priority -1), which joins it on the right 0.4 s later.
+   step(23.01);assert(shows(UICopy.get("coach.firstStars.toast")),"the Welcome Stars toast comes first")
+   local toast=ticketOf(UICopy.get("coach.firstStars.toast"))
+   assert(toast.kind=="stars"and toast.card:FindFirstChild("Amount",true).Text=="+6","its Stars show as +6 after the line")
    assert(cards.garden.elapsed==0,"a queued beat's clock has not started")
-   assert(shows((Cards.copy("machines",{pet="Bear",input="Keyboard"})),6),"then the beat's title is the rail line")
-   assert(capsule.Active==true,"a tap on the line opens How it works")
+   assert(shows((Cards.copy("machines",{pet="Bear",input="Keyboard"})),6),"then the beat's title is on the rail")
+   local beat=ticketOf((Cards.copy("machines",{pet="Bear",input="Keyboard"})))
+   assert(beat and beat.ticket.Active==true,"a tap on the line opens How it works")
    cards:dismiss("tap")
    step(23.1);assert(garden()=="hub","beat 2: hub (a tap moves on)")
    step(23.2,{canRoam=false});assert(garden()==nil,"a menu hides the beat")
@@ -171,7 +188,10 @@ return function(client,parent)
    step(68.51,{idleFor=5});assert(shows((Cards.copy("machines",{pet="Bear",input="Keyboard"}))))
    step(80,{idleFor=5,awayFor=60});step(95,{idleFor=5,awayFor=60})
    assert(garden()=="machines"and cards.garden.elapsed<life,"the clock pauses while the player is away")
-   assert(quiet(),"and the line leaves the rail meanwhile")
+   -- v2 tickets: other coach lines may share the row, so this checks the beat's own line.
+   do local line=(Cards.copy("machines",{pet="Bear",input="Keyboard"}));local deadline=os.clock()+2
+    while ticketOf(line)and os.clock()<deadline do RunService.RenderStepped:Wait()end
+    assert(ticketOf(line)==nil,"and the line leaves the rail meanwhile")end
    step(96,{idleFor=5,windowActive=false});step(120,{idleFor=5,windowActive=false})
    assert(garden()=="machines"and cards.garden.elapsed<life,"and while the window is unfocused")
    cards:dismiss("skip");step(121)
@@ -235,21 +255,27 @@ return function(client,parent)
   cards:destroy();gui:Destroy();assert(ok,problem)
  end)
 
- test("QA v775 live: the rail never advances or replaces a line while a card is open, and rests between lines",function()
+ test("QA v775 live: the rail never advances or replaces a line while a card is open",function()
   local Rail=require(client.NotificationRail);local How=require(client.HowItWorks)
   local RunService=game:GetService("RunService")
   local gui=Instance.new("ScreenGui");gui.Name="_CoachCalmSpec";gui.Parent=parent
   local cards=Cards.new({gui=parent,send=function()end})
   local ok,problem=pcall(function()
    local open={};local clock=0
-   local function railText()local _,capsule=Rail.view();return if capsule and capsule.Visible then capsule.Message.Text else nil end
-   -- Real frames for up to `seconds`: the cards step on the real dt; returns every rail text seen.
+   -- v2 tickets: the coach's own lines on the row (other lines may show beside them).
+   local function railHas(text)
+    for _,entry in ipairs(Rail.shown())do if entry.text==text then return true end end
+    return false
+   end
+   -- Real frames for up to `seconds`: the cards step on the real dt; returns every coach line seen.
    local function run(seconds,stop)
     local seen={};local deadline=os.clock()+seconds
     repeat
      clock+=RunService.RenderStepped:Wait()
      cards:step(clock,{mode="Room",canRoam=true,presented=false,owned=1,input="Keyboard",open=open,used={},pet="Bear",idleFor=5})
-     seen[railText()or "-"]=true
+     local any=false
+     for _,entry in ipairs(Rail.shown())do if entry.item and entry.item.owner==cards.host then seen[entry.text]=true;any=true end end
+     if not any then seen["-"]=true end
     until os.clock()>deadline or(stop and stop())
     return seen
    end
@@ -261,8 +287,8 @@ return function(client,parent)
    local hatch=Cards.railLine("hatch","once",{pet="Bear",input="Keyboard"},true).text
    local book=Cards.railLine("book","once",{pet="Bear",input="Keyboard"},true).text
    open.hatch=true
-   run(4+Rail.Gap,function()return railText()==hatch end)
-   assert(railText()==hatch,"the first-visit line shows")
+   run(4,function()return railHas(hatch)end)
+   assert(railHas(hatch),"the first-visit line shows")
    -- The player opens its card and reads it for longer than the line's whole time.
    assert(How.open("hatch")and Rail.held(),"a card is open: the rail holds")
    local elapsed=cards.garden.elapsed
@@ -273,11 +299,10 @@ return function(client,parent)
    assert(cards.garden and cards.garden.id=="hatch"and cards.garden.elapsed==elapsed,"no clock ran")
    assert(How.isOpen()and How.openId()=="hatch","the card the player opened stays until they close it")
    How.close("fixture");open.hatch=false
-   -- The line leaves with its screen; the rail rests, then shows one new line.
-   local t0=os.clock()
-   seen=run(Rail.Gap+4,function()return railText()==book end)
-   assert(railText()==book,"the next line shows")
-   assert(os.clock()-t0>=Rail.Gap-.25,"but only after the calm gap")
+   -- The line leaves with its screen; the next line shows once the card has closed (the v775
+   -- calm gap is retired by the v2 tickets spec).
+   seen=run(4,function()return railHas(book)end)
+   assert(railHas(book),"the next line shows")
    fine,other=only(seen,{"-",hatch,book})
    assert(fine,"a stray line showed: "..tostring(other))
   end)

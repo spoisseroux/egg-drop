@@ -813,6 +813,23 @@ local function addPlayer(player)
 	publishPetAppearance(board)
 	-- Slice E repair-on-join: a pet already earned but not granted yet.
 	if board.profileReady then grantEarned(player, board) end
+	-- Private beta: the owner's test save gets a one-time 1,000 Star top-up (the Bunny is 400).
+	if game.PlaceId == Nursery.BetaPlaceId and require(ReplicatedStorage.Shared.SimCheck).isOwner(player) then
+		task.spawn(function()
+			for _ = 1, 30 do
+				if boards[player] ~= board or board.closing then return end
+				if canProgress(board) and not board.nurseryBusy and not board.nursery.busy and not board.nursery.pending then
+					board.nurseryBusy = true
+					local ok, why = Nursery.betaGrantStars(board.nursery, "beta:stars:2026-11-20", 1000)
+					board.nurseryBusy = false
+					if boards[player] ~= board then return end
+					publishNursery(board); publishState(board)
+					if ok or (why ~= "Busy" and why ~= "Pending" and why ~= "Retrying" and why ~= "RevisionChanged") then return end
+				end
+				task.wait(2)
+			end
+		end)
+	end
 	folder:SetAttribute("Mode", board.mode)
 	folder:SetAttribute("DeckThemeId", profile.theme)
 	folder:SetAttribute("DeckStickerId", profile.sticker)

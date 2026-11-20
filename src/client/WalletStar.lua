@@ -26,7 +26,7 @@ local Star={}
 Star.MinSize=16
 Star.Cycle=6
 Star.SwayTime=4.4 -- then the turn takes Cycle-SwayTime
-Star.SwayDegrees=16
+
 Star.GlintTime=.6
 Star.FaceYaw=40
 Star.ViewScale=1.3 -- the viewport is this much larger than the icon rect (centred)
@@ -36,12 +36,25 @@ Star.SpinStep=3 -- degrees per cached spin frame
 Star.ClockKey="WalletStar"
 
 -- ── Pure ─────────────────────────────────────────────────────────────────────
--- Yaw (degrees, always 0: front-facing) and glint phase (0..1, or nil) at time t.
--- v816: no sway and no turn, so no screen can ever catch the Star edge-on.
+-- Yaw (degrees) and glint phase (0..1, or nil) at time t.
+-- v816 held the Star still so no phone caught it edge-on. Spencer (2026-11-20, "the star
+-- doesnt rotate anymore?"): it sways again, a slow rock of +-SwayDegrees (well inside
+-- FaceYaw, so the face and the Star's width always show), and spins one full turn when
+-- Stars are earned (Star.celebrate): the only time it passes edge-on, for a few frames.
+Star.SwayDegrees=24
+Star.SwayPeriod=4.8
+Star.SpinTime=.55
 function Star.pose(t)
  local u=t%Star.Cycle
  local glint=if u<Star.GlintTime then u/Star.GlintTime else nil
- return 0,glint
+ return Star.SwayDegrees*math.sin(t/Star.SwayPeriod*2*math.pi),glint
+end
+-- Extra yaw of an earn spin started at `start` (0 when none or done): Quad Out.
+function Star.spinYaw(now,start)
+ if not start then return 0 end
+ local k=(now-start)/Star.SpinTime
+ if k<0 or k>=1 then return 0 end
+ return 360*(1-(1-k)*(1-k))
 end
 -- The face turn (-180..180) for a yaw, or nil when the face hides.
 function Star.faceTurn(yaw)
@@ -145,6 +158,11 @@ step=function(now)
    else
     if still then apply(w,0,nil)else
      local yaw,glint=Star.pose(now)
+     if w.spinAt then
+      local extra=Star.spinYaw(now,w.spinAt)
+      if extra==0 and now-w.spinAt>=Star.SpinTime then w.spinAt=nil end
+      yaw+=extra
+     end
      apply(w,yaw,glint)
     end
    end
@@ -217,6 +235,13 @@ local function build(pill,icon,size,template)
  holder:SetAttribute("WalletStar3D",true)
  return{holder=holder,viewport=viewport,part=part,camera=camera,face=face,sparkle=sparkle,sparkleScale=scale,glow=glow,
   facePos=facePos,faceSize=faceSize,spin=0,turn=nil,glint=nil,visible=false,visibleAt=0,registered=false}
+end
+
+-- One full turn now (Kit.wallet on a Stars gain). Reduced Motion: nothing.
+function Star.celebrate(handle)
+ local w=handle and handle.wallet
+ if not w or reduced()then return false end
+ w.spinAt=os.clock();return true
 end
 
 -- Kit.wallet calls this for its Star icon. Returns a handle {state="loading"|"3D"|"2D",
