@@ -89,7 +89,7 @@ function Host.mount(deps)
 	-- The result card (V2-HATCH-REDESIGN 2.5): the egg card's odds and Feast promise on the
 	-- state after this hatch, the stock line, and Hatch another (the same buy as the egg card).
 	function api.revealInfo(petId)
-		return {petName=deps.petName(petId),canFeed=true,
+		return {canFeed=true,
 			odds=function()return Odds.rows(deps.state(),petId)end,
 			pity=function()
 				local state=deps.state()

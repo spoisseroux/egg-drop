@@ -25,13 +25,14 @@ Reveal.__index=Reveal
 Reveal.Sting={nibble="rarity_common",snack="rarity_uncommon",feast="rarity_rare"}
 
 -- Pure: the reveal's words for a receipt.
-function Reveal.copy(receipt,petName)
+-- Spencer 2026-11-20: snacks go to the account pouch and Feed now feeds the pet that is out,
+-- so the card names no pet at all (no "For Bear" line, the button stays "Feed now").
+function Reveal.copy(receipt)
 	local size=K.size(receipt.size)or K.Sizes.nibble
 	local statName=UICopy.get("stats.name."..tostring(receipt.stat))
 	return{kind=UICopy.get("hatch.stat.reveal.kind"),
 		name=UICopy.get("hatch.stat.reveal.name",{stat=statName,size=UICopy.get("stats.snacks.size."..size.id)}),
-		boost=UICopy.get("hatch.stat.reveal.boost",{mult=size.mult,count=size.xp}),
-		forPet=UICopy.get("hatch.stat.reveal.forPet",{pet=petName or "Bear"})}
+		boost=UICopy.get("hatch.stat.reveal.boost",{mult=size.mult,count=size.xp})}
 end
 function Reveal.tier(receipt)return Rarity.tier("stat",receipt)end
 
@@ -91,14 +92,14 @@ function Reveal.new(playerGui,audio)
 end
 function Reveal:isOpen()return self.open end
 function Reveal:reduced()return Kit.reduced()end
--- receipt: the server's buy receipt {snackId, stat, size, free}. info: {petName, pill, canFeed,
+-- receipt: the server's buy receipt {snackId, stat, size, free}. info: {pill, canFeed,
 -- odds(), pity(), again()}. callbacks: feed(receipt), keep(receipt).
 function Reveal:show(receipt,info,callbacks)
 	local handover=self.againPressed==true;self.againPressed=nil
 	self:close("replaced",handover)
 	info=info or {}
 	self.receipt,self.callbacks,self.info=receipt,callbacks or {},info
-	local words=Reveal.copy(receipt,info.petName)
+	local words=Reveal.copy(receipt)
 	local tier=Reveal.tier(receipt)
 	self.tier=tier
 	self.feedSource.Interactable=info.canFeed~=false
@@ -115,7 +116,7 @@ function Reveal:show(receipt,info,callbacks)
 	local stage=Stage.show(self.host,{scene=self.scene,kind="stat",tier=tier,result=receipt,cover=false,zIndex=20,lid=not handover,
 		instant=not fresh,reduced=function()return self.reducedStart end,owns=function()return self.open end,
 		name=function()return words.name end,effect=function()return words.boost end,
-		description=function()return words.forPet..(if info.pill and info.pill~=""then "  ·  "..info.pill else "")end,
+		description=function()return info.pill or ""end,
 		sticker=function()return Stage.bannerText(tier,"stat")end,
 		stoneColors=function()return {stat and stat.color or Color3.new(1,1,1)}end,
 		odds=info.odds,wonId=receipt.size,pity=info.pity,again=info.again and function()

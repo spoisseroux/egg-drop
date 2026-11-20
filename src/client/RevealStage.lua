@@ -646,7 +646,7 @@ function Stage:layout()
   local fw=math.min(w,h)*.66
   local floorY=(L.feet-y)/math.max(1,h)
   b.floorLight.Position=UDim2.new(.5,0,floorY,0);b.floorLight.Size=UDim2.fromOffset(fw,fw*.28)
-  b.floorRing.Position=UDim2.new(.5,0,floorY,0);b.floorRing.Size=UDim2.fromOffset(fw*.62,fw*.12)
+  b.floorShadow.Position=UDim2.new(.5,0,floorY+.01,0);b.floorShadow.Size=UDim2.fromOffset(fw*.6,fw*.13)
  end
  self.staticDone,self.coneKey,self.cameraKey=false,nil,nil
  -- Cone group: centred on the pet, top edge at y 0, wide enough for the halo.

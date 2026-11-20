@@ -84,7 +84,7 @@ local Table={
    hatch="★ Hatch {count}",free="Open free egg ({count})",soldOut="Back tomorrow",pouchFull="Pouch full · feed a snack",
    allMaxed="Every stat is at 99",notReady="Stat Eggs are not ready yet.",noPet="Hatch a pet first",
    today="{count} of {total} left in today's nest",freeLine="{count} free eggs to open",
-   reveal={kind="STAT SNACK",name="{stat} {size}",boost="{mult}x for your next {count} XP",forPet="For {pet}",feed="Feed now",keep="Keep",kept="In your pouch"},
+   reveal={kind="STAT SNACK",name="{stat} {size}",boost="{mult}x for your next {count} XP",feed="Feed now",keep="Keep",kept="In your pouch"},
    reason={PoolChanged="Your odds just changed. Check them and tap again.",PouchFull="Your pouch is full. Feed a snack first.",SoldOut="Today's nest is empty. Back tomorrow.",
     NeedStars="You need more Stars.",NoFreeEgg="No free egg to open.",AllMaxed="Every stat is at 99.",PetNotOut="Bring your pet out first.",ClockRollback="One moment, then try again.",
     ExpiredDay="A new day just started. Tap again.",Busy="Finishing your last save…",Throttled="One moment…",Retrying="Still saving… your egg will show here.",Timeout="Still saving… your egg will show here.",Disabled="Stat Eggs are not ready yet."},

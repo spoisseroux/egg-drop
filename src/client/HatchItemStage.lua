@@ -60,6 +60,7 @@ end
 -- ── Pure rules (specs cover these) ───────────────────────────────────────────
 Stage.BurstAt=Rarity.BurstAt;Stage.SettleAfter=.50;Stage.AgainLock=.40;Stage.ReducedFade=.15
 Stage.SpinSpeed=math.rad(42);Stage.SpinEase=.8
+Stage.Shadow=Color3.fromHex("#5A3424");Stage.ShadowAlpha=.5
 Stage.Ink=Color3.fromHex("#15143A");Stage.Lemon=Color3.fromHex("#FFE14D");Stage.Cream=Color3.fromHex("#FFF4DC")
 Stage.Rainbow=table.freeze({"#FF5A7A","#FFB13B","#FFE14D","#5CE27A","#4FC3FF","#8E7CFF","#FF5A7A"})
 Stage.Pool=table.freeze({burst=30,cannon=52,orbit=12}) -- 94 moving pieces at most, all made at open
@@ -391,7 +392,7 @@ end
 
 -- The shell and the stage well as one piece (the pet reveal draws the same backdrop).
 -- Returns {shell, checkerTile, shafts, well, clip, core, raysImage, pattern, floorLight,
--- floorRing, bloom, seat, waitEgg, rim, rimStroke, rimRainbow, ...}.
+-- floorShadow, bloom, seat, waitEgg, rim, rimStroke, rimRainbow, ...}.
 function Stage.backdrop(root,z,tier,kind)
  tier=if Rarity.Look[tier or ""]then tier else "Neutral"
  local look,st=Rarity.Look[tier],Rarity.Stage[tier]
@@ -409,7 +410,7 @@ function Stage.backdrop(root,z,tier,kind)
  b.shafts=image(root,"LightShafts","shafts",z+2,{ImageTransparency=1})
  Kit.paint(b.shafts,"ImageColor3",function()return Kit.color("shell"):Lerp(Color3.new(1,1,1),.62)end)
  -- The stage well: edge colour, a core glow, light rays, the edge pattern, a vignette in
- -- the tier's deep colour, the floor light and its ring, the bloom; ink outline, tier rim.
+ -- the tier's deep colour, the floor light and a soft warm contact shadow, the bloom; ink outline, tier rim.
  b.well=frame(root,"StageWell",z+3,{BackgroundTransparency=0,BackgroundColor3=st.edge,AnchorPoint=Vector2.new(.5,.5)})
  b.wellCorner=node("UICorner",b.well,{CornerRadius=UDim.new(0,16)})
  b.wellStroke=node("UIStroke",b.well,{Color=Stage.Ink,Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
@@ -423,9 +424,9 @@ function Stage.backdrop(root,z,tier,kind)
    NumberSequenceKeypoint.new(.78,1),NumberSequenceKeypoint.new(1,.7)})})
  end
  b.floorLight=image(b.clip,"FloorLight","glow",z+3,{ImageColor3=st.floor,ImageTransparency=.25})
- b.floorRing=frame(b.clip,"FloorRing",z+3,{AnchorPoint=Vector2.new(.5,.5)})
- node("UICorner",b.floorRing,{CornerRadius=UDim.new(.5,0)})
- node("UIStroke",b.floorRing,{Color=st.floor,Thickness=2,Transparency=.35})
+ -- Spencer 2026-11-20: the white floor ring read as a leftover; a soft warm drop shadow on the
+ -- stage floor instead (the glow sprite, tinted a warm cocoa, never an outline).
+ b.floorShadow=image(b.clip,"FloorShadow","glow",z+3,{ImageColor3=Stage.Shadow,ImageTransparency=Stage.ShadowAlpha})
  b.bloom=image(b.clip,"Bloom","glow",z+4,{ImageColor3=Color3.new(1,1,1),ImageTransparency=1})
  -- The scene seat (the 3D egg and result), and the 2D egg that waits while it loads.
  b.seat=frame(root,"NativeSceneSeat",z+4,{AnchorPoint=Vector2.new(.5,.5)})
@@ -901,7 +902,7 @@ function Stage:paint(dt)
  self.raysImage.ImageTransparency=if s.jackpot and s.t<s.burstAt and not still then .65 else .42
  local fw=side*.66
  self.floorLight.Position=UDim2.new(.5,0,.78,0);self.floorLight.Size=UDim2.fromOffset(fw,fw*.28)
- self.floorRing.Position=UDim2.new(.5,0,.78,0);self.floorRing.Size=UDim2.fromOffset(fw*.62,fw*.12)
+ self.floorShadow.Position=UDim2.new(.5,0,.79,0);self.floorShadow.Size=UDim2.fromOffset(fw*.6,fw*.13)
  local br=150*scale*s.bloomR*2
  self.bloom.Position=UDim2.fromScale(.5,.5);self.bloom.Size=UDim2.fromOffset(math.max(1,br),math.max(1,br));self.bloom.ImageTransparency=1-s.bloom
  -- Rare: light shafts behind the well, the rainbow on the rim and the screen edge.
