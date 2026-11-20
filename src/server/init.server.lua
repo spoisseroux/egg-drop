@@ -2232,6 +2232,17 @@ if RunService:IsStudio() then
 		return nil, "UnknownAction"
 	end
 	hook.Parent = game:GetService("ServerStorage")
+	-- v2 pet names: stat XP through a real save transaction (level-ups grant name pieces there).
+	local statHook = Instance.new("BindableFunction")
+	statHook.Name = "EggDropStatTestGrant"
+	statHook.OnInvoke = function(player, petId, statId, xp)
+		local board = boards[player]
+		if not board then return false, "NoBoard" end
+		local ok, why = Nursery.studioGrantStat(board.nursery, petId, statId, xp)
+		publishNursery(board); publishState(board)
+		return ok, why
+	end
+	statHook.Parent = game:GetService("ServerStorage")
 end
 
 game:BindToClose(function()

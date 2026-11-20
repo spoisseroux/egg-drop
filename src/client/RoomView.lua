@@ -160,6 +160,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
     and not self.menuOpen and not self.overlayOpen()and(self.canRoam==nil or self.canRoam()==true)
   end})
 	self.ambience=HollowAmbience.new()
+ -- v2 pet names: name tags over your pet and nearby named pets (PetNameplates; nameState set by the client entry).
+ self.nameplates=require(script.Parent.PetNameplates).new(Players.LocalPlayer:FindFirstChildOfClass("PlayerGui"))
  self.affection=PetAffection.new(workspace,function(index)
   if self.petContactActive and self:contactEligible(self.contactContext)then self.audio:play(self.shownPet.cue,if index%2==0 then .96 else 1.06,.26)end
  end)
@@ -309,6 +311,11 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		-- v2 Stat Snacks: eating poses on top of this frame's pet poses.
 		if self.snackStep then self.snackStep(dt)end
 		if self.inspect then self.inspect:step(dt,serverNow)end
+		if self.nameplates then
+			local character=Players.LocalPlayer.Character
+			self.nameplates:step(dt,{own={visual=self.pet,petId=self.shownPet and self.shownPet.id,state=if self.nameState then self.nameState()else nil,mode=self.mode},
+				others=if self.mode=="Room"then self.companions.active else nil,localRoot=character and character:FindFirstChild("HumanoidRootPart")})
+		end
 		if self.park then
 			local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart")
 			local camera=workspace.CurrentCamera
@@ -1325,6 +1332,7 @@ function Room:destroy()
 	if self.garden then self.garden:destroy()end
  if self.park then self.park:destroy();self.park=nil end
  if self.inspect then self.inspect:destroy();self.inspect=nil end
+ if self.nameplates then self.nameplates:destroy();self.nameplates=nil end
 	if self.gardenToy then self.gardenToy:destroy();self.gardenToy=nil end
  if self.affection then self.affection:destroy()end
 	if self.ambience then self.ambience:destroy();self.ambience=nil end

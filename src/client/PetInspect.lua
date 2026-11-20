@@ -1,6 +1,6 @@
 -- Inspect another player's pet (QA v685 R6; VISITOR-PET-SCOPE 2026-11-14), as a
 -- profile card. Left: a live, spinnable 3D preview in the pet's real appearance. Right:
--- the name slot (the species until Names ships in v2), the owner and bond level, a grid
+-- the name slot (v2 pet names: the chosen name, with the species on the owner line), the owner and bond level, a grid
 -- of every wearable slot with the equipped item or Empty, then charm, finish and toy,
 -- and Say hello.
 --
@@ -534,6 +534,12 @@ function Inspect:refresh()
  local owner=if player.DisplayName~=player.Name then player.DisplayName.." @"..player.Name else "@"..player.Name
  local level=board:GetAttribute(Rules.BondAttribute)
  local line=UICopy.get("inspect.owner",{name=owner})
+ -- v2 pet names: "Biscuit Sprout" / "Bear · @owner's pet" (ids from the board, text from NameCatalog).
+ local NameText=require(script.Parent.PetNameText)
+ local display,named=NameText.ofBoard(board,identity.petId)
+ if card.name.Text~=display then card.name.Text=display end
+ card.frame:SetAttribute("PetName",display)
+ if named then line=NameText.species(identity.petId).." · "..line end
  if type(level)=="number"then line=line.." · "..UICopy.get("inspect.bond",{count=level})end
  if card.sub.Text~=line then card.sub.Text=line end
  self:paintStats()

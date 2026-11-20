@@ -24,6 +24,8 @@ local UICopy=require(Shared.UICopy)
 local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
 local BondPips=require(script.Parent.BondPips)
+-- v2 pet names: an owned pet shows its chosen name (the species while it has none).
+local NameText=require(script.Parent.PetNameText)
 local Hub={}
 Hub.__index=Hub
 Hub.Size=Vector2.new(848,608)
@@ -106,7 +108,7 @@ function Hub.petCards(state,activeId)
  local cards={}
  local mask=state and state.inventoryMask or 0
  for _,pet in ipairs(Pets.collection)do
-  if Pets.isActive(pet)and Eggs.isOwned(mask,pet.id)then table.insert(cards,{id=pet.id,name=pet.name,following=pet.id==activeId})end
+  if Pets.isActive(pet)and Eggs.isOwned(mask,pet.id)then table.insert(cards,{id=pet.id,name=(NameText.own(state,pet.id)),following=pet.id==activeId})end
  end
  for _,petId in ipairs(Earned.Order)do
   local pet,rule=Pets.byId[petId],Earned.Rules[petId]
@@ -310,7 +312,7 @@ function Hub:buildHub(body,W,H,phone)
   self:buildWell(pane,12,12,176,math.max(60,ph-80))
   -- Phone: the pips sit beside the name (no room under it above "Following you").
   local pipsW=if bond then BondPips.extent(BondPips.Size.compact)+8 else 0
-  self.petName=txt(pane,"Title",pet and pet.name or "","text",12,ph-62,176-pipsW,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
+  self.petName=txt(pane,"Title",(NameText.own(self.ctx.state,petId)),"text",12,ph-62,176-pipsW,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
   self.following=txt(pane,"Small","Following you","soft",12,ph-34,176,18,{TextSize=12})
   if bond then
    self.pips=BondPips.new(pane,true);self.pips.root.Position=UDim2.fromOffset(12+176-self.pips.width,ph-62+2);self.pips.set(bond)
@@ -320,7 +322,7 @@ function Hub:buildHub(body,W,H,phone)
   -- Desktop: the pips go under the name; the preview well gives up their 22 px.
   local lift=if bond then 22 else 0
   self:buildWell(pane,16,16,296,248-lift)
-  self.petName=txt(pane,"Title",pet and pet.name or "","text",16,276-lift,190,32,{TextSize=24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
+  self.petName=txt(pane,"Title",(NameText.own(self.ctx.state,petId)),"text",16,276-lift,190,32,{TextSize=24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
   local chip=Kit.chip(pane,"Following",nil,26);chip.root.AnchorPoint=Vector2.new(1,.5);chip.root.Position=UDim2.fromOffset(312,292-lift)
   Kit.paint(chip.label,"TextColor3","accent");self.followChip=chip
   if bond then
@@ -344,8 +346,19 @@ function Hub:buildHub(body,W,H,phone)
   local b=Kit.button(pane,"StatsButton",{text=label,size=Vector2.new(if phone then 104 else 132,if phone then 40 else 44),textSize=if phone then 15 else 17,selectable=false})
   b.Position=UDim2.fromOffset(if phone then 18 else 24,if phone then 18 else 24);b.ZIndex=pane.ZIndex+8
   for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=8 end end
-  b.Activated:Connect(function()self.statsFocus=true;self:act()end)
+  b.Activated:Connect(function()self.statsFocus=true;self.paneKey="stats";self:act()end)
   self.statsButton=b
+ end
+ -- v2 pet names: Name, in the well's bottom left corner (Down from Stats reaches it on a pad).
+ self.nameButton=nil
+ if self.callbacks.names~=false and self.viewport and self.statsButton then
+  local b=Kit.button(pane,"NameButton",{text=UICopy.get("names.open"),size=Vector2.new(if phone then 104 else 132,if phone then 40 else 44),textSize=if phone then 15 else 17,selectable=false})
+  local well=self.viewport.Parent
+  local bh=if phone then 40 else 44
+  b.Position=UDim2.fromOffset(well.Position.X.Offset+(if phone then 6 else 8),well.Position.Y.Offset+well.Size.Y.Offset-bh-(if phone then 8 else 10));b.ZIndex=pane.ZIndex+8
+  for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=8 end end
+  b.Activated:Connect(function()self.statsFocus=true;self.paneKey="name";self:act()end)
+  self.nameButton=b
  end
  local ctx=self:statusCtx()
  for index,row in ipairs(Hub.Rows)do
@@ -541,7 +554,7 @@ function Hub:paintSelectorPane()
  local adopting=card~=nil and card.id==entry.id and card.adopt==true
  if self.pips then self.pips.set(if adopting then nil else BondPips.info(self.ctx.state and self.ctx.state.bond,entry.id))end
  local pet=Pets.byId[entry.id];local following=entry.id==self.ctx.activeId
- self.paneName.Text=pet.name
+ self.paneName.Text=(NameText.own(self.ctx.state,entry.id))
  self.action.Visible=true
  if card and card.id==entry.id and card.adopt then
   local confirming=self.confirmAdopt~=nil and self.confirmAdopt.id==entry.id and os.clock()<self.confirmAdopt.untilAt
@@ -593,10 +606,18 @@ function Hub:move(dx,dy)
  -- v2 S3: Left from the rows reaches the Stats button; Right or Up / Down returns.
  if self.statsFocus then
   if dx<0 then return false end
+  -- v2 pet names: Up / Down move between Stats and Name; Right returns to the rows.
+  if dx==0 and dy~=0 and self.nameButton then
+   local key=if dy>0 then "name"else "stats"
+   if key==self.paneKey then return false end
+   self.paneKey=key
+   if self.ring then self.ring.attach(if key=="name"then self.nameButton else self.statsButton,12)end
+   return true
+  end
   self.statsFocus=false;self:focusRow(self.rowIndex);return true
  end
  if dx<0 and self.statsButton then
-  self.statsFocus=true;self:refresh();if self.ring then self.ring.attach(self.statsButton,12)end;return true
+  self.statsFocus=true;self.paneKey="stats";self:refresh();if self.ring then self.ring.attach(self.statsButton,12)end;return true
  end
  local nextIndex=Hub.step(self.rowIndex,0,dy,#Hub.Rows,1)
  if nextIndex==self.rowIndex then return false end
@@ -620,7 +641,7 @@ function Hub:act()
  if not self.visible then return false end
  if self.page=="hub"then
   if self.statsFocus then
-   local ok=self.callbacks.open~=nil and self.callbacks.open("stats",self:activePet())==true
+   local ok=self.callbacks.open~=nil and self.callbacks.open(if self.paneKey=="name"then "name"else "stats",self:activePet())==true
    if not ok and self.visible then self:focusRow(self.rowIndex)end
    self.statsFocus=false
    return ok

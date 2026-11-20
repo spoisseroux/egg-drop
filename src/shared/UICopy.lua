@@ -16,7 +16,7 @@ local Table={
   display={charm="A charm for your pet",finish="A material for your pet",wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",material="Material for your pet",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
   -- Full-screen item reveal (QA v685 H2): the rarity banner over the item's name.
   reveal={tier={Common="COMMON",Uncommon="UNCOMMON",Rare="RARE"},
-   kind={toy="TOY",hue="COLOUR JAR",material="MATERIAL",feature="FEATURE",item="ITEM",finish="MATERIAL JAR",charm="CHARM",stat="STAT SNACK"},
+   kind={toy="TOY",hue="COLOUR JAR",material="MATERIAL",feature="FEATURE",item="ITEM",finish="MATERIAL JAR",charm="CHARM",stat="STAT SNACK",name="NAME PIECE"},
    banner="{tier} {kind}",fresh="NEW {kind}",close="Close",
    -- QA R1 (2026-11-15): one fun line for every hatch result, shown under the name on the
    -- item reveal. 60 characters at most, in the garden's warm and quirky voice (the pets'
@@ -390,6 +390,31 @@ local Table={
  },
  -- v2 S3: the pet stats panel (StatsPanel), the level-up line (StatToasts) and the
  -- results strip. Stat names and tier words are the StatCatalog ids in UICopy form.
+ -- v2 pet names (V2-CUTE-ICONS-AND-NAMES-2026-11-20 2.6). The pieces themselves are proper names
+ -- in NameCatalog, shown the same to every viewer (never in this table, never translated).
+ names={
+  title="Name your {pet}",eyebrow="Companions",open="Name",save="Save name",saving="Saving…",saved="Name saved",
+  swap="Swap",clear="Clear",
+  slots={empty="Pick a piece",hint="One piece or two. No typing, ever."},
+  tab={all="All",starter="Starter",egg="Names Egg",stat="Stats",book="Book"},
+  shows={title="Shows",where="Over your pet\nOn its card and stats",own="Each pet has its own name."},
+  footer={free="Renaming is free, any time.",account="A piece you unlock is yours for every pet."},
+  lock={stat="{stat} {level}",total="TOTAL {count}",anyLevel="ANY STAT {level}",book="BOOK {count}",egg="NAMES EGG"},
+  hint={stat="Reach {stat} {level} on any pet to unlock it.",total="Reach a total level of {count} on one pet to unlock it.",
+   anyLevel="Reach level {level} in any stat to unlock it.",book="Claim {count} collection book rewards to unlock it.",
+   egg="This one hatches from the Names Egg."},
+  egg={key="Names Egg · {price} Stars",allShort="All pieces collected",title="Names Egg",line="One new name piece every time. Never a duplicate.",
+   per="1 name piece per egg",each="Each piece left: 1 in {count}, {each}",next="Next: {piece}",nextValue="Next",
+   order="Pieces come in a fixed order, shown before you buy.",fixedLine="No surprises. Your next piece is shown above.",
+   randomLine="Every piece still to find is equally likely.",buy="Hatch for {price} Stars",hatching="Hatching…",
+   all="All name pieces collected",notReady="The Names Egg is not ready yet.",close="Close",left="{count} pieces left to find",
+   again="Hatch another · {price}"},
+  reveal={sticker="NEW NAME PIECE",line="Yours for every pet",use="Use it",done="Done",yours="Renaming is free, any time."},
+  unlocked="New name piece: {piece}",
+  reason={PoolChanged="The egg just changed. Check it and tap again.",AllOwned="All name pieces collected",NeedStars="Not enough Stars yet",
+   NotOwned="Unlock that piece first",SamePiece="Pick two different pieces",Busy="One moment, then try again",Throttled="One moment, then try again",
+   Retrying="Still saving. Try again in a moment.",Timeout="No answer yet. Try again.",default="Couldn't save. Try again."},
+ },
  stats={
   title="{pet}'s stats",eyebrow="Companions",open="Stats",chip="Total {count}",
   total="Total level",of="/ {total}",nextKeeper="{name} at {count}",topKeeper="Every stat at the top",

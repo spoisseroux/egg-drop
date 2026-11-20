@@ -1601,6 +1601,16 @@ function Hatching.setPetName(handle, petId, ids)
 	return transact(handle, signature, handle.state.revision, Names.setName, candidate)
 end
 
+-- Studio only (the EggDropStatTestGrant hook): stat XP through a real transaction, so a level-up and
+-- its name piece commit the way live play does. Refused outside Studio.
+function Hatching.studioGrantStat(handle, petId, statId, xp)
+	if not game:GetService("RunService"):IsStudio() then return false, "StudioOnly" end
+	local candidate = table.freeze({ petId = petId, stat = statId, xp = xp })
+	return transact(handle, "studioStat:" .. handle.adapter.guid(), handle.state.revision, function(state, c)
+		return Stats.grant(state, c.petId, c.stat, c.xp, nil, true) > 0, "NoChange"
+	end, candidate)
+end
+
 local function maintain(handle, releasing)
 	if handle.busy then return false, "Busy" end
 	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end

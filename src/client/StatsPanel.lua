@@ -18,6 +18,8 @@ local Hub=require(script.Parent.CompanionsHub)
 -- v2 Stat Snacks: the pouch (a second view of the grid area, "Stats · Snacks") and the boost line.
 local SnackTray=require(script.Parent.SnackTray)
 local StatEggCatalog=require(Shared.StatEggCatalog)
+-- v2 pet names: the title is "<name>'s stats" (the species while the pet has no name).
+local NameText=require(script.Parent.PetNameText)
 local Panel={}
 Panel.__index=Panel
 Panel.Cols=3
@@ -165,8 +167,7 @@ function Panel:build(view)
   body=Kit.frame(content,"Body",nil,UDim2.new(),UDim2.fromScale(1,1));body.ZIndex=sheet.ZIndex+3
  end
  self.body=body
- local pet=Pets.byId[self:petId()]
- self.header=Kit.header(body,{title=UICopy.get("stats.title",{pet=pet and pet.name or "Bear"}),eyebrow=UICopy.get("stats.eyebrow"),tint="companions",
+ self.header=Kit.header(body,{title=UICopy.get("stats.title",{pet=(NameText.own(self.ctx.state,self:petId()))}),eyebrow=UICopy.get("stats.eyebrow"),tint="companions",
   compact=phone,width=W,left=if phone then view.hx else 24,onBack=function()self:back()end})
  self.header.root.Name="StatsHeader"
  if self.header.wallet then self.header.wallet.set(self.ctx.wallet or 0)end

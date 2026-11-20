@@ -52,7 +52,7 @@ pcall(function()clientUI.clientSim=require(script.ClientRoundDriver).start()end)
 clientUI.BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
 clientUI.ballFaces=require(script.BallFaces).new();clientUI.faceList={};clientUI.heldFace={}
 function clientUI.isHueOpen()return(clientUI.hueView~=nil and clientUI.hueView:isOpen())or(clientUI.hub~=nil and clientUI.hub:isOpen())
- or(clientUI.stats~=nil and clientUI.stats.isOpen())end
+ or(clientUI.stats~=nil and clientUI.stats.isOpen())or(clientUI.names~=nil and clientUI.names.isOpen())end
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -1214,6 +1214,7 @@ do
    petId=petId or board:GetAttribute("CompanionId")
    if rowId=="wardrobe"then return clientUI.openWardrobe and clientUI.openWardrobe(petId)or false end
    if rowId=="stats"then return clientUI.openStats~=nil and clientUI.openStats({from="hub",petId=petId,slideFrom=Kit.SlideOffset})==true end
+   if rowId=="name"then return clientUI.openNames~=nil and clientUI.openNames({from="hub",petId=petId,slideFrom=Kit.SlideOffset})==true end
    -- UI-SPEC-v816 3: Toys is its own screen (the Customize view on its Toys page).
    if rowId=="customize"or rowId=="toys"then
     clientUI.hub:close("customize")
@@ -1364,6 +1365,31 @@ do
  clientUI.openStats=function(options)return clientUI.stats.open(options)end
  roomView.openStats=clientUI.openStats
  gui.Destroying:Connect(function()clientUI.stats.destroy()end)
+end
+-- v2 pet names: the naming screen (Companions → pet → Name), the Names Egg card and its reveal on
+-- the Pop-Out Stage, and the name tags in the garden (RoomView.nameplates reads nameState).
+do
+ local Kit=require(script.DeckKit)
+ local Rail=require(script.NotificationRail)
+ local railOwner=Instance.new("Folder");railOwner.Name="NamesRailOwner";railOwner.Parent=gui.Parent
+ clientUI.names=require(script.NameScreen).mount({parent=gui.Parent,insetProbe=clientUI.insetProbe,remotes=remotes,audio=audio,
+  state=function()return nurseryState end,
+  appearance=function(petId)return nurseryView.appearanceFor(petId)end,
+  canOpen=function()return not roomView.busy and board:GetAttribute("Mode")=="Room"and not(nurseryState and nurseryState.lastHatch)
+   and not clientUI.book:isOpen()and not clientUI.hueView:isOpen()and not(clientUI.isWardrobeOpen and clientUI.isWardrobeOpen())
+   and not clientUI.stats.isOpen()and not modal.Visible and not clientUI.questLog.visible and not(clientUI.bugReport and clientUI.bugReport:isOpen())end,
+  prepare=function()
+   cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
+   if gameMenu and gameMenu.shade.Visible and closeMenu then closeMenu()end
+   if clientUI.hub:isOpen()then clientUI.hub:close("names")end
+   if roomView.focusing then roomView:useRoomCamera(false)end
+  end,
+  reopenHub=function()if clientUI.openHub then clientUI.openHub({slideFrom=-Kit.SlideOffset})end end,
+  closed=function(reason,from)if clientUI.machineReturn=="companions"and not(reason=="back"and from=="hub")then clientUI.machineReturn=nil end end,
+  notify=function(text)Rail.enqueue(railOwner,"name:"..text,{text=text,icon="★",duration=3})end})
+ clientUI.openNames=function(options)return clientUI.names.open(options)end
+ roomView.nameState=function()return nurseryState end
+ gui.Destroying:Connect(function()clientUI.names.destroy()end)
 end
 -- v2 Stat Eggs and Stat Snacks (SnackHost): the Stat Egg on Hatch eggs and its reveal, the pouch
 -- in the stats panel and in pet focus, the eating sequence and other players' "ate a snack" beat.
@@ -1530,6 +1556,7 @@ local function refreshNursery(state)
     if clientUI.syncHub then clientUI.syncHub(state)end
     if clientUI.syncBook then clientUI.syncBook(state)end
     if clientUI.stats then clientUI.stats.sync(state)end
+    if clientUI.names then clientUI.names.sync(state)end
     if roomView.focusUI and roomView.focusUI.snacksOpen and roomView.focusUI:snacksOpen()then roomView.focusUI:refreshSnacks()end
     clientUI.hueIntent:update(state)
     clientUI.materialIntent:update(state)
@@ -1545,6 +1572,7 @@ local function refreshNursery(state)
 	local result = state.lastHatch
  if result and clientUI.isHueOpen()then clientUI.hueView:close("forced")end
  if result and clientUI.stats then clientUI.stats.close("forced")end
+ if result and clientUI.names then clientUI.names.close("forced")end
 	if result and result.id ~= shownNurseryHatch then
 		cancelHatchNavigation()
 		shownNurseryHatch = result.id
@@ -1672,6 +1700,7 @@ openMenu = function(options)
 	if roomView.busy or modal.Visible or nurseryView:isOpen() or clientUI.isHueOpen() then return end
 	if (clientUI.hub and clientUI.hub:isOpen()) or (clientUI.book and clientUI.book:isOpen()) or clientUI.questLog.visible
 		or (clientUI.stats and clientUI.stats.isOpen())
+		or (clientUI.names and clientUI.names.isOpen())
 		or (clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()) then return end
 	clientUI.machineReturn=nil
 	clearPlayInputs(); picker:close(); journal:close(); roomView:setMenuOpen(true)
@@ -2804,6 +2833,7 @@ local controllerFocus=clientUI.ControllerFocus.new({
 		if clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then return{blocked=true}end
 		if clientUI.hub and clientUI.hub:isOpen()then return{blocked=true}end
 		if clientUI.stats and clientUI.stats.isOpen()then return{blocked=true}end -- StatsHost owns its focus
+		if clientUI.names and clientUI.names.isOpen()then return{blocked=true}end -- NameScreen owns its focus
 		if clientUI.bugReport and clientUI.bugReport:isOpen()then return{blocked=true}end -- the report sheet owns its focus
 		if clientUI.isHueOpen()then owner=clientUI.hueView:getControllerFocus()
         elseif nurseryView:isOpen()then owner=nurseryView:getControllerFocus()
@@ -4000,6 +4030,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	if nurseryView then nurseryView:close("forced") end
     if clientUI.hueView then clientUI.hueView:close("forced")end
 	if clientUI.stats then clientUI.stats.close("forced")end
+	if clientUI.names then clientUI.names.close("forced")end
 	if closeMenu then closeMenu() end
 	if mode == "Room" then
   rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
