@@ -1,0 +1,202 @@
+{
+ "asset": "stat-snacks",
+ "sourceBlend": "assets/art-source/snacks/stat-snacks.blend",
+ "builtBy": [
+  "assets/art-source/snacks/build_snack_images.py",
+  "assets/art-source/snacks/build_snacks.py"
+ ],
+ "axes": "axis_forward=-Z axis_up=Y (same as bear.fbx). Blender: front -Y, up +Z, 1 unit = 1 stud. Every piece's origin is the middle of its snack.",
+ "pieceNames": [
+  "biscuit",
+  "icing",
+  "pearls"
+ ],
+ "textures": {
+  "biscuit": "biscuit.png (256 px, shared by all three sizes)"
+ },
+ "runeDecals": {
+  "heart": "rune-decal-heart-256.png",
+  "power": "rune-decal-power-256.png",
+  "energy": "rune-decal-energy-256.png",
+  "jump": "rune-decal-jump-256.png",
+  "speed": "rune-decal-speed-256.png",
+  "smarts": "rune-decal-smarts-256.png"
+ },
+ "statColors": {
+  "heart": "#FF86A8",
+  "power": "#FF9D4D",
+  "energy": "#6CCBFF",
+  "jump": "#B9EE5A",
+  "speed": "#8FA8FF",
+  "smarts": "#E58CFF"
+ },
+ "decalNote": "Put the rune as a Decal on the icing MeshPart. The icing top's UVs fill the whole image (the rune's top is the snack's back, Blender +Y); the cream ring's UVs sit in a clear corner, so the decal shows only on top. The decal is dark cocoa on clear; do not tint it.",
+ "sizes": [
+  {
+   "id": "nibble",
+   "name": "Nibble",
+   "export": "snack-nibble.fbx",
+   "layers": 1,
+   "pearls": 0,
+   "triangles": 146,
+   "budget": 150,
+   "sizeStuds": [
+    0.2,
+    0.19021,
+    0.06432
+   ],
+   "pieces": {
+    "biscuit": {
+     "mesh": "StatSnack_Nibble__Biscuit",
+     "triangles": 98,
+     "centerBlender": [
+      0.0,
+      0.0,
+      -0.00816
+     ],
+     "sizeBlender": [
+      0.2,
+      0.19021,
+      0.048
+     ],
+     "texture": "biscuit.png",
+     "color": "#FFFFFF (shows the texture)"
+    },
+    "icing": {
+     "mesh": "StatSnack_Nibble__Icing",
+     "triangles": 48,
+     "centerBlender": [
+      0.0,
+      0.0,
+      0.02196
+     ],
+     "sizeBlender": [
+      0.166,
+      0.166,
+      0.0204
+     ],
+     "texture": null,
+     "color": "the stat colour (StatCatalog.ById[stat].color)"
+    }
+   }
+  },
+  {
+   "id": "snack",
+   "name": "Snack",
+   "export": "snack-snack.fbx",
+   "layers": 2,
+   "pearls": 0,
+   "triangles": 250,
+   "budget": 250,
+   "sizeStuds": [
+    0.25,
+    0.23776,
+    0.1608
+   ],
+   "pieces": {
+    "biscuit": {
+     "mesh": "StatSnack_Snack__Biscuit",
+     "triangles": 178,
+     "centerBlender": [
+      0.0,
+      0.0,
+      -0.0102
+     ],
+     "sizeBlender": [
+      0.25,
+      0.23776,
+      0.1404
+     ],
+     "texture": "biscuit.png",
+     "color": "#FFFFFF (shows the texture)"
+    },
+    "icing": {
+     "mesh": "StatSnack_Snack__Icing",
+     "triangles": 72,
+     "centerBlender": [
+      0.0,
+      0.0,
+      0.0264
+     ],
+     "sizeBlender": [
+      0.215,
+      0.215,
+      0.108
+     ],
+     "texture": null,
+     "color": "the stat colour (StatCatalog.ById[stat].color)"
+    }
+   }
+  },
+  {
+   "id": "feast",
+   "name": "Feast",
+   "export": "snack-feast.fbx",
+   "layers": 3,
+   "pearls": 5,
+   "triangles": 396,
+   "budget": 400,
+   "sizeStuds": [
+    0.30525,
+    0.2953,
+    0.28944
+   ],
+   "pieces": {
+    "biscuit": {
+     "mesh": "StatSnack_Feast__Biscuit",
+     "triangles": 258,
+     "centerBlender": [
+      0.0,
+      0.0,
+      -0.01224
+     ],
+     "sizeBlender": [
+      0.3,
+      0.28532,
+      0.26496
+     ],
+     "texture": "biscuit.png",
+     "color": "#FFFFFF (shows the texture)"
+    },
+    "icing": {
+     "mesh": "StatSnack_Feast__Icing",
+     "triangles": 88,
+     "centerBlender": [
+      0.0,
+      0.0,
+      0.03168
+     ],
+     "sizeBlender": [
+      0.258,
+      0.249,
+      0.22608
+     ],
+     "texture": null,
+     "color": "the stat colour (StatCatalog.ById[stat].color)"
+    },
+    "pearls": {
+     "mesh": "StatSnack_Feast__Pearls",
+     "triangles": 50,
+     "centerBlender": [
+      0.01483,
+      0.0,
+      0.10449
+     ],
+     "sizeBlender": [
+      0.28085,
+      0.2953,
+      0.0189
+     ],
+     "texture": null,
+     "color": "#FFF6E9"
+    }
+   }
+  }
+ ],
+ "cheekCheck": {
+  "bearHeadWidth": 0.985,
+  "feastWidth": 0.3,
+  "ratio": 0.305,
+  "limit": "under one third"
+ }
+}
