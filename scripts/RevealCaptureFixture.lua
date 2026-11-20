@@ -3,6 +3,10 @@
 -- execute_luau:  _G.RevealFx=require(client.ZZSpecs.RevealCaptureFixture)(client)
 --   RevealFx.open({ {kind="pet",x=0,y=0,w=812,h=354}, {kind="material",id="jelly",...} })
 --   RevealFx.to(1.2)   -- step every open reveal to hatch time 1.2 s (fixed 1/30 s steps)
+--   RevealFx.frames(9) -- step 9 frames of real time (the v2 toy lid runs before hatch time 0)
+-- v2 (2026-11-20): kind="stat" {size, stat} draws the Stat Egg (StatEggReveal.scene on the
+-- real HatchItemStage); items carry the result card's odds, pity and Hatch another from the
+-- real EggHatchView / StatEggOdds rules on a synthetic state; spec.lid=false skips the lid.
 --   RevealFx.close()
 -- It runs the REAL modules (HatchCinematic, HatchDisplayScene, RevealStage, HueItemReveal,
 -- HatchItemStage) on synthetic results: no purchase, remote, save or sound. The clocks are
@@ -13,6 +17,10 @@ return function(client)
  local Cinematic=require(client.HatchCinematic)
  local RevealStage=require(client.RevealStage)
  local ItemReveal=require(client.HueItemReveal)
+ local ItemStage=require(client.HatchItemStage)
+ local Pose=require(client.HatchDisplayPose)
+ local Rarity=require(client.HatchRarityCue)
+ local Eggs=require(client.EggHatchView)
  local Pets=require(Shared.PetCatalog)
  local Copy=require(Shared.UICopy)
  local Fx={entries={}}
@@ -76,14 +84,62 @@ return function(client)
   -- Stand-ins for the host's receipt buttons (HueEggView's Action and Use now).
   local primary=node("TextButton",host,{Name="FixtureUseNow",Text=primaryText,Size=UDim2.fromOffset(10,10),Position=UDim2.fromOffset(-50,-50)})
   local secondary=node("TextButton",host,{Name="FixtureAction",Text=secondaryText,Size=UDim2.fromOffset(10,10),Position=UDim2.fromOffset(-50,-50)})
+  -- The result card's tray from the real egg-card rules on a synthetic state.
+  local egg=if kind=="hue"then "look"else kind
+  local state={nectar=200,toyUnlocks={ball=true},lookCharmMisses=spec.misses or 5,charmUnlocks=0,lookAvailable=true,materialAvailable=true}
+  local won=result.itemId or result.toyId or result.finishId or result.featureId
+  if kind=="hue"and require(Shared.LookEggCatalog).kind(result.itemId)=="charm"then won="charm"end
   local reveal=ItemReveal.new(art,{recipeId=kind,resultBuilder=builders[kind]and builders[kind]()or nil,reduceEffects=function()return spec.reduced==true end,
    stage={parent=host,cover=false,zIndex=80,owns=function()return true end,name=function()return name end,detail=function()return detail end,close=function()end,
+    odds=function()local ok,rows=pcall(Eggs.oddsRows,egg,state,"pip");return if ok then rows else nil end,wonId=function()return won end,
+    pity=function()
+     if egg=="look"then for _,row in ipairs(Eggs.lookOdds(state).rows)do if row.id=="pity"then return {line=row.name,sub=""}end end end
+     if egg=="toy"then return {line=Copy.get("hatch.result.stockToys",{count=5}),sub=""}end
+     return nil
+    end,
+    again=function()return {text=Copy.get("hatch.result.againPrice",{count=if egg=="toy"then 20 else 12}),enabled=true,act=function()entry.again=true;return true end}end,
     actions=function()return {{source=primary,primary=true,act=function()entry.acted="primary"end},{source=secondary,primary=false,act=function()entry.acted="secondary"end}}end}})
   entry.reveal=reveal
   reveal:show(result,spec.instant~=true)
   entry.cinematic=reveal.cinematic
   entry.stages=function()return {reveal.stage}end
   entry.ready=function()return reveal.cinematic.presented==true and reveal.stage~=nil end
+  if spec.lid==false and reveal.stage then reveal.stage.useLid=false end
+ end
+ -- The Stat Egg: StatEggReveal's snack scene on the real stage, with a hand-stepped clock
+ -- shaped like a cinematic (age, active, step, paint) so the fixture drives it the same way.
+ local function openStat(entry,spec)
+  local Reveal=require(client.StatEggReveal);local Odds=require(client.StatEggOdds)
+  local receipt={snackId=1,stat=spec.stat or "power",size=spec.size or "snack"}
+  local words=Reveal.copy(receipt,"Bear")
+  local tier=Reveal.tier(receipt)
+  local state={nectar=200,statEgg={enabled=true,mode="random",price=15,pouch={},pouchSize=12,free=0,boughtToday=1,dailyBuys=3,misses=spec.misses or 3,
+   quotes={pip={key="k",eligible={"heart","power","energy","jump","speed","smarts"}}}}}
+  local keep=node("TextButton",entry.host,{Name="FixtureKeep",Text=Copy.get("hatch.stat.reveal.keep"),Size=UDim2.fromOffset(10,10),Position=UDim2.fromOffset(-50,-50)})
+  local feed=node("TextButton",entry.host,{Name="FixtureFeed",Text=Copy.get("hatch.stat.reveal.feed"),Size=UDim2.fromOffset(10,10),Position=UDim2.fromOffset(-50,-50)})
+  local scene=Reveal.scene(receipt)
+  local reduced=spec.reduced==true
+  local stat=require(Shared.StatCatalog).ById[receipt.stat]
+  local stage=ItemStage.show(entry.host,{scene=scene,kind="stat",tier=tier,result=receipt,cover=false,zIndex=80,lid=spec.lid~=false,
+   reduced=function()return reduced end,owns=function()return true end,
+   name=function()return words.name end,effect=function()return words.boost end,description=function()return words.forPet end,
+   sticker=function()return ItemStage.bannerText(tier,"stat")end,stoneColors=function()return {stat.color}end,
+   odds=function()return Odds.rows(state,"pip")end,wonId=receipt.size,
+   pity=function()return {line=require(client.SnackHost).revealPill(state,"pip"),sub=Odds.stockLine(state)}end,
+   again=function()return {text=Copy.get("hatch.result.againPrice",{count=15}),enabled=true,act=function()entry.again=true;return true end}end,
+   actions=function()return {{source=keep,primary=false,act=function()entry.acted="keep"end},{source=feed,primary=true,act=function()entry.acted="feed"end}}end,
+   onSkip=function()end,onClose=function()end})
+  local T=Rarity.timing(tier,"stat",reduced)
+  local c={age=0,active=true,presented=true,rarityState={tier=tier}}
+  function c:disconnectClock()end
+  function c:refreshOwner()end
+  function c:paint()local sample=Pose.sample(self.age,"stat",reduced,tier);scene:render(sample);stage:updateExternal(self.age,sample)end
+  function c:step(dt)if not stage:holdsClock()then self.age=math.min(T.duration,self.age+dt)end;self:paint()end
+  function c:finishStatic()self.age=T.duration;self:paint()end
+  function c:destroy()stage:destroy();scene:destroy()end
+  entry.cinematic=c;entry.stage=stage
+  entry.stages=function()return {stage}end
+  entry.ready=function()return true end
  end
  function Fx.open(specs)
   Fx.close()
@@ -95,7 +151,7 @@ return function(client)
    -- HatchCinematic allows one visible owner and settles the previous one on a new play.
    -- The fixture shows several side by side, so earlier ones ignore that one call.
    for _,other in ipairs(Fx.entries)do if other.cinematic then other.cinematic.finishStatic=function()end end end
-   if spec.kind=="pet"then openPet(entry,spec)else openItem(entry,spec)end
+   if spec.kind=="pet"then openPet(entry,spec)elseif spec.kind=="stat"then openStat(entry,spec)else openItem(entry,spec)end
    for _,other in ipairs(Fx.entries)do if other.cinematic then other.cinematic.finishStatic=nil end end
   end
   -- Wait for every scene (and pet rig) to load, freezing each clock as it starts.
@@ -110,21 +166,31 @@ return function(client)
   until all or os.clock()>deadline
   for _,entry in ipairs(Fx.entries)do if not entry.frozen then freeze(entry)end end
   -- The open fade follows the fixture's clock too (QA R4), starting from the first frame.
-  for _,entry in ipairs(Fx.entries)do for _,stage in ipairs(entry.stages())do stage.openElapsed=0;stage:step(0)end end
+  -- v2: the toy lid starts on the fixture's clock too (it ran while the scenes loaded).
+  for _,entry in ipairs(Fx.entries)do for _,stage in ipairs(entry.stages())do stage.openElapsed=0;stage.openClock=0;stage.lidHeld=0;stage.lid=nil;stage:step(0)end end
   Fx.time=0
   return Fx.stats()
  end
- -- Advance every reveal to hatch time `t` in fixed 1/30 s steps (the real step functions).
- function Fx.to(t)
+ -- One fixed 1/30 s frame of real time for every reveal (the real step functions).
+ local function frame()
   local dt=1/30
-  while Fx.time<t-1e-6 do
-   Fx.time+=dt
-   for _,entry in ipairs(Fx.entries)do
-    local c=entry.cinematic
-    c.windowActive=true -- Studio is not the focused window during MCP captures
-    if c.active then c:step(dt)end
-    for _,stage in ipairs(entry.stages())do stage.openElapsed=Fx.time;stage:step(dt)end
-   end
+  Fx.time+=dt
+  for _,entry in ipairs(Fx.entries)do
+   local c=entry.cinematic
+   c.windowActive=true -- Studio is not the focused window during MCP captures
+   if c.active then c:step(dt)end
+   for _,stage in ipairs(entry.stages())do stage.openElapsed=Fx.time;stage:step(dt)end
+  end
+ end
+ function Fx.frames(n)for _=1,n do frame()end;return Fx.stats()end
+ -- Advance every reveal to hatch time `t` (v2: the lid runs first, so hatch time starts
+ -- once its iris is open). At most 20 s of frames.
+ function Fx.to(t)
+  for _=1,600 do
+   local behind=false
+   for _,entry in ipairs(Fx.entries)do local c=entry.cinematic;if c.active and c.age<t-1e-6 then behind=true end end
+   if not behind then break end
+   frame()
   end
   return Fx.stats()
  end
@@ -141,6 +207,7 @@ return function(client)
    if stage then
     stage.seenAt=os.clock()
     if entry.reveal then entry.reveal:clear()else stage:dismiss(function()entry.dismissed=true end)end
+    if stage.leaving then stage.leaving.at=os.clock()end
     if stage.leaving then
      if stage.connection then stage.connection:Disconnect();stage.connection=nil end
      table.insert(Fx.leaving,stage)

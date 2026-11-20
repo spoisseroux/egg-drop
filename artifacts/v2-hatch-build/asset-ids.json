@@ -1,0 +1,11 @@
+{
+ "uploaded": "2026-11-19 (Open Cloud, creator userId 10716920546)",
+ "audio": {
+  "hatch_jackpot": {"id": 125080180187325, "file": "artifacts/v2-hatch-redesign-2026-11-19/audio/rare-jackpot-layer.mp3"},
+  "hatch_jackpot_calm": {"id": 125229335467544, "file": "artifacts/v2-hatch-redesign-2026-11-19/audio/rare-jackpot-calm-layer.mp3"}
+ },
+ "images": {
+  "hatch-v2-burst": {"id": 80540254791233, "file": "assets/ui/hatch-v2/hatch-v2-burst.png"},
+  "hatch-v2-bits": {"id": 103382562170036, "file": "assets/ui/hatch-v2/hatch-v2-bits.png"}
+ }
+}
