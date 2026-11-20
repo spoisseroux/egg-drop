@@ -130,6 +130,7 @@ function Focus.new(parentGui, callbacks)
 	table.insert(self.connections, back.Activated:Connect(function()if self.active and self:canOwnInput()then callbacks.back()end end))
 	self:buildBondCard()
 	self:buildStatsButton()
+	self:buildSnacks()
 	table.insert(self.connections,UserInputService.TouchStarted:Connect(function(input)self.heldTouches[input]=true end))
 	table.insert(self.connections,UserInputService.TouchEnded:Connect(function(input)self.heldTouches[input]=nil;self:endPointer(input)end))
 	table.insert(self.connections,hit.InputBegan:Connect(function(input)self:beginPointer(input)end))
@@ -179,6 +180,75 @@ function Focus:buildStatsButton()
 	self.statsButton=b
 	table.insert(self.connections,b.Activated:Connect(function()if self.active and self:canOwnInput()then self.callbacks.stats()end end))
 end
+-- v2 Stat Snacks: the Snacks button opens a tray of the pouch under the pet. Drag a snack onto
+-- the pet, or pick one and press Feed; on a gamepad the d-pad picks, A feeds, B closes the tray.
+-- callbacks.snackModel() -> SnackTray model; callbacks.snackFeed(snackId, onBusy) -> bool;
+-- callbacks.snackCarry(kind, group) (the pet watches, opens its mouth, sniffs).
+function Focus:buildSnacks()
+	if not self.callbacks.snackModel then return end
+	local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
+	local b=Kit.button(self.panel,"SnacksButton",{text=UICopy.get("stats.snacks.open"),glyph="X",showGlyph=false,size=Vector2.new(112,48),textSize=17,selectable=false})
+	b.ZIndex=8;for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=7 end end
+	self.snacksButton=b
+	table.insert(self.connections,b.Activated:Connect(function()if self.active and self:canOwnInput()then self:toggleSnacks()end end))
+	local card=Kit.card(self.panel,"SnackTrayCard",nil,{pad=12});card.AnchorPoint=Vector2.new(.5,1);card.Position=UDim2.new(.5,0,1,-12)
+	card.Size=UDim2.fromOffset(440,150);card.Visible=false;card.Active=true;card.ZIndex=12
+	local host=Kit.frame(card,"TrayHost",nil,UDim2.fromOffset(12,10),UDim2.new(1,-24,1,-20))
+	self.trayCard=card
+	self.tray=require(script.Parent.SnackTray).new(host,{compact=true,carryLayer=self.panel,
+		petName=function()return self.bondInfo and self.bondInfo.name or "Bear"end,
+		dropTarget=function()return self.petRectPosition,self.petRectSize end,
+		onCarry=function(kind,group)if self.callbacks.snackCarry then self.callbacks.snackCarry(kind,group)end end,
+		onSelect=function(group)if self.callbacks.snackCarry then self.callbacks.snackCarry("pick",group)end end,
+		onFeed=function(group)
+			return self.callbacks.snackFeed(group.ids[1],function(busy)if self.tray then self.tray:setBusy(busy)end end)==true
+		end})
+end
+function Focus:snacksOpen()return self.trayCard~=nil and self.trayCard.Visible end
+function Focus:refreshSnacks(select)
+	if not self.tray then return end
+	local model=self.callbacks.snackModel()
+	model.select=select
+	self.tray:set(model)
+end
+-- Opens the tray (with `snackId` picked when given).
+function Focus:openSnacks(snackId)
+	if not self.trayCard then return false end
+	self.trayCard.Visible=true
+	self:refreshSnacks(snackId)
+	self:layoutTray()
+	self:bindTray(self.active)
+	return true
+end
+function Focus:closeSnacks()
+	if self.tray then self.tray:cancelCarry()end
+	if not self.trayCard or not self.trayCard.Visible then return end
+	self.trayCard.Visible=false
+	self:bindTray(false)
+	if self.callbacks.snackCarry then self.callbacks.snackCarry("close")end
+end
+function Focus:toggleSnacks()if self:snacksOpen()then self:closeSnacks()else self:openSnacks()end end
+function Focus:layoutTray()
+	if not self.trayCard then return end
+	local size=self.root.AbsoluteSize
+	self.trayCard.Size=UDim2.fromOffset(math.min(440,math.max(200,size.X-24)),if size.Y<420 then 132 else 150)
+end
+function Focus:bindTray(on)
+	local name=self.actionPrefix.."Tray"
+	ContextActionService:UnbindAction(name)
+	if not on or not self:snacksOpen()then return end
+	local K=Enum.KeyCode
+	ContextActionService:BindActionAtPriority(name,function(_,state,input)
+		if not self.active or not self:canOwnInput()or not self:snacksOpen()then return Enum.ContextActionResult.Pass end
+		if state~=Enum.UserInputState.Begin then return Enum.ContextActionResult.Sink end
+		local key=input.KeyCode
+		if key==K.ButtonB or key==K.Escape then self:closeSnacks()
+		elseif key==K.ButtonX then self:closeSnacks()
+		else self.tray:input(key)end
+		return Enum.ContextActionResult.Sink
+	end,false,Enum.ContextActionPriority.High.Value+260,K.ButtonA,K.ButtonB,K.ButtonX,K.DPadLeft,K.DPadRight,K.Escape,K.Return,K.KeypadEnter,K.F,
+		K.One,K.Two,K.Three,K.Four,K.Five,K.Six,K.Left,K.Right)
+end
 function Focus:handleStats(state)
 	if not self.active or not self:canOwnInput()or not(self.statsButton and self.statsButton.Visible)then return Enum.ContextActionResult.Pass end
 	if state==Enum.UserInputState.Begin then self.callbacks.stats()end
@@ -216,9 +286,11 @@ function Focus:bindPickup(pickup)
 end
 function Focus:layoutFocusRow()
  if not self.bondCard then return end
- local row=require(script.Parent.FocusRow).layout(self.root.AbsoluteSize.X,self.bondWidth,self.pickupButton~=nil and self.pickupButton.Visible,self.statsButton~=nil)
+ local row=require(script.Parent.FocusRow).layout(self.root.AbsoluteSize.X,self.bondWidth,self.pickupButton~=nil and self.pickupButton.Visible,self.statsButton~=nil,self.snacksButton~=nil)
  if self.statsButton then self.statsButton.Visible=row.stats~=nil end
- for _,entry in ipairs({{self.back,row.back},{self.bondCard,row.bond},{self.pickupButton,row.pickup},{self.statsButton,row.stats}})do
+ if self.snacksButton then self.snacksButton.Visible=row.snacks~=nil end
+ self:layoutTray()
+ for _,entry in ipairs({{self.back,row.back},{self.bondCard,row.bond},{self.pickupButton,row.pickup},{self.statsButton,row.stats},{self.snacksButton,row.snacks}})do
   local object,g=entry[1],entry[2]
   if object and g then object.AnchorPoint=Vector2.zero;object.Position=UDim2.fromOffset(g.x,g.y);object.Size=UDim2.fromOffset(g.w,g.h)end
  end
@@ -283,7 +355,7 @@ end
 function Focus:inside(point)
 	local at,size=self.hit.Position,self.hit.Size
 	if point.X<at.X.Offset or point.Y<at.Y.Offset or point.X>at.X.Offset+size.X.Offset or point.Y>at.Y.Offset+size.Y.Offset then return false end
-	for _,node in ipairs({self.back,self.helper,self.bondCard,self.pickupButton,self.statsButton})do
+	for _,node in ipairs({self.back,self.helper,self.bondCard,self.pickupButton,self.statsButton,self.snacksButton,self.trayCard})do
 		if node and node.Visible then
 			local p,s=node.AbsolutePosition-self.root.AbsolutePosition,node.AbsoluteSize
 			if point.X>=p.X and point.X<=p.X+s.X and point.Y>=p.Y and point.Y<=p.Y+s.Y then return false end
@@ -370,6 +442,14 @@ function Focus:setActive(active)
 		if self.statsButton then
 			ContextActionService:BindActionAtPriority(prefix .. "Stats", function(_, state)return self:handleStats(state)end, false, priority, Enum.KeyCode.ButtonY)
 		end
+		self:bindTray(true)
+		if self.snacksButton then
+			ContextActionService:BindActionAtPriority(prefix .. "Snacks", function(_, state)
+				if not self.active or not self:canOwnInput()or not self.snacksButton.Visible then return Enum.ContextActionResult.Pass end
+				if state==Enum.UserInputState.Begin then self:toggleSnacks()end
+				return Enum.ContextActionResult.Sink
+			end, false, priority, Enum.KeyCode.DPadDown)
+		end
 		ContextActionService:BindActionAtPriority(prefix .. "Move", function(_,state,input)return self:handleMove(state,input)end,
 			false, priority, Enum.PlayerActions.CharacterForward, Enum.PlayerActions.CharacterBackward,
 			Enum.PlayerActions.CharacterLeft, Enum.PlayerActions.CharacterRight, Enum.PlayerActions.CharacterJump,
@@ -379,7 +459,8 @@ function Focus:setActive(active)
 	else
 		if self.focusLessonStarted then self:retireFocusHint()end
 		self.openingADevice=nil;self.openingTouches=nil;self.openingMouse=false;self.openingGreetE=false;self.openingGreetDevice=nil
-		for _, suffix in ipairs({ "Back", "Greet", "Move", "Stats" }) do ContextActionService:UnbindAction(prefix .. suffix) end
+		for _, suffix in ipairs({ "Back", "Greet", "Move", "Stats", "Snacks" }) do ContextActionService:UnbindAction(prefix .. suffix) end
+		self:closeSnacks()
 		if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.panel) then GuiService.SelectedObject = nil end
 	end
 end
@@ -471,6 +552,9 @@ function Focus:update(camera, pet, roamHint)
 	local rigFrame,rigSize
 	if pet and pet.model and pet.model.Parent then rigFrame,rigSize=RigBounds.getBody(pet)end
 	local position,size=Focus.projectBounds(camera,pet and pet.model,self.root,rigFrame,rigSize)
+	-- The snack drop target: the pet's on-screen box (SnackTray grows it 30%, at least 96 px).
+	self.petRectPosition=if position then position+self.root.AbsolutePosition else nil
+	self.petRectSize=size
 	if position and canReact and not self.saveNotice then self.focusLessonStarted=true end
 	self.helper.Visible=self.saveNotice~=nil or(self.focusLessonStarted and not self.focusLessonRetired)
 	self:checkContactDeadline()
@@ -544,6 +628,7 @@ function Focus:destroy()
 	self:setActive(false)
 	self:cancelPointer()
 	self.destroyed = true
+	if self.tray then self.tray:destroy();self.tray=nil end
 	for _, connection in ipairs(self.connections) do connection:Disconnect() end
 	table.clear(self.connections)
 	self.gui:Destroy()

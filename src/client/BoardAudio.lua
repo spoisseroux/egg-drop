@@ -48,6 +48,18 @@ local placeholderIds = {
 	egg_select = 133779589657893,
 }
 for cue, id in pairs(placeholderIds) do assetIds[cue] = id end
+-- v2 Stat Snack feeding (V2-FEEDING-RUNES-ONBOARDING 3.3): synthesized by scripts/synth_feeding_sfx.py,
+-- uploaded 2026-11-19 (artifacts/v2-feeding-runes-2026-11-19/sfx/asset-ids.json). Not heard by Spencer yet.
+local snackIds = {
+	snack_nom_a = 118900084273341, snack_nom_b = 126750068296693, snack_nom_c = 116046377032257,
+	snack_crunch_feast = 130468203740981, snack_gulp = 94280129016754, snack_happy_squeak = 118931768213631,
+	snack_happy_coo = 108894686063251, snack_boost_sparkle = 71807243055819, snack_sniff = 129720431098904,
+	snack_refuse_hm = 130546625018025,
+}
+-- Suggested gains from the SFX README.
+Audio.SnackGain = table.freeze({ snack_nom_a = .7, snack_nom_b = .7, snack_nom_c = .7, snack_crunch_feast = .85, snack_gulp = .5,
+	snack_happy_squeak = .6, snack_happy_coo = .65, snack_boost_sparkle = .7, snack_sniff = .45, snack_refuse_hm = .55 })
+for cue, id in pairs(snackIds) do assetIds[cue] = id end
 -- Dedicated voice pool reuses the existing80ms body; no new asset or loop.
 assetIds.hatch_finish=placeholderIds.goal_tick
 Audio.PlaceholderIds = placeholderIds
@@ -70,6 +82,9 @@ local cues = {
 	-- Results count-up: one very short blip per +1 Star, each cut by the next
 	-- (batch 2026-11-13 R1). No id yet; the coordinator uploads a placeholder.
 	"count_blip",
+	-- v2 Stat Snack feeding.
+	"snack_nom_a", "snack_nom_b", "snack_nom_c", "snack_crunch_feast", "snack_gulp", "snack_happy_squeak",
+	"snack_happy_coo", "snack_boost_sparkle", "snack_sniff", "snack_refuse_hm",
 }
 -- Cues named by the UI spec whose sound files are not delivered yet
 -- (AUDIO-HANDOFF.md). They have no voice, so play() is a quiet no-op.

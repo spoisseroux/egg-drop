@@ -117,7 +117,9 @@ return function(client,parent)
     assert(view:selectRecipe("look"));frames();assert(view.shopPanel:GetAttribute("OddsRows")==9 and view.eggName.Text=="Customization Egg","seven jars, one Charm row and the pity line")
     -- Keyboard W / S / Up / Down move the selection and clamp at the ends.
     assert(view:moveRecipe(-1)and view.selected=="toy"and not view:moveRecipe(-1))
-    assert(view:moveRecipe(1)and view.selected=="look"and not view:moveRecipe(1))
+    assert(view:moveRecipe(1)and view.selected=="look")
+    -- v2: the Stat Egg is last on the list.
+    assert(view:moveRecipe(1)and view.selected=="stat"and not view:moveRecipe(1))
     view:close("close")
    end)
   end

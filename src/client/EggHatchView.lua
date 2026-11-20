@@ -38,7 +38,15 @@ local LookEgg=require(game:GetService("ReplicatedStorage").Shared.LookEggCatalog
 local liveOrder={"toy","look"}
 if MaterialCatalog.EnablePurchases then table.insert(liveOrder,2,"material")end
 if FeatureFlags.Features then table.insert(liveOrder,2,"feature")end
+-- v2 Stat Eggs: last on the list. Its card and button come from StatEggOdds; the hatch is
+-- StatEggReveal (onOpenStat), not the item cinematic (the hatch redesign comes later).
+local StatEggCatalog=require(game:GetService("ReplicatedStorage").Shared.StatEggCatalog)
+local StatOdds=require(script.Parent.StatEggOdds)
+if StatEggCatalog.Enabled then table.insert(liveOrder,"stat")end
+-- The art each egg borrows until its own shell exists.
+local function artOf(id)return if id=="look"then "hue"elseif id=="stat"then "feature"else id end
 local function shopRecipe(id)
+ if id=="stat"then return {id="stat",name=UICopy.get("hatch.egg.stat.name"),cost=StatEggCatalog.Price}end
  if id=="hue"then return {id="hue",name="Hue Egg",cost=HueCatalog.Cost}end
  if id=="look"then return {id="look",name=UICopy.get("hatch.egg.look.name"),cost=LookEgg.Price}end
  if id=="toy"then return {id="toy",name="Toy Egg",cost=ToyCatalog.Cost}end
@@ -92,7 +100,7 @@ local function eggGraphic(parent, recipeId, color, y)
 		Art.leaf(scene, "Leaf", UDim2.new(0.5, side * 35 - 8, 0.5, 9),
 			UDim2.fromOffset(14, 31), Art.Leaf, side * 48)
 	end
-	EggArt.create(scene, if recipeId == "look" then "hue" else recipeId, UDim2.new(0.5, -32, 0.5, -44), UDim2.fromOffset(64, 82), scene.ZIndex + 2)
+	EggArt.create(scene, artOf(recipeId), UDim2.new(0.5, -32, 0.5, -44), UDim2.fromOffset(64, 82), scene.ZIndex + 2)
 end
 
 function View.new(parent, audio, reduceEffects, sendCommand)
@@ -203,6 +211,12 @@ end
 function View:actPrimary()
 		if not self.shade.Visible or self.pending or not self.action.Interactable then return end
 		local current = self.state
+		if self.selected=="stat"and not current.lastHatch then
+			local a=StatOdds.action(current,self.statPet and self.statPet())
+			if a.enabled and self.onOpenStat then Peek.hop();self.onOpenStat(a.free==true)
+			elseif a.need then self:close("earn")end
+			return
+		end
 		if current.lastHatch then
 			self:chooseResult(View.secondaryIntent(current.lastHatch))
 		-- v842 phone bug: only the selected egg's own saved result opens here. A result from
@@ -574,7 +588,7 @@ function View:refreshFooter()
 		local pet = Pets.byId[state.lastHatch.petId]
 		self.meetButton.Text = if self.pending then "Saving…" elseif self.shade.AbsoluteSize.Y<200 or self.card.Size.X.Offset<400 then "Meet" else "Meet " .. (if pet then pet.name else "friend")
 	else
-		local planned = View.hatchAction(self.selected, state)
+		local planned = View.hatchAction(self.selected, state, self.statPet and self.statPet())
 		textValue, canAct = planned.text, planned.enabled
 	end
 	Art.type(self.action,"Action",self.compactShop or self.card.Size.X.Offset<400)
@@ -643,6 +657,7 @@ function View.liveOrder(flags)
  local order={"toy","look"}
  if material then table.insert(order,2,"material")end
  if flags.Features then table.insert(order,2,"feature")end
+ if flags.StatEgg==true then table.insert(order,"stat")end
  return order
 end
 -- Pure: the odds block for one egg. Values always come from OddsText.list, so the
@@ -650,8 +665,9 @@ end
 -- Returns {rows = {{id, name, value}}, per = "1 toy per egg", empty = text or nil}.
 -- Restricted players (snapshot `restricted`, F1 policy) never roll: the block is one
 -- "Next: <item>" row (or "All collected") from `nextFixed`, and `restricted` is true.
-function View.oddsRows(id,state)
+function View.oddsRows(id,state,petId)
  state=state or {}
+ if id=="stat"then return StatOdds.rows(state,petId)end
  if id=="material"and(state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then return require(script.Parent.MaterialDisclosure).rows(state)end
  if id=="look"then return View.lookOdds(state)end
  if NextItem.restricted(state)then
@@ -742,8 +758,9 @@ function View.ownPending(id,state)
  end
  return nil
 end
-function View.hatchAction(id,state)
+function View.hatchAction(id,state,petId)
  state=state or {}
+ if id=="stat"then return StatOdds.action(state,petId)end
  local own,ownKind=View.ownPending(id,state)
  if own and(ownKind=="look"or ownKind=="hue")then
   local kind=LookEgg.kind(own.itemId)
@@ -1083,11 +1100,11 @@ function View:paintEggPane()
  if not self.shopPane then return end
  local id=self.selected;local recipe=shopRecipe(id);local copy=View.EggCopy[id]or {}
  local g=self.shopGeom;local phone=g.phone
- local artId=if id=="look"then "hue"else id
+ local artId=artOf(id)
  if self.egg3D and self.egg3D.type~=artId then self.egg3D:setType(artId)end
  if self.eggArtId~=id then
   for _,child in ipairs(self.eggHolder:GetChildren())do child:Destroy()end
-  self.eggArt=EggArt.create(self.eggHolder,if id=="look"then "hue"else id,UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.eggHolder.ZIndex+1)
+  self.eggArt=EggArt.create(self.eggHolder,artOf(id),UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.eggHolder.ZIndex+1)
   self.eggArtId=id
   if not self:eggReduced()then
    local scale=self.eggHolder:FindFirstChildOfClass("UIScale")or Kit.node("UIScale",self.eggHolder,{Scale=1.04})
@@ -1097,15 +1114,17 @@ function View:paintEggPane()
  end
  self.eggName.Text=recipe.name
  local promise=self.shopRoot and self.shopRoot:FindFirstChild("Promise",true)
- if promise then promise.Text=if id=="look"then View.lookOdds(self.state).note elseif id=="material"and(self.state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then require(script.Parent.MaterialDisclosure).promise(self.state)else UICopy.get("hatch.promise")end
+ local statPet=self.statPet and self.statPet()
+ if promise then promise.Text=if id=="stat"then(StatOdds.rows(self.state,statPet).note or UICopy.get("hatch.promise"))elseif id=="look"then View.lookOdds(self.state).note elseif id=="material"and(self.state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then require(script.Parent.MaterialDisclosure).promise(self.state)else UICopy.get("hatch.promise")end
  self.eggPrice.set("★ "..recipe.cost,"sticker") -- T6: the pane's one sticker
  self.eggDescription.Text=copy.description or ""
  if id=="look"then local shapes=View.lookOdds(self.state).shapes;if shapes then self.eggDescription.Text..=" "..shapes end end
- local odds=View.oddsRows(id,self.state)
+ if id=="stat"then self.eggDescription.Text..=" "..StatOdds.stockLine(self.state)end
+ local odds=View.oddsRows(id,self.state,statPet)
  self.oddsPer.Text=string.upper(odds.per)
  self.oddsLabel.Text=string.upper(if odds.restricted then UICopy.get("hatch.next.label")else "Odds")
  for _,child in ipairs(self.oddsHolder:GetChildren())do child:Destroy()end
- local a=View.hatchAction(id,self.state)
+ local a=View.hatchAction(id,self.state,statPet)
  local need=if self.statusText then self.statusText else a.need
  self.needLine.Text=need or "";self.needLine.Visible=need~=nil
  Kit.paint(self.needLine,"TextColor3",if a.need and not self.statusText then "dangerText"else "soft")
@@ -1146,7 +1165,7 @@ function View:sync3D()
  if self.previewRetry then self.previewRetry.Visible=not on and egg.loadReason~=nil end
  if self.eggHolder then self.eggHolder.Visible=not on end
  if self.eggShadow then self.eggShadow.Visible=not on end
- if on then egg:setType(self.selected,true)end
+ if on then egg:setType(artOf(self.selected),true)end
  self:syncEggClock()
 end
 function View:eggReduced()

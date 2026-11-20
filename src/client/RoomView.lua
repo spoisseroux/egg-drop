@@ -171,6 +171,10 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		charmToggle=function(visible)return self:setCharmVisible(visible)end,
 		-- v2 S3: the Stats button (and Y) leaves focus and opens the stats panel.
 		stats=function()return self.openStats~=nil and self.openStats({from="focus"})==true end,
+		-- v2 Stat Snacks (SnackHost sets snackModel / snackFeed / snackCarry on this view).
+		snackModel=function()return if self.snackModel then self.snackModel()else {pouch={}}end,
+		snackFeed=function(snackId,onBusy)return self.snackFeed~=nil and self.snackFeed(snackId,onBusy)==true end,
+		snackCarry=function(kind,group)if self.snackCarry then self.snackCarry(kind,group)end end,
 		canOwnInput = function() return not self.busy and not self.overlayOpen() end,
 		canReact = function()
 			return self.focusing and not self.focusTransitioning and self.mode == "Room" and not self.busy and not self.overlayOpen()
@@ -302,6 +306,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			if self.petTarget and self.petTarget.pet == self.pet then PetClickTarget.sync(self.petTarget) end
 		end
 		if self.mode=="Room"then self.companions:update(dt,serverNow);self:visitorBeats()end
+		-- v2 Stat Snacks: eating poses on top of this frame's pet poses.
+		if self.snackStep then self.snackStep(dt)end
 		if self.inspect then self.inspect:step(dt,serverNow)end
 		if self.park then
 			local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart")

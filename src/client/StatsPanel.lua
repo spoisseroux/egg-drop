@@ -15,6 +15,9 @@ local Pets=require(Shared.PetCatalog)
 local UICopy=require(Shared.UICopy)
 local Kit=require(script.Parent.DeckKit)
 local Hub=require(script.Parent.CompanionsHub)
+-- v2 Stat Snacks: the pouch (a second view of the grid area, "Stats · Snacks") and the boost line.
+local SnackTray=require(script.Parent.SnackTray)
+local StatEggCatalog=require(Shared.StatEggCatalog)
 local Panel={}
 Panel.__index=Panel
 Panel.Cols=3
@@ -54,14 +57,24 @@ function Panel.model(petStats,petId)
  local entry=type(petStats)=="table"and type(petStats.pets)=="table"and petStats.pets[petId]or nil
  local bonus=type(petStats)=="table"and type(petStats.bonus)=="table"and petStats.bonus or {}
  local xp=entry and type(entry.xp)=="table"and entry.xp or {}
- local out={stats={},total=0,known=entry~=nil}
+ local boosts=entry and type(entry.boosts)=="table"and entry.boosts or {}
+ local out={stats={},total=0,known=entry~=nil,boosts=boosts}
  for _,id in ipairs(Panel.Order)do
   local p=Catalog.progress(tonumber(xp[id])or 0)
   local left=tonumber(bonus[id])or 0
-  table.insert(out.stats,{id=id,level=p.level,xp=p.xp,into=p.into,need=p.need,tier=Panel.tierWord(p.level),bonus=math.max(0,math.floor(left))})
+  local b=boosts[id]
+  table.insert(out.stats,{id=id,level=p.level,xp=p.xp,into=p.into,need=p.need,tier=Panel.tierWord(p.level),bonus=math.max(0,math.floor(left)),
+   boost=if type(b)=="table"and type(b.mult)=="number"and type(b.left)=="number"then b else nil})
   out.total+=p.level
  end
  return out
+end
+-- Pure: "2x · 80 XP left" (and "+120" for boosts queued behind it), or nil.
+function Panel.boostText(stat)
+ local b=stat and stat.boost;if not b then return nil end
+ local more=math.max(0,(b.queued or b.left)-b.left)
+ if more>0 then return UICopy.get("stats.boostMore",{mult=b.mult,count=b.left,more=more})end
+ return UICopy.get("stats.boost",{mult=b.mult,count=b.left})
 end
 -- Pure: grid focus movement over Panel.Cols columns.
 function Panel.step(index,dx,dy,count)return Hub.step(index,dx,dy,count or #Panel.Order,Panel.Cols)end
@@ -180,6 +193,7 @@ function Panel:buildLeft(body,W,H,phone)
  pane.Size=UDim2.fromOffset(pw,ph);self.leftW=pw
  local wellH=if phone then math.max(60,ph-pad-84)else 300
  local well=self:buildWell(pane,pad,pad,pw-pad*2,wellH)
+ self.previewWell=well
  local chip=Kit.chip(well,"",nil,if phone then 22 else 26);chip.root.AnchorPoint=Vector2.new(0,1);chip.root.Position=UDim2.fromOffset(8,wellH-8)
  chip.root.ZIndex=well.ZIndex+4;chip.label.ZIndex=chip.root.ZIndex+1;self.keeperChip=chip
  local y=pad+wellH+(if phone then 4 else 16)
@@ -228,6 +242,11 @@ function Panel:buildGrid(body,W,H,phone)
    e.tierX,e.tierY,e.tagH=p,p+59,22
   end
   e.bonus,e.bonusWord=bonusTag(button,e.tagH);e.bonus.Visible=false
+  -- The boost line ("2x · 80 XP left") with its small flame, in the stat's colour. Phones show
+  -- it in the tier word's place.
+  if not phone then
+   e.boostLine=txt(button,"Label","",color,p,p+82,tileW-p*2,16,{Name="Boost",TextSize=12,Visible=false,TextTruncate=Enum.TextTruncate.AtEnd})
+  end
   e.tileW,e.tileH,e.pad,e.phone=tileW,tileH,p,phone
   e.bar=bar(button,p,tileH-(if phone then 32 else 40),tileW-p*2,if phone then 7 else 9,color)
   e.toNext=txt(button,"Counter","","soft",p,tileH-(if phone then 22 else 28),tileW-p*2,if phone then 16 else 20,{Name="ToNext",TextSize=if phone then 11 else 13,TextXAlignment=Enum.TextXAlignment.Right})
@@ -237,17 +256,103 @@ function Panel:buildGrid(body,W,H,phone)
  -- Detail strip: the selected stat's rune, name and what trains it.
  local strip=Kit.card(body,"Detail",nil,{pad=12});strip.Position=UDim2.fromOffset(gx,detailY);strip.Size=UDim2.fromOffset(gw,detailH)
  self.detail=strip
+ local snackW=if phone then 92 else 140
  if phone then
   self.detailRune=nil;self.detailRuneAt={x=10,y=11,size=24}
   self.detailName=txt(strip,"Strong","","text",42,3,180,20,{Name="DetailName",TextSize=14})
-  self.detailBonus=txt(strip,"Small","","accent",200,3,gw-210,20,{Name="DetailBonus",TextSize=11,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
-  self.detailLine=txt(strip,"Small","","soft",42,21,gw-52,30,{Name="DetailLine",TextSize=11,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,TextTruncate=Enum.TextTruncate.AtEnd})
+  self.detailBonus=txt(strip,"Small","","accent",200,3,gw-210-snackW,20,{Name="DetailBonus",TextSize=11,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
+  self.detailLine=txt(strip,"Small","","soft",42,21,gw-52-snackW,30,{Name="DetailLine",TextSize=11,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,TextTruncate=Enum.TextTruncate.AtEnd})
  else
   self.detailRuneAt={x=16,y=16,size=44}
   self.detailName=txt(strip,"Heading","","text",72,14,240,26,{Name="DetailName",TextSize=20})
-  self.detailBonus=txt(strip,"Small","","accent",260,16,gw-276,22,{Name="DetailBonus",TextSize=13,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
-  self.detailLine=txt(strip,"Body","","soft",72,44,gw-88,detailH-52,{Name="DetailLine",TextSize=15,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
+  self.detailBonus=txt(strip,"Small","","accent",260,16,gw-276-snackW,22,{Name="DetailBonus",TextSize=13,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
+  self.detailLine=txt(strip,"Body","","soft",72,44,gw-88-snackW,detailH-52,{Name="DetailLine",TextSize=15,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
  end
+ -- "Snacks · 3" opens the pouch view in place of the grid (X on a gamepad).
+ local snackH=if phone then 40 else 44
+ local snacks=Kit.button(strip,"SnacksButton",{text=UICopy.get("stats.snacks.open"),glyph="X",showGlyph=false,size=Vector2.new(snackW-12,snackH),selectable=false})
+ snacks.Position=UDim2.fromOffset(gw-snackW,math.floor((detailH-snackH)/2))
+ for _,d in ipairs(snacks:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=2 end end
+ snacks.Activated:Connect(function()self:setMode("snacks")end)
+ self.snacksButton=snacks
+ self:buildSnacks(body,gx,gy,gw,bottom-gy,phone)
+end
+
+-- The Snacks view: the pouch tray, today's eggs and the way to Hatch eggs. It feeds in place:
+-- the pet in the preview well eats (V2-FEEDING-RUNES 2), and the well is the drop target.
+function Panel:buildSnacks(body,x,y,w,h,phone)
+ local view=Kit.card(body,"SnacksView",nil,{pad=12});view.Position=UDim2.fromOffset(x,y);view.Size=UDim2.fromOffset(w,h);view.Visible=false
+ self.snackView=view
+ local pad=if phone then 10 else 16
+ local trayH=if phone then 128 else 150
+ local trayHost=Kit.frame(view,"TrayHost",nil,UDim2.fromOffset(pad,pad),UDim2.fromOffset(w-pad*2,trayH))
+ if self.tray then self.tray:destroy()end
+ self.tray=SnackTray.new(trayHost,{compact=phone,carryLayer=self.root,
+  petName=function()local pet=Pets.byId[self:petId()];return pet and pet.name or "Bear"end,
+  dropTarget=function()local well=self.previewWell;if well and well.Parent then return well.AbsolutePosition,well.AbsoluteSize end;return nil end,
+  onFeed=function(group)return self:feedGroup(group)end})
+ local ey=pad+trayH+(if phone then 4 else 12)
+ self.eggLine=txt(view,"Small","","soft",pad,ey,w-pad*2,if phone then 16 else 20,{Name="EggLine",TextSize=if phone then 11 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
+ local bh=if phone then 40 else 48
+ local by=h-pad-bh
+ local back=Kit.button(view,"StatsBack",{text=UICopy.get("stats.snacks.back"),glyph="B",showGlyph=false,size=Vector2.new(if phone then 96 else 140,bh),selectable=false})
+ back.Position=UDim2.fromOffset(pad,by);back.Activated:Connect(function()self:setMode("stats")end)
+ local eggW=if phone then 150 else 200
+ local eggs=Kit.button(view,"GoHatch",{text=UICopy.get("stats.snacks.eggs"),glyph="Y",showGlyph=false,size=Vector2.new(eggW,bh),selectable=false})
+ eggs.Position=UDim2.fromOffset(w-pad-eggW,by);eggs.Activated:Connect(function()self:openEggs()end)
+ for _,b in ipairs({back,eggs})do for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=2 end end end
+ self.snackBack,self.snackEggs=back,eggs
+ self:setMode(self.mode or "stats",true)
+end
+function Panel:openEggs()
+ if not self.callbacks.openEggs then return end
+ self:close("eggs");self.callbacks.openEggs()
+end
+-- Pure: why this panel can't feed right now (Feed greys with one line), or nil. The server
+-- checks again; this is only the hint.
+function Panel.feedLock(ctx,petId)
+ local name=(Pets.byId[petId]or{name="Bear"}).name
+ if ctx and ctx.activeId~=nil and petId~=ctx.activeId then return UICopy.get("stats.snacks.reason.PetNotOut",{pet=name})end
+ if ctx and ctx.inRound then return UICopy.get("stats.snacks.reason.InRound",{pet=name})end
+ return nil
+end
+function Panel:snackModel()
+ local state=self.ctx.state or {}
+ local egg=type(state.statEgg)=="table"and state.statEgg or {}
+ local m=self.lastModel or self:viewModel()
+ return{pouch=egg.pouch or {},boosts=m.boosts,total=egg.pouchSize or StatEggCatalog.PouchSize,locked=Panel.feedLock(self.ctx,self:petId()),select=self.pickSnack}
+end
+function Panel:paintSnackButton()
+ if not self.snacksButton then return end
+ local egg=type((self.ctx.state or {}).statEgg)=="table"and self.ctx.state.statEgg or {}
+ local n=#(egg.pouch or {})
+ Kit.setText(self.snacksButton,if n>0 then UICopy.get("stats.snacks.open").." · "..n else UICopy.get("stats.snacks.open"))
+end
+function Panel:paintSnacks()
+ if not self.tray then return end
+ self.tray:set(self:snackModel());self.pickSnack=nil
+ if self.feeding then self.tray:setBusy(true)end
+ self.eggLine.Text=require(script.Parent.StatEggOdds).stockLine(self.ctx.state or {})
+ self:paintSnackButton()
+end
+function Panel:setMode(mode,quiet)
+ self.mode=if mode=="snacks"then "snacks"else "stats"
+ local snacks=self.mode=="snacks"
+ if self.snackView then self.snackView.Visible=snacks end
+ for _,e in ipairs(self.tiles or {})do e.button.Visible=not snacks end
+ if self.detail then self.detail.Visible=not snacks end
+ if self.ring then if snacks then self.ring.hide()else self:paintSelection()end end
+ self.root:SetAttribute("StatsMode",self.mode)
+ if snacks then self:paintSnacks()end
+ if not quiet and snacks and self.snackView then Kit.boing(self.snackView)end
+end
+function Panel:feedGroup(group)
+ if self.feeding or not group or not group.ids[1]or not self.callbacks.feed then return false end
+ local accepted=self.callbacks.feed(group.ids[1],{visual=self.visual,overlay=self.previewWell,onBusy=function(busy)
+  self.feeding=busy==true
+  if self.tray then self.tray:setBusy(busy)end
+ end})
+ return accepted==true
 end
 
 -- Paint values (no rebuild). `animate`: the bars fill from empty (screen open).
@@ -273,7 +378,11 @@ function Panel:paint(animate)
   e.bonus.Visible=s.bonus>0 and s.need>0 and show
   e.bonusWord.Visible=word
   e.bonus.Position=UDim2.fromOffset(x,y)
-  e.button:SetAttribute("AccessibleLabel",string.format("%s %d, %s",Panel.statName(s.id),s.level,Panel.toNext(s)))
+  local boost=Panel.boostText(s)
+  if e.boostLine then e.boostLine.Text=if boost then "▲ "..boost else "";e.boostLine.Visible=boost~=nil
+  elseif boost then e.tier.Text="▲ "..string.upper(boost)end
+  e.button:SetAttribute("Boost",boost or "")
+  e.button:SetAttribute("AccessibleLabel",string.format("%s %d, %s",Panel.statName(s.id),s.level,Panel.toNext(s))..(if boost then ", "..boost else ""))
   e.button:SetAttribute("Level",s.level)
  end
  self.totalValue.Text=tostring(m.total)
@@ -287,9 +396,10 @@ function Panel:paint(animate)
  else self.keeperBar.set(1,false);self.keeperLine.Text=UICopy.get("stats.topKeeper")end
  self.root:SetAttribute("TotalLevel",m.total);self.root:SetAttribute("PetId",self:petId())
  self:paintSelection()
+ if self.mode=="snacks"then self:paintSnacks()else self:paintSnackButton()end
 end
 function Panel:paintSelection()
- if not self.tiles then return end
+ if not self.tiles or self.mode=="snacks"then return end
  self.index=math.clamp(self.index,1,#self.tiles)
  for index,e in ipairs(self.tiles)do e.state.setSelected(index==self.index,false)end
  local m=self.lastModel or self:viewModel()
@@ -334,6 +444,7 @@ function Panel:setContext(ctx)
  if ctx.wallet then self.ctx.wallet=ctx.wallet end
  if ctx.state then self.ctx.state=ctx.state end
  if ctx.activeId~=nil then self.ctx.activeId=ctx.activeId end
+ if ctx.inRound~=nil then self.ctx.inRound=ctx.inRound end
  if self.visible then
   if self.header and self.header.wallet then self.header.wallet.set(self.ctx.wallet or 0)end
   self:paint(false)
@@ -348,6 +459,13 @@ function Panel:back()
 end
 function Panel:input(key)
  local K=Enum.KeyCode
+ if self.mode=="snacks"then
+  if key==K.ButtonB or key==K.Backspace or key==K.Escape or key==K.ButtonX then self:setMode("stats")
+  elseif key==K.ButtonY then self:openEggs()
+  elseif self.tray then self.tray:input(key)end
+  return
+ end
+ if key==K.ButtonX then self:setMode("snacks");return end
  if key==K.Left or key==K.A or key==K.DPadLeft then self:move(-1,0)
  elseif key==K.Right or key==K.D or key==K.DPadRight then self:move(1,0)
  elseif key==K.Up or key==K.W or key==K.DPadUp then self:move(0,-1)
@@ -367,10 +485,13 @@ function Panel:open(ctx,options)
   if ctx.activeId~=nil then self.ctx.activeId=ctx.activeId end
  end
  self.petOverride=options.petId;self.from=options.from
+ self.mode=if options.snacks then "snacks"else "stats";self.pickSnack=options.snack
+ local feedNow=if options.feedNow then options.snack else nil
  self.index=table.find(Panel.Order,options.stat or "")or self.index or 1
  self.visible=true;self.root.Visible=true;self.key=nil
  Kit.shadeOpen(self,self.shade,function(covered)if self.visible then self.root.Visible=not covered end end)
  self:fit(self.host.AbsoluteSize)
+ self:setMode(self.mode,true)
  self:paint(true)
  self:paintPreview(self:petId())
  if options.slideFrom and self.body then Kit.slideIn(self.body,options.slideFrom,Kit.headerSkip(self.header))
@@ -379,10 +500,28 @@ function Panel:open(ctx,options)
  end
  if self.clock then self.clock:Disconnect()end
  self.clock=RunService.RenderStepped:Connect(function(dt)
-  local v=self.visual;if not self.visible or not v or v.destroyed then return end
-  if GuiService.ReducedMotionEnabled then return end
-  v.cosmeticTime=os.clock();v:update(math.min(dt,.1))
+  if not self.visible then return end
+  local v=self.visual
+  if v and not v.destroyed and not GuiService.ReducedMotionEnabled then v.cosmeticTime=os.clock();v:update(math.min(dt,.1))end
+  -- The eating sequence poses on top of this frame's pose (with Reduced Motion too: one bite).
+  -- Stepped even without a preview pet, so a feed always finishes (code review).
+  if self.callbacks.step then self.callbacks.step(math.min(dt,.1))end
  end)
+ -- "Feed now" from the Stat Egg reveal: feed that snack once the preview pet exists.
+ if feedNow then
+  -- Wait (up to about a second) for the preview pet, so the bites show (code review).
+  task.spawn(function()
+   for _=1,60 do
+    if not self.visible or self.mode~="snacks"or not self.tray then return end
+    if self.visual and not self.visual.destroyed then break end
+    RunService.Heartbeat:Wait()
+   end
+   if not self.visible or self.mode~="snacks"or not self.tray then return end
+   for _,g in ipairs(self.tray.groups)do if table.find(g.ids,feedNow)then
+    self:feedGroup({key=g.key,stat=g.stat,size=g.size,count=g.count,known=g.known,ids={feedNow}});break
+   end end
+  end)
+ end
  self.sizeConnection=self.sizeConnection or self.host:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
   if self.visible then local key=self.key;self:fit(self.host.AbsoluteSize);if self.key~=key then self:paintPreview(self:petId())end end
  end)
@@ -391,6 +530,7 @@ end
 function Panel:close(reason)
  if not self.visible then return false end
  self.visible=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end
+ if self.callbacks.cancelFeed then self.callbacks.cancelFeed()end
  if self.clock then self.clock:Disconnect();self.clock=nil end
  if self.visual then self.visual:destroy();self.visual=nil end
  if self.callbacks.closed then self.callbacks.closed(reason,self.from)end

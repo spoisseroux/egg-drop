@@ -1331,6 +1331,13 @@ do
  local Kit=require(script.DeckKit)
  clientUI.stats=require(script.StatsHost).mount({parent=gui.Parent,insetProbe=clientUI.insetProbe,
   state=function()return nurseryState end,activeId=function()return board:GetAttribute("CompanionId")end,
+  -- v2 Stat Snacks: the panel's Snacks view feeds in place (SnackHost, mounted below).
+  inRound=function()return board:GetAttribute("Mode")~="Room"end,
+  feed=function(snackId,options)return clientUI.snacks~=nil and clientUI.snacks.feed(snackId,"panel",options)==true end,
+  step=function(dt)if clientUI.snacks then clientUI.snacks.stepPanel(dt)end end,
+  -- Closing the panel stops its pet's eating; cancel's onDone clears the host's busy state.
+  cancelFeed=function()if clientUI.snacks then clientUI.snacks.panel:cancel()end end,
+  openEggs=function()task.defer(function()if openNursery then openNursery();nurseryView:selectRecipe("stat")end end)end,
   appearance=function(petId)return nurseryView.appearanceFor(petId)end,
   canOpen=function()return not roomView.busy and board:GetAttribute("Mode")=="Room"and not(nurseryState and nurseryState.lastHatch)
    and not clientUI.book:isOpen()and not clientUI.hueView:isOpen()and not(clientUI.isWardrobeOpen and clientUI.isWardrobeOpen())
@@ -1348,6 +1355,45 @@ do
  clientUI.openStats=function(options)return clientUI.stats.open(options)end
  roomView.openStats=clientUI.openStats
  gui.Destroying:Connect(function()clientUI.stats.destroy()end)
+end
+-- v2 Stat Eggs and Stat Snacks (SnackHost): the Stat Egg on Hatch eggs and its reveal, the pouch
+-- in the stats panel and in pet focus, the eating sequence and other players' "ate a snack" beat.
+do
+ local function petName(petId)local pet=Pets.byId[petId or ""];return pet and pet.name or "Bear"end
+ local function pouchModel()
+  local state=nurseryState or {}
+  local egg=type(state.statEgg)=="table"and state.statEgg or {}
+  local petId=board:GetAttribute("CompanionId")
+  local ps=state.petStats;local entry=type(ps)=="table"and type(ps.pets)=="table"and ps.pets[petId or ""]or nil
+  return{pouch=egg.pouch or {},boosts=entry and entry.boosts or {},total=egg.pouchSize}
+ end
+ clientUI.snacks=require(script.SnackHost).mount({remotes=remotes,audio=audio,playerGui=gui.Parent,
+  state=function()return nurseryState end,activeId=function()return board:GetAttribute("CompanionId")end,petName=petName,
+  roomView=roomView,inRound=function()return board:GetAttribute("Mode")~="Room"end,
+  closeShop=function()if nurseryView:isOpen()then nurseryView:close("stat")end end,
+  openStats=function(options)return clientUI.openStats(options)end,
+  ownPetVisual=function()return roomView.pet end,
+  otherPetVisual=function(userId)
+   local other=Players:GetPlayerByUserId(userId)
+   local entry=other and roomView.companions and roomView.companions.active[other]
+   return entry and entry.visual or nil
+  end})
+ nurseryView.statPet=function()return board:GetAttribute("CompanionId")end
+ nurseryView.onOpenStat=function(free)clientUI.snacks.buy(free)end
+ roomView.snackStep=function(dt)clientUI.snacks.stepGarden(dt)end
+ roomView.snackModel=pouchModel
+ roomView.snackFeed=function(snackId,onBusy)return clientUI.snacks.feed(snackId,"garden",{onBusy=onBusy})end
+ -- The client-only carry feedback in pet focus: the first time a held snack enters the ring, a sniff.
+ local sniffed=false
+ roomView.snackCarry=function(kind)
+  if kind=="lift"then sniffed=false
+  elseif kind=="enter"and not sniffed then sniffed=true;pcall(function()audio:play("snack_sniff",1,.45)end)
+  elseif kind=="close"then clientUI.snacks.garden:cancel()end
+ end
+ clientUI.snacks.onChanged=function()
+  if roomView.focusUI and roomView.focusUI:snacksOpen()then roomView.focusUI:refreshSnacks()end
+ end
+ gui.Destroying:Connect(function()clientUI.snacks.destroy()end)
 end
 -- v1 track B: Settings > "Report a bug / Suggest something". Own ScreenGui above the
 -- book; the sheet opens over Settings and Back returns there. Replies ride BugReport.
@@ -1475,6 +1521,7 @@ local function refreshNursery(state)
     if clientUI.syncHub then clientUI.syncHub(state)end
     if clientUI.syncBook then clientUI.syncBook(state)end
     if clientUI.stats then clientUI.stats.sync(state)end
+    if roomView.focusUI and roomView.focusUI.snacksOpen and roomView.focusUI:snacksOpen()then roomView.focusUI:refreshSnacks()end
     clientUI.hueIntent:update(state)
     clientUI.materialIntent:update(state)
     clientUI.toyIntent:update(state)

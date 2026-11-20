@@ -1,0 +1,17 @@
+{
+  "uploaded": "2026-11-19",
+  "creatorUserId": 10716920546,
+  "note": "Uploaded through Studio MCP open_cloud_invoke (POST /assets/v1/assets, Audio). Moderation was Reviewing at upload. Spencer has not listened yet (README): swap the ids if a sound is redone.",
+  "sounds": {
+    "nom_a": {"file": "nom_a.mp3", "assetId": 118900084273341, "gain": 0.70},
+    "nom_b": {"file": "nom_b.mp3", "assetId": 126750068296693, "gain": 0.70},
+    "nom_c": {"file": "nom_c.mp3", "assetId": 116046377032257, "gain": 0.70},
+    "crunch_feast": {"file": "crunch_feast.mp3", "assetId": 130468203740981, "gain": 0.85},
+    "gulp": {"file": "gulp.mp3", "assetId": 94280129016754, "gain": 0.50},
+    "happy_squeak": {"file": "happy_squeak.mp3", "assetId": 118931768213631, "gain": 0.60},
+    "happy_coo": {"file": "happy_coo.mp3", "assetId": 108894686063251, "gain": 0.65},
+    "boost_sparkle": {"file": "boost_sparkle.mp3", "assetId": 71807243055819, "gain": 0.70},
+    "sniff": {"file": "sniff.mp3", "assetId": 129720431098904, "gain": 0.45},
+    "refuse_hm": {"file": "refuse_hm.mp3", "assetId": 130546625018025, "gain": 0.55}
+  }
+}

@@ -28,13 +28,18 @@ function Host.mount(deps)
  local connections={deps.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets)}
  local function context()
   local state=deps.state()
-  return{wallet=state and state.nectar or 0,state=state or {},activeId=deps.activeId()}
+  return{wallet=state and state.nectar or 0,state=state or {},activeId=deps.activeId(),inRound=deps.inRound~=nil and deps.inRound()==true}
  end
  local api={}
  local panel=Panel.new(host,{
   appearance=function(petId)return deps.appearance(petId)end,
   back=function(from)if from=="hub"and deps.reopenHub then deps.reopenHub()end end,
-  closed=function(reason,from)if deps.closed then deps.closed(reason,from)end end})
+  closed=function(reason,from)if deps.closed then deps.closed(reason,from)end end,
+  -- v2 Stat Snacks (SnackHost): feed in place on the preview, step its eating, Hatch eggs.
+  feed=function(snackId,options)return deps.feed~=nil and deps.feed(snackId,options)==true end,
+  step=function(dt)if deps.step then deps.step(dt)end end,
+  cancelFeed=function()if deps.cancelFeed then deps.cancelFeed()end end,
+  openEggs=deps.openEggs})
  api.panel=panel
  -- options: stat, petId, from ("hub" | "focus" | "rail"), slideFrom.
  function api.open(options)
@@ -57,7 +62,7 @@ function Host.mount(deps)
  -- Held lines flush once the round's results show (checked each frame; cheap).
  table.insert(connections,game:GetService("RunService").Heartbeat:Connect(function()if toasts.pending then toasts:flush()end end))
  local K=Enum.KeyCode
- local keys={K.Left,K.Right,K.Up,K.Down,K.A,K.D,K.W,K.S,K.Q,K.E,K.X,K.ButtonX,K.ButtonL1,K.ButtonR1,K.DPadLeft,K.DPadRight,K.DPadUp,K.DPadDown,
+ local keys={K.One,K.Two,K.Three,K.Four,K.Five,K.Six,K.F,K.Left,K.Right,K.Up,K.Down,K.A,K.D,K.W,K.S,K.Q,K.E,K.X,K.ButtonX,K.ButtonL1,K.ButtonR1,K.DPadLeft,K.DPadRight,K.DPadUp,K.DPadDown,
   K.Space,K.Return,K.KeypadEnter,K.ButtonA,K.ButtonB,K.Backspace,K.Escape,K.M,K.ButtonY,K.ButtonStart}
  -- Above the Companions hub (High+790) and the Wardrobe (High+800): the panel owns input while open.
  ContextActionService:BindActionAtPriority("EggDropStats",function(_,state,input)
