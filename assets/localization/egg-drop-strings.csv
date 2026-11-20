@@ -346,6 +346,7 @@ ui.names.egg.notReady,The Names Egg is not ready yet.,,Menu text
 ui.names.egg.order,"Pieces come in a fixed order, shown before you buy.",,Menu text
 ui.names.egg.per,1 name piece per egg,,Menu text
 ui.names.egg.randomLine,Every piece still to find is equally likely.,,Menu text
+ui.names.egg.retry,Still saving · tap to check,,Menu text
 ui.names.egg.title,Names Egg,,Menu text; also ui.names.tab.egg
 ui.names.footer.account,A piece you unlock is yours for every pet.,,Menu text
 ui.names.footer.free,"Renaming is free, any time.",,Menu text; also ui.names.reveal.yours
