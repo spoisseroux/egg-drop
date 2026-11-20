@@ -28,6 +28,8 @@ local Kit=require(script.Parent.DeckKit)
 local C=require(script.Parent.CelebrationKit)
 local Pets=require(ReplicatedStorage.Shared.PetCatalog)
 local BaseColors=require(ReplicatedStorage.Shared.PetBaseColors)
+local ItemStage=require(script.Parent.HatchItemStage)
+local Rarity=require(script.Parent.HatchRarityCue)
 local Stage={};Stage.__index=Stage
 
 -- ── Pure rules (specs cover these) ───────────────────────────────────────────
@@ -292,7 +294,11 @@ function Stage.show(parent,options)
  self.accent=options.accent or Stage.accentFor(pet.id,options.appearance)
  self.ink=Stage.ink(self.accent)
  local root=Kit.frame(parent,"RevealStage",nil,UDim2.new(),UDim2.fromScale(1,1))
- root.BackgroundTransparency=0;root.BackgroundColor3=C.Stage;root.ClipsDescendants=true;root.Active=true
+ -- v2 (V2-HATCH-REDESIGN 2.4): pets hatch on the same Pop-Out Stage as items: the deck's
+ -- shell and the tier's vibrant well (Sunny Peach for the Bear). No dark stage, no spotlight
+ -- and no full-screen flash (section 4).
+ root.BackgroundTransparency=0;root.ClipsDescendants=true;root.Active=true
+ Kit.paint(root,"BackgroundColor3","shell")
  root:SetAttribute("AccessibleLabel",(pet.name or "Pet").." revealed")
  self.root=root
  self:build()
@@ -527,6 +533,14 @@ function Stage:build()
  end
  self.ring=Kit.focusRing(ui)
  self.cover=fill(root,"FadeCover",C.Stage,1);self.cover.Size=UDim2.fromScale(1,1);self.cover.ZIndex=root.ZIndex+200;self.cover.Active=false
+ Kit.paint(self.cover,"BackgroundColor3","shell")
+ -- The shell's checker and the tier's well, under every layer (layers start at +10).
+ self.tier=Rarity.tier("companion",{petId=self.pet.id})
+ local b=ItemStage.backdrop(root,root.ZIndex,self.tier,"companion")
+ b.shell.BackgroundTransparency=1
+ for _,extra in ipairs({b.shafts,b.seat,b.waitEgg})do extra:Destroy()end
+ self.backdrop=b;self.checkerOffset=0;self.rayTurn=0
+ self.coneGroup.Visible=false
 end
 
 -- The 3D pet: hidden until its meshes load (at most 2.5 s), then faded in, so
@@ -600,10 +614,40 @@ function Stage:placeCamera()
  self.viewport.LightDirection=CFrame.Angles(0,yaw,0):VectorToWorldSpace(Stage.Light.direction)
 end
 
+-- The well behind the pet: from the top of the stage to just under its feet.
+function Stage.wellRect(L)
+ local top=math.max(16,math.floor(L.feet-L.petH*1.55))
+ local bottom=math.min(L.H-8,math.floor(L.feet+math.max(30,L.petH*.2)))
+ local w=math.floor(math.min(L.petBox*1.7,L.petX*2-32))
+ return math.floor(L.petX-w/2),top,w,bottom-top
+end
+function Stage:paintBackdrop()
+ local b=self.backdrop;if not b or not self.L then return end
+ local alpha=self.root.BackgroundTransparency
+ b.well.Visible=alpha<.5;b.rim.Visible=alpha<.5
+ b.checkerTile.Position=UDim2.fromOffset(math.floor(-Kit.Checker.tile+self.checkerOffset),math.floor(-Kit.Checker.tile+self.checkerOffset))
+ b.raysImage.Rotation=self.rayTurn
+end
 function Stage:layout()
  local size=self.root.AbsoluteSize
  local W,H=math.max(1,size.X),math.max(1,size.Y)
  local L=Stage.geometry(W,H);self.L=L
+ do
+  local b=self.backdrop
+  local x,y,w,h=Stage.wellRect(L)
+  b.well.Position=UDim2.fromOffset(x+w/2,y+h/2);b.well.Size=UDim2.fromOffset(w,h)
+  b.rim.Position=b.well.Position;b.rim.Size=UDim2.fromOffset(w-6,h-6)
+  local radius=math.max(12,math.floor(16*math.max(.6,L.s)))
+  b.wellCorner.CornerRadius=UDim.new(0,radius);b.rimCorner.CornerRadius=UDim.new(0,radius-3)
+  local inset=Kit.patternInset(radius)
+  b.clip.Position=UDim2.fromOffset(inset,inset);b.clip.Size=UDim2.new(1,-inset*2,1,-inset*2)
+  local diag=math.sqrt(w*w+h*h)*1.05
+  b.core.Size=UDim2.fromOffset(w*1.5,h*1.5);b.raysImage.Size=UDim2.fromOffset(diag,diag)
+  local fw=math.min(w,h)*.66
+  local floorY=(L.feet-y)/math.max(1,h)
+  b.floorLight.Position=UDim2.new(.5,0,floorY,0);b.floorLight.Size=UDim2.fromOffset(fw,fw*.28)
+  b.floorRing.Position=UDim2.new(.5,0,floorY,0);b.floorRing.Size=UDim2.fromOffset(fw*.62,fw*.12)
+ end
  self.staticDone,self.coneKey,self.cameraKey=false,nil,nil
  -- Cone group: centred on the pet, top edge at y 0, wide enough for the halo.
  self.coneHalfW=math.ceil(L.coneBottom*1.3*.5+4)
@@ -797,6 +841,7 @@ end
 -- only when the yaw moves, and twinkles / dust / glint only when a quantised
 -- value changes. Everything else stays as the last full paint left it.
 function Stage:paintIdle()
+ self:paintBackdrop()
  local clock=self.clock
  local idle=not self.reducedStart and not self:reduced()
  local breathe=if idle then 1+.03*math.sin(clock*math.pi*2/4)else 1
@@ -865,6 +910,7 @@ function Stage:paint()
  if lead and lead.scene and type(lead.scene.setVeil)=="function"and not lead.scene.destroyed then lead.scene:setVeil(1-open)end
  -- The stage fades to black over the egg scene (120 ms; 150 ms when reduced).
  self.root.BackgroundTransparency=if lead then 1-openDim else 1-(if reduced then s.fade else s.dark)
+ self:paintBackdrop()
  -- "Play again" fades the stage out under the cover.
  local cover=if self.exiting and not meetExit then 1-exit else 1
  self.cover.BackgroundTransparency=cover;self.cover.Visible=cover<1
@@ -894,7 +940,7 @@ function Stage:paint()
  self.glow.BackgroundTransparency=if s.colour>0 then .82-.08*s.colour elseif leading then 1-.2*ls.glow*(.8+.2*math.sin(clock*9))else 1
  -- Streaks sweep in from the left, three times brighter at first.
  self.streaks.Position=UDim2.fromOffset(L.petX-(1-s.streak)*L.W*1.4,L.feet-L.petH*.45)
- self.streaks.Visible=s.streak>0
+ self.streaks.Visible=false
  for _,part in ipairs(self.streakParts)do
   part.node.BackgroundTransparency=1-math.min(1,(1-part.base)*s.streakGlow*(if L.phone and part.h>3 then .7 else 1))
  end
@@ -923,7 +969,8 @@ function Stage:paint()
  self.shownYaw=self.yaw+(if reduced then 0 else s.spinIn)
  self:placeCamera()
  -- Flash.
- self.flash.BackgroundTransparency=1-math.max(s.flash,if lead and not reduced and not self.instant and not self:isSettled()then ls.flash else 0)
+ -- v2 photosensitivity (section 4): no full-screen flash, for everyone.
+ self.flash.BackgroundTransparency=1
  self:paintConfetti()
  -- Burst sparkles.
  local cx,cy=L.petX,L.feet-L.petH*.55
@@ -1071,6 +1118,10 @@ function Stage:step(dt)
   return
  end
  dt=math.clamp(dt,0,.1);self.clock+=dt
+ if not self:reduced()then
+  self.checkerOffset=(self.checkerOffset+8*dt)%Kit.Checker.tile
+  self.rayTurn=(self.rayTurn+(Rarity.Stage[self.tier]or Rarity.Stage.Common).spin*dt)%360
+ end
  -- The entrance waits at 0 while the egg lead-in plays (the hatch clock ends it).
  if self.lead and not self.lead.done then self:paint();return end
  local before=self.age;self.age+=dt

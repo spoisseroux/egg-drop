@@ -69,7 +69,7 @@ function Host.mount(deps)
 		local receipt=message.receipt
 		if action=="statEggBuy"then
 			local petId=deps.activeId()
-			reveal:show(receipt,{petName=deps.petName(petId),pill=Host.revealPill(deps.state(),petId),canFeed=true},{
+			reveal:show(receipt,api.revealInfo(petId),{
 				feed=function(r)api.feedNow(r.snackId)end,keep=function()notify(UICopy.get("hatch.stat.reveal.kept"))end})
 		else
 			notify(Host.boostLine(receipt))
@@ -86,6 +86,27 @@ function Host.mount(deps)
 	end
 	api.notify=notify
 
+	-- The result card (V2-HATCH-REDESIGN 2.5): the egg card's odds and Feast promise on the
+	-- state after this hatch, the stock line, and Hatch another (the same buy as the egg card).
+	function api.revealInfo(petId)
+		return {petName=deps.petName(petId),canFeed=true,
+			odds=function()return Odds.rows(deps.state(),petId)end,
+			pity=function()
+				local state=deps.state()
+				local egg=type(state)=="table"and state.statEgg or {}
+				local line=if egg.mode=="random"then Host.revealPill(state,petId)else ""
+				return {line=line,sub=Odds.stockLine(state)}
+			end,
+			again=function()
+				local state=deps.state()
+				local action=Odds.action(state,petId)
+				local egg=type(state)=="table"and state.statEgg or {}
+				local text=if action.free then action.text else UICopy.get("hatch.result.againPrice",{count=egg.price or K.Price})
+				local reason=if action.enabled then nil elseif type(action.need)=="string"and action.need~=""then action.need else action.text
+				return {text=text,enabled=action.enabled==true,reason=reason,pending=api.buying==true,
+					act=function()return api.buy(action.free==true)end}
+			end}
+	end
 	-- The egg: buy (or open a free one) for the pet that is out, then the reveal.
 	function api.buy(free)
 		local state=deps.state();local petId=deps.activeId()
@@ -97,10 +118,11 @@ function Host.mount(deps)
 			if message.status=="Saved"and type(message.receipt)=="table"then
 				if deps.closeShop then deps.closeShop()end
 				local receipt=message.receipt
-				reveal:show(receipt,{petName=deps.petName(petId),pill=Host.revealPill(deps.state(),petId),canFeed=true},{
+				reveal:show(receipt,api.revealInfo(petId),{
 					feed=function(r)api.feedNow(r.snackId)end,
 					keep=function()notify(UICopy.get("hatch.stat.reveal.kept"))end})
 			else
+				reveal.againPressed=nil
 				notify(Host.reasonText(message.reason,nil,nil,true))
 			end
 			if api.onChanged then api.onChanged()end
