@@ -1,0 +1,126 @@
+{
+  "image": "icon-atlas-512x128.png",
+  "size": [
+    512,
+    128
+  ],
+  "gutter": 8,
+  "padding": 1,
+  "order": [
+    "heart",
+    "power",
+    "energy",
+    "jump",
+    "speed",
+    "smarts"
+  ],
+  "note": "Rects are ImageRectOffset (x, y) and ImageRectSize (w, h). 'sprites' are 64 px, 'small' are the 24 px chips. Same rects as rune-atlas-512x128.json.",
+  "stats": {
+    "heart": {
+      "name": "Heart",
+      "color": "#FF86A8",
+      "icon": "heart"
+    },
+    "power": {
+      "name": "Power",
+      "color": "#FF9D4D",
+      "icon": "paw"
+    },
+    "energy": {
+      "name": "Energy",
+      "color": "#6CCBFF",
+      "icon": "bolt"
+    },
+    "jump": {
+      "name": "Jump",
+      "color": "#B9EE5A",
+      "icon": "spring"
+    },
+    "speed": {
+      "name": "Speed",
+      "color": "#8FA8FF",
+      "icon": "sneaker"
+    },
+    "smarts": {
+      "name": "Smarts",
+      "color": "#E58CFF",
+      "icon": "bulb"
+    }
+  },
+  "sprites": {
+    "heart": {
+      "x": 8,
+      "y": 8,
+      "w": 64,
+      "h": 64
+    },
+    "power": {
+      "x": 80,
+      "y": 8,
+      "w": 64,
+      "h": 64
+    },
+    "energy": {
+      "x": 152,
+      "y": 8,
+      "w": 64,
+      "h": 64
+    },
+    "jump": {
+      "x": 224,
+      "y": 8,
+      "w": 64,
+      "h": 64
+    },
+    "speed": {
+      "x": 296,
+      "y": 8,
+      "w": 64,
+      "h": 64
+    },
+    "smarts": {
+      "x": 368,
+      "y": 8,
+      "w": 64,
+      "h": 64
+    }
+  },
+  "small": {
+    "heart": {
+      "x": 8,
+      "y": 80,
+      "w": 24,
+      "h": 24
+    },
+    "power": {
+      "x": 40,
+      "y": 80,
+      "w": 24,
+      "h": 24
+    },
+    "energy": {
+      "x": 72,
+      "y": 80,
+      "w": 24,
+      "h": 24
+    },
+    "jump": {
+      "x": 104,
+      "y": 80,
+      "w": 24,
+      "h": 24
+    },
+    "speed": {
+      "x": 136,
+      "y": 80,
+      "w": 24,
+      "h": 24
+    },
+    "smarts": {
+      "x": 168,
+      "y": 80,
+      "w": 24,
+      "h": 24
+    }
+  }
+}
