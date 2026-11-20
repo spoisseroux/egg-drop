@@ -59,9 +59,34 @@ return function(client)
 			assert(g.compact == (screen[2] < 500))
 			assert(g.W <= screen[1] - 24 and g.H <= screen[2] - 58 - 12, ("card %dx%d on %dx%d"):format(g.W, g.H, screen[1], screen[2]))
 			assert(g.rightW >= 3 * 76, "slot cells narrower than 76 px")
-			assert(g.rowH >= 30 and g.button >= 38 and g.preview >= 150)
+			-- v2 S4: phone Outfit rows are 26 px (they share the body with the Stats tab).
+			assert(g.rowH >= (if g.compact then 26 else 30) and g.button >= 38 and g.preview >= 150)
 			assert(g.rows * Inspect.Columns >= #Wearables.Tabs + 3)
+			assert(g.gridH <= g.bodyH and g.statsH <= g.bodyH and g.tileH >= 44, "a tab overflows the body")
+			assert(g.compareW < g.rightW / 2, "Compare crowds Say hello")
 		end
+	end)
+
+	test("v2 S4: the Stats tab reads levels only, clamped, and localises the words", function()
+		local Http = game:GetService("HttpService")
+		local Catalog = require(Shared.StatCatalog)
+		assert(Inspect.statsModel(nil, "pip") == nil and Inspect.statsModel("not json", "pip") == nil)
+		assert(Inspect.statsModel("{\"pets\":{}}", "pip") == nil and Inspect.statsModel("{\"pets\":{\"pip\":{}}}", "pip") == nil)
+		local raw = Http:JSONEncode({ v = 1, pets = { pip = { levels = { heart = 52, power = 29, energy = 31, jump = 44, speed = 18, smarts = 27 }, total = 201, keeper = "Bloom Keeper" } } })
+		local m = Inspect.statsModel(raw, "pip")
+		assert(m and #m.stats == 6 and m.total == 201)
+		for index, id in ipairs(Catalog.Order) do assert(m.stats[index].id == id) end
+		assert(m.stats[1].tier == UICopy.get("stats.tier.bloom") and m.stats[5].tier == "", "tier word from 25 up")
+		assert(m.keeper == UICopy.get("stats.keeper", { name = UICopy.get("stats.tier.bloom") }))
+		-- Malformed values never show past the catalogue; the total is re-added, never trusted.
+		raw = Http:JSONEncode({ pets = { pip = { levels = { heart = 500, power = -3, energy = "x", jump = 12.7 }, total = 9999 } } })
+		m = Inspect.statsModel(raw, "pip")
+		assert(m.stats[1].level == 99 and m.stats[2].level == 1 and m.stats[3].level == 1 and m.stats[4].level == 12 and m.total == 99 + 1 + 1 + 12 + 1 + 1)
+		assert(Inspect.statsModel(raw, "other") == nil)
+		for _, name in ipairs({ "tab.stats", "tab.outfit", "compare", "you", "statsPrivate", "statsNone" }) do
+			assert(UICopy.has("inspect." .. name), "UICopy inspect." .. name)
+		end
+		assert(UICopy.get("inspect.you", { count = 41 }) == "You 41")
 	end)
 
 	test("the wave: a glance in and out with two sweeps; Reduced Motion one small raise", function()

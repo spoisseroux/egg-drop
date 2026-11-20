@@ -11,6 +11,12 @@
 -- E / X on the quiet Inspect prompt. Closes on B / Escape / Backspace, the close button,
 -- walking away, a menu opening, or when the target leaves or changes.
 --
+-- v2 S4 (V2-SCOPE-2026-11-19 section 6): two tabs over the right column. Stats (default): six
+-- level tiles with rune chips (Heart, Power, Energy / Jump, Speed, Smarts), a tier word from 25
+-- up, the total level and the Keeper tier chip, read from the board's public PublicStats
+-- attribute (levels only; XP, Stars and history stay private). Outfit: the slot grid above.
+-- Compare shows the local player's own pet that is out ("You 41") beside each number.
+--
 -- Say hello sends one request (owner, pet, character and pet generation); the server
 -- decides. Reward-free. The wave itself arrives on the owner's board (PetHelloPose).
 local Players=game:GetService("Players")
@@ -18,6 +24,7 @@ local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local UserInputService=game:GetService("UserInputService")
 local ContextActionService=game:GetService("ContextActionService")
 local GuiService=game:GetService("GuiService")
+local HttpService=game:GetService("HttpService")
 local Shared=ReplicatedStorage.Shared
 local Kit=require(script.Parent.DeckKit)
 local Bounds=require(script.Parent.PetRigBounds)
@@ -28,6 +35,8 @@ local Wearables=require(Shared.WearableCatalog)
 local Toys=require(Shared.ToyCatalog)
 local Materials=require(Shared.MaterialCatalog)
 local Charms=require(Shared.PetCharmCatalog)
+local StatCatalog=require(Shared.StatCatalog)
+local StatsPanel=require(script.Parent.StatsPanel)
 
 local Inspect={};Inspect.__index=Inspect
 Inspect.Action="PetInspectClose"
@@ -65,6 +74,28 @@ function Inspect.helloState(facts)
  if not facts.free then return "inspect.busy",false end
  return "inspect.hello",true
 end
+-- Pure (v2 S4): one pet's public stats from a board's PublicStats JSON, or nil when there is
+-- none. Only levels are read; each is clamped to 1..99 and the total is re-added here, so a
+-- malformed attribute can never show more than the catalogue allows. Words are localised here
+-- (the server's English Keeper word is not shown).
+-- {stats = {{id, level, tier}} in StatCatalog.Order, total, keeper}
+Inspect.TierFrom=StatCatalog.Tiers[2].level -- the tier word shows from Sprout (25) up
+function Inspect.statsModel(raw,petId)
+ if type(raw)~="string"or type(petId)~="string"then return nil end
+ local ok,data=pcall(HttpService.JSONDecode,HttpService,raw)
+ local pets=ok and type(data)=="table"and data.pets
+ local entry=type(pets)=="table"and pets[petId]
+ if type(entry)~="table"or type(entry.levels)~="table"then return nil end
+ local out={stats={},total=0}
+ for _,id in ipairs(StatCatalog.Order)do
+  local level=entry.levels[id]
+  level=if type(level)=="number"and level==level and math.abs(level)~=math.huge then math.clamp(math.floor(level),1,StatCatalog.MaxLevel)else 1
+  table.insert(out.stats,{id=id,level=level,tier=if level>=Inspect.TierFrom then StatsPanel.tierWord(level)else ""})
+  out.total+=level
+ end
+ out.keeper=StatsPanel.keeperWord(out.total)
+ return out
+end
 -- v859 phone notes: the button flickered between "Say hello" and "Playing right now" as the
 -- pet's garden actor stepped between follow, wander pauses and play. The free/busy fact is now
 -- debounced: a change has to hold for FreeHold seconds before the button follows it.
@@ -82,17 +113,28 @@ function Inspect.geometry(width,height)
  local pad=if compact then 8 else 12
  local W=math.min(if compact then 460 else 540,width-24)
  local preview=if compact then 156 else 216
- local rowH=if compact then 30 else 34
+ -- v2 S4: the Outfit grid shares its area with the Stats tab under a tab bar, so phone rows
+ -- are 26 px (read-only cells; the card still clears the top bar on an 812x354 phone).
+ local rowH=if compact then 26 else 34
  local gap=4
  local rows=math.ceil((#Wearables.Tabs+3)/Inspect.Columns)
  local head=if compact then 22 else 26
  local sub=if compact then 16 else 18
  local button=if compact then 38 else 44
- local gridY=pad+head+sub+6
+ local tabsH=if compact then 26 else 32
+ local tabsY=pad+head+sub+2
+ local gridY=tabsY+tabsH+4
  local gridH=rows*rowH+(rows-1)*gap
- local H=gridY+gridH+8+button+pad+4
+ -- Stats tab: two rows of tiles, the summary strip, the privacy line.
+ local tileH=if compact then 46 else 60
+ local stripH=if compact then 30 else 40
+ local noteH=if compact then 12 else 16
+ local statsH=tileH*2+gap*2+stripH+2+noteH
+ local bodyH=math.max(gridH,statsH)
+ local H=gridY+bodyH+8+button+pad+4
  local x0=pad+preview+pad
- return {compact=compact,pad=pad,W=W,H=H,preview=preview,rowH=rowH,gap=gap,rows=rows,head=head,sub=sub,button=button,gridY=gridY,gridH=gridH,x0=x0,rightW=W-x0-pad}
+ return {compact=compact,pad=pad,W=W,H=H,preview=preview,rowH=rowH,gap=gap,rows=rows,head=head,sub=sub,button=button,gridY=gridY,gridH=gridH,x0=x0,rightW=W-x0-pad,
+  tabsH=tabsH,tabsY=tabsY,tileH=tileH,stripH=stripH,noteH=noteH,statsH=statsH,bodyH=bodyH,compareW=if compact then 96 else 112}
 end
 
 -- options:
@@ -271,20 +313,29 @@ function Inspect:build(identity)
  close:SetAttribute("AccessibleLabel",UICopy.get("inspect.close"))
  close.Activated:Connect(function()self:close("button")end)
  local grid=Kit.frame(card,"Slots",nil,UDim2.fromOffset(g.x0,g.gridY),UDim2.fromOffset(g.rightW,g.gridH))
+ grid.Visible=false
  local cellW=math.floor((g.rightW-(Inspect.Columns-1)*g.gap)/Inspect.Columns)
  local cells={}
  for index,row in ipairs(Inspect.rows(identity.petId,nil))do
   local col,line=(index-1)%Inspect.Columns,math.floor((index-1)/Inspect.Columns)
   local cell=Kit.frame(grid,"Slot_"..row.key,"well",UDim2.fromOffset(col*(cellW+g.gap),line*(g.rowH+g.gap)),UDim2.fromOffset(cellW,g.rowH),8)
   local half=math.floor((g.rowH-4)/2)
-  local label=Kit.text(cell,"Small",row.label,"dim",{Name="Slot",Position=UDim2.fromOffset(6,2),Size=UDim2.fromOffset(cellW-10,half),TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
-  local value=Kit.text(cell,"Strong","","text",{Name="Item",Position=UDim2.fromOffset(6,2+half),Size=UDim2.fromOffset(cellW-10,half),TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+  local size=if g.compact then 11 else 12
+  local label=Kit.text(cell,"Small",row.label,"dim",{Name="Slot",Position=UDim2.fromOffset(6,2),Size=UDim2.fromOffset(cellW-10,half),TextSize=size,TextTruncate=Enum.TextTruncate.AtEnd})
+  local value=Kit.text(cell,"Strong","","text",{Name="Item",Position=UDim2.fromOffset(6,2+half),Size=UDim2.fromOffset(cellW-10,half),TextSize=size,TextTruncate=Enum.TextTruncate.AtEnd})
   cells[row.key]={cell=cell,label=label,value=value}
  end
- local hello=Kit.button(card,"SayHello",{variant="primary",text=UICopy.get("inspect.hello"),size=Vector2.new(g.rightW,g.button),textSize=if g.compact then 16 else 18})
- hello.Position=UDim2.fromOffset(g.x0,g.gridY+g.gridH+8)
+ local stats=self:buildStats(card,g)
+ local tabs=Kit.tabs(card,{UICopy.get("inspect.tab.stats"),UICopy.get("inspect.tab.outfit")},g.rightW,g.tabsH,if g.compact then 14 else 16)
+ tabs.root.Name="InspectTabs";tabs.root.Position=UDim2.fromOffset(g.x0,g.tabsY)
+ tabs.changed=function(index)self:showTab(index)end
+ local buttonY=g.gridY+g.bodyH+8
+ local hello=Kit.button(card,"SayHello",{variant="primary",text=UICopy.get("inspect.hello"),size=Vector2.new(g.rightW-g.compareW-6,g.button),textSize=if g.compact then 16 else 18})
+ hello.Position=UDim2.fromOffset(g.x0,buttonY)
  hello.Activated:Connect(function()self:hello()end)
- hello.NextSelectionUp,hello.NextSelectionDown,hello.NextSelectionLeft,hello.NextSelectionRight=hello,hello,hello,hello
+ local compare=Kit.button(card,"Compare",{variant="secondary",text=UICopy.get("inspect.compare"),size=Vector2.new(g.compareW,g.button),textSize=if g.compact then 15 else 17})
+ compare.Position=UDim2.fromOffset(g.x0+g.rightW-g.compareW,buttonY)
+ compare.Activated:Connect(function()self:toggleCompare()end)
  -- Spin: drag on the preview (mouse or touch); the thumbstick turns it too.
  local drag=nil
  viewport.InputBegan:Connect(function(input)
@@ -299,7 +350,139 @@ function Inspect:build(identity)
  local ended=UserInputService.InputEnded:Connect(function(input)
   if drag and(input==drag.input or input.UserInputType==Enum.UserInputType.MouseButton1)then drag=nil end
  end)
- return {frame=card,geometry=g,viewport=viewport,world=world,lens=lens,name=name,sub=sub,cells=cells,hello=hello,hint=hint,inputs={moved,ended}}
+ local built={frame=card,geometry=g,viewport=viewport,world=world,lens=lens,name=name,sub=sub,cells=cells,grid=grid,stats=stats,tabs=tabs,tab=1,
+  hello=hello,compareButton=compare,compare=false,hint=hint,inputs={moved,ended}}
+ Inspect.wireSelection(built)
+ return built
+end
+-- Gamepad: the tabs above, Say hello and Compare below. A disabled Kit button is not
+-- interactable (Roblox would skip it and could leave the card), so the links follow what is
+-- enabled, and a selection left on a disabled button moves to the Stats tab.
+function Inspect.wireSelection(card)
+ local tab1,tab2=card.tabs.buttons[1],card.tabs.buttons[2]
+ local hello,compare=card.hello,card.compareButton
+ local function on(button)local state=Kit.buttonState(button);return state==nil or state.enabled end
+ local helloOn,compareOn=on(hello),on(compare)
+ tab1.NextSelectionUp,tab1.NextSelectionLeft,tab1.NextSelectionRight=tab1,tab1,tab2
+ tab1.NextSelectionDown=if helloOn then hello elseif compareOn then compare else tab1
+ tab2.NextSelectionUp,tab2.NextSelectionLeft,tab2.NextSelectionRight=tab2,tab1,tab2
+ tab2.NextSelectionDown=if compareOn then compare elseif helloOn then hello else tab2
+ hello.NextSelectionUp,hello.NextSelectionDown,hello.NextSelectionLeft=tab1,hello,hello
+ hello.NextSelectionRight=if compareOn then compare else hello
+ compare.NextSelectionUp,compare.NextSelectionDown,compare.NextSelectionRight=tab2,compare,compare
+ compare.NextSelectionLeft=if helloOn then hello else compare
+ local selected=GuiService.SelectedObject
+ if(selected==hello and not helloOn)or(selected==compare and not compareOn)then GuiService.SelectedObject=tab1 end
+end
+-- v2 S4: the Stats tab. Six tiles (rune chip, name, level, tier word or "You 41"), the summary
+-- strip (total level / 594, You, Keeper chip), the privacy line, and a line for no stats.
+function Inspect:buildStats(card,g)
+ local compact=g.compact
+ local pane=Kit.frame(card,"StatsPane",nil,UDim2.fromOffset(g.x0,g.gridY),UDim2.fromOffset(g.rightW,g.statsH))
+ local tileW=math.floor((g.rightW-(Inspect.Columns-1)*g.gap)/Inspect.Columns)
+ local runeSize=if compact then 18 else 22
+ local levelH=if compact then 20 else 26
+ local levelW=if compact then 28 else 36
+ local tiles={}
+ for index,id in ipairs(StatCatalog.Order)do
+  local col,line=(index-1)%Inspect.Columns,math.floor((index-1)/Inspect.Columns)
+  local tile=Kit.frame(pane,"Stat_"..id,"well",UDim2.fromOffset(col*(tileW+g.gap),line*(g.tileH+g.gap)),UDim2.fromOffset(tileW,g.tileH),10)
+  Kit.stroke(tile)
+  local rune=StatsPanel.rune(tile,id,runeSize);rune.Position=UDim2.fromOffset(5,4)
+  Kit.text(tile,"Label",StatsPanel.statName(id),"soft",{Name="StatName",Position=UDim2.fromOffset(5+runeSize+4,4),Size=UDim2.fromOffset(tileW-runeSize-14,runeSize),
+   TextSize=if compact then 10 else 12,TextTruncate=Enum.TextTruncate.AtEnd})
+  local y=g.tileH-levelH-3
+  local level=Kit.text(tile,"CounterL","1","text",{Name="Level",Position=UDim2.fromOffset(6,y),Size=UDim2.fromOffset(levelW,levelH),TextSize=if compact then 20 else 26})
+  local tier=Kit.text(tile,"Label","",StatCatalog.ById[id].color,{Name="Tier",AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-5,0,y+(if compact then 3 else 4)),
+   Size=UDim2.fromOffset(tileW-levelW-12,levelH-(if compact then 4 else 6)),TextXAlignment=Enum.TextXAlignment.Right,TextSize=if compact then 9 else 11,TextTruncate=Enum.TextTruncate.AtEnd})
+  tiles[index]={id=id,tile=tile,level=level,tier=tier}
+ end
+ local stripY=g.tileH*2+g.gap*2
+ local strip=Kit.frame(pane,"Summary","well",UDim2.fromOffset(0,stripY),UDim2.fromOffset(g.rightW,g.stripH),10)
+ Kit.stroke(strip)
+ Kit.text(strip,"Label",UICopy.get("stats.total"),"dim",{Name="TotalLabel",Position=UDim2.fromOffset(8,2),Size=UDim2.fromOffset(140,if compact then 11 else 14),TextSize=if compact then 9 else 11})
+ local totalH=if compact then 17 else 22
+ local total=Kit.text(strip,"CounterL","","text",{Name="TotalLevel",Position=UDim2.fromOffset(8,g.stripH-totalH-1),Size=UDim2.fromOffset(40,totalH),TextSize=if compact then 16 else 21})
+ local of=Kit.text(strip,"Counter","","dim",{Name="TotalOf",Position=UDim2.fromOffset(48,g.stripH-totalH-1),Size=UDim2.fromOffset(44,totalH),TextSize=if compact then 11 else 13})
+ local you=Kit.text(strip,"Label","","soft",{Name="TotalYou",Position=UDim2.fromOffset(92,g.stripH-totalH-1),Size=UDim2.fromOffset(70,totalH),TextSize=if compact then 9 else 11})
+ local chip=Kit.chip(strip,"",nil,if compact then 20 else 24)
+ chip.root.Name="KeeperChip";chip.root.AnchorPoint=Vector2.new(1,.5);chip.root.Position=UDim2.new(1,-6,.5,0)
+ local note=Kit.text(pane,"Small",UICopy.get("inspect.statsPrivate"),"dim",{Name="Private",Position=UDim2.fromOffset(0,stripY+g.stripH+2),Size=UDim2.fromOffset(g.rightW,g.noteH),
+  TextSize=if compact then 10 else 12,TextXAlignment=Enum.TextXAlignment.Center,TextTruncate=Enum.TextTruncate.AtEnd})
+ local none=Kit.text(pane,"Small",UICopy.get("inspect.statsNone"),"soft",{Name="None",Position=UDim2.new(),Size=UDim2.fromOffset(g.rightW,g.tileH*2+g.gap),
+  TextSize=if compact then 13 else 15,TextXAlignment=Enum.TextXAlignment.Center,Visible=false})
+ return {pane=pane,tiles=tiles,strip=strip,total=total,of=of,you=you,chip=chip,note=note,none=none}
+end
+-- The local player's own board (for Compare), or nil.
+function Inspect:ownBoard()
+ local boards=self.options.companions and self.options.companions.boards
+ return boards and boards:FindFirstChild(tostring(Players.LocalPlayer.UserId))or nil
+end
+function Inspect:showTab(index)
+ local card=self.card;if not card then return end
+ card.tab=index
+ card.stats.pane.Visible=index==1
+ card.grid.Visible=index==2
+ if card.tabs.selected~=index then card.tabs.select(index)end
+end
+function Inspect:toggleCompare()
+ local card=self.card;if not card or not card.compareReady then return false end
+ card.compare=not card.compare
+ Kit.setSelected(card.compareButton,card.compare)
+ if card.compare then self:showTab(1)end
+ card.statsSeen=nil;self:paintStats()
+ return card.compare
+end
+-- Paint the Stats tab when the public attribute (theirs or ours) or Compare changes.
+function Inspect:paintStats()
+ local card=self.card;if not card then return end
+ local board=card.identity.board
+ local raw=board:GetAttribute(StatCatalog.PublicAttribute)
+ local own=self:ownBoard()
+ local ownRaw=own and own:GetAttribute(StatCatalog.PublicAttribute)
+ local ownId=own and own:GetAttribute("CompanionId")
+ -- Once a frame from refresh: compare the four inputs as they are (no string building).
+ local seen=card.statsSeen
+ if seen and seen[1]==raw and seen[2]==ownRaw and seen[3]==ownId and seen[4]==card.compare then return end
+ card.statsSeen={raw,ownRaw,ownId,card.compare}
+ local view=card.stats
+ local model=Inspect.statsModel(raw,card.identity.petId)
+ local mine=Inspect.statsModel(ownRaw,ownId)
+ card.compareReady=model~=nil and mine~=nil
+ if not card.compareReady and card.compare then card.compare=false;Kit.setSelected(card.compareButton,false)end
+ Kit.setEnabled(card.compareButton,card.compareReady)
+ Inspect.wireSelection(card)
+ local compare=card.compare
+ view.none.Visible=model==nil
+ view.strip.Visible=model~=nil
+ for index,t in ipairs(view.tiles)do
+  t.tile.Visible=model~=nil
+  local s=model and model.stats[index]
+  if s then
+   t.level.Text=tostring(s.level)
+   local yours=if compare then UICopy.get("inspect.you",{count=mine.stats[index].level})else nil
+   if yours then
+    t.tier.Text=yours;Kit.paint(t.tier,"TextColor3","soft")
+   else
+    t.tier.Text=string.upper(s.tier);Kit.paint(t.tier,"TextColor3",StatCatalog.ById[s.id].color)
+   end
+   local label=string.format("%s %d",StatsPanel.statName(s.id),s.level)
+   if yours then label..=", "..yours end
+   t.tile:SetAttribute("AccessibleLabel",label);t.tile:SetAttribute("Level",s.level)
+  end
+ end
+ if model then
+  view.total.Text=tostring(model.total)
+  local tw=math.ceil(Kit.measure(view.total.Text,"CounterL",view.total.TextSize).X)
+  view.of.Text=UICopy.get("stats.of",{total=StatCatalog.GardenStarTotal})
+  view.of.Position=UDim2.fromOffset(8+tw+4,view.total.Position.Y.Offset)
+  local ow=math.ceil(Kit.measure(view.of.Text,"Counter",view.of.TextSize).X)
+  view.you.Text=if compare then UICopy.get("inspect.you",{count=mine.total})else ""
+  view.you.Position=UDim2.fromOffset(8+tw+4+ow+8,view.total.Position.Y.Offset)
+  view.chip.set(model.keeper,nil);Kit.paint(view.chip.label,"TextColor3","accent")
+  view.pane:SetAttribute("TotalLevel",model.total)
+ else view.pane:SetAttribute("TotalLevel",nil)end
+ view.pane:SetAttribute("Compare",compare)
 end
 -- v859 phone notes: "Drag to turn" made the pet drift away. The fit re-ran whenever the
 -- animated height moved a hundredth, and the axis-aligned width of a turned pet grows up to
@@ -353,6 +536,7 @@ function Inspect:refresh()
  local line=UICopy.get("inspect.owner",{name=owner})
  if type(level)=="number"then line=line.." · "..UICopy.get("inspect.bond",{count=level})end
  if card.sub.Text~=line then card.sub.Text=line end
+ self:paintStats()
 end
 function Inspect:open(player)
  if self.destroyed or not self:allowed()then return false end
@@ -412,7 +596,9 @@ function Inspect:gone()
  if not card or card.goneAt then return end
  card.goneAt=os.clock()
  card.name.Text=UICopy.get("inspect.gone")
- Kit.setEnabled(card.hello,false)
+ Kit.setEnabled(card.hello,false);Kit.setEnabled(card.compareButton,false)
+ for _,button in ipairs(card.tabs.buttons)do button.Active=false;button.Interactable=false end
+ Inspect.wireSelection(card)
 end
 function Inspect:hello()
  local card=self.card
@@ -462,7 +648,7 @@ function Inspect:step(dt,serverNow)
      cooling=now<(card.coolUntil or 0)or(card.pendingSeq~=nil and now-(card.pendingAt or 0)<2),distance=distance,
      free=Inspect.stableFree(card.freeMemo,actor~=nil and Rules.free(actor,serverNow),now)and now>=(card.busyUntil or 0)})
     if card.helloKey~=key then card.helloKey=key;Kit.setText(card.hello,UICopy.get(key))end
-    if card.helloReady~=ready then card.helloReady=ready;Kit.setEnabled(card.hello,ready)end
+    if card.helloReady~=ready then card.helloReady=ready;Kit.setEnabled(card.hello,ready);Inspect.wireSelection(card)end
     -- The preview mirrors the real pet's hello.
     if card.visual then card.visual.hello=entry.visual.hello;card.visual.helloTarget=Vector3.new(0,0,6)end
    end

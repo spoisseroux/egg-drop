@@ -238,4 +238,26 @@ function State.public(state,today)
 	return result
 end
 
+-- For other players (v2 S4, section 6): the board attribute Catalog.PublicAttribute. Per owned
+-- pet, the six levels, the total level and the Keeper tier word. Levels only: no XP, no Bonus
+-- XP, no wallet, nothing else from the save. Derived from the save on every publish; the server
+-- never reads it back.
+function State.publicLevels(state)
+	local pets={}
+	if type(state)~="table"then return {v=1,pets=pets}end
+	local petStats=State.sanitizePetStats(state.petStats)or {}
+	for _,pet in ipairs(Pets.collection)do
+		if Eggs.isOwned(state.inventoryMask or 0,pet.id)then
+			local stats=petStats[pet.id]or {}
+			local levels,total={},0
+			for _,stat in ipairs(Catalog.Order)do
+				local level=Catalog.levelFor(stats[stat]or 0)
+				levels[stat]=level;total+=level
+			end
+			pets[pet.id]={levels=levels,total=total,keeper=Catalog.keeperTier(total)}
+		end
+	end
+	return {v=1,pets=pets}
+end
+
 return State

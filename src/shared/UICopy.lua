@@ -398,6 +398,9 @@ local Table={
   hello="Say hello",sent="Hello!",closer="Come closer",busy="Playing right now",off="Greetings off",wait="In a moment",
   gone="Pet moved on",close="Close",spin="Drag to turn",
   setting={on="Pet greetings: On",off="Pet greetings: Off"},
+  -- v2 S4: the Stats tab (default) beside the Outfit grid, and Compare.
+  tab={stats="Stats",outfit="Outfit"},compare="Compare",you="You {count}",
+  statsPrivate="Levels only. XP, Stars and history stay private.",statsNone="No stats to show yet.",
  },
  -- QA v735 H5: notice cards (NoticeCards.lua). A tap on a top-bar pill (a quest ticker or
  -- an onboarding line) opens one: what it means, what to do next, and one button that goes

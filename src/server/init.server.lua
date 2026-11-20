@@ -296,12 +296,18 @@ do
 			local board=boardOf(ownerId)
 			if board and board.folder.Parent then board.folder:SetAttribute(Rules.Attribute,if hello then HttpService:JSONEncode(hello)else nil)end
 		end})
-	-- The public summary on the owner's board: greetings off, and the selected pet's bond level.
+	local StatCatalog=require(ReplicatedStorage.Shared.StatCatalog)
+	local StatState=require(script.StatState)
+	-- The public summary on the owner's board: greetings off, the selected pet's bond level and
+	-- (v2 S4) every owned pet's stat levels. publishNursery reaches here after every saved
+	-- transaction (award, pet, park, quest, daily, book), so the levels follow the save.
 	function petHello.social(board)
 		board.folder:SetAttribute(Rules.OffAttribute,board.profile.greetOff==true)
 		local petId=board.profile.companionId
-		local bond=board.nursery and board.nursery.state and board.nursery.state.bond
+		local state=board.nursery and board.nursery.state
+		local bond=state and state.bond
 		board.folder:SetAttribute(Rules.BondAttribute,if petId then Bond.level(Bond.xpOf(bond,petId))else nil)
+		board.folder:SetAttribute(StatCatalog.PublicAttribute,if state then HttpService:JSONEncode(StatState.publicLevels(state))else nil)
 	end
 	remote.OnServerEvent:Connect(function(player,packet)
 		local board=boards[player]

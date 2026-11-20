@@ -7,6 +7,10 @@
 local Catalog={}
 
 Catalog.Order=table.freeze({"heart","power","energy","jump","speed","smarts"})
+-- v2 S4: the public, read-only board attribute other players' inspect cards read (JSON from
+-- StatState.publicLevels: per owned pet, the six levels, the total and the Keeper tier word).
+-- Levels only: never XP, Bonus XP, Stars or anything else from the save.
+Catalog.PublicAttribute="PublicStats"
 Catalog.MaxLevel=99
 Catalog.MaxXP=2000000
 -- Display data. Names go through UICopy (stats.<id>) when shown; these are the English

@@ -29,7 +29,7 @@ ui.book.entry.line,"Pages to fill, Stars to find",,Collection book
 ui.book.eyebrow,Garden,,"Collection book; also ui.hub.eyebrow, ui.report.category.garden"
 ui.book.failed,Not claimed,,Collection book
 ui.book.found,Found,,Collection book
-ui.book.hint.back,Back,,"Collection book; also ui.input.action.back, ui.phoneDeck.b.back, ui.r1.reveal.exit"
+ui.book.hint.back,Back,,"Collection book; also ui.input.action.back, ui.phoneDeck.b.back, ui.r1.reveal.exit, ui.stats.hint.back"
 ui.book.hint.claim,Claim,,Collection book
 ui.book.hint.move,Move,,Collection book
 ui.book.hint.pages,Pages,,Collection book
@@ -68,7 +68,7 @@ ui.care.notice.retry,Couldn't complete · try again,,Menu text
 ui.care.notice.saving,Wait for your pet save,,Menu text
 ui.coach.book.line,Fill the pages as you collect. Every page pays once.,,First-round coaching
 ui.coach.companions.line,"Dress up {pet}, swap pets and customize.",,"First-round coaching; e.g. Dress up Bear, swap pets and customize."
-ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name"
+ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name, ui.stats.eyebrow"
 ui.coach.effortPay,Good effort,,First-round coaching
 ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and the round ends.,,First-round coaching; also ui.notice.fillLine.what
 ui.coach.fillLine.short,Keep the pile under the line,,First-round coaching
@@ -239,7 +239,7 @@ ui.hub.tile.settings.name,Settings,,"Pocket menu (machine hub); also ui.pause.se
 ui.hub.tile.style.line,"Faceplates, backgrounds and balls",,Pocket menu (machine hub); also ui.r5.station.Customize.line
 ui.hub.tile.style.short,Style,,Pocket menu (machine hub)
 ui.hub.week,This week,,Pocket menu (machine hub)
-ui.input.action.browse,Browse,,Menu text
+ui.input.action.browse,Browse,,Menu text; also ui.stats.hint.browse
 ui.input.action.confirm,Pick,,Menu text
 ui.input.action.tab,Switch tab,,Menu text
 ui.input.legend.gamepad,"D-pad moves, A picks, B goes back, LB and RB switch tabs.",,Menu text
@@ -247,6 +247,7 @@ ui.input.legend.keyboard,"Arrows or WASD move, Enter picks, Backspace goes back,
 ui.input.legend.touch,Tap a card to pick it. The back arrow closes the screen.,,Menu text
 ui.inspect.busy,Playing right now,,Menu text
 ui.inspect.closer,Come closer,,Menu text
+ui.inspect.compare,Compare,,Menu text
 ui.inspect.empty,Empty,,Menu text
 ui.inspect.gone,Pet moved on,,Menu text
 ui.inspect.hello,Say hello,,Menu text
@@ -261,7 +262,12 @@ ui.inspect.slot.charm,Charm,,Menu text
 ui.inspect.slot.finish,Material,,Menu text; also ui.r4.customize.finish.title
 ui.inspect.slot.toy,Toy,,Menu text
 ui.inspect.spin,Drag to turn,,Menu text
+ui.inspect.statsNone,No stats to show yet.,,Menu text
+ui.inspect.statsPrivate,"Levels only. XP, Stars and history stay private.",,Menu text
+ui.inspect.tab.outfit,Outfit,,Menu text
+ui.inspect.tab.stats,Stats,,"Menu text; also ui.stats.open, ui.stats.results.label"
 ui.inspect.wait,In a moment,,Menu text
+ui.inspect.you,You {count},,Menu text; e.g. You 3
 ui.items.note.empty,You have no items,,Round item notes
 ui.items.note.full,Belt's full. Use one first.,,Round item notes
 ui.menu.subtitle.empty,Round not started,,Pause menu
@@ -539,6 +545,42 @@ ui.stamp.promise,"No streaks. Miss a day, lose nothing.",,Stamp card
 ui.stamp.tomorrow,Next stamp tomorrow: ★ {reward},,Stamp card; e.g. Next stamp tomorrow: ★ 5
 ui.stampChip.done,✓ {count}/{total},,Menu text; e.g. ✓ 3/12
 ui.stampChip.label,Daily stamp,,Menu text
+ui.stats.bonus,BONUS,,Menu text
+ui.stats.bonusLeft,2x bonus: {count} XP left today,,Menu text; e.g. 2x bonus: 3 XP left today
+ui.stats.bonusUsed,Today's 2x bonus is used. Back tomorrow.,,Menu text
+ui.stats.chip,Total {count},,Menu text; e.g. Total 3
+ui.stats.footer,"Levels never go down. Miss a day, lose nothing.",,Menu text
+ui.stats.gardenStar,Garden Star,,Menu text
+ui.stats.keeper,{name} Keeper,,Menu text; e.g. Pet Park Keeper
+ui.stats.levelUp,{name} {count},,Menu text; e.g. Pet Park 3
+ui.stats.levelUpMore,{name} {count} +{target},,Menu text; e.g. Pet Park 3 +3
+ui.stats.max,Top level,,Menu text
+ui.stats.name.energy,Energy,,Menu text
+ui.stats.name.heart,Heart,,"Menu text; also catalog.PetCharmCatalog.ById.heart.name, catalog.BookCatalog.Pages.charms.items.4.name"
+ui.stats.name.jump,Jump,,Menu text
+ui.stats.name.power,Power,,Menu text
+ui.stats.name.smarts,Smarts,,Menu text
+ui.stats.name.speed,Speed,,Menu text
+ui.stats.nextKeeper,{name} at {count},,Menu text; e.g. Pet Park at 3
+ui.stats.none,Hatch a pet to start its stats.,,Menu text
+ui.stats.of,/ {total},,Menu text; e.g. / 12
+ui.stats.results.gain,{name} +{count},,Menu text; e.g. Pet Park +3
+ui.stats.results.up,{name} +{count} (Lv {target}!),,Menu text; e.g. Pet Park +3 (Lv 3!)
+ui.stats.tier.bloom,Bloom,,Menu text
+ui.stats.tier.fullBloom,Full Bloom,,Menu text
+ui.stats.tier.seedling,Seedling,,Menu text
+ui.stats.tier.sprout,Sprout,,Menu text; also catalog.BallThemes.ById.pea_soup.names.2
+ui.stats.tier.starbloom,Starbloom,,Menu text
+ui.stats.title,{pet}'s stats,,Menu text; e.g. Bear's stats
+ui.stats.toNext,{count} XP to {target},,Menu text; e.g. 3 XP to 3
+ui.stats.topKeeper,Every stat at the top,,Menu text
+ui.stats.total,Total level,,Menu text
+ui.stats.train.energy,"Finishing and winning rounds, goals met and tidy wins. Harder pays more.",,Menu text
+ui.stats.train.heart,"Petting, pet focus, care stations and rounds with your pet beside you.",,Menu text
+ui.stats.train.jump,"Pet Park games you start, the daily Play date and playing with friends' pets.",,Menu text
+ui.stats.train.power,"Merges and chains on the Pocket Deck. Every merge counts, win or lose.",,Menu text
+ui.stats.train.smarts,"Daily and weekly quests, the daily stamp and Collection book finds.",,Menu text
+ui.stats.train.speed,"Throw and fetch, and toy play in the garden.",,Menu text
 ui.style.balls.pitch,"Same sizes, same rules. Only cuter.",,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.balls,Just for looks. Never an advantage.,,Deck style screen
@@ -615,7 +657,6 @@ catalog.BallThemes.ById.midnight.names.5,Star,,"Catalogue BallThemes (names); al
 catalog.BallThemes.ById.midnight.pitch,Dark balls with glowing eyes.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.pea_soup.name,Pea Soup,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.6.name
 catalog.BallThemes.ById.pea_soup.names.1,Pea,,Catalogue BallThemes (names)
-catalog.BallThemes.ById.pea_soup.names.2,Sprout,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.pea_soup.names.3,Leaf,,"Catalogue BallThemes (names); also catalog.PetCharmCatalog.ById.leaf.name, catalog.BookCatalog.Pages.charms.items.6.name"
 catalog.BallThemes.ById.pea_soup.names.4,Lime,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.pea_soup.names.5,Glow,,Catalogue BallThemes (names)
@@ -681,7 +722,6 @@ catalog.FeatureCatalog.ById.claws.name,Claws,,Catalogue FeatureCatalog (name)
 catalog.FeatureCatalog.ById.horns.name,Horn buds,,Catalogue FeatureCatalog (name)
 catalog.FeatureCatalog.ById.wings.name,Folded wings,,Catalogue FeatureCatalog (name)
 catalog.PetCharmCatalog.ById.dot.name,Snowflake,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.1.name
-catalog.PetCharmCatalog.ById.heart.name,Heart,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.4.name
 catalog.PetCharmCatalog.ById.ring.name,Ring,,Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.2.name
 catalog.WearableCatalog.Tabs.1.label,Hat,,Catalogue WearableCatalog (label)
 catalog.WearableCatalog.Tabs.2.label,Shirt,,Catalogue WearableCatalog (label)

@@ -173,5 +173,29 @@ return function(server)
 		assert(clean.pip and clean.pip.power==7,"the known Bear is kept first")
 	end)
 
+	test("v2 S4: the public board attribute carries levels only (no XP, Bonus XP or wallet)",function()
+		local state={inventoryMask=pip,nectar=12345,petStats={pip={heart=C.xpFor(52),power=C.xpFor(29)+3,futureStat=999},zzfuture={power=50}},
+			statBonus={day="5",left={heart=40}},statsSeed=1}
+		local public=S.publicLevels(state)
+		local keys={};for k in pairs(public)do table.insert(keys,k)end;table.sort(keys)
+		assert(table.concat(keys,",")=="pets,v","top level: "..table.concat(keys,","))
+		local n=0;for _ in pairs(public.pets)do n+=1 end
+		assert(n==1 and public.pets.pip,"owned known pets only")
+		local entry=public.pets.pip
+		keys={};for k in pairs(entry)do table.insert(keys,k)end;table.sort(keys)
+		assert(table.concat(keys,",")=="keeper,levels,total","entry: "..table.concat(keys,","))
+		n=0;for stat,level in pairs(entry.levels)do n+=1;assert(C.ById[stat]and level%1==0 and level>=1 and level<=C.MaxLevel)end
+		assert(n==#C.Order)
+		assert(entry.levels.heart==52 and entry.levels.power==29 and entry.levels.smarts==1 and entry.total==52+29+4)
+		assert(entry.keeper==C.keeperTier(entry.total))
+		local json=game:GetService("HttpService"):JSONEncode(public)
+		for _,word in ipairs({"xp","bonus","left","nectar","12345","day","statsSeed","futureStat"})do
+			assert(not json:lower():find(word:lower(),1,true),"leaks "..word..": "..json)
+		end
+		-- No pet, no save: an empty table, never an error.
+		assert(next(S.publicLevels({inventoryMask=0}).pets)==nil and next(S.publicLevels(nil).pets)==nil)
+		assert(next(S.publicLevels({inventoryMask=pip,petStats="bad"}).pets.pip.levels)~=nil)
+	end)
+
 	return {passed=#cases,cases=cases}
 end
