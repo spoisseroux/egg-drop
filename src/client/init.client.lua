@@ -1238,7 +1238,7 @@ do
   closed=function(reason)
    if clientUI.machineReturn~="companions"then return end
    if reason=="back"then clientUI.returnToMachineHub("companions")
-   elseif reason~="customize"and reason~="stats"then clientUI.machineReturn=nil end
+   elseif reason~="customize"and reason~="stats"and reason~="names"then clientUI.machineReturn=nil end
   end})
  clientUI.openHub=function(options)
   if not nurseryState or roomView.busy then return false end
@@ -1351,7 +1351,8 @@ do
   appearance=function(petId)return nurseryView.appearanceFor(petId)end,
   canOpen=function()return not roomView.busy and board:GetAttribute("Mode")=="Room"and not(nurseryState and nurseryState.lastHatch)
    and not clientUI.book:isOpen()and not clientUI.hueView:isOpen()and not(clientUI.isWardrobeOpen and clientUI.isWardrobeOpen())
-   and not modal.Visible and not clientUI.questLog.visible and not(clientUI.bugReport and clientUI.bugReport:isOpen())end,
+   and not modal.Visible and not clientUI.questLog.visible and not(clientUI.bugReport and clientUI.bugReport:isOpen())
+   and not(clientUI.names and clientUI.names.isOpen())end,
   prepare=function()
    cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
    if gameMenu and gameMenu.shade.Visible and closeMenu then closeMenu()end

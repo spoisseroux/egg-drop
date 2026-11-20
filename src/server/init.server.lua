@@ -123,6 +123,21 @@ end
 -- client shows the result instead of inviting a second press.
 local function settleSnack(player,board,pending,ok,reason)
 	local signature=type(pending)=="table"and pending.signature or ""
+	-- v2 pet names (code review): a Names Egg the background retry settled still answers its op id,
+	-- so the client shows the reveal instead of a silent debit.
+	if string.sub(signature,1,8)=="nameEgg:"then
+		if boards[player]~=board then return end
+		local c=pending.candidate
+		local saved=NameState.receipt(board.nursery.state,c.op)
+		local revision=board.nursery.state.revision
+		if saved and saved.digest==c.digest then
+			Economy.command(player,"NameEgg",board.nursery.state.nectar+(tonumber(saved.cost)or 0),board.nursery.state.nectar,board.nursery.state)
+			nameResult:FireClient(player,{id=c.op,action="nameEggBuy",status="Saved",reason="Saved",receipt=NameState.publicReceipt(saved),revision=revision})
+		elseif not ok and reason~="Retrying"and board.nursery.pending~=pending then
+			nameResult:FireClient(player,{id=c.op,action="nameEggBuy",status="Rejected",reason=reason,revision=revision})
+		end
+		return
+	end
 	local action=if string.sub(signature,1,8)=="statEgg:"then "statEggBuy"elseif string.sub(signature,1,6)=="snack:"then "snackFeed"else nil
 	if not action or boards[player]~=board then return end
 	local c=pending.candidate
@@ -1524,6 +1539,9 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		if action=="nameEggBuy"then
 			if type(v.quote)~="string"or #v.quote>64 then reply("Rejected","InvalidNameEgg");return end
 			if NameState.receipt(board.nursery.state,opId)then
+				-- Read-only replay, still throttled (code review).
+				if os.clock()-(board.lastNameReplay or -math.huge)<.3 then reply("Rejected","Throttled");return end
+				board.lastNameReplay=os.clock()
 				local ok,reason,receipt=Nursery.nameEggBuy(board.nursery,opId,v.quote)
 				reply(if ok then "Saved"else "Rejected",reason,receipt);return
 			end

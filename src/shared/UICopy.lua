@@ -406,7 +406,7 @@ local Table={
   egg={key="Names Egg · {price} Stars",allShort="All pieces collected",title="Names Egg",line="One new name piece every time. Never a duplicate.",
    per="1 name piece per egg",each="Each piece left: 1 in {count}, {each}",next="Next: {piece}",nextValue="Next",
    order="Pieces come in a fixed order, shown before you buy.",fixedLine="No surprises. Your next piece is shown above.",
-   randomLine="Every piece still to find is equally likely.",buy="Hatch for {price} Stars",hatching="Hatching…",
+   randomLine="Every piece still to find is equally likely.",buy="Hatch for {price} Stars",hatching="Hatching…",retry="Still saving · tap to check",
    all="All name pieces collected",notReady="The Names Egg is not ready yet.",close="Close",left="{count} pieces left to find",
    again="Hatch another · {price}"},
   reveal={sticker="NEW NAME PIECE",line="Yours for every pet",use="Use it",done="Done",yours="Renaming is free, any time."},

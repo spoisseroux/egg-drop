@@ -345,7 +345,11 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and not Stats.validBoosts(state) then warn("Egg Drop: dropped petBoosts at load"); state.petBoosts = nil end
 		if type(state) == "table" and not StatEggs.valid(state) then warn("Egg Drop: dropped statEgg/snackPouch at load"); state.statEgg = nil; state.snackPouch = nil end
 		-- v2 names: repaired one subfield at a time; still invalid drops receipts, petNames, owned in turn.
-		if type(state) == "table" then Names.sanitize(state); Names.dropInvalid(state) end
+		-- Code review: guarded like catchUp, so a repair error drops the names fields, never the load.
+		if type(state) == "table" then
+			local repaired, problem = pcall(function() Names.sanitize(state); Names.dropInvalid(state) end)
+			if not repaired then warn("Egg Drop: dropped names at load:", problem); state.names = nil; state.petNames = nil end
+		end
 		-- "No default charm" (plan §2.2): a save written before this build has no charmUnlocks and
 		-- keeps Snowflake, Ring and Pebble (everyone owned them under the old rules); a save this
 		-- acquire creates starts with none. Written once here, so every later reader sees one form.

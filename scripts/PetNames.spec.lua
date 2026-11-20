@@ -22,6 +22,7 @@ return function(server)
 			update=function(key,transform)
 				local value=transform(copy(db[key]))
 				if value then db[key]=copy(value)end
+				if c.throwAfter then c.throwAfter=false;error("ambiguous: committed but the reply was lost")end
 				return copy(value)
 			end,
 		}
@@ -161,6 +162,26 @@ return function(server)
 		for _,id in ipairs(C.EggOrder)do assert(seen[id])end
 		assert(#H.public(h).names.remaining==0)
 		assert(select(2,H.nameEggBuy(h,"r99",quote(h)))=="AllOwned"and h.state.nectar==1000-160)
+	end)
+
+	test("Names Egg: a commit whose reply is lost is Retrying; a new op is Pending; the same op replays, one debit",function()
+		local h,db,c=ready(nil,20)
+		local key=quote(h)
+		c.throwAfter=true
+		local ok,why=H.nameEggBuy(h,"t1",key)
+		assert(not ok and why=="Retrying",tostring(why))
+		assert(db.player_1.hatching.nectar==12,"the write committed")
+		assert(select(2,H.nameEggBuy(h,"t2",key))=="Pending")
+		local ok2,why2,receipt=H.nameEggBuy(h,"t1",key)
+		assert(ok2 and receipt and receipt.piece=="velvet",tostring(why2))
+		assert(h.state.nectar==12 and db.player_1.hatching.nectar==12 and #N.owned(h.state)==7)
+		local ok3,why3=H.nameEggBuy(h,"t1",key)
+		assert(ok3 and why3=="AlreadySaved"and h.state.nectar==12)
+		-- A rename whose reply is lost resumes the same write.
+		c.throwAfter=true
+		assert(select(2,H.setPetName(h,"pip",{"velvet"}))=="Retrying")
+		assert(H.setPetName(h,"pip",{"velvet"}))
+		assert(N.petName(h.state,"pip")[1]=="velvet")
 	end)
 
 	test("rename: owned distinct pieces only, unowned pet refused, same name Unchanged, clear, public ids only",function()

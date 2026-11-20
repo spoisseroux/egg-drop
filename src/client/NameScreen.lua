@@ -372,7 +372,8 @@ function Screen:paintEgg()
 	self.eggList.CanvasSize=UDim2.fromOffset(0,y)
 	self.eggNote.Text=odds.note or odds.per or ""
 	local action=Screen.eggAction(names,self.ctx.wallet)
-	if self.pendingEgg then action={text=UICopy.get("names.egg.hatching"),enabled=false}end
+	if self.pendingEgg then action={text=UICopy.get("names.egg.hatching"),enabled=false}
+	elseif self.retryEgg then action={text=UICopy.get("names.egg.retry"),enabled=true}end
 	Kit.setText(self.eggBuy,action.text);Kit.setEnabled(self.eggBuy,action.enabled)
 end
 
@@ -531,15 +532,25 @@ function Screen:closeEgg()
 	if not self.eggCard then return end
 	self.eggCard.Visible=false;self.root:SetAttribute("EggCard",false)
 end
+-- Code review: an egg whose save is still retrying keeps its op id and quote, and the next tap
+-- sends the same request again, so a committed egg replays its receipt (and its reveal) instead of
+-- a second purchase or a silent debit.
 function Screen:buyEgg()
 	local names=self:names()
 	if self.pendingEgg or not names then return false end
-	if not Screen.eggAction(names,self.ctx.wallet).enabled then return false end
-	self.lastOdds=Screen.eggOdds(names)
-	local op=self.callbacks.buyEgg and self.callbacks.buyEgg(names.quoteKey)
+	local retry=self.retryEgg
+	if not retry and not Screen.eggAction(names,self.ctx.wallet).enabled then return false end
+	if not retry then self.lastOdds=Screen.eggOdds(names)end
+	local quote=if retry then retry.quote else names.quoteKey
+	local op=self.callbacks.buyEgg and self.callbacks.buyEgg(quote,retry and retry.op)
 	if not op then return false end
-	self.pendingEgg=op;self:paintEgg()
-	task.delay(12,function()if self.pendingEgg==op then self.pendingEgg=nil;self:say(Screen.reasonText("Timeout"));self:paintEgg()end end)
+	self.pendingEgg=op;self.sentQuote=quote;self:paintEgg()
+	task.delay(12,function()
+		if self.pendingEgg==op then
+			self.pendingEgg=nil;self.retryEgg={op=op,quote=quote}
+			self:say(Screen.reasonText("Timeout"));self:paintEgg()
+		end
+	end)
 	return true
 end
 -- A reply from the server (NameResult).
@@ -550,8 +561,10 @@ function Screen:onResult(message)
 		if message.status=="Saved"then self:say(UICopy.get("names.saved"))
 		else self:say(Screen.reasonText(message.reason))end
 		self:paint()
-	elseif message.action=="nameEggBuy"and message.id==self.pendingEgg then
+	elseif message.action=="nameEggBuy"and(message.id==self.pendingEgg or(self.retryEgg~=nil and message.id==self.retryEgg.op))then
+		local quote=if self.retryEgg and message.id==self.retryEgg.op then self.retryEgg.quote else self.sentQuote
 		self.pendingEgg=nil
+		self.retryEgg=if message.status=="Retrying"then {op=message.id,quote=quote}else nil
 		if message.status=="Saved"and type(message.receipt)=="table"then
 			self:closeEgg()
 			if self.callbacks.reveal then self.callbacks.reveal(message.receipt,self.lastOdds)end
@@ -703,9 +716,9 @@ function Screen.mount(deps)
 	local reveal=Reveal.new(deps.parent,deps.audio)
 	api.reveal=reveal
 	local screen
-	local function buy(quoteKey)
+	local function buy(quoteKey,retryOp)
 		if type(quoteKey)~="string"then return nil end
-		local op=HttpService:GenerateGUID(false)
+		local op=if type(retryOp)=="string"then retryOp else HttpService:GenerateGUID(false)
 		request:FireServer("nameEggBuy",{id=op,quote=quoteKey})
 		return op
 	end
