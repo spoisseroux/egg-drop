@@ -91,6 +91,10 @@ local petAppearanceResult = child("RemoteEvent", "PetAppearanceResult", remotes)
 -- v2 Stat Eggs: the owner's buy/feed replies, and the public "ate a snack" beat other players see.
 local snackResult = child("RemoteEvent", "SnackResult", remotes)
 local snackBeat = child("RemoteEvent", "SnackBeat", remotes)
+-- v2 pet names: the owner's Names Egg and rename replies.
+local nameResult = child("RemoteEvent", "NameResult", remotes)
+local NameCatalog = require(ReplicatedStorage.Shared.NameCatalog)
+local NameState = require(script.NameState)
 local StatEggCatalog = require(ReplicatedStorage.Shared.StatEggCatalog)
 local StatEggState = require(script.StatEggState)
 -- v1 track B: bug reports / suggestions (remote BugReport, owner tool ServerStorage.EggDropReportsTool).
@@ -343,6 +347,8 @@ do
 		local bond=state and state.bond
 		board.folder:SetAttribute(Rules.BondAttribute,if petId then Bond.level(Bond.xpOf(bond,petId))else nil)
 		board.folder:SetAttribute(StatCatalog.PublicAttribute,if state then HttpService:JSONEncode(StatState.publicLevels(state))else nil)
+		-- v2 names: piece ids per owned pet (never text); viewers build the text from NameCatalog.
+		board.folder:SetAttribute(NameCatalog.Attribute,if state then HttpService:JSONEncode(NameState.publicNames(state))else nil)
 	end
 	remote.OnServerEvent:Connect(function(player,packet)
 		local board=boards[player]
@@ -1502,6 +1508,44 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 			ok,reason,receipt=Nursery.snackFeed(board.nursery,opId,v.snackId,petId)
 		end
 		if ok and reason~="AlreadySaved"then snackEffects(player,board,action,receipt,walletBefore)end
+		board.nurseryBusy=false;if boards[player]~=board then return end
+		publishNursery(board);publishState(board)
+		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,receipt);return
+	end
+
+	-- v2 pet names: buy one Names Egg (8 Stars, one new piece) or rename a pet (free). The egg is
+	-- idempotent by the client's op id (keep it across Retrying); a saved receipt replays read-only.
+	-- Renames store piece ids only; the save checks are in NameState.
+	if action=="nameEggBuy"or action=="petName"then
+		local v=if type(value)=="table"then value else {}
+		local opId=if type(v.id)=="string"and #v.id>=1 and #v.id<=80 then v.id else nil
+		local function reply(status,reason,receipt)nameResult:FireClient(player,{id=opId,action=action,status=status,reason=reason,receipt=receipt,revision=board.nursery.state.revision})end
+		if not opId then reply("Rejected","InvalidName");return end
+		if action=="nameEggBuy"then
+			if type(v.quote)~="string"or #v.quote>64 then reply("Rejected","InvalidNameEgg");return end
+			if NameState.receipt(board.nursery.state,opId)then
+				local ok,reason,receipt=Nursery.nameEggBuy(board.nursery,opId,v.quote)
+				reply(if ok then "Saved"else "Rejected",reason,receipt);return
+			end
+		end
+		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then reply("Rejected","Throttled");return end
+		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
+		board.lastHatchRequest=os.clock()
+		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
+		local ok,reason,receipt
+		if action=="nameEggBuy"then
+			ok,reason,receipt=Nursery.nameEggBuy(board.nursery,opId,v.quote)
+			if ok and reason~="AlreadySaved"and type(receipt)=="table"then
+				Economy.command(player,"NameEgg",walletBefore,board.nursery.state.nectar,board.nursery.state)
+				Economy.event(player,"EggOpened_name",1,{tostring(receipt.piece),tostring(receipt.mode)})
+			end
+		else
+			local petId=if type(v.petId)=="string"and #v.petId<=32 then v.petId else nil
+			local pieces=if type(v.pieces)=="table"then v.pieces else nil
+			if not petId or not pieces then ok,reason=false,"InvalidName"
+			else ok,reason=Nursery.setPetName(board.nursery,petId,pieces)end
+		end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,receipt);return

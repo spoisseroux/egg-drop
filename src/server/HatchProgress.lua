@@ -45,6 +45,9 @@ local StatCaps=require(game:GetService("ReplicatedStorage").Shared.StatCatalog).
 -- v2 Stat Eggs: optional snackPouch / statEgg fields (StatEggState) and petBoosts (StatState).
 local StatEggs=require(script.Parent.StatEggState)
 local StatEggCatalog=require(ReplicatedStorage.Shared.StatEggCatalog)
+-- v2 pet names: optional names / petNames fields (NameState); earned pieces granted by catchUp.
+local Names=require(script.Parent.NameState)
+local NameCatalog=require(ReplicatedStorage.Shared.NameCatalog)
 -- v2 S2: the pet that earns XP for actions with no pet of their own (quests, the daily stamp,
 -- book milestones). The host sets handle.statPetOf; read once per call, so retries are stable.
 local function statPet(handle)
@@ -203,7 +206,7 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- Bond levels (overnight 2026-11-14, slice F): optional additive `bond` on v11, valid when missing (no version bump).
 -- Customization Egg (2026-11-16): optional additive finishInventory, petFinish, charmUnlocks,
 -- lookCharmMisses and lookFound on v11 (LookState.valid, run inside HueState.valid).
-local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -341,6 +344,8 @@ function Hatching.load(userId, profile, adapter)
 		-- own, never with petStats beside it. Unreachable while sanitize is complete; logged if hit.
 		if type(state) == "table" and not Stats.validBoosts(state) then warn("Egg Drop: dropped petBoosts at load"); state.petBoosts = nil end
 		if type(state) == "table" and not StatEggs.valid(state) then warn("Egg Drop: dropped statEgg/snackPouch at load"); state.statEgg = nil; state.snackPouch = nil end
+		-- v2 names: repaired one subfield at a time; still invalid drops receipts, petNames, owned in turn.
+		if type(state) == "table" then Names.sanitize(state); Names.dropInvalid(state) end
 		-- "No default charm" (plan §2.2): a save written before this build has no charmUnlocks and
 		-- keeps Snowflake, Ring and Pebble (everyone owned them under the old rules); a save this
 		-- acquire creates starts with none. Written once here, so every later reader sees one form.
@@ -353,6 +358,9 @@ function Hatching.load(userId, profile, adapter)
 		Stats.seed(state)
 		-- Code review: a seed problem must never lock a player out; drop the stats instead.
 		if not Stats.valid(state) then state.petStats = nil end
+		-- v2 names (architect review): starters and every earned piece the save already qualifies for.
+		-- Protected: an error or an invalid result restores the old value, never a failed load.
+		Hatching.catchUpNames(state)
 		state = clone(state)
 		local now = adapter.now()
 		-- A timed-out acquire may already have committed. Retry the same token
@@ -470,6 +478,8 @@ function Hatching.public(handle)
 	public.petStats = Stats.public(state, dayOf(handle.adapter.now()))
 	-- v2 Stat Eggs: pouch, eggs left today, free eggs, the Feast promise and per pet quote keys.
 	public.statEgg = StatEggs.public(state, dayOf(handle.adapter.now()), StatEggCatalog.selectionMode(handle.restricted))
+	-- v2 names: owned pieces, per-pet names and the Names Egg card (odds or the fixed next piece).
+	public.names = Names.public(state, NameCatalog.selectionMode(handle.restricted))
 	-- Weekly shelf (slice C): the week the server prices with (nil while the shelf is off).
 	-- The client may also derive it from dailyDay; this is the authoritative copy.
 	public.shelfWeek = shelfWeek(handle.adapter.now())
@@ -580,6 +590,8 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		-- `now` is read here, inside the callback, so the state-derived Discoveries
 		-- (BookCatalog.stateBits) see the clock of this attempt.
 		Lifetime.record(before, state, pending.signature, handle.adapter.now())
+		-- v2 names: a level-up, a book claim or a first pet and its name pieces commit in one write.
+		Hatching.catchUpNames(state)
 		state.revision += 1
 		state.operationSeq = pending.sequence
 		state.lastOperation = { id = pending.id, sequence = pending.sequence, digest = pending.digest }
@@ -1526,6 +1538,67 @@ function Hatching.snackFeed(handle, operationId, snackId, petId)
 	return snackOperation(handle, signature, operationId, digest, function()
 		return table.freeze({ op = operationId, digest = digest, snackId = snackId, petId = petId })
 	end, StatEggs.feed)
+end
+
+-- v2 names. catchUp never fails its caller: an error restores the old value (architect review).
+function Hatching.catchUpNames(state)
+	if type(state) ~= "table" then return {} end
+	local before = state.names
+	local ok, added = pcall(Names.catchUp, state)
+	if not ok then state.names = before; warn("Egg Drop: name catch-up failed:", added); return {} end
+	return added
+end
+
+local function nameOperation(handle, signature, operationId, digest, makeCandidate, apply)
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming then
+		local saved = Names.receipt(handle.state, operationId)
+		if saved then
+			if saved.digest == digest then return true, "AlreadySaved", Names.publicReceipt(saved) end
+			return false, "OperationConflict"
+		end
+	end
+	local candidate = if resuming then handle.pending.candidate else makeCandidate()
+	if candidate.digest ~= digest then return false, "OperationConflict" end
+	local ok, reason = transact(handle, signature, handle.state.revision, apply, candidate, signature, nil, digest)
+	local saved = Names.receipt(handle.state, operationId)
+	if saved and saved.digest == digest and (ok or reason == "AlreadySaved") then return true, if ok then reason else "AlreadySaved", Names.publicReceipt(saved) end
+	return ok, reason
+end
+
+-- One Names Egg (8 Stars): one new piece, never a duplicate. `quoteKey` is the key the card
+-- showed (NameCatalog.quoteKey); any change is "PoolChanged" with no charge. A restricted (or
+-- unknown) policy draws no random number: the fixed next piece in NameCatalog.EggOrder.
+function Hatching.nameEggBuy(handle, operationId, quoteKey)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80
+		or type(quoteKey) ~= "string" or #quoteKey < 1 or #quoteKey > 64 then return false, "InvalidNameEgg" end
+	local signature = "nameEgg:" .. operationId
+	local digest = "name:" .. quoteKey
+	return nameOperation(handle, signature, operationId, digest, function()
+		local mode = NameCatalog.selectionMode(handle.restricted)
+		return table.freeze({ op = operationId, digest = digest, quoteKey = quoteKey, mode = mode,
+			unit = if mode == "random" then handle.adapter.random() else nil })
+	end, Names.buy)
+end
+
+-- Rename a pet (free): 0..2 owned, distinct piece ids. Same name as saved = "Unchanged", no write.
+function Hatching.setPetName(handle, petId, ids)
+	if type(petId) ~= "string" or #petId > 32 or not Pets.byId[petId] or type(ids) ~= "table" or #ids > NameCatalog.MaxPieces then return false, "InvalidName" end
+	local clean = {}
+	for index = 1, #ids do
+		local v = ids[index]
+		if type(v) ~= "string" or #v < 1 or #v > 40 then return false, "InvalidName" end
+		clean[index] = v
+	end
+	local n = 0; for _ in pairs(ids) do n += 1 end
+	if n ~= #ids then return false, "InvalidName" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	if not handle.pending and Names.sameName(handle.state, petId, clean) then return true, "Unchanged" end
+	local signature = "petName:" .. petId .. ":" .. table.concat(clean, "+")
+	local candidate = if handle.pending and handle.pending.signature == signature then handle.pending.candidate
+		else table.freeze({ petId = petId, ids = table.freeze(clean) })
+	return transact(handle, signature, handle.state.revision, Names.setName, candidate)
 end
 
 local function maintain(handle, releasing)
