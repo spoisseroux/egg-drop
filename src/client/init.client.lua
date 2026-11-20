@@ -51,7 +51,8 @@ pcall(function()clientUI.clientSim=require(script.ClientRoundDriver).start()end)
 -- Ball themes + faces (batch 2026-11-13 R1): the equipped theme comes from the nursery snapshot.
 clientUI.BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
 clientUI.ballFaces=require(script.BallFaces).new();clientUI.faceList={};clientUI.heldFace={}
-function clientUI.isHueOpen()return(clientUI.hueView~=nil and clientUI.hueView:isOpen())or(clientUI.hub~=nil and clientUI.hub:isOpen())end
+function clientUI.isHueOpen()return(clientUI.hueView~=nil and clientUI.hueView:isOpen())or(clientUI.hub~=nil and clientUI.hub:isOpen())
+ or(clientUI.stats~=nil and clientUI.stats.isOpen())end
 local DropDispenser = require(script.DropDispenser)
 local BoardQuestHUD = require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -1209,6 +1210,7 @@ do
   open=function(rowId,petId)
    petId=petId or board:GetAttribute("CompanionId")
    if rowId=="wardrobe"then return clientUI.openWardrobe and clientUI.openWardrobe(petId)or false end
+   if rowId=="stats"then return clientUI.openStats~=nil and clientUI.openStats({from="hub",petId=petId,slideFrom=Kit.SlideOffset})==true end
    -- UI-SPEC-v816 3: Toys is its own screen (the Customize view on its Toys page).
    if rowId=="customize"or rowId=="toys"then
     clientUI.hub:close("customize")
@@ -1226,7 +1228,7 @@ do
   closed=function(reason)
    if clientUI.machineReturn~="companions"then return end
    if reason=="back"then clientUI.returnToMachineHub("companions")
-   elseif reason~="customize"then clientUI.machineReturn=nil end
+   elseif reason~="customize"and reason~="stats"then clientUI.machineReturn=nil end
   end})
  clientUI.openHub=function(options)
   if not nurseryState or roomView.busy then return false end
@@ -1322,6 +1324,30 @@ do
   return Enum.ContextActionResult.Sink
  end,false,Enum.ContextActionPriority.High.Value+810,table.unpack(keys))
  gui.Destroying:Connect(function()ContextActionService:UnbindAction("EggDropBook");clientUI.book:destroy();bookGui:Destroy()end)
+end
+-- v2 S3: the pet stats panel and the level-up line (StatsHost owns the wiring). Opened
+-- from the Companions hub's Stats button, pet focus and a tap on the level-up line.
+do
+ local Kit=require(script.DeckKit)
+ clientUI.stats=require(script.StatsHost).mount({parent=gui.Parent,insetProbe=clientUI.insetProbe,
+  state=function()return nurseryState end,activeId=function()return board:GetAttribute("CompanionId")end,
+  appearance=function(petId)return nurseryView.appearanceFor(petId)end,
+  canOpen=function()return not roomView.busy and board:GetAttribute("Mode")=="Room"and not(nurseryState and nurseryState.lastHatch)
+   and not clientUI.book:isOpen()and not clientUI.hueView:isOpen()and not(clientUI.isWardrobeOpen and clientUI.isWardrobeOpen())
+   and not modal.Visible and not clientUI.questLog.visible and not(clientUI.bugReport and clientUI.bugReport:isOpen())end,
+  prepare=function()
+   cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
+   if gameMenu and gameMenu.shade.Visible and closeMenu then closeMenu()end
+   if clientUI.hub:isOpen()then clientUI.hub:close("stats")end
+   if roomView.focusing then roomView:useRoomCamera(false)end
+  end,
+  held=function()return board:GetAttribute("Mode")~="Room"and not clientUI.deckResults.visible end,
+  reopenHub=function()if clientUI.openHub then clientUI.openHub({slideFrom=-Kit.SlideOffset})end end,
+  -- Back to the hub keeps the machine hub's way back; any other close forgets it.
+  closed=function(reason,from)if clientUI.machineReturn=="companions"and not(reason=="back"and from=="hub")then clientUI.machineReturn=nil end end})
+ clientUI.openStats=function(options)return clientUI.stats.open(options)end
+ roomView.openStats=clientUI.openStats
+ gui.Destroying:Connect(function()clientUI.stats.destroy()end)
 end
 -- v1 track B: Settings > "Report a bug / Suggest something". Own ScreenGui above the
 -- book; the sheet opens over Settings and Back returns there. Replies ride BugReport.
@@ -1448,6 +1474,7 @@ local function refreshNursery(state)
     if clientUI.syncWardrobe then clientUI.syncWardrobe(state)end
     if clientUI.syncHub then clientUI.syncHub(state)end
     if clientUI.syncBook then clientUI.syncBook(state)end
+    if clientUI.stats then clientUI.stats.sync(state)end
     clientUI.hueIntent:update(state)
     clientUI.materialIntent:update(state)
     clientUI.toyIntent:update(state)
@@ -1461,6 +1488,7 @@ local function refreshNursery(state)
  if clientUI.syncFirstSpend then clientUI.syncFirstSpend(state)end
 	local result = state.lastHatch
  if result and clientUI.isHueOpen()then clientUI.hueView:close("forced")end
+ if result and clientUI.stats then clientUI.stats.close("forced")end
 	if result and result.id ~= shownNurseryHatch then
 		cancelHatchNavigation()
 		shownNurseryHatch = result.id
@@ -1587,6 +1615,7 @@ openMenu = function(options)
 	cancelHatchNavigation()
 	if roomView.busy or modal.Visible or nurseryView:isOpen() or clientUI.isHueOpen() then return end
 	if (clientUI.hub and clientUI.hub:isOpen()) or (clientUI.book and clientUI.book:isOpen()) or clientUI.questLog.visible
+		or (clientUI.stats and clientUI.stats.isOpen())
 		or (clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()) then return end
 	clientUI.machineReturn=nil
 	clearPlayInputs(); picker:close(); journal:close(); roomView:setMenuOpen(true)
@@ -2047,6 +2076,10 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
   canLeave=owned>0,level=heat.index,questCount=clientUI.questCount(),canHatch=owned>0,
   questDone=clientUI.finishedQuest(reward),
   tidy=success==true and reward~=nil and(reward.base or 0)>=Payout.TidyWin,eggName=egg.name,eggCost=egg.cost,
+  -- v2 S3: the round's stat gains (results Stats strip), levels from the pet's XP now.
+  stats=require(script.StatToasts).resultsParts(reward and reward.stats,(function()
+   local ps=nurseryState and nurseryState.petStats;local e=type(ps)=="table"and type(ps.pets)=="table"and ps.pets[board:GetAttribute("CompanionId")or ""]
+   return type(e)=="table"and e.xp or nil end)()),
   quest=quest,nudge=nudge,petName=(Pets.byId[board:GetAttribute("CompanionId")or ""]or Pets.active[1]or Pets[1]).name,
   result={status=status,receiptPending=status=="Saved"and runReceipt==nil,reward=runReceipt,sequence=board:GetAttribute("RunSequence")}}
 end
@@ -2713,6 +2746,7 @@ local controllerFocus=clientUI.ControllerFocus.new({
 		-- The Wardrobe owns its own focus (ContextAction "EggDropWardrobe").
 		if clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then return{blocked=true}end
 		if clientUI.hub and clientUI.hub:isOpen()then return{blocked=true}end
+		if clientUI.stats and clientUI.stats.isOpen()then return{blocked=true}end -- StatsHost owns its focus
 		if clientUI.bugReport and clientUI.bugReport:isOpen()then return{blocked=true}end -- the report sheet owns its focus
 		if clientUI.isHueOpen()then owner=clientUI.hueView:getControllerFocus()
         elseif nurseryView:isOpen()then owner=nurseryView:getControllerFocus()
@@ -3889,6 +3923,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	local mode = board:GetAttribute("Mode")
 	if nurseryView then nurseryView:close("forced") end
     if clientUI.hueView then clientUI.hueView:close("forced")end
+	if clientUI.stats then clientUI.stats.close("forced")end
 	if closeMenu then closeMenu() end
 	if mode == "Room" then
   rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
@@ -4179,6 +4214,7 @@ end)
 -- QA Q2.5: alt-tab back with a menu screen open keeps the cursor free and the camera off the mouse.
 clientUI.anyModalOpen=function()
  return(clientUI.hub~=nil and clientUI.hub:isOpen())or(clientUI.wardrobe~=nil and clientUI.wardrobe:isOpen())or(clientUI.book~=nil and clientUI.book:isOpen())
+  or(clientUI.stats~=nil and clientUI.stats.isOpen())
   or isPickerOpen()or(journal~=nil and journal.shade.Visible)or(nurseryView~=nil and nurseryView:isOpen())or clientUI.isHueOpen()
   or(gameMenu~=nil and(gameMenu:isOpen()or gameMenu.shade.Visible))or(modal~=nil and modal.Visible)
   or(clientUI.questLog~=nil and clientUI.questLog.visible)

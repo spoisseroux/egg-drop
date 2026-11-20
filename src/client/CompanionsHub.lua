@@ -113,6 +113,12 @@ function Hub.firstOwned(state)
  for _,pet in ipairs(Pets.active)do if Eggs.isOwned(mask,pet.id)then return pet.id end end
  return Pets.active[1]and Pets.active[1].id or Pets[1].id
 end
+-- Pure (v2 S3): a pet's total stat level from the snapshot, or nil without stats.
+function Hub.totalLevel(state,petId)
+ local stats=state and state.petStats
+ local entry=type(stats)=="table"and type(stats.pets)=="table"and stats.pets[petId]or nil
+ return if type(entry)=="table"and type(entry.total)=="number"then entry.total else nil
+end
 -- Pure: focus movement. Hub rows are one column; the selector is a cols-wide grid.
 function Hub.step(index,dx,dy,count,cols)
  cols=math.max(1,cols or 1)
@@ -303,6 +309,17 @@ function Hub:buildHub(body,W,H,phone)
    self.summaryLabels[pair[1]]=value;local _=name
   end
  end
+ -- v2 S3: Stats, over the preview well's top left (left of the rows for the d-pad).
+ self.statsButton=nil
+ if self.callbacks.stats~=false and self.viewport then
+  local total=Hub.totalLevel(self.ctx.state,petId)
+  local label=if total then UICopy.get("stats.open").." · "..total else UICopy.get("stats.open")
+  local b=Kit.button(pane,"StatsButton",{text=label,size=Vector2.new(if phone then 104 else 132,if phone then 40 else 44),textSize=if phone then 15 else 17,selectable=false})
+  b.Position=UDim2.fromOffset(if phone then 18 else 24,if phone then 18 else 24);b.ZIndex=pane.ZIndex+8
+  for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=8 end end
+  b.Activated:Connect(function()self.statsFocus=true;self:act()end)
+  self.statsButton=b
+ end
  local ctx=self:statusCtx()
  for index,row in ipairs(Hub.Rows)do
   local P=Hub.RowPitch
@@ -461,7 +478,7 @@ function Hub:refresh()
   self.rowIndex=math.clamp(self.rowIndex,1,#Hub.Rows)
   for index,entry in ipairs(self.rows)do
    -- v850: opened by touch, no row is highlighted; the ring is for gamepad and keyboard.
-   local focused=index==self.rowIndex and not self.touchMode
+   local focused=index==self.rowIndex and not self.touchMode and not self.statsFocus
    paintRowFocus(entry,focused)
    Kit.paint(entry.disc,"BackgroundColor3",function()return if focused then Kit.color("accent")else Kit.Color.ink end)
    Kit.tintIcon(entry.icon,if focused then "ink"else "text")
@@ -499,7 +516,7 @@ function Hub:paintSelectorPane()
 end
 
 function Hub:focusRow(index,instant)
- self.rowIndex=math.clamp(index,1,#Hub.Rows);self:refresh()
+ self.rowIndex=math.clamp(index,1,#Hub.Rows);self.statsFocus=false;self:refresh()
  local entry=self.rows[self.rowIndex]
  if self.touchMode and self.page=="hub"then if self.ring then self.ring.hide()end;return end
  if entry and self.ring then self.ring.attach(entry.button,if self.view then 12 else 14)end
@@ -526,6 +543,14 @@ function Hub:move(dx,dy)
   if nextIndex==self.cardIndex then return false end
   self:focusCard(nextIndex);return true
  end
+ -- v2 S3: Left from the rows reaches the Stats button; Right or Up / Down returns.
+ if self.statsFocus then
+  if dx<0 then return false end
+  self.statsFocus=false;self:focusRow(self.rowIndex);return true
+ end
+ if dx<0 and self.statsButton then
+  self.statsFocus=true;self:refresh();if self.ring then self.ring.attach(self.statsButton,12)end;return true
+ end
  local nextIndex=Hub.step(self.rowIndex,0,dy,#Hub.Rows,1)
  if nextIndex==self.rowIndex then return false end
  self:focusRow(nextIndex);return true
@@ -547,6 +572,12 @@ end
 function Hub:act()
  if not self.visible then return false end
  if self.page=="hub"then
+  if self.statsFocus then
+   local ok=self.callbacks.open~=nil and self.callbacks.open("stats",self:activePet())==true
+   if not ok and self.visible then self:focusRow(self.rowIndex)end
+   self.statsFocus=false
+   return ok
+  end
   local row=Hub.Rows[self.rowIndex];if not row then return false end
   self.lastRow=self.rowIndex
   if row.id=="pets"then self:setPage("pets");return true end
@@ -610,7 +641,7 @@ function Hub:open(ctx,options)
   if ctx.state then self.ctx.state=ctx.state end
   if ctx.activeId~=nil then self.ctx.activeId=ctx.activeId end
  end
- self.assign=options.assign;self.pendingFollow=nil
+ self.assign=options.assign;self.pendingFollow=nil;self.statsFocus=false
  self.page=options.page or "hub";self.key=nil;self.slideFrom=nil
  self.rowIndex=self.lastRow or Hub.DefaultRow
  self.touchMode=if options.touch~=nil then options.touch==true else Kit.lastInputTouch()

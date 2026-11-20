@@ -169,6 +169,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		pet = function()return self:reactPet(true)end,
 		petContact=function(active)return self:setPetContact(active)end,
 		charmToggle=function(visible)return self:setCharmVisible(visible)end,
+		-- v2 S3: the Stats button (and Y) leaves focus and opens the stats panel.
+		stats=function()return self.openStats~=nil and self.openStats({from="focus"})==true end,
 		canOwnInput = function() return not self.busy and not self.overlayOpen() end,
 		canReact = function()
 			return self.focusing and not self.focusTransitioning and self.mode == "Room" and not self.busy and not self.overlayOpen()

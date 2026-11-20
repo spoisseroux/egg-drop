@@ -410,6 +410,8 @@ function Results:buildCompact()
  self.totalLabel=txt(payout,"Strong","Total","text",10,62,120,24)
  self.totalAmount=txt(payout,"Counter","","stars",cardW-130,62,120,24,{TextXAlignment=Enum.TextXAlignment.Right})
  self.saved=txt(payout,"Small",UICopy.get("results.saved.done"),"dim",10,90,cardW-150,20);self.saved.Visible=false
+ -- v2 S3: the round's stat gains ride the subline (the portrait cards have no free row).
+ self.statsLine=self.subline;self.subline.RichText=true;self.subline.TextTruncate=Enum.TextTruncate.AtEnd
  self.wallet=Kit.wallet(payout,32);self.wallet.root.AnchorPoint=Vector2.new(1,.5);self.wallet.root.Position=UDim2.new(1,-10,0,100)
  local goals,eyebrow=Kit.card(root,"Goals","GOALS",{pad=10,labelY=8})
  goals.Position,goals.Size=UDim2.fromOffset(W-pad-cardW,cardY),UDim2.fromOffset(cardW,cardH);self.goalsEyebrow=eyebrow
@@ -441,7 +443,7 @@ function Results:build(compact)
  self.difficulty,self.questButton,self.questTarget,self.hatch,self.star,self.todayText=nil,nil,nil,nil,nil,nil
  self.nudge,self.strip,self.stripStroke,self.todayLabel,self.hints,self.skipHint,self.hintRight=nil,nil,nil,nil,nil,nil,nil
  self.missText,self.warmText,self.unit,self.minis,self.confetti,self.twinkles,self.newBest=nil,nil,nil,nil,nil,nil,nil
- self.goalHint,self.replayPulse,self.starIcon,self.countHolder=nil,nil,nil,nil
+ self.goalHint,self.replayPulse,self.starIcon,self.countHolder,self.statsLine=nil,nil,nil,nil,nil
  if self.phone then self.compact=false;return self:buildPhone(compact)end
  self.compact=compact==true
  if self.compact then return self:buildCompact()end
@@ -798,6 +800,11 @@ function Results:show(data,compact)
  if self.nudge then self.nudge.Text=data.nudge or "";self.nudge.Position=UDim2.fromOffset(18,if loss then 92 else 214)end
  if self.saved and not self.phone and not self.compact then self.saved.Position=UDim2.fromOffset(18,240)end
  self:paintGoals(data)
+ if self.statsLine then
+  local parts=data.stats or {}
+  if #parts>0 then self.statsLine.Text=self.statsLine.Text.."   "..require(script.Parent.StatToasts).resultsRich(parts)end
+  Kit.localizeRich(self.statsLine)
+ end
  if self.warmText then
   self.warmText.Text=Results.warmLine(data.petName or "Bear",data.result and data.result.sequence or 0)
  end

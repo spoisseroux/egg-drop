@@ -129,6 +129,7 @@ function Focus.new(parentGui, callbacks)
 		actionPrefix = "EggDropPetFocus" .. serial, active = false, windowActive=true, heldTouches={},retiredTouches=setmetatable({},{__mode="k"}),retiredMouse=false, roamDock=parentGui:FindFirstChild("LoungeControls") }, Focus)
 	table.insert(self.connections, back.Activated:Connect(function()if self.active and self:canOwnInput()then callbacks.back()end end))
 	self:buildBondCard()
+	self:buildStatsButton()
 	table.insert(self.connections,UserInputService.TouchStarted:Connect(function(input)self.heldTouches[input]=true end))
 	table.insert(self.connections,UserInputService.TouchEnded:Connect(function(input)self.heldTouches[input]=nil;self:endPointer(input)end))
 	table.insert(self.connections,hit.InputBegan:Connect(function(input)self:beginPointer(input)end))
@@ -168,6 +169,21 @@ function Focus:buildBondCard()
 	self.bondPips=nil
 	self.bondCompact=nil
 end
+-- v2 S3: a Stats button left of the focus card (the pet is the way into its stats).
+-- Click / tap, or Y on a gamepad while focus owns input.
+function Focus:buildStatsButton()
+	if not self.callbacks.stats then return end
+	local b=Kit.button(self.panel,"StatsButton",{text=require(game:GetService("ReplicatedStorage").Shared.UICopy).get("stats.open"),glyph="Y",showGlyph=false,
+		size=Vector2.new(112,48),textSize=17,selectable=false})
+	b.ZIndex=8;for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=7 end end
+	self.statsButton=b
+	table.insert(self.connections,b.Activated:Connect(function()if self.active and self:canOwnInput()then self.callbacks.stats()end end))
+end
+function Focus:handleStats(state)
+	if not self.active or not self:canOwnInput()or not(self.statsButton and self.statsButton.Visible)then return Enum.ContextActionResult.Pass end
+	if state==Enum.UserInputState.Begin then self.callbacks.stats()end
+	return Enum.ContextActionResult.Sink
+end
 -- info: {name, bond = BondPips.info(...)} or nil. animate: a level-up (the new pip pops).
 function Focus:setBond(info,animate)
 	if self.destroyed or not self.bondCard then return end
@@ -200,10 +216,11 @@ function Focus:bindPickup(pickup)
 end
 function Focus:layoutFocusRow()
  if not self.bondCard then return end
- local row=require(script.Parent.FocusRow).layout(self.root.AbsoluteSize.X,self.bondWidth,self.pickupButton~=nil and self.pickupButton.Visible)
- for _,entry in ipairs({{self.back,row.back},{self.bondCard,row.bond},{self.pickupButton,row.pickup}})do
+ local row=require(script.Parent.FocusRow).layout(self.root.AbsoluteSize.X,self.bondWidth,self.pickupButton~=nil and self.pickupButton.Visible,self.statsButton~=nil)
+ if self.statsButton then self.statsButton.Visible=row.stats~=nil end
+ for _,entry in ipairs({{self.back,row.back},{self.bondCard,row.bond},{self.pickupButton,row.pickup},{self.statsButton,row.stats}})do
   local object,g=entry[1],entry[2]
-  if object then object.AnchorPoint=Vector2.zero;object.Position=UDim2.fromOffset(g.x,g.y);object.Size=UDim2.fromOffset(g.w,g.h)end
+  if object and g then object.AnchorPoint=Vector2.zero;object.Position=UDim2.fromOffset(g.x,g.y);object.Size=UDim2.fromOffset(g.w,g.h)end
  end
  self.controlHeight=row.height
  if self.bondPips and self.bondLevel then
@@ -266,7 +283,7 @@ end
 function Focus:inside(point)
 	local at,size=self.hit.Position,self.hit.Size
 	if point.X<at.X.Offset or point.Y<at.Y.Offset or point.X>at.X.Offset+size.X.Offset or point.Y>at.Y.Offset+size.Y.Offset then return false end
-	for _,node in ipairs({self.back,self.helper,self.bondCard,self.pickupButton})do
+	for _,node in ipairs({self.back,self.helper,self.bondCard,self.pickupButton,self.statsButton})do
 		if node and node.Visible then
 			local p,s=node.AbsolutePosition-self.root.AbsolutePosition,node.AbsoluteSize
 			if point.X>=p.X and point.X<=p.X+s.X and point.Y>=p.Y and point.Y<=p.Y+s.Y then return false end
@@ -350,6 +367,9 @@ function Focus:setActive(active)
 		ContextActionService:BindActionAtPriority(prefix .. "Greet", function(_, state,input)
 			return self:handleGreet(state,input)
 		end, false, priority, Enum.KeyCode.E, Enum.KeyCode.ButtonX)
+		if self.statsButton then
+			ContextActionService:BindActionAtPriority(prefix .. "Stats", function(_, state)return self:handleStats(state)end, false, priority, Enum.KeyCode.ButtonY)
+		end
 		ContextActionService:BindActionAtPriority(prefix .. "Move", function(_,state,input)return self:handleMove(state,input)end,
 			false, priority, Enum.PlayerActions.CharacterForward, Enum.PlayerActions.CharacterBackward,
 			Enum.PlayerActions.CharacterLeft, Enum.PlayerActions.CharacterRight, Enum.PlayerActions.CharacterJump,
@@ -359,7 +379,7 @@ function Focus:setActive(active)
 	else
 		if self.focusLessonStarted then self:retireFocusHint()end
 		self.openingADevice=nil;self.openingTouches=nil;self.openingMouse=false;self.openingGreetE=false;self.openingGreetDevice=nil
-		for _, suffix in ipairs({ "Back", "Greet", "Move" }) do ContextActionService:UnbindAction(prefix .. suffix) end
+		for _, suffix in ipairs({ "Back", "Greet", "Move", "Stats" }) do ContextActionService:UnbindAction(prefix .. suffix) end
 		if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.panel) then GuiService.SelectedObject = nil end
 	end
 end

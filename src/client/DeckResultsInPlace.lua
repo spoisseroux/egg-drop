@@ -98,6 +98,9 @@ function View.new(owner,v)
  self.rule=Kit.frame(self.payout,"Rule","text",UDim2.fromOffset(pad,134),UDim2.fromOffset(l.w-2*pad,1));self.rule.BackgroundTransparency=.8
  self.total=labelAt(self.payout,"Total","",16,"stars",pad,140,l.w-2*pad,24)
  self.today=labelAt(self.payout,"Today","",12,"soft",pad,166,l.w-2*pad,18)
+ -- v2 S3: the round's stat gains under today's line, one stat a line in its colour.
+ self.statsTitle=labelAt(self.payout,"StatsTitle",Copy.get("stats.results.label"),12,"soft",pad,190,l.w-2*pad,16)
+ self.statsGains=labelAt(self.payout,"StatsGains","",12,"text",pad,208,l.w-2*pad,18);self.statsGains.RichText=true
  -- QA v751 P5: the 28 px chip (Kit.WalletSpec[28]) carries the 3D WalletStar; the 20 px one
  -- had an 11 px Star, under WalletStar.MinSize, so it stayed a flat glyph.
  self.wallet=Kit.wallet(self.left,28);self.wallet.root.AnchorPoint=Vector2.new(0,1);self.wallet.root.Position=UDim2.fromOffset(pad,l.h-4)
@@ -171,6 +174,16 @@ function View:paint(data)
  self.rule.Position=UDim2.fromOffset(pad,y);self.rule.Size=UDim2.fromOffset(lw-2*pad,1)
  self.total.Position=UDim2.fromOffset(pad,y+8);self.total.Text=Copy.get("results.inPlace.total",{count=if data.pending then "…"else data.total or data.earned or 0})
  self.today.Position=UDim2.fromOffset(pad,y+36);self.today.Text=Copy.get("results.today.line",{count=data.todayEarned or 0})
+ local parts=data.stats or {}
+ self.statsTitle.Visible=#parts>0;self.statsGains.Visible=#parts>0
+ if #parts>0 then
+  local Toasts=require(script.Parent.StatToasts)
+  local lines={}
+  for _,part in ipairs(parts)do table.insert(lines,Toasts.resultsRich({part}))end
+  self.statsTitle.Position=UDim2.fromOffset(pad,y+60)
+  self.statsGains.Text=table.concat(lines,"\n");Kit.localizeRich(self.statsGains)
+  self.statsGains.Position=UDim2.fromOffset(pad,y+78);self.statsGains.Size=UDim2.fromOffset(lw-2*pad,#parts*17+4)
+ end
  local rw=self.view.right.w
  local tight=self.tightGoals==true
  local gy=if tight then 21 else 28;local done,count=0,0

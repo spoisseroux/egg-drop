@@ -366,6 +366,28 @@ local Table={
   -- The last level: nothing more is promised.
   top="Lv {count} · Best friends",
  },
+ -- v2 S3: the pet stats panel (StatsPanel), the level-up line (StatToasts) and the
+ -- results strip. Stat names and tier words are the StatCatalog ids in UICopy form.
+ stats={
+  title="{pet}'s stats",eyebrow="Companions",open="Stats",chip="Total {count}",
+  total="Total level",of="/ {total}",nextKeeper="{name} at {count}",topKeeper="Every stat at the top",
+  toNext="{count} XP to {target}",max="Top level",bonus="BONUS",
+  bonusLeft="2x bonus: {count} XP left today",bonusUsed="Today's 2x bonus is used. Back tomorrow.",
+  footer="Levels never go down. Miss a day, lose nothing.",none="Hatch a pet to start its stats.",
+  hint={browse="Browse",back="Back"},
+  name={heart="Heart",power="Power",energy="Energy",jump="Jump",speed="Speed",smarts="Smarts"},
+  tier={seedling="Seedling",sprout="Sprout",bloom="Bloom",fullBloom="Full Bloom",starbloom="Starbloom"},
+  keeper="{name} Keeper",gardenStar="Garden Star",
+  -- What trains each stat (V2-SCOPE 2.2).
+  train={heart="Petting, pet focus, care stations and rounds with your pet beside you.",
+   power="Merges and chains on the Pocket Deck. Every merge counts, win or lose.",
+   energy="Finishing and winning rounds, goals met and tidy wins. Harder pays more.",
+   jump="Pet Park games you start, the daily Play date and playing with friends' pets.",
+   speed="Throw and fetch, and toy play in the garden.",
+   smarts="Daily and weekly quests, the daily stamp and Collection book finds."},
+  levelUp="{name} {count}",levelUpMore="{name} {count} +{target}",
+  results={label="Stats",gain="{name} +{count}",up="{name} +{count} (Lv {target}!)"},
+ },
  -- QA v685 R10: the daily stamp chip on the Hatch eggs header (a counter; opens Quests).
  stampChip={done="✓ {count}/{total}",open="{count}/{total}",label="Daily stamp"},
  -- QA v685 R6: another player's pet, as a read-only profile card, and the reward-free
