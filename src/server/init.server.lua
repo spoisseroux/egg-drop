@@ -101,6 +101,36 @@ remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharm
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
 local boards = {}
+-- The side effects of a saved Stat Egg or feed (also for one the background retry settled).
+local function snackEffects(player,board,action,receipt,walletBefore)
+	if type(receipt)~="table"then return end
+	if action=="statEggBuy"then
+		Economy.command(player,"StatEgg",walletBefore,board.nursery.state.nectar,board.nursery.state)
+		Economy.event(player,"EggOpened_stat",1,{receipt.stat,receipt.size,if receipt.free then "free"else "paid"})
+	else
+		board.lastFeedAt=os.clock()
+		Economy.event(player,"SnackFed",1,{receipt.stat,receipt.size})
+		-- Everyone (the owner included) gets the public beat; other clients play the bites on this pet.
+		snackBeat:FireAllClients(player.UserId,{petId=receipt.petId,stat=receipt.stat,size=receipt.size,id=receipt.snackId})
+	end
+end
+-- Code review: a snack op that ended "Retrying" on the client and was settled later by the
+-- background retry (or found committed by the lease renew) still answers its op id, so the
+-- client shows the result instead of inviting a second press.
+local function settleSnack(player,board,pending,ok,reason)
+	local signature=type(pending)=="table"and pending.signature or ""
+	local action=if string.sub(signature,1,8)=="statEgg:"then "statEggBuy"elseif string.sub(signature,1,6)=="snack:"then "snackFeed"else nil
+	if not action or boards[player]~=board then return end
+	local c=pending.candidate
+	local saved=StatEggState.receipt(board.nursery.state,c.op)
+	local revision=board.nursery.state.revision
+	if saved and saved.digest==c.digest then
+		snackEffects(player,board,action,StatEggState.publicReceipt(saved),board.nursery.state.nectar+(tonumber(saved.cost)or 0))
+		snackResult:FireClient(player,{id=c.op,action=action,status="Saved",reason="Saved",receipt=StatEggState.publicReceipt(saved),revision=revision})
+	elseif not ok and reason~="Retrying"and board.nursery.pending~=pending then
+		snackResult:FireClient(player,{id=c.op,action=action,status="Rejected",reason=reason,revision=revision})
+	end
+end
 ClientSim.mount(remotes,function(player)return boards[player]end)
 local loading = {}
 local closing = {}
@@ -1425,19 +1455,10 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		if action=="statEggBuy"then
 			if type(v.free)~="boolean"or type(v.quote)~="string"or #v.quote>64 then ok,reason=false,"InvalidStatEgg"
 			else ok,reason,receipt=Nursery.statEggBuy(board.nursery,opId,petId,v.free,v.quote)end
-			if ok and reason~="AlreadySaved"then
-				Economy.command(player,"StatEgg",walletBefore,board.nursery.state.nectar,board.nursery.state)
-				Economy.event(player,"EggOpened_stat",1,{receipt and receipt.stat,receipt and receipt.size,if v.free then "free"else "paid"})
-			end
 		else
 			ok,reason,receipt=Nursery.snackFeed(board.nursery,opId,v.snackId,petId)
-			if ok and reason~="AlreadySaved"then
-				board.lastFeedAt=os.clock()
-				Economy.event(player,"SnackFed",1,{receipt and receipt.stat,receipt and receipt.size})
-				-- Everyone (the owner included) gets the public beat; other clients play the bites on this pet.
-				if receipt then snackBeat:FireAllClients(player.UserId,{petId=petId,stat=receipt.stat,size=receipt.size,id=receipt.snackId})end
-			end
 		end
+		if ok and reason~="AlreadySaved"then snackEffects(player,board,action,receipt,walletBefore)end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,receipt);return
@@ -2011,6 +2032,7 @@ task.spawn(function()
 					if boards[player]==board and pending and pending.kind=="hue"and not ok and reason~="Retrying"then sendHueResult(board,pending.candidate.quote,"Rejected",reason)end
 					if boards[player]==board and pending and pending.kind=="material"and not ok and reason~="Retrying"then sendMaterialResult(board,pending.candidate.quote,"Rejected",reason)end
 					if boards[player]==board and pending and(pending.kind=="toy"or pending.kind=="feature")and not ok and reason~="Retrying"then sendItemResult(board,pending.kind,pending.candidate.quote,"Rejected",reason)end
+					if pending then settleSnack(player,board,pending,ok,reason)end
 				end)
 			end
 		end
@@ -2064,7 +2086,9 @@ task.spawn(function()
 							replacement.status = "Unavailable"
 						end
 					else
+						local pending=board.nursery.pending
 						Nursery.renew(board.nursery)
+						if pending and board.nursery.pending~=pending then settleSnack(player,board,pending,true,"Saved")end
 					end
 					if boards[player] == board then publishNursery(board); publishState(board);if board.petContact then board.petContact:reconcile()end end
 				end)

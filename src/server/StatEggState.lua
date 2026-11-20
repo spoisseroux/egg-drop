@@ -38,17 +38,15 @@ end
 local function count(t)local n=0;for _ in pairs(t)do n+=1 end;return n end
 local function isArray(t)return type(t)=="table"and count(t)==#t end
 local function copy(v)if type(v)~="table"then return v end;local r={};for k,x in pairs(v)do r[k]=copy(x)end;return r end
-local function primitive(v)
-	local t=type(v)
-	return t=="boolean"or(t=="string"and #v<=160)or(t=="number"and v==v and math.abs(v)~=math.huge)
-end
 
 local function validSnack(snack)
 	return type(snack)=="table"and integer(snack.id,Catalog.SerialLimit)and snack.id>=1 and id(snack.stat)and id(snack.size)
 end
+-- Code review: only the fields this build reads are checked, so a later build may add receipt
+-- fields of any shape without making this build's valid() fail (and the session with it).
 local function validReceipt(r)
 	if type(r)~="table"or not id(r.op,80)or not id(r.kind,16)then return false end
-	for key,value in pairs(r)do if type(key)~="string"or #key>24 or not primitive(value)then return false end end
+	if r.digest~=nil and not(type(r.digest)=="string"and #r.digest<=160)then return false end
 	return r.snackId==nil or(integer(r.snackId,Catalog.SerialLimit))
 end
 local statEggChecks={
