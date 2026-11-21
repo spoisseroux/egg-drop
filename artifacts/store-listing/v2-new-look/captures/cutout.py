@@ -39,6 +39,8 @@ SHOTS = {
     # frame with every part but HandL/HandR hidden, used only as a mask for the paws.
     "S10": ("S10-black.jpg", "S10-grey.jpg"),
     "S10-paws": ("S10-paws-black.jpg", "S10-paws-grey.jpg"),
+    # S11: close Rose Bunny (3 rose, beads), turned toward the Bear, same camera as S10 (icon E).
+    "S11": ("S11-black.jpg", "S11-grey.jpg"),
 }
 
 
@@ -224,7 +226,7 @@ def main(args):
             w = three_quarter(img)
             w.save(os.path.join(HERE, "S4.png"))
             print("S4", w.size)
-    contact(["S1", "S2", "S3", "S4", "S4-straight", "S5", "S6", "S7", "S8", "S9", "S10"])
+    contact(["S1", "S2", "S3", "S4", "S4-straight", "S5", "S6", "S7", "S8", "S9", "S10", "S11"])
 
 
 if __name__ == "__main__":

@@ -227,6 +227,165 @@ def icon_d(deck_yaw=-22.0, deck_pitch=-12.0, s=1.06, top=16, deck_w=760, deck_dy
     return c
 
 
+def fisheye(src, out=M, mag=1.25, k=0.45):
+    """Barrel lens over a finished scene: the middle is magnified `mag` times and the
+    edges are squeezed (k), like a 90s handheld ad shot right up against a fisheye.
+    Bilinear resample of `src` (square, centred on the lens) into an `out` square."""
+    a = np.asarray(src.convert("RGB")).astype(np.float32)
+    H, W = a.shape[:2]
+    half = out / 2
+    yy, xx = (np.mgrid[0:out, 0:out].astype(np.float32) + 0.5 - half) / half
+    r2 = xx ** 2 + yy ** 2
+    g = (1 + k * r2) / mag
+    sx = W / 2 + xx * g * half - 0.5
+    sy = H / 2 + yy * g * half - 0.5
+    x0, y0 = np.floor(sx).astype(int), np.floor(sy).astype(int)
+    fx, fy = (sx - x0)[..., None], (sy - y0)[..., None]
+    x0, y0 = x0.clip(0, W - 2), y0.clip(0, H - 2)
+    p = a[y0, x0] * (1 - fx) * (1 - fy) + a[y0, x0 + 1] * fx * (1 - fy) \
+        + a[y0 + 1, x0] * (1 - fx) * fy + a[y0 + 1, x0 + 1] * fx * fy
+    vig = (1 - 0.16 * np.clip(r2 - 0.55, 0, None) ** 1.3)[..., None]  # soft lens fall-off
+    return Image.fromarray((p * vig).clip(0, 255).astype(np.uint8), "RGB").convert("RGBA")
+
+
+def icon_e(S=1600, bear_s=1.0, bun_s=1.05, deck_w=940, mag=1.34, k=0.95, bun_dx=200, bun_y=200, deck_cx=40, deck_y=780):
+    """Spencer 2026-11-21, after D: "less warped, make it just make sense visually like he's
+    holding it up to a fish eye lens, maybe make the characters distorted with fish eye lens
+    too, add the bunny back too, on the right, like a retro game boy ad!!! Make the background
+    blue again". The deck is flat-on (S4-straight); the Bear (S10, paws split off and set on
+    the deck's top corners) holds it up to the lens; the Rose Bunny (S11) leans in from the
+    right. The whole scene is then shot through one fisheye. Sky."""
+    import sys
+    sys.path.insert(0, CAP)
+    import cutout
+    full = cutout.matte("S10-black.jpg", "S10-grey.jpg")
+    paw_a = np.asarray(cutout.matte("S10-paws-black.jpg", "S10-paws-grey.jpg").getchannel("A")).astype(np.float32) / 255
+    fa = np.asarray(full).astype(np.float32)
+    body = fa.copy()
+    body[..., 3] *= 1 - np.clip(paw_a * 1.4, 0, 1)
+    pw = fa.copy()
+    pw[..., 3] = np.minimum(fa[..., 3], paw_a * 255)
+    mid = fa.shape[1] // 2
+    left, right = pw.copy(), pw.copy()
+    left[:, mid:, 3] = 0
+    right[:, :mid, 3] = 0
+
+    def cut(arr, s):
+        im = Image.fromarray(arr.clip(0, 255).astype(np.uint8), "RGBA")
+        im = im.crop(im.getchannel("A").point(lambda v: 255 if v > 6 else 0).getbbox())
+        return relight(im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS), cool=0.14)
+
+    bear, paw_l, paw_r = cut(body, bear_s), cut(left, bear_s), cut(right, bear_s)
+    bun = relight(load(os.path.join(CAP, "S11.png"), bun_s, rot=-4), cool=0.10)
+
+    c = field(*SKY, floor=0.80, w=S, h=S)
+    put_bubble(c, 330, 380, 190)
+    put_bubble(c, 560, 250, 60, 0.9)
+    put_bubble(c, 1250, 300, 80, 0.85)
+    cx = S // 2
+    # Bunny behind, right; Bear in the middle, a touch left.
+    bun_xy = (cx + bun_dx, bun_y)
+    soft_shadow(c, bun, bun_xy, dx=10, dy=10, blur=16, alpha=0.18)
+    paste(c, bun, bun_xy)
+    bear_xy = (cx - 70 - bear.width // 2, 250)
+    soft_shadow(c, bear, bear_xy, dx=-12, dy=10, blur=18, alpha=0.20)
+    paste(c, bear, bear_xy)
+    # The deck, flat to the lens, held just under his chin.
+    deck = load(os.path.join(CAP, "S4-straight.png"))
+    deck = deck.resize((deck_w, round(deck.height * deck_w / deck.width)), Image.LANCZOS)
+    dx, dy = cx + deck_cx - deck_w // 2, deck_y
+    soft_shadow(c, deck, (dx, dy), dx=0, dy=-18, blur=20, alpha=0.32)
+    contact(c, dx + deck_w / 2, min(S - 40, dy + deck.height + 60), deck_w * 0.38, 26, alpha=70, blur=30)
+    paste(c, deck, (dx, dy))
+    # Paws over the top corners, clear of the wordmark.
+    for paw, px in ((paw_l, dx + 10), (paw_r, dx + deck_w - 10)):
+        xy = (int(px - paw.width / 2), int(dy + 34 - paw.height / 2))
+        soft_shadow(c, paw, xy, dx=6, dy=12, blur=10, alpha=0.30)
+        paste(c, paw, xy)
+    return fisheye(c, M, mag=mag, k=k)
+
+
+def bulge(im, mag=1.18, k=0.5, pad=1.18):
+    """Fisheye on one cut-out only (premultiplied RGBA): its middle swells toward the
+    viewer and its straight edges bow out, as if just this object is up against the lens."""
+    a = np.asarray(im.convert("RGBA")).astype(np.float32)
+    al = a[..., 3:4] / 255
+    a = np.concatenate([a[..., :3] * al, a[..., 3:4]], -1)
+    H, W = a.shape[:2]
+    oh, ow = int(H * pad), int(W * pad)
+    R = max(ow, oh) / 2
+    yy, xx = np.mgrid[0:oh, 0:ow].astype(np.float32) + 0.5
+    xx, yy = (xx - ow / 2) / R, (yy - oh / 2) / R
+    g = (1 + k * (xx ** 2 + yy ** 2)) / mag
+    sx, sy = W / 2 + xx * g * R - 0.5, H / 2 + yy * g * R - 0.5
+    inside = ((sx >= 0) & (sx <= W - 1) & (sy >= 0) & (sy <= H - 1))[..., None]
+    x0, y0 = np.floor(sx).astype(int).clip(0, W - 2), np.floor(sy).astype(int).clip(0, H - 2)
+    fx, fy = (sx - x0).clip(0, 1)[..., None], (sy - y0).clip(0, 1)[..., None]
+    p = a[y0, x0] * (1 - fx) * (1 - fy) + a[y0, x0 + 1] * fx * (1 - fy) \
+        + a[y0 + 1, x0] * (1 - fx) * fy + a[y0 + 1, x0 + 1] * fx * fy
+    p = p * inside
+    oa = p[..., 3:4] / 255
+    rgb = p[..., :3] / np.maximum(oa, 1e-3)
+    out = Image.fromarray(np.concatenate([rgb, p[..., 3:4]], -1).clip(0, 255).astype(np.uint8), "RGBA")
+    return out.crop(out.getchannel("A").point(lambda v: 255 if v > 6 else 0).getbbox())
+
+
+def icon_f(bear_s=0.84, bun_s=0.80, deck_w=780, mag=1.12, k=0.45,
+           bear_x=400, bear_y=40, bun_x=580, bun_y=136, deck_x=512, deck_y=600, paw_in=-14, paw_h=0.42):
+    """Spencer 2026-11-21, after E: "Try a version with the characters and background un
+    fish eyed? And framed better". E's scene with the lens taken off everything but the deck:
+    the Bear and the Rose Bunny sit flat on Sky, and only the deck (held up to the camera)
+    bulges. Tighter frame: faces fill the top, the deck the bottom. Positions are on the
+    1024 canvas (bear_x / deck_x are centres)."""
+    import sys
+    sys.path.insert(0, CAP)
+    import cutout
+    full = cutout.matte("S10-black.jpg", "S10-grey.jpg")
+    paw_a = np.asarray(cutout.matte("S10-paws-black.jpg", "S10-paws-grey.jpg").getchannel("A")).astype(np.float32) / 255
+    fa = np.asarray(full).astype(np.float32)
+    body = fa.copy()
+    body[..., 3] *= 1 - np.clip(paw_a * 1.4, 0, 1)
+    pw = fa.copy()
+    pw[..., 3] = np.minimum(fa[..., 3], paw_a * 255)
+    mid = fa.shape[1] // 2
+    left, right = pw.copy(), pw.copy()
+    left[:, mid:, 3] = 0
+    right[:, :mid, 3] = 0
+
+    def cut(arr, s):
+        im = Image.fromarray(arr.clip(0, 255).astype(np.uint8), "RGBA")
+        im = im.crop(im.getchannel("A").point(lambda v: 255 if v > 6 else 0).getbbox())
+        return relight(im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS), cool=0.14)
+
+    bear, paw_l, paw_r = cut(body, bear_s), cut(left, bear_s), cut(right, bear_s)
+    bun = relight(load(os.path.join(CAP, "S11.png"), bun_s, rot=-4), cool=0.10)
+
+    c = field(*SKY, floor=0.80)
+    put_bubble(c, 120, 150, 150)
+    put_bubble(c, 300, 70, 44, 0.9)
+    paste(c, bun, (bun_x, bun_y))
+    bxy = (bear_x - bear.width // 2, bear_y)
+    soft_shadow(c, bear, bxy, dx=14, dy=10, blur=18, alpha=0.22)  # onto the Bunny
+    paste(c, bear, bxy)
+    flat = load(os.path.join(CAP, "S4-straight.png"))
+    flat = flat.resize((deck_w, round(flat.height * deck_w / flat.width)), Image.LANCZOS)
+    deck = bulge(flat, mag=mag, k=k)
+    dx, dy = deck_x - deck.width // 2, deck_y
+    soft_shadow(c, deck, (dx, dy), dx=0, dy=-16, blur=18, alpha=0.32)
+    paste(c, deck, (dx, dy))
+    # Paws grip the bulged deck's sides, like hands on a handheld: centred on the outline's
+    # left and right edge at `paw_h` of its height, clear of the wordmark and the D-pad.
+    da = np.asarray(deck.getchannel("A")) > 128
+    row = int(deck.height * paw_h)
+    cols = np.nonzero(da[row])[0]
+    for paw, col in ((paw_l, cols[0] + paw_in), (paw_r, cols[-1] - paw_in)):
+        pys, pxs = np.nonzero(np.asarray(paw.getchannel("A")) > 128)  # solid centre, not the bbox
+        xy = (int(dx + col - pxs.mean()), int(dy + row - pys.mean()))
+        soft_shadow(c, paw, xy, dx=6, dy=12, blur=10, alpha=0.30)
+        paste(c, paw, xy)
+    return c
+
+
 # ---------------------------------------------------------------- sheet
 def rounded(im, r):
     m = Image.new("L", (im.width * 3, im.height * 3), 0)
@@ -239,7 +398,7 @@ def rounded(im, r):
 def sheet(icons):
     f = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", 30)
     fs = ImageFont.truetype("C:/Windows/Fonts/Quicksand-Bold.ttf", 22)
-    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell"}
+    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell", "E": "Icon E  fisheye", "F": "Icon F  lens on the deck"}
     keys = list(icons)
     gw, pad, top = 512 + 30 + 150, 56, 70
     band_h = top + 512 + 60
@@ -261,7 +420,7 @@ def sheet(icons):
 
 if __name__ == "__main__":
     icons = {}
-    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False)):
+    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False), ("E", icon_e, False), ("F", icon_f, True)):
         big = fn().convert("RGB")
         if master:
             big.save(os.path.join(HERE, f"icon-{k}-1024.png"))
@@ -270,4 +429,5 @@ if __name__ == "__main__":
     icons = {k: v.convert("RGBA") for k, v in icons.items()}
     sheet({k: icons[k] for k in "ABC"}).save(os.path.join(HERE, "icons-ABC.png"))
     sheet({k: icons[k] for k in "CD"}).save(os.path.join(HERE, "icons-CD.png"))
-    print("wrote icon-A/B/C/D.png, icon-B-1024.png, icon-C-1024.png, icons-ABC.png, icons-CD.png")
+    sheet({k: icons[k] for k in "EF"}).save(os.path.join(HERE, "icons-EF.png"))
+    print("wrote icon-A..F.png, icon-B/C/F-1024.png, icons-ABC.png, icons-CD.png, icons-EF.png")
