@@ -686,7 +686,7 @@ def bubbles_screen(w, h):
                        ink=BUBBLES_INK, face="dots", sky=("#E9F7FF", "#F3ECFF"))
 
 
-def icon_j(word_w=700, word_xy=(6, 4), outline=5, depth=7, pals_in=1.05):
+def icon_j(word_w=650, word_xy=(10, 8), outline=5, depth=7, pals_in=1.05):
     """Spencer 2026-11-21, on I: "Make the ball's a different color scheme to match the icon? We
     can make the top left text a bit bigger, slightly overlapping the characters?" I with the
     Bubbles ball theme on the deck and a bigger wordmark laid over the pals' heads."""
