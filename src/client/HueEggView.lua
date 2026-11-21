@@ -234,7 +234,8 @@ function View:bindRevealStages()
     for _,entry in ipairs(actions(result))do
      local button=entry.source
      -- Same rule as the stage's own buttons (HatchItemStage: shown and interactable).
-     if button and button.Text=="Store"and button.Visible and button.Interactable then entry.act();return end
+     -- Round 3 (Spencer): × goes back to Hatch eggs once the store lands (backAfterStore).
+     if button and button.Text=="Store"and button.Visible and button.Interactable then self.backAfterStore=pendingKey[kind];entry.act();return end
     end
    end
    self:close("back")
@@ -978,13 +979,16 @@ function View:refresh()
    if receipt.action=="hueLegacyRedeem"then self.page="receipt"end
   end
   if self.migrationOperation==receipt.id then self.migrationOperation=nil;self.page=if self.state.pendingHueResult then "receipt"else self.afterMigrationPage or "palette"end
-  if self.storeOperation==receipt.id then self.storeOperation=nil;self:close("stored");return end
+  if self.storeOperation==receipt.id then self.storeOperation=nil;self:close(if self.backAfterStore then "back"else "stored");return end
  end
  self:noteNewItems()
  if not self.shade.Visible then return end
  self:storePending()
  local r=self.state.pendingHueResult
  local materialResult=self.state.pendingMaterialResult;local toyResult=self.state.pendingToyResult;local featureResult=self.state.pendingFeatureResult
+ -- Round 3: the result card's × stored its result; once it has landed, back to where the hatch
+ -- came from (Hatch eggs), not the Customize page the receipt would settle on.
+ if self.backAfterStore and not self.state[self.backAfterStore]then self.backAfterStore=nil;self:close("back");return end
  if self.toyAssignment and not self:hasToyAssignment()then self.toyAssignment=nil end
  if self.featureAssignment and not self:hasFeatureAssignment()then self.featureAssignment=nil end
  for _,entry in ipairs({{"toy",toyResult,"toys"},{"feature",featureResult,"features"}})do
@@ -2047,6 +2051,7 @@ end
 function View:close(reason,reconciled)
  self.selectorOwnsPick=nil
  require(script.Parent.ConfirmDialog).cancelFor(self)
+ self.backAfterStore=nil
  self.fruitEating:cancel();self.eatingProof:cancel();self.eatingReady=nil;self.boundedEating=nil
  self:stopPortraitClock()
  if not self.shade.Visible then return end

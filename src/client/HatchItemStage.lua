@@ -1249,9 +1249,17 @@ end
 function Stage:paintAgain(force)
  local s=self.lastSample;if not s then return end
  local state=if s.input then self:againState()else nil
+ -- Round 3 (Spencer): once shown, the key stays up (disabled) while the card leaves: the host
+ -- stops offering it as soon as the result is stored, before the stage's own exit.
+ if state==nil and self.againShown and s.input then
+  if self.againLive~=false then self.againLive=false;Kit.setEnabled(self.againButton,false)end
+  self.againButton:SetAttribute("AgainLive",false)
+  return
+ end
  local show=state~=nil
  self.againButton.Visible=show
  if not show then return end
+ self.againShown=true
  -- A press the host refused (it is no longer pending a second later) frees the key again.
  if self.againPressed and not state.pending and os.clock()-(self.againPressedAt or 0)>1 then self.againPressed=false end
  local text=state.text or Copy.get("hatch.result.again")
@@ -1311,7 +1319,12 @@ function Stage:dismiss(after,options)
   -- underneath), until the next stage takes over. It leaves by the iris if the host stops
   -- waiting (a refused store or buy) for half a second, or after HandoverTimeout.
   self.leaving.handover=true
-  self.root.Active=true;self.ui.Visible=false
+  -- Round 3 (Spencer): the keys stay on screen, disabled, until the next stage takes over
+  -- (the root sinks every tap; the key bindings are already gone).
+  self.root.Active=true
+  for _,entry in ipairs(self.buttons)do if entry.node then Kit.setEnabled(entry.node,false)end end
+  Kit.setEnabled(self.againButton,false);self.againLive=false
+  if self.close then self.close.Interactable=false end
   Stage.handover=self
   local idleSince
   local pending=options.pending

@@ -285,7 +285,7 @@ return function(client,parent)
    -- Hatch another: the old stage stays up until the next one takes over, without its lid.
    local first,firstRecord=open(844,390);at(first,3.1);local gone=0
    assert(first:dismiss(function()gone+=1 end,{handover=true})and Stage.handover==first)
-   assert(first.root.Active and not first.ui.Visible,"the kept-up stage swallows taps and shows no keys")
+   assert(first.root.Active and first.againButton.Interactable==false,"the kept-up stage swallows taps; its keys stay, disabled (round 3)")
    if first.connection then first.connection:Disconnect();first.connection=nil end
    local nextStage=open(844,390,{lid=true})
    assert(first.destroyed and gone==1 and firstRecord.releases==1 and not nextStage.useLid and Stage.handover==nil,"the next egg drops into the well")

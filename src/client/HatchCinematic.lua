@@ -513,7 +513,12 @@ function Cinematic:step(dt)
  if self.nativeScene then
   if not self.active then self:disconnectClock();return end
   if not self:owned()or(self:reduced()and not self.reducedIntro)or(self.reducedIntro and not self:reduced())then self:refreshOwner();return end
-  if dt>.25 or(self.audio and self.deviceEpoch~=(self.audio.deviceEpoch or 0))then self:finishStatic();return end
+  -- Round 3 (Spencer: "once a Customization Egg hatch played no sound"): one long frame (a
+  -- phone loading the reveal's meshes) used to end the hatch at once and stop its sounds; now a
+  -- hitch under 2 s counts as 0.1 s and the hatch plays on. A device change or a longer gap
+  -- (the app was away) still settles it.
+  if dt>2 or(self.audio and self.deviceEpoch~=(self.audio.deviceEpoch or 0))then self:finishStatic();return end
+  if dt>.25 then dt=.1 end
   if self:held()then self:paint();return end
   self.age+=math.max(0,dt);self.sampleAge=(self.sampleAge or 0)+dt
   -- v2 (R1.3 "one clock"): every frame is sampled, so the jackpot's fast beats never stair-step.
@@ -524,7 +529,10 @@ function Cinematic:step(dt)
    local liveCue=self.active and self.freshReveal and self.presented and(not self:reduced()or self.reducedIntro==true)and not self.nativeFailed
    -- Every note due this frame (the Rare burst is a shimmer and a fanfare together).
    for _,event in ipairs(self.rarityState:due(self.age,sample and sample.receiptReady==true,liveCue))do
-    if self.audio and self:owned()then self.audio:play(event.cue or RarityCue.Cue,event.speed,event.gain,self.accentOwner)end
+    if self.audio and self:owned()then
+     self.audio:play(event.cue or RarityCue.Cue,event.speed,event.gain,self.accentOwner)
+     if event.cue==(RarityCue.Sting[self.tier]or RarityCue.Sting.Common).cue then self.stingPlayed=true end
+    end
    end
    if self.age>=self.timing.quiet and not self.accentStopped then
     self.accentStopped=true;if self.audio and self.audio.stopOwner then self.audio:stopOwner(self.accentOwner)end
@@ -564,7 +572,7 @@ function Cinematic:play(result,onComplete,options)
  self.receiptKey=self.kind..":"..tostring(result.id);self.appearance=options.appearance;self.building=true;self.result=result;self.pet=Pets.byId[result.petId]or Pets.byId.pip
  self.splitAt=if result.rare then .95 else .75;self.duration=if result.rare then 1.70 else 1.50;self.age=0;self.sampleAge=0;self.onComplete=onComplete;self.onPresented=options.onPresented;self.audioOwner={}
  self.freshReveal=not options.skipIntro and not seen[self.receiptKey]
- self.accentOwner={};self.accentStopped=nil
+ self.accentOwner={};self.accentStopped=nil;self.stingPlayed=nil
  self.nativeDisplay=options.nativeDisplay==true
  self.reducedIntro=self.nativeDisplay and self.freshReveal and self:reduced()
  self.tier=RarityCue.tier(self.kind,result);self.bodyPending=false
@@ -581,7 +589,16 @@ function Cinematic:skip()
  if self.nativeScene and self.presentationSample and self.presentationSample.receiptReady then return false end
  -- v2 (2.2): the first hatch of each egg type plays in full; the host says (canSkip).
  if self.canSkip and not self.canSkip()then return false end
- if not self.active or not self:owned()then return false end;self:finishStatic();return true
+ if not self.active or not self:owned()then return false end
+ -- Round 3: a skip before the burst still rings the tier's sting once (with the body bed off a
+ -- skipped hatch was silent).
+ local ring=self.nativeScene~=nil and self.rarityState~=nil and not self.stingPlayed and self.freshReveal and not self:reduced()
+ self:finishStatic()
+ if ring and self.audio then
+  local sting=RarityCue.Sting[self.tier]or RarityCue.Sting.Common
+  self.stingPlayed=true;self.audio:play(sting.cue,1,sting.gain,self.accentOwner)
+ end
+ return true
 end
 function Cinematic:skipInputBegan(input)
  -- A decorative tail must never arm the global drain after the receipt opens.

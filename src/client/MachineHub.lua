@@ -190,18 +190,26 @@ end
 -- Pure: tile rects for a W x H screen (desktop: the 848 x 608 panel). Three columns,
 -- two rows. Desktop: under the 84 px header, above the hint bar at 566. Phone: under
 -- the 60 px header, 20 px side margins, 8 px gaps (the lip sits in the gap).
-Hub.TileShare=.84
+-- Round 3 (Spencer: "thinner", then "less tall, there's dead space on top and bottom"): on
+-- phones the tiles are TileShare of what the free height would give them, and the sheet itself
+-- is only as tall as the header and two rows (Hub.phoneHeight), centred in the free height, so
+-- its rounded bottom corners are on screen. The desktop panel is unchanged.
+Hub.TileShare=.94
+-- Pure: the phone sheet height for `free` px of height under the Roblox controls.
+function Hub.phoneHeight(free)
+ local y0,gap,pad=64,8,12
+ local rows=math.ceil(Hub.Count/Hub.Cols)
+ local full=math.floor((free-pad-y0-(rows-1)*gap)/rows)
+ local h=math.floor(full*Hub.TileShare)
+ return math.min(free,y0+rows*h+(rows-1)*gap+pad)
+end
 function Hub.geometry(W,H,phone)
  local x0,y0,gap,bottom
  if phone then x0,y0,gap,bottom=20,64,8,H-12 else x0,y0,gap,bottom=24,84,16,548 end
  local cols=Hub.Cols;local rows=math.ceil(Hub.Count/cols)
  local w=math.floor((W-2*x0-(cols-1)*gap)/cols)
- local full=math.floor((bottom-y0-(rows-1)*gap)/rows)
- -- Round 3 (Spencer: "a bit thinner vertically to fit better in the menu"): on phones the tiles
- -- are Hub.TileShare of the band's height, the block centred in it. The desktop panel keeps its
- -- 224 px tiles (its layout needs that height for the chips and the status line).
- local h=if phone then math.floor(full*Hub.TileShare)else full
- y0+=math.floor((full-h)*rows/2)
+ -- (Round 3: on phones Hub.fit sizes the sheet so these fill it; see Hub.phoneHeight.)
+ local h=math.floor((bottom-y0-(rows-1)*gap)/rows)
  local tiles={}
  for i=1,Hub.Count do
   local c,r=(i-1)%cols,(i-1)//cols
@@ -473,8 +481,9 @@ end
 function Hub:fit(size)
  if Kit.compactRule(size.X,size.Y)then
   local _,kh=Kit.keepOut();local top=kh+2
-  local view={phone=true,W=math.floor(size.X),H=math.floor(size.Y)-top,hx=24}
-  self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.fromOffset(0,top);self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
+  local free=math.floor(size.Y)-top
+  local view={phone=true,W=math.floor(size.X),H=Hub.phoneHeight(free),hx=24}
+  self.root.AnchorPoint=Vector2.zero;self.root.Position=UDim2.fromOffset(0,top+math.floor((free-view.H)/2));self.root.Size=UDim2.fromOffset(view.W,view.H);self.scale.Scale=1
   if self.key~=string.format("%dx%d",view.W,view.H)then self:build(view);self:focusTile(self.index,true)end
   return
  end
