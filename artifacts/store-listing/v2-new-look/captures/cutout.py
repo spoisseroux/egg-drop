@@ -23,7 +23,7 @@ RAW = os.path.join(HERE, "raw")
 
 # shot -> (dark raw, light raw). S4 (three-quarter) is a perspective warp of S4-straight.
 # UI shots (the deck) are exact alpha composites over flat frames: no speck or edge cleanup.
-UI_SHOTS = {"S4-straight"}
+UI_SHOTS = {"S4-straight", "D-cloud", "D-prism", "D-lagoon", "D-bigmerge"}
 SHOTS = {
     "S1": ("S1-black.jpg", "S1-grey.jpg"),
     "S2": ("S2-black.jpg", "S2-grey.jpg"),
@@ -46,6 +46,30 @@ SHOTS = {
     "S12": ("S12-black.jpg", "S12-grey.jpg"),
     "S13": ("S13-black.jpg", "S13-grey.jpg"),
     "S14": ("S14-black.jpg", "S14-grey.jpg"),
+    # Store set redo (FEATURE-SET-BRIEF.md): props P-*, dressed pets F*, real decks D-* (black/white).
+    "P-egg-toy": ("P-egg-toy-black.jpg", "P-egg-toy-grey.jpg"),
+    "P-egg-open": ("P-egg-open-black.jpg", "P-egg-open-grey.jpg"),
+    "P-egg-stat": ("P-egg-stat-black.jpg", "P-egg-stat-grey.jpg"),
+    "P-egg-hue": ("P-egg-hue-black.jpg", "P-egg-hue-grey.jpg"),
+    "P-toy-ball": ("P-toy-ball-black.jpg", "P-toy-ball-grey.jpg"),
+    "P-toy-bone": ("P-toy-bone-black.jpg", "P-toy-bone-grey.jpg"),
+    "P-toy-sparkler": ("P-toy-sparkler-black.jpg", "P-toy-sparkler-grey.jpg"),
+    "P-toy-top": ("P-toy-top-black.jpg", "P-toy-top-grey.jpg"),
+    "P-toy-carrot": ("P-toy-carrot-black.jpg", "P-toy-carrot-grey.jpg"),
+    "P-toy-deck": ("P-toy-deck-black.jpg", "P-toy-deck-grey.jpg"),
+    "P-jar-rose": ("P-jar-rose-black.jpg", "P-jar-rose-grey.jpg"),
+    "P-jar-tide": ("P-jar-tide-black.jpg", "P-jar-tide-grey.jpg"),
+    "P-jar-citrus": ("P-jar-citrus-black.jpg", "P-jar-citrus-grey.jpg"),
+    "P-jar-iris": ("P-jar-iris-black.jpg", "P-jar-iris-grey.jpg"),
+    "P-feast": ("P-feast-black.jpg", "P-feast-grey.jpg"),
+    "F7a": ("F7a-black.jpg", "F7a-grey.jpg"),
+    "F7b": ("F7b-black.jpg", "F7b-grey.jpg"),
+    "F7c": ("F7c-black.jpg", "F7c-grey.jpg"),
+    "F13": ("F13-black.jpg", "F13-grey.jpg"),
+    "D-cloud": ("D-cloud-black.jpg", "D-cloud-white.jpg"),
+    "D-prism": ("D-prism-black.jpg", "D-prism-white.jpg"),
+    "D-lagoon": ("D-lagoon-black.jpg", "D-lagoon-white.jpg"),
+    "D-bigmerge": ("D-bigmerge-black.jpg", "D-bigmerge-white.jpg"),
 }
 
 
