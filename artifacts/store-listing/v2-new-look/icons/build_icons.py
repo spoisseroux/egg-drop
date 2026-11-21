@@ -386,6 +386,15 @@ def icon_f(bear_s=0.84, bun_s=0.80, deck_w=780, mag=1.12, k=0.45,
     return c
 
 
+def icon_g():
+    """Spencer 2026-11-21: "Make it framed more like icon a". F's scene (flat pals, the lens on
+    the deck only) at A's scale: two big heads filling the square, the Bear on the left, the
+    Bunny on the right with her ears near the top, the deck held up under both and running off
+    the bottom edge the way the bodies do in A."""
+    return icon_f(bear_s=1.05, bun_s=1.05, deck_w=900, bear_x=290, bear_y=170,
+                  bun_x=576, bun_y=60, deck_x=520, deck_y=720)
+
+
 # ---------------------------------------------------------------- sheet
 def rounded(im, r):
     m = Image.new("L", (im.width * 3, im.height * 3), 0)
@@ -398,7 +407,7 @@ def rounded(im, r):
 def sheet(icons):
     f = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", 30)
     fs = ImageFont.truetype("C:/Windows/Fonts/Quicksand-Bold.ttf", 22)
-    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell", "E": "Icon E  fisheye", "F": "Icon F  lens on the deck"}
+    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell", "E": "Icon E  fisheye", "F": "Icon F  lens on the deck", "G": "Icon G  framed like A"}
     keys = list(icons)
     gw, pad, top = 512 + 30 + 150, 56, 70
     band_h = top + 512 + 60
@@ -420,7 +429,7 @@ def sheet(icons):
 
 if __name__ == "__main__":
     icons = {}
-    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False), ("E", icon_e, False), ("F", icon_f, True)):
+    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False), ("E", icon_e, False), ("F", icon_f, True), ("G", icon_g, False)):
         big = fn().convert("RGB")
         if master:
             big.save(os.path.join(HERE, f"icon-{k}-1024.png"))
@@ -429,5 +438,6 @@ if __name__ == "__main__":
     icons = {k: v.convert("RGBA") for k, v in icons.items()}
     sheet({k: icons[k] for k in "ABC"}).save(os.path.join(HERE, "icons-ABC.png"))
     sheet({k: icons[k] for k in "CD"}).save(os.path.join(HERE, "icons-CD.png"))
-    sheet({k: icons[k] for k in "EF"}).save(os.path.join(HERE, "icons-EF.png"))
-    print("wrote icon-A..F.png, icon-B/C/F-1024.png, icons-ABC.png, icons-CD.png, icons-EF.png")
+    sheet({k: icons[k] for k in "EF"}).save(os.path.join(HERE, "icons-EF.png, icons-AG.png"))
+    sheet({k: icons[k] for k in "AG"}).save(os.path.join(HERE, "icons-AG.png"))
+    print("wrote icon-A..G.png, icon-B/C/F-1024.png, icons-ABC.png, icons-CD.png, icons-EF.png, icons-AG.png")
