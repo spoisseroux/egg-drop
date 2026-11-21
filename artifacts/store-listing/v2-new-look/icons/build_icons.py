@@ -403,13 +403,19 @@ def icon_g():
 BALL = [("#2E8BFF", "#0A3FD6", "#8FE1FF"), ("#FF8A1A", "#E0400A", "#FFD45C"), ("#22E06A", "#04963F", "#B4FF7A"),
         ("#FF4DA6", "#C4126F", "#FFB0DC"), ("#A66BFF", "#5B21D6", "#E3C8FF")]
 BALL_INK = (21, 16, 43)
+# The Bubbles theme (BallThemes.lua, 100 Stars): Sky, Peach, Melon, Blossom, Violet; ink #2A2450,
+# face "dots". Its pale bodies and near-white lights match the icon's sky, cream and rose.
+BUBBLES = [("#8FD0FF", "#4A9BE8", "#F0FAFF"), ("#FFC48A", "#F08A4A", "#FFF1DC"), ("#9FF0C0", "#3FC486", "#EFFFF2"),
+           ("#FFA8D0", "#E85FA0", "#FFEAF4"), ("#CDB0FF", "#8B5FE8", "#F5ECFF")]
+BUBBLES_INK = (42, 36, 80)
 SCREEN_BOX = (306, 84, 966, 558)  # the glass inside S4-straight's bezel
 
 
-def pixel_ball(px, cx, cy, r, tier):
+def pixel_ball(px, cx, cy, r, tier, ramps=None, ink=None, face="smiley"):
     """One Smileys ball on the low-res LCD grid `px` (a PIL image): ink rim, deep shade
     bottom-right, light highlight top-left, two eyes and a smile."""
-    body, deep, light = (rgb(h) for h in BALL[tier])
+    body, deep, light = (rgb(h) for h in (ramps or BALL)[tier])
+    INKC = ink or BALL_INK
     d = ImageDraw.Draw(px)
     for y in range(int(cy - r - 1), int(cy + r + 2)):
         for x in range(int(cx - r - 1), int(cx + r + 2)):
@@ -419,7 +425,7 @@ def pixel_ball(px, cx, cy, r, tier):
                 continue
             c = body
             if q > r - 1.05:
-                c = BALL_INK
+                c = INKC
             elif dx * 0.6 + dy * 0.8 > r * 0.42:
                 c = deep
             elif (dx + r * 0.38) ** 2 + (dy + r * 0.42) ** 2 < (r * 0.30) ** 2:
@@ -428,12 +434,14 @@ def pixel_ball(px, cx, cy, r, tier):
     e = max(1, round(r * 0.16))
     ey, ex = cy - r * 0.12, r * 0.36
     for sx in (-1, 1):
-        d.rectangle((round(cx + sx * ex - e / 2), round(ey - e / 2), round(cx + sx * ex - e / 2) + e - 1, round(ey - e / 2) + e), fill=BALL_INK)
+        d.rectangle((round(cx + sx * ex - e / 2), round(ey - e / 2), round(cx + sx * ex - e / 2) + e - 1, round(ey - e / 2) + e), fill=INKC)
+    if face == "dots":
+        return
     w = max(2, round(r * 0.5))
     my = round(cy + r * 0.22)
-    d.line((round(cx - w / 2), my, round(cx + w / 2), my), fill=BALL_INK)
-    d.point((round(cx - w / 2) - 1, my - 1), fill=BALL_INK)
-    d.point((round(cx + w / 2) + 1, my - 1), fill=BALL_INK)
+    d.line((round(cx - w / 2), my, round(cx + w / 2), my), fill=INKC)
+    d.point((round(cx - w / 2) - 1, my - 1), fill=INKC)
+    d.point((round(cx + w / 2) + 1, my - 1), fill=INKC)
 
 
 def hero_screen(w, h, px=6):
@@ -562,22 +570,22 @@ def font_path(name):
     raise FileNotFoundError(name)
 
 
-def cute_screen(w, h, px=10):
+def cute_screen(w, h, px=10, ramps=None, ink=None, face="smiley", sky=("#C8F2FF", "#EADCFF")):
     """Spencer 2026-11-21: "less detail on the pocket deck ... cuter matching the vibe of the
     icon". A pastel LCD (sky to lilac), chunky pixels, three big Smileys balls and a pink pair
     merging under one gold sparkle. No type, no panels."""
     gw, gh = w // px, h // px
     t = np.linspace(0, 1, gh)[:, None, None]
-    a = np.array(rgb("#C8F2FF")) * (1 - t) + np.array(rgb("#EADCFF")) * t
+    a = np.array(rgb(sky[0])) * (1 - t) + np.array(rgb(sky[1])) * t
     a = np.repeat(a, gw, 1).astype(np.float32)
     yy, xx = np.mgrid[0:gh, 0:gw]
     a -= ((xx * 3 + yy * 5) % 11 == 0)[..., None] * 10  # faint LCD speckle
     lcd = Image.fromarray(a.clip(0, 255).astype(np.uint8))
     d = ImageDraw.Draw(lcd)
-    pixel_ball(lcd, gw * 0.24, gh - 14.5, 11.5, 4)   # big violet (clear of the icon corner)
-    pixel_ball(lcd, gw * 0.80, gh - 11.5, 8.6, 2)    # green
-    pixel_ball(lcd, gw * 0.45, gh * 0.40, 8.0, 3)    # pink pair, merging
-    pixel_ball(lcd, gw * 0.62, gh * 0.36, 8.0, 3)
+    pixel_ball(lcd, gw * 0.24, gh - 14.5, 11.5, 4, ramps, ink, face)   # big violet (clear of the icon corner)
+    pixel_ball(lcd, gw * 0.80, gh - 11.5, 8.6, 2, ramps, ink, face)    # green
+    pixel_ball(lcd, gw * 0.45, gh * 0.40, 8.0, 3, ramps, ink, face)    # pink pair, merging
+    pixel_ball(lcd, gw * 0.62, gh * 0.36, 8.0, 3, ramps, ink, face)
     sx, sy = round(gw * 0.535), round(gh * 0.14)      # gold four-point sparkle above the merge
     for i in range(-5, 6):
         k = 5 - abs(i)
@@ -662,6 +670,37 @@ def icon_i(word_w=470, word_xy=(18, 20)):
     return c
 
 
+def bubbles_screen(w, h):
+    """I's cute screen in the Bubbles ball theme: big Sky, Peach, and a Blossom pair merging,
+    on a soft periwinkle LCD so the pale balls hold their edge."""
+    return cute_screen(w, h, ramps=[BUBBLES[0], BUBBLES[1], BUBBLES[1], BUBBLES[3], BUBBLES[0]],
+                       ink=BUBBLES_INK, face="dots", sky=("#E9F7FF", "#F3ECFF"))
+
+
+def icon_j(word_w=600, word_xy=(10, 8)):
+    """Spencer 2026-11-21, on I: "Make the ball's a different color scheme to match the icon? We
+    can make the top left text a bit bigger, slightly overlapping the characters?" I with the
+    Bubbles ball theme on the deck and a bigger wordmark laid over the pals' heads."""
+    c = field(*SKY, floor=0.80)
+    bunny = relight(load(os.path.join(CAP, "S2.png"), 1.62, rot=8), cool=0.20)
+    bear = relight(load(os.path.join(CAP, "S1-tight.png"), 1.08, rot=-5), cool=0.18)
+    paste(c, bunny, (448, 44))
+    exy = (-92, 336 - 60)
+    soft_shadow(c, bear, exy, dx=14, dy=10, blur=18, alpha=0.26)
+    paste(c, bear, exy)
+    deck = deck_with_hero(bubbles_screen)
+    deck = deck.resize((700, round(deck.height * 700 / deck.width)), Image.LANCZOS)
+    deck = deck.rotate(9.0, Image.BICUBIC, expand=True)
+    dxy = (int(710 - deck.width / 2), 640)
+    soft_shadow(c, deck, dxy, dx=10, dy=-14, blur=20, alpha=0.32)
+    soft_shadow(c, deck, dxy, dx=-14, dy=8, blur=12, alpha=0.40)
+    paste(c, deck, dxy)
+    wm = aero_wordmark(lead=0.72)  # pals tucked up: clips only the beanie brim
+    wm = wm.resize((word_w, round(wm.height * word_w / wm.width)), Image.LANCZOS)
+    paste(c, wm, word_xy)
+    return c
+
+
 # ---------------------------------------------------------------- sheet
 def rounded(im, r):
     m = Image.new("L", (im.width * 3, im.height * 3), 0)
@@ -674,7 +713,7 @@ def rounded(im, r):
 def sheet(icons):
     f = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", 30)
     fs = ImageFont.truetype("C:/Windows/Fonts/Quicksand-Bold.ttf", 22)
-    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell", "E": "Icon E  fisheye", "F": "Icon F  lens on the deck", "G": "Icon G  framed like A", "H": "Icon H  A + hero deck", "I": "Icon I  aero wordmark"}
+    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell", "E": "Icon E  fisheye", "F": "Icon F  lens on the deck", "G": "Icon G  framed like A", "H": "Icon H  A + hero deck", "I": "Icon I  aero wordmark", "J": "Icon J  bubbles balls"}
     keys = list(icons)
     gw, pad, top = 512 + 30 + 150, 56, 70
     band_h = top + 512 + 60
@@ -696,7 +735,7 @@ def sheet(icons):
 
 if __name__ == "__main__":
     icons = {}
-    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False), ("E", icon_e, False), ("F", icon_f, True), ("G", icon_g, False), ("H", icon_h, False), ("I", icon_i, False)):
+    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False), ("E", icon_e, False), ("F", icon_f, True), ("G", icon_g, False), ("H", icon_h, False), ("I", icon_i, False), ("J", icon_j, False)):
         big = fn().convert("RGB")
         if master:
             big.save(os.path.join(HERE, f"icon-{k}-1024.png"))
@@ -705,9 +744,10 @@ if __name__ == "__main__":
     icons = {k: v.convert("RGBA") for k, v in icons.items()}
     sheet({k: icons[k] for k in "ABC"}).save(os.path.join(HERE, "icons-ABC.png"))
     sheet({k: icons[k] for k in "CD"}).save(os.path.join(HERE, "icons-CD.png"))
-    sheet({k: icons[k] for k in "EF"}).save(os.path.join(HERE, "icons-EF.png, icons-AG.png, icons-AH.png, icons-HI.png, deck-hero-screen.png"))
-    sheet({k: icons[k] for k in "AG"}).save(os.path.join(HERE, "icons-AG.png, icons-AH.png, icons-HI.png, deck-hero-screen.png"))
+    sheet({k: icons[k] for k in "EF"}).save(os.path.join(HERE, "icons-EF.png, icons-AG.png, icons-AH.png, icons-HI.png, icons-IJ.png, deck-hero-screen.png"))
+    sheet({k: icons[k] for k in "AG"}).save(os.path.join(HERE, "icons-AG.png, icons-AH.png, icons-HI.png, icons-IJ.png, deck-hero-screen.png"))
     sheet({k: icons[k] for k in "AH"}).save(os.path.join(HERE, "icons-AH.png"))
     sheet({k: icons[k] for k in "HI"}).save(os.path.join(HERE, "icons-HI.png"))
+    sheet({k: icons[k] for k in "IJ"}).save(os.path.join(HERE, "icons-IJ.png"))
     deck_with_hero().save(os.path.join(HERE, "deck-hero-screen.png"))
-    print("wrote icon-A..I.png, icon-B/C/F-1024.png, icons-ABC.png, icons-CD.png, icons-EF.png, icons-AG.png, icons-AH.png, icons-HI.png, deck-hero-screen.png")
+    print("wrote icon-A..J.png, icon-B/C/F-1024.png, icons-ABC.png, icons-CD.png, icons-EF.png, icons-AG.png, icons-AH.png, icons-HI.png, icons-IJ.png, deck-hero-screen.png")
