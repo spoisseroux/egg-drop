@@ -554,6 +554,114 @@ def icon_h(bear_up=60, deck_w=700, tilt=9.0, deck_cx=710, deck_y=640, paw=False,
     return c
 
 
+def font_path(name):
+    for d in ("C:/Windows/Fonts", os.path.expanduser("~/AppData/Local/Microsoft/Windows/Fonts")):
+        p = os.path.join(d, name)
+        if os.path.exists(p):
+            return p
+    raise FileNotFoundError(name)
+
+
+def cute_screen(w, h, px=10):
+    """Spencer 2026-11-21: "less detail on the pocket deck ... cuter matching the vibe of the
+    icon". A pastel LCD (sky to lilac), chunky pixels, three big Smileys balls and a pink pair
+    merging under one gold sparkle. No type, no panels."""
+    gw, gh = w // px, h // px
+    t = np.linspace(0, 1, gh)[:, None, None]
+    a = np.array(rgb("#C8F2FF")) * (1 - t) + np.array(rgb("#EADCFF")) * t
+    a = np.repeat(a, gw, 1).astype(np.float32)
+    yy, xx = np.mgrid[0:gh, 0:gw]
+    a -= ((xx * 3 + yy * 5) % 11 == 0)[..., None] * 10  # faint LCD speckle
+    lcd = Image.fromarray(a.clip(0, 255).astype(np.uint8))
+    d = ImageDraw.Draw(lcd)
+    pixel_ball(lcd, gw * 0.24, gh - 14.5, 11.5, 4)   # big violet (clear of the icon corner)
+    pixel_ball(lcd, gw * 0.80, gh - 11.5, 8.6, 2)    # green
+    pixel_ball(lcd, gw * 0.45, gh * 0.40, 8.0, 3)    # pink pair, merging
+    pixel_ball(lcd, gw * 0.62, gh * 0.36, 8.0, 3)
+    sx, sy = round(gw * 0.535), round(gh * 0.14)      # gold four-point sparkle above the merge
+    for i in range(-5, 6):
+        k = 5 - abs(i)
+        d.line((sx + i, sy - k // 3, sx + i, sy + k // 3), fill=(255, 200, 60))
+        d.line((sx - k // 3, sy + i, sx + k // 3, sy + i), fill=(255, 200, 60))
+    d.point((sx, sy), fill=(255, 255, 255))
+    for ox, oy in ((-9, 6), (10, 3), (6, -3)):
+        d.point((sx + ox, sy + oy), fill=(255, 255, 255))
+    return lcd.resize((gw * px, gh * px), Image.NEAREST).resize((w, h), Image.NEAREST).convert("RGBA")
+
+
+def aero_wordmark(lines=("pocket", "pals"), size=150, lead=0.80, rim=13, indent=(0.0, 0.42)):
+    """Frutiger Aero type: Nunito Black, lowercase, a deep aqua body per line (light cyan top to
+    royal blue bottom), a wet white gloss over the top half that stops on a hard edge, a light
+    bounce glow along the bottom, a thick white rim, a soft white halo and an Ink Navy shadow."""
+    f = ImageFont.truetype(font_path("Nunito-Black.ttf"), size)
+    pad = int(size * 0.35)
+    W = max(f.getbbox(t)[2] + int(indent[i] * size) for i, t in enumerate(lines)) + pad * 2
+    H = int(size * lead * (len(lines) - 1) + size * 1.15) + pad * 2
+    mask = Image.new("L", (W, H), 0)
+    d = ImageDraw.Draw(mask)
+    yy = np.mgrid[0:H, 0:W][0].astype(np.float32)
+    ph = np.zeros((H, W), np.float32)
+    boxes = []
+    for i, t in enumerate(lines):
+        y = pad + int(i * size * lead)
+        d.text((pad + int(indent[i] * size), y), t, font=f, fill=255)
+        x0, y0, x1, y1 = f.getbbox(t)
+        boxes.append((y + y0, y + y1))
+    # Each row belongs to the nearest line; phase 0 at its top, 1 at its bottom.
+    for k, (top, bot) in enumerate(boxes):
+        lo = 0 if k == 0 else (boxes[k - 1][1] + top) / 2
+        hi = H if k == len(boxes) - 1 else (bot + boxes[k + 1][0]) / 2
+        sel = (yy >= lo) & (yy < hi)
+        ph[sel] = ((yy[sel] - top) / (bot - top)).clip(0, 1)
+    m = np.asarray(mask).astype(np.float32) / 255
+    c0, c1, c2 = (np.array(rgb(c), np.float32) for c in ("#8FE4FF", "#1C8CF2", "#0A3A9E"))
+    p = ph[..., None]
+    fill = np.where(p < 0.55, c0 + (c1 - c0) * (p / 0.55), c1 + (c2 - c1) * ((p - 0.55) / 0.45))
+    inner = np.asarray(mask.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.GaussianBlur(1.5))).astype(np.float32) / 255
+    gloss = np.where(ph < 0.48, 0.80 - 0.45 * (ph / 0.48), 0.0) * inner
+    fill = fill + (255 - fill) * gloss[..., None]
+    bounce = np.clip((ph - 0.78) / 0.22, 0, 1) * 0.38 * inner
+    fill = fill + (np.array(rgb("#B8F4FF"), np.float32) - fill) * bounce[..., None]
+    rim_m = mask.filter(ImageFilter.MaxFilter(rim))
+    rim_a = np.asarray(rim_m.filter(ImageFilter.GaussianBlur(1.2))).astype(np.float32) / 255
+    halo = np.asarray(rim_m.filter(ImageFilter.GaussianBlur(14))).astype(np.float32) / 255 * 0.55
+    alpha = rim_a + halo * (1 - rim_a)
+    col = fill * m[..., None] + 255 * (1 - m[..., None])
+    img = Image.fromarray(np.dstack([col, alpha * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+    shadow = Image.new("RGBA", (W, H), INK + (0,))
+    shadow.putalpha(rim_m.point(lambda v: int(v * 0.60)).filter(ImageFilter.GaussianBlur(7)))
+    base = Image.new("RGBA", (W, H + 12), (0, 0, 0, 0))
+    base.alpha_composite(shadow, (0, 12))
+    base.alpha_composite(img, (0, 0))
+    return base.crop(base.getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox())
+
+
+def icon_i(word_w=470, word_xy=(18, 20)):
+    """Spencer 2026-11-21, on H: "less detail on the pocket deck ... cuter matching the vibe of
+    the icon? And then some frutiger aero text in the top left, like pocket pals". H's layout
+    (A's poses, Bear up, deck tilted) with the cute pastel screen and an Aero "pocket pals"
+    wordmark where A's big bubble was; one small bubble moves beside it."""
+    c = field(*SKY, floor=0.80)
+    put_bubble(c, 478, 300, 54, 0.85)
+    bunny = relight(load(os.path.join(CAP, "S2.png"), 1.62, rot=8), cool=0.20)
+    bear = relight(load(os.path.join(CAP, "S1-tight.png"), 1.08, rot=-5), cool=0.18)
+    paste(c, bunny, (448, 44))
+    exy = (-92, 336 - 60)
+    soft_shadow(c, bear, exy, dx=14, dy=10, blur=18, alpha=0.26)
+    paste(c, bear, exy)
+    deck = deck_with_hero(cute_screen)
+    deck = deck.resize((700, round(deck.height * 700 / deck.width)), Image.LANCZOS)
+    deck = deck.rotate(9.0, Image.BICUBIC, expand=True)
+    dxy = (int(710 - deck.width / 2), 640)
+    soft_shadow(c, deck, dxy, dx=10, dy=-14, blur=20, alpha=0.32)
+    soft_shadow(c, deck, dxy, dx=-14, dy=8, blur=12, alpha=0.40)
+    paste(c, deck, dxy)
+    wm = aero_wordmark()
+    wm = wm.resize((word_w, round(wm.height * word_w / wm.width)), Image.LANCZOS)
+    paste(c, wm, word_xy)
+    return c
+
+
 # ---------------------------------------------------------------- sheet
 def rounded(im, r):
     m = Image.new("L", (im.width * 3, im.height * 3), 0)
@@ -566,7 +674,7 @@ def rounded(im, r):
 def sheet(icons):
     f = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", 30)
     fs = ImageFont.truetype("C:/Windows/Fonts/Quicksand-Bold.ttf", 22)
-    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell", "E": "Icon E  fisheye", "F": "Icon F  lens on the deck", "G": "Icon G  framed like A", "H": "Icon H  A + hero deck"}
+    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell", "E": "Icon E  fisheye", "F": "Icon F  lens on the deck", "G": "Icon G  framed like A", "H": "Icon H  A + hero deck", "I": "Icon I  aero wordmark"}
     keys = list(icons)
     gw, pad, top = 512 + 30 + 150, 56, 70
     band_h = top + 512 + 60
@@ -588,7 +696,7 @@ def sheet(icons):
 
 if __name__ == "__main__":
     icons = {}
-    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False), ("E", icon_e, False), ("F", icon_f, True), ("G", icon_g, False), ("H", icon_h, False)):
+    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False), ("E", icon_e, False), ("F", icon_f, True), ("G", icon_g, False), ("H", icon_h, False), ("I", icon_i, False)):
         big = fn().convert("RGB")
         if master:
             big.save(os.path.join(HERE, f"icon-{k}-1024.png"))
@@ -597,8 +705,9 @@ if __name__ == "__main__":
     icons = {k: v.convert("RGBA") for k, v in icons.items()}
     sheet({k: icons[k] for k in "ABC"}).save(os.path.join(HERE, "icons-ABC.png"))
     sheet({k: icons[k] for k in "CD"}).save(os.path.join(HERE, "icons-CD.png"))
-    sheet({k: icons[k] for k in "EF"}).save(os.path.join(HERE, "icons-EF.png, icons-AG.png, icons-AH.png, deck-hero-screen.png"))
-    sheet({k: icons[k] for k in "AG"}).save(os.path.join(HERE, "icons-AG.png, icons-AH.png, deck-hero-screen.png"))
+    sheet({k: icons[k] for k in "EF"}).save(os.path.join(HERE, "icons-EF.png, icons-AG.png, icons-AH.png, icons-HI.png, deck-hero-screen.png"))
+    sheet({k: icons[k] for k in "AG"}).save(os.path.join(HERE, "icons-AG.png, icons-AH.png, icons-HI.png, deck-hero-screen.png"))
     sheet({k: icons[k] for k in "AH"}).save(os.path.join(HERE, "icons-AH.png"))
+    sheet({k: icons[k] for k in "HI"}).save(os.path.join(HERE, "icons-HI.png"))
     deck_with_hero().save(os.path.join(HERE, "deck-hero-screen.png"))
-    print("wrote icon-A..H.png, icon-B/C/F-1024.png, icons-ABC.png, icons-CD.png, icons-EF.png, icons-AG.png, icons-AH.png, deck-hero-screen.png")
+    print("wrote icon-A..I.png, icon-B/C/F-1024.png, icons-ABC.png, icons-CD.png, icons-EF.png, icons-AG.png, icons-AH.png, icons-HI.png, deck-hero-screen.png")
