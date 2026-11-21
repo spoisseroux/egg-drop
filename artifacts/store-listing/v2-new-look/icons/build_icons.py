@@ -1,4 +1,5 @@
-"""Dewdrop store icons A, B, C (ART-DIRECTION.md, "Update 2026-11-21").
+"""Dewdrop store icons A, B, C, D (ART-DIRECTION.md, "Update 2026-11-21").
+D is Spencer's follow-up to C: the Bear holds his deck out to the camera (S10).
 
 Everything is drawn in code (numpy + PIL) from our own Studio cut-outs in ../captures
 (S1-tight, S2, S3, S4, S5) and the game's own 3D Star token capture
@@ -8,7 +9,7 @@ Each icon is composed on a 1024 canvas and reduced to 512 (the Roblox icon size)
 A 1024 master is written only where no cut-out is enlarged past its capture size.
 
 Run: python build_icons.py
- ->  icon-A.png icon-B.png icon-C.png (512), icon-B-1024.png icon-C-1024.png, icons-ABC.png
+ ->  icon-A..D.png (512), icon-B-1024.png icon-C-1024.png, icons-ABC.png, icons-CD.png
 """
 import os
 
@@ -178,6 +179,54 @@ def icon_c():
     return c
 
 
+def icon_d(deck_yaw=-22.0, deck_pitch=-12.0, s=1.06, top=16, deck_w=760, deck_dy=-55, deck_dx=24):
+    """Spencer 2026-11-21: C's idea, but the Bear shows his deck to the camera, arms forward,
+    higher in the frame with the whole face clear. S10 is the front-on Bear with his paws
+    placed at the deck's ends in Studio; S10-paws (same frame, paws only) masks the paws so
+    they sit over the deck's top corners. The deck is S4-straight turned like S4. Leaf.
+    Fable's pass: deck 800 -> 760 to keep the bottom edge in frame, yaw -22 to match C, s 1.06."""
+    import sys
+    sys.path.insert(0, CAP)
+    import cutout
+    full = cutout.matte("S10-black.jpg", "S10-grey.jpg")
+    paw_a = np.asarray(cutout.matte("S10-paws-black.jpg", "S10-paws-grey.jpg").getchannel("A"))
+    fa = np.asarray(full)
+    paws = fa.copy()
+    paws[..., 3] = np.minimum(fa[..., 3], paw_a)
+    box = full.getchannel("A").point(lambda v: 255 if v > 6 else 0).getbbox()
+    full, paws = full.crop(box), Image.fromarray(paws, "RGBA").crop(box)
+    size = (round(full.width * s), round(full.height * s))
+    bear = relight(full.resize(size, Image.LANCZOS), cool=0.14)
+    paws = relight(paws.resize(size, Image.LANCZOS), cool=0.14)
+    # Paw centres in the cut-out (from the paw matte), in canvas units.
+    pa = np.asarray(paws.getchannel("A")) > 128
+    ys, xs = np.nonzero(pa)
+    mid = paws.width / 2
+    lx, rx = xs[xs < mid].mean(), xs[xs >= mid].mean()
+    py = ys.mean()
+
+    c = field(*LEAF, floor=0.82)
+    put_bubble(c, 120, 150, 150)
+    put_bubble(c, 936, 300, 64, 0.9)
+    put_bubble(c, 900, 120, 40, 0.8)
+    bx = (M - bear.width) // 2
+    paste(c, bear, (bx, top))
+
+    flat = Image.open(os.path.join(CAP, "S4-straight.png")).convert("RGBA")
+    deck = cutout.three_quarter(flat, yaw=deck_yaw, pitch=deck_pitch)
+    k = deck_w / deck.width
+    deck = deck.resize((deck_w, round(deck.height * k)), Image.LANCZOS)
+    dcx = bx + (lx + rx) / 2
+    dx = int(dcx - deck.width / 2) + deck_dx  # keeps the left paw off the wordmark
+    dy = int(top + py + deck_dy)
+    soft_shadow(c, deck, (dx, dy), dx=0, dy=-14, blur=16, alpha=0.30)  # cast up onto the Bear
+    contact(c, dcx, min(M - 30, dy + deck.height + 22), deck.width * 0.36, 18, alpha=70, blur=22)
+    paste(c, deck, (dx, dy))
+    soft_shadow(c, paws, (bx, top), dx=6, dy=10, blur=8, alpha=0.28)  # paws on the deck
+    paste(c, paws, (bx, top))
+    return c
+
+
 # ---------------------------------------------------------------- sheet
 def rounded(im, r):
     m = Image.new("L", (im.width * 3, im.height * 3), 0)
@@ -190,16 +239,17 @@ def rounded(im, r):
 def sheet(icons):
     f = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", 30)
     fs = ImageFont.truetype("C:/Windows/Fonts/Quicksand-Bold.ttf", 22)
-    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck"}
+    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell"}
+    keys = list(icons)
     gw, pad, top = 512 + 30 + 150, 56, 70
     band_h = top + 512 + 60
-    W = pad + 3 * (gw + pad)
+    W = pad + len(keys) * (gw + pad)
     out = Image.new("RGBA", (W, band_h * 2), (0, 0, 0, 0))
     d = ImageDraw.Draw(out)
     for bi, (bg, ink, sub) in enumerate((((244, 247, 251), INK, (90, 110, 135)), ((22, 25, 32), (255, 255, 255), (150, 160, 175)))):
         y0 = bi * band_h
         d.rectangle((0, y0, W, y0 + band_h), fill=bg)
-        for i, k in enumerate("ABC"):
+        for i, k in enumerate(keys):
             x = pad + i * (gw + pad)
             d.text((x, y0 + 20), names[k], font=f, fill=ink)
             for size, ox, oy in ((512, 0, 0), (150, 542, 0), (50, 542, 150 + 62)):
@@ -211,12 +261,13 @@ def sheet(icons):
 
 if __name__ == "__main__":
     icons = {}
-    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True)):
+    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False)):
         big = fn().convert("RGB")
         if master:
             big.save(os.path.join(HERE, f"icon-{k}-1024.png"))
         icons[k] = big.resize((512, 512), Image.LANCZOS)
         icons[k].save(os.path.join(HERE, f"icon-{k}.png"))
     icons = {k: v.convert("RGBA") for k, v in icons.items()}
-    sheet(icons).save(os.path.join(HERE, "icons-ABC.png"))
-    print("wrote icon-A/B/C.png, icon-B-1024.png, icon-C-1024.png, icons-ABC.png")
+    sheet({k: icons[k] for k in "ABC"}).save(os.path.join(HERE, "icons-ABC.png"))
+    sheet({k: icons[k] for k in "CD"}).save(os.path.join(HERE, "icons-CD.png"))
+    print("wrote icon-A/B/C/D.png, icon-B-1024.png, icon-C-1024.png, icons-ABC.png, icons-CD.png")

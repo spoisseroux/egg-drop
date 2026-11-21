@@ -35,6 +35,10 @@ SHOTS = {
     "S7": ("S7-black.jpg", "S7-grey.jpg"),
     "S8": ("S8-black.jpg", "S8-grey.jpg"),
     "S9": ("S9-black.jpg", "S9-grey.jpg"),
+    # S10: front-on Bear, paws raised forward to hold the deck (icon D); S10-paws is the same
+    # frame with every part but HandL/HandR hidden, used only as a mask for the paws.
+    "S10": ("S10-black.jpg", "S10-grey.jpg"),
+    "S10-paws": ("S10-paws-black.jpg", "S10-paws-grey.jpg"),
 }
 
 
@@ -220,7 +224,7 @@ def main(args):
             w = three_quarter(img)
             w.save(os.path.join(HERE, "S4.png"))
             print("S4", w.size)
-    contact(["S1", "S2", "S3", "S4", "S4-straight", "S5", "S6", "S7", "S8", "S9"])
+    contact(["S1", "S2", "S3", "S4", "S4-straight", "S5", "S6", "S7", "S8", "S9", "S10"])
 
 
 if __name__ == "__main__":
