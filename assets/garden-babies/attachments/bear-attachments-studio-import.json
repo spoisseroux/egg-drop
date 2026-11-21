@@ -1,7 +1,7 @@
 {
  "assetId": "93989945223773",
  "source": "attachments/bear-attachments.fbx",
- "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids. EyeL sparkle shine replaced 2026-11-12 (mirrored offset) from Open Cloud asset 115415643038914. Hoops moved to the ear lobes and all four shirt sleeves re-wound outward 2026-11-12 (Open Cloud asset 80064672135176; final hanging hoops 78174575929416). Happy Eyes and Lash Eyes added 2026-11-14 (Open Cloud asset 121849094985091; rel from the manifest centre with the shared import offset). Slice B wearables (blush, party hat, bow tail, acorn pendant, friendship bands, round specs; 14 meshes) added 2026-11-14 from bear-attachments-slice-b.fbx (Open Cloud asset 123556704488674; rel from the manifest centre with the shared import offset).",
+ "note": "Studio import at 100x: Size = ms/100. rel is the centre relative to the imported model pivot, in import units. All 63 meshes come from the final-wearables import (Open Cloud asset 93989945223773, 2026-11-12); unchanged horn, wing and face-alt meshes resolve to their earlier mesh ids. EyeL sparkle shine replaced 2026-11-12 (mirrored offset) from Open Cloud asset 115415643038914. Hoops moved to the ear lobes and all four shirt sleeves re-wound outward 2026-11-12 (Open Cloud asset 80064672135176; final hanging hoops 78174575929416). Happy Eyes and Lash Eyes added 2026-11-14 (Open Cloud asset 121849094985091; rel from the manifest centre with the shared import offset). Slice B wearables (blush, party hat, bow tail, acorn pendant, friendship bands, round specs; 14 meshes) added 2026-11-14 from bear-attachments-slice-b.fbx (Open Cloud asset 123556704488674; rel from the manifest centre with the shared import offset). Eye conform 2026-11-21: the 22 eye and cheek items replaced from attachments/patches/v2-eye-conform.fbx (Open Cloud asset 88598931173890; pos = template position x100, rel left as it was).",
  "previousAssetIds": [
   "97156894572368",
   "120398944545621"
@@ -11,85 +11,115 @@
  },
  "parts": {
   "Bear__EyeL_AltRound": {
-   "id": "rbxassetid://108362362446813",
+   "id": "rbxassetid://83515873126027",
    "rel": [
     21.384842,
     9.497612,
     -43.09853
    ],
    "ms": [
-    18.771919,
-    20.107727,
-    9.856194
+    18.7719193,
+    20.1077271,
+    10.7523575
+   ],
+   "pos": [
+    22.4330025,
+    97.1369171,
+    -40.7109489
    ]
   },
   "Bear__EyeL_AltSleepy": {
-   "id": "rbxassetid://133426708238364",
+   "id": "rbxassetid://129799141274113",
    "rel": [
     22.50802,
     6.247726,
     -42.271942
    ],
    "ms": [
-    17.137342,
-    7.691582,
-    10.723568
+    17.1373444,
+    7.6915741,
+    11.8910828
+   ],
+   "pos": [
+    23.5561829,
+    93.8870239,
+    -39.4488945
    ]
   },
   "Bear__EyeL_AltSmallWide": {
-   "id": "rbxassetid://83165508586501",
+   "id": "rbxassetid://92110023102315",
    "rel": [
     24.82881,
     9.009995,
     -41.78566
    ],
    "ms": [
-    12.936064,
-    19.203949,
-    8.255718
+    12.9360619,
+    19.2039566,
+    8.33486176
+   ],
+   "pos": [
+    25.8769703,
+    96.649292,
+    -39.0952225
    ]
   },
   "Bear__EyeL_AltSparkle": {
-   "id": "rbxassetid://107797478617904",
+   "id": "rbxassetid://127360025065483",
    "rel": [
     21.451843,
     9.160706,
     -42.827477
    ],
    "ms": [
-    13.200002,
-    20.800003,
-    9.541447
+    13.2000017,
+    20.8000031,
+    10.3846779
+   ],
+   "pos": [
+    22.5000038,
+    96.8000107,
+    -40.094223
    ]
   },
   "Bear__EyeL_AltSparkle_Iris": {
-   "id": "rbxassetid://139489202406965",
+   "id": "rbxassetid://113688965453943",
    "rel": [
     21.451841,
     4.360703,
     -45.634964
    ],
    "ms": [
-    8.799999,
-    7.228027,
-    4.682629
+    8.79999924,
+    7.22802734,
+    4.4777565
+   ],
+   "pos": [
+    22.5000019,
+    92.0000076,
+    -42.2302246
    ]
   },
   "Bear__EyeL_AltSparkle_Shine": {
-   "id": "rbxassetid://127409760942346",
+   "id": "rbxassetid://136110657648449",
    "rel": [
     22.348154,
     12.854485,
     -45.052483
    ],
    "ms": [
-    9.399999618530273,
-    10.212432861328125,
-    6.896095275878906
+    9.39999962,
+    10.2124329,
+    4.74327469
+   ],
+   "pos": [
+    23.4000015,
+    100.49379,
+    -43.4509735
    ]
   },
   "Bear__EyeL_AltSparkle_White": {
-   "id": "rbxassetid://118929276982702",
+   "id": "rbxassetid://102554087609531",
    "rel": [
     21.451843,
     9.560699,
@@ -97,99 +127,139 @@
    ],
    "ms": [
     16.5,
-    24.499992,
-    11.65691
+    24.5,
+    12.5421104
+   ],
+   "pos": [
+    22.5000038,
+    97.2000046,
+    -39.0184479
    ]
   },
   "Bear__EyeR_AltRound": {
-   "id": "rbxassetid://125680847985543",
+   "id": "rbxassetid://98125722221992",
    "rel": [
     -21.381321,
     9.49675,
     -43.114326
    ],
    "ms": [
-    18.780418,
-    20.106194,
-    9.836796
+    18.7804184,
+    20.1061935,
+    10.7286491
+   ],
+   "pos": [
+    -22.4331703,
+    97.1360474,
+    -40.7251816
    ]
   },
   "Bear__EyeR_AltSleepy": {
-   "id": "rbxassetid://70910305520764",
+   "id": "rbxassetid://92635667880953",
    "rel": [
     -22.504333,
     6.247726,
     -42.271957
    ],
    "ms": [
-    17.137344,
-    7.691582,
-    10.723545
+    17.1373405,
+    7.6915741,
+    11.9816589
+   ],
+   "pos": [
+    -23.556181,
+    93.8870239,
+    -39.3875847
    ]
   },
   "Bear__EyeR_AltSmallWide": {
-   "id": "rbxassetid://104718688217893",
+   "id": "rbxassetid://104713690781638",
    "rel": [
     -24.833426,
     9.009888,
     -41.7994
    ],
    "ms": [
-    12.936152,
-    19.202805,
-    8.232685
+    12.9361515,
+    19.2028046,
+    8.28874207
+   ],
+   "pos": [
+    -25.8852768,
+    96.6491852,
+    -39.0087585
    ]
   },
   "Bear__EyeR_AltSparkle": {
-   "id": "rbxassetid://103307919900963",
+   "id": "rbxassetid://112230572992133",
    "rel": [
     -21.448156,
     9.160706,
     -42.827461
    ],
    "ms": [
-    13.200003,
-    20.800003,
-    9.54147
+    13.2000017,
+    20.8000031,
+    10.3783112
+   ],
+   "pos": [
+    -22.5000038,
+    96.8000107,
+    -40.0571861
    ]
   },
   "Bear__EyeR_AltSparkle_Iris": {
-   "id": "rbxassetid://111326069685488",
+   "id": "rbxassetid://126146974486113",
    "rel": [
     -21.448154,
     4.360703,
     -45.634979
    ],
    "ms": [
-    8.799999,
-    7.228027,
-    4.682606
+    8.79999924,
+    7.22802734,
+    4.40997314
+   ],
+   "pos": [
+    -22.5000019,
+    92.0000076,
+    -42.1626892
    ]
   },
   "Bear__EyeR_AltSparkle_Shine": {
-   "id": "rbxassetid://98411629843829",
+   "id": "rbxassetid://134915770222674",
    "rel": [
     -22.348154,
     12.854485,
     -45.052483
    ],
    "ms": [
-    9.4,
-    10.212433,
-    6.896076
+    9.39999962,
+    10.2124329,
+    4.58401108
+   ],
+   "pos": [
+    -23.4000015,
+    100.49379,
+    -43.3665009
    ]
   },
   "Bear__EyeR_AltSparkle_White": {
-   "id": "rbxassetid://100813324137837",
+   "id": "rbxassetid://75480423679255",
    "rel": [
     -21.448156,
     9.560699,
     -41.338036
    ],
    "ms": [
-    16.500002,
-    24.499992,
-    11.65691
+    16.5,
+    24.5,
+    12.6920547
+   ],
+   "pos": [
+    -22.5000038,
+    97.2000046,
+    -39.0374146
    ]
   },
   "Bear__Hat_Beanie": {
@@ -830,107 +900,147 @@
    ]
   },
   "Bear__EyeL_AltHappy": {
-   "id": "rbxassetid://92250565495035",
+   "id": "rbxassetid://85637078232470",
    "rel": [
     21.452,
     11.367,
     -42.883
    ],
    "ms": [
-    17.497059,
-    8.988098,
-    10.857876
+    17.497057,
+    8.98809052,
+    11.7216415
+   ],
+   "pos": [
+    22.5000038,
+    99.0059509,
+    -40.3523483
    ]
   },
   "Bear__EyeR_AltHappy": {
-   "id": "rbxassetid://125820634837836",
+   "id": "rbxassetid://115456078322842",
    "rel": [
     -21.448,
     11.367,
     -42.883
    ],
    "ms": [
-    17.497055,
-    8.988098,
-    10.857903
+    17.497057,
+    8.98809052,
+    11.8751602
+   ],
+   "pos": [
+    -22.5000038,
+    99.0059509,
+    -40.2767105
    ]
   },
   "Bear__EyeL_AltLash": {
-   "id": "rbxassetid://110832726846807",
+   "id": "rbxassetid://113074568992285",
    "rel": [
     23.166,
     9.604,
     -40.613
    ],
    "ms": [
-    17.827961,
-    20.785004,
-    14.156761
+    17.8279572,
+    20.7850037,
+    12.4529266
+   ],
+   "pos": [
+    24.2139816,
+    97.2432251,
+    -39.3117943
    ]
   },
   "Bear__EyeR_AltLash": {
-   "id": "rbxassetid://121003572852386",
+   "id": "rbxassetid://124133077069732",
    "rel": [
     -23.162,
     9.604,
     -40.613
    ],
    "ms": [
-    17.827957,
-    20.785004,
-    14.156715
+    17.8279572,
+    20.7850037,
+    12.5096436
+   ],
+   "pos": [
+    -24.2139816,
+    97.2432251,
+    -39.2812653
    ]
   },
   "Bear__EyeL_AltLash_Shine": {
-   "id": "rbxassetid://80973076304076",
+   "id": "rbxassetid://89563071946075",
    "rel": [
     20.602,
     10.15,
     -46.009
    ],
    "ms": [
-    7.9,
-    10.909409,
-    3.917862
+    7.90000153,
+    10.9094162,
+    5.78398514
+   ],
+   "pos": [
+    21.6500034,
+    97.788681,
+    -43.5108032
    ]
   },
   "Bear__EyeR_AltLash_Shine": {
-   "id": "rbxassetid://131682016489107",
+   "id": "rbxassetid://111628176887755",
    "rel": [
     -20.598,
     10.15,
     -46.009
    ],
    "ms": [
-    7.9,
-    10.909409,
-    3.917885
+    7.90000153,
+    10.9094162,
+    5.82523346
+   ],
+   "pos": [
+    -21.6500034,
+    97.788681,
+    -43.460453
    ]
   },
   "Bear__CheekL_Blush": {
-   "id": "rbxassetid://104763963175021",
+   "id": "rbxassetid://136310650278352",
    "rel": [
     35.202,
     -8.639,
     -28.206
    ],
    "ms": [
-    12.800003,
-    7.037819,
-    16.326263
+    12.8000031,
+    7.03782654,
+    18.7523403
+   ],
+   "pos": [
+    35.2000008,
+    84.8000031,
+    -26.2702942
    ]
   },
   "Bear__CheekR_Blush": {
-   "id": "rbxassetid://133632326281119",
+   "id": "rbxassetid://117195161015696",
    "rel": [
     -35.198,
     -8.639,
     -28.206
    ],
    "ms": [
-    12.800003,
-    7.037819,
-    16.326263
+    12.8000031,
+    7.03782654,
+    18.8649693
+   ],
+   "pos": [
+    -35.2000008,
+    84.8000031,
+    -26.3089447
    ]
   },
   "Bear__Hat_PartyHat": {

@@ -5319,7 +5319,7 @@
         <Properties>
           <string name="Name">Bear__EyeL</string>
           <Content name="MeshId">
-            <url>rbxassetid://73538697393561</url>
+            <url>rbxassetid://85905676502135</url>
           </Content>
           <Content name="TextureID">
             <url>rbxassetid://103471125730621</url>
@@ -5327,17 +5327,17 @@
           <Vector3 name="Size">
             <X>0.150543671</X>
             <Y>0.20196365400000002</Y>
-            <Z>0.08498081210000001</Z>
+            <Z>0.08588802340000001</Z>
           </Vector3>
           <Vector3 name="InitialSize">
             <X>15.0543671</X>
             <Y>20.1963654</Y>
-            <Z>8.49808121</Z>
+            <Z>8.58880234</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.22632</X>
             <Y>0.97168</Y>
-            <Z>-0.40657</Z>
+            <Z>-0.40853</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5358,7 +5358,7 @@
         <Properties>
           <string name="Name">Bear__EyeR</string>
           <Content name="MeshId">
-            <url>rbxassetid://134469615729463</url>
+            <url>rbxassetid://134376317893056</url>
           </Content>
           <Content name="TextureID">
             <url>rbxassetid://103471125730621</url>
@@ -5366,17 +5366,17 @@
           <Vector3 name="Size">
             <X>0.150543671</X>
             <Y>0.20196365400000002</Y>
-            <Z>0.08485969539999999</Z>
+            <Z>0.0859482193</Z>
           </Vector3>
           <Vector3 name="InitialSize">
             <X>15.0543671</X>
             <Y>20.1963654</Y>
-            <Z>8.48596954</Z>
+            <Z>8.59482193</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.22632</X>
             <Y>0.97168</Y>
-            <Z>-0.40652</Z>
+            <Z>-0.40857</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5397,7 +5397,7 @@
         <Properties>
           <string name="Name">Bear__BlushL</string>
           <Content name="MeshId">
-            <url>rbxassetid://100782287605361</url>
+            <url>rbxassetid://75402627527862</url>
           </Content>
           <Content name="TextureID">
             <url />
@@ -5405,17 +5405,17 @@
           <Vector3 name="Size">
             <X>0.179281368</X>
             <Y>0.106508789</Y>
-            <Z>0.25554340400000003</Z>
+            <Z>0.248910389</Z>
           </Vector3>
           <Vector3 name="InitialSize">
             <X>17.9281368</X>
             <Y>10.6508789</Y>
-            <Z>25.5543404</Z>
+            <Z>24.8910389</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.34846</X>
             <Y>0.85611</Y>
-            <Z>-0.24703</Z>
+            <Z>-0.25035</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5445,7 +5445,7 @@
         <Properties>
           <string name="Name">Bear__BlushR</string>
           <Content name="MeshId">
-            <url>rbxassetid://136349463170207</url>
+            <url>rbxassetid://136173835774990</url>
           </Content>
           <Content name="TextureID">
             <url />
@@ -5453,17 +5453,17 @@
           <Vector3 name="Size">
             <X>0.179281368</X>
             <Y>0.106508789</Y>
-            <Z>0.262079411</Z>
+            <Z>0.250531883</Z>
           </Vector3>
           <Vector3 name="InitialSize">
             <X>17.9281368</X>
             <Y>10.6508789</Y>
-            <Z>26.2079411</Z>
+            <Z>25.0531883</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.34846</X>
             <Y>0.85611</Y>
-            <Z>-0.24376</Z>
+            <Z>-0.24954</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7742,25 +7742,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltRound</string>
           <Content name="MeshId">
-            <url>rbxassetid://108362362446813</url>
+            <url>rbxassetid://83515873126027</url>
           </Content>
           <Content name="TextureID">
             <url>rbxassetid://75513553871906</url>
           </Content>
           <Vector3 name="Size">
-            <X>0.18771919</X>
-            <Y>0.20107727</Y>
-            <Z>0.09856194</Z>
+            <X>0.187719193</X>
+            <Y>0.20107727100000003</Y>
+            <Z>0.10752357500000001</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>18.771919</X>
-            <Y>20.107727</Y>
-            <Z>9.856194</Z>
+            <X>18.7719193</X>
+            <Y>20.1077271</Y>
+            <Z>10.7523575</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.22433</X>
             <Y>0.97137</Y>
-            <Z>-0.40211</Z>
+            <Z>-0.40711</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7781,25 +7781,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltRound</string>
           <Content name="MeshId">
-            <url>rbxassetid://125680847985543</url>
+            <url>rbxassetid://98125722221992</url>
           </Content>
           <Content name="TextureID">
             <url>rbxassetid://75513553871906</url>
           </Content>
           <Vector3 name="Size">
-            <X>0.18780418000000001</X>
-            <Y>0.20106194</Y>
-            <Z>0.09836795999999999</Z>
+            <X>0.18780418399999999</X>
+            <Y>0.201061935</Y>
+            <Z>0.107286491</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>18.780418</X>
-            <Y>20.106194</Y>
-            <Z>9.836796</Z>
+            <X>18.7804184</X>
+            <Y>20.1061935</Y>
+            <Z>10.7286491</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.22433</X>
             <Y>0.97136</Y>
-            <Z>-0.40086</Z>
+            <Z>-0.40725</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7820,25 +7820,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltSmallWide</string>
           <Content name="MeshId">
-            <url>rbxassetid://83165508586501</url>
+            <url>rbxassetid://92110023102315</url>
           </Content>
           <Content name="TextureID">
             <url>rbxassetid://75513553871906</url>
           </Content>
           <Vector3 name="Size">
-            <X>0.12936064</X>
-            <Y>0.19203949</Y>
-            <Z>0.08255718</Z>
+            <X>0.129360619</X>
+            <Y>0.19203956600000002</Y>
+            <Z>0.08334861760000001</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>12.936064</X>
-            <Y>19.203949</Y>
-            <Z>8.255718</Z>
+            <X>12.9360619</X>
+            <Y>19.2039566</Y>
+            <Z>8.33486176</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.25877</X>
             <Y>0.96649</Y>
-            <Z>-0.38898</Z>
+            <Z>-0.39095</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7859,25 +7859,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltSmallWide</string>
           <Content name="MeshId">
-            <url>rbxassetid://104718688217893</url>
+            <url>rbxassetid://104713690781638</url>
           </Content>
           <Content name="TextureID">
             <url>rbxassetid://75513553871906</url>
           </Content>
           <Vector3 name="Size">
-            <X>0.12936152</X>
-            <Y>0.19202805</Y>
-            <Z>0.08232685000000001</Z>
+            <X>0.12936151499999998</X>
+            <Y>0.192028046</Y>
+            <Z>0.08288742069999999</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>12.936152</X>
-            <Y>19.202805</Y>
-            <Z>8.232685</Z>
+            <X>12.9361515</X>
+            <Y>19.2028046</Y>
+            <Z>8.28874207</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.25885</X>
             <Y>0.96649</Y>
-            <Z>-0.38771</Z>
+            <Z>-0.39009</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7937,25 +7937,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltSparkle_White</string>
           <Content name="MeshId">
-            <url>rbxassetid://118929276982702</url>
+            <url>rbxassetid://102554087609531</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
             <X>0.165</X>
-            <Y>0.24499991999999998</Y>
-            <Z>0.1165691</Z>
+            <Y>0.245</Y>
+            <Z>0.125421104</Z>
           </Vector3>
           <Vector3 name="InitialSize">
             <X>16.5</X>
-            <Y>24.499992</Y>
-            <Z>11.65691</Z>
+            <Y>24.5</Y>
+            <Z>12.5421104</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.225</X>
             <Y>0.972</Y>
-            <Z>-0.38451</Z>
+            <Z>-0.39018</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7976,25 +7976,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltSparkle</string>
           <Content name="MeshId">
-            <url>rbxassetid://107797478617904</url>
+            <url>rbxassetid://127360025065483</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.13200002</X>
-            <Y>0.20800003</Y>
-            <Z>0.09541447</Z>
+            <X>0.132000017</X>
+            <Y>0.208000031</Y>
+            <Z>0.103846779</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>13.200002</X>
-            <Y>20.800003</Y>
-            <Z>9.541447</Z>
+            <X>13.2000017</X>
+            <Y>20.8000031</Y>
+            <Z>10.3846779</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.225</X>
             <Y>0.968</Y>
-            <Z>-0.3994</Z>
+            <Z>-0.40094</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8015,25 +8015,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltSparkle_Iris</string>
           <Content name="MeshId">
-            <url>rbxassetid://139489202406965</url>
+            <url>rbxassetid://113688965453943</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.08799999</X>
-            <Y>0.07228027</Y>
-            <Z>0.046826290000000007</Z>
+            <X>0.0879999924</X>
+            <Y>0.0722802734</Y>
+            <Z>0.044777565</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>8.799999</X>
-            <Y>7.228027</Y>
-            <Z>4.682629</Z>
+            <X>8.79999924</X>
+            <Y>7.22802734</Y>
+            <Z>4.4777565</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.225</X>
             <Y>0.92</Y>
-            <Z>-0.42748</Z>
+            <Z>-0.4223</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8054,25 +8054,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltSparkle_Shine</string>
           <Content name="MeshId">
-            <url>rbxassetid://127409760942346</url>
+            <url>rbxassetid://136110657648449</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.09399999618530273</X>
-            <Y>0.10212432861328125</Y>
-            <Z>0.06896095275878907</Z>
+            <X>0.09399999619999999</X>
+            <Y>0.102124329</Y>
+            <Z>0.047432746899999996</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>9.399999618530273</X>
-            <Y>10.212432861328125</Y>
-            <Z>6.896095275878906</Z>
+            <X>9.39999962</X>
+            <Y>10.2124329</Y>
+            <Z>4.74327469</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.234</X>
             <Y>1.00494</Y>
-            <Z>-0.42165</Z>
+            <Z>-0.43451</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8093,25 +8093,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltSleepy</string>
           <Content name="MeshId">
-            <url>rbxassetid://133426708238364</url>
+            <url>rbxassetid://129799141274113</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17137342</X>
-            <Y>0.07691582000000001</Y>
-            <Z>0.10723568</Z>
+            <X>0.17137344399999999</X>
+            <Y>0.07691574100000001</Y>
+            <Z>0.118910828</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>17.137342</X>
-            <Y>7.691582</Y>
-            <Z>10.723568</Z>
+            <X>17.1373444</X>
+            <Y>7.6915741</Y>
+            <Z>11.8910828</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.23556</X>
             <Y>0.93887</Y>
-            <Z>-0.39384</Z>
+            <Z>-0.39449</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8132,25 +8132,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltHappy</string>
           <Content name="MeshId">
-            <url>rbxassetid://92250565495035</url>
+            <url>rbxassetid://85637078232470</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17497059</X>
-            <Y>0.08988098000000001</Y>
-            <Z>0.10857876</Z>
+            <X>0.17497057000000002</X>
+            <Y>0.0898809052</Y>
+            <Z>0.117216415</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>17.497059</X>
-            <Y>8.988098</Y>
-            <Z>10.857876</Z>
+            <X>17.497057</X>
+            <Y>8.98809052</Y>
+            <Z>11.7216415</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.225</X>
             <Y>0.99006</Y>
-            <Z>-0.39995</Z>
+            <Z>-0.40352</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8171,25 +8171,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltLash</string>
           <Content name="MeshId">
-            <url>rbxassetid://110832726846807</url>
+            <url>rbxassetid://113074568992285</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17827960999999998</X>
-            <Y>0.20785004</Y>
-            <Z>0.14156760999999998</Z>
+            <X>0.178279572</X>
+            <Y>0.20785003700000002</Y>
+            <Z>0.124529266</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>17.827961</X>
-            <Y>20.785004</Y>
-            <Z>14.156761</Z>
+            <X>17.8279572</X>
+            <Y>20.7850037</Y>
+            <Z>12.4529266</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.24214</X>
             <Y>0.97243</Y>
-            <Z>-0.37725</Z>
+            <Z>-0.39312</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8210,25 +8210,25 @@
         <Properties>
           <string name="Name">Bear__EyeL_AltLash_Shine</string>
           <Content name="MeshId">
-            <url>rbxassetid://80973076304076</url>
+            <url>rbxassetid://89563071946075</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.079</X>
-            <Y>0.10909409</Y>
-            <Z>0.03917862</Z>
+            <X>0.0790000153</X>
+            <Y>0.10909416200000001</Y>
+            <Z>0.0578398514</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>7.9</X>
-            <Y>10.909409</Y>
-            <Z>3.917862</Z>
+            <X>7.90000153</X>
+            <Y>10.9094162</Y>
+            <Z>5.78398514</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.2165</X>
             <Y>0.97789</Y>
-            <Z>-0.43121</Z>
+            <Z>-0.43511</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8249,25 +8249,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltSparkle_White</string>
           <Content name="MeshId">
-            <url>rbxassetid://100813324137837</url>
+            <url>rbxassetid://75480423679255</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.16500002</X>
-            <Y>0.24499991999999998</Y>
-            <Z>0.1165691</Z>
+            <X>0.165</X>
+            <Y>0.245</Y>
+            <Z>0.126920547</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>16.500002</X>
-            <Y>24.499992</Y>
-            <Z>11.65691</Z>
+            <X>16.5</X>
+            <Y>24.5</Y>
+            <Z>12.6920547</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.225</X>
             <Y>0.972</Y>
-            <Z>-0.3831</Z>
+            <Z>-0.39037</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8288,25 +8288,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltSparkle</string>
           <Content name="MeshId">
-            <url>rbxassetid://103307919900963</url>
+            <url>rbxassetid://112230572992133</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.13200003000000002</X>
-            <Y>0.20800003</Y>
-            <Z>0.0954147</Z>
+            <X>0.132000017</X>
+            <Y>0.208000031</Y>
+            <Z>0.10378311200000001</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>13.200003</X>
-            <Y>20.800003</Y>
-            <Z>9.54147</Z>
+            <X>13.2000017</X>
+            <Y>20.8000031</Y>
+            <Z>10.3783112</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.225</X>
             <Y>0.968</Y>
-            <Z>-0.39799</Z>
+            <Z>-0.40057</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8327,25 +8327,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltSparkle_Iris</string>
           <Content name="MeshId">
-            <url>rbxassetid://111326069685488</url>
+            <url>rbxassetid://126146974486113</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.08799999</X>
-            <Y>0.07228027</Y>
-            <Z>0.046826059999999996</Z>
+            <X>0.0879999924</X>
+            <Y>0.0722802734</Y>
+            <Z>0.0440997314</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>8.799999</X>
-            <Y>7.228027</Y>
-            <Z>4.682606</Z>
+            <X>8.79999924</X>
+            <Y>7.22802734</Y>
+            <Z>4.40997314</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.225</X>
             <Y>0.92</Y>
-            <Z>-0.42607</Z>
+            <Z>-0.42163</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8366,25 +8366,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltSparkle_Shine</string>
           <Content name="MeshId">
-            <url>rbxassetid://98411629843829</url>
+            <url>rbxassetid://134915770222674</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.094</X>
-            <Y>0.10212433000000001</Y>
-            <Z>0.06896076</Z>
+            <X>0.09399999619999999</X>
+            <Y>0.102124329</Y>
+            <Z>0.0458401108</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>9.4</X>
-            <Y>10.212433</Y>
-            <Z>6.896076</Z>
+            <X>9.39999962</X>
+            <Y>10.2124329</Y>
+            <Z>4.58401108</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.234</X>
             <Y>1.00494</Y>
-            <Z>-0.42024</Z>
+            <Z>-0.43367</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8405,25 +8405,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltSleepy</string>
           <Content name="MeshId">
-            <url>rbxassetid://70910305520764</url>
+            <url>rbxassetid://92635667880953</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17137344</X>
-            <Y>0.07691582000000001</Y>
-            <Z>0.10723545</Z>
+            <X>0.171373405</X>
+            <Y>0.07691574100000001</Y>
+            <Z>0.11981658899999999</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>17.137344</X>
-            <Y>7.691582</Y>
-            <Z>10.723545</Z>
+            <X>17.1373405</X>
+            <Y>7.6915741</Y>
+            <Z>11.9816589</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.23556</X>
             <Y>0.93887</Y>
-            <Z>-0.39243</Z>
+            <Z>-0.39388</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8444,25 +8444,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltHappy</string>
           <Content name="MeshId">
-            <url>rbxassetid://125820634837836</url>
+            <url>rbxassetid://115456078322842</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17497055</X>
-            <Y>0.08988098000000001</Y>
-            <Z>0.10857903</Z>
+            <X>0.17497057000000002</X>
+            <Y>0.0898809052</Y>
+            <Z>0.118751602</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>17.497055</X>
-            <Y>8.988098</Y>
-            <Z>10.857903</Z>
+            <X>17.497057</X>
+            <Y>8.98809052</Y>
+            <Z>11.8751602</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.225</X>
             <Y>0.99006</Y>
-            <Z>-0.39854</Z>
+            <Z>-0.40277</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8483,25 +8483,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltLash</string>
           <Content name="MeshId">
-            <url>rbxassetid://121003572852386</url>
+            <url>rbxassetid://124133077069732</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17827957000000003</X>
-            <Y>0.20785004</Y>
-            <Z>0.14156715</Z>
+            <X>0.178279572</X>
+            <Y>0.20785003700000002</Y>
+            <Z>0.125096436</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>17.827957</X>
-            <Y>20.785004</Y>
-            <Z>14.156715</Z>
+            <X>17.8279572</X>
+            <Y>20.7850037</Y>
+            <Z>12.5096436</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.24214</X>
             <Y>0.97243</Y>
-            <Z>-0.37584</Z>
+            <Z>-0.39281</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8522,25 +8522,25 @@
         <Properties>
           <string name="Name">Bear__EyeR_AltLash_Shine</string>
           <Content name="MeshId">
-            <url>rbxassetid://131682016489107</url>
+            <url>rbxassetid://111628176887755</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.079</X>
-            <Y>0.10909409</Y>
-            <Z>0.03917885</Z>
+            <X>0.0790000153</X>
+            <Y>0.10909416200000001</Y>
+            <Z>0.0582523346</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>7.9</X>
-            <Y>10.909409</Y>
-            <Z>3.917885</Z>
+            <X>7.90000153</X>
+            <Y>10.9094162</Y>
+            <Z>5.82523346</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.2165</X>
             <Y>0.97789</Y>
-            <Z>-0.4298</Z>
+            <Z>-0.4346</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8678,25 +8678,25 @@
         <Properties>
           <string name="Name">Bear__CheekL_Blush</string>
           <Content name="MeshId">
-            <url>rbxassetid://104763963175021</url>
+            <url>rbxassetid://136310650278352</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.12800003000000001</X>
-            <Y>0.07037819</Y>
-            <Z>0.16326263000000002</Z>
+            <X>0.128000031</X>
+            <Y>0.0703782654</Y>
+            <Z>0.187523403</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>12.800003</X>
-            <Y>7.037819</Y>
-            <Z>16.326263</Z>
+            <X>12.8000031</X>
+            <Y>7.03782654</Y>
+            <Z>18.7523403</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.352</X>
             <Y>0.848</Y>
-            <Z>-0.27168</Z>
+            <Z>-0.2627</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8717,25 +8717,25 @@
         <Properties>
           <string name="Name">Bear__CheekR_Blush</string>
           <Content name="MeshId">
-            <url>rbxassetid://133632326281119</url>
+            <url>rbxassetid://117195161015696</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.12800003000000001</X>
-            <Y>0.07037819</Y>
-            <Z>0.16326263000000002</Z>
+            <X>0.128000031</X>
+            <Y>0.0703782654</Y>
+            <Z>0.18864969299999998</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>12.800003</X>
-            <Y>7.037819</Y>
-            <Z>16.326263</Z>
+            <X>12.8000031</X>
+            <Y>7.03782654</Y>
+            <Z>18.8649693</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.352</X>
             <Y>0.848</Y>
-            <Z>-0.27168</Z>
+            <Z>-0.26309</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>

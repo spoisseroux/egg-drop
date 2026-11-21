@@ -48,5 +48,11 @@
   "before": "06-bunny-lash-specs-round-w-BEFORE.jpg",
   "after": "06-bunny-lash-specs-round-w-AFTER.jpg",
   "lightingNote": "geometry matches; light differs slightly between the two Play sessions (dusk grade warm-up)"
+ },
+ "eyeConform": {
+  "taken": "2026-11-21, fresh Play after the eye conform (Model 88598931173890)",
+  "hashAll": 1499651059,
+  "noneCase": 663281757,
+  "result": "All 20 Bunny pieces identical to before in every case (frames, sizes, meshes). Only the 22 eye and cheek item parts changed: new mesh ids, depth (runtime Z) centre and depth size; X, Y and rotation unchanged. E.g. EyeL_AltLash z 0.37544 -> 0.39131 (size z 0.1416 -> 0.1245), EyeL_AltSparkle z 0.39759 -> 0.39913, EyeL_AltRound 0.4003 -> 0.4053, CheekL_Blush 0.24477 -> 0.23579. Specs, hat and mouth items unchanged."
  }
 }

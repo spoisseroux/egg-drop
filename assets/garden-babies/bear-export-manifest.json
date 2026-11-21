@@ -133,12 +133,12 @@
    "name": "Bear__EyeL",
    "centerBlender": [
     -0.22632,
-    -0.40657,
+    -0.40853,
     0.97168
    ],
    "sizeBlender": [
     0.15054,
-    0.08498,
+    0.08589,
     0.20196
    ],
    "triangles": 72
@@ -147,12 +147,12 @@
    "name": "Bear__EyeR",
    "centerBlender": [
     0.22632,
-    -0.40652,
+    -0.40857,
     0.97168
    ],
    "sizeBlender": [
     0.15054,
-    0.08486,
+    0.08595,
     0.20196
    ],
    "triangles": 72
@@ -161,12 +161,12 @@
    "name": "Bear__BlushL",
    "centerBlender": [
     -0.34846,
-    -0.24703,
+    -0.25035,
     0.85611
    ],
    "sizeBlender": [
     0.17928,
-    0.25554,
+    0.24891,
     0.10651
    ],
    "triangles": 36
@@ -175,12 +175,12 @@
    "name": "Bear__BlushR",
    "centerBlender": [
     0.34846,
-    -0.24376,
+    -0.24954,
     0.85611
    ],
    "sizeBlender": [
     0.17928,
-    0.26208,
+    0.25053,
     0.10651
    ],
    "triangles": 36
@@ -446,5 +446,5 @@
    0.54
   ]
  },
- "v2": "2026-11-21: Body, Head, EarL, EarR, Muzzle, Nose, MouthSmile, EyeL, EyeR, BlushL, BlushR and the EyeLine anchor are the v2 cute Bear (assets/art-source/pets/pet-bear-v2-cute.blend, exported to bear-v2.fbx by assets/art-source/pets/export_bear_v2.py). The rest is bear.fbx, unchanged."
+ "v2": "2026-11-21: Body, Head, EarL, EarR, Muzzle, Nose, MouthSmile, EyeL, EyeR, BlushL, BlushR and the EyeLine anchor are the v2 cute Bear (assets/art-source/pets/pet-bear-v2-cute.blend, exported to bear-v2.fbx by assets/art-source/pets/export_bear_v2.py). The rest is bear.fbx, unchanged. 2026-11-21 eye conform: EyeL, EyeR, BlushL, BlushR depth-conformed to the v2 head (assets/art-source/pets/conform_bear_v2_eyes.py)."
 }

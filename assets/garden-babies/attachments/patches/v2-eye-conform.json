@@ -1,0 +1,2089 @@
+{
+ "schema": 1,
+ "date": "2026-11-21",
+ "builtBy": "assets/art-source/pets/conform_bear_v2_eyes.py",
+ "sourceBlend": "assets/art-source/pets/pet-bear-v2-cute.blend",
+ "fbx": "assets/garden-babies/attachments/patches/v2-eye-conform.fbx",
+ "axes": "FBX axis_forward=-Z axis_up=Y, world transform baked, pet root at the origin. Blender pet-local: front -Y, up +Z, L = -X.",
+ "mode": "envelope",
+ "floor": 0.006,
+ "minVertexHeight": 0.005,
+ "minFaceHeight": 0.0035,
+ "note": "Heights are distances to the Head+Muzzle surface in studs, positive outside. deepest/mean/highest are over the visible vertices; faceDeepest also samples inside every visible triangle. `skirt` is [deepest, highest] of the edge vertices that are modelled sunk into the head to seal the edge (hidden by design, not counted in the other numbers). `before` is the shipped rigid move. Same vertex and triangle counts, same x and z per vertex: only the depth (Blender y) changed, so centre and size change in y only. Items are checked on the Bunny at the Bear position plus bunny.anchorDelta (Bunny anchor minus v2 Bear anchor, Blender axes).",
+ "layers": [
+  {
+   "upper": "Bear__EyeL_AltLash_Shine",
+   "lower": "Bear__EyeL_AltLash",
+   "clearanceAsModelled": -0.0071,
+   "clearanceAfter": -0.0085
+  },
+  {
+   "upper": "Bear__EyeL_AltSparkle",
+   "lower": "Bear__EyeL_AltSparkle_White",
+   "clearanceAsModelled": 0.0023,
+   "clearanceAfter": 0.0024
+  },
+  {
+   "upper": "Bear__EyeL_AltSparkle_Iris",
+   "lower": "Bear__EyeL_AltSparkle",
+   "clearanceAsModelled": -0.0089,
+   "clearanceAfter": -0.0089
+  },
+  {
+   "upper": "Bear__EyeL_AltSparkle_Iris",
+   "lower": "Bear__EyeL_AltSparkle_White",
+   "clearanceAsModelled": 0.0047,
+   "clearanceAfter": 0.0049
+  },
+  {
+   "upper": "Bear__EyeL_AltSparkle_Shine",
+   "lower": "Bear__EyeL_AltSparkle",
+   "clearanceAsModelled": -0.0025,
+   "clearanceAfter": -0.0024
+  },
+  {
+   "upper": "Bear__EyeL_AltSparkle_Shine",
+   "lower": "Bear__EyeL_AltSparkle_Iris",
+   "clearanceAsModelled": null,
+   "clearanceAfter": null
+  },
+  {
+   "upper": "Bear__EyeL_AltSparkle_Shine",
+   "lower": "Bear__EyeL_AltSparkle_White",
+   "clearanceAsModelled": 0.0108,
+   "clearanceAfter": 0.01
+  },
+  {
+   "upper": "Bear__EyeR_AltLash_Shine",
+   "lower": "Bear__EyeR_AltLash",
+   "clearanceAsModelled": -0.0071,
+   "clearanceAfter": -0.0086
+  },
+  {
+   "upper": "Bear__EyeR_AltSparkle",
+   "lower": "Bear__EyeR_AltSparkle_White",
+   "clearanceAsModelled": 0.0031,
+   "clearanceAfter": 0.0014
+  },
+  {
+   "upper": "Bear__EyeR_AltSparkle_Iris",
+   "lower": "Bear__EyeR_AltSparkle",
+   "clearanceAsModelled": -0.0089,
+   "clearanceAfter": -0.0093
+  },
+  {
+   "upper": "Bear__EyeR_AltSparkle_Iris",
+   "lower": "Bear__EyeR_AltSparkle_White",
+   "clearanceAsModelled": 0.0047,
+   "clearanceAfter": 0.0044
+  },
+  {
+   "upper": "Bear__EyeR_AltSparkle_Shine",
+   "lower": "Bear__EyeR_AltSparkle",
+   "clearanceAsModelled": -0.0025,
+   "clearanceAfter": -0.0026
+  },
+  {
+   "upper": "Bear__EyeR_AltSparkle_Shine",
+   "lower": "Bear__EyeR_AltSparkle_Iris",
+   "clearanceAsModelled": null,
+   "clearanceAfter": null
+  },
+  {
+   "upper": "Bear__EyeR_AltSparkle_Shine",
+   "lower": "Bear__EyeR_AltSparkle_White",
+   "clearanceAsModelled": 0.0108,
+   "clearanceAfter": 0.0097
+  }
+ ],
+ "meshes": [
+  {
+   "name": "Bear__BlushL",
+   "source": "PetBear__BlushL",
+   "kind": "bear",
+   "anchor": null,
+   "item": null,
+   "piece": null,
+   "vertices": 25,
+   "triangles": 36,
+   "material": "petBear__blush",
+   "designHeight": {
+    "lowest": 0.0099,
+    "highest": 0.0429
+   },
+   "nudgedVertices": 12,
+   "largestNudge": 0.0066,
+   "largestMove": 0.0066,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": 0.0069,
+     "mean": 0.0074,
+     "highest": 0.0077,
+     "faceDeepest": 0.0007
+    },
+    "after": {
+     "deepest": 0.0073,
+     "mean": 0.008,
+     "highest": 0.0101,
+     "faceDeepest": 0.0035
+    }
+   },
+   "centerBlender": [
+    -0.34846,
+    -0.25035,
+    0.85611
+   ],
+   "sizeBlender": [
+    0.17928,
+    0.24891,
+    0.10651
+   ],
+   "centerRuntime": [
+    -0.34846,
+    0.85611,
+    0.25035
+   ],
+   "sizeRuntime": [
+    0.17928,
+    0.10651,
+    0.24891
+   ]
+  },
+  {
+   "name": "Bear__BlushR",
+   "source": "PetBear__BlushR",
+   "kind": "bear",
+   "anchor": null,
+   "item": null,
+   "piece": null,
+   "vertices": 25,
+   "triangles": 36,
+   "material": "petBear__blush",
+   "designHeight": {
+    "lowest": 0.0099,
+    "highest": 0.0473
+   },
+   "nudgedVertices": 12,
+   "largestNudge": 0.0115,
+   "largestMove": 0.0115,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": 0.0068,
+     "mean": 0.0074,
+     "highest": 0.0077,
+     "faceDeepest": -0.0015
+    },
+    "after": {
+     "deepest": 0.0072,
+     "mean": 0.0083,
+     "highest": 0.0123,
+     "faceDeepest": 0.0035
+    }
+   },
+   "centerBlender": [
+    0.34846,
+    -0.24954,
+    0.85611
+   ],
+   "sizeBlender": [
+    0.17928,
+    0.25053,
+    0.10651
+   ],
+   "centerRuntime": [
+    0.34846,
+    0.85611,
+    0.24954
+   ],
+   "sizeRuntime": [
+    0.17928,
+    0.10651,
+    0.25053
+   ]
+  },
+  {
+   "name": "Bear__CheekL_Blush",
+   "source": "PetBear__CheekL_Blush",
+   "kind": "item",
+   "anchor": "CheekL",
+   "item": "blush",
+   "piece": "Main",
+   "vertices": 31,
+   "triangles": 50,
+   "material": "wear__FF9FB2",
+   "designHeight": {
+    "lowest": -0.008,
+    "highest": 0.0194
+   },
+   "nudgedVertices": 10,
+   "largestNudge": 0.0059,
+   "largestMove": 0.0439,
+   "skirtVertices": 9,
+   "bear": {
+    "before": {
+     "deepest": 0.0084,
+     "mean": 0.0205,
+     "highest": 0.0286,
+     "faceDeepest": 0.0084,
+     "skirt": [
+      0.0033,
+      0.0114
+     ]
+    },
+    "after": {
+     "deepest": 0.005,
+     "mean": 0.011,
+     "highest": 0.0206,
+     "faceDeepest": 0.0036,
+     "skirt": [
+      -0.0093,
+      -0.0028
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.0,
+     0.02691,
+     -0.027
+    ],
+    "before": {
+     "deepest": 0.0074,
+     "mean": 0.0167,
+     "highest": 0.0262,
+     "faceDeepest": 0.0058,
+     "skirt": [
+      -0.0054,
+      0.0131
+     ]
+    },
+    "after": {
+     "deepest": 0.005,
+     "mean": 0.0084,
+     "highest": 0.0118,
+     "faceDeepest": 0.0035,
+     "skirt": [
+      -0.014,
+      -0.0003
+     ]
+    }
+   },
+   "centerBlender": [
+    -0.352,
+    -0.2627,
+    0.848
+   ],
+   "sizeBlender": [
+    0.128,
+    0.18752,
+    0.07038
+   ],
+   "centerRuntime": [
+    -0.352,
+    0.848,
+    0.2627
+   ],
+   "sizeRuntime": [
+    0.128,
+    0.07038,
+    0.18752
+   ]
+  },
+  {
+   "name": "Bear__CheekR_Blush",
+   "source": "PetBear__CheekR_Blush",
+   "kind": "item",
+   "anchor": "CheekR",
+   "item": "blush",
+   "piece": "Main",
+   "vertices": 31,
+   "triangles": 50,
+   "material": "wear__FF9FB2",
+   "designHeight": {
+    "lowest": -0.008,
+    "highest": 0.0194
+   },
+   "nudgedVertices": 10,
+   "largestNudge": 0.0055,
+   "largestMove": 0.0452,
+   "skirtVertices": 9,
+   "bear": {
+    "before": {
+     "deepest": 0.0092,
+     "mean": 0.0202,
+     "highest": 0.0282,
+     "faceDeepest": 0.0092,
+     "skirt": [
+      0.003,
+      0.0123
+     ]
+    },
+    "after": {
+     "deepest": 0.005,
+     "mean": 0.011,
+     "highest": 0.0199,
+     "faceDeepest": 0.0038,
+     "skirt": [
+      -0.0087,
+      -0.0028
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.0,
+     0.02759,
+     -0.027
+    ],
+    "before": {
+     "deepest": 0.0066,
+     "mean": 0.0164,
+     "highest": 0.0259,
+     "faceDeepest": 0.0052,
+     "skirt": [
+      -0.006,
+      0.0131
+     ]
+    },
+    "after": {
+     "deepest": 0.005,
+     "mean": 0.0083,
+     "highest": 0.012,
+     "faceDeepest": 0.0035,
+     "skirt": [
+      -0.0133,
+      -0.0003
+     ]
+    }
+   },
+   "centerBlender": [
+    0.352,
+    -0.26309,
+    0.848
+   ],
+   "sizeBlender": [
+    0.128,
+    0.18865,
+    0.07038
+   ],
+   "centerRuntime": [
+    0.352,
+    0.848,
+    0.26309
+   ],
+   "sizeRuntime": [
+    0.128,
+    0.07038,
+    0.18865
+   ]
+  },
+  {
+   "name": "Bear__EyeL",
+   "source": "PetBear__EyeL",
+   "kind": "bear",
+   "anchor": null,
+   "item": null,
+   "piece": null,
+   "vertices": 49,
+   "triangles": 72,
+   "material": "petBear__eyeCute",
+   "designHeight": {
+    "lowest": 0.0044,
+    "highest": 0.0243
+   },
+   "nudgedVertices": 17,
+   "largestNudge": 0.0021,
+   "largestMove": 0.0029,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": 0.0038,
+     "mean": 0.0108,
+     "highest": 0.0216,
+     "faceDeepest": 0.0013
+    },
+    "after": {
+     "deepest": 0.005,
+     "mean": 0.0115,
+     "highest": 0.0216,
+     "faceDeepest": 0.0035
+    }
+   },
+   "centerBlender": [
+    -0.22632,
+    -0.40853,
+    0.97168
+   ],
+   "sizeBlender": [
+    0.15054,
+    0.08589,
+    0.20196
+   ],
+   "centerRuntime": [
+    -0.22632,
+    0.97168,
+    0.40853
+   ],
+   "sizeRuntime": [
+    0.15054,
+    0.20196,
+    0.08589
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltHappy",
+   "source": "PetBear__EyeL_AltHappy",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "happy",
+   "piece": "Main",
+   "vertices": 54,
+   "triangles": 78,
+   "material": "attach__ink",
+   "designHeight": {
+    "lowest": -0.006,
+    "highest": 0.0192
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.025,
+   "skirtVertices": 28,
+   "bear": {
+    "before": {
+     "deepest": -0.0044,
+     "mean": 0.0076,
+     "highest": 0.0164,
+     "faceDeepest": -0.0046,
+     "skirt": [
+      -0.0268,
+      -0.0012
+     ]
+    },
+    "after": {
+     "deepest": 0.0138,
+     "mean": 0.0162,
+     "highest": 0.0197,
+     "faceDeepest": 0.0137,
+     "skirt": [
+      -0.0123,
+      -0.0042
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0048,
+     "mean": 0.0104,
+     "highest": 0.0197,
+     "faceDeepest": -0.0054,
+     "skirt": [
+      -0.0312,
+      -0.0001
+     ]
+    },
+    "after": {
+     "deepest": 0.0151,
+     "mean": 0.0192,
+     "highest": 0.0232,
+     "faceDeepest": 0.0149,
+     "skirt": [
+      -0.0138,
+      -0.0036
+     ]
+    }
+   },
+   "centerBlender": [
+    -0.225,
+    -0.40352,
+    0.99006
+   ],
+   "sizeBlender": [
+    0.17497,
+    0.11722,
+    0.08988
+   ],
+   "centerRuntime": [
+    -0.225,
+    0.99006,
+    0.40352
+   ],
+   "sizeRuntime": [
+    0.17497,
+    0.08988,
+    0.11722
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltLash",
+   "source": "PetBear__EyeL_AltLash",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "lash",
+   "piece": "Main",
+   "vertices": 71,
+   "triangles": 106,
+   "material": "attach__ink",
+   "designHeight": {
+    "lowest": -0.006,
+    "highest": 0.03
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0418,
+   "skirtVertices": 30,
+   "bear": {
+    "before": {
+     "deepest": -0.0143,
+     "mean": 0.0063,
+     "highest": 0.0343,
+     "faceDeepest": -0.0144,
+     "skirt": [
+      -0.0301,
+      0.016
+     ]
+    },
+    "after": {
+     "deepest": 0.0094,
+     "mean": 0.017,
+     "highest": 0.0269,
+     "faceDeepest": 0.0084,
+     "skirt": [
+      -0.0213,
+      -0.0041
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0218,
+     "mean": 0.008,
+     "highest": 0.047,
+     "faceDeepest": -0.0218,
+     "skirt": [
+      -0.0385,
+      0.0283
+     ]
+    },
+    "after": {
+     "deepest": 0.0099,
+     "mean": 0.0192,
+     "highest": 0.0305,
+     "faceDeepest": 0.0093,
+     "skirt": [
+      -0.0138,
+      -0.0035
+     ]
+    }
+   },
+   "centerBlender": [
+    -0.24214,
+    -0.39312,
+    0.97243
+   ],
+   "sizeBlender": [
+    0.17828,
+    0.12453,
+    0.20785
+   ],
+   "centerRuntime": [
+    -0.24214,
+    0.97243,
+    0.39312
+   ],
+   "sizeRuntime": [
+    0.17828,
+    0.20785,
+    0.12453
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltLash_Shine",
+   "source": "PetBear__EyeL_AltLash_Shine",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "lash",
+   "piece": "Shine",
+   "vertices": 34,
+   "triangles": 48,
+   "material": "wear__FFFFFF",
+   "designHeight": {
+    "lowest": 0.02,
+    "highest": 0.036
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0278,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": -0.0025,
+     "mean": 0.018,
+     "highest": 0.0371,
+     "faceDeepest": -0.0025
+    },
+    "after": {
+     "deepest": 0.0173,
+     "mean": 0.0234,
+     "highest": 0.032,
+     "faceDeepest": 0.0162
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0061,
+     "mean": 0.0185,
+     "highest": 0.0359,
+     "faceDeepest": -0.0061
+    },
+    "after": {
+     "deepest": 0.0171,
+     "mean": 0.0246,
+     "highest": 0.036,
+     "faceDeepest": 0.0169
+    }
+   },
+   "centerBlender": [
+    -0.2165,
+    -0.43511,
+    0.97789
+   ],
+   "sizeBlender": [
+    0.079,
+    0.05784,
+    0.10909
+   ],
+   "centerRuntime": [
+    -0.2165,
+    0.97789,
+    0.43511
+   ],
+   "sizeRuntime": [
+    0.079,
+    0.10909,
+    0.05784
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltRound",
+   "source": "PetBear__EyeL_AltRound",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "Round",
+   "piece": null,
+   "vertices": 29,
+   "triangles": 42,
+   "material": "petBear__eye",
+   "designHeight": {
+    "lowest": 0.0012,
+    "highest": 0.0418
+   },
+   "nudgedVertices": 1,
+   "largestNudge": 0.0004,
+   "largestMove": 0.0404,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": -0.016,
+     "mean": 0.0134,
+     "highest": 0.0385,
+     "faceDeepest": -0.017
+    },
+    "after": {
+     "deepest": 0.005,
+     "mean": 0.0212,
+     "highest": 0.0427,
+     "faceDeepest": 0.005
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0211,
+     "mean": 0.0161,
+     "highest": 0.0419,
+     "faceDeepest": -0.0211
+    },
+    "after": {
+     "deepest": 0.0056,
+     "mean": 0.0241,
+     "highest": 0.0402,
+     "faceDeepest": 0.0056
+    }
+   },
+   "centerBlender": [
+    -0.22433,
+    -0.40711,
+    0.97137
+   ],
+   "sizeBlender": [
+    0.18772,
+    0.10752,
+    0.20108
+   ],
+   "centerRuntime": [
+    -0.22433,
+    0.97137,
+    0.40711
+   ],
+   "sizeRuntime": [
+    0.18772,
+    0.20108,
+    0.10752
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltSleepy",
+   "source": "PetBear__EyeL_AltSleepy",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "sleepy",
+   "piece": "Main",
+   "vertices": 66,
+   "triangles": 90,
+   "material": "attach__ink",
+   "designHeight": {
+    "lowest": -0.006,
+    "highest": 0.0153
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0266,
+   "skirtVertices": 36,
+   "bear": {
+    "before": {
+     "deepest": 0.0065,
+     "mean": 0.0131,
+     "highest": 0.0221,
+     "faceDeepest": 0.0065,
+     "skirt": [
+      -0.0134,
+      0.0054
+     ]
+    },
+    "after": {
+     "deepest": 0.0082,
+     "mean": 0.0112,
+     "highest": 0.0133,
+     "faceDeepest": 0.0082,
+     "skirt": [
+      -0.0213,
+      -0.0033
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": 0.012,
+     "mean": 0.0173,
+     "highest": 0.0268,
+     "faceDeepest": 0.012,
+     "skirt": [
+      -0.0077,
+      0.0163
+     ]
+    },
+    "after": {
+     "deepest": 0.0095,
+     "mean": 0.0156,
+     "highest": 0.0237,
+     "faceDeepest": 0.0095,
+     "skirt": [
+      -0.0063,
+      -0.0031
+     ]
+    }
+   },
+   "centerBlender": [
+    -0.23556,
+    -0.39449,
+    0.93887
+   ],
+   "sizeBlender": [
+    0.17137,
+    0.11891,
+    0.07692
+   ],
+   "centerRuntime": [
+    -0.23556,
+    0.93887,
+    0.39449
+   ],
+   "sizeRuntime": [
+    0.17137,
+    0.07692,
+    0.11891
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltSmallWide",
+   "source": "PetBear__EyeL_AltSmallWide",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "SmallWide",
+   "piece": null,
+   "vertices": 29,
+   "triangles": 42,
+   "material": "petBear__eye",
+   "designHeight": {
+    "lowest": 0.002,
+    "highest": 0.0429
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0389,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": -0.0117,
+     "mean": 0.0156,
+     "highest": 0.0378,
+     "faceDeepest": -0.0117
+    },
+    "after": {
+     "deepest": 0.0053,
+     "mean": 0.0211,
+     "highest": 0.0393,
+     "faceDeepest": 0.005
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0166,
+     "mean": 0.0185,
+     "highest": 0.0467,
+     "faceDeepest": -0.0169
+    },
+    "after": {
+     "deepest": 0.0056,
+     "mean": 0.0242,
+     "highest": 0.044,
+     "faceDeepest": 0.0056
+    }
+   },
+   "centerBlender": [
+    -0.25877,
+    -0.39095,
+    0.96649
+   ],
+   "sizeBlender": [
+    0.12936,
+    0.08335,
+    0.19204
+   ],
+   "centerRuntime": [
+    -0.25877,
+    0.96649,
+    0.39095
+   ],
+   "sizeRuntime": [
+    0.12936,
+    0.19204,
+    0.08335
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltSparkle",
+   "source": "PetBear__EyeL_AltSparkle",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "sparkle",
+   "piece": "Pupil",
+   "vertices": 37,
+   "triangles": 60,
+   "material": "attach__ink",
+   "designHeight": {
+    "lowest": -0.004,
+    "highest": 0.03
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0436,
+   "skirtVertices": 12,
+   "bear": {
+    "before": {
+     "deepest": -0.0136,
+     "mean": 0.014,
+     "highest": 0.0374,
+     "faceDeepest": -0.0136,
+     "skirt": [
+      -0.0273,
+      0.0196
+     ]
+    },
+    "after": {
+     "deepest": 0.0109,
+     "mean": 0.0192,
+     "highest": 0.0286,
+     "faceDeepest": 0.0079,
+     "skirt": [
+      -0.0198,
+      -0.0031
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.021,
+     "mean": 0.017,
+     "highest": 0.0489,
+     "faceDeepest": -0.0212,
+     "skirt": [
+      -0.0339,
+      0.0306
+     ]
+    },
+    "after": {
+     "deepest": 0.0116,
+     "mean": 0.0224,
+     "highest": 0.0308,
+     "faceDeepest": 0.01,
+     "skirt": [
+      -0.0132,
+      -0.0021
+     ]
+    }
+   },
+   "centerBlender": [
+    -0.225,
+    -0.40094,
+    0.968
+   ],
+   "sizeBlender": [
+    0.132,
+    0.10385,
+    0.208
+   ],
+   "centerRuntime": [
+    -0.225,
+    0.968,
+    0.40094
+   ],
+   "sizeRuntime": [
+    0.132,
+    0.208,
+    0.10385
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltSparkle_Iris",
+   "source": "PetBear__EyeL_AltSparkle_Iris",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "sparkle",
+   "piece": "Iris",
+   "vertices": 21,
+   "triangles": 30,
+   "material": "petBear__secondary",
+   "designHeight": {
+    "lowest": 0.02,
+    "highest": 0.035
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0214,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": 0.0195,
+     "mean": 0.0279,
+     "highest": 0.0405,
+     "faceDeepest": 0.0195
+    },
+    "after": {
+     "deepest": 0.0157,
+     "mean": 0.0208,
+     "highest": 0.0314,
+     "faceDeepest": 0.0157
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": 0.0209,
+     "mean": 0.0341,
+     "highest": 0.0519,
+     "faceDeepest": 0.0209
+    },
+    "after": {
+     "deepest": 0.017,
+     "mean": 0.0274,
+     "highest": 0.0367,
+     "faceDeepest": 0.017
+    }
+   },
+   "centerBlender": [
+    -0.225,
+    -0.4223,
+    0.92
+   ],
+   "sizeBlender": [
+    0.088,
+    0.04478,
+    0.07228
+   ],
+   "centerRuntime": [
+    -0.225,
+    0.92,
+    0.4223
+   ],
+   "sizeRuntime": [
+    0.088,
+    0.07228,
+    0.04478
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltSparkle_Shine",
+   "source": "PetBear__EyeL_AltSparkle_Shine",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "sparkle",
+   "piece": "Shine",
+   "vertices": 30,
+   "triangles": 42,
+   "material": "wear__FFFFFF",
+   "designHeight": {
+    "lowest": 0.026,
+    "highest": 0.0421
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0371,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": -0.0004,
+     "mean": 0.0184,
+     "highest": 0.0339,
+     "faceDeepest": -0.0004
+    },
+    "after": {
+     "deepest": 0.0229,
+     "mean": 0.0282,
+     "highest": 0.0375,
+     "faceDeepest": 0.0226
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0081,
+     "mean": 0.0194,
+     "highest": 0.0373,
+     "faceDeepest": -0.0081
+    },
+    "after": {
+     "deepest": 0.0212,
+     "mean": 0.0291,
+     "highest": 0.0392,
+     "faceDeepest": 0.0192
+    }
+   },
+   "centerBlender": [
+    -0.234,
+    -0.43451,
+    1.00494
+   ],
+   "sizeBlender": [
+    0.094,
+    0.04743,
+    0.10212
+   ],
+   "centerRuntime": [
+    -0.234,
+    1.00494,
+    0.43451
+   ],
+   "sizeRuntime": [
+    0.094,
+    0.10212,
+    0.04743
+   ]
+  },
+  {
+   "name": "Bear__EyeL_AltSparkle_White",
+   "source": "PetBear__EyeL_AltSparkle_White",
+   "kind": "item",
+   "anchor": "EyeL",
+   "item": "sparkle",
+   "piece": "White",
+   "vertices": 37,
+   "triangles": 60,
+   "material": "wear__FFFFFF",
+   "designHeight": {
+    "lowest": -0.014,
+    "highest": 0.016
+   },
+   "nudgedVertices": 8,
+   "largestNudge": 0.0076,
+   "largestMove": 0.0502,
+   "skirtVertices": 12,
+   "bear": {
+    "before": {
+     "deepest": -0.023,
+     "mean": 0.004,
+     "highest": 0.0345,
+     "faceDeepest": -0.0245,
+     "skirt": [
+      -0.0377,
+      0.0176
+     ]
+    },
+    "after": {
+     "deepest": 0.0051,
+     "mean": 0.0118,
+     "highest": 0.0207,
+     "faceDeepest": 0.0035,
+     "skirt": [
+      -0.0243,
+      -0.0101
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     -0.007,
+     0.00182,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0316,
+     "mean": 0.0065,
+     "highest": 0.0439,
+     "faceDeepest": -0.0319,
+     "skirt": [
+      -0.0459,
+      0.0272
+     ]
+    },
+    "after": {
+     "deepest": 0.0052,
+     "mean": 0.0147,
+     "highest": 0.0264,
+     "faceDeepest": 0.0047,
+     "skirt": [
+      -0.0214,
+      -0.0095
+     ]
+    }
+   },
+   "centerBlender": [
+    -0.225,
+    -0.39018,
+    0.972
+   ],
+   "sizeBlender": [
+    0.165,
+    0.12542,
+    0.245
+   ],
+   "centerRuntime": [
+    -0.225,
+    0.972,
+    0.39018
+   ],
+   "sizeRuntime": [
+    0.165,
+    0.245,
+    0.12542
+   ]
+  },
+  {
+   "name": "Bear__EyeR",
+   "source": "PetBear__EyeR",
+   "kind": "bear",
+   "anchor": null,
+   "item": null,
+   "piece": null,
+   "vertices": 49,
+   "triangles": 72,
+   "material": "petBear__eyeCute",
+   "designHeight": {
+    "lowest": 0.0044,
+    "highest": 0.0243
+   },
+   "nudgedVertices": 19,
+   "largestNudge": 0.0023,
+   "largestMove": 0.0031,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": 0.0038,
+     "mean": 0.0108,
+     "highest": 0.0215,
+     "faceDeepest": 0.0012
+    },
+    "after": {
+     "deepest": 0.005,
+     "mean": 0.0115,
+     "highest": 0.0215,
+     "faceDeepest": 0.0035
+    }
+   },
+   "centerBlender": [
+    0.22632,
+    -0.40857,
+    0.97168
+   ],
+   "sizeBlender": [
+    0.15054,
+    0.08595,
+    0.20196
+   ],
+   "centerRuntime": [
+    0.22632,
+    0.97168,
+    0.40857
+   ],
+   "sizeRuntime": [
+    0.15054,
+    0.20196,
+    0.08595
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltHappy",
+   "source": "PetBear__EyeR_AltHappy",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "happy",
+   "piece": "Main",
+   "vertices": 54,
+   "triangles": 78,
+   "material": "attach__ink",
+   "designHeight": {
+    "lowest": -0.006,
+    "highest": 0.0192
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0261,
+   "skirtVertices": 28,
+   "bear": {
+    "before": {
+     "deepest": -0.0056,
+     "mean": 0.0067,
+     "highest": 0.0159,
+     "faceDeepest": -0.0058,
+     "skirt": [
+      -0.0277,
+      -0.0023
+     ]
+    },
+    "after": {
+     "deepest": 0.0138,
+     "mean": 0.016,
+     "highest": 0.0187,
+     "faceDeepest": 0.013,
+     "skirt": [
+      -0.0138,
+      -0.0049
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0048,
+     "mean": 0.0107,
+     "highest": 0.0197,
+     "faceDeepest": -0.0056,
+     "skirt": [
+      -0.0312,
+      0.0001
+     ]
+    },
+    "after": {
+     "deepest": 0.015,
+     "mean": 0.0202,
+     "highest": 0.0246,
+     "faceDeepest": 0.0148,
+     "skirt": [
+      -0.0131,
+      -0.0036
+     ]
+    }
+   },
+   "centerBlender": [
+    0.225,
+    -0.40277,
+    0.99006
+   ],
+   "sizeBlender": [
+    0.17497,
+    0.11875,
+    0.08988
+   ],
+   "centerRuntime": [
+    0.225,
+    0.99006,
+    0.40277
+   ],
+   "sizeRuntime": [
+    0.17497,
+    0.08988,
+    0.11875
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltLash",
+   "source": "PetBear__EyeR_AltLash",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "lash",
+   "piece": "Main",
+   "vertices": 71,
+   "triangles": 106,
+   "material": "attach__ink",
+   "designHeight": {
+    "lowest": -0.006,
+    "highest": 0.03
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.041,
+   "skirtVertices": 30,
+   "bear": {
+    "before": {
+     "deepest": -0.0151,
+     "mean": 0.0056,
+     "highest": 0.0337,
+     "faceDeepest": -0.0155,
+     "skirt": [
+      -0.0307,
+      0.0149
+     ]
+    },
+    "after": {
+     "deepest": 0.0094,
+     "mean": 0.0167,
+     "highest": 0.0269,
+     "faceDeepest": 0.0085,
+     "skirt": [
+      -0.0218,
+      -0.004
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0213,
+     "mean": 0.0081,
+     "highest": 0.047,
+     "faceDeepest": -0.0215,
+     "skirt": [
+      -0.0385,
+      0.0283
+     ]
+    },
+    "after": {
+     "deepest": 0.0098,
+     "mean": 0.0198,
+     "highest": 0.0312,
+     "faceDeepest": 0.009,
+     "skirt": [
+      -0.0133,
+      -0.0035
+     ]
+    }
+   },
+   "centerBlender": [
+    0.24214,
+    -0.39281,
+    0.97243
+   ],
+   "sizeBlender": [
+    0.17828,
+    0.1251,
+    0.20785
+   ],
+   "centerRuntime": [
+    0.24214,
+    0.97243,
+    0.39281
+   ],
+   "sizeRuntime": [
+    0.17828,
+    0.20785,
+    0.1251
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltLash_Shine",
+   "source": "PetBear__EyeR_AltLash_Shine",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "lash",
+   "piece": "Shine",
+   "vertices": 34,
+   "triangles": 48,
+   "material": "wear__FFFFFF",
+   "designHeight": {
+    "lowest": 0.02,
+    "highest": 0.036
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0278,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": -0.0035,
+     "mean": 0.0175,
+     "highest": 0.0372,
+     "faceDeepest": -0.0035
+    },
+    "after": {
+     "deepest": 0.0172,
+     "mean": 0.0233,
+     "highest": 0.0319,
+     "faceDeepest": 0.016
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.006,
+     "mean": 0.0187,
+     "highest": 0.0358,
+     "faceDeepest": -0.006
+    },
+    "after": {
+     "deepest": 0.0172,
+     "mean": 0.0252,
+     "highest": 0.0375,
+     "faceDeepest": 0.017
+    }
+   },
+   "centerBlender": [
+    0.2165,
+    -0.4346,
+    0.97789
+   ],
+   "sizeBlender": [
+    0.079,
+    0.05825,
+    0.10909
+   ],
+   "centerRuntime": [
+    0.2165,
+    0.97789,
+    0.4346
+   ],
+   "sizeRuntime": [
+    0.079,
+    0.10909,
+    0.05825
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltRound",
+   "source": "PetBear__EyeR_AltRound",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "Round",
+   "piece": null,
+   "vertices": 29,
+   "triangles": 42,
+   "material": "petBear__eye",
+   "designHeight": {
+    "lowest": 0.0016,
+    "highest": 0.0418
+   },
+   "nudgedVertices": 1,
+   "largestNudge": 0.0004,
+   "largestMove": 0.0401,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": -0.0171,
+     "mean": 0.0126,
+     "highest": 0.0378,
+     "faceDeepest": -0.0181
+    },
+    "after": {
+     "deepest": 0.005,
+     "mean": 0.0211,
+     "highest": 0.0419,
+     "faceDeepest": 0.005
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0209,
+     "mean": 0.0162,
+     "highest": 0.0418,
+     "faceDeepest": -0.0209
+    },
+    "after": {
+     "deepest": 0.0071,
+     "mean": 0.0249,
+     "highest": 0.0411,
+     "faceDeepest": 0.0071
+    }
+   },
+   "centerBlender": [
+    0.22433,
+    -0.40725,
+    0.97136
+   ],
+   "sizeBlender": [
+    0.1878,
+    0.10729,
+    0.20106
+   ],
+   "centerRuntime": [
+    0.22433,
+    0.97136,
+    0.40725
+   ],
+   "sizeRuntime": [
+    0.1878,
+    0.20106,
+    0.10729
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltSleepy",
+   "source": "PetBear__EyeR_AltSleepy",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "sleepy",
+   "piece": "Main",
+   "vertices": 66,
+   "triangles": 90,
+   "material": "attach__ink",
+   "designHeight": {
+    "lowest": -0.006,
+    "highest": 0.0153
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0256,
+   "skirtVertices": 36,
+   "bear": {
+    "before": {
+     "deepest": 0.0054,
+     "mean": 0.0124,
+     "highest": 0.0218,
+     "faceDeepest": 0.0054,
+     "skirt": [
+      -0.0145,
+      0.0048
+     ]
+    },
+    "after": {
+     "deepest": 0.0082,
+     "mean": 0.0112,
+     "highest": 0.0135,
+     "faceDeepest": 0.0082,
+     "skirt": [
+      -0.0217,
+      -0.0035
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": 0.0125,
+     "mean": 0.0173,
+     "highest": 0.0263,
+     "faceDeepest": 0.0125,
+     "skirt": [
+      -0.0072,
+      0.0156
+     ]
+    },
+    "after": {
+     "deepest": 0.01,
+     "mean": 0.0163,
+     "highest": 0.0241,
+     "faceDeepest": 0.01,
+     "skirt": [
+      -0.0067,
+      -0.0031
+     ]
+    }
+   },
+   "centerBlender": [
+    0.23556,
+    -0.39388,
+    0.93887
+   ],
+   "sizeBlender": [
+    0.17137,
+    0.11982,
+    0.07692
+   ],
+   "centerRuntime": [
+    0.23556,
+    0.93887,
+    0.39388
+   ],
+   "sizeRuntime": [
+    0.17137,
+    0.07692,
+    0.11982
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltSmallWide",
+   "source": "PetBear__EyeR_AltSmallWide",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "SmallWide",
+   "piece": null,
+   "vertices": 29,
+   "triangles": 42,
+   "material": "petBear__eye",
+   "designHeight": {
+    "lowest": 0.0022,
+    "highest": 0.0429
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0384,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": -0.0126,
+     "mean": 0.0149,
+     "highest": 0.0373,
+     "faceDeepest": -0.0126
+    },
+    "after": {
+     "deepest": 0.0053,
+     "mean": 0.0211,
+     "highest": 0.0383,
+     "faceDeepest": 0.0049
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0166,
+     "mean": 0.0185,
+     "highest": 0.0465,
+     "faceDeepest": -0.0169
+    },
+    "after": {
+     "deepest": 0.0063,
+     "mean": 0.0249,
+     "highest": 0.0449,
+     "faceDeepest": 0.0063
+    }
+   },
+   "centerBlender": [
+    0.25885,
+    -0.39009,
+    0.96649
+   ],
+   "sizeBlender": [
+    0.12936,
+    0.08289,
+    0.19203
+   ],
+   "centerRuntime": [
+    0.25885,
+    0.96649,
+    0.39009
+   ],
+   "sizeRuntime": [
+    0.12936,
+    0.19203,
+    0.08289
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltSparkle",
+   "source": "PetBear__EyeR_AltSparkle",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "sparkle",
+   "piece": "Pupil",
+   "vertices": 37,
+   "triangles": 60,
+   "material": "attach__ink",
+   "designHeight": {
+    "lowest": -0.004,
+    "highest": 0.03
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0431,
+   "skirtVertices": 12,
+   "bear": {
+    "before": {
+     "deepest": -0.0147,
+     "mean": 0.0132,
+     "highest": 0.0363,
+     "faceDeepest": -0.0147,
+     "skirt": [
+      -0.0283,
+      0.0185
+     ]
+    },
+    "after": {
+     "deepest": 0.0109,
+     "mean": 0.019,
+     "highest": 0.0277,
+     "faceDeepest": 0.0079,
+     "skirt": [
+      -0.0201,
+      -0.0032
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0209,
+     "mean": 0.0171,
+     "highest": 0.0488,
+     "faceDeepest": -0.0213,
+     "skirt": [
+      -0.0338,
+      0.0305
+     ]
+    },
+    "after": {
+     "deepest": 0.0115,
+     "mean": 0.023,
+     "highest": 0.0315,
+     "faceDeepest": 0.0103,
+     "skirt": [
+      -0.0129,
+      -0.0021
+     ]
+    }
+   },
+   "centerBlender": [
+    0.225,
+    -0.40057,
+    0.968
+   ],
+   "sizeBlender": [
+    0.132,
+    0.10378,
+    0.208
+   ],
+   "centerRuntime": [
+    0.225,
+    0.968,
+    0.40057
+   ],
+   "sizeRuntime": [
+    0.132,
+    0.208,
+    0.10378
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltSparkle_Iris",
+   "source": "PetBear__EyeR_AltSparkle_Iris",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "sparkle",
+   "piece": "Iris",
+   "vertices": 21,
+   "triangles": 30,
+   "material": "petBear__secondary",
+   "designHeight": {
+    "lowest": 0.02,
+    "highest": 0.035
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.02,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": 0.02,
+     "mean": 0.0274,
+     "highest": 0.0403,
+     "faceDeepest": 0.02
+    },
+    "after": {
+     "deepest": 0.0157,
+     "mean": 0.0209,
+     "highest": 0.0316,
+     "faceDeepest": 0.0156
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": 0.0211,
+     "mean": 0.0341,
+     "highest": 0.0519,
+     "faceDeepest": 0.0211
+    },
+    "after": {
+     "deepest": 0.0169,
+     "mean": 0.0279,
+     "highest": 0.0372,
+     "faceDeepest": 0.0169
+    }
+   },
+   "centerBlender": [
+    0.225,
+    -0.42163,
+    0.92
+   ],
+   "sizeBlender": [
+    0.088,
+    0.0441,
+    0.07228
+   ],
+   "centerRuntime": [
+    0.225,
+    0.92,
+    0.42163
+   ],
+   "sizeRuntime": [
+    0.088,
+    0.07228,
+    0.0441
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltSparkle_Shine",
+   "source": "PetBear__EyeR_AltSparkle_Shine",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "sparkle",
+   "piece": "Shine",
+   "vertices": 30,
+   "triangles": 42,
+   "material": "wear__FFFFFF",
+   "designHeight": {
+    "lowest": 0.026,
+    "highest": 0.0421
+   },
+   "nudgedVertices": 0,
+   "largestNudge": 0.0,
+   "largestMove": 0.0369,
+   "skirtVertices": 0,
+   "bear": {
+    "before": {
+     "deepest": -0.0011,
+     "mean": 0.0178,
+     "highest": 0.0338,
+     "faceDeepest": -0.0011
+    },
+    "after": {
+     "deepest": 0.0228,
+     "mean": 0.0279,
+     "highest": 0.0372,
+     "faceDeepest": 0.0225
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0078,
+     "mean": 0.0196,
+     "highest": 0.0378,
+     "faceDeepest": -0.0078
+    },
+    "after": {
+     "deepest": 0.0209,
+     "mean": 0.0296,
+     "highest": 0.0395,
+     "faceDeepest": 0.019
+    }
+   },
+   "centerBlender": [
+    0.234,
+    -0.43367,
+    1.00494
+   ],
+   "sizeBlender": [
+    0.094,
+    0.04584,
+    0.10212
+   ],
+   "centerRuntime": [
+    0.234,
+    1.00494,
+    0.43367
+   ],
+   "sizeRuntime": [
+    0.094,
+    0.10212,
+    0.04584
+   ]
+  },
+  {
+   "name": "Bear__EyeR_AltSparkle_White",
+   "source": "PetBear__EyeR_AltSparkle_White",
+   "kind": "item",
+   "anchor": "EyeR",
+   "item": "sparkle",
+   "piece": "White",
+   "vertices": 37,
+   "triangles": 60,
+   "material": "wear__FFFFFF",
+   "designHeight": {
+    "lowest": -0.014,
+    "highest": 0.016
+   },
+   "nudgedVertices": 8,
+   "largestNudge": 0.0054,
+   "largestMove": 0.0497,
+   "skirtVertices": 12,
+   "bear": {
+    "before": {
+     "deepest": -0.0237,
+     "mean": 0.0031,
+     "highest": 0.0334,
+     "faceDeepest": -0.0256,
+     "skirt": [
+      -0.0384,
+      0.0165
+     ]
+    },
+    "after": {
+     "deepest": 0.0051,
+     "mean": 0.0116,
+     "highest": 0.02,
+     "faceDeepest": 0.0035,
+     "skirt": [
+      -0.0253,
+      -0.0099
+     ]
+    }
+   },
+   "bunny": {
+    "anchorDelta": [
+     0.007,
+     0.00057,
+     -0.027
+    ],
+    "before": {
+     "deepest": -0.0314,
+     "mean": 0.0066,
+     "highest": 0.0438,
+     "faceDeepest": -0.0319,
+     "skirt": [
+      -0.0455,
+      0.027
+     ]
+    },
+    "after": {
+     "deepest": 0.0051,
+     "mean": 0.0154,
+     "highest": 0.0253,
+     "faceDeepest": 0.0045,
+     "skirt": [
+      -0.021,
+      -0.0095
+     ]
+    }
+   },
+   "centerBlender": [
+    0.225,
+    -0.39037,
+    0.972
+   ],
+   "sizeBlender": [
+    0.165,
+    0.12692,
+    0.245
+   ],
+   "centerRuntime": [
+    0.225,
+    0.972,
+    0.39037
+   ],
+   "sizeRuntime": [
+    0.165,
+    0.245,
+    0.12692
+   ]
+  }
+ ]
+}
