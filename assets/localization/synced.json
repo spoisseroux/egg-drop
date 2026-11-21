@@ -517,10 +517,20 @@
    "context": "",
    "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.bookworm.name"
   },
+  "catalog.DeckThemes.ById.cloud_glass.name": {
+   "source": "Cloud Glass",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.cloud_glass.name, catalog.BookCatalog.Pages.faceplates.items.11.name"
+  },
   "catalog.DeckThemes.ById.copperleaf.name": {
    "source": "Copperleaf",
    "context": "",
    "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.copperleaf.name"
+  },
+  "catalog.DeckThemes.ById.dewy_meadow.name": {
+   "source": "Dewy Meadow",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.dewy_meadow.name, catalog.BookCatalog.Pages.faceplates.items.13.name"
   },
   "catalog.DeckThemes.ById.gloaming.name": {
    "source": "Gloaming",
@@ -536,6 +546,11 @@
    "source": "Creek",
    "context": "",
    "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.ice.name, catalog.DeckBackgrounds.ById.creek.name"
+  },
+  "catalog.DeckThemes.ById.lagoon.name": {
+   "source": "Lagoon",
+   "context": "",
+   "example": "Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.lagoon.name, catalog.BookCatalog.Pages.faceplates.items.12.name"
   },
   "catalog.DeckThemes.ById.lime_gel.name": {
    "source": "Lime Gel",
