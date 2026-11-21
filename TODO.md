@@ -13,7 +13,7 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 - [ ] Stars notifications: give them something to open (or no chevron).
 - [ ] Confirm dialog with a gamepad: releasing the A that opened it must not press Yes.
 - [ ] Real phone pass and a two-account pass on v2.
-- [ ] Bear v2 cute model (Fable, `assets/art-source/pets/pet-bear-v2-cute.blend`): Spencer's call, then export and rig rebuild.
+- [x] Bear v2 cute model: shipped live 2026-11-21 (v1033).
 
 **2. Make levels matter**
 - [ ] Level rewards (free at a level): tricks (Heart 5/10/15...), merge pops and drop trails (Power), deck flourishes (Energy), park looks (Jump), toy perks (Speed), Book hints (Smarts). Stats panel shows "Next at N" only where something exists. (V2-SCOPE 4.1, slice S5)
@@ -35,7 +35,8 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 ## Now working on
 
-- [ ] **Ship the cute Bear + Dewdrop store art (2026-11-21, Opus + Fable).** Spencer: "ship it now", captures with the cute Bear, Fable picks what to feature; make icons A, B and C, then show him; Frutiger Aero faceplates for the deck in the art (real in-game plates, so the ads stay honest). In flight: architect review of the Bear ship plan (export, Open Cloud upload, LoadAsset, rig rebuild, Bunny kept identical); Fable on 3 Aero plates and the shot list. Refs: `artifacts/store-listing/v2-new-look/refs/REFERENCES.md` (Chao Garden mods, Aero wallpapers and devices; nothing downloaded). Decisions: lowercase wordmark OK; ads $5/day for one week (nothing spent until the creative is ready and he says go); game stays 16+ limited until "100 hep", so the ad audience is 17+; ad numbers read through his Chrome, no API key needed.
+- [x] **Cute Bear + Aero faceplates LIVE (2026-11-21, v1033, rollback v1032).** Eyes conformed to the head after Spencer saw clipping; beta first, then "Publish live now". Servers not restarted yet.
+- [ ] **Dewdrop store art (2026-11-21, Opus + Fable).** Captures S1-S9 next, then icons A, B, C to show Spencer. Spencer: "ship it now", captures with the cute Bear, Fable picks what to feature; make icons A, B and C, then show him; Frutiger Aero faceplates for the deck in the art (real in-game plates, so the ads stay honest). In flight: architect review of the Bear ship plan (export, Open Cloud upload, LoadAsset, rig rebuild, Bunny kept identical); Fable on 3 Aero plates and the shot list. Refs: `artifacts/store-listing/v2-new-look/refs/REFERENCES.md` (Chao Garden mods, Aero wallpapers and devices; nothing downloaded). Decisions: lowercase wordmark OK; ads $5/day for one week (nothing spent until the creative is ready and he says go); game stays 16+ limited until "100 hep", so the ad audience is 17+; ad numbers read through his Chrome, no API key needed.
   - Bear rig part (Sol, 2026-11-21): bear-v2.fbx uploaded (Model 113193601678263, eye Decal 79423116883955), manifests, BearRigDefinition, PetAssets Bear template and the 21 eye/eyewear items rebuilt; Bunny snapshot identical (hash 2734834761 before and after). Studio Edit carries it (Rojo plugin was disconnected, pushed by hash-checked source edits); nothing committed, saved or published. Evidence: artifacts/v2-bear-ship-2026-11-21/.
 
 - [x] **v2 live (2026-11-20, Opus).** Published runtime aeae2d9 to the live place after Spencer's beta pass; translations synced (226/5); test content stripped; branch fast-forwarded to main. Servers restarted (Open Cloud 200 OK). Next: watch the first live saves (stats, pouch, Bunny adopt) in the logs.
