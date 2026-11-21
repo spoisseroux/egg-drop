@@ -55,7 +55,7 @@ return function(client)
    end)
   end
   test("all seven authored aliases retain identity bits, ordering and rarity",function()
-   assert(Pets.byId.pip.name=="Bear"and Pets.byId.puddle.name=="Ovelle"and #Pets.collection==7)
+   assert(Pets.byId.pip.name=="Bear"and Pets.byId.puddle.name=="Ovelle"and #Pets.collection==8) -- +Bunny (v2)
    for i,pet in ipairs(Pets.collection)do
     assert(pet.index==i);local v=Factory.new(folder,Vector3.new(2000,4,0),pet,.72);table.insert(views,v)
     assert(v.model:GetAttribute("RigId")~=nil and v.definition.legacyId==pet.id)

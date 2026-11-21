@@ -126,3 +126,77 @@ Six cuts of about 1.5 s. Each is a real gameplay clip (merge chain, egg hatch, f
 Opus: captures C2 to C6 and C8 in the beta place (107705084891479), nothing saved or published. Fable: `compose_dewdrop.py` beside the board script, Icon A and thumbnail 1 first for Spencer's eye, then the rest. Spencer: uploads.
 
 Sources read 21 Nov 2026: [Game Boy Micro (Wikipedia)](https://en.wikipedia.org/wiki/Game_Boy_Micro), [Nintendo launch release via Nintendo World Report](https://www.nintendoworldreport.com/pr/10725/game-boy-micro-in-september-at-99), [Frutiger Aero (Wikipedia)](https://en.wikipedia.org/wiki/Frutiger_Aero), [Chao (Wikipedia)](https://en.wikipedia.org/wiki/Chao_(Sonic_the_Hedgehog)), [Chao Garden (Sonic Retro)](https://info.sonicretro.org/Chao_garden), [Cook and Becker on Sonic art](https://www.cookandbecker.com/en/article/262/30-years-of-sonic-the-hedgehog.html). Roblox policy sources are listed in the old scope.
+
+## Update 2026-11-21: Aero faceplates, what to feature, shot list
+
+Fable. This section overrides anything above that it contradicts. Nothing is uploaded, published, captured or spent.
+
+### Spencer's answers
+
+| Question | Answer |
+|---|---|
+| Icon | Make **all three** (A, B, C), then show him. No pick yet. |
+| Wordmark | Lowercase **pocket pals** is approved. |
+| Ad budget | **$5 a day for 7 days** ($35), not spent. Replaces the $10 a day suggestion. That is thin for three creatives, so run **A and C only**; B waits. |
+| Age | The game stays **16+ limited**, so the ad audience is **17+**. No Kids and Select campaign. |
+| References | He has none. `refs/REFERENCES.md` (looked at in the browser, nothing saved) is the reference set. |
+| Bear | The cute restyle (`pet-bear-v2-cute.blend`) ships now. All captures use it; no old Bear cut-outs are reused. |
+| Deck | The Pocket Deck in the icon, thumbnails and ads wears a Frutiger Aero faceplate that players can really buy. |
+
+### Three Aero faceplates
+
+Built in the existing pipeline: `scripts/deck_art/build_faceplates.py` (functions `cloud_glass`, `lagoon`, `dewy_meadow`; rows appended as orders 21 to 23), textures in `assets/deck/faceplates/` at 1024 × 499 RGBA with the rounded alpha, rows in `faceplates.json`. All drawn in code (numpy and PIL); nothing traced or generated. Sheet: `aero-faceplates.png` (rebuild with `python build_aero_sheet.py`). The sheet is plate art on the repo's shell mock-up, not a Studio render.
+
+| id | Name | Tier | Stars | What it is | Overlay | Differs from |
+|---|---|---|---|---|---|---|
+| `cloud_glass` | **Cloud Glass** | common | **40** | The hero. Pale sky at the top through sky blue to a cobalt rim, six white clouds inside the shell, one glass band across the top third, a thin bright rim line. | gloss | Aqua Pop is blue at the top, white below and covered in bubbles. This runs the other way and has clouds, no bubbles. |
+| `lagoon` | **Lagoon** | rare | **100** | Clear turquoise water under a pale mint sky: a lit waterline, a soft net of light on the bed, one splash arc over the right grip, a few droplets. | water | Tidepool is deep blue and all caustics. Creek is clear plastic with ribs. This is light, two fields, with a surface. |
+| `dewy_meadow` | **Dewy Meadow** | rare | **100** | Two glossy emerald hills with a wet highlight on each crest, pink-lilac cloud on the horizon, white to pale cyan sky, dew drops. | gloss | Lime Gel is one lime gel slab. Canopy is a leaf print. This is a scene, green and white. |
+
+Prices sit on the live ladder (40 / 100 / 250). Cloud Glass is common so a new player can own the deck from the ads early. All three use the silver band and dark engraving. All detail sits on the grips and the top and bottom strips, because the glass hides the middle.
+
+**Not done, for the primary agent and Opus:**
+
+1. Upload the three PNGs. `asset-ids.json` has a `pending` block with null ids; move each into `faceplates` once uploaded.
+2. `src/shared/DeckThemes.lua` is **not** written by any script (its comment says "Generated", but no generator exists), so I did not touch it. Paste-ready rows, with Toy Shell palettes solved by the `build_revision1.py` method, are in `aero-plates-DeckThemes-rows.lua.txt`. The ids also go into `Themes.Order`. Specs that count plates need new numbers (`FaceplatePurchase.spec.lua` expects 18 in `Order`; `DeckStyle.spec.lua` expects 20 shop tiles).
+3. The Toy Shell hues are my proposal and have not been seen in the menus: Cloud Glass 211 (between Aqua Pop 205 and Tidepool 216, so check the three side by side), Lagoon 180, Dewy Meadow 146 with a lilac tag.
+4. Three new names need the translation sync before publish.
+5. **Honesty gate:** no ad or thumbnail showing an Aero plate goes live before that plate can be bought in the live place.
+
+One change to flag: `build_faceplates.py` still held the old 20 / 40 / 80 prices, and running it would have written them into `faceplates.json`. I set its `PRICE` to 40 / 100 / 250 to match `DeckThemes.lua`. The JSON rows for the existing sold plates therefore moved from a stale 30 / 60 / 120 to 40 / 100 / 250. I found no game code that reads that JSON.
+
+### What we feature
+
+- **The Bear** is always the white cute Bear in the **Butter Pom Beanie** (`beanie_butter`) with **Blush Stickers** (`blush`). White on blue is our strongest contrast, and the butter pom is the one Sun accent a frame is allowed. The same outfit in every shot makes the character recognisable from icon to ad.
+- **The Bunny** is always **Rose** dye (`rose`), ears bare, with **Pearl Beads** (`beads`). No hat: the ears are the silhouette.
+- **The deck** is always **Cloud Glass**. Lagoon and Dewy Meadow wait for the later line-up frames (thumbnail 5 can show all three in a row).
+- Everything worn costs 40 Stars. Nothing in the lead images is a showcase item.
+- Cloud Glass is sky blue, so on the Sky field it stands low, against the pale horizon, where its cobalt rim separates it. Icon C moves from the Aqua field to **Leaf** (blue deck on green: sky over grass).
+
+### Shot list for Studio
+
+Setup for every shot: beta place 107705084891479, fixture save, nothing saved or published. FOV 35. Camera at the subject's eye height unless stated. Blink off, idle beat forced. Key light from top left. Every capture is a **cut-out**: shoot each as a matched pair on plain backdrops (pets on the grey Neon pair as before; the deck with its screen lit on a black and white pair so the screen glow mattes cleanly). No shot needs a real garden background; fields, floor, reflections, bubbles and type are composited. Use the widest window available, with the subject at 70% of frame height or more.
+
+| Shot | Used in | Subject | Dye | Items | Plate | Camera and pose | Notes |
+|---|---|---|---|---|---|---|---|
+| S1 | Icon A (and Ad B later) | Bear, head and shoulders | none (white) | `beanie_butter`, `blush` | none | Front, turned 10° to its left, level, looking at camera, idle smile. | Leave room above the pom. |
+| S2 | Icon A | Bunny, head and shoulders | `rose` | `beads` | none | Front, turned 10° to its right, level, ears fully up. | Same camera distance and height as S1, so the two sit cheek to cheek at one scale. Whole ear length in frame. |
+| S3 | Icon B | Bear, face | none | `blush` only, no hat | none | Front, head tilted about 8°, level, face filling the frame. | The bare head shows the new ears and eyes. The Star is added in compositing from the UI Star art. |
+| S4 | Icon C, thumbnail 1, Ad A | Pocket Deck, screen lit | n/a | n/a | `cloud_glass` | Three-quarter: yawed 25° to its left, pitched 10° toward camera, level. | Screen shows a live merge at ×3 or more (chain-freeze method). Also one **straight-on** frame for thumbnail 5. Black and white pair. |
+| S5 | Icon C | Bear, eyes and ears | none | `blush`, no hat | none | Front, level, camera a little below eye height so the Bear looks down over an edge. | Only the top third of the head is used; it peeks over the deck. |
+| S6 | Thumbnail 1, Ad A | Bear, full body, standing | none | `beanie_butter`, `blush` | none | Front three-quarter (20° to its left), level, wave or idle. Feet in frame for the contact shadow. | Hero of the frame, left of centre. |
+| S7 | Thumbnail 1, Ad A | Bunny, full body | `rose` | `beads` | none | Front three-quarter (20° to its right), level, ears up, sitting or standing. | Composited a little smaller and behind the Bear. |
+| S8 | Ad C | Bunny, mid-hop | `rose` | `beads` | none | Side three-quarter (45°), camera low (about knee height), top of the hop arc, ears back. | Record the hop and pick the frame. It travels left to right, rising. |
+| S9 | Ad C | Bear, cheer | none | `beanie_butter`, `blush` | none | Same 45° and low camera as S8, arms up at the peak of the cheer. | Leans the same way as S8. |
+
+The Rose dye should read as a clear mid pink, not hot pink. Record how many doses the fixture used so the colour is one a player can reach.
+
+Layouts (as in the concepts above except where stated):
+
+- **Icon A, two pals:** S1 and S2 on the Sky field, floor at 80%, one bubble top right, no type.
+- **Icon B, one pal:** S3 on the Sky field, face at 70% of the square, one Star on the floor.
+- **Icon C, pocket deck:** S4 on the **Leaf** field, tilted 5°, S5 peeking over its top edge. Check the screen at 150 px; if it turns to mush, enlarge the merge pieces in the freeze, never in paint.
+- **Thumbnail 1 and Ad A, the line-up:** Sky field. S6 left, S7 beside it, S4 right, low on the floor with a reflection. Wordmark **pocket pals**, tag "merge · hatch · train". Ad A is this frame unchanged.
+- **Ad C, sky hop:** one 12° diagonal, Sky above, Leaf below. S8 top right, S9 lower centre. Italic "your pocket pets", tag "pocket pals". No deck here: it is the energy test and a third subject would break the one-diagonal rule. Nothing that reads as racing.
+
+Order: S1, S2, S3, S5, S6, S7, S8 and S9 can be shot now. **S4 waits** for the Cloud Glass upload and its DeckThemes row. I compose the three icons first and show Spencer, then thumbnail 1, then Ad C.

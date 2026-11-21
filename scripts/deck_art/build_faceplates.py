@@ -459,6 +459,133 @@ def night_orb():
     return finish(gloss_arc(img, 0.12), 0.12)
 
 
+# ------------------------------------------------------------------ Frutiger Aero plates (store look 2026-11-21)
+def outline(inset, radius, width, blur=0.0016):
+    """Rounded-rect outline following the plate edge. inset, radius, width and blur in plate heights."""
+    m = Image.new("L", (GW, GH), 0)
+    i, r = inset * GH, radius * GH
+    ImageDraw.Draw(m).rounded_rectangle([i, i, GW - 1 - i, GH - 1 - i], r, outline=255, width=max(1, int(width * GH)))
+    return np.asarray(m.filter(ImageFilter.GaussianBlur(GH * blur))).astype(np.float32) / 255
+
+
+def inner_mask(inset, radius, blur=0.003):
+    m = Image.new("L", (GW, GH), 0)
+    i, r = inset * GH, radius * GH
+    ImageDraw.Draw(m).rounded_rectangle([i, i, GW - 1 - i, GH - 1 - i], r, fill=255)
+    return np.asarray(m.filter(ImageFilter.GaussianBlur(GH * blur))).astype(np.float32) / 255
+
+
+def edge_dist():
+    return np.minimum(np.minimum(X, 1 - X) * ASPECT, np.minimum(Y, 1 - Y))
+
+
+def aero_shell(img, rim_color, depth=0.34, reach=0.17, where=None):
+    """Translucent candy plastic: the shell reads thicker and deeper toward the rim."""
+    a = (1 - smooth(0, reach, edge_dist())) ** 1.5 * depth
+    return over(img, rim_color, a if where is None else a * where)
+
+
+def glass_band(img, top=0.62, edge=0.20, y_edge=0.36, sag=0.07):
+    """The one big Aero highlight: a white band across the top third with a crisp curved lower edge, fading to clear."""
+    yl = y_edge - sag * ((X - 0.5) * 2) ** 2                       # lower edge, highest at the sides
+    inside = smooth(0.004, -0.004, Y - yl) * inner_mask(0.034, 0.150)
+    a = top + (edge - top) * np.clip(Y / np.maximum(yl, 1e-3), 0, 1) ** 0.8
+    return over(img, "#FFFFFF", inside * a)
+
+
+def rim_light(img, color="#FFFFFF", strength=0.85):
+    """Thin bright line following the outline, brightest top left, with a soft bounce along the bottom."""
+    g = outline(0.020, 0.160, 0.0055)
+    lit = np.clip(1.05 - (X * 0.55 + Y * 0.75), 0.22, 1)
+    img = over(img, color, g * lit * strength)
+    bounce = outline(0.036, 0.146, 0.016, blur=0.012) * smooth(0.55, 1.0, Y)
+    return over(img, color, bounce * 0.30)
+
+
+def cloud(img, cx, cy, s, a=0.88, shade="#8FC4F2"):
+    """One soft cumulus seen inside the shell: five puffs on a flat base. cx aspect-true, s in plate heights."""
+    puffs = ((-0.95, 0.10, 0.52), (-0.38, -0.22, 0.66), (0.26, -0.40, 0.78), (0.86, -0.08, 0.58), (0.10, 0.12, 0.70))
+    body = np.zeros((GH, GW), dtype=np.float32)
+    for dx, dy, r in puffs:
+        d = np.sqrt((XA - (cx + dx * s)) ** 2 + (Y - (cy + dy * s)) ** 2) / (r * s)
+        body = np.maximum(body, smooth(1.0, 0.78, d))
+    body = body * smooth(cy + 0.50 * s, cy + 0.34 * s, Y)          # flat underside
+    under = np.clip((Y - (cy - 0.10 * s)) / (0.55 * s), 0, 1)
+    img = over(img, "#FFFFFF", body * a)
+    return over(img, shade, body * under * 0.42)
+
+
+def cloud_glass():
+    """Cloud Glass (Aero hero): cobalt rim to sky to pale sky, clouds reflected in the shell, one glass band, bright rim."""
+    img = ramp3(Y, [(0, "#CDEBFF"), (0.30, "#8FD2FF"), (0.62, "#49A8F8"), (1, "#1C5BD8")])
+    img = over(img, "#B9F3FF", blob(0.50 * ASPECT, 1.12, 0.62, 1.5) * 0.42)             # cyan caustic pooling at the bottom
+    for cx, cy, s, a in ((0.105, 0.800, 0.150, .90), (0.905, 0.180, 0.125, .86), (0.860, 0.905, 0.105, .80),
+                         (0.300, 0.955, 0.070, .70), (0.620, 0.060, 0.062, .62), (0.030, 0.300, 0.085, .66)):
+        img = cloud(img, cx * ASPECT, cy, s, a)
+    img = aero_shell(img, "#1444C0", 0.40)
+    img = glass_band(img, 0.60, 0.22, 0.37)
+    return finish(rim_light(img), 0.03)
+
+
+def lagoon():
+    """Lagoon: clear turquoise water under a pale mint sky. A lit waterline, a soft bed net, one splash ribbon and droplets."""
+    yw = 0.40 + 0.030 * np.sin(X * 7.4 + 0.6) + 0.014 * np.sin(X * 17.0 + 2.0)          # waterline
+    air = ramp3(Y, [(0, "#C9FBF4"), (0.45, "#F4FFFB")])
+    water = ramp3(Y, [(0.36, "#7FEFE6"), (0.62, "#2CCBD8"), (1, "#0C86B4")])
+    t = smooth(-0.004, 0.004, Y - yw)
+    img = air * (1 - t[..., None]) + water * t[..., None]
+    net = caustics(411, 0.62) * t * smooth(0.40, 0.75, Y)                               # the bed seen through the water
+    img = screen(img, "#DFFFF6", net * 0.34)
+    img = over(img, "#FFFFFF", np.exp(-((Y - yw - 0.004) / 0.007) ** 2) * 0.95)          # glint on the surface
+    img = over(img, "#0A7FA6", np.exp(-((Y - yw - 0.030) / 0.022) ** 2) * 0.22)          # the surface casts a soft line below
+    # splash ribbon: one arc of water leaping over the right grip, thick in the middle, thin at the ends
+    u = np.clip((X - 0.775) / 0.20, 0, 1)
+    arc = np.clip(np.sin(u * math.pi), 0, 1)
+    yc = 0.40 - 0.30 * arc ** 0.9
+    wdt = 0.006 + 0.030 * arc ** 1.4
+    rib = smooth(1.0, 0.72, np.abs(Y - yc) / wdt) * (X > 0.775) * (X < 0.975)
+    img = over(img, "#5FE3E4", rib * 0.90)
+    img = over(img, "#FFFFFF", smooth(1.0, 0.4, np.abs(Y - (yc - wdt * 0.42)) / (wdt * 0.36)) * rib * 0.85)
+    drops = [(0.800, 0.070, 0.020), (0.955, 0.150, 0.026), (0.985, 0.300, 0.015), (0.745, 0.210, 0.013),
+             (0.060, 0.260, 0.030), (0.150, 0.110, 0.017), (0.025, 0.120, 0.012), (0.205, 0.300, 0.012)]
+    img = bubbles(img, [(x * ASPECT, y, r) for x, y, r in drops], "#D9FFFA")
+    img = aero_shell(img, "#0A7FA6", 0.30)
+    img = glass_band(img, 0.50, 0.16, 0.30, 0.05)
+    return finish(rim_light(img), 0.03)
+
+
+def dewy_meadow():
+    """Dewy Meadow: two glossy emerald hills under a white-to-pale-cyan sky, with lilac cotton cloud on the horizon."""
+    img = ramp3(Y, [(0, "#BFEFF6"), (0.34, "#E9FBF4"), (0.58, "#FBFDE0")])
+    hb = 0.560 - 0.110 * np.sin(X * 3.6 + 2.2) - 0.020 * np.sin(X * 9.0)                 # back hill crest
+    hf = 0.700 + 0.100 * np.sin(X * 3.1 + 0.4) + 0.016 * np.sin(X * 8.0 + 1.0)           # front hill crest
+    cl = np.zeros((GH, GW), dtype=np.float32)                                            # cloud bank behind the hills
+    rng = np.random.default_rng(2111)
+    for k in range(30):
+        cx = (k + rng.random()) / 30 * ASPECT
+        r = 0.050 + rng.random() * 0.050
+        cy = float(np.interp(cx / ASPECT, X[0], hb[0])) - r * (0.15 + 0.45 * rng.random())
+        cl = np.maximum(cl, smooth(1.0, 0.80, np.sqrt((XA - cx) ** 2 + (Y - cy) ** 2) / r))
+    img = over(img, "#F6C9E6", cl * 0.92)
+    img = over(img, "#FFFFFF", cl * smooth(0.02, -0.07, Y - hb + 0.05) * 0.55)           # white tops
+    for crest, hi, mid, lo, lip in ((hb, "#8BEA5A", "#46CF3F", "#22A838", 0.60), (hf, "#5FE04A", "#1FB82E", "#0C8A30", 0.80)):
+        m = smooth(-0.003, 0.003, Y - crest)
+        depth = np.clip((Y - crest) / 0.42, 0, 1)
+        hill = ramp3(depth, [(0, hi), (0.30, mid), (1, lo)])
+        img = img * (1 - m[..., None]) + hill * m[..., None]
+        img = over(img, "#F2FFD0", np.exp(-((Y - crest - 0.014) / 0.012) ** 2) * m * lip)   # wet gloss along the crest
+        img = over(img, "#FFFFFF", np.exp(-((Y - crest - 0.050) / 0.030) ** 2) * m * 0.16)
+    grass = smooth(0.0, 0.05, Y - np.minimum(hb, hf) - 0.03)
+    tuft = np.clip(fbm(26, 2113, 2) - 0.60, 0, 1) * 2.5 * grass
+    img = over(img, "#B6F56A", np.clip(tuft, 0, 1) * 0.30)                               # lighter lawn tufts, no brown
+    dew = [(0.060, 0.860, 0.020), (0.180, 0.930, 0.013), (0.900, 0.800, 0.022), (0.960, 0.930, 0.012), (0.800, 0.945, 0.015)]
+    img = bubbles(img, [(x * ASPECT, y, r) for x, y, r in dew], "#F2FFD0")
+    img = aero_shell(img, "#0C8A30", 0.26, 0.15, smooth(0.45, 0.80, Y))                  # green rim low, sky rim high
+    img = aero_shell(img, "#6FC6DC", 0.22, 0.15, smooth(0.55, 0.20, Y))
+    img = glass_band(img, 0.66, 0.26, 0.33, 0.06)
+    return finish(rim_light(img), 0.03)
+
+
 # ------------------------------------------------------------------ book-only plate
 def deck_uv(x, y):
     """Deck units (1600 x 800 body) to plate 0..1 (the plate rect starts at 20,20 and is 1560 x 760)."""
@@ -682,8 +809,13 @@ PLATES = [
     ("rose_chrome", "Rose Chrome", rose_chrome, "rare", "#FFC2D4", "#8A4660", RS, "rose chrome", "Metal", ("gloss", 0.0, 0.50, 4.0), None),
     # Follow-up 2026-11-14: second book-only plate (Discoveries page at 100%). Appended: order 20.
     ("stargazer", "Stargazer", stargazer, "book", "#B9C6FF", "#1B1F4A", G, "foil-stamped night sky", "SmoothPlastic", None, "book"),
+    # Store look 2026-11-21 (ART-DIRECTION.md "Update 2026-11-21"): Frutiger Aero plates for the icon, thumbnails and ads.
+    # Appended so no earlier `order` moves: 21, 22, 23. Cloud Glass is the ad hero and is priced for a new player.
+    ("cloud_glass", "Cloud Glass", cloud_glass, "common", "#8FD2FF", "#1C5BD8", S, "translucent sky plastic, clouds inside", "Glass", ("gloss", 0.0, 0.45, 5.0), None),
+    ("lagoon", "Lagoon", lagoon, "rare", "#6FF0E0", "#0C7FA6", S, "clear water and splash", "Glass", ("water", 0.10, 0.55, 5.0), None),
+    ("dewy_meadow", "Dewy Meadow", dewy_meadow, "rare", "#8CF07A", "#178F3A", S, "glossy hills and cloud", "SmoothPlastic", ("gloss", 0.0, 0.40, 6.0), None),
 ]
-PRICE = {"starter": 0, "common": 20, "rare": 40, "showcase": 80, "book": 0}
+PRICE = {"starter": 0, "common": 40, "rare": 100, "showcase": 250, "book": 0}   # v1 ladder (745483b); matches DeckThemes.lua
 # Engrave (wordmark) colour and opacity; dark ink unless listed.
 ENGRAVE = {"aurora_glass": ("#FFFFFF", 0.78), "night_orb": ("#FFFFFF", 0.78), "tidepool": ("#FFFFFF", 0.78), "bookworm": ("#F2CF7A", 0.85), "stargazer": ("#FFE9A8", 0.85)}
 BAND_NAME = {S: "silver", GM: "gunmetal", G: "gold", RS: "rose", P: "paper"}
@@ -724,7 +856,7 @@ def main(only=None):
     doc = {
         "schema": 1, "textureSize": [W, H], "plateRect": DECK["plate"],
         "tiers": {"starter": {"priceStars": 0, "note": "the 8 existing deck styles; ids are the saved DeckThemes ids, unlock rules unchanged"},
-                  "common": {"priceStars": 20}, "rare": {"priceStars": 40}, "showcase": {"priceStars": 80},
+                  "common": {"priceStars": PRICE["common"]}, "rare": {"priceStars": PRICE["rare"]}, "showcase": {"priceStars": PRICE["showcase"]},
                   "book": {"priceStars": 0, "note": "collection book reward, never sold, not in the shop grid's 16"}},
         "tintRule": "UI surfaces: glass #15171B, raised #23262C, well #0C0D10 lean 14% / 16% / 10% toward `deep`. `accent` is used only for selection, focus fill, the primary action and progress. Text on an accent fill uses `ink`. The `ui` block is that derivation, precomputed.",
         "overlayRule": "Overlay textures share the plate rect and already carry its rounded alpha. Animate ImageTransparency only (no scrolling, the plate cannot clip). opacity = [min, max].",

@@ -66,7 +66,7 @@ return function(server)
 			local function c(value)return if value<=.04045 then value/12.92 else ((value+.055)/1.055)^2.4 end
 			return .2126*c(color.R)+.7152*c(color.G)+.0722*c(color.B)
 		end
-		assert(#Themes.Order==18) -- +grape_soda, rose_chrome (overnight 2026-11-14)
+		assert(#Themes.Order==21) -- +grape_soda, rose_chrome (overnight 2026-11-14); +3 Aero plates (2026-11-21)
 		assert(#Themes.BookOnly==2) -- bookworm, stargazer: book-only, never in Order
 		for _,id in ipairs(Themes.BookOnly)do assert(table.find(Themes.Order,id)==nil and typeof(Themes.ById[id].ui.panel)=="Color3"and typeof(Themes.ById[id].lcd.base)=="Color3",id)end
 		for _,id in ipairs(Themes.Order)do

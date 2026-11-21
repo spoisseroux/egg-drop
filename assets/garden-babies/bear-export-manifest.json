@@ -7,57 +7,57 @@
    "name": "Bear__Body",
    "centerBlender": [
     0.0,
-    -0.085,
-    0.455
+    -0.08202,
+    0.45458
    ],
    "sizeBlender": [
-    0.60315,
-    0.64287,
-    0.58
+    0.56802,
+    0.62405,
+    0.57574
    ],
-   "triangles": 148
+   "triangles": 224
   },
   {
    "name": "Bear__Head",
    "centerBlender": [
     0.0,
-    -0.03,
-    1.00997
+    -0.03051,
+    1.0106
    ],
    "sizeBlender": [
-    0.98499,
-    0.89371,
-    0.75955
+    0.97298,
+    0.87169,
+    0.74832
    ],
-   "triangles": 198
+   "triangles": 360
   },
   {
    "name": "Bear__EarL",
    "centerBlender": [
-    -0.34421,
-    -0.0,
-    1.32972
+    -0.34493,
+    0.00019,
+    1.32862
    ],
    "sizeBlender": [
-    0.30118,
-    0.15065,
-    0.29945
+    0.29205,
+    0.13877,
+    0.29276
    ],
-   "triangles": 78
+   "triangles": 96
   },
   {
    "name": "Bear__EarR",
    "centerBlender": [
-    0.345,
-    -0.0001,
-    1.32974
+    0.34495,
+    -0.00097,
+    1.32857
    ],
    "sizeBlender": [
-    0.2996,
-    0.15045,
-    0.29947
+    0.29205,
+    0.13665,
+    0.29262
    ],
-   "triangles": 78
+   "triangles": 96
   },
   {
    "name": "Bear__EarInnerL",
@@ -92,70 +92,98 @@
    "centerBlender": [
     0.0,
     -0.395,
-    0.85
+    0.8456
    ],
    "sizeBlender": [
-    0.32853,
+    0.24311,
     0.2711,
-    0.24
+    0.1872
    ],
    "triangles": 72
   },
   {
    "name": "Bear__Nose",
    "centerBlender": [
-    0.00075,
-    -0.51617,
-    0.90718
+    0.0,
+    -0.4953,
+    0.9005
    ],
    "sizeBlender": [
-    0.09518,
-    0.06032,
-    0.0715
+    0.06277,
+    0.04,
+    0.045
    ],
-   "triangles": 44
+   "triangles": 60
   },
   {
    "name": "Bear__MouthSmile",
    "centerBlender": [
     0.0,
-    -0.43973,
-    0.79767
+    -0.44639,
+    0.81356
    ],
    "sizeBlender": [
-    0.14956,
-    0.19141,
-    0.13629
+    0.15804,
+    0.17666,
+    0.11213
    ],
-   "triangles": 128
+   "triangles": 32
   },
   {
    "name": "Bear__EyeL",
    "centerBlender": [
-    -0.21451,
-    -0.42246,
-    1.02886
+    -0.22632,
+    -0.40657,
+    0.97168
    ],
    "sizeBlender": [
-    0.16415,
-    0.09247,
-    0.2447
+    0.15054,
+    0.08498,
+    0.20196
    ],
-   "triangles": 42
+   "triangles": 72
   },
   {
    "name": "Bear__EyeR",
    "centerBlender": [
-    0.21452,
-    -0.42256,
-    1.02885
+    0.22632,
+    -0.40652,
+    0.97168
    ],
    "sizeBlender": [
-    0.16422,
-    0.09232,
-    0.24469
+    0.15054,
+    0.08486,
+    0.20196
    ],
-   "triangles": 42
+   "triangles": 72
+  },
+  {
+   "name": "Bear__BlushL",
+   "centerBlender": [
+    -0.34846,
+    -0.24703,
+    0.85611
+   ],
+   "sizeBlender": [
+    0.17928,
+    0.25554,
+    0.10651
+   ],
+   "triangles": 36
+  },
+  {
+   "name": "Bear__BlushR",
+   "centerBlender": [
+    0.34846,
+    -0.24376,
+    0.85611
+   ],
+   "sizeBlender": [
+    0.17928,
+    0.26208,
+    0.10651
+   ],
+   "triangles": 36
   },
   {
    "name": "Bear__Tail",
@@ -369,8 +397,8 @@
   ],
   "EyeLine": [
    0.0,
-   -0.469,
-   1.03
+   -0.46779,
+   0.972
   ],
   "FootL": [
    -0.165,
@@ -417,5 +445,6 @@
    0.17,
    0.54
   ]
- }
+ },
+ "v2": "2026-11-21: Body, Head, EarL, EarR, Muzzle, Nose, MouthSmile, EyeL, EyeR, BlushL, BlushR and the EyeLine anchor are the v2 cute Bear (assets/art-source/pets/pet-bear-v2-cute.blend, exported to bear-v2.fbx by assets/art-source/pets/export_bear_v2.py). The rest is bear.fbx, unchanged."
 }

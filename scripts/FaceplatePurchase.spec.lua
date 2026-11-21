@@ -37,9 +37,9 @@ return function(server)
 		assert(H.grantPurchase(h, "fund-" .. stars .. "-" .. h.state.revision, stars, false))
 	end
 
-	test("the catalogue: 18 plates, 8 free starters with the saved ids, 10 at 40/100/250", function()
-		assert(#Themes.Order == 18)
-		-- Book-only plates are counted apart from the 18 on the grid: Bookworm, Stargazer.
+	test("the catalogue: 21 plates, 8 free starters with the saved ids, 13 at 40/100/250", function()
+		assert(#Themes.Order == 21)
+		-- Book-only plates are counted apart from the 21 on the grid: Bookworm, Stargazer.
 		assert(#Themes.BookOnly == 2 and Themes.BookOnly[1] == "bookworm" and Themes.BookOnly[2] == "stargazer")
 		for _, id in ipairs(Themes.BookOnly) do
 			local plate = Themes.ById[id]
@@ -58,6 +58,7 @@ return function(server)
 		for _, id in ipairs({ "sherbet", "stone", "ice", "brick", "moss", "honey", "gloaming", "copperleaf" }) do assert(Themes.ById[id].tier == "starter") end
 		assert(prices.aqua_pop == 40 and prices.lime_gel == 40 and prices.sorbet_sky == 40)
 		assert(prices.liquid_chrome == 100 and prices.tidepool == 100 and prices.aurora_glass == 100)
+		assert(prices.cloud_glass == 40 and prices.lagoon == 100 and prices.dewy_meadow == 100) -- Aero plates (2026-11-21)
 		assert(prices.prism_flare == 250 and prices.night_orb == 250)
 	end)
 

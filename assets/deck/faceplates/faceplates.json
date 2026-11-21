@@ -365,7 +365,7 @@
    "name": "Aqua Pop",
    "order": 9,
    "tier": "common",
-   "priceStars": 30,
+   "priceStars": 40,
    "texture": "aqua_pop.png",
    "finish": "glossy bubbles",
    "accent": "#6FE3FF",
@@ -409,7 +409,7 @@
    "name": "Lime Gel",
    "order": 10,
    "tier": "common",
-   "priceStars": 30,
+   "priceStars": 40,
    "texture": "lime_gel.png",
    "finish": "translucent gel",
    "accent": "#B6F24B",
@@ -453,7 +453,7 @@
    "name": "Sorbet Sky",
    "order": 11,
    "tier": "common",
-   "priceStars": 30,
+   "priceStars": 40,
    "texture": "sorbet_sky.png",
    "finish": "glossy gradient",
    "accent": "#FFB37A",
@@ -497,7 +497,7 @@
    "name": "Liquid Chrome",
    "order": 12,
    "tier": "rare",
-   "priceStars": 60,
+   "priceStars": 100,
    "texture": "liquid_chrome.png",
    "finish": "chrome",
    "accent": "#DCE6F5",
@@ -541,7 +541,7 @@
    "name": "Tidepool",
    "order": 13,
    "tier": "rare",
-   "priceStars": 60,
+   "priceStars": 100,
    "texture": "tidepool.png",
    "finish": "water overlay",
    "accent": "#5CD6E8",
@@ -585,7 +585,7 @@
    "name": "Aurora Glass",
    "order": 14,
    "tier": "rare",
-   "priceStars": 60,
+   "priceStars": 100,
    "texture": "aurora_glass.png",
    "finish": "aurora overlay",
    "accent": "#7CF5C4",
@@ -629,7 +629,7 @@
    "name": "Prism Flare",
    "order": 15,
    "tier": "showcase",
-   "priceStars": 120,
+   "priceStars": 250,
    "texture": "prism_flare.png",
    "finish": "holographic lens flare",
    "accent": "#F3B6FF",
@@ -673,7 +673,7 @@
    "name": "Night Orb",
    "order": 16,
    "tier": "showcase",
-   "priceStars": 120,
+   "priceStars": 250,
    "texture": "night_orb.png",
    "finish": "glass orbs and chrome rings",
    "accent": "#FF7AD9",
@@ -753,7 +753,7 @@
    "name": "Grape Soda",
    "order": 18,
    "tier": "common",
-   "priceStars": 30,
+   "priceStars": 40,
    "texture": "grape_soda.png",
    "finish": "glossy bubbles",
    "accent": "#C9A6FF",
@@ -797,7 +797,7 @@
    "name": "Rose Chrome",
    "order": 19,
    "tier": "rare",
-   "priceStars": 60,
+   "priceStars": 100,
    "texture": "rose_chrome.png",
    "finish": "rose chrome",
    "accent": "#FFC2D4",
@@ -871,6 +871,138 @@
    },
    "bookOnly": true,
    "unlock": "book"
+  },
+  {
+   "id": "cloud_glass",
+   "name": "Cloud Glass",
+   "order": 21,
+   "tier": "common",
+   "priceStars": 40,
+   "texture": "cloud_glass.png",
+   "finish": "translucent sky plastic, clouds inside",
+   "accent": "#8FD2FF",
+   "ink": "#0E0F12",
+   "accentInkContrast": 11.71,
+   "deep": "#1C5BD8",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#162135",
+    "raised": "#222E48",
+    "well": "#0E1524",
+    "selected": "#314562",
+    "line": "#96B2C8"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.45
+    ],
+    "periodSeconds": 5.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "Glass",
+    "reflectance": 0.08,
+    "transparency": 0.25
+   }
+  },
+  {
+   "id": "lagoon",
+   "name": "Lagoon",
+   "order": 22,
+   "tier": "rare",
+   "priceStars": 100,
+   "texture": "lagoon.png",
+   "finish": "clear water and splash",
+   "accent": "#6FF0E0",
+   "ink": "#0E0F12",
+   "accentInkContrast": 13.89,
+   "deep": "#0C7FA6",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#14262E",
+    "raised": "#1F3440",
+    "well": "#0C181F",
+    "selected": "#2A4E56",
+    "line": "#8BBCBD"
+   },
+   "overlay": {
+    "texture": "overlay-water.png",
+    "kind": "water",
+    "opacity": [
+     0.1,
+     0.55
+    ],
+    "periodSeconds": 5.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "Glass",
+    "reflectance": 0.08,
+    "transparency": 0.25
+   }
+  },
+  {
+   "id": "dewy_meadow",
+   "name": "Dewy Meadow",
+   "order": 23,
+   "tier": "rare",
+   "priceStars": 100,
+   "texture": "dewy_meadow.png",
+   "finish": "glossy hills and cloud",
+   "accent": "#8CF07A",
+   "ink": "#0E0F12",
+   "accentInkContrast": 13.56,
+   "deep": "#178F3A",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#15281F",
+    "raised": "#21372E",
+    "well": "#0D1A14",
+    "selected": "#305139",
+    "line": "#95BC99"
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "kind": "gloss",
+    "opacity": [
+     0.0,
+     0.4
+    ],
+    "periodSeconds": 6.0,
+    "ease": "sine in-out, ping-pong",
+    "reducedEffects": "hold at the lower opacity"
+   },
+   "held3d": {
+    "material": "SmoothPlastic",
+    "reflectance": 0.08,
+    "transparency": 0
+   }
   }
  ]
 }

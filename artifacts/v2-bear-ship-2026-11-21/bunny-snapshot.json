@@ -1,0 +1,52 @@
+{
+ "taken": "2026-11-21, Studio Play client, before any Bear v2 change (repo HEAD e171ce7 state in Studio)",
+ "how": "ZZSpecs BunnySnapshot: GardenPetVisual Bunny (blip) per case, every v.pieces entry: name|frame position|rotation|size|shown|meshId|textureId, rounded 1e-6, lines sorted; hash h=(h*31+b)%2^32",
+ "cases": [
+  "none",
+  "Cheek=blush",
+  "Eyes=happy",
+  "Eyes=lash",
+  "Eyes=round",
+  "Eyes=sleepy",
+  "Eyes=smallwide",
+  "Eyes=sparkle",
+  "Eyewear=specs",
+  "Mouth=blep",
+  "Mouth=w",
+  "combo (beanie, lash, specs, w, blush)"
+ ],
+ "hashAll": 2734834761,
+ "hashByCase": {
+  "Cheek=blush": 3803281114,
+  "Eyes=happy": 3088439387,
+  "Eyes=lash": 4190713984,
+  "Eyes=round": 416796993,
+  "Eyes=sleepy": 1543811911,
+  "Eyes=smallwide": 771041017,
+  "Eyes=sparkle": 418065722,
+  "Eyewear=specs": 3892230022,
+  "Mouth=blep": 3227121125,
+  "Mouth=w": 4211168970,
+  "combo": 1354650849,
+  "none": 663281757
+ },
+ "sample": {
+  "none.EyeL": "-0.233691,0.944598,0.396033 size 0.15872,0.202568,0.094544 mesh 111517888173642 tex 115519818938598",
+  "Eyes=lash.EyeL_AltLash": "-0.24914,0.94543,0.37544",
+  "Eyes=round.EyeL_AltRound": "-0.23133,0.94437,0.4003",
+  "Eyes=sparkle.EyeL_AltSparkle": "-0.232,0.941,0.39759",
+  "Eyewear=specs.Eyewear_RoundSpecs": "0,0.94506,0.24352",
+  "Mouth=w.Mouth_AltW": "0,0.83397,0.46522"
+ },
+ "after": {
+  "taken": "2026-11-21, fresh Studio Play after the Bear v2 definition, template and 21 eye/eyewear items changed",
+  "hashAll": 2734834761,
+  "hashByCaseIdentical": true,
+  "note": "Every case hash equal to before (-0 normalised to 0: JSON round trip in the first pass dropped the sign). A third run on the reverted v1 data (for the BEFORE capture) also gave 2734834761."
+ },
+ "captures": {
+  "before": "06-bunny-lash-specs-round-w-BEFORE.jpg",
+  "after": "06-bunny-lash-specs-round-w-AFTER.jpg",
+  "lightingNote": "geometry matches; light differs slightly between the two Play sessions (dusk grade warm-up)"
+ }
+}

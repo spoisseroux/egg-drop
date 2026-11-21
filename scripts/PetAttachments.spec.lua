@@ -249,12 +249,17 @@ return function(client,parent)
    local bunny=Defs.blip;local Attach=require(client.PetAttachments)
    assert(bunny.id=="bunny"and bunny.fitFrom=="pip"and bunny.attachments==bear.attachments and bunny.wearableItems==bear.wearableItems,"inherits the Bear's tables")
    local fits=Attach.anchorFit(bunny)
+   -- Bear v2 (2026-11-21): the Bear's own eye anchors moved to its new eye line. The Bunny's
+   -- anchorDeltaFromBear offsets were measured from the v1 Bear, so these four take off that move
+   -- (runtime axes); the Bunny's own anchors are unchanged.
+   local bearV2Shift={EyeL={-.0105,-.058,-.0185},EyeR={.0105,-.058,-.01991},EyeLine={0,-.058,-.00121},FaceBridge={0,-.058,.00198}}
    for anchor,delta in pairs(bunny.anchorDeltaFromBear)do
     local fit=assert(fits[anchor],"no fit for "..anchor)
     local moved=fit*Rules.anchorFrame(bear,anchor,1)
     assert((moved.Position-Rules.anchorFrame(bunny,anchor,1).Position).Magnitude<1e-4,anchor.." does not land on the Bunny anchor")
     local d=delta.offset;local own=bunny.anchors[anchor];local from=bear.anchors[anchor]
-    for i=1,3 do assert(math.abs(own[i]-from[i]-d[i])<2e-3,anchor.." delta "..i)end
+    local shift=bearV2Shift[anchor]or{0,0,0}
+    for i=1,3 do assert(math.abs(own[i]-from[i]-(d[i]-shift[i]))<2e-3,anchor.." delta "..i)end
    end
    assert(fits.HatCrown==nil and fits.Torso==nil and fits.Neck==nil,"unmoved anchors keep the Bear's frame")
    assert(next(Attach.anchorFit(bear))==nil,"the Bear wears its own meshes")
@@ -272,7 +277,7 @@ return function(client,parent)
    assert(shown(find(v,"Hat_Beanie"))and shown(find(v,"EyeL_AltRound"))and shown(find(v,"Mouth_AltW"))and v.hatEarPose~=nil)
    assert(not shown(find(v,"EyeL"))and not shown(find(v,"MouthSmile")),"the swaps hide the Bunny's own eyes and mouth")
    local eye=find(v,"EyeL_AltRound")
-   assert(eye.frame.Position.Y<(1.03-.05)*v.scale,"Round Eyes moved down to the Bunny's eye line")
+   assert(math.abs(eye.frame.Position.Y-bunny.anchors.EyeL[2]*v.scale)<.01*v.scale and eye.frame.Position.Y<bear.anchors.EyeL[2]*v.scale,"Round Eyes moved down to the Bunny's eye line")
    local plain=make(Pets.byId.blip,appearance(0,0,{Eyes="round"}))
    assert(plain.hatEarPose==nil,"no hat, ears at rest")
    assert(plain.colors.nose and find(plain,"Nose").part.Color==plain.colors.nose,"the fixed pink nose role")

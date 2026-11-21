@@ -96,7 +96,10 @@ end
 -- design and stays put. Only Y is used today; X/Z are there for later rigs.
 -- Keyed by base item id: a variant renders as its base, so it takes the same lift.
 Catalog.Fit=table.freeze({
- bear=table.freeze({sunhat=Vector3.new(0,.03,0),beanie=Vector3.new(0,.015,0)}),
+ -- v2 cute Bear (2026-11-21): the snout pad is narrower, so at the mouth its surface sits a
+ -- little further back (pet-bear-v2-cute.blend: the W mean gap 0.010 -> 0.016, Blep 0.0015 ->
+ -- 0.005). Blep and Kitty W step back onto it (Z is the front); deepest stays as live.
+ bear=table.freeze({sunhat=Vector3.new(0,.03,0),beanie=Vector3.new(0,.015,0),blep=Vector3.new(0,0,-.003),w=Vector3.new(0,0,-.005)}),
  -- v2 Bunny: same crown (HatCrown unmoved, head within 0.01 of the Bear's: bunny-report.json),
  -- so the same lifts. Its moved face and ear anchors are carried by PetAttachments.anchorFit.
  bunny=table.freeze({sunhat=Vector3.new(0,.03,0),beanie=Vector3.new(0,.015,0)}),

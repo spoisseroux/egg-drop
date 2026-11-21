@@ -689,9 +689,9 @@
    "kind": "face",
    "isNew": true,
    "positionBlender": [
-    -0.2145,
-    -0.42468,
-    1.03
+    -0.225,
+    -0.40618,
+    0.972
    ],
    "eulerXYZDegBlender": [
     0.0,
@@ -716,9 +716,9 @@
     ]
    },
    "positionRuntime": [
-    -0.2145,
-    1.03,
-    0.42468
+    -0.225,
+    0.972,
+    0.40618
    ],
    "note": "Eye socket centre on the skull. Identity rotation: +Z up, -Y out of the face, so eye textures stay upright."
   },
@@ -731,8 +731,8 @@
    "isNew": false,
    "positionBlender": [
     0.0,
-    -0.469,
-    1.03
+    -0.46779,
+    0.972
    ],
    "eulerXYZDegBlender": [
     0.0,
@@ -758,8 +758,8 @@
    },
    "positionRuntime": [
     0.0,
-    1.03,
-    0.469
+    0.972,
+    0.46779
    ],
    "note": ""
   },
@@ -771,9 +771,9 @@
    "kind": "face",
    "isNew": true,
    "positionBlender": [
-    0.2145,
-    -0.42468,
-    1.03
+    0.225,
+    -0.40477,
+    0.972
    ],
    "eulerXYZDegBlender": [
     0.0,
@@ -798,9 +798,9 @@
     ]
    },
    "positionRuntime": [
-    0.2145,
-    1.03,
-    0.42468
+    0.225,
+    0.972,
+    0.40477
    ],
    "note": "Eye socket centre on the skull. Identity rotation: +Z up, -Y out of the face, so eye textures stay upright."
   },
@@ -813,8 +813,8 @@
    "isNew": true,
    "positionBlender": [
     0.0,
-    -0.46051,
-    1.04
+    -0.46249,
+    0.982
    ],
    "eulerXYZDegBlender": [
     0.0,
@@ -840,8 +840,8 @@
    },
    "positionRuntime": [
     0.0,
-    1.04,
-    0.46051
+    0.982,
+    0.46249
    ],
    "note": "Between the eyes: glasses, masks, monocle."
   },
@@ -4086,9 +4086,9 @@
     0.7
    ],
    "centerBlender": [
-    -0.21383,
-    -0.42061,
-    1.02937
+    -0.22433,
+    -0.40211,
+    0.97137
    ],
    "sizeBlender": [
     0.18772,
@@ -4129,9 +4129,9 @@
     0.7
    ],
    "centerBlender": [
-    0.21383,
-    -0.42077,
-    1.02936
+    0.22433,
+    -0.40086,
+    0.97136
    ],
    "sizeBlender": [
     0.1878,
@@ -4172,9 +4172,9 @@
     0.7
    ],
    "centerBlender": [
-    -0.24827,
-    -0.40748,
-    1.02449
+    -0.25877,
+    -0.38898,
+    0.96649
    ],
    "sizeBlender": [
     0.12936,
@@ -4215,9 +4215,9 @@
     0.7
    ],
    "centerBlender": [
-    0.24835,
-    -0.40762,
-    1.02449
+    0.25885,
+    -0.38771,
+    0.96649
    ],
    "sizeBlender": [
     0.12936,
@@ -4301,9 +4301,9 @@
     1.03
    ],
    "centerBlender": [
-    -0.2145,
-    -0.40301,
-    1.03
+    -0.225,
+    -0.38451,
+    0.972
    ],
    "sizeBlender": [
     0.165,
@@ -4350,9 +4350,9 @@
     1.03
    ],
    "centerBlender": [
-    -0.2145,
-    -0.4179,
-    1.026
+    -0.225,
+    -0.3994,
+    0.968
    ],
    "sizeBlender": [
     0.132,
@@ -4399,9 +4399,9 @@
     1.03
    ],
    "centerBlender": [
-    -0.2145,
-    -0.44598,
-    0.978
+    -0.225,
+    -0.42748,
+    0.92
    ],
    "sizeBlender": [
     0.088,
@@ -4448,9 +4448,9 @@
     1.03
    ],
    "centerBlender": [
-    -0.2235,
-    -0.44015,
-    1.06294
+    -0.234,
+    -0.42165,
+    1.00494
    ],
    "sizeBlender": [
     0.094,
@@ -4497,9 +4497,9 @@
     1.03
    ],
    "centerBlender": [
-    -0.22506,
-    -0.41234,
-    0.99687
+    -0.23556,
+    -0.39384,
+    0.93887
    ],
    "sizeBlender": [
     0.17137,
@@ -4546,9 +4546,9 @@
     1.03
    ],
    "centerBlender": [
-    -0.2145,
-    -0.41845,
-    1.04806
+    -0.225,
+    -0.39995,
+    0.99006
    ],
    "sizeBlender": [
     0.17497,
@@ -4595,9 +4595,9 @@
     1.03
    ],
    "centerBlender": [
-    -0.23164,
-    -0.39575,
-    1.03043
+    -0.24214,
+    -0.37725,
+    0.97243
    ],
    "sizeBlender": [
     0.17828,
@@ -4644,9 +4644,9 @@
     1.03
    ],
    "centerBlender": [
-    -0.206,
-    -0.44971,
-    1.03589
+    -0.2165,
+    -0.43121,
+    0.97789
    ],
    "sizeBlender": [
     0.079,
@@ -4693,9 +4693,9 @@
     1.03
    ],
    "centerBlender": [
-    0.2145,
-    -0.40301,
-    1.03
+    0.225,
+    -0.3831,
+    0.972
    ],
    "sizeBlender": [
     0.165,
@@ -4742,9 +4742,9 @@
     1.03
    ],
    "centerBlender": [
-    0.2145,
-    -0.4179,
-    1.026
+    0.225,
+    -0.39799,
+    0.968
    ],
    "sizeBlender": [
     0.132,
@@ -4791,9 +4791,9 @@
     1.03
    ],
    "centerBlender": [
-    0.2145,
-    -0.44598,
-    0.978
+    0.225,
+    -0.42607,
+    0.92
    ],
    "sizeBlender": [
     0.088,
@@ -4840,9 +4840,9 @@
     1.03
    ],
    "centerBlender": [
-    0.2235,
-    -0.44015,
-    1.06294
+    0.234,
+    -0.42024,
+    1.00494
    ],
    "sizeBlender": [
     0.094,
@@ -4889,9 +4889,9 @@
     1.03
    ],
    "centerBlender": [
-    0.22506,
-    -0.41234,
-    0.99687
+    0.23556,
+    -0.39243,
+    0.93887
    ],
    "sizeBlender": [
     0.17137,
@@ -4938,9 +4938,9 @@
     1.03
    ],
    "centerBlender": [
-    0.2145,
-    -0.41845,
-    1.04806
+    0.225,
+    -0.39854,
+    0.99006
    ],
    "sizeBlender": [
     0.17497,
@@ -4987,9 +4987,9 @@
     1.03
    ],
    "centerBlender": [
-    0.23164,
-    -0.39575,
-    1.03043
+    0.24214,
+    -0.37584,
+    0.97243
    ],
    "sizeBlender": [
     0.17828,
@@ -5036,9 +5036,9 @@
     1.03
    ],
    "centerBlender": [
-    0.206,
-    -0.44971,
-    1.03589
+    0.2165,
+    -0.4298,
+    0.97789
    ],
    "sizeBlender": [
     0.079,
@@ -5864,8 +5864,8 @@
    ],
    "centerBlender": [
     0.0,
-    -0.24347,
-    1.03006
+    -0.24545,
+    0.97206
    ],
    "sizeBlender": [
     0.97156,
@@ -6994,5 +6994,6 @@
    "Helix piercings are sold as a pair (one item id, a mesh per ear) but the two ears stay independent slots."
   ]
  },
- "wearablesNote": "The 13 launch wearables are final art built by scripts/build_bear_wearables.py. The grey-box placeholders (Shirt_Torso/SleeveL/SleeveR, AltButton eyes, AltO mouth, AltArrow tail) are gone; Hat_Beanie, Neck_Beads and HelixL/R_Ring keep their names with final meshes. Studio must re-import the FBX set before scripts/build_bear_attachments.py will run."
+ "wearablesNote": "The 13 launch wearables are final art built by scripts/build_bear_wearables.py. The grey-box placeholders (Shirt_Torso/SleeveL/SleeveR, AltButton eyes, AltO mouth, AltArrow tail) are gone; Hat_Beanie, Neck_Beads and HelixL/R_Ring keep their names with final meshes. Studio must re-import the FBX set before scripts/build_bear_attachments.py will run.",
+ "v2Bear": "2026-11-21: the EyeL, EyeR, EyeLine and FaceBridge anchors moved to the v2 cute Bear's eye line (pet-bear-v2-cute.blend); every mesh on those anchors moved by exactly its anchor's offset: {\"EyeL\": [-0.0105, 0.0185, -0.058], \"EyeLine\": [0.0, 0.00121, -0.058], \"EyeR\": [0.0105, 0.01991, -0.058], \"FaceBridge\": [0.0, -0.00198, -0.058]}"
 }

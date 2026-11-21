@@ -12,6 +12,9 @@ Outputs:
 
 Blender (x, y, z) maps to template (-x, z, y) and to definition (x, z, -y); this was checked against
 the actual Studio import (worst centre difference 0.000005 studs).
+
+v2 (2026-11-21): the changed pieces (Body, Head, ears, snout pad, nose, mouth, eyes, BlushL/BlushR) come
+from bear-v2.fbx (assets/art-source/pets/export_bear_v2.py); both manifests carry their numbers.
 """
 from __future__ import annotations
 
@@ -38,6 +41,9 @@ PIECES = {
     "MouthSmile": ("Head", "mouth", "smile"),
     "EyeL": ("Head", "face", "ellipsoid"),
     "EyeR": ("Head", "face", "ellipsoid"),
+    # v2 cute Bear (2026-11-21): soft blush decals, cut-outs like the Bunny's.
+    "BlushL": ("Head", "blush", "ellipsoid"),
+    "BlushR": ("Head", "blush", "ellipsoid"),
     "Tail": ("Body", "body", "ellipsoid"),
     "HandL": ("HandL", "body", "ellipsoid"),
     "HandR": ("HandR", "body", "ellipsoid"),
@@ -45,6 +51,16 @@ PIECES = {
     "FootR": ("FootR", "body", "ellipsoid"),
     "CharmDot": ("Charm", "secondary", "ellipsoid"),
 }
+# Native fallback (GardenPetVisual.native: ellipsoids when a mesh is unavailable). The cut-outs'
+# bounding boxes wrap round the snout and cheeks, so a single ellipsoid there would be a blob: they
+# get one thin ellipsoid on the face instead (centre and size as fractions of the piece's box).
+FALLBACK = {
+    "MouthSmile": [{"shape": "ellipsoid", "center": [0, -0.121, 0.331], "size": [0.443, 0.268, 0.113], "xyzEulerDeg": [0, 0, 0]}],
+    "BlushL": [{"shape": "ellipsoid", "center": [0, 0, 0.25], "size": [0.9, 0.9, 0.12], "xyzEulerDeg": [0, -40, 0]}],
+    "BlushR": [{"shape": "ellipsoid", "center": [0, 0, 0.25], "size": [0.9, 0.9, 0.12], "xyzEulerDeg": [0, 40, 0]}],
+}
+# Cut-out pieces: SurfaceAppearance (referent, name).
+CUTOUTS = {"MouthSmile": ("BearInk", "MouthInk"), "BlushL": ("BearInkBlushL", "CutOut"), "BlushR": ("BearInkBlushR", "CutOut")}
 TEMPLATE_EXTRA = ("WingL", "WingR", "CharmStar", "CharmHeart", "CharmButton", "CharmLeaf")
 ANCHORS = {"Head": "Head", "Body": "Body", "HandL": "HandL", "HandR": "HandR", "FootL": "FootL", "FootR": "FootR",
            "EyeLine": "EyeLine", "HandCatch": "HandCatch", "CharmAnchor": "CharmFloat", "Tail": "Tail",
@@ -71,6 +87,8 @@ def lua_definition() -> str:
         o = objects[name]
         pieces.append({"name": name, "channel": channel, "shape": shape, "center": to_def(o["centerBlender"]),
                        "size": size_of(o["sizeBlender"]), "xyzEulerDeg": [0, 0, 0], "colorRole": role})
+        if name in FALLBACK:
+            pieces[-1]["fallbackParts"] = FALLBACK[name]
     # Surprise mouth: a small dark "O" the runtime draws itself (no mesh), seated on the front of the muzzle (the smile is a curved shell, so its centre is inside it).
     mouth = next(p for p in pieces if p["name"] == "MouthSmile")
     pieces.append({"name": "MouthO", "channel": "Head", "shape": "ellipsoid",
@@ -84,7 +102,7 @@ def lua_definition() -> str:
         "axes": {"up": "+Y", "front": "+Z", "right": "+X"}, "units": "studs at garden size",
         "nativeScaleFactor": 1.3888888888888888,
         "palette": {"body": "#FFFFFF", "secondary": "#A8A5AE", "face": "#2A2226", "mouth": "#66332E",
-                    "ivory": "#FFF6E9", "blush": "#E8A6A6"},
+                    "ivory": "#FFF6E9", "blush": "#FFB0BC"},
         "anchors": anchors, "pieces": pieces,
     }
     if ATTACH_MANIFEST.exists():
@@ -122,12 +140,13 @@ def xml_block() -> str:
         pos = charm if name in ("CharmStar", "CharmHeart", "CharmButton", "CharmLeaf") else to_template(o["centerBlender"])
         raw = p["ms"]
         size = [raw[0] / 100, raw[1] / 100, raw[2] / 100]
-        # Cut-out textures (the mouth) need a SurfaceAppearance in Transparency mode:
+        # Cut-out textures (the mouth, the v2 blush) need a SurfaceAppearance in Transparency mode:
         # MeshPart.TextureID ignored the mouth's alpha in-game (checked in Studio 2026-11-12).
-        cutout = textures.get(name, "") if name == "MouthSmile" else ""
+        cutout = textures.get(name, "") if name in CUTOUTS else ""
         texture = "" if cutout else textures.get(name, "")
-        ink = ("        <Item class=\"SurfaceAppearance\" referent=\"BearInk\">\n          <Properties>\n"
-               "            <string name=\"Name\">MouthInk</string>\n            <token name=\"AlphaMode\">1</token>\n"
+        ink_ref, ink_name = CUTOUTS.get(name, ("", ""))
+        ink = (f"        <Item class=\"SurfaceAppearance\" referent=\"{ink_ref}\">\n          <Properties>\n"
+               f"            <string name=\"Name\">{ink_name}</string>\n            <token name=\"AlphaMode\">1</token>\n"
                f"            <Content name=\"ColorMap\">\n              <url>{cutout}</url>\n            </Content>\n"
                "          </Properties>\n        </Item>\n") if cutout else ""
         out.append(f"      <Item class=\"MeshPart\" referent=\"Bear{index}\">\n        <Properties>\n"

@@ -1,0 +1,248 @@
+{
+ "objects": [
+  {
+   "name": "Bear__Body",
+   "centerBlender": [
+    0.0,
+    -0.08202,
+    0.45458
+   ],
+   "sizeBlender": [
+    0.56802,
+    0.62405,
+    0.57574
+   ],
+   "triangles": 224,
+   "material": "petBear__body"
+  },
+  {
+   "name": "Bear__Head",
+   "centerBlender": [
+    0.0,
+    -0.03051,
+    1.0106
+   ],
+   "sizeBlender": [
+    0.97298,
+    0.87169,
+    0.74832
+   ],
+   "triangles": 360,
+   "material": "petBear__body"
+  },
+  {
+   "name": "Bear__EarL",
+   "centerBlender": [
+    -0.34493,
+    0.00019,
+    1.32862
+   ],
+   "sizeBlender": [
+    0.29205,
+    0.13877,
+    0.29276
+   ],
+   "triangles": 96,
+   "material": "petBear__body"
+  },
+  {
+   "name": "Bear__EarR",
+   "centerBlender": [
+    0.34495,
+    -0.00097,
+    1.32857
+   ],
+   "sizeBlender": [
+    0.29205,
+    0.13665,
+    0.29262
+   ],
+   "triangles": 96,
+   "material": "petBear__body"
+  },
+  {
+   "name": "Bear__Muzzle",
+   "centerBlender": [
+    0.0,
+    -0.395,
+    0.8456
+   ],
+   "sizeBlender": [
+    0.24311,
+    0.2711,
+    0.1872
+   ],
+   "triangles": 72,
+   "material": "petBear__secondary"
+  },
+  {
+   "name": "Bear__Nose",
+   "centerBlender": [
+    0.0,
+    -0.4953,
+    0.9005
+   ],
+   "sizeBlender": [
+    0.06277,
+    0.04,
+    0.045
+   ],
+   "triangles": 60,
+   "material": "petBear__nose"
+  },
+  {
+   "name": "Bear__MouthSmile",
+   "centerBlender": [
+    0.0,
+    -0.44639,
+    0.81356
+   ],
+   "sizeBlender": [
+    0.15804,
+    0.17666,
+    0.11213
+   ],
+   "triangles": 32,
+   "material": "petBear__mouth"
+  },
+  {
+   "name": "Bear__EyeL",
+   "centerBlender": [
+    -0.22632,
+    -0.40657,
+    0.97168
+   ],
+   "sizeBlender": [
+    0.15054,
+    0.08498,
+    0.20196
+   ],
+   "triangles": 72,
+   "material": "petBear__eyeCute"
+  },
+  {
+   "name": "Bear__EyeR",
+   "centerBlender": [
+    0.22632,
+    -0.40652,
+    0.97168
+   ],
+   "sizeBlender": [
+    0.15054,
+    0.08486,
+    0.20196
+   ],
+   "triangles": 72,
+   "material": "petBear__eyeCute"
+  },
+  {
+   "name": "Bear__BlushL",
+   "centerBlender": [
+    -0.34846,
+    -0.24703,
+    0.85611
+   ],
+   "sizeBlender": [
+    0.17928,
+    0.25554,
+    0.10651
+   ],
+   "triangles": 36,
+   "material": "petBear__blush"
+  },
+  {
+   "name": "Bear__BlushR",
+   "centerBlender": [
+    0.34846,
+    -0.24376,
+    0.85611
+   ],
+   "sizeBlender": [
+    0.17928,
+    0.26208,
+    0.10651
+   ],
+   "triangles": 36,
+   "material": "petBear__blush"
+  }
+ ],
+ "unchanged": {
+  "EarInnerL": 2e-06,
+  "EarInnerR": 2e-06,
+  "Tail": 4e-06,
+  "HandL": 4e-06,
+  "HandR": 5e-06,
+  "FootL": 4e-06,
+  "FootR": 4e-06,
+  "CharmDot": 4e-06
+ },
+ "anchorsBlender": {
+  "EyeL": [
+   -0.225,
+   -0.406184,
+   0.972
+  ],
+  "EyeR": [
+   0.225,
+   -0.404767,
+   0.972
+  ],
+  "EyeLine": [
+   0.0,
+   -0.467789,
+   0.972
+  ],
+  "FaceBridge": [
+   0.0,
+   -0.462493,
+   0.982
+  ],
+  "Mouth": [
+   0.0,
+   -0.510293,
+   0.8
+  ],
+  "Nose": [
+   0.0,
+   -0.50522,
+   0.905
+  ]
+ },
+ "mouthGap": {
+  "Mouth_AltW": {
+   "live_deepest": -0.0036,
+   "v2_deepest": -0.0011,
+   "live_mean": 0.0104,
+   "v2_mean": 0.0164
+  },
+  "Mouth_AltBlep": {
+   "live_deepest": -0.0037,
+   "v2_deepest": -0.0021,
+   "live_mean": 0.0015,
+   "v2_mean": 0.005
+  },
+  "Mouth_AltBlep_Tongue": {
+   "live_deepest": -0.0072,
+   "v2_deepest": -0.0044,
+   "live_mean": 0.0034,
+   "v2_mean": 0.0091
+  },
+  "Mouth": {
+   "live_deepest": -0.0139,
+   "v2_deepest": 0.0087,
+   "live_mean": -0.0012,
+   "v2_mean": 0.0095
+  },
+  "Nose": {
+   "live_deepest": -0.0306,
+   "v2_deepest": -0.024,
+   "live_mean": -0.0111,
+   "v2_mean": -0.0016
+  }
+ },
+ "mouthTextureMatchesLive": true,
+ "eyeTextureSize": [
+  128,
+  128
+ ]
+}

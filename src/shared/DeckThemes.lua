@@ -3,7 +3,9 @@ local Themes={
 	Order = { "sherbet", "stone", "ice", "brick", "moss", "honey", "gloaming", "copperleaf",
 		"aqua_pop", "lime_gel", "sorbet_sky", "liquid_chrome", "tidepool", "aurora_glass", "prism_flare", "night_orb",
 		-- Overnight 2026-11-14 (slice C): palette variants, appended so the first 16 keep their places.
-		"grape_soda", "rose_chrome" },
+		"grape_soda", "rose_chrome",
+		-- Frutiger Aero plates (2026-11-21), appended.
+		"cloud_glass", "lagoon", "dewy_meadow" },
 	ById = {
 		sherbet = { name="Scout", highlight=Color3.fromHex("#69F4B3"), face=Color3.fromHex("#23BF89"), shell=Color3.fromHex("#147863"),
 			trim=Color3.fromHex("#69F4B3"), buttons=Color3.fromHex("#76F6B0"), rocker=Color3.fromHex("#76F6B0"), backdrop=Color3.fromHex("#123C35"), band=Color3.fromHex("#147863") },
@@ -78,6 +80,14 @@ local Plates={
  -- a gold egg-and-star constellation, double gold rule (build_faceplates.py stargazer). Order 20.
  stargazer={name="Stargazer",order=20,tier="book",priceStars=0,bookOnly=true,texture="rbxassetid://75553254311335",finish="foil-stamped night sky",accent="#B9C6FF",ink="#0E0F12",deep="#1B1F4A",band="#EBC978",engrave="#FFE9A8",engraveOpacity=0.85,
   ui={panel="#161822",raised="#222531",well="#0E0F16",selected="#373C4E",line="#A5ADC8"},overlay=nil,held3d={material="SmoothPlastic",reflectance=0.08,transparency=0}},
+ -- Frutiger Aero plates (Fable, 2026-11-21; artifacts/store-listing/v2-new-look/aero-faceplates.png):
+ -- Cloud Glass is the store-art hero. Orders 21 to 23, appended to Themes.Order.
+ cloud_glass={name="Cloud Glass",order=21,tier="common",priceStars=40,texture="rbxassetid://131862681653621",finish="translucent sky plastic, clouds inside",accent="#8FD2FF",ink="#0E0F12",deep="#1C5BD8",band="#FFFFFF",engrave="#0E0F12",engraveOpacity=0.42,
+  ui={panel="#162135",raised="#222E48",well="#0E1524",selected="#314562",line="#96B2C8"},toyShell={shell="#2667AD",shellHi="#79A6D5",shellLip="#123B66",tray="#184676",well="#0D1C2B",wellDot="#233A53",ink="#0E1924",inkSoft="#3E5267",onShellSoft="#D8EAFC",tag="#BFE6FF",tagLip="#7C98AC"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.45,period=5.0},held3d={material="Glass",reflectance=0.08,transparency=0.25}},
+ lagoon={name="Lagoon",order=22,tier="rare",priceStars=100,texture="rbxassetid://120926962377631",finish="clear water and splash",accent="#6FF0E0",ink="#0E0F12",deep="#0C7FA6",band="#FFFFFF",engrave="#0E0F12",engraveOpacity=0.42,
+  ui={panel="#14262E",raised="#1F3440",well="#0C181F",selected="#2A4E56",line="#8BBCBD"},toyShell={shell="#107171",shellHi="#5CAFAF",shellLip="#064141",tray="#094D4D",well="#0F1A32",wellDot="#27385D",ink="#0A1B1B",inkSoft="#335656",onShellSoft="#CCEEEE",tag="#7CFFD2",tagLip="#51A88C"},overlay={image="rbxassetid://105339906963951",kind="water",min=0.1,max=0.55,period=5.0},held3d={material="Glass",reflectance=0.08,transparency=0.25}},
+ dewy_meadow={name="Dewy Meadow",order=23,tier="rare",priceStars=100,texture="rbxassetid://90647448423547",finish="glossy hills and cloud",accent="#8CF07A",ink="#0E0F12",deep="#178F3A",band="#FFFFFF",engrave="#0E0F12",engraveOpacity=0.42,
+  ui={panel="#15281F",raised="#21372E",well="#0D1A14",selected="#305139",line="#95BC99"},toyShell={shell="#13753D",shellHi="#60B384",shellLip="#084422",tray="#0B4F28",well="#0F1A32",wellDot="#27385D",ink="#0A1C12",inkSoft="#355844",onShellSoft="#CEEFDC",tag="#F6C9E6",tagLip="#9C8795"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.4,period=6.0},held3d={material="SmoothPlastic",reflectance=0.08,transparency=0}},
 }
 local hex=Color3.fromHex
 -- Toy Shell (UI-RETRO-RESTYLE-2026-11-19 R1.4): the menu palette. Each plate's `toyShell`

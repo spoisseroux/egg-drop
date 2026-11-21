@@ -4959,25 +4959,25 @@
         <Properties>
           <string name="Name">Bear__Body</string>
           <Content name="MeshId">
-            <url>rbxassetid://138100295598293</url>
+            <url>rbxassetid://128652832267043</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.6031543731689453</X>
-            <Y>0.58</Y>
-            <Z>0.6428688812255859</Z>
+            <X>0.5680241389999999</X>
+            <Y>0.5757444</Y>
+            <Z>0.624054565</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>60.31543731689453</X>
-            <Y>58</Y>
-            <Z>64.2868881225586</Z>
+            <X>56.8024139</X>
+            <Y>57.57444</Y>
+            <Z>62.4054565</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.0</X>
-            <Y>0.455</Y>
-            <Z>-0.085</Z>
+            <Y>0.45458</Y>
+            <Z>-0.08202</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -4998,25 +4998,25 @@
         <Properties>
           <string name="Name">Bear__Head</string>
           <Content name="MeshId">
-            <url>rbxassetid://126711089334508</url>
+            <url>rbxassetid://120528433213110</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.9849941253662109</X>
-            <Y>0.7595549011230469</Y>
-            <Z>0.8937059783935547</Z>
+            <X>0.972977371</X>
+            <Y>0.748320236</Y>
+            <Z>0.871694031</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>98.4994125366211</X>
-            <Y>75.95549011230469</Y>
-            <Z>89.37059783935547</Z>
+            <X>97.2977371</X>
+            <Y>74.8320236</Y>
+            <Z>87.1694031</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.0</X>
-            <Y>1.00997</Y>
-            <Z>-0.03</Z>
+            <Y>1.0106</Y>
+            <Z>-0.03051</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5037,25 +5037,25 @@
         <Properties>
           <string name="Name">Bear__EarL</string>
           <Content name="MeshId">
-            <url>rbxassetid://71490081741704</url>
+            <url>rbxassetid://127776032005404</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.301175537109375</X>
-            <Y>0.29944816589355466</Y>
-            <Z>0.15065099716186522</Z>
+            <X>0.292051525</X>
+            <Y>0.292758636</Y>
+            <Z>0.138768559</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>30.1175537109375</X>
-            <Y>29.94481658935547</Y>
-            <Z>15.065099716186523</Z>
+            <X>29.2051525</X>
+            <Y>29.2758636</Y>
+            <Z>13.8768559</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.34421</X>
-            <Y>1.32972</Y>
-            <Z>-0.0</Z>
+            <X>0.34493</X>
+            <Y>1.32862</Y>
+            <Z>0.00019</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5076,25 +5076,25 @@
         <Properties>
           <string name="Name">Bear__EarR</string>
           <Content name="MeshId">
-            <url>rbxassetid://111965295762800</url>
+            <url>rbxassetid://128361040672110</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.2996027755737305</X>
-            <Y>0.29947486877441404</Y>
-            <Z>0.1504506301879883</Z>
+            <X>0.292052879</X>
+            <Y>0.292624969</Y>
+            <Z>0.13665411</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>29.960277557373047</X>
-            <Y>29.947486877441406</Y>
-            <Z>15.045063018798828</Z>
+            <X>29.2052879</X>
+            <Y>29.2624969</Y>
+            <Z>13.665411</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.345</X>
-            <Y>1.32974</Y>
-            <Z>-0.0001</Z>
+            <X>-0.34495</X>
+            <Y>1.32857</Y>
+            <Z>-0.00097</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5193,24 +5193,24 @@
         <Properties>
           <string name="Name">Bear__Muzzle</string>
           <Content name="MeshId">
-            <url>rbxassetid://90697163315621</url>
+            <url>rbxassetid://76790168994270</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.3285318374633789</X>
-            <Y>0.24</Y>
-            <Z>0.2710987854003906</Z>
+            <X>0.24311355599999998</X>
+            <Y>0.187200012</Y>
+            <Z>0.271098766</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>32.85318374633789</X>
-            <Y>24</Y>
-            <Z>27.109878540039062</Z>
+            <X>24.3113556</X>
+            <Y>18.7200012</Y>
+            <Z>27.1098766</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.0</X>
-            <Y>0.85</Y>
+            <Y>0.8456</Y>
             <Z>-0.395</Z>
             <R00>1</R00>
             <R01>0</R01>
@@ -5232,25 +5232,25 @@
         <Properties>
           <string name="Name">Bear__Nose</string>
           <Content name="MeshId">
-            <url>rbxassetid://82812607912031</url>
+            <url>rbxassetid://99478201829118</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.09517646789550781</X>
-            <Y>0.07149696350097656</Y>
-            <Z>0.060322723388671874</Z>
+            <X>0.0627697372</X>
+            <Y>0.0449999237</Y>
+            <Z>0.040000038099999996</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>9.517646789550781</X>
-            <Y>7.149696350097656</Y>
-            <Z>6.0322723388671875</Z>
+            <X>6.27697372</X>
+            <Y>4.49999237</Y>
+            <Z>4.00000381</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.00075</X>
-            <Y>0.90718</Y>
-            <Z>-0.51617</Z>
+            <X>-0.0</X>
+            <Y>0.9005</Y>
+            <Z>-0.4953</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5271,25 +5271,25 @@
         <Properties>
           <string name="Name">Bear__MouthSmile</string>
           <Content name="MeshId">
-            <url>rbxassetid://137525787392108</url>
+            <url>rbxassetid://84570445183789</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.14955879211425782</X>
-            <Y>0.13628868103027345</Y>
-            <Z>0.19140602111816407</Z>
+            <X>0.15804110500000002</X>
+            <Y>0.112130356</Y>
+            <Z>0.176656609</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>14.955879211425781</X>
-            <Y>13.628868103027344</Y>
-            <Z>19.140602111816406</Z>
+            <X>15.8041105</X>
+            <Y>11.2130356</Y>
+            <Z>17.6656609</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.0</X>
-            <Y>0.79767</Y>
-            <Z>-0.43973</Z>
+            <Y>0.81356</Y>
+            <Z>-0.44639</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5319,25 +5319,25 @@
         <Properties>
           <string name="Name">Bear__EyeL</string>
           <Content name="MeshId">
-            <url>rbxassetid://99028421773215</url>
+            <url>rbxassetid://73538697393561</url>
           </Content>
           <Content name="TextureID">
-            <url>rbxassetid://75513553871906</url>
+            <url>rbxassetid://103471125730621</url>
           </Content>
           <Vector3 name="Size">
-            <X>0.16414844512939453</X>
-            <Y>0.24469985961914062</Y>
-            <Z>0.09246551513671875</Z>
+            <X>0.150543671</X>
+            <Y>0.20196365400000002</Y>
+            <Z>0.08498081210000001</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>16.414844512939453</X>
-            <Y>24.469985961914062</Y>
-            <Z>9.246551513671875</Z>
+            <X>15.0543671</X>
+            <Y>20.1963654</Y>
+            <Z>8.49808121</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.21451</X>
-            <Y>1.02886</Y>
-            <Z>-0.42246</Z>
+            <X>0.22632</X>
+            <Y>0.97168</Y>
+            <Z>-0.40657</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5358,25 +5358,25 @@
         <Properties>
           <string name="Name">Bear__EyeR</string>
           <Content name="MeshId">
-            <url>rbxassetid://79578264340722</url>
+            <url>rbxassetid://134469615729463</url>
           </Content>
           <Content name="TextureID">
-            <url>rbxassetid://75513553871906</url>
+            <url>rbxassetid://103471125730621</url>
           </Content>
           <Vector3 name="Size">
-            <X>0.16421533584594727</X>
-            <Y>0.24468940734863281</Y>
-            <Z>0.09232208251953125</Z>
+            <X>0.150543671</X>
+            <Y>0.20196365400000002</Y>
+            <Z>0.08485969539999999</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>16.421533584594727</X>
-            <Y>24.46894073486328</Y>
-            <Z>9.232208251953125</Z>
+            <X>15.0543671</X>
+            <Y>20.1963654</Y>
+            <Z>8.48596954</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.21452</X>
-            <Y>1.02885</Y>
-            <Z>-0.42256</Z>
+            <X>-0.22632</X>
+            <Y>0.97168</Y>
+            <Z>-0.40652</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -5394,6 +5394,102 @@
         </Properties>
       </Item>
       <Item class="MeshPart" referent="Bear11">
+        <Properties>
+          <string name="Name">Bear__BlushL</string>
+          <Content name="MeshId">
+            <url>rbxassetid://100782287605361</url>
+          </Content>
+          <Content name="TextureID">
+            <url />
+          </Content>
+          <Vector3 name="Size">
+            <X>0.179281368</X>
+            <Y>0.106508789</Y>
+            <Z>0.25554340400000003</Z>
+          </Vector3>
+          <Vector3 name="InitialSize">
+            <X>17.9281368</X>
+            <Y>10.6508789</Y>
+            <Z>25.5543404</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.34846</X>
+            <Y>0.85611</Y>
+            <Z>-0.24703</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+        </Properties>
+        <Item class="SurfaceAppearance" referent="BearInkBlushL">
+          <Properties>
+            <string name="Name">CutOut</string>
+            <token name="AlphaMode">1</token>
+            <Content name="ColorMap">
+              <url>rbxassetid://121551531406280</url>
+            </Content>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="MeshPart" referent="Bear12">
+        <Properties>
+          <string name="Name">Bear__BlushR</string>
+          <Content name="MeshId">
+            <url>rbxassetid://136349463170207</url>
+          </Content>
+          <Content name="TextureID">
+            <url />
+          </Content>
+          <Vector3 name="Size">
+            <X>0.179281368</X>
+            <Y>0.106508789</Y>
+            <Z>0.262079411</Z>
+          </Vector3>
+          <Vector3 name="InitialSize">
+            <X>17.9281368</X>
+            <Y>10.6508789</Y>
+            <Z>26.2079411</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-0.34846</X>
+            <Y>0.85611</Y>
+            <Z>-0.24376</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+        </Properties>
+        <Item class="SurfaceAppearance" referent="BearInkBlushR">
+          <Properties>
+            <string name="Name">CutOut</string>
+            <token name="AlphaMode">1</token>
+            <Content name="ColorMap">
+              <url>rbxassetid://121551531406280</url>
+            </Content>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="MeshPart" referent="Bear13">
         <Properties>
           <string name="Name">Bear__Tail</string>
           <Content name="MeshId">
@@ -5432,7 +5528,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear12">
+      <Item class="MeshPart" referent="Bear14">
         <Properties>
           <string name="Name">Bear__HandL</string>
           <Content name="MeshId">
@@ -5471,7 +5567,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear13">
+      <Item class="MeshPart" referent="Bear15">
         <Properties>
           <string name="Name">Bear__HandR</string>
           <Content name="MeshId">
@@ -5510,7 +5606,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear14">
+      <Item class="MeshPart" referent="Bear16">
         <Properties>
           <string name="Name">Bear__FootL</string>
           <Content name="MeshId">
@@ -5549,7 +5645,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear15">
+      <Item class="MeshPart" referent="Bear17">
         <Properties>
           <string name="Name">Bear__FootR</string>
           <Content name="MeshId">
@@ -5588,7 +5684,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear16">
+      <Item class="MeshPart" referent="Bear18">
         <Properties>
           <string name="Name">Bear__CharmDot</string>
           <Content name="MeshId">
@@ -5627,7 +5723,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear17">
+      <Item class="MeshPart" referent="Bear19">
         <Properties>
           <string name="Name">Bear__WingL</string>
           <Content name="MeshId">
@@ -5666,7 +5762,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear18">
+      <Item class="MeshPart" referent="Bear20">
         <Properties>
           <string name="Name">Bear__WingR</string>
           <Content name="MeshId">
@@ -5705,7 +5801,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear19">
+      <Item class="MeshPart" referent="Bear21">
         <Properties>
           <string name="Name">Bear__CharmStar</string>
           <Content name="MeshId">
@@ -5744,7 +5840,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear20">
+      <Item class="MeshPart" referent="Bear22">
         <Properties>
           <string name="Name">Bear__CharmHeart</string>
           <Content name="MeshId">
@@ -5783,7 +5879,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear21">
+      <Item class="MeshPart" referent="Bear23">
         <Properties>
           <string name="Name">Bear__CharmButton</string>
           <Content name="MeshId">
@@ -5822,7 +5918,7 @@
           <bool name="CanQuery">false</bool>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="Bear22">
+      <Item class="MeshPart" referent="Bear24">
         <Properties>
           <string name="Name">Bear__CharmLeaf</string>
           <Content name="MeshId">
@@ -7662,9 +7758,9 @@
             <Z>9.856194</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.21383</X>
-            <Y>1.02937</Y>
-            <Z>-0.42061</Z>
+            <X>0.22433</X>
+            <Y>0.97137</Y>
+            <Z>-0.40211</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7701,9 +7797,9 @@
             <Z>9.836796</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.21383</X>
-            <Y>1.02936</Y>
-            <Z>-0.42077</Z>
+            <X>-0.22433</X>
+            <Y>0.97136</Y>
+            <Z>-0.40086</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7740,9 +7836,9 @@
             <Z>8.255718</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.24827</X>
-            <Y>1.02449</Y>
-            <Z>-0.40748</Z>
+            <X>0.25877</X>
+            <Y>0.96649</Y>
+            <Z>-0.38898</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7779,9 +7875,9 @@
             <Z>8.232685</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.24835</X>
-            <Y>1.02449</Y>
-            <Z>-0.40762</Z>
+            <X>-0.25885</X>
+            <Y>0.96649</Y>
+            <Z>-0.38771</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7857,9 +7953,9 @@
             <Z>11.65691</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.2145</X>
-            <Y>1.03</Y>
-            <Z>-0.40301</Z>
+            <X>0.225</X>
+            <Y>0.972</Y>
+            <Z>-0.38451</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7896,9 +7992,9 @@
             <Z>9.541447</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.2145</X>
-            <Y>1.026</Y>
-            <Z>-0.4179</Z>
+            <X>0.225</X>
+            <Y>0.968</Y>
+            <Z>-0.3994</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7935,9 +8031,9 @@
             <Z>4.682629</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.2145</X>
-            <Y>0.978</Y>
-            <Z>-0.44598</Z>
+            <X>0.225</X>
+            <Y>0.92</Y>
+            <Z>-0.42748</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -7974,9 +8070,9 @@
             <Z>6.896095275878906</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.2235</X>
-            <Y>1.06294</Y>
-            <Z>-0.44015</Z>
+            <X>0.234</X>
+            <Y>1.00494</Y>
+            <Z>-0.42165</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8013,9 +8109,9 @@
             <Z>10.723568</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.22506</X>
-            <Y>0.99687</Y>
-            <Z>-0.41234</Z>
+            <X>0.23556</X>
+            <Y>0.93887</Y>
+            <Z>-0.39384</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8052,9 +8148,9 @@
             <Z>10.857876</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.2145</X>
-            <Y>1.04806</Y>
-            <Z>-0.41845</Z>
+            <X>0.225</X>
+            <Y>0.99006</Y>
+            <Z>-0.39995</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8091,9 +8187,9 @@
             <Z>14.156761</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.23164</X>
-            <Y>1.03043</Y>
-            <Z>-0.39575</Z>
+            <X>0.24214</X>
+            <Y>0.97243</Y>
+            <Z>-0.37725</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8130,9 +8226,9 @@
             <Z>3.917862</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0.206</X>
-            <Y>1.03589</Y>
-            <Z>-0.44971</Z>
+            <X>0.2165</X>
+            <Y>0.97789</Y>
+            <Z>-0.43121</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8169,9 +8265,9 @@
             <Z>11.65691</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.2145</X>
-            <Y>1.03</Y>
-            <Z>-0.40301</Z>
+            <X>-0.225</X>
+            <Y>0.972</Y>
+            <Z>-0.3831</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8208,9 +8304,9 @@
             <Z>9.54147</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.2145</X>
-            <Y>1.026</Y>
-            <Z>-0.4179</Z>
+            <X>-0.225</X>
+            <Y>0.968</Y>
+            <Z>-0.39799</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8247,9 +8343,9 @@
             <Z>4.682606</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.2145</X>
-            <Y>0.978</Y>
-            <Z>-0.44598</Z>
+            <X>-0.225</X>
+            <Y>0.92</Y>
+            <Z>-0.42607</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8286,9 +8382,9 @@
             <Z>6.896076</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.2235</X>
-            <Y>1.06294</Y>
-            <Z>-0.44015</Z>
+            <X>-0.234</X>
+            <Y>1.00494</Y>
+            <Z>-0.42024</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8325,9 +8421,9 @@
             <Z>10.723545</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.22506</X>
-            <Y>0.99687</Y>
-            <Z>-0.41234</Z>
+            <X>-0.23556</X>
+            <Y>0.93887</Y>
+            <Z>-0.39243</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8364,9 +8460,9 @@
             <Z>10.857903</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.2145</X>
-            <Y>1.04806</Y>
-            <Z>-0.41845</Z>
+            <X>-0.225</X>
+            <Y>0.99006</Y>
+            <Z>-0.39854</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8403,9 +8499,9 @@
             <Z>14.156715</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.23164</X>
-            <Y>1.03043</Y>
-            <Z>-0.39575</Z>
+            <X>-0.24214</X>
+            <Y>0.97243</Y>
+            <Z>-0.37584</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -8442,9 +8538,9 @@
             <Z>3.917885</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-0.206</X>
-            <Y>1.03589</Y>
-            <Z>-0.44971</Z>
+            <X>-0.2165</X>
+            <Y>0.97789</Y>
+            <Z>-0.4298</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -9106,8 +9202,8 @@
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.0</X>
-            <Y>1.03006</Y>
-            <Z>-0.24347</Z>
+            <Y>0.97206</Y>
+            <Z>-0.24545</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
