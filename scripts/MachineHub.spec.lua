@@ -78,7 +78,7 @@ return function(client,parent)
     end
     assert(g.tiles[2].x-(g.tiles[1].x+g.tiles[1].w)>=8 and g.tiles[4].y-(g.tiles[1].y+g.tiles[1].h)>=8,W.." gaps hold the lip")
    end
-   local d=Hub.geometry(848,608,false).tiles[1];assert(d.x==24 and d.y==84 and d.w==256 and d.h==224,"desktop tile 256 x 224")
+   local d=Hub.geometry(848,608,false).tiles[1];assert(d.x==24 and d.y==84 and d.w==256 and d.h==224,"desktop tile 256 x 224 (round 3 shortens phone tiles only)")
    assert(Hub.step(1,1,0)==2 and Hub.step(3,1,0)==3 and Hub.step(1,0,1)==4 and Hub.step(6,0,1)==6 and Hub.step(4,-1,0)==4 and Hub.step(5,0,-1)==2)
    assert(Hub.keyAction(K.ButtonA)=="open"and Hub.keyAction(K.Return)=="open"and Hub.keyAction(K.ButtonB)=="back"and Hub.keyAction(K.Escape)=="back")
    assert(Hub.keyAction(K.M)=="back"and Hub.keyAction(K.DPadLeft)=="left"and Hub.keyAction(K.S)=="down"and Hub.keyAction(K.Q)==nil)

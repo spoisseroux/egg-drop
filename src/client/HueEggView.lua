@@ -121,7 +121,7 @@ function View.new(parent,intent,options)
  self.secondaryTab=button(card,"SecondaryTab","Secondary",function()self:chooseChannel("secondary")end)
  self.portrait=Art.frame(card,"PetPortrait","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(240,170),23);Art.corner(self.portrait,16)
  self.viewport=Instance.new("ViewportFrame");self.viewport.Name="SavedPet";self.viewport.BackgroundTransparency=1;self.viewport.Size=UDim2.fromScale(1,1);self.viewport.ZIndex=24;self.viewport.Parent=self.portrait
- self.viewport.Ambient=Color3.fromRGB(175,184,183);self.viewport.LightColor=Color3.fromRGB(255,250,231);self.viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ self.viewport.Ambient=Color3.fromRGB(206,202,194);self.viewport.LightColor=Color3.fromRGB(128,122,110);self.viewport.LightDirection=Vector3.new(-1,-1.4,-3)
  self.world=Instance.new("WorldModel");self.world.Parent=self.viewport;self.camera=Instance.new("Camera");self.camera.FieldOfView=30;self.camera.Parent=self.viewport;self.viewport.CurrentCamera=self.camera
  self.petName=text(card,"PetName","Bear","Action");self.petName.TextXAlignment=Enum.TextXAlignment.Center;self.petName.AutoLocalize=false
  self.channelTitle=text(body,"ChannelTitle","Main","Action")
@@ -909,13 +909,21 @@ function View:clearColour()
   end
   self:layout();return ok
  end
- local token={petId=self.petId,channel=self.channel,untilTime=os.clock()+View.ClearConfirmSeconds}
- self.clearConfirm=token
- local delay=self.options.delay or task.delay
- delay(View.ClearConfirmSeconds,function()
-  if self.clearConfirm==token then self.clearConfirm=nil;if not self.destroyed and self.shade.Visible then self:layout()end end
- end)
- self:layout();return true
+ -- Round 3 (Spencer: a confirmation dialog for anything we need to confirm): the reset asks in
+ -- ConfirmDialog; its yes opens the old confirm window for this pet and channel and runs again,
+ -- so every check above runs on the state at that moment.
+ local petId,channel=self.petId,self.channel
+ local Confirm=require(script.Parent.ConfirmDialog)
+ self.confirmHandle=Confirm.ask({tone="danger",title=UICopy.get("confirm.resetTitle"),line=UICopy.get("confirm.resetLine"),
+  confirm=UICopy.get("confirm.resetYes"),
+  onConfirm=function()
+   self.confirmHandle=nil
+   if self.destroyed or not self.shade.Visible or self.petId~=petId or self.channel~=channel then return end
+   self.clearConfirm={petId=petId,channel=channel,untilTime=os.clock()+View.ClearConfirmSeconds}
+   self:clearColour()
+   self.clearConfirm=nil -- code review: never leave the reset armed if it stopped early
+  end,onCancel=function()self.confirmHandle=nil end})
+ return self.confirmHandle~=nil
 end
 function View:stopPortraitClock()
  if self.previewFeedback then self.previewFeedback:cancel()end
@@ -2038,6 +2046,7 @@ function View:open(state,page,petId)
 end
 function View:close(reason,reconciled)
  self.selectorOwnsPick=nil
+ require(script.Parent.ConfirmDialog).cancelFor(self)
  self.fruitEating:cancel();self.eatingProof:cancel();self.eatingReady=nil;self.boundedEating=nil
  self:stopPortraitClock()
  if not self.shade.Visible then return end

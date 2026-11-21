@@ -295,7 +295,7 @@ function Inspect:build(identity)
  well.ClipsDescendants=true;Kit.stage(well) -- Toy Shell R1.2.5: the pet on the berry stage
  local viewport=Instance.new("ViewportFrame")
  viewport.Name="PetViewport";viewport.BackgroundTransparency=1;viewport.BorderSizePixel=0;viewport.Size=UDim2.fromScale(1,1)
- viewport.Ambient=Color3.fromRGB(175,184,183);viewport.LightColor=Color3.fromRGB(255,250,231);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ viewport.Ambient=Color3.fromRGB(206,202,194);viewport.LightColor=Color3.fromRGB(128,122,110);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
  viewport.ZIndex=well.ZIndex+1;viewport.Active=true;viewport.Parent=well
  local world=Instance.new("WorldModel");world.Parent=viewport
  local lens=Instance.new("Camera");lens.FieldOfView=30;lens.Parent=viewport;viewport.CurrentCamera=lens
@@ -480,6 +480,7 @@ function Inspect:paintStats()
   view.you.Text=if compare then UICopy.get("inspect.you",{count=mine.total})else ""
   view.you.Position=UDim2.fromOffset(8+tw+4+ow+8,view.total.Position.Y.Offset)
   view.chip.set(model.keeper,nil);Kit.paint(view.chip.label,"TextColor3","accent")
+  view.chip.root.Visible=StatsPanel.ShowKeeper -- round 3: the Keeper title is hidden for now
   view.pane:SetAttribute("TotalLevel",model.total)
  else view.pane:SetAttribute("TotalLevel",nil)end
  view.pane:SetAttribute("Compare",compare)

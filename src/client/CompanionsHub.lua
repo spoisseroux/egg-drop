@@ -252,7 +252,7 @@ end
 function Hub:buildWell(parent,x,y,w,h)
  local well=Kit.frame(parent,"PreviewWell","stage",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12);Kit.stroke(well);Kit.stage(well)
  local viewport=Kit.node("ViewportFrame",well,{Name="PetPreview",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex+1,
-  Ambient=Color3.fromRGB(175,184,183),LightColor=Color3.fromRGB(255,250,231),LightDirection=Vector3.new(-1,-1.4,-3)})
+  Ambient=Color3.fromRGB(206,202,194),LightColor=Color3.fromRGB(128,122,110),LightDirection=Vector3.new(-1,-1.4,-3)})
  local world=Kit.node("WorldModel",viewport,{});local camera=Kit.node("Camera",viewport,{FieldOfView=30})
  viewport.CurrentCamera=camera
  viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
@@ -394,7 +394,8 @@ function Hub:buildHub(body,W,H,phone)
   local stroke=tileState.stroke
   local s=Hub.status(row.id,ctx)
   -- Spencer 2026-11-20: the Name tile reads "Name your Bear" (the species, as the screen's title).
-  local title=if row.id=="name"then UICopy.get("names.title",{pet=NameText.species(self:activePet())})else row.name
+  -- Round 3 (Spencer): the tile is just "Name" (the naming screen keeps "Name your Bear").
+  local title=row.name
   local name,line,status,d,icon,dot
   button:SetAttribute("AccessibleLabel",title..", "..row.line)
   if phone then
@@ -690,21 +691,24 @@ function Hub:act()
   -- v2 Bunny: 400 Stars is a big spend, so the first press arms a 3 s confirm and the second sends.
   -- An earned (free) card sends at once: nothing is spent.
   if self.assign or self.pendingAdopt or(not card.free and(self.ctx.wallet or 0)<card.price)then return false end
-  if not card.free and not(self.confirmAdopt and self.confirmAdopt.id==card.id and os.clock()<self.confirmAdopt.untilAt)then
-   self.confirmAdopt={id=card.id,untilAt=os.clock()+3};self:refresh()
-   task.delay(3.05,function()if self.visible and self.confirmAdopt and os.clock()>=self.confirmAdopt.untilAt then self.confirmAdopt=nil;self:refresh()end end)
-   return true
+  -- Round 3 (Spencer: "don't do press again to adopt, open a confirmation dialog"): a paid adopt
+  -- asks in ConfirmDialog; the yes re-checks everything, as the hub may have changed meanwhile.
+  if not card.free then
+   local id,price=card.id,card.price
+   local pet=Pets.byId[id]
+   local vars={pet=pet and pet.name or "",price=price}
+   self.confirmHandle=require(script.Parent.ConfirmDialog).ask({tone="spend",
+    title=UICopy.get("confirm.adoptTitle",vars),line=UICopy.get("confirm.adoptLine",vars),confirm=UICopy.get("confirm.adoptYes",vars),
+    onConfirm=function()
+     self.confirmHandle=nil
+     if not self.visible or self.page~="pets"or self.assign or self.pendingAdopt then return end
+     local now=self:cards()[self.cardIndex]
+     if not now or now.id~=id or not now.adopt or now.free or now.price~=price or(self.ctx.wallet or 0)<price then return end
+     self:sendAdopt(now)
+    end,onCancel=function()self.confirmHandle=nil end})
+   return self.confirmHandle~=nil
   end
-  self.confirmAdopt=nil
-  local sent=self.callbacks.adopt and self.callbacks.adopt(card.id,card.price)
-  if sent then
-   -- The callback returns the operation id (or true); replies and the timeout match on it.
-   local opId=if type(sent)=="string"then sent else nil
-   self.pendingAdopt,self.pendingAdoptId=card.id,opId;require(script.Parent.UIClick).play("equip");self:refresh()
-   task.delay(12,function()if self.pendingAdopt==card.id and self.pendingAdoptId==opId then self.pendingAdopt,self.pendingAdoptId=nil,nil;self:refresh()end end)
-   return true
-  end
-  return false
+  return self:sendAdopt(card)
  end
  if self.assign then
   local assign=self.assign;self.assign=nil
@@ -717,6 +721,20 @@ function Hub:act()
   self.pendingFollow=entry.id;require(script.Parent.UIClick).play("equip");self:refresh();return true -- QA v775 note 10: Follow is an equip
  end
  return false
+end
+-- Sends one adopt (the free card at once, a paid one after the confirm dialog's yes).
+function Hub:sendAdopt(card)
+ do
+  local sent=self.callbacks.adopt and self.callbacks.adopt(card.id,card.price)
+  if sent then
+   -- The callback returns the operation id (or true); replies and the timeout match on it.
+   local opId=if type(sent)=="string"then sent else nil
+   self.pendingAdopt,self.pendingAdoptId=card.id,opId;require(script.Parent.UIClick).play("equip");self:refresh()
+   task.delay(12,function()if self.pendingAdopt==card.id and self.pendingAdoptId==opId then self.pendingAdopt,self.pendingAdoptId=nil,nil;self:refresh()end end)
+   return true
+  end
+  return false
+ end
 end
 function Hub:back()
  local target=Hub.backTarget(self.page,self.assign~=nil)
@@ -791,6 +809,7 @@ function Hub:open(ctx,options)
 end
 function Hub:close(reason)
  if not self.visible then return false end
+ if self.confirmHandle then self.confirmHandle.cancel("owner");self.confirmHandle=nil end
  self.visible=false;self.covered=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end
  if self.clock then self.clock:Disconnect();self.clock=nil end
  if self.visual then self.visual:destroy();self.visual=nil end

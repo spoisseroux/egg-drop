@@ -133,7 +133,7 @@ local function build()
  local viewport=Instance.new("ViewportFrame")
  viewport.Name="PeekViewport";viewport.BackgroundTransparency=1;viewport.BorderSizePixel=0
  viewport.Active=false;viewport.Selectable=false;viewport.Interactable=false
- viewport.Ambient=Color3.fromRGB(175,184,183);viewport.LightColor=Color3.fromRGB(255,250,231);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ viewport.Ambient=Color3.fromRGB(206,202,194);viewport.LightColor=Color3.fromRGB(128,122,110);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
  viewport.Parent=clip
  local world=Instance.new("WorldModel");world.Parent=viewport
  local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport

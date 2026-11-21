@@ -506,7 +506,8 @@ function Cinematic:held()return self.clockHold~=nil and self.clockHold()==true e
 function Cinematic:playBody()
  if not self.bodyPending or self:held()or self.age<(self.timing and self.timing.bodyAt or 0)then return end
  self.bodyPending=false
- self:cue("hatch_display_"..(if self.kind=="companion"then "bear"else self.kind),1,1)
+ -- Round 3: the body bed is off (RarityCue.BodyGain 0) so the tier sting reads, as on the Stat Egg.
+ if RarityCue.BodyGain>0 then self:cue("hatch_display_"..(if self.kind=="companion"then "bear"else self.kind),1,RarityCue.BodyGain)end
 end
 function Cinematic:step(dt)
  if self.nativeScene then

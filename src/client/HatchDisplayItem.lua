@@ -91,6 +91,13 @@ function Item.create(world,gui,result,builder,height,reduced)
  if api then handle=if result.toyId then api.create(world,id,1)else api.create(world,id,1,1,Color3.fromHex("#95CDB9"))
   -- v842: the Sparkler's sparks in the reveal follow Reduced Effects.
   if handle and result.toyId and api.setSparks then api.setSparks(handle,not reduced and not game:GetService("GuiService").ReducedMotionEnabled)end
+ elseif result.stat and result.size then
+  -- Round 3: the Stat Egg's hero is the 3D Stat Snack. Until its meshes load the snack is the
+  -- placeholder stack; it swaps for the production model when they arrive (onChanged).
+  local SnackModel=require(script.Parent.SnackModel)
+  local model=SnackModel.build(result.size,result.stat,1)
+  model.Parent=world
+  handle={model=model,destroy=function()model:Destroy()end,snack=true,placeholder=model:GetAttribute("SnackBackend")=="Placeholder"}
  elseif result.itemId then
   -- Slice 3 (2026-11-16): hue jars, finish jars and the charm capsule turn in 3D like toys.
   local model=require(script.Parent.JarModel).build(result.itemId,1,{turn=false})
@@ -104,8 +111,11 @@ function Item.create(world,gui,result,builder,height,reduced)
     table.insert(entries,{part=part,frame=part.CFrame,size=part.Size})
    end end
    local self={model=handle.model,handle=handle,entries=entries,scale=scale,mode="Object3D"}
+   -- A snack tips its top 16 degrees toward the camera so the topper reads (Spencer 2026-11-20).
+   local lean=if handle.snack then math.rad(16)else 0
    function self:pose(sample)
-    local rotation=CFrame.Angles(sample.toyTilt, sample.toyYaw, sample.toyTilt*.45)
+    self.lastSample=sample
+    local rotation=CFrame.Angles(sample.toyTilt+lean, sample.toyYaw, sample.toyTilt*.45)
     local factor=self.scale*sample.heroScale;local lowest
     for _,entry in ipairs(self.entries)do
      local p=entry.part;p.Size=entry.size*factor;p.CFrame=rotation*CFrame.new(entry.frame.Position*factor)*entry.frame.Rotation
@@ -115,7 +125,30 @@ function Item.create(world,gui,result,builder,height,reduced)
     for _,entry in ipairs(self.entries)do entry.part.CFrame+=offset end
     self.minimum=.0021+(sample.hop or 0)*height;self.contact=lowest+offset
    end
-   function self:destroy()self.handle:destroy()end
+   function self:destroy()self.destroyed=true;self.handle:destroy()end
+   if handle.placeholder then
+    -- Poll for the production meshes (SnackModel.warm runs in the background), up to 6 s.
+    task.spawn(function()
+     local SnackModel=require(script.Parent.SnackModel)
+     for _=1,30 do
+      task.wait(.2)
+      if self.destroyed then return end
+      if SnackModel.template(result.size)then
+       local made=SnackModel.build(result.size,result.stat,1)
+       if made:GetAttribute("SnackBackend")=="Placeholder"then made:Destroy();return end
+       self.handle.destroy();made.Parent=world
+       local _,size2=made:GetBoundingBox()
+       self.scale=height*1.45/math.max(.01,size2.X,size2.Y)
+       table.clear(self.entries)
+       for _,part in ipairs(made:GetDescendants())do if part:IsA("BasePart")then table.insert(self.entries,{part=part,frame=part.CFrame,size=part.Size})end end
+       self.model=made;self.handle={model=made,destroy=function()made:Destroy()end,snack=true}
+       if self.lastSample then self:pose(self.lastSample)end
+       if self.onChanged then self.onChanged()end
+       return
+      end
+     end
+    end)
+   end
    return self
   end
  end

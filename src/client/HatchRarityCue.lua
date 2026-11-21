@@ -25,6 +25,8 @@ local Cue={};Cue.__index=Cue
 local valid={Common=true,Uncommon=true,Rare=true,Neutral=true}
 local materialTier=table.freeze({standard="Common",gloss="Common",matte="Common",jelly="Rare"})
 local rarePets={};for _,pet in ipairs(Pets.rares)do rarePets[pet.id]=true end
+-- Round 3 (Fable brief 3): earned pets (the Bunny) hatch as Rare; the Bear stays Common.
+for _,pet in ipairs(Pets.earned or {})do rarePets[pet.id]=true end
 local basePets={};for _,pet in ipairs(Pets)do basePets[pet.id]=true end
 local statTier=table.freeze({nibble="Common",snack="Uncommon",feast="Rare"})
 local function tier(row)return if row and valid[row.rarity]then row.rarity else "Neutral"end
@@ -119,6 +121,22 @@ function Policy.burstAt(tier,kind)return Policy.timing(tier,kind,false).burst en
 -- The jackpot's two voices (uploaded 2026-11-19 from artifacts/v2-hatch-redesign-2026-11-19/audio):
 -- hatch_jackpot plays under the approved Rare sting, hatch_jackpot_calm under Reduced Motion.
 Policy.JackpotCue="hatch_jackpot";Policy.JackpotCalmCue="hatch_jackpot_calm"
+-- Round 3 (Fable, CREATIVE-BRIEF 2): one sound line for every egg, pets included. The tier
+-- sting is the hatch's sound; three wobbles on the rock peaks and the crack glint lead into it.
+-- The old body cues (hatch_display_<kind>) play at BodyGain (0: off; they covered the sting).
+Policy.BodyGain=0
+Policy.Foley=table.freeze({
+ table.freeze({at=.21,cue="egg_wobble",speed=1.00,gain=.28}),table.freeze({at=.48,cue="egg_wobble",speed=1.08,gain=.34}),
+ table.freeze({at=.81,cue="egg_wobble",speed=1.16,gain=.40}),table.freeze({at=.65,cue="egg_crack_glint",speed=1,gain=.45}),
+})
+-- The tier line with the foley merged in, in time order (Policy.new).
+local function withFoley(events)
+ local out={}
+ for _,f in ipairs(Policy.Foley)do table.insert(out,{at=f.at,cue=f.cue,speed=f.speed,gain=f.gain,pre=true})end
+ for _,e in ipairs(events)do table.insert(out,e)end
+ table.sort(out,function(a,b)return a.at<b.at end)
+ return out
+end
 function Policy.events(classification,readyAt,reduced,kind)
  local s=Policy.Sting[classification]or Policy.Sting.Common
  local J=Policy.Jackpot
@@ -137,8 +155,11 @@ function Policy.events(classification,readyAt,reduced,kind)
 end
 function Policy.new(kind,result,readyAt,reduced)
  local classification=Policy.tier(kind,result)
- -- Pets keep the reveal stage's own sound line (RevealStage.Cues); items get the tier line.
- local events=if kind=="companion"then {}else Policy.events(classification,readyAt,reduced,kind)
+ -- Round 3: pets get the tier line too (the Bear's rarity_common lands as the shell opens);
+ -- RevealStage.Cues stay as the entrance after it.
+ -- The egg foley leads in (not under Reduced Motion); Policy.events stays the tier's own line.
+ local events=Policy.events(classification,readyAt,reduced,kind)
+ if not reduced then events=withFoley(events)end
  return setmetatable({tier=classification,events=events,cursor=1,lastAge=0,readyAt=readyAt},Cue)
 end
 function Cue:cancel()self.cancelled=true;self.cursor=#self.events+1 end

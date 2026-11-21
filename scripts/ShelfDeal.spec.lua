@@ -113,7 +113,7 @@ return function(client,parent)
     shop:focus(at);settle()
     assert(shop.deal.root.Visible and shop.root:GetAttribute("ShelfPrice")==slot.price,"pane chip on the shelf item")
     assert(shop.deal.root.AbsoluteSize.X<=shop.viewport.AbsoluteSize.X,"the chip fits the preview well")
-    shop:act();shop:act() -- confirm, then buy
+    shop:act();require(client.ConfirmDialog).accept();task.wait();task.wait() -- round 3: the dialog's yes buys
     assert(#orders==1 and orders[1].itemId==slot.id and orders[1].price==slot.price,"the buy sends the shelf price")
     shop:result({id=orders[1].id,status="Refused",reason="PriceChanged"})
     assert(shop.status.Text==UICopy.get("shop.reason.priceChanged"),"a week boundary refusal reads as a price change")

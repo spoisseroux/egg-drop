@@ -30,6 +30,7 @@ local Pets=require(ReplicatedStorage.Shared.PetCatalog)
 local BaseColors=require(ReplicatedStorage.Shared.PetBaseColors)
 local ItemStage=require(script.Parent.HatchItemStage)
 local Rarity=require(script.Parent.HatchRarityCue)
+local Copy=require(ReplicatedStorage.Shared.UICopy)
 local Stage={};Stage.__index=Stage
 
 -- ── Pure rules (specs cover these) ───────────────────────────────────────────
@@ -106,8 +107,9 @@ local function quintOut(x)return 1-(1-x)^5 end
 local function quadOut(x)return 1-(1-x)^2 end
 Stage.ease={backOut=backOut,quintOut=quintOut,quadOut=quadOut}
 
--- Timeline 1.5, milliseconds after the egg splits, as progress lanes.
-function Stage.sample(t)
+-- Timeline 1.5, milliseconds after the egg splits, as progress lanes. `rare`: the Rare pet's
+-- entrance (Stage.rareLanes); omitted, every lane is the Bear's.
+function Stage.sample(t,rare)
  t=math.max(0,t or 0)
  local s={t=t}
  s.dark=ramp(t,0,.12)                           -- 0: stage fades to black
@@ -128,17 +130,100 @@ function Stage.sample(t)
  s.buttons=quadOut(ramp(t,Stage.InputAt,.14))   -- 1000: buttons + hint, input opens
  s.input=t>=Stage.InputAt
  s.settled=t>=Stage.Duration
+ s.plateAt=.60
  if t<.12 then s.letters=0 end
+ if rare then Stage.rareLanes(s,t)end
  return s
 end
 -- Reduced Motion: one 150 ms cross-fade to the settled frame.
-function Stage.reducedSample(t)
- local s=Stage.sample(Stage.Duration)
+function Stage.reducedSample(t,rare)
+ local s=Stage.sample(Stage.Duration,rare)
  s.reduced=true;s.fade=ramp(t or 0,0,Stage.ReducedFade);s.flash=0;s.burstAlive=false;s.spinIn=0;s.streakGlow=1
  s.settled=(t or 0)>=Stage.ReducedFade
+ if rare then
+  -- The calm jackpot (Fable brief 3): no leap, hops or shake; "RARE!" fades in at full size
+  -- and fades out again, over a static rainbow edge (Stage.jackpot).
+  local R=Stage.Rare
+  s.arc,s.squash,s.stampShake,s.stampScale=0,0,0,1
+  s.stamp=ramp(t or 0,0,Stage.ReducedFade)*(1-ramp(t or 0,R.reducedStampOut,.15))
+ end
  return s
 end
 Stage.Cues={{0,"reveal_hush"},{.12,"spot_on"},{.30,"streak_whoosh"},{.42,"reveal_shimmer"},{.48,"tag_slam"},{.60,"name_slam"},{.84,"desc_tick"}}
+
+-- Round 3 (Spencer 2026-11-20: "the bunny should have an awesome hatch animation like the bear!
+-- make it epic"; Fable brief 3, cut by the architect review). A Rare pet (the Bunny: earned pets
+-- are Rare in HatchRarityCue) gets the jackpot on the pet's own clock. No wind-up or freeze:
+-- LeadIn stays 1.05, the receipt still opens at LeadIn + InputAt (2.05) and HatchRarityCue's tier
+-- timing is untouched, so no egg hatch changes. At the shell's opening (the tier burst, 0.98 on
+-- the hatch clock) the shockwave, the rim and screen-edge rainbow, the well's punch and a shake;
+-- then the leap (720 deg, an arc), the "RARE!" stamp, a three-hop landing with rising boops, two
+-- cannons, and the "RARE / DISCOVERY!" headline once the stamp has gone. Times are entrance
+-- seconds (hatch - LeadIn) except `burst`. Common and Uncommon pets (the Bear) keep every beat above.
+Stage.Rare=table.freeze({burst=Rarity.BurstAt,leap=.12,leapFor=.34,spin=720,arc=.38,back=2.4,
+ hops=table.freeze({table.freeze({.50,.62,.16}),table.freeze({.66,.76,.07})}),    -- {from, land, height x petH}
+ lands=table.freeze({table.freeze({.46,.12}),table.freeze({.62,.06}),table.freeze({.76,.03})}), -- {at, squash}
+ stamp=.25,stampFall=.12,stampShake=.18,stampLeave=.70,stampOut=.07,reducedStampOut=.9,
+ headline=.77,greet=.80,plate=.82,desc=.96,cannon=.20,cannonGap=.12,burstCount=30,shafts=.25,calmEdge=.6,earFlick=22,
+ cannonColors=table.freeze({"#FFC14D","#FFFFFF","#FF79D9","#B9EE5A"}),edgeRadius=table.freeze({phone=34,regular=24}),edgeBand=14})
+-- The Rare pet's entrance sound: the three boops rise with the hops, then the slams. reveal_hush,
+-- spot_on, streak_whoosh, reveal_shimmer and the popper's new_best are dropped (they fight the
+-- rarity_rare sting that HatchRarityCue plays as the shell opens). {at, cue, pitch, gain}
+Stage.RareCues=table.freeze({{.46,"bear_boop",1.25,.40},{.62,"bear_boop",1.40,.30},{.76,"bear_boop",1.55,.22},
+ {.77,"tag_slam",1,.55},{.82,"name_slam",1,.55},{.96,"desc_tick",1,.45}})
+local function smooth(a,b,t)local u=math.clamp((t-a)/(b-a),0,1);return u*u*(3-2*u)end
+-- Pure: the Rare pet's entrance lanes over `s` (Stage.sample's), at entrance time `t`. arc is the
+-- pet's height off the floor (x petH), squash the landing squash (x wider, y shorter).
+function Stage.rareLanes(s,t)
+ local R,E=Stage.Rare,ItemStage.ease
+ local u=ramp(t,R.leap,R.leapFor)
+ s.rare=true
+ s.rise=E.back(u,R.back);s.spinIn=R.spin*(1-quintOut(u))
+ local arc=if t>=R.leap and t<R.leap+R.leapFor then R.arc*math.sin(math.pi*u)else 0
+ for _,hop in ipairs(R.hops)do
+  if t>=hop[1]and t<hop[2]then arc+=hop[3]*math.sin(math.pi*(t-hop[1])/(hop[2]-hop[1]))end
+ end
+ s.arc=arc
+ local squash=0
+ for _,land in ipairs(R.lands)do if t>=land[1]then squash+=land[2]*E.spring(t-land[1],.26,1,6)end end
+ s.squash=squash
+ s.stamp,s.stampScale,s.stampShake=0,1,0
+ if t>=R.stamp then
+  local leave=ramp(t,R.stampLeave,R.stampOut)
+  s.stamp=1-leave;s.stampScale=(2.6-1.6*E.expoIn(ramp(t,R.stamp,R.stampFall)))*(1-.1*leave)
+  local landed=R.stamp+R.stampFall
+  if t>=landed and t<landed+R.stampShake then s.stampShake=4*(1-ramp(t,landed,R.stampShake))end
+ end
+ s.headline=backOut(ramp(t,R.headline,.20))
+ s.greet=t>=R.greet
+ s.plate=quintOut(ramp(t,R.plate,.24));s.plateAt=R.plate
+ s.letters=if t<R.plate then 0 else math.floor((t-R.plate)/.04)+1
+ s.desc=quintOut(ramp(t,R.desc,.16))
+ return s
+end
+-- Pure: the jackpot lanes on the hatch clock `h` (they start inside the egg lead-in, as the shell
+-- opens). Reduced Motion: the static calm frame (rainbow 0.6, shafts 0.15, nothing moves).
+function Stage.jackpot(h,reduced)
+ local R,E=Stage.Rare,ItemStage.ease;local B=R.burst
+ if reduced then return{shafts=R.shafts*.6,rainbow=R.calmEdge,shock=nil,punch=0,shake=0,bloom=0,bloomR=0}end
+ h=math.max(0,h or 0)
+ local j={shafts=R.shafts*smooth(.12,B,h),rainbow=ramp(h,B,.25),shock=nil,punch=0,shake=0,bloom=0,bloomR=0}
+ if h>=B then
+  j.punch=E.back(ramp(h,B,.22),2.4)*(1-smooth(B+.22,B+.62,h))
+  if h<B+.2 then j.shake=3*(1-ramp(h,B,.2))end
+  if h<B+.5 then local v=ramp(h,B,.5);j.shock={radius=40+560*E.expoOut(v),width=10-8*v,alpha=1-v*v}end
+  j.bloomR=E.expoOut(ramp(h,B,.16));j.bloom=Rarity.Stage.Rare.bloom*ramp(h,B,.05)*(1-ramp(h,B,.40))^2
+ end
+ return j
+end
+-- Pure: the ear flick on each landing (radians), 0 before the first.
+function Stage.earFlick(t)
+ local R=Stage.Rare;local flick=0
+ for index,land in ipairs(R.lands)do
+  if t>=land[1]then flick+=math.rad(R.earFlick)*ItemStage.ease.spring(t-land[1],.26,1,6)*(if index==1 then 1 else .5)end
+ end
+ return flick
+end
 
 -- Confetti popper (QA v2 R1.1): two poppers in the bottom corners fire with the colour
 -- burst (t = 0.42), the pieces arc up and inward, tumble and fall out of the frame. The
@@ -293,6 +378,9 @@ function Stage.show(parent,options)
  self.kind=options.tag or "new"
  self.accent=options.accent or Stage.accentFor(pet.id,options.appearance)
  self.ink=Stage.ink(self.accent)
+ -- The tier's well (and, Round 3, a Rare pet's jackpot) is chosen before anything is built.
+ self.tier=Rarity.tier("companion",{petId=pet.id})
+ self.jackpot=self.tier=="Rare"
  local root=Kit.frame(parent,"RevealStage",nil,UDim2.new(),UDim2.fromScale(1,1))
  -- v2 (V2-HATCH-REDESIGN 2.4): pets hatch on the same Pop-Out Stage as items: the deck's
  -- shell and the tier's vibrant well (Sunny Peach for the Bear). No dark stage, no spotlight
@@ -316,9 +404,10 @@ function Stage.show(parent,options)
  self:bindInput()
  if not self.instant then
   if self.reducedStart then
-   self:cue("reveal_shimmer",if self.kind=="rare"then 2^(3/12)else 1,.6*.72)
+   -- Round 3: a Rare pet's calm frame keeps only the voice (its sting is the host's).
+   if not self.jackpot then self:cue("reveal_shimmer",if self.kind=="rare"then 2^(3/12)else 1,.6*.72)end
    if options.voice~=false then self:cue(pet.cue or "pet",1,.4)end
-  elseif not self.lead then self:cue("reveal_hush",1,.5)end
+  elseif not self.lead and not self.jackpot then self:cue("reveal_hush",1,.5)end
  end
  self:paint()
  self.connection=RunService.RenderStepped:Connect(function(dt)self:step(dt)end)
@@ -361,7 +450,7 @@ function Stage:updateExternal(age,sample)
  self.root:SetAttribute("ReceiptReady",sample~=nil and sample.receiptReady==true)
  if not lead.done then
   if jumped then self:settle(true,true)
-  elseif lead.sample.done then self:endLead();self:cue("reveal_hush",1,.5)end
+  elseif lead.sample.done then self:endLead();if not self.jackpot then self:cue("reveal_hush",1,.5)end end
  elseif jumped and not self:isSettled()then self:settle(true,true)end
 end
 function Stage:reduced()
@@ -452,7 +541,7 @@ function Stage:build()
  -- Sparkles: burst, idle twinkles and dust in the beam.
  local sparkLayer=layerFrame(root,"Sparkles",6)
  self.burst,self.twinkles,self.dust={},{},{}
- for index=1,Stage.BurstCount do
+ for index=1,if self.jackpot then Stage.Rare.burstCount else Stage.BurstCount do
   local spark=C.sparkle(sparkLayer,math.floor(16+10*hash(index,1)),if index%3==0 then accent else Color3.new(1,1,1));spark.Visible=false;self.burst[index]=spark
  end
  for index=1,Stage.TwinkleCount do
@@ -470,6 +559,7 @@ function Stage:build()
   if index%4==0 then Kit.corner(piece,999)end
   self.confettiPieces[index]=piece
  end
+ if self.jackpot then self:buildJackpot(confettiLayer)end
  local flashLayer=layerFrame(root,"Flash",7)
  self.flash=fill(flashLayer,"White",Color3.new(1,1,1),1);self.flash.Size=UDim2.fromScale(1,1)
  -- Headline.
@@ -535,12 +625,42 @@ function Stage:build()
  self.cover=fill(root,"FadeCover",C.Stage,1);self.cover.Size=UDim2.fromScale(1,1);self.cover.ZIndex=root.ZIndex+200;self.cover.Active=false
  Kit.paint(self.cover,"BackgroundColor3","shell")
  -- The shell's checker and the tier's well, under every layer (layers start at +10).
- self.tier=Rarity.tier("companion",{petId=self.pet.id})
  local b=ItemStage.backdrop(root,root.ZIndex,self.tier,"companion")
  b.shell.BackgroundTransparency=1
- for _,extra in ipairs({b.shafts,b.seat,b.waitEgg})do extra:Destroy()end
- self.backdrop=b;self.checkerOffset=0;self.rayTurn=0
+ -- Round 3: a Rare pet keeps the light shafts behind its well (Fable brief 3).
+ for _,extra in ipairs({b.seat,b.waitEgg})do extra:Destroy()end
+ if self.jackpot then b.shafts.Visible=false else b.shafts:Destroy();b.shafts=nil end
+ self.backdrop=b;self.checkerOffset=0;self.rayTurn=0;self.shaftTurn=0;self.shaftLevel=0
  self.coneGroup.Visible=false
+end
+-- Round 3 (Fable brief 3, 8): the Rare pet's jackpot nodes, the same ones HatchItemStage draws:
+-- the shockwave line, the rainbow screen edge (rounded inner corners), the "RARE!" stamp and the
+-- two cannons' 52 pieces. Built only for a Rare pet, so a Bear stage is unchanged.
+function Stage:buildJackpot(confettiLayer)
+ local root=self.root
+ self.shock=Kit.node("Frame",root,{Name="Shockwave",BackgroundTransparency=1,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),ZIndex=root.ZIndex+65,Visible=false})
+ Kit.node("UICorner",self.shock,{CornerRadius=UDim.new(.5,0)})
+ self.shockStroke=Kit.node("UIStroke",self.shock,{Color=Color3.new(1,1,1),Thickness=10})
+ local keys={}
+ for i,hex in ipairs(ItemStage.Rainbow)do table.insert(keys,ColorSequenceKeypoint.new((i-1)/(#ItemStage.Rainbow-1),Color3.fromHex(hex)))end
+ self.edge=Kit.node("Frame",root,{Name="RainbowEdge",BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=root.ZIndex+75,Visible=false,Active=false})
+ self.edgeStroke=Kit.inner(Kit.node("UIStroke",self.edge,{Thickness=Stage.Rare.edgeBand,Color=Color3.new(1,1,1),ApplyStrokeMode=Enum.ApplyStrokeMode.Border}))
+ self.edgeCorner=Kit.node("UICorner",self.edge,{CornerRadius=UDim.new(0,0)})
+ self.edgeGradient=Kit.node("UIGradient",self.edgeStroke,{Color=ColorSequence.new(keys)})
+ self.stamp=Kit.node("TextLabel",root,{Name="RareStamp",BackgroundTransparency=1,BorderSizePixel=0,ZIndex=root.ZIndex+76,Visible=false,
+  Text=Copy.get("hatch.result.stamp.rare"),FontFace=Kit.DisplayFace,TextSize=64,TextColor3=Color3.new(1,1,1),
+  TextXAlignment=Enum.TextXAlignment.Center,TextYAlignment=Enum.TextYAlignment.Center,AnchorPoint=Vector2.new(.5,.5),Rotation=-6})
+ self.stampStroke=Kit.node("UIStroke",self.stamp,{Color=ItemStage.Ink,Thickness=5,ApplyStrokeMode=Enum.ApplyStrokeMode.Contextual})
+ self.stampScale=Kit.node("UIScale",self.stamp,{Scale=1})
+ self.cannonPieces={}
+ local art=ItemStage.Art
+ for index=1,ItemStage.Cannon.count*2 do
+  local a=art[if index%3==0 then "sparkle"else "pebble"]
+  local R=Stage.Rare.cannonColors
+  self.cannonPieces[index]=Kit.node("ImageLabel",confettiLayer,{Name="Cannon"..index,BackgroundTransparency=1,BorderSizePixel=0,
+   Image=art[a[1]],ImageRectOffset=Vector2.new(a[2],a[3]),ImageRectSize=Vector2.new(a[4],a[5]),AnchorPoint=Vector2.new(.5,.5),
+   ImageColor3=Color3.fromHex(R[(index-1)%#R+1]),ZIndex=confettiLayer.ZIndex+2,Visible=false})
+ end
 end
 
 -- The 3D pet: hidden until its meshes load (at most 2.5 s), then faded in, so
@@ -627,6 +747,11 @@ function Stage:paintBackdrop()
  b.well.Visible=alpha<.5;b.rim.Visible=alpha<.5
  b.checkerTile.Position=UDim2.fromOffset(math.floor(-Kit.Checker.tile+self.checkerOffset),math.floor(-Kit.Checker.tile+self.checkerOffset))
  b.raysImage.Rotation=self.rayTurn
+ -- Round 3: a Rare pet's shafts and rainbow edge keep turning while the card is up.
+ if b.shafts then b.shafts.Visible=alpha<.5 and self.shaftLevel>0;b.shafts.Rotation=self.shaftTurn end
+ if self.edge and self.edge.Visible and not self:reduced()then
+  local turn=(self.clock*216)%360;self.edgeGradient.Rotation=turn;b.rimRainbow.Rotation=turn
+ end
 end
 function Stage:layout()
  local size=self.root.AbsoluteSize
@@ -647,6 +772,20 @@ function Stage:layout()
   local floorY=(L.feet-y)/math.max(1,h)
   b.floorLight.Position=UDim2.new(.5,0,floorY,0);b.floorLight.Size=UDim2.fromOffset(fw,fw*.28)
   b.floorShadow.Position=UDim2.new(.5,0,floorY+.01,0);b.floorShadow.Size=UDim2.fromOffset(fw*.6,fw*.13)
+  self.wellBase={cx=x+w/2,cy=y+h/2,w=w,h=h,top=y}
+  if self.jackpot then
+   -- Round 3: the bloom opens on the egg; the rainbow edge has rounded inner corners
+   -- (HatchItemStage.edgeRing; 34 px on the phone, 24 elsewhere, a 14 px band).
+   b.bloom.Position=UDim2.new(.5,0,math.clamp((L.feet-L.petH*.35-y)/math.max(1,h),0,1),0)
+   local R=Stage.Rare
+   local ring=ItemStage.edgeRing(if L.phone then R.edgeRadius.phone else R.edgeRadius.regular,R.edgeBand)
+   self.edge.Position=UDim2.fromOffset(-ring.offset,-ring.offset);self.edge.Size=UDim2.new(1,ring.offset*2,1,ring.offset*2)
+   self.edgeCorner.CornerRadius=UDim.new(0,ring.corner);self.edgeStroke.Thickness=ring.thickness
+   local text=math.max(40,math.floor((if L.phone then 64 else 110)*L.s+.5))
+   self.stamp.TextSize=text
+   self.stamp.Size=UDim2.fromOffset(math.ceil(Kit.measure(self.stamp.Text,"Title",text).X*1.2)+20,math.floor(text*1.3))
+   self.stampY=math.max(y+text*.9,L.feet-L.petH*1.12)
+  end
  end
  self.staticDone,self.coneKey,self.cameraKey=false,nil,nil
  -- Cone group: centred on the pet, top edge at y 0, wide enough for the halo.
@@ -789,8 +928,8 @@ end
 
 -- Paint one sample (timeline) plus the idle layer once settled.
 function Stage:currentSample()
- if self.reducedStart then return Stage.reducedSample(self.age)end
- return Stage.sample(self.age)
+ if self.reducedStart then return Stage.reducedSample(self.age,self.jackpot)end
+ return Stage.sample(self.age,self.jackpot)
 end
 -- One half of the cone: clip rect from the centre line out to the floor width,
 -- holding one frame whose inner-facing edge lies on the cone's slanted edge.
@@ -948,7 +1087,10 @@ function Stage:paint()
  local box=L.petBox*(.55+.45*s.rise)
  local squash=0
  if self.boopAt then local b=clock-self.boopAt;if b<.28 then squash=.07*math.sin(b/.28*math.pi)*(1-b/.28)else self.boopAt=nil end end
- self.petHolder.Position=UDim2.fromOffset(L.petX,L.feet+(L.petBox-L.petH)*.5*(box/L.petBox))
+ -- Round 3: a Rare pet's leap arc, hops and landing squashes (none on a Bear).
+ squash+=if reduced then 0 else(s.squash or 0)
+ local lift=if reduced then 0 else(s.arc or 0)*L.petH
+ self.petHolder.Position=UDim2.fromOffset(L.petX,L.feet+(L.petBox-L.petH)*.5*(box/L.petBox)-lift)
  self.petHolder.Size=UDim2.fromOffset(box*(1+squash),box*(1-squash))
  -- Hidden until loaded, then a 220 ms fade (the load fade-in from the card).
  local loadMask=1
@@ -972,12 +1114,14 @@ function Stage:paint()
  -- v2 photosensitivity (section 4): no full-screen flash, for everyone.
  self.flash.BackgroundTransparency=1
  self:paintConfetti()
- -- Burst sparkles.
+ if self.jackpot then self:paintJackpot(s,reduced)end
+ -- Burst sparkles (Round 3: 30 for a Rare pet, 18 for the Bear).
  local cx,cy=L.petX,L.feet-L.petH*.55
+ local count=#self.burst
  for index,spark in ipairs(self.burst)do
   spark.Visible=s.burstAlive and not reduced
   if spark.Visible then
-   local a=index/Stage.BurstCount*math.pi*2+hash(index,3)*.4
+   local a=index/count*math.pi*2+hash(index,3)*.4
    local r=s.burst*L.petBox*(.45+.4*hash(index,4))
    spark.Position=UDim2.fromOffset(cx+math.cos(a)*r,cy+math.sin(a)*r*.8)
    C.fadeSparkle(spark,math.clamp((s.burst-.55)/.45,0,1))
@@ -996,7 +1140,7 @@ function Stage:paint()
  self.plateSmear.Visible=plateIn>0 and plateIn<.98 and not reduced
  local letters=#self.name.Text
  self.name.MaxVisibleGraphemes=if reduced or s.settled then -1 else math.min(letters,s.letters)
- local pop=if reduced or s.settled then 0 else math.max(0,1-((s.t-.60)%.04)/.04)
+ local pop=if reduced or s.settled or s.t<s.plateAt then 0 else math.max(0,1-((s.t-s.plateAt)%.04)/.04)
  self.nameScale.Scale=1+.06*pop
  self:paintGlint(idle,clock)
  -- Description wipe.
@@ -1022,7 +1166,60 @@ function Stage:paint()
  -- The first settled frame is the last full paint; idle frames take paintIdle.
  -- (Not before the pet has loaded and finished its fade-in.)
  local petDone=self.loaded and(not self.loadedAt or self.clock-self.loadedAt>=.25)
- if s.settled and not self.exiting and not self.boopAt and self.inputOpened and petDone and not self:confettiAlive()and(not opening or opening.done)then self.staticDone=true end
+ -- (Round 3: a calm Rare frame also waits for its stamp to fade.)
+ local calmStamp=self.jackpot and reduced and self.age<Stage.Rare.reducedStampOut+.15
+ if s.settled and not self.exiting and not self.boopAt and self.inputOpened and petDone and not self:confettiAlive()and(not opening or opening.done)and not calmStamp then self.staticDone=true end
+end
+-- Round 3: the Rare pet's jackpot lanes (Stage.jackpot on the hatch clock, the stamp on the
+-- entrance clock). The lead-in's hatch age drives the burst, so it lands as the shell opens.
+function Stage:paintJackpot(s,reduced)
+ local L,b=self.L,self.backdrop;local lead=self.lead
+ local h=if lead and not lead.done then lead.age else Stage.LeadIn+s.t
+ local j=Stage.jackpot(h,reduced)
+ local shake=((j.shake or 0)+(s.stampShake or 0))*math.max(L.s,.6)
+ local dx,dy=0,0
+ if shake>0 then dx,dy=math.sin(self.clock*61)*shake,math.cos(self.clock*53)*shake*.6 end
+ local base=self.wellBase
+ if base then
+  local w,hh=base.w+48*L.s*j.punch,base.h+12*L.s*j.punch
+  b.well.Position=UDim2.fromOffset(base.cx+dx,base.cy+dy);b.well.Size=UDim2.fromOffset(w,hh)
+  b.rim.Position=b.well.Position;b.rim.Size=UDim2.fromOffset(w-6,hh-6)
+  self.petLayer.Position=UDim2.fromOffset(math.round(dx),math.round(dy))
+  self.shaftLevel=j.shafts
+  if b.shafts then
+   local side=math.max(L.W,L.H)*1.6
+   b.shafts.Position=UDim2.fromOffset(base.cx,base.cy);b.shafts.Size=UDim2.fromOffset(side,side);b.shafts.ImageTransparency=1-j.shafts
+   b.shafts.Visible=b.well.Visible and j.shafts>0
+  end
+ end
+ -- The rainbow on the rim and round the screen.
+ local rainbow=j.rainbow
+ self.edge.Visible=rainbow>0 and b.well.Visible;b.rimRainbow.Enabled=rainbow>0
+ if rainbow>0 then
+  self.edgeStroke.Transparency=1-rainbow
+  local turn=if reduced then 0 else(self.clock*216)%360
+  self.edgeGradient.Rotation=turn;b.rimRainbow.Rotation=turn
+  b.rimStroke.Color=Color3.new(1,1,1);b.rimStroke.Thickness=math.max(3,math.floor(5*L.s))
+ else b.rimStroke.Color=Rarity.Look[self.tier].color;b.rimStroke.Thickness=3 end
+ -- The shockwave line from the egg, and the one bloom inside the well.
+ local shock=j.shock
+ self.shock.Visible=shock~=nil
+ if shock then
+  local d=shock.radius*2*L.s
+  self.shock.Position=UDim2.fromOffset(L.petX+dx,L.feet-L.petH*.45+dy);self.shock.Size=UDim2.fromOffset(d,d)
+  self.shockStroke.Thickness=math.max(1,math.floor(shock.width*L.s+.5));self.shockStroke.Transparency=1-shock.alpha
+ end
+ local bloom=150*L.s*j.bloomR*2
+ b.bloom.Size=UDim2.fromOffset(math.max(1,bloom),math.max(1,bloom));b.bloom.ImageTransparency=1-j.bloom
+ -- "RARE!" drops onto the well over the pet's head, then leaves before the headline.
+ local stamp=s.stamp or 0
+ self.stamp.Visible=stamp>0 and not self.instant
+ if self.stamp.Visible then
+  self.stamp.Position=UDim2.fromOffset(math.round(L.petX+dx),math.round((self.stampY or L.feet-L.petH)+dy))
+  local scale=if reduced then 1 else s.stampScale or 1
+  self.stampScale.Scale=if math.abs(scale-1)<1e-3 then 1 else scale
+  self.stamp.TextTransparency=1-stamp;self.stampStroke.Transparency=1-stamp
+ end
 end
 -- QA R4: leave instead of vanishing (see HatchItemStage:dismiss). The stage moves to its own
 -- top-level gui, stops taking input, its content sinks into the dark and the dark lifts off
@@ -1071,16 +1268,38 @@ function Stage:paintLeave(elapsed)
  self.cover.BackgroundTransparency=s.lift
 end
 -- Confetti popper (QA v2 R1.1).
+-- Round 3: a Rare pet fires the two cannons instead (left, then right 0.12 s later), silently.
 function Stage:pop()
  if self.popAt or self.destroyed or self.instant or self.reducedStart or self:reduced()then return false end
  self.popAt=self.clock
- self:cue(Stage.PopCue,1.18,.45)
+ if not self.jackpot then self:cue(Stage.PopCue,1.18,.45)end
  return true
 end
 function Stage:confettiAlive()
- return self.popAt~=nil and self.clock-self.popAt<=Stage.ConfettiLife
+ local life=if self.jackpot then ItemStage.Cannon.life+Stage.Rare.cannonGap else Stage.ConfettiLife
+ return self.popAt~=nil and self.clock-self.popAt<=life
+end
+function Stage:paintCannons()
+ local pieces,L=self.cannonPieces,self.L
+ if not self:confettiAlive()or self:reduced()then
+  if self.confettiShown then self.confettiShown=false;for _,piece in ipairs(pieces)do piece.Visible=false end end
+  return
+ end
+ self.confettiShown=true
+ local t=self.clock-self.popAt;local per=ItemStage.Cannon.count
+ for index,piece in ipairs(pieces)do
+  local side=if index<=per then -1 else 1
+  local x,y,rotation,fade=ItemStage.cannon(index,side,t-(if side<0 then 0 else Stage.Rare.cannonGap),L.W,L.H,L.s)
+  piece.Visible=x~=nil
+  if x then
+   local size=math.floor((12+8*hash(index,58))*L.s+.5)
+   piece.Position=UDim2.fromOffset(math.floor(x+.5),math.floor(y+.5));piece.Size=UDim2.fromOffset(size,size)
+   piece.Rotation=rotation;piece.ImageTransparency=1-fade
+  end
+ end
 end
 function Stage:paintConfetti()
+ if self.jackpot then self:paintCannons();return end
  local pieces=self.confettiPieces;if not pieces then return end
  local L=self.L
  local alive=self:confettiAlive()and not self:reduced()
@@ -1121,20 +1340,23 @@ function Stage:step(dt)
  if not self:reduced()then
   self.checkerOffset=(self.checkerOffset+8*dt)%Kit.Checker.tile
   self.rayTurn=(self.rayTurn+(Rarity.Stage[self.tier]or Rarity.Stage.Common).spin*dt)%360
+  if self.jackpot then self.shaftTurn=(self.shaftTurn+12*dt)%360 end
  end
  -- The entrance waits at 0 while the egg lead-in plays (the hatch clock ends it).
  if self.lead and not self.lead.done then self:paint();return end
  local before=self.age;self.age+=dt
  if not self.reducedStart and not self.instant then
-  for _,beat in ipairs(Stage.Cues)do
+  for _,beat in ipairs(if self.jackpot then Stage.RareCues else Stage.Cues)do
    if before<beat[1]and self.age>=beat[1]then
-    local pitch=if beat[2]=="reveal_shimmer"and self.kind=="rare"then 2^(3/12)else 1
-    self:cue(beat[2],pitch,.55)
+    local pitch=beat[3]or(if beat[2]=="reveal_shimmer"and self.kind=="rare"then 2^(3/12)else 1)
+    self:cue(beat[2],pitch,beat[4]or .55)
     if beat[2]=="name_slam"and self.kind=="rare"then task.delay(.09,function()if not self.destroyed then self:cue("name_slam",1.06,.45)end end)end
    end
   end
-  if before<Stage.PopAt and self.age>=Stage.PopAt then self:pop()end
-  if before<.56 and self.age>=.56 then
+  local popAt=if self.jackpot then Stage.Rare.cannon else Stage.PopAt
+  local greetAt=if self.jackpot then Stage.Rare.greet else .56
+  if before<popAt and self.age>=popAt then self:pop()end
+  if before<greetAt and self.age>=greetAt then
    self.waveAt=self.clock
    if self.visual then pcall(function()self.visual:greet()end)end
    if self.options.voice~=false or self.lead then self:cue(self.pet.cue or "pet",1,.4)end
@@ -1149,7 +1371,10 @@ function Stage:step(dt)
   pcall(function()
    local reduced=self:reduced()
    self.visual.reducedEffects=reduced
-   self.visual:setRevealPose(Stage.wavePose(if self.waveAt then self.clock-self.waveAt else -1,self.clock,reduced))
+   local pose=Stage.wavePose(if self.waveAt then self.clock-self.waveAt else -1,self.clock,reduced)
+   -- Round 3: a Rare pet's ears flick on each landing.
+   if self.jackpot and not reduced and not self.reducedStart then pose.ear+=Stage.earFlick(self.age)end
+   self.visual:setRevealPose(pose)
    self.visual:update(elapsed)
   end)
  end
@@ -1186,6 +1411,9 @@ end
 function Stage:settle(quiet,pop)
  if self.destroyed then return end
  local was=self:isSettled()
+ -- Round 3: a host may hold a press-to-skip (options.canSkip; the Bunny's once-ever hatch plays
+ -- in full, as the first Bear's does). Clock jumps and a lost owner (quiet) always settle.
+ if not quiet and not was and type(self.options.canSkip)=="function"and self.options.canSkip()~=true then return end
  if self.lead then self:endLead()end
  self.age=math.max(self.age,if self.reducedStart then Stage.ReducedFade else Stage.Duration)
  if not was and self.visual then pcall(function()self.visual:greet()end)end
@@ -1347,6 +1575,7 @@ end
 function Stage:getStats()
  return{age=self.age,settled=self:isSettled(),yaw=self.yaw,omega=self.omega,renderMode=self.renderMode,loaded=self.loaded,
   kind=self.kind,accent=self.accent,focus=self.focus,phone=self.L and self.L.phone,popped=self.popAt~=nil,confetti=self:confettiAlive(),
+  tier=self.tier,jackpot=self.jackpot,
   sharedScene=self.lead~=nil,externalClock=self.lead~=nil,leadDone=self.lead~=nil and self.lead.done,leadAge=self.lead and self.lead.age}
 end
 

@@ -1367,8 +1367,6 @@ do
  roomView.openStats=clientUI.openStats
  gui.Destroying:Connect(function()clientUI.stats.destroy()end)
 end
--- Spencer 2026-11-20: small soft fades on the edges of every scrolling list (ScrollFades).
-pcall(function()require(script.ScrollFades).start(gui.Parent)end)
 -- v2 pet names: the naming screen (Companions → pet → Name), the Names Egg card and its reveal on
 -- the Pop-Out Stage, and the name on the petting card (RoomView.shownName reads nameState).
 do
@@ -1389,7 +1387,7 @@ do
   end,
   reopenHub=function()if clientUI.openHub then clientUI.openHub({slideFrom=-Kit.SlideOffset})end end,
   closed=function(reason,from)if clientUI.machineReturn=="companions"and not(reason=="back"and from=="hub")then clientUI.machineReturn=nil end end,
-  notify=function(text)Rail.enqueue(railOwner,"name:"..text,{text=text,icon="★",duration=3})end})
+  notify=function(text)Rail.enqueue(railOwner,"name:"..text,{text=text,icon="★",duration=4.5})end})
  clientUI.openNames=function(options)return clientUI.names.open(options)end
  roomView.nameState=function()return nurseryState end
  gui.Destroying:Connect(function()clientUI.names.destroy()end)
@@ -1408,7 +1406,9 @@ do
  clientUI.snacks=require(script.SnackHost).mount({remotes=remotes,audio=audio,playerGui=gui.Parent,
   state=function()return nurseryState end,activeId=function()return board:GetAttribute("CompanionId")end,petName=petName,
   roomView=roomView,inRound=function()return board:GetAttribute("Mode")~="Room"end,
-  closeShop=function()if nurseryView:isOpen()then nurseryView:close("stat")end end,
+  closeShop=function()if nurseryView:isOpen()then nurseryView:close("stat");return true end;return false end,
+  -- Round 3 (Spencer): Close on a Stat Egg result returns to Hatch eggs, on the Stat Egg.
+  reopenEggs=function()task.defer(function()if openNursery and not nurseryView:isOpen()then openNursery();nurseryView:selectRecipe("stat")end end)end,
   openStats=function(options)return clientUI.openStats(options)end,
   ownPetVisual=function()return roomView.pet end,
   otherPetVisual=function(userId)
@@ -2969,11 +2969,16 @@ gui.Destroying:Connect(function()clientUI.boardHints:destroy()end)
 do
  local CoachCards=require(script.CoachCards)
  local coachRemote=remotes:WaitForChild("HatchRequest")
+ -- Round 3 (Spencer 2026-11-20: "the bunny should have an awesome hatch animation like the
+ -- bear!"): the earned pet arrives as a hatch (PetArrivalHatch), played instead of the card.
+ clientUI.arrivalHatch=require(script.PetArrivalHatch).new(gui.Parent,audio)
  clientUI.coach=CoachCards.new({gui=gui.Parent,boardParent=clientUI.deviceRoot,z=38,
   send=function(id)coachRemote:FireServer("coachMark",id)end,
   -- Slice E: "Say hi" on the arrival card makes the new friend the companion (the
   -- existing `companion` action; the server checks owned and active).
   sayHi=function(petId)request:FireServer("companion",petId)end,
+  -- Round 3: its Meet does what Say hi did (CoachCards:startArrivalHatch).
+  arrivalHatch=function(petId,done)return clientUI.arrivalHatch:play(petId,{appearance=nurseryView.appearanceFor(petId),onDone=done})end,
   learned=function(station)if clientUI.attract then clientUI.attract:learn(station)end end,
   -- QA v735 H5: the garden step is the "Your garden" tour (machines, Quests and dailies,
   -- customize, the Menu); closing it ends the step.
@@ -3017,6 +3022,7 @@ do
   open.hatch=nurseryView:isOpen();open.style=isPickerOpen()and picker.active~="Settings"
   open.companions=clientUI.hub~=nil and clientUI.hub:isOpen();open.quests=clientUI.questLog.visible==true
   open.book=clientUI.book~=nil and clientUI.book:isOpen()
+  open.arrival=clientUI.arrivalHatch:isOpen() -- Round 3: the arrival hatch holds the garden cards
   local companion=Pets.byId[board:GetAttribute("CompanionId")or ""]or Pets.byId.pip
   clientUI.coach:step(os.clock(),{mode=mode,canRoam=roomView.canRoam(),
    presented=backdrop.Visible and rendererPresentation.canPresent~=nil and rendererPresentation.canPresent(board:GetAttribute("ResetId")),
@@ -3026,7 +3032,7 @@ do
    companionId=board:GetAttribute("CompanionId"),
    drops=clientUI.attr("Drops")or 0,windowActive=cs.window,idleFor=os.clock()-cs.stillSince,awayFor=os.clock()-cs.inputAt})
  end)
- gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy();for _,link in ipairs(cs.links)do link:Disconnect()end end)
+ gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy();clientUI.arrivalHatch:destroy();for _,link in ipairs(cs.links)do link:Disconnect()end end)
 end
 -- Remaining Welcome/first-spend work: contained ownership keeps the top-level
 -- Luau local budget unchanged. Server owns timer/demo/grant and all toy writes.

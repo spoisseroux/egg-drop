@@ -46,7 +46,7 @@ return function(client,parent)
    assert(tap.width==plain.width+Rail.MoreWidth and tap.fits,"room for the chevron")
    -- Spec 1 widths: 96..260 (220 on a free bar under 600 px); hidden under a 32 px bar.
    assert(Rail.geometry(1280,58,0).width==Rail.MinWidth and Rail.geometry(1280,58,900).width==Rail.MaxWidth and Rail.geometry(320,58,900).width==Rail.NarrowMaxWidth)
-   assert(Rail.geometry(1280,58,10).height==40 and Rail.geometry(1280,40,10).height==32 and not Rail.geometry(1280,30,10).fits,"40 / 32 / hidden by bar height")
+   assert(Rail.geometry(1280,58,10).height==44 and Rail.geometry(1280,40,10).height==34 and Rail.geometry(1280,32,10).height==32 and not Rail.geometry(1280,30,10).fits,"44 / 34 / 32 / hidden by bar height (round 3)")
    local lines={{UICopy.get("notice.pill.firstSpend")},{UICopy.get("qa.coach.welcome")},{UICopy.get("coach.firstStars.toast"),6},
     {UICopy.get("coach.fillLine.short")},{UICopy.get("coach.item.short")},{"Quest claimed",12}}
    for _,id in ipairs({"hatch","style","companions","quests","book","park"})do table.insert(lines,{Cards.railLine(id,"once",{pet="Bear"},true).text})end

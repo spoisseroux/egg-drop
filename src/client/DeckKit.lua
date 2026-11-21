@@ -747,6 +747,21 @@ end
 function Kit.setSelected(button,selected)local s=buttons[button];if s then s.selected=selected==true;Kit.paintButton(button)end end
 function Kit.setText(button,text)local s=buttons[button];if s then s.label.Text=text;button:SetAttribute("AccessibleLabel",text)end end
 function Kit.setGlyphVisible(button,visible)local s=buttons[button];if s then s.showGlyph=visible;Kit.paintButton(button)end end
+-- A round close key with an ink X (round 3: the snack pouch closes with an X at its top right).
+-- `size` px square (default 30); the label is "Close" for screen readers. Returns the button.
+function Kit.closeKey(parent,name,size,label)
+ size=size or 30
+ local button,state=Kit.button(parent,name,{text="",size=Vector2.new(size,size),radius=math.floor(size/2),compact=true,selectable=false})
+ button:SetAttribute("AccessibleLabel",label or "Close")
+ state.label.Visible=false
+ local mark=Kit.frame(state.content,"X",nil,UDim2.new(),UDim2.fromOffset(math.floor(size*.42),math.floor(size*.42)))
+ local bars={}
+ for i,angle in ipairs({45,-45})do
+  local bar=Kit.frame(mark,"Bar"..i,nil,UDim2.fromScale(.5,.5),UDim2.new(1.25,0,0,math.max(2,math.floor(size*.1))),999)
+  bar.AnchorPoint=Vector2.new(.5,.5);bar.Rotation=angle;bar.BackgroundTransparency=0;paint(bar,"BackgroundColor3","ink");bars[i]=bar
+ end
+ return button,state
+end
 -- Hardware or keyboard press: a short settle with no pointer involved.
 function Kit.pulse(button)
  local s=buttons[button];if not s or not s.enabled then return end
@@ -1374,7 +1389,7 @@ function Kit.wallet(parent,height)
  Kit.stroke(medal,"ink",2,0)
  if height>28 then
   local ring=Kit.frame(medal,"MedalRing",nil,UDim2.fromOffset(3,3),UDim2.new(1,-6,1,-6),999);ring.ZIndex=z+5
-  node("UIStroke",ring,{Color=Kit.Color.stars,Thickness=1.5,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+  node("UIStroke",ring,{Color=Color3.fromHex("#FFC14D"),Thickness=2,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
  end
  -- The Star sits on the root (WalletStar puts its 3D Star beside the icon), centred on the medallion.
  local star=Kit.icon(root,"star",spec.star);star.AnchorPoint=Vector2.new(.5,.5);star.ZIndex=z+6

@@ -20,7 +20,8 @@
 local Queue={};Queue.__index=Queue
 Queue.MaxShown=4
 Queue.Spacing=.4
-Queue.Duration=3.5
+-- Round 3 (Spencer: "make the notifications last a bit longer"): 3.5 s before.
+Queue.Duration=5
 function Queue.new(limit)
  return setmetatable({items={},providers={},serial=0,limit=limit or 24,shown={},status=nil,
   maxShown=Queue.MaxShown,spacing=Queue.Spacing,since=math.huge,view={},scratch={}},Queue)

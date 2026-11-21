@@ -13,7 +13,7 @@ local Catalog=require(Shared.StatCatalog)
 local UICopy=require(Shared.UICopy)
 local Toasts={}
 Toasts.__index=Toasts
-Toasts.Duration=4
+Toasts.Duration=5.5
 
 -- Pure: level-ups between two level maps ({[petId] = {[stat] = level}}), in stat order.
 -- A pet missing from `before` gives none (first sight records only).

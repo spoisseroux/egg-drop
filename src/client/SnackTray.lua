@@ -99,7 +99,17 @@ function Tray.new(parent,options)
 	self.root=root
 	local compact=options.compact==true
 	self.title=Kit.text(root,"Label",UICopy.get("stats.snacks.title"),"dim",{Name="Title",Position=UDim2.fromOffset(0,0),Size=UDim2.new(1,-80,0,16),TextSize=if compact then 11 else 13})
-	self.count=Kit.text(root,"Counter","","soft",{Name="Count",Position=UDim2.new(1,-80,0,0),Size=UDim2.fromOffset(80,16),TextSize=if compact then 11 else 13,TextXAlignment=Enum.TextXAlignment.Right})
+	-- Round 3 (Spencer): an X at the top right closes the pouch (options.onClose); the count
+	-- moves left of it.
+	local closeW=if options.onClose then 30 else 0
+	self.count=Kit.text(root,"Counter","","soft",{Name="Count",Position=UDim2.new(1,-80-closeW,0,0),Size=UDim2.fromOffset(80,16),TextSize=if compact then 11 else 13,TextXAlignment=Enum.TextXAlignment.Right})
+	if options.onClose then
+		local close=Kit.closeKey(root,"CloseTray",26,UICopy.get("stats.snacks.close"))
+		close.AnchorPoint=Vector2.new(1,0);close.Position=UDim2.new(1,2,0,-6);close.ZIndex=root.ZIndex+4
+		for _,d in ipairs(close:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=4 end end
+		self.closeButton=close
+		table.insert(self.connections,close.Activated:Connect(function()if options.onClose then options.onClose()end end))
+	end
 	local row=Kit.node("ScrollingFrame",root,{Name="Row",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(0,20),Size=UDim2.new(1,0,0,if compact then 56 else 64),
 		ScrollingDirection=Enum.ScrollingDirection.X,ScrollBarThickness=3,CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.X,ZIndex=root.ZIndex+1,Selectable=false})
 	Kit.node("UIListLayout",row,{FillDirection=Enum.FillDirection.Horizontal,Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder})

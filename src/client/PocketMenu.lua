@@ -161,6 +161,7 @@ end
 function Menu:close(instant)
  if not self.visible then return false end
  self.visible=false;self.armed=nil
+ require(script.Parent.ConfirmDialog).cancelFor(self)
  self.ring.hide()
  self.token+=1;local token=self.token
  local layer=self.overlay.layer
@@ -196,7 +197,7 @@ function Menu:disarm()
  if self.visible then self:paint()end
 end
 
--- One press acts; Restart and Quit mid-round need a second press within 3 s.
+-- One press acts; Restart and Quit mid-round ask in the confirm dialog first (round 3).
 function Menu:activate(index,pointer)
  if not self.visible then return false end
  if pointer and self.focusIndex~=index then self.focusIndex=index;if self.ring then self.ring.attach(self.buttons[index],12)end end
@@ -206,11 +207,19 @@ function Menu:activate(index,pointer)
   return false
  end
  if item.armed and not self.state.empty and self.armed~=item.id then
-  self.armed=item.id;self.armToken=(self.armToken or 0)+1;local token=self.armToken
-  self:paint()
+  -- Round 3 (Spencer: a confirmation dialog for anything we need to confirm): mid-round,
+  -- Restart and Quit ask in ConfirmDialog; its yes arms the item and runs it.
   if self.callbacks.armed then self.callbacks.armed(item.id)end
-  task.delay(Menu.ArmTime,function()if self.armToken==token and self.armed==item.id then self:disarm()end end)
-  return true
+  local key=if item.id=="restart"then "restart"else "quit"
+  local Confirm=require(script.Parent.ConfirmDialog)
+  self.confirmHandle=Confirm.ask({tone="danger",title=UICopy.get("confirm."..key.."Title"),line=UICopy.get("confirm."..key.."Line"),
+   confirm=UICopy.get("confirm."..key.."Yes"),
+   onConfirm=function()
+    self.confirmHandle=nil
+    if not self.visible or self.enabled[index]==false then return end
+    self.armed=item.id;self:activate(index)
+   end,onCancel=function()self.confirmHandle=nil end})
+  return self.confirmHandle~=nil
  end
  self.armed=nil
  local callback=self.callbacks[item.id]

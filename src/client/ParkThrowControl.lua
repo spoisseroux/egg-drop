@@ -25,7 +25,7 @@ function Control.new(parkClient,options)
 				self.pending=nil
 				self.note=Copy.get(if packet.status=="Applied"then "park.fetching"elseif packet.reason=="NoLane"then "park.fetchUnavailable"else "park.fetchWait")
 				self.noteUntil=os.clock()+2
-				Rail.enqueue(self.park.folder,"fetch-result",{text=self.note,duration=3.5})
+				Rail.enqueue(self.park.folder,"fetch-result",{text=self.note,duration=5})
 			end)
 		end
 	end
@@ -103,7 +103,7 @@ function Control:step(_,context)
 	if self.pending and now-self.pending.at>2 then
 		if self.pending.attempts<2 then
 			self.pending.attempts+=1;self.pending.at=now;self.remote:FireServer(self.pending.packet)
-		else self.pending=nil;Rail.enqueue(self.park.folder,"fetch-timeout",{text=Copy.get("park.fetchWait"),duration=3.5})end
+		else self.pending=nil;Rail.enqueue(self.park.folder,"fetch-timeout",{text=Copy.get("park.fetchWait"),duration=5})end
 	end
 
 end

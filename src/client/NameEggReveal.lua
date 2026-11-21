@@ -107,7 +107,7 @@ function Reveal:show(receipt,info,callbacks)
 	self.timing=Rarity.timing(tier,Reveal.Kind,reduced)
 	self.cue=Rarity.new(Reveal.Kind,receipt,self.timing.ready,reduced)
 	self.owner={}
-	local stage=Stage.show(self.host,{scene=self.scene,kind=Reveal.Kind,tier=tier,result=receipt,cover=false,zIndex=20,lid=not handover,
+	local stage=Stage.show(self.host,{scene=self.scene,kind=Reveal.Kind,tier=tier,result=receipt,cover=false,fullScreen=true,zIndex=20,lid=not handover,
 		reduced=function()return self.reducedStart end,owns=function()return self.open end,
 		name=function()return words.name end,effect=function()return words.effect end,
 		description=function()return info.pill or ""end,

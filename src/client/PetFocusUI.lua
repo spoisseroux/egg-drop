@@ -206,7 +206,9 @@ function Focus:buildSnacks()
 			-- "fed": hide the tray without the carry "close" (that cancels the eating it just started).
 			if sent then task.defer(function()self:closeSnacks("fed")end)end
 			return sent
-		end})
+		end,
+		-- Round 3 (Spencer): the X at the pouch's top right closes it (as B and the Snacks key do).
+		onClose=function()self:closeSnacks("close")end})
 end
 function Focus:snacksOpen()return self.trayCard~=nil and self.trayCard.Visible end
 function Focus:refreshSnacks(select)

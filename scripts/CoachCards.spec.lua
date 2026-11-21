@@ -122,7 +122,8 @@ return function(client,parent)
     local deadline=os.clock()+2
     repeat
      local any=false
-     for _,entry in ipairs(Rail.shown())do if entry.item and entry.item.owner==cards.host then any=true end end
+     -- (A timed toast may still be on its own 5 s clock, round 3: only the coach lines count.)
+     for _,entry in ipairs(Rail.shown())do if entry.item and entry.item.owner==cards.host and string.sub(tostring(entry.item.key),1,6)~="toast:"then any=true end end
      if not any then return true end
      RunService.RenderStepped:Wait()
     until os.clock()>deadline
@@ -143,7 +144,7 @@ return function(client,parent)
    -- Its entrance (fade, UIScale 0.9 to 1) settles before it is measured.
    local settle=os.clock()+1
    while welcome.ticket:FindFirstChildOfClass("UIScale").Scale~=1 and os.clock()<settle do RunService.RenderStepped:Wait()end
-   local cardH=if game:GetService("GuiService").TopbarInset.Height>=56 then 40 else 32
+   local cardH=Rail.size(game:GetService("GuiService").TopbarInset.Height).card
    assert(railGui.DisplayOrder>cards.gui.DisplayOrder and welcome.card.AbsoluteSize.Y==cardH
     and welcome.ticket:GetAttribute("Truncated")~=true,"one 40 px ticket above the menus, its line never cut")
    -- QA v735 H5: every line can be tapped; this one opens its notice card.

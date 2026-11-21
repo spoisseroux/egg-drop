@@ -98,7 +98,7 @@ return function(client,parent)
     assert(hub.rows[6].id=="toys"and string.find(hub.rows[6].status.Text,"NEW",1,true)and hub.rows[6].dot~=nil)
     assert(hub.rows[5].status.Text==""and hub.rows[5].dot==nil)
     assert(hub.rows[5].line.Text=="Hue, charm and material")
-    assert(hub.rows[3].name.Text=="Name your "..Pets.byId[active].name,"the Name tile reads Name your <species>")
+    assert(hub.rows[3].name.Text=="Name","the Name tile reads Name (round 3)")
     -- Every tile stays inside the panel / sheet, two columns.
     for _,row in ipairs(hub.rows)do
      local bottom=row.button.AbsolutePosition.Y+row.button.AbsoluteSize.Y
@@ -141,13 +141,17 @@ return function(client,parent)
     assert(hub.page=="pets"and hub.root:GetAttribute("Assigning")==true and hub.action.Visible)
     assert(#hub.cardButtons==#Hub.petCards(state,active)-(if Hub.petCards(state,active)[2]and Hub.petCards(state,active)[2].adopt then 1 else 0),"assign mode lists owned pets only")
     hub:act();assert(chosen==active and not hub:isOpen(),"assign mode chooses the focused pet and closes")
-    -- v2 Bunny adopt: the first press arms a 3 s confirm, the second sends; the answer clears it.
+    -- v2 Bunny adopt (round 3): the press opens the confirm dialog; its yes sends; the answer clears it.
     if Pets.isActive("blip")then
      hub:open({wallet=500,state=state,activeId=active},{page="pets"});settle()
      hub:input(K.Right);settle();assert(hub.root:GetAttribute("FocusedPet")=="blip")
      assert(string.find(tostring(hub.action:GetAttribute("AccessibleLabel")),"Adopt for",1,true),tostring(hub.action:GetAttribute("AccessibleLabel")))
-     hub:input(K.Return);settle();assert(#adopts==0 and string.find(tostring(hub.action:GetAttribute("AccessibleLabel")),"Press again",1,true),"armed: "..tostring(hub.action:GetAttribute("AccessibleLabel")))
-     hub:input(K.Return);settle();assert(#adopts==1 and adopts[1][1]=="blip"and adopts[1][2]==400 and hub.pendingAdopt=="blip")
+     local Confirm=require(client.ConfirmDialog)
+     hub:input(K.Return);settle();assert(#adopts==0 and Confirm.isOpen(),"the press opens the confirm dialog")
+     assert(string.find(Confirm.panel().Title.Text,"Bunny",1,true),Confirm.panel().Title.Text)
+     Confirm.close("cancel");settle();assert(#adopts==0 and not Confirm.isOpen(),"cancel sends nothing")
+     hub:input(K.Return);settle();Confirm.accept();settle()
+     assert(#adopts==1 and adopts[1][1]=="blip"and adopts[1][2]==400 and hub.pendingAdopt=="blip")
      hub:input(K.Return);settle();assert(#adopts==1,"one request while saving")
      assert(hub:adoptResult({kind="adopt",petId="pip",status="Saved"})==nil,"another pet's answer is ignored")
      assert(hub:adoptResult({kind="adopt",petId="blip",status="Saved"})=="Bunny came home with you!"and hub.pendingAdopt==nil)

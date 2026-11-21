@@ -343,6 +343,102 @@ return function(client,parent)
    stage=open({reduced=function()return true end,fresh=true});stage:step(.05);assert(stage.lead.done and not stage.lead.seat.Visible)
    stage:step(.2);assert(stage:isSettled()and stage.popAt==nil,"Reduced Motion has no popper")
   end)
+  -- Round 3 (Spencer 2026-11-20): the Bunny's hatch is a Rare pet jackpot on the pet's own clock.
+  test("Round 3: the Rare pet entrance (leap, stamp, three hops, late headline) keeps the input time; the Bear's is unchanged",function()
+   local Pose=require(client.HatchDisplayPose);local Rarity=require(client.HatchRarityCue)
+   assert(Rarity.tier("companion",{petId="blip"})=="Rare"and Rarity.tier("companion",{petId="pip"})=="Common")
+   assert(Pose.readyAt("companion","Rare",false)==Pose.BearReady and not Rarity.timing("Rare","companion",false).jackpot,"no pet wind-up: the clock is the Bear's")
+   for t=0,1.3,.01 do
+    local a,b=Stage.sample(t),Stage.sample(t,false)
+    assert(a.rare==nil and a.arc==nil and a.stamp==nil,"a Bear sample has no Rare lanes")
+    for key,value in pairs(a)do assert(b[key]==value,key.." differs at "..t)end
+   end
+   local R=Stage.Rare;local S=function(t)return Stage.sample(t,true)end
+   assert(S(.12).spinIn==720 and S(.47).spinIn<1 and Stage.sample(.12).spinIn==540,"720 deg against the Bear's 540")
+   assert(near(S(.29).arc,R.arc,.01)and S(.48).arc==0 and near(S(.56).arc,.16,.01)and near(S(.71).arc,.07,.01)and S(.9).arc==0,"leap arc and two hops")
+   assert(S(.40).squash==0 and near(S(.46).squash,.12,1e-3)and near(S(.62).squash,.06,.01)and S(1.14).squash==0,"three landings")
+   assert(S(.24).stamp==0 and S(.25).stamp==1 and near(S(.25).stampScale,2.6,.01)and near(S(.37).stampScale,1,.01)and S(.38).stampShake>0)
+   assert(S(.78).stamp==0 and R.stampLeave+R.stampOut<=R.headline,"the stamp is gone before the headline")
+   assert(math.abs(S(.76).headline)<1e-6 and near(S(.98).headline,1,.02)and not S(.79).greet and S(.80).greet)
+   assert(S(.81).plate==0 and S(.81).letters==0 and S(.821).letters==1 and S(.861).letters==2 and near(S(1.07).plate,1,.01))
+   assert(not S(.999).input and S(1.0).input and not S(1.13).settled and S(1.14).settled,"input and settle as the Bear's")
+   for t=0,1.3,.01 do local x=S(t);assert(x.stamp>=0 and x.stamp<=1 and x.arc>=0 and x.arc<=R.arc+1e-6 and x.squash>=-.12 and x.squash<=.13)end
+   local calm=Stage.reducedSample(0,true)
+   assert(calm.arc==0 and calm.squash==0 and calm.stamp==0 and Stage.reducedSample(.15,true).stamp==1 and Stage.reducedSample(.9,true).stamp==1)
+   assert(Stage.reducedSample(1.05,true).stamp==0 and Stage.reducedSample(.15,true).settled and Stage.reducedSample(0).stamp==nil)
+   assert(Stage.earFlick(.45)==0 and near(Stage.earFlick(.46),math.rad(22),1e-3))
+  end)
+  test("Round 3: the jackpot lanes land as the shell opens (0.98 on the hatch clock); Reduced Motion is the static calm frame",function()
+   local J=Stage.jackpot
+   assert(J(.97).rainbow==0 and J(.97).shock==nil and J(.97).punch==0 and J(.97).bloom==0)
+   assert(J(.98).shock and J(.98).shock.radius==40 and J(.98).shake==3 and J(1.0).bloom>0 and J(1.4).bloom==0)
+   assert(near(J(1.23).rainbow,1,1e-6)and J(1.481).shock==nil and J(1.2).shake==0 and near(J(2.2).shafts,.25,1e-3)and J(2.2).punch==0)
+   local peak=0;for h=.98,1.6,.01 do peak=math.max(peak,J(h).punch)end;assert(peak>1,"the well punches open (Back overshoot)")
+   local calm=J(1.0,true);assert(calm.rainbow==.6 and near(calm.shafts,.15,1e-6)and calm.shock==nil and calm.shake==0 and calm.punch==0)
+   local names={};for _,beat in ipairs(Stage.RareCues)do names[beat[2]]=(names[beat[2]]or 0)+1 end
+   assert(names.bear_boop==3 and names.tag_slam==1 and names.name_slam==1 and names.desc_tick==1)
+   for _,dropped in ipairs({"reveal_hush","spot_on","streak_whoosh","reveal_shimmer",Stage.PopCue})do assert(names[dropped]==nil,dropped.." is dropped")end
+   assert(Stage.RareCues[1][3]==1.25 and Stage.RareCues[2][3]==1.40 and Stage.RareCues[3][3]==1.55,"the boops rise")
+  end)
+  test("Round 3: a live Bunny stage draws the jackpot over its egg lead-in; a Bear stage builds none of it",function()
+   local ItemStage=require(client.HatchItemStage)
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
+   local cues={};local audio={deviceActive=true};function audio:play(name,pitch)table.insert(cues,{name=name,pitch=pitch});return false end
+   local function has(name,pitch)for _,c in ipairs(cues)do if c.name==name and(pitch==nil or math.abs(c.pitch-pitch)<1e-6)then return true end end;return false end
+   local bear=Stage.show(host,{pet=Pets.byId.pip,audio=audio,reduced=false,buttons={{id="meet",text="Meet Bear",primary=true}}})
+   table.insert(stages,bear);if bear.connection then bear.connection:Disconnect();bear.connection=nil end
+   assert(not bear.jackpot and bear.edge==nil and bear.stamp==nil and bear.shock==nil and bear.backdrop.shafts==nil and #bear.burst==Stage.BurstCount)
+   bear:destroy();table.clear(cues)
+   local scene={ready=true,root=Instance.new("Frame")}
+   function scene:borrow(seat)self.root.Parent=seat;return self end
+   function scene:release()self.root.Parent=nil end
+   function scene:setBare()end;function scene:layout()end;function scene:groundPoint()return Vector2.new(.5,.75)end
+   local bunny=Stage.show(host,{pet=Pets.byId.blip,tag="rare",audio=audio,scene=scene,externalClock=true,owns=function()return true end,
+    reduced=function()return false end,buttons={{id="meet",text="Meet Bunny",primary=true}}})
+   table.insert(stages,bunny);if bunny.connection then bunny.connection:Disconnect();bunny.connection=nil end
+   assert(bunny.jackpot and bunny.tier=="Rare"and #bunny.burst==Stage.Rare.burstCount and #bunny.cannonPieces==ItemStage.Cannon.count*2)
+   local ring=ItemStage.edgeRing(Stage.Rare.edgeRadius.phone,Stage.Rare.edgeBand)
+   assert(bunny.edgeCorner.CornerRadius.Offset==ring.corner and bunny.edge.Position.X.Offset==-ring.offset and bunny.edgeStroke.Thickness==ring.thickness,"rounded inner corners")
+   assert(bunny.headline.label.Text=="DISCOVERY!"and bunny.stamp.Text~="")
+   task.wait(require(client.CelebrationKit).OpenSettle+.05)
+   for i=1,9 do bunny:updateExternal(i*.1,{inputLocked=true});bunny:step(.05)end -- (a jump over 0.3 s would settle)
+   assert(not bunny.edge.Visible and not bunny.shock.Visible,"nothing before the shell opens")
+   bunny:updateExternal(1.0,{inputLocked=true});bunny:step(.05)
+   assert(bunny.shock.Visible and bunny.edge.Visible and bunny.backdrop.rimRainbow.Enabled and bunny.backdrop.shafts.Visible,"the burst lands in the lead-in")
+   bunny:updateExternal(1.06,{inputLocked=true});assert(bunny.lead.done and not has("reveal_hush"),"no hush for a Rare pet")
+   bunny:step(.11);bunny:step(.11);assert(bunny.popAt~=nil and not has(Stage.PopCue),"the cannons fire silently")
+   bunny:step(.1);assert(bunny.stamp.Visible and bunny.stampScale.Scale>1,"the stamp drops")
+   local flying=0;for _,piece in ipairs(bunny.cannonPieces)do if piece.Visible then flying+=1 end end
+   local popped=0;for _,piece in ipairs(bunny.confettiPieces)do if piece.Visible then popped+=1 end end
+   assert(flying>0 and popped==0,"cannons, never the corner poppers")
+   for _=1,10 do bunny:step(.1)end
+   assert(bunny:isSettled()and not bunny.stamp.Visible and bunny.edge.Visible)
+   assert(has("bear_boop",1.25)and has("bear_boop",1.40)and has("bear_boop",1.55)and has("tag_slam")and has("name_slam")and has("desc_tick"))
+   for _,dropped in ipairs({"reveal_hush","spot_on","streak_whoosh","reveal_shimmer",Stage.PopCue})do assert(not has(dropped),dropped.." played")end
+   bunny:destroy()
+   -- Reduced Motion: the calm frame (static edge 0.6, the stamp fades in and out, no cannons).
+   table.clear(cues)
+   local calm=Stage.show(host,{pet=Pets.byId.blip,tag="rare",audio=audio,reduced=true,fresh=true,buttons={{id="meet",text="Meet Bunny",primary=true}}})
+   table.insert(stages,calm);if calm.connection then calm.connection:Disconnect();calm.connection=nil end
+   assert(not has("reveal_shimmer"))
+   calm:step(.1);calm:step(.1)
+   assert(calm:isSettled()and calm.edge.Visible and near(calm.edgeStroke.Transparency,.4,1e-6)and calm.stamp.Visible and not calm.shock.Visible and calm.popAt==nil)
+   for _=1,10 do calm:step(.1)end;assert(not calm.stamp.Visible and calm.edge.Visible)
+   calm:destroy();host:Destroy()
+  end)
+  test("Round 3: a host can hold press-to-skip (canSkip); clock jumps still settle",function()
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(812,354);host.BackgroundTransparency=1;host.Parent=gui
+   local allow,skips=false,0
+   local held=Stage.show(host,{pet=Pets.byId.blip,reduced=false,canSkip=function()return allow end,onSkip=function()skips+=1 end,
+    buttons={{id="meet",text="Meet Bunny",primary=true}}})
+   table.insert(stages,held);if held.connection then held.connection:Disconnect();held.connection=nil end
+   held:settle();held:confirm();assert(not held:isSettled()and skips==0,"held")
+   allow=true;held:settle();assert(held:isSettled()and skips==1)
+   local quiet=Stage.show(host,{pet=Pets.byId.blip,reduced=false,canSkip=function()return false end,buttons={}})
+   table.insert(stages,quiet);if quiet.connection then quiet.connection:Disconnect();quiet.connection=nil end
+   quiet:settle(true);assert(quiet:isSettled(),"a quiet settle (a jump, a lost owner) is never held")
+   held:destroy();quiet:destroy();host:Destroy()
+  end)
  end)
  for _,stage in ipairs(stages)do pcall(function()stage:destroy()end)end
  gui:Destroy()

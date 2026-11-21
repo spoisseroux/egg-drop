@@ -116,6 +116,16 @@ function Cards.arrivalDue(ctx)
  end
  return nil
 end
+-- Round 3 (Spencer 2026-11-20: "the bunny should have an awesome hatch animation like the bear!"):
+-- with a hatch host (options.arrivalHatch, PetArrivalHatch) the arrival is the pet's hatch, played
+-- instead of the card and once only (its Meet does what Say hi does), even when the player already
+-- made the pet the companion in Companions. Pure: "hatch" | "card" | "mark" (already the
+-- companion, no hatch host: just save the bit).
+function Cards.arrivalAction(petId,companionId,hasHatch)
+ if hasHatch then return "hatch"end
+ if companionId~=nil and companionId==petId then return "mark"end
+ return "card"
+end
 -- May the arrival card show now? Only in the free garden, settled, with no reveal open.
 function Cards.arrivalReady(ctx,roomFor)
  return ctx.mode=="Room"and Cards.gardenFree(ctx)and not ctx.revealPending and(roomFor or 0)>=Coach.GardenSettle
@@ -404,6 +414,27 @@ function Cards:sayHi()
  self:mark("petArrived")
  return true
 end
+-- Round 3: the arrival as a hatch. options.arrivalHatch(petId, done) opens it and returns true;
+-- done(meet) runs once when it closes: Meet switches the companion (as Say hi) unless the pet
+-- already is, and either way the bit is saved, so no card follows (one celebration). A host that
+-- refuses (no gui yet, an error) falls back to the card for the rest of the session.
+function Cards:startArrivalHatch(petId)
+ local hatch=self.options.arrivalHatch
+ if type(hatch)~="function"or self.arrivalHatchFailed or self.arrivalHatch then return false end
+ self.arrivalHatch=petId
+ local ok,opened=pcall(hatch,petId,function(meet)
+  if self.arrivalHatch~=petId then return end
+  self.arrivalHatch=nil
+  if meet and self.options.sayHi and self.companionId~=petId then self.options.sayHi(petId)end
+  self:mark("petArrived")
+ end)
+ if not ok or opened~=true then
+  if not ok then warn("Arrival hatch failed: "..tostring(opened))end
+  if self.arrivalHatch==petId then self.arrivalHatch=nil end
+  self.arrivalHatchFailed=true;return false
+ end
+ return true
+end
 -- A tap moves the garden step on; Skip ends it; a one-time card just closes.
 function Cards:dismiss(how)
  local current=self.garden
@@ -458,6 +489,7 @@ end
 -- idleFor (seconds the character has stood still), awayFor (seconds since any input).
 function Cards:step(now,ctx)
  self.owned=ctx.owned or self.owned
+ self.companionId=ctx.companionId
  local base=self:ctx(ctx)
  local dt=math.max(0,now-(self.lastNow or now));self.lastNow=now
  -- A tip or notice card is open (How it works, a notice, the garden tour): the garden
@@ -495,7 +527,9 @@ function Cards:step(now,ctx)
   local vars={pet=ctx.pet,input=ctx.input,reward=self.starterStars}
   local machine=Cards.machineDue(ctx.open,ctx.used,base)
   local roomFor=if self.roomSince then now-self.roomSince else 0
-  if machine then
+  if self.arrivalHatch then
+   -- Round 3: the arrival hatch is up: nothing else starts until it closes.
+  elseif machine then
    self:showGarden(machine,"once",vars,now,if ctx.open and ctx.open[machine]then machine else nil)
   elseif self.tourOpen then
    -- The tour cards are up: nothing else starts until they close.
@@ -512,8 +546,11 @@ function Cards:step(now,ctx)
    -- Slice E: a friend arrived (the 7th-stamp pet). Already the companion (the player
    -- switched in Companions first): nothing to offer, just save the bit.
    local petId=Cards.arrivalDue(base)
-   if ctx.companionId==petId then self:mark("petArrived")
-   else self:showGarden("petArrived","arrival",{pet=Pets.byId[petId].name,petId=petId},now)end
+   local action=Cards.arrivalAction(petId,ctx.companionId,type(self.options.arrivalHatch)=="function"and not self.arrivalHatchFailed)
+   -- Round 3: the hatch plays instead of the card (a refused hatch shows the card).
+   if action=="hatch"and not self:startArrivalHatch(petId)then action=Cards.arrivalAction(petId,ctx.companionId,false)end
+   if action=="mark"then self:mark("petArrived")
+   elseif action=="card"then self:showGarden("petArrived","arrival",{pet=Pets.byId[petId].name,petId=petId},now)end
   elseif self.questToldPending and(ctx.mode~="Board"or ctx.over==true)then
    self.questToldPending=false
    if Coach.wants("questDone",base)then self:showGarden("questDone","once",vars,now)end

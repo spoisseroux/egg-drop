@@ -382,11 +382,11 @@ return function(client,parent)
     -- Keyboard / gamepad focus.
     assert(menu.focusIndex==1)
     menu:move(0,1);assert(menu.focusIndex==2,label.." down")
-    -- Mid-round Restart asks once more; moving away disarms; a second press acts.
-    menu:confirm();assert(menu.armed=="restart"and #calls==0 and Kit.buttonState(menu.buttons[2]).label.Text=="Tap again to restart",label.." armed")
-    -- (Up, not down: at 568 the four rows are 2 + 2, so Restart is a column's last row.)
-    menu:move(0,-1);assert(menu.armed==nil and Kit.buttonState(menu.buttons[2]).label.Text=="Restart round",label.." disarmed by moving")
-    menu:move(0,1);menu:confirm();menu:confirm();assert(calls[1]=="restart",label.." restart after the second press")
+    -- Mid-round Restart asks in the confirm dialog (round 3); Cancel does nothing; its yes restarts.
+    local Confirm=require(client.ConfirmDialog)
+    menu:confirm();assert(Confirm.isOpen()and #calls==0,label.." asks")
+    Confirm.close("cancel");task.wait();assert(#calls==0 and not Confirm.isOpen(),label.." cancel does nothing")
+    menu:confirm();Confirm.accept();task.wait();task.wait();assert(calls[1]=="restart",label.." restart after the yes")
     -- Empty board: Quit acts at once. Disabled rows do nothing.
     table.clear(calls)
     menu:open({empty=true,canRestart=true,canQuit=true,canSettings=false})

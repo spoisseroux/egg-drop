@@ -255,7 +255,7 @@ function Shop:buildPane(pane,pw,ph,compact)
  local viewH=math.max(80,ph-lower-pad)
  local _,well=Kit.previewWell(pane,"PreviewWell",UDim2.fromOffset(pad,pad),UDim2.fromOffset(pw-pad*2,viewH),12)
  local viewport=Kit.node("ViewportFrame",well,{Name="PetPreview",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex+1,
-  Ambient=Color3.fromRGB(175,184,183),LightColor=Color3.fromRGB(255,250,231),LightDirection=Vector3.new(-1,-1.4,-3)})
+  Ambient=Color3.fromRGB(206,202,194),LightColor=Color3.fromRGB(128,122,110),LightDirection=Vector3.new(-1,-1.4,-3)})
  local world=Kit.node("WorldModel",viewport,{});local camera=Kit.node("Camera",viewport,{FieldOfView=30})
  viewport.CurrentCamera=camera
  self.viewport,self.world,self.camera=viewport,world,camera
@@ -549,7 +549,7 @@ function Shop:buildCardPreview(tile)
  local appearance=table.clone(self.callbacks.appearance and self.callbacks.appearance(self.petId)or {})
  appearance.wearables=Shop.previewWearables(self.petId,{},tile.id)
  local viewport=Instance.new("ViewportFrame");viewport.Name="CardPreview";viewport.BackgroundTransparency=1;viewport.Size=UDim2.fromScale(1,1)
- viewport.Ambient=Color3.fromRGB(175,184,183);viewport.LightColor=Color3.fromRGB(255,250,231);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ viewport.Ambient=Color3.fromRGB(206,202,194);viewport.LightColor=Color3.fromRGB(128,122,110);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
  local world=Instance.new("WorldModel");world.Parent=viewport
  local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera
  local ok,visual=pcall(Factory.new,world,Vector3.zero,pet,nil,appearance)
@@ -763,10 +763,9 @@ function Shop:act()
    if self.callbacks.buy then self.callbacks.buy(self.pending)end
    self:paintPane();return true
   end
-  self.confirmId,self.confirmUntil=id,os.clock()+Shop.ConfirmSeconds
-  local token=self.confirmUntil
-  task.delay(Shop.ConfirmSeconds,function()if self.confirmUntil==token then self.confirmId=nil;if self.visible then self:paintPane()end end end)
-  self:paintPane();return true
+  -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
+  return require(script.Parent.ConfirmDialog).purchase(self,id,(Catalog.item(self.petId,id)or{name=""}).name or "",status.price,
+   function()return self.visible and self:focusedId()==id end,function()self:act()end)~=nil
  end
  return false
 end
@@ -842,7 +841,7 @@ end
 function Shop:back()if self.callbacks.back then self.callbacks.back()else self:close()end end
 function Shop:close()
  if self.previewFeedback then self.previewFeedback:cancel()end
- self.visible=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end;self.confirmId=nil
+ self.visible=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end;self.confirmId=nil;require(script.Parent.ConfirmDialog).cancelFor(self)
  if self.clock then self.clock:Disconnect();self.clock=nil end
  if self.visual then self.visual:destroy();self.visual=nil end
  self:clearPreviews()

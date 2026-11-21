@@ -9,12 +9,14 @@ M.Egg={
  spinPivot=Vector3.new(0,0.546,0),seamHeight=0.7537,
 }
 M.Star={mesh="rbxassetid://74284933281038",colorMap="rbxassetid://118655103980144",size=Vector3.new(1.0097,0.9714,0.45)}
-M.Order={"companion","toy","material","hue","feature"}
+M.Order={"companion","toy","material","hue","feature","stat"}
 M.Types={
  companion={name="Companion Egg",colorMap="rbxassetid://79542364257645",roughness=0.3,core=Color3.fromHex("#FFE58A"),bloom=Color3.fromHex("#FFD86B"),crackLight=Color3.fromHex("#FFFBE6"),particles={Color3.fromHex("#FFFFFF"),Color3.fromHex("#FFE58A"),Color3.fromHex("#7C9BFF")}},
  toy={name="Toy Egg",colorMap="rbxassetid://102395066318876",roughness=0.26,core=Color3.fromHex("#FFB340"),bloom=Color3.fromHex("#FF9F2E"),crackLight=Color3.fromHex("#FFE9A6"),particles={Color3.fromHex("#FFFFFF"),Color3.fromHex("#FFD45C"),Color3.fromHex("#F16F65"),Color3.fromHex("#49C7E0")}},
  material={name="Material Egg",colorMap="rbxassetid://116788417697124",roughness=0.18,core=Color3.fromHex("#8FF0E4"),bloom=Color3.fromHex("#6FDCD2"),crackLight=Color3.fromHex("#F7F2FF"),particles={Color3.fromHex("#FFFFFF"),Color3.fromHex("#BFF7F0"),Color3.fromHex("#C8B8F5")}},
  hue={name="Hue Egg",colorMap="rbxassetid://99992329486875",roughness=0.26,core=Color3.fromHex("#FF7AB8"),bloom=Color3.fromHex("#FF5FA8"),crackLight=Color3.fromHex("#C9F6F8"),particles={Color3.fromHex("#FFFFFF"),Color3.fromHex("#FF7AB8"),Color3.fromHex("#FFDD4A"),Color3.fromHex("#5FD0FF"),Color3.fromHex("#B58BFF")}},
  feature={name="Feature Egg",colorMap="rbxassetid://71347942777030",roughness=0.24,core=Color3.fromHex("#9CFFDD"),bloom=Color3.fromHex("#74E8C4"),crackLight=Color3.fromHex("#C9A8E8"),particles={Color3.fromHex("#FFFFFF"),Color3.fromHex("#9CFFDD"),Color3.fromHex("#E3C8FF")}},
+ -- Round 3 (Fable, artifacts/v2-round3-2026-11-20): the Stat Egg's own shell (cream, a Stars-gold belt of six stat stones).
+ stat={name="Stat Egg",colorMap="rbxassetid://137038692844773",roughness=0.26,core=Color3.fromHex("#FF8A5C"),bloom=Color3.fromHex("#FF9D4D"),crackLight=Color3.fromHex("#FFF3C4"),particles={Color3.fromHex("#FFFFFF"),Color3.fromHex("#FF86A8"),Color3.fromHex("#FF9D4D"),Color3.fromHex("#6CCBFF"),Color3.fromHex("#B9EE5A"),Color3.fromHex("#8FA8FF"),Color3.fromHex("#E58CFF")}},
 }
 return table.freeze(M)

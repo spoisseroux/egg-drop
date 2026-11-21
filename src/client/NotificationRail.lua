@@ -35,12 +35,19 @@ Rail.DragQuiet=2 -- no auto-scroll this long after the player dragged the row
 -- Edge fade: a UIGradient on the row's CanvasGroup (a gradient on a CanvasGroup applies to
 -- the whole rendered group, so it fades the tickets under it). If Studio shows it does not
 -- mask the group, set this false: the ScrollingFrame's own clip stays (a hard edge).
-Rail.EdgeFade=true
+-- Spencer 2026-11-20 (round 3): no fades on scrolling lists, so the row keeps a hard clip.
+Rail.EdgeFade=false
 Rail.Motion={enter=.22,leave=.25,slide=.2,scroll=.25,reduced=.15,press=.06,breathe=1.2}
 -- Per bar height (spec "Card"): card height, lip, face, corner radius, disc, text size.
+-- Round 3 (Spencer: the timer clipped the text): cards 4 px taller, the text sits in the face
+-- above the timer, the timer 3 px over the face's bottom. `tight` keeps the old 32 px key for
+-- a 32 to 33 px bar.
 Rail.Sizes={
- full={card=40,lip=4,face=36,radius=12,disc=24,text=14},
- compact={card=32,lip=3,face=29,radius=10,disc=20,text=13}}
+ full={card=44,lip=4,face=40,radius=12,disc=24,text=14},
+ compact={card=34,lip=3,face=31,radius=10,disc=20,text=13},
+ tight={card=32,lip=3,face=29,radius=10,disc=18,text=12}}
+-- Space under the text kept for the timer bar (3 px bar, 3 px under it, 2 px over it).
+Rail.TimerRoom=8
 -- Kinds (spec table): disc fill, icon (a Kit.icon name) or glyph, icon colour, timer bar fill.
 Rail.Kinds={
  stars={disc="well",icon="star",color="stars",bar="stars"},
@@ -85,7 +92,8 @@ end
 -- Pure: the card size for a free bar `height` (nil under 32 px: the row hides).
 function Rail.size(height)
  if height>=56 then return Rail.Sizes.full end
- if height>=32 then return Rail.Sizes.compact end
+ if height>=34 then return Rail.Sizes.compact end
+ if height>=32 then return Rail.Sizes.tight end
  return nil
 end
 -- Pure: a ticket's geometry in a free bar of width x height for `contentWidth` (the text,
@@ -100,7 +108,7 @@ function Rail.geometry(width,height,contentWidth,tappable)
  local desired=math.ceil(contentWidth or 0)+pad
  local w=math.clamp(desired,Rail.MinWidth,math.max(Rail.MinWidth,cap))
  return{fits=cap>=Rail.MinWidth,full=cap>=Rail.MinWidth and desired<=cap,width=w,height=size.card,size=size,room=w-pad,
-  x=Rail.Gutter,y=if height>=56 then height-44 else math.floor((height-32)/2)}
+  x=Rail.Gutter,y=if height>=56 then height-size.card-4 else math.max(0,math.floor((height-size.card)/2))}
 end
 local font=Font.new("rbxasset://fonts/families/BuilderSans.json",Enum.FontWeight.Medium)
 -- Measured once per data table and text size (handle:update makes a new data table).
@@ -259,12 +267,12 @@ local function configure(t,data,size,barW,barH)
  t.lip.Size=UDim2.fromOffset(w,face);t.lip.Position=UDim2.fromOffset(0,size.lip)
  t.face.Size=UDim2.fromOffset(w,face);t.face.Position=UDim2.fromOffset(0,if t.pressed then size.lip else 0)
  t.lipCorner.CornerRadius=UDim.new(0,size.radius);t.faceCorner.CornerRadius=UDim.new(0,size.radius)
- local discY=math.floor((face-size.disc)/2)
+ local textH=face-(if t.persistent then 0 else Rail.TimerRoom)
+ local discY=math.floor((textH-size.disc)/2)
  t.disc.Size=UDim2.fromOffset(size.disc,size.disc);t.disc.Position=UDim2.fromOffset(8,discY)
  local x=8+size.disc+8
  local room=g.room-(if amount then 4+amountW else 0)
  local shownW=math.max(0,math.min(math.ceil(textW),room))
- local textH=face-(if t.persistent then 0 else 4)
  t.message.Text=text;t.message.TextSize=size.text
  t.message.Position=UDim2.fromOffset(x,0);t.message.Size=UDim2.fromOffset(shownW+1,textH)
  t.amount.Visible=amount~=nil
@@ -275,7 +283,7 @@ local function configure(t,data,size,barW,barH)
  t.more.Visible=tappable
  t.more.Position=UDim2.fromOffset(w-12-14,0);t.more.Size=UDim2.fromOffset(14,textH)
  t.timer.Visible=not t.persistent
- t.timer.Position=UDim2.fromOffset(10,face-4-3);t.timer.Size=UDim2.fromOffset(math.max(0,w-20),3)
+ t.timer.Position=UDim2.fromOffset(10,face-3-3);t.timer.Size=UDim2.fromOffset(math.max(0,w-20),3)
  t.root:SetAttribute("Truncated",not g.full)
  t.root:SetAttribute("Kind",if t.persistent then "status"else Rail.kind(data))
  local kind=Rail.kind(data)
@@ -398,7 +406,9 @@ local function frame(dt)
  end
  -- Each ticket: hit area, enter / leave motion, timer, breathing status disc.
  local now=os.clock()
- local cardY=if barH>=56 then barH-44 else math.floor((barH-32)/2)
+ -- (Rail.geometry's y: 4 px over the bar's bottom on a full bar, else centred.)
+ local cardH=(size or Rail.Sizes.tight).card
+ local cardY=if barH>=56 then barH-cardH-4 else math.max(0,math.floor((barH-cardH)/2))
  for _,t in ipairs(order)do
   local s=t.size or size
   local item=t.item

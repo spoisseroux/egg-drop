@@ -27,7 +27,7 @@ return function(client,parent)
    while c.active and c.age<age-1e-6 do c:step(math.min(1/60,age-c.age));c:disconnectClock()end
   end
   -- Tier notes: everything on the accent owner (the hatch body has its own owner).
-  local function accents()local list={};for _,call in ipairs(calls)do if call.cue~="hatch_display_material"then table.insert(list,call)end end;return list end
+  local function accents()local list={};for _,call in ipairs(calls)do if call.cue~="hatch_display_material"and call.cue~="egg_wobble"and call.cue~="egg_crack_glint"then table.insert(list,call)end end;return list end
   return c,play,advance,calls,accents,stops,function(value)owner=value;c:refreshOwner();c:disconnectClock()end,function()return scene end,audio
  end
  local function names(list)local out={};for _,call in ipairs(list)do table.insert(out,call.cue)end;return table.concat(out,",")end
@@ -40,17 +40,18 @@ return function(client,parent)
    advance(J.layerAt-.03);assert(#accents()==0,"the jackpot started early")
    advance(T.bodyAt-.03);for _,call in ipairs(calls)do assert(call.cue~="hatch_display_material","the body started before its offset")end
    advance(T.bodyAt+.02);local body;for _,call in ipairs(calls)do if call.cue=="hatch_display_material"then body=call end end
-   assert(body and body.cue=="hatch_display_material"and body.speed==1 and body.gain==1,"the body starts at its offset")
+   -- Round 3 (Fable brief 2): the body bed is off (BodyGain 0) so the tier sting reads.
+   assert(Policy.BodyGain==0 and body==nil,"the body bed is off")
    advance(J.stingAt+.05);local notes=accents()
    assert(#notes==2 and notes[1].cue==Policy.JackpotCue and notes[2].cue=="rarity_rare"and notes[2].speed==1 and notes[2].gain==J.stingGain,"Rare line was "..names(notes))
-   assert(notes[1].owner==c.accentOwner and notes[2].owner==c.accentOwner and notes[1].owner~=body.owner,"the jackpot has its own voice, apart from the body")
+   assert(notes[1].owner==c.accentOwner and notes[2].owner==c.accentOwner,"the jackpot has its own voice")
    advance(T.ready+.2);assert(#accents()==2 and c:getPresentationState().receiptReady,"a third note played")
    -- It rings to its end before its voice is retired.
    advance(J.layerAt+J.layerLength+.02);assert(#accents()==2 and not stops[c.accentOwner],"the jackpot was cut")
    c:cancel();assert(stops[c.audioOwner]and stops[c.accentOwner])
   end)
   test("Common, Uncommon and Rare are three different sounds on the real owner clock",function()
-   local _,playCommon,advanceCommon,calls,commonNotes=make();playCommon({id="rarity-common-"..os.clock(),finishId="gloss"});assert(#calls==1,"a Common body starts at once")
+   local _,playCommon,advanceCommon,calls,commonNotes=make();playCommon({id="rarity-common-"..os.clock(),finishId="gloss"});assert(#calls==0,"no body bed (round 3)")
    advanceCommon(3.1)
    local _,playRare,advanceRare,_,rareNotes=make();playRare();advanceRare(4.6)
    local common,rare=commonNotes(),rareNotes()
@@ -75,7 +76,7 @@ return function(client,parent)
   end)
   test("late preload starts at zero while focus device takeover and long frames drop pending notes",function()
    local c,play,advance,calls,accents,_,setOwner,getScene,audio=make(false);play({id="late-"..os.clock(),finishId="gloss"});assert(not c.presented and #calls==0)
-   getScene().ready=true;c:refreshOwner();c:disconnectClock();assert(c.age==0 and #calls==1)
+   getScene().ready=true;c:refreshOwner();c:disconnectClock();assert(c.age==0 and #calls==0) -- round 3: no body bed
    advance(1.2);local count=#accents();setOwner(false);setOwner(true);advance(3.1);assert(#accents()==count)
    play();advance(1.2);count=#accents();audio.deviceEpoch+=1;c:step(1/60);c:disconnectClock();assert(#accents()==count)
    play();advance(1.2);count=#accents();c:step(.7);c:disconnectClock();assert(#accents()==count)

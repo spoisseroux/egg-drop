@@ -71,6 +71,7 @@ function Host.mount(deps)
 		local receipt=message.receipt
 		if action=="statEggBuy"then
 			local petId=deps.activeId()
+			reveal.fromShop=nil
 			reveal:show(receipt,api.revealInfo(petId),{
 				feed=function(r)api.feedNow(r.snackId)end,keep=function()notify(UICopy.get("hatch.stat.reveal.kept"),true)end})
 		else
@@ -99,7 +100,7 @@ function Host.mount(deps)
 	-- tap); otherwise a refusal (a warning line, nothing to open).
 	function notify(text,pouch)
 		if text and text~=""then
-			Rail.enqueue(owner,"snack:"..text,{text=text,icon=if pouch then "•"else "!",duration=2.6,
+			Rail.enqueue(owner,"snack:"..text,{text=text,icon=if pouch then "•"else "!",duration=4,
 				activate=if pouch then openPouch else nil})
 		end
 	end
@@ -135,11 +136,17 @@ function Host.mount(deps)
 		intent:buy(petId,free,q.key,function(message)
 			api.buying=false
 			if message.status=="Saved"and type(message.receipt)=="table"then
-				if deps.closeShop then deps.closeShop()end
+				-- Bought from Hatch eggs: the shop closes under the reveal, and Close (Keep) brings it
+				-- back (round 3). Captured per buy; Hatch another (the reveal still up) inherits it.
+				local fromShop=(deps.closeShop~=nil and deps.closeShop()==true)or(reveal:isOpen()and reveal.fromShop==true)
 				local receipt=message.receipt
 				reveal:show(receipt,api.revealInfo(petId),{
 					feed=function(r)api.feedNow(r.snackId)end,
-					keep=function()notify(UICopy.get("hatch.stat.reveal.kept"),true)end})
+					keep=function()
+						notify(UICopy.get("hatch.stat.reveal.kept"),true)
+						if fromShop and deps.reopenEggs then deps.reopenEggs()end
+					end})
+				reveal.fromShop=fromShop
 			else
 				reveal.againPressed=nil
 				notify(Host.reasonText(message.reason,nil,nil,true))

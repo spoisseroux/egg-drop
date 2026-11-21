@@ -190,12 +190,18 @@ end
 -- Pure: tile rects for a W x H screen (desktop: the 848 x 608 panel). Three columns,
 -- two rows. Desktop: under the 84 px header, above the hint bar at 566. Phone: under
 -- the 60 px header, 20 px side margins, 8 px gaps (the lip sits in the gap).
+Hub.TileShare=.84
 function Hub.geometry(W,H,phone)
  local x0,y0,gap,bottom
  if phone then x0,y0,gap,bottom=20,64,8,H-12 else x0,y0,gap,bottom=24,84,16,548 end
  local cols=Hub.Cols;local rows=math.ceil(Hub.Count/cols)
  local w=math.floor((W-2*x0-(cols-1)*gap)/cols)
- local h=math.floor((bottom-y0-(rows-1)*gap)/rows)
+ local full=math.floor((bottom-y0-(rows-1)*gap)/rows)
+ -- Round 3 (Spencer: "a bit thinner vertically to fit better in the menu"): on phones the tiles
+ -- are Hub.TileShare of the band's height, the block centred in it. The desktop panel keeps its
+ -- 224 px tiles (its layout needs that height for the chips and the status line).
+ local h=if phone then math.floor(full*Hub.TileShare)else full
+ y0+=math.floor((full-h)*rows/2)
  local tiles={}
  for i=1,Hub.Count do
   local c,r=(i-1)%cols,(i-1)//cols

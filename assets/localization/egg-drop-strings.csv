@@ -103,6 +103,23 @@ ui.coach.welcome.title,Hatch your first friend,,First-round coaching; also ui.r1
 ui.companions.toys.line,Something to carry and chase,,Companions screen
 ui.companions.toys.name,Toys,,Companions screen; also ui.r4.customize.toys.title
 ui.companions.wearing.none,Nothing yet,,Companions screen
+ui.confirm.adoptLine,The {pet} comes home with you for ★ {price}.,,Menu text; e.g. The Bear comes home with you for ★ {price}.
+ui.confirm.adoptTitle,Adopt the {pet}?,,Menu text; e.g. Adopt the Bear?
+ui.confirm.adoptYes,Adopt ★ {price},,Menu text; e.g. Adopt ★ {price}
+ui.confirm.buyLine,It's yours to keep for ★ {price}.,,Menu text; e.g. It's yours to keep for ★ {price}.
+ui.confirm.buyTitle,Buy {item}?,,Menu text; e.g. Buy Squeaky Bone?
+ui.confirm.buyYes,Buy ★ {price},,Menu text; e.g. Buy ★ {price}
+ui.confirm.cancel,Cancel,,Menu text
+ui.confirm.quitLine,This round ends now.,,Menu text
+ui.confirm.quitTitle,Quit to the garden?,,Menu text
+ui.confirm.quitYes,Quit,,Menu text
+ui.confirm.resetLine,Your pet goes back to its first colours. It's free.,,Menu text
+ui.confirm.resetTitle,Reset the colours?,,Menu text
+ui.confirm.resetYes,Reset,,Menu text
+ui.confirm.restartLine,The board starts over from the beginning.,,Menu text
+ui.confirm.restartTitle,Restart this round?,,Menu text
+ui.confirm.restartYes,Restart,,Menu text
+ui.confirm.yes,Confirm,,Menu text
 ui.e2.arrived.line,{pet} came to stay in your garden.,,Menu text; e.g. Bear came to stay in your garden.
 ui.e2.arrived.sayHi,Say hi,,Menu text
 ui.e2.arrived.title,A friend arrived!,,Menu text

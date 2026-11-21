@@ -8,7 +8,8 @@ nothing pinches at the poles or shows a seam at u = 0/1. The layout matches scri
 u runs round the egg (u = 0.5 is the front), v in [0.08, 1] runs bottom pole to top pole, and the strip
 below v = 0.075 is the inside of the shell and its cut rim.
 
-Outputs: assets/eggs/textures/egg-<type>-color.png (1024), egg-roughness.png (256),
+Outputs: assets/eggs/textures/egg-<type>-color.png (1024; the five in ORDER plus EXTRA, the Stat Egg),
+egg-roughness.png (256),
 star-color.png (512), star-roughness.png (64).
 """
 import math
@@ -280,8 +281,50 @@ def paint_feature(t):
     return img
 
 
+def paint_stat(t):
+    """Cream shell, a gold belt under the seam set with six stat stones (Heart faces the front)."""
+    stones = [rgb(c) for c in t["accents"]]
+    gold, lip, glint, ink = rgb(t["gold"]), rgb(t["goldLip"]), rgb(t["goldLight"]), rgb(t["ink"])
+    white = rgb("#FFFFFF")
+    img = fill(rgb(t["base"]))
+    img = mix(img, rgb("#FFE2B8"), smooth(0.30, 0.02, T) * 0.55)          # warm peach foot
+    belt = 0.365
+    per_t = math.pi * E.HEIGHT / 2 * math.sin(math.pi * belt)            # studs per unit t at the belt
+    per_u = 2 * math.pi * E.profile(belt)[0]                             # studs per unit u at the belt
+    img = mix(img, ink, ring_band(belt, 0.058))                           # ink keyline
+    img = mix(img, lip, ring_band(belt, 0.046))
+    img = mix(img, gold, ring_band(belt + 0.004, 0.036))
+    img = mix(img, glint, ring_band(belt + 0.013, 0.007) * 0.85)
+    n = len(stones)
+    for k, c in enumerate(stones):
+        u = (E.FRONT_U + k / n) % 1.0
+        dot(img, u, belt, 0.142, ink)                                     # keyline
+        dot(img, u, belt, 0.128, lip)                                     # gold setting
+        dot(img, u, belt + 0.006 / per_t, 0.118, gold)
+        dot(img, u, belt, 0.096, ink)
+        dot(img, u, belt, 0.084, c * 0.72)                                # stone shade (lower right)
+        dot(img, u - 0.010 / per_u, belt + 0.012 / per_t, 0.074, c)       # stone face
+        dot(img, u - 0.030 / per_u, belt + 0.034 / per_t, 0.026, white, 0.92)   # glint
+        dot(img, u + 0.030 / per_u, belt - 0.034 / per_t, 0.012, mix_c(c, white, 0.6), 0.8)
+        # gold rivet between stones
+        dot(img, (u + 0.5 / n) % 1.0, belt, 0.030, lip)
+        dot(img, (u + 0.5 / n) % 1.0, belt + 0.004 / per_t, 0.020, glint)
+    # crown: six small stone dots, each opposite its belt stone, and tiny gold sparkles between
+    for k, c in enumerate(stones):
+        u = (E.FRONT_U + (k + 3.5) / n) % 1.0
+        dot(img, u, 0.775, 0.050, ink)
+        dot(img, u, 0.775, 0.040, c)
+        dot(img, u - 0.004, 0.783, 0.012, white, 0.9)
+        sparkle(img, (E.FRONT_U + (k + 3.0) / n) % 1.0, 0.685, 0.050, gold)
+    # foot: a ring of small gold dots
+    for k in range(n):
+        dot(img, (E.FRONT_U + (k + 0.5) / n) % 1.0, 0.185, 0.034, lip)
+        dot(img, (E.FRONT_U + (k + 0.5) / n) % 1.0, 0.189, 0.024, gold)
+    return img
+
+
 PAINT = {"companion": paint_companion, "toy": paint_toy, "material": paint_material,
-         "hue": paint_hue, "feature": paint_feature}
+         "hue": paint_hue, "feature": paint_feature, "stat": paint_stat}
 
 
 def finish(img, t):
@@ -316,10 +359,12 @@ def save(img, path, size=SIZE):
     print("wrote", path.relative_to(REPO), im.size)
 
 
-def build_eggs():
-    for tid in E.ORDER:
+def build_eggs(only=None):
+    for tid in only or (E.ORDER + E.EXTRA):
         t = E.TYPES[tid]
         save(finish(PAINT[tid](t), t), OUT / f"egg-{tid}-color.png")
+    if only:
+        return
     # Shared RoughnessMap: glossy toy plastic outside, chalky inside.
     v = 1.0 - (np.arange(256) + 0.5) / 256
     col = np.where(v < 0.075, 0.78, 0.27)
@@ -372,5 +417,10 @@ def build_star():
 
 
 if __name__ == "__main__":
-    build_eggs()
-    build_star()
+    # `python scripts/build_egg_textures.py stat` paints only the named egg maps.
+    wanted = [a for a in sys.argv[1:] if a in PAINT]
+    if wanted:
+        build_eggs(wanted)
+    else:
+        build_eggs()
+        build_star()

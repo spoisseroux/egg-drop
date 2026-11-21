@@ -119,8 +119,23 @@ TYPES = {
         "particles": ["#FFFFFF", "#9CFFDD", "#E3C8FF"],
         "roughness": 0.24,
     },
+    # v2 Stat Egg (round 3, 2026-11-20). Not in ORDER: the shipped five keep their manifest and
+    # previews; scripts/build_egg_textures.py builds it from EXTRA (or `... stat` alone).
+    # accents: the six stat stones in StatCatalog.Order (heart, power, energy, jump, speed, smarts).
+    "stat": {
+        "name": "Stat Egg",
+        "look": "house cream shell, a Stars-gold belt set with six round stat stones, small stone dots on the crown",
+        "base": "#FFF4DC", "deep": "#EDB877", "light": "#FFFDF4",
+        "accents": ["#FF86A8", "#FF9D4D", "#6CCBFF", "#B9EE5A", "#8FA8FF", "#E58CFF"],
+        "gold": "#FFC14D", "goldLip": "#D9A31C", "goldLight": "#FFE9A0", "ink": "#15143A",
+        "inner": "#FFE9C7",
+        "core": "#FF8A5C", "bloom": "#FF9D4D",
+        "particles": ["#FFFFFF", "#FF86A8", "#FF9D4D", "#6CCBFF", "#B9EE5A", "#8FA8FF", "#E58CFF"],
+        "roughness": 0.26,
+    },
 }
 ORDER = ["companion", "toy", "material", "hue", "feature"]
+EXTRA = ["stat"]
 
 # ---- the Star token ----
 STAR = {

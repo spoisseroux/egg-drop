@@ -45,6 +45,8 @@ local StatOdds=require(script.Parent.StatEggOdds)
 if StatEggCatalog.Enabled then table.insert(liveOrder,"stat")end
 -- The art each egg borrows until its own shell exists.
 local function artOf(id)return if id=="look"then "hue"elseif id=="stat"then "feature"else id end
+-- Round 3: the 3D shell type for an egg (the Stat Egg has its own; the 2D art still borrows Feature's).
+local function shellOf(id)return if id=="stat"then "stat"else artOf(id)end
 local function shopRecipe(id)
  if id=="stat"then return {id="stat",name=UICopy.get("hatch.egg.stat.name"),cost=StatEggCatalog.Price}end
  if id=="hue"then return {id="hue",name="Hue Egg",cost=HueCatalog.Cost}end
@@ -58,6 +60,7 @@ end
 
 local SaveNotice=require(script.Parent.SaveNotice)
 local View = {}
+View.shellOf=shellOf
 View.__index = View
 
 local function frame(parent, name, color, position, size, z)
@@ -1100,8 +1103,8 @@ function View:paintEggPane()
  if not self.shopPane then return end
  local id=self.selected;local recipe=shopRecipe(id);local copy=View.EggCopy[id]or {}
  local g=self.shopGeom;local phone=g.phone
- local artId=artOf(id)
- if self.egg3D and self.egg3D.type~=artId then self.egg3D:setType(artId)end
+ local shell=View.shellOf(id)
+ if self.egg3D and self.egg3D.type~=shell then self.egg3D:setType(shell)end
  if self.eggArtId~=id then
   for _,child in ipairs(self.eggHolder:GetChildren())do child:Destroy()end
   self.eggArt=EggArt.create(self.eggHolder,artOf(id),UDim2.fromScale(0,0),UDim2.fromScale(1,1),self.eggHolder.ZIndex+1)
@@ -1165,7 +1168,8 @@ function View:sync3D()
  if self.previewRetry then self.previewRetry.Visible=not on and egg.loadReason~=nil end
  if self.eggHolder then self.eggHolder.Visible=not on end
  if self.eggShadow then self.eggShadow.Visible=not on end
- if on then egg:setType(artOf(self.selected),true)end
+ -- Round 3: the 3D preview has the Stat Egg's own shell (the 2D fallback still borrows Feature's).
+ if on then egg:setType(View.shellOf(self.selected),true)end
  self:syncEggClock()
 end
 function View:eggReduced()

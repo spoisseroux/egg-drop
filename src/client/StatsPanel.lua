@@ -38,6 +38,7 @@ function Panel.tierWord(level)
  local name=Catalog.tier(level)
  return if TierKey[name]then UICopy.get("stats.tier."..TierKey[name])else name
 end
+Panel.ShowKeeper=false
 function Panel.keeperWord(total)
  if total>=Catalog.GardenStarTotal then return UICopy.get("stats.gardenStar")end
  local name=Catalog.Tiers[1].name
@@ -294,18 +295,10 @@ function Panel:buildSnacks(body,x,y,w,h,phone)
  self.tray=SnackTray.new(trayHost,{compact=phone,carryLayer=self.root,
   petName=function()local pet=Pets.byId[self:petId()];return pet and pet.name or "Bear"end,
   dropTarget=function()local well=self.previewWell;if well and well.Parent then return well.AbsolutePosition,well.AbsoluteSize end;return nil end,
-  onFeed=function(group)return self:feedGroup(group)end})
+  onFeed=function(group)return self:feedGroup(group)end,onClose=function()self:setMode("stats")end})
  local ey=pad+trayH+(if phone then 4 else 12)
  self.eggLine=txt(view,"Small","","soft",pad,ey,w-pad*2,if phone then 16 else 20,{Name="EggLine",TextSize=if phone then 11 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
- local bh=if phone then 40 else 48
- local by=h-pad-bh
- local back=Kit.button(view,"StatsBack",{text=UICopy.get("stats.snacks.back"),glyph="B",showGlyph=false,size=Vector2.new(if phone then 96 else 140,bh),selectable=false})
- back.Position=UDim2.fromOffset(pad,by);back.Activated:Connect(function()self:setMode("stats")end)
- local eggW=if phone then 150 else 200
- local eggs=Kit.button(view,"GoHatch",{text=UICopy.get("stats.snacks.eggs"),glyph="Y",showGlyph=false,size=Vector2.new(eggW,bh),selectable=false})
- eggs.Position=UDim2.fromOffset(w-pad-eggW,by);eggs.Activated:Connect(function()self:openEggs()end)
- for _,b in ipairs({back,eggs})do for _,d in ipairs(b:GetDescendants())do if d:IsA("GuiObject")then d.ZIndex+=2 end end end
- self.snackBack,self.snackEggs=back,eggs
+ -- Round 3 (Spencer): no Stats / Hatch eggs keys here; the pouch's X (and B) go back to Stats.
  self:setMode(self.mode or "stats",true)
 end
 function Panel:openEggs()
@@ -326,11 +319,10 @@ function Panel:snackModel()
  local m=self.lastModel or self:viewModel()
  return{pouch=egg.pouch or {},boosts=m.boosts,total=egg.pouchSize or StatEggCatalog.PouchSize,locked=Panel.feedLock(self.ctx,self:petId()),select=self.pickSnack}
 end
+-- Round 3 (Spencer: "too crowded"): the key says Snacks, no count (the pouch shows it).
 function Panel:paintSnackButton()
  if not self.snacksButton then return end
- local egg=type((self.ctx.state or {}).statEgg)=="table"and self.ctx.state.statEgg or {}
- local n=#(egg.pouch or {})
- Kit.setText(self.snacksButton,if n>0 then UICopy.get("stats.snacks.open").." · "..n else UICopy.get("stats.snacks.open"))
+ Kit.setText(self.snacksButton,UICopy.get("stats.snacks.open"))
 end
 function Panel:paintSnacks()
  if not self.tray then return end
@@ -393,6 +385,9 @@ function Panel:paint(animate)
  local tw=math.ceil(Kit.measure(self.totalValue.Text,"CounterL",self.totalValue.TextSize).X)
  self.totalOf.Text=UICopy.get("stats.of",{total=Catalog.GardenStarTotal});self.totalOf.Position=UDim2.new(0,self.totalValue.Position.X.Offset+tw+6,0,self.totalValue.Position.Y.Offset+(if self.view then 4 else 8))
  self.keeperChip.set(Panel.keeperWord(m.total),nil);Kit.paint(self.keeperChip.label,"TextColor3","accent")
+ -- Round 3 (Spencer: "what does Seedling Keeper mean? hide that for now"): the Keeper title,
+ -- its bar and the next-title line stay built but hidden while Panel.ShowKeeper is false.
+ self.keeperChip.root.Visible=Panel.ShowKeeper;self.keeperBar.root.Visible=Panel.ShowKeeper;self.keeperLine.Visible=Panel.ShowKeeper
  local nextTier=Panel.nextKeeper(m.total)
  if nextTier then
   self.keeperBar.set((m.total-nextTier.from)/math.max(1,nextTier.total-nextTier.from),animate)
@@ -465,7 +460,6 @@ function Panel:input(key)
  local K=Enum.KeyCode
  if self.mode=="snacks"then
   if key==K.ButtonB or key==K.Backspace or key==K.Escape or key==K.ButtonX then self:setMode("stats")
-  elseif key==K.ButtonY then self:openEggs()
   elseif self.tray then self.tray:input(key)end
   return
  end

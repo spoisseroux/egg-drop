@@ -628,10 +628,9 @@ function Shop:act(fromPane)
    if self.callbacks.buy then self.callbacks.buy(self.pending)end
    self:paintPane();return true
   end
-  self.confirmId,self.confirmUntil=id,os.clock()+Shop.ConfirmSeconds
-  local token=self.confirmUntil
-  task.delay(Shop.ConfirmSeconds,function()if self.confirmUntil==token then self.confirmId=nil;if self.visible then self:paintPane()end end end)
-  self:paintPane();return true
+  -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
+  return require(script.Parent.ConfirmDialog).purchase(self,id,(Themes.ById[id]or{name=""}).name,status.price,
+   function()return self.visible and self.tab==1 and self.tiles[self.index]~=nil and self.tiles[self.index].id==id end,function()self:act()end)~=nil
  end
  return false
 end
@@ -681,7 +680,7 @@ function Shop:open(equipped,tab,keepFocus)
 end
 function Shop:close()
  if self.content then Peek.hide(self.content)end
- self.visible=false;self.root.Visible=false;if self.ring then self.ring.hide()end;self.confirmId=nil
+ self.visible=false;self.root.Visible=false;if self.ring then self.ring.hide()end;self.confirmId=nil;require(script.Parent.ConfirmDialog).cancelFor(self)
  self.backgrounds:show(false)
  self.balls:show(false)
 end

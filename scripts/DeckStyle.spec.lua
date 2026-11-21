@@ -133,13 +133,15 @@ return function(client,parent)
     assert(shop:result({kind="ballTheme",id=sent[2][2].id,status="Rejected",reason="Busy"})and balls.ctx.equipped=="marbles"and shown[2]=="marbles"and balls.errorId=="smileys")
     table.remove(sent,2);balls.callbacks.equipped=nil
     assert(#f.applied==0,"ball themes never go through the deck appearance slots")
-    -- Buy: first press arms the confirm, the second sends theme + fixed price.
+    -- Buy (round 3): the press opens the confirm dialog; its yes sends theme + fixed price.
+    local Confirm=require(client.ConfirmDialog)
+    local function yes()Confirm.accept();task.wait();task.wait()end
     assert(balls:focusId("gems")and shop.root:GetAttribute("BallPaneState")=="buy")
-    assert(shop:act(false)and #sent==1 and balls.confirmId=="gems")
-    assert(shop:act(false)and #sent==2 and sent[2][1]=="ballThemeBuy"and sent[2][2].themeId=="gems"and sent[2][2].price==100 and sent[2][2].equip==true)
+    assert(shop:act(false)and #sent==1 and Confirm.isOpen())
+    yes();assert(#sent==2 and sent[2][1]=="ballThemeBuy"and sent[2][2].themeId=="gems"and sent[2][2].price==100 and sent[2][2].equip==true)
     assert(not shop:result({kind="ballTheme",id="other",status="Saved"}),"a reply for another press is ignored")
     assert(shop:result({kind="ballTheme",id=sent[2][2].id,status="Rejected",reason="NeedStars"})and balls.errorId=="gems")
-    assert(shop:act(false)and shop:act(false)and #sent==3)
+    assert(shop:act(false));yes();assert(#sent==3)
     assert(shop:result({kind="ballTheme",id=sent[3][2].id,status="Saved"})and table.find(balls.ctx.owned,"gems")and balls.ctx.equipped=="gems")
     v:setShopState(20,{},{owned={"smileys","marbles","gems"},equipped="gems"},8)
     assert(select(1,Balls.tileStatus("gems",balls.ctx))=="IN USE"and balls.ctx.revision==8)

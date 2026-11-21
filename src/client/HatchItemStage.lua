@@ -279,6 +279,19 @@ function Stage.closeRect(W,H,phone,safe,bar)
 end
 -- Pure: how much of the top to keep clear: the top bar (with the notification row in it) plus
 -- 6 px, or the safe-area top when that is larger.
+-- Round 3 (Spencer: rounded corners on the inside, like an iPhone's screen): the Rare screen
+-- edge is a ring whose inner edge is rounded and whose outer corners stay square. The frame
+-- reaches `offset` px past every screen edge (the root clips it) with a corner of `corner` and an
+-- inner stroke of `thickness`, so the band's inner edge sits Stage.EdgeThickness in from the
+-- screen with an inner radius of `radius`, and the rounded outer cut stays off screen
+-- (corner <= offset * sqrt2 / (sqrt2 - 1)). Pure.
+Stage.EdgeThickness=14
+Stage.EdgeRadius={phone=34,regular=24} -- Fable brief 8: parallel to an iPhone's glass on phones
+function Stage.edgeRing(radius,band)
+ band=band or Stage.EdgeThickness
+ local offset=math.max(24,math.ceil((radius+band)/2.4142)+2)
+ return{offset=offset,corner=radius+band+offset,thickness=band+offset}
+end
 function Stage.topClear(safe,bar)
  local t=math.max(0,(safe and safe.t)or 0)
  if bar and bar.height and bar.height>0 then t=math.max(t,bar.height+6)end
@@ -466,6 +479,10 @@ function Stage.show(parent,options)
  root:SetAttribute("RevealTier",tier);root:SetAttribute("RevealKind",self.kind);root:SetAttribute("PopOutStage",true)
  self.root=root
  if options.cover~=false then Kit.coverScreen(root)end
+ -- Round 3: a host whose own ScreenGui already spans the whole screen (the Stat and Names Egg
+ -- reveals: ScreenInsets None, IgnoreGuiInset) says fullScreen, so the safe area and the top
+ -- bar (with the notification row) are kept clear like a covering stage's.
+ if options.cover==false and options.fullScreen==true then root:SetAttribute("CoversScreen",true)end
  -- Hatch another hands over from the stage that is still up: no lid, the shell stays.
  local handover=Stage.handover;Stage.handover=nil
  self.instant=options.instant==true
@@ -535,12 +552,18 @@ function Stage:build()
  for index=1,Stage.Pool.cannon do
   local o=image(root,"Cannon"..index,if index%3==0 then "sparkle"else "pebble",z+7,{Visible=false});self.cannons[index]=o
  end
+ -- Round 3 (Fable brief 1.3): the Stat Egg's stone roulette, six sparkles round the belt.
+ self.roulette={}
+ if self.options.roulette then
+  for index=1,6 do self.roulette[index]=image(root,"Roulette"..index,"sparkle",z+6,{Visible=false})end
+ end
  -- Shockwave: a 10 px line thinning to 2 px (not a filled flash), and the rainbow edge.
  self.shock=frame(root,"Shockwave",z+8,{AnchorPoint=Vector2.new(.5,.5),Visible=false})
  node("UICorner",self.shock,{CornerRadius=UDim.new(.5,0)})
  self.shockStroke=node("UIStroke",self.shock,{Color=Color3.new(1,1,1),Thickness=10})
  self.rainbow=frame(root,"RainbowEdge",z+8,{Size=UDim2.fromScale(1,1),Visible=false})
- self.rainbowStroke=Kit.inner(node("UIStroke",self.rainbow,{Thickness=14,Color=Color3.new(1,1,1),ApplyStrokeMode=Enum.ApplyStrokeMode.Border}))
+ self.rainbowStroke=Kit.inner(node("UIStroke",self.rainbow,{Thickness=Stage.EdgeThickness,Color=Color3.new(1,1,1),ApplyStrokeMode=Enum.ApplyStrokeMode.Border}))
+ self.rainbowCorner=node("UICorner",self.rainbow,{CornerRadius=UDim.new(0,0)})
  self.rainbowGradient=node("UIGradient",self.rainbowStroke,{Color=rainbowSequence()})
  -- Text column: sticker, name, effect line, fun line; the "In this egg" tray.
  local tz=z+9
@@ -763,6 +786,11 @@ function Stage:layout()
  local size=self.root.AbsoluteSize;local W,H=math.max(1,size.X),math.max(1,size.Y)
  local safe,bar=Stage.safeArea(self.root)
  local L=Stage.geometry(W,H,Stage.topClear(safe,bar));self.L=L;self.staticDone=false
+ do
+  local ring=Stage.edgeRing(if L.phone then Stage.EdgeRadius.phone else Stage.EdgeRadius.regular)
+  self.rainbow.Position=UDim2.fromOffset(-ring.offset,-ring.offset);self.rainbow.Size=UDim2.new(1,ring.offset*2,1,ring.offset*2)
+  self.rainbowCorner.CornerRadius=UDim.new(0,ring.corner);self.rainbowStroke.Thickness=ring.thickness
+ end
  local tx=L.text
  self.stickerText.TextSize=tx.sticker
  self.name.TextSize=tx.name;self.nameStroke.Thickness=math.max(2,math.floor(3*L.s+.5))
@@ -939,6 +967,19 @@ function Stage:paint(dt)
  else self.rimStroke.Color=self.look.color;self.rimStroke.Thickness=3 end
  -- Shockwave.
  local shock=s.shock
+ -- Round 3 (Fable brief 1.3): a host with an accent (the won stat's colour) shows it only from
+ -- the burst: the bloom and the shockwave take it, and an Uncommon gets one ring of it.
+ local accent=self:accent()
+ if accent then
+  local burst=s.burstAge~=nil and s.burstAge>=0
+  self.bloom.ImageColor3=if burst then accent else Color3.new(1,1,1)
+  self.shockStroke.Color=accent
+  if not shock and self.tier=="Uncommon"and burst and s.burstAge<.35 and not still then
+   local u=s.burstAge/.35
+   shock={radius=40+240*expoOut(u),width=6-4*u,alpha=.8*(1-u)}
+  end
+ end
+ self:paintRoulette(s,still)
  self.shock.Visible=shock~=nil and not still
  if shock and not still then
   local d=shock.radius*2*scale
@@ -1050,6 +1091,42 @@ function Stage:paintOrbit(s,still)
    o.Position=UDim2.fromOffset(self.cx+math.cos(a)*r,self.cy+math.sin(a)*r*.82)
    o.Size=UDim2.fromOffset(size,size);o.ImageTransparency=if still then 0 else 1-s.orbit
    o.Rotation=if index>8 then 0 else math.deg(a)*.25
+   local colors=self.options.orbitColors and self.options.orbitColors()
+   if index<=8 and type(colors)=="table"and #colors>0 then o.ImageColor3=colors[(index-1)%#colors+1]end
+  end
+ end
+end
+function Stage:accent()
+ local fn=self.options.accent
+ local value=if fn then fn()else nil
+ return if typeof(value)=="Color3"then value else nil
+end
+-- Round 3 (Fable brief 1.3): while the egg rocks, six stat-coloured sparkles pop on an ellipse
+-- round its belt, two per rock (0.21, 0.48, 0.81). They say "one of six" and never the answer.
+Stage.RouletteAt=table.freeze({.21,.48,.81})
+function Stage.rouletteScale(t,index)
+ local at=Stage.RouletteAt[math.ceil(index/2)]
+ if not at then return 0 end
+ local u=(t-at)/.22
+ if u<=0 or u>=1 then return 0 end
+ return 1.2*math.sin(math.pi*u)
+end
+function Stage:paintRoulette(s,still)
+ local list=self.roulette;if #list==0 then return end
+ local colors=self.options.roulette()
+ local L=self.L
+ -- The egg in the well is about 21% of its short side wide, its belt 20% of its height below
+ -- the centre (measured on the 844x390 and desktop captures, round 3).
+ local eggW=math.min(self.ww,self.wh)*.21
+ for index,o in ipairs(list)do
+  local k=if still or s.reduced then 0 else Stage.rouletteScale(s.t,index)
+  o.Visible=k>0
+  if k>0 then
+   local a=(index-1)/6*math.pi*2+math.pi/2
+   local size=math.floor(14*L.s*k+.5)
+   o.ImageColor3=(type(colors)=="table"and colors[index])or Color3.new(1,1,1)
+   o.Position=UDim2.fromOffset(self.cx+math.cos(a)*eggW*.62,self.cy+self.wh*.20+math.sin(a)*eggW*.14)
+   o.Size=UDim2.fromOffset(size,size)
   end
  end
 end
@@ -1093,7 +1170,8 @@ function Stage:paintConfetti(s,still)
   o.Visible=x~=nil
   if x then
    if not o:GetAttribute("Painted")then
-    o.ImageColor3=if index%3==0 then Color3.new(1,1,1)else Color3.fromHex(Stage.Rainbow[(index%6)+1])
+    local accent=self:accent()
+    o.ImageColor3=if index%3==0 then Color3.new(1,1,1)elseif accent then(if index%2==0 then accent else Color3.fromHex("#FFC14D"))else Color3.fromHex(Stage.Rainbow[(index%6)+1])
     o:SetAttribute("Painted",true)
    end
    local size=math.floor((12+8*hash(index,58))*L.s+.5)

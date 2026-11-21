@@ -349,10 +349,9 @@ function Shop:act()
    self:send("ballThemeBuy",{id=self.pending.id,themeId=id,price=s.price,equip=true})
    self:paintPane();return true
   end
-  self.confirmId,self.confirmUntil=id,os.clock()+Shop.ConfirmSeconds
-  local token=self.confirmUntil
-  task.delay(Shop.ConfirmSeconds,function()if self.confirmUntil==token then self.confirmId=nil;if self.body then self:paintPane()end end end)
-  self:paintPane();return true
+  -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
+  return require(script.Parent.ConfirmDialog).purchase(self,id,(Themes.ById[id]or{name=""}).name,s.price,
+   function()return self:active()and self:focusedId()==id end,function()self:act()end)~=nil
  end
  return false
 end
@@ -400,6 +399,6 @@ function Shop:show(visible,landOnEquipped)
   self:focus(self.index,true)
   -- R4.6: opening the tab drops the pane's pile in too.
   if opening and self.board then Shop.dropIn(self.board.balls)end
- else self.confirmId=nil end
+ else self.confirmId=nil;require(script.Parent.ConfirmDialog).cancelFor(self)end
 end
 return Shop

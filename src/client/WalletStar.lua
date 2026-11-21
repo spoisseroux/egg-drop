@@ -69,12 +69,14 @@ for i=0,math.floor(360/Star.SpinStep)-1 do spinFrames[i]=CFrame.Angles(0,math.ra
 local spinCount=math.floor(360/Star.SpinStep)
 local GlintSteps=12
 local sparkleScale,sparkleAlpha,ambientSteps,glowAlpha={},{},{},{}
-local AmbientBase,AmbientBright=Color3.fromRGB(206,192,166),Color3.fromRGB(255,240,200)
+-- Round 3 (Fable brief 6, Spencer: "more vivid"): a warm gold ambient and a low front fill
+-- (the old back light left the face as texture x grey-beige); a brighter, larger glow.
+local AmbientBase,AmbientBright=Color3.fromRGB(250,226,176),Color3.fromRGB(255,244,206)
 for i=0,GlintSteps do
  local k=math.sin(i/GlintSteps*math.pi) -- 0 -> 1 -> 0
  sparkleScale[i]=.2+.9*k;sparkleAlpha[i]=1-k
  ambientSteps[i]=AmbientBase:Lerp(AmbientBright,k*.8)
- glowAlpha[i]=.78-.3*k
+ glowAlpha[i]=.62-.22*k
 end
 
 -- ── Loader (replaceable for specs) ───────────────────────────────────────────
@@ -183,14 +185,14 @@ local function build(pill,icon,size,template)
  local z=icon.ZIndex
  local holder=make("Frame",pill,{Name="Star3D",BackgroundTransparency=1,BorderSizePixel=0,AnchorPoint=icon.AnchorPoint,Position=icon.Position,
   Size=UDim2.fromOffset(size,size),ZIndex=z,Active=false,Selectable=false,Interactable=false,Visible=true})
- local glow=make("Frame",holder,{Name="Glow",BackgroundColor3=Color3.fromRGB(255,193,77),BackgroundTransparency=glowAlpha[0],BorderSizePixel=0,
-  AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.52),Size=UDim2.fromScale(1.25,1.25),ZIndex=z,Active=false})
+ local glow=make("Frame",holder,{Name="Glow",BackgroundColor3=Color3.fromHex("#FFD45C"),BackgroundTransparency=glowAlpha[0],BorderSizePixel=0,
+  AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.52),Size=UDim2.fromScale(1.35,1.35),ZIndex=z,Active=false})
  round(glow)
  -- A centred band on a round frame reads as a soft halo (as on the results Star).
  make("UIGradient",glow,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})})
  local viewport=make("ViewportFrame",holder,{Name="StarViewport",BackgroundTransparency=1,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),
   Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(Star.ViewScale,Star.ViewScale),ZIndex=z+1,Active=false,Selectable=false,Interactable=false,
-  Ambient=AmbientBase,LightColor=Color3.fromRGB(255,214,120),LightDirection=Vector3.new(-.55,-.6,.6)})
+  Ambient=AmbientBase,LightColor=Color3.fromRGB(140,104,52),LightDirection=Vector3.new(.45,-.55,-.7)})
  local Models=require(game:GetService("ReplicatedStorage").Shared.EggModels).Star
  local part=template:Clone()
  part.Size=Models.size;part.Anchored=true;part.CanCollide=false;part.CanQuery=false;part.CanTouch=false;part.CastShadow=false
@@ -217,7 +219,7 @@ local function build(pill,icon,size,template)
  end
  -- Four-point sparkle on the upper tip.
  local sparkle=make("Frame",holder,{Name="Sparkle",BackgroundTransparency=1,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),
-  Position=UDim2.fromScale(.74,.2),Size=UDim2.fromOffset(math.floor(size*.62),math.floor(size*.62)),ZIndex=z+3,Visible=false,Active=false})
+  Position=UDim2.fromScale(.74,.2),Size=UDim2.fromOffset(math.floor(size*.70),math.floor(size*.70)),ZIndex=z+3,Visible=false,Active=false})
  local scale=make("UIScale",sparkle,{Scale=sparkleScale[0]})
  local thick=math.max(2,math.floor(size*.09+.5))
  for _,vertical in ipairs({true,false})do

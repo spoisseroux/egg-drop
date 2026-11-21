@@ -63,24 +63,42 @@ function Preview.beat(t,amp,side,hopH)
  if t<=0 or t>=Preview.BeatLength then return 0,1,0 end
  local tilt
  if t<.10 then local u=t/.10;tilt=amp*(1-(1-u)*(1-u))
- elseif t<.18 then local u=(t-.10)/.08;tilt=amp+(-4-amp)*u
+ -- Round 3 (Spencer 2026-11-20): smoothstep counter-tilt; the linear ramp read as a snap.
+ elseif t<.18 then local u=(t-.10)/.08;tilt=amp+(-4-amp)*u*u*(3-2*u)
  else local u=(t-.18)/.17;tilt=-4*(1-u)*(1-u) end
  local squash=if t<.08 then 1-.04*math.sin(t/.08*math.pi)else 1
  local hop=if t>=.15 then hopH*math.sin((t-.15)/.20*math.pi)else 0
  return side*tilt,squash,hop
 end
--- Pure: crack-light lift (studs) and CrackFlash transparency, ft seconds into a flash.
+-- Round 3 (Spencer 2026-11-20, brief 5): the peek glare swells out of the seam and fades with a
+-- tail instead of a hard 0.25 s slab. Envelope: attack 0.18 s, hold 0.14 s, release 0.50 s.
+Preview.FlashLength=.90
+local function flashEnv(ft)
+ if ft<=0 or ft>=.82 then return 0 end
+ if ft<.18 then local u=ft/.18;return 1-(1-u)*(1-u)end
+ if ft<.32 then return 1 end
+ local u=(ft-.32)/.50;return(1-u)*(1-u)
+end
+-- Pure: ft seconds into a flash. Returns the top shell's lift (studs), the CrackFlash core's and the
+-- CrackGlow halo's transparency, and the envelope (0..1) that also brightens the bloom and core.
+-- The core trails the lift by 0.04 s so the light reads as coming out of the opening seam.
 function Preview.flash(ft)
- if ft<0 or ft>=.25 then return 0,1 end
- local lift=if ft<.12 then .05*ft/.12 elseif ft<.22 then .05*(1-(ft-.12)/.10)else 0
- local tr=if ft<.125 then 1-.65*(ft/.125)else .35+.65*((ft-.125)/.125)
- return lift,tr
+ if ft<0 or ft>=Preview.FlashLength then return 0,1,1,0 end
+ local lift
+ if ft<.22 then local u=ft/.22;lift=.06*(1-(1-u)*(1-u))
+ elseif ft<.40 then lift=.06
+ elseif ft<.70 then local u=(ft-.40)/.30;local e=if u<.5 then 2*u*u else 1-2*(1-u)*(1-u);lift=.06*(1-e)
+ else lift=0 end
+ local env=flashEnv(ft)
+ return lift,1-.80*flashEnv(ft-.04),1-.35*env,env
 end
 -- Pure: per-type rhythm (FX doc 3).
 function Preview.rhythm(id)
  if id=="material"then return{gapMin=3.2,gapMax=4.4,double=false,hop=.06,sparkles=6}end
  if id=="toy"then return{gapMin=2.4,gapMax=3.6,double=true,hop=.08,sparkles=6}end
  if id=="feature"then return{gapMin=2.4,gapMax=3.6,double=true,hop=.06,sparkles=8}end
+ -- Round 3 (Spencer 2026-11-20, brief 1.1): the Stat Egg hops like the Toy Egg, sparkles like Feature.
+ if id=="stat"then return{gapMin=2.4,gapMax=3.6,double=true,hop=.08,sparkles=8}end
  return{gapMin=2.4,gapMax=3.6,double=true,hop=.06,sparkles=6}
 end
 
@@ -103,14 +121,22 @@ function Preview.new(well,options)
  local world=Kit.node("WorldModel",viewport,{});local camera=Kit.node("Camera",viewport,{FieldOfView=20})
  camera.CFrame=CFrame.lookAt(Vector3.new(0,1.5,5.2),Vector3.new(0,.7,0));viewport.CurrentCamera=camera
  self.viewport,self.world,self.camera=viewport,world,camera
+ -- Round 3 (Spencer 2026-11-20, brief 5): a soft halo under the peek core, created first so the
+ -- core draws over it at the same ZIndex.
+ self.glow=circle(well,"CrackGlow",z+2)
+ Kit.node("UIGradient",self.glow,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})})
  self.crack=circle(well,"CrackFlash",z+2)
  Kit.node("UIGradient",self.crack,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})})
- self.glint=circle(well,"Glint",z+2);self.glint.BackgroundColor3=Color3.new(1,1,1);self.glint.Rotation=-32
  -- QA v2 R1.7: the sheen is clipped to the egg's oval (a CanvasGroup clips to its corner
  -- radius; a plain ClipsDescendants frame clipped to a rectangle over the whole well).
  self.sheenClip=Kit.node("CanvasGroup",well,{Name="SheenClip",BackgroundTransparency=1,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),ZIndex=z+2,Size=UDim2.fromOffset(10,10)})
  Kit.node("UICorner",self.sheenClip,{CornerRadius=UDim.new(.5,0)})
  self.sheen=Kit.frame(self.sheenClip,"Sheen",nil,UDim2.new(),UDim2.fromScale(.18,1.6));self.sheen.BackgroundColor3=Color3.new(1,1,1);self.sheen.BackgroundTransparency=1;self.sheen.Rotation=20;self.sheen.AnchorPoint=Vector2.new(.5,.5)
+ -- Round 3 (Spencer 2026-11-20, brief 4): the hard Glint capsule could sit off the egg; a soft
+ -- specular inside the clip (so it never leaves the oval) drifts with the yaw instead.
+ self.spec=circle(self.sheenClip,"Spec",z+3);self.spec.BackgroundColor3=Color3.new(1,1,1)
+ Kit.node("UIGradient",self.spec,{Rotation=90,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,.45),NumberSequenceKeypoint.new(1,1)})})
+ self.specDot=circle(self.sheenClip,"SpecDot",z+4);self.specDot.BackgroundColor3=Color3.new(1,1,1)
  self.white=Kit.frame(well,"HatchFlash",nil,UDim2.new(),UDim2.fromScale(1,1));self.white.BackgroundColor3=Color3.new(1,1,1);self.white.BackgroundTransparency=1;self.white.ZIndex=z+4
  for i=1,12 do
   local holder=Kit.icon(well,"sparkle",16,"text");holder.Name="Sparkle"..i;holder.AnchorPoint=Vector2.new(.5,.5);holder.Visible=false;holder.ZIndex=z+3
@@ -129,10 +155,10 @@ function Preview.new(well,options)
  end)
  return self
 end
--- The 3D egg's own glow, shadow and glint show only once the meshes are in.
+-- The 3D egg's own glow, shadow, peek light and specular show only once the meshes are in.
 function Preview:showOverlays(on)
  for _,d in ipairs(self.bloom)do d.Visible=on end
- self.shadow.Visible=on;self.glint.Visible=on;self.crack.Visible=on;self.sheenClip.Visible=on
+ self.shadow.Visible=on;self.glow.Visible=on;self.crack.Visible=on;self.sheenClip.Visible=on
 end
 function Preview:cue(name)
  local audio=self.options.audio;if not audio or not audio.play then return end
@@ -155,9 +181,23 @@ function Preview:measure()
  self.geo={W=W,H=H,k=k,cx=W/2,cy=H/2+.05*k,ew=1.0*k,eh=1.3*k,phone=math.min(W,H)<=150}
  local g=self.geo
  for i,d in ipairs(self.bloom)do local share=d:GetAttribute("Share");d.Size=UDim2.fromOffset(g.ew*2.6*share,g.ew*2.6*share);d.Position=UDim2.fromOffset(g.cx,g.cy)end
- self.crack.Size=UDim2.fromOffset(g.ew*1.3,g.eh*.25)
- self.glint.Size=UDim2.fromOffset(g.ew*.10,g.ew*.26)
- self.sheenClip.Size=UDim2.fromOffset(math.floor(g.ew*.82),math.floor(g.eh*.86));self.sheenClip.Position=UDim2.fromOffset(math.floor(g.cx),math.floor(g.cy))
+ self.crack.Size=UDim2.fromOffset(g.ew*1.05,g.eh*.10)
+ self.glow.Size=UDim2.fromOffset(g.ew*1.5,g.eh*.42)
+ g.cw,g.ch=math.floor(g.ew*.82),math.floor(g.eh*.86)
+ self.sheenClip.Size=UDim2.fromOffset(g.cw,g.ch);self.sheenClip.Position=UDim2.fromOffset(math.floor(g.cx),math.floor(g.cy))
+ self.spec.Size=UDim2.fromOffset(g.cw*.36,g.ch*.30);self.specDot.Size=UDim2.fromOffset(g.cw*.075,g.cw*.075)
+ self:placeSpec(0,0,1)
+end
+-- The specular inside SheenClip (clip-local offsets; brief 4). drift is 2*yaw (0 = home, as at yaw 0); the
+-- dot sits up and left of the streak's centre and drifts with it.
+function Preview:placeSpec(drift,hopPx,sy)
+ local g=self.geo;local cw,ch=g.cw,g.ch
+ local s,c=math.sin(drift),math.cos(drift)
+ local x,y=cw*(.30+.05*s),ch*(.27+.015*c)
+ self.spec.Rotation=-32+6*s
+ self.spec.Size=UDim2.fromOffset(cw*.36*(2-sy),ch*.30)
+ self.spec.Position=UDim2.fromOffset(x,y);self.specDot.Position=UDim2.fromOffset(x-cw*.035,y-ch*.055)
+ self.sheenClip.Position=UDim2.fromOffset(math.floor(g.cx),math.floor(g.cy-hopPx))
 end
 function Preview:build()
  if self.built then return end
@@ -197,7 +237,7 @@ function Preview:setType(id,quiet)
   self.parts.TopShell.TextureID=t.colorMap;self.parts.BottomShell.TextureID=t.colorMap
   self.parts.Core.Color=t.core
  end
- self.crack.BackgroundColor3=t.crackLight
+ self.crack.BackgroundColor3=t.crackLight;self.glow.BackgroundColor3=t.crackLight:Lerp(t.bloom,.5)
  for _,d in ipairs(self.bloom)do d.BackgroundColor3=t.bloom end
  for i,s in ipairs(self.sparkles)do local c=t.particles[(i-1)%#t.particles+1];for _,ink in ipairs(s.inks)do ink.BackgroundColor3=c end end
  if changed and not quiet then self:cue("egg_select");self.hatchStart=nil end
@@ -226,9 +266,11 @@ function Preview:paintStatic()
  local g=self.geo
  self:pose(math.rad(-28),0,0,1,0,0,0,0,1)
  self:paintBloom(.6)
- self.crack.BackgroundTransparency=1;self.white.BackgroundTransparency=1;self.sheen.BackgroundTransparency=1
+ self.crack.BackgroundTransparency=1;self.glow.BackgroundTransparency=1;self.white.BackgroundTransparency=1;self.sheen.BackgroundTransparency=1;self.sweepStart=nil
  self.shadow.Size=UDim2.fromOffset(g.ew*1.05,g.ew*.18);self.shadow.Position=UDim2.fromOffset(g.cx,g.cy+g.eh*.5);self.shadow.BackgroundTransparency=.55
- self.glint.Position=UDim2.fromOffset(g.cx-g.ew*.24,g.cy-g.eh*.5+g.eh*.26);self.glint.BackgroundTransparency=if self.loaded then .4 else 1
+ -- Specular at home: no yaw drift, no breath, no sweep.
+ self:placeSpec(0,0,1)
+ self.spec.BackgroundTransparency=if self.loaded then 0 else 1;self.specDot.BackgroundTransparency=if self.loaded then .15 else 1
  for i,s in ipairs(self.sparkles)do
   local show=i<=2 and self.loaded
   s.holder.Visible=show
@@ -299,12 +341,15 @@ function Preview:step(dt)
  self.staticPainted=false
  dt=math.min(dt,.1);self.clock+=dt;local now=self.clock;local g=self.geo;local r=self.rhythm
  local tilt,sy,hop,lift,topUp,topTip,topFade,coreScale=0,1,0,0,0,0,0,1
+ local crackW,crackH=g.ew*1.05,g.eh*.10
  local bloom=.64+.08*math.sin(now*math.pi*2/1.6)
  if self.hatchStart then
   -- Hatch (FX doc 4): three growing beats, anticipation, pop, core swell and white flash.
   local t=now-self.hatchStart
   for i,amp in ipairs({8,11,14})do local bt=t-(i-1)*.12;if bt>0 and bt<Preview.BeatLength then tilt,sy,hop=Preview.beat(bt,amp,if i%2==0 then -1 else 1,r.hop)end end
   bloom=math.max(.3,bloom-t)
+  -- The hatch keeps its own wide crack slab (brief 5 softens only the idle peek); no halo here.
+  crackW,crackH=g.ew*1.3,g.eh*.25;self.glow.BackgroundTransparency=1;self.crack.BackgroundTransparency=1
   if t>=.4 and t<.5 then sy=.9;lift=.05;self.crack.BackgroundTransparency=0 end
   if t>=1.6 then
    -- The pop has played; if the hatch was refused the shop stays open, so settle back.
@@ -317,7 +362,10 @@ function Preview:step(dt)
    if not self.burstDone then self.burstDone=true;self:burst(now,12,true)end
   end
  else
+  -- Brief 4: one Sheen sweep each time the turn passes a multiple of 180 deg (every 9 s).
+  local half=math.floor(self.yaw/math.pi)
   self.yaw+=math.rad(20)*dt
+  if math.floor(self.yaw/math.pi)~=half then self.sweepStart=now end
   if not self.beatStart and now>=self.nextBeat then
    self.beatStart=now;self.beatAmp=6+3*math.random();self.beatSide=if math.random()<.5 then -1 else 1
    self.double=r.double and math.random()<.25
@@ -334,13 +382,18 @@ function Preview:step(dt)
    end
   end
   if now>=self.nextFlash then self.nextFlash=now+5+2*math.random();if not self.flashStart then self.flashStart=now;self:cue("egg_crack_glint")end end
+  local env=0
   if self.flashStart then
-   local fl,tr=Preview.flash(now-self.flashStart)
-   lift=fl;self.crack.BackgroundTransparency=tr
-   if tr<1 then bloom=.45 end
-   if now-self.flashStart>=.25 then self.flashStart=nil end
-  else self.crack.BackgroundTransparency=1 end
-  coreScale=1+math.floor((.05*math.sin(now*math.pi*2/1.6))*200+.5)/200
+   local ft=now-self.flashStart
+   local fl,coreTr,haloTr,e=Preview.flash(ft)
+   lift=fl;env=e;self.crack.BackgroundTransparency=coreTr;self.glow.BackgroundTransparency=haloTr
+   -- The core spreads from the middle during its attack (0.04 s behind the lift), then holds.
+   if ft-.04<.18 then crackW=g.ew*(.55+.50*(1-coreTr)/.80)end
+   bloom-=.14*env
+   if ft>=Preview.FlashLength then self.flashStart=nil end
+  else self.crack.BackgroundTransparency=1;self.glow.BackgroundTransparency=1 end
+  -- Quantised so the core MeshPart is resized only on 0.005 steps.
+  coreScale=1+math.floor((.05*math.sin(now*math.pi*2/1.6)+.08*env)*200+.5)/200
  end
  self:pose(self.yaw,tilt,hop,sy,lift,topUp,topTip,topFade,coreScale)
  -- 2D overlays follow the hop.
@@ -350,15 +403,23 @@ function Preview:step(dt)
   local list=Models.Types.hue.particles;local f=(now/6*#list)%#list;local a=math.floor(f)
   local c=list[a+1]:Lerp(list[(a+1)%#list+1],f-a);for _,d in ipairs(self.bloom)do d.BackgroundColor3=c end
  end
- self.crack.Position=UDim2.fromOffset(g.cx,g.cy+g.eh*.5-.58*g.eh-hopPx)
+ local seamY=g.cy+g.eh*.5-.58*g.eh-hopPx
+ self.crack.Size=UDim2.fromOffset(crackW,crackH);self.crack.Position=UDim2.fromOffset(g.cx,seamY);self.glow.Position=UDim2.fromOffset(g.cx,seamY)
  local shrink=1-.15*math.clamp(hop/math.max(.01,r.hop),0,1)
  self.shadow.Size=UDim2.fromOffset(g.ew*1.05*shrink,g.ew*.18*shrink);self.shadow.Position=UDim2.fromOffset(g.cx,g.cy+g.eh*.5)
  self.shadow.BackgroundTransparency=.55+.15*(1-shrink)/.15
- self.glint.Size=UDim2.fromOffset(g.ew*.10*(2-sy),g.ew*.26);self.glint.Position=UDim2.fromOffset(g.cx-g.ew*.24,g.cy-g.eh*.24-hopPx);self.glint.BackgroundTransparency=.4
- if self.type=="material"and not g.phone then
+ -- Specular: drifts twice per turn, breathes with the bloom, rides the hop, fades with the top shell.
+ self:placeSpec(2*self.yaw,hopPx,sy)
+ local breath=.85+.15*math.sin(now*math.pi*2/1.6)
+ self.spec.BackgroundTransparency=1-breath*(1-topFade);self.specDot.BackgroundTransparency=1-.85*(1-topFade)
+ if g.phone then self.sheen.BackgroundTransparency=1;self.sweepStart=nil
+ elseif self.type=="material"then
   local u=(now%4)/.8
   self.sheen.BackgroundTransparency=if u<1 then .75 else 1;self.sheen.Position=UDim2.fromScale(-.2+1.4*math.min(u,1),.5)
- else self.sheen.BackgroundTransparency=1 end
+ elseif self.sweepStart and now-self.sweepStart<.8 then
+  local u=(now-self.sweepStart)/.8;local e=if u<.5 then 2*u*u else 1-2*(1-u)*(1-u)
+  self.sheen.BackgroundTransparency=.78;self.sheen.Position=UDim2.fromScale(-.2+1.4*e,.5)
+ else self.sheen.BackgroundTransparency=1;self.sweepStart=nil end
  self:stepSparkles(now)
 end
 function Preview:setActive(on)
@@ -388,7 +449,8 @@ function Preview:retry()
 end
 function Preview.prewarm()
  Preview.loadTemplates(function()end)
- for _,id in ipairs({"toy","material","hue","feature"})do local t=Models.Types[id];if t then Warmup.shared:request({t.colorMap},function()end,0)end end
+ -- Round 3 (Spencer 2026-11-20): "stat" only warms once EggModels.Types.stat exists.
+ for _,id in ipairs({"toy","material","hue","feature","stat"})do local t=Models.Types[id];if t then Warmup.shared:request({t.colorMap},function()end,0)end end
 end
 function Preview:destroy()
  if self.destroyed then return end

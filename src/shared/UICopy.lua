@@ -498,6 +498,14 @@ local Table={
   bond={title="Bond grew",what="Hearts show how close you and {pet} are. Each new level unlocks a trick.",
    next="Keep petting, playing rounds and going on Play dates. The hearts are in Companions."},
  },
+ -- Round 3 (Spencer 2026-11-20): the confirm dialog (ConfirmDialog) for big spends and actions
+ -- that can't be undone; it replaces "press again" confirms.
+ confirm={cancel="Cancel",yes="Confirm",
+  adoptTitle="Adopt the {pet}?",adoptLine="The {pet} comes home with you for ★ {price}.",adoptYes="Adopt ★ {price}",
+  buyTitle="Buy {item}?",buyLine="It's yours to keep for ★ {price}.",buyYes="Buy ★ {price}",
+  restartTitle="Restart this round?",restartLine="The board starts over from the beginning.",restartYes="Restart",
+  quitTitle="Quit to the garden?",quitLine="This round ends now.",quitYes="Quit",
+  resetTitle="Reset the colours?",resetLine="Your pet goes back to its first colours. It's free.",resetYes="Reset"},
  -- v2 Bunny (2026-11-19, Sol): adopting the second pet on the Companions Pets page. Free at the
  -- stamp count, or a fixed Star price (never random, never Robux).
  v2={

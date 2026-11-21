@@ -25,7 +25,7 @@ return function(client,playerGui)
  -- The row: x 8 inside the free bar, at most its width less 16 (1 px slack).
  assert(physicalRow.X>=inset.Min.X+7 and physicalRow.X+row.AbsoluteSize.X<=inset.Max.X-7,"safe physical horizontal row: "..diagnostic)
  assert(physical.Y>=inset.Min.Y-1 and physical.Y+pill.AbsoluteSize.Y<=inset.Max.Y+1,"physical topbar row: "..diagnostic)
- local cardH=if inset.Height>=56 then 40 else 32
+ local cardH=require(client.NotificationRail).size(inset.Height).card
  assert(math.abs(pill.AbsoluteSize.Y-cardH)<.2 and pill.AbsoluteSize.X>=95.9 and pill.AbsoluteSize.X<=260.1,"40 (32) px ticket, 96..260 wide: "..diagnostic)
  local button,state=Kit.button(host,"DisabledBuy",{text="Buy  ★ 12",variant="primary"})
  Kit.setEnabled(button,false)

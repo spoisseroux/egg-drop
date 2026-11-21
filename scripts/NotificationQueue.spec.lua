@@ -16,7 +16,7 @@ return function(client)
  q:add(b,"award",{text="Saved",onShown=function()shown+=1 end,onDone=function()done+=1 end})
  check(#q.items==1 and shown==1,"dedupe does not duplicate presentation")
  status.data={text="Games 2/3",active=true}
- check(ids(q:step(4,fits))=="park"and status.data.text=="Games 2/3"and done==1 and first.cancelled,"its time ran out; the latest status text stays")
+ check(ids(q:step(Queue.Duration+.5,fits))=="park"and status.data.text=="Games 2/3"and done==1 and first.cancelled,"its time ran out; the latest status text stays")
  local deferred=q:add(a,"tip",{text="too long",onShown=function()error("deferred counted as seen")end})
  q:step(9,fits);check(not deferred.shown and deferred.age==0,"a line that cannot be drawn waits without consuming its time")
  local second=q:add(b,"next",{text="Next",paused=true})

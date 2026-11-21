@@ -15,7 +15,6 @@ local K=require(Shared.StatEggCatalog)
 local Stats=require(Shared.StatCatalog)
 local UICopy=require(Shared.UICopy)
 local Kit=require(script.Parent.DeckKit)
-local SnackModel=require(script.Parent.SnackModel)
 local Stage=require(script.Parent.HatchItemStage)
 local Pose=require(script.Parent.HatchDisplayPose)
 local Rarity=require(script.Parent.HatchRarityCue)
@@ -35,48 +34,44 @@ function Reveal.copy(receipt)
 		boost=UICopy.get("hatch.stat.reveal.boost",{mult=size.mult,count=size.xp})}
 end
 function Reveal.tier(receipt)return Rarity.tier("stat",receipt)end
+-- The six stat colours in StatCatalog.Order (the roulette and the Feast's orbit stones).
+function Reveal.stoneRow()
+	local out={}
+	for _,id in ipairs(Stats.Order)do table.insert(out,Stats.ById[id].color)end
+	return out
+end
 
--- A scene for the stage: the 2D Stat Egg, then the 3D snack. The stage borrows it like the
--- hatch's native scene (borrow / release / layout / setSpin) and this host renders it from
--- HatchDisplayPose on the stage's clock.
-local function snackScene(receipt)
-	local root=Instance.new("Frame");root.Name="StatSnackScene";root.BackgroundTransparency=1;root.Size=UDim2.fromScale(1,1)
-	local a=Stage.Art.statEgg
-	local egg=Instance.new("ImageLabel");egg.Name="StatEgg";egg.BackgroundTransparency=1;egg.Image=Stage.Art[a[1]]
-	egg.ImageRectOffset=Vector2.new(a[2],a[3]);egg.ImageRectSize=Vector2.new(a[4],a[5]);egg.AnchorPoint=Vector2.new(.5,1)
-	egg.Position=UDim2.fromScale(.5,.8);egg.Size=UDim2.fromScale(.46,.575);egg.ZIndex=root.ZIndex;egg.Parent=root
-	-- The crack: a zigzag of four ink strokes drawn left to right as it grows.
-	local cracks={}
-	for i=1,4 do
-		local bar=Instance.new("Frame");bar.Name="Crack"..i;bar.BackgroundColor3=Color3.fromHex("#15143A");bar.BorderSizePixel=0
-		bar.AnchorPoint=Vector2.new(.5,.5);bar.Position=UDim2.fromScale(.2+(i-.5)*.15,.42);bar.Size=UDim2.fromScale(.17,.022)
-		bar.Rotation=if i%2==0 then -32 else 32;bar.Visible=false;bar.Parent=egg;cracks[i]=bar
+-- Round 3 (Spencer: "I want the 3D model like the other eggs, but more exciting"): the scene is
+-- the same HatchDisplayScene every item hatch uses (kind "stat": the Stat Egg's own shell from
+-- EggModels.Types.stat, split halves, one camera and light), with the 3D Stat Snack as its hero
+-- (HatchDisplayItem). It lives in a hidden home frame until the stage borrows it.
+local function snackScene(receipt,reduced,home)
+	local Scene=require(script.Parent.HatchDisplayScene)
+	local owned=home==nil
+	if owned then
+		home=Instance.new("Frame");home.Name="StatSceneHome";home.BackgroundTransparency=1;home.Size=UDim2.fromOffset(844,390);home.Visible=false
 	end
-	-- At 80% of the seat, so a three-layer Feast stands inside the well.
-	local holder=Instance.new("Frame");holder.Name="SnackHolder";holder.BackgroundTransparency=1;holder.AnchorPoint=Vector2.new(.5,.5)
-	holder.Position=UDim2.fromScale(.5,.5);holder.Size=UDim2.fromScale(.8,.8);holder.Parent=root
-	local scale=Instance.new("UIScale");scale.Parent=holder
-	local preview=SnackModel.viewport(holder,receipt.size,receipt.stat,{Size=UDim2.fromScale(1,1),Position=UDim2.fromScale(0,-.04),ImageTransparency=1})
-	local scene={ready=true,root=root,preview=preview}
-	function scene:borrow(seat)root.Parent=seat;return root end
-	function scene:release(token)if token==root then root.Parent=nil end end
-	function scene:setBare()end
-	function scene:setVeil()end
-	function scene:layout()end
-	function scene:setSpin(radians)self.spin=radians;return radians~=0 end
-	function scene:render(sample)
-		local shell=sample.shellAlpha or 0
-		egg.Visible=shell>.01
-		egg.ImageTransparency=1-shell
-		egg.Rotation=math.deg(sample.rock or 0)
-		egg.Size=UDim2.fromScale(.46*(sample.eggSX or 1)*(.4+.6*(sample.shellScale or 1)),.575*(sample.eggSY or 1)*(.4+.6*(sample.shellScale or 1)))
-		egg.Position=UDim2.fromScale(.5,.8-.05*(sample.eggLift or 0))
-		for i,bar in ipairs(cracks)do bar.Visible=(sample.crack or 0)>=(i-1)/4+.01 end
-		preview.viewport.ImageTransparency=1-(sample.heroAlpha or 0)
-		scale.Scale=math.max(.01,sample.heroScale or 1)
-	end
-	function scene:destroy()self.destroyed=true;preview.destroy();root:Destroy()end
+	local scene=Scene.new(home,{kind="stat",result=receipt,reduced=reduced==true})
+	local destroy=scene.destroy
+	function scene:destroy()destroy(self);if owned then home:Destroy()end end
 	return scene
+end
+-- Pure (Fable brief 1.3): the snack's pop after the burst, `u` seconds past it: 0.55 at +0.12,
+-- Back Out to the tier's peak at +0.34, settled to 1 by +0.50; and one extra yaw turn over 0.60 s
+-- (Expo Out) from +0.12. Returns heroScale, extra yaw (radians); nil before +0.12.
+Reveal.Peak={Common=1.08,Uncommon=1.12,Rare=1.18,Neutral=1.08}
+function Reveal.pop(u,tier)
+	if u<.12 then return nil,0 end
+	local peak=Reveal.Peak[tier]or 1.08
+	local scale
+	if u<.34 then
+		local x=(u-.12)/.22;local c=2.2;local v=x-1
+		scale=.55+(peak-.55)*(1+(c+1)*v*v*v+c*v*v)
+	elseif u<.50 then
+		local x=(u-.34)/.16;scale=peak+(1-peak)*x*x*(3-2*x)
+	else scale=1 end
+	local turn=math.clamp((u-.12)/.60,0,1)
+	return scale,math.pi*2*(if turn>=1 then 1 else 1-2^(-10*turn))
 end
 
 Reveal.scene=snackScene -- (scripts/RevealCaptureFixture.lua draws the Stat Egg with it)
@@ -106,19 +101,27 @@ function Reveal:show(receipt,info,callbacks)
 	self.open=true;self.gui.Enabled=true
 	local reduced=self:reduced()
 	local fresh=true
-	self.scene=snackScene(receipt)
+	self.home=self.home or(function()
+		local f=Instance.new("Frame");f.Name="StatSceneHome";f.BackgroundTransparency=1;f.Size=UDim2.fromScale(1,1);f.Visible=false;f.Parent=self.gui
+		return f
+	end)()
+	self.scene=snackScene(receipt,reduced,self.home)
 	self.age=0;self.reducedStart=reduced
 	local T=Rarity.timing(tier,"stat",reduced)
 	self.timing=T
 	self.cue=Rarity.new("stat",receipt,T.ready,reduced)
 	self.owner={}
 	local stat=Stats.ById[receipt.stat]
-	local stage=Stage.show(self.host,{scene=self.scene,kind="stat",tier=tier,result=receipt,cover=false,zIndex=20,lid=not handover,
+	local stage=Stage.show(self.host,{scene=self.scene,kind="stat",tier=tier,result=receipt,cover=false,fullScreen=true,zIndex=20,lid=not handover,
 		instant=not fresh,reduced=function()return self.reducedStart end,owns=function()return self.open end,
 		name=function()return words.name end,effect=function()return words.boost end,
 		description=function()return info.pill or ""end,
 		sticker=function()return Stage.bannerText(tier,"stat")end,
 		stoneColors=function()return {stat and stat.color or Color3.new(1,1,1)}end,
+		-- Round 3 (Fable brief 1.3): the won stat's colour from the burst; the six stones before it.
+		accent=function()return stat and stat.color or nil end,
+		orbitColors=function()return Reveal.stoneRow()end,roulette=function()return Reveal.stoneRow()end,
+		ready=function()return self.scene~=nil and self.scene.ready==true end,
 		odds=info.odds,wonId=receipt.size,pity=info.pity,again=info.again and function()
 			local state=info.again()
 			if not state then return nil end
@@ -159,14 +162,21 @@ end
 -- The hatch clock (one clock, sampled every frame; the stage's lid holds it at zero).
 function Reveal:step(dt)
 	local stage=self.stage;if not stage or stage.destroyed or not self.open then return end
-	if not stage:holdsClock()then self.age+=math.clamp(dt,0,.1)end
+	-- The clock (and its sounds) wait for the 3D egg (Hatch another and Reduced Motion have no
+	-- lid to hold it); the scene times itself out at 3.5 s and then shows its settled frame.
+	local ready=self.scene.ready==true
+	if ready and not stage:holdsClock()then self.age+=math.clamp(dt,0,.1)end
 	local reduced=self.reducedStart
 	local T=self.timing
 	if self.age>T.duration then self.age=T.duration end
 	local sample=Pose.sample(self.age,"stat",reduced,self.tier)
+	if not reduced then
+		local scale,turn=Reveal.pop(self.age-T.burst,self.tier)
+		if scale then sample.heroScale=scale;sample.toyYaw=(sample.toyYaw or 0)+turn end
+	end
 	self.scene:render(sample)
-	if self.scene.preview and not reduced and(self.scene.spin or 0)~=0 then self.scene.preview.step(dt)end
 	stage:updateExternal(self.age,sample)
+	if not ready then return end
 	if self.cue and self.audio then
 		for _,event in ipairs(self.cue:due(self.age,true,true))do
 			pcall(function()self.audio:play(event.cue,event.speed,event.gain,self.owner)end)

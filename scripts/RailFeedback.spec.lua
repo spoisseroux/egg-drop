@@ -17,7 +17,7 @@ return function(client)
   assert(#q.items==2 and q.items[1].key~=q.items[2].key and q.items[1].owner==owner)
   local first=q:step(0,function()return true end)[1];assert(first.data.text=="+ Magnet · From a star ball"and first.data.itemId=="magnet")
   -- v2 tickets: each grant runs its own clock; the second is admitted 0.4 s after the first.
-  local later=q:step(4,function()return true end)
+  local later=q:step(6,function()return true end) -- round 3: lines last 5 s
   assert(#later==1 and later[1]~=first and first.cancelled and #q.items==1)
   if not Kit.reduced()then assert(c.chip:FindFirstChild("BoingScale"),"native grant did not exercise belt-chip boing")end
  end)
