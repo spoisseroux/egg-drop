@@ -4,7 +4,7 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 ## Now working on
 
-- [x] **v2 live (2026-11-20, Opus).** Published runtime aeae2d9 to the live place after Spencer's beta pass; translations synced (226/5); test content stripped; branch fast-forwarded to main. Next: Spencer decides on a server restart so running servers pick up v2; watch the first live saves (stats, pouch, Bunny adopt) in the logs.
+- [x] **v2 live (2026-11-20, Opus).** Published runtime aeae2d9 to the live place after Spencer's beta pass; translations synced (226/5); test content stripped; branch fast-forwarded to main. Servers restarted (Open Cloud 200 OK). Next: watch the first live saves (stats, pouch, Bunny adopt) in the logs.
 
 - [x] **Spencer's round 3 follow-ups (2026-11-20, Opus).** The item hatch card's × stores and goes back to Hatch eggs (HueEggView backAfterStore); Hatch another stays on screen, disabled, while the card leaves (HatchItemStage paintAgain/handover); a hatch survives one long frame (phone mesh loading) instead of ending silent, and a skip before the burst still rings the tier sting (HatchCinematic); phone Pocket menu sheet is only as tall as its tiles (Hub.phoneHeight, 94% tiles), centred, rounded bottom on screen. Specs green: MachineHub 14, CompactPhone 12, HatchItemStage 17, HatchRarityAudio 4, HueEggView, HatchFlowE2E 7.
 
