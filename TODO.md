@@ -4,7 +4,7 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 ## v3 (proposed 2026-11-20, awaiting Fable's v3 scope doc and Spencer's approval; nothing built)
 
-Recommended order: bug fixes, then level rewards + gated items + medals, then Garden Dash on the new garden path. Capes and the other two competitions can follow as v3.1. Source plan: `V2-SCOPE-2026-11-19.md` (sections 2.4, 4, 8, 11). Fable is writing `V3-SCOPE-2026-11-21.md`. The second Pet Park already ships (ParkLayout sites arrival + grove), so it is not on this list.
+Recommended order: bug fixes, then level rewards + gated items + medals, then Garden Dash on the new garden path. Capes and the other two competitions can follow as v3.1. Source plan: `V2-SCOPE-2026-11-19.md` (sections 2.4, 4, 8, 11). Scope: `V3-SCOPE-2026-11-21.md` (Spencer's decisions 2026-11-21 at its top: two publishes, Levels matter then Garden Dash; race bands by Speed+Energy+Jump; 2 Stars a race, 10 a day; pals count; Bond folds into Heart). The second Pet Park already ships (ParkLayout sites arrival + grove), so it is not on this list.
 
 **1. Bug fixes and v2 follow-ups (ongoing)**
 - [ ] Watch the first live v2 saves (stats, snack pouch, Bunny adopt) in the logs and fix what players hit.
@@ -27,7 +27,7 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 - [ ] Treasure Hunt: most garden finds in 60 s (Smarts, Speed). v3.1, needs garden finds.
 
 **4. The 3D environment**
-- [ ] Garden landscape swap: the approved greybox landscape replaces the flat lawn (world v7 / world_path scripts in progress; path native collision still unresolved). Garden Dash runs on this path.
+- [ ] More to do in the garden (Spencer 2026-11-21: no landscape swap, "just adding more stuff / interactivity"): Fable to scope a list of new interactive things in the existing v7 garden. The grove path reroute and its collision problem are parked.
 - [ ] Garden finds: server-placed, rate-limited sparkle spots for Smarts XP; Treasure Hunt's props. (slice S7)
 - [ ] Training courses: stepping course and chime game for active Jump and Speed training.
 
