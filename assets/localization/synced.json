@@ -302,11 +302,6 @@
    "context": "",
    "example": "Catalogue BallThemes (names)"
   },
-  "catalog.BallThemes.ById.pea_soup.names.2": {
-   "source": "Sprout",
-   "context": "",
-   "example": "Catalogue BallThemes (names)"
-  },
   "catalog.BallThemes.ById.pea_soup.names.3": {
    "source": "Leaf",
    "context": "",
@@ -717,8 +712,8 @@
    "context": "",
    "example": "Catalogue PetCatalog (description)"
   },
-  "catalog.PetCatalog.byId.blip.description": {
-   "source": "Fell off a toy shelf on a faraway moon. Likes it here.",
+  "catalog.PetCatalog.active.2.description": {
+   "source": "Shy for a second, then bouncy for the rest of the day.",
    "context": "",
    "example": "Catalogue PetCatalog (description)"
   },
@@ -741,11 +736,6 @@
    "source": "Snowflake",
    "context": "",
    "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.1.name"
-  },
-  "catalog.PetCharmCatalog.ById.heart.name": {
-   "source": "Heart",
-   "context": "",
-   "example": "Catalogue PetCharmCatalog (name); also catalog.BookCatalog.Pages.charms.items.4.name"
   },
   "catalog.PetCharmCatalog.ById.ring.name": {
    "source": "Ring",
@@ -1041,11 +1031,6 @@
    "source": "Next and Then trade places.",
    "context": "",
    "example": "Catalogue RoundItems (effect)"
-  },
-  "catalog.RoundItems.ById.swap.name": {
-   "source": "Swap",
-   "context": "",
-   "example": "Catalogue RoundItems (name)"
   },
   "catalog.RoundItems.ById.swap.short": {
    "source": "Next and Then swap.",
@@ -1480,7 +1465,7 @@
   "ui.book.hint.back": {
    "source": "Back",
    "context": "",
-   "example": "Collection book; also ui.input.action.back, ui.phoneDeck.b.back, ui.r1.reveal.exit"
+   "example": "Collection book; also ui.input.action.back, ui.phoneDeck.b.back, ui.r1.reveal.exit, ui.stats.hint.back"
   },
   "ui.book.hint.claim": {
    "source": "Claim",
@@ -1510,7 +1495,7 @@
   "ui.book.pending": {
    "source": "Saving…",
    "context": "",
-   "example": "Collection book; also ui.onboarding.welcome.saving, ui.results.saved.pending"
+   "example": "Collection book; also ui.names.saving, ui.onboarding.welcome.saving, ui.results.saved.pending"
   },
   "ui.book.promise": {
    "source": "Every page pays once. Nothing to buy.",
@@ -1675,7 +1660,7 @@
   "ui.coach.companions.title": {
    "source": "Companions",
    "context": "",
-   "example": "First-round coaching; also ui.hub.tile.companions.name, ui.r3.help.companions.title, ui.r5.station.Journal.name"
+   "example": "First-round coaching; also ui.hub.tile.companions.name, ui.names.eyebrow, ui.r3.help.companions.title, ui.r5.station.Journal.name"
   },
   "ui.coach.effortPay": {
    "source": "Good effort",
@@ -1770,7 +1755,7 @@
   "ui.coach.next": {
    "source": "Next",
    "context": "",
-   "example": "First-round coaching"
+   "example": "First-round coaching; also ui.names.egg.nextValue"
   },
   "ui.coach.park.line": {
    "source": "{pet} plays here. Three play dates a day pay +4 ★.",
@@ -1846,6 +1831,91 @@
    "source": "Nothing yet",
    "context": "",
    "example": "Companions screen"
+  },
+  "ui.confirm.adoptLine": {
+   "source": "The {pet} comes home with you for ★ {price}.",
+   "context": "",
+   "example": "Menu text; e.g. The Bear comes home with you for ★ {price}."
+  },
+  "ui.confirm.adoptTitle": {
+   "source": "Adopt the {pet}?",
+   "context": "",
+   "example": "Menu text; e.g. Adopt the Bear?"
+  },
+  "ui.confirm.adoptYes": {
+   "source": "Adopt ★ {price}",
+   "context": "",
+   "example": "Menu text; e.g. Adopt ★ {price}"
+  },
+  "ui.confirm.buyLine": {
+   "source": "It's yours to keep for ★ {price}.",
+   "context": "",
+   "example": "Menu text; e.g. It's yours to keep for ★ {price}."
+  },
+  "ui.confirm.buyTitle": {
+   "source": "Buy {item}?",
+   "context": "",
+   "example": "Menu text; e.g. Buy Squeaky Bone?"
+  },
+  "ui.confirm.buyYes": {
+   "source": "Buy ★ {price}",
+   "context": "",
+   "example": "Menu text; e.g. Buy ★ {price}"
+  },
+  "ui.confirm.cancel": {
+   "source": "Cancel",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.quitLine": {
+   "source": "This round ends now.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.quitTitle": {
+   "source": "Quit to the garden?",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.quitYes": {
+   "source": "Quit",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.resetLine": {
+   "source": "Your pet goes back to its first colours. It's free.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.resetTitle": {
+   "source": "Reset the colours?",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.resetYes": {
+   "source": "Reset",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.restartLine": {
+   "source": "The board starts over from the beginning.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.restartTitle": {
+   "source": "Restart this round?",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.restartYes": {
+   "source": "Restart",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.confirm.yes": {
+   "source": "Confirm",
+   "context": "",
+   "example": "Menu text"
   },
   "ui.e2.arrived.line": {
    "source": "{pet} came to stay in your garden.",
@@ -1989,6 +2059,26 @@
   },
   "ui.hatch.egg.material.per": {
    "source": "1 material per egg",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.stat.description": {
+   "source": "Hatches one Stat Snack. Feed it to your pet: the next XP it earns in that stat counts extra.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.stat.line": {
+   "source": "A snack that speeds up training",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.stat.name": {
+   "source": "Stat Egg",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.egg.stat.per": {
+   "source": "1 snack per egg",
    "context": "",
    "example": "Hatch eggs screen"
   },
@@ -2140,7 +2230,7 @@
   "ui.hatch.look.reason.PolicyChanged": {
    "source": "Your odds just changed. Check them and tap again.",
    "context": "",
-   "example": "Hatch eggs screen; also ui.hatch.look.reason.PoolChanged"
+   "example": "Hatch eggs screen; also ui.hatch.look.reason.PoolChanged, ui.hatch.stat.reason.PoolChanged"
   },
   "ui.hatch.look.restrictedCharm": {
    "source": "Charm in {count} eggs",
@@ -2195,7 +2285,7 @@
   "ui.hatch.next.done": {
    "source": "All collected",
    "context": "",
-   "example": "Hatch eggs screen"
+   "example": "Hatch eggs screen; also ui.hatch.result.allFound"
   },
   "ui.hatch.next.label": {
    "source": "Next item",
@@ -2217,6 +2307,76 @@
    "context": "",
    "example": "Hatch eggs screen"
   },
+  "ui.hatch.result.again": {
+   "source": "Hatch another",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.result.againPrice": {
+   "source": "Hatch another  ★ {count}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Hatch another  ★ 3"
+  },
+  "ui.hatch.result.allToys": {
+   "source": "Every toy found",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.result.hatching": {
+   "source": "Hatching…",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.names.egg.hatching"
+  },
+  "ui.hatch.result.inThisEgg": {
+   "source": "IN THIS EGG",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.result.more": {
+   "source": "+{count} more",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. +3 more"
+  },
+  "ui.hatch.result.need": {
+   "source": "{count} more Stars needed",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. 3 more Stars needed; also ui.qa.shortfall"
+  },
+  "ui.hatch.result.pouchFull": {
+   "source": "Pouch is full. Feed a snack first.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.result.soldOut": {
+   "source": "Back tomorrow",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.hatch.stat.soldOut"
+  },
+  "ui.hatch.result.stamp.rare": {
+   "source": "RARE!",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.result.stockNest": {
+   "source": "{count} left in today's nest",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. 3 left in today's nest"
+  },
+  "ui.hatch.result.stockToys": {
+   "source": "{count} toys left to find",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. 3 toys left to find"
+  },
+  "ui.hatch.result.tapToSkip": {
+   "source": "Tap to skip",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.result.youGot": {
+   "source": "YELLOW = YOU GOT",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
   "ui.hatch.reveal.banner": {
    "source": "{tier} {kind}",
    "context": "",
@@ -2225,7 +2385,7 @@
   "ui.hatch.reveal.close": {
    "source": "Close",
    "context": "",
-   "example": "Hatch eggs screen; also ui.inspect.close, ui.r3.help.close"
+   "example": "Hatch eggs screen; also ui.inspect.close, ui.names.egg.close, ui.r3.help.close, ui.stats.snacks.close"
   },
   "ui.hatch.reveal.describe.charm.dot": {
    "source": "A tiny snowflake that never melts.",
@@ -2417,6 +2577,16 @@
    "context": "",
    "example": "Hatch eggs screen"
   },
+  "ui.hatch.reveal.kind.name": {
+   "source": "NAME PIECE",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.reveal.kind.stat": {
+   "source": "STAT SNACK",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.hatch.stat.reveal.kind"
+  },
   "ui.hatch.reveal.kind.toy": {
    "source": "TOY",
    "context": "",
@@ -2436,6 +2606,186 @@
    "source": "UNCOMMON",
    "context": "",
    "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.allMaxed": {
+   "source": "Every stat is at 99",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.cycle": {
+   "source": "Sizes follow a ten-egg cycle: 6 Nibble, 3 Snack, 1 Feast.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.each": {
+   "source": "Each stat",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.eachLabel": {
+   "source": "One of {count} stats, {each} each: {names}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. One of 3 stats, {each} each: {names}"
+  },
+  "ui.hatch.stat.free": {
+   "source": "Open free egg ({count})",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Open free egg (3)"
+  },
+  "ui.hatch.stat.freeLine": {
+   "source": "{count} free eggs to open",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. 3 free eggs to open"
+  },
+  "ui.hatch.stat.hatch": {
+   "source": "★ Hatch {count}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. ★ Hatch 3"
+  },
+  "ui.hatch.stat.next": {
+   "source": "Next: {stat} {size}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. Next: {stat} {size}"
+  },
+  "ui.hatch.stat.noPet": {
+   "source": "Hatch a pet first",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.notReady": {
+   "source": "Stat Eggs are not ready yet.",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.hatch.stat.reason.Disabled"
+  },
+  "ui.hatch.stat.pity": {
+   "source": "A Feast within {count} eggs",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. A Feast within 3 eggs"
+  },
+  "ui.hatch.stat.pityOne": {
+   "source": "Next egg: a Feast",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.pityRule": {
+   "source": "If 7 eggs pass without a Feast, the 8th is a Feast.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.pouchFull": {
+   "source": "Pouch full · feed a snack",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.promise.fixed": {
+   "source": "No surprises. Your next snack is shown above.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.promise.random": {
+   "source": "The odds are on the label. A Feast within 8 eggs.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.AllMaxed": {
+   "source": "Every stat is at 99.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.Busy": {
+   "source": "Finishing your last save…",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.ClockRollback": {
+   "source": "One moment, then try again.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.ExpiredDay": {
+   "source": "A new day just started. Tap again.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.NeedStars": {
+   "source": "You need more Stars.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.NoFreeEgg": {
+   "source": "No free egg to open.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.PetNotOut": {
+   "source": "Bring your pet out first.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.PouchFull": {
+   "source": "Your pouch is full. Feed a snack first.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.Retrying": {
+   "source": "Still saving… your egg will show here.",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.hatch.stat.reason.Timeout"
+  },
+  "ui.hatch.stat.reason.SoldOut": {
+   "source": "Today's nest is empty. Back tomorrow.",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reason.Throttled": {
+   "source": "One moment…",
+   "context": "",
+   "example": "Hatch eggs screen; also ui.stats.snacks.reason.Busy"
+  },
+  "ui.hatch.stat.reveal.boost": {
+   "source": "{mult}x for your next {count} XP",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. {mult}x for your next 3 XP; also ui.stats.snacks.card"
+  },
+  "ui.hatch.stat.reveal.feed": {
+   "source": "Feed now",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reveal.keep": {
+   "source": "Keep",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reveal.kept": {
+   "source": "In your pouch",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.reveal.name": {
+   "source": "{stat} {size}",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. {stat} {size}; also ui.stats.snacks.name"
+  },
+  "ui.hatch.stat.size.feast": {
+   "source": "Feast · 3x 120 XP",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.size.nibble": {
+   "source": "Nibble · 2x 50 XP",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.size.snack": {
+   "source": "Snack · 2x 120 XP",
+   "context": "",
+   "example": "Hatch eggs screen"
+  },
+  "ui.hatch.stat.today": {
+   "source": "{count} of {total} left in today's nest",
+   "context": "",
+   "example": "Hatch eggs screen; e.g. 3 of 12 left in today's nest"
   },
   "ui.hub.chip.book": {
    "source": "{percent}% found",
@@ -2485,7 +2835,7 @@
   "ui.hub.tile.book.short": {
    "source": "Book",
    "context": "",
-   "example": "Pocket menu (machine hub)"
+   "example": "Pocket menu (machine hub); also ui.names.tab.book"
   },
   "ui.hub.tile.companions.line": {
    "source": "Pets, wardrobe and customize",
@@ -2530,7 +2880,7 @@
   "ui.input.action.browse": {
    "source": "Browse",
    "context": "",
-   "example": "Menu text"
+   "example": "Menu text; also ui.stats.hint.browse"
   },
   "ui.input.action.confirm": {
    "source": "Pick",
@@ -2567,6 +2917,11 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.inspect.compare": {
+   "source": "Compare",
+   "context": "",
+   "example": "Menu text"
+  },
   "ui.inspect.empty": {
    "source": "Empty",
    "context": "",
@@ -2584,6 +2939,16 @@
   },
   "ui.inspect.hidden": {
    "source": "Hidden",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.menuColours.classic": {
+   "source": "Menu colours: Classic Shell",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.menuColours.deck": {
+   "source": "Menu colours: Match my deck",
    "context": "",
    "example": "Menu text"
   },
@@ -2637,10 +3002,35 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.inspect.statsNone": {
+   "source": "No stats to show yet.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.statsPrivate": {
+   "source": "Levels only. XP, Stars and history stay private.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.tab.outfit": {
+   "source": "Outfit",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.inspect.tab.stats": {
+   "source": "Stats",
+   "context": "",
+   "example": "Menu text; also ui.names.tab.stat, ui.stats.open, ui.stats.results.label, ui.stats.snacks.back"
+  },
   "ui.inspect.wait": {
    "source": "In a moment",
    "context": "",
    "example": "Menu text"
+  },
+  "ui.inspect.you": {
+   "source": "You {count}",
+   "context": "",
+   "example": "Menu text; e.g. You 3"
   },
   "ui.items.note.empty": {
    "source": "You have no items",
@@ -2666,6 +3056,291 @@
    "source": "Round paused",
    "context": "",
    "example": "Pause menu"
+  },
+  "ui.names.clear": {
+   "source": "Clear",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.egg.again": {
+   "source": "Hatch another · {price}",
+   "context": "",
+   "example": "Menu text; e.g. Hatch another · {price}"
+  },
+  "ui.names.egg.all": {
+   "source": "All name pieces collected",
+   "context": "",
+   "example": "Menu text; also ui.names.reason.AllOwned"
+  },
+  "ui.names.egg.allShort": {
+   "source": "All pieces collected",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.egg.buy": {
+   "source": "Hatch for {price} Stars",
+   "context": "",
+   "example": "Menu text; e.g. Hatch for {price} Stars"
+  },
+  "ui.names.egg.each": {
+   "source": "Each piece left: 1 in {count}, {each}",
+   "context": "",
+   "example": "Menu text; e.g. Each piece left: 1 in 3, {each}"
+  },
+  "ui.names.egg.fixedLine": {
+   "source": "No surprises. Your next piece is shown above.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.egg.key": {
+   "source": "Names Egg · {price} Stars",
+   "context": "",
+   "example": "Menu text; e.g. Names Egg · {price} Stars"
+  },
+  "ui.names.egg.left": {
+   "source": "{count} pieces left to find",
+   "context": "",
+   "example": "Menu text; e.g. 3 pieces left to find"
+  },
+  "ui.names.egg.line": {
+   "source": "One new name piece every time. Never a duplicate.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.egg.next": {
+   "source": "Next: {piece}",
+   "context": "",
+   "example": "Menu text; e.g. Next: {piece}"
+  },
+  "ui.names.egg.notReady": {
+   "source": "The Names Egg is not ready yet.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.egg.order": {
+   "source": "Pieces come in a fixed order, shown before you buy.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.egg.per": {
+   "source": "1 name piece per egg",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.egg.randomLine": {
+   "source": "Every piece still to find is equally likely.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.egg.retry": {
+   "source": "Still saving · tap to check",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.egg.title": {
+   "source": "Names Egg",
+   "context": "",
+   "example": "Menu text; also ui.names.tab.egg"
+  },
+  "ui.names.footer.account": {
+   "source": "A piece you unlock is yours for every pet.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.footer.free": {
+   "source": "Renaming is free, any time.",
+   "context": "",
+   "example": "Menu text; also ui.names.reveal.yours"
+  },
+  "ui.names.hint.anyLevel": {
+   "source": "Reach level {level} in any stat to unlock it.",
+   "context": "",
+   "example": "Menu text; e.g. Reach level {level} in any stat to unlock it."
+  },
+  "ui.names.hint.book": {
+   "source": "Claim {count} collection book rewards to unlock it.",
+   "context": "",
+   "example": "Menu text; e.g. Claim 3 collection book rewards to unlock it."
+  },
+  "ui.names.hint.egg": {
+   "source": "This one hatches from the Names Egg.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.hint.stat": {
+   "source": "Reach {stat} {level} on any pet to unlock it.",
+   "context": "",
+   "example": "Menu text; e.g. Reach {stat} {level} on any pet to unlock it."
+  },
+  "ui.names.hint.total": {
+   "source": "Reach a total level of {count} on one pet to unlock it.",
+   "context": "",
+   "example": "Menu text; e.g. Reach a total level of 3 on one pet to unlock it."
+  },
+  "ui.names.lock.anyLevel": {
+   "source": "ANY STAT {level}",
+   "context": "",
+   "example": "Menu text; e.g. ANY STAT {level}"
+  },
+  "ui.names.lock.book": {
+   "source": "BOOK {count}",
+   "context": "",
+   "example": "Menu text; e.g. BOOK 3"
+  },
+  "ui.names.lock.egg": {
+   "source": "NAMES EGG",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.lock.stat": {
+   "source": "{stat} {level}",
+   "context": "",
+   "example": "Menu text; e.g. {stat} {level}"
+  },
+  "ui.names.lock.total": {
+   "source": "TOTAL {count}",
+   "context": "",
+   "example": "Menu text; e.g. TOTAL 3"
+  },
+  "ui.names.open": {
+   "source": "Name",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reason.Busy": {
+   "source": "One moment, then try again",
+   "context": "",
+   "example": "Menu text; also ui.names.reason.Throttled"
+  },
+  "ui.names.reason.NeedStars": {
+   "source": "Not enough Stars yet",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reason.NotOwned": {
+   "source": "Unlock that piece first",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reason.PoolChanged": {
+   "source": "The egg just changed. Check it and tap again.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reason.Retrying": {
+   "source": "Still saving. Try again in a moment.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reason.SamePiece": {
+   "source": "Pick two different pieces",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reason.Timeout": {
+   "source": "No answer yet. Try again.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reason.default": {
+   "source": "Couldn't save. Try again.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reveal.done": {
+   "source": "Done",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reveal.line": {
+   "source": "Yours for every pet",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reveal.sticker": {
+   "source": "NEW NAME PIECE",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.reveal.use": {
+   "source": "Use it",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.row": {
+   "source": "Pick name pieces for your pet",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.rowUnnamed": {
+   "source": "Not named yet",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.save": {
+   "source": "Save name",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.saved": {
+   "source": "Name saved",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.shows.own": {
+   "source": "Each pet has its own name.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.shows.title": {
+   "source": "Shows",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.shows.where": {
+   "source": "When you pet it\nOn its card and stats",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.slots.empty": {
+   "source": "Pick a piece",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.slots.hint": {
+   "source": "One piece or two. No typing, ever.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.slots.optional": {
+   "source": "Optional",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.swap": {
+   "source": "Swap",
+   "context": "",
+   "example": "Menu text; also catalog.RoundItems.ById.swap.name"
+  },
+  "ui.names.tab.all": {
+   "source": "All",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.tab.starter": {
+   "source": "Starter",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.names.title": {
+   "source": "Name your {pet}",
+   "context": "",
+   "example": "Menu text; e.g. Name your Bear"
+  },
+  "ui.names.unlocked": {
+   "source": "New name piece: {piece}",
+   "context": "",
+   "example": "Menu text; e.g. New name piece: {piece}"
   },
   "ui.notice.bond.next": {
    "source": "Keep petting, playing rounds and going on Play dates. The hearts are in Companions.",
@@ -3087,11 +3762,6 @@
    "context": "",
    "example": "Menu text"
   },
-  "ui.qa.shortfall": {
-   "source": "{count} more Stars needed",
-   "context": "",
-   "example": "Menu text; e.g. 3 more Stars needed"
-  },
   "ui.qa.shortfallOne": {
    "source": "{count} more Star needed",
    "context": "",
@@ -3455,7 +4125,7 @@
   "ui.r4.customize.finish.jellyCount": {
    "source": "{count}/{total}",
    "context": "",
-   "example": "Menu text; e.g. 3/12; also ui.stampChip.open"
+   "example": "Menu text; e.g. 3/12; also ui.stampChip.open, ui.stats.snacks.count"
   },
   "ui.r4.customize.finish.kept": {
    "source": "Kept: {finish}",
@@ -3634,6 +4304,11 @@
   },
   "ui.r4.hue.reset": {
    "source": "Reset colour",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.r4.hue.white": {
+   "source": "White",
    "context": "",
    "example": "Menu text"
   },
@@ -4022,6 +4697,326 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.stats.bonus": {
+   "source": "BONUS",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.bonusLeft": {
+   "source": "2x bonus: {count} XP left today",
+   "context": "",
+   "example": "Menu text; e.g. 2x bonus: 3 XP left today"
+  },
+  "ui.stats.bonusUsed": {
+   "source": "Today's 2x bonus is used. Back tomorrow.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.boost": {
+   "source": "{mult}x · {count} XP left",
+   "context": "",
+   "example": "Menu text; e.g. {mult}x · 3 XP left"
+  },
+  "ui.stats.boostMore": {
+   "source": "{mult}x · {count} XP left · +{more}",
+   "context": "",
+   "example": "Menu text; e.g. {mult}x · 3 XP left · +{more}"
+  },
+  "ui.stats.chip": {
+   "source": "Total {count}",
+   "context": "",
+   "example": "Menu text; e.g. Total 3"
+  },
+  "ui.stats.footer": {
+   "source": "Levels never go down. Miss a day, lose nothing.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.gardenStar": {
+   "source": "Garden Star",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.keeper": {
+   "source": "{name} Keeper",
+   "context": "",
+   "example": "Menu text; e.g. Pet Park Keeper"
+  },
+  "ui.stats.levelUp": {
+   "source": "{name} {count}",
+   "context": "",
+   "example": "Menu text; e.g. Pet Park 3"
+  },
+  "ui.stats.levelUpMore": {
+   "source": "{name} {count} +{target}",
+   "context": "",
+   "example": "Menu text; e.g. Pet Park 3 +3"
+  },
+  "ui.stats.max": {
+   "source": "Top level",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.name.energy": {
+   "source": "Energy",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.name.heart": {
+   "source": "Heart",
+   "context": "",
+   "example": "Menu text; also catalog.PetCharmCatalog.ById.heart.name, catalog.BookCatalog.Pages.charms.items.4.name"
+  },
+  "ui.stats.name.jump": {
+   "source": "Jump",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.name.power": {
+   "source": "Power",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.name.smarts": {
+   "source": "Smarts",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.name.speed": {
+   "source": "Speed",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.nextKeeper": {
+   "source": "{name} at {count}",
+   "context": "",
+   "example": "Menu text; e.g. Pet Park at 3"
+  },
+  "ui.stats.none": {
+   "source": "Hatch a pet to start its stats.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.of": {
+   "source": "/ {total}",
+   "context": "",
+   "example": "Menu text; e.g. / 12"
+  },
+  "ui.stats.results.gain": {
+   "source": "{name} +{count}",
+   "context": "",
+   "example": "Menu text; e.g. Pet Park +3"
+  },
+  "ui.stats.results.up": {
+   "source": "{name} +{count} (Lv {target}!)",
+   "context": "",
+   "example": "Menu text; e.g. Pet Park +3 (Lv 3!)"
+  },
+  "ui.stats.row": {
+   "source": "Levels, Bonus XP and snacks",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.cardBoost": {
+   "source": "{stat} has {mult}x · {left} XP left",
+   "context": "",
+   "example": "Menu text; e.g. {stat} has {mult}x · {left} XP left"
+  },
+  "ui.stats.snacks.drop": {
+   "source": "Let go to feed {pet}",
+   "context": "",
+   "example": "Menu text; e.g. Let go to feed Bear"
+  },
+  "ui.stats.snacks.eggs": {
+   "source": "Go to Hatch eggs",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.empty": {
+   "source": "No snacks yet. Hatch a Stat Egg.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.favourite": {
+   "source": "{pet}'s favourite!",
+   "context": "",
+   "example": "Menu text; e.g. Bear's favourite!"
+  },
+  "ui.stats.snacks.feed": {
+   "source": "Feed",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.line": {
+   "source": "{name} boost: {mult}x for your next {count} XP",
+   "context": "",
+   "example": "Menu text; e.g. Pet Park boost: {mult}x for your next 3 XP"
+  },
+  "ui.stats.snacks.open": {
+   "source": "Snacks",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.reason.InRound": {
+   "source": "{pet} can't eat during a round",
+   "context": "",
+   "example": "Menu text; e.g. Bear can't eat during a round"
+  },
+  "ui.stats.snacks.reason.NoSnack": {
+   "source": "That snack is gone",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.reason.PetBusy": {
+   "source": "{pet} is busy playing",
+   "context": "",
+   "example": "Menu text; e.g. Bear is busy playing"
+  },
+  "ui.stats.snacks.reason.PetNotOut": {
+   "source": "Bring {pet} out first",
+   "context": "",
+   "example": "Menu text; e.g. Bring Bear out first"
+  },
+  "ui.stats.snacks.reason.QueueFull": {
+   "source": "{stat} is already full of boosts",
+   "context": "",
+   "example": "Menu text; e.g. {stat} is already full of boosts"
+  },
+  "ui.stats.snacks.reason.Retrying": {
+   "source": "Still saving… check your pouch in a moment.",
+   "context": "",
+   "example": "Menu text; also ui.stats.snacks.reason.Timeout"
+  },
+  "ui.stats.snacks.reason.RevealPending": {
+   "source": "Open your egg first",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.reason.StatMaxed": {
+   "source": "{stat} is at the top",
+   "context": "",
+   "example": "Menu text; e.g. {stat} is at the top"
+  },
+  "ui.stats.snacks.reason.Throttled": {
+   "source": "One bite at a time",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.reason.UnknownSnack": {
+   "source": "This snack is from a newer update",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.reason.other": {
+   "source": "Couldn't feed right now",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.size.feast": {
+   "source": "Feast",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.size.nibble": {
+   "source": "Nibble",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.size.snack": {
+   "source": "Snack",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.tapHint": {
+   "source": "Tap a snack, then Feed.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.snacks.tile": {
+   "source": "{stat} {size}, {count}",
+   "context": "",
+   "example": "Menu text; e.g. {stat} {size}, 3"
+  },
+  "ui.stats.snacks.title": {
+   "source": "Snack pouch",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.tier.bloom": {
+   "source": "Bloom",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.tier.fullBloom": {
+   "source": "Full Bloom",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.tier.seedling": {
+   "source": "Seedling",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.tier.sprout": {
+   "source": "Sprout",
+   "context": "",
+   "example": "Menu text; also catalog.BallThemes.ById.pea_soup.names.2"
+  },
+  "ui.stats.tier.starbloom": {
+   "source": "Starbloom",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.title": {
+   "source": "{pet}'s stats",
+   "context": "",
+   "example": "Menu text; e.g. Bear's stats"
+  },
+  "ui.stats.toNext": {
+   "source": "{count} XP to {target}",
+   "context": "",
+   "example": "Menu text; e.g. 3 XP to 3"
+  },
+  "ui.stats.topKeeper": {
+   "source": "Every stat at the top",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.total": {
+   "source": "Total level",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.train.energy": {
+   "source": "Finishing and winning rounds, goals met and tidy wins. Harder pays more.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.train.heart": {
+   "source": "Petting, pet focus, care stations and rounds with your pet beside you.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.train.jump": {
+   "source": "Pet Park games you start, the daily Play date and playing with friends' pets.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.train.power": {
+   "source": "Merges and chains on the Pocket Deck. Every merge counts, win or lose.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.train.smarts": {
+   "source": "Daily and weekly quests, the daily stamp and Collection book finds.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.stats.train.speed": {
+   "source": "Throw and fetch, and toy play in the garden.",
+   "context": "",
+   "example": "Menu text"
+  },
   "ui.style.balls.pitch": {
    "source": "Same sizes, same rules. Only cuter.",
    "context": "",
@@ -4041,6 +5036,66 @@
    "source": "Fixed prices. No random plates.",
    "context": "",
    "example": "Deck style screen"
+  },
+  "ui.v2.adopt.button": {
+   "source": "Adopt for ★ {price}",
+   "context": "",
+   "example": "Menu text; e.g. Adopt for ★ {price}"
+  },
+  "ui.v2.adopt.confirm": {
+   "source": "Press again to adopt for ★ {price}",
+   "context": "",
+   "example": "Menu text; e.g. Press again to adopt for ★ {price}"
+  },
+  "ui.v2.adopt.done": {
+   "source": "{pet} came home with you!",
+   "context": "",
+   "example": "Menu text; e.g. Bear came home with you!"
+  },
+  "ui.v2.adopt.failed": {
+   "source": "Couldn't adopt right now. No Stars were spent.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.v2.adopt.free": {
+   "source": "Take home free",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.v2.adopt.freeLine": {
+   "source": "{need} stamps: yours for free",
+   "context": "",
+   "example": "Menu text; e.g. {need} stamps: yours for free"
+  },
+  "ui.v2.adopt.freeStatus": {
+   "source": "FREE",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.v2.adopt.line": {
+   "source": "Free at {need} stamps ({stamps}/{need}), or adopt now",
+   "context": "",
+   "example": "Menu text; e.g. Free at {need} stamps ({stamps}/{need}), or adopt now"
+  },
+  "ui.v2.adopt.retry": {
+   "source": "Still saving… try again in a moment.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.v2.adopt.saving": {
+   "source": "Adopting…",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.v2.adopt.short": {
+   "source": "Needs ★ {price}",
+   "context": "",
+   "example": "Menu text; e.g. Needs ★ {price}"
+  },
+  "ui.v2.adopt.status": {
+   "source": "ADOPT ★ {price}",
+   "context": "",
+   "example": "Menu text; e.g. ADOPT ★ {price}"
   },
   "ui.variants.note": {
    "source": "A new colour of {item}",
