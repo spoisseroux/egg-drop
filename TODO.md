@@ -4,7 +4,7 @@ Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.
 
 ## v3 (proposed 2026-11-20, awaiting Fable's v3 scope doc and Spencer's approval; nothing built)
 
-Recommended order: bug fixes, then level rewards + gated items + medals, then Garden Dash on the new garden path. Capes and the other two competitions can follow as v3.1. Source plan: `V2-SCOPE-2026-11-19.md` (sections 2.4, 4, 8, 11).
+Recommended order: bug fixes, then level rewards + gated items + medals, then Garden Dash on the new garden path. Capes and the other two competitions can follow as v3.1. Source plan: `V2-SCOPE-2026-11-19.md` (sections 2.4, 4, 8, 11). Fable is writing `V3-SCOPE-2026-11-21.md`. The second Pet Park already ships (ParkLayout sites arrival + grove), so it is not on this list.
 
 **1. Bug fixes and v2 follow-ups (ongoing)**
 - [ ] Watch the first live v2 saves (stats, snack pouch, Bunny adopt) in the logs and fix what players hit.
@@ -28,7 +28,6 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 **4. The 3D environment**
 - [ ] Garden landscape swap: the approved greybox landscape replaces the flat lawn (world v7 / world_path scripts in progress; path native collision still unresolved). Garden Dash runs on this path.
-- [ ] Second Pet Park for full servers (9 slots, 12 players).
 - [ ] Garden finds: server-placed, rate-limited sparkle spots for Smarts XP; Treasure Hunt's props. (slice S7)
 - [ ] Training courses: stepping course and chime game for active Jump and Speed training.
 
@@ -154,7 +153,7 @@ Status reconciliation 2026-11-14: checked implementation entries below have publ
 **Handed to Codex 2026-11-14 (Claude Code out of weekly usage): `CODEX-HANDOFF-2026-11-14.md`. First: wait for Spencer's QA pass on v634, triage, fix, publish. Then:**
 - [ ] **Blip looks too close to the Bear (Spencer 2026-11-14): make him read as his own species.** **Concepts ready (2026-11-14): `artifacts/blip-v2-2026-11-14/` (A Bean, B Saucer, C Sprout; Fable picks C), Spencer 2026-11-14: "none of those, we need cuter" (rejected A/B/C). Next round (Sunday): push baby proportions: head ~60% of height and bigger than the body, huge glossy eyes set low and wide-ish with two shines, tiny mouth, blush, chubby short limbs, a soft round single antenna or two short bobbly ones, rounded everything (no flat tops), pastel mint with a cream belly patch; review at phone size against the Bear before any build.** He shares the Bear's body, ear-less head and limbs (`scripts/build_blip.py`, `assets/art-source/pets/pet-blip.blend`). Ideas for Fable: a rounder bean/egg body with no neck, shorter stubbier arms, a wider low head with a flatter top, bigger set-apart antennae with bobbles, a tiny curl tail, maybe three-toed feet; keep the face kit family resemblance. Review side by side with the Bear at phone size, then export/import and flip `SecondPet`.
 - [x] **World flicker: 38 coplanar pairs fixed, published in private v634 (f75cf12; collision rebuilt, place saved). Follow-up: 196 more same-facing pairs in Stairs, Rotunda, MarbleArch, Bridge, Balustrades and stations (FLICKER-FIX.md).**
-- [ ] **Second Pet Park (Spencer 2026-11-14).** The first park (v583, east picnic lawn) has 9 slots; a 12-player server needs a second. Scope a new site, then generalize the singleton park layout, director, snapshots and mounting before adding another instance. A second attach/build currently replaces the first park; see `artifacts/qa-prep-2026-11-14/SOURCE-AUDIT.md`. Site recommendations are preparation, not an approved placement.
+- [x] **Second Pet Park (Spencer 2026-11-14), shipped (ParkLayout arrival + grove).** The first park (v583, east picnic lawn) has 9 slots; a 12-player server needs a second. Scope a new site, then generalize the singleton park layout, director, snapshots and mounting before adding another instance. A second attach/build currently replaces the first park; see `artifacts/qa-prep-2026-11-14/SOURCE-AUDIT.md`. Site recommendations are preparation, not an approved placement.
 - [ ] **Pet Park follow-through (Spencer 2026-11-14, recommendations accepted):** shared fetch with idle pets joining remains unimplemented. The spectator playground and Play date reward shipped in v583; verify duos/rewards with a second test account, and confirm 12-player capacity in Creator Hub. The playground BUILD-PLAN deliberately replaced the earlier Throw/Call design; fetch needs a separate implementation slice.
 - [x] **UI personality implementation published in private v558 (9586f02), retained in v634:** Fredoka One, lips and seams, copy voice, desktop pet peek, house palette + per-screen tint, Star face in wallet and results hero. Human visual acceptance remains part of the v634 QA pass; do not rebuild this as an unimplemented feature.
 - [ ] Spencer's QA pass on v634 (checklist: `obsidian-spencer/roblox qa pass nov 15 checklist.md`).
