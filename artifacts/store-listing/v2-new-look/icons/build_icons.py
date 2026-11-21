@@ -597,49 +597,58 @@ def cute_screen(w, h, px=10, ramps=None, ink=None, face="smiley", sky=("#C8F2FF"
     return lcd.resize((gw * px, gh * px), Image.NEAREST).resize((w, h), Image.NEAREST).convert("RGBA")
 
 
-def aero_wordmark(lines=("pocket", "pals"), size=150, lead=0.80, rim=13, indent=(0.0, 0.42)):
-    """Frutiger Aero type: Nunito Black, lowercase, a deep aqua body per line (light cyan top to
-    royal blue bottom), a wet white gloss over the top half that stops on a hard edge, a light
-    bounce glow along the bottom, a thick white rim, a soft white halo and an Ink Navy shadow."""
+def aero_wordmark(lines=("pocket", "pals"), size=150, lead=0.80, rim=13, indent=(0.0, 0.42),
+                  outline=0, depth=0):
+    """Frutiger Aero type: Nunito Black, lowercase, a deep aqua body (light cyan top to royal
+    blue bottom), a wet white gloss over the top half that stops on a hard edge, a light bounce
+    glow along the bottom, a thick white rim, a soft white halo and an Ink Navy shadow.
+    Each line is coloured from its own letter shapes, so a tall letter tucked under the line
+    above (the l in pals) keeps its own gradient. `outline` adds a navy ring outside the white
+    rim and `depth` a navy extrusion below it, for a title that stands off busy art."""
     f = ImageFont.truetype(font_path("Nunito-Black.ttf"), size)
-    pad = int(size * 0.35)
+    pad = int(size * 0.35) + outline + depth
     W = max(f.getbbox(t)[2] + int(indent[i] * size) for i, t in enumerate(lines)) + pad * 2
     H = int(size * lead * (len(lines) - 1) + size * 1.15) + pad * 2
-    mask = Image.new("L", (W, H), 0)
-    d = ImageDraw.Draw(mask)
     yy = np.mgrid[0:H, 0:W][0].astype(np.float32)
-    ph = np.zeros((H, W), np.float32)
-    boxes = []
+    c0, c1, c2 = (np.array(rgb(c), np.float32) for c in ("#8FE4FF", "#1C8CF2", "#0A3A9E"))
+    col = np.full((H, W, 3), 255, np.float32)
+    mask = Image.new("L", (W, H), 0)
     for i, t in enumerate(lines):
         y = pad + int(i * size * lead)
-        d.text((pad + int(indent[i] * size), y), t, font=f, fill=255)
+        lm = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(lm).text((pad + int(indent[i] * size), y), t, font=f, fill=255)
         x0, y0, x1, y1 = f.getbbox(t)
-        boxes.append((y + y0, y + y1))
-    # Each row belongs to the nearest line; phase 0 at its top, 1 at its bottom.
-    for k, (top, bot) in enumerate(boxes):
-        lo = 0 if k == 0 else (boxes[k - 1][1] + top) / 2
-        hi = H if k == len(boxes) - 1 else (bot + boxes[k + 1][0]) / 2
-        sel = (yy >= lo) & (yy < hi)
-        ph[sel] = ((yy[sel] - top) / (bot - top)).clip(0, 1)
-    m = np.asarray(mask).astype(np.float32) / 255
-    c0, c1, c2 = (np.array(rgb(c), np.float32) for c in ("#8FE4FF", "#1C8CF2", "#0A3A9E"))
-    p = ph[..., None]
-    fill = np.where(p < 0.55, c0 + (c1 - c0) * (p / 0.55), c1 + (c2 - c1) * ((p - 0.55) / 0.45))
-    inner = np.asarray(mask.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.GaussianBlur(1.5))).astype(np.float32) / 255
-    gloss = np.where(ph < 0.48, 0.80 - 0.45 * (ph / 0.48), 0.0) * inner
-    fill = fill + (255 - fill) * gloss[..., None]
-    bounce = np.clip((ph - 0.78) / 0.22, 0, 1) * 0.38 * inner
-    fill = fill + (np.array(rgb("#B8F4FF"), np.float32) - fill) * bounce[..., None]
+        top, bot = y + y0, y + y1
+        p = ((yy - top) / (bot - top)).clip(0, 1)[..., None]
+        fill = np.where(p < 0.55, c0 + (c1 - c0) * (p / 0.55), c1 + (c2 - c1) * ((p - 0.55) / 0.45))
+        inner = np.asarray(lm.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.GaussianBlur(1.5))).astype(np.float32) / 255
+        gloss = np.where(p[..., 0] < 0.48, 0.80 - 0.45 * (p[..., 0] / 0.48), 0.0) * inner
+        fill = fill + (255 - fill) * gloss[..., None]
+        bounce = np.clip((p[..., 0] - 0.78) / 0.22, 0, 1) * 0.38 * inner
+        fill = fill + (np.array(rgb("#B8F4FF"), np.float32) - fill) * bounce[..., None]
+        m = (np.asarray(lm).astype(np.float32) / 255)[..., None]
+        col = fill * m + col * (1 - m)
+        mask = Image.fromarray(np.maximum(np.asarray(mask), np.asarray(lm)))
     rim_m = mask.filter(ImageFilter.MaxFilter(rim))
     rim_a = np.asarray(rim_m.filter(ImageFilter.GaussianBlur(1.2))).astype(np.float32) / 255
     halo = np.asarray(rim_m.filter(ImageFilter.GaussianBlur(14))).astype(np.float32) / 255 * 0.55
     alpha = rim_a + halo * (1 - rim_a)
-    col = fill * m[..., None] + 255 * (1 - m[..., None])
     img = Image.fromarray(np.dstack([col, alpha * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+    base = Image.new("RGBA", (W, H + 16), (0, 0, 0, 0))
+    shell = rim_m
+    if outline:
+        shell = rim_m.filter(ImageFilter.MaxFilter(outline * 2 + 1)).filter(ImageFilter.GaussianBlur(1.0))
     shadow = Image.new("RGBA", (W, H), INK + (0,))
-    shadow.putalpha(rim_m.point(lambda v: int(v * 0.60)).filter(ImageFilter.GaussianBlur(7)))
-    base = Image.new("RGBA", (W, H + 12), (0, 0, 0, 0))
-    base.alpha_composite(shadow, (0, 12))
+    shadow.putalpha(shell.point(lambda v: int(v * 0.60)).filter(ImageFilter.GaussianBlur(7)))
+    base.alpha_composite(shadow, (0, 12 + depth))
+    if outline or depth:
+        deep = Image.new("RGBA", (W, H), rgb("#06286E") + (0,))
+        deep.putalpha(shell)
+        for k in range(depth, 0, -1):  # extrusion, darkest at the back
+            base.alpha_composite(deep, (0, k))
+        ring = Image.new("RGBA", (W, H), rgb("#0B3C9C") + (0,))
+        ring.putalpha(shell)
+        base.alpha_composite(ring, (0, 0))
     base.alpha_composite(img, (0, 0))
     return base.crop(base.getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox())
 
@@ -677,7 +686,7 @@ def bubbles_screen(w, h):
                        ink=BUBBLES_INK, face="dots", sky=("#E9F7FF", "#F3ECFF"))
 
 
-def icon_j(word_w=600, word_xy=(10, 8)):
+def icon_j(word_w=700, word_xy=(6, 4), outline=5, depth=7, pals_in=1.05):
     """Spencer 2026-11-21, on I: "Make the ball's a different color scheme to match the icon? We
     can make the top left text a bit bigger, slightly overlapping the characters?" I with the
     Bubbles ball theme on the deck and a bigger wordmark laid over the pals' heads."""
@@ -695,7 +704,7 @@ def icon_j(word_w=600, word_xy=(10, 8)):
     soft_shadow(c, deck, dxy, dx=10, dy=-14, blur=20, alpha=0.32)
     soft_shadow(c, deck, dxy, dx=-14, dy=8, blur=12, alpha=0.40)
     paste(c, deck, dxy)
-    wm = aero_wordmark(lead=0.72)  # pals tucked up: clips only the beanie brim
+    wm = aero_wordmark(lead=0.72, outline=outline, depth=depth, indent=(0.0, pals_in))  # navy ring + extrusion; pals over the ear, off the beanie
     wm = wm.resize((word_w, round(wm.height * word_w / wm.width)), Image.LANCZOS)
     paste(c, wm, word_xy)
     return c
