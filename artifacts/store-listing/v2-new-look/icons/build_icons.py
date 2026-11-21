@@ -395,6 +395,165 @@ def icon_g():
                   bun_x=576, bun_y=60, deck_x=520, deck_y=720)
 
 
+# ---------------------------------------------------------------- hero deck screen
+# Spencer 2026-11-21: "show a more exciting screen on the pocket deck, it doesn't have to be a
+# real screen? Just larger and readable, cool colors and ui". Drawn here from the game's own
+# look: the Smileys ball ramps from src/shared/BallThemes.lua (body / deep / light, ink
+# #15102B), chunky LCD pixels like the in-game board, a merge burst and a big score.
+BALL = [("#2E8BFF", "#0A3FD6", "#8FE1FF"), ("#FF8A1A", "#E0400A", "#FFD45C"), ("#22E06A", "#04963F", "#B4FF7A"),
+        ("#FF4DA6", "#C4126F", "#FFB0DC"), ("#A66BFF", "#5B21D6", "#E3C8FF")]
+BALL_INK = (21, 16, 43)
+SCREEN_BOX = (306, 84, 966, 558)  # the glass inside S4-straight's bezel
+
+
+def pixel_ball(px, cx, cy, r, tier):
+    """One Smileys ball on the low-res LCD grid `px` (a PIL image): ink rim, deep shade
+    bottom-right, light highlight top-left, two eyes and a smile."""
+    body, deep, light = (rgb(h) for h in BALL[tier])
+    d = ImageDraw.Draw(px)
+    for y in range(int(cy - r - 1), int(cy + r + 2)):
+        for x in range(int(cx - r - 1), int(cx + r + 2)):
+            dx, dy = x + 0.5 - cx, y + 0.5 - cy
+            q = (dx * dx + dy * dy) ** 0.5
+            if q > r:
+                continue
+            c = body
+            if q > r - 1.05:
+                c = BALL_INK
+            elif dx * 0.6 + dy * 0.8 > r * 0.42:
+                c = deep
+            elif (dx + r * 0.38) ** 2 + (dy + r * 0.42) ** 2 < (r * 0.30) ** 2:
+                c = light
+            d.point((x, y), fill=c)
+    e = max(1, round(r * 0.16))
+    ey, ex = cy - r * 0.12, r * 0.36
+    for sx in (-1, 1):
+        d.rectangle((round(cx + sx * ex - e / 2), round(ey - e / 2), round(cx + sx * ex - e / 2) + e - 1, round(ey - e / 2) + e), fill=BALL_INK)
+    w = max(2, round(r * 0.5))
+    my = round(cy + r * 0.22)
+    d.line((round(cx - w / 2), my, round(cx + w / 2), my), fill=BALL_INK)
+    d.point((round(cx - w / 2) - 1, my - 1), fill=BALL_INK)
+    d.point((round(cx + w / 2) + 1, my - 1), fill=BALL_INK)
+
+
+def hero_screen(w, h, px=6):
+    """The deck's screen as an ad shot: violet-navy LCD, a tall jar of pixel balls mid-merge,
+    a starburst with +240, SCORE 12,480 and a gold x5 COMBO pill. `px` is the LCD pixel size."""
+    gw, gh = w // px, h // px
+    lcd = Image.new("RGB", (gw, gh))
+    a = np.zeros((gh, gw, 3), np.float32)
+    t = np.linspace(0, 1, gh)[:, None, None]
+    a[:] = np.array(rgb("#1E2A78")) * (1 - t) + np.array(rgb("#3B1670")) * t
+    yy, xx = np.mgrid[0:gh, 0:gw]
+    a += ((xx + yy) % 9 == 0)[..., None] * 10  # the board's diagonal dashes
+    lcd = Image.fromarray(a.clip(0, 255).astype(np.uint8))
+    d = ImageDraw.Draw(lcd)
+    # Jar: a lighter well in the middle third with a dashed fill line.
+    jx0, jx1 = int(gw * 0.30), int(gw * 0.70)
+    d.rectangle((jx0, int(gh * 0.20), jx1, gh - 3), fill=(44, 54, 140))
+    d.rectangle((jx0, int(gh * 0.20), jx0, gh - 3), fill=(120, 150, 255))
+    d.rectangle((jx1, int(gh * 0.20), jx1, gh - 3), fill=(120, 150, 255))
+    for x in range(jx0 + 2, jx1 - 1, 4):
+        d.line((x, int(gh * 0.42), x + 1, int(gh * 0.42)), fill=(150, 170, 255))
+    # Burst behind the merge.
+    bx, by = gw * 0.50, gh * 0.58
+    for i in range(16):
+        ang = i * np.pi / 8
+        L = (gh * 0.40) if i % 2 == 0 else (gh * 0.26)
+        d.line((bx, by, bx + np.cos(ang) * L, by + np.sin(ang) * L), fill=(255, 214, 92) if i % 2 == 0 else (255, 160, 220), width=2)
+    # The stack: big violet at the bottom, the rest piled up, a pink pair merging.
+    cyb = gh - 3
+    pixel_ball(lcd, jx0 + 9.5, cyb - 9, 8.5, 4)
+    pixel_ball(lcd, jx1 - 7.5, cyb - 7, 6.6, 2)
+    pixel_ball(lcd, jx0 + 22, cyb - 6, 5.2, 1)
+    pixel_ball(lcd, bx - 4.5, by + 1, 6.0, 3)
+    pixel_ball(lcd, bx + 6.0, by - 1, 6.0, 3)
+    # Side panels.
+    d.rectangle((2, 2, jx0 - 3, gh - 3), fill=(24, 34, 96))
+    d.rectangle((jx1 + 3, 2, gw - 3, gh - 3), fill=(24, 34, 96))
+    pixel_ball(lcd, (jx1 + gw) / 2, gh * 0.74, 6.0, 1)
+    pixel_ball(lcd, jx0 / 2, gh * 0.74, 5.0, 0)
+    img = lcd.resize((gw * px, gh * px), Image.NEAREST).resize((w, h), Image.NEAREST).convert("RGBA")
+    # Crisp UI type over the LCD.
+    d = ImageDraw.Draw(img)
+    big = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", int(h * 0.15))
+    mid = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", int(h * 0.085))
+    small = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", int(h * 0.065))
+    lx = int(w * 0.035)
+    huge = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", int(h * 0.20))
+    d.text((lx, int(h * 0.015)), "12,480", font=huge, fill=(255, 255, 255), stroke_width=4, stroke_fill=BALL_INK)
+    rx = int(w * 0.735)
+    d.text((rx, int(h * 0.06)), "COMBO", font=small, fill=(255, 212, 92))
+    # Gold combo pill, top right.
+    pill = (rx - 2, int(h * 0.15), w - int(w * 0.035), int(h * 0.36))
+    d.rounded_rectangle(pill, radius=(pill[3] - pill[1]) // 2, fill=(255, 212, 92), outline=BALL_INK, width=3)
+    d.text(((pill[0] + pill[2]) / 2, (pill[1] + pill[3]) / 2 - 2), "x5", font=big, fill=BALL_INK, anchor="mm")
+    # +240 pop over the merge.
+    d.text((w * 0.50, h * 0.40), "+240", font=huge, fill=(255, 255, 255), anchor="mm", stroke_width=4, stroke_fill=(196, 18, 111))
+    return img
+
+
+def deck_with_hero(screen_fn=hero_screen):
+    """S4-straight with its screen replaced by the hero screen, plus a faint glass glare."""
+    deck = load(os.path.join(CAP, "S4-straight.png"))
+    x0, y0, x1, y1 = SCREEN_BOX
+    w, h = x1 - x0, y1 - y0
+    scr = screen_fn(w, h)
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    glare = np.clip(1 - (xx / w * 0.9 + yy / h * 0.6) / 0.75, 0, 1) ** 2 * 0.16
+    g = Image.new("RGBA", (w, h), (255, 255, 255, 0))
+    g.putalpha(Image.fromarray((glare * 255).astype(np.uint8)))
+    scr.alpha_composite(g)
+    m = Image.new("L", (w * 3, h * 3), 0)
+    ImageDraw.Draw(m).rounded_rectangle((0, 0, w * 3 - 1, h * 3 - 1), 18 * 3, fill=255)
+    deck.paste(scr, (x0, y0), m.resize((w, h), Image.LANCZOS))
+    return deck
+
+
+def icon_h(bear_up=60, deck_w=700, tilt=9.0, deck_cx=710, deck_y=640, paw=False, paw_s=0.95, paw_h=0.42):
+    """Spencer 2026-11-21: "A bit more like icon [A], characters in similar position? Bear up a
+    tiny bit on the left ... same positions/poses? Maybe pocket deck tilted to compensate for
+    height difference between the two chars? And show a more exciting screen". Icon A's own
+    cut-outs and placement (S2 Bunny, S1-tight Bear), the Bear `bear_up` px higher, and the
+    hero-screen deck in front, turned `tilt` degrees so it rises from his side to hers.
+    `deck_cx` is the deck's centre x and `deck_y` its top on the 1024 canvas."""
+    c = field(*SKY, floor=0.80)
+    put_bubble(c, 160, 160, 180)
+    put_bubble(c, 400, 92, 58, 0.9)
+    bunny = relight(load(os.path.join(CAP, "S2.png"), 1.62, rot=8), cool=0.20)
+    bear = relight(load(os.path.join(CAP, "S1-tight.png"), 1.08, rot=-5), cool=0.18)
+    paste(c, bunny, (448, 44))
+    exy = (-92, 336 - bear_up)
+    soft_shadow(c, bear, exy, dx=14, dy=10, blur=18, alpha=0.26)
+    paste(c, bear, exy)
+    deck = deck_with_hero()
+    deck = deck.resize((deck_w, round(deck.height * deck_w / deck.width)), Image.LANCZOS)
+    deck = deck.rotate(tilt, Image.BICUBIC, expand=True)
+    dxy = (int(deck_cx - deck.width / 2), deck_y)
+    soft_shadow(c, deck, dxy, dx=10, dy=-14, blur=20, alpha=0.32)  # cast up onto the pals
+    soft_shadow(c, deck, dxy, dx=-14, dy=8, blur=12, alpha=0.40)  # darker edge off the white Bear
+    paste(c, deck, dxy)
+    if paw:
+        # The Bear's own paw (S10, the screen-right one) gripping the deck's left end.
+        import sys
+        sys.path.insert(0, CAP)
+        import cutout
+        full = np.asarray(cutout.matte("S10-black.jpg", "S10-grey.jpg")).astype(np.float32)
+        pa = np.asarray(cutout.matte("S10-paws-black.jpg", "S10-paws-grey.jpg").getchannel("A")).astype(np.float32)
+        full[..., 3] = np.minimum(full[..., 3], pa)
+        full[:, : full.shape[1] // 2, 3] = 0
+        p = Image.fromarray(full.clip(0, 255).astype(np.uint8), "RGBA")
+        p = p.crop(p.getchannel("A").point(lambda v: 255 if v > 128 else 0).getbbox())
+        p = relight(p.resize((round(p.width * paw_s), round(p.height * paw_s)), Image.LANCZOS), cool=0.14)
+        da = np.asarray(deck.getchannel("A")) > 128
+        row = int(deck.height * paw_h)
+        col = int(np.nonzero(da[row])[0][0])
+        xy = (dxy[0] + col - p.width // 2 + 6, dxy[1] + row - p.height // 2)
+        soft_shadow(c, p, xy, dx=6, dy=12, blur=10, alpha=0.30)
+        paste(c, p, xy)
+    return c
+
+
 # ---------------------------------------------------------------- sheet
 def rounded(im, r):
     m = Image.new("L", (im.width * 3, im.height * 3), 0)
@@ -407,7 +566,7 @@ def rounded(im, r):
 def sheet(icons):
     f = ImageFont.truetype("C:/Windows/Fonts/Nunito-ExtraBold.ttf", 30)
     fs = ImageFont.truetype("C:/Windows/Fonts/Quicksand-Bold.ttf", 22)
-    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell", "E": "Icon E  fisheye", "F": "Icon F  lens on the deck", "G": "Icon G  framed like A"}
+    names = {"A": "Icon A  two pals", "B": "Icon B  one pal", "C": "Icon C  pocket deck", "D": "Icon D  show and tell", "E": "Icon E  fisheye", "F": "Icon F  lens on the deck", "G": "Icon G  framed like A", "H": "Icon H  A + hero deck"}
     keys = list(icons)
     gw, pad, top = 512 + 30 + 150, 56, 70
     band_h = top + 512 + 60
@@ -429,7 +588,7 @@ def sheet(icons):
 
 if __name__ == "__main__":
     icons = {}
-    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False), ("E", icon_e, False), ("F", icon_f, True), ("G", icon_g, False)):
+    for k, fn, master in (("A", icon_a, False), ("B", icon_b, True), ("C", icon_c, True), ("D", icon_d, False), ("E", icon_e, False), ("F", icon_f, True), ("G", icon_g, False), ("H", icon_h, False)):
         big = fn().convert("RGB")
         if master:
             big.save(os.path.join(HERE, f"icon-{k}-1024.png"))
@@ -438,6 +597,8 @@ if __name__ == "__main__":
     icons = {k: v.convert("RGBA") for k, v in icons.items()}
     sheet({k: icons[k] for k in "ABC"}).save(os.path.join(HERE, "icons-ABC.png"))
     sheet({k: icons[k] for k in "CD"}).save(os.path.join(HERE, "icons-CD.png"))
-    sheet({k: icons[k] for k in "EF"}).save(os.path.join(HERE, "icons-EF.png, icons-AG.png"))
-    sheet({k: icons[k] for k in "AG"}).save(os.path.join(HERE, "icons-AG.png"))
-    print("wrote icon-A..G.png, icon-B/C/F-1024.png, icons-ABC.png, icons-CD.png, icons-EF.png, icons-AG.png")
+    sheet({k: icons[k] for k in "EF"}).save(os.path.join(HERE, "icons-EF.png, icons-AG.png, icons-AH.png, deck-hero-screen.png"))
+    sheet({k: icons[k] for k in "AG"}).save(os.path.join(HERE, "icons-AG.png, icons-AH.png, deck-hero-screen.png"))
+    sheet({k: icons[k] for k in "AH"}).save(os.path.join(HERE, "icons-AH.png"))
+    deck_with_hero().save(os.path.join(HERE, "deck-hero-screen.png"))
+    print("wrote icon-A..H.png, icon-B/C/F-1024.png, icons-ABC.png, icons-CD.png, icons-EF.png, icons-AG.png, icons-AH.png, deck-hero-screen.png")
