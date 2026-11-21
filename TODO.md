@@ -2,6 +2,38 @@
 
 Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private v685 published 2026-11-14** (reviewed runtime70e0440; current v3 music retained for phone QA). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
+## v3 (proposed 2026-11-20, awaiting Fable's v3 scope doc and Spencer's approval; nothing built)
+
+Recommended order: bug fixes, then level rewards + gated items + medals, then Garden Dash on the new garden path. Capes and the other two competitions can follow as v3.1. Source plan: `V2-SCOPE-2026-11-19.md` (sections 2.4, 4, 8, 11).
+
+**1. Bug fixes and v2 follow-ups (ongoing)**
+- [ ] Watch the first live v2 saves (stats, snack pouch, Bunny adopt) in the logs and fix what players hit.
+- [ ] Bunny arrival hatch: check it in motion with sound (needs a save without the petArrived bit).
+- [ ] Stats panel: a level-up ticket tapped while the panel is open should switch to that stat (StatsHost needs a focus hook).
+- [ ] Stars notifications: give them something to open (or no chevron).
+- [ ] Confirm dialog with a gamepad: releasing the A that opened it must not press Yes.
+- [ ] Real phone pass and a two-account pass on v2.
+- [ ] Bear v2 cute model (Fable, `assets/art-source/pets/pet-bear-v2-cute.blend`): Spencer's call, then export and rig rebuild.
+
+**2. Make levels matter**
+- [ ] Level rewards (free at a level): tricks (Heart 5/10/15...), merge pops and drop trails (Power), deck flourishes (Energy), park looks (Jump), toy perks (Speed), Book hints (Smarts). Stats panel shows "Next at N" only where something exists. (V2-SCOPE 4.1, slice S5)
+- [ ] Gated shop items: about 12 new recolours, faceplates, a ball theme and toys that need a level and Stars; gate field on catalogues, locked state in Wardrobe / Deck style / Customize, server-side check. Nothing on sale before 2026-11-19 is ever gated. (4.2)
+- [ ] Medals at 25 / 50 / 75 / 99 per stat: a free Stat Egg each, a deck sticker at 25. (8)
+- [ ] Champion Capes at 99 (Back slot, twirl emote, Garden Star Cape at 594), optional plain cape at 50. Can land in v3.1. (8, slice S8)
+
+**3. Minigame: pet competitions (stats give at most ~25% edge; matchmaking by total level; a Just for Fun mode)**
+- [ ] Garden Dash: a 4 to 8 pet race around the garden path with hurdles and a shortcut (Speed, Energy, Jump). The v3 headline.
+- [ ] Tug of War: 1v1 or 2v2, tap in rhythm (Power, Heart, Energy). v3.1.
+- [ ] Treasure Hunt: most garden finds in 60 s (Smarts, Speed). v3.1, needs garden finds.
+
+**4. The 3D environment**
+- [ ] Garden landscape swap: the approved greybox landscape replaces the flat lawn (world v7 / world_path scripts in progress; path native collision still unresolved). Garden Dash runs on this path.
+- [ ] Second Pet Park for full servers (9 slots, 12 players).
+- [ ] Garden finds: server-placed, rate-limited sparkle spots for Smarts XP; Treasure Hunt's props. (slice S7)
+- [ ] Training courses: stepping course and chime game for active Jump and Speed training.
+
+**Later, not v3:** weekly shared board, a third pet, more Pocket Deck cartridges (pinball), two-player deck modes, guilds, trading (wait for retention data and concurrency).
+
 ## Now working on
 
 - [x] **v2 live (2026-11-20, Opus).** Published runtime aeae2d9 to the live place after Spencer's beta pass; translations synced (226/5); test content stripped; branch fast-forwarded to main. Servers restarted (Open Cloud 200 OK). Next: watch the first live saves (stats, pouch, Bunny adopt) in the logs.
