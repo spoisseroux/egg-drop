@@ -9,6 +9,8 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Catalog=require(Shared.WearableCatalog)
 local Eggs=require(Shared.EggCatalog)
+local Gate=require(Shared.LevelGate)
+local Stats=require(script.Parent.StatState)
 local State={Limit=Catalog.OwnedLimit,KeyLimit=24}
 -- Weekly shelf (slice C): a purchase made in shelf week `week` pays the shelf price when the
 -- item is on that week's shelf, otherwise the catalogue price. The module is Lane K's; a
@@ -75,7 +77,9 @@ end
 
 -- Pure check shared by the server's early refusal and the UpdateAsync callback. `week` is
 -- the shelf week frozen in the purchase (nil = no shelf: the catalogue price). Returns
--- true, nil, item, expectedPrice.
+-- true, nil, item, expectedPrice. A level-gated item reads the levels of the save being written
+-- (never a public attribute): below the gate it is NeedsLevel, with no charge. While gates are off
+-- the item is not in the list at all (NotForSale).
 function State.price(petId,itemId,week)
 	local item=Catalog.item(petId,itemId)
 	return if item then expectedPrice("wearable",itemId,item.price,week)else nil
@@ -88,6 +92,7 @@ function State.check(state,petId,itemId,price,week)
 	if price~=nil and price~=expected then return false,"PriceChanged"end
 	if State.owns(state,petId,itemId)then return false,"AlreadyOwned"end
 	if #State.row(state,petId).owned>=State.Limit then return false,"OwnedLimit"end
+	if item.gate~=nil and not Gate.met(Gate.levels(Stats.publicLevels(state).pets),item.gate)then return false,Gate.Reason end
 	if state.nectar<expected then return false,"NeedStars"end
 	return true,nil,item,expected
 end
@@ -110,9 +115,11 @@ function State.equipResult(state,petId,slot,itemId)
 	if not Eggs.isOwned(state.inventoryMask,petId)then return nil,"Unowned"end
 	local row=State.row(state,petId)
 	if itemId then
-		local item=Catalog.item(petId,itemId)
+		-- An owned item stays wearable even when it is not listed now (a gated item with gates off).
+		local owned=table.find(row.owned,itemId)~=nil
+		local item=if owned then Catalog.forPet(petId,math.huge).byId[itemId]else Catalog.item(petId,itemId)
 		if not item or item.slot~=slot then return nil,"InvalidWearable"end
-		if not table.find(row.owned,itemId)then return nil,"NotOwned"end
+		if not owned then return nil,"NotOwned"end
 		wear(row,petId,item)
 	else
 		local known=false

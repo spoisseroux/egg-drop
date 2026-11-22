@@ -5,6 +5,7 @@ local Trials = require(game:GetService("ReplicatedStorage").Shared.PocketTrials)
 local Settings = require(game:GetService("ReplicatedStorage").Shared.DeckSettings)
 local Backgrounds = require(game:GetService("ReplicatedStorage").Shared.DeckBackgrounds)
 local BoardConfig = require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
+local DeckJuice = require(game:GetService("ReplicatedStorage").Shared.DeckJuiceCatalog)
 local PetAppearance=require(script.Parent.PetAppearance)
 local HatchGuard=require(script.Parent.HatchGuard)
 local EggCatalog=require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
@@ -114,6 +115,9 @@ local function decode(key, record, success)
 		-- missing reads as "Match my deck".
 		menuClassic = record.menuClassic == true,
 		whiteSecond = whiteSecondOf(record.whiteSecond),
+		-- Levels matter S3: chosen deck cosmetics {pop, trail, start}. Optional and additive: missing
+		-- is classic; unknown ids are kept and drawn classic (DeckJuiceCatalog.resolve).
+		deckJuice = DeckJuice.decode(record.deckJuice) or {},
 		-- Last difficulty played (picker focus). Never trusted for payout; the
 		-- run's own server-stored heat is.
 		lastHeat = if BoardConfig.validHeat(record.heat) then record.heat else BoardConfig.DefaultHeat,
@@ -198,6 +202,7 @@ flush=function(profile)
 	local greetChange = profile.greetChange
 	local menuChange = profile.menuChange
 	local whiteChange = profile.whiteChange
+	local juiceChange = profile.juiceChange
 	local function merge(previous)
 		local record = if type(previous) == "table" then table.clone(previous) else {}
 		local previousRank = rankOf(record)
@@ -228,6 +233,7 @@ flush=function(profile)
 		mergeSetting("greetOff", greetChange)
 		mergeSetting("menuClassic", menuChange)
 		mergeSetting("whiteSecond", whiteChange)
+		mergeSetting("deckJuice", juiceChange)
 		mergeSetting("heat", heatChange)
 		if next(petChanges)then record.petAppearance=PetAppearance.merge(record.petAppearance,petChanges)end
 		local previousTime = appearanceStamp(record.themeAt)
@@ -366,8 +372,11 @@ flush=function(profile)
 	if whiteChange == profile.whiteChange then
 		profile.whiteChange = nil
 	end
+	if juiceChange == profile.juiceChange then
+		profile.juiceChange = nil
+	end
 	if not (profile.earnedRank or profile.earnedBest or profile.themeAt or profile.companionAt or profile.companionChange
-		or profile.earnedTrials or profile.soundChange or profile.motionChange or profile.heatChange or profile.greetChange or profile.menuChange or profile.whiteChange or next(profile.petAppearanceChanges or {})) then
+		or profile.earnedTrials or profile.soundChange or profile.motionChange or profile.heatChange or profile.greetChange or profile.menuChange or profile.whiteChange or profile.juiceChange or next(profile.petAppearanceChanges or {})) then
 		pending[profile] = nil
 	end
 	finishFlush(profile,not profile.saveFailed)
@@ -397,7 +406,8 @@ end
 function Progress.setSetting(profile, key, value)
 	local changeKey = if key == "sound" then "soundChange" elseif key == "greetOff" then "greetChange"
 		elseif key == "menuClassic" then "menuChange"
-		elseif key == "whiteSecond" then "whiteChange" else "motionChange"
+		elseif key == "whiteSecond" then "whiteChange"
+		elseif key == "deckJuice" then "juiceChange" else "motionChange"
 	profile[key] = value
 	profile[changeKey] = { value = value, at = DateTime.now().UnixTimestampMillis }
 	markDirty(profile)

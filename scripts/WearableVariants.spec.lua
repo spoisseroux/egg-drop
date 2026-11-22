@@ -10,13 +10,21 @@ return function(server, shared)
 	local Catalog = require(Shared.WearableCatalog)
 	local Rules = require(Shared.PetAttachmentRules)
 	local Defs = require(Shared.PetRigDefinitions)
+	local Levels = require(Shared.Levels)
 	local cases = {}
 	local function test(name, run) run(); table.insert(cases, name) end
+	-- Levels matter: gated rows list only with gates on. Runs `run` with the parts off or on.
+	local function with(on, run)
+		Levels.inject(if on then { flags = { LevelsMatter = true }, studio = true } else { flags = {}, studio = true })
+		local ok, problem = pcall(run)
+		Levels.inject(nil)
+		assert(ok, problem)
+	end
 	local bear = Defs.pip
 	local function attachment(name) for _, a in ipairs(bear.attachments) do if a.name == name then return a end end; error("no attachment " .. name) end
 
-	test("rows: ten valid recolours with the brief's exact colours; bad rows are refused", function()
-		assert(#Variants.Rows == 10 and Variants.problem(Variants.Rows) == nil)
+	test("rows: ten valid recolours with the brief's exact colours, then 14 level-gated ones; bad rows are refused", function()
+		assert(#Variants.Rows == 24 and Variants.problem(Variants.Rows) == nil)
 		local expected = {
 			beanie_mint = { "beanie", "#7FE0CF", "Mint Pom Beanie" }, beanie_butter = { "beanie", "#FFD86B", "Butter Pom Beanie" },
 			beanie_grape = { "beanie", "#9B7BE8", "Grape Pom Beanie" }, tee_berry = { "tee", "#D94A7A", "Berry Stripy Tee" },
@@ -24,13 +32,34 @@ return function(server, shared)
 			bellcollar_silver = { "bellcollar", "#DCE3EE", "Silver Bell Collar" }, bellcollar_rose = { "bellcollar", "#F2A0A8", "Rose Bell Collar" },
 			sunhat_cocoa = { "sunhat", "#A9764F", "Cocoa Sun Hat" }, sunhat_peach = { "sunhat", "#FFB38A", "Peach Sun Hat" },
 		}
-		for _, row in ipairs(Variants.Rows) do
+		-- Gated rows (Levels matter S2): id -> base, name, gate. Gates may only be loosened.
+		local gated = {
+			specs_orchid = { "specs", "Orchid Round Specs", "smarts", 10 }, beanie_rose = { "beanie", "Rose Pom Beanie", "heart", 15 },
+			tee_sky = { "tee", "Sky Stripy Tee", "energy", 15 }, partyhat_lime = { "partyhat", "Lime Party Hat", "jump", 15 },
+			tee_periwinkle = { "tee", "Periwinkle Stripy Tee", "speed", 15 }, bands_tangerine = { "bands", "Tangerine Friendship Bands", "power", 20 },
+			beads_orchid = { "beads", "Orchid Pearl Beads", "smarts", 20 }, bellcollar_blossom = { "bellcollar", "Blossom Bell Collar", "heart", 30 },
+			beanie_lime = { "beanie", "Lime Pom Beanie", "jump", 30 }, bowtail_periwinkle = { "bowtail", "Periwinkle Bow Tail", "speed", 30 },
+			blush_peach = { "blush", "Peach Blush Stickers", "power", 35 }, sunhat_sky = { "sunhat", "Sky Sun Hat", "energy", 35 },
+			hoodie_starbloom = { "hoodie", "Starbloom Hoodie", "total", 150 }, flowercrown_golden = { "flowercrown", "Golden Flower Crown", "total", 300 },
+		}
+		local gates = 0
+		for index, row in ipairs(Variants.Rows) do
+			assert((row.gate == nil) == (index <= 10), "the ungated rows keep their places")
+			if row.gate then
+				gates += 1
+				local want = assert(gated[row.id], "unexpected gated variant " .. row.id)
+				assert(row.base == want[1] and row.name == want[2], row.id)
+				assert(if want[3] == "total" then row.gate.total == want[4] else row.gate.stat == want[3] and row.gate.level == want[4], row.id)
+				assert(Variants.ById[row.id] == row and row.from == nil and row.price == nil and table.isfrozen(row) and table.isfrozen(row.gate))
+				continue
+			end
 			local want = assert(expected[row.id], "unexpected variant " .. row.id)
 			assert(row.base == want[1] and row.color == want[2] and row.name == want[3], row.id)
 			assert(#row.id <= 32 and Variants.ById[row.id] == row and row.from == nil and row.price == nil)
 			assert(table.isfrozen(row))
 		end
-		assert(Variants.ById.bellcollar_rose.piece == "Neck_BellCollar_Bell" and Variants.ById.beanie_mint.piece == nil)
+		assert(gates == 14, gates)
+		assert(Variants.ById.bellcollar_blossom.piece == "Neck_BellCollar_Bell" and Variants.ById.bellcollar_rose.piece == "Neck_BellCollar_Bell" and Variants.ById.beanie_mint.piece == nil)
 		local function bad(row) return Variants.problem({ row }) ~= nil end
 		assert(bad({ id = "Beanie", base = "beanie", name = "x", color = "#FFFFFF" }), "upper case id")
 		assert(bad({ id = string.rep("a", 33), base = "beanie", name = "x", color = "#FFFFFF" }), "33 characters")
@@ -38,12 +67,15 @@ return function(server, shared)
 		assert(bad({ id = "a", base = "beanie", name = "", color = "#FFFFFF" }), "no name")
 		assert(bad({ id = "a", base = "beanie", name = "x", color = "FFFFFF" }) and bad({ id = "a", base = "beanie", name = "x", color = "#FFF" }), "hex")
 		assert(bad({ id = "a", base = "beanie", name = "x", color = "#FFFFFF", price = 0 }) and bad({ id = "a", base = "beanie", name = "x", color = "#FFFFFF", from = -1 }))
+		for _, gate in ipairs({ {}, true, { stat = "jump" }, { level = 5 }, { stat = "cuteness", level = 5 }, { stat = "jump", level = 1 }, { stat = "jump", level = 100 }, { stat = "jump", level = 5.5 }, { total = 6 }, { total = 595 }, { total = 60, stat = "jump", level = 5 }, { stat = "jump", level = 5, extra = 1 } }) do
+			assert(bad({ id = "a", base = "beanie", name = "x", color = "#FFFFFF", gate = gate }), "bad gate")
+		end
 		assert(Variants.problem({ { id = "a", base = "beanie", name = "x", color = "#FFFFFF" }, { id = "a", base = "tee", name = "y", color = "#000000" } }) ~= nil, "duplicate id")
 		assert(Variants.problem({ { id = "a", base = "beanie", name = "x", color = "#FFFFFF" }, { id = "b", base = "a", name = "y", color = "#000000" } }) ~= nil, "a variant of a variant")
 		assert(Variants.problem({ { id = "a", base = "beanie", name = "x", color = "#12ab9F", price = 20, from = 3000, piece = "Hat_Beanie" } }) == nil)
 	end)
 
-	test("the Bear lists all ten at the base price, each right after its base, sharing the base's slot and keys", function()
+	local function listing(total)
 		local list = Catalog.forPet("pip")
 		local count = 0
 		for index, item in ipairs(list.order) do
@@ -59,14 +91,37 @@ return function(server, shared)
 				assert(list.order[back].id == item.base, item.id .. " is not after its base")
 				assert(Catalog.item("pip", item.id) == item and Catalog.price("pip", item.id) == base.price)
 			else
-				assert(item.variant == nil and item.base == nil and item.color == nil, item.id)
+				assert(item.variant == nil and item.base == nil and item.color == nil and item.gate == nil, item.id)
 			end
+			assert(item.gate == (Variants.ById[item.id] and Variants.ById[item.id].gate), item.id)
 		end
-		assert(count == 10, count)
+		assert(count == total, count)
+	end
+	test("gates off: the Bear lists the ten ungated at the base price, each right after its base, sharing the base's slot and keys", function() with(false, function()
+		listing(10)
 		local hats = Catalog.inTab("pip", "Hat")
 		assert(hats[1].id == "beanie" and hats[2].id == "beanie_mint" and hats[3].id == "beanie_butter" and hats[4].id == "beanie_grape" and hats[5].id == "sunhat" and hats[6].id == "sunhat_cocoa")
 		assert(Catalog.price("pip", "beanie_mint") == 40 and Catalog.price("pip", "sunhat_peach") == 100 and Catalog.price("pip", "bellcollar_rose") == 100 and Catalog.price("pip", "tee_berry") == 40)
 		assert(Catalog.Variants == Variants.Rows, "the localization export reads the names from WearableCatalog.Variants")
+		-- Off, a gated row is not listed or priced anywhere, but a saved one still renders and lists once owned.
+		assert(Catalog.item("pip", "beanie_rose") == nil and Catalog.price("pip", "beanie_rose") == nil)
+		assert(Catalog.renderMap("pip", { Hat = "beanie_rose" }).mapped.Hat == "beanie" and Catalog.forPet("pip", math.huge).byId.beanie_rose)
+		local function ids(list) local out = {}; for _, item in ipairs(list) do table.insert(out, item.id) end; return table.concat(out, ",") end
+		assert(ids(Catalog.shopTab("pip", "Hat", {})) == ids(hats) and ids(Catalog.shopTab("pip", "Hat", nil)) == ids(hats) and ids(Catalog.shopTab("pip", "Hat", { "beanie_mint" })) == ids(hats))
+		assert(ids(Catalog.shopTab("pip", "Hat", { "beanie_lime" })) == string.gsub(ids(hats), "beanie_grape", "beanie_grape,beanie_lime"), "an owned gated item keeps its place")
+	end) end)
+
+	test("gates on: all 24 are listed the same way, gated rows carry their gate; turning gates off hides them again", function()
+		with(true, function()
+			listing(24)
+			assert(Catalog.item("pip", "beanie_rose").gate.level == 15 and Catalog.price("pip", "hoodie_starbloom") == 250 and Catalog.price("pip", "bellcollar_blossom") == 100)
+			local hats = Catalog.inTab("pip", "Hat")
+			assert(hats[4].id == "beanie_grape" and hats[5].id == "beanie_rose" and hats[6].id == "beanie_lime" and hats[7].id == "sunhat")
+			assert(#Catalog.shopTab("pip", "Hat", {}) == #hats)
+			-- The Bunny wears the same items.
+			assert(Catalog.item("blip", "beanie_rose"))
+		end)
+		with(false, function() assert(Catalog.item("pip", "beanie_rose") == nil, "the cache key carries the switch") end)
 	end)
 
 	test("a `from` week hides a row until that week; a price override applies; a pet without the base lists none", function()
@@ -123,7 +178,7 @@ return function(server, shared)
 		assert(Catalog.tintFor(nil, attachment("Hat_Beanie")) == nil and Catalog.tintFor(tints.Hat, nil) == nil)
 		-- Every shipped variant recolours at least one piece of its base and never a secondary or face piece.
 		for _, row in ipairs(Variants.Rows) do
-			local item = Catalog.item("pip", row.id)
+			local item = Catalog.forPet("pip", math.huge).byId[row.id]
 			local tint = Catalog.renderMap("pip", { [item.keys[1]] = row.id }).tints[item.keys[1]]
 			local changed = 0
 			for _, a in ipairs(bear.attachments) do

@@ -2,9 +2,14 @@
 -- paths and winner are chosen here. No paid rewards or client positions enter this module.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local A=require(Shared.GardenActivity)
+local Perks=require(Shared.ParkPerks)
 local Fetch={};Fetch.__index=Fetch
 Fetch.Radius=14;Fetch.MaxPets=3;Fetch.Speed=6;Fetch.ThrowSeconds=.9;Fetch.PickupSeconds=.7;Fetch.HomeSeconds=1
 local ZERO=Vector3.zero
+-- How far the ball lands: 4 studs, or 5 for a thrower whose companion's saved Speed has the longer
+-- throw (Levels matter S1; the host's options.speedLevel reads the save). Everything about a throw at
+-- 5 is preflighted first; any failure falls back to the plain 4 stud throw.
+Fetch.Reach=Perks.Reach.normal
 local function distance(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
 function Fetch.new(director,layout)
 	return setmetatable({director=director,garden=director.garden,layout=layout,serial=0},Fetch)
@@ -23,6 +28,24 @@ function Fetch:lane(ownerPosition)
 		if clear then return home,target end
 	end
 	return nil
+end
+-- The same lane at a longer reach (same home, same direction), or nil when it is not clear.
+function Fetch:extend(home,target,reach)
+	local park=self.layout
+	local dir=Vector3.new(target.X-home.X,0,target.Z-home.Z)
+	if dir.Magnitude<.1 then return nil end
+	local far=home+dir.Unit*reach
+	far=Vector3.new(far.X,park.ground(far.X,far.Z),far.Z)
+	if not park.inside(far,-2)or not park.clearOfKeepout(far,1)then return nil end
+	local steps=math.ceil(reach*2)
+	for i=0,steps do if not park.clearOfKeepout(home:Lerp(far,i/steps),.6)then return nil end end
+	return far
+end
+function Fetch:reachOf(ownerId)
+	local read=self.director.options.speedLevel
+	if not read then return Fetch.Reach end
+	local ok,level=pcall(read,ownerId)
+	return if ok then Perks.throwReach(level)else Fetch.Reach
 end
 function Fetch:plan(actor,target)
 	local from=self.garden:position(actor,self.director:clock())
@@ -48,13 +71,10 @@ function Fetch:eligible(pet)
   and pet.action~="nookApproach"and pet.action~="nookRest"and input~=nil and input.alive and input.owned
   and self.layout.member(input.position,true)and self.layout.inside(self.garden:position(pet,self.director:clock()),0)
 end
-function Fetch:throw(ownerId)
-	if self.session then return false,"BallOut"end
-	local actor,input=self.garden.actors[ownerId],self.garden.inputs[ownerId]
+-- Who runs where for one landing point: participants, plans and the winner, or nil and why. A pet
+-- with no path there stays behind; with `strict` (the longer throw) that fails the whole preflight.
+function Fetch:preflight(ownerId,input,home,target,strict)
 	local park=self.layout;local now=self.director:clock()
-	if not actor or not actor.park or actor.park.parkId~=park.Id or actor.mode~="Room"or not input or not input.alive or not park.member(input.position,true)then return false,"NotInPark"end
-	local home,target=self:lane(input.position)
-	if not home then return false,"NoLane"end
 	local candidates={}
 	for _,pet in pairs(self.garden.actors)do
 		if self:eligible(pet)and distance(self.garden:position(pet,now),input.position)<=Fetch.Radius then table.insert(candidates,pet)end
@@ -68,12 +88,13 @@ function Fetch:throw(ownerId)
 	for _,pet in ipairs(candidates)do
 		if #participants>=Fetch.MaxPets then break end
 		local plan=self:plan(pet,target)
+		if strict and not plan then return nil,"NoLane"end
 		if plan then
 			table.insert(participants,pet.ownerId);plans[pet.ownerId]=plan
 			if not winner or plan.seconds<plans[winner].seconds-.001 or(math.abs(plan.seconds-plans[winner].seconds)<=.001 and pet.ownerId<winner)then winner=pet.ownerId end
 		end
 	end
-	if not winner then return false,"NoIdlePets"end
+	if not winner then return nil,"NoIdlePets"end
 	local along=target-home;local across=Vector3.new(-along.Z,0,along.X).Unit
 	local companion=0
 	for _,id in ipairs(participants)do
@@ -81,12 +102,31 @@ function Fetch:throw(ownerId)
 			companion+=1
 			local beside=target+across*(if companion==1 then -.9 else .9)
 			beside=Vector3.new(beside.X,park.ground(beside.X,beside.Z),beside.Z)
-			if not park.clearOfKeepout(beside,.6)then return false,"NoLane"end
+			if not park.clearOfKeepout(beside,.6)then return nil,"NoLane"end
 			local plan=self:plan(self.garden.actors[id],beside)
-			if not plan then return false,"NoLane"end
+			if not plan then return nil,"NoLane"end
 			plans[id]=plan
 		end
 	end
+	return {participants=participants,plans=plans,winner=winner}
+end
+function Fetch:throw(ownerId)
+	if self.session then return false,"BallOut"end
+	local actor,input=self.garden.actors[ownerId],self.garden.inputs[ownerId]
+	local park=self.layout;local now=self.director:clock()
+	if not actor or not actor.park or actor.park.parkId~=park.Id or actor.mode~="Room"or not input or not input.alive or not park.member(input.position,true)then return false,"NotInPark"end
+	local home,target=self:lane(input.position)
+	if not home then return false,"NoLane"end
+	local flight,why
+	local reach=self:reachOf(ownerId)
+	if reach>Fetch.Reach then
+		local far=self:extend(home,target,reach)
+		flight=far and self:preflight(ownerId,input,home,far,true)or nil
+		if flight then target=far end
+	end
+	if not flight then flight,why=self:preflight(ownerId,input,home,target)end
+	if not flight then return false,why end
+	local participants,plans,winner=flight.participants,flight.plans,flight.winner
 	-- Every path is preflighted before any reservation. Only now may actors transition.
 	self.serial+=1
 	local session={id=park.Id..":fetch:"..self.serial,ownerId=ownerId,winnerId=winner,owners=participants,plans=plans,generations={},
