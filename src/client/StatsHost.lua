@@ -91,9 +91,13 @@ function Host.mount(deps)
  -- The store route reopens this panel as it was.
  function api.current()return if panel:isOpen()then{petId=panel.petOverride,from=if panel.from=="hub"then "hub"else nil,stat=Panel.Order[panel.index],snacks=if panel.mode=="snacks"then true else nil,
   guide=if panel.mode=="guide"then true else nil}else nil end
- function api.close(reason)return panel:close(reason or "close")end
  -- The medal moment (S4): medals crossed this session, one stage for all that wait together.
  local watch,moment={},nil
+ -- Closes whatever is up: the panel, and the medal moment over the garden.
+ function api.close(reason)
+  local lost=moment~=nil and moment:close(reason or "close")
+  return panel:close(reason or "close")or lost
+ end
  function api.isBusy()return moment~=nil and moment:isOpen()end
  local function eggsRoute()
   if not deps.openEggs then return false end

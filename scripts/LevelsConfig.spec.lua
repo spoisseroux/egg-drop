@@ -1,6 +1,6 @@
 -- Studio Server. The Levels runtime switch (LevelsConfig on AliveConfig's publisher) on a fake ConfigService,
--- clock and scheduler: the server's value before the attribute, missing / malformed = on, failures keep the
--- last value, /levels overrides; purchases and medal eggs in flight finish; credit is hidden, never lost.
+-- clock and scheduler: the server's value before the attribute, off until the config has loaded once, then
+-- missing / malformed = on, failures keep the last value, /levels overrides; purchases and medal eggs in flight finish; credit is hidden, never lost.
 -- Isolated adapters only; no DataStore or user writes.
 -- Usage: require(ServerScriptService.Server.ZZSpecs.LevelsConfig)(ServerScriptService.Server)
 return function(server)
@@ -79,9 +79,9 @@ return function(server)
 		return h,db2,c2
 	end
 	local ok,problem=pcall(function()
-		test("the default is written before anything yields, the server's value first; a service that never answers changes nothing",function()
+		test("off is written before anything yields, the server's value first; a service that never answers leaves it off",function()
 			local r=rig(function()return{GetConfigAsync=function()return coroutine.yield()end}end)
-			r.config.start();assert(table.concat(r.log,",")=="hold true,set true"and r.is(true));r.config.start();r.advance(1000);assert(#r.log==2)
+			r.config.start();assert(table.concat(r.log,",")=="hold false,set false"and r.is(false));r.config.start();r.advance(1000);assert(#r.log==2)
 		end)
 		test("levels_matter=false is off, true is on; missing and malformed are the shipped default; no other key is read",function()
 			for _,case in ipairs({{false,false},{true,true},{nil,true},{"false",true},{0,true}})do
@@ -90,13 +90,23 @@ return function(server)
 				for _,key in ipairs(s.asked)do assert(key=="levels_matter",key)end
 			end
 		end)
-		test("failures keep the shipped default and retry at 5, 15, 60 then every 300 s; a late load applies",function()
+		test("off while it has never loaded: failures retry at 5, 15, 60 then every 300 s; a late load applies",function()
 			local calls=0
 			local r=rig(serviceOf(function()calls+=1;if calls<5 then error("down")end;return snapshot({levels_matter=false})end))
-			r.config.start();r.advance(5+15+60);assert(r.is(true)and calls==4);r.advance(300);assert(r.is(false)and calls==5)
+			r.config.start();r.advance(5+15+60);assert(r.is(false)and calls==4);r.advance(300);assert(r.is(false)and calls==5 and r.config.loaded)
 			assert(table.concat(r.waits," ")=="5 15 60 300"and #r.warnings==1 and string.find(r.warnings[1],"[Levels]",1,true))
 			local errored=snapshot({levels_matter=false});errored.Error="LoadFailed"
-			r=rig(serviceOf(errored));r.config.start();r.advance(1000);assert(r.is(true))
+			r=rig(serviceOf(errored));r.config.start();r.advance(1000);assert(r.is(false))
+		end)
+		test("off then on once a late load lands (missing key), then off and on again: one attribute write per flip, no rejoin",function()
+			local calls=0
+			local s=snapshot({})
+			local r=rig(serviceOf(function()calls+=1;if calls==1 then error("down")end;return s end))
+			r.config.start();assert(r.is(false));r.advance(5);assert(r.is(true))
+			r.at=20;s.values={levels_matter=false};s.update();assert(r.is(false));r.at=40;s.values={};s.update();assert(r.is(true))
+			assert(table.concat(r.log,",")=="hold false,set false,hold true,set true,hold false,set false,hold true,set true")
+			-- an owner override speaks before the first load; clear goes back to off
+			r=rig(function()error("down")end);r.config.start();assert(r.config.command("/levels on")and r.is(true)and r.config.command("/levels clear")and r.is(false))
 		end)
 		test("an update flips it without a publish; a refresh that fails keeps the last value",function()
 			local s=snapshot({});local r=rig(serviceOf(s));r.config.start();assert(r.is(true))
@@ -170,6 +180,14 @@ return function(server)
 			done,why=H.statEggBuy(h,"m2","pip",true,key());assert(not done and why=="NoFreeEgg"and db.player_1.hatching.medalEggsUsed==1,tostring(why))
 			switch(true);assert(H.public(h).statEgg.medalEggs==1 and M.left(h.state)==1)
 			done=H.statEggBuy(h,"m3","pip",true,key());assert(done and db.player_1.hatching.medalEggsUsed==2 and M.left(h.state)==0)
+		end)
+		test("off then on for one open session: gated sale, medal credit and snapshot keys follow the switch",function()
+			switch(false)
+			local h=ready({jump=50})
+			assert(select(2,H.buyWearable(h,"o1","pip","partyhat_lime",40,true))=="NotForSale"and H.public(h).statEgg.medalEggs==nil)
+			switch(true)
+			assert(H.public(h).statEgg.medalEggs==2 and H.buyWearable(h,"o2","pip","partyhat_lime",40,true)and H.statEggBuy(h,"o3","pip",true,H.public(h).statEgg.quotes.pip.key))
+			switch(false);assert(H.public(h).statEgg.medalEggs==nil and H.equipWearable(h,"o4","pip","Hat",false))
 		end)
 		test("deck juice: off publishes nothing and refuses a choice; the saved choice is untouched",function()
 			local state={inventoryMask=Eggs.bit("pip"),petStats={pip={power=Stats.xpFor(50)}}}

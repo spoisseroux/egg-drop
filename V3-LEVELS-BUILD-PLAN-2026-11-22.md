@@ -4,7 +4,8 @@ Scope: `V3-SCOPE-2026-11-21.md` 2, 3.1, 6, 7. No capes. Starts after the Alive e
 
 ## Rules
 
-- `FeatureFlags.LevelsMatter=true` is the build ceiling. `src/shared/Levels.lua` (pure): `Levels.on(part)` needs the flag **and** (place 107705084891479 **or** Studio). Parts `track, gates, medals, juice`. Specs inject flags, place and studio, and run each suite on and off. No runtime switch yet (off needs a republish; add one before live).
+- `FeatureFlags.LevelsMatter=true` is the build ceiling. `src/shared/Levels.lua` (pure): `Levels.on(part)` needs the flag **and** (place 107705084891479 **or** Studio). Parts `track, gates, medals, juice`. Specs inject flags, place and studio, and run each suite on and off. Runtime switch: ConfigService `levels_matter` (server `LevelsConfig`), off until it has loaded once, then missing = on.
+- **Going live checklist:** move both beta constants, `Alive.PlaceId` (`src/shared/Alive.lua`) and `Levels.PlaceId` (`src/shared/Levels.lua`), to the live place (and their specs' beta ids), and set the `levels_matter` and `alive_*` keys in the live config first.
 - Off = today: shops, shelf weeks, Book totals, pips, toasts, writes, snapshot keys. Saved ids still display and stay owned.
 - Levels come from XP and XP never falls: derive everything. Levels in gates, medals and tricks are append-only and may only loosen.
 

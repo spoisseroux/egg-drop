@@ -1180,7 +1180,8 @@ do
   buy=function(order)nurseryRequest:FireServer("wearableBuy",{id=order.id,petId=order.petId,itemId=order.itemId,price=order.price,equip=true},nurseryState and nurseryState.revision or 0)end,
   equip=function(order)nurseryRequest:FireServer("wearableEquip",{id=order.id,petId=order.petId,slot=order.slot,itemId=order.wear},nurseryState and nurseryState.revision or 0)end,
   done=function(order)
-   local item=WearableCatalog.item(order.petId,order.itemId)
+   -- Every row ever: an owned gated item still says so while gates are off.
+   local item=WearableCatalog.item(order.petId,order.itemId)or WearableCatalog.forPet(order.petId,math.huge).byId[order.itemId]
    clientUI.wardrobeToaster=clientUI.wardrobeToaster or Kit.toaster(host)
    if item then clientUI.wardrobeToaster.show(if order.action=="wearableBuy"then item.name.." bought"elseif order.wear then item.name.." on"else item.name.." off")end
   end,
@@ -1620,7 +1621,7 @@ local function refreshNursery(state)
  if clientUI.syncFirstSpend then clientUI.syncFirstSpend(state)end
 	local result = state.lastHatch
  if result and clientUI.isHueOpen()then clientUI.hueView:close("forced")end
- if result and clientUI.stats then clientUI.stats.close("forced")end
+ if result and clientUI.stats then clientUI.stats.close("forced")end -- the panel and the medal moment
  if result and clientUI.names then clientUI.names.close("forced")end
 	if result and result.id ~= shownNurseryHatch then
 		cancelHatchNavigation()
@@ -1781,7 +1782,7 @@ function clientUI.closeAllMenus(reason)
  cancelHatchNavigation();clearPlayInputs()
  if clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then clientUI.wardrobe:close()end
  if clientUI.names and clientUI.names.isOpen()then clientUI.names.close(reason)end
- if clientUI.stats and clientUI.stats.isOpen()then clientUI.stats.close(reason)end
+ if clientUI.stats and(clientUI.stats.isOpen()or clientUI.stats.isBusy())then clientUI.stats.close(reason)end
  if clientUI.hub and clientUI.hub:isOpen()then clientUI.hub:close(reason)end
  if clientUI.book and clientUI.book:isOpen()then clientUI.book:close(reason)end
  if clientUI.questLog and clientUI.questLog.visible then clientUI.questFromHub=nil;clientUI.closeQuestLog()end

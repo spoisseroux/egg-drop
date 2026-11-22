@@ -48,9 +48,10 @@ function State.spend(state)
 	return true
 end
 -- Load-time repair, after the stats seed (the seed may earn medals): a malformed count becomes the
--- number earned, so a broken field can never hand out eggs. Off: nothing is written.
+-- number earned, so a broken field can never hand out eggs. Off: nothing is written. With no stats (load
+-- dropped them) nothing is known to be earned: the field stays as it is, which already reads as none left.
 function State.sanitize(state)
-	if type(state)~="table"or not Levels.on("medals")then return end
+	if type(state)~="table"or state.petStats==nil or not Levels.on("medals")then return end
 	if State.used(state)==nil then state.medalEggsUsed=math.min(State.earned(state),State.StoredMax)end
 end
 return State

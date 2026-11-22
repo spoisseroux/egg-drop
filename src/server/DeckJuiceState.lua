@@ -8,7 +8,14 @@ local Gate=require(Shared.LevelGate)
 local Levels=require(Shared.Levels)
 local Stats=require(script.Parent.StatState)
 
-local State={Throttle=.25}
+local State={Throttle=.25,FlushGap=5}
+-- True (and noted on the board) when a choice may ask for a save now: at most one per FlushGap. The sweep
+-- and the leave save take the rest, so the last choice is always kept.
+function State.flushDue(board,now)
+	if board.juiceFlushAt and now-board.juiceFlushAt<State.FlushGap then return false end
+	board.juiceFlushAt=now
+	return true
+end
 function State.levels(state)
 	return Gate.levels(Stats.publicLevels(state).pets)
 end

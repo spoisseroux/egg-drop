@@ -116,6 +116,19 @@ function Preload.new(options)
 	}
 	return setmetatable(self, { __index = Preload })
 end
+-- Levels matter: the switch came on after this list was made: what it adds joins the background pass.
+function Preload:extend(images)
+	local seen = {}
+	for _, uri in ipairs(self.images) do seen[canonical(uri)] = true end
+	for _, uri in ipairs(images or Preload.allImages()) do
+		local id = canonical(uri)
+		if not seen[id] then
+			seen[id] = true
+			table.insert(self.images, uri)
+			if self.done then self.warm:request({ id }, function(ok) if ok then self.ready[id] = true else self.failed[id] = true end; self:progress() end, 0) end
+		end
+	end
+end
 function Preload:isReady(uri) return self.ready[canonical(uri)] == true end
 function Preload:stop() self.stopped = true end
 -- Background pass: wait for the game and the garden, then warm in small batches.
@@ -190,6 +203,7 @@ function Preload.start()
 	if not player then return nil end
 	Preload.shared = Preload.new()
 	Preload.shared.reportTo = player:FindFirstChildOfClass("PlayerGui")
+	Levels.changed():Connect(function() if Levels.switch() and not Preload.shared.stopped then Preload.shared:extend() end end)
 	task.spawn(function() Preload.shared:run() end)
 	return Preload.shared
 end

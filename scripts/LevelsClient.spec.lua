@@ -23,6 +23,30 @@ return function(client,parent)
   test("a client cannot set the server's value",function()
    assert(Levels.setSwitch(true)==false and not Levels.switch())
   end)
+  test("off then on in one session: the parts, the trick baseline and the medal watch start fresh, with no old news",function()
+   local Toasts=require(client.StatToasts)
+   local Host=require(client.StatsHost)
+   local seen,watch={},{}
+   local state={bond={},petStats={pets={pip={level={heart=33}}}}}
+   for _=1,2 do
+    workspace:SetAttribute(Levels.Attribute,false)
+    assert(#Toasts.trickUps(seen,state)==0 and Host.watchMedals(watch,{pip={jump=50}})==0)
+    seen.tricks=nil -- init's off branch
+    workspace:SetAttribute(Levels.Attribute,true)
+    assert(Levels.on("medals")==Levels.ceiling("medals"))
+    assert(#Toasts.trickUps(seen,state)==0 and Host.watchMedals(watch,{pip={jump=50}})==0,"the first look only records")
+   end
+   assert(Host.watchMedals(watch,{pip={jump=75}})==(if Levels.on("medals")then 1 else 0))
+  end)
+  test("wiring: closing every menu closes the medal moment, a committed hatch does too, and an owned gated item is named while off",function()
+   local source=client.Source
+   assert(string.find(source,"if clientUI.stats and(clientUI.stats.isOpen()or clientUI.stats.isBusy())then clientUI.stats.close(reason)end",1,true),"closeAllMenus")
+   assert(string.find(source,"if result and clientUI.stats then clientUI.stats.close(\"forced\")end",1,true),"refreshNursery")
+   assert(string.find(source,"or WearableCatalog.forPet(order.petId,math.huge).byId[order.itemId]",1,true),"wardrobe toast")
+   local Wear=require(game:GetService("ReplicatedStorage").Shared.WearableCatalog)
+   workspace:SetAttribute(Levels.Attribute,false)
+   assert(Wear.item("pip","partyhat_lime")==nil and Wear.forPet("pip",math.huge).byId.partyhat_lime.name=="Lime Party Hat")
+  end)
   test("off: the trick tickets, the medal watch and the shop chip all stand down",function()
    workspace:SetAttribute(Levels.Attribute,false)
    local Toasts=require(client.StatToasts)

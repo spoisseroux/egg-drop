@@ -177,6 +177,10 @@ return function(server)
 			for _,fine in ipairs({0,1,1000000})do local h=ready({petStats=xp({jump=50}),medalEggsUsed=fine});assert(h.state.medalEggsUsed==fine)end
 			-- petStats dropped at load: credit 0, and the count kept
 			local h=ready({petStats="junk",medalEggsUsed=2});assert(h.status=="Ready"and M.left(h.state)==0 and h.state.medalEggsUsed==2)
+			-- and a malformed count is not repaired to zero while the stats are gone: it still reads as none left
+			local gone={inventoryMask=pip,medalEggsUsed="broken"}
+			M.sanitize(gone);assert(gone.medalEggsUsed=="broken"and M.left(gone)==0 and not M.spend(gone))
+			gone.petStats=xp({jump=50});M.sanitize(gone);assert(gone.medalEggsUsed==2 and M.left(gone)==0)
 		end)
 		test("off: the credit is hidden, NoFreeEgg as before, nothing written; on again it is all still there",function()
 			medals(false)

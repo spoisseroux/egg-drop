@@ -154,6 +154,32 @@ return function(client,parent)
    Stage.show=real
    assert(fine,wrong)
   end)
+  test("a stage that is lost, or outstays its time, closes the moment; api.close closes it too",function()
+   on()
+   local rows={{petId="pip",stat="jump",tier="sprout",level=25}}
+   local moment=View.Moment.new(parent,nil)
+   assert(moment:show(rows,{waiting=1},{}));moment.stage:destroy();settle(3)
+   assert(not moment:isOpen()and not moment.gui.Enabled and moment.limit==nil,"lost")
+   assert(moment:show(rows,{waiting=1},{}));moment.stage=nil;settle(3);assert(not moment:isOpen(),"missing")
+   local grace=View.Moment.Grace
+   assert(grace==15)
+   View.Moment.Grace=-1000
+   local fine,wrong=pcall(function()
+    local reason
+    assert(moment:show(rows,{waiting=1},{closed=function(why)reason=why end}))
+    moment.stage.holdsClock=function()return true end -- a stage that never settles
+    settle(4);assert(not moment:isOpen()and reason=="timeout",tostring(reason))
+   end)
+   View.Moment.Grace=grace;moment:destroy()
+   assert(fine,wrong)
+   local probe=Instance.new("Frame");probe.Size=UDim2.fromScale(1,1);probe.BackgroundTransparency=1;probe.Parent=gui
+   local state=snapshot({jump=24})
+   local api=Host.mount({parent=parent,insetProbe=probe,state=function()return state end,activeId=function()return "pip"end,appearance=function()return{}end,
+    canOpen=function()return true end,prepare=function()end,held=function()return false end,openEggs=function()end,quiet=function()return true end,playerGui=parent})
+   api.sync(state);state=snapshot({jump=25});api.sync(state);settle(4);assert(api.isBusy())
+   api.close("forced");assert(not api.isBusy(),"a committed hatch or the store route")
+   api.destroy();probe:Destroy()
+  end)
   test("the moment: waits for quiet, one stage for several medals, A goes to the eggs",function()
    on()
    local probe=Instance.new("Frame");probe.Size=UDim2.fromScale(1,1);probe.BackgroundTransparency=1;probe.Parent=gui

@@ -1181,7 +1181,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		if not map then return end
 		Progress.setSetting(board.profile, "deckJuice", map)
 		petHello.social(board)
-		Progress.requestFlush(board.profile)
+		if DeckJuice.flushDue(board, now) then Progress.requestFlush(board.profile) end
 		return
 	end
 	if action == "menuColours" then

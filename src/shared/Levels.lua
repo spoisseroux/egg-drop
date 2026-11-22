@@ -3,8 +3,8 @@
 -- is on. Off is exactly the game before this build: shops, shelf weeks, Book totals, snapshots and
 -- writes. Missing flag = off.
 --   Levels.on(part)   part is "track" (S1), "gates" (S2), "medals" (S4) or "juice" (S3)
--- The runtime switch (server LevelsConfig; ConfigService key `levels_matter`, missing = on) is for all
--- four parts. The server reads its own resolved value, never an attribute; clients read the workspace
+-- The runtime switch (server LevelsConfig; ConfigService key `levels_matter`, off until it has loaded
+-- once, then missing = on) is for all four parts. The server reads its own resolved value, never an attribute; clients read the workspace
 -- attribute the server writes, and a missing one (no such server code, or not started) is off.
 local RunService=game:GetService("RunService")
 local Flags=require(script.Parent.FeatureFlags)
