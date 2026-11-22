@@ -21,6 +21,15 @@ Store.Products = table.freeze({
 	table.freeze({ key = "chest", id = 3730431229, price = 499, stars = 400, name = "Chest of Stars" }),
 })
 
+-- Offer icons on the Get Stars page (Fable's pass / pack art, 2026-11-21; 256 px Images,
+-- assets/ui/store-icons/asset-ids.json). Presentation only; the server never reads these.
+Store.Icons = table.freeze({
+	doubleStars = "rbxassetid://118011813767622", supporter = "rbxassetid://74750791155139",
+	starter = "rbxassetid://108466283055872", handful = "rbxassetid://74483269282745",
+	pouch = "rbxassetid://108817187115805", jar = "rbxassetid://130169643842493",
+	chest = "rbxassetid://116263073319468",
+})
+
 -- Pass effects on a saved round reward. Applied inside the fenced transaction.
 Store.DoubleStarsMultiplier = 2
 Store.SupporterRoundBonus = 1
