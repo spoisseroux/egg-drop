@@ -72,7 +72,7 @@ Kill switch: per-feature `FeatureFlags` as ceiling, **plus** server `ConfigServi
 - Strip scripts, constraints, sounds, hidden children; pass through Blender.
 - Commit source, author, licence, date, SHA, our asset id. No licence, no use.
 - Upload as game owner; await moderation; grant both universes; test another account.
-- Textures 256 or less. "Original art only" stands.
+- Textures 256 or less. "Original art only" was loosened 2026-11-22 ("Allow some"): V3-SCOPE 12.9.
 
 ## 6. Rollout
 

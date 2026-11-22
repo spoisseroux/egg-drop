@@ -161,7 +161,6 @@ C5 garden pals (after the Dash pals exist), C6 fish, B8 ripples, D5 pop, A9, upr
 
 ## Open questions for Spencer
 
-1. Does "original art only" cover sound too (section 4)?
-2. Any restyled CC0 scenery ever, or never?
+1. and 2. Answered 2026-11-22 ("Allow some"): `V3-SCOPE-2026-11-21.md` 12.9.
 3. Alive 1 as scoped: go?
 4. The screen recording of the reference game's menus is still wanted before the spring numbers are locked (12.1). Until then the numbers are our own taste.
