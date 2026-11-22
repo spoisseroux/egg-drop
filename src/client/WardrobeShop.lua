@@ -22,6 +22,9 @@ local Bounds=require(script.Parent.PetRigBounds)
 local TabInk=require(script.Parent.TabInk)
 local HintLegend=require(script.Parent.HintLegend)
 local Deal=require(script.Parent.ShelfDeal)
+-- Levels matter (S2): level-gated recolours (the chip, the bar and the way to the training).
+local Levels=require(Shared.Levels)
+local Locked=require(script.Parent.LockedItem)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
@@ -36,13 +39,22 @@ local SlotNote={Hat="Hats sit on the crown",Shirt="Sleeves move with the arms",N
 Shop.NoneId="none"
 -- Pure: the cards of one slot tab (None first, then the catalogue items). A slot
 -- with no items for this pet has no cards at all (the empty line shows instead).
-function Shop.tileList(petId,slot)
+-- `owned` (the pet's owned ids): a gated item it owns stays listed while gates are off.
+function Shop.tileList(petId,slot,owned)
  if not petId then return {}end -- before the first open there is no pet yet (slice E)
- local items=Catalog.inTab(petId,slot)
+ local items=Catalog.shopTab(petId,slot,owned)
  if #items==0 then return {}end
  local list={{id=Shop.NoneId,none=true,slot=slot,name=UICopy.get("r4.wardrobe.none")}}
  for _,item in ipairs(items)do table.insert(list,item)end
  return list
+end
+-- Pure: an item by id. A gated item the shop does not list (gates off) still resolves, so an
+-- owned one can be seen, worn and taken off; `status` never sells it.
+function Shop.item(petId,id)
+ local item=Catalog.item(petId,id)
+ if item then return item end
+ local any=Catalog.forPet(petId,math.huge).byId[id]
+ return if any and any.gate~=nil then any else nil
 end
 -- Pure: the None card's pane. Current when nothing is worn in the slot.
 function Shop.noneStatus(petId,slot,ctx)
@@ -51,17 +63,24 @@ function Shop.noneStatus(petId,slot,ctx)
  return {kind="owned",text="",button=UICopy.get("r4.wardrobe.takeOff"),enabled=true}
 end
 -- Pure: what the pane says and offers for one item.
--- ctx = { petId, wallet, row = {owned={...}, equipped={key=id}} }
+-- ctx = { petId, wallet, row = {owned={...}, equipped={key=id}}, levels = {petId={stat=level}} }
 -- QA v2 R3.5: the item being worn keeps its button, disabled, reading "Equipped"
 -- (taking it off is the None card).
 function Shop.status(petId,itemId,ctx)
- local item=Catalog.item(petId,itemId)
+ local item=Shop.item(petId,itemId)
  if not item then return {kind="invalid",text="",button=nil}end
  local row=ctx.row or {owned={},equipped={}}
  local owned=table.find(row.owned or {},itemId)~=nil
+ if not owned and not Catalog.item(petId,itemId)then return {kind="invalid",text="",button=nil}end
  if owned and Catalog.equippedIn(petId,row.equipped,item.slot)==itemId then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
  if owned then return {kind="owned",text="",button="Wear",enabled=true}end
  local wallet=ctx.wallet or 0
+ -- Levels matter (S2): below the level the pane shows the way there; the price stays on the card.
+ local gate=Locked.info(item,ctx.levels)
+ if gate and not gate.met then
+  local pet=gate.petId and Pets.byId[gate.petId]or Pets.byId[petId]
+  return {kind="locked",text=gate.line,button=Locked.trainText(gate,pet and pet.name),price=item.price,gate=gate,enabled=true}
+ end
  -- Slice C: an item on this week's shelf sells at the shelf price (`full` = the struck price).
  local price,full=Deal.quote("wearable",itemId,item.price,ctx.week)
  if wallet>=price then return {kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
@@ -76,7 +95,7 @@ function Shop.tileStatus(petId,itemId,ctx,slot)
  if s.kind=="equipped"then return "WEARING","accent"end
  if s.kind=="owned"then return "✓ Owned","soft"end
  if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
- if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
+ if s.kind=="short"or s.kind=="locked"then return Deal.priceText(s.price,s.full),"dim"end
  return "","dim"
 end
 -- Slice E: the pet the Wardrobe opens on when none (or one without wearables) is asked
@@ -88,10 +107,10 @@ end
 -- Slice B: only slot tabs with at least one item for this pet are shown (Ankle stays
 -- hidden until an anklet exists). A pet with no wearables at all keeps every tab, so
 -- the screen still has a tab bar and the empty line.
-function Shop.tabsFor(petId)
+function Shop.tabsFor(petId,owned)
  local list={}
  if petId then
-  for _,tab in ipairs(Catalog.Tabs)do if #Catalog.inTab(petId,tab.slot)>0 then table.insert(list,tab)end end
+  for _,tab in ipairs(Catalog.Tabs)do if #Catalog.shopTab(petId,tab.slot,owned)>0 then table.insert(list,tab)end end
  end
  if #list==0 then for _,tab in ipairs(Catalog.Tabs)do table.insert(list,tab)end end
  return list
@@ -150,7 +169,7 @@ end
 -- swapped into its slot (or the slot emptied when the focused item is the one worn).
 function Shop.previewWearables(petId,equipped,itemId)
  local result=table.clone(equipped or {})
- local item=itemId and Catalog.item(petId,itemId)
+ local item=itemId and Shop.item(petId,itemId)
  if not item then return result end
  for _,key in ipairs(Catalog.slotKeys(petId,item.slot))do result[key]=nil end
  for _,key in ipairs(item.keys)do result[key]=item.id end
@@ -158,7 +177,7 @@ function Shop.previewWearables(petId,equipped,itemId)
 end
 -- Pure: a short line about exclusions for the focused item (hide, never unequip).
 function Shop.note(petId,itemId,stages)
- local item=Catalog.item(petId,itemId);if not item then return ""end
+ local item=Shop.item(petId,itemId);if not item then return ""end
  local horns=(stages and stages.horns or 0)>0
  if item.slot=="Hat"and item.flags.openCrown then return if horns then "Open crown: your horns stay visible"else "Open crown: horns stay visible"end
  if item.slot=="Hat"and item.flags.coversHorns and horns then return "Hides your horns while worn"end
@@ -238,7 +257,8 @@ end
 
 -- The visible tab list (slice B) and the tab in front.
 function Shop:tabInfo()return self.tabList[self.tab]or self.tabList[1]end
-function Shop:items()return if self.petId then Catalog.inTab(self.petId,self:tabInfo().slot)else {}end
+function Shop:owned()return self.ctx.row and self.ctx.row.owned or nil end
+function Shop:items()return if self.petId then Catalog.shopTab(self.petId,self:tabInfo().slot,self:owned())else {}end
 function Shop:slot()return self:tabInfo().slot end
 -- The pane status of a card (None included).
 function Shop:statusOf(id)
@@ -279,7 +299,7 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
  if self.tileRoot then self.tileRoot:Destroy()end
  local holder=Kit.frame(parent,"Tiles",nil,UDim2.new(),UDim2.fromScale(1,1));holder.ZIndex=parent.ZIndex+1;self.tileRoot=holder
  self.tiles={}
- for index,item in ipairs(Shop.tileList(self.petId,self:slot()))do
+ for index,item in ipairs(Shop.tileList(self.petId,self:slot(),self:owned()))do
   local col,row=(index-1)%cols,math.floor((index-1)/cols)
   -- T2: pressable tile with a lip (4 px in the 12 px desktop gap, 3 px in the 8 px phone gap).
   local tile,tileState=Kit.tile(holder,"Tile_"..item.id,{selectable=false,radius=12,compact=gap<12,
@@ -311,6 +331,18 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
   local status=txt(tile,"Counter","","soft",tx,tileH/2+2,tileW-tx-8,18,{TextSize=13})
   self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role,slot=item.slot,primary=item.primary,none=item.none,
    variantColor=Shop.variantColor(item)}
+  -- Levels matter (S2): the requirement chip (right of the price on phones, under it on desktop)
+  -- and the small lock, made only for a gated item while gates are on.
+  if Locked.on()and item.gate~=nil then
+   local entry=self.tiles[index]
+   entry.lock=Locked.mark(swatch,if side>=60 then 22 else 16)
+   entry.chip=Locked.chip(tile,20)
+   if tileH>=90 then entry.chip.root.Position=UDim2.fromOffset(tx,tileH/2+21);entry.chipRoom=tileW-tx-8
+   else
+    entry.chip.root.AnchorPoint=Vector2.new(1,0);entry.chip.root.Position=UDim2.fromOffset(tileW-8,tileH/2+1)
+    entry.chipRoom=tileW-tx-8-58
+   end
+  end
   tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
  end
  if #self.tiles==0 then txt(holder,"Body",UICopy.get("wardrobe.emptySlot"),"soft",x0,y0,300,24)end
@@ -353,7 +385,8 @@ function Shop:build(view)
  self.content=content
  -- Slice B: the tabs this pet has items for; the front tab stays on its slot when it can.
  local frontId=self.tabList and self.tabList[self.tab]and self.tabList[self.tab].id
- self.tabList=Shop.tabsFor(self.petId);self.tabKey=Shop.tabKey(self.tabList)
+ self.levelsKey=Levels.key()
+ self.tabList=Shop.tabsFor(self.petId,self:owned());self.tabKey=Shop.tabKey(self.tabList)
  self.tab=1;for i,tab in ipairs(self.tabList)do if tab.id==frontId then self.tab=i end end
  local labels={};for _,tab in ipairs(self.tabList)do table.insert(labels,Shop.tabLabel(tab))end
  if phone then
@@ -456,7 +489,7 @@ end
 function Shop.applyEquip(petId,equipped,itemId,wear,slot)
  if wear then return Shop.previewWearables(petId,equipped,itemId)end
  local result=table.clone(equipped or {})
- local item=Catalog.item(petId,itemId)
+ local item=Shop.item(petId,itemId)
  slot=slot or(item and item.slot)
  if not slot then return result end
  for _,key in ipairs(Catalog.slotKeys(petId,slot))do result[key]=nil end
@@ -478,9 +511,13 @@ function Shop:setContext(ctx)
   self.ctx.row={owned=ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self.equips)}
  end
  if ctx.stages then self.ctx.stages=ctx.stages end
+ -- Levels matter: the pets' levels (the owner snapshot's) for the requirement chips.
+ self.ctx.levels=if Locked.on()then ctx.levels or Locked.levels()else nil
  -- Slice C: the shelf week (the snapshot's own day; ShelfDeal.week reads the owner snapshot).
  if ctx.week~=nil then self.ctx.week=ctx.week else self.ctx.week=Deal.week()or self.ctx.week end
  if self.wallet then self.wallet.set(self.ctx.wallet)end
+ -- The runtime switch flipped while the shop is open: list, chips and tabs again.
+ if self.visible and self.levelsKey~=Levels.key()then self:build(self.view);self:relayout();return end
  if self.visible then self:refresh()end
 end
 
@@ -620,6 +657,13 @@ function Shop:refresh()
   tile.stroke.Thickness=if focused then 2 else 1;tile.stroke.Transparency=if focused then 0 else .86
   Kit.paint(tile.stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
   tile.button:SetAttribute("TileState",self:statusOf(tile.id).kind)
+  if tile.chip then
+   local owned=table.find(self.ctx.row.owned or {},tile.id)~=nil
+   local item=Shop.item(self.petId,tile.id)
+   local gate=Locked.info(item,self.ctx.levels,owned)
+   tile.chip.set(gate,tile.chipRoom);tile.lock.set(gate~=nil and not gate.met)
+   if item then tile.button:SetAttribute("AccessibleLabel",if gate and not gate.met then item.name..", "..gate.needs else item.name)end
+  end
  end
  self:paintPane()
 end
@@ -665,7 +709,7 @@ function Shop:paintPane()
   if self.deal then self.deal.set(false)end
   if self.visible and self.petId then self:paintPreview()end;return
  end
- local item=Catalog.item(self.petId,id)
+ local item=Shop.item(self.petId,id)
  if id==Shop.NoneId or not item then
   self.tier.root.Visible=false;self.name.Text=UICopy.get("r4.wardrobe.none")
   self.note.Text=UICopy.get("r4.wardrobe.noneNote")
@@ -681,16 +725,43 @@ function Shop:paintPane()
  local pending=self.pending and self.pending.itemId==id and self.pending.action=="wearableBuy"
  self.status.Text=if pending then "Saving…"elseif self.errorId==id and self.errorText then self.errorText else status.text
  if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.status,self.errorFit)end
+ -- Levels matter: "Needs Jump 30 · 22/30" (the requirement alone when that is too long) and its bar.
+ local gate=if status.kind=="locked"then status.gate else nil
+ if gate and not(self.errorId==id and self.errorText)then Kit.fitText(self.status,{gate.line,gate.needs})end
+ self:paintLock(gate)
  local tone=if status.kind=="equipped"then "accent"elseif status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
  Kit.paint(self.status,"TextColor3",function()return colorOf(tone,self.status,"TextColor3")end)
  self.action.Visible=status.button~=nil
  if status.button then
   Kit.setText(self.action,if pending then "Saving…"elseif confirming then "Confirm ★ "..status.price else status.button)
-  Kit.setEnabled(self.action,status.enabled==true and not(self.pending and self.pending.action=="wearableBuy"))
+  Kit.setEnabled(self.action,status.enabled==true and not(self.pending and self.pending.action=="wearableBuy")and(gate==nil or self.callbacks.train~=nil))
   Kit.setTappable(self.action,status.kind=="short"and not self.pending)
  end
  self.root:SetAttribute("FocusedItem",id);self.root:SetAttribute("PaneState",status.kind);self.root:SetAttribute("Tab",self:tabInfo().id)
  if self.visible then self:paintPreview()end
+end
+
+-- The bar between the requirement line and the button; made the first time a locked item is shown.
+function Shop:paintLock(gate)
+ if not gate and not self.lockBar then return end
+ if not self.lockBar or not self.lockBar.root.Parent then
+  if not gate then self.lockBar=nil;return end
+  local y=self.status.Position.Y.Offset+self.status.Size.Y.Offset
+  self.lockBar=Locked.bar(self.status.Parent,self.status.Position.X.Offset,y+1,self.status.Size.X.Offset,5)
+ end
+ self.lockBar.set(gate)
+end
+-- Brings one item's card to the front (the reward guide's "Go to shop"). True when it is listed.
+function Shop:showItem(itemId)
+ local item=self.petId and Shop.item(self.petId,itemId)
+ if not item then return false end
+ for index,tab in ipairs(self.tabList)do
+  if tab.slot==item.slot then
+   if index~=self.tab and self:setTab(index)==false then return false end
+   for i,tile in ipairs(self.tiles)do if tile.id==itemId then self:focus(i,true);return true end end
+  end
+ end
+ return false
 end
 
 function Shop:scrollTo(index)
@@ -764,18 +835,23 @@ function Shop:act()
    self:paintPane();return true
   end
   -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
-  return require(script.Parent.ConfirmDialog).purchase(self,id,(Catalog.item(self.petId,id)or{name=""}).name or "",status.price,
+  return require(script.Parent.ConfirmDialog).purchase(self,id,(Shop.item(self.petId,id)or{name=""}).name or "",status.price,
    function()return self.visible and self:focusedId()==id end,function()self:act()end)~=nil
+ elseif status.kind=="locked"then
+  -- Levels matter: the button leads to where that stat is trained (the stats panel on it).
+  if self.pending or not self.callbacks.train then return false end
+  self.callbacks.train(Locked.route(status.gate))
+  return true
  elseif status.kind=="short"then
   -- Stars store access: a short item opens the "need more Stars" card.
   if self.pending then return false end
-  return require(script.Parent.StarsShort).ask({price=status.price,wallet=self.ctx.wallet,item=(Catalog.item(self.petId,id)or{name=""}).name,from="wardrobe"},self)
+  return require(script.Parent.StarsShort).ask({price=status.price,wallet=self.ctx.wallet,item=(Shop.item(self.petId,id)or{name=""}).name,from="wardrobe"},self)
  end
  return false
 end
 
 local Reasons={NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled",NotOwned="shop.reason.notOwned",
- PriceChanged="shop.reason.priceChanged",ShelfChanged="shop.reason.priceChanged",Retrying="shop.reason.retrying"}
+ NeedsLevel="shop.reason.needsLevel",PriceChanged="shop.reason.priceChanged",ShelfChanged="shop.reason.priceChanged",Retrying="shop.reason.retrying"}
 function Shop:result(message)
  if type(message)~="table"then return false end
  -- Equips: any in-flight order (an earlier one superseded by a quicker second tap still
@@ -805,7 +881,7 @@ function Shop:result(message)
  if message.status~="Saved"then
   self.errorId,self.errorText,self.errorFit=order.itemId,UICopy.get(Reasons[message.reason]or "shop.failed.saved"),nil
   if message.reason=="NeedStars"then
-   local item=Catalog.item(order.petId or self.petId,order.itemId)
+   local item=Shop.item(order.petId or self.petId,order.itemId)
    local price=item and Deal.quote("wearable",order.itemId,item.price,self.ctx.week)
    self.errorFit=UICopy.starsShort(if price then price-(self.ctx.wallet or 0)else nil);self.errorText=self.errorFit[1]
   end
@@ -822,7 +898,7 @@ function Shop:open(petId,ctx)
  self.visible=true;self.root.Visible=true;self.confirmId,self.errorId=nil,nil
  Kit.shadeOpen(self,self.shade,function(covered)self.root.Visible=not covered end)
  -- Slice B: another pet can have other tabs; rebuild the bar when the set changes.
- if Shop.tabKey(Shop.tabsFor(self.petId))~=self.tabKey then self:build(self.view);self:relayout()end
+ if Shop.tabKey(Shop.tabsFor(self.petId,self:owned()))~=self.tabKey or self.levelsKey~=Levels.key()then self:build(self.view);self:relayout()end
  self:fit(self.host.AbsoluteSize)
  if self.visual and self.visualPet~=self.petId then self.visual:destroy();self.visual=nil end
  self:setTab(self.tab)

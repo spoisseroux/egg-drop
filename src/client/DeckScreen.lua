@@ -796,7 +796,8 @@ end
 
 function Screen:setTheme(id,theme)
  self.plate.Image=Assets.Faceplate[id]or Assets.Faceplate.sherbet
- for _,r in ipairs(self.rims)do r.Image=self.plate.Image end
+ Assets.plateBase(self.plate,theme)
+ for _,r in ipairs(self.rims)do r.Image=self.plate.Image;Assets.plateBase(r,theme,true)end
  local band=theme.bandTint or Color3.new(1,1,1)
  self.band.ImageColor3=band;for _,s in ipairs(self.shoulders)do s.ImageColor3=band end
  self.wordmark.ImageColor3=theme.engrave or Kit.Color.ink;self.wordmark.ImageTransparency=1-(theme.engraveOpacity or .42)

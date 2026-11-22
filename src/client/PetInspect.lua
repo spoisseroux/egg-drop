@@ -37,6 +37,10 @@ local Materials=require(Shared.MaterialCatalog)
 local Charms=require(Shared.PetCharmCatalog)
 local StatCatalog=require(Shared.StatCatalog)
 local StatsPanel=require(script.Parent.StatsPanel)
+-- Levels matter (S4): the Marks row (medals derived from the public levels) and the trim from 75.
+local Levels=require(Shared.Levels)
+local Medals=require(Shared.Medals)
+local MedalView=require(script.Parent.MedalView)
 
 local Inspect={};Inspect.__index=Inspect
 Inspect.Action="PetInspectClose"
@@ -53,7 +57,8 @@ function Inspect.rows(petId,appearance)
  local worn=type(appearance.wearables)=="table"and appearance.wearables or {}
  for _,tab in ipairs(Wearables.Tabs)do
   local id=Wearables.equippedIn(petId,worn,tab.slot)
-  local item=id and Wearables.item(petId,id)
+  -- A level-gated item still worn while gates are off keeps its name.
+  local item=id and(Wearables.item(petId,id)or Wearables.forPet(petId,math.huge).byId[id])
   table.insert(rows,{key=tab.id,label=tab.label,value=if item then item.name else UICopy.get("inspect.empty"),empty=item==nil})
  end
  local shape=Charms.ById[Charms.renderShape(appearance.charmShape)]
@@ -107,8 +112,10 @@ function Inspect.stableFree(memo,raw,now)
  if now-memo.since>=Inspect.FreeHold then memo.free,memo.since=raw,nil end
  return memo.free
 end
--- Pure: card geometry for a screen. Compact = a phone-height screen.
-function Inspect.geometry(width,height)
+-- Pure: card geometry for a screen. Compact = a phone-height screen. `marks` (Levels matter S4):
+-- room for the medals: a row of their own, or (phones, where the card has no row to spare) the right
+-- of the summary strip.
+function Inspect.geometry(width,height,marks)
  local compact=height<500
  local pad=if compact then 8 else 12
  local W=math.min(if compact then 460 else 540,width-24)
@@ -129,12 +136,14 @@ function Inspect.geometry(width,height)
  local tileH=if compact then 46 else 60
  local stripH=if compact then 30 else 40
  local noteH=if compact then 12 else 16
- local statsH=tileH*2+gap*2+stripH+2+noteH
+ local marksH=if marks and not compact then 38 else 0
+ if marks and compact then stripH=34 end
+ local statsH=tileH*2+gap*2+stripH+2+noteH+(if marksH>0 then marksH+gap else 0)
  local bodyH=math.max(gridH,statsH)
  local H=gridY+bodyH+8+button+pad+4
  local x0=pad+preview+pad
  return {compact=compact,pad=pad,W=W,H=H,preview=preview,rowH=rowH,gap=gap,rows=rows,head=head,sub=sub,button=button,gridY=gridY,gridH=gridH,x0=x0,rightW=W-x0-pad,
-  tabsH=tabsH,tabsY=tabsY,tileH=tileH,stripH=stripH,noteH=noteH,statsH=statsH,bodyH=bodyH,compareW=if compact then 96 else 112}
+  tabsH=tabsH,tabsY=tabsY,tileH=tileH,stripH=stripH,noteH=noteH,statsH=statsH,marks=marks==true,marksH=marksH,bodyH=bodyH,compareW=if compact then 96 else 112}
 end
 
 -- options:
@@ -285,7 +294,7 @@ end
 function Inspect:build(identity)
  local camera=workspace.CurrentCamera
  local view=camera and camera.ViewportSize or Vector2.new(1280,720)
- local g=Inspect.geometry(view.X,view.Y)
+ local g=Inspect.geometry(view.X,view.Y,Levels.on("medals"))
  local card=Kit.frame(self.root,"InspectCard","panel",nil,UDim2.fromOffset(g.W,g.H),14)
  card.AnchorPoint=Vector2.new(.5,0);card.Active=true;Kit.stroke(card)
  -- Phones: under the top bar, centred, clear of the thumbstick and jump corners.
@@ -407,11 +416,49 @@ function Inspect:buildStats(card,g)
  local you=Kit.text(strip,"Label","","soft",{Name="TotalYou",Position=UDim2.fromOffset(92,g.stripH-totalH-1),Size=UDim2.fromOffset(70,totalH),TextSize=if compact then 9 else 11})
  local chip=Kit.chip(strip,"",nil,if compact then 20 else 24)
  chip.root.Name="KeeperChip";chip.root.AnchorPoint=Vector2.new(1,.5);chip.root.Position=UDim2.new(1,-6,.5,0)
- local note=Kit.text(pane,"Small",UICopy.get("inspect.statsPrivate"),"dim",{Name="Private",Position=UDim2.fromOffset(0,stripY+g.stripH+2),Size=UDim2.fromOffset(g.rightW,g.noteH),
+ -- S4: Marks, six medals (one a stat, dark until earned).
+ local marks
+ local noteY=stripY+g.stripH+2
+ if g.marks then
+  local row,rowW,rowH,pitch
+  if g.marksH>0 then
+   rowW,rowH=g.rightW,g.marksH
+   row=Kit.frame(pane,"Marks","well",UDim2.fromOffset(0,stripY+g.stripH+g.gap),UDim2.fromOffset(rowW,rowH),10)
+   Kit.stroke(row)
+   pitch=math.min(rowH+8,math.floor((rowW-74)/6))
+   Kit.text(row,"Label",UICopy.get("inspect.marks"),"dim",{Name="MarksLabel",Position=UDim2.fromOffset(8,0),Size=UDim2.fromOffset(rowW-pitch*6-18,rowH),TextSize=11,TextTruncate=Enum.TextTruncate.AtEnd})
+   noteY+=rowH+g.gap
+  else
+   pitch=24;rowW,rowH=pitch*6+6,g.stripH
+   row=Kit.frame(strip,"Marks",nil,UDim2.fromOffset(g.rightW-rowW-2,0),UDim2.fromOffset(rowW,rowH))
+  end
+  row:SetAttribute("AccessibleLabel",UICopy.get("inspect.marks"))
+  marks={row=row,slots={},inStrip=g.marksH==0}
+  for index,id in ipairs(StatCatalog.Order)do
+   local medal=MedalView.new(row,math.min(rowH-2,pitch+6))
+   medal.root.Name="Mark_"..id;medal.root.AnchorPoint=Vector2.new(.5,.5)
+   medal.root.Position=UDim2.fromOffset(rowW-4-math.floor((6-index+.5)*pitch),math.floor(rowH/2))
+   marks.slots[index]=medal
+  end
+ end
+ local note=Kit.text(pane,"Small",UICopy.get("inspect.statsPrivate"),"dim",{Name="Private",Position=UDim2.fromOffset(0,noteY),Size=UDim2.fromOffset(g.rightW,g.noteH),
   TextSize=if compact then 10 else 12,TextXAlignment=Enum.TextXAlignment.Center,TextTruncate=Enum.TextTruncate.AtEnd})
  local none=Kit.text(pane,"Small",UICopy.get("inspect.statsNone"),"soft",{Name="None",Position=UDim2.new(),Size=UDim2.fromOffset(g.rightW,g.tileH*2+g.gap),
   TextSize=if compact then 13 else 15,TextXAlignment=Enum.TextXAlignment.Center,Visible=false})
- return {pane=pane,tiles=tiles,strip=strip,total=total,of=of,you=you,chip=chip,note=note,none=none}
+ return {pane=pane,tiles=tiles,strip=strip,total=total,of=of,you=you,chip=chip,note=note,none=none,marks=marks}
+end
+-- S4: from 75 the card's edge is trimmed in the stat's colour (the highest one). Made when first needed.
+function Inspect:paintTrim(stat)
+ local card=self.card
+ if not stat and not card.trim then return end
+ if not card.trim then
+  local trim=Kit.frame(card.frame,"MedalTrim",nil,UDim2.fromOffset(4,4),UDim2.new(1,-8,1,-8),11)
+  trim.ZIndex=card.frame.ZIndex+1
+  card.trim=trim;card.trimStroke=Kit.node("UIStroke",trim,{Name="Trim",Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+ end
+ card.trim.Visible=stat~=nil
+ if stat then card.trimStroke.Color=StatCatalog.ById[stat].color end
+ card.frame:SetAttribute("TrimStat",stat)
 end
 -- The local player's own board (for Compare), or nil.
 function Inspect:ownBoard()
@@ -443,8 +490,9 @@ function Inspect:paintStats()
  local ownId=own and own:GetAttribute("CompanionId")
  -- Once a frame from refresh: compare the four inputs as they are (no string building).
  local seen=card.statsSeen
- if seen and seen[1]==raw and seen[2]==ownRaw and seen[3]==ownId and seen[4]==card.compare then return end
- card.statsSeen={raw,ownRaw,ownId,card.compare}
+ local medalsOn=Levels.on("medals")
+ if seen and seen[1]==raw and seen[2]==ownRaw and seen[3]==ownId and seen[4]==card.compare and seen[5]==medalsOn then return end
+ card.statsSeen={raw,ownRaw,ownId,card.compare,medalsOn}
  local view=card.stats
  local model=Inspect.statsModel(raw,card.identity.petId)
  local mine=Inspect.statsModel(ownRaw,ownId)
@@ -482,7 +530,16 @@ function Inspect:paintStats()
   view.chip.set(model.keeper,nil);Kit.paint(view.chip.label,"TextColor3","accent")
   view.chip.root.Visible=StatsPanel.ShowKeeper -- round 3: the Keeper title is hidden for now
   view.pane:SetAttribute("TotalLevel",model.total)
- else view.pane:SetAttribute("TotalLevel",nil)end
+ end
+ local levels=if model and medalsOn then StatsPanel.levelsOf(model)else nil
+ if view.marks then
+  view.marks.row.Visible=levels~=nil
+  -- Phones: the "You" total stops before the medals.
+  if view.marks.inStrip then view.you.TextTruncate=Enum.TextTruncate.AtEnd;view.you.Size=UDim2.new(0,math.clamp(view.marks.row.Position.X.Offset-view.you.Position.X.Offset-2,20,70),0,view.you.Size.Y.Offset)end
+  if levels then for index,medal in ipairs(view.marks.slots)do medal.set(StatCatalog.Order[index],Medals.count(levels[StatCatalog.Order[index]]))end end
+ end
+ self:paintTrim(levels and MedalView.trimStat(levels)or nil)
+ if not model then view.pane:SetAttribute("TotalLevel",nil)end
  view.pane:SetAttribute("Compare",compare)
 end
 -- v859 phone notes: "Drag to turn" made the pet drift away. The fit re-ran whenever the

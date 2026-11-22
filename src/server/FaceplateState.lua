@@ -3,6 +3,8 @@
 -- hatching record next to the wallet, so a debit and its plate commit together.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Themes=require(Shared.DeckThemes)
+local Gate=require(Shared.LevelGate)
+local Stats=require(script.Parent.StatState)
 local Faceplates={Limit=64}
 -- Weekly shelf (slice C): a purchase made in shelf week `week` pays the shelf price when the
 -- item is on that week's shelf, otherwise the catalogue price. The module is Lane K's; a
@@ -37,22 +39,26 @@ function Faceplates.owns(state,id)
 end
 
 -- Pure check shared by the server's early refusal and the UpdateAsync callback. `week` is
--- the shelf week frozen in the purchase (nil = no shelf: the catalogue price).
-function Faceplates.check(state,plateId,price,week)
+-- the shelf week frozen in the purchase (nil = no shelf: the catalogue price). A level-gated plate
+-- reads the levels of the save being written: below the gate it is NeedsLevel with no charge, and
+-- while gates are off it is NotForSale (unless `gates` says the purchase began with them on).
+function Faceplates.check(state,plateId,price,week,gates)
 	local expected=Themes.price(plateId)
-	if not expected then return false,"NotForSale"end
+	local gate=expected and Themes.ById[plateId].gate
+	if not expected or not(gates==true or Gate.listed(gate))then return false,"NotForSale"end
 	expected=expectedPrice("faceplate",plateId,expected,week)
 	if price~=nil and price~=expected then return false,"PriceChanged"end
 	if Faceplates.owns(state,plateId)then return false,"AlreadyOwned"end
 	if #(state.faceplates or {})>=Faceplates.Limit then return false,"OwnedLimit"end
+	if gate and not Gate.met(Gate.levels(Stats.publicLevels(state).pets),gate)then return false,Gate.Reason end
 	if state.nectar<expected then return false,"NeedStars"end
 	return true,nil,expected
 end
 
 -- candidate = { plateId, price, operationId, week }
-function Faceplates.apply(state,candidate)
+function Faceplates.apply(state,candidate,gates)
 	if type(candidate)~="table"or not validId(candidate.plateId)then return false,"InvalidFaceplate"end
-	local ok,why,price=Faceplates.check(state,candidate.plateId,candidate.price,candidate.week)
+	local ok,why,price=Faceplates.check(state,candidate.plateId,candidate.price,candidate.week,gates)
 	if not ok then return false,why end
 	local owned=table.clone(state.faceplates or {})
 	table.insert(owned,candidate.plateId)

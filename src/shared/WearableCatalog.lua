@@ -6,6 +6,7 @@
 -- like any item and render as their base item's meshes with one colour override (renderMap).
 local Defs=require(script.Parent.PetRigDefinitions)
 local Variants=require(script.Parent.WearableVariants)
+local Levels=require(script.Parent.Levels)
 local Catalog={Version=1,OwnedLimit=128}
 -- Shop tabs in display order (UI: hat, shirt, neck, ears, eyes, mouth, tail, then slice B's
 -- eyewear, cheek, wrist, ankle). Append-only: WearableState validates take-off against this
@@ -24,7 +25,8 @@ Catalog.week=Variants.week
 -- Items for one pet's rig from an explicit variant row list (uncached; forPet caches it).
 -- Order: each rig item, then its variants in row order, so a slot tab lists a base with its
 -- recolours right after it. A variant copies the base's slot, keys, flags, tier and main
--- colour data and adds variant=true, base=<id>, color=<hex>, piece=<attachment name or nil>.
+-- colour data and adds variant=true, base=<id>, color=<hex>, piece=<attachment name or nil>,
+-- gate=<LevelGate gate or nil>.
 function Catalog.compose(petId,rows)
  local definition=type(petId)=="string"and Defs[petId]
  local order,byId={},{}
@@ -51,7 +53,7 @@ function Catalog.compose(petId,rows)
     local list=following[row.base];if not list then list={};following[row.base]=list end
     table.insert(list,table.freeze({id=row.id,slot=base.slot,name=row.name,tier=base.tier,price=row.price or base.price,
      flags=base.flags,perSide=base.perSide,keys=base.keys,primary=base.primary,role=base.role,
-     variant=true,base=base.id,color=row.color,piece=row.piece}))
+     variant=true,base=base.id,color=row.color,piece=row.piece,gate=row.gate}))
    end
   end
   for _,raw in ipairs(definition.wearableItems)do
@@ -74,8 +76,9 @@ local none=Catalog.compose(nil)
 function Catalog.forPet(petId,week)
  if type(petId)~="string"then return none end
  local rows=Variants.rows(if type(week)=="number"then week else Variants.week())
- -- Rows only ever join as the week advances, so the count names the set.
- local key=petId.."|"..#rows
+ -- Rows only ever join as the week advances, so the count names the set (with the gated rows
+ -- listed or not: Levels may differ between two calls in a spec).
+ local key=petId.."|"..#rows..(if Levels.on("gates")then "|g"else "")
  local found=cache[key]
  if not found then found=Catalog.compose(petId,rows);cache[key]=found end
  return found
@@ -111,6 +114,17 @@ function Catalog.fitOffset(rigId,itemId)
 end
 function Catalog.inTab(petId,tabSlot)
  local result={};for _,item in ipairs(Catalog.forPet(petId).order)do if item.slot==tabSlot then table.insert(result,item)end end
+ return result
+end
+-- The same list plus gated items the pet owns while gates are off (they are not sold then, but
+-- stay wearable and removable). With gates on, or nothing gated owned, it is exactly inTab.
+function Catalog.shopTab(petId,tabSlot,owned)
+ if Levels.on("gates")or type(owned)~="table"then return Catalog.inTab(petId,tabSlot)end
+ local listed=Catalog.forPet(petId).byId
+ local result={}
+ for _,item in ipairs(Catalog.forPet(petId,math.huge).order)do
+  if item.slot==tabSlot and(listed[item.id]or(item.gate~=nil and table.find(owned,item.id)))then table.insert(result,listed[item.id]or item)end
+ end
  return result
 end
 -- The shop tabs that sell at least one item for this pet, in Tabs order. A tab ships only

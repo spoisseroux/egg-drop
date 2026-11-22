@@ -15,6 +15,35 @@ Assets.Image={
 local Themes=require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
 Assets.Faceplate={}
 for id,theme in pairs(Themes.ById)do Assets.Faceplate[id]=theme.texture end
+-- Level-gated plates (Themes.Gated): the plate's own colour under `image` until its texture is loaded, so
+-- a texture that cannot load is a plain coloured plate. Other plates get nothing. `square`: no corners.
+Assets.PlateCorner=.155 -- of the plate's height, the texture's own corner
+function Assets.plateBase(image,theme,square)
+ local base=image:FindFirstChild("PlateBase")
+ local wanted=type(theme)=="table"and theme.gate~=nil
+ if not wanted then
+  if base then base:SetAttribute("Wanted",false);base.Visible=false end
+  return nil
+ end
+ if not base then
+  base=Instance.new("Frame");base.Name="PlateBase";base.Size=UDim2.fromScale(1,1);base.BorderSizePixel=0;base.Active=false;base.ZIndex=-1
+  local corner=Instance.new("UICorner");corner.Parent=base
+  local function refresh()
+   base.Visible=base:GetAttribute("Wanted")==true and not image.IsLoaded
+   -- A cropped plate (phones) fills its rect to the corners.
+   corner.CornerRadius=UDim.new(if square or image.ImageRectSize~=Vector2.zero then 0 else Assets.PlateCorner,0)
+  end
+  image:GetPropertyChangedSignal("IsLoaded"):Connect(refresh)
+  image:GetPropertyChangedSignal("ImageRectSize"):Connect(refresh)
+  base:GetAttributeChangedSignal("Wanted"):Connect(refresh)
+  base:SetAttribute("Wanted",true);refresh()
+  base.Parent=image
+ end
+ base.BackgroundColor3=theme.face
+ base:SetAttribute("Wanted",true)
+ base.Visible=not image.IsLoaded
+ return base
+end
 -- Boot sheets (assets/deck/boot/asset-ids.json): fixed art under accent-tinted ink.
 Assets.Boot={fixed="rbxassetid://139514431996183",ink="rbxassetid://108875671405895"}
 Assets.Layout={

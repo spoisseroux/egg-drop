@@ -13,7 +13,7 @@
 --   1. a recolour variant (rows with from == week first, otherwise any released variant)
 --   2. a wearable that is not a variant
 --   3. a faceplate in even weeks, a ball theme in odd weeks
--- Never deluxe, book-only or free. A wearable's shelf price applies to that item id for any
+-- Never deluxe, book-only, free or level-gated (a gated row would move live picks). A wearable's shelf price applies to that item id for any
 -- pet that sells it; the pools are read from the Bear (ShelfPet), today's only seller.
 -- Picks use rendezvous hashing: the highest hash(week, Salt, id) wins, so adding catalogue
 -- items mid-week changes a slot only when the new item outranks the current pick. A slot
@@ -56,7 +56,7 @@ Shelf.hash=hash
 function Shelf.pools(week)
  local variants,wearables,plates,balls={},{},{},{}
  for _,item in ipairs(Wear.forPet(Shelf.ShelfPet,week).order)do
-  if type(item.price)=="number"and item.price>0 then
+  if type(item.price)=="number"and item.price>0 and item.gate==nil then
    if item.variant then
     local row=Variants.ById[item.id]
     table.insert(variants,{id=item.id,full=item.price,fresh=row~=nil and row.from==week})
@@ -65,11 +65,11 @@ function Shelf.pools(week)
  end
  for _,id in ipairs(Plates.Order)do
   local price=Plates.price(id);local theme=Plates.ById[id]
-  if price and theme and theme.tier~="deluxe"and not Plates.isBookOnly(id)then table.insert(plates,{id=id,full=price})end
+  if price and theme and theme.tier~="deluxe"and theme.gate==nil and not Plates.isBookOnly(id)then table.insert(plates,{id=id,full=price})end
  end
  for _,id in ipairs(Balls.Order)do
   local price=Balls.price(id);local theme=Balls.ById[id]
-  if price and theme and theme.tier~="deluxe"then table.insert(balls,{id=id,full=price})end
+  if price and theme and theme.tier~="deluxe"and theme.gate==nil then table.insert(balls,{id=id,full=price})end
  end
  local function byId(a,b)return a.id<b.id end
  table.sort(variants,byId);table.sort(wearables,byId);table.sort(plates,byId);table.sort(balls,byId)

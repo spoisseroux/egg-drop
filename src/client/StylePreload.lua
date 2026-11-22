@@ -10,6 +10,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContentProvider = game:GetService("ContentProvider")
+local Levels = require(ReplicatedStorage.Shared.Levels)
 
 local Preload = {}
 Preload.Batch = 3 -- images handed to the queue per step
@@ -32,6 +33,8 @@ function Preload.styleImages(assets, themes)
 	table.sort(ordered, function(a, b) if a.order ~= b.order then return a.order < b.order end; return a.id < b.id end)
 	for _, entry in ipairs(ordered) do
 		local theme = themes.ById[entry.id]
+		-- Levels matter: a gated plate's art only while gates are on (an owned one loads when it is drawn).
+		if theme.gate ~= nil and not Levels.on("gates") then continue end
 		add(assets.Faceplate[entry.id] or theme.texture)
 		if type(theme.overlay) == "table" then add(theme.overlay.image) end
 	end
@@ -45,6 +48,7 @@ end
 Preload.MenuModules = table.freeze({
 	{ shared = "StoreCatalog", key = "Icons" }, { client = "DeckAssets" }, { client = "EggArtAssets" },
 	{ shared = "EggModels" }, { client = "HatchDisplayAssets" }, { shared = "RoundItems" },
+	{ client = "MedalView", key = "Art", part = "medals" },
 })
 function Preload.collectImages(value, out, seen, visited)
 	visited = visited or {}
@@ -67,7 +71,10 @@ function Preload.collectImages(value, out, seen, visited)
 end
 function Preload.menuImages(modules)
 	local out, seen = {}, {}
+	-- DeckAssets lists every faceplate: the gated ones are styleImages' business.
+	for _, theme in pairs(require(ReplicatedStorage.Shared.DeckThemes).ById) do if theme.gate ~= nil and theme.texture then seen[theme.texture] = true end end
 	for _, spec in ipairs(modules or Preload.MenuModules) do
+		if spec.part and not Levels.on(spec.part) then continue end
 		local ok, data = pcall(function()
 			local module = if spec.shared then ReplicatedStorage.Shared:FindFirstChild(spec.shared) else script.Parent:FindFirstChild(spec.client)
 			return module and require(module)
@@ -108,6 +115,19 @@ function Preload.new(options)
 		ready = {}, failed = {}, boosted = {}, started = false, done = false, stopped = false,
 	}
 	return setmetatable(self, { __index = Preload })
+end
+-- Levels matter: the switch came on after this list was made: what it adds joins the background pass.
+function Preload:extend(images)
+	local seen = {}
+	for _, uri in ipairs(self.images) do seen[canonical(uri)] = true end
+	for _, uri in ipairs(images or Preload.allImages()) do
+		local id = canonical(uri)
+		if not seen[id] then
+			seen[id] = true
+			table.insert(self.images, uri)
+			if self.done then self.warm:request({ id }, function(ok) if ok then self.ready[id] = true else self.failed[id] = true end; self:progress() end, 0) end
+		end
+	end
 end
 function Preload:isReady(uri) return self.ready[canonical(uri)] == true end
 function Preload:stop() self.stopped = true end
@@ -183,6 +203,7 @@ function Preload.start()
 	if not player then return nil end
 	Preload.shared = Preload.new()
 	Preload.shared.reportTo = player:FindFirstChildOfClass("PlayerGui")
+	Levels.changed():Connect(function() if Levels.switch() and not Preload.shared.stopped then Preload.shared:extend() end end)
 	task.spawn(function() Preload.shared:run() end)
 	return Preload.shared
 end

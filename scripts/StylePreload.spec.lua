@@ -6,6 +6,7 @@ return function(client)
 	local Assets = require(client.DeckAssets)
 	local Themes = require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
 	local Shimmer = require(client.LoadingShimmer)
+	local Levels = require(game:GetService("ReplicatedStorage").Shared.Levels)
 	local cases = {}
 	local function test(name, run) run(); table.insert(cases, name) end
 	local function fakeQueue()
@@ -23,6 +24,8 @@ return function(client)
 		local set = {}
 		for _, id in ipairs(images) do assert(not set[id], "duplicate " .. id); set[id] = true end
 		for id, theme in pairs(Themes.ById) do
+			-- Levels matter: a gated plate is warmed only while gates are on.
+			if theme.gate ~= nil and not Levels.on("gates") then assert(not set[theme.texture], id); continue end
 			assert(set[Assets.Faceplate[id] or theme.texture], "faceplate " .. id .. " missing")
 			if type(theme.overlay) == "table" then assert(set[theme.overlay.image], "overlay of " .. id .. " missing") end
 		end
@@ -30,6 +33,31 @@ return function(client)
 			assert(set[Assets.Image[key]], "shell sprite " .. key .. " missing")
 		end
 		assert(images[#images] ~= nil and #images <= 64, "a bounded list (" .. #images .. ")")
+	end)
+
+	test("Levels matter: gated plates and medal art are warmed only while their parts are on", function()
+		local function set() local out = {}; for _, id in ipairs(Preload.allImages()) do out[id] = true end; return out end
+		local Medal = require(client.MedalView)
+		local ok, problem = pcall(function()
+			for _, on in ipairs({ true, false }) do
+				Levels.inject({ flags = { LevelsMatter = true }, studio = true, switch = on })
+				local images = set()
+				for _, id in ipairs(Themes.Gated) do assert((images[Themes.ById[id].texture] == true) == on, id) end
+				for level, row in pairs(Medal.Art) do assert((images[row.tint] == true) == on and (images[row.trim] == true) == on, tostring(level)) end
+			end
+		end)
+		Levels.inject(nil)
+		assert(ok, problem)
+	end)
+
+	test("Levels matter: the switch coming on later adds its images once, after the pass too", function()
+		local q = fakeQueue()
+		local p = Preload.new({ warm = q, images = { "rbxassetid://1" }, wait = function(t) return t end, gardenReady = function() return true end, folders = {} })
+		p:extend({ "rbxassetid://1", "rbxassetid://2" })
+		assert(#p.images == 2 and #q.calls == 0, "the running pass will reach it")
+		p:run(); assert(#q.calls == 2 and p:isReady("rbxassetid://2"))
+		p:extend({ "rbxassetid://2", "rbxassetid://3" }); p:extend({ "rbxassetid://3" })
+		assert(#q.calls == 3 and q.calls[3].priority == 0 and p:isReady("rbxassetid://3"))
 	end)
 
 	test("the full list (2026-11-21): Get Stars icons first, then menu art, then style; no duplicates", function()

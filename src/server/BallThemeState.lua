@@ -7,6 +7,8 @@
 -- upgrade so a later catalogue that prices one cannot take it away.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Themes=require(Shared.BallThemes)
+local Gate=require(Shared.LevelGate)
+local Stats=require(script.Parent.StatState)
 local State={Limit=Themes.Limit}
 -- Weekly shelf (slice C): a purchase made in shelf week `week` pays the shelf price when the
 -- item is on that week's shelf, otherwise the catalogue price. The module is Lane K's; a
@@ -49,22 +51,26 @@ function State.equipped(state)
 end
 
 -- Pure check shared by the server's early refusal and the UpdateAsync callback. `week` is
--- the shelf week frozen in the purchase (nil = no shelf: the catalogue price).
-function State.check(state,themeId,price,week)
+-- the shelf week frozen in the purchase (nil = no shelf: the catalogue price). A level-gated theme
+-- reads the levels of the save being written: below the gate it is NeedsLevel with no charge, and
+-- while gates are off it is NotForSale (unless `gates` says the purchase began with them on).
+function State.check(state,themeId,price,week,gates)
 	local expected=Themes.price(themeId)
-	if not expected then return false,"NotForSale"end
+	local gate=expected and Themes.ById[themeId].gate
+	if not expected or not(gates==true or Gate.listed(gate))then return false,"NotForSale"end
 	expected=expectedPrice("ball",themeId,expected,week)
 	if price~=nil and price~=expected then return false,"PriceChanged"end
 	if State.owns(state,themeId)then return false,"AlreadyOwned"end
 	if #((state.ballThemes or {}).owned or {})>=State.Limit then return false,"OwnedLimit"end
+	if gate and not Gate.met(Gate.levels(Stats.publicLevels(state).pets),gate)then return false,Gate.Reason end
 	if state.nectar<expected then return false,"NeedStars"end
 	return true,nil,expected
 end
 
 -- candidate = { themeId, price, operationId, equip, week }
-function State.applyBuy(state,candidate)
+function State.applyBuy(state,candidate,gates)
 	if type(candidate)~="table"or not validId(candidate.themeId)then return false,"InvalidBallTheme"end
-	local ok,why,price=State.check(state,candidate.themeId,candidate.price,candidate.week)
+	local ok,why,price=State.check(state,candidate.themeId,candidate.price,candidate.week,gates)
 	if not ok then return false,why end
 	local row=copy(state.ballThemes or State.fresh())
 	table.insert(row.owned,candidate.themeId)
@@ -77,7 +83,9 @@ end
 -- candidate = { themeId, operationId }
 function State.applyEquip(state,candidate)
 	if type(candidate)~="table"or not validId(candidate.themeId)or not Themes.ById[candidate.themeId]then return false,"InvalidBallTheme"end
-	if not State.owns(state,candidate.themeId)then return false,"Unowned"end
+	if not State.owns(state,candidate.themeId)then
+		return false,if Gate.listed(Themes.ById[candidate.themeId].gate)then "Unowned"else "InvalidBallTheme"
+	end
 	local row=copy(state.ballThemes or State.fresh())
 	if row.equipped==candidate.themeId then return false,"NoChange"end
 	row.equipped=candidate.themeId

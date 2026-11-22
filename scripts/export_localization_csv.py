@@ -41,7 +41,7 @@ DEFAULT_REVIEW = os.path.join(ROOT, "artifacts", "localization", "hardcoded-stri
 CATALOGS = [
     "BallThemes", "DeckThemes", "DeckBackgrounds", "DeckStickers", "MaterialCatalog", "ToyCatalog",
     "HueCatalog", "FeatureCatalog", "PetCharmCatalog", "WearableCatalog", "RoundItems", "QuestCatalog",
-    "StoreCatalog", "BookCatalog", "AppearanceCatalog", "FieldObjectives", "EggCatalog", "PetCatalog",
+    "StoreCatalog", "BookCatalog", "AppearanceCatalog", "FieldObjectives", "EggCatalog", "PetCatalog", "DeckJuiceCatalog",
 ]
 # Fields that hold player-facing text.
 TEXT_FIELDS = {"name", "names", "title", "sub", "description", "blurb", "pitch", "effect", "short", "label",
@@ -56,7 +56,7 @@ SECTION_NOTES = {
     "onboarding": "First-round coaching", "coach": "First-round coaching",
 }
 SAMPLE = {"count": 3, "heat": "Medium", "low": 6, "high": 8, "pet": "Bear", "reward": 5, "item": "Squeaky Bone",
-          "owned": 3, "total": 12, "target": 3, "name": "Pet Park"}
+          "owned": 3, "total": 12, "target": 3, "name": "Pet Park", "level": 10}
 
 HARNESS = r'''
 local Sources = SOURCES

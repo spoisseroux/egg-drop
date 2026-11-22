@@ -21,6 +21,9 @@ local BallShop=require(script.Parent.BallShop)
 local Peek=require(script.Parent.PetPeek)
 local TabInk=require(script.Parent.TabInk)
 local HintLegend=require(script.Parent.HintLegend)
+-- Levels matter: gated plates (S2) and the Effects tab (S3, EffectsShop, only while juice is on).
+local Levels=require(Shared.Levels)
+local Locked=require(script.Parent.LockedItem)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
@@ -28,6 +31,13 @@ Shop.Columns=4
 Shop.ConfirmSeconds=3
 Shop.Title,Shop.Eyebrow="Deck style","Pocket deck"
 Shop.Tabs={{id="faceplates",label="Faceplates",icon="faceplate"},{id="backgrounds",label="Backgrounds",icon="pattern"},{id="balls",label="Balls",icon="smiley"}}
+-- Pure: the tabs shown. Off, exactly the three above.
+Shop.EffectsTab={id="effects",label=UICopy.get("style.effects.title"),icon="sparkle"}
+function Shop.tabList()
+ if not Levels.on("juice")then return Shop.Tabs end
+ local tabs=table.clone(Shop.Tabs);table.insert(tabs,Shop.EffectsTab)
+ return tabs
+end
 -- Desktop rects in panel units (section 4): tabs where Wardrobe's slot tabs sit, the
 -- pane at 24,144 328x392, a 4x4 grid of 104x88 cards from 371,147, hints on y 566.
 Shop.Regular={tabs={24,84,800,44},pane={24,144,328,392},grid={371,147},tile={104,88},gap=12,hints=566}
@@ -36,6 +46,7 @@ Shop.Hints={
  {pairs={{"browse","Browse"},{"tab","Tab"},{"confirm","Buy or equip"},{"back","Back"}},promise=UICopy.get("style.promise.faceplates")},
  {pairs={{"browse","Browse"},{"tab","Tab"},{"confirm","Use"},{"back","Back"}},promise=UICopy.get("style.promise.backgrounds")},
  {pairs={{"browse","Browse"},{"tab","Tab"},{"confirm","Buy or use"},{"back","Back"}},promise=UICopy.get("style.promise.balls")},
+ {pairs={{"browse","Browse"},{"tab","Tab"},{"confirm","Use"},{"back","Back"}},promise=UICopy.get("style.effects.promise")},
 }
 local TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
  rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")},book={"BOOK",Kit.Tint.book},
@@ -54,7 +65,7 @@ local function finishName(theme)
 end
 
 -- Pure: what the pane says and offers for one plate.
--- ctx = { equipped = id, wallet = n, facts = AppearanceCatalog facts (with .faceplates) }
+-- ctx = { equipped = id, wallet = n, facts = AppearanceCatalog facts (with .faceplates), levels }
 function Shop.status(id,ctx)
  local theme=Themes.ById[id]
  if not theme then return {kind="invalid",text="",button=nil}end
@@ -64,6 +75,10 @@ function Shop.status(id,ctx)
  if ctx.equipped==id then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
  local base=Themes.price(id)
  if base and not Catalog.ownsFaceplate(facts,id)then
+  -- Levels matter (S2): below the level the pane shows the way there; the price stays on the card.
+  local gate=Locked.info(theme,ctx.levels)
+  if gate and not gate.met then return {kind="locked",text=gate.line,button=Locked.trainText(gate),price=base,gate=gate,enabled=true}end
+  if theme.gate and not Locked.on()then return {kind="invalid",text="",button=nil}end -- not for sale, not listed
   local wallet=ctx.wallet or 0
   -- Slice C: a plate on this week's shelf sells at the shelf price (`full` = the struck price).
   local price,full=Deal.quote("faceplate",id,base,weekOf(ctx))
@@ -80,14 +95,14 @@ function Shop.tileStatus(id,ctx)
  if s.kind=="equipped"then return "EQUIPPED","accent"end
  if s.kind=="owned"then return (if Themes.isBookOnly(id)then "From the book"else "✓ Owned"),"soft"end
  if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
- if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
+ if s.kind=="short"or s.gate then return Deal.priceText(s.price,s.full),"dim"end
  local short=({firstWin="Win 1",rankI="Win 3",rankII="Win 10",book="Book"})[Themes.ById[id]and Themes.ById[id].rule or ""]or "Locked"
  return "🔒 "..short,"dim"
 end
 -- Pure: the plates on the grid. The 16 sold / earned plates, then any book-only plate
 -- the player owns (play-forever F2: Bookworm shows once the book grants it).
 function Shop.order(facts)
- local order=table.clone(Themes.Order)
+ local order=Themes.listed(facts and facts.faceplates) -- Order, then gated plates while gates are on or owned
  for _,id in ipairs(Themes.BookOnly or {})do
   if Catalog.ownsFaceplate(facts or {},id)then table.insert(order,id)end
  end
@@ -105,7 +120,7 @@ function Shop.step(index,dx,dy,count,columns)
  return math.min(count,row*cols+col+1)
 end
 -- Pure: the next tab for a Q / E (LB / RB) press, clamped (no wrap).
-function Shop.nextTab(tab,delta)return math.clamp(tab+delta,1,#Shop.Tabs)end
+function Shop.nextTab(tab,delta)return math.clamp(tab+delta,1,#Shop.tabList())end
 
 -- Mini deck composed from the real shell sprites (296 wide in the pane, 88 on tiles).
 local function miniDeck(parent,width,position)
@@ -148,6 +163,7 @@ local function miniDeck(parent,width,position)
  root.Destroying:Connect(function()epoch+=1;if ticket then ticket:cancel()end end)
  return {root=root,set=function(theme,id)
   plate.Image=Assets.Faceplate[id]or Assets.Faceplate.sherbet
+  local plain=Assets.plateBase(plate,theme)~=nil -- a gated plate never waits for its own texture
   band.ImageColor3=theme.bandTint or Color3.new(1,1,1)
   overlayWanted=theme.overlay~=nil;finish.Visible=ready and overlayWanted;if theme.overlay then finish.Image=theme.overlay.image;finish.ImageTransparency=1-theme.overlay.max*.6 end
   lcd.BackgroundColor3=theme.ui.panel
@@ -156,7 +172,7 @@ local function miniDeck(parent,width,position)
   if id~=lastId or(not ready and os.clock()>=retryAt)then
    local retry=id==lastId;lastId=id;ready=false;epoch+=1;local serial=epoch
    if ticket then ticket:cancel()end
-   local ids={};for _,image in ipairs(root:GetDescendants())do if image:IsA("ImageLabel")and image.Image~=""and(image~=finish or overlayWanted)then table.insert(ids,image.Image)end end
+   local ids={};for _,image in ipairs(root:GetDescendants())do if image:IsA("ImageLabel")and image.Image~=""and(image~=finish or overlayWanted)and not(plain and image==plate)then table.insert(ids,image.Image)end end
    local warm=require(script.Parent.UIAssetWarmup).shared
    local request=if retry then warm.retry else warm.request
    retryAt=os.clock()+3
@@ -182,7 +198,7 @@ end
 -- host: a Frame that receives the 848x608 glass screen (scaled to fit).
 -- callbacks: equip(id), buy(order), bought(id), back(), tab(index) (a tab request:
 -- the owner answers with setTab), rebuilt(), and for Backgrounds: use(id),
--- retry(slot).
+-- retry(slot). Levels matter: train(route) ({stat, petId}), the way to a locked item's training.
 function Shop.new(host,callbacks)
  local self=setmetatable({host=host,callbacks=callbacks or {},index=1,tab=1,ctx={equipped=Themes.Default,wallet=0,facts={}},
   visible=false,pending=nil,confirmUntil=0,columns=Shop.Columns},Shop)
@@ -217,9 +233,10 @@ function Shop:buildChrome(parent,view,tabsW)
  end
  self.wallet,self.backArrow,self.title=self.header.wallet,self.header.back,self.header.title
  local labels,icons={},{}
- for _,tab in ipairs(Shop.Tabs)do table.insert(labels,tab.label);table.insert(icons,tab.icon)end
+ for _,tab in ipairs(self.tabSet)do table.insert(labels,tab.label);table.insert(icons,tab.icon)end
  if phone then
-  self.tabs=Kit.tabs(parent,labels,tabsW,36,if tabsW<400 then 12 else 14,icons);self.tabs.root.Position=UDim2.fromOffset(20,64)
+  local narrow=if #labels>3 then 460 else 400 -- a fourth tab needs the smaller words sooner
+  self.tabs=Kit.tabs(parent,labels,tabsW,36,if #labels>3 and tabsW<340 then 11 elseif tabsW<narrow then 12 else 14,icons);self.tabs.root.Position=UDim2.fromOffset(20,64)
  else
   local R=Shop.Regular.tabs
   self.tabs=Kit.tabs(parent,labels,R[3],R[4],16,icons);self.tabs.root.Position=UDim2.fromOffset(R[1],R[2])
@@ -229,6 +246,7 @@ function Shop:buildChrome(parent,view,tabsW)
  self.hints={};self.legends={}
  if not phone then
   for index,set in ipairs(Shop.Hints)do
+   if index>#self.tabSet then break end
    local row=Kit.frame(parent,"Hints"..index,nil,UDim2.fromOffset(24,Shop.Regular.hints),UDim2.fromOffset(800,24))
    local promise=txt(row,"Small",set.promise,"dim",500,0,300,24,{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right})
    local legend=HintLegend.attach(row,800,"style",set.pairs)
@@ -241,6 +259,12 @@ end
 
 function Shop:build(view)
  if self.content then Peek.hide(self.content);self.backgrounds:releasePreview();self.content:Destroy()end
+ -- Levels matter S3: the fourth tab comes and goes with the part.
+ self.levelsKey=Levels.key();self.tabSet=Shop.tabList()
+ if #self.tabSet>#Shop.Tabs then self.effects=self.effects or require(script.Parent.EffectsShop).new(self,{send=self.callbacks.effectSend})
+ elseif self.effects then self.effects:release();self.effects=nil end
+ if self.tab>#self.tabSet then self.tab=1 end
+ self.lockBar,self.lockChip=nil,nil
  if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
  self.view=view;self.key=Shop.viewKey(view)
  self.plateOrder=Shop.order(self.ctx.facts);self.orderKey=table.concat(self.plateOrder,",")
@@ -310,12 +334,14 @@ function Shop:buildRegular()
   local nameLabel=txt(tile,"Strong",Themes.ById[id].name,"text",8,51,90,16,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",8,68,90,16,{TextSize=13})
   self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke}
+  self:addLock(index,tile,UDim2.fromOffset(8,6),UDim2.fromOffset(88,44),R.tile[1])
   tile.Activated:Connect(function()
    if self.index==index then self:act(true)else self:focus(index);Kit.boing(tile)end
   end)
  end
  self.backgrounds:build(content,nil,nil)
  self.balls:build(content,nil,nil)
+ if self.effects then self.effects:build(content,nil,nil)end
 end
 
 -- Pure (UI-SPEC-COMPACT 9, redesign 4): pane width, grid width, columns and tile width.
@@ -402,12 +428,37 @@ function Shop:buildCompact(v)
   local nameLabel=txt(tile,"Strong",Themes.ById[id].name,"text",tx,12,grid.tileW-tx-8,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",tx,34,grid.tileW-tx-8,18,{TextSize=13,TextTruncate=Enum.TextTruncate.AtEnd})
   self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke}
+  self:addLock(index,tile,UDim2.fromOffset(10,(64-deckTile/2)/2),UDim2.fromOffset(deckTile,deckTile/2),deckTile+20)
   tile.Activated:Connect(function()
    if self.index==index then self:act(true)else self:focus(index);Kit.boing(tile)end
   end)
  end
  self.backgrounds:build(body,v,grid)
  self.balls:build(body,v,grid)
+ if self.effects then self.effects:build(body,v,grid)end
+end
+-- Levels matter (S2): a gated plate's requirement chip and small lock over its picture, made only while
+-- gates are on.
+function Shop:addLock(index,tile,position,size,width)
+ local entry=self.tiles[index]
+ if not Themes.ById[entry.id].gate or not Locked.on()then return end
+ local area=Kit.frame(tile,"LockArea",nil,position,size);area.ZIndex=tile.ZIndex+8
+ entry.lock=Locked.mark(area,16)
+ entry.chip=Locked.chip(tile,18);entry.chip.root.Position=UDim2.fromOffset(6,4);entry.chip.root.ZIndex=tile.ZIndex+14
+ entry.chipRoom=width-12
+end
+-- The pane's chip over the preview and the bar under its status line, made the first time a locked plate
+-- is shown.
+function Shop:paintLock(gate,noted)
+ if not gate and not self.lockBar then return end
+ if not self.lockBar then
+  local deck=self.preview.root
+  self.lockChip=Locked.chip(deck.Parent,22);self.lockChip.root.Position=deck.Position+UDim2.fromOffset(8,8);self.lockChip.root.ZIndex=deck.Parent.ZIndex+20
+  self.lockRoom=deck.Size.X.Offset-16
+  self.lockBar=Locked.bar(self.action.Parent,self.action.Position.X.Offset,self.action.Position.Y.Offset-8,self.action.Size.X.Offset,5)
+ end
+ self.lockChip.set(gate,self.lockRoom);self.lockBar.set(gate)
+ if gate and not noted then Kit.fitText(self.status,{gate.line,gate.needs})end
 end
 -- Keep the selected tile fully in view with 8 px to spare; `anchorRow` puts it
 -- in that visible row (the equipped plate opens in the second row).
@@ -427,7 +478,7 @@ end
 -- Repaint after a rebuild.
 function Shop:relayout()
  self.wallet.set(self.ctx.wallet)
- self:refresh();self.backgrounds:refresh();self.balls:refresh()
+ self:refresh();self.backgrounds:refresh();self.balls:refresh();if self.effects then self.effects:refresh()end
  if self.visible then self.root.Visible=true;self:applyTab();self:focusActive(true)end
 end
 
@@ -466,6 +517,11 @@ function Shop:setContext(ctx)
  if ctx.chosen~=nil then self.ctx.chosen=ctx.chosen end
  if ctx.note~=nil then self.ctx.note=ctx.note end
  if ctx.retry~=nil then self.ctx.retry=ctx.retry end
+ -- Levels matter: the pets' levels (the owner snapshot's); a flipped switch lists the tabs and cards again.
+ self.ctx.levels=if Locked.on()then ctx.levels or Locked.levels()else nil
+ if self.levelsKey~=Levels.key()then
+  self:build(self.view);self:relayout();return
+ end
  -- A book-only plate just granted (or a fresh save's facts) changes the grid: rebuild it.
  if table.concat(Shop.order(self.ctx.facts),",")~=self.orderKey then
   local id=self.tiles[self.index]and self.tiles[self.index].id
@@ -475,6 +531,7 @@ function Shop:setContext(ctx)
  end
  self.wallet.set(self.ctx.wallet)
  self:refresh()
+ if self.effects and self.effects:active()then self.effects:refresh()end
 end
 
 function Shop:refresh()
@@ -482,6 +539,12 @@ function Shop:refresh()
   local text,role=Shop.tileStatus(tile.id,self.ctx)
   if self.view and role=="dim"then role="soft"end
   Deal.setPrice(tile.status,text)
+  if tile.chip then
+   local theme=Themes.ById[tile.id]
+   local gate=Locked.info(theme,self.ctx.levels,Catalog.ownsFaceplate(self.ctx.facts or {},tile.id))
+   tile.chip.set(gate,tile.chipRoom);tile.lock.set(gate~=nil and not gate.met)
+   tile.button:SetAttribute("AccessibleLabel",if gate and not gate.met then theme.name..", "..gate.needs else theme.name)
+  end
   tile.status.FontFace=if role=="accent"then Kit.Type.Label[3]else Kit.Type.Counter[3]
   Kit.paint(tile.status,"TextColor3",function()return colorOf(role,tile.status,"TextColor3")end)
   local focused=index==self.index
@@ -517,12 +580,13 @@ function Shop:paintPane()
  if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.status,self.errorFit)end
  local tone=if status.kind=="equipped"and not retry then "accent"elseif retry or status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
  Kit.paint(self.status,"TextColor3",function()return colorOf(tone,self.status,"TextColor3")end)
+ self:paintLock(if status.kind=="locked"then status.gate else nil,pending or note~=nil or(self.errorId==id and self.errorText~=nil))
  self.action.Visible=status.button~=nil or retry
  if retry then
   Kit.setText(self.action,"Retry");Kit.setEnabled(self.action,true)
  elseif status.button then
   Kit.setText(self.action,if pending then "Buying…"elseif confirming then "Confirm ★ "..status.price else status.button)
-  Kit.setEnabled(self.action,status.enabled==true and not pending)
+  Kit.setEnabled(self.action,status.enabled==true and not pending and(status.gate==nil or self.callbacks.train~=nil))
   Kit.setTappable(self.action,status.kind=="short"and not self.pending)
  end
  self.root:SetAttribute("FocusedPlate",id);self.root:SetAttribute("PaneState",if retry then "retry"else status.kind)
@@ -545,7 +609,8 @@ function Shop:focusId(id)
  self:focus(index,true);return true
 end
 function Shop:focusActive(instant)
- if self.tab==2 then self.backgrounds:focus(self.backgrounds.index,instant)elseif self.tab==3 then self.balls:focus(self.balls.index,instant)else self:focus(self.index,instant)end
+ if self.tab==2 then self.backgrounds:focus(self.backgrounds.index,instant)elseif self.tab==3 then self.balls:focus(self.balls.index,instant)
+ elseif self.tab==4 and self.effects then self.effects:focus(self.effects.index,instant)else self:focus(self.index,instant)end
 end
 -- D-pad / arrows / WASD on the selected tab's grid.
 function Shop:dismissLegend()for _,legend in pairs(self.legends or {})do legend.dismiss()end end
@@ -553,6 +618,7 @@ function Shop:move(dx,dy)
  self:dismissLegend()
  if self.tab==2 then return self.backgrounds:move(dx,dy)end
  if self.tab==3 then return self.balls:move(dx,dy)end
+ if self.tab==4 and self.effects then return self.effects:move(dx,dy)end
  local nextIndex=Shop.step(self.index,dx,dy,#self.tiles,self.columns)
  if nextIndex==self.index then return false end
  self:focus(nextIndex);return true
@@ -566,10 +632,11 @@ function Shop:applyTab()
  if self.tabs then self.tabs.select(self.tab)end
  self.backgrounds:show(self.visible and self.tab==2,false)
  self.balls:show(self.visible and self.tab==3,false)
- self.root:SetAttribute("Tab",Shop.Tabs[self.tab].id)
+ if self.effects then self.effects:show(self.visible and self.tab==4,false)end
+ self.root:SetAttribute("Tab",self.tabSet[self.tab].id)
 end
 function Shop:setTab(index,landOnConfirmed)
- index=math.clamp(index,1,#Shop.Tabs)
+ index=math.clamp(index,1,#self.tabSet)
  local changed=index~=self.tab
  self.tab=index;self.confirmId=nil;self.errorId=nil
  self:applyTab()
@@ -584,6 +651,11 @@ function Shop:setTab(index,landOnConfirmed)
   if changed and not Kit.reduced()then
    local body=self.balls.body;if body then body.Position=UDim2.fromOffset(0,6);Kit.tween(body,.09,{Position=UDim2.new()})end
   end
+ elseif index==4 then
+  if self.visible then self.effects:show(true,landOnConfirmed or changed)end
+  if changed and not Kit.reduced()then
+   local body=self.effects.body;if body then body.Position=UDim2.fromOffset(0,6);Kit.tween(body,.09,{Position=UDim2.new()})end
+  end
  elseif self.visible then
   self:focus(self.index,true)
   if changed and not Kit.reduced()and self.plates then self.plates.Position=UDim2.fromOffset(0,6);Kit.tween(self.plates,.09,{Position=UDim2.new()})end
@@ -592,10 +664,15 @@ function Shop:setTab(index,landOnConfirmed)
 end
 -- A tab press (click, tap, Q / E, LB / RB): the owner decides, else switch here.
 function Shop:requestTab(index)
- index=math.clamp(index,1,#Shop.Tabs)
+ index=math.clamp(index,1,#self.tabSet)
  if index==self.tab then if self.tabs then self.tabs.select(self.tab)end;return false end
+ -- Effects is this screen's own tab (it is no appearance slot and holds no saved focus): the owner
+ -- keeps the last of its own three, and is asked again on the way back.
+ if self.tabSet[index].id=="effects"then require(script.Parent.UIClick).play("tab");return self:setTab(index)end
  if self.callbacks.tab then
+  local fromEffects=self.tabSet[self.tab].id=="effects"
   local accepted=self.callbacks.tab(index)
+  if fromEffects and self.tab~=index and self.visible then return self:setTab(index)end
   if self.tab~=index and self.tabs then self.tabs.select(self.tab)end
   return accepted~=false and self.tab==index
  end
@@ -612,6 +689,7 @@ function Shop:act(fromPane)
  self:dismissLegend()
  if self.tab==2 then return self.backgrounds:act()end
  if self.tab==3 then return self.balls:act()end
+ if self.tab==4 and self.effects then return self.effects:act()end
  local id=self.tiles[self.index].id
  local status=Shop.status(id,self.ctx)
  if self.pending then return false end
@@ -632,6 +710,10 @@ function Shop:act(fromPane)
   -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
   return require(script.Parent.ConfirmDialog).purchase(self,id,(Themes.ById[id]or{name=""}).name,status.price,
    function()return self.visible and self.tab==1 and self.tiles[self.index]~=nil and self.tiles[self.index].id==id end,function()self:act()end)~=nil
+ elseif status.gate then
+  -- Levels matter: the button leads to where that stat is trained.
+  if not self.callbacks.train then return false end
+  self.callbacks.train(Locked.route(status.gate));return true
  elseif status.kind=="short"then
   -- Stars store access: a short plate opens the "need more Stars" card.
   return require(script.Parent.StarsShort).ask({price=status.price,wallet=self.ctx.wallet,item=(Themes.ById[id]or{name=""}).name,from="style"},self)
@@ -653,8 +735,10 @@ function Shop:result(message)
  if message.status=="Retrying"then return false end
  local plateId=self.pending.plateId;self.pending=nil
  if message.status~="Saved"then
-  local reason=({NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled",ShelfChanged="shop.reason.priceChanged",PriceChanged="shop.reason.priceChanged"})[message.reason]
+  local reason=({NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled",NeedsLevel="shop.reason.needsLevel",ShelfChanged="shop.reason.priceChanged",PriceChanged="shop.reason.priceChanged"})[message.reason]
   self.errorId,self.errorText,self.errorFit=plateId,UICopy.get(reason or "shop.failed.bought"),nil
+  -- A stale card: read the save again, so the chip shows.
+  if message.reason=="NeedsLevel"then self.balls:send("snapshot")end
   if message.reason=="NeedStars"then self.errorFit=Shop.shortText(plateId,self.ctx);self.errorText=self.errorFit[1]end
  else
   self.errorId,self.errorText=nil,nil
@@ -678,7 +762,8 @@ function Shop:open(equipped,tab,keepFocus)
  self.anchoring=true;self.index=index;self:refresh();self.anchoring=false
  self:applyTab()
  if not keepFocus and self.legends and self.legends[self.tab]then self.legends[self.tab].open()end
- if self.tab==2 then self.backgrounds:show(true,not keepFocus)elseif self.tab==3 then self.balls:show(true,not keepFocus)else self:focus(index,true)end
+ if self.tab==2 then self.backgrounds:show(true,not keepFocus)elseif self.tab==3 then self.balls:show(true,not keepFocus)
+ elseif self.tab==4 and self.effects then self.effects:show(true,not keepFocus)else self:focus(index,true)end
  if self.grid then self:scrollTo(index,2)end
  self:syncPeek()
 end
@@ -687,6 +772,7 @@ function Shop:close()
  self.visible=false;self.root.Visible=false;if self.ring then self.ring.hide()end;self.confirmId=nil;require(script.Parent.ConfirmDialog).cancelFor(self)
  self.backgrounds:show(false)
  self.balls:show(false)
+ if self.effects then self.effects:show(false)end
 end
 -- T4: the pet peeks over the tab bar (desktop only), between the title and the
 -- Stars capsule; the clip keeps clear of the title, eyebrow and wallet.

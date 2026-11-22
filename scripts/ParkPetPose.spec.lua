@@ -157,6 +157,48 @@ return function(client,parent)
 			assert((Vector2.new(foot.X,foot.Z)-Vector2.new(slot.approach.X,slot.approach.Z)).Magnitude>6,"chute foot beside the ladder")
 		end)
 
+		test("Levels matter perks are looks on top: swing height and wave, chute spin, see-saw hop, catch hop",function()
+			local Perks=require(Shared.ParkPerks)
+			-- No perks (nil or empty) is the same pose; a higher swing keeps the pet on its seat.
+			local entry=session(20,"swing",8000)
+			local swing=Catalog.ById.swing
+			local wave=0
+			for t=8000,8000+swing.duration-.05,.1 do
+				Pose.apply(v,"swing1",entry,t,1/30,false);local plain=v.origin
+				Pose.apply(v,"swing1",entry,t,1/30,false,{});assert((v.origin-plain).Magnitude<1e-6)
+				Pose.apply(v,"swing1",entry,t,1/30,false,{swingHigh=true,swingCheer=true})
+				local _,step=Data.phase(swing,8000,t)
+				if step and step.name=="swing"then
+					local seat=Data.swingSeat("swing1",Data.swingAngle("swing1",entry,t)*Perks.SwingScale)
+					assert((v.origin-seat.Position).Magnitude<1e-3,"off the seat at "..t)
+					wave=math.max(wave,v.careHand)
+				end
+				Pose.apply(v,"swing1",entry,t,1/30,true,{swingCheer=true});assert(v.careHand==0,"Reduced Motion: no wave")
+				frame("swing1",entry,t,false)
+			end
+			assert(wave>.1,"no wave at the top")
+			assert(Pose.swingScale(nil)==1 and Pose.swingScale({})==1 and Pose.swingScale({swingHigh=true})==Perks.SwingScale)
+			-- One turn on the chute, back to front at the end; none under Reduced Motion.
+			local chute=session(21,"slide",9000)
+			local start=9000+Catalog.phaseStart("slide","slide")
+			Pose.apply(v,"slide",chute,start+1e-4,1/30,false,{slideSpin=true});local yaw=v.yaw
+			Pose.apply(v,"slide",chute,start+.6,1/30,false,{slideSpin=true});assert(math.abs(v.yaw-yaw-math.pi)<.05)
+			Pose.apply(v,"slide",chute,start+1.199,1/30,false,{slideSpin=true});assert(math.abs(v.yaw-yaw-math.pi*2)<.01)
+			Pose.apply(v,"slide",chute,start+.6,1/30,true,{slideSpin=true});assert(math.abs(v.yaw-yaw)<1e-3)
+			Pose.apply(v,"slide",chute,start+.6,1/30,false);assert(math.abs(v.yaw-yaw)<1e-3)
+			-- The see-saw hop lifts the bob at the top and never at the bottom.
+			local saw=session(22,"seesaw",9500)
+			local top=0
+			for t=9501.05,9509.9,.05 do
+				Pose.apply(v,"seesaw1",saw,t,1/30,false,{seesawHop=true});top=math.max(top,v.movementBob)
+				Pose.apply(v,"seesaw1",saw,t,1/30,true,{seesawHop=true});assert(v.movementBob==0)
+				Pose.apply(v,"seesaw1",saw,t,1/30,false);assert(v.movementBob==0)
+			end
+			assert(math.abs(top-Pose.SeesawHop)<.03,"see-saw hop "..top)
+			assert(Pose.catchHop(nil)==0 and Pose.catchHop(-.1)==0 and Pose.catchHop(Pose.CatchSeconds)==0 and Pose.catchHop(Pose.CatchSeconds/2)>.2)
+			Pose.clear(v)
+		end)
+
 		test("a pet whose partner left hops off on its own clock",function()
 			local actor={action=Catalog.HopOffAction,startTime=7000,endTime=7000+Catalog.HopOffSeconds,actionId=5}
 			v.origin=Park.Slots.seesaw1.approach

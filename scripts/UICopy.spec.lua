@@ -62,6 +62,27 @@ return function(client,parent)
    local Balls=require(client.BallShop);assert(Balls.Reasons.NeedStars==UICopy.get("shop.reason.needStars"))
    local Shop=require(client.FaceplateShop);assert(Shop.Hints[3].promise==UICopy.get("style.promise.balls"))
   end)
+  test("Levels matter: every reward, medal, gate and hint has its words, and they fill",function()
+   for _,key in ipairs({"stats.next.free","stats.next.gate","stats.next.top","stats.guide.title","stats.guide.open","stats.guide.earned","stats.guide.at",
+    "stats.guide.shop","stats.guide.jobs","stats.guide.none","stats.levelUpReward","shop.needs.stat","shop.needs.total","shop.train","shop.reason.needsLevel",
+    "inspect.marks","medal.earned","medal.eggOne","medal.eggs","style.effects.title","style.effects.pop","style.effects.trail","style.effects.start",
+    "style.effects.classic","style.effects.promise","style.effects.locked","book.where.balls","book.where.faceplates","book.where.wardrobe","book.where.toy",
+    "book.where.finishJar","book.where.charmEgg","book.where.charmEarned","book.where.pets","book.where.discoveries"})do
+    assert(UICopy.has(key),"missing "..key)
+   end
+   local Shared=game:GetService("ReplicatedStorage").Shared
+   for _,tier in ipairs(require(Shared.Medals).Tiers)do assert(UICopy.has("medal."..tier.id),tier.id)end
+   for _,row in ipairs(require(Shared.ParkPerks).Rows)do assert(UICopy.has("stats.reward."..row.id),row.id)end
+   for _,row in ipairs(require(Shared.DeckJuiceCatalog).Rows)do assert(UICopy.has("stats.reward."..row.id),row.id)end
+   local Rewards=require(Shared.StatRewards)
+   for _,stat in ipairs(require(Shared.StatCatalog).Order)do
+    for _,row in ipairs(Rewards.forStat(stat))do
+     local text=Rewards.text(row,UICopy.get)
+     assert(text~=""and not string.find(text,"[{}]")and UICopy.has(row.copy)and(row.nameCopy==nil or UICopy.has(row.nameCopy)),row.id..": "..text)
+    end
+   end
+   assert(UICopy.get("shop.needs.stat",{name="Jump",level=15})=="Needs Jump 15"and UICopy.get("shop.needs.total",{count=150})=="Needs total level 150")
+  end)
   test("every key the QA Q5 call sites read exists (machine hub, pause Settings, results Today)",function()
    for _,key in ipairs({"hub.title","hub.eyebrow","hub.promise","hub.tile.hatch.name","hub.tile.hatch.line","hub.tile.style.name",
     "hub.tile.style.line","hub.tile.style.short","hub.tile.companions.name","hub.tile.companions.line","hub.tile.quests.name",

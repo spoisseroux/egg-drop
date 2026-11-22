@@ -59,6 +59,14 @@ ui.book.title,Collection book,,"Collection book; also ui.coach.book.title, ui.r3
 ui.book.toast.bookworm,Bookworm faceplate unlocked,,Collection book
 ui.book.toast.claimed,Page milestone,,Collection book
 ui.book.toast.plate,{name} faceplate unlocked,,Collection book; e.g. Pet Park faceplate unlocked
+ui.book.where.balls,"In Deck style, under Balls.",,Collection book
+ui.book.where.charmEarned,Earned by playing. Check its page.,,Collection book
+ui.book.where.charmEgg,Hatches from the Customization Egg.,,Collection book; also ui.book.where.finishJar
+ui.book.where.discoveries,Play a round and it will turn up.,,Collection book
+ui.book.where.faceplates,"In Deck style, under Faceplates.",,Collection book
+ui.book.where.pets,Say hello in Companions.,,Collection book
+ui.book.where.toy,Hatches from the Toy Egg.,,Collection book
+ui.book.where.wardrobe,"In Companions, under Wardrobe.",,Collection book
 ui.care.notice.busy,Machine busy · keep carrying,,Menu text
 ui.care.notice.changed,Your pet changed · try again,,Menu text
 ui.care.notice.closer,Move closer to your pet or machine,,Menu text
@@ -74,7 +82,7 @@ ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and t
 ui.coach.fillLine.short,Keep the pile under the line,,First-round coaching
 ui.coach.fillLine.title,Fill line,,First-round coaching; also ui.notice.fillLine.title
 ui.coach.firstStars.toast,First round cleared,,First-round coaching
-ui.coach.gotIt,Got it,,First-round coaching; also ui.r3.help.done
+ui.coach.gotIt,Got it,,"First-round coaching; also ui.r3.help.done, ui.stats.guide.earned"
 ui.coach.hatch.line,Spend Stars on eggs. The odds are on every label.,,First-round coaching
 ui.coach.hatch.title,Hatch eggs,,"First-round coaching; also ui.hub.tile.hatch.name, ui.onboarding.spend.hatch, ui.r3.help.companions.d.title, ui.r3.help.hatch.title"
 ui.coach.hub.key,"Press M for every machine, any time.",,First-round coaching
@@ -325,6 +333,7 @@ ui.inspect.empty,Empty,,Menu text
 ui.inspect.gone,Pet moved on,,Menu text
 ui.inspect.hello,Say hello,,Menu text
 ui.inspect.hidden,Hidden,,Menu text
+ui.inspect.marks,Marks,,Menu text
 ui.inspect.menuColours.classic,Menu colours: Classic Shell,,Menu text
 ui.inspect.menuColours.deck,Menu colours: Match my deck,,Menu text
 ui.inspect.off,Greetings off,,Menu text
@@ -345,6 +354,13 @@ ui.inspect.wait,In a moment,,Menu text
 ui.inspect.you,You {count},,Menu text; e.g. You 3
 ui.items.note.empty,You have no items,,Round item notes
 ui.items.note.full,Belt's full. Use one first.,,Round item notes
+ui.medal.bloom,Bloom medal,,Menu text
+ui.medal.earned,{name} medal! A free Stat Egg is yours.,,Menu text; e.g. Pet Park medal! A free Stat Egg is yours.
+ui.medal.eggOne,1 medal egg is waiting.,,Menu text
+ui.medal.eggs,{count} medal eggs are waiting.,,Menu text; e.g. 3 medal eggs are waiting.
+ui.medal.fullBloom,Full Bloom medal,,Menu text
+ui.medal.sprout,Sprout medal,,Menu text
+ui.medal.starbloom,Starbloom medal,,Menu text
 ui.menu.subtitle.empty,Round not started,,Pause menu
 ui.menu.subtitle.locked,Win a round and this opens up,,Pause menu
 ui.menu.subtitle.paused,Round paused,,Pause menu
@@ -367,15 +383,15 @@ ui.names.egg.retry,Still saving · tap to check,,Menu text
 ui.names.egg.title,Names Egg,,Menu text; also ui.names.tab.egg
 ui.names.footer.account,A piece you unlock is yours for every pet.,,Menu text
 ui.names.footer.free,"Renaming is free, any time.",,Menu text; also ui.names.reveal.yours
-ui.names.hint.anyLevel,Reach level {level} in any stat to unlock it.,,Menu text; e.g. Reach level {level} in any stat to unlock it.
+ui.names.hint.anyLevel,Reach level {level} in any stat to unlock it.,,Menu text; e.g. Reach level 10 in any stat to unlock it.
 ui.names.hint.book,Claim {count} collection book rewards to unlock it.,,Menu text; e.g. Claim 3 collection book rewards to unlock it.
 ui.names.hint.egg,This one hatches from the Names Egg.,,Menu text
-ui.names.hint.stat,Reach {stat} {level} on any pet to unlock it.,,Menu text; e.g. Reach {stat} {level} on any pet to unlock it.
+ui.names.hint.stat,Reach {stat} {level} on any pet to unlock it.,,Menu text; e.g. Reach {stat} 10 on any pet to unlock it.
 ui.names.hint.total,Reach a total level of {count} on one pet to unlock it.,,Menu text; e.g. Reach a total level of 3 on one pet to unlock it.
-ui.names.lock.anyLevel,ANY STAT {level},,Menu text; e.g. ANY STAT {level}
+ui.names.lock.anyLevel,ANY STAT {level},,Menu text; e.g. ANY STAT 10
 ui.names.lock.book,BOOK {count},,Menu text; e.g. BOOK 3
 ui.names.lock.egg,NAMES EGG,,Menu text
-ui.names.lock.stat,{stat} {level},,Menu text; e.g. {stat} {level}
+ui.names.lock.stat,{stat} {level},,Menu text; e.g. {stat} 10
 ui.names.lock.total,TOTAL {count},,Menu text; e.g. TOTAL 3
 ui.names.open,Name,,Menu text
 ui.names.reason.Busy,"One moment, then try again",,Menu text; also ui.names.reason.Throttled
@@ -657,8 +673,11 @@ ui.shelf.status,On this week's shelf,,Menu text
 ui.shop.failed.applied,Not applied,,Shop status and errors
 ui.shop.failed.bought,Not bought,,Shop status and errors
 ui.shop.failed.saved,Not saved,,Shop status and errors
+ui.shop.needs.stat,Needs {name} {level},,Shop status and errors; e.g. Needs Pet Park 10; also ui.style.effects.locked
+ui.shop.needs.total,Needs total level {count},,Shop status and errors; e.g. Needs total level 3
 ui.shop.reason.busy,"Busy, try again",,Shop status and errors
 ui.shop.reason.needStars,Not enough Stars,,Shop status and errors
+ui.shop.reason.needsLevel,Your pet needs a higher level first,,Shop status and errors
 ui.shop.reason.notOwned,Buy it first,,Shop status and errors
 ui.shop.reason.priceChanged,Price changed,,Shop status and errors
 ui.shop.reason.throttled,Try again in a moment,,Shop status and errors
@@ -668,6 +687,7 @@ ui.shop.short.many,{count} Stars short. One more round?,,Shop status and errors;
 ui.shop.short.one,1 Star short. One more round?,,Shop status and errors
 ui.shop.short.plain,{count} Stars short,,Shop status and errors; e.g. 3 Stars short
 ui.shop.short.plainOne,1 Star short,,Shop status and errors
+ui.shop.train,Train {name},,Shop status and errors; e.g. Train Pet Park
 ui.stamp.button,Stamp today +{reward},,Stamp card; e.g. Stamp today +5
 ui.stamp.done,Stamped for today,,Stamp card
 ui.stamp.full,Card full. A fresh one tomorrow.,,Stamp card
@@ -691,21 +711,46 @@ ui.stats.boostMore,{mult}x · {count} XP left · +{more},,Menu text; e.g. {mult}
 ui.stats.chip,Total {count},,Menu text; e.g. Total 3
 ui.stats.footer,"Levels never go down. Miss a day, lose nothing.",,Menu text
 ui.stats.gardenStar,Garden Star,,Menu text
+ui.stats.guide.at,Level {level},,Menu text; e.g. Level 10
+ui.stats.guide.jobs,Also good for,,Menu text
+ui.stats.guide.none,More rewards soon,,Menu text
+ui.stats.guide.open,All {name} rewards,,Menu text; e.g. All Pet Park rewards
+ui.stats.guide.shop,Go to shop,,Menu text
+ui.stats.guide.title,{name} guide,,Menu text; e.g. Pet Park guide
 ui.stats.keeper,{name} Keeper,,Menu text; e.g. Pet Park Keeper
 ui.stats.levelUp,{name} {count},,Menu text; e.g. Pet Park 3
 ui.stats.levelUpMore,{name} {count} +{target},,Menu text; e.g. Pet Park 3 +3
-ui.stats.max,Top level,,Menu text
+ui.stats.levelUpReward,{name} {count} · {reward},,Menu text; e.g. Pet Park 3 · 5
+ui.stats.max,Top level,,Menu text; also ui.stats.next.top
 ui.stats.name.energy,Energy,,Menu text
 ui.stats.name.heart,Heart,,"Menu text; also catalog.PetCharmCatalog.ById.heart.name, catalog.BookCatalog.Pages.charms.items.4.name"
 ui.stats.name.jump,Jump,,Menu text
 ui.stats.name.power,Power,,Menu text
 ui.stats.name.smarts,Smarts,,Menu text
 ui.stats.name.speed,Speed,,Menu text
+ui.stats.next.free,Next at {level}: {name} · free,,Menu text; e.g. Next at 10: Pet Park · free
+ui.stats.next.gate,Next at {level}: {name} · shop,,Menu text; e.g. Next at 10: Pet Park · shop
 ui.stats.nextKeeper,{name} at {count},,Menu text; e.g. Pet Park at 3
 ui.stats.none,Hatch a pet to start its stats.,,Menu text
 ui.stats.of,/ {total},,Menu text; e.g. / 12
 ui.stats.results.gain,{name} +{count},,Menu text; e.g. Pet Park +3
 ui.stats.results.up,{name} +{count} (Lv {target}!),,Menu text; e.g. Pet Park +3 (Lv 3!)
+ui.stats.reward.bookHints,Where-to-find hints in the Book,,Menu text
+ui.stats.reward.bubble,Bubble drop trail,,Menu text
+ui.stats.reward.catchHop,A happy catch hop,,Menu text
+ui.stats.reward.comet,Comet drop trail,,Menu text
+ui.stats.reward.confetti,Confetti merge pop,,Menu text
+ui.stats.reward.fizz,Fizz merge pop,,Menu text
+ui.stats.reward.item,{name},,Menu text; e.g. Pet Park
+ui.stats.reward.lightning,Lightning lid start,,Menu text
+ui.stats.reward.longThrow,Longer throw in the park,,Menu text
+ui.stats.reward.name,Name piece: {name},,Menu text; e.g. Name piece: Pet Park
+ui.stats.reward.ready,"Ready, steady start",,Menu text
+ui.stats.reward.seesawHop,A hop on the see-saw,,Menu text
+ui.stats.reward.slideSpin,A spin on the slide,,Menu text
+ui.stats.reward.swingCheer,A wave on the swing,,Menu text
+ui.stats.reward.swingHigh,Swings higher,,Menu text
+ui.stats.reward.trick,New trick: {name},,Menu text; e.g. New trick: Pet Park
 ui.stats.row,"Levels, Bonus XP and snacks",,Menu text
 ui.stats.snacks.cardBoost,{stat} has {mult}x · {left} XP left,,Menu text; e.g. {stat} has {mult}x · {left} XP left
 ui.stats.snacks.drop,Let go to feed {pet},,Menu text; e.g. Let go to feed Bear
@@ -779,8 +824,13 @@ ui.store.thanks,Thank you! This boost is always on.,,Menu text
 ui.store.walletAfter,Your wallet after,,Menu text
 ui.store.whatYouGet,What you get,,Menu text
 ui.style.balls.pitch,"Same sizes, same rules. Only cuter.",,Deck style screen
+ui.style.effects.classic,Classic,,Deck style screen
+ui.style.effects.pop,Merge pop,,Deck style screen
+ui.style.effects.promise,Just for looks. Never an advantage.,,Deck style screen; also ui.style.promise.balls
+ui.style.effects.start,Start,,Deck style screen
+ui.style.effects.title,Effects,,Deck style screen
+ui.style.effects.trail,Drop trail,,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
-ui.style.promise.balls,Just for looks. Never an advantage.,,Deck style screen
 ui.style.promise.faceplates,Fixed prices. No random plates.,,Deck style screen
 ui.v2.adopt.button,Adopt for ★ {price},,Menu text; e.g. Adopt for ★ {price}
 ui.v2.adopt.confirm,Press again to adopt for ★ {price},,Menu text; e.g. Press again to adopt for ★ {price}
@@ -822,7 +872,7 @@ catalog.BallThemes.ById.bubblegum.names.5,Puff,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.bubblegum.pitch,"One pink, five strengths.",,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.bubbles.name,Bubbles,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.5.name
 catalog.BallThemes.ById.bubbles.names.1,Sky,,Catalogue BallThemes (names); also catalog.BallThemes.ById.deep_sea.names.4
-catalog.BallThemes.ById.bubbles.names.2,Peach,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.bubbles.names.2,Peach,,Catalogue BallThemes (names); also catalog.BallThemes.ById.tangerine_pop.names.4
 catalog.BallThemes.ById.bubbles.names.3,Melon,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.bubbles.names.4,Blossom,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.bubbles.names.5,Violet,,"Catalogue BallThemes (names); also catalog.BallThemes.ById.marbles.names.5, catalog.BallThemes.ById.smileys.names.5"
@@ -886,6 +936,12 @@ catalog.BallThemes.ById.pocket_grey.names.5,Pearl,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.pocket_grey.pitch,Grey pebbles. Size is the tell.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.smileys.name,Smileys,,Catalogue BallThemes (name)
 catalog.BallThemes.ById.smileys.pitch,Crude little faces. The default.,,Catalogue BallThemes (pitch)
+catalog.BallThemes.ById.tangerine_pop.name,Tangerine Pop,,Catalogue BallThemes (name)
+catalog.BallThemes.ById.tangerine_pop.names.1,Pip,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.tangerine_pop.names.2,Zest,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.tangerine_pop.names.3,Juice,,Catalogue BallThemes (names)
+catalog.BallThemes.ById.tangerine_pop.names.5,Fizz,,Catalogue BallThemes (names); also catalog.DeckJuiceCatalog.ByKind.pop.2.name
+catalog.BallThemes.ById.tangerine_pop.pitch,"Juicy orange, deep to bright.",,Catalogue BallThemes (pitch)
 catalog.DeckThemes.ById.aqua_pop.name,Aqua Pop,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aqua_pop.name, catalog.BookCatalog.Pages.faceplates.items.1.name"
 catalog.DeckThemes.ById.aurora_glass.name,Aurora Glass,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aurora_glass.name, catalog.BookCatalog.Pages.faceplates.items.6.name"
 catalog.DeckThemes.ById.bookworm.name,Bookworm,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.bookworm.name
@@ -903,8 +959,10 @@ catalog.DeckThemes.ById.night_orb.name,Night Orb,,"Catalogue DeckThemes (name); 
 catalog.DeckThemes.ById.prism_flare.name,Prism Flare,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.prism_flare.name, catalog.BookCatalog.Pages.faceplates.items.7.name"
 catalog.DeckThemes.ById.rose_chrome.name,Rose Chrome,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.rose_chrome.name, catalog.BookCatalog.Pages.faceplates.items.10.name"
 catalog.DeckThemes.ById.sherbet.name,Scout,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sherbet.name
+catalog.DeckThemes.ById.sky_fizz.name,Sky Fizz,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sky_fizz.name
 catalog.DeckThemes.ById.sorbet_sky.name,Sorbet Sky,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.sorbet_sky.name, catalog.BookCatalog.Pages.faceplates.items.3.name"
 catalog.DeckThemes.ById.stargazer.name,Stargazer,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.stargazer.name
+catalog.DeckThemes.ById.storm_glass.name,Storm Glass,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.storm_glass.name
 catalog.DeckThemes.ById.tidepool.name,Tidepool,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.tidepool.name, catalog.BookCatalog.Pages.faceplates.items.5.name"
 catalog.DeckBackgrounds.ById.lantern.name,Lantern,,Catalogue DeckBackgrounds (name)
 catalog.DeckBackgrounds.ById.moonpond.name,Moonpond,,Catalogue DeckBackgrounds (name)
@@ -952,6 +1010,20 @@ catalog.WearableCatalog.Variants.7.name,Silver Bell Collar,,Catalogue WearableCa
 catalog.WearableCatalog.Variants.8.name,Rose Bell Collar,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.Variants.9.name,Cocoa Sun Hat,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.Variants.10.name,Peach Sun Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.11.name,Orchid Round Specs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.12.name,Rose Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.13.name,Sky Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.14.name,Lime Party Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.15.name,Periwinkle Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.16.name,Tangerine Friendship Bands,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.17.name,Orchid Pearl Beads,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.18.name,Blossom Bell Collar,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.19.name,Lime Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.20.name,Periwinkle Bow Tail,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.21.name,Peach Blush Stickers,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.22.name,Sky Sun Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.23.name,Starbloom Hoodie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.24.name,Golden Flower Crown,,Catalogue WearableCatalog (name)
 catalog.RoundItems.ById.bomb.effect,Your next ball bursts on landing and clears a small circle.,,Catalogue RoundItems (effect)
 catalog.RoundItems.ById.bomb.name,Bomb,,Catalogue RoundItems (name)
 catalog.RoundItems.ById.bomb.short,Next ball clears a circle.,,Catalogue RoundItems (short)
@@ -1047,6 +1119,11 @@ catalog.PetCatalog.active.2.description,"Shy for a second, then bouncy for the r
 catalog.PetCatalog.byId.bloom_pip.description,A bear in bloom. Smells faintly of tomorrow's picnic.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.byId.eclipse_orbit.description,Borrows the night sky and always gives it back.,,Catalogue PetCatalog (description)
 catalog.PetCatalog.byId.foxfire_wick.description,"Glows when happy. Glows a lot, honestly.",,Catalogue PetCatalog (description)
+catalog.DeckJuiceCatalog.ByKind.pop.1.name,Confetti,,Catalogue DeckJuiceCatalog (name)
+catalog.DeckJuiceCatalog.ByKind.start.1.name,"Ready, steady",,Catalogue DeckJuiceCatalog (name)
+catalog.DeckJuiceCatalog.ByKind.start.2.name,Lightning lid,,Catalogue DeckJuiceCatalog (name)
+catalog.DeckJuiceCatalog.ByKind.trail.1.name,Bubble trail,,Catalogue DeckJuiceCatalog (name)
+catalog.DeckJuiceCatalog.ByKind.trail.2.name,Comet trail,,Catalogue DeckJuiceCatalog (name)
 catalog.WearableCatalog.pip.beanie.name,Pom Beanie,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.pip.sunhat.name,Tiny Sun Hat,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.pip.flowercrown.name,Flower Crown,,Catalogue WearableCatalog (name)

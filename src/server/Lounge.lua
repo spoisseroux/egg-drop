@@ -163,7 +163,8 @@ local function paintDevice(device, themeId)
 		-- The plate has a planar 0..1 UV, so the faceplate texture maps straight on.
 		local held = theme.held3d or {}
 		plate.TextureID = theme.texture or ""
-		plate.Color = if theme.texture then Color3.new(1, 1, 1) else theme.face or theme.shell
+		-- A gated plate keeps its own colour under the texture (Levels matter: it may not load yet).
+		plate.Color = if theme.texture and theme.gate == nil then Color3.new(1, 1, 1) else theme.face or theme.shell
 		plate.Material = Enum.Material[held.material or "SmoothPlastic"] or Enum.Material.SmoothPlastic
 		plate.Reflectance = held.reflectance or 0
 		plate.Transparency = held.transparency or 0

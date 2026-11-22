@@ -103,6 +103,8 @@ do local ok,problem=pcall(function()require(script.BugReportStore).mount(remotes
 do local ok,problem=pcall(function()require(script.SimCheckHost).mount(remotes)end);if not ok then warn("[SimCheck] not mounted: "..tostring(problem))end end
 -- Alive off switch (ALIVE-BUILD-PLAN-2026-11-22): workspace attributes first, ConfigService later; never blocks boot.
 task.spawn(function()local ok,problem=pcall(function()require(script.AliveConfig).start()end);if not ok then warn("[Alive] config not started: "..tostring(problem))end end)
+-- Levels matter off switch (LevelsConfig): the same way, one key. Not started = off for everyone.
+task.spawn(function()local ok,problem=pcall(function()require(script.LevelsConfig).start()end);if not ok then warn("[Levels] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -112,7 +114,7 @@ local function snackEffects(player,board,action,receipt,walletBefore)
 	if type(receipt)~="table"then return end
 	if action=="statEggBuy"then
 		Economy.command(player,"StatEgg",walletBefore,board.nursery.state.nectar,board.nursery.state)
-		Economy.event(player,"EggOpened_stat",1,{receipt.stat,receipt.size,if receipt.free then "free"else "paid"})
+		Economy.event(player,"EggOpened_stat",1,{receipt.stat,receipt.size,receipt.source or(if receipt.free then "free"else "paid")})
 	else
 		board.lastFeedAt=os.clock()
 		Economy.event(player,"SnackFed",1,{receipt.stat,receipt.size})
@@ -364,6 +366,9 @@ do
 		local bond=state and state.bond
 		board.folder:SetAttribute(Rules.BondAttribute,if petId then Bond.level(Bond.xpOf(bond,petId))else nil)
 		board.folder:SetAttribute(StatCatalog.PublicAttribute,if state then HttpService:JSONEncode(StatState.publicLevels(state))else nil)
+		-- Levels matter S3: the deck juice every client draws (nil while the part is off).
+		local juice=state and require(script.DeckJuiceState).public(board.profile.deckJuice,state)or nil
+		board.folder:SetAttribute(require(ReplicatedStorage.Shared.DeckJuiceCatalog).Attribute,if juice then HttpService:JSONEncode(juice)else nil)
 		-- v2 names: piece ids per owned pet (never text); viewers build the text from NameCatalog.
 		board.folder:SetAttribute(NameCatalog.Attribute,if state then HttpService:JSONEncode(NameState.publicNames(state))else nil)
 	end
@@ -820,6 +825,8 @@ local function addPlayer(player)
 	if (game.PlaceId == Nursery.BetaPlaceId or RunService:IsStudio()) and require(ReplicatedStorage.Shared.SimCheck).isOwner(player) then
 		-- "/alive <feature|all> <on|off|clear>": its own connection, never behind the board and busy checks below.
 		player.Chatted:Connect(function(message) pcall(function() require(script.AliveConfig).command(message) end) end)
+		-- "/levels <on|off|clear>": the Levels matter switch, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.LevelsConfig).command(message) end) end)
 		player.Chatted:Connect(function(message)
 			local amount = type(message) == "string" and tonumber(string.match(message, "^%s*/stars%s+(%d+)%s*$"))
 			if not amount or boards[player] ~= board or board.closing then return end
@@ -1161,6 +1168,20 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		Progress.setSetting(board.profile, "whiteSecond", map)
 		publishPetAppearance(board)
 		Progress.requestFlush(board.profile)
+		return
+	end
+	if action == "deckJuice" then
+		-- Levels matter S3: {kind, id}. Known and unlocked from the save, or ignored (DeckJuiceState).
+		if type(value) ~= "table" then return end
+		if not canProgress(board) or board.closing or board.profile.loadFailed then return end
+		local DeckJuice = require(script.DeckJuiceState)
+		if board.juiceAt and now - board.juiceAt < DeckJuice.Throttle then return end
+		board.juiceAt = now
+		local map = DeckJuice.choose(board.profile.deckJuice, board.nursery.state, value.kind, value.id)
+		if not map then return end
+		Progress.setSetting(board.profile, "deckJuice", map)
+		petHello.social(board)
+		if DeckJuice.flushDue(board, now) then Progress.requestFlush(board.profile) end
 		return
 	end
 	if action == "menuColours" then
@@ -1957,6 +1978,14 @@ ParkDirector.attach(garden, { enabled = FeatureFlags.Park == true,
 		local player = Players:GetPlayerByUserId(ownerId); local board = player and boards[player]
 		return board ~= nil and board.petContact ~= nil and board.petContact.lease ~= nil
 	end,
+	speedLevel = function(ownerId)
+		-- Levels matter S1: the thrower's companion's saved Speed (never a public attribute).
+		local player = Players:GetPlayerByUserId(ownerId); local board = player and boards[player]
+		local state = board and not board.closing and board.nursery and board.nursery.state
+		local petId = state and board.profile and board.profile.companionId
+		if not petId or not NurseryCatalog.isOwned(state.inventoryMask, petId) then return nil end
+		return require(ReplicatedStorage.Shared.StatCatalog).levelFor(require(script.StatState).xp(state, petId, "speed"))
+	end,
 	finished = function(ownerId, activityId)
 		local player = Players:GetPlayerByUserId(ownerId); local board = player and boards[player]
 		if not board or board.closing then return end
@@ -1966,6 +1995,17 @@ ParkDirector.attach(garden, { enabled = FeatureFlags.Park == true,
 		board.folder:SetAttribute("ParkGamesPending",board.parkPending)
 		flushParkGames(player, board)
 	end })
+
+-- Levels matter: when the runtime switch flips, every player gets a fresh snapshot (medal credit) and
+-- board attributes (deck juice). Only this server writes the attribute; it is not read here.
+require(ReplicatedStorage.Shared.Levels).changed():Connect(function()
+	for _, board in pairs(table.clone(boards)) do
+		if not board.closing then
+			local ok, problem = pcall(publishNursery, board)
+			if not ok then warn("[Levels] refresh: " .. tostring(problem)) end
+		end
+	end
+end)
 
 -- B2 client-run board (B2-plan.md): a lockstep round's authoritative events feed the same
 -- consumers as the merge loop below. Progress (best score, trials) is written only while the save

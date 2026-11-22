@@ -97,6 +97,8 @@ local Table={
    balls="Just for looks. Never an advantage.",
   },
   balls={pitch="Same sizes, same rules. Only cuter."},
+  -- Levels matter S3: the Effects tab (deck juice).
+  effects={title="Effects",pop="Merge pop",trail="Drop trail",start="Start",classic="Classic",promise="Just for looks. Never an advantage.",locked="Needs {name} {level}"},
  },
  results={
   inPlace={noStars="No Stars this round",total="Total  ★ {count}",metrics="Score {score} · Best {best} · Chain ×{chain}",replay="Replay",hatch="Hatch eggs"},
@@ -123,7 +125,10 @@ local Table={
   reason={
    needStars="Not enough Stars",busy="Busy, try again",throttled="Try again in a moment",priceChanged="Price changed",
    unowned="Not owned yet",notOwned="Buy it first",retrying="Still saving…",
+   needsLevel="Your pet needs a higher level first",
   },
+  -- Levels matter S2: the chip on a locked item, and the way to train for it.
+  needs={stat="Needs {name} {level}",total="Needs total level {count}"},train="Train {name}",
   failed={bought="Not bought",applied="Not applied",saved="Not saved"},
   -- QA Q2.4: an optimistic change the server refused, now put back.
   rolledBack="Didn't save, so it's back how it was",
@@ -169,6 +174,10 @@ local Table={
   bookworm={line="Finish any three pages: Bookworm faceplate",short="3 full pages: Bookworm",done="Bookworm faceplate is yours",count="{count}/3"},
   toast={claimed="Page milestone",bookworm="Bookworm faceplate unlocked",plate="{name} faceplate unlocked"},
   hint={pages="Pages",move="Move",claim="Claim",back="Back"},
+  -- Levels matter S1: "where to find" on empty spots (Smarts 5).
+  where={balls="In Deck style, under Balls.",faceplates="In Deck style, under Faceplates.",wardrobe="In Companions, under Wardrobe.",
+   toy="Hatches from the Toy Egg.",finishJar="Hatches from the Customization Egg.",charmEgg="Hatches from the Customization Egg.",charmEarned="Earned by playing. Check its page.",
+   pets="Say hello in Companions.",discoveries="Play a round and it will turn up."},
   stats={rounds="Rounds played",winsEasy="Wins on Easy",winsMedium="Wins on Medium",winsHard="Wins on Hard",tidyWins="Tidy wins",
    merges="Merges",bestChain="Best chain",tierFive="Tier V balls",itemsUsed="Items used",pets="Pets hatched",
    starsEarned="Stars earned",starsSpent="Stars spent",stamps="Stamps collected"},
@@ -445,7 +454,19 @@ local Table={
     StatMaxed="{stat} is at the top",NoSnack="That snack is gone",RevealPending="Open your egg first",Throttled="One bite at a time",Busy="One moment…",
     Timeout="Still saving… check your pouch in a moment.",UnknownSnack="This snack is from a newer update",Retrying="Still saving… check your pouch in a moment.",other="Couldn't feed right now"}},
   results={label="Stats",gain="{name} +{count}",up="{name} +{count} (Lv {target}!)"},
+  -- Levels matter S1: the next reward line, the guide, and each reward's words (StatRewards).
+  next={free="Next at {level}: {name} · free",gate="Next at {level}: {name} · shop",top="Top level"},
+  guide={title="{name} guide",open="All {name} rewards",earned="Got it",at="Level {level}",shop="Go to shop",jobs="Also good for",none="More rewards soon"},
+  levelUpReward="{name} {count} · {reward}",
+  reward={item="{name}",name="Name piece: {name}",trick="New trick: {name}",
+   swingCheer="A wave on the swing",swingHigh="Swings higher",slideSpin="A spin on the slide",seesawHop="A hop on the see-saw",
+   longThrow="Longer throw in the park",catchHop="A happy catch hop",bookHints="Where-to-find hints in the Book",
+   confetti="Confetti merge pop",fizz="Fizz merge pop",bubble="Bubble drop trail",comet="Comet drop trail",
+   ready="Ready, steady start",lightning="Lightning lid start"},
  },
+ -- Levels matter S4: stat medals and the free Stat Egg each one brings.
+ medal={sprout="Sprout medal",bloom="Bloom medal",fullBloom="Full Bloom medal",starbloom="Starbloom medal",
+  earned="{name} medal! A free Stat Egg is yours.",eggOne="1 medal egg is waiting.",eggs="{count} medal eggs are waiting."},
  -- QA v685 R10: the daily stamp chip on the Hatch eggs header (a counter; opens Quests).
  stampChip={done="✓ {count}/{total}",open="{count}/{total}",label="Daily stamp"},
  -- QA v685 R6: another player's pet, as a read-only profile card, and the reward-free
@@ -459,7 +480,7 @@ local Table={
   -- Toy Shell R1.1: Settings > Menu colours (menus follow the equipped deck, or Classic Shell).
   menuColours={deck="Menu colours: Match my deck",classic="Menu colours: Classic Shell"},
   -- v2 S4: the Stats tab (default) beside the Outfit grid, and Compare.
-  tab={stats="Stats",outfit="Outfit"},compare="Compare",you="You {count}",
+  tab={stats="Stats",outfit="Outfit"},compare="Compare",you="You {count}",marks="Marks",
   statsPrivate="Levels only. XP, Stars and history stay private.",statsNone="No stats to show yet.",
  },
  -- QA v735 H5: notice cards (NoticeCards.lua). A tap on a top-bar pill (a quest ticker or

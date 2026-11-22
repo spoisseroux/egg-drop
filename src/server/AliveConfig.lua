@@ -2,6 +2,7 @@
 -- feature before anything yields, then follows ConfigService. A missing or malformed key is the shipped
 -- default (on); a failed or errored snapshot keeps the last good values. Nothing here reaches the caller.
 -- Owner chat on the beta and in Studio: /alive <feature|all> <on|off|clear>, for this server only.
+-- LevelsConfig runs the same publisher on its own switch (deps.switch: Features, attribute, key, resolve).
 local Alive=require(game:GetService("ReplicatedStorage").Shared.Alive)
 local Config={}
 Config.Backoff=table.freeze({5,15,60})
@@ -9,14 +10,15 @@ Config.Retry=300
 Config.RefreshGap=5
 
 -- Values read from a snapshot, or nil and the problem when it is errored or throws.
-function Config.read(snapshot)
+function Config.read(snapshot,switch)
+ switch=switch or Alive
  local ok,values=pcall(function()
   local problem=snapshot.Error
   if typeof(problem)=="EnumItem"then problem=problem.Name end
   if problem~=nil and problem~="None"then error(tostring(problem),0)end
   local out={}
-  for _,feature in ipairs(Alive.Features)do
-   local value=snapshot:GetValue(Alive.key(feature))
+  for _,feature in ipairs(switch.Features)do
+   local value=snapshot:GetValue(switch.key(feature))
    if type(value)=="boolean"then out[feature]=value end
   end
   return out
@@ -34,23 +36,25 @@ function Config.parse(message)
  return{features=features,value=if verb=="clear"then nil else verb=="on"}
 end
 
--- deps (specs replace them): service(), set(name, value), wait(s), spawn(fn), now(), ceiling(feature), warn(text).
+-- deps (specs replace them): service(), set(name, value), wait(s), spawn(fn), now(), ceiling(feature), warn(text);
+-- switch and label name another set of features (default: the Alive ones).
 function Config.new(deps)
+ local switch,label=deps.switch or Alive,deps.label or "Alive"
  local self={values={},overrides={},loaded=false,started=false}
  local lastRefresh,queued,turn=-math.huge,false,0
  local warned={}
  local function once(kind,problem)
   if warned[kind]then return end
   warned[kind]=true
-  pcall(deps.warn,"[Alive] config "..kind..": "..tostring(problem).." (keeping the last good values)")
+  pcall(deps.warn,"["..label.."] config "..kind..": "..tostring(problem).." (keeping the last good values)")
  end
  function self.publish()
-  for _,feature in ipairs(Alive.Features)do
-   pcall(deps.set,Alive.attribute(feature),Alive.resolve(feature,self.values[feature],self.overrides[feature],deps.ceiling(feature)))
+  for _,feature in ipairs(switch.Features)do
+   pcall(deps.set,switch.attribute(feature),switch.resolve(feature,self.values[feature],self.overrides[feature],deps.ceiling(feature)))
   end
  end
  local function adopt(snapshot)
-  local values,problem=Config.read(snapshot)
+  local values,problem=Config.read(snapshot,switch)
   if not values then once("snapshot",problem);return false end
   self.values=values;self.loaded=true;self.publish()
   return true
@@ -88,7 +92,7 @@ function Config.new(deps)
   self.started=true
   self.publish()
   local wanted=false
-  for _,feature in ipairs(Alive.Features)do wanted=wanted or deps.ceiling(feature)end
+  for _,feature in ipairs(switch.Features)do wanted=wanted or deps.ceiling(feature)end
   if not wanted then return end
   deps.spawn(function()
    local try=0

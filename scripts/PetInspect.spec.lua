@@ -39,6 +39,16 @@ return function(client)
 		assert(rows[1].empty and rows[#rows - 1].value == "Standard" and rows[#rows].empty and rows[#rows - 2].value == "Snowflake")
 	end)
 
+	test("Levels matter: a gated item still worn keeps its name while gates are off", function()
+		local Levels = require(Shared.Levels)
+		for _, on in ipairs({ true, false }) do
+			Levels.inject({ flags = { LevelsMatter = on }, studio = true, shipped = { gates = true } })
+			local rows = Inspect.rows("pip", { wearables = { Hat = "beanie_lime" } })
+			Levels.inject(nil)
+			assert(rows[1].value == "Lime Pom Beanie" and not rows[1].empty)
+		end
+	end)
+
 	test("Say hello: off, sent, cooling, far, busy, ready (in that order)", function()
 		local key, ready = Inspect.helloState({ off = true, sent = true, cooling = true, distance = 1, free = true })
 		assert(key == "inspect.off" and not ready)
