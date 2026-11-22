@@ -1467,13 +1467,17 @@ function Kit.wallet(parent,height,options)
   tap.MouseButton1Up:Connect(function()settle(1)end)
   tap.MouseLeave:Connect(function()settle(1)end)
   tap.Activated:Connect(function()
-   settle(1)
-   local ok=false
-   if Kit.onWalletTap then local fine,result=pcall(Kit.onWalletTap,api);ok=fine and result==true end
-   if not ok then
-    flash.BackgroundTransparency=.35
-    TweenService:Create(flash,TweenInfo.new(.32,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency=1}):Play()
+   -- Spencer 2026-11-21: "there's no feedback visually showing i clicked the stars button".
+   -- Every tap: the face flashes lemon and the capsule pops (1.12 and back), then the store
+   -- opens (or, refused, that flash is the whole answer). Reduced Motion: the flash only.
+   flash.BackgroundTransparency=.15
+   TweenService:Create(flash,TweenInfo.new(.36,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,.06),{BackgroundTransparency=1}):Play()
+   if game:GetService("GuiService").ReducedMotionEnabled then press.Scale=1 else
+    press.Scale=1.12
+    TweenService:Create(press,TweenInfo.new(.22,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
    end
+   pcall(function()require(script.Parent.UIClick).play("confirm")end)
+   if Kit.onWalletTap then pcall(Kit.onWalletTap,api)end
   end)
   api.tap=tap
  end
@@ -1982,7 +1986,11 @@ function Kit.shellPattern(surface,radius)
  local rootStroke=root:FindFirstChild("KitStroke")
  if rootStroke then rootStroke.Thickness=Kit.Stroke.sheet end
  local C=Kit.Checker
- local pad=Kit.patternInset(radius)
+ -- Spencer 2026-11-21: the inset rectangle's corners touched the rounded edge exactly, so they
+ -- covered the surface's ink outline right at the curve and read as square corners. Inset by
+ -- the outline too (plus 1 px), so the pattern stays inside the outline everywhere.
+ local outline=root:FindFirstChild("KitStroke")
+ local pad=Kit.patternInset(radius)+(if outline then math.ceil(outline.Thickness) else 0)+1
  -- Lowest of its siblings in a Sibling gui (cards, text and wells all draw over it); the
  -- fade above the checker inside the holder. A Global gui keeps the surface's own layer.
  local gui=surface:FindFirstAncestorWhichIsA("LayerCollector")
@@ -2000,7 +2008,13 @@ function Kit.shellPattern(surface,radius)
   ImageColor3=Kit.Color.white,ScaleType=Enum.ScaleType.Tile,TileSize=UDim2.fromOffset(C.tile,C.tile),
   Size=UDim2.new(1,C.tile,1,C.tile),Position=UDim2.fromOffset(-C.tile,-C.tile),ZIndex=z,Active=false,Selectable=false})
  local fade=node("Frame",holder,{Name="Fade",BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=if sibling then z+1 else z,Active=false,Selectable=false})
- paint(fade,"BackgroundColor3","shell")
+ -- Spencer 2026-11-21 (phone, second look): the fade was painted "shell" while a phone sheet
+ -- fills with its own "panel" shade, so the opaque bottom band read as a lighter rectangle with
+ -- square ends. The fade now copies the surface's own fill, so it melts into it.
+ local fill=if root.BackgroundTransparency<1 then root else surface
+ local function matchFill()fade.BackgroundColor3=fill.BackgroundColor3 end
+ fill:GetPropertyChangedSignal("BackgroundColor3"):Connect(matchFill)
+ matchFill()
  local gradient=node("UIGradient",fade,{Rotation=90,Transparency=NumberSequence.new(1,C.fadeTo)})
  -- Spencer 2026-11-21: the checker is a rectangle inside a rounded surface, so its square
  -- bottom corners read as "unrounded". Over the last FadeBand px (two corner radii) the fade

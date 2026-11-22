@@ -38,6 +38,52 @@ function Preload.styleImages(assets, themes)
 	return out
 end
 
+-- Spencer 2026-11-21: "we need to preload the textures ... for everything like the eggs too".
+-- Every image the menus and hatch screens draw, read from the asset tables themselves (any
+-- "rbxassetid://<n>" string inside them, nested tables included): the Get Stars icons first,
+-- then the deck shell, egg art, the hatch stage, round items. Style images follow.
+Preload.MenuModules = table.freeze({
+	{ shared = "StoreCatalog", key = "Icons" }, { client = "DeckAssets" }, { client = "EggArtAssets" },
+	{ shared = "EggModels" }, { client = "HatchDisplayAssets" }, { shared = "RoundItems" },
+})
+function Preload.collectImages(value, out, seen, visited)
+	visited = visited or {}
+	if type(value) == "string" then
+		local id = value:match("^rbxassetid://(%d+)$")
+		if id and not seen["rbxassetid://" .. id] then seen["rbxassetid://" .. id] = true; table.insert(out, "rbxassetid://" .. id) end
+	elseif type(value) == "table" and not visited[value] then
+		visited[value] = true
+		-- Stable order: sorted keys, so the queue is the same every session.
+		local keys = {}
+		for k in pairs(value) do table.insert(keys, k) end
+		table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+		for _, k in ipairs(keys) do Preload.collectImages(value[k], out, seen, visited) end
+	end
+	return out
+end
+function Preload.menuImages(modules)
+	local out, seen = {}, {}
+	for _, spec in ipairs(modules or Preload.MenuModules) do
+		local ok, data = pcall(function()
+			local module = if spec.shared then ReplicatedStorage.Shared:FindFirstChild(spec.shared) else script.Parent:FindFirstChild(spec.client)
+			return module and require(module)
+		end)
+		if ok and data then Preload.collectImages(if spec.key then data[spec.key] else data, out, seen) end
+	end
+	return out
+end
+-- Pure: menu images first, then Deck style's, deduplicated.
+function Preload.allImages()
+	local out, seen = {}, {}
+	for _, list in ipairs({ Preload.menuImages(), Preload.styleImages() }) do
+		for _, raw in ipairs(list) do
+			local id = Preload.canonical(raw)
+			if type(id) == "string" and not seen[id] then seen[id] = true; table.insert(out, id) end
+		end
+	end
+	return out
+end
+
 -- Pure: the queue's id form, so callers can ask "is this one warm?".
 local function canonical(uri)
 	local id = type(uri) == "string" and (uri:match("^rbxassetid://(%d+)$") or uri:match("^(%d+)$"))
@@ -54,7 +100,7 @@ function Preload.new(options)
 		gardenReady = options.gardenReady or function() return workspace:FindFirstChild("EggDropLounge") ~= nil end,
 		preload = options.preload or function(items) ContentProvider:PreloadAsync(items) end,
 		folders = options.folders,
-		images = options.images or Preload.styleImages(),
+		images = options.images or Preload.allImages(),
 		ready = {}, failed = {}, boosted = {}, started = false, done = false, stopped = false,
 	}
 	return setmetatable(self, { __index = Preload })

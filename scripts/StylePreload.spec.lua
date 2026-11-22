@@ -32,6 +32,22 @@ return function(client)
 		assert(images[#images] ~= nil and #images <= 64, "a bounded list (" .. #images .. ")")
 	end)
 
+	test("the full list (2026-11-21): Get Stars icons first, then menu art, then style; no duplicates", function()
+		local Catalog = require(game:GetService("ReplicatedStorage").Shared.StoreCatalog)
+		local all = Preload.allImages()
+		local set = {}
+		for _, id in ipairs(all) do assert(not set[id], "duplicate " .. id); set[id] = true; assert(id:match("^rbxassetid://%d+$"), id) end
+		local icons = 0
+		for _, uri in pairs(Catalog.Icons) do icons += 1; assert(set[uri], "store icon " .. uri .. " missing") end
+		for i = 1, icons do
+			local isIcon = false
+			for _, uri in pairs(Catalog.Icons) do if all[i] == uri then isIcon = true end end
+			assert(isIcon, "store icons lead the queue (slot " .. i .. ")")
+		end
+		for _, id in ipairs(Preload.styleImages()) do assert(set[Preload.canonical(id)] or set[id], "style image " .. tostring(id) .. " missing") end
+		assert(#all > #Preload.styleImages(), "menu art adds images")
+	end)
+
 	test("background pass: waits for the garden, then every image at priority 0 in batches of " .. Preload.Batch, function()
 		local q = fakeQueue()
 		local waits, gardenChecks, folders = 0, 0, {}

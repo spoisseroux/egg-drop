@@ -86,7 +86,11 @@ return function(client,parent)
    local sheet=Kit.frame(holder,"Shell","panel",UDim2.new(),UDim2.fromOffset(400,300),16)
    local ctl=Kit.shellPattern(sheet);settle()
    local h=ctl.holder
-   assert(h.ClipsDescendants and h.Position==UDim2.fromOffset(5,5)and h.Size==UDim2.new(1,-10,1,-10),"inset ceil(16 * 0.293) = 5")
+   -- 2026-11-21: inset ceil(16 * 0.293) = 5, plus the outline (none here) and 1 px.
+   assert(h.ClipsDescendants and h.Position==UDim2.fromOffset(6,6)and h.Size==UDim2.new(1,-12,1,-12),"inset 5 + 1")
+   local outlined=Kit.frame(holder,"Outlined","panel",UDim2.new(),UDim2.fromOffset(200,100),16);Kit.stroke(outlined)
+   local octl=Kit.shellPattern(outlined);assert(octl.holder.Position==UDim2.fromOffset(9,9),"inside a 3 px outline: 5 + 3 + 1")
+   outlined:Destroy()
    assert(Kit.patternInset(30)==9 and Kit.patternInset(16)==5)
    assert(ctl.tile.Image==Kit.Checker.image and ctl.tile.TileSize==UDim2.fromOffset(32,32)and math.abs(ctl.tile.ImageTransparency-.91)<.001)
    assert(ctl.running and h:GetAttribute("PatternRunning"),"moving while shown")

@@ -269,9 +269,20 @@ function View:attachStore(store)
 		self:syncEggClock()
 		self:bumpControllerEpoch()
 	end
-	store.onClosed = function()
+	store.onClosed = function(reason)
+		-- Spencer 2026-11-21: "when i click back or x it goes back to hatch eggs screen even if i
+		-- wasn't there before". Opened from another screen (storeReturn, set by init's store route),
+		-- Back leaves Hatch eggs too and reopens that screen (true: the garden, or the hub through
+		-- machineReturn).
+		local back = self.storeReturn
+		self.storeReturn = nil
 		self.card.Visible = self.state.lastHatch ~= nil or not self.shopRoot
 		if self.shopPanel then self.shopPanel.Visible = true end
+		if back and reason == "back" and self.shade.Visible then
+			self:close("close")
+			if type(back) == "function" then task.defer(back) end
+			return
+		end
 		self:syncEggClock()
 		self:bumpControllerEpoch()
 		if self.shade.Visible then
@@ -1430,6 +1441,7 @@ function View:close(reason, choice)
 		if reason == nil or reason == "close" then self.store:close("back"); return end
 		self.store:close("forced")
 	end
+	self.storeReturn = nil
 	if self.shade.Visible then self:bumpControllerEpoch()end
 	if not self.shade.Visible then return end
  if self.onRouteChanged then self.onRouteChanged("close",reason)end

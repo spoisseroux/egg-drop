@@ -202,6 +202,9 @@ function View.new(parent, options)
 		self.destroyed = true
 		selection:Disconnect()
 	end)
+	-- Spencer 2026-11-21: "we need to preload the textures". The offer icons start loading
+	-- when the game does (the client makes this view at startup), not on the first open.
+	self:warmIcons()
 	return self
 end
 

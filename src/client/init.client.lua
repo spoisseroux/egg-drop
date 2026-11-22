@@ -1781,6 +1781,16 @@ function clientUI.openStarsStore(from)
  -- Already on Hatch eggs: the store page opens in place (reopening would reset focus).
  if nurseryView:isOpen()then return nurseryView:openStore()==true or refuseStore("hatchView")end
  local fromHub=gameMenu:isOpen()
+ -- Where Back from the store goes (Spencer 2026-11-21: not Hatch eggs, unless you were there):
+ -- the screen that was open, else the garden. The hub goes through machineReturn.
+ local back=true
+ if fromHub then back=true
+ elseif clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then local pet=clientUI.wardrobe.petId;back=function()clientUI.openWardrobe(pet)end
+ elseif clientUI.names and clientUI.names.isOpen()then back=function()clientUI.openNames()end
+ elseif clientUI.stats and clientUI.stats.isOpen()then back=function()clientUI.openStats()end
+ elseif clientUI.hub and clientUI.hub:isOpen()then back=function()clientUI.openHub()end
+ elseif clientUI.book and clientUI.book:isOpen()then back=function()clientUI.openBook()end
+ elseif clientUI.questLog and clientUI.questLog.visible then back=function()clientUI.openQuestLog("daily")end end
  starsStoreOpening=true
  local ok=false
  if clientUI.closeAllMenus("store")then
@@ -1788,6 +1798,7 @@ function clientUI.openStarsStore(from)
   -- From the machine hub: Back from the store, then Hatch eggs, lands on the hub again.
   if fromHub and nurseryView:isOpen()then clientUI.machineReturn="hatch"end
   ok=nurseryView:isOpen()and nurseryView:openStore()==true
+  if ok then nurseryView.storeReturn=back end
  end
  starsStoreOpening=false
  if not ok then refuseStore("didNotOpen")end
