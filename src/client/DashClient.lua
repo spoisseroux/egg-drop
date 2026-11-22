@@ -65,7 +65,7 @@ function Client.ahead(track,tick,unit)
 end
 
 -- The gate card's picture: the start arch and the lanes from the side, over the lawn west of the waiting pad.
-Client.GateEye=Vector3.new(10.5,5,11) -- to the pad's side of the start, up, and along the course
+Client.GateEye=Vector3.new(10.5,5,11) -- across the start from the pad, up, and along the course: the waiting players are behind the arch
 Client.GateLook=Vector3.new(0,1,2)
 function Client.gateView()
 	local x,y,z,yaw=Course.at(0)

@@ -506,6 +506,15 @@ function Cards:showIntro(id,notice,vars)
   onDone=function()if self.garden==current then self:hideGarden()end end})
  self.gardenView.root.Visible=false
 end
+function Cards:introBlocked(now,current)
+ local things=self.options.things
+ if not things then return true end
+ local ok,why=pcall(things.blocked,if self.roomSince then now-self.roomSince else 0,if current.presented then "shown"else "queued")
+ if ok then return why~=nil end
+ warn("[Things] tips: "..tostring(why))
+ self.options.things=nil
+ return true
+end
 function Cards:stepIntro(now,base,vars,roomFor)
  local things=self.options.things
  if not things then return end
@@ -543,8 +552,7 @@ function Cards:step(now,ctx)
   if current.rail and current.rail:isVisible()and Cards.clockRuns(ctx,current.kind)then current.elapsed+=dt end
   local elapsed=current.elapsed
   local gone=elapsed>=current.duration
-   or(current.kind=="intro"and(self.options.things==nil
-    or self.options.things.blocked(if self.roomSince then now-self.roomSince else 0,if current.presented then "shown"else "queued")~=nil))
+   or(current.kind=="intro"and self:introBlocked(now,current))
    or((current.kind=="beat"or current.kind=="arrival")and not Cards.gardenOpen(ctx))
    or(current.machine and not(ctx.open and ctx.open[current.machine]))
   if gone then

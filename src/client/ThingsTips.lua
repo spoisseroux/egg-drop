@@ -52,7 +52,7 @@ function Tips.due(ctx)
 	local id,copy
 	if Coach.wants("parkInvite",ctx)and Coach.has(ctx.mask,"gardenIntro")and Coach.wants("park",ctx)then
 		id,copy="parkInvite","parkInvite"
-	elseif ctx.dashOn==true and ctx.raced~=true and Coach.wantsIntro("dashIntro",ctx)
+	elseif ctx.dashOn==true and ctx.raced~=true and not Coach.has(ctx.mask,"dashSeen")and Coach.wantsIntro("dashIntro",ctx)
 		and(ctx.returning==true or(ctx.playDates or 0)>=1)then
 		id,copy="dashIntro",if ctx.returning==true then "dashNew"else "dashIntro"
 	end

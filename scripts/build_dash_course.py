@@ -45,7 +45,7 @@ OBSTACLES = [
     (-3.35, 6.3, 1.9, 4.05),  # the bush round the last one
 ]
 CLIFF_X, CLIFF_ROOM = 78.0, 4.0  # nothing of the race comes nearer than this to the cliff rock east of x 78
-PAD, PAD_RADIUS = (70.0, 0.0), 3.0  # where racers wait, beside the start and off the line
+PAD, PAD_RADIUS = (69.0, -14.0), 3.0  # where racers wait, off the line and north of it: a pad at (70, 0) put the crown of the tree at (74, 12) in the camera of anyone walking here from spawn
 BUSHES = [(float(x), float(z)) for x, z in re.findall(
     r"\{(-?[\d.]+),-?[\d.]+,(-?[\d.]+),", (ROOT / "src/shared/WorldDressing.lua").read_text().split("Dressing.Bushes=")[1])]
 LANES, LANE_STEP = 8, .5

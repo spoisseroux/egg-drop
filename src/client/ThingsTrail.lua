@@ -19,6 +19,10 @@ Trail.MenuGrace=.6  -- the menu that started it may take this long to close
 Trail.Near=3        -- started on the spot: the marker shows this long
 Trail.FadeIn=.25;Trail.FadeLag=.03;Trail.FadeOut=1
 Trail.Clear=.15     -- how see-through a print is
+-- The way up to the bridge's west end, from the measured race line: the navigation mesh has a seam there and goes round it
+-- through the stream (Studio 2026-11-22). Outermost first.
+Trail.West=table.freeze({Vector3.new(-18.95,4.4,14.33),Vector3.new(-13,4.4,21)})
+Trail.Bank=1        -- the water boxes hold this much bank: a way that brushes the Bubble Spring's rim is dry (Studio 2026-11-22)
 Trail.Color=Color3.fromHex("#FFF4DC")
 Trail.Ink=Color3.fromHex("#24304F")
 Trail.Agent=table.freeze({AgentRadius=2,AgentHeight=5,AgentCanJump=false,WaypointSpacing=4})
@@ -52,7 +56,7 @@ function Trail.wet()
 	if wet then return wet end
 	wet={}
 	local function add(x,z,w,d,yaw)
-		table.insert(wet,{Parent=true,CFrame=CFrame.new(x,0,z)*CFrame.Angles(0,yaw or 0,0),Size=Vector3.new(w,1,d),GetAttribute=function()return false end})
+		table.insert(wet,{Parent=true,CFrame=CFrame.new(x,0,z)*CFrame.Angles(0,yaw or 0,0),Size=Vector3.new(math.max(1,w-Trail.Bank*2),1,math.max(1,d-Trail.Bank*2)),GetAttribute=function()return false end})
 	end
 	if World.WorldVersion=="v7"then
 		for _,entry in ipairs(require(Shared:WaitForChild("WorldV7Data")).wet or {})do
@@ -72,6 +76,27 @@ function Trail.dry(points,list)
 	end
 	return true
 end
+-- A dry way between a place and a bridge's end, or nil: straight, else by the west approach. Reversed: from the end out.
+local function approach(compute,place,mouth,west,dry,reversed)
+	local function way(inner)
+		local points=if reversed then compute(inner,place)else compute(place,inner)
+		return if points and #points>=2 and dry(points)then points else nil
+	end
+	local points=way(mouth)
+	if points then return points end
+	if not west then return nil end
+	points=way(Trail.West[1])
+	if not points then return nil end
+	local all={}
+	if reversed then
+		for i=#Trail.West,1,-1 do table.insert(all,Trail.West[i])end
+		for _,point in ipairs(points)do table.insert(all,point)end
+	else
+		all=table.clone(points)
+		for _,point in ipairs(Trail.West)do table.insert(all,point)end
+	end
+	return if dry(all)then all else nil
+end
 -- A dry way, or nil: straight there, else over a bridge. compute may yield.
 function Trail.route(compute,from,to,dry)
 	dry=dry or Trail.dry
@@ -84,8 +109,9 @@ function Trail.route(compute,from,to,dry)
 			local centre=Vector3.new(span.center.X,y,span.center.Z)
 			local near,far=centre-half,centre+half
 			if flat(from,far)<flat(from,near)then near,far=far,near end
-			local first,second=compute(from,near),compute(far,to)
-			if first and second and #first>=2 and #second>=2 and dry(first)and dry(second)then
+			local first=approach(compute,from,near,near.X<centre.X,dry,false)
+			local second=first and approach(compute,to,far,far.X<centre.X,dry,true)
+			if first and second then
 				local all=table.clone(first)
 				table.insert(all,near);table.insert(all,far)
 				for _,point in ipairs(second)do table.insert(all,point)end

@@ -4595,13 +4595,10 @@ do
    return if root and humanoid and humanoid.Health>0 then root.Position else nil
   end
   local function dashNow()return if Dash.on()and clientUI.dash then clientUI.dash:summary()else nil end
-  -- Where the race starts: the live gate's own mark, so a gate that moves needs no edit here.
+  -- The waiting pad, where the race's prompt is: the same numbers the gate is built from.
   local function dashGate()
-   local model=workspace:FindFirstChild("GardenDash")
-   local start=model and model:GetAttribute("Start")
-   if typeof(start)=="CFrame"then return start.Position end
-   local x,y,z=Course.at(0)
-   return Vector3.new(x,y,z)
+   local pad=Course.Pad
+   return Vector3.new(pad.x/100,pad.y/100,pad.z/100)
   end
   local function parkGate(from)
    if not Attract.parkAnchor()then return nil end
@@ -4618,7 +4615,7 @@ do
   local trail=require(script.ThingsTrail).new({world=workspace,root=rootPosition,reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
    free=function()
     return Things.on()and board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy
-     and not roomView.dashHeld and(clientUI.dash==nil or clientUI.dash.seat==nil)
+     and not roomView.dashHeld and(clientUI.dash==nil or clientUI.dash.seat==nil or clientUI.dash.seat.phase=="gather")
    end,
    busy=function()
     return clientUI.anyModalOpen()==true or How.isOpen()or Confirm.isOpen()or roomView.focusing==true or clientUI.arrivalHatch:isOpen()
@@ -4653,7 +4650,7 @@ do
    closeMenu()
    if id~="deck"then things.show(id);return true end
    -- The Deck: as its own button in the garden (a race seat is asked about first).
-   local function play()cancelHatchNavigation();request:FireServer("mode","Board")end
+   local function play()roomView:requestSwitch(function()cancelHatchNavigation();request:FireServer("mode","Board")end)end
    if not(clientUI.dash and clientUI.dash:askLeave(play))then play()end
    return true
   end
@@ -4712,7 +4709,7 @@ do
     while mine==running and Things.on()do
      local good,why=pcall(function()
       local dash=dashNow()
-      clientUI.attract:extra("Dash",if dash then dashGate()else nil,dash~=nil and dash.raced)
+      clientUI.attract:extra("Dash",if dash then dashGate()else nil,dash~=nil and(dash.raced or Coach.has(clientUI.coach.mask,"dashSeen")))
       if clientUI.dash and clientUI.dash.seat then things.seen("dash")end
      end)
      if not good then warn("[Things] "..tostring(why));return end
