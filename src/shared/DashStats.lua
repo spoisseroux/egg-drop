@@ -67,11 +67,11 @@ end
 -- Time Trial and Just for Fun run at level 50; a Stats On heat uses its band's row, derived at the lowest
 -- balanced level of the band (level 1 for Seedling). Doing nothing, or only holding Dash, earns no medal. [P]
 Stats.Pars=table.freeze({
-	trial=table.freeze({bronze=35000,silver=32000,gold=30000}),
+	trial=table.freeze({bronze=35500,silver=32500,gold=30000}),
 	seedling=table.freeze({bronze=39500,silver=36500,gold=34000}),
-	sprout=table.freeze({bronze=38500,silver=35500,gold=33000}),
-	bloom=table.freeze({bronze=37000,silver=34000,gold=32000}),
-	fullBloom=table.freeze({bronze=35000,silver=32000,gold=30000}),
+	sprout=table.freeze({bronze=38500,silver=36000,gold=33500}),
+	bloom=table.freeze({bronze=37500,silver=34500,gold=32000}),
+	fullBloom=table.freeze({bronze=35500,silver=32500,gold=30000}),
 	starbloom=table.freeze({bronze=33500,silver=30500,gold=28500}),
 })
 function Stats.pars(mode,band)

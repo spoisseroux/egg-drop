@@ -19,7 +19,7 @@ return function(_, shared, offline)
 		end
 	end
 	local cases = {}
-	local function test(name, run) run(); table.insert(cases, name) end
+	local function test(name, run) local note = run(); table.insert(cases, if note then name .. ": " .. note else name) end
 	local function points(list)
 		local out = {}
 		for i = 1, #list, 4 do table.insert(out, { d = list[i], x = list[i + 1] / 100, y = list[i + 2] / 100, z = list[i + 3] / 100 }) end
@@ -67,6 +67,23 @@ return function(_, shared, offline)
 			end
 		end
 		assert(nearest >= 6, nearest)
+	end)
+	test("clear of the measured solid things: the leaning tree's base, centre line 3.8 studs and every lane outside it", function()
+		local closest = 1e9
+		for _, tree in ipairs({ { 38.25, 8, 1.6, 3.8 } }) do -- build_dash_course.py OBSTACLES
+			for _, way in ipairs({ { Course.Length, false }, { Course.StonesLength, true } }) do
+				for d = 0, way[1], 10 do
+					local x, _, z = Course.at(d, way[2])
+					closest = math.min(closest, near({ x, z }, tree))
+					assert(near({ x, z }, tree) >= tree[4], d)
+					for lane = 1, 8 do
+						local lx, _, lz = Course.at(d, way[2], lane)
+						assert(near({ lx, lz }, tree) >= tree[3] + .4, d)
+					end
+				end
+			end
+		end
+		return string.format("closest %.2f", closest)
 	end)
 	test("heights: the bare ground, the deck on the bridge, the stone tops over the stream; no step over 0.8", function()
 		for _, p in ipairs(main) do

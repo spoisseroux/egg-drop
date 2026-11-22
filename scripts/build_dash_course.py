@@ -33,6 +33,9 @@ WET.append((52, 3, 7, 4.4, 0))
 BLOCKED = [(-63, 45, 38, 44, 0), (-46, 31.5, 34, 9, math.atan2(-25, -22))]
 STATIONS = [(-31, -11), (-17, -15), (-46, -9), (-30, 18.5), (49.5, 14), (54.5, 14)]
 LAMPS = [(69.65, 51.97), (29.44, 29.85), (-9, 28), (-12, -44), (-70, -3), (50, -10), (-22, 38)]
+# Solid things the walk map's one-stud cells blur, measured by server raycast in Studio: x, z, radius, least
+# distance to the centre line (the outside lane is 1.75 studs out). DashCourse.spec checks the same list.
+OBSTACLES = [(38.25, 8.0, 1.6, 3.8)]  # 2026-11-22: the base of the leaning tree (W7_Trunks__bark)
 BUSHES = [(float(x), float(z)) for x, z in re.findall(
     r"\{(-?[\d.]+),-?[\d.]+,(-?[\d.]+),", (ROOT / "src/shared/WorldDressing.lua").read_text().split("Dressing.Bushes=")[1])]
 LANES, LANE_STEP = 8, .5
@@ -40,11 +43,11 @@ STEP = 2.0
 MIN_RADIUS = 6.0
 
 # (x, z, kind): "P" snaps to the dirt, "F" never moves, "-" may be nudged by the search.
-MAIN = [(80.5, 55, "F"), (74, 52.5, "P"), (66, 49, "P"), (57, 44.5, "P"), (51, 40, "-"), (46, 31, "-"), (43, 20, "-"),  # past the garden arch at (85, 58)
-        (36, 8, "-"),  # the lawn east of the stream
+MAIN = [(80.5, 55, "F"), (74, 52.5, "P"), (66, 49, "P"), (57, 44.5, "P"), (51, 40, "-"), (46, 31, "-"), (45, 18, "-"),  # past the garden arch at (85, 58)
+        (44, 3, "-"),  # the lawn east of the stream, outside the leaning tree
         (30, 2.5, "-"), (24, 2.5, "-"), (23.5, 21, "-"), (18, 21, "F"), (13.5, 21, "F"), (-8.5, 21, "F"), (-13, 21, "F"),
         (-17.5, 13.2, "-"), (-25, 13.2, "-"), (-36, 13.2, "-"), (-43, 8, "-"), (-50, 0, "-"), (-58, -3.6, "P"),
-        (-68, -6.6, "P"), (-78, -9.4, "P"), (-88, -10.8, "P")]
+        (-68, -6.6, "P"), (-77, -9.2, "P"), (-84, -10.6, "P")]
 FORK_POINT, REJOIN_POINT = (30.0, 2.7), (-23.0, 13.2)
 SAVING, LENGTH = 14.0, 220.0
 STONE_TOP = 4.0
@@ -53,6 +56,12 @@ STONE_TOP = 4.0
 def code(x, z):
     i, j = int(round(x - S["x0"])), int(round(z - S["z0"]))
     return (S["rows"][j][i], S["h"][j][i]) if 0 <= i < S["nx"] and 0 <= j < S["nz"] else (".", -999)
+
+
+def segment_distance(p, a, b):
+    dx, dz = b[0] - a[0], b[1] - a[1]
+    t = max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / max(1e-9, dx * dx + dz * dz)))
+    return math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dz * t)
 
 
 def ground(x, z):  # World.groundY
@@ -179,6 +188,10 @@ def faults(points, wet_ok=None, height=height):
             for s in spots:
                 if math.dist(s, (x, z)) < room:
                     out.append((room - math.dist(s, (x, z)), f"{name} {what} {s}"))
+        for ox, oz, _, room in OBSTACLES if i else ():
+            d = segment_distance((ox, oz), points[i - 1], (x, z))
+            if d < room + .05:
+                out.append((room + .05 - d + .5, f"{name} obstacle ({ox},{oz}) {d:.2f}"))
         for what, d in (("kerb", kerb_distance(x, z)), ("grove", grove_distance(x, z))):
             if d < KEEP:
                 out.append((KEEP - d + 1, f"{name} {what} {d:.1f}"))
@@ -254,7 +267,7 @@ def emit(control):
     # Stones: the branch's wet stretch, three centres spread evenly.
     wet = [row[0] for row, p in zip(b, branch) if code(*p)[0] == "W"]
     lo, hi = wet[0] - 100, wet[-1] + 100
-    centres = [lo + (hi - lo) * k // 6 for k in (1, 3, 5)]
+    centres = [lo + (hi - lo) * k // 8 for k in (1, 4, 7)]
     if not 1200 <= lo <= stones_len - 1200:
         problems.append(f"stones too close to the fork: {lo}")
     if abs(saving - SAVING * 100) > 100:
@@ -302,7 +315,7 @@ def emit(control):
         text = text.replace("@" + key + "@", str(value))
     turn = min(radius(main[i - 2], main[i], main[i + 2]) for i in range(2, len(main) - 2))
     print(f"length {total / 100} fork {fork / 100} rejoin {rejoin / 100} stones {stones_len / 100} saving {saving / 100} "
-          f"min turn radius {turn:.1f} kerb {min(kerb_distance(*p) for p in main):.1f} "
+          f"obstacle {min(segment_distance(o, a, b) for o in OBSTACLES for a, b in zip(main, main[1:])):.2f} min turn radius {turn:.1f} kerb {min(kerb_distance(*p) for p in main):.1f} "
           f"start {main[0]} finish {main[-1]} bushes {len(BUSHES)} layouts {layouts}")
     return text
 
