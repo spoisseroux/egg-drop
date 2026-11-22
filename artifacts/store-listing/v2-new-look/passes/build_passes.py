@@ -351,22 +351,24 @@ def double_stars():
 
 
 def supporter():
-    """Supporter: the Bear with a heart, and +1 Star."""
+    """Supporter: the Bear, a small thank-you heart, and "+1 Star" read as one unit.
+    Spencer 2026-11-21: a big heart beside "+1" read as "+1 Heart" (Heart is a stat), so the
+    +1 sits right against a Star and the heart is small and off to the side."""
     c = base(cy=470, glow_r=700)
     bubbles(c, [(250, 230, 64), (810, 300, 50)])
-    bear = bi.relight(bi.load(os.path.join(CAP, "S1-tight.png"), 0.90), cool=0.16)
+    bear = bi.relight(bi.load(os.path.join(CAP, "S1-tight.png"), 0.86), cool=0.16)
     B = new()
-    bi.paste(B, bear, (int(470 - bear.width / 2), 170))
+    bi.paste(B, bear, (int(512 - bear.width / 2), 150))
     stick(c, B, rim=8)
     H = new()
-    heart(H, 335, 690, 125)
-    stick(c, H, rim=10)
+    heart(H, 285, 330, 58)
+    stick(c, H, rim=7)
+    number(c, "+1", 300, 420, 850, size=230)
     S = new()
-    put_star(S, 770, 490, 170, 12, "a")
+    put_star(S, 680, 740, 200, 10, "a")
     stick(c, S, rim=8)
-    number(c, "+1", 350, 630, 838, size=240)
     sparkle(c, 760, 200, 34)
-    sparkle(c, 170, 470, 30)
+    sparkle(c, 800, 620, 26)
     return c
 
 
