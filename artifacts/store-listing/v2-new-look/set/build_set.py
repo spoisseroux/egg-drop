@@ -360,9 +360,9 @@ def t1(tag=True):
     paste_center(c, egg, ex, ey)
     for x, y, r, rot in STARS1:
         gold_star(c, x, y, r, rot)
-    bun = cut("S13", 1.03)
+    bun = cut("B2", 1.10)
     put(c, bun, 1720, bottom=1040)  # clear of the Bear's cheek
-    bear = cut("C1", 1.28)
+    bear = cut("B1", 1.28)
     put(c, bear, 1300, bottom=1075)
     for sx, sy, r in SPARK1:
         sparkle(c, sx, sy, r)

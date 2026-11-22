@@ -76,6 +76,9 @@ SHOTS = {
     "C7c": ("C7c-black.jpg", "C7c-grey.jpg"),
     "C13": ("C13-black.jpg", "C13-grey.jpg"),
     "CJ": ("CJ-black.jpg", "CJ-grey.jpg"),
+    # T1 heroes (Spencer: shirt on the Bear, more accessories and a charm on the Bunny).
+    "B1": ("B1-black.jpg", "B1-grey.jpg"),
+    "B2": ("B2-black.jpg", "B2-grey.jpg"),
 }
 
 
