@@ -175,7 +175,8 @@ function Shop:buildTile(parent,index,item,x,y,w,h,compact)
  local status=txt(tile,"Counter","","soft",8,stripH+26,w-16,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=true})
  local entry={item=item,button=tile,status=status,name=name,stroke=tileState.stroke}
  if item.gate then
-  entry.lock=Locked.mark(strip,16)
+  -- Art review: the picture at 45%, a 16 px lock.
+  entry.lock=Locked.mark(strip,23,.45)
   entry.chip=Locked.chip(tile,18);entry.chip.root.Position=UDim2.fromOffset(6,stripH+26);entry.chipRoom=w-12
  end
  self.tiles[index]=entry
@@ -328,6 +329,8 @@ function Shop:refresh()
   local s=Shop.status(tile.item,self.ctx)
   if self.view and role=="dim"then role="soft"end
   tile.status.Text=text
+  -- 12 px, or 11 where a long word needs it.
+  tile.status.TextSize=if Kit.measure(text,"Counter",12).X*(if Kit.translating then 1.35 else 1)<=tile.status.Size.X.Offset then 12 else 11
   tile.status.FontFace=if role=="accent"then Kit.Type.Label[3]else Kit.Type.Counter[3]
   Kit.paint(tile.status,"TextColor3",function()return colorOf(role,tile.status,"TextColor3")end)
   if tile.chip then

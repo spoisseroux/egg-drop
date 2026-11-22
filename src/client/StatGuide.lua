@@ -25,6 +25,8 @@ function Guide.nextText(stat,level,row)
  if #Rewards.forStat(stat)>0 then return UICopy.get("stats.next.top")end
  return nil
 end
+-- The same without the free / shop word, for a line with no room for it.
+function Guide.nextShort(row)return if row then UICopy.get("stats.next.short",{level=row.level,name=Guide.text(row)})else nil end
 -- An item a level gate sells that this snapshot already owns (the wardrobe: on any pet).
 function Guide.owned(row,state)
  if type(row)~="table"or row.kind~="gate"or type(state)~="table"then return false end
@@ -99,15 +101,20 @@ function Guide.picture(parent,row,size)
  icon.AnchorPoint=Vector2.new(.5,.5);icon.Position=UDim2.fromScale(.5,.5)
  return disc
 end
--- The "Next at N" line: a picture and the words. set(row or nil, text).
+-- The "Next at N" line: a picture and the words. set(row or nil, text, short) keeps the longest wording
+-- that fits (with room for a translation) and says whether one does; wrap(on) gives the words two lines.
 function Guide.line(parent,x,y,w,h,textSize)
  local Kit=require(script.Parent.DeckKit)
  local root=Kit.frame(parent,"NextLine",nil,UDim2.fromOffset(x,y),UDim2.fromOffset(w,h))
  local label=Kit.text(root,"Strong","","text",{Name="Words",Position=UDim2.fromOffset(h+6,0),Size=UDim2.fromOffset(w-h-6,h),TextSize=textSize,TextTruncate=Enum.TextTruncate.AtEnd})
  local api={root=root,label=label}
  local picture,shown
- function api.set(row,text)
+ local function fits(words,width)return Kit.measure(words,"Strong",textSize).X*(if Kit.translating then 1.35 else 1)<=width end
+ function api.set(row,text,short)
   root.Visible=text~=nil
+  local room=if row then w-h-6 else w
+  local ok=text~=nil and fits(text,room)
+  if text and not ok and short and fits(short,room)then text=short;ok=true end
   label.Text=text or ""
   local key=row and row.id or nil
   if shown~=key then
@@ -117,6 +124,12 @@ function Guide.line(parent,x,y,w,h,textSize)
   end
   label.Position=UDim2.fromOffset(if row then h+6 else 0,0);label.Size=UDim2.fromOffset(if row then w-h-6 else w,h)
   root:SetAttribute("Reward",key);root:SetAttribute("Level",row and row.level or nil)
+  return ok
+ end
+ function api.wrap(on)
+  label.TextWrapped=on==true
+  local tall=if on then textSize*2+10 else h
+  root.Size=UDim2.fromOffset(w,tall);label.Size=UDim2.fromOffset(label.Size.X.Offset,tall)
  end
  return api
 end

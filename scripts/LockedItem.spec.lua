@@ -73,10 +73,14 @@ return function(client,parent)
     assert(shop:showItem(limeJump)and shop:focusedId()==limeJump,"showItem lands on the card")
     assert(shop:statusOf(limeJump).kind=="locked"and shop.root:GetAttribute("PaneState")=="locked")
     local tile=shop.tiles[shop.index]
-    assert(tile.chip.root.Visible and tile.lock.root.Visible and string.find(tile.status.Text,"40",1,true),"price stays on the card")
+    assert(tile.chip.root.Visible and tile.lock.root.Visible and tile.status.Text=="","the chip stands where the price would")
     assert(string.find(tile.button:GetAttribute("AccessibleLabel"),UICopy.get("shop.needs.stat",{name=UICopy.get("stats.name.jump"),level=30}),1,true))
     local tp,ts,cp,cs=tile.button.AbsolutePosition,tile.button.AbsoluteSize,tile.chip.root.AbsolutePosition,tile.chip.root.AbsoluteSize
-    assert(cp.X>=tp.X and cp.X+cs.X<=tp.X+ts.X+1 and cp.Y+cs.Y<=tp.Y+ts.Y+1,"the chip is inside its card")
+    local k=shop.scale.Scale
+    assert(cp.X>=tp.X+6*k-.5 and cp.X+cs.X<=tp.X+ts.X-6*k+.5 and cp.Y+cs.Y<=tp.Y+ts.Y-6*k+.5,"the chip is 6 px inside its card")
+    -- The bar: 8 px, 10 px clear of the button, under its 13 px line.
+    local line,bar,key=shop.status,shop.lockBar.root,shop.action
+    assert(line.TextSize==13 and bar.Size.Y.Offset==8 and bar.Position.Y.Offset+8+10<=key.Position.Y.Offset and line.Position.Y.Offset+line.Size.Y.Offset<=bar.Position.Y.Offset,"bar "..bar.Position.Y.Offset.." line "..line.Position.Y.Offset.." key "..key.Position.Y.Offset)
     assert(shop.lockBar.root.Visible and shop.action:GetAttribute("AccessibleLabel")==UICopy.get("shop.train",{name=UICopy.get("stats.name.jump")}))
     assert(string.find(shop.root:GetAttribute("PreviewWearables"),limeJump,1,true),"try-on still works")
     assert(shop:act()and trained.stat=="jump"and trained.petId=="pip"and shop.pending==nil,"nothing is bought")

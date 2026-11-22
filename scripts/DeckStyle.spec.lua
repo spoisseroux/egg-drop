@@ -193,13 +193,18 @@ return function(client,parent)
     balls:setContext({wallet=100,owned={},equipped="smileys",levels={pip={power=4}}})
     assert(balls:focusId("tangerine_pop"),"listed");settle()
     local tile=balls.tiles[balls.index]
-    assert(shop.root:GetAttribute("BallPaneState")=="locked"and tile.chip.root.Visible and tile.lock.root.Visible and tile.status.Text=="★ 40","price and chip")
+    assert(shop.root:GetAttribute("BallPaneState")=="locked"and tile.chip.root.Visible and tile.lock.root.Visible and tile.status.Text=="","the chip, no price")
+    do
+     local k=shop.scale.Scale;local c,b=tile.chip.root,tile.button
+     assert(c.AbsolutePosition.Y+c.AbsoluteSize.Y<=b.AbsolutePosition.Y+b.AbsoluteSize.Y-6*k+.5 and c.AbsolutePosition.X+c.AbsoluteSize.X<=b.AbsolutePosition.X+b.AbsoluteSize.X-6*k+.5,"at the card's bottom, 6 px in")
+     assert(tile.name.AbsolutePosition.Y+tile.name.AbsoluteSize.Y<=c.AbsolutePosition.Y+.5,"under the name")
+    end
     assert(balls.lockBar.root.Visible and balls.lockChip.root.Visible and Kit.buttonState(balls.action).label.Text==UICopy.get("shop.train",{name="Power"}))
     assert(balls.grid and balls.grid.CanvasPosition.Y+balls.grid.AbsoluteWindowSize.Y>=tile.button.Position.Y.Offset+tile.button.Size.Y.Offset-1,"scrolled into view")
     assert(shop:act(false)and #sent==0 and trained[1].stat=="power"and trained[1].petId=="pip")
     -- Met: the same card buys; a refusal from an older save reads the save again.
     balls:setContext({levels={pip={power=10}}})
-    assert(shop.root:GetAttribute("BallPaneState")=="buy"and not tile.lock.root.Visible and not tile.chip.root.Visible and not balls.lockBar.root.Visible and not balls.lockChip.root.Visible,"met: no chip is left")
+    assert(shop.root:GetAttribute("BallPaneState")=="buy"and not tile.lock.root.Visible and not tile.chip.root.Visible and not balls.lockBar.root.Visible and not balls.lockChip.root.Visible and tile.status.Text=="★ 40","met: the price, no chip")
     -- A level that came in with a snapshot repaints the tile with no focus change (and plates the same way).
     balls:setContext({levels={pip={power=9}}});assert(tile.chip.root.Visible);balls:setContext({levels={pip={power=25}}});assert(not tile.chip.root.Visible)
     for _,plate in ipairs(shop.tiles)do
@@ -231,7 +236,10 @@ return function(client,parent)
     assert(not v:shiftStyleTab(1)and shop.tab==4,"no wrap")
     assert(#shop.effects.tiles==9 and shop.effects:focusedItem().id=="classic"and shop.root:GetAttribute("EffectPaneState")=="inUse"and not shop:act(false))
     -- every card sits inside its grid
-    for _,tile in ipairs(shop.effects.tiles)do assert(tile.button.AbsoluteSize.X>=60 and tile.name.TextFits~=nil,tile.item.id)end
+    for _,tile in ipairs(shop.effects.tiles)do
+     assert(tile.button.AbsoluteSize.X>=60 and tile.name.TextFits~=nil and tile.status.TextSize>=11,tile.item.id)
+     if tile.lock then assert(math.abs(tile.lock.veil.BackgroundTransparency-.45)<1e-3 and tile.lock.root.Size.X.Offset==23,"45% picture, 16 px lock")end
+    end
     assert(shop:move(1,0)and shop.effects:focusedItem().id=="confetti"and shop.root:GetAttribute("EffectPaneState")=="owned")
     assert(shop:act(false)and #sent==1 and sent[1]=="pop.confetti"and shop.root:GetAttribute("EffectPaneState")=="inUse","optimistic")
     folder:SetAttribute(Juice.Attribute,game:GetService("HttpService"):JSONEncode({pop="confetti",trail="classic",start="classic"}));task.wait()

@@ -455,7 +455,7 @@ local Table={
     Timeout="Still saving… check your pouch in a moment.",UnknownSnack="This snack is from a newer update",Retrying="Still saving… check your pouch in a moment.",other="Couldn't feed right now"}},
   results={label="Stats",gain="{name} +{count}",up="{name} +{count} (Lv {target}!)"},
   -- Levels matter S1: the next reward line, the guide, and each reward's words (StatRewards).
-  next={free="Next at {level}: {name} · free",gate="Next at {level}: {name} · shop",top="Top level"},
+  next={free="Next at {level}: {name} · free",gate="Next at {level}: {name} · shop",short="At {level}: {name}",top="Top level"},
   guide={title="{name} guide",open="All {name} rewards",earned="Got it",at="Level {level}",shop="Go to shop",jobs="Also good for",none="More rewards soon"},
   levelUpReward="{name} {count} · {reward}",
   reward={item="{name}",name="Name piece: {name}",trick="New trick: {name}",

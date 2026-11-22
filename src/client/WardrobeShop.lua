@@ -75,7 +75,7 @@ function Shop.status(petId,itemId,ctx)
  if owned and Catalog.equippedIn(petId,row.equipped,item.slot)==itemId then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
  if owned then return {kind="owned",text="",button="Wear",enabled=true}end
  local wallet=ctx.wallet or 0
- -- Levels matter (S2): below the level the pane shows the way there; the price stays on the card.
+ -- Levels matter (S2): below the level the pane shows the way there; the card shows the chip.
  local gate=Locked.info(item,ctx.levels)
  if gate and not gate.met then
   local pet=gate.petId and Pets.byId[gate.petId]or Pets.byId[petId]
@@ -95,7 +95,8 @@ function Shop.tileStatus(petId,itemId,ctx,slot)
  if s.kind=="equipped"then return "WEARING","accent"end
  if s.kind=="owned"then return "✓ Owned","soft"end
  if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
- if s.kind=="short"or s.kind=="locked"then return Deal.priceText(s.price,s.full),"dim"end
+ if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
+ if s.kind=="locked"then return "","dim"end -- the chip stands where the price would
  return "","dim"
 end
 -- Slice E: the pet the Wardrobe opens on when none (or one without wearables) is asked
@@ -272,6 +273,8 @@ function Shop:buildPane(pane,pw,ph,compact)
  local nameH=if compact then 22 else 30
  local actionH=if compact then 48 else 56
  local lower=(if compact then 22+18+20+12 else 30+22+24+16)+actionH+pad
+ -- Levels matter (art review): room for the level bar, 8 px tall and 10 px clear of the button.
+ if Locked.on()then lower+=if compact then 8 else 16 end
  local viewH=math.max(80,ph-lower-pad)
  local _,well=Kit.previewWell(pane,"PreviewWell",UDim2.fromOffset(pad,pad),UDim2.fromOffset(pw-pad*2,viewH),12)
  local viewport=Kit.node("ViewportFrame",well,{Name="PetPreview",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex+1});Kit.petLight(viewport)
@@ -331,17 +334,13 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
   local status=txt(tile,"Counter","","soft",tx,tileH/2+2,tileW-tx-8,18,{TextSize=13})
   self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role,slot=item.slot,primary=item.primary,none=item.none,
    variantColor=Shop.variantColor(item)}
-  -- Levels matter (S2): the requirement chip (right of the price on phones, under it on desktop)
-  -- and the small lock, made only for a gated item while gates are on.
+  -- Levels matter (S2): the requirement chip where the price stands (hidden while locked) and the
+  -- small lock, made only for a gated item while gates are on.
   if Locked.on()and item.gate~=nil then
    local entry=self.tiles[index]
    entry.lock=Locked.mark(swatch,if side>=60 then 22 else 16)
    entry.chip=Locked.chip(tile,20)
-   if tileH>=90 then entry.chip.root.Position=UDim2.fromOffset(tx,tileH/2+21);entry.chipRoom=tileW-tx-8
-   else
-    entry.chip.root.AnchorPoint=Vector2.new(1,0);entry.chip.root.Position=UDim2.fromOffset(tileW-8,tileH/2+1)
-    entry.chipRoom=tileW-tx-8-58
-   end
+   entry.chip.root.Position=UDim2.fromOffset(tx,math.floor(tileH/2)+2);entry.chipRoom=tileW-tx-8
   end
   tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
  end
@@ -727,8 +726,8 @@ function Shop:paintPane()
  if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.status,self.errorFit)end
  -- Levels matter: "Needs Jump 30 · 22/30" (the requirement alone when that is too long) and its bar.
  local gate=if status.kind=="locked"then status.gate else nil
- if gate and not(self.errorId==id and self.errorText)then Kit.fitText(self.status,{gate.line,gate.needs})end
  self:paintLock(gate)
+ if gate and not(self.errorId==id and self.errorText)then Kit.fitText(self.status,{gate.line,gate.needs})end
  local tone=if status.kind=="equipped"then "accent"elseif status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
  Kit.paint(self.status,"TextColor3",function()return colorOf(tone,self.status,"TextColor3")end)
  self.action.Visible=status.button~=nil
@@ -742,12 +741,15 @@ function Shop:paintPane()
 end
 
 -- The bar between the requirement line and the button; made the first time a locked item is shown.
+Shop.LockBar,Shop.LockGap=8,10
 function Shop:paintLock(gate)
+ local size=if gate then 13 else 14
+ if self.status.TextSize~=size then self.status.TextSize=size end
  if not gate and not self.lockBar then return end
  if not self.lockBar or not self.lockBar.root.Parent then
   if not gate then self.lockBar=nil;return end
   local y=self.status.Position.Y.Offset+self.status.Size.Y.Offset
-  self.lockBar=Locked.bar(self.status.Parent,self.status.Position.X.Offset,y+1,self.status.Size.X.Offset,5)
+  self.lockBar=Locked.bar(self.status.Parent,self.status.Position.X.Offset,math.max(y+1,self.action.Position.Y.Offset-Shop.LockGap-Shop.LockBar),self.status.Size.X.Offset,Shop.LockBar)
  end
  self.lockBar.set(gate)
 end

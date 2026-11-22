@@ -199,11 +199,21 @@ return function(client,parent)
    local stage
    local medalGui=parent:FindFirstChild("EggDropMedal")
    for _,d in ipairs(medalGui:GetDescendants())do if d:GetAttribute("Medal")then stage=d end end
+   for _,d in ipairs(stage:GetDescendants())do if d.Name=="Sticker"then assert(not d.Visible,"no second tier pill")end end
    assert(stage and stage:GetAttribute("Medal")=="bloom"and stage:GetAttribute("MedalStat")=="heart"and stage:GetAttribute("MedalCount")==2)
    assert(api.open({stat="jump"})==false,"the panel waits for it")
    api.destroy();assert(parent:FindFirstChild("EggDropMedal")==nil)
    local moment=View.Moment.new(parent,nil)
    assert(moment:show({{petId="pip",stat="jump",tier="starbloom",level=99}},{waiting=1},{eggs=function()eggs+=1 end}))
+   -- The words are one block on the well's centre line, the level at 22 px on a desktop stage.
+   moment:skip();moment:step(.1);settle(3)
+   local s=moment.stage;local L=s.L
+   if L and L.landscape then
+    local top,bottom=L.name.y,L.line2.y+L.line2.h
+    assert(math.abs((top+bottom)/2-(L.wellSeat.y+L.wellSeat.h/2))<=2,"centred")
+    assert(s.effect.TextSize==math.max(14,math.floor(16.3*L.s+.5))and(L.s<1.35 or s.effect.TextSize==22))
+    assert(bottom<=L.primary.y,"clear of the keys")
+   end
    moment:choose("eggs");assert(eggs==1 and not moment:isOpen())
    assert(moment:show({},{},{})==false,"nothing to show")
    moment:destroy();probe:Destroy()

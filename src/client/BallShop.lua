@@ -47,7 +47,7 @@ function Shop.status(id,ctx)
  -- QA v2 R3.5: the theme in use keeps the Use button, disabled, reading "In use".
  if(ctx.equipped or Themes.Default)==id then return{kind="inUse",text="In use",button=UICopy.get("r4.inUse"),enabled=false}end
  if Themes.owns(ctx.owned,id)then return{kind="owned",text="Owned",button="Use",enabled=true}end
- -- Levels matter (S2): below the level the pane shows the way there; the price stays on the card.
+ -- Levels matter (S2): below the level the pane shows the way there; the card shows the chip.
  local gate=Locked.info(entry,ctx.levels)
  if gate and not gate.met then return{kind="locked",text=gate.line,button=Locked.trainText(gate),price=entry.price,gate=gate,enabled=true}end
  if entry.gate and not Locked.on()then return{kind="invalid",text="",button=nil}end -- not for sale, not listed
@@ -63,7 +63,8 @@ function Shop.tileStatus(id,ctx)
  if s.kind=="inUse"then return "IN USE","accent"end
  if s.kind=="owned"then return "✓ Owned","soft"end
  if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
- if s.kind=="short"or s.kind=="locked"then return Deal.priceText(s.price,s.full),"dim"end
+ if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
+ if s.kind=="locked"then return "","dim"end -- the chip says it
  return "","dim"
 end
 -- QA v2 R4.6 (193916): previews show the balls falling in, as a sample of the round.
@@ -235,25 +236,29 @@ function Shop:buildTile(parent,index,id,x,y,w,h,compact)
  local stroke=tileState.stroke
  tile:SetAttribute("AccessibleLabel",entry.name);tile:SetAttribute("BallThemeId",id)
  -- The five sizes in a row, as they draw on the board (smaller scale on phones).
- local stripH=if compact then 30 else 66
+ -- Levels matter: a gated card on a phone gives its strip 8 px so the chip has its own row.
+ local gated=entry.gate~=nil and Locked.on()
+ local stripH=if compact then(if gated then 22 else 30)else 66
  local strip=Kit.frame(tile,"Strip","well",UDim2.fromOffset(6,6),UDim2.fromOffset(w-12,stripH),10)
  Kit.dotGrid(strip) -- T7: a row of balls reads as a small screen
- local px=if compact then 1 else 2
+ local px=if compact then(if gated then .75 else 1)else 2
  local xs={.06,.19,.36,.59,.84}
  local balls={}
  for tier=1,5 do table.insert(balls,(ballAt(strip,id,tier,px,xs[tier]*(w-12),stripH-3)))end
  strip.ClipsDescendants=true
- local nameY=if compact then stripH+10 else stripH+14
+ local nameY=if compact then(if gated then 40 else stripH+10)else stripH+14
  local nameLabel=txt(tile,"Name",entry.name,"text",10,nameY,w-20-(if compact then 70 else 90),20,{TextSize=if compact then 13 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
  local status=txt(tile,"Counter","","soft",w-10-(if compact then 70 else 90),nameY,if compact then 70 else 90,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right,AutoLocalize=true})
  self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke,balls=balls}
- -- Levels matter (S2): the requirement chip over the strip's quiet corner and the small lock, made only
- -- for a gated theme while gates are on.
- if entry.gate and Locked.on()then
+ -- Levels matter (S2): the requirement chip along the card's bottom (the name moves up and the price goes
+ -- while it shows) and the small lock, made only for a gated theme while gates are on.
+ if gated then
   local made=self.tiles[index]
   made.lock=Locked.mark(strip,if compact then 14 else 18)
-  made.chip=Locked.chip(tile,if compact then 18 else 20);made.chip.root.Position=UDim2.fromOffset(9,9);made.chip.root.ZIndex=tile.ZIndex+12
-  made.chipRoom=w-18
+  local chipH=if compact then 16 else 18
+  made.chip=Locked.chip(tile,chipH);made.chip.root.Position=UDim2.fromOffset(8,h-6-chipH);made.chip.root.ZIndex=tile.ZIndex+12
+  made.chipRoom=w-16
+  made.nameAt={open=nameY,locked=if compact then 29 else stripH+8,openW=nameLabel.Size.X.Offset,lockedW=w-20,h=if compact then 16 else 20}
  end
  tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
  -- R4.6: hovering a card drops its five balls in again (focus does too).
@@ -295,6 +300,8 @@ function Shop:refresh()
   if tile.chip then
    local gate=Locked.info(Themes.ById[tile.id],self.ctx.levels,Themes.owns(self.ctx.owned,tile.id))
    tile.chip.set(gate,tile.chipRoom);tile.lock.set(s.kind=="locked")
+   local at,locked=tile.nameAt,s.kind=="locked"
+   tile.name.Position=UDim2.fromOffset(10,if locked then at.locked else at.open);tile.name.Size=UDim2.fromOffset(if locked then at.lockedW else at.openW,if locked then at.h else 20)
    tile.button:SetAttribute("AccessibleLabel",if s.kind=="locked"then Themes.ById[tile.id].name..", "..s.gate.needs else Themes.ById[tile.id].name)
   end
   tile.button:SetAttribute("TileState",s.kind)

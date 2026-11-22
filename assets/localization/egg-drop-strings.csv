@@ -730,6 +730,7 @@ ui.stats.name.smarts,Smarts,,Menu text
 ui.stats.name.speed,Speed,,Menu text
 ui.stats.next.free,Next at {level}: {name} · free,,Menu text; e.g. Next at 10: Pet Park · free
 ui.stats.next.gate,Next at {level}: {name} · shop,,Menu text; e.g. Next at 10: Pet Park · shop
+ui.stats.next.short,At {level}: {name},,Menu text; e.g. At 10: Pet Park
 ui.stats.nextKeeper,{name} at {count},,Menu text; e.g. Pet Park at 3
 ui.stats.none,Hatch a pet to start its stats.,,Menu text
 ui.stats.of,/ {total},,Menu text; e.g. / 12

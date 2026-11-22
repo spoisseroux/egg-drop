@@ -23,6 +23,7 @@
 --   detail()    the host's supporting line; description() one fun line (default Stage.describe)
 --   effect()    an effect line under the name (a Stat Snack's boost), optional
 --   sticker()   the kind word on the sticker (default from hatch.reveal.kind.*)
+--   quietText   (medals) no sticker, a larger effect line, and the words centred on the well
 --   actions()   {{source=GuiButton, primary=bool, act=function}}: the host's receipt buttons,
 --               mirrored (text / enabled / visible) and called only once the receipt is ready
 --   odds()      {rows={{id,name,value,info?}}, restricted?, empty?} for the "In this egg" tray,
@@ -794,7 +795,8 @@ function Stage:layout()
  local tx=L.text
  self.stickerText.TextSize=tx.sticker
  self.name.TextSize=tx.name;self.nameStroke.Thickness=math.max(2,math.floor(3*L.s+.5))
- self.effect.TextSize=tx.line;self.describe.TextSize=tx.small+1;self.hostLine.TextSize=tx.small
+ tx.effect=if self.options.quietText then math.max(14,math.floor(16.3*L.s+.5))else tx.line
+ self.effect.TextSize=tx.effect;self.describe.TextSize=tx.small+1;self.hostLine.TextSize=tx.small
  self.trayTitle.TextSize=tx.small;self.trayKeyText.TextSize=math.max(11,tx.small-1)
  self.pityLine.TextSize=tx.small+1;self.pitySub.TextSize=tx.small
  self.stamp.TextSize=tx.stamp;self.skipText.TextSize=tx.small
@@ -821,9 +823,25 @@ function Stage:layout()
  if self.scene and not self.scene.destroyed then self.scene:layout()end
  self:paint()
 end
+-- quietText: the name, the effect (two lines when it is long) and the fun line as one block, centred
+-- on the well's seat. Landscape only; nothing else uses the tray's room there.
+function Stage:quietLayout()
+ local L=self.L
+ if not L or not self.options.quietText or not L.landscape then return end
+ local size=L.text.effect or L.text.line
+ local wide=Kit.measure(self.effect.Text,"Body",size).X*(if Kit.translating then 1.35 else 1.05)>L.line1.w
+ local effectH=math.ceil(size*1.25)*(if wide then 2 else 1)
+ local gap=math.floor(6*L.s)
+ local total=L.name.h+gap+effectH+2+L.line2.h
+ local y=math.floor(L.wellSeat.y+(L.wellSeat.h-total)/2+.5)
+ L.name.y=y;L.line1.y=y+L.name.h+gap;L.line1.h=effectH;L.line2.y=L.line1.y+effectH+2
+ place(self.lines,{x=L.line1.x,y=L.line1.y,w=L.line1.w,h=effectH+2+L.line2.h*2+2})
+ self.effect.Size=UDim2.fromOffset(L.line1.w,effectH)
+end
 -- The name shrinks to its column (never below 18 px) instead of clipping.
 function Stage:layoutText()
  local L=self.L;if not L then return end
+ self:quietLayout()
  local text=self.name.Text
  local wanted=Kit.measure(text,"Title",L.text.name).X
  local size=if wanted>L.textW-8 then math.max(18,math.floor(L.text.name*(L.textW-8)/math.max(1,wanted)))else L.text.name
@@ -1202,7 +1220,7 @@ function Stage:paintText(s,still)
  local L=self.L
  -- Sticker and name pop (Back 2.0 / 2.2) when the receipt is ready.
  local named=s.named
- self.sticker.Visible=named and s.sticker>0
+ self.sticker.Visible=named and s.sticker>0 and not self.options.quietText
  self.sticker.Position=UDim2.fromOffset(L.sticker.x,L.sticker.y+math.floor(L.sticker.h/2))
  self.stickerScale.Scale=if s.reduced or s.sticker>=1 then 1 else math.max(.01,s.sticker)
  self.sticker.BackgroundTransparency=if s.reduced then 1-s.sticker else 0

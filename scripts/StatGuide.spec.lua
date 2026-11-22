@@ -80,6 +80,13 @@ return function(client,parent)
     assert(panel.nextLines[1].label.Text==Guide.nextText("jump",15)and(panel.nextLines[2]~=nil)==(panel.view==nil),"one line on phones, two on desktop")
     local strip,line=panel.detail,panel.nextLines[1].root
     assert(line.AbsolutePosition.Y+line.AbsoluteSize.Y<=strip.AbsolutePosition.Y+strip.AbsoluteSize.Y+1,"the line is inside the strip")
+    for _,row in ipairs(panel.nextLines)do assert(row.label.TextSize==12)end
+    if panel.nextLines[2]and panel.nextLines[2].root.Visible then
+     local a,b=panel.nextLines[1].root,panel.nextLines[2].root
+     assert(b.Position.Y.Offset-(a.Position.Y.Offset+a.Size.Y.Offset)==6 and b.Position.Y.Offset+b.Size.Y.Offset<=strip.Size.Y.Offset-10,"6 px apart, clear of the edge")
+     assert(panel.nextLines[1].label.TextFits and panel.nextLines[2].label.TextFits)
+    end
+    assert(panel.detailLine.Position.Y.Offset+panel.detailLine.Size.Y.Offset<=line.Position.Y.Offset+1,"under the words")
     assert(panel.guideHit.AbsoluteSize.Y>=44,"a 44 px target")
     assert(panel.tiles[4].dot.Visible and not panel.tiles[1].dot.Visible,"a dot on Jump only")
     panel:openGuide();settle()
@@ -104,6 +111,20 @@ return function(client,parent)
     assert(panel.guide:act()and went and went.kind=="gate"and not panel.visible)
     panel:open({state=st,activeId="pip"},{stat="speed",guide=true,row="medal_speed_starbloom"});settle()
     assert(panel.guide.root:GetAttribute("FocusedReward")=="medal_speed_starbloom"and not panel.tiles[4].dot.Visible)
+    -- A long translation: the second line is dropped before anything is cut off, and the first may wrap.
+    do
+     local Kit=require(client.DeckKit);local was=Kit.translating
+     local measure=Kit.measure
+     local fine,wrong=pcall(function()
+      Kit.measure=function(text,role,...)local b=measure(text,role,...);return if role=="Strong"then b*Vector2.new(3,1)else b end
+      panel:setMode("stats");panel:setContext({state=st})
+      if panel.nextLines[2]then assert(not panel.nextLines[2].root.Visible and panel.nextLines[1].label.TextWrapped)end
+      assert(panel.nextLines[1].root.Visible)
+     end)
+     Kit.measure=measure;Kit.translating=was;assert(fine,wrong)
+     panel:setContext({state=st});if panel.nextLines[2]then assert(not panel.nextLines[1].label.TextWrapped)end
+     panel:openGuide("speed","medal_speed_starbloom");assert(panel.mode=="guide")
+    end
     -- The runtime switch flips off, then on, while it is open.
     off();panel:setContext({state=st});assert(panel.mode=="stats"and panel.guideHit==nil and panel.guide==nil and panel.tiles[1].dot==nil and panel.medalSlots==nil)
     on();panel:setContext({state=st});assert(panel.guideHit~=nil and #panel.medalSlots==6)

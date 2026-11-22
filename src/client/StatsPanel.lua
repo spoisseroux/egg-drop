@@ -280,7 +280,7 @@ function Panel:buildGrid(body,W,H,phone)
  if phone then gx=20+self.leftW+12;gy=64;gw=W-20-gx;gap=8;detailH=54
  else gx,gy,gw,gap,detailH=312,84,512,12,116 end
  local track=Levels.on("track")
- if track and phone then detailH=58 end -- one more line: the next reward
+ if track then detailH=if phone then 58 else 128 end -- room for the next rewards
  local bottom=if phone then H-20 else 536
  local detailY=bottom-detailH
  local tileW=math.floor((gw-gap*(Panel.Cols-1))/Panel.Cols)
@@ -367,15 +367,16 @@ function Panel:buildNext(strip,gw,detailH,snackW,phone)
   self.detailLine.Position=UDim2.fromOffset(42,19);self.detailLine.Size=UDim2.fromOffset(gw-52-snackW,15);self.detailLine.TextWrapped=false
   self.nextLines[1]=Guide.line(strip,42,35,gw-72-snackW,18,12)
  else
-  self.detailName.Position=UDim2.fromOffset(72,8);self.detailName.Size=UDim2.fromOffset(240,24)
-  self.detailBonus.Position=UDim2.fromOffset(260,10);self.detailBonus.Size=UDim2.fromOffset(gw-276-snackW,20)
-  self.detailLine.Position=UDim2.fromOffset(72,34);self.detailLine.Size=UDim2.fromOffset(gw-88-snackW,38);self.detailLine.TextSize=14
+  self.detailName.Position=UDim2.fromOffset(72,9);self.detailName.Size=UDim2.fromOffset(240,24)
+  self.detailBonus.Position=UDim2.fromOffset(260,11);self.detailBonus.Size=UDim2.fromOffset(gw-276-snackW,20)
+  self.detailLine.Position=UDim2.fromOffset(72,34);self.detailLine.Size=UDim2.fromOffset(gw-88-snackW,36);self.detailLine.TextSize=14
   self.detailLine.TextTruncate=Enum.TextTruncate.AtEnd
-  self.nextLines[1]=Guide.line(strip,72,73,gw-108-snackW,18,13)
-  self.nextLines[2]=Guide.line(strip,72,93,gw-108-snackW,18,13)
+  -- Art review: 12 px words, 6 px between the lines.
+  self.nextLines[1]=Guide.line(strip,72,77,gw-108-snackW,16,12)
+  self.nextLines[2]=Guide.line(strip,72,99,gw-108-snackW,16,12)
  end
  local mark=Kit.icon(strip,"chevron",if phone then 12 else 14,"soft");mark.Name="GuideChevron"
- mark.AnchorPoint=Vector2.new(.5,.5);mark.Position=UDim2.fromOffset(gw-snackW-14,if phone then 44 else 82)
+ mark.AnchorPoint=Vector2.new(.5,.5);mark.Position=UDim2.fromOffset(gw-snackW-14,if phone then 44 else 96)
  local hit=Kit.node("TextButton",strip,{Name="GuideOpen",Text="",AutoButtonColor=false,BackgroundTransparency=1,Selectable=false,
   Position=UDim2.new(),Size=UDim2.fromOffset(gw-snackW-4,detailH),ZIndex=strip.ZIndex+8})
  hit.Activated:Connect(function()self:openGuide()end)
@@ -569,8 +570,14 @@ function Panel:paintSelection()
  Kit.paint(self.detailBonus,"TextColor3",if s.bonus>0 then "accent"else "dim")
  if self.guideHit then
   local rows=Rewards.upcoming(id,s.level,#self.nextLines)
-  self.nextLines[1].set(rows[1],Guide.nextText(id,s.level,rows[1]))
-  if self.nextLines[2]then self.nextLines[2].set(rows[2],rows[2]and Guide.nextText(id,s.level,rows[2])or nil)end
+  local one,two=self.nextLines[1],self.nextLines[2]
+  local fits=one.set(rows[1],Guide.nextText(id,s.level,rows[1]),Guide.nextShort(rows[1]))
+  if two then
+   -- The second line only when both fit whole; a first line that does not may wrap into its place.
+   local shown=fits and rows[2]~=nil and two.set(rows[2],Guide.nextText(id,s.level,rows[2]),Guide.nextShort(rows[2]))
+   if not shown then two.set(nil,nil)end
+   one.wrap(fits~=true)
+  end
   self.guideHit:SetAttribute("AccessibleLabel",UICopy.get("stats.guide.open",{name=Panel.statName(id)}))
  end
  self.root:SetAttribute("SelectedStat",id)

@@ -160,6 +160,7 @@ end
 local Moment={};Moment.__index=Moment
 View.Moment=Moment
 Moment.Max=4 -- medals drawn on one stage (the words name every one)
+Moment.Share=.86 -- of the stage's seat, for one medal
 Moment.Grace=15 -- seconds after the stage has settled: it closes by itself, whatever the stage is doing
 
 local function medalScene(crossed)
@@ -172,7 +173,8 @@ local function medalScene(crossed)
  local scale=Instance.new("UIScale");scale.Parent=bright
  bright.AnchorPoint=Vector2.new(.5,.5);bright.Position=UDim2.fromScale(.5,.5)
  local shown=math.min(Moment.Max,#crossed)
- local share=if shown==1 then .62 elseif shown==2 then .46 else .36
+ -- Art review: one medal is about 200 px across on a desktop stage.
+ local share=if shown==1 then Moment.Share elseif shown==2 then .5 else .36
  local darks={}
  for index=1,shown do
   local row=crossed[index]
@@ -257,7 +259,7 @@ function Moment:build(crossed,words)
  local stage=Stage.show(self.host,{scene=self.scene,kind="medal",tier="Neutral",result={medal=words.tier},cover=false,fullScreen=true,zIndex=20,lid=false,
   reduced=function()return self.reducedStart end,owns=function()return self.open or self.building==true end,skippable=function()return true end,
   name=function()return words.name end,effect=function()return words.effect end,description=function()return words.line end,
-  sticker=function()return words.sticker end,accent=function()return color end,
+  quietText=true,accent=function()return color end,
   stoneColors=function()return {color,Kit.Color.lemon,Kit.Color.cream}end,
   actions=function()
    local list={{source=self.doneSource,primary=self.callbacks.eggs==nil,act=function()self:choose("done")end}}

@@ -115,11 +115,11 @@ function Locked.bar(parent,x,y,w,h)
  end}
 end
 -- The small lock on a picture's bottom left corner, and a light veil over the picture (never a
--- silhouette). set(shown).
-function Locked.mark(picture,size)
+-- silhouette). set(shown). veil: how much of the picture still shows (default 72%).
+function Locked.mark(picture,size,veilAlpha)
  local Kit=require(script.Parent.DeckKit)
  size=size or 18
- local veil=Kit.frame(picture,"LockVeil","well",UDim2.new(),UDim2.fromScale(1,1),10);veil.BackgroundTransparency=.72;veil.ZIndex=picture.ZIndex+2
+ local veil=Kit.frame(picture,"LockVeil","well",UDim2.new(),UDim2.fromScale(1,1),10);veil.BackgroundTransparency=veilAlpha or .72;veil.ZIndex=picture.ZIndex+2
  local disc=Kit.frame(picture,"LockMark",nil,UDim2.new(0,3,1,-size-3),UDim2.fromOffset(size,size),999)
  disc.BackgroundTransparency=0;disc.BackgroundColor3=Kit.Color.ink;disc.ZIndex=picture.ZIndex+4;Kit.setSurface(disc,"dark")
  local lock=Kit.icon(disc,"lock",math.floor(size*.7),"text");lock.AnchorPoint=Vector2.new(.5,.5);lock.Position=UDim2.fromScale(.5,.5);lock.ZIndex=disc.ZIndex+1

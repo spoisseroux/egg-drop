@@ -20,9 +20,9 @@ src/client/BallShop.lua,49,Use,,yes
 src/client/BallShop.lua,57,You have enough Stars,,
 src/client/BallShop.lua,57,★ Buy ,fragment (sentence built from parts),
 src/client/BallShop.lua,58,★ Buy ,fragment (sentence built from parts),
-src/client/BallShop.lua,148,Use,,yes
-src/client/BallShop.lua,176,Use,,yes
-src/client/BallShop.lua,330,Confirm ★ ,fragment (sentence built from parts),
+src/client/BallShop.lua,149,Use,,yes
+src/client/BallShop.lua,177,Use,,yes
+src/client/BallShop.lua,337,Confirm ★ ,fragment (sentence built from parts),
 src/client/BoardDanger.lua,113,FILL LINE,,
 src/client/BoardHints.lua,115,Settling,,
 src/client/BoardQuestHUD.lua,20,Match on LEFT,,
@@ -68,8 +68,8 @@ src/client/DeckArt.lua,510,Open deck,,
 src/client/DeckArt.lua,511,Menu,,yes
 src/client/DeckArt.lua,511,Deck,,
 src/client/DeckKit.lua,921,Close,,yes
-src/client/DeckKit.lua,1802,toast:,,
-src/client/DeckKit.lua,1841,Back,,yes
+src/client/DeckKit.lua,1805,toast:,,
+src/client/DeckKit.lua,1844,Back,,yes
 src/client/DeckMenu.lua,91,Pocket menu,,yes
 src/client/DeckMenu.lua,94,0 Stars,,
 src/client/DeckMenu.lua,112,Play destinations,,
@@ -244,16 +244,16 @@ src/client/FaceplateShop.lua,85,★ Buy ,fragment (sentence built from parts),
 src/client/FaceplateShop.lua,86,★ Buy ,fragment (sentence built from parts),
 src/client/FaceplateShop.lua,89,From the book,,
 src/client/FaceplateShop.lua,89,Equip,,
-src/client/FaceplateShop.lua,302,Primary,,
-src/client/FaceplateShop.lua,308,Equip,,
-src/client/FaceplateShop.lua,391,Primary,,
-src/client/FaceplateShop.lua,403,Equip,,
-src/client/FaceplateShop.lua,565, finish,fragment (sentence built from parts),
-src/client/FaceplateShop.lua,565, finish. Tints the deck and its background.,fragment (sentence built from parts),
-src/client/FaceplateShop.lua,579,Buying…,,
-src/client/FaceplateShop.lua,586,Retry,,
-src/client/FaceplateShop.lua,588,Buying…,,
-src/client/FaceplateShop.lua,588,Confirm ★ ,fragment (sentence built from parts),
+src/client/FaceplateShop.lua,303,Primary,,
+src/client/FaceplateShop.lua,309,Equip,,
+src/client/FaceplateShop.lua,392,Primary,,
+src/client/FaceplateShop.lua,404,Equip,,
+src/client/FaceplateShop.lua,566, finish,fragment (sentence built from parts),
+src/client/FaceplateShop.lua,566, finish. Tints the deck and its background.,fragment (sentence built from parts),
+src/client/FaceplateShop.lua,580,Buying…,,
+src/client/FaceplateShop.lua,587,Retry,,
+src/client/FaceplateShop.lua,589,Buying…,,
+src/client/FaceplateShop.lua,589,Confirm ★ ,fragment (sentence built from parts),
 src/client/FeaturePanel.lua,19,Features,,
 src/client/FeaturePanel.lua,19,Grow and show each feature independently.,,
 src/client/FeaturePanel.lua,86, found!,fragment (sentence built from parts),
@@ -540,11 +540,11 @@ src/client/WardrobeShop.lua,76,Wear,,
 src/client/WardrobeShop.lua,86,You have enough Stars,,
 src/client/WardrobeShop.lua,86,★ Buy ,fragment (sentence built from parts),
 src/client/WardrobeShop.lua,87,★ Buy ,fragment (sentence built from parts),
-src/client/WardrobeShop.lua,292,Wear,,
-src/client/WardrobeShop.lua,421,Fixed prices. No random items.,,
-src/client/WardrobeShop.lua,726,Saving…,,yes
-src/client/WardrobeShop.lua,736,Saving…,,yes
-src/client/WardrobeShop.lua,736,Confirm ★ ,fragment (sentence built from parts),
+src/client/WardrobeShop.lua,295,Wear,,
+src/client/WardrobeShop.lua,420,Fixed prices. No random items.,,
+src/client/WardrobeShop.lua,725,Saving…,,yes
+src/client/WardrobeShop.lua,735,Saving…,,yes
+src/client/WardrobeShop.lua,735,Confirm ★ ,fragment (sentence built from parts),
 src/client/WelcomePresentation.lua,107,Gamepad,,
 src/client/init.client.lua,271,PD·01,,
 src/client/init.client.lua,288,POCKET PALS,,
