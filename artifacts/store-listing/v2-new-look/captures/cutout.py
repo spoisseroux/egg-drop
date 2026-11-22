@@ -79,6 +79,9 @@ SHOTS = {
     # T1 heroes (Spencer: shirt on the Bear, more accessories and a charm on the Bunny).
     "B1": ("B1-black.jpg", "B1-grey.jpg"),
     "B2": ("B2-black.jpg", "B2-grey.jpg"),
+    # T5 distinct pals: J2 Tide Bunny mid-jump (party hat, bell collar, star charm); J3 Iris Bunny (sun hat, specs, acorn, leaf charm).
+    "J2": ("J2-black.jpg", "J2-grey.jpg"),
+    "J3": ("J3-black.jpg", "J3-grey.jpg"),
 }
 
 

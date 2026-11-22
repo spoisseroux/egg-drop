@@ -500,22 +500,79 @@ def t4():
     return c
 
 
-def park_plate(ox=150, blur=1.6):
-    """The real Pet Park at dusk, cropped to cover the frame and pushed back a touch."""
+PARK = dict(sky_top="#2483EA", sky_low="#D2F0FF", cloud="#E4F6FF", far_lit="#B2E0FC", far="#97D1F8",
+            tree="#5FADE4", water="#F2FBFF", ground_top="#BDEFC4", ground_low="#93DDA6", path="#D2F2E0", light="#F1FBFF", toy="#52BFA6")
+
+
+def park_silhouette(ox=150):
+    """The real Pet Park plate, boiled down to a few flat Sky-palette tones so the pals carry the colour.
+
+    Every shape is cut from the plate's own pixels: colour rules split sky, rock, leaf, water, lawn and
+    play equipment; each mask is blurred and re-thresholded to round it off; then it is repainted flat.
+    """
     im = Image.open(os.path.join(CAP, "raw", "park-plate.jpg")).convert("RGB")
     k = H / im.height
     im = im.resize((round(im.width * k), H), Image.LANCZOS).crop((round(ox * k), 0, round(ox * k) + W, H))
-    im = im.filter(ImageFilter.GaussianBlur(blur))
-    im = ImageEnhance.Color(im).enhance(1.10)
-    im = ImageEnhance.Brightness(im).enhance(1.04)
-    a = np.asarray(im).astype(np.float32)
+    # the plate's camera stood on a yellow marker block: lay the kerb beside it over it
+    im.paste(ImageOps.mirror(im.crop((680, 960, 945, H))), (945, 960))
+    a = np.asarray(im.filter(ImageFilter.GaussianBlur(2.2))).astype(np.float32)
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    lum = 0.30 * r + 0.59 * g + 0.11 * b
+    sat = (a.max(-1) - a.min(-1)) / np.maximum(a.max(-1), 1)
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    px, py = xx / k + ox, yy / k  # plate pixels
+
+    def box(x0, y0, x1, y1):
+        return (px >= x0) & (px < x1) & (py >= y0) & (py < y1)
+
+    def soft(m, rad=3.0, gain=5.0):
+        v = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(rad)), np.float32)
+        return (((v - 127.5) * gain + 127.5).clip(0, 255) / 255)[..., None]
+
+    horizon = np.interp(px, [0, 250, 620, 1000, 1250, 1400, 1649], [345, 335, 328, 326, 335, 350, 352])
+    land = py > horizon
+    green = (g > r * 1.08) & (g > b * 1.15)
+    pinkish = (r > 222) & (g > 138) & (b > 140)
+    clutter = box(40, 226, 625, 345)  # pavilions and blossom trees along the left horizon
+    sky = pinkish & ~land & ~clutter
+    cloud = sky & (r - g > 78)
+    water = ~land & (b > r * 0.98) & (b > 150) & box(930, 100, 1060, 335)
+    tree = ~land & ~sky & ((green & (lum < 121)) | (clutter & ~green & (r > 200))) & ~water
+    lit = ~land & ~sky & ~tree & (lum > 150)
+    toys = (box(262, 352, 625, 592) | box(686, 350, 962, 445) | box(705, 455, 1045, 612)  # swing, bench, see-saw
+            | box(1150, 322, 1335, 380) | box(1160, 380, 1335, 595) | box(1090, 410, 1180, 482))  # slide tower
+    toy = land & ~green & toys
+    light = land & ~green & ~toys & (sat < 0.46) & (lum > 140)
+    path = land & ~green & ~toys & ~light
+
+    def col(name):
+        return np.array(bi.rgb(PARK[name]), np.float32)
+
+    v = (yy / (H * 0.47)).clip(0, 1)[..., None]
+    out = col("sky_top") + (col("sky_low") - col("sky_top")) * v ** 0.7
+    for m, name, rad, al in ((cloud, "cloud", 9, 0.30),):
+        out = out * (1 - soft(m, rad, 3) * al) + col(name) * soft(m, rad, 3) * al
+    notsky = soft(~sky & ~land, 3.5)
+    out = out * (1 - notsky) + col("far") * notsky
+    for m, name, rad in ((lit, "far_lit", 5), (tree, "tree", 4), (water, "water", 3)):
+        s_ = soft(m, rad)
+        out = out * (1 - s_) + col(name) * s_
+    gv = ((yy - H * 0.45) / (H * 0.55)).clip(0, 1)[..., None]
+    lawn = col("ground_top") + (col("ground_low") - col("ground_top")) * gv
+    s_ = soft(land, 3)
+    out = out * (1 - s_) + lawn * s_
+    # a breath of haze where the lawn meets the hills, to push the far layer back
+    hz = np.exp(-((py - horizon) / 26) ** 2)[..., None] * 0.35
+    out = out + (255 - out) * hz
+    for m, name, rad in ((path, "path", 4), (light, "light", 2.6), (toy, "toy", 2.4)):
+        s_ = soft(m, rad)
+        out = out * (1 - s_) + col(name) * s_
     # a navy wash top-left so the caption reads, and a gentle corner vignette
-    v = np.clip(1 - np.hypot((xx - 200) / 1050, (yy - 60) / 520), 0, 1)[..., None] ** 1.3 * 0.62
-    a = a * (1 - v) + np.array(NAVY, np.float32) * v
-    e = np.clip(np.hypot((xx - W / 2) / (W / 2), (yy - H / 2) / (H / 2)) - 0.85, 0, 1)[..., None] * 0.5
-    a = a * (1 - e) + np.array((40, 20, 70), np.float32) * e
-    return Image.fromarray(a.clip(0, 255).astype(np.uint8)).convert("RGBA"), k
+    w_ = np.clip(1 - np.hypot((xx - 200) / 1050, (yy - 60) / 520), 0, 1)[..., None] ** 1.3 * 0.45
+    out = out * (1 - w_) + np.array(NAVY, np.float32) * w_
+    e = np.clip(np.hypot((xx - W / 2) / (W / 2), (yy - H / 2) / (H / 2)) - 0.9, 0, 1)[..., None] * 0.35
+    out = out * (1 - e) + col("sky_top") * e
+    return Image.fromarray(out.clip(0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8)).convert("RGBA"), k
 
 
 def heart(c, cx, cy, r, color=(255, 92, 150), rot=0):
@@ -558,9 +615,9 @@ def swish(c, cx, cy, r, a0, a1, width=9, alpha=215):
 
 
 def t5():
-    """Play with friends: seven pals all over the real Pet Park at dusk."""
+    """Play with friends: seven different pals all over the Pet Park, the park itself a calm silhouette."""
     ox = 150
-    c, k = park_plate(ox)
+    c, k = park_silhouette(ox)
 
     def P(px, py):  # plate pixel -> canvas
         return (px - ox) * k, py * k
@@ -574,21 +631,18 @@ def t5():
         bi.paste(c, im, (int(x - im.width / 2), int(y - im.height)))
         return x, y - im.height
 
-    # the plate's camera stood on a yellow marker block: lay the kerb beside it over it
-    c.paste(ImageOps.mirror(c.crop((680, 960, 945, H))), (945, 960))
-    glow(c, 1500, 330, 900, 0.16)
     # ---- on the equipment, far to near
     # by the slide and the ball mat
-    pal("C7c", 0.36, 1122, 478, rot=-6, ry=8, sh=95)
+    pal("C7a", 0.40, 1122, 480, rot=-6, ry=8, sh=60)
     # swing
-    x, y = pal("C7a", 0.40, 418, 520, rot=8, ry=1, sh=0)
+    x, y = pal("C7c", 0.42, 418, 520, rot=8, ry=1, sh=0)
     bi.contact(c, x + 10, P(0, 545)[1], 60, 10, alpha=80, blur=10)
     swish(c, x - 10, y - 40, 300, 100, 125, width=8)
     swish(c, x - 10, y - 40, 340, 104, 122, width=6)
     swish(c, x + 10, y - 40, 300, 52, 76, width=8)
     # see-saw: Bunny down, Bear up
-    pal("F7b", 0.40, 752, 566, rot=6, ry=6, sh=70)
-    x, y = pal("S14", 0.40, 1003, 494, rot=-8, ry=5, sh=50, flip=True)
+    pal("F7b", 0.42, 752, 566, rot=6, ry=6, sh=50)
+    x, y = pal("J3", 0.42, 1003, 494, rot=-8, ry=5, sh=40)
     for dx, a in ((-70, -28), (0, 0), (70, 28)):
         layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
         t = np.radians(a)
@@ -597,7 +651,7 @@ def t5():
         c.alpha_composite(layer.filter(ImageFilter.GaussianBlur(1)))
     # ---- toys on the lawn
     for name, s, px, py, rot in (("P-toy-top", 0.26, 452, 662, 14), ("P-toy-bone", 0.28, 1075, 640, -12),
-                                 ("P-toy-carrot", 0.24, 700, 715, 62), ("P-toy-deck", 0.50, 885, 733, -8)):
+                                 ("P-toy-deck", 0.50, 885, 733, -8)):
         im = cut(name, s, rot, cool=0)
         x, y = P(px, py)
         bi.contact(c, x, y - 6, im.width * 0.40, 10, alpha=90, blur=10)
@@ -609,8 +663,8 @@ def t5():
     bear = cut("B1", 1.02, cool=0)
     bi.contact(c, 1700, 1064, bear.width * 0.42, 20, alpha=110, blur=14)
     bi.paste(c, bear, (1700 - bear.width // 2, 1078 - bear.height))
-    hop = cut("CJ", 0.92, rot=-8, cool=0)
-    hx, top, ground = 690, 340, 1000
+    hop = cut("J2", 0.96, rot=-6, cool=0)
+    hx, top, ground = 676, 322, 1000
     bi.contact(c, hx, ground, hop.width * 0.24, 14, alpha=95, blur=16)
     puff(c, hx - 10, ground - 6)
     layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
@@ -628,12 +682,11 @@ def t5():
     swish(c, 1040, 300, 96, -50, 20, width=8)
     swish(c, 1040, 300, 122, -38, 8, width=6)
     # ---- joy
-    for hx_, hy_, r, rot in ((470, 520, 26, 14), (1470, 440, 26, -12), (1840, 380, 22, 16), (585, 470, 18, -10)):
+    for hx_, hy_, r, rot in ((1500, 420, 26, -12), (1840, 380, 22, 16), (300, 470, 22, -10)):
         heart(c, hx_, hy_, r, rot=rot)
-    for nx, ny, r, rot in ((1120, 500, 24, -12), (1330, 470, 18, 10), (520, 600, 18, 12), (1560, 520, 20, 8)):
+    for nx, ny, r, rot in ((1120, 500, 24, -12), (1345, 440, 18, 10), (520, 560, 18, 12)):
         note(c, nx, ny, r, rot=rot)
-    for sx, sy, r in ((930, 470, 24), (1180, 160, 20), (1420, 250, 16), (620, 380, 16), (1600, 150, 22),
-                      (60, 520, 18), (1870, 620, 16), (1010, 900, 18)):
+    for sx, sy, r in ((930, 470, 24), (1180, 160, 20), (1420, 250, 16), (1600, 150, 22), (60, 520, 18)):
         sparkle(c, sx, sy, r)
     cap = caption(["play with", "friends"], 700, [0.0, 0.0])
     bi.paste(c, cap, (40, 20))
