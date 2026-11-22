@@ -64,6 +64,10 @@ local snackIds = {
 Audio.SnackGain = table.freeze({ snack_nom_a = .7, snack_nom_b = .7, snack_nom_c = .7, snack_crunch_feast = .85, snack_gulp = .5,
 	snack_happy_squeak = .6, snack_happy_coo = .65, snack_boost_sparkle = .7, snack_sniff = .45, snack_refuse_hm = .55 })
 for cue, id in pairs(snackIds) do assetIds[cue] = id end
+-- Stars bought with Robux (Spencer 2026-11-22), synthesised by scripts/synth_stars_bought.py (candidate A,
+-- Fable; assets/audio/custom/egg_drop_stars_bought.wav). Not heard by Spencer yet.
+assetIds.stars_bought = 105056947696236
+Audio.StarsBoughtGain = .7
 -- Dedicated voice pool reuses the existing80ms body; no new asset or loop.
 assetIds.hatch_finish=placeholderIds.goal_tick
 Audio.PlaceholderIds = placeholderIds
@@ -89,6 +93,8 @@ local cues = {
 	-- v2 Stat Snack feeding.
 	"snack_nom_a", "snack_nom_b", "snack_nom_c", "snack_crunch_feast", "snack_gulp", "snack_happy_squeak",
 	"snack_happy_coo", "snack_boost_sparkle", "snack_sniff", "snack_refuse_hm",
+	-- Stars bought with Robux (PurchaseCue).
+	"stars_bought",
 }
 -- Cues named by the UI spec whose sound files are not delivered yet
 -- (AUDIO-HANDOFF.md). They have no voice, so play() is a quiet no-op.

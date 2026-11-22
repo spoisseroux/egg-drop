@@ -54,7 +54,7 @@ end
 function Cache.buildPet(pet,appearance,zoom,decorate)
  if not pet then return false end
  local viewport=Instance.new("ViewportFrame");viewport.Name="CardPreview";viewport.BackgroundTransparency=1;viewport.Size=UDim2.fromScale(1,1)
- viewport.Ambient=Color3.fromRGB(206,202,194);viewport.LightColor=Color3.fromRGB(128,122,110);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ require(script.Parent.DeckKit).petLight(viewport)
  local world=Instance.new("WorldModel");world.Parent=viewport
  local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera
  local ok,visual=pcall(Factory.new,world,Vector3.zero,pet,nil,appearance)

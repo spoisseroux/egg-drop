@@ -251,8 +251,7 @@ end
 -- Preview well: a ViewportFrame with the pet (same set-up as the Wardrobe pane).
 function Hub:buildWell(parent,x,y,w,h)
  local well=Kit.frame(parent,"PreviewWell","stage",UDim2.fromOffset(x,y),UDim2.fromOffset(w,h),12);Kit.stroke(well);Kit.stage(well)
- local viewport=Kit.node("ViewportFrame",well,{Name="PetPreview",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex+1,
-  Ambient=Color3.fromRGB(206,202,194),LightColor=Color3.fromRGB(128,122,110),LightDirection=Vector3.new(-1,-1.4,-3)})
+ local viewport=Kit.node("ViewportFrame",well,{Name="PetPreview",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex+1});Kit.petLight(viewport)
  local world=Kit.node("WorldModel",viewport,{});local camera=Kit.node("Camera",viewport,{FieldOfView=30})
  viewport.CurrentCamera=camera
  viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()

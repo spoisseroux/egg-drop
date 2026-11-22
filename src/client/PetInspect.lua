@@ -295,7 +295,7 @@ function Inspect:build(identity)
  well.ClipsDescendants=true;Kit.stage(well) -- Toy Shell R1.2.5: the pet on the berry stage
  local viewport=Instance.new("ViewportFrame")
  viewport.Name="PetViewport";viewport.BackgroundTransparency=1;viewport.BorderSizePixel=0;viewport.Size=UDim2.fromScale(1,1)
- viewport.Ambient=Color3.fromRGB(206,202,194);viewport.LightColor=Color3.fromRGB(128,122,110);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ Kit.petLight(viewport)
  viewport.ZIndex=well.ZIndex+1;viewport.Active=true;viewport.Parent=well
  local world=Instance.new("WorldModel");world.Parent=viewport
  local lens=Instance.new("Camera");lens.FieldOfView=30;lens.Parent=viewport;viewport.CurrentCamera=lens

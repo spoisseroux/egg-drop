@@ -46,3 +46,14 @@ Specs: `PetLight` (all eight use it, no old literals), StoreView (banner, onGran
 ## Release
 
 Beta after a code review. Live only on Spencer's word.
+
+## Revisions after the architect review (2026-11-22)
+
+| Original | Revised | Reason |
+|---|---|---|
+| Banner restarts on PromptProductPurchaseFinished | Only for this player, a completed purchase, and the product of a grant not yet re-shown; either order | It also fires on cancel and would replay the last grant |
+| "Late receipt: no StoreResult" | Wrong: one is sent for every fresh grant. Sound and banner only for a grant that follows a prompt made in this session | A rejoin could sound from nowhere |
+| Retry the sound on focus | `PurchaseCue`: deferred, 10 s, once, never when effects are muted | Listener order; mute is a choice |
+| Banner text in the chrome | Text, deadline and token on the view, repainted by paintPane, cleared on close | A phone resize destroys the chrome |
+| Banner over the selected offer | It names its own amount; a claimed Starter moves the selection | Else it reads as another offer's |
+| | Assert the Pocket menu tile is the 3D portrait | Its build is pcalled and fails silently to a sprite |

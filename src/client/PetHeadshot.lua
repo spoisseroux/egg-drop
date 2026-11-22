@@ -17,13 +17,30 @@ Shot.Cream=Color3.fromHex("#FFF4DC")
 Shot.LockedTint=Color3.new(0,0,0)
 Shot.LockedTransparency=.35
 
--- Pure: the backdrop colour for a pet (secondary lerped .55 toward cream).
+-- Fable 2026-11-22, for the brighter preview light: a white pet melts into white or grey, so a
+-- pale colour with no hue of its own is shown as lilac behind a pet (headshot discs and the
+-- Original colour / White cards).
+Shot.Pale=225
+Shot.Lilac=Color3.fromRGB(226,214,242)
+Shot.FlatSaturation,Shot.FlatValue=.08,.6
+function Shot.flat(color)
+ local _,saturation,value=color:ToHSV()
+ return saturation<Shot.FlatSaturation and value>=Shot.FlatValue
+end
+-- Pure: the colour to put behind a pet for a colour card.
+function Shot.behind(color)
+ return if typeof(color)=="Color3"and Shot.flat(color)then Shot.Lilac else color
+end
+-- Pure: the backdrop colour for a pet: its secondary softened .40 toward cream, or lilac when that
+-- comes out colourless (the default grey) or nearly white.
 function Shot.backdrop(petId,appearance)
  local ok,colors=pcall(Palette.resolve,petId,appearance)
  local secondary=ok and type(colors)=="table"and colors.secondary or nil
  if typeof(secondary)=="string"then secondary=Color3.fromHex(secondary)end
  if typeof(secondary)~="Color3"then return Shot.Cream end
- return secondary:Lerp(Shot.Cream,.55)
+ local disc=secondary:Lerp(Shot.Cream,.40)
+ local limit=Shot.Pale/255
+ return if Shot.flat(disc)or disc.R>=limit and disc.G>=limit and disc.B>=limit then Shot.Lilac else disc
 end
 -- Head framing: a little above the eye line, looking at the upper part of the rig, fitting about
 -- 62% of its height into the frame (ear and horn tips may crop).

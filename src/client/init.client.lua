@@ -960,6 +960,26 @@ clientUI.storeView=require(script.StoreView).new(nurseryView.shade,{reduceEffect
  request=function(actionName,key)if clientUI.storeRequest then clientUI.storeRequest:FireServer(actionName,key)end end})
 clientUI.storeView.onAccepted=function(kind)clientUI.accepted(kind)end
 nurseryView:attachStore(clientUI.storeView)
+-- Stars bought with Robux (Spencer 2026-11-22): the cue plays when the grant lands, or once when
+-- Roblox's purchase window closes or the game has the focus again (PurchaseCue).
+clientUI.purchaseCue=require(script.PurchaseCue).new({now=os.clock,defer=task.defer,
+ muted=function()return audio.group.Volume==0 end,
+ play=function()return audio:play("stars_bought",1,Audio.StarsBoughtGain)==true end})
+clientUI.storeView.onGranted=function()clientUI.purchaseCue:granted()end
+do
+ local Market=game:GetService("MarketplaceService")
+ local links={
+  Market.PromptProductPurchaseFinished:Connect(function(userId,productId,purchased)
+   if userId~=player.UserId then return end
+   clientUI.storeView:purchaseWindowClosed(productId,purchased==true);clientUI.purchaseCue:resume()
+  end),
+  Market.PromptGamePassPurchaseFinished:Connect(function(who,passId,purchased)
+   if who~=player then return end
+   clientUI.storeView:purchaseWindowClosed(passId,purchased==true);clientUI.purchaseCue:resume()
+  end),
+  UserInputService.WindowFocused:Connect(function()clientUI.purchaseCue:resume()end)}
+ gui.Destroying:Connect(function()for _,link in ipairs(links)do link:Disconnect()end end)
+end
 task.spawn(function()
  clientUI.storeRequest=remotes:WaitForChild("StoreRequest")
  local stateConnection=remotes:WaitForChild("StoreState").OnClientEvent:Connect(function(snapshot)clientUI.storeView:setState(snapshot)end)

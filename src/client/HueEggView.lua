@@ -121,7 +121,7 @@ function View.new(parent,intent,options)
  self.secondaryTab=button(card,"SecondaryTab","Secondary",function()self:chooseChannel("secondary")end)
  self.portrait=Art.frame(card,"PetPortrait","inset",UDim2.fromOffset(0,0),UDim2.fromOffset(240,170),23);Art.corner(self.portrait,16)
  self.viewport=Instance.new("ViewportFrame");self.viewport.Name="SavedPet";self.viewport.BackgroundTransparency=1;self.viewport.Size=UDim2.fromScale(1,1);self.viewport.ZIndex=24;self.viewport.Parent=self.portrait
- self.viewport.Ambient=Color3.fromRGB(206,202,194);self.viewport.LightColor=Color3.fromRGB(128,122,110);self.viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ Kit.petLight(self.viewport)
  self.world=Instance.new("WorldModel");self.world.Parent=self.viewport;self.camera=Instance.new("Camera");self.camera.FieldOfView=30;self.camera.Parent=self.viewport;self.viewport.CurrentCamera=self.camera
  self.petName=text(card,"PetName","Bear","Action");self.petName.TextXAlignment=Enum.TextXAlignment.Center;self.petName.AutoLocalize=false
  self.channelTitle=text(body,"ChannelTitle","Main","Action")
@@ -1636,12 +1636,12 @@ function View:layoutChrome()
     -- The pet's own first colour on this channel; free; CURRENT when nothing is used.
     local resolved=Palette.resolve(self.petId,View.previewAppearance(a,"hue","original",self.channel))
     Cards.dress(b,{name=UICopy.get("r4.hue.original"),status=if original then UICopy.get("r4.hue.currentChip")else UICopy.get("r4.hue.free"),
-     tone=if original then "accent"else "soft",swatch=resolved[if self.channel=="main"then "body"else "secondary"],focused=i==index,compact=compact})
+     tone=if original then "accent"else "soft",swatch=require(script.Parent.PetHeadshot).behind(resolved[if self.channel=="main"then "body"else "secondary"]),focused=i==index,compact=compact})
     table.insert(focus,{button=b,id=id,act=function()return self:clearColour()end})
    elseif id=="white"then
     local resolved=Palette.resolve(self.petId,View.previewAppearance(a,"hue","white","secondary"))
     Cards.dress(b,{name=UICopy.get("r4.hue.white"),status=if whiteCurrent then UICopy.get("r4.hue.currentChip")else UICopy.get("r4.hue.free"),
-     tone=if whiteCurrent then "accent"else "soft",swatch=resolved.secondary,focused=i==index,compact=compact})
+     tone=if whiteCurrent then "accent"else "soft",swatch=require(script.Parent.PetHeadshot).behind(resolved.secondary),focused=i==index,compact=compact})
     table.insert(focus,{button=b,id=id,act=function()return self:chooseWhite(true)end})
    else
     local stock=(self.state.hueInventory or {})[id]or 0;local reason=self:reason(id)

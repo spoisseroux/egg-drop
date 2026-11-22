@@ -836,6 +836,16 @@ function Kit.warmWell(frame)
  frame:SetAttribute("WarmWell",true);Kit.setSurface(frame,"dark")
  return fill
 end
+-- The light on every pet preview in the menus (cards, headshots, Companions, Stats, Customize,
+-- Wardrobe, inspect, the peeking pet, the Pocket menu tile). Spencer 2026-11-22: "the pet previews
+-- are a little dark/washed out. can we make them bright ... across the boards". It was ambient 206 /
+-- light 128 and rendered white fur at 229 and the yellow Bear at 226,180,68 (true 255,208,75).
+-- Eggs, jars, snacks and the directed hatch stages keep their own light.
+Kit.PetLight=table.freeze({ambient=Color3.fromRGB(215,213,210),color=Color3.fromRGB(200,194,182),direction=Vector3.new(-1,-1.4,-3)})
+function Kit.petLight(viewport)
+ viewport.Ambient=Kit.PetLight.ambient;viewport.LightColor=Kit.PetLight.color;viewport.LightDirection=Kit.PetLight.direction
+ return viewport
+end
 -- A stage: the berry preview backdrop with its dot grid (R1.2.5), for 3D previews.
 function Kit.stage(frame)
  paint(frame,"BackgroundColor3","stage");frame.BackgroundTransparency=0

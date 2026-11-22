@@ -1,0 +1,45 @@
+{
+ "sample_rate": 44100,
+ "bit_depth": 16,
+ "channels": 1,
+ "sounds": {
+  "stars_bought_a": {
+   "seconds": 1.2,
+   "peak_dbfs": -3.0,
+   "rms_dbfs": -18.48,
+   "loudest_50ms_dbfs": -12.12,
+   "centroid_hz": 1505,
+   "above_4khz_share": 0.0135,
+   "clipped_samples": 0,
+   "first_sample_16bit": 0,
+   "last_sample_16bit": 0,
+   "last_10ms_peak_dbfs": -92.5,
+   "largest_sample_step": 0.202,
+   "loudest_10ms_at_s": 0.45,
+   "at_suggested_volume": {
+    "volume": 0.7,
+    "peak_dbfs": -6.1,
+    "rms_dbfs": -21.58
+   }
+  },
+  "stars_bought_b": {
+   "seconds": 1.1,
+   "peak_dbfs": -3.0,
+   "rms_dbfs": -17.86,
+   "loudest_50ms_dbfs": -12.18,
+   "centroid_hz": 1380,
+   "above_4khz_share": 0.0173,
+   "clipped_samples": 0,
+   "first_sample_16bit": 0,
+   "last_sample_16bit": 0,
+   "last_10ms_peak_dbfs": -88.5,
+   "largest_sample_step": 0.2325,
+   "loudest_10ms_at_s": 0.54,
+   "at_suggested_volume": {
+    "volume": 0.7,
+    "peak_dbfs": -6.1,
+    "rms_dbfs": -20.96
+   }
+  }
+ }
+}

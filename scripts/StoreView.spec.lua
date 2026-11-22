@@ -155,6 +155,77 @@ return function(client,parent)
    end
    Gui.SelectedObject=nil;hidden:Destroy();shown:Destroy()
   end)
+  test("bought (2026-11-22): banner and sound only for a grant that follows a prompt here",function()
+   local savedHold=Store.BannerHold;Store.BannerHold=.6
+   local okBanner,bannerProblem=pcall(function()
+    for _,size in ipairs({Vector2.new(1649,971),Vector2.new(844,390)})do
+     root.Size=UDim2.fromOffset(size.X,size.Y);settle()
+     local granted={};view.onGranted=function(key)table.insert(granted,key)end
+     view:setState(snapshot());view:open(24);settle()
+     -- A late receipt (no prompt this session): the wallet and the line, no fuss.
+     view:handleResult({kind="product",key="jar",stars=140,balance=164});settle()
+     assert(#granted==0 and not view.bannerFrame,"a late receipt stays quiet")
+     -- Refused: nothing, and it does not arm a later one.
+     view:select("pouch");assert(view:buySelected());view:handleResult({kind="rejected",key="pouch",reason="Throttled"});settle()
+     view:handleResult({kind="product",key="pouch",stars=60,balance=224});settle()
+     assert(#granted==0 and not view.bannerFrame,"a refused prompt arms nothing")
+     -- Cancelled in Roblox's window: same.
+     assert(view:buySelected());view:purchaseWindowClosed(3730431153,false);view.cooling=false
+     view:handleResult({kind="product",key="pouch",stars=60,balance=284});settle()
+     assert(#granted==0 and not view.bannerFrame,"a cancelled prompt arms nothing")
+     -- Bought.
+     view:select("chest");assert(view:buySelected())
+     view:handleResult({kind="product",key="chest",stars=400,balance=684});settle()
+     assert(#granted==1 and granted[1]=="chest")
+     local banner=view.bannerFrame
+     assert(banner and banner.Label.Text=="+400 Stars"and banner.Label.TextFits,"the banner names its own amount")
+     local well,buy=view.well,view.buyButton
+     task.wait(Store.BannerIn+.1)
+     assert(banner.AbsolutePosition.Y>=well.AbsolutePosition.Y-1 and banner.AbsolutePosition.X>=well.AbsolutePosition.X-1
+      and banner.AbsolutePosition.X+banner.AbsoluteSize.X<=well.AbsolutePosition.X+well.AbsoluteSize.X+1
+      and banner.AbsolutePosition.Y+banner.AbsoluteSize.Y<=well.AbsolutePosition.Y+well.AbsoluteSize.Y+1,"inside the stage")
+     assert(banner.AbsolutePosition.Y+banner.AbsoluteSize.Y<buy.AbsolutePosition.Y or banner.AbsolutePosition.X+banner.AbsoluteSize.X<buy.AbsolutePosition.X,"never over Buy")
+     -- Survives a rebuild; the closing window shows it once more, only for its own product.
+     view.chromeKey=nil;view:layout();settle();assert(view.bannerFrame and view.bannerFrame~=banner and view.bannerFrame.Label.Text=="+400 Stars","survives a rebuild")
+     task.wait(Store.BannerHold+Store.BannerOut+.3);assert(not view.bannerFrame,"gone after the hold")
+     assert(not view:purchaseWindowClosed(3730431114,true)and not view.bannerFrame,"another product does not replay it")
+     assert(view:purchaseWindowClosed(3730431229,true)and view.bannerFrame,"its own window closing shows it again")
+     assert(not view:purchaseWindowClosed(3730431229,true),"once")
+     view:close("back");assert(not view.bannerFrame and not view.banner,"closing clears it")
+     -- The same result twice: one grant.
+     view:open(24);settle();view.cooling=false;view:select("jar");assert(view:buySelected())
+     view:handleResult({kind="product",key="jar",stars=140,balance=300});view:handleResult({kind="product",key="jar",stars=140,balance=300})
+     assert(#granted==2,"one sound per grant")
+     view.cooling=false;view:select("supporter");assert(view:buySelected());view:handleResult({kind="pass",key="supporter"});settle()
+     assert(#granted==3 and view.bannerFrame.Label.Text=="It's yours!")
+     view:close("forced");view.onGranted=nil
+    end
+    -- The window closes before the grant: one banner, and rebuying never replays it early.
+   do
+    local granted=0;view.onGranted=function()granted+=1 end
+    view:setState(snapshot());view:open(24);settle();view.cooling=false;view:select("pouch");assert(view:buySelected())
+    assert(not view:purchaseWindowClosed(3730431153,true)and not view.bannerFrame and granted==0,"closed first: nothing yet")
+    view:handleResult({kind="product",key="pouch",stars=60,balance=84});settle()
+    assert(granted==1 and view.bannerFrame and not view.banner.again)
+    task.wait(Store.BannerHold+Store.BannerOut+.3);assert(not view.bannerFrame)
+    view.cooling=false;assert(view:buySelected())
+    assert(not view:purchaseWindowClosed(3730431153,true)and not view.bannerFrame and granted==1,"no banner before the second grant")
+    view:handleResult({kind="product",key="pouch",stars=60,balance=144});settle();assert(granted==2 and view.bannerFrame)
+    -- Grant first, its window never reported, then a rebuy whose window closes first.
+    task.wait(Store.BannerHold+Store.BannerOut+.3);view.cooling=false;assert(view:buySelected())
+    view:handleResult({kind="product",key="pouch",stars=60,balance=204});assert(view.banner.again)
+    task.wait(Store.BannerHold+Store.BannerOut+.3);view.cooling=false;assert(view:buySelected())
+    assert(not view:purchaseWindowClosed(3730431153,true)and not view.bannerFrame,"the older banner stays gone")
+    view:close("forced");view.prompted={};view.onGranted=nil
+   end
+   -- Bought with the page closed before the grant lands: the sound, no banner.
+    local granted=0;view.onGranted=function()granted+=1 end
+    view:setState(snapshot());view:open(24);settle();view.cooling=false;view:select("pouch");assert(view:buySelected())
+    view:close("back");view:handleResult({kind="product",key="pouch",stars=60,balance=84});settle()
+    assert(granted==1 and not view.bannerFrame);view.onGranted=nil
+   end)
+   Store.BannerHold=savedHold;assert(okBanner,bannerProblem)
+  end)
   test("before the first snapshot: passes Loading, packs hidden, malformed snapshots ignored",function()
    local fresh=Store.new(root,{request=function()end,geometry=Shop.shopGeometry});fresh:open(0);settle()
    assert(fresh.body.Column:GetAttribute("PacksShown")==false and not Kit.buttonState(fresh.buyButton).enabled)

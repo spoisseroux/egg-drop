@@ -189,7 +189,7 @@ function View.new(parent, options)
 		request = options.request or function() end,
 		geometry = options.geometry, warm = options.warm,
 		state = fallbackState(), balance = 0, message = View.Idle, messageKind = "info",
-		promptToken = 0, cooling = false, offers = {}, rows = {}, list = {}, iconReady = {}, iconTickets = {},
+		promptToken = 0, cooling = false, offers = {}, rows = {}, list = {}, iconReady = {}, iconTickets = {}, prompted = {},
 	}, View)
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		if shade.Visible then self:layout() end
@@ -295,6 +295,7 @@ function View:handleResult(result)
 		if tonumber(result.balance) then self.balance = tonumber(result.balance) end
 		self:pulseWallet()
 		self:setMessage(string.format("+%s added. You have %s.", Stars.amount(stars), Stars.amount(self.balance)), "reward")
+		self:celebrate(result.key, UICopy.get("store.banner.stars", { count = stars }))
 	elseif result.kind == "pass" then
 		local name
 		for _, pass in ipairs(self.state.passes) do
@@ -304,8 +305,10 @@ function View:handleResult(result)
 			end
 		end
 		self:setMessage((name or "Your pass") .. " is yours. Thank you!", "reward")
+		self:celebrate(result.key, UICopy.get("store.banner.pass"))
 		if self.shade.Visible then self:layout() end
 	elseif result.kind == "rejected" then
+		if result.key then self.prompted[result.key] = nil end
 		self:setMessage(View.Rejected[result.reason] or View.Rejected.Unavailable, "notice")
 	end
 end
@@ -326,6 +329,7 @@ function View:prompt(key)
 	local token = self.promptToken
 	self:setMessage(View.Opening, "info")
 	if self.onAccepted then self.onAccepted("confirm") end
+	self.prompted[key] = true
 	self.request("prompt", key)
 	task.delay(1.2, function()
 		if self.promptToken == token then
@@ -397,6 +401,7 @@ function View:close(reason)
 	self.promptToken += 1
 	self.cooling = false
 	self.shade.Visible = false
+	self:clearBanner()
 	if (reason == nil or reason == "close" or reason == "back") and self.onAccepted then self.onAccepted("back") end
 	local restore = GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)
 	if self.onClosed then self.onClosed(reason or "close") end
@@ -408,9 +413,99 @@ function View:close(reason)
 	end
 end
 
+-- ── "+20 Stars" ──────────────────────────────────────────────────────────────
+-- Spencer 2026-11-22: "i dont remember seeing +20 stars added": the status line was there, but
+-- Roblox's own "Purchase completed" window covers the page when the grant lands. A gold sticker
+-- in the lower third of the stage holds BannerHold s and starts over when that window closes.
+-- Only for a grant that follows a prompt made here: a late receipt on rejoin stays quiet.
+View.BannerHold = 4
+View.BannerIn, View.BannerOut, View.BannerStill = .28, .2, .12
+function View:celebrate(key, text)
+	local prompt = key and self.prompted[key]
+	if not prompt then return false end
+	self.prompted[key] = nil
+	local entry = Catalog.ProductByKey[key] or Catalog.PassByKey[key]
+	-- `id` lets the closing window find this grant (either may come first).
+	self.banner = { text = text, id = entry and entry.id, untilAt = os.clock() + View.BannerHold, again = prompt ~= "closed" }
+	self:paintBanner(true)
+	if self.onGranted then self.onGranted(key) end
+	return true
+end
+-- Roblox's purchase window closed for this player. It also fires on cancel.
+function View:purchaseWindowClosed(id, purchased)
+	for key in pairs(self.prompted) do
+		local entry = Catalog.ProductByKey[key] or Catalog.PassByKey[key]
+		if entry and entry.id == id then
+			-- Still waiting for its grant: a cancel disarms it, and a purchase that lands after
+			-- its window has closed shows its banner once (code review 2026-11-22: otherwise
+			-- rebuying a pack replayed the last grant before the new Stars landed).
+			self.prompted[key] = if purchased then "closed" else nil
+			return false
+		end
+	end
+	if not purchased then return false end
+	local banner = self.banner
+	if not banner or banner.id ~= id or not banner.again then return false end
+	banner.again = false
+	banner.untilAt = os.clock() + View.BannerHold
+	self:paintBanner(true)
+	return true
+end
+function View:clearBanner()
+	self.banner, self.bannerToken = nil, nil
+	if self.bannerFrame then self.bannerFrame:Destroy(); self.bannerFrame = nil end
+end
+function View:paintBanner(pop)
+	local banner, well = self.banner, self.well
+	if not banner or not well or not well.Parent or not self.shade.Visible or os.clock() >= banner.untilAt then return end
+	local frame = self.bannerFrame
+	if frame and frame.Parent and not pop then return end
+	if frame then frame:Destroy() end
+	local phone = self.g.phone
+	local height, size = if phone then 28 else 40, if phone then 14 else 22
+	local wellW, wellH = well.Size.X.Offset, well.Size.Y.Offset
+	local widest = if phone then 126 else wellW - 40
+	while size > 11 and Kit.measure(banner.text, "Button", size).X + 28 > widest do size -= 1 end
+	local width = math.min(widest, math.ceil(Kit.measure(banner.text, "Button", size).X) + 28)
+	frame = Kit.frame(well, "GrantBanner", nil, UDim2.fromOffset(wellW / 2, wellH - (if phone then 22 else 30)), UDim2.fromOffset(width, height), 999)
+	frame.AnchorPoint, frame.Rotation, frame.ZIndex = Vector2.new(.5, .5), -4, self.stageIcon.ZIndex + 4
+	frame.BackgroundTransparency = 0
+	frame.BackgroundColor3 = Kit.Color.stars
+	Kit.setSurface(frame, "light")
+	local stroke = Kit.stroke(frame, "cream", 2, 0)
+	local label = Kit.text(frame, "Button", banner.text, "ink", { Name = "Label", Size = UDim2.fromScale(1, 1), TextSize = size,
+		TextXAlignment = Enum.TextXAlignment.Center })
+	label.ZIndex = frame.ZIndex + 1
+	frame:SetAttribute("AccessibleLabel", banner.text)
+	self.bannerFrame = frame
+	local still = Kit.reduced() or self.reduceEffects()
+	if pop and still then
+		frame.BackgroundTransparency, label.TextTransparency, stroke.Transparency = 1, 1, 1
+		Kit.tween(frame, View.BannerStill, { BackgroundTransparency = 0 })
+		Kit.tween(label, View.BannerStill, { TextTransparency = 0 })
+		Kit.tween(stroke, View.BannerStill, { Transparency = 0 })
+	elseif pop then
+		local scale = Kit.node("UIScale", frame, { Name = "Pop", Scale = .6 })
+		game:GetService("TweenService"):Create(scale, TweenInfo.new(View.BannerIn, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	end
+	local token = {}
+	self.bannerToken = token
+	task.delay(math.max(0, banner.untilAt - os.clock()), function()
+		if self.destroyed or self.bannerToken ~= token or self.bannerFrame ~= frame or not frame.Parent then return end
+		local out = if still then View.BannerStill else View.BannerOut
+		Kit.tween(frame, out, { BackgroundTransparency = 1 })
+		Kit.tween(label, out, { TextTransparency = 1 })
+		Kit.tween(stroke, out, { Transparency = 1 })
+		task.delay(out + .05, function()
+			if self.bannerFrame == frame and self.bannerToken == token then frame:Destroy(); self.bannerFrame = nil end
+		end)
+	end)
+end
+
 -- ── Chrome ────────────────────────────────────────────────────────────────────
 function View:buildChrome(view)
 	if self.root then self.root:Destroy() end
+	self.bannerFrame = nil
 	local phone = view ~= nil
 	local geometry = self.geometry or View.defaultGeometry
 	local g = geometry(if phone then view.W else 848, if phone then view.H else 608, phone)
@@ -458,6 +553,7 @@ function View:buildChrome(view)
 	local p = g.pad
 	local wellR = if phone then { x = p, y = p, w = 138, h = 138 } else { x = p, y = p, w = g.pane.w - p * 2, h = 152 }
 	local well = Kit.previewWell(pane, "OfferWell", UDim2.fromOffset(wellR.x, wellR.y), UDim2.fromOffset(wellR.w, wellR.h), 12)
+	self.well = well
 	local iconSize = math.min(wellR.h - 28, if phone then 100 else 124)
 	local stageIcon = iconBox(well, "StageIcon", iconSize, if phone then 16 else 20, 3)
 	stageIcon.AnchorPoint, stageIcon.Position = Vector2.new(.5, .5), UDim2.fromScale(.5, .5)
@@ -739,6 +835,7 @@ function View:paintPane()
 	Kit.setEnabled(self.buyButton, enabled)
 	Kit.setGlyphVisible(self.buyButton, not phone or not Kit.lastInputTouch())
 	self.buyButton:SetAttribute("OfferKey", offer and offer.key or nil)
+	self:paintBanner(false)
 end
 
 function View:layout()

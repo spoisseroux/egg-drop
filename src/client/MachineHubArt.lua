@@ -303,8 +303,7 @@ function builders.companions(root,w,h,ctx)
  if owned then
   live=pcall(function()
    local Factory=require(script.Parent.PetFactory);local Bounds=require(script.Parent.PetRigBounds)
-   local viewport=Kit.node("ViewportFrame",root,{Name="PetPortrait3D",BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromOffset(w-thumb,h),ZIndex=root.ZIndex+1,Active=false,
-    Ambient=Color3.fromRGB(206,202,194),LightColor=Color3.fromRGB(128,122,110),LightDirection=Vector3.new(-1,-1.4,-3)})
+   local viewport=Kit.node("ViewportFrame",root,{Name="PetPortrait3D",BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromOffset(w-thumb,h),ZIndex=root.ZIndex+1,Active=false});Kit.petLight(viewport)
    local world=Kit.node("WorldModel",viewport,{});local camera=Kit.node("Camera",viewport,{FieldOfView=30})
    viewport.CurrentCamera=camera
    local visual=Factory.new(world,Vector3.zero,pet,nil,appearance)

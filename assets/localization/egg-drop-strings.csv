@@ -747,6 +747,8 @@ ui.stats.train.jump,"Pet Park games you start, the daily Play date and playing w
 ui.stats.train.power,"Merges and chains on the Pocket Deck. Every merge counts, win or lose.",,Menu text
 ui.stats.train.smarts,"Daily and weekly quests, the daily stamp and Collection book finds.",,Menu text
 ui.stats.train.speed,"Throw and fetch, and toy play in the garden.",,Menu text
+ui.store.banner.pass,It's yours!,,Menu text
+ui.store.banner.stars,+{count} Stars,,Menu text; e.g. +3 Stars
 ui.store.best,BEST VALUE,,Menu text
 ui.store.blurb.chest,The big one.,,Menu text
 ui.store.blurb.handful,A little top-up for one more egg.,,Menu text

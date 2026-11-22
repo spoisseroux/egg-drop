@@ -516,7 +516,7 @@ local Table={
   sub={doubleStars="Double Stars, forever",supporter="+1 Star every round",starter="{stars} Stars · one per player",pack="{stars} Stars"},
   gets={doubleStars="Every round and quest",doubleStarsValue="2× Stars",supporter="Every finished round",supporterValue="+1 Star"},
   blurb={handful="A little top-up for one more egg.",pouch="Enough Stars for a few eggs.",jar="Lots of Stars for lots of eggs.",chest="The big one."},
-  hints={buy="Buy"}},
+  hints={buy="Buy"},banner={stars="+{count} Stars",pass="It's yours!"}},
  starsShort={title="You need ★ {count} more",titleOne="You need ★ 1 more",line="{item} is ★ {price}. Get Stars, or earn them on the Pocket Deck.",
   lineNoItem="Get Stars, or earn them on the Pocket Deck.",buy="Get Stars",earn="Play a round",wallet="Get Stars"},
  -- v2 Bunny (2026-11-19, Sol): adopting the second pet on the Companions Pets page. Free at the

@@ -15,7 +15,9 @@ return function(client,parent)
   -- v2 Bunny adoption.
   price=400,need=7,stamps=3,
   -- v2 pet names.
-  piece="Velvet",level=25}
+  piece="Velvet",level=25,
+  -- Stars store packs.
+  stars=60}
  local function width(text,role,size)
   local params=Instance.new("GetTextBoundsParams")
   params.Text=text;params.Font=Kit.faceFor(role,size);params.Size=size;params.Width=10000

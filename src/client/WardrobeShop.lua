@@ -254,8 +254,7 @@ function Shop:buildPane(pane,pw,ph,compact)
  local lower=(if compact then 22+18+20+12 else 30+22+24+16)+actionH+pad
  local viewH=math.max(80,ph-lower-pad)
  local _,well=Kit.previewWell(pane,"PreviewWell",UDim2.fromOffset(pad,pad),UDim2.fromOffset(pw-pad*2,viewH),12)
- local viewport=Kit.node("ViewportFrame",well,{Name="PetPreview",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex+1,
-  Ambient=Color3.fromRGB(206,202,194),LightColor=Color3.fromRGB(128,122,110),LightDirection=Vector3.new(-1,-1.4,-3)})
+ local viewport=Kit.node("ViewportFrame",well,{Name="PetPreview",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=well.ZIndex+1});Kit.petLight(viewport)
  local world=Kit.node("WorldModel",viewport,{});local camera=Kit.node("Camera",viewport,{FieldOfView=30})
  viewport.CurrentCamera=camera
  self.viewport,self.world,self.camera=viewport,world,camera
@@ -549,7 +548,7 @@ function Shop:buildCardPreview(tile)
  local appearance=table.clone(self.callbacks.appearance and self.callbacks.appearance(self.petId)or {})
  appearance.wearables=Shop.previewWearables(self.petId,{},tile.id)
  local viewport=Instance.new("ViewportFrame");viewport.Name="CardPreview";viewport.BackgroundTransparency=1;viewport.Size=UDim2.fromScale(1,1)
- viewport.Ambient=Color3.fromRGB(206,202,194);viewport.LightColor=Color3.fromRGB(128,122,110);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
+ Kit.petLight(viewport)
  local world=Instance.new("WorldModel");world.Parent=viewport
  local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera
  local ok,visual=pcall(Factory.new,world,Vector3.zero,pet,nil,appearance)
