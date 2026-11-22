@@ -148,6 +148,7 @@ return function(client,parent)
     local early=View.Moment.new(parent,nil);table.insert(cleanup,function()early:destroy()end)
     early.build=function()error("no modules")end
     assert(early:show({{petId="pip",stat="jump",tier="sprout",level=25}},{waiting=1},{})==false and not early:isOpen()and not early.gui.Enabled)
+    early:destroy()
     Stage.show=function()error("no stage")end
     local probe=Instance.new("Frame");probe.Size=UDim2.fromScale(1,1);probe.BackgroundTransparency=1;probe.Parent=gui
     local state=snapshot({jump=24})
@@ -168,6 +169,9 @@ return function(client,parent)
    assert(moment:show(rows,{waiting=1},{}));moment.stage:destroy();settle(3)
    assert(not moment:isOpen()and not moment.gui.Enabled and moment.limit==nil,"lost")
    assert(moment:show(rows,{waiting=1},{}));moment.stage=nil;settle(3);assert(not moment:isOpen(),"missing")
+   -- No frame drawn (a window in the background): Heartbeat alone closes it.
+   assert(moment:show(rows,{waiting=1},{}));moment.clock:Disconnect();moment.stage:destroy();settle(3)
+   assert(not moment:isOpen()and not moment.gui.Enabled and moment.guard==nil,"lost with nothing drawn")
    local grace=View.Moment.Grace
    assert(grace==15)
    View.Moment.Grace=-1000
@@ -190,6 +194,9 @@ return function(client,parent)
   test("the moment: waits for quiet, one stage for several medals, A goes to the eggs",function()
    on()
    local probe=Instance.new("Frame");probe.Size=UDim2.fromScale(1,1);probe.BackgroundTransparency=1;probe.Parent=gui
+   local before={} -- the game's own host may hold a medal gui here too
+   for _,g in ipairs(parent:GetChildren())do before[g]=true end
+   local function made()for _,g in ipairs(parent:GetChildren())do if g.Name=="EggDropMedal"and not before[g]then return g end end;return nil end
    local state,quiet,eggs=snapshot({jump=24,heart=49}),false,0
    local api=Host.mount({parent=parent,insetProbe=probe,state=function()return state end,activeId=function()return "pip"end,appearance=function()return{}end,
     canOpen=function()return true end,prepare=function()end,held=function()return false end,openEggs=function()eggs+=1 end,quiet=function()return quiet end,playerGui=parent})
@@ -197,12 +204,14 @@ return function(client,parent)
    settle();assert(not api.isBusy(),"not while something is on screen")
    quiet=true;settle(4);assert(api.isBusy())
    local stage
-   local medalGui=parent:FindFirstChild("EggDropMedal")
+   local medalGui=made()
+   assert(medalGui and medalGui.Enabled,"the host made its own gui")
    for _,d in ipairs(medalGui:GetDescendants())do if d:GetAttribute("Medal")then stage=d end end
+   assert(stage,"the stage is in it")
    for _,d in ipairs(stage:GetDescendants())do if d.Name=="Sticker"then assert(not d.Visible,"no second tier pill")end end
    assert(stage and stage:GetAttribute("Medal")=="bloom"and stage:GetAttribute("MedalStat")=="heart"and stage:GetAttribute("MedalCount")==2)
    assert(api.open({stat="jump"})==false,"the panel waits for it")
-   api.destroy();assert(parent:FindFirstChild("EggDropMedal")==nil)
+   api.destroy();assert(made()==nil)
    local moment=View.Moment.new(parent,nil)
    assert(moment:show({{petId="pip",stat="jump",tier="starbloom",level=99}},{waiting=1},{eggs=function()eggs+=1 end}))
    -- The words are one block on the well's centre line, the level at 22 px on a desktop stage.

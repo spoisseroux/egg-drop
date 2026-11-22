@@ -117,7 +117,9 @@ return function(client,parent)
      local measure=Kit.measure
      local fine,wrong=pcall(function()
       Kit.measure=function(text,role,...)local b=measure(text,role,...);return if role=="Strong"then b*Vector2.new(3,1)else b end
-      panel:setMode("stats");panel:setContext({state=st})
+      -- On a stat with rewards left: at 99 (Speed here) the one short line is all there is to wrap.
+      panel:setMode("stats");panel:focusStat("jump","pip");panel:setContext({state=st})
+      assert(panel.root:GetAttribute("SelectedStat")=="jump"and panel.nextLines[1].root:GetAttribute("Reward")~=nil)
       if panel.nextLines[2]then assert(not panel.nextLines[2].root.Visible and panel.nextLines[1].label.TextWrapped)end
       assert(panel.nextLines[1].root.Visible)
      end)

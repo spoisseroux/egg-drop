@@ -274,6 +274,8 @@ function Moment:begin()
  self:step(0)
  if not self.open then error("the stage was lost",0)end
  self.limit=task.delay(math.max(0,self.timing.duration+Moment.Grace),function()self.limit=nil;self:close("timeout")end)
+ -- A lost stage is noticed with no frames drawn too (a minimised window): Heartbeat, not RenderStepped.
+ self.guard=RunService.Heartbeat:Connect(function()if self:stageLost()then self:close("lost")end end)
  self.clock=RunService.RenderStepped:Connect(function(dt)
   local ok,problem=pcall(self.step,self,dt)
   if not ok then warn("[Levels] medal moment: "..tostring(problem));self:close("failed")end
@@ -291,10 +293,11 @@ function Moment:begin()
   return Enum.ContextActionResult.Sink
  end,false,Enum.ContextActionPriority.High.Value+835,K.ButtonA,K.ButtonB,K.Return,K.KeypadEnter,K.Space,K.Escape,K.Backspace)
 end
+function Moment:stageLost()return self.open and(self.stage==nil or self.stage.destroyed==true)end
 function Moment:step(dt)
  if not self.open then return end
+ if self:stageLost()then self:close("lost");return end
  local stage=self.stage
- if not stage or stage.destroyed then self:close("lost");return end
  if not stage:holdsClock()then self.age+=math.clamp(dt,0,.1)end
  if self.age>self.timing.duration then self.age=self.timing.duration end
  local sample=require(script.Parent.HatchDisplayPose).sample(self.age,"medal",self.reducedStart,"Neutral")
@@ -323,6 +326,7 @@ function Moment:close(reason)
  self.open=false;self.stung=nil
  ContextActionService:UnbindAction("EggDropMedal")
  if self.clock then self.clock:Disconnect();self.clock=nil end
+ if self.guard then self.guard:Disconnect();self.guard=nil end
  if self.limit then pcall(task.cancel,self.limit);self.limit=nil end
  if self.audio and self.audio.stopOwner and self.owner then pcall(function()self.audio:stopOwner(self.owner)end)end
  local stage,scene=self.stage,self.scene

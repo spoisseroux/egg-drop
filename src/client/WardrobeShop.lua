@@ -290,7 +290,9 @@ function Shop:buildPane(pane,pw,ph,compact)
  self.tier=Kit.chip(pane,"RARE","sticker",if compact then 22 else 26);if compact then self.tier.label.TextSize=12 end
  self.tier.root.AnchorPoint=Vector2.new(1,.5);self.tier.root.Position=UDim2.fromOffset(pw-pad,y+nameH/2)
  y+=nameH+(if compact then 0 else 4)
- self.note=txt(pane,"Small","","soft",pad,y,pw-pad*2,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd});y+=if compact then 18 else 22
+ self.note=txt(pane,"Small","","soft",pad,y,pw-pad*2,18,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+ self.lines={note=y,noteH=18,status=y+(if compact then 18 else 22),statusH=20}
+ y=self.lines.status
  self.status=txt(pane,"Body","","soft",pad,y,pw-pad*2,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
  local action,state=Kit.button(pane,"Action",{variant="primary",text="Wear",glyph="A",size=Vector2.new(pw-pad*2,actionH),textSize=if compact then 16 else nil,selectable=false})
  action.Position=UDim2.fromOffset(pad,ph-pad-actionH);self.action,self.actionState=action,state
@@ -705,6 +707,7 @@ function Shop:paintPane()
  local id=self:focusedId()
  if not id then
   self.name.Text="";self.note.Text="";self.status.Text="";self.action.Visible=false;self.tier.root.Visible=false
+  self:paintLock(nil)
   if self.deal then self.deal.set(false)end
   if self.visible and self.petId then self:paintPreview()end;return
  end
@@ -741,15 +744,30 @@ function Shop:paintPane()
 end
 
 -- The bar between the requirement line and the button; made the first time a locked item is shown.
-Shop.LockBar,Shop.LockGap=8,10
+-- A short pane tightens the two lines over it, for a locked item only, and drops the note when even
+-- that is not enough: the bar is always LockGap clear of the button.
+Shop.LockBar,Shop.LockGap,Shop.LockLine=8,10,16
+-- Pure: where the note and the requirement line stand. lines: their resting places; barTop: the bar's.
+function Shop.lockLines(lines,barTop)
+ if lines.status+lines.statusH<=barTop then return lines,true end
+ local status=math.max(lines.note,math.min(lines.status,barTop-Shop.LockLine))
+ local noteH=math.min(lines.noteH,status-lines.note)
+ if noteH<Shop.LockLine then return{note=lines.note,noteH=lines.noteH,status=status,statusH=Shop.LockLine},false end
+ return{note=lines.note,noteH=noteH,status=status,statusH=Shop.LockLine},true
+end
 function Shop:paintLock(gate)
+ local lines,note=self.lines,true
+ if gate then lines,note=Shop.lockLines(lines,self.action.Position.Y.Offset-Shop.LockGap-Shop.LockBar)end
+ for label,at in pairs({[self.note]={lines.note,lines.noteH},[self.status]={lines.status,lines.statusH}})do
+  label.Position=UDim2.fromOffset(label.Position.X.Offset,at[1]);label.Size=UDim2.fromOffset(label.Size.X.Offset,at[2])
+ end
+ self.note.Visible=note
  local size=if gate then 13 else 14
  if self.status.TextSize~=size then self.status.TextSize=size end
  if not gate and not self.lockBar then return end
  if not self.lockBar or not self.lockBar.root.Parent then
   if not gate then self.lockBar=nil;return end
-  local y=self.status.Position.Y.Offset+self.status.Size.Y.Offset
-  self.lockBar=Locked.bar(self.status.Parent,self.status.Position.X.Offset,math.max(y+1,self.action.Position.Y.Offset-Shop.LockGap-Shop.LockBar),self.status.Size.X.Offset,Shop.LockBar)
+  self.lockBar=Locked.bar(self.status.Parent,self.status.Position.X.Offset,self.action.Position.Y.Offset-Shop.LockGap-Shop.LockBar,self.status.Size.X.Offset,Shop.LockBar)
  end
  self.lockBar.set(gate)
 end

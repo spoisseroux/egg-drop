@@ -63,7 +63,7 @@ return function(client,parent)
   end)
   for _,item in ipairs(Catalog.forPet("pip",math.huge).order)do if item.gate and item.gate.stat=="jump"and item.gate.level==30 then limeJump=item.id end end
   assert(limeJump,"a Jump 30 recolour")
-  for _,size in ipairs({Vector2.new(1280,720),Vector2.new(844,390),Vector2.new(667,375)})do
+  for _,size in ipairs({Vector2.new(1280,720),Vector2.new(1649,971),Vector2.new(844,390),Vector2.new(812,375),Vector2.new(800,360),Vector2.new(667,375)})do
    test(tostring(size).." Wardrobe on: the locked card, the way to train, then Buy",function()
     on()
     local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
@@ -80,7 +80,9 @@ return function(client,parent)
     assert(cp.X>=tp.X+6*k-.5 and cp.X+cs.X<=tp.X+ts.X-6*k+.5 and cp.Y+cs.Y<=tp.Y+ts.Y-6*k+.5,"the chip is 6 px inside its card")
     -- The bar: 8 px, 10 px clear of the button, under its 13 px line.
     local line,bar,key=shop.status,shop.lockBar.root,shop.action
-    assert(line.TextSize==13 and bar.Size.Y.Offset==8 and bar.Position.Y.Offset+8+10<=key.Position.Y.Offset and line.Position.Y.Offset+line.Size.Y.Offset<=bar.Position.Y.Offset,"bar "..bar.Position.Y.Offset.." line "..line.Position.Y.Offset.." key "..key.Position.Y.Offset)
+    assert(line.TextSize==13 and bar.Size.Y.Offset==8 and bar.Position.Y.Offset+8+10<=key.Position.Y.Offset and line.Position.Y.Offset+line.Size.Y.Offset<=bar.Position.Y.Offset,tostring(size).." bar "..bar.Position.Y.Offset.." line "..line.Position.Y.Offset.." key "..key.Position.Y.Offset)
+    assert(line.TextFits and line.Position.Y.Offset>=(if shop.note.Visible then shop.note.Position.Y.Offset+shop.note.Size.Y.Offset else shop.note.Position.Y.Offset),"clear of the words over it")
+    assert(shop.name.Position.Y.Offset+shop.name.Size.Y.Offset<=shop.note.Position.Y.Offset+1,"under the name")
     assert(shop.lockBar.root.Visible and shop.action:GetAttribute("AccessibleLabel")==UICopy.get("shop.train",{name=UICopy.get("stats.name.jump")}))
     assert(string.find(shop.root:GetAttribute("PreviewWearables"),limeJump,1,true),"try-on still works")
     assert(shop:act()and trained.stat=="jump"and trained.petId=="pip"and shop.pending==nil,"nothing is bought")
@@ -90,6 +92,7 @@ return function(client,parent)
     -- The level is met: Buy, no lock, no bar.
     shop:setContext({levels=Locked.levels(state({jump=30})),row={owned={},equipped={}}});shop:focus(shop.index,true)
     assert(shop:statusOf(limeJump).kind=="buy"and not shop.lockBar.root.Visible and not shop.tiles[shop.index].lock.root.Visible and not shop.tiles[shop.index].chip.root.Visible)
+    assert(shop.note.Visible and shop.note.Position.Y.Offset==shop.lines.note and shop.note.Size.Y.Offset==18 and shop.status.Position.Y.Offset==shop.lines.status and shop.status.Size.Y.Offset==20,"the lines are back in their places")
     -- Without a train route the button does nothing.
     shop.callbacks.train=nil;shop:setContext({levels=jump});assert(shop:act()==false)
     shop:destroy();host:Destroy()
