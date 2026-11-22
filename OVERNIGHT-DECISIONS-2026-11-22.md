@@ -17,7 +17,7 @@ Spencer, asleep: "make decisions ot move forward by urself". Each row is a choic
 | 11 | Dash maths tuned and merged, but nothing uses it yet: idling earns no medal, dashing all the time costs you, stats clamp within a band (7.6% widest gap), luck never beats a run one trip cleaner | Tuned by simulation only; the line still needs a Studio walk and every number is [P] | Nothing to undo: no script requires it |
 | 12 | Fixed the desktop Balls tab (rows 5 to 7 unreachable by mouse) and scroll-to in Balls and Faceplates | Real bugs on live today; in the beta, goes live with your next publish | Revert ed8a1a6 |
 | 13 | Medal ring art, recolours, two level faceplates (Sky Fizz, Storm Glass) and six deck effects are Fable's or drawn from shapes | No outside art used | Per item |
-| 14 | Garden Dash server and player side merged (9d98503), reviewed and fixed, not published | Nobody has run a race yet; it needs the Studio window | `garden_dash` off, or revert |
+| 14 | Garden Dash on the beta (5f340ee), prizes off | Two real races run in Studio first | `garden_dash` off, or revert |
 | 15 | Stopped building at about 91% of the weekly limit | Leaves usage for your feedback; it resets 4 PM | |
 | 16 | Star prizes for races are off unless a remote setting turns them on | Nothing can pay out until you decide | `garden_dash_prizes` |
 | 17 | The race route goes around the leaning tree at (38, 8) | Lanes 5 to 8 ran into it, measured in Studio | `scripts/build_dash_course.py` |
