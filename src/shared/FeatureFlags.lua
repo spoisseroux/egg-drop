@@ -38,7 +38,9 @@
 -- needs the beta place or Studio (Levels.PlaceId) and the server's switch (LevelsConfig). Missing = off.
 -- GardenDash (V3-DASH-BUILD-PLAN-2026-11-22): the build ceiling for the pet race. Also needs the beta place or
 -- Studio (Dash.PlaceId) and the server's switches (DashConfig: garden_dash, garden_dash_prizes). Missing = off.
+-- AeroWorld (WORLD-PLAN-2026-11-22 section 9): the build ceiling for the client's Frutiger Aero look. Also needs the
+-- beta place or Studio (Aero.PlaceId) and the server's switch (AeroConfig: aero_world). Missing = off.
 return table.freeze({SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,
- LevelsMatter=true,GardenDash=true})
+ LevelsMatter=true,GardenDash=true,AeroWorld=true})

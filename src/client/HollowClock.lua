@@ -18,7 +18,13 @@ function Clock.cycle(unixSeconds)
 	return hour, sunlight * sunlight * (3 - 2 * sunlight)
 end
 
+-- Another look over the garden (AeroWorld): {Hour, Daylight, CloudColor, paint()}. While set, the clock samples and
+-- paints it, so Lighting keeps one writer; nil is the garden without it.
+Clock.look = nil
+
 function Clock.sample(unixSeconds)
+	local look = Clock.look
+	if look then return look.Hour, look.Daylight end
 	if not Clock.DayNight then return Dusk.Hour, Dusk.Daylight end
 	return Clock.cycle(unixSeconds)
 end
@@ -26,6 +32,11 @@ end
 function Clock.environment(unixSeconds)
 	local hour, daylight = Clock.sample(unixSeconds)
  Clock.lastHour,Clock.lastDaylight=hour,daylight
+	if Clock.look then
+		Clock.look.paint()
+		Clock.backdrop(daylight)
+		return hour,daylight
+	end
 	if not Clock.DayNight then
 		Clock.dusk()
 		return hour,daylight
@@ -114,7 +125,7 @@ function Clock.backdrop(daylight)
 			end
 		end
 	end
-	local color = if Clock.DayNight then Clock.cloudColor(daylight) else Dusk.CloudColor
+	local color = if Clock.look then Clock.look.CloudColor elseif Clock.DayNight then Clock.cloudColor(daylight) else Dusk.CloudColor
 	for _, part in ipairs(Clock.clouds) do
 		if part.Color ~= color then part.Color = color end
 	end
