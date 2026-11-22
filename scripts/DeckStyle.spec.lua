@@ -176,7 +176,13 @@ return function(client,parent)
    assert(Balls.status("tangerine_pop",{owned={},wallet=999,levels=levels}).kind=="invalid","never sold while off")
    assert(Balls.status("tangerine_pop",{owned={"tangerine_pop"},equipped="smileys"}).kind=="owned"and Balls.status("tangerine_pop",{owned={"tangerine_pop"},equipped="tangerine_pop"}).kind=="inUse")
    local f=picker(Vector2.new(1920,1080));local v=f.v
-   assert(v.shop.effects==nil and #v.shop.tabs.buttons==3 and v.shop.balls.grid==nil and #v.shop.balls.tiles==#BallThemes.Order,"today's grid")
+   assert(v.shop.effects==nil and #v.shop.tabs.buttons==3 and #v.shop.balls.tiles==#BallThemes.Order,"today's list")
+   -- Live bug fixed 2026-11-22: rows 5-7 ran off the desktop panel with no scrolling.
+   local grid=v.shop.balls.grid;assert(grid and grid:IsA("ScrollingFrame"),"13 themes scroll")
+   v.shop:setTab(3);settle();v.shop.balls:scrollTo(#v.shop.balls.tiles);settle()
+   local last=v.shop.balls.tiles[#v.shop.balls.tiles].button;local k=grid.AbsoluteSize.Y/grid.Size.Y.Offset
+   local bottom=(last.Position.Y.Offset+last.Size.Y.Offset)*k -- offsets: the rig's panel may be hidden
+   assert(bottom>grid.AbsoluteSize.Y and bottom<=grid.CanvasPosition.Y+grid.AbsoluteWindowSize.Y+1 and bottom<=grid.AbsoluteCanvasSize.Y,"the last card scrolls into view")
    v:setShopState(128,{},{owned={"tangerine_pop"},equipped="smileys"},1)
    assert(#v.shop.balls.tiles==#BallThemes.Order+1 and v.shop.balls.tiles[#v.shop.balls.tiles].chip==nil and v.shop.balls.grid,"an owned gated theme is still listed")
    v:close("forced")

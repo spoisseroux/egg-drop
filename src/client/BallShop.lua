@@ -20,7 +20,7 @@ Shop.__index=Shop
 Shop.ConfirmSeconds=3
 -- Desktop rects in panel units: the pane matches Faceplates; 2 columns of 222x122 cards.
 Shop.Regular={pane={24,144,328,392},grid={371,147},tile={222,122},gap=12,columns=2}
--- Desktop, while a gated theme is listed: the same cards in a scrolling column (as Faceplates).
+-- Desktop: more rows than fit scroll (as Faceplates). 2026-11-22: 13 themes used to run off the panel, rows 5-7 unreachable by mouse.
 Shop.ScrollGrid=table.freeze({x=368,y=144,w=466,h=400,pitch=134})
 Shop.TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
  rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")},
@@ -179,7 +179,7 @@ function Shop:build(parent,view,grid)
   action.Activated:Connect(function()self:act()end)
   self.grid=nil;self.columns=R.columns
   local gridParent,gx,gy=body,R.grid[1],R.grid[2]
-  if #order>#Themes.Order then
+  if math.ceil(#order/R.columns)*Shop.ScrollGrid.pitch-R.gap>Shop.ScrollGrid.h then
    local G=Shop.ScrollGrid
    local list=Kit.node("ScrollingFrame",body,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(G.x,G.y),
     Size=UDim2.fromOffset(G.w,G.h),ScrollBarThickness=4,ZIndex=body.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
@@ -362,10 +362,12 @@ function Shop:canTrain()local callbacks=self.owner.callbacks;return callbacks~=n
 function Shop:scrollTo(index)
  local list=self.grid;local tile=self.tiles[index];if not list or not tile then return end
  local top=tile.button.Position.Y.Offset;local bottom=top+tile.button.Size.Y.Offset
- local view=list.AbsoluteWindowSize.Y;if view<=0 then view=list.Size.Y.Offset end
- local y=list.CanvasPosition.Y
+ -- CanvasPosition and the window are in scaled pixels, the cards' offsets are not.
+ local k=if list.Size.Y.Offset>0 and list.AbsoluteSize.Y>0 then list.AbsoluteSize.Y/list.Size.Y.Offset else 1
+ local view=list.AbsoluteWindowSize.Y/k;if view<=0 then view=list.Size.Y.Offset end
+ local y=list.CanvasPosition.Y/k
  if top-8<y then y=top-8 elseif bottom+8>y+view then y=bottom+8-view end
- list.CanvasPosition=Vector2.new(0,math.clamp(y,0,math.max(0,list.CanvasSize.Y.Offset-view)))
+ list.CanvasPosition=Vector2.new(0,math.clamp(y,0,math.max(0,list.CanvasSize.Y.Offset-view))*k)
 end
 function Shop:focus(index,instant)
  if #self.tiles==0 then return end

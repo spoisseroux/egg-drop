@@ -365,10 +365,11 @@ function Shop:scrollTo(index)
  local list=self.grid;local tile=self.tiles[index];if not list or not tile then return end
  -- Its row's caption comes along.
  local top=tile.button.Position.Y.Offset-20;local bottom=tile.button.Position.Y.Offset+tile.button.Size.Y.Offset
- local view=list.AbsoluteWindowSize.Y;if view<=0 then view=list.Size.Y.Offset end
- local y=list.CanvasPosition.Y
+ local k=if list.Size.Y.Offset>0 and list.AbsoluteSize.Y>0 then list.AbsoluteSize.Y/list.Size.Y.Offset else 1 -- scaled pixels per offset
+ local view=list.AbsoluteWindowSize.Y/k;if view<=0 then view=list.Size.Y.Offset end
+ local y=list.CanvasPosition.Y/k
  if top-4<y then y=top-4 elseif bottom+8>y+view then y=bottom+8-view end
- list.CanvasPosition=Vector2.new(0,math.clamp(y,0,math.max(0,list.CanvasSize.Y.Offset-view)))
+ list.CanvasPosition=Vector2.new(0,math.clamp(y,0,math.max(0,list.CanvasSize.Y.Offset-view))*k)
 end
 function Shop:focus(index,instant)
  if #self.tiles==0 then return end

@@ -468,13 +468,15 @@ function Shop:scrollTo(index,anchorRow)
  local cols=self.columns;local row=math.floor((index-1)/cols)
  local pitch,tileH=self.rowPitch or 72,self.tileH or 64
  local top,bottom=row*pitch,row*pitch+tileH
- local view=list.AbsoluteWindowSize.Y;if view<=0 then view=list.Size.Y.Offset end
+ -- CanvasPosition and the window are in scaled pixels, the cards' offsets are not.
+ local k=if list.Size.Y.Offset>0 and list.AbsoluteSize.Y>0 then list.AbsoluteSize.Y/list.Size.Y.Offset else 1
+ local view=list.AbsoluteWindowSize.Y/k;if view<=0 then view=list.Size.Y.Offset end
  local maxY=math.max(0,list.CanvasSize.Y.Offset-view)
- local y=list.CanvasPosition.Y
+ local y=list.CanvasPosition.Y/k
  if anchorRow then y=top-pitch*(anchorRow-1)
  elseif top-8<y then y=top-8
  elseif bottom+8>y+view then y=bottom+8-view end
- list.CanvasPosition=Vector2.new(0,math.clamp(y,0,maxY))
+ list.CanvasPosition=Vector2.new(0,math.clamp(y,0,maxY)*k)
 end
 -- Repaint after a rebuild.
 function Shop:relayout()

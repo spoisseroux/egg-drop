@@ -1,0 +1,6 @@
+{"head":"b0f2c4c","synced":"EffectsShop line-by-line identical; MedalView, StatGuide, WearableState lengths match",
+"alone":{"fail":["MedalView:170 missing","StatGuide:124","LockedItem:83 bar 177 line 156 key 188"],"pass":["LevelsClient","DeckJuiceClient","DropTrail","KitSurfaces","CompactPhone","KitArrive","KitDepart","MachineHub"],"timeout30s":"KitSpring (passes in full run)"},
+"full_on":"server 9 fail = baseline; client 23 fail = 20 baseline + LockedItem, MedalView, StatGuide",
+"full_off":"server 9 fail = baseline; client 23 fail, same 3 new",
+"B":"off: wearable/ball/plate below and at level all NotForSale, stars unchanged; on: at level Saved (-40 each), below level NeedsLevel",
+"D":"off: balls grid scrolls, rows reachable"}

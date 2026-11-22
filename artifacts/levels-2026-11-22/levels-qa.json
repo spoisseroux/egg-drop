@@ -1,0 +1,14 @@
+{
+ "date":"2026-11-22","head":"cade907","studio_place":96451847774961,"viewport":"1649x734",
+ "attributes_fresh_play":{"Alive_close":true,"Alive_menus":true,"Alive_springs":true,"Alive_wind":true,"Levels_matter":true},
+ "specs_levels_on":{"server":"74 pass, 9 fail, identical set to baseline; all 10 new server specs pass","client":"163 pass, 29 fail; vs baseline new: MedalView, StatGuide, KitSurfaces(on only), CompactPhone(on only), MachineHub(flaky), KitArrive/KitDepart/KitSpring(flaky, welcome UI/menus open)","ClientLocalBudget":"now passes"},
+ "specs_levels_off":{"server":"74 pass, 9 fail, same as baseline","client":"170 pass, 22 fail: baseline 22 minus JellyLCD/ClientLocalBudget plus MedalView and StatGuide"},
+ "new_failures":{
+  "MedalView":"MedalView:139 'build' (on and off): show() with failing Stage.show does not return false",
+  "StatGuide":"StatGuide:79 '44 px rows' (on and off): guide row height under 44 at 1649x734",
+  "KitSurfaces":"on only; KitSurfaces:104 Themes.Order[index] nil (grid has more tiles than Order: gated theme listed)",
+  "CompactPhone":"on only; 568x320 FaceplateShop.Tab1.Strong text size 11 < 12"},
+ "gameplay":{"locked_item":"Rose Pom Beanie chip Needs Heart 15, bar, try-on, Train Heart route works","buy_below":"NeedsLevel, no charge","buy_at_level":"Saved, 500->460 (40) once; replay AlreadyOwned","medal_moments":"Jump/Power/Energy 25 appear; closed by Backspace, Enter (goes to Hatch eggs), mouse Done","medal_eggs":"2 credits, one opened: free 2->1, Stars 460 unchanged, daily nest 3/3 untouched","balls_desktop":"scrolls, rows reachable on","effects":"Confetti/Bubble/Ready selected, board DeckJuice updated; trail unlocked live at Power 30","levels_off":"Effects tab drops to 3 tabs, no error; worn gated beanie stays, removable, re-wearable","off_server_sale":"off: bought tee_sky (met) Saved; bowtail below level NeedsLevel (plan says NotForSale)","stale_chip":"Tangerine Pop tile kept chip Needs Power 10 with Power 25 (Buy enabled)"},
+ "frame_times":{"juice_on":"1263 frames avg16.7 p95 18.3 p99 18.9 max 33.9 ms","classic":"1172 frames avg16.7 p95 18.1 p99 19.0 max 25.8 ms"},
+ "console":"BoardSnapshot discard warning once at start, flags still off then; BoardNetClient unchanged since deck-net. Other: EditableImage, ContentId 203785492 and 103644756322872 (assets)"
+}

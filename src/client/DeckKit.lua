@@ -2581,7 +2581,9 @@ function Kit.setShadeAlpha(shade,alpha)shade:SetAttribute("ShadeAlpha",alpha);pa
 function Kit.shadeDepth()paintShades();return #shadeStack end
 function Kit.shadeTop()
  -- A screen destroyed while open takes its shade with it (paintShades drops it on the next change).
- while #shadeStack>0 and not shadeStack[#shadeStack].shade.Parent do table.remove(shadeStack)end
+ local popped=false
+ while #shadeStack>0 and not shadeStack[#shadeStack].shade.Parent do table.remove(shadeStack);popped=true end
+ if popped then paintShades()end
  local entry=shadeStack[#shadeStack];return entry and entry.owner,entry and entry.shade
 end
 -- How many open shades currently dim the screen (always 0 or 1).

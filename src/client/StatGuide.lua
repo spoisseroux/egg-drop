@@ -237,11 +237,13 @@ function Guide:select(index,instant)
  local view=self.views[self.index]
  if view then
   local top=view.root.Position.Y.Offset;local bottom=top+self.rowH
-  local window=self.list.AbsoluteWindowSize.Y;if window<=0 then window=self.list.Size.Y.Offset end
-  local y=self.list.CanvasPosition.Y
+  local list=self.list
+  local k=if list.Size.Y.Offset>0 and list.AbsoluteSize.Y>0 then list.AbsoluteSize.Y/list.Size.Y.Offset else 1 -- scaled pixels per offset
+  local window=list.AbsoluteWindowSize.Y/k;if window<=0 then window=list.Size.Y.Offset end
+  local y=list.CanvasPosition.Y/k
   -- Opening lands the row a third of the way down; moving scrolls just far enough.
   if instant then y=top-window/3 elseif top-8<y then y=top-8 elseif bottom+8>y+window then y=bottom+8-window end
-  self.list.CanvasPosition=Vector2.new(0,math.clamp(y,0,math.max(0,self.list.CanvasSize.Y.Offset-window)))
+  list.CanvasPosition=Vector2.new(0,math.clamp(y,0,math.max(0,list.CanvasSize.Y.Offset-window))*k)
   local ring=self.callbacks.ring and self.callbacks.ring()
   if ring then ring.attach(view.root,10)end
  end
