@@ -632,17 +632,17 @@ def t5():
         return x, y - im.height
 
     # ---- on the equipment, far to near
-    # by the slide and the ball mat
-    pal("C7a", 0.40, 1122, 480, rot=-6, ry=8, sh=60)
-    # swing
-    x, y = pal("C7c", 0.42, 418, 520, rot=8, ry=1, sh=0)
-    bi.contact(c, x + 10, P(0, 545)[1], 60, 10, alpha=80, blur=10)
-    swish(c, x - 10, y - 40, 300, 100, 125, width=8)
-    swish(c, x - 10, y - 40, 340, 104, 122, width=6)
-    swish(c, x + 10, y - 40, 300, 52, 76, width=8)
-    # see-saw: Bunny down, Bear up
-    pal("F7b", 0.42, 752, 566, rot=6, ry=6, sh=50)
-    x, y = pal("J3", 0.42, 1003, 494, rot=-8, ry=5, sh=40)
+    # stretching by the slide and the ball mat
+    pal("A-C7c-stretch", 0.50, 1102, 486, rot=-4, ry=8, sh=60)
+    # sitting on the swing seat, mid-swing
+    x, y = pal("A-C7a-sit", 0.52, 410, 540, rot=7, ry=1, sh=0, flip=True)
+    bi.contact(c, x + 10, P(0, 560)[1], 70, 10, alpha=80, blur=10)
+    swish(c, x - 10, y - 40, 330, 100, 125, width=8)
+    swish(c, x - 10, y - 40, 370, 104, 122, width=6)
+    swish(c, x + 10, y - 40, 330, 52, 76, width=8)
+    # see-saw: Bear sitting on the low seat, Bunny wiggling on the high end
+    pal("A-F7b-sit", 0.50, 764, 574, rot=5, ry=6, sh=50)
+    x, y = pal("A-J3-wiggle", 0.50, 990, 498, rot=-7, ry=5, sh=40, flip=True)
     for dx, a in ((-70, -28), (0, 0), (70, 28)):
         layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
         t = np.radians(a)
@@ -656,37 +656,39 @@ def t5():
         x, y = P(px, py)
         bi.contact(c, x, y - 6, im.width * 0.40, 10, alpha=90, blur=10)
         bi.paste(c, im, (int(x - im.width / 2), int(y - im.height)))
-    # ---- foreground pals
-    bun = cut("B2", 0.94, cool=0)
-    bi.contact(c, 190, 1062, bun.width * 0.42, 20, alpha=110, blur=14)
-    bi.paste(c, bun, (190 - bun.width // 2, 1075 - bun.height))
-    bear = cut("B1", 1.02, cool=0)
-    bi.contact(c, 1700, 1064, bear.width * 0.42, 20, alpha=110, blur=14)
-    bi.paste(c, bear, (1700 - bear.width // 2, 1078 - bear.height))
-    hop = cut("J2", 0.96, rot=-6, cool=0)
-    hx, top, ground = 676, 322, 1000
+    # ---- foreground pals: Bunny sitting on the lawn by the toys, Bear waving hello
+    bun = cut("A-B2-sit", 1.10, cool=0)
+    bi.contact(c, 168, 1046, bun.width * 0.46, 22, alpha=120, blur=14)
+    bi.paste(c, bun, (168 - bun.width // 2, 1066 - bun.height))
+    bear = cut("A-B1-wave", 1.28, cool=0)
+    bi.contact(c, 1748, 1050, bear.width * 0.42, 20, alpha=110, blur=14)
+    bi.paste(c, bear, (1748 - bear.width // 2, 1070 - bear.height))
+    # the jumper: whole body in the air, feet well clear of the lawn and of every edge
+    hop = cut("A-J2-jump", 1.12, rot=-6, cool=0)
+    hx, top, ground = 640, 300, 1000
+    assert top + hop.height < ground - 60, "jumper's feet must stay in the air and on the canvas"
     bi.contact(c, hx, ground, hop.width * 0.24, 14, alpha=95, blur=16)
     puff(c, hx - 10, ground - 6)
     layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
-    for off, L in ((-0.30, 70), (-0.10, 110), (0.10, 90), (0.30, 60)):
+    for off, L in ((-0.26, 60), (-0.09, 95), (0.09, 80), (0.26, 50)):
         x0 = hx + 10 + off * hop.width
-        d.line((x0, top + hop.height + 6, x0 - 8, top + hop.height + 6 + L), fill=(255, 255, 255, 190), width=10)
+        d.line((x0, top + hop.height + 14, x0 - 8, top + hop.height + 14 + L), fill=(255, 255, 255, 190), width=10)
     c.alpha_composite(layer.filter(ImageFilter.GaussianBlur(1.6)))
     bi.paste(c, hop, (hx - hop.width // 2, top))
     # ---- the ball, thrown from the Bear to the Bunny
-    dots(c, 1600, 560, 1110, 330, lift=110, n=8)
+    dots(c, 1570, 500, 1110, 330, lift=110, n=8)
     ball = cut("P-toy-ball", 0.36, rot=20, cool=0)
     bi.soft_shadow(c, ball, (1040 - ball.width // 2, 300 - ball.height // 2), dx=10, dy=12, blur=12, alpha=0.25)
     paste_center(c, ball, 1040, 300)
     swish(c, 1040, 300, 96, -50, 20, width=8)
     swish(c, 1040, 300, 122, -38, 8, width=6)
     # ---- joy
-    for hx_, hy_, r, rot in ((1500, 420, 26, -12), (1840, 380, 22, 16), (300, 470, 22, -10)):
+    for hx_, hy_, r, rot in ((1500, 400, 26, -12), (1880, 300, 22, 16), (330, 440, 22, -10)):
         heart(c, hx_, hy_, r, rot=rot)
     for nx, ny, r, rot in ((1120, 500, 24, -12), (1345, 440, 18, 10), (520, 560, 18, 12)):
         note(c, nx, ny, r, rot=rot)
-    for sx, sy, r in ((930, 470, 24), (1180, 160, 20), (1420, 250, 16), (1600, 150, 22), (60, 520, 18)):
+    for sx, sy, r in ((930, 470, 24), (1180, 160, 20), (1420, 250, 16), (1600, 150, 22), (40, 460, 18)):
         sparkle(c, sx, sy, r)
     cap = caption(["play with", "friends"], 700, [0.0, 0.0])
     bi.paste(c, cap, (40, 20))

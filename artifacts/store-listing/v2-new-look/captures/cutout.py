@@ -82,6 +82,14 @@ SHOTS = {
     # T5 distinct pals: J2 Tide Bunny mid-jump (party hat, bell collar, star charm); J3 Iris Bunny (sun hat, specs, acorn, leaf charm).
     "J2": ("J2-black.jpg", "J2-grey.jpg"),
     "J3": ("J3-black.jpg", "J3-grey.jpg"),
+    # T5 animated pals (Spencer: "more animated, some sitting"): the game's own sit pose and idle beats.
+    "A-F7b-sit": ("A-F7b-sit-black.jpg", "A-F7b-sit-grey.jpg"),
+    "A-B2-sit": ("A-B2-sit-black.jpg", "A-B2-sit-grey.jpg"),
+    "A-B1-wave": ("A-B1-wave-black.jpg", "A-B1-wave-grey.jpg"),
+    "A-C7c-stretch": ("A-C7c-stretch-black.jpg", "A-C7c-stretch-grey.jpg"),
+    "A-J3-wiggle": ("A-J3-wiggle-black.jpg", "A-J3-wiggle-grey.jpg"),
+    "A-C7a-sit": ("A-C7a-sit-black.jpg", "A-C7a-sit-grey.jpg"),
+    "A-J2-jump": ("A-J2-jump-black.jpg", "A-J2-jump-grey.jpg"),
 }
 
 
