@@ -198,6 +198,19 @@ function Client:held()
 	return seat~=nil and seat.phase~="gather"
 end
 function Client:panelOpen()return self.card~=nil and not self.card.closed end
+-- Things to do asks these two. A seat (waiting too), the line, a request on its way or a card.
+function Client:engaged()return self.seat~=nil or self.queued==true or self.pending~=nil or self:panelOpen()end
+-- The race as anyone sees it, or nil while Dash is off or has given up here: phase "gather" | "live" | "idle", how many
+-- players wait, and whether this player has ever raced.
+function Client:summary()
+	if not self.isOpen or self.dead then return nil end
+	local roster,count=self.roster,0
+	local phase=roster and roster.phase
+	if phase=="gather"then
+		for _,place in ipairs(roster.seats)do if type(place)=="table"and place.pal~=true then count+=1 end end
+	end
+	return{phase=if phase=="gather"then"gather"elseif phase~=nil and Client.LIVE[phase]then"live"else"idle",count=count,raced=not self:newRacer()}
+end
 -- Opening the Pocket Deck gives up a seat: ask first. True when the question is up (do nothing else yet).
 function Client:askLeave(action)
 	if not self.seat or self.seat.phase=="done"then

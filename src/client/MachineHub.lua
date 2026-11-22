@@ -36,6 +36,12 @@ Hub.Tiles=table.freeze({
  table.freeze({id="settings",icon="settings",tint=nil,name="hub.tile.settings.name",line="hub.tile.settings.line"}),
 })
 Hub.Count=#Hub.Tiles
+-- Things to do (V3-THINGS-TO-DO-PLAN-2026-11-22): a seventh tile before Settings and four columns, only while
+-- `callbacks.things.on()`; its page opens inside this hub (ThingsPage). Off, every list and size is the six-tile hub's.
+Hub.ThingsTiles=table.clone(Hub.Tiles)
+table.insert(Hub.ThingsTiles,Hub.Count,table.freeze({id="things",icon="target",tint="garden",name="things.title",line="things.tile.line",short="things.tile.short"}))
+table.freeze(Hub.ThingsTiles)
+Hub.ThingsCols=4
 Hub.Tint=Kit.Tint.garden -- the hub's own header tint (Toy Shell 3.1: Garden is go), not a machine's
 Hub.DefaultIndex=1
 
@@ -78,6 +84,7 @@ function Hub.status(id,ctx)
   local text=claims(type(book)=="table"and type(book.claimable)=="table"and #book.claimable or 0)
   if text then return{text=text,tone="stars",dot=true,locked=false}end
  end
+ if id=="things"and type(ctx.things)=="table"and ctx.things.new==true then return{text=UICopy.get("things.new"),tone="stars",dot=true,locked=false}end
  return{text="",tone="dim",dot=false,locked=false}
 end
 -- Slice C (weekly shelf): which shelf kinds a tile sells, and how an id reads as a name.
@@ -165,7 +172,22 @@ end
 -- of a phone tile (a square) and the top-right of a desktop tile (beside the disc);
 -- the name, status, line and chips keep to the left of / under it. `line` and `chips`
 -- are nil when the tile is too short for them (the chips win over the line).
-function Hub.tileLayout(w,h,phone)
+-- narrow (four columns on a phone): the disc beside a wide well, the name across the tile, and one bottom row the
+-- status and the chips share.
+function Hub.tileLayout(w,h,phone,narrow)
+ if phone and narrow then
+  local pad,disc=8,28
+  local rowH=if h>=96 then 24 else 18
+  local rowY=h-rowH-(if h>=96 then 6 else 3)
+  local nameH=if h>=96 then 20 else 18
+  local nameY=rowY-1-nameH
+  local side=math.max(24,math.min(nameY-8,60))
+  disc=math.min(disc,side)
+  local wellX=pad+disc+6
+  local textW=w-2*pad
+  return{pad=pad,disc=disc,well={x=wellX,y=6,w=w-wellX-8,h=side},name={x=pad,y=nameY,w=textW,h=nameH},status={x=pad,y=rowY+math.floor((rowH-16)/2),w=textW,h=16},
+   chips={x=pad,y=rowY,w=textW},textW=textW,chipH=rowH,shared=true,nameSize=if w<150 then 14 else 16}
+ end
  if phone then
   local pad,disc=12,36
   local tx=pad+disc+8
@@ -206,15 +228,16 @@ function Hub.phoneHeight(free)
  local h=math.floor(full*Hub.TileShare)
  return math.min(free,y0+rows*h+(rows-1)*gap+pad)
 end
-function Hub.geometry(W,H,phone)
+function Hub.geometry(W,H,phone,count,columns)
  local x0,y0,gap,bottom
  if phone then x0,y0,gap,bottom=20,64,8,H-Hub.PhoneBottomPad else x0,y0,gap,bottom=24,84,16,548 end
- local cols=Hub.Cols;local rows=math.ceil(Hub.Count/cols)
+ count=count or Hub.Count
+ local cols=columns or Hub.Cols;local rows=math.ceil(count/cols)
  local w=math.floor((W-2*x0-(cols-1)*gap)/cols)
  -- (Round 3: on phones Hub.fit sizes the sheet so these fill it; see Hub.phoneHeight.)
  local h=math.floor((bottom-y0-(rows-1)*gap)/rows)
  local tiles={}
- for i=1,Hub.Count do
+ for i=1,count do
   local c,r=(i-1)%cols,(i-1)//cols
   tiles[i]={x=x0+c*(w+gap),y=y0+r*(h+gap),w=w,h=h}
  end
@@ -228,7 +251,7 @@ function Hub.step(index,dx,dy,cols,count)
  local rows=math.ceil(count/cols)
  local nc,nr=math.clamp(c+dx,0,cols-1),math.clamp(r+dy,0,rows-1)
  local nextIndex=nr*cols+nc+1
- if nextIndex>count then return index end
+ if nextIndex>count then return if dy>0 then count else index end -- a short last row: its last tile
  return nextIndex
 end
 -- Pure: what a key does (nil when the hub ignores it).
@@ -261,7 +284,7 @@ function Hub:reducedMotion()
  return Kit.reduced()or(self.callbacks.reduced~=nil and self.callbacks.reduced()==true)
 end
 function Hub:motionWanted()
- return self.visible and not self.covered and self.content~=nil and not self.destroyed and not self:reducedMotion()
+ return self.visible and not self.covered and not self.pageOn and self.content~=nil and not self.destroyed and not self:reducedMotion()
 end
 function Hub:syncMotion()
  local Clock=require(script.Parent.PetPeek)
@@ -287,10 +310,10 @@ function Hub:syncMotion()
 end
 
 -- host: a full-screen Frame (its own ScreenGui). callbacks: open(id) -> bool,
--- locked(id), closed(reason), reduced() -> bool (the game's Reduced Effects setting).
+-- locked(id), closed(reason), reduced() -> bool (the game's Reduced Effects setting), things (optional, see ThingsPage).
 function Hub.new(host,callbacks)
  local self=setmetatable({host=host,callbacks=callbacks or {},index=Hub.DefaultIndex,visible=false,covered=false,
-  ctx={owned=0,wallet=0,state={}},tileViews={}},Hub)
+  ctx={owned=0,wallet=0,state={}},tileViews={},tiles=Hub.Tiles,cols=Hub.Cols},Hub)
  -- Q2 shade stack: one full-screen shade beside the panel (never its parent).
  self.shade=Kit.modalShade(host,"MachineHubShade",30)
  local root=Kit.frame(host,"MachineHub","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(848,608),30)
@@ -315,7 +338,66 @@ function Hub:buildHints(content)
  txt(content,"Small",UICopy.get("hub.promise"),"dim",424,566,400,24,{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right})
 end
 
+-- The seventh tile comes and goes while the hub is closed; the focus stays on the same machine.
+function Hub:thingsOn()
+ local things=self.callbacks.things
+ return things~=nil and things.on()==true
+end
+function Hub:syncTiles()
+ local on=self:thingsOn()
+ local tiles=if on then Hub.ThingsTiles else Hub.Tiles
+ if tiles==self.tiles then return end
+ local function same(index)
+  local id=index and self.tiles[index]and self.tiles[index].id
+  for i,tile in ipairs(tiles)do if tile.id==id then return i end end
+  return Hub.DefaultIndex
+ end
+ self.index,self.lastIndex=same(self.index),if self.lastIndex then same(self.lastIndex)else nil
+ self.tiles,self.cols=tiles,if on then Hub.ThingsCols else Hub.Cols
+end
+function Hub:titleText()
+ if self.notice then return self.notice.short end
+ return UICopy.get(if self.pageOn then "things.title"else "hub.title")
+end
+-- The Things to do page, over the tiles. Back, or the switch going off, is the tiles again.
+function Hub:openPage()
+ if not self.visible or self.pageOn or not self.body or not self:thingsOn()or Hub.locked("things",self.ctx.owned)then return false end
+ self.pageOn=true
+ self:mountPage()
+ self:syncMotion()
+ return self.pageOn==true
+end
+function Hub:mountPage()
+ for _,entry in ipairs(self.tileViews)do entry.button.Visible=false end
+ self.header.setTitle(self:titleText())
+ local g=self.pageSize
+ local ok,page=pcall(function()
+  return require(script.Parent.ThingsPage).new(self.body,{W=g.W,H=g.H,phone=g.phone,ring=self.ring,things=self.callbacks.things,
+   shown=function()return self.visible and not self.covered end,gone=function()self:closePage()end})
+ end)
+ if not ok then
+  warn("[Things] page: "..tostring(page))
+  local left=self.body:FindFirstChild("ThingsPage");if left then left:Destroy()end
+  self:closePage();return
+ end
+ self.page=page
+ self.root:SetAttribute("Page","things")
+ page:focus(nil,nil,true)
+end
+function Hub:closePage()
+ if not self.pageOn then return false end
+ self.pageOn=false
+ if self.page then self.page:destroy();self.page=nil end
+ self.root:SetAttribute("Page",nil)
+ for _,entry in ipairs(self.tileViews)do entry.button.Visible=true end
+ if self.header then self.header.setTitle(self:titleText())end
+ self:syncMotion()
+ if self.visible then self:paintTiles();self:focusTile(self.index,true)end
+ return true
+end
+
 function Hub:build(view)
+ if self.page then self.page:destroy();self.page=nil end
  if self.content then self.content:Destroy()end
  if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
  self.view=view;self.key=if view then string.format("%dx%d",view.W,view.H)else "regular"
@@ -333,7 +415,8 @@ function Hub:build(view)
   body=Kit.frame(content,"Body",nil,UDim2.new(),UDim2.fromScale(1,1));body.ZIndex=sheet.ZIndex+3
  end
  self.body=body
- local title=if self.notice then self.notice.short else UICopy.get("hub.title")
+ local title=self:titleText()
+ self.pageSize={W=W,H=H,phone=phone}
  self.header=Kit.header(body,{title=title,eyebrow=UICopy.get("hub.eyebrow"),tint=Hub.Tint,compact=phone,width=W,
   left=if phone then view.hx else 24,onBack=function()self:back()end})
  self.header.root.Name="HubHeader"
@@ -342,19 +425,21 @@ function Hub:build(view)
  if not phone then self:buildHints(content)end
  self.ring=Kit.focusRing(self.root)
  root:SetAttribute("Layout",if phone then "phone"else "regular")
+ if self.pageOn then self:mountPage()end
 end
 
 function Hub:buildTiles(body,W,H,phone)
- local g=Hub.geometry(W,H,phone)
+ local narrow=self.cols>Hub.Cols
+ local g=Hub.geometry(W,H,phone,#self.tiles,self.cols)
  self.geometryCache=g
  self.tileViews={}
- for index,tile in ipairs(Hub.Tiles)do
+ for index,tile in ipairs(self.tiles)do
   local r=g.tiles[index]
   local button,tileState=Kit.tile(body,"Tile_"..tile.id,{selectable=false,radius=if phone then 12 else 14,compact=phone,
    position=UDim2.fromOffset(r.x,r.y),size=UDim2.fromOffset(r.w,r.h)})
   local name=UICopy.get(tile.name);local line=UICopy.get(tile.line)
   button:SetAttribute("AccessibleLabel",name..", "..line);button:SetAttribute("TileId",tile.id)
-  local L=Hub.tileLayout(r.w,r.h,phone)
+  local L=Hub.tileLayout(r.w,r.h,phone,narrow)
   local discSize,pad=L.disc,L.pad
   local disc=Kit.frame(button,"IconDisc",nil,UDim2.fromOffset(pad,pad),UDim2.fromOffset(discSize,discSize),999);disc.BackgroundTransparency=0
   local icon=Kit.icon(disc,tile.icon,math.floor(discSize*.5),"ink");icon.AnchorPoint=Vector2.new(.5,.5);icon.Position=UDim2.fromScale(.5,.5)
@@ -370,7 +455,7 @@ function Hub:buildTiles(body,W,H,phone)
   Kit.seam(button)
   local nameLabel,lineLabel,statusLabel
   if phone then
-   nameLabel=txt(button,"Name",name,"text",L.name.x,L.name.y,L.name.w,L.name.h,{TextSize=16,TextTruncate=Enum.TextTruncate.AtEnd})
+   nameLabel=txt(button,"Name",name,"text",L.name.x,L.name.y,L.name.w,L.name.h,{TextSize=L.nameSize or 16,TextTruncate=Enum.TextTruncate.AtEnd})
    statusLabel=txt(button,"Label","","dim",L.status.x,L.status.y,L.status.w,L.status.h,{Name="Status",TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
    local lr=L.line or {x=pad,y=pad+discSize+6,w=L.textW,h=18}
    lineLabel=txt(button,"Small",line,"soft",lr.x,lr.y,lr.w,lr.h,{TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
@@ -378,6 +463,7 @@ function Hub:buildTiles(body,W,H,phone)
    Kit.fitText(nameLabel,if tile.short then {name,UICopy.get(tile.short)}else {name},L.name.w)
   else
    nameLabel=txt(button,"Name",name,"text",L.name.x,L.name.y,L.name.w,L.name.h,{TextSize=22,TextTruncate=Enum.TextTruncate.AtEnd})
+   if narrow then Kit.fitText(nameLabel,if tile.short then {name,UICopy.get(tile.short)}else {name},L.name.w)end
    lineLabel=txt(button,"Body",line,"soft",L.line.x,L.line.y,L.line.w,L.line.h,{TextSize=15,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
    statusLabel=txt(button,"Label","","dim",L.status.x,L.status.y,L.status.w,L.status.h,{Name="Status",TextSize=12})
   end
@@ -413,6 +499,7 @@ end
 
 -- Status lines, dots, lock look and focus.
 function Hub:paintTiles()
+ if self.tiles~=Hub.Tiles and self.callbacks.things then self.ctx.things={new=self.callbacks.things.new()==true}end
  for index,entry in ipairs(self.tileViews)do
   local s=Hub.status(entry.id,self.ctx)
   local focused=index==self.index
@@ -423,21 +510,21 @@ function Hub:paintTiles()
   if entry.dot.Visible then
    local p=entry.status.Position
    if entry.phone then
-    entry.status.Position=UDim2.fromOffset(entry.pad+36+8+14,p.Y.Offset)
+    entry.status.Position=UDim2.fromOffset(entry.layout.status.x+14,p.Y.Offset)
     entry.status.Size=UDim2.fromOffset(entry.layout.status.w-14,entry.layout.status.h)
-    entry.dot.Position=UDim2.fromOffset(entry.pad+36+8,p.Y.Offset+4)
+    entry.dot.Position=UDim2.fromOffset(entry.layout.status.x,p.Y.Offset+4)
    else
     entry.status.Position=UDim2.fromOffset(entry.pad+14,p.Y.Offset)
     entry.dot.Position=UDim2.fromOffset(entry.pad,p.Y.Offset+4)
    end
   else
-   entry.status.Position=UDim2.fromOffset(if entry.phone then entry.pad+36+8 else entry.pad,entry.status.Position.Y.Offset)
+   entry.status.Position=UDim2.fromOffset(if entry.phone then entry.layout.status.x else entry.pad,entry.status.Position.Y.Offset)
    entry.status.Size=UDim2.fromOffset(entry.layout.status.w,entry.layout.status.h)
   end
   -- Locked: the disc goes grey and the line says how it opens up.
   local tint=if s.locked then nil else Kit.tintColor(entry.tint)
   entry.disc.BackgroundColor3=tint or(if s.locked then Kit.Color.dim else Kit.Color.soft)
-  entry.line.Text=if s.locked then UICopy.get("menu.subtitle.locked")else UICopy.get(Hub.Tiles[index].line)
+  entry.line.Text=if s.locked then UICopy.get("menu.subtitle.locked")else UICopy.get(self.tiles[index].line)
   -- Slice C: this week's shelf takes the line on the tiles that sell it, in Stars gold.
   local shelf=Hub.shelfLines(entry.id,self.ctx)
   if shelf then Kit.fitText(entry.line,shelf,entry.lineWidth)end
@@ -457,7 +544,7 @@ function Hub:paintTiles()
    entry.wellStroke.Color=if shelf then Kit.Color.stars else Kit.Stroke.color
   end
   local list=Hub.chips(entry.id,self.ctx)
-  local room=entry.layout.chips
+  local room=if entry.layout.shared and s.text~=""then nil else entry.layout.chips
   local x=room and room.x or 0
   local shown={}
   for slot,chip in ipairs(entry.chips)do
@@ -477,7 +564,7 @@ function Hub:paintTiles()
   entry.stroke.Thickness=if focused then 2 else 1;entry.stroke.Transparency=if focused then 0 else Kit.Stroke.transparency
   Kit.paint(entry.stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
  end
- local focusedTile=Hub.Tiles[self.index]
+ local focusedTile=self.tiles[self.index]
  self.root:SetAttribute("FocusedTile",focusedTile and focusedTile.id or nil)
 end
 
@@ -509,8 +596,12 @@ function Hub:setContext(ctx)
 end
 
 function Hub:focusTile(index,instant)
- self.index=math.clamp(index,1,Hub.Count)
+ self.index=math.clamp(index,1,#self.tiles)
  if self.content then self:paintTiles()end
+ if self.pageOn then
+  if self.page then self.page:focus(nil,nil,true)end
+  return
+ end
  local entry=self.tileViews[self.index]
  if entry and self.ring and self.visible and not self.covered then
   self.ring.attach(entry.button,if self.view then 12 else 14)
@@ -519,14 +610,14 @@ function Hub:focusTile(index,instant)
 end
 function Hub:move(dx,dy)
  if not self.visible then return false end
- local nextIndex=Hub.step(self.index,dx,dy)
+ local nextIndex=Hub.step(self.index,dx,dy,self.cols,#self.tiles)
  if nextIndex==self.index then return false end
  self:focusTile(nextIndex);return true
 end
 -- A / Enter / tap: open the focused machine, or say why it is locked.
 function Hub:act()
  if not self.visible then return false end
- local tile=Hub.Tiles[self.index];if not tile then return false end
+ local tile=self.tiles[self.index];if not tile then return false end
  local entry=self.tileViews[self.index]
  if Hub.locked(tile.id,self.ctx.owned)then
   if entry then Kit.boing(entry.button)end
@@ -539,6 +630,11 @@ function Hub:act()
 end
 function Hub:back()
  if not self.visible then return false end
+ if self.pageOn then
+  self:closePage()
+  if self.onAccepted then self.onAccepted("back")end
+  return true
+ end
  Kit.depart(self.root)
  self:close("back")
  return true
@@ -547,6 +643,7 @@ end
 function Hub:input(key)
  if not self:takesInput()then return false end
  local action=Hub.keyAction(key)
+ if self.pageOn and self.page and action~="back"then return action~=nil and self.page:input(action)end
  if action=="left"then return self:move(-1,0)
  elseif action=="right"then return self:move(1,0)
  elseif action=="up"then return self:move(0,-1)
@@ -576,8 +673,9 @@ function Hub:open(ctx,options)
  options=options or {}
  if ctx then self:setContext(ctx)end
  local wasOpen=self.visible
+ if not wasOpen then self:closePage();self:syncTiles()end
  if options.focus then
-  for i,tile in ipairs(Hub.Tiles)do if tile.id==options.focus then self.index=i end end
+  for i,tile in ipairs(self.tiles)do if tile.id==options.focus then self.index=i end end
  elseif not wasOpen then self.index=self.lastIndex or Hub.DefaultIndex end
  self.visible=true;self.covered=false;self.root.Visible=true
  Kit.shadeOpen(self,self.shade,function(covered)self:setCovered(covered)end)
@@ -599,6 +697,7 @@ function Hub:close(reason)
  if not self.visible then return false end
  self.lastIndex=self.index
  self.visible=false;self.covered=false;self.root.Visible=false;Kit.shadeClose(self)
+ self:closePage()
  self:syncMotion()
  if self.ring then self.ring.hide()end
  if self.callbacks.closed then self.callbacks.closed(reason or "close")end
@@ -627,7 +726,7 @@ function Hub:setFieldObjective()return false end
 function Hub:setSaveNotice(notice)
  if self.notice==notice then return false end
  self.notice=notice
- if self.header then self.header.setTitle(if notice then notice.short else UICopy.get("hub.title"))end
+ if self.header then self.header.setTitle(self:titleText())end
  return true
 end
 function Hub:getControllerFocus()return nil end

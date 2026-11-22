@@ -1709,6 +1709,7 @@ end
 -- the quest log's fromHub). Nothing opened (busy, a pending hatch took over): the hub stays.
 function clientUI.openMachine(id)
  if not gameMenu:isOpen()or MachineHub.locked(id,board:GetAttribute("OwnedPets")or 0)then return false end
+ if id=="things"then return gameMenu:openPage()==true end -- its page is in the hub itself
  local Kit=require(script.DeckKit)
  gameMenu:close("machine");roomView:setMenuOpen(false)
  clientUI.machineReturn=nil
@@ -1730,7 +1731,7 @@ end
 -- "menu"). Only from the free garden with a pet (never mid-round or over another screen);
 -- it goes through the hub, so Back from the machine returns there as from a tile.
 function clientUI.noticeCanGo(target)
- return type(target)=="string"and(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Room"
+ return type(target)=="string"and target~="show"and(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Room"
   and roomView.canRoam()==true and not gameMenu:isOpen()
 end
 function clientUI.noticeGo(target)
@@ -4566,6 +4567,165 @@ do
  end)
  if ok and clientUI.dash then gui.Destroying:Connect(function()clientUI.dash:destroy()end)
  elseif not ok then warn("[Dash] not mounted: "..tostring(problem))end
+end
+-- Things to do (Shared.Things): nothing at all with the build ceiling off; with the switch off only the switches are
+-- watched. clientUI.things is what the Pocket menu's page (MachineHub), the coach's last line (ThingsTips) and the trail
+-- (ThingsTrail) ask.
+do
+ (function()
+ local Things=require(ReplicatedStorage.Shared.Things)
+ if not Things.ceiling()then return end
+ local ok,problem=pcall(function()
+  local Dash=require(ReplicatedStorage.Shared.Dash)
+  local Course=require(ReplicatedStorage.Shared.DashCourse)
+  local Park=require(ReplicatedStorage.Shared.ParkLayout)
+  local Coach=require(ReplicatedStorage.Shared.CoachMarks)
+  local Copy=require(ReplicatedStorage.Shared.UICopy)
+  local Attract=require(script.StationAttract)
+  local Tips=require(script.ThingsTips)
+  local Guide=require(script.FirstSpendGuide)
+  local How=require(script.HowItWorks)
+  local Rail=require(script.NotificationRail)
+  local Confirm=require(script.ConfirmDialog)
+  local things={}
+  local function rootPosition()
+   local character=player.Character
+   local root=character and character:FindFirstChild("HumanoidRootPart")
+   local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+   return if root and humanoid and humanoid.Health>0 then root.Position else nil
+  end
+  local function dashNow()return if Dash.on()and clientUI.dash then clientUI.dash:summary()else nil end
+  -- Where the race starts: the live gate's own mark, so a gate that moves needs no edit here.
+  local function dashGate()
+   local model=workspace:FindFirstChild("GardenDash")
+   local start=model and model:GetAttribute("Start")
+   if typeof(start)=="CFrame"then return start.Position end
+   local x,y,z=Course.at(0)
+   return Vector3.new(x,y,z)
+  end
+  local function parkGate(from)
+   if not Attract.parkAnchor()then return nil end
+   local best,far=nil,math.huge
+   for _,site in ipairs(Park.Sites)do
+    for _,gateway in ipairs(site.Gateways)do
+     local distance=(gateway.position-from).Magnitude
+     if distance<far then best,far=gateway.position,distance end
+    end
+   end
+   return best
+  end
+  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
+  local trail=require(script.ThingsTrail).new({world=workspace,root=rootPosition,reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+   free=function()
+    return Things.on()and board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy
+     and not roomView.dashHeld and(clientUI.dash==nil or clientUI.dash.seat==nil)
+   end,
+   busy=function()
+    return clientUI.anyModalOpen()==true or How.isOpen()or Confirm.isOpen()or roomView.focusing==true or clientUI.arrivalHatch:isOpen()
+   end,
+   ground=function(at)
+    local skip={}
+    for _,other in ipairs(Players:GetPlayers())do if other.Character then table.insert(skip,other.Character)end end
+    params.FilterDescendantsInstances=skip
+    local hit=workspace:Raycast(at+Vector3.new(0,2.5,0),Vector3.new(0,-6,0),params)
+    return hit and hit.Position.Y
+   end})
+  -- The page (MachineHub's callbacks.things) ---------------------------------------------------------------------
+  things.on=Things.on
+  function things.new()return dashNow()~=nil and not Coach.has(clientUI.coach.mask,"dashSeen")end
+  function things.context()
+   local state=nurseryState or {}
+   return{park=Attract.parkAnchor()~=nil,playDate=state.playDate,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new()}
+  end
+  function things.seen(id)
+   if id=="dash"and Things.on()and not Coach.has(clientUI.coach.mask,"dashSeen")then clientUI.coach:mark("dashSeen")end
+  end
+  function things.help(id)return How.open(id)end
+  function things.show(id)
+   local from=Things.on()and rootPosition()
+   if not from then return false end
+   if id=="park"or id=="parkInvite"then return trail:start({position=parkGate(from),name=Copy.get("park.name")})end
+   if dashNow()==nil then return false end
+   return trail:start({position=dashGate(),name=Copy.get("dash.title")})
+  end
+  function things.act(id)
+   if not Things.on()or not closeMenu then return false end
+   closeMenu()
+   if id~="deck"then things.show(id);return true end
+   -- The Deck: as its own button in the garden (a race seat is asked about first).
+   local function play()cancelHatchNavigation();request:FireServer("mode","Board")end
+   if not(clientUI.dash and clientUI.dash:askLeave(play))then play()end
+   return true
+  end
+  -- The tips (CoachCards options.things) -------------------------------------------------------------------------
+  local function gate(roomFor)
+   local ctx=clientUI.coach.stepCtx or {}
+   local pet=roomView.shownPet
+   local actor=if pet and roomView.garden then roomView.garden:renderActor(player.UserId,pet.id,player.Character)else nil
+   return{on=Things.tips(),mode=board:GetAttribute("Mode"),canRoam=roomView.canRoam(),revealPending=clientUI.coach.revealPending==true,
+    modal=clientUI.anyModalOpen()==true or(clientUI.names~=nil and clientUI.names.isOpen())or clientUI.deckResults.visible==true,
+    hatch=clientUI.arrivalHatch:isOpen()or(clientUI.snacks~=nil and clientUI.snacks.reveal~=nil and clientUI.snacks.reveal:isOpen()),
+    card=How.isOpen()or Confirm.isOpen(),tour=clientUI.coach.tourOpen==true or clientUI.coach.replaying==true,
+    greeting=roomView.focusing==true or roomView.greetingCamera~=nil and roomView.greetingCamera~=false or roomView.focusTransitioning==true,
+    engaged=clientUI.dash~=nil and clientUI.dash:engaged(),action=actor and actor.action,parkPending=board:GetAttribute("ParkGamesPending"),
+    care=actor~=nil and(actor.care~=nil or actor.mode=="Carried"or actor.mode=="Docked"),
+    petting=roomView.petContactActive==true or(roomView.pet~=nil and roomView.pet.petting==true),
+    purchase=next(clientUI.storeView.prompted)~=nil or starsPurchasePending(),
+    windowActive=ctx.windowActive,awayFor=ctx.awayFor,idleFor=ctx.idleFor,roomFor=roomFor,railEmpty=Rail.empty()}
+  end
+  local nextLook=0
+  function things.due(ctx)
+   -- Four looks a second, and none at all unless the tips are on.
+   if os.clock()<nextLook then return nil end
+   nextLook=os.clock()+.25
+   local state=nurseryState
+   if not Things.tips()or type(state)~="table"then return nil end
+   local dash=dashNow()
+   ctx.firstEgg=Guide.stage(state,{eligible=true})=="done"and clientUI.firstSpend.flight==nil
+   ctx.dashOn,ctx.raced=dash~=nil,dash~=nil and dash.raced
+   ctx.playDates=if type(state.playDate)=="table"then state.playDate.count else 0
+   ctx.returning,ctx.gate=things.returning,gate(ctx.roomFor)
+   return Tips.due(ctx)
+  end
+  function things.blocked(roomFor,started)return Tips.blocked(gate(roomFor),started)end
+  local function firstReady(state)
+   if things.returning==nil and type(state)=="table"and state.status=="Ready"then things.returning=Tips.returning(state)end
+  end
+  firstReady(nurseryState)
+  local stopSnapshot=clientUI.ownerSnapshot.subscribe(firstReady)
+  clientUI.things=things
+  gameMenu.callbacks.things=things
+  clientUI.coach.options.things=things
+  clientUI.attract.options.single=Things.on
+  clientUI.attract.options.quiet=function()return clientUI.coach.garden~=nil end
+  -- Twice a second while on: the race's station follows the live gate, and a race joined clears the New dot.
+  local running=0
+  local function sync()
+   running+=1
+   local mine=running
+   if not Things.on()then
+    trail:stop("off")
+    clientUI.attract:extra("Dash",nil)
+    return
+   end
+   task.spawn(function()
+    while mine==running and Things.on()do
+     local good,why=pcall(function()
+      local dash=dashNow()
+      clientUI.attract:extra("Dash",if dash then dashGate()else nil,dash~=nil and dash.raced)
+      if clientUI.dash and clientUI.dash.seat then things.seen("dash")end
+     end)
+     if not good then warn("[Things] "..tostring(why));return end
+     task.wait(.5)
+    end
+   end)
+  end
+  local link=Things.changed("page"):Connect(sync)
+  sync()
+  gui.Destroying:Connect(function()running+=1;link:Disconnect();stopSnapshot();trail:destroy()end)
+ end)
+ if not ok then warn("[Things] not mounted: "..tostring(problem))end
+ end)()
 end
 layout()
 updateHud()

@@ -175,7 +175,10 @@ return function(server)
 	-- Overnight 2026-11-14, slice E: the "a friend arrived" card for the earned pet is bit 10.
 	test("petArrived is bit 10: it saves, survives a reload and never disturbs the older bits",function()
 		assert(Coach.Bits.petArrived==10 and Coach.bit("petArrived")==1024 and Coach.validId("petArrived"))
-		assert(Coach.Order[#Coach.Order]=="petArrived","appended, never renumbered")
+		assert(Coach.Order[11]=="petArrived","appended, never renumbered")
+		-- Things to do: 11 to 13 after it. A server without them drops the ids and keeps the bits.
+		assert(Coach.Bits.parkInvite==11 and Coach.Bits.dashIntro==12 and Coach.Bits.dashSeen==13 and Coach.Order[14]=="dashSeen"and #Coach.Order==14)
+		local kept=Coach.merge(Coach.bit("dashSeen"),Coach.bit("fillLine"));assert(Coach.valid({coachMask=kept})and Coach.sanitize(kept)==kept)
 		local h,db=fixture()
 		local quests=Coach.bit("questDone")
 		assert(H.coachMark(h,quests))

@@ -66,6 +66,7 @@ Cards.WelcomeSeconds=5 -- the Welcome pill's time on screen
 Cards.WelcomeFadeIn=.25;Cards.WelcomeFadeOut=.4
 Cards.BoardSeconds=6  -- fill-line and item cards on the board
 Cards.ArrivalSeconds=20 -- the "a friend arrived" card (it has a button, so it stays longer)
+Cards.IntroSeconds=7 -- a Things to do line (it leads somewhere, so it stays a little longer)
 Cards.Width=460
 Cards.Machines=table.freeze({"hatch","style","companions","quests","book"})
 -- Tint (Kit.Tint key) and icon per card.
@@ -482,6 +483,39 @@ function Cards:replayGarden()
  return true
 end
 
+-- Things to do (options.things, set by init.client where it is built; ThingsTips): one more line, on the last branch.
+-- things = {due(ctx) -> id, notice id; blocked(roomFor, started) -> reason or nil; show(id)}. Marked and counted only
+-- once it is really on the rail; a line that something interrupts before then is not, and comes back later.
+function Cards:showIntro(id,notice,vars)
+ local things=self.options.things
+ local fill={pet=type(vars)=="table"and vars.pet or nil}
+ local current={id=id,kind="intro",elapsed=0,duration=Cards.IntroSeconds,line={text=Notices.title(notice,fill),icon="?",notice=notice}}
+ self.garden=current
+ current.rail=require(script.Parent.NotificationRail).enqueue(self.host,"things:"..id,{text=current.line.text,icon="?",priority=-1,active=false,
+  duration=Cards.IntroSeconds,
+  activate=function()
+   if self.garden~=current then return end
+   require(script.Parent.HowItWorks).openNotice(notice,{vars=fill,run=function()things.show(id)end})
+  end,
+  onShown=function()
+   if self.garden~=current then return end
+   current.presented=true
+   self.introShown=(self.introShown or 0)+1;self.introAt=self.lastNow
+   self:mark(id)
+  end,
+  onDone=function()if self.garden==current then self:hideGarden()end end})
+ self.gardenView.root.Visible=false
+end
+function Cards:stepIntro(now,base,vars,roomFor)
+ local things=self.options.things
+ if not things then return end
+ local ok,id,notice=pcall(things.due,{mask=base.mask,seen=base.seen,totalWins=base.totalWins,owned=base.owned,
+  shown=self.introShown,lastAt=self.introAt,now=now,roomFor=roomFor})
+ if not ok then
+  warn("[Things] tips: "..tostring(id))
+  self.options.things=nil
+ elseif id then self:showIntro(id,notice,vars)end
+end
 -- Per frame. ctx (from the caller): mode ("Board"|"Room"), canRoam, presented (the board
 -- is on screen), phase, over, merges, drops, pressure, belt (items on the belt), owned,
 -- input, open = {hatch, style, companions, quests, book} (machine screens open), used
@@ -490,6 +524,7 @@ end
 function Cards:step(now,ctx)
  self.owned=ctx.owned or self.owned
  self.companionId=ctx.companionId
+ if self.options.things then self.stepCtx=ctx end
  local base=self:ctx(ctx)
  local dt=math.max(0,now-(self.lastNow or now));self.lastNow=now
  -- A tip or notice card is open (How it works, a notice, the garden tour): the garden
@@ -508,6 +543,8 @@ function Cards:step(now,ctx)
   if current.rail and current.rail:isVisible()and Cards.clockRuns(ctx,current.kind)then current.elapsed+=dt end
   local elapsed=current.elapsed
   local gone=elapsed>=current.duration
+   or(current.kind=="intro"and(self.options.things==nil
+    or self.options.things.blocked(if self.roomSince then now-self.roomSince else 0,if current.presented then "shown"else "queued")~=nil))
    or((current.kind=="beat"or current.kind=="arrival")and not Cards.gardenOpen(ctx))
    or(current.machine and not(ctx.open and ctx.open[current.machine]))
   if gone then
@@ -556,6 +593,8 @@ function Cards:step(now,ctx)
    if Coach.wants("questDone",base)then self:showGarden("questDone","once",vars,now)end
   elseif ctx.canRoam and ctx.used and ctx.used.Park and Coach.wants("park",base)then
    self:showGarden("park","once",vars,now)
+  else
+   self:stepIntro(now,base,vars,roomFor)
   end
  end
  -- Board ------------------------------------------------------------------

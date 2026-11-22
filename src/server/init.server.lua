@@ -109,6 +109,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.LevelsConfi
 task.spawn(function()local ok,problem=pcall(function()require(script.DashConfig).start()end);if not ok then warn("[Dash] config not started: "..tostring(problem))end end)
 -- Frutiger Aero off switch (AeroConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.AeroConfig).start()end);if not ok then warn("[Aero] config not started: "..tostring(problem))end end)
+-- Things to do off switches (ThingsConfig): the same way, two keys. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.ThingsConfig).start()end);if not ok then warn("[Things] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -835,6 +837,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.DashConfig).command(message) end) end)
 		-- "/aero <on|off|clear>" and "/aero <lime|coral>": the Frutiger Aero look, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.AeroConfig).command(message) end) end)
+		-- "/todo <on|off|clear>" and "/todo tips <on|off|clear>": the Things to do switches, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.ThingsConfig).command(message) end) end)
 		player.Chatted:Connect(function(message)
 			local amount = type(message) == "string" and tonumber(string.match(message, "^%s*/stars%s+(%d+)%s*$"))
 			if not amount or boards[player] ~= board or board.closing then return end
@@ -1652,6 +1656,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	-- (flushCoach). Unknown ids are dropped; a bit already saved or queued costs nothing.
 	if action=="coachMark"then
 		if not CoachMarks.validId(value)then return end
+		if CoachMarks.Gated[value]and not require(ReplicatedStorage.Shared.Things).allows(CoachMarks.Gated[value])then return end
 		if board.firstSession then
 			if value=="gardenIntro"then board.firstSession:advance(5)
 			elseif value=="hatch"or value=="style"or value=="companions"or value=="quests"or value=="book"then board.firstSession:advance(6)end

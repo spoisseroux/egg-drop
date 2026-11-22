@@ -198,6 +198,10 @@ local Table={
    Petting="Your pet is busy",Hatching="Finish hatching first",Saving="Saving. Try again soon",Queued="You're next in line",WrongBand="That race is for other levels. You're next!",
    Full="The line is full",Off="The race has stopped",Error="The race has stopped",Empty="The race has stopped",Deck="You left the race",Left="You left the race",
    PetChanged="You changed pets",AlreadySeated="You're already in",Throttled="One moment",StalePet="Try again in a moment",other="Can't race right now"}},
+ -- Things to do (V3-THINGS-TO-DO-PLAN-2026-11-22): the Pocket menu tile, its page and the trail's marker.
+ things={title="Things to do",new="New",play="Play",show="Show me",tile={line="Every game in the garden",short="Things"},
+  deck={name="Pocket Deck",line="Play a round"},
+  dash={gather="Race: {count} of 8",live="A race is on",idle="Start a race",prizes="Stars races today: {done} of {total}"}},
  park={waitIdle="Pets are playing",count="Pets playing {count}/{capacity}",full="Park full · {count}/{capacity}",otherHasRoom="The other park has room",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
  onboarding={
@@ -306,7 +310,8 @@ local Table={
     e={title="Say hi to your pet",line="Walk up to your pet and press E to say hi, then hold E to pet it.",
      linePad="Walk up to your pet and press X to say hi, then hold X to pet it.",lineTouch="Tap your pet to say hi, then rub to pet it."},
     b={title="Quests and dailies",line="Open the Menu and pick Quests. Three daily quests and a once-a-day stamp pay Stars."},
-    c={title="Customize",line="Open Companions to recolour and dress your pet. New pieces hatch from eggs."}},
+    c={title="Customize",line="Open Companions to recolour and dress your pet. New pieces hatch from eggs."},
+    f={title="Things to do",line="Find every game in Things to do."}},
    book={title="Collection book",
     a={title="Collect",line="Every ball, plate, outfit and toy you own gets a spot in the book."},
     b={title="Milestones",line="Fill a page to 25, 50, 75 and 100% to claim Stars. Each pays once."},
@@ -314,6 +319,12 @@ local Table={
    park={title="Pet Park",
     a={title="Play dates",line="Bring your pet in to play. Three play dates a day pay Stars."},
     b={title="Busy park",line="When every spot is taken, pets mingle and wait their turn."}},
+   -- Listed only while the race is on; card d only while its prizes are.
+   dash={title="Garden Dash",
+    a={title="Run",line="Your pet runs. You help."},
+    b={title="Jump",line="Tap Jump at each hoop."},
+    c={title="Dash",line="Hold Dash to zoom. Let go to rest."},
+    d={title="Stars",line="Two Stars a race, five races a day."}},
   },
   quests={
    eyebrow="Quests",
@@ -335,6 +346,7 @@ local Table={
    Customize={name="Deck style",line="Faceplates, backgrounds and balls"},
    Journal={name="Companions",line="Dress up and care for your pets"},
    Park={name="Pet Park",line="Pets play here. Play dates pay Stars"},
+   Dash={name="Garden Dash",line="Race your pet. It's free!"},
   },
  },
  -- QA v2 track R4 (Wardrobe, Customize, Deck style content). `equipped` / `inUse`: the
@@ -503,7 +515,7 @@ local Table={
  -- there. `pill` is the wording of the pills themselves.
  notice={
   label={what="What it means",next="What to do next"},
-  go={quests="Open Quests",hatch="Open Hatch eggs",companions="Open Companions",menu="Open the Menu"},
+  go={quests="Open Quests",hatch="Open Hatch eggs",companions="Open Companions",menu="Open the Menu",show="Show me"},
   pill={tip="Tip: {title}",firstSpend="Hatch your first egg"},
   welcome={title="Your first round",what="Drop eggs into the deck. Two of the same kind merge into a bigger one.",
    next="Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars."},
@@ -533,6 +545,10 @@ local Table={
    next="Open Hatch eggs and choose the Toy Egg. The odds are on every label."},
   bond={title="Bond grew",what="Hearts show how close you and {pet} are. Each new level unlocks a trick.",
    next="Keep petting, playing rounds and going on Play dates. The hearts are in Companions."},
+  -- Things to do: the lines that lead to a game (ThingsTips).
+  parkInvite={title="Pet Park",what="{pet} wants to play.",next="Tap Show me and follow the trail to the park."},
+  dashIntro={title="Garden Dash",what="Race your pet. It's free!",next="Tap Show me and follow the trail to the race."},
+  dashNew={title="New in the garden",what="Garden Dash is open.",next="Race your pet. It's free! Tap Show me to find it."},
  },
  -- Round 3 (Spencer 2026-11-20): the confirm dialog (ConfirmDialog) for big spends and actions
  -- that can't be undone; it replaces "press again" confirms.

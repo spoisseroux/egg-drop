@@ -52,7 +52,7 @@ SECTION_NOTES = {
     "shop": "Shop status and errors", "items": "Round item notes", "menu": "Pause menu",
     "hub": "Pocket menu (machine hub)", "pause": "Pause menu", "quests": "Quest log",
     "wardrobe": "Wardrobe screen", "companions": "Companions screen", "pet": "Petting reward",
-    "book": "Collection book", "park": "Pet Park chip", "stamp": "Stamp card", "report": "Bug report sheet",
+    "book": "Collection book", "park": "Pet Park chip", "things": "Things to do page", "stamp": "Stamp card", "report": "Bug report sheet",
     "onboarding": "First-round coaching", "coach": "First-round coaching",
 }
 SAMPLE = {"count": 3, "heat": "Medium", "low": 6, "high": 8, "pet": "Bear", "reward": 5, "item": "Squeaky Bone",

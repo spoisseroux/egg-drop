@@ -29,10 +29,14 @@ Notice.ById=table.freeze({
  -- The first egg, and bond.
  firstSpend=define("hatch","star","egg","hatch"),
  bond=define("companions","paw","smiley","companions"),
+ -- Things to do (ThingsTips): the button lays the trail (each line brings its own `run`).
+ parkInvite=define("companions","paw","target","show"),
+ dashIntro=define("quests","trophy","target","show"),
+ dashNew=define("quests","trophy","target","show"),
 })
 Notice.Order=table.freeze({"welcome","firstStars","locked","machines","hub","quest","customize","fillLine","item",
- "questDone","questReady","questClaimed","firstSpend","bond"})
-Notice.Targets=table.freeze({"quests","hatch","companions","menu"})
+ "questDone","questReady","questClaimed","firstSpend","bond","parkInvite","dashIntro","dashNew"})
+Notice.Targets=table.freeze({"quests","hatch","companions","menu","show"})
 -- Values every line can be filled from when the caller has none.
 Notice.Defaults=table.freeze({pet="your pet",reward="",quest="A quest"})
 function Notice.has(id)return type(id)=="string"and Notice.ById[id]~=nil end

@@ -16,6 +16,8 @@ return table.freeze({
 		Journal = table.freeze({ hue = "#FF6FAE", light = "#FFC9DC", glyph = "♥", pitch = 0.89, iconHeight = 9.5 }),
 		-- Pet Park (QA Q4): over the east gateway; "used" once the player first walks in (no prompt).
 		Park = table.freeze({ hue = "#3FB98A", light = "#C9F7E2", glyph = "★", pitch = 1.06, iconHeight = 6.2 }),
+		-- Garden Dash (Things to do): under the start arch, only while Attract:extra is given the live gate. Not in Order.
+		Dash = table.freeze({ hue = "#FF6B6B", light = "#FFD9D9", glyph = "»", pitch = 1.19, iconHeight = 6.2 }),
 	}),
 	Order = table.freeze({ "Customize", "Eggs", "Journal", "Park" }),
 	BeckonRange = 40, InviteRange = 14,

@@ -122,12 +122,27 @@ return function(client,parent)
     end
     for _,input in ipairs({"Touch","Keyboard","Gamepad"})do
      local g=How.layout(size.X,size.Y,How.cards("garden",input))
-     assert(g.columns==4 and g.panelW<=size.X and g.panelH<=size.Y and g.cardH<=g.viewportH,"garden tour ("..input..") at "..tostring(size))
+     local tour=#How.cards("garden",input)
+     assert(g.columns==(if tour>4 and g.compact then 3 else tour)and g.panelW<=size.X and g.panelH<=size.Y and g.cardH<=g.viewportH,"garden tour ("..input..") at "..tostring(size))
     end
    end
   end)
+  test("Things to do off: the tour is four cards and there is no race set; on: one card more, and Stars only with prizes",function()
+   local Things=require(Shared.Things);local Dash=require(Shared.Dash)
+   local good,why=pcall(function()
+    Things.inject({flags={},studio=true});Dash.inject({flags={GardenDash=true},studio=true})
+    assert(#How.cards("garden")==4 and not How.has("dash")and #How.list()==#How.Order and not How.open("dash"))
+    Things.inject({flags={ThingsToDo=true},studio=true});Dash.inject({flags={GardenDash=true},studio=true,prizes=false})
+    assert(#How.cards("garden")==5 and How.cards("garden")[5].key=="f"and How.has("dash")and #How.list()==#How.Order+1)
+    assert(#How.cards("dash")==3 and #How.Order==6)
+    for _,card in ipairs(How.cards("dash"))do assert(not card.line:find("Star",1,true),card.line)end
+    Dash.inject({flags={GardenDash=true},studio=true});assert(#How.cards("dash")==4)
+    Dash.inject({flags={},studio=true});assert(not How.has("dash"))
+   end)
+   Things.inject(nil);Dash.inject(nil);assert(good,why)
+  end)
   test("the garden tour: four cards that teach machines and the Menu, saying hi, Quests and dailies, and customize",function()
-   local cards=How.cards("garden");assert(#cards==4 and not table.find(How.Order,"garden"),"a tour, not a machine's ? set")
+   local cards=How.cards("garden");assert(#cards==(if require(Shared.Things).on()then 5 else 4)and not table.find(How.Order,"garden"),"a tour, not a machine's ? set")
    local text=""
    for _,card in ipairs(cards)do assert(card.title~=""and card.line~=""and not card.title:find("r3.",1,true));text..=card.title.." "..card.line.." "end
    for _,word in ipairs({"machine","Quests","stamp","Menu","Companions","eggs"})do assert(text:find(word,1,true),"the tour never says "..word)end
