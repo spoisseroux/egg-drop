@@ -769,7 +769,7 @@ function Room:enterDash()
 		self:_useRoomCamera(false)
 	end
 	self:cancelCameraTween()
-	self.dashHeld={camera=camera,shot=PetGreetingShot.capture(camera,root)}
+	self.dashHeld={camera=camera,shot=PetGreetingShot.capture(camera,root),selected=GuiService.SelectedObject}
 	MovementLock.shared():acquire("dash")
 	if GuiService.SelectedObject then GuiService.SelectedObject=nil end
 	camera.CameraType=Enum.CameraType.Scriptable
@@ -805,6 +805,10 @@ function Room:leaveDash()
 	end
 	self.followState=nil
 	if not self.destroyed then self:updateControls()end
+	-- The gamepad goes back to what it had selected, if that can still be selected here.
+	local selected=held.selected
+	if selected and not self.destroyed and self.mode=="Room"and self.target=="Room"and GuiService.SelectedObject==nil
+		and require(script.Parent.DeckKit).focusable(selected)then GuiService.SelectedObject=selected end
 	return true
 end
 

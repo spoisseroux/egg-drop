@@ -1,6 +1,7 @@
 -- Garden Dash cards (V3-DASH-BUILD-PLAN-2026-11-22, slice S7): one small Toy Shell card over a shade, used by the gate
 -- (pick a race) and the results. One is open at a time; its ScreenGui is made for it and goes with it.
---   Card.open({playerGui, name, title, lines={text}, buttons={{name, text, act(), primary?}}, back()}) -> card
+--   Card.open({playerGui, name, title, lines={text}, buttons={{name, text, act(), primary?}}, back()}) -> card, or nil
+--   when it could not be drawn (nothing is left behind: no shade, no binding, no gui)
 -- Enter / A press the first (or the selected) button; B, Backspace or the round key go back.
 local ContextActionService=game:GetService("ContextActionService")
 local GuiService=game:GetService("GuiService")
@@ -37,10 +38,20 @@ function Card.open(options)
 	root.Name="Root";root.BackgroundTransparency=1;root.Size=UDim2.fromScale(1,1);root.Parent=gui
 	gui.Parent=options.playerGui
 	self.gui,self.root=gui,root
-	self.shade=Kit.modalShade(root,"DashShade",10)
-	Kit.shadeOpen(self,self.shade)
-	self:build()
-	self.connection=root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:build()end)
+	local ok,problem=pcall(function()
+		self.shade=Kit.modalShade(root,"DashShade",10)
+		Kit.shadeOpen(self,self.shade)
+		self:build()
+		self.connection=root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+			local drawn,trouble=pcall(self.build,self)
+			if not drawn then warn("[Dash] card: "..tostring(trouble));self:back()end
+		end)
+	end)
+	if not ok then
+		warn("[Dash] card: "..tostring(problem))
+		self:close()
+		return nil
+	end
 	ContextActionService:BindActionAtPriority(Card.Action,function(_,state,input)
 		local Confirm=require(script.Parent.ConfirmDialog)
 		if Confirm.isOpen()then return Enum.ContextActionResult.Pass end
@@ -105,8 +116,8 @@ function Card:close()
 	if self.closed then return end
 	self.closed=true
 	ContextActionService:UnbindAction(Card.Action)
-	self.connection:Disconnect()
-	Kit.shadeClose(self)
+	if self.connection then self.connection:Disconnect()end
+	pcall(Kit.shadeClose,self)
 	local selected=GuiService.SelectedObject
 	if selected and selected:IsDescendantOf(self.gui)then GuiService.SelectedObject=nil end
 	self.gui:Destroy()

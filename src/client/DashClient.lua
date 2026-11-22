@@ -123,7 +123,7 @@ function Client:open()
 	prompt.KeyboardKeyCode,prompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
 	prompt.RequiresLineOfSight=false;prompt.HoldDuration=0;prompt.MaxActivationDistance=Client.PromptReach;prompt.Enabled=false
 	prompt.Parent=sign
-	on(prompt.Triggered,function()self:gate()end)
+	on(prompt.Triggered,guarded(self.gate))
 	self.prompt=prompt
 	require(script.Parent.NotificationRail).holder=function()return self:held()end
 	d.roomView.dash=self
@@ -238,6 +238,7 @@ function Client:gate()
 		buttons={{name="Fun",text=UICopy.get("dash.fun"),primary=true,act=go("join","fun")},
 			{name="Stats",text=UICopy.get("dash.stats"),act=go("join","stats")},
 			{name="Trial",text=UICopy.get("dash.trial"),act=go("trial")}}})
+	if not self.card then self:notify("dash.reason.other")end
 end
 
 -- Events -----------------------------------------------------------------------------------------------------
@@ -274,12 +275,16 @@ function Client:event(packet)
 		if seat and seat.phase~="done"and(packet.raceId==nil or packet.raceId==seat.raceId)then self:endSeat()end
 		self:notify("dash.reason."..tostring(packet.reason))
 	elseif kind=="aborted"then
-		if seat and packet.r==seat.raceId then self:endSeat();self:notify("dash.reason.Off")end
+		if seat and packet.r==seat.raceId then self:endSeat();self:notify("dash.reason."..tostring(packet.reason))end
 	elseif kind=="cup"then self:notify("dash.newCup")
 	elseif seat and seat.predict and packet.r==seat.raceId then
 		if kind=="refusedInput"then
 			seat.predict:refused(packet.n)
-			if self.core then self.core.down=self:dashDown(seat)end
+			local core=self.core
+			if core then
+				core.down=self:dashDown(seat)
+				if not core.open then core:loseAll()end -- a refused dashUp is sent again: nobody is holding it now
+			end
 		elseif kind=="zoom"then
 			if seat.predict:zoom(packet.tick)then self:say("dash.zoom")end
 		elseif kind=="judged"then
@@ -507,6 +512,12 @@ end
 function Client:hold(seat)
 	local room=self.d.roomView
 	local want=room.mode=="Room"and room.target=="Room"and not self.d.modalOpen()
+	if self.holding and not room.dashHeld then
+		-- RoomView let go by itself (a mode switch that came back, a camera restore).
+		self.holding=false
+		self.input.close()
+		self.hud:hide()
+	end
 	if want and not self.holding then
 		if not room:enterDash()then return false end
 		self.holding=true
@@ -611,7 +622,7 @@ function Client:showResults(seat)
 			self:endSeat()
 			if not self.pending then self:send(if seat.trial then "trial"else "join",if seat.trial then nil else seat.mode)end
 		end},{name="Done",text=UICopy.get("dash.done"),act=done}},back=done})
-	self.card.results=true
+	if self.card then self.card.results=true else done()end -- no card: never a race nobody can put away
 end
 
 -- Four times a second: the prompt, the line at the gate, pings, the saved receipt.

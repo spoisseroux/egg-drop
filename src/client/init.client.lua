@@ -4531,9 +4531,12 @@ gui.Destroying:Connect(function()
 	table.clear(eggViews);table.clear(viewsById);table.clear(pixelMerges)
 end)
 -- QA Q2.5: alt-tab back with a menu screen open keeps the cursor free and the camera off the mouse.
--- `others`: every screen but the Garden Dash cards (DashClient asks).
+-- `others`: every screen but the Garden Dash cards (DashClient asks). Where Dash is built (never live) the naming
+-- screen and the snack reveal count too, so a race never takes the camera under them.
 clientUI.anyModalOpen=function(others)
- return(not others and clientUI.dash~=nil and clientUI.dash:panelOpen())or(clientUI.hub~=nil and clientUI.hub:isOpen())or(clientUI.wardrobe~=nil and clientUI.wardrobe:isOpen())or(clientUI.book~=nil and clientUI.book:isOpen())
+ return(not others and clientUI.dash~=nil and clientUI.dash:panelOpen())
+  or(clientUI.dash~=nil and((clientUI.names~=nil and clientUI.names.isOpen())or(clientUI.snacks~=nil and clientUI.snacks.reveal~=nil and clientUI.snacks.reveal:isOpen())))
+  or(clientUI.hub~=nil and clientUI.hub:isOpen())or(clientUI.wardrobe~=nil and clientUI.wardrobe:isOpen())or(clientUI.book~=nil and clientUI.book:isOpen())
   or(clientUI.stats~=nil and(clientUI.stats.isOpen()or clientUI.stats.isBusy()))
   or isPickerOpen()or(journal~=nil and journal.shade.Visible)or(nurseryView~=nil and nurseryView:isOpen())or clientUI.isHueOpen()
   or(gameMenu~=nil and(gameMenu:isOpen()or gameMenu.shade.Visible))or(modal~=nil and modal.Visible)

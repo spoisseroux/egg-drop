@@ -29,7 +29,7 @@ CLIENT = ["DashPredict", "DashCamera", "DashInput", "DashHud", "DashClient"]
 SPECS += CLIENT
 STUBS = {
     "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
-    "PetFactory": "return{}", "DeckKit": "return{}", "NotificationRail": "return{}",
+    "PetFactory": "return{}", "DeckKit": "return{focusable=function(object)return object.ok==true end}", "NotificationRail": "return{}",
     "ConfirmDialog": "return{isOpen=function()return false end}",
 }
 
@@ -42,10 +42,13 @@ def client_modules():
     hooks = room[room.index("function Room:enterDash()"):room.index("function Room:retryArrivalPlacement()")]
     out["client/RoomViewDash"] = (
         "local Room={};Room.__index=Room\nRoom.lock=require(script.Parent.MovementLock).new({})\nlocal MovementLock={shared=function()return Room.lock end}\n"
-        "local GuiService={}\nlocal PetGreetingShot={capture=function(camera,root)return{camera=camera,root=root,position=root and root.Position,"
+        "local GuiService={}\nRoom.gui=GuiService\nlocal PetGreetingShot={capture=function(camera,root)return{camera=camera,root=root,position=root and root.Position,"
         "transform=camera.CFrame,focus=camera.Focus,fov=camera.FieldOfView}end,\nrestore=function(saved,camera,root)if not saved or saved.camera~=camera or "
         "saved.root~=root or not root then return false end;camera.CFrame,camera.Focus,camera.FieldOfView=saved.transform,saved.focus,saved.fov;return true end}\n"
         + hooks + "\nreturn Room")
+    init = (ROOT / "src/client/init.client.lua").read_text(encoding="utf-8")
+    modal = init[init.index("clientUI.anyModalOpen=function(others)"):init.index("-- QA v2 R2.1/R2.2: the same edge")]
+    out["client/InitModal"] = "return function(clientUI,isPickerOpen,journal,nurseryView,gameMenu,modal)\n" + modal + "\nreturn clientUI.anyModalOpen\nend"
     out["client/MovementLock"] = (ROOT / "src/client/MovementLock.lua").read_text(encoding="utf-8")
     return out
 

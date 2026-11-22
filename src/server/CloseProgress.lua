@@ -1,9 +1,14 @@
 -- Drain retained writes and the earned round before releasing its fenced lease.
 local Close = {}
+Close.Timeout = 20
+-- What is left of the drain after `spent` seconds of settling first, so both fit under BindToClose's 25 s.
+function Close.remaining(spent)
+	return math.max(2, Close.Timeout - math.max(0, spent))
+end
 function Close.drain(hatching, handle, payout, options)
 	options = options or {}
 	local now, wait = options.now or os.clock, options.wait or task.wait
-	local deadline = now() + (options.timeout or 20)
+	local deadline = now() + (options.timeout or Close.Timeout)
 	local backoff = .5
 	while now() < deadline do
 		if handle.busy then

@@ -7,6 +7,7 @@
 return function(server)
 	local Shared=game:GetService("ReplicatedStorage").Shared
 	local Levels=require(Shared.Levels)
+	local Dash=require(Shared.Dash)
 	local Shelf=require(Shared.WeeklyShelf)
 	local Wear=require(Shared.WearableCatalog)
 	local Variants=require(Shared.WearableVariants)
@@ -82,6 +83,8 @@ return function(server)
 		return H.load(1,{rank=1},adapter),db,c
 	end
 	local ok,problem=pcall(function()
+		-- The goldens are from before Garden Dash, which adds its own snapshot key while it is on (DashOffParity).
+		Dash.inject({flags={GardenDash=false},studio=true})
 		for _,off in ipairs(OFF)do test("off ("..tostring(off).."): 200 shelf weeks, every Book page, every shop list and price, toys and eggs are the live build's",function()
 			levels(off)
 			shelf();book();eggs()
@@ -111,6 +114,7 @@ return function(server)
 			levels(off)
 			local h,db,c=fixture()
 			assert(h.status=="Ready"and keys(H.public(h).statEgg)==GOLD.statEgg and keys(H.public(h).petStats)==GOLD.petStats)
+			assert(H.public(h).dash==nil,"Garden Dash off: no snapshot key")
 			assert(keys(H.public(h))==GOLD.public,keys(H.public(h)))
 			assert(keys(db.player_1.hatching)==GOLD.saved,keys(db.player_1.hatching))
 			assert(H.parkPlay(h,"p1",1,"pip"))
@@ -137,7 +141,7 @@ return function(server)
 			assert(keys(S.publicLevels(h.state))=="pets v","the public attribute is unchanged")
 		end)
 	end)
-	Levels.inject(nil)
+	Levels.inject(nil);Dash.inject(nil)
 	assert(ok,problem)
 	return{passed=#cases,cases=cases}
 end

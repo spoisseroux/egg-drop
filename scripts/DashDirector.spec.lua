@@ -218,6 +218,16 @@ return function(server)
 	test("leaving a trial, or a trial whose seat fails, frees the pet and pays nothing",function()
 		local c=rig();c.d:trial(1);assert(c.d:leave(1)and c.tags[1]==nil);c.d:trial(2);c.refuse[2]={reason="Deck",stage="seat"};c.run(1);assert(c.tags[2]==nil and #c.finished==0)
 	end)
+	test("a trial dropped for a reason (another pet, the Deck) says so once; leaving it yourself says nothing",function()
+		for _,reason in ipairs({"PetChanged","Deck"})do
+			local c=rig();local sent={};c.d.options.event=function(id,packet)table.insert(sent,{id=id,packet=packet})end
+			local _,_,id=c.d:trial(1);table.clear(sent)
+			assert(c.d:leave(1,reason)and c.tags[1]==nil and #sent==1 and sent[1].id==1)
+			assert(sent[1].packet.kind=="aborted"and sent[1].packet.r==id and sent[1].packet.reason==reason)
+			c.d:leave(1,reason);assert(#sent==1)
+			c.d:trial(1);table.clear(sent);c.d:leave(1);assert(#sent==0)
+		end
+	end)
 	test("twelve trials and a race at once stay inside the step budget",function()
 		local c=rig();for id=1,8 do c.d:join(id,"fun")end;c.until_("race");for id=20,31 do assert(c.d:trial(id))end
 		c.run(4);local start=os.clock();c.run(10);local frame=(os.clock()-start)/600

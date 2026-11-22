@@ -61,5 +61,58 @@ return function(client)
 			assert(Input.zone(0,width)=="dash"and Input.zone(width/2-1,width)=="dash"and Input.zone(width/2,width)=="jump"and Input.zone(width,width)=="jump")
 		end
 	end)
+	-- The device, on stand-in services.
+	local function device()
+		local r=rig()
+		local function signal()
+			local s={list={}}
+			function s:Connect(fn)table.insert(s.list,fn);return{Disconnect=function()table.remove(s.list,table.find(s.list,fn))end}end
+			function s:Fire(...)for _,fn in ipairs(table.clone(s.list))do fn(...)end end
+			return s
+		end
+		local user={InputBegan=signal(),InputEnded=signal(),WindowFocusReleased=signal(),TextBoxFocused=signal(),GamepadDisconnected=signal()}
+		local actions={BindActionAtPriority=function(_,_,fn)r.act=fn end,UnbindAction=function()r.act=nil end}
+		local gui,character={MenuOpened=signal()},signal()
+		r.zones={jump={InputBegan=signal()},dash={InputBegan=signal()}}
+		r.stones={Activated=signal()}
+		r.user,r.gui,r.character=user,gui,character
+		r.left=0
+		r.api=Input.mount({core=r.core,zones=r.zones,stones=r.stones,leave=function()r.left+=1 end,
+			services={UserInputService=user,ContextActionService=actions,GuiService=gui,Players={LocalPlayer={CharacterRemoving=character}}}})
+		function r.key(code,state)return r.act("a",Enum.UserInputState[state],{KeyCode=Enum.KeyCode[code]})end
+		function r.touch(zone,state)
+			local input={UserInputType=Enum.UserInputType.Touch,UserInputState=Enum.UserInputState[state],KeyCode=Enum.KeyCode.Unknown}
+			r.zones[zone].InputBegan:Fire(input)
+			return input
+		end
+		return r
+	end
+	test("a trigger that moves while held keeps Dash down; only End or Cancel lets go",function()
+		for _,last in ipairs({"End","Cancel"})do
+			local r=device();r.api.open()
+			r.key("ButtonR2","Begin");for _=1,20 do r.key("ButtonR2","Change")end
+			assert(r.said()=="dashDown",last)
+			r.key("ButtonR2",last);assert(r.said()=="dashUp")
+			r.key("ButtonR2","Change");assert(r.said()=="")
+		end
+	end)
+	test("a finger that slides over the middle neither jumps nor holds; a fresh touch does",function()
+		local r=device();r.api.open()
+		r.touch("jump","Change");r.touch("dash","Change");r.touch("dash","End");assert(r.said()=="")
+		local held=r.touch("dash","Begin")
+		r.zones.jump.InputBegan:Fire({UserInputType=Enum.UserInputType.Touch,UserInputState=Enum.UserInputState.Change});assert(r.said()=="dashDown","it keeps its half")
+		r.touch("jump","Begin");r.user.InputEnded:Fire(held);assert(r.said()=="jump,dashUp")
+		-- The mouse's own move events never press either.
+		r.zones.jump.InputBegan:Fire({UserInputType=Enum.UserInputType.MouseMovement,UserInputState=Enum.UserInputState.Change});assert(r.said()=="")
+	end)
+	test("window focus, the Roblox menu, a text box, a pulled controller and a respawn each let go; closing unbinds",function()
+		for _,fire in ipairs({function(r)r.user.WindowFocusReleased:Fire()end,function(r)r.gui.MenuOpened:Fire()end,function(r)r.user.TextBoxFocused:Fire()end,
+			function(r)r.user.GamepadDisconnected:Fire()end,function(r)r.character:Fire()end,function(r)r.api.close()end,function(r)r.api.destroy()end})do
+			local r=device();r.api.open();r.key("LeftShift","Begin");r.said();fire(r);assert(r.said()=="dashUp")
+		end
+		local r=device();r.touch("jump","Begin");assert(r.said()=="","not bound yet")
+		r.api.open();r.key("ButtonB","Begin");r.key("ButtonB","End");assert(r.left==1)
+		r.api.close();assert(r.act==nil and not r.api.bound)
+	end)
 	return{passed=#cases,cases=cases}
 end

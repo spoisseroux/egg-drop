@@ -970,9 +970,12 @@ local function closeBoard(board)
 	petHello.state:remove(board.player.UserId)
 	if board.petContact then board.petContact:destroy()end
 	task.spawn(function()
+		local settled = 0
 		if garden.dashHost then
+			local from = os.clock()
 			local ok, problem = pcall(garden.dashHost.settle, garden.dashHost, board)
 			if not ok then warn("[Dash] settle: " .. tostring(problem)) end
+			settled = os.clock() - from
 		end
 		-- Code review: queued Play date / parkGames counts are saved once on leave (the flush loop
 		-- stops at closing), unless a write for them is still in flight or ambiguous.
@@ -983,6 +986,7 @@ local function closeBoard(board)
 		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout, {
 			profileFlush = function() return Progress.flushOnce(board.profile) end,
 			dash = garden.dashHost and garden.dashHost:drain(board) or nil,
+			timeout = CloseProgress.remaining(settled),
 		})
 		if not ok then warn("Egg Drop close save did not finish:", reason) end
 		closing[board] = nil

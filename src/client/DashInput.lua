@@ -55,12 +55,11 @@ end
 -- Which part of the screen a touch at x is for.
 function Input.zone(x,width)return if x>=width/2 then "jump"else "dash"end
 
--- options: core, zones (GuiObjects: {jump, dash}), stones (GuiButton), leave()
+-- options: core, zones (GuiObjects: {jump, dash}), stones (GuiButton), leave(), services (specs: stand-ins by name)
 function Input.mount(options)
-	local UserInputService=game:GetService("UserInputService")
-	local ContextActionService=game:GetService("ContextActionService")
-	local GuiService=game:GetService("GuiService")
-	local Players=game:GetService("Players")
+	local function service(name)return options.services and options.services[name]or game:GetService(name)end
+	local UserInputService,ContextActionService=service("UserInputService"),service("ContextActionService")
+	local GuiService,Players=service("GuiService"),service("Players")
 	local Keys=Enum.KeyCode
 	local core=options.core
 	local api={bound=false}
@@ -77,13 +76,15 @@ function Input.mount(options)
 		end
 		local action=actions[key]
 		if not action then return Enum.ContextActionResult.Pass end
+		-- Change (a trigger squeezed further, or eased) is neither a press nor a let go.
 		if state==Enum.UserInputState.Begin then core:begin(key,action)
-		else core:finish(key)end
+		elseif state==Enum.UserInputState.End or state==Enum.UserInputState.Cancel then core:finish(key)end
 		return Enum.ContextActionResult.Sink
 	end
 	local function touch(zone,action)
 		on(zone.InputBegan,function(input)
-			if not api.bound then return end
+			-- A finger that slides in from the other half begins here too, as Change: only a fresh touch counts.
+			if not api.bound or input.UserInputState~=Enum.UserInputState.Begin then return end
 			if input.UserInputType==Enum.UserInputType.Touch then core:begin(input,action)
 			-- A mouse on a touch screen lands on the zone too: click jumps, right button dashes, on either half.
 			elseif input.UserInputType==Enum.UserInputType.MouseButton1 then core:begin("mouse1","jump")

@@ -128,6 +128,66 @@ ui.confirm.restartLine,The board starts over from the beginning.,,Menu text
 ui.confirm.restartTitle,Restart this round?,,Menu text
 ui.confirm.restartYes,Restart,,Menu text
 ui.confirm.yes,Confirm,,Menu text
+ui.dash.again,Race again,,Menu text
+ui.dash.ask.line,"Your pet runs on, but you won't get a ribbon.",,Menu text
+ui.dash.ask.no,Keep racing,,Menu text
+ui.dash.ask.title,Leave the race?,,Menu text
+ui.dash.ask.yes,Leave,,Menu text; also ui.results.leave.narrow
+ui.dash.clear,Nice!,,Menu text
+ui.dash.clover,Lucky clover!,,Menu text
+ui.dash.dash,Dash,,Menu text
+ui.dash.done,Done,,Menu text; also ui.names.reveal.done
+ui.dash.fun,Just for Fun,,Menu text
+ui.dash.gate.line,Your pet runs. Jump the hoops. Hold Dash to zoom!,,Menu text
+ui.dash.gate.modes,Just for Fun: all pets equal. Stats On: your pet's levels count.,,Menu text
+ui.dash.gather,{name} · {count} of 8 · {left},,Menu text; e.g. Pet Park · 3 of 8 · {left}
+ui.dash.go,GO!,,Menu text
+ui.dash.jump,Jump,,Menu text; also ui.stats.name.jump
+ui.dash.leave,Leave race,,Menu text
+ui.dash.medal.bronze,Bronze cup time!,,Menu text
+ui.dash.medal.gold,Gold cup time!,,Menu text
+ui.dash.medal.silver,Silver cup time!,,Menu text
+ui.dash.newCup,You won a cup!,,Menu text
+ui.dash.ordinal.p1,1st,,Menu text
+ui.dash.ordinal.p2,2nd,,Menu text
+ui.dash.ordinal.p3,3rd,,Menu text
+ui.dash.ordinal.p4,4th,,Menu text
+ui.dash.ordinal.p5,5th,,Menu text
+ui.dash.ordinal.p6,6th,,Menu text
+ui.dash.ordinal.p7,7th,,Menu text
+ui.dash.ordinal.p8,8th,,Menu text
+ui.dash.perfect,Perfect!,,Menu text
+ui.dash.prompt,Race,,Menu text
+ui.dash.puff,Phew!,,Menu text
+ui.dash.queue,You're next in line,,Menu text; also ui.dash.reason.Queued
+ui.dash.reason.AlreadySeated,You're already in,,Menu text
+ui.dash.reason.Busy,Your pet is busy,,Menu text; also ui.dash.reason.Petting
+ui.dash.reason.Carried,Put your pet down first,,Menu text
+ui.dash.reason.Deck,You left the race,,Menu text; also ui.dash.reason.Left
+ui.dash.reason.Empty,The race has stopped,,"Menu text; also ui.dash.reason.Error, ui.dash.reason.Off"
+ui.dash.reason.Far,Come closer to the gate,,Menu text
+ui.dash.reason.Full,The line is full,,Menu text
+ui.dash.reason.Hatching,Finish hatching first,,Menu text
+ui.dash.reason.NoCharacter,Try again in a moment,,"Menu text; also ui.dash.reason.StalePet, ui.shop.reason.throttled"
+ui.dash.reason.NoPet,Bring your pet with you,,Menu text
+ui.dash.reason.PetChanged,You changed pets,,Menu text
+ui.dash.reason.Saving,Saving. Try again soon,,Menu text
+ui.dash.reason.Throttled,One moment,,Menu text
+ui.dash.reason.WrongBand,That race is for other levels. You're next!,,Menu text
+ui.dash.reason.other,Can't race right now,,Menu text
+ui.dash.result.best,Best {best} s,,Menu text; e.g. Best {best} s
+ui.dash.result.home,Almost home!,,Menu text; also ui.dash.result.noTime
+ui.dash.result.place,You finished {place}!,,Menu text; e.g. You finished {place}!
+ui.dash.result.stars,+{reward} Stars ({done} of {total} today),,Menu text; e.g. +5 Stars ({done} of 12 today)
+ui.dash.result.time,Time {time} s,,Menu text; e.g. Time {time} s
+ui.dash.result.trial,{time} s!,,Menu text; e.g. {time} s!
+ui.dash.result.tryAgain,Try again for a cup!,,Menu text
+ui.dash.stats,Stats On,,Menu text
+ui.dash.stones,Take the stones,,Menu text
+ui.dash.title,Garden Dash,,Menu text
+ui.dash.trial,Time Trial,,Menu text
+ui.dash.trip,Oops!,,Menu text
+ui.dash.zoom,Zoomies!,,Menu text
 ui.e2.arrived.line,{pet} came to stay in your garden.,,Menu text; e.g. Bear came to stay in your garden.
 ui.e2.arrived.sayHi,Say hi,,Menu text
 ui.e2.arrived.title,A friend arrived!,,Menu text
@@ -402,7 +462,6 @@ ui.names.reason.Retrying,Still saving. Try again in a moment.,,Menu text
 ui.names.reason.SamePiece,Pick two different pieces,,Menu text
 ui.names.reason.Timeout,No answer yet. Try again.,,Menu text
 ui.names.reason.default,Couldn't save. Try again.,,Menu text
-ui.names.reveal.done,Done,,Menu text
 ui.names.reveal.line,Yours for every pet,,Menu text
 ui.names.reveal.sticker,NEW NAME PIECE,,Menu text
 ui.names.reveal.use,Use it,,Menu text
@@ -656,7 +715,6 @@ ui.results.inPlace.noStars,No Stars this round,,Round results screen
 ui.results.inPlace.replay,Replay,,Round results screen
 ui.results.inPlace.total,Total  ★ {count},,Round results screen; e.g. Total  ★ 3
 ui.results.leave.mid,Leave to garden,,Round results screen
-ui.results.leave.narrow,Leave,,Round results screen
 ui.results.leave.wide,Back to the garden,,Round results screen
 ui.results.nudge.again,A win on {heat} pays {low} to {high},,Round results screen; e.g. A win on Medium pays 6 to 8
 ui.results.nudge.up,Brave? {heat} pays {low} to {high},,Round results screen; e.g. Brave? Medium pays 6 to 8
@@ -680,7 +738,6 @@ ui.shop.reason.needStars,Not enough Stars,,Shop status and errors
 ui.shop.reason.needsLevel,Your pet needs a higher level first,,Shop status and errors
 ui.shop.reason.notOwned,Buy it first,,Shop status and errors
 ui.shop.reason.priceChanged,Price changed,,Shop status and errors
-ui.shop.reason.throttled,Try again in a moment,,Shop status and errors
 ui.shop.reason.unowned,Not owned yet,,Shop status and errors
 ui.shop.rolledBack,"Didn't save, so it's back how it was",,Shop status and errors
 ui.shop.short.many,{count} Stars short. One more round?,,Shop status and errors; e.g. 3 Stars short. One more round?
@@ -724,7 +781,6 @@ ui.stats.levelUpReward,{name} {count} · {reward},,Menu text; e.g. Pet Park 3 ·
 ui.stats.max,Top level,,Menu text; also ui.stats.next.top
 ui.stats.name.energy,Energy,,Menu text
 ui.stats.name.heart,Heart,,"Menu text; also catalog.PetCharmCatalog.ById.heart.name, catalog.BookCatalog.Pages.charms.items.4.name"
-ui.stats.name.jump,Jump,,Menu text
 ui.stats.name.power,Power,,Menu text
 ui.stats.name.smarts,Smarts,,Menu text
 ui.stats.name.speed,Speed,,Menu text

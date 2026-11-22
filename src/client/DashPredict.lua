@@ -3,8 +3,8 @@
 -- fixed ticks, so the same accepted inputs and zoomies give the same pet, bit for bit.
 --   * the clock is the server's plus one fixed lead for the whole race (Predict.lead), so an honest input always
 --     reaches the server before its tick is stepped;
---   * a refused input or the server's zoomies edit the log and run the race again from tick 0: nothing is replayed
---     on screen, the drawn pet eases to the new place (EaseSeconds) or snaps when it is SnapCs away;
+--   * a refused input or the server's zoomies edit the log; the next step runs the race again from tick 0, once for
+--     however many came: nothing is replayed on screen, the drawn pet eases to the new place (EaseSeconds) or snaps when it is SnapCs away;
 --   * the server's 10 Hz states are checked against what was drawn for that tick; two that still disagree after
 --     ConfirmTicks (so a correction on its way has landed) and the race is drawn from the server's states alone.
 -- The result only ever comes from the server.
@@ -36,7 +36,7 @@ function Predict.new(options)
 		plan={mode=plan.mode,count=1,layout=plan.layout,lanes={lane},clovers=plan.clovers,cloverHurdle=plan.cloverHurdle,zoomies={}},
 		levels=if type(options.levels)=="table"then options.levels else{},
 		log={},n=0,zooms={},history=buffer.create(2*(Sim.MaxTicks+2)),
-		target=-1,fraction=0,ease=0,easeLeft=0,mismatches=0,pending=nil,serverRender=false,rebuilds=0,
+		target=-1,fraction=0,ease=0,easeLeft=0,mismatches=0,pending=nil,serverRender=false,dirty=false,rebuilds=0,
 		seenTick=0,seenClover=0,seenPuffs=0},Predict)
 	self:fresh()
 	return self
@@ -53,6 +53,7 @@ local function tick(self)
 end
 -- Brings the race to the clock. Call once a frame; presses made between frames land on the next tick.
 function Predict:step(now,dt)
+	if self.dirty then self:rebuild()end
 	local clock=(now-self.goAt+self.lead)*Stats.TicksPerSecond
 	local target=math.floor(clock)
 	self.target=target
@@ -97,6 +98,7 @@ end
 
 -- Corrections ------------------------------------------------------------------------------------------------
 function Predict:rebuild()
+	self.dirty=false
 	local upTo,before=self.race.tick,self:cs()
 	local finished=self.runner.finishUs
 	self:fresh()
@@ -123,7 +125,7 @@ function Predict:refused(n)
 	for i=#self.log,1,-1 do
 		if self.log[i].n==n then
 			table.remove(self.log,i)
-			self:rebuild()
+			self.dirty=true
 			return true
 		end
 	end
@@ -133,7 +135,7 @@ end
 function Predict:zoom(at)
 	if type(at)~="number"or at%1~=0 or at<1 or at>Sim.MaxTicks or self.zooms[at]then return false end
 	self.zooms[at]=true
-	if at<=self.race.tick then self:rebuild()end
+	if at<=self.race.tick then self.dirty=true end
 	return true
 end
 -- A server state for this pet: remembered when it disagrees, judged ConfirmTicks later.

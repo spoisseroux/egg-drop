@@ -158,6 +158,7 @@ function Director:leave(userId,reason)
 	if trial then
 		self.trials[userId]=nil
 		self:call("tag",userId,nil)
+		if reason then self:call("event",userId,{kind="aborted",r=trial.id,reason=reason})end
 		return true
 	end
 	local heat=self.heat

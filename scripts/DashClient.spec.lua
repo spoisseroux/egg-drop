@@ -28,14 +28,16 @@ return function(client,offline)
 	local function pet()return{origin=Vector3.zero,worldScale=.72,model={},update=function()end,destroy=function(self)self.gone=true end,applyGardenPose=function()end}end
 	require(client.PetFactory).create=function()return pet()end
 	-- The screen, the cards and the device.
-	local screen
+	local screen,screenFails
 	Hud.new=function()
 		screen={on=false}
 		return setmetatable({zones={},stones={},show=function()screen.on=true;screen.rest=false end,hide=function()screen.on=false end,rest=function()screen.rest=true end,destroy=function()screen.gone=true;screen.on=false end,
 			say=function(_,text)screen.word=text end,setDigits=function(_,text)screen.digits=text end},{__index=function()return function()end end})
 	end
 	local card
+	local openCard=Card.open
 	Card.open=function(options)
+		if options.name==screenFails then return nil end
 		card={options=options,lines=table.clone(options.lines),closed=false}
 		function card:close()self.closed=true end
 		function card:setLine(i,text)self.lines[i]=text end
@@ -72,8 +74,8 @@ return function(client,offline)
 		r.gui=Instance.new("Folder")
 		r.room={mode="Room",target="Room",held=false,locks=0,frames=0,pet=pet(),companions={active={}},shownPet={id="pip"},
 			garden={petGeneration=function()return 1 end,characterId=function()return 2 end},
-			enterDash=function(room)if room.refuse then return false end;room.held=true;room.locks+=1;return true end,
-			leaveDash=function(room)if room.held then room.held=false;room.locks-=1 end end,
+			enterDash=function(room)if room.refuse then return false end;room.held=true;room.dashHeld={};room.locks+=1;return true end,
+			leaveDash=function(room)if room.held then room.held=false;room.dashHeld=nil;room.locks-=1 end end,
 			dashCamera=function(room)assert(room.held,"the camera only while held");room.frames+=1 end}
 		Rail.enqueue=function(_,key)table.insert(r.notes,key)end
 		Rail.status=function()return{update=function(_,v)r.line=v.text end,cancel=function()r.line=nil end}end
@@ -205,6 +207,52 @@ return function(client,offline)
 		r.room.refuse=true;r.lock();r.frame(3);assert(not r.room.held and r.drawn);r.room.refuse=false;r.frame();assert(r.room.held)
 		r.client:leave();r.done()
 	end)
+	test("a dashUp refused after the buttons closed is sent again, with nobody holding",function()
+		local r=rig();r.lock();r.frame(240);device.core:begin("s","dash")
+		r.modal=true;r.frame();local up=r.inputs[#r.inputs];assert(up.k=="dashUp"and not device.core.open)
+		r.fire({kind="refusedInput",r="race-1",n=up.n,reason="late"})
+		local again=r.inputs[#r.inputs];assert(again~=up and again.k=="dashUp"and again.n>up.n and not device.core.down)
+		r.frame(5);assert(not r.client.seat.predict.runner.dash)
+		r.client:leave();r.done()
+	end)
+	test("a trial the server drops says why and gives everything back",function()
+		local r=rig();r.lock("trial",1,true);r.frame(240);assert(r.room.held)
+		r.fire({kind="aborted",r="trial-1",reason="PetChanged"});assert(r.notes[#r.notes]=="dash.reason.PetChanged");r.free("trial dropped");r.done()
+	end)
+	test("RoomView letting go by itself is noticed: the buttons close and the race takes the camera again",function()
+		local r=rig();r.lock();r.frame(240);device.core:begin("s","dash")
+		r.room:leaveDash();r.room.refuse=true;r.frame()
+		assert(not r.client.holding and not device.bound and not screen.on and r.inputs[#r.inputs].k=="dashUp"and r.room.locks==0)
+		r.room.refuse=false;r.frame(2);assert(r.room.held and r.room.locks==1 and screen.on and device.bound)
+		r.client:leave();r.free("after");r.done()
+	end)
+	test("a card that cannot be drawn leaves no shade; the gate says so and the results still end",function()
+		local Kit=require(client.DeckKit)
+		local shades,plainWarn=0,0
+		Kit.modalShade=function()return{}end
+		Kit.shadeOpen=function()shades+=1 end
+		Kit.shadeClose=function()shades-=1;return true end
+		Kit.measure=function()plainWarn+=1;error("no font")end
+		local gui=Instance.new("Folder")
+		assert(openCard({playerGui=gui,name="Gate",title="T",lines={"a"},buttons={{name="A",text="a",act=function()end}}})==nil)
+		assert(shades==0 and #gui:GetChildren()==0)
+		local r=rig();screenFails="Gate";r.client:gate();assert(r.client.card==nil and not r.client:panelOpen()and r.notes[#r.notes]=="dash.reason.other")
+		r.client.prompt.Triggered:Fire();assert(r.client.errors==0)
+		screenFails="Results";r.lock();r.frame(5);r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=1,us=41000000})
+		r.client.seat.cardAt=-1;r.frame(20);r.free("no results card")
+		screenFails=nil;r.done()
+	end)
+	test("other screens: Names and the snack reveal hold a race back; without Dash built they change nothing",function()
+		local open={}
+		local function closed()return{isOpen=function()return false end}end
+		local ui={isHueOpen=function()return false end,names={isOpen=function()return open.names==true end},snacks={reveal={isOpen=function()return open.snack==true end}}}
+		local any=require(client.InitModal)(ui,function()return false end,nil,nil,nil,nil)
+		open.names,open.snack=true,true;assert(not any()and not any(true),"live: as before")
+		ui.dash={panelOpen=function()return open.card==true end}
+		assert(any()and any(true));open.names=false;assert(any(true));open.snack=false;assert(not any()and not any(true))
+		open.card=true;assert(any()and not any(true))
+		ui.names,ui.snacks=nil,nil;open.card=false;assert(not any(true));ui.hub=closed();assert(not any(true))
+	end)
 	test("gather: the player walks and the garden is not held; the Deck asks; a queue is left quietly",function()
 		local r=rig()
 		r.fire({kind="joined",raceId="race-1",seat=1,mode="fun"})
@@ -304,6 +352,18 @@ return function(client,offline)
 		room,camera=make();room:enterDash();room.root={Position=Vector3.new(50,2,3),Parent={}};room:leaveDash()
 		assert(camera.CFrame.X==55 and camera.FieldOfView==65 and lock:count()==0,"a new character: behind it")
 		room,camera=make();room:enterDash();workspace.CurrentCamera=nil;room:leaveDash();assert(lock:count()==0)
+		-- The gamepad's selection: put away for the race, given back unless it cannot be or something else has it.
+		local gui,button=Room.gui,{ok=true}
+		for _,case in ipairs({{want=button},{ok=false},{taken=true},{board=true},{gone=true}})do
+			room=make();button.ok=case.ok~=false;gui.SelectedObject=button;room:enterDash();assert(gui.SelectedObject==nil)
+			local other={}
+			if case.taken then gui.SelectedObject=other end
+			if case.board then room.target="Board"end
+			if case.gone then room.destroyed=true end
+			room:leaveDash()
+			assert(gui.SelectedObject==(if case.taken then other else case.want))
+			gui.SelectedObject=nil
+		end
 		for _,odd in ipairs({{mode="Board"},{target="Board"},{busy=true},{destroyed=true},{arrivalPlacementPending=true}})do
 			room=make();for k,v in pairs(odd)do room[k]=v end
 			assert(not room:enterDash()and lock:count()==0)
