@@ -17,3 +17,5 @@ Spencer, asleep: "make decisions ot move forward by urself". Each row is a choic
 | 11 | Dash maths tuned and merged, but nothing uses it yet: idling earns no medal, dashing all the time costs you, stats clamp within a band (7.6% widest gap), luck never beats a run one trip cleaner | Tuned by simulation only; the line still needs a Studio walk and every number is [P] | Nothing to undo: no script requires it |
 | 12 | Fixed the desktop Balls tab (rows 5 to 7 unreachable by mouse) and scroll-to in Balls and Faceplates | Real bugs on live today; in the beta, goes live with your next publish | Revert ed8a1a6 |
 | 13 | Medal ring art, recolours, two level faceplates (Sky Fizz, Storm Glass) and six deck effects are Fable's or drawn from shapes | No outside art used | Per item |
+| 14 | The Garden Dash server is built on branch `worktree-agent-a966b514a7587704c` (2a4ee65) and not merged or published; not code-reviewed, not run in Studio | Without its client a gate would appear with no race behind it | Delete the branch |
+| 15 | Stopped building at about 91% of the weekly limit | Leaves usage for your feedback; it resets 4 PM | |
