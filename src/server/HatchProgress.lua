@@ -1109,6 +1109,20 @@ function Hatching.betaGrantStars(handle, grantId, stars)
 	end, candidate)
 end
 
+-- Private beta and Studio only (Spencer 2026-11-21: "i have too many stars now to test need more
+-- stars?"): the owner's `/stars N` chat command sets the test save's balance to N (0..100000).
+-- Never on the live place: this refuses unless the place is the beta or the session is Studio.
+-- Not a purchase and not a grant: no ledger entry, no Economy event.
+function Hatching.betaSetStars(handle, stars)
+	if game.PlaceId ~= Hatching.BetaPlaceId and not game:GetService("RunService"):IsStudio() then return false, "BetaOnly" end
+	if type(stars) ~= "number" or stars < 0 or stars > 100000 or stars % 1 ~= 0 then return false, "InvalidStars" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	return transact(handle, "betaSetStars:" .. tostring(stars) .. ":" .. tostring(handle.state.revision), handle.state.revision, function(state, c)
+		state.nectar = c.stars
+		return true
+	end, table.freeze({ stars = stars }))
+end
+
 -- Robux purchase grant. The purchase id is the durable idempotency key, so a
 -- repeated ProcessReceipt on any server can never grant twice.
 function Hatching.grantPurchase(handle, purchaseId, stars, once)

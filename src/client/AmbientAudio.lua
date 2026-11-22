@@ -30,8 +30,10 @@ Ambient.Ids = {
 }
 Ambient.OneShots = { "pet_coo_1", "pet_coo_2", "pet_coo_3", "machine_attract" }
 
--- A3 brook bed: bed = 0.22 + 0.18 * smoothstep(1 - d / 45), sampled at 4 Hz, eased 0.5 s.
-Ambient.BedFloor, Ambient.BedPeak, Ambient.BedRange = .22, .40, 45
+-- A3 brook bed: bed = floor + (peak - floor) * smoothstep(1 - d / 45), sampled at 4 Hz, eased 0.5 s.
+-- Spencer 2026-11-21 (beta, phone): "The wind sound is too loud". The always-on brook hiss is
+-- what reads as wind: .22 / .40 -> .12 / .24 (about -5 dB).
+Ambient.BedFloor, Ambient.BedPeak, Ambient.BedRange = .12, .24, 45
 Ambient.BedSample, Ambient.BedEase = .25, .5
 -- A6: round fade out 0.6 s, back over 1.0 s. Deck music voice volume (world music is
 -- BoardAudio.MusicVolume, 0.07). Was .2 for the v3 texture; Spencer's loop is hotter.
@@ -46,8 +48,9 @@ Ambient.Falls = {
 	-- by 2x min and is silent at max, so each fall is heard only on its own bank.
 	-- v834 phone notes: still too loud. Volume halved (.60 / .42 -> .30 / .21) and the
 	-- rolloff tightened about a third (min 9 / 6 -> 6 / 4, max 64 / 42 -> 44 / 30).
-	W7_Water__waterfall_tumble = { anchor = "bottom", lift = 5.8, volume = .30, min = 6, max = 44, speed = .92, offset = 0 },
-	W7_Water__waterfall_sky = { anchor = "top", lift = -.75, volume = .21, min = 4, max = 30, speed = 1.08, offset = 3.7 },
+	-- 2026-11-21 ("wind too loud"): .30 / .21 -> .22 / .15 (about -3 dB).
+	W7_Water__waterfall_tumble = { anchor = "bottom", lift = 5.8, volume = .22, min = 6, max = 44, speed = .92, offset = 0 },
+	W7_Water__waterfall_sky = { anchor = "top", lift = -.75, volume = .15, min = 4, max = 30, speed = 1.08, offset = 3.7 },
 }
 -- A5 birds.
 Ambient.BirdVoices, Ambient.BirdReach, Ambient.BirdChoices = 3, 70, 6

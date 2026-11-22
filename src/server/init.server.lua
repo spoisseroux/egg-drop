@@ -813,6 +813,20 @@ local function addPlayer(player)
 	publishPetAppearance(board)
 	-- Slice E repair-on-join: a pet already earned but not granted yet.
 	if board.profileReady then grantEarned(player, board) end
+	-- Private beta and Studio: the owner can set the test save's Stars with "/stars N" in chat
+	-- (Stars store access testing, Spencer 2026-11-21). Live: never connected.
+	if (game.PlaceId == Nursery.BetaPlaceId or RunService:IsStudio()) and require(ReplicatedStorage.Shared.SimCheck).isOwner(player) then
+		player.Chatted:Connect(function(message)
+			local amount = type(message) == "string" and tonumber(string.match(message, "^%s*/stars%s+(%d+)%s*$"))
+			if not amount or boards[player] ~= board or board.closing then return end
+			if not canProgress(board) or board.nurseryBusy or board.nursery.busy or board.nursery.pending then return end
+			board.nurseryBusy = true
+			local ok = Nursery.betaSetStars(board.nursery, amount)
+			board.nurseryBusy = false
+			if boards[player] ~= board then return end
+			if ok then publishNursery(board); publishState(board) end
+		end)
+	end
 	-- Private beta: the owner's test save gets a one-time 1,000 Star top-up (the Bunny is 400).
 	if game.PlaceId == Nursery.BetaPlaceId and require(ReplicatedStorage.Shared.SimCheck).isOwner(player) then
 		task.spawn(function()

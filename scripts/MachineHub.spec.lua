@@ -71,7 +71,8 @@ return function(client,parent)
     local g=Hub.geometry(W,H,phone)
     assert(g.cols==3 and g.rows==2 and #g.tiles==6)
     local top=if phone then 64 else 84
-    local bottom=if phone then H-12 else 548
+    local bottom=if phone then H-Hub.PhoneBottomPad else 548
+    assert(Hub.PhoneBottomPad>=20,"room under the last row (Spencer 2026-11-21)")
     for i,r in ipairs(g.tiles)do
      assert(r.w>=44 and r.h>=44,W.." tile "..i.." target")
      assert(r.x>=20 and r.x+r.w<=W-20 and r.y>=top and r.y+r.h<=bottom,W.." tile "..i.." inside")

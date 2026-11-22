@@ -8,8 +8,13 @@ return function(client, parent)
 	local function near(a, b, eps) return math.abs(a - b) <= (eps or .005) end
 
 	test("bed gain follows the A3 table and never goes silent", function()
-		for _, row in ipairs({ { 0, .40 }, { 10, .38 }, { 20, .32 }, { 30, .27 }, { 45, .22 }, { 200, .22 } }) do
-			assert(near(Ambient.bedGain(row[1]), row[2], .011), "bed at " .. row[1] .. " = " .. Ambient.bedGain(row[1]))
+		-- The A3 curve's shape (share of the floor-to-peak swing); the levels came down 2026-11-21
+		-- ("wind too loud": floor .12, peak .24).
+		assert(near(Ambient.BedFloor, .12) and near(Ambient.BedPeak, .24))
+		local swing = Ambient.BedPeak - Ambient.BedFloor
+		for _, row in ipairs({ { 0, 1 }, { 10, .89 }, { 20, .56 }, { 30, .28 }, { 45, 0 }, { 200, 0 } }) do
+			local want = Ambient.BedFloor + swing * row[2]
+			assert(near(Ambient.bedGain(row[1]), want, .011), "bed at " .. row[1] .. " = " .. Ambient.bedGain(row[1]))
 		end
 		local last = math.huge
 		for d = 0, 60, 2 do local g = Ambient.bedGain(d); assert(g <= last + 1e-9 and g >= Ambient.BedFloor); last = g end
@@ -23,8 +28,8 @@ return function(client, parent)
 		assert(near(Ambient.streamDistance(Vector3.new(-6, 0, 0), stream), 4), "past the end")
 		local World = require(game.ReplicatedStorage.Shared.WorldV7Data)
 		local onBridge = Ambient.streamDistance(Vector3.new(2.5, 7, 21), World.beams.stream)
-		assert(onBridge < 2 and Ambient.bedGain(onBridge) > .39, "bridge is on the stream")
-		assert(Ambient.bedGain(Ambient.streamDistance(Vector3.new(96, 4, 66), World.beams.stream)) < .25, "arrival dais is far")
+		assert(onBridge < 2 and Ambient.bedGain(onBridge) > Ambient.BedPeak - .01, "bridge is on the stream")
+		assert(Ambient.bedGain(Ambient.streamDistance(Vector3.new(96, 4, 66), World.beams.stream)) < Ambient.BedFloor + .03, "arrival dais is far")
 	end)
 
 	test("QA v775: each waterfall is silent from the spawn lawn and at its own max", function()
@@ -126,7 +131,7 @@ return function(client, parent)
 		local ok, err = pcall(function()
 			a:setRound(false);for _ = 1, 30 do a:step(1 / 30) end
 			assert(a.ambience.Volume > .99 and a.group.Volume == 1, "garden not audible")
-			assert(a.bed > .3, "bridge bed too quiet " .. a.bed)
+			assert(a.bed > Ambient.BedFloor + (Ambient.BedPeak - Ambient.BedFloor) * .5, "bridge bed too quiet " .. a.bed)
 			a:setRound(true)
 			for _ = 1, 30 do a:step(1 / 30) end
 			assert(a.ambience.Volume == 0 and a.mix == 0, "ambience still up in the round")

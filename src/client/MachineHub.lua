@@ -195,9 +195,12 @@ end
 -- is only as tall as the header and two rows (Hub.phoneHeight), centred in the free height, so
 -- its rounded bottom corners are on screen. The desktop panel is unchanged.
 Hub.TileShare=.94
+-- Spencer 2026-11-21 (phone): "The pocket menu needs to be taller on the bottom to add some more
+-- padding space": the gap under the last row (the tiles' lip sits in it) 12 -> 22 px.
+Hub.PhoneBottomPad=22
 -- Pure: the phone sheet height for `free` px of height under the Roblox controls.
 function Hub.phoneHeight(free)
- local y0,gap,pad=64,8,12
+ local y0,gap,pad=64,8,Hub.PhoneBottomPad
  local rows=math.ceil(Hub.Count/Hub.Cols)
  local full=math.floor((free-pad-y0-(rows-1)*gap)/rows)
  local h=math.floor(full*Hub.TileShare)
@@ -205,7 +208,7 @@ function Hub.phoneHeight(free)
 end
 function Hub.geometry(W,H,phone)
  local x0,y0,gap,bottom
- if phone then x0,y0,gap,bottom=20,64,8,H-12 else x0,y0,gap,bottom=24,84,16,548 end
+ if phone then x0,y0,gap,bottom=20,64,8,H-Hub.PhoneBottomPad else x0,y0,gap,bottom=24,84,16,548 end
  local cols=Hub.Cols;local rows=math.ceil(Hub.Count/cols)
  local w=math.floor((W-2*x0-(cols-1)*gap)/cols)
  -- (Round 3: on phones Hub.fit sizes the sheet so these fill it; see Hub.phoneHeight.)

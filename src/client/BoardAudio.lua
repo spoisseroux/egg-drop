@@ -95,7 +95,8 @@ local cues = {
 Audio.PendingCues = {}
 -- World music voice volume. Was 0.13 for the -38 LUFS v3 texture; Spencer's garden
 -- loop is mastered about 6 dB over the -24 dBFS RMS loop target, so it sits lower.
-Audio.MusicVolume = 0.07
+-- Spencer 2026-11-21: "turn up the music a bit in the world": .07 -> .088 (about +2 dB).
+Audio.MusicVolume = 0.088
 local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_chain"}
 table.insert(cues,"hatch_finish")
 -- Only newly reviewed v3 timestamped SFX are eligible here. Rejected/held

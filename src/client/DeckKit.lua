@@ -1458,7 +1458,8 @@ function Kit.wallet(parent,height,options)
  -- unset or refuses (a round, a hatch waiting), the face flashes and nothing else happens.
  if options.tap then
   local tap=node("TextButton",root,{Name="Tap",Text="",AutoButtonColor=false,BackgroundTransparency=1,Selectable=false,
-   Position=UDim2.fromOffset(-4,0),Size=UDim2.new(1,4,1,0),ZIndex=z+8})
+   -- At least 44 px tall (touch target rule; the compact header capsule is 36), centred on it.
+   Position=UDim2.fromOffset(-4,-math.max(0,44-height)/2),Size=UDim2.new(1,4,0,math.max(44,height)),ZIndex=z+8})
   tap:SetAttribute("AccessibleLabel",require(game:GetService("ReplicatedStorage").Shared.UICopy).get("starsShort.wallet"))
   local press=node("UIScale",root,{Name="TapScale"})
   local function settle(scale)TweenService:Create(press,TweenInfo.new(.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=scale}):Play()end
@@ -1917,8 +1918,15 @@ end
 -- shell sheet at 8 with its 3 px ink outline and the moving checker, header hairline at y 60.
 Kit.SheetLip=4
 function Kit.sheet(parent,W,H)
- local bezel=Kit.frame(parent,"SheetBezel",nil,UDim2.fromOffset(6,6),UDim2.fromOffset(W-12,H-12+Kit.SheetLip),18)
+ -- Spencer 2026-11-21 (phone): "fix those sharp unrounded corners at the bottom of each ui". The
+ -- lip was one frame 4 px taller than the rim, so its 18 px arcs sat off the sheet's and left a
+ -- dark wedge at each bottom corner. Now, like a Kit button's Edge, the lip is a copy of the rim
+ -- shifted down SheetLip px: its bottom corners follow the sheet's curve exactly.
+ local lip=Kit.frame(parent,"SheetLipBand",nil,UDim2.fromOffset(6,6+Kit.SheetLip),UDim2.fromOffset(W-12,H-12),18)
+ lip.BackgroundTransparency=0;paint(lip,"BackgroundColor3","shellLip");Kit.stroke(lip,"ink",2,0)
+ local bezel=Kit.frame(parent,"SheetBezel",nil,UDim2.fromOffset(6,6),UDim2.fromOffset(W-12,H-12),18)
  bezel.BackgroundTransparency=0;paint(bezel,"BackgroundColor3","shellLip");Kit.stroke(bezel,"ink",2,0)
+ lip.ZIndex=bezel.ZIndex-1 -- under the rim (children of a Sibling gui still draw over their parent)
  local sheet=Kit.frame(parent,"Sheet","panel",UDim2.fromOffset(8,8),UDim2.fromOffset(W-16,H-16),16);Kit.stroke(sheet,nil,Kit.Stroke.sheet)
  Kit.setSurface(sheet,"dark")
  local tint=Kit.frame(sheet,"Gradient",nil,UDim2.new(),UDim2.fromScale(1,1),16);tint.BackgroundTransparency=1;tint.BackgroundColor3=Color3.new(1,1,1)
