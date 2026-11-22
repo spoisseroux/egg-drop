@@ -21,3 +21,14 @@ Before each publish, keep the cloud localization table current so Roblox auto-tr
 1. `python scripts/export_localization_csv.py` (regenerates `assets/localization/egg-drop-strings.csv` from UICopy + catalogues).
 2. `python scripts/sync_localization.py` (pushes adds/changes and deletes removed strings it created; state in `assets/localization/synced.json`, commit it). It needs `ROBLOX_LOCALIZATION_KEY` (Open Cloud key, scope `legacy-universe:manage`) in `~/.claude/.env`; without it, `--emit DIR` writes PATCH bodies to send through Studio MCP `open_cloud_invoke` (needs that scope granted in Studio's Assistant MCP Permissions), then `--mark-synced`.
 3. Record "translations synced (N add/update, M delete)" in the build's PLAY-BUILD entry.
+
+## Every live version: store listing audit (Spencer, 2026-11-21)
+
+Whenever a new version goes live, audit the store listing against what the version ships, and update whatever is out of date:
+
+1. **Description** (Basic Settings; draft in `artifacts/store-listing/`, keep under ~950 characters and the first line under 160).
+2. **Thumbnails**: both the Experience Detail Page carousel and the separate **Home Page** set.
+3. **Icon**.
+4. **Ads**: running campaign creatives in Ads Manager.
+
+Draft the changes and get Spencer's OK before posting public text or images. Any ad spend change needs his explicit go. Record "listing audited: <what changed / nothing needed>" in the PLAY-BUILD entry.
