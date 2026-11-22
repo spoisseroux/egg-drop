@@ -361,18 +361,18 @@ def t1(tag=True):
     for x, y, r, rot in STARS1:
         gold_star(c, x, y, r, rot)
     bun = cut("S13", 1.03)
-    put(c, bun, 1660, bottom=1040)
+    put(c, bun, 1720, bottom=1040)  # clear of the Bear's cheek
     bear = cut("C1", 1.28)
-    put(c, bear, 1330, bottom=1075)
+    put(c, bear, 1300, bottom=1075)
     for sx, sy, r in SPARK1:
         sparkle(c, sx, sy, r)
     wm = caption(["pocket", "pals"], 700, [0.0, 1.05])
     bi.paste(c, wm, (40, 20))
     if tag:
-        p = chip("merge · hatch · dress up", 50)
+        p = chip("merge · hatch · dress up · train", 50)
         bi.paste(c, p, (40, 20 + wm.height - 10))
         x = 40
-        for txt in (f"{N_TOYS} toys", f"{N_WEAR} outfit items", f"{N_DECKS} decks"):
+        for txt in ("clothes", "colors", "toys", "decks", "stats", "& more"):
             ch = chip(txt, 36)
             bi.paste(c, ch, (x, 20 + wm.height + p.height - 34))
             x += ch.width - 20
