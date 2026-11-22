@@ -45,6 +45,9 @@ local StatCaps=require(game:GetService("ReplicatedStorage").Shared.StatCatalog).
 -- v2 Stat Eggs: optional snackPouch / statEgg fields (StatEggState) and petBoosts (StatState).
 local StatEggs=require(script.Parent.StatEggState)
 local StatEggCatalog=require(ReplicatedStorage.Shared.StatEggCatalog)
+-- Levels matter (2026-11-22): medal eggs are derived from the saved XP (MedalEggs); off = not read.
+local MedalEggs=require(script.Parent.MedalEggs)
+local Levels=require(ReplicatedStorage.Shared.Levels)
 -- v2 pet names: optional names / petNames fields (NameState); earned pieces granted by catchUp.
 local Names=require(script.Parent.NameState)
 local NameCatalog=require(ReplicatedStorage.Shared.NameCatalog)
@@ -362,6 +365,10 @@ function Hatching.load(userId, profile, adapter)
 		Stats.seed(state)
 		-- Code review: a seed problem must never lock a player out; drop the stats instead.
 		if not Stats.valid(state) then state.petStats = nil end
+		-- Levels matter: a malformed medal egg count fails closed (all used). After the seed, which may
+		-- itself earn medals. Never a failed load.
+		local counted, problem = pcall(MedalEggs.sanitize, state)
+		if not counted then warn("Egg Drop: medal egg repair failed:", problem) end
 		-- v2 names (architect review): starters and every earned piece the save already qualifies for.
 		-- Protected: an error or an invalid result restores the old value, never a failed load.
 		Hatching.catchUpNames(state)
@@ -481,7 +488,7 @@ function Hatching.public(handle)
 	-- v2 stats (S1): per owned pet XP, levels and total; Bonus XP left today per stat.
 	public.petStats = Stats.public(state, dayOf(handle.adapter.now()))
 	-- v2 Stat Eggs: pouch, eggs left today, free eggs, the Feast promise and per pet quote keys.
-	public.statEgg = StatEggs.public(state, dayOf(handle.adapter.now()), StatEggCatalog.selectionMode(handle.restricted))
+	public.statEgg = StatEggs.public(state, dayOf(handle.adapter.now()), StatEggCatalog.selectionMode(handle.restricted), Levels.on("medals"))
 	-- v2 names: owned pieces, per-pet names and the Names Egg card (odds or the fixed next piece).
 	public.names = Names.public(state, NameCatalog.selectionMode(handle.restricted))
 	-- Weekly shelf (slice C): the week the server prices with (nil while the shelf is off).
@@ -1538,7 +1545,7 @@ local function snackOperation(handle, signature, operationId, digest, makeCandid
 end
 
 -- Buy and hatch one Stat Egg for `petId` (the pet that is out; the host checks that), paid with
--- Stars or, when `free`, one banked free egg. `quoteKey` is the key the player's card showed
+-- Stars or, when `free`, one banked free egg (then one medal egg, while medals are on). `quoteKey` is the key the player's card showed
 -- (StatEggCatalog.quoteKey): any change to the pool, price, mode, promise or position is
 -- "PoolChanged" with no charge. A restricted (or unknown) policy draws no random number.
 function Hatching.statEggBuy(handle, operationId, petId, free, quoteKey)
@@ -1550,7 +1557,7 @@ function Hatching.statEggBuy(handle, operationId, petId, free, quoteKey)
 		local mode = StatEggCatalog.selectionMode(handle.restricted)
 		local random = mode == "random"
 		return table.freeze({ op = operationId, digest = digest, petId = petId, free = free, quoteKey = quoteKey, mode = mode,
-			day = dayOf(handle.adapter.now()),
+			day = dayOf(handle.adapter.now()), medals = Levels.on("medals"),
 			unitStat = if random then handle.adapter.random() else nil, unitSize = if random then handle.adapter.random() else nil })
 	end, function(state, c)
 		return StatEggs.buy(state, c, dayOf(handle.adapter.now()))

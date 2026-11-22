@@ -7,11 +7,16 @@
 -- The first seven themes keep the hue family per size: blue, orange, green, pink, violet.
 -- The six monotone themes (DECK-LAYOUT-SPEC-v834 2, `mono = true`) are one hue stepped in
 -- value, smallest darkest; with one of them equipped a ball's word is its size.
+local Levels=require(script.Parent.Levels)
 local Themes={Default="smileys",Limit=64}
 -- Bubbles (slice C, overnight 2026-11-14) is appended so the saved order of the first six never moves.
 -- The six monotone themes are appended after it for the same reason.
 Themes.Order={"smileys","marbles","gumdrops","gems","planets","kittens","bubbles",
  "pea_soup","pocket_grey","amber","deep_sea","bubblegum","midnight"}
+-- Themes with a level gate (Levels matter, 2026-11-22): `gate` is a LevelGate gate. They are kept out
+-- of Order, so the shelf, the Book and the shop read exactly what they read before; shops list
+-- Themes.listed(owned). Append-only, and a gate may only be loosened.
+Themes.Gated={"tangerine_pop"}
 -- Icon circles step in size inside a fixed slot so colour is never the only cue
 -- (scope B5/B6: blue and violet look alike without red-green vision).
 Themes.CircleScale=table.freeze({.52,.64,.76,.88,1})
@@ -80,13 +85,28 @@ Themes.ById={
   ramps={ramp("#4E3A9A","#34266E","#9280E6"),ramp("#6650BE","#48388E","#AA98F5"),ramp("#8169DC","#5E4CAE","#C2B4FF"),
    ramp("#9480EE","#7462CC","#DCD2FF"),ramp("#A894FA","#8C78E6","#EEE8FF")},
   pitch="Dark balls with glowing eyes.",names={"Dusk","Plum","Iris","Lilac","Star"}},
+ tangerine_pop={name="Tangerine Pop",tier="common",price=40,face="smiley",texture="none",ink="#2A0E04",mono=true,gate={stat="power",level=10},
+  ramps={ramp("#C24A10","#8A3208","#F08A4E"),ramp("#DE6418","#AA480E","#FFAA6E"),ramp("#F5822A","#CA6218","#FFC48C"), -- placeholder: Fable
+   ramp("#FFA552","#E88432","#FFDCB0"),ramp("#FFCB8C","#F5AA62","#FFF0DA")}, -- placeholder: Fable
+  pitch="Zesty orange, pip to pop.",names={"Pip","Zest","Slice","Juice","Pop"}},
 }
-for index,id in ipairs(Themes.Order)do
- local entry=Themes.ById[id];entry.id=id;entry.order=index
+local function seal(id,order)
+ local entry=Themes.ById[id];entry.id=id;entry.order=order
  if not table.isfrozen(entry.ramps)then table.freeze(entry.ramps)end;table.freeze(entry.names)
+ if entry.gate then table.freeze(entry.gate)end
  table.freeze(entry)
 end
-table.freeze(Themes.ById);table.freeze(Themes.Order)
+for index,id in ipairs(Themes.Order)do seal(id,index)end
+for index,id in ipairs(Themes.Gated)do assert(Themes.ById[id].gate,"BallThemes: gated "..id);seal(id,#Themes.Order+index)end
+table.freeze(Themes.ById);table.freeze(Themes.Order);table.freeze(Themes.Gated)
+-- The ids a shop lists: Order, then the gated themes while gates are on, or that are owned.
+function Themes.listed(owned)
+ local list=table.clone(Themes.Order)
+ for _,id in ipairs(Themes.Gated)do
+  if Levels.on("gates")or(type(owned)=="table"and table.find(owned,id)~=nil)then table.insert(list,id)end
+ end
+ return list
+end
 
 function Themes.get(id)return Themes.ById[id]or Themes.ById[Themes.Default]end
 -- Fixed Star price for a theme that is sold; nil for free or unknown ids.

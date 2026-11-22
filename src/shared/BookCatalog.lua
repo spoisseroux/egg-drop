@@ -11,6 +11,8 @@
 --     everyone has them, so they would hand out milestones for nothing.
 --   * The book-only faceplate is listed on the Faceplates page (`bookOnly`) but is not
 --     part of its total, so finishing that page never depends on finishing three others.
+--   * Level-gated balls and plates (Levels matter, 2026-11-22) never count, like recolours: a page
+--     never needs a level.
 --   * A catalogue that grows can drop a page below a claimed milestone; claims stay.
 local Shared=script.Parent
 local Balls=require(Shared.BallThemes)
@@ -180,14 +182,14 @@ local function page(id,items,owns,extra)
 end
 do
 	local items={}
-	for _,id in ipairs(Balls.Order)do if Balls.price(id)then table.insert(items,{id=id,name=Balls.ById[id].name})end end
+	for _,id in ipairs(Balls.Order)do if Balls.price(id)and Balls.ById[id].gate==nil then table.insert(items,{id=id,name=Balls.ById[id].name})end end
 	page("balls",items,function(state,item)
 		local row=state.ballThemes;return type(row)=="table"and listHas(row.owned,item.id)
 	end)
 end
 do
 	local items={}
-	for _,id in ipairs(Plates.Order)do if Plates.price(id)then table.insert(items,{id=id,name=Plates.ById[id].name})end end
+	for _,id in ipairs(Plates.Order)do if Plates.price(id)and Plates.ById[id].gate==nil then table.insert(items,{id=id,name=Plates.ById[id].name})end end
 	-- Book-only plates that exist in this build's DeckThemes (Stargazer joins with its art).
 	local bookOnly={}
 	for _,id in ipairs({Book.BookOnlyFaceplate,Book.StargazerPlate})do

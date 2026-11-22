@@ -1,3 +1,4 @@
+local Levels=require(script.Parent.Levels)
 local Themes={
 	Default = "sherbet",
 	Order = { "sherbet", "stone", "ice", "brick", "moss", "honey", "gloaming", "copperleaf",
@@ -107,6 +108,7 @@ for id,plate in pairs(Plates)do
  end
  theme.tier,theme.priceStars,theme.order,theme.finish=plate.tier,plate.priceStars,plate.order,plate.finish
  theme.texture,theme.overlay,theme.held3d=plate.texture,plate.overlay,plate.held3d
+ if plate.gate then theme.gate=table.freeze(plate.gate)end
  theme.accent,theme.deep,theme.ink=hex(plate.accent),hex(plate.deep),hex(plate.ink)
  theme.bandTint,theme.engrave,theme.engraveOpacity=hex(plate.band),hex(plate.engrave),plate.engraveOpacity
  if plate.priceStars>0 then theme.rule="stars"end
@@ -138,6 +140,17 @@ end
 Themes.Plates=Plates
 -- Plates that only the collection book grants (never sold, not in the shop grid's Order).
 Themes.BookOnly={"bookworm","stargazer"}
+-- Plates with a level gate (`gate` on the plate row, a LevelGate gate): never in Themes.Order, so the
+-- shelf and the Book never see them; shops list Themes.listed(owned). Empty until Fable's textures
+-- exist: sky_fizz {stat="energy",level=10} 40 and storm_glass {stat="energy",level=30} 100.
+Themes.Gated={}
+function Themes.listed(owned)
+ local list=table.clone(Themes.Order)
+ for _,id in ipairs(Themes.Gated)do
+  if Levels.on("gates")or(type(owned)=="table"and table.find(owned,id)~=nil)then table.insert(list,id)end
+ end
+ return list
+end
 -- Fixed Star price for a plate, or nil when it is not sold (book-only plates never are).
 function Themes.price(id)
  local theme=Themes.ById[id]

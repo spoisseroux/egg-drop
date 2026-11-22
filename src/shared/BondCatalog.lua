@@ -4,6 +4,9 @@
 --   Bond.level(xp)      1..MaxLevelShipped: the highest shipped level whose threshold xp reaches
 --   Bond.progress(xp)   {level, xp, floor, next, fraction, capped} toward the next shipped level
 --   Bond.unlock(level)  the trick a level unlocks
+--   Bond.trickLevel(xp, heartLevel)  tricks unlocked (1..MaxLevelShipped): the better of the Bond
+--                       level and the Heart level (Levels matter, 2026-11-22). Both unlock a prefix of
+--                       Unlocks, so nobody loses a trick. HeartLevels may only be lowered.
 --
 -- XP keeps accruing past the last shipped level (to MaxXP), so raising MaxLevelShipped
 -- needs no migration: the display simply caps at the shipped level until then.
@@ -11,6 +14,7 @@
 --
 -- Follow-up 2026-11-14: levels 6..10 ship (Version 2, MaxLevelShipped 10). The save is
 -- unchanged (xp per pet, v11): a pet that already had 350+ xp simply reads its new level.
+local Levels=require(script.Parent.Levels)
 local Bond={Version=2,MaxXP=100000,MaxLevelShipped=10}
 -- xp needed to BE each level.
 -- Levels 1..5: 25 / 50 / 75 / 100 apart. Levels 6..10 [PLACEHOLDER, gentle]: 100, then a
@@ -35,7 +39,11 @@ Bond.Unlocks=table.freeze({
  table.freeze({level=9,id="showoff",copy="bond.trick.l9",beats=table.freeze({"scratch","stretch","wave"}),hearts=true}),
  table.freeze({level=10,id="bestFriends",copy="bond.trick.l10",beats=table.freeze({"wave","wiggle","wiggle","stretch","sit"}),hearts=true}),
 })
+-- The Heart level that unlocks each trick (V2-SCOPE 10.2).
+Bond.HeartLevels=table.freeze({1,5,10,14,18,22,25,28,31,33})
 do
+ assert(#Bond.HeartLevels==Bond.MaxLevelShipped and Bond.HeartLevels[1]==1,"BondCatalog: Heart levels")
+ for index=2,#Bond.HeartLevels do assert(Bond.HeartLevels[index]>Bond.HeartLevels[index-1],"BondCatalog: Heart levels must rise")end
  assert(Bond.Thresholds[1]==0 and Bond.MaxLevelShipped>=1 and Bond.MaxLevelShipped<=#Bond.Thresholds,"BondCatalog: bad level range")
  for index=2,#Bond.Thresholds do
   assert(Bond.Thresholds[index]>Bond.Thresholds[index-1],"BondCatalog: thresholds must rise")
@@ -69,6 +77,19 @@ function Bond.progress(xp)
  return {level=level,xp=xp,floor=floor,next=goal,fraction=math.clamp((xp-floor)/(goal-floor),0,1),capped=false}
 end
 function Bond.unlock(level)return Bond.Unlocks[level]end
+-- Tricks a Heart level unlocks (0 for anything but a whole level of 1 or more).
+function Bond.heartTricks(heartLevel)
+ if type(heartLevel)~="number"or heartLevel~=heartLevel then return 0 end
+ local n=0
+ for index,need in ipairs(Bond.HeartLevels)do if heartLevel>=need then n=index end end
+ return n
+end
+-- With the track off this is exactly Bond.level(xp).
+function Bond.trickLevel(xp,heartLevel)
+ local level=Bond.level(xp)
+ if not Levels.on("track")then return level end
+ return math.max(level,Bond.heartTricks(heartLevel))
+end
 -- Every unlock the xp has reached, in level order.
 function Bond.unlocked(xp)
  local result={}

@@ -70,7 +70,10 @@ return function(server)
 		for _, tab in ipairs(Catalog.tabsFor("pip")) do assert(#Catalog.inTab("pip", tab.slot) > 0, tab.id); shown[tab.id] = true end
 		for _, id in ipairs({ "hat", "shirt", "neck", "ears", "eyes", "mouth", "tail" }) do assert(shown[id], id) end
 		for _, tab in ipairs(Catalog.Tabs) do assert((shown[tab.id] == true) == (#Catalog.inTab("pip", tab.slot) > 0), tab.id) end
-		assert(#variants == 10 and Catalog.OwnedLimit == 128 and W.Limit == 128)
+		-- Levels matter: the 14 level-gated recolours are listed only with gates on.
+		local ungated = 0
+		for _, item in ipairs(variants) do if item.gate == nil then ungated += 1 end end
+		assert(ungated == 10 and (#variants == 10 or #variants == 24) and Catalog.OwnedLimit == 128 and W.Limit == 128)
 		-- Every sold item renders on the Bear rig.
 		local known = {}; for _, row in ipairs(Rules.items(Defs.pip)) do known[row.item] = true end
 		for _, item in ipairs(items) do assert(known[item.id], "no meshes for " .. item.id) end

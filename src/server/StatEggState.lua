@@ -27,6 +27,7 @@ local StatCatalog=require(Shared.StatCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Stats=require(script.Parent.StatState)
 local Guard=require(script.Parent.HatchGuard)
+local MedalEggs=require(script.Parent.MedalEggs)
 
 local State={}
 local integer=Catalog.integer
@@ -178,6 +179,8 @@ end
 -- One Stat Egg, inside the transaction. c = {op, digest, petId, free, day, mode, quoteKey,
 -- unitStat, unitSize} (units only in random mode, drawn once at request time and frozen in the
 -- pending candidate, so a retried write rolls the same snack). `today` is the callback's clock.
+-- Levels matter (2026-11-22): c.medals (frozen with the candidate) lets a free egg come from the
+-- medals when the bank is empty; the bank is always used first. The receipt says source="medal".
 function State.buy(state,c,today)
 	if not Catalog.Enabled then return false,"Disabled"end
 	local saved=State.receipt(state,c.op)
@@ -191,8 +194,12 @@ function State.buy(state,c,today)
 	if #State.pouch(state)>=Catalog.PouchSize then return false,"PouchFull"end
 	if State.quoteKey(state,c.petId,c.mode)~=c.quoteKey then return false,"PoolChanged"end
 	local bought=State.boughtToday(state,today)
+	local fromMedal=false
 	if c.free then
-		if State.free(state)<1 then return false,"NoFreeEgg"end
+		if State.free(state)<1 then
+			if c.medals~=true or MedalEggs.left(state)<1 then return false,"NoFreeEgg"end
+			fromMedal=true
+		end
 	else
 		if bought>=Catalog.DailyBuys then return false,"SoldOut"end
 		if state.nectar<Catalog.Price then return false,"NeedStars"end
@@ -207,19 +214,22 @@ function State.buy(state,c,today)
 	if not stat or not size then return false,"InvalidRoll"end
 	local serial=State.serial(state)+1
 	if serial>Catalog.SerialLimit then return false,"SnackLimit"end
+	if fromMedal and not MedalEggs.spend(state)then return false,"NoFreeEgg"end
 	local pouch=copy(State.pouch(state))
 	table.insert(pouch,{id=serial,stat=stat,size=size})
 	state.snackPouch=pouch
 	local changes={serial=serial,misses=if size=="feast"then 0 else math.min(misses+1,Catalog.MissesLimit)}
 	if nextCycle then changes.cycleIndex=nextCycle;changes.statCursor=nextCursor end
 	local cost=0
-	if c.free then changes.free=State.free(state)-1
+	if fromMedal then -- the medal count moved in MedalEggs.spend
+	elseif c.free then changes.free=State.free(state)-1
 	else
 		cost=Catalog.Price;state.nectar-=cost
 		changes.boughtDay=today;changes.boughtCount=bought+1
 	end
 	writeEgg(state,changes)
-	pushReceipt(state,{op=c.op,kind="buy",digest=c.digest,snackId=serial,stat=stat,size=size,petId=c.petId,free=c.free==true,cost=cost,mode=c.mode,day=today})
+	pushReceipt(state,{op=c.op,kind="buy",digest=c.digest,snackId=serial,stat=stat,size=size,petId=c.petId,free=c.free==true,cost=cost,mode=c.mode,day=today,
+		source=if fromMedal then "medal"else nil})
 	return true
 end
 
@@ -267,8 +277,9 @@ function State.publicReceipt(r)
 end
 
 -- For the client: the pouch, eggs left, the pity counter and, per owned pet, the quote key and
--- the pool (and the fixed next snack for a restricted player).
-function State.public(state,today,mode)
+-- the pool (and the fixed next snack for a restricted player). With `medals`, `free` is the bank plus
+-- the medal eggs and `medalEggs` is the medal part alone; without it the keys are as before.
+function State.public(state,today,mode,medals)
 	local quotes={}
 	for petId in pairs(require(Shared.PetCatalog).byId)do
 		if Eggs.isOwned(state.inventoryMask or 0,petId)then
@@ -282,10 +293,11 @@ function State.public(state,today,mode)
 		end
 	end
 	local receipts=field(state,"receipts",{})
+	local medalEggs=if medals==true then MedalEggs.left(state)else nil
 	return {
 		enabled=Catalog.Enabled,mode=mode,poolVersion=Catalog.PoolVersion,price=Catalog.Price,
 		pouch=copy(State.pouch(state)),pouchSize=Catalog.PouchSize,
-		free=State.free(state),freeLimit=Catalog.FreeLimit,
+		free=State.free(state)+(medalEggs or 0),freeLimit=Catalog.FreeLimit,medalEggs=medalEggs,
 		boughtToday=State.boughtToday(state,today),dailyBuys=Catalog.DailyBuys,
 		misses=State.misses(state),pityLeft=Catalog.pityLeft(State.misses(state)),
 		cycleIndex=field(state,"cycleIndex",0),
