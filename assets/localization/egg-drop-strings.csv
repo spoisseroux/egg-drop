@@ -142,6 +142,8 @@ ui.dash.gate.line,Your pet runs. Jump the hoops. Hold Dash to zoom!,,Menu text
 ui.dash.gate.modes,Just for Fun: all pets equal. Stats On: your pet's levels count.,,Menu text
 ui.dash.gather,{name} · {count} of 8 · {left},,Menu text; e.g. Pet Park · 3 of 8 · {left}
 ui.dash.go,GO!,,Menu text
+ui.dash.hint.dash,Hold Dash!,,Menu text
+ui.dash.hint.jump,Tap Jump now!,,Menu text
 ui.dash.jump,Jump,,Menu text; also ui.stats.name.jump
 ui.dash.leave,Leave race,,Menu text
 ui.dash.medal.bronze,Bronze cup time!,,Menu text

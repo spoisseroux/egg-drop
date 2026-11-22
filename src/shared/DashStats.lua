@@ -65,14 +65,14 @@ end
 -- plus 0.3 s, up to the next half second. Bronze: a careless run that tries (two Trips, four Clears, Dash held
 -- down). Silver: three Clears, no Trip, Dash held down. Gold: five Perfects and a Clear, Dash spent well.
 -- Time Trial and Just for Fun run at level 50; a Stats On heat uses its band's row, derived at the lowest
--- balanced level of the band (level 1 for Seedling). Doing nothing, or only holding Dash, earns no medal. [P]
+-- balanced level of the band (level 1 for Seedling). Course version 2 (Dash Meadow, 179 studs). Doing nothing, or only holding Dash, earns no medal. [P]
 Stats.Pars=table.freeze({
-	trial=table.freeze({bronze=35500,silver=32500,gold=30000}),
-	seedling=table.freeze({bronze=39500,silver=36500,gold=34000}),
-	sprout=table.freeze({bronze=38500,silver=36000,gold=33500}),
-	bloom=table.freeze({bronze=37500,silver=34500,gold=32000}),
-	fullBloom=table.freeze({bronze=35500,silver=32500,gold=30000}),
-	starbloom=table.freeze({bronze=33500,silver=30500,gold=28500}),
+	trial=table.freeze({bronze=29000,silver=26500,gold=24500}),
+	seedling=table.freeze({bronze=32500,silver=30000,gold=27500}),
+	sprout=table.freeze({bronze=32000,silver=29000,gold=27000}),
+	bloom=table.freeze({bronze=31000,silver=28000,gold=26000}),
+	fullBloom=table.freeze({bronze=29000,silver=26500,gold=24500}),
+	starbloom=table.freeze({bronze=27500,silver=24500,gold=23000}),
 })
 function Stats.pars(mode,band)
 	return if mode=="stats"then Stats.Pars[Stats.Bands[band].id]else Stats.Pars.trial

@@ -210,7 +210,7 @@ return function(_, shared, options)
 				local script, at = { jumps = { T, T, T, T, T, T }, dash = dash }, 1
 				repeat
 					drive(race, 1, script)
-					if race.tick == 100 then Sim.push(race, 1, 101, "jump") end
+					if race.tick == 30 then Sim.push(race, 1, 31, "jump") end -- a far press: a free hop
 					local r = race.runners[1]
 					local going = Sim.step(race)
 					if r.trips >= at then
@@ -342,7 +342,7 @@ return function(_, shared, options)
 		local idle = solo(50, { jumps = { T, T, T, T, T, T }, dash = "none" })
 		local typical = solo(50, { jumps = { P, C, T, P, C, T } })
 		assert(ninety / one > .76 and ninety / one < .82, ninety / one)
-		assert(one > 30 and one < 36 and ninety > 24 and ninety < 29)
+		assert(one > 24 and one < 30 and ninety > 19 and ninety < 24)
 		return string.format("clean %.1f / %.1f / %.1f s at 1 / 50 / 99; two Trips %.1f s; idle %.1f s at 50", one, fifty, ninety, typical, idle)
 	end)
 	test("modes: Just for Fun ignores levels; Time Trial has no luck and the Even layout; plans keep their secrets", function()

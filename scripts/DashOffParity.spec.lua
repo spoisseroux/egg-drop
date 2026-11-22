@@ -65,7 +65,10 @@ return function(server)
 			for _,node in ipairs(model:GetDescendants())do
 				if node.ClassName=="Part"then parts+=1;assert(node.Anchored==true and node.CanCollide==false and node.CanQuery==false and node.CanTouch==false)end
 			end
-			assert(parts>=15 and parts<=60 and model:GetAttribute("Start")and model:GetAttribute("Finish"))
+			-- 33 more are the client's (DashClient.spec): 60 in all at most.
+			assert(parts>=15 and parts<=27 and model:GetAttribute("Start")and model:GetAttribute("Finish"),parts)
+			local start,gate=model:GetAttribute("Start").Position,Mount.gate()
+			assert(Vector2.new(start.X-gate.X,start.Z-gate.Z).Magnitude>6,"the waiting pad is off the line")
 			Mount.build(room);assert(#room:GetChildren()==1);Mount.remove(room);Mount.remove(room);assert(#room:GetChildren()==0);room:Destroy()
 		end)
 	end)

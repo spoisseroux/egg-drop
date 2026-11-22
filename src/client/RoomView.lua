@@ -759,8 +759,13 @@ end
 
 -- Garden Dash (DashClient): the race owns the camera and the movement lock from enterDash to leaveDash. Every way
 -- out of the garden (setMode, show, restoreCamera, destroy) leaves first, so a race can never hold a round up.
-function Room:enterDash()
-	if self.dashHeld then return true end
+-- preview: only the camera and the controls (the gate card's view of the course); a race also hides the owner's avatar
+-- on this screen, until leaveDash.
+function Room:enterDash(preview)
+	if self.dashHeld then
+		if not preview then self:hideDashCharacter()end
+		return true
+	end
 	local camera,root=self:cameraIdentity()
 	if self.destroyed or self.mode~="Room"or self.target~="Room"or self.busy or self.arrivalPlacementPending or not camera or not camera.Parent then return false end
 	if self.focusing or self.greetingCamera or self.focusTransitioning then
@@ -773,14 +778,31 @@ function Room:enterDash()
 	MovementLock.shared():acquire("dash")
 	if GuiService.SelectedObject then GuiService.SelectedObject=nil end
 	camera.CameraType=Enum.CameraType.Scriptable
+	if not preview then self:hideDashCharacter()end
 	self:updateControls()
 	return true
+end
+-- The avatar waits by the gate, out of the picture. A respawn mid-race hides the new one and gives the old one back.
+function Room:hideDashCharacter()
+	local held=self.dashHeld
+	if not held then return end
+	held.hide=true
+	local _,root=self:cameraIdentity()
+	local character=root and root.Parent
+	local scope=held.visibility
+	if scope then
+		if scope.character==character and not scope.released then return end
+		held.visibility=nil
+		scope:release()
+	end
+	if character then held.visibility=FocusCharacterVisibility.acquire(character)end
 end
 function Room:dashCamera(frame,fov)
 	local held=self.dashHeld
 	local camera=workspace.CurrentCamera
 	if not held or not camera then return end
 	if held.camera~=camera then held.camera,held.shot=camera,nil end
+	if held.hide then self:hideDashCharacter()end
 	if camera.CameraType~=Enum.CameraType.Scriptable then camera.CameraType=Enum.CameraType.Scriptable end
 	camera.CFrame,camera.Focus,camera.FieldOfView=frame,frame,fov
 end
@@ -789,6 +811,7 @@ function Room:leaveDash()
 	if not held then return false end
 	self.dashHeld=nil
 	MovementLock.shared():release("dash")
+	if held.visibility then pcall(held.visibility.release,held.visibility)end
 	local camera,root,humanoid=self:cameraIdentity()
 	if camera then
 		if humanoid then camera.CameraSubject=humanoid end

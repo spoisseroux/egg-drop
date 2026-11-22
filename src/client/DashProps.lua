@@ -1,5 +1,5 @@
 -- Garden Dash local props (V3-DASH-BUILD-PLAN-2026-11-22, slice S7): the six hoops and the lucky clovers of the layout
--- being raced, and the leaf tags over the pals. Placeholder parts until the art lands (Fable). Everything is local,
+-- being raced, the leaf tags over the pals and the balloon over the start. Placeholder parts until the art lands (Fable). Everything is local,
 -- anchored, and never collides, touches or answers a raycast. Made once, the first time a race is shown, and reused;
 -- a frame writes a part only while the hoops rise or sink. At most Props.MaxParts parts in all.
 local Course=require(game:GetService("ReplicatedStorage").Shared.DashCourse)
@@ -15,6 +15,15 @@ Props.Clover=Color3.fromHex("#43DB5F")
 Props.Leaf=Color3.fromHex("#BBF7D0")
 Props.MaxClovers=4
 Props.MaxTags=8
+Props.TagReach=12 -- a pal's tag shows only this near the player's own pet, and never over another tag
+Props.TagSize=Vector2.new(84,22)
+Props.TagGap=4
+Props.Balloon=Color3.fromHex("#FF6B6B")
+Props.Flag=Color3.fromHex("#FFD23F")
+Props.BalloonSize=5
+Props.BalloonHeight=16 -- its middle, over the start line
+Props.BalloonBob=.6
+Props.BalloonPeriod=4
 local UP=Vector3.yAxis
 
 local function part(parent,name,size,color,shape)
@@ -37,7 +46,7 @@ function Props.cloverAt(plan)
 	return hurdle and hurdle+Course.CloverPast
 end
 function Props.new(parent)
-	return setmetatable({parent=parent,hoops={},clovers={},tags={},share=0,want=0,count=0},Props)
+	return setmetatable({parent=parent,hoops={},clovers={},tags={},order={},share=0,want=0,count=0},Props)
 end
 function Props:make(name,size,color,shape)
 	if self.count>=Props.MaxParts then return nil end
@@ -127,7 +136,7 @@ function Props:tag(slot,text)
 		if not anchor then return end
 		anchor.Transparency=1
 		local board=Instance.new("BillboardGui")
-		board.Name="Leaf";board.Size=UDim2.fromOffset(84,22);board.LightInfluence=0;board.MaxDistance=90;board.Adornee=anchor
+		board.Name="Leaf";board.Size=UDim2.fromOffset(Props.TagSize.X,Props.TagSize.Y);board.LightInfluence=0;board.MaxDistance=90;board.Adornee=anchor;board.Enabled=false
 		local label=Instance.new("TextLabel")
 		label.Name="Name";label.Size=UDim2.fromScale(1,1);label.BackgroundColor3=Props.Leaf;label.BackgroundTransparency=.1
 		label.TextColor3=Color3.fromHex("#15143A");label.Font=Enum.Font.FredokaOne;label.TextSize=15
@@ -137,19 +146,68 @@ function Props:tag(slot,text)
 		tag={part=anchor,board=board,label=label}
 		self.tags[slot]=tag
 	end
-	tag.label.Text=text;tag.board.Enabled=true
+	tag.label.Text=text;tag.used=true
 end
 function Props:tagAt(slot,position)
 	local tag=self.tags[slot]
-	if tag and tag.board.Enabled then tag.part.Position=position end
+	if tag and tag.used then tag.part.Position=position end
 end
 function Props:untag(slot)
 	local tag=self.tags[slot]
-	if tag then tag.board.Enabled=false end
+	if tag then tag.used=false;tag.board.Enabled=false end
+end
+local function nearer(a,b)return a.away<b.away end
+-- Which tags show this frame: near `anchor` (the player's own pet; nil = none), nearest first, none over another.
+-- project(position) -> screen x, y in px, or nil when it is off screen.
+function Props:placeTags(anchor,project)
+	local order=self.order
+	table.clear(order)
+	for _,tag in pairs(self.tags)do
+		tag.show=false
+		if tag.used and anchor then
+			tag.away=(tag.part.Position-anchor).Magnitude
+			if tag.away<=Props.TagReach then
+				tag.x,tag.y=project(tag.part.Position)
+				if tag.x then table.insert(order,tag)end
+			end
+		end
+	end
+	table.sort(order,nearer)
+	for i,tag in ipairs(order)do
+		tag.show=true
+		for j=1,i-1 do
+			local other=order[j]
+			if other.show and math.abs(tag.x-other.x)<Props.TagSize.X+Props.TagGap and math.abs(tag.y-other.y)<Props.TagSize.Y+Props.TagGap then
+				tag.show=false
+				break
+			end
+		end
+	end
+	for _,tag in pairs(self.tags)do
+		if tag.board.Enabled~=tag.show then tag.board.Enabled=tag.show end
+	end
+end
+-- The balloon over the start arch, tall enough to see from the arrival dais (96, 66). Placeholder: a ball and a flag.
+function Props:balloon(now,still)
+	local made=self.sky
+	if not made then
+		local ball=self:make("Balloon",Vector3.one*Props.BalloonSize,Props.Balloon,Enum.PartType.Ball)
+		local flag=self:make("BalloonFlag",Vector3.new(.2,1.6,3),Props.Flag)
+		if not ball or not flag then return end
+		local x,y,z=Course.at(0)
+		made={ball=ball,flag=flag,at=CFrame.new(x,y+Props.BalloonHeight,z)}
+		self.sky=made
+	end
+	local up=if still then 0 else Props.BalloonBob*math.sin(now/Props.BalloonPeriod*math.pi*2)
+	if made.up==up then return end
+	made.up=up
+	made.ball.CFrame=made.at*CFrame.new(0,up,0)
+	made.flag.CFrame=made.at*CFrame.new(0,up-Props.BalloonSize/2-1,0)
 end
 function Props:destroy()
 	if self.folder then self.folder:Destroy();self.folder=nil end
-	table.clear(self.hoops);table.clear(self.clovers);table.clear(self.tags)
+	table.clear(self.hoops);table.clear(self.clovers);table.clear(self.tags);table.clear(self.order)
+	self.sky=nil
 	self.plan,self.share,self.want,self.count=nil,0,0,0
 end
 return Props

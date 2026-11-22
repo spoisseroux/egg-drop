@@ -27,7 +27,7 @@ Sim.StumblePct=10
 Sim.StumbleTicks=40
 Sim.TripTicks=120
 -- The scope says a 1.5 s climb out AND that one miss makes the stones slower than the bridge. The stones save
--- 13.8 studs (2.3 s at level 1, plus up to two Perfects' dash), so the climb and the shake dry take 2.8 s. [P]
+-- 13.4 studs (2.2 s at level 1, plus up to two Perfects' dash), so the climb and the shake dry take 2.8 s. [P]
 Sim.SplashTicks=280
 Sim.PerfectBar=50*Stats.DashTick
 -- Dash is a choice (tuned 2026-11-22) [P]: the meter drains four times faster than it refills, a pet that runs it

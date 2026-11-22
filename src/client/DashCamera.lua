@@ -4,9 +4,10 @@
 -- Reduced Motion: no widening on a dash. There is no shake in any mode.
 local Course=require(game:GetService("ReplicatedStorage").Shared.DashCourse)
 local Camera={};Camera.__index=Camera
-Camera.Back=900
-Camera.Ahead=420
-Camera.EyeHeight=6.3 -- over the arch banners (4.35 to 5.25 studs)
+Camera.Back=1400 -- WORLD-PLAN section 2: about 14 back, 9 up, 25 degrees down
+Camera.Ahead=250
+Camera.EyeHeight=9 -- under the start arch's banner (10.4 up) and over the finish banner (5.25)
+Camera.StartRoom=600 -- how far behind the start line the eye may stand: the cliff is at its back
 Camera.LookHeight=1.3
 Camera.Fov=58
 Camera.DashFov=64
@@ -31,15 +32,23 @@ function Camera.rail(cs,onStones,viaStones,past,lane)
 	if extra~=0 then x+=math.sin(yaw)*extra/100;z+=math.cos(yaw)*extra/100 end
 	return x,y,z,yaw
 end
+-- How far behind the pet the eye rides: closer by the start, where there is no room.
+function Camera.back(cs,onStones,viaStones)
+	if onStones or viaStones then return Camera.Back end
+	return math.min(Camera.Back,math.max(0,cs)+Camera.StartRoom)
+end
 function Camera.new()
 	return setmetatable({ready=false,ex=0,ey=0,ez=0,lx=0,ly=0,lz=0,fov=Camera.Fov},Camera)
 end
 function Camera:reset()self.ready=false;self.fov=Camera.Fov end
 -- One frame. cs, onStones, lane as Sim.spot; viaStones = the runner took the stones; dashing widens the view.
 function Camera:step(dt,cs,onStones,lane,viaStones,dashing,reduced)
-	local ex,ey,ez=Camera.rail(cs,onStones,viaStones,-Camera.Back,lane)
+	local back=Camera.back(cs,onStones,viaStones)
+	local ex,ey,ez=Camera.rail(cs,onStones,viaStones,-back,lane)
 	local lx,ly,lz=Camera.rail(cs,onStones,viaStones,Camera.Ahead,lane)
-	ey+=Camera.EyeHeight;ly+=Camera.LookHeight
+	-- The same angle down wherever the eye is.
+	ey+=Camera.LookHeight+(Camera.EyeHeight-Camera.LookHeight)*(back+Camera.Ahead)/(Camera.Back+Camera.Ahead)
+	ly+=Camera.LookHeight
 	local far=math.abs(ex-self.ex)+math.abs(ez-self.ez)>Camera.SnapStuds
 	if not self.ready or far then
 		self.ready=true

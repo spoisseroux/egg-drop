@@ -39,7 +39,8 @@ return function(client)
 			local hx,hz=math.sin(yaw),math.cos(yaw)
 			local back=(camera.ex-x)*hx+(camera.ez-z)*hz
 			local ahead=(camera.lx-x)*hx+(camera.lz-z)*hz
-			assert(back<-6 and back> -10,"behind "..back);assert(ahead>2.5,"ahead "..ahead)
+			local far=if cs<800 then cs/100+6 else 14
+			assert(back<-.6*far and back> -far-.1,"behind "..back);assert(ahead>1.8,"ahead "..ahead)
 			assert(camera.ey>camera.ly+3)
 		end
 	end)
@@ -53,6 +54,33 @@ return function(client)
 		local nx,_,nz=Camera.rail(Course.Rejoin+100,false,false,-300,nil)
 		local ox,_,oz=Course.at(Course.Rejoin-200)
 		assert(math.abs(nx-ox)<.01 and math.abs(nz-oz)<.01)
+	end)
+	test("about 14 back, 9 up, 25 degrees down; closer behind the start line, at the same angle",function()
+		for _,cs in ipairs({0,300,800,3000,17000})do
+			local camera=Camera.new()
+			camera:step(1/60,cs,false,4,false,false,false)
+			local back=Camera.back(cs,false,false)/100
+			assert(back==math.min(14,6+cs/100))
+			local pitch=math.deg(math.atan2(Camera.LookHeight+(Camera.EyeHeight-Camera.LookHeight)*(back+2.5)/16.5-Camera.LookHeight,back+2.5))
+			assert(math.abs(pitch-25)<.2,pitch)
+			local ex,ey=camera.ex,camera.ey
+			local _,gy=Camera.rail(cs,false,false,-back*100,4)
+			assert(ey-gy<=9.01)
+			if cs==0 then assert(ex<79 and ey-gy<5.6,"clear of the cliff behind the start")end
+			if back==14 then assert(math.abs(ey-gy-9)<.01)end
+		end
+		assert(Camera.back(0,true,true)==Camera.Back and Camera.back(Course.Rejoin,false,true)==Camera.Back)
+	end)
+	test("the pet is always in the middle of the picture: the camera looks at it, not at the avatar",function()
+		for cs=0,Course.Length,50 do
+			local camera=Camera.new();camera:step(1/60,cs,false,4,false,false,false)
+			local x,_,z=Course.at(cs,false,4)
+			local fx,fz=camera.lx-camera.ex,camera.lz-camera.ez
+			local run=math.sqrt(fx*fx+fz*fz)
+			local side=((x-camera.ex)*fz-(z-camera.ez)*fx)/run
+			local along=((x-camera.ex)*fx+(z-camera.ez)*fz)/run
+			assert(math.abs(side)/along<.3 and along>4,cs)
+		end
 	end)
 	test("a dash widens the view; Reduced Motion never does; a snap never swoops",function()
 		local camera=Camera.new()

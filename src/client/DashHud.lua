@@ -35,7 +35,8 @@ function Hud.layout(W,H)
 		bar=box(dash.x,dash.y-12-16,pad,16),
 		strip=strip,place=box(m,4,104,40),leave=box(W-m-44,4,44,44),
 		digits=box((W-200)/2,math.max(52,(H-digitsH)/2-16),200,digitsH),
-		word=box((W-240)/2,math.max(52+digitsH,H/2+digitsH/2-12),240,34)}
+		word=box((W-240)/2,math.max(52+digitsH,H/2+digitsH/2-12),240,34),
+		hint=box((W-280)/2,math.max(52+digitsH,H/2+digitsH/2-12)+36,280,34)}
 end
 -- Pure: the ring's size as a multiple of the pad, `ticks` before the take-off spot; nil = not shown.
 function Hud.ring(ticks,first)
@@ -116,6 +117,7 @@ function Hud.new(playerGui,options)
 	self.place=label("Place","Title",28);self.place.TextXAlignment=Enum.TextXAlignment.Left
 	self.digits=label("Digits","Title",72)
 	self.word=label("Word","Title",26)
+	self.hint=label("Hint","Title",24)
 	self.leave=Kit.closeKey(root,"Leave",44,UICopy.get("dash.leave"))
 	self.leave.ZIndex=9;self.leave.Selectable=false
 	self.leave.Activated:Connect(function()options.leave()end)
@@ -134,7 +136,7 @@ function Hud:fit()
 	self.l=l
 	put(self.zones.dash,l.zoneDash);put(self.zones.jump,l.zoneJump)
 	put(self.jump,l.jump);put(self.dash,l.dash);put(self.stones,l.stones);put(self.bar,l.bar);put(self.strip,l.strip)
-	put(self.place,l.place);put(self.digits,l.digits);put(self.word,l.word);put(self.leave,l.leave)
+	put(self.place,l.place);put(self.digits,l.digits);put(self.word,l.word);put(self.hint,l.hint);put(self.leave,l.leave)
 	self.ring.Position=UDim2.fromOffset(l.jump.x+l.pad/2,l.jump.y+l.pad/2)
 	self.shown.ring=nil
 end
@@ -156,7 +158,7 @@ function Hud:show(first)
 	self.ringStroke.Thickness=if self.first then 8 else 5
 	for _,dot in ipairs(self.dots)do dot.Visible=false end
 	self.ring.Visible,self.stones.Visible=false,false
-	self.place.Text,self.digits.Text,self.word.Text="","",""
+	self.place.Text,self.digits.Text,self.word.Text,self.hint.Text="","","",""
 	self.jump.Visible,self.dash.Visible,self.bar.Visible,self.strip.Visible,self.leave.Visible=true,true,true,true,true
 	self.gui.Enabled=true
 	self:fit();self:keys()
@@ -166,6 +168,7 @@ function Hud:rest(final)
 	self.racing=false
 	self.jump.Visible,self.dash.Visible,self.bar.Visible,self.leave.Visible=false,false,false,final~=true
 	self.ring.Visible,self.stones.Visible=false,false
+	self:setHint(nil)
 	self:keys()
 end
 function Hud:hide()
@@ -214,6 +217,12 @@ function Hud:setDot(seat,share,mine)
 end
 function Hud:setStones(visible)
 	if self.stones.Visible~=visible then self.stones.Visible=visible end
+end
+-- The first race's help line (DashHints); nil = none.
+function Hud:setHint(text)
+	if self.shown.hint==text then return end
+	self.shown.hint=text
+	self.hint.Text=text or""
 end
 function Hud:say(text)
 	self.word.Text=text

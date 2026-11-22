@@ -23,6 +23,8 @@ return function(client)
 				for j=i+1,#names do assert(apart(b,l[names[j]]),name.." and "..names[j].." at "..W.."x"..H)end
 			end
 			assert(l.jump.w>=96 and l.dash.w>=96 and l.stones.h>=44 and l.leave.w>=44 and l.leave.h>=44,"targets")
+			for _,name in ipairs({"jump","dash","stones","bar","word"})do assert(apart(l.hint,l[name]),"hint and "..name.." at "..W)end
+			assert(l.hint.y+l.hint.h<=H)
 			assert(apart(l.digits,l.strip)and apart(l.digits,l.jump)and apart(l.digits,l.dash),"digits at "..W)
 			assert(l.zoneDash.x+l.zoneDash.w<=l.zoneJump.x+1 and l.zoneJump.x+l.zoneJump.w==W,"the halves meet")
 			assert(l.zoneJump.x<=l.jump.x and l.zoneDash.w>=l.dash.x+l.dash.w)
@@ -64,6 +66,18 @@ return function(client)
 			end
 		end
 	end)
+	test("the gate card lies low: the bottom of every screen, its keys inside, the top line first to stay",function()
+		for _,screen in ipairs(SCREENS)do
+			for _,lines in ipairs({{},{20,20},{38,38}})do
+				local W,H=screen[1],screen[2]
+				local g=Card.lowLayout(W,H,lines,3)
+				assert(g.w<=W-16 and g.buttonY+g.bh<=g.h and g.bh>=44 and g.bw>=120,W.."x"..H)
+				assert(g.bw*3+g.gap*2+g.pad*2<=g.w and #g.lines<=#lines)
+				assert(g.h<=math.max(H/3,H*.4),"low at "..W.."x"..H.." "..g.h)
+				if H>=600 then assert(#g.lines==#lines and H-g.h-g.low>=H*.64)end
+			end
+		end
+	end)
 	test("the words: place, time, best; Stars only once the save has them; no losing screen",function()
 		local title,lines=Results.words({place=5,us=41230000,mode="fun"},nil,nil)
 		assert(title=="You finished 5th!"and lines[1]=="Time 41.2 s"and lines[2]==""and lines[3]=="")
@@ -87,6 +101,7 @@ return function(client)
 		for _,reason in ipairs({"Far","NoPet","NoCharacter","Carried","Busy","Petting","Hatching","Saving","Queued","WrongBand","Full","Off","Error","Empty","Deck","Left","PetChanged","AlreadySeated","Throttled","StalePet","other"})do
 			assert(UICopy.has("dash.reason."..reason),reason)
 		end
+		assert(UICopy.get("dash.hint.jump")=="Tap Jump now!"and UICopy.get("dash.hint.dash")=="Hold Dash!")
 		for _,kind in ipairs({"line","modes"})do assert(UICopy.has("dash.gate."..kind))end
 		assert(Wire.Modes.fun and Wire.Modes.stats)
 	end)

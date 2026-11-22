@@ -38,7 +38,7 @@ return function(server)
 		assert(state.nectar==2 and state.dash.day=="19690"and state.dash.paid==5)
 	end)
 	test("what does not pay: too few inputs, unfinished, too slow, prizes off, a Time Trial",function()
-		for _,odd in ipairs({{inputs=2},{us="none"},{us=60000001},{prize=false}})do
+		for _,odd in ipairs({{inputs=2},{us="none"},{us=49000001},{prize=false}})do
 			local r=race(1,odd);if odd.us=="none"then r.us=nil end
 			local state={nectar=0};assert(write(state,"x",{r})and state.nectar==0 and state.dash.paid==0)
 			local ribbon=S.ribbon(r)
@@ -46,21 +46,34 @@ return function(server)
 			elseif odd.us then assert(ribbon=="gold")
 			else assert(ribbon==nil,"no ribbon for idle racers, none with prizes off")end
 		end
-		local slow=race(1,{us=60000000});local state={nectar=0};assert(write(state,"x",{slow})and state.nectar==2,"exactly 2x Gold still pays")
-		local banded=race(1,{mode="stats",band=1,us=68000000});state={nectar=0};assert(write(state,"x",{banded})and state.nectar==2)
-		state={nectar=0};assert(write(state,"x",{trial(29000000)})and state.nectar==0 and state.dash.paid==0 and state.dash.cups==7)
+		local slow=race(1,{us=49000000});local state={nectar=0};assert(write(state,"x",{slow})and state.nectar==2,"exactly 2x Gold still pays")
+		local banded=race(1,{mode="stats",band=1,us=55000000});state={nectar=0};assert(write(state,"x",{banded})and state.nectar==2)
+		state={nectar=0};assert(write(state,"x",{trial(24000000)})and state.nectar==0 and state.dash.paid==0 and state.dash.cups==7)
 	end)
 	test("a full wallet pays 0 and stays valid",function()
 		local state={nectar=S.Wallet-1};assert(write(state,"x",{race(1)})and state.nectar==S.Wallet-1 and S.receipt(state,"x").stars==0)
 	end)
 	test("cups OR together once each, best only improves; prizes off still keeps the best",function()
 		local state={nectar=0}
-		assert(write(state,"1",{trial(34000000)})and state.dash.cups==1 and state.dash.best==34000000)
-		assert(write(state,"2",{trial(31000000)})and state.dash.cups==3 and state.dash.best==31000000)
-		assert(write(state,"3",{trial(34900000)})and state.dash.cups==3 and state.dash.best==31000000)
-		assert(write(state,"4",{trial(29000000,false)})and state.dash.cups==3 and state.dash.best==29000000)
-		assert(S.pointless(state,trial(29000000,false))and not S.pointless(state,trial(29000000)),"the gold cup is still owed")
-		assert(S.pointless(state,trial(32000000))and S.pointless(state,trial(nil))and S.pointless(state,race(1,{prize=false}))and not S.pointless(state,race(1)))
+		assert(write(state,"1",{trial(28500000)})and state.dash.cups==1 and S.best(state)==28500000)
+		assert(write(state,"2",{trial(26000000)})and state.dash.cups==3 and S.best(state)==26000000)
+		assert(write(state,"3",{trial(28900000)})and state.dash.cups==3 and S.best(state)==26000000)
+		assert(write(state,"4",{trial(24000000,false)})and state.dash.cups==3 and S.best(state)==24000000)
+		assert(S.pointless(state,trial(24000000,false))and not S.pointless(state,trial(24000000)),"the gold cup is still owed")
+		assert(S.pointless(state,trial(27000000))and S.pointless(state,trial(nil))and S.pointless(state,race(1,{prize=false}))and not S.pointless(state,race(1)))
+	end)
+	test("a best belongs to its course: the first course's and any other's are ignored, kept and never block this one",function()
+		local state={nectar=0,dash={day=DAY,paid=2,ribbons={gold=3},cups=3,best=20000000,trials={["1"]=21000000,["77"]=5}}}
+		assert(S.best(state)==nil and S.public(state,DAY).best==nil and S.public(state,DAY).cups==3)
+		assert(not S.pointless(state,trial(28000000,false)),"slower than another course's best is still a first time here")
+		assert(write(state,"t1",{trial(28000000)})and S.best(state)==28000000 and S.public(state,DAY).best==28000000)
+		assert(state.dash.best==20000000 and state.dash.trials["1"]==21000000 and state.dash.trials["77"]==5 and state.dash.trials[S.Course]==28000000)
+		assert(state.dash.paid==2 and state.dash.ribbons.gold==3)
+		assert(S.pointless(state,trial(28500000,false)))
+		for _,odd in ipairs({"x",5,false,{[S.Course]="a"},{[S.Course]=0/0},{[S.Course]=-1},{[2]=9},{["02"]=9},{["1e0"]=9},{["1000"]=9}})do
+			local bad={nectar=0,dash={day=DAY,paid=0,trials=odd}}
+			assert(S.best(bad)==nil and S.read(bad).trials==nil and write(bad,"z",{trial(27000000)})and S.best(bad)==27000000)
+		end
 	end)
 	test("the title is derived: five ribbons this week, gone on Monday",function()
 		local state={nectar=0}
