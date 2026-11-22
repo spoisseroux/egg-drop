@@ -35,27 +35,39 @@ STATIONS = [(-31, -11), (-17, -15), (-46, -9), (-30, 18.5), (49.5, 14), (54.5, 1
 LAMPS = [(69.65, 51.97), (29.44, 29.85), (-9, 28), (-12, -44), (-70, -3), (50, -10), (-22, 38)]
 # Solid things the walk map's one-stud cells blur, measured by server raycast in Studio: x, z, radius, least
 # distance to the centre line (the outside lane is 1.75 studs out). DashCourse.spec checks the same list.
-OBSTACLES = [(38.25, 8.0, 1.6, 3.8)]  # 2026-11-22: the base of the leaning tree (W7_Trunks__bark)
+OBSTACLES = [
+    (38.25, 8.0, 1.6, 3.8),  # 2026-11-22: the base of the leaning tree (W7_Trunks__bark)
+    (52.0, 3.0, 3.6, 5.8),  # the Bubble Spring's marble rim
+    (72.0, -22.0, 3.0, 5.2),  # the tree over the meadow, and the rocks at its foot
+    (69.5, 8.0, 2.0, 4.2),  # the rock south of the start
+]
+CLIFF_X, CLIFF_ROOM = 78.0, 4.0  # nothing of the race comes nearer than this to the cliff rock east of x 78
+PAD, PAD_RADIUS = (70.0, 0.0), 3.0  # where racers wait, beside the start and off the line
 BUSHES = [(float(x), float(z)) for x, z in re.findall(
     r"\{(-?[\d.]+),-?[\d.]+,(-?[\d.]+),", (ROOT / "src/shared/WorldDressing.lua").read_text().split("Dressing.Bushes=")[1])]
 LANES, LANE_STEP = 8, .5
 STEP = 2.0
 MIN_RADIUS = 6.0
 
-# (x, z, kind): "P" snaps to the dirt, "F" never moves, "-" may be nudged by the search.
-MAIN = [(80.5, 55, "F"), (74, 52.5, "P"), (66, 49, "P"), (57, 44.5, "P"), (51, 40, "-"), (46, 31, "-"), (45, 18, "-"),  # past the garden arch at (85, 58)
-        (44, 3, "-"),  # the lawn east of the stream, outside the leaning tree
-        (30, 2.5, "-"), (24, 2.5, "-"), (23.5, 21, "-"), (18, 21, "F"), (13.5, 21, "F"), (-8.5, 21, "F"), (-13, 21, "F"),
-        (-17.5, 13.2, "-"), (-25, 13.2, "-"), (-36, 13.2, "-"), (-43, 8, "-"), (-50, 0, "-"), (-58, -3.6, "P"),
-        (-68, -6.6, "P"), (-77, -9.2, "P"), (-84, -10.6, "P")]
+# (x, z, kind): "P" snaps to the dirt, "F" never moves, "-" may be nudged by the search, "n" only a little.
+# 2026-11-22 (WORLD-PLAN section 2, option B): the start is the Dash Meadow. Everything from the stones on is the line
+# the first Studio races were run on (the old search's own numbers), so only the first 40 studs are new.
+MAIN = [(72, -8, "F"), (67, -7.6, "F"), (60, -6.6, "-"), (52, -4.4, "-"), (45, -1, "-"), (38, 1.6, "-"),  # west over the open lawn
+        (30.888, .706, "F"), (24.489, 4.012, "n"), (23.603, 18.563, "n"), (18, 21, "F"), (13.5, 21, "F"), (-8.5, 21, "F"), (-13, 21, "F"),
+        (-18.95, 14.331, "F"), (-22.439, 13.032, "F"), (-36.074, 13.037, "F"), (-47.863, .79, "F"), (-47.441, 1.712, "F"), (-58.094, -3.812, "F"),
+        (-68.194, -6.226, "F"), (-77.071, -8.821, "F"), (-84.072, -10, "F")]
 FORK_POINT, REJOIN_POINT = (30.0, 2.7), (-23.0, 13.2)
-SAVING, LENGTH = 14.0, 220.0
+SAVING, LENGTH = 14.0, 179.0
 STONE_TOP = 4.0
 
 
 def code(x, z):
     i, j = int(round(x - S["x0"])), int(round(z - S["z0"]))
     return (S["rows"][j][i], S["h"][j][i]) if 0 <= i < S["nx"] and 0 <= j < S["nz"] else (".", -999)
+
+
+def cliff_distance(x, z):
+    return min(math.hypot(x - cx, z - cz) for cx in range(int(CLIFF_X), 90) for cz in range(-20, 8) if code(cx, cz)[0] == "R")
 
 
 def segment_distance(p, a, b):
@@ -230,11 +242,11 @@ def search():
     rng = random.Random(SEED)
     best = [snap(x, z) if kind == "P" else (float(x), float(z)) for x, z, kind in MAIN]
     score = cost(best)
-    move = [i for i, p in enumerate(MAIN) if p[2] == "-"] + [len(MAIN) - 1]
+    move = [i for i, p in enumerate(MAIN) if p[2] in "-n"]
     for n in range(1600):
         trial = list(best)
         i = rng.choice(move)
-        reach = 1.6 if n < 900 else .5
+        reach = .1 if MAIN[i][2] == "n" else 1.6 if n < 900 else .5
         dx, dz = rng.uniform(-reach, reach), rng.uniform(-reach, reach)
         x, z = trial[i][0] + dx, trial[i][1] + dz
         trial[i] = (x, snap(x, z)[1] if MAIN[i][2] == "P" else z)
@@ -272,21 +284,32 @@ def emit(control):
         problems.append(f"stones too close to the fork: {lo}")
     if abs(saving - SAVING * 100) > 100:
         problems.append(f"saving {saving}")
-    if not 20000 <= total <= 24000:
+    if not 17500 <= total <= 18500:
         problems.append(f"length {total}")
+    if min(cliff_distance(x, z) for x, z in main[:20] + [PAD]) < CLIFF_ROOM:
+        problems.append("cliff")
+    # The waiting pad: level lawn, off every lane, clear of the solid things.
+    px, pz = PAD
+    rim = [(px, pz)] + [(px + PAD_RADIUS * math.cos(k * math.pi / 8), pz + PAD_RADIUS * math.sin(k * math.pi / 8)) for k in range(16)]
+    if any(code(x, z)[0] not in "PGg" for x, z in rim) or max(ground(*p) for p in rim) - min(ground(*p) for p in rim) > .3:
+        problems.append("pad ground")
+    if min(math.dist(PAD, p) for p in main) < PAD_RADIUS + (LANES - 1) / 2 * LANE_STEP + 1:
+        problems.append("pad on the line")
+    if any(math.dist(PAD, o[:2]) < PAD_RADIUS + o[2] + .5 for o in OBSTACLES):
+        problems.append("pad obstacle")
     if min(kerb_distance(x, z) for x, z in main + branch) < KEEP or min(grove_distance(x, z) for x, z in main + branch) < KEEP:
         problems.append("kerb or grove")
     if problems:
         raise SystemExit("course breaks its rules:\n  " + "\n  ".join(problems))
-    a0, a1, b0, b1 = 1600, fork - 900, rejoin + 900, total - 1400
+    a0, a1, b0, b1 = 1400, fork - 850, rejoin + 900, total - 1400
     def spread(lo, hi, n):
         return [lo + (hi - lo) * k // (n - 1) for k in range(n)]
     pair = 700  # two hoops close together: never nearer than the early-press reach at any speed
     layouts = [
         ("even", spread(a0, a1, 3) + spread(b0, b1, 3)),
-        ("pairs", [a0 + 600, a1 - 600 - pair, a1 - 600, b0 + 400, b0 + 400 + pair, b1]),
+        ("pairs", [a0, a1 - pair, a1, b0 + 400, b0 + 400 + pair, b1]),
         ("early", spread(a0, a1, 4) + spread(b0 + 600, b1 - 200, 2)),
-        ("late", spread(a0 + 800, a1 - 400, 2) + spread(b0, b1, 4)),
+        ("late", spread(a0 + 500, a1 - 200, 2) + spread(b0, b1, 4)),
     ]
     def flat(values):
         lines, text = [], ""
@@ -310,12 +333,14 @@ def emit(control):
         "MAIN": table(m), "BRANCH": table(b),
         "STONELIST": ",".join("table.freeze({d=%d,x=%d,y=%d,z=%d})" % s for s in stone),
         "LAYOUTS": "\n".join("\t%s=table.freeze({%s})," % (n, ",".join(map(str, v))) for n, v in layouts),
+        "PAD": "x=%d,y=%d,z=%d,r=%d" % (cs(px), cs(ground(px, pz)), cs(pz), cs(PAD_RADIUS)),
         "ORDER": ",".join('"%s"' % n for n, _ in layouts),
     }.items():
         text = text.replace("@" + key + "@", str(value))
     turn = min(radius(main[i - 2], main[i], main[i + 2]) for i in range(2, len(main) - 2))
     print(f"length {total / 100} fork {fork / 100} rejoin {rejoin / 100} stones {stones_len / 100} saving {saving / 100} "
-          f"obstacle {min(segment_distance(o, a, b) for o in OBSTACLES for a, b in zip(main, main[1:])):.2f} min turn radius {turn:.1f} kerb {min(kerb_distance(*p) for p in main):.1f} "
+          f"obstacles {[round(min(segment_distance(o, a, b) for a, b in zip(main, main[1:])), 2) for o in OBSTACLES]} "
+          f"cliff {min(cliff_distance(*p) for p in main[:20]):.1f} pad {cliff_distance(*PAD):.1f} from line {min(math.dist(PAD, p) for p in main):.1f} min turn radius {turn:.1f} kerb {min(kerb_distance(*p) for p in main):.1f} "
           f"start {main[0]} finish {main[-1]} bushes {len(BUSHES)} layouts {layouts}")
     return text
 
@@ -323,8 +348,8 @@ def emit(control):
 TEMPLATE = '''-- Generated by scripts/build_dash_course.py (seed @SEED@) from assets/world/world-v7-walk.json.
 -- Do not edit by hand: change the script and rerun it. V3-SCOPE-2026-11-21 section 4.2, slice S5.
 --
--- The Garden Dash course: a rail line from near the arrival end of the dirt path, over the lawn and the marble
--- bridge, round the edge of the hub plaza and along the west path. Pure data and maths: no instances, no
+-- The Garden Dash course: a rail line from the Dash Meadow in the east (WORLD-PLAN-2026-11-22 section 2, option B), west
+-- over the open lawn and the marble bridge, round the edge of the hub plaza and along the west path. Pure data and maths: no instances, no
 -- requires. Every stored number is a whole number of hundredths of a stud ("cs"); the race (DashSim) counts
 -- only the centre line, so a lane is a drawing offset and no lane is shorter on a bend.
 --   Main      d, x, y, z per point, d = distance from the start arch
@@ -333,7 +358,7 @@ TEMPLATE = '''-- Generated by scripts/build_dash_course.py (seed @SEED@) from as
 -- Heights are World.groundY (and the marble deck), the same ground the park pets stand on.
 local Course={}
 
-Course.Version=1
+Course.Version=2
 Course.Length=@LENGTH@
 Course.Fork=@FORK@
 Course.Rejoin=@REJOIN@
@@ -343,6 +368,7 @@ Course.LaneCount=8
 Course.LaneStep=50 -- eight lanes inside the 4-stud path
 Course.HurdleHeight=80
 Course.CloverPast=150 -- a lucky clover grows this far past its hurdle [P]
+Course.Pad=table.freeze({@PAD@}) -- the waiting pad beside the start: the spot joins are measured from
 Course.Main=table.freeze(@MAIN@)
 Course.Branch=table.freeze(@BRANCH@)
 -- Stone centres: d along Branch (where the hop is judged), then the world spot.

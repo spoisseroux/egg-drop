@@ -26,6 +26,8 @@ local RaceCamera=require(script.Parent.DashCamera)
 local RaceInput=require(script.Parent.DashInput)
 local Pose=require(script.Parent.DashPose)
 local Props=require(script.Parent.DashProps)
+local Fade=require(script.Parent.DashFade)
+local Hints=require(script.Parent.DashHints)
 local Results=require(script.Parent.DashResults)
 local Client={};Client.__index=Client
 Client.MaxErrors=3
@@ -62,6 +64,17 @@ function Client.ahead(track,tick,unit)
 	return math.min(total,track.cs+unit*track.pace/100*math.clamp(tick-track.tick,0,Client.ExtrapolateTicks))
 end
 
+-- The gate card's picture: the start arch and the lanes from the side, over the lawn west of the waiting pad.
+Client.GateEye=Vector3.new(10.5,5,11) -- to the pad's side of the start, up, and along the course
+Client.GateLook=Vector3.new(0,1,2)
+function Client.gateView()
+	local x,y,z,yaw=Course.at(0)
+	local function spot(v)
+		local s,c=math.sin(yaw),math.cos(yaw)
+		return Vector3.new(x+v.X*c+v.Z*s,y+v.Y,z-v.X*s+v.Z*c)
+	end
+	return spot(Client.GateEye),spot(Client.GateLook)
+end
 function Client.mount(deps)
 	if not Dash.ceiling()then return nil end
 	local self=setmetatable({d=deps,userId=Players.LocalPlayer.UserId,connections={},errors=0,seq=0,isOpen=false,slow=0,pings=0,pingAt=0,rtts={}},Client)
@@ -112,12 +125,23 @@ function Client:open()
 	if found then folder(found)else on(ReplicatedStorage.ChildAdded,folder)end
 	self.props=Props.new(workspace)
 	self.camera=RaceCamera.new()
+	self.fade=Fade.new()
+	self.project=function(position)
+		local camera=workspace.CurrentCamera
+		if not camera or not camera.WorldToViewportPoint then return nil end
+		local at,seen=camera:WorldToViewportPoint(position)
+		if not seen then return nil end
+		return at.X,at.Y
+	end
 	self.ownFlags={}
 	self.owner=Instance.new("Folder");self.owner.Name="DashRailOwner";self.owner.Parent=d.playerGui
-	local x,y,z,yaw=Course.at(0)
+	local pad=Course.Pad
 	local sign=self.props:make("GateSign",Vector3.new(.2,.2,.2),Props.HoopTop)
 	sign.Transparency=1
-	sign.CFrame=CFrame.new(x,y,z)*CFrame.Angles(0,yaw,0)*CFrame.new(-4.2,2.2,-1)
+	sign.CFrame=CFrame.new(pad.x/100,pad.y/100+2.2,pad.z/100)
+	self.props:balloon(0,true)
+	local eye,look=Client.gateView()
+	self.gateFrame=CFrame.lookAt(eye,look)
 	local prompt=Instance.new("ProximityPrompt")
 	prompt.Name="DashGatePrompt";prompt.ObjectText=UICopy.get("dash.title");prompt.ActionText=UICopy.get("dash.prompt")
 	prompt.KeyboardKeyCode,prompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
@@ -146,6 +170,7 @@ function Client:close()
 	if self.input then self.input.destroy();self.input,self.core=nil,nil end
 	if self.hud then self.hud:destroy();self.hud=nil end
 	if self.props then self.props:destroy();self.props=nil end
+	if self.fade then pcall(self.fade.release,self.fade);self.fade=nil end
 	if self.rail then pcall(self.rail.cancel,self.rail);self.rail=nil end
 	self.lineText=nil
 	if self.owner then self.owner:Destroy();self.owner=nil end
@@ -203,6 +228,8 @@ local function first(dash)
 	local ribbons=if type(dash.ribbons)=="table"then dash.ribbons else NONE
 	return dash.best==nil and dash.last==nil and(ribbons.gold or 0)+(ribbons.silver or 0)+(ribbons.bronze or 0)+(ribbons.green or 0)==0
 end
+-- A player who has never raced: nothing saved, and none this session (the helper, Just for Fun picked).
+function Client:newRacer()return not self.raced and first(self:saved())end
 function Client:saved()
 	local state=self.d.state()
 	return type(state)=="table"and type(state.dash)=="table"and state.dash or nil
@@ -233,12 +260,32 @@ function Client:gate()
 			self:send(kind,mode)
 		end
 	end
-	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Gate",title=UICopy.get("dash.title"),
+	-- Just for Fun to begin with; after that, whatever this player raced last.
+	local picked=1
+	if not self:newRacer()and self.last then picked=if self.last.kind=="trial"then 3 elseif self.last.mode=="stats"then 2 else 1 end
+	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Gate",title=UICopy.get("dash.title"),low=true,selected=picked,
 		lines={UICopy.get("dash.gate.line"),UICopy.get("dash.gate.modes")},
-		buttons={{name="Fun",text=UICopy.get("dash.fun"),primary=true,act=go("join","fun")},
-			{name="Stats",text=UICopy.get("dash.stats"),act=go("join","stats")},
-			{name="Trial",text=UICopy.get("dash.trial"),act=go("trial")}}})
-	if not self.card then self:notify("dash.reason.other")end
+		buttons={{name="Fun",text=UICopy.get("dash.fun"),primary=picked==1,act=go("join","fun")},
+			{name="Stats",text=UICopy.get("dash.stats"),primary=picked==2,act=go("join","stats")},
+			{name="Trial",text=UICopy.get("dash.trial"),primary=picked==3,act=go("trial")}}})
+	if not self.card then self:notify("dash.reason.other");return end
+	self.card.gate=true
+end
+-- While the gate card is open the camera shows the course from the side. Any way the card goes gives it back.
+function Client:gateShot()
+	local room,card=self.d.roomView,self.card
+	if self.shot and not room.dashHeld then -- RoomView let go by itself: not again for this card
+		self.shot=false
+		if card then card.shotLost=true end
+	end
+	local want=card~=nil and card.gate==true and not card.closed and not card.shotLost and self.seat==nil
+		and room.mode=="Room"and room.target=="Room"and not self.d.modalOpen()
+	if want and not self.shot then self.shot=room:enterDash(true)==true
+	elseif self.shot and not want then
+		self.shot=false
+		room:leaveDash()
+	end
+	if self.shot then room:dashCamera(self.gateFrame,RaceCamera.Fov)end
 end
 
 -- Events -----------------------------------------------------------------------------------------------------
@@ -331,7 +378,8 @@ function Client:lock(packet)
 	seat.track={cs=0,pace=0,tick=-1,flags=NONE,draw=0}
 	local mine=self:saved()
 	seat.before=mine and mine.last and mine.last.op
-	seat.first=not self.raced and first(mine)
+	seat.first=self:newRacer()
+	seat.hints=if seat.first then Hints.new()else nil
 	self.raced=true
 	if self.card then self.card:close();self.card=nil end
 	self.d.closeMenus()
@@ -349,8 +397,9 @@ end
 function Client:endSeat()
 	local seat=self.seat
 	if self.input then pcall(self.input.close)end -- lets Dash go while there is still a race to tell
-	self.seat,self.holding=nil,false
+	self.seat,self.holding,self.shot=nil,false,false
 	pcall(self.d.roomView.leaveDash,self.d.roomView)
+	if self.fade then pcall(self.fade.release,self.fade)end
 	if self.hud then pcall(self.hud.hide,self.hud)end
 	if self.card then pcall(self.card.close,self.card);self.card=nil end
 	if self.asked then pcall(self.asked.cancel);self.asked=nil end
@@ -517,10 +566,11 @@ function Client:hold(seat)
 		self.holding=false
 		self.input.close()
 		self.hud:hide()
+		self.fade:release()
 	end
 	if want and not self.holding then
 		if not room:enterDash()then return false end
-		self.holding=true
+		self.holding,self.shot=true,false
 		self:ensureHud()
 		self.camera:reset()
 		self.hud:show(seat.first)
@@ -529,6 +579,7 @@ function Client:hold(seat)
 		self.holding=false
 		self.input.close()
 		self.hud:hide()
+		self.fade:release()
 		room:leaveDash()
 	end
 	return self.holding
@@ -590,7 +641,13 @@ function Client:raceStep(seat,dt,now,reduced)
 		hud:setDigits(if digit>0 then tostring(digit)elseif digit<0 then UICopy.get("dash.go")else nil)
 		if digit>0 then self.d.audio:play("count_blip",1,.4)end
 	end
-	hud:setRing(if racing and not flags.tumble and not predict.serverRender then Sim.nextJump(r)else nil)
+	local ticks=if racing and not flags.tumble and not predict.serverRender then Sim.nextJump(r)else nil
+	hud:setRing(ticks)
+	if seat.hints then
+		local hint=seat.hints:step(dt,racing,ticks,r.next,flags.dash,news)
+		hud:setHint(if hint then UICopy.get("dash.hint."..hint)else nil)
+		if seat.hints.done then seat.hints=nil;hud:setHint(nil)end
+	end
 	hud:setBar(r.bar/r.cap,flags.puff)
 	local gap=Course.Fork*CS-r.pos
 	hud:setStones(racing and not r.forked and not r.wants and gap>0 and gap<=r.step*Sim.SignpostTicks)
@@ -610,7 +667,10 @@ function Client:raceStep(seat,dt,now,reduced)
 	hud:step(dt)
 	self.camera:step(dt,seat.cs,seat.onStones,seat.lane,flags.stones==true,flags.dash==true and seat.phase=="race",reduced)
 	local c=self.camera
-	room:dashCamera(CFrame.lookAt(Vector3.new(c.ex,c.ey,c.ez),Vector3.new(c.lx,c.ly,c.lz)),c.fov)
+	local eye=Vector3.new(c.ex,c.ey,c.ez)
+	local px,py,pz=Course.at(seat.cs,seat.onStones,seat.lane)
+	self.fade:step(dt,eye,Vector3.new(px,py+.8,pz),seat.cs,seat.onStones==true)
+	room:dashCamera(CFrame.lookAt(eye,Vector3.new(c.lx,c.ly,c.lz)),c.fov)
 end
 function Client:showResults(seat)
 	seat.cardAt=nil
@@ -672,10 +732,15 @@ function Client:frame(dt,now)
 		self.slow=Client.SlowEvery
 		self:slowStep(now)
 	end
+	self:gateShot()
 	self:heatStep(dt,now,reduced)
 	local seat=self.seat
 	if seat and seat.predict then self:raceStep(seat,dt,now,reduced)end
+	if not self.props then return end -- closed by what the race just did
 	self.props:step(dt)
+	self.props:balloon(now,reduced)
+	local pet=self.d.roomView.pet
+	if self.heat then self.props:placeTags(pet and pet.origin,self.project)end
 end
 -- RoomView's RenderStepped, before the pets are posed.
 function Client:step(dt,now)

@@ -19,7 +19,7 @@ return function(server)
 	local function test(name,run)run();table.insert(cases,name)end
 	local function copy(v)if type(v)~="table"then return v end;local r={};for k,x in pairs(v)do r[k]=copy(x)end;return r end
 	local function dash(env)env=env or {};env.flags=env.flags or {GardenDash=true};env.studio=true;Dash.inject(env)end
-	local gx,gy,gz=Course.at(0)
+	local gx,gy,gz=Course.Pad.x/100,Course.Pad.y/100,Course.Pad.z/100
 	local function signal()
 		local s={list={}}
 		function s:Connect(fn)table.insert(s.list,fn);return{Disconnect=function()local at=table.find(s.list,fn);if at then table.remove(s.list,at)end end}end
@@ -31,7 +31,7 @@ return function(server)
 		function node:SetAttribute(name,value)self.attrs[name]=value end
 		return node
 	end
-	local WIN={kind="race",mode="stats",band=5,place=8,us=57000000,inputs=1000000,seed=4294967295,prize=true}
+	local WIN={kind="race",mode="stats",band=5,place=8,us=46000000,inputs=1000000,seed=4294967295,prize=true}
 	local function rig(count)
 		local c={now=5000,serial=0,players={},boards={},remotes={},parked={},beat=signal(),shared=attributes(),sold={},published=0}
 		local function player(id)

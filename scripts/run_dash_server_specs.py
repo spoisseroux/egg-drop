@@ -25,7 +25,7 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "DashOffParity", "DashCrossVersion", "CloseProgress"]
 # Client specs: the Dash modules as they are, small stand-ins for the screens they borrow, and RoomView's hooks cut
 # out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and IsStudio true.
-CLIENT = ["DashPredict", "DashCamera", "DashInput", "DashHud", "DashClient"]
+CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient"]
 SPECS += CLIENT
 STUBS = {
     "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
@@ -39,9 +39,11 @@ def client_modules():
     for path in sorted((ROOT / "src/client").glob("Dash*.lua")):
         out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
-    hooks = room[room.index("function Room:enterDash()"):room.index("function Room:retryArrivalPlacement()")]
+    hooks = room[room.index("function Room:enterDash("):room.index("function Room:retryArrivalPlacement()")]
     out["client/RoomViewDash"] = (
         "local Room={};Room.__index=Room\nRoom.lock=require(script.Parent.MovementLock).new({})\nlocal MovementLock={shared=function()return Room.lock end}\n"
+        "Room.hidden=0\nlocal FocusCharacterVisibility={acquire=function(character)Room.hidden+=1;local scope={character=character}\n"
+        "function scope:release()if not self.released then self.released=true;Room.hidden-=1 end end\nreturn scope end}\n"
         "local GuiService={}\nRoom.gui=GuiService\nlocal PetGreetingShot={capture=function(camera,root)return{camera=camera,root=root,position=root and root.Position,"
         "transform=camera.CFrame,focus=camera.Focus,fov=camera.FieldOfView}end,\nrestore=function(saved,camera,root)if not saved or saved.camera~=camera or "
         "saved.root~=root or not root then return false end;camera.CFrame,camera.Focus,camera.FieldOfView=saved.transform,saved.focus,saved.fov;return true end}\n"

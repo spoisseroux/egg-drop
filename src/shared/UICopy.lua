@@ -186,6 +186,7 @@ local Table={
  -- Garden Dash (V3 slice S7). Short: most of it is read while running.
  dash={title="Garden Dash",prompt="Race",fun="Just for Fun",stats="Stats On",trial="Time Trial",jump="Jump",dash="Dash",stones="Take the stones",
   go="GO!",perfect="Perfect!",clear="Nice!",trip="Oops!",clover="Lucky clover!",zoom="Zoomies!",puff="Phew!",leave="Leave race",again="Race again",done="Done",
+  hint={jump="Tap Jump now!",dash="Hold Dash!"},
   newCup="You won a cup!",gather="{name} · {count} of 8 · {left}",queue="You're next in line",
   gate={line="Your pet runs. Jump the hoops. Hold Dash to zoom!",modes="Just for Fun: all pets equal. Stats On: your pet's levels count."},
   ask={title="Leave the race?",line="Your pet runs on, but you won't get a ribbon.",yes="Leave",no="Keep racing"},

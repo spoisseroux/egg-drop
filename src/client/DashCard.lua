@@ -2,6 +2,8 @@
 -- (pick a race) and the results. One is open at a time; its ScreenGui is made for it and goes with it.
 --   Card.open({playerGui, name, title, lines={text}, buttons={{name, text, act(), primary?}}, back()}) -> card, or nil
 --   when it could not be drawn (nothing is left behind: no shade, no binding, no gui)
+--   low=true: in the bottom of the screen, so what is behind it (the pet, the course) stays in view; selected=n: the
+--   button Enter and a gamepad start on (the first one by itself).
 -- Enter / A press the first (or the selected) button; B, Backspace or the round key go back.
 local ContextActionService=game:GetService("ContextActionService")
 local GuiService=game:GetService("GuiService")
@@ -27,6 +29,29 @@ function Card.layout(W,H,lineH,buttons)
 	local gap=10
 	local bw=math.floor((w-pad*2-gap*(buttons-1))/math.max(1,buttons))
 	return{compact=compact,pad=pad,w=w,h=math.min(H-8,y+bh+pad),titleH=titleH,lineW=w-pad*2,lines=lines,buttonY=y,bw=bw,bh=bh,gap=gap,text=if compact then 15 else 17}
+end
+
+-- Pure: the low card. Small enough for the bottom of the screen: the last lines go before it passes a third of it.
+function Card.lowLayout(W,H,lineH,buttons)
+	local compact=H<=430 or W<=700
+	local pad=if compact then 8 else 14
+	local w=math.min(if compact then 520 else 600,W-24)
+	local titleH=if compact then 26 else 32
+	local bh=if compact then 44 else 48
+	local shown=#lineH
+	local function height(count)
+		local h=pad+titleH+2
+		for index=1,count do h+=lineH[index]+2 end
+		return h+4+bh+pad
+	end
+	while shown>1 and height(shown)>H/3 do shown-=1 end
+	if shown==1 and height(1)>H*.4 then shown=0 end
+	local y=pad+titleH+2
+	local lines={}
+	for index=1,shown do lines[index]={y=y,h=lineH[index]};y+=lineH[index]+2 end
+	local gap=10
+	local bw=math.floor((w-pad*2-gap*(buttons-1))/math.max(1,buttons))
+	return{compact=compact,pad=pad,w=w,h=y+4+bh+pad,titleH=titleH,lineW=w-pad*2,lines=lines,buttonY=y+4,bw=bw,bh=bh,gap=gap,text=if compact then 14 else 17,low=8}
 end
 
 function Card.open(options)
@@ -56,7 +81,7 @@ function Card.open(options)
 		local Confirm=require(script.Parent.ConfirmDialog)
 		if Confirm.isOpen()then return Enum.ContextActionResult.Pass end
 		if state~=Enum.UserInputState.Begin then return Enum.ContextActionResult.Sink end
-		if input.KeyCode==Enum.KeyCode.Return or input.KeyCode==Enum.KeyCode.KeypadEnter then self:press(1)
+		if input.KeyCode==Enum.KeyCode.Return or input.KeyCode==Enum.KeyCode.KeypadEnter then self:press(options.selected or 1)
 		else self:back()end
 		return Enum.ContextActionResult.Sink
 	end,false,Card.Priority,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter)
@@ -68,12 +93,14 @@ function Card:build()
 	table.clear(self.buttons);table.clear(self.lines)
 	local size=self.root.AbsoluteSize
 	local W,H=math.max(320,size.X),math.max(240,size.Y)
-	local probe=Card.layout(W,H,{},#options.buttons)
+	local layout=if options.low then Card.lowLayout else Card.layout
+	local probe=layout(W,H,{},#options.buttons)
 	local heights={}
 	for index,text in ipairs(options.lines)do heights[index]=math.max(20,math.ceil(Kit.measure(text,"Body",probe.text,probe.lineW).Y)+4)end
-	local g=Card.layout(W,H,heights,#options.buttons)
+	local g=layout(W,H,heights,#options.buttons)
 	local panel=Kit.frame(self.root,"DashCard","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(g.w,g.h),if g.compact then 16 else 22)
 	panel.AnchorPoint=Vector2.new(.5,.5);panel.Active=true;panel.ZIndex=20
+	if g.low then panel.AnchorPoint=Vector2.new(.5,1);panel.Position=UDim2.new(.5,0,1,-g.low)end
 	Kit.stroke(panel)
 	self.panel=panel
 	Kit.text(panel,"Title",options.title,"text",{Name="Title",Position=UDim2.fromOffset(g.pad,g.pad),Size=UDim2.fromOffset(g.lineW-44,g.titleH),
@@ -83,6 +110,7 @@ function Card:build()
 	close.AnchorPoint=Vector2.new(1,0);close.Position=UDim2.fromOffset(g.w-g.pad+4,g.pad-4);close.ZIndex=panel.ZIndex+2
 	close.Activated:Connect(function()self:back()end)
 	for index,text in ipairs(options.lines)do
+		if not g.lines[index]then break end
 		self.lines[index]=Kit.text(panel,"Body",text,"soft",{Name="Line"..index,Position=UDim2.fromOffset(g.pad,g.lines[index].y),Size=UDim2.fromOffset(g.lineW,g.lines[index].h),
 			TextSize=g.text,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
 	end
@@ -93,7 +121,7 @@ function Card:build()
 		button.Activated:Connect(function()self:press(index)end)
 		self.buttons[index]=button
 	end
-	if string.sub(UserInputService:GetLastInputType().Name,1,7)=="Gamepad"then GuiService.SelectedObject=self.buttons[1]end
+	if string.sub(UserInputService:GetLastInputType().Name,1,7)=="Gamepad"then GuiService.SelectedObject=self.buttons[options.selected or 1]end
 end
 -- New words on an open card (a saved receipt); same number of lines, no rebuild.
 function Card:setLine(index,text)

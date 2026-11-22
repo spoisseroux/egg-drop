@@ -32,7 +32,7 @@ return function(client,offline)
 	Hud.new=function()
 		screen={on=false}
 		return setmetatable({zones={},stones={},show=function()screen.on=true;screen.rest=false end,hide=function()screen.on=false end,rest=function()screen.rest=true end,destroy=function()screen.gone=true;screen.on=false end,
-			say=function(_,text)screen.word=text end,setDigits=function(_,text)screen.digits=text end},{__index=function()return function()end end})
+			say=function(_,text)screen.word=text end,setHint=function(_,text)screen.hint=text end,setDigits=function(_,text)screen.digits=text end},{__index=function()return function()end end})
 	end
 	local card
 	local openCard=Card.open
@@ -74,8 +74,13 @@ return function(client,offline)
 		r.gui=Instance.new("Folder")
 		r.room={mode="Room",target="Room",held=false,locks=0,frames=0,pet=pet(),companions={active={}},shownPet={id="pip"},
 			garden={petGeneration=function()return 1 end,characterId=function()return 2 end},
-			enterDash=function(room)if room.refuse then return false end;room.held=true;room.dashHeld={};room.locks+=1;return true end,
-			leaveDash=function(room)if room.held then room.held=false;room.dashHeld=nil;room.locks-=1 end end,
+			enterDash=function(room,preview)
+				if room.dashHeld then if not preview then room.hidden=true end;return true end
+				if room.refuse then return false end
+				room.held=true;room.dashHeld={};room.locks+=1;room.hidden=not preview
+				return true
+			end,
+			leaveDash=function(room)if room.held then room.held=false;room.dashHeld=nil;room.locks-=1;room.hidden=false end end,
 			dashCamera=function(room)assert(room.held,"the camera only while held");room.frames+=1 end}
 		Rail.enqueue=function(_,key)table.insert(r.notes,key)end
 		Rail.status=function()return{update=function(_,v)r.line=v.text end,cancel=function()r.line=nil end}end
@@ -107,7 +112,8 @@ return function(client,offline)
 		end
 		function r.roster(value)r.folder:SetAttribute(Wire.RosterAttribute,HttpService:JSONEncode(value))end
 		function r.free(why)
-			assert(not r.room.held and r.room.locks==0,why..": camera and controls")
+			assert(not r.room.held and r.room.locks==0 and not r.room.hidden,why..": camera, controls and avatar")
+			assert(not r.client.shot and(r.client.fade==nil or next(r.client.fade.records)==nil),why..": see-through")
 			assert(r.client.seat==nil and not r.client:held(),why..": seat")
 			assert(not(screen and screen.on)and not(device and device.bound),why..": screen and buttons")
 			r.frame();assert(r.drawn==false and r.room.pet.dashState==nil and r.room.pet.parkPose~=true,why..": the pet")
@@ -116,6 +122,65 @@ return function(client,offline)
 		return r
 	end
 
+	test("the gate card: the course from the side, the avatar in view; every way the card goes gives the camera back",function()
+		local r=rig()
+		local eye,look=Client.gateView()
+		local Course=require(Shared.DashCourse)
+		local x,y,z=Course.at(0)
+		assert((eye-Vector3.new(x,y,z)).Magnitude<18 and(look-Vector3.new(x,y,z)).Magnitude<4 and eye.Y>y+3)
+		assert(math.sqrt((eye.X-Course.Pad.x/100)^2+(eye.Z-Course.Pad.z/100)^2)>Course.Pad.r/100+2,"not over the waiting players")
+		for name,out in pairs({
+			back=function()card.closed=true end,
+			race=function()card:pick("Fun");r.lock()end,
+			deck=function()r.room.target="Board"end,
+			other=function()r.modal=true end,
+			off=function()r.client:close()end,
+			error=function()r.client:fail("x")end,
+			lost=function()r.room:leaveDash()end,
+		})do
+			r.done();r=rig()
+			r.client:gate();assert(card.options.low==true)
+			r.frame(2);assert(r.room.held and not r.room.hidden and r.client.shot and r.room.frames>0,name)
+			out();r.frame(40)
+			if name=="race"then assert(r.room.held and r.room.hidden and r.room.locks==1);r.client:leave()end
+			r.room.target="Room";r.modal=false
+			if name=="lost"then assert(not r.room.held,"not taken again for the same card");card:close()end
+			if name=="other"then assert(card.closed)end
+			r.frame();if r.client.isOpen then r.free(name)else assert(not r.room.held and r.room.locks==0)end
+		end
+		r.done()
+	end)
+	test("Just for Fun is picked for a first race; later the gate remembers what was raced",function()
+		local r=rig()
+		r.client:gate();assert(card.options.selected==1 and card.options.buttons[1].name=="Fun"and card.options.buttons[1].primary);card:pick("Stats")
+		r.client.pending=nil;r.client:gate();assert(card.options.selected==1,"still a first race");card:pick("Stats");r.client.pending=nil
+		r.client.raced=true;r.client:gate();assert(card.options.selected==2 and card.options.buttons[2].primary and not card.options.buttons[1].primary);card:close()
+		r.saved={best=1};r.client.raced=nil;r.client.last={kind="trial"};r.client:gate();assert(card.options.selected==3);card:close()
+		r.done()
+	end)
+	test("the first-race helper shows on a first race only, and never after a clean jump",function()
+		local r=rig()
+		r.lock();assert(r.client.seat.hints);r.frame(235);assert(screen.hint=="Hold Dash!"or r.frame(20)==nil and screen.hint=="Hold Dash!")
+		r.frame(170);r.client.seat.hints.done=true;r.frame(2);assert(r.client.seat.hints==nil and screen.hint==nil)
+		r.client:leave();r.lock();assert(r.client.seat.hints==nil,"the second race of the session");r.client:leave();r.done()
+		r=rig();r.saved={best=1};r.lock();assert(r.client.seat.hints==nil);r.client:leave();r.done()
+	end)
+	test("tags: only near the player's pet, and never over each other",function()
+		local r=rig();r.lock("fun",8);r.frame(12)
+		local props=r.client.props
+		local function shown()local n=0;for _,tag in pairs(props.tags)do if tag.board.Enabled then n+=1 end end;return n end
+		for slot,tag in pairs(props.tags)do tag.part.Position=Vector3.new(slot,0,0)end
+		local function wide(p)return p.X*200,50 end
+		props:placeTags(Vector3.zero,wide);assert(shown()==7)
+		props:placeTags(Vector3.zero,function(p)return p.X*20,50 end)
+		local last=nil
+		for slot=1,8 do local tag=props.tags[slot];if tag and tag.board.Enabled then if last then assert(math.abs(tag.x-last)>=Props.TagSize.X+Props.TagGap)end;last=tag.x end end
+		assert(shown()>=1 and shown()<7 and props.tags[2].board.Enabled,"the nearest one wins")
+		props:placeTags(Vector3.new(-6,0,0),wide);assert(shown()==5,"12 studs")
+		props:placeTags(Vector3.zero,function()return nil end);assert(shown()==0)
+		props:placeTags(nil,wide);assert(shown()==0)
+		r.client:leave();r.done()
+	end)
 	test("ceiling off: nil; switch off: no instances, no hooks, nothing stepped",function()
 		Dash.inject({flags={},studio=true});assert(Client.mount({})==nil)
 		local r=rig({flags={GardenDash=true},studio=true,race=false})
@@ -273,7 +338,7 @@ return function(client,offline)
 		local heat=r.client.heat
 		assert(heat and heat.byUser[7]and not r.client:racing(8)and r.client:racing(7))
 		local pals=0;for _,track in pairs(heat.tracks)do if track.visual then pals+=1 end end;assert(pals==7,"one a frame")
-		assert(r.client.props.count<=Props.MaxParts and #workspace:FindFirstChild(Props.FolderName):GetChildren()<=Props.MaxParts)
+		assert(r.client.props.count<=33 and r.client.props.count<=Props.MaxParts and #workspace:FindFirstChild(Props.FolderName):GetChildren()<=Props.MaxParts)
 		now=r.goAt
 		for _=1,200 do Sim.step(r.race)end
 		r.state.OnClientEvent:Fire(Wire.encode("race-1",r.race,Stats.UnitsPerCs))
@@ -351,6 +416,13 @@ return function(client,offline)
 		assert(camera.CameraSubject==room.humanoid)
 		room,camera=make();room:enterDash();room.root={Position=Vector3.new(50,2,3),Parent={}};room:leaveDash()
 		assert(camera.CFrame.X==55 and camera.FieldOfView==65 and lock:count()==0,"a new character: behind it")
+		-- The avatar: hidden for a race, not for the gate card; a respawn hides the new one; always given back.
+		assert(Room.hidden==0)
+		room=make();room:enterDash(true);assert(Room.hidden==0);room:enterDash();assert(Room.hidden==1 and lock:count()==1)
+		room.root={Position=Vector3.zero,Parent={}};room:dashCamera(CFrame.new(0,0,0),58);assert(Room.hidden==1 and room.dashHeld.visibility.character==room.root.Parent)
+		room.root=nil;room:dashCamera(CFrame.new(0,0,0),58);assert(Room.hidden==0,"no avatar just now")
+		room.root={Position=Vector3.zero,Parent={}};room:dashCamera(CFrame.new(0,0,0),58);assert(Room.hidden==1)
+		room:leaveDash();assert(Room.hidden==0 and not room:leaveDash()and Room.hidden==0)
 		room,camera=make();room:enterDash();workspace.CurrentCamera=nil;room:leaveDash();assert(lock:count()==0)
 		-- The gamepad's selection: put away for the race, given back unless it cannot be or something else has it.
 		local gui,button=Room.gui,{ok=true}

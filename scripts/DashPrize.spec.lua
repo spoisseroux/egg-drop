@@ -39,7 +39,7 @@ return function(server)
 		for _,n in ipairs({1,2,3,8})do
 			for _,when in ipairs({"none","failBefore","failAfter"})do
 				local h,db,c=fixture();local list={}
-				for i=1,n do list[i]={kind="race",mode="stats",band=5,place=8,us=if i==1 then 57000000 else 120000000,inputs=1000000,seed=4294967295,prize=true}end
+				for i=1,n do list[i]={kind="race",mode="stats",band=5,place=8,us=if i==1 then 46000000 else 120000000,inputs=1000000,seed=4294967295,prize=true}end
 				local wallet=h.state.nectar;c[when]=true;local id="dash-"..string.rep("f",36)
 				local ok,why=H.dashResults(h,id,list)
 				if when~="none"then assert(why=="Retrying");ok=H.retry(h)end
