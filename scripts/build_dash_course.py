@@ -40,6 +40,9 @@ OBSTACLES = [
     (52.0, 3.0, 3.6, 5.8),  # the Bubble Spring's marble rim
     (72.0, -22.0, 3.0, 5.2),  # the tree over the meadow, and the rocks at its foot
     (69.5, 8.0, 2.0, 4.2),  # the rock south of the start
+    # The boulders beside the stones (W7_Rocks__boulder_rock, from the mesh): two studs clear of the centre line.
+    (20.6, 1.25, 1.0, 3.2), (13.6, 4.45, .95, 3.15), (-2.7, 6.95, 1.1, 3.3),
+    (-3.35, 6.3, 1.9, 4.05),  # the bush round the last one
 ]
 CLIFF_X, CLIFF_ROOM = 78.0, 4.0  # nothing of the race comes nearer than this to the cliff rock east of x 78
 PAD, PAD_RADIUS = (70.0, 0.0), 3.0  # where racers wait, beside the start and off the line
@@ -50,12 +53,19 @@ STEP = 2.0
 MIN_RADIUS = 6.0
 
 # (x, z, kind): "P" snaps to the dirt, "F" never moves, "-" may be nudged by the search, "n" only a little.
-# 2026-11-22 (WORLD-PLAN section 2, option B): the start is the Dash Meadow. Everything from the stones on is the line
-# the first Studio races were run on (the old search's own numbers), so only the first 40 studs are new.
-MAIN = [(72, -8, "F"), (67, -7.6, "F"), (60, -6.6, "-"), (52, -4.4, "-"), (45, -1, "-"), (38, 1.6, "-"),  # west over the open lawn
-        (30.888, .706, "F"), (24.489, 4.012, "n"), (23.603, 18.563, "n"), (18, 21, "F"), (13.5, 21, "F"), (-8.5, 21, "F"), (-13, 21, "F"),
-        (-18.95, 14.331, "F"), (-22.439, 13.032, "F"), (-36.074, 13.037, "F"), (-47.863, .79, "F"), (-47.441, 1.712, "F"), (-58.094, -3.812, "F"),
-        (-68.194, -6.226, "F"), (-77.071, -8.821, "F"), (-84.072, -10, "F")]
+# 2026-11-22 (WORLD-PLAN section 2, option B): the start is the Dash Meadow, then west over the open lawn (six points). From
+# the stones on it is the line the first Studio races were run on. The search's own result, kept as it was checked: only
+# the stones are still nudged.
+MAIN = [(72.0, -8.0, "F"), (67.0, -7.6, "F"), (59.173932182961636, -6.299683658803034, "F"),
+        (49.537981656619515, -2.214834219696677, "F"), (49.79815623406458, -2.6384985499134683, "F"), (38.81004619603708, 3.007104843901345, "F"),
+        (30.888, 0.706, "F"), (24.512100059355035, 3.7601885048680113, "F"), (23.50384559714782, 18.49280362653026, "F"),
+        (18.0, 21.0, "F"), (13.5, 21.0, "F"), (-8.5, 21.0, "F"),
+        (-13.0, 21.0, "F"), (-18.95, 14.331, "F"), (-22.439, 13.032, "F"),
+        (-36.074, 13.037, "F"), (-47.863, 0.79, "F"), (-47.441, 1.712, "F"),
+        (-58.094, -3.812, "F"), (-68.194, -6.226, "F"), (-77.071, -8.821, "F"),
+        (-84.072, -10.0, "F")]
+# The way over the stones, south of the boulders; the search nudges it.
+STONES = [(20.5, 4.6), (12.5, 8.0), (-3.2, 10.8)]
 FORK_POINT, REJOIN_POINT = (30.0, 2.7), (-23.0, 13.2)
 SAVING, LENGTH = 14.0, 179.0
 STONE_TOP = 4.0
@@ -217,13 +227,14 @@ def faults(points, wet_ok=None, height=height):
 
 
 def build(control):
+    control, way = control[:len(MAIN)], control[len(MAIN):]
     main = resample(smooth(control))
     f, r = nearest(main, FORK_POINT), nearest(main, REJOIN_POINT)
     fp, rp = main[f], main[r]
     fd = (main[f][0] - main[f - 1][0], main[f][1] - main[f - 1][1])
     rd = (main[r + 1][0] - main[r][0], main[r + 1][1] - main[r][1])
     k, m = 6 / math.hypot(*fd), 6 / math.hypot(*rd)
-    branch = resample(smooth([fp, (fp[0] + fd[0] * k, fp[1] + fd[1] * k), (rp[0] - rd[0] * m, rp[1] - rd[1] * m), rp]))
+    branch = resample(smooth([fp, (fp[0] + fd[0] * k, fp[1] + fd[1] * k), *way, (rp[0] - rd[0] * m, rp[1] - rd[1] * m), rp]))
     return main, f, r, branch
 
 
@@ -240,16 +251,17 @@ def cost(control):
 
 def search():
     rng = random.Random(SEED)
-    best = [snap(x, z) if kind == "P" else (float(x), float(z)) for x, z, kind in MAIN]
+    best = [snap(x, z) if kind == "P" else (float(x), float(z)) for x, z, kind in MAIN] + [(float(x), float(z)) for x, z in STONES]
     score = cost(best)
-    move = [i for i, p in enumerate(MAIN) if p[2] in "-n"]
+    points = MAIN + [(x, z, "b") for x, z in STONES]
+    move = [i for i, p in enumerate(points) if p[2] in "-nb"]
     for n in range(1600):
         trial = list(best)
         i = rng.choice(move)
-        reach = .1 if MAIN[i][2] == "n" else 1.6 if n < 900 else .5
+        reach = .1 if points[i][2] == "n" else .4 if points[i][2] == "b" else 1.6 if n < 900 else .5
         dx, dz = rng.uniform(-reach, reach), rng.uniform(-reach, reach)
         x, z = trial[i][0] + dx, trial[i][1] + dz
-        trial[i] = (x, snap(x, z)[1] if MAIN[i][2] == "P" else z)
+        trial[i] = (x, snap(x, z)[1] if points[i][2] == "P" else z)
         c = cost(trial)
         if c < score:
             best, score = trial, c

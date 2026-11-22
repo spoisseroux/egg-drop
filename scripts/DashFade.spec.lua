@@ -12,7 +12,7 @@ return function(client)
 			local item=Instance.new("MeshPart");item.Name=name;item.LocalTransparencyModifier=prior or 0;item.Parent=folder
 			return item
 		end
-		return folder,{crown=part("W7_Vegetation__foliage"),pillar=part("W7_Architecture__marble",.2),ground=part("W7_Ground__grass"),cell=part("W7C_Architecture_01"),bridge=part("W7_Bridge__marble")}
+		return folder,{crown=part("W7_Vegetation__foliage"),pillar=part("W7_Bridge__palette",.2),kerb=part("W7_Architecture__marble"),trunk=part("W7_Trunks__bark"),ground=part("W7_Ground__grass"),cell=part("W7C_Architecture_01"),bridge=part("W7_Bridge__marble")}
 	end
 	local function rig()
 		local folder,parts=world()
@@ -31,7 +31,7 @@ return function(client)
 		r.run(1,zone.to+10);assert(r.parts.crown.LocalTransparencyModifier==0 and next(r.fade.records)==nil)
 		r.run(.5,zone.from+10,true);assert(r.parts.crown.LocalTransparencyModifier==0)
 	end)
-	test("a pillar in the way clears and keeps its own value; the ground, colliders and the bridge are never asked",function()
+	test("a solid thing in the way clears and keeps its own value; the ground, kerbs, trunks, colliders and the deck are never asked",function()
 		local r=rig();r.hit=r.parts.pillar
 		r.run(.6);assert(math.abs(r.parts.pillar.LocalTransparencyModifier-Fade.Clear)<1e-9)
 		assert(#r.asked==1 and r.asked[1]==r.parts.pillar)
@@ -44,6 +44,28 @@ return function(client)
 		assert(r.parts.pillar.LocalTransparencyModifier==.2 and r.parts.crown.LocalTransparencyModifier==0 and next(r.fade.records)==nil and not r.fade.ready)
 		r.run(.6,zone.from+10);assert(r.parts.crown.LocalTransparencyModifier==Fade.Clear);r.fade:release()
 		r.run(.6,zone.from+10);r.parts.crown:Destroy();r.run(.6,0);r.fade:release()
+	end)
+	test("looks past what it has hit, three deep, and asks for each thing once",function()
+		local fade=rig().fade
+		local a,b,c,d={LocalTransparencyModifier=0},{LocalTransparencyModifier=0},{LocalTransparencyModifier=0},{LocalTransparencyModifier=0}
+		fade.ready,fade.solids=true,{a,b,c,d}
+		local seen={}
+		fade.cast=function(_,_,left)table.insert(seen,#left);return left[1]end
+		fade:look(EYE,PET-EYE)
+		assert(#seen==3 and seen[1]==4 and seen[2]==3 and seen[3]==2 and fade.records[a]and fade.records[b]and fade.records[c]and not fade.records[d])
+		assert(#fade.solids==4,"the list itself is kept")
+	end)
+	test("a world that comes late, streams a mesh in or is replaced is found on the next look",function()
+		local folder,parts=world()
+		local now=nil
+		local fade=Fade.new({world=function()return now end,cast=function()return nil end})
+		local function run(n)for _=1,n do fade:step(1/60,EYE,PET,zone.from+10,false)end end
+		run(30);assert(not fade.ready and next(fade.records)==nil)
+		now=folder;run(30);assert(fade.ready and parts.crown.LocalTransparencyModifier==Fade.Clear)
+		local other,fresh=world();fresh.crown.Parent=nil;now=other;run(30);assert(fresh.crown.LocalTransparencyModifier==0)
+		fresh.crown.Parent=other;run(30);assert(fresh.crown.LocalTransparencyModifier==Fade.Clear and parts.crown.LocalTransparencyModifier==0,"the old one came back")
+		now=nil;run(60);assert(not fade.ready and fresh.crown.LocalTransparencyModifier==0)
+		fade:release()
 	end)
 	test("no world yet: nothing happens",function()
 		local fade=Fade.new({world=function()return nil end})

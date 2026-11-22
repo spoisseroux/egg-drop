@@ -1,11 +1,13 @@
 -- Garden Dash on the save (V3-DASH-BUILD-PLAN-2026-11-22, slice S6). One optional, additive field on the hatching
 -- save (v11, no version bump), written only inside HatchProgress.transact (Hatching.dashResults):
---   dash = {day, paid, week, weekRibbons, ribbons={gold,silver,bronze,green}, cups, best, op,
+--   dash = {day, paid, week, weekRibbons, ribbons={gold,silver,bronze,green}, cups, best, trials, op,
 --           receipt={op,seed,place,us,stars,balance}}
 --   day, paid      the day ("20000") Stars were last counted for, and how many races it paid (0..5)
 --   week           QuestRotation week of weekRibbons; the "Garden Dasher" title is derived: 5 ribbons this week
 --   cups           bitmask 1 bronze, 2 silver, 4 gold (Time Trial pars beaten, ORed, so a repeat adds nothing)
---   best           best Time Trial in microseconds
+--   best           best Time Trial in microseconds on course 1 (before trials); kept as it is, never read or written
+--   trials         best Time Trial per course, {["2"]=us}: the key is DashCourse.Version. Only this course's is read or
+--                  improved; the others are kept. An older beta build repairs it away on its next Dash write
 --   op             the last flight written: the proof that it committed (exactly once under retry and replay)
 --   receipt        what that flight paid; analytics read only this. The seed never leaves the server.
 --
@@ -14,6 +16,7 @@
 -- subfield is repaired on its own, and a malformed day or paid reads as "all paid today" (fail closed).
 local Shared=game:GetService("ReplicatedStorage").Shared
 local DashStats=require(Shared.DashStats)
+local Course=require(Shared.DashCourse)
 local Rotation=require(Shared.QuestRotation)
 
 local State={}
@@ -28,6 +31,8 @@ State.MaxUs=120000000 -- DashSim.MaxTicks
 State.CupBits=table.freeze({bronze=1,silver=2,gold=4})
 State.CupOrder=table.freeze({"bronze","silver","gold"})
 State.Ribbons=table.freeze({"gold","silver","bronze","green"})
+State.Course=tostring(Course.Version)
+State.MaxCourse=999
 
 local function integer(value,low,high)
 	return type(value)=="number"and value==value and value%1==0 and value>=low and value<=high
@@ -62,10 +67,22 @@ function State.read(state)
 	for _,id in ipairs(State.Ribbons)do out.ribbons[id]=if integer(ribbons[id],0,State.StoredMax)then ribbons[id]else 0 end
 	if integer(source.cups,0,7)then out.cups=source.cups end
 	if integer(source.best,1,State.MaxUs)then out.best=source.best end
+	if type(source.trials)=="table"then
+		for key,us in pairs(source.trials)do
+			local version=if type(key)=="string"then tonumber(key)else nil
+			if integer(version,1,State.MaxCourse)and tostring(version)==key and integer(us,1,State.MaxUs)then
+				out.trials=out.trials or {}
+				out.trials[key]=us
+			end
+		end
+	end
 	if op(source.op)then out.op=source.op end
 	out.receipt=receiptOf(source.receipt)
 	return out
 end
+local function bestOf(entry)return entry.trials and entry.trials[State.Course]end
+-- The best Time Trial on this course; a time from another course is not one.
+function State.best(state)return bestOf(State.read(state))end
 -- The day's count as of `today`: a later saved day is kept (clock rollback), an earlier one starts again.
 local function roll(entry,today)
 	local now=tonumber(today)
@@ -129,7 +146,8 @@ function State.pointless(state,result)
 	if result.kind=="race"then return State.ribbon(result)==nil and not State.earns(result)end
 	if not result.us then return true end
 	local entry=State.read(state)
-	if entry.best==nil or result.us<entry.best then return false end
+	local best=bestOf(entry)
+	if best==nil or result.us<best then return false end
 	return not result.prize or bit32.band(State.cupBits(result.us),bit32.bnot(entry.cups))==0
 end
 
@@ -143,7 +161,11 @@ function State.apply(state,candidate,today)
 	for _,result in ipairs(candidate.results)do
 		if result.kind=="trial"then
 			if result.us then
-				if entry.best==nil or result.us<entry.best then entry.best=result.us end
+				local best=bestOf(entry)
+				if best==nil or result.us<best then
+					entry.trials=entry.trials or {}
+					entry.trials[State.Course]=result.us
+				end
 				if result.prize then entry.cups=bit32.bor(entry.cups,State.cupBits(result.us))end
 			end
 		else
@@ -175,7 +197,7 @@ end
 function State.public(state,today)
 	local entry=roll(State.read(state),today)
 	local receipt=entry.receipt
-	return{day=today,paid=entry.paid,limit=State.DailyLimit,stars=State.Stars,ribbons=entry.ribbons,cups=entry.cups,best=entry.best,
+	return{day=today,paid=entry.paid,limit=State.DailyLimit,stars=State.Stars,ribbons=entry.ribbons,cups=entry.cups,best=bestOf(entry),
 		weekRibbons=entry.weekRibbons,titleAt=State.TitleRibbons,title=entry.weekRibbons>=State.TitleRibbons,
 		last=if receipt then{op=receipt.op,place=receipt.place,us=receipt.us,stars=receipt.stars}else nil}
 end

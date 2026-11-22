@@ -351,7 +351,7 @@ function Host:finish(board,flight)
 	if new~=0 then
 		local ids={}
 		for _,id in ipairs(DashState.CupOrder)do if bit32.band(new,DashState.CupBits[id])~=0 then table.insert(ids,id)end end
-		pcall(self.fire,self,board.player.UserId,{kind="cup",cups=ids,us=DashState.read(board.nursery.state).best})
+		pcall(self.fire,self,board.player.UserId,{kind="cup",cups=ids,us=DashState.best(board.nursery.state)})
 	end
 	return true
 end

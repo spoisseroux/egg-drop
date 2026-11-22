@@ -31,7 +31,7 @@ return function(_, shared, offline)
 	local function near(a, b) return math.sqrt((a[1] - b[1]) ^ 2 + (a[2] - b[2]) ^ 2) end
 	local function inSpan(x, z) return math.abs(x - world.span[1]) <= world.span[3] / 2 and math.abs(z - world.span[2]) <= world.span[4] / 2 end
 
-	test("whole hundredths; distances rise and add up; 175 to 185 studs; the stones save about 14", function()
+	test("whole hundredths; distances rise and add up; 175 to 185 studs; the stones save 13 to 14.5", function()
 		for _, list in ipairs({ Course.Main, Course.Branch }) do
 			assert(#list % 4 == 0 and list[1] == 0)
 			for i, v in ipairs(list) do assert(v % 1 == 0, i) end
@@ -42,7 +42,7 @@ return function(_, shared, offline)
 		end
 		assert(main[#main].d == Course.Length and Course.Length >= 17500 and Course.Length <= 18500, Course.Length)
 		assert(branch[#branch].d == Course.StonesLength)
-		assert(Course.Saving == Course.Rejoin - Course.Fork - Course.StonesLength and math.abs(Course.Saving - 1400) <= 50, Course.Saving)
+		assert(Course.Saving == Course.Rejoin - Course.Fork - Course.StonesLength and Course.Saving >= 1300 and Course.Saving <= 1450, Course.Saving)
 		assert(Course.Fork / Course.Length > .22 and Course.Rejoin / Course.Length < .65, "a run before the fork, a run after")
 	end)
 	test("the branch leaves and rejoins the main line on its own points", function()
@@ -103,9 +103,10 @@ return function(_, shared, offline)
 		assert(high - low < .3 and math.abs(pad.y / 100 - world.groundY(px, pz)) < .02, high - low)
 		assert(near({ px, pz }, { 69.5, 8 }) > r + 2 and near({ px, pz }, { 72, -22 }) > r + 3)
 	end)
-	test("clear of the measured solid things: the leaning tree, the Bubble Spring, the meadow tree and rock, every lane outside them", function()
+	test("clear of the measured solid things: the leaning tree, the Bubble Spring, the meadow tree and rock, the boulders by the stones, every lane outside them", function()
 		local closest = 1e9
-		for _, tree in ipairs({ { 38.25, 8, 1.6, 3.8 }, { 52, 3, 3.6, 5.8 }, { 72, -22, 3, 5.2 }, { 69.5, 8, 2, 4.2 } }) do -- build_dash_course.py OBSTACLES
+		for _, tree in ipairs({ { 38.25, 8, 1.6, 3.8 }, { 52, 3, 3.6, 5.8 }, { 72, -22, 3, 5.2 }, { 69.5, 8, 2, 4.2 },
+			{ 20.6, 1.25, 1, 3.2 }, { 13.6, 4.45, .95, 3.15 }, { -2.7, 6.95, 1.1, 3.3 }, { -3.35, 6.3, 1.9, 4.05 } }) do -- build_dash_course.py OBSTACLES
 			for _, way in ipairs({ { Course.Length, false }, { Course.StonesLength, true } }) do
 				for d = 0, way[1], 10 do
 					local x, _, z = Course.at(d, way[2])

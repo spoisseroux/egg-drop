@@ -2,7 +2,7 @@
 -- the pet goes 75% clear on this screen only, and comes back. Owner-client presentation: LocalTransparencyModifier,
 -- never the replicated Transparency. Every part it touched gets its own value back when the view is clear again and
 -- on release() (every way out of a race).
---   * pillars and trunks answer rays: one short cast every Fade.Every seconds, against those meshes alone;
+--   * solid things answer rays: a look every Fade.Every seconds, against the named meshes alone, up to Fade.Casts deep;
 --   * the crowns do not (nor the blossom), so where they cross the view is measured offline from the world meshes
 --     (scripts/measure_dash_camera.py) and kept here as stretches of the course.
 -- The island's crowns are one merged mesh, so they fade together until they are exported apart (plan slice 9).
@@ -12,16 +12,13 @@ Fade.Seconds=.18
 Fade.Every=.1
 Fade.Hold=.3 -- a mesh stays clear this long after the last time it was in the way
 Fade.Lounge="EggDropLounge"
-Fade.Solids=table.freeze({"W7_Trunks","W7_Architecture","W7_Rotunda","W7_Aqueduct","W7_Stations"})
+Fade.Casts=3
+-- Only what measure_dash_camera.py reports and what is one thing by itself: the caps of the bridge's rails. Never a mesh
+-- that also holds ground or kerbs (the bridge deck, the rocks, W7_Architecture).
+Fade.Solids=table.freeze({"W7_Bridge__palette"})
 -- Course version 2: 4900..5050 on Main, plus a stud and a half either side to have it clear on arrival.
 Fade.Zones=table.freeze({table.freeze({mesh="W7_Vegetation__foliage",stones=false,from=4750,to=5200})})
 
-function Fade.solid(name)
-	for _,prefix in ipairs(Fade.Solids)do
-		if string.sub(name,1,#prefix)==prefix then return true end
-	end
-	return false
-end
 local function world()
 	local lounge=workspace:FindFirstChild(Fade.Lounge)
 	return lounge and lounge:FindFirstChild("World")
@@ -31,22 +28,44 @@ function Fade.new(options)
 	options=options or {}
 	return setmetatable({world=options.world or world,cast=options.cast,records={},wait=0},Fade)
 end
--- The meshes of this race, found once.
-function Fade:begin()
-	if self.ready then return end
-	self.ready=true
-	self.solids,self.crowns={},{}
+-- The meshes, looked up by name on every look: they may stream in, or be replaced, during a race.
+function Fade:find()
 	local folder=self.world()
-	if not folder then return end
-	for _,part in ipairs(folder:GetChildren())do
-		if part:IsA("MeshPart")and Fade.solid(part.Name)then table.insert(self.solids,part)end
+	self.ready=folder~=nil
+	if not folder then
+		if self.solids then table.clear(self.solids);table.clear(self.crowns)end
+		return
+	end
+	self.solids,self.crowns=self.solids or {},self.crowns or {}
+	table.clear(self.solids)
+	for _,name in ipairs(Fade.Solids)do
+		local part=folder:FindFirstChild(name)
+		if part then table.insert(self.solids,part)end
 	end
 	for index,zone in ipairs(Fade.Zones)do self.crowns[index]=folder:FindFirstChild(zone.mesh)end
-	if not self.cast and #self.solids>0 then
-		local params=RaycastParams.new()
-		params.FilterType=Enum.RaycastFilterType.Include
-		params.FilterDescendantsInstances=self.solids
-		self.params=params
+end
+-- Everything solid between the eye and the pet, nearest first: each cast leaves out what was already hit.
+function Fade:look(eye,way)
+	local left=self.solids
+	for _=1,Fade.Casts do
+		if #left==0 then return end
+		local part
+		if self.cast then part=self.cast(eye,way,left)
+		else
+			if not self.params then
+				self.params=RaycastParams.new()
+				self.params.FilterType=Enum.RaycastFilterType.Include
+			end
+			self.params.FilterDescendantsInstances=left
+			local hit=workspace:Raycast(eye,way,self.params)
+			part=hit and hit.Instance
+		end
+		if not part then return end
+		self:blocked(part)
+		left=table.clone(left)
+		local at=table.find(left,part)
+		if not at then return end
+		table.remove(left,at)
 	end
 end
 function Fade:blocked(part)
@@ -59,22 +78,18 @@ function Fade:blocked(part)
 end
 -- One frame: from the eye to the pet, which is at cs (onStones as Sim.spot).
 function Fade:step(dt,eye,pet,cs,onStones)
-	self:begin()
-	for index,zone in ipairs(Fade.Zones)do
-		local crown=self.crowns[index]
-		if crown and zone.stones==onStones and cs>=zone.from and cs<=zone.to then self:blocked(crown)end
-	end
 	self.wait-=dt
-	if self.wait<=0 and #self.solids>0 then
+	local look=self.wait<=0
+	if look then
 		self.wait=Fade.Every
-		local way=pet-eye
-		local part
-		if self.cast then part=self.cast(eye,way,self.solids)
-		else
-			local hit=workspace:Raycast(eye,way,self.params)
-			part=hit and hit.Instance
+		self:find()
+	end
+	if self.ready then
+		for index,zone in ipairs(Fade.Zones)do
+			local crown=self.crowns[index]
+			if crown and zone.stones==onStones and cs>=zone.from and cs<=zone.to then self:blocked(crown)end
 		end
-		if part then self:blocked(part)end
+		if look then self:look(eye,pet-eye)end
 	end
 	for part,record in pairs(self.records)do
 		record.hold-=dt
