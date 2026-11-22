@@ -278,6 +278,34 @@ return function(client,parent)
    view:input(K.ButtonB);assert(not view:isOpen()and backs==1)
    view:destroy();host:Destroy()
   end)
+  test("Levels matter: where-to-find lines from Smarts 5, only on pages with something missing",function()
+   local Levels=require(Shared.Levels)
+   local function levels(on)Levels.inject({flags={LevelsMatter=on},studio=true,shipped={track=true}})end
+   levels(false);assert(not View.hintsOn({pip={smarts=99}})and #View.hints("balls",{{owned=false}},View.hintsOn({pip={smarts=99}}))==0)
+   levels(true);assert(not View.hintsOn({pip={smarts=4}})and View.hintsOn({pip={smarts=4},blip={smarts=5}}))
+   assert(#View.hints("balls",{{owned=true}},true)==0 and View.hints("balls",{{owned=true},{owned=false},{owned=false}},true)[1]==UICopy.get("book.where.balls"))
+   local toys=View.hints("toys",{{owned=false,toy="ball"},{owned=false,jar="gloss"},{owned=false,jar="matte"}},true)
+   assert(#toys==2 and toys[1]==UICopy.get("book.where.toy")and toys[2]==UICopy.get("book.where.finishJar"))
+   assert(#View.hints("charms",{{owned=false,how="egg"},{owned=false,how="earned"}},true)==2)
+   for _,id in ipairs(Book.PageOrder)do for _,item in ipairs(View.items(id,{}))do
+    local kind=View.whereKind(id,item);assert(kind==nil or UICopy.has("book.where."..kind),id)
+   end end
+   local saved=View.hintsOn
+   for _,size in ipairs({Vector2.new(1280,720),Vector2.new(844,390),Vector2.new(667,375)})do
+    local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
+    local view=View.new(host,{send=function()end})
+    View.hintsOn=function()return true end
+    view:open(snapshot(false),{page="wardrobe"});settle()
+    local strip=view.grid:FindFirstChild("WhereToFind")
+    assert(strip and view.root:GetAttribute("BookHints")==1)
+    for _,child in ipairs(view.grid:GetChildren())do if string.sub(child.Name,1,5)=="Item_"then assert(child.Position.Y.Offset>=strip.Size.Y.Offset+4,"cards start under the line")end end
+    View.hintsOn=function()return false end
+    view:setContext({});settle();assert(view.grid:FindFirstChild("WhereToFind")==nil and view.root:GetAttribute("BookHints")==nil)
+    view:destroy();host:Destroy()
+   end
+   View.hintsOn=saved
+   Levels.inject(nil)
+  end)
  end,function(e)return tostring(e).." | "..debug.traceback()end)
  View.PendingTimeout=savedTimeout
  Peek.setSource(savedSource)

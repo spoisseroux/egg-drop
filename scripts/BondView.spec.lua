@@ -12,6 +12,8 @@
 --    is every pet's at any level (follow-up 2026-11-14), level 2 only makes it sooner;
 --    levels 3-10 play their routine beat by beat while the owner stands near.
 --  * Ten levels on five hearts: levels 6-10 turn the hearts gold (follow-up 2026-11-14).
+--  * Levels matter (2026-11-22): the cases above run with it off; on, the Heart level chip takes the
+--    pips' place and tricks follow the better of Bond and Heart (off, Heart changes nothing).
 -- Usage: require(PlayerScripts.Client.ZZSpecs.BondView)(PlayerScripts.Client, PlayerGui)
 return function(client,parent)
  local Shared=game:GetService("ReplicatedStorage").Shared
@@ -19,6 +21,9 @@ return function(client,parent)
  local Kit=require(client.DeckKit)
  local UICopy=require(Shared.UICopy)
  local Pets=require(Shared.PetCatalog)
+ local Levels=require(Shared.Levels)
+ local function levels(on)Levels.inject({flags={LevelsMatter=on},studio=true,shipped={track=true,gates=true,medals=true,juice=true}})end
+ levels(false)
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local gui=Instance.new("ScreenGui");gui.Name="_BondViewSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
  local screen=gui;gui=Instance.new("Frame");gui.Name="Host";gui.BackgroundTransparency=1;gui.Size=UDim2.fromScale(1,1);gui.Parent=screen -- pips live in frames in game
@@ -292,7 +297,57 @@ return function(client,parent)
    -- Reduced Effects: no routines at all.
    self,pet=room(Catalog.Thresholds[5]);self.bondTrickAt=os.clock()-1;self:bondTricks(true);assert(self.bondRoutine==nil and pet.idleBeat==nil)
   end)
+  test("Levels matter on: the Heart chip on the focus card and in Companions; off puts the pips back",function()
+   Pips.override=nil
+   if not Pips.catalog()then return end
+   levels(true)
+   local stats={pets={[petId]={xp={},level={heart=14},total=19}},bonus={}}
+   local Focus=require(client.PetFocusUI)
+   local holder=Instance.new("Frame");holder.Size=UDim2.fromScale(1,1);holder.BackgroundTransparency=1;holder.Parent=screen
+   local focus=Focus.new(holder,{back=function()end,canReact=function()return true end,greet=function()return true end,pet=function()return true end})
+   focus:setBond({name="Bear",bond=Pips.info({[petId]=50},petId),heart=14})
+   assert(focus.bondCard.Visible and focus.bondCard:GetAttribute("HeartLevel")==14 and focus.bondCard:GetAttribute("BondLevel")==nil and focus.heartChip.root.Visible and focus.bondPips==nil)
+   local chip=focus.heartChip.root
+   assert(chip.Position.X.Offset+chip.Size.X.Offset<=focus.bondCard.Size.X.Offset and chip.Position.Y.Offset+chip.Size.Y.Offset<=48,"the chip is inside the card")
+   focus:setBond({name="Bear",heart=99});assert(focus.bondCard.Visible,"no bond map: still the Heart level")
+   focus:setBond({name="Bear",bond=Pips.info({[petId]=50},petId)});assert(not chip.Visible and focus.bondPips.root.Visible and focus.bondCard:GetAttribute("HeartLevel")==nil)
+   focus:destroy();holder:Destroy()
+   local Hub=require(client.CompanionsHub)
+   for _,size in ipairs({Vector2.new(1280,720),Vector2.new(844,390),Vector2.new(667,375)})do
+    local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
+    local hub=Hub.new(host,{appearance=function()return{}end})
+    local state={inventoryMask=1,bond={[petId]=0},petStats=stats}
+    hub:open({wallet=1,state=state,activeId=petId});settle()
+    assert(hub.pips==nil and hub.heartChip.root.Visible and hub.heartChip.root:GetAttribute("HeartLevel")==14,tostring(size))
+    local pane=hub.heartChip.root.Parent
+    local left,right=hub.heartChip.root.AbsolutePosition.X,hub.heartChip.root.AbsolutePosition.X+hub.heartChip.root.AbsoluteSize.X
+    assert(left>=pane.AbsolutePosition.X and right<=pane.AbsolutePosition.X+pane.AbsoluteSize.X+.5,"the chip is inside the pane")
+    if size.X<1000 then assert(hub.petName.AbsolutePosition.X+hub.petName.AbsoluteSize.X<=left+.5,"and clear of the name")end
+    hub:setPage("pets");settle();assert(hub.heartChip.root.Visible)
+    levels(false);hub:setContext({state=state});settle();assert(hub.heartChip==nil and hub.pips~=nil,"off: the pips")
+    levels(true)
+    hub:destroy();host:Destroy()
+   end
+   levels(false)
+  end)
+  test("Levels matter: tricks follow the better of Bond and Heart while the track is on",function()
+   if not Pips.catalog()then return end
+   local Room=require(client.RoomView)
+   local Real=require(Shared.BondCatalog)
+   local function room(xp,heart)
+    local pet={idleBeatsEnabled=true,ownerNearStill=true,gaitWeight=0,ownerStillNearFor=9,model=Instance.new("Model")}
+    local state={petStats={pets={[petId]={level={heart=heart}}}}}
+    return setmetatable({pet=pet,shownPet={id=petId,name="Bear"},bond={[petId]=xp},bondHello={[petId]=true},mode="Room",target="Room",reduceEffects=function()return false end,nameState=function()return state end},Room),pet
+   end
+   levels(true)
+   local self,pet=room(0,14);assert(self:heartLevel()==14);self:bondTricks(false);assert(pet.bondLevel==4,"Heart 14: four tricks")
+   self,pet=room(Real.Thresholds[10],1);self:bondTricks(false);assert(pet.bondLevel==10,"Bond 10, Heart 1: ten tricks")
+   self,pet=room(0,99);self.bondTrickAt=os.clock()-1;self:bondTricks(false);assert(self.bondRoutine and self.bondRoutine.unlock==Real.Unlocks[10])
+   levels(false)
+   self,pet=room(0,99);assert(self:heartLevel()==nil);self:bondTricks(false);assert(pet.bondLevel==1,"off: Bond alone")
+  end)
  end,function(e)Pips.override=nil;return tostring(e).." | "..debug.traceback()end)
+ Levels.inject(nil)
  screen:Destroy()
  if not ok then error(problem,0)end
  return{passed=#cases,cases=cases}

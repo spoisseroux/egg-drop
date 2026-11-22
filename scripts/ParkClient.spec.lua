@@ -237,6 +237,36 @@ return function(client,parent)
 		c:destroy()
 	end)
 
+	test("Levels matter: a rider's perks come from its owner's public levels; the seat swings as far as the pet; off is today",function()
+		local Levels=require(Shared.Levels)
+		local Stats=require(Shared.StatCatalog)
+		local Perks=require(Shared.ParkPerks)
+		local Http=game:GetService("HttpService")
+		local function levels(on)Levels.inject({flags={LevelsMatter=on},studio=true,shipped={track=true}})end
+		local good,problem=pcall(function()
+			local boards=Instance.new("Folder")
+			local board=Instance.new("Folder");board.Name="31";board.Parent=boards
+			board:SetAttribute(Stats.PublicAttribute,Http:JSONEncode({v=1,pets={pip={levels={jump=10,speed=20}}}}))
+			local garden={boards=boards,playerId=1,snapshot={actors={["31"]={petId="pip"}}}}
+			local block={value={version=1,slots={swing1=session(40,"swing",31,100)}}}
+			local c=make(block,{garden=garden})
+			local part=c.parts[Data.Swings.swing1.mesh].part
+			local t=100+Catalog.phaseStart("swing","swing")+Catalog.ById.swing.period*1.25
+			local function frameAt(scale)return Data.frame(Data.Swings.swing1.mesh,Data.Roots.SwingSet,Data.swingMotion(Data.swingAngle("swing1",block.value.slots.swing1,t)*scale))end
+			levels(true)
+			local perks=c:riderPerks(31);assert(perks.swingHigh and perks.catchHop and perks.swingCheer and not perks.slideSpin and c:perksFor(31,"pip")==perks,"cached per attribute")
+			c:animate(t);assert(near(part.CFrame,frameAt(Perks.SwingScale)),"the seat does not follow the higher swing")
+			assert(next(c:perksFor(31,"blip"))==nil and next(c:perksFor(99,"pip"))==nil and next(c:riderPerks(nil))==nil)
+			board:SetAttribute(Stats.PublicAttribute,"{bad");assert(next(c:perksFor(31,"pip"))==nil,"a bad attribute has no perks")
+			board:SetAttribute(Stats.PublicAttribute,Http:JSONEncode({v=1,pets={pip={levels={jump=10}}}}))
+			levels(false);assert(next(c:riderPerks(31))==nil)
+			c:animate(t+.001);c:animate(t);assert(near(part.CFrame,frameAt(1)),"off: today's swing")
+			c:destroy()
+		end)
+		Levels.inject(nil)
+		assert(good,problem)
+	end)
+
 	end)
 	root:Destroy()
 	assert(ok,err)
