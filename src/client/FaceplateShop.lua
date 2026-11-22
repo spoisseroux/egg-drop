@@ -163,6 +163,7 @@ local function miniDeck(parent,width,position)
  root.Destroying:Connect(function()epoch+=1;if ticket then ticket:cancel()end end)
  return {root=root,set=function(theme,id)
   plate.Image=Assets.Faceplate[id]or Assets.Faceplate.sherbet
+  local plain=Assets.plateBase(plate,theme)~=nil -- a gated plate never waits for its own texture
   band.ImageColor3=theme.bandTint or Color3.new(1,1,1)
   overlayWanted=theme.overlay~=nil;finish.Visible=ready and overlayWanted;if theme.overlay then finish.Image=theme.overlay.image;finish.ImageTransparency=1-theme.overlay.max*.6 end
   lcd.BackgroundColor3=theme.ui.panel
@@ -171,7 +172,7 @@ local function miniDeck(parent,width,position)
   if id~=lastId or(not ready and os.clock()>=retryAt)then
    local retry=id==lastId;lastId=id;ready=false;epoch+=1;local serial=epoch
    if ticket then ticket:cancel()end
-   local ids={};for _,image in ipairs(root:GetDescendants())do if image:IsA("ImageLabel")and image.Image~=""and(image~=finish or overlayWanted)then table.insert(ids,image.Image)end end
+   local ids={};for _,image in ipairs(root:GetDescendants())do if image:IsA("ImageLabel")and image.Image~=""and(image~=finish or overlayWanted)and not(plain and image==plate)then table.insert(ids,image.Image)end end
    local warm=require(script.Parent.UIAssetWarmup).shared
    local request=if retry then warm.retry else warm.request
    retryAt=os.clock()+3

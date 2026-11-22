@@ -101,6 +101,7 @@ return function(server)
 			local listed=Balls.listed({});assert(#listed==#Balls.Order+#Balls.Gated and listed[#Balls.Order+1]=="tangerine_pop")
 			for _,id in ipairs(Balls.Order)do assert(Balls.ById[id].gate==nil,id)end
 			for _,id in ipairs(Plates.Order)do assert(Plates.ById[id].gate==nil,id)end
+			assert(table.concat(Plates.listed({})," ",#Plates.Order+1)=="sky_fizz storm_glass"and Plates.price("sky_fizz")==40 and Plates.price("storm_glass")==100)
 			for _,item in ipairs(Wear.forPet("pip").order)do if not item.variant then assert(item.gate==nil,"a base design is never gated")end end
 			local gated,all=0,0;for _,item in ipairs(Wear.forPet("pip").order)do all+=1;if item.gate then gated+=1 end end
 			assert(gated==14 and gated*3<=all,"at most a third of the Wardrobe")

@@ -41,6 +41,18 @@ return function(client,parent)
    assert(View.trimStat({heart=74,jump=50})==nil and View.trimStat({heart=75,smarts=75})=="heart"and View.trimStat({heart=75,smarts=99})=="smarts"and View.trimStat(nil)==nil)
    for _,tier in ipairs(Medals.Tiers)do assert(View.Sting[tier.id],tier.id)end
   end)
+  test("the uploaded art: every tier has a tint and a trim, eight different images",function()
+   local seen,n={},0
+   for count,tier in ipairs(Medals.Tiers)do
+    local row=View.art(count);assert(row and row==View.Art[tier.level],tier.id)
+    for _,id in ipairs({row.tint,row.trim})do assert(string.match(id,"^rbxassetid://%d+$")and not seen[id],id);seen[id]=true;n+=1 end
+   end
+   assert(n==8)
+   local frame=Instance.new("Frame");frame.Size=UDim2.fromOffset(120,120);frame.Parent=gui
+   local medal=View.new(frame,96);medal.set("jump",4)
+   assert(medal.root.Tint.ImageColor3==Stats.ById.jump.color and medal.root.Trim.ImageColor3==Color3.new(1,1,1)and medal.root.Trim.ZIndex>medal.root.Tint.ZIndex,"only the tint layer takes the colour; the cream well is in the trim")
+   frame:Destroy()
+  end)
   test("drawn discs with no images; image layers once a tier has both ids",function()
    View.Art={}
    local frame=Instance.new("Frame");frame.Size=UDim2.fromOffset(120,120);frame.Parent=gui
@@ -112,6 +124,35 @@ return function(client,parent)
    off();assert(Host.watchMedals(watch,{pip={jump=99}})==0 and #watch.pending==0 and Host.medalEggs({statEgg={medalEggs=4}})==0)
    on();assert(Host.watchMedals(watch,{pip={jump=99}})==0)
    assert(Host.medalEggs({statEgg={medalEggs=4}})==4 and Host.medalEggs({statEgg={}})==0 and Host.medalEggs(nil)==0 and Host.medalEggs({statEgg={medalEggs=0/0}})==0)
+  end)
+  test("a stage that cannot be built leaves nothing open, and the ticket says it",function()
+   on()
+   local Stage=require(client.HatchItemStage)
+   local real=Stage.show
+   local fine,wrong=pcall(function()
+    for _,where in ipairs({"build","step"})do
+     Stage.show=if where=="build"then function()error("no stage")end else function(...)
+      local stage=real(...);stage.updateExternal=function()error("no step")end;return stage
+     end
+     local moment=View.Moment.new(parent,nil)
+     assert(moment:show({{petId="pip",stat="jump",tier="sprout",level=25}},{waiting=1},{})==false,where)
+     assert(not moment:isOpen()and not moment.gui.Enabled and moment.clock==nil and moment.stage==nil and moment.scene==nil,where)
+     Stage.show=real
+     assert(moment:show({{petId="pip",stat="jump",tier="sprout",level=25}},{waiting=1},{})and moment:isOpen(),"the next one plays")
+     moment:destroy()
+    end
+    Stage.show=function()error("no stage")end
+    local probe=Instance.new("Frame");probe.Size=UDim2.fromScale(1,1);probe.BackgroundTransparency=1;probe.Parent=gui
+    local state=snapshot({jump=24})
+    state.statEgg.medalEggs=1
+    local api=Host.mount({parent=parent,insetProbe=probe,state=function()return state end,activeId=function()return "pip"end,appearance=function()return{}end,
+     canOpen=function()return true end,prepare=function()end,held=function()return false end,openEggs=function()end,quiet=function()return true end,playerGui=parent})
+    api.sync(state);state=snapshot({jump=25});state.statEgg.medalEggs=2;api.sync(state);settle(4)
+    assert(not api.isBusy()and Host.medalEggs(state)==2 and api.open({stat="jump"}),"menus stay usable and the credit stands")
+    api.destroy();probe:Destroy()
+   end)
+   Stage.show=real
+   assert(fine,wrong)
   end)
   test("the moment: waits for quiet, one stage for several medals, A goes to the eggs",function()
    on()

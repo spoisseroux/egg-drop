@@ -114,9 +114,14 @@ function Host.mount(deps)
   if deps.quiet and deps.playerGui then
    if panel:isOpen()or deps.quiet()~=true or not deps.canOpen()then return end
    local crossed=watch.pending;watch.pending={}
-   moment=moment or MedalView.Moment.new(deps.playerGui,deps.audio)
-   moment:show(crossed,{waiting=Host.medalEggs(deps.state())},{eggs=if deps.openEggs then eggsRoute else nil})
-   return
+   local ok,shown=pcall(function()
+    moment=moment or MedalView.Moment.new(deps.playerGui,deps.audio)
+    return moment:show(crossed,{waiting=Host.medalEggs(deps.state())},{eggs=if deps.openEggs then eggsRoute else nil})
+   end)
+   if not ok then warn("[Levels] medal moment: "..tostring(shown))end
+   if ok and shown then return end
+   -- The stage could not show: nothing stays open, and the ticket below says it.
+   watch.pending=crossed
   end
   -- No stage in this build: one ticket names the best medal.
   local crossed=watch.pending;watch.pending={}

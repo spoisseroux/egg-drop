@@ -15,7 +15,11 @@ local View={}
 -- The uploaded images (assets/ui/levels/medal-<level>-<tint|trim>.png, 256 px), by tier level:
 -- [25]={tint="rbxassetid://...",trim="rbxassetid://..."}. A tier with no row (or half a row) draws
 -- the discs below instead. The tint layer takes the stat's colour; the trim is never tinted.
-View.Art={}
+View.Art={
+ [25]={tint="rbxassetid://90236769323715",trim="rbxassetid://136852142964634"},
+ [50]={tint="rbxassetid://102026866321678",trim="rbxassetid://80587895341395"},
+ [75]={tint="rbxassetid://96749218944985",trim="rbxassetid://72046428689012"},
+ [99]={tint="rbxassetid://80652233269995",trim="rbxassetid://85722125258746"}}
 -- Shares of the 256 px canvas (art.json): the medal's centre, its cream well, the icon, and the
 -- drawn fallback's discs.
 View.Centre=Vector2.new(128/256,138/256)
@@ -212,16 +216,34 @@ function Moment.new(playerGui,audio)
 end
 function Moment:isOpen()return self.open end
 -- crossed: Medals.crossed rows. info: {waiting = medal eggs waiting}. callbacks: eggs(), done().
+-- False when there is nothing to show or the stage could not be built: then nothing is left open (the
+-- host says it with a rail ticket; the egg is the server's and does not depend on this).
 function Moment:show(crossed,info,callbacks)
- local Kit=require(script.Parent.DeckKit)
- local Stage=require(script.Parent.HatchItemStage)
- local Rarity=require(script.Parent.HatchRarityCue)
  self:close("replaced")
  info=info or {}
  local words=View.words(crossed,info.waiting)
  if not words then return false end
  self.callbacks=callbacks or {}
- self.open=true;self.gui.Enabled=true
+ self.building=true
+ local ok,problem=pcall(self.build,self,crossed,words)
+ self.building=false
+ if ok then
+  self.open=true
+  ok,problem=pcall(self.begin,self)
+ end
+ if ok then return true end
+ warn("[Levels] medal moment: "..tostring(problem))
+ -- A stage that died half built never reached self.stage: take what it left.
+ local half=self.stage==nil
+ self.open=true;self:close("failed")
+ if half then self.host:ClearAllChildren()end
+ return false
+end
+function Moment:build(crossed,words)
+ local Kit=require(script.Parent.DeckKit)
+ local Stage=require(script.Parent.HatchItemStage)
+ local Rarity=require(script.Parent.HatchRarityCue)
+ self.gui.Enabled=true
  self.reducedStart=Kit.reduced()
  self.scene=medalScene(crossed)
  self.age=0
@@ -232,7 +254,7 @@ function Moment:show(crossed,info,callbacks)
  self.eggsSource.Visible=self.callbacks.eggs~=nil
  local color=Stats.ById[words.stat].color
  local stage=Stage.show(self.host,{scene=self.scene,kind="medal",tier="Neutral",result={medal=words.tier},cover=false,fullScreen=true,zIndex=20,lid=false,
-  reduced=function()return self.reducedStart end,owns=function()return self.open end,skippable=function()return true end,
+  reduced=function()return self.reducedStart end,owns=function()return self.open or self.building==true end,skippable=function()return true end,
   name=function()return words.name end,effect=function()return words.effect end,description=function()return words.line end,
   sticker=function()return words.sticker end,accent=function()return color end,
   stoneColors=function()return {color,Kit.Color.lemon,Kit.Color.cream}end,
@@ -244,8 +266,13 @@ function Moment:show(crossed,info,callbacks)
   onSkip=function()self:skip()end,onClose=function()self:choose("done")end})
  self.stage=stage
  stage.root:SetAttribute("Medal",words.tier);stage.root:SetAttribute("MedalStat",words.stat);stage.root:SetAttribute("MedalCount",#crossed)
- self.clock=RunService.RenderStepped:Connect(function(dt)self:step(dt)end)
+end
+function Moment:begin()
  self:step(0)
+ self.clock=RunService.RenderStepped:Connect(function(dt)
+  local ok,problem=pcall(self.step,self,dt)
+  if not ok then warn("[Levels] medal moment: "..tostring(problem));self:close("failed")end
+ end)
  local K=Enum.KeyCode
  ContextActionService:BindActionAtPriority("EggDropMedal",function(_,state,input)
   if not self.open or GuiService.MenuIsOpen then return Enum.ContextActionResult.Pass end
@@ -258,7 +285,6 @@ function Moment:show(crossed,info,callbacks)
   end
   return Enum.ContextActionResult.Sink
  end,false,Enum.ContextActionPriority.High.Value+835,K.ButtonA,K.ButtonB,K.Return,K.KeypadEnter,K.Space,K.Escape,K.Backspace)
- return true
 end
 function Moment:step(dt)
  local stage=self.stage;if not stage or stage.destroyed or not self.open then return end
@@ -295,8 +321,9 @@ function Moment:close(reason)
  self.stage,self.scene=nil,nil
  if stage then
   local function gone()if scene then scene:destroy()end end
-  if not stage:dismiss(gone,{})then stage:destroy();gone()end
- end
+  local ok,problem=pcall(function()if not stage:dismiss(gone,{})then stage:destroy();gone()end end)
+  if not ok then warn("[Levels] medal moment: "..tostring(problem));pcall(stage.destroy,stage);pcall(gone)end
+ elseif scene then pcall(scene.destroy,scene)end
  self.gui.Enabled=false
  if self.callbacks and self.callbacks.closed then self.callbacks.closed(reason)end
  return true

@@ -89,6 +89,12 @@ local Plates={
   ui={panel="#14262E",raised="#1F3440",well="#0C181F",selected="#2A4E56",line="#8BBCBD"},toyShell={shell="#107171",shellHi="#5CAFAF",shellLip="#064141",tray="#094D4D",well="#0F1A32",wellDot="#27385D",ink="#0A1B1B",inkSoft="#335656",onShellSoft="#CCEEEE",tag="#7CFFD2",tagLip="#51A88C"},overlay={image="rbxassetid://105339906963951",kind="water",min=0.1,max=0.55,period=5.0},held3d={material="Glass",reflectance=0.08,transparency=0.25}},
  dewy_meadow={name="Dewy Meadow",order=23,tier="rare",priceStars=100,texture="rbxassetid://90647448423547",finish="glossy hills and cloud",accent="#8CF07A",ink="#0E0F12",deep="#178F3A",band="#FFFFFF",engrave="#0E0F12",engraveOpacity=0.42,
   ui={panel="#15281F",raised="#21372E",well="#0D1A14",selected="#305139",line="#95BC99"},toyShell={shell="#13753D",shellHi="#60B384",shellLip="#084422",tray="#0B4F28",well="#0F1A32",wellDot="#27385D",ink="#0A1C12",inkSoft="#355844",onShellSoft="#CEEFDC",tag="#F6C9E6",tagLip="#9C8795"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.4,period=6.0},held3d={material="SmoothPlastic",reflectance=0.08,transparency=0}},
+ -- Levels matter (Fable, 2026-11-22; artifacts/levels-2026-11-22/art.json): level-gated plates, listed
+ -- by Themes.Gated only, never in Themes.Order.
+ sky_fizz={name="Sky Fizz",order=24,tier="common",priceStars=40,gate={stat="energy",level=10},texture="rbxassetid://103644756322872",finish="sky soda glass, sun and fizz",accent="#7FDCFF",ink="#0E0F12",deep="#1766D2",band="#FFFFFF",engrave="#0E0F12",engraveOpacity=0.42,
+  ui={panel="#152235",raised="#213047",well="#0D1623",selected="#2E4861",line="#91B5C8"},toyShell={shell="#186D94",shellHi="#6BAAC8",shellLip="#0A3F57",tray="#0E4A65",well="#0F1A32",wellDot="#27385D",ink="#0C1A20",inkSoft="#395460",onShellSoft="#D4EBF6",tag="#FFB3DA",tagLip="#A37993"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.45,period=4.5},held3d={material="Glass",reflectance=0.08,transparency=0.25}},
+ storm_glass={name="Storm Glass",order=25,tier="rare",priceStars=100,gate={stat="energy",level=30},texture="rbxassetid://121521921093197",finish="deep storm glass, soft light and rain beads",accent="#A9C4F2",ink="#0E0F12",deep="#22304E",band="#6F7480",engrave="#FFFFFF",engraveOpacity=0.78,
+  ui={panel="#171A22",raised="#232831",well="#0E1016",selected="#363E4C",line="#9FADC3"},toyShell={shell="#4565A4",shellHi="#8DA3CE",shellLip="#263961",tray="#2E446F",well="#0F1A30",wellDot="#26385C",ink="#0F1828",inkSoft="#42506E",onShellSoft="#DDE8FC",tag="#C4B5FF",tagLip="#7F79AD"},overlay={image="rbxassetid://105339906963951",kind="water",min=0.08,max=0.45,period=6.0},held3d={material="Glass",reflectance=0.08,transparency=0.25}},
 }
 local hex=Color3.fromHex
 -- Toy Shell (UI-RETRO-RESTYLE-2026-11-19 R1.4): the menu palette. Each plate's `toyShell`
@@ -151,9 +157,9 @@ Themes.Plates=Plates
 -- Plates that only the collection book grants (never sold, not in the shop grid's Order).
 Themes.BookOnly={"bookworm","stargazer"}
 -- Plates with a level gate (`gate` on the plate row, a LevelGate gate): never in Themes.Order, so the
--- shelf and the Book never see them; shops list Themes.listed(owned). Empty until Fable's textures
--- exist: sky_fizz {stat="energy",level=10} 40 and storm_glass {stat="energy",level=30} 100.
-Themes.Gated={}
+-- shelf and the Book never see them; shops list Themes.listed(owned). A gated plate draws in its own
+-- colour until its texture loads (DeckAssets.plateBase, Lounge): storm_glass may still be in review.
+Themes.Gated={"sky_fizz","storm_glass"}
 function Themes.listed(owned)
  local list=table.clone(Themes.Order)
  for _,id in ipairs(Themes.Gated)do

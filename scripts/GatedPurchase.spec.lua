@@ -179,7 +179,20 @@ return function(server)
 			assert(listed and table.find(Balls.listed(h2.state.ballThemes.owned),"tangerine_pop")and not table.find(Balls.listed({}),"tangerine_pop"))
 			assert(H.valid(h2.state))
 		end)
-		test("faceplates: the same gate (no gated plate ships until its texture does)",function()
+		test("the two gated plates: Energy 10 and 30, sold below off and at the gate, kept and worn off",function()
+			for id,want in pairs({sky_fizz={10,40},storm_glass={30,100}})do
+				local level,cost=want[1],want[2]
+				gates(false);local h=ready({pip={energy=99}})
+				local bought,why=H.buyFaceplate(h,"off-"..id,id,cost);assert(not bought and why=="NotForSale"and h.state.nectar==1000,id)
+				gates(true);h=ready({pip={energy=level-1}})
+				bought,why=H.buyFaceplate(h,"low-"..id,id,cost);assert(not bought and why=="NeedsLevel"and h.state.nectar==1000,id)
+				h=ready({pip={energy=level}})
+				bought,why=H.buyFaceplate(h,"ok-"..id,id,cost);assert(bought and why=="Saved"and h.state.nectar==1000-cost and F.owns(h.state,id),id.." "..tostring(why))
+				gates(false);assert(table.find(Plates.listed(h.state.faceplates),id)and not table.find(Plates.listed({}),id)and H.valid(h.state))
+				assert(require(Shared.AppearanceCatalog).canEquip("theme",id,require(Shared.AppearanceCatalog).facts({trials=0},h.state)),id.." stays wearable")
+			end
+		end)
+		test("faceplates: the same gate (every shipped gated plate has its texture and palette)",function()
 			for _,id in ipairs(Plates.Gated)do local plate=Plates.ById[id];assert(plate.gate and plate.texture and plate.toy and not table.find(Plates.Order,id),id)end
 			-- a fixture row, as a shipped gated plate will look to the server
 			Plates.ById._spec_gated={name="Spec",priceStars=40,gate={stat="energy",level=10}}
