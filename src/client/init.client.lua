@@ -52,7 +52,7 @@ pcall(function()clientUI.clientSim=require(script.ClientRoundDriver).start()end)
 clientUI.BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
 clientUI.ballFaces=require(script.BallFaces).new();clientUI.faceList={};clientUI.heldFace={}
 function clientUI.isHueOpen()return(clientUI.hueView~=nil and clientUI.hueView:isOpen())or(clientUI.hub~=nil and clientUI.hub:isOpen())
- or(clientUI.stats~=nil and clientUI.stats.isOpen())or(clientUI.names~=nil and clientUI.names.isOpen())end
+ or(clientUI.stats~=nil and(clientUI.stats.isOpen()or clientUI.stats.isBusy()))or(clientUI.names~=nil and clientUI.names.isOpen())end
 require(script.DropDispenser)
 require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
@@ -1184,14 +1184,18 @@ do
    clientUI.wardrobeToaster=clientUI.wardrobeToaster or Kit.toaster(host)
    if item then clientUI.wardrobeToaster.show(if order.action=="wearableBuy"then item.name.." bought"elseif order.wear then item.name.." on"else item.name.." off")end
   end,
-  back=function()clientUI.wardrobe:close();if clientUI.isHueOpen()then clientUI.hueView:refresh()end end})
+  back=function()clientUI.wardrobe:close();if clientUI.isHueOpen()then clientUI.hueView:refresh()end end,
+  -- Levels matter: a locked item's button goes to the stats panel on the stat that unlocks it.
+  train=function(route)clientUI.closeAllMenus("stats");clientUI.openStats({from="rail",stat=route.stat,petId=route.petId})end})
  clientUI.isWardrobeOpen=function()return clientUI.wardrobe:isOpen()end
  clientUI.syncWardrobe=function(state)if clientUI.wardrobe:isOpen()then clientUI.wardrobe:setContext(context(state))end end
- clientUI.openWardrobe=function(petId)
+ clientUI.openWardrobe=function(petId,itemId)
   if not nurseryState or roomView.busy or not WearableCatalog.hasItems(petId or "")then return false end
   if GuiService.SelectedObject then GuiService.SelectedObject=nil end
   syncInsets();clientUI.wardrobe.petId=petId
-  clientUI.wardrobe:open(petId,context(nurseryState));return true
+  clientUI.wardrobe:open(petId,context(nurseryState))
+  if itemId then clientUI.wardrobe:showItem(itemId)end
+  return true
  end
  clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets)
  local wearableResultConnection=remotes:WaitForChild("WearableResult").OnClientEvent:Connect(function(message)
@@ -1344,7 +1348,7 @@ do
   end,
   back=function()clientUI.accepted("back")end})
  clientUI.openBook=function(options)
-  if not nurseryState or roomView.busy or clientUI.book:isOpen()then return false end
+  if not nurseryState or roomView.busy or clientUI.book:isOpen()or(clientUI.stats~=nil and clientUI.stats.isBusy())then return false end
   if GuiService.SelectedObject then GuiService.SelectedObject=nil end
   clearPlayInputs();syncInsets()
   local ok=clientUI.book:open(context(nurseryState),options)
@@ -1378,6 +1382,17 @@ do
   -- Closing the panel stops its pet's eating; cancel's onDone clears the host's busy state.
   cancelFeed=function()if clientUI.snacks then clientUI.snacks.panel:cancel()end end,
   openEggs=function()task.defer(function()if openNursery then openNursery();nurseryView:selectRecipe("stat")end end)end,
+  -- Levels matter: the reward guide's "Go to shop", and the medal moment (only with nothing else on screen).
+  openShop=function(area,ref)task.defer(function()
+   if area=="wardrobe"then clientUI.openWardrobe(board:GetAttribute("CompanionId"),ref)
+   else openPicker(if area=="balls"then "Balls"else "Shell",nil,"workbench")end
+  end)end,
+  audio=audio,playerGui=gui.Parent,
+  quiet=function()return board:GetAttribute("Mode")=="Room"and not roomView.busy and not roomView.focusing and not nurseryView:isOpen()
+   and not(nurseryState and nurseryState.lastHatch)and not(clientUI.snacks and clientUI.snacks.reveal and clientUI.snacks.reveal:isOpen())
+   and not clientUI.isHueOpen()and not clientUI.book:isOpen()and not(clientUI.isWardrobeOpen and clientUI.isWardrobeOpen())
+   and not modal.Visible and not isPickerOpen()and not journal.shade.Visible and not gameMenu.shade.Visible and not clientUI.questLog.visible
+   and not GuiService.MenuIsOpen and not clientUI.deckResults.visible and not(clientUI.bugReport and clientUI.bugReport:isOpen())end,
   appearance=function(petId)return nurseryView.appearanceFor(petId)end,
   canOpen=function()return not roomView.busy and board:GetAttribute("Mode")=="Room"and not(nurseryState and nurseryState.lastHatch)
    and not clientUI.book:isOpen()and not clientUI.hueView:isOpen()and not(clientUI.isWardrobeOpen and clientUI.isWardrobeOpen())
@@ -1408,7 +1423,7 @@ do
   appearance=function(petId)return nurseryView.appearanceFor(petId)end,
   canOpen=function()return not roomView.busy and board:GetAttribute("Mode")=="Room"and not(nurseryState and nurseryState.lastHatch)
    and not clientUI.book:isOpen()and not clientUI.hueView:isOpen()and not(clientUI.isWardrobeOpen and clientUI.isWardrobeOpen())
-   and not clientUI.stats.isOpen()and not modal.Visible and not clientUI.questLog.visible and not(clientUI.bugReport and clientUI.bugReport:isOpen())end,
+   and not clientUI.stats.isOpen()and not clientUI.stats.isBusy()and not modal.Visible and not clientUI.questLog.visible and not(clientUI.bugReport and clientUI.bugReport:isOpen())end,
   prepare=function()
    cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
    if gameMenu and gameMenu.shade.Visible and closeMenu then closeMenu()end
@@ -1733,7 +1748,7 @@ openMenu = function(options)
 	cancelHatchNavigation()
 	if roomView.busy or modal.Visible or nurseryView:isOpen() or clientUI.isHueOpen() then return end
 	if (clientUI.hub and clientUI.hub:isOpen()) or (clientUI.book and clientUI.book:isOpen()) or clientUI.questLog.visible
-		or (clientUI.stats and clientUI.stats.isOpen())
+		or (clientUI.stats and (clientUI.stats.isOpen() or clientUI.stats.isBusy()))
 		or (clientUI.names and clientUI.names.isOpen())
 		or (clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()) then return end
 	clientUI.machineReturn=nil
@@ -1757,7 +1772,7 @@ function clientUI.anyMenuOpen()
  return isPickerOpen()or journal.shade.Visible or clientUI.isHueOpen()or gameMenu:isOpen()
   or(clientUI.hub~=nil and clientUI.hub:isOpen())or(clientUI.book~=nil and clientUI.book:isOpen())
   or clientUI.questLog~=nil and clientUI.questLog.visible==true
-  or(clientUI.stats~=nil and clientUI.stats.isOpen())or(clientUI.names~=nil and clientUI.names.isOpen())
+  or(clientUI.stats~=nil and(clientUI.stats.isOpen()or clientUI.stats.isBusy()))or(clientUI.names~=nil and clientUI.names.isOpen())
   or(clientUI.isWardrobeOpen~=nil and clientUI.isWardrobeOpen())
 end
 -- Closes every menu screen with `reason` (not "back"). True when none is left open.
@@ -1870,6 +1885,8 @@ require(script.StarsShort).setRoute(function(choice,request)
  if ok then clientUI.accepted("confirm")end
 end)
 picker.onAccepted=clientUI.accepted;journal.onAccepted=clientUI.accepted;gameMenu.onAccepted=clientUI.accepted;nurseryView.onAccepted=clientUI.accepted
+-- Levels matter: a locked ball, plate or effect leads to where its stat is trained.
+picker.shop.callbacks.train=function(route)picker:close("stats");clientUI.openStats({from="rail",stat=route.stat,petId=route.petId})end
 
 do
 	local handoff = overlayGui.DeckHandoff
@@ -2101,6 +2118,14 @@ local function project(position)
 end
 rendererPresentation.restoreCheap=function(now,reduced)
  for source,view in pairs(eggViews)do view.gel:render(source.Position,0,now,project,true,reduced)end
+end
+-- Levels matter S3: the chosen merge pop, drop trail and start flourish (FieldEffects owns them; classic costs nothing).
+do
+ local ok,problem=pcall(function()
+  rendererPresentation.fx:attachJuice({board=board,views=eggViews,project=project,launchY=Config.SpawnY,
+   ready=function()local boot=clientUI.deck and clientUI.deck.boot;return not(boot and boot.host and boot.host.Visible)end})
+ end)
+ if not ok then warn("[Levels] deck juice not mounted: "..tostring(problem))end
 end
 
 
@@ -2992,7 +3017,7 @@ local controllerFocus=clientUI.ControllerFocus.new({
 		-- The Wardrobe owns its own focus (ContextAction "EggDropWardrobe").
 		if clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then return{blocked=true}end
 		if clientUI.hub and clientUI.hub:isOpen()then return{blocked=true}end
-		if clientUI.stats and clientUI.stats.isOpen()then return{blocked=true}end -- StatsHost owns its focus
+		if clientUI.stats and(clientUI.stats.isOpen()or clientUI.stats.isBusy())then return{blocked=true}end -- StatsHost owns its focus
 		if clientUI.names and clientUI.names.isOpen()then return{blocked=true}end -- NameScreen owns its focus
 		if clientUI.bugReport and clientUI.bugReport:isOpen()then return{blocked=true}end -- the report sheet owns its focus
 		if clientUI.isHueOpen()then owner=clientUI.hueView:getControllerFocus()
@@ -3341,7 +3366,20 @@ do
   local bond=type(state)=="table"and state.bond or nil
   roomView:setBond(bond)
   if type(bond)~="table"then return end
-  for _,event in ipairs(BondPips.levelUps(clientUI.bondSeen,bond))do
+  local ups=BondPips.levelUps(clientUI.bondSeen,bond)
+  -- Levels matter S1: Heart brings the tricks (bond XP still may); a Heart ticket names its own trick.
+  local Toasts=require(script.StatToasts)
+  if Toasts.tricksOn()then
+   for _,event in ipairs(Toasts.trickUps(clientUI.bondSeen,state))do
+    if Pets.isActive(event.petId)then
+     if not event.heart then clientUI.coach.toaster.show(event.text)end
+     roomView:bondLevelUp(event.petId,event.level)
+    end
+   end
+   return
+  end
+  clientUI.bondSeen.tricks=nil -- off: today's toast, and a fresh trick baseline next time
+  for _,event in ipairs(ups)do
    if Pets.isActive(event.petId)then
     roomView:bondLevelUp(event.petId,event.level)
     clientUI.coach.toaster.show(BondPips.toastText(event.level),nil,nil,require(script.NoticeCards).detail("bond"))
@@ -3861,6 +3899,7 @@ local function addView(source)
 	-- No tier numerals (batch R1): size, colour and the ball's face carry the tier.
 	eggViews[source] = { gel = gel, id = id, tier = tier, radius = Config.Tiers[tier].radius, faceInput = { id = id, tier = tier, x = 0, y = 0, radius = Config.Tiers[tier].radius }, face = { tier = tier, expr = "idle", dx = 0 } }
 	viewsById[id] = gel
+	if rendererPresentation.fx.trail then rendererPresentation.fx:ballAdded(source) end -- deck juice: nil while classic
 end
 
 local function removeView(source)
@@ -4487,7 +4526,7 @@ end)
 -- QA Q2.5: alt-tab back with a menu screen open keeps the cursor free and the camera off the mouse.
 clientUI.anyModalOpen=function()
  return(clientUI.hub~=nil and clientUI.hub:isOpen())or(clientUI.wardrobe~=nil and clientUI.wardrobe:isOpen())or(clientUI.book~=nil and clientUI.book:isOpen())
-  or(clientUI.stats~=nil and clientUI.stats.isOpen())
+  or(clientUI.stats~=nil and(clientUI.stats.isOpen()or clientUI.stats.isBusy()))
   or isPickerOpen()or(journal~=nil and journal.shade.Visible)or(nurseryView~=nil and nurseryView:isOpen())or clientUI.isHueOpen()
   or(gameMenu~=nil and(gameMenu:isOpen()or gameMenu.shade.Visible))or(modal~=nil and modal.Visible)
   or(clientUI.questLog~=nil and clientUI.questLog.visible)
