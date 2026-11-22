@@ -14,6 +14,6 @@ Spencer, asleep: "make decisions ot move forward by urself". Each row is a choic
 | 8 | No level-25 badges yet (ids empty) | Creating badges is public and yours to do | Add three ids |
 | 9 | Wind also moves pennants x1.8, and gusts run toward Tumble Falls | The brief asked for both; its "south" was a compass slip | One line in `WorldMotion` |
 | 10 | Levels stays off on a server until the remote settings load once | If Roblox's settings service is down, nothing level-locked sells by mistake | `LevelsConfig` |
-| 11 | Dash maths is on its own branch, not merged (`worktree-agent-a9c31b5ac11fd8784`, 3e7dcd3) | Medal times too easy (doing nothing beats Silver), holding Dash has no downside, 25% speed gap inside a band; the line needs a Studio walk | Tune, then merge |
+| 11 | Dash maths tuned and merged, but nothing uses it yet: idling earns no medal, dashing all the time costs you, stats clamp within a band (7.6% widest gap), luck never beats a run one trip cleaner | Tuned by simulation only; the line still needs a Studio walk and every number is [P] | Nothing to undo: no script requires it |
 | 12 | Fixed the desktop Balls tab (rows 5 to 7 unreachable by mouse) and scroll-to in Balls and Faceplates | Real bugs on live today; in the beta, goes live with your next publish | Revert ed8a1a6 |
 | 13 | Medal ring art, recolours, two level faceplates (Sky Fizz, Storm Glass) and six deck effects are Fable's or drawn from shapes | No outside art used | Per item |
