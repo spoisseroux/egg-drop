@@ -76,6 +76,8 @@ clientUI.accepted=clientUI.click.play
 task.defer(function()clientUI.click.start(audio,player:WaitForChild("PlayerGui"))end)
 clientUI.clock=HollowClock.start()
 clientUI.worldMotion=require(script.WorldMotion).start()
+-- Frutiger Aero (AeroWorld): not even loaded where the build ceiling is off (the live game).
+pcall(function()if require(ReplicatedStorage.Shared.Aero).ceiling()then clientUI.aeroWorld=require(script.AeroWorld).start({clock=HollowClock})end end)
 pcall(function()require(script.AliveBudget).level()end) -- Alive: starts the frame sampler (beta only)
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")

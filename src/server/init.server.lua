@@ -107,6 +107,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.AliveConfig
 task.spawn(function()local ok,problem=pcall(function()require(script.LevelsConfig).start()end);if not ok then warn("[Levels] config not started: "..tostring(problem))end end)
 -- Garden Dash off switches (DashConfig): the same way, two keys. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.DashConfig).start()end);if not ok then warn("[Dash] config not started: "..tostring(problem))end end)
+-- Frutiger Aero off switch (AeroConfig): the same way, one key. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.AeroConfig).start()end);if not ok then warn("[Aero] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -831,6 +833,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.LevelsConfig).command(message) end) end)
 		-- "/dash <on|off|clear>" and "/dash prizes <on|off|clear>": the Garden Dash switches, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.DashConfig).command(message) end) end)
+		-- "/aero <on|off|clear>" and "/aero <lime|coral>": the Frutiger Aero look, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.AeroConfig).command(message) end) end)
 		player.Chatted:Connect(function(message)
 			local amount = type(message) == "string" and tonumber(string.match(message, "^%s*/stars%s+(%d+)%s*$"))
 			if not amount or boards[player] ~= board or board.closing then return end

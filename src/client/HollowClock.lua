@@ -18,7 +18,18 @@ function Clock.cycle(unixSeconds)
 	return hour, sunlight * sunlight * (3 - 2 * sunlight)
 end
 
+-- Another look over the garden (AeroWorld): {Hour, Daylight, CloudColor, paint()}. While set, the clock samples and
+-- paints it, so Lighting keeps one writer; nil is the garden without it.
+Clock.look = nil
+
 function Clock.sample(unixSeconds)
+	local look = Clock.look
+	if look then return look.Hour, look.Daylight end
+	return Clock.schedule(unixSeconds)
+end
+
+-- The garden's own hour, whatever look is over it.
+function Clock.schedule(unixSeconds)
 	if not Clock.DayNight then return Dusk.Hour, Dusk.Daylight end
 	return Clock.cycle(unixSeconds)
 end
@@ -26,6 +37,11 @@ end
 function Clock.environment(unixSeconds)
 	local hour, daylight = Clock.sample(unixSeconds)
  Clock.lastHour,Clock.lastDaylight=hour,daylight
+	if Clock.look then
+		Clock.look.paint()
+		Clock.backdrop(daylight)
+		return hour,daylight
+	end
 	if not Clock.DayNight then
 		Clock.dusk()
 		return hour,daylight
@@ -114,7 +130,7 @@ function Clock.backdrop(daylight)
 			end
 		end
 	end
-	local color = if Clock.DayNight then Clock.cloudColor(daylight) else Dusk.CloudColor
+	local color = if Clock.look then Clock.look.CloudColor elseif Clock.DayNight then Clock.cloudColor(daylight) else Dusk.CloudColor
 	for _, part in ipairs(Clock.clouds) do
 		if part.Color ~= color then part.Color = color end
 	end
@@ -137,7 +153,11 @@ function Clock.now()
  end
  return workspace:GetServerTimeNow()
 end
-function Clock.daylight()return Clock.lastDaylight or select(2,Clock.sample(Clock.now()))end
+-- What the birds, coos and fireflies live by: a look changes the light, never their day.
+function Clock.daylight()
+ if Clock.look then return(select(2,Clock.schedule(Clock.now())))end
+ return Clock.lastDaylight or select(2,Clock.sample(Clock.now()))
+end
 Clock.Step=5
 local Controller={};Controller.__index=Controller
 local function finite(value)return type(value)=="number"and value==value and math.abs(value)<math.huge end

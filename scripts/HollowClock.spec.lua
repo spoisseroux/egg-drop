@@ -17,6 +17,8 @@ return function(client)
   local l=Instance.new("PointLight");l.Brightness=.123;l.Color=Color3.fromRGB(255,211,130);l.Range=9;l.Shadows=false
   if marked then l:SetAttribute("HollowLamp",true)end;l.Parent=holder;return l,holder
  end
+ -- The Aero look (AeroWorld) is put back at the end.
+ local look=Clock.look;Clock.look=nil;table.insert(cleanup,function()Clock.look=look end)
  local ok,err=pcall(function()
  test("fixed UTCminus5 real24hour day preserves midnight noon and wrap",function()
   local midnight,dark=Clock.cycle(5*3600);local noon,day=Clock.cycle(17*3600);local nextMidnight=Clock.cycle(29*3600)
@@ -33,6 +35,18 @@ return function(client)
   local f=fixture();local c=Clock.new({world=f.world,now=function()return 5*3600 end,environment=function()end})
   local l=light(f.room,true);settle();c:apply(5*3600)
   assert(math.abs(l.Brightness-(1.55+(.65-1.55)*Dusk.Daylight))<1e-4,"lamps glow at the dusk mix");c:destroy()
+ end)
+ test("a look is sampled and painted instead, and nothing else; nil is the garden without it",function()
+  local painted,backdrop=0,nil
+  local real=Clock.backdrop;Clock.backdrop=function(daylight)backdrop=daylight end
+  local fine,wrong=pcall(function()
+   Clock.look={Hour=10.5,Daylight=.9,CloudColor=Color3.new(1,1,1),paint=function()painted+=1 end}
+   local hour,daylight=Clock.sample(0);assert(hour==10.5 and daylight==.9)
+   Clock.environment(0);assert(painted==1 and backdrop==.9 and Clock.lastHour==10.5 and Clock.lastDaylight==.9)
+   assert(Clock.daylight()==select(2,Clock.schedule(Clock.now())),"the birds keep their own day")
+  end)
+  Clock.look=nil;Clock.backdrop=real;Clock.lastHour,Clock.lastDaylight=Clock.schedule(0);assert(fine,wrong)
+  assert(Clock.sample(0)==require(game:GetService("ReplicatedStorage").Shared.WorldDusk).Hour)
  end)
  test("incremental marked lamp cache paints exact day and night only",function()
   local f=fixture();local l=light(f.room,true);local other=light(f.room,false);local originalOther=other.Brightness;settle()
