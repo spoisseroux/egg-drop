@@ -70,6 +70,12 @@ SHOTS = {
     "D-prism": ("D-prism-black.jpg", "D-prism-white.jpg"),
     "D-lagoon": ("D-lagoon-black.jpg", "D-lagoon-white.jpg"),
     "D-bigmerge": ("D-bigmerge-black.jpg", "D-bigmerge-white.jpg"),
+    # Charms (Spencer: "show off charms"): C1 hero Bear star, C7a leaf, C7c star, C13 Bunny heart, CJ Bunny mid-jump.
+    "C1": ("C1-black.jpg", "C1-grey.jpg"),
+    "C7a": ("C7a-black.jpg", "C7a-grey.jpg"),
+    "C7c": ("C7c-black.jpg", "C7c-grey.jpg"),
+    "C13": ("C13-black.jpg", "C13-grey.jpg"),
+    "CJ": ("CJ-black.jpg", "CJ-grey.jpg"),
 }
 
 

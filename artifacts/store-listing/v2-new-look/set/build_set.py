@@ -240,6 +240,7 @@ EGGS = egg_prices()
 STATS, TIERS = stats()
 FEAST_NAME, FEAST_MULT = feast()
 N_TOYS = toy_count()
+N_CHARMS = len(re.findall(r'"([a-z]+)"', re.search(r"Order=table\.freeze\(\{(.*?)\}", read("src/shared/PetCharmCatalog.lua")).group(1)))
 
 
 def t1(tag=True):
@@ -247,18 +248,28 @@ def t1(tag=True):
     c = base(0.86)
     glow(c, 1400, 560, 900, 0.30)
     rays(c, 1400, 560, alpha=0.08)
-    bubbles(c, [(1830, 90, 120), (1680, 60, 46), (900, 70, 60)])
+    bubbles(c, [(1080, 90, 90), (960, 50, 40)])
     deck = cut("D-cloud", 0.98, rot=4, cool=0)
     bi.soft_shadow(c, deck, (-60, 500), dx=16, dy=14, blur=20, alpha=0.32)
     bi.paste(c, deck, (-60, 500))
     bun = cut("S13", 1.08)
     put(c, bun, 1660, bottom=1040)
-    bear = cut("S12", 1.20)
+    bear = cut("C1", 1.28)
     put(c, bear, 1330, bottom=1075)
-    egg = cut("P-egg-stat", 0.55, rot=-12)
-    paste_center(c, egg, 1810, 300)
-    sparkle(c, 1740, 190, 26)
-    sparkle(c, 1880, 400, 18)
+    # top right: a cracked Toy Egg with its toys bursting out
+    ex, ey = 1700, 230
+    rays(c, ex, ey, n=14, alpha=0.10, length=420)
+    egg = cut("P-egg-open", 0.56, rot=-8, cool=0)
+    bi.soft_shadow(c, egg, (ex - egg.width // 2, ey - egg.height // 2), dx=8, dy=10, blur=10, alpha=0.22)
+    paste_center(c, egg, ex, ey)
+    for name, sc, x, y, r in (("P-toy-ball", 0.26, 1500, 120, 0), ("P-toy-carrot", 0.27, 1880, 110, 24),
+                              ("P-toy-sparkler", 0.30, 1585, 60, -18), ("P-jar-rose", 0.22, 1880, 330, 10),
+                              ("P-toy-top", 0.24, 1530, 300, -8)):
+        im = cut(name, sc, rot=r, cool=0)
+        bi.soft_shadow(c, im, (int(x - im.width / 2), int(y - im.height / 2)), dx=6, dy=8, blur=8, alpha=0.2)
+        paste_center(c, im, x, y)
+    for sx, sy, r in ((1640, 90, 20), (1790, 60, 14), (1460, 220, 14), (1800, 420, 16)):
+        sparkle(c, sx, sy, r)
     wm = caption(["pocket", "pals"], 700, [0.0, 1.05])
     bi.paste(c, wm, (40, 20))
     if tag:
@@ -279,11 +290,11 @@ def t2(prices=True, words=("dress up", "your pal")):
     rays(c, 960, 640, alpha=0.07)
     bubbles(c, [(1840, 330, 80), (1500, 120, 40)])
     floor = 1000
-    row = [("F7a", 1.04, 205, ("flowercrown",)), ("F7b", 1.04, 560, ("sunhat_peach",)),
-           ("S12", 1.16, 960, ("beanie_butter",)), ("F7c", 1.04, 1360, ("hoodie",)), ("F13", 1.04, 1715, ("beads",))]
+    row = [("C7a", 1.02, 205, ("flowercrown",)), ("F7b", 1.04, 560, ("sunhat_peach",)),
+           ("C1", 1.22, 960, ("beanie_butter",)), ("C7c", 1.02, 1360, ("hoodie",)), ("C13", 1.04, 1715, ("beads",))]
     for name, s, cx, _ in row[:2] + row[3:]:
         put(c, cut(name, s), cx, bottom=floor)
-    put(c, cut("S12", 1.16), 960, bottom=floor + 40)
+    put(c, cut("C1", 1.22), 960, bottom=floor + 40)
     if prices:
         for name, s, cx, items in row:
             nm, pr = WEAR[items[0]]
@@ -297,7 +308,7 @@ def t2(prices=True, words=("dress up", "your pal")):
         j = cut("P-jar-" + jar, 0.32, cool=0)
         bi.paste(c, drop(j, 6, 0.22), (x, 30))
         x += j.width + 4
-    ch = chip("4 dyes · 3 finishes", 32)
+    ch = chip(f"4 dyes · 3 finishes · {N_CHARMS} charms", 32)
     bi.paste(c, ch, (930, 190))
     return c
 
@@ -305,11 +316,11 @@ def t2(prices=True, words=("dress up", "your pal")):
 def t3(words=("merge", "big chains")):
     """The real deck, straight-on, frozen at Chain ×4; the Bear peeking; a ×4 burst; the five sizes."""
     c = base(0.88)
-    glow(c, 820, 640, 900, 0.30)
-    rays(c, 820, 640, alpha=0.08)
+    glow(c, 870, 640, 900, 0.30)
+    rays(c, 870, 640, alpha=0.08)
     bubbles(c, [(1850, 100, 110), (1700, 70, 44)])
-    deck = cut("D-bigmerge", 1.06, cool=0)
-    dx, dy = 70, 1080 - deck.height + 40
+    deck = cut("D-bigmerge", 1.0, cool=0)
+    dx, dy = 230, 350
     peek = cut("S5", 0.62)
     bi.paste(c, peek, (dx + deck.width - peek.width - 120, dy - peek.height + 80))
     bi.soft_shadow(c, deck, (dx, dy), dx=14, dy=12, blur=20, alpha=0.34)
@@ -326,9 +337,9 @@ def t3(words=("merge", "big chains")):
     for i, (y, r) in enumerate(zip(ys, rs)):
         bi.pixel_ball(lad, 28, y, r, i, ramps=ramps, ink=(42, 36, 80), face="dots")
     lad = lad.resize((lad.width * 7 // 2, lad.height * 7 // 2), Image.NEAREST)
-    bi.paste(c, drop(lad, 8, 0.22), (1600, 380))
-    ch = chip("merge up 5 sizes", 36)
-    bi.paste(c, ch, (1520, 300))
+    bi.paste(c, drop(lad, 8, 0.22), (1660, 330))
+    ch = chip("5 sizes", 36)
+    bi.paste(c, ch, (1640, 250))
     return c
 
 
@@ -339,7 +350,7 @@ def t4():
     glow(c, ex, ey - 80, 1000, 0.45)
     rays(c, ex, ey - 80, n=22, alpha=0.16)
     bubbles(c, [(1860, 80, 90)])
-    bun = cut("F13", 1.12)
+    bun = cut("C13", 1.12)
     put(c, bun, 330, bottom=1040)
     egg = cut("P-egg-open", 1.12, cool=0)
     put(c, egg, ex, bottom=1000)
@@ -373,23 +384,47 @@ def t5():
     c, _ = leaf_floor()
     glow(c, 960, 560, 900, 0.22)
     bubbles(c, [(1840, 90, 110), (1690, 60, 44)])
-    put(c, cut("F7a", 0.92), 420, bottom=900)
+    put(c, cut("C7a", 0.92), 420, bottom=900)
     ball = cut("P-toy-ball", 0.34, cool=0)
     put(c, ball, 600, bottom=915, shadow=False)
-    put(c, cut("S12", 1.14), 980, bottom=1010)
+    put(c, cut("C1", 1.22), 980, bottom=1010)
     bone = cut("P-toy-bone", 0.34, rot=-10, cool=0)
     put(c, bone, 1180, bottom=1030, shadow=False)
-    hop = cut("S14", 1.02, rot=-8)
-    bi.contact(c, 1520, 1010, hop.width * 0.26, 14, alpha=90, blur=16)
-    dots(c, 1210, 940, 1450, 590, lift=200)
-    bi.paste(c, hop, (1520 - hop.width // 2, 150))
-    car = cut("P-toy-carrot", 0.36, rot=20, cool=0)
-    paste_center(c, car, 1690, 300)
+    hop = cut("CJ", 1.04, rot=-10)
+    hx, top = 1560, 40
+    ground = 1000
+    bi.contact(c, hx, ground, hop.width * 0.20, 12, alpha=70, blur=18)  # far below: she is high up
+    puff(c, 1330, ground - 10)
+    dots(c, 1330, ground - 40, hx - 40, top + hop.height - 40, lift=260)
+    speed_lines(c, hx, top + hop.height + 10, hop.width)
+    bi.paste(c, hop, (hx - hop.width // 2, top))
+    car = cut("P-toy-carrot", 0.36, rot=30, cool=0)
+    paste_center(c, car, 1790, 330)
     cap = caption(["play with", "friends"], 700, [0.0, 0.0])
     bi.paste(c, cap, (40, 20))
     ch = chip("park · toys · friends", 34)
     bi.paste(c, ch, (40, 20 + cap.height - 10))
     return c
+
+
+def puff(c, x, y):
+    """A little dust cloud where she took off."""
+    layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    for dx, dy, r in ((-60, 0, 30), (-20, -14, 38), (30, -6, 34), (70, 4, 24), (5, 10, 30)):
+        d.ellipse((x + dx - r, y + dy - r, x + dx + r, y + dy + r), fill=(255, 255, 255, 215))
+    c.alpha_composite(layer.filter(ImageFilter.GaussianBlur(2)))
+
+
+def speed_lines(c, cx, y, width):
+    """Short white strokes under her feet, streaming down: she is going up."""
+    layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    for i, off in enumerate((-0.32, -0.12, 0.08, 0.28)):
+        x = cx + off * width
+        L = 120 + (i % 2) * 50
+        d.line((x, y + 10, x - 18, y + 10 + L), fill=(255, 255, 255, 220), width=12)
+    c.alpha_composite(layer.filter(ImageFilter.GaussianBlur(1.2)))
 
 
 def leaf_floor(split=0.80):
@@ -426,13 +461,15 @@ def t6():
     back_l = cut("D-prism", 0.78, rot=10, cool=0)
     back_r = cut("D-lagoon", 0.78, rot=-10, cool=0)
     front = cut("D-cloud", 0.92, cool=0)
-    for im, xy in ((back_l, (300, 400)), (back_r, (1120, 250))):
+    peek = cut("C1", 1.10)
+    bi.paste(c, peek, (1125 - peek.width // 2, 60))  # behind the decks: only his head shows
+    for im, xy in ((back_l, (300, 290)), (back_r, (1120, 160))):
         bi.soft_shadow(c, im, xy, dx=12, dy=14, blur=18, alpha=0.30)
         bi.paste(c, im, xy)
-    fxy = (int(1120 - front.width / 2), 500)
+    fxy = (int(1120 - front.width / 2), 380)
     bi.soft_shadow(c, front, fxy, dx=14, dy=16, blur=22, alpha=0.38)
     bi.paste(c, front, fxy)
-    for pid, xy in (("prism_flare", (330, 430)), ("lagoon", (1560, 200)), ("cloud_glass", (1120, 1000))):
+    for pid, xy in (("prism_flare", (250, 830)), ("lagoon", (1560, 120)), ("cloud_glass", (1120, 900))):
         nm, pr = DECKS[pid]
         ch = chip(nm, 36, pr)
         bi.paste(c, ch, (xy[0] - ch.width // 2 if pid == "cloud_glass" else xy[0], xy[1]))
@@ -458,7 +495,7 @@ def t7():
     c = base(0.86)
     glow(c, 420, 600, 800, 0.30)
     bubbles(c, [(1860, 90, 100), (1720, 60, 40)])
-    put(c, cut("F13", 1.18), 380, bottom=1040)
+    put(c, cut("C13", 1.18), 380, bottom=1040)
     # card
     cx0, cy0, cw, chh = 760, 250, 1100, 740
     s = 2
