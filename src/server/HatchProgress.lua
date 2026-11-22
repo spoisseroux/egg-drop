@@ -1147,10 +1147,13 @@ end
 -- between the request and this apply, the write is refused as ShelfChanged with no charge
 -- (the client re-reads the snapshot). transact checks committed() before apply, so a write
 -- that already landed still proves "Saved" after the boundary.
+-- Levels matter: whether gated items are sold is frozen here too, so a purchase already in flight
+-- finishes when the runtime switch goes off (a pending operation keeps this closure).
 local function shelfApply(handle, apply)
+	local gates = Levels.on("gates")
 	return function(state, captured)
 		if captured.week ~= nil and shelfWeek(handle.adapter.now()) ~= captured.week then return false, "ShelfChanged" end
-		return apply(state, captured)
+		return apply(state, captured, gates)
 	end
 end
 

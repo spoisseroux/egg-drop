@@ -53,11 +53,11 @@ end
 -- Pure check shared by the server's early refusal and the UpdateAsync callback. `week` is
 -- the shelf week frozen in the purchase (nil = no shelf: the catalogue price). A level-gated theme
 -- reads the levels of the save being written: below the gate it is NeedsLevel with no charge, and
--- while gates are off it is NotForSale.
-function State.check(state,themeId,price,week)
+-- while gates are off it is NotForSale (unless `gates` says the purchase began with them on).
+function State.check(state,themeId,price,week,gates)
 	local expected=Themes.price(themeId)
 	local gate=expected and Themes.ById[themeId].gate
-	if not expected or not Gate.listed(gate)then return false,"NotForSale"end
+	if not expected or not(gates==true or Gate.listed(gate))then return false,"NotForSale"end
 	expected=expectedPrice("ball",themeId,expected,week)
 	if price~=nil and price~=expected then return false,"PriceChanged"end
 	if State.owns(state,themeId)then return false,"AlreadyOwned"end
@@ -68,9 +68,9 @@ function State.check(state,themeId,price,week)
 end
 
 -- candidate = { themeId, price, operationId, equip, week }
-function State.applyBuy(state,candidate)
+function State.applyBuy(state,candidate,gates)
 	if type(candidate)~="table"or not validId(candidate.themeId)then return false,"InvalidBallTheme"end
-	local ok,why,price=State.check(state,candidate.themeId,candidate.price,candidate.week)
+	local ok,why,price=State.check(state,candidate.themeId,candidate.price,candidate.week,gates)
 	if not ok then return false,why end
 	local row=copy(state.ballThemes or State.fresh())
 	table.insert(row.owned,candidate.themeId)

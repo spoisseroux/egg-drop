@@ -41,11 +41,11 @@ end
 -- Pure check shared by the server's early refusal and the UpdateAsync callback. `week` is
 -- the shelf week frozen in the purchase (nil = no shelf: the catalogue price). A level-gated plate
 -- reads the levels of the save being written: below the gate it is NeedsLevel with no charge, and
--- while gates are off it is NotForSale.
-function Faceplates.check(state,plateId,price,week)
+-- while gates are off it is NotForSale (unless `gates` says the purchase began with them on).
+function Faceplates.check(state,plateId,price,week,gates)
 	local expected=Themes.price(plateId)
 	local gate=expected and Themes.ById[plateId].gate
-	if not expected or not Gate.listed(gate)then return false,"NotForSale"end
+	if not expected or not(gates==true or Gate.listed(gate))then return false,"NotForSale"end
 	expected=expectedPrice("faceplate",plateId,expected,week)
 	if price~=nil and price~=expected then return false,"PriceChanged"end
 	if Faceplates.owns(state,plateId)then return false,"AlreadyOwned"end
@@ -56,9 +56,9 @@ function Faceplates.check(state,plateId,price,week)
 end
 
 -- candidate = { plateId, price, operationId, week }
-function Faceplates.apply(state,candidate)
+function Faceplates.apply(state,candidate,gates)
 	if type(candidate)~="table"or not validId(candidate.plateId)then return false,"InvalidFaceplate"end
-	local ok,why,price=Faceplates.check(state,candidate.plateId,candidate.price,candidate.week)
+	local ok,why,price=Faceplates.check(state,candidate.plateId,candidate.price,candidate.week,gates)
 	if not ok then return false,why end
 	local owned=table.clone(state.faceplates or {})
 	table.insert(owned,candidate.plateId)

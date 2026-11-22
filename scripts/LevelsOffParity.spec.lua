@@ -1,5 +1,5 @@
--- "Levels matter" off is the game before it (V3-LEVELS-BUILD-PLAN-2026-11-22). Goldens were read from
--- cf61cc0 (v2 live): 200 shelf weeks, Book pages, shop lists and prices, egg and toy prices, snapshot
+-- "Levels matter" off (its flag, or the runtime switch) is the game before it (V3-LEVELS-BUILD-PLAN-2026-11-22). Goldens were read from
+-- 90ae236 (v1054, the commit this build starts from): 200 shelf weeks, Book pages, shop lists and prices, egg and toy prices, snapshot
 -- and save keys. With the flag on, the shelf, the Book and everything on sale before keep the same
 -- ids and prices (levels only ever add).
 -- Isolated adapters only; no DataStore or user writes.
@@ -22,18 +22,19 @@ return function(server)
 	local function test(name,run)run();table.insert(cases,name)end
 	local function copy(v)if type(v)~="table"then return v end;local r={};for k,x in pairs(v)do r[k]=copy(x)end;return r end
 	local ALL={track=true,gates=true,medals=true,juice=true}
-	local function levels(on)Levels.inject({flags={LevelsMatter=on==true},studio=true,shipped=ALL})end
+	local function levels(on)Levels.inject({flags={LevelsMatter=on~=false},studio=true,shipped=ALL,switch=on~="switch"})end
+	local OFF={false,"switch"}
 	local function keys(t)local out={};for k in pairs(t)do table.insert(out,tostring(k))end;table.sort(out);return table.concat(out," ")end
 
 	local GOLD={
-		shelfBase=2811,shelfHash=3939713803,
+		shelfBase=2811,shelfHash=3485999808,
 		shelfFirst="wearable:beanie_mint:40:32,wearable:heart:100:80,ball:midnight:250:200,wearable:bellcollar_silver:100:80,wearable:bowtail:100:80,faceplate:liquid_chrome:100:80",
 		wear="beanie:40 beanie_mint:40 beanie_butter:40 beanie_grape:40 sunhat:100 sunhat_cocoa:100 sunhat_peach:100 flowercrown:250 tee:40 tee_berry:40 tee_forest:40 tee_tangerine:40 hoodie:250 beads:40 bellcollar:100 bellcollar_silver:100 bellcollar_rose:100 ring:40 starstud:100 sparkle:100 sleepy:40 blep:40 heart:100 happy:40 lash:40 blush:40 partyhat:40 bowtail:100 acorn:100 bands:40 specs:40 round:40 w:40",
 		balls="smileys:0 marbles:0 gumdrops:40 gems:100 planets:100 kittens:250 bubbles:100 pea_soup:40 pocket_grey:40 amber:100 deep_sea:100 bubblegum:100 midnight:250",
-		plates="sherbet:0 stone:0 ice:0 brick:0 moss:0 honey:0 gloaming:0 copperleaf:0 aqua_pop:40 lime_gel:40 sorbet_sky:40 liquid_chrome:100 tidepool:100 aurora_glass:100 prism_flare:250 night_orb:250 grape_soda:40 rose_chrome:100",
+		plates="sherbet:0 stone:0 ice:0 brick:0 moss:0 honey:0 gloaming:0 copperleaf:0 aqua_pop:40 lime_gel:40 sorbet_sky:40 liquid_chrome:100 tidepool:100 aurora_glass:100 prism_flare:250 night_orb:250 grape_soda:40 rose_chrome:100 cloud_glass:40 lagoon:100 dewy_meadow:100",
 		book={balls="gumdrops gems planets kittens bubbles pea_soup pocket_grey amber deep_sea bubblegum midnight",
-			faceplates="aqua_pop lime_gel sorbet_sky liquid_chrome tidepool aurora_glass prism_flare night_orb grape_soda rose_chrome"},
-		bookTotals="balls=11 faceplates=10 wardrobe=46 toys=9 charms=6 pets=2 discoveries=17",
+			faceplates="aqua_pop lime_gel sorbet_sky liquid_chrome tidepool aurora_glass prism_flare night_orb grape_soda rose_chrome cloud_glass lagoon dewy_meadow"},
+		bookTotals="balls=11 faceplates=13 wardrobe=46 toys=9 charms=6 pets=2 discoveries=17",
 		toys="ball bone pocket_deck sparkler squeaky_carrot wobble_top",
 		statEgg="boughtToday cycleIndex dailyBuys enabled free freeLimit misses mode pityLeft poolVersion pouch pouchSize price quotes",
 		petStats="bonus pets",
@@ -81,8 +82,8 @@ return function(server)
 		return H.load(1,{rank=1},adapter),db,c
 	end
 	local ok,problem=pcall(function()
-		test("off: 200 shelf weeks, every Book page, every shop list and price, toys and eggs are the live build's",function()
-			levels(false)
+		for _,off in ipairs(OFF)do test("off ("..tostring(off).."): 200 shelf weeks, every Book page, every shop list and price, toys and eggs are the live build's",function()
+			levels(off)
 			shelf();book();eggs()
 			for _,pet in ipairs({"pip","blip"})do assert(wearList(pet)==GOLD.wear,pet)end
 			assert(priced(Balls.Order,Balls.price)==GOLD.balls and priced(Plates.Order,Plates.price)==GOLD.plates)
@@ -91,7 +92,7 @@ return function(server)
 				local a,b=Wear.inTab("pip",tab.slot),Wear.shopTab("pip",tab.slot,{})
 				assert(#a==#b);for index,item in ipairs(a)do assert(b[index]==item and item.gate==nil)end
 			end
-		end)
+		end)end
 		test("on: the shelf, the Book, toys and eggs are unchanged; every ungated id keeps its place and price",function()
 			levels(true)
 			shelf();book();eggs()
@@ -105,8 +106,8 @@ return function(server)
 			assert(gated==14 and gated*3<=all,"at most a third of the Wardrobe")
 			for _,tab in ipairs(Wear.tabsFor("pip"))do assert(Wear.inTab("pip",tab.slot)[1].gate==nil,"the first row of "..tab.id)end
 		end)
-		test("off: snapshot and save keys are the live build's, and a save with the new fields loads, plays and keeps them",function()
-			levels(false)
+		for _,off in ipairs(OFF)do test("off ("..tostring(off).."): snapshot and save keys are the live build's, and a save with the new fields loads, plays and keeps them",function()
+			levels(off)
 			local h,db,c=fixture()
 			assert(h.status=="Ready"and keys(H.public(h).statEgg)==GOLD.statEgg and keys(H.public(h).petStats)==GOLD.petStats)
 			assert(keys(H.public(h))==GOLD.public,keys(H.public(h)))
@@ -125,7 +126,7 @@ return function(server)
 			local saved=db2.player_1
 			assert(saved.hatching.medalEggsUsed==3 and saved.deckJuice.pop=="fizz"and saved.deckJuiceAt==7 and saved.deckJuiceWriter=="w")
 			assert(saved.hatching.petWearables.pip.equipped.Hat=="beanie_rose"and saved.hatching.ballThemes.equipped=="tangerine_pop"and #saved.hatching.faceplates==2)
-		end)
+		end)end
 		test("on: the snapshot adds one key (statEgg.medalEggs); nothing else moves and nothing new is saved by playing",function()
 			levels(true)
 			local h,db=fixture()
