@@ -46,6 +46,21 @@ return function(client)
 		end
 		for _, id in ipairs(Preload.styleImages()) do assert(set[Preload.canonical(id)] or set[id], "style image " .. tostring(id) .. " missing") end
 		assert(#all > #Preload.styleImages(), "menu art adds images")
+		-- 2026-11-22: mesh ids are not images (the first cut asked for 6 of them on the live place).
+		local Models = require(game:GetService("ReplicatedStorage").Shared.EggModels)
+		local meshes = {}
+		local function walk(value, seen)
+			if type(value) ~= "table" or seen[value] then return end
+			seen[value] = true
+			for k, v in pairs(value) do
+				if type(k) == "string" and k:lower():find("mesh", 1, true) and type(v) == "string" then meshes[v] = true end
+				walk(v, seen)
+			end
+		end
+		walk(Models, {}); walk(require(client.HatchDisplayAssets), {})
+		assert(next(meshes) ~= nil, "the fixture found mesh ids")
+		for _, id in ipairs(all) do assert(not meshes[id], "a mesh id is in the image list: " .. id) end
+		assert(set[Models.Types.toy.colorMap], "egg colour maps are in the list")
 	end)
 
 	test("background pass: waits for the garden, then every image at priority 0 in batches of " .. Preload.Batch, function()

@@ -57,7 +57,11 @@ function Preload.collectImages(value, out, seen, visited)
 		local keys = {}
 		for k in pairs(value) do table.insert(keys, k) end
 		table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
-		for _, k in ipairs(keys) do Preload.collectImages(value[k], out, seen, visited) end
+		for _, k in ipairs(keys) do
+			-- `mesh` fields (EggModels, HatchDisplayAssets) hold mesh ids: asked for as images they
+			-- fail ("Asset type does not match requested type") and retry in this same queue.
+			if not (type(k) == "string" and k:lower():find("mesh", 1, true)) then Preload.collectImages(value[k], out, seen, visited) end
+		end
 	end
 	return out
 end
