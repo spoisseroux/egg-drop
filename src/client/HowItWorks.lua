@@ -28,6 +28,8 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local UICopy=require(Shared.UICopy)
 local Kit=require(script.Parent.DeckKit)
 local Notices=require(script.Parent.NoticeCards)
+local Things=require(Shared.Things)
+local Dash=require(Shared.Dash)
 local How={}
 
 -- Card sets. `icon` is a Kit.icon name; `art` names a special picture ("stamps").
@@ -51,8 +53,17 @@ How.Sets=table.freeze({
  -- and dailies are, and how to customize. Not in Order: it is not a machine's ? set.
  garden=table.freeze({tint="quests",cards=table.freeze({
   table.freeze({key="a",icon="target"}),table.freeze({key="e",icon="paw",input=true}),table.freeze({key="b",icon="quests"}),
-  table.freeze({key="c",icon="wand"})})}),
+  table.freeze({key="c",icon="wand"}),
+  -- Things to do: one more card while it is on.
+  table.freeze({key="f",icon="smiley",when="things"})})}),
+ -- Garden Dash: only while Things to do and the race are on; what it pays only while its prizes are.
+ dash=table.freeze({tint="quests",when="dash",cards=table.freeze({
+  table.freeze({key="a",icon="paw"}),table.freeze({key="b",icon="target"}),table.freeze({key="c",icon="sparkle"}),
+  table.freeze({key="d",icon="star",when="prizes"})})}),
 })
+-- What a set or card that names a `when` waits for.
+How.When=table.freeze({things=function()return Things.on()end,dash=function()return Things.on()and Dash.on()end,prizes=function()return Dash.prizes()end})
+local function open(entry)return entry.when==nil or How.When[entry.when]()==true end
 How.Order=table.freeze({"hatch","style","companions","quests","book","park"})
 How.DisplayOrder=40 -- above every menu ScreenGui (12 to 14) and the coach cards
 How.Action="EggDropHowItWorks"
@@ -60,7 +71,7 @@ How.Action="EggDropHowItWorks"
 How.StampSample=table.freeze({stamps=3,dailyAvailable=true})
 
 -- ── Pure ─────────────────────────────────────────────────────────────────────
-function How.has(id)return How.Sets[id]~=nil end
+function How.has(id)return How.Sets[id]~=nil and open(How.Sets[id])end
 function How.title(id)return UICopy.get("r3.help."..id..".title")end
 -- "Touch" | "Gamepad" | "Keyboard", by the same rule as the pet's own prompts (PetFocusUI).
 function How.inputKind()
@@ -74,6 +85,7 @@ function How.cards(id,input)
  local set=How.Sets[id];if not set then return {}end
  local out={}
  for _,card in ipairs(set.cards)do
+  if not open(card)then continue end
   local lineKey=if card.input then How.InputLine[input or How.inputKind()]or "line" else "line"
   table.insert(out,{key=card.key,icon=card.icon,art=card.art,
    title=UICopy.get("r3.help."..id.."."..card.key..".title"),line=UICopy.get("r3.help."..id.."."..card.key.."."..lineKey)})
@@ -83,6 +95,7 @@ end
 function How.list()
  local out={}
  for _,id in ipairs(How.Order)do table.insert(out,{id=id,title=How.title(id)})end
+ if How.has("dash")then table.insert(out,{id="dash",title=How.title("dash")})end
  return out
 end
 -- Layout for a host of size W x H and `n` cards. Phones (Kit.compactRule) get the
@@ -91,7 +104,7 @@ end
 -- picture, titleSize, lineSize, lineH}.
 function How.layout(W,H,cards)
  local compact=Kit.compactRule(W,H)
- local n=math.max(1,#cards);local columns=if W<600 and H>420 then 1 else n
+ local n=math.max(1,#cards);local columns=if W<600 and H>420 then 1 elseif n>4 and compact then 3 else n
  local pad=if compact then 16 else 24;local gap=if compact then 10 else 16
  local panelW=math.floor(math.min(W-(if compact then 24 else 48),if n<=2 then 640 elseif n==3 then 820 else 1000))
  local cardW=math.floor((panelW-pad*2-gap*(columns-1))/columns)

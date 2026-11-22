@@ -388,6 +388,18 @@ return function(client,offline)
 		r.fire({kind="judged",r="race-1",jump=1,result=1,tick=100});assert(screen.word=="Perfect!")
 		r.client:leave();r.done()
 	end)
+	test("Things to do's readers: engaged from the gather seat on, held() only from the countdown; the summary follows the roster",function()
+		local c=setmetatable({isOpen=true,d={state=function()return nil end}},Client)
+		assert(not c:engaged()and c:summary().phase=="idle"and c:summary().count==0 and c:summary().raced==false)
+		for _,state in ipairs({{seat={phase="gather"}},{queued=true},{pending={seq=1}},{card={closed=false}}})do
+			local e=setmetatable(state,Client);assert(e:engaged()==true and not e:held())
+		end
+		assert(not setmetatable({card={closed=true}},Client):engaged())
+		c.roster={phase="gather",seats={{},{},{pal=true},5}};assert(c:summary().phase=="gather"and c:summary().count==2)
+		for _,phase in ipairs({"countdown","race","results"})do c.roster={phase=phase,seats={}};assert(c:summary().phase=="live",phase)end
+		c.raced=true;assert(c:summary().raced==true)
+		c.dead=true;assert(c:summary()==nil);c.dead=nil;c.isOpen=false;assert(c:summary()==nil)
+	end)
 	test("junk packets change nothing",function()
 		local r=rig()
 		for _,junk in ipairs({1,"x",{},{kind="locked"},{kind="locked",raceId="r",seat="1"},{kind="joined"},{kind="result",r="r"},{kind="zoom"},{kind="reply"},{kind="refusedInput",r="race-1",n=5}})do r.fire(junk)end

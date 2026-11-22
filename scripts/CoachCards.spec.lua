@@ -256,6 +256,36 @@ return function(client,parent)
   cards:destroy();gui:Destroy();assert(ok,problem)
  end)
 
+ test("Things to do live: the last branch's line; interrupted before it shows it is not saved; shown, it is saved and counted once",function()
+  local RunService=game:GetService("RunService")
+  local gui=Instance.new("ScreenGui");gui.Name="_CoachThingsSpec";gui.Parent=parent
+  local sent,due,why,showed={},nil,nil,nil
+  local cards=Cards.new({gui=parent,send=function(id)table.insert(sent,id)end})
+  local ok,problem=pcall(function()
+   local clock=0
+   local function step(dt)
+    clock+=dt
+    cards:step(clock,{mode="Room",canRoam=true,presented=false,owned=1,input="Keyboard",open={},used={},pet="Bear",idleFor=5,cardOpen=false})
+   end
+   cards:sync({coachMask=Coach.with(0,"gardenIntro"),totalWins=0,quests={daily={}}})
+   for _=1,5 do step(1)end
+   assert(cards.garden==nil and cards.stepCtx==nil,"without options.things: as before")
+   cards.options.things={due=function()return due,due end,blocked=function()return why end,show=function(id)showed=id end}
+   due="parkInvite";step(.1);assert(cards.garden and cards.garden.kind=="intro"and cards.garden.line.notice=="parkInvite"and #sent==0)
+   why="menu";due=nil;step(.1);assert(cards.garden==nil and #sent==0 and not cards.seen.parkInvite,"interrupted: it comes back later")
+   why=nil;due="parkInvite";step(.1);due=nil
+   local deadline=os.clock()+6
+   repeat step(RunService.RenderStepped:Wait())until #sent>0 or os.clock()>deadline
+   assert(sent[1]=="parkInvite"and #sent==1 and cards.introShown==1 and cards.seen.parkInvite)
+   why="race";step(.1);assert(cards.garden==nil,"a race starts: the line leaves")
+   for _=1,10 do step(1)end
+   assert(#sent==1 and showed==nil)
+   cards.options.things.due=function()error("broken")end
+   step(.1);assert(cards.options.things==nil and cards.garden==nil,"an error turns the tips off, not the coach");step(.1)
+  end)
+  cards:destroy();gui:Destroy();assert(ok,problem)
+ end)
+
  test("QA v775 live: the rail never advances or replaces a line while a card is open",function()
   local Rail=require(client.NotificationRail);local How=require(client.HowItWorks)
   local RunService=game:GetService("RunService")

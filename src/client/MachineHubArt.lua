@@ -428,6 +428,20 @@ function builders.book(root,w,h,ctx)
   for _,sticker in ipairs(stickers)do sticker.node.Position=UDim2.fromOffset(sticker.x,sticker.y);sticker.node.Rotation=sticker.tilt end
  end)
 end
+-- Things to do: the games' discs in a row.
+Art.Things=table.freeze({table.freeze({"faceplate","style"}),table.freeze({"paw","companions"}),table.freeze({"trophy","quests"})})
+function builders.things(root,w,h)
+ local n=#Art.Things
+ local size=math.floor(math.min(h-10,(w-12-(n-1)*4)/n,40))
+ local x=math.floor((w-n*size-(n-1)*4)/2)
+ for index,entry in ipairs(Art.Things)do
+  local lift=if index%2==0 then -2 else 2
+  local disc=Kit.frame(root,"Game"..index,nil,UDim2.fromOffset(x+(index-1)*(size+4),math.floor((h-size)/2)+lift),UDim2.fromOffset(size,size),999)
+  disc.BackgroundTransparency=0;disc.BackgroundColor3=Kit.tintColor(entry[2])or Kit.Color.stars
+  Kit.stroke(disc)
+  local icon=Kit.icon(disc,entry[1],math.floor(size*.6),"ink");icon.AnchorPoint=Vector2.new(.5,.5);icon.Position=UDim2.fromScale(.5,.5)
+ end
+end
 function builders.settings(root,w,h)
  local rowsN=3
  local trackH=6

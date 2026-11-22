@@ -97,7 +97,7 @@ ui.coach.machines.title,Machines,,"First-round coaching; also ui.notice.machines
 ui.coach.missPay,Goal met,,First-round coaching
 ui.coach.next,Next,,First-round coaching; also ui.names.egg.nextValue
 ui.coach.park.line,{pet} plays here. Three play dates a day pay +4 ★.,,First-round coaching; e.g. Bear plays here. Three play dates a day pay +4 ★.
-ui.coach.park.title,Pet Park,,"First-round coaching; also ui.park.name, ui.r3.help.park.title, ui.r5.station.Park.name, ui.report.category.park"
+ui.coach.park.title,Pet Park,,"First-round coaching; also ui.notice.parkInvite.title, ui.park.name, ui.r3.help.park.title, ui.r5.station.Park.name"
 ui.coach.quest.line,Today's quests pay Stars. Find them in the menu.,,First-round coaching
 ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, ui.hub.quests.title, ui.hub.tile.quests.name, ui.r3.help.quests.title"
 ui.coach.questDone.line,"Claim its Stars in Quests, in the menu.",,First-round coaching
@@ -135,7 +135,7 @@ ui.dash.ask.title,Leave the race?,,Menu text
 ui.dash.ask.yes,Leave,,Menu text; also ui.results.leave.narrow
 ui.dash.clear,Nice!,,Menu text
 ui.dash.clover,Lucky clover!,,Menu text
-ui.dash.dash,Dash,,Menu text
+ui.dash.dash,Dash,,Menu text; also ui.r3.help.dash.c.title
 ui.dash.done,Done,,Menu text; also ui.names.reveal.done
 ui.dash.fun,Just for Fun,,Menu text
 ui.dash.gate.line,Your pet runs. Jump the hoops. Hold Dash to zoom!,,Menu text
@@ -144,7 +144,7 @@ ui.dash.gather,{name} · {count} of 8 · {left},,Menu text; e.g. Pet Park · 3 o
 ui.dash.go,GO!,,Menu text
 ui.dash.hint.dash,Hold Dash!,,Menu text
 ui.dash.hint.jump,Tap Jump now!,,Menu text
-ui.dash.jump,Jump,,Menu text; also ui.stats.name.jump
+ui.dash.jump,Jump,,"Menu text; also ui.r3.help.dash.b.title, ui.stats.name.jump"
 ui.dash.leave,Leave race,,Menu text
 ui.dash.medal.bronze,Bronze cup time!,,Menu text
 ui.dash.medal.gold,Gold cup time!,,Menu text
@@ -186,7 +186,7 @@ ui.dash.result.trial,{time} s!,,Menu text; e.g. {time} s!
 ui.dash.result.tryAgain,Try again for a cup!,,Menu text
 ui.dash.stats,Stats On,,Menu text
 ui.dash.stones,Take the stones,,Menu text
-ui.dash.title,Garden Dash,,Menu text
+ui.dash.title,Garden Dash,,"Menu text; also ui.notice.dashIntro.title, ui.r3.help.dash.title, ui.r5.station.Dash.name"
 ui.dash.trial,Time Trial,,Menu text
 ui.dash.trip,Oops!,,Menu text
 ui.dash.zoom,Zoomies!,,Menu text
@@ -489,6 +489,11 @@ ui.notice.bond.what,Hearts show how close you and {pet} are. Each new level unlo
 ui.notice.customize.next,Open Companions and pick Customize or Wardrobe. New pieces hatch from eggs.,,Menu text
 ui.notice.customize.title,Customize your pet,,Menu text
 ui.notice.customize.what,"Colour jars, charms, toys and outfits change how {pet} looks. Looks only.",,"Menu text; e.g. Colour jars, charms, toys and outfits change how Bear looks. Looks only."
+ui.notice.dashIntro.next,Tap Show me and follow the trail to the race.,,Menu text
+ui.notice.dashIntro.what,Race your pet. It's free!,,Menu text; also ui.r5.station.Dash.line
+ui.notice.dashNew.next,Race your pet. It's free! Tap Show me to find it.,,Menu text
+ui.notice.dashNew.title,New in the garden,,Menu text
+ui.notice.dashNew.what,Garden Dash is open.,,Menu text
 ui.notice.fillLine.next,"Merge to make room, and drop each egg next to its match.",,Menu text
 ui.notice.firstSpend.next,Open Hatch eggs and choose the Toy Egg. The odds are on every label.,,Menu text
 ui.notice.firstSpend.title,Your first egg,,Menu text
@@ -500,6 +505,7 @@ ui.notice.go.companions,Open Companions,,Menu text
 ui.notice.go.hatch,Open Hatch eggs,,Menu text
 ui.notice.go.menu,Open the Menu,,Menu text
 ui.notice.go.quests,Open Quests,,Menu text
+ui.notice.go.show,Show me,,Menu text; also ui.things.show
 ui.notice.hub.next,"Open it any time: tap Menu, press M, or press Y on a gamepad.",,Menu text
 ui.notice.hub.what,"The Menu lists every machine, with Quests, the Collection book and Settings.",,Menu text
 ui.notice.item.next,Tap Items to use one when the pile gets tight.,,Menu text
@@ -510,6 +516,8 @@ ui.notice.locked.next,Win this round to hatch your first friend.,,Menu text
 ui.notice.locked.what,The garden and its machines open once you have a pet.,,Menu text
 ui.notice.machines.next,"Walk up to a machine to use it, or open the Menu to jump to any of them.",,Menu text
 ui.notice.machines.what,"Each glowing machine in the garden does one job: Hatch eggs, Deck style, Companions and the Pocket Deck.",,Menu text
+ui.notice.parkInvite.next,Tap Show me and follow the trail to the park.,,Menu text
+ui.notice.parkInvite.what,{pet} wants to play.,,Menu text; e.g. Bear wants to play.
 ui.notice.pill.firstSpend,Hatch your first egg,,Menu text
 ui.notice.pill.tip,Tip: {title},,Menu text; e.g. Tip: {title}
 ui.notice.quest.next,Open the Menu and pick Quests. Stamp the card each day and claim every finished quest.,,Menu text
@@ -585,6 +593,12 @@ ui.r3.help.companions.b.title,Wardrobe,,Menu text; also catalog.BookCatalog.Page
 ui.r3.help.companions.c.line,"Use colour jars, add a charm or hand over a toy.",,Menu text
 ui.r3.help.companions.c.title,Customize,,Menu text; also ui.r3.help.garden.c.title
 ui.r3.help.companions.d.line,Toys and colour jars hatch from eggs. Spend Stars at Hatch eggs.,,Menu text
+ui.r3.help.dash.a.line,Your pet runs. You help.,,Menu text
+ui.r3.help.dash.a.title,Run,,Menu text
+ui.r3.help.dash.b.line,Tap Jump at each hoop.,,Menu text
+ui.r3.help.dash.c.line,Hold Dash to zoom. Let go to rest.,,Menu text
+ui.r3.help.dash.d.line,"Two Stars a race, five races a day.",,Menu text
+ui.r3.help.dash.d.title,Stars,,"Menu text; also ui.report.category.stars, ui.store.starsRow"
 ui.r3.help.garden.a.line,"Walk up to a glowing machine to use it, or tap Menu to open any of them from anywhere.",,Menu text
 ui.r3.help.garden.b.line,Open the Menu and pick Quests. Three daily quests and a once-a-day stamp pay Stars.,,Menu text
 ui.r3.help.garden.c.line,Open Companions to recolour and dress your pet. New pieces hatch from eggs.,,Menu text
@@ -592,6 +606,8 @@ ui.r3.help.garden.e.line,"Walk up to your pet and press E to say hi, then hold E
 ui.r3.help.garden.e.linePad,"Walk up to your pet and press X to say hi, then hold X to pet it.",,Menu text
 ui.r3.help.garden.e.lineTouch,"Tap your pet to say hi, then rub to pet it.",,Menu text
 ui.r3.help.garden.e.title,Say hi to your pet,,Menu text
+ui.r3.help.garden.f.line,Find every game in Things to do.,,Menu text
+ui.r3.help.garden.f.title,Things to do,,Menu text; also ui.things.title
 ui.r3.help.garden.title,Your garden,,Menu text
 ui.r3.help.hatch.a.line,Rounds and quests earn Stars. Open Quests for your once-daily stamp.,,Menu text
 ui.r3.help.hatch.a.title,Earn Stars,,Menu text
@@ -687,11 +703,10 @@ ui.r5.station.Eggs.line,Spend Stars on new eggs,,Menu text
 ui.r5.station.Journal.line,Dress up and care for your pets,,Menu text
 ui.r5.station.Park.line,Pets play here. Play dates pay Stars,,Menu text
 ui.report.about,What's it about?,,Bug report sheet
-ui.report.category.deck,Pocket Deck,,"Bug report sheet; also catalog.ToyCatalog.ById.pocket_deck.name, catalog.BookCatalog.Pages.toys.items.3.name"
+ui.report.category.deck,Pocket Deck,,"Bug report sheet; also ui.things.deck.name, catalog.ToyCatalog.ById.pocket_deck.name, catalog.BookCatalog.Pages.toys.items.3.name"
 ui.report.category.menus,Menus,,Bug report sheet
 ui.report.category.other,Other,,Bug report sheet
 ui.report.category.pets,Pets,,Bug report sheet; also catalog.BookCatalog.Pages.pets.name
-ui.report.category.stars,Stars,,Bug report sheet; also ui.store.starsRow
 ui.report.entry,Report a bug / Suggest something,,Bug report sheet
 ui.report.entryShort,Report or suggest,,Bug report sheet
 ui.report.kind.bug,Bug,,Bug report sheet
@@ -757,7 +772,7 @@ ui.stamp.tomorrow,Next stamp tomorrow: ★ {reward},,Stamp card; e.g. Next stamp
 ui.stampChip.done,✓ {count}/{total},,Menu text; e.g. ✓ 3/12
 ui.stampChip.label,Daily stamp,,Menu text
 ui.starsShort.buy,Get Stars,,"Menu text; also ui.starsShort.wallet, ui.store.title"
-ui.starsShort.earn,Play a round,,Menu text
+ui.starsShort.earn,Play a round,,Menu text; also ui.things.deck.line
 ui.starsShort.line,"{item} is ★ {price}. Get Stars, or earn them on the Pocket Deck.",,"Menu text; e.g. Squeaky Bone is ★ {price}. Get Stars, or earn them on the Pocket Deck."
 ui.starsShort.lineNoItem,"Get Stars, or earn them on the Pocket Deck.",,Menu text
 ui.starsShort.title,You need ★ {count} more,,Menu text; e.g. You need ★ 3 more
@@ -891,6 +906,14 @@ ui.style.effects.title,Effects,,Deck style screen
 ui.style.effects.trail,Drop trail,,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.faceplates,Fixed prices. No random plates.,,Deck style screen
+ui.things.dash.gather,Race: {count} of 8,,Things to do page; e.g. Race: 3 of 8
+ui.things.dash.idle,Start a race,,Things to do page
+ui.things.dash.live,A race is on,,Things to do page
+ui.things.dash.prizes,Stars races today: {done} of {total},,Things to do page; e.g. Stars races today: {done} of 12
+ui.things.new,New,,Things to do page
+ui.things.play,Play,,Things to do page
+ui.things.tile.line,Every game in the garden,,Things to do page
+ui.things.tile.short,Things,,Things to do page
 ui.v2.adopt.button,Adopt for ★ {price},,Menu text; e.g. Adopt for ★ {price}
 ui.v2.adopt.confirm,Press again to adopt for ★ {price},,Menu text; e.g. Press again to adopt for ★ {price}
 ui.v2.adopt.done,{pet} came home with you!,,Menu text; e.g. Bear came home with you!

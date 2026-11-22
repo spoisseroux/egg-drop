@@ -249,6 +249,17 @@ local function build(folder, id, base)
 		label = label, labelName = labelName, labelLine = labelLine, intro = true, state = "hidden" }
 end
 
+-- Things to do: only the nearest unlearned station beckons. Pure: its id, or nil.
+function Attract.nearest(stations, used, position)
+	local best, far = nil, Data.BeckonRange
+	if typeof(position) ~= "Vector3" then return nil end
+	for id, entry in pairs(stations) do
+		local distance = (position - entry.base).Magnitude
+		if used[id] ~= true and (distance < far or (distance == far and best == nil)) then best, far = id, distance end
+	end
+	return best
+end
+
 -- options: {read=stationContext, triggered=PromptTriggered, player, voice=AmbientAudio,
 --   reduced=function, cradleBusy=function, now=function, world=Instance, positions={id=Vector3}, auto=false}
 function Attract.new(options)
@@ -328,6 +339,19 @@ function Attract:learn(id)
 	return true
 end
 
+-- A place that comes and goes (the Garden Dash gate, Things to do): nil takes it away, a moved one is built again.
+function Attract:extra(id, position, learned)
+	local entry = self.stations[id]
+	if entry and (position == nil or (entry.base - position).Magnitude > .05) then
+		self.stations[id] = nil
+		entry.anchor:Destroy()
+		entry.ringPart:Destroy()
+		entry = nil
+	end
+	if position and not entry and not self.destroyed and Data.Stations[id] then self.stations[id] = build(self.folder, id, position) end
+	if position and learned then self:learn(id) end
+end
+
 function Attract:visible(state)
 	if self.now() < self.hiddenUntil then return false end
 	return state ~= nil and LoungeStations.canRoam(state)
@@ -368,10 +392,13 @@ function Attract:step(dt)
 	if self.stations.Park and not self.used.Park and Attract.parkMember(position) then self.used.Park = true; self.introduced.Park = true end
 	local bob = if reduced then 0 else math.sin(self.time * math.pi * 2 / Data.BobPeriod) * Data.BobHeight
 	local hop = if reduced then 0 else Attract.hop(self.time) * Data.HopHeight
+	-- Things to do on (options.single): one beckon at a time, none while a coach line shows (options.quiet).
+	local single = self.options.single ~= nil and self.options.single() == true
+	local only = if single and not (self.options.quiet and self.options.quiet() == true) then Attract.nearest(self.stations, self.used, position) else nil
 	for id, entry in pairs(self.stations) do
 		local shown = visible and not (id == "Journal" and self.options.cradleBusy and self.options.cradleBusy())
 		local distance = position and (position - entry.base).Magnitude or nil
-		local mode = Attract.state(distance, self.used[id] == true, shown)
+		local mode = Attract.state(distance, self.used[id] == true or (single and id ~= only), shown)
 		if mode == "invite" and entry.state ~= "invite" then self:ping(entry, now) end
 		entry.state = mode
 		local active = mode == "beckon" or mode == "invite"

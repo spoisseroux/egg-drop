@@ -500,6 +500,13 @@ function Rail.texts()
  for _,entry in ipairs(Rail.shown())do table.insert(out,entry.text)end
  return out
 end
+-- Nothing showing, waiting or pinned (a line that is switched off does not count).
+function Rail.empty()
+ for _,list in ipairs({queue.items,queue.providers})do
+  for _,item in ipairs(list)do if not item.cancelled and item.data.active~=false then return false end end
+ end
+ return true
+end
 -- A cloned spec module can release its singleton; its destroyed GUI must not
 -- leave a RenderStepped callback that recreates identically named empty rails.
 function Rail.destroy()

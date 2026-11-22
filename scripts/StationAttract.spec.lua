@@ -39,6 +39,31 @@ return function(client, parent)
 		end
 	end)
 
+	test("Things to do: the race's station is outside Order, comes and goes with its gate, and only the nearest unlearned one beckons", function()
+		assert(Data.Stations.Dash and not table.find(Data.Order, "Dash") and #Data.Order == 4)
+		local folder = Instance.new("Folder"); folder.Parent = parent or workspace
+		local at, single, quiet = Vector3.new(0, 0, 0), false, false
+		local clock = 100
+		local attract = Attract.new({ world = folder, auto = false, now = function() return clock end, reduced = function() return true end,
+			positions = { Eggs = Vector3.new(10, 0, 0), Customize = Vector3.new(20, 0, 0) }, single = function() return single end, quiet = function() return quiet end,
+			read = function() return { uiReady = true, mode = "Room", viewMode = "Room", alive = true, position = at } end })
+		local ok, problem = pcall(function()
+			attract:step(.1); assert(attract.stations.Eggs.state == "invite" and attract.stations.Customize.state == "beckon", "off: as before")
+			single = true; attract:step(.1); assert(attract.stations.Eggs.state == "invite" and attract.stations.Customize.state == "learned", "one beckon")
+			quiet = true; attract:step(.1); assert(attract.stations.Eggs.state == "marker" and attract.stations.Customize.state == "learned", "none during a coach line")
+			quiet = false
+			attract:extra("Dash", Vector3.new(0, 0, 5)); attract:step(.1); assert(attract.stations.Dash.state == "invite" and attract.stations.Eggs.state == "marker")
+			local anchor = attract.stations.Dash.anchor
+			attract:extra("Dash", Vector3.new(0, 0, 5)); assert(attract.stations.Dash.anchor == anchor)
+			attract:extra("Dash", Vector3.new(0, 0, 9), true); assert(attract.stations.Dash.anchor ~= anchor and anchor.Parent == nil)
+			attract:step(.1); assert(attract.stations.Dash.state == "marker" and attract.stations.Eggs.state == "invite", "raced: it stops beckoning")
+			attract:extra("Dash", nil); assert(attract.stations.Dash == nil and folder.EggDropStationAttract:FindFirstChild("DashAttract") == nil)
+			assert(folder.EggDropStationAttract:FindFirstChild("DashAttractRing") == nil)
+			attract:extra("Nope", Vector3.zero); assert(attract.stations.Nope == nil)
+		end)
+		attract:destroy(); folder:Destroy(); assert(ok, problem)
+	end)
+
 	test("ping: none in the first 10 s, one per station per 45 s, one of any kind per 20 s", function()
 		assert(not Attract.canPing(9.9, 0, nil, nil) and Attract.canPing(10, 0, nil, nil))
 		assert(not Attract.canPing(30, 0, 15, nil) and Attract.canPing(35, 0, 15, nil))

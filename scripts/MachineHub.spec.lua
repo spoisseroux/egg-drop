@@ -84,6 +84,69 @@ return function(client,parent)
    assert(Hub.keyAction(K.ButtonA)=="open"and Hub.keyAction(K.Return)=="open"and Hub.keyAction(K.ButtonB)=="back"and Hub.keyAction(K.Escape)=="back")
    assert(Hub.keyAction(K.M)=="back"and Hub.keyAction(K.DPadLeft)=="left"and Hub.keyAction(K.S)=="down"and Hub.keyAction(K.Q)==nil)
   end)
+  test("Things to do pure: a seventh tile before Settings in 4 x 2, the six others unchanged; the short row steps",function()
+   local ids={};for i,tile in ipairs(Hub.ThingsTiles)do ids[i]=tile.id end
+   assert(table.concat(ids,",")=="hatch,style,companions,quests,book,things,settings"and #Hub.Tiles==6 and Hub.Count==6 and Hub.Cols==3)
+   local at=0;for _,tile in ipairs(Hub.ThingsTiles)do if tile.id~="things"then at+=1;assert(tile==Hub.Tiles[at])end end
+   assert(UICopy.has("things.title")and UICopy.has("things.tile.line")and UICopy.has("things.tile.short")and Hub.locked("things",0)and not Hub.locked("things",1))
+   assert(Hub.status("things",{owned=1}).text==""and Hub.status("things",{owned=1,things={new=true}}).dot and Hub.status("things",{owned=0,things={new=true}}).locked)
+   for _,case in ipairs({{848,608,false},{568,Hub.phoneHeight(260),true},{667,Hub.phoneHeight(315),true},{844,Hub.phoneHeight(330),true},{812,Hub.phoneHeight(294),true}})do
+    local W,H,phone=case[1],case[2],case[3]
+    local g=Hub.geometry(W,H,phone,7,4);assert(g.cols==4 and g.rows==2 and #g.tiles==7)
+    for i,r in ipairs(g.tiles)do
+     local label=W.."x"..H.." tile "..i
+     assert(r.w>=44 and r.h>=44 and r.x>=20 and r.x+r.w<=W-20 and r.y>=(if phone then 64 else 84)and r.y+r.h<=(if phone then H-Hub.PhoneBottomPad else 548),label)
+     local L=Hub.tileLayout(r.w,r.h,phone,true)
+     assert(L.name.w>=100 and L.name.x>=0 and L.name.x+L.name.w<=r.w,label.." name "..L.name.w)
+     assert(L.well.w>=24 and L.well.h>=24 and L.well.x+L.well.w<=r.w-8 and L.well.x>=L.pad+L.disc,label.." well")
+     if phone then
+      assert(L.well.y+L.well.h<=L.name.y and L.name.y+L.name.h<=L.chips.y and L.chips.y+L.chipH<=r.h-3 and L.status.y>=L.name.y+L.name.h and L.status.y+L.status.h<=r.h,label.." stacked")
+     end
+    end
+   end
+   -- Off, the old calls give the old numbers.
+   local a,b=Hub.geometry(812,294,true),Hub.geometry(812,294,true,6,3)
+   for i=1,6 do assert(a.tiles[i].x==b.tiles[i].x and a.tiles[i].w==b.tiles[i].w and a.tiles[i].h==b.tiles[i].h)end
+   assert(Hub.step(4,0,1,4,7)==7 and Hub.step(3,0,1,4,7)==7 and Hub.step(7,1,0,4,7)==7 and Hub.step(7,0,-1,4,7)==3 and Hub.step(4,1,0,4,7)==4 and Hub.step(5,-1,0,4,7)==5)
+  end)
+  for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(568,320),Vector2.new(667,375),Vector2.new(844,390)})do
+   test(tostring(size).." Things to do: the tile opens its page in the hub; Back, the switch and closing end it; focus stays",function()
+    local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
+    local on,log,ctx=true,{},{park=true,playDate={count=1,target=3},dash={phase="idle",count=0}}
+    local things={on=function()return on end,new=function()return true end,context=function()return table.clone(ctx)end,
+     act=function(id)table.insert(log,"act "..id);return true end,help=function(id)table.insert(log,"help "..id);return true end,seen=function(id)if not table.find(log,"seen "..id)then table.insert(log,"seen "..id)end end}
+    local hub
+    hub=Hub.new(host,{things=things,open=function(id)table.insert(log,"open "..id);return id=="things"and hub:openPage()==true end})
+    local good,why=xpcall(function()
+     assert(hub:open({owned=1,wallet=0,state=rich},{focus="things"}));settle()
+     assert(#hub.tileViews==7 and hub.tileViews[6].id=="things"and hub.root:GetAttribute("FocusedTile")=="things"and hub.tileViews[6].button:GetAttribute("Ready"))
+     for i,entry in ipairs(hub.tileViews)do
+      assert(inside(entry.button,hub.root)and inside(entry.well,entry.button),"tile "..i)
+      assert(entry.name.Text~="",entry.id)
+     end
+     assert(hub:act());settle()
+     assert(hub.pageOn and hub:isOpen()and hub.root:GetAttribute("Page")=="things"and table.find(log,"seen dash"))
+     local page=hub.page
+     for _,view in ipairs(page.views)do
+      assert(inside(view.card,hub.root)and inside(view.go,view.card),view.id.." inside")
+      if view.ask then assert(inside(view.ask,view.card),view.id.." ?")end
+      assert(view.go.AbsoluteSize.Y*(1/math.max(.01,hub.scale.Scale))>=44)
+     end
+     for _,entry in ipairs(hub.tileViews)do assert(not entry.button.Visible)end
+     assert(hub:input(K.Down)and page.row==2 and hub:input(K.Left)and page.col==1 and hub:input(K.ButtonA)and table.find(log,"help park"))
+     assert(hub:input(K.Right)and hub:input(K.Return)and table.find(log,"act park")and hub:input(K.DPadDown)and not hub:input(K.DPadDown))
+     ctx.dash={phase="gather",count=4};page:refresh();assert(page.views[3].line.Text==UICopy.get("things.dash.gather",{count=4}))
+     ctx.dash=nil;page:refresh();assert(#page.views==2 and page.row<=2);ctx.dash={phase="idle",count=0};page:refresh();assert(#page.views==3)
+     assert(hub:input(K.ButtonB)and not hub.pageOn and hub:isOpen()and hub.tileViews[1].button.Visible and hub.root:GetAttribute("FocusedTile")=="things")
+     assert(hub:act()and hub.pageOn);on=false;hub.page:refresh();assert(not hub.pageOn and hub:isOpen(),"switched off under the page")
+     assert(not hub:act(),"and the tile opens nothing")
+     assert(hub:close("x"));assert(hub:open({owned=1}));settle();assert(#hub.tileViews==6 and hub.cols==3,"off: the six tiles")
+     on=true;hub:focusTile(6);hub:close("x");hub:open({owned=1});settle();assert(#hub.tileViews==7 and hub.root:GetAttribute("FocusedTile")=="settings","the focus keeps its machine")
+     hub:openPage();hub:close("x");assert(not hub.pageOn and hub.page==nil);hub:open({owned=1});assert(not hub.pageOn)
+    end,debug.traceback)
+    hub:destroy();host:Destroy();assert(good,why)
+   end)
+  end
   test("U2 pure: progress chips (quests n/3, the stamp card, book %, owned counts)",function()
    local Stamp=require(game:GetService("ReplicatedStorage").Shared.StampCard)
    local done,total=Hub.questsDone(rich.quests);assert(done==2 and total==3,"ready and claimed count as done: "..done.."/"..total)

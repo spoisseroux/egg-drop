@@ -22,8 +22,14 @@ Coach.Bits=table.freeze({
 	item=8,        -- first round item on the belt
 	questDone=9,   -- first quest complete
 	petArrived=10, -- overnight 2026-11-14 slice E: the "a friend arrived" card for the 7th-stamp pet
+	-- Things to do (V3-THINGS-TO-DO-PLAN-2026-11-22). Older servers drop these ids and keep the bits.
+	parkInvite=11, -- the line that leads a new player to the Pet Park
+	dashIntro=12,  -- the Garden Dash line (a returning player reads "New in the garden")
+	dashSeen=13,   -- the Garden Dash row was shown, or a race joined: no New dot
 })
-Coach.Order=table.freeze({"fillLine","gardenIntro","hatch","style","companions","quests","book","park","item","questDone","petArrived"})
+Coach.Order=table.freeze({"fillLine","gardenIntro","hatch","style","companions","quests","book","park","item","questDone","petArrived","parkInvite","dashIntro","dashSeen"})
+-- Cards of a build that has its own switch, and the part of it they belong to (Things.allows): refused while it is off.
+Coach.Gated=table.freeze({parkInvite="tips",dashIntro="tips",dashSeen="page"})
 Coach.Max=2^31-1 -- the stored range (bits 0..30); unknown bits from a later build are kept
 
 -- The Welcome round is the first Stars round: the starter grant pays this with the Bear,
@@ -94,6 +100,13 @@ function Coach.wants(id,ctx)
 	if Coach.has(ctx.mask,id)then return false end
 	if type(ctx.seen)=="table"and ctx.seen[id]then return false end
 	if Coach.veteran(ctx.totalWins)then return false end
+	return(ctx.owned or 0)>0
+end
+-- A line about something new in the garden: as `wants`, but veterans see it too.
+function Coach.wantsIntro(id,ctx)
+	ctx=ctx or {}
+	if not Coach.Bits[id]or Coach.has(ctx.mask,id)then return false end
+	if type(ctx.seen)=="table"and ctx.seen[id]then return false end
 	return(ctx.owned or 0)>0
 end
 -- The first-session flow, in order: which step is the player on?
