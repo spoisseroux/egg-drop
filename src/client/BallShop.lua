@@ -12,12 +12,16 @@ local Kit=require(script.Parent.DeckKit)
 local UICopy=require(Shared.UICopy)
 local Deal=require(script.Parent.ShelfDeal)
 local Sprite=require(script.Parent.JellySprite)
+-- Levels matter (S2): the level-gated theme's chip, bar and way to its training.
+local Locked=require(script.Parent.LockedItem)
 local TweenService=game:GetService("TweenService")
 local Shop={}
 Shop.__index=Shop
 Shop.ConfirmSeconds=3
 -- Desktop rects in panel units: the pane matches Faceplates; 2 columns of 222x122 cards.
 Shop.Regular={pane={24,144,328,392},grid={371,147},tile={222,122},gap=12,columns=2}
+-- Desktop, while a gated theme is listed: the same cards in a scrolling column (as Faceplates).
+Shop.ScrollGrid=table.freeze({x=368,y=144,w=466,h=400,pitch=134})
 Shop.TierChip={starter={"STARTER",Color3.fromHex("#C3C8D0")},common={"COMMON",Color3.fromHex("#9BE3A8")},
  rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")},
  -- Slice C: the deluxe tier (160), in Stars gold.
@@ -29,12 +33,13 @@ local function weekOf(ctx)
  return Deal.week()
 end
 Shop.Reasons={NeedStars=UICopy.get("shop.reason.needStars"),Busy=UICopy.get("shop.reason.busy"),Throttled=UICopy.get("shop.reason.throttled"),
- PriceChanged=UICopy.get("shop.reason.priceChanged"),ShelfChanged=UICopy.get("shop.reason.priceChanged"),Unowned=UICopy.get("shop.reason.unowned")}
+ PriceChanged=UICopy.get("shop.reason.priceChanged"),ShelfChanged=UICopy.get("shop.reason.priceChanged"),Unowned=UICopy.get("shop.reason.unowned"),
+ NeedsLevel=UICopy.get("shop.reason.needsLevel")}
 -- The pane's small board: {tier, x, bottom} in pane-board units (0..1 across, px up from the floor).
 Shop.Pile={{4,.22,0},{3,.5,0},{5,.8,0},{2,.36,40},{1,.12,44},{2,.62,52},{1,.9,64}}
 
 -- Pure: what the pane says and offers for one theme.
--- ctx = { owned = saved purchase list, equipped = id, wallet = n }
+-- ctx = { owned = saved purchase list, equipped = id, wallet = n, levels = {petId={stat=level}} }
 function Shop.status(id,ctx)
  local entry=Themes.ById[id]
  if not entry then return{kind="invalid",text="",button=nil}end
@@ -42,6 +47,10 @@ function Shop.status(id,ctx)
  -- QA v2 R3.5: the theme in use keeps the Use button, disabled, reading "In use".
  if(ctx.equipped or Themes.Default)==id then return{kind="inUse",text="In use",button=UICopy.get("r4.inUse"),enabled=false}end
  if Themes.owns(ctx.owned,id)then return{kind="owned",text="Owned",button="Use",enabled=true}end
+ -- Levels matter (S2): below the level the pane shows the way there; the price stays on the card.
+ local gate=Locked.info(entry,ctx.levels)
+ if gate and not gate.met then return{kind="locked",text=gate.line,button=Locked.trainText(gate),price=entry.price,gate=gate,enabled=true}end
+ if entry.gate and not Locked.on()then return{kind="invalid",text="",button=nil}end -- not for sale, not listed
  local wallet=ctx.wallet or 0
  -- Slice C: a theme on this week's shelf sells at the shelf price (`full` = the struck price).
  local price,full=Deal.quote("ball",id,entry.price,weekOf(ctx))
@@ -54,7 +63,7 @@ function Shop.tileStatus(id,ctx)
  if s.kind=="inUse"then return "IN USE","accent"end
  if s.kind=="owned"then return "✓ Owned","soft"end
  if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
- if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
+ if s.kind=="short"or s.kind=="locked"then return Deal.priceText(s.price,s.full),"dim"end
  return "","dim"
 end
 -- QA v2 R4.6 (193916): previews show the balls falling in, as a sample of the round.
@@ -113,6 +122,11 @@ end
 function Shop:build(parent,view,grid)
  if self.body then self.body:Destroy()end
  self.view=view;self.tiles={};self.board=nil
+ self.parent,self.geometry=parent,grid
+ -- Themes.Order, then a gated theme while gates are on (or that is owned).
+ local order=Themes.listed(self.ctx.owned)
+ self.order,self.orderKey=order,table.concat(order,",")
+ self.lockBar,self.lockChip=nil,nil
  local body=Kit.frame(parent,"Balls",nil,UDim2.new(),UDim2.fromScale(1,1));body.ZIndex=parent.ZIndex+1;body.Visible=false
  self.body=body
  if view then
@@ -141,13 +155,13 @@ function Shop:build(parent,view,grid)
   local cols=g.cols or 3
   self.columns=cols
   local tileW=math.floor((g.gw-8-(cols-1)*8)/cols)
-  for index,id in ipairs(Themes.Order)do
+  for index,id in ipairs(order)do
    local col,row=(index-1)%cols,math.floor((index-1)/cols)
    self:buildTile(list,index,id,3+col*(tileW+2),3+row*76,tileW-6,68,true)
   end
   -- QA v2 R3.2 (follow-up 2026-11-14): room for the first cards' top and left edges (stroke, lip, shadow); tiles keep their place.
   local bleed=Kit.scrollBleed(list,4)
-  list.CanvasSize=UDim2.fromOffset(0,math.ceil(#Themes.Order/cols)*76-8+6+bleed*2)
+  list.CanvasSize=UDim2.fromOffset(0,math.ceil(#order/cols)*76-8+6+bleed*2)
  else
   local R=Shop.Regular
   local pane=Kit.card(body,"Preview",nil,{pad=20,seam=true});pane.Position=UDim2.fromOffset(R.pane[1],R.pane[2]);pane.Size=UDim2.fromOffset(R.pane[3],R.pane[4])
@@ -163,9 +177,19 @@ function Shop:build(parent,view,grid)
   action.Position=UDim2.fromOffset(20,R.pane[4]-16-56);self.action,self.actionState=action,state
   action.Activated:Connect(function()self:act()end)
   self.grid=nil;self.columns=R.columns
-  for index,id in ipairs(Themes.Order)do
+  local gridParent,gx,gy=body,R.grid[1],R.grid[2]
+  if #order>#Themes.Order then
+   local G=Shop.ScrollGrid
+   local list=Kit.node("ScrollingFrame",body,{Name="Grid",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(G.x,G.y),
+    Size=UDim2.fromOffset(G.w,G.h),ScrollBarThickness=4,ZIndex=body.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
+    ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6})
+   list.CanvasSize=UDim2.fromOffset(0,math.ceil(#order/R.columns)*G.pitch-R.gap+3+3+Kit.Lip.tile)
+   gridParent,gx,gy=list,3,3
+   self.grid=list
+  end
+  for index,id in ipairs(order)do
    local col,row=(index-1)%R.columns,math.floor((index-1)/R.columns)
-   self:buildTile(body,index,id,R.grid[1]+col*(R.tile[1]+R.gap),R.grid[2]+row*(R.tile[2]+R.gap),R.tile[1],R.tile[2],false)
+   self:buildTile(gridParent,index,id,gx+col*(R.tile[1]+R.gap),gy+row*(R.tile[2]+R.gap),R.tile[1],R.tile[2],false)
   end
  end
  self.index=math.clamp(self.index,1,#self.tiles)
@@ -223,6 +247,14 @@ function Shop:buildTile(parent,index,id,x,y,w,h,compact)
  local nameLabel=txt(tile,"Name",entry.name,"text",10,nameY,w-20-(if compact then 70 else 90),20,{TextSize=if compact then 13 else 16,TextTruncate=Enum.TextTruncate.AtEnd})
  local status=txt(tile,"Counter","","soft",w-10-(if compact then 70 else 90),nameY,if compact then 70 else 90,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right,AutoLocalize=true})
  self.tiles[index]={id=id,button=tile,status=status,name=nameLabel,stroke=stroke,balls=balls}
+ -- Levels matter (S2): the requirement chip over the strip's quiet corner and the small lock, made only
+ -- for a gated theme while gates are on.
+ if entry.gate and Locked.on()then
+  local made=self.tiles[index]
+  made.lock=Locked.mark(strip,if compact then 14 else 18)
+  made.chip=Locked.chip(tile,if compact then 18 else 20);made.chip.root.Position=UDim2.fromOffset(9,9);made.chip.root.ZIndex=tile.ZIndex+12
+  made.chipRoom=w-18
+ end
  tile.Activated:Connect(function()if self.index==index then self:act()else self:focus(index);Kit.boing(tile)end end)
  -- R4.6: hovering a card drops its five balls in again (focus does too).
  tile.MouseEnter:Connect(function()if self:active()then Shop.dropIn(balls)end end)
@@ -235,6 +267,14 @@ function Shop:setContext(ctx)
  -- the server's word arrives as the result (Saved keeps it, a refusal rolls back).
  local p=self.pending
  if p and p.action=="ballThemeEquip"then self.serverEquipped=self.ctx.equipped;self.ctx.equipped=p.themeId end
+ -- Levels matter: the pets' levels (the owner snapshot's) for the requirement chip.
+ self.ctx.levels=if Locked.on()then ctx.levels or Locked.levels()else nil
+ -- A gated theme came or went (the switch, or it was bought): list the cards again.
+ if self.body and table.concat(Themes.listed(self.ctx.owned),",")~=self.orderKey then
+  local id,shown=self:focusedId(),self.body.Visible
+  self:build(self.parent,self.view,self.geometry)
+  if shown then self:show(true,false);self:focusId(id)end
+ end
  if self.body then self:refresh()end
 end
 function Shop:focusedId()local tile=self.tiles[self.index];return tile and tile.id end
@@ -251,7 +291,13 @@ function Shop:refresh()
   Kit.paint(tile.button,"BackgroundColor3",function()return colorOf(if focused then "selected"else "raised",tile.button,"BackgroundColor3")end)
   tile.stroke.Thickness=if focused then 2 else 1;tile.stroke.Transparency=if focused then 0 else .86
   Kit.paint(tile.stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
-  tile.button:SetAttribute("TileState",Shop.status(tile.id,self.ctx).kind)
+  local s=Shop.status(tile.id,self.ctx)
+  if tile.chip then
+   local gate=Locked.info(Themes.ById[tile.id],self.ctx.levels,Themes.owns(self.ctx.owned,tile.id))
+   tile.chip.set(gate,tile.chipRoom);tile.lock.set(s.kind=="locked")
+   tile.button:SetAttribute("AccessibleLabel",if s.kind=="locked"then Themes.ById[tile.id].name..", "..s.gate.needs else Themes.ById[tile.id].name)
+  end
+  tile.button:SetAttribute("TileState",s.kind)
  end
  self:paintPane()
 end
@@ -275,17 +321,36 @@ function Shop:paintPane()
  local note=if pending then "Buying…"
   elseif self.errorId==id and self.errorText then self.errorText else nil
  if self.statusLabel then
-  self.statusLabel.Text=note or(if s.kind=="short"then s.text elseif s.full then UICopy.get("shelf.status")else UICopy.get("style.balls.pitch"))
+  self.statusLabel.Text=note or(if s.kind=="short"or s.kind=="locked"then s.text elseif s.full then UICopy.get("shelf.status")else UICopy.get("style.balls.pitch"))
   if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.statusLabel,self.errorFit)end
  end
+ self:paintLock(if s.kind=="locked"then s.gate else nil,note~=nil)
  self.action.Visible=s.button~=nil
  if s.button then
   Kit.setText(self.action,if pending then "…"elseif confirming then "Confirm ★ "..s.price else s.button)
-  Kit.setEnabled(self.action,s.enabled==true and not pending)
+  Kit.setEnabled(self.action,s.enabled==true and not pending and(s.kind~="locked"or self:canTrain()))
   Kit.setTappable(self.action,s.kind=="short"and not self.pending)
  end
  self.owner.root:SetAttribute("FocusedBallTheme",id);self.owner.root:SetAttribute("BallPaneState",s.kind)
 end
+
+-- Levels matter: the pane's chip over the board and the bar under it, made the first time a locked
+-- theme is shown.
+function Shop:paintLock(gate,noted)
+ if not gate and not self.lockBar then return end
+ if not self.lockBar then
+  local b=self.board.well.Parent
+  local x,y,w=b.Position.X.Offset,b.Position.Y.Offset,b.Size.X.Offset
+  self.lockChip=Locked.chip(self.pane,22);self.lockChip.root.Position=UDim2.fromOffset(x+8,y+8);self.lockChip.root.ZIndex=self.pane.ZIndex+20
+  self.lockRoom=w-16
+  local line=self.statusLabel
+  self.lockBar=if line then Locked.bar(self.pane,line.Position.X.Offset,line.Position.Y.Offset+21,line.Size.X.Offset,5)
+   else Locked.bar(self.pane,12,self.action.Position.Y.Offset-9,self.action.Size.X.Offset,5)
+ end
+ self.lockChip.set(gate,self.lockRoom);self.lockBar.set(gate)
+ if gate and self.statusLabel and not noted then Kit.fitText(self.statusLabel,{gate.line,gate.needs})end
+end
+function Shop:canTrain()local callbacks=self.owner.callbacks;return callbacks~=nil and callbacks.train~=nil end
 
 function Shop:scrollTo(index)
  local list=self.grid;local tile=self.tiles[index];if not list or not tile then return end
@@ -353,6 +418,10 @@ function Shop:act()
   -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
   return require(script.Parent.ConfirmDialog).purchase(self,id,(Themes.ById[id]or{name=""}).name,s.price,
    function()return self:active()and self:focusedId()==id end,function()self:act()end)~=nil
+ elseif s.kind=="locked"then
+  -- Levels matter: the button leads to where that stat is trained.
+  if self.pending or not self:canTrain()then return false end
+  self.owner.callbacks.train(Locked.route(s.gate));return true
  elseif s.kind=="short"then
   -- Stars store access: a short theme opens the "need more Stars" card.
   if self.pending then return false end
@@ -378,6 +447,8 @@ function Shop:result(message)
  self.serverEquipped=nil
  if message.status~="Saved"then
   self.errorId,self.errorText,self.errorFit=done.themeId,Shop.Reasons[message.reason]or UICopy.get(if done.action=="ballThemeBuy"then "shop.failed.bought"else "shop.failed.applied"),nil
+  -- A stale card: read the save again, so the chip shows.
+  if message.reason=="NeedsLevel"then self:send("snapshot")end
   if message.reason=="NeedStars"and done.action=="ballThemeBuy"then
    local entry=Themes.ById[done.themeId]
    local price=entry and entry.price and Deal.quote("ball",done.themeId,entry.price,weekOf(self.ctx))
@@ -400,7 +471,7 @@ function Shop:show(visible,landOnEquipped)
  local opening=visible==true and not self.body.Visible
  self.body.Visible=visible==true
  if visible then
-  if landOnEquipped then self.index=table.find(Themes.Order,self.ctx.equipped or Themes.Default)or 1 end
+  if landOnEquipped then self.index=table.find(self.order,self.ctx.equipped or Themes.Default)or 1 end
   self:focus(self.index,true)
   -- R4.6: opening the tab drops the pane's pile in too.
   if opening and self.board then Shop.dropIn(self.board.balls)end

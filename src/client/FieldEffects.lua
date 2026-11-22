@@ -1,6 +1,12 @@
 -- Four reusable, passive tray bursts. No event creates Instances or tweens.
 local Effects={};Effects.__index=Effects
 local Pico8=require(game:GetService("ReplicatedStorage").Shared.Pico8)
+-- Deck juice (Levels matter S3): the merge pop's look, and the drop trail and start flourish this layer
+-- owns. Nothing below is made, listened to or stepped while the part is off or the choice is classic.
+local Shared=game:GetService("ReplicatedStorage").Shared
+local Juice=require(Shared.DeckJuiceCatalog)
+local Levels=require(Shared.Levels)
+local Budget=require(script.Parent.AliveBudget)
 Effects.PopDuration=.7
 -- G1 (QA 2026-11-16) merge juice. Everything below scales with the merged tier.
 Effects.PunchTime=.1 -- "+N" and the chain counter land from PunchScale to 1 in this long
@@ -15,6 +21,34 @@ function Effects.chainTextSize(chain)return 16+2*math.clamp(chain or 2,2,7)end
 function Effects.mergeDuration(tier)return .22+.02*math.clamp(tier or 1,1,5)end
 function Effects.ringReach(tier)return .42+.08*math.clamp(tier or 1,1,5)end
 function Effects.fragmentReach(tier)return 1.1+.2*math.clamp(tier or 1,1,5)end
+-- The chosen merge pops: the same slots and fragments, other shapes. `stretch` is how much longer the
+-- fragments live than the ring; the ring, the "+N" and the chain counter never change.
+Effects.Pops=table.freeze({confetti=table.freeze({stretch=1.9}),fizz=table.freeze({stretch=1.7})})
+Effects.Ink=Color3.fromHex("#142D20")
+Effects.Confetti=table.freeze({Color3.fromHex("#FFD84A"),Color3.fromHex("#FF6FA8"),Color3.fromHex("#58B8FF"),
+ Color3.fromHex("#5FE39A"),Color3.fromHex("#FF9A3C"),Color3.fromHex("#F4F8E9")})
+-- Pure: fragment `j` (1..6) of a pop at `t` (0..1, `out` eased): x, y, width and height in ball radii,
+-- degrees, transparency. Numbers only.
+function Effects.popPose(id,j,t,out,reach)
+ if id=="confetti"then
+  -- Bursts out, then flutters down as it turns.
+  local angle=j*math.pi/3+.35;local d=.8+out*reach
+  return math.cos(angle)*d,math.sin(angle)*d*.85-.35*out+1.25*t*t,
+   .36,.22*(.35+.65*math.abs(math.cos(t*9+j))),j*47+(if j%2==0 then -220 else 260)*t,math.clamp((t-.6)/.4,0,1)
+ end
+ -- Fizz: bubbles of three sizes rush up, swell and pop.
+ local pop=math.clamp((t-.8)/.2,0,1);local size=(.24+.08*(j%3))*(1+.35*pop)
+ return(j-3.5)/2.5*.95+math.sin(t*7+j*1.7)*.16,-(.2+(.75+.26*((j*2)%3))*out*reach*.75),size,size,0,.08+.92*pop
+end
+-- Pure: what the board's DeckJuice attribute asks for: pop, trail and start ids this build knows, nil
+-- each for classic. A missing, broken or unknown value is classic.
+function Effects.readJuice(text)
+ if type(text)~="string"or text==""then return nil,nil,nil end
+ local ok,choice=pcall(function()return game:GetService("HttpService"):JSONDecode(text)end)
+ if not ok or type(choice)~="table"then return nil,nil,nil end
+ local function known(kind)return if Juice.row(kind,choice[kind])then choice[kind]else nil end
+ return known("pop"),known("trail"),known("start")
+end
 local function node(parent,name)
 	local frame=Instance.new("Frame");frame.Name=name;frame.BorderSizePixel=0;frame.BackgroundTransparency=1
 	frame.Active,frame.Selectable=false,false;frame.AnchorPoint=Vector2.new(.5,.5);frame.ZIndex=5;frame.Visible=false;frame.Parent=parent
@@ -52,6 +86,8 @@ end
 function Effects:observeDrop(serial,count)
  local accepted=type(serial)=="number"and serial==self.dropSerial and type(count)=="number"and count==(self.drops or 0)+1
  self.dropSerial,self.drops=serial,count
+ -- Juice: the first drop cuts the start flourish, so it is never in the way.
+ if self.flourish and(count or 0)>0 then self.flourish:cancel()end
  return accepted
 end
 function Effects:clear()
@@ -59,6 +95,8 @@ function Effects:clear()
 		slot.active=false;put(self,slot.ring,"Visible",false)
 		for _,fragment in ipairs(slot.fragments)do put(self,fragment,"Visible",false)end
 	end
+ if self.trail then self.trail:clear()end
+ if self.flourish then self.flourish:cancel()end
  if self.caption then put(self,self.caption,"Visible",false)end
  if self.pops then for _,pop in ipairs(self.pops)do pop.active=false;put(self,pop.label,"Visible",false)end end
  self.captionUntil=nil
@@ -70,11 +108,15 @@ function Effects:setOwner(visible,serial,reduced)
  local lost=self.visible and(not visible or self.serial~=serial)
 	if self.serial~=serial or self.visible~=visible or self.reduced~=reduced then self:clear()end
 	self.visible,self.serial,self.reduced=visible,serial,reduced
+ if self.trail then self.trail:setOwner(visible,reduced)end
+ if self.flourish then self.flourish:owner(visible,serial,reduced,self.dropSerial==serial and(self.drops or 0)==0)end
  return lost
 end
 function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,cleared,score)
 	if self.destroyed or not self.visible or serial~=self.serial then self.stats.rejected+=1;return false end
  if kind=="merge"and type(score)=="number"and score>0 then self:pop(point,radius,color,score,now)end
+	-- A slow phone stays on the classic pop for the session.
+	if self.popStyle and Budget.level()>=Budget.MaxLevel then self:setPop(nil)end
 	local priority=if kind=="merge"then 100+(tier or 1)*10+math.min(chain or 1,9)+(if cleared then 1000 else 0)elseif kind=="impact"then 20 else 10
 	local chosen
 	for _,slot in ipairs(self.slots)do if not slot.active then chosen=slot;break end end
@@ -87,6 +129,8 @@ function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,clear
 	chosen.point,chosen.radius,chosen.kind=point,math.max(3,radius),kind
 	chosen.duration=if self.reduced then .18 elseif kind=="merge"then Effects.mergeDuration(tier) elseif kind=="impact"then .22 else .18
 	chosen.tier=tier or 1
+	chosen.style=if kind=="merge"and not self.reduced then self.popStyle else nil
+	if chosen.style then chosen.ringTime=chosen.duration;chosen.duration*=Effects.Pops[chosen.style].stretch end
 	put(self,chosen.stroke,"Thickness",if kind=="merge"then 1.5+.5*math.clamp(tier or 1,1,5)else 1.5)
 	chosen.normal=normal or Vector2.new(0,-1)
  put(self,chosen.ring,"Rotation",if kind=="impact"then math.deg(math.atan2(chosen.normal.X,chosen.normal.Y))else 0)
@@ -113,7 +157,14 @@ function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,clear
   self.captionStart,self.captionUntil=now,now+Effects.CaptionHold
  end
 	-- Every other fragment is a near-white sparkle so the burst reads on any ball colour.
-	for j,fragment in ipairs(chosen.fragments)do put(self,fragment,"BackgroundColor3",if j%2==0 then color:Lerp(Effects.White,.7)else color);put(self,fragment,"Visible",not self.reduced and kind=="merge")end
+	if chosen.style then
+		for j,fragment in ipairs(chosen.fragments)do
+			put(self,fragment,"BackgroundColor3",if chosen.style=="confetti"then Effects.Confetti[j]else color:Lerp(Effects.White,if j%2==0 then .85 else .55))
+			put(self,fragment,"Visible",true)
+		end
+	else
+		for j,fragment in ipairs(chosen.fragments)do put(self,fragment,"BackgroundColor3",if j%2==0 then color:Lerp(Effects.White,.7)else color);put(self,fragment,"Visible",not self.reduced and kind=="merge")end
+	end
 	self.stats.accepted+=1;self:update(now);return true
 end
 function Effects:update(now)
@@ -131,6 +182,8 @@ function Effects:update(now)
   end
  end
  self:updatePops(now)
+ if self.trail then self.trail:step(now)end
+ if self.flourish then self.flourish:update(now)end
 	local active=0
 	for _,slot in ipairs(self.slots)do if slot.active then
 		local t=math.clamp((now-slot.start)/slot.duration,0,1)
@@ -139,13 +192,24 @@ function Effects:update(now)
 			for _,fragment in ipairs(slot.fragments)do put(self,fragment,"Visible",false)end
 		else
 			local merge=slot.kind=="merge"
+			-- A chosen pop's fragments (`whole`) outlive the ring, which keeps its own time.
+			local style,whole=slot.style,t
+			if style then t=math.min(1,(now-slot.start)/slot.ringTime)end
 			-- A merge bursts out fast and eases to rest (ease-out); other rings stay linear.
 			local out=if merge then 1-(1-t)*(1-t)else t
 			active+=1;local r=slot.radius*(if self.reduced then 1.04 elseif merge then 1+Effects.ringReach(slot.tier)*out else 1+.42*t)
 			put(self,slot.ring,"Size",UDim2.fromOffset(r*2,r*(if slot.kind=="impact"then .65 elseif slot.kind=="drop"then .8+1.2*t else 2)))
 			-- A merge ring starts as a bright flash, then fades.
 			put(self,slot.stroke,"Transparency",if merge and not self.reduced then .08+.92*t else .45+.55*t)
-			if not self.reduced and merge then for j,fragment in ipairs(slot.fragments)do
+			if style then
+				local reach,ease=Effects.fragmentReach(slot.tier),1-(1-whole)*(1-whole)
+				for j,fragment in ipairs(slot.fragments)do
+					local x,y,w,h,turn,fade=Effects.popPose(style,j,whole,ease,reach)
+					put(self,fragment,"Position",UDim2.fromOffset(slot.point.X+x*slot.radius,slot.point.Y+y*slot.radius))
+					put(self,fragment,"Size",UDim2.fromOffset(math.max(4,w*slot.radius),math.max(3,h*slot.radius)))
+					put(self,fragment,"Rotation",turn);put(self,fragment,"BackgroundTransparency",fade);put(self,slot.edges[j],"Transparency",fade)
+				end
+			elseif not self.reduced and merge then for j,fragment in ipairs(slot.fragments)do
 				local angle=j*math.pi/3+.35;local distance=slot.radius*(.8+out*Effects.fragmentReach(slot.tier))
 				put(self,fragment,"Position",UDim2.fromOffset(slot.point.X+math.cos(angle)*distance,slot.point.Y+math.sin(angle)*distance))
 				local size=math.max(2.5,slot.radius*.16)*(1-t*.5);put(self,fragment,"Size",UDim2.fromOffset(size,size))
@@ -184,6 +248,73 @@ function Effects:updatePops(now)
   end
  end end
 end
+-- Deck juice. nil (or an id this build does not draw) is classic: the pool is put back as it was made.
+-- Its outlines are made once, with the first chosen pop.
+function Effects:setPop(id)
+ id=if type(id)=="string"and Effects.Pops[id]then id else nil
+ if self.destroyed or self.popStyle==id then return end
+ self:clear();self.popStyle=id
+ local round=if id=="confetti"then UDim.new(0,2)else UDim.new(.5,0)
+ for _,slot in ipairs(self.slots)do
+  slot.style=nil
+  if id and not slot.edges then
+   slot.edges={}
+   for j,fragment in ipairs(slot.fragments)do
+    local edge=Instance.new("UIStroke");edge.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;edge.Thickness=1;edge.Color=Effects.Ink;edge.Parent=fragment
+    slot.edges[j]=edge
+   end
+  end
+  for j,fragment in ipairs(slot.fragments)do
+   put(self,fragment,"Rotation",0);fragment:FindFirstChildOfClass("UICorner").CornerRadius=round
+   if slot.edges then put(self,slot.edges[j],"Enabled",id~=nil)end
+  end
+ end
+end
+function Effects:setTrail(id)
+ if self.destroyed then return end
+ local options=self.juice
+ local Trail=if id then require(script.Parent.DropTrail)else nil
+ if not(Trail and Trail.Styles[id]and options and options.views and options.project)then
+  if self.trail then self.trail:setStyle(nil);self.trail=nil end
+  return
+ end
+ self.trailPool=self.trailPool or Trail.new(self.root,options)
+ self.trail=self.trailPool
+ self.trail:setStyle(id);self.trail:setOwner(self.visible,self.reduced)
+end
+function Effects:setStart(id)
+ if self.destroyed then return end
+ local Flourish=if id then require(script.Parent.DeckFlourish)else nil
+ if not(Flourish and Flourish.Styles[id])then
+  if self.flourish then self.flourish:setStyle(nil);self.flourish=nil end
+  return
+ end
+ self.flourishPool=self.flourishPool or Flourish.new(self.root,self.juice)
+ self.flourish=self.flourishPool
+ self.flourish:setStyle(id)
+end
+function Effects:setJuice(pop,trail,start)self:setPop(pop);self:setTrail(trail);self:setStart(start)end
+-- The host's one mount: {board (the folder with the attribute), views, project, launchY, ready}. Does
+-- nothing where the part can never be on; while the switch is off everything is classic, and a flip
+-- either way is followed. No per-frame work until something is chosen.
+function Effects:attachJuice(options)
+ if self.destroyed or self.juiceLinks or not Levels.ceiling("juice")then return false end
+ self.juice=options
+ local board=options.board
+ local function read()
+  if Levels.on("juice")then self:setJuice(Effects.readJuice(board:GetAttribute(Juice.Attribute)))else self:setJuice(nil,nil,nil)end
+ end
+ self.juiceLinks={board:GetAttributeChangedSignal(Juice.Attribute):Connect(read),Levels.changed():Connect(read)}
+ read();return true
+end
+-- A ball's view was made (the host's addView). Only a chosen trail looks at it.
+function Effects:ballAdded(source)local trail=self.trail;if trail then trail:added(source,os.clock())end end
 function Effects:getStats()return table.clone(self.stats)end
-function Effects:destroy()if self.destroyed then return end;self:clear();self.destroyed=true;self.root:Destroy()end
+function Effects:destroy()
+ if self.destroyed then return end
+ self:clear();self.destroyed=true
+ if self.juiceLinks then for _,link in ipairs(self.juiceLinks)do link:Disconnect()end;table.clear(self.juiceLinks)end
+ self.trail,self.flourish=nil,nil
+ self.root:Destroy()
+end
 return Effects

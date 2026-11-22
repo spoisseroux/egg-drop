@@ -6,13 +6,17 @@
 -- switch, the Backgrounds pane borrows the live preview only while shown, Use goes
 -- through onApply("background"), a trial lock has no button (Pocket Trials retired, QA
 -- Q5), the shop owns focus (no native selection), and Settings stays inside the picker
--- under the header. Fake transport only; nothing is sent.
+-- under the header. Fake transport only; nothing is sent. Every case runs with Levels matter off (the
+-- three-tab screen exactly as it was); the last ones turn it on for the Effects tab and a gated theme.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.DeckStyle)(PlayerScripts.Client, PlayerGui)
 return function(client,parent)
  local Picker=require(client.DeckPicker);local Shop=require(client.FaceplateShop);local Backs=require(client.BackgroundShop)
  local Balls=require(client.BallShop);local BallThemes=require(game.ReplicatedStorage.Shared.BallThemes)
  local Art=require(client.DeckArt);local Kit=require(client.DeckKit)
  local Trials=require(game.ReplicatedStorage.Shared.PocketTrials);local Flags=require(game.ReplicatedStorage.Shared.FeatureFlags)
+ local Levels=require(game.ReplicatedStorage.Shared.Levels);local UICopy=require(game.ReplicatedStorage.Shared.UICopy)
+ local function parts(gates,juice)Levels.inject({flags={LevelsMatter=gates or juice},studio=true,shipped={track=true,gates=gates,medals=true,juice=juice}})end
+ parts(false,false)
  local GuiService=game:GetService("GuiService")
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local gui=Instance.new("ScreenGui");gui.Name="_DeckStyleSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
@@ -164,6 +168,83 @@ return function(client,parent)
     v:back();assert(not v.shade.Visible and f.closed[#f.closed]=="back")
    end)
   end
+  test("Levels off: three tabs, today's lists, and a gated theme only shows (and equips) once owned",function()
+   parts(false,false)
+   assert(Shop.tabList()==Shop.Tabs and Shop.nextTab(3,1)==3)
+   assert(table.concat(BallThemes.listed({}),",")==table.concat(BallThemes.Order,",")and #Shop.order({faceplates={}})==21)
+   local levels={pip={power=99}}
+   assert(Balls.status("tangerine_pop",{owned={},wallet=999,levels=levels}).kind=="invalid","never sold while off")
+   assert(Balls.status("tangerine_pop",{owned={"tangerine_pop"},equipped="smileys"}).kind=="owned"and Balls.status("tangerine_pop",{owned={"tangerine_pop"},equipped="tangerine_pop"}).kind=="inUse")
+   local f=picker(Vector2.new(1920,1080));local v=f.v
+   assert(v.shop.effects==nil and #v.shop.tabs.buttons==3 and v.shop.balls.grid==nil and #v.shop.balls.tiles==#BallThemes.Order,"today's grid")
+   v:setShopState(128,{},{owned={"tangerine_pop"},equipped="smileys"},1)
+   assert(#v.shop.balls.tiles==#BallThemes.Order+1 and v.shop.balls.tiles[#v.shop.balls.tiles].chip==nil and v.shop.balls.grid,"an owned gated theme is still listed")
+   v:close("forced")
+  end)
+  for _,size in ipairs({Vector2.new(1920,1080),Vector2.new(812,354),Vector2.new(667,375)})do
+   local label=tostring(size)
+   test(label.." gated ball theme: chip, bar and the way to its training; below the level nothing is sent",function()
+    parts(true,false)
+    local f=picker(size);local v=f.v;local shop=v.shop;local balls=shop.balls
+    local sent,trained={},{}
+    balls.callbacks.send=function(action,payload)table.insert(sent,{action,payload})end
+    shop.callbacks.train=function(route)table.insert(trained,route)end
+    v.customizationEntry=true;v:open("sherbet","none","Balls");settle()
+    balls:setContext({wallet=100,owned={},equipped="smileys",levels={pip={power=4}}})
+    assert(balls:focusId("tangerine_pop"),"listed");settle()
+    local tile=balls.tiles[balls.index]
+    assert(shop.root:GetAttribute("BallPaneState")=="locked"and tile.chip.root.Visible and tile.lock.root.Visible and tile.status.Text=="★ 40","price and chip")
+    assert(balls.lockBar.root.Visible and balls.lockChip.root.Visible and Kit.buttonState(balls.action).label.Text==UICopy.get("shop.train",{name="Power"}))
+    assert(balls.grid and balls.grid.CanvasPosition.Y+balls.grid.AbsoluteWindowSize.Y>=tile.button.Position.Y.Offset+tile.button.Size.Y.Offset-1,"scrolled into view")
+    assert(shop:act(false)and #sent==0 and trained[1].stat=="power"and trained[1].petId=="pip")
+    -- Met: the same card buys; a refusal from an older save reads the save again.
+    balls:setContext({levels={pip={power=10}}})
+    assert(shop.root:GetAttribute("BallPaneState")=="buy"and not tile.lock.root.Visible and not balls.lockBar.root.Visible)
+    local Confirm=require(client.ConfirmDialog)
+    assert(shop:act(false)and Confirm.isOpen());Confirm.accept();task.wait();task.wait()
+    assert(#sent==1 and sent[1][1]=="ballThemeBuy"and sent[1][2].themeId=="tangerine_pop"and sent[1][2].price==40)
+    assert(shop:result({kind="ballTheme",id=sent[1][2].id,status="Rejected",reason="NeedsLevel"})and #sent==2 and sent[2][1]=="snapshot"and balls.errorText==UICopy.get("shop.reason.needsLevel"))
+    v:close("forced")
+   end)
+   test(label.." Effects tab: last tab, locked cards, optimistic Use, back to the owner's tabs",function()
+    parts(true,true)
+    local f=picker(size);local v=f.v;local shop=v.shop
+    local Effects=require(client.EffectsShop);local Juice=require(game.ReplicatedStorage.Shared.DeckJuiceCatalog)
+    local folder=Instance.new("Folder")
+    v:setShopState(128,{},{owned={},equipped="smileys"},1)
+    assert(#Shop.tabList()==4 and #shop.tabs.buttons==4 and shop.effects,"four tabs")
+    local sent,trained={},{}
+    shop.effects.callbacks.send=function(kind,id)table.insert(sent,kind.."."..id)end
+    shop.effects.callbacks.board=function()return folder end
+    shop.callbacks.train=function(route)table.insert(trained,route)end
+    shop.effects:setContext({levels={pip={power=15,energy=4}}})
+    v.customizationEntry=true;v:open("sherbet","none","Balls");settle()
+    assert(v:shiftStyleTab(1)and shop.tab==4 and shop.effects.body.Visible and not shop.balls.body.Visible and shop.root:GetAttribute("Tab")=="effects");settle()
+    assert(not v:shiftStyleTab(1)and shop.tab==4,"no wrap")
+    assert(#shop.effects.tiles==9 and shop.effects:focusedItem().id=="classic"and shop.root:GetAttribute("EffectPaneState")=="inUse"and not shop:act(false))
+    -- every card sits inside its grid
+    for _,tile in ipairs(shop.effects.tiles)do assert(tile.button.AbsoluteSize.X>=60 and tile.name.TextFits~=nil,tile.item.id)end
+    assert(shop:move(1,0)and shop.effects:focusedItem().id=="confetti"and shop.root:GetAttribute("EffectPaneState")=="owned")
+    assert(shop:act(false)and #sent==1 and sent[1]=="pop.confetti"and shop.root:GetAttribute("EffectPaneState")=="inUse","optimistic")
+    folder:SetAttribute(Juice.Attribute,game:GetService("HttpService"):JSONEncode({pop="confetti",trail="classic",start="classic"}));task.wait()
+    assert(shop.effects.pending.pop==nil and shop.effects.ctx.choice.pop=="confetti")
+    assert(shop:move(1,0)and shop:act(false)and shop:move(-1,0)and shop.effects:focusId("pop","classic")and shop:act(false)and #sent==1,"one send per gap")
+    task.wait(Effects.SendGap+.15);assert(#sent==2 and sent[2]=="pop.classic","the last choice wins")
+    assert(shop.effects:focusId("trail","comet")and shop.root:GetAttribute("EffectPaneState")=="locked"and shop.effects.tiles[shop.effects.index].chip.root.Visible)
+    assert(shop:act(false)and trained[1].stat=="power"and #sent==2)
+    assert(shop.effects:focusId("start","ready")and shop:act(false)and trained[2].stat=="energy")
+    -- the demo runs on the real renderers and stops with the tab
+    local e=shop.effects
+    for _,item in ipairs(e.list)do e:focusId(item.kind,item.id);for k=0,12 do e:stepDemo(100+k*.16)end end
+    assert(shop:requestTab(3)and shop.tab==3 and v.active=="Balls"and shop.balls.body.Visible and not e.body.Visible and e.demoLink==nil,"back to Balls")
+    assert(shop:requestTab(4)and shop.tab==4)
+    assert(shop:requestTab(1)and v.active=="Shell"and shop.plates.Visible and not e.body.Visible,"and to Faceplates")
+    assert(shop:requestTab(4));parts(false,false);v:setShopState(128,{},{owned={},equipped="smileys"},2)
+    assert(shop.effects==nil and shop.tab==1 and #shop.tabs.buttons==3 and shop.plates.Visible,"the switch flipped off under it")
+    v:close("forced");folder:Destroy();parts(false,false)
+   end)
+  end
+  parts(false,false)
   -- Play-forever F2: the book-only Bookworm plate joins the grid once the book grants it.
   test("Bookworm: hidden until owned, then a 22nd card (21 sold plates already scroll) that equips",function()
    local Themes=require(game.ReplicatedStorage.Shared.DeckThemes)
@@ -192,7 +273,7 @@ return function(client,parent)
  end,function(e)return tostring(e).." | "..debug.traceback()end)
  GuiService.SelectedObject=nil
  for _,v in ipairs(views)do v:close("forced");v.shade:Destroy()end
- gui:Destroy()
+ gui:Destroy();Levels.inject(nil)
  if not ok then error(problem,0)end
  return{passed=#cases,cases=cases}
 end
