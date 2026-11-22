@@ -1,0 +1,94 @@
+{
+ "date": "2026-11-22",
+ "studio_place": 96451847774961,
+ "sync": "KitSpring, Alive, AliveConfig, AliveBudget, Wind, WindClient, WorldMotion, DeckKit, AmbientAudio, RoomView, CompanionsHub, BookView, MachineHub, StatsPanel, NameScreen, LoungeWorldV7Art, FeatureFlags, init.client, init.server: Studio source == repo file (adler32 equal). Stale dupes outside Client folder: StarterPlayerScripts.StatsPanel/CompanionsHub/RoomView differ from files (not loaded by Client).",
+ "specs": {
+  "server": "74 run (73 + AliveConfig), 9 fail = identical to baseline set; no new failures",
+  "client": "186 run (179 + 7 alive), 20 fail, all in baseline's 22; ClientLocalBudget and JellyLCD now pass; 8 alive specs, KitSurfaces, WalletStar, AmbientAudio pass (full run and 3x isolated); DeckRoundQA fails 153 same as baseline",
+  "note": "Earlier run C had KitSurfaces:48 and WalletStar:78 failing and DeckRoundQA:83; not reproduced now (flaky/order dependent or fixed by the modified spec files)"
+ },
+ "play_through": {
+  "method": "Studio mouse by instance path, Studio keyboard (Backspace, M), computer-use clicks; recorder in plugin + LocalScript probe sharing game module cache for Spring.count/Kit.shadeDepth",
+  "screens_pass": [
+   "PocketMenu(MachineHub) hamburger/mouse open, BackArrow close, M close, Backspace close",
+   "Hatch eggs",
+   "Deck style(FaceplateShop)",
+   "Companions",
+   "Quests",
+   "Collection book",
+   "Settings(DeckPicker; Card Position {.5,0},{0,100} flagged by my rest=.5,.5 rule: layout, not spring)",
+   "Stats",
+   "Name",
+   "Wardrobe (shadeDepth 2 but one visible shade)",
+   " Customize",
+   "Toys"
+  ],
+  "per_check": "springs=0, visible shades<=1, ghost off, panel roots exactly UDim2.fromScale(.5,.5), no PopScale left, after 1.1 s",
+  "rapid_10x": "10 open/close pairs, 30-200 ms gaps: end state clean, 8 ghosts each .14-.16 s, max springs 8, max shade depth 1",
+  "ghost_max_s": 0.157,
+  "open_trace_MachineHub": "rise starts +11 px, undershoot -1 px at ~110-175 ms, 0 at 190 ms; 8 springs (rise + 7 pops) all done by ~400 ms; pops gone at 307 ms",
+  "mid_spring_flags_off": "flags off 120 ms into open (pos -1, 6 pops live): exact rest and 0 PopScale within 2 frames",
+  "escape": "Escape (Studio keyboard) opens the Roblox menu instead of closing the Pocket menu",
+  "round_start": "OpenHandheld in garden sets Mode=Board, FieldPhase=Playing but view is blank green (EggDropDeck disabled, Backdrop hidden), identical with all Alive flags off -> not Alive; not further tested",
+  "open_then_round_start": "Menu click then OpenHandheld 60 ms later: handheld click swallowed by the shade, no round",
+  "phone_resize": "not tested"
+ },
+ "live_switches": {
+  "SetTestingValue": "works in Studio server: SetTestingValue(key,bool) fires snapshot.UpdateAvailable at once; AliveConfig publishes workspace attribute within ~1 ms; ClearTestingValue returns to default on (about .3 s); second change inside 5 s is rate-limited (RefreshGap) and the final state converges; GetValue of absent keys prints engine line 'Config value not found for key' x4 per refresh",
+  "chat": "player chat '/alive wind on|off', '/alive all off|clear', bogus feature ignored: all behave (via TextChannels.RBXGeneral:SendAsync, LegacyChatService)",
+  "wind_off_midgust": "4.08 deg -> exact CFrame == WorldRestCFrame in 1 frame, stable 929 frames; on again: first motion in 3 frames (34 ms)"
+ },
+ "wind": {
+  "bushes": "44 pieces (FrondFan 20, FrondSpray 2, LeafTuft 22); exact rest with wind off in 1632 samples",
+  "max_angle_on_deg": 5.301,
+  "windat_max_seen": 0.876,
+  "never_moved": "14 bushes at 203-246 studs from eye (cap 200)",
+  "client_vs_server_Wind.at": "20 positions at one time value: max abs diff 5e-10 (string rounding), 0 mismatches at 9 decimals",
+  "clock": "GetServerTimeNow - wall: server +1.6 ms, client +0.6 ms",
+  "movers_off_vs_on_peak_deg": "Chime 7.42 -> 14.2-16.7 (x1.9-2.26 vs plan 2.5); Pennant 9.53 -> 14.7-15.6 (x1.54-1.63 vs plan 1.8); CastleFlag ~16 -> 21.8-25.9 (x1.36-1.62); ratios depend on gust at place",
+  "rustle": "Sound EggDropAmbient_wind_rustle id 131058187750745 loaded, looped, group EggDropAmbience, TimeLength 14 s; focused: volume 0..0.0942, playing only in gusts; unfocused Studio: ambience group 0, never plays (by design, bed loop also silent)"
+ },
+ "perf_studio_desktop": {
+  "run": "4 pairs x 10 s alternating off/on, garden idle, 60 Hz vsync",
+  "frame_ms_off": {
+   "p50": 16.682,
+   "p95": 17.955,
+   "max": 32.37
+  },
+  "frame_ms_on": {
+   "p50": 16.671,
+   "p95": 17.987,
+   "max": 22.81
+  },
+  "RenderCPUms_per_window_off": [
+   4.08,
+   3.35,
+   3.3,
+   4.76
+  ],
+  "RenderCPUms_on": [
+   3.46,
+   3.57,
+   3.81,
+   3.63
+  ],
+  "HeartbeatMs_off": [
+   0.64,
+   0.52,
+   0.52,
+   0.78
+  ],
+  "HeartbeatMs_on": [
+   0.69,
+   0.76,
+   0.8,
+   0.65
+  ],
+  "draw_calls": "205 both",
+  "scene_triangles": "~115.1k both",
+  "memoryMB": "3245-3251 both (Studio total)",
+  "springs_script_ms": "0 (no spring live while idle)",
+  "wind_script_ms": "not measurable: WindClient never sets stepMs, probe reads rawget(WindClient,'stepMs')"
+ },
+ "console": "no errors or warnings from our scripts; only ConfigService 'Config value not found' info lines, Assistant plugin notes, ContentId 203785492 asset-type message, EditableImage notice (pre-existing)"
+}

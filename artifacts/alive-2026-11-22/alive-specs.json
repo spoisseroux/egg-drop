@@ -1,0 +1,1842 @@
+{
+ "date": "2026-11-22",
+ "note": "A: new specs, flags on. B: Alive_* attributes set false on client, full lists. C: flags on, full client list. Isolated reruns in fresh Play (flags on): KitSurfaces, WalletStar, DeckRoundQA still fail alone; ClientLocalBudget, JellyLCD pass alone.",
+ "A": {
+  "flags": {
+   "Alive_springs": true,
+   "Alive_menus": true,
+   "Alive_close": true,
+   "Alive_wind": true
+  },
+  "client": {
+   "KitSpring": {
+    "ok": true,
+    "info": "passed"
+   },
+   "Alive": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AliveBudget": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitArrive": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitDepart": {
+    "ok": true,
+    "info": "passed"
+   },
+   "Wind": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WindClient": {
+    "ok": true,
+    "info": "passed"
+   }
+  },
+  "server": {
+   "AliveConfig": {
+    "ok": true,
+    "info": "passed"
+   }
+  }
+ },
+ "B": {
+  "client": {
+   "Alive": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AliveBudget": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AmbientAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AppearanceIntentClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AppearancePalette": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AppearanceStyle": {
+    "ok": false,
+    "info": "AppearanceStyle:80: assertion failed!"
+   },
+   "ArcadeAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ArrivalCard": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BackdropFloor": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BackdropGlobal": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BackgroundPicker": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BallFaces": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BallSpanBudget": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BallThemes": {
+    "ok": false,
+    "info": "BallThemes:142: brick tinted the menus"
+   },
+   "BoardDanger": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardPattern": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardRoundDeterminism": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardSimDeterminism": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardSnapshots": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BondView": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BookView": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CameraClamp": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CareMachineUI": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CharmCards": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ClientLocalBudget": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CoachCards": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CompactDeck": {
+    "ok": false,
+    "info": "CompactDeck:28: tray too small 568, 279"
+   },
+   "CompactEggShop": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CompactPhone": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CompanionsHatchCard": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CompanionsHub": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ConfirmDialog": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ControllerSheets": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CustomizeNewItem": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CustomizeRedesign": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckBackground": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckBoot": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckFit": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckHeader": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckMergeJolt": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckQuests": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckResults": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckRoundQA": {
+    "ok": false,
+    "info": "DeckRoundQA:153: Goals pane is stitched"
+   },
+   "DeckScreen": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckStyle": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeviceItemFront": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DirectPetting": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DropIntent": {
+    "ok": true,
+    "info": "passed"
+   },
+   "EggArt": {
+    "ok": true,
+    "info": "passed"
+   },
+   "EggShopReopen": {
+    "ok": true,
+    "info": "passed"
+   },
+   "EmulatorSafeArea": {
+    "ok": false,
+    "info": "EmulatorSafeArea:66: assertion failed!"
+   },
+   "FieldEffects": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FieldFeedbackOwner": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FieldQuestText": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FirstSpendGuide": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FirstSpendReconcile": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FirstSpendToyHost": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenCareClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenCareStartup": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenPetVisual": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GhostDrops": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GhostFlight": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GlobalUIBounds": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HardwareDeck": {
+    "ok": false,
+    "info": "HardwareDeck:8: attempt to index nil with 'status'"
+   },
+   "HatchActions": {
+    "ok": false,
+    "info": "HatchActions:346: assertion failed!"
+   },
+   "HatchAudioDuck": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchCinematic": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchDisclosure": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchDisplayPose": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchEggsList": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchFlowE2E": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchIdentity": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchItemStage": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNativeCinematic": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNativeFrustum": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNativeHost": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNativeItemFit": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNavigation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchOwnerTransition": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchRarityAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchRarityCue": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HelpCardsBounds": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HollowClock": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HueEggView": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HueItemReveal": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HuePalette": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HueSwatchInspection": {
+    "ok": true,
+    "info": "passed"
+   },
+   "InPlaceResults": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ItemCarousel": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ItemReceiptComposition": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyLCD": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyMarks": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyMaterials": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyOverflow": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyPalette": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyRenderOwner": {
+    "ok": false,
+    "info": "JellyRenderOwner:41: local visual probe did not create its separate mark"
+   },
+   "JellySprite": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyUnderlay": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitArrive": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitDepart": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitSpring": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitSurfaces": {
+    "ok": true,
+    "info": "passed"
+   },
+   "LocalizationFit": {
+    "ok": true,
+    "info": "passed"
+   },
+   "LookEggClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "LoopAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MachineHub": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MaterialDisclosure": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MaterialEditor": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MaterialFinishPreview": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MaterialIntent": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MenuPolish": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MovementLock": {
+    "ok": true,
+    "info": "passed"
+   },
+   "NameScreen": {
+    "ok": true,
+    "info": "passed"
+   },
+   "NoticeCards": {
+    "ok": true,
+    "info": "passed"
+   },
+   "NotificationQueue": {
+    "ok": true,
+    "info": "passed"
+   },
+   "OddsAudit": {
+    "ok": true,
+    "info": "passed"
+   },
+   "Onboarding": {
+    "ok": false,
+    "info": "Onboarding:72: assertion failed!"
+   },
+   "ParkClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ParkCounter": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ParkPetPose": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PersonalToyOpportunity": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetAffection": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetArrivalHatch": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetAttachments": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetClickTarget": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetContactIntentClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetCoos": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetFocusUI": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetGeneralization": {
+    "ok": false,
+    "info": "PetGeneralization:46: GardenPetVisual:410 names the Bear"
+   },
+   "PetHeldToy": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetInspect": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetLife": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetLifeTuning": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetPeek": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetPersonalPlay": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetRoamHint": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PhonePetFirstRow": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PlayfulPresentation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PreferredTextLayout": {
+    "ok": false,
+    "info": "PreferredTextLayout:20: preference disabled: Heading"
+   },
+   "PresentationAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PurchaseCue": {
+    "ok": true,
+    "info": "passed"
+   },
+   "QAPreviewBounds": {
+    "ok": true,
+    "info": "passed"
+   },
+   "QAUIState": {
+    "ok": true,
+    "info": "passed"
+   },
+   "R4Content": {
+    "ok": false,
+    "info": "R4Content:139: was ink-dark before the guard"
+   },
+   "RailFeedback": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RecapFeedback": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ReceiptRouteGuard": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RevealStage": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RoundEndPresentation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RoundJuiceShop": {
+    "ok": true,
+    "info": "passed"
+   },
+   "SaveNoticeLayout": {
+    "ok": false,
+    "info": "SaveNoticeLayout:25: NectarPurpose text=Loading"
+   },
+   "SaveNoticeOwnership": {
+    "ok": false,
+    "info": "SaveNoticeOwnership:9: attempt to index nil with 'lastHatch'"
+   },
+   "SemanticUI": {
+    "ok": false,
+    "info": "SemanticUI:41: assertion failed!"
+   },
+   "SharedHeaders": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ShelfDeal": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StampCardView": {
+    "ok": false,
+    "info": "StampCardView:36: assertion failed!"
+   },
+   "StampChip": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StarsPresentation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StarsRoute": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StarsStoreAccess": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StatEggsClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StationAttract": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StatsUI": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StoreView": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StyleJournalActions": {
+    "ok": false,
+    "info": "StyleJournalActions:161: FamilyRank is not a valid member of TextButton"
+   },
+   "StyleJournalLayout": {
+    "ok": false,
+    "info": "StyleJournalLayout:78: assertion failed!"
+   },
+   "StylePreload": {
+    "ok": true,
+    "info": "passed"
+   },
+   "TennisBallToy": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ThemeLCD": {
+    "ok": true,
+    "info": "passed"
+   },
+   "TierRamps": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ToyFeatureIntent": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ToyShell": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UIAssetWarmup": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UIClick": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UICopy": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UIShellQA": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UsableSheetWidth": {
+    "ok": true,
+    "info": "passed"
+   },
+   "VividHandheld": {
+    "ok": false,
+    "info": "VividHandheld:65: assertion failed!"
+   },
+   "WalletStar": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WardrobeTabs": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WelcomeCoaching": {
+    "ok": false,
+    "info": "WelcomeCoaching:35: Hatch a friend"
+   },
+   "WelcomeHUDBounds": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WelcomePresentation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "Wind": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WindClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WorldDressing": {
+    "ok": true,
+    "info": "passed"
+   }
+  },
+  "server": {
+   "AliveConfig": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BackgroundAppearanceCatalog": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BallThemePurchase": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardAngle": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardRoundDeterminism": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardRoundParity": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardSimDeterminism": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardSimParity": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BondCatalog": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BondProgress": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BookClaim": {
+    "ok": false,
+    "info": "BookClaim:52: assertion failed!"
+   },
+   "BookStateBits": {
+    "ok": false,
+    "info": "BookStateBits:107: 46 vs 23"
+   },
+   "BugReports": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CharmOwnership": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CharmRules": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CoachMask": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckHeldScale": {
+    "ok": true,
+    "info": "passed"
+   },
+   "EarnedPet": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FaceplatePurchase": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FieldObjectives": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FirstSessionFunnel": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenCare": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenGreyboxWorld": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenMotion": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenNook": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenSit": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenState": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchProgress": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HueClear": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HueHost": {
+    "ok": false,
+    "info": "HueHost:13: Unable to cast value to Object (raised inside the sandboxed init.server source, line 1043)"
+   },
+   "HuePalette": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HueProgress": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyMaterialPool": {
+    "ok": true,
+    "info": "passed"
+   },
+   "LaunchFlags": {
+    "ok": false,
+    "info": "LaunchFlags:11: SecondPet / PseudoLocale"
+   },
+   "LifetimeCounters": {
+    "ok": true,
+    "info": "passed"
+   },
+   "LookEggCatalog": {
+    "ok": true,
+    "info": "passed"
+   },
+   "LookEggProgress": {
+    "ok": true,
+    "info": "passed"
+   },
+   "LossPayout": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MaterialHost": {
+    "ok": false,
+    "info": "MaterialHost:13: Unable to cast value to Object"
+   },
+   "MaterialProgress": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MultipleParks": {
+    "ok": true,
+    "info": "passed"
+   },
+   "NeutralPetRoster": {
+    "ok": false,
+    "info": "NeutralPetRoster:31: assertion failed!"
+   },
+   "OverflowGraceLeft": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ParkDirector": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ParkFetch": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ParkMount": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetAppearance": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetAward": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetContact": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetContactHost": {
+    "ok": false,
+    "info": "PetContactHost:56: Unable to cast value to Object"
+   },
+   "PetGeneralizationServer": {
+    "ok": false,
+    "info": "PetGeneralizationServer:56: StatState:31 names the Bear: State.SeedPet=pip"
+   },
+   "PetHello": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetNames": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PlayDate": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PreferenceFlush": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RestrictedEggs": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RoundItems": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RunReturn": {
+    "ok": true,
+    "info": "passed"
+   },
+   "SessionRecovery": {
+    "ok": true,
+    "info": "passed"
+   },
+   "SharedToyRetirement": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ShelfPurchase": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StampCard": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StatEggs": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StatState": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StudioStore": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ToyFeatureHost": {
+    "ok": false,
+    "info": "ToyFeatureHost:19: Unable to cast value to Object (toy call)"
+   },
+   "ToyFeatureProgress": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WearablePurchase": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WearableVariants": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WeeklyShelf": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WelcomeSeed": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WelcomeState": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WorldBackdropFidelity": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WorldRoutes": {
+    "ok": true,
+    "info": "passed"
+   }
+  }
+ },
+ "C": {
+  "client": {
+   "Alive": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AliveBudget": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AmbientAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AppearanceIntentClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AppearancePalette": {
+    "ok": true,
+    "info": "passed"
+   },
+   "AppearanceStyle": {
+    "ok": false,
+    "info": "AppearanceStyle:80: assertion failed!"
+   },
+   "ArcadeAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ArrivalCard": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BackdropFloor": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BackdropGlobal": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BackgroundPicker": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BallFaces": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BallSpanBudget": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BallThemes": {
+    "ok": false,
+    "info": "BallThemes:142: brick tinted the menus"
+   },
+   "BoardDanger": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardPattern": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardRoundDeterminism": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardSimDeterminism": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BoardSnapshots": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BondView": {
+    "ok": true,
+    "info": "passed"
+   },
+   "BookView": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CameraClamp": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CareMachineUI": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CharmCards": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ClientLocalBudget": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CoachCards": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CompactDeck": {
+    "ok": false,
+    "info": "CompactDeck:28: tray too small 568, 279"
+   },
+   "CompactEggShop": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CompactPhone": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CompanionsHatchCard": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CompanionsHub": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ConfirmDialog": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ControllerSheets": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CustomizeNewItem": {
+    "ok": true,
+    "info": "passed"
+   },
+   "CustomizeRedesign": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckBackground": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckBoot": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckFit": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckHeader": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckMergeJolt": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckQuests": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckResults": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckRoundQA": {
+    "ok": false,
+    "info": "DeckRoundQA:83: landed on the Balls segment"
+   },
+   "DeckScreen": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeckStyle": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DeviceItemFront": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DirectPetting": {
+    "ok": true,
+    "info": "passed"
+   },
+   "DropIntent": {
+    "ok": true,
+    "info": "passed"
+   },
+   "EggArt": {
+    "ok": true,
+    "info": "passed"
+   },
+   "EggShopReopen": {
+    "ok": true,
+    "info": "passed"
+   },
+   "EmulatorSafeArea": {
+    "ok": false,
+    "info": "EmulatorSafeArea:66: assertion failed!"
+   },
+   "FieldEffects": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FieldFeedbackOwner": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FieldQuestText": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FirstSpendGuide": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FirstSpendReconcile": {
+    "ok": true,
+    "info": "passed"
+   },
+   "FirstSpendToyHost": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenCareClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenCareStartup": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GardenPetVisual": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GhostDrops": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GhostFlight": {
+    "ok": true,
+    "info": "passed"
+   },
+   "GlobalUIBounds": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HardwareDeck": {
+    "ok": false,
+    "info": "HardwareDeck:8: attempt to index nil with 'status'"
+   },
+   "HatchActions": {
+    "ok": false,
+    "info": "HatchActions:346: assertion failed!"
+   },
+   "HatchAudioDuck": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchCinematic": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchDisclosure": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchDisplayPose": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchEggsList": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchFlowE2E": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchIdentity": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchItemStage": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNativeCinematic": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNativeFrustum": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNativeHost": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNativeItemFit": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchNavigation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchOwnerTransition": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchRarityAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HatchRarityCue": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HelpCardsBounds": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HollowClock": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HueEggView": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HueItemReveal": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HuePalette": {
+    "ok": true,
+    "info": "passed"
+   },
+   "HueSwatchInspection": {
+    "ok": true,
+    "info": "passed"
+   },
+   "InPlaceResults": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ItemCarousel": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ItemReceiptComposition": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyLCD": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyMarks": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyMaterials": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyOverflow": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyPalette": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyRenderOwner": {
+    "ok": false,
+    "info": "JellyRenderOwner:41: local visual probe did not create its separate mark"
+   },
+   "JellySprite": {
+    "ok": true,
+    "info": "passed"
+   },
+   "JellyUnderlay": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitArrive": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitDepart": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitSpring": {
+    "ok": true,
+    "info": "passed"
+   },
+   "KitSurfaces": {
+    "ok": false,
+    "info": "KitSurfaces:48: assertion failed! (via :221)"
+   },
+   "LocalizationFit": {
+    "ok": true,
+    "info": "passed"
+   },
+   "LookEggClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "LoopAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MachineHub": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MaterialDisclosure": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MaterialEditor": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MaterialFinishPreview": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MaterialIntent": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MenuPolish": {
+    "ok": true,
+    "info": "passed"
+   },
+   "MovementLock": {
+    "ok": true,
+    "info": "passed"
+   },
+   "NameScreen": {
+    "ok": true,
+    "info": "passed"
+   },
+   "NoticeCards": {
+    "ok": true,
+    "info": "passed"
+   },
+   "NotificationQueue": {
+    "ok": true,
+    "info": "passed"
+   },
+   "OddsAudit": {
+    "ok": true,
+    "info": "passed"
+   },
+   "Onboarding": {
+    "ok": false,
+    "info": "Onboarding:72: assertion failed!"
+   },
+   "ParkClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ParkCounter": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ParkPetPose": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PersonalToyOpportunity": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetAffection": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetArrivalHatch": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetAttachments": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetClickTarget": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetContactIntentClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetCoos": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetFocusUI": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetGeneralization": {
+    "ok": false,
+    "info": "PetGeneralization:46: GardenPetVisual:410 names the Bear"
+   },
+   "PetHeldToy": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetInspect": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetLife": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetLifeTuning": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetPeek": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetPersonalPlay": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PetRoamHint": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PhonePetFirstRow": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PlayfulPresentation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PreferredTextLayout": {
+    "ok": false,
+    "info": "PreferredTextLayout:20: preference disabled: Heading"
+   },
+   "PresentationAudio": {
+    "ok": true,
+    "info": "passed"
+   },
+   "PurchaseCue": {
+    "ok": true,
+    "info": "passed"
+   },
+   "QAPreviewBounds": {
+    "ok": true,
+    "info": "passed"
+   },
+   "QAUIState": {
+    "ok": true,
+    "info": "passed"
+   },
+   "R4Content": {
+    "ok": false,
+    "info": "R4Content:139: was ink-dark before the guard"
+   },
+   "RailFeedback": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RecapFeedback": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ReceiptRouteGuard": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RevealStage": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RoundEndPresentation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "RoundJuiceShop": {
+    "ok": true,
+    "info": "passed"
+   },
+   "SaveNoticeLayout": {
+    "ok": false,
+    "info": "SaveNoticeLayout:25: NectarPurpose text=Loading"
+   },
+   "SaveNoticeOwnership": {
+    "ok": false,
+    "info": "SaveNoticeOwnership:9: attempt to index nil with 'lastHatch'"
+   },
+   "SemanticUI": {
+    "ok": false,
+    "info": "SemanticUI:41: assertion failed!"
+   },
+   "SharedHeaders": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ShelfDeal": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StampCardView": {
+    "ok": false,
+    "info": "StampCardView:36: assertion failed!"
+   },
+   "StampChip": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StarsPresentation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StarsRoute": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StarsStoreAccess": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StatEggsClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StationAttract": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StatsUI": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StoreView": {
+    "ok": true,
+    "info": "passed"
+   },
+   "StyleJournalActions": {
+    "ok": false,
+    "info": "StyleJournalActions:161: FamilyRank is not a valid member of TextButton"
+   },
+   "StyleJournalLayout": {
+    "ok": false,
+    "info": "StyleJournalLayout:78: assertion failed!"
+   },
+   "StylePreload": {
+    "ok": true,
+    "info": "passed"
+   },
+   "TennisBallToy": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ThemeLCD": {
+    "ok": true,
+    "info": "passed"
+   },
+   "TierRamps": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ToyFeatureIntent": {
+    "ok": true,
+    "info": "passed"
+   },
+   "ToyShell": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UIAssetWarmup": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UIClick": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UICopy": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UIShellQA": {
+    "ok": true,
+    "info": "passed"
+   },
+   "UsableSheetWidth": {
+    "ok": true,
+    "info": "passed"
+   },
+   "VividHandheld": {
+    "ok": false,
+    "info": "VividHandheld:65: assertion failed!"
+   },
+   "WalletStar": {
+    "ok": false,
+    "info": "WalletStar:78: Star rect (via :135)"
+   },
+   "WardrobeTabs": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WelcomeCoaching": {
+    "ok": false,
+    "info": "WelcomeCoaching:35: Hatch a friend"
+   },
+   "WelcomeHUDBounds": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WelcomePresentation": {
+    "ok": true,
+    "info": "passed"
+   },
+   "Wind": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WindClient": {
+    "ok": true,
+    "info": "passed"
+   },
+   "WorldDressing": {
+    "ok": true,
+    "info": "passed"
+   }
+  }
+ }
+}
