@@ -5057,6 +5057,16 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.store.banner.pass": {
+   "source": "It's yours!",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.banner.stars": {
+   "source": "+{count} Stars",
+   "context": "",
+   "example": "Menu text; e.g. +3 Stars"
+  },
   "ui.store.best": {
    "source": "BEST VALUE",
    "context": "",
