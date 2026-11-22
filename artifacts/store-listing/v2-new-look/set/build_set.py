@@ -232,6 +232,77 @@ def bubbles(c, spots):
         bi.put_bubble(c, x, y, d, 0.9)
 
 
+# ---------------------------------------------------------------- the peek (S10 Bear over a deck edge)
+PAW_DY = 508  # S10-paws.png is the same frame as S10.png, trimmed: its rows start 508 px down
+
+
+def bear_parts(scale, cool=0.14):
+    """S10 (front-on Bear, paws forward) split like build_icons.icon_e: the body with the paws
+    matted out, and each paw on its own. Returned at `scale`, relit; the body keeps S10's frame."""
+    full = np.asarray(Image.open(os.path.join(CAP, "S10.png")).convert("RGBA")).astype(np.float32)
+    pm = np.asarray(Image.open(os.path.join(CAP, "S10-paws.png")).convert("RGBA")).astype(np.float32)
+    paw_a = np.zeros(full.shape[:2], np.float32)
+    paw_a[PAW_DY:PAW_DY + pm.shape[0]] = pm[:full.shape[0] - PAW_DY, :, 3] / 255
+    body = full.copy()
+    body[..., 3] *= 1 - np.clip(paw_a * 1.4, 0, 1)
+    pw = full.copy()
+    pw[..., 3] = np.minimum(full[..., 3], paw_a * 255)
+    mid = full.shape[1] // 2
+    left, right = pw.copy(), pw.copy()
+    left[:, mid:, 3] = 0
+    right[:, :mid, 3] = 0
+
+    def img(arr, trim=True):
+        im = Image.fromarray(arr.clip(0, 255).astype(np.uint8), "RGBA")
+        if trim:
+            im = im.crop(im.getchannel("A").point(lambda v: 255 if v > 6 else 0).getbbox())
+        im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
+        return bi.relight(im, cool=cool) if cool else im
+
+    return img(body, trim=False), img(left), img(right)
+
+
+def peek_head(c, cx, edge_y, scale=0.70, tilt=0.0, chin=482, hide=70):
+    """Stage 1 of a peek, pasted BEFORE the deck: the Bear's head tucked so the deck's top edge
+    (canvas y `edge_y`) crosses S10 row `chin`, just under his mouth. `hide` more rows carry on
+    behind the deck so a tilt never opens a gap. Returns the paws for peek_paws()."""
+    body, paw_l, paw_r = bear_parts(scale)
+    head = body.crop((0, 0, body.width, round((chin + hide) * scale)))
+    px, py = 402 * scale, chin * scale  # the chin point, in the head image
+    if tilt:
+        big = Image.new("RGBA", (head.width * 2, head.height * 2), (0, 0, 0, 0))
+        big.paste(head, (int(head.width - px), int(head.height - py)))  # chin at the centre
+        head = big.rotate(tilt, Image.BICUBIC)
+        px, py = head.width / 2, head.height / 2
+    xy = (int(cx - px), int(edge_y - py))
+    bi.soft_shadow(c, head, xy, dx=12, dy=8, blur=16, alpha=0.18)
+    bi.paste(c, head, xy)
+    return paw_l, paw_r
+
+
+def peek_paws(c, deck, dxy, paws, xs, edge_y, over=0.50, rot=(14, -14)):
+    """Stage 2, pasted AFTER the deck: each paw rests on the top edge at canvas x in `xs`, with
+    `over` of its height above the edge and the rest in front of the faceplate. Under each paw a
+    tight contact shadow and a longer soft one, both clipped to the deck so nothing lands on sky."""
+    on_deck = Image.new("L", c.size, 0)
+    on_deck.paste(deck.getchannel("A"), dxy)
+    for paw, x, r in zip(paws, xs, rot):
+        if r:
+            paw = paw.rotate(r, Image.BICUBIC, expand=True)
+        xy = (int(x - paw.width / 2), int(edge_y - paw.height * over))
+        for ddx, ddy, blur, alpha in ((4, 22, 13, 0.50), (1, 7, 4, 0.60)):
+            sh = Image.new("RGBA", c.size, (0, 0, 0, 0))
+            a = paw.getchannel("A").point(lambda v: int(v * alpha))
+            ink = Image.new("RGBA", paw.size, (8, 30, 86, 0))
+            ink.putalpha(a)
+            sh.paste(ink, (xy[0] + ddx, xy[1] + ddy))
+            sh = sh.filter(ImageFilter.GaussianBlur(blur))
+            sh.putalpha(Image.fromarray((np.asarray(sh.getchannel("A")).astype(np.float32)
+                                         * np.asarray(on_deck) / 255).astype(np.uint8)))
+            c.alpha_composite(sh)
+        bi.paste(c, paw, xy)
+
+
 # ---------------------------------------------------------------- the set
 WEAR, N_WEAR = wearables()
 DECKS, N_DECKS = decks()
@@ -250,10 +321,10 @@ def t1(tag=True):
     rays(c, 1400, 560, alpha=0.08)
     bubbles(c, [(1080, 90, 90), (960, 50, 40)])
     deck = cut("D-cloud", 0.98, rot=4, cool=0)
-    bi.soft_shadow(c, deck, (-60, 500), dx=16, dy=14, blur=20, alpha=0.32)
-    bi.paste(c, deck, (-60, 500))
-    bun = cut("S13", 1.08)
-    put(c, bun, 1660, bottom=1040)
+    bi.soft_shadow(c, deck, (-60, 526), dx=16, dy=14, blur=20, alpha=0.32)
+    bi.paste(c, deck, (-60, 526))  # its top edge clear of the count chips
+    bun = cut("S13", 1.03)
+    put(c, bun, 1660, bottom=1040)  # ears clear of the egg and its toys
     bear = cut("C1", 1.28)
     put(c, bear, 1330, bottom=1075)
     # top right: a cracked Toy Egg with its toys bursting out
@@ -262,8 +333,8 @@ def t1(tag=True):
     egg = cut("P-egg-open", 0.56, rot=-8, cool=0)
     bi.soft_shadow(c, egg, (ex - egg.width // 2, ey - egg.height // 2), dx=8, dy=10, blur=10, alpha=0.22)
     paste_center(c, egg, ex, ey)
-    for name, sc, x, y, r in (("P-toy-ball", 0.26, 1500, 120, 0), ("P-toy-carrot", 0.27, 1880, 110, 24),
-                              ("P-toy-sparkler", 0.30, 1585, 60, -18), ("P-jar-rose", 0.22, 1880, 330, 10),
+    for name, sc, x, y, r in (("P-toy-ball", 0.26, 1500, 130, 0), ("P-toy-carrot", 0.27, 1822, 120, 24),
+                              ("P-toy-sparkler", 0.30, 1590, 98, -18), ("P-jar-rose", 0.22, 1852, 300, 10),
                               ("P-toy-top", 0.24, 1530, 300, -8)):
         im = cut(name, sc, rot=r, cool=0)
         bi.soft_shadow(c, im, (int(x - im.width / 2), int(y - im.height / 2)), dx=6, dy=8, blur=8, alpha=0.2)
@@ -298,7 +369,7 @@ def t2(prices=True, words=("dress up", "your pal")):
     if prices:
         for name, s, cx, items in row:
             nm, pr = WEAR[items[0]]
-            ch = chip(nm, 32, pr)
+            ch = chip(nm, 30, pr)
             paste_center(c, ch, cx, 1030)
     cap = caption(list(words), 760, [0.0, 0.0])
     bi.paste(c, cap, (40, 20))
@@ -318,15 +389,18 @@ def t3(words=("merge", "big chains")):
     c = base(0.88)
     glow(c, 870, 640, 900, 0.30)
     rays(c, 870, 640, alpha=0.08)
-    bubbles(c, [(1850, 100, 110), (1700, 70, 44)])
-    deck = cut("D-bigmerge", 1.0, cool=0)
-    dx, dy = 230, 350
-    peek = cut("S5", 0.62)
-    bi.paste(c, peek, (dx + deck.width - peek.width - 120, dy - peek.height + 80))
+    bubbles(c, [(1470, 130, 96), (1560, 215, 40)])  # out from behind the wordmark
+    deck = cut("D-bigmerge", 0.95, cool=0)
+    dx, dy = 262, 426
+    edge = dy + 15  # the faceplate's top edge (the shoulder buttons stand a little above it)
+    bx = dx + 728
+    paws = peek_head(c, bx, edge, scale=0.84, tilt=-5, chin=490)
+    bi.soft_shadow(c, deck, (dx, dy), dx=0, dy=-12, blur=14, alpha=0.30)  # the deck's shadow up onto his chin
     bi.soft_shadow(c, deck, (dx, dy), dx=14, dy=12, blur=20, alpha=0.34)
     bi.paste(c, deck, (dx, dy))
+    peek_paws(c, deck, (dx, dy), paws, (bx - 262, bx + 252), edge)
     b = burst("×4", 92)
-    paste_center(c, b, dx + 1180, dy + 170)  # clear of the merge on the screen
+    paste_center(c, b, dx + 1215, dy + 60)  # on the deck's top corner: clear of the screen, the A button and his paw
     cap = caption(list(words), 720, [0.0, 0.0])
     bi.paste(c, cap, (40, 20))
     # size ladder, right: the Bubbles balls I..V, each merging into the next
@@ -349,12 +423,12 @@ def t4():
     ex, ey = 1080, 640
     glow(c, ex, ey - 80, 1000, 0.45)
     rays(c, ex, ey - 80, n=22, alpha=0.16)
-    bubbles(c, [(1860, 80, 90)])
+    bubbles(c, [(1570, 120, 80)])
     bun = cut("C13", 1.12)
     put(c, bun, 330, bottom=1040)
     egg = cut("P-egg-open", 1.12, cool=0)
     put(c, egg, ex, bottom=1000)
-    arc = [("P-toy-ball", 0.42, 690, 520), ("P-toy-bone", 0.38, 760, 300), ("P-toy-top", 0.40, 930, 150),
+    arc = [("P-toy-ball", 0.42, 690, 520), ("P-toy-bone", 0.38, 792, 338), ("P-toy-top", 0.40, 930, 150),
            ("P-toy-carrot", 0.42, 1200, 120), ("P-toy-sparkler", 0.42, 1390, 250), ("P-toy-deck", 0.42, 1500, 430),
            ("P-jar-rose", 0.36, 830, 690), ("P-jar-tide", 0.34, 1270, 330), ("P-jar-citrus", 0.34, 1010, 330),
            ("P-jar-iris", 0.36, 1350, 600)]
@@ -384,9 +458,9 @@ def t5():
     c, _ = leaf_floor()
     glow(c, 960, 560, 900, 0.22)
     bubbles(c, [(1840, 90, 110), (1690, 60, 44)])
-    put(c, cut("C7a", 0.92), 420, bottom=900)
+    put(c, cut("C7a", 0.92), 476, bottom=900)
     ball = cut("P-toy-ball", 0.34, cool=0)
-    put(c, ball, 600, bottom=915, shadow=False)
+    put(c, ball, 652, bottom=915, shadow=False)
     put(c, cut("C1", 1.22), 980, bottom=1010)
     bone = cut("P-toy-bone", 0.34, rot=-10, cool=0)
     put(c, bone, 1180, bottom=1030, shadow=False)
@@ -461,14 +535,17 @@ def t6():
     back_l = cut("D-prism", 0.78, rot=10, cool=0)
     back_r = cut("D-lagoon", 0.78, rot=-10, cool=0)
     front = cut("D-cloud", 0.92, cool=0)
-    peek = cut("C1", 1.10)
-    bi.paste(c, peek, (1125 - peek.width // 2, 60))  # behind the decks: only his head shows
-    for im, xy in ((back_l, (300, 290)), (back_r, (1120, 160))):
+    for im, xy in ((back_l, (262, 296)), (back_r, (1120, 160))):
         bi.soft_shadow(c, im, xy, dx=12, dy=14, blur=18, alpha=0.30)
         bi.paste(c, im, xy)
     fxy = (int(1120 - front.width / 2), 380)
+    edge = fxy[1] + 14
+    bx = 1000
+    paws = peek_head(c, bx, edge, scale=0.74, tilt=4, chin=490)  # in front of the back decks, behind his own
+    bi.soft_shadow(c, front, fxy, dx=0, dy=-12, blur=14, alpha=0.30)
     bi.soft_shadow(c, front, fxy, dx=14, dy=16, blur=22, alpha=0.38)
     bi.paste(c, front, fxy)
+    peek_paws(c, front, fxy, paws, (bx - 236, bx + 232), edge)
     for pid, xy in (("prism_flare", (250, 830)), ("lagoon", (1560, 120)), ("cloud_glass", (1120, 900))):
         nm, pr = DECKS[pid]
         ch = chip(nm, 36, pr)
@@ -494,10 +571,10 @@ def t7():
     """Level up your pal: the Bunny, a stats card from StatCatalog, a Feast snack."""
     c = base(0.86)
     glow(c, 420, 600, 800, 0.30)
-    bubbles(c, [(1860, 90, 100), (1720, 60, 40)])
-    put(c, cut("C13", 1.18), 380, bottom=1040)
+    bubbles(c, [(1500, 130, 100), (1400, 70, 40)])  # out from behind the wordmark
+    put(c, cut("C13", 1.10), 345, bottom=1040)  # ears and heart charm clear of the caption
     # card
-    cx0, cy0, cw, chh = 760, 250, 1100, 740
+    cx0, cy0, cw, chh = 780, 250, 1090, 740
     s = 2
     card = Image.new("RGBA", (cw * s, chh * s), (0, 0, 0, 0))
     d = ImageDraw.Draw(card)
@@ -531,11 +608,11 @@ def t7():
     paste_center(c, b, jx + 40, jy)
     lv = chip("LEVEL UP!", 34)
     bi.paste(c, lv, (jx - 40 - lv.width, jy - lv.height // 2))
-    fe = cut("P-feast", 0.62, cool=0)
-    put(c, fe, 690, bottom=1050)
+    fe = cut("P-feast", 0.58, cool=0)
+    put(c, fe, 652, bottom=1046)  # beside the card, not over its stat icons
     ch = chip(f"{FEAST_NAME} ×{FEAST_MULT} XP", 36)
-    bi.paste(c, ch, (560, 1080 - ch.height - 4))
-    cap = caption(["level up", "your pal"], 680, [0.0, 0.0])
+    bi.paste(c, ch, (652 - ch.width // 2, 1080 - ch.height - 2))
+    cap = caption(["level up", "your pal"], 640, [0.0, 0.0])
     bi.paste(c, cap, (40, 20))
     return c
 
