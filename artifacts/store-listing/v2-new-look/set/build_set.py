@@ -314,32 +314,57 @@ N_TOYS = toy_count()
 N_CHARMS = len(re.findall(r'"([a-z]+)"', re.search(r"Order=table\.freeze\(\{(.*?)\}", read("src/shared/PetCharmCatalog.lua")).group(1)))
 
 
+def gold_star(c, cx, cy, r, rot=-90):
+    """A chunky gold star with a navy rim, like the Stars wallet icon."""
+    s = 3
+    n = int(r * 2 + 16)
+    big = Image.new("RGBA", (n * s, n * s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(big)
+    m = n * s / 2
+    d.polygon(star_poly(m, m, (r + 6) * s, inner=0.52, rot=rot), fill=NAVY + (255,))
+    d.polygon(star_poly(m, m, r * s, inner=0.50, rot=rot), fill=bi.rgb("#FFC93C") + (255,))
+    d.polygon(star_poly(m - r * s * 0.10, m - r * s * 0.12, r * s * 0.52, inner=0.50, rot=rot), fill=bi.rgb("#FFE58A") + (255,))
+    im = drop(big.resize((n, n), Image.LANCZOS), 5, 0.25, blur=5)
+    paste_center(c, im, cx, cy)
+
+
+def loose_ball(c, cx, cy, tier, k, theme="bubbles", r=None, face="dots"):
+    """One pixel ball of a theme, flying free of the screen: drawn on the LCD grid, scaled by k."""
+    r = r or (5, 8, 11, 15, 21)[tier]
+    n = int(r * 2 + 6)
+    px = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    bi.pixel_ball(px, n / 2, n / 2, r, tier, ramps=BALL_RAMPS[theme], ink=(42, 36, 80), face=face)
+    px = px.resize((n * k, n * k), Image.NEAREST)
+    paste_center(c, drop(px, 7, 0.24, blur=6), cx, cy)
+
+
 def t1(tag=True):
-    """pocket pals + merge · hatch · dress up. Deck big lower left, the pals right, an egg top right."""
+    """pocket pals + merge · hatch · dress up. Deck big lower left, the pals right; a cracked Toy
+    Egg top centre with its toys bursting right across the top."""
     c = base(0.86)
     glow(c, 1400, 560, 900, 0.30)
     rays(c, 1400, 560, alpha=0.08)
-    bubbles(c, [(1080, 90, 90), (960, 50, 40)])
+    ex, ey = EGG1
+    glow(c, ex, ey, 620, 0.40)
+    rays(c, ex, ey, n=16, alpha=0.13, length=760)
+    bubbles(c, B1)
     deck = cut("D-cloud", 0.98, rot=4, cool=0)
     bi.soft_shadow(c, deck, (-60, 526), dx=16, dy=14, blur=20, alpha=0.32)
     bi.paste(c, deck, (-60, 526))  # its top edge clear of the count chips
-    bun = cut("S13", 1.03)
-    put(c, bun, 1660, bottom=1040)  # ears clear of the egg and its toys
-    bear = cut("C1", 1.28)
-    put(c, bear, 1330, bottom=1075)
-    # top right: a cracked Toy Egg with its toys bursting out
-    ex, ey = 1700, 230
-    rays(c, ex, ey, n=14, alpha=0.10, length=420)
-    egg = cut("P-egg-open", 0.56, rot=-8, cool=0)
-    bi.soft_shadow(c, egg, (ex - egg.width // 2, ey - egg.height // 2), dx=8, dy=10, blur=10, alpha=0.22)
-    paste_center(c, egg, ex, ey)
-    for name, sc, x, y, r in (("P-toy-ball", 0.26, 1500, 130, 0), ("P-toy-carrot", 0.27, 1822, 120, 24),
-                              ("P-toy-sparkler", 0.30, 1590, 98, -18), ("P-jar-rose", 0.22, 1852, 300, 10),
-                              ("P-toy-top", 0.24, 1530, 300, -8)):
+    for name, sc, x, y, r in TOYS1:
         im = cut(name, sc, rot=r, cool=0)
         bi.soft_shadow(c, im, (int(x - im.width / 2), int(y - im.height / 2)), dx=6, dy=8, blur=8, alpha=0.2)
         paste_center(c, im, x, y)
-    for sx, sy, r in ((1640, 90, 20), (1790, 60, 14), (1460, 220, 14), (1800, 420, 16)):
+    egg = cut("P-egg-open", EGG1_S, rot=-8, cool=0)
+    bi.soft_shadow(c, egg, (ex - egg.width // 2, ey - egg.height // 2), dx=8, dy=10, blur=10, alpha=0.22)
+    paste_center(c, egg, ex, ey)
+    for x, y, r, rot in STARS1:
+        gold_star(c, x, y, r, rot)
+    bun = cut("S13", 1.03)
+    put(c, bun, 1660, bottom=1040)
+    bear = cut("C1", 1.28)
+    put(c, bear, 1330, bottom=1075)
+    for sx, sy, r in SPARK1:
         sparkle(c, sx, sy, r)
     wm = caption(["pocket", "pals"], 700, [0.0, 1.05])
     bi.paste(c, wm, (40, 20))
@@ -352,6 +377,17 @@ def t1(tag=True):
             bi.paste(c, ch, (x, 20 + wm.height + p.height - 34))
             x += ch.width - 20
     return c
+
+
+EGG1, EGG1_S = (1010, 262), 0.84
+B1 = [(790, 60, 70), (1900, 420, 60)]
+TOYS1 = (("P-toy-top", 0.30, 838, 230, -14), ("P-jar-tide", 0.24, 850, 455, -10),
+         ("P-toy-sparkler", 0.36, 1168, 118, -28), ("P-toy-ball", 0.38, 1318, 168, 0),
+         ("P-jar-citrus", 0.24, 1208, 352, 12), ("P-toy-bone", 0.30, 1502, 96, 14),
+         ("P-toy-carrot", 0.33, 1668, 196, 30), ("P-toy-deck", 0.30, 1812, 92, -12),
+         ("P-jar-rose", 0.25, 1846, 268, 12), ("P-jar-iris", 0.22, 1482, 262, -8))
+STARS1 = ((930, 60, 30, -80), (1420, 60, 22, -100), (1590, 330, 24, -75), (1745, 330, 18, -95), (760, 330, 20, -100))
+SPARK1 = ((1100, 60, 22), (1250, 60, 16), (1400, 300, 18), (1610, 60, 16), (1900, 180, 18), (900, 370, 16), (1740, 150, 14))
 
 
 def t2(prices=True, words=("dress up", "your pal")):
@@ -385,35 +421,46 @@ def t2(prices=True, words=("dress up", "your pal")):
 
 
 def t3(words=("merge", "big chains")):
-    """The real deck, straight-on, frozen at Chain ×4; the Bear peeking; a ×4 burst; the five sizes."""
+    """The real deck, straight-on, frozen at Chain ×4; the Bear peeking over it, the Rose Bunny at
+    its left end; stars and Bubbles balls bursting out; the five sizes on the right."""
     c = base(0.88)
-    glow(c, 870, 640, 900, 0.30)
-    rays(c, 870, 640, alpha=0.08)
-    bubbles(c, [(1470, 130, 96), (1560, 215, 40)])  # out from behind the wordmark
-    deck = cut("D-bigmerge", 0.95, cool=0)
-    dx, dy = 262, 426
-    edge = dy + 15  # the faceplate's top edge (the shoulder buttons stand a little above it)
-    bx = dx + 728
-    paws = peek_head(c, bx, edge, scale=0.84, tilt=-5, chin=490)
+    glow(c, 1000, 600, 1000, 0.34)
+    rays(c, 1000, 600, n=20, alpha=0.11)
+    bubbles(c, [(1500, 70, 80), (800, 330, 46), (60, 330, 50)])
+    deck = cut("D-bigmerge", 1.0, cool=0)
+    dx, dy = 318, 428
+    edge = dy + 16  # the faceplate's top edge (the shoulder buttons stand a little above it)
+    bx = dx + 766
+    # behind everything: balls flying up out of the deck
+    for x, y, t, k in ((770, 372, 1, 4), (1462, 262, 2, 4), (1580, 180, 0, 4), (1368, 150, 1, 4)):
+        loose_ball(c, x, y, t, k)
+    paws = peek_head(c, bx, edge, scale=0.86, tilt=-5, chin=490)
     bi.soft_shadow(c, deck, (dx, dy), dx=0, dy=-12, blur=14, alpha=0.30)  # the deck's shadow up onto his chin
     bi.soft_shadow(c, deck, (dx, dy), dx=14, dy=12, blur=20, alpha=0.34)
     bi.paste(c, deck, (dx, dy))
-    peek_paws(c, deck, (dx, dy), paws, (bx - 262, bx + 252), edge)
+    peek_paws(c, deck, (dx, dy), paws, (bx - 268, bx + 258), edge)
     b = burst("×4", 92)
-    paste_center(c, b, dx + 1215, dy + 60)  # on the deck's top corner: clear of the screen, the A button and his paw
+    paste_center(c, b, dx + 1232, dy + 44)  # on the deck's top corner: clear of the screen, the A button and his paw
+    for x, y, r, rot in ((1330, 290, 22, -100), (690, 400, 24, -100), (1280, 60, 22, -80), (1640, 330, 20, -80)):
+        gold_star(c, x, y, r, rot)
+    for sx, sy, r in ((1450, 200, 22), (1620, 120, 16), (860, 300, 16), (1330, 380, 14), (250, 470, 18)):
+        sparkle(c, sx, sy, r)
+    bun = cut("C13", 1.06)
+    put(c, bun, 204, bottom=1052)  # in front of the deck's left end, watching the chain
     cap = caption(list(words), 720, [0.0, 0.0])
     bi.paste(c, cap, (40, 20))
     # size ladder, right: the Bubbles balls I..V, each merging into the next
     ramps = BALL_RAMPS["bubbles"]
-    lad = Image.new("RGBA", (56, 190), (0, 0, 0, 0))
-    ys = [9, 30, 58, 95, 150]
+    lad = Image.new("RGBA", (56, 176), (0, 0, 0, 0))
+    ys = [8, 27, 52, 86, 136]
     rs = [5, 8, 11, 15, 21]
-    for i, (y, r) in enumerate(zip(ys, rs)):
-        bi.pixel_ball(lad, 28, y, r, i, ramps=ramps, ink=(42, 36, 80), face="dots")
-    lad = lad.resize((lad.width * 7 // 2, lad.height * 7 // 2), Image.NEAREST)
-    bi.paste(c, drop(lad, 8, 0.22), (1660, 330))
-    ch = chip("5 sizes", 36)
-    bi.paste(c, ch, (1640, 250))
+    xs = [24, 34, 26, 34, 30]
+    for i, (x, y, r) in enumerate(zip(xs, ys, rs)):
+        bi.pixel_ball(lad, x, y, r, i, ramps=ramps, ink=(42, 36, 80), face="dots")
+    lad = lad.resize((lad.width * 5, lad.height * 5), Image.NEAREST)
+    bi.paste(c, drop(lad, 8, 0.22), (1640, 262))
+    ch = chip("5 sizes", 40)
+    bi.paste(c, ch, (1668, 196))
     return c
 
 
@@ -527,43 +574,49 @@ def dots(c, x0, y0, x1, y1, lift=200, n=9):
 
 
 def t6():
-    """Customize your deck: three real decks fanned, their names and prices; the ball themes."""
+    """Customize your deck: three real decks fanned evenly about the centre, their names and
+    prices; the Bear peeking over the front one; the ball themes top right."""
     c = base(0.86)
-    glow(c, 1080, 620, 900, 0.30)
-    rays(c, 1080, 620, alpha=0.08)
-    bubbles(c, [(1860, 90, 100)])
-    back_l = cut("D-prism", 0.78, rot=10, cool=0)
-    back_r = cut("D-lagoon", 0.78, rot=-10, cool=0)
-    front = cut("D-cloud", 0.92, cool=0)
-    for im, xy in ((back_l, (262, 296)), (back_r, (1120, 160))):
+    glow(c, 1000, 620, 1000, 0.32)
+    rays(c, 1000, 620, alpha=0.09)
+    bubbles(c, [(1260, 70, 70), (60, 470, 50)])
+    back_l = cut("D-prism", 0.84, rot=11, cool=0)
+    back_r = cut("D-lagoon", 0.84, rot=-11, cool=0)
+    front = cut("D-cloud", 0.86, cool=0)
+    mid = 1000
+    for im, xy in ((back_l, (mid - 968, 312)), (back_r, (mid + 968 - back_r.width, 312))):
         bi.soft_shadow(c, im, xy, dx=12, dy=14, blur=18, alpha=0.30)
         bi.paste(c, im, xy)
-    fxy = (int(1120 - front.width / 2), 380)
+    fxy = (int(mid - front.width / 2), 426)
     edge = fxy[1] + 14
-    bx = 1000
-    paws = peek_head(c, bx, edge, scale=0.74, tilt=4, chin=490)  # in front of the back decks, behind his own
+    bx = mid - 20
+    paws = peek_head(c, bx, edge, scale=0.76, tilt=4, chin=490)  # in front of the back decks, behind his own
     bi.soft_shadow(c, front, fxy, dx=0, dy=-12, blur=14, alpha=0.30)
     bi.soft_shadow(c, front, fxy, dx=14, dy=16, blur=22, alpha=0.38)
     bi.paste(c, front, fxy)
-    peek_paws(c, front, fxy, paws, (bx - 236, bx + 232), edge)
-    for pid, xy in (("prism_flare", (250, 830)), ("lagoon", (1560, 120)), ("cloud_glass", (1120, 900))):
+    peek_paws(c, front, fxy, paws, (bx - 240, bx + 236), edge)
+    for pid, cx, y in (("prism_flare", 250, 968), ("lagoon", 1700, 468), ("cloud_glass", mid, 940)):
         nm, pr = DECKS[pid]
         ch = chip(nm, 36, pr)
-        bi.paste(c, ch, (xy[0] - ch.width // 2 if pid == "cloud_glass" else xy[0], xy[1]))
+        bi.paste(c, ch, (cx - ch.width // 2, y))
     cap = caption(["customize", "your deck"], 700, [0.0, 0.0])
     bi.paste(c, cap, (40, 20))
-    # ball themes: one size-III ball of each, with names
     y = 20 + cap.height + 10
-    ch = chip(f"{N_DECKS} decks · {len(BALL_IDS)} ball themes", 36)
+    ch = chip(f"{N_DECKS} decks", 36)
     bi.paste(c, ch, (40, y))
-    y = 950
+    # ball themes, top right: one ball of each of five, over the count
+    x0, y = 1330, 60
     for i, tid in enumerate(("smileys", "gems", "kittens", "bubbles", "midnight")):
         rp = BALL_RAMPS[tid]
         lad = Image.new("RGBA", (26, 26), (0, 0, 0, 0))
         ink = (255, 255, 255) if tid == "midnight" else (21, 16, 43)
         bi.pixel_ball(lad, 13, 13, 11.5, i, ramps=rp, ink=ink, face="dots" if tid in ("gems", "bubbles", "midnight") else "smiley")
         lad = lad.resize((104, 104), Image.NEAREST)
-        bi.paste(c, drop(lad, 6, 0.25), (24 + i * 98, y))
+        bi.paste(c, drop(lad, 6, 0.25), (x0 + i * 108, y + (18 if i % 2 else 0)))
+    ch = chip(f"{len(BALL_IDS)} ball themes", 36)
+    bi.paste(c, ch, (x0 + 290 - ch.width // 2, y + 150))
+    for sx, sy, r in ((1290, 250, 18), (1890, 330, 16), (640, 400, 16), (120, 640, 14)):
+        sparkle(c, sx, sy, r)
     return c
 
 
