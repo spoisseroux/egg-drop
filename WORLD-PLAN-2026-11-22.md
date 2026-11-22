@@ -113,3 +113,46 @@ Medium, with Light first behind a flag. The Bear reads white, so grass stays mid
 4. Pink trees change: a different green, or a different red; Fable picks, shown to Spencer in captures.
 5. Things to do: **menu only**, no board in the world.
 6. Race: **shorter**.
+
+## 9. Medium, exact (Fable, 2026-11-22)
+
+Proposal from code and three dusk captures; nothing run. Capture every value with the Bear and Bunny on grass, path and marble.
+
+**How.** A `WorldAero` table shaped like `WorldDusk`, picked by one flag in `Art.lighting` and `Clock.dusk`. Surface values go on the clones in `Art.meshes`, by the name after `__`. Matte surfaces are white parts under a SurfaceAppearance: only `SurfaceAppearance.Color` moves them, and it multiplies, so it can darken or shift, never brighten. Good: grass and path stay mid-value under pale pets.
+
+| Surface | In code |
+|---|---|
+| grass | SA.Color #F0FFD6 |
+| meadow | SA.Color #E4FFC8 |
+| foliage | SA.Color #E6FFE0 |
+| dirt_path, pebble_bed, bark | unchanged (#FFFFFF) |
+| cliff_rock, boulder_rock | SA.Color #E2EAF0 (cooler, 8% darker) |
+| marble, marble_smooth | colour can't move (textured MeshPart) [check]; Reflectance .06 and .12 |
+| trim | Reflectance .18 |
+| water_stream, water_pool, Landmarks water | stays opaque (it sorted through pet heads); Reflectance .22 |
+| FlowSkin stream / pool / landmark | Color3 #3CC8F0 at .42 / #7FE0FF at .5 / #7FE0FF at .5 |
+| FlowGlint | Color3 #FFFFFF at .6 |
+| fall beams, splash, mist | #DDF6FF, #F4FCFF, #E9F8FF |
+| glow_warm, glow_aqua | #FFE08A, #4FE6FF |
+| glow_pink | #C4F060 |
+| cloud (backdrop and water), foam | #FFFFFF |
+| bubble | #DEF3FF, Transparency .55, Reflectance .2 |
+
+**Light.** Hour 10.5, Daylight .9. Brightness 2.4, ExposureCompensation 0, Ambient #8C9AA8, OutdoorAmbient #9FC4E6, ColorShift_Top #FFF6E0, ColorShift_Bottom #BFE4FF, EnvironmentDiffuseScale .4, EnvironmentSpecularScale .2 (pets depend on it), ShadowSoftness .5. Atmosphere: Density .28, Offset .1, Haze 1.2, Glare .2, Color #CFEFFF, Decay #8FCBF5. Grade: Contrast .05, Saturation .12, Tint #F6FBFF. **Bloom .18, Size 20, Threshold 1.3**, not section 5's .35: marble haloed at .28 in the 11-13 QA. SunRays .03, .5. Sky: day faces, sun at 12, no stars; if not near #2F9BEF, new painted faces (an upload, not an export). `Clouds` under Terrain: Cover .5, Density .3, #FFFFFF [check on a phone].
+
+**Trees: a different green (recommended), lime #8FD63F.** The alternative is coral red #F2545B. Lime is the palette's accent, splits these crowns from the dark foliage and leaves pink and white to the pets; red beside green pulls the eye off them. Cost: pink can't multiply to green, so the three blossom parts drop the SurfaceAppearance and TextureID and become flat Fabric #8FD63F. Red is a tint (SA.Color #FF7078) and keeps the leaf texture. Capture both; if flat lime reads cheap, ship red until the export. Petals follow the crown.
+
+**Additions, in slice order**
+
+| Slice | Thing | Cap |
+|---|---|---|
+| 5 | Everything above, behind the flag | |
+| 7 | Bubbles | 8 (section 6) |
+| 7 | Dew glints: sparkle emitters on four lawns, size .25 | 4 emitters, 24 live |
+| 8 | Gloss lips: white ring, Reflectance .35, on each station rim | 6 |
+| 8 | Rounded signs: #CFF4FF glass at .25, corner 16, ink #24304F icon, no words | 6 |
+| 8 | Glass dome on Eggs: Glass #CFF4FF, Transparency .7, Reflectance .15, no collide, query or shadow, too small to stand in [check sorting] | 1 |
+
+**Keycap path.** From (58, 26) curving north-west to (40, 42), ending at the picnic (34, 46); region x 38..60, z 24..44; fourteen keys over about 28 studs; roughly 60 studs and 4 s from spawn. One ASMR corner with the squish bench (56, 22) and pop pad (57, 9), off the arrival line, 35 studs from Dash Meadow. Unmeasured: flatness, crowns over the camera, finds, the interim pad (74, 38).
+
+**Re-export later (slice 9, with split crowns):** a textured lime blossom map; marble map down to #E6ECF2 so pale pets read on the plaza; `FLAT` cloud and foam back to white, `PALETTE_SATURATION` 1.0. Store art is re-audited when the flag goes on.
