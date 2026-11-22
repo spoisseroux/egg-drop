@@ -64,7 +64,7 @@ end
 function View.bestValue(products)
 	local bestKey, bestRatio, count = nil, 0, 0
 	for _, product in ipairs(products or {}) do
-		if not product.claimed and (tonumber(product.price) or 0) > 0 then
+		if not product.claimed and product.available and (tonumber(product.price) or 0) > 0 then
 			count += 1
 			local ratio = (tonumber(product.stars) or 0) / product.price
 			if ratio > bestRatio then bestKey, bestRatio = product.key, ratio end
@@ -316,7 +316,7 @@ end
 function View:prompt(key)
 	if not self:ownsInput() or self.cooling then return false end
 	local offer = self:offerFor(key)
-	if offer and not offer.enabled then return false end
+	if not offer or not offer.enabled then return false end
 	-- The server throttles prompts to one a second; a short quiet window keeps a
 	-- double tap from turning into a "try again" message.
 	self.cooling = true
@@ -342,6 +342,9 @@ end
 
 function View:select(key, animate)
 	if not key or not self:offerFor(key) then return false end
+	-- Code review: only a pick the player made arms the second-tap buy on a row (the page
+	-- opens with an offer highlighted; a first tap on it only confirms the pick).
+	self.chosen = true
 	local changed = self.selectedKey ~= key
 	self.selectedKey = key
 	self:paintRows()
@@ -373,7 +376,7 @@ function View:open(balance)
 	if not self.shade.Visible then
 		self.previousSelection = GuiService.SelectedObject
 		self.message, self.messageKind, self.cooling = View.Idle, "info", false
-		self.selectedKey = nil
+		self.selectedKey, self.chosen = nil, false
 		if self.body then self.body.CanvasPosition = Vector2.zero end
 	end
 	self.shade.Visible = true
@@ -394,7 +397,9 @@ function View:close(reason)
 	if (reason == nil or reason == "close" or reason == "back") and self.onAccepted then self.onAccepted("back") end
 	local restore = GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)
 	if self.onClosed then self.onClosed(reason or "close") end
-	if restore then
+	-- Code review: the host may already have placed focus (Hatch eggs' Get Stars); keep it.
+	local placed = GuiService.SelectedObject ~= nil and not GuiService.SelectedObject:IsDescendantOf(self.shade)
+	if restore and not placed then
 		local previous = self.previousSelection
 		GuiService.SelectedObject = if previous and previous.Parent then previous else nil
 	end
@@ -608,7 +613,7 @@ function View:renderList()
 		local key = offer.key
 		n.Activated:Connect(function()
 			if not self:ownsInput() then return end
-			if self.selectedKey == key then self:buySelected() else self:select(key, true); Kit.boing(n) end
+			if self.selectedKey == key and self.chosen then self:buySelected() else self:select(key, true); Kit.boing(n) end
 		end)
 		n.SelectionGained:Connect(function() if self.selectedKey ~= key then self:select(key, true) end end)
 		local iconSize = math.min(rowH - 12, if phone then 38 else 44)

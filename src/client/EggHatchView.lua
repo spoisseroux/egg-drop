@@ -266,11 +266,13 @@ function View:attachStore(store)
 		self.card.Visible = false
 		if self.shopPanel then self.shopPanel.Visible = false end
 		self:syncShopShade()
+		self:syncEggClock()
 		self:bumpControllerEpoch()
 	end
 	store.onClosed = function()
 		self.card.Visible = self.state.lastHatch ~= nil or not self.shopRoot
 		if self.shopPanel then self.shopPanel.Visible = true end
+		self:syncEggClock()
 		self:bumpControllerEpoch()
 		if self.shade.Visible then
 			self:layout()
@@ -972,7 +974,7 @@ end
 -- The legend shows on the first Hatch eggs open of the session, then fades.
 function View:showLegendOnce()
  local line=self.legendLine
- if legendShown or not line or not self.shade.Visible or self.state.lastHatch then return end
+ if legendShown or not line or not self.shade.Visible or self.state.lastHatch or self:isStoreOpen() then return end
  legendShown=true
  line.Text=View.legendText(View.inputKind());line.Visible=true;line.TextTransparency=0
  local token={};self.legendToken=token
@@ -1199,7 +1201,9 @@ end
 -- The egg sways gently and every 2.4 to 3.6 s does a "something inside" beat.
 -- 2D shell fallback until the 3D egg shells are modelled (build plan).
 function View:syncEggClock()
- local wanted=self.shade.Visible and self.shopRoot~=nil and self.shopRoot.Visible and not self.state.lastHatch
+ -- Code review (store restyle): shopRoot stays up under the Get Stars page, so the egg clock,
+ -- preview sounds and peek stop while the store is open.
+ local wanted=self.shade.Visible and self.shopRoot~=nil and self.shopRoot.Visible and not self.state.lastHatch and not self:isStoreOpen()
  if self.eggWell then
   if wanted then Peek.show(self.eggWell,{rect=self.peekRect,align="right",key="hatch",compact=self.shopGeom==nil or self.shopGeom.phone})
   else Peek.hide(self.eggWell)end

@@ -1270,13 +1270,14 @@ do
    if state==Enum.UserInputState.Begin then view:chromeInput(key)end
    return Enum.ContextActionResult.Sink
   end
-  -- Get Stars page (restyle 2026-11-21): W / S / Up / Down pick an offer, Enter / Space buy it.
+  -- Get Stars page (restyle 2026-11-21): W / S / Up / Down pick an offer, Enter buys it.
   -- Back stays on the existing nurseryView:close path.
   if nurseryView:isOpen()and nurseryView:isStoreOpen()then
    local store=clientUI.storeView
    local delta=if key==Enum.KeyCode.Up or key==Enum.KeyCode.W then -1 elseif key==Enum.KeyCode.Down or key==Enum.KeyCode.S then 1 else 0
    if delta~=0 then if state==Enum.UserInputState.Begin then store:move(delta)end;return Enum.ContextActionResult.Sink end
-   if key==Enum.KeyCode.Return or key==Enum.KeyCode.KeypadEnter or key==Enum.KeyCode.Space then if state==Enum.UserInputState.Begin then store:buySelected()end;return Enum.ContextActionResult.Sink end
+   -- Enter only (code review: Space is the jump key, too easy to press by reflex).
+   if key==Enum.KeyCode.Return or key==Enum.KeyCode.KeypadEnter then if state==Enum.UserInputState.Begin then store:buySelected()end;return Enum.ContextActionResult.Sink end
   end
   -- Hatch eggs list: keyboard W / S / Up / Down move the selection, Enter hatches.
   if nurseryView:isOpen()and not(nurseryView.state and nurseryView.state.lastHatch)and not nurseryView:isStoreOpen()then
