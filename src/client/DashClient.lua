@@ -605,7 +605,7 @@ function Client:raceStep(seat,dt,now,reduced)
 				hud:setDot(track.seat,1-left/Course.Length)
 			end
 		end
-		if seat.phase=="race"then hud:setPlace(place)end
+		if racing then hud:setPlace(place)end -- home: everyone at 0 left would read 1st
 	end
 	hud:step(dt)
 	self.camera:step(dt,seat.cs,seat.onStones,seat.lane,flags.stones==true,flags.dash==true and seat.phase=="race",reduced)

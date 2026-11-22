@@ -1,5 +1,61 @@
-{"head":"35808cb","status":"PARTIAL - stopped after a user interrupt on computer-use",
-"step0":{"editSync":"DashClient, Shared.Dash, server DashHost present","workspaceAttrs":"Levels_matter=true Dash_race=true Dash_prizes=false Alive_menus/wind/close/springs=true","remotes":"DashRequest DashInput DashEvent DashState","gate":"Workspace.GardenDash (server), Workspace.GardenDashLocal.GateSign.DashGatePrompt (client)"},
-"server_specs":{"pass":82,"fail":10,"dash_specs":"Dash DashConfig DashDirector DashGating DashHost DashOffParity DashPrize DashState DashWire HatchProgress all ok","fails":["BookClaim","BookStateBits","HueHost","LaunchFlags","MaterialHost","NeutralPetRoster","PetContactHost","PetGeneralizationServer","ToyFeatureHost (all 9 baseline)","LevelsOffParity NEW: snapshot keys list now includes 'dash' (spec GOLD list lacks it, spec ZZSpecs/LevelsOffParity:114/141)"]},
-"client_specs":{"dash_ok":["DashCamera","DashCourse","DashHud","DashInput","DashPredict","DashSim"],"skipped":["DashClient (offline-only harness)","DashCrossVersion (brief)"],"full_list":"run reached DeckStyle of ~170 (alphabetical) in ~10 min, 4 baseline fails so far (AppearanceStyle BallThemes CompactDeck DeckRoundQA); not finished"},
-"not_tested":["steps 2-6: natural play, race, exits, off, prizes, frame time"]}
+{
+ "head": "9ef0f21",
+ "status": "PARTIAL - stopped after a user interrupt on computer-use",
+ "step0": {
+  "editSync": "DashClient, Shared.Dash, server DashHost present",
+  "workspaceAttrs": "Levels_matter=true Dash_race=true Dash_prizes=false Alive_menus/wind/close/springs=true",
+  "remotes": "DashRequest DashInput DashEvent DashState",
+  "gate": "Workspace.GardenDash (server), Workspace.GardenDashLocal.GateSign.DashGatePrompt (client)"
+ },
+ "server_specs": {
+  "pass": 82,
+  "fail": 10,
+  "dash_specs": "Dash DashConfig DashDirector DashGating DashHost DashOffParity DashPrize DashState DashWire HatchProgress all ok",
+  "fails": [
+   "BookClaim",
+   "BookStateBits",
+   "HueHost",
+   "LaunchFlags",
+   "MaterialHost",
+   "NeutralPetRoster",
+   "PetContactHost",
+   "PetGeneralizationServer",
+   "ToyFeatureHost (all 9 baseline)",
+   "LevelsOffParity NEW: snapshot keys list now includes 'dash' (spec GOLD list lacks it, spec ZZSpecs/LevelsOffParity:114/141)"
+  ]
+ },
+ "client_specs": {
+  "dash_ok": [
+   "DashCamera",
+   "DashCourse",
+   "DashHud",
+   "DashInput",
+   "DashPredict",
+   "DashSim"
+  ],
+  "skipped": [
+   "DashClient (offline-only harness)",
+   "DashCrossVersion (brief)"
+  ],
+  "full_list": "run reached DeckStyle of ~170 (alphabetical) in ~10 min, 4 baseline fails so far (AppearanceStyle BallThemes CompactDeck DeckRoundQA); not finished"
+ },
+ "not_tested": [
+  "steps 2-6: natural play, race, exits, off, prizes, frame time"
+ ],
+ "run2": {
+  "status": "computer-use refused with user interrupt on the first batch; steps A-D not run, stopped per instruction",
+  "E_client_specs_ok": [
+   "DashCamera",
+   "DashHud",
+   "DashInput",
+   "UICopy",
+   "ClientLocalBudget",
+   "UIShellQA",
+   "CompanionsHub",
+   "MachineHub",
+   "StoreView"
+  ],
+  "DashPredict": "ok earlier with {races=200}; failed only because this run passed a ScreenGui as options (harness error)",
+  "NotificationRail": "no spec"
+ }
+}
