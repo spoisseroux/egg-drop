@@ -35,6 +35,19 @@ return function(server)
 		assert(saved(db).dash.ribbons.silver==1 and H.dashCommitted(h,"f1")and H.dashReceipt(h,"f1").balance==wallet+2)
 		assert((h.state.stats.starsEarned or 0)==earned+2 and H.valid(h.state))
 	end)
+	test("1, 2, 3 and 8 worst-case results all save, replay and retry",function()
+		for _,n in ipairs({1,2,3,8})do
+			for _,when in ipairs({"none","failBefore","failAfter"})do
+				local h,db,c=fixture();local list={}
+				for i=1,n do list[i]={kind="race",mode="stats",band=5,place=8,us=if i==1 then 57000000 else 120000000,inputs=1000000,seed=4294967295,prize=true}end
+				local wallet=h.state.nectar;c[when]=true;local id="dash-"..string.rep("f",36)
+				local ok,why=H.dashResults(h,id,list)
+				if when~="none"then assert(why=="Retrying");ok=H.retry(h)end
+				assert(ok and H.valid(saved(db))and #saved(db).lastOperation.digest<=120 and saved(db).nectar==wallet+2 and saved(db).dash.ribbons.green==n,n.." "..when.." "..tostring(why))
+				assert(select(2,H.dashResults(h,id,list))=="AlreadySaved")
+			end
+		end
+	end)
 	test("the 2x pass never counts: a boosted handle still gets 2",function()
 		local h=fixture();h.passMultiplier=2;local wallet=h.state.nectar;assert(H.dashResults(h,"f",{race()})and h.state.nectar==wallet+2)
 	end)

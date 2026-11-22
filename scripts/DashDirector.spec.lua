@@ -14,7 +14,7 @@ return function(server)
 		local c={now=1000,serial=0,seedAt=options.seed or 77,events={},tags={},finished={},states={},refuse={},level={},prizes=true,day="1",warnings=0}
 		c.d=Director.new({now=function()return c.now end,guid=function()c.serial+=1;return "race-"..c.serial end,
 			seed=function()c.seedAt+=1;return c.seedAt end,day=function()return c.day end,prizes=function()return c.prizes end,
-			check=function(id,stage)if c.throw==stage then error("boom")end;local why=c.refuse[id];if why and(why.stage==nil or why.stage==stage)then return false,why.reason end;return true end,
+			check=function(id,stage)if c.throw==stage then error("boom")end;local why=c.refuse[id];if why and(why.stage==nil or why.stage==stage)then return false,why.reason end;return true,if stage=="promote"and c.closer and c.closer[id]then"Closer"else nil end,
 			levels=function(id)return c.level[id]or{speed=20,energy=20,jump=20}end,pet=function()return "pip"end,
 			tag=function(id,race)c.tags[id]=race end,event=function(id,packet)table.insert(c.events,{id=id,packet=packet})end,
 			state=function(id,race,sim)table.insert(c.states,{id=id,race=race,tick=sim.tick})end,
@@ -112,6 +112,13 @@ return function(server)
 		c.refuse[9]={reason="Far",stage="queue"};c.run(1);assert(#c.d.queue==2 and c.last(9,"refused").reason=="Far")
 		c.d:abort("Test");local _,why=c.d:join(50,"fun");assert(why=="Queued");c.run(.1)
 		assert(c.d.heat.seats[1].userId==10 and c.d.heat.seats[3].userId==50)
+	end)
+	test("promotion: busy pets keep their place and block nobody, the far ones are told to come closer, the rest are rechecked",function()
+		local c=rig();for id=1,11 do c.d:join(id,"fun")end
+		c.refuse[9]={reason="Petting",stage="promote"};c.closer={[10]=true};c.d:abort("Test");c.run(.1)
+		assert(c.d.heat.seats[1].userId==10 and c.d.heat.seats[2].userId==11 and #c.d.queue==1 and c.d.queue[1].userId==9 and c.tags[9]==nil)
+		local told=c.last(10,"joined");assert(told.promoted and told.closer);told=c.last(11,"joined");assert(told.promoted and not told.closer and c.last(9,"refused")==nil)
+		c.d:abort("Test");c.run(2);assert(c.d.heat==nil and #c.d.queue==1);c.refuse[9]=nil;c.run(.6);assert(c.d.heat.seats[1].userId==9)
 	end)
 	test("refused joins touch nothing: no seat, no tag, no line",function()
 		local c=rig();c.refuse[1]={reason="Far"};local ok,why=c.d:join(1,"fun");assert(not ok and why=="Far"and c.d.heat==nil and c.tags[1]==nil)

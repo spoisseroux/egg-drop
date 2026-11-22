@@ -90,13 +90,22 @@ function State.validResults(results)
 	for _,result in ipairs(results)do if not State.validResult(result)then return false end end
 	return true
 end
--- Binds an operation id to its content.
+-- Binds an operation id to its content: the count and two 32-bit hashes of every field, always 24 characters
+-- (lastOperation.digest is at most 120, or the whole save is refused).
+local function fnv(text,hash)
+	for i=1,#text do
+		hash=bit32.bxor(hash,string.byte(text,i))
+		hash=(hash%65536*16777619+(hash//65536*403%65536)*65536)%4294967296
+	end
+	return hash
+end
 function State.digest(results)
 	local out={}
 	for index,r in ipairs(results)do
 		out[index]=table.concat({r.kind,r.mode,tostring(r.band),r.place,tostring(r.us),r.inputs,r.seed,tostring(r.prize)},",")
 	end
-	return "dash:"..table.concat(out,";")
+	local text=table.concat(out,";")
+	return string.format("dash:%02d:%08x%08x",#results,fnv(text,2166136261),fnv(text,3735928559))
 end
 -- The cups this time earns, as bits (a better par includes the ones below it).
 function State.cupBits(us)

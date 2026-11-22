@@ -7,7 +7,8 @@
 -- An error ends that race unpaid and frees its pets; MaxErrors of them turn Dash off on this server.
 --
 -- options: now(), guid(), seed() (1..2^32-1), day(), prizes(),
---   check(userId, stage) -> ok, reason   stage "join", "queue" (in line), "countdown", "seat" (cheap, twice a second)
+--   check(userId, stage) -> ok, reason   stage "join", "queue" (in line), "promote" (from the line into a race; ok with
+--                            "Closer" is seated but must walk up before the countdown), "countdown", "seat" (cheap)
 --   levels(userId) -> {speed,energy,jump} from the save; pet(userId) -> petId
 --   tag(userId, raceId|nil), event(userId, packet), state(userId|nil for everyone, raceId, race),
 --   finished(userId, result) (DashState.validResult shape), publish(roster), warn(text)
@@ -51,7 +52,7 @@ function Director:call(name,...)
 end
 function Director:check(userId,stage)
 	local ok,reason=self:call("check",userId,stage)
-	return ok==true,if ok==true then nil else reason or"Unavailable"
+	return ok==true,if ok==true then reason else reason or"Unavailable"
 end
 function Director:levels(userId)
 	local levels=self:call("levels",userId)
@@ -73,18 +74,18 @@ function Director:runner(userId)
 end
 
 -- Joining ------------------------------------------------------------------------------------------------------
-function Director:seat(heat,userId,now)
+function Director:seat(heat,userId,now,promoted,closer)
 	table.insert(heat.seats,{userId=userId,petId=self:call("pet",userId),n=0,bad=0})
 	self:call("tag",userId,heat.id)
 	heat.endsAt=math.min(math.max(heat.endsAt,now+Director.JoinSeconds),heat.startedAt+Director.GatherMax)
 	self.dirty=true
-	self:call("event",userId,{kind="joined",raceId=heat.id,seat=#heat.seats,mode=heat.mode})
+	self:call("event",userId,{kind="joined",raceId=heat.id,seat=#heat.seats,mode=heat.mode,promoted=promoted,closer=closer})
 end
-function Director:gather(userId,mode,now)
+function Director:gather(userId,mode,now,promoted,closer)
 	local heat={id=self.options.guid(),phase="gather",mode=mode,seats={},startedAt=now,endsAt=now+Director.GatherSeconds}
 	if mode=="stats"then heat.band=Stats.band(self:levels(userId))end
 	self.heat=heat
-	self:seat(heat,userId,now)
+	self:seat(heat,userId,now,promoted,closer)
 	return heat
 end
 function Director:fits(heat,userId)
@@ -346,18 +347,29 @@ function Director:finishTrial(userId,trial)
 	end
 	self:result(trial,trial.seats[1],(standings(trial.race)),1,self:call("prizes")==true)
 end
--- Nobody is racing: the line forms the next race, in order.
+-- Nobody is racing: the line forms the next race, in order. A pet that is busy just now (carried, petted,
+-- hatching) keeps its place; its owner is dropped only for what would drop them from the line anyway.
 function Director:promote(now)
+	if now<(self.promoteAt or 0)then return end
 	local line=table.clone(self.queue)
 	for _,entry in ipairs(line)do
 		local heat=self.heat
 		if heat and(#heat.seats>=Director.MaxSeats or entry.mode~=heat.mode or not self:fits(heat,entry.userId))then continue end
-		local ok,reason=self:check(entry.userId,"queue")
+		local ok,reason=self:check(entry.userId,"promote")
+		if not ok then
+			local stays,why=self:check(entry.userId,"queue")
+			if not stays then
+				self:unqueue(entry.userId)
+				self:call("event",entry.userId,{kind="refused",reason=why})
+			end
+			continue
+		end
 		self:unqueue(entry.userId)
-		if not ok then self:call("event",entry.userId,{kind="refused",reason=reason})
-		elseif heat then self:seat(heat,entry.userId,now)
-		else self:gather(entry.userId,entry.mode,now)end
+		local closer=if reason=="Closer"then true else nil
+		if heat then self:seat(heat,entry.userId,now,true,closer)
+		else self:gather(entry.userId,entry.mode,now,true,closer)end
 	end
+	self.promoteAt=if self.heat then nil else now+Director.CheckEvery
 end
 function Director:checkAll(now)
 	if now-self.checkAt<Director.CheckEvery then return end

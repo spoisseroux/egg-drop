@@ -32,6 +32,9 @@ Host.QueueLimit=32
 Host.QuietSeconds=3
 Host.MarksEvery=1
 Host.DrainTries=8
+Host.SettleSeconds=5
+Host.RetryBase=5 -- a batch the save refused is tried again after 5, 10, 20, 40, 60, 60... s
+Host.RetryMax=60
 Host.MaxErrors=3
 
 -- d: remotes, shared (the GardenState folder), room (workspace), garden, boards, players, nursery, economy,
@@ -127,6 +130,7 @@ function Host:close()
 		if board.folder then board.folder:SetAttribute(Wire.MarksAttribute,nil)end
 		board.dashMarks=nil
 	end
+	pcall(self.publishGarden,self)
 	d.shared:SetAttribute(Wire.RosterAttribute,nil)
 	self.director.dirty=false
 	if d.room then pcall(Mount.remove,d.room)end
@@ -147,6 +151,7 @@ function Host:step()
 		for _,trial in pairs(table.clone(director.trials))do self:watch(trial.seats[1])end
 	end
 	director:step()
+	self:publishGarden()
 	local now=self.clock()
 	if now-self.marksAt>=Host.MarksEvery then
 		self.marksAt=now
@@ -187,7 +192,7 @@ function Host:check(userId,stage)
 		return true
 	end
 	local handle=board.nursery
-	-- A save in flight must not cost a seat already taken; a new join waits for it.
+	-- A save in flight must not cost a seat already taken or a place in line; a new join waits for it.
 	if stage=="join"then
 		if not d.canProgress(board)then return false,"Saving"end
 	elseif not board.profileReady or(handle.status~="Ready"and handle.status~="Retrying")then return false,"Saving"end
@@ -199,8 +204,9 @@ function Host:check(userId,stage)
 	if not root or not humanoid or humanoid.Health<=0 or not character:IsDescendantOf(workspace)then return false,"NoCharacter"end
 	local at,gate=root.Position,Mount.gate()
 	if not(finite(at.X)and finite(at.Y)and finite(at.Z))then return false,"Far"end
-	local reach=if stage=="queue"then Host.QueueReach else Host.JoinReach
-	if Vector2.new(at.X-gate.X,at.Z-gate.Z).Magnitude>reach or math.abs(at.Y-gate.Y)>Host.HeightReach then return false,"Far"end
+	local reach=if stage=="queue"or stage=="promote"then Host.QueueReach else Host.JoinReach
+	local far=Vector2.new(at.X-gate.X,at.Z-gate.Z).Magnitude
+	if far>reach or math.abs(at.Y-gate.Y)>Host.HeightReach then return false,"Far"end
 	if stage=="queue"then return true end
 	local actor=d.garden.actors[userId]
 	if not actor or actor.petId~=petId then return false,"NoPet"end
@@ -208,7 +214,7 @@ function Host:check(userId,stage)
 	if actor.mode~="Room"then return false,"Busy"end
 	if board.petContact and board.petContact.lease then return false,"Petting"end
 	if Guard.other(state)then return false,"Hatching"end
-	return true
+	return true,if far>Host.JoinReach then"Closer"else nil
 end
 -- Saved XP of the pet that is out: never a public attribute, never a packet.
 function Host:levels(userId)
@@ -224,6 +230,12 @@ function Host:tag(userId,raceId)
 	local board=self:board(userId)
 	if board then board.dashHeld=if raceId then true else nil end
 	self.d.garden:setRacer(userId,raceId)
+	self.tagged=true
+end
+-- One garden snapshot however many tags changed (eight come off together at the results).
+function Host:publishGarden()
+	if not self.tagged then return end
+	self.tagged=false
 	self.d.garden:publish()
 end
 
@@ -276,6 +288,7 @@ function Host:request(player,packet)
 		end
 	end
 	client.reply=result
+	self:publishGarden()
 	self.eventRemote:FireClient(player,result)
 end
 function Host:answer(player,board,clean,reply)
@@ -320,14 +333,16 @@ local function nextFlight(self,board)
 	local queue=board.dashQueue
 	if not queue or #queue==0 then return nil end
 	local results={}
-	for index=1,math.min(#queue,DashState.MaxBatch)do results[index]=queue[index]end
+	for index=1,math.min(#queue,board.dashBatch or DashState.MaxBatch)do results[index]=queue[index]end
 	return{id="dash-"..self.guid(),results=results}
 end
 -- The one place a flight ends: its results leave the queue, and analytics read the saved receipt.
 function Host:finish(board,flight)
 	if board.dashFlight~=flight or not self.d.nursery.dashCommitted(board.nursery,flight.id)then return false end
 	local receipt=self.d.nursery.dashReceipt(board.nursery,flight.id)
-	self:drop(board,flight)
+	self:take(board,flight)
+	board.dashTries,board.dashRetryAt=nil,nil
+	if #board.dashQueue==0 then board.dashBatch=nil end
 	if receipt and receipt.stars>0 then
 		pcall(self.d.economy.source,board.player,receipt.stars,receipt.balance,"Gameplay","GardenDash")
 	end
@@ -340,13 +355,37 @@ function Host:finish(board,flight)
 	end
 	return true
 end
-function Host:drop(board,flight)
+-- The flight's results leave the queue: they are saved, or can never be.
+function Host:take(board,flight)
 	if board.dashFlight~=flight then return end
 	for _=1,#flight.results do table.remove(board.dashQueue,1)end
 	board.dashFlight=nil
 end
--- A refusal that can never turn into a save.
-local function final(reason)return reason=="InvalidDash"or reason=="InvalidData"or reason=="OperationConflict"end
+-- A refused flight. Results are only ever given up for a malformed result (it can never be written) or an id the
+-- save already holds with other content (it may have paid), and never without a warning. A batch the save itself
+-- refuses is proven unwritten: its results stay, go one at a time, the refused one last, and wait longer each try.
+function Host:refused(board,flight,reason)
+	if board.dashFlight~=flight then return end
+	if reason=="InvalidDash"then
+		board.dashFlight=nil
+		for index=#board.dashQueue,1,-1 do
+			if not DashState.validResult(board.dashQueue[index])then
+				table.remove(board.dashQueue,index)
+				warn("[Dash] a malformed result was dropped")
+			end
+		end
+	elseif reason=="OperationConflict"then
+		warn("[Dash] "..#flight.results.." result(s) dropped: "..flight.id.." is already used")
+		self:take(board,flight)
+		return
+	elseif reason~="InvalidData"then return end
+	board.dashFlight=nil
+	board.dashTries=(board.dashTries or 0)+1
+	board.dashRetryAt=self.clock()+math.min(Host.RetryMax,Host.RetryBase*2^math.min(10,board.dashTries-1))
+	if #flight.results==1 and #board.dashQueue>1 then table.insert(board.dashQueue,table.remove(board.dashQueue,1))end
+	board.dashBatch=1
+	warn("[Dash] save refused ("..reason.."), "..#board.dashQueue.." result(s) kept, try "..board.dashTries)
+end
 function Host:send(board)
 	local flight=board.dashFlight
 	if not flight then
@@ -356,7 +395,7 @@ function Host:send(board)
 	flight.cups=DashState.read(board.nursery.state).cups
 	local ok,reason=self.d.nursery.dashResults(board.nursery,flight.id,flight.results)
 	if self:finish(board,flight)then return true,"Saved"end
-	if not ok and final(reason)then self:drop(board,flight)end
+	if not ok then self:refused(board,flight,reason)end
 	return false,reason
 end
 function Host:flush(player,board)
@@ -370,7 +409,9 @@ function Host:flush(player,board)
 				local handle=board.nursery
 				if flight and self:finish(board,flight)then d.publishNursery(board);d.publishState(board);continue end
 				local waiting=flight and handle.pending and handle.pending.id==flight.id -- ambiguous: Nursery.retry settles it
-				local quiet=self.clock()-(board.lastNurseryCommand or-math.huge)>=Host.QuietSeconds
+				-- Never under a live round (a write holds canProgress for a moment); closeBoard drains the rest.
+				local quiet=(board.mode=="Room"or(board.round~=nil and board.round.over==true))
+					and self.clock()-(board.lastNurseryCommand or-math.huge)>=Host.QuietSeconds and self.clock()>=(board.dashRetryAt or 0)
 				if not waiting and quiet and d.canProgress(board)and not board.nurseryBusy and not handle.busy and not handle.pending and not board.payoutPending then
 					board.nurseryBusy=true;d.publishNursery(board)
 					local sent,trouble=pcall(self.send,self,board)
@@ -396,6 +437,22 @@ function Host:leave(board)
 	board.dashHeld=nil
 	self.d.garden:setRacer(userId,nil)
 end
+-- closeBoard, before its own last park write: a Dash write in flight (or ambiguous) is settled first, for at most
+-- SettleSeconds, so that write is not refused as busy or pending. Nothing in flight: returns at once.
+function Host:settle(board)
+	local handle,deadline=board.nursery,self.clock()+Host.SettleSeconds
+	while board.dashFlight and self.clock()<deadline do
+		local flight=board.dashFlight
+		if handle.busy then self.wait(.1)
+		elseif handle.pending and handle.pending.id==flight.id then
+			self.d.nursery.retry(handle)
+			self.wait(.1)
+		else
+			self:finish(board,flight)
+			return
+		end
+	end
+end
 -- For CloseProgress.drain (handle not busy, nothing pending, round already paid): one try a call, true once
 -- there is nothing left to write or no use trying. It can never hold the lease past DrainTries.
 function Host:drain(board)
@@ -407,7 +464,10 @@ function Host:drain(board)
 			local status=board.nursery.status
 			if status~="Ready"and status~="Retrying"then return true end
 			tries+=1
-			if tries>Host.DrainTries then return true end
+			if tries>Host.DrainTries then
+				warn("[Dash] closed with "..#board.dashQueue.." result(s) not saved")
+				return true
+			end
 			self:send(board)
 			return not board.dashFlight and #board.dashQueue==0 and not board.nursery.pending
 		end)

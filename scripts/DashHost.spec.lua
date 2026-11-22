@@ -31,6 +31,7 @@ return function(server)
 		function node:SetAttribute(name,value)self.attrs[name]=value end
 		return node
 	end
+	local WIN={kind="race",mode="stats",band=5,place=8,us=57000000,inputs=1000000,seed=4294967295,prize=true}
 	local function rig(count)
 		local c={now=5000,serial=0,players={},boards={},remotes={},parked={},beat=signal(),shared=attributes(),sold={},published=0}
 		local function player(id)
@@ -215,6 +216,54 @@ return function(server)
 			dash();local c=rig(1);c.run(1);local p=c.players[1];local wallet=p.board.nursery.state.nectar;c.ask(1,"join",1);c.run(24);p.ctl.down=true
 			c.run(60,c.pilot(1));assert(p.board.nursery.pending);c.run(30);p.ctl.down=false;H.retry(p.board.nursery);c.run(10)
 			assert(p.db.player_1.hatching.nectar==wallet+2 and #p.board.dashQueue==0)
+		end)
+		test("eight results waiting are written together, none lost",function()
+			dash();local c=rig(1);c.run(1);local p=c.players[1];local board=p.board;local wallet=board.nursery.state.nectar
+			board.payoutPending=true;for _=1,11 do c.host:finished(1,table.clone(WIN))end;board.payoutPending=nil;c.run(8)
+			local saved=p.db.player_1.hatching;assert(#board.dashQueue==0 and saved.dash.ribbons.green==11 and saved.nectar==wallet+10 and #c.sold==1)
+		end)
+		test("a batch the save refuses is never deleted: kept, one at a time, slower each try, warned; it saves when it can",function()
+			dash();local c=rig(1);c.run(1);local p=c.players[1];local board=p.board
+			local real,calls,refuse=H.dashResults,0,true
+			c.d.nursery=setmetatable({dashResults=function(h,id,list)calls+=1;if refuse then return false,"InvalidData"end;return real(h,id,list)end},{__index=H})
+			board.payoutPending=true;for i=1,4 do local r=table.clone(WIN);r.seed=i;c.host:finished(1,r)end;board.payoutPending=nil
+			c.run(120);assert(#board.dashQueue==4 and calls>=4 and calls<=7 and board.dashBatch==1 and not board.nurseryBusy,calls)
+			refuse=false;c.run(90);assert(#board.dashQueue==0 and p.db.player_1.hatching.dash.ribbons.green==4 and board.dashBatch==nil and board.dashTries==nil)
+			-- only a malformed result is given up, and alone
+			board.payoutPending=true;c.host:finished(1,table.clone(WIN));table.insert(board.dashQueue,1,{kind="race"});board.payoutPending=nil
+			c.run(90);assert(#board.dashQueue==0 and p.db.player_1.hatching.dash.ribbons.green==5)
+		end)
+		test("nothing is written under a live round: in Room, or once the round is over",function()
+			dash();local c=rig(1);c.run(1);local p=c.players[1];local board=p.board
+			board.mode="Board";board.round={over=false};c.host:finished(1,table.clone(WIN));c.run(20);assert(#board.dashQueue==1 and p.db.player_1.hatching.dash==nil)
+			board.round.over=true;c.run(4);assert(#board.dashQueue==0)
+			board.round.over=false;c.host:finished(1,table.clone(WIN));c.run(5);board.mode="Room";c.run(4);assert(#board.dashQueue==0 and p.db.player_1.hatching.dash.ribbons.green==2)
+		end)
+		test("eight tags come off in one garden snapshot",function()
+			dash();local c=rig(8);c.run(1);for id=1,8 do c.ask(id,"join",1)end;c.run(24)
+			local writes=0;local publish=c.garden.publish;c.garden.publish=function(self)if self.dirty then writes+=1 end;return publish(self)end
+			local director=c.host.director;local seen=false
+			for _=1,3000 do
+				writes=0;c.now+=1/30;c.beat.fire()
+				if director.heat and director.heat.phase=="results"then seen=true;break end
+			end
+			assert(seen and writes==1,writes);for id=1,8 do assert(c.players[id].board.dashHeld==nil and c.garden.actors[id].dash==nil)end
+		end)
+		test("from the line: 12 to 16 studs is told to come closer and refused at the countdown; a pet being petted keeps its place",function()
+			dash();local c=rig(11);c.run(1);for id=1,11 do c.ask(id,"join",1)end
+			local home=c.players[9].root.Position;c.players[9].root.Position=home+Vector3.new(13,0,0);c.players[10].board.petContact={lease={}}
+			c.run(.1);c.host.director:abort("Test");c.run(1)
+			assert(c.got(9,"joined")[1].closer and c.got(11,"joined")[1].promoted and not c.got(11,"joined")[1].closer and c.players[10].board.dashHeld==nil and #c.got(10,"refused")==0)
+			c.run(24);assert(c.got(9,"refused")[1].reason=="Far"and c.players[9].board.dashHeld==nil)
+		end)
+		test("closing with a Dash write in flight or ambiguous settles it first, so the last park write is not skipped",function()
+			dash();local c=rig(1);c.run(1);local p=c.players[1];local board=p.board
+			p.ctl.failAfter=true;c.host:finished(1,table.clone(WIN));c.run(1);assert(board.nursery.pending and select(2,H.parkPlay(board.nursery,"lost",1,"pip"))=="Pending")
+			local waits=0;c.host.wait=function(s)waits+=1;c.now+=s end
+			c.boards[p]=nil;board.closing=true;c.host:leave(board);c.host:settle(board)
+			assert(board.nursery.pending==nil and board.dashFlight==nil and H.parkPlay(board.nursery,"kept",1,"pip")and p.db.player_1.hatching.dash.paid==1)
+			c.host:settle(board);assert(waits==1,"nothing in flight: no wait")
+			board.dashFlight={id="x",results={WIN}};board.nursery.busy=true;local from=c.now;c.host:settle(board);assert(c.now-from<=Host.SettleSeconds+.2)
 		end)
 		test("leaving: a race under way pays nothing; results not yet saved are drained before the lease goes",function()
 			dash();local c=rig(2);c.run(1);c.ask(1,"join",1);c.ask(2,"join",1);c.run(25)

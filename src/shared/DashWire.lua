@@ -9,7 +9,8 @@
 --   DashEvent    S->C  one of
 --     {kind="reply", request, seq, ok, reason?, raceId?, at?}  every request's answer (a repeated seq repeats it);
 --                      reason "Queued" means ok and waiting in line; ping answers with `at`, the server time
---     {kind="joined", raceId, seat?, mode, trial?}             seated (seats may shift until the countdown)
+--     {kind="joined", raceId, seat?, mode, trial?, promoted?, closer?}  seated (seats may shift until the countdown);
+--                      promoted = from the line; closer = too far from the gate, walk up before the countdown
 --     {kind="locked", raceId, seat, mode, goAt, plan, levels?, trial?}  countdown: plan is Sim.publicPlan, levels
 --                      are the owner's own frozen levels (Stats On only)
 --     {kind="refused", raceId?, reason}                        unseated, or dropped from the line, and why

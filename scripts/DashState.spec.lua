@@ -92,6 +92,18 @@ return function(server)
 		assert(not S.apply({nectar=0},{id="",results={race(1)}},DAY)and not S.apply({nectar=0/0},{id="x",results={race(1)}},DAY)and not S.apply({nectar=0},{id="x",results={race(1)}},"today"))
 		assert(S.digest({race(1)})~=S.digest({race(2)})and S.digest({race(1)})==S.digest({race(1)}))
 	end)
+	test("the digest is 24 characters for any batch, and one changed field changes it",function()
+		local worst={kind="race",mode="stats",band=5,place=8,us=120000000,inputs=1000000,seed=4294967295,prize=false}
+		local seen={}
+		for n=1,8 do
+			local list={};for i=1,n do list[i]=table.clone(worst)end
+			local d=S.digest(list);assert(#d==24 and not seen[d],d);seen[d]=true
+			for key,value in pairs({kind="trial",mode="fun",band=4,place=7,us=119999999,inputs=999999,seed=4294967294,prize=true})do
+				local keep=list[n][key];list[n][key]=value;local other=S.digest(list);assert(#other==24 and not seen[other],key);seen[other]=true;list[n][key]=keep
+			end
+			assert(S.digest(list)==d)
+		end
+	end)
 	test("the owner's snapshot never carries the seed",function()
 		local state={nectar=0};write(state,"x",{race(1)})
 		local public=S.public(state,DAY);assert(public.last.stars==2 and public.last.seed==nil and public.seed==nil and public.paid==1 and public.limit==5)

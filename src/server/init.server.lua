@@ -970,6 +970,10 @@ local function closeBoard(board)
 	petHello.state:remove(board.player.UserId)
 	if board.petContact then board.petContact:destroy()end
 	task.spawn(function()
+		if garden.dashHost then
+			local ok, problem = pcall(garden.dashHost.settle, garden.dashHost, board)
+			if not ok then warn("[Dash] settle: " .. tostring(problem)) end
+		end
 		-- Code review: queued Play date / parkGames counts are saved once on leave (the flush loop
 		-- stops at closing), unless a write for them is still in flight or ambiguous.
 		if (board.parkPending or 0) > 0 and not board.parkInFlight and board.nursery and not board.nursery.pending then
@@ -1575,7 +1579,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		if action=="snackFeed"then
 			if board.mode~="Room"then reply("Rejected","InRound");return end
 			local actor=garden.actors[player.UserId]
-			if actor and(actor.park or actor.care or actor.toyReservation)then reply("Rejected","PetBusy");return end
+			if actor and(actor.park or actor.care or actor.dash or actor.toyReservation)then reply("Rejected","PetBusy");return end
 			if os.clock()-(board.lastFeedAt or -math.huge)<StatEggCatalog.FeedCooldown then reply("Rejected","Throttled");return end
 		end
 		board.lastHatchRequest=os.clock()

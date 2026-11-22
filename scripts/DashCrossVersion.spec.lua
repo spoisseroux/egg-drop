@@ -83,6 +83,21 @@ return function(_,offline)
 		wallet=h.state.nectar;for i=4,9 do assert(H.dashResults(h,"f"..i,{RACE}))end;assert(h.state.nectar==wallet+4 and h.state.dash.ribbons.silver==9)
 		dashOn(false)
 	end)
+	test("1, 2, 3 and 8 worst-case results: the live build's own validity check passes and it loads, plays and keeps them",function()
+		dashOn(true)
+		for _,n in ipairs({1,2,3,8})do
+			local db,c={},{now=1700000000,serial=0}
+			local h,H=open(new,db,c);local list={}
+			for i=1,n do list[i]={kind="race",mode="stats",band=5,place=8,us=120000000,inputs=1000000,seed=4294967295,prize=true}end
+			assert(H.dashResults(h,"dash-"..string.rep("f",36),list))
+			local L=live.require(live.server.HatchProgress);assert(L.valid(db.player_1.hatching),n.." results")
+			H.release(h);c.now+=1
+			local field=encode(db.player_1.hatching.dash);local old=open(live,db,c)
+			assert(old.status=="Ready"and L.parkPlay(old,"p",1,"pip")and L.release(old)and encode(db.player_1.hatching.dash)==field);c.now+=1
+			h=open(new,db,c);assert(h.status=="Ready"and h.state.dash.ribbons.green==n)
+		end
+		dashOn(false)
+	end)
 	test("a malformed field loads in both builds and never costs anything else in the save",function()
 		for _,bad in ipairs({"x",7,true,{},{day=1,paid={}},{ribbons="x",op=5}})do
 			dashOn(true);local db,c={},{now=1700000000,serial=0}
