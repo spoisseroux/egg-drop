@@ -26,7 +26,7 @@ ui.book.empty,Nothing on this page yet.,,Collection book
 ui.book.entry.claimMany,{count} TO CLAIM,,Collection book; e.g. 3 TO CLAIM
 ui.book.entry.claimOne,1 TO CLAIM,,Collection book
 ui.book.entry.line,"Pages to fill, Stars to find",,Collection book
-ui.book.eyebrow,Garden,,"Collection book; also ui.hub.eyebrow, ui.report.category.garden"
+ui.book.eyebrow,Garden,,"Collection book; also ui.hub.eyebrow, ui.report.category.garden, ui.store.eyebrow"
 ui.book.failed,Not claimed,,Collection book
 ui.book.found,Found,,Collection book
 ui.book.hint.back,Back,,"Collection book; also ui.input.action.back, ui.phoneDeck.b.back, ui.r1.reveal.exit, ui.stats.hint.back"
@@ -614,7 +614,7 @@ ui.report.category.deck,Pocket Deck,,"Bug report sheet; also catalog.ToyCatalog.
 ui.report.category.menus,Menus,,Bug report sheet
 ui.report.category.other,Other,,Bug report sheet
 ui.report.category.pets,Pets,,Bug report sheet; also catalog.BookCatalog.Pages.pets.name
-ui.report.category.stars,Stars,,Bug report sheet
+ui.report.category.stars,Stars,,Bug report sheet; also ui.store.starsRow
 ui.report.entry,Report a bug / Suggest something,,Bug report sheet
 ui.report.entryShort,Report or suggest,,Bug report sheet
 ui.report.kind.bug,Bug,,Bug report sheet
@@ -677,6 +677,12 @@ ui.stamp.promise,"No streaks. Miss a day, lose nothing.",,Stamp card
 ui.stamp.tomorrow,Next stamp tomorrow: ★ {reward},,Stamp card; e.g. Next stamp tomorrow: ★ 5
 ui.stampChip.done,✓ {count}/{total},,Menu text; e.g. ✓ 3/12
 ui.stampChip.label,Daily stamp,,Menu text
+ui.starsShort.buy,Get Stars,,"Menu text; also ui.starsShort.wallet, ui.store.title"
+ui.starsShort.earn,Play a round,,Menu text
+ui.starsShort.line,"{item} is ★ {price}. Get Stars, or earn them on the Pocket Deck.",,"Menu text; e.g. Squeaky Bone is ★ {price}. Get Stars, or earn them on the Pocket Deck."
+ui.starsShort.lineNoItem,"Get Stars, or earn them on the Pocket Deck.",,Menu text
+ui.starsShort.title,You need ★ {count} more,,Menu text; e.g. You need ★ 3 more
+ui.starsShort.titleOne,You need ★ 1 more,,Menu text
 ui.stats.bonus,BONUS,,Menu text
 ui.stats.bonusLeft,2x bonus: {count} XP left today,,Menu text; e.g. 2x bonus: 3 XP left today
 ui.stats.bonusUsed,Today's 2x bonus is used. Back tomorrow.,,Menu text
@@ -741,6 +747,35 @@ ui.stats.train.jump,"Pet Park games you start, the daily Play date and playing w
 ui.stats.train.power,"Merges and chains on the Pocket Deck. Every merge counts, win or lose.",,Menu text
 ui.stats.train.smarts,"Daily and weekly quests, the daily stamp and Collection book finds.",,Menu text
 ui.stats.train.speed,"Throw and fetch, and toy play in the garden.",,Menu text
+ui.store.best,BEST VALUE,,Menu text
+ui.store.blurb.chest,The big one.,,Menu text
+ui.store.blurb.handful,A little top-up for one more egg.,,Menu text
+ui.store.blurb.jar,Lots of Stars for lots of eggs.,,Menu text
+ui.store.blurb.pouch,Enough Stars for a few eggs.,,Menu text
+ui.store.boosts,Boosts,,Menu text
+ui.store.buy,Buy · R$ {price},,Menu text; e.g. Buy · R$ {price}
+ui.store.forever,FOREVER,,Menu text
+ui.store.foreverValue,Forever,,Menu text
+ui.store.free,You can always earn Stars free by playing.,,Menu text
+ui.store.gets.doubleStars,Every round and quest,,Menu text
+ui.store.gets.doubleStarsValue,2× Stars,,Menu text; also catalog.StoreCatalog.PassById.2078960411.name
+ui.store.gets.supporter,Every finished round,,Menu text
+ui.store.gets.supporterValue,+1 Star,,Menu text
+ui.store.hints.buy,Buy,,Menu text
+ui.store.keepsWorking,Keeps working,,Menu text
+ui.store.loading,Loading…,,Menu text
+ui.store.opening,Opening…,,Menu text
+ui.store.owned,✓ Owned,,Menu text
+ui.store.ownedChip,✓ OWNED,,Menu text
+ui.store.packs,Stars packs,,Menu text
+ui.store.soon,Coming soon,,Menu text
+ui.store.sub.doubleStars,"Double Stars, forever",,Menu text
+ui.store.sub.pack,{stars} Stars,,Menu text; e.g. {stars} Stars
+ui.store.sub.starter,{stars} Stars · one per player,,Menu text; e.g. {stars} Stars · one per player
+ui.store.sub.supporter,+1 Star every round,,Menu text
+ui.store.thanks,Thank you! This boost is always on.,,Menu text
+ui.store.walletAfter,Your wallet after,,Menu text
+ui.store.whatYouGet,What you get,,Menu text
 ui.style.balls.pitch,"Same sizes, same rules. Only cuter.",,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.balls,Just for looks. Never an advantage.,,Deck style screen
@@ -977,7 +1012,6 @@ catalog.QuestCatalog.ById.w_wins12.title,Win 12 rounds,,Catalogue QuestCatalog (
 catalog.StoreCatalog.PassById.2078804439.blurb,+1 Star for every finished round. Thank you!,,Catalogue StoreCatalog (blurb)
 catalog.StoreCatalog.PassById.2078804439.name,Supporter,,Catalogue StoreCatalog (name)
 catalog.StoreCatalog.PassById.2078960411.blurb,Double Stars from every round and quest. Forever.,,Catalogue StoreCatalog (blurb)
-catalog.StoreCatalog.PassById.2078960411.name,2× Stars,,Catalogue StoreCatalog (name)
 catalog.StoreCatalog.ProductById.3730431023.blurb,40 Stars to get your garden going. One per player.,,Catalogue StoreCatalog (blurb)
 catalog.StoreCatalog.ProductById.3730431023.name,Starter pack,,Catalogue StoreCatalog (name)
 catalog.StoreCatalog.ProductById.3730431114.name,Handful of Stars,,Catalogue StoreCatalog (name)

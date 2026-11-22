@@ -1067,11 +1067,6 @@
    "context": "",
    "example": "Catalogue StoreCatalog (blurb)"
   },
-  "catalog.StoreCatalog.PassById.2078960411.name": {
-   "source": "2× Stars",
-   "context": "",
-   "example": "Catalogue StoreCatalog (name)"
-  },
   "catalog.StoreCatalog.ProductById.3730431023.blurb": {
    "source": "40 Stars to get your garden going. One per player.",
    "context": "",
@@ -1465,7 +1460,7 @@
   "ui.book.eyebrow": {
    "source": "Garden",
    "context": "",
-   "example": "Collection book; also ui.hub.eyebrow, ui.report.category.garden"
+   "example": "Collection book; also ui.hub.eyebrow, ui.report.category.garden, ui.store.eyebrow"
   },
   "ui.book.failed": {
    "source": "Not claimed",
@@ -4400,7 +4395,7 @@
   "ui.report.category.stars": {
    "source": "Stars",
    "context": "",
-   "example": "Bug report sheet"
+   "example": "Bug report sheet; also ui.store.starsRow"
   },
   "ui.report.entry": {
    "source": "Report a bug / Suggest something",
@@ -4709,6 +4704,36 @@
   },
   "ui.stampChip.label": {
    "source": "Daily stamp",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.starsShort.buy": {
+   "source": "Get Stars",
+   "context": "",
+   "example": "Menu text; also ui.starsShort.wallet, ui.store.title"
+  },
+  "ui.starsShort.earn": {
+   "source": "Play a round",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.starsShort.line": {
+   "source": "{item} is ★ {price}. Get Stars, or earn them on the Pocket Deck.",
+   "context": "",
+   "example": "Menu text; e.g. Squeaky Bone is ★ {price}. Get Stars, or earn them on the Pocket Deck."
+  },
+  "ui.starsShort.lineNoItem": {
+   "source": "Get Stars, or earn them on the Pocket Deck.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.starsShort.title": {
+   "source": "You need ★ {count} more",
+   "context": "",
+   "example": "Menu text; e.g. You need ★ 3 more"
+  },
+  "ui.starsShort.titleOne": {
+   "source": "You need ★ 1 more",
    "context": "",
    "example": "Menu text"
   },
@@ -5029,6 +5054,151 @@
   },
   "ui.stats.train.speed": {
    "source": "Throw and fetch, and toy play in the garden.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.best": {
+   "source": "BEST VALUE",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.blurb.chest": {
+   "source": "The big one.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.blurb.handful": {
+   "source": "A little top-up for one more egg.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.blurb.jar": {
+   "source": "Lots of Stars for lots of eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.blurb.pouch": {
+   "source": "Enough Stars for a few eggs.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.boosts": {
+   "source": "Boosts",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.buy": {
+   "source": "Buy · R$ {price}",
+   "context": "",
+   "example": "Menu text; e.g. Buy · R$ {price}"
+  },
+  "ui.store.forever": {
+   "source": "FOREVER",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.foreverValue": {
+   "source": "Forever",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.free": {
+   "source": "You can always earn Stars free by playing.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.gets.doubleStars": {
+   "source": "Every round and quest",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.gets.doubleStarsValue": {
+   "source": "2× Stars",
+   "context": "",
+   "example": "Menu text; also catalog.StoreCatalog.PassById.2078960411.name"
+  },
+  "ui.store.gets.supporter": {
+   "source": "Every finished round",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.gets.supporterValue": {
+   "source": "+1 Star",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.hints.buy": {
+   "source": "Buy",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.keepsWorking": {
+   "source": "Keeps working",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.loading": {
+   "source": "Loading…",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.opening": {
+   "source": "Opening…",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.owned": {
+   "source": "✓ Owned",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.ownedChip": {
+   "source": "✓ OWNED",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.packs": {
+   "source": "Stars packs",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.soon": {
+   "source": "Coming soon",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.sub.doubleStars": {
+   "source": "Double Stars, forever",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.sub.pack": {
+   "source": "{stars} Stars",
+   "context": "",
+   "example": "Menu text; e.g. {stars} Stars"
+  },
+  "ui.store.sub.starter": {
+   "source": "{stars} Stars · one per player",
+   "context": "",
+   "example": "Menu text; e.g. {stars} Stars · one per player"
+  },
+  "ui.store.sub.supporter": {
+   "source": "+1 Star every round",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.thanks": {
+   "source": "Thank you! This boost is always on.",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.walletAfter": {
+   "source": "Your wallet after",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.whatYouGet": {
+   "source": "What you get",
    "context": "",
    "example": "Menu text"
   },
