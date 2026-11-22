@@ -90,6 +90,9 @@ SHOTS = {
     "A-J3-wiggle": ("A-J3-wiggle-black.jpg", "A-J3-wiggle-grey.jpg"),
     "A-C7a-sit": ("A-C7a-sit-black.jpg", "A-C7a-sit-grey.jpg"),
     "A-J2-jump": ("A-J2-jump-black.jpg", "A-J2-jump-grey.jpg"),
+    # See-saw riders, sitting and turned to face each other (F7b faces right, J3 faces left).
+    "A-F7b-ride": ("A-F7b-ride-black.jpg", "A-F7b-ride-grey.jpg"),
+    "A-J3-ride": ("A-J3-ride-black.jpg", "A-J3-ride-grey.jpg"),
 }
 
 

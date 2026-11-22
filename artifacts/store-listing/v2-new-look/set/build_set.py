@@ -633,16 +633,16 @@ def t5():
 
     # ---- on the equipment, far to near
     # stretching by the slide and the ball mat
-    pal("A-C7c-stretch", 0.50, 1102, 486, rot=-4, ry=8, sh=60)
+    pal("A-C7c-stretch", 0.40, 1185, 455, rot=-4, ry=6, sh=50)  # further back, apart from the see-saw pair
     # sitting on the swing seat, mid-swing
     x, y = pal("A-C7a-sit", 0.52, 410, 540, rot=7, ry=1, sh=0, flip=True)
     bi.contact(c, x + 10, P(0, 560)[1], 70, 10, alpha=80, blur=10)
     swish(c, x - 10, y - 40, 330, 100, 125, width=8)
     swish(c, x - 10, y - 40, 370, 104, 122, width=6)
     swish(c, x + 10, y - 40, 330, 52, 76, width=8)
-    # see-saw: Bear sitting on the low seat, Bunny wiggling on the high end
-    pal("A-F7b-sit", 0.50, 764, 574, rot=5, ry=6, sh=50)
-    x, y = pal("A-J3-wiggle", 0.50, 990, 498, rot=-7, ry=5, sh=40, flip=True)
+    # see-saw: both riders sit on their seats, turned to face each other
+    pal("A-F7b-ride", 0.58, 768, 574, rot=6, ry=6, sh=50)
+    x, y = pal("A-J3-ride", 0.55, 985, 502, rot=-8, ry=5, sh=40)
     for dx, a in ((-70, -28), (0, 0), (70, 28)):
         layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
         t = np.radians(a)
