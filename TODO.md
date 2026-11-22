@@ -23,6 +23,7 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 **3. Minigame: pet competitions (stats give at most ~25% edge; matchmaking by total level; a Just for Fun mode)**
 - [ ] Garden Dash: a 4 to 8 pet race around the garden path with hurdles and a shortcut (Speed, Energy, Jump). The v3 headline.
+  - [x] S5 (2026-11-22): `DashCourse`, `DashStats`, `DashSim`, specs (`python scripts/run_dash_specs.py`). Pure shared code; nothing requires it yet.
 - [ ] Tug of War: 1v1 or 2v2, tap in rhythm (Power, Heart, Energy). v3.1.
 - [ ] Treasure Hunt: most garden finds in 60 s (Smarts, Speed). v3.1, needs garden finds.
 
