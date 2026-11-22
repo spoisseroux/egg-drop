@@ -24,6 +24,17 @@ return function(client)
 		assert(Trail.dry({spawnAt,V(51.5,63.2)})and Trail.dry({spawnAt,V(72,-8)}))
 		assert(not Trail.dry({V(20,40),V(-20,40)}),"the stream")
 		assert(Trail.dry({V(14,21),V(-9,21)}),"the bridge")
+		-- The stream has no gaps at its joints (2026-11-22: a stud of bank on every box opened this line, beside the bridge).
+		assert(not Trail.dry({V(14.3,14.8),V(-7.4,18.1)}),"the stream beside the bridge")
+		assert(Trail.dry({V(55.2,5.7),V(59,4.3)}),"past the Bubble Spring's rim")
+		-- The mesh's seam: no straight dry way to the bridge's west end, so by the spelled-out approach.
+		local hub=V(-25,0)
+		local function seam(from,to)
+			if from==hub and math.abs(to.Z-21)<1 then return{from,V(3,10),to}end
+			return{from,to}
+		end
+		local over=Trail.route(seam,hub,V(40,30))
+		assert(over and Trail.dry(over)and table.find(over,Trail.West[1])~=nil and table.find(over,Trail.West[2])~=nil,"by the west approach")
 		local way=Trail.route(straight,V(20,40),V(-20,40))
 		assert(way and #way>=4 and Trail.dry(way),"over the bridge")
 		assert(Trail.route(function()return nil end,spawnAt,V(51,63))==nil and Trail.route(function()return{V(0,0)}end,spawnAt,V(51,63))==nil)

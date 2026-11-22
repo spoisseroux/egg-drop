@@ -21,3 +21,7 @@ Spencer, asleep: "make decisions ot move forward by urself". Each row is a choic
 | 15 | Stopped building at about 91% of the weekly limit | Leaves usage for your feedback; it resets 4 PM | |
 | 16 | Star prizes for races are off unless a remote setting turns them on | Nothing can pay out until you decide | `garden_dash_prizes` |
 | 17 | The race route goes around the leaning tree at (38, 8) | Lanes 5 to 8 ran into it, measured in Studio | `scripts/build_dash_course.py` |
+| 18 | The blue-garden light is lower than Fable's plan (Brightness 1.85, not 2.4; softer ambient) | At 2.4 the Bear washed out to flat white and lost its muzzle | `WorldAero.Lighting`, or `/aero off` |
+| 19 | Both tree colours are flat and smooth | Lime on Fabric rendered olive; coral as a tint rendered near black | `WorldAero.Crowns` |
+| 20 | The race's waiting pad and sign moved to (69, -14), north of the start; the course itself is unchanged | At (70, 0) a tree crown filled the camera of anyone walking over from spawn | `PAD` in `scripts/build_dash_course.py` |
+| 21 | "Show me" draws no prints from a few odd spots (in the spring, some of the north bank): the marker alone shows | Never a line over water | Trail code |

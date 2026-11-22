@@ -22,7 +22,7 @@ Trail.Clear=.15     -- how see-through a print is
 -- The way up to the bridge's west end, from the measured race line: the navigation mesh has a seam there and goes round it
 -- through the stream (Studio 2026-11-22). Outermost first.
 Trail.West=table.freeze({Vector3.new(-18.95,4.4,14.33),Vector3.new(-13,4.4,21)})
-Trail.Bank=1        -- the water boxes hold this much bank: a way that brushes the Bubble Spring's rim is dry (Studio 2026-11-22)
+Trail.Bank=1        -- the Bubble Spring's box holds this much rim: a way that brushes it is dry (Studio 2026-11-22). Never the stream's boxes: shrunk, they part at the joints
 Trail.Color=Color3.fromHex("#FFF4DC")
 Trail.Ink=Color3.fromHex("#24304F")
 Trail.Agent=table.freeze({AgentRadius=2,AgentHeight=5,AgentCanJump=false,WaypointSpacing=4})
@@ -55,8 +55,9 @@ local wet
 function Trail.wet()
 	if wet then return wet end
 	wet={}
-	local function add(x,z,w,d,yaw)
-		table.insert(wet,{Parent=true,CFrame=CFrame.new(x,0,z)*CFrame.Angles(0,yaw or 0,0),Size=Vector3.new(math.max(1,w-Trail.Bank*2),1,math.max(1,d-Trail.Bank*2)),GetAttribute=function()return false end})
+	local function add(x,z,w,d,yaw,bank)
+		bank=(bank or 0)*2
+		table.insert(wet,{Parent=true,CFrame=CFrame.new(x,0,z)*CFrame.Angles(0,yaw or 0,0),Size=Vector3.new(math.max(1,w-bank),1,math.max(1,d-bank)),GetAttribute=function()return false end})
 	end
 	if World.WorldVersion=="v7"then
 		for _,entry in ipairs(require(Shared:WaitForChild("WorldV7Data")).wet or {})do
@@ -65,7 +66,7 @@ function Trail.wet()
 		end
 	end
 	for _,entry in ipairs(World.Wet or {})do
-		if typeof(entry.center)=="Vector2"then add(entry.center.X,entry.center.Y,entry.size.X,entry.size.Y,entry.yaw)end
+		if typeof(entry.center)=="Vector2"then add(entry.center.X,entry.center.Y,entry.size.X,entry.size.Y,entry.yaw,if entry.name=="BubbleSpring"then Trail.Bank else 0)end
 	end
 	return wet
 end
@@ -84,7 +85,7 @@ local function approach(compute,place,mouth,west,dry,reversed)
 	end
 	local points=way(mouth)
 	if points then return points end
-	if not west then return nil end
+	if not west or World.WorldVersion~="v7"then return nil end
 	points=way(Trail.West[1])
 	if not points then return nil end
 	local all={}
@@ -179,7 +180,12 @@ function Trail:start(target)
 	local mine=self.generation
 	if not self.spot then
 		(self.d.spawn or task.spawn)(function()
-			local ok,points=pcall(Trail.route,self.d.compute or Trail.pathfind,root,target.position)
+			local base=self.d.compute or Trail.pathfind
+			local function compute(from,to) -- a trail that is over asks for no more ways
+				if self.generation~=mine or not self.target then return nil end
+				return base(from,to)
+			end
+			local ok,points=pcall(Trail.route,compute,root,target.position)
 			if self.generation~=mine or not self.target then return end
 			if ok and points then self:lay(points)else self.folder:SetAttribute("Way","none")end
 		end)

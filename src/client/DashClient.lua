@@ -64,7 +64,7 @@ function Client.ahead(track,tick,unit)
 	return math.min(total,track.cs+unit*track.pace/100*math.clamp(tick-track.tick,0,Client.ExtrapolateTicks))
 end
 
--- The gate card's picture: the start arch and the lanes from the side, over the lawn west of the waiting pad.
+-- The gate card's picture: the start arch and the lanes from the side, with the waiting pad behind the arch.
 Client.GateEye=Vector3.new(10.5,5,11) -- across the start from the pad, up, and along the course: the waiting players are behind the arch
 Client.GateLook=Vector3.new(0,1,2)
 function Client.gateView()
