@@ -13,3 +13,5 @@ Spencer, asleep: "make decisions ot move forward by urself". Each row is a choic
 | 7 | Level-locked items never go on the weekly shelf or count in Book totals | Adding rows would change this week's picks and everyone's Book percent | Per item |
 | 8 | No level-25 badges yet (ids empty) | Creating badges is public and yours to do | Add three ids |
 | 9 | Wind also moves pennants x1.8, and gusts run toward Tumble Falls | The brief asked for both; its "south" was a compass slip | One line in `WorldMotion` |
+| 10 | Levels stays off on a server until the remote settings load once | If Roblox's settings service is down, nothing level-locked sells by mistake | `LevelsConfig` |
+| 11 | Dash maths is on its own branch, not merged (`worktree-agent-a9c31b5ac11fd8784`, 3e7dcd3) | Medal times too easy (doing nothing beats Silver), holding Dash has no downside, 25% speed gap inside a band; the line needs a Studio walk | Tune, then merge |
