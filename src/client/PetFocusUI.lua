@@ -283,10 +283,13 @@ function Focus:handleStats(state)
 	return Enum.ContextActionResult.Sink
 end
 -- info: {name, bond = BondPips.info(...)} or nil. animate: a level-up (the new pip pops).
+-- Levels matter (S1): info.heart (a Heart level) shows the Heart chip in the pips' place.
 function Focus:setBond(info,animate)
 	if self.destroyed or not self.bondCard then return end
 	self.bondInfo=info
-	if not info or not info.bond then self.bondCard.Visible=false;return end
+	if not info or not(info.bond or info.heart)then self.bondCard.Visible=false;return end
+	if info.heart then self:setHeart(info,animate);return end
+	if self.heartChip then self.heartChip.set(nil);self.bondCard:SetAttribute("HeartLevel",nil)end
 	local compact=true -- five hearts and their progress bar fit the shared48px row.
  if self.bondPips==nil or self.bondCompact~=compact then
   if self.bondPips then self.bondPips.root:Destroy()end
@@ -304,6 +307,22 @@ function Focus:setBond(info,animate)
  self.bondLevel.Size=UDim2.fromOffset(self.bondWidth-12-pips.width-6-8,20)
  self.bondCard.Visible=true;pips.set(info.bond,animate==true)
  self.bondCard:SetAttribute("BondLevel",info.bond.shown)
+ self:layoutFocusRow()
+end
+-- The card with the pet's name and its Heart level chip (no pips, no "Lv" label).
+function Focus:setHeart(info,animate)
+ if self.bondPips then self.bondPips.set(nil)end
+ self.heartChip=self.heartChip or require(script.Parent.StatsPanel).heartChip(self.bondCard,false)
+ self.heartChip.root.ZIndex=self.bondCard.ZIndex+1
+ self.heartChip.root.Position=UDim2.fromOffset(12,21)
+ self.bondWidth=math.clamp(12+self.heartChip.width+12,150,190)
+ self.bondName.Text=info.name or "";self.bondName.Position=UDim2.fromOffset(12,2)
+ self.bondName.Size=UDim2.new(1,-24,0,18);self.bondName.TextSize=14
+ self.bondLevel.Text=""
+ self.heartChip.set(info.heart)
+ if animate==true then Kit.boing(self.heartChip.root)end
+ self.bondCard.Visible=true
+ self.bondCard:SetAttribute("BondLevel",nil);self.bondCard:SetAttribute("HeartLevel",info.heart)
  self:layoutFocusRow()
 end
 -- GardenCare supplies its existing button; this is its only geometry owner.

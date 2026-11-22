@@ -11,6 +11,11 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Catalog=require(Shared.StatCatalog)
 local UICopy=require(Shared.UICopy)
+-- Levels matter (S1): a level that brings a reward names it ("Jump 15 · Lime Party Hat"), and a tap
+-- opens the stat guide on that reward. No rows while the parts are off, so the lines stay plain.
+local Levels=require(Shared.Levels)
+local Rewards=require(Shared.StatRewards)
+local Bond=require(Shared.BondCatalog)
 local Toasts={}
 Toasts.__index=Toasts
 Toasts.Duration=5.5
@@ -24,7 +29,7 @@ function Toasts.diff(before,after)
   local old=before[petId]
   if type(old)=="table"then
    for _,id in ipairs(Catalog.Order)do
-    if(levels[id]or 1)>(old[id]or 1)then table.insert(ups,{petId=petId,stat=id,level=levels[id]})end
+    if(levels[id]or 1)>(old[id]or 1)then table.insert(ups,{petId=petId,stat=id,level=levels[id],from=old[id]or 1})end
    end
   end
  end
@@ -49,15 +54,60 @@ function Toasts.merge(pending,ups)
  for _,up in ipairs(ups)do pending[up.stat]=math.max(pending[up.stat]or 0,up.level)end
  return pending
 end
-function Toasts.line(pending)
- local parts,first={},nil
+-- The lowest level a merged line started from, per stat (`from` of Toasts.diff).
+function Toasts.mergeFrom(from,ups)
+ from=from or {}
+ for _,up in ipairs(ups)do if up.from then from[up.stat]=math.min(from[up.stat]or math.huge,up.from)end end
+ return from
+end
+-- The reward a line names for one stat: the first row of the highest level reached, or nil.
+function Toasts.reward(stat,from,level)
+ local rows=if type(from)=="number"then Rewards.earned(stat,from,level)else {}
+ local best=rows[#rows]
+ if not best then return nil end
+ for _,row in ipairs(rows)do if row.level==best.level then return row end end
+ return best
+end
+-- The line, its first stat, and the first reward it names (a row; nil without `from`).
+function Toasts.line(pending,from)
+ local parts,first,reward={},nil,nil
  for _,id in ipairs(Catalog.Order)do
   if pending[id]then
-   first=first or id
-   table.insert(parts,UICopy.get("stats.levelUp",{name=UICopy.get("stats.name."..id),count=pending[id]}))
+   local vars={name=UICopy.get("stats.name."..id),count=pending[id]}
+   local row=from and Toasts.reward(id,from[id],pending[id])or nil
+   first=first or id;reward=reward or row
+   if row then vars.reward=Rewards.text(row,UICopy.get);table.insert(parts,UICopy.get("stats.levelUpReward",vars))
+   else table.insert(parts,UICopy.get("stats.levelUp",vars))end
   end
  end
- return table.concat(parts,", "),first
+ return table.concat(parts,", "),first,reward
+end
+-- The trick tickets (S1, instead of the bond toast): tricks unlocked since the last snapshot.
+-- `seen` is the caller's table; the first snapshot (and a pet first seen, and the part turning on)
+-- only records. One event per pet: {petId, level = tricks now, heart = Heart alone brought it (its
+-- own ticket names it), text}.
+function Toasts.tricksOn()return Levels.on("track")end
+function Toasts.trickUps(seen,state)
+ local events={}
+ if type(seen)~="table"or type(state)~="table"or not Toasts.tricksOn()then return events end
+ local pets=type(state.petStats)=="table"and type(state.petStats.pets)=="table"and state.petStats.pets or {}
+ local first=seen.tricks==nil
+ seen.tricks=seen.tricks or {}
+ local ids={};for petId in pairs(pets)do if type(petId)=="string"then table.insert(ids,petId)end end
+ table.sort(ids)
+ for _,petId in ipairs(ids)do
+  local level=type(pets[petId])=="table"and type(pets[petId].level)=="table"and pets[petId].level.heart or nil
+  local xp=Bond.xpOf(state.bond,petId)
+  local now=Bond.trickLevel(xp,level)
+  local before=seen.tricks[petId]
+  if not first and before and now>before then
+   local unlock=Bond.unlock(now)
+   table.insert(events,{petId=petId,level=now,heart=Bond.level(xp)<now,
+    text=if unlock then UICopy.get("stats.reward.trick",{name=UICopy.get(unlock.copy)})else ""})
+  end
+  seen.tricks[petId]=math.max(before or 0,now)
+ end
+ return events
 end
 -- Pure: results strip parts from the round's gains ({power=, energy=, heart=}) and the
 -- pet's XP now. Each part: {id, gain, level, up = levelled this round, text}.
@@ -89,13 +139,21 @@ end
 
 -- Pure: the line for `levels`, or "Power 15 +2" when the full line does not fit the rail
 -- (`fits(text)`; a phone's top bar, a long translation, four stats at once).
-function Toasts.capped(levels,fits)
- local text,first=Toasts.line(levels)
- if not fits or fits(text)then return text,first end
+-- `from` (optional) adds the rewards when they fit. Second and third results: the stat a tap opens
+-- (the reward's, when there is one) and that reward's row.
+function Toasts.capped(levels,fits,from)
+ local text,first,row
+ if from then
+  text,first,row=Toasts.line(levels,from)
+  if not fits or fits(text)then return text,if row then row.stat else first,row end
+ end
+ text,first=Toasts.line(levels)
+ local target=if row then row.stat else first
+ if not fits or fits(text)then return text,target,row end
  local others=0
  for id in pairs(levels)do if id~=first then others+=1 end end
- if others==0 then return text,first end
- return UICopy.get("stats.levelUpMore",{name=UICopy.get("stats.name."..first),count=levels[first],target=others}),first
+ if others==0 then return text,target,row end
+ return UICopy.get("stats.levelUpMore",{name=UICopy.get("stats.name."..first),count=levels[first],target=others}),target,row
 end
 -- The rail's own width rule (NotificationRail.geometry) for a tappable line: the whole line
 -- shows on its ticket (`full`; a longer one would be truncated at the end).
@@ -112,8 +170,8 @@ local function railFits(rail)
 end
 Toasts.MaxWait=20 -- a queued line that never showed in this long is retired
 
--- deps: rail (NotificationRail), owner (Instance), held() -> bool, open(statId, petId),
--- focus(statId, petId) -> bool (optional: the panel is already open, switch it to that stat;
+-- deps: rail (NotificationRail), owner (Instance), held() -> bool, open(statId, petId, rowId),
+-- focus(statId, petId, rowId) -> bool (optional: the panel is already open, switch it to that stat;
 -- false when it is not open), fits(text) -> bool (optional; the rail's width rule by
 -- default), now() (optional clock)
 function Toasts.new(deps)
@@ -132,6 +190,7 @@ function Toasts:update(petStats)
  end
  if #ups==0 then return end
  self.pending=Toasts.merge(self.pending,ups)
+ self.pendingFrom=Toasts.mergeFrom(self.pendingFrom,ups)
  self.pendingPet=ups[1].petId
  self:flush()
 end
@@ -139,8 +198,8 @@ end
 function Toasts:flush(now)
  if not self.pending or(self.deps.held and self.deps.held())then return end
  now=now or(if self.deps.now then self.deps.now()else os.clock())
- local pending,petId=self.pending,self.pendingPet
- self.pending,self.pendingPet=nil,nil
+ local pending,petId,from=self.pending,self.pendingPet,self.pendingFrom
+ self.pending,self.pendingPet,self.pendingFrom=nil,nil,nil
  local fits=self.fits
  local live=self.handle
  -- A line that ended, or never got a turn on the rail, takes no more merges.
@@ -150,19 +209,21 @@ function Toasts:flush(now)
  end
  local merged=Toasts.merge(if live then table.clone(live.levels)else nil,{})
  for id,level in pairs(pending)do merged[id]=math.max(merged[id]or 0,level)end
+ local mergedFrom=if live and live.from then table.clone(live.from)else {}
+ for id,level in pairs(from or {})do mergedFrom[id]=math.min(mergedFrom[id]or math.huge,level)end
  -- The merged line would not fit while the new ups alone do: they start their own line.
- if live and fits and not fits((Toasts.line(merged)))and fits((Toasts.line(pending)))then live=nil;merged=pending end
+ if live and fits and not fits((Toasts.line(merged)))and fits((Toasts.line(pending)))then live=nil;merged=pending;mergedFrom=from or {}end
  if not live then
   self.serial+=1;live={key="statLevel:"..self.serial,done=false,shown=false,at=now,levels={}};self.handle=live
  end
- live.levels=merged;live.petId=live.petId or petId
- local text,first=Toasts.capped(merged,fits)
+ live.levels=merged;live.from=mergedFrom;live.petId=live.petId or petId
+ local text,first,row=Toasts.capped(merged,fits,mergedFrom)
  local deps=self.deps
  -- Same key: the rail updates the queued or showing line in place.
  live.item=deps.rail.enqueue(deps.owner,live.key,{text=text,icon="▲",duration=Toasts.Duration,
   activate=if deps.open then function()
-   if deps.focus and deps.focus(first,live.petId)then return true end
-   return deps.open(first,live.petId)
+   if deps.focus and deps.focus(first,live.petId,row and row.id or nil)then return true end
+   return deps.open(first,live.petId,row and row.id or nil)
   end else nil,
   onShown=function()live.shown=true end,onDone=function()live.done=true end})
  return text

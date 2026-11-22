@@ -27,6 +27,9 @@ local DeckThemes=require(Shared.DeckThemes)
 local UICopy=require(Shared.UICopy)
 local Kit=require(script.Parent.DeckKit)
 local Peek=require(script.Parent.PetPeek)
+-- Levels matter (S1): "where to find" lines on pages with empty spots, from Smarts 5 on any pet.
+local Levels=require(Shared.Levels)
+local Rewards=require(Shared.StatRewards)
 local View={}
 View.__index=View
 View.Size=Vector2.new(848,608)
@@ -194,6 +197,31 @@ function View.pageHasThumbs(pageId,items)
  if #items==0 then return false end
  for _,item in ipairs(items)do if View.thumbKind(pageId,item)then return true end end
  return false
+end
+-- Pure: where a missing item is found ("book.where.<kind>"), by page and item.
+function View.whereKind(pageId,item)
+ if pageId=="toys"then return if item.jar then "finishJar"elseif item.toy then "toy"else nil end
+ if pageId=="charms"then return if item.how=="egg"then "charmEgg"elseif item.how=="earned"then "charmEarned"else nil end
+ if pageId=="balls"or pageId=="faceplates"or pageId=="wardrobe"or pageId=="pets"or pageId=="discoveries"then return pageId end
+ return nil
+end
+-- Pure: the distinct lines for a page's missing items, in item order ({} while hints are off).
+function View.hints(pageId,items,on)
+ local out,seen={},{}
+ if not on then return out end
+ for _,item in ipairs(items)do
+  local kind=not item.owned and View.whereKind(pageId,item)or nil
+  if kind and not seen[kind]then seen[kind]=true;table.insert(out,UICopy.get("book.where."..kind))end
+ end
+ -- Two kinds found the same way say it once.
+ local lines,said={},{}
+ for _,line in ipairs(out)do if not said[line]then said[line]=true;table.insert(lines,line)end end
+ return lines
+end
+-- Hints are on once any owned pet's Smarts reaches the level (the owner snapshot's own levels).
+function View.hintsOn(levels)
+ if not Levels.on("track")then return false end
+ return Rewards.bookHints(levels or require(script.Parent.LockedItem).levels())
 end
 -- Focus movement in the page list (clamped, no wrap).
 function View.stepPage(index,delta,count)return math.clamp(index+delta,1,math.max(1,count))end
@@ -427,10 +455,26 @@ end
 -- always; the atlas pages once it is uploaded), else the name chips (or discovery
 -- badges). Rebuilt only when the page or what is owned on it changes (a snapshot),
 -- never per frame.
+-- The "where to find" lines over the items: one strip, as tall as its lines. Returns its height.
+function View:buildHintsStrip(entry,items)
+ local lines=View.hints(entry.id,items,View.hintsOn())
+ self.root:SetAttribute("BookHints",if #lines>0 then #lines else nil)
+ if #lines==0 then return 0 end
+ local lineH=if self.view then 18 else 20
+ local h=#lines*lineH+8
+ local strip=Kit.frame(self.grid,"WhereToFind","well",UDim2.fromOffset(0,0),UDim2.fromOffset(self.gridW-8,h),10)
+ Kit.stroke(strip)
+ local icon=Kit.icon(strip,"book",16,"soft");icon.AnchorPoint=Vector2.new(0,.5);icon.Position=UDim2.new(0,10,.5,0)
+ for index,line in ipairs(lines)do
+  txt(strip,"Small",line,"soft",34,4+(index-1)*lineH,self.gridW-8-34-8,lineH,{Name="Where"..index,TextSize=if self.view then 12 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
+ end
+ return h+8
+end
 function View:buildItems(entry)
  self:clearGrid()
  local items=View.items(entry.id,entry.ownedIds)
- if View.pageHasThumbs(entry.id,items)then return self:buildCards(entry,items)end
+ local top=self:buildHintsStrip(entry,items)
+ if View.pageHasThumbs(entry.id,items)then return self:buildCards(entry,items,top)end
  local phone=self.view~=nil
  local discoveries=entry.id=="discoveries"
  local cols=if discoveries then 2 elseif phone then(if self.gridW>=420 then 3 else 2)else 3
@@ -440,7 +484,7 @@ function View:buildItems(entry)
  self.root:SetAttribute("ItemLayout","chips")
  for index,item in ipairs(items)do
   local col,row=(index-1)%cols,math.floor((index-1)/cols)
-  local chip=Kit.frame(self.grid,"Item_"..item.id,if item.owned then "raised"else "well",UDim2.fromOffset(col*(cw+gap),row*(ch+gap)),UDim2.fromOffset(cw,ch),10)
+  local chip=Kit.frame(self.grid,"Item_"..item.id,if item.owned then "raised"else "well",UDim2.fromOffset(col*(cw+gap),top+row*(ch+gap)),UDim2.fromOffset(cw,ch),10)
   local stroke=Kit.stroke(chip)
   if item.owned and discoveries then stroke.Thickness=2;stroke.Transparency=0;stroke.Color=Kit.Tint.book end
   chip:SetAttribute("Owned",item.owned);chip:SetAttribute("AccessibleLabel",item.name..", "..UICopy.get(if item.owned then "book.found"else "book.missing"))
@@ -461,12 +505,13 @@ function View:buildItems(entry)
   end
  end
  local rows=math.ceil(#items/cols)
- self.grid.CanvasSize=UDim2.fromOffset(0,math.max(0,rows*(ch+gap)-gap))
+ self.grid.CanvasSize=UDim2.fromOffset(0,math.max(0,top+rows*(ch+gap)-gap))
  if #items==0 then txt(self.grid,"Small",UICopy.get("book.empty"),"soft",0,0,self.gridW-8,24,{TextSize=if phone then 12 else 14})end
 end
 -- Picture cards: a well with the thumbnail (48 px, 52 px tall well), the name under it
 -- and a check beside the name when owned. Same columns as the chips.
-function View:buildCards(entry,items)
+function View:buildCards(entry,items,top)
+ top=top or 0
  local phone=self.view~=nil
  local discoveries=entry.id=="discoveries"
  local T=View.Thumb
@@ -478,7 +523,7 @@ function View:buildCards(entry,items)
  self.root:SetAttribute("ItemLayout","cards")
  for index,item in ipairs(items)do
   local col,row=(index-1)%cols,math.floor((index-1)/cols)
-  local card=Kit.frame(self.grid,"Item_"..item.id,if item.owned then "raised"else "well",UDim2.fromOffset(col*(cw+gap),row*(ch+gap)),UDim2.fromOffset(cw,ch),10)
+  local card=Kit.frame(self.grid,"Item_"..item.id,if item.owned then "raised"else "well",UDim2.fromOffset(col*(cw+gap),top+row*(ch+gap)),UDim2.fromOffset(cw,ch),10)
   local stroke=Kit.stroke(card)
   if item.owned and discoveries then stroke.Thickness=2;stroke.Transparency=0;stroke.Color=Kit.Tint.book end
   card:SetAttribute("Owned",item.owned);card:SetAttribute("AccessibleLabel",item.name..", "..UICopy.get(if item.owned then "book.found"else "book.missing"))
@@ -512,7 +557,7 @@ function View:buildCards(entry,items)
   end
  end
  local rows=math.ceil(#items/cols)
- self.grid.CanvasSize=UDim2.fromOffset(0,math.max(0,rows*(ch+gap)-gap))
+ self.grid.CanvasSize=UDim2.fromOffset(0,math.max(0,top+rows*(ch+gap)-gap))
 end
 -- Records: label / value rows, two columns on desktop and wide phones.
 function View:buildRecords()
@@ -654,6 +699,7 @@ function View:paintPane()
   self.root:SetAttribute("Bookworm",worm.count)
  end
  local key=entry.id..":"..table.concat(type(entry.ownedIds)=="table"and entry.ownedIds or {},",")
+ if View.hintsOn()then key..=":hints"end
  if self.builtPage~=entry.id or self.itemsKey~=key then self:buildItems(entry);self.builtPage=entry.id;self.itemsKey=key end
 end
 

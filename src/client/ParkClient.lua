@@ -13,6 +13,7 @@
 -- a small chevron, local only) and the park chip (name + Play date) while the owner is inside the kerb.
 local Players=game:GetService("Players")
 local AssetService=game:GetService("AssetService")
+local HttpService=game:GetService("HttpService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local UICopy=require(Shared.UICopy)
 local Flags=require(Shared.FeatureFlags)
@@ -20,6 +21,11 @@ local DefaultPark=require(Shared.ParkLayout)
 local DataModule=require(Shared.ParkPoseData)
 local PoseModule=require(script.Parent.ParkPetPose)
 local FetchMotion=require(Shared.ParkFetchMotion)
+-- Levels matter (S1): looks from each rider's public levels, so every viewer draws the same ones.
+local Levels=require(Shared.Levels)
+local Perks=require(Shared.ParkPerks)
+local StatCatalog=require(Shared.StatCatalog)
+local NONE=table.freeze({})
 local function build(Park)
 local Data=DataModule.forSite(Park)
 local Follow=require(script.Parent.PetFollow)
@@ -60,7 +66,7 @@ function Client.new(options)
 	local enabled=if options.enabled==nil then Flags.Park==true else options.enabled==true
 	if not enabled or not Park.Enabled then return nil end
 	local self=setmetatable({garden=options.garden,parkSource=options.park,reduced=options.reduced or function()return false end,
-		playDateSource=options.playDate,guiParent=options.gui,parts={},lastHop={},ownerInside=false},Client)
+		playDateSource=options.playDate,guiParent=options.gui,parts={},lastHop={},swingScale={},ownerInside=false},Client)
 	local folder=Instance.new("Folder");folder.Name="PetParkLocal_"..Park.Id
 	folder.Parent=options.parent or workspace
 	self.folder=folder
@@ -118,6 +124,30 @@ function Client:slotFor(ownerId)
 	return nil,nil
 end
 
+-- A rider's perks from its owner's board (decoded only when the attribute, the pet or the switch
+-- changes). Empty while the track is off or the board has no public levels.
+function Client:perksFor(ownerId,petId)
+	if not Levels.on("track")or type(petId)~="string"then return NONE end
+	local boards=self.garden and self.garden.boards
+	local board=boards and boards:FindFirstChild(tostring(ownerId))
+	local raw=board and board:GetAttribute(StatCatalog.PublicAttribute)
+	if type(raw)~="string"then return NONE end
+	self.perkCache=self.perkCache or {}
+	local hit=self.perkCache[ownerId]
+	if hit and hit.raw==raw and hit.petId==petId then return hit.perks end
+	local ok,data=pcall(HttpService.JSONDecode,HttpService,raw)
+	local perks=if ok then Perks.fromPublic(data,petId)else NONE
+	self.perkCache[ownerId]={raw=raw,petId=petId,perks=perks}
+	return perks
+end
+-- The pet a slot's owner has out (the garden actor's, else the board's companion).
+function Client:riderPerks(ownerId)
+	if not Levels.on("track")or ownerId==nil then return NONE end
+	local actors=self.garden and self.garden.snapshot and self.garden.snapshot.actors
+	local actor=actors and actors[tostring(ownerId)]
+	return self:perksFor(ownerId,actor and actor.petId)
+end
+
 local function setFrame(entry,frame)
 	if entry.part and entry.lastFrame~=frame then entry.part.CFrame=frame;entry.lastFrame=frame end
 end
@@ -145,6 +175,10 @@ function Client:animate(t)
 		local hop=Data.swingHopAt(entry)
 		if hop then self.lastHop[slotId]=hop end
 		local angle=Data.swingAngle(slotId,entry,t,self.lastHop[slotId])
+		-- swingHigh: the seat swings as far as its rider is drawn; it settles at that scale.
+		if hop then self.swingScale[slotId]=PetPose.swingScale(self:riderPerks(entry.ownerId))end
+		local scale=self.swingScale[slotId]or 1
+		if scale~=1 then angle*=scale end
 		local part=self.parts[Data.Swings[slotId].mesh]
 		if part.angle~=angle or not part.lastFrame then
 			part.angle=angle
@@ -221,7 +255,13 @@ function Client:drive(visual,actor,now,dt,state,reduced)
 	visual.parkPose=false
 	if actor.action=="parkFetchChase"or actor.action=="parkFetchReturn"then
 		visual.expression="joy"
-		if not reduced then visual.movementBob=(visual.movementBob or 0)+math.abs(math.sin(now*5+actor.ownerId))*.05 end
+		if not reduced then
+			visual.movementBob=(visual.movementBob or 0)+math.abs(math.sin(now*5+actor.ownerId))*.05
+			-- catchHop: a hop as the pet turns back with the ball.
+			if actor.action=="parkFetchReturn"and type(actor.startTime)=="number"and self:perksFor(actor.ownerId,actor.petId).catchHop then
+				visual.movementBob+=PetPose.catchHop(now-Data.Delay-actor.startTime,(visual.worldScale or .72)/.72)
+			end
+		end
 		return state
 	end
 	if actor.care or actor.mode~="Room"or not PetPose.Actions[actor.action]then return state end
@@ -229,7 +269,7 @@ function Client:drive(visual,actor,now,dt,state,reduced)
 	local t=now-Data.Delay
 	local slotId,entry=self:slotFor(actor.ownerId)
 	local posed=false
-	if entry then posed=PetPose.apply(visual,slotId,entry,t,dt,reduced)end
+	if entry then posed=PetPose.apply(visual,slotId,entry,t,dt,reduced,self:perksFor(actor.ownerId,actor.petId))end
 	if not posed then posed=PetPose.hopOff(visual,actor,t,reduced)end
 	if posed then visual.parkBase=base;visual.parkPosedOrigin=visual.origin end
 	return state

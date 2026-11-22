@@ -32,6 +32,8 @@ local Pets = require(ReplicatedStorage.Shared.PetCatalog)
 -- the level-up flourish and tricks 1-2).
 local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
 local BondPips=require(script.Parent.BondPips)
+local BondCatalog=require(ReplicatedStorage.Shared.BondCatalog)
+local Levels=require(ReplicatedStorage.Shared.Levels)
 local NameText=require(script.Parent.PetNameText)
 local PetIdleBeats=require(script.Parent.PetIdleBeats)
 
@@ -315,7 +317,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		self.nameClock=(self.nameClock or 0)-dt
 		if self.nameClock<=0 then
 			self.nameClock=.25
-			if self:shownName()~=self.bondNameShown then self:syncBond(false)end
+			if self:shownName()~=self.bondNameShown or self:heartLevel()~=self.heartShown then self:syncBond(false)end
 		end
 		if self.park then
 			local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart")
@@ -529,12 +531,28 @@ function Room:bondInfo()
 	if not self.shownPet then return nil end
 	return BondPips.info(self.bond,self.shownPet.id)
 end
--- The focus card: the shown pet's name and pips (hidden without bond data).
+-- Levels matter (S1): the shown pet's Heart level (the owner snapshot's), nil without stats or while
+-- the track is off.
+function Room:heartLevel()
+	if not self.shownPet or not Levels.on("track")then return nil end
+	local state=if self.nameState then self.nameState()else nil
+	local stats=type(state)=="table"and state.petStats
+	local entry=type(stats)=="table"and type(stats.pets)=="table"and stats.pets[self.shownPet.id]or nil
+	local level=type(entry)=="table"and type(entry.level)=="table"and entry.level.heart or nil
+	return if type(level)=="number"then level else nil
+end
+-- Tricks unlocked (the better of Bond and Heart while the track is on, else the Bond level shown).
+function Room:trickLevel(info,heart)
+	if heart==nil then return info.shown end
+	return math.max(info.shown,BondCatalog.trickLevel(info.xp,heart))
+end
+-- The focus card: the shown pet's name and pips (hidden without bond data), or its Heart level.
 function Room:syncBond(animate)
 	if not self.focusUI or not self.focusUI.setBond then return end
 	local info=self:bondInfo()
 	local name=self:shownName();self.bondNameShown=name
-	self.focusUI:setBond(if info and self.shownPet then {name=name,bond=info}else nil,animate)
+	local heart=self:heartLevel();self.heartShown=heart
+	self.focusUI:setBond(if self.shownPet and(info or heart)then {name=name,bond=info,heart=heart}else nil,animate)
 end
 -- The shown pet's given name (v2 pet names), or its species name without one.
 function Room:shownName()
@@ -610,10 +628,11 @@ end
 function Room:bondTricks(reduced)
 	local pet=self.pet
 	local info=self:bondInfo()
-	pet.bondLevel=info and info.shown or nil
+	local tricks=if info then self:trickLevel(info,self:heartLevel())else nil
+	pet.bondLevel=tricks
 	if self.pendingBond then self:bondFlourish()end
 	if not info then self.bondRoutine=nil;return end
-	if info.shown>=2 and(pet.ownerStillNearFor or 0)>0 then pet.ownerStillNearFor+=Room.BondSitHead end
+	if tricks>=2 and(pet.ownerStillNearFor or 0)>0 then pet.ownerStillNearFor+=Room.BondSitHead end
 	local id=self.shownPet.id
 	local free=not reduced and pet.idleBeatsEnabled and pet.ownerNearStill and(pet.gaitWeight or 0)<.03
 	local running=pet.idleBeat and pet.idleBeat.kind
@@ -641,12 +660,12 @@ function Room:bondTricks(reduced)
 		end
 		return
 	end
-	if info.shown<Room.BondTrickFrom then return end
+	if tricks<Room.BondTrickFrom then return end
 	if not free then self.bondTrickAt=nil;return end
 	local now=os.clock()
 	self.bondTrickAt=self.bondTrickAt or now+Room.BondTrickFirst
 	if running or now<self.bondTrickAt then return end
-	local routines=Room.bondRoutines(info.shown)
+	local routines=Room.bondRoutines(tricks)
 	if #routines==0 then return end
 	self.bondTrickTurn=(self.bondTrickTurn or 0)+1
 	local unlock=routines[(self.bondTrickTurn-1)%#routines+1]

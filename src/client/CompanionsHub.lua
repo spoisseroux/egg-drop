@@ -24,6 +24,8 @@ local UICopy=require(Shared.UICopy)
 local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
 local BondPips=require(script.Parent.BondPips)
+-- Levels matter (S1): while the track is on the Heart level chip takes the bond pips' place.
+local Levels=require(Shared.Levels)
 -- v2 pet names: an owned pet shows its chosen name (the species while it has none).
 local NameText=require(script.Parent.PetNameText)
 -- Spencer 2026-11-20: pet cards show a headshot of the pet instead of the same paw on every card.
@@ -122,7 +124,8 @@ function Hub.summary(petId,appearance)
  local worn,seen={},{}
  for _,id in pairs(appearance.wearables or {})do
   if type(id)=="string"and not seen[id]then seen[id]=true
-   local item=WearableCatalog.item(petId,id);if item then table.insert(worn,item.name)end
+   -- (math.huge: a level-gated item still worn while gates are off keeps its name.)
+   local item=WearableCatalog.item(petId,id)or WearableCatalog.forPet(petId,math.huge).byId[id];if item then table.insert(worn,item.name)end
   end
  end
  table.sort(worn)
@@ -184,6 +187,15 @@ function Hub.totalLevel(state,petId)
  local stats=state and state.petStats
  local entry=type(stats)=="table"and type(stats.pets)=="table"and stats.pets[petId]or nil
  return if type(entry)=="table"and type(entry.total)=="number"then entry.total else nil
+end
+-- Pure (Levels matter S1): a pet's Heart level from the snapshot; nil without stats or while the track
+-- is off (the bond pips show then).
+function Hub.heartLevel(state,petId)
+ if not Levels.on("track")then return nil end
+ local stats=state and state.petStats
+ local entry=type(stats)=="table"and type(stats.pets)=="table"and stats.pets[petId]or nil
+ local level=type(entry)=="table"and type(entry.level)=="table"and entry.level.heart or nil
+ return if type(level)=="number"then level else nil
 end
 -- Pure: focus movement. Hub rows are one column; the selector is a cols-wide grid.
 function Hub.step(index,dx,dy,count,cols)
@@ -310,6 +322,7 @@ function Hub:build(view)
  if self.ring then self.ring.hide();self.ring.root:Destroy();self.ring=nil end
  if self.visual then self.visual:destroy();self.visual=nil end
  self.world=nil
+ self.heartChip=nil
  self.view=view;self.key=(if view then string.format("%dx%d",view.W,view.H)else "regular")..":"..self.page..":"..tostring(self.assign~=nil)
  local root=self.root;local phone=view~=nil
  root.BackgroundTransparency=if phone then 1 else 0;self.gradient.Visible=not phone;self.rootStroke.Enabled=not phone;root.ClipsDescendants=not phone
@@ -347,28 +360,34 @@ function Hub:buildHub(body,W,H,phone)
  local petId=self:activePet();local pet=Pets.byId[petId]
  local pane=Kit.card(body,"PetPane",nil,{pad=16,seam=not phone}) -- QA v685 U4: the seam read as a clipped border on phones
  -- Slice F: bond pips with the pet's name (nil while bond data is not in the snapshot).
- local bond=BondPips.info(self.ctx.state and self.ctx.state.bond,petId)
+ local heart=Hub.heartLevel(self.ctx.state,petId)
+ local bond=if heart then nil else BondPips.info(self.ctx.state and self.ctx.state.bond,petId)
  self.pips=nil
+ if heart then self.heartChip=require(script.Parent.StatsPanel).heartChip(pane,phone)end
  if phone then
   local ph=H-64-20
   pane.Position=UDim2.fromOffset(20,64);pane.Size=UDim2.fromOffset(200,ph)
   self:buildWell(pane,12,12,176,math.max(60,ph-80))
   -- Phone: the pips sit beside the name (no room under it above "Following you").
-  local pipsW=if bond then BondPips.extent(BondPips.Size.compact)+8 else 0
+  local pipsW=if heart then self.heartChip.width+8 elseif bond then BondPips.extent(BondPips.Size.compact)+8 else 0
   self.petName=txt(pane,"Title",(NameText.own(self.ctx.state,petId)),"text",12,ph-62,176-pipsW,24,{TextSize=18,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
   self.following=txt(pane,"Small","Following you","soft",12,ph-34,176,18,{TextSize=12})
-  if bond then
+  if heart then
+   self.heartChip.root.AnchorPoint=Vector2.new(1,0);self.heartChip.root.Position=UDim2.fromOffset(12+176,ph-62+1);self.heartChip.set(heart)
+  elseif bond then
    self.pips=BondPips.new(pane,true);self.pips.root.Position=UDim2.fromOffset(12+176-self.pips.width,ph-62+2);self.pips.set(bond)
   end
  else
   pane.Position=UDim2.fromOffset(24,84);pane.Size=UDim2.fromOffset(328,452)
   -- Desktop: the pips go under the name; the preview well gives up their 22 px.
-  local lift=if bond then 22 else 0
+  local lift=if bond or heart then 22 else 0
   self:buildWell(pane,16,16,296,248-lift)
   self.petName=txt(pane,"Title",(NameText.own(self.ctx.state,petId)),"text",16,276-lift,190,32,{TextSize=24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
   local chip=Kit.chip(pane,"Following",nil,26);chip.root.AnchorPoint=Vector2.new(1,.5);chip.root.Position=UDim2.fromOffset(312,292-lift)
   Kit.paint(chip.label,"TextColor3","accent");self.followChip=chip
-  if bond then
+  if heart then
+   self.heartChip.root.Position=UDim2.fromOffset(16,287);self.heartChip.set(heart)
+  elseif bond then
    self.pips=BondPips.new(pane,false);self.pips.root.Position=UDim2.fromOffset(16,288);self.pips.set(bond)
    self.pipsLabel=txt(pane,"Small",BondPips.label(bond),"soft",16+self.pips.width+10,286,296-self.pips.width-10,20,{Name="BondLabel",TextSize=13,TextTruncate=Enum.TextTruncate.AtEnd})
   end
@@ -450,13 +469,16 @@ function Hub:buildSelector(body,W,H,phone)
  self:buildWell(pane,pad,pad,pw-pad*2,wellH)
  local y=pad+wellH+(if phone then 6 else 12)
  -- Slice F: the focused pet's bond pips sit at the right of its name.
- local hasBond=BondPips.info(self.ctx.state and self.ctx.state.bond,self:activePet())~=nil
- local pipsW=if hasBond then BondPips.extent(if phone then BondPips.Size.compact else BondPips.Size.regular)+8 else 0
+ local heart=Hub.heartLevel(self.ctx.state,self:activePet())
+ local hasBond=heart==nil and BondPips.info(self.ctx.state and self.ctx.state.bond,self:activePet())~=nil
+ if heart then self.heartChip=require(script.Parent.StatsPanel).heartChip(pane,phone)end
+ local pipsW=if heart then self.heartChip.width+8 elseif hasBond then BondPips.extent(if phone then BondPips.Size.compact else BondPips.Size.regular)+8 else 0
  self.paneName=txt(pane,"Title","","text",pad,y,pw-pad*2-pipsW,if phone then 22 else 30,{TextSize=if phone then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
  self.pips=nil
  if hasBond then
   self.pips=BondPips.new(pane,phone);self.pips.root.Position=UDim2.fromOffset(pw-pad-self.pips.width,y+(if phone then 1 else 4))
  end
+ if heart then self.heartChip.root.AnchorPoint=Vector2.new(1,0);self.heartChip.root.Position=UDim2.fromOffset(pw-pad,y+(if phone then 0 else 3))end
  y+=if phone then 22 else 34
  self.paneLine=txt(pane,"Small","","soft",pad,y,pw-pad*2,18,{TextSize=if phone then 12 else 14,TextTruncate=Enum.TextTruncate.AtEnd})
  local action,state=Kit.button(pane,"Action",{variant="primary",text="Follow",glyph="A",size=Vector2.new(pw-pad*2,actionH),textSize=if phone then 16 else nil,selectable=false})
@@ -600,6 +622,7 @@ function Hub:paintSelectorPane()
  if not entry then
   self.paneName.Text="";self.paneLine.Text="";self.action.Visible=false
   if self.pips then self.pips.set(nil)end
+  if self.heartChip then self.heartChip.set(nil)end
   return
  end
  self.focusPet=entry.id
@@ -607,6 +630,7 @@ function Hub:paintSelectorPane()
  -- An adopt card has no bond yet: no hearts until the pet is yours.
  local adopting=card~=nil and card.id==entry.id and card.adopt==true
  if self.pips then self.pips.set(if adopting then nil else BondPips.info(self.ctx.state and self.ctx.state.bond,entry.id))end
+ if self.heartChip then self.heartChip.set(if adopting then nil else Hub.heartLevel(self.ctx.state,entry.id))end
  local pet=Pets.byId[entry.id];local following=entry.id==self.ctx.activeId
  self.paneName.Text=(NameText.own(self.ctx.state,entry.id))
  self.action.Visible=true
