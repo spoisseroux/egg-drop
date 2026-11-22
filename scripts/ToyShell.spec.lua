@@ -91,6 +91,15 @@ return function(client,parent)
    local outlined=Kit.frame(holder,"Outlined","panel",UDim2.new(),UDim2.fromOffset(200,100),16);Kit.stroke(outlined)
    local octl=Kit.shellPattern(outlined);assert(octl.holder.Position==UDim2.fromOffset(9,9),"inside a 3 px outline: 5 + 3 + 1")
    outlined:Destroy()
+   -- 2026-11-22: a pattern over a root that outlives it drops its link when its content is rebuilt.
+   local keep=Kit.frame(holder,"Keep","panel",UDim2.new(),UDim2.fromOffset(200,100),16)
+   for _=1,3 do
+    local content=Kit.frame(keep,"Content",nil,UDim2.new(),UDim2.fromScale(1,1))
+    local pattern=Kit.shellPattern(content)
+    assert(pattern.fade.BackgroundColor3==keep.BackgroundColor3 and pattern.watchingFill(),"follows the root's fill")
+    content:Destroy();settle();assert(not pattern.watchingFill(),"link dropped with the content")
+   end
+   keep:Destroy()
    assert(Kit.patternInset(30)==9 and Kit.patternInset(16)==5)
    assert(ctl.tile.Image==Kit.Checker.image and ctl.tile.TileSize==UDim2.fromOffset(32,32)and math.abs(ctl.tile.ImageTransparency-.91)<.001)
    assert(ctl.running and h:GetAttribute("PatternRunning"),"moving while shown")

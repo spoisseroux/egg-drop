@@ -187,9 +187,9 @@ function View.new(parent, options)
 		shade = shade,
 		reduceEffects = options.reduceEffects or function() return false end,
 		request = options.request or function() end,
-		geometry = options.geometry,
+		geometry = options.geometry, warm = options.warm,
 		state = fallbackState(), balance = 0, message = View.Idle, messageKind = "info",
-		promptToken = 0, cooling = false, offers = {}, rows = {}, list = {}, iconReady = {}, iconTries = {},
+		promptToken = 0, cooling = false, offers = {}, rows = {}, list = {}, iconReady = {}, iconTickets = {},
 	}, View)
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		if shade.Visible then self:layout() end
@@ -202,9 +202,8 @@ function View.new(parent, options)
 		self.destroyed = true
 		selection:Disconnect()
 	end)
-	-- Spencer 2026-11-21: "we need to preload the textures". The offer icons start loading
-	-- when the game does (the client makes this view at startup), not on the first open.
-	self:warmIcons()
+	-- Review 2026-11-22: no icon loading here. At startup it queued ahead of the hatch prewarm;
+	-- StylePreload leads with these icons in the background, and opening the page asks for them.
 	return self
 end
 
@@ -384,6 +383,7 @@ function View:open(balance)
 	end
 	self.shade.Visible = true
 	self:layout()
+	self:warmIcons()
 	self.request("open")
 	if self.onOpened then self.onOpened() end
 	if self:ownsInput() and string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then
@@ -403,8 +403,8 @@ function View:close(reason)
 	-- Code review: the host may already have placed focus (Hatch eggs' Get Stars); keep it.
 	local placed = GuiService.SelectedObject ~= nil and not GuiService.SelectedObject:IsDescendantOf(self.shade)
 	if restore and not placed then
-		local previous = self.previousSelection
-		GuiService.SelectedObject = if previous and previous.Parent then previous else nil
+		-- Review 2026-11-22: never a hidden row (Hatch eggs behind the store): that traps the pad.
+		GuiService.SelectedObject = if Kit.focusable(self.previousSelection) then self.previousSelection else nil
 	end
 end
 
@@ -507,7 +507,6 @@ function View:buildChrome(view)
 			Size = UDim2.fromOffset(400, 24), TextXAlignment = Enum.TextXAlignment.Right })
 		self:paintHints()
 	end
-	self:warmIcons()
 end
 
 function View:paintHints()
@@ -529,32 +528,38 @@ function View:paintHints()
 	row:SetAttribute("HintInput", kind)
 end
 
--- Icons: each id loads on its own (one still in moderation never blocks the rest); the
--- badge shows until it has. A failed id retries every 4 s while the page is open, 10 times.
+-- Icons: each id loads on its own (one still in moderation never blocks the rest) and the
+-- badge shows until it has. Asked on every open and then by a timer while the page stays open
+-- (architect 2026-11-22: an exhausted or timed-out record never calls back, so retries cannot
+-- hang on the callback). The generation is set before the first ask: a warm icon answers at once.
+View.IconRetry = 4
+View.IconAsks = 10
 function View:warmIcons()
-	local warm = require(script.Parent.UIAssetWarmup).shared
-	for key, uri in pairs(Catalog.Icons or {}) do
-		if not self.iconReady[uri] and not self.iconTries[uri] then
-			self.iconTries[uri] = 0
-			local function ask(retry)
-				local request = if retry then warm.retry else warm.request
-				request(warm, { uri }, function(ok)
-					if self.destroyed then return end
-					if ok then
-						self.iconReady[uri] = true
-						if self.shade.Visible then self:paintRows(); self:paintPane() end
-					else
-						self.iconTries[uri] += 1
-						if self.iconTries[uri] < 10 then
-							task.delay(4, function() if not self.destroyed and not self.iconReady[uri] then ask(true) end end)
-						end
-					end
+	local warm = self.warm or require(script.Parent.UIAssetWarmup).shared
+	local generation = {}
+	self.iconGeneration = generation
+	local function ask()
+		local missing = false
+		for _, uri in pairs(Catalog.Icons or {}) do
+			if not self.iconReady[uri] then
+				if self.iconTickets[uri] then self.iconTickets[uri]:cancel() end
+				self.iconTickets[uri] = warm:retry({ uri }, function(ok)
+					if not ok or self.destroyed or self.iconGeneration ~= generation or self.iconReady[uri] then return end
+					self.iconReady[uri] = true
+					if self.shade.Visible and self.pane then self:paintRows(); self:paintPane() end
 				end, 1)
+				if not self.iconReady[uri] then missing = true end
 			end
-			local _ = key
-			ask(false)
 		end
+		return missing
 	end
+	if not ask() then return end
+	task.spawn(function()
+		for _ = 2, View.IconAsks do
+			task.wait(View.IconRetry)
+			if self.destroyed or self.iconGeneration ~= generation or not self.shade.Visible or not ask() then return end
+		end
+	end)
 end
 
 -- Paints an iconBox for an offer: the image once it has loaded, else the badge.

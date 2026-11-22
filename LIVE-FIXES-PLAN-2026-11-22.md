@@ -58,3 +58,13 @@ Live in Studio with the window focused: store and Back from the Pocket menu, Com
 2. The Studio output log read for new errors.
 3. Beta publish, then live: Rojo stopped, strip report, translation export and sync, File > Publish, PLAY-BUILD, TODO, and a listing audit that actually opens the listing.
 4. Servers are restarted only if Spencer says so.
+
+## Revisions after the architect review (2026-11-22)
+
+| Original | Revised | Reason |
+|---|---|---|
+| `request` on open, retries from callbacks | `warm:retry` on every ask, re-asked by a timer while the page is open | An exhausted record only adds a listener, and a late completion never notifies |
+| Stale check by ticket | A generation set before the call | Warm icons call back before the ticket is returned |
+| capture returns nil for the garden | `true` | `onClosed` needs a truthy `storeReturn`, else Back lands on Hatch eggs |
+| Customize reopens `hueView.page` | `"toys"` or `"palette"`; hub in assign mode goes to the garden | Other pages lose Toys or open a legacy card |
+| machineReturn restored around the open | Set after the open succeeds; pickerReturn and questFromHub only as open arguments; one shared guard | Opens and closes clear them; some screens don't check Mode or lastHatch |

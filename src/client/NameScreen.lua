@@ -798,6 +798,8 @@ function Screen.mount(deps)
 		return screen:open(context(),options)
 	end
 	function api.isOpen()return screen:isOpen()or reveal:isOpen()end
+	-- The store route reopens this screen as it was (nil while only the reveal shows).
+	function api.current()return if screen:isOpen()then{petId=screen.petId,from=if screen.from=="hub"then "hub"else nil,tab=screen.tab}else nil end
 	function api.close(reason)reveal:close(reason or "close");return screen:close(reason or "close")end
 	-- New pieces since the last snapshot (earned ones too): one rail line each.
 	local known

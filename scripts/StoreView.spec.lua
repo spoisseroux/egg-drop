@@ -112,6 +112,49 @@ return function(client,parent)
    view:close("forced");view:open(85);settle();assert(view.status.Text==Store.Idle,"a reopened page starts from the idle line")
    view:close("forced")
   end)
+  test("icons (2026-11-22): none asked before the page opens; one live ask each; a timer re-asks; a late answer counts; closing stops",function()
+   local asks,live={},{}
+   local answer -- nil: never answers (an exhausted record)
+   local fake={}
+   function fake:retry(ids,callback)
+    local id=ids[1];asks[id]=(asks[id]or 0)+1
+    local ticket={cancelled=false};function ticket:cancel()self.cancelled=true;if live[id]==self then live[id]=nil end end
+    assert(live[id]==nil,"the old ask is cancelled first")
+    live[id]=ticket;ticket.callback=callback
+    if answer~=nil then callback(answer)end -- a warm icon answers before the ticket is returned
+    return ticket
+   end
+   function fake:request()error("exhausted records never call back: the page must use retry")end
+   local savedRetry=Store.IconRetry;Store.IconRetry=.1
+   local okIcons,iconProblem=pcall(function()
+    local page=Store.new(root,{request=function()end,geometry=Shop.shopGeometry,warm=fake});settle()
+    assert(next(asks)==nil,"nothing at startup: the hatch prewarm goes first")
+    page:setState(snapshot());page:open(0);settle()
+    local icons=0;for _ in pairs(asks)do icons+=1 end
+    assert(icons==7,"all seven asked on open ("..icons..")")
+    assert(page.body.Column.Pass_doubleStars.Icon.Badge.Visible,"badge until it loads")
+    task.wait(.35);for id,n in pairs(asks)do assert(n>=2,"re-asked by the timer: "..id)end
+    page:close("forced");task.wait(.15);local frozen={};for id,n in pairs(asks)do frozen[id]=n end
+    task.wait(.3);for id,n in pairs(asks)do assert(n==frozen[id],"no asks while closed")end
+    answer=true;page:open(0);settle()
+    local ready=0;for _ in pairs(page.iconReady)do ready+=1 end
+    assert(ready==7,"a synchronous answer counts ("..ready..")")
+    assert(page.body.Column.Pass_doubleStars.Icon.Image.Visible and not page.body.Column.Pass_doubleStars.Icon.Badge.Visible)
+    page:close("forced");page.shade:Destroy()
+   end)
+   Store.IconRetry=savedRetry;assert(okIcons,iconProblem)
+  end)
+  test("closing never focuses a hidden row",function()
+   local hidden=Instance.new("TextButton");hidden.Visible=false;hidden.Parent=root
+   local shown=Instance.new("TextButton");shown.Size=UDim2.fromOffset(50,50);shown.Parent=root
+   assert(not Kit.focusable(hidden)and Kit.focusable(shown)and not Kit.focusable(nil))
+   for _,case in ipairs({{hidden,nil},{shown,shown}})do
+    view:setState(snapshot());view:open(24);settle()
+    view.previousSelection=case[1];Gui.SelectedObject=view.rows.supporter
+    if Gui.SelectedObject==view.rows.supporter then view:close("back");assert(Gui.SelectedObject==case[2],"restored "..tostring(Gui.SelectedObject))else view:close("back")end
+   end
+   Gui.SelectedObject=nil;hidden:Destroy();shown:Destroy()
+  end)
   test("before the first snapshot: passes Loading, packs hidden, malformed snapshots ignored",function()
    local fresh=Store.new(root,{request=function()end,geometry=Shop.shopGeometry});fresh:open(0);settle()
    assert(fresh.body.Column:GetAttribute("PacksShown")==false and not Kit.buttonState(fresh.buyButton).enabled)
@@ -136,6 +179,22 @@ return function(client,parent)
      shop:close();settle()
      assert(not page:isOpen()and shop:isOpen()and shop.shopPanel.Visible,"Back returns to Hatch eggs")
      assert(shop:openStore());shop:close("forced");assert(not page:isOpen()and not shop:isOpen(),"a forced close takes both")
+     -- Opened from another screen (storeReturn): Back leaves Hatch eggs too and reopens it once.
+     for _,press in ipairs({"arrow","key"})do
+      local reopened,reasons,sounds=0,{},{}
+      shop.onClosed=function(reason)table.insert(reasons,reason)end
+      shop.onAccepted=function(kind)table.insert(sounds,kind)end;page.onAccepted=shop.onAccepted
+      shop:open(state);settle();assert(shop:openStore());table.clear(sounds)
+      shop.storeReturn=function()reopened+=1 end
+      if press=="arrow"then page:close("back")else shop:close()end
+      assert(not page:isOpen()and not shop:isOpen(),press.." leaves Hatch eggs");settle()
+      assert(reopened==1 and shop.storeReturn==nil,press.." reopens once ("..reopened..")")
+      assert(#reasons==1 and reasons[1]=="storeBack",press.." closes once as storeBack")
+      assert(#sounds==1 and sounds[1]=="back",press.." one back sound ("..#sounds..")")
+      shop:open(state);settle();assert(shop:openStore());shop.storeReturn=function()reopened+=1 end
+      shop:close("forced");settle();assert(reopened==1 and shop.storeReturn==nil,"a forced close reopens nothing")
+      shop.onClosed,shop.onAccepted,page.onAccepted=nil,nil,nil
+     end
     end
     for _,entry in ipairs(sent)do assert(entry[1]=="open","browsing must never prompt")end
    end)

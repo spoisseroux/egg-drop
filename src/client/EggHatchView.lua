@@ -279,7 +279,8 @@ function View:attachStore(store)
 		self.card.Visible = self.state.lastHatch ~= nil or not self.shopRoot
 		if self.shopPanel then self.shopPanel.Visible = true end
 		if back and reason == "back" and self.shade.Visible then
-			self:close("close")
+			-- "storeBack": Back already sounded once (the store's own close).
+			self:close("storeBack")
 			if type(back) == "function" then task.defer(back) end
 			return
 		end
@@ -1459,7 +1460,7 @@ function View:close(reason, choice)
 	self.revealHost.Visible = false
 	self.playingId, self.ackReady, self.pending, self.retryAvailable = nil, false, false, false
 	if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade) then
-		GuiService.SelectedObject = self.previousSelection
+		GuiService.SelectedObject = if require(script.Parent.DeckKit).focusable(self.previousSelection) then self.previousSelection else nil
 	end
 	if self.onClosed then self.onClosed(reason or "close", choice) end
 end

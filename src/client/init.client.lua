@@ -1542,7 +1542,8 @@ nurseryView.onClosed = function(reason, choice)
 	end
 	-- QA Q5: opened from the machine hub's Hatch eggs tile, Back (X / B) returns there.
 	if clientUI.machineReturn == "hatch" then
-		if reason == "close" then clientUI.returnToMachineHub("hatch") else clientUI.machineReturn = nil end
+		-- "storeBack": Back from the Get Stars page, opened from the machine hub.
+		if reason == "close" or reason == "storeBack" then clientUI.returnToMachineHub("hatch") else clientUI.machineReturn = nil end
 	end
 end
 visitEggs = function()
@@ -1755,6 +1756,38 @@ function clientUI.closeAllMenus(reason)
  return not clientUI.anyMenuOpen()
 end
 local starsStoreOpening=false
+-- What was open when the store opened, and how to reopen it (StarsRoute).
+clientUI.starsRouteDeps={
+ hubOpen=function()return gameMenu:isOpen()end,
+ canReopen=function()return clientUI.starsStoreRefusal()==nil and not clientUI.anyMenuOpen()and not nurseryView:isOpen()end,
+ getMachineReturn=function()return clientUI.machineReturn end,
+ setMachineReturn=function(id)clientUI.machineReturn=id end,
+ wardrobe={isOpen=function()return clientUI.isWardrobeOpen~=nil and clientUI.isWardrobeOpen()==true end,
+  petId=function()return clientUI.wardrobe.petId end,open=function(petId)return clientUI.openWardrobe(petId)end},
+ screens={
+  names={isOpen=function()return clientUI.names~=nil and clientUI.names.isOpen()end,capture=function()return clientUI.names.current()end,
+   open=function(args)return clientUI.openNames(args)end},
+  stats={isOpen=function()return clientUI.stats~=nil and clientUI.stats.isOpen()end,capture=function()return clientUI.stats.current()end,
+   open=function(args)return clientUI.openStats(args)end},
+  -- Only the Companions routes reopen; the Care Cradle and the journal need their own station.
+  hue={isOpen=function()return clientUI.hueView~=nil and clientUI.hueView:isOpen()end,
+   capture=function()
+    local back=clientUI.hueReturn
+    if clientUI.hueView.page~="palette"or(back~="hub"and back~="companions")then return nil end
+    return{page=if clientUI.hueView.tab=="toys"then "toys"else "palette",petId=clientUI.hueView.petId,back=back}
+   end,open=function(args)return clientUI.openHue(args.page,args.petId,args.back)end},
+  hub={isOpen=function()return clientUI.hub~=nil and clientUI.hub:isOpen()end,
+   capture=function()return if clientUI.hub.assign then nil else{page=clientUI.hub.page}end,open=function(args)return clientUI.openHub(args)end},
+  book={isOpen=function()return clientUI.book~=nil and clientUI.book:isOpen()end,
+   capture=function()local entry=clientUI.book:entries()[clientUI.book.pageIndex];return{page=entry and entry.id or nil}end,
+   open=function(args)return clientUI.openBook(args)end},
+  quests={isOpen=function()return clientUI.questLog~=nil and clientUI.questLog.visible==true end,
+   capture=function()return{tab=clientUI.questLog.tab or "daily",fromHub=clientUI.questFromHub==true}end,
+   open=function(args)return clientUI.openQuestLog(args.tab,{fromHub=args.fromHub})end},
+  picker={isOpen=isPickerOpen,
+   capture=function()return{mode=picker.active,back=clientUI.pickerReturn,source=if picker.customizationEntry then "workbench"else nil}end,
+   open=function(args)return openPicker(args.mode,args.back,args.source)end},
+ }}
 -- Why the store did not open (nil when it can): read by specs and the live check through the
 -- PlayerGui attribute StarsStoreRefused.
 function clientUI.starsStoreRefusal()
@@ -1783,14 +1816,8 @@ function clientUI.openStarsStore(from)
  local fromHub=gameMenu:isOpen()
  -- Where Back from the store goes (Spencer 2026-11-21: not Hatch eggs, unless you were there):
  -- the screen that was open, else the garden. The hub goes through machineReturn.
- local back=true
- if fromHub then back=true
- elseif clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then local pet=clientUI.wardrobe.petId;back=function()clientUI.openWardrobe(pet)end
- elseif clientUI.names and clientUI.names.isOpen()then back=function()clientUI.openNames()end
- elseif clientUI.stats and clientUI.stats.isOpen()then back=function()clientUI.openStats()end
- elseif clientUI.hub and clientUI.hub:isOpen()then back=function()clientUI.openHub()end
- elseif clientUI.book and clientUI.book:isOpen()then back=function()clientUI.openBook()end
- elseif clientUI.questLog and clientUI.questLog.visible then back=function()clientUI.openQuestLog("daily")end end
+ -- Captured before anything closes: closing clears the way-back markers.
+ local back=require(script.StarsRoute).capture(clientUI.starsRouteDeps)
  starsStoreOpening=true
  local ok=false
  if clientUI.closeAllMenus("store")then

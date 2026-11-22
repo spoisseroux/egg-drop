@@ -177,6 +177,16 @@ Kit.Motion={screen=.16,focus=.09,pressDown=.06,pressUp=.10,hover=.08,tab=.14,tog
 
 function Kit.reduced()return GuiService.ReducedMotionEnabled end
 local UserInputService=game:GetService("UserInputService")
+-- Can this take gamepad focus now: in the game, selectable, and nothing above it hidden or off.
+function Kit.focusable(object)
+ if not object or not object.Parent or not object:IsDescendantOf(game)or not object:IsA("GuiObject")or not object.Selectable then return false end
+ local n=object
+ while n do
+  if n:IsA("GuiObject")and(not n.Visible or not n.Interactable)or n:IsA("ScreenGui")and not n.Enabled then return false end
+  n=n.Parent
+ end
+ return true
+end
 function Kit.lastInputTouch()return UserInputService:GetLastInputType()==Enum.UserInputType.Touch end
 -- Compact screens hide the focus ring and glyph chips after touch input (UI-SPEC-COMPACT 2.5).
 Kit.touchHidesFocus=false
@@ -2012,9 +2022,14 @@ function Kit.shellPattern(surface,radius)
  -- fills with its own "panel" shade, so the opaque bottom band read as a lighter rectangle with
  -- square ends. The fade now copies the surface's own fill, so it melts into it.
  local fill=if root.BackgroundTransparency<1 then root else surface
- local function matchFill()fade.BackgroundColor3=fill.BackgroundColor3 end
- fill:GetPropertyChangedSignal("BackgroundColor3"):Connect(matchFill)
- matchFill()
+ -- `fill` can outlive this pattern (a desktop root whose content is rebuilt), so the link is
+ -- dropped with it (review 2026-11-22: one connection and one Fade leaked per rebuild).
+ local fillLink
+ local function watchFill()
+  fade.BackgroundColor3=fill.BackgroundColor3
+  if not fillLink then fillLink=fill:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()fade.BackgroundColor3=fill.BackgroundColor3 end)end
+ end
+ watchFill()
  local gradient=node("UIGradient",fade,{Rotation=90,Transparency=NumberSequence.new(1,C.fadeTo)})
  -- Spencer 2026-11-21: the checker is a rectangle inside a rounded surface, so its square
  -- bottom corners read as "unrounded". Over the last FadeBand px (two corner radii) the fade
@@ -2069,9 +2084,11 @@ function Kit.shellPattern(surface,radius)
  end
  function ctl.destroy()
   unwire();patterns[ctl]=nil
+  if fillLink then fillLink:Disconnect();fillLink=nil end
   if tween then tween:Cancel();tween=nil end
  end
- holder.AncestryChanged:Connect(function()if holder.Parent then patterns[ctl]=true;wire();ctl.sync()else ctl.destroy()end end)
+ function ctl.watchingFill()return fillLink~=nil end -- specs
+ holder.AncestryChanged:Connect(function()if holder.Parent then patterns[ctl]=true;watchFill();wire();ctl.sync()else ctl.destroy()end end)
  holder.Destroying:Connect(ctl.destroy)
  patterns[ctl]=true
  wire();ctl.sync()

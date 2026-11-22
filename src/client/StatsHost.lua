@@ -50,6 +50,8 @@ function Host.mount(deps)
   return panel:open(context(),options)
  end
  function api.isOpen()return panel:isOpen()end
+ -- The store route reopens this panel as it was.
+ function api.current()return if panel:isOpen()then{petId=panel.petOverride,from=if panel.from=="hub"then "hub"else nil,stat=Panel.Order[panel.index],snacks=if panel.mode=="snacks"then true else nil}else nil end
  function api.close(reason)return panel:close(reason or "close")end
  local toasts=Toasts.new({rail=Rail,owner=host,held=deps.held,
   open=function(stat,petId)api.open({stat=stat,petId=petId,from="rail"})end})
