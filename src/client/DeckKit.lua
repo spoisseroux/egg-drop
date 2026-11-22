@@ -7,6 +7,8 @@ local GuiService=game:GetService("GuiService")
 local TweenService=game:GetService("TweenService")
 local Art=require(script.Parent.DeckArt)
 local Assets=require(script.Parent.DeckAssets)
+local Alive=require(game:GetService("ReplicatedStorage").Shared.Alive)
+local Spring=require(script.Parent.KitSpring)
 local Kit={}
 
 -- 2.1 Colour: the Toy Shell (UI-RETRO-RESTYLE-2026-11-19). Plastic is bright and
@@ -173,7 +175,8 @@ Kit.Radius={button=12,card=14,row=10,tile=12,well=14,chip=999}
 -- sheets), so no rect, gap or 44 px target changes.
 Kit.Stroke={color=Color3.fromHex("#15143A"),transparency=0,thickness=2,sheet=3}
 -- 2.4 Motion (seconds).
-Kit.Motion={screen=.16,focus=.09,pressDown=.06,pressUp=.10,hover=.08,tab=.14,toggle=.11,progress=.45,toastIn=.24,toastHold=2.4,toastOut=.16}
+Kit.Motion={screen=.16,focus=.09,pressDown=.06,pressUp=.10,hover=.08,tab=.14,toggle=.11,progress=.45,toastIn=.24,toastHold=2.4,toastOut=.16,
+ bounce=1} -- scales every spring's overshoot (0 = none)
 
 function Kit.reduced()return GuiService.ReducedMotionEnabled end
 local UserInputService=game:GetService("UserInputService")
@@ -194,10 +197,118 @@ Kit.touchHidesFocus=false
 -- and touch rely on each screen's own selected state (the green card edge).
 Kit.ringGamepadOnly=true
 function Kit.lastInputGamepad()return UserInputService:GetLastInputType().Name:sub(1,7)=="Gamepad"end
+-- object -> {property -> {tween, goal}}: Kit tweens a spring may have to take over. Kept only while Alive is on.
+local tweens=setmetatable({},{__mode="k"})
 function Kit.tween(object,time,goal,style)
+ if Spring.busy(object)then for key in pairs(goal)do Spring.cancel(object,key)end end
  if Kit.reduced()then for key,value in pairs(goal)do object[key]=value end;return end
+ if Alive.on("springs")or Alive.on("menus")then
+  local record={goal=goal,tween=TweenService:Create(object,TweenInfo.new(time,style or Enum.EasingStyle.Quad,Enum.EasingDirection.Out),goal)}
+  local set=tweens[object]or {};tweens[object]=set
+  for key in pairs(goal)do set[key]=record end
+  record.tween.Completed:Once(function()for key in pairs(goal)do if set[key]==record then set[key]=nil end end end)
+  record.tween:Play()
+  return
+ end
  TweenService:Create(object,TweenInfo.new(time,style or Enum.EasingStyle.Quad,Enum.EasingDirection.Out),goal):Play()
 end
+-- Stops the Kit tweens on `covered` (property names) of `object`; the other properties of a stopped
+-- tween land on their goals, since the spring only takes these.
+local function dropTween(object,covered)
+ local set=tweens[object];if not set then return end
+ for property in pairs(covered)do
+  local record=set[property]
+  if record then
+   local land={}
+   for key,value in pairs(record.goal)do
+    if set[key]==record then set[key]=nil;if not covered[key]then land[key]=value end end
+   end
+   record.tween:Cancel()
+   for key,value in pairs(land)do object[key]=value end
+  end
+ end
+end
+-- Springs (KitSpring). Alive motion plays only with its switch on and neither Reduced Motion nor Motion: Low.
+Kit.Spring=Spring
+function Spring.reduced()return Kit.patternStill()end
+function Kit.alive(feature)return Alive.on(feature)and not Kit.patternStill()end
+local function springTo(object,property,goal,options)
+ options.damping=math.clamp(1-(1-(options.damping or .5))*Kit.Motion.bounce,.1,1)
+ local ok,result=pcall(Spring.to,object,property,goal,options)
+ if ok then return result end
+ -- Never a stuck key or a lost rest: an error lands on the goal.
+ warn("[Kit.spring] "..tostring(result))
+ pcall(function()if options.set then options.set(goal,0)else object[property]=goal end end)
+ if options.done then pcall(options.done,"snap")end
+ return nil
+end
+-- options: time and style (today's tween, used while springs are off), frequency, damping, velocity, done.
+function Kit.spring(object,property,goal,options)
+ options=if options then table.clone(options)else {}
+ if not Kit.alive(options.feature or "springs")then return Kit.tween(object,options.time or Kit.Motion.screen,{[property]=goal},options.style)end
+ dropTween(object,{[property]=true})
+ return springTo(object,property,goal,options)
+end
+-- Open and close paint may never break the screen it decorates: an error is a warning and `fallback`.
+local function paintSafely(name,fallback,fn)
+ return function(...)
+  local ok,result=pcall(fn,...)
+  if ok then return result end
+  warn("[Kit."..name.."] "..tostring(result));return fallback
+ end
+end
+-- Screen rise (step 2): true when it took the rise; false leaves the caller its own (today's 8 px tween).
+Kit.Rise={offset=12,frequency=3.2,damping=.55}
+Kit.arrive=paintSafely("arrive",false,function(object,goal)
+ if not Kit.alive("menus")then return false end
+ goal=goal or UDim2.fromScale(.5,.5)
+ dropTween(object,{Position=true})
+ object.Position=goal+UDim2.fromOffset(0,Kit.Rise.offset)
+ springTo(object,"Position",goal,{feature="menus",frequency=Kit.Rise.frequency,damping=Kit.Rise.damping})
+ return true
+end)
+-- 2D art pops in, .85 to 1, one after another: the first eight shown, all done by .35 s. Its UIScale is
+-- removed at rest. Never text, viewports, scrollers, canvas groups, list children or art that is scaled already.
+Kit.Pop={from=.85,top=1.06,gap=.025,count=8,time=.35,frequency=5,damping=.55}
+local function popAllowed(object)
+ if not object:IsA("GuiObject")or object:FindFirstChildOfClass("UIScale")or Spring.stateOf(object)~="ok"then return false end
+ if object.Parent:FindFirstChildWhichIsA("UIGridStyleLayout")then return false end
+ local function heavy(n)
+  return n:IsA("ViewportFrame")or n:IsA("ScrollingFrame")or n:IsA("CanvasGroup")or n:IsA("TextLabel")or n:IsA("TextButton")or n:IsA("TextBox")
+ end
+ if heavy(object)then return false end
+ for _,n in ipairs(object:GetDescendants())do if heavy(n)then return false end end
+ return true
+end
+Kit.artPop=paintSafely("artPop",0,function(objects)
+ if not objects or not Kit.alive("menus")or require(script.Parent.AliveBudget).level()>=2 then return 0 end
+ local count=0
+ for _,object in ipairs(objects)do
+  if count>=Kit.Pop.count then break end
+  if popAllowed(object)then
+   count+=1
+   -- A UIScale grows from the AnchorPoint; the art shifts to grow from its centre.
+   local home,lean=object.Position,Vector2.new(.5,.5)-object.AnchorPoint
+   local size=Vector2.new(object.Size.X.Offset,object.Size.Y.Offset)
+   local scale=Instance.new("UIScale");scale.Name="PopScale";scale.Scale=Kit.Pop.from;scale.Parent=object
+   local placed=home
+   springTo(scale,"Scale",1,{feature="menus",frequency=Kit.Pop.frequency,damping=Kit.Pop.damping,delay=(count-1)*Kit.Pop.gap,limit=Kit.Pop.time,
+    get=function()return scale.Scale end,
+    set=function(value)
+     scale.Scale=math.min(value,Kit.Pop.top)
+     if lean~=Vector2.zero and object.Position==placed then
+      local shift=size*lean*(1-scale.Scale)
+      object.Position=home+UDim2.fromOffset(math.floor(shift.X+.5),math.floor(shift.Y+.5));placed=object.Position
+     end
+    end,
+    done=function()
+     if object.Position==placed and placed~=home then object.Position=home end
+     scale:Destroy()
+    end})
+  end
+ end
+ return count
+end)
 
 local function node(class,parent,props)
  local object=Instance.new(class)
@@ -620,6 +731,39 @@ local paintButtonNow
 function Kit.paintButton(button)
  if buttons[button]then Art.scoped(button,paintButtonNow,button)end
 end
+-- Presses on springs (step 1): one scalar per key writes everything that drops with its face. Down stays the
+-- .06 s tween (the face also widens 2 px a side over a ledge); the release overshoots up to 2 px above rest.
+Kit.Press={over=2,widen=2,minWidth=60,frequency=6,damping=.28,epsilon=.3,limit=.35} -- under .5 px draws as rest
+local FillRest=UDim2.new(1,0,1,0)
+local function dropButton(s,d)
+ local y=math.floor(math.max(d,-Kit.Press.over)+.5)
+ s.content.Position=UDim2.fromOffset(0,y)
+ if s.ledge>0 then
+  local w=if s.wide then math.clamp(math.floor(Kit.Press.widen*d/math.max(1,s.lip)+.5),0,Kit.Press.widen)else 0
+  s.fill.Position=UDim2.fromOffset(-w,y)
+  if s.wide then s.fill.Size=UDim2.new(1,w*2,1,0)end
+ end
+end
+local function springButton(button,s,drop)
+ if drop>0 then
+  Spring.cancel(s.content,"KitDrop")
+  s.wide=s.ledge>0 and button.AbsoluteSize.X>=Kit.Press.minWidth and(s.wide or s.fill.Size==FillRest)or nil
+  Kit.tween(s.content,Kit.Motion.pressDown,{Position=UDim2.fromOffset(0,drop)})
+  if s.wide then Kit.tween(s.fill,Kit.Motion.pressDown,{Position=UDim2.fromOffset(-Kit.Press.widen,drop),Size=UDim2.new(1,Kit.Press.widen*2,1,0)})
+  elseif s.ledge>0 then Kit.tween(s.fill,Kit.Motion.pressDown,{Position=UDim2.fromOffset(0,drop)})end
+  return
+ end
+ dropTween(s.content,{Position=true});dropTween(s.fill,{Position=true,Size=true})
+ if not s.enabled then Spring.cancel(s.content,"KitDrop");dropButton(s,0);s.wide=nil;return end
+ springTo(s.content,"KitDrop",0,{frequency=Kit.Press.frequency,damping=Kit.Press.damping,epsilon=Kit.Press.epsilon,limit=Kit.Press.limit,
+  get=function()return s.content.Position.Y.Offset end,mark=function()return s.content.Position end,set=function(d)dropButton(s,d)end,
+  done=function(reason)
+   if reason=="replaced"or reason=="cancel"then return end
+   -- Someone moved the content: the face follows it, at its own width.
+   if reason=="foreign"and s.ledge>0 then s.fill.Position=UDim2.fromOffset(0,s.content.Position.Y.Offset)end
+   if s.wide then s.wide=nil;s.fill.Size=FillRest end
+  end})
+end
 function paintButtonNow(button)
  local s=buttons[button];if not s then return end
  local color,transparency,lip=baseFill(s)
@@ -647,6 +791,12 @@ function paintButtonNow(button)
  local drop=if s.pressed then s.lip else 0
  if s.drop~=drop then
   s.drop=drop
+  if Kit.alive("springs")then springButton(button,s,drop);return end
+  -- Springs went off mid-press: hand the face back at its own width.
+  if Spring.cancel(s.content,"KitDrop")or s.wide then
+   dropTween(s.fill,{Position=true,Size=true})
+   s.wide=nil;s.fill.Size=FillRest;s.fill.Position=UDim2.fromOffset(0,s.fill.Position.Y.Offset)
+  end
   local time=if s.pressed then Kit.Motion.pressDown else Kit.Motion.pressUp
   Kit.tween(s.content,time,{Position=UDim2.fromOffset(0,drop)})
   if s.ledge>0 then Kit.tween(s.fill,time,{Position=UDim2.fromOffset(0,drop)})end
@@ -752,7 +902,7 @@ function Kit.buttonState(button)return buttons[button]end
 function Kit.setEnabled(button,enabled)
  local s=buttons[button];if not s then return end
  s.enabled=enabled~=false;button.Active=s.enabled or s.tappable==true;button.Interactable=button.Active
- if not s.enabled then s.pressed=false;s.hover=false end;Kit.paintButton(button)
+ if not s.enabled then s.pressed=false;s.hover=false;Spring.settle(s.content,"KitDrop")end;Kit.paintButton(button)
 end
 -- Stars store access: a disabled button that still takes a press (a short buy opens the
 -- "need more Stars" card). It keeps the disabled paint; only Active / Interactable change.
@@ -882,6 +1032,15 @@ function Kit.boing(object)
  local foreign=object:FindFirstChildOfClass("UIScale")
  if foreign and foreign.Name~="BoingScale"then return end
  local scale=object:FindFirstChild("BoingScale")or node("UIScale",object,{Name="BoingScale",Scale=1})
+ if Kit.alive("springs")and not(object.Parent and object.Parent:FindFirstChildWhichIsA("UIGridStyleLayout"))then
+  -- At most 4 px of growth a side; a hit rect never shrinks past today's 4%.
+  local size=object.AbsoluteSize/math.max(scale.Scale,.01)
+  local top=1+8/math.max(size.X,size.Y,1)
+  local from=if object:IsA("GuiButton")or object:FindFirstChildWhichIsA("GuiButton",true)then .96 else .94
+  scale.Scale=from
+  springTo(scale,"Scale",1,{frequency=5,damping=.45,get=function()return scale.Scale end,set=function(value)scale.Scale=math.clamp(value,from,top)end})
+  return
+ end
  local half=Kit.BoingTime/2
  scale.Scale=.96
  TweenService:Create(scale,TweenInfo.new(half,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=1.04}):Play()
@@ -950,9 +1109,24 @@ end
 local tiles=setmetatable({},{__mode="k"})
 -- Pure: lip depth for a pressable tile.
 function Kit.tileLip(compact)return if compact then Kit.Lip.compact else Kit.Lip.tile end
+local PadDrop={PaddingTop=true,PaddingBottom=true}
+local function dropTile(state,d)
+ local y=math.floor(math.max(d,-Kit.Press.over)+.5)
+ state.pad.PaddingTop,state.pad.PaddingBottom=UDim.new(0,y),UDim.new(0,-y)
+ state.lipFrame.Position=UDim2.fromOffset(0,state.lip-y)
+end
+local function springTile(state)
+ dropTween(state.pad,PadDrop);dropTween(state.lipFrame,{Position=true})
+ local tile=state.pad.Parent
+ if not tile or not tile.Interactable or not tile.Visible then Spring.cancel(state.pad,"KitDrop");dropTile(state,0);return end
+ springTo(state.pad,"KitDrop",0,{frequency=Kit.Press.frequency,damping=Kit.Press.damping,epsilon=Kit.Press.epsilon,limit=Kit.Press.limit,
+  get=function()return state.pad.PaddingTop.Offset end,set=function(d)dropTile(state,d)end})
+end
 local function pressTile(state,down)
  if state.pressed==down then return end
  state.pressed=down
+ if not down and Kit.alive("springs")then springTile(state);return end
+ Spring.cancel(state.pad,"KitDrop")
  local time=if down then Kit.Motion.pressDown else Kit.Motion.pressUp
  local drop=if down then state.lip else 0
  Kit.tween(state.pad,time,{PaddingTop=UDim.new(0,drop),PaddingBottom=UDim.new(0,-drop)})
@@ -970,6 +1144,7 @@ function Kit.tileState(tile)return tiles[tile]end
 function Kit.setTileLip(tile,depth)
  local s=tiles[tile];if not s or s.lip==depth then return end
  s.lip=depth;s.pressed=false
+ Spring.cancel(s.pad,"KitDrop");dropTween(s.pad,PadDrop);dropTween(s.lipFrame,{Position=true})
  s.pad.PaddingTop,s.pad.PaddingBottom=UDim.new(),UDim.new()
  s.lipFrame.Position=UDim2.fromOffset(0,depth);s.lipFrame.BackgroundTransparency=if depth>0 then 0 else 1
  tile:SetAttribute("KitLip",depth)
@@ -1056,8 +1231,9 @@ function Kit.tile(parent,name,options)
   tile.MouseLeave:Connect(function()pressTile(state,false)end)
   -- Never leave a tile dropped when it is disabled, hidden or loses selection mid-press (code review).
   local function release()pressTile(state,false)end
-  tile:GetPropertyChangedSignal("Interactable"):Connect(release)
-  tile:GetPropertyChangedSignal("Visible"):Connect(release)
+  local function rest()release();Spring.settle(pad,"KitDrop")end
+  tile:GetPropertyChangedSignal("Interactable"):Connect(rest)
+  tile:GetPropertyChangedSignal("Visible"):Connect(rest)
   tile.SelectionLost:Connect(release)
  end
  function state.setSelected(on,animate)
@@ -1168,7 +1344,7 @@ function Kit.toggle(parent,name)
   api.on=on==true
   paint(button,"BackgroundColor3",if api.on then "accent"else "well");stroke.Enabled=true
   knob.BackgroundColor3=if api.on then Kit.Color.ink else Kit.Color.soft
-  Kit.tween(knob,Kit.Motion.toggle,{Position=UDim2.fromOffset(if api.on then 26 else 4,4)})
+  Kit.spring(knob,"Position",UDim2.fromOffset(if api.on then 26 else 4,4),{time=Kit.Motion.toggle,frequency=5,damping=.65,limit=.35})
   button.BackgroundTransparency=if enabled==false then .53 else 0;button.Active=enabled~=false
  end
  api.set(false);return api
@@ -1257,9 +1433,33 @@ function Kit.tabs(parent,labels,width,height,textSize,icons,options)
   api.selected=index
   local x,size=api.pillRect(index)
   local goal,rest=UDim2.fromOffset(x,4),UDim2.fromOffset(size.X,size.Y)
+  local springs=Kit.alive("springs")
+  if not springs then Spring.cancel(pill,"KitPill")end
+  if springs then
+   if moved or inFlight~=index then
+    squashToken+=1;cancelMotion();inFlight=nil
+    if moved then
+     inFlight=index
+     local stretch=math.floor(segment*.06+.5)
+     springTo(pill,"KitPill",x,{frequency=6,damping=.7,epsilon=.3,limit=.25,get=function()return pill.Position.X.Offset end,mark=function()return pill.Position end,
+      set=function(value,speed)
+       -- The stretch follows the speed; the pill never leaves the track.
+       local w=size.X+math.min(stretch,math.floor(math.abs(speed)*.02))
+       pill.Size=UDim2.fromOffset(w,size.Y)
+       pill.Position=UDim2.fromOffset(math.clamp(math.floor(value-(w-size.X)/2+.5),4,math.max(4,4+inner-w)),4)
+      end,
+      done=function(reason)
+       if reason=="replaced"then return end
+       if inFlight==index then inFlight=nil end
+       if reason=="cancel"then return end
+       pill.Size=rest
+       if reason~="foreign"then pill.Position=goal end
+      end})
+    else Spring.cancel(pill,"KitPill");pill.Position=goal;pill.Size=rest end
+   end
   -- T11 squash: the pill stretches 6% along its travel at mid-flight, centred on
   -- its path, then settles (cut under Reduced Motion).
-  if moved or inFlight~=index then
+  elseif moved or inFlight~=index then
    squashToken+=1;cancelMotion();inFlight=nil
    if moved and not Kit.reduced()then
     local token,half=squashToken,Kit.Motion.tab/2
@@ -1452,6 +1652,23 @@ function Kit.wallet(parent,height,options)
  local api={root=root,amount=amount,height=height,star=star,star3D=star3D,face=face,medal=medal}
  local shown
  local TweenService=game:GetService("TweenService")
+ -- The Star (2D and 3D) hops 8 px on a gain; gains within .3 s share one hop.
+ local starHome,hoppedAt=star.Position,-math.huge
+ local function hop()
+  if not Kit.alive("springs")or os.clock()-hoppedAt<.3 then return end
+  hoppedAt=os.clock()
+  springTo(root,"KitHop",0,{frequency=5,damping=.4,velocity=416*Kit.Motion.bounce,epsilon=.1,
+   get=function()return starHome.Y.Offset-star.Position.Y.Offset end,mark=function()return star.Position end,
+   set=function(value)
+    star.Position=starHome-UDim2.fromOffset(0,math.floor(math.min(value,8)+.5))
+    local shown3D=star3D.wallet;if shown3D and shown3D.holder.Parent then shown3D.holder.Position=star.Position end
+   end,
+   -- However a hop ends, the two Stars end on one spot.
+   done=function(reason)
+    local shown3D=star3D.wallet
+    if reason~="replaced"and shown3D and shown3D.holder.Parent then shown3D.holder.Position=star.Position end
+   end})
+ end
  -- Earn juice (spec: number goes up only): the digits pop and the face flashes lemon. The text itself changes at once (screens and specs read it straight after set).
  local function earn()
   if not root:IsDescendantOf(game)then return end
@@ -1463,6 +1680,7 @@ function Kit.wallet(parent,height,options)
   local up=TweenService:Create(pop,TweenInfo.new(.08,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1.25})
   up.Completed:Once(function()TweenService:Create(pop,TweenInfo.new(.16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=1}):Play()end)
   up:Play()
+  hop()
  end
  function api.set(value)
   local before=shown;shown=value
@@ -2216,6 +2434,69 @@ function Kit.modalShade(host,name,zIndex)
  Kit.coverScreen(shade)
  return shade
 end
+-- Close plate (step 3). The close has already happened; this only paints where the screen was: one pooled
+-- plate, .35 to clear and 4% smaller in .12 s. Called first thing by the handlers that mean "the player
+-- closed this", while the screen still shows; drawn on the next Heartbeat only when the garden is bare.
+Kit.Depart={alpha=.35,shrink=.04,time=.12,displayOrder=20}
+local shadeSerial,departToken=0,0
+local ghost -- {gui, plate, corner, tween, link}
+function Kit.inRoom()
+ local boards=game:GetService("ReplicatedStorage"):FindFirstChild("EggDropBoards")
+ local player=game:GetService("Players").LocalPlayer
+ local board=boards and player and boards:FindFirstChild(tostring(player.UserId))
+ return board~=nil and board:GetAttribute("Mode")=="Room"
+end
+function Kit.cutDepart()
+ if not ghost then return end
+ if ghost.link then ghost.link:Disconnect();ghost.link=nil end
+ if ghost.tween then ghost.tween:Cancel();ghost.tween=nil end
+ ghost.gui.Enabled=false
+end
+local function departBlocked(serial)
+ return serial~=shadeSerial or Kit.shadeTop()~=nil or not Kit.alive("close")or not Kit.inRoom()
+end
+local function drawDepart(holder,shape,serial)
+ if not ghost or not ghost.plate.Parent or ghost.gui.Parent~=holder then
+  if ghost then Kit.cutDepart();ghost.gui:Destroy()end
+  local gui=node("ScreenGui",holder,{Name="EggDropDepart",ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.None,ClipToDeviceSafeArea=false,
+   DisplayOrder=Kit.Depart.displayOrder,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,Enabled=false})
+  local plate=node("Frame",gui,{Name="Plate",BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Active=false,Selectable=false,Interactable=false})
+  ghost={gui=gui,plate=plate,corner=node("UICorner",plate,{})}
+ end
+ Kit.cutDepart()
+ local plate=ghost.plate
+ plate.Position=shape.position;plate.Size=shape.size;plate.BackgroundColor3=shape.color;plate.BackgroundTransparency=Kit.Depart.alpha
+ ghost.corner.CornerRadius=UDim.new(0,shape.radius)
+ ghost.gui.Enabled=true
+ local k=1-Kit.Depart.shrink
+ ghost.tween=TweenService:Create(plate,TweenInfo.new(Kit.Depart.time,Enum.EasingStyle.Quad,Enum.EasingDirection.In),
+  {BackgroundTransparency=1,Size=UDim2.fromOffset(shape.size.X.Offset*k,shape.size.Y.Offset*k)})
+ local began=os.clock()
+ ghost.link=game:GetService("RunService").Heartbeat:Connect(function()
+  if os.clock()-began>=Kit.Depart.time+.02 or departBlocked(serial)then Kit.cutDepart()end
+ end)
+ ghost.tween:Play()
+end
+Kit.depart=paintSafely("depart",false,function(root)
+ if not root or not Kit.alive("close")or not Kit.inRoom()or Spring.stateOf(root)~="ok"then return false end
+ local gui=root:FindFirstAncestorOfClass("ScreenGui");local holder=gui and gui.Parent
+ local probe=Kit.screenProbe(root)
+ if not holder or not probe then return false end
+ -- A phone screen's root is clear: its sheet is the plate.
+ local face=if root.BackgroundTransparency<1 then root else root:FindFirstChild("Sheet",true)or root
+ local position,size=Kit.coverRect(face.AbsolutePosition,face.AbsoluteSize,probe.AbsolutePosition)
+ local corner=face:FindFirstChildOfClass("UICorner");local scale=root:FindFirstChildOfClass("UIScale")
+ local shape={size=size,position=position+UDim2.fromOffset(size.X.Offset/2,size.Y.Offset/2),color=face.BackgroundColor3,
+  radius=(if corner then corner.CornerRadius.Offset else 16)*(if scale then scale.Scale else 1)}
+ departToken+=1
+ local serial,token=shadeSerial,departToken
+ game:GetService("RunService").Heartbeat:Once(function()
+  if token~=departToken or departBlocked(serial)or Spring.stateOf(root)=="ok"or not holder.Parent then return end
+  local ok,problem=pcall(drawDepart,holder,shape,serial)
+  if not ok then warn("[Kit.depart] "..tostring(problem))end
+ end)
+ return true
+end)
 local shadeStack={}
 -- QA v2 R3.1: one full-screen shade per open screen, always, on phones too. A screen
 -- that asks for a clear shade (ShadeAlpha 1, the old phone-sheet rule) still dims at
@@ -2252,6 +2533,7 @@ end
 -- shade frame swaps in), so a refresh under a child screen never jumps above it.
 -- options.overlay: this shade dims over the screens under it without covering them.
 function Kit.shadeOpen(owner,shade,onCovered,options)
+ shadeSerial+=1;Kit.cutDepart()
  local entry
  for _,e in ipairs(shadeStack)do if e.owner==owner then entry=e end end
  if entry then

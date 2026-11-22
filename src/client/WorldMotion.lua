@@ -10,6 +10,9 @@ local Motion={}
 Motion.__index=Motion
 Motion.Rate=1/30
 Motion.Range=900
+-- Alive step 4: how far a full gust widens a mover. Amplitude only, so the phase never jumps; every
+-- other mover, and all of them with no wind, keep today's pose exactly (WindClient sets motion.gust).
+Motion.FlagGust,Motion.ChimeGust=1.8,2.5
 
 local TAU=math.pi*2
 
@@ -31,6 +34,18 @@ function Motion.pose(kind,rest,pivot,amp,period,phase,t)
 	return rest
 end
 
+function Motion.gustGain(kind,region)
+	if kind=="flag"then return Motion.FlagGust end
+	if kind~="sway"or type(region)~="string"then return nil end
+	if region:sub(1,6)=="Chime_"then return Motion.ChimeGust end
+	if region:sub(1,8)=="Pennant_"then return Motion.FlagGust end
+	return nil
+end
+function Motion.gusted(amp,gain,gust)
+	if type(gust)~="number"or gust~=gust or gust<=0 then return amp end
+	return amp*(1+(gain-1)*math.min(gust,1))
+end
+
 function Motion.new(world)
 	local self=setmetatable({world=world or workspace,entries={},beams={},skins={},emitters={},connections={},elapsed=0,still=false},Motion)
 	return self
@@ -48,6 +63,7 @@ function Motion:bind(room)
 				table.insert(self.entries,{part=part,kind=kind,rest=part:GetAttribute("WorldRestCFrame")or part.CFrame,
 					pivot=part:GetAttribute("WorldPivot"),amp=part:GetAttribute("WorldMotionAmp")or 0,
 					period=math.max(part:GetAttribute("WorldMotionPeriod")or 1,.1),phase=part:GetAttribute("WorldMotionPhase")or 0,
+					gain=Motion.gustGain(kind,part:GetAttribute("WorldRegion")),
 					far=part:GetAttribute("WorldMotionFar")==true,transparency=part.Transparency})
 			end
 		end
@@ -110,7 +126,12 @@ function Motion:apply(t)
 		if e.kind=="pulse"then
 			part.Transparency=e.transparency+e.amp*(.5+.5*math.sin(TAU*(t/e.period+e.phase)))
 		else
-			table.insert(parts,part);table.insert(frames,Motion.pose(e.kind,e.rest,e.pivot,e.amp,e.period,e.phase,t))
+			local amp=e.amp
+			if e.gain and self.gust then
+				local ok,gust=pcall(self.gust,e)
+				if ok then amp=Motion.gusted(amp,e.gain,gust)else self.gust=nil end
+			end
+			table.insert(parts,part);table.insert(frames,Motion.pose(e.kind,e.rest,e.pivot,amp,e.period,e.phase,t))
 		end
 	end
 	if #parts>0 then workspace:BulkMoveTo(parts,frames,Enum.BulkMoveMode.FireCFrameChanged)end
@@ -130,6 +151,8 @@ end
 function Motion:destroy()
 	for _,c in ipairs(self.connections)do c:Disconnect()end
 	table.clear(self.connections)
+	self.destroyed=true
+	if self.wind then self.wind:destroy();self.wind=nil end
 	if self.room then self:rest()end
 end
 
@@ -145,6 +168,18 @@ function Motion.start()
 	table.insert(self.connections,workspace.ChildRemoved:Connect(function(item)if item==self.room then self:bind(nil)end end))
 	watch(workspace:FindFirstChild("EggDropLounge"))
 	table.insert(self.connections,RunService.Heartbeat:Connect(function(dt)self:step(dt)end))
+	-- The wind is paint: whatever happens to it, the movers above keep going and boot never waits.
+	task.spawn(function()
+		local ok,wind=pcall(function()
+			local Alive=require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Alive"))
+			-- Not on this place at all (the live game): nothing is loaded or connected.
+			if not Alive.ceiling("wind")then return nil end
+			return require(script.Parent.WindClient).start({motion=self})
+		end)
+		if not ok then warn("[Wind] not started: "..tostring(wind));return end
+		if not wind then return end
+		if self.destroyed then wind:destroy()else self.wind=wind end
+	end)
 	return self
 end
 

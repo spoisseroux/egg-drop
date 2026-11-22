@@ -11,6 +11,7 @@ local ContentProvider = game:GetService("ContentProvider")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
+local Wind = require(script.Parent.Wind)
 
 local Ambient = {}
 Ambient.__index = Ambient
@@ -28,6 +29,12 @@ Ambient.Ids = {
 	-- Spencer's original Pocket Deck loop (assets/audio/music/pocket-deck-loop.wav, 2026-11-16).
 	deck_music = 107339572876342,
 }
+-- Alive step 4: leaves in the gust (assets/audio/custom/egg_drop_wind_rustle.wav, 14 s loop). Not in
+-- Ids and never in `warm`: the voice is made the first time the wind is on, and nil means no voice.
+Ambient.RustleId = 131058187750745
+-- Volume at a full gust, the most it may change per second (over a gust's own .19, so a clock jump
+-- never clicks), and how long it stays silent before the loop stops.
+Ambient.RustlePeak, Ambient.RustleSlew, Ambient.RustleHold = .10, .4, 1.5
 Ambient.OneShots = { "pet_coo_1", "pet_coo_2", "pet_coo_3", "machine_attract" }
 
 -- A3 brook bed: bed = floor + (peak - floor) * smoothstep(1 - d / 45), sampled at 4 Hz, eased 0.5 s.
@@ -221,7 +228,7 @@ local function group(name)
 end
 
 -- audio: the BoardAudio instance (master volume, focus, music toggle, ducks).
--- options: {world, data, perches, now, daylight, listener, auto=false} (fixtures).
+-- options: {world, data, perches, now, daylight, listener, auto=false, wind={on, gust} or false} (fixtures).
 function Ambient.new(audio, options)
 	options = options or {}
 	local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
@@ -231,7 +238,7 @@ function Ambient.new(audio, options)
 		bedClock = 0, stream = data.beams and data.beams.stream or {}, perches = options.perches or data.perches or require(script.Parent.AmbientPerches),
 		birds = Birds.new(options.seed or 1), voices = {}, owners = {}, connections = {},
 		now = options.now or os.clock, daylight = options.daylight or require(script.Parent.HollowClock).daylight,
-		listenerOf = options.listener, deviceActive = true,
+		listenerOf = options.listener, deviceActive = true, rustle = 0, rustleQuiet = 0,
 	}, Ambient)
 	self.group = group("EggDropAmbientCues")
 	self.ambience = group("EggDropAmbience")
@@ -290,6 +297,22 @@ function Ambient.new(audio, options)
 	if Ambient.Ids.deck_music then
 		self.deckVoice = sound("deck_music", Ambient.Ids.deck_music, self.deckGroup, SoundService, true)
 		table.insert(warm, self.deckVoice)
+	end
+	if options.wind ~= nil then
+		self.wind = options.wind or nil
+	else
+		task.spawn(function()
+			local Alive = require(Shared:WaitForChild("Alive"))
+			-- Not on this place at all (the live game): nothing runs per frame.
+			if not Alive.ceiling("wind") then return end
+			self.wind = {
+				on = function() return Alive.on("wind") end,
+				gust = function()
+					local camera = workspace.CurrentCamera
+					return if camera then Wind.gust(camera.CFrame.Position, workspace:GetServerTimeNow()) else 0
+				end,
+			}
+		end)
 	end
 	task.spawn(function()
 		local failed = {}
@@ -404,6 +427,48 @@ function Ambient:step(dt)
 	end
 	local events = self.birds:step(self.now(), listener, self.daylight(), self.perches, audible and not self.round and self.mix > .5)
 	for _, event in ipairs(events) do self:chirp(event) end
+	if self.wind and not pcall(self.stepRustle, self, dt, audible) then
+		self.wind = nil
+		self:stopRustle()
+	end
+end
+
+-- The rustle follows the gust where the camera is. The gust comes in over .8 s and leaves over 2.7 s by
+-- itself; the ambience group (Ambience setting, master, ducks, round fade) sits on top. Reduced Motion
+-- does not change it. Silent for a while, off, muted or in a round: the loop is stopped, not playing 0.
+function Ambient:stepRustle(dt, audible)
+	if not audible or Ambient.RustleId == nil or self.wind.on() ~= true then
+		self:stopRustle()
+		return
+	end
+	local voice = self.rustleVoice
+	if not voice then
+		voice = sound("wind_rustle", Ambient.RustleId, self.ambience, SoundService, true)
+		self.rustleVoice = voice
+		task.spawn(function() pcall(function() ContentProvider:PreloadAsync({ voice }) end) end)
+	end
+	local gust = self.wind.gust()
+	if type(gust) ~= "number" or gust ~= gust then gust = 0 end
+	local goal, most = Ambient.RustlePeak * math.clamp(gust, 0, 1), Ambient.RustleSlew * dt
+	self.rustle += math.clamp(goal - self.rustle, -most, most)
+	voice.Volume = self.rustle
+	if self.rustle > 0 then
+		self.rustleQuiet = 0
+		-- A missing, refused or still loading asset never plays.
+		if voice.IsLoaded then startLoop(voice, 0) end
+	elseif voice.IsPlaying then
+		self.rustleQuiet += dt
+		if self.rustleQuiet >= Ambient.RustleHold then voice:Stop() end
+	end
+end
+
+function Ambient:stopRustle()
+	self.rustle, self.rustleQuiet = 0, 0
+	local voice = self.rustleVoice
+	if voice and (voice.IsPlaying or voice.Volume > 0) then
+		voice:Stop()
+		voice.Volume = 0
+	end
 end
 
 function Ambient:chirp(event)
@@ -466,6 +531,7 @@ function Ambient:destroy()
 	self.bedVoice:Destroy()
 	for _, voices in pairs(self.voices) do for _, voice in ipairs(voices) do voice:Destroy() end end
 	if self.deckVoice then self.deckVoice:Destroy() end
+	if self.rustleVoice then self.rustleVoice:Destroy() end
 	self.folder:Destroy()
 	self.group:Destroy(); self.ambience:Destroy(); self.deckGroup:Destroy()
 	if Ambient.shared == self then Ambient.shared = nil end

@@ -36,8 +36,8 @@ local DeckPicker = require(script.DeckPicker)
 local PetJournal = require(script.PetJournal)
 local RoomView = require(script.RoomView)
 local LoungeStations = require(script.LoungeStations)
-local HandheldScreens = require(script.HandheldScreens)
-local HatchReveal = require(script.HatchReveal)
+require(script.HandheldScreens) -- here for the require order; used once below (ClientLocalBudget)
+require(script.HatchReveal)
 local DeckScreen = require(script.DeckScreen)
 local FirstHatchGuide = require(script.FirstHatchGuide)
 local Art = require(script.DeckArt)
@@ -53,11 +53,11 @@ clientUI.BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThem
 clientUI.ballFaces=require(script.BallFaces).new();clientUI.faceList={};clientUI.heldFace={}
 function clientUI.isHueOpen()return(clientUI.hueView~=nil and clientUI.hueView:isOpen())or(clientUI.hub~=nil and clientUI.hub:isOpen())
  or(clientUI.stats~=nil and clientUI.stats.isOpen())or(clientUI.names~=nil and clientUI.names.isOpen())end
-local DropDispenser = require(script.DropDispenser)
-local BoardQuestHUD = require(script.BoardQuestHUD)
+require(script.DropDispenser)
+require(script.BoardQuestHUD)
 local HollowClock = require(script.HollowClock)
 local NurseryView = require(script.EggHatchView)
-local HatchNavigation = require(script.HatchNavigation)
+require(script.HatchNavigation)
 local RunReceipt = require(script.RunReceipt)
 local Portrait = require(script.PetPortrait)
 -- QA Q5: the garden "Pocket menu" is the machine hub (DeckMenu is retired).
@@ -76,6 +76,7 @@ clientUI.accepted=clientUI.click.play
 task.defer(function()clientUI.click.start(audio,player:WaitForChild("PlayerGui"))end)
 clientUI.clock=HollowClock.start()
 clientUI.worldMotion=require(script.WorldMotion).start()
+pcall(function()require(script.AliveBudget).level()end) -- Alive: starts the frame sampler (beta only)
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
 local feedback = remotes:WaitForChild("BoardMerge")
@@ -84,7 +85,7 @@ local nurseryRequest = remotes:WaitForChild("HatchRequest")
 local nurseryFeedback = remotes:WaitForChild("HatchFeedback")
 local trays = ReplicatedStorage:WaitForChild("EggDropBoards")
 local board = trays:WaitForChild(tostring(player.UserId))
-HandheldScreens.start(trays, Config)
+require(script.HandheldScreens).start(trays, Config)
 
 local function reduceEffects()
 	return GuiService.ReducedMotionEnabled or board:GetAttribute("ReducedEffects") == true
@@ -537,8 +538,8 @@ hardware.MakerMark.Font = Art.Font.Action
 hardware.MakerMark.AutoLocalize = false -- the game's name
 local firstHatchGuide = FirstHatchGuide.new(rail, dpad.RockerWell, action, meter, status)
 firstHatchGuide.meter.Position,firstHatchGuide.meter.Size=UDim2.fromOffset(1,1),UDim2.new(1,-2,1,-2)
-local questHUD = BoardQuestHUD.new(status)
-local dispenser = DropDispenser.new(meter, reduceEffects)
+local questHUD = require(script.BoardQuestHUD).new(status)
+local dispenser = require(script.DropDispenser).new(meter, reduceEffects)
 rendererPresentation.dispenser=dispenser
 -- Pocket Deck Slim (UI-SPEC-2026-11-12). The wide layout draws the sprite shell and
 -- the in-LCD HUD; the stacked portrait case keeps the legacy hardware below. Both
@@ -799,7 +800,7 @@ pet.Position = UDim2.new(0.5, 0, 0, 108)
 pet.Size = UDim2.fromOffset(88, 88)
 pet.ZIndex = 14
 pet.AutoButtonColor = false
-local reveal = HatchReveal.new(modal, pet, audio)
+local reveal = require(script.HatchReveal).new(modal, pet, audio)
 -- The round results render inside the deck LCD (DeckResults); the floating
 -- recap card is gone. `recap` keeps the old name for the owner checks below.
 local recap = clientUI.deckResults
@@ -1531,7 +1532,7 @@ openNursery = function()
     if clientUI.hueView then clientUI.hueView:close("forced")end
 	if nurseryState then nurseryView:open(nurseryState) end
 end
-hatchNavigation = HatchNavigation.new({
+hatchNavigation = require(script.HatchNavigation).new({
 	get = function(name) return board:GetAttribute(name) end,
 	send = function(actionName, value) request:FireServer(actionName, value) end,
 	ready = function() return not roomView.busy end,

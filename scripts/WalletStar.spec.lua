@@ -75,6 +75,13 @@ return function(client,parent)
     assert(wa.amount.Position==wb.amount.Position and wa.amount.Size==wb.amount.Size and wa.amount.AbsolutePosition==wb.amount.AbsolutePosition-b.AbsolutePosition+a.AbsolutePosition,"number at "..value)
    end
    local holder=wa.root.Star3D
+   -- Alive: these gains hop the Star. Both Stars hop together; the rect is compared at rest.
+   for _=1,240 do
+    assert(holder.Position==wa.star.Position,"the 2D and 3D Star stay together")
+    if not Kit.Spring.busy(wa.root)then break end
+    frames(1)
+   end
+   assert(not Kit.Spring.busy(wa.root),"the hop ends")
    assert(holder.AbsolutePosition==wb.star.AbsolutePosition-b.AbsolutePosition+a.AbsolutePosition and holder.AbsoluteSize==wb.star.AbsoluteSize,"Star rect")
    local at,size=wa.root.AbsolutePosition,wa.root.AbsoluteSize
    frames(60)

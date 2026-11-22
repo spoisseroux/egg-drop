@@ -878,6 +878,7 @@ function View:close(reason)
  return true
 end
 function View:back()
+ Kit.depart(self.root)
  self:close("back")
  if self.callbacks.back then self.callbacks.back()end
  return true

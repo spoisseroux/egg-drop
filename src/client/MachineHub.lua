@@ -539,6 +539,7 @@ function Hub:act()
 end
 function Hub:back()
  if not self.visible then return false end
+ Kit.depart(self.root)
  self:close("back")
  return true
 end
@@ -586,7 +587,11 @@ function Hub:open(ctx,options)
  if options.slideFrom and self.body then Kit.slideIn(self.body,options.slideFrom,Kit.headerSkip(self.header))
  elseif not wasOpen and not self.view and not Kit.reduced()then
   -- Screen in: 160 ms with an 8 px rise (desktop); Reduced Motion is a cut.
-  self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)})
+  if Kit.arrive(self.root)then
+   local discs={}
+   for _,entry in ipairs(self.tileViews)do table.insert(discs,entry.disc)end
+   Kit.artPop(discs)
+  else self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)}) end
  end
  return true
 end

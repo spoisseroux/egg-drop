@@ -12,6 +12,12 @@ return function(client,parent)
  end
  local function contrast(a,b)local x,y=lum(a),lum(b);return(math.max(x,y)+.05)/(math.min(x,y)+.05)end
  local function settle()for _=1,3 do game:GetService("RunService").Heartbeat:Wait()end end
+ -- A release rests by .35 s on springs (Alive), by .10 s without: wait for the rest itself, at most .5 s.
+ local function rests(fn)
+  local started=os.clock()
+  while not fn()and os.clock()-started<.5 do game:GetService("RunService").Heartbeat:Wait()end
+  return fn()
+ end
  local gui=Instance.new("ScreenGui");gui.Name="_KitSurfacesSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
  local realReduced=Kit.reduced
  local savedSeam,savedDots=Assets.Personality.seam,Assets.Personality.dotGrid
@@ -42,10 +48,11 @@ return function(client,parent)
    state.pressed=true;Kit.paintButton(b);task.wait(Kit.Motion.pressDown+.04)
    assert(state.content.Position.Y.Offset==4 and state.fill.Position.Y.Offset==4 and state.edge.Visible,"face rests on the lip")
    assert(b.AbsolutePosition==before,"hit rect stays put")
-   state.pressed=false;Kit.paintButton(b);task.wait(Kit.Motion.pressUp+.04)
-   assert(state.content.Position.Y.Offset==0 and state.fill.Position.Y.Offset==0)
+   state.pressed=false;Kit.paintButton(b)
+   local function up()return state.content.Position==UDim2.new()and state.fill.Position==UDim2.new()and state.fill.Size==UDim2.fromScale(1,1)and not Kit.Spring.busy(state.content)end
+   assert(rests(up),"the face is exactly back")
    Kit.pulse(b);task.wait(Kit.Motion.pressDown+.02);assert(state.pressed and state.content.Position.Y.Offset==4)
-   task.wait(Kit.Motion.pressDown+Kit.Motion.pressUp+.1);assert(not state.pressed and state.content.Position.Y.Offset==0)
+   task.wait(Kit.Motion.pressDown+Kit.Motion.pressUp+.1);assert(not state.pressed and rests(up))
    b:Destroy();Kit.reduced=realReduced
   end)
 
@@ -72,7 +79,8 @@ return function(client,parent)
    assert(tile.AbsolutePosition==old.AbsolutePosition,"press leaves the hit rect")
    assert(state.face.AbsolutePosition.Y==tile.AbsolutePosition.Y+4 and state.lipFrame.AbsolutePosition.Y==tile.AbsolutePosition.Y+4,"face drops onto the lip")
    assert(state.face.AbsoluteSize==tile.AbsoluteSize,"nothing resizes on press")
-   Kit.pressTile(tile,false);task.wait(Kit.Motion.pressUp+.04);assert(state.face.AbsolutePosition==tile.AbsolutePosition)
+   Kit.pressTile(tile,false)
+   assert(rests(function()return state.face.AbsolutePosition==tile.AbsolutePosition and state.pad.PaddingTop==UDim.new()and not Kit.Spring.busy(state.pad)end))
    Kit.setTileLip(tile,3);assert(tile:GetAttribute("KitLip")==3 and state.lipFrame.Position.Y.Offset==3)
    state.setSelected(true);assert(state.stroke.Thickness==3 and state.stroke.Transparency==0 and tile.BackgroundColor3==Kit.color("selected"))
    state.setSelected(false);assert(state.stroke.Thickness==Kit.TileRest and tile.BackgroundColor3==Kit.color("tile"))

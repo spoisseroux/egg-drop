@@ -851,7 +851,9 @@ function Room.greetingVisualBlocks(lounge,floor,rootPosition,reach)
   -- Merged island meshes (WorldMesh) have world-sized bounds, never a usable blocker box.
   if part:IsA("BasePart")and part~=floor and not part:IsA("Terrain")and part:GetAttribute("WorldMesh")~=true
    and 1-(1-part.Transparency)*(1-part.LocalTransparencyModifier)<.99 then
-   local cf,size=part.CFrame,part.Size
+   -- A bush in the wind (WindClient) blocks from where it rests, so a plan never depends on the gust.
+   local rest=if part:GetAttribute("WorldDressing")~=nil then part:GetAttribute("WorldRestCFrame")else nil
+   local cf,size=(if typeof(rest)=="CFrame"then rest else part.CFrame),part.Size
    local mesh=part:FindFirstChildOfClass("SpecialMesh")
    if mesh then
     cf*=CFrame.new(mesh.Offset)

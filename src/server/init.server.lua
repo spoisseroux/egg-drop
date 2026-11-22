@@ -101,6 +101,8 @@ local StatEggState = require(script.StatEggState)
 do local ok,problem=pcall(function()require(script.BugReportStore).mount(remotes)end);if not ok then warn("[EggDropReport] not mounted: "..tostring(problem))end end
 -- Client-run board B0: owner-only sim determinism check (FeatureFlags.SimCheck, remote SimCheck).
 do local ok,problem=pcall(function()require(script.SimCheckHost).mount(remotes)end);if not ok then warn("[SimCheck] not mounted: "..tostring(problem))end end
+-- Alive off switch (ALIVE-BUILD-PLAN-2026-11-22): workspace attributes first, ConfigService later; never blocks boot.
+task.spawn(function()local ok,problem=pcall(function()require(script.AliveConfig).start()end);if not ok then warn("[Alive] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -816,6 +818,8 @@ local function addPlayer(player)
 	-- Private beta and Studio: the owner can set the test save's Stars with "/stars N" in chat
 	-- (Stars store access testing, Spencer 2026-11-21). Live: never connected.
 	if (game.PlaceId == Nursery.BetaPlaceId or RunService:IsStudio()) and require(ReplicatedStorage.Shared.SimCheck).isOwner(player) then
+		-- "/alive <feature|all> <on|off|clear>": its own connection, never behind the board and busy checks below.
+		player.Chatted:Connect(function(message) pcall(function() require(script.AliveConfig).command(message) end) end)
 		player.Chatted:Connect(function(message)
 			local amount = type(message) == "string" and tonumber(string.match(message, "^%s*/stars%s+(%d+)%s*$"))
 			if not amount or boards[player] ~= board or board.closing then return end

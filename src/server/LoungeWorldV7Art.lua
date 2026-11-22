@@ -339,6 +339,8 @@ function Art.dressing(room)
 		bush.Anchored,bush.CanCollide,bush.CanQuery,bush.CanTouch,bush.CastShadow=true,false,false,false,false
 		bush.Size,bush.CFrame=size,cframe
 		bush:SetAttribute("WorldDressing","bush")
+		-- Where it rests: the client wind (WindClient) sways it from here and puts it back here.
+		bush:SetAttribute("WorldRestCFrame",bush.CFrame)
 		bush.Parent=folder
 		count+=1
 	end

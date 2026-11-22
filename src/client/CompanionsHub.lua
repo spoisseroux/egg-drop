@@ -749,6 +749,7 @@ function Hub:back()
   self:close("cancel");if assign and assign.cancel then assign.cancel()end
   return "cancel"
  elseif target=="hub"then self:setPage("hub");return "hub"end
+ Kit.depart(self.root)
  self:close("back");if self.callbacks.back then self.callbacks.back()end
  return "close"
 end
@@ -801,7 +802,8 @@ function Hub:open(ctx,options)
  -- Back from a child screen (Customize) slides in from the left instead (QA Q2.2).
  if options.slideFrom and self.body then Kit.slideIn(self.body,options.slideFrom,Kit.headerSkip(self.header))
  elseif not self.view and not Kit.reduced()then
-  self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)})
+  if Kit.arrive(self.root)then self:popDiscs()
+  else self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)}) end
  end
  if self.clock then self.clock:Disconnect()end
  self.clock=RunService.RenderStepped:Connect(function(dt)
@@ -812,6 +814,12 @@ function Hub:open(ctx,options)
  end)
  self.sizeConnection=self.sizeConnection or self.host:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()if self.visible then self:fit(self.host.AbsoluteSize)end end)
  return true
+end
+-- Alive: the hub page's icon discs pop in with the rise (never again on a rebuild or a focus move).
+function Hub:popDiscs()
+ local discs={}
+ if self.page=="hub"then for _,entry in ipairs(self.rows)do table.insert(discs,entry.disc)end end
+ Kit.artPop(discs)
 end
 function Hub:close(reason)
  if not self.visible then return false end

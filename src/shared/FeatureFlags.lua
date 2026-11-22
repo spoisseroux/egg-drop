@@ -32,5 +32,8 @@
 -- can feel the client-run deck on his phone before B4/B5 and the flag flip. Everyone else: today's path.
 -- SimCheck off for launch (Spencer 2026-11-17): phone and PC matched the server on v903; the
 -- owner-only check has done its job. True again re-runs it for SimCheck.isOwner accounts.
+-- Alive* (ALIVE-BUILD-PLAN-2026-11-22): the build ceiling for springs, menu rises, the close plate and the
+-- wind. Each also needs the beta place or Studio (Alive.PlaceId) and the server's switch (AliveConfig).
 return table.freeze({SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
- DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})
+ DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
+ AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true})

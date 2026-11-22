@@ -452,6 +452,7 @@ function Panel:setContext(ctx)
 end
 function Panel:back()
  local from=self.from
+ Kit.depart(self.root)
  self:close("back")
  if self.callbacks.back then self.callbacks.back(from)end
  return "close"
@@ -494,7 +495,7 @@ function Panel:open(ctx,options)
  self:paintPreview(self:petId())
  if options.slideFrom and self.body then Kit.slideIn(self.body,options.slideFrom,Kit.headerSkip(self.header))
  elseif not self.view and not Kit.reduced()then
-  self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)})
+  if not Kit.arrive(self.root)then self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)}) end
  end
  if self.clock then self.clock:Disconnect()end
  self.clock=RunService.RenderStepped:Connect(function(dt)
