@@ -2001,7 +2001,20 @@ function Kit.shellPattern(surface,radius)
   Size=UDim2.new(1,C.tile,1,C.tile),Position=UDim2.fromOffset(-C.tile,-C.tile),ZIndex=z,Active=false,Selectable=false})
  local fade=node("Frame",holder,{Name="Fade",BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=if sibling then z+1 else z,Active=false,Selectable=false})
  paint(fade,"BackgroundColor3","shell")
- node("UIGradient",fade,{Rotation=90,Transparency=NumberSequence.new(1,C.fadeTo)})
+ local gradient=node("UIGradient",fade,{Rotation=90,Transparency=NumberSequence.new(1,C.fadeTo)})
+ -- Spencer 2026-11-21: the checker is a rectangle inside a rounded surface, so its square
+ -- bottom corners read as "unrounded". Over the last FadeBand px (two corner radii) the fade
+ -- turns fully shell-coloured, so the pattern is gone before the curve starts.
+ local band=math.max(12,(radius or 16)*2)
+ local function fitFade()
+  local h=holder.AbsoluteSize.Y
+  if h<=band*2 then gradient.Transparency=NumberSequence.new(1,C.fadeTo);return end
+  local at=1-band/h
+  gradient.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),
+   NumberSequenceKeypoint.new(at,1+(C.fadeTo-1)*at),NumberSequenceKeypoint.new(1,0)})
+ end
+ holder:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitFade)
+ fitFade()
  holder:SetAttribute("ShellPattern",true)
  local ctl={holder=holder,tile=tile,fade=fade,running=false}
  local tween,links=nil,{}
