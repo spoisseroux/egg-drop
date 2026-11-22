@@ -741,8 +741,14 @@ end
 function Kit.buttonState(button)return buttons[button]end
 function Kit.setEnabled(button,enabled)
  local s=buttons[button];if not s then return end
- s.enabled=enabled~=false;button.Active=s.enabled;button.Interactable=s.enabled
+ s.enabled=enabled~=false;button.Active=s.enabled or s.tappable==true;button.Interactable=button.Active
  if not s.enabled then s.pressed=false;s.hover=false end;Kit.paintButton(button)
+end
+-- Stars store access: a disabled button that still takes a press (a short buy opens the
+-- "need more Stars" card). It keeps the disabled paint; only Active / Interactable change.
+function Kit.setTappable(button,tappable)
+ local s=buttons[button];if not s then return end
+ s.tappable=tappable==true;button.Active=s.enabled or s.tappable;button.Interactable=button.Active
 end
 function Kit.setSelected(button,selected)local s=buttons[button];if s then s.selected=selected==true;Kit.paintButton(button)end end
 function Kit.setText(button,text)local s=buttons[button];if s then s.label.Text=text;button:SetAttribute("AccessibleLabel",text)end end
@@ -1368,8 +1374,12 @@ function Kit.walletWidth(height,textW)
  local spec=Kit.walletSpec(height)
  return math.ceil((spec.disc-4)+6+textW+spec.pad)
 end
-function Kit.wallet(parent,height)
+-- Stars store access: set by init.client; called with the wallet's api when a tappable
+-- wallet is pressed. Returns true when it opened the store (else the wallet only flashes).
+Kit.onWalletTap=nil
+function Kit.wallet(parent,height,options)
  height=height or 44
+ options=options or {}
  local spec=Kit.walletSpec(height)
  local faceH=height-spec.lip
  local root=Kit.frame(parent,"Wallet",nil,UDim2.new(),UDim2.fromOffset(110,height));root.ClipsDescendants=false
@@ -1442,6 +1452,29 @@ function Kit.wallet(parent,height)
   root.Size=UDim2.fromOffset(Kit.walletWidth(height,w),height)
   root:SetAttribute("AccessibleLabel",require(script.Parent.StarText).amount(value))
   if type(before)=="number"and type(value)=="number"and value>before then earn()end
+ end
+ -- Stars store access (opt-in: Kit.header only). A transparent key over the capsule and its
+ -- medallion; not in the gamepad focus chain. The tap goes to Kit.onWalletTap; when that is
+ -- unset or refuses (a round, a hatch waiting), the face flashes and nothing else happens.
+ if options.tap then
+  local tap=node("TextButton",root,{Name="Tap",Text="",AutoButtonColor=false,BackgroundTransparency=1,Selectable=false,
+   Position=UDim2.fromOffset(-4,0),Size=UDim2.new(1,4,1,0),ZIndex=z+8})
+  tap:SetAttribute("AccessibleLabel",require(game:GetService("ReplicatedStorage").Shared.UICopy).get("starsShort.wallet"))
+  local press=node("UIScale",root,{Name="TapScale"})
+  local function settle(scale)TweenService:Create(press,TweenInfo.new(.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=scale}):Play()end
+  tap.MouseButton1Down:Connect(function()if not game:GetService("GuiService").ReducedMotionEnabled then settle(.94)end end)
+  tap.MouseButton1Up:Connect(function()settle(1)end)
+  tap.MouseLeave:Connect(function()settle(1)end)
+  tap.Activated:Connect(function()
+   settle(1)
+   local ok=false
+   if Kit.onWalletTap then local fine,result=pcall(Kit.onWalletTap,api);ok=fine and result==true end
+   if not ok then
+    flash.BackgroundTransparency=.35
+    TweenService:Create(flash,TweenInfo.new(.32,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency=1}):Play()
+   end
+  end)
+  api.tap=tap
  end
  api.set(0);return api
 end
@@ -1812,7 +1845,7 @@ function Kit.header(parent,options)
  api.title:GetPropertyChangedSignal("Visible"):Connect(placePlate)
  api.title:GetPropertyChangedSignal("TextSize"):Connect(placePlate)
  local inner
- if options.wallet~=false then inner=Kit.wallet(holder,if compact then 36 else 44);inner.root.AnchorPoint=Vector2.zero end
+ if options.wallet~=false then inner=Kit.wallet(holder,if compact then 36 else 44,{tap=true});inner.root.AnchorPoint=Vector2.zero end
  local back=Kit.backArrow(holder,compact,{header=true});back.root.AnchorPoint=Vector2.zero;back.root.ZIndex=holder.ZIndex+5
  api.back=back
  -- R3.8: the machine's "How it works" circle, from options.help or the tint's family.

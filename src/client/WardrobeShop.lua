@@ -688,6 +688,7 @@ function Shop:paintPane()
  if status.button then
   Kit.setText(self.action,if pending then "Saving…"elseif confirming then "Confirm ★ "..status.price else status.button)
   Kit.setEnabled(self.action,status.enabled==true and not(self.pending and self.pending.action=="wearableBuy"))
+  Kit.setTappable(self.action,status.kind=="short"and not self.pending)
  end
  self.root:SetAttribute("FocusedItem",id);self.root:SetAttribute("PaneState",status.kind);self.root:SetAttribute("Tab",self:tabInfo().id)
  if self.visible then self:paintPreview()end
@@ -766,6 +767,10 @@ function Shop:act()
   -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
   return require(script.Parent.ConfirmDialog).purchase(self,id,(Catalog.item(self.petId,id)or{name=""}).name or "",status.price,
    function()return self.visible and self:focusedId()==id end,function()self:act()end)~=nil
+ elseif status.kind=="short"then
+  -- Stars store access: a short item opens the "need more Stars" card.
+  if self.pending then return false end
+  return require(script.Parent.StarsShort).ask({price=status.price,wallet=self.ctx.wallet,item=(Catalog.item(self.petId,id)or{name=""}).name,from="wardrobe"},self)
  end
  return false
 end

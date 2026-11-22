@@ -217,7 +217,7 @@ function View:actPrimary()
 		if self.selected=="stat"and not current.lastHatch then
 			local a=StatOdds.action(current,self.statPet and self.statPet())
 			if a.enabled and self.onOpenStat then Peek.hop();self.onOpenStat(a.free==true)
-			elseif a.need then self:close("earn")end
+			elseif a.need then self:askStars(shopRecipe("stat"))end
 			return
 		end
 		if current.lastHatch then
@@ -233,7 +233,7 @@ function View:actPrimary()
 			elseif s=="feature"then if self.onOpenFeature then self.onOpenFeature(false)end
 			elseif s=="material"then if self.onOpenMaterial then self.onOpenMaterial(false)end end
         elseif (current.nectar or 0) < shopRecipe(self.selected).cost then
-			self:close("earn")
+			self:askStars(shopRecipe(self.selected))
 		else
 			-- QA v751 P2: the panel's egg no longer plays its own hatch pop here. The full-screen
 			-- stage owns the one hatch the player sees; the panel only waits for the result.
@@ -243,6 +243,15 @@ function View:actPrimary()
 		end
 	end
 
+-- Stars store access: short of Stars, the egg's button opens the "need more Stars" card
+-- (Get Stars opens the store page below in place; Play a round is the old "earn" close).
+-- Without the card route (specs), the old close("earn") still runs.
+function View:askStars(recipe)
+ local price=if self.selected=="stat"then((self.state.statEgg or {}).price or recipe.cost)else recipe.cost
+ if require(script.Parent.StarsShort).ask({price=price,wallet=self.state.nectar,item=recipe.name,from="hatch"},self)then return true end
+ if not require(script.Parent.StarsShort).hasRoute()then self:close("earn")end
+ return false
+end
 -- Robux store page (StoreView). It replaces the egg card while open, so the egg
 -- shop remains the one presentation, Back and controller-focus owner.
 function View:isStoreOpen()
@@ -584,6 +593,7 @@ function View:refreshFooter()
 	local state = self.state
 	local ready = state.status == nil or state.status == "Ready"
 	local textValue, canAct
+	local shortTap=false -- Stars store access: a short egg still takes a press (the card)
 	if state.lastHatch then
 		local secondary = if state.lastHatch.starter then UICopy.get("r1.reveal.exit") else "Play again"
 		textValue = if self.ackReady then (if self.retryAvailable then "Try again" else secondary) else "Hatching…"
@@ -593,6 +603,7 @@ function View:refreshFooter()
 	else
 		local planned = View.hatchAction(self.selected, state, self.statPet and self.statPet())
 		textValue, canAct = planned.text, planned.enabled
+		shortTap = type(planned.need)=="string" and planned.need~=""
 	end
 	Art.type(self.action,"Action",self.compactShop or self.card.Size.X.Offset<400)
 	Art.type(self.meetButton,"Action",self.card.Size.X.Offset<400)
@@ -605,10 +616,13 @@ function View:refreshFooter()
 		end
 		if self:footerRowHeight(self.meetButton,width)>44 then self.meetButton.Text=if self.pending then "Saving" else "Meet" end
 	end
-	self.action.Interactable = ready and not self.pending and canAct == true
+	local canPress = ready and not self.pending and canAct == true
 	self.action.TextTransparency=0
-	Art.control(self.action,not state.lastHatch,self.action.Interactable)
-	self.meetButton.Interactable = state.lastHatch ~= nil and self.action.Interactable
+	Art.control(self.action,not state.lastHatch,canPress)
+	-- After Art.control (it writes Interactable): a short egg keeps the dim paint but takes a press.
+	self.actionShort = not canPress and ready and not self.pending and shortTap
+	self.action.Interactable = canPress or self.actionShort;self.action.Active=self.action.Interactable
+	self.meetButton.Interactable = state.lastHatch ~= nil and canPress
 	self.meetButton.TextTransparency=0
 	Art.control(self.meetButton,true,self.meetButton.Interactable)
 	self:refreshShopHeader()
@@ -1155,7 +1169,8 @@ function View:paintEggPane()
  self.needLine.Position=UDim2.fromOffset(self.oddsX,self.buttonY-20)
  local text=if self.pending then "Saving…"else a.text
  Kit.setText(self.hatchButton,text)
- Kit.setEnabled(self.hatchButton,self.action.Interactable)
+ Kit.setEnabled(self.hatchButton,self.action.Interactable and not self.actionShort)
+ Kit.setTappable(self.hatchButton,self.actionShort==true)
  Kit.setGlyphVisible(self.hatchButton,not phone or not Kit.lastInputTouch())
  self.shopHeader.setTitle(if self.headerTitle and self.headerTitle~="Hatch eggs"then self.headerTitle else "Hatch eggs")
  if self.shopHeader.wallet then self.shopHeader.wallet.set(self.state.nectar or 0)end
@@ -1399,6 +1414,7 @@ function View:open(state)
 end
 
 function View:close(reason, choice)
+	require(script.Parent.ConfirmDialog).cancelFor(self) -- a "need more Stars" card this view raised
 	if self:isStoreOpen() then
 		-- Back or X leaves the store page first; every other reason closes both.
 		if reason == nil or reason == "close" then self.store:close("back"); return end

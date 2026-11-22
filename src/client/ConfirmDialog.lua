@@ -11,6 +11,9 @@
 --     cannot show. handle.cancel() closes it if it is still this ask (call it from the caller's
 --     own close(), so a screen that closes underneath never leaves the dialog up).
 --   Confirm.isOpen(), Confirm.close(reason) (cancels), Confirm.panel() (specs)
+--   Optional `alt` (Stars store access, 2026-11-21): {text, onSelect()} turns the left key into
+--   a second choice (X / ButtonX) and adds a round close key top right; B / Esc / the shade
+--   still cancel.
 local ContextActionService=game:GetService("ContextActionService")
 local GuiService=game:GetService("GuiService")
 local Players=game:GetService("Players")
@@ -79,14 +82,23 @@ function Confirm.build()
 	local y=g.pad
 	Kit.text(panel,"Title",o.title or "","text",{Name="Title",Position=UDim2.fromOffset(g.pad,y),Size=UDim2.fromOffset(g.lineW,g.titleH),
 		TextSize=if g.compact then 20 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
+	if o.alt then
+		-- Touch needs a way out that isn't one of the two choices.
+		local closeSize=if g.compact then 30 else 34
+		local x=Kit.closeKey(panel,"Close",closeSize,o.cancel or UICopy.get("confirm.cancel"))
+		x.AnchorPoint=Vector2.new(1,0);x.Position=UDim2.fromOffset(g.w-g.pad+6,g.pad-6);x.ZIndex=panel.ZIndex+2
+		x.Activated:Connect(function()Confirm.close("cancel")end)
+		panel.Title.Size=UDim2.fromOffset(g.lineW-closeSize-6,g.titleH)
+		state.x=x
+	end
 	y+=g.titleH+8
 	Kit.text(panel,"Body",o.line or "","soft",{Name="Line",Position=UDim2.fromOffset(g.pad,y),Size=UDim2.fromOffset(g.lineW,lineH),
 		TextSize=lineSize,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
 	local by=g.h-g.pad-g.bh
-	local cancel=Kit.button(panel,"Cancel",{variant="secondary",text=o.cancel or UICopy.get("confirm.cancel"),glyph="B",
-		size=Vector2.new(g.buttonW,g.bh),textSize=if g.compact then 15 else 17})
+	local cancel=Kit.button(panel,if o.alt then "Alt" else "Cancel",{variant="secondary",text=if o.alt then o.alt.text else(o.cancel or UICopy.get("confirm.cancel")),
+		glyph=if o.alt then "X" else "B",size=Vector2.new(g.buttonW,g.bh),textSize=if g.compact then 15 else 17})
 	cancel.Position=UDim2.fromOffset(g.pad,by);cancel.ZIndex=panel.ZIndex+2
-	cancel.Activated:Connect(function()Confirm.close("cancel")end)
+	cancel.Activated:Connect(function()if o.alt then Confirm.chooseAlt()else Confirm.close("cancel")end end)
 	local yes=Kit.button(panel,"Confirm",{variant="primary",text=o.confirm or UICopy.get("confirm.yes"),glyph="A",
 		size=Vector2.new(g.buttonW,g.bh),textSize=if g.compact then 15 else 17})
 	yes.Position=UDim2.fromOffset(g.w-g.pad-g.buttonW,by);yes.ZIndex=panel.ZIndex+2
@@ -108,7 +120,8 @@ local function bind()
 		local key=input.KeyCode
 		if key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace or key==Enum.KeyCode.Escape then Confirm.close("back")
 		elseif key==Enum.KeyCode.Return or key==Enum.KeyCode.KeypadEnter or key==Enum.KeyCode.ButtonA then Confirm.accept()
-		elseif key==Enum.KeyCode.Space then Confirm.accept()end
+		elseif key==Enum.KeyCode.Space then Confirm.accept()
+		elseif(key==Enum.KeyCode.ButtonX or key==Enum.KeyCode.X)and state.options and state.options.alt then Confirm.chooseAlt()end
 		return Enum.ContextActionResult.Sink
 	end,false,Confirm.Priority,
 		Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,Enum.KeyCode.Escape,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,Enum.KeyCode.Space,
@@ -118,13 +131,13 @@ local function bind()
 		Enum.KeyCode.W,Enum.KeyCode.S,Enum.KeyCode.ButtonX,Enum.KeyCode.ButtonY,Enum.KeyCode.M,Enum.KeyCode.H,Enum.KeyCode.X,Enum.KeyCode.Tab)
 end
 
-local function finish(confirmed,reason)
+local function finish(confirmed,reason,alt)
 	if not state.open then return false end
 	state.open=false
 	ContextActionService:UnbindAction(Confirm.Action)
 	Kit.shadeClose(owner)
 	if state.panel then state.panel:Destroy();state.panel=nil end
-	state.yes,state.cancel=nil,nil
+	state.yes,state.cancel,state.x=nil,nil,nil
 	local previous=state.previous;state.previous=nil
 	if previous and previous.Parent and gamepad()then GuiService.SelectedObject=previous end
 	local o=state.options;state.options=nil
@@ -132,6 +145,8 @@ local function finish(confirmed,reason)
 		-- After the close, so a screen the action opens is not under this shade or its keys.
 		if confirmed then
 			if o.onConfirm then task.spawn(o.onConfirm)end
+		elseif alt then
+			if o.alt and o.alt.onSelect then task.spawn(o.alt.onSelect)end
 		elseif o.onCancel then task.spawn(o.onCancel,reason or "cancel")end
 		if o.onClosed then task.spawn(o.onClosed,confirmed)end
 	end
@@ -139,6 +154,10 @@ local function finish(confirmed,reason)
 end
 
 function Confirm.accept()return finish(true,"confirm")end
+function Confirm.chooseAlt()
+	if not(state.open and state.options and state.options.alt)then return false end
+	return finish(false,"alt",true)
+end
 function Confirm.close(reason)return finish(false,reason or "close")end
 
 function Confirm.ask(options)

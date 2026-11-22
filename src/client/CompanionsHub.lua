@@ -611,10 +611,12 @@ function Hub:paintSelectorPane()
  local pet=Pets.byId[entry.id];local following=entry.id==self.ctx.activeId
  self.paneName.Text=(NameText.own(self.ctx.state,entry.id))
  self.action.Visible=true
+ Kit.setTappable(self.action,false) -- only a short adopt below takes a dim press
  if card and card.id==entry.id and card.adopt then
   local confirming=self.confirmAdopt~=nil and self.confirmAdopt.id==entry.id and os.clock()<self.confirmAdopt.untilAt
   local line,button,enabled=Hub.adoptPane(card,self.ctx.wallet,self.pendingAdopt~=nil,confirming)
   self.paneLine.Text=line;Kit.setText(self.action,button);Kit.setEnabled(self.action,enabled and not self.assign)
+  Kit.setTappable(self.action,not card.free and not self.assign and self.pendingAdopt==nil and(self.ctx.wallet or 0)<card.price)
  elseif self.assign then
   self.paneLine.Text=self.assign.line or("Use it on "..pet.name)
   Kit.setText(self.action,self.assign.button or "Choose");Kit.setEnabled(self.action,true)
@@ -690,7 +692,12 @@ function Hub:act()
  if card and card.id==entry.id and card.adopt then
   -- v2 Bunny: 400 Stars is a big spend, so the first press arms a 3 s confirm and the second sends.
   -- An earned (free) card sends at once: nothing is spent.
-  if self.assign or self.pendingAdopt or(not card.free and(self.ctx.wallet or 0)<card.price)then return false end
+  if self.assign or self.pendingAdopt then return false end
+  if not card.free and(self.ctx.wallet or 0)<card.price then
+   -- Stars store access: short of Stars opens the "need more Stars" card.
+   local pet=Pets.byId[card.id]
+   return require(script.Parent.StarsShort).ask({price=card.price,wallet=self.ctx.wallet,item=pet and pet.name or nil,from="companions"},self)
+  end
   -- Round 3 (Spencer: "don't do press again to adopt, open a confirmation dialog"): a paid adopt
   -- asks in ConfirmDialog; the yes re-checks everything, as the hub may have changed meanwhile.
   if not card.free then

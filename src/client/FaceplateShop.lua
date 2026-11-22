@@ -523,6 +523,7 @@ function Shop:paintPane()
  elseif status.button then
   Kit.setText(self.action,if pending then "Buying…"elseif confirming then "Confirm ★ "..status.price else status.button)
   Kit.setEnabled(self.action,status.enabled==true and not pending)
+  Kit.setTappable(self.action,status.kind=="short"and not self.pending)
  end
  self.root:SetAttribute("FocusedPlate",id);self.root:SetAttribute("PaneState",if retry then "retry"else status.kind)
 end
@@ -631,6 +632,9 @@ function Shop:act(fromPane)
   -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
   return require(script.Parent.ConfirmDialog).purchase(self,id,(Themes.ById[id]or{name=""}).name,status.price,
    function()return self.visible and self.tab==1 and self.tiles[self.index]~=nil and self.tiles[self.index].id==id end,function()self:act()end)~=nil
+ elseif status.kind=="short"then
+  -- Stars store access: a short plate opens the "need more Stars" card.
+  return require(script.Parent.StarsShort).ask({price=status.price,wallet=self.ctx.wallet,item=(Themes.ById[id]or{name=""}).name,from="style"},self)
  end
  return false
 end

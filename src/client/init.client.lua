@@ -1712,6 +1712,95 @@ openMenu = function(options)
 		{focus=options.focus,slideFrom=options.slideFrom})
 end
 roomView.onOpenMenu=function()if openMenu()then clientUI.accepted("confirm")end end
+-- Stars store access (STARS-STORE-ACCESS-PLAN-2026-11-21.md; Spencer: "clicking the stars icon
+-- opens a store to buy stars?"). One route for the header wallet and the "need more Stars"
+-- card: close whatever menu is up (never as "back", which would reopen the hub over the store),
+-- open Hatch eggs, then its store page. Only in the free garden: never mid-round, over a hatch
+-- result or a modal, or while any egg or jar purchase is still saving.
+local function starsPurchasePending()
+ if nurseryView.pending then return true end
+ for _,kind in ipairs({"hue","material","toy","feature"})do local intent=clientUI[kind.."Intent"];if intent and intent.pending then return true end end
+ return false
+end
+function clientUI.anyMenuOpen()
+ return isPickerOpen()or journal.shade.Visible or clientUI.isHueOpen()or gameMenu:isOpen()
+  or(clientUI.hub~=nil and clientUI.hub:isOpen())or(clientUI.book~=nil and clientUI.book:isOpen())
+  or clientUI.questLog~=nil and clientUI.questLog.visible==true
+  or(clientUI.stats~=nil and clientUI.stats.isOpen())or(clientUI.names~=nil and clientUI.names.isOpen())
+  or(clientUI.isWardrobeOpen~=nil and clientUI.isWardrobeOpen())
+end
+-- Closes every menu screen with `reason` (not "back"). True when none is left open.
+function clientUI.closeAllMenus(reason)
+ reason=reason or "store"
+ cancelHatchNavigation();clearPlayInputs()
+ if clientUI.isWardrobeOpen and clientUI.isWardrobeOpen()then clientUI.wardrobe:close()end
+ if clientUI.names and clientUI.names.isOpen()then clientUI.names.close(reason)end
+ if clientUI.stats and clientUI.stats.isOpen()then clientUI.stats.close(reason)end
+ if clientUI.hub and clientUI.hub:isOpen()then clientUI.hub:close(reason)end
+ if clientUI.book and clientUI.book:isOpen()then clientUI.book:close(reason)end
+ if clientUI.questLog and clientUI.questLog.visible then clientUI.questFromHub=nil;clientUI.closeQuestLog()end
+ if clientUI.isHueOpen()then clientUI.hueView:close("forced")end
+ picker:close();journal:close()
+ if gameMenu:isOpen()then gameMenu:close(reason);roomView:setMenuOpen(false)end
+ clientUI.machineReturn=nil
+ return not clientUI.anyMenuOpen()
+end
+local starsStoreOpening=false
+-- Why the store did not open (nil when it can): read by specs and the live check through the
+-- PlayerGui attribute StarsStoreRefused.
+function clientUI.starsStoreRefusal()
+ if not nurseryState then return "noState"end
+ if roomView.busy then return "busy"end
+ if board:GetAttribute("Mode")~="Room"then return "notRoom"end
+ if modal.Visible then return "modal"end
+ if nurseryState.lastHatch then return "hatchResult"end
+ if starsPurchasePending()then return "pending"end
+ return nil
+end
+function clientUI.canOpenStarsStore()return clientUI.starsStoreRefusal()==nil end
+local function refuseStore(reason)
+ local playerGui=player:FindFirstChildOfClass("PlayerGui")
+ if playerGui then playerGui:SetAttribute("StarsStoreRefused",reason)end
+ return false
+end
+function clientUI.openStarsStore(from)
+ if nurseryView:isStoreOpen()then return true end
+ if starsStoreOpening then return refuseStore("opening")end
+ local refusal=clientUI.starsStoreRefusal()
+ if refusal then return refuseStore(refusal)end
+ refuseStore(nil)
+ -- Already on Hatch eggs: the store page opens in place (reopening would reset focus).
+ if nurseryView:isOpen()then return nurseryView:openStore()==true or refuseStore("hatchView")end
+ local fromHub=gameMenu:isOpen()
+ starsStoreOpening=true
+ local ok=false
+ if clientUI.closeAllMenus("store")then
+  openNursery()
+  -- From the machine hub: Back from the store, then Hatch eggs, lands on the hub again.
+  if fromHub and nurseryView:isOpen()then clientUI.machineReturn="hatch"end
+  ok=nurseryView:isOpen()and nurseryView:openStore()==true
+ end
+ starsStoreOpening=false
+ if not ok then refuseStore("didNotOpen")end
+ return ok
+end
+-- "Play a round" on the card: the free way to earn the Stars.
+function clientUI.playRoundForStars()
+ -- Code review: same gate as the store (a hatch result that arrived under the card must be seen).
+ if clientUI.starsStoreRefusal()then return false end
+ if nurseryView:isOpen()then nurseryView:close("earn");return true end
+ if not clientUI.closeAllMenus("store")then return false end
+ hatchNavigation:play();return true
+end
+require(script.DeckKit).onWalletTap=function()
+ local ok=clientUI.openStarsStore("wallet")
+ if ok then clientUI.accepted("confirm")end
+ return ok
+end
+require(script.StarsShort).setRoute(function(choice,request)
+ local ok=if choice=="store"then clientUI.openStarsStore(request and request.from)else clientUI.playRoundForStars()
+ if ok then clientUI.accepted("confirm")end
+end)
 picker.onAccepted=clientUI.accepted;journal.onAccepted=clientUI.accepted;gameMenu.onAccepted=clientUI.accepted;nurseryView.onAccepted=clientUI.accepted
 
 do

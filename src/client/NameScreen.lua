@@ -388,6 +388,7 @@ function Screen:paintEgg()
 	if self.pendingEgg then action={text=UICopy.get("names.egg.hatching"),enabled=false}
 	elseif self.retryEgg then action={text=UICopy.get("names.egg.retry"),enabled=true}end
 	Kit.setText(self.eggBuy,action.text);Kit.setEnabled(self.eggBuy,action.enabled)
+	Kit.setTappable(self.eggBuy,action.need~=nil and not self.pendingEgg and not self.retryEgg)
 end
 
 function Screen:setTab(tab)
@@ -564,7 +565,12 @@ function Screen:buyEgg()
 	local names=self:names()
 	if self.pendingEgg or not names then return false end
 	local retry=self.retryEgg
-	if not retry and not Screen.eggAction(names,self.ctx.wallet).enabled then return false end
+	local action=if retry then nil else Screen.eggAction(names,self.ctx.wallet)
+	if action and not action.enabled then
+		-- Stars store access: short of Stars opens the "need more Stars" card.
+		if action.need then return require(script.Parent.StarsShort).ask({price=names.price or Names.Price,wallet=self.ctx.wallet,item=UICopy.get("names.egg.title"),from="names"},self)end
+		return false
+	end
 	if not retry then self.lastOdds=Screen.eggOdds(names)end
 	local quote=if retry then retry.quote else names.quoteKey
 	local op=self.callbacks.buyEgg and self.callbacks.buyEgg(quote,retry and retry.op)
@@ -707,6 +713,7 @@ function Screen:open(ctx,options)
 end
 function Screen:close(reason)
 	if not self.visible then return false end
+	require(script.Parent.ConfirmDialog).cancelFor(self) -- a "need more Stars" card this screen raised
 	self.visible=false;self.root.Visible=false;Kit.shadeClose(self);if self.ring then self.ring.hide()end
 	self:stopPulses()
 	self:closeEgg()

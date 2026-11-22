@@ -282,6 +282,7 @@ function Shop:paintPane()
  if s.button then
   Kit.setText(self.action,if pending then "…"elseif confirming then "Confirm ★ "..s.price else s.button)
   Kit.setEnabled(self.action,s.enabled==true and not pending)
+  Kit.setTappable(self.action,s.kind=="short"and not self.pending)
  end
  self.owner.root:SetAttribute("FocusedBallTheme",id);self.owner.root:SetAttribute("BallPaneState",s.kind)
 end
@@ -352,6 +353,10 @@ function Shop:act()
   -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
   return require(script.Parent.ConfirmDialog).purchase(self,id,(Themes.ById[id]or{name=""}).name,s.price,
    function()return self:active()and self:focusedId()==id end,function()self:act()end)~=nil
+ elseif s.kind=="short"then
+  -- Stars store access: a short theme opens the "need more Stars" card.
+  if self.pending then return false end
+  return require(script.Parent.StarsShort).ask({price=s.price,wallet=self.ctx.wallet,item=(Themes.ById[id]or{name=""}).name,from="style"},self)
  end
  return false
 end
