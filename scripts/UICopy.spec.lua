@@ -9,7 +9,7 @@ return function(client,parent)
  local Kit=require(client.DeckKit)
  local TextService=game:GetService("TextService")
  local cases={};local function test(name,run)run();table.insert(cases,name)end
- local sample={count=3,heat="Medium",low=6,high=8,pet="Bear",reward=5,item="Squeaky Bone",owned=3,total=12,target=3,name="Pet Park",tier="RARE",kind="FINISH",percent=40,done=3,best=120,chain=4,score=80,title="Your Pocket Deck",quest="Win a round",capacity=8,each="2%",shapes="Snowflake",look="Glossy",finish="Gloss",jelly="Jelly",sheen="Glossy",
+ local sample={count=3,heat="Medium",low=6,high=8,pet="Bear",reward=5,item="Squeaky Bone",owned=3,total=12,target=3,name="Pet Park",tier="RARE",kind="FINISH",percent=40,done=3,best=120,chain=4,score=80,title="Your Pocket Deck",quest="Win a round",capacity=8,place="1st",time="41.2",each="2%",shapes="Snowflake",look="Glossy",finish="Gloss",jelly="Jelly",sheen="Glossy",
   -- v2 Stat Eggs and Stat Snacks.
   stat="Jump",size="Snack",mult=2,left=80,more=120,names="Heart, Power, Energy",
   -- v2 Bunny adoption.

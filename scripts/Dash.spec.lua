@@ -15,10 +15,13 @@ return function(server)
 			for _,flags in ipairs({{},{GardenDash=false},{GardenDash="true"},{GardenDash=1}})do assert(not Dash.ceiling({flags=flags,place=BETA,studio=true}))end
 			assert(Flags.GardenDash==true,"the shipped flag (the place and the switch decide)")
 		end)
-		test("a value: boolean override, then boolean config, then on; nothing beats the ceiling",function()
+		test("a value: boolean override, then boolean config, then the part's default (race on, prizes off); nothing beats the ceiling",function()
 			for _,case in ipairs({{nil,nil,true},{false,nil,false},{true,nil,true},{"false",nil,true},{0,nil,true},{false,true,true},{true,false,false},{nil,"off",true}})do
 				assert(Dash.resolve(case[1],case[2],true)==case[3])
 				assert(Dash.resolve(case[1],case[2],false)==false)
+			end
+			for _,case in ipairs({{nil,nil,false},{"true",nil,false},{1,nil,false},{true,nil,true},{false,nil,false},{nil,true,true},{true,false,false}})do
+				assert(Dash.resolve(case[1],case[2],true,"prizes")==case[3]and not Dash.resolve(case[1],case[2],false,"prizes"))
 			end
 		end)
 		test("both keys: off until the server's value and the attribute say on; prizes need racing",function()

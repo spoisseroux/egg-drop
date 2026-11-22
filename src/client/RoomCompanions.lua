@@ -82,7 +82,7 @@ function Companions:update(dt,serverNow)
 			if entry.root~=item.root then entry.followState=nil;PetFollow.rest(entry.visual)end
 			entry.root,entry.actor = item.root,item.actor
 			entry.board=item.board
-			entry.full=index<=Layout.ObserverCap
+			entry.full=index<=Layout.ObserverCap or(self.dash~=nil and self.dash:racing(item.player.UserId))
 			local appearanceKey=appearance and game:GetService("HttpService"):JSONEncode(appearance)
             if appearance and entry.visual.applyAppearance and entry.appearanceKey~=appearanceKey then
 				entry.visual:applyAppearance(appearance);entry.charmVisible=appearance.charmVisible;entry.appearanceKey=appearanceKey
@@ -112,7 +112,9 @@ function Companions:update(dt,serverNow)
 		entry.visual.personalPlayEnabled=actor~=nil and actor.mode=="Room"and entry.board:GetAttribute("Mode")=="Room"
         entry.visual.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
         require(script.Parent.PersonalToyOpportunity).apply(entry.visual,actor,serverNow)
-		if actor and self.park then entry.followState=self.park:drive(entry.visual,actor,serverNow,step,entry.followState,self.reduceEffects())
+		-- Garden Dash: a racing pet is drawn on the course (nil unless Dash is on).
+		if self.dash and self.dash:drive(entry.visual,entry.visual.model:GetAttribute("CompanionOwnerId"),step,self.reduceEffects())then entry.followState=nil
+		elseif actor and self.park then entry.followState=self.park:drive(entry.visual,actor,serverNow,step,entry.followState,self.reduceEffects())
 		elseif actor then entry.followState=PetFollow.activity(entry.visual,actor,serverNow,step,entry.followState,self.reduceEffects())
 		elseif entry.board:GetAttribute("Mode")=="Board"then PetFollow.rest(entry.visual)
 		else entry.followState = PetFollow.step(entry.visual, entry.root, step, entry.followState,self.reduceEffects())end

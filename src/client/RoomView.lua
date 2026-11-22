@@ -149,7 +149,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	self.focusTransition=FocusTransition.new(gui,reduceEffects)
 	-- QA v2 R2.3: the roam camera stays in front of the island's (invisible) collision.
 	self.cameraClamp=require(script.Parent.CameraClamp).new({run=RunService,
-		active=function()return not self.destroyed and self.mode=="Room"and not self.focusing end,
+		active=function()return not self.destroyed and self.mode=="Room"and not self.focusing and not self.dashHeld end,
 		world=function()return workspace:FindFirstChild("EggDropLounge")end})
  self.companions.garden=self.garden
  -- Pet Park (K3): nil unless FeatureFlags.Park; companions drive their pets through it too.
@@ -257,6 +257,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		if self.pet and gardenFocus then self.garden:focus(true,self.shownPet.id)else self.garden:focus(false)end
 		self.garden:step(dt)
 		if self.care then self.care:step()end
+		if self.dash then self.dash:step(dt,serverNow)end -- Garden Dash (DashClient); nil unless it is on
 
 		if self.pet then
 			local character = Players.LocalPlayer.Character
@@ -271,7 +272,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			end
 			local reduced=self.reduceEffects()
 			self.pet.reducedEffects=reduced
-			if root and character~=self.removingCharacter and humanoid and humanoid.Health>0 and not self.focusing and not self.busy and not self.arrivalPlacementPending then
+			if self.dash and self.dash:drive(self.pet,Players.LocalPlayer.UserId,dt,reduced)then self.followState=nil
+			elseif root and character~=self.removingCharacter and humanoid and humanoid.Health>0 and not self.focusing and not self.busy and not self.arrivalPlacementPending then
 				local actor=self.garden:renderActor(Players.LocalPlayer.UserId,self.shownPet.id,character)
                 self.pet.personalPlayEnabled=self.pet.personalPlayEnabled and actor~=nil and actor.mode=="Room"
                 self.pet.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
@@ -289,7 +291,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
             -- standing still (1 s+) within 6 studs.
             local still=root~=nil and root.AssemblyLinearVelocity.Magnitude<.6
             if still then self.ownerStillSince=self.ownerStillSince or serverNow else self.ownerStillSince=nil end
-            self.pet.idleBeatsEnabled=self.mode=="Room"and not self.focusing
+            self.pet.idleBeatsEnabled=self.mode=="Room"and not self.focusing and not self.dashHeld
             self.pet.ownerNearStill=still and serverNow-self.ownerStillSince>=1 and(root.Position-self.pet.origin).Magnitude<=6
             -- FEEL-ALIVE B2/B3: look-at-owner and the owner-still sit (8 studs, 6 s).
             self.pet.ownerPosition=root and root.Position or nil;self.pet.ownerMoving=not still
@@ -722,6 +724,7 @@ function Room:restoreFocusCharacter()
 end
 
 function Room:restoreCamera(keepFocusCover)
+    if self.dashHeld then self:leaveDash()end
     self:restoreFocusCharacter()
     if not keepFocusCover then
         if self.focusTransition and not self.focusTransition.destroyed then self.focusTransition:cancel()end
@@ -754,6 +757,57 @@ function Room:restoreCamera(keepFocusCover)
 	end
 end
 
+-- Garden Dash (DashClient): the race owns the camera and the movement lock from enterDash to leaveDash. Every way
+-- out of the garden (setMode, show, restoreCamera, destroy) leaves first, so a race can never hold a round up.
+function Room:enterDash()
+	if self.dashHeld then return true end
+	local camera,root=self:cameraIdentity()
+	if self.destroyed or self.mode~="Room"or self.target~="Room"or self.busy or self.arrivalPlacementPending or not camera or not camera.Parent then return false end
+	if self.focusing or self.greetingCamera or self.focusTransitioning then
+		if self.focusTransition and not self.focusTransition.destroyed then self.focusTransition:cancel()end
+		self.focusTransitioning,self.focusExiting=false,false
+		self:_useRoomCamera(false)
+	end
+	self:cancelCameraTween()
+	self.dashHeld={camera=camera,shot=PetGreetingShot.capture(camera,root)}
+	MovementLock.shared():acquire("dash")
+	if GuiService.SelectedObject then GuiService.SelectedObject=nil end
+	camera.CameraType=Enum.CameraType.Scriptable
+	self:updateControls()
+	return true
+end
+function Room:dashCamera(frame,fov)
+	local held=self.dashHeld
+	local camera=workspace.CurrentCamera
+	if not held or not camera then return end
+	if held.camera~=camera then held.camera,held.shot=camera,nil end
+	if camera.CameraType~=Enum.CameraType.Scriptable then camera.CameraType=Enum.CameraType.Scriptable end
+	camera.CFrame,camera.Focus,camera.FieldOfView=frame,frame,fov
+end
+function Room:leaveDash()
+	local held=self.dashHeld
+	if not held then return false end
+	self.dashHeld=nil
+	MovementLock.shared():release("dash")
+	local camera,root,humanoid=self:cameraIdentity()
+	if camera then
+		if humanoid then camera.CameraSubject=humanoid end
+		if not PetGreetingShot.restore(held.shot,camera,root)then
+			-- Another character or camera since: behind the avatar, as an arrival.
+			camera.FieldOfView=65
+			if root then
+				local target=root.Position+Vector3.new(0,1,0)
+				camera.CFrame=CFrame.lookAt(target+Vector3.new(5,6,12),target)
+				camera.Focus=CFrame.new(target)
+			end
+		end
+		camera.CameraType=Enum.CameraType.Custom
+	end
+	self.followState=nil
+	if not self.destroyed then self:updateControls()end
+	return true
+end
+
 function Room:retryArrivalPlacement()
 	if self.arrivalPlacementPending and not self.destroyed and self.mode=="Room" and self.target=="Room" then
 		self:useRoomCamera(false)
@@ -780,6 +834,8 @@ function Room:useRoomCamera(animate,arriving)
     return self:_useRoomCamera(animate,arriving)
 end
 function Room:_useRoomCamera(animate, arriving)
+	-- Garden Dash holds the camera: a respawn or a new camera waits for leaveDash.
+	if self.dashHeld then MovementLock.shared():enforce();return false end
     self:restoreFocusCharacter()
 	self.focusStageOrigin,self.focusStageBearing=nil,nil
 	if self.garden then self.garden:focus(false)end
@@ -1334,6 +1390,7 @@ function Room:setMode(mode)
 	end
 	if self.target~=mode then self.lastSwitchAt=os.clock() end
 	self.target=mode
+	if mode~="Room"and self.dashHeld then self:leaveDash()end
 	self.transition:refresh()
 	if mode~="Room" and self.focusing then self:useRoomCamera(false) end
 	if not self.busy and self.mode~=mode then self:driveModes(false) end

@@ -1,8 +1,8 @@
 -- The Garden Dash runtime switches (V3-DASH-BUILD-PLAN-2026-11-22): AliveConfig's publisher on two keys.
 -- ConfigService `garden_dash` = false ends every race and hides the gate without a publish; `garden_dash_prizes`
--- = false turns Stars, ribbons and cups off alone. Both are off until the config has loaded once (or an owner
--- override), then follow it: missing or malformed = the shipped default (on); a later failed or errored
--- snapshot keeps the last good values. Saved Dash fields are untouched either way: off only hides them.
+-- = true turns Stars, ribbons and cups on. Both are off until the config has loaded once (or an owner override),
+-- then follow it: a missing or malformed `garden_dash` is on, missing or malformed prizes are OFF (prizes need an
+-- explicit true); a later failed or errored snapshot keeps the last good values. Saved Dash fields are untouched either way: off only hides them.
 -- With the build ceiling off nothing starts: no attribute is written and ConfigService is never asked.
 -- Owner chat on the beta and in Studio: /dash <on|off|clear>, /dash prizes <on|off|clear>, this server only.
 local Dash=require(game:GetService("ReplicatedStorage").Shared.Dash)
@@ -24,9 +24,9 @@ function Config.new(deps)
 	local self
 	deps.label="Dash"
 	deps.switch={Features=Dash.Features,attribute=Dash.attribute,key=Dash.key,
-		resolve=function(_,value,override,ceiling)
+		resolve=function(feature,value,override,ceiling)
 			if not self.loaded and type(override)~="boolean"then return false end
-			return Dash.resolve(value,override,ceiling)
+			return Dash.resolve(value,override,ceiling,feature)
 		end}
 	local set,hold=deps.set,deps.hold
 	local features={}

@@ -1,4 +1,4 @@
-"""Run the Garden Dash server specs (slice S6) in the Luau command line tool, with Roblox mocks (no Studio).
+"""Run the Garden Dash server and client specs (slices S6, S7) in the Luau command line tool, with Roblox mocks (no Studio).
 
     python scripts/run_dash_server_specs.py [path to luau.exe] [base commit] [live commit]
     DASH_SPECS="ParkDirector MedalEggs" ...   other specs by name (some need engine parts the mocks do not have)
@@ -23,6 +23,31 @@ LIVE = sys.argv[3] if len(sys.argv) > 3 else "aeae2d9"
 ONLY = os.environ.get("DASH_SPECS", "").split()
 SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPrize", "DashGating", "DashHost",
          "DashOffParity", "DashCrossVersion", "CloseProgress"]
+# Client specs: the Dash modules as they are, small stand-ins for the screens they borrow, and RoomView's hooks cut
+# out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and IsStudio true.
+CLIENT = ["DashPredict", "DashCamera", "DashInput", "DashHud", "DashClient"]
+SPECS += CLIENT
+STUBS = {
+    "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
+    "PetFactory": "return{}", "DeckKit": "return{}", "NotificationRail": "return{}",
+    "ConfirmDialog": "return{isOpen=function()return false end}",
+}
+
+
+def client_modules():
+    out = {f"client/{name}": source for name, source in STUBS.items()}
+    for path in sorted((ROOT / "src/client").glob("Dash*.lua")):
+        out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
+    room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
+    hooks = room[room.index("function Room:enterDash()"):room.index("function Room:retryArrivalPlacement()")]
+    out["client/RoomViewDash"] = (
+        "local Room={};Room.__index=Room\nRoom.lock=require(script.Parent.MovementLock).new({})\nlocal MovementLock={shared=function()return Room.lock end}\n"
+        "local GuiService={}\nlocal PetGreetingShot={capture=function(camera,root)return{camera=camera,root=root,position=root and root.Position,"
+        "transform=camera.CFrame,focus=camera.Focus,fov=camera.FieldOfView}end,\nrestore=function(saved,camera,root)if not saved or saved.camera~=camera or "
+        "saved.root~=root or not root then return false end;camera.CFrame,camera.Focus,camera.FieldOfView=saved.transform,saved.focus,saved.fov;return true end}\n"
+        + hooks + "\nreturn Room")
+    out["client/MovementLock"] = (ROOT / "src/client/MovementLock.lua").read_text(encoding="utf-8")
+    return out
 
 
 def git(*args):
@@ -45,8 +70,11 @@ def files(commit):
 
 
 def tree(name, commit):
+    sources = files(commit)
+    if commit is None:
+        sources.update(client_modules())
     body = "\n".join(
-        f'trees.{name}["{path}"]=function(script,require,game)\n{source}\nend' for path, source in files(commit).items())
+        f'trees.{name}["{path}"]=function(script,require,game)\n{source}\nend' for path, source in sources.items())
     return f"trees.{name}={{}}\n{body}"
 
 
@@ -60,6 +88,7 @@ bundle = "\n".join([
     "\n".join(f"specs.{name}=function(game,require)\n{(ROOT / f'scripts/{name}.spec.lua').read_text(encoding='utf-8')}\nend"
               for name in specs),
     f"local ORDER={{{','.join(repr(name) for name in specs)}}}",
+    f"local CLIENT={{{','.join(name + '=true' for name in CLIENT)}}}",
     (ROOT / "scripts/offline_roblox.luau").read_text(encoding="utf-8"),
 ])
 lines = bundle.splitlines()

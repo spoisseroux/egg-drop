@@ -62,6 +62,7 @@ function Rail.held()
   local ok,value=pcall(require,module)
   How=if module and ok and type(value)=="table"then value else false
  end
+ if Rail.holder~=nil and Rail.holder()==true then return true end -- Garden Dash: notices wait for the race
  return How~=false and How.isOpen()==true
 end
 function Rail.tappable(data)return type(data)=="table"and(data.activate~=nil or type(data.detail)=="table")end

@@ -5,7 +5,8 @@
 --   Dash.on()       racing (ConfigService key `garden_dash`)
 --   Dash.prizes()   Stars, ribbons and cups too (`garden_dash_prizes`); off alone, races still run and only the
 --                   best Time Trial is saved
--- Both keys are off until the config has loaded once, then missing = on (server DashConfig). The server is on
+-- Both keys are off until the config has loaded once (server DashConfig). Then a missing `garden_dash` is on, but
+-- prizes are only ever on by an explicit true: missing or malformed stays off. The server is on
 -- only while its own resolved value and the attribute it published both say so. Clients read the workspace
 -- attributes the server writes; a missing one (no such server code, or not started) is off.
 local RunService=game:GetService("RunService")
@@ -15,6 +16,8 @@ Dash.PlaceId=107705084891479 -- Pocket Pals Beta
 Dash.Features=table.freeze({"race","prizes"})
 Dash.Attributes=table.freeze({race="Dash_race",prizes="Dash_prizes"})
 Dash.Keys=table.freeze({race="garden_dash",prizes="garden_dash_prizes"})
+-- What a missing or malformed value means, per part.
+Dash.Default=table.freeze({race=true,prizes=false})
 function Dash.attribute(feature)return Dash.Attributes[feature]end
 function Dash.key(feature)return Dash.Keys[feature]end
 
@@ -27,13 +30,13 @@ function Dash.ceiling(env)
 	if studio==nil then studio=RunService:IsStudio()end
 	return(env.place or game.PlaceId)==Dash.PlaceId or studio==true
 end
--- Pure: a switch value. Anything but a boolean (missing, malformed) is the shipped default, on.
-function Dash.resolve(configValue,override,ceiling)
+-- Pure: a switch value. Anything but a boolean (missing, malformed) is the part's shipped default.
+function Dash.resolve(configValue,override,ceiling,feature)
 	if ceiling==nil then ceiling=Dash.ceiling()end
 	if not ceiling then return false end
 	if type(override)=="boolean"then return override end
 	if type(configValue)=="boolean"then return configValue end
-	return true
+	return Dash.Default[feature or"race"]==true
 end
 -- Server only (DashConfig): the resolved values every server check reads. Off until they are set.
 local switches={race=false,prizes=false}

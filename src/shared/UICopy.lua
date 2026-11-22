@@ -183,6 +183,20 @@ local Table={
    starsEarned="Stars earned",starsSpent="Stars spent",stamps="Stamps collected"},
  },
  -- Pet Park K3: the park chip (shown only while the owner is inside the kerb).
+ -- Garden Dash (V3 slice S7). Short: most of it is read while running.
+ dash={title="Garden Dash",prompt="Race",fun="Just for Fun",stats="Stats On",trial="Time Trial",jump="Jump",dash="Dash",stones="Take the stones",
+  go="GO!",perfect="Perfect!",clear="Nice!",trip="Oops!",clover="Lucky clover!",zoom="Zoomies!",puff="Phew!",leave="Leave race",again="Race again",done="Done",
+  newCup="You won a cup!",gather="{name} · {count} of 8 · {left}",queue="You're next in line",
+  gate={line="Your pet runs. Jump the hoops. Hold Dash to zoom!",modes="Just for Fun: all pets equal. Stats On: your pet's levels count."},
+  ask={title="Leave the race?",line="Your pet runs on, but you won't get a ribbon.",yes="Leave",no="Keep racing"},
+  ordinal={p1="1st",p2="2nd",p3="3rd",p4="4th",p5="5th",p6="6th",p7="7th",p8="8th"},
+  medal={bronze="Bronze cup time!",silver="Silver cup time!",gold="Gold cup time!"},
+  result={place="You finished {place}!",trial="{time} s!",noTime="Almost home!",time="Time {time} s",home="Almost home!",tryAgain="Try again for a cup!",best="Best {best} s",
+   stars="+{reward} Stars ({done} of {total} today)"},
+  reason={Far="Come closer to the gate",NoPet="Bring your pet with you",NoCharacter="Try again in a moment",Carried="Put your pet down first",Busy="Your pet is busy",
+   Petting="Your pet is busy",Hatching="Finish hatching first",Saving="Saving. Try again soon",Queued="You're next in line",WrongBand="That race is for other levels. You're next!",
+   Full="The line is full",Off="The race has stopped",Error="The race has stopped",Empty="The race has stopped",Deck="You left the race",Left="You left the race",
+   PetChanged="You changed pets",AlreadySeated="You're already in",Throttled="One moment",StalePet="Try again in a moment",other="Can't race right now"}},
  park={waitIdle="Pets are playing",count="Pets playing {count}/{capacity}",full="Park full · {count}/{capacity}",otherHasRoom="The other park has room",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
  onboarding={

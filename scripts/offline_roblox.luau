@@ -292,7 +292,7 @@ local function build(name)
 		folders[side]=f
 		return f
 	end
-	folder("shared");folder("server")
+	folder("shared");folder("server");folder("client")
 	local replicated=instance("ReplicatedStorage")
 	rawget(replicated,"props").Shared=folders.shared
 	function game:GetService(service)
@@ -310,7 +310,7 @@ local function build(name)
 		end
 		return loaded[path]
 	end
-	return{server=folders.server,shared=folders.shared,game=game,require=requireModule}
+	return{server=folders.server,shared=folders.shared,client=folders.client,game=game,require=requireModule}
 end
 local new,base,live=build("new"),build("base"),build("live")
 local offline={base=base,live=live,new=new,encode=encode,Instance=Instance,signal=signal,heartbeat=heartbeat,services=services,warnings=quiet}
@@ -320,6 +320,7 @@ for _,name in ipairs(ORDER)do
 	local ok,result=xpcall(function()
 		local spec=specs[name](new.game,new.require)
 		if name=="CloseProgress"then return spec(new.require(new.server.CloseProgress))end
+		if CLIENT and CLIENT[name]then return spec(new.client,offline)end
 		return spec(new.server,offline)
 	end,function(e)return tostring(e).."\n"..debug.traceback()end)
 	if ok then

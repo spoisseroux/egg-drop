@@ -1,0 +1,317 @@
+-- Garden Dash client (DashClient and RoomView's camera hooks, slice S7) with a fake room, screen and network: off is
+-- nothing at all, and every way out of a race gives the camera, the controls and the pet back.
+-- Offline only (scripts/run_dash_server_specs.py): it replaces DashHud, DashCard, DashInput.mount and the services.
+return function(client,offline)
+	local RS=game:GetService("ReplicatedStorage")
+	local Shared=RS.Shared
+	local Dash=require(Shared.Dash)
+	local Sim=require(Shared.DashSim)
+	local Wire=require(Shared.DashWire)
+	local Stats=require(Shared.DashStats)
+	local HttpService=game:GetService("HttpService")
+	local cases={}
+	local function test(name,run)run();table.insert(cases,name)end
+	offline.services.Players={LocalPlayer={UserId=7,GetNetworkPing=function()return .04 end,RequestStreamAroundAsync=function()end}}
+	offline.services.GuiService={MenuIsOpen=false}
+	offline.services.UserInputService={GetFocusedTextBox=function()return nil end}
+	local Hud,Card,Input,Rail,Confirm=require(client.DashHud),require(client.DashCard),require(client.DashInput),require(client.NotificationRail),require(client.ConfirmDialog)
+	local Client=require(client.DashClient)
+	local Props=require(client.DashProps)
+	local ON={flags={GardenDash=true},studio=true}
+	local function signal()return offline.signal()end
+	local plain=Instance.new
+	Instance.new=function(class,parent)
+		local item=plain(class,parent)
+		if class=="ProximityPrompt"then item.Triggered=signal()end
+		return item
+	end
+	local function pet()return{origin=Vector3.zero,worldScale=.72,model={},update=function()end,destroy=function(self)self.gone=true end,applyGardenPose=function()end}end
+	require(client.PetFactory).create=function()return pet()end
+	-- The screen, the cards and the device.
+	local screen
+	Hud.new=function()
+		screen={on=false}
+		return setmetatable({zones={},stones={},show=function()screen.on=true;screen.rest=false end,hide=function()screen.on=false end,rest=function()screen.rest=true end,destroy=function()screen.gone=true;screen.on=false end,
+			say=function(_,text)screen.word=text end,setDigits=function(_,text)screen.digits=text end},{__index=function()return function()end end})
+	end
+	local card
+	Card.open=function(options)
+		card={options=options,lines=table.clone(options.lines),closed=false}
+		function card:close()self.closed=true end
+		function card:setLine(i,text)self.lines[i]=text end
+		function card:pick(name)for _,b in ipairs(options.buttons)do if b.name==name then self.closed=true;b.act();return end end;error(name)end
+		return card
+	end
+	local device
+	Input.mount=function(options)
+		device={core=options.core,bound=false}
+		return{open=function()device.bound=true;options.core:setOpen(true)end,close=function()device.bound=false;options.core:setOpen(false)end,destroy=function()device.bound=false;device.gone=true end}
+	end
+	local asked
+	Confirm.ask=function(options)asked=options;return{cancel=function()asked=nil end}end
+
+	local now
+	local function rig(env)
+		now=1000
+		Dash.inject(env or ON)
+		local r={requests={},inputs={},notes={},modal=false,roam=true,menusClosed=0,saved=nil}
+		local remotes=Instance.new("Folder")
+		local function remote(name,sent)
+			local item=Instance.new("RemoteEvent");item.Name=name;item.OnClientEvent=signal()
+			item.FireServer=function(_,packet)table.insert(sent,packet)end
+			item.Parent=remotes
+			return item
+		end
+		remotes.ChildAdded=signal()
+		r.remotes=remotes
+		r.request=remote(Wire.Remotes.request,r.requests);r.input=remote(Wire.Remotes.input,r.inputs)
+		r.event=remote(Wire.Remotes.event,{});r.state=remote(Wire.Remotes.state,{})
+		local old=RS:FindFirstChild("GardenState");if old then old:Destroy()end
+		r.folder=Instance.new("Folder");r.folder.Name="GardenState";r.folder.Parent=RS
+		RS.ChildAdded=signal()
+		r.gui=Instance.new("Folder")
+		r.room={mode="Room",target="Room",held=false,locks=0,frames=0,pet=pet(),companions={active={}},shownPet={id="pip"},
+			garden={petGeneration=function()return 1 end,characterId=function()return 2 end},
+			enterDash=function(room)if room.refuse then return false end;room.held=true;room.locks+=1;return true end,
+			leaveDash=function(room)if room.held then room.held=false;room.locks-=1 end end,
+			dashCamera=function(room)assert(room.held,"the camera only while held");room.frames+=1 end}
+		Rail.enqueue=function(_,key)table.insert(r.notes,key)end
+		Rail.status=function()return{update=function(_,v)r.line=v.text end,cancel=function()r.line=nil end}end
+		Rail.holder=nil
+		r.client=Client.mount({remotes=remotes,roomView=r.room,playerGui=r.gui,audio={play=function()end},reduced=function()return r.reduced==true end,
+			state=function()return{dash=r.saved}end,canRoam=function()return r.roam end,modalOpen=function()return r.modal end,closeMenus=function()r.menusClosed+=1 end})
+		function r.fire(packet)r.event.OnClientEvent:Fire(packet)end
+		function r.frame(count,dt)
+			for _=1,count or 1 do
+				now+=dt or 1/60
+				if r.room.dash then
+					r.room.dash:step(dt or 1/60,now)
+					if r.room.dash then r.drawn=r.room.dash:drive(r.room.pet,7,1/60,false)end
+				else r.drawn=false end
+			end
+		end
+		function r.lock(mode,count,trial)
+			local runners={}
+			for i=1,count or 4 do runners[i]=if i==1 then {}else{bot=true}end
+			r.race=Sim.new({seed=9,mode=mode or"fun",runners=runners})
+			r.id=if trial then "trial-1"else "race-1"
+			r.fire({kind="joined",raceId=r.id,seat=1,mode=mode or"fun",trial=trial})
+			r.goAt=now+3.5
+			local seats={}
+			for i=1,count or 4 do seats[i]=if i==1 then{seat=1,userId=7,petId="pip"}else{seat=i,pal=true,petId="blip",name={"noodle"},tint=1}end
+			r.plan=Sim.publicPlan(r.race.plan)
+			r.fire({kind="locked",raceId=r.id,seat=1,mode=mode or"fun",goAt=r.goAt,plan=r.plan,trial=trial})
+			if not trial then r.roster({v=1,phase="countdown",raceId=r.id,mode=mode or"fun",goAt=r.goAt,plan=r.plan,seats=seats,queue={}})end
+		end
+		function r.roster(value)r.folder:SetAttribute(Wire.RosterAttribute,HttpService:JSONEncode(value))end
+		function r.free(why)
+			assert(not r.room.held and r.room.locks==0,why..": camera and controls")
+			assert(r.client.seat==nil and not r.client:held(),why..": seat")
+			assert(not(screen and screen.on)and not(device and device.bound),why..": screen and buttons")
+			r.frame();assert(r.drawn==false and r.room.pet.dashState==nil and r.room.pet.parkPose~=true,why..": the pet")
+		end
+		function r.done()r.client:destroy();Dash.inject(nil)end
+		return r
+	end
+
+	test("ceiling off: nil; switch off: no instances, no hooks, nothing stepped",function()
+		Dash.inject({flags={},studio=true});assert(Client.mount({})==nil)
+		local r=rig({flags={GardenDash=true},studio=true,race=false})
+		assert(r.client and not r.client.isOpen and r.room.dash==nil and r.room.companions.dash==nil and Rail.holder==nil)
+		assert(#r.gui:GetChildren()==0 and workspace:FindFirstChild(Props.FolderName)==nil and #r.event.OnClientEvent.list==0)
+		assert(not r.client:held()and not r.client:panelOpen()and not r.client:askLeave(function()error("no")end))
+		r.done()
+	end)
+	test("on and off again leaves the same trees, hooks and connections",function()
+		local r=rig()
+		assert(r.room.dash==r.client and workspace:FindFirstChild(Props.FolderName)and #r.event.OnClientEvent.list==1)
+		r.lock();r.frame(5);assert(r.room.held)
+		Dash.inject({flags={GardenDash=true},studio=true,race=false});workspace:SetAttribute("Dash_race",not workspace:GetAttribute("Dash_race"))
+		assert(r.room.dash==nil and r.room.companions.dash==nil and Rail.holder==nil and workspace:FindFirstChild(Props.FolderName)==nil)
+		assert(#r.gui:GetChildren()==0 and #r.event.OnClientEvent.list==0 and #r.state.OnClientEvent.list==0)
+		r.free("switch off")
+		r.done()
+	end)
+	test("a race: held from the countdown, buttons from GO, a press goes out, the result and Done give everything back",function()
+		local r=rig()
+		assert(r.client.prompt)
+		r.frame(20);assert(r.client.prompt.Enabled==true)
+		r.client:gate();card:pick("Fun")
+		local join=r.requests[#r.requests];assert(join.kind=="join"and join.mode=="fun"and join.petId=="pip"and join.petGeneration==1 and join.characterId==2 and Wire.request(join))
+		r.fire({kind="reply",request="join",seq=join.seq,ok=true,raceId="race-1"})
+		r.lock();assert(r.menusClosed==1 and r.client:held()and Rail.holder())
+		r.frame();assert(r.room.held and screen.on and r.drawn and not device.bound and screen.digits=="3"or screen.digits==nil)
+		assert(not device.core:begin("t","jump"),"not before GO")
+		r.frame(230);assert(device.bound and screen.digits=="GO!")
+		assert(device.core:begin("k","jump"));local packet=r.inputs[#r.inputs];assert(packet.k=="jump"and packet.r=="race-1"and Wire.input(packet))
+		device.core:begin("s","dash");assert(r.inputs[#r.inputs].k=="dashDown")
+		-- A refused dashDown is pressed again while held.
+		r.fire({kind="refusedInput",r="race-1",n=r.inputs[#r.inputs].n,reason="late"});local count=#r.inputs
+		r.frame();assert(#r.inputs==count+1 and r.inputs[#r.inputs].k=="dashDown")
+		r.fire({kind="zoom",r="race-1",tick=40});assert(screen.word=="Zoomies!")
+		r.fire({kind="zoom",r="old",tick=41})
+		r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=2,us=41000000})
+		assert(not device.bound and r.inputs[#r.inputs].k=="dashUp"and screen.rest and r.room.held,"the finish is still on screen")
+		r.client.seat.cardAt=-1;r.frame(20);assert(card.options.name=="Results"and card.options.title=="You finished 2nd!"and card.lines[3]=="")
+		r.saved={paid=1,limit=5,best=41000000,last={op="x",stars=2}};r.frame(20);assert(card.lines[3]=="+2 Stars (1 of 5 today)")
+		card:pick("Done");r.free("done")
+		r.done()
+	end)
+	test("Race again and back; the results close themselves",function()
+		local r=rig()
+		r.lock();r.frame(5)
+		r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=1,us=41000000});r.client.seat.cardAt=-1;r.frame(20)
+		local before=#r.requests;card:pick("Again");r.free("again");assert(#r.requests==before+1 and r.requests[#r.requests].kind=="join")
+		r.lock("trial",1,true);r.frame(5);assert(r.room.held)
+		r.fire({kind="result",r="trial-1",trial=true,mode="trial",seats={},seat=1,place=1,us=31000000,medal="silver"});r.client.seat.cardAt=-1;r.frame(20)
+		assert(card.options.title=="31.0 s!");r.client.seat.closeAt=-1;r.frame(20);assert(card.closed);r.free("left alone")
+		r.done()
+	end)
+	test("every other way out: abort, refused, an error, the Deck, a mode switch, leaving",function()
+		for name,out in pairs({
+			abort=function(r)r.fire({kind="aborted",r="race-1",reason="Error"})end,
+			refused=function(r)r.fire({kind="refused",raceId="race-1",reason="Deck"})end,
+			deck=function(r)r.room.target="Board";r.frame();assert(r.requests[#r.requests].kind=="leave")end,
+			error=function(r)r.client.seat.predict.runner=nil;r.frame();assert(r.client.errors==1)end,
+			drive=function(r)r.room.pet.dashState={};r.frame();assert(r.client.errors==1)end,
+			leave=function(r)assert(r.client:askLeave(function()r.acted=true end));assert(r.room.held,"asked first");asked.onConfirm();assert(r.acted and r.requests[#r.requests].kind=="leave")end,
+			stale=function(r)now+=200;r.frame();assert(r.requests[#r.requests].kind=="leave")end,
+			newRace=function(r)r.fire({kind="joined",raceId="other",seat=1,mode="fun"});r.fire({kind="refused",raceId="other",reason="Far"})end,
+		})do
+			local r=rig();r.lock();r.frame(240)
+			assert(r.room.held and device.bound,name)
+			device.core:begin("s","dash")
+			if name=="newRace"then r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=1,us=1})end
+			out(r)
+			r.free(name)
+			assert(r.inputs[#r.inputs].k=="dashUp"or name=="error"or name=="stale",name..": dash let go")
+			r.done()
+		end
+	end)
+	test("three errors turn it off here, with everything given back",function()
+		local r=rig()
+		for _=1,3 do r.lock();r.frame(3);r.client.seat.predict.runner=nil;r.frame()end
+		assert(r.client.dead and not r.client.isOpen and r.room.dash==nil)
+		r.free("three errors")
+		r.done()
+	end)
+	test("another screen over a race: camera and controls back while it is open, then the race again",function()
+		local r=rig();r.lock();r.frame(240);device.core:begin("s","dash")
+		r.modal=true;r.frame()
+		assert(not r.room.held and r.room.locks==0 and not screen.on and not device.bound and r.inputs[#r.inputs].k=="dashUp"and r.client.seat and r.drawn)
+		r.modal=false;r.frame();assert(r.room.held and screen.on);r.frame();assert(device.bound)
+		r.client:leave();r.free("after")
+		-- A room that cannot give its camera yet is asked again.
+		r.room.refuse=true;r.lock();r.frame(3);assert(not r.room.held and r.drawn);r.room.refuse=false;r.frame();assert(r.room.held)
+		r.client:leave();r.done()
+	end)
+	test("gather: the player walks and the garden is not held; the Deck asks; a queue is left quietly",function()
+		local r=rig()
+		r.fire({kind="joined",raceId="race-1",seat=1,mode="fun"})
+		r.roster({v=1,phase="gather",raceId="race-1",mode="fun",endsAt=12,seats={{seat=1,userId=7,petId="pip"}},queue={}})
+		r.frame(30);assert(not r.room.held and not r.client:held()and r.line and string.find(r.line,"Just for Fun",1,true))
+		local pings=0;for _,p in ipairs(r.requests)do if p.kind=="ping"then pings+=1 end end;assert(pings>=1)
+		assert(r.client:askLeave(function()end))
+		r.fire({kind="refused",raceId="race-1",reason="Far"});r.frame(30);assert(r.line==""and r.notes[#r.notes]=="dash.reason.Far")
+		r.fire({kind="joined",raceId="race-2",seat=1,mode="fun",promoted=true,closer=true});assert(#r.notes==2 and r.notes[2]=="dash.reason.Far")
+		r.fire({kind="refused",raceId="race-2",reason="Far"})
+		r.client:gate();card:pick("Stats");local join=r.requests[#r.requests]
+		r.fire({kind="reply",request="join",seq=join.seq,ok=true,reason="WrongBand"});assert(r.client.queued)
+		assert(not r.client:askLeave(function()end)and r.requests[#r.requests].kind=="leave"and not r.client.queued)
+		r.done()
+	end)
+	test("rivals and pals: drawn from the states, at most 400 ms on; parts stay under the cap; another race's state is ignored",function()
+		local r=rig();r.lock("fun",8);r.frame(12)
+		local heat=r.client.heat
+		assert(heat and heat.byUser[7]and not r.client:racing(8)and r.client:racing(7))
+		local pals=0;for _,track in pairs(heat.tracks)do if track.visual then pals+=1 end end;assert(pals==7,"one a frame")
+		assert(r.client.props.count<=Props.MaxParts and #workspace:FindFirstChild(Props.FolderName):GetChildren()<=Props.MaxParts)
+		now=r.goAt
+		for _=1,200 do Sim.step(r.race)end
+		r.state.OnClientEvent:Fire(Wire.encode("race-1",r.race,Stats.UnitsPerCs))
+		r.frame(30)
+		local track=heat.tracks[2];assert(track.tick==200 and track.draw>0)
+		r.state.OnClientEvent:Fire(Wire.encode("older",r.race,Stats.UnitsPerCs));r.state.OnClientEvent:Fire("junk");r.state.OnClientEvent:Fire(nil)
+		local unit=heat.unit
+		local at={cs=1000,pace=100,tick=200,flags={}}
+		assert(Client.ahead(at,200,unit)==1000 and Client.ahead(at,100000,unit)==1000+unit*40)
+		at.flags={tumble=true};assert(Client.ahead(at,240,unit)==1000)
+		at.flags={finished=true};assert(Client.ahead(at,240,unit)==1000)
+		-- A level 50 pet at plain pace covers 6.75 studs a second.
+		assert(math.abs(unit*100-675)<1)
+		r.client:leave()
+		local held={};for _,t in pairs(heat.tracks)do table.insert(held,t.visual)end
+		r.room.mode="Board";r.frame();for _,v in ipairs(held)do assert(v.gone)end
+		r.room.mode="Room";r.frame(10);r.roster({v=1,phase="idle",seats={},queue={}})
+		assert(r.client.heat==nil);r.frame(60);assert(r.client.props.share==0)
+		r.folder:SetAttribute(Wire.RosterAttribute,"{bad");r.folder:SetAttribute(Wire.RosterAttribute,nil)
+		r.done()
+	end)
+	test("Reduced Motion: no hoop rise, no spin, no hop",function()
+		local r=rig();r.reduced=true;r.lock();r.frame(2);assert(r.client.props.share==1)
+		local Pose=require(client.DashPose)
+		for _,reduced in ipairs({false,true})do
+			local v,s=pet(),Pose.state();Pose.begin(v,s)
+			local pitch,high=0,0
+			for i=1,60 do
+				Pose.step(v,s,1000,false,1,{tumble=true},true,1/60,reduced)
+				pitch=math.max(pitch,math.abs(v.carePitch))
+			end
+			assert(reduced==(pitch==0)and v.activitySit==true,"a sit")
+			local _,base=require(Shared.DashCourse).at(1000,false,1)
+			Pose.step(v,s,1000,false,1,{air=true},true,1/60,reduced)
+			for _=1,40 do Pose.step(v,s,1000,false,1,{},true,1/60,reduced);high=math.max(high,v.origin.Y-base)end
+			assert(if reduced then high<.7 else high>.9)
+			Pose.clear(v);assert(v.parkPose==false and v.carePitch==0 and v.activitySit==false)
+		end
+		r.client:leave();r.done()
+	end)
+	test("a server-drawn race: after two disagreements the own pet follows the states",function()
+		local r=rig();r.lock();r.frame(240)
+		r.client.seat.predict.serverRender=true
+		for _=1,120 do Sim.step(r.race)end
+		r.state.OnClientEvent:Fire(Wire.encode("race-1",r.race,Stats.UnitsPerCs));r.frame(20)
+		assert(r.client.seat.track.tick==120 and r.client.seat.raw==r.client.seat.track.draw and r.drawn)
+		r.fire({kind="judged",r="race-1",jump=1,result=1,tick=100});assert(screen.word=="Perfect!")
+		r.client:leave();r.done()
+	end)
+	test("junk packets change nothing",function()
+		local r=rig()
+		for _,junk in ipairs({1,"x",{},{kind="locked"},{kind="locked",raceId="r",seat="1"},{kind="joined"},{kind="result",r="r"},{kind="zoom"},{kind="reply"},{kind="refusedInput",r="race-1",n=5}})do r.fire(junk)end
+		assert(r.client.errors==0 and not r.room.held)
+		r.fire({kind="locked",raceId="r",seat=1,plan={},goAt=5});assert(r.client.seat==nil and r.requests[#r.requests].kind=="leave")
+		r.lock();r.frame(3);for _,odd in ipairs({{kind="zoom",r="race-1",tick="x"},{kind="refusedInput",r="race-1"},{kind="result",r="other"}})do r.fire(odd)end
+		assert(r.client.errors==0 and r.client.seat.phase=="countdown")
+		r.client:leave();r.done()
+	end)
+	test("RoomView: enterDash and leaveDash always pair, whatever the camera or character became",function()
+		local Room=require(client.RoomViewDash) -- the hooks alone, cut from RoomView.lua by the runner
+		local lock=Room.lock
+		local function make()
+			local camera={Parent=true,CFrame=CFrame.new(0,5,0),Focus=CFrame.new(0,0,0),FieldOfView=70,CameraType="Custom"}
+			local room=setmetatable({mode="Room",target="Room",updateControls=function()end,cancelCameraTween=function()end},Room)
+			workspace.CurrentCamera=camera
+			local root={Position=Vector3.new(1,2,3),Parent={}}
+			room.cameraIdentity=function()return workspace.CurrentCamera,room.root,room.humanoid end
+			room.root,room.humanoid=root,{Health=100}
+			return room,camera
+		end
+		local room,camera=make()
+		assert(room:enterDash()and room:enterDash()and lock:holds("dash")and lock:count()==1 and camera.CameraType==Enum.CameraType.Scriptable)
+		camera.CameraType="Custom";room:dashCamera(CFrame.new(9,9,9),58);assert(camera.FieldOfView==58 and camera.CameraType==Enum.CameraType.Scriptable,"a respawn's reset is undone")
+		assert(room:leaveDash()and not room:leaveDash()and not lock:holds("dash")and camera.CameraType==Enum.CameraType.Custom and camera.FieldOfView==70 and camera.CFrame.Y==5)
+		assert(camera.CameraSubject==room.humanoid)
+		room,camera=make();room:enterDash();room.root={Position=Vector3.new(50,2,3),Parent={}};room:leaveDash()
+		assert(camera.CFrame.X==55 and camera.FieldOfView==65 and lock:count()==0,"a new character: behind it")
+		room,camera=make();room:enterDash();workspace.CurrentCamera=nil;room:leaveDash();assert(lock:count()==0)
+		for _,odd in ipairs({{mode="Board"},{target="Board"},{busy=true},{destroyed=true},{arrivalPlacementPending=true}})do
+			room=make();for k,v in pairs(odd)do room[k]=v end
+			assert(not room:enterDash()and lock:count()==0)
+		end
+		local canceled=false
+		room=make();room.focusing=true;room.focusTransition={destroyed=false,cancel=function()canceled=true end};room._useRoomCamera=function(self)self.focusing=false end
+		assert(room:enterDash()and canceled and not room.focusing);room:leaveDash()
+	end)
+	Dash.inject(nil);Instance.new=plain
+	return{passed=#cases,cases=cases}
+end

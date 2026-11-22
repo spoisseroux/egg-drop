@@ -656,6 +656,8 @@ local function isPickerOpen()
 	return picker ~= nil and picker.shade.Visible
 end
 local roomView = RoomView.new(gui, backdrop, board, audio, function()
+	-- Garden Dash: opening the Deck gives up a seat, so it asks first (nil unless Dash is on).
+	if clientUI.dash and clientUI.dash:askLeave(function()cancelHatchNavigation();request:FireServer("mode","Board");clientUI.accepted("confirm")end)then return end
 	cancelHatchNavigation()
 	request:FireServer("mode", "Board");clientUI.accepted("confirm")
 end, function()
@@ -664,6 +666,7 @@ end, function()
 	if openJournal()then clientUI.accepted("confirm")end
 end, function()
 	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
+		or (clientUI.dash ~= nil and (clientUI.dash:held() or clientUI.dash:panelOpen()))
 end, reduceEffects, function() if openNursery then openNursery() end end)
 roomView.onShowMode=function(mode)clientUI.shownMode=mode;clientUI.refreshInsets()end
 clientUI.petContactRemote=remotes:WaitForChild("PetContact")
@@ -693,7 +696,8 @@ local function stationContext()
 		position=if alive then root.Position else nil,busy=roomView.busy or roomView.transition.shade.Visible,
 		switchQueued=roomView.switchQueued,focusing=roomView.focusing,menuOpen=roomView.menuOpen,
 		overlay=(modal and modal.Visible) or isPickerOpen() or (journal and journal.shade.Visible)
-			or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible),
+			or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible)
+			or (clientUI.dash ~= nil and (clientUI.dash:held() or clientUI.dash:panelOpen())),
 		coreMenu=GuiService.MenuIsOpen,textCapture=UserInputService:GetFocusedTextBox()~=nil,
 		snapshot=nurseryState,rank=board:GetAttribute("OwnedPets") or 0,trials=board:GetAttribute("TrialMask") or 0}
 end
@@ -1393,7 +1397,8 @@ do
    and not(nurseryState and nurseryState.lastHatch)and not(clientUI.snacks and clientUI.snacks.reveal and clientUI.snacks.reveal:isOpen())
    and not clientUI.isHueOpen()and not clientUI.book:isOpen()and not(clientUI.isWardrobeOpen and clientUI.isWardrobeOpen())
    and not modal.Visible and not isPickerOpen()and not journal.shade.Visible and not gameMenu.shade.Visible and not clientUI.questLog.visible
-   and not GuiService.MenuIsOpen and not clientUI.deckResults.visible and not(clientUI.bugReport and clientUI.bugReport:isOpen())end,
+   and not GuiService.MenuIsOpen and not clientUI.deckResults.visible and not(clientUI.bugReport and clientUI.bugReport:isOpen())
+   and not(clientUI.dash and clientUI.dash:held())end,
   appearance=function(petId)return nurseryView.appearanceFor(petId)end,
   canOpen=function()return not roomView.busy and board:GetAttribute("Mode")=="Room"and not(nurseryState and nurseryState.lastHatch)
    and not clientUI.book:isOpen()and not clientUI.hueView:isOpen()and not(clientUI.isWardrobeOpen and clientUI.isWardrobeOpen())
@@ -1748,6 +1753,7 @@ openMenu = function(options)
 	options=options or {}
 	cancelHatchNavigation()
 	if roomView.busy or modal.Visible or nurseryView:isOpen() or clientUI.isHueOpen() then return end
+	if clientUI.dash and (clientUI.dash:held() or clientUI.dash:panelOpen()) then return end
 	if (clientUI.hub and clientUI.hub:isOpen()) or (clientUI.book and clientUI.book:isOpen()) or clientUI.questLog.visible
 		or (clientUI.stats and (clientUI.stats.isOpen() or clientUI.stats.isBusy()))
 		or (clientUI.names and clientUI.names.isOpen())
@@ -4525,8 +4531,9 @@ gui.Destroying:Connect(function()
 	table.clear(eggViews);table.clear(viewsById);table.clear(pixelMerges)
 end)
 -- QA Q2.5: alt-tab back with a menu screen open keeps the cursor free and the camera off the mouse.
-clientUI.anyModalOpen=function()
- return(clientUI.hub~=nil and clientUI.hub:isOpen())or(clientUI.wardrobe~=nil and clientUI.wardrobe:isOpen())or(clientUI.book~=nil and clientUI.book:isOpen())
+-- `others`: every screen but the Garden Dash cards (DashClient asks).
+clientUI.anyModalOpen=function(others)
+ return(not others and clientUI.dash~=nil and clientUI.dash:panelOpen())or(clientUI.hub~=nil and clientUI.hub:isOpen())or(clientUI.wardrobe~=nil and clientUI.wardrobe:isOpen())or(clientUI.book~=nil and clientUI.book:isOpen())
   or(clientUI.stats~=nil and(clientUI.stats.isOpen()or clientUI.stats.isBusy()))
   or isPickerOpen()or(journal~=nil and journal.shade.Visible)or(nurseryView~=nil and nurseryView:isOpen())or clientUI.isHueOpen()
   or(gameMenu~=nil and(gameMenu:isOpen()or gameMenu.shade.Visible))or(modal~=nil and modal.Visible)
@@ -4539,6 +4546,22 @@ end
 clientUI.movementLock=require(script.MovementLock).shared()
 clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui"),movement=clientUI.movementLock})
 gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
+-- Garden Dash (DashClient): nil with the build ceiling off; with the switch off it only watches for the switch.
+do
+ local ok,problem=pcall(function()
+  clientUI.dash=require(script.DashClient).mount({remotes=remotes,roomView=roomView,playerGui=gui.Parent,audio=audio,reduced=reduceEffects,
+   state=function()return nurseryState end,canRoam=function()return roomView.canRoam()end,
+   modalOpen=function()return clientUI.anyModalOpen(true)end,
+   closeMenus=function()
+    clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
+    if gameMenu and gameMenu.shade.Visible and closeMenu then closeMenu()end
+    if clientUI.hub and clientUI.hub:isOpen()then clientUI.hub:close("dash")end
+    roomView:setMenuOpen(false)
+   end})
+ end)
+ if ok and clientUI.dash then gui.Destroying:Connect(function()clientUI.dash:destroy()end)
+ elseif not ok then warn("[Dash] not mounted: "..tostring(problem))end
+end
 layout()
 updateHud()
 roomView:startPresentation(board:GetAttribute("Mode"))
