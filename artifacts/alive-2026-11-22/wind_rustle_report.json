@@ -1,0 +1,47 @@
+{
+  "file": "assets/audio/custom/egg_drop_wind_rustle.wav",
+  "brief": "ALIVE-BRIEF-2026-11-22 section 3, row D1",
+  "method": "numpy shaped noise only, seed 20261122; built on a circle, so the loop has no crossfade",
+  "judged_by": "numbers only; nobody has listened to this file yet",
+  "suggested_volume_at_gust_peak": 0.1,
+  "ticks": 3220,
+  "measurements": {
+    "seconds": 14.0,
+    "sample_rate": 44100,
+    "channels": 1,
+    "bits": 16,
+    "samples": 617400,
+    "peak_dbfs": -6.0,
+    "clipped_samples": 0,
+    "rms_dbfs": -20.06,
+    "crest_db": 14.06,
+    "dc_offset": -0.0,
+    "spectral_centroid_hz": 1703.2,
+    "energy_share": {
+      "below_300_hz": 1e-06,
+      "300_to_600_hz": 0.013,
+      "600_to_5000_hz": 0.9778,
+      "5000_to_7000_hz": 0.0092,
+      "above_7000_hz": 1e-06
+    },
+    "loop_seam": {
+      "step_last_to_first": 0.01947,
+      "median_sample_step": 0.013916,
+      "p95_sample_step": 0.057526,
+      "max_sample_step": 0.224854,
+      "seam_over_median": 1.4,
+      "third_octave_diff_db_across_wrap": 1.18,
+      "third_octave_diff_db_neighbouring_half_seconds_mean": 2.51,
+      "third_octave_diff_db_neighbouring_half_seconds_max": 4.62,
+      "rms_dbfs_last_100_ms": -16.59,
+      "rms_dbfs_first_100_ms": -17.59
+    },
+    "half_second_windows": {
+      "loudest_rms_dbfs": -17.77,
+      "loudest_at_s": 13.6,
+      "quietest_rms_dbfs": -22.9,
+      "quietest_at_s": 9.25,
+      "spread_db": 5.13
+    }
+  }
+}

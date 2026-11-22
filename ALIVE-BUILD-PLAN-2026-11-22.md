@@ -59,3 +59,18 @@ New: `KitSpring`, `Alive` (shared/client), `AliveConfig` (server, fake service),
 - **Wind** (step 4): `Wind, WindClient, WorldMotion`, `AmbientAudio` rustle hook, specs; mounts from a do-block or `clientUI`, no new column-0 local; codes against the `Alive` contract above.
 - **Fable**: rustle loop, later the review of real captures.
 - One owner of Studio at a time (the integrator). Workers do not touch Studio, Rojo or git.
+
+## Revisions after the architect review (2026-11-22; these win over the text above)
+
+1. **Ceiling** = flag AND (`game.PlaceId == 107705084891479` or Studio). The place id constant lives in `Alive.lua`. Nothing Alive can run on the live place until that line changes.
+2. **Missing:** a missing or malformed config key means the shipped default (on). On the client a missing attribute means **off** (`Alive.on` is `== true`): AliveConfig writes explicit booleans, so absence means there is no kill switch. Existing specs then run the old paths unless they set the attribute.
+3. **AliveConfig** runs in one pcall'd `task.spawn` (require, GetService, start). `/alive` is its own `player.Chatted` connection, outside the `/stars` handler's board and busy checks, same owner and place gate.
+4. **`Kit.tween` registry:** when a spring takes one property of a live multi-property tween, write that tween's other goals first. With the flag off never cancel anything.
+5. **Presses:** one scalar `drop` spring per key or tile; its setter writes Content, Fill, PaddingTop, PaddingBottom and TileLip together (top = -bottom always). Cancelled in `setTileLip`, disable, hide and destroy, landing on exact rest.
+6. **Foreign write:** cancel the spring, never keep the old goal. Detect by comparing with the value **read back** after our own write (Scale is float32, offsets are integers).
+7. **Flag-off bodies stay verbatim** for boing, tabs and wallet (an `if` around them). In tabs `done` fires exactly once on rest, snap, settle and drop.
+8. **Boing** growth is capped at 4 px a side and never shrinks a hit rect under its rest size by more than today's 4%.
+9. **Arrive** only where the 8 px rise exists today: CompanionsHub, MachineHub, StatsPanel, NameScreen. Not BookView, Wardrobe, Store, EggHatch, PocketMenu, DifficultyPicker, QuestLog, DeckResults. `artPop` may be used on MachineHub and CompanionsHub icon discs.
+10. **Depart:** called from the input handlers that mean "the player closed this" (close key, B/Escape/Backspace, shade tap), not inferred from the reason; requires board Mode == Room at capture and at the next Heartbeat, an unchanged `shadeOpen` counter, `Kit.shadeTop()` nil, and the screen effectively visible at capture. `shadeOpen` kills a live plate. Plate uses ScreenInsets.None through `coverRect`. Never `shadeDepth()`.
+11. **Bushes:** server sets `WorldRestCFrame` on each dressing bush (an attribute only; `LoungeWorldV7Art` ~341). Client binds only from it, never from live CFrame, and resets to rest on stream-in before swaying. `RoomView:857` uses rest for `WorldDressing` parts. Gust gain applies only to kind `flag` and WorldRegion `Chime_*`; parked = gain 1; movers never stop.
+12. **Split:** Wind owns `Wind, WindClient, WorldMotion, RoomView, LoungeWorldV7Art, AmbientAudio`; mounts inside `WorldMotion.start()`. UI owns everything else. `AliveBudget.level()` returns 0, 1 or 2 and is safe to require first. Locals: inline requires at their current execution position only. Rustle asset 131058187750745; nil id means no voice and nothing in `warm`; destroyed with Ambient.
