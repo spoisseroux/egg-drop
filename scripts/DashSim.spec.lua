@@ -15,17 +15,24 @@ return function(_, shared, options)
 	local function near(a, b) return math.abs(a - b) < 1e-9 end
 
 	-- A scripted player: presses each jump for the wanted result, through push(), like a real client.
-	-- script: {jumps={P,C,T,...}, stones=bool, dash=bool}
+	-- script: {jumps={P,C,T,...}, stones=bool, dash="hold" (default) | "smart" | "none"}
 	local function drive(race, seat, script)
 		local r = race.runners[seat]
 		local tick = race.tick + 1
-		if script.dash ~= false and tick == 1 then Sim.push(race, seat, tick, "dashDown") end
 		if script.stones and not r.forked and not r.wants and Course.Fork * UNIT - r.pos < r.step * 150 then Sim.push(race, seat, tick, "stones") end
 		local goal, want = r.list[r.next], script.jumps[r.next] or P
+		local gap = if goal then Sim.takeoff(r, goal) - r.pos else Course.Length * UNIT
 		if goal and want ~= T and r.air == 0 and r.tumble == 0 and script.at ~= r.next then
-			local gap = goal.at - r.pos
-			local early = if want == P then r.step else r.step * 20 -- 10 ms early, or 0.20 s early
+			local early = if want == P then r.step else r.judge * 20 -- 10 ms early, or 0.20 s early
 			if gap <= early then script.at = r.next; assert(Sim.push(race, seat, tick, "jump")) end
+		end
+		local plan = script.dash or "hold"
+		if plan == "hold" then
+			if tick == 1 then Sim.push(race, seat, tick, "dashDown") end
+		elseif plan == "smart" then
+			local down = r.dash
+			if down and(r.bar <= 8 * Stats.DashTick or gap <= r.judge * 40) then Sim.push(race, seat, tick, "dashUp")
+			elseif not down and r.bar >= 80 * Stats.DashTick and r.puff == 0 and r.tumble == 0 and gap > r.judge * 70 then Sim.push(race, seat, tick, "dashDown") end
 		end
 	end
 	local function heat(plan, runners, scripts)
@@ -73,8 +80,8 @@ return function(_, shared, options)
 			-- no jump is due for a while at 16 studs; count the dash ticks on a runner with no hoops in front
 			r.next = 99
 			while Sim.step(race) do if r.bar < before then dashed += 1; before = r.bar else break end end
-			assert(dashed == math.floor(Stats.energy(level) * 100 + 1e-9), level)
-			-- windows, by the judge's own arithmetic one tick of distance inside and outside
+			assert(dashed == math.floor(Stats.energy(level) * 100 + 1e-9) and r.puffs == 1, level)
+			-- windows, one unit inside and outside, early and late
 			local step = r.stride * 100
 			for _, pair in ipairs({ { Stats.perfect(level), P, C }, { Stats.clear(level), C, 0 } }) do
 				for _, sign in ipairs({ 1, -1 }) do
@@ -82,11 +89,11 @@ return function(_, shared, options)
 						local try = Sim.new({ plan = plain("stats", "even", 1), runners = { all(level) } })
 						local q = try.runners[1]
 						local gap = math.floor(step * pair[1] / 980000) + (if inside == 1 then 0 else 1)
-						q.pos = q.list[1].at - sign * gap
-						-- a late miss is already a Trip on the next step, so only early misses read as 0
+						q.pos = Sim.takeoff(q, q.list[1]) - sign * gap
 						Sim.push(try, 1, 1, "jump"); Sim.step(try)
 						local want = if inside == 1 then pair[2] else pair[3]
-						assert((q.results[1] or 0) == want or (sign == -1 and want == 0 and q.results[1] == T), level)
+						-- past the late Clear edge is past the hoop itself: a Trip
+						assert((q.results[1] or 0) == want or (sign == -1 and q.results[1] == T and gap >= math.floor(step * Stats.clear(level) / 980000)), level)
 					end
 				end
 			end
@@ -196,12 +203,146 @@ return function(_, shared, options)
 		assert(race.runners[1].wants == false)
 		return string.format("clean saves %.2f to %.2f s, one miss costs %.2f to %.2f s", gains[1], gains[2], losses[1], losses[2])
 	end)
+	test("an unpressed or mistimed hoop trips at the hoop, at every pace", function()
+		for level = 1, 99, 14 do
+			for _, dash in ipairs({ "hold", "none" }) do
+				local race = Sim.new({ plan = plain("stats", "pairs", 1), runners = { all(level) } })
+				local script, at = { jumps = { T, T, T, T, T, T }, dash = dash }, 1
+				repeat
+					drive(race, 1, script)
+					if race.tick == 100 then Sim.push(race, 1, 101, "jump") end
+					local r = race.runners[1]
+					local going = Sim.step(race)
+					if r.trips >= at then
+						assert(r.pos - r.list[at].at >= 0 and r.pos - r.list[at].at < r.step, level); at += 1
+					end
+				until not going
+				assert(at == 7)
+			end
+		end
+	end)
+	test("dash is a choice: spending it well beats holding it, which beats leaving it; empty means puffed out", function()
+		local least, most, held = 1e9, 0, 1e9
+		for level = 1, 99, 7 do
+			for _, layout in ipairs(Course.LayoutOrder) do
+				for _, jumps in ipairs({ { P, P, P, P, P, P }, { C, P, C, P, C, P }, { C, T, C, T, C, C } }) do
+					local smart, sr = solo(level, { jumps = jumps, dash = "smart" }, layout)
+					local hold, hr = solo(level, { jumps = jumps }, layout)
+					local none = solo(level, { jumps = jumps, dash = "none" }, layout)
+					assert(sr.puffs == 0 and hr.puffs > 5 and smart < hold and hold < none, string.format("%d %s %.2f %.2f %.2f", level, layout, smart, hold, none))
+					least, most, held = math.min(least, hold - smart), math.max(most, hold - smart), math.min(held, none - hold)
+				end
+			end
+		end
+		local race = Sim.new({ plan = plain("stats", "even", 1), runners = { all(1) } })
+		local r = race.runners[1]; r.next = 99; r.bar = Stats.DashTick * 2; r.dash = true
+		Sim.step(race); Sim.step(race); assert(r.puff == Sim.PuffTicks)
+		local from = r.pos
+		for _ = 1, 100 do Sim.step(race) end
+		assert(near((r.pos - from) / Stats.UnitsPerStud, Stats.speed(1) * .9) and r.bar == Sim.RefillTick * 100 and r.puff == 0)
+		-- sprinting into a hoop: the window is judged at the pace without the dash
+		local base = r.stride * 100
+		r.bar = r.cap; Sim.step(race); assert(r.step == r.stride * 130 and r.judge == base)
+		return string.format("spent well saves %.2f to %.2f s over holding; holding saves at least %.2f s over none", least, most, held)
+	end)
+	test("a band's pets: lopsided is never over 8% from balanced; balanced pets keep their numbers; never less for more", function()
+		local widest, name = 0, ""
+		for index, band in ipairs(Stats.Bands) do
+			local fast, slow = {}, {}
+			-- every corner of the band: each stat at a limit or sharing what is left
+			local seen = {}
+			for _, total in ipairs({ band.from, band.to }) do
+				for speed = 1, 99, 7 do for energy = 1, 99, 14 do
+					local jump = total - speed - energy
+					if jump >= 1 and jump <= 99 then table.insert(seen, { speed = speed, energy = energy, jump = jump }) end
+				end end
+				for _, s in ipairs({ 1, 99 }) do
+					local rest = (total - s) // 2
+					if rest >= 1 and rest <= 99 then table.insert(seen, { speed = s, energy = rest, jump = total - s - rest }) end
+				end
+				local even = total // 3
+				local balanced = { speed = even, energy = even, jump = total - 2 * even }
+				local same = Stats.effective(balanced)
+				for _, id in ipairs(Stats.Order) do assert(same[id] == balanced[id], total) end
+				table.insert(seen, balanced)
+			end
+			for _, levels in ipairs(seen) do
+				assert(Stats.band(levels) == index)
+				for _, dash in ipairs({ "smart", "none" }) do
+					local race = heat(plain("stats", "even", 1), { levels }, { { jumps = { P, P, P, P, P, P }, dash = dash } })
+					local t = race.runners[1].finishUs / 1e6
+					fast[dash] = math.min(fast[dash] or 1e9, t); slow[dash] = math.max(slow[dash] or 0, t)
+				end
+			end
+			for _, dash in ipairs({ "smart", "none" }) do
+				local gap = slow[dash] / fast[dash] - 1
+				if gap > widest then widest, name = gap, band.id end
+			end
+		end
+		assert(widest <= .08, name .. " " .. widest)
+		for other = 1, 99, 9 do
+			local last
+			for level = 1, 99 do
+				for _, id in ipairs(Stats.Order) do
+					local levels = { speed = other, energy = other, jump = other }
+					levels[id] = level
+					local up = table.clone(levels); up[id] = math.min(99, level + 1)
+					local a, b2 = Stats.effective(levels), Stats.effective(up)
+					for _, each in ipairs(Stats.Order) do assert(b2[each] >= a[each], level) end
+				end
+			end
+		end
+		return string.format("widest %.1f%% (%s)", widest * 100, name)
+	end)
+	local MODELS = {
+		bronze = { jumps = { C, T, C, T, C, C }, dash = "hold" },
+		silver = { jumps = { P, C, P, C, P, C }, dash = "hold" },
+		gold = { jumps = { P, P, C, P, P, P }, dash = "smart" },
+	}
+	local function slowest(level, model)
+		local worst, best = 0, 1e9
+		for _, layout in ipairs(Course.LayoutOrder) do
+			local t = solo(level, { jumps = model.jumps, dash = model.dash }, layout)
+			worst, best = math.max(worst, t), math.min(best, t)
+		end
+		return worst, best
+	end
+	test("pars: re-derived from the model runs; doing nothing, only Dash or mashing Jump earns no medal anywhere", function()
+		local idle, only = { jumps = { T, T, T, T, T, T }, dash = "none" }, { jumps = { T, T, T, T, T, T }, dash = "hold" }
+		local rows, wrong = {}, false
+		local function row(id, level, top, mode, band)
+			local text = id
+			for _, medal in ipairs({ "bronze", "silver", "gold" }) do
+				local want = math.ceil((slowest(level, MODELS[medal]) + .3) * 2) * 500
+				text ..= string.format(" %s=%d", medal, want)
+				local pars = Stats.Pars[id]
+				if not pars or pars[medal] ~= want then wrong = true end
+			end
+			for _, model in ipairs({ idle, only }) do
+				local _, best = slowest(top, model)
+				text ..= string.format(" (%.1f)", best) -- idle, then Dash held
+				if not wrong then assert(Stats.medal(mode, band, best * 1e6) == nil, id) end
+			end
+			table.insert(rows, text)
+		end
+		row("trial", 50, 50, "trial", nil)
+		for index, band in ipairs(Stats.Bands) do
+			row(band.id, math.max(1, band.from // 3), math.min(99, Stats.bandMiddle(index) + Stats.BandReach), "stats", index)
+		end
+		assert(not wrong, table.concat(rows, "\n"))
+		local mash = Sim.new({ plan = plain("trial", "even", 1), runners = { all(50) } })
+		repeat if mash.tick % 10 == 0 then Sim.push(mash, 1, mash.tick + 1, "jump") end until not Sim.step(mash)
+		assert(Stats.medal("trial", nil, mash.runners[1].finishUs) == nil)
+		for id, pars in pairs(Stats.Pars) do assert(pars.gold + 1000 <= pars.silver and pars.silver + 1000 <= pars.bronze, id) end
+		assert(Stats.medal("trial", nil, nil) == nil and Stats.medal("trial", nil, Stats.Pars.trial.gold * 1000) == "gold")
+		return table.concat(rows, "; ")
+	end)
 	test("pace: clean runs, an idle run, and an all-99 pet about 20% sooner than an all-1 pet", function()
 		local one, fifty, ninety = solo(1, clean()), solo(50, clean()), solo(99, clean())
-		local idle = solo(50, { jumps = { T, T, T, T, T, T }, dash = false })
+		local idle = solo(50, { jumps = { T, T, T, T, T, T }, dash = "none" })
 		local typical = solo(50, { jumps = { P, C, T, P, C, T } })
 		assert(ninety / one > .76 and ninety / one < .82, ninety / one)
-		assert(one > 31 and one < 36 and ninety > 25 and ninety < 29)
+		assert(one > 30 and one < 36 and ninety > 24 and ninety < 29)
 		return string.format("clean %.1f / %.1f / %.1f s at 1 / 50 / 99; two Trips %.1f s; idle %.1f s at 50", one, fifty, ninety, typical, idle)
 	end)
 	test("modes: Just for Fun ignores levels; Time Trial has no luck and the Even layout; plans keep their secrets", function()
@@ -251,7 +392,8 @@ return function(_, shared, options)
 				local stride = Stats.stride(if mode == "fun" then 50 else level)
 				local zoom, clover, trip = stride * Sim.ZoomPct * ticks, stride * Sim.DashPct * 100, stride * 100 * Sim.TripTicks
 				assert(zoom < Sim.ZoomGap, level)
-				assert(zoom + clover < trip, level)
+				local puff = stride * Sim.PuffPct * Sim.PuffTicks -- one more puff dodged, at most
+				assert(zoom + clover + puff < trip, level)
 			end
 		end
 	end)
@@ -267,16 +409,16 @@ return function(_, shared, options)
 							for _, better in ipairs({ P, C }) do
 								local good, bad = table.clone(base), table.clone(base)
 								good[hoop], bad[hoop] = better, T
-								for clover = 1, 6 do
+								for clover = 1, 6 do for _, dash in ipairs({ "hold", "smart", "none" }) do
 									local plan = plain(mode, layout, 2)
 									plan.clovers = { 2 }; plan.cloverHurdle = clover
 									local moment = 400 + (clover * 97 + hoop * 53 + index * 31) % 301
 									plan.zoomies = if mode == "fun" then { moment, math.min(700, moment + 90) } else { moment }
-									local race = heat(plan, { all(level), all(level) }, { { jumps = good }, { jumps = bad } })
+									local race = heat(plan, { all(level), all(level) }, { { jumps = good, dash = dash }, { jumps = bad, dash = dash } })
 									local margin = (race.runners[2].finishUs - race.runners[1].finishUs) / 1e6
-									assert(margin > 0, string.format("%s %d %s base %d hoop %d clover %d: %.3f", mode, level, layout, index, hoop, clover, margin))
+									assert(margin > 0, string.format("%s %d %s base %d hoop %d clover %d %s: %.3f", mode, level, layout, index, hoop, clover, dash, margin))
 									closest = math.min(closest, margin); raced += 1
-								end
+								end end
 							end
 						end
 					end

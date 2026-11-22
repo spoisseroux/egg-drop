@@ -48,6 +48,41 @@ function Stats.band(levels)
 	for index,band in ipairs(Stats.Bands)do if total<=band.to then return index end end
 	return #Stats.Bands
 end
+-- What a Stats On heat runs each stat at [P]: the pet's own level, held to within BandReach levels of its band's
+-- middle. Balanced pets keep their own numbers exactly and the 4.4 table is untouched; only a lopsided pet is
+-- held in, so nobody is 8% quicker than another pet in the same band. A higher level never gives less.
+Stats.BandReach=14
+function Stats.effective(levels)
+	levels=if type(levels)=="table"then levels else{}
+	local middle=Stats.bandMiddle(Stats.band(levels))
+	local out={}
+	for _,id in ipairs(Stats.Order)do
+		out[id]=Stats.level(math.clamp(Stats.level(levels[id]),middle-Stats.BandReach,middle+Stats.BandReach))
+	end
+	return out
+end
+-- Medal times in milliseconds, from model runs (DashSim.spec re-derives them): the slowest of the four layouts,
+-- plus 0.3 s, up to the next half second. Bronze: a careless run that tries (two Trips, four Clears, Dash held
+-- down). Silver: three Clears, no Trip, Dash held down. Gold: five Perfects and a Clear, Dash spent well.
+-- Time Trial and Just for Fun run at level 50; a Stats On heat uses its band's row, derived at the lowest
+-- balanced level of the band (level 1 for Seedling). Doing nothing, or only holding Dash, earns no medal. [P]
+Stats.Pars=table.freeze({
+	trial=table.freeze({bronze=35000,silver=32000,gold=30000}),
+	seedling=table.freeze({bronze=39500,silver=36500,gold=34000}),
+	sprout=table.freeze({bronze=38500,silver=35500,gold=33000}),
+	bloom=table.freeze({bronze=37000,silver=34000,gold=32000}),
+	fullBloom=table.freeze({bronze=35000,silver=32000,gold=30000}),
+	starbloom=table.freeze({bronze=33500,silver=30500,gold=28500}),
+})
+function Stats.pars(mode,band)
+	return if mode=="stats"then Stats.Pars[Stats.Bands[band].id]else Stats.Pars.trial
+end
+function Stats.medal(mode,band,finishUs)
+	if type(finishUs)~="number"then return nil end
+	local pars=Stats.pars(mode,band)
+	for _,id in ipairs({"gold","silver","bronze"})do if finishUs<=pars[id]*1000 then return id end end
+	return nil
+end
 -- A garden pal's level in each race stat for a band: the middle of the band, split evenly. [P]
 function Stats.bandMiddle(index)
 	local band=Stats.Bands[math.clamp(math.floor(index),1,#Stats.Bands)]

@@ -30,8 +30,14 @@ Sim.TripTicks=120
 -- 13.8 studs (2.3 s at level 1, plus up to two Perfects' dash), so the climb and the shake dry take 2.8 s. [P]
 Sim.SplashTicks=280
 Sim.PerfectBar=50*Stats.DashTick
+-- Dash is a choice (tuned 2026-11-22) [P]: the meter drains four times faster than it refills, a pet that runs it
+-- empty is puffed out (10% slower and no dash for 1 s), and a hoop met at a sprint has a 30% shorter window.
+-- So: dash on the straights, let go before a hoop and before the meter is empty.
+Sim.RefillTick=98
+Sim.PuffPct=10
+Sim.PuffTicks=100
 Sim.AirTicks=25 -- a pet in the air ignores presses [P]
-Sim.ReachTicks=60 -- a press this close before a hoop but outside the Clear window is a Trip; earlier is a free hop [P]
+Sim.ReachTicks=60 -- a press this long before the take-off spot but outside the Clear window is a Trip; earlier is a free hop [P]
 Sim.SignpostTicks=200
 Sim.CloverBar=100*Stats.DashTick
 Sim.ZoomPct=20
@@ -113,6 +119,9 @@ local function lists(layout)
 			table.insert(main,{at=d*UNIT,hurdle=index});table.insert(stones,{at=d*UNIT-SAVING,hurdle=index})
 		end
 	end
+	for _,list in ipairs({main,stones})do -- half way back to the jump before: no take-off spot is further back than that
+		for i,goal in ipairs(list)do goal.room=if i>1 then(goal.at-list[i-1].at)//2 else goal.at end
+	end
 	return main,stones
 end
 
@@ -134,16 +143,17 @@ function Sim.new(options)
 	local main,stones=lists(plan.layout)
 	local race={plan=plan,tick=0,over=false,winnerTick=nil,moment=1,main=main,stonesList=stones,runners={}}
 	for seat,spec in ipairs(runners)do
-		local function level(id)return if plan.mode=="stats"then Stats.level(spec[id])else Stats.FunLevel end
+		local levels=if plan.mode=="stats"then Stats.effective(spec)else nil
+		local function level(id)return if levels then levels[id]else Stats.FunLevel end
 		local stride,bar=Stats.stride(level("speed")),Stats.bar(level("energy"))
 		local lane=plan.lanes[seat]or seat
 		local clover=table.find(plan.clovers,lane)~=nil and plan.cloverHurdle>0
 		race.runners[seat]={seat=seat,lane=lane,stride=stride,cap=bar,bar=bar,
 			perfect=Stats.perfect(level("jump")),clear=Stats.clear(level("jump")),
-			pos=0,total=LENGTH,step=stride*100,list=main,next=1,results={},doomed=false,
-			dash=false,tumble=0,stumble=0,zoom=0,air=0,wants=false,stones=false,forked=false,zoomed=false,
+			pos=0,total=LENGTH,step=stride*100,judge=stride*100,list=main,next=1,results={},doomed=false,
+			dash=false,tumble=0,stumble=0,puff=0,zoom=0,air=0,wants=false,stones=false,forked=false,zoomed=false,
 			clover=if clover then plan.cloverHurdle else 0,cloverTick=0,zoomTick=0,
-			perfects=0,clears=0,trips=0,inputs=0,lastKind=0,lastTick=0,finishUs=nil,
+			perfects=0,clears=0,trips=0,puffs=0,inputs=0,lastKind=0,lastTick=0,finishUs=nil,
 			queue={},head=1,recent={},recentHead=1,stamp=0,
 			bot=if spec.bot then botOf(options.seed or plan.seed or seat,seat,if type(spec.bot)=="table"then spec.bot.skill else nil)else nil}
 	end
@@ -151,6 +161,11 @@ function Sim.new(options)
 end
 
 function Sim.remaining(runner)return runner.total-runner.pos end
+-- The take-off spot, the middle of the jump window: one late Clear window before the hoop, so a hoop nobody
+-- jumped is met exactly as the window closes and the pet trips at the hoop. `judge` is the pace without dash.
+function Sim.takeoff(r,goal)
+	return goal.at-math.min(r.judge*r.clear//JUDGE,goal.room)
+end
 
 local function land(race,r,kind)
 	local index=r.next
@@ -172,11 +187,11 @@ local function jump(race,r)
 	r.air=Sim.AirTicks
 	local goal=r.list[r.next]
 	if not goal then return end
-	local gap,step=goal.at-r.pos,r.step
+	local gap,judge=Sim.takeoff(r,goal)-r.pos,r.judge
 	local size=math.abs(gap)*JUDGE
-	if size<=step*r.perfect then land(race,r,PERFECT)
-	elseif size<=step*r.clear then land(race,r,CLEAR)
-	elseif gap>0 and gap<=step*Sim.ReachTicks then r.doomed=true end -- too early: the tumble comes at the hoop
+	if size<=judge*r.perfect then land(race,r,PERFECT)
+	elseif size<=judge*r.clear then land(race,r,CLEAR)
+	elseif gap>0 and gap<=judge*Sim.ReachTicks then r.doomed=true end -- too early: the tumble comes at the hoop
 end
 local function apply(race,r,kind)
 	if kind=="jump"then jump(race,r)
@@ -224,9 +239,14 @@ end
 -- Garden pals press the same buttons through apply(): no shortcut into speeds or results.
 local function think(race,r)
 	local bot=r.bot
-	if race.tick==bot.ready then apply(race,r,"dashDown")end
 	if bot.stones and not r.forked and not r.wants and FORK-r.pos<=r.step*(Sim.SignpostTicks//2)then apply(race,r,"stones")end
 	local goal=r.list[r.next]
+	local gap=if goal then Sim.takeoff(r,goal)-r.pos else LENGTH
+	if race.tick>=bot.ready then -- dash on the straights, rest for the hoops and before the meter is empty
+		if r.dash then
+			if r.bar<=8*Stats.DashTick or gap<=r.judge*30 then apply(race,r,"dashUp")end
+		elseif r.bar>=80*Stats.DashTick and r.puff==0 and gap>r.judge*60 then apply(race,r,"dashDown")end
+	end
 	if not goal then return end
 	if bot.at~=r.next then -- one skill roll for each jump
 		bot.at,bot.press=r.next,nil
@@ -241,7 +261,7 @@ local function think(race,r)
 	end
 	local press=bot.press
 	if press and goal.stone then press=math.abs(press)end -- the stones are close together: never late
-	if press and(goal.at-r.pos)*JUDGE<=r.step*press then apply(race,r,"jump")end
+	if press and gap*JUDGE<=r.judge*press then apply(race,r,"jump")end
 end
 
 local function move(race,r)
@@ -250,9 +270,15 @@ local function move(race,r)
 	if zoom then r.zoom-=1 end
 	if r.tumble>0 then r.tumble-=1;return end
 	local pct=100
-	if r.dash and r.bar>=Stats.DashTick then pct+=Sim.DashPct;r.bar-=Stats.DashTick end
 	if r.stumble>0 then pct-=Sim.StumblePct;r.stumble-=1 end
 	if zoom then pct+=Sim.ZoomPct end
+	local dashing=r.dash and r.puff==0 and r.bar>=Stats.DashTick
+	if r.puff>0 then pct-=Sim.PuffPct;r.puff-=1 end
+	r.judge=r.stride*pct
+	if dashing then
+		pct+=Sim.DashPct;r.bar-=Stats.DashTick
+		if r.bar<Stats.DashTick then r.puff=Sim.PuffTicks;r.puffs+=1 end
+	else r.bar=math.min(r.cap,r.bar+Sim.RefillTick)end
 	local step=r.stride*pct
 	local before=r.pos
 	local pos=before+step
@@ -263,11 +289,7 @@ local function move(race,r)
 	end
 	local list=r.list
 	local goal=list[r.next]
-	if goal and pos>=goal.at then
-		local past=pos-goal.at
-		local following=list[r.next+1]
-		if r.doomed or past*JUDGE>step*r.clear or(following and past*2>following.at-goal.at)then land(race,r,TRIP)end
-	end
+	if goal and pos>=goal.at then land(race,r,TRIP)end -- pressed too early, or not at all
 	if r.clover>0 then
 		for index,jumped in ipairs(list)do
 			if jumped.hurdle==r.clover then
@@ -366,11 +388,11 @@ function Sim.spot(runner)
 	end
 	return cs,false,runner.lane
 end
--- The jump in front, for the closing ring: ticks until the middle of its window (negative when past), or nil.
+-- The jump in front, for the closing ring: ticks until its take-off spot (negative when past), or nil.
 function Sim.nextJump(runner)
 	local goal=runner.list[runner.next]
 	if not goal then return nil end
-	return (goal.at-runner.pos)/runner.step
+	return (Sim.takeoff(runner,goal)-runner.pos)/runner.step
 end
 
 return table.freeze(Sim)
