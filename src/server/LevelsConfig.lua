@@ -28,7 +28,8 @@ function Config.new(deps)
    return Levels.resolve(value,override,ceiling)
   end}
  local set,hold=deps.set,deps.hold
- -- The server's own value first: an attribute that cannot be written never leaves the server on.
+ -- The server's own value first: an attribute that cannot be written never leaves the server on, and a
+ -- server whose attribute says off is off (Levels.switch needs both).
  deps.set=function(name,value)
   hold(value)
   set(name,value)

@@ -1,6 +1,6 @@
 -- "Levels matter" switches (V3-LEVELS-BUILD-PLAN-2026-11-22): the ceiling needs the flag and the beta
 -- place or Studio; the live place is never on; the runtime switch (LevelsConfig) turns every part off and
--- the server reads its own value, never the attribute; inject is a Studio-only spec seam.
+-- the server needs its own value and its published attribute; inject is a Studio-only spec seam.
 -- Usage (Server): require(ServerScriptService.Server.ZZSpecs.Levels)(ServerScriptService.Server)
 return function(_)
 	local Shared=game:GetService("ReplicatedStorage").Shared
@@ -9,7 +9,8 @@ return function(_)
 	local function test(name,run)run();table.insert(cases,name)end
 	local BETA,LIVE=107705084891479,96451847774961
 	local on={LevelsMatter=true}
-	local held=Levels.switch()
+	local savedAttribute=workspace:GetAttribute(Levels.Attribute)
+	local held=savedAttribute==true
 	local ok,problem=pcall(function()
 		test("four parts, the beta place, and a part only counts once its code is in the build",function()
 			assert(table.concat(Levels.Parts," ")=="track gates medals juice"and Levels.PlaceId==BETA)
@@ -40,6 +41,7 @@ return function(_)
 			Levels.inject(env);env.flags={};assert(Levels.on("gates"),"a copy is kept")
 			assert(Levels.inject(nil))
 			-- Studio with nothing injected: the build flag and the server's switch.
+			workspace:SetAttribute(Levels.Attribute,true)
 			for _,value in ipairs({true,false})do
 				assert(Levels.setSwitch(value))
 				for _,part in ipairs(Levels.Parts)do assert(Levels.on(part)==(flag and value and Levels.Shipped[part]),part)end
@@ -50,16 +52,18 @@ return function(_)
 			Levels.inject({flags=on,place=BETA,studio=true,shipped=all});assert(Levels.key()=="1111")
 			Levels.inject({flags=on,place=BETA,studio=true,shipped=all,switch=false});assert(Levels.key()=="0000")
 			Levels.inject(nil)
+			workspace:SetAttribute(Levels.Attribute,true)
 			for _,odd in ipairs({"true",1,{},false})do Levels.setSwitch(odd);assert(Levels.switch()==false)end
 			Levels.setSwitch(nil);assert(Levels.switch()==false)
 			Levels.setSwitch(true);assert(Levels.switch()==true)
 		end)
-		test("switch: the server never reads the attribute",function()
-			local saved=workspace:GetAttribute(Levels.Attribute)
+		test("switch: the attribute alone never turns the server on, and an attribute that says off turns it off",function()
 			Levels.setSwitch(false);workspace:SetAttribute(Levels.Attribute,true)
-			local leaked=Levels.switch()or Levels.on("gates")
-			workspace:SetAttribute(Levels.Attribute,saved)
-			assert(not leaked)
+			assert(not Levels.switch()and not Levels.on("gates"))
+			Levels.setSwitch(true)
+			for _,odd in ipairs({false,"true",1})do workspace:SetAttribute(Levels.Attribute,odd);assert(not Levels.switch(),tostring(odd))end
+			workspace:SetAttribute(Levels.Attribute,nil);assert(not Levels.switch(),"missing")
+			workspace:SetAttribute(Levels.Attribute,true);assert(Levels.switch())
 		end)
 		test("resolve: ceiling, then override, then config, then on; malformed counts as missing",function()
 			assert(Levels.resolve(true,true,false)==false,"the ceiling wins")
@@ -73,7 +77,7 @@ return function(_)
 			assert(not Levels.allowed({flags={},place=BETA,studio=true})and not Levels.allowed({flags=on,place=BETA,studio=true,shipped={}}))
 		end)
 	end)
-	Levels.inject(nil);Levels.setSwitch(held)
+	Levels.inject(nil);Levels.setSwitch(held);workspace:SetAttribute(Levels.Attribute,savedAttribute)
 	assert(ok,problem)
 	return{passed=#cases,cases=cases}
 end

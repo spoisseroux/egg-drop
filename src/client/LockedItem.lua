@@ -61,8 +61,8 @@ function Locked.route(info)
 end
 
 -- Drawn parts --------------------------------------------------------------------
--- A chip: the stat's icon (bars for a total) and the words, outlined in the stat's colour; filled
--- with it once the level is met. set(info, maxWidth) keeps the longest wording that fits.
+-- A chip: the stat's icon (bars for a total) and the words, outlined in the stat's colour; gone once
+-- the level is met. set(info, maxWidth) keeps the longest wording that fits.
 function Locked.chip(parent,height)
  local Kit=require(script.Parent.DeckKit)
  height=height or 20
@@ -74,8 +74,9 @@ function Locked.chip(parent,height)
  local icon,iconKey
  local api={root=root,label=label,stroke=stroke}
  function api.set(info,maxWidth)
-  root.Visible=info~=nil
-  if not info then return end
+  local shown=info~=nil and not info.met
+  root.Visible=shown;root:SetAttribute("Met",info~=nil and info.met==true)
+  if not shown then return end
   local key=info.stat or "total"
   if iconKey~=key then
    if icon then icon:Destroy()end
@@ -84,9 +85,8 @@ function Locked.chip(parent,height)
    icon.AnchorPoint=Vector2.new(0,.5);icon.Position=UDim2.new(0,Locked.ChipPad,.5,0)
   end
   stroke.Color=info.color
-  local face,ink=info.color,Kit.Color.ink
-  Kit.paint(root,"BackgroundColor3",if info.met then function()return face end else "well")
-  Kit.paint(label,"TextColor3",if info.met then function()return ink end else function()return Kit.Color.white end)
+  Kit.paint(root,"BackgroundColor3","well")
+  Kit.paint(label,"TextColor3",function()return Kit.Color.white end)
   local edge=left+Locked.ChipPad
   local room=math.max(24,(maxWidth or 1000)-edge)
   local extra=if Kit.translating then 1+Locked.Headroom else 1
@@ -95,7 +95,7 @@ function Locked.chip(parent,height)
   if w>room then words=info.short;w=math.ceil(Kit.measure(words,"Small",12).X*extra)+2 end
   label.Text=words
   root.Size=UDim2.fromOffset(math.min(w,room)+edge,height)
-  root:SetAttribute("Met",info.met==true);root:SetAttribute("Words",words)
+  root:SetAttribute("Words",words)
  end
  root.Visible=false
  return api

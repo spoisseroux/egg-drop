@@ -236,7 +236,8 @@ function Shop:buildChrome(parent,view,tabsW)
  for _,tab in ipairs(self.tabSet)do table.insert(labels,tab.label);table.insert(icons,tab.icon)end
  if phone then
   local narrow=if #labels>3 then 460 else 400 -- a fourth tab needs the smaller words sooner
-  self.tabs=Kit.tabs(parent,labels,tabsW,36,if #labels>3 and tabsW<340 then 11 elseif tabsW<narrow then 12 else 14,icons);self.tabs.root.Position=UDim2.fromOffset(20,64)
+  local iconOnly=#labels>3 and tabsW<340 -- 568 wide phones: no room for four names at 12 px
+  self.tabs=Kit.tabs(parent,labels,tabsW,36,if tabsW<narrow then 12 else 14,icons,if iconOnly then{iconOnly=true}else nil);self.tabs.root.Position=UDim2.fromOffset(20,64)
  else
   local R=Shop.Regular.tabs
   self.tabs=Kit.tabs(parent,labels,R[3],R[4],16,icons);self.tabs.root.Position=UDim2.fromOffset(R[1],R[2])

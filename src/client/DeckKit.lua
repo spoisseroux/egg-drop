@@ -1379,8 +1379,10 @@ function Kit.tabs(parent,labels,width,height,textSize,icons,options)
  pillFace.ZIndex=pill.ZIndex
  Kit.inner(node("UIStroke",pillFace,{Name="FaceStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2,Color=Kit.Color.ink}))
  local api={root=track,buttons={},selected=1,labels={},icons={}}
- local withIcons=Kit.tabIconsFit(labels,icons,segment,textSize)
- local iconSize=textSize+4
+ -- options.iconOnly: the icon alone (a narrow phone's four tabs); the name stays for screen readers.
+ local iconOnly=options~=nil and options.iconOnly==true and icons~=nil and #icons==#labels
+ local withIcons=iconOnly or Kit.tabIconsFit(labels,icons,segment,textSize)
+ local iconSize=if iconOnly then 18 else textSize+4
  api.hasIcons=withIcons;track:SetAttribute("TabIcons",withIcons)
  for index,text in ipairs(labels)do
   local hitH=math.max(44,height-8)
@@ -1393,6 +1395,7 @@ function Kit.tabs(parent,labels,width,height,textSize,icons,options)
    local icon=Kit.icon(b,icons[index],iconSize,"text");icon.AnchorPoint=Vector2.new(0,.5);icon.Position=UDim2.new(0,x,.5,0)
    api.icons[index]=icon
    label=Kit.text(b,"Strong",text,"text",{Position=UDim2.fromOffset(x+iconSize+Kit.TabIconGap,0),Size=UDim2.new(0,w+2,1,0),TextSize=textSize})
+   if iconOnly then icon.AnchorPoint=Vector2.new(.5,.5);icon.Position=UDim2.fromScale(.5,.5);label.Visible=false end
   else
    label=Kit.text(b,"Strong",text,"text",{Size=UDim2.fromScale(1,1),TextXAlignment=Enum.TextXAlignment.Center,TextSize=textSize})
   end
@@ -2576,7 +2579,11 @@ function Kit.shadeClose(owner)
 end
 function Kit.setShadeAlpha(shade,alpha)shade:SetAttribute("ShadeAlpha",alpha);paintShades()end
 function Kit.shadeDepth()paintShades();return #shadeStack end
-function Kit.shadeTop()local entry=shadeStack[#shadeStack];return entry and entry.owner,entry and entry.shade end
+function Kit.shadeTop()
+ -- A screen destroyed while open takes its shade with it (paintShades drops it on the next change).
+ while #shadeStack>0 and not shadeStack[#shadeStack].shade.Parent do table.remove(shadeStack)end
+ local entry=shadeStack[#shadeStack];return entry and entry.owner,entry and entry.shade
+end
 -- How many open shades currently dim the screen (always 0 or 1).
 function Kit.dimmingShades()
  local n=0

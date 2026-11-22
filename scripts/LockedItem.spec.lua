@@ -2,7 +2,7 @@
 -- Wardrobe that shows them, with gates on and off.
 --  * info: nil when ungated, owned or off; needs / short / count / ratio / colour for a stat and a
 --    total gate; best owned pet; a malformed gate is never met.
---  * the chip keeps the longest words that fit, fills when met; the bar and the lock follow.
+--  * the chip keeps the longest words that fit and goes when met; the bar and the lock follow.
 --  * Wardrobe on: a locked card keeps its price, try-on works, the button trains, the server's
 --    NeedsLevel shows; met = Buy. Off: gated cards are gone unless owned, and an owned one is worn
 --    and taken off as any item. Desktop, 844 x 390 and 667 x 375.
@@ -18,6 +18,8 @@ return function(client,parent)
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local function on()Levels.inject({flags={LevelsMatter=true},studio=true,shipped={gates=true,track=true,medals=true,juice=true}})end
  local function off()Levels.inject({flags={},studio=true})end
+ parent=parent:FindFirstAncestorOfClass("PlayerGui")or parent -- a gui inside a gui has no layout of its own
+ local shops={} -- closed whatever happens
  local gui=Instance.new("ScreenGui");gui.Name="_LockedItemSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
  local function settle()for _=1,3 do game:GetService("RunService").Heartbeat:Wait()end end
  local function state(levels)return{petStats={pets={pip={level=levels}}}}end
@@ -50,7 +52,8 @@ return function(client,parent)
    local info=Locked.info({gate={stat="jump",level=30}},jump)
    chip.set(info,300);assert(chip.root.Visible and chip.label.Text==info.needs and chip.root:GetAttribute("Met")==false and chip.stroke.Color==Stats.ById.jump.color)
    chip.set(info,90);assert(chip.label.Text==info.short and chip.root.Size.X.Offset<=90)
-   chip.set(Locked.info({gate={stat="jump",level=5}},jump),300);assert(chip.root:GetAttribute("Met")==true and chip.root.BackgroundColor3==Stats.ById.jump.color)
+   chip.set(Locked.info({gate={stat="jump",level=5}},jump),300);assert(chip.root:GetAttribute("Met")==true and not chip.root.Visible,"met: nothing is needed any more")
+   chip.set(info,300);assert(chip.root.Visible,"and it can come back")
    chip.set(nil);assert(not chip.root.Visible)
    local bar=Locked.bar(frame,0,30,100,5)
    bar.set(info);assert(bar.root.Visible and math.abs(bar.fill.Size.X.Scale-14/30)<1e-3)
@@ -65,7 +68,7 @@ return function(client,parent)
     on()
     local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
     local trained
-    local shop=Shop.new(host,{appearance=function()return{}end,train=function(route)trained=route end,buy=function()end})
+    local shop=Shop.new(host,{appearance=function()return{}end,train=function(route)trained=route end,buy=function()end});table.insert(shops,shop)
     shop:open("pip",{wallet=500,row={owned={},equipped={}},week=false,levels=jump});settle()
     assert(shop:showItem(limeJump)and shop:focusedId()==limeJump,"showItem lands on the card")
     assert(shop:statusOf(limeJump).kind=="locked"and shop.root:GetAttribute("PaneState")=="locked")
@@ -82,7 +85,7 @@ return function(client,parent)
     shop:result({id="op",status="Rejected",reason="NeedsLevel"});assert(shop.status.Text==UICopy.get("shop.reason.needsLevel"),shop.status.Text)
     -- The level is met: Buy, no lock, no bar.
     shop:setContext({levels=Locked.levels(state({jump=30})),row={owned={},equipped={}}});shop:focus(shop.index,true)
-    assert(shop:statusOf(limeJump).kind=="buy"and not shop.lockBar.root.Visible and not shop.tiles[shop.index].lock.root.Visible)
+    assert(shop:statusOf(limeJump).kind=="buy"and not shop.lockBar.root.Visible and not shop.tiles[shop.index].lock.root.Visible and not shop.tiles[shop.index].chip.root.Visible)
     -- Without a train route the button does nothing.
     shop.callbacks.train=nil;shop:setContext({levels=jump});assert(shop:act()==false)
     shop:destroy();host:Destroy()
@@ -90,7 +93,7 @@ return function(client,parent)
    test(tostring(size).." Wardrobe off: gated cards are gone; an owned one is worn and taken off",function()
     off()
     local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
-    local shop=Shop.new(host,{appearance=function()return{}end,equip=function()end})
+    local shop=Shop.new(host,{appearance=function()return{}end,equip=function()end});table.insert(shops,shop)
     shop:open("pip",{wallet=500,row={owned={limeJump},equipped={}},week=false});settle()
     local slot=Catalog.forPet("pip",math.huge).byId[limeJump].slot
     local plain,owned=Shop.tileList("pip",slot,{}),Shop.tileList("pip",slot,{limeJump})
@@ -109,6 +112,7 @@ return function(client,parent)
   end
  end,function(e)return tostring(e).." | "..debug.traceback()end)
  Levels.inject(nil)
+ for _,shop in ipairs(shops)do pcall(function()shop:destroy()end)end
  gui:Destroy()
  if not ok then error(problem,0)end
  return{passed=#cases,cases=cases}

@@ -21,6 +21,8 @@ return function(client,parent)
  local cases={};local function test(name,run)run();table.insert(cases,name)end
  local function on()Levels.inject({flags={LevelsMatter=true},studio=true,shipped={track=true,gates=true,medals=true,juice=true}})end
  local function off()Levels.inject({flags={},studio=true})end
+ parent=parent:FindFirstAncestorOfClass("PlayerGui")or parent -- a gui inside a gui has no layout of its own
+ local cleanup={} -- closed whatever happens
  local gui=Instance.new("ScreenGui");gui.Name="_MedalViewSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
  local function settle(n)for _=1,n or 3 do game:GetService("RunService").Heartbeat:Wait()end end
  local function snapshot(levels)
@@ -134,13 +136,18 @@ return function(client,parent)
      Stage.show=if where=="build"then function()error("no stage")end else function(...)
       local stage=real(...);stage.updateExternal=function()error("no step")end;return stage
      end
-     local moment=View.Moment.new(parent,nil)
+     local moment=View.Moment.new(parent,nil);table.insert(cleanup,function()moment:destroy()end)
+     assert(moment.scene==nil and View.Moment.scene==nil,"no static scene")
      assert(moment:show({{petId="pip",stat="jump",tier="sprout",level=25}},{waiting=1},{})==false,where)
      assert(not moment:isOpen()and not moment.gui.Enabled and moment.clock==nil and moment.stage==nil and moment.scene==nil,where)
      Stage.show=real
      assert(moment:show({{petId="pip",stat="jump",tier="sprout",level=25}},{waiting=1},{})and moment:isOpen(),"the next one plays")
      moment:destroy()
     end
+    -- A build that dies before its scene exists (a module that will not load) still closes cleanly.
+    local early=View.Moment.new(parent,nil);table.insert(cleanup,function()early:destroy()end)
+    early.build=function()error("no modules")end
+    assert(early:show({{petId="pip",stat="jump",tier="sprout",level=25}},{waiting=1},{})==false and not early:isOpen()and not early.gui.Enabled)
     Stage.show=function()error("no stage")end
     local probe=Instance.new("Frame");probe.Size=UDim2.fromScale(1,1);probe.BackgroundTransparency=1;probe.Parent=gui
     local state=snapshot({jump=24})
@@ -204,6 +211,7 @@ return function(client,parent)
  end,function(e)return tostring(e).." | "..debug.traceback()end)
  View.Art=savedArt
  Levels.inject(nil)
+ for _,run in ipairs(cleanup)do pcall(run)end
  gui:Destroy()
  if not ok then error(problem,0)end
  return{passed=#cases,cases=cases}

@@ -228,8 +228,10 @@ return function(client,parent)
       local deck=hub.tileViews[2].art:FindFirstChild("MiniDeck");local ball=deck and deck:FindFirstChild("DemoBall",true)
       if deck and ball then
        local seen={}
-       for _=1,24 do settle();seen[ball.Position.Y.Offset]=true end
-       local n=0;for _ in pairs(seen)do n+=1 end
+       local n,began=0,os.clock()
+       repeat -- several drawn frames, however slow Studio draws them
+        settle();local y=ball.Position.Y.Offset;if not seen[y]then seen[y]=true;n+=1 end
+       until n>=2 or os.clock()-began>5
        assert(n>=2,"the demo ball never moved")
       end
       -- Covered by a machine's screen: paused. Uncovered: running again.

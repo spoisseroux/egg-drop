@@ -386,7 +386,7 @@ function Panel:ensureGuide()
  if not self.guide or not self.guide.root.Parent then
   self.guide=Guide.new(self.body,self.guideRect,self.guidePhone,{close=function()self:setMode("stats")end,
    shop=if self.callbacks.shop then function(row)self:close("shop");self.callbacks.shop(row)end else nil,
-   ring=function()return self.ring end})
+   ring=function()return self.ring end,scale=function()return self.scale.Scale end})
  end
  return self.guide
 end
@@ -601,6 +601,8 @@ function Panel:fit(size)
  if self.key~="regular"then self:build(nil)end
  self.root.Position=UDim2.fromScale(.5,.5)
  self.scale.Scale=math.max(.1,math.min(1.2,(size.X-24)/848,(size.Y-24)/608))
+ -- The guide's rows follow the new scale.
+ if self.visible and self.mode=="guide"and self.guide and self.guide.root.Parent then self:paintGuide(nil,true)end
 end
 function Panel:setContext(ctx)
  if ctx.wallet then self.ctx.wallet=ctx.wallet end

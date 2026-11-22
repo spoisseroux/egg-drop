@@ -122,7 +122,7 @@ function Guide.line(parent,x,y,w,h,textSize)
 end
 
 -- host: the body; rect {x,y,w,h}; callbacks: close(), shop(row) (nil: no shop keys), stat(delta),
--- ring() -> the panel's focus ring.
+-- ring() -> the panel's focus ring; scale() -> the panel's fit scale (rows stay 44 px on screen).
 function Guide.new(host,rect,phone,callbacks)
  local Kit=require(script.Parent.DeckKit)
  local self=setmetatable({callbacks=callbacks or {},phone=phone,rows={},views={},index=1,w=rect.w,h=rect.h},Guide)
@@ -142,14 +142,22 @@ function Guide.new(host,rect,phone,callbacks)
  self.list=list
  return self
 end
-Guide.RowHeight={phone=44,regular=46}
+Guide.RowHeight={phone=45,regular=46}
+Guide.RowTarget=45 -- px on screen, whatever the panel's fit scale
+-- Pure: a row's height in panel units at a fit scale.
+function Guide.rowHeight(phone,scale)
+ local base=if phone then Guide.RowHeight.phone else Guide.RowHeight.regular
+ if type(scale)~="number"or scale~=scale or scale<=0 then return base end
+ return math.max(base,math.ceil(Guide.RowTarget/scale))
+end
 Guide.RowGap=5
+function Guide:wantedRow()return Guide.rowHeight(self.phone,if self.callbacks.scale then self.callbacks.scale()else 1)end
 function Guide:buildRows()
  local Kit=require(script.Parent.DeckKit)
  for _,view in ipairs(self.views)do view.root:Destroy()end
  table.clear(self.views)
  if self.empty then self.empty:Destroy();self.empty=nil end
- local rowH=if self.phone then Guide.RowHeight.phone else Guide.RowHeight.regular
+ local rowH=self:wantedRow()
  local w=self.list.Size.X.Offset-10
  local statusW=if self.phone then 92 else 112
  if Kit.translating then statusW=math.floor(statusW*1.2)end
@@ -203,7 +211,7 @@ function Guide:show(stat,level,state,rowId,keep)
  end
  local parts={}
  for _,entry in ipairs(self.rows)do table.insert(parts,entry.row.id..":"..entry.state..":"..tostring(entry.shop))end
- local key=stat.."|"..table.concat(parts,",")
+ local key=stat.."|"..self:wantedRow().."|"..table.concat(parts,",")
  if self.key~=key then self.key=key;self:buildRows()end
  self.root.Visible=true
  self.root:SetAttribute("GuideStat",stat);self.root:SetAttribute("Rows",#self.rows)

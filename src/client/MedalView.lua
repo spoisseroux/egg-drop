@@ -203,7 +203,7 @@ local function medalScene(crossed)
  function scene:destroy()self.destroyed=true;root:Destroy()end
  return scene
 end
-Moment.scene=medalScene
+Moment.makeScene=medalScene -- never `scene`: an instance without one would find this through __index
 
 function Moment.new(playerGui,audio)
  local gui=Instance.new("ScreenGui");gui.Name="EggDropMedal";gui.ResetOnSpawn=false;gui.DisplayOrder=16
@@ -329,7 +329,7 @@ function Moment:close(reason)
   local function gone()if scene then scene:destroy()end end
   local ok,problem=pcall(function()if not stage:dismiss(gone,{})then stage:destroy();gone()end end)
   if not ok then warn("[Levels] medal moment: "..tostring(problem));pcall(stage.destroy,stage);pcall(gone)end
- elseif scene then pcall(scene.destroy,scene)end
+ elseif scene then pcall(function()scene:destroy()end)end
  self.gui.Enabled=false
  if self.callbacks and self.callbacks.closed then self.callbacks.closed(reason)end
  return true

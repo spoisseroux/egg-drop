@@ -23,6 +23,7 @@ return function(client,parent)
  end
  local function show(r)return if r then string.format("%d,%d,%dx%d",r.x,r.y,r.w,r.h)else "nil"end
  local sizes={Vector2.new(568,320),Vector2.new(667,375),Vector2.new(740,360),Vector2.new(844,390),Vector2.new(932,430)}
+ local cleanup={} -- a screen a failed case leaves open would cover every later spec
  local gui=Instance.new("ScreenGui");gui.Name="_CompactPhoneSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
  local function frame(size)
   local root=Instance.new("Frame");root.Name="Root";root.Size=UDim2.fromOffset(size.X,size.Y);root.BackgroundTransparency=1;root.Parent=gui
@@ -482,8 +483,12 @@ return function(client,parent)
     assert(log.footer.AbsolutePosition.X-log.overlay.layer.AbsolutePosition.X==mg+14,label.." log body edge at mg + 14")
     log:hide()
     local host=frame(size);host.Name="ShopHost"
-    local shop=Shop.new(host,{});shop:fit(size)
+    local shop=Shop.new(host,{});shop:fit(size);table.insert(cleanup,function()shop:close()end)
     shop:setContext({equipped="sherbet",wallet=128,facts={faceplates={}}});shop:open("sherbet");task.wait()
+    if size.X==568 and #shop.tabSet>3 then
+     assert(shop.tabs.root:GetAttribute("TabIcons")==true and not shop.tabs.labels[1].Visible and shop.tabs.buttons[1]:GetAttribute("AccessibleLabel")==shop.tabSet[1].label,label.." four tabs: icons alone, named")
+    else for _,tabLabel in ipairs(shop.tabs.labels)do assert(tabLabel.Visible and tabLabel.TextSize>=12,label.." tab words")end end
+    for _,b in ipairs(shop.tabs.buttons)do assert(b.AbsoluteSize.X>=44 and b.AbsoluteSize.Y>=44,label.." tab hit")end
     -- QA v760: Deck style is the whole root wide, like the Pocket menu (no grip inset).
     local grid=Shop.compactGrid(size.X,size.Y-60)
     assert(shop.columns==grid.cols and shop.tiles[1].button.AbsoluteSize.X==grid.tileW and shop.tiles[1].button.AbsoluteSize.Y==64,label.." grid")
@@ -550,6 +555,7 @@ return function(client,parent)
    end
   end)
  end,function(e)return tostring(e).." | "..debug.traceback()end)
+ for _,run in ipairs(cleanup)do pcall(run)end
  gui:Destroy()
  if not ok then error(problem,0)end
  return #cases.." passed: "..table.concat(cases," | ")

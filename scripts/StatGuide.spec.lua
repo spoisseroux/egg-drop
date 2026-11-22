@@ -21,6 +21,8 @@ return function(client,parent)
  local ALL={track=true,gates=true,medals=true,juice=true}
  local function on(shipped)Levels.inject({flags={LevelsMatter=true},studio=true,shipped=shipped or ALL})end
  local function off()Levels.inject({flags={},studio=true})end
+ parent=parent:FindFirstAncestorOfClass("PlayerGui")or parent -- a gui inside a gui has no layout of its own
+ local panels={} -- closed whatever happens, or an open panel covers every later spec
  local gui=Instance.new("ScreenGui");gui.Name="_StatGuideSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.Parent=parent
  local function settle()for _=1,3 do game:GetService("RunService").Heartbeat:Wait()end end
  local function snapshot(levels)
@@ -59,12 +61,19 @@ return function(client,parent)
    local dots=Guide.dots({jump=14,heart=1},{jump=15,heart=1});assert(dots.jump and not dots.heart)
    assert(next(Guide.dots(nil,{jump=99}))==nil,"a pet not seen before has no dots")
   end)
-  for _,size in ipairs({Vector2.new(1280,720),Vector2.new(844,390),Vector2.new(667,375)})do
+  test("pure: rows are 44 px on screen at any fit scale",function()
+   for _,phone in ipairs({true,false})do
+    for _,scale in ipairs({.5,.7,.9,.95,1,1.167,1.2})do assert(Guide.rowHeight(phone,scale)*scale>=44,tostring(scale))end
+    for _,odd in ipairs({0,-1,0/0})do assert(Guide.rowHeight(phone,odd)>=44)end
+   end
+   assert(Guide.rowHeight(false,1)==46 and Guide.rowHeight(false,1.2)==46 and Guide.rowHeight(false,nil)==46)
+  end)
+  for _,size in ipairs({Vector2.new(1280,720),Vector2.new(1649,734),Vector2.new(1000,560),Vector2.new(844,390),Vector2.new(667,375)})do
    test(tostring(size).." panel: next line, dots, the guide and its keys",function()
     on()
     local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
     local went
-    local panel=Panel.new(host,{appearance=function()return{}end,shop=function(row)went=row end})
+    local panel=Panel.new(host,{appearance=function()return{}end,shop=function(row)went=row end});table.insert(panels,panel)
     panel:noteLevels(snapshot({jump=14}).petStats)
     local st=snapshot({jump=15,speed=99})
     panel:open({wallet=1,state=st,activeId="pip"},{stat="jump"});settle()
@@ -76,7 +85,7 @@ return function(client,parent)
     panel:openGuide();settle()
     assert(panel.mode=="guide"and panel.guide.root.Visible and not panel.tiles[1].button.Visible and not panel.detail.Visible and panel.ring.target==panel.guide.views[panel.guide.index].root)
     for _,view in ipairs(panel.guide.views)do
-     assert(view.root.AbsoluteSize.Y>=44,"44 px rows")
+     assert(view.root.AbsoluteSize.Y>=44,tostring(size).." 44 px rows: "..view.root.AbsoluteSize.Y.." at scale "..panel.scale.Scale)
      local label=view.text;assert(label.AbsolutePosition.X+label.AbsoluteSize.X<=view.root.AbsolutePosition.X+view.root.AbsoluteSize.X,view.entry.row.id)
     end
     local index=panel.guide.index
@@ -103,7 +112,7 @@ return function(client,parent)
    test(tostring(size).." panel off: no line, no dots, no guide; A still boings a tile",function()
     off()
     local host=Instance.new("Frame");host.BackgroundTransparency=1;host.Size=UDim2.fromOffset(size.X,size.Y);host.Parent=gui
-    local panel=Panel.new(host,{appearance=function()return{}end})
+    local panel=Panel.new(host,{appearance=function()return{}end});table.insert(panels,panel)
     panel:open({state=snapshot({jump=15}),activeId="pip"},{stat="jump",guide=true,row="x"});settle()
     assert(panel.mode=="stats"and panel.detail:FindFirstChild("GuideOpen")==nil and panel.detail:FindFirstChild("NextLine")==nil and panel.body:FindFirstChild("StatGuide")==nil)
     assert(panel.tiles[1].button:FindFirstChild("RewardDot")==nil and panel.medalSlots==nil)
@@ -147,6 +156,7 @@ return function(client,parent)
   end)
  end,function(e)return tostring(e).." | "..debug.traceback()end)
  Levels.inject(nil)
+ for _,panel in ipairs(panels)do pcall(function()panel:destroy()end)end
  gui:Destroy()
  if not ok then error(problem,0)end
  return{passed=#cases,cases=cases}

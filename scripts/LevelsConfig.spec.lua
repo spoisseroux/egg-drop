@@ -152,6 +152,67 @@ return function(server)
 			switch(false);bought,why=H.buyWearable(h,"b2","pip","beanie",40,false);assert(bought and db.player_1.hatching.nectar==880,tostring(why))
 			assert(H.valid(h.state))
 		end)
+		test("the real switch, no seam: flipped off through the publisher, met and unmet wearables, balls and plates are NotForSale; only an op that began while on finishes",function()
+			Levels.inject(nil)
+			local savedAttribute=workspace:GetAttribute(Levels.Attribute)
+			local fine,wrong=pcall(function()
+				local s=snapshot({levels_matter=true})
+				local r=rig(serviceOf(s),function()return Levels.allowed()end,function(name,value)workspace:SetAttribute(name,value)end)
+				local hold=Levels.setSwitch
+				local config=Config.new({service=serviceOf(s),now=function()return r.at end,ceiling=function()return Levels.allowed()end,hold=hold,
+					set=function(name,value)workspace:SetAttribute(name,value)end,warn=function()end,spawn=function(fn)fn()end,wait=function()return coroutine.yield()end})
+				local function flip(on)assert(config.command(if on then "/levels on"else "/levels off"));assert(Levels.on("gates")==(on and Levels.ceiling("gates")))end
+				if not Levels.ceiling("gates")then return end -- a build without the flag has nothing to flip
+				flip(true)
+				local function refused(h,tag)
+					for _,buy in ipairs({
+						function(op)return H.buyWearable(h,op,"pip","tee_sky",40,true)end,       -- Energy 15
+						function(op)return H.buyWearable(h,op,"pip","tee_sky",nil,true)end,      -- a raw request with no price
+						function(op)return H.buyWearable(h,op,"pip","tee_sky",32,true)end,       -- a shelf price
+						function(op)return H.buyWearable(h,op,"pip","bowtail_periwinkle",100,false)end, -- Speed 30
+						function(op)return H.buyBallTheme(h,op,"tangerine_pop",40,true)end,      -- Power 10
+						function(op)return H.buyBallTheme(h,op,"tangerine_pop",32,true)end,
+						function(op)return H.buyFaceplate(h,op,"sky_fizz",40)end,                -- Energy 10
+						function(op)return H.buyFaceplate(h,op,"storm_glass",nil)end,            -- Energy 30
+					})do
+						tag..="."
+						local bought,why=buy("off-"..tag)
+						assert(not bought and why=="NotForSale",tag.." "..tostring(why))
+					end
+					assert(h.pending==nil and h.status=="Ready")
+				end
+				-- met and unmet, on both sides of the flip, in one open session
+				for name,levels in pairs({met={energy=99,power=99,speed=99},unmet={energy=1}})do
+					flip(true)
+					local h,db=ready(levels)
+					flip(false);refused(h,name);assert(db.player_1.hatching.nectar==1000,name)
+				end
+				-- either half off is off: the attribute (clients were told), or the server's own value
+				flip(true)
+				local h,db=ready({energy=99,power=99,speed=99})
+				workspace:SetAttribute(Levels.Attribute,false);refused(h,"attribute")
+				workspace:SetAttribute(Levels.Attribute,true);Levels.setSwitch(false);refused(h,"value")
+				flip(true)
+				-- the op that began while on finishes after the flip; a new op, and a reused id for another item, do not
+				flip(true)
+				local h2,db2,c2=ready({energy=99,power=99,speed=99})
+				c2.failBefore=true
+				local bought,why=H.buyWearable(h2,"began","pip","tee_sky",40,true);assert(not bought and why=="Retrying")
+				flip(false)
+				bought,why=H.buyWearable(h2,"other","pip","bowtail_periwinkle",100,true);assert(not bought and why=="Pending",tostring(why))
+				bought,why=H.buyWearable(h2,"began","pip","tee_sky",40,true);assert(bought and why=="Saved"and db2.player_1.hatching.nectar==960,tostring(why))
+				bought,why=H.buyBallTheme(h2,"after","tangerine_pop",40,true);assert(not bought and why=="NotForSale")
+				for _,plate in ipairs({"sky_fizz"})do
+					flip(true);c2.failBefore=true
+					bought,why=H.buyFaceplate(h2,"plate",plate,40);assert(not bought and why=="Retrying")
+					flip(false);bought,why=H.retry(h2);assert(bought and F.owns(h2.state,plate)and db2.player_1.hatching.nectar==920,tostring(why))
+				end
+				-- back on: sold again, no rejoin
+				flip(true);bought,why=H.buyBallTheme(h2,"again","tangerine_pop",40,true);assert(bought and db2.player_1.hatching.nectar==880,tostring(why))
+			end)
+			Levels.setSwitch(savedAttribute==true);workspace:SetAttribute(Levels.Attribute,savedAttribute)
+			assert(fine,wrong)
+		end)
 		test("a purchase that begins with the switch off is NotForSale with no charge; a frozen gate never skips the level check",function()
 			switch(false)
 			local h,db=ready({jump=15,power=10,energy=10})

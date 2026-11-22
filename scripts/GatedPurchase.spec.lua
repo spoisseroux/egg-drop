@@ -179,6 +179,18 @@ return function(server)
 			assert(listed and table.find(Balls.listed(h2.state.ballThemes.owned),"tangerine_pop")and not table.find(Balls.listed({}),"tangerine_pop"))
 			assert(H.valid(h2.state))
 		end)
+		test("ball themes through the buy the remote makes: with a price met saves and unmet is NeedsLevel; a request with no price is malformed for every theme",function()
+			gates(true)
+			local h=ready({pip={power=10}})
+			for _,id in ipairs({"tangerine_pop","gumdrops"})do
+				local bought,why=H.buyBallTheme(h,"raw-"..id,id,nil,true);assert(not bought and why=="InvalidBallTheme"and h.state.nectar==1000,id)
+			end
+			local low=ready({pip={power=9}})
+			local bought,why=H.buyBallTheme(low,"low","tangerine_pop",40,true);assert(not bought and why=="NeedsLevel"and low.state.nectar==1000)
+			bought,why=H.buyBallTheme(h,"ok","tangerine_pop",40,true);assert(bought and why=="Saved"and h.state.nectar==960)
+			bought,why=H.buyBallTheme(h,"ok","tangerine_pop",40,true);assert(bought and h.state.nectar==960,"replayed")
+			assert(select(2,H.buyBallTheme(low,"odd","tangerine_pop",39,true))=="PriceChanged")
+		end)
 		test("the two gated plates: Energy 10 and 30, sold below off and at the gate, kept and worn off",function()
 			for id,want in pairs({sky_fizz={10,40},storm_glass={30,100}})do
 				local level,cost=want[1],want[2]

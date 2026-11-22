@@ -199,7 +199,15 @@ return function(client,parent)
     assert(shop:act(false)and #sent==0 and trained[1].stat=="power"and trained[1].petId=="pip")
     -- Met: the same card buys; a refusal from an older save reads the save again.
     balls:setContext({levels={pip={power=10}}})
-    assert(shop.root:GetAttribute("BallPaneState")=="buy"and not tile.lock.root.Visible and not balls.lockBar.root.Visible)
+    assert(shop.root:GetAttribute("BallPaneState")=="buy"and not tile.lock.root.Visible and not tile.chip.root.Visible and not balls.lockBar.root.Visible and not balls.lockChip.root.Visible,"met: no chip is left")
+    -- A level that came in with a snapshot repaints the tile with no focus change (and plates the same way).
+    balls:setContext({levels={pip={power=9}}});assert(tile.chip.root.Visible);balls:setContext({levels={pip={power=25}}});assert(not tile.chip.root.Visible)
+    for _,plate in ipairs(shop.tiles)do
+     if plate.chip then
+      shop:setContext({levels={pip={energy=1}}});assert(plate.chip.root.Visible and plate.lock.root.Visible,plate.id)
+      shop:setContext({levels={pip={energy=99}}});assert(not plate.chip.root.Visible and not plate.lock.root.Visible,plate.id)
+     end
+    end
     local Confirm=require(client.ConfirmDialog)
     assert(shop:act(false)and Confirm.isOpen());Confirm.accept();task.wait();task.wait()
     assert(#sent==1 and sent[1][1]=="ballThemeBuy"and sent[1][2].themeId=="tangerine_pop"and sent[1][2].price==40)
@@ -231,6 +239,11 @@ return function(client,parent)
     assert(shop:move(1,0)and shop:act(false)and shop:move(-1,0)and shop.effects:focusId("pop","classic")and shop:act(false)and #sent==1,"one send per gap")
     task.wait(Effects.SendGap+.15);assert(#sent==2 and sent[2]=="pop.classic","the last choice wins")
     assert(shop.effects:focusId("trail","comet")and shop.root:GetAttribute("EffectPaneState")=="locked"and shop.effects.tiles[shop.effects.index].chip.root.Visible)
+    do
+     local comet=shop.effects.tiles[shop.effects.index]
+     shop.effects:setContext({levels={pip={power=45,energy=4}}});assert(not comet.chip.root.Visible and not comet.lock.root.Visible,"met: no chip is left")
+     shop.effects:setContext({levels={pip={power=15,energy=4}}});assert(comet.chip.root.Visible)
+    end
     assert(shop:act(false)and trained[1].stat=="power"and #sent==2)
     assert(shop.effects:focusId("start","ready")and shop:act(false)and trained[2].stat=="energy")
     -- the demo runs on the real renderers and stops with the tab

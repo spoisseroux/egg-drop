@@ -6,7 +6,14 @@ return function(client,parent)
  local Kit=require(client.DeckKit);local Spring=require(client.KitSpring);local Alive=require(game:GetService("ReplicatedStorage").Shared.Alive)
  local RunService=game:GetService("RunService")
  local cases={};local function test(name,run)run();table.insert(cases,name)end
- local function settle(n)for _=1,n or 3 do RunService.Heartbeat:Wait()end end
+ -- A frame is drawn (springs step on RenderStepped) before each heartbeat returns; 1 s at most.
+ local function settle(n)
+  for _=1,n or 3 do
+   local drawn=false;local once=RunService.RenderStepped:Once(function()drawn=true end);local began=os.clock()
+   repeat RunService.Heartbeat:Wait()until drawn or os.clock()-began>1
+   if not drawn then once:Disconnect()end
+  end
+ end
  parent=parent:FindFirstAncestorOfClass("PlayerGui")or parent -- the suite runner passes a ScreenGui; a gui inside a gui has no layout of its own
  local screen=Instance.new("ScreenGui");screen.Name="_KitSpringSpec";screen.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;screen.ResetOnSpawn=false;screen.Parent=parent
  local gui=Instance.new("Frame");gui.Size=UDim2.fromOffset(900,600);gui.BackgroundTransparency=1;gui.Parent=screen

@@ -4,8 +4,10 @@
 -- writes. Missing flag = off.
 --   Levels.on(part)   part is "track" (S1), "gates" (S2), "medals" (S4) or "juice" (S3)
 -- The runtime switch (server LevelsConfig; ConfigService key `levels_matter`, off until it has loaded
--- once, then missing = on) is for all four parts. The server reads its own resolved value, never an attribute; clients read the workspace
--- attribute the server writes, and a missing one (no such server code, or not started) is off.
+-- once, then missing = on) is for all four parts. The server is on only while its own resolved value and
+-- the attribute it published both say so: an attribute alone never turns it on, and it never sells what
+-- clients were told is off. Clients read the workspace attribute the server writes, and a missing one
+-- (no such server code, or not started) is off.
 local RunService=game:GetService("RunService")
 local Flags=require(script.Parent.FeatureFlags)
 local Levels={}
@@ -47,7 +49,7 @@ function Levels.setSwitch(value)
  return true
 end
 function Levels.switch()
- if RunService:IsServer()then return switch end
+ if RunService:IsServer()and not switch then return false end
  return workspace:GetAttribute(Levels.Attribute)==true
 end
 -- Fires when the switch flips (the server also pushes a fresh snapshot to every player).

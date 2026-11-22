@@ -7,7 +7,14 @@ return function(client,parent)
  local Alive=require(game:GetService("ReplicatedStorage").Shared.Alive);local Machine=require(client.MachineHub);local Companions=require(client.CompanionsHub)
  local RunService=game:GetService("RunService")
  local cases={};local function test(name,run)run();table.insert(cases,name)end
- local function settle(n)for _=1,n or 3 do RunService.Heartbeat:Wait()end end
+ -- A frame is drawn (springs step on RenderStepped) before each heartbeat returns; 1 s at most.
+ local function settle(n)
+  for _=1,n or 3 do
+   local drawn=false;local once=RunService.RenderStepped:Once(function()drawn=true end);local began=os.clock()
+   repeat RunService.Heartbeat:Wait()until drawn or os.clock()-began>1
+   if not drawn then once:Disconnect()end
+  end
+ end
  parent=parent:FindFirstAncestorOfClass("PlayerGui")or parent -- the suite runner passes a ScreenGui; a gui inside a gui has no layout of its own
  local gui=Instance.new("ScreenGui");gui.Name="_KitArriveSpec";gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.IgnoreGuiInset=true;gui.ResetOnSpawn=false;gui.Parent=parent
  local saved={reduced=Kit.reduced,effects=Kit.reducedEffects,level=Budget.level}

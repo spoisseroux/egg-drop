@@ -95,13 +95,15 @@ return function(client,parent)
    local host=Instance.new("Frame");host.Size=UDim2.fromOffset(900,640);host.BackgroundTransparency=1;host.Parent=gui
    local shop=Shop.new(host,{})
    local R=Shop.Regular
+   local listed=Themes.listed({}) -- Order, then the gated plates while gates are on
+   assert(#shop.tiles==#listed)
    for index=1,#shop.tiles do
     local col,row=(index-1)%4,math.floor((index-1)/4)
     local b=shop.tiles[index].button
     -- 18 plates (overnight 2026-11-14) put the grid in Shop.ScrollGrid: origin 3,3 and its own row pitch.
     local ox,oy,pitch=R.grid[1],R.grid[2],R.tile[2]+R.gap
     if shop.grid then ox,oy,pitch=3,3,Shop.ScrollGrid.pitch end
-    assert(b.Name=="Tile_"..Themes.Order[index]and b.Position==UDim2.fromOffset(ox+col*(R.tile[1]+R.gap),oy+row*pitch))
+    assert(b.Name=="Tile_"..listed[index]and b.Position==UDim2.fromOffset(ox+col*(R.tile[1]+R.gap),oy+row*pitch))
     assert(b.Size==UDim2.fromOffset(R.tile[1],R.tile[2])and b.Selectable==false and b:GetAttribute("KitLip")==4)
    end
    assert(R.gap>=4+3,"the lip fits the grid gap with room to spare")
