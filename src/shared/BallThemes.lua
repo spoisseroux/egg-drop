@@ -85,10 +85,11 @@ Themes.ById={
   ramps={ramp("#4E3A9A","#34266E","#9280E6"),ramp("#6650BE","#48388E","#AA98F5"),ramp("#8169DC","#5E4CAE","#C2B4FF"),
    ramp("#9480EE","#7462CC","#DCD2FF"),ramp("#A894FA","#8C78E6","#EEE8FF")},
   pitch="Dark balls with glowing eyes.",names={"Dusk","Plum","Iris","Lilac","Star"}},
- tangerine_pop={name="Tangerine Pop",tier="common",price=40,face="smiley",texture="none",ink="#2A0E04",mono=true,gate={stat="power",level=10},
-  ramps={ramp("#C24A10","#8A3208","#F08A4E"),ramp("#DE6418","#AA480E","#FFAA6E"),ramp("#F5822A","#CA6218","#FFC48C"), -- placeholder: Fable
-   ramp("#FFA552","#E88432","#FFDCB0"),ramp("#FFCB8C","#F5AA62","#FFF0DA")}, -- placeholder: Fable
-  pitch="Zesty orange, pip to pop.",names={"Pip","Zest","Slice","Juice","Pop"}},
+ -- Level-gated (Levels matter S2; Fable, artifacts/levels-2026-11-22/art.json): steps of 7 L* or more.
+ tangerine_pop={name="Tangerine Pop",tier="common",price=40,face="happy",texture="none",ink="#2B0F04",mono=true,gate={stat="power",level=10},
+  ramps={ramp("#D9440F","#A32E08","#FF9360"),ramp("#F05E18","#BD4210","#FFAB74"),ramp("#FF7A26","#DB5814","#FFC08C"),
+   ramp("#FF9C52","#EC772C","#FFD7B0"),ramp("#FFC394","#F59E5C","#FFF0E0")},
+  pitch="Juicy orange, deep to bright.",names={"Pip","Zest","Juice","Peach","Fizz"}},
 }
 local function seal(id,order)
  local entry=Themes.ById[id];entry.id=id;entry.order=order

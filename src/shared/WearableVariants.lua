@@ -32,21 +32,22 @@ Variants.Rows={
  {id="bellcollar_rose",base="bellcollar",name="Rose Bell Collar",color="#F2A0A8",piece="Neck_BellCollar_Bell"},
  {id="sunhat_cocoa",base="sunhat",name="Cocoa Sun Hat",color="#A9764F"},
  {id="sunhat_peach",base="sunhat",name="Peach Sun Hat",color="#FFB38A"},
- -- Levels matter (V3-LEVELS-BUILD-PLAN-2026-11-22 S2): 14 gated recolours in the stat's colour family.
- {id="specs_orchid",base="specs",name="Orchid Round Specs",color="#E58CFF",gate={stat="smarts",level=10}}, -- placeholder: Fable
- {id="beanie_rose",base="beanie",name="Rose Pom Beanie",color="#FF86A8",gate={stat="heart",level=15}}, -- placeholder: Fable
- {id="tee_sky",base="tee",name="Sky Stripy Tee",color="#6CCBFF",gate={stat="energy",level=15}}, -- placeholder: Fable
- {id="partyhat_lime",base="partyhat",name="Lime Party Hat",color="#B9EE5A",gate={stat="jump",level=15}}, -- placeholder: Fable
- {id="tee_periwinkle",base="tee",name="Periwinkle Stripy Tee",color="#8FA8FF",gate={stat="speed",level=15}}, -- placeholder: Fable
- {id="bands_tangerine",base="bands",name="Tangerine Friendship Bands",color="#FF9D4D",gate={stat="power",level=20}}, -- placeholder: Fable
- {id="beads_orchid",base="beads",name="Orchid Pearl Beads",color="#EFB3FF",gate={stat="smarts",level=20}}, -- placeholder: Fable
- {id="bellcollar_blossom",base="bellcollar",name="Blossom Bell Collar",color="#FF9CBC",piece="Neck_BellCollar_Bell",gate={stat="heart",level=30}}, -- placeholder: Fable
- {id="beanie_lime",base="beanie",name="Lime Pom Beanie",color="#B4E85C",gate={stat="jump",level=30}}, -- placeholder: Fable
- {id="bowtail_periwinkle",base="bowtail",name="Periwinkle Bow Tail",color="#8FA8FF",gate={stat="speed",level=30}}, -- placeholder: Fable
- {id="blush_peach",base="blush",name="Peach Blush Stickers",color="#FFB27A",gate={stat="power",level=35}}, -- placeholder: Fable
- {id="sunhat_sky",base="sunhat",name="Sky Sun Hat",color="#8FD6FF",gate={stat="energy",level=35}}, -- placeholder: Fable
- {id="hoodie_starbloom",base="hoodie",name="Starbloom Hoodie",color="#F2A6DE",gate={total=150}}, -- placeholder: Fable
- {id="flowercrown_golden",base="flowercrown",name="Golden Flower Crown",color="#F2C24B",gate={total=300}}, -- placeholder: Fable
+ -- Levels matter (V3-LEVELS-BUILD-PLAN-2026-11-22 S2): 14 gated recolours in the stat's colour family
+ -- (hexes: Fable, artifacts/levels-2026-11-22/art.json).
+ {id="specs_orchid",base="specs",name="Orchid Round Specs",color="#B45CE6",gate={stat="smarts",level=10}},
+ {id="beanie_rose",base="beanie",name="Rose Pom Beanie",color="#EC4F8F",gate={stat="heart",level=15}},
+ {id="tee_sky",base="tee",name="Sky Stripy Tee",color="#35B4F2",gate={stat="energy",level=15}},
+ {id="partyhat_lime",base="partyhat",name="Lime Party Hat",color="#93D62E",gate={stat="jump",level=15}},
+ {id="tee_periwinkle",base="tee",name="Periwinkle Stripy Tee",color="#8A82F0",gate={stat="speed",level=15}},
+ {id="bands_tangerine",base="bands",name="Tangerine Friendship Bands",color="#FF8A2E",gate={stat="power",level=20}},
+ {id="beads_orchid",base="beads",name="Orchid Pearl Beads",color="#CF8DF2",gate={stat="smarts",level=20}},
+ {id="bellcollar_blossom",base="bellcollar",name="Blossom Bell Collar",color="#FF5C93",piece="Neck_BellCollar_Bell",gate={stat="heart",level=30}},
+ {id="beanie_lime",base="beanie",name="Lime Pom Beanie",color="#A4D93A",gate={stat="jump",level=30}},
+ {id="bowtail_periwinkle",base="bowtail",name="Periwinkle Bow Tail",color="#7F92F5",gate={stat="speed",level=30}},
+ {id="blush_peach",base="blush",name="Peach Blush Stickers",color="#FF8748",gate={stat="power",level=35}},
+ {id="sunhat_sky",base="sunhat",name="Sky Sun Hat",color="#5CBEF5",gate={stat="energy",level=35}},
+ {id="hoodie_starbloom",base="hoodie",name="Starbloom Hoodie",color="#2F2C7C",gate={total=150}},
+ {id="flowercrown_golden",base="flowercrown",name="Golden Flower Crown",color="#F0B429",gate={total=300}},
 }
 
 local function hex(value)return type(value)=="string"and string.match(value,"^#%x%x%x%x%x%x$")~=nil end
