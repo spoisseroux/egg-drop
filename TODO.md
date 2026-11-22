@@ -25,7 +25,7 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 - [ ] Garden Dash: a 4 to 8 pet race around the garden path with hurdles and a shortcut (Speed, Energy, Jump). The v3 headline.
   - [x] S5 (2026-11-22): `DashCourse`, `DashStats`, `DashSim`, specs (`python scripts/run_dash_specs.py`). Pure shared code; nothing requires it yet.
   - [ ] S6 + S7 (2026-11-22, branch `worktree-agent-a966b514a7587704c`): server and client built, offline specs pass (`python scripts/run_dash_server_specs.py`). Prizes now need `garden_dash_prizes` = true. Server reviewed (1912bd0), client not; not run in Studio, not merged. Left out: ghost, Today cup, ribbons on the inspect card and stats panel, pal recolours, all art and sound.
-- [ ] Things to do + minigame tips (2026-11-22, branch `worktree-agent-a6251b4c10c2e441d`): built behind `FeatureFlags.ThingsToDo` + `things_to_do` / `things_tips` (`/todo`), offline specs pass. Left: Studio run (Show me paths, 4-column hub on phones, tips on fresh saves), real paw-print art, Fable captures, `sync_localization.py`.
+- [ ] Things to do + minigame tips (2026-11-22): merged, reviewed, on the BETA (6) 21f890e; Show me paths and the off switch checked in Studio. Built behind `FeatureFlags.ThingsToDo` + `things_to_do` / `things_tips` (`/todo`), offline specs pass. Left: 4-column hub on phones, gamepad, the two tips on screen, real paw-print art, Fable captures, `sync_localization.py`.
 - [ ] Tug of War: 1v1 or 2v2, tap in rhythm (Power, Heart, Energy). v3.1.
 - [ ] Treasure Hunt: most garden finds in 60 s (Smarts, Speed). v3.1, needs garden finds.
 
@@ -38,7 +38,7 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 ## Now working on
 
-- [ ] **Frutiger Aero Medium, first layer (Opus, 2026-11-22).** Built, beta only, not run in Studio: `AeroWorld` + `AeroAdditions` (client), `Aero` + `WorldAero` (shared), `AeroConfig` (key `aero_world`; owner chat `/aero on|off|clear|lime|coral`). Next: Studio QA (dome over jelly pets, bloom on marble, lime vs coral captures, phone clouds and memory). Not built: rounded signs, bubbles.
+- [ ] **Frutiger Aero Medium, first layer (Opus, 2026-11-22).** On the BETA (6) 21f890e; light lowered so pale pets keep their faces; waiting on Spencer: lime or coral trees (`artifacts/aero-2026-11-22/`). Left: frame time, phone, marble and sky export. Was: built, beta only: `AeroWorld` + `AeroAdditions` (client), `Aero` + `WorldAero` (shared), `AeroConfig` (key `aero_world`; owner chat `/aero on|off|clear|lime|coral`). Next: Studio QA (dome over jelly pets, bloom on marble, lime vs coral captures, phone clouds and memory). Not built: rounded signs, bubbles.
 
 - [ ] **Minigame places, onboarding and tutorials (Spencer, 2026-11-22): "we need better locations for mini games, and onboarding and tutorials that mention them".** Scoping with the Frutiger Aero look and alive steps 5-7 in one world plan: `WORLD-PLAN-2026-11-22.md` written and spot-checked. Waiting on Spencer: its six picks. Then architect, then slices 1 to 9.
 - [ ] **v3: ASMR things to play with (Spencer, 2026-11-22).** Keycaps and crunchy things in the world, maybe pet toys. Scoped: `V3-SCOPE-2026-11-21.md` section 13, S19, question 18. Next: sound candidates for Spencer to hear.
