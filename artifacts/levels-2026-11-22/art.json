@@ -1,0 +1,503 @@
+{
+ "schema": 1,
+ "date": "2026-11-22",
+ "by": "Fable (creative direction); values proposed, not yet in the catalogues",
+ "notes": [
+  "Recolour rows map to WearableVariants: {id, base=item, name, color=hex, price, piece?} plus gate.",
+  "Bunny rose is assumed #F5A9BC for the checks; every row still needs the render check on both rigs.",
+  "flowercrown_golden recolours the crown's main own colour (#58B368, the leaves); if the gold should land on the flowers it needs a `piece`."
+ ],
+ "recolours": [
+  {
+   "id": "specs_orchid",
+   "item": "specs",
+   "name": "Orchid Round Specs",
+   "hex": "#B45CE6",
+   "gate": {
+    "stat": "smarts",
+    "level": 10
+   },
+   "price": 40,
+   "reason": "Smarts orchid taken deep, because the frames are thin and must hold on white fur.",
+   "check": {
+    "deltaE_white_bear": 92.3,
+    "deltaE_rose_bunny": 67.4,
+    "contrast_white_bear": 3.74,
+    "nearest_same_item_deltaE": 137.1
+   }
+  },
+  {
+   "id": "beanie_rose",
+   "item": "beanie",
+   "name": "Rose Pom Beanie",
+   "hex": "#EC4F8F",
+   "gate": {
+    "stat": "heart",
+    "level": 15
+   },
+   "price": 40,
+   "reason": "Heart pink pushed to a full rose: pinker than the red base, darker than the Bunny.",
+   "check": {
+    "deltaE_white_bear": 77.9,
+    "deltaE_rose_bunny": 39.9,
+    "contrast_white_bear": 3.45,
+    "nearest_same_item_deltaE": 39.1
+   }
+  },
+  {
+   "id": "tee_sky",
+   "item": "tee",
+   "name": "Sky Stripy Tee",
+   "hex": "#35B4F2",
+   "gate": {
+    "stat": "energy",
+    "level": 15
+   },
+   "price": 40,
+   "reason": "Energy sky on the cyan side, so it never reads as the Speed tee.",
+   "check": {
+    "deltaE_white_bear": 52.6,
+    "deltaE_rose_bunny": 61.4,
+    "contrast_white_bear": 2.34,
+    "nearest_same_item_deltaE": 42.8
+   }
+  },
+  {
+   "id": "partyhat_lime",
+   "item": "partyhat",
+   "name": "Lime Party Hat",
+   "hex": "#93D62E",
+   "gate": {
+    "stat": "jump",
+    "level": 15
+   },
+   "price": 40,
+   "reason": "Jump lime with more green in it, so the cone keeps its shape on white.",
+   "check": {
+    "deltaE_white_bear": 85.5,
+    "deltaE_rose_bunny": 101.5,
+    "contrast_white_bear": 1.76,
+    "nearest_same_item_deltaE": 96.9
+   }
+  },
+  {
+   "id": "tee_periwinkle",
+   "item": "tee",
+   "name": "Periwinkle Stripy Tee",
+   "hex": "#8A82F0",
+   "gate": {
+    "stat": "speed",
+    "level": 15
+   },
+   "price": 40,
+   "reason": "Speed periwinkle on the violet side: a clear step from Sky and from the navy base.",
+   "check": {
+    "deltaE_white_bear": 74.1,
+    "deltaE_rose_bunny": 58.8,
+    "contrast_white_bear": 3.21,
+    "nearest_same_item_deltaE": 29.7
+   }
+  },
+  {
+   "id": "bands_tangerine",
+   "item": "bands",
+   "name": "Tangerine Friendship Bands",
+   "hex": "#FF8A2E",
+   "gate": {
+    "stat": "power",
+    "level": 20
+   },
+   "price": 40,
+   "reason": "Power orange at full strength: the bands are tiny, so they get the loudest colour.",
+   "check": {
+    "deltaE_white_bear": 81.4,
+    "deltaE_rose_bunny": 64.1,
+    "contrast_white_bear": 2.35,
+    "nearest_same_item_deltaE": 103.7
+   }
+  },
+  {
+   "id": "beads_orchid",
+   "item": "beads",
+   "name": "Orchid Pearl Beads",
+   "hex": "#CF8DF2",
+   "gate": {
+    "stat": "smarts",
+    "level": 20
+   },
+   "price": 40,
+   "reason": "A paler, pearly orchid than the specs, so the two worn together look like a set.",
+   "check": {
+    "deltaE_white_bear": 67.0,
+    "deltaE_rose_bunny": 45.2,
+    "contrast_white_bear": 2.4,
+    "nearest_same_item_deltaE": 75.6
+   }
+  },
+  {
+   "id": "bellcollar_blossom",
+   "item": "bellcollar",
+   "name": "Blossom Bell Collar",
+   "hex": "#FF5C93",
+   "gate": {
+    "stat": "heart",
+    "level": 30
+   },
+   "price": 100,
+   "reason": "Hot blossom pink bell: far stronger than the pale Rose bell, and it pops on the Bunny.",
+   "check": {
+    "deltaE_white_bear": 76.0,
+    "deltaE_rose_bunny": 38.4,
+    "contrast_white_bear": 2.91,
+    "nearest_same_item_deltaE": 36.7
+   },
+   "piece": "Neck_BellCollar_Bell"
+  },
+  {
+   "id": "beanie_lime",
+   "item": "beanie",
+   "name": "Lime Pom Beanie",
+   "hex": "#A4D93A",
+   "gate": {
+    "stat": "jump",
+    "level": 30
+   },
+   "price": 40,
+   "reason": "Yellower lime than the party hat and nothing like Mint: the Jump hat for cold days.",
+   "check": {
+    "deltaE_white_bear": 80.9,
+    "deltaE_rose_bunny": 96.4,
+    "contrast_white_bear": 1.67,
+    "nearest_same_item_deltaE": 42.2
+   }
+  },
+  {
+   "id": "bowtail_periwinkle",
+   "item": "bowtail",
+   "name": "Periwinkle Bow Tail",
+   "hex": "#7F92F5",
+   "gate": {
+    "stat": "speed",
+    "level": 30
+   },
+   "price": 100,
+   "reason": "The Speed colour a shade deeper, so the bow's folds still show.",
+   "check": {
+    "deltaE_white_bear": 66.5,
+    "deltaE_rose_bunny": 56.3,
+    "contrast_white_bear": 2.86,
+    "nearest_same_item_deltaE": 84.3
+   }
+  },
+  {
+   "id": "blush_peach",
+   "item": "blush",
+   "name": "Peach Blush Stickers",
+   "hex": "#FF8748",
+   "gate": {
+    "stat": "power",
+    "level": 35
+   },
+   "price": 40,
+   "reason": "Warm peach-orange cheeks: the hue is far enough from rose to show on the Bunny.",
+   "check": {
+    "deltaE_white_bear": 74.0,
+    "deltaE_rose_bunny": 53.2,
+    "contrast_white_bear": 2.38,
+    "nearest_same_item_deltaE": 48.3
+   }
+  },
+  {
+   "id": "sunhat_sky",
+   "item": "sunhat",
+   "name": "Sky Sun Hat",
+   "hex": "#5CBEF5",
+   "gate": {
+    "stat": "energy",
+    "level": 35
+   },
+   "price": 100,
+   "reason": "A softer sky than the tee for the big brim, still dark enough to edge against white.",
+   "check": {
+    "deltaE_white_bear": 46.4,
+    "deltaE_rose_bunny": 57.2,
+    "contrast_white_bear": 2.07,
+    "nearest_same_item_deltaE": 73.6
+   }
+  },
+  {
+   "id": "hoodie_starbloom",
+   "item": "hoodie",
+   "name": "Starbloom Hoodie",
+   "hex": "#2F2C7C",
+   "gate": {
+    "total": 150
+   },
+   "price": 250,
+   "reason": "Midnight indigo, no stat's colour: the chest star becomes a star in a night sky.",
+   "check": {
+    "deltaE_white_bear": 93.0,
+    "deltaE_rose_bunny": 71.3,
+    "contrast_white_bear": 11.85,
+    "nearest_same_item_deltaE": 35.9
+   }
+  },
+  {
+   "id": "flowercrown_golden",
+   "item": "flowercrown",
+   "name": "Golden Flower Crown",
+   "hex": "#F0B429",
+   "gate": {
+    "total": 300
+   },
+   "price": 250,
+   "reason": "Stars gold on the crown's main (leaf) colour: the top prize wears the wallet's colour.",
+   "check": {
+    "deltaE_white_bear": 76.6,
+    "deltaE_rose_bunny": 73.5,
+    "contrast_white_bear": 1.86,
+    "nearest_same_item_deltaE": 69.2
+   }
+  }
+ ],
+ "ballTheme": {
+  "id": "tangerine_pop",
+  "name": "Tangerine Pop",
+  "tier": "common",
+  "price": 40,
+  "gate": {
+   "stat": "power",
+   "level": 10
+  },
+  "face": "happy",
+  "texture": "none",
+  "ink": "#2B0F04",
+  "mono": true,
+  "ramps": [
+   {
+    "body": "#D9440F",
+    "deep": "#A32E08",
+    "light": "#FF9360"
+   },
+   {
+    "body": "#F05E18",
+    "deep": "#BD4210",
+    "light": "#FFAB74"
+   },
+   {
+    "body": "#FF7A26",
+    "deep": "#DB5814",
+    "light": "#FFC08C"
+   },
+   {
+    "body": "#FF9C52",
+    "deep": "#EC772C",
+    "light": "#FFD7B0"
+   },
+   {
+    "body": "#FFC394",
+    "deep": "#F59E5C",
+    "light": "#FFF0E0"
+   }
+  ],
+  "pitch": "Juicy orange, deep to bright.",
+  "names": [
+   "Pip",
+   "Zest",
+   "Juice",
+   "Peach",
+   "Fizz"
+  ],
+  "check": {
+   "bodyLstar": [
+    50.6,
+    58.6,
+    66.0,
+    73.3,
+    83.1
+   ],
+   "amberBodyLstar": [
+    47.3,
+    57.7,
+    68.0,
+    78.4,
+    88.3
+   ],
+   "inkOnBody": [
+    4.08,
+    5.39,
+    6.88,
+    8.64,
+    11.5
+   ],
+   "bodyOnWell": [
+    4.07,
+    5.37,
+    6.86,
+    8.61,
+    11.46
+   ]
+  }
+ },
+ "ballThemeLua": "tangerine_pop={name=\"Tangerine Pop\",tier=\"common\",price=40,face=\"happy\",texture=\"none\",ink=\"#2B0F04\",mono=true,\n  ramps={ramp(\"#D9440F\",\"#A32E08\",\"#FF9360\"),ramp(\"#F05E18\",\"#BD4210\",\"#FFAB74\"),ramp(\"#FF7A26\",\"#DB5814\",\"#FFC08C\"),ramp(\"#FF9C52\",\"#EC772C\",\"#FFD7B0\"),ramp(\"#FFC394\",\"#F59E5C\",\"#FFF0E0\")},\n  pitch=\"Juicy orange, deep to bright.\",names={\"Pip\",\"Zest\",\"Juice\",\"Peach\",\"Fizz\"}},",
+ "faceplates": [
+  {
+   "id": "sky_fizz",
+   "name": "Sky Fizz",
+   "order": 24,
+   "tier": "common",
+   "priceStars": 40,
+   "gate": {
+    "stat": "energy",
+    "level": 10
+   },
+   "texture": "assets/deck/faceplates/sky_fizz.png",
+   "textureAssetId": null,
+   "finish": "sky soda glass, sun and fizz",
+   "accent": "#7FDCFF",
+   "ink": "#0E0F12",
+   "accentInkContrast": 12.4,
+   "deep": "#1766D2",
+   "band": {
+    "name": "silver",
+    "tint": "#FFFFFF"
+   },
+   "engrave": {
+    "color": "#0E0F12",
+    "opacity": 0.42
+   },
+   "ui": {
+    "panel": "#152235",
+    "raised": "#213047",
+    "well": "#0D1623",
+    "selected": "#2E4861",
+    "line": "#91B5C8"
+   },
+   "toyShell": {
+    "shell": "#186D94",
+    "shellHi": "#6BAAC8",
+    "shellLip": "#0A3F57",
+    "tray": "#0E4A65",
+    "well": "#0F1A32",
+    "wellDot": "#27385D",
+    "ink": "#0C1A20",
+    "inkSoft": "#395460",
+    "onShellSoft": "#D4EBF6",
+    "tag": "#FFB3DA",
+    "tagLip": "#A37993"
+   },
+   "toyShellSource": {
+    "hue": 199,
+    "saturation": 0.84,
+    "note": "shell sits between Creek (192) and Aqua Pop (205); pink lemonade tag, picked up by the pink bubbles"
+   },
+   "toyShellContrast": {
+    "white/shell": 5.75,
+    "ink/tag": 10.73,
+    "ink/cream": 16.23,
+    "lemon/shell": 4.41
+   },
+   "overlay": {
+    "texture": "overlay-gloss-sweep.png",
+    "image": "rbxassetid://114031715260538",
+    "kind": "gloss",
+    "min": 0.0,
+    "max": 0.45,
+    "period": 4.5
+   },
+   "held3d": {
+    "material": "Glass",
+    "reflectance": 0.08,
+    "transparency": 0.25
+   }
+  },
+  {
+   "id": "storm_glass",
+   "name": "Storm Glass",
+   "order": 25,
+   "tier": "rare",
+   "priceStars": 100,
+   "gate": {
+    "stat": "energy",
+    "level": 30
+   },
+   "texture": "assets/deck/faceplates/storm_glass.png",
+   "textureAssetId": null,
+   "finish": "deep storm glass, soft light and rain beads",
+   "accent": "#A9C4F2",
+   "ink": "#0E0F12",
+   "accentInkContrast": 10.83,
+   "deep": "#22304E",
+   "band": {
+    "name": "gunmetal",
+    "tint": "#6F7480"
+   },
+   "engrave": {
+    "color": "#FFFFFF",
+    "opacity": 0.78
+   },
+   "ui": {
+    "panel": "#171A22",
+    "raised": "#232831",
+    "well": "#0E1016",
+    "selected": "#363E4C",
+    "line": "#9FADC3"
+   },
+   "toyShell": {
+    "shell": "#4565A4",
+    "shellHi": "#8DA3CE",
+    "shellLip": "#263961",
+    "tray": "#2E446F",
+    "well": "#0F1A30",
+    "wellDot": "#26385C",
+    "ink": "#0F1828",
+    "inkSoft": "#42506E",
+    "onShellSoft": "#DDE8FC",
+    "tag": "#C4B5FF",
+    "tagLip": "#7F79AD"
+   },
+   "toyShellSource": {
+    "hue": 220,
+    "saturation": 0.58,
+    "note": "slate blue shell, more colour than Liquid Chrome (218, .40); lilac tag from the light's halo"
+   },
+   "toyShellContrast": {
+    "white/shell": 5.75,
+    "ink/tag": 9.65,
+    "ink/cream": 16.27,
+    "lemon/shell": 4.42
+   },
+   "overlay": {
+    "texture": "overlay-water.png",
+    "image": "rbxassetid://105339906963951",
+    "kind": "water",
+    "min": 0.08,
+    "max": 0.45,
+    "period": 6.0
+   },
+   "held3d": {
+    "material": "Glass",
+    "reflectance": 0.08,
+    "transparency": 0.25
+   }
+  }
+ ],
+ "medals": {
+  "files": "assets/ui/levels/medal-<25|50|75|99>-<tint|trim>.png",
+  "size": 256,
+  "centre": [
+   128,
+   138
+  ],
+  "wellRadius": 52,
+  "iconSize": 92,
+  "use": "tint layer: ImageColor3 = stat colour (multiply). trim layer on top, untinted. Stat icon on top, centred on `centre`.",
+  "unearned": "tint layer coloured ToyShell wellDot, trim at 35% opacity, no icon",
+  "tiers": {
+   "25": "disc",
+   "50": "disc + cream ring",
+   "75": "disc + cream ring + petal ring (the second ring)",
+   "99": "the 75 medal + gold star and two sparkles"
+  }
+ }
+}
