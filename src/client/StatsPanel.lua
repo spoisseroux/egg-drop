@@ -610,7 +610,7 @@ function Panel:setContext(ctx)
  if self.visible then
   if self.header and self.header.wallet then self.header.wallet.set(self.ctx.wallet or 0)end
   -- The runtime switch flipped while the panel is open: build it again.
-  if self.levelsKey~=Levels.key()then self.key=nil;self:fit(self.host.AbsoluteSize)end
+  if self.levelsKey~=Levels.key()then self.key=nil;self:fit(self.host.AbsoluteSize);self:paintPreview(self:petId())end
   self:paint(false)
   if self.visual then self:paintPreview(self:petId())end
  end

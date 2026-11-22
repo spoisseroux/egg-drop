@@ -56,11 +56,13 @@ Put it right after `if type(bond)~="table"then return end`. Keep calling `BondPi
 
 ## Runtime switch
 
-`WardrobeShop`, `StatsPanel`, `CompanionsHub`, `BookView` keep `Levels.key()` in their build key, so the snapshot the server pushes after a flip rebuilds an open screen. A card already open in `PetInspect` hides its Marks row on the next paint. Nothing listens to `Levels.changed()`.
+`WardrobeShop` and `StatsPanel` rebuild when `Levels.key()` changes, `CompanionsHub` and `BookView` re-read the part on every snapshot, so the snapshot the server pushes after a flip updates an open screen. A card already open in `PetInspect` hides its Marks row on the next paint. Nothing listens to `Levels.changed()`.
 
 ## Medal images
 
 `MedalView.Art` is empty. After the upload: `MedalView.Art={[25]={tint="rbxassetid://..",trim="rbxassetid://.."},[50]=...,[75]=...,[99]=...}`. A missing half keeps that tier's drawn discs. Stings: `MedalView.Sting` uses the existing hatch stings until the four medal stings are uploaded.
+
+New file beyond the list: `src/client/MedalView.lua` (one drawing for the panel slots, the Marks row, the guide and the medal moment). On phones the Marks sit in the inspect card's summary strip (a row of their own would push the card past the top-bar rule). The guide has no "Also good for" block: no job rows exist yet, so `stats.guide.jobs` is unused.
 
 ## C: LockedItem
 
