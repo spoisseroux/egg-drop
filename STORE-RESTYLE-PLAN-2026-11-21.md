@@ -97,3 +97,14 @@ Then run the `HatchEggsList`, `EggShopReopen`, `CompactEggShop`, `StarsStoreAcce
 - **Touch targets:** Fable's phone rows are 35 tall, under the 44 px rule (CompactPhone enforces it). Make phone rows 44 with smaller icons and let the list scroll on the smallest phones, or give each row an invisible 44 px hit area. Recommendation: 44 px rows, and scroll only on 568x320.
 - **Icon moderation:** uploads can sit in moderation and render blank, so the glyph badge fallback is the guard.
 - **StoreView rewrite:** the existing StoreView spec and HatchActions/HatchEggsList may assert old node names (Card, Close, Body). Keep the `Body` ScrollingFrame name for the list, and check those specs.
+
+## Revisions after the architect review (2026-11-21)
+
+| Original plan | Revised | Architect's reason |
+|---|---|---|
+| Copy the Hatch panel size | Pass `nurseryView.shopGeom` in through `attachStore`, so the store panel matches exactly. | Avoid copying the numbers. |
+| Hide the Hatch panel while the store is open | Hide only `shopPanel` and keep `shopRoot` and its dim showing. No new `Kit.shadeOpen`. | With `shopRoot` hidden, `syncShopShade` closes the shared dim (EggHatchView 984-994), so the store would sit over an undimmed world. |
+| StoreView-owned ContextAction for keys | An `elseif nurseryView:isStoreOpen()` branch in the existing High+790 binding (init.client ~1274) for Up/Down/W/S and Return/Space. Back stays on the existing `nurseryView:close()` path. | A second binding would bypass `ConfirmDialog.cancelFor` and fight the shade stack. |
+| Glyph badge only when an icon id is missing | The badge shows until `UIAssetWarmup` reports the image loaded, as FaceplateShop 155-164 does. | An id still in moderation renders blank. |
+| 35 px phone rows | 44 px rows on every size; the list scrolls on phones, using `ensureVisible` for the selected row. | The 44 px rule. Seven rows don't fit 390 tall either. |
+| Specs | Rewrite `scripts/StoreView.spec.lua` on purpose: the claimed Starter leaves the list (was a disabled "Claimed" row), and focus falls back to the header back arrow. | Only that spec reads store node names. |

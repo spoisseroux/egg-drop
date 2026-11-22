@@ -1,16 +1,24 @@
--- "Get Stars" sheet: game passes and Robux Stars packs.
--- Presentation only. The server owns prompts, eligibility, the paid-random-items
--- gate and every grant; this view draws the latest StoreState snapshot, asks the
--- server to prompt, and words StoreResult for the player. It opens as a child
--- page of the egg shop, so the egg shop stays the single presentation owner.
+-- "Get Stars": game passes and Robux Stars packs, in the Toy Shell look (Spencer
+-- 2026-11-21, "It doesn't match the other UI at all??"; Fable's brief and mocks in
+-- artifacts/stars-store-2026-11-21/, plan STORE-RESTYLE-PLAN-2026-11-21.md).
+--
+-- The Hatch eggs screen with offers where the eggs were: a list of cream tiles on the
+-- left (icon, name, one line, price or OWNED), one tray on the right (the selected
+-- offer's icon on the stage, what you get, one green Buy key), the shared header
+-- (Get Stars, the wallet, back). Pick, read, Buy.
+--
+-- Presentation only. The server owns prompts, eligibility, the paid-random-items gate
+-- and every grant; this view draws the latest StoreState snapshot, asks the server to
+-- prompt, and words StoreResult for the player. It opens as a child page of Hatch eggs
+-- (EggHatchView.attachStore): Hatch eggs hides its own panel and keeps its dim, so the
+-- egg shop stays the single presentation, Back and controller-focus owner.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local Art = require(script.Parent.DeckArt)
-local EggArt = require(script.Parent.EggArt)
+local Kit = require(script.Parent.DeckKit)
 local Stars = require(script.Parent.StarText)
 local Catalog = require(ReplicatedStorage.Shared.StoreCatalog)
+local UICopy = require(ReplicatedStorage.Shared.UICopy)
 
 local View = {}
 View.__index = View
@@ -29,6 +37,7 @@ View.Rejected = table.freeze({
 	Unavailable = "That isn't available right now. Nothing was bought.",
 })
 
+-- The drawn badge an offer shows until its icon image has loaded (or when it has none).
 View.Badges = table.freeze({
 	doubleStars = tostring(Catalog.DoubleStarsMultiplier) .. "×",
 	supporter = "+" .. tostring(Catalog.SupporterRoundBonus),
@@ -49,79 +58,145 @@ local function fallbackState()
 	return { passes = passes, products = {}, packsAllowed = false, ready = false }
 end
 
-local function tile(parent, name, z)
-	local node = Instance.new("TextButton")
-	node.Name, node.Text, node.BorderSizePixel, node.ZIndex = name, "", 0, z
-	node.BackgroundColor3, node.TextColor3, node.Font, node.TextSize = Art.Raised, Art.Silver, Art.Font.Action, 14
-	node.Parent = parent
-	Art.bind(node, { BackgroundColor3 = "raised" })
-	Art.button(node, 10)
-	return node
+-- Pure: the pack that really gives the most Stars for each Robux among what this
+-- player can still buy. Computed from the snapshot so the tag is never a guess
+-- (the Starter pack while it is unclaimed).
+function View.bestValue(products)
+	local bestKey, bestRatio, count = nil, 0, 0
+	for _, product in ipairs(products or {}) do
+		if not product.claimed and (tonumber(product.price) or 0) > 0 then
+			count += 1
+			local ratio = (tonumber(product.stars) or 0) / product.price
+			if ratio > bestRatio then bestKey, bestRatio = product.key, ratio end
+		end
+	end
+	return if count >= 2 then bestKey else nil
+end
+function View:bestValueKey(products)
+	return View.bestValue(products)
 end
 
--- style: "buy" (filled, ink lettering), "owned" (outlined word), "quiet" (recessed).
-local function pill(parent, content, style, compact)
-	local frame = Art.frame(parent, "Price", if style == "buy" then "accent" else "inset",
-		UDim2.fromOffset(0, 0), UDim2.fromOffset(72, 32), parent.ZIndex + 1)
-	Art.corner(frame, 8)
-	frame:SetAttribute("PillStyle", style)
-	if style == "owned" then Art.stroke(frame, "accent", 0.1, 2) end
-	local label = Art.text(frame, "Label", content, UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1),
-		if style == "buy" then "ink" elseif style == "owned" then "text" else "muted", 16)
-	Art.type(label, "Action", compact)
-	label.TextWrapped = false
-	local width = math.max(72, Art.textWidth(label) + 16)
-	local height = math.max(if compact then 30 else 34, Art.textHeight(label, width, 0) + 6)
-	frame.Size = UDim2.fromOffset(width, height)
-	return frame, width, height
+-- Pure: the offers in list order for a snapshot. Passes first, then (only when packs are
+-- allowed and the snapshot is ready) the Starter pack until it is claimed, then the packs.
+-- Each offer: {key, kind = "pass" | "pack", name, price, stars, owned, enabled, reason,
+-- best}. reason: nil (buyable), "owned", "loading" or "soon".
+function View.offers(state)
+	state = state or fallbackState()
+	local list = {}
+	local ready = state.ready == true
+	for _, pass in ipairs(state.passes or {}) do
+		local reason = if pass.owned then "owned" elseif not ready then "loading" elseif not pass.available then "soon" else nil
+		table.insert(list, { key = pass.key, kind = "pass", name = pass.name, price = pass.price, owned = pass.owned == true,
+			enabled = reason == nil, reason = reason, blurb = pass.blurb })
+	end
+	if state.packsAllowed == true and ready then
+		local products = state.products or {}
+		local best = View.bestValue(products)
+		for _, product in ipairs(products) do
+			if not (product.once and product.claimed) then
+				local reason = if product.available then nil else "soon"
+				table.insert(list, { key = product.key, kind = "pack", name = product.name, price = product.price,
+					stars = tonumber(product.stars) or 0, once = product.once == true, owned = false,
+					enabled = reason == nil, reason = reason, best = best == product.key, blurb = product.blurb })
+			end
+		end
+	end
+	return list
+end
+
+-- Pure: the offer a fresh open selects: the first one that can be bought, else the first.
+function View.openingKey(offers)
+	for _, offer in ipairs(offers) do if offer.enabled then return offer.key end end
+	return if offers[1] then offers[1].key else nil
+end
+
+-- Pure: the row's one line under the name.
+function View.subLine(offer)
+	if offer.kind == "pass" then return UICopy.get("store.sub." .. offer.key) end
+	if offer.once then return UICopy.get("store.sub.starter", { stars = offer.stars }) end
+	return UICopy.get("store.sub.pack", { stars = offer.stars })
+end
+
+-- Pure: the tray's blurb.
+function View.blurb(offer)
+	if offer.kind == "pass" or offer.once then
+		local entry = if offer.kind == "pass" then Catalog.PassByKey[offer.key] else Catalog.ProductByKey[offer.key]
+		return offer.blurb or (entry and entry.blurb) or ""
+	end
+	return UICopy.get("store.blurb." .. offer.key)
+end
+
+-- Pure: the tray's "what you get" rows, {label, value}.
+function View.gets(offer, balance)
+	if offer.kind == "pack" then
+		return { { UICopy.get("store.starsRow"), "+" .. tostring(offer.stars) },
+			{ UICopy.get("store.walletAfter"), tostring((tonumber(balance) or 0) + offer.stars) } }
+	end
+	local first = if offer.key == "supporter"
+		then { UICopy.get("store.gets.supporter"), UICopy.get("store.gets.supporterValue") }
+		else { UICopy.get("store.gets.doubleStars"), UICopy.get("store.gets.doubleStarsValue") }
+	return { first, { UICopy.get("store.keepsWorking"), UICopy.get("store.foreverValue") } }
+end
+
+-- Pure: the Buy key's text and whether it can be pressed.
+function View.buyKey(offer, cooling)
+	if not offer then return UICopy.get("store.loading"), false end
+	if offer.reason == "owned" then return UICopy.get("store.owned"), false end
+	if offer.reason == "loading" then return UICopy.get("store.loading"), false end
+	if offer.reason == "soon" then return UICopy.get("store.soon"), false end
+	if cooling then return UICopy.get("store.opening"), false end
+	return UICopy.get("store.buy", { price = offer.price }), true
+end
+
+-- Pure: chrome geometry. Hatch eggs passes its own (View.shopGeometry) through attachStore
+-- so both panels match; this copy is the fallback for specs and a missing host.
+function View.defaultGeometry(W, H, phone)
+	if phone then
+		return { phone = true, W = W, H = H, list = { x = 20, y = 64, w = 226, h = H - 84 }, rowH = 56, rowGap = 8,
+			pane = { x = 252, y = 64, w = W - 20 - 252, h = H - 84 }, pad = 12, actionH = 44 }
+	end
+	return { phone = false, W = 848, H = 608, list = { x = 24, y = 84, w = 334, h = 452 }, rowH = 72, rowGap = 12,
+		pane = { x = 368, y = 84, w = 456, h = 452 }, pad = 16, actionH = 56 }
+end
+
+-- An offer icon: a rounded, ink-stroked square with the uploaded image, and the drawn
+-- badge under it until the image has loaded (an id still in moderation renders blank).
+local function iconBox(parent, name, size, radius, stroke)
+	local box = Kit.frame(parent, name, "well", UDim2.new(), UDim2.fromOffset(size, size), radius)
+	box.BackgroundTransparency = 0
+	Kit.stroke(box, "ink", stroke, 0)
+	local badge = Kit.text(box, "Title", "", "stars", { Name = "Badge", Size = UDim2.fromScale(1, 1),
+		TextXAlignment = Enum.TextXAlignment.Center, TextSize = math.max(11, math.floor(size * .36)) })
+	Kit.fixedText(badge)
+	local image = Instance.new("ImageLabel")
+	image.Name, image.BackgroundTransparency, image.BorderSizePixel = "Image", 1, 0
+	image.Size, image.ZIndex, image.Visible, image.ScaleType = UDim2.fromScale(1, 1), box.ZIndex + 2, false, Enum.ScaleType.Fit
+	image.Parent = box
+	Kit.corner(image, radius)
+	return box
 end
 
 function View.new(parent, options)
 	options = options or {}
 	local z = options.z or 70
-	local shade = Art.frame(parent, "StoreView", "ink", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), z)
-	shade.BackgroundTransparency, shade.Active, shade.Visible = 1, true, false
-	local card = Art.frame(shade, "Card", "panel", UDim2.fromScale(0.5, 0.5), UDim2.fromOffset(560, 420), z + 1)
-	card.AnchorPoint = Vector2.new(0.5, 0.5)
-	Art.panel(card, 16, "accent")
-	local heading = Art.text(card, "Heading", "Get Stars", UDim2.fromOffset(12, 6), UDim2.fromOffset(200, 24), "text", 20)
-	heading.ZIndex = z + 3
-	local wallet = Art.frame(card, "Wallet", Art.Canopy, UDim2.fromOffset(12, 4), UDim2.fromOffset(120, 29), z + 2)
-	local drop = EggArt.nectar(wallet, UDim2.fromOffset(3, 5), UDim2.fromOffset(19, 20), z + 3)
-	local amount = Art.text(wallet, "Stars", "0", UDim2.fromOffset(24, 0), UDim2.fromOffset(60, 24), "reward", 16)
-	amount.ZIndex = z + 4
-	local body = Instance.new("ScrollingFrame")
-	body.Name, body.BackgroundTransparency, body.BorderSizePixel, body.ZIndex = "Body", 1, 0, z + 2
-	body.ClipsDescendants, body.ScrollBarThickness = true, 4
-	body.ScrollingDirection, body.ElasticBehavior = Enum.ScrollingDirection.Y, Enum.ElasticBehavior.Never
-	body.Selectable = false
-	body.Parent = card
-	Art.bind(body, { ScrollBarImageColor3 = "accent" })
-	local close = Instance.new("TextButton")
-	close.Name, close.BorderSizePixel, close.ZIndex, close.Size = "Close", 0, z + 6, UDim2.fromOffset(44, 44)
-	close.BackgroundColor3, close.TextColor3 = Art.Raised, Art.Silver
-	close.Parent = card
-	Art.bind(close, { BackgroundColor3 = "raised", TextColor3 = "text" })
-	Art.button(close, 10)
-	Art.bareClose(close)
-	local status = Art.text(card, "Status", View.Idle, UDim2.fromOffset(12, 0), UDim2.fromOffset(200, 20), "muted", 14)
-	status.ZIndex = z + 3
+	local shade = Instance.new("Frame")
+	shade.Name, shade.BackgroundTransparency, shade.BorderSizePixel = "StoreView", 1, 0
+	shade.Size, shade.ZIndex, shade.Active, shade.Visible = UDim2.fromScale(1, 1), z, true, false
+	shade.Parent = parent
 	local self = setmetatable({
-		shade = shade, card = card, heading = heading, wallet = wallet, walletDrop = drop, amount = amount,
-		body = body, closeButton = close, status = status,
+		shade = shade,
 		reduceEffects = options.reduceEffects or function() return false end,
 		request = options.request or function() end,
+		geometry = options.geometry,
 		state = fallbackState(), balance = 0, message = View.Idle, messageKind = "info",
-		promptToken = 0, cooling = false, offers = {},
+		promptToken = 0, cooling = false, offers = {}, rows = {}, list = {}, iconReady = {}, iconTries = {},
 	}, View)
-	close.Activated:Connect(function() self:close("close") end)
-	Art.watchTextPreference(shade, function() return shade.Visible end, function() self:layout() end)
 	shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		if shade.Visible then self:layout() end
 	end)
 	local selection = GuiService:GetPropertyChangedSignal("SelectedObject"):Connect(function()
 		local node = GuiService.SelectedObject
-		if shade.Visible and node and node:IsDescendantOf(body) then self:ensureVisible(node) end
+		if shade.Visible and self.body and node and node:IsDescendantOf(self.body) then self:ensureVisible(node) end
 	end)
 	shade.Destroying:Connect(function()
 		self.destroyed = true
@@ -149,26 +224,33 @@ function View:bumpControllerEpoch()
 	self.shade:SetAttribute("ControllerEpoch", (self.shade:GetAttribute("ControllerEpoch") or 0) + 1)
 end
 
+function View:backButton()
+	return self.header and self.header.back.root or nil
+end
+
 function View:focusTarget()
+	local row = self.selectedKey and self.rows[self.selectedKey]
+	if row and row.Parent and row.Interactable and row.Selectable then return row end
 	for _, offer in ipairs(self.offers) do
 		if offer.button.Parent and offer.button.Interactable and offer.button.Selectable then return offer.button end
 	end
-	return self.closeButton
+	return self:backButton()
 end
 
 function View:getControllerFocus()
 	if not self.shade.Visible then return nil end
 	return { root = self.shade, epoch = self.shade:GetAttribute("ControllerEpoch") or 0,
-		target = function() return self:focusTarget() end, fallback = self.closeButton,
+		target = function() return self:focusTarget() end, fallback = self:backButton(),
 		ensure = function(node) self:ensureVisible(node) end }
 end
 
 function View:ensureVisible(node)
 	local body = self.body
-	if not node or not node:IsDescendantOf(body) then return end
-	local window = body.AbsoluteSize.Y
-	local top = node.AbsolutePosition.Y - body.AbsolutePosition.Y + body.CanvasPosition.Y
-	local height = node.AbsoluteSize.Y
+	if not body or not node or not node:IsDescendantOf(body) then return end
+	local window = if body.Size.Y.Scale == 0 and body.Size.Y.Offset > 0 then body.Size.Y.Offset else body.AbsoluteSize.Y
+	local scale = if body.AbsoluteSize.Y > 0 then window / body.AbsoluteSize.Y else 1
+	local top = (node.AbsolutePosition.Y - body.AbsolutePosition.Y) * scale + body.CanvasPosition.Y
+	local height = node.AbsoluteSize.Y * scale
 	local current = body.CanvasPosition.Y
 	local wanted = if height > window or top < current then math.max(0, top - 4)
 		elseif top + height > current + window then top + height + 4 - window else current
@@ -177,14 +259,15 @@ end
 
 function View:setMessage(text, kind)
 	self.message, self.messageKind = text or View.Idle, kind or "info"
-	if self.shade.Visible then self:layout() end
+	if self.shade.Visible then self:paintPane() end
 end
 
 function View:setBalance(balance)
 	balance = tonumber(balance)
 	if not balance or balance == self.balance then return end
 	self.balance = balance
-	if self.shade.Visible then self:layout() end
+	if self.header and self.header.wallet then self.header.wallet.set(balance) end
+	if self.shade.Visible then self:paintPane() end
 end
 
 function View:setState(snapshot)
@@ -194,11 +277,9 @@ function View:setState(snapshot)
 	return true
 end
 
+-- The wallet in the header counts up and flashes on its own (Kit.wallet earn juice).
 function View:pulseWallet()
-	if self.reduceEffects() or not self.shade.Visible then return end
-	local scale = self.walletDrop:FindFirstChild("GrantPulse") or Instance.new("UIScale")
-	scale.Name, scale.Scale, scale.Parent = "GrantPulse", 1.35, self.walletDrop
-	TweenService:Create(scale, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	if self.header and self.header.wallet then self.header.wallet.set(self.balance) end
 end
 
 -- StoreResult from the server. Works while closed too: the next open starts
@@ -210,8 +291,8 @@ function View:handleResult(result)
 	if result.kind == "product" then
 		local stars = tonumber(result.stars) or 0
 		if tonumber(result.balance) then self.balance = tonumber(result.balance) end
-		self:setMessage(string.format("+%s added. You have %s.", Stars.amount(stars), Stars.amount(self.balance)), "reward")
 		self:pulseWallet()
+		self:setMessage(string.format("+%s added. You have %s.", Stars.amount(stars), Stars.amount(self.balance)), "reward")
 	elseif result.kind == "pass" then
 		local name
 		for _, pass in ipairs(self.state.passes) do
@@ -221,13 +302,21 @@ function View:handleResult(result)
 			end
 		end
 		self:setMessage((name or "Your pass") .. " is yours. Thank you!", "reward")
+		if self.shade.Visible then self:layout() end
 	elseif result.kind == "rejected" then
 		self:setMessage(View.Rejected[result.reason] or View.Rejected.Unavailable, "notice")
 	end
 end
 
+function View:offerFor(key)
+	for _, offer in ipairs(self.list) do if offer.key == key then return offer end end
+	return nil
+end
+
 function View:prompt(key)
 	if not self:ownsInput() or self.cooling then return false end
+	local offer = self:offerFor(key)
+	if offer and not offer.enabled then return false end
 	-- The server throttles prompts to one a second; a short quiet window keeps a
 	-- double tap from turning into a "try again" message.
 	self.cooling = true
@@ -237,8 +326,44 @@ function View:prompt(key)
 	if self.onAccepted then self.onAccepted("confirm") end
 	self.request("prompt", key)
 	task.delay(1.2, function()
-		if self.promptToken == token then self.cooling = false end
+		if self.promptToken == token then
+			self.cooling = false
+			if self.shade.Visible then self:paintPane() end
+		end
 	end)
+	return true
+end
+
+-- Enter / Space / the Buy key: prompt the selected offer.
+function View:buySelected()
+	if not self.selectedKey then return false end
+	return self:prompt(self.selectedKey)
+end
+
+function View:select(key, animate)
+	if not key or not self:offerFor(key) then return false end
+	local changed = self.selectedKey ~= key
+	self.selectedKey = key
+	self:paintRows()
+	self:paintPane()
+	if self.rows[key] then self:ensureVisible(self.rows[key]) end
+	if changed and animate and self.stageIcon and not self.reduceEffects() then Kit.boing(self.stageIcon) end
+	return changed
+end
+
+-- W / S / Up / Down (init.client routes them while the store is open).
+function View:move(delta)
+	if #self.list == 0 then return false end
+	local index = 1
+	for i, offer in ipairs(self.list) do if offer.key == self.selectedKey then index = i end end
+	local nextIndex = math.clamp(index + delta, 1, #self.list)
+	if nextIndex == index then return false end
+	self:select(self.list[nextIndex].key, true)
+	local row = self.rows[self.selectedKey]
+	if row then
+		self:ensureVisible(row)
+		if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade) then GuiService.SelectedObject = row end
+	end
 	return true
 end
 
@@ -247,8 +372,9 @@ function View:open(balance)
 	self:bumpControllerEpoch()
 	if not self.shade.Visible then
 		self.previousSelection = GuiService.SelectedObject
-		self.body.CanvasPosition = Vector2.zero
 		self.message, self.messageKind, self.cooling = View.Idle, "info", false
+		self.selectedKey = nil
+		if self.body then self.body.CanvasPosition = Vector2.zero end
 	end
 	self.shade.Visible = true
 	self:layout()
@@ -274,247 +400,332 @@ function View:close(reason)
 	end
 end
 
--- The pack that really gives the most Stars for each Robux among what this
--- player can still buy. Computed from the snapshot so the tag is never a guess.
-function View:bestValueKey(products)
-	local bestKey, bestRatio, count = nil, 0, 0
-	for _, product in ipairs(products) do
-		if not product.claimed and (tonumber(product.price) or 0) > 0 then
-			count += 1
-			local ratio = (tonumber(product.stars) or 0) / product.price
-			if ratio > bestRatio then bestKey, bestRatio = product.key, ratio end
-		end
+-- ── Chrome ────────────────────────────────────────────────────────────────────
+function View:buildChrome(view)
+	if self.root then self.root:Destroy() end
+	local phone = view ~= nil
+	local geometry = self.geometry or View.defaultGeometry
+	local g = geometry(if phone then view.W else 848, if phone then view.H else 608, phone)
+	self.g, self.chromeKey = g, if phone then string.format("%dx%d", view.W, view.H) else "regular"
+	table.clear(self.rows)
+	local root = Kit.frame(self.shade, "StoreRoot", nil, UDim2.new(), UDim2.fromScale(1, 1))
+	root.ZIndex = self.shade.ZIndex + 1
+	self.root = root
+	local panel = Kit.frame(root, "Panel", "panel", UDim2.fromScale(.5, .5), UDim2.fromOffset(g.W, g.H), 30)
+	panel.Active, panel.ZIndex = true, root.ZIndex + 1
+	self.panel, self.panelScale = panel, Kit.node("UIScale", panel, { Scale = 1 })
+	local body = panel
+	if phone then
+		panel.BackgroundTransparency = 1
+		local sheet = Kit.sheet(panel, g.W, g.H)
+		body = Kit.frame(panel, "Content", nil, UDim2.new(), UDim2.fromScale(1, 1))
+		body.ZIndex = sheet.ZIndex + 3
+	else
+		panel.AnchorPoint, panel.ClipsDescendants = Vector2.new(.5, .5), true
+		Kit.stroke(panel)
+		Kit.shellPattern(panel, 30)
+		local gradient = Kit.frame(panel, "Gradient", nil, UDim2.new(), UDim2.fromScale(1, 1))
+		gradient.BackgroundTransparency, gradient.BackgroundColor3 = 0, Color3.new(1, 1, 1)
+		Kit.node("UIGradient", gradient, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0, 0, 0)),
+			Transparency = NumberSequence.new(.97, .88) })
 	end
-	return if count >= 2 then bestKey else nil
+	self.content = body
+	self.header = Kit.header(body, { title = UICopy.get("store.title"), eyebrow = UICopy.get("store.eyebrow"), tint = "results",
+		compact = phone, width = g.W, left = 24, onBack = function() self:close("back") end })
+	self.header.back.root.Selectable = true
+	if self.header.wallet then self.header.wallet.set(self.balance) end
+	-- The list: a scrolling column of offer tiles.
+	local list = Instance.new("ScrollingFrame")
+	list.Name, list.BackgroundTransparency, list.BorderSizePixel = "Body", 1, 0
+	list.ZIndex, list.ClipsDescendants, list.ScrollBarThickness = body.ZIndex + 1, true, 4
+	list.ScrollingDirection, list.ElasticBehavior, list.Selectable = Enum.ScrollingDirection.Y, Enum.ElasticBehavior.Never, false
+	list.Position, list.Size = UDim2.fromOffset(g.list.x - 3, g.list.y - 3), UDim2.fromOffset(g.list.w, g.list.h + 6)
+	Kit.paint(list, "ScrollBarImageColor3", "soft")
+	list.Parent = body
+	self.body = list
+	-- The tray: stage with the icon, name + chip, blurb, what you get, message, Buy.
+	local pane = Kit.card(body, "OfferPane", nil, { pad = g.pad, seam = not phone })
+	pane.Position, pane.Size = UDim2.fromOffset(g.pane.x, g.pane.y), UDim2.fromOffset(g.pane.w, g.pane.h)
+	self.pane = pane
+	local p = g.pad
+	local wellR = if phone then { x = p, y = p, w = 138, h = 138 } else { x = p, y = p, w = g.pane.w - p * 2, h = 152 }
+	local well = Kit.previewWell(pane, "OfferWell", UDim2.fromOffset(wellR.x, wellR.y), UDim2.fromOffset(wellR.w, wellR.h), 12)
+	local iconSize = math.min(wellR.h - 28, if phone then 100 else 124)
+	local stageIcon = iconBox(well, "StageIcon", iconSize, if phone then 16 else 20, 3)
+	stageIcon.AnchorPoint, stageIcon.Position = Vector2.new(.5, .5), UDim2.fromScale(.5, .5)
+	stageIcon.ZIndex = well.ZIndex + 4
+	self.stageIcon = stageIcon
+	for index, spec in ipairs({ { -.34, -.22, 16 }, { .36, -.1, 12 }, { .3, .3, 10 } }) do
+		local spark = Kit.text(well, "Title", "✦", if index == 2 then "text" else "stars",
+			{ Name = "Sparkle" .. index, AnchorPoint = Vector2.new(.5, .5), Position = UDim2.new(.5, spec[1] * wellR.w, .5, spec[2] * wellR.h),
+				Size = UDim2.fromOffset(spec[3] * 2, spec[3] * 2), TextSize = spec[3] * 2, TextXAlignment = Enum.TextXAlignment.Center })
+		spark.ZIndex = well.ZIndex + 3
+	end
+	local tx = if phone then wellR.x + wellR.w + 12 else p
+	local tw = g.pane.w - tx - p
+	local y = if phone then p else wellR.y + wellR.h + 12
+	self.offerName = Kit.text(pane, "Title", "", "text", { Name = "OfferName", Position = UDim2.fromOffset(tx, y),
+		Size = UDim2.fromOffset(tw - 96, if phone then 24 else 30), TextSize = if phone then 18 else 24, TextTruncate = Enum.TextTruncate.AtEnd })
+	self.offerChip = Kit.chip(pane, "", "sticker", if phone then 22 else 26)
+	self.offerChip.root.AnchorPoint = Vector2.new(1, .5)
+	self.offerChip.root.Position = UDim2.fromOffset(tx + tw, y + (if phone then 12 else 15))
+	y += if phone then 26 else 32
+	self.offerBlurb = Kit.text(pane, "Body", "", "soft", { Name = "OfferBlurb", Position = UDim2.fromOffset(tx, y),
+		Size = UDim2.fromOffset(tw, if phone then 30 else 40), TextSize = if phone then 12 else 15, TextWrapped = true,
+		TextYAlignment = Enum.TextYAlignment.Top })
+	y += if phone then 32 else 44
+	if not phone then
+		Kit.text(pane, "Label", string.upper(UICopy.get("store.whatYouGet")), "dim", { Name = "GetsLabel",
+			Position = UDim2.fromOffset(tx, y), Size = UDim2.fromOffset(tw, 16), TextSize = 12 })
+		y += 20
+	end
+	self.getsTop, self.getsX, self.getsW = y, tx, tw
+	self.gets = Kit.frame(pane, "Gets", nil, UDim2.fromOffset(tx, y), UDim2.fromOffset(tw, 10))
+	local buttonY = g.pane.h - p - g.actionH
+	self.status = Kit.text(pane, "Small", View.Idle, "soft", { Name = "Status", Position = UDim2.fromOffset(tx, buttonY - (if phone then 34 else 40)),
+		Size = UDim2.fromOffset(tw, if phone then 30 else 36), TextSize = if phone then 12 else 14, TextWrapped = true,
+		TextYAlignment = Enum.TextYAlignment.Bottom })
+	local buy = Kit.button(pane, "BuyButton", { variant = "primary", text = "", glyph = "A", size = Vector2.new(tw, g.actionH),
+		textSize = if phone then 16 else nil, selectable = true })
+	buy.Position = UDim2.fromOffset(tx, buttonY)
+	buy.Activated:Connect(function() self:buySelected() end)
+	self.buyButton = buy
+	-- Footer (desktop): hint chips left, the free-earn line right.
+	self.hintRow = nil
+	if not phone then
+		local row = Kit.frame(body, "Hints", nil, UDim2.fromOffset(24, 566), UDim2.fromOffset(420, 24))
+		self.hintRow = row
+		Kit.text(body, "Small", UICopy.get("store.free"), "dim", { Name = "FreeLine", Position = UDim2.fromOffset(424, 566),
+			Size = UDim2.fromOffset(400, 24), TextXAlignment = Enum.TextXAlignment.Right })
+		self:paintHints()
+	end
+	self:warmIcons()
 end
 
-function View:renderBody(plannedWidth, compact, short)
-	local body = self.body
+function View:paintHints()
+	local row = self.hintRow
+	if not row then return end
+	local HintGlyphs = require(script.Parent.HintGlyphs)
+	local kind = HintGlyphs.kindOf(UserInputService:GetLastInputType())
+	for _, child in ipairs(row:GetChildren()) do if child:IsA("GuiObject") then child:Destroy() end end
+	local x = 0
+	for _, pair in ipairs(HintGlyphs.rows({ { "browse", UICopy.get("input.action.browse") }, { "confirm", UICopy.get("store.hints.buy") },
+		{ "back", UICopy.get("input.action.back") } }, kind)) do
+		local chip = Kit.glyph(row, pair[1], false, 22, true)
+		chip.Position = UDim2.fromOffset(x, 1)
+		x += chip.Size.X.Offset + 6
+		Kit.text(row, "Small", pair[2], "soft", { Name = "Hint_" .. pair[2], Position = UDim2.fromOffset(x, 0), Size = UDim2.fromOffset(120, 24),
+			AutomaticSize = Enum.AutomaticSize.X })
+		x += math.ceil(Kit.measure(pair[2], "Small", 14).X) + 18
+	end
+	row:SetAttribute("HintInput", kind)
+end
+
+-- Icons: each id loads on its own (one still in moderation never blocks the rest); the
+-- badge shows until it has. A failed id retries every 4 s while the page is open, 10 times.
+function View:warmIcons()
+	local warm = require(script.Parent.UIAssetWarmup).shared
+	for key, uri in pairs(Catalog.Icons or {}) do
+		if not self.iconReady[uri] and not self.iconTries[uri] then
+			self.iconTries[uri] = 0
+			local function ask(retry)
+				local request = if retry then warm.retry else warm.request
+				request(warm, { uri }, function(ok)
+					if self.destroyed then return end
+					if ok then
+						self.iconReady[uri] = true
+						if self.shade.Visible then self:paintRows(); self:paintPane() end
+					else
+						self.iconTries[uri] += 1
+						if self.iconTries[uri] < 10 then
+							task.delay(4, function() if not self.destroyed and not self.iconReady[uri] then ask(true) end end)
+						end
+					end
+				end, 1)
+			end
+			local _ = key
+			ask(false)
+		end
+	end
+end
+
+-- Paints an iconBox for an offer: the image once it has loaded, else the badge.
+function View:paintIcon(box, offer)
+	local uri = Catalog.Icons and Catalog.Icons[offer.key]
+	local ready = uri ~= nil and self.iconReady[uri] == true
+	local image, badge = box:FindFirstChild("Image"), box:FindFirstChild("Badge")
+	if image then
+		image.Image = if ready then uri else ""
+		image.Visible = ready
+	end
+	if badge then
+		badge.Visible = not ready
+		badge.Text = if offer.kind == "pass" then (View.Badges[offer.key] or "★") else tostring(offer.stars)
+	end
+	box:SetAttribute("IconReady", ready)
+end
+
+-- ── The list ──────────────────────────────────────────────────────────────────
+function View:renderList()
+	local g, list = self.g, self.body
+	local phone = g.phone
+	local canvas = list.CanvasPosition
 	local previous = GuiService.SelectedObject
-	local focusName = previous and previous:IsDescendantOf(body) and previous.Name or nil
-	for _, child in ipairs(body:GetChildren()) do
-		if child:IsA("GuiObject") then child:Destroy() end
-	end
+	local focusKey = previous and previous:IsDescendantOf(list) and previous:GetAttribute("OfferKey") or nil
+	for _, child in ipairs(list:GetChildren()) do if child:IsA("GuiObject") then child:Destroy() end end
+	table.clear(self.rows)
 	table.clear(self.offers)
-	local rect = Art.scrollContentRect(body, plannedWidth)
-	local x, w = rect.x, rect.width
-	local column = Art.frame(body, "Column", "ink", UDim2.fromOffset(0, 0), UDim2.fromOffset(plannedWidth, 1), body.ZIndex)
-	column.BackgroundTransparency = 1
-	local state = self.state
-	local pad = if compact then 8 else 10
-	local y = 4
-
-	local function line(parent, name, content, role, color, lx, ly, lw, align)
-		local node = Art.text(parent, name, content, UDim2.fromOffset(lx, ly), UDim2.fromOffset(lw, 20), color or "text", 16)
-		Art.type(node, role, compact)
-		node.TextXAlignment = align or Enum.TextXAlignment.Left
-		local h = Art.textHeight(node, lw, 0)
-		node.Size = UDim2.fromOffset(lw, h)
-		return node, h
-	end
-	local function copy(name, content, role, color)
-		local _, h = line(column, name, content, role, color, x, y, w)
-		y += h + (if role == "Action" then 6 else 8)
-	end
-	local function register(button, key, enabled)
-		button.Interactable, button.Selectable = enabled, enabled
-		button:SetAttribute("OfferKey", key)
-		Art.control(button, false, enabled)
-		table.insert(self.offers, { key = key, button = button })
-		if enabled then button.Activated:Connect(function() self:prompt(key) end) end
-	end
-
-	-- One full-width offer: words on the left, price on the right (below when narrow).
-	local function offerRow(name, spec)
-		local button = tile(column, name, body.ZIndex + 1)
-		local price, pw, ph = pill(button, spec.pill, spec.style, compact)
-		local hasArt = spec.star or spec.badge ~= nil
-		local art = if hasArt then (if compact then 30 else 40) else 0
-		local artGap = if hasArt then 8 else 0
-		local side = w >= 360
-		local textX = pad + art + artGap
-		local textW = math.max(1, w - textX - pad - (if side then pw + 10 else 0))
-		local info = Art.frame(button, "Info", "ink", UDim2.fromOffset(textX, pad), UDim2.fromOffset(textW, 1), button.ZIndex)
-		info.BackgroundTransparency = 1
-		local ty = 0
-		local _, titleH = line(info, "Title", spec.title, "Action", "text", 0, ty, textW)
-		ty += titleH
-		if spec.detail then
-			local _, detailH = line(info, "Detail", spec.detail, "Supporting", "muted", 0, ty + 2, textW)
-			ty += detailH + 2
+	self.list = View.offers(self.state)
+	if not self.selectedKey or not self:offerFor(self.selectedKey) then self.selectedKey = View.openingKey(self.list) end
+	local column = Kit.frame(list, "Column", nil, UDim2.fromOffset(0, 0), UDim2.fromOffset(g.list.w, 1))
+	local packs = 0
+	for _, offer in ipairs(self.list) do if offer.kind == "pack" then packs += 1 end end
+	column:SetAttribute("PacksShown", packs > 0)
+	local w = g.list.w - 10
+	local passesOnly = packs == 0
+	-- 44 px rows at least everywhere (touch); a phone list scrolls when they don't all fit.
+	local rowH = if phone then 52 else g.rowH
+	local rowGap = if phone then 6 else 8
+	if passesOnly then rowH = math.max(rowH, if phone then 60 else 80) end
+	-- Desktop: all seven fit the 452 px window with both eyebrows (Fable's mock: 50 px rows).
+	if not phone and not passesOnly then rowH = 50 end
+	local y = 3
+	local lastKind
+	for _, offer in ipairs(self.list) do
+		if not phone and offer.kind ~= lastKind and not passesOnly then
+			Kit.text(column, "Label", string.upper(UICopy.get(if offer.kind == "pass" then "store.boosts" else "store.packs")), "dim",
+				{ Name = if offer.kind == "pass" then "BoostsHeading" else "PacksHeading", Position = UDim2.fromOffset(8, y),
+					Size = UDim2.fromOffset(w, 18), TextSize = 12 })
+			y += 20
+		elseif phone and lastKind and offer.kind ~= lastKind then
+			y += 4
 		end
-		for index, note in ipairs(spec.notes) do
-			local _, noteH = line(info, "Note" .. index, note.text, "Supporting", note.color, 0, ty + 2, textW)
-			ty += noteH + 2
-		end
-		info.Size = UDim2.fromOffset(textW, ty)
-		local h
-		if side then
-			h = math.max(44, ty + pad * 2, ph + pad * 2)
-			info.Position = UDim2.fromOffset(textX, math.floor((h - ty) / 2))
-			price.Position = UDim2.fromOffset(w - pad - pw, math.floor((h - ph) / 2))
+		lastKind = offer.kind
+		local n = Kit.tile(column, (if offer.kind == "pass" then "Pass_" else "Product_") .. offer.key,
+			{ radius = 12, compact = phone, selectable = true })
+		n:SetAttribute("OfferKey", offer.key)
+		n.Position, n.Size = UDim2.fromOffset(3, y), UDim2.fromOffset(w, rowH)
+		local key = offer.key
+		n.Activated:Connect(function()
+			if not self:ownsInput() then return end
+			if self.selectedKey == key then self:buySelected() else self:select(key, true); Kit.boing(n) end
+		end)
+		n.SelectionGained:Connect(function() if self.selectedKey ~= key then self:select(key, true) end end)
+		local iconSize = math.min(rowH - 12, if phone then 38 else 44)
+		local icon = iconBox(n, "Icon", iconSize, 8, 2)
+		icon.Position = UDim2.fromOffset(10, math.floor((rowH - iconSize) / 2))
+		icon.ZIndex = n.ZIndex + 2
+		local tx = 10 + iconSize + 10
+		local priceW = if offer.owned then (if phone then 78 else 92) else (if phone then 64 else 76)
+		local name = Kit.text(n, "Name", offer.name, "text", { Name = "OfferName", TextTruncate = Enum.TextTruncate.AtEnd,
+			TextSize = if phone then 15 else 18 })
+		local nameW = w - tx - priceW - 8
+		while name.TextSize > 11 and Kit.measure(offer.name, "Name", name.TextSize).X > nameW do name.TextSize -= 1 end
+		local showSub = not phone or passesOnly
+		if showSub then
+			name.Position, name.Size = UDim2.fromOffset(tx, rowH / 2 - (if phone then 19 else 22)), UDim2.fromOffset(nameW, if phone then 20 else 24)
+			Kit.text(n, "Small", View.subLine(offer), "soft", { Name = "OfferLine", Position = UDim2.fromOffset(tx, rowH / 2 + 2),
+				Size = UDim2.fromOffset(nameW, 18), TextSize = if phone then 12 else 14, TextTruncate = Enum.TextTruncate.AtEnd })
 		else
-			h = math.max(art, ty) + pad * 2 + 8 + ph
-			price.Position, price.Size = UDim2.fromOffset(pad, h - pad - ph), UDim2.fromOffset(w - pad * 2, ph)
+			name.Position, name.Size = UDim2.fromOffset(tx, 0), UDim2.fromOffset(nameW, rowH)
 		end
-		if hasArt then
-			local blockH = if side then h else math.max(art, ty) + pad * 2
-			local well = Art.frame(button, if spec.star then "StarWell" else "BoostWell", "inset",
-				UDim2.fromOffset(pad, math.floor((blockH - art) / 2)), UDim2.fromOffset(art, art), button.ZIndex + 1)
-			Art.corner(well, 10)
-			if spec.star then
-				Art.stroke(well, "reward", 0.15, 2)
-				EggArt.nectar(well, UDim2.fromOffset(4, 4), UDim2.fromOffset(art - 8, art - 8), button.ZIndex + 2)
-			else
-				-- Decorative emblem; the row's own words carry the meaning.
-				local emblem = Art.text(well, "Emblem", spec.badge, UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), "reward", 18, Art.Font.Heading)
-				Art.fitText(emblem, if compact then 16 else 20, 10, 2, false)
-			end
-		end
-		button.Position, button.Size = UDim2.fromOffset(x, y), UDim2.fromOffset(w, h)
-		register(button, spec.key, spec.enabled)
-		y += h + 8
-		return button
-	end
-
-	-- A short phone leads with a whole offer; the framing copy closes the list instead.
-	local function framing()
-		copy("Intro", "Stars hatch eggs. You always earn them free by playing rounds and quests.", "Supporting", "muted")
-		if short then copy("IdleNote", View.Idle, "Supporting", "muted") end
-	end
-	if not short then framing() end
-
-	copy("BoostsHeading", "Boosts", "Action")
-	for _, pass in ipairs(state.passes) do
-		local notes, style, enabled = {}, "buy", false
-		local label = View.price(pass.price)
-		if pass.owned then
-			label, style = "Owned", "owned"
-		elseif not state.ready then
-			style = "quiet"
-			table.insert(notes, { text = "Loading…", color = "muted" })
-		elseif not pass.available then
-			style = "quiet"
-			table.insert(notes, { text = "Coming soon", color = "muted" })
+		if offer.owned then
+			local chip = Kit.chip(n, UICopy.get("store.ownedChip"), "plain", if phone then 22 else 26)
+			chip.root.AnchorPoint, chip.root.Position = Vector2.new(1, .5), UDim2.new(1, -10, .5, 0)
+			chip.root.ZIndex = n.ZIndex + 2
+			chip.root.Name = "OwnedChip"
 		else
-			enabled = true
+			Kit.text(n, "Counter", View.price(offer.price), if offer.enabled then "text" else "soft", { Name = "Price",
+				Position = UDim2.fromOffset(w - priceW - 10, 0), Size = UDim2.fromOffset(priceW, rowH), TextSize = if phone then 15 else 18,
+				TextXAlignment = Enum.TextXAlignment.Right })
 		end
-		local row = offerRow("Pass_" .. pass.key, { key = pass.key, title = pass.name, detail = pass.blurb, badge = View.Badges[pass.key] or "★",
-			notes = notes, pill = label, style = style, enabled = enabled })
-		row:SetAttribute("Owned", pass.owned == true)
+		if offer.best then
+			local sticker = Kit.chip(n, UICopy.get("store.best"), "sticker", if phone then 18 else 22)
+			sticker.root.Name = "BestValue"
+			sticker.root.AnchorPoint, sticker.root.Position = Vector2.new(1, .5), UDim2.new(1, -8, 0, 2)
+			sticker.root.ZIndex = n.ZIndex + 4
+		end
+		n:SetAttribute("Owned", offer.owned)
+		n:SetAttribute("AccessibleLabel", offer.name .. ", " .. View.subLine(offer) .. ", "
+			.. (if offer.owned then UICopy.get("store.owned") else View.price(offer.price)))
+		self.rows[offer.key] = n
+		table.insert(self.offers, { key = offer.key, button = n })
+		y += rowH + rowGap
 	end
+	if phone then
+		y += 2
+		Kit.text(column, "Small", UICopy.get("store.free"), "soft", { Name = "FreeLine", Position = UDim2.fromOffset(8, y),
+			Size = UDim2.fromOffset(w - 8, 32), TextSize = 12, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top })
+		y += 34
+	end
+	local window = list.Size.Y.Offset
+	column.Size = UDim2.fromOffset(g.list.w, y)
+	list.CanvasSize = UDim2.fromOffset(0, y + 4)
+	list.ScrollingEnabled = y + 4 > window
+	list:SetAttribute("Scrolls", y + 4 > window)
+	list.CanvasPosition = Vector2.new(0, math.clamp(canvas.Y, 0, math.max(0, y + 4 - window)))
+	self:paintRows()
+	if focusKey and self:ownsInput() then
+		local target = self.rows[focusKey] or self:focusTarget()
+		if target then GuiService.SelectedObject = target end
+	end
+end
 
-	-- Paid-random-items rule: with packs disallowed, no Stars product is drawn at all.
-	local products = if state.packsAllowed == true then state.products else {}
-	column:SetAttribute("PacksShown", #products > 0)
-	if not state.ready then
-		copy("PacksLoading", "Checking what else is available…", "Supporting", "muted")
-	elseif #products > 0 then
-		local best = self:bestValueKey(products)
-		local function productNotes(product)
-			local notes = {}
-			if best == product.key then table.insert(notes, { text = View.BestTag, color = "reward" }) end
-			if not product.available and not product.claimed then table.insert(notes, { text = "Coming soon", color = "muted" }) end
-			return notes
-		end
-		y += 4
-		copy("PacksHeading", "Stars packs", "Action")
-		local grid, claimedOnce = {}, {}
-		for _, product in ipairs(products) do
-			if product.once and product.claimed then
-				table.insert(claimedOnce, product)
-			elseif product.once then
-				-- The one-time starter leads the section until it is claimed.
-				local row = offerRow("Product_" .. product.key, { key = product.key, star = true,
-					title = product.name .. " · " .. Stars.amount(product.stars),
-					detail = product.blurb or "One per player.", notes = productNotes(product),
-					pill = View.price(product.price), style = if product.available then "buy" else "quiet",
-					enabled = product.available == true })
-				row:SetAttribute("Featured", true)
-			else
-				table.insert(grid, product)
-			end
-		end
-		if #grid > 0 then
-			-- Measure the unbreakable words and the price before choosing columns.
-			local probe = Art.text(column, "Measure", "", UDim2.fromOffset(0, 0), UDim2.fromOffset(1, 1), "text", 16)
-			probe.Visible = false
-			local minimum = 72
-			for _, product in ipairs(grid) do
-				Art.type(probe, "Supporting", compact)
-				for word in tostring(product.name):gmatch("%S+") do
-					probe.Text = word
-					minimum = math.max(minimum, Art.textWidth(probe))
-				end
-				Art.type(probe, "Action", compact)
-				probe.Text = Stars.amount(product.stars)
-				minimum = math.max(minimum, Art.textWidth(probe))
-				probe.Text = View.price(product.price)
-				minimum = math.max(minimum, Art.textWidth(probe) + 16)
-			end
-			probe:Destroy()
-			local columns = math.clamp(math.floor((w + 8) / (minimum + pad * 2 + 8)), 1, #grid)
-			if columns == 3 and #grid == 4 then columns = 2 end
-			column:SetAttribute("PackColumns", columns)
-			-- Bigger packs draw a slightly bigger star inside one shared well height.
-			local glyph = if compact then 26 else 44
-			local smallest = if compact then 18 else 28
-			local built, rowHeights = {}, {}
-			for index, product in ipairs(grid) do
-				local _, cw = Art.gridCell(w, (index - 1) % columns, columns, 8)
-				local inner = cw - pad * 2
-				local button = tile(column, "Product_" .. product.key, body.ZIndex + 1)
-				local info = Art.frame(button, "Info", "ink", UDim2.fromOffset(pad, pad), UDim2.fromOffset(inner, 1), button.ZIndex)
-				info.BackgroundTransparency = 1
-				local star = math.floor(smallest + (glyph - smallest) * (if #grid > 1 then (index - 1) / (#grid - 1) else 1))
-				EggArt.nectar(info, UDim2.fromOffset(math.floor((inner - star) / 2), math.floor((glyph - star) / 2)), UDim2.fromOffset(star, star), button.ZIndex + 1)
-				local ty = glyph + 2
-				local center = Enum.TextXAlignment.Center
-				local _, amountH = line(info, "Amount", Stars.amount(product.stars), "Action", "reward", 0, ty, inner, center)
-				ty += amountH
-				local _, nameH = line(info, "Title", product.name, "Supporting", "muted", 0, ty, inner, center)
-				ty += nameH
-				for noteIndex, note in ipairs(productNotes(product)) do
-					local _, noteH = line(info, "Note" .. noteIndex, note.text, "Supporting", note.color, 0, ty + 2, inner, center)
-					ty += noteH + 2
-				end
-				info.Size = UDim2.fromOffset(inner, ty)
-				local price, _, ph = pill(button, View.price(product.price), if product.available then "buy" else "quiet", compact)
-				price.Size = UDim2.fromOffset(inner, ph)
-				local needed = pad + ty + 6 + ph + pad
-				local group = math.floor((index - 1) / columns) + 1
-				rowHeights[group] = math.max(rowHeights[group] or 44, needed)
-				built[index] = { button = button, info = info, price = price, textH = ty, priceH = ph, product = product }
-			end
-			for index, entry in ipairs(built) do
-				local group = math.floor((index - 1) / columns) + 1
-				local gx, cw = Art.gridCell(w, (index - 1) % columns, columns, 8)
-				local gy = y
-				for n = 1, group - 1 do gy += rowHeights[n] + 8 end
-				local h = rowHeights[group]
-				entry.button.Position, entry.button.Size = UDim2.fromOffset(x + gx, gy), UDim2.fromOffset(cw, h)
-				-- Words stay top-aligned so stars and amounts line up across a row.
-				entry.price.Position = UDim2.fromOffset(pad, h - pad - entry.priceH)
-				register(entry.button, entry.product.key, entry.product.available == true)
-			end
-			for _, h in ipairs(rowHeights) do y += h + 8 end
-		end
-		for _, product in ipairs(claimedOnce) do
-			local row = offerRow("Product_" .. product.key, { key = product.key, title = product.name,
-				detail = "One per player. You already have yours.", notes = {}, pill = "Claimed", style = "quiet", enabled = false })
-			row:SetAttribute("Claimed", true)
+function View:paintRows()
+	for _, offer in ipairs(self.list) do
+		local n = self.rows[offer.key]
+		if n and n.Parent then
+			local selected = self.selectedKey == offer.key
+			local state = Kit.tileState(n)
+			if state and state.setSelected then state.setSelected(selected) end
+			n:SetAttribute("Selected", selected)
+			local icon = n:FindFirstChild("Icon")
+			if icon then self:paintIcon(icon, offer) end
 		end
 	end
+end
 
-	if short then framing() end
-	y = math.max(1, y - 4)
-	column.Size = UDim2.fromOffset(plannedWidth, y)
-	if focusName then
-		local target = column:FindFirstChild(focusName)
-		if not (target and target.Interactable and target.Selectable) then target = self.closeButton end
-		if self:ownsInput() then GuiService.SelectedObject = target end
+-- ── The tray ──────────────────────────────────────────────────────────────────
+function View:paintPane()
+	if not self.pane then return end
+	local offer = self.selectedKey and self:offerFor(self.selectedKey)
+	local phone = self.g.phone
+	self.pane:SetAttribute("OfferKey", offer and offer.key or nil)
+	if offer then
+		self:paintIcon(self.stageIcon, offer)
+		self.offerName.Text = offer.name
+		local chipText = if offer.kind == "pack" then "★ " .. tostring(offer.stars)
+			elseif offer.owned then UICopy.get("store.ownedChip") else UICopy.get("store.forever")
+		self.offerChip.set(chipText, "sticker")
+		self.offerBlurb.Text = if offer.owned then UICopy.get("store.thanks") else View.blurb(offer)
+	else
+		self.offerName.Text, self.offerBlurb.Text = UICopy.get("store.title"), ""
+		self.offerChip.set("", "sticker")
 	end
-	return y
+	self.offerChip.root.Visible = offer ~= nil
+	-- What you get.
+	for _, child in ipairs(self.gets:GetChildren()) do if child:IsA("GuiObject") then child:Destroy() end end
+	local rowH, gap = if phone then 24 else 30, if phone then 4 else 6
+	local rows = if offer then View.gets(offer, self.balance) else {}
+	for index, pair in ipairs(rows) do
+		local r = Kit.frame(self.gets, "Get" .. index, "well", UDim2.fromOffset(0, (index - 1) * (rowH + gap)), UDim2.fromOffset(self.getsW, rowH), 8)
+		r.BackgroundTransparency = 0
+		Kit.text(r, "Body", pair[1], "text", { Name = "Label", Position = UDim2.fromOffset(10, 0), Size = UDim2.fromOffset(self.getsW * .6, rowH),
+			TextSize = if phone then 12 else 15, TextTruncate = Enum.TextTruncate.AtEnd })
+		Kit.text(r, "Counter", pair[2], "text", { Name = "Value", Position = UDim2.fromOffset(self.getsW * .55, 0),
+			Size = UDim2.fromOffset(self.getsW * .45 - 10, rowH), TextSize = if phone then 13 else 16, TextXAlignment = Enum.TextXAlignment.Right })
+	end
+	self.gets.Size = UDim2.fromOffset(self.getsW, math.max(1, #rows * (rowH + gap)))
+	-- Message line over the key.
+	self.status.Text = self.message
+	Kit.paint(self.status, "TextColor3", if self.messageKind == "reward" then "stars" elseif self.messageKind == "notice" then "text" else "soft")
+	self.status:SetAttribute("MessageKind", self.messageKind)
+	-- The one green key.
+	local text, enabled = View.buyKey(offer, self.cooling)
+	Kit.setText(self.buyButton, text)
+	Kit.setEnabled(self.buyButton, enabled)
+	Kit.setGlyphVisible(self.buyButton, not phone or not Kit.lastInputTouch())
+	self.buyButton:SetAttribute("OfferKey", offer and offer.key or nil)
 end
 
 function View:layout()
@@ -527,38 +738,25 @@ function View:layout()
 	repeat
 		self.layoutDirty = false
 		local size = self.shade.AbsoluteSize
-		local width = math.max(1, math.min(640, size.X - 16))
-		local maxHeight = math.max(1, math.min(720, size.Y - 16))
-		local short = size.Y < 280
-		local compact = short or width < 400
-		self.compact = compact
-		self.card.Size = UDim2.fromOffset(width, self.card.Size.Y.Offset)
-		local plan = Art.sheetHeader(width, self.heading, self.wallet, self.amount, self.walletDrop, self.closeButton,
-			{ pad = 12, top = 0, amount = self.balance, title = "Get Stars", shortTitle = "Stars", accessibleTitle = "Get Stars" })
-		local status = self.status
-		status.Text = self.message
-		-- A grant or a refusal is the news; the idle reassurance stays quiet.
-		Art.type(status, if self.messageKind == "info" then "Supporting" else "Body", compact)
-		Art.bind(status, { TextColor3 = if self.messageKind == "reward" then "reward" elseif self.messageKind == "notice" then "text" else "muted" })
-		status:SetAttribute("MessageKind", self.messageKind)
-		-- Short phones keep the idle reassurance in the scroll; results are always pinned.
-		local pinned = not short or self.message ~= View.Idle
-		status.Visible = pinned
-		local statusH = if pinned then Art.textHeight(status, width - 24, 0) else 0
-		local edge = if short then 4 else 10
-		local top = plan.height + (if short then 0 else 4)
-		local canvas = self.body.CanvasPosition
-		local contentH = self:renderBody(width - 24, compact, short)
-		local statusGap = if pinned then 6 else 0
-		local room = math.max(1, maxHeight - top - statusGap - statusH - edge)
-		local bodyH = math.min(contentH, room)
-		local height = top + bodyH + statusGap + statusH + edge
-		self.card.Size = UDim2.fromOffset(width, height)
-		self.body.Position, self.body.Size = UDim2.fromOffset(12, top), UDim2.fromOffset(width - 24, bodyH)
-		self.body.CanvasSize = UDim2.fromOffset(0, contentH)
-		self.body.ScrollingEnabled = contentH > bodyH
-		self.body.CanvasPosition = Vector2.new(0, math.clamp(canvas.Y, 0, math.max(0, contentH - bodyH)))
-		status.Position, status.Size = UDim2.fromOffset(12, top + bodyH + statusGap), UDim2.fromOffset(width - 24, math.max(1, statusH))
+		local phone = Kit.compactRule(size.X, size.Y)
+		local view = nil
+		if phone then
+			local top = Kit.sheetTop(self.shade)
+			view = { W = math.floor(size.X), H = math.max(1, math.floor(size.Y) - top), top = top }
+		end
+		local key = if view then string.format("%dx%d", view.W, view.H) else "regular"
+		if self.chromeKey ~= key or not self.root or not self.root.Parent then self:buildChrome(view) end
+		local panel = self.panel
+		if view then
+			panel.AnchorPoint, panel.Position, panel.Size = Vector2.zero, UDim2.fromOffset(0, view.top), UDim2.fromOffset(view.W, view.H)
+			self.panelScale.Scale = 1
+		else
+			panel.AnchorPoint, panel.Position, panel.Size = Vector2.new(.5, .5), UDim2.fromScale(.5, .5), UDim2.fromOffset(848, 608)
+			self.panelScale.Scale = math.max(.1, math.min(1.2, (size.X - 24) / 848, (size.Y - 24) / 608))
+		end
+		if self.header.wallet then self.header.wallet.set(self.balance) end
+		self:renderList()
+		self:paintPane()
 	until not self.layoutDirty or self.destroyed
 	self.layingOut = false
 end

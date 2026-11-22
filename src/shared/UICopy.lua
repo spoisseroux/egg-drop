@@ -508,6 +508,15 @@ local Table={
   resetTitle="Reset the colours?",resetLine="Your pet goes back to its first colours. It's free.",resetYes="Reset"},
  -- Stars store access (Spencer 2026-11-21: "clicking the stars icon opens a store to buy stars?"):
  -- the header wallet opens the store; a short buy button opens this card.
+ -- Get Stars page, Toy Shell restyle (Fable's brief, artifacts/stars-store-2026-11-21/).
+ store={title="Get Stars",eyebrow="Garden",boosts="Boosts",packs="Stars packs",whatYouGet="What you get",
+  buy="Buy · R$ {price}",owned="✓ Owned",ownedChip="✓ OWNED",forever="FOREVER",loading="Loading…",soon="Coming soon",opening="Opening…",
+  best="BEST VALUE",free="You can always earn Stars free by playing.",thanks="Thank you! This boost is always on.",
+  starsRow="Stars",walletAfter="Your wallet after",keepsWorking="Keeps working",foreverValue="Forever",
+  sub={doubleStars="Double Stars, forever",supporter="+1 Star every round",starter="{stars} Stars · one per player",pack="{stars} Stars"},
+  gets={doubleStars="Every round and quest",doubleStarsValue="2× Stars",supporter="Every finished round",supporterValue="+1 Star"},
+  blurb={handful="A little top-up for one more egg.",pouch="Enough Stars for a few eggs.",jar="Lots of Stars for lots of eggs.",chest="The big one."},
+  hints={buy="Buy"}},
  starsShort={title="You need ★ {count} more",titleOne="You need ★ 1 more",line="{item} is ★ {price}. Get Stars, or earn them on the Pocket Deck.",
   lineNoItem="Get Stars, or earn them on the Pocket Deck.",buy="Get Stars",earn="Play a round",wallet="Get Stars"},
  -- v2 Bunny (2026-11-19, Sol): adopting the second pet on the Companions Pets page. Free at the

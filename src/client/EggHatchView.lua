@@ -259,14 +259,18 @@ function View:isStoreOpen()
 end
 function View:attachStore(store)
 	self.store = store
+	-- Get Stars restyle (2026-11-21): the store draws its own Toy Shell panel at this shop's
+	-- geometry; Hatch eggs hides only its panel and keeps the shared dim under it.
+	store.geometry = View.shopGeometry
 	store.onOpened = function()
 		self.card.Visible = false
-		if self.shopRoot then self.shopRoot.Visible = false end
+		if self.shopPanel then self.shopPanel.Visible = false end
 		self:syncShopShade()
 		self:bumpControllerEpoch()
 	end
 	store.onClosed = function()
 		self.card.Visible = self.state.lastHatch ~= nil or not self.shopRoot
+		if self.shopPanel then self.shopPanel.Visible = true end
 		self:bumpControllerEpoch()
 		if self.shade.Visible then
 			self:layout()
@@ -992,7 +996,9 @@ end
 -- Shop chrome on (list + pane) or off (the result card keeps its old frame).
 function View:useShopChrome(on)
  local store=self:isStoreOpen()
- if self.shopRoot then self.shopRoot.Visible=on and not store end
+ -- The store page keeps shopRoot (and its dim) up and only hides the egg panel.
+ if self.shopRoot then self.shopRoot.Visible=on end
+ if self.shopPanel then self.shopPanel.Visible=not store end
  self.card.Visible=not on and not store
  if on then
   if self.body.Parent~=self.shopBody then self.body.Parent=self.shopBody end
