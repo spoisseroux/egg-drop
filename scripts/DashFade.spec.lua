@@ -12,7 +12,7 @@ return function(client)
 			local item=Instance.new("MeshPart");item.Name=name;item.LocalTransparencyModifier=prior or 0;item.Parent=folder
 			return item
 		end
-		return folder,{crown=part("W7_Vegetation__foliage"),pillar=part("W7_Bridge__palette",.2),kerb=part("W7_Architecture__marble"),trunk=part("W7_Trunks__bark"),ground=part("W7_Ground__grass"),cell=part("W7C_Architecture_01"),bridge=part("W7_Bridge__marble")}
+		return folder,{crown=part("W7_Vegetation__foliage"),pillar=part("W7_Bridge__palette",.25),kerb=part("W7_Architecture__marble"),trunk=part("W7_Trunks__bark"),ground=part("W7_Ground__grass"),cell=part("W7C_Architecture_01"),bridge=part("W7_Bridge__marble")}
 	end
 	local function rig()
 		local folder,parts=world()
@@ -36,12 +36,12 @@ return function(client)
 		r.run(.6);assert(math.abs(r.parts.pillar.LocalTransparencyModifier-Fade.Clear)<1e-9)
 		assert(#r.asked==1 and r.asked[1]==r.parts.pillar)
 		r.hit=nil;r.run(.1);assert(r.parts.pillar.LocalTransparencyModifier==Fade.Clear,"held for a moment: no flicker")
-		r.run(1);assert(r.parts.pillar.LocalTransparencyModifier==.2)
+		r.run(1);assert(r.parts.pillar.LocalTransparencyModifier==.25)
 	end)
 	test("release gives everything back at once, twice is nothing, and the next race finds its meshes again",function()
 		local r=rig();r.hit=r.parts.pillar
 		r.run(.6,zone.from+10);r.fade:release();r.fade:release()
-		assert(r.parts.pillar.LocalTransparencyModifier==.2 and r.parts.crown.LocalTransparencyModifier==0 and next(r.fade.records)==nil and not r.fade.ready)
+		assert(r.parts.pillar.LocalTransparencyModifier==.25 and r.parts.crown.LocalTransparencyModifier==0 and next(r.fade.records)==nil and not r.fade.ready)
 		r.run(.6,zone.from+10);assert(r.parts.crown.LocalTransparencyModifier==Fade.Clear);r.fade:release()
 		r.run(.6,zone.from+10);r.parts.crown:Destroy();r.run(.6,0);r.fade:release()
 	end)
