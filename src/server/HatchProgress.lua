@@ -48,6 +48,9 @@ local StatEggCatalog=require(ReplicatedStorage.Shared.StatEggCatalog)
 -- Levels matter (2026-11-22): medal eggs are derived from the saved XP (MedalEggs); off = not read.
 local MedalEggs=require(script.Parent.MedalEggs)
 local Levels=require(ReplicatedStorage.Shared.Levels)
+-- Garden Dash (2026-11-22): the optional dash field (DashState); off = not read, not written, no snapshot key.
+local DashState=require(script.Parent.DashState)
+local Dash=require(ReplicatedStorage.Shared.Dash)
 -- v2 pet names: optional names / petNames fields (NameState); earned pieces granted by catchUp.
 local Names=require(script.Parent.NameState)
 local NameCatalog=require(ReplicatedStorage.Shared.NameCatalog)
@@ -481,6 +484,8 @@ function Hatching.public(handle)
 	public.stats = stats
 	-- Pet Park Play date progress for today: {day, count, target, reward, done}.
 	public.playDate = PlayDate.public(state, dayOf(handle.adapter.now()))
+	-- Garden Dash: today's paid races, ribbons, cups, best time and title. Never the seed.
+	if Dash.on() then public.dash = DashState.public(state, dayOf(handle.adapter.now())) end
 	-- Onboarding: one-time coach cards already shown (0 when the field is missing).
 	public.coachMask = Coach.mask(state.coachMask)
 	-- Bond XP per pet (slice F): {} when the field is missing. Levels come from BondCatalog.
@@ -1526,6 +1531,24 @@ end
 function Hatching.parkCommitted(handle, operationId) return PlayDate.committed(handle.state, operationId) end
 function Hatching.parkCompletion(handle, operationId) return PlayDate.completion(handle.state, operationId) end
 function Hatching.playDateDone(handle) return PlayDate.done(handle.state, dayOf(handle.adapter.now())) end
+
+-- Garden Dash (DashState): up to 8 finished races and Time Trials in one write. `operationId` is the host's
+-- flight id, kept across retries; dash.op is the proof, so a retry, a replay or a second session pays once.
+-- The day is read inside the write. No 2x pass and no XP. `results` is copied and frozen here.
+function Hatching.dashResults(handle, operationId, results)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or not DashState.validResults(results) then return false, "InvalidDash" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	if DashState.committed(handle.state, operationId) then return true, "AlreadySaved" end
+	local signature = "dash:" .. operationId
+	local pending = handle.pending
+	if pending and pending.signature ~= signature then return false, "Pending" end
+	local candidate = if pending then pending.candidate else table.freeze({ id = operationId, results = table.freeze(clone(results)) })
+	return transact(handle, signature, handle.state.revision, function(state, captured)
+		return DashState.apply(state, captured, dayOf(handle.adapter.now()))
+	end, candidate, operationId, nil, DashState.digest(candidate.results))
+end
+function Hatching.dashCommitted(handle, operationId) return DashState.committed(handle.state, operationId) end
+function Hatching.dashReceipt(handle, operationId) return DashState.receipt(handle.state, operationId) end
 
 -- The free daily reroll: signature reroll:<day>:<slot>; saved as `rerolled`.
 function Hatching.questReroll(handle, slot, day, boost)

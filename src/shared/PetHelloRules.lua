@@ -21,7 +21,7 @@ local quiet={wanderPause=true,nookRest=true,settle=true}
 -- A garden actor (server actor or a client snapshot actor) that may wave right now:
 -- in the garden, standing, and not reserved by its owner, care, the park or another pet.
 function Rules.free(actor,now)
- if type(actor)~="table"or actor.mode~="Room"or actor.care~=nil then return false end
+ if type(actor)~="table"or actor.mode~="Room"or actor.care~=nil or actor.dash~=nil then return false end
  if actor.pairId~=nil or actor.peerId~=nil or actor.toyActionId~=nil or actor.toyReservation~=nil or actor.toyRole~=nil then return false end
  if type(actor.park)=="table"and actor.park.state~="idle"then return false end
  if actor.behavior=="rest"then return actor.action==nil or quiet[actor.action]==true end

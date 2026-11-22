@@ -61,7 +61,7 @@ function Hello:step()
   local actor=options.garden.actors[ownerId]
   local over=now-hello.at>=Rules.Duration
   local broken=not actor or actor.petId~=hello.petId or actor.petGeneration~=hello.petGeneration or actor.characterId~=hello.characterId
-   or actor.mode~="Room"or actor.care~=nil or actor.pairId~=nil or actor.toyActionId~=nil
+   or actor.mode~="Room"or actor.care~=nil or actor.dash~=nil or actor.pairId~=nil or actor.toyActionId~=nil
    or(type(actor.park)=="table"and actor.park.state~="idle")or(options.allowed and options.allowed(ownerId)==false)
   if over or broken then
    self.active[ownerId]=nil

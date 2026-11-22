@@ -68,6 +68,7 @@ function Care:request(id,packet)
  if self.equips[id]and packet.kind=="careEquip"then return self:response(packet,"Rejected","Saving")end
  local actor,input=self.garden.actors[id],self.garden.inputs[id]
  local function reject(reason)return self:response(packet,"Rejected",reason)end
+ if actor and actor.dash then return reject("Racing")end -- Garden Dash
  if not actor or not input or not input.alive or not input.owned or input.mode~="Room"or packet.petId~=actor.petId or packet.characterId~=actor.characterId or packet.petGeneration~=actor.petGeneration or packet.actorGeneration~=actor.generation then return reject("IdentityChanged")end
  local response
  if packet.kind=="carePulse"then

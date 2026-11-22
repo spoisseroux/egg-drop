@@ -14,6 +14,10 @@ function Close.drain(hatching, handle, payout, options)
 		elseif payout and not payout.saved then
 			local ok = hatching.award(handle, payout.sequence, payout.amount, payout.summary, payout.boost)
 			if ok then payout.saved = true else wait(.25) end
+		elseif options.dash and not options.dash() then
+			-- Garden Dash results still waiting for the save (the host answers true once nothing is left, or
+			-- when a write was refused for good, so a race can never hold the lease).
+			wait(.25)
 		else
 			if options.profileFlush then
 				local ok, reason = options.profileFlush()

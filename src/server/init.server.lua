@@ -105,6 +105,8 @@ do local ok,problem=pcall(function()require(script.SimCheckHost).mount(remotes)e
 task.spawn(function()local ok,problem=pcall(function()require(script.AliveConfig).start()end);if not ok then warn("[Alive] config not started: "..tostring(problem))end end)
 -- Levels matter off switch (LevelsConfig): the same way, one key. Not started = off for everyone.
 task.spawn(function()local ok,problem=pcall(function()require(script.LevelsConfig).start()end);if not ok then warn("[Levels] config not started: "..tostring(problem))end end)
+-- Garden Dash off switches (DashConfig): the same way, two keys. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.DashConfig).start()end);if not ok then warn("[Dash] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -189,7 +191,7 @@ local function petState(board)
 		alive=humanoid~=nil and humanoid.Health>0 and root~=nil and character:IsDescendantOf(workspace),
 		ready=canProgress(board)and not handle.busy and not handle.pending,
 		busy=handle.busy or board.nurseryBusy,pendingId=handle.pending and handle.pending.id,
-		conflict=board.payoutPending or state.lastHatch~=nil or board.profile.saving or board.profile.loadFailed or board.profile.saveFailed or(board.careHeld==true),
+		conflict=board.payoutPending or state.lastHatch~=nil or board.profile.saving or board.profile.loadFailed or board.profile.saveFailed or(board.careHeld==true)or(board.dashHeld==true),
 		lastPetAward=state.lastPetAward,capReached=tonumber(today)<tonumber(state.petDay)
 			or(today==state.petDay and state.petCount>=Nursery.PetDailyCap)}
 end
@@ -827,6 +829,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.AliveConfig).command(message) end) end)
 		-- "/levels <on|off|clear>": the Levels matter switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.LevelsConfig).command(message) end) end)
+		-- "/dash <on|off|clear>" and "/dash prizes <on|off|clear>": the Garden Dash switches, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.DashConfig).command(message) end) end)
 		player.Chatted:Connect(function(message)
 			local amount = type(message) == "string" and tonumber(string.match(message, "^%s*/stars%s+(%d+)%s*$"))
 			if not amount or boards[player] ~= board or board.closing then return end
@@ -957,6 +961,11 @@ local function closeBoard(board)
 		settleReward(board.player, board)
 	end
 	if board.welcome then board.welcome:destroy()end
+	-- Garden Dash: a race still running pays nothing; what had finished is drained below (nil while Dash is off).
+	if garden.dashHost then
+		local ok, problem = pcall(garden.dashHost.leave, garden.dashHost, board)
+		if not ok then warn("[Dash] leave: " .. tostring(problem)) end
+	end
 	garden:remove(board.player.UserId)
 	petHello.state:remove(board.player.UserId)
 	if board.petContact then board.petContact:destroy()end
@@ -969,6 +978,7 @@ local function closeBoard(board)
 		end
 		local ok, reason = CloseProgress.drain(Nursery, board.nursery, board.earnedPayout, {
 			profileFlush = function() return Progress.flushOnce(board.profile) end,
+			dash = garden.dashHost and garden.dashHost:drain(board) or nil,
 		})
 		if not ok then warn("Egg Drop close save did not finish:", reason) end
 		closing[board] = nil
@@ -1995,6 +2005,17 @@ ParkDirector.attach(garden, { enabled = FeatureFlags.Park == true,
 		board.folder:SetAttribute("ParkGamesPending",board.parkPending)
 		flushParkGames(player, board)
 	end })
+
+-- Garden Dash (FeatureFlags.GardenDash): nil and nothing made with the build ceiling off. Its own protected
+-- connections; the garden carries the host so a close can reach it.
+do
+	local ok, problem = pcall(function()
+		garden.dashHost = require(script.DashHost).mount({ remotes = remotes, shared = gardenShared, room = workspace, garden = garden,
+			boards = boards, players = Players, nursery = Nursery, economy = Economy, canProgress = canProgress, gardenInput = gardenInput,
+			publishNursery = publishNursery, publishState = publishState, dayOf = Daily.dayOf })
+	end)
+	if not ok then warn("[Dash] not mounted: " .. tostring(problem)) end
+end
 
 -- Levels matter: when the runtime switch flips, every player gets a fresh snapshot (medal credit) and
 -- board attributes (deck juice). Only this server writes the attribute; it is not read here.

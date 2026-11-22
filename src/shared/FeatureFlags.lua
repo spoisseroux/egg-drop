@@ -36,7 +36,9 @@
 -- wind. Each also needs the beta place or Studio (Alive.PlaceId) and the server's switch (AliveConfig).
 -- LevelsMatter (V3-LEVELS-BUILD-PLAN-2026-11-22): the build ceiling for levels, gates, medals and deck juice. Also
 -- needs the beta place or Studio (Levels.PlaceId) and the server's switch (LevelsConfig). Missing = off.
+-- GardenDash (V3-DASH-BUILD-PLAN-2026-11-22): the build ceiling for the pet race. Also needs the beta place or
+-- Studio (Dash.PlaceId) and the server's switches (DashConfig: garden_dash, garden_dash_prizes). Missing = off.
 return table.freeze({SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,
- LevelsMatter=true})
+ LevelsMatter=true,GardenDash=true})

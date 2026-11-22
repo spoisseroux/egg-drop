@@ -50,6 +50,21 @@ function Garden:transition(actor,behavior,target,duration,action,actionId,via,pr
 
     actor.peerId=nil;self.dirty=true
 end
+-- Garden Dash (DashHost): the owner's pet is racing. It leaves every other garden activity and stands still
+-- here while the race draws it; decide, greeting, focus, care, hello and the parks skip it. `racers` is nil
+-- until the first race, and actor.dash is nil for everybody else (the snapshot key is then absent).
+function Garden:setRacer(id,raceId)
+    self.racers=self.racers or {}
+    self.racers[id]=raceId
+    local actor,input=self.actors[id],self.inputs[id]
+    if not actor or actor.dash==raceId then return end
+    self:release(actor);actor.dash=raceId
+    if raceId then
+        actor.park=nil
+        self:transition(actor,"rest",self:position(actor,self.options.now()),.05,"dash")
+    elseif input then self:reset(actor,input)
+    else self.dirty=true end
+end
 function Garden:resume(actor,input,prior)
     local now=self.options.now()
     -- Spring slots can be claimed by a third owner during a greeting. Resume
@@ -102,7 +117,8 @@ function Garden:sync(inputs,freshOwnerId)
             local now=self.options.now()
             actor={ownerId=id,petId=input.petId,characterId=input.characterId,petGeneration=input.petGeneration or 0,generation=self:token(),mode=input.mode,
                 behavior="follow",actionId=self:token(),from=Activity.pack(input.anchor),to=Activity.pack(input.anchor),
-                startTime=now,endTime=now+.5,idleSince=now+.5,lastOwner=input.position,yaw=input.yaw or 0}
+                startTime=now,endTime=now+.5,idleSince=now+.5,lastOwner=input.position,yaw=input.yaw or 0,
+                dash=self.racers and self.racers[id]or nil}
             self.actors[id]=actor;self.dirty=true
             if input.mode=="Board" then self:reset(actor,input) end
         elseif input.mode~=(if actor.mode=="Focus"or(actor.care~=nil)then "Room"else actor.mode)then self:reset(actor,input)end
@@ -121,7 +137,7 @@ function Garden:sync(inputs,freshOwnerId)
             actor.lastOwner,actor.idleSince=input.position,self.options.now()
             actor.wanderCount,actor.nextWanderAt=0,nil
             -- Park pets stay in the playground while their owner walks around the kerb.
-            if actor.mode=="Room" and actor.behavior~="follow" and not actor.park then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
+            if actor.mode=="Room" and actor.behavior~="follow" and not actor.park and not actor.dash then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
         end
         if actor.care and self.care then self.care:tick(actor,input)end
     end
@@ -138,7 +154,7 @@ function Garden:focus(id,packet)
         or input.mode~="Room" or packet.petId~=actor.petId or input.petId~=actor.petId or input.characterId~=actor.characterId
         or(input.petGeneration or 0)~=actor.petGeneration or(packet.characterId~=nil and packet.characterId~=input.characterId)
         or(packet.petGeneration~=nil and packet.petGeneration~=actor.petGeneration)then return false end
-    if actor.mode=="Carried"or actor.mode=="Docked"then return false end
+    if actor.mode=="Carried"or actor.mode=="Docked"or actor.dash then return false end
     local now=self.options.now()
     if packet.kind=="focusEnd" then
         if actor.focusSeq==packet.seq and actor.mode=="Focus" then self:reset(actor,input);return true end
@@ -178,10 +194,10 @@ function Garden:greeting(now,ordered)
         local i=((self.greetingCursor or 0)+offset-1)%#ordered+1
         local first=ordered[i]
         -- Park pets greet only through the park director (6 s cadence, 45 s per pair).
-        if first.mode~="Room" or first.pairId or first.park or(first.behavior~="follow" and first.behavior~="rest") then continue end
+        if first.mode~="Room" or first.pairId or first.park or first.dash or(first.behavior~="follow" and first.behavior~="rest") then continue end
         for delta=1,#ordered-1 do
             local second=ordered[(i+delta-1)%#ordered+1]
-            if second.mode~="Room" or second.pairId or second.park or(second.behavior~="follow" and second.behavior~="rest") then continue end
+            if second.mode~="Room" or second.pairId or second.park or second.dash or(second.behavior~="follow" and second.behavior~="rest") then continue end
             local a,b=self:position(first,now),self:position(second,now)
             if distance(a,b)>9 then continue end
             self:greetPair(first,second,now)
@@ -301,7 +317,7 @@ function Garden:decide()
             if now>actor.focusUntil then self:reset(actor,input) end
             continue
         end
-        if actor.care then continue end
+        if actor.care or actor.dash then continue end
         -- Park pets (actor.park, set only by ParkDirector) skip follow, wander and the 22-stud recall.
         if actor.park and self.park then self.park:tick(actor,input,now) continue end
         if actor.mode=="Board" then
@@ -378,6 +394,7 @@ function Garden:remove(id)
     local actor=self.actors[id]
     if actor then self:release(actor);self.actors[id]=nil;self.inputs[id]=nil;self.dirty=true end
     if self.toyRequests then self.toyRequests[id]=nil end
+    if self.racers then self.racers[id]=nil end
     if self.care then self.care.requests[id]=nil;self.care.equips[id]=nil;self.care.equipProofs[id]=nil end
     return self:publish()
 end
@@ -404,7 +421,7 @@ function Garden:snapshot()
         actors[tostring(id)]={ownerId=id,petId=actor.petId,characterId=actor.characterId,petGeneration=actor.petGeneration,generation=actor.generation,mode=actor.mode,
             behavior=actor.behavior,action=actor.action,actionId=actor.actionId,peerId=actor.peerId,startTime=actor.startTime,endTime=actor.endTime,
             from=actor.from,to=actor.to,via=actor.via,path=actor.path,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0,
-            parkId=actor.park and actor.park.parkId or nil,toyRole=actor.toyRole,toyStartTime=actor.toyStartTime,care=actor.care and table.clone(actor.care)or nil}
+            parkId=actor.park and actor.park.parkId or nil,toyRole=actor.toyRole,toyStartTime=actor.toyStartTime,care=actor.care and table.clone(actor.care)or nil,dash=actor.dash}
     end
     -- park is nil unless FeatureFlags.Park attached a director (then the snapshot is unchanged).
     return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy),careBay=self.care and self.care:snapshot()or nil,

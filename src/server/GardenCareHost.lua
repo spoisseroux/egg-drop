@@ -43,6 +43,7 @@ function Host:bind(board)
 end
 function Host:switch(board,target,packet,entry)
  self:bind(board)
+ if board.dashHeld then return false,"Racing"end -- Garden Dash: the racing pet stays the companion
  if board.closing or board.mode~="Room"or not self.d.canProgress(board)or board.careEquip or board.profile.saving or board.nursery.busy or board.nursery.pending then return false,"Saving"end
  if HatchGuard.other(board.nursery.state,"companion")then return false,"RevealPending"end
  if not Pets.byId[target]or not Catalog.isOwned(self.d.inventory(board),target)then return false,"NotOwned"end

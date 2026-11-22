@@ -65,7 +65,7 @@ function Director:busy(actor)return self.options.busy~=nil and self.options.busy
 function Director:eligible(actor,now)
 	local park=actor.park
 	if not park or park.parkId~=Park.Id or park.fetchId or park.session or park.state~="idle"or now<(park.nextPickAt or 0)then return false end
-	if actor.mode~="Room"or actor.care or actor.pairId or actor.action=="nookApproach"or actor.action=="nookRest"then return false end
+	if actor.mode~="Room"or actor.care or actor.dash or actor.pairId or actor.action=="nookApproach"or actor.action=="nookRest"then return false end
 	local input=self.garden.inputs[actor.ownerId]
 	if not input or not input.alive or self:busy(actor)then return false end
 	return Park.inside(self.garden:position(actor,now),0)
@@ -99,7 +99,7 @@ function Director:start(activity,slotIds,actors,now)
 	for index,actor in ipairs(actors)do
 		local slot=Park.Slots[slotIds[index]]
 		if not actor.park or actor.park.parkId~=Park.Id or actor.park.state~="idle"or actor.park.session or actor.park.fetchId
-			or actor.mode~="Room"or actor.care or actor.pairId or self:busy(actor)
+			or actor.mode~="Room"or actor.care or actor.dash or actor.pairId or self:busy(actor)
 			or seen[actor.ownerId]or not slot or slot.equipment~=activity.equipment then
 			return false,"ActorUnavailable:"..tostring(actor.ownerId)..":"..tostring(actor.park and actor.park.parkId)..":"..tostring(actor.park and actor.park.state)..":"..tostring(actor.pairId)
 		end
@@ -402,8 +402,8 @@ function Director:schedule(now,ordered)
 	for _,actor in ipairs(ordered)do
 		local input=garden.inputs[actor.ownerId]
 		if actor.park and actor.park.parkId==Park.Id then
-			if not input or actor.care or(actor.mode~="Room"and actor.mode~="Focus")then self:release(actor);actor.park=nil end
-		elseif not actor.park and input and input.alive and input.owned and actor.mode=="Room"and not actor.care and Park.member(input.position,false)then
+			if not input or actor.care or actor.dash or(actor.mode~="Room"and actor.mode~="Focus")then self:release(actor);actor.park=nil end
+		elseif not actor.park and input and input.alive and input.owned and actor.mode=="Room"and not actor.care and not actor.dash and Park.member(input.position,false)then
 			actor.park={parkId=Park.Id,state="idle",since=now,nextPickAt=now+1,waitingSince=now+1,nextWanderAt=now}
 		end
 	end
@@ -529,7 +529,7 @@ function Director:greetings(now,ordered,taken)
 		local park=actor.park
 		if park and park.parkId==Park.Id and not park.fetchId and not taken[actor]and not park.session and park.state=="idle"and not(park.partnerWaitUntil and now<park.partnerWaitUntil)
 			and now-(park.waitingSince or now)<Director.GreetPatience
-			and actor.mode=="Room"and not actor.care and not actor.pairId
+			and actor.mode=="Room"and not actor.care and not actor.dash and not actor.pairId
 			and actor.action~="nookApproach"and actor.action~="nookRest"and not self:busy(actor)and Park.inside(self.garden:position(actor,now),0)then
 			table.insert(idle,actor)
 		end
