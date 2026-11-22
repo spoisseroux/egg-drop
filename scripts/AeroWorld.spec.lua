@@ -37,10 +37,11 @@ return function(client)
 		local methods={IsA=function(_,c)return c==class end,GetAttribute=function(_,k)return attrs[k]end,
 			SetAttribute=function(_,k,v)attrs[k]=v;log.writes+=1 end}
 		return setmetatable(item,{__index=function(_,k)
-			if k=="Name"then return name elseif k=="ClassName"then return class end
+			if k=="Name"then return name elseif k=="ClassName"then return class elseif k=="Parent"then return log.parent and log.parent(item)end
 			return methods[k]or props[k]
 		end,__newindex=function(_,k,v)
 			if props[k]==nil and methods[k]==nil then error(class.." has no "..tostring(k),2)end
+			if log.refuse==k then error("refused "..k,2)end
 			props[k]=v;log.writes+=1
 		end}),props,attrs
 	end
@@ -68,7 +69,9 @@ return function(client)
 		raw.Lighting=props
 		props.FindFirstChild=function(_,name)for _,c in ipairs(children)do if c.Name==name then return c end end;return nil end
 		props.FindFirstChildOfClass=function(_,class)for _,c in ipairs(children)do if c.ClassName==class then return c end end;return nil end
-		return(fake("Lighting","Lighting",props,log)),raw,children
+		local lighting=fake("Lighting","Lighting",props,log)
+		log.parent=function(item)return if table.find(children,item)then lighting else nil end
+		return lighting,raw,children
 	end
 	local function frozen(raw)
 		local out={}
@@ -248,6 +251,46 @@ return function(client)
 			r.flip(true);assert(r.raw.Sky.SkyboxBk=="duskBk")
 			table.insert(r.effects,late);r.clock.apply();assert(r.raw.Sky.SkyboxBk=="dayBk")
 			r.flip(false);assert(r.raw.Sky.SkyboxBk=="duskBk"and r.raw.attrs.FaceSet=="dusk")
+		end)
+		test("a value that cannot be put back stays on record, says so, and goes back next time",function()
+			local r=rig();lounge(r.world);local light=frozen(r.raw);r.flip(true)
+			r.log.refuse="Haze";r.flip(false)
+			assert(r.raw.Atmosphere.Haze==Values.Atmosphere.Haze and r.raw.Atmosphere.Density==light["Atmosphere.Density"]and #r.warnings==1 and next(r.aero.light)~=nil)
+			r.log.refuse=nil;r.flip(true);r.flip(false);same(light,frozen(r.raw));assert(next(r.aero.light)==nil)
+			-- a parked child, the same way
+			local part=Instance.new("Part");part.Parent=holder
+			local child,locked={},true
+			local records={[part]={was={Transparency=.25},now={},want={},parked={setmetatable(child,{__newindex=function(t,k,v)if locked then error("locked")end;rawset(t,k,v)end})}}}
+			assert(AeroWorld.restore(records,part)~=nil and near(part.Transparency,.25)and #records[part].parked==1 and next(records[part].was)==nil)
+			locked=false;assert(AeroWorld.restore(records,part)==nil and records[part]==nil and child.Parent==part)
+		end)
+		test("a crown that will not go flat keeps its leaves, once, until the next switch",function()
+			local r=rig();local l=lounge(r.world);local before=picture(l.crown)
+			local real,refusing=AeroWorld.write,true
+			AeroWorld.write=function(records,item,key,value)if refusing and item==l.crown and key=="Color"then error("refused")end;return real(records,item,key,value)end
+			local fine,wrong=pcall(function()
+				r.flip(true);for _=1,3 do r.pump()end
+				assert(#r.deferred==0,"no retry loop");samePicture(before,picture(l.crown))
+				assert(l.crown.TextureID=="rbxassetid://111"and l.crown.Material==Enum.Material.SmoothPlastic and l.crown:FindFirstChildOfClass("SurfaceAppearance")and l.islet.TextureID==""and #r.warnings==1)
+				refusing=false;r.treesChanged.fire();r.pump();assert(l.crown.TextureID==""and l.crown:FindFirstChildOfClass("SurfaceAppearance")==nil)
+			end)
+			AeroWorld.write=real;assert(fine,wrong);r.flip(false);assert(l.crown.TextureID=="rbxassetid://111")
+		end)
+		test("a new World beside, or instead of, the old: the old gets its looks back, its signals are let go, and a re-add connects once",function()
+			local r=rig();local l=lounge(r.world);local before=picture(l.world);r.flip(true);r.pump()
+			local function links()local n=0;for _,list in pairs(r.aero.folderLinks)do for _,link in ipairs(list)do if link.Connected then n+=1 end end end;return n end
+			assert(links()==4)
+			local w=Instance.new("Folder");w.Name="World";local marble=mesh(w,"W7_New__marble");w.Parent=l.room;r.pump()
+			assert(near(marble.Reflectance,.06)and links()==4);samePicture(before,picture(l.world))
+			mesh(l.world,"W7_Old__marble");r.pump();assert(near(l.world.W7_Old__marble.Reflectance,0));l.world.W7_Old__marble:Destroy()
+			w.Parent=nil;r.pump();assert(near(marble.Reflectance,0)and painted(l)and links()==4,"the one left is painted again")
+			for _=1,3 do l.world.Parent=nil;r.pump();assert(links()==2 and not painted(l));l.world.Parent=l.room;r.pump();assert(links()==4 and painted(l))end
+			r.flip(false);assert(links()==0);samePicture(before,picture(l.world))
+		end)
+		test("an effect that was replaced is let go, and the new one painted",function()
+			local r=rig();lounge(r.world);r.flip(true)
+			local old=table.remove(r.effects);assert(r.aero.light[old]);r.clock.apply()
+			assert(r.aero.light[old]==nil and r.raw.Sky.SkyboxBk=="duskBk");r.flip(false);assert(#r.warnings==0)
 		end)
 		test("a rebuilt room is painted; the old one gets its looks back",function()
 			local r=rig();local a=lounge(r.world);local before=picture(a.room);r.flip(true)

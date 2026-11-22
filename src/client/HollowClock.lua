@@ -25,6 +25,11 @@ Clock.look = nil
 function Clock.sample(unixSeconds)
 	local look = Clock.look
 	if look then return look.Hour, look.Daylight end
+	return Clock.schedule(unixSeconds)
+end
+
+-- The garden's own hour, whatever look is over it.
+function Clock.schedule(unixSeconds)
 	if not Clock.DayNight then return Dusk.Hour, Dusk.Daylight end
 	return Clock.cycle(unixSeconds)
 end
@@ -148,7 +153,11 @@ function Clock.now()
  end
  return workspace:GetServerTimeNow()
 end
-function Clock.daylight()return Clock.lastDaylight or select(2,Clock.sample(Clock.now()))end
+-- What the birds, coos and fireflies live by: a look changes the light, never their day.
+function Clock.daylight()
+ if Clock.look then return(select(2,Clock.schedule(Clock.now())))end
+ return Clock.lastDaylight or select(2,Clock.sample(Clock.now()))
+end
 Clock.Step=5
 local Controller={};Controller.__index=Controller
 local function finite(value)return type(value)=="number"and value==value and math.abs(value)<math.huge end

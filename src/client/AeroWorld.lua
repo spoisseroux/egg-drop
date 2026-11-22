@@ -50,12 +50,23 @@ function World.write(records,item,key,value)
 	record.now[key]=read(item,key)
 	return true
 end
+-- Puts an item back. What cannot be put back stays on record (the next restore tries again); returns the problem.
 function World.restore(records,item)
 	local record=records[item]
-	if not record then return end
-	records[item]=nil
-	for key,value in pairs(record.was)do pcall(put,item,key,value)end
-	for _,child in ipairs(record.parked)do pcall(function()child.Parent=item end)end
+	if not record then return nil end
+	local problem
+	for key,value in pairs(table.clone(record.was))do
+		local ok,why=pcall(put,item,key,value)
+		if ok then record.was[key],record.now[key],record.want[key]=nil,nil,nil else problem=why end
+	end
+	local parked=record.parked
+	record.parked={}
+	for _,child in ipairs(parked)do
+		local ok,why=pcall(function()child.Parent=item end)
+		if not ok then table.insert(record.parked,child);problem=why end
+	end
+	if next(record.was)==nil and #record.parked==0 then records[item]=nil end
+	return problem
 end
 
 -- options (fixtures): world, lighting, data, clock {look, now, apply}, switch {on, changed, trees, treesChanged},
@@ -63,7 +74,8 @@ end
 function World.new(options)
 	options=options or {}
 	local self=setmetatable({world=options.world or workspace,lighting=options.lighting or game:GetService("Lighting"),
-		clock=options.clock,enabled=false,turn=0,writes=0,light={},surfaces={},connections={},roomLinks={},late={}},World)
+		clock=options.clock,enabled=false,turn=0,writes=0,light={},surfaces={},refused=setmetatable({},{__mode="k"}),
+		connections={},roomLinks={},folderLinks={},folders={},late={}},World)
 	self.data=options.data or require(Shared:WaitForChild("WorldV7Data"))
 	self.switch=options.switch or require(Shared:WaitForChild("Aero"))
 	self.level=options.level or require(script.Parent.AliveBudget).level
@@ -105,12 +117,21 @@ end
 function World:set(records,item,key,value)
 	local ok,wrote=pcall(World.write,records,item,key,value)
 	if not ok then self:complain(wrote)elseif wrote then self.writes+=1 end
+	return ok
+end
+function World:restoreItem(records,item)
+	local problem=World.restore(records,item)
+	if problem~=nil then self:complain(problem)end
 end
 
 -- Light: called by HollowClock only. Effects that are not there (yet) are skipped; its next pass finds them.
 function World:paintLight()
 	if not self.enabled then return end
 	local lighting=self.lighting
+	-- An effect that was replaced or destroyed is let go (with its own looks, where it still takes them).
+	for _,item in ipairs(self:items(self.light))do
+		if item~=lighting and item.Parent~=lighting then World.restore(self.light,item);self.light[item]=nil end
+	end
 	local function all(item,values)
 		if not item then return end
 		for key,value in pairs(values)do self:set(self.light,item,key,value)end
@@ -156,22 +177,27 @@ function World:paintPart(part)
 end
 function World:paintCrown(part)
 	local crown=Values.Crowns[self.switch.trees()]
-	if not crown then return end
-	for _,child in ipairs(part:GetChildren())do
-		if not child:IsA("SurfaceAppearance")then continue end
-		if crown.Flat then
-			-- Only its Parent moves, and only here: the same instance goes back.
-			local record=entry(self.surfaces,part)
-			local ok=pcall(function()child.Parent=nil end)
-			if ok then table.insert(record.parked,child);self.writes+=1 end
-		else
-			self:set(self.surfaces,child,"Color",crown.Tint)
-		end
+	if not crown or self.refused[part]then return end
+	local skins={}
+	for _,child in ipairs(part:GetChildren())do if child:IsA("SurfaceAppearance")then table.insert(skins,child)end end
+	if not crown.Flat then
+		for _,child in ipairs(skins)do self:set(self.surfaces,child,"Color",crown.Tint)end
+		return
 	end
-	if crown.Flat then
-		if part:IsA("MeshPart")then self:set(self.surfaces,part,"TextureID","")end
-		self:set(self.surfaces,part,"Material",crown.Material)
-		self:set(self.surfaces,part,"Color",crown.Color)
+	-- All or nothing: a crown that will not go flat keeps its own leaves until the next switch.
+	local ok=not part:IsA("MeshPart")or self:set(self.surfaces,part,"TextureID","")
+	ok=ok and self:set(self.surfaces,part,"Material",crown.Material)
+	ok=ok and self:set(self.surfaces,part,"Color",crown.Color)
+	for _,child in ipairs(skins)do
+		if not ok then break end
+		-- Only its Parent moves, and only here: the same instance goes back.
+		local record=entry(self.surfaces,part)
+		local moved,why=pcall(function()child.Parent=nil end)
+		if moved then table.insert(record.parked,child);self.writes+=1 else ok=false;self:complain(why)end
+	end
+	if not ok then
+		self.refused[part]=true
+		self:restoreItem(self.surfaces,part)
 	end
 end
 function World:paint(item)
@@ -214,44 +240,63 @@ function World:queue(item)
 	end)
 end
 function World:inside(item)
-	for _,folder in pairs(self.folders or {})do if folder:IsAncestorOf(item)and self.room:IsAncestorOf(item)then return true end end
+	for _,folder in pairs(self.folders)do if folder:IsAncestorOf(item)and self.room:IsAncestorOf(item)then return true end end
 	return false
 end
 -- What left the room gets its own looks back; if it returns it is painted afresh.
 function World:sweep()
 	local gone={}
 	for item in pairs(self.surfaces)do if not self:inside(item)then table.insert(gone,item)end end
-	for _,item in ipairs(gone)do World.restore(self.surfaces,item)end
+	for _,item in ipairs(gone)do self:restoreItem(self.surfaces,item)end
 end
 function World:watch(folder)
 	if folder.Name~="World"and folder.Name~="WaterFlow"or self.folders[folder.Name]==folder then return end
+	-- A new folder takes over from the one before it: that one's items get their own looks back.
+	local old=self.folders[folder.Name]
+	if old then self:unwatch(old);self:queue(nil)end
+	self:unwatch(folder)
 	self.folders[folder.Name]=folder
-	table.insert(self.roomLinks,folder.DescendantAdded:Connect(function(item)self:queue(item)end))
-	table.insert(self.roomLinks,folder.DescendantRemoving:Connect(function()self:queue(nil)end))
+	self.folderLinks[folder]={
+		folder.DescendantAdded:Connect(function(item)self:queue(item)end),
+		folder.DescendantRemoving:Connect(function()self:queue(nil)end),
+	}
 	for _,item in ipairs(folder:GetDescendants())do
 		local ok,problem=pcall(self.paint,self,item)
 		if not ok then self:complain(problem)end
 	end
 end
+function World:unwatch(folder)
+	for _,link in ipairs(self.folderLinks[folder]or{})do link:Disconnect()end
+	self.folderLinks[folder]=nil
+end
 function World:bind(room)
 	if self.room==room then return end
+	for folder in pairs(table.clone(self.folderLinks))do self:unwatch(folder)end
 	for _,link in ipairs(self.roomLinks)do link:Disconnect()end
 	table.clear(self.roomLinks);table.clear(self.late)
 	self:restoreAll(self.surfaces)
+	table.clear(self.refused)
 	self.room,self.folders=room,{}
 	self:dropAdditions()
 	if not room then return end
 	table.insert(self.roomLinks,room.ChildAdded:Connect(function(child)self:watch(child)end))
 	table.insert(self.roomLinks,room.ChildRemoved:Connect(function(child)
-		if self.folders[child.Name]==child then self.folders[child.Name]=nil;self:queue(nil)end
+		self:unwatch(child)
+		if self.folders[child.Name]~=child then return end
+		self.folders[child.Name]=nil;self:queue(nil)
+		local left=room:FindFirstChild(child.Name)
+		if left then self:watch(left)end
 	end))
 	for _,child in ipairs(room:GetChildren())do self:watch(child)end
 	self:buildAdditions()
 end
-function World:restoreAll(records)
+function World:items(records)
 	local items={}
 	for item in pairs(records)do table.insert(items,item)end
-	for _,item in ipairs(items)do World.restore(records,item)end
+	return items
+end
+function World:restoreAll(records)
+	for _,item in ipairs(self:items(records))do self:restoreItem(records,item)end
 end
 
 -- Additions (AeroAdditions): gone for good this session at budget level 2, and still under Reduced Motion.
@@ -303,11 +348,12 @@ end
 function World:repaintCrowns()
 	if not self.enabled or not self.room then return end
 	local meshes=self.folders.World
+	table.clear(self.refused)
 	if not meshes then return end
 	for _,part in ipairs(meshes:GetChildren())do
 		if not part:IsA("BasePart")or Values.kind(part.Name)~=Values.CrownKind then continue end
-		for _,child in ipairs(part:GetChildren())do World.restore(self.surfaces,child)end
-		World.restore(self.surfaces,part)
+		for _,child in ipairs(part:GetChildren())do self:restoreItem(self.surfaces,child)end
+		self:restoreItem(self.surfaces,part)
 		local ok,problem=pcall(self.paintCrown,self,part)
 		if not ok then self:complain(problem)end
 	end
