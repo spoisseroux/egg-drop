@@ -17,7 +17,7 @@ import re
 import sys
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
@@ -500,27 +500,141 @@ def t4():
     return c
 
 
+def park_plate(ox=150, blur=1.6):
+    """The real Pet Park at dusk, cropped to cover the frame and pushed back a touch."""
+    im = Image.open(os.path.join(CAP, "raw", "park-plate.jpg")).convert("RGB")
+    k = H / im.height
+    im = im.resize((round(im.width * k), H), Image.LANCZOS).crop((round(ox * k), 0, round(ox * k) + W, H))
+    im = im.filter(ImageFilter.GaussianBlur(blur))
+    im = ImageEnhance.Color(im).enhance(1.10)
+    im = ImageEnhance.Brightness(im).enhance(1.04)
+    a = np.asarray(im).astype(np.float32)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    # a navy wash top-left so the caption reads, and a gentle corner vignette
+    v = np.clip(1 - np.hypot((xx - 200) / 1050, (yy - 60) / 520), 0, 1)[..., None] ** 1.3 * 0.62
+    a = a * (1 - v) + np.array(NAVY, np.float32) * v
+    e = np.clip(np.hypot((xx - W / 2) / (W / 2), (yy - H / 2) / (H / 2)) - 0.85, 0, 1)[..., None] * 0.5
+    a = a * (1 - e) + np.array((40, 20, 70), np.float32) * e
+    return Image.fromarray(a.clip(0, 255).astype(np.uint8)).convert("RGBA"), k
+
+
+def heart(c, cx, cy, r, color=(255, 92, 150), rot=0):
+    s = 4
+    n = int(r * 3) * s
+    big = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(big)
+    m, R = n / 2, r * s
+
+    def shape(R, fill):
+        d.ellipse((m - R, m - R * 0.95, m, m + R * 0.05), fill=fill)
+        d.ellipse((m, m - R * 0.95, m + R, m + R * 0.05), fill=fill)
+        d.polygon([(m - R * 0.96, m - R * 0.25), (m + R * 0.96, m - R * 0.25), (m, m + R * 0.95)], fill=fill)
+    shape(R, (255, 255, 255, 255))
+    shape(R * 0.78, color + (255,))
+    im = big.resize((n // s, n // s), Image.LANCZOS).rotate(rot, Image.BICUBIC)
+    bi.paste(c, drop(im, 4, 0.25, 4), (int(cx - im.width / 2), int(cy - im.height / 2)))
+
+
+def note(c, cx, cy, r, color=(255, 255, 255), rot=0):
+    s = 4
+    n = int(r * 4) * s
+    big = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(big)
+    m, R = n / 2, r * s
+    for w, col in ((R * 0.30, NAVY + (255,)), (0, color + (255,))):
+        d.ellipse((m - R - w, m + R * 0.3 - w, m + w, m + R * 1.1 + w), fill=col)
+        d.rectangle((m - R * 0.22 - w, m - R * 1.2 - w, m + w, m + R * 0.7 + w), fill=col)
+        d.polygon([(m - w, m - R * 1.2 - w), (m + R * 0.8 + w, m - R * 0.7 - w), (m + R * 0.8 + w, m - R * 0.2 + w),
+                   (m - w, m - R * 0.7 + w)], fill=col)
+    im = big.resize((n // s, n // s), Image.LANCZOS).rotate(rot, Image.BICUBIC)
+    bi.paste(c, im, (int(cx - im.width / 2), int(cy - im.height / 2)))
+
+
+def swish(c, cx, cy, r, a0, a1, width=9, alpha=215):
+    """A curved motion stroke: part of a circle round (cx, cy)."""
+    layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
+    ImageDraw.Draw(layer).arc((cx - r, cy - r, cx + r, cy + r), a0, a1, fill=(255, 255, 255, alpha), width=width)
+    c.alpha_composite(layer.filter(ImageFilter.GaussianBlur(1.0)))
+
+
 def t5():
-    """Play with friends: three pals and their toys on Sky over a Leaf lawn."""
-    c, _ = leaf_floor()
-    glow(c, 960, 560, 900, 0.22)
-    bubbles(c, [(1840, 90, 110), (1690, 60, 44)])
-    put(c, cut("C7a", 0.92), 476, bottom=900)
-    ball = cut("P-toy-ball", 0.34, cool=0)
-    put(c, ball, 652, bottom=915, shadow=False)
-    put(c, cut("C1", 1.22), 980, bottom=1010)
-    bone = cut("P-toy-bone", 0.34, rot=-10, cool=0)
-    put(c, bone, 1180, bottom=1030, shadow=False)
-    hop = cut("CJ", 1.04, rot=-10)
-    hx, top = 1560, 40
-    ground = 1000
-    bi.contact(c, hx, ground, hop.width * 0.20, 12, alpha=70, blur=18)  # far below: she is high up
-    puff(c, 1330, ground - 10)
-    dots(c, 1330, ground - 40, hx - 40, top + hop.height - 40, lift=260)
-    speed_lines(c, hx, top + hop.height + 10, hop.width)
+    """Play with friends: seven pals all over the real Pet Park at dusk."""
+    ox = 150
+    c, k = park_plate(ox)
+
+    def P(px, py):  # plate pixel -> canvas
+        return (px - ox) * k, py * k
+
+    def pal(name, scale, px, py, rot=0.0, ry=10, flip=False, sh=90):
+        im = cut(name, scale, rot, cool=0)
+        if flip:
+            im = ImageOps.mirror(im)
+        x, y = P(px, py)
+        bi.contact(c, x, y - 4, im.width * 0.40, ry, alpha=sh, blur=10)
+        bi.paste(c, im, (int(x - im.width / 2), int(y - im.height)))
+        return x, y - im.height
+
+    # the plate's camera stood on a yellow marker block: lay the kerb beside it over it
+    c.paste(ImageOps.mirror(c.crop((680, 960, 945, H))), (945, 960))
+    glow(c, 1500, 330, 900, 0.16)
+    # ---- on the equipment, far to near
+    # by the slide and the ball mat
+    pal("C7c", 0.36, 1122, 478, rot=-6, ry=8, sh=95)
+    # swing
+    x, y = pal("C7a", 0.40, 418, 520, rot=8, ry=1, sh=0)
+    bi.contact(c, x + 10, P(0, 545)[1], 60, 10, alpha=80, blur=10)
+    swish(c, x - 10, y - 40, 300, 100, 125, width=8)
+    swish(c, x - 10, y - 40, 340, 104, 122, width=6)
+    swish(c, x + 10, y - 40, 300, 52, 76, width=8)
+    # see-saw: Bunny down, Bear up
+    pal("F7b", 0.40, 752, 566, rot=6, ry=6, sh=70)
+    x, y = pal("S14", 0.40, 1003, 494, rot=-8, ry=5, sh=50, flip=True)
+    for dx, a in ((-70, -28), (0, 0), (70, 28)):
+        layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
+        t = np.radians(a)
+        ImageDraw.Draw(layer).line((x + dx, y - 14, x + dx + 46 * np.sin(t), y - 14 - 46 * np.cos(t)),
+                                   fill=(255, 255, 255, 225), width=9)
+        c.alpha_composite(layer.filter(ImageFilter.GaussianBlur(1)))
+    # ---- toys on the lawn
+    for name, s, px, py, rot in (("P-toy-top", 0.26, 452, 662, 14), ("P-toy-bone", 0.28, 1075, 640, -12),
+                                 ("P-toy-carrot", 0.24, 700, 715, 62), ("P-toy-deck", 0.50, 885, 733, -8)):
+        im = cut(name, s, rot, cool=0)
+        x, y = P(px, py)
+        bi.contact(c, x, y - 6, im.width * 0.40, 10, alpha=90, blur=10)
+        bi.paste(c, im, (int(x - im.width / 2), int(y - im.height)))
+    # ---- foreground pals
+    bun = cut("B2", 0.94, cool=0)
+    bi.contact(c, 190, 1062, bun.width * 0.42, 20, alpha=110, blur=14)
+    bi.paste(c, bun, (190 - bun.width // 2, 1075 - bun.height))
+    bear = cut("B1", 1.02, cool=0)
+    bi.contact(c, 1700, 1064, bear.width * 0.42, 20, alpha=110, blur=14)
+    bi.paste(c, bear, (1700 - bear.width // 2, 1078 - bear.height))
+    hop = cut("CJ", 0.92, rot=-8, cool=0)
+    hx, top, ground = 690, 340, 1000
+    bi.contact(c, hx, ground, hop.width * 0.24, 14, alpha=95, blur=16)
+    puff(c, hx - 10, ground - 6)
+    layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    for off, L in ((-0.30, 70), (-0.10, 110), (0.10, 90), (0.30, 60)):
+        x0 = hx + 10 + off * hop.width
+        d.line((x0, top + hop.height + 6, x0 - 8, top + hop.height + 6 + L), fill=(255, 255, 255, 190), width=10)
+    c.alpha_composite(layer.filter(ImageFilter.GaussianBlur(1.6)))
     bi.paste(c, hop, (hx - hop.width // 2, top))
-    car = cut("P-toy-carrot", 0.36, rot=30, cool=0)
-    paste_center(c, car, 1790, 330)
+    # ---- the ball, thrown from the Bear to the Bunny
+    dots(c, 1600, 560, 1110, 330, lift=110, n=8)
+    ball = cut("P-toy-ball", 0.36, rot=20, cool=0)
+    bi.soft_shadow(c, ball, (1040 - ball.width // 2, 300 - ball.height // 2), dx=10, dy=12, blur=12, alpha=0.25)
+    paste_center(c, ball, 1040, 300)
+    swish(c, 1040, 300, 96, -50, 20, width=8)
+    swish(c, 1040, 300, 122, -38, 8, width=6)
+    # ---- joy
+    for hx_, hy_, r, rot in ((470, 520, 26, 14), (1470, 440, 26, -12), (1840, 380, 22, 16), (585, 470, 18, -10)):
+        heart(c, hx_, hy_, r, rot=rot)
+    for nx, ny, r, rot in ((1120, 500, 24, -12), (1330, 470, 18, 10), (520, 600, 18, 12), (1560, 520, 20, 8)):
+        note(c, nx, ny, r, rot=rot)
+    for sx, sy, r in ((930, 470, 24), (1180, 160, 20), (1420, 250, 16), (620, 380, 16), (1600, 150, 22),
+                      (60, 520, 18), (1870, 620, 16), (1010, 900, 18)):
+        sparkle(c, sx, sy, r)
     cap = caption(["play with", "friends"], 700, [0.0, 0.0])
     bi.paste(c, cap, (40, 20))
     ch = chip("park · toys · friends", 34)
@@ -683,7 +797,7 @@ SET_LIST = [
     ("T2-dress-up", lambda: with_mark(t2, pos="tr")),
     ("T3-merge", lambda: with_mark(t3, pos="tr")),
     ("T4-hatch", lambda: with_mark(t4, pos="tr")),
-    ("T5-play", lambda: with_mark(t5)),
+    ("T5-play", lambda: with_mark(t5, pos="tr")),
     ("T6-decks", lambda: with_mark(t6)),
     ("T7-level-up", lambda: with_mark(t7, pos="tr")),
     ("ad-A", lambda: t1()),
