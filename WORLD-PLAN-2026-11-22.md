@@ -103,11 +103,13 @@ Medium, with Light first behind a flag. The Bear reads white, so grass stays mid
 | 8. Aero Medium, pop pad, squish bench | L | Maybe |
 | 9. Crowns sway; residents; Tug, Treasure Hunt | L | **Yes** (crowns) |
 
-## 8. Questions for Spencer
+## 8. Spencer's picks (2026-11-22)
 
-1. Move the Dash start to the east meadow? **Pick: yes (B).**
-2. Keycap path beside spawn? **Pick: yes, the first toy a child meets.**
-3. Aero size? **Pick: Medium, Light first.**
-4. Keep pink blossom as an accent? **Pick: yes.**
-5. "Things to do" in the world and the menu? **Pick: both.**
-6. A shorter race (about 182 studs)? **Pick: yes.**
+"Medium, rework the environment a bit to be more frutiger / 1 easy measure / 2 somewhere else? / 4 make a different shade of green? Or a different red? / 5 board as in pocket deck? Menu only / 6 shorter ig"
+
+1. Dash start: read as **east meadow** (option B).
+2. Keycap path: **not beside spawn**; Fable picks another spot.
+3. Aero: **Medium**, and rework the environment a bit to read as Frutiger Aero (shapes stay, no landscape swap).
+4. Pink trees change: a different green, or a different red; Fable picks, shown to Spencer in captures.
+5. Things to do: **menu only**, no board in the world.
+6. Race: **shorter**.
