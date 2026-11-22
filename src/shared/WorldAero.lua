@@ -8,11 +8,12 @@ local hex=Color3.fromHex
 Aero.Hour=10.5
 Aero.Daylight=.9
 Aero.Lighting=table.freeze({
-	ClockTime=Aero.Hour,Brightness=2.4,ExposureCompensation=0,
-	Ambient=hex("#8C9AA8"),OutdoorAmbient=hex("#9FC4E6"),
+	-- The plan's 2.4 and .4 washed the pale pets to flat white (Studio 2026-11-22); these keep the Bear's muzzle.
+	ClockTime=Aero.Hour,Brightness=1.85,ExposureCompensation=0,
+	Ambient=hex("#7C8894"),OutdoorAmbient=hex("#8CAAC8"),
 	ColorShift_Top=hex("#FFF6E0"),ColorShift_Bottom=hex("#BFE4FF"),
 	-- Pets and water rely on the global specular scale.
-	EnvironmentDiffuseScale=.4,EnvironmentSpecularScale=.2,ShadowSoftness=.5,
+	EnvironmentDiffuseScale=.2,EnvironmentSpecularScale=.2,ShadowSoftness=.5,
 })
 Aero.Atmosphere=table.freeze({Density=.28,Offset=.1,Haze=1.2,Glare=.2,Color=hex("#CFEFFF"),Decay=hex("#8FCBF5")})
 Aero.Grade=table.freeze({Brightness=0,Contrast=.05,Saturation=.12,TintColor=hex("#F6FBFF")})
@@ -59,12 +60,12 @@ Aero.Skins=table.freeze({
 -- Beams and emitters under the room's WaterFlow folder.
 Aero.Falls=ColorSequence.new(hex("#DDF6FF"))
 Aero.Spray=table.freeze({Splash=ColorSequence.new(hex("#F4FCFF")),Mist=ColorSequence.new(hex("#E9F8FF"))})
--- foliage_blossom. Pink cannot multiply to green, so lime drops the SurfaceAppearance and texture for flat Fabric;
--- coral is a tint and keeps the leaf texture.
+-- foliage_blossom. Pink cannot multiply to green, so both drop the SurfaceAppearance and texture for flat smooth crowns.
+-- (A textured crown needs a world export.)
 Aero.CrownKind="foliage_blossom"
 Aero.Crowns=table.freeze({
-	lime={Flat=true,Color=hex("#8FD63F"),Material=Enum.Material.Fabric},
-	coral={Tint=hex("#FF7078")}, -- the tint for coral #F2545B
+	lime={Flat=true,Color=hex("#8FD63F"),Material=Enum.Material.SmoothPlastic}, -- Fabric rendered olive (Studio 2026-11-22)
+	coral={Flat=true,Color=hex("#F2545B"),Material=Enum.Material.SmoothPlastic}, -- as a tint on the leaf texture it rendered near black
 })
 
 -- Additions. Draw calls at worst, all on screen at once: dome 1, lips 3, glints 4 = 8. Station sizes are measured on
