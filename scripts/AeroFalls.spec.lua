@@ -503,7 +503,7 @@ return function(client,offline)
 				assert(e.Texture==Fly.Texture and e.LightInfluence==0 and e.LightEmission==1 and math.abs(e.Drag-Fly.Drag)<1e-6)
 				assert(e:FindFirstChildOfClass("PointLight")==nil and box:FindFirstChildOfClass("PointLight")==nil,"no light")
 				if not offline then
-					assert(e.Lifetime.Min==4 and e.Lifetime.Max==6 and e.Size.Keypoints[1].Value==.6)
+					assert(e.Lifetime.Min==4 and e.Lifetime.Max==6 and near(e.Size.Keypoints[1].Value,.6))
 					local fade=e.Transparency.Keypoints
 					assert(fade[1].Value==1 and fade[#fade].Value==1 and math.abs(fade[2].Time-.2)<1e-6,"1 s in and out of 5")
 				end

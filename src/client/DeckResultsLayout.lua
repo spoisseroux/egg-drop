@@ -74,4 +74,32 @@ function Layout.move(focus,dx,dy,paired)
 	if dy>0 and focus==2 then return focus end
 	return nil
 end
+-- Studio check beta 12 and FABLE-REVIEW-R1 8: the payout pane's foot and its stat rows on a phone.
+Layout.WalletChip=28
+Layout.WalletBottom=8 -- the chip's foot above the pane's bottom
+Layout.WalletGap=6    -- and the scrolling rows end this far above the chip: 42 in all
+Layout.DiscBelow=150  -- a pane narrower than this shows the level as a 14 pt disc with the number only
+-- Pure: how far above the pane's bottom the scrolling rows stop (nothing draws under the wallet chip).
+function Layout.payoutFoot()return Layout.WalletBottom+Layout.WalletChip+Layout.WalletGap end
+-- Pure: one stat row in a pane `paneW` wide with `pad` each side: a 10 pt dot, the name (truncated with an ellipsis
+-- when it must give way, never overlapped), the gain, and on a level-up the "Lv n" pill right-aligned at the padding
+-- (the gain's right edge 6 left of it), or under DiscBelow a 14 pt disc with the number (gaps of 4:
+-- 10 | dot 10 | 4 | name | 4 | gain | 4 | disc 14 | 10). nameW and gainW are the measured words. x in row space.
+function Layout.statRow(paneW,pad,nameW,gainW,up,pillW)
+	local inner=paneW-2*pad
+	local disc=paneW<Layout.DiscBelow
+	local gap=if disc then 4 else 6
+	local out={disc=disc,dot={x=0,w=10}}
+	local right=inner
+	if up then
+		local w=if disc then 14 else(pillW or 34)
+		out.pill={x=inner-w,w=w}
+		right=out.pill.x-gap
+	end
+	local nameX=10+gap
+	local room=math.max(0,right-nameX-gap-gainW)
+	out.name={x=nameX,w=math.min(nameW,room),truncated=nameW>room}
+	out.gain={x=nameX+out.name.w+gap,w=gainW}
+	return out
+end
 return Layout

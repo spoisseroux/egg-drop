@@ -9,10 +9,32 @@ Icons.Ids={
 	racingFlag=97444903136843,  -- icons/racing-flag.png: the chequered flag (the Racing pill, the progress strip's cap)
 	dashWhite=132239421086976,  -- icons/dash-white.png, tintable with ImageColor3
 	jumpWhite=132916023122268,  -- icons/jump-white.png
+	-- FABLE-REVIEW-R1 4: look/ui/spot-wedge.png, the Dash stages' spotlight (256 px white trapezoid, top 18%, bottom
+	-- 80%, 4 px feathered sides). PLACEHOLDER: 0 until it is uploaded; the stages draw no spotlight until then.
+	spotWedge=0,
 }
 -- "rbxassetid://n" for a name, or nil while it is not uploaded.
 function Icons.image(name)
 	local id=Icons.Ids[name]
 	return if type(id)=="number"and id>0 then "rbxassetid://"..id else nil
+end
+-- Every uploaded icon's "rbxassetid://n", in a fixed order (pure).
+function Icons.list()
+	local out={}
+	for _,name in ipairs({"dash","jump","racingFlag","dashWhite","jumpWhite","spotWedge"})do
+		local image=Icons.image(name)
+		if image then table.insert(out,image)end
+	end
+	return out
+end
+-- Fetch them in the background when Dash mounts, so the first countdown's pads are not blank (FABLE-REVIEW-R1 5: the
+-- icons were missing for the first seconds). `provider` is ContentProvider (a stand-in in specs). Never throws.
+function Icons.preload(provider)
+	local list=Icons.list()
+	if #list==0 then return 0 end
+	task.spawn(function()
+		pcall(function()(provider or game:GetService("ContentProvider")):PreloadAsync(list)end)
+	end)
+	return #list
 end
 return Icons

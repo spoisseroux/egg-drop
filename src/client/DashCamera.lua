@@ -81,11 +81,20 @@ function Camera.lineupDistance(aspect)
 	local half=math.tan(math.rad(Camera.Fov)/2)*math.max(.5,aspect or 16/9)
 	return Camera.RowHalf/(Camera.RowShare*half)
 end
-function Camera.lineup(aspect)
+-- FABLE-REVIEW-R1 6: the shot fits the racers present, not eight: its back distance and height scale by
+-- max(.5, (span + 3) / 13.5), span = (count - 1) x 1.5 studs (eight: 1, as before; four: .56, so the row fills 55 to
+-- 65% of the width and the gate posts leave the frame). A missing count is eight.
+function Camera.lineupScale(count)
+	local n=if type(count)=="number"and count>=1 then math.min(math.floor(count),Course.LaneCount)else Course.LaneCount
+	return math.max(.5,((n-1)*Grid.StartStep/100+3)/13.5)
+end
+function Camera.lineup(aspect,count)
 	local x,y,z,yaw=Course.at(0)
 	local want=Camera.lineupDistance(aspect)
 	local back=math.min(Camera.LineupBack,want*math.cos(Camera.LineupPitch))
 	local up=math.clamp(math.sqrt(math.max(0,want*want-back*back)),math.max(Camera.LineupLow,back*math.tan(Camera.LineupPitch)),Camera.LineupHigh)
+	local scale=Camera.lineupScale(count)
+	back,up=back*scale,up*scale
 	local fx,fz=math.sin(yaw),math.cos(yaw)
 	return x-fx*back,y+Camera.LookHeight+up,z-fz*back,x+fx,y+Camera.LookHeight,z+fz
 end

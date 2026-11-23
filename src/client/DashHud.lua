@@ -30,6 +30,8 @@ Hud.IconTop=9
 Hud.WordAt=.76
 Hud.Cap=20
 Hud.CapIn=8 -- the key cap overlaps the pad this much
+Hud.CapEdge=8 -- FABLE-REVIEW-R1 5: a cap's edge at least this far inside the safe area
+Hud.CapText=11 -- and its word at least this size
 Hud.PlaceW=54
 Hud.PlaceH=24
 Hud.StripH=20
@@ -46,7 +48,7 @@ function Hud.layout(W,H)
 	local strip=box(0,14,math.clamp(W-side*2,80,380),Hud.StripH)
 	strip.x=math.floor((W-strip.w)/2)
 	local digitsH=if H<=430 then 84 else 110
-	return{pad=pad,jump=jump,dash=dash,
+	return{W=W,H=H,pad=pad,jump=jump,dash=dash,
 		zoneDash=box(0,0,W/2,H),zoneJump=box(W/2,0,W-math.floor(W/2),H),
 		stones=box(jump.x+(pad-72)/2,jump.y-12-56,72,56),
 		bar=box(dash.x,dash.y-12-14,pad,14),
@@ -54,6 +56,16 @@ function Hud.layout(W,H)
 		digits=box((W-200)/2,math.max(strip.y+strip.h+6,H*Hud.DigitsAt-digitsH/2),200,digitsH),
 		word=box((W-240)/2,math.max(52+digitsH,H/2+digitsH/2-12),240,34),
 		hint=box((W-280)/2,math.max(52+digitsH,H/2+digitsH/2-12)+36,280,34)}
+end
+-- Pure: a key cap `width` px wide on the `name` pad ("jump" or "dash"), overlapping the pad's top right by CapIn; when
+-- that would come nearer than CapEdge to the safe area's right edge, the pad's top left instead (Jump, on the right,
+-- always), so a wide word ("Space", "Shift") grows toward the middle of the screen (Studio check beta 12: "Space" ran
+-- off the right edge; FABLE-REVIEW-R1 5).
+function Hud.capBox(l,name,width)
+	local p=l[name]
+	local x=p.x+p.w-Hud.CapIn
+	if x+width>l.W-Hud.CapEdge then x=p.x+Hud.CapIn-width end
+	return box(math.clamp(x,Hud.CapEdge,math.max(Hud.CapEdge,l.W-Hud.CapEdge-width)),p.y+Hud.CapIn-Hud.Cap,width,Hud.Cap)
 end
 -- Pure: the ring's size as a multiple of the pad, `ticks` before the take-off spot; nil = not shown.
 function Hud.ring(ticks,first)
@@ -185,6 +197,20 @@ function Hud:fit()
 	put(self.place,l.place);put(self.digits,l.digits);put(self.word,l.word);put(self.hint,l.hint);put(self.leave,l.leave)
 	self.ring.Position=UDim2.fromOffset(l.jump.x+l.pad/2,l.jump.y+l.pad/2)
 	self.shown.ring=nil
+	self:placeCaps()
+end
+-- The key caps, in pad space, from Hud.capBox (after a resize and after a new cap).
+function Hud:placeCaps()
+	local l=self.l
+	if not l then return end
+	for name,face in pairs(self.faces)do
+		local cap=face.cap
+		if cap then
+			local key=string.lower(name)
+			local b=Hud.capBox(l,key,cap.Size.X.Offset)
+			cap.AnchorPoint=Vector2.zero;cap.Position=UDim2.fromOffset(b.x-l[key].x,b.y-l[key].y)
+		end
+	end
 end
 -- Pure: the key cap's word for each pad on this input ("" on touch: no cap).
 function Hud.capWords(touch,gamepad)
@@ -192,7 +218,7 @@ function Hud.capWords(touch,gamepad)
 	if gamepad then return "A","RT"end
 	return "Space","Shift"
 end
--- Key caps on the pads (Kit.glyph, at the top right, overlapping by CapIn), and the touch zones only for a touch screen.
+-- Key caps on the pads (Kit.glyph, 20 tall with an 11 pt word, placed by Hud.capBox), and the touch zones only for a touch screen.
 function Hud:keys()
 	local last=UserInputService:GetLastInputType()
 	local touch=last==Enum.UserInputType.Touch or(UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled and not UserInputService.GamepadEnabled)
@@ -205,12 +231,15 @@ function Hud:keys()
 			if word~=""then
 				local Kit=require(script.Parent.DeckKit)
 				local cap=Kit.glyph(face.frame,word,false,Hud.Cap)
-				cap.Name="KeyCap";cap.AnchorPoint=Vector2.new(0,1);cap.Position=UDim2.new(1,-Hud.CapIn,0,Hud.CapIn);cap.ZIndex=8
+				cap.Name="KeyCap";cap.ZIndex=8
+				local word=cap:FindFirstChildWhichIsA("TextLabel")
+				if word and word.TextSize<Hud.CapText then word.TextSize=Hud.CapText end
 				for _,child in ipairs(cap:GetDescendants())do if child:IsA("GuiObject")then child.ZIndex=9 end end
 				face.cap=cap
 			end
 		end
 	end
+	self:placeCaps()
 	local zones=self.racing==true and UserInputService.TouchEnabled
 	self.zones.dash.Visible,self.zones.jump.Visible=zones,zones
 end

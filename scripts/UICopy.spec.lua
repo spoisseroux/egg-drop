@@ -17,7 +17,9 @@ return function(client,parent)
   -- v2 pet names.
   piece="Velvet",level=25,
   -- Stars store packs.
-  stars=60}
+  stars=60,
+  -- Dash level band.
+  band="Full Bloom"}
  local function width(text,role,size)
   local params=Instance.new("GetTextBoundsParams")
   params.Text=text;params.Font=Kit.faceFor(role,size);params.Size=size;params.Width=10000

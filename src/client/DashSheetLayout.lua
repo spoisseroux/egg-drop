@@ -81,8 +81,14 @@ function Layout.results(W,H,opts)
 	out.again=box(p,y,again,48)
 	out.done=box(p+again+8,y,inner-again-8,48)
 	out.h=y+48+p
-	-- The podium step and the medal on the stage.
-	out.podium=box((stageW-132)/2,out.stage.h-(22+8)-24,math.min(132,stageW-16),22)
+	-- The podium step and the medal on the stage. FABLE-REVIEW-R1 7: a tall stage (an Earned or Field row, about 172)
+	-- has a 132 x 22 step 14 above the bottom, an 84 pt pet and a 24 pt hop; a short one (132, prizes off) a 110 x 18
+	-- step 10 above it, a 62 pt pet and a 16 pt hop. The pet stands centred 10 right of the middle, clear of the medal.
+	local tall=out.stage.h>=150
+	local pw,ph,lift=if tall then 132 else 110,if tall then 22 else 18,if tall then 14 else 10
+	pw=math.min(pw,stageW-16)
+	out.podium=box((stageW-pw)/2,out.stage.h-lift-ph,pw,ph)
+	out.pet={height=if tall then 84 else 62,hop=if tall then 24 else 16,shift=10,clear=8}
 	out.medal=box(8,8,40,40)
 	out.card,out.scale=place(W,H,w,out.h)
 	return out

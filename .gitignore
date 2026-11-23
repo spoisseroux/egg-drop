@@ -4,3 +4,4 @@
 
 # Blender auto-backups
 *.blend1
+build/luau-cli/

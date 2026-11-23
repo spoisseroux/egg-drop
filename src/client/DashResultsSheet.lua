@@ -63,7 +63,7 @@ function Sheet.build(card,W,H)
 	local z=panel.ZIndex+2
 	-- The stage: podium, pet, medal, confetti.
 	local pet=o.pet or Pets.byId.pip
-	local stage=Stage.new(panel,g.stage,{kind="podium",pet=pet,appearance=o.appearance,pedestal=g.podium,place=if m.trial then(if m.medal and m.medal.cup then 1 else 4)else(o.place or 4),z=panel.ZIndex+1})
+	local stage=Stage.new(panel,g.stage,{kind="podium",pet=pet,appearance=o.appearance,pedestal=g.podium,frame=g.pet,place=if m.trial then(if m.medal and m.medal.cup then 1 else 4)else(o.place or 4),z=panel.ZIndex+1})
 	card.stage=stage
 	local medal=Kit.frame(stage.root,"Medal",nil,UDim2.fromOffset(g.medal.x+g.medal.w/2,g.medal.y+g.medal.h/2),UDim2.fromOffset(g.medal.w,g.medal.h),999)
 	medal.AnchorPoint=Vector2.new(.5,.5);medal.BackgroundTransparency=0;medal.BackgroundColor3=hex(m.medal and m.medal.color);medal.ZIndex=stage.root.ZIndex+9

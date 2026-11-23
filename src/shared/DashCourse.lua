@@ -21,7 +21,7 @@ Course.LaneCount=8
 Course.LaneStep=50 -- eight lanes inside the 4-stud path
 Course.HurdleHeight=80
 Course.CloverPast=150 -- a lucky clover grows this far past its hurdle [P]
-Course.Pad=table.freeze({x=6700,y=467,z=-1700,r=250}) -- the waiting pad beside the start: the spot joins are measured from
+Course.Pad=table.freeze({x=6600,y=464,z=-2100,r=250}) -- the waiting pad beside the start: the spot joins are measured from
 Course.Main=table.freeze({
 	0,7200,476,-800,200,7001,475,-784,400,6802,475,-766,601,6603,474,-740,800,6406,480,-711,1000,6209,485,-676,1200,6014,473,-630,1400,5823,459,-572,1599,5635,
 	450,-506,1800,5449,441,-431,1999,5265,433,-354,2199,5080,426,-279,2393,4897,423,-216,2593,4717,419,-128,2793,4539,417,-37,2992,4361,424,53,3192,4177,430,

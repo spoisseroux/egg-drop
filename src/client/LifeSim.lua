@@ -515,12 +515,13 @@ function Sim.butterflyLook(b,now)
 	return{wing=wing,body=body,glow=glow}
 end
 -- Body, wing L, wing R (round 3: span 1.2). Each wing is a plate built standing (its Front/Back decals upright) and
--- laid flat by the last -90 about X: image top forward, the Back face up.
+-- laid flat by the last -90 about X: image top forward, the Back face up. FABLE-REVIEW-R1 1: the wings leave from the
+-- body's mid-line, and the body sits .03 forward so a little head shows past the fore wings.
 local flat90=CFrame.Angles(math.rad(-90),0,0)
 function Sim.butterflyParts(root,phi)
-	return{root,
-		root*CFrame.new(-.04,.03,0)*CFrame.Angles(0,0,-phi)*CFrame.new(-.28,0,0)*flat90,
-		root*CFrame.new(.04,.03,0)*CFrame.Angles(0,0,phi)*CFrame.new(.28,0,0)*flat90}
+	return{root*CFrame.new(0,0,-.03),
+		root*CFrame.new(-.03,0,0)*CFrame.Angles(0,0,-phi)*CFrame.new(-.28,0,0)*flat90,
+		root*CFrame.new(.03,0,0)*CFrame.Angles(0,0,phi)*CFrame.new(.28,0,0)*flat90}
 end
 
 -- Birds (brief C1; round 3: GARDEN-LIFE-NEST-LOOK 3) ---------------------------------------------------------------
@@ -732,15 +733,18 @@ end
 local fold=CFrame.Angles(math.rad(-55),0,0)
 function Sim.birdParts(root,wings,flick,phi,head,tau,tuck)
 	local H=root*CFrame.new(0,.37,-.35)*(head or CFrame.identity)
-	local parts={root,H,H*CFrame.new(0,-.02,-.36)*CFrame.Angles(math.rad(-35.26),0,0)*CFrame.Angles(0,math.rad(45),0),
+	-- FABLE-REVIEW-R1 2: an ellipsoid beak straight out of the face (no corner-first turn).
+	local parts={root,H,H*CFrame.new(0,-.03,-.38),
 		H*CFrame.new(.235,.065,-.22),H*CFrame.new(-.235,.065,-.22)}
 	local out=math.rad(Sim.Bird.flick)*(flick or 0)
-	local foldL=root*CFrame.new(-.53,-.02,.15)*CFrame.Angles(0,0,-out)*CFrame.Angles(0,math.rad(12),0)*fold
-	local foldR=root*CFrame.new(.53,-.02,.15)*CFrame.Angles(0,0,out)*CFrame.Angles(0,math.rad(-12),0)*fold
+	-- The folded wings (.95 x .66 plates, FABLE-REVIEW-R1 2) sit further out and back, their tips across the tail root.
+	local foldL=root*CFrame.new(-.54,-.02,.20)*CFrame.Angles(0,0,-out)*CFrame.Angles(0,math.rad(12),0)*fold
+	local foldR=root*CFrame.new(.54,-.02,.20)*CFrame.Angles(0,0,out)*CFrame.Angles(0,math.rad(-12),0)*fold
 	if wings=="fly"then
 		phi=phi or 0
-		local left=root*CFrame.new(-.37,.11,.04)*CFrame.Angles(0,0,-phi)*CFrame.new(-.37,0,0)*CFrame.Angles(0,0,-math.pi/2)
-		local right=root*CFrame.new(.37,.11,.04)*CFrame.Angles(0,0,phi)*CFrame.new(.37,0,0)*CFrame.Angles(0,0,math.pi/2)
+		-- Half the .95 wing out from the shoulder, so the root stays at the shoulder.
+		local left=root*CFrame.new(-.37,.11,.04)*CFrame.Angles(0,0,-phi)*CFrame.new(-.475,0,0)*CFrame.Angles(0,0,-math.pi/2)
+		local right=root*CFrame.new(.37,.11,.04)*CFrame.Angles(0,0,phi)*CFrame.new(.475,0,0)*CFrame.Angles(0,0,math.pi/2)
 		tuck=math.clamp(tuck or 0,0,1)
 		if tuck>0 then left,right=left:Lerp(foldL,tuck),right:Lerp(foldR,tuck)end
 		parts[6],parts[7]=left,right

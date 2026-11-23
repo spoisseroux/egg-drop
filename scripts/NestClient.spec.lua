@@ -267,7 +267,7 @@ return function(client)
 		local function localAt(name)return root:PointToObjectSpace(folder:FindFirstChild(name).CFrame.Position)end
 		local function close(a,b)return(a-b).Magnitude<1e-4 end
 		local mound=folder:FindFirstChild("NestMound")
-		assert(mound.Size==Vector3.new(.42,3.5,3.5)and close(localAt("NestMound"),Vector3.new(0,.21,0)))
+		assert(mound.Size==Vector3.new(.42,3.5,3.5)and close(localAt("NestMound"),Vector3.new(0,.21,0))and mound.Material==Enum.Material.Wood)
 		local twigs=0
 		for _,t in ipairs(mound:GetChildren())do if t.ClassName=="Texture"then twigs+=1;assert(t.Texture==LifeArt.id("nestTwigs")and t.StudsPerTileU==2.4 and t.StudsPerTileV==1.2)end end
 		assert(twigs==4,"twigs on the four curved faces")
@@ -276,8 +276,12 @@ return function(client)
 			local at=localAt("NestRim"..(k+1))
 			local r0=if k%2==0 then 1.42 else 1.50
 			assert(rim.Size==Vector3.new(1.30,.66,.66)and math.abs(Vector3.new(at.X,0,at.Z).Magnitude-r0)<1e-4,"rim "..k)
+			assert(rim.Material==Enum.Material.Wood,"FABLE-REVIEW-R1 3: wood, not varnish")
 			local t=rim:FindFirstChildOfClass("Texture")
 			assert(t and math.abs(t.OffsetStudsU-.37*k)<1e-6)
+			local faces={}
+			for _,c in ipairs(rim:GetChildren())do if c.ClassName=="Texture"then faces[c.Face]=true end end
+			assert(faces[Enum.NormalId.Left]and faces[Enum.NormalId.Right],"twigs on both caps: no flat brown slat")
 		end
 		local straw=folder:FindFirstChild("NestStraw")
 		assert(straw.Size==Vector3.new(.30,2.36,2.36)and close(localAt("NestStraw"),Vector3.new(0,.55,0)))
@@ -299,9 +303,27 @@ return function(client)
 		assert(post.Material==Enum.Material.Wood and board.Material==Enum.Material.Wood and board.Size==Vector3.new(1.3,.8,.08))
 		assert(close(localAt("NestSign"),Vector3.new(-1.95,1.45,-1.03)))
 		local front=root:VectorToObjectSpace(board.CFrame.LookVector)
-		assert(front.Z<-.8 and front.X>.2,"the board faces the front, turned toward the egg: "..tostring(front))
+		assert(front.Z<-.7 and front.X>.5,"the board faces the front, turned toward the egg: "..tostring(front))
+		-- Studio check beta 12: the Front reads from the prompt point and the plaza's middle, the Back from the arrival
+		-- path's mouth (-17, 7) (GARDEN-LIFE-NEST-LOOK 4), each within 40 degrees of square on.
+		local at=board.CFrame.Position
+		local function facing(point,normal)
+			local to=Vector3.new(point.X-at.X,0,point.Z-at.Z).Unit
+			return to:Dot(Vector3.new(normal.X,0,normal.Z).Unit)
+		end
+		local prompt=root*Vector3.new(0,0,-Nest.Front)
+		local look=board.CFrame.LookVector
+		assert(facing(prompt,look)>math.cos(math.rad(40)),"Front toward the prompt point")
+		assert(facing(Vector3.new(Nest.Facing.X,0,Nest.Facing.Z),look)>math.cos(math.rad(40)),"Front toward the plaza's middle")
+		assert(facing(Vector3.new(-17,0,7),-look)>math.cos(math.rad(40)),"Back toward the arrival path's mouth")
 		local words=board:FindFirstChild("Words"):FindFirstChild("Name")
+		local back=board:FindFirstChild("WordsBack")
+		assert(back and back.Face==Enum.NormalId.Back and back.AlwaysOnTop==false)
 		assert(words.Text==Client.signText(r.client.view),"the pet stored at land: "..words.Text)
+		assert(back:FindFirstChild("Name").Text==words.Text,"both faces name the pet")
+		local signDecals={}
+		for _,c in ipairs(board:GetChildren())do if c.ClassName=="Decal"then signDecals[c.Face]=true end end
+		if LifeArt.id("nestSign")then assert(signDecals[Enum.NormalId.Front]and signDecals[Enum.NormalId.Back],"painted on both faces")end
 		assert(Client.signText({pet="pip"})==UICopy.get("onb3.nest.sign",{pet="Bear"}),"a named pet")
 		assert(Client.signText({pet="nobody"})==UICopy.get("onb3.nest.signPlain"))
 		assert(math.abs(Client.EggBase-.64)<1e-9 and Client.BearSpot==Vector3.new(2.2,0,-1.4))

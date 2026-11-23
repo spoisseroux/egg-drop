@@ -108,7 +108,9 @@ function View.new(owner,v)
  -- Payout: rows scroll above the pinned wallet chip.
  local pad=10
  self.amountWidth=44
- self.payout.Size=UDim2.new(1,0,1,-34)
+ -- v3 (FABLE-REVIEW-R1 8): the rows stop 42 above the pane's bottom and the chip sits 8 above it, so nothing
+ -- draws under the chip (Studio check beta 12: the chip covered the Energy row).
+ self.payout.Size=UDim2.new(1,0,1,if self.v3 then -Layout.payoutFoot()else -34)
  self.payoutTitle=labelAt(self.payout,"Payout","Payout",12,"soft",pad,8,l.w-2*pad,16)
  self.rows={};self.amounts={}
  for i=1,4 do
@@ -124,7 +126,8 @@ function View.new(owner,v)
  self.statsGains=labelAt(self.payout,"StatsGains","",12,"text",pad,208,l.w-2*pad,18);self.statsGains.RichText=true
  -- QA v751 P5: the 28 px chip (Kit.WalletSpec[28]) carries the 3D WalletStar; the 20 px one
  -- had an 11 px Star, under WalletStar.MinSize, so it stayed a flat glyph.
- self.wallet=Kit.wallet(self.left,28);self.wallet.root.AnchorPoint=Vector2.new(0,1);self.wallet.root.Position=UDim2.fromOffset(pad,l.h-4)
+ self.wallet=Kit.wallet(self.left,28);self.wallet.root.AnchorPoint=Vector2.new(0,1)
+ self.wallet.root.Position=UDim2.fromOffset(pad,l.h-(if self.v3 then Layout.WalletBottom else 4))
  -- Goals.
  self.goalLabels={}
  self.goalTitle=labelAt(self.goals,"GoalTitle","Goals",12,"soft",pad,if self.tightGoals then 4 else 8,r.w-2*pad,16)
@@ -224,9 +227,10 @@ function View:paintPayoutV3(data,pad,lw)
   if part and not row then
    local frame=Kit.frame(self.payout,"StatGain"..i,nil,UDim2.new(),UDim2.fromOffset(lw-2*pad,18))
    local dot=Kit.frame(frame,"Dot",nil,UDim2.fromOffset(0,4),UDim2.fromOffset(10,10),999);dot.BackgroundTransparency=0
-   local name=Kit.text(frame,"BodyMedium","","text",{Name="Name",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(lw-2*pad-16,18),TextSize=12})
-   local gain=Kit.text(frame,"Strong","","text",{Name="Gain",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(40,18),TextSize=12});Kit.fixedText(gain)
-   local pill=Kit.frame(frame,"LevelUp",nil,UDim2.new(1,0,.5,0),UDim2.fromOffset(34,14),999);pill.AnchorPoint=Vector2.new(1,.5);pill.BackgroundTransparency=0
+   local name=Kit.text(frame,"BodyMedium","","text",{Name="Name",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(lw-2*pad-16,18),TextSize=12,
+    TextWrapped=false,TextTruncate=Enum.TextTruncate.AtEnd})
+   local gain=Kit.text(frame,"Strong","","text",{Name="Gain",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(40,18),TextSize=12,TextWrapped=false});Kit.fixedText(gain)
+   local pill=Kit.frame(frame,"LevelUp",nil,UDim2.new(0,0,.5,0),UDim2.fromOffset(34,14),999);pill.AnchorPoint=Vector2.new(0,.5);pill.BackgroundTransparency=0
    local lv=Kit.text(pill,"Title","","text",{Size=UDim2.fromScale(1,1),TextSize=10,TextXAlignment=Enum.TextXAlignment.Center});Kit.fixedText(lv)
    lv.TextColor3=Color3.fromHex("#15143A")
    row={frame=frame,dot=dot,name=name,gain=gain,pill=pill,lv=lv}
@@ -240,10 +244,21 @@ function View:paintPayoutV3(data,pad,lw)
     row.frame.Position=UDim2.fromOffset(pad,y)
     row.dot.BackgroundColor3=color
     row.name.Text=Copy.get("stats.name."..part.id);row.name.TextColor3=color
+    row.gain.Text="+"..tostring(part.gain or 0);row.gain.TextColor3=Color3.new(1,1,1)
+    local up=part.up==true and type(part.level)=="number"
     local nameW=math.ceil(Kit.measure(row.name.Text,"BodyMedium",12).X)
-    row.gain.Text="+"..tostring(part.gain or 0);row.gain.Position=UDim2.fromOffset(16+nameW+6,0);row.gain.TextColor3=Color3.new(1,1,1)
-    row.pill.Visible=part.up==true and type(part.level)=="number"
-    if row.pill.Visible then row.pill.BackgroundColor3=color;row.lv.Text=Copy.get("bond.short",{count=part.level})end
+    local gainW=math.ceil(Kit.measure(row.gain.Text,"Strong",12).X)+1
+    -- Studio check beta 12: placed by Layout.statRow, so the level never covers the gain (a disc on a narrow pane).
+    local g=Layout.statRow(lw,pad,nameW,gainW,up)
+    row.dot.Position=UDim2.fromOffset(g.dot.x,4)
+    row.name.Position=UDim2.fromOffset(g.name.x,0);row.name.Size=UDim2.fromOffset(g.name.w,18);row.name.Visible=g.name.w>0
+    row.gain.Position=UDim2.fromOffset(g.gain.x,0);row.gain.Size=UDim2.fromOffset(g.gain.w,18)
+    row.pill.Visible=up
+    if up then
+     row.pill.BackgroundColor3=color
+     row.pill.Position=UDim2.new(0,g.pill.x,.5,0);row.pill.Size=UDim2.fromOffset(g.pill.w,14)
+     row.lv.Text=if g.disc then tostring(part.level)else Copy.get("bond.short",{count=part.level})
+    end
     y+=18
    end
   end

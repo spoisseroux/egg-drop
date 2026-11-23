@@ -41,5 +41,38 @@ return function(client)
 		assert(Layout.move(1,0,1,true)==nil,"Replay keeps the old rule (down to Difficulty)")
 		assert(Layout.move(5,0,1,false)==2 and Layout.move(2,0,-1,false)==3,"two full rows: up and down")
 	end)
+	test("Studio check beta 12 / FABLE-REVIEW-R1 8: stat rows never overlap; a disc under 150; the rows stop 42 above the pane's foot",function()
+		assert(Layout.payoutFoot()==42 and Layout.WalletBottom==8 and Layout.WalletChip==28)
+		local function apart(a,b)return a.x+a.w<=b.x or b.x+b.w<=a.x end
+		for paneW=96,320,2 do
+			local inner=paneW-20
+			for _,words in ipairs({{"Heart",22},{"Power",40},{"Energy",60},{"Somewhatlongname",130}})do
+				for _,gain in ipairs({"+2","+58","+180"})do
+					local gainW=measure(gain,12)
+					for _,up in ipairs({false,true})do
+						local g=Layout.statRow(paneW,10,words[2],gainW,up)
+						assert(g.disc==(paneW<150))
+						assert(g.dot.x==0 and g.dot.w==10 and g.name.x>=g.dot.x+g.dot.w)
+						assert(g.name.w>=0 and g.name.w<=words[2]and g.name.truncated==(g.name.w<words[2]))
+						assert(g.gain.x>=g.name.x+g.name.w,"gain after the name")
+						if up then
+							assert(g.pill.x+g.pill.w==inner,"the level right-aligned at the padding")
+							assert(g.pill.w==(if g.disc then 14 else 34))
+							if g.gain.x+g.gain.w<=g.pill.x then
+								assert(g.pill.x-(g.gain.x+g.gain.w)>=(if g.disc then 4 else 6)or g.name.w==0,"the gap before the level")
+							end
+							assert(apart(g.gain,g.pill)or g.name.w==0 and paneW<70,"level over the gain at "..paneW)
+							assert(apart(g.name,g.pill),"level over the name at "..paneW)
+						else
+							assert(g.gain.x+g.gain.w<=inner or g.name.w==0)
+						end
+					end
+				end
+			end
+		end
+		-- Spencer's phone: a 125 pane fits dot, Power, +58 and the disc, about 116 wide, with nothing cut.
+		local g=Layout.statRow(125,10,math.ceil(measure("Power",12)),math.ceil(measure("+58",12)),true)
+		assert(g.disc and not g.name.truncated and g.gain.x+g.gain.w+4<=g.pill.x)
+	end)
 	return{passed=#cases,cases=cases}
 end

@@ -166,9 +166,10 @@ function Sheet.build(card,W,H)
 		if not reduced then
 			scale.Scale=g.scale*.92
 			tween(scale,.22,{Scale=g.scale},Enum.EasingStyle.Back)
-			for _,slice in ipairs(stage.light:GetChildren())do
-				slice.BackgroundTransparency=1
-				pcall(function()TweenService:Create(slice,TweenInfo.new(.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,.1),{BackgroundTransparency=.9}):Play()end)
+			local light=stage.light -- the wedge image, once it is uploaded
+			if light then
+				light.ImageTransparency=1
+				pcall(function()TweenService:Create(light,TweenInfo.new(.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,.1),{ImageTransparency=Stage.Wedge}):Play()end)
 			end
 		end
 	end
