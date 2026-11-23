@@ -111,6 +111,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.DashConfig)
 task.spawn(function()local ok,problem=pcall(function()require(script.AeroConfig).start()end);if not ok then warn("[Aero] config not started: "..tostring(problem))end end)
 -- Things to do off switches (ThingsConfig): the same way, two keys. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.ThingsConfig).start()end);if not ok then warn("[Things] config not started: "..tostring(problem))end end)
+-- Garden finds off switch (FindsConfig): the same way, one key. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.FindsConfig).start()end);if not ok then warn("[Finds] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -839,6 +841,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.AeroConfig).command(message) end) end)
 		-- "/todo <on|off|clear>" and "/todo tips <on|off|clear>": the Things to do switches, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.ThingsConfig).command(message) end) end)
+		-- "/finds <on|off|clear>": the Garden finds switch, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.FindsConfig).command(message) end) end)
 		player.Chatted:Connect(function(message)
 			local amount = type(message) == "string" and tonumber(string.match(message, "^%s*/stars%s+(%d+)%s*$"))
 			if not amount or boards[player] ~= board or board.closing then return end
@@ -973,6 +977,11 @@ local function closeBoard(board)
 	if garden.dashHost then
 		local ok, problem = pcall(garden.dashHost.leave, garden.dashHost, board)
 		if not ok then warn("[Dash] leave: " .. tostring(problem)) end
+	end
+	-- Garden finds: live sparkles and unsaved claims go; a pending find write is retried by CloseProgress.drain.
+	if garden.findsHost then
+		local ok, problem = pcall(garden.findsHost.leave, garden.findsHost, board)
+		if not ok then warn("[Finds] leave: " .. tostring(problem)) end
 	end
 	garden:remove(board.player.UserId)
 	petHello.state:remove(board.player.UserId)
@@ -2032,6 +2041,16 @@ do
 			publishNursery = publishNursery, publishState = publishState, dayOf = Daily.dayOf })
 	end)
 	if not ok then warn("[Dash] not mounted: " .. tostring(problem)) end
+end
+-- Garden finds (FeatureFlags.GardenFinds): nil and nothing made with the build ceiling off. Its own protected
+-- connections; the garden carries the host so a close can reach it. Active play: no round, hatch, race or carry.
+do
+	local ok, problem = pcall(function()
+		garden.findsHost = require(script.FindsHost).mount({ remotes = remotes, garden = garden, boards = boards, players = Players,
+			nursery = Nursery, canProgress = canProgress, publishNursery = publishNursery, publishState = publishState, dayOf = Daily.dayOf,
+			active = function(board) local state = petState(board); return state.alive and not state.conflict end })
+	end)
+	if not ok then warn("[Finds] not mounted: " .. tostring(problem)) end
 end
 
 -- Levels matter: when the runtime switch flips, every player gets a fresh snapshot (medal credit) and
