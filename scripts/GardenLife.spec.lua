@@ -422,10 +422,10 @@ return function(client)
 				for _,p in ipairs(r.parts())do if string.sub(p.Name,1,#name)==name then n+=1 end end
 				assert(n==3,"butterfly parts "..n)
 				local bodyPart=folder:FindFirstChild(name.."Body")
-				assert(bodyPart.Size==Vector3.new(.09,.08,.42)and bodyPart.Color==Life.ButterflyBody and bodyPart.Reflectance==0)
+				assert(bodyPart.Size==Vector3.new(.04,.035,.18)and bodyPart.Color==Life.ButterflyBody and bodyPart.Reflectance==0)
 				assert(bodyPart:FindFirstChild("Spindle")and bodyPart.Spindle.ClassName=="SpecialMesh","a spindle, still 3 parts")
 				local left,right=folder:FindFirstChild(name.."WingL"),folder:FindFirstChild(name.."WingR")
-				for _,plate in ipairs({left,right})do assert(plate.Size==Vector3.new(.56,.67,.02)and plate.Transparency==1)end
+				for _,plate in ipairs({left,right})do assert(plate.Size==Vector3.new(.24,.29,.02)and plate.Transparency==1)end
 				local file,mirror=LifeArt.id(Life.ButterflyArt[slot][1]),LifeArt.id(Life.ButterflyArt[slot][2])
 				for _,d in pairs(faces(left,{[Face.Back]=mirror,[Face.Front]=file}))do assert(isWhite(d.Color3),"full colour")end
 				faces(right,{[Face.Back]=file,[Face.Front]=mirror})

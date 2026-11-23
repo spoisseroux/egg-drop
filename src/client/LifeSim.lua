@@ -297,9 +297,9 @@ end
 local function smooth(t)t=math.clamp(t,0,1);return t*t*(3-2*t)end
 Sim.Butterfly=table.freeze({reach=60,wander=3,speed=.65,restMin=2,restMax=4,low=1.2,high=2.4,perch=.35,restChance=.35,
 	spawnGap=.5,pitch=10,
-	flapHz=table.freeze({2.2,1.6}),flapMid=22,flapAmp=38,glideAngle=28,
+	flapHz=table.freeze({3.0,2.2}),flapMid=22,flapAmp=38,glideAngle=28, -- QA-R2-LOOK 4: small things beat faster
 	glideEvery=table.freeze({1.6,3.2}),glideFor=table.freeze({.6,1.1}),envelope=.25,glideSink=.25,climb=.6,
-	bob=.06,drift=.15,driftHz=.4,wobble=12,wobbleHz=.5,
+	bob=.04,drift=.15,driftHz=.4,wobble=12,wobbleHz=.5,
 	restMid=62,restAmp=14,restHz=.25,blend=.5,fadeIn=1.2,
 	fly=.30,spawn=.34,handFloor=.24,handGap=1.5,handFade=1.5,handEnd=5,handGone=6,fadeOut=.5,
 	glowFrom=.2,glowTo=.9,glowLit=.1,glowDim=.55,glowPulse=1.8,glowSpeed=.25,glowRise=table.freeze({1.5,2}),glowClimb=1.2})
@@ -514,14 +514,16 @@ function Sim.butterflyLook(b,now)
 	end
 	return{wing=wing,body=body,glow=glow}
 end
--- Body, wing L, wing R (round 3: span 1.2). Each wing is a plate built standing (its Front/Back decals upright) and
--- laid flat by the last -90 about X: image top forward, the Back face up. FABLE-REVIEW-R1 1: the wings leave from the
--- body's mid-line, and the body sits .03 forward so a little head shows past the fore wings.
+-- Body, wing L, wing R (QA-R2-LOOK 4: span .52, a tenth of the avatar). Each wing is a plate built standing (its
+-- Front/Back decals upright) and laid flat by the last -90 about X: image top forward, the Back face up. The wings
+-- leave from the body's mid-line, and the body sits a little forward so a little head shows past the fore wings.
 local flat90=CFrame.Angles(math.rad(-90),0,0)
+Sim.ButterflyWing=table.freeze({hinge=.013,half=.12,forward=.013})
 function Sim.butterflyParts(root,phi)
-	return{root*CFrame.new(0,0,-.03),
-		root*CFrame.new(-.03,0,0)*CFrame.Angles(0,0,-phi)*CFrame.new(-.28,0,0)*flat90,
-		root*CFrame.new(.03,0,0)*CFrame.Angles(0,0,phi)*CFrame.new(.28,0,0)*flat90}
+	local W=Sim.ButterflyWing
+	return{root*CFrame.new(0,0,-W.forward),
+		root*CFrame.new(-W.hinge,0,0)*CFrame.Angles(0,0,-phi)*CFrame.new(-W.half,0,0)*flat90,
+		root*CFrame.new(W.hinge,0,0)*CFrame.Angles(0,0,phi)*CFrame.new(W.half,0,0)*flat90}
 end
 
 -- Birds (brief C1; round 3: GARDEN-LIFE-NEST-LOOK 3) ---------------------------------------------------------------

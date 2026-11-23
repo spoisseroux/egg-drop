@@ -76,15 +76,17 @@ Life.BirdLooks=table.freeze({
 	[2]=table.freeze({name="Moss",body=hex("#E6D788"),breast=hex("#A6A45E"),head=hex("#6E7A4A"),tail=hex("#4A5230"),beak=hex("#4A4038"),wing="birdWingMoss"}),
 })
 Life.EyeInk=hex("#14110F")
-Life.ButterflySize=Vector3.new(.09,.08,.42)
+Life.ButterflySize=Vector3.new(.04,.035,.18) -- QA-R2-LOOK 4 (was .09, .08, .42 with the 1.2 span)
+Life.ButterflyWing=Vector3.new(.24,.29,.02)  -- span .52: 1 : 10 of the avatar, 1 : 3 of a pet
 Life.BirdMaterial=Enum.Material.Sand -- matte, fine grain (FABLE-REVIEW-R1 2; Fabric if it reads as gravel)
 Life.BirdBeak=Vector3.new(.10,.09,.24)
 Life.BirdWing=Vector3.new(.04,.95,.66)
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 2): the three leaf emitters. The petal's tint follows the crowns (lime or pink).
+-- QA-R2-LOOK 4: about x .52 (Animal Crossing sized: a leaf is 1 : 21 of the avatar, 1 : 6 of a pet).
 Life.Leaves=table.freeze({
-	table.freeze({name="LifeLeafA",texture="leafA",size={.30,.46,.08,.42}}),
-	table.freeze({name="LifeLeafB",texture="leafB",size={.26,.40,.06,.36}}),
-	table.freeze({name="LifeLeafPetal",texture=nil,size={.22,.34,.05,.30}}),
+	table.freeze({name="LifeLeafA",texture="leafA",size={.16,.24,.04,.22}}),
+	table.freeze({name="LifeLeafB",texture="leafB",size={.14,.21,.03,.19}}),
+	table.freeze({name="LifeLeafPetal",texture=nil,size={.11,.17,.03,.15}}),
 })
 Life.PetalColours=table.freeze({lime=hex("#FFF6C2"),pink=hex("#FFB8D6")})
 Life.LeafAnchor=Vector3.new(4,2,4)
@@ -435,8 +437,8 @@ function Life:enable()
 		local art=Life.ButterflyArt[slot]
 		local file,mirror=LifeArt.id(art[1]),LifeArt.id(art[2])
 		local name="LifeButterfly"..slot.."_"
-		local left=part(folder,name.."WingL","Part",Vector3.new(.56,.67,.02),false)
-		local right=part(folder,name.."WingR","Part",Vector3.new(.56,.67,.02),false)
+		local left=part(folder,name.."WingL","Part",Life.ButterflyWing,false)
+		local right=part(folder,name.."WingR","Part",Life.ButterflyWing,false)
 		local decals={decal(left,Face.Back,mirror,white),decal(left,Face.Front,file,white),
 			decal(right,Face.Back,file,white),decal(right,Face.Front,mirror,white)}
 		local bodyPart=part(folder,name.."Body","Part",Life.ButterflySize,Life.ButterflyBody)

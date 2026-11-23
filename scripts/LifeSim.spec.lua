@@ -256,12 +256,12 @@ return function(client)
 			for _,length in pairs(glidesSeen)do n+=1;assert(length>=.6-1e-6 and length<=1.1+1e-6,"glide "..length)end
 			assert(n>=4,"they glide: "..n)
 		end
-		-- In a glide the wings hold the shallow V (28) and the root sinks .25; flapping at 2.2 Hz, 22 +- 38.
+		-- In a glide the wings hold the shallow V (28) and the root sinks .25; flapping at 3.0 Hz, 22 +- 38.
 		local b={mode="fly",phase=0,glideAt=10,glideEnd=11,lastGlide=-math.huge,position=Vector3.zero,heading=Vector3.new(0,0,-1),born=-10}
 		assert(near(math.deg(Sim.butterflyFlap(b,10.5,0)),28,1e-6)and Sim.butterflyEnvelope(b,10.5)==0)
 		assert(near(Sim.butterflyEnvelope(b,5),1)and near(Sim.butterflyEnvelope(b,11.125),.5))
-		assert(near(math.deg(Sim.butterflyFlap(b,1/(4*2.2),0)),60,1e-4),"the top of the flap at 2.2 Hz")
-		assert(near(math.deg(Sim.butterflyFlap(b,1/(4*1.6),1)),60,1e-4),"1.6 Hz at level 1")
+		assert(near(math.deg(Sim.butterflyFlap(b,1/(4*3.0),0)),60,1e-4),"the top of the flap at 3.0 Hz")
+		assert(near(math.deg(Sim.butterflyFlap(b,1/(4*2.2),1)),60,1e-4),"2.2 Hz at level 1")
 		local level=table.clone(b);level.glideAt,level.glideEnd=100,101
 		local sink=Sim.butterflyRoot(level,10.999,0).Position.Y-Sim.butterflyRoot(b,10.999,0).Position.Y
 		assert(sink>.18 and sink<.32,"the glide sinks .25: "..sink)
@@ -317,8 +317,9 @@ return function(client)
 		local up=-Sim.birdParts(root,"perch",0,0,nil,2,0)[8].UpVector
 		assert(up.Y>tip.Y,"a flick lifts it")
 		local wings=Sim.butterflyParts(root,0)
-		assert(close(wings[2].Position,Vector3.new(-.31,0,0))and close(wings[3].Position,Vector3.new(.31,0,0)),"span 1.2, from the mid-line")
-		assert(close(wings[1].Position,Vector3.new(0,0,-.03)),"the body .03 forward")
+		assert(close(wings[2].Position,Vector3.new(-.133,0,0))and close(wings[3].Position,Vector3.new(.133,0,0)),"span .52 (QA-R2-LOOK 4), from the mid-line")
+		assert(math.abs(2*(.133+.24/2)-.52)<.02,"tip to tip about .52")
+		assert(close(wings[1].Position,Vector3.new(0,0,-.013)),"the body .013 forward")
 		for i=2,3 do
 			assert(close(wings[i].UpVector,Vector3.new(0,0,-1)),"image top forward")
 			assert(close(wings[i].LookVector,Vector3.new(0,-1,0)),"Front face down, so Back is up")
