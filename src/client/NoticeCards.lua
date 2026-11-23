@@ -33,9 +33,10 @@ Notice.ById=table.freeze({
  parkInvite=define("companions","paw","target","show"),
  dashIntro=define("quests","trophy","target","show"),
  dashNew=define("quests","trophy","target","show"),
+ findsIntro=define("results","sparkle","target","show"),
 })
 Notice.Order=table.freeze({"welcome","firstStars","locked","machines","hub","quest","customize","fillLine","item",
- "questDone","questReady","questClaimed","firstSpend","bond","parkInvite","dashIntro","dashNew"})
+ "questDone","questReady","questClaimed","firstSpend","bond","parkInvite","dashIntro","dashNew","findsIntro"})
 Notice.Targets=table.freeze({"quests","hatch","companions","menu","show"})
 -- Values every line can be filled from when the caller has none.
 Notice.Defaults=table.freeze({pet="your pet",reward="",quest="A quest"})

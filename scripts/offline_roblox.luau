@@ -295,6 +295,8 @@ local function build(name)
 	folder("shared");folder("server");folder("client")
 	local replicated=instance("ReplicatedStorage")
 	rawget(replicated,"props").Shared=folders.shared
+	-- ReplicatedStorage:WaitForChild("Shared") (the Things and Finds client modules) finds it too.
+	rawset(folders.shared,"Name","Shared");table.insert(rawget(replicated,"kids"),folders.shared)
 	function game:GetService(service)
 		if service=="ReplicatedStorage"then return replicated end
 		return services[service]or any()

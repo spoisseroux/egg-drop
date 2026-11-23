@@ -10,8 +10,9 @@ local Page={};Page.__index=Page
 Page.Refresh=.5
 Page.Hit=44
 
--- Pure: the rows, in order. ctx: {park, playDate={count,target}, dash={phase,count}, prizes, saved={paid,limit}, new}.
--- Nothing here says Stars unless the race prizes are on.
+-- Pure: the rows, in order. ctx: {park, playDate={count,target}, finds={waiting,count,limit}, dash={phase,count}, prizes,
+-- saved={paid,limit}, new}. Nothing here says Stars unless the race prizes are on. The race stays the last row: paint()
+-- marks it seen only there.
 function Page.rows(ctx)
 	ctx=type(ctx)=="table"and ctx or {}
 	local rows={{id="deck",icon="faceplate",tint="style",name=UICopy.get("things.deck.name"),line=UICopy.get("things.deck.line"),button=UICopy.get("things.play")}}
@@ -20,6 +21,16 @@ function Page.rows(ctx)
 		local target=tonumber(date.target)or 3
 		table.insert(rows,{id="park",icon="paw",tint="companions",name=UICopy.get("park.name"),help="park",
 			line=UICopy.get("park.playDate",{count=math.clamp(tonumber(date.count)or 0,0,target),target=target}),button=UICopy.get("things.show")})
+	end
+	local finds=ctx.finds
+	if type(finds)=="table"then
+		local waiting=math.max(0,math.floor(tonumber(finds.waiting)or 0))
+		local limit=tonumber(finds.limit)
+		local line=if waiting==1 then UICopy.get("things.finds.one")
+			elseif waiting>0 then UICopy.get("things.finds.waiting",{count=waiting})
+			elseif limit and(tonumber(finds.count)or 0)>=limit then UICopy.get("things.finds.done")
+			else UICopy.get("things.finds.later")
+		table.insert(rows,{id="finds",icon="sparkle",tint="garden",name=UICopy.get("things.finds.name"),line=line,button=UICopy.get("things.show")})
 	end
 	local dash=ctx.dash
 	if type(dash)=="table"then
@@ -33,7 +44,9 @@ function Page.rows(ctx)
 	end
 	return rows
 end
--- Pure: where the rows and their parts sit on a W x H page (the hub's own panel or phone sheet).
+-- Pure: where the rows and their parts sit on a W x H page (the hub's own panel or phone sheet). Rows that do not fit at
+-- Hit + 2 px (four on the smallest phone) scroll: `scroll` = {y, h, canvas} is the window on the page, and the rows' y
+-- are then in the canvas.
 function Page.layout(W,H,phone,count)
 	local x,y,bottom,gap=24,96,548,14
 	if phone then x,y,bottom,gap=20,64,H-22,6 end
@@ -48,9 +61,11 @@ function Page.layout(W,H,phone,count)
 	local tx=pad+disc+(if phone then 10 else 18)
 	local nameH,lineH=if phone then 22 else 30,if phone then 18 else 24
 	local ty=math.floor((h-nameH-lineH)/2)
-	local rows={}
+	local rows,scroll={},nil
+	local total=count*h+math.max(0,count-1)*gap
+	if count>0 and y+total>bottom then scroll={y=y,h=bottom-y,canvas=total};y=0 end
 	for i=1,count do rows[i]={x=x,y=y+(i-1)*(h+gap),w=w,h=h}end
-	return{rows=rows,pad=pad,disc=disc,go=go,help=help,name={x=tx,y=ty,w=help.x-8-tx,h=nameH},line={x=tx,y=ty+nameH,w=help.x-8-tx,h=lineH},
+	return{rows=rows,scroll=scroll,pad=pad,disc=disc,go=go,help=help,name={x=tx,y=ty,w=help.x-8-tx,h=nameH},line={x=tx,y=ty+nameH,w=help.x-8-tx,h=lineH},
 		nameSize=if phone then 17 else 24,lineSize=if phone then 13 else 17}
 end
 
@@ -90,11 +105,19 @@ function Page:build(ctx)
 	table.clear(self.views)
 	local rows=Page.rows(self:context(ctx))
 	local L=Page.layout(self.o.W,self.o.H,self.o.phone,#rows)
+	local holder=self.root
+	self.scroller=nil
+	if L.scroll then
+		holder=Kit.node("ScrollingFrame",self.root,{Name="Rows",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(0,L.scroll.y),
+			Size=UDim2.fromOffset(self.o.W,L.scroll.h),CanvasSize=UDim2.fromOffset(0,L.scroll.canvas),ScrollBarThickness=4,
+			ScrollingDirection=Enum.ScrollingDirection.Y,ElasticBehavior=Enum.ElasticBehavior.Never,Selectable=false,ZIndex=self.root.ZIndex})
+		self.scroller=holder
+	end
 	local ids={}
 	for index,row in ipairs(rows)do
 		table.insert(ids,row.id)
 		local r=L.rows[index]
-		local card=Kit.card(self.root,"Row_"..row.id,nil,{role="raised",radius=if self.o.phone then 12 else 16})
+		local card=Kit.card(holder,"Row_"..row.id,nil,{role="raised",radius=if self.o.phone then 12 else 16})
 		card.Position=UDim2.fromOffset(r.x,r.y);card.Size=UDim2.fromOffset(r.w,r.h)
 		local disc=Kit.frame(card,"IconDisc",nil,UDim2.fromOffset(L.pad,math.floor((r.h-L.disc)/2)),UDim2.fromOffset(L.disc,L.disc),999)
 		disc.BackgroundTransparency=0;disc.BackgroundColor3=Kit.tintColor(row.tint)or Kit.Color.stars
@@ -171,6 +194,13 @@ function Page:focus(row,col,instant)
 	local view=self.views[self.row]
 	if not view then return end
 	if self.col==1 and not view.ask then self.col=2 end
+	-- A scrolled list brings the focused row into its window.
+	local scroller,L=self.scroller,self.layoutCache
+	if scroller and L and L.scroll then
+		local r,top=L.rows[self.row],scroller.CanvasPosition.Y
+		if r.y<top then scroller.CanvasPosition=Vector2.new(0,r.y)
+		elseif r.y+r.h>top+L.scroll.h then scroller.CanvasPosition=Vector2.new(0,r.y+r.h-L.scroll.h)end
+	end
 	local target=if self.col==1 then view.ask else view.go
 	local ring=self.o.ring
 	if ring and self.o.shown()then

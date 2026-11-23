@@ -4568,6 +4568,37 @@ do
  if ok and clientUI.dash then gui.Destroying:Connect(function()clientUI.dash:destroy()end)
  elseif not ok then warn("[Dash] not mounted: "..tostring(problem))end
 end
+-- Garden finds (FindsClient): nil with the build ceiling off; with the switch off it only watches for the switch. The
+-- claim goes only while my pet is out and the garden is free (Room mode, no menu or card, no race seat, no close-up,
+-- no petting). clientUI.finds:summary() is what Things to do reads.
+do
+ local ok,problem=pcall(function()
+  local How=require(script.HowItWorks)
+  local Confirm=require(script.ConfirmDialog)
+  clientUI.finds=require(script.FindsClient).mount({remotes=remotes,audio=audio,player=player,
+   reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+   root=function()
+    local character=player.Character
+    local root=character and character:FindFirstChild("HumanoidRootPart")
+    local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+    return if root and humanoid and humanoid.Health>0 then root.Position else nil
+   end,
+   petOut=function()
+    local id=board:GetAttribute("CompanionId")
+    return roomView.pet~=nil and type(id)=="string"and id~=""
+   end,
+   free=function()
+    return board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy
+     and not roomView.dashHeld and roomView.focusing~=true and roomView.focusTransitioning~=true and roomView.petContactActive~=true
+     and(roomView.pet==nil or roomView.pet.petting~=true)and(clientUI.dash==nil or clientUI.dash.seat==nil)
+   end,
+   busy=function()
+    return clientUI.anyModalOpen()==true or How.isOpen()or Confirm.isOpen()or clientUI.arrivalHatch:isOpen()
+   end})
+ end)
+ if ok and clientUI.finds then gui.Destroying:Connect(function()clientUI.finds:destroy()end)
+ elseif not ok then warn("[Finds] not mounted: "..tostring(problem))end
+end
 -- Things to do (Shared.Things): nothing at all with the build ceiling off; with the switch off only the switches are
 -- watched. clientUI.things is what the Pocket menu's page (MachineHub), the coach's last line (ThingsTips) and the trail
 -- (ThingsTrail) ask.
@@ -4583,6 +4614,7 @@ do
   local Copy=require(ReplicatedStorage.Shared.UICopy)
   local Attract=require(script.StationAttract)
   local Tips=require(script.ThingsTips)
+  local Finds=require(ReplicatedStorage.Shared.Finds)
   local Guide=require(script.FirstSpendGuide)
   local How=require(script.HowItWorks)
   local Rail=require(script.NotificationRail)
@@ -4595,6 +4627,7 @@ do
    return if root and humanoid and humanoid.Health>0 then root.Position else nil
   end
   local function dashNow()return if Dash.on()and clientUI.dash then clientUI.dash:summary()else nil end
+  local function findsNow()return if Finds.on()and clientUI.finds then clientUI.finds:summary()else nil end
   -- The waiting pad, where the race's prompt is: the same numbers the gate is built from.
   local function dashGate()
    local pad=Course.Pad
@@ -4632,7 +4665,12 @@ do
   function things.new()return dashNow()~=nil and not Coach.has(clientUI.coach.mask,"dashSeen")end
   function things.context()
    local state=nurseryState or {}
-   return{park=Attract.parkAnchor()~=nil,playDate=state.playDate,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new()}
+   local finds=findsNow()
+   if finds then
+    local saved=type(state.finds)=="table"and state.finds or {}
+    finds={waiting=finds.waiting,count=tonumber(saved.count)or 0,limit=tonumber(saved.limit)or Finds.DailyLimit}
+   end
+   return{park=Attract.parkAnchor()~=nil,playDate=state.playDate,finds=finds,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new()}
   end
   function things.seen(id)
    if id=="dash"and Things.on()and not Coach.has(clientUI.coach.mask,"dashSeen")then clientUI.coach:mark("dashSeen")end
@@ -4642,11 +4680,18 @@ do
    local from=Things.on()and rootPosition()
    if not from then return false end
    if id=="park"or id=="parkInvite"then return trail:start({position=parkGate(from),name=Copy.get("park.name")})end
+   if id=="finds"or id=="findsIntro"then
+    local finds=findsNow()
+    if not(finds and finds.nearest)then return false end
+    return trail:start({position=finds.nearest,name=Copy.get("finds.name")})
+   end
    if dashNow()==nil then return false end
    return trail:start({position=dashGate(),name=Copy.get("dash.title")})
   end
   function things.act(id)
    if not Things.on()or not closeMenu then return false end
+   -- Nothing waiting: no trail to lay, so the page stays.
+   if id=="finds"then local finds=findsNow();if not(finds and finds.nearest)then return false end end
    closeMenu()
    if id~="deck"then things.show(id);return true end
    -- The Deck: as its own button in the garden (a race seat is asked about first).
@@ -4682,6 +4727,8 @@ do
    ctx.dashOn,ctx.raced=dash~=nil,dash~=nil and dash.raced
    ctx.playDates=if type(state.playDate)=="table"then state.playDate.count else 0
    ctx.returning,ctx.gate=things.returning,gate(ctx.roomFor)
+   local finds=findsNow()
+   ctx.findsNear=finds~=nil and finds.distance~=nil and finds.distance<=Finds.Notice
    return Tips.due(ctx)
   end
   function things.blocked(roomFor,started)return Tips.blocked(gate(roomFor),started)end

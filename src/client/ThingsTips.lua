@@ -3,6 +3,7 @@
 --   parkInvite  a new player, after the garden tour and the first egg, who has not been to the Pet Park
 --   dashIntro   Garden Dash is on and the first egg is done: after a play date, or at once for a returning player
 --               (who reads "New in the garden"); never for someone who has raced
+--   findsIntro  Garden finds is on and one of my finds sparkles within Finds.Notice (veterans too)
 -- Each once ever (coachMask). At most Max lines a session, Gap seconds apart, counted when a line is really shown.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
@@ -43,7 +44,7 @@ function Tips.blocked(g,started)
 	if g.railEmpty~=true then return "rail"end
 	return nil
 end
--- ctx: {mask, seen, totalWins, owned, firstEgg, dashOn, raced, playDates, returning, shown, lastAt, now, gate}.
+-- ctx: {mask, seen, totalWins, owned, firstEgg, dashOn, raced, playDates, returning, findsNear, shown, lastAt, now, gate}.
 -- The coach id due now and the NoticeCards id it reads from, or nil.
 function Tips.due(ctx)
 	if(ctx.owned or 0)<=0 or ctx.firstEgg~=true then return nil end
@@ -55,6 +56,8 @@ function Tips.due(ctx)
 	elseif ctx.dashOn==true and ctx.raced~=true and not Coach.has(ctx.mask,"dashSeen")and Coach.wantsIntro("dashIntro",ctx)
 		and(ctx.returning==true or(ctx.playDates or 0)>=1)then
 		id,copy="dashIntro",if ctx.returning==true then "dashNew"else "dashIntro"
+	elseif ctx.findsNear==true and Coach.wantsIntro("findsIntro",ctx)then
+		id,copy="findsIntro","findsIntro"
 	end
 	if not id or Tips.blocked(ctx.gate)then return nil end
 	return id,copy
