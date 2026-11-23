@@ -30,6 +30,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
 | 15 | **Dewdrop fruit** (Garden life, looks only) | Built on a branch, offline specs green; Studio and Fable's capture review next | Two or three glossy honey-coral drops hang under each lime tree and sway; in a strong gust one lets go, bounces twice, rolls downwind, rests, fades and grows back later. Your pet beside a fallen one bats it once. Never on a find, the race course or the park; nothing to collect. Reduced Motion: they just hang. Switch: `/alive life off` |
+| 17 | **Island re-export: swaying trees, new waterfall shape, rocks** | Built on branch `claude/island-reexport-337cd0`, checked in Studio, Fable GO, waits for your OK to publish to the beta | Trees sway in the wind from the trunk top (gentle in the breeze, a bigger lean in a gust); on a phone the 6 nearest move. Lime trees are a touch darker underneath. Tumble Falls: tapered, wavy, bowed sheets with foam lips, dark wet rocks at its foot, on the ledge and in the pool; you can't walk through the rocks; pets never stand on them. Props' colours slightly softer. `/aero off` puts today's trees and falls back at once; `/alive wind off` keeps the new trees but still |
 
 ## Scoped, not built
 

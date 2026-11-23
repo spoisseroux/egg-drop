@@ -64,6 +64,9 @@
       },
       "PocketDeckSlim": {
         "$path": "assets/deck/PocketDeckSlim.rbxmx"
+      },
+      "AeroKit": {
+        "$path": "assets/world/AeroKit.rbxmx"
       }
     },
     "ServerScriptService": {

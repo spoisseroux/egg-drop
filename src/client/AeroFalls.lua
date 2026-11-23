@@ -52,10 +52,14 @@ end
 local function fallFrame(sheet)
 	local n=vector(sheet.normal).Unit
 	local t=Vector3.new(n.Z,0,-n.X).Unit
-	return{name=sheet.name,top=vector(sheet.top),bottom=vector(sheet.bottom),width0=sheet.width0,width1=sheet.width1,n=n,t=t}
+	return{name=sheet.name,top=vector(sheet.top),bottom=vector(sheet.bottom),width0=sheet.width0,width1=sheet.width1,n=n,t=t,curve=0}
 end
 
-function Falls.build(folder,data)
+-- kit (WorldAeroKit, while the world kit stands): its sheets bow out along their height on the curve a beam draws with
+-- CurveSize0 = curve and CurveSize1 = -curve (scripts/build_world_aero_kit.py), so strands and ribbons take that curve
+-- (AeroWorld switches the flat server beams off while the kit stands: they would cut through the bow), and the kit's
+-- foam lip meshes replace the capsule lips.
+function Falls.build(folder,data,kit)
 	local root=Instance.new("Folder")
 	root.Name=Falls.Name
 	local layers={}
@@ -63,7 +67,11 @@ function Falls.build(folder,data)
 	local tiers={}
 	local sky
 	for _,sheet in ipairs(data and data.beams and data.beams.sheets or {})do
-		if Look.Tiers[sheet.name]then tiers[Look.Tiers[sheet.name]]=fallFrame(sheet)
+		if Look.Tiers[sheet.name]then
+			local fall=fallFrame(sheet)
+			local shaped=kit and kit.falls and kit.falls[sheet.name]
+			if shaped then fall.curve,fall.kit=shaped.curve,true end
+			tiers[Look.Tiers[sheet.name]]=fall
 		elseif sheet.name==Look.Sky then sky=fallFrame(sheet)end
 	end
 
@@ -91,12 +99,13 @@ function Falls.build(folder,data)
 		beam.Name=name
 		beam.Attachment0,beam.Attachment1=a0,a1
 		beam.Width0,beam.Width1=fall.width0*spec.scale+spec.grow,fall.width1*spec.scale+spec.grow
+		beam.CurveSize0,beam.CurveSize1=fall.curve,-fall.curve
 		beam.FaceCamera=false
 		beam.Texture=if name=="Ribbon"then Look.Textures.Ribbon else Look.Textures.Strand
 		beam.TextureMode=Enum.TextureMode.Wrap
 		beam.TextureLength=length
 		beam.TextureSpeed=spec.speed
-		beam.Segments=6
+		beam.Segments=if fall.kit then 14 else 6 -- the kit sheet's 14 rows
 		beam.Color=ColorSequence.new(spec.Color)
 		beam.Transparency=spec.Transparency
 		beam.LightInfluence=1
@@ -135,11 +144,13 @@ function Falls.build(folder,data)
 			if not fall then continue end
 			for _,strand in ipairs(Look.Strands)do sheetBeam("Tumble",strand.name,fall,strand,strand.length)end
 			sheetBeam("Tumble","Ribbon",fall,Look.Ribbon,Look.Ribbon.length)
-			local lip=Look.Lips[tierName]
-			local roll=part(root,"Lip"..tierName,Vector3.new(lip.length,lip.thickness,lip.thickness),
-				frame(fall.top+fall.n*lip.out,fall.t,UP,fall.t:Cross(UP)),Enum.PartType.Cylinder)
-			roll.Material,roll.Color,roll.Reflectance=Enum.Material.SmoothPlastic,Look.LipLook.Color,Look.LipLook.Reflectance
-			add({group="Tumble",name="Lip",kind="part",item=roll})
+			if not fall.kit then
+				local lip=Look.Lips[tierName]
+				local roll=part(root,"Lip"..tierName,Vector3.new(lip.length,lip.thickness,lip.thickness),
+					frame(fall.top+fall.n*lip.out,fall.t,UP,fall.t:Cross(UP)),Enum.PartType.Cylinder)
+				roll.Material,roll.Color,roll.Reflectance=Enum.Material.SmoothPlastic,Look.LipLook.Color,Look.LipLook.Reflectance
+				add({group="Tumble",name="Lip",kind="part",item=roll})
+			end
 		end
 		local function at(spec)
 			local base=if spec.at=="ledge"then lower.top else impact

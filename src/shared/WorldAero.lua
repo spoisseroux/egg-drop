@@ -47,6 +47,9 @@ Aero.Surfaces=table.freeze({
 	cloud={Color=hex("#FFFFFF")},
 	foam={Color=hex("#FFFFFF")},
 	bubble={Color=hex("#DEF3FF"),Transparency=.55,Reflectance=.2},
+	-- WORLD-PLAN slice 9: the props' palette at saturation 1.0, not the dusk grade's 1.1 (scripts/draw_aero_palette.py;
+	-- the island's own map is bound to the native collision checkpoint, so the swap is here).
+	palette={TextureID="rbxassetid://121108587763392"},
 })
 -- Scrolling Texture layers (LoungeWorldV7Art.WaterSkins) by layer name, then by the water under them.
 Aero.Skins=table.freeze({

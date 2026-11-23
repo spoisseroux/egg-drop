@@ -95,6 +95,26 @@ return function(client,offline)
 	end
 
 	local ok,problem=pcall(function()
+		test("with the world kit standing: strands and ribbons take its curve, its lip meshes replace the capsules",function()
+			local kit={falls={Water_TumbleFalls_Upper={curve=2},Water_TumbleFalls_Lower={curve=2}}}
+			local added=Additions.build({parent=holder,data=DATA,clouds=false,groundY=function()return 4.5 end,hour=false,kit=kit})
+			for _,each in ipairs(added.falls.layers)do assert(each.name~="Lip","no capsule lip while the kit stands")end
+			for _,name in ipairs({"StrandA","StrandB","Ribbon"})do
+				for nth=1,2 do
+					local beam=layer(added,"Tumble",name,nth).item
+					assert(beam.CurveSize0==2 and beam.CurveSize1==-2 and beam.Segments==14,name..nth)
+				end
+			end
+			local sky=layer(added,"Sky","StrandA").item
+			assert(sky.CurveSize0==0 and sky.CurveSize1==0 and sky.Segments==6,"Sky Falls has no kit sheet")
+			added.destroy()
+			-- And without it, today's flat falls exactly.
+			added=build(holder)
+			assert(layer(added,"Tumble","Lip",1)and layer(added,"Tumble","Lip",2))
+			local flat=layer(added,"Tumble","StrandA",2).item
+			assert(flat.CurveSize0==0 and flat.CurveSize1==0 and flat.Segments==6)
+			added.destroy()
+		end)
 		test("the falls the layers use are the walk map's",function()
 			local data=require(Shared.WorldV7Data)
 			local byName={}
