@@ -115,6 +115,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.ThingsConfi
 task.spawn(function()local ok,problem=pcall(function()require(script.OnboardConfig).start()end);if not ok then warn("[Onboard] config not started: "..tostring(problem))end end)
 -- Garden finds off switch (FindsConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.FindsConfig).start()end);if not ok then warn("[Finds] config not started: "..tostring(problem))end end)
+-- Garden hour off switch (GardenHourConfig): the same way, one key, but missing = off. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.GardenHourConfig).start()end);if not ok then warn("[Hour] config not started: "..tostring(problem))end end)
 -- Island edges off switch (IslandBoundsConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.IslandBoundsConfig).start()end);if not ok then warn("[Bounds] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
@@ -851,6 +853,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.IslandBoundsConfig).command(message) end) end)
 		-- "/finds <on|off|clear>": the Garden finds switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.FindsConfig).command(message) end) end)
+		-- "/hour <on|off|clear>" and "/hour at <0-3599>": the garden hour switch and its test clock, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.GardenHourConfig).command(message) end) end)
 		player.Chatted:Connect(function(message)
 			local amount = type(message) == "string" and tonumber(string.match(message, "^%s*/stars%s+(%d+)%s*$"))
 			if not amount or boards[player] ~= board or board.closing then return end

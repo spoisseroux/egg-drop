@@ -52,7 +52,10 @@
 -- OnboardingV3 (ONBOARDING-V3-PLAN-2026-11-23): the build ceiling for follow the Bear, the need bubbles and the Sleepy
 -- Nest. Also needs the beta place or Studio (Onboard.PlaceId), Things to do on, and the server's switches (OnboardConfig:
 -- onboard_follow, onboard_needs, onboard_nest). Missing = off.
+-- GardenHour (GARDEN-HOUR-BUILD-PLAN-2026-11-23): the build ceiling for the one-hour day and night. Also needs the beta
+-- place or Studio (GardenHour.PlaceId), the Aero look on, and the server's switch (GardenHourConfig: garden_hour).
+-- Missing = off. Never touches DayNight.
 return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,
- LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true})
+ LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true})
