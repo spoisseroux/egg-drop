@@ -31,6 +31,9 @@ function Session.ready(handle, busy)
 	return handle.status == "Ready" and not busy
 end
 function Session.hydrate(profile, handle)
+	-- Beta (12) QA T1: a profile whose first load was refused (ProgressKey could not read the fresh-save pointer) took
+	-- the base key as a placeholder; the save it now joins is the handle's (the key ProgressKey resolved on reload).
+	if Session.ready(handle) and profile.loadFailed and type(handle.key) == "string" then profile.key = handle.key end
 	if not Session.ready(handle) or not handle.profileRecord
 		or not Progress.hydrate(profile, handle.profileRecord) then return false end
 	local mask = handle.state.inventoryMask

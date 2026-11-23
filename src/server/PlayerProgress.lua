@@ -15,6 +15,8 @@ local pending = {}
 local flushRequested,flushQueued,flushAttempts={},{},{}
 local flush,scheduleFlush
 local store = require(script.Parent.ProgressStore)
+-- Beta (12) QA T1: the save key comes from ProgressKey (player_<id>, or the owner's fresh-save key on the beta).
+local ProgressKey = require(script.Parent.ProgressKey)
 local writer = game.JobId
 local function appearanceStamp(value)
 	return if type(value)=="number" and value==value and value>=0 and value<=9007199254740000 and value%1==0 then value else 0
@@ -127,11 +129,18 @@ local function decode(key, record, success)
 end
 
 function Progress.fromRecord(userId, record, success)
-	return decode("player_" .. userId, record, success ~= false)
+	return decode(ProgressKey.of(userId), record, success ~= false)
 end
 
 function Progress.load(userId)
-	local key = "player_" .. userId
+	local key = ProgressKey.resolve(userId)
+	if not key then
+		-- The fresh-save pointer could not be read: refuse like a lock (loadFailed: nothing is saved) and let the
+		-- reload loop try again. Never the base key by default.
+		local profile = decode(ProgressKey.base(userId), nil, false)
+		profile.newSave = false
+		return profile
+	end
 	local success, record
 	for attempt = 1, 3 do
 		success, record = pcall(store.GetAsync, store, key)

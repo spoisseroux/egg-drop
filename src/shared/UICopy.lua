@@ -208,19 +208,24 @@ local Table={
  -- Onboarding v3 (ONBOARDING-V3-PLAN-2026-11-23 section 6): the need bubbles (Things to do top row), the station label
  -- tips, the Sleepy Nest, the See you tomorrow strip, the welcome-week card and the veterans' ticket. Whole sentences.
  onb3={
-  need={hi="Say hi to {pet}.",toy="{pet} wants a toy.",deck="{pet} wants to watch you play.",nest="{pet} is sleepy.",
-   park="{pet} wants to meet friends.",egg="{pet}'s Sleepy egg is ready!"},
+  -- Beta (12) QA O1 (Fable, GARDEN-LIFE-NEST-LOOK.md section 5): the egg naps, you come back, you hatch a gift. Never
+  -- "ready", "growing" or "sleepy" for the same thing. {hours} is Nest.Hours, never typed.
+  need={hi="Say hi to {pet}.",toy="{pet} wants a toy.",deck="{pet} wants to watch you play.",nest="Tuck in {pet}'s egg.",
+   park="{pet} wants to meet friends.",egg="{pet}'s egg is ready to hatch!"},
   tip={hatch="{pet} found the egg machine!",style="Dress up your Pocket Deck here.",companions="Care for {pet} here.",
-   park="Pets play together in here.",nest="This is {pet}'s nest."},
-  nest={title="Sleepy egg",inside="Inside: {item} and {stars} Stars.",insideStars="Inside: {stars} Stars.",
-   hours="Ready in {hours} h.",minutes="Ready in {minutes} min.",ready="Ready!",tuck="Tuck in",hatch="Hatch",
-   tucked="Sleep tight. It will wait for you.",next="A new egg is growing.",count="Egg {count} of 7",
-   chipHours="{hours} h",chipMinutes="{minutes} min",got="{item} from the Sleepy egg!"},
+   park="Pets play together in here.",nest="{pet}'s egg is napping. Hatch it later for a gift."},
+  nest={title="Napping egg",sign="{pet}'s egg",how="{pet}'s egg naps for {hours} hours. Come back to hatch a gift.",
+   howPlain="This egg naps for {hours} hours. Come back to hatch a gift.",
+   inside="Inside: {item} and {stars} Stars.",insideStars="Inside: {stars} Stars.",
+   hours="Hatches in {hours} h",minutes="Hatches in {minutes} min",ready="Hatch me!",tuck="Tuck in",hatch="Hatch",
+   tuckedFirst="Tucked in! Come back in {hours} hours to hatch a gift.",
+   tucked="Sleep tight. It naps while you're away.",next="A new egg is napping. Come back in {hours} hours.",count="Egg {count} of 7",
+   chipHours="Egg {hours} h",chipMinutes="Egg {minutes} min",chipReady="Hatch egg!",got="{item} from the napping egg!"},
   strip={title="See you tomorrow",stamp="Stamp {count}: {stars} Stars",quests="3 new quests",wait="Miss a day, lose nothing."},
   week={title="Welcome week done!",line="{pet} loves the garden. The nest keeps growing eggs."},
   new={title="New in the garden",line="{pet} has a nest now."},
   charm={name="Nest Charm"},
-  notify="{pet}'s Sleepy egg is ready to hatch!",notifyPlain="Your Sleepy egg is ready to hatch!",
+  notify="{pet}'s egg is ready to hatch!",notifyPlain="Your egg is ready to hatch!",
  },
  park={waitIdle="Pets are playing",count="Pets playing {count}/{capacity}",full="Park full · {count}/{capacity}",otherHasRoom="The other park has room",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.

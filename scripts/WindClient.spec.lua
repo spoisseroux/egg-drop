@@ -397,7 +397,21 @@ return function(client)
 	end
 	local function run(a,n)for _=1,n do a:step(1/30)end end
 
-	test("rustle: 0 to .10 with the gust, one voice in the ambience group, stopped once it has been silent",function()
+	-- The shipped build has no rustle id (beta (12) QA S1); the voice cases run on a fixture id and put it back.
+	local shipped=Ambient.RustleId
+	local function withId(run)
+		Ambient.RustleId=1
+		local ok,problem=pcall(run)
+		Ambient.RustleId=shipped
+		assert(ok,problem)
+	end
+	test("rustle: the shipped build makes no voice, even in a full gust",function()
+		assert(Ambient.RustleId==nil,"the rustle is off since beta (12) QA S1")
+		local a=ambient({on=function()return true end,gust=function()return 1 end});a:setRound(false);run(a,60)
+		assert(a.rustleVoice==nil,"a voice was made");a:destroy()
+	end)
+
+	test("rustle: 0 to .10 with the gust, one voice in the ambience group, stopped once it has been silent",function()withId(function()
 		local w={is=true,level=0};local a=ambient({on=function()return w.is end,gust=function()return w.level end})
 		a:setRound(false);run(a,30)
 		local real=a.rustleVoice
@@ -412,9 +426,9 @@ return function(client)
 		run(a,math.ceil(Ambient.RustleHold*30)+2);assert(not v.IsPlaying and v.stops==1,"still playing silence")
 		run(a,300);assert(v.stops==1 and v.plays==1)
 		a:destroy();assert(v.gone,"destroyed with Ambient")
-	end)
+	end)end)
 
-	test("rustle: rounds, the Ambience setting, the feature switch and an unloaded asset are silent",function()
+	test("rustle: rounds, the Ambience setting, the feature switch and an unloaded asset are silent",function()withId(function()
 		local w={is=true,level=1};local a,audio=ambient({on=function()return w.is end,gust=function()return w.level end})
 		a:setRound(false);run(a,10);local v=voice();a.rustleVoice:Destroy();a.rustleVoice=v;run(a,40);assert(v.IsPlaying)
 		a:setRound(true);run(a,30);assert(not v.IsPlaying and v.Volume==0,"round");run(a,60);assert(not v.IsPlaying)
@@ -425,10 +439,10 @@ return function(client)
 		w.is=false;run(a,1);assert(not v.IsPlaying and v.Volume==0,"feature off");w.is=true
 		v.IsLoaded=false;run(a,60);assert(not v.IsPlaying,"an unloaded asset played")
 		a:destroy()
-	end)
+	end)end)
 
 	test("rustle: no id, no wind, and a wind that throws make no voice and break nothing",function()
-		local id=Ambient.RustleId
+		local id=1
 		local done,problem=pcall(function()
 			Ambient.RustleId=nil
 			local a=ambient({on=function()return true end,gust=function()return 1 end});a:setRound(false);run(a,60);assert(a.rustleVoice==nil);a:destroy()
@@ -438,7 +452,7 @@ return function(client)
 			a=ambient({on=function()return true end,gust=function()error("broken")end});a:setRound(false);run(a,60)
 			assert(a.wind==nil and a.ambience.Volume>.99 and(a.rustleVoice==nil or not a.rustleVoice.IsPlaying));a:destroy()
 		end)
-		Ambient.RustleId=id;assert(done,problem)
+		Ambient.RustleId=shipped;assert(done,problem)
 		for _,known in pairs(Ambient.Ids)do assert(known~=Ambient.RustleId,"the rustle is never in the warm set")end
 	end)
 

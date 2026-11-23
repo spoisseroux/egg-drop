@@ -112,6 +112,13 @@ return function(client, _parent)
 			end
 			local fake={root={AbsoluteSize=Vector2.new(733,307)},helper=helper,back={Position=UDim2.fromOffset(12,12),Size=UDim2.fromOffset(44,44)},saveNotice={detail="Saved appearance"}}
 			Focus.layoutSaveHelper(fake);assert(helper.AnchorPoint.Y==1 and helper.Position.Y.Scale==1,"save notice placement changed")
+			-- Beta (12) QA U1: 6 / 4 / 12 padding, and Art.type on a relayout does not wipe it.
+			local function padded()
+				local inset=helper:FindFirstChildOfClass("UIPadding")
+				return inset and inset.PaddingTop.Offset==6 and inset.PaddingBottom.Offset==4 and inset.PaddingLeft.Offset==12 and inset.PaddingRight.Offset==12
+			end
+			assert(padded(),"hint padding")
+			fake.helperLayoutKey=nil;Focus.layoutSaveHelper(fake);assert(padded(),"hint padding after a relayout")
 			ui.active=true;ui.focusLessonStarted=true;ui.helper.Visible=true;ui:retireFocusHint();assert(ui.focusLessonRetired and not ui.helper.Visible)
 			surface:Destroy();ui:destroy();ui=nil
 		end)
