@@ -341,7 +341,7 @@ return function(client)
 		end)
 		test("the real additions: local, inert, inside the caps, gone on destroy",function()
 			local parent=Instance.new("Folder");parent.Parent=holder
-			local added=Additions.build({parent=parent,clouds=false,groundY=function()return 4.5 end})
+			local added=Additions.build({parent=parent,clouds=false,falls=false,groundY=function()return 4.5 end})
 			local parts,emitters=0,0
 			for _,item in ipairs(added.folder:GetDescendants())do
 				if item:IsA("BasePart")then
@@ -357,6 +357,45 @@ return function(client)
 			added.still(true);for _,e in ipairs(added.emitters)do assert(not e.Enabled)end
 			added.still(false);for _,e in ipairs(added.emitters)do assert(e.Enabled)end
 			added.destroy();assert(#parent:GetChildren()==0)
+		end)
+		test("additions: the waterfall layers get the level, the camera and the clock's daylight on build and on each check",function()
+			local states={}
+			local r=rig({additions={build=function(o)
+				assert(o.data==Data)
+				return{still=function()end,update=function(state)table.insert(states,state)end,destroy=function()end}
+			end}})
+			lounge(r.world);r.clock.lastDaylight=.55
+			local spot=Vector3.new(80,10,-60)
+			r.aero.camera=function()return spot end
+			r.flip(true)
+			assert(#states==1 and states[1].level==0 and states[1].camera==spot and states[1].daylight==.55)
+			r.lvl=1;spot=Vector3.new(0,10,0);r.tick()
+			assert(#states==2 and states[2].level==1 and states[2].camera==spot)
+			r.clock.lastDaylight=nil;r.tick();assert(states[3].daylight==Values.Daylight)
+			r.flip(false)
+		end)
+		test("additions: the real waterfall layers through the switch; off puts the picture back",function()
+			local falls=Values.Waterfall
+			local data={sky=Data.sky,beams={sheets={
+				{name="Water_TumbleFalls_Upper",top={81.4254,51.6046,-81.4254},bottom={79.7284,22.25,-79.7284},width0=8.4,width1=9.6,normal={-.7071,0,.7071}},
+				{name="Water_TumbleFalls_Lower",top={73.9649,22.3,-73.9649},bottom={72.6921,3.2,-72.6921},width0=11.4,width1=12.6,normal={-.7071,0,.7071}},
+			}}}
+			local built
+			local r=rig({additions={build=function(o)
+				built=Additions.build({parent=o.parent,data=o.data,clouds=false,groundY=function()return 4.5 end})
+				return built
+			end}})
+			r.aero.data=data
+			lounge(r.world);local before=picture(r.world)
+			r.aero.camera=function()return Vector3.new(60,8,-60)end
+			r.flip(true)
+			assert(built.falls.draws()==14 and built.folder.Parent==r.world and built.falls.folder.Parent==built.folder)
+			r.still=true;r.reducedChanged.fire();assert(built.falls.draws()==0)
+			r.still=false;r.reducedChanged.fire();r.lvl=1;r.tick();assert(built.falls.draws()<=8)
+			r.aero.camera=function()return Vector3.new(72.7+falls.Radius+5,8,-72.7)end;r.tick();assert(built.falls.draws()==0)
+			r.flip(false);r.pump()
+			assert(built.folder.Parent==nil)
+			samePicture(before,picture(r.world))
 		end)
 		test("start follows the switch; destroy puts everything back and lets go",function()
 			local r=rig();lounge(r.world);local before=picture(r.world)

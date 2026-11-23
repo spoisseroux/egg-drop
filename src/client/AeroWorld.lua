@@ -70,7 +70,7 @@ function World.restore(records,item)
 end
 
 -- options (fixtures): world, lighting, data, clock {look, now, apply}, switch {on, changed, trees, treesChanged},
--- level, reduced, reducedChanged, defer, delay, additions, warn. The game passes only clock.
+-- level, reduced, reducedChanged, camera, defer, delay, additions, warn. The game passes only clock.
 function World.new(options)
 	options=options or {}
 	local self=setmetatable({world=options.world or workspace,lighting=options.lighting or game:GetService("Lighting"),
@@ -79,6 +79,11 @@ function World.new(options)
 	self.data=options.data or require(Shared:WaitForChild("WorldV7Data"))
 	self.switch=options.switch or require(Shared:WaitForChild("Aero"))
 	self.level=options.level or require(script.Parent.AliveBudget).level
+	-- Where the camera is, for the waterfall layers' distance gate (checked on the additions' timer).
+	self.camera=options.camera or function()
+		local camera=workspace.CurrentCamera
+		return camera and camera.CFrame.Position
+	end
 	self.defer,self.delay=options.defer or task.defer,options.delay or task.delay
 	self.additions=options.additions or Additions
 	self.warn=options.warn or warn
@@ -301,18 +306,27 @@ function World:restoreAll(records)
 	for _,item in ipairs(self:items(records))do self:restoreItem(records,item)end
 end
 
--- Additions (AeroAdditions): gone for good this session at budget level 2, and still under Reduced Motion.
+-- Additions (AeroAdditions): gone for good this session at budget level 2, and still under Reduced Motion. The
+-- waterfall layers among them also follow the level, the camera and the clock's daylight (update).
+function World:tuneAdditions(added)
+	pcall(added.still,self.reduced())
+	if not added.update then return end
+	local ok,problem=pcall(function()
+		added.update({level=self.level(),camera=self.camera(),daylight=self.clock and self.clock.lastDaylight or Values.Daylight})
+	end)
+	if not ok then self:complain(problem)end
+end
 function World:buildAdditions()
 	if self.added or self.level()>=World.DropLevel then return end
-	local ok,added=pcall(self.additions.build,{parent=self.world})
+	local ok,added=pcall(self.additions.build,{parent=self.world,data=self.data})
 	if not ok then self:complain(added);return end
 	self.added=added
-	pcall(added.still,self.reduced())
+	self:tuneAdditions(added)
 	local turn=self.turn
 	local function check()
 		if turn~=self.turn or self.added~=added then return end
 		if self.level()>=World.DropLevel then self:dropAdditions();return end
-		pcall(added.still,self.reduced())
+		self:tuneAdditions(added)
 		self.delay(World.Interval,check)
 	end
 	self.delay(World.Interval,check)
