@@ -244,9 +244,9 @@ return function(client)
 			local sitting
 			for slot=1,3 do
 				local b=body(r,slot)
-				if not hidden(b)and(b.CFrame.Position-(LANDING+Vector3.new(0,.50,0))).Magnitude<.01 then sitting=b end
+				if not hidden(b)and(b.CFrame.Position-(LANDING+Vector3.new(0,Sim.Bird.lift,0))).Magnitude<.01 then sitting=b end
 			end
-			assert(sitting,"a bird sits .50 over perch 2's landing")
+			assert(sitting,"a bird sits on perch 2's landing")
 			assert(sitting.Color==Life.BirdLooks[2%3].body,"perch 2's colourway")
 			assert(r.life:chirp(2)=="hop")
 			assert(r.life:chirp(3)=="land")
@@ -329,7 +329,7 @@ return function(client)
 			r.step(.04)
 			local b
 			for slot=1,3 do if not hidden(body(r,slot))then b=body(r,slot)end end
-			assert(b and(b.CFrame.Position-(LANDING+Vector3.new(0,.50,0))).Magnitude<1e-3,"sits at once")
+			assert(b and(b.CFrame.Position-(LANDING+Vector3.new(0,Sim.Bird.lift,0))).Magnitude<1e-3,"sits at once")
 			local at=b.CFrame.Position
 			assert(r.life:chirp(2)==nil,"no hop")
 			r.step(5)
@@ -395,24 +395,26 @@ return function(client)
 				assert(n==8,"bird parts "..n)
 				local look=Life.BirdLooks[(slot-1)%3]
 				local bodyPart=folder:FindFirstChild(name.."Body")
-				assert(bodyPart.Size==Vector3.new(1.05,1.05,1.05)and bodyPart.Color==look.body and bodyPart.Material==Life.BirdMaterial)
+				-- QA-R2-LOOK 3: the songbird's shape (a Sphere-meshed egg, a small head, a wedge beak, narrow wings and tail).
+				assert(bodyPart.Size==Vector3.new(.50,.52,.82)and bodyPart.Shape~=Enum.PartType.Ball and bodyPart.Spindle.ClassName=="SpecialMesh")
+				assert(bodyPart.Color==look.body and bodyPart.Material==Life.BirdMaterial)
 				if LifeArt.id("birdBreast")then faces(bodyPart,{[Face.Front]=LifeArt.id("birdBreast")})else assert(next(decals(bodyPart))==nil,"no breast stand-in")end
 				local head=folder:FindFirstChild(name.."Head")
-				assert(head.Size==Vector3.new(.68,.68,.68)and head.Material==Life.BirdMaterial and head.Color==look.head)
+				assert(head.Size==Vector3.new(.40,.40,.40)and head.Material==Life.BirdMaterial and head.Color==look.head)
 				for _,side in ipairs({"EyeR","EyeL"})do
 					local eye=folder:FindFirstChild(name..side)
-					assert(eye.Size==Vector3.new(.14,.14,.14)and eye.Color==Life.EyeInk and eye.Reflectance==0,"no shine")
+					assert(eye.Size==Vector3.new(.08,.08,.08)and eye.Color==Life.EyeInk and eye.Reflectance==0,"no shine")
 				end
 				local beak=folder:FindFirstChild(name.."Beak")
-				assert(beak.Size==Vector3.new(.10,.09,.24)and beak:FindFirstChild("Spindle")and beak.Spindle.ClassName=="SpecialMesh","an ellipsoid beak")
+				assert(beak.ClassName=="WedgePart"and beak.Size==Vector3.new(.09,.08,.20),"a flat-bottomed point")
 				for _,side in ipairs({"WingL","WingR"})do
 					local plate=folder:FindFirstChild(name..side)
-					assert(plate.Size==Vector3.new(.04,.95,.66)and plate.Transparency==1,"a see-through plate")
+					assert(plate.Size==Vector3.new(.03,.68,.32)and plate.Transparency==1,"a see-through plate")
 					for _,d in pairs(faces(plate,{[Face.Left]=LifeArt.id(look.wing),[Face.Right]=LifeArt.id(look.wing)}))do assert(isWhite(d.Color3))end
 				end
 				wingsLoaded[look.wing]=true
 				local tail=folder:FindFirstChild(name.."Tail")
-				assert(tail.Size==Vector3.new(.46,.68,.02)and tail.Transparency==1)
+				assert(tail.Size==Vector3.new(.22,.62,.02)and tail.Transparency==1)
 				for _,d in pairs(faces(tail,{[Face.Front]=LifeArt.id("birdTail"),[Face.Back]=LifeArt.id("birdTail")}))do assert(d.Color3==look.tail)end
 			end
 			assert(wingsLoaded.birdWingEmber and wingsLoaded.birdWingSlate and wingsLoaded.birdWingMoss,"all three bird wings written at build")

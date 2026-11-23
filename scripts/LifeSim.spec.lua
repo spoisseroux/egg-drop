@@ -284,38 +284,52 @@ return function(client)
 	test("round 3 poses: the songbird's eight parts (head on its own, beads, beak, folded and flying wings, the tail); butterfly wings laid flat",function()
 		local function close(a,b)return(a-b).Magnitude<1e-4 end
 		local root=CFrame.new(0,0,0)
-		local perched=Sim.birdParts(root,"perch",0,0,nil,20,0)
+		local B,S=Sim.Bird,Sim.BirdShape
+		local perched=Sim.birdParts(root,"perch",0,0,nil,B.tail,0)
 		assert(#perched==8)
-		assert(close(perched[2].Position,Vector3.new(0,.37,-.35)),"the head")
-		assert(close(perched[3].Position,Vector3.new(0,.34,-.73))and close(perched[3].LookVector,Vector3.new(0,0,-1)),"the beak off the head, straight out")
-		assert(close(perched[4].Position,Vector3.new(.235,.435,-.57))and close(perched[5].Position,Vector3.new(-.235,.435,-.57)),"two eyes")
+		-- QA-R2-LOOK 3: an egg tipped 20 nose-up, a head half its length set forward, a point, a long narrow tail.
+		assert(close(perched[1].Position,Vector3.zero)and perched[1].LookVector.Y>.3 and perched[1].LookVector.Y<.36,"the body 20 nose-up")
+		assert(close(perched[2].Position,Vector3.new(0,.28,-.30)),"the head")
+		assert(close(perched[3].Position,Vector3.new(0,.26,-.57))and close(perched[3].LookVector,Vector3.new(0,0,-1)),"the beak off the head, straight out")
+		assert(close(perched[4].Position,Vector3.new(.135,.32,-.42))and close(perched[5].Position,Vector3.new(-.135,.32,-.42)),"two eyes")
+		assert(near(S.head/S.body.Z,.49,.02)and near(S.tail.Y/S.body.Z,.75,.02)and S.tail.X<S.body.X/2,"1 : 2 head, 3 : 4 tail, narrow")
+		-- Beak tip to tail tip, about 1.59; overall length to height about 2.3 : 1.
+		local beakTip=(perched[3]*CFrame.new(0,0,-S.beak.Z/2)).Position
+		local tailTip=(perched[8]*CFrame.new(0,-S.tail.Y/2,0)).Position
+		assert(near(tailTip.Z-beakTip.Z,1.59,.06),"length "..(tailTip.Z-beakTip.Z))
+		local top=perched[2].Position.Y+S.head/2
+		assert(near((tailTip.Z-beakTip.Z)/(top+B.lift),2.3,.35),"length : height "..(tailTip.Z-beakTip.Z)/(top+B.lift))
 		-- The head turns on its own: eyes and beak go with it, the body does not.
-		local turned=Sim.birdParts(root,"perch",0,0,CFrame.Angles(0,math.rad(40),0),20,0)
+		local turned=Sim.birdParts(root,"perch",0,0,CFrame.Angles(0,math.rad(40),0),B.tail,0)
 		assert(close(turned[1].Position,perched[1].Position)and close(turned[2].Position,perched[2].Position))
 		assert(turned[3].Position.X<-.1,"the beak swings with the head")
-		assert(close(perched[6].Position,Vector3.new(-.54,-.02,.20))and close(perched[7].Position,Vector3.new(.54,-.02,.20)))
+		assert(close(perched[6].Position,Vector3.new(-.25,.03,.11))and close(perched[7].Position,Vector3.new(.25,.03,.11)))
 		for i=6,7 do
 			local tip=-perched[i].UpVector -- the texture is tip-down
-			assert(tip.Y<-.5 and tip.Z>.75,"folded tip back and down: "..tostring(tip))
+			assert(tip.Y<-.5 and tip.Z>.6,"folded tip back and down: "..tostring(tip))
+			local at=(perched[i]*CFrame.new(0,-S.wing.Y/2,0)).Position
+			assert(at.Z>S.tailAt.Z-.05 and math.abs(at.X)<.25,"the tips reach across the tail root: "..tostring(at))
 		end
-		local flicked=Sim.birdParts(root,"perch",1,0,nil,20,0)
+		local flicked=Sim.birdParts(root,"perch",1,0,nil,B.tail,0)
 		assert(-flicked[6].UpVector.X< -perched[6].UpVector.X and -flicked[7].UpVector.X>-perched[7].UpVector.X,"the flick swings the tips out")
 		for _,phi in ipairs({math.rad(65),math.rad(-35)})do
-			local flying=Sim.birdParts(root,"fly",0,phi,nil,20,0)
+			local flying=Sim.birdParts(root,"fly",0,phi,nil,B.tail,0)
 			local left,right=-flying[6].UpVector,-flying[7].UpVector
 			assert(left.X<0 and right.X>0,"tips out on both sides")
 			assert(near(left.Y,right.Y,1e-4),"the two wings mirror")
 			assert((phi>0)==(right.Y>0),"up on the up stroke")
 		end
-		local bound=Sim.birdParts(root,"fly",0,math.rad(15),nil,20,1)
+		local bound=Sim.birdParts(root,"fly",0,math.rad(15),nil,B.tail,1)
 		assert(close(bound[6].Position,perched[6].Position)and close(bound[7].Position,perched[7].Position),"tucked in the bound")
-		-- The tail: its root under the rump, the tip back and a little down at rest; a flick lifts it.
+		local span=(Sim.birdParts(root,"fly",0,0,nil,B.tail,0)[7]*CFrame.new(0,-S.wing.Y/2,0)).Position.X*2
+		assert(near(math.abs(span),1.76,.02),"span tip to tip "..span)
+		-- The tail: its root at the rump, the tip back and 15 down at rest, in line with the back; the flick goes 5 above level.
 		local tail=perched[8]
 		local tip=-tail.UpVector
-		assert(tip.Z>.9 and tip.Y<-.2 and tip.Y>-.5,"tip back and slightly down: "..tostring(tip))
-		assert(tail.Position.Z>.4 and tail.Position.Y<-.09,"behind and under the rump")
-		local up=-Sim.birdParts(root,"perch",0,0,nil,2,0)[8].UpVector
-		assert(up.Y>tip.Y,"a flick lifts it")
+		assert(tip.Z>.9 and near(math.deg(math.asin(-tip.Y)),15,.5),"tip back and 15 down: "..tostring(tip))
+		assert(tail.Position.Z>.5 and tail.Position.Y<0,"behind and under the rump")
+		local up=-Sim.birdParts(root,"perch",0,0,nil,B.tailUp,0)[8].UpVector
+		assert(up.Y>0 and near(math.deg(math.asin(up.Y)),5,.5),"a flick lifts it to 5 above level")
 		local wings=Sim.butterflyParts(root,0)
 		assert(close(wings[2].Position,Vector3.new(-.133,0,0))and close(wings[3].Position,Vector3.new(.133,0,0)),"span .52 (QA-R2-LOOK 4), from the mid-line")
 		assert(math.abs(2*(.133+.24/2)-.52)<.02,"tip to tip about .52")
@@ -340,13 +354,13 @@ return function(client)
 		assert(near(bird.tau,B.tailUp,1e-3),"the tail flicks up on landing: "..bird.tau)
 		birds:step(1.2,world,false,3,0)
 		assert(near(bird.tau,B.tail),"and back")
-		assert((bird.root.Position-(spot+Vector3.new(0,.50,0))).Magnitude<1e-3,"sits .50 over the crown top")
+		assert((bird.root.Position-(spot+Vector3.new(0,Sim.Bird.lift,0))).Magnitude<1e-3,"sits on the crown top")
 		local parts=Sim.birdParts(bird.root,bird.wings,bird.flick,bird.phi,bird.turn,bird.tau,bird.tuck)
 		assert(#parts==8)
 		bird.turnAt=math.huge -- no turn hop in the way
 		assert(birds:chirp(1.3,5,spot,3,world,false)=="hop")
 		birds:step(1.3+.09,world,false,3,0)
-		assert(near(bird.root.Position.Y,spot.Y+.50+.16,1e-3),".16 high at the top: "..bird.root.Position.Y-spot.Y)
+		assert(near(bird.root.Position.Y,spot.Y+Sim.Bird.lift+.16,1e-3),".16 high at the top: "..bird.root.Position.Y-spot.Y)
 		assert(bird.flick==1,"wings flick in the first .12 s")
 		birds:step(1.3+.18+.12+.09+.12+.2,world,false,3,0);assert(bird.hopAt==nil and bird.flick==0)
 		-- 40% of hops come in pairs, .12 s apart.
@@ -430,7 +444,7 @@ return function(client)
 			if was then assert((frame-was).Magnitude<.3,"a jump at "..i)end
 			was=frame
 		end
-		assert(Sim.Bird.lift==.50 and B.hop==.16 and B.hopTime==.18 and B.flick==15)
+		assert(Sim.Bird.lift==.27 and B.hop==.16 and B.hopTime==.18 and B.flick==15)
 	end)
 
 	test("birds: the player within 12 studs sends it off, away from the player; the 4th is refused; stations and the camera too",function()
@@ -459,7 +473,7 @@ return function(client)
 		assert(birds:chirp(0,3,spot,3,world,true)=="land")
 		birds:step(0,world,true,3,0)
 		local bird=birds.list[1]
-		assert(bird.state=="sit"and bird.wings=="perch"and(bird.root.Position-(spot+Vector3.new(0,.50,0))).Magnitude<1e-6)
+		assert(bird.state=="sit"and bird.wings=="perch"and(bird.root.Position-(spot+Vector3.new(0,Sim.Bird.lift,0))).Magnitude<1e-6)
 		assert(bird.still==true and bird.tau==Sim.Bird.tail and(bird.turn.LookVector-Vector3.new(0,0,-1)).Magnitude<1e-6)
 		assert(birds:chirp(.5,3,spot,3,world,true)==nil,"no hop")
 		local yaw=bird.yaw
@@ -481,7 +495,7 @@ return function(client)
 		live:step(t+.05,{},true,3,0)
 		assert((perched.turn.LookVector-Vector3.new(0,0,-1)).Magnitude<1e-6 and(perched.turn.UpVector-Vector3.new(0,1,0)).Magnitude<1e-6,"head straight")
 		assert(perched.hopAt==nil and perched.tau==Sim.Bird.tail and perched.still==true,"no hop, tail at rest, still")
-		assert(math.abs(perched.root.Position.Y-(spot.Y+.50))<1e-6,"sitting on the crown")
+		assert(math.abs(perched.root.Position.Y-(spot.Y+Sim.Bird.lift))<1e-6,"sitting on the crown")
 		-- In flight when Reduced Motion comes on: it sits at once.
 		assert(birds:chirp(8,3,spot,3,{},false)=="land")
 		birds:step(8.2,{},true,3,0)

@@ -530,11 +530,15 @@ end
 -- A small round songbird: a body, a head it turns and cocks on its own, bead eyes, a short beak, folded wings, a tail
 -- that flicks on every landing and hop. Low quick hops, often in pairs; it turns by hopping; it flies in bounds (two
 -- beats, wings tucked, two beats). Everything eased; nothing is a two-pose swap. Each bird has its own Random.
-Sim.Bird=table.freeze({lift=.50,land=.8,leave=1.2,stayMin=8,stayMax=20,flee=12,
+-- QA-R2-LOOK 3: a songbird's silhouette, not two balls: an egg tipped 20 degrees nose-up, a small head set forward, a
+-- point at the front and a long narrow tail carrying the back's line down. 1.59 studs beak tip to tail tip. `lift` is
+-- the pitched body's half height (.28) less a hair, so it still sits on the perch. The tail angle here is positive DOWN
+-- (Fable's spec counts up): rest 15 down (her -15), the flick to 5 above level (her +5).
+Sim.Bird=table.freeze({lift=.27,land=.8,leave=1.2,stayMin=8,stayMax=20,flee=12,
 	fromMin=9,fromMax=12,upMin=4,upMax=6,riseMin=5,riseMax=7,away=10,
 	dip=.12,dipPitch=12,dipIn=.10,dipOut=.15,
 	hop=.16,hopTime=.18,hopDip=.06,hopDipTime=.08,pair=.4,pairGap=.12,flick=15,flickTime=.12,
-	tail=20,tailUp=2,tailTime=.16,
+	tail=15,tailUp=-5,tailTime=.16,
 	headEveryMin=.8,headEveryMax=2.5,headMin=25,headMax=50,headTime=.12,cock=.3,cockRoll=15,
 	turnMin=20,turnMax=45,turnEveryMin=2.5,turnEveryMax=5,turnTime=.15,crouch=.10,crouchTime=.08,diveTilt=15,level=.2,
 	beatHz=table.freeze({5.5,3.5}),beats=2,beatMid=15,beatAmp=50,tuckTime=.22,tuckDip=.12,tuckBlend=.06})
@@ -732,28 +736,42 @@ end
 -- The eight frames in pool order: body, head, beak, eye R, eye L, wing L, wing R, tail (GARDEN-LIFE-NEST-LOOK 3).
 -- head: the head's own turn (CFrame) under H; phi: the flap (radians) in flight; tuck 0 to 1 lerps the flying wings
 -- to the folded pose (the bound); flick 0 to 1 swings the folded tips out; tau: the tail's tilt in degrees.
-local fold=CFrame.Angles(math.rad(-55),0,0)
+-- QA-R2-LOOK 3 shape, studs, root = the body's centre, -Z forward. GardenLife sizes its parts from this table.
+Sim.BirdShape=table.freeze({
+	body=Vector3.new(.50,.52,.82),pitch=20,                       -- a Sphere-meshed block, nose up
+	head=.40,headAt=Vector3.new(0,.28,-.30),                       -- head diameter : body length = 1 : 2
+	beak=Vector3.new(.09,.08,.20),beakAt=Vector3.new(0,-.02,-.27), -- a WedgePart, its thin edge forward
+	beakWedge=true,beakSpindle=Vector3.new(.07,.06,.24),           -- [check] the wedge's facing; false = the spindle
+	eye=.08,eyeAt=Vector3.new(.135,.04,-.12),
+	wing=Vector3.new(.03,.68,.32),foldAt=Vector3.new(.25,.03,.11),foldYaw=8,fold=-45, -- drooped 10 more than -55
+	shoulder=Vector3.new(.20,.10,-.04),
+	tail=Vector3.new(.22,.62,.02),tailAt=Vector3.new(0,-.01,.32),  -- tail : body length = 3 : 4
+})
 function Sim.birdParts(root,wings,flick,phi,head,tau,tuck)
-	local H=root*CFrame.new(0,.37,-.35)*(head or CFrame.identity)
-	-- FABLE-REVIEW-R1 2: an ellipsoid beak straight out of the face (no corner-first turn).
-	local parts={root,H,H*CFrame.new(0,-.03,-.38),
-		H*CFrame.new(.235,.065,-.22),H*CFrame.new(-.235,.065,-.22)}
+	local S=Sim.BirdShape
+	local H=root*CFrame.new(S.headAt)*(head or CFrame.identity)
+	local eye=S.eyeAt
+	local parts={root*CFrame.Angles(math.rad(S.pitch),0,0),H,H*CFrame.new(S.beakAt),
+		H*CFrame.new(eye.X,eye.Y,eye.Z),H*CFrame.new(-eye.X,eye.Y,eye.Z)}
 	local out=math.rad(Sim.Bird.flick)*(flick or 0)
-	-- The folded wings (.95 x .66 plates, FABLE-REVIEW-R1 2) sit further out and back, their tips across the tail root.
-	local foldL=root*CFrame.new(-.54,-.02,.20)*CFrame.Angles(0,0,-out)*CFrame.Angles(0,math.rad(12),0)*fold
-	local foldR=root*CFrame.new(.54,-.02,.20)*CFrame.Angles(0,0,out)*CFrame.Angles(0,math.rad(-12),0)*fold
+	-- The folded wings lie along the pitched body, their tips across the tail root.
+	local fold=CFrame.Angles(math.rad(S.fold),0,0)
+	local at=S.foldAt
+	local foldL=root*CFrame.new(-at.X,at.Y,at.Z)*CFrame.Angles(0,0,-out)*CFrame.Angles(0,math.rad(S.foldYaw),0)*fold
+	local foldR=root*CFrame.new(at.X,at.Y,at.Z)*CFrame.Angles(0,0,out)*CFrame.Angles(0,math.rad(-S.foldYaw),0)*fold
 	if wings=="fly"then
 		phi=phi or 0
-		-- Half the .95 wing out from the shoulder, so the root stays at the shoulder.
-		local left=root*CFrame.new(-.37,.11,.04)*CFrame.Angles(0,0,-phi)*CFrame.new(-.475,0,0)*CFrame.Angles(0,0,-math.pi/2)
-		local right=root*CFrame.new(.37,.11,.04)*CFrame.Angles(0,0,phi)*CFrame.new(.475,0,0)*CFrame.Angles(0,0,math.pi/2)
+		-- Half the wing out from the shoulder, so the root stays at the shoulder.
+		local half,sh=S.wing.Y/2,S.shoulder
+		local left=root*CFrame.new(-sh.X,sh.Y,sh.Z)*CFrame.Angles(0,0,-phi)*CFrame.new(-half,0,0)*CFrame.Angles(0,0,-math.pi/2)
+		local right=root*CFrame.new(sh.X,sh.Y,sh.Z)*CFrame.Angles(0,0,phi)*CFrame.new(half,0,0)*CFrame.Angles(0,0,math.pi/2)
 		tuck=math.clamp(tuck or 0,0,1)
 		if tuck>0 then left,right=left:Lerp(foldL,tuck),right:Lerp(foldR,tuck)end
 		parts[6],parts[7]=left,right
 	else
 		parts[6],parts[7]=foldL,foldR
 	end
-	parts[8]=root*CFrame.new(0,-.09,.40)*CFrame.Angles(math.rad(tau or Sim.Bird.tail),0,0)*CFrame.new(0,0,.29)*CFrame.Angles(math.rad(-90),0,0)
+	parts[8]=root*CFrame.new(S.tailAt)*CFrame.Angles(math.rad(tau or Sim.Bird.tail),0,0)*CFrame.new(0,0,S.tail.Y/2)*CFrame.Angles(math.rad(-90),0,0)
 	return parts
 end
 

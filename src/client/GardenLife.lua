@@ -79,8 +79,6 @@ Life.EyeInk=hex("#14110F")
 Life.ButterflySize=Vector3.new(.04,.035,.18) -- QA-R2-LOOK 4 (was .09, .08, .42 with the 1.2 span)
 Life.ButterflyWing=Vector3.new(.24,.29,.02)  -- span .52: 1 : 10 of the avatar, 1 : 3 of a pet
 Life.BirdMaterial=Enum.Material.Sand -- matte, fine grain (FABLE-REVIEW-R1 2; Fabric if it reads as gravel)
-Life.BirdBeak=Vector3.new(.10,.09,.24)
-Life.BirdWing=Vector3.new(.04,.95,.66)
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 2): the three leaf emitters. The petal's tint follows the crowns (lime or pink).
 -- QA-R2-LOOK 4: about x .52 (Animal Crossing sized: a leaf is 1 : 21 of the avatar, 1 : 6 of a pet).
 Life.Leaves=table.freeze({
@@ -397,30 +395,35 @@ function Life:enable()
 	for slot=1,Sim.Caps.birds[1]do
 		local look=Life.BirdLooks[(slot-1)%3]
 		local name="LifeBird"..slot.."_"
-		local bodyPart=part(folder,name.."Body","Part",Vector3.new(1.05,1.05,1.05),look.body,Enum.PartType.Ball)
+		-- QA-R2-LOOK 3: an egg tipped nose-up (a Sphere-meshed block), not a ball.
+		local S=Sim.BirdShape
+		local bodyPart=part(folder,name.."Body","Part",S.body,look.body)
+		spindle(bodyPart)
 		bodyPart.Material=Life.BirdMaterial
 		local art={wings={},tail={}}
 		local breast=LifeArt.id("birdBreast")
 		if breast then art.breast=decal(bodyPart,Face.Front,breast,look.breast)end
 		local eyes={}
 		for _,side in ipairs({"EyeR","EyeL"})do
-			local eye=part(folder,name..side,"Part",Vector3.new(.14,.14,.14),Life.EyeInk,Enum.PartType.Ball)
+			local eye=part(folder,name..side,"Part",Vector3.one*S.eye,Life.EyeInk,Enum.PartType.Ball)
 			eyes[side]=eye
 		end
 		local wings={}
 		for i,side in ipairs({"WingL","WingR"})do
-			local plate=part(folder,name..side,"Part",Life.BirdWing,false)
+			local plate=part(folder,name..side,"Part",S.wing,false)
 			table.insert(art.wings,decal(plate,Face.Left,LifeArt.id(look.wing),white))
 			table.insert(art.wings,decal(plate,Face.Right,LifeArt.id(look.wing),white))
 			wings[i]=plate
 		end
-		local tail=part(folder,name.."Tail","Part",Vector3.new(.46,.68,.02),false)
+		local tail=part(folder,name.."Tail","Part",S.tail,false)
 		art.tail={decal(tail,Face.Front,LifeArt.id("birdTail"),look.tail),decal(tail,Face.Back,LifeArt.id("birdTail"),look.tail)}
 		art.wing=look.wing
-		local head=part(folder,name.."Head","Part",Vector3.new(.68,.68,.68),look.head,Enum.PartType.Ball)
+		local head=part(folder,name.."Head","Part",Vector3.one*S.head,look.head,Enum.PartType.Ball)
 		head.Material=Life.BirdMaterial
-		local beak=part(folder,name.."Beak","Part",Life.BirdBeak,look.beak)
-		spindle(beak)
+		-- A flat-bottomed point (an upper mandible): a WedgePart, its thin edge forward; the spindle is the fallback.
+		local beak
+		if S.beakWedge then beak=part(folder,name.."Beak","WedgePart",S.beak,look.beak)
+		else beak=part(folder,name.."Beak","Part",S.beakSpindle,look.beak);spindle(beak)end
 		self.birdPool[slot]={
 			bodyPart,
 			head,
