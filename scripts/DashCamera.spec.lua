@@ -95,6 +95,25 @@ return function(client)
 		assert(camera.ex==camera.ex)
 		camera:reset();assert(not camera.ready and camera.fov==Camera.Fov)
 	end)
+	test("FABLE-REVIEW-R1 6: the line-up fits the racers present: eight as before, four at .56, never under half",function()
+		local Grid=require(Shared.DashGrid)
+		local x,y,z=Course.at(0)
+		assert(Camera.lineupScale(8)==1 and Camera.lineupScale(nil)==1 and math.abs(Camera.lineupScale(4)-7.5/13.5)<1e-9)
+		assert(Camera.lineupScale(1)==.5 and Camera.lineupScale(2)==.5 and Camera.lineupScale(12)==1)
+		for _,aspect in ipairs({874/402,16/9,4/3})do
+			local e8={Camera.lineup(aspect,8)};local e4={Camera.lineup(aspect,4)};local base={Camera.lineup(aspect)}
+			for i=1,6 do assert(e8[i]==base[i],"eight is today's shot")end
+			local s=Camera.lineupScale(4)
+			assert(math.abs((e4[1]-x)-(e8[1]-x)*s)<1e-6 and math.abs((e4[3]-z)-(e8[3]-z)*s)<1e-6,"back scales")
+			assert(math.abs((e4[2]-y-Camera.LookHeight)-(e8[2]-y-Camera.LookHeight)*s)<1e-6,"height scales")
+			-- Four racers fill 55 to 65% of the width at their depth.
+			local depth=math.sqrt((e4[1]-x)^2+(e4[2]-y-Camera.LookHeight)^2+(e4[3]-z)^2)
+			local half=math.tan(math.rad(Camera.Fov)/2)*aspect*depth
+			local row=(1.5*Grid.StartStep/100+.6)/half
+			assert(row>=.55 and row<=.65,"four racers: "..row)
+			print(string.format("line-up row of four at %.2f: %.0f%% of the width",aspect,row*100))
+		end
+	end)
 	test("the line-up shot (beta 12 U5): the whole row of eight in at most 70% of the width, behind the line by no more than the cliff allows",function()
 		local Grid=require(Shared.DashGrid)
 		local x,y,z,yaw=Course.at(0)

@@ -179,19 +179,23 @@ end
 local Face=Enum.NormalId
 local CURVED={Face.Top,Face.Bottom,Face.Front,Face.Back} -- a Cylinder's round side (its caps are Left and Right)
 local BOTH={Face.Front,Face.Back}
+local ROLL={Face.Top,Face.Bottom,Face.Front,Face.Back,Face.Left,Face.Right} -- a rim roll: its round side and both caps
+Client.SignYaw=-40 -- degrees about root Y
 function Client.parts()
 	local list={}
 	local rad=math.rad
 	local up=CFrame.Angles(0,0,math.pi/2) -- a Cylinder's axis is X: turn it up (its Right cap then faces up)
+	-- FABLE-REVIEW-R1 3: the mound and the rim rolls are Material Wood (the twig Texture stays on top), and each roll's
+	-- end caps carry the twigs too: a plain-coloured cap poking past its neighbour read as a flat brown slat.
 	table.insert(list,{name="NestMound",shape="cylinder",size=Vector3.new(.42,3.5,3.5),cf=CFrame.new(0,.21,0)*up,color="mound",
-		texture={"twigs",CURVED,2.4,1.2,0},shadow=true})
+		texture={"twigs",CURVED,2.4,1.2,0},shadow=true,wood=true})
 	for k=0,7 do
 		local a=rad(22.5+45*k)
 		local even=k%2==0
 		local r,y=if even then 1.42 else 1.50,if even then .56 else .62
 		table.insert(list,{name="NestRim"..(k+1),shape="cylinder",size=Vector3.new(1.30,.66,.66),
 			cf=CFrame.new(math.sin(a)*r,y,math.cos(a)*r)*CFrame.Angles(0,a,0)*CFrame.Angles(0,0,rad(if even then 7 else -7)),
-			color="rim"..(k%3+1),texture={"twigs",CURVED,2.4,1.2,.37*k}})
+			color="rim"..(k%3+1),texture={"twigs",ROLL,2.4,1.2,.37*k},wood=true})
 	end
 	table.insert(list,{name="NestStraw",shape="cylinder",size=Vector3.new(.30,2.36,2.36),cf=CFrame.new(0,.55,0)*up,color="straw",
 		decal={"bed",{Face.Right}}})
@@ -207,9 +211,12 @@ function Client.parts()
 			cf=CFrame.new(math.sin(a)*1.05,.98,math.cos(a)*1.05)*CFrame.Angles(0,a,0)*CFrame.Angles(rad(15),0,0),decal={"wisps",BOTH}})
 	end
 	table.insert(list,{name="NestSignPost",shape="block",size=Vector3.new(.14,1.5,.14),cf=CFrame.new(-1.95,.75,-.95),color="post",wood=true})
+	-- The board is painted on both faces and yawed 40 toward the egg (Studio check beta 12: at 20, one face, people
+	-- coming in from the arrival path's mouth saw its edge and back). The Front reads from the prompt point and the
+	-- plaza's middle, the Back from the arrival path's mouth, each within about 35 degrees (NestClient.spec).
 	table.insert(list,{name="NestSign",shape="block",size=Vector3.new(1.3,.8,.08),
-		cf=CFrame.new(-1.95,1.45,-1.03)*CFrame.Angles(0,rad(-20),0)*CFrame.Angles(rad(6),0,0),color="board",wood=true,
-		decal={"sign",{Face.Front}},sign=true})
+		cf=CFrame.new(-1.95,1.45,-1.03)*CFrame.Angles(0,rad(Client.SignYaw),0)*CFrame.Angles(rad(6),0,0),color="board",wood=true,
+		decal={"sign",BOTH},sign=true})
 	return list
 end
 -- The sign's words: "{pet}'s egg" for the pet stored at land, "Your egg" without a name.
@@ -365,10 +372,10 @@ end
 -- Drawing -------------------------------------------------------------------------------------------------------
 -- The sign's words, written only when they change (the pet stored at land).
 function Client:paintSign()
-	local words=self.signWords
-	if not words or not self.view then return end
+	local list=self.signWords
+	if not list or not self.view then return end
 	local text=Client.signText(self.view)
-	if words.Text~=text then words.Text=text end
+	for _,words in ipairs(list)do if words.Text~=text then words.Text=text end end
 end
 function Client:groundY()
 	local y=Client.Spot.Y
@@ -405,14 +412,17 @@ function Client:draw()
 			for _,face in ipairs(decal[2])do make("Decal",p,{Name="Art",Texture=id,Face=face})end
 		end
 		if spec.sign then
-			-- The pet's name on the board's right 62%; the burnt crescent is in the texture at the left.
-			local gui=make("SurfaceGui",p,{Name="Words",Face=Face.Front,SizingMode=Enum.SurfaceGuiSizingMode.PixelsPerStud,
-				PixelsPerStud=50,LightInfluence=1,AlwaysOnTop=false,ClipsDescendants=true})
-			local words=make("TextLabel",gui,{Name="Name",BackgroundTransparency=1,Position=UDim2.fromScale(.34,.14),
-				Size=UDim2.fromScale(.63,.72),Font=Enum.Font.FredokaOne,TextColor3=Client.Color.signInk,TextScaled=true,
-				TextWrapped=true,Text=""})
-			make("UITextSizeConstraint",words,{MaxTextSize=22})
-			self.signWords=words
+			-- The pet's name on the board's right 62% of each face; the burnt crescent is in the texture at the left.
+			self.signWords={}
+			for _,face in ipairs(BOTH)do
+				local gui=make("SurfaceGui",p,{Name=if face==Face.Front then "Words"else "WordsBack",Face=face,
+					SizingMode=Enum.SurfaceGuiSizingMode.PixelsPerStud,PixelsPerStud=50,LightInfluence=1,AlwaysOnTop=false,ClipsDescendants=true})
+				local words=make("TextLabel",gui,{Name="Name",BackgroundTransparency=1,Position=UDim2.fromScale(.34,.14),
+					Size=UDim2.fromScale(.63,.72),Font=Enum.Font.FredokaOne,TextColor3=Client.Color.signInk,TextScaled=true,
+					TextWrapped=true,Text=""})
+				make("UITextSizeConstraint",words,{MaxTextSize=22})
+				table.insert(self.signWords,words)
+			end
 		end
 		p.Parent=folder
 	end

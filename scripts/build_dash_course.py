@@ -45,7 +45,10 @@ OBSTACLES = [
     (-3.35, 6.3, 1.9, 4.05),  # the bush round the last one
 ]
 CLIFF_X, CLIFF_ROOM = 78.0, 4.0  # nothing of the race comes nearer than this to the cliff rock east of x 78
-PAD, PAD_RADIUS = (67.0, -17.0), 2.5  # where racers wait, off the line and north of it: a pad at (70, 0) put the crown of the tree at (74, 12) in the camera of anyone walking here from spawn.
+# Studio check beta 12 (2026-11-23) moved it from (67, -17): after Done the camera looks west along the course from
+# behind the avatar, and the north start post stood 2.6 studs to the side of that line, across the avatar. At (66, -21)
+# the post is 6.6 studs to the side of it (and 5.5 across it for a camera from the south), and still 6 from the tree.
+PAD, PAD_RADIUS = (66.0, -21.0), 2.5  # where racers wait, off the line and north of it: a pad at (70, 0) put the crown of the tree at (74, 12) in the camera of anyone walking here from spawn.
 # Beta 12 QA U5 moved it from (69, -14) r 3: the wider start (DashGrid) stood the outer pets and a post on it.
 # The start grid (src/shared/DashGrid.lua, kept in step by DashCourse.spec): lanes 1.5 apart at the line, easing to
 # LANE_STEP between FUNNEL[0] and FUNNEL[1] studs on, posts POST_HALF_WIDTH out (centre plus half a post).

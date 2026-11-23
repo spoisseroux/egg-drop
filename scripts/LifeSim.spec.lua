@@ -287,13 +287,13 @@ return function(client)
 		local perched=Sim.birdParts(root,"perch",0,0,nil,20,0)
 		assert(#perched==8)
 		assert(close(perched[2].Position,Vector3.new(0,.37,-.35)),"the head")
-		assert(close(perched[3].Position,Vector3.new(0,.35,-.71)),"the beak off the head")
+		assert(close(perched[3].Position,Vector3.new(0,.34,-.73))and close(perched[3].LookVector,Vector3.new(0,0,-1)),"the beak off the head, straight out")
 		assert(close(perched[4].Position,Vector3.new(.235,.435,-.57))and close(perched[5].Position,Vector3.new(-.235,.435,-.57)),"two eyes")
 		-- The head turns on its own: eyes and beak go with it, the body does not.
 		local turned=Sim.birdParts(root,"perch",0,0,CFrame.Angles(0,math.rad(40),0),20,0)
 		assert(close(turned[1].Position,perched[1].Position)and close(turned[2].Position,perched[2].Position))
 		assert(turned[3].Position.X<-.1,"the beak swings with the head")
-		assert(close(perched[6].Position,Vector3.new(-.53,-.02,.15))and close(perched[7].Position,Vector3.new(.53,-.02,.15)))
+		assert(close(perched[6].Position,Vector3.new(-.54,-.02,.20))and close(perched[7].Position,Vector3.new(.54,-.02,.20)))
 		for i=6,7 do
 			local tip=-perched[i].UpVector -- the texture is tip-down
 			assert(tip.Y<-.5 and tip.Z>.75,"folded tip back and down: "..tostring(tip))
@@ -317,7 +317,8 @@ return function(client)
 		local up=-Sim.birdParts(root,"perch",0,0,nil,2,0)[8].UpVector
 		assert(up.Y>tip.Y,"a flick lifts it")
 		local wings=Sim.butterflyParts(root,0)
-		assert(close(wings[2].Position,Vector3.new(-.32,.03,0))and close(wings[3].Position,Vector3.new(.32,.03,0)),"span 1.2")
+		assert(close(wings[2].Position,Vector3.new(-.31,0,0))and close(wings[3].Position,Vector3.new(.31,0,0)),"span 1.2, from the mid-line")
+		assert(close(wings[1].Position,Vector3.new(0,0,-.03)),"the body .03 forward")
 		for i=2,3 do
 			assert(close(wings[i].UpVector,Vector3.new(0,0,-1)),"image top forward")
 			assert(close(wings[i].LookVector,Vector3.new(0,-1,0)),"Front face down, so Back is up")

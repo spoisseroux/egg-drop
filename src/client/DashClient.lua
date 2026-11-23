@@ -94,6 +94,7 @@ function Client:sync()
 end
 function Client:open()
 	self.isOpen=true
+	pcall(function()require(script.Parent.DashIcons).preload()end)
 	local d=self.d
 	local function on(signal,fn)table.insert(self.connections,signal:Connect(fn))end
 	local function guarded(fn)
@@ -733,7 +734,7 @@ function Client:raceStep(seat,dt,now,reduced)
 	local k=RaceCamera.lineupBlend(-until_,reduced)
 	if k<1 then
 		local view=workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize
-		local ex,ey,ez,lx,ly,lz=RaceCamera.lineup(if view and view.Y>0 then view.X/view.Y else nil)
+		local ex,ey,ez,lx,ly,lz=RaceCamera.lineup(if view and view.Y>0 then view.X/view.Y else nil,count)
 		eye=Vector3.new(ex,ey,ez):Lerp(eye,k);look=Vector3.new(lx,ly,lz):Lerp(look,k)
 	end
 	local px,py,pz=Grid.at(seat.cs,seat.onStones,seat.lane,count)

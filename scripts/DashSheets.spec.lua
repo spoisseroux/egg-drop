@@ -124,5 +124,65 @@ return function(client)
 		local tanH=math.tan(math.rad(Stage.Fov)/2)*196/248
 		assert(2/(2*away*tanH)<=Stage.Fill+.05,"fills at most about 60% of the width")
 	end)
+	test("Studio check beta 12: every pet's whole box (ears, horns, hats) and its highest hop stay inside the stage, feet on the line",function()
+		-- Bear with its ears, a horned or hatted pet, a tall thin one, a wide low one, a big one.
+		local pets={Vector3.new(1.1,1.75,.95),Vector3.new(1,2.6,1),Vector3.new(.7,2.2,.7),Vector3.new(2.6,1,1.6),Vector3.new(2.4,3.2,2)}
+		local stages={}
+		for _,screen in ipairs(SCREENS)do
+			local W,H=screen[1],screen[2]
+			local g=Layout.gate(W,H)
+			table.insert(stages,{w=g.stage.w,h=g.stage.h,feet=g.pedestal.y+g.pedestal.h*.45})
+			for _,opts in ipairs({{earned=true,field=true,strip=true},{}})do
+				local r=Layout.results(W,H,opts)
+				table.insert(stages,{w=r.stage.w,h=r.stage.h,feet=r.podium.y+r.podium.h*.45})
+			end
+		end
+		local top=math.max(Stage.Headroom,math.floor(150*.06))
+		for _,st in ipairs(stages)do
+			local top=math.max(Stage.Headroom,math.floor(st.h*.06))
+			for _,size in ipairs(pets)do
+				for _,lift in ipairs({0,Pose.JumpHeight})do
+					local centre=size.Y/2
+					local eye,look=Stage.camera(size,centre,st.w,st.h,st.feet,lift)
+					local _,feet=Stage.project(eye,look,Vector3.new(0,0,0),st.w,st.h)
+					assert(math.abs(feet-st.feet)<=1,"feet on the line ("..feet.." vs "..st.feet..")")
+					for _,rise in ipairs({0,lift})do
+						for _,sx in ipairs({-1,1})do for _,sy in ipairs({-1,1})do for _,sz in ipairs({-1,1})do
+							local x,y=Stage.project(eye,look,Vector3.new(sx*size.X/2,centre+rise+sy*size.Y/2,sz*size.Z/2),st.w,st.h)
+							assert(y>=top-.5,"headroom over a "..tostring(size.Y).."-stud pet in a "..st.w.."x"..st.h.." stage: "..y)
+							assert(x>=Stage.Side-.5 and x<=st.w-Stage.Side+.5,"inside the sides")
+						end end end
+					end
+				end
+			end
+		end
+		assert(top>0)
+	end)
+	test("FABLE-REVIEW-R1 7: the results pet is 84 pt on a tall stage and 62 on a short one, hops 24 or 16, 8 clear at the top",function()
+		for _,screen in ipairs(SCREENS)do
+			local W,H=screen[1],screen[2]
+			for _,opts in ipairs({{earned=true,field=true,strip=true},{earned=true},{}})do
+				local r=Layout.results(W,H,opts)
+				local tall=r.stage.h>=150
+				local pod,pet=r.podium,r.pet
+				assert(pod.w==math.min(if tall then 132 else 110,r.stage.w-16)and pod.h==(if tall then 22 else 18))
+				assert(r.stage.h-(pod.y+pod.h)==(if tall then 14 else 10),"the step above the bottom")
+				assert(pet.height==(if tall then 84 else 62)and pet.hop==(if tall then 24 else 16)and pet.shift==10 and pet.clear==8)
+				-- A Bear-sized pet with its ears: the box is pet.height on screen, and the top of its hop stays 8 clear.
+				local size=Vector3.new(1.1,1.75,.95)
+				local feetY=pod.y+pod.h*.45
+				local hop=pet.hop*size.Y/pet.height
+				local eye,look=Stage.camera(size,size.Y/2,r.stage.w,r.stage.h,feetY,hop,pet)
+				local _,feet=Stage.project(eye,look,Vector3.new(0,0,0),r.stage.w,r.stage.h)
+				local _,crown=Stage.project(eye,look,Vector3.new(0,size.Y,0),r.stage.w,r.stage.h)
+				assert(math.abs((feet-crown)-pet.height)<=2,"pet "..(feet-crown).." pt on a "..r.stage.h.." stage")
+				assert(math.abs(feet-feetY)<=1)
+				for _,sx in ipairs({-1,1})do for _,sz in ipairs({-1,1})do
+					local _,y=Stage.project(eye,look,Vector3.new(sx*size.X/2,size.Y+hop,sz*size.Z/2),r.stage.w,r.stage.h)
+					assert(y>=pet.clear-.5,"clear over the hop: "..y)
+				end end
+			end
+		end
+	end)
 	return{passed=#cases,cases=cases}
 end

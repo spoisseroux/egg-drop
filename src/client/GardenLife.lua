@@ -66,16 +66,20 @@ Life.ButterflyArt=table.freeze({
 	table.freeze({"butterflyAmber","butterflyAmberM"}),table.freeze({"butterflyChalk","butterflyChalkM"}),
 	table.freeze({"butterflyDusk","butterflyDuskM"}),table.freeze({"butterflyMeadow","butterflyMeadowM"}),
 })
-Life.ButterflyBody=hex("#2A2018")
+Life.ButterflyBody=hex("#33271C") -- FABLE-REVIEW-R1 1: a spindle (Sphere mesh), not a plank
 Life.Glow=table.freeze({colour=hex("#E8FF8A"),brightness=2,maxDistance=110})
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 3), picked by perch index % 3; the wing is a full-colour file, the breast and tail
 -- are tinted decals.
 Life.BirdLooks=table.freeze({
 	[0]=table.freeze({name="Ember",body=hex("#EADBC2"),breast=hex("#D9713A"),head=hex("#7A6248"),tail=hex("#5E4A36"),beak=hex("#3A3028"),wing="birdWingEmber"}),
 	[1]=table.freeze({name="Slate",body=hex("#EBDCC4"),breast=hex("#E0A070"),head=hex("#6F8FB3"),tail=hex("#465E7E"),beak=hex("#2E2E33"),wing="birdWingSlate"}),
-	[2]=table.freeze({name="Moss",body=hex("#E6D788"),breast=hex("#A6A45E"),head=hex("#3F4438"),tail=hex("#4A5230"),beak=hex("#4A4038"),wing="birdWingMoss"}),
+	[2]=table.freeze({name="Moss",body=hex("#E6D788"),breast=hex("#A6A45E"),head=hex("#6E7A4A"),tail=hex("#4A5230"),beak=hex("#4A4038"),wing="birdWingMoss"}),
 })
 Life.EyeInk=hex("#14110F")
+Life.ButterflySize=Vector3.new(.09,.08,.42)
+Life.BirdMaterial=Enum.Material.Sand -- matte, fine grain (FABLE-REVIEW-R1 2; Fabric if it reads as gravel)
+Life.BirdBeak=Vector3.new(.10,.09,.24)
+Life.BirdWing=Vector3.new(.04,.95,.66)
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 2): the three leaf emitters. The petal's tint follows the crowns (lime or pink).
 Life.Leaves=table.freeze({
 	table.freeze({name="LifeLeafA",texture="leafA",size={.30,.46,.08,.42}}),
@@ -90,6 +94,15 @@ Life.BubbleHeading=(Wind.Direction*2.25+Vector3.new(0,Sim.BubbleRise,0)).Unit
 local function finite(n)return type(n)=="number"and n==n and math.abs(n)<math.huge end
 
 -- Parts ---------------------------------------------------------------------------------------------------------
+-- A Sphere SpecialMesh on a block: a rounded spindle or beak in the block's own proportions (no extra part).
+local function spindle(p)
+	local mesh=Instance.new("SpecialMesh")
+	mesh.Name="Spindle"
+	mesh.MeshType=Enum.MeshType.Sphere
+	mesh.Scale=Vector3.new(1,1,1)
+	mesh.Parent=p
+	return mesh
+end
 local function part(folder,name,class,size,colour,shape)
 	local p=Instance.new(class or "Part")
 	p.Name=name
@@ -376,25 +389,25 @@ function Life:enable()
 	self.folder=folder
 	self.shown={}
 	self.birdPool,self.birdArt,self.flyPool,self.leafPool={},{},{},{}
-	-- Birds (round 3): body (the breast decal on its Front), head, beak turned corner-first, two bead eyes, two wing
-	-- plates, the tail plate. Eight parts. Each slot starts with a different wing file, so all three load at once.
+	-- Birds (round 3; FABLE-REVIEW-R1 2): body (the breast decal on its Front) and head in matte Sand, an ellipsoid beak,
+	-- two bead eyes with no shine, two wing plates, the tail plate. Eight parts. Each slot starts with a different wing file, so all three load at once.
 	local Face=Enum.NormalId
 	for slot=1,Sim.Caps.birds[1]do
 		local look=Life.BirdLooks[(slot-1)%3]
 		local name="LifeBird"..slot.."_"
 		local bodyPart=part(folder,name.."Body","Part",Vector3.new(1.05,1.05,1.05),look.body,Enum.PartType.Ball)
+		bodyPart.Material=Life.BirdMaterial
 		local art={wings={},tail={}}
 		local breast=LifeArt.id("birdBreast")
 		if breast then art.breast=decal(bodyPart,Face.Front,breast,look.breast)end
 		local eyes={}
 		for _,side in ipairs({"EyeR","EyeL"})do
 			local eye=part(folder,name..side,"Part",Vector3.new(.14,.14,.14),Life.EyeInk,Enum.PartType.Ball)
-			eye.Reflectance=.2
 			eyes[side]=eye
 		end
 		local wings={}
 		for i,side in ipairs({"WingL","WingR"})do
-			local plate=part(folder,name..side,"Part",Vector3.new(.04,.75,.55),false)
+			local plate=part(folder,name..side,"Part",Life.BirdWing,false)
 			table.insert(art.wings,decal(plate,Face.Left,LifeArt.id(look.wing),white))
 			table.insert(art.wings,decal(plate,Face.Right,LifeArt.id(look.wing),white))
 			wings[i]=plate
@@ -402,10 +415,14 @@ function Life:enable()
 		local tail=part(folder,name.."Tail","Part",Vector3.new(.46,.68,.02),false)
 		art.tail={decal(tail,Face.Front,LifeArt.id("birdTail"),look.tail),decal(tail,Face.Back,LifeArt.id("birdTail"),look.tail)}
 		art.wing=look.wing
+		local head=part(folder,name.."Head","Part",Vector3.new(.68,.68,.68),look.head,Enum.PartType.Ball)
+		head.Material=Life.BirdMaterial
+		local beak=part(folder,name.."Beak","Part",Life.BirdBeak,look.beak)
+		spindle(beak)
 		self.birdPool[slot]={
 			bodyPart,
-			part(folder,name.."Head","Part",Vector3.new(.68,.68,.68),look.head,Enum.PartType.Ball),
-			part(folder,name.."Beak","Part",Vector3.new(.17,.17,.17),look.beak),
+			head,
+			beak,
 			eyes.EyeR,eyes.EyeL,
 			wings[1],wings[2],
 			tail,
@@ -422,7 +439,8 @@ function Life:enable()
 		local right=part(folder,name.."WingR","Part",Vector3.new(.56,.67,.02),false)
 		local decals={decal(left,Face.Back,mirror,white),decal(left,Face.Front,file,white),
 			decal(right,Face.Back,file,white),decal(right,Face.Front,mirror,white)}
-		local bodyPart=part(folder,name.."Body","Part",Vector3.new(.08,.08,.40),Life.ButterflyBody)
+		local bodyPart=part(folder,name.."Body","Part",Life.ButterflySize,Life.ButterflyBody)
+		spindle(bodyPart)
 		local gui,dot=glow(bodyPart)
 		self.flyPool[slot]={parts={bodyPart,left,right},decals=decals,glow=gui,dot=dot,
 			owner=nil,wing=0,body=0,glowOn=false,glowSize=nil,glowTr=nil}

@@ -41,12 +41,34 @@ return function(client)
 			local centre=l.digits.y+l.digits.h/2
 			assert(math.abs(centre-H*Hud.DigitsAt)<=1 or l.digits.y==l.strip.y+l.strip.h+6,"digits at 26% at "..W.."x"..H)
 			assert(l.digits.y+l.digits.h<=l.word.y,"over the GO word")
-			-- The key cap sits over the pad's top right, clear of the bar and the stones key above.
+			-- The key cap sits over the pad's inner top corner, clear of the bar and the stones key above.
 			assert(l.bar.y+l.bar.h<=l.dash.y-Hud.Cap+Hud.CapIn and l.stones.y+l.stones.h<=l.jump.y-Hud.Cap+Hud.CapIn)
 		end
 		local jump,dash=Hud.capWords(true,false);assert(jump==""and dash=="","no caps on touch")
 		jump,dash=Hud.capWords(false,true);assert(jump=="A"and dash=="RT")
 		jump,dash=Hud.capWords(false,false);assert(jump=="Space"and dash=="Shift")
+	end)
+	test("Studio check beta 12: both key caps stay inside the safe area on every screen, clear of every other piece",function()
+		for _,screen in ipairs(SCREENS)do
+			local W,H=screen[1],screen[2]
+			local l=Hud.layout(W,H)
+			for _,width in ipairs({Hud.Cap,44,52,64,90})do
+				local caps={}
+				for _,name in ipairs({"jump","dash"})do
+					local b=Hud.capBox(l,name,width);caps[name]=b
+					assert(b.x>=Hud.CapEdge and b.y>=0 and b.x+b.w<=W-Hud.CapEdge and b.y+b.h<=H,name.." cap "..width.." on screen at "..W.."x"..H)
+					assert(b.h==20,"20 tall")
+					assert(not apart(b,l[name]),name.." cap touches its pad")
+					for _,other in ipairs({"stones","bar","strip","place","leave","digits"})do
+						assert(apart(b,l[other]),name.." cap and "..other.." at "..W.."x"..H)
+					end
+				end
+				assert(apart(caps.jump,caps.dash)and apart(caps.jump,l.dash)and apart(caps.dash,l.jump),"caps apart at "..W)
+				-- Dash's cap on its pad's top right; Jump's, by the screen's right edge, on its top left (toward the middle).
+				assert(caps.jump.x+caps.jump.w==l.jump.x+Hud.CapIn and caps.dash.x==l.dash.x+l.dash.w-Hud.CapIn)
+				assert(Hud.CapText>=11)
+			end
+		end
 	end)
 	test("the ring closes on the pad as the hoop comes, and is larger for a first race",function()
 		assert(Hud.ring(nil)==nil and Hud.ring(Hud.RingTicks+1)==nil and Hud.ring(-20)==nil)
@@ -54,6 +76,14 @@ return function(client)
 		local last=math.huge
 		for ticks=Hud.RingTicks,0,-1 do local r=Hud.ring(ticks);assert(r<=last and r>=1);last=r end
 		assert(Hud.ring(50,true)>Hud.ring(50,false))
+	end)
+	test("FABLE-REVIEW-R1 5: the icons are fetched when Dash mounts, every uploaded one, and a failing fetch is quiet",function()
+		local Icons=require(client.DashIcons)
+		local list=Icons.list()
+		assert(#list>=5 and list[1]==Icons.image("dash")and list[2]==Icons.image("jump"))
+		local asked
+		assert(Icons.preload({PreloadAsync=function(_,ids)asked=ids end})==#list and asked and #asked==#list)
+		Icons.preload({PreloadAsync=function()error("offline")end})
 	end)
 	test("the setters write only what changed, and make nothing",function()
 		local writes=0

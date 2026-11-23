@@ -395,17 +395,19 @@ return function(client)
 				assert(n==8,"bird parts "..n)
 				local look=Life.BirdLooks[(slot-1)%3]
 				local bodyPart=folder:FindFirstChild(name.."Body")
-				assert(bodyPart.Size==Vector3.new(1.05,1.05,1.05)and bodyPart.Color==look.body)
+				assert(bodyPart.Size==Vector3.new(1.05,1.05,1.05)and bodyPart.Color==look.body and bodyPart.Material==Life.BirdMaterial)
 				if LifeArt.id("birdBreast")then faces(bodyPart,{[Face.Front]=LifeArt.id("birdBreast")})else assert(next(decals(bodyPart))==nil,"no breast stand-in")end
-				assert(folder:FindFirstChild(name.."Head").Size==Vector3.new(.68,.68,.68))
+				local head=folder:FindFirstChild(name.."Head")
+				assert(head.Size==Vector3.new(.68,.68,.68)and head.Material==Life.BirdMaterial and head.Color==look.head)
 				for _,side in ipairs({"EyeR","EyeL"})do
 					local eye=folder:FindFirstChild(name..side)
-					assert(eye.Size==Vector3.new(.14,.14,.14)and eye.Color==Life.EyeInk and eye.Reflectance==.2)
+					assert(eye.Size==Vector3.new(.14,.14,.14)and eye.Color==Life.EyeInk and eye.Reflectance==0,"no shine")
 				end
-				assert(folder:FindFirstChild(name.."Beak").Size==Vector3.new(.17,.17,.17))
+				local beak=folder:FindFirstChild(name.."Beak")
+				assert(beak.Size==Vector3.new(.10,.09,.24)and beak:FindFirstChild("Spindle")and beak.Spindle.ClassName=="SpecialMesh","an ellipsoid beak")
 				for _,side in ipairs({"WingL","WingR"})do
 					local plate=folder:FindFirstChild(name..side)
-					assert(plate.Size==Vector3.new(.04,.75,.55)and plate.Transparency==1,"a see-through plate")
+					assert(plate.Size==Vector3.new(.04,.95,.66)and plate.Transparency==1,"a see-through plate")
 					for _,d in pairs(faces(plate,{[Face.Left]=LifeArt.id(look.wing),[Face.Right]=LifeArt.id(look.wing)}))do assert(isWhite(d.Color3))end
 				end
 				wingsLoaded[look.wing]=true
@@ -420,7 +422,8 @@ return function(client)
 				for _,p in ipairs(r.parts())do if string.sub(p.Name,1,#name)==name then n+=1 end end
 				assert(n==3,"butterfly parts "..n)
 				local bodyPart=folder:FindFirstChild(name.."Body")
-				assert(bodyPart.Size==Vector3.new(.08,.08,.40)and bodyPart.Color==Life.ButterflyBody)
+				assert(bodyPart.Size==Vector3.new(.09,.08,.42)and bodyPart.Color==Life.ButterflyBody and bodyPart.Reflectance==0)
+				assert(bodyPart:FindFirstChild("Spindle")and bodyPart.Spindle.ClassName=="SpecialMesh","a spindle, still 3 parts")
 				local left,right=folder:FindFirstChild(name.."WingL"),folder:FindFirstChild(name.."WingR")
 				for _,plate in ipairs({left,right})do assert(plate.Size==Vector3.new(.56,.67,.02)and plate.Transparency==1)end
 				local file,mirror=LifeArt.id(Life.ButterflyArt[slot][1]),LifeArt.id(Life.ButterflyArt[slot][2])
