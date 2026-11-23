@@ -11,6 +11,8 @@ return function(server)
 	local Dressing=require(Shared.WorldDressing)
 	local Aero=require(Shared.WorldAero)
 	local Onboard=require(Shared.Onboard)
+	local Walk=require(Shared.GardenWalkability)
+	local Catchup=require(Shared.PetCatchup)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local function flat(a,x,z)return math.sqrt((a.X-x)^2+(a.Z-z)^2)end
@@ -21,12 +23,14 @@ return function(server)
 		return math.sqrt((px-ax-dx*t)^2+(pz-az-dz*t)^2)
 	end
 	local spot=Nest.Spot
-	local Plaza=Vector3.new(-30,0,-4)
+	local Hub=Layout.Landmarks.Hub
 
-	test("spot A: (-17.5, 4.07, -2.5) on the plaza's east rim, 12.6 from its middle, facing it",function()
+	test("spot A: (-17.5, 4.07, -2.5) on the plaza's east rim, 12.6 from the marble circle's middle, facing it",function()
 		assert(spot==Vector3.new(-17.5,4.07,-2.5),tostring(spot))
-		assert(math.abs(flat(spot,Plaza.X,Plaza.Z)-12.59)<.05,"on the rim")
-		assert(Nest.Facing==Vector3.new(-30,4.07,-4)and Nest.Block==5.5)
+		-- Fable's (-30, -4), not the layout's Hub (-30, 4): the Studio probe put the Hub facing's prompt on a trim strip.
+		assert(Nest.Facing==Vector3.new(-30,4.07,-4)and Hub==Vector2.new(-30,4))
+		assert(math.abs(flat(spot,-30,-4)-12.59)<.05,"on the rim")
+		assert(Nest.Block==4.2 and Nest.Front==2.6)
 	end)
 
 	test("clear of every station, the Dash course and pad, the arrival walking line, the flowers and the firefly areas",function()
@@ -53,22 +57,49 @@ return function(server)
 		for _,area in ipairs(Aero.Fireflies.Areas)do assert(flat(spot,area.x,area.z)>=10+area.width,area.name)end
 	end)
 
-	test("the server keeps pets off the nest's square: one GardenBlockedRegion, 5.5 studs, at the spot (Onboarding v3 places only)",function()
+	-- The world built under an Onboarding v3 environment (nil: the real one), its SleepyNest box or nil.
+	local function build(env)
+		Onboard.inject(env)
 		local room=Instance.new("Folder")
 		local ok,problem=pcall(function()require(server.LoungeWorldV7Art).collision(room)end)
+		Onboard.inject(nil)
 		assert(ok,problem)
 		local regions=room:FindFirstChild("PetRegions")
-		local box=regions and regions:FindFirstChild("SleepyNest")
-		if Onboard.ceiling()then
-			assert(box,"the box is there with the ceiling on")
-			assert(box:GetAttribute("GardenBlockedRegion")==true and box.CanCollide==false and box.Transparency==1)
-			assert(box.Size==Vector3.new(5.5,1,5.5))
-			local at=box.CFrame.Position
-			assert(math.abs(at.X-spot.X)<1e-6 and math.abs(at.Z-spot.Z)<1e-6)
-		else
-			assert(box==nil,"no box without the ceiling (live)")
+		return regions and regions:FindFirstChild("SleepyNest"),regions
+	end
+
+	test("the server keeps pets off the nest: one GardenBlockedRegion, turned with the nest, on the beta and in Studio only",function()
+		local box=build({flags={OnboardingV3=true},place=107705084891479,studio=false})
+		assert(box,"the beta: the box is there")
+		assert(box:GetAttribute("GardenBlockedRegion")==true and box.CanCollide==false and box.Transparency==1)
+		assert(box.Size==Vector3.new(4.2,1,4.2))
+		local at=box.CFrame.Position
+		assert(math.abs(at.X-spot.X)<1e-6 and math.abs(at.Z-spot.Z)<1e-6)
+		local toward=Vector3.new(Nest.Facing.X-spot.X,0,Nest.Facing.Z-spot.Z).Unit
+		assert((box.CFrame.LookVector-toward).Magnitude<1e-6,"its front faces the plaza like the nest")
+		assert(build({flags={OnboardingV3=true},studio=true}),"Studio: the box is there")
+		assert(build({place=96451847774961,studio=false})==nil,"live: no box")
+		assert(build({flags={OnboardingV3=false},place=107705084891479,studio=false})==nil,"the flag off: no box")
+	end)
+
+	test("pets stay off the rim and straw; the prompt, the trail end and a catch-up landing beside a player there stay open",function()
+		local box=build({flags={OnboardingV3=true},studio=true})
+		local wet={box}
+		local root=CFrame.lookAt(Vector3.new(spot.X,spot.Y,spot.Z),Vector3.new(Nest.Facing.X,spot.Y,Nest.Facing.Z))
+		for k=0,15 do
+			local a=k/16*math.pi*2
+			local rim=root*Vector3.new(math.cos(a)*2.4,0,math.sin(a)*2.4)
+			assert(not Walk.segmentAllowed(rim,rim,wet),"a pet in the nest at "..k)
 		end
-		assert(Onboard.ceiling({place=96451847774961,studio=false})==false,"live: never")
+		local prompt=root*Vector3.new(0,0,-Nest.Front)
+		assert(Walk.segmentAllowed(prompt,prompt,wet),"the prompt point is open")
+		-- A player standing at the prompt: the catch-up's first candidate (ring 0) is the player's own spot.
+		local open=0
+		local list=Catchup.candidates(prompt,(prompt-root.Position).Unit)
+		assert(list[1]==prompt or(list[1]-prompt).Magnitude<1e-6,"ring 0 is the anchor")
+		assert(Walk.segmentAllowed(list[1],list[1],wet),"ring 0 (the player's own spot) is a landing")
+		for _,candidate in ipairs(list)do if Walk.segmentAllowed(candidate,candidate,wet)then open+=1 end end
+		assert(open>=#list-4,"only the candidates over the nest are taken: "..open.." of "..#list)
 	end)
 
 	return{passed=#cases,cases=cases}

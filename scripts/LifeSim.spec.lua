@@ -105,10 +105,15 @@ return function(client)
 		end
 		local spot,why=Sim.leafSpot(r,Vector3.zero,{ground=function()return nil end})
 		assert(spot==nil and why=="ground")
-		-- The rotunda (the default cover): stand under it; every spot that comes back drifts clear of the roof.
-		assert(#Sim.LeafCover>=1 and Sim.LeafCover[1].name=="Rotunda"and Sim.LeafCoverChecked==false)
+		-- The Studio probe's roofs (STUDIO-PROBES.md): the rotunda first, at (-60, 50) r 8.2; leaves on the beta now.
+		assert(Sim.LeafCoverChecked==true and #Sim.LeafCover==6)
 		local roof=Sim.LeafCover[1]
-		local world={ground=function()return 14 end}
+		assert(roof.name=="Rotunda"and roof.x==-60 and roof.z==50 and roof.r==8.2)
+		local names={}
+		for _,place in ipairs(Sim.LeafCover)do assert(place.r>0 and not names[place.name]);names[place.name]=true end
+		assert(names.BridgeArch and names.WestColonnade and names.EastColonnade and names.StationRoof and names.BridgeArchSide)
+		-- Stand under the rotunda: every spot that comes back drifts clear of its roof.
+		local world={ground=function()return 14 end,cover={roof}}
 		local refused=0
 		for _=1,2000 do
 			local at,reason=Sim.leafSpot(r,Vector3.new(roof.x,14,roof.z),world)
@@ -119,10 +124,14 @@ return function(client)
 		end
 		assert(refused>100 and refused<1900,"some refused, not all: "..refused)
 		local function from(d)return roof.x+Wind.Direction.X*d,roof.z+Wind.Direction.Z*d end
-		assert(Sim.leafCovered(from(0))=="Rotunda","over the roof")
-		assert(Sim.leafCovered(from(-(L.reach-1)))=="Rotunda","upwind within reach drifts in")
-		assert(Sim.leafCovered(from(-(L.reach+roof.r+L.side+1)))==nil,"far upwind is fine")
-		assert(Sim.leafCovered(from(roof.r+L.side+1))==nil,"downwind of the roof is fine")
+		local only={roof}
+		local function covered(d)local x,z=from(d);return Sim.leafCovered(x,z,only)end
+		assert(covered(0)=="Rotunda","over the roof")
+		assert(covered(-(L.reach-1))=="Rotunda","upwind within reach drifts in")
+		assert(covered(-(L.reach+roof.r+L.side+1))==nil,"far upwind is fine")
+		assert(covered(roof.r+L.side+1)==nil,"downwind of the roof is fine")
+		-- The default list: under the bridge arch too.
+		assert(Sim.leafCovered(5,20.6)=="BridgeArch")
 		-- The cover list is a table: a probe row drops in.
 		assert(Sim.leafCovered(0,0,{{name="Cave",x=0,z=0,r=5}})=="Cave")
 	end)
@@ -457,6 +466,20 @@ return function(client)
 		world.player=spot
 		birds:step(7.1,world,true,3,0)
 		assert(#birds.list==0,"gone at once")
+		-- Perched with its head cocked and mid-hop when Reduced Motion comes on: head straight and still at once.
+		local live=Sim.Birds.new(4)
+		assert(live:chirp(20,3,spot,3,{},false)=="land")
+		local perched=live.list[1]
+		perched.stayUntil=math.huge
+		local t=20
+		while perched.head.at==-math.huge and t<40 do t+=1/30;live:step(t,{},false,3,0)end
+		assert(perched.head.at>-math.huge,"a head snap happened")
+		perched.head.yaw,perched.head.roll,perched.head.fromYaw,perched.head.fromRoll=40,15,40,15
+		assert(live:chirp(t,3,spot,3,{},false)=="hop")
+		live:step(t+.05,{},true,3,0)
+		assert((perched.turn.LookVector-Vector3.new(0,0,-1)).Magnitude<1e-6 and(perched.turn.UpVector-Vector3.new(0,1,0)).Magnitude<1e-6,"head straight")
+		assert(perched.hopAt==nil and perched.tau==Sim.Bird.tail and perched.still==true,"no hop, tail at rest, still")
+		assert(math.abs(perched.root.Position.Y-(spot.Y+.50))<1e-6,"sitting on the crown")
 		-- In flight when Reduced Motion comes on: it sits at once.
 		assert(birds:chirp(8,3,spot,3,{},false)=="land")
 		birds:step(8.2,{},true,3,0)

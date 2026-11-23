@@ -135,7 +135,9 @@ function Art.collision(room)
 	local okOnboard,onboard=pcall(function()return require(Shared.Onboard).ceiling()end)
 	if okOnboard and onboard==true then
 		local Nest=require(Shared.Nest)
-		local box=invisible(nil,"SleepyNest",CFrame.new(Nest.Spot.X,World.FloorTop+.5,Nest.Spot.Z),Vector3.new(Nest.Block,1,Nest.Block),false)
+		local y=World.FloorTop+.5
+		local at=CFrame.lookAt(Vector3.new(Nest.Spot.X,y,Nest.Spot.Z),Vector3.new(Nest.Facing.X,y,Nest.Facing.Z))
+		local box=invisible(nil,"SleepyNest",at,Vector3.new(Nest.Block,1,Nest.Block),false)
 		box:SetAttribute("GardenBlockedRegion",true)
 		box.Parent=regions
 	end

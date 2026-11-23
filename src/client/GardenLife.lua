@@ -12,8 +12,8 @@
 -- is moved far away, never re-parented or resized. Textures come from LifeArt (the uploaded ids, or stand-ins until then).
 --   Leaves: three emitters (leaf A, leaf B, a pale petal) whose anchors move to a fresh spot round the player for each
 --   emit (LifeSim.leafSpot: 72 studs square, 11 over the ground, never where the drift would carry it under a roof);
---   28 / 14 alive at most, their Acceleration (the wind) written at 4 Hz. Shown on the beta only once the covered-place
---   list has been checked in Studio (LifeSim.LeafCoverChecked); always in Studio.
+--   28 / 14 alive at most, their Acceleration (the wind) written at 4 Hz. Shown on the beta once the covered-place list
+--   came from the Studio probe (LifeSim.LeafCoverChecked, true since 2026-11-23); always in Studio.
 --   Butterflies: wing decals, body and glow written at 10 Hz and only on change; at dusk (daylight under .30) each hands
 --   off to a firefly glow (LifeSim), and a park or Reduced Motion turns every glow off at once.
 --   Birds: a sitting bird with nothing moving is not written again.
@@ -448,6 +448,8 @@ function Life:enable()
 	self.birdStill={}
 	self.elapsed,self.since,self.steps,self.pollIn,self.gateIn,self.lookIn,self.windIn=0,0,0,0,0,0,0
 	self.parked,self.hatch,self.live,self.wasReduced,self.colour,self.lime=false,false,false,false,nil,false
+	-- One spot function for every step: round self.leafCentre (the player), never under a roof.
+	self.leafPlace=function(_,random)return Sim.leafSpot(random,self.leafCentre,self.leafWorld)end
 	local okGate,gate=pcall(self.leavesGate)
 	self.leavesOn=okGate and gate==true
 	self:readDay(self.now())
@@ -621,9 +623,8 @@ function Life:step(dt)
 			local accel=Sim.leafWind(g,now)
 			for _,entry in ipairs(self.leafPool)do entry.emitter.Acceleration=accel end
 		end
-		local leafWorld=self.leafWorld
-		local place=function(_,random)return Sim.leafSpot(random,centre,leafWorld)end
-		for _,leaf in ipairs(self.leaves:step(now,tick,g,Sim.cap("leaves",level),level,place))do
+		self.leafCentre=centre
+		for _,leaf in ipairs(self.leaves:step(now,tick,g,Sim.cap("leaves",level),level,self.leafPlace))do
 			local entry=self.leafPool[leaf.kind]
 			put(entry.anchor,CFrame.new(leaf.at))
 			table.insert(emits,{entry.emitter,1})

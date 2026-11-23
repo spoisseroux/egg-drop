@@ -35,7 +35,7 @@ Client.Event="NestEvent"
 Client.Claim="NestClaim"
 Client.Spot=Nest.Spot                  -- the plaza's east rim (spot A); the walk map's ground, raycast when it can be
 Client.Facing=Nest.Facing              -- the plaza's middle: root -Z points at it
-Client.PromptAt=Vector3.new(0,1,-2.6)  -- root-local: the prompt, and where the Bear's prints end
+Client.PromptAt=Vector3.new(0,1,-Nest.Front) -- root-local: the prompt, and where the Bear's prints end (outside the pets' box)
 Client.BearSpot=Vector3.new(2.2,0,-1.4) -- the Bear curls here (the fringe is wider); the sign is on the other side
 Client.EggBase=.64     -- .06 into the straw bed
 Client.Scale=table.freeze({small=1.25,glow=1.6,rocking=2,ready=2})

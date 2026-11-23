@@ -316,7 +316,7 @@ return function(client)
 		assert(typeof(at)=="Vector3")
 		assert(math.abs(at.Y-6)<1e-6,"ground 5, the prompt 1 over it: "..tostring(at.Y))
 		local centre=Vector3.new(SPOT.X,6,SPOT.Z)
-		assert(math.abs((at-centre).Magnitude-2.6)<1e-6,"2.6 studs toward the plaza's middle")
+		assert(math.abs((at-centre).Magnitude-Nest.Front)<1e-6,"Front studs toward the plaza's middle")
 		local toward=(Vector3.new(Nest.Facing.X,6,Nest.Facing.Z)-centre).Unit
 		assert(((at-centre).Unit-toward).Magnitude<1e-6,"the front faces the plaza's middle")
 		Onboard.inject(nil)

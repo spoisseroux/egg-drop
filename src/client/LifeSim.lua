@@ -124,14 +124,22 @@ Sim.Leaf=table.freeze({
 	-- spends most of its life in the calm lean. [check] in Studio that a leaf's real drift matches (Drag's half-life).
 	reach=16,side=2,
 })
--- The covered places (roofs) no leaf may come down under: a flat circle each, x, z and radius in studs. The rotunda's
--- roof is W7_Rotunda__palette (15 x 15 at (-60, 50), top 30.2): radius 8 until the Studio probe measures the overhang.
--- The read-only probe (scripts/probe_leaf_cover.luau) lists every roofed cell on the island; its clusters drop in here,
--- and LeafCoverChecked goes true once it has run. Until then GardenLife shows leaves only in Studio (not on the beta).
+-- The covered places (roofs) no leaf may come down under: a flat circle each, x, z and radius in studs. From the
+-- read-only Studio probe (scripts/probe_leaf_cover.luau, Play on the beta build after the island re-export, 2026-11-23;
+-- artifacts/qa-2026-11-23-beta12/STUDIO-PROBES.md): every roof players stand under. Left out: the north aqueduct and
+-- the cave and rock overhangs (behind the cave blocker and the rocks: nobody stands there) and the 1-2 cell rails and
+-- ledges. Kept although IslandBounds.safeCell is false at their middles (pets do not walk there, players do): the
+-- rotunda (on the knoll), the arch over the bridge, the station roof and the east colonnade.
 Sim.LeafCover={
-	{name="Rotunda",x=-60,z=50,r=8},
+	{name="Rotunda",x=-60,z=50,r=8.2},           -- W7_Rotunda__palette, 45 cells
+	{name="BridgeArch",x=5,z=20.6,r=14.8},       -- W7_Architecture__palette, 29 cells
+	{name="BridgeArchSide",x=-6,z=24.7,r=3.4},   -- W7_Architecture__palette, 3 cells
+	{name="WestColonnade",x=-36.4,z=-25.1,r=11.8}, -- W7_Architecture__trim, 9 cells
+	{name="StationRoof",x=-46,z=-8.7,r=3.4},     -- W7_Stations__wood_plank, 3 cells
+	{name="EastColonnade",x=85,z=57.4,r=8.4},    -- W7_Architecture__trim, 10 cells
 }
-Sim.LeafCoverChecked=false
+-- The probe has run: leaves show on the beta (beta 13).
+Sim.LeafCoverChecked=true
 
 -- The Acceleration for gust g (0 to 1) at time t: downwind lean, a slow sideways sway, a gentle fall.
 function Sim.leafWind(g,t)
@@ -585,6 +593,12 @@ function Birds:step(now,world,reduced,cap,level)
 			if bird.state=="land"then bird.state="sit";bird.landedAt=-math.huge;bird.hopAt=nil;bird.hop2=nil
 			else table.remove(list,i);continue end
 		end
+		if reduced and bird.head and(bird.head.at~=-math.huge or bird.hopAt or bird.turnStart)then
+			-- Reduced Motion while perched: head straight, no hop or turn in flight, the tail at rest, at once.
+			bird.head={yaw=0,roll=0,fromYaw=0,fromRoll=0,at=-math.huge}
+			bird.hopAt,bird.hop2,bird.turnStart=nil,nil,nil
+			bird.landedAt=-math.huge
+		end
 		if bird.state=="land"and now-bird.start>=B.land then bird.state="sit";bird.landedAt=now end
 		if bird.state=="sit"then
 			local player=world.player
@@ -637,9 +651,10 @@ end
 local function tailAt(bird,now)
 	local B=Sim.Bird
 	local last=-math.huge
-	for _,t in ipairs({bird.landedAt or -math.huge,bird.hopAt or -math.huge,bird.hop2 or -math.huge})do
-		if t<=now and t>last then last=t end
-	end
+	local a,b,c=bird.landedAt,bird.hopAt,bird.hop2
+	if a and a<=now and a>last then last=a end
+	if b and b<=now and b>last then last=b end
+	if c and c<=now and c>last then last=c end
 	local u=(now-last)/B.tailTime
 	if u<0 or u>=1 then return B.tail end
 	local k=if u<.5 then smooth(u*2)else smooth((1-u)*2)
@@ -685,7 +700,8 @@ function Sim.birdPose(bird,now,level)
 		local k=1-(since-B.dipIn)/B.dipOut;y-=B.dip*k;pitch-=B.dipPitch*k
 	end
 	local busy=false
-	for _,start in ipairs({bird.hopAt or false,bird.hop2 or false})do
+	for i=1,2 do
+		local start=if i==1 then bird.hopAt else bird.hop2
 		if start then
 			local h=now-start
 			if h>=0 and h<B.hopTime then local u=h/B.hopTime;y+=B.hop*4*u*(1-u);busy=true

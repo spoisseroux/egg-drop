@@ -20,11 +20,18 @@ Nest.ReadyPing=14               -- studs: the one soft ping when a ready egg com
 Nest.Charm="nest"               -- the Nest Charm: an earned rule (n >= WeekLength), no saved data
 -- Where the nest stands (beta 12 QA O2, GARDEN-LIFE-NEST-LOOK 4, spot A): the plaza's east rim, root -Z facing the
 -- plaza's middle. Y is the walk map's ground (the client raycasts it). Shared: NestClient draws the nest here and the
--- server keeps pets off it (LoungeWorldV7Art: one GardenBlockedRegion box, Block wide, behind Onboard.ceiling).
--- Fallback B, if Studio shows A blocked: (-22.5, 4.07, 5.5), same facing.
+-- server keeps pets off it (LoungeWorldV7Art: one GardenBlockedRegion box, Block wide, turned with the nest, behind
+-- Onboard.ceiling). Facing is Fable's middle of the marble circle (-30, -4), not HollowWorldLayout's Hub (-30, 4):
+-- the Studio probe (artifacts/qa-2026-11-23-beta12/STUDIO-PROBES.md, scripts/probe_nest_spot.luau) put this facing's
+-- prompt on open marble (y 4.09) and the Hub facing's on a raised trim strip (y 4.20). Spot A is clear all round.
+-- Fallback B (also clear): (-22.5, 4.07, 5.5), same facing.
 Nest.Spot=Vector3.new(-17.5,4.07,-2.5)
 Nest.Facing=Vector3.new(-30,4.07,-4)
-Nest.Block=5.5                  -- studs: the square pets walk round
+-- Pets keep Block / 2 + .35 (GardenWalkability's margin) = 2.45 studs off the middle: over the rim and the straw, at
+-- most grazing the see-through fringe's tips (2.57). The prompt, the Show me trail's end and a catch-up landing beside
+-- a player standing there are at Front, outside it (the probe's marble spot).
+Nest.Block=4.2
+Nest.Front=2.6
 
 -- The welcome-week gifts, egg 1 to 7, fixed and shown from the moment the egg lands (never rolled). `stars` is
 -- always paid with the egg. Item kinds pick at land time and store the pick in `gift`:

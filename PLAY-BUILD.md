@@ -10,6 +10,16 @@ Verified before publish: 301 runtime sources match Studio; 498 script containers
 
 ---
 
+## Pre-publish checklist (every beta or live build)
+
+1. Offline specs green: `python scripts/run_dash_server_specs.py "C:/Users/skunk/Documents/Development/egg-drop/build/luau-cli/luau.exe"`.
+2. Garden life and nest textures: `python scripts/check_life_art.py` passes (every LifeArt id uploaded, files byte-identical to `scripts/draw_garden_life_r3_textures.py`).
+3. Translations: `python scripts/export_localization_csv.py`, then `python scripts/sync_localization.py`; record "translations synced (N add/update, M delete)" in the build's entry (AGENTS.md).
+4. Test content stripped (ZZSpecs), Rojo disconnected.
+5. Live only: the store listing audit (AGENTS.md); record "listing audited: ...".
+
+---
+
 ## Unpublished checkpoint — 2026-11-14
 
 No experience publish; published QA baseline remains private v634. World/garden/QA fixes, native hatch/SFX, lucky Jelly pool4 and sparse garden/deck working music are integrated. Native56server/36client suites pass across initial runs and targeted reruns; fresh full-build20,920collision rays match. Native Studio download copies preserve all170physical payloads. Local translation CSV regenerated:591strings; cloud sync deferred until an authorized publish. [Current result and evidence](artifacts/qa-2026-11-14-v634/UNPUBLISHED-RESULT.md).
