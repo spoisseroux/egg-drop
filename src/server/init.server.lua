@@ -111,6 +111,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.DashConfig)
 task.spawn(function()local ok,problem=pcall(function()require(script.AeroConfig).start()end);if not ok then warn("[Aero] config not started: "..tostring(problem))end end)
 -- Things to do off switches (ThingsConfig): the same way, two keys. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.ThingsConfig).start()end);if not ok then warn("[Things] config not started: "..tostring(problem))end end)
+-- Onboarding v3 off switches (OnboardConfig): the same way, three keys, each also off while Things to do is off.
+task.spawn(function()local ok,problem=pcall(function()require(script.OnboardConfig).start()end);if not ok then warn("[Onboard] config not started: "..tostring(problem))end end)
 -- Garden finds off switch (FindsConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.FindsConfig).start()end);if not ok then warn("[Finds] config not started: "..tostring(problem))end end)
 -- Island edges off switch (IslandBoundsConfig): the same way, one key. With its build ceiling off nothing starts.
@@ -843,6 +845,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.AeroConfig).command(message) end) end)
 		-- "/todo <on|off|clear>" and "/todo tips <on|off|clear>": the Things to do switches, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.ThingsConfig).command(message) end) end)
+		-- "/onboard <follow|needs|nest|all> <on|off|clear>": the onboarding v3 switches, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.OnboardConfig).command(message) end) end)
 		-- "/bounds <on|off|clear>": the island edges switch (wall top-ups, safe-spot return), this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.IslandBoundsConfig).command(message) end) end)
 		-- "/finds <on|off|clear>": the Garden finds switch, this server only.
@@ -1682,7 +1686,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	-- (flushCoach). Unknown ids are dropped; a bit already saved or queued costs nothing.
 	if action=="coachMark"then
 		if not CoachMarks.validId(value)then return end
-		if CoachMarks.Gated[value]and not require(ReplicatedStorage.Shared.Things).allows(CoachMarks.Gated[value])then return end
+		if not CoachMarks.allows(value)then return end
 		if board.firstSession then
 			if value=="gardenIntro"then board.firstSession:advance(5)
 			elseif value=="hatch"or value=="style"or value=="companions"or value=="quests"or value=="book"then board.firstSession:advance(6)end
