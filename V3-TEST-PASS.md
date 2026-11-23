@@ -4,7 +4,7 @@ Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test 
 
 Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the game back as it was, `clear` follows the remote config. Use `off` to tell which piece caused a problem.
 
-## On the beta now (beta (8), runtime 4820205)
+## On the beta now (beta (9), runtime 6119afa)
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
@@ -15,13 +15,14 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | 5 | **Things to do** (Pocket menu) + tips | (6) | Pocket menu > Things to do: Play, Show me (footprints to the place), "?" cards. The park and race tips show once | `/todo off`, `/todo tips off` |
 | 6 | **Garden finds** | (7) | After about a minute of walking a gold sparkle appears on a lawn; walk to it with your pet: pop, "+16 Smarts". 3 waiting at most, 12 a day; Things to do row "N finds waiting" with Show me | `/finds off` |
 | 7 | **Garden life** | (8) | A round bird lands on the crown where you hear a chirp, hops, flies off when you get close; butterflies over flowers; soap bubbles drift by; petals off the lime trees in gusts. Gone in deck rounds and races | `/alive life off` |
+| 8 | **Textured lime trees** | (9) | Lime crowns show leaf clumps and highlights, still lime, never olive or white | `/aero off` |
+| 9 | **Island edges** | (9) | Try to climb the mountains (east grass ramp by spawn, the north spur, behind the waterfall pool) and walk or jump off the island: blocked, or you're put back where you last stood. Pets never stuck behind a wall | `/bounds off` |
 
-## Built, not on the beta yet (next: beta (9))
+## Built, not on the beta yet
 
 | # | Piece | Status | What to try |
 |---|---|---|---|
-| 8 | **Textured lime trees** (Fable's leaf map) | Committed 83f25ae; Studio check pending | Crowns show leaf clumps, still lime, not olive |
-| 9 | **Island edges** (sweep, extra walls, return to a safe spot) | Being built | Try to climb the mountains and walk off the island: you can't, or you're put back where you were |
+| 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
 
 ## Scoped, not built
 
