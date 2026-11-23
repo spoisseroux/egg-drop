@@ -44,7 +44,10 @@
 -- the beta place or Studio (Things.PlaceId) and the server's switches (ThingsConfig: things_to_do, things_tips). Missing = off.
 -- GardenFinds (V3-FINDS-BUILD-PLAN-2026-11-22): the build ceiling for the lawn sparkles that pay Smarts. Also needs the beta
 -- place or Studio (Finds.PlaceId) and the server's switch (FindsConfig: garden_finds). Missing = off.
+-- IslandBounds (WORLD-PASS-2026-11-22 item 5): the build ceiling for the wall top-ups at the climbable slope feet and the
+-- safe-spot return. Also needs the beta place or Studio (IslandBounds.PlaceId) and the server's switch (IslandBoundsConfig:
+-- island_bounds). Missing = off.
 return table.freeze({SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,
- LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true})
+ LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true})

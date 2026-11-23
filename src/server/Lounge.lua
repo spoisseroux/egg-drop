@@ -8,6 +8,16 @@ local WorldLayout = require(ReplicatedStorage.Shared.HollowWorldLayout)
 local Players = game:GetService("Players")
 
 local Lounge = {}
+-- Island edges (IslandBoundsHost): init sets moved(player) while the host is mounted; every server teleport of a
+-- character below calls it, so the safe-spot sampler and the return stand back for a moment. nil otherwise.
+Lounge.moved = nil
+local function notifyMoved(player)
+	local moved = Lounge.moved
+	if moved then
+		local ok, problem = pcall(moved, player)
+		if not ok then warn("[Bounds] moved: " .. tostring(problem)) end
+	end
+end
 
 local function part(parent, name, size, transform, color, collides)
 	local piece = Instance.new("Part")
@@ -71,6 +81,7 @@ local function watchFallCatch(room)
 		busy[player] = true
 		root.AssemblyLinearVelocity = Vector3.zero
 		character:PivotTo(Lounge.spawnFrame(player.UserId % 5 + 1, humanoid, root, room))
+		notifyMoved(player)
 		task.delay(1, function()
 			busy[player] = nil
 		end)
@@ -299,6 +310,7 @@ function Lounge.spawn(character, slot, player, deckState)
 		return
 	end
 	character:PivotTo(Lounge.spawnFrame(slot, humanoid, root, workspace:FindFirstChild("EggDropLounge")))
+	notifyMoved(player)
 	local mode, themeId = deckState()
 	Lounge.setMode(character, player.UserId, mode, themeId)
 end

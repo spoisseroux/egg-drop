@@ -113,6 +113,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.AeroConfig)
 task.spawn(function()local ok,problem=pcall(function()require(script.ThingsConfig).start()end);if not ok then warn("[Things] config not started: "..tostring(problem))end end)
 -- Garden finds off switch (FindsConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.FindsConfig).start()end);if not ok then warn("[Finds] config not started: "..tostring(problem))end end)
+-- Island edges off switch (IslandBoundsConfig): the same way, one key. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.IslandBoundsConfig).start()end);if not ok then warn("[Bounds] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -841,6 +843,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.AeroConfig).command(message) end) end)
 		-- "/todo <on|off|clear>" and "/todo tips <on|off|clear>": the Things to do switches, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.ThingsConfig).command(message) end) end)
+		-- "/bounds <on|off|clear>": the island edges switch (wall top-ups, safe-spot return), this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.IslandBoundsConfig).command(message) end) end)
 		-- "/finds <on|off|clear>": the Garden finds switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.FindsConfig).command(message) end) end)
 		player.Chatted:Connect(function(message)
@@ -982,6 +986,11 @@ local function closeBoard(board)
 	if garden.findsHost then
 		local ok, problem = pcall(garden.findsHost.leave, garden.findsHost, board)
 		if not ok then warn("[Finds] leave: " .. tostring(problem)) end
+	end
+	-- Island edges: the safe spot is forgotten (nil while the build ceiling is off).
+	if garden.boundsHost then
+		local ok, problem = pcall(garden.boundsHost.leave, garden.boundsHost, board)
+		if not ok then warn("[Bounds] leave: " .. tostring(problem)) end
 	end
 	garden:remove(board.player.UserId)
 	petHello.state:remove(board.player.UserId)
@@ -2058,6 +2067,20 @@ do
 			active = function(board) local state = petState(board); return state.alive and not state.conflict end })
 	end)
 	if not ok then warn("[Finds] not mounted: " .. tostring(problem)) end
+end
+-- Island edges (FeatureFlags.IslandBounds, WORLD-PASS-2026-11-22 item 5): nil and nothing made with the build ceiling
+-- off. Wall top-ups and the safe-spot return on its own protected connection; Lounge tells it about the server's own
+-- teleports (spawn, FallCatch), which stays the last resort.
+do
+	local ok, problem = pcall(function()
+		local host = require(script.IslandBoundsHost).mount({ boards = boards,
+			spawnFrame = function(board, view)
+				return Lounge.spawnFrame(board.player.UserId % 5 + 1, view.humanoid, view.root, workspace:FindFirstChild("EggDropLounge"))
+			end })
+		garden.boundsHost = host
+		if host then Lounge.moved = function(player) host:moved(player) end end
+	end)
+	if not ok then warn("[Bounds] not mounted: " .. tostring(problem)) end
 end
 
 -- Levels matter: when the runtime switch flips, every player gets a fresh snapshot (medal credit) and
