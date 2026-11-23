@@ -169,3 +169,12 @@ Art comes after each greybox is fun. Translations and the store listing audit ru
 ## Files
 
 This document only. No code, assets, save formats or `TODO.md` lines were changed.
+
+## Spencer's answers (2026-11-22)
+
+"Whatever you rec for those 5 v4 qs": all five recommended answers stand (v4.0 = framework + Lime Time + Moonpond Pinball; Egg Drop and pinball free, tiny carts earned, mid carts fixed Stars behind a level gate; boards at level-50 numbers; full deck screen allowed; Spencer writes one pinball loop).
+
+**Pokémon Pinball as a guide** (Spencer: "I just want to use decompiled pokemon pinball as a heavy guide for we don't repeat work, we'd have to translate to Roblox anyways and change / cut some things"). The line we hold:
+- **OK:** play it and study it as a player and designer; write down at the idea level what makes a handheld table feel good (mode structure, how a catch/hatch mode is paced, ball save timing, how many targets light a mode, camera on a tall table, flipper feel), then design and code our own. `V2-PINBALL.md` already lists design references from 2026-11-03.
+- **Not OK:** porting or line-by-line translating the decompiled code, its physics constants, collision masks, data tables, table layouts, art, sounds, music or text into Luau, even changed or trimmed. Translated code is still their code; that is the part that would put the game at risk (takedown).
+- **So "not repeating work" means:** a short reference doc of mechanics in our own words (Fable), a fresh pinball physics core in Luau (Opus: circle-vs-segment collisions, swept ball, flipper as a rotating capsule; standard techniques), and Moonpond's own table.
