@@ -73,6 +73,8 @@ function Host:request(board,packet)
  local response=self.care:request(board.player.UserId,packet)
  if response then
   if response.status=="Accepted"and(packet.kind=="carePickup"or packet.kind=="carePlace")and board.petContact then board.petContact:cancel("Carried")end
+  -- First-session funnel: the first accepted care (pick up or dock at the care machine).
+  if response.status=="Accepted"and(packet.kind=="carePickup"or packet.kind=="carePlace")and board.firstSession then board.firstSession:record("FirstPet")end
   self.d.garden:publish();self.result:FireClient(board.player,response)
  end
 end

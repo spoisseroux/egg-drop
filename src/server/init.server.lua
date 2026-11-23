@@ -939,6 +939,7 @@ local function addPlayer(player)
 			local walletBefore=board.nursery.state.nectar
 			local petOk,petReason=Nursery.awardPet(board.nursery,candidate)
 			if petOk and petReason~="AlreadySaved"then Economy.source(player,board.nursery.state.nectar-walletBefore,board.nursery.state.nectar,"Gameplay","PetCare")end
+			if petOk and petReason~="AlreadySaved"and board.firstSession then board.firstSession:record("FirstPet")end
 			if petOk and petReason~="AlreadySaved"and board.nursery.state.petCount==(Nursery.PetDailyCap or 10)then Economy.event(player,"PettingCapReached")end
 			board.nurseryBusy=false
 			if boards[player]==board and not board.closing then publishNursery(board);publishState(board)end
@@ -1833,6 +1834,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	else ok,reason=Nursery.command(board.nursery,action,value,revision)end
 	if ok and reason ~= "AlreadySaved" then
 		Economy.command(player, action, walletBefore, board.nursery.state.nectar, board.nursery.state)
+		if action == "hatch" and board.firstSession then board.firstSession:record("FirstHatch") end
 		if action == "hueBuy" then Economy.eggOpened(player, "hue", receipt) end
 		-- Customization Egg (slice 4): the day-7 wallet check reads this sink.
 		if action == "lookBuy" then Economy.eggOpened(player, "look", receipt) end
@@ -2316,6 +2318,8 @@ task.spawn(function()
 						board.nurseryBusy = true
 						local candidateProfile = board.profile
 						if candidateProfile.loadFailed then candidateProfile = Progress.load(player.UserId) end
+						-- First-session funnel: a join whose first read failed can still be a brand-new save.
+						if candidateProfile.newSave == true then board.profile.newSave = true end
 						local replacement = Nursery.load(player.UserId, candidateProfile)
 						replacement.statPetOf = function() return board.profile.companionId end
 						replacement.restricted = PaidRandomPolicy.cached(player)

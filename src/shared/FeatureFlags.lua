@@ -47,7 +47,9 @@
 -- IslandBounds (WORLD-PASS-2026-11-22 item 5): the build ceiling for the wall top-ups at the climbable slope feet and the
 -- safe-spot return. Also needs the beta place or Studio (IslandBounds.PlaceId) and the server's switch (IslandBoundsConfig:
 -- island_bounds). Missing = off.
-return table.freeze({SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
+-- FirstSessionFunnel (funnel fix 2026-11-23): the onboarding funnel and first-session custom events
+-- (FirstSession.lua). False logs nothing: FirstSession.new returns nil, as in Studio.
+return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true})
