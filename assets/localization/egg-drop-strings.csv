@@ -35,7 +35,7 @@ ui.book.hint.move,Move,,Collection book
 ui.book.hint.pages,Pages,,Collection book
 ui.book.missing,Not yet,,Collection book; also ui.notice.locked.title
 ui.book.owned,{owned}/{total},,Collection book; e.g. 3/12
-ui.book.pending,Saving…,,"Collection book; also ui.names.saving, ui.onboarding.welcome.saving, ui.results.saved.pending"
+ui.book.pending,Saving…,,"Collection book; also ui.dash.result.saving, ui.names.saving, ui.onboarding.welcome.saving, ui.results.saved.pending"
 ui.book.promise,Every page pays once. Nothing to buy.,,Collection book
 ui.book.records.empty,Play a round and your records start here.,,Collection book
 ui.book.records.line,Your lifetime numbers,,Collection book
@@ -133,10 +133,13 @@ ui.dash.ask.line,"Your pet runs on, but you won't get a ribbon.",,Menu text
 ui.dash.ask.no,Keep racing,,Menu text
 ui.dash.ask.title,Leave the race?,,Menu text
 ui.dash.ask.yes,Leave,,Menu text; also ui.results.leave.narrow
+ui.dash.band,{band} · Dash level {level},,Menu text; e.g. {band} · Dash level 10
+ui.dash.bestShort,Best {best} s,,Menu text; e.g. Best {best} s; also ui.dash.result.best
 ui.dash.clear,Nice!,,Menu text
 ui.dash.clover,Lucky clover!,,Menu text
 ui.dash.dash,Dash,,Menu text; also ui.r3.help.dash.c.title
 ui.dash.done,Done,,Menu text; also ui.names.reveal.done
+ui.dash.equal,All pets equal in this race,,Menu text
 ui.dash.fun,Just for Fun,,Menu text
 ui.dash.gate.line,Your pet runs. Jump the hoops. Hold Dash to zoom!,,Menu text
 ui.dash.gate.modes,Just for Fun: all pets equal. Stats On: your pet's levels count.,,Menu text
@@ -145,6 +148,8 @@ ui.dash.go,GO!,,Menu text
 ui.dash.hint.dash,Hold Dash!,,Menu text
 ui.dash.hint.jump,Tap Jump now!,,Menu text
 ui.dash.jump,Jump,,"Menu text; also ui.r3.help.dash.b.title, ui.stats.name.jump"
+ui.dash.label.best,Best,,Menu text
+ui.dash.label.time,Time,,Menu text
 ui.dash.leave,Leave race,,Menu text
 ui.dash.medal.bronze,Bronze cup time!,,Menu text
 ui.dash.medal.gold,Gold cup time!,,Menu text
@@ -158,10 +163,14 @@ ui.dash.ordinal.p5,5th,,Menu text
 ui.dash.ordinal.p6,6th,,Menu text
 ui.dash.ordinal.p7,7th,,Menu text
 ui.dash.ordinal.p8,8th,,Menu text
+ui.dash.pad.dash,DASH,,Menu text
+ui.dash.pad.jump,JUMP,,Menu text
+ui.dash.pad.puff,PHEW!,,Menu text
 ui.dash.perfect,Perfect!,,Menu text
 ui.dash.prompt,Race,,Menu text
 ui.dash.puff,Phew!,,Menu text
 ui.dash.queue,You're next in line,,Menu text; also ui.dash.reason.Queued
+ui.dash.racing,Racing,,Menu text
 ui.dash.reason.AlreadySeated,You're already in,,Menu text
 ui.dash.reason.Busy,Your pet is busy,,Menu text; also ui.dash.reason.Petting
 ui.dash.reason.Carried,Put your pet down first,,Menu text
@@ -177,15 +186,21 @@ ui.dash.reason.Saving,Saving. Try again soon,,Menu text
 ui.dash.reason.Throttled,One moment,,Menu text
 ui.dash.reason.WrongBand,That race is for other levels. You're next!,,Menu text
 ui.dash.reason.other,Can't race right now,,Menu text
-ui.dash.result.best,Best {best} s,,Menu text; e.g. Best {best} s
 ui.dash.result.home,Almost home!,,Menu text; also ui.dash.result.noTime
+ui.dash.result.newBest,New best,,Menu text
 ui.dash.result.place,You finished {place}!,,Menu text; e.g. You finished {place}!
 ui.dash.result.stars,+{reward} Stars ({done} of {total} today),,Menu text; e.g. +5 Stars ({done} of 12 today)
+ui.dash.result.starsShort,+{reward} Stars,,Menu text; e.g. +5 Stars; also ui.stamp.landed
 ui.dash.result.time,Time {time} s,,Menu text; e.g. Time {time} s
+ui.dash.result.today,{done} of {total} today,,Menu text; e.g. {done} of 12 today
+ui.dash.result.tomorrow,Stars again tomorrow,,Menu text
 ui.dash.result.trial,{time} s!,,Menu text; e.g. {time} s!
 ui.dash.result.tryAgain,Try again for a cup!,,Menu text
 ui.dash.stats,Stats On,,Menu text
 ui.dash.stones,Take the stones,,Menu text
+ui.dash.sub.fun,All pets equal,,Menu text
+ui.dash.sub.stats,Your levels count,,Menu text
+ui.dash.sub.trial,Solo. Beat the clock,,Menu text
 ui.dash.title,Garden Dash,,"Menu text; also ui.notice.dashIntro.title, ui.r3.help.dash.title, ui.r5.station.Dash.name"
 ui.dash.trial,Time Trial,,Menu text
 ui.dash.trip,Oops!,,Menu text
@@ -549,7 +564,7 @@ ui.onb3.nest.chipMinutes,Egg {minutes} min,,"First-session onboarding: pet bubbl
 ui.onb3.nest.chipReady,Hatch egg!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.count,Egg {count} of 7,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Egg 3 of 7"
 ui.onb3.nest.got,{item} from the napping egg!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Squeaky Bone from the napping egg!"
-ui.onb3.nest.hatch,Hatch,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; also ui.r1.hatchHints.hatch"
+ui.onb3.nest.hatch,Hatch,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; also ui.r1.hatchHints.hatch, ui.results.inPlace.hatchShort"
 ui.onb3.nest.hours,Hatches in {hours} h,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Hatches in 7 h"
 ui.onb3.nest.how,{pet}'s egg naps for {hours} hours. Come back to hatch a gift.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear's egg naps for 7 hours. Come back to hatch a gift."
 ui.onb3.nest.howPlain,This egg naps for {hours} hours. Come back to hatch a gift.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. This egg naps for 7 hours. Come back to hatch a gift."
@@ -559,6 +574,7 @@ ui.onb3.nest.minutes,Hatches in {minutes} min,,"First-session onboarding: pet bu
 ui.onb3.nest.next,A new egg is napping. Come back in {hours} hours.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. A new egg is napping. Come back in 7 hours."
 ui.onb3.nest.ready,Hatch me!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.sign,{pet}'s egg,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear's egg"
+ui.onb3.nest.signPlain,Your egg,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.title,Napping egg,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.tuck,Tuck in,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.tucked,Sleep tight. It naps while you're away.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
@@ -574,7 +590,7 @@ ui.onb3.tip.hatch,{pet} found the egg machine!,,"First-session onboarding: pet b
 ui.onb3.tip.nest,{pet}'s egg is napping. Hatch it later for a gift.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear's egg is napping. Hatch it later for a gift."
 ui.onb3.tip.park,Pets play together in here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.tip.style,Dress up your Pocket Deck here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
-ui.onb3.week.line,{pet} loves the garden. The nest keeps growing eggs.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear loves the garden. The nest keeps growing eggs."
+ui.onb3.week.line,{pet} loves the garden. A new egg naps in the nest after every hatch.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear loves the garden. A new egg naps in the nest after every hatch."
 ui.onb3.week.title,Welcome week done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
@@ -808,7 +824,6 @@ ui.shop.train,Train {name},,Shop status and errors; e.g. Train Pet Park
 ui.stamp.button,Stamp today +{reward},,Stamp card; e.g. Stamp today +5
 ui.stamp.done,Stamped for today,,Stamp card
 ui.stamp.full,Card full. A fresh one tomorrow.,,Stamp card
-ui.stamp.landed,+{reward} Stars,,Stamp card; e.g. +5 Stars
 ui.stamp.next,Today's stamp: ★ {reward},,Stamp card; e.g. Today's stamp: ★ 5
 ui.stamp.promise,"No streaks. Miss a day, lose nothing.",,Stamp card
 ui.stamp.tomorrow,Next stamp tomorrow: ★ {reward},,Stamp card; e.g. Next stamp tomorrow: ★ 5
