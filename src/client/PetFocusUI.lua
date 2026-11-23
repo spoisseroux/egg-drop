@@ -290,6 +290,7 @@ function Focus:setBond(info,animate)
 	if not info or not(info.bond or info.heart)then self.bondCard.Visible=false;return end
 	if info.heart then self:setHeart(info,animate);return end
 	if self.heartChip then self.heartChip.set(nil);self.bondCard:SetAttribute("HeartLevel",nil)end
+	self.bondRange=nil;self.statShown=nil
 	local compact=true -- five hearts and their progress bar fit the shared48px row.
  if self.bondPips==nil or self.bondCompact~=compact then
   if self.bondPips then self.bondPips.root:Destroy()end
@@ -309,20 +310,33 @@ function Focus:setBond(info,animate)
  self.bondCard:SetAttribute("BondLevel",info.bond.shown)
  self:layoutFocusRow()
 end
--- The card with the pet's name and its Heart level chip (no pips, no "Lv" label).
+-- The card with the pet's name and its top stat chip (no pips, no "Lv" label). Beta 12 U2: one row 48 tall,
+-- `12 | name | 10 | chip | 10`, the card hugging its words (120 to 220, the name truncating first), the chip centred on
+-- the row; info.stat = {id, level} (the top stat, Heart when all are equal), info.heart the Heart level.
+Focus.TagMin=120
+Focus.TagMax=220
+Focus.SmallTag=700 -- under this width the chip drops its word
 function Focus:setHeart(info,animate)
  if self.bondPips then self.bondPips.set(nil)end
- self.heartChip=self.heartChip or require(script.Parent.StatsPanel).heartChip(self.bondCard,false)
- self.heartChip.root.ZIndex=self.bondCard.ZIndex+1
- self.heartChip.root.Position=UDim2.fromOffset(12,21)
- self.bondWidth=math.clamp(12+self.heartChip.width+12,150,190)
- self.bondName.Text=info.name or "";self.bondName.Position=UDim2.fromOffset(12,2)
- self.bondName.Size=UDim2.new(1,-24,0,18);self.bondName.TextSize=14
+ local Panel=require(script.Parent.StatsPanel)
+ self.heartChip=self.heartChip or Panel.statChip(self.bondCard)
+ local chip=self.heartChip
+ chip.root.ZIndex=self.bondCard.ZIndex+1
+ local stat=info.stat or {id="heart",level=info.heart}
+ local small=self.root.AbsoluteSize.X>0 and self.root.AbsoluteSize.X<Focus.SmallTag
+ local before=self.statShown
+ chip.set(stat.id,stat.level,small)
+ local width,nameW=require(script.Parent.FocusRow).tagWidth(Kit.measure(info.name or "","Name",16).X+2,chip.width,Focus.TagMin,Focus.TagMax)
+ self.bondWidth=width;self.bondRange={Focus.TagMin,Focus.TagMax}
+ self.bondName.Text=info.name or "";self.bondName.Position=UDim2.fromOffset(12,0)
+ self.bondName.Size=UDim2.fromOffset(math.max(0,nameW),48);self.bondName.TextSize=16
+ chip.root.AnchorPoint=Vector2.new(0,.5);chip.root.Position=UDim2.new(0,12+nameW+10,.5,0)
  self.bondLevel.Text=""
- self.heartChip.set(info.heart)
- if animate==true then Kit.boing(self.heartChip.root)end
+ self.statShown=stat.id..":"..tostring(stat.level)
+ if animate==true or(before and before~=self.statShown and before:match("^[^:]+")==stat.id)then Kit.boing(chip.disc)end
  self.bondCard.Visible=true
  self.bondCard:SetAttribute("BondLevel",nil);self.bondCard:SetAttribute("HeartLevel",info.heart)
+ self.bondCard:SetAttribute("TopStat",stat.id);self.bondCard:SetAttribute("TopStatLevel",stat.level)
  self:layoutFocusRow()
 end
 -- GardenCare supplies its existing button; this is its only geometry owner.
@@ -333,7 +347,7 @@ function Focus:bindPickup(pickup)
 end
 function Focus:layoutFocusRow()
  if not self.bondCard then return end
- local row=require(script.Parent.FocusRow).layout(self.root.AbsoluteSize.X,self.bondWidth,self.pickupButton~=nil and self.pickupButton.Visible,self.statsButton~=nil,self.snacksButton~=nil,self.root.AbsoluteSize.Y)
+ local row=require(script.Parent.FocusRow).layout(self.root.AbsoluteSize.X,self.bondWidth,self.pickupButton~=nil and self.pickupButton.Visible,self.statsButton~=nil,self.snacksButton~=nil,self.root.AbsoluteSize.Y,self.bondRange)
  self.leftColumn=row.leftColumn
  if self.statsButton then self.statsButton.Visible=row.stats~=nil end
  if self.snacksButton then self.snacksButton.Visible=row.snacks~=nil end

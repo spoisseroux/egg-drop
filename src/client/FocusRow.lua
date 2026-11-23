@@ -5,10 +5,31 @@ local Row={}
 -- which opens bottom centre. Given the root `height`; without it (or with no room) they hide.
 Row.StatsWidth=112
 Row.SnacksWidth=112
-function Row.layout(width,bondWidth,pickup,stats,snacks,height)
+-- Beta 12 U2: the stat chip's pieces (StatsPanel.statChip), 22 tall: `6 | icon 14 | 4 | word | 5 | disc | 2`, or without
+-- the word `6 | icon 14 | 5 | disc | 2`. wordW: the word's width (nil = none); digitsW: a two-digit level's width (nil =
+-- one digit: the 18 pt disc), which makes the disc a pill with 5 pt sides. {w, iconX, wordX, discX, discW}.
+Row.ChipDisc=18
+function Row.chip(wordW,digitsW)
+ local discW=math.max(Row.ChipDisc,math.ceil(digitsW or 0)+10)
+ local x=6+14
+ local out={iconX=6}
+ if wordW then out.wordX=x+4;x+=4+math.ceil(wordW)+5 else x+=5 end
+ out.discX=x;out.discW=discW
+ out.w=x+discW+2
+ return out
+end
+-- Pure: the pet tag card's width for its name and chip, `12 | name | 10 | chip | 10`, clamped; and the room left for
+-- the name (which truncates first).
+function Row.tagWidth(nameW,chipW,low,high)
+ local width=math.clamp(12+math.ceil(nameW)+10+chipW+10,low or 120,high or 220)
+ return width,width-12-10-chipW-10
+end
+-- range (beta 12 U2, the stat chip card): {min, max} card widths in place of 150 to 190; the card keeps its right edge.
+function Row.layout(width,bondWidth,pickup,stats,snacks,height,range)
  local h,gap,edge=48,8,12
- local maximum=math.max(150,math.min(190,width-edge*2-h-gap-(if pickup then h+gap else 0)))
- local cardW=math.clamp(math.ceil(bondWidth or 150),150,maximum)
+ local low,high=if range then range[1]else 150,if range then range[2]else 190
+ local maximum=math.max(low,math.min(high,width-edge*2-h-gap-(if pickup then h+gap else 0)))
+ local cardW=math.clamp(math.ceil(bondWidth or low),low,maximum)
  local right=width-edge
  local pickupX=right-h
  local cardRight=if pickup then pickupX-gap else right

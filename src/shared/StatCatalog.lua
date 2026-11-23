@@ -61,6 +61,18 @@ function Catalog.totalLevel(stats)
 	return total
 end
 
+-- Beta 12 QA U2: a pet's top stat from its level table ({id = level}): the highest level, ties to the first in Order
+-- (Heart first, so all equal is Heart). {id, level}, or nil without levels.
+function Catalog.top(levels)
+	if type(levels)~="table"then return nil end
+	local best=nil
+	for _,id in ipairs(Catalog.Order)do
+		local level=levels[id]
+		if type(level)=="number"and(best==nil or level>best.level)then best={id=id,level=level}end
+	end
+	return best
+end
+
 -- Tiers (section 3.6): per stat level, and the Keeper tier from the total level.
 Catalog.Tiers=table.freeze({
 	{level=1,name="Seedling",total=6},{level=25,name="Sprout",total=60},{level=50,name="Bloom",total=150},
