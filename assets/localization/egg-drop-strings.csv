@@ -197,6 +197,8 @@ ui.e2.hub.none,No companion yet. Play your first rounds to meet your Bear.,,Menu
 ui.e2.tease.many,Someone's on the way… {count} more stamps,,Menu text; e.g. Someone's on the way… 3 more stamps
 ui.e2.tease.one,Someone's on the way… 1 more stamp,,Menu text
 ui.e2.tease.short,Someone's on the way…,,Menu text
+ui.finds.gain,+{count} Smarts,,Menu text; e.g. +3 Smarts
+ui.finds.name,Garden find,,Menu text
 ui.hatch.display.charm,A charm for your pet,,Hatch eggs screen
 ui.hatch.display.finish,A material for your pet,,Hatch eggs screen
 ui.hatch.display.firstFriend,Your first friend,,Hatch eggs screen
@@ -495,6 +497,9 @@ ui.notice.dashNew.next,Race your pet. It's free! Tap Show me to find it.,,Menu t
 ui.notice.dashNew.title,New in the garden,,Menu text
 ui.notice.dashNew.what,Garden Dash is open.,,Menu text
 ui.notice.fillLine.next,"Merge to make room, and drop each egg next to its match.",,Menu text
+ui.notice.findsIntro.next,Tap Show me and follow the trail to it.,,Menu text
+ui.notice.findsIntro.title,Something sparkles,,Menu text
+ui.notice.findsIntro.what,Walk {pet} over to sniff it.,,Menu text; e.g. Walk Bear over to sniff it.
 ui.notice.firstSpend.next,Open Hatch eggs and choose the Toy Egg. The odds are on every label.,,Menu text
 ui.notice.firstSpend.title,Your first egg,,Menu text
 ui.notice.firstSpend.what,You have enough Stars for an egg. A Toy Egg hatches a toy for {pet} to carry and play with.,,Menu text; e.g. You have enough Stars for an egg. A Toy Egg hatches a toy for Bear to carry and play with.
@@ -910,6 +915,11 @@ ui.things.dash.gather,Race: {count} of 8,,Things to do page; e.g. Race: 3 of 8
 ui.things.dash.idle,Start a race,,Things to do page
 ui.things.dash.live,A race is on,,Things to do page
 ui.things.dash.prizes,Stars races today: {done} of {total},,Things to do page; e.g. Stars races today: {done} of 12
+ui.things.finds.done,All found today,,Things to do page
+ui.things.finds.later,Come back later,,Things to do page
+ui.things.finds.name,Garden finds,,Things to do page
+ui.things.finds.one,1 find waiting,,Things to do page
+ui.things.finds.waiting,{count} finds waiting,,Things to do page; e.g. 3 finds waiting
 ui.things.new,New,,Things to do page
 ui.things.play,Play,,Things to do page
 ui.things.tile.line,Every game in the garden,,Things to do page
