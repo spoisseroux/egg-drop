@@ -64,7 +64,10 @@ Aero.Spray=table.freeze({Splash=ColorSequence.new(hex("#F4FCFF")),Mist=ColorSequ
 -- (A textured crown needs a world export.)
 Aero.CrownKind="foliage_blossom"
 Aero.Crowns=table.freeze({
-	lime={Flat=true,Color=hex("#8FD63F"),Material=Enum.Material.SmoothPlastic}, -- Fabric rendered olive (Studio 2026-11-22)
+	-- Fabric rendered olive (Studio 2026-11-22). World pass 1 (Fable, 2026-11-22): a full-colour lime leaf map whose mean is
+	-- #8FD63F (assets/world/lime-leaf.png) on the crown's TextureID, with the part white so it shows as drawn.
+	lime={Flat=true,Color=hex("#8FD63F"),Material=Enum.Material.SmoothPlastic,
+		Texture="rbxassetid://127425168647805",TextureColor=Color3.new(1,1,1)},
 	coral={Flat=true,Color=hex("#F2545B"),Material=Enum.Material.SmoothPlastic}, -- as a tint on the leaf texture it rendered near black
 })
 

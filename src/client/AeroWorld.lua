@@ -185,9 +185,11 @@ function World:paintCrown(part)
 		return
 	end
 	-- All or nothing: a crown that will not go flat keeps its own leaves until the next switch.
-	local ok=not part:IsA("MeshPart")or self:set(self.surfaces,part,"TextureID","")
+	-- A crown with its own map (lime) shows it on a white part; a MeshPart is needed for a TextureID, else flat colour.
+	local mapped=crown.Texture~=nil and part:IsA("MeshPart")
+	local ok=not part:IsA("MeshPart")or self:set(self.surfaces,part,"TextureID",if mapped then crown.Texture else "")
 	ok=ok and self:set(self.surfaces,part,"Material",crown.Material)
-	ok=ok and self:set(self.surfaces,part,"Color",crown.Color)
+	ok=ok and self:set(self.surfaces,part,"Color",if mapped then crown.TextureColor or crown.Color else crown.Color)
 	for _,child in ipairs(skins)do
 		if not ok then break end
 		-- Only its Parent moves, and only here: the same instance goes back.
