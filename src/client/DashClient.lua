@@ -350,7 +350,10 @@ function Client:event(packet)
 		elseif kind=="zoom"then
 			if seat.predict:zoom(packet.tick)then self:say("dash.zoom")end
 		elseif kind=="judged"then
-			if seat.predict.serverRender then self:say(if packet.result==1 then "dash.perfect"elseif packet.result==2 then "dash.clear"else "dash.trip")end
+			if seat.predict.serverRender then
+				self:say(if packet.result==1 then "dash.perfect"elseif packet.result==2 then "dash.clear"else "dash.trip")
+				if packet.result==1 and self.hud then self.hud:flash()end
+			end
 		elseif kind=="result"then
 			seat.phase,seat.result,seat.cardAt="done",packet,os.clock()+Client.ResultAfter
 			if self.input then self.input.close()end
@@ -554,7 +557,7 @@ end
 function Client:say(key)if self.hud then self.hud:say(UICopy.get(key))end end
 function Client:ensureHud()
 	if self.hud then return end
-	self.hud=require(script.Parent.DashHud).new(self.d.playerGui,{leave=function()self:askLeave()end})
+	self.hud=require(script.Parent.DashHud).new(self.d.playerGui,{leave=function()self:askLeave()end,reduced=function()return self.d.reduced()==true end})
 	local Confirm=require(script.Parent.ConfirmDialog)
 	self.core=RaceInput.Core.new({
 		press=function(kind)
@@ -563,6 +566,7 @@ function Client:ensureHud()
 			if not packet or not self.inputRemote then return false end
 			self.inputRemote:FireServer(packet)
 			if kind=="dashDown"then self.d.audio:play("streak_whoosh",1.1,.3)elseif kind=="jump"then self.d.audio:play("drop",1.2,.3)end
+			if self.hud then self.hud:press(kind)end
 			return true
 		end,
 		blocked=function()return GuiService.MenuIsOpen or Confirm.isOpen()or UserInputService:GetFocusedTextBox()~=nil end})
@@ -590,7 +594,7 @@ function Client:hold(seat)
 		self.holding,self.shot=true,false
 		self:ensureHud()
 		self.camera:reset()
-		self.hud:show(seat.first)
+		self.hud:show(seat.first,seat.plan)
 		if seat.home then self.hud:rest(seat.phase=="done")end
 	elseif not want and self.holding then
 		self.holding=false
@@ -645,7 +649,7 @@ function Client:raceStep(seat,dt,now,reduced)
 		local entry=NEWS[news]
 		hud:say(UICopy.get(entry[1]))
 		self.d.audio:play(entry[2],entry[3],.4)
-		if news=="clover"then self.props:pick(seat.lane)end
+		if news=="clover"then self.props:pick(seat.lane)elseif news=="perfect"then hud:flash()end
 	end
 	local racing=seat.phase=="race"and not flags.finished
 	if racing then self.input.open();self.core:step()else self.input.close()end
@@ -665,7 +669,7 @@ function Client:raceStep(seat,dt,now,reduced)
 		hud:setHint(if hint then UICopy.get("dash.hint."..hint)else nil)
 		if seat.hints.done then seat.hints=nil;hud:setHint(nil)end
 	end
-	hud:setBar(r.bar/r.cap,flags.puff)
+	hud:setBar(r.bar/r.cap,flags.puff,flags.dash==true and racing)
 	local gap=Course.Fork*CS-r.pos
 	hud:setStones(racing and not r.forked and not r.wants and gap>0 and gap<=r.step*Sim.SignpostTicks)
 	hud:setDot(seat.index,1-Client.left(raw,flags.stones)/Course.Length,true)
