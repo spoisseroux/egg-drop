@@ -169,7 +169,15 @@ function Page:paint(rows)
 		end
 		view.card:SetAttribute("Line",row.line)
 	end
-	if self.views[#rows]and rows[#rows].id=="dash"then self.o.things.seen("dash")end
+	-- Code review: in a scrolled list the Dash row counts as seen only once it is inside the window (paint runs on the
+	-- refresh timer, so scrolling to it marks it within Page.Refresh).
+	if self.views[#rows]and rows[#rows].id=="dash"and self:inWindow(#rows)then self.o.things.seen("dash")end
+end
+function Page:inWindow(index)
+	local scroller,L=self.scroller,self.layoutCache
+	if not(scroller and L and L.scroll and L.rows[index])then return true end
+	local r,top=L.rows[index],scroller.CanvasPosition.Y
+	return r.y>=top-1 and r.y+r.h<=top+L.scroll.h+1
 end
 -- Read the rows again. A game that opened or closed rebuilds the list; the switch going off ends the page.
 function Page:refresh()
