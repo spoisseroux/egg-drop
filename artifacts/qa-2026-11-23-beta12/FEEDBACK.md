@@ -40,5 +40,16 @@ Source: `C:\Users\skunk\Documents\obsidian-spencer\pocketpals\v3 qa pass 23 nov 
 - G3 Dewdrop fruit (row 15): not seen; looks only. Check in Studio; make them easier to notice.
 - G4 Garden Dash: other players see racing pets run the course (pets are server-side). His question: how to handle it.
 
+## Round 2 (Spencer, 2026-11-23 evening)
+
+- R2.1 Wind rustle: "just deactivate it for now" (done in the quick-fix batch: `Ambient.RustleId=nil`, ships in beta 13).
+- R2.2 "i didnt see any springiness in the menues": springs are on but too subtle; stronger, visible on a phone.
+- R2.3 "can we hear crickets at night instead of birds".
+- R2.4 "Make birds more bird shaped, less circular".
+- R2.5 "leaves and butter flies smaller? like animal crossing sized?" (size reference only).
+- R2.6 "why see you tomorrow? ... seem like the player finished everything for the day? and 8h isnt tomorrow, maybe we should make it more dynamic?"
+- R2.7 "Make the flower textures on the ground blend more in with the color of the grass etc, theyre too glaring".
+Fable spec: `QA-R2-LOOK.md` (coming). Planned for beta 14.
+
 ## T. Test tooling
 - T1 "Should we reset the progress on keehar01 to test?" (row 11 needs a new save). No reset command exists. Option: a beta-only owner command that starts a fresh save and keeps the old one as a backup.
