@@ -1,20 +1,27 @@
 -- Garden life (ALIVE-LIFE-BUILD-PLAN-2026-11-22, Alive step 5): petals off the blossom crowns in a gust, soap bubbles
 -- drifting past the camera, a round bird on the crown where AmbientAudio's chirp came from, butterflies over the
--- flower patches. Client only and looks only: no remotes, no saves. LifeSim decides; this owns the parts.
+-- flower patches, and Dewdrops hanging under the lime crowns that a strong gust shakes loose (WORLD-PASS item 3,
+-- artifacts/world-pass-2026-11-22/FRUIT-LOOK.md). Client only and looks only: no remotes, no saves, nothing to collect.
+-- LifeSim decides; this owns the parts.
 --
 -- mount() is nil with the build ceiling off (Alive.ceiling("life")). With the switch off only the Alive signal is
 -- connected and nothing exists. On: one folder EggDropLife in the workspace (birds 3 x 6 parts, butterflies 4 x 3,
--- three petal anchors and two bubble anchors, each with a ParticleEmitter), ONE Heartbeat at 30 Hz (15 at budget
--- level 1) and ONE BulkMoveTo a step; a part not in use is moved far away, never re-parented or resized.
+-- three petal anchors and two bubble anchors, each with a ParticleEmitter, 16 Dewdrop anchors each with a BillboardGui),
+-- ONE Heartbeat at 30 Hz (15 at budget level 1) and ONE BulkMoveTo a step; a part not in use is moved far away, never
+-- re-parented or resized.
+--   Dewdrops: lime crowns within 90 studs, nearest first, 16 / 8 shown (level 0 / 1, no sway at 1), at most 3 / 2 loose;
+--   the gust number seeds which one falls, so every client sees the same fruit go; a pet within 3 studs bats a resting
+--   one in place; never landing on a find spot, the Dash course or a park kerb. Reduced Motion: they just hang.
 --   Parked (a hatch, the board out of Room mode, my own race): everything hidden, nothing simulated.
 --   A menu: bubbles stop starting; the rest goes on behind the shade.
---   Reduced Motion: no petals, bubbles or flight; a bird is just there on its crown, folded and still.
+--   Reduced Motion: no petals, bubbles or flight; a bird is just there on its crown, folded and still; fruit hangs.
 --   Budget level 2: nothing at all (torn down, and it never comes back up that session).
 --   The switch off, or a step that throws: everything gone in that frame.
 -- deps: ambient (the AmbientAudio instance: onChirp is set while on), dash() -> DashClient?, modalOpen(), reduced(),
 --   mode(), plus fixtures for specs: alive {ceiling, on, changed}, world, heartbeat, now, camera() -> CFrame?,
 --   root() -> Vector3?, move(parts, frames), hatching, level, spots, patches, stations, pad, course, crowns() -> "lime"|"pink",
---   groundY, warn, seed.
+--   groundY, warn, seed; pets() -> {Vector3} (the garden pets this client draws, for the fruit bat), finds {Vector3},
+--   kerbs {{x, z, rx, rz}}, safe(x, z) -> boolean (walkable ground: IslandBounds.safeCell).
 local GuiService=game:GetService("GuiService")
 local Players=game:GetService("Players")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
@@ -36,6 +43,9 @@ Life.BirdEye="rbxassetid://127417519256529"
 Life.BirdWing="rbxassetid://81512459364906"
 Life.ButterflyWing="rbxassetid://108754043011076"
 Life.ButterflyWingM="rbxassetid://95949019207820" -- the mirror of ButterflyWing
+-- FRUIT-LOOK 1: assets/world/dewdrop.png (scripts/draw_world_textures.py), uploaded 2026-11-23. Billboard studs.
+Life.DewdropTexture="rbxassetid://82054526707528"
+Life.FruitSize=Vector2.new(1.1,1.28)
 local hex=Color3.fromHex
 Life.Ink=hex("#24304F")
 Life.EyeInk=hex("#161C38")
@@ -154,6 +164,34 @@ local function bubbleEmitter(anchor,kind)
 	return e
 end
 
+-- A Dewdrop (FRUIT-LOOK 1): an invisible anchor at the image centre with one BillboardGui and its ImageLabel. The
+-- entry caches what was last written so a step only writes what changed.
+local function dewdrop(folder,slot)
+	local anchor=part(folder,"LifeDewdrop"..slot,"Part",Vector3.new(.2,.2,.2),false)
+	local gui=Instance.new("BillboardGui")
+	gui.Name="Dewdrop"
+	gui.Size=UDim2.fromScale(Life.FruitSize.X,Life.FruitSize.Y)
+	gui.LightInfluence=.6
+	gui.Brightness=1
+	gui.AlwaysOnTop=false
+	gui.MaxDistance=110
+	gui.ClipsDescendants=false
+	gui.Active=false
+	gui.Parent=anchor
+	local label=Instance.new("ImageLabel")
+	label.Name="Image"
+	label.Size=UDim2.fromScale(1,1)
+	label.BackgroundTransparency=1
+	label.BorderSizePixel=0
+	label.Image=Life.DewdropTexture
+	label.ImageColor3=Color3.new(1,1,1)
+	label.ImageTransparency=0
+	label.ScaleType=Enum.ScaleType.Stretch
+	label.Rotation=0
+	label.Parent=gui
+	return{anchor=anchor,gui=gui,label=label,key=nil,position=nil,rotation=0,transparency=0,w=1,h=1}
+end
+
 -- Mount ---------------------------------------------------------------------------------------------------------
 function Life.mount(deps)
 	deps=deps or {}
@@ -185,6 +223,7 @@ function Life.mount(deps)
 		local root=character and character:FindFirstChild("HumanoidRootPart")
 		return root and root.Position
 	end
+	self.pets=deps.pets or function()return{}end
 	table.insert(self.connections,alive.changed("life"):Connect(function()self:sync()end))
 	self:sync()
 	return self
@@ -229,6 +268,23 @@ function Life:places()
 		self.pad={x=Course.Pad.x/100,z=Course.Pad.z/100,r=Course.Pad.r/100}
 	end
 	self.groundY=d.groundY
+	-- Dewdrops land only on walkable lawn, off every find spot and park kerb (FRUIT-LOOK 7).
+	local finds=d.finds
+	if not finds then
+		finds={}
+		for _,spot in ipairs(require(Shared:WaitForChild("FindSpots")))do table.insert(finds,Vector3.new(spot.x/100,spot.y/100,spot.z/100))end
+	end
+	local kerbs=d.kerbs
+	if not kerbs then
+		kerbs={}
+		local Park=require(Shared:WaitForChild("ParkLayout"))
+		for _,site in ipairs(Park.Sites or {Park})do
+			table.insert(kerbs,{x=site.Center.X,z=site.Center.Z,rx=site.Radius.X,rz=site.Radius.Y})
+		end
+	end
+	self.fruitWorld={stations=self.stations,pad=self.pad,course=self.course,finds=finds,kerbs=kerbs,
+		groundY=d.groundY or require(Shared:WaitForChild("HollowWorldLayout")).groundY,
+		safe=d.safe or require(Shared:WaitForChild("IslandBounds")).safeCell}
 	self.crowns=d.crowns or function()
 		local Aero=require(Shared:WaitForChild("Aero"))
 		return if Aero.on()and Aero.trees()=="lime"then "lime"else "pink"
@@ -286,6 +342,8 @@ function Life:enable()
 		local anchor=part(folder,"LifePetals"..slot,"Part",Vector3.new(1,1,1),false)
 		self.petalPool[slot]={anchor=anchor,emitter=petalEmitter(anchor)}
 	end
+	self.fruitPool={}
+	for slot=1,Sim.Fruit.pool do self.fruitPool[slot]=dewdrop(folder,slot)end
 	self.bubblePool={}
 	for _,kind in ipairs({"small","large"})do
 		local anchor=part(folder,if kind=="small"then "LifeBubblesSmall"else "LifeBubblesLarge","Part",Vector3.new(.2,.2,.2),false)
@@ -295,9 +353,11 @@ function Life:enable()
 	self.flies=Sim.Butterflies.new(self.seed+1)
 	self.petals=Sim.Petals.new()
 	self.bubbles=Sim.Bubbles.new(self.seed+2)
+	self.orchard=Sim.Orchard.new()
+	self.stems,self.fruitOf,self.fruitShown,self.fruitCount={},{},{},0
 	self.picked={}
 	self.elapsed,self.since,self.steps,self.pollIn,self.gateIn=0,0,0,0,0
-	self.parked,self.hatch,self.live,self.wasReduced,self.colours=false,false,false,false,nil
+	self.parked,self.hatch,self.live,self.wasReduced,self.colours,self.lime=false,false,false,false,nil,false
 	folder.Parent=self.world
 	local ambient=self.d.ambient
 	if ambient then
@@ -321,6 +381,7 @@ function Life:disable()
 	local folder=self.folder
 	self.folder,self.shown,self.birdPool,self.flyPool,self.petalPool,self.bubblePool=nil,nil,nil,nil,nil,nil
 	self.birds,self.flies,self.petals,self.bubbles,self.picked=nil,nil,nil,nil,nil
+	self.fruitPool,self.orchard,self.stems,self.fruitOf,self.fruitShown,self.fruitCount=nil,nil,nil,nil,nil,0
 	if folder then folder:Destroy()end
 end
 
@@ -351,6 +412,7 @@ function Life:park()
 	self.birds:clear();self.flies:clear()
 	self:clearEmitters()
 	table.clear(self.picked)
+	self:forgetFruit()
 	local parts,frames={},{}
 	for p in pairs(self.shown)do table.insert(parts,p);table.insert(frames,Life.Hidden)end
 	table.clear(self.shown)
@@ -400,7 +462,7 @@ function Life:step(dt)
 	local now=self.now()
 	if not finite(now)then return end
 	local reduced=self.reduced()==true
-	if reduced and not self.wasReduced then self:clearEmitters()end
+	if reduced and not self.wasReduced then self:clearEmitters();self.orchard:refill()end
 	self.wasReduced=reduced
 	local eye=camera.Position
 	local parts,frames,emits={},{},{}
@@ -419,6 +481,7 @@ function Life:step(dt)
 		local ok,summary=pcall(function()return dash and dash:summary()end)
 		self.live=ok and type(summary)=="table"and summary.phase=="live"
 		local okColour,colours=pcall(self.crowns)
+		self.lime=okColour and colours=="lime"
 		colours=Life.PetalColours[okColour and colours or "pink"]or Life.PetalColours.pink
 		local repaint=colours~=self.colours
 		self.colours=colours
@@ -478,9 +541,111 @@ function Life:step(dt)
 		end
 	end
 	for _,pool in ipairs(self.birdPool)do if not used[pool]then for _,p in ipairs(pool)do hide(p)end end end
+	self:stepFruit(now,camera,level,reduced,put,hide)
 	if #parts>0 then self.move(parts,frames)end
 	-- After the move, so a bubble or a petal leaves from where its anchor now is.
 	for _,emit in ipairs(emits)do emit[1]:Emit(emit[2])end
+end
+
+-- Dewdrops -------------------------------------------------------------------------------------------------------
+-- Crown i's filled slots (fixed per crown: Wind.hash), worked out once.
+function Life:stemsOf(i,crown)
+	local stems=self.stems[i]
+	if not stems then stems=Sim.fruitStems(i,crown);self.stems[i]=stems end
+	return stems
+end
+
+-- Parked or the crowns gone pink: no loose fruit, every pool entry free (park/hide moves the anchors away).
+function Life:forgetFruit()
+	if not self.orchard then return end
+	self.orchard:clear()
+	table.clear(self.fruitOf);table.clear(self.fruitShown)
+	self.fruitCount=0
+	for _,entry in ipairs(self.fruitPool)do entry.key,entry.position=nil,nil end
+end
+
+-- One step of fruit: the loose ones moved on (bats, fades), a drop where a crown's gust peaks, then the nearest hanging
+-- slots up to the cap; each wanted fruit keeps its pool entry while it lasts, and only changed properties are written.
+local function differs(a,b,eps)return math.abs(a-b)>eps end
+function Life:stepFruit(now,camera,level,reduced,put,hide)
+	local pool,orchard,F=self.fruitPool,self.orchard,Sim.Fruit
+	local want={}
+	local hanging=0
+	if self.lime and level<2 then
+		local eye,right=camera.Position,camera.RightVector
+		local world=self.fruitWorld
+		world.camera,world.right=eye,right
+		local cap=Sim.cap("loose",level)
+		orchard:step(now,world,self.pets,cap,self.live)
+		local near={}
+		for i,crown in ipairs(self.spots.Crowns or {})do
+			local d=(crown.position-eye).Magnitude
+			if d<=F.reach then table.insert(near,{i=i,crown=crown,d=d,at=Wind.at(crown.position,now)})end
+		end
+		table.sort(near,function(a,b)return a.d<b.d end)
+		local still=reduced or level>=1
+		if not reduced and not self.live then
+			for _,entry in ipairs(near)do
+				local n=orchard:gust(entry.i,entry.crown.position,now,entry.at)
+				if n then
+					orchard:drop(entry.i,entry.crown,self:stemsOf(entry.i,entry.crown),n,now,world,cap,
+						function(slot)return Sim.fruitSway(slot.k,now,entry.at,still)end,self.fruitShown)
+				end
+			end
+		end
+		local room=math.min(Sim.cap("fruit",level),F.pool-#orchard.loose)
+		local dot=right:Dot(Wind.Direction)
+		local shown={}
+		for _,entry in ipairs(near)do
+			if hanging>=room then break end
+			for _,slot in ipairs(self:stemsOf(entry.i,entry.crown))do
+				if hanging>=room then break end
+				local scale=orchard:hanging(slot.key,now)
+				if scale then
+					hanging+=1
+					shown[slot.key]=true
+					local angle=Sim.fruitSway(slot.k,now,entry.at,still)
+					want[slot.key]={Sim.fruitHang(slot.stem,angle,scale),-angle*dot,scale,scale,0}
+				end
+			end
+		end
+		self.fruitShown=shown
+		for _,plan in ipairs(orchard.loose)do
+			local pose=Sim.fruitPose(plan,now)
+			want[-plan.key]={pose.position,pose.rotation,pose.w,pose.h,pose.transparency}
+		end
+	elseif #orchard.loose>0 or next(self.fruitOf)then
+		self:forgetFruit()
+	end
+	self.fruitCount=hanging
+	local of,free=self.fruitOf,{}
+	for index,entry in ipairs(pool)do
+		if entry.key~=nil and not want[entry.key]then
+			of[entry.key]=nil;entry.key,entry.position=nil,nil
+		end
+		if entry.key==nil then
+			hide(entry.anchor)
+			table.insert(free,index)
+		end
+	end
+	local size=Life.FruitSize
+	for key,v in pairs(want)do
+		local index=of[key]
+		if not index then
+			index=table.remove(free,1)
+			if not index then continue end
+			of[key]=index;pool[index].key=key
+		end
+		local entry=pool[index]
+		local position,rotation,w,h,transparency=v[1],v[2],v[3],v[4],v[5]
+		if entry.position~=position then entry.position=position;put(entry.anchor,CFrame.new(position))end
+		if differs(entry.rotation,rotation,.05)then entry.rotation=rotation;entry.label.Rotation=rotation end
+		if differs(entry.transparency,transparency,.005)then entry.transparency=transparency;entry.label.ImageTransparency=transparency end
+		if differs(entry.w,w,.002)or differs(entry.h,h,.002)then
+			entry.w,entry.h=w,h
+			entry.gui.Size=UDim2.fromScale(size.X*w,size.Y*h)
+		end
+	end
 end
 
 -- AmbientAudio calls this for each chirp it actually plays. A bird comes in to that perch's crown, or the one
@@ -518,9 +683,10 @@ end
 
 -- For specs and the perf probe: how much is alive.
 function Life:counts()
-	if not self.enabled then return{birds=0,butterflies=0,petals=0,bubbles=0}end
+	if not self.enabled then return{birds=0,butterflies=0,petals=0,bubbles=0,fruit=0,loose=0}end
 	local now=self.now()
-	return{birds=#self.birds.list,butterflies=#self.flies.list,petals=self.petals:count(now),bubbles=self.bubbles:count(now)}
+	return{birds=#self.birds.list,butterflies=#self.flies.list,petals=self.petals:count(now),bubbles=self.bubbles:count(now),
+		fruit=if self.parked then 0 else self.fruitCount,loose=#self.orchard.loose}
 end
 
 return Life

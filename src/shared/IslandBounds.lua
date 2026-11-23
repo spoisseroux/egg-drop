@@ -2,7 +2,8 @@
 -- the build ceiling, and it opens only on the beta place or in Studio, while the runtime switch is on (ConfigService key
 -- `island_bounds`, server IslandBoundsConfig: off until the config has loaded once, then missing or malformed = on). Off
 -- is the game before this build: no extra walls, no safe-spot return; the perimeter ring and FallCatch are untouched
--- either way (FallCatch stays the last resort). The server (IslandBoundsHost) reads it; no client code does.
+-- either way (FallCatch stays the last resort). The server (IslandBoundsHost) reads it; no client code does (GardenLife
+-- reads only the pure safeCell, for where a Dewdrop may land).
 --
 -- Walls: hand-written top-ups at the feet of the climbable slopes `scripts/sweep_island_edges.py` found walking
 -- (artifacts/world-pass-2026-11-22/edge-sweep.md). Each is a thin invisible box from (x1, z1) to (x2, z2), standing

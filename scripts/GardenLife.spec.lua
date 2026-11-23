@@ -3,12 +3,15 @@
 -- parts and one Heartbeat; off mid-flight destroys it all in that frame; parked (hatch, board, my race) hides
 -- everything and simulates nothing; Reduced Motion; budget level 2 shows nothing; a chirp lands a bird on that perch's
 -- crown and the 4th is refused; bubbles refuse a station, a live course and a menu; the round 2 look (LOOK-R2): decal
--- plates with the uploaded textures, two fixed-size bubble emitters, the petal cap and gust burst.
+-- plates with the uploaded textures, two fixed-size bubble emitters, the petal cap and gust burst; Dewdrops (FRUIT-LOOK):
+-- 16 billboards made once, hanging caps per level, the same drops on two clients, Reduced Motion, parked, a live race,
+-- landing rejection and the pet bat.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.GardenLife)(PlayerScripts.Client); offline in
 -- scripts/run_dash_server_specs.py (DASH_SPECS="GardenLife").
 return function(client)
 	local Life=require(client.GardenLife)
 	local Sim=require(client.LifeSim)
+	local Wind=require(client.Wind)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local T0=1795300000
@@ -34,6 +37,8 @@ return function(client)
 		r.changed=signal();r.beat=signal()
 		r.camera=CFrame.lookAt(Vector3.new(0,10,10),Vector3.new(0,8,-10))
 		r.player=Vector3.new(0,5,8)
+		r.pets={}
+		r.crownColour="lime"
 		r.world=Instance.new("Folder");r.world.Name="_GardenLifeSpec";r.world.Parent=workspace
 		r.dash={held=function()return r.held end,summary=function()return{phase=r.phase}end}
 		r.life=Life.mount({ambient=r.ambient,world=r.world,heartbeat=r.beat,seed=7,
@@ -42,9 +47,11 @@ return function(client)
 			level=function()return r.level end,hatching=function()return r.hatch end,mode=function()return r.mode end,
 			dash=function()return r.dash end,modalOpen=function()return r.menu end,reduced=function()return r.reduced end,
 			move=function(parts,frames)r.moves+=1;for i,p in ipairs(parts)do p.CFrame=frames[i]end end,
-			spots=SPOTS,patches=options.patches or {Vector3.new(4,4,-14),Vector3.new(-6,4,-18),Vector3.new(10,4,-10)},
+			spots=options.spots or SPOTS,patches=options.patches or {Vector3.new(4,4,-14),Vector3.new(-6,4,-18),Vector3.new(10,4,-10)},
 			stations=options.stations or {Vector3.new(200,4,200)},pad=options.pad or {x=300,z=300,r=3},course=options.course or {400,400,500,400},
-			crowns=function()return "lime"end,warn=function(text)table.insert(r.warned,text)end})
+			crowns=function()return r.crownColour end,warn=function(text)table.insert(r.warned,text)end,
+			groundY=options.groundY or function()return 4 end,safe=options.safe or function()return true end,
+			finds=options.finds or {},kerbs=options.kerbs or {},pets=function()return r.pets end})
 		function r.step(seconds)
 			for _=1,math.floor(seconds*30+.5)do r.now+=1/30;r.beat:Fire(1/30)end
 		end
@@ -79,7 +86,7 @@ return function(client)
 			local folder=assert(r.folder())
 			assert(folder.Parent==r.world and #r.beat.list==1 and type(r.ambient.onChirp)=="function")
 			local parts=r.parts()
-			assert(#parts==3*6+4*3+3+2,"parts "..#parts)
+			assert(#parts==3*6+4*3+3+2+16,"parts "..#parts)
 			for _,p in ipairs(parts)do
 				assert(p.Anchored==true and p.CanCollide==false and p.CanQuery==false and p.CanTouch==false and p.CastShadow==false,p.Name)
 				assert(string.sub(p.Name,1,2)~="W7",p.Name)
@@ -331,6 +338,179 @@ return function(client)
 			end
 			assert(shown==2,"one emitter per crown in reach: "..shown)
 			assert(r.life.colours==Life.PetalColours.lime,"lime crowns, lime petals")
+		end)
+		-- Dewdrops (WORLD-PASS item 3; FRUIT-LOOK) -------------------------------------------------------------------
+		local function dewdrops(r)
+			local out={}
+			for slot=1,Sim.Fruit.pool do table.insert(out,r.folder():FindFirstChild("LifeDewdrop"..slot))end
+			return out
+		end
+		local function shownFruit(r)
+			local out={}
+			for _,p in ipairs(dewdrops(r))do if not hidden(p)then table.insert(out,p)end end
+			return out
+		end
+		-- Steps a second at a time until a Dewdrop is loose (nil after `most` seconds).
+		local function untilLoose(r,most)
+			for _=1,most or 400 do
+				r.step(1)
+				if r.life:counts().loose>0 then return r.life.orchard.loose[1]end
+			end
+			return nil
+		end
+
+		test("Dewdrops: 16 billboards made once (the uploaded texture, FRUIT-LOOK sizes), inert anchors",function()
+			local r=rig()
+			assert(Life.DewdropTexture=="rbxassetid://82054526707528")
+			local list=dewdrops(r)
+			assert(#list==16)
+			for _,anchor in ipairs(list)do
+				assert(anchor.Size==Vector3.new(.2,.2,.2)and anchor.Transparency==1 and hidden(anchor))
+				local gui=anchor:FindFirstChild("Dewdrop")
+				assert(gui and gui.ClassName=="BillboardGui"and gui.MaxDistance==110 and gui.LightInfluence==.6 and gui.Brightness==1)
+				assert(gui.AlwaysOnTop==false and gui.ClipsDescendants==false)
+				local label=gui:FindFirstChild("Image")
+				assert(label and label.ClassName=="ImageLabel"and label.Image==Life.DewdropTexture and label.BackgroundTransparency==1)
+			end
+			r.step(60)
+			assert(#dewdrops(r)==16 and #r.parts()==51,"never made or destroyed in play")
+		end)
+
+		test("Dewdrops: hanging under the lime crowns in reach, nearest first: 16 at level 0, 8 still ones at 1, none pink",function()
+			local crowns={}
+			for i=1,9 do table.insert(crowns,{position=Vector3.new(-40+i*8,12,-30-i),size=Vector3.new(9,5.5,9)})end
+			table.insert(crowns,{position=Vector3.new(0,12,-200),size=Vector3.new(9,5.5,9)}) -- out of reach
+			local spots={Perches=0,Landings={},Crowns=crowns}
+			local total=0
+			for i=1,9 do total+=#Sim.fruitStems(i,crowns[i])end
+			assert(total>16,"enough fruit to hit the cap: "..total)
+			local r=rig({spots=spots})
+			r.step(.2)
+			assert(r.life:counts().fruit==16 and #shownFruit(r)==16,"the cap: "..r.life:counts().fruit)
+			local stems={}
+			for i,crown in ipairs(crowns)do for _,slot in ipairs(Sim.fruitStems(i,crown))do stems[slot.key]={slot=slot,i=i}end end
+			for _,p in ipairs(shownFruit(r))do
+				local best=math.huge
+				for _,entry in pairs(stems)do best=math.min(best,(p.CFrame.Position-entry.slot.stem).Magnitude)end
+				assert(best<.64+1e-3,"under a stem: "..best)
+			end
+			for key in pairs(r.life.fruitShown)do assert(stems[key].i<10,"not the far crown")end
+			r.level=1
+			r.step(.2)
+			assert(r.life:counts().fruit==8,"level 1: 8")
+			local before={}
+			for _,p in ipairs(shownFruit(r))do before[p]={p.CFrame.Position,p.Dewdrop.Image.Rotation}end
+			r.step(1)
+			for p,was in pairs(before)do
+				assert(p.CFrame.Position==was[1]and p.Dewdrop.Image.Rotation==was[2]and was[2]==0,"level 1: no sway")
+			end
+			r.crownColour="pink"
+			r.step(2.1)
+			assert(r.life:counts().fruit==0 and #shownFruit(r)==0,"pink crowns: no fruit")
+		end)
+
+		test("Dewdrops: a strong gust drops the same fruit for two clients (no remote); it falls, rests on the lawn, fades",function()
+			local a=rig()
+			local b=rig()
+			b.camera=CFrame.lookAt(Vector3.new(12,10,6),Vector3.new(10,8,-12))
+			local seenA,seenB,most={},{},0
+			for _=1,240 do
+				a.step(1);b.step(1)
+				for _,plan in ipairs(a.life.orchard.loose)do seenA[plan.key.." "..plan.n.." "..plan.start]=plan end
+				for _,plan in ipairs(b.life.orchard.loose)do seenB[plan.key.." "..plan.n.." "..plan.start]=true end
+				most=math.max(most,a.life:counts().loose)
+			end
+			local n=0
+			for id,plan in pairs(seenA)do
+				n+=1
+				assert(seenB[id],"the other client saw "..id.." fall too")
+				assert(Wind.hash(plan.n*16+plan.i,13)<.35)
+				assert(math.abs(plan.p4.Y-4.5)<1e-6,"rests .5 over the lawn")
+			end
+			for id in pairs(seenB)do assert(seenA[id],"and nothing else")end
+			assert(n>=1,"a drop in 4 minutes")
+			assert(most<=Sim.cap("loose",0))
+			assert(a.life:counts().fruit+a.life:counts().loose<=16)
+		end)
+
+		test("Dewdrops, Reduced Motion: loose ones gone at once, the rest hang upright and still, none fall",function()
+			local r=rig()
+			assert(untilLoose(r),"a drop")
+			r.reduced=true
+			r.step(.1)
+			local c=r.life:counts()
+			assert(c.loose==0,"gone at once")
+			local list=shownFruit(r)
+			assert(#list==c.fruit and c.fruit==#Sim.fruitStems(1,SPOTS.Crowns[1])+#Sim.fruitStems(2,SPOTS.Crowns[2]),"every slot just filled")
+			local at={}
+			for _,p in ipairs(list)do at[p]=p.CFrame.Position;assert(p.Dewdrop.Image.Rotation==0,"upright")end
+			for _=1,120 do r.step(1);assert(r.life:counts().loose==0,"none fall")end
+			for p,was in pairs(at)do assert(p.CFrame.Position==was,"still")end
+		end)
+
+		test("Dewdrops: parked hides every one and forgets the loose; off clears; a live race fades the loose in .3 s, drops none",function()
+			local r=rig()
+			assert(untilLoose(r))
+			r.hatch=true
+			r.step(.4)
+			assert(#shownFruit(r)==0 and r.life:counts().loose==0 and r.life:counts().fruit==0,"parked")
+			r.hatch=false
+			r.step(.5)
+			assert(r.life:counts().fruit>0,"back on the trees")
+			r.flip(false)
+			assert(r.folder()==nil and r.life:counts().fruit==0 and r.life:counts().loose==0,"off: nothing")
+			local q=rig()
+			assert(untilLoose(q))
+			q.phase="live"
+			q.step(2.5)
+			assert(q.life:counts().loose==0,"a live race: faded")
+			assert(q.life.live==true)
+			for _=1,90 do q.step(1);assert(q.life:counts().loose==0,"no drops in a race")end
+		end)
+
+		test("Dewdrops, landing rejection: a kerb, a find spot or the course over the lawn: nothing falls, all stay up",function()
+			for _,options in ipairs({{kerbs={{x=0,z=0,rx=500,rz=500}}},{safe=function()return false end}})do
+				local r=rig(options)
+				for _=1,240 do r.step(1);assert(r.life:counts().loose==0,"skipped")end
+				assert(next(r.life.orchard.empty)==nil,"the fruit stayed on the tree")
+				assert(r.life:counts().fruit>0)
+			end
+			-- A find spot right where a fruit would rest, and the course through it (idle): that drop is skipped.
+			local probe=rig()
+			local plan=assert(untilLoose(probe))
+			for _,options in ipairs({{finds={plan.p4}},{course={plan.p4.X-5,plan.p4.Z,plan.p4.X+5,plan.p4.Z}}})do
+				local r=rig(options)
+				local seen=false
+				for _=1,math.ceil(plan.start-T0)+2 do
+					r.step(1)
+					for _,other in ipairs(r.life.orchard.loose)do
+						if other.key==plan.key and other.n==plan.n then seen=true end
+						assert(Sim.fruitClear(other.p4,{finds=options.finds,course=options.course}),"no loose fruit rests in the way")
+					end
+				end
+				assert(not seen,"that drop was skipped")
+			end
+		end)
+
+		test("Dewdrops: a pet within 3 studs of a resting one bats it once, 1 stud away; a pet farther off does nothing",function()
+			local r=rig()
+			local plan=assert(untilLoose(r))
+			local rest=plan.p4
+			r.pets={rest+Vector3.new(4,0,0)}
+			r.step(math.max(0,plan.t5-r.now)+2.2)
+			assert(not plan.bat,"4 studs: nothing")
+			r.pets={rest+Vector3.new(0,0,2)}
+			r.step(2.2)
+			assert(plan.bat and not plan.bat.straight,"batted")
+			assert(math.abs(Sim.flat(plan.rest,rest)-1)<1e-6 and(plan.rest-rest):Dot(Vector3.new(0,0,-1))>.99,"straight away from the pet")
+			r.step(1)
+			local p
+			for _,anchor in ipairs(shownFruit(r))do if(anchor.CFrame.Position-plan.rest).Magnitude<1e-3 then p=anchor end end
+			assert(p,"the billboard rests where it landed")
+			local bat=plan.bat
+			r.pets={plan.rest}
+			r.step(2.2)
+			assert(plan.bat==bat,"once in its life")
 		end)
 	end)
 	for _,r in ipairs(rigs)do

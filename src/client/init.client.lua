@@ -4671,12 +4671,23 @@ do
 end
 -- Garden life (GardenLife, Alive step 5): nil with the build ceiling off; with the switch off it only watches the switch.
 -- Petals, bubbles, birds on the perch AmbientAudio's chirp came from (it sets clientUI.ambient.onChirp while on) and
--- butterflies. Parked in a hatch, out of Room mode and in my own race; bubbles stop behind a menu.
+-- butterflies, and Dewdrops under the lime crowns (a pet this client draws within reach of a fallen one bats it).
+-- Parked in a hatch, out of Room mode and in my own race; bubbles stop behind a menu.
 do
  local ok,problem=pcall(function()
   if not require(ReplicatedStorage.Shared.Alive).ceiling("life")then return end
   clientUI.life=require(script.GardenLife).mount({ambient=clientUI.ambient,
    dash=function()return clientUI.dash end,
+   pets=function()
+    local out={}
+    local own=roomView.pet
+    if own and typeof(own.origin)=="Vector3"then table.insert(out,own.origin)end
+    for _,entry in pairs(roomView.companions and roomView.companions.active or {})do
+     local visual=entry.visual
+     if visual and typeof(visual.origin)=="Vector3"then table.insert(out,visual.origin)end
+    end
+    return out
+   end,
    modalOpen=function()return clientUI.anyModalOpen()==true end,
    reduced=function()return reduceEffects()==true end,
    mode=function()return board:GetAttribute("Mode")end})
