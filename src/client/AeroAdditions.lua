@@ -94,8 +94,17 @@ function Additions.fireflyFade()
 	return NumberSequence.new(points)
 end
 -- One clear box and one emitter an area, built off (Rate 0, Enabled false). Returns {area, box, emitter} a row.
+-- All five areas or nothing: a throw partway destroys every box made so far (listed or not yet) and is raised again.
 function Additions.fireflies(folder,groundY)
 	local list={}
+	local ok,problem=pcall(Additions.fireflyAreas,folder,groundY,list)
+	if ok then return list end
+	for _,item in ipairs(folder:GetChildren())do
+		if string.sub(item.Name,1,9)=="Fireflies"then item:Destroy()end
+	end
+	error(problem,0)
+end
+function Additions.fireflyAreas(folder,groundY,list)
 	local fade=Additions.fireflyFade()
 	for _,area in ipairs(Fly.Areas)do
 		local y=groundY(area.x,area.z)+Fly.Low+Fly.Band/2
@@ -124,7 +133,6 @@ function Additions.fireflies(folder,groundY)
 		e.Parent=box
 		table.insert(list,{area=area,box=box,emitter=e})
 	end
-	return list
 end
 -- 0 at Spawn daylight and above, 1 at Full and below (the count follows the blend in and out).
 function Additions.fireflyRamp(daylight)
@@ -187,7 +195,14 @@ function Additions.build(options)
 			if emitter.Enabled~=glints then emitter.Enabled=glints end
 			if cut then emitter:Clear()end
 		end
-		if state.on and not flies and not reduced and levelOf()<2 then flies=Additions.fireflies(folder,groundY)end
+		-- A build that throws is cleaned up and not tried again this session (the update pass runs every 5 s).
+		if state.on and not flies and not reduced and levelOf()<2 and not Additions.firefliesFailed then
+			local built,result=pcall(Additions.fireflies,folder,groundY)
+			if built then flies=result else
+				Additions.firefliesFailed=true
+				warn("[Aero] fireflies not built: "..tostring(result))
+			end
+		end
 		if not flies then return end
 		local ramp=if state.on and not reduced then Additions.fireflyRamp(state.daylight)else 0
 		local level=levelOf()

@@ -36,8 +36,9 @@ STUBS = {
     "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
     "PetFactory": "return{}", "DeckKit": "return{focusable=function(object)return object.ok==true end}", "NotificationRail": "return{}",
     "ConfirmDialog": "return{isOpen=function()return false end}",
-    # Garden hour E: PetFace reads HollowClock.lastDaylight (the spec sets it); the real clock needs Lighting.
-    "HollowClock": "return{daylight=function()return 1 end}",
+    # Garden hour E: PetFace reads HollowClock.lastDaylight (the spec sets it); the real clock needs Lighting. GardenLife
+    # and PetMaterials gate on hourOn (no Aero look offline: off; their specs swap it).
+    "HollowClock": "return{daylight=function()return 1 end,hourOn=function()return false end}",
 }
 
 

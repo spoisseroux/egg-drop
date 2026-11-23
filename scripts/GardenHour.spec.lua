@@ -44,6 +44,8 @@ return function(server)
 			local p=Hour.phase(s)
 			assert(not Hour.Blending(s)and p.from==nil and p.blend==nil and p.k==1,"hold "..s)
 		end
+		-- Blending (asked every frame, no phase table) agrees with phase() at every quarter second.
+		each(function(s,_,p)assert(Hour.Blending(Base+s)==(p.blend~=nil),"Blending "..s)end)
 	end)
 	test("daylight is one continuous number in the look's ranges: exact in holds, monotonic within each blend",function()
 		local expect={dawn=.5,day=.9,golden=.55,night=.12}
@@ -65,11 +67,11 @@ return function(server)
 			last,lastBlend=p.daylight,p
 		end)
 	end)
-	test("holds return the phase's own frozen tables (never a lerp); day is WorldAero, golden WorldDusk but diffuse .25",function()
+	test("holds return the phase's own frozen tables (never a lerp); day is WorldAero, golden WorldDusk but diffuse .2, glare .3",function()
 		local function check(look,values,name)
 			for _,section in ipairs({"Lighting","Atmosphere","Grade","Bloom","SunRays","Sky"})do
 				for key,value in pairs(values[section])do
-					if not(name=="golden"and key=="EnvironmentDiffuseScale")then
+					if not(name=="golden"and(key=="EnvironmentDiffuseScale"or key=="Glare"))then
 						assert(look[section][key]==value,name.." "..section.."."..key)
 					end
 				end
@@ -84,7 +86,14 @@ return function(server)
 		end
 		assert(Hour.Holds.day.Lighting==Day.Lighting and Hour.Holds.day.Clouds==Day.Clouds)
 		assert(Hour.Holds.day.GlowWarm==Day.Surfaces.glow_warm.Color and Hour.Holds.day.PeakColor==nil)
-		assert(Hour.Holds.golden.Lighting.EnvironmentDiffuseScale==.25 and Dusk.Lighting.EnvironmentDiffuseScale==.35)
+		-- Fable R1 (GARDEN-HOUR-REVIEW-R1 fixes 2 to 4): golden diffuse .2 and glare .30; dawn its own phase.
+		assert(Hour.Holds.golden.Lighting.EnvironmentDiffuseScale==.2 and Dusk.Lighting.EnvironmentDiffuseScale==.35)
+		assert(Hour.Holds.golden.Atmosphere.Glare==.3 and Dusk.Atmosphere.Glare==.45 and table.isfrozen(Hour.Holds.golden.Atmosphere))
+		for _,phase in ipairs({"dawn","day","golden","night"})do
+			assert(Hour.Holds[phase].Lighting.EnvironmentDiffuseScale==.2,phase.." diffuse is .2 in every phase")
+		end
+		assert(same(Dawn.Atmosphere.Color,hex("#FFE0D0"))and Dawn.Atmosphere.Haze==1.8 and same(Dawn.Grade.TintColor,hex("#FFEEE2")))
+		assert(Dawn.Lighting.ExposureCompensation==0 and Dawn.Lighting.Brightness==1.6)
 		assert(Hour.Holds.golden.FaceSet=="dusk"and Hour.Holds.night.FaceSet=="night"and Hour.Holds.dawn.FaceSet=="day")
 		assert(same(Hour.Holds.golden.Clouds.Color,hex("#FFD9E4"))and same(Hour.Holds.golden.GlowWarm,hex("#FFC96A")))
 		assert(same(Night.PeakColor,hex("#56629A"))and Dawn.PeakColor==nil and Hour.Holds.golden.PeakColor==nil)
@@ -163,8 +172,8 @@ return function(server)
 			assert(luma(L.Ambient)>=luma(floorAmbient)-1e-9,"Ambient "..s)
 			assert(luma(L.OutdoorAmbient)>=luma(floorOutdoor)-1e-9,"Outdoor "..s)
 			assert(L.ExposureCompensation>=0 and L.ExposureCompensation<=.15,"Exposure "..s)
-			-- Golden's .25 is Fable's [check] cell (look section 2), above the section 3 ceiling of .2.
-			assert(L.EnvironmentDiffuseScale<=.25+1e-9,"Diffuse "..s)
+			-- Every phase is .2 (Fable R1 settled golden's [check] cell on the section 3 ceiling), so it never lerps.
+			assert(math.abs(L.EnvironmentDiffuseScale-.2)<=1e-9,"Diffuse "..s)
 			assert(look.Bloom.Intensity<=.18+1e-9,"Bloom "..s)
 			assert(look.Atmosphere.Density<=Hour.Cover.MaxDensity+1e-9,"Density "..s)
 			if look.Cover==0 then assert(look.Atmosphere.Density<=.3+1e-9,"Density without cover "..s)end
@@ -317,7 +326,7 @@ return function(server)
 		for _,odd in ipairs({5,{},true})do assert(not r.config.command(odd))end
 		assert(not r.config.command(nil)and r.offset==nil)
 	end)
-	test("config: /hour at N sets Hour_offset so the hour reads N now (Studio and beta only)",function()
+	test("config: /hour at N sets Hour_offset so the hour reads N now (Studio and beta only); clear clears it",function()
 		local r=rig(of(snapshot({})))
 		r.config.start()
 		for _,at in ipairs({0,360,2400,2880,3599,1800})do
@@ -327,6 +336,11 @@ return function(server)
 			assert(Hour.phase(r.clock+r.offset).s==(r.clock+r.offset)%3600)
 		end
 		assert(Config.parse("/hour at 0007").at==7 and Config.parse("/Hour AT 2880").at==2880)
+		-- /hour clear puts the real clock back too; on and off leave the offset alone.
+		assert(r.config.command("/hour at 2880")and r.offset~=nil)
+		local held=r.offset
+		assert(r.config.command("/hour on")and r.config.command("/hour off")and r.offset==held,"on/off keep it")
+		assert(r.config.command("/hour clear")and r.offset==nil and r.log[#r.log]=="offset nil","clear clears it")
 		local live=rig(of(snapshot({})),nil,nil,function()return false end)
 		live.config.start();assert(not live.config.command("/hour at 10")and live.offset==nil)
 		assert(Config.offsetFor(100,3600*7+50)==50 and Config.offsetFor(0,3599)==1)

@@ -34,9 +34,9 @@ return function(client,offline)
   function s.fire()for _,fn in pairs(table.clone(s.list))do fn()end end
   return s
  end
- local state={on=true,ceiling=true,t=Base+1000,level=0,reduced=false,calls=0,changed=sig(),offset=sig()}
+ local state={on=true,ceiling=true,t=Base+1000,level=0,reduced=false,calls=0,looks=0,changed=sig(),offset=sig()}
  local fake={on=function()state.calls+=1;return state.on end,ceiling=function()return state.ceiling end,time=function()return state.t end,
-  look=Real.look,phase=Real.phase,Blending=Real.Blending,ApplyRate=Real.ApplyRate,
+  look=function(...)state.looks+=1;return Real.look(...)end,phase=Real.phase,Blending=Real.Blending,ApplyRate=Real.ApplyRate,
   changed=function()return state.changed end,offsetChanged=function()return state.offset end}
  local painted,backdrops={},{}
  local look={Hour=Day.Hour,Daylight=Day.Daylight,CloudColor=Day.CloudColor,
@@ -125,6 +125,24 @@ return function(client,offline)
   -- Off: the blend windows mean nothing.
   state.on=false;f.c:step(.001);before=f.applies
   for _=1,40 do f.c:step(.1)end;assert(f.applies==before)
+ end)
+ test("a pass works the hour's look out once, for both the sample and the paint (none while the hour is off)",function()
+  reset(true);Clock.look=look
+  local c=Clock.new({world=world(),now=function()return 0 end,level=function()return 0 end,hour=fake})
+  table.insert(cleanup,function()c:destroy()end)
+  for _,s in ipairs(Moments)do
+   state.t=Base+s;state.looks=0;table.clear(painted)
+   local want=Real.look(state.t)
+   local hour,daylight=c:apply(0)
+   assert(state.looks==1,"one look at "..s..": "..state.looks)
+   assert(hour==want.Hour and daylight==want.Daylight and c.daylight==want.Daylight,"sampled "..s)
+   assert(#painted==1 and painted[1].values.Hour==want.Hour and Clock.lastDaylight==want.Daylight,"painted "..s)
+  end
+  state.on=false;state.looks=0;table.clear(painted);c:apply(0)
+  assert(state.looks==0 and #painted==1 and painted[1].n==0,"off: the Aero picture, no look")
+  -- Each on its own still works it out (callers outside a pass).
+  state.on=true;state.t=Base+2450;state.looks=0;Clock.sample(0);Clock.environment(0);assert(state.looks==2)
+  c:destroy()
  end)
  test("a switch flip or an offset change paints at once; nothing without the Aero look; destroy lets go",function()
   reset(true);Clock.look=look

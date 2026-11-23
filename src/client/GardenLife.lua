@@ -21,7 +21,8 @@
 --   The garden hour (GARDEN-HOUR-BUILD-PLAN-2026-11-23 slice D): with it on, bubbles, butterflies and birds start only
 --   while its daylight is above .7 (Sim.day); the ones out finish (bubbles pop on time, butterflies fly off, birds sit out
 --   their stay). Petals and Dewdrops never ask. The daylight is GardenHour's, from the server clock, so the gate is the
---   same on every client; with the hour off it is nil and nothing changes.
+--   same on every client; with the hour off it is nil and nothing changes. On is HollowClock.hourOn(): the hour and the
+--   Aero look painting it, so a client whose AeroWorld did not start keeps today's garden under today's light.
 --   The switch off, or a step that throws: everything gone in that frame.
 -- deps: ambient (the AmbientAudio instance: onChirp is set while on), dash() -> DashClient?, modalOpen(), reduced(),
 --   mode(), plus fixtures for specs: alive {ceiling, on, changed}, world, heartbeat, now, camera() -> CFrame?,
@@ -232,8 +233,8 @@ function Life.mount(deps)
 	end
 	self.pets=deps.pets or function()return{}end
 	self.daylight=deps.daylight or function(now)
+		if not require(script.Parent.HollowClock).hourOn()then return nil end
 		local Hour=require(Shared:WaitForChild("GardenHour"))
-		if not Hour.on()then return nil end
 		return Hour.phase(now+Hour.offset()).daylight
 	end
 	table.insert(self.connections,alive.changed("life"):Connect(function()self:sync()end))
