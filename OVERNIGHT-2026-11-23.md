@@ -18,3 +18,9 @@ Spencer, 2026-11-22: "Add first session tracking, should we disable the ad campa
 4. [x] **Waterfall: merged (layers 2f6d9d5, fixes d8cf7c9); code review GO, Fable GO with fixes applied; ships in beta (10) with onboarding.** Fable look + 5 textures uploaded (f508345); builder adding the client layers. Was: **World pass 3: waterfall client layers** (WORLD-PASS item 4 + architect check): Fable look, build, Studio, Fable capture review, beta.
 5. [ ] **Fruit (looks only)**, then **garden hour** (own gate; pets stay awake), as time allows.
 6. [ ] Morning report: what landed, beta number, test-pass rows, what's waiting on Spencer (ads pause, live tracking hotfix, grove-path parking before the re-export).
+
+## Resume note (usage limit, 2026-11-23 ~00:45)
+
+- Merged and specs green: A+B with review fixes (9576cb1), C+F with review fixes (e99e1d2), waterfall + fixes (db162be). Nest look + 7 textures uploaded (deb281e). **Builder running: D nest client + E strip** (branch worktree-agent-a4bc909a5b75c3631): merge it, code review, then Studio check.
+- **Studio check of A+B was in progress:** a hand bubble showed over the Bear with no tour card (good). Tapping a moving billboard was hard; after a tap the bubble switched off and no ball bubble or paw prints had appeared 10 s later. Bear at (97,4,70), no errors in the log, PetFocus/screens visible in PlayerGui. Re-check that flow first: does tapping start the greeting, does the ball bubble and trail follow?
+- Rojo is running and connected (stop it and strip ZZSpecs before any publish). Next beta (10) = waterfall + onboarding A-F once checked.
