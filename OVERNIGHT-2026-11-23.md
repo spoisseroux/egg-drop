@@ -13,7 +13,7 @@ Spencer, 2026-11-22: "Add first session tracking, should we disable the ad campa
 ## Steps
 
 1. [ ] **Island edges** (builder running) + **lime leaf map** (committed 83f25ae): merge, review, Studio check (try to climb/fall; crowns not olive), beta (9).
-2. [ ] **First-session tracking:** Roblox onboarding funnel (`AnalyticsService:LogOnboardingFunnelStepEvent`) at each first-session step; plan, architect, build, review. Only useful on live: prepare a **live-ready hotfix** (from the live runtime commit, tracking only) and a beta copy; publishing live waits for Spencer's go.
+2. [ ] **First-session tracking:** FOUND ALREADY LIVE (9-step funnel, `research/FUNNEL-SNAPSHOT-2026-11-23.md`: 50% reach a second round, biggest drop at the garden walkthrough, D1 1%). Builder fixing step order + 3 custom events on `hotfix/first-session-funnel` (from 54dca26) and the feature branch. Was: Roblox onboarding funnel (`AnalyticsService:LogOnboardingFunnelStepEvent`) at each first-session step; plan, architect, build, review. Only useful on live: prepare a **live-ready hotfix** (from the live runtime commit, tracking only) and a beta copy; publishing live waits for Spencer's go.
 3. [ ] **Onboarding research:** exemplary Roblox first sessions (top pet/garden/tycoon/sim games), what works in the first 60 s / 5 min, sources; Fable turns it into `ONBOARDING-V3-PLAN` fit to our game; architect; build in slices on the beta.
 4. [ ] **World pass 3: waterfall client layers** (WORLD-PASS item 4 + architect check): Fable look, build, Studio, Fable capture review, beta.
 5. [ ] **Fruit (looks only)**, then **garden hour** (own gate; pets stay awake), as time allows.
