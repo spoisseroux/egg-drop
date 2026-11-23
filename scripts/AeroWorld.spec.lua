@@ -478,7 +478,7 @@ return function(client,offline)
 			}}}
 			local built
 			local r=rig({additions={build=function(o)
-				built=Additions.build({parent=o.parent,data=o.data,clouds=false,groundY=function()return 4.5 end})
+				built=Additions.build({parent=o.parent,data=o.data,clouds=false,groundY=function()return 4.5 end,hour={on=function()return false end}}) -- the hour off: these are the waterfall's own counts
 				return built
 			end}})
 			r.aero.data=data
