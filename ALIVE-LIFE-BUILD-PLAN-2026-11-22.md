@@ -50,3 +50,17 @@ Pet looks at a bird or butterfly (C2), bubble pop and wing flutter sounds (D4, D
 Specs: `LifeSim` (rates follow the wind, caps per level, paths deterministic for a seed, spawn rejection near camera/stations/course/pad, bird stay and leave), `GardenLife` (with a fake world: mount nil with the ceiling off; off destroys everything; parked hides; Reduced Motion; budget level 2 shows nothing; one Heartbeat connection; chirp lands a bird at that perch; 4th bird refused), `AmbientAudio` hook (called per chirp, sound unchanged without it), `Alive` (feature list), `ClientLocalBudget`. Offline runner as Finds.
 
 Studio: switch on, watch each kind in day and night, `/alive life off` clears, deck round hides; frame time pairs (life on/off) with the probe; output log clean. Fable reviews the captures before publish.
+
+## Revisions after the architect review (2026-11-22; these win over the text above)
+
+1. **Crowns are not instances** (blocker): `foliage_blossom` is three merged MeshParts. A generator `scripts/build_life_spots.py` (as `build_ambient_perches.py`, from `vegetation-placements.json` minus declutter) writes `src/client/LifeSpots.lua`: blossom crown tops (petal anchors) and **perch landing tops** (the bird sits on the crown, not inside it; drop stale perches). Anchors are our own local parts and never stream out. Butterflies read `WorldDressing.Flowers` (data).
+2. **Keep-out positions** (blocker): `HollowWorldLayout.Stations`, `DashCourse.Pad` (hundredths: r=300 is 3 studs), the course start, Garden finds' spots are fine to overlap. Not `StationAttractData` (no positions).
+3. **Bubbles** (blocker): around the camera only (brief B7), no Spring source this slice. One `ParticleEmitter` (bubble texture `rbxassetid://77828632873187`) on one local anchor 10 to 16 studs ahead of the camera, `Emit(1)` every 3 s while the live count < cap; nothing emitted while the anchor is within 8 studs of a station, or over the course while a race is live (`dash:summary().phase=="live"`, polled every 2 s). Never Glass, never Ball parts.
+4. **Alive spec** (blocker): `scripts/Alive.spec.lua` pins the four features and the flag table; update it for `life`.
+5. **Chirp hook** is a field, not an option: `clientUI.ambient.onChirp` set by GardenLife on enable, cleared on disable; `Ambient:step` calls it only when a chirp actually played, in pcall, nil on error. A second chirp on the same perch is a hop. Birds only appear when ambience is audible (that is fine).
+6. **Mount** after FindsClient in a `do` block behind `Alive.ceiling("life")`, as `clientUI.life`. Parked when: hatch (`WindClient`'s local `hatching()`, exported, checked first), board `Mode ~= "Room"`, `clientUI.dash:held()`. Menus: `clientUI.anyModalOpen` (bubbles stop spawning).
+7. **Day:** `DayNight=false`, `daylight()` is always .55: no day gating this slice.
+8. **Petals:** emitters at Rate 0; the stepper calls `Emit` against a live count (cap 24); petal texture `rbxassetid://112974880714881`; drift by `Speed` along `Wind.Direction` plus `Drag`, never `Acceleration`.
+9. **Wings:** two poses swapped at 7.5 Hz (LOOK.md); held still at budget level 1.
+10. **Instances:** folder `EggDropLife` directly in `workspace` (never under `EggDropLounge`), no `W7*` names; hide by moving parts far away in the same `BulkMoveTo`; `CastShadow=false`, `CanCollide=false` then `CanQuery=false`, `CanTouch=false`, `Anchored`.
+11. Look numbers: `artifacts/alive-life-2026-11-22/LOOK.md` (Fable).
