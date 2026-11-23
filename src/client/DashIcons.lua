@@ -11,7 +11,7 @@ Icons.Ids={
 	jumpWhite=132916023122268,  -- icons/jump-white.png
 	-- FABLE-REVIEW-R1 4: look/ui/spot-wedge.png, the Dash stages' spotlight (256 px white trapezoid, top 18%, bottom
 	-- 80%, 4 px feathered sides). PLACEHOLDER: 0 until it is uploaded; the stages draw no spotlight until then.
-	spotWedge=0,
+	spotWedge=123828042465302,
 }
 -- "rbxassetid://n" for a name, or nil while it is not uploaded.
 function Icons.image(name)

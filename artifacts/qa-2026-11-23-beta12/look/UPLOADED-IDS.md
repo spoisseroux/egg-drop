@@ -33,3 +33,4 @@
 | jump.png | 135761648509586 |
 | jump-white.png | 132916023122268 |
 | racing-flag.png | 97444903136843 |
+| spot-wedge.png | 123828042465302 |
