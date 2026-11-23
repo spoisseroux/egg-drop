@@ -494,7 +494,7 @@ ui.notice.customize.what,"Colour jars, charms, toys and outfits change how {pet}
 ui.notice.dashIntro.next,Tap Show me and follow the trail to the race.,,Menu text
 ui.notice.dashIntro.what,Race your pet. It's free!,,Menu text; also ui.r5.station.Dash.line
 ui.notice.dashNew.next,Race your pet. It's free! Tap Show me to find it.,,Menu text
-ui.notice.dashNew.title,New in the garden,,Menu text
+ui.notice.dashNew.title,New in the garden,,Menu text; also ui.onb3.new.title
 ui.notice.dashNew.what,Garden Dash is open.,,Menu text
 ui.notice.fillLine.next,"Merge to make room, and drop each egg next to its match.",,Menu text
 ui.notice.findsIntro.next,Tap Show me and follow the trail to it.,,Menu text
@@ -537,6 +537,41 @@ ui.notice.questReady.what,{quest} is finished. It pays ★ {reward} when you cla
 ui.notice.welcome.next,"Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars.",,Menu text
 ui.notice.welcome.title,Your first round,,Menu text
 ui.notice.welcome.what,Drop eggs into the deck. Two of the same kind merge into a bigger one.,,Menu text
+ui.onb3.charm.name,Nest Charm,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.need.deck,{pet} wants to watch you play.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear wants to watch you play."
+ui.onb3.need.egg,{pet}'s Sleepy egg is ready!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear's Sleepy egg is ready!"
+ui.onb3.need.hi,Say hi to {pet}.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Say hi to Bear."
+ui.onb3.need.nest,{pet} is sleepy.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear is sleepy."
+ui.onb3.need.park,{pet} wants to meet friends.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear wants to meet friends."
+ui.onb3.need.toy,{pet} wants a toy.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear wants a toy."
+ui.onb3.nest.chipHours,{hours} h,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 7 h"
+ui.onb3.nest.chipMinutes,{minutes} min,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 40 min"
+ui.onb3.nest.count,Egg {count} of 7,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Egg 3 of 7"
+ui.onb3.nest.got,{item} from the Sleepy egg!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Squeaky Bone from the Sleepy egg!"
+ui.onb3.nest.hatch,Hatch,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; also ui.r1.hatchHints.hatch"
+ui.onb3.nest.hours,Ready in {hours} h.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Ready in 7 h."
+ui.onb3.nest.inside,Inside: {item} and {stars} Stars.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Inside: Squeaky Bone and {stars} Stars."
+ui.onb3.nest.insideStars,Inside: {stars} Stars.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Inside: {stars} Stars."
+ui.onb3.nest.minutes,Ready in {minutes} min.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Ready in 40 min."
+ui.onb3.nest.next,A new egg is growing.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.nest.ready,Ready!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.nest.title,Sleepy egg,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.nest.tuck,Tuck in,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.nest.tucked,Sleep tight. It will wait for you.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.new.line,{pet} has a nest now.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear has a nest now."
+ui.onb3.notify,{pet}'s Sleepy egg is ready to hatch!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear's Sleepy egg is ready to hatch!"
+ui.onb3.notifyPlain,Your Sleepy egg is ready to hatch!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.quests,3 new quests,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.stamp,Stamp {count}: {stars} Stars,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Stamp 3: {stars} Stars"
+ui.onb3.strip.title,See you tomorrow,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.wait,"Miss a day, lose nothing.",,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.tip.companions,Care for {pet} here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Care for Bear here."
+ui.onb3.tip.hatch,{pet} found the egg machine!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear found the egg machine!"
+ui.onb3.tip.nest,This is {pet}'s nest.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. This is Bear's nest."
+ui.onb3.tip.park,Pets play together in here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.tip.style,Dress up your Pocket Deck here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.week.line,{pet} loves the garden. The nest keeps growing eggs.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear loves the garden. The nest keeps growing eggs."
+ui.onb3.week.title,Welcome week done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
 ui.onboarding.spend.ready,A toy for {pet},,First-round coaching; e.g. A toy for Bear
@@ -583,7 +618,6 @@ ui.qa.retryPreview,Retry preview,,Menu text
 ui.qa.shortfallOne,{count} more Star needed,,Menu text; e.g. 3 more Star needed
 ui.quests.allDone,All done. {pet} is impressed.,,Quest log; e.g. All done. Bear is impressed.
 ui.quests.allDoneSolo,All done for today.,,Quest log
-ui.r1.hatchHints.hatch,Hatch,,Menu text
 ui.r1.welcomePill.wide,Merge to hatch your first friend,,Menu text
 ui.r3.help.book.a.line,"Every ball, plate, outfit and toy you own gets a spot in the book.",,Menu text
 ui.r3.help.book.a.title,Collect,,Menu text
