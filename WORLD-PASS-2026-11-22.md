@@ -144,3 +144,14 @@ Pieces 1 to 5 are independent and each sits behind its own flag. Every piece end
 3. **Garden hour split: 34 minutes day, 8 golden, 12 night, 6 dawn, same for everyone?** Recommend yes, beta first.
 4. **Move night-only Book finds from the real clock to the garden hour?** Recommend yes, after Opus checks it.
 5. **OK to do one world re-export after the runtime pieces land?** Recommend yes: it is the only way to get swaying crowns, shaped falls and rocks, and it folds in slice 9.
+
+## Architect check (Opus, 2026-11-22; wins over the text above)
+
+- **Export blocker:** five tracked pipeline files (incl. `world_native_collision_test.py`) edited 2026-11-20, calling ~11 untracked `scripts/world_path_*.py` from 2026-11-14: the parked grove path reroute. Not ours: park it on a wip branch with its untracked files (Spencer's OK), never discard.
+- **Lime map:** no new SurfaceAppearance: `AeroWorld.paintCrown` already writes `TextureID=""`; write the uploaded lime map id there (runtime, Aero ceiling and switch, restore path). Also textures the islet blossoms (same material).
+- **Sway:** `WorldMotion` already has `WorldPivot`; `WindClient` already sways bushes from the base (phone 16 within 120 studs): crowns join as a second kind under that cap. The re-export must add split crowns as an extra group shown only behind the ceiling (live keeps merged crowns). 32 shadow decals would be 32 draws: over budget.
+- **Fruit:** client-only, seeded from `Wind.hash`. Pets move on the server (`GardenState`), so no trot-over: an in-place bat when fruit lands within reach. Keep off `FindSpots`, the Dash course and the park kerb; must not look like the Hue Egg fruit item.
+- **Waterfall 1:** client layers in the Aero additions (today's falls are server-built, also on live); rings are new code; measure overdraw at the pool edge on a phone. Step 2 rocks with collision need the pets' walk grid rebuilt.
+- **Edges:** wall top-ups in a hand-written module behind a ceiling (not WorldV7Data, which needs the blocked generator); no collision group; safe spot recorded only when not anchored, not seated, on ground tiles, and not moved by the server in the last 2 s. Raising FallCatch breaks the `GardenGreyboxWorld` spec (y < -150).
+- **Garden hour: L, risky as written.** `DayNight` is a build flag that changes live (server sky, `LaunchFlags` spec): needs its own gate (beta place + server switch) like Aero. Under Aero `Clock.look` pins 10.5, so the look must follow the hour. Two daylight values must agree; under .3 pets turn sleepy with glowing faces, about 12 minutes of every hour: Spencer's call. Clock updates every 5 s. Night Book find: one shared garden-hour module the server's `Book.isNight` reads (same save bit).
+- **Order:** parked path decision, lime map, edge sweep and safe spot, waterfall client layers, fruit, garden hour (own gate), one re-export with gated split crowns.
