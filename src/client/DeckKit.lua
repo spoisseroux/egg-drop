@@ -265,17 +265,21 @@ end
 Kit.Rise={offset=28,phone=22,frequency=3.0,damping=.42,scale=.90,top=1.03,rootScale=true,sheet=40,sheetFrequency=3.2,sheetDamping=.50}
 -- The fit UIScale (the screen's own, written by its fit code) times k: one helper keeps the fit and writes fit * k, so
 -- a re-fit mid-open (a rotation) is a foreign write that wins, and a spring cut short rests at exactly the fit.
+local rides=setmetatable({},{__mode="k"}) -- UIScale -> {fit, last}: the fit lives here, never read back mid-ride
 function Kit.rideScale(uiScale,from,top,options)
- local fit=uiScale.Scale
+ -- The fit: the value the owner last wrote. Our own in-flight write (an arrive again before a step, a close and
+ -- reopen in one frame) is never taken for it.
+ local ride=rides[uiScale]
+ if not ride or uiScale.Scale~=ride.last then ride={fit=uiScale.Scale};rides[uiScale]=ride end
+ local fit=ride.fit
  local k=from
- local last
- local function write(value)k=value;uiScale.Scale=fit*math.min(value,top);last=uiScale.Scale end
+ local function write(value)k=value;uiScale.Scale=fit*math.min(value,top);ride.last=uiScale.Scale end
  write(from)
  return springTo(uiScale,"ArriveScale",1,{feature="menus",frequency=options.frequency,damping=options.damping,limit=options.limit,
   get=function()return k end,mark=function()return uiScale.Scale end,set=function(value)write(value)end,
   done=function(reason)
-   -- Cut or replaced: back to the fit exactly (unless the fit code wrote it meanwhile).
-   if(reason=="cancel"or reason=="replaced")and uiScale.Scale==last then uiScale.Scale=fit end
+   -- Cut: back to the fit exactly (unless the fit code wrote it meanwhile). Replaced: the new ride owns it.
+   if reason=="cancel"and uiScale.Scale==ride.last then uiScale.Scale=fit;ride.last=uiScale.Scale end
   end})
 end
 function Kit.phoneScreen()
@@ -295,8 +299,11 @@ Kit.arrive=paintSafely("arrive",false,function(object,goal,options)
  local frequency,damping=if sheet then R.sheetFrequency else R.frequency,if sheet then R.sheetDamping else R.damping
  object.Position=goal+UDim2.fromOffset(0,offset)
  springTo(object,"Position",goal,{feature="menus",frequency=frequency,damping=damping})
+ -- The scale grows from the AnchorPoint: only a centred screen grows (a top-left one would grow out of its corner and
+ -- its clip would cut the overshoot), so anything else rises only.
  local fit=object:FindFirstChildOfClass("UIScale")
- if R.rootScale and not sheet and fit and require(script.Parent.AliveBudget).level()<2 then
+ local centred=object.AnchorPoint==Vector2.new(.5,.5)
+ if R.rootScale and not sheet and centred and fit and require(script.Parent.AliveBudget).level()<2 then
   Kit.rideScale(fit,R.scale,R.top,{frequency=frequency,damping=damping})
  end
  return true

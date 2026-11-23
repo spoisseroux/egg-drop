@@ -382,13 +382,13 @@ function Strip:texts()
 	for _,chip in ipairs(self.chips)do out[chip.id]=chip.text.Text end
 	return out
 end
--- Shown: parented and nothing above it hidden.
+-- Shown: parented and nothing above it hidden. Answers false and the node that hides it (and the property).
 function Strip:shown()
 	local node=self.root
 	if not node.Parent then return false end
 	while node and node~=game do
-		if(node:IsA("GuiObject")or node:IsA("Frame"))and node.Visible==false then return false end
-		if(node:IsA("LayerCollector")or node:IsA("ScreenGui"))and node.Enabled==false then return false end
+		if(node:IsA("GuiObject")or node:IsA("Frame"))and node.Visible==false then return false,node,"Visible" end
+		if(node:IsA("LayerCollector")or node:IsA("ScreenGui"))and node.Enabled==false then return false,node,"Enabled" end
 		node=node.Parent
 	end
 	return true
@@ -412,17 +412,37 @@ function Strip:refresh()
 	end
 	return true
 end
--- The live pass, once a second while shown (a screen's entrance may hide it a moment: that pass is skipped). Out of
--- the game, destroyed or set to nothing: the connection goes (a later set brings it back).
+-- The live pass, once a second while shown. Hidden (the strip or a screen above it): the pass is cut and one watch
+-- waits on whatever hides it, bringing the pass back when it shows. Out of the game, destroyed or set to nothing: both go
+-- (a later set brings it back). options.clock (specs): {connect(fn) -> handle, watch(node, property, fn) -> handle}.
+function Strip:park(node,property)
+	self:stopLive()
+	local function wake()
+		if self.wake then self.wake:Disconnect();self.wake=nil end
+		self:live()
+	end
+	local ok,handle=pcall(function()
+		if self.options.clock and self.options.clock.watch then return self.options.clock.watch(node,property,wake)end
+		return node:GetPropertyChangedSignal(property):Connect(wake)
+	end)
+	if ok and handle then self.wake=handle;return true end
+	return false
+end
 function Strip:live()
-	if self.link or not self.options.source or self.root.Visible==false then return end
+	if self.link or self.wake or not self.options.source or not self.model then return end
+	local shown,node,property=self:shown()
+	if not shown and node and self:park(node,property)then return end
 	local elapsed=0
 	local function tick(dt)
 		elapsed+=dt
 		if elapsed<Strip.Refresh then return end
 		elapsed=0
 		if not self.root.Parent then self:stopLive();return end -- removed or destroyed (Destroying also cuts it)
-		if not self:shown()then return end
+		local now,hider,which=self:shown()
+		if not now then
+			if hider then self:park(hider,which)end -- no watch to be had: keep the pass, skip it
+			return
+		end
 		local ok,problem=pcall(self.refresh,self)
 		if not ok then warn("[Strip] live: "..tostring(problem));self:stopLive()end
 	end
@@ -431,6 +451,7 @@ function Strip:live()
 end
 function Strip:stopLive()
 	if self.link then self.link:Disconnect();self.link=nil end
+	if self.wake then self.wake:Disconnect();self.wake=nil end
 end
 -- In: 12 px up and a fade (0.25 s) after `delay`, chips 60 ms apart. Reduced Motion: a fade only.
 -- Call it after the strip is placed and set: it tweens back to where it is now. Answers false (and moves nothing)

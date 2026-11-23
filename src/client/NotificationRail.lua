@@ -434,7 +434,8 @@ local function frame(dt)
   if t.enter<1 then t.enter=math.min(1,t.enter+dt/(if reduced then Rail.Motion.reduced else Rail.Motion.enter))end
   local alpha,scale,dx
   local sprung=not reduced and springs
-  if sprung and t.sprung==nil then t.sprung=0 end
+  -- Menus switched off (or Reduced Motion) mid-entrance: the spring stops for good and the ease finishes it.
+  if sprung and t.sprung==nil then t.sprung=0 elseif not sprung and t.sprung then t.sprung=false end
   if t.sprung and t.sprung<Rail.Spring.time then t.sprung=math.min(Rail.Spring.time,t.sprung+dt)end
   if reduced then
    alpha=t.enter*(1-math.min(1,t.leave));scale=1;dx=0

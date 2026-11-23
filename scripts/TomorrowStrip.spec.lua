@@ -152,14 +152,16 @@ return function(client)
 	test("live: a pass a second, a write only when a word changes, the last model kept through a nil, gone on destroy",function()
 		local host=Instance.new("Frame");host.Parent=workspace
 		local ticks={}
-		local clock={connect=function(fn)local handle={fn=fn};function handle:Disconnect()self.gone=true end;table.insert(ticks,handle);return handle end}
+		local watches={}
+		local clock={connect=function(fn)local handle={fn=fn};function handle:Disconnect()self.gone=true end;table.insert(ticks,handle);return handle end,
+			watch=function(node,property,fn)local handle={node=node,property=property,fn=fn};function handle:Disconnect()self.gone=true end;table.insert(watches,handle);return handle end}
 		local left,answer=7*3600+52*60,true
 		local calls=0
 		local view=Strip.new(host,{measure=measure,source=function()calls+=1;return if answer then Strip.model(ctx(left))else nil end,clock=clock})
 		view:set(Strip.model(ctx(left)),800)
 		assert(#ticks==1 and view.link==ticks[1],"one connection")
 		view:set(Strip.model(ctx(left)),800);assert(#ticks==1,"a second set adds none")
-		local function second()ticks[1].fn(1)end
+		local function second()ticks[#ticks].fn(1)end
 		local text=view.byId.nest.text
 		local writes=0
 		local set=view.set
@@ -173,9 +175,19 @@ return function(client)
 		answer=true;left=0;second()
 		assert(view.byId.nest.gold and view.chips[1].id=="nest"and text.Text=="Egg ready!","ready: gold, first")
 		host.Visible=false;left=600;second()
-		assert(text.Text=="Egg ready!"and view.link,"hidden: the pass is skipped, the link kept")
-		host.Visible=true;second();assert(text.Text=="Egg in 10 min","a new egg (no bounce)")
-		view:destroy();assert(ticks[1].gone and view.link==nil,"destroy: the connection goes")
+		assert(text.Text=="Egg ready!"and view.link==nil and ticks[1].gone,"hidden: the pass is cut")
+		assert(#watches==1 and watches[1].node==host and watches[1].property=="Visible"and view.wake==watches[1],"one watch on what hides it")
+		host.Visible=true;watches[1].fn()
+		assert(watches[1].gone and view.wake==nil and #ticks==2 and view.link==ticks[2],"shown again: the pass comes back")
+		second();assert(text.Text=="Egg in 10 min","a new egg (no bounce)")
+		host.Visible=false;second();assert(#watches==2 and view.link==nil)
+		view:destroy();assert(watches[2].gone and view.wake==nil and view.link==nil,"destroy: everything goes")
+		-- Hidden when the screen first sets it (a sheet's entrance): parked at once, no pass a second.
+		local hidden=Instance.new("Frame");hidden.Parent=workspace;hidden.Visible=false
+		local parked=Strip.new(hidden,{measure=measure,source=function()return Strip.model(ctx(left))end,clock=clock})
+		local before=#ticks;parked:set(Strip.model(ctx(left)),800)
+		assert(#ticks==before and parked.wake and parked.link==nil,"no pass while hidden")
+		parked:destroy();hidden:Destroy()
 		host:Destroy()
 	end)
 	test("enter: refused before set; after it, the tween goes home to where the strip was placed",function()

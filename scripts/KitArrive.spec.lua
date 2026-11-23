@@ -49,7 +49,15 @@ return function(client,parent)
    Kit.arrive(f);run(.05);fit.Scale=.7;run(2);assert(math.abs(fit.Scale-.7)<1e-6,"a re-fit mid-open wins")
    Kit.arrive(f);run(.05);Spring.settle(f);assert(math.abs(fit.Scale-.7)<1e-6,"cut short: the fit exactly")
    Budget.level=function()return 2 end;Kit.arrive(f);assert(math.abs(fit.Scale-.7)<1e-6,"level 2: the rise alone");Budget.level=saved.level
-   run(2);f:Destroy()
+   run(2)
+   -- Code review: twice before a step (a close and reopen in one frame) never takes the half-grown scale for the fit.
+   Kit.arrive(f);Kit.arrive(f);run(.05);Kit.arrive(f);run(2);assert(math.abs(fit.Scale-.7)<1e-6,"the fit survives a re-arrive: "..fit.Scale)
+   f:Destroy()
+   -- A top-left anchored screen (QuestLog, DifficultyPicker content) would grow out of its corner: it rises only.
+   local corner=host(400,300);corner.Position=UDim2.new()
+   local cornerFit=Instance.new("UIScale");cornerFit.Scale=1;cornerFit.Parent=corner
+   assert(Kit.arrive(corner,UDim2.new())==true and cornerFit.Scale==1 and not Spring.busy(cornerFit),"rise only")
+   run(2);assert(corner.Position==UDim2.new());corner:Destroy()
   end)
   test("QA-R2 press: a Kit button's only GuiObject child is its Face; the PressScale shrinks the Face, never the button; live keeps today's tree",function()
    assert(Kit.FaceOn==true,"Studio is under the springs ceiling")
