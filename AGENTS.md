@@ -10,6 +10,8 @@ Spencer's standing instruction, 8 November 2026:
 - **Private beta (2026-11-19):** "Pocket Pals Beta", place 107705084891479, universe 10777916361. Test v2 builds there first; it has its own saves and no Robux products. Live stays 96451847774961.
 - Work in this Egg Drop repository on the authorized branch. Studio target is place **96451847774961**; never modify the other `roblox_suica_collector` project/place.
 
+Keep `V3-TEST-PASS.md` current too (Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test pass"): every slice that lands on the beta adds its row (what to try, its switch), and moves from "Built, not on the beta" when published.
+
 Keep `TODO.md` current while working: update **Now working on** when a task starts, check items off when they land, and add new findings as they come up. Do not wait until the end of a session.
 
 Current approved creative direction: original quirky, expressive baby pets; a lively shared garden with the existing day/night cycle; one earned **Stars** wallet; optional floating charms using each pet's secondary palette. Read `CHAO-GARDEN-DIRECTION.md` before choosing an implementation slice. The new roster, wallet conversion, egg types, stats and world redesign are proposals until implemented and verified. Read `PLAY-BUILD.md` and the latest build evidence to distinguish repository checkpoints from the published private place.
