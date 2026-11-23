@@ -4,7 +4,7 @@ Scope: `V3-SCOPE-2026-11-21.md` section 4. `DashCourse/DashSim/DashStats` stay u
 
 ## Switch
 
-`FeatureFlags.GardenDash` is the ceiling. `shared/Dash.lua` copies `Levels.lua` (flag and (beta or Studio)). `server/DashConfig.lua` runs AliveConfig's publisher on `garden_dash` and `garden_dash_prizes` (off until loaded, then missing = on). Owner chat `/dash`. Ceiling off: no remotes, gate, attributes, snapshot keys or writes. **Go-live:** set keys, then move the `Alive`, `Levels`, `Dash` PlaceIds.
+`FeatureFlags.GardenDash` is the ceiling. `shared/Dash.lua` copies `Levels.lua` (flag and (beta or Studio)). `server/DashConfig.lua` runs AliveConfig's publisher on `garden_dash` and `garden_dash_prizes` (off until loaded, then missing = on). Owner chat `/dash`. Ceiling off: no remotes, gate, attributes, snapshot keys or writes. **Go-live:** set keys, then move the `Alive`, `Levels`, `Dash`, `Finds` PlaceIds.
 
 ## Files
 

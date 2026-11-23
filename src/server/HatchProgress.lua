@@ -51,6 +51,9 @@ local Levels=require(ReplicatedStorage.Shared.Levels)
 -- Garden Dash (2026-11-22): the optional dash field (DashState); off = not read, not written, no snapshot key.
 local DashState=require(script.Parent.DashState)
 local Dash=require(ReplicatedStorage.Shared.Dash)
+-- Garden finds (S9): the optional finds field (FindsState); off = not read, not written, no snapshot key.
+local FindsState=require(script.Parent.FindsState)
+local Finds=require(ReplicatedStorage.Shared.Finds)
 -- v2 pet names: optional names / petNames fields (NameState); earned pieces granted by catchUp.
 local Names=require(script.Parent.NameState)
 local NameCatalog=require(ReplicatedStorage.Shared.NameCatalog)
@@ -486,6 +489,8 @@ function Hatching.public(handle)
 	public.playDate = PlayDate.public(state, dayOf(handle.adapter.now()))
 	-- Garden Dash: today's paid races, ribbons, cups, best time and title. Never the seed.
 	if Dash.on() then public.dash = DashState.public(state, dayOf(handle.adapter.now())) end
+	-- Garden finds: today's paid finds and the daily limit, only while the switch is on.
+	if Finds.on() then public.finds = FindsState.public(state, dayOf(handle.adapter.now())) end
 	-- Onboarding: one-time coach cards already shown (0 when the field is missing).
 	public.coachMask = Coach.mask(state.coachMask)
 	-- Bond XP per pet (slice F): {} when the field is missing. Levels come from BondCatalog.
@@ -1549,6 +1554,25 @@ function Hatching.dashResults(handle, operationId, results)
 end
 function Hatching.dashCommitted(handle, operationId) return DashState.committed(handle.state, operationId) end
 function Hatching.dashReceipt(handle, operationId) return DashState.receipt(handle.state, operationId) end
+
+-- Garden finds (FindsState): one find for the pet the host captured when it accepted the claim. `operationId` is the
+-- host's id, kept across retries; finds.op is the proof, so a retry, a replay or a second session pays once. A pending
+-- write resumes its own frozen candidate. The count's day is read inside the write; the XP day is the candidate's.
+-- A refusal (DailyLimit, NoPet) writes nothing.
+function Hatching.findClaim(handle, operationId, petId)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(petId) ~= "string" or #petId < 1 or #petId > 40 then return false, "InvalidFind" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	if FindsState.committed(handle.state, operationId) then return true, "AlreadySaved" end
+	local signature = "find:" .. operationId
+	local pending = handle.pending
+	if pending and pending.signature ~= signature then return false, "Pending" end
+	local candidate = if pending then pending.candidate else table.freeze({ id = operationId, petId = petId, n = 1, day = dayOf(handle.adapter.now()) })
+	return transact(handle, signature, handle.state.revision, function(state, captured)
+		return FindsState.apply(state, captured, dayOf(handle.adapter.now()))
+	end, candidate, operationId, nil, "find:" .. candidate.day .. ":" .. candidate.petId)
+end
+function Hatching.findCommitted(handle, operationId) return FindsState.committed(handle.state, operationId) end
+function Hatching.findReceipt(handle, operationId) return FindsState.receipt(handle.state, operationId) end
 
 -- The free daily reroll: signature reroll:<day>:<slot>; saved as `rerolled`.
 function Hatching.questReroll(handle, slot, day, boost)
