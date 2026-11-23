@@ -3,6 +3,11 @@
 Script-drawn, deterministic, no outside art:
   assets/life/petal.png   64x64   white/grey petal, tinted by ParticleEmitter.Color
   assets/life/bubble.png  128x128 soap bubble: thin ring, curved highlight, faint rainbow edge
+Round 2 (LOOK-R2.md), Decals on thin transparent parts:
+  assets/life/bird-eye.png          64x64    cream rim, ink pupil, top glint (full colour; cylinder cap)
+  assets/life/bird-wing.png         128x184  three-feather wing, tip down, left-right symmetric (tinted by Decal.Color3)
+  assets/life/butterfly-wing.png    160x192  one side of a butterfly, root at the LEFT edge, fore wing up (tinted)
+  assets/life/butterfly-wing-m.png  the same mirrored, root at the RIGHT edge
 
 Run:  python scripts/draw_life_textures.py [--preview DIR]
 --preview also writes contact sheets on grass / sky / pet-white at in-game pixel sizes.
@@ -14,7 +19,7 @@ import math
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets" / "life"
@@ -158,14 +163,167 @@ def preview(directory: Path, pet: Image.Image, bub: Image.Image) -> None:
     sheet.save(directory / "bubble-sheet.png")
 
 
+# Round 2 decals -------------------------------------------------------------------------------------------------
+DS = 6  # supersample for the ImageDraw shapes
+
+
+def _ellipse(cx: float, cy: float, a: float, b: float, deg: float, k: float = 1.0, n: int = 96):
+    """Polygon of an ellipse turned by deg (screen degrees, clockwise), scaled by k about its centre."""
+    c, s = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+    pts = []
+    for i in range(n):
+        t = 2 * math.pi * i / n
+        x, y = a * k * math.cos(t), b * k * math.sin(t)
+        pts.append(((cx + x * c - y * s) * DS, (cy + x * s + y * c) * DS))
+    return pts
+
+
+def _finish(mask: Image.Image, grey: Image.Image, size: tuple[int, int]) -> Image.Image:
+    return Image.merge("RGBA", (grey, grey, grey, mask)).resize(size, Image.LANCZOS)
+
+
+def bird_eye() -> Image.Image:
+    n = 64 * DS
+    img = Image.new("RGBA", (n, n), (255, 248, 232, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse((0, 0, n - 1, n - 1), fill=(255, 248, 232, 255))  # cream rim, fills the cap
+    r = 0.405 * n
+    d.ellipse((n / 2 - r, n / 2 - r, n / 2 + r, n / 2 + r), fill=(22, 28, 56, 255))  # ink pupil
+    g = 0.125 * n
+    d.ellipse((n / 2 - g, 0.275 * n - g, n / 2 + g, 0.275 * n + g), fill=(255, 255, 255, 255))  # top glint
+    return img.resize((64, 64), Image.LANCZOS)
+
+
+def bird_wing() -> Image.Image:
+    """Tip down, symmetric left-right so it reads the same on the Left and the Right face."""
+    w, h = 128, 184
+    mask = Image.new("L", (w * DS, h * DS), 0)
+    grey = Image.new("L", (w * DS, h * DS), 255)
+    dm, dg = ImageDraw.Draw(mask), ImageDraw.Draw(grey)
+    rim = 118
+    # (cx, cy, a, b, deg): two side feathers, the long middle one, then the round shoulder on top.
+    shapes = [(40, 104, 62, 27, 76), (88, 104, 62, 27, 104), (64, 112, 68, 28, 90), (64, 56, 58, 52, 0)]
+    for cx, cy, a, b, deg in shapes:
+        dm.polygon(_ellipse(cx, cy, a, b, deg), fill=255)
+    for i, (cx, cy, a, b, deg) in enumerate(shapes):
+        dg.polygon(_ellipse(cx, cy, a, b, deg), fill=rim)
+        fill = 255 if i == 3 else (226 if i == 2 else 200)
+        dg.polygon(_ellipse(cx, cy, a - 7, b - 7, deg), fill=fill)
+    return _finish(mask, grey, (w, h))
+
+
+def butterfly_wing() -> Image.Image:
+    """One side: root at the left edge, fore wing up. White field (takes the tint), near-black border and veins."""
+    w, h = 160, 192
+    mask = Image.new("L", (w * DS, h * DS), 0)
+    grey = Image.new("L", (w * DS, h * DS), 255)
+    dm, dg = ImageDraw.Draw(mask), ImageDraw.Draw(grey)
+    dark = 26
+    root = (4, 104)
+    lobes = [(70, 142, 64, 44, 28), (80, 60, 82, 52, -24)]  # hind, then fore on top
+    for cx, cy, a, b, deg in lobes:
+        dm.polygon(_ellipse(cx, cy, a, b, deg), fill=255)
+    dm.polygon([(0, 84 * DS), (40 * DS, 70 * DS), (40 * DS, 140 * DS), (0, 122 * DS)], fill=255)  # the join at the body
+    for cx, cy, a, b, deg in lobes:
+        dg.polygon(_ellipse(cx, cy, a, b, deg), fill=dark)
+        # The field: the lobe shrunk and pulled toward the root, so the border is widest at the outer edge.
+        k = 0.80
+        fx, fy = cx + (root[0] - cx) * 0.10, cy + (root[1] - cy) * 0.10
+        dg.polygon(_ellipse(fx, fy, a, b, deg, k), fill=255)
+        c, s = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+        for off in (-0.30, 0.30):  # two veins from the root through the field
+            ex, ey = fx + a * k * 0.80 * c - b * k * off * 2 * s, fy + a * k * 0.80 * s + b * k * off * 2 * c
+            dg.line([(root[0] * DS, root[1] * DS), (ex * DS, ey * DS)], fill=dark, width=int(3 * DS))
+        for t in (-52, -18, 18, 52):  # dots in the border along the outer edge (they take the tint)
+            tt = math.radians(t)
+            x, y = a * 0.905 * math.cos(tt), b * 0.905 * math.sin(tt)
+            qx, qy = cx + x * c - y * s, cy + x * s + y * c
+            dg.ellipse(((qx - 4) * DS, (qy - 4) * DS, (qx + 4) * DS, (qy + 4) * DS), fill=255)
+    dg.polygon([(0, 88 * DS), (30 * DS, 84 * DS), (30 * DS, 126 * DS), (0, 118 * DS)], fill=dark)
+    return _finish(mask, grey, (w, h))
+
+
+BIRDS = {"tide": ("#2A6BE0", "#173F9E", "#FF9F1C"), "coral": ("#FF7C6B", "#C93F3A", "#FFD23F"), "sun": ("#FFD23F", "#E08A10", "#FF7A1A")}
+FLIES = ["#FF327A", "#FFCC00", "#7A35F0", "#0A4FD0"]
+
+
+def _bird_mock(px: int, colours, eye: Image.Image, wing: Image.Image) -> Image.Image:
+    """Side view, facing right; px is the body ball (1.2 studs) in pixels."""
+    s = 4
+    U = px / 1.2 * s  # supersampled pixels per stud
+    big = Image.new("RGBA", (int(2.2 * U), int(1.8 * U)), (0, 0, 0, 0))
+    d = ImageDraw.Draw(big)
+    ox, oy = big.width / 2, big.height / 2
+    body, _, beak = (hexrgb(c) + (255,) for c in colours)
+    d.polygon([(ox + 0.50 * U, oy - 0.10 * U), (ox + 0.92 * U, oy + 0.10 * U), (ox + 0.50 * U, oy + 0.16 * U)], fill=beak)
+    d.ellipse((ox - 0.6 * U, oy - 0.6 * U, ox + 0.6 * U, oy + 0.6 * U), fill=body)
+    hi = Image.new("RGBA", big.size, (0, 0, 0, 0))
+    ImageDraw.Draw(hi).ellipse((ox - 0.42 * U, oy - 0.52 * U, ox + 0.22 * U, oy - 0.02 * U), fill=(255, 255, 255, 46))
+    big.alpha_composite(hi.filter(ImageFilter.GaussianBlur(0.08 * U)))
+    wg = tint(wing, colours[1]).resize((max(2, int(0.46 * U)), max(2, int(0.66 * U))), Image.LANCZOS)
+    wg = wg.rotate(-55, resample=Image.BICUBIC, expand=True)
+    big.alpha_composite(wg, (int(ox - 0.14 * U - wg.width / 2), int(oy + 0.06 * U - wg.height / 2)))
+    e = eye.resize((max(2, int(0.46 * U)),) * 2, Image.LANCZOS)
+    big.alpha_composite(e, (int(ox + 0.20 * U - e.width / 2), int(oy - 0.14 * U - e.height / 2)))
+    return big.resize((big.width // s, big.height // s), Image.LANCZOS)
+
+
+def _fly_mock(px: int, colour: str, wing: Image.Image) -> Image.Image:
+    """Top view, wings flat; px is the 1.5 stud span in pixels."""
+    s = 4
+    U = px / 1.5 * s
+    big = Image.new("RGBA", (int(1.7 * U), int(1.1 * U)), (0, 0, 0, 0))
+    ox, oy = big.width / 2, big.height / 2
+    r = tint(wing, colour).resize((max(2, int(0.70 * U)), max(2, int(0.84 * U))), Image.LANCZOS)
+    big.alpha_composite(r, (int(ox + 0.05 * U), int(oy - r.height / 2)))
+    left = r.transpose(Image.FLIP_LEFT_RIGHT)
+    big.alpha_composite(left, (int(ox - 0.05 * U - left.width), int(oy - left.height / 2)))
+    ImageDraw.Draw(big).rounded_rectangle(
+        (ox - 0.05 * U, oy - 0.25 * U, ox + 0.05 * U, oy + 0.25 * U), radius=0.05 * U, fill=(36, 48, 79, 255)
+    )
+    return big.resize((big.width // s, big.height // s), Image.LANCZOS)
+
+
+def _sheet(directory: Path, name: str, grounds, columns, sizes, ratio: float, row: int, mock) -> None:
+    cellw = sum(int(s * ratio) + 14 for s in sizes)
+    sheet = Image.new("RGBA", (cellw * len(columns), row * len(grounds)), (0, 0, 0, 255))
+    for gy, ground in enumerate(grounds):
+        for cx, column in enumerate(columns):
+            tile = Image.new("RGBA", (cellw, row), hexrgb(ground) + (255,))
+            x = 5
+            for s in sizes:
+                m = mock(s, column)
+                tile.alpha_composite(m, (x, (row - m.height) // 2))
+                x += m.width + 10
+            sheet.paste(tile, (cx * cellw, gy * row))
+    sheet.save(directory / name)
+
+
+def preview_r2(directory: Path, eye: Image.Image, wing: Image.Image, fly: Image.Image) -> None:
+    """Mock side-view birds and top-view butterflies at about close, 12, 22 and 36 studs on a phone."""
+    directory.mkdir(parents=True, exist_ok=True)
+    _sheet(directory, "bird-sheet.png", ["#2F9BEF", "#BFE9FF", "#8FD63F", "#1F6B2E", "#F4F7FA"], list(BIRDS.values()),
+           [150, 48, 26, 16], 2.2 / 1.2, 240, lambda s, c: _bird_mock(s, c, eye, wing))
+    _sheet(directory, "butterfly-sheet.png", ["#5FCB3F", "#2FA84F", "#2F9BEF", "#1F6B2E"], FLIES,
+           [180, 60, 30, 18], 1.7 / 1.5, 150, lambda s, c: _fly_mock(s, c, fly))
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     pet, bub = petal(), bubble()
     pet.save(OUT / "petal.png", optimize=True)
     bub.save(OUT / "bubble.png", optimize=True)
     print("wrote", OUT / "petal.png", pet.size, OUT / "bubble.png", bub.size)
+    eye, wing, fly = bird_eye(), bird_wing(), butterfly_wing()
+    eye.save(OUT / "bird-eye.png", optimize=True)
+    wing.save(OUT / "bird-wing.png", optimize=True)
+    fly.save(OUT / "butterfly-wing.png", optimize=True)
+    fly.transpose(Image.FLIP_LEFT_RIGHT).save(OUT / "butterfly-wing-m.png", optimize=True)
+    print("wrote bird-eye", eye.size, "bird-wing", wing.size, "butterfly-wing (+ -m)", fly.size)
     if "--preview" in sys.argv:
-        preview(Path(sys.argv[sys.argv.index("--preview") + 1]), pet, bub)
+        directory = Path(sys.argv[sys.argv.index("--preview") + 1])
+        preview(directory, pet, bub)
+        preview_r2(directory, eye, wing, fly)
 
 
 if __name__ == "__main__":
