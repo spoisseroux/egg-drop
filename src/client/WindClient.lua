@@ -73,6 +73,8 @@ local function hatching()
 	end
 	return false
 end
+-- GardenLife parks on the same check.
+Client.hatching=hatching
 
 -- options (fixtures): world, motion, alive {on, changed}, level, now, eye, reduced, mode, hatching,
 -- move(parts, frames), warn, touch, auto=false. The game passes only motion.

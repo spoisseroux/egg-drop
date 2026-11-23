@@ -23,11 +23,11 @@ LIVE = sys.argv[3] if len(sys.argv) > 3 else "aeae2d9"
 ONLY = os.environ.get("DASH_SPECS", "").split()
 SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPrize", "DashGating", "DashHost",
          "DashOffParity", "DashCrossVersion", "CloseProgress"]
-# Client specs: the Dash, Things and Finds modules as they are, small stand-ins for the screens they borrow, and
+# Client specs: the Dash, Things, Finds and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient",
-          "FindsClient", "ThingsTrail", "ThingsTips"]
+          "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio"]
 SPECS += CLIENT
 STUBS = {
     "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
@@ -38,7 +38,8 @@ STUBS = {
 
 def client_modules():
     out = {f"client/{name}": source for name, source in STUBS.items()}
-    for pattern in ("Dash*.lua", "Things*.lua", "Finds*.lua", "NoticeCards.lua"):
+    for pattern in ("Dash*.lua", "Things*.lua", "Finds*.lua", "NoticeCards.lua", "Life*.lua", "GardenLife.lua", "Wind*.lua",
+                    "AmbientAudio.lua", "AmbientPerches.lua", "AliveBudget.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
