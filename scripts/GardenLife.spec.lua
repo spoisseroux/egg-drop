@@ -4,7 +4,8 @@
 -- everything and simulates nothing; Reduced Motion; budget level 2 shows nothing; a chirp lands a bird on that perch's
 -- crown and the 4th is refused; bubbles refuse a station, a live course and a menu; the round 2 look (LOOK-R2): decal
 -- plates with the uploaded textures, two fixed-size bubble emitters, the petal cap and gust burst; Dewdrops (FRUIT-LOOK):
--- 16 billboards made once, hanging caps per level, the same drops on two clients, Reduced Motion, parked, a live race,
+-- 16 billboards made once, hanging caps per level, the same simulated drops on four clients (cameras far apart, budget
+-- levels 0 and 1, Reduced Motion), Reduced Motion, parked, a live race, pink crowns skipping the pool,
 -- landing rejection and the pet bat.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.GardenLife)(PlayerScripts.Client); offline in
 -- scripts/run_dash_server_specs.py (DASH_SPECS="GardenLife").
@@ -354,7 +355,7 @@ return function(client)
 		local function untilLoose(r,most)
 			for _=1,most or 400 do
 				r.step(1)
-				if r.life:counts().loose>0 then return r.life.orchard.loose[1]end
+				if r.life:counts().loose>0 then return r.life.loose.list[1]end
 			end
 			return nil
 		end
@@ -394,7 +395,7 @@ return function(client)
 				for _,entry in pairs(stems)do best=math.min(best,(p.CFrame.Position-entry.slot.stem).Magnitude)end
 				assert(best<.64+1e-3,"under a stem: "..best)
 			end
-			for key in pairs(r.life.fruitShown)do assert(stems[key].i<10,"not the far crown")end
+			for key in pairs(r.life.fruitOf)do if key>0 then assert(stems[key].i<10,"not the far crown")end end
 			r.level=1
 			r.step(.2)
 			assert(r.life:counts().fruit==8,"level 1: 8")
@@ -407,30 +408,52 @@ return function(client)
 			r.crownColour="pink"
 			r.step(2.1)
 			assert(r.life:counts().fruit==0 and #shownFruit(r)==0,"pink crowns: no fruit")
+			assert(next(r.life.fruitOf)==nil and #r.life.loose.list==0,"nothing assigned")
+			local entry=r.life.fruitPool[1]
+			entry.anchor.CFrame=CFrame.new(1,2,3)
+			r.step(.5)
+			assert(entry.anchor.CFrame.Position==Vector3.new(1,2,3),"pink: the pool is not walked")
+			entry.anchor.CFrame=Life.Hidden
 		end)
 
-		test("Dewdrops: a strong gust drops the same fruit for two clients (no remote); it falls, rests on the lawn, fades",function()
-			local a=rig()
-			local b=rig()
-			b.camera=CFrame.lookAt(Vector3.new(12,10,6),Vector3.new(10,8,-12))
-			local seenA,seenB,most={},{},0
-			for _=1,240 do
-				a.step(1);b.step(1)
-				for _,plan in ipairs(a.life.orchard.loose)do seenA[plan.key.." "..plan.n.." "..plan.start]=plan end
-				for _,plan in ipairs(b.life.orchard.loose)do seenB[plan.key.." "..plan.n.." "..plan.start]=true end
-				most=math.max(most,a.life:counts().loose)
+		test("Dewdrops: every client simulates the same drops: cameras far apart, budget levels 0 and 1, Reduced Motion",function()
+			local near=rig()
+			local far=rig()
+			far.camera=CFrame.lookAt(Vector3.new(0,10,400),Vector3.new(0,8,420)) -- no crown in reach, looking away
+			local slow=rig({level=1})
+			slow.camera=CFrame.lookAt(Vector3.new(12,10,6),Vector3.new(10,8,-12))
+			local still=rig()
+			still.reduced=true
+			local clients={near,far,slow,still}
+			local seen={{},{},{},{}}
+			local drawn,most={},0
+			for _=1,300 do
+				for c,r in ipairs(clients)do
+					r.step(1)
+					local grove=r.life.grove
+					for i=1,#grove.crowns do
+						for _,drop in ipairs(grove.drops[i])do if drop.start<=r.now then seen[c][drop.id]=drop end end
+					end
+				end
+				for _,loose in ipairs(near.life.loose.list)do drawn[loose.id]=loose end
+				most=math.max(most,near.life:counts().loose)
+				assert(far.life:counts().loose==0 and far.life:counts().fruit==0,"far away: nothing drawn")
+				assert(still.life:counts().loose==0,"Reduced Motion: nothing drawn falling")
 			end
 			local n=0
-			for id,plan in pairs(seenA)do
+			for id,drop in pairs(seen[1])do
 				n+=1
-				assert(seenB[id],"the other client saw "..id.." fall too")
-				assert(Wind.hash(plan.n*16+plan.i,13)<.35)
-				assert(math.abs(plan.p4.Y-4.5)<1e-6,"rests .5 over the lawn")
+				for c=2,4 do assert(seen[c][id]and seen[c][id].start==drop.start and seen[c][id].p4==drop.p4,"client "..c.." has "..id)end
+				assert(Wind.hash(drop.n*16+drop.i,13)<.35)
+				assert(math.abs(drop.p4.Y-4.5)<1e-6,"rests .5 over the lawn")
 			end
-			for id in pairs(seenB)do assert(seenA[id],"and nothing else")end
-			assert(n>=1,"a drop in 4 minutes")
+			for c=2,4 do for id in pairs(seen[c])do assert(seen[1][id],"client "..c.." has nothing extra: "..id)end end
+			assert(n>=2,"drops in 5 minutes: "..n)
+			local d=0
+			for id in pairs(drawn)do d+=1;assert(seen[1][id],"drawn only what the grove dropped")end
+			assert(d>=1,"and the near one drew them")
 			assert(most<=Sim.cap("loose",0))
-			assert(a.life:counts().fruit+a.life:counts().loose<=16)
+			assert(near.life:counts().fruit+near.life:counts().loose<=16)
 		end)
 
 		test("Dewdrops, Reduced Motion: loose ones gone at once, the rest hang upright and still, none fall",function()
@@ -472,7 +495,7 @@ return function(client)
 			for _,options in ipairs({{kerbs={{x=0,z=0,rx=500,rz=500}}},{safe=function()return false end}})do
 				local r=rig(options)
 				for _=1,240 do r.step(1);assert(r.life:counts().loose==0,"skipped")end
-				assert(next(r.life.orchard.empty)==nil,"the fruit stayed on the tree")
+				for i=1,#r.life.grove.crowns do assert(#r.life.grove.drops[i]==0,"the fruit stayed on the tree")end
 				assert(r.life:counts().fruit>0)
 			end
 			-- A find spot right where a fruit would rest, and the course through it (idle): that drop is skipped.
@@ -483,7 +506,7 @@ return function(client)
 				local seen=false
 				for _=1,math.ceil(plan.start-T0)+2 do
 					r.step(1)
-					for _,other in ipairs(r.life.orchard.loose)do
+					for _,other in ipairs(r.life.loose.list)do
 						if other.key==plan.key and other.n==plan.n then seen=true end
 						assert(Sim.fruitClear(other.p4,{finds=options.finds,course=options.course}),"no loose fruit rests in the way")
 					end

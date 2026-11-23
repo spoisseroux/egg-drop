@@ -1,8 +1,9 @@
 -- Studio Client. Garden life, the maths (LifeSim, ALIVE-LIFE-BUILD-PLAN-2026-11-22): petals follow the wind under the live
 -- cap, bubbles one every 3 s ahead of the camera and never in the way, butterflies over the patches within reach, the
 -- bird's land / hop / stay / leave, caps per budget level, and the same garden for the same seed. Pure, no instances.
--- Dewdrops (FRUIT-LOOK): caps, stems, the gust trigger and the same drops on two clients, the flight numbers, landing
--- rejection (finds, course, kerb, camera, station, water, too low), the pet bat, quick fades, regrow, Reduced Motion refill.
+-- Dewdrops (FRUIT-LOOK): caps, stems, the wind-only trigger, the grove as a pure function of the server time (any
+-- window or refresh rhythm gives the same drops), the flight numbers, landing rejection (finds, course, kerb, station,
+-- water, too low; never the camera), the pet bat, and drawing (cap, reach, race, near-camera fade) never changing it.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.LifeSim)(PlayerScripts.Client); offline in
 -- scripts/run_dash_server_specs.py (DASH_SPECS="LifeSim").
 return function(client)
@@ -317,23 +318,16 @@ return function(client)
 	local F=Sim.Fruit
 	local CROWN={position=Vector3.new(0,12,0),size=Vector3.new(10,6,10)}
 	local function flatWorld(extra)
-		local world={groundY=function()return 4 end,safe=function()return true end,stations={},finds={},kerbs={},right=Vector3.new(1,0,0)}
+		local world={groundY=function()return 4 end,safe=function()return true end,stations={},finds={},kerbs={}}
 		for k,v in pairs(extra or {})do world[k]=v end
 		return world
-	end
-	-- A plan for the crown's first stem in gust n (the first one whose ground rules pass in a flat world).
-	local function firstPlan(world,n)
-		local stems=Sim.fruitStems(1,CROWN)
-		assert(stems[1],"crown 1 has fruit")
-		local plan,why=Sim.fruitPlan(1,CROWN,stems[1],n or 7,T0,world or flatWorld(),0)
-		return plan,why,stems[1]
 	end
 
 	test("Dewdrops: caps 16/8/0 hanging and 3/2/0 loose; 2 or 3 a crown under the lower skirt, the same every time",function()
 		for level=0,2 do
 			assert(Sim.cap("fruit",level)==({16,8,0})[level+1]and Sim.cap("loose",level)==({3,2,0})[level+1],"level "..level)
 		end
-		assert(F.pool==16 and F.reach==90 and F.chance==.35 and F.dropAt==.8 and F.rearm==.5)
+		assert(F.pool==16 and F.reach==90 and F.chance==.35 and F.dropAt==.8)
 		local total,twoOrMore=0,0
 		for i,crown in ipairs(Spots.Crowns)do
 			local stems=Sim.fruitStems(i,crown)
@@ -365,201 +359,281 @@ return function(client)
 		end
 	end)
 
-	test("Dewdrops: a gust fires once when the wind passes .8, re-arms under .5; two orchards on one clock drop the same fruit",function()
-		local o=Sim.Orchard.new()
-		local at=CROWN.position
-		assert(o:gust(1,at,T0,.7)==nil,"under .8")
-		local n=o:gust(1,at,T0,.85)
-		assert(type(n)=="number"and n==math.floor(Wind.localTime(at,T0)/Wind.Slot+.5),"the gust number")
-		assert(o:gust(1,at,T0+.1,.95)==nil,"once a gust")
-		assert(o:gust(1,at,T0+.2,.6)==nil and o:gust(1,at,T0+.3,.9)==nil,"not re-armed above .5")
-		assert(o:gust(1,at,T0+.4,.4)==nil and o:gust(1,at,T0+.5,.9)==nil,"re-armed, but the same gust number")
-		assert(o:gust(1,at,T0+Wind.Slot,.4)==nil and o:gust(1,at,T0+Wind.Slot,.9)==n+1,"the next gust")
-		assert(o:gust(2,at,T0,.9)==n,"each crown on its own")
-		-- Real wind at the real crowns for 20 minutes: drops happen, seeded, the same on two clients, never over the cap.
-		local function run()
-			local orchard=Sim.Orchard.new()
-			local world=flatWorld({camera=Vector3.new(0,10,40)})
-			local out,drops,chanceFails={},0,0
-			for step=0,20*60*15 do
-				local now=T0+step/15
-				orchard:step(now,world,{},3,false)
-				for i,crown in ipairs(Spots.Crowns)do
-					local g=orchard:gust(i,crown.position,now)
-					if g then
-						local plan,why=orchard:drop(i,crown,Sim.fruitStems(i,crown),g,now,flatWorld({camera=crown.position+Vector3.new(0,0,40)}),3)
-						if plan then
-							drops+=1
-							assert(Wind.hash(g*16+i,13)<.35,"the seeded chance")
-							table.insert(out,string.format("%d %d %.3f %.3f %.3f",plan.key,g,plan.start,plan.p4.X,plan.p4.Z))
-						elseif why=="chance"then chanceFails+=1 end
-					end
+	test("Dewdrops: the trigger is the wind alone: a gust whose peak passes .8 lets go the first 1/60 s it does",function()
+		local hits,calms=0,0
+		local N0=math.floor(T0/Wind.Slot)
+		for _,crown in ipairs(Spots.Crowns)do
+			local at=crown.position
+			for n=N0,N0+40 do
+				local t=Sim.fruitTrigger(at,n)
+				local start=Wind.start(n)+at:Dot(Wind.Direction)/Wind.Speed
+				if t then
+					hits+=1
+					assert(t>=start-1e-9 and t<=start+Wind.Rise+1e-9,"on the way up")
+					assert(Wind.at(at,t)>=.8,"past .8")
+					assert(t-start<1e-9 or Wind.at(at,t-1/60)<.8,"the first step that does")
+					assert(Sim.fruitTrigger(at,n)==t,"the same every call")
+				else
+					calms+=1
+					assert(Wind.at(at,start+Wind.Rise)<.8 or Wind.peak(n)==0,"a calm gust lets nothing go")
 				end
-				assert(#orchard.loose<=3,"the loose cap")
 			end
-			return table.concat(out,"|"),drops,chanceFails
 		end
-		local a,drops,fails=run()
-		local b=run()
-		assert(a==b,"every client sees the same fruit fall")
-		assert(drops>=5 and fails>drops,"some drops, more misses: "..drops.." / "..fails)
+		assert(hits>40 and calms>40,"some gusts do, some do not: "..hits.." / "..calms)
+		-- Candidates: the seeded chance, then the trigger, then the seeded slot of all the crown's stems.
+		local stems=Sim.fruitStems(1,CROWN)
+		local chance,calm,plans=0,0,0
+		for n=N0,N0+200 do
+			local plan,why=Sim.fruitCandidate(1,CROWN,stems,n,flatWorld())
+			if plan then
+				plans+=1
+				assert(Wind.hash(n*16+1,13)<.35 and plan.start==Sim.fruitTrigger(CROWN.position,n))
+				assert(plan.key==stems[math.floor(Wind.hash(n*16+1,14)*#stems)+1].key,"the seeded slot")
+				assert(plan.id==plan.key..":"..n and table.isfrozen(plan),"shared and frozen")
+			elseif why=="chance"then chance+=1;assert(Wind.hash(n*16+1,13)>=.35)
+			elseif why=="calm"then calm+=1 end
+		end
+		assert(plans>10 and chance>plans and calm>0,plans.." / "..chance.." / "..calm)
+		assert(select(2,Sim.fruitCandidate(1,CROWN,{},N0,flatWorld()))=="empty")
+	end)
+
+	-- The first gust from N0 on whose candidate passes in this world.
+	local function firstCandidate(world)
+		local stems=Sim.fruitStems(1,CROWN)
+		local N0=math.floor(T0/Wind.Slot)
+		for n=N0,N0+400 do
+			local plan=Sim.fruitCandidate(1,CROWN,stems,n,world or flatWorld())
+			if plan then return plan,n,stems end
+		end
+		error("no candidate")
+	end
+
+	test("Dewdrops: the grove is a pure function of the server time: any window, any refresh rhythm, the same drops",function()
+		local world=flatWorld()
+		local HOLD=Sim.FruitHold
+		assert(HOLD==46.5)
+		-- Client A refreshes every second from T0; client B joins 7 minutes late and refreshes every 3 s; C asks once.
+		local function record(grove,from,to,every)
+			local seen={}
+			local now=from
+			while now<=to do
+				grove:refresh(now)
+				for i=1,#grove.crowns do
+					for _,drop in ipairs(grove.drops[i])do if drop.start<=now then seen[drop.id]=drop.start end end
+				end
+				now+=every
+			end
+			return seen
+		end
+		local a=record(Sim.Grove.new(Spots.Crowns,world),T0,T0+1500,1)
+		local b=record(Sim.Grove.new(Spots.Crowns,world),T0+420,T0+1500,3)
+		local c=Sim.Grove.new(Spots.Crowns,world)
+		local once={}
+		for i=1,#Spots.Crowns do for _,drop in ipairs(c:dropsAt(i,T0+420,T0+1500))do once[drop.id]=drop.start end end
+		local n=0
+		for id,start in pairs(once)do
+			n+=1
+			assert(a[id]==start,"A saw "..id)
+			assert(b[id]==start,"B (late, slower) saw "..id)
+		end
+		for id,start in pairs(a)do if start>=T0+420 and start<=T0+1500 then assert(once[id],"nothing extra: "..id)end end
+		assert(n>=20,"drops in 18 minutes: "..n)
+		-- A slot never falls twice within HOLD; while empty it does not hang; it regrows to 1.12 and settles.
+		local byKey={}
+		for id,start in pairs(once)do
+			local key=tonumber(string.match(id,"^(%d+):"))
+			byKey[key]=byKey[key]or {}
+			table.insert(byKey[key],start)
+		end
+		for _,starts in pairs(byKey)do
+			table.sort(starts)
+			for j=2,#starts do assert(starts[j]-starts[j-1]>=HOLD,"held "..(starts[j]-starts[j-1]))end
+		end
+		local key,start=next(once)
+		key=tonumber(string.match(key,"^(%d+):"))
+		c:refresh(start+1)
+		assert(c:hanging(key,start+1)==nil,"empty after it falls")
+		c:refresh(start+44)
+		assert(c:hanging(key,start+44.9)==nil)
+		c:refresh(start+45.3)
+		local s1=c:hanging(key,start+45.3)
+		assert(s1>0 and s1<1.12)
+		c:refresh(start+46.05)
+		assert(near(c:hanging(key,start+46.05),1.12,1e-6),"the overshoot")
+		c:refresh(start+46.4)
+		assert(c:hanging(key,start+46.4)>1)
+		c:refresh(start+46.6)
+		assert(c:hanging(key,start+46.6)==1,"settled")
+		-- Islet crowns far over their ground and water never drop (the fruit stays on the tree).
+		local low=Sim.Grove.new({{position=Vector3.new(0,30,0),size=Vector3.new(10,6,10)}},world)
+		assert(#low:dropsAt(1,T0,T0+600)==0,"too far down")
 	end)
 
 	test("Dewdrops: the flight: tug, fall, two bounces with a squash, a roll downwind, 18 s at rest leaning 12, fade, gone",function()
-		local plan,_,slot=firstPlan()
-		assert(plan,"a flat lawn takes it")
+		local plan=firstCandidate()
+		local slot={stem=plan.stem}
+		local loose=Sim.fruitLoose(plan,Vector3.new(1,0,0))
+		assert(loose.plan==plan and loose~=plan and not table.isfrozen(loose),"a drawn copy; the shared plan untouched")
 		local dir=Wind.Direction
 		assert(near(Sim.flat(plan.release,plan.p1),1.2,1e-6)and(plan.p1-plan.release):Dot(dir)>0,"1.2 downwind in the fall")
 		assert(near(Sim.flat(plan.p1,plan.p2),.5,1e-6)and near(Sim.flat(plan.p2,plan.p3),.2,1e-6))
 		assert(plan.length>=1.6 and plan.length<=2.4 and near(Sim.flat(plan.p3,plan.p4),plan.length,1e-6),"roll 1.6 to 2.4")
 		assert(plan.heading:Dot(dir)>=math.cos(math.rad(25))-1e-9,"within 25 of the wind")
 		for _,p in ipairs({plan.p1,plan.p2,plan.p3,plan.p4})do assert(near(p.Y,4.5,1e-9),"centre .5 over the ground")end
-		local times={plan.t1-plan.start,plan.t2-plan.t1,plan.t3-plan.t2,plan.t4-plan.t3,plan.t5-plan.t4,plan.t6-plan.t5}
-		for i,want in ipairs({.15,.55,.34,.2,.9,18})do assert(near(times[i],want,1e-6),"phase "..i)end
-		local p=Sim.fruitPose(plan,T0+.075)
+		local times={plan.t1-plan.start,plan.t2-plan.t1,plan.t3-plan.t2,plan.t4-plan.t3,plan.t5-plan.t4,plan.t6-plan.t5,plan.gone-plan.t6}
+		for i,want in ipairs({.15,.55,.34,.2,.9,18,1.2})do assert(near(times[i],want,1e-6),"phase "..i)end
+		local p=Sim.fruitPose(loose,plan.start+.075)
 		assert(p.phase=="tug"and near((p.position-slot.stem).Magnitude,.64,1e-6),"the stem still holds it")
-		p=Sim.fruitPose(plan,plan.t1+.3)
+		p=Sim.fruitPose(loose,plan.t1+.3)
 		assert(p.phase=="fall"and p.position.Y<plan.release.Y and p.position.Y>plan.p1.Y)
 		local mid=plan.release.Y+(plan.p1.Y-plan.release.Y)*.25
-		assert(near(Sim.fruitPose(plan,plan.t1+.275).position.Y,mid,1e-6),"speeding up")
-		p=Sim.fruitPose(plan,plan.t2+.01)
+		assert(near(Sim.fruitPose(loose,plan.t1+.275).position.Y,mid,1e-6),"speeding up")
+		p=Sim.fruitPose(loose,plan.t2+.01)
 		assert(p.phase=="bounce"and p.w==1.15 and p.h==.85,"the landing squash")
-		assert(Sim.fruitPose(plan,plan.t2+.1).w==1,"for .06 s")
-		assert(near(Sim.fruitPose(plan,plan.t2+.17).position.Y,4.5+.9,1e-6),"bounce .9")
-		assert(near(Sim.fruitPose(plan,plan.t3+.1).position.Y,4.5+.3,1e-6),"then .3")
-		assert(Sim.fruitPose(plan,plan.t4+.01).w==1.15,"a squash on each landing")
-		p=Sim.fruitPose(plan,plan.t4+.45)
+		assert(Sim.fruitPose(loose,plan.t2+.1).w==1,"for .06 s")
+		assert(near(Sim.fruitPose(loose,plan.t2+.17).position.Y,4.5+.9,1e-6),"bounce .9")
+		assert(near(Sim.fruitPose(loose,plan.t3+.1).position.Y,4.5+.3,1e-6),"then .3")
+		assert(Sim.fruitPose(loose,plan.t4+.01).w==1.15,"a squash on each landing")
+		p=Sim.fruitPose(loose,plan.t4+.45)
 		assert(p.phase=="roll"and Sim.flat(p.position,plan.p3)>plan.length*.5,"ease-out")
 		-- The camera's right is +X here, so the roll spins clockwise when it goes +X on screen and rests leaning 12.
-		local off=(plan.r4-12*(if plan.heading.X<0 then -1 else 1))%360
+		local sr=if plan.heading.X<0 then -1 else 1
+		local off=(loose.r4-12*sr)%360
 		assert(math.min(off,360-off)<1e-6,"rests leaning 12 the way it went")
-		assert(math.abs(plan.r4-(plan.r3+150*plan.length*(if plan.heading.X<0 then -1 else 1)))<=180,"about 150 a stud")
+		assert(math.abs(loose.r4-(loose.r3+150*plan.length*sr))<=180,"about 150 a stud")
 		local calm
 		for i=0,180 do
 			local now=plan.t5+.1*i
-			if Wind.at(plan.rest,now)<=.6 then calm=now;break end
+			if Wind.at(plan.p4,now)<=.6 then calm=now;break end
 		end
 		assert(calm,"a calm moment at rest")
-		p=Sim.fruitPose(plan,calm)
-		assert(p.phase=="rest"and p.position==plan.p4 and p.rotation==plan.r4 and p.transparency==0)
-		p=Sim.fruitPose(plan,plan.t6+.6)
+		p=Sim.fruitPose(loose,calm)
+		assert(p.phase=="rest"and p.position==plan.p4 and p.rotation==loose.r4 and p.transparency==0)
+		p=Sim.fruitPose(loose,plan.t6+.6)
 		assert(p.phase=="fade"and near(p.transparency,.5,1e-6)and near(p.w,.85,1e-6))
-		assert(Sim.fruitPose(plan,plan.t6+1.2).phase=="gone")
-		-- The same plan for the same gust, crown and slot.
-		local again=firstPlan()
-		assert(again.p4==plan.p4 and again.r4==plan.r4 and again.t6==plan.t6,"deterministic")
+		assert(Sim.fruitPose(loose,plan.t6+1.2).phase=="gone")
+		local again=firstCandidate()
+		assert(again.p4==plan.p4 and again.start==plan.start and again.t6==plan.t6,"deterministic")
 	end)
 
-	test("Dewdrops: landing rejection: a find spot, the Dash course (idle too), a park kerb, the camera, a station, water, too low",function()
-		local plan=firstPlan()
+	test("Dewdrops: landing rejection: a find spot, the Dash course (idle too), a park kerb, a station, water, too low; never the camera",function()
+		local plan,n,stems=firstCandidate()
 		local rest=plan.p4
+		local slot
+		for _,s in ipairs(stems)do if s.key==plan.key then slot=s end end
+		local function again(extra)return Sim.fruitPlan(1,CROWN,slot,n,plan.start,flatWorld(extra))end
 		local cases={
 			find={finds={rest+Vector3.new(2,0,0)}},
 			course={course={rest.X-10,rest.Z+3,rest.X+10,rest.Z+3}},
 			kerb={kerbs={{x=rest.X+17,z=rest.Z,rx=16,rz=11}}},
-			camera={camera=rest+Vector3.new(0,3,0)},
 			station={stations={rest+Vector3.new(0,0,6)}},
 			water={safe=function()return false end},
 			low={groundY=function()return 12-15 end},
 			ground={groundY=function()return nil end},
 		}
 		for want,extra in pairs(cases)do
-			local got,why=firstPlan(flatWorld(extra))
+			local got,why=again(extra)
 			assert(got==nil and why==want,want..": "..tostring(why))
+			assert(select(2,Sim.fruitCandidate(1,CROWN,stems,n,flatWorld(extra)))==want,"the candidate too")
 		end
-		assert(firstPlan(flatWorld({finds={rest+Vector3.new(3.1,0,0)}})),"3 studs from a find is fine")
-		assert(firstPlan(flatWorld({course={rest.X-10,rest.Z+4.1,rest.X+10,rest.Z+4.1}})),"4 from the course is fine")
-		assert(firstPlan(flatWorld({kerbs={{x=rest.X+18.1,z=rest.Z,rx=16,rz=11}}})),"past the kerb grown by 2")
-		-- Through the orchard: a rejected drop leaves the fruit on the tree.
-		local o=Sim.Orchard.new()
-		local stems=Sim.fruitStems(1,CROWN)
-		local n
-		for g=1,400 do if Wind.hash(g*16+1,13)<.35 then n=g;break end end
-		local got,why=o:drop(1,CROWN,stems,n,T0,flatWorld({safe=function()return false end}),3)
-		assert(got==nil and why=="water"and #o.loose==0)
-		for _,slot in ipairs(stems)do assert(o:hanging(slot.key,T0+1)==1,"still on the tree")end
-		local miss
-		for g=1,400 do if Wind.hash(g*16+1,13)>=.35 then miss=g;break end end
-		assert(select(2,o:drop(1,CROWN,stems,miss,T0,flatWorld(),3))=="chance")
-		assert(select(2,o:drop(1,CROWN,stems,n,T0,flatWorld(),0))=="cap")
-		assert(select(2,o:drop(1,CROWN,stems,n,T0,flatWorld(),3,nil,{}))=="unseen","only a fruit that is drawn falls")
+		assert(again({camera=rest+Vector3.new(0,1,0)}),"a camera on top of it changes nothing (shared)")
+		assert(again({finds={rest+Vector3.new(3.1,0,0)}}),"3 studs from a find is fine")
+		assert(again({course={rest.X-10,rest.Z+4.1,rest.X+10,rest.Z+4.1}}),"4 from the course is fine")
+		assert(again({kerbs={{x=rest.X+18.1,z=rest.Z,rx=16,rz=11}}}),"past the kerb grown by 2")
+		-- A rejected candidate leaves the fruit on the tree and does not hold the slot.
+		local grove=Sim.Grove.new({CROWN},flatWorld({safe=function()return false end}))
+		grove:refresh(plan.start+1)
+		assert(#grove:active(plan.start+1)==0 and grove:hanging(plan.key,plan.start+1)==1,"still on the tree")
 	end)
 
-	test("Dewdrops: a pet within 3 studs bats a resting one once, 1 stud away (straight up when that spot fails), polled every 2 s",function()
-		local o=Sim.Orchard.new()
+	-- A Loose drawing one grove's fruit: the shared plans active at `now` (one crown, a flat world).
+	local function drawn()
+		local grove=Sim.Grove.new({CROWN},flatWorld())
 		local stems=Sim.fruitStems(1,CROWN)
-		local n
-		for g=1,400 do if Wind.hash(g*16+1,13)<.35 then n=g;break end end
+		local N0=math.floor(T0/Wind.Slot)
+		for n=N0,N0+400 do
+			local c=Sim.fruitCandidate(1,CROWN,stems,n,flatWorld())
+			if c then
+				grove:refresh(c.start)
+				for _,plan in ipairs(grove:active(c.start))do if plan.id==c.id then return plan,grove,Sim.Loose.new()end end
+			end
+		end
+		error("no drop")
+	end
+
+	test("Dewdrops: a pet within 3 studs bats a drawn resting one once, 1 stud away (straight up when that spot fails), polled every 2 s",function()
+		local plan,grove,draw=drawn()
 		local world=flatWorld()
-		local plan=assert(o:drop(1,CROWN,stems,n,T0,world,3))
+		local view={camera=Vector3.new(0,10,40),right=Vector3.new(1,0,0)}
 		local rest=plan.p4
 		local calls=0
 		local pet=rest+Vector3.new(5,0,0)
 		local function pets()calls+=1;return{pet}end
-		o:step(plan.t5-.5,world,pets,3,false)
-		assert(calls==0,"no poll before it rests: the pets are not even asked")
-		o:step(plan.t5,world,pets,3,false)
-		assert(calls==1 and not plan.bat,"5 studs: no bat")
+		local function step(now)grove:refresh(now);return draw:step(now,grove:active(now),view,world,pets,3,false)end
+		step(plan.t5-.5)
+		local loose=assert(draw.list[1],"drawn")
+		assert(loose.plan==plan and calls==0,"no poll before it rests: the pets are not even asked")
+		step(plan.t5)
+		assert(calls==1 and not loose.bat,"5 studs: no bat")
 		pet=rest+Vector3.new(2,0,0)
-		o:step(plan.t5+1,world,pets,3,false)
-		assert(calls==1 and not plan.bat,"the next poll is 2 s on")
+		step(plan.t5+1)
+		assert(calls==1 and not loose.bat,"the next poll is 2 s on")
 		local at=plan.t5+2
-		o:step(at,world,pets,3,false)
-		assert(plan.bat and plan.bat.start==at and not plan.bat.straight,"batted")
-		assert(near(Sim.flat(plan.rest,rest),1,1e-6)and(plan.rest-rest):Dot(Vector3.new(-1,0,0))>.99,"1 stud straight away from the pet")
-		local p=Sim.fruitPose(plan,at+.2)
+		step(at)
+		assert(loose.bat and loose.bat.start==at and not loose.bat.straight,"batted")
+		assert(near(Sim.flat(loose.rest,rest),1,1e-6)and(loose.rest-rest):Dot(Vector3.new(-1,0,0))>.99,"1 stud straight away from the pet")
+		assert(plan.p4==rest and plan.bat==nil,"the shared plan never moves")
+		local p=Sim.fruitPose(loose,at+.2)
 		assert(p.phase=="bat"and near(p.position.Y,4.5+.7,1e-6),"a .7 hop")
-		assert(Sim.fruitPose(plan,at+.41).w==1.15,"the landing squash")
-		assert(near(Sim.fruitPose(plan,at+.475).position.Y,4.5+.2,1e-6),"one .2 bounce")
-		p=Sim.fruitPose(plan,at+.6)
-		assert(p.phase=="rest"and p.position==plan.rest)
-		local before=plan.bat
-		pet=plan.rest+Vector3.new(0,0,1)
-		o:step(at+4,world,pets,3,false)
-		assert(plan.bat==before,"once in its life")
+		assert(Sim.fruitPose(loose,at+.41).w==1.15,"the landing squash")
+		assert(near(Sim.fruitPose(loose,at+.475).position.Y,4.5+.2,1e-6),"one .2 bounce")
+		p=Sim.fruitPose(loose,at+.6)
+		assert(p.phase=="rest"and p.position==loose.rest)
+		local before=loose.bat
+		pet=loose.rest+Vector3.new(0,0,1)
+		step(at+4)
+		assert(loose.bat==before,"once in its life")
 		-- A failed spot: straight up.
-		local q=Sim.Orchard.new()
-		local other=assert(q:drop(1,CROWN,stems,n,T0,world,3))
-		local blocked=flatWorld({finds={other.p4+Vector3.new(-1.5,0,0)}})
-		q:step(other.t5,blocked,{other.p4+Vector3.new(1,0,0)},3,false)
-		assert(other.bat and other.bat.straight and other.rest==other.p4,"straight up")
-		assert(near(Sim.fruitPose(other,other.t5+.2).position.Y,4.5+.7,1e-6))
+		local other=Sim.fruitLoose(plan,view.right)
+		local blocked=flatWorld({finds={plan.p4+Vector3.new(-1.5,0,0)}})
+		assert(Sim.fruitBat(other,plan.p4+Vector3.new(1,0,0),plan.t5,blocked,view.right))
+		assert(other.bat.straight and other.rest==plan.p4,"straight up")
+		assert(near(Sim.fruitPose(other,plan.t5+.2).position.Y,4.5+.7,1e-6))
 	end)
 
-	test("Dewdrops: quick fade near the camera or in a live race; past 120 dropped; over the cap trimmed; regrow 45 s on",function()
-		local stems=Sim.fruitStems(1,CROWN)
-		local n
-		for g=1,400 do if Wind.hash(g*16+1,13)<.35 then n=g;break end end
+	test("Dewdrops, drawing only: the loose cap, reach, a live race, the near-camera fade; none of it changes what falls",function()
+		local plan,grove,draw=drawn()
 		local world=flatWorld()
-		local o=Sim.Orchard.new()
-		local plan=assert(o:drop(1,CROWN,stems,n,T0,world,3))
-		o:step(T0+1,world,nil,3,true)
-		assert(plan.quick==T0+1,"a live race: a quick fade")
-		o:step(T0+1.31,world,nil,3,true)
-		assert(#o.loose==0,"gone in .3 s")
-		local q=Sim.Orchard.new()
-		local near6=assert(q:drop(1,CROWN,stems,n,T0,world,3))
-		q:step(near6.t5,flatWorld({camera=near6.p4+Vector3.new(0,1,5.5)}),nil,3,false)
-		assert(near6.quick,"closer than 6 to the camera")
-		local far=Sim.Orchard.new()
-		assert(far:drop(1,CROWN,stems,n,T0,world,3))
-		far:step(T0+1,flatWorld({camera=Vector3.new(500,0,0)}),nil,3,false)
-		assert(#far.loose==0,"past 120: dropped")
-		local cap=Sim.Orchard.new()
-		assert(cap:drop(1,CROWN,stems,n,T0,world,3))
-		cap:step(T0+1,world,nil,0,false)
-		assert(#cap.loose==0,"the cap shrank: trimmed at once")
-		-- Regrow: empty for 45 s, then 0 to 1.12 to 1 over 1.5 s; Reduced Motion fills it at once.
-		local key=plan.key
-		assert(o:hanging(key,T0+44.9)==nil,"empty")
-		local a=o:hanging(key,T0+45+.3)
-		local b=o:hanging(key,T0+45+1.05)
-		assert(a>0 and a<1.12 and near(b,1.12,1e-6),"grows to the overshoot")
-		assert(o:hanging(key,T0+45+1.4)>1 and o:hanging(key,T0+45+1.5)==1 and o:hanging(key,T0+60)==1,"settles to 1")
-		local r=Sim.Orchard.new()
-		local gone=assert(r:drop(1,CROWN,stems,n,T0,world,3))
-		r:refill()
-		assert(#r.loose==0 and r:hanging(gone.key,T0+1)==1,"Reduced Motion: hangs again, no pop")
+		local view={camera=Vector3.new(0,10,40),right=Vector3.new(1,0,0)}
+		local now=plan.start+1
+		draw:step(now,grove:active(now),view,world,nil,0,false)
+		assert(#draw.list==0,"cap 0: not drawn")
+		draw:step(now,grove:active(now),view,world,nil,3,false)
+		assert(#draw.list==1,"room again: drawn mid-flight")
+		draw:step(now+.1,grove:active(now+.1),view,world,nil,0,false)
+		assert(#draw.list==0,"the cap shrank: trimmed at once")
+		local live=Sim.Loose.new()
+		live:step(now,grove:active(now),view,world,nil,3,true)
+		assert(#live.list==0,"a live race draws none")
+		live:step(now+1,grove:active(now+1),view,world,nil,3,false)
+		assert(#live.list==0,"and never later")
+		local racing=Sim.Loose.new()
+		racing:step(now,grove:active(now),view,world,nil,3,false)
+		racing:step(now+.5,grove:active(now+.5),view,world,nil,3,true)
+		assert(racing.list[1].quick==now+.5,"a race starts: a quick fade")
+		racing:step(now+.81,grove:active(now+.81),view,world,nil,3,true)
+		racing:step(now+.82,grove:active(now+.82),view,world,nil,3,false)
+		assert(#racing.list==0,"gone in .3 s, not drawn again")
+		local far=Sim.Loose.new()
+		far:step(now,grove:active(now),{camera=Vector3.new(500,0,0),right=view.right},world,nil,3,false)
+		assert(#far.list==0,"past 120: not drawn")
+		local close=Sim.Loose.new()
+		local eye=plan.p4+Vector3.new(0,1,5.5)
+		close:step(plan.t5,grove:active(plan.t5),{camera=eye,right=view.right},world,nil,3,false)
+		assert(close.list[1].quick==plan.t5,"closer than 6 to the camera: a quick fade")
+		-- After all that, the grove is untouched: the same active list and the same hanging.
+		assert(#grove:active(now)==1 and grove:active(now)[1]==plan and grove:hanging(plan.key,now)==nil)
+		assert(#grove:active(plan.gone+.01)==0,"gone from the grove once faded")
 	end)
 
 	return{passed=#cases,cases=cases}
