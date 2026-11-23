@@ -953,7 +953,7 @@ local function addPlayer(player)
 		end})
 	folder.Parent = trays
 	if board.firstSession then
-		board.firstSession:advance(1)
+		board.firstSession:hit("BoardReady")
 	end
 	local function spawn(character)
 		board.characterGeneration=(board.characterGeneration or 0)+1;board.groundAnchor=nil
@@ -962,6 +962,7 @@ local function addPlayer(player)
 		Lounge.spawn(character, slot, player, function()
 			return board.mode, profile.theme
 		end)
+		if board.mode == "Room" and board.firstSession then board.firstSession:hit("InGarden") end
 	end
 	board.characterConnection = player.CharacterAdded:Connect(spawn)
 	if player.Character then
@@ -992,6 +993,11 @@ local function closeBoard(board)
 		local ok, problem = pcall(garden.findsHost.leave, garden.findsHost, board)
 		if not ok then warn("[Finds] leave: " .. tostring(problem)) end
 	end
+	-- Sleepy Nest: writes not yet sent go; a nest write in flight is settled below, then CloseProgress.drain.
+	if garden.nestHost then
+		local ok, problem = pcall(garden.nestHost.leave, garden.nestHost, board)
+		if not ok then warn("[Nest] leave: " .. tostring(problem)) end
+	end
 	-- Island edges: the safe spot is forgotten (nil while the build ceiling is off).
 	if garden.boundsHost then
 		local ok, problem = pcall(garden.boundsHost.leave, garden.boundsHost, board)
@@ -1013,6 +1019,12 @@ local function closeBoard(board)
 			local from = os.clock()
 			local ok, problem = pcall(garden.findsHost.settle, garden.findsHost, board)
 			if not ok then warn("[Finds] settle: " .. tostring(problem)) end
+			settled += os.clock() - from
+		end
+		if garden.nestHost then
+			local from = os.clock()
+			local ok, problem = pcall(garden.nestHost.settle, garden.nestHost, board)
+			if not ok then warn("[Nest] settle: " .. tostring(problem)) end
 			settled += os.clock() - from
 		end
 		-- Code review: queued Play date / parkGames counts are saved once on leave (the flush loop
@@ -1041,7 +1053,7 @@ Players.PlayerAdded:Connect(addPlayer)
 -- Slice A analytics: funnel step 8 on any Stars sink; session totals on leave.
 Economy.onSink = function(player)
 	local board = boards[player]
-	if board and board.firstSession then board.firstSession:advance(8) end
+	if board and board.firstSession then board.firstSession:hit("FirstSpend") end
 end
 Players.PlayerRemoving:Connect(function(player)
 	local board = boards[player]
@@ -1131,7 +1143,7 @@ local function acceptedDrop(board,value,now,isDemo,token)
 	if board.welcome and not isDemo then board.welcome:acceptedDrop()end
 	publishState(board)
 	if board.firstSession then
-		board.firstSession:advance(2)
+		board.firstSession:hit("FirstDrop")
 		if board.sim.drops==1 then board.firstSession:roundStarted()end
 	end
 	return true
@@ -1364,6 +1376,7 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		garden:sync(gardenInputs());garden:publish()
 		if value == "Room" and board.firstSession then
 			board.firstSession:record("FirstSessionLoungeVisit")
+			if player.Character then board.firstSession:hit("InGarden") end
 		end
 		return
 	end
@@ -1688,8 +1701,8 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		if not CoachMarks.validId(value)then return end
 		if not CoachMarks.allows(value)then return end
 		if board.firstSession then
-			if value=="gardenIntro"then board.firstSession:advance(5)
-			elseif value=="hatch"or value=="style"or value=="companions"or value=="quests"or value=="book"then board.firstSession:advance(6)end
+			if value=="gardenIntro"then board.firstSession:hit("GardenWalkthrough")
+			elseif value=="hatch"or value=="style"or value=="companions"or value=="quests"or value=="book"then board.firstSession:hit("FirstMachine",value)end
 		end
 		local bit=CoachMarks.bit(value)
 		if CoachMarks.covers(board.nursery.state.coachMask,bit)or CoachMarks.covers(board.coachPending,bit)then return end
@@ -1754,7 +1767,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		if action=="questClaim"then ok,reason=Nursery.questClaim(board.nursery,scope,slot,period,boost)
 		else ok,reason=Nursery.questReroll(board.nursery,slot,period,boost)end
 		if ok and board.nursery.state.nectar>walletBefore then Economy.source(player,board.nursery.state.nectar-walletBefore,board.nursery.state.nectar,"Gameplay","Quest")end
-		if ok and action=="questClaim"and reason~="AlreadyClaimed"and board.firstSession then board.firstSession:advance(7)end
+		if ok and action=="questClaim"and reason~="AlreadyClaimed"and board.firstSession then board.firstSession:hit("FirstQuest")end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
 		reply(if ok then(if reason=="AlreadyClaimed"then "AlreadyClaimed"else "Saved")elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
@@ -1776,6 +1789,8 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
   local ok,reason,saved=Nursery[itemKind.."Command"](board.nursery,action,value,revision)
   if ok then Economy.command(player,action,walletBefore,board.nursery.state.nectar,board.nursery.state)end
   if ok and reason~="AlreadySaved"and(action=="toyBuy"or action=="featureBuy")then Economy.eggOpened(player,itemKind,saved)end
+  if ok and action=="toyBuy"then board.toyBought=true end
+  if ok and action=="toyEquip"and board.toyBought and board.firstSession then board.firstSession:hit("ToyGiven")end
   if reason=="Retrying"then board[itemKind.."Waiting"]=quote end
   board.nurseryBusy=false;if boards[player]~=board then return end
   publishNursery(board);publishState(board)
@@ -1877,6 +1892,7 @@ settleReward = function(player, board)
 		-- Slice D: item kinds used this round (bits swap 1, pop 2, bomb 4, magnet 8).
 		itemKinds = bit32.band(board.itemKinds or 0, 15) }
 	board.settledRounds = (board.settledRounds or 0) + 1
+	if board.firstSession then board.firstSession:roundSettled() end
 	-- Slice F: the companion at the end of the round earns the bond XP. It rides in a copy of
 	-- the boost table so the close-drain path (CloseProgress passes payout.boost) carries it too.
 	local passBoost = StoreService.boost(board)
@@ -1952,7 +1968,7 @@ grantWelcome=function(player,board)
 					if board.profile.rank<1 then Progress.chargeHatch(board.profile,math.max(0,Pets.byId.pip.charge-board.profile.charge))end
 					board.profile.companionId="pip"
 					publishCompanion(board)
-					if board.firstSession then board.firstSession:advance(4)end
+					if board.firstSession then board.firstSession:hit("BearMet")end
 				end
 				publishNursery(board);publishState(board)
 				if board.runSequence~=sequence or board.welcome~=welcome then break end
@@ -1972,7 +1988,7 @@ grantWelcome=function(player,board)
 			if board.profile.rank<1 then Progress.chargeHatch(board.profile,math.max(0,Pets.byId.pip.charge-board.profile.charge))end
 			board.profile.companionId="pip";publishCompanion(board)
 			publishNursery(board);publishState(board)
-			if board.firstSession then board.firstSession:advance(4)end
+			if board.firstSession then board.firstSession:hit("BearMet")end
 			if board.runSequence==sequence and board.welcome==welcome and player.Parent then welcomeResult:FireClient(player,{sequence=sequence,status="Applied"})end
 		end
 		board.starterRunning=false
@@ -2074,6 +2090,17 @@ do
 	end)
 	if not ok then warn("[Finds] not mounted: " .. tostring(problem)) end
 end
+-- The Sleepy Nest (Onboarding v3 slice C, Onboard.on("nest")): nil and nothing made with the v3 build ceiling off; the
+-- remotes come the first time the switch is on. The first egg lands on the first garden arrival. Its own protected
+-- connections; the garden carries the host so a close can reach it.
+do
+	local ok, problem = pcall(function()
+		garden.nestHost = require(script.NestHost).mount({ remotes = remotes, boards = boards, nursery = Nursery,
+			canProgress = canProgress, publishNursery = publishNursery, publishState = publishState, economy = Economy,
+			notify = function(board, name) if board.firstSession then board.firstSession:hit(name) end end })
+	end)
+	if not ok then warn("[Nest] not mounted: " .. tostring(problem)) end
+end
 -- Island edges (FeatureFlags.IslandBounds, WORLD-PASS-2026-11-22 item 5): nil and nothing made with the build ceiling
 -- off. Wall top-ups and the safe-spot return on its own protected connection; Lounge tells it about the server's own
 -- teleports (spawn, FallCatch), which stays the last resort.
@@ -2108,7 +2135,7 @@ lockstepHooks = {
 	drop = function(player, board, drops)
 		board.runDay=RunDay.onDrop(board.runDay,drops,Daily.dayOf(board.nursery.adapter.now()))
 		if board.firstSession then
-			board.firstSession:advance(2)
+			board.firstSession:hit("FirstDrop")
 			if drops==1 then board.firstSession:roundStarted()end
 		end
 	end,
@@ -2121,7 +2148,7 @@ lockstepHooks = {
 			Progress.recordScore(board.profile, score)
 			Progress.recordTrials(board.profile, chain, score, clears)
 		end
-		if board.firstSession then board.firstSession:advance(3) end
+		if board.firstSession then board.firstSession:hit("FirstMerge") end
 		-- B4: on a live session the owner's mirror played this merge; the event is Studio-only there.
 		if ClientSim.mergeEvents(board) then
 			feedback:FireClient(player, Vector2.new(merge.x, merge.y), merge.tier, chain, Vector2.new(merge.fromX, merge.fromY),
@@ -2212,7 +2239,7 @@ RunService.Heartbeat:Connect(function(dt)
 					Progress.chargeHatch(board.profile, merge.tier)
 				end
 				if board.firstSession then
-					board.firstSession:advance(3)
+					board.firstSession:hit("FirstMerge")
 				end
 				feedback:FireClient(player, merge.position, merge.tier, board.chain, merge.from, merge.other, merge.id, merge.cleared, board.folder:GetAttribute("ResetId"), BoardNet.tick(board), merge.firstId, merge.secondId)
 				for _, id in ipairs(merge.powerUps or {}) do
@@ -2353,7 +2380,7 @@ task.spawn(function()
 							petHello.social(board)
 							Lounge.setMode(player.Character, player.UserId, board.mode, board.profile.theme)
 							Lounge.setAppearance(player.Character, board.profile.theme)
-							if board.firstSession then board.firstSession:advance(1) end
+							if board.firstSession then board.firstSession:hit("BoardReady") end
 							-- Slice E repair-on-reload: a pet already earned but not granted yet.
 							grantEarned(player, board)
 						elseif replacement.status == "Ready" then
