@@ -24,3 +24,15 @@ Spencer, 2026-11-22: "And should we add like a 1hr day night cycle?" Answer (rec
 ## Tests
 
 `GardenHour.spec` (phase boundaries, blends, daylight monotonic within blends, isNight), HollowClock spec (on: phase-driven; off: identical to today), PetExpression (awake when on), Book night (on/off), Garden life day-only rules, AeroFalls rainbow threshold. Studio: `/hour at` each phase, captures of the Bear at night (face readable), Fable review, frame time during a blend.
+
+## Architect review (Opus, 2026-11-23; wins over the text above)
+
+Blockers folded in:
+1. **Two daylights exist under Aero:** `Clock.lastDaylight` (.9, feeds `Face.daylight`, lamps, rainbow) and `Clock.daylight()` (dusk .55, feeds AmbientAudio, coos, HollowAmbience). With the hour on, both return the hour's value; off, nothing changes.
+2. **The hour needs Aero on too** (day is `WorldAero`; the only Lighting writer is `look.paint`). Aero off = the dusk lock as today.
+3. **Missing switch = off** (unlike Aero's resolve).
+4. **Sun/moon swap under the haze:** bend the ClockTime path so 18.0 and 6.0 fall on the sky swap at the haze peak; keep Fable's brightness pinch. Reduced Motion steps across the swap.
+5. **Holds return the exact table values** (not `Lerp(a,b,1)`), so `World.write` writes nothing on 5 s holds.
+
+Design: one writer `HollowClock.environment → Clock.look.paint(blend)`; `GardenHour.look(t)` (shared, pure) returns the blended table; `Clock.sample` returns `blend.Hour, blend.Daylight` when the look is set and the hour is on; `AeroWorld.paintLight(values)` takes the table (default WorldAero) and paints `glow_warm`; `Clock.backdrop` takes cloud colour and flat peaks from the blend. Blend apply in `Controller:step` at ≤20 Hz (10 at budget 1, 2 at budget 2); holds keep the 5 s pass; measure GPU shadow cost on a phone. Consumers: `WorldAero.Waterfall.RainbowDaylight` .5→.7; GardenLife daylight dep (bubbles, butterflies, birds above .7); AeroAdditions dew glints above .7 + new v7 fireflies (HollowAmbience fireflies are legacy only); pets awake via one `Face.moodDaylight()` (never below .3 while the hour is on) feeding `PetExpression.garden` (GardenPetVisual:240), `PetIdleBeats` night weights (:273), `PetCooScheduler` NightWait (RoomView:336). Book: leave `Book.isNight`; add optional `isNight` arg to `Book.stateBits(state, now, sig, isNight)`, `LifetimeState:102` passes `GardenHour.isNight` when on (same bit 11, no save change). Studio `/hour at`: a workspace offset attribute `GardenHour.time()` reads on both sides.
+Split: **A first** `GardenHour.lua` (gate, phases, look blend, isNight, offset), `WorldNight`/`WorldDawn` values, `GardenHourConfig` + `/hour`, spec. **Then parallel:** B `HollowClock` + `AeroWorld.paintLight` + backdrop (the writer, one owner); C `AeroAdditions`/`AeroFalls`/`WorldAero` (rainbow, glints, fireflies) + D `GardenLife`/`LifeSim`; E `PetFace`/`GardenPetVisual`/`RoomView` + F `BookCatalog`/`LifetimeState`. Merge B before the others' Studio checks.
