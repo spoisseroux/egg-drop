@@ -14,7 +14,8 @@
 -- deps: remotes, audio ({play(name, speed, volume)}), reduced(), root() -> Vector3?, free() (Room mode, nothing
 --   in the way), busy() (a menu or card is up), compact() (phone), chipHost() -> GuiObject? (the garden dock),
 --   show() (lay the Show me trail to the nest), toast(text, stars) (the rail), petName(), ground(at) -> y?,
---   meshes() -> {TopShell, BottomShell, Core}? (fresh MeshPart copies, or nil while they load),
+--   meshes() -> {TopShell, BottomShell, Core}? (fresh MeshPart copies, or nil while they load), focus() (the pet focus
+--   camera is on: the label hides), chipHidden() (in the Pet Park: the chip hides), measure(text, size) -> px,
 --   plus world, player ({CharacterAdded}), now() (server unix time) and step=false (no Heartbeat; specs call :step).
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
@@ -45,7 +46,10 @@ Client.NextLabel=3
 Client.HatchSeconds=2
 Client.StageTween=.6
 Client.DropSeconds=.35
-Client.Prompt=10        -- studs
+Client.Prompt=6         -- studs (the spawn is 10 away: it never fires at arrival)
+Client.PromptOffset=Vector2.new(0,72) -- under the nest, never on the egg
+Client.Near=8           -- studs: the "Inside:" line
+Client.GroundSlack=1    -- studs: a ground hit further than this from Spot.Y is not the lawn
 Client.Assets=table.freeze({
 	chip="rbxassetid://114080030018596",flag="rbxassetid://96303130180036",leaves="rbxassetid://130921787854357",
 	weave="rbxassetid://118690234276511",egg="rbxassetid://116613877519776",halo="rbxassetid://93444884817210",
@@ -185,12 +189,6 @@ function Client.mount(deps)
 	self.world=deps.world or workspace
 	self.now=deps.now or function()return workspace:GetServerTimeNow()end
 	self.changed=Onboard.changed("nest"):Connect(function()self:sync()end)
-	if deps.step~=false then
-		self.beat=RunService.Heartbeat:Connect(function(dt)
-			local ok,problem=pcall(self.step,self,dt)
-			if not ok then warn("[Nest] "..tostring(problem));self.dead=true;pcall(self.close,self);self.beat:Disconnect()end
-		end)
-	end
 	self:sync()
 	return self
 end
@@ -206,6 +204,13 @@ function Client:open()
 	self.isOpen=true
 	self.synced=false
 	local d=self.d
+	-- Per-frame work only while on (off: the switch is watched, nothing else).
+	if d.step~=false and not self.beat then
+		self.beat=RunService.Heartbeat:Connect(function(dt)
+			local ok,problem=pcall(self.step,self,dt)
+			if not ok then warn("[Nest] "..tostring(problem));self.dead=true;pcall(self.close,self)end
+		end)
+	end
 	local function on(signal,fn)table.insert(self.connections,signal:Connect(fn))end
 	local function receive(packet)
 		local ok,problem=pcall(self.receive,self,packet)
@@ -247,6 +252,7 @@ function Client:clear()
 end
 function Client:close()
 	self.isOpen=false
+	if self.beat then self.beat:Disconnect();self.beat=nil end
 	for _,connection in ipairs(self.connections)do connection:Disconnect()end
 	table.clear(self.connections)
 	self:clear()
@@ -256,7 +262,6 @@ function Client:destroy()
 	if self.destroyed then return end
 	self.destroyed=true;self.dead=true
 	self.changed:Disconnect()
-	if self.beat then self.beat:Disconnect()end
 	self:close()
 end
 function Client:play(name,speed,volume)
@@ -279,7 +284,8 @@ function Client:receive(packet)
 			self.waiting=nil
 			self.promptAfter=self.clock+Client.BusyWait
 		end
-		-- A refused tuck undoes nothing ("Tucked" is not an error); the next state packet is the truth.
+		-- A tuck refused as "Tucked" undoes nothing (it is tucked); any other refusal (Lost, Off, Busy...) gives Tuck in back.
+		if packet.of=="tuck"and packet.reason~="Tucked"then self.tuck=nil end
 	end
 end
 -- A new view: drawn on first sight (no tween), moved on, or everything goes (nil).
@@ -304,7 +310,8 @@ function Client:groundY()
 	local ground=self.d.ground
 	if ground then
 		local ok,hit=pcall(ground,Client.Spot)
-		if ok and finite(hit)then y=hit end
+		-- Only the lawn: a hit far from the walk map's ground is a pet, a player or a prop standing there.
+		if ok and finite(hit)and math.abs(hit-Client.Spot.Y)<=Client.GroundSlack then y=hit end
 	end
 	return y
 end
@@ -358,23 +365,26 @@ function Client:draw()
 	egg.stillZ=make("BillboardGui",anchor,{Name="StillZ",LightInfluence=0,AlwaysOnTop=false,MaxDistance=80,Enabled=false,Size=UDim2.fromOffset(20,20)})
 	make("ImageLabel",egg.stillZ,{Name="Z",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Image=Client.Assets.z})
 	-- The label: a cream pill (gold when ready) with the clock; near, a second line with what is inside.
-	local board=make("BillboardGui",anchor,{Name="Label",LightInfluence=0,AlwaysOnTop=true,MaxDistance=60,Size=UDim2.fromOffset(240,62)})
+	local board=make("BillboardGui",anchor,{Name="Label",LightInfluence=0,AlwaysOnTop=true,MaxDistance=60,Size=UDim2.fromOffset(240,62),Enabled=true})
 	local pill=make("Frame",board,{Name="Pill",AnchorPoint=Vector2.new(.5,0),Position=UDim2.fromScale(.5,0),Size=UDim2.fromOffset(160,28),
 		BackgroundColor3=Client.Color.cream,BorderSizePixel=0})
 	corner(pill)
 	egg.pillStroke=make("UIStroke",pill,{Color=Client.Color.ink,Thickness=2})
 	egg.clock=label(pill,"Clock",14,Client.Color.ink)
-	egg.inside=label(board,"Inside",13,Client.Color.cream)
-	egg.inside.Position=UDim2.fromOffset(0,32);egg.inside.Size=UDim2.new(1,0,0,14);egg.inside.TextStrokeTransparency=.4;egg.inside.Visible=false
-	egg.count=label(board,"Count",13,Client.Color.cream)
-	egg.count.Position=UDim2.fromOffset(0,47);egg.count.Size=UDim2.new(1,0,0,14);egg.count.TextStrokeTransparency=.4;egg.count.Visible=false
-	egg.board,egg.pill=board,pill
+	-- Near (Client.Near): what is inside, in its own cream pill 4 px under the clock (Fable R1; "Egg n of 7" stays
+	-- on the gift tile, not here).
+	local insidePill=make("Frame",board,{Name="InsidePill",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,32),Size=UDim2.fromOffset(200,24),
+		BackgroundColor3=Client.Color.cream,BorderSizePixel=0,Visible=false})
+	corner(insidePill)
+	make("UIStroke",insidePill,{Color=Client.Color.ink,Thickness=2})
+	egg.inside=label(insidePill,"Inside",13,Client.Color.ink)
+	egg.board,egg.pill,egg.insidePill=board,pill,insidePill
 	-- The prompt, at the front of the nest (where the Bear's prints end).
 	local spot=inert(make("Part",nil,{Name="SleepyNestPrompt",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
 	spot.CFrame=self.root*CFrame.new(Client.PromptAt)
 	spot.Parent=folder
 	egg.prompt=make("ProximityPrompt",spot,{Name="NestPrompt",ObjectText=UICopy.get("onb3.nest.title"),ActionText=UICopy.get("onb3.nest.tuck"),
-		HoldDuration=0,MaxActivationDistance=Client.Prompt,RequiresLineOfSight=false,Enabled=false})
+		HoldDuration=0,MaxActivationDistance=Client.Prompt,RequiresLineOfSight=false,Enabled=false,UIOffset=Client.PromptOffset})
 	local triggered=egg.prompt.Triggered
 	if typeof(triggered)=="RBXScriptSignal"then
 		table.insert(self.connections,triggered:Connect(function()
@@ -426,11 +436,13 @@ function Client:paint(fresh)
 	egg.pill.BackgroundColor3=if ready then Client.Color.stars else Client.Color.cream
 	egg.pill.Size=UDim2.fromOffset(math.max(120,math.min(236,#text*8+28)),28)
 	local textSize=if self.d.compact and self.d.compact()==true then 13 else 14
-	egg.clock.TextSize=textSize;egg.inside.TextSize=textSize-1;egg.count.TextSize=textSize-1
-	local inside=Client.inside(view)
-	if egg.inside.Text~=inside then egg.inside.Text=inside end
-	local count=UICopy.get("onb3.nest.count",{count=view.egg})
-	if egg.count.Text~=count then egg.count.Text=count end
+	egg.clock.TextSize=textSize
+	-- What is inside changes only with the egg: worked out once per view.
+	if egg.insideFor~=view then
+		egg.insideFor=view
+		egg.inside.Text=Client.inside(view)
+		egg.insidePill.Size=UDim2.fromOffset(math.min(236,math.ceil(self:measure(egg.inside.Text,13))+24),24)
+	end
 	-- Tuck in while it grows (once per egg), Hatch when it is ready; nothing while a hatch is asked for or playing.
 	local action=nil
 	if look=="ready"then action="hatch"elseif not view.tucked and not self.tuck then action="tuck"end
@@ -443,7 +455,24 @@ function Client:paint(fresh)
 	self:paintChip(left,look)
 end
 
--- The HUD chip: the nest icon, the gift icon, the clock; gold when ready. A tap lays the Show me trail.
+-- The HUD chip: the nest icon and the clock; gold when ready. A tap lays the Show me trail. It sits above the garden
+-- dock, right-aligned with it and never wider: the dock's own row (left of it) is the save notice and feedback line
+-- (PetFocusUI), so the two never meet. In the Pet Park the lane above the dock is the Throw button's: the chip hides.
+Client.ChipGap=8
+Client.ChipIconGap=6
+function Client.chipWidth(iconSize,textW)return math.ceil(10+iconSize+Client.ChipIconGap+textW+12)end
+-- Pure: the chip's rect for a dock rect {x, y, w, h} (screen px), `w` wide and `hit` tall.
+function Client.chipRect(dock,w,hit)
+	w=math.min(w,dock.w)
+	return{x=dock.x+dock.w-w,y=dock.y-Client.ChipGap-hit,w=w,h=hit}
+end
+function Client:measure(text,size)
+	if self.d.measure then
+		local ok,w=pcall(self.d.measure,text,size)
+		if ok and finite(w)then return w end
+	end
+	return #text*size*.6
+end
 function Client:paintChip(left,look)
 	local host=self.d.chipHost and self.d.chipHost()
 	if not host then
@@ -460,22 +489,26 @@ function Client:paintChip(left,look)
 	local text,kind=Client.chipText(left)
 	local ready=kind=="ready"
 	if chip.label.Text~=text then chip.label.Text=text end
-	local glyph=Client.giftGlyph(self.view.gift.kind)
-	if chip.gift and chip.gift.Text~=glyph then chip.gift.Text=glyph end
 	if chip.ready~=ready then
 		chip.ready=ready
 		chip.pill.BackgroundColor3=if ready then Client.Color.stars else Client.Color.well
 		chip.label.TextColor3=if ready then Client.Color.ink else Client.Color.text
 		chip.stroke.Color=if ready then Client.Color.gold else Client.Color.ink
 	end
-	local textW=if self.d.measure then self.d.measure(text,chip.textSize)else #text*(chip.textSize*.6)
-	local iconW=chip.iconSize+4+(if chip.gift then 16+4 else 0)
-	local w=math.ceil(10+iconW+textW+12)
-	if chip.width~=w then
+	-- Measured only when the words change (once a minute at most).
+	if chip.measured~=text then
+		chip.measured=text
+		local dockW=host.AbsoluteSize and host.AbsoluteSize.X
+		local size=chip.textSize
+		local w=Client.chipWidth(chip.iconSize,self:measure(text,size))
+		if typeof(dockW)=="number"and dockW>0 and w>dockW then size=12;w=math.min(dockW,Client.chipWidth(chip.iconSize,self:measure(text,size)))end
+		chip.label.TextSize=size
 		chip.width=w
 		chip.button.Size=UDim2.fromOffset(w,chip.hit)
+		local iconW=chip.iconSize+Client.ChipIconGap
 		chip.label.Position=UDim2.fromOffset(10+iconW,0);chip.label.Size=UDim2.new(1,-(10+iconW),1,0)
 	end
+	chip.button.Visible=not(self.d.chipHidden and self.d.chipHidden()==true)
 	local bob=if ready and not self:reduced()then math.floor(2*math.sin(self.clock*1.2*2*math.pi)+.5)else 0
 	chip.icon.Position=UDim2.new(0,10,.5,-bob)
 end
@@ -485,7 +518,7 @@ function Client:buildChip(host,compact)
 	local iconSize=if compact then 18 else 22
 	local textSize=if compact then 13 else 14
 	local button=make("TextButton",host,{Name="NestChip",Text="",AutoButtonColor=false,BackgroundTransparency=1,
-		AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(0,-8,.5,0),Size=UDim2.fromOffset(92,hit),Selectable=false,ZIndex=10})
+		AnchorPoint=Vector2.new(1,1),Position=UDim2.new(1,0,0,-Client.ChipGap),Size=UDim2.fromOffset(92,hit),Selectable=false,ZIndex=10})
 	button:SetAttribute("AccessibleLabel",UICopy.get("onb3.nest.title"))
 	local pill=make("Frame",button,{Name="Pill",AnchorPoint=Vector2.new(0,.5),Position=UDim2.fromScale(0,.5),Size=UDim2.new(1,0,0,pillH),
 		BackgroundColor3=Client.Color.well,BorderSizePixel=0,ZIndex=10})
@@ -493,25 +526,15 @@ function Client:buildChip(host,compact)
 	local stroke=make("UIStroke",pill,{Color=Client.Color.ink,Thickness=2})
 	local icon=make("ImageLabel",pill,{Name="NestIcon",BackgroundTransparency=1,Image=Client.Assets.chip,AnchorPoint=Vector2.new(0,.5),
 		Position=UDim2.new(0,10,.5,0),Size=UDim2.fromOffset(iconSize,iconSize),ZIndex=11})
-	-- Phone: no gift icon (about 70 px wide).
-	local gift=nil
-	if not compact then
-		gift=make("TextLabel",pill,{Name="GiftIcon",BackgroundTransparency=1,AnchorPoint=Vector2.new(0,.5),Position=UDim2.new(0,10+iconSize+4,.5,0),
-			Size=UDim2.fromOffset(16,16),Text="",TextColor3=Client.Color.stars,TextSize=14,Font=Enum.Font.FredokaOne,ZIndex=11})
-		gift.AutoLocalize=false
-	end
 	local text=label(pill,"Clock",textSize,Client.Color.text)
 	text.ZIndex=11;text.TextXAlignment=Enum.TextXAlignment.Left;text.AutoLocalize=true
-	local chip={host=host,compact=compact,button=button,pill=pill,stroke=stroke,icon=icon,gift=gift,label=text,hit=hit,iconSize=iconSize,textSize=textSize}
+	local chip={host=host,compact=compact,button=button,pill=pill,stroke=stroke,icon=icon,label=text,hit=hit,iconSize=iconSize,textSize=textSize}
 	local activated=button.Activated
 	if typeof(activated)=="RBXScriptSignal"then
 		activated:Connect(function()if self.d.show then pcall(self.d.show)end end)
 	end
 	return chip
 end
--- The gift glyph on the chip: the Star for Stars eggs, a small gift mark otherwise (the ItemIcons art is the
--- later step).
-function Client.giftGlyph(kind)return if kind=="stars"then "★"else "✦"end
 
 -- Actions ---------------------------------------------------------------------------------------------------------
 -- The prompt (or a spec): Tuck in or Hatch.
@@ -543,12 +566,17 @@ function Client:peek()
 	local name=Client.itemName(view.gift.kind,view.gift.item,view.pet)
 	local item=label(tile,"Item",14,Client.Color.ink)
 	item.Text=name or "★";item.TextWrapped=true
+	item.Size=UDim2.new(1,0,1,-18)
+	-- "Egg n of 7" lives here in the welcome week (not on the world label).
+	local count=label(tile,"Count",12,Client.Color.ink)
+	count.Position=UDim2.new(0,0,1,-20);count.Size=UDim2.new(1,0,0,16)
+	count.Text=if view.egg<=Nest.WeekLength then UICopy.get("onb3.nest.count",{count=view.egg})else ""
 	local chip=make("Frame",board,{Name="Stars",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,70),Size=UDim2.fromOffset(56,22),
 		BackgroundColor3=Client.Color.stars,BorderSizePixel=0})
 	corner(chip)
 	local stars=label(chip,"Count",14,Client.Color.ink);stars.Text="+"..view.gift.stars;stars.AutoLocalize=false
 	board.StudsOffset=Vector3.new(0,(self.shownScale or 1.25)*1.3+1.6,0)
-	table.insert(self.beats,{kind="peek",board=board,t=0,parts={tile,chip},labels={item,stars}})
+	table.insert(self.beats,{kind="peek",board=board,t=0,parts={tile,chip},labels={item,count,stars}})
 end
 -- The label holds `text` for `seconds` (Sleep tight, A new egg is growing), then the clock again.
 function Client:say(text,seconds)
@@ -716,9 +744,11 @@ function Client:pose(dt)
 	end
 	-- Near: the second line (what is inside, and the egg's number in the welcome week).
 	local root=self.d.root and self.d.root()
-	local near=root~=nil and(root-self.root.Position).Magnitude<=Nest.ReadyPing
-	egg.inside.Visible=near
-	egg.count.Visible=near and view.egg<=Nest.WeekLength
+	local near=root~=nil and(root-self.root.Position).Magnitude<=Client.Near
+	egg.insidePill.Visible=near
+	-- The pet focus (greeting) camera: no label, it would read as the Bear's speech.
+	local focus=self.d.focus~=nil and self.d.focus()==true
+	if egg.board.Enabled==focus then egg.board.Enabled=not focus end
 end
 function Client:place(frame,s,squash,top,bottomFade,core)
 	local egg=self.egg

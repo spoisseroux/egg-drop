@@ -189,13 +189,13 @@ function View:paint(data)
  -- over the near-miss item or the buttons); a narrow pane, so the short values.
  local tomorrow=self.owner:tomorrowModel()
  if tomorrow then
-  if not self.tomorrow then
-   self.tomorrow=require(script.Parent.TomorrowStrip).new(self.payout,{phone=true,short=true})
-   self.tomorrow:enter(self.owner.TomorrowDelay or 1,self:reduced())
-  end
+  local fresh=self.tomorrow==nil
+  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.payout,{phone=true,short=true})end
+  -- Placed and drawn first: enter() tweens back to where the strip is now, and fades the chips it has.
   local sy=if #parts>0 then y+78+#parts*17+12 else y+64
   self.tomorrow.root.Position=UDim2.fromOffset(pad,sy+8)
   self.tomorrow:set(tomorrow,lw-2*pad)
+  if fresh then self.tomorrow:enter(self.owner.TomorrowDelay or 1,self:reduced())end
  elseif self.tomorrow then self.tomorrow:destroy();self.tomorrow=nil end
  local rw=self.view.right.w
  local tight=self.tightGoals==true

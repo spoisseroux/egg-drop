@@ -79,10 +79,10 @@ function Bubble.new(options)
 	local image=Instance.new("ImageLabel")
 	image.Name="IconImage";image.AnchorPoint=Vector2.new(.5,.5);image.Position=UDim2.fromScale(.5,.54);image.Size=UDim2.fromScale(.64,.64)
 	image.BackgroundTransparency=1;image.Visible=false;image.ZIndex=4;image.Parent=art
-	-- The key cap: bottom right of the bubble, the key that does what a tap does.
+	-- The key cap: 22 px at the bubble's top right, clear of the tail (Fable R1), the key that does what a tap does.
 	local key=Instance.new("TextLabel")
-	key.Name="Key";key.AnchorPoint=Vector2.new(.5,.5);key.Position=UDim2.fromScale(.86,.86);key.Size=UDim2.fromOffset(26,22)
-	key.BackgroundColor3=Bubble.Ink;key.TextColor3=Color3.new(1,1,1);key.Font=Enum.Font.GothamBold;key.TextSize=13;key.ZIndex=5
+	key.Name="Key";key.AnchorPoint=Vector2.new(1,0);key.Position=UDim2.new(1,6,0,-6);key.Size=UDim2.fromOffset(22,22)
+	key.BackgroundColor3=Bubble.Ink;key.TextColor3=Color3.new(1,1,1);key.Font=Enum.Font.GothamBold;key.TextSize=14;key.ZIndex=5
 	key.BorderSizePixel=0;key.Visible=false;key.Parent=art
 	local keyCorner=Instance.new("UICorner");keyCorner.CornerRadius=UDim.new(0,6);keyCorner.Parent=key
 	-- The hit area: the whole billboard, clear, over everything.

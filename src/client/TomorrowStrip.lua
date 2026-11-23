@@ -220,11 +220,15 @@ function Strip:texts()
 	return out
 end
 -- In: 12 px up and a fade (0.25 s) after `delay`, chips 60 ms apart. Reduced Motion: a fade only.
+-- Call it after the strip is placed and set: it tweens back to where it is now. Answers false (and moves nothing)
+-- before a set, or for a hidden strip.
 function Strip:enter(delay,reduced)
 	local root=self.root
+	if not self.model or #self.chips==0 or root.Visible==false then return false end
+	local home=root.Position
+	self.home=home
 	local ok=pcall(function()
 		local TweenService=game:GetService("TweenService")
-		local home=root.Position
 		root.BackgroundTransparency=1
 		if not reduced then root.Position=home+UDim2.fromOffset(0,12)end
 		local info=TweenInfo.new(.25,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,delay or 0)
