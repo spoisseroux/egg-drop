@@ -13,10 +13,27 @@ Flowers.Interval=.25
 
 local Controller={};Controller.__index=Controller
 
+-- QA-R2-LOOK 6: the patches redrawn to sit in the graded lawn, on the beta place only (Alive's place ceiling for
+-- "life", read once); everywhere else today's textures. Per kind: an R2 id if there is one, else today's id.
+-- Answers the texture table and the Decal transparency. `beta` overrides the place check (specs).
+function Flowers.textures(beta)
+	if beta==nil then
+		local ok,on=pcall(function()return require(Shared:WaitForChild("Alive")).ceiling("life")end)
+		beta=ok and on==true
+	end
+	if not beta then return Dressing.Textures,0 end
+	local out={}
+	for _,kind in ipairs(Dressing.Kinds)do
+		local r2=Dressing.TexturesR2 and Dressing.TexturesR2[kind]
+		out[kind]=if type(r2)=="string"and r2~=""then r2 else Dressing.Textures[kind]
+	end
+	return out,Dressing.TransparencyR2 or 0
+end
 -- Builds the patch parts (unparented). Kinds without an uploaded texture are skipped.
 function Flowers.build(options)
 	options=options or {}
-	local textures=options.textures or Dressing.Textures
+	local textures,transparency=options.textures,options.transparency or 0
+	if not textures then textures,transparency=Flowers.textures(options.beta)end
 	local patches={}
 	for index,entry in ipairs(Dressing.Flowers)do
 		if index>Dressing.MaxFlowers then break end
@@ -34,6 +51,7 @@ function Flowers.build(options)
 		decal.Name="Flowers"
 		decal.Face=Enum.NormalId.Top
 		decal.Texture=texture
+		decal.Transparency=transparency
 		decal.Parent=part
 		table.insert(patches,{part=part,position=part.Position})
 	end

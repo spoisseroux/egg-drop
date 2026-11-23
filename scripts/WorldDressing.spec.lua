@@ -37,6 +37,20 @@ return function(client)
 			table.insert(cleanup,a[i].part);table.insert(cleanup,b[i].part)
 		end
 		assert(#Flowers.build({textures={}})==0,"kinds without an uploaded texture are skipped")
+		-- QA-R2-LOOK 6: live keeps today's five at full opacity; the beta place uses the redrawn five at .08.
+		local live,liveT=Flowers.textures(false)
+		assert(live==Dressing.Textures and liveT==0,"live: today's textures")
+		local beta,betaT=Flowers.textures(true)
+		assert(betaT==.08)
+		for _,kind in ipairs(Dressing.Kinds)do
+			assert(beta[kind]==Dressing.TexturesR2[kind]and beta[kind]~=Dressing.Textures[kind],"beta "..kind)
+		end
+		for _,patch in ipairs(Flowers.build({beta=true}))do
+			assert(patch.part.Flowers.Transparency==.08);patch.part:Destroy()
+		end
+		for _,patch in ipairs(Flowers.build({beta=false}))do
+			assert(patch.part.Flowers.Transparency==0);patch.part:Destroy()
+		end
 	end)
 
 	test("patches are flat, upward-facing decals on invisible, non-interactive parts",function()

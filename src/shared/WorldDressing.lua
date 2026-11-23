@@ -10,6 +10,10 @@ Dressing.Kinds=table.freeze({"daisy","tulip","bellflower","buttercup","starbloom
 -- Uploaded assets/world/textures/flower_patch_<kind>.png ids, from assets/world/world-dressing-import.json
 -- "flowers". A kind without an id is skipped by the placer (nothing is drawn until the upload lands).
 Dressing.Textures=table.freeze({daisy="rbxassetid://95700607317252",tulip="rbxassetid://94776225603001",bellflower="rbxassetid://133299223166205",buttercup="rbxassetid://109583327267968",starbloom="rbxassetid://124976107239424"})
+-- QA-R2-LOOK 6: the same five redrawn for the graded lawn (assets/world/textures/r2/, "flowers_r2"), and their Decal
+-- transparency. WorldDressingClient uses them only on the beta place (Alive.ceiling("life")); live keeps Textures.
+Dressing.TexturesR2=table.freeze({daisy="rbxassetid://79653915172587",tulip="rbxassetid://106033616541686",bellflower="rbxassetid://119959872222036",buttercup="rbxassetid://139206399591457",starbloom="rbxassetid://136157018506269"})
+Dressing.TransparencyR2=.08
 Dressing.BushKinds=table.freeze({"W7D_FrondFan","W7D_FrondSpray","W7D_LeafTuft"})
 Dressing.BushMeshes=table.freeze({W7D_FrondFan={size=Vector3.new(3.2011,1.1348,3.1944),base=0.5674},W7D_FrondSpray={size=Vector3.new(2.5353,1.988,2.4161),base=0.994},W7D_LeafTuft={size=Vector3.new(1.8236,0.8568,1.9765),base=0.4284}})
 Dressing.MaxFlowers=150
