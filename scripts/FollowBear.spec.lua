@@ -76,7 +76,8 @@ return function(client)
 			follow=function()return r.follow end,needs=function()return r.needsOn end,returning=function()return r.returning end,
 			gate=function()return r.gate end,greeting=function()return false end,inPark=function()return false end,nest=function()return false end,
 			place=function(where)if where=="Eggs"then return Vector3.new(-31,4,-11),"Hatch eggs"end;return nil end,
-			trail=function(target,how)table.insert(r.trails,{name=target.name,how=how});r.trailUp=true;return true end,trailActive=function()return r.trailUp end,
+			trail=function(target,how)table.insert(r.trails,{name=target.name,how=how});r.trailUp=true;r.trailOn=target;return true end,trailActive=function()return r.trailUp end,
+			trailTarget=function()return r.trailOn end,prompt=function()return r.prompt==true end,
 			sayHi=function()return true end,playDeck=function()return true end,quiet=function(on)r.quiet=on end,chirp=function()r.chirps+=1 end,react=function()end})
 		r.t=0
 		function r.run(seconds)for _=1,math.max(1,math.floor(seconds/.25+.5))do r.t+=.25;r.needs:step(r.t,.25)end end
@@ -91,6 +92,15 @@ return function(client)
 		r.trailUp=false;r.run(.25)
 		assert(r.intro==1,"arrived (or skipped): gardenIntro")
 		r.run(10);assert(r.intro==1 and #r.trails==1,"once")
+	end)
+	test("a trail the player started is never replaced by the Bear's own",function()
+		local r=rig();local mine={name="Pet Park"}
+		r.trailUp=true;r.trailOn=mine;r.run(3)
+		assert(#r.trails==0 and r.intro==0,"the Show me trail stays")
+		r.gate.idleFor=Tips.IdleHint;r.run(.5);assert(#r.trails==0,"nor the idle hint")
+		r.gate.idleFor=5;r.trailUp=false;r.run(1.5)
+		assert(#r.trails==1 and r.trails[1].how=="auto","then the Bear's prints")
+		r.trailOn=mine;r.run(.25);assert(r.intro==1,"replaced by the player: the first trail counts as over")
 	end)
 	test("on: the garden step is marked after 60 s in the garden, whatever else happened",function()
 		local r=rig();r.run(Tips.IntroAfter-1);assert(r.intro==0)
