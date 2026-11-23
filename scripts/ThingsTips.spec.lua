@@ -78,7 +78,7 @@ return function(client)
 		assert(Coach.Bits.parkInvite==11 and Coach.Bits.dashIntro==12 and Coach.Bits.dashSeen==13 and Coach.Bits.findsIntro==14)
 		local mask=0
 		for _,id in ipairs(Coach.Order)do mask=Coach.with(mask,id)end
-		assert(Coach.integer(mask)and mask==2^15-1 and Coach.valid({coachMask=mask}))
+		assert(Coach.integer(mask)and mask==2^#Coach.Order-1 and #Coach.Order>=15 and Coach.valid({coachMask=mask}),"every bit up to the last appended one")
 		assert(not Coach.validId("nope")and Coach.validId("dashSeen")and Coach.validId("findsIntro"))
 	end)
 	test("lines: a notice with Show me each, short titles, no Stars, nothing left to fill",function()
