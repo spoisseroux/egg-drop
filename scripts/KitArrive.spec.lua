@@ -78,6 +78,16 @@ return function(client,parent)
    local live=Kit.button(h,"Live",{text="Live"})
    Kit.FaceOn=true
    assert(live:FindFirstChild("Face")==nil and live:FindFirstChild("Fill")and live:FindFirstChild("Content")and live:FindFirstChild("Edge"),"live: today's tree")
+   -- FABLE-REVIEW-R3 1: the round Back and Help keys squeeze their Disc to .88 and spring back (at most 1.12).
+   for _,make in ipairs({function()return Kit.backArrow(h,false,{header=true})end,function()return Kit.helpButton(h,false,"spec")end})do
+    local key=make();local disc=key.disc;local scale=disc:FindFirstChild("PressScale")
+    assert(scale and key.root:FindFirstChildOfClass("UIScale")==nil and key.lip:FindFirstChildOfClass("UIScale")==nil,"the disc, never the hit rect or the lip")
+    Kit.pressScale(disc,true,Kit.PressScale.round);task.wait(.12);assert(math.abs(scale.Scale-.88)<.01,"down to .88")
+    Kit.pressScale(disc,false,Kit.PressScale.round)
+    local top=0;run(1,function()top=math.max(top,scale.Scale)end)
+    assert(top>1 and top<=1.12+1e-6 and math.abs(scale.Scale-1)<1e-6,"back past 1, at most 1.12: "..top)
+    key.root:Destroy()
+   end
    h:Destroy()
   end)
   test("off, Reduced Motion and Motion: Low: arrive does nothing at all and says so",function()
