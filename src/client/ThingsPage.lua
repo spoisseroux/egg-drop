@@ -30,7 +30,8 @@ function Page.rows(ctx)
 			elseif waiting>0 then UICopy.get("things.finds.waiting",{count=waiting})
 			elseif limit and(tonumber(finds.count)or 0)>=limit then UICopy.get("things.finds.done")
 			else UICopy.get("things.finds.later")
-		table.insert(rows,{id="finds",icon="sparkle",tint="garden",name=UICopy.get("things.finds.name"),line=line,button=UICopy.get("things.show")})
+		-- Studio check: with nothing waiting Show me has nowhere to go, so it is dimmed (and A does nothing).
+		table.insert(rows,{id="finds",icon="sparkle",tint="garden",name=UICopy.get("things.finds.name"),line=line,button=UICopy.get("things.show"),off=waiting==0})
 	end
 	local dash=ctx.dash
 	if type(dash)=="table"then
@@ -153,6 +154,7 @@ function Page:paint(rows)
 		local view=self.views[index]
 		if view.name.Text~=row.name then view.name.Text=row.name end
 		if view.line.Text~=row.line then view.line.Text=row.line end
+		if view.off~=(row.off==true)then view.off=row.off==true;Kit.setEnabled(view.go,not view.off)end
 		if row.new~=view.new then
 			view.new=row.new
 			view.chip.root.Visible=row.new==true
@@ -220,6 +222,7 @@ function Page:act()
 	local view=self.views[self.row]
 	if not view or self.destroyed then return false end
 	if self.col==1 then return self.o.things.help(view.help)==true end
+	if view.off then return false end
 	return self.o.things.act(view.id)==true
 end
 -- "left" | "right" | "up" | "down" | "open". True when something moved or opened.
