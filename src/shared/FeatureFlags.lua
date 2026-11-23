@@ -42,7 +42,9 @@
 -- beta place or Studio (Aero.PlaceId) and the server's switch (AeroConfig: aero_world). Missing = off.
 -- ThingsToDo (V3-THINGS-TO-DO-PLAN-2026-11-22): the build ceiling for the Things to do tile, page, trail and tips. Also needs
 -- the beta place or Studio (Things.PlaceId) and the server's switches (ThingsConfig: things_to_do, things_tips). Missing = off.
+-- GardenFinds (V3-FINDS-BUILD-PLAN-2026-11-22): the build ceiling for the lawn sparkles that pay Smarts. Also needs the beta
+-- place or Studio (Finds.PlaceId) and the server's switch (FindsConfig: garden_finds). Missing = off.
 return table.freeze({SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,
- LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true})
+ LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true})
