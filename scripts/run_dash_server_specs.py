@@ -25,6 +25,8 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour", "GardenHourBook",
          # Beta (12) QA quick fixes: pet catch-up (G1), the fresh-save key switch (T1), finds near the player (G2).
          "PetCatchup", "CatchupConfig", "GardenState", "ProgressKey", "FreshSave", "FindsState", "FindsHost",
+         # Garden life round 3 and the nest remodel (beta 12 QA O2): the nest's spot and the pets kept off it.
+         "NestSpot",
          # Beta (12) QA Dash and Deck UI: the start grid (U5).
          "DashGrid"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and

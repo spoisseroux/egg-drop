@@ -1,8 +1,10 @@
 -- The Sleepy Nest in the garden, the client (ONBOARDING-V3-PLAN-2026-11-23 slice D; the look is
--- artifacts/onboarding-2026-11-23/NEST-LOOK.md). mount() answers nil with the Onboarding v3 build ceiling off; with
--- Onboard.on("nest") off it only watches the switch: no instances, no remotes bound, no per-frame work.
--- On: the nest (10 parts) and the Sleepy egg at Fable's spot as local inert parts in one folder (anchored, nothing can
--- touch, stand on, query or shade them), the egg's growth look from Nest.look (small, glow, rocking, ready), a label with
+-- artifacts/onboarding-2026-11-23/NEST-LOOK.md, remodelled and moved to the plaza for beta 12 QA O2:
+-- artifacts/qa-2026-11-23-beta12/GARDEN-LIFE-NEST-LOOK.md section 4). mount() answers nil with the Onboarding v3 build
+-- ceiling off; with Onboard.on("nest") off it only watches the switch: no instances, no remotes bound, no per-frame work.
+-- On: the nest (21 parts: a twig mound, rim rolls, a straw bed, twig and straw fringes, a wooden sign with the pet's
+-- name) and the napping egg at Nest.Spot as local inert parts in one folder (anchored, nothing can touch, stand on or
+-- query them; only the mound casts a shadow), the egg's growth look from Nest.look (small, glow, rocking, ready), a label with
 -- the clock, a ProximityPrompt to Tuck in or Hatch, a HUD chip with the countdown, and clientUI.nestPlace for the Bear.
 -- The server is the truth (NestHost):
 --   NestEvent {kind="state", public}    the egg, its clock and its gift (public = nil: no nest, everything goes)
@@ -25,16 +27,17 @@ local UICopy=require(Shared:WaitForChild("UICopy"))
 local Toys=require(Shared:WaitForChild("ToyCatalog"))
 local Wear=require(Shared:WaitForChild("WearableCatalog"))
 local Pets=require(Shared:WaitForChild("PetCatalog"))
+local LifeArt=require(Shared:WaitForChild("LifeArt"))
 local Models=require(Shared:WaitForChild("EggModels")).Egg
 local Client={};Client.__index=Client
 Client.Folder="EggDropSleepyNest"
 Client.Event="NestEvent"
 Client.Claim="NestClaim"
-Client.Spot=Vector3.new(86,4.33,66)    -- the walk map's ground; the ground is raycast when it can be
-Client.Facing=Vector3.new(96,4.33,66)  -- the arrival dais: root -Z points at it
-Client.PromptAt=Vector3.new(0,1,-2.6)  -- root-local: the prompt, and where the Bear's prints end
-Client.BearSpot=Vector3.new(1.9,0,-1.3)
-Client.EggBase=.61
+Client.Spot=Nest.Spot                  -- the plaza's east rim (spot A); the walk map's ground, raycast when it can be
+Client.Facing=Nest.Facing              -- the plaza's middle: root -Z points at it
+Client.PromptAt=Vector3.new(0,1,-Nest.Front) -- root-local: the prompt, and where the Bear's prints end (outside the pets' box)
+Client.BearSpot=Vector3.new(2.2,0,-1.4) -- the Bear curls here (the fringe is wider); the sign is on the other side
+Client.EggBase=.64     -- .06 into the straw bed
 Client.Scale=table.freeze({small=1.25,glow=1.6,rocking=2,ready=2})
 Client.Halo=table.freeze({glow={.25,.5},rocking={.45,.7},ready={.85,.85}})
 Client.HaloStill=table.freeze({glow=.3,rocking=.5,ready=.8})
@@ -48,7 +51,7 @@ Client.NextLabel=3
 Client.HatchSeconds=2
 Client.StageTween=.6
 Client.DropSeconds=.35
-Client.Prompt=6         -- studs (the spawn is 10 away: it never fires at arrival)
+Client.Prompt=6         -- studs: only within reach of the nest's front
 Client.PromptOffset=Vector2.new(0,72) -- under the nest, never on the egg
 Client.Near=8           -- studs: the "Inside:" line
 Client.SecondWidth=236  -- px: the widest second-line pill; the explainer wraps inside it
@@ -60,12 +63,14 @@ Client.Copy=table.freeze({how="onb3.nest.how",howPlain="onb3.nest.howPlain",tuck
 	ready="onb3.nest.ready"})
 Client.GroundSlack=1    -- studs: a ground hit further than this from Spot.Y is not the lawn
 Client.Assets=table.freeze({
-	chip="rbxassetid://114080030018596",flag="rbxassetid://96303130180036",leaves="rbxassetid://130921787854357",
-	weave="rbxassetid://118690234276511",egg="rbxassetid://116613877519776",halo="rbxassetid://93444884817210",
+	chip="rbxassetid://114080030018596",egg="rbxassetid://116613877519776",halo="rbxassetid://93444884817210",
 	z="rbxassetid://127381504371398"})
+-- The remodel's textures (LifeArt: the uploaded ids, or stand-ins until then).
+Client.Art=table.freeze({twigs="nestTwigs",fringe="nestFringe",bed="strawBed",wisps="strawWisps",sign="nestSign"})
 Client.Spark="rbxasset://textures/particles/sparkles_main.dds"
-Client.Color=table.freeze({base=Color3.fromHex("#6E4524"),rimA=Color3.fromHex("#B07A45"),rimB=Color3.fromHex("#8A5A30"),
-	cushion=Color3.fromHex("#FFF4DA"),egg=Color3.fromHex("#C9B4FF"),halo=Color3.fromHex("#FFF3C4"),gold=Color3.fromHex("#FFE08A"),
+Client.Color=table.freeze({mound=Color3.fromHex("#3A2616"),rim1=Color3.fromHex("#6B4A2C"),rim2=Color3.fromHex("#5A3D24"),
+	rim3=Color3.fromHex("#7D5A38"),straw=Color3.fromHex("#B8974F"),post=Color3.fromHex("#6B4A2B"),board=Color3.fromHex("#A47E50"),
+	signInk=Color3.fromHex("#3B2A1A"),egg=Color3.fromHex("#C9B4FF"),halo=Color3.fromHex("#FFF3C4"),gold=Color3.fromHex("#FFE08A"),
 	core=Color3.fromHex("#FFF3C4"),cream=Color3.fromHex("#FFF4DC"),ink=Color3.fromHex("#15143A"),stars=Color3.fromHex("#FFC14D"),
 	well=Color3.fromHex("#20234A"),text=Color3.fromHex("#FFFFFF")})
 
@@ -169,23 +174,49 @@ function Client.frame(y)
 	local at=Vector3.new(Client.Spot.X,y,Client.Spot.Z)
 	return CFrame.lookAt(at,Vector3.new(Client.Facing.X,y,Client.Facing.Z))
 end
--- The ten nest parts, root-local (NEST-LOOK section 2). shape: "cylinder" (axis along X) or "plate" (decal plate).
+-- The 21 nest parts, root-local (GARDEN-LIFE-NEST-LOOK 4; degrees, root -Z the front). shape: "cylinder" (axis along
+-- X), "block" or "plate" (a see-through decal plate). texture = {key, faces, u, v, offsetU}; decal = {key, faces}.
+local Face=Enum.NormalId
+local CURVED={Face.Top,Face.Bottom,Face.Front,Face.Back} -- a Cylinder's round side (its caps are Left and Right)
+local BOTH={Face.Front,Face.Back}
 function Client.parts()
 	local list={}
-	local up=CFrame.Angles(0,0,math.pi/2) -- a Cylinder's axis is X: turn it up
-	table.insert(list,{name="NestBase",shape="cylinder",size=Vector3.new(.35,3,3),cf=CFrame.new(0,.175,0)*up,color="base"})
-	for k=0,5 do
-		local a=math.rad(30+60*k)
-		local tip=math.rad(if k%2==0 then 8 else -8)
-		table.insert(list,{name="NestRim"..(k+1),shape="cylinder",size=Vector3.new(1.62,.72,.72),
-			cf=CFrame.new(math.sin(a)*1.45,.46,math.cos(a)*1.45)*CFrame.Angles(0,a,0)*CFrame.Angles(0,0,tip),
-			color=if k%2==0 then "rimA"else "rimB",weave=true})
+	local rad=math.rad
+	local up=CFrame.Angles(0,0,math.pi/2) -- a Cylinder's axis is X: turn it up (its Right cap then faces up)
+	table.insert(list,{name="NestMound",shape="cylinder",size=Vector3.new(.42,3.5,3.5),cf=CFrame.new(0,.21,0)*up,color="mound",
+		texture={"twigs",CURVED,2.4,1.2,0},shadow=true})
+	for k=0,7 do
+		local a=rad(22.5+45*k)
+		local even=k%2==0
+		local r,y=if even then 1.42 else 1.50,if even then .56 else .62
+		table.insert(list,{name="NestRim"..(k+1),shape="cylinder",size=Vector3.new(1.30,.66,.66),
+			cf=CFrame.new(math.sin(a)*r,y,math.cos(a)*r)*CFrame.Angles(0,a,0)*CFrame.Angles(0,0,rad(if even then 7 else -7)),
+			color="rim"..(k%3+1),texture={"twigs",CURVED,2.4,1.2,.37*k}})
 	end
-	table.insert(list,{name="NestCushion",shape="cylinder",size=Vector3.new(.34,2.3,2.3),cf=CFrame.new(0,.5,0)*up,color="cushion"})
-	table.insert(list,{name="NestFlag",shape="plate",size=Vector3.new(.96,1.6,.04),cf=CFrame.new(1.1,1.55,.95),decal="flag"})
-	table.insert(list,{name="NestLeaves",shape="plate",size=Vector3.new(1,.6,.04),
-		cf=CFrame.new(-1.15,1.08,-.9)*CFrame.Angles(0,math.rad(25),0)*CFrame.Angles(math.rad(-15),0,0),decal="leaves"})
+	table.insert(list,{name="NestStraw",shape="cylinder",size=Vector3.new(.30,2.36,2.36),cf=CFrame.new(0,.55,0)*up,color="straw",
+		decal={"bed",{Face.Right}}})
+	for k=0,5 do
+		local a=rad(15+60*k)
+		table.insert(list,{name="NestFringe"..(k+1),shape="plate",size=Vector3.new(1.9,1.05,.04),
+			cf=CFrame.new(math.sin(a)*1.62,.78,math.cos(a)*1.62)*CFrame.Angles(0,a,0)*CFrame.Angles(0,rad(if k%2==0 then 8 else -8),0)
+				*CFrame.Angles(rad(22),0,0),decal={"fringe",BOTH}})
+	end
+	for k=0,2 do
+		local a=rad(40+120*k)
+		table.insert(list,{name="NestTuft"..(k+1),shape="plate",size=Vector3.new(1.3,.62,.04),
+			cf=CFrame.new(math.sin(a)*1.05,.98,math.cos(a)*1.05)*CFrame.Angles(0,a,0)*CFrame.Angles(rad(15),0,0),decal={"wisps",BOTH}})
+	end
+	table.insert(list,{name="NestSignPost",shape="block",size=Vector3.new(.14,1.5,.14),cf=CFrame.new(-1.95,.75,-.95),color="post",wood=true})
+	table.insert(list,{name="NestSign",shape="block",size=Vector3.new(1.3,.8,.08),
+		cf=CFrame.new(-1.95,1.45,-1.03)*CFrame.Angles(0,rad(-20),0)*CFrame.Angles(rad(6),0,0),color="board",wood=true,
+		decal={"sign",{Face.Front}},sign=true})
 	return list
+end
+-- The sign's words: "{pet}'s egg" for the pet stored at land, "Your egg" without a name.
+function Client.signText(view)
+	local name=Client.petName(view)
+	if name then return UICopy.get("onb3.nest.sign",{pet=name})end
+	return UICopy.get("onb3.nest.signPlain")
 end
 
 -- ── Instances ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -271,6 +302,7 @@ function Client:send(kind)
 end
 function Client:clear()
 	if self.folder then self.folder:Destroy();self.folder=nil end
+	self.signWords=nil
 	if self.chip then self.chip.button:Destroy();self.chip=nil end
 	self.view,self.drawn,self.egg,self.hatching,self.waiting,self.queued,self.tuck=nil,nil,nil,nil,nil,nil,nil
 	table.clear(self.beats)
@@ -320,6 +352,7 @@ function Client:set(view,landing)
 	self.view=view
 	if before and(before.at~=view.at or before.n~=view.n)then self.tuck,self.waiting=nil,nil end
 	if not self.drawn then self:draw()end
+	self:paintSign()
 	if landing then
 		self.drop={t=0}
 		self:play("land",1,.5)
@@ -330,6 +363,13 @@ function Client:set(view,landing)
 end
 
 -- Drawing -------------------------------------------------------------------------------------------------------
+-- The sign's words, written only when they change (the pet stored at land).
+function Client:paintSign()
+	local words=self.signWords
+	if not words or not self.view then return end
+	local text=Client.signText(self.view)
+	if words.Text~=text then words.Text=text end
+end
 function Client:groundY()
 	local y=Client.Spot.Y
 	local ground=self.d.ground
@@ -346,22 +386,33 @@ function Client:draw()
 	self.root=Client.frame(self:groundY())
 	for _,spec in ipairs(Client.parts())do
 		local p=inert(make("Part",nil,{Name=spec.name}))
-		p.Material=Enum.Material.SmoothPlastic
+		p.Material=if spec.wood then Enum.Material.Wood else Enum.Material.SmoothPlastic
 		p.Size=spec.size
 		p.CFrame=self.root*spec.cf
-		if spec.shape=="cylinder"then
-			p.Shape=Enum.PartType.Cylinder
-			p.Color=Client.Color[spec.color]
-			if spec.weave then
-				for _,face in ipairs({Enum.NormalId.Top,Enum.NormalId.Bottom,Enum.NormalId.Front,Enum.NormalId.Back})do
-					make("Texture",p,{Name="Weave",Texture=Client.Assets.weave,Face=face,StudsPerTileU=.8,StudsPerTileV=.4})
-				end
+		if spec.shadow then p.CastShadow=true end -- the mound alone: the nest sits on the marble
+		if spec.shape=="plate"then p.Transparency=1 else p.Color=Client.Color[spec.color]end
+		if spec.shape=="cylinder"then p.Shape=Enum.PartType.Cylinder end
+		local texture=spec.texture
+		if texture then
+			local id=LifeArt.id(Client.Art[texture[1]])
+			for _,face in ipairs(texture[2])do
+				make("Texture",p,{Name="Twigs",Texture=id,Face=face,StudsPerTileU=texture[3],StudsPerTileV=texture[4],OffsetStudsU=texture[5]})
 			end
-		else
-			p.Transparency=1
-			for _,face in ipairs({Enum.NormalId.Front,Enum.NormalId.Back})do
-				make("Decal",p,{Name="Art",Texture=Client.Assets[spec.decal],Face=face})
-			end
+		end
+		local decal=spec.decal
+		local id=decal and LifeArt.id(Client.Art[decal[1]])
+		if id then
+			for _,face in ipairs(decal[2])do make("Decal",p,{Name="Art",Texture=id,Face=face})end
+		end
+		if spec.sign then
+			-- The pet's name on the board's right 62%; the burnt crescent is in the texture at the left.
+			local gui=make("SurfaceGui",p,{Name="Words",Face=Face.Front,SizingMode=Enum.SurfaceGuiSizingMode.PixelsPerStud,
+				PixelsPerStud=50,LightInfluence=1,AlwaysOnTop=false,ClipsDescendants=true})
+			local words=make("TextLabel",gui,{Name="Name",BackgroundTransparency=1,Position=UDim2.fromScale(.34,.14),
+				Size=UDim2.fromScale(.63,.72),Font=Enum.Font.FredokaOne,TextColor3=Client.Color.signInk,TextScaled=true,
+				TextWrapped=true,Text=""})
+			make("UITextSizeConstraint",words,{MaxTextSize=22})
+			self.signWords=words
 		end
 		p.Parent=folder
 	end
@@ -747,7 +798,7 @@ function Client:pose(dt)
 			return
 		end
 	end
-	-- The new egg drops 1.5 studs onto the cushion with one bounce.
+	-- The new egg drops 1.5 studs onto the straw with one bounce.
 	local drop=0
 	if self.drop then
 		self.drop.t+=dt

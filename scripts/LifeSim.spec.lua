@@ -1,6 +1,9 @@
--- Studio Client. Garden life, the maths (LifeSim, ALIVE-LIFE-BUILD-PLAN-2026-11-22): petals follow the wind under the live
--- cap, bubbles one every 3 s ahead of the camera and never in the way, butterflies over the patches within reach, the
--- bird's land / hop / stay / leave, caps per budget level, and the same garden for the same seed. Pure, no instances.
+-- Studio Client. Garden life, the maths (LifeSim, ALIVE-LIFE-BUILD-PLAN-2026-11-22; round 3, beta 12 QA L1-L3): leaves
+-- at their rate under the live cap, their drift reach derived from the real wind, no spawn whose drift reaches a roof;
+-- bubbles one every 3 s ahead of the camera and never in the way; butterflies over the patches within reach with one
+-- continuous wing angle and glides, handing off to fireflies at dusk; the songbird's eight parts, its land / hop (in
+-- pairs) / head snaps / tail flick / bounding flight / stay / leave; caps per budget level; the same garden for the
+-- same seed. Pure, no instances.
 -- Dewdrops (FRUIT-LOOK): caps, stems, the wind-only trigger, the grove as a pure function of the server time (any
 -- window or refresh rhythm gives the same drops), the flight numbers, landing rejection (finds, course, kerb, station,
 -- water, too low; never the camera), the pet bat, and drawing (cap, reach, race, near-camera fade) never changing it.
@@ -16,68 +19,121 @@ return function(client)
 	local function near(a,b,eps)return math.abs(a-b)<=(eps or 1e-6)end
 	local T0=1795300000
 
-	test("caps per budget level: 40/20/0 petals, 8/4/0 bubbles, 4/2/0 butterflies, 3/2/0 birds; 30 and 15 Hz, nothing at 2",function()
-		for kind,want in pairs({petals={40,20,0},bubbles={8,4,0},butterflies={4,2,0},birds={3,2,0}})do
+	test("caps per budget level: 28/14/0 leaves (petals the same table), 8/4/0 bubbles, 4/2/0 butterflies, 3/2/0 birds; 30 and 15 Hz, nothing at 2",function()
+		for kind,want in pairs({leaves={28,14,0},petals={28,14,0},bubbles={8,4,0},butterflies={4,2,0},birds={3,2,0}})do
 			for level=0,2 do assert(Sim.cap(kind,level)==want[level+1],kind.." at "..level)end
 		end
+		assert(rawequal(Sim.Caps.petals,Sim.Caps.leaves),"petals is leaves under its old name")
 		assert(near(Sim.rate(0),1/30)and near(Sim.rate(1),1/15)and Sim.rate(2)==nil)
 		assert(Sim.level(nil)==0 and Sim.level(0/0)==0 and Sim.level(7)==2 and Sim.level(-1)==0)
 	end)
 
-	test("petal rate: none in the breeze, 7 a second at a full gust, never more",function()
-		assert(Sim.petalRate(0)==0 and Sim.petalRate(.25)==0 and Sim.petalRate(Wind.Breeze)==0)
-		assert(near(Sim.petalRate(1),7)and Sim.petalRate(2)==7 and Sim.petalRate(0/0)==0 and Sim.petalRate(nil)==0)
-		assert(Sim.petalRate(.625)>3.4 and Sim.petalRate(.625)<3.6)
-		assert(Sim.PetalLife==6.5)
-		-- Through real gusts at one crown: some petals, and the rate only ever follows Wind.at.
-		local crown=Spots.Crowns[1].position
-		local petals=Sim.Petals.new()
-		local total,most=0,0
-		for i=0,6000 do
-			local now=T0+i/30
-			local n=petals:step(now,1/30,{Wind.at(crown,now),false,false},40)
-			total+=n[1];assert(n[2]==0 and n[3]==0,"no emitter, no petals")
-			most=math.max(most,petals:count(now))
+	-- Falling leaves (beta 12 QA L2; GARDEN-LIFE-NEST-LOOK 2) ------------------------------------------------------
+	local L=Sim.Leaf
+	test("leaves: the drift reach is derived from real wind: every 12 s life over 3,000 s of gusts (the dial at 1 and 1.5) fits",function()
+		-- The look's terminal speeds: a .7 studs a second lean when calm, 3.3 in a full gust, a 1.3 fall.
+		local k=L.drag*math.log(2)
+		local calm,full=Sim.leafWind(0,0):Dot(Wind.Direction)/k,Sim.leafWind(1,0):Dot(Wind.Direction)/k
+		assert(near(calm,.72,.01)and near(full,3.32,.01)and near(-Sim.leafWind(.5,3).Y/k,1.3,.01),calm.." "..full)
+		local along,across=0,0
+		local position=Vector3.new(-60,20,50)
+		local dial=Wind.Strength
+		local ok,problem=pcall(function()
+			for _,strength in ipairs({1,1.5})do
+				Wind.Strength=strength
+				for i=0,3999 do
+					local a,c=Sim.leafDrift(T0+i*.75,L.life[1][2],position,1/15)
+					along=math.max(along,a);across=math.max(across,math.abs(c))
+				end
+			end
+		end)
+		Wind.Strength=dial
+		assert(ok,problem)
+		print(string.format("leaf drift over a 12 s life: along %.2f (reach %d), across %.2f (side %d)",along,L.reach,across,L.side))
+		assert(along<=L.reach and across<=L.side,"the drift fits: "..along.." / "..across)
+		assert(L.reach-along<2 and L.side-across<2,"and is not padded: "..along.." / "..across)
+	end)
+
+	test("leaves: 2.4 / 1.2 a second x (1 + .5 g), at most one a kind a step, the live cap exact, 55 / 30 / 15",function()
+		local function run(level,g,seconds,cap,hz)
+			local leaves=Sim.Leaves.new(3)
+			local n,most,kinds=0,0,{0,0,0}
+			hz=hz or 30
+			for i=1,seconds*hz do
+				local now=i/hz
+				local out=leaves:step(now,1/hz,g,cap,level,function(_,r)return Vector3.new(r:NextNumber(),0,0)end)
+				local seen={}
+				for _,leaf in ipairs(out)do
+					assert(not seen[leaf.kind],"one a kind a step");seen[leaf.kind]=true
+					kinds[leaf.kind]+=1
+				end
+				n+=#out
+				most=math.max(most,leaves:count(now))
+			end
+			return n,most,kinds
 		end
-		assert(total>20,"a gust drops petals: "..total)
-		assert(most<=40,"live cap "..most)
-	end)
-
-	test("petals: a gust burst of 6 when the wind first passes .6, re-armed below .3, out of the same room",function()
-		local petals=Sim.Petals.new()
-		local function at(wind,cap)return petals:step(0,0,{wind},cap or 40)[1]end
-		assert(at(.5)==0,"under .6: no burst")
-		assert(at(.6)==6,"the burst")
-		assert(at(.9)==0 and at(.4)==0,"once a gust")
-		assert(at(.29)==0 and at(.7)==6,"re-armed below .3")
-		local full=Sim.Petals.new()
-		assert(full:step(0,0,{.7},4)[1]==4,"the cap cuts a burst")
-		assert(full:step(0,0,{.8},40)[1]==0,"and the rest is spent, not saved")
-		local slot=Sim.Petals.new()
-		slot:step(0,0,{.7},40);slot:step(0,0,{false},40)
-		assert(slot:step(0,0,{.7},40)[1]==6,"a new crown on the slot bursts again")
-		-- A 4 s full gust: about 28 + 6 off one crown, never over the cap.
-		local gust=Sim.Petals.new()
-		local total=0
-		for i=1,120 do total+=gust:step(i/30,1/30,{1},40)[1]end
-		assert(total>=33 and total<=35,"a 4 s gust: "..total)
-	end)
-
-	test("petals: the live cap holds across emitters and a lull never ends in a burst",function()
-		local petals=Sim.Petals.new()
+		local n=run(0,0,100,1000);assert(n>=238 and n<=241,"calm, level 0: "..n)
+		n=run(1,0,100,1000,15);assert(n>=118 and n<=121,"calm, level 1: "..n)
+		n=run(0,1,100,1000);assert(n>=358 and n<=361,"full gust: "..n)
+		assert(run(2,1,10,28)==0,"level 2: none")
+		local _,most=run(0,1,120,28);assert(most==28,"the level 0 cap: "..most)
+		_,most=run(1,1,120,14,15);assert(most==14,"the level 1 cap: "..most)
+		local _,_,kinds=run(0,1,1000,100000)
+		local total=kinds[1]+kinds[2]+kinds[3]
+		for i,want in ipairs(L.share)do assert(math.abs(kinds[i]/total-want)<.03,"share "..i..": "..kinds[i]/total)end
+		-- A refused spot is skipped, not redrawn: nothing counted, and the rate is spent the same.
+		local skip=Sim.Leaves.new(3)
+		local made=0
+		for i=1,3000 do made+=#skip:step(i/30,1/30,0,1000,0,function()return nil end)end
+		assert(made==0 and skip:count(100)==0)
+		-- At the cap nothing piles up: one emit when room comes back, not a burst.
+		local full=Sim.Leaves.new(5)
 		local now=0
-		local peak=0
-		for _=1,600 do
-			now+=1/30
-			local n=petals:step(now,1/30,{1,1,1},20)
-			peak=math.max(peak,petals:count(now))
-			for _,k in ipairs(n)do assert(k<=(if now<=1/30+1e-9 then Sim.PetalBurst else 1),"one step emits at most a petal per emitter")end
+		for _=1,30*60 do now+=1/30;full:step(now,1/30,1,28,0,function()return Vector3.zero end)end
+		local before=full:count(now)
+		local burst=#full:step(now+.01,1/30,1,before+5,0,function()return Vector3.zero end)
+		assert(burst<=1,"no burst: "..burst)
+		assert(L.life[1][2]==12 and L.life[3][2]==10 and L.rate[1]==2.4 and L.rate[2]==1.2)
+	end)
+
+	test("leaf spots: in the 72-stud square 10 to 12 over the ground, none off the island, none whose drift reaches a roof",function()
+		local r=Random.new(8)
+		local flat={ground=function()return 4 end,cover={}}
+		for _=1,300 do
+			local spot=assert(Sim.leafSpot(r,Vector3.new(10,5,-20),flat))
+			assert(math.abs(spot.X-10)<=36 and math.abs(spot.Z+20)<=36 and spot.Y>=14-1e-6 and spot.Y<=16+1e-6,tostring(spot))
 		end
-		assert(peak==20,"level 1 cap "..peak)
-		assert(#petals:step(now,1/30,{1,1,1},0)==3 and petals:count(now)<=20)
-		local zero=petals:step(now+.1,1/30,{1,1,1},0)
-		assert(zero[1]+zero[2]+zero[3]==0,"level 2 emits nothing")
-		petals:clear();assert(petals:count(now)==0)
+		local spot,why=Sim.leafSpot(r,Vector3.zero,{ground=function()return nil end})
+		assert(spot==nil and why=="ground")
+		-- The Studio probe's roofs (STUDIO-PROBES.md): the rotunda first, at (-60, 50) r 8.2; leaves on the beta now.
+		assert(Sim.LeafCoverChecked==true and #Sim.LeafCover==6)
+		local roof=Sim.LeafCover[1]
+		assert(roof.name=="Rotunda"and roof.x==-60 and roof.z==50 and roof.r==8.2)
+		local names={}
+		for _,place in ipairs(Sim.LeafCover)do assert(place.r>0 and not names[place.name]);names[place.name]=true end
+		assert(names.BridgeArch and names.WestColonnade and names.EastColonnade and names.StationRoof and names.BridgeArchSide)
+		-- Stand under the rotunda: every spot that comes back drifts clear of its roof.
+		local world={ground=function()return 14 end,cover={roof}}
+		local refused=0
+		for _=1,2000 do
+			local at,reason=Sim.leafSpot(r,Vector3.new(roof.x,14,roof.z),world)
+			if at then
+				local line={at.X,at.Z,at.X+Wind.Direction.X*L.reach,at.Z+Wind.Direction.Z*L.reach}
+				assert(Sim.lineDistance(roof.x,roof.z,line)>=roof.r+L.side,"drifts under the roof: "..tostring(at))
+			else assert(reason=="Rotunda",tostring(reason));refused+=1 end
+		end
+		assert(refused>100 and refused<1900,"some refused, not all: "..refused)
+		local function from(d)return roof.x+Wind.Direction.X*d,roof.z+Wind.Direction.Z*d end
+		local only={roof}
+		local function covered(d)local x,z=from(d);return Sim.leafCovered(x,z,only)end
+		assert(covered(0)=="Rotunda","over the roof")
+		assert(covered(-(L.reach-1))=="Rotunda","upwind within reach drifts in")
+		assert(covered(-(L.reach+roof.r+L.side+1))==nil,"far upwind is fine")
+		assert(covered(roof.r+L.side+1)==nil,"downwind of the roof is fine")
+		-- The default list: under the bridge arch too.
+		assert(Sim.leafCovered(5,20.6)=="BridgeArch")
+		-- The cover list is a table: a probe row drops in.
+		assert(Sim.leafCovered(0,0,{{name="Cave",x=0,z=0,r=5}})=="Cave")
 	end)
 
 	test("bubbles: one every 3 s while allowed and under the cap; a skipped slot is not saved up",function()
@@ -154,12 +210,13 @@ return function(client)
 					seen[b.restUntil]=first
 					assert(b.restUntil-first<=4+1e-6 and b.restUntil-first>=2-1/15,"rest "..(b.restUntil-first))
 				end
-				local parts=Sim.butterflyParts(Sim.butterflyRoot(b,now),Sim.butterflyFlap(b,now,true,false))
+				local parts=Sim.butterflyParts(Sim.butterflyRoot(b,now,0),Sim.butterflyFlap(b,now,0))
 				assert(#parts==3)
 			end
 		end
 		for _ in pairs(seen)do rested+=1 end
 		assert(rested>0,"they rest on the flowers")
+		assert(Sim.Butterfly.speed==.65)
 		assert(#flies:step(now,1/30,world,patches,2,false)<=2,"the cap shrinks at once")
 		assert(#flies:step(now,1/30,world,patches,4,true)==0,"Reduced Motion: no flight")
 		world.camera=Vector3.new(500,10,0)
@@ -170,71 +227,208 @@ return function(client)
 		assert(#station.list==0,"no patch by a station")
 	end)
 
-	test("flap: two poses at 7.5 Hz (+50 / -20 and +60 / -15), held at level 1, a slow sine at rest",function()
-		assert(near(Sim.birdFlap(true,false),math.rad(50))and near(Sim.birdFlap(false,false),math.rad(-20))and Sim.birdFlap(true,true)==0)
-		local b={mode="fly",phase=0}
-		assert(near(Sim.butterflyFlap(b,0,true,false),math.rad(60))and near(Sim.butterflyFlap(b,0,false,false),math.rad(-15)))
-		assert(near(Sim.butterflyFlap(b,0,false,true),math.rad(30)))
-		b.mode="rest"
-		for t=0,4,.1 do local phi=Sim.butterflyFlap(b,t,true,false);assert(phi>=math.rad(20)-1e-6 and phi<=math.rad(70)+1e-6)end
+	test("butterfly wings: one continuous angle, no snap (flap, glides, landings, rests), glides 1.6 to 3.2 s apart for .6 to 1.1 s",function()
+		local B=Sim.Butterfly
+		local patches={Vector3.new(0,4,-10),Vector3.new(8,4,-12),Vector3.new(-8,4,-14),Vector3.new(4,4,-20)}
+		local world={camera=Vector3.new(0,10,10),stations={}}
+		for _,run in ipairs({{hz=30,level=0,most=32},{hz=15,level=1,most=50}})do
+			local flies=Sim.Butterflies.new(9)
+			local last,worst,rests,glidesSeen={},0,0,{}
+			local now=0
+			for _=1,run.hz*90 do
+				now+=1/run.hz
+				for _,b in ipairs(flies:step(now,1/run.hz,world,patches,4,false))do
+					local phi=math.deg(Sim.butterflyFlap(b,now,run.level))
+					assert(phi>=-17-1e-6 and phi<=77+1e-6,"angle "..phi)
+					if last[b]then worst=math.max(worst,math.abs(phi-last[b]))end
+					last[b]=phi
+					if b.mode=="rest"and now-b.switchAt>=B.blend then
+						rests+=1;assert(phi>=48-1e-6 and phi<=76+1e-6,"rest "..phi)
+					end
+					glidesSeen[b.glideAt]=b.glideEnd-b.glideAt
+					assert(b.lastGlide==-math.huge or(b.glideAt-b.lastGlide<=3.2+1e-6 and b.glideAt-b.lastGlide>=1.6-1e-6),"glide gap")
+				end
+			end
+			print(string.format("butterfly wing step at %d Hz: worst %.1f degrees (today's swap: 75)",run.hz,worst))
+			assert(worst<=run.most,run.hz.." Hz: "..worst)
+			assert(rests>0,"some rest")
+			local n=0
+			for _,length in pairs(glidesSeen)do n+=1;assert(length>=.6-1e-6 and length<=1.1+1e-6,"glide "..length)end
+			assert(n>=4,"they glide: "..n)
+		end
+		-- In a glide the wings hold the shallow V (28) and the root sinks .25; flapping at 2.2 Hz, 22 +- 38.
+		local b={mode="fly",phase=0,glideAt=10,glideEnd=11,lastGlide=-math.huge,position=Vector3.zero,heading=Vector3.new(0,0,-1),born=-10}
+		assert(near(math.deg(Sim.butterflyFlap(b,10.5,0)),28,1e-6)and Sim.butterflyEnvelope(b,10.5)==0)
+		assert(near(Sim.butterflyEnvelope(b,5),1)and near(Sim.butterflyEnvelope(b,11.125),.5))
+		assert(near(math.deg(Sim.butterflyFlap(b,1/(4*2.2),0)),60,1e-4),"the top of the flap at 2.2 Hz")
+		assert(near(math.deg(Sim.butterflyFlap(b,1/(4*1.6),1)),60,1e-4),"1.6 Hz at level 1")
+		local level=table.clone(b);level.glideAt,level.glideEnd=100,101
+		local sink=Sim.butterflyRoot(level,10.999,0).Position.Y-Sim.butterflyRoot(b,10.999,0).Position.Y
+		assert(sink>.18 and sink<.32,"the glide sinks .25: "..sink)
+		-- Each butterfly's glides are its own: the same timetable at 30 and 15 Hz.
+		local function timetable(hz)
+			local flies=Sim.Butterflies.new(21)
+			local out,now={},0
+			for _=1,hz*30 do
+				now+=1/hz
+				local first=flies:step(now,1/hz,world,patches,1,false)[1]
+				if first and not out[#out]or(first and out[#out]~=first.glideAt-first.born)then table.insert(out,first.glideAt-first.born)end
+			end
+			return out
+		end
+		local a,c=timetable(30),timetable(15)
+		assert(#a>=5)
+		for i=1,math.min(#a,#c)do assert(near(a[i],c[i],1e-9),"glide "..i)end
 	end)
 
-	test("LOOK-R2 poses: bird eyes, beak and wings (perched back and down, flying tips out); butterfly wings laid flat",function()
+	test("round 3 poses: the songbird's eight parts (head on its own, beads, beak, folded and flying wings, the tail); butterfly wings laid flat",function()
 		local function close(a,b)return(a-b).Magnitude<1e-4 end
 		local root=CFrame.new(0,0,0)
-		local perched=Sim.birdParts(root,"perch",0,0)
-		assert(#perched==6)
-		assert(close(perched[2].Position,Vector3.new(.425,.128,-.357))and close(perched[6].Position,Vector3.new(-.425,.128,-.357)))
-		assert(close(perched[3].Position,Vector3.new(0,-.04,-.64)))
-		assert(perched[2].RightVector.X>0 and perched[2].RightVector.Z<0 and perched[6].RightVector.X>0 and perched[6].RightVector.Z>0,"each disc's axis runs out and forward (its outer cap: Right on the right eye, Left on the left)")
-		assert(close(perched[4].Position,Vector3.new(-.60,-.06,.13))and close(perched[5].Position,Vector3.new(.60,-.06,.13)))
-		for i=4,5 do
+		local perched=Sim.birdParts(root,"perch",0,0,nil,20,0)
+		assert(#perched==8)
+		assert(close(perched[2].Position,Vector3.new(0,.37,-.35)),"the head")
+		assert(close(perched[3].Position,Vector3.new(0,.35,-.71)),"the beak off the head")
+		assert(close(perched[4].Position,Vector3.new(.235,.435,-.57))and close(perched[5].Position,Vector3.new(-.235,.435,-.57)),"two eyes")
+		-- The head turns on its own: eyes and beak go with it, the body does not.
+		local turned=Sim.birdParts(root,"perch",0,0,CFrame.Angles(0,math.rad(40),0),20,0)
+		assert(close(turned[1].Position,perched[1].Position)and close(turned[2].Position,perched[2].Position))
+		assert(turned[3].Position.X<-.1,"the beak swings with the head")
+		assert(close(perched[6].Position,Vector3.new(-.53,-.02,.15))and close(perched[7].Position,Vector3.new(.53,-.02,.15)))
+		for i=6,7 do
 			local tip=-perched[i].UpVector -- the texture is tip-down
-			assert(tip.Y<-.5 and tip.Z>.75,"perched tip back and down: "..tostring(tip))
+			assert(tip.Y<-.5 and tip.Z>.75,"folded tip back and down: "..tostring(tip))
 		end
-		local flicked=Sim.birdParts(root,"perch",1,0)
-		assert(-flicked[4].UpVector.X< -perched[4].UpVector.X and -flicked[5].UpVector.X>-perched[5].UpVector.X,"the flick swings the tips out")
-		for _,phi in ipairs({math.rad(50),math.rad(-20)})do
-			local flying=Sim.birdParts(root,"fly",0,phi)
-			local left,right=-flying[4].UpVector,-flying[5].UpVector
+		local flicked=Sim.birdParts(root,"perch",1,0,nil,20,0)
+		assert(-flicked[6].UpVector.X< -perched[6].UpVector.X and -flicked[7].UpVector.X>-perched[7].UpVector.X,"the flick swings the tips out")
+		for _,phi in ipairs({math.rad(65),math.rad(-35)})do
+			local flying=Sim.birdParts(root,"fly",0,phi,nil,20,0)
+			local left,right=-flying[6].UpVector,-flying[7].UpVector
 			assert(left.X<0 and right.X>0,"tips out on both sides")
 			assert(near(left.Y,right.Y,1e-4),"the two wings mirror")
 			assert((phi>0)==(right.Y>0),"up on the up stroke")
 		end
+		local bound=Sim.birdParts(root,"fly",0,math.rad(15),nil,20,1)
+		assert(close(bound[6].Position,perched[6].Position)and close(bound[7].Position,perched[7].Position),"tucked in the bound")
+		-- The tail: its root under the rump, the tip back and a little down at rest; a flick lifts it.
+		local tail=perched[8]
+		local tip=-tail.UpVector
+		assert(tip.Z>.9 and tip.Y<-.2 and tip.Y>-.5,"tip back and slightly down: "..tostring(tip))
+		assert(tail.Position.Z>.4 and tail.Position.Y<-.09,"behind and under the rump")
+		local up=-Sim.birdParts(root,"perch",0,0,nil,2,0)[8].UpVector
+		assert(up.Y>tip.Y,"a flick lifts it")
 		local wings=Sim.butterflyParts(root,0)
-		assert(close(wings[2].Position,Vector3.new(-.40,.03,0))and close(wings[3].Position,Vector3.new(.40,.03,0)))
+		assert(close(wings[2].Position,Vector3.new(-.32,.03,0))and close(wings[3].Position,Vector3.new(.32,.03,0)),"span 1.2")
 		for i=2,3 do
 			assert(close(wings[i].UpVector,Vector3.new(0,0,-1)),"image top forward")
 			assert(close(wings[i].LookVector,Vector3.new(0,-1,0)),"Front face down, so Back is up")
 		end
 	end)
 
-	test("birds: a chirp lands one on its perch's crown in .8 s, a repeat chirp hops, it stays 8 to 20 s",function()
+	test("birds: a chirp lands one on its perch's crown in .8 s, a repeat chirp hops low (often twice), it stays 8 to 20 s",function()
+		local B=Sim.Bird
 		local spot=Vector3.new(10,14,10)
 		local birds=Sim.Birds.new(7)
 		local world={camera=Vector3.new(30,12,30),stations={}}
 		assert(birds:chirp(0,5,spot,3,world,false)=="land")
 		local bird=birds.list[1]
 		assert(bird.colour==5%3 and(bird.from-spot).Magnitude>=9)
-		birds:step(.4,world,false,3);assert(bird.state=="land"and bird.wings=="fly")
-		birds:step(.81,world,false,3);assert(bird.state=="sit"and bird.wings=="perch")
-		birds:step(1.2,world,false,3)
-		assert((bird.root.Position-(spot+Vector3.new(0,.56,0))).Magnitude<1e-3,"sits .56 over the crown top")
-		local parts=Sim.birdParts(bird.root,bird.wings,bird.flick,0)
-		assert(#parts==6)
+		birds:step(.4,world,false,3,0);assert(bird.state=="land"and bird.wings=="fly")
+		birds:step(.81,world,false,3,0);assert(bird.state=="sit"and bird.wings=="perch")
+		birds:step(.81+.08,world,false,3,0)
+		assert(near(bird.tau,B.tailUp,1e-3),"the tail flicks up on landing: "..bird.tau)
+		birds:step(1.2,world,false,3,0)
+		assert(near(bird.tau,B.tail),"and back")
+		assert((bird.root.Position-(spot+Vector3.new(0,.50,0))).Magnitude<1e-3,"sits .50 over the crown top")
+		local parts=Sim.birdParts(bird.root,bird.wings,bird.flick,bird.phi,bird.turn,bird.tau,bird.tuck)
+		assert(#parts==8)
+		bird.turnAt=math.huge -- no turn hop in the way
 		assert(birds:chirp(1.3,5,spot,3,world,false)=="hop")
-		birds:step(1.3+.11,world,false,3)
-		assert(bird.root.Position.Y>spot.Y+.56+.2,"up in the hop")
+		birds:step(1.3+.09,world,false,3,0)
+		assert(near(bird.root.Position.Y,spot.Y+.50+.16,1e-3),".16 high at the top: "..bird.root.Position.Y-spot.Y)
 		assert(bird.flick==1,"wings flick in the first .12 s")
-		birds:step(1.3+.5,world,false,3);assert(bird.hopAt==nil and bird.flick==0)
+		birds:step(1.3+.18+.12+.09+.12+.2,world,false,3,0);assert(bird.hopAt==nil and bird.flick==0)
+		-- 40% of hops come in pairs, .12 s apart.
+		local pairs,n=0,0
+		for i=1,600 do
+			assert(birds:chirp(2+i*.001,5,spot,3,world,false)=="hop")
+			n+=1
+			if bird.hop2 then pairs+=1;assert(near(bird.hop2-bird.hopAt,B.hopTime+B.pairGap))end
+		end
+		assert(math.abs(pairs/n-.4)<.06,"pairs: "..pairs/n)
 		local stay=bird.stayUntil
 		assert(stay>=8 and stay<=20,"stay "..stay)
-		local t=1.8
-		while bird.state=="sit"and t<25 do t+=.1;birds:step(t,world,false,3)end
+		local t=3
+		while bird.state=="sit"and t<25 do t+=.1;birds:step(t,world,false,3,0)end
 		assert(bird.state=="leave"and t>=stay-.11,"leaves when its stay is over")
-		t+=.04;birds:step(t,world,false,3);assert(bird.wings=="perch","crouches first")
-		t+=.5;birds:step(t,world,false,3);assert(bird.wings=="fly")
-		t+=1;birds:step(t,world,false,3);assert(#birds.list==0,"gone after the arc")
+		t+=.04;birds:step(t,world,false,3,0);assert(bird.wings=="perch","crouches first")
+		t+=.2;birds:step(t,world,false,3,0);assert(bird.wings=="fly")
+		t+=1.2;birds:step(t,world,false,3,0);assert(#birds.list==0,"gone after the arc")
+	end)
+
+	test("birds: the head snaps (.12 s) to a new look every .8 to 2.5 s and holds it; 30% with a cock; turns come with a hop",function()
+		local B=Sim.Bird
+		local birds=Sim.Birds.new(12)
+		local world={camera=Vector3.new(30,12,30),stations={}}
+		local spot=Vector3.new(0,14,0)
+		assert(birds:chirp(0,3,spot,3,world,false)=="land")
+		local bird=birds.list[1]
+		bird.stayUntil=math.huge
+		local snaps,cocks,lastAt,turns=0,0,nil,0
+		local t=0
+		while t<1200 do
+			t+=1/30
+			local turnBefore=bird.turnStart
+			birds:step(t,world,false,3,0)
+			if bird.turnStart~=turnBefore then turns+=1;assert(bird.hopAt==bird.turnStart,"a turn is a hop")end
+			local head=bird.head
+			if head.at~=lastAt and head.at>0 then
+				if lastAt then
+					local gap=head.at-lastAt
+					assert(gap>=B.headEveryMin-1/30 and gap<=B.headEveryMax+1/30,"gap "..gap)
+				end
+				lastAt=head.at
+				snaps+=1
+				assert(math.abs(head.yaw)>=25 and math.abs(head.yaw)<=50,"yaw "..head.yaw)
+				assert(head.roll==0 or math.abs(head.roll)==15)
+				if head.roll~=0 then cocks+=1 end
+				-- Held: the pose reaches the new look in .12 s and stays.
+				local copy=table.clone(bird.head)
+				local probe={state="sit",spot=spot,yaw=bird.yaw,landedAt=-math.huge,head=copy}
+				Sim.birdPose(probe,head.at+.06,0)
+				local mid=probe.turn
+				Sim.birdPose(probe,head.at+.12,0)
+				local done=probe.turn
+				Sim.birdPose(probe,head.at+.5,0)
+				assert((done.LookVector-probe.turn.LookVector).Magnitude<1e-6,"held")
+				local moved=(mid.LookVector-done.LookVector).Magnitude+(mid.UpVector-done.UpVector).Magnitude
+				assert(moved>1e-6 or(math.abs(copy.yaw-copy.fromYaw)<.5 and math.abs(copy.roll-copy.fromRoll)<.5),"still moving at .06 s")
+			end
+		end
+		assert(snaps>600 and turns>200,"snaps "..snaps.." turns "..turns)
+		assert(math.abs(cocks/snaps-.3)<.06,"cocks "..cocks/snaps)
+	end)
+
+	test("birds fly in bounds: two beats (5.5 Hz, 3.5 at level 1), then .22 s tucked with a .12 dip; no swap",function()
+		local B=Sim.Bird
+		local phi,tuck,dip=Sim.birdBeat(.07,0)
+		assert(tuck==0 and dip==0 and phi>B.beatMid+20,"beating")
+		local beating=2/5.5
+		phi,tuck,dip=Sim.birdBeat(beating+.11,0)
+		assert(tuck==1 and near(dip,.12,1e-6),"tucked, dipping")
+		phi,tuck=Sim.birdBeat(beating+.22+.1,0)
+		assert(tuck==0,"beating again: one cycle is .584 s")
+		local slow=2/3.5
+		assert(select(2,Sim.birdBeat(slow-.01,1))>0 and select(2,Sim.birdBeat(.4,1))==0,"level 1: .57 s of beats")
+		-- Continuous: the wing tip never jumps between 1/120 s samples (a two-pose swap would move it a stud at once).
+		local root=CFrame.new(0,0,0)
+		local was
+		for i=0,360 do
+			local p,k=Sim.birdBeat(i/120,0)
+			local frame=Sim.birdParts(root,"fly",0,math.rad(p),nil,20,k)[7].Position
+			if was then assert((frame-was).Magnitude<.3,"a jump at "..i)end
+			was=frame
+		end
+		assert(Sim.Bird.lift==.50 and B.hop==.16 and B.hopTime==.18 and B.flick==15)
 	end)
 
 	test("birds: the player within 12 studs sends it off, away from the player; the 4th is refused; stations and the camera too",function()
@@ -246,34 +440,49 @@ return function(client)
 		assert(birds:chirp(0,9,Vector3.new(100,14,103),9,world,false)==nil,"by a station")
 		assert(select(2,birds:chirp(0,9,Vector3.new(0,20,43),9,world,false))=="camera")
 		assert(select(2,birds:chirp(0,9,nil,9,world,false))=="spot","a perch with no landing")
-		for t=0,1,.1 do birds:step(t,world,false,3)end
+		for t=0,1,.1 do birds:step(t,world,false,3,0)end
 		world.player=Vector3.new(20,10,5)
-		birds:step(1.1,world,false,3)
+		birds:step(1.1,world,false,3,0)
 		local first=birds:find(1)
 		assert(first.state=="leave"and first.away.Z<0,"flies away from the player")
 		assert(birds:find(2).state=="sit")
-		birds:step(1.2,world,false,2)
+		birds:step(1.2,world,false,2,0)
 		assert(#birds.list==2,"the cap shrinks at once")
 	end)
 
-	test("Reduced Motion: a bird is just there, folded; no hop, no turns, gone without an arc",function()
+	test("Reduced Motion: a bird is just there, folded, head straight, tail at rest; no hop, no turns, gone without an arc",function()
 		local birds=Sim.Birds.new(3)
 		local spot=Vector3.new(0,14,0)
 		local world={camera=Vector3.new(0,10,30)}
 		assert(birds:chirp(0,3,spot,3,world,true)=="land")
-		birds:step(0,world,true,3)
+		birds:step(0,world,true,3,0)
 		local bird=birds.list[1]
-		assert(bird.state=="sit"and bird.wings=="perch"and(bird.root.Position-(spot+Vector3.new(0,.56,0))).Magnitude<1e-6)
+		assert(bird.state=="sit"and bird.wings=="perch"and(bird.root.Position-(spot+Vector3.new(0,.50,0))).Magnitude<1e-6)
+		assert(bird.still==true and bird.tau==Sim.Bird.tail and(bird.turn.LookVector-Vector3.new(0,0,-1)).Magnitude<1e-6)
 		assert(birds:chirp(.5,3,spot,3,world,true)==nil,"no hop")
 		local yaw=bird.yaw
-		for t=0,7,.1 do birds:step(t,world,true,3)end
+		for t=0,7,.1 do birds:step(t,world,true,3,0);assert(bird.head.at==-math.huge,"no head snaps")end
 		assert(bird.yaw==yaw,"no turns")
 		world.player=spot
-		birds:step(7.1,world,true,3)
+		birds:step(7.1,world,true,3,0)
 		assert(#birds.list==0,"gone at once")
+		-- Perched with its head cocked and mid-hop when Reduced Motion comes on: head straight and still at once.
+		local live=Sim.Birds.new(4)
+		assert(live:chirp(20,3,spot,3,{},false)=="land")
+		local perched=live.list[1]
+		perched.stayUntil=math.huge
+		local t=20
+		while perched.head.at==-math.huge and t<40 do t+=1/30;live:step(t,{},false,3,0)end
+		assert(perched.head.at>-math.huge,"a head snap happened")
+		perched.head.yaw,perched.head.roll,perched.head.fromYaw,perched.head.fromRoll=40,15,40,15
+		assert(live:chirp(t,3,spot,3,{},false)=="hop")
+		live:step(t+.05,{},true,3,0)
+		assert((perched.turn.LookVector-Vector3.new(0,0,-1)).Magnitude<1e-6 and(perched.turn.UpVector-Vector3.new(0,1,0)).Magnitude<1e-6,"head straight")
+		assert(perched.hopAt==nil and perched.tau==Sim.Bird.tail and perched.still==true,"no hop, tail at rest, still")
+		assert(math.abs(perched.root.Position.Y-(spot.Y+.50))<1e-6,"sitting on the crown")
 		-- In flight when Reduced Motion comes on: it sits at once.
 		assert(birds:chirp(8,3,spot,3,{},false)=="land")
-		birds:step(8.2,{},true,3)
+		birds:step(8.2,{},true,3,0)
 		assert(birds.list[1].state=="sit")
 	end)
 
@@ -281,14 +490,19 @@ return function(client)
 		local function run(seed)
 			local out={}
 			local birds,flies,bubbles=Sim.Birds.new(seed),Sim.Butterflies.new(seed),Sim.Bubbles.new(seed)
+			local leaves=Sim.Leaves.new(seed)
 			local patches={Vector3.new(5,4,0),Vector3.new(-5,4,8),Vector3.new(12,4,-6)}
 			local world={camera=Vector3.new(0,10,20),stations={}}
+			local leafWorld={ground=function()return 4 end,cover={}}
 			bubbles:due(0,8,true)
 			for i=1,600 do
 				local now=i/30
 				if i%90==0 then birds:chirp(now,i//90,Vector3.new(i//90*7,14,0),3,world,false)end
-				for _,b in ipairs(birds:step(now,world,false,3))do table.insert(out,string.format("%.4f",b.root.Position.Y))end
-				for _,f in ipairs(flies:step(now,1/30,world,patches,4,false))do table.insert(out,string.format("%.4f %.4f",f.position.X,f.position.Z))end
+				for _,b in ipairs(birds:step(now,world,false,3,0))do table.insert(out,string.format("%.4f",b.root.Position.Y))end
+				for _,f in ipairs(flies:step(now,1/30,world,patches,4,false))do table.insert(out,string.format("%.4f %.4f %.4f",f.position.X,f.position.Z,Sim.butterflyFlap(f,now,0)))end
+				for _,leaf in ipairs(leaves:step(now,1/30,.3,28,0,function(_,r)return Sim.leafSpot(r,Vector3.zero,leafWorld)end))do
+					table.insert(out,string.format("%d %.3f",leaf.kind,leaf.at.X))
+				end
 				if bubbles:due(now,8,true)then local spot=Sim.bubbleSpot(CFrame.new(0,8,0),bubbles.random,world);table.insert(out,tostring(spot and spot.X))end
 			end
 			return table.concat(out,"|")
@@ -637,7 +851,8 @@ return function(client)
 	end)
 
 
-	-- Garden hour slice D (GARDEN-HOUR-BUILD-PLAN-2026-11-23; GARDEN-HOUR-LOOK 5): bubbles, butterflies and birds by day only.
+	-- Garden hour slice D (GARDEN-HOUR-BUILD-PLAN-2026-11-23; GARDEN-HOUR-LOOK 5): bubbles and birds by day only; butterflies
+	-- by their own gate (round 3: fireflies at dusk).
 	test("the garden hour's gate: day only above .7; nil (the hour off) is day; the hour's own phases",function()
 		assert(Sim.DayLife==.7)
 		assert(Sim.day(nil)==true and Sim.day(0/0)==true and Sim.day("x")==true,"no number: the hour is off, always day")
@@ -654,39 +869,93 @@ return function(client)
 		assert(opened and opened>360 and opened<450,"opens inside the blend")
 	end)
 
-	test("butterflies at night: none start; the ones out fly off up and away from the camera and are gone",function()
+	test("butterflies at dusk: under .30 each hands off to a firefly, slot 1 first, 1.5 s apart, gone at 6 s; none spawn under .34",function()
+		local B=Sim.Butterfly
 		local patches={}
 		for i=1,6 do patches[i]=Vector3.new(i*8,4,0)end
 		local flies=Sim.Butterflies.new(4)
-		local world={camera=Vector3.new(0,10,10),stations={}}
+		local world={camera=Vector3.new(0,10,10),stations={},ground=function()return 4 end}
 		local now=0
-		for _=1,30*20 do now+=1/30;flies:step(now,1/30,world,patches,4,false,true)end
+		for _=1,30*20 do now+=1/30;flies:step(now,1/30,world,patches,4,false,.9)end
 		local out=#flies.list
-		assert(out>0,"some by day")
+		assert(out>=3,"some by day: "..out)
+		assert(B.fly==.30 and B.spawn==.34 and B.handFloor==.24)
+		-- Golden light (.55) and dawn (.31): still flying; .31 spawns none.
+		for _=1,30*5 do now+=1/30;flies:step(now,1/30,world,patches,4,false,.55)end
+		assert(#flies.list==out,"golden light keeps them")
 		local before={}
-		for _,b in ipairs(flies.list)do before[b]=b.position end
-		now+=1/30;flies:step(now,1/30,world,patches,4,false,false)
-		for _,b in ipairs(flies.list)do
-			assert(b.mode=="leave","each one leaves")
-			local away=Vector3.new(b.target.X-world.camera.X,0,b.target.Z-world.camera.Z).Magnitude
-			local was=Vector3.new(before[b].X-world.camera.X,0,before[b].Z-world.camera.Z).Magnitude
-			assert(away>was and b.target.Y>before[b].Y+5,"up and away")
-		end
-		assert(#flies.list==out,"none dropped at once")
+		for _,b in ipairs(flies.list)do before[b]=true end
+		flies.list[1]=flies.list[1] -- (no change)
+		now+=1/30;flies:step(now,1/30,world,patches,4,false,.28)
+		local start=now
+		local order={}
+		for _,b in ipairs(flies.list)do assert(b.hand,"each one hands off");table.insert(order,b)end
+		table.sort(order,function(a,c)return a.colour<c.colour end)
+		for i,b in ipairs(order)do assert(near(b.hand,start+(i-1)*1.5,1e-9),"slot order, 1.5 s apart: "..i)end
+		local most,seen=0,{}
 		local gone
-		for i=1,30*10 do
+		for i=1,30*14 do
 			now+=1/30
-			local list=flies:step(now,1/30,world,patches,4,false,false)
-			for _,b in ipairs(list)do assert(b.mode=="leave","no new one at night")end
-			local parts=#list>0 and Sim.butterflyParts(Sim.butterflyRoot(list[1],now),Sim.butterflyFlap(list[1],now,true,false))
-			assert(not parts or #parts==3)
-			if #list==0 then gone=i/30;break end
+			local list=flies:step(now,1/30,world,patches,4,false,.28)
+			local glows=0
+			for _,b in ipairs(list)do
+				assert(before[b],"none new at dusk")
+				local look=Sim.butterflyLook(b,now)
+				local h=now-b.hand
+				if h<0 then assert(look.glow==nil and look.wing<.05,"waits its turn")
+				elseif h<B.handFade then
+					glows+=1
+					assert(look.glow and look.glow.size>=.2-1e-6 and look.glow.size<=.9+1e-6,"the glow comes up")
+					assert(near(look.wing,look.body,1e-6)or look.wing>=look.body,"wings fade")
+				else
+					glows+=1
+					assert(look.wing==1 and look.body==1 and b.mode=="glow","a firefly now")
+					assert(look.glow.transparency>=.1-1e-6 and look.glow.transparency<=1+1e-6)
+					if h<B.handEnd then assert(look.glow.transparency<=.55+1e-6,"pulsing .1 to .55")end
+					if h>=B.handEnd-.05 and h<B.handEnd then seen[b]=b.position.Y end
+				end
+			end
+			most=math.max(most,glows)
+			if #list==0 then gone=now-start;break end
 		end
-		assert(gone and gone<=Sim.Butterfly.leaveTime+.1,"gone within the leave time")
-		for _=1,30*5 do now+=1/30;flies:step(now,1/30,world,patches,4,false,false)end
-		assert(#flies.list==0,"still none")
-		for _=1,30*5 do now+=1/30;flies:step(now,1/30,world,patches,4,false,nil)end
-		assert(#flies.list>0,"day again: back")
+		assert(most<=4,"at most 4 glows: "..most)
+		for _,y in pairs(seen)do assert(y>=4+1.4 and y<=4+2.1,"a firefly 1.5 to 2 studs up: "..y)end
+		assert(gone and gone>=1.5*(out-1)+6-.1 and gone<=1.5*(out-1)+6+.1,"the last one gone 6 s after its turn: "..tostring(gone))
+		-- Still dusk: none spawn; past .34 they come back, fading their wings in over 1.2 s.
+		for _=1,30*5 do now+=1/30;flies:step(now,1/30,world,patches,4,false,.32)end
+		assert(#flies.list==0,"none spawn under .34")
+		now+=1/30;flies:step(now,1/30,world,patches,4,false,.35)
+		local b=flies.list[1]
+		assert(b and b.born==now,"spawns over .34")
+		assert(Sim.butterflyLook(b,now).wing>.99 and Sim.butterflyLook(b,now+.6).wing>0 and Sim.butterflyLook(b,now+1.2).wing==0,"fades in")
+	end)
+
+	test("butterflies at a jump past dusk (under .24): wings fade in .5 s, no glow; level 1's two glows; nil daylight is day",function()
+		local patches={Vector3.new(8,4,0),Vector3.new(16,4,0),Vector3.new(24,4,0)}
+		local world={camera=Vector3.new(0,10,10),stations={}}
+		local flies=Sim.Butterflies.new(5)
+		local now=0
+		for _=1,30*10 do now+=1/30;flies:step(now,1/30,world,patches,4,false,nil)end
+		assert(#flies.list>0,"nil: day")
+		now+=1/30;flies:step(now,1/30,world,patches,4,false,.12)
+		for _,b in ipairs(flies.list)do
+			assert(b.fade and not b.hand,"a fade, no hand-off")
+			assert(Sim.butterflyLook(b,now+.25).glow==nil and Sim.butterflyLook(b,now+.5).wing==1)
+		end
+		for _=1,16 do now+=1/30;flies:step(now,1/30,world,patches,4,false,.12)end
+		assert(#flies.list==0,"gone in .5 s")
+		-- Level 1: the cap is 2, so at most two glows.
+		local two=Sim.Butterflies.new(6)
+		now=0
+		for _=1,15*10 do now+=1/15;two:step(now,1/15,world,patches,2,false,.9)end
+		local most=0
+		for _=1,15*10 do
+			now+=1/15
+			local glows=0
+			for _,b in ipairs(two:step(now,1/15,world,patches,2,false,.25))do if Sim.butterflyLook(b,now).glow then glows+=1 end end
+			most=math.max(most,glows)
+		end
+		assert(most>=1 and most<=2,"level 1 glows: "..most)
 	end)
 
 	test("birds at night: a chirp lands none; one already sitting hops and sits out its stay; bubbles wait for day",function()
