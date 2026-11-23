@@ -51,8 +51,15 @@ function Strip.clock(left)
 	if minutes==0 then return "h",hours,0 end
 	return "hm",hours,minutes
 end
--- Whole hours to a reset `left` seconds away, rounded up (at least 1).
-function Strip.hoursUp(left)return math.max(1,math.ceil(left/3600))end
+-- A reset `left` seconds away in the egg's words (FABLE-REVIEW-R3 5.3: "Stamp 1 in 8 h" with 7 h 17 m left broke the
+-- floor rule): whole, short and tiny for a `key` family ("stampIn" or "questsIn": key.."HM", key, key.."M").
+function Strip.resetWords(left,key,vars)
+	local kind,hours,minutes=Strip.clock(left)
+	if kind=="ready"or kind=="soon"then kind,minutes="m",1 end
+	vars=table.clone(vars or {});vars.hours,vars.minutes=hours,minutes
+	local whole=if kind=="hm"then key.."HM"elseif kind=="h"then key else key.."M"
+	return get(whole,vars),get("short."..kind,vars),get("tiny."..kind,vars)
+end
 -- Seconds to the next day boundary at server time `now` (QuestState.dayStart / DailyContracts.dayOf, never the garden
 -- hour's offset clock).
 function Strip.resetIn(now)
@@ -117,20 +124,23 @@ function Strip.model(ctx)
 		local words="+"..tostring(card.reward)
 		stamp={id="stamp",text=get("stampReady",{count=card.nextIndex,stars=card.reward}),short=words,tiny=words,ready=true,outline=true}
 	elseif reset and today then
-		local hours=Strip.hoursUp(reset)
-		stamp={id="stamp",text=get("stampIn",{count=card.nextIndex,hours=hours}),short=get("short.h",{hours=hours}),tiny=get("tiny.h",{hours=hours})}
+		local text,short,tiny=Strip.resetWords(reset,"stampIn",{count=card.nextIndex})
+		stamp={id="stamp",text=text,short=short,tiny=tiny}
 	else
 		local words="+"..tostring(card.reward)
 		stamp={id="stamp",text=get("stampNext",{stars=card.reward}),short=words,tiny=words}
 	end
 	stamp.icon,stamp.stars,stamp.index="star",card.reward,card.nextIndex
 	local chip
-	if quests.left>0 then
+	if quests.ready>0 then
+		-- FABLE-REVIEW-R3 5.1: gold means ready, and says so.
+		chip={id="quests",text=get("questsReady",{count=quests.ready}),short=get("short.ready"),tiny=get("tiny.ready"),icon="quests",ready=true,outline=true}
+	elseif quests.left>0 then
 		chip={id="quests",text=if quests.left==1 then get("questsOne")else get("questsLeft",{left=quests.left}),
-			short=get("short.left",{left=quests.left}),tiny=tostring(quests.left),icon="quests",ready=quests.ready>0,outline=quests.ready>0}
+			short=get("short.left",{left=quests.left}),tiny=tostring(quests.left),icon="quests"}
 	elseif reset and today then
-		local hours=Strip.hoursUp(reset)
-		chip={id="quests",text=get("questsIn",{hours=hours}),short=get("short.h",{hours=hours}),tiny=get("tiny.h",{hours=hours}),icon="check",soft=true}
+		local text,short,tiny=Strip.resetWords(reset,"questsIn")
+		chip={id="quests",text=text,short=short,tiny=tiny,icon="check",soft=true}
 	else
 		chip={id="quests",text=get("questsDone"),short=get("short.done"),tiny=get("tiny.done"),icon="check",soft=true}
 	end
@@ -369,8 +379,10 @@ function Strip:set(model,width)
 		local gap=if fit.inset then 5 else 6
 		chip.text.Position=UDim2.fromOffset(left+fit.icon+gap,0);chip.text.Size=UDim2.new(1,-(left+fit.icon+gap),1,0)
 		chip.frame.BackgroundColor3=if spec.gold then Strip.Color.stars else Strip.Color.chip
-		chip.text.TextColor3=if spec.gold then Strip.Color.ink elseif spec.soft then Strip.Color.soft elseif spec.id=="stamp"then Strip.Color.stars else Strip.Color.text
-		chip.stroke.Color=if spec.gold or spec.outline then Strip.Color.gold else Strip.Color.ink
+		-- FABLE-REVIEW-R3 5.2: gold text only on a ready stamp (the Star icon stays gold); a ready outline is #FFC14D, 2 px.
+		chip.text.TextColor3=if spec.gold then Strip.Color.ink elseif spec.soft then Strip.Color.soft elseif spec.id=="stamp"and spec.ready then Strip.Color.stars else Strip.Color.text
+		chip.stroke.Color=if spec.outline then Strip.Color.stars elseif spec.gold then Strip.Color.gold else Strip.Color.ink
+		chip.stroke.Thickness=if spec.outline then 2 else 1.5
 		chip.gold=spec.gold==true
 		chip.frame:SetAttribute("StripText",fit.text)
 	end

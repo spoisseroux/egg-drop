@@ -80,9 +80,9 @@ src/client/DeckArt.lua,510,Menu,,yes
 src/client/DeckArt.lua,510,Open deck,,
 src/client/DeckArt.lua,511,Menu,,yes
 src/client/DeckArt.lua,511,Deck,,
-src/client/DeckKit.lua,921,Close,,yes
-src/client/DeckKit.lua,1805,toast:,,
-src/client/DeckKit.lua,1844,Back,,yes
+src/client/DeckKit.lua,1022,Close,,yes
+src/client/DeckKit.lua,1912,toast:,,
+src/client/DeckKit.lua,1955,Back,,yes
 src/client/DeckMenu.lua,91,Pocket menu,,yes
 src/client/DeckMenu.lua,94,0 Stars,,
 src/client/DeckMenu.lua,112,Play destinations,,
@@ -538,8 +538,8 @@ src/client/SnackHost.lua,103,snack:,,
 src/client/StampCardView.lua,251, of ,fragment (sentence built from parts),
 src/client/StationAttract.lua,146,Line,,
 src/client/ThingsPage.lua,128,Line,,
-src/client/TomorrowStrip.lua,71,short.,,
-src/client/TomorrowStrip.lua,71,tiny.,,
+src/client/TomorrowStrip.lua,78,short.,,
+src/client/TomorrowStrip.lua,78,tiny.,,
 src/client/ToyPanel.lua,19,Toys,,yes
 src/client/ToyPanel.lua,19,Choose one toy for this pet.,,
 src/client/ToyPanel.lua,52, unlocked!,fragment (sentence built from parts),

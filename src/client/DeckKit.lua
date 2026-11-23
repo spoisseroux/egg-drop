@@ -996,7 +996,14 @@ function Kit.buttonState(button)return buttons[button]end
 function Kit.setEnabled(button,enabled)
  local s=buttons[button];if not s then return end
  s.enabled=enabled~=false;button.Active=s.enabled or s.tappable==true;button.Interactable=button.Active
- if not s.enabled then s.pressed=false;s.hover=false;Spring.settle(s.content,"KitDrop")end;Kit.paintButton(button)
+ if not s.enabled then
+  s.pressed=false;s.hover=false;Spring.settle(s.content,"KitDrop")
+  -- QA R2 Studio check R3: the face's press scale (and any boing on the key) lands at 1 too, never mid-ring.
+  for _,name in ipairs({"PressScale","BoingScale"})do
+   local scale=(s.face and s.face:FindFirstChild(name))or button:FindFirstChild(name)
+   if scale then Spring.settle(scale);dropTween(scale,{Scale=true});scale.Scale=1 end
+  end
+ end;Kit.paintButton(button)
 end
 -- Stars store access: a disabled button that still takes a press (a short buy opens the
 -- "need more Stars" card). It keeps the disabled paint; only Active / Interactable change.
@@ -1921,6 +1928,10 @@ end
 Kit.RoundLip=2
 function Kit.roundKeyLip(button,disc)
  if disc==button then return nil end
+ -- FABLE-REVIEW-R3 1: the round Back and Help keys press too. Their Disc (with its glyph) carries a PressScale on the
+ -- beta place (the Face gate): .88 down in 60 ms, back on 5 Hz / .32, clamp 1.12 (Kit.pressScale); the KeyLip and the
+ -- hit rect stay still.
+ if Kit.FaceOn and not disc:FindFirstChildOfClass("UIScale")then node("UIScale",disc,{Name="PressScale",Scale=1})end
  local lip=node("Frame",button,{Name="KeyLip",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(.5,0,.5,Kit.RoundLip),Size=disc.Size,
   BorderSizePixel=0,BackgroundColor3=Kit.Color.cream,ZIndex=button.ZIndex-1,Active=false,Selectable=false})
  Kit.corner(lip,999)

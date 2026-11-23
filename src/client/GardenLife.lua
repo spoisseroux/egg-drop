@@ -71,20 +71,23 @@ Life.Glow=table.freeze({colour=hex("#E8FF8A"),brightness=2,maxDistance=110})
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 3), picked by perch index % 3; the wing is a full-colour file, the breast and tail
 -- are tinted decals.
 Life.BirdLooks=table.freeze({
-	[0]=table.freeze({name="Ember",body=hex("#EADBC2"),breast=hex("#D9713A"),head=hex("#7A6248"),tail=hex("#5E4A36"),beak=hex("#3A3028"),wing="birdWingEmber"}),
-	[1]=table.freeze({name="Slate",body=hex("#EBDCC4"),breast=hex("#E0A070"),head=hex("#6F8FB3"),tail=hex("#465E7E"),beak=hex("#2E2E33"),wing="birdWingSlate"}),
-	[2]=table.freeze({name="Moss",body=hex("#E6D788"),breast=hex("#A6A45E"),head=hex("#6E7A4A"),tail=hex("#4A5230"),beak=hex("#4A4038"),wing="birdWingMoss"}),
+	-- FABLE-REVIEW-R3 3: horn beaks (and legs), at least 35% brighter than the head (dark on dark was invisible).
+	[0]=table.freeze({name="Ember",body=hex("#EADBC2"),breast=hex("#D9713A"),head=hex("#7A6248"),tail=hex("#5E4A36"),beak=hex("#E2A548"),wing="birdWingEmber"}),
+	[1]=table.freeze({name="Slate",body=hex("#EBDCC4"),breast=hex("#E0A070"),head=hex("#6F8FB3"),tail=hex("#465E7E"),beak=hex("#E8B45A"),wing="birdWingSlate"}),
+	[2]=table.freeze({name="Moss",body=hex("#E6D788"),breast=hex("#A6A45E"),head=hex("#6E7A4A"),tail=hex("#4A5230"),beak=hex("#D98A4A"),wing="birdWingMoss"}),
 })
 Life.EyeInk=hex("#14110F")
 Life.ButterflySize=Vector3.new(.04,.035,.18) -- QA-R2-LOOK 4 (was .09, .08, .42 with the 1.2 span)
 Life.ButterflyWing=Vector3.new(.24,.29,.02)  -- span .52: 1 : 10 of the avatar, 1 : 3 of a pet
 Life.BirdMaterial=Enum.Material.Sand -- matte, fine grain (FABLE-REVIEW-R1 2; Fabric if it reads as gravel)
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 2): the three leaf emitters. The petal's tint follows the crowns (lime or pink).
--- QA-R2-LOOK 4: about x .52 (Animal Crossing sized: a leaf is 1 : 21 of the avatar, 1 : 6 of a pet).
+-- QA-R2-LOOK 4, FABLE-REVIEW-R3 4b: emitter Size keys. An emitter draws its leaf about 1.45 x Size (Studio check R3,
+-- beside a .5 cube), and these already allow for it: leaf A draws .24 studs at its peak (1 : 6 of a pet), B .21, the
+-- petal .17.
 Life.Leaves=table.freeze({
-	table.freeze({name="LifeLeafA",texture="leafA",size={.16,.24,.04,.22}}),
-	table.freeze({name="LifeLeafB",texture="leafB",size={.14,.21,.03,.19}}),
-	table.freeze({name="LifeLeafPetal",texture=nil,size={.11,.17,.03,.15}}),
+	table.freeze({name="LifeLeafA",texture="leafA",size={.11,.165,.03,.15}}),
+	table.freeze({name="LifeLeafB",texture="leafB",size={.10,.145,.02,.13}}),
+	table.freeze({name="LifeLeafPetal",texture=nil,size={.075,.12,.02,.105}}),
 })
 Life.PetalColours=table.freeze({lime=hex("#FFF6C2"),pink=hex("#FFB8D6")})
 Life.LeafAnchor=Vector3.new(4,2,4)
@@ -389,8 +392,8 @@ function Life:enable()
 	self.folder=folder
 	self.shown={}
 	self.birdPool,self.birdArt,self.flyPool,self.leafPool={},{},{},{}
-	-- Birds (round 3; FABLE-REVIEW-R1 2): body (the breast decal on its Front) and head in matte Sand, an ellipsoid beak,
-	-- two bead eyes with no shine, two wing plates, the tail plate. Eight parts. Each slot starts with a different wing file, so all three load at once.
+	-- Birds (round 3; FABLE-REVIEW-R1 2, R3 3): body (the breast decal on its Front) and head in matte Sand, a horn beak,
+	-- two bead eyes with no shine, two wing plates, the tail wedge, two legs. Ten parts. Each slot starts with a different wing file, so all three load at once.
 	local Face=Enum.NormalId
 	for slot=1,Sim.Caps.birds[1]do
 		local look=Life.BirdLooks[(slot-1)%3]
@@ -415,15 +418,19 @@ function Life:enable()
 			table.insert(art.wings,decal(plate,Face.Right,LifeArt.id(look.wing),white))
 			wings[i]=plate
 		end
-		local tail=part(folder,name.."Tail","Part",S.tail,false)
-		art.tail={decal(tail,Face.Front,LifeArt.id("birdTail"),look.tail),decal(tail,Face.Back,LifeArt.id("birdTail"),look.tail)}
+		-- FABLE-REVIEW-R3 3: a solid wedge (never a hair edge-on), turned over so its Bottom face is on top: the tail file there.
+		local tail=part(folder,name.."Tail","WedgePart",S.tail,look.tail)
+		tail.Material=Life.BirdMaterial
+		local tailFile=LifeArt.id("birdTail")
+		art.tail=if tailFile then{decal(tail,Face.Bottom,tailFile,look.tail)}else{}
 		art.wing=look.wing
 		local head=part(folder,name.."Head","Part",Vector3.one*S.head,look.head,Enum.PartType.Ball)
 		head.Material=Life.BirdMaterial
-		-- A flat-bottomed point (an upper mandible): a WedgePart, its thin edge forward; the spindle is the fallback.
-		local beak
-		if S.beakWedge then beak=part(folder,name.."Beak","WedgePart",S.beak,look.beak)
-		else beak=part(folder,name.."Beak","Part",S.beakSpindle,look.beak);spindle(beak)end
+		-- A bright rounded cone: a spindle half buried in the face, round from the front, a short point from the side.
+		local beak=part(folder,name.."Beak","Part",S.beak,look.beak)
+		spindle(beak)
+		local legs={}
+		for _,side in ipairs({"LegR","LegL"})do legs[side]=part(folder,name..side,"Part",S.leg,look.beak)end
 		self.birdPool[slot]={
 			bodyPart,
 			head,
@@ -431,6 +438,7 @@ function Life:enable()
 			eyes.EyeR,eyes.EyeL,
 			wings[1],wings[2],
 			tail,
+			legs.LegR,legs.LegL,
 		}
 		self.birdArt[slot]=art
 	end
@@ -697,7 +705,8 @@ function Life:step(dt)
 			used[pool]=true
 			if not(bird.still and still[bird.slot]==bird)then
 				local list=Sim.birdParts(bird.root,bird.wings,bird.flick,bird.phi,bird.turn,bird.tau,bird.tuck)
-				for i,p in ipairs(pool)do put(p,list[i])end
+				-- A nil frame (the legs in flight) parks that part: hidden.
+				for i,p in ipairs(pool)do if list[i]then put(p,list[i])else hide(p)end end
 			end
 			still[bird.slot]=if bird.still then bird else nil
 		end
@@ -836,6 +845,8 @@ end
 function Life:paintBird(slot,look)
 	local pool,art=self.birdPool[slot],self.birdArt[slot]
 	pool[1].Color,pool[2].Color,pool[3].Color=look.body,look.head,look.beak
+	pool[8].Color=look.tail
+	if pool[9]then pool[9].Color,pool[10].Color=look.beak,look.beak end
 	if art.breast then art.breast.Color3=look.breast end
 	for _,d in ipairs(art.tail)do d.Color3=look.tail end
 	if art.wing~=look.wing then
