@@ -10,7 +10,12 @@ local Quests=require(Shared.QuestCatalog)
 local Stamp=require(Shared.StampCard)
 local Strip={};Strip.__index=Strip
 Strip.Quests=#Quests.Pools -- one new daily quest a pool, every day
-Strip.Height=table.freeze({desktop=44,phone=36})
+Strip.Height=table.freeze({desktop=44,phone=48}) -- phone: v2 (beta 12 U7), the title row inside
+Strip.PhoneMin=240    -- a phone strip narrower than this is not drawn
+Strip.PhoneWhole=400  -- from this wide a phone strip has room for the whole words
+Strip.TitleY=11       -- the title row's middle
+Strip.ChipY=21
+Strip.ChipH=22
 Strip.Gap=table.freeze({desktop=8,phone=6})
 Strip.TitleW=132
 Strip.NarrowCard=420     -- a card narrower than this uses the short values at once
@@ -69,16 +74,22 @@ function Strip.fit(model,width,measure,options)
 	end
 	local out={phone=phone,h=if phone then Strip.Height.phone else Strip.Height.desktop,chips={}}
 	if phone then
+		-- Beta 12 U7 (strip v2): the title on its own row inside the strip, the chips under it, the words and the icon
+		-- centred in each chip. 400 wide or more: the whole words; less: the short values; under 240: no strip (nil).
+		if width<Strip.PhoneMin then return nil end
+		local short=options.short or width<Strip.PhoneWhole
 		local gap=Strip.Gap.phone
 		local colW=math.floor((width-12-gap*2)/3)
-		out.title={x=math.floor((width-Strip.TitleW)/2),w=Strip.TitleW}
+		out.title={x=25,w=width-25-10,y=Strip.TitleY}
 		for index,chip in ipairs(model.chips)do
 			local pick=nil
-			for _,v in ipairs(variants(chip))do
+			for _,v in ipairs(if short then {{chip.short,big}}else variants(chip))do
 				pick=v
 				if chipWidth(iconSize,measure(v[1],v[2]))<=colW then break end
 			end
-			out.chips[index]={x=6+(index-1)*(colW+gap),w=colW,text=pick[1],size=pick[2],icon=iconSize}
+			local inner=iconSize+5+measure(pick[1],pick[2])
+			out.chips[index]={x=6+(index-1)*(colW+gap),w=colW,y=Strip.ChipY,h=Strip.ChipH,text=pick[1],size=pick[2],icon=iconSize,
+				inset=math.max(4,math.floor((colW-inner)/2))}
 		end
 		return out
 	end
@@ -157,13 +168,17 @@ function Strip.new(parent,options)
 	make("UICorner",root,{CornerRadius=UDim.new(0,12)})
 	make("UIStroke",root,{Color=Strip.Color.ink,Thickness=2})
 	self.root,self.h,self.z=root,h,z
-	-- The title: at the left (desktop), or on a small tab centred on the top edge (phone).
+	-- The title: at the left (desktop), or on its own row inside the strip with a small moon mark (phone, v2).
 	if phone then
-		self.tab=make("Frame",root,{Name="TitleTab",BackgroundColor3=Strip.Color.well,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,0),
-			Position=UDim2.new(.5,0,0,-7),Size=UDim2.fromOffset(Strip.TitleW,16),ZIndex=z+1})
-		make("UICorner",self.tab,{CornerRadius=UDim.new(0,8)})
-		self.title=make("TextLabel",self.tab,{Name="Title",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Font=Enum.Font.FredokaOne,
-			TextSize=11,TextColor3=Strip.Color.soft,ZIndex=z+2})
+		local moon=make("Frame",root,{Name="Moon",BackgroundColor3=Strip.Color.soft,BorderSizePixel=0,AnchorPoint=Vector2.new(0,.5),
+			Position=UDim2.fromOffset(10,Strip.TitleY),Size=UDim2.fromOffset(10,10),ZIndex=z+1})
+		make("UICorner",moon,{CornerRadius=UDim.new(.5,0)})
+		local bite=make("Frame",moon,{Name="Bite",BackgroundColor3=Strip.Color.well,BorderSizePixel=0,Position=UDim2.fromOffset(4,-2),Size=UDim2.fromOffset(9,9),ZIndex=z+2})
+		make("UICorner",bite,{CornerRadius=UDim.new(.5,0)})
+		self.moon=moon
+		self.title=make("TextLabel",root,{Name="Title",BackgroundTransparency=1,AnchorPoint=Vector2.new(0,.5),Position=UDim2.fromOffset(25,Strip.TitleY),
+			Size=UDim2.new(1,-35,0,14),Font=Enum.Font.FredokaOne,TextSize=12,TextColor3=Strip.Color.soft,TextXAlignment=Enum.TextXAlignment.Left,
+			TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=z+1})
 	else
 		self.title=make("TextLabel",root,{Name="Title",BackgroundTransparency=1,Position=UDim2.fromOffset(12,0),Size=UDim2.fromOffset(Strip.TitleW,h),
 			Font=Enum.Font.FredokaOne,TextSize=12,TextColor3=Strip.Color.soft,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=z+1})
@@ -183,6 +198,7 @@ function Strip:set(model,width)
 	root.Size=UDim2.fromOffset(width,self.h)
 	local layout=Strip.fit(model,width,self.options.measure or Strip.measure,{phone=self.options.phone,short=self.options.short})
 	self.layout=layout
+	if not layout then root.Visible=false;return end -- a phone strip too narrow to read (v2): none at all
 	self.title.Text=model.title
 	self.title.Visible=layout.title.w>0
 	if self.wait then self.wait.Text=model.wait end
@@ -200,13 +216,17 @@ function Strip:set(model,width)
 			chip={frame=frame,stroke=stroke,icon=mark,text=text,id=spec.id}
 			self.chips[index]=chip
 		end
-		local chipH=self.h-(if self.options.phone then 10 else 12)
-		chip.frame.Position=UDim2.fromOffset(fit.x,math.floor((self.h-chipH)/2))
+		local chipH=fit.h or self.h-12
+		chip.frame.Position=UDim2.fromOffset(fit.x,fit.y or math.floor((self.h-chipH)/2))
 		chip.frame.Size=UDim2.fromOffset(fit.w,chipH)
 		chip.text.Text=fit.text;chip.text.TextSize=fit.size
 		-- The numbers alone (short values) are never sent for translation.
 		chip.text.AutoLocalize=tonumber(fit.text)==nil
-		chip.text.Position=UDim2.fromOffset(8+fit.icon+6,0);chip.text.Size=UDim2.new(1,-(8+fit.icon+6),1,0)
+		-- Phone (v2): the icon and the words centred in the chip; desktop: from the left.
+		local left=fit.inset or 8
+		chip.icon.Position=UDim2.new(0,left,.5,0)
+		local gap=if fit.inset then 5 else 6
+		chip.text.Position=UDim2.fromOffset(left+fit.icon+gap,0);chip.text.Size=UDim2.new(1,-(left+fit.icon+gap),1,0)
 		chip.frame.BackgroundColor3=if spec.gold then Strip.Color.stars else Strip.Color.chip
 		chip.text.TextColor3=if spec.gold or spec.id=="stamp"then(if spec.gold then Strip.Color.ink else Strip.Color.stars)else Strip.Color.text
 		chip.stroke.Color=if spec.gold then Strip.Color.gold else Strip.Color.ink

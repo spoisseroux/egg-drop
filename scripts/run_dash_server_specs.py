@@ -26,7 +26,7 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
-CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient", "DashSheets",
+CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient", "DashSheets", "DeckResultsLayout",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
           "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets"]
 SPECS += CLIENT
@@ -50,7 +50,7 @@ def client_modules():
                     "BearNeeds.lua", "NeedBubble.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
                     "JournalPromptPriority.lua", "FirstSpendGuide.lua",
                     # Onboarding v3 D+E: the nest in the garden and the See you tomorrow strip.
-                    "NestClient.lua", "TomorrowStrip.lua",
+                    "NestClient.lua", "TomorrowStrip.lua", "DeckResultsLayout.lua",
                     # Garden hour E: the pet mood rules and the face that feeds them.
                     "PetFace.lua", "PetExpression.lua", "PetIdleBeats.lua", "PetCoo*.lua", "CareFeedbackData.lua",
                     "PetNightSurfaces.lua", "PetMaterial*.lua"):

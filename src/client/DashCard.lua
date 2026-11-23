@@ -33,7 +33,7 @@ function Card.layout(W,H,lineH,buttons,strip)
 	for index,height in ipairs(lineH)do lines[index]={y=y,h=height};y+=height+2 end
 	y+=10
 	local stripY,stripH=nil,0
-	if strip then stripY,stripH=y,if compact then 36 else 44;y+=stripH+(if compact then 6 else 8)end
+	if strip then stripY,stripH=y,if compact then 48 else 44;y+=stripH+(if compact then 6 else 8)end -- 48: strip v2
 	local gap=10
 	local bw=math.floor((w-pad*2-gap*(buttons-1))/math.max(1,buttons))
 	return{compact=compact,pad=pad,w=w,h=math.min(H-8,y+bh+pad),titleH=titleH,lineW=w-pad*2,lines=lines,buttonY=y,bw=bw,bh=bh,gap=gap,text=if compact then 15 else 17,
