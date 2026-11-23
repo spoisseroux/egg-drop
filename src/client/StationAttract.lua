@@ -12,6 +12,9 @@
 -- "Used" is remembered for the session on this client (a station stops beckoning
 -- once its prompt was used); the saved coachMask bits make it permanent (learn).
 -- Client presentation only: no remotes, no saves, never touches the prompts.
+-- Onboarding v3 slice A (follow the Bear): options.tip(id) -> a one-line tip or nil, asked when a label first shows;
+-- the tip takes the label's line for IntroSeconds of being shown, once per station (options.tipShown(id) saves its
+-- own coach bit). options.focus() -> a station id: while a need points at it, only that station beckons.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
@@ -246,7 +249,7 @@ local function build(folder, id, base)
 	sparkles.Parent = sparkAt
 	return { id = id, base = base, spec = spec, anchor = anchor, ringPart = ringPart, glow = glow, shaft = shaft, surface = surface, ring = ring,
 		ripple = ripple, rippleStroke = rippleStroke, billboard = billboard, icon = icon, pointer = pointer, sparkles = sparkles,
-		label = label, labelName = labelName, labelLine = labelLine, intro = true, state = "hidden" }
+		label = label, labelName = labelName, labelLine = labelLine, introLine = labelLine.Text, intro = true, state = "hidden" }
 end
 
 -- Things to do: only the nearest unlearned station beckons. Pure: its id, or nil.
@@ -365,9 +368,35 @@ function Attract:ping(entry, now)
 	return true
 end
 
+-- Follow the Bear: a station's one-line tip, the first time its label shows. True while the tip holds the label.
+function Attract:paintTip(entry, shown, dt)
+	local tip = entry.tip
+	if not tip and shown and not entry.tipDone and self.options.tip then
+		local text = self.options.tip(entry.id)
+		if type(text) == "string" and text ~= "" then
+			tip = { shown = 0 }
+			entry.tip = tip
+			entry.labelLine.Text, entry.labelLine.Visible, entry.intro = text, true, nil
+			-- The tip is this station's introduction: the "what it is" line does not follow it.
+			self.introduced[entry.id] = true
+			if self.options.tipShown then self.options.tipShown(entry.id) end
+		end
+	end
+	if not tip then return false end
+	if shown then tip.shown += dt end
+	if tip.shown < Data.IntroSeconds then
+		entry.label.Enabled = shown
+		return true
+	end
+	entry.tip, entry.tipDone = nil, true
+	entry.labelLine.Text, entry.intro = entry.introLine or "", nil
+	return false
+end
+
 -- Name label: intro (name + line) until the station is introduced, then the name alone.
 function Attract:paintLabel(entry, shown, dt)
 	local id = entry.id
+	if self:paintTip(entry, shown, dt) then return end
 	local intro = not self.introduced[id]
 	if shown and intro then
 		self.introShown[id] = (self.introShown[id] or 0) + dt
@@ -395,10 +424,14 @@ function Attract:step(dt)
 	-- Things to do on (options.single): one beckon at a time, none while a coach line shows (options.quiet).
 	local single = self.options.single ~= nil and self.options.single() == true
 	local only = if single and not (self.options.quiet and self.options.quiet() == true) then Attract.nearest(self.stations, self.used, position) else nil
+	-- Follow the Bear: the station a need points at beckons alone (learned or not); the others keep the glow breath.
+	local focus = self.options.focus and self.options.focus() or nil
+	if focus ~= nil and not self.stations[focus] then focus = nil end
 	for id, entry in pairs(self.stations) do
 		local shown = visible and not (id == "Journal" and self.options.cradleBusy and self.options.cradleBusy())
 		local distance = position and (position - entry.base).Magnitude or nil
-		local mode = Attract.state(distance, self.used[id] == true or (single and id ~= only), shown)
+		local quiet = if focus then id ~= focus else self.used[id] == true or (single and id ~= only)
+		local mode = Attract.state(distance, quiet, shown)
 		if mode == "invite" and entry.state ~= "invite" then self:ping(entry, now) end
 		entry.state = mode
 		local active = mode == "beckon" or mode == "invite"

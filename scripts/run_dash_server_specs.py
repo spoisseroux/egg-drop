@@ -23,11 +23,12 @@ LIVE = sys.argv[3] if len(sys.argv) > 3 else "aeae2d9"
 ONLY = os.environ.get("DASH_SPECS", "").split()
 SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPrize", "DashGating", "DashHost",
          "DashOffParity", "DashCrossVersion", "CloseProgress"]
-# Client specs: the Dash, Things, Finds and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
+# Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient",
-          "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio"]
+          "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
+          "BearNeeds", "FollowBear"]
 SPECS += CLIENT
 STUBS = {
     "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
@@ -39,7 +40,10 @@ STUBS = {
 def client_modules():
     out = {f"client/{name}": source for name, source in STUBS.items()}
     for pattern in ("Dash*.lua", "Things*.lua", "Finds*.lua", "NoticeCards.lua", "Life*.lua", "GardenLife.lua", "Wind*.lua",
-                    "AmbientAudio.lua", "AmbientPerches.lua", "AliveBudget.lua"):
+                    "AmbientAudio.lua", "AmbientPerches.lua", "AliveBudget.lua",
+                    # Onboarding v3 A+B: the needs, the tour gate, the station label tips and the pill's quiet stage.
+                    "BearNeeds.lua", "NeedBubble.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
+                    "JournalPromptPriority.lua", "FirstSpendGuide.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

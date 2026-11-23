@@ -44,14 +44,15 @@ function Tips.blocked(g,started)
 	if g.railEmpty~=true then return "rail"end
 	return nil
 end
--- ctx: {mask, seen, totalWins, owned, firstEgg, dashOn, raced, playDates, returning, findsNear, shown, lastAt, now, gate}.
+-- ctx: {mask, seen, totalWins, owned, firstEgg, dashOn, raced, playDates, returning, findsNear, shown, lastAt, now, gate, needs}.
 -- The coach id due now and the NoticeCards id it reads from, or nil.
 function Tips.due(ctx)
 	if(ctx.owned or 0)<=0 or ctx.firstEgg~=true then return nil end
 	if(ctx.shown or 0)>=Tips.Max then return nil end
 	if ctx.lastAt and(ctx.now or 0)-ctx.lastAt<Tips.Gap then return nil end
 	local id,copy
-	if Coach.wants("parkInvite",ctx)and Coach.has(ctx.mask,"gardenIntro")and Coach.wants("park",ctx)then
+	-- Onboarding v3: with the need bubbles on, need 5 (the park) takes the park line's place.
+	if ctx.needs~=true and Coach.wants("parkInvite",ctx)and Coach.has(ctx.mask,"gardenIntro")and Coach.wants("park",ctx)then
 		id,copy="parkInvite","parkInvite"
 	elseif ctx.dashOn==true and ctx.raced~=true and not Coach.has(ctx.mask,"dashSeen")and Coach.wantsIntro("dashIntro",ctx)
 		and(ctx.returning==true or(ctx.playDates or 0)>=1)then
@@ -61,5 +62,40 @@ function Tips.due(ctx)
 	end
 	if not id or Tips.blocked(ctx.gate)then return nil end
 	return id,copy
+end
+
+-- ── Follow the Bear (ONBOARDING-V3-PLAN-2026-11-23 section 3, architect review) ───────────────────────────────────────
+-- Station label tips: one line on the station's own label, the first time the player comes within its label range.
+-- Their own bits, never hatch/style/companions/park (those drive funnel step 6 and the first-visit cards).
+Tips.TipBits=table.freeze({Eggs="tipHatch",Customize="tipStyle",Journal="tipCompanions",Park="tipPark",Nest="tipNest"})
+Tips.TipCopy=table.freeze({tipHatch="onb3.tip.hatch",tipStyle="onb3.tip.style",tipCompanions="onb3.tip.companions",tipPark="onb3.tip.park",tipNest="onb3.tip.nest"})
+Tips.IdleHint=20  -- standing still this long with an open need: the Bear chirps, the bubble hops, the prints replay
+Tips.IdleHints=3  -- at most this many per need, then it waits quietly
+Tips.IntroAfter=60 -- free in the garden this long: the garden step counts as done (gardenIntro), whatever else happened
+-- Which tip bit is due at this station now, or nil. ctx: {follow (the session's captured switch), mask, seen, totalWins,
+-- owned}. The nest's tip also needs its own part (Coach.allows), which the caller asks.
+function Tips.stationTip(station,ctx)
+	ctx=ctx or {}
+	local id=Tips.TipBits[station]
+	if ctx.follow~=true or id==nil then return nil end
+	return if Coach.wants(id,ctx)then id else nil
+end
+-- The idle hint. track = {} kept by the caller; key = what is open now (a need id, or "follow"), nil = nothing open.
+-- True when a hint is due now (and counts it): idleFor seconds standing still, at most IdleHints per key, IdleHint apart.
+function Tips.idleDue(track,key,idleFor,now)
+	if key==nil then return false end
+	if track.key~=key then track.key,track.count,track.lastAt=key,0,nil end
+	if track.count>=Tips.IdleHints or(idleFor or 0)<Tips.IdleHint then return false end
+	if track.lastAt and now-track.lastAt<Tips.IdleHint then return false end
+	track.count+=1;track.lastAt=now
+	return true
+end
+-- The garden step (gardenIntro) under follow the Bear: done when Say hi is done (the bubbles on) or the first trail is over
+-- (bubbles off: arrived, skipped or timed out), or after IntroAfter seconds free in the garden, whichever is first.
+-- ctx: {saidHi, trailOver, gardenFor, needs}.
+function Tips.followDone(ctx)
+	if(ctx.gardenFor or 0)>=Tips.IntroAfter then return true end
+	if ctx.needs==true then return ctx.saidHi==true end
+	return ctx.trailOver==true
 end
 return table.freeze(Tips)

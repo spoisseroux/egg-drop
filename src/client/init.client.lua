@@ -4757,6 +4757,69 @@ do
   clientUI.coach.options.things=things
   clientUI.attract.options.single=Things.on
   clientUI.attract.options.quiet=function()return clientUI.coach.garden~=nil end
+  -- Onboarding v3 slices A and B (BearNeeds): follow the Bear and the need bubbles. Nothing with the build ceiling off;
+  -- with the switches off only the watching runs (the tour, the pill and the tips stay exactly as before).
+  local okNeeds,needsProblem=pcall(function()
+   local Onboard=require(ReplicatedStorage.Shared.Onboard)
+   if not Onboard.ceiling()then return end
+   local Needs=require(script.BearNeeds)
+   local function petName()local shown=roomView.shownPet;local pet=shown and Pets.byId[shown.id];return pet and pet.name or "Bear"end
+   local function petPart()
+    local pet=roomView.pet;local model=pet and not pet.destroyed and pet.model
+    if not(model and model.Parent)then return nil end
+    return model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart",true)
+   end
+   local function nestAt()local f=clientUI.nestPlace;local at=type(f)=="function"and f()or nil;return if typeof(at)=="Vector3"then at else nil end
+   local needs
+   local bubble=require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),adornee=petPart,
+    reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+    onTap=function()if needs then needs:tap()end end})
+   needs=Needs.new({bubble=bubble,state=function()return nurseryState end,owned=function()return board:GetAttribute("OwnedPets")or 0 end,
+    mask=function()return clientUI.coach.mask end,mark=function(id)clientUI.coach:mark(id)end,finishIntro=function()clientUI.coach:finishGarden()end,
+    follow=function()return Onboard.sessionFollow()end,needs=function()return Onboard.on("needs")end,returning=function()return things.returning==true end,
+    gate=function()local since=clientUI.coach.roomSince;return gate(if since then os.clock()-since else 0)end,
+    greeting=function()return roomView.focusing==true end,inPark=function()return Attract.parkMember(rootPosition())end,
+    nest=function()return nestAt()~=nil end,park=function()return Attract.parkAnchor()~=nil end,
+    place=function(where)
+     if where=="Eggs"then local entry=clientUI.attract.stations.Eggs;return entry and entry.base,Copy.get("r5.station.Eggs.name")end
+     if where=="Park"then local from=rootPosition();return from and parkGate(from),Copy.get("park.name")end
+     if where=="Nest"then return nestAt(),Copy.get("onb3.nest.title")end
+     return nil
+    end,
+    trail=function(target)return trail:start(target)end,trailActive=function()return trail:active()end,
+    sayHi=function()return roomView:interactPet()end,playDeck=function()return things.act("deck")end,
+    quiet=function(on)if clientUI.firstSpend then clientUI.firstSpend:setQuiet(on)end end,
+    chirp=function()local shown=roomView.shownPet;if shown and shown.cue then audio:play(shown.cue,1.1,.3)end end,
+    react=function(id)if id=="needHi"or id=="needPark"then roomView:cheerPet("cheer")end end})
+   clientUI.needs=needs
+   clientUI.coach.options.follow=function()return Onboard.sessionFollow()end
+   -- Station label tips: once each, their own bits, only for a session that follows the Bear.
+   clientUI.attract.options.tip=function(id)
+    local bit=Tips.stationTip(id,{follow=needs.follow,mask=clientUI.coach.mask,seen=clientUI.coach.seen,totalWins=clientUI.coach.totalWins,
+     owned=board:GetAttribute("OwnedPets")or 0})
+    if not bit or not Coach.allows(bit)then return nil end
+    return Copy.get(Tips.TipCopy[bit],{pet=petName()})
+   end
+   clientUI.attract.options.tipShown=function(id)local bit=Tips.TipBits[id];if bit then clientUI.coach:mark(bit)end end
+   clientUI.attract.options.focus=function()return needs:focus()end
+   -- The park line gives way to need 5; no rail line while the Bear's prints run.
+   local due=things.due
+   function things.due(ctx)
+    if needs.follow and trail:active()then return nil end
+    ctx.needs=Onboard.on("needs")
+    return due(ctx)
+   end
+   local intent=roomView.petContactIntent
+   local saved=intent.d.saved
+   intent.d.saved=function(...)needs:saidHi();return saved(...)end
+   local beat
+   beat=RunService.Heartbeat:Connect(function(dt)
+    local good,why=pcall(needs.step,needs,os.clock(),dt)
+    if not good then warn("[Onboard] needs: "..tostring(why));beat:Disconnect();bubble:set(nil,false);bubble.gui.Enabled=false end
+   end)
+   gui.Destroying:Connect(function()beat:Disconnect();bubble:destroy()end)
+  end)
+  if not okNeeds then warn("[Onboard] not mounted: "..tostring(needsProblem))end
   -- Twice a second while on: the race's station follows the live gate, and a race joined clears the New dot.
   local running=0
   local function sync()
