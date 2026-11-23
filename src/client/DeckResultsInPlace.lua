@@ -184,6 +184,19 @@ function View:paint(data)
   self.statsGains.Text=table.concat(lines,"\n");Kit.localizeRich(self.statsGains)
   self.statsGains.Position=UDim2.fromOffset(pad,y+78);self.statsGains.Size=UDim2.fromOffset(lw-2*pad,#parts*17+4)
  end
+
+ -- Onboarding v3 slice E: the See you tomorrow strip at the foot of the payout rows (they scroll, so it never sits
+ -- over the near-miss item or the buttons); a narrow pane, so the short values.
+ local tomorrow=self.owner:tomorrowModel()
+ if tomorrow then
+  if not self.tomorrow then
+   self.tomorrow=require(script.Parent.TomorrowStrip).new(self.payout,{phone=true,short=true})
+   self.tomorrow:enter(self.owner.TomorrowDelay or 1,self:reduced())
+  end
+  local sy=if #parts>0 then y+78+#parts*17+12 else y+64
+  self.tomorrow.root.Position=UDim2.fromOffset(pad,sy+8)
+  self.tomorrow:set(tomorrow,lw-2*pad)
+ elseif self.tomorrow then self.tomorrow:destroy();self.tomorrow=nil end
  local rw=self.view.right.w
  local tight=self.tightGoals==true
  local gy=if tight then 21 else 28;local done,count=0,0

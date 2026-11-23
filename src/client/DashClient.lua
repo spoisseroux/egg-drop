@@ -690,7 +690,10 @@ function Client:showResults(seat)
 	seat.closeAt=os.clock()+Client.ResultSeconds
 	local title,lines=Results.words(seat.result,self:saved(),seat.before)
 	local function done()self:endSeat()end
-	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,
+	-- Onboarding v3 slice E: the See you tomorrow strip (nil with the nest off).
+	local strip=nil
+	if self.d.strip then local ok,model=pcall(self.d.strip);if ok then strip=model end end
+	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,
 		buttons={{name="Again",text=UICopy.get("dash.again"),primary=true,act=function()
 			self:endSeat()
 			if not self.pending then self:send(if seat.trial then "trial"else "join",if seat.trial then nil else seat.mode)end
