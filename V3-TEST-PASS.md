@@ -4,7 +4,7 @@ Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test 
 
 Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the game back as it was, `clear` follows the remote config. Use `off` to tell which piece caused a problem.
 
-## On the beta now (beta (10), runtime e5edeb0)
+## On the beta now (beta (11), runtime 9272c61)
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
@@ -21,6 +21,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | 12 | **The Bear's Sleepy Nest + welcome week** | (10) | Next to the arch: "Ready in 8 h", walk up and Tuck in. After 8 h, Hatch: a gift (day 1 a beanie + 10 Stars ... day 7 a Nest Charm + 25), the next egg starts; HUD chip counts down. Never pays twice; nothing to buy | `/onboard nest off` |
 | 13 | **"See you tomorrow" strip** | (10) | On deck results and Dash results: nest time, tomorrow's stamp Stars, new quests | `/onboard nest off` |
 | 14 | **Waterfall layers** | (10) | Strands, white edges, foam, ripple rings, mist (fades near the camera), a faint rainbow | `/aero off` |
+| 15 | **Dewdrop fruit** | (11) | Under the lime trees: honey-coral drops with a leaf cap; in a strong gust some fall, bounce and roll, rest, then fade. Walk your pet near one: it hops. Two players see the same drops | `/alive life off` |
 
 ## Built, not on the beta yet
 
