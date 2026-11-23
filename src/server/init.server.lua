@@ -38,6 +38,7 @@ local GardenState = require(script.GardenState)
 local GardenLayout = require(ReplicatedStorage.Shared.GardenLayout)
 local GardenActivity = require(ReplicatedStorage.Shared.GardenActivity)
 local GardenWalkability=require(ReplicatedStorage.Shared.GardenWalkability)
+local PetCatchup=require(ReplicatedStorage.Shared.PetCatchup)
 local GardenPathPlanner=require(ReplicatedStorage.Shared.GardenPathPlanner)
 local PetAppearance = require(script.PetAppearance)
 local StoreService = require(script.StoreService)
@@ -119,6 +120,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.FindsConfig
 task.spawn(function()local ok,problem=pcall(function()require(script.GardenHourConfig).start()end);if not ok then warn("[Hour] config not started: "..tostring(problem))end end)
 -- Island edges off switch (IslandBoundsConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.IslandBoundsConfig).start()end);if not ok then warn("[Bounds] config not started: "..tostring(problem))end end)
+-- Pet catch-up off switch (CatchupConfig, beta (12) QA G1): the same way, one key. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.CatchupConfig).start()end);if not ok then warn("[Catchup] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -208,6 +211,7 @@ local function petState(board)
 			or(today==state.petDay and state.petCount>=Nursery.PetDailyCap)}
 end
 local gardenScene
+local sceneWatch -- the one DescendantAdded listener of the current garden scene (beta and Studio only)
 local function petAnchor(state)
 	local room=workspace:FindFirstChild("EggDropLounge")
 	local floor=room and room:FindFirstChild("Floor")
@@ -231,6 +235,21 @@ gardenScene=function()
  if not room then return nil end
  if not wanderScene or wanderScene.room~=room then
   wanderScene={room=room,wet={},stations={},solids={}}
+  -- Beta (12) QA G1 (code review 3): on the beta and in Studio only (the catch-up or onboarding v3 ceiling), a blocked
+  -- or wet footprint added after this cache was built (the plaza nest's GardenBlockedRegion box) joins the wet list,
+  -- so pet paths, wanders and catch-up landings reject it. The attribute must be set before the part is parented.
+  -- One listener: a rebuilt scene disconnects the old one.
+  if sceneWatch then sceneWatch:Disconnect();sceneWatch=nil end
+  local watch=false
+  pcall(function()watch=PetCatchup.ceiling()or require(ReplicatedStorage.Shared.Onboard).ceiling()end)
+  if watch then
+   local scene=wanderScene
+   sceneWatch=room.DescendantAdded:Connect(function(node)
+    if not node:IsA("BasePart")then return end
+    if node:GetAttribute("GardenWetRegion")~=true and node:GetAttribute("GardenBlockedRegion")~=true then return end
+    if wanderScene==scene and not table.find(scene.wet,node)then table.insert(scene.wet,node)end
+   end)
+  end
   for _,node in ipairs(room:GetDescendants())do
    -- Merged island meshes span the world; their bounds would block every rest path.
    -- Park colliders (players only) never block pet rest paths; pets are visuals.
@@ -269,16 +288,7 @@ local function validWander(input,target,from)
  elseif workspace:Raycast(from+lift,grounded-from,params)then return nil end
  return grounded
 end
-local garden = GardenState.new({sharedToyEnabled=false,now=function()return workspace:GetServerTimeNow()end,
-	publish=function(snapshot)
-		gardenShared:SetAttribute("Snapshot",HttpService:JSONEncode(snapshot))
-		for player,board in pairs(boards)do local actor=snapshot.actors[tostring(player.UserId)];board.careHeld=actor~=nil and actor.care~=nil;board.folder:SetAttribute("CareMode",if actor and actor.care then actor.mode else nil)end
-	end,
-    planPath=function(from,to,velocity,speed,minimum,yaw,via,terminal)
-        local scene=gardenScene()
-        return GardenPathPlanner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,if scene then scene.wet else {})
-    end,
-    resolveTarget=function(target,from)
+local function resolveGardenTarget(target,from)
         local scene=gardenScene();if not scene then return target,false end
         local resolved=GardenWalkability.resolveAnchor(target,scene.wet)
         if not resolved then return from,true end
@@ -289,7 +299,40 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
         local grounded=Vector3.new(resolved.X,hit.Position.Y+.025,resolved.Z)
         if not GardenWalkability.segmentAllowed(grounded,grounded,scene.wet)then return from,true end
         return grounded,(grounded-target).Magnitude>.001
+end
+-- Beta (12) QA G1: where a catching-up pet lands. Rings round the owner's ground anchor (PetCatchup.candidates, behind
+-- the owner first); each must resolve to walkable ground where it stands (no `from` fallback: nil is a refusal), stay
+-- within Rise of the anchor's height, and pass PetCatchup.clear (safe ground, island walls, the course and pad while a
+-- race is live). nil when none does: the pet stays and GardenState retries later.
+local function catchupLanding(input,racing)
+	local anchor=input and input.anchor
+	if typeof(anchor)~="Vector3"then return nil end
+	-- With no garden scene nothing can be checked: refuse (resolveGardenTarget would hand the spot back unchecked).
+	if not gardenScene()then return nil end
+	local facing=nil
+	local root=input.root
+	if root and root.Parent then local look=root.CFrame.LookVector;facing=Vector3.new(look.X,0,look.Z)end
+	for _,candidate in ipairs(PetCatchup.candidates(anchor,facing))do
+		local spot=resolveGardenTarget(candidate,nil)
+		if typeof(spot)=="Vector3"and PetCatchup.flat(spot,candidate)<=.5 and math.abs(spot.Y-anchor.Y)<=PetCatchup.Rise
+			and PetCatchup.clear(spot.X,spot.Z,racing,anchor)then return spot end
+	end
+	return nil
+end
+local garden = GardenState.new({sharedToyEnabled=false,now=function()return workspace:GetServerTimeNow()end,
+	publish=function(snapshot)
+		gardenShared:SetAttribute("Snapshot",HttpService:JSONEncode(snapshot))
+		for player,board in pairs(boards)do local actor=snapshot.actors[tostring(player.UserId)];board.careHeld=actor~=nil and actor.care~=nil;board.folder:SetAttribute("CareMode",if actor and actor.care then actor.mode else nil)end
+	end,
+    planPath=function(from,to,velocity,speed,minimum,yaw,via,terminal)
+        local scene=gardenScene()
+        return GardenPathPlanner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,if scene then scene.wet else {})
     end,
+    resolveTarget=resolveGardenTarget,
+    -- Beta (12) QA G1: pets catch up (PetCatchup; off unless its switch is on).
+    catchup=function()return PetCatchup.on()end,
+    landing=catchupLanding,
+    warn=warn,
     validToyPath=function(path)
         local scene=gardenScene();return scene~=nil and GardenWalkability.pathAllowed(path,scene.wet)
     end,
@@ -785,6 +828,17 @@ local function addPlayer(player)
 		return
 	end
 	loading[player] = true
+	-- Beta (12) QA T1 (code review 4): only the owner's fresh-save pointer is ever read; everyone else is player_<id>
+	-- with no extra read. isOwner is asked only where the gate is open (never on live).
+	do
+		local ProgressKey = require(script.ProgressKey)
+		local owner = false
+		if ProgressKey.enabled() then
+			local ok, result = pcall(require(ReplicatedStorage.Shared.SimCheck).isOwner, player)
+			owner = ok and result == true
+		end
+		ProgressKey.markOwner(player.UserId, owner)
+	end
 	local profile = Progress.load(player.UserId)
 	local nursery = Nursery.load(player.UserId, profile)
 	-- v2 S2: the pet that earns stat XP for quests, stamps and book milestones.
@@ -853,8 +907,18 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.IslandBoundsConfig).command(message) end) end)
 		-- "/finds <on|off|clear>": the Garden finds switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.FindsConfig).command(message) end) end)
+		-- "/finds now": one find at once near you, past the timer (beta (12) QA G2), this server only.
+		player.Chatted:Connect(function(message)
+			if not garden.findsHost or not garden.findsHost.parseNow(message) then return end
+			pcall(garden.findsHost.now, garden.findsHost, board)
+		end)
 		-- "/hour <on|off|clear>" and "/hour at <0-3599>": the garden hour switch and its test clock, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.GardenHourConfig).command(message) end) end)
+		-- "/catchup <on|off|clear>": pets hop to their owner when far or stuck (beta (12) QA G1), this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.CatchupConfig).command(message) end) end)
+		-- "/freshsave" and "/freshsave restore": the owner's next join is a brand-new save, or the old one again
+		-- (beta (12) QA T1). One pointer write and a kick; FreshSave refuses unless ProgressKey's gate is open.
+		player.Chatted:Connect(function(message) pcall(function() require(script.FreshSave).command(player, message) end) end)
 		player.Chatted:Connect(function(message)
 			local amount = type(message) == "string" and tonumber(string.match(message, "^%s*/stars%s+(%d+)%s*$"))
 			if not amount or boards[player] ~= board or board.closing then return end
@@ -867,11 +931,16 @@ local function addPlayer(player)
 		end)
 	end
 	-- Private beta: the owner's test save gets a one-time 1,000 Star top-up (the Bunny is 400).
+	-- Not on a fresh test save (beta (12) QA T1): a first-session test starts with no Stars, so only the base key gets it.
+	-- Checked again on every try: a refused first load (unreadable pointer) reloads later onto whatever key resolves.
 	if game.PlaceId == Nursery.BetaPlaceId and require(ReplicatedStorage.Shared.SimCheck).isOwner(player) then
+		local baseKey = require(script.ProgressKey).base(player.UserId)
 		task.spawn(function()
 			for _ = 1, 30 do
 				if boards[player] ~= board or board.closing then return end
-				if canProgress(board) and not board.nurseryBusy and not board.nursery.busy and not board.nursery.pending then
+				if canProgress(board) and board.nursery.key ~= baseKey then return end
+				if canProgress(board) and not board.nurseryBusy and not board.nursery.busy and not board.nursery.pending
+					and board.nursery.key == baseKey then
 					board.nurseryBusy = true
 					local ok, why = Nursery.betaGrantStars(board.nursery, "beta:stars:2026-11-20", 1000)
 					board.nurseryBusy = false

@@ -20,6 +20,7 @@ local Shared=ReplicatedStorage:WaitForChild("Shared")
 local Values=require(Shared:WaitForChild("WorldAero"))
 local Hour=require(Shared:WaitForChild("GardenHour"))
 local Additions=require(script.Parent.AeroAdditions)
+local Kit=require(script.Parent.AeroKit)
 
 local World={}
 World.__index=World
@@ -96,6 +97,45 @@ function World.new(options)
 	end
 	self.defer,self.delay=options.defer or task.defer,options.delay or task.delay
 	self.additions=options.additions or Additions
+	-- The world kit (AeroKit): split crowns, falls sheets and rocks. Its templates exist only where the ceiling passes.
+	self.kit=options.kit or Kit
+	self.hidden={} -- what the kit hides (merged crowns and falls, Tumble sheet beams): only the kit's drop restores it
+	self.kitData=options.kitData or function()
+		local module=Shared:FindFirstChild("WorldAeroKit")
+		return module and require(module)
+	end
+	self.templates=options.templates or function()return ReplicatedStorage:FindFirstChild(Kit.Templates)end
+	self.spawn=options.spawn or task.spawn
+	-- The crowns' near fade (AeroKit.fader): on only in Room mode with the roam camera (a deck, a focus or a Dash race take
+	-- the camera: Scriptable). nil in specs unless given.
+	self.fade=options.fade
+	if self.fade==nil and options.world==nil then
+		local RunService=game:GetService("RunService")
+		self.fade={
+			active=function()
+				local camera=workspace.CurrentCamera
+				if not camera or camera.CameraType~=Enum.CameraType.Custom then return false end
+				local boards,player=ReplicatedStorage:FindFirstChild("EggDropBoards"),Players.LocalPlayer
+				local board=boards and player and boards:FindFirstChild(tostring(player.UserId))
+				return board~=nil and board:GetAttribute("Mode")=="Room"
+			end,
+			camera=function()local camera=workspace.CurrentCamera;return camera and camera.CFrame.Position end,
+			root=function()
+				local character=Players.LocalPlayer and Players.LocalPlayer.Character
+				local root=character and character:FindFirstChild("HumanoidRootPart")
+				return root and root.Position
+			end,
+			connect=function(fn)return RunService.Heartbeat:Connect(fn)end,
+		}
+	end
+	-- true when every template's mesh (and texture) loaded; yields.
+	self.preload=options.preload or function(folder)
+		local good=true
+		game:GetService("ContentProvider"):PreloadAsync(folder:GetChildren(),function(_,status)
+			if status~=Enum.AssetFetchStatus.Success then good=false end
+		end)
+		return good
+	end
 	self.warn=options.warn or warn
 	self.reducedChanged=options.reducedChanged or function()return GuiService:GetPropertyChangedSignal("ReducedMotionEnabled")end
 	self.reduced=options.reduced or function()
@@ -209,7 +249,8 @@ function World:paintPart(part)
 				if child:IsA("SurfaceAppearance")then self:set(self.surfaces,child,"Color",value)end
 			end
 		elseif key=="Color"and part:GetAttribute("CareStatusSurface")==true
-			or key=="Transparency"and part:GetAttribute("WorldMotion")=="pulse"then
+			or key=="Transparency"and part:GetAttribute("WorldMotion")=="pulse"
+			or key=="Transparency"and self.hidden[part]~=nil then
 			continue
 		elseif key=="Color"and kind=="glow_warm"then
 			-- The garden hour's glow (paintGlow) if it is on.
@@ -223,6 +264,8 @@ end
 function World:paintCrown(part)
 	local crown=Values.Crowns[self.switch.trees()]
 	if not crown or self.refused[part]then return end
+	-- LOOK-R2 1: a kit crown with its own matte lime SurfaceAppearance needs nothing for lime (coral still goes flat).
+	if crown.Texture and part:GetAttribute("AeroMatteLime")==true and part:FindFirstChildOfClass("SurfaceAppearance")then return end
 	local skins={}
 	for _,child in ipairs(part:GetChildren())do if child:IsA("SurfaceAppearance")then table.insert(skins,child)end end
 	if not crown.Flat then
@@ -284,6 +327,11 @@ function World:queue(item)
 				if not ok then self:complain(problem)end
 			end
 		end
+		-- A merged part or sheet beam that arrived late (streaming, a beam added after its anchor) is hidden too.
+		if self.built then
+			local ok,problem=pcall(self.hideMerged,self)
+			if not ok then self:complain(problem)end
+		end
 	end)
 end
 function World:inside(item)
@@ -297,7 +345,7 @@ function World:sweep()
 	for _,item in ipairs(gone)do self:restoreItem(self.surfaces,item)end
 end
 function World:watch(folder)
-	if folder.Name~="World"and folder.Name~="WaterFlow"or self.folders[folder.Name]==folder then return end
+	if folder.Name~="World"and folder.Name~="WaterFlow"and folder.Name~=Kit.Folder or self.folders[folder.Name]==folder then return end
 	-- A new folder takes over from the one before it: that one's items get their own looks back.
 	local old=self.folders[folder.Name]
 	if old then self:unwatch(old);self:queue(nil)end
@@ -311,6 +359,11 @@ function World:watch(folder)
 		local ok,problem=pcall(self.paint,self,item)
 		if not ok then self:complain(problem)end
 	end
+	-- A new World or WaterFlow under a standing kit: hide what the kit replaces in it too.
+	if self.built and folder.Name~=Kit.Folder then
+		local ok,problem=pcall(self.hideMerged,self)
+		if not ok then self:complain(problem)end
+	end
 end
 function World:unwatch(folder)
 	for _,link in ipairs(self.folderLinks[folder]or{})do link:Disconnect()end
@@ -321,6 +374,7 @@ function World:bind(room)
 	for folder in pairs(table.clone(self.folderLinks))do self:unwatch(folder)end
 	for _,link in ipairs(self.roomLinks)do link:Disconnect()end
 	table.clear(self.roomLinks);table.clear(self.late)
+	self:dropKit()
 	self:restoreAll(self.surfaces)
 	table.clear(self.glows)
 	table.clear(self.refused)
@@ -336,6 +390,7 @@ function World:bind(room)
 		if left then self:watch(left)end
 	end))
 	for _,child in ipairs(room:GetChildren())do self:watch(child)end
+	self:buildKit()
 	self:buildAdditions()
 end
 function World:items(records)
@@ -359,7 +414,7 @@ function World:tuneAdditions(added)
 end
 function World:buildAdditions()
 	if self.added or self.level()>=World.DropLevel then return end
-	local ok,added=pcall(self.additions.build,{parent=self.world,data=self.data})
+	local ok,added=pcall(self.additions.build,{parent=self.world,data=self.data,kit=self.built and self.built.data})
 	if not ok then self:complain(added);return end
 	self.added=added
 	self:tuneAdditions(added)
@@ -376,6 +431,91 @@ function World:dropAdditions()
 	local added=self.added
 	self.added=nil
 	if added then pcall(added.destroy)end
+end
+
+-- The world kit: built after the room's folders are watched (so its parts are painted as they arrive), then the merged
+-- meshes and beams it replaces are hidden in the same step, so no frame shows a garden without trees. Dropped with the
+-- room, Aero off or budget level 2: hidden things back first, then the kit goes, in one step. A kit that cannot build
+-- (no templates: not this place; no data) leaves the merged garden as it is.
+function World:hideMerged()
+	local built,room=self.built,self.room
+	if not(built and room)then return end
+	-- The folders this layer watches: a new World that arrived before the old one left is the one that counts.
+	local meshes=self.folders.World
+	for _,name in ipairs(built.data.hides or {})do
+		local part=meshes and meshes:FindFirstChild(name)
+		if part and part:IsA("BasePart")then
+			-- A part the look also paints (the bubbles' Transparency): its own value back first, so the hide keeps the
+			-- original and the paint comes back over it when the kit goes (dropKit repaints).
+			local painted=self.surfaces[part]
+			if painted and painted.was.Transparency~=nil and self.hidden[part]==nil then
+				pcall(function()part.Transparency=painted.was.Transparency end)
+				painted.was.Transparency,painted.now.Transparency,painted.want.Transparency=nil,nil,nil
+				if next(painted.was)==nil and #painted.parked==0 then self.surfaces[part]=nil end
+			end
+			self:set(self.hidden,part,"Transparency",1)
+		end
+	end
+	local flow=self.folders.WaterFlow
+	for _,beam in ipairs(flow and flow:GetDescendants()or {})do
+		if beam:IsA("Beam")and Values.Waterfall.Tiers[beam.Name]then self:set(self.hidden,beam,"Enabled",false)end
+	end
+end
+-- The kit's meshes are fetched first (PreloadAsync on the templates): nothing is hidden until every one has loaded, so a
+-- join never shows a bare garden, and a mesh that fails (moderated, offline) leaves the merged garden as it is. The
+-- additions are rebuilt once the kit stands, so the falls layers fit its sheets.
+function World:buildKit()
+	if self.built or not self.room or self.level()>=World.DropLevel then return end
+	-- One fetch per turn and room; a new room or a new switch turn starts its own.
+	local loading=self.kitLoading
+	if loading and loading.turn==self.turn and loading.room==self.room then return end
+	local templates=self.templates()
+	local ok,data=pcall(self.kitData)
+	if not(templates and ok and data)then return end
+	local turn,room=self.turn,self.room
+	local token={turn=turn,room=room}
+	self.kitLoading=token
+	self.spawn(function()
+		local fetched,loaded=pcall(self.preload,templates)
+		if self.kitLoading==token then self.kitLoading=nil end
+		if turn~=self.turn or room~=self.room or self.built or not self.enabled then return end
+		if not(fetched and loaded==true)then self:complain(if fetched then "kit meshes did not load" else loaded);return end
+		if self.level()>=World.DropLevel then return end
+		self:standKit(data,templates,turn)
+	end)
+end
+function World:standKit(data,templates,turn)
+	local ok,built=pcall(self.kit.build,{data=data,templates=templates,parent=self.room,fade=self.fade})
+	if not ok then self:complain(built);return end
+	self.built=built
+	self:watch(built.folder)
+	local hid,problem=pcall(self.hideMerged,self)
+	if not hid then self:complain(problem);self:dropKit();return end
+	if self.added then self:dropAdditions();self:buildAdditions()end
+	local function check()
+		if turn~=self.turn or self.built~=built then return end
+		if self.level()>=World.DropLevel then self:dropKit();return end
+		self.delay(World.Interval,check)
+	end
+	self.delay(World.Interval,check)
+end
+function World:dropKit()
+	local was=self:items(self.hidden)
+	self:restoreAll(self.hidden)
+	if self.enabled and self.room then
+		for _,item in ipairs(was)do
+			if item:IsA("BasePart")and self.room:IsAncestorOf(item)then pcall(self.paintPart,self,item)end
+		end
+	end
+	local built=self.built
+	self.built=nil
+	if not built then return end
+	if self.folders[Kit.Folder]==built.folder then
+		self:unwatch(built.folder)
+		self.folders[Kit.Folder]=nil
+		for _,item in ipairs(built.folder:GetDescendants())do self:restoreItem(self.surfaces,item)end
+	end
+	built.destroy()
 end
 
 function World:enable()
@@ -406,10 +546,13 @@ function World:disable()
 end
 function World:repaintCrowns()
 	if not self.enabled or not self.room then return end
-	local meshes=self.folders.World
 	table.clear(self.refused)
-	if not meshes then return end
-	for _,part in ipairs(meshes:GetChildren())do
+	local parts={}
+	for _,name in ipairs({"World",Kit.Folder})do
+		local folder=self.folders[name]
+		if folder then for _,part in ipairs(folder:GetChildren())do table.insert(parts,part)end end
+	end
+	for _,part in ipairs(parts)do
 		if not part:IsA("BasePart")or Values.kind(part.Name)~=Values.CrownKind then continue end
 		for _,child in ipairs(part:GetChildren())do self:restoreItem(self.surfaces,child)end
 		self:restoreItem(self.surfaces,part)

@@ -124,6 +124,15 @@ function Follow.activity(visual,actor,now,dt,state,reduced)
     local sample=Activity.sample(actor,sampleTime)
 	if not sample then return state end
 	state=state or {};local old=visual.origin
+	-- Beta (12) QA G1: a catch-up hop. The snapshot's hop counter persists, so the poof plays once per new seq even
+	-- when the sync has already moved the pet on to "follow". The first sight of a pet only records the seq.
+	local hop=actor.hop
+	local hopSeq=if type(hop)=="table"and type(hop.seq)=="number"then hop.seq else 0
+	if state.hopSeen and hopSeq~=state.hopSeq then
+		local from=type(hop)=="table"and Activity.vector(hop.from)or old
+		pcall(function()require(script.Parent.PetPoof).play(from,sample.position,reduced==true)end)
+	end
+	state.hopSeq,state.hopSeen=hopSeq,true
 	visual.origin,visual.reducedEffects=sample.position,reduced==true
     visual.yaw=sample.yaw;visual.gardenPivot=sample.pivot==true;visual.gardenPivotPhase=sample.pivotPhase or 0;visual.gardenPivotTurn=sample.pivotTurn or 0
     state.travelYaw=visual.yaw

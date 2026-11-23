@@ -55,7 +55,12 @@
 -- GardenHour (GARDEN-HOUR-BUILD-PLAN-2026-11-23): the build ceiling for the one-hour day and night. Also needs the beta
 -- place or Studio (GardenHour.PlaceId), the Aero look on, and the server's switch (GardenHourConfig: garden_hour).
 -- Missing = off. Never touches DayNight.
+-- PetCatchup (beta (12) QA G1): the build ceiling for pets hopping to their owner when far or stuck. Also needs the beta
+-- place or Studio (PetCatchup.PlaceId) and the server's switch (CatchupConfig: pet_catchup). Missing = off.
+-- FreshSaveCommand (beta (12) QA T1): the owner's /freshsave and /freshsave restore (ProgressKey, FreshSave). Also needs
+-- the beta place and universe, or the in-memory store (Studio). Missing = off: every save is player_<id>, as before.
 return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,
- LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true})
+ LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
+ PetCatchup=true,FreshSaveCommand=true})

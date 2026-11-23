@@ -113,4 +113,11 @@ function Pets.collectionSummary(rank,trials,inventoryMask)
  return string.format("%02d/%02d",active,#Pets.active)..(if retained>0 then " · "..retained.." retained"else "")
 end
 
+-- A pet's display name by id ("pip" -> "Bear"), or nil for an unknown or nameless id. Shared by the nest's words
+-- (NestClient, beta (12) QA O1) and the garden life; callers choose their own fallback.
+function Pets.petName(id)
+ local pet=type(id)=="string"and Pets.byId[id]or nil
+ return if pet and type(pet.name)=="string"and pet.name~=""then pet.name else nil
+end
+
 return Pets

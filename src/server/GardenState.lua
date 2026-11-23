@@ -325,6 +325,8 @@ function Garden:decide()
             continue
         end
         local position=self:position(actor,now)
+        -- Beta (12) QA G1: a pet too far behind, or stuck, hops to a landing by the owner (Room mode only).
+        if actor.mode=="Room"and self:catchUp(actor,input,position,now)then continue end
         -- v859 leash: too far from the owner ends any play or interaction (release frees a toy
         -- return, a greeting partner, a rest nook) and the pet walks back.
         local heading=Activity.vector(actor.to)
@@ -390,6 +392,37 @@ function Garden:decide()
     if self.park then self.park:schedule(now,ordered)end
     self:greeting(now,ordered)
 end
+-- Pets catch up (beta (12) QA G1, PetCatchup). options.catchup() says the switch is on; options.landing(input, racing)
+-- answers a checked landing by input.anchor or nil. Off (or no options): returns before touching the actor, so the
+-- decide and the snapshot are today's. On a hop the pet stands at the landing at once (a prepared hold, never the
+-- planner's stroll), rests Rest seconds, then follows; `hop` = {seq, from} stays on the actor so every client plays
+-- the poof once when seq changes, whatever the sync does to the action meanwhile.
+function Garden:catchUp(actor,input,position,now)
+    local catchup,landing=self.options.catchup,self.options.landing
+    if not catchup or not landing or catchup()~=true then return false end
+    local Catchup=self.Catchup or require(Shared.PetCatchup)
+    self.Catchup=Catchup
+    actor.catch=actor.catch or {}
+    local gap=distance(position,input.anchor)
+    -- Stuck counts only while following or in a wanderPause: a sit (settle and its rest), a nook rest or a greeting
+    -- far from the anchor is play, not stuck (code review 2).
+    local tracking=actor.pairId==nil and(actor.behavior=="follow"or actor.action=="wanderPause")
+    local why=Catchup.step(actor.catch,now,gap,position,tracking)
+    if not why then return false end
+    local racing=false
+    for _,race in pairs(self.racers or {})do if race then racing=true;break end end
+    local spot=landing(input,racing)
+    if typeof(spot)~="Vector3"then Catchup.done(actor.catch,now,false);return false end
+    if Catchup.done(actor.catch,now,true)=="burst"and self.options.warn then
+        pcall(self.options.warn,"[Catchup] pet of "..tostring(actor.ownerId).." hopped "..Catchup.Burst.." times in a minute; quiet for "..Catchup.BurstQuiet.." s")
+    end
+    self:release(actor)
+    actor.idleSince=now
+    self:transition(actor,"rest",spot,Catchup.Rest,"catchup",nil,nil,{path=nil,duration=Catchup.Rest})
+    actor.from=Activity.pack(spot);actor.to=Activity.pack(spot)
+    actor.hop={seq=(actor.hop and actor.hop.seq or 0)+1,from=Activity.pack(position),why=why}
+    return true
+end
 function Garden:remove(id)
     local actor=self.actors[id]
     if actor then self:release(actor);self.actors[id]=nil;self.inputs[id]=nil;self.dirty=true end
@@ -421,7 +454,8 @@ function Garden:snapshot()
         actors[tostring(id)]={ownerId=id,petId=actor.petId,characterId=actor.characterId,petGeneration=actor.petGeneration,generation=actor.generation,mode=actor.mode,
             behavior=actor.behavior,action=actor.action,actionId=actor.actionId,peerId=actor.peerId,startTime=actor.startTime,endTime=actor.endTime,
             from=actor.from,to=actor.to,via=actor.via,path=actor.path,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0,
-            parkId=actor.park and actor.park.parkId or nil,toyRole=actor.toyRole,toyStartTime=actor.toyStartTime,care=actor.care and table.clone(actor.care)or nil,dash=actor.dash}
+            parkId=actor.park and actor.park.parkId or nil,toyRole=actor.toyRole,toyStartTime=actor.toyStartTime,care=actor.care and table.clone(actor.care)or nil,dash=actor.dash,
+            hop=actor.hop and{seq=actor.hop.seq,from=actor.hop.from}or nil}
     end
     -- park is nil unless FeatureFlags.Park attached a director (then the snapshot is unchanged).
     return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy),careBay=self.care and self.care:snapshot()or nil,

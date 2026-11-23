@@ -31,7 +31,9 @@ Ambient.Ids = {
 }
 -- Alive step 4: leaves in the gust (assets/audio/custom/egg_drop_wind_rustle.wav, 14 s loop). Not in
 -- Ids and never in `warm`: the voice is made the first time the wind is on, and nil means no voice.
-Ambient.RustleId = 131058187750745
+-- OFF since beta (12) QA S1 (Spencer 2026-11-23): restarting the loop on every gust read as an intermittent
+-- "toilet flush". The id was 131058187750745; the code path stays, so a replacement is one id here.
+Ambient.RustleId = nil
 -- Volume at a full gust, the most it may change per second (over a gust's own .19, so a clock jump
 -- never clicks), and how long it stays silent before the loop stops.
 Ambient.RustlePeak, Ambient.RustleSlew, Ambient.RustleHold = .10, .4, 1.5
@@ -357,6 +359,23 @@ function Ambient:setRound(active)
 		-- The world music sits under BoardAudio's duck table; a long duck holds it out
 		-- for the whole round and a zero-length one releases it.
 		if active then self.audio:duck(Ambient.DeckDuck, 1e6, 0) else self.audio:duck(Ambient.DeckDuck, 0, 1) end
+	end
+end
+
+-- Another looped world voice (the Aero fountain, LOOK-R2 3), mixed exactly like the falls: in the ambience group (master,
+-- Ambience level, ducks, the deck round's fade, device focus) and stopped with them. spec: {id, parent, volume, speed,
+-- min, max}. Returns a remover; calling it twice is nothing.
+function Ambient:addVoice(name, spec)
+	local voice = sound(name, spec.id, self.ambience, spec.parent, true)
+	voice.RollOffMode = Enum.RollOffMode.InverseTapered
+	voice.RollOffMinDistance, voice.RollOffMaxDistance = spec.min or 5, spec.max or 30
+	voice.PlaybackSpeed = spec.speed or 1
+	local entry = { voice = voice, spec = { volume = spec.volume or .2, offset = 0 } }
+	table.insert(self.falls, entry)
+	return function()
+		local at = table.find(self.falls, entry)
+		if at then table.remove(self.falls, at) end
+		pcall(function() voice:Destroy() end)
 	end
 end
 

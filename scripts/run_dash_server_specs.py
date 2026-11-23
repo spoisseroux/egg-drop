@@ -17,18 +17,22 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LUAU = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / "build/luau-cli/luau.exe")
+LUAU = str(Path(sys.argv[1]).resolve()) if len(sys.argv) > 1 else str(ROOT / "build/luau-cli/luau.exe")
 BASE = sys.argv[2] if len(sys.argv) > 2 else "46ab954"
 LIVE = sys.argv[3] if len(sys.argv) > 3 else "aeae2d9"
 ONLY = os.environ.get("DASH_SPECS", "").split()
 SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPrize", "DashGating", "DashHost",
-         "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour", "GardenHourBook", "DashGrid"]
+         "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour", "GardenHourBook",
+         # Beta (12) QA quick fixes: pet catch-up (G1), the fresh-save key switch (T1), finds near the player (G2).
+         "PetCatchup", "CatchupConfig", "GardenState", "ProgressKey", "FreshSave", "FindsState", "FindsHost",
+         # Beta (12) QA Dash and Deck UI: the start grid (U5).
+         "DashGrid"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient", "DashSheets", "DeckResultsLayout",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
-          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets"]
+          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -46,6 +50,8 @@ def client_modules():
     out = {f"client/{name}": source for name, source in STUBS.items()}
     for pattern in ("Dash*.lua", "Things*.lua", "Finds*.lua", "NoticeCards.lua", "Life*.lua", "GardenLife.lua", "Wind*.lua",
                     "AmbientAudio.lua", "AmbientPerches.lua", "AliveBudget.lua", "AeroAdditions.lua", "AeroFalls.lua",
+                    # The island re-export: the Aero world kit (split crowns, falls sheets, rocks).
+                    "AeroKit.lua", "AeroFountain.lua",
                     # Onboarding v3 A+B: the needs, the tour gate, the station label tips and the pill's quiet stage.
                     "BearNeeds.lua", "NeedBubble.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
                     "JournalPromptPriority.lua", "FirstSpendGuide.lua",

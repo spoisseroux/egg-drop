@@ -8,7 +8,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
-| 1 | **Bouncy menus and wind** (Alive 0-4) | (3) | Press buttons, tabs, toggles: they spring. Open and close menus fast: nothing sticks or doubles. Bushes, pennants, flags and chimes move with gusts; a soft rustle | `/alive springs|menus|close|wind off` |
+| 1 | **Bouncy menus and wind** (Alive 0-4) | (3) | Press buttons, tabs, toggles: they spring. Open and close menus fast: nothing sticks or doubles. Bushes, pennants, flags and chimes move with gusts (the leaf rustle is removed after beta (12): it read as a "toilet flush") | `/alive springs|menus|close|wind off` |
 | 2 | **Levels matter** (reward track, gated items, medals, deck juice) | (4) | Stats panel says what the next level gives. Wardrobe: a locked item shows "Needs Jump 15" and buying it costs nothing. A pet reaching 25 in a stat gets a free egg. Deck juice choices (pop, trail, start) | `/levels off` |
 | 3 | **Garden Dash** | (5), moved in (6) | Walk to the pad in the east meadow, race once (Just for Fun, then Stats On, Time Trial). Avatar hides, camera follows the pet, everything comes back after. Prizes are off unless `garden_dash_prizes` is set | `/dash off` |
 | 4 | **Blue garden** (Frutiger Aero Medium) | (6) | Blue sky, glossy water, egg dome, station rims, **lime trees**. Pets' faces readable in the light | `/aero off`, `/aero coral` |
@@ -28,8 +28,12 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 
 | # | Piece | Status | What to try |
 |---|---|---|---|
+| 17 | **Beta (12) quick fixes** (S1, U1, O1, G2) | Built on a branch, offline specs green; not seen in Studio | No more "flush" in gusts. The petting hint and the rail toasts sit a little lower in their cards. The nest explains itself: "Bear's egg naps for 8 hours. Come back to hatch a gift." until your first hatch; the first Tuck in says when to come back (and toasts it); the chip reads "Egg 7 h". Garden finds appear near you; owner `/finds now` drops one at once. Switch for finds: `/finds off` |
+| 18 | **Pets catch up** (G1) | Built on a branch, offline specs green; not seen in Studio | Run far ahead of your pet (or respawn, or get it stuck behind a wall): after about 1.5 s it poofs and lands right behind you. Never in a deck round or your own race; never onto the course or pad while anyone races. Switch: `/catchup off` |
+| 19 | **Test tool: fresh save** (T1) | Built on a branch, offline specs green; not seen in Studio | `/freshsave` kicks you; rejoin for a brand-new save (row 11 checks). `/freshsave restore` kicks you; rejoin and your old save is back. Each `/freshsave` is a new empty save; the old one is never touched. Owner only, beta and Studio only |
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
 | 15 | **Dewdrop fruit** (Garden life, looks only) | Built on a branch, offline specs green; Studio and Fable's capture review next | Two or three glossy honey-coral drops hang under each lime tree and sway; in a strong gust one lets go, bounces twice, rolls downwind, rests, fades and grows back later. Your pet beside a fallen one bats it once. Never on a find, the race course or the park; nothing to collect. Reduced Motion: they just hang. Switch: `/alive life off` |
+| 17 | **Island re-export: swaying trees, new waterfall, fountain** | Built on branch `claude/island-reexport-337cd0`, checked in Studio, Fable GO, code review GO; waits for your OK to publish to the beta | Trees sway from the trunk top (gentle in the breeze, a lean in a gust; 6 nearest on a phone); lime trees matte, less neon; walk the camera into a crown: it goes see-through. Tumble Falls: white water streaming over dark wet rock, spray and a foam apron at the foot, rocks you can't walk through. The meadow bubble spring is now a stone fountain with a jet and a splash you can hear up close. `/aero off` puts today's trees, falls and spring back at once; `/alive wind off` keeps the new trees but still |
 
 ## Scoped, not built
 
