@@ -12,6 +12,9 @@ Script-drawn, deterministic, no outside art:
                                        (artifacts/world-pass-2026-11-22/WATERFALL-LOOK.md). The water maps keep RGB
                                        white under clear pixels so no dark fringe shows; Beam or emitter Color tints.
 
+  assets/world/dewdrop.png       192x224  one Dewdrop fruit, full colour on clear: a peach drop with a lime leaf cap
+                                       (artifacts/world-pass-2026-11-22/FRUIT-LOOK.md). Fruit centre = image centre.
+
 Why full colour and not a grey map tinted by Color: an opaque TextureID replaces the part Color, and anything
 that multiplies (SurfaceAppearance.Color, a tint) can only darken, which is how lime went olive before. So the
 lime is in the pixels, the mean of the map IS the crown colour (#8FD63F), and the part Color is set to white so
@@ -406,6 +409,113 @@ def water_preview(directory: Path, maps: dict[str, Image.Image]) -> None:
     print("\n".join(lines))
 
 
+# Dewdrop fruit (FRUIT-LOOK.md) --------------------------------------------------------------------------------------
+DEW_W, DEW_H = 192, 224
+DEW_TOP = (0xFF, 0xE0, 0x8C)    # honey, the lit shoulder
+DEW_LOW = (0xFF, 0x6A, 0x48)    # coral orange, the belly
+DEW_RIM = (0xB8, 0x3A, 0x1C)    # outline
+DEW_LEAF = (0x8F, 0xD6, 0x3F)   # the crown's own lime
+DEW_LEAF_RIM = (0x2F, 0x8A, 0x2A)
+DEW_STEM = (0x4E, 0x7A, 0x22)
+
+
+def _dew_mask(w: int, h: int, grow: float) -> np.ndarray:
+    """The drop: a round belly with a short shoulder up to a blunt point. grow = extra radius in 1x pixels."""
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    k = w / DEW_W
+    cx, cy, r = 96 * k, 134 * k, (66 + grow) * k
+    tip_y, tip_r = 62 * k, (16 + grow) * k
+    belly = np.hypot(xx - cx, yy - cy) <= r
+    # the shoulder: radius shrinks from r at the belly centre to tip_r at the tip, eased so the sides bulge
+    t = np.clip((cy - yy) / (cy - tip_y), 0, 1)
+    rad = r * np.sqrt(np.clip(1 - t * t, 0, 1)) * (1 - t) + (r * (1 - t ** 1.6) + tip_r * t ** 1.6) * t
+    shoulder = (np.abs(xx - cx) <= rad) & (yy <= cy) & (yy >= tip_y - tip_r)
+    cap = np.hypot(xx - cx, yy - tip_y) <= tip_r
+    return belly | shoulder | cap
+
+
+def dewdrop() -> Image.Image:
+    ss = 4
+    w, h = DEW_W * ss, DEW_H * ss
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    body = _dew_mask(w, h, 0)
+    rim = _dew_mask(w, h, 5)
+    # body colour: honey at the upper left to coral at the lower right, with a soft blush low on the belly
+    g = np.clip(((yy / ss - 50) * .82 + (xx / ss - 96) * .32) / 150, 0, 1)
+    g = g * g * (3 - 2 * g)
+    rgb = np.zeros((h, w, 3), np.float32)
+    for c in range(3):
+        rgb[..., c] = DEW_TOP[c] + (DEW_LOW[c] - DEW_TOP[c]) * g
+    # inner shade along the lower right edge, so it reads round and not flat
+    d = np.hypot(xx / ss - 84, yy / ss - 120)
+    shade = np.clip((d - 52) / 30, 0, 1)[..., None] * .22
+    rgb = rgb * (1 - shade) + np.array(DEW_RIM, np.float32) * shade
+    out = np.zeros((h, w, 4), np.float32)
+    out[rim, :3] = DEW_RIM
+    out[rim, 3] = 255
+    out[body, :3] = rgb[body]
+    img = Image.fromarray(out.clip(0, 255).astype(np.uint8), "RGBA")
+    draw = ImageDraw.Draw(img)
+
+    def box(cx, cy, rx, ry):
+        return ((cx - rx) * ss, (cy - ry) * ss, (cx + rx) * ss, (cy + ry) * ss)
+
+    # the gloss: one big white bean and a dot, upper left (a low bounce light was tried and read as a bruise)
+    gloss = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(gloss)
+    gd.ellipse(box(68, 112, 13, 24), fill=(255, 255, 255, 240))
+    gloss = gloss.rotate(24, center=(68 * ss, 112 * ss), resample=Image.BICUBIC)
+    ImageDraw.Draw(gloss).ellipse(box(62, 150, 6, 6), fill=(255, 255, 255, 225))
+    img.alpha_composite(gloss)
+    draw = ImageDraw.Draw(img)
+    # stem, then the leaf cap: two lime leaves with a dark rim, the right one larger
+    draw.line(((96 * ss, 50 * ss), (99 * ss, 26 * ss), (106 * ss, 12 * ss)), fill=DEW_STEM + (255,), width=7 * ss, joint="curve")
+    for cx, cy, length, width, angle in ((122, 44, 62, 30, -22), (72, 46, 50, 25, 200)):
+        for grow, fill in ((4, DEW_LEAF_RIM), (0, DEW_LEAF)):
+            leaf = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+            ld = ImageDraw.Draw(leaf)
+            rx, ry = length / 2 + grow, width / 2 + grow
+            # a lens: the overlap of two circles reads as a pointed leaf
+            m1 = Image.new("L", (w, h), 0)
+            m2 = Image.new("L", (w, h), 0)
+            big = (rx * rx + ry * ry) / (2 * ry)
+            ImageDraw.Draw(m1).ellipse(box(cx, cy + big - ry, big, big), fill=255)
+            ImageDraw.Draw(m2).ellipse(box(cx, cy - big + ry, big, big), fill=255)
+            lens = Image.fromarray(np.minimum(np.asarray(m1), np.asarray(m2)))
+            ld.bitmap((0, 0), lens, fill=fill + (255,))
+            if grow == 0:
+                ld.line(((cx - rx * .8) * ss, cy * ss, (cx + rx * .8) * ss, cy * ss), fill=DEW_LEAF_RIM + (255,), width=2 * ss)
+            leaf = leaf.rotate(angle, center=(cx * ss, cy * ss), resample=Image.BICUBIC)
+            img.alpha_composite(leaf)
+    img = img.resize((DEW_W, DEW_H), Image.LANCZOS)
+    a = np.asarray(img).copy()
+    # clear pixels keep the rim colour so no dark or white fringe shows when it is filtered small
+    clear = a[..., 3] == 0
+    a[clear, :3] = DEW_RIM
+    return Image.fromarray(a, "RGBA")
+
+
+def dew_preview(directory: Path, img: Image.Image) -> None:
+    """The fruit at 160 to 8 px on lime, dark foliage, lawn and sky, plus the four Hue berry colours beside it."""
+    directory.mkdir(parents=True, exist_ok=True)
+    grounds = (BASE, (0x1F, 0x6B, 0x2C), (0x3F, 0xA8, 0x3C), (0x5F, 0xB8, 0xF0))
+    sizes = (160, 64, 32, 20, 12, 8)
+    sheet = Image.new("RGBA", (sum(sizes) + 12 * (len(sizes) + 1) + 150, 200 * len(grounds)), (0, 0, 0, 255))
+    d = ImageDraw.Draw(sheet)
+    for row, ground in enumerate(grounds):
+        d.rectangle((0, row * 200, sheet.width, row * 200 + 200), fill=ground + (255,))
+        x = 12
+        for s in sizes:
+            small = img.resize((s, round(s * DEW_H / DEW_W)), Image.LANCZOS)
+            sheet.alpha_composite(small, (x, row * 200 + 100 - small.height // 2))
+            x += s + 12
+        for i, hue in enumerate(((0xFF, 0x32, 0x7A), (0x00, 0x8D, 0xFF), (0xFF, 0xCC, 0x00), (0x93, 0x50, 0xFF))):
+            d.ellipse((x + 4 + i * 34, row * 200 + 86, x + 32 + i * 34, row * 200 + 114), fill=hue + (255,))
+    sheet.convert("RGB").save(directory / "dewdrop-sizes.png")
+    a = np.asarray(img.getchannel("A"))
+    print("dewdrop: alpha max on the border %d (must be 0)" % max(a[0].max(), a[-1].max(), a[:, 0].max(), a[:, -1].max()))
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     img = lime_leaf()
@@ -416,10 +526,14 @@ def main() -> None:
     for name, water in maps.items():
         water.save(OUT / (name + ".png"), optimize=True)
         print("wrote", OUT / (name + ".png"), water.size)
+    dew = dewdrop()
+    dew.save(OUT / "dewdrop.png", optimize=True)
+    print("wrote", OUT / "dewdrop.png", dew.size)
     if "--preview" in sys.argv:
         directory = Path(sys.argv[sys.argv.index("--preview") + 1])
         preview(directory, img)
         water_preview(directory, maps)
+        dew_preview(directory, dew)
 
 
 if __name__ == "__main__":
