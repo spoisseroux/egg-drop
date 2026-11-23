@@ -4777,6 +4777,7 @@ do
     if visible and not self.real then
      self.real=require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),adornee=petPart,
       reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+      keyHint=function()return Needs.keyHint(clientUI.inputKind())end,
       onTap=function()if needs then needs:tap()end end})
     end
     if self.real then self.real:set(icon,visible)end
@@ -4784,6 +4785,12 @@ do
    function bubble:hop()if self.real then self.real:hop()end end
    function bubble:step(dt)if self.real then self.real:step(dt)end end
    function bubble:destroy()if self.real then self.real:destroy();self.real=nil end end
+   -- Studio QA: a tap on the Bear does the open need's action too; its own key (E / ButtonX) keeps petting.
+   local interact=roomView.interactPet
+   local petKeyAt=-math.huge
+   local petKeys=UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode==Enum.KeyCode.E or input.KeyCode==Enum.KeyCode.ButtonX then petKeyAt=os.clock()end
+   end)
    needs=Needs.new({bubble=bubble,state=function()return nurseryState end,owned=function()return board:GetAttribute("OwnedPets")or 0 end,
     mask=function()return clientUI.coach.mask end,mark=function(id)clientUI.coach:mark(id)end,finishIntro=function()clientUI.coach:finishGarden()end,
     follow=function()return Onboard.sessionFollow()end,needs=function()return Onboard.on("needs")end,returning=function()return things.returning==true end,
@@ -4799,7 +4806,7 @@ do
      return nil
     end,
     trail=function(target)return trail:start(target)end,trailActive=function()return trail:active()end,trailTarget=function()return trail.target end,
-    sayHi=function()return roomView:interactPet()end,playDeck=function()return things.act("deck")end,
+    sayHi=function()return interact(roomView)end,playDeck=function()return things.act("deck")end,
     quiet=function(on)if clientUI.firstSpend then clientUI.firstSpend:setQuiet(on)end end,
     chirp=function()local shown=roomView.shownPet;if shown and shown.cue then audio:play(shown.cue,1.1,.3)end end,
     react=function(id)if id=="needHi"or id=="needPark"then roomView:cheerPet("cheer")end end})
@@ -4814,6 +4821,7 @@ do
     needs:abandon();bubble:destroy()
     clientUI.attract.options.focus=nil;clientUI.attract.options.tip=nil;clientUI.attract.options.tipShown=nil
     things.due=due
+    roomView.interactPet=interact;petKeys:Disconnect();ContextActionService:UnbindAction("EggDropNeedBubble")
    end
    beat=RunService.Heartbeat:Connect(function(dt)
     -- Both switches off and nothing started: look twice a second, nothing else.
@@ -4824,7 +4832,7 @@ do
     local good,why=pcall(needs.step,needs,os.clock(),dt)
     if not good then abandon(why)end
    end)
-   gui.Destroying:Connect(function()beat:Disconnect();bubble:destroy()end)
+   gui.Destroying:Connect(function()beat:Disconnect();petKeys:Disconnect();bubble:destroy()end)
    -- Mounted: only now does the rest of the game lean on it.
    intent.d.saved=function(...)needs:saidHi();return saved(...)end
    -- The park line gives way to need 5 (a new player this session only); no rail line while the Bear's prints run.
@@ -4842,6 +4850,15 @@ do
    end
    clientUI.attract.options.tipShown=function(id)local bit=Tips.TipBits[id];if bit then clientUI.coach:mark(bit)end end
    clientUI.attract.options.focus=function()return needs:focus()end
+   function roomView.interactPet(view,...)
+    if os.clock()-petKeyAt>.3 and needs:petTap("tap")then return true end
+    return interact(view,...)
+   end
+   -- The bubble's own key (Needs.Keys): G or L2, unused elsewhere in the garden; passed on while no bubble shows.
+   ContextActionService:BindActionAtPriority("EggDropNeedBubble",function(_,state)
+    if state~=Enum.UserInputState.Begin or not needs.shown then return Enum.ContextActionResult.Pass end
+    return if needs:key()then Enum.ContextActionResult.Sink else Enum.ContextActionResult.Pass
+   end,false,Enum.ContextActionPriority.Medium.Value,Enum.KeyCode.G,Enum.KeyCode.ButtonL2)
    clientUI.needs=needs
    clientUI.coach.options.follow=function()return Onboard.sessionFollow()end
   end)

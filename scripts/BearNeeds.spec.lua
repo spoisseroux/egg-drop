@@ -10,6 +10,7 @@ return function(client)
 	local Needs=require(client.BearNeeds)
 	local Tips=require(client.ThingsTips)
 	local Guide=require(client.FirstSpendGuide)
+	local Bubble=require(client.NeedBubble)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local function with(base,t)local c=table.clone(base);for k,v in pairs(t or {})do c[k]=v end;return c end
@@ -217,6 +218,52 @@ return function(client)
 		local r=rig();r.run(4);assert(r.bubble.icon=="hand")
 		r.prompt=true;r.run(.25);assert(r.bubble.icon==nil)
 		r.prompt=false;r.run(.25);assert(r.bubble.icon=="hand")
+	end)
+	test("QA 1: a hit area of at least 96 px round the same 72 px bubble, and a steady place over a shuttling Bear",function()
+		assert(Bubble.HitSize>=96 and Bubble.Size==72 and Bubble.HitSize>Bubble.Size)
+		local spot={}
+		local home=Vector3.new(0,6,0)
+		assert(Bubble.follow(spot,home,.016)==home,"the first frame: over the Bear")
+		-- The Bear's idle shuttle in its first minute: about 1.5 studs either way, every few seconds.
+		for i=1,200 do
+			local bear=home+Vector3.new(if math.floor(i/40)%2==0 then 1.5 else -1.5,0,0)
+			assert(Bubble.follow(spot,bear,.016)==home,"a move under Dead studs is ignored")
+		end
+		-- A real walk: chased smoothly (no frame jumps more than a stud), then settled on the target.
+		local far=home+Vector3.new(8,0,0)
+		local last=spot.at
+		for _=1,240 do
+			local at=Bubble.follow(spot,far,.016)
+			assert((at-last).Magnitude<1,"no jump");last=at
+		end
+		assert((last-far).Magnitude<=Bubble.Settle and not spot.chasing,"there, and still")
+		local jump=far+Vector3.new(0,0,Bubble.Snap+1)
+		assert(Bubble.follow(spot,jump,.016)==jump,"a teleport snaps")
+		assert(Bubble.follow({at=home},home+Vector3.new(3,0,0),.016,true)==home+Vector3.new(3,0,0),"Reduced Motion: no glide")
+		assert(Bubble.follow({at=home},home+Vector3.new(1,0,0),.016,true)==home,"Reduced Motion keeps the dead zone")
+		assert(Bubble.follow({at=home},nil,.016)==home)
+	end)
+	test("QA 2: a tap on the Bear does the open need's action; the greeting stays the greeting; its key keeps petting",function()
+		local r=rig({state={coachMask=Coach.with(0,"needHi")}});r.run(4);assert(r.bubble.icon=="ball")
+		assert(not r.needs:petTap("key"),"E / ButtonX on the Bear: petting as before")
+		r.trails={};assert(r.needs:petTap("tap")and r.trails[1]and r.trails[1].name=="Eggs","a tap on the Bear: the prints")
+		r.state=with(r.state,{petToys={pip="ball"},toyUnlocks={ball=true}});r.run(Needs.Rest+Needs.Return)
+		assert(r.bubble.icon=="deck"and r.needs:petTap("tap")and r.acts[#r.acts]=="deck","need 3 from the Bear: a round")
+		r.state=with(r.state,{stats={rounds=2}});r.run(Needs.Rest+Needs.Return)
+		r.trails={};assert(r.bubble.icon=="paws"and r.needs:petTap("tap")and r.trails[1].name=="Park","need 5 from the Bear: to the park")
+		local hi=rig();hi.run(4);assert(hi.bubble.icon=="hand"and not hi.needs:petTap("tap"),"need 1: the greeting itself does it")
+		local hidden=rig({state={coachMask=Coach.with(0,"needHi")}});hidden.run(4);hidden.gate=with(hidden.gate,{modal=true});hidden.run(.25)
+		assert(not hidden.needs:petTap("tap"),"no bubble shown: the Bear's tap is the greeting")
+		hidden.needs:abandon();assert(not hidden.needs:petTap("tap"))
+	end)
+	test("QA 3: the bubble's own key does its action while it shows, and is passed on otherwise",function()
+		assert(Needs.Keys.Keyboard=="G"and Needs.Keys.Gamepad=="L2"and Needs.keyHint("Keyboard")=="G"and Needs.keyHint("Gamepad")=="L2"and Needs.keyHint("Touch")==nil)
+		local r=rig();r.run(4);assert(r.bubble.icon=="hand")
+		assert(r.needs:key()and r.acts[1]=="hi","need 1 on the key: Say hi")
+		local toy=rig({state={coachMask=Coach.with(0,"needHi")}});toy.run(4);toy.trails={}
+		assert(toy.needs:key()and toy.trails[1].name=="Eggs")
+		toy.gate=with(toy.gate,{modal=true});toy.run(.25);assert(not toy.needs:key(),"hidden: the key passes")
+		local off=rig({needsOn=false});off.run(4);assert(not off.needs:key())
 	end)
 	return{passed=#cases,cases=cases}
 end
