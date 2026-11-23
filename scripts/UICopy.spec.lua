@@ -16,6 +16,8 @@ return function(client,parent)
   price=400,need=7,stamps=3,
   -- v2 pet names.
   piece="Velvet",level=25,
+  -- beta 13 nest chip.
+  hours=7,minutes=52,
   -- Stars store packs.
   stars=60,
   -- Dash level band.
