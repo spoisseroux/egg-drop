@@ -22,7 +22,7 @@ BASE = sys.argv[2] if len(sys.argv) > 2 else "46ab954"
 LIVE = sys.argv[3] if len(sys.argv) > 3 else "aeae2d9"
 ONLY = os.environ.get("DASH_SPECS", "").split()
 SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPrize", "DashGating", "DashHost",
-         "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour", "GardenHourBook"]
+         "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour", "GardenHourBook", "NestSpot"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

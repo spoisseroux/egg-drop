@@ -2,13 +2,15 @@
 -- Heartbeat and world: nil with the ceiling off; the switch off is nothing but its signal; on is one folder of inert
 -- parts and one Heartbeat; off mid-flight destroys it all in that frame; parked (hatch, board, my race) hides
 -- everything and simulates nothing; Reduced Motion; budget level 2 shows nothing; a chirp lands a bird on that perch's
--- crown and the 4th is refused; bubbles refuse a station, a live course and a menu; the round 2 look (LOOK-R2): decal
--- plates with the uploaded textures, two fixed-size bubble emitters, the petal cap and gust burst; Dewdrops (FRUIT-LOOK):
+-- crown and the 4th is refused; bubbles refuse a station, a live course and a menu; the round 3 look (beta 12 QA L1-L3,
+-- GARDEN-LIFE-NEST-LOOK): eight-part songbirds and butterflies with LifeArt textures, the dusk hand-off to firefly glows
+-- (off at once when parked or with Reduced Motion), the leaves round the player under the cap and never under a roof,
+-- two fixed-size bubble emitters; Dewdrops (FRUIT-LOOK):
 -- 16 billboards made once, hanging caps per level, the same simulated drops on four clients (cameras far apart, budget
 -- levels 0 and 1, Reduced Motion), Reduced Motion, parked, a live race, pink crowns skipping the pool,
 -- landing rejection and the pet bat. Garden hour slice D: off (daylight nil) and day are today's garden; golden, night
--- and dawn start no bubbles, butterflies or birds (petals and fruit as by day); the ones out finish; the gate is the
--- server clock's, the same on four clients.
+-- and dawn start no bubbles or birds (leaves and fruit as by day), butterflies fly over .30; the ones out finish; the
+-- gate is the server clock's, the same on four clients.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.GardenLife)(PlayerScripts.Client); offline in
 -- scripts/run_dash_server_specs.py (DASH_SPECS="GardenLife").
 return function(client)
@@ -56,6 +58,7 @@ return function(client)
 			crowns=function()return r.crownColour end,warn=function(text)table.insert(r.warned,text)end,
 			groundY=options.groundY or function()return 4 end,safe=options.safe or function()return true end,
 			finds=options.finds or {},kerbs=options.kerbs or {},pets=function()return r.pets end,
+			cover=options.cover or {},leafGround=options.leafGround,leaves=function()return options.leaves~=false end,
 			-- The garden hour: r.daylight (nil = the hour off), or r.hour(now) when a case drives the real clock.
 			daylight=if options.realHour then nil else function(now)if r.hour then return r.hour(now)end return r.daylight end})
 		function r.step(seconds)
@@ -91,7 +94,7 @@ return function(client)
 			local c=day.life:counts()
 			assert(c.bubbles>0 and c.butterflies>0 and c.birds>0,"all of it by day: "..c.bubbles.." "..c.butterflies.." "..c.birds)
 		end)
-		test("golden, night and dawn: no bubbles, butterflies or birds start; petals and Dewdrops as by day",function()
+		test("golden, night and dawn: no bubbles or birds start, butterflies only over .30; leaves and Dewdrops as by day",function()
 			for _,daylight in ipairs({.55,.12,.5})do
 				local day,dark=rig(),rig({daylight=daylight})
 				for second=1,24 do
@@ -104,17 +107,21 @@ return function(client)
 					end
 					day.step(1);dark.step(1)
 					local a,b=day.life:counts(),dark.life:counts()
-					assert(b.bubbles==0 and b.butterflies==0 and b.birds==0,daylight..": nothing starts at "..second)
-					assert(a.petals==b.petals and a.fruit==b.fruit and a.loose==b.loose,daylight..": petals and fruit unchanged")
+					assert(b.bubbles==0 and b.birds==0,daylight..": nothing starts at "..second)
+					if daylight<.3 then assert(b.butterflies==0,"no butterflies at night")end
+					assert(a.leaves==b.leaves and a.fruit==b.fruit and a.loose==b.loose,daylight..": leaves and fruit unchanged")
 				end
 				assert(day.life:counts().butterflies>0,"the day rig has them")
-				-- Only petal anchors and Dewdrops may show at night.
+				if daylight>.34 then assert(dark.life:counts().butterflies>0,daylight..": golden light and dawn keep butterflies")end
+				-- Only leaf anchors and Dewdrops (and butterflies over .30) may show.
 				for _,p in ipairs(dark.parts())do
-					if not hidden(p)then assert(string.match(p.Name,"^LifePetals")or string.match(p.Name,"^LifeDewdrop"),p.Name)end
+					if not hidden(p)then
+						assert(string.match(p.Name,"^LifeLeaf")or string.match(p.Name,"^LifeDewdrop")or(daylight>.3 and string.match(p.Name,"^LifeButterfly")),p.Name)
+					end
 				end
 			end
 		end)
-		test("day to night: the ones out finish (bubbles pop on time, butterflies fly off, a bird sits out its stay)",function()
+		test("day to night: the ones out finish (bubbles pop on time, butterflies fade past dusk, a bird sits out its stay)",function()
 			local r=rig()
 			r.step(.2);chirps(r)
 			r.step(9)
@@ -124,13 +131,13 @@ return function(client)
 			r.step(2.1) -- the next poll reads the hour
 			local bubbles,birds=r.life:counts().bubbles,r.life:counts().birds
 			assert(r.life:counts().butterflies<=c.butterflies)
-			for _,b in ipairs(r.life.flies.list)do assert(b.mode=="leave","flying off")end
+			for _,b in ipairs(r.life.flies.list)do assert(b.fade and not b.hand,"a jump past dusk (.12): wings fade, no glow")end
 			for second=1,25 do
 				r.step(1)
 				local now=r.life:counts()
 				assert(now.bubbles<=bubbles and now.birds<=birds,"nothing new")
 				bubbles,birds=now.bubbles,now.birds
-				if second>=Sim.Butterfly.leaveTime+1 then assert(now.butterflies==0,"butterflies gone")end
+				if second>=1 then assert(now.butterflies==0 and now.glows==0,"butterflies gone, no glow")end
 				if second>=Sim.BubbleLife+1 then assert(now.bubbles==0,"bubbles popped")end
 			end
 			assert(r.life:counts().birds==0,"the bird left after its stay")
@@ -201,7 +208,7 @@ return function(client)
 			local folder=assert(r.folder())
 			assert(folder.Parent==r.world and #r.beat.list==1 and type(r.ambient.onChirp)=="function")
 			local parts=r.parts()
-			assert(#parts==3*6+4*3+3+2+16,"parts "..#parts)
+			assert(#parts==3*8+4*3+3+2+16,"parts "..#parts)
 			for _,p in ipairs(parts)do
 				assert(p.Anchored==true and p.CanCollide==false and p.CanQuery==false and p.CanTouch==false and p.CastShadow==false,p.Name)
 				assert(string.sub(p.Name,1,2)~="W7",p.Name)
@@ -237,10 +244,10 @@ return function(client)
 			local sitting
 			for slot=1,3 do
 				local b=body(r,slot)
-				if not hidden(b)and(b.CFrame.Position-(LANDING+Vector3.new(0,.56,0))).Magnitude<.01 then sitting=b end
+				if not hidden(b)and(b.CFrame.Position-(LANDING+Vector3.new(0,.50,0))).Magnitude<.01 then sitting=b end
 			end
-			assert(sitting,"a bird sits .56 over perch 2's landing")
-			assert(sitting.Color==Life.BirdColours[2%3].body,"perch 2's colourway")
+			assert(sitting,"a bird sits .50 over perch 2's landing")
+			assert(sitting.Color==Life.BirdLooks[2%3].body,"perch 2's colourway")
 			assert(r.life:chirp(2)=="hop")
 			assert(r.life:chirp(3)=="land")
 			local result,why=r.life:chirp(4)
@@ -322,7 +329,7 @@ return function(client)
 			r.step(.04)
 			local b
 			for slot=1,3 do if not hidden(body(r,slot))then b=body(r,slot)end end
-			assert(b and(b.CFrame.Position-(LANDING+Vector3.new(0,.56,0))).Magnitude<1e-3,"sits at once")
+			assert(b and(b.CFrame.Position-(LANDING+Vector3.new(0,.50,0))).Magnitude<1e-3,"sits at once")
 			local at=b.CFrame.Position
 			assert(r.life:chirp(2)==nil,"no hop")
 			r.step(5)
@@ -352,7 +359,8 @@ return function(client)
 			assert(q.folder()==nil,"never back up")
 		end)
 
-		test("LOOK-R2 parts: 5 a bird, 3 a butterfly, the sizes, and decals with the uploaded ids on the named faces",function()
+		test("round 3 parts: 8 a bird, 3 a butterfly and its glow, the sizes, LifeArt textures on the named faces, all wings preloaded",function()
+			local LifeArt=require(game:GetService("ReplicatedStorage").Shared.LifeArt)
 			local r=rig()
 			local folder=r.folder()
 			local Face=Enum.NormalId
@@ -378,48 +386,123 @@ return function(client)
 				assert(n==m,p.Name..": "..n.." decals")
 				return got
 			end
+			local function isWhite(c)return c.R==1 and c.G==1 and c.B==1 end
+			local wingsLoaded={}
 			for slot=1,3 do
 				local name="LifeBird"..slot.."_"
 				local n=0
 				for _,p in ipairs(r.parts())do if string.sub(p.Name,1,#name)==name then n+=1 end end
-				assert(n==6,"bird parts "..n)
+				assert(n==8,"bird parts "..n)
+				local look=Life.BirdLooks[(slot-1)%3]
+				local bodyPart=folder:FindFirstChild(name.."Body")
+				assert(bodyPart.Size==Vector3.new(1.05,1.05,1.05)and bodyPart.Color==look.body)
+				if LifeArt.id("birdBreast")then faces(bodyPart,{[Face.Front]=LifeArt.id("birdBreast")})else assert(next(decals(bodyPart))==nil,"no breast stand-in")end
+				assert(folder:FindFirstChild(name.."Head").Size==Vector3.new(.68,.68,.68))
 				for _,side in ipairs({"EyeR","EyeL"})do
-					local eyes=folder:FindFirstChild(name..side)
-					assert(eyes.Size==Vector3.new(.06,.46,.46)and eyes.Color==Life.EyeInk and eyes.Transparency==0)
-					for _,d in pairs(faces(eyes,{[Face.Left]=Life.BirdEye,[Face.Right]=Life.BirdEye}))do local c=d.Color3;assert(c.R==1 and c.G==1 and c.B==1,"a white eye decal")end
+					local eye=folder:FindFirstChild(name..side)
+					assert(eye.Size==Vector3.new(.14,.14,.14)and eye.Color==Life.EyeInk and eye.Reflectance==.2)
 				end
-				local beak=folder:FindFirstChild(name.."Beak")
-				assert(beak.Size==Vector3.new(.26,.26,.26)and beak.ClassName=="Part")
-				assert(folder:FindFirstChild(name.."Body").Size==Vector3.new(1.2,1.2,1.2))
+				assert(folder:FindFirstChild(name.."Beak").Size==Vector3.new(.17,.17,.17))
 				for _,side in ipairs({"WingL","WingR"})do
 					local plate=folder:FindFirstChild(name..side)
-					assert(plate.Size==Vector3.new(.04,.66,.46)and plate.Transparency==1,"a see-through plate")
-					faces(plate,{[Face.Left]=Life.BirdWing,[Face.Right]=Life.BirdWing})
+					assert(plate.Size==Vector3.new(.04,.75,.55)and plate.Transparency==1,"a see-through plate")
+					for _,d in pairs(faces(plate,{[Face.Left]=LifeArt.id(look.wing),[Face.Right]=LifeArt.id(look.wing)}))do assert(isWhite(d.Color3))end
 				end
+				wingsLoaded[look.wing]=true
+				local tail=folder:FindFirstChild(name.."Tail")
+				assert(tail.Size==Vector3.new(.46,.68,.02)and tail.Transparency==1)
+				for _,d in pairs(faces(tail,{[Face.Front]=LifeArt.id("birdTail"),[Face.Back]=LifeArt.id("birdTail")}))do assert(d.Color3==look.tail)end
 			end
+			assert(wingsLoaded.birdWingEmber and wingsLoaded.birdWingSlate and wingsLoaded.birdWingMoss,"all three bird wings written at build")
 			for slot=1,4 do
 				local name="LifeButterfly"..slot.."_"
 				local n=0
 				for _,p in ipairs(r.parts())do if string.sub(p.Name,1,#name)==name then n+=1 end end
 				assert(n==3,"butterfly parts "..n)
-				assert(folder:FindFirstChild(name.."Body").Size==Vector3.new(.10,.10,.50))
+				local bodyPart=folder:FindFirstChild(name.."Body")
+				assert(bodyPart.Size==Vector3.new(.08,.08,.40)and bodyPart.Color==Life.ButterflyBody)
 				local left,right=folder:FindFirstChild(name.."WingL"),folder:FindFirstChild(name.."WingR")
-				for _,plate in ipairs({left,right})do assert(plate.Size==Vector3.new(.70,.84,.02)and plate.Transparency==1)end
-				for _,d in pairs(faces(left,{[Face.Back]=Life.ButterflyWingM,[Face.Front]=Life.ButterflyWing}))do assert(d.Color3==Life.WingColours[slot])end
-				faces(right,{[Face.Back]=Life.ButterflyWing,[Face.Front]=Life.ButterflyWingM})
+				for _,plate in ipairs({left,right})do assert(plate.Size==Vector3.new(.56,.67,.02)and plate.Transparency==1)end
+				local file,mirror=LifeArt.id(Life.ButterflyArt[slot][1]),LifeArt.id(Life.ButterflyArt[slot][2])
+				for _,d in pairs(faces(left,{[Face.Back]=mirror,[Face.Front]=file}))do assert(isWhite(d.Color3),"full colour")end
+				faces(right,{[Face.Back]=file,[Face.Front]=mirror})
+				local gui=bodyPart:FindFirstChild("Glow")
+				assert(gui and gui.ClassName=="BillboardGui"and gui.Enabled==false and gui.LightInfluence==0 and gui.Brightness==2)
+				assert(gui.MaxDistance==110 and gui.AlwaysOnTop==false and bodyPart:FindFirstChildOfClass("PointLight")==nil)
+				local dot=gui:FindFirstChild("Dot")
+				local want=Color3.fromHex("#E8FF8A")
+				assert(dot.Image==LifeArt.id("fireflyDot")and math.abs(dot.ImageColor3.G-want.G)<1e-6 and math.abs(dot.ImageColor3.B-want.B)<1e-6)
 			end
-			for _,id in ipairs({Life.BirdEye,Life.BirdWing,Life.ButterflyWing,Life.ButterflyWingM})do
-				assert(string.match(id,"^rbxassetid://%d+$"),id)
-			end
-			assert(Life.ButterflyWing~=Life.ButterflyWingM)
-			-- A landing paints the wing decals in that perch's colourway.
+			-- A landing paints that perch's colourway: colours, tints, the wing file (perch 2: Moss on slot 1's Ember plates).
 			r.step(.1)
 			assert(r.life:chirp(2)=="land")
 			local bird=r.life.birds:find(2)
-			local look=Life.BirdColours[2%3]
+			local look=Life.BirdLooks[2%3]
 			local pool=r.life.birdPool[bird.slot]
-			assert(pool[1].Color==look.body and pool[3].Color==look.beak)
-			for _,plate in ipairs({pool[4],pool[5]})do for _,d in pairs(decals(plate))do assert(d.Color3==look.wing)end end
+			assert(pool[1].Color==look.body and pool[2].Color==look.head and pool[3].Color==look.beak)
+			for _,plate in ipairs({pool[6],pool[7]})do for _,d in pairs(decals(plate))do assert(d.Texture==LifeArt.id(look.wing))end end
+			for _,d in pairs(decals(pool[8]))do assert(d.Color3==look.tail)end
+		end)
+
+		test("a perched bird that is not moving is not written again",function()
+			local r=rig()
+			r.reduced=true -- just there, still
+			r.step(.1)
+			assert(r.life:chirp(2)=="land")
+			local writes=0
+			local saved=r.life.move
+			r.life.move=function(parts,frames)
+				for _,p in ipairs(parts)do if string.match(p.Name,"^LifeBird")then writes+=1 end end
+				return saved(parts,frames)
+			end
+			r.step(.1)
+			local first=writes
+			r.step(3)
+			assert(first>0 and writes==first,"one write, then none: "..first.." / "..writes)
+		end)
+
+		test("dusk: each butterfly hands off to a glow (at most 4), wings fading; a park or Reduced Motion turns every glow off at once",function()
+			local function glowing(r)
+				local n=0
+				for slot=1,4 do if r.folder():FindFirstChild("LifeButterfly"..slot.."_Body").Glow.Enabled then n+=1 end end
+				return n
+			end
+			for _,ending in ipairs({"park","reduced","none"})do
+				local r=rig({daylight=.9})
+				r.step(8)
+				local out=r.life:counts().butterflies
+				assert(out>=2,"out by day: "..out)
+				assert(glowing(r)==0,"no glow by day")
+				r.daylight=.28
+				r.step(2.6) -- the poll reads it; the first hand-off is under way
+				local most=0
+				for _=1,10 do
+					r.step(.3)
+					most=math.max(most,glowing(r))
+					assert(r.life:counts().glows==glowing(r))
+					if ending~="none"and glowing(r)>0 then break end
+				end
+				assert(most>=1 and most<=4,"glows: "..most)
+				if ending=="park"then
+					r.mode="Board";r.step(.3)
+					assert(glowing(r)==0 and r.life:counts().butterflies==0,"parked: every glow off")
+				elseif ending=="reduced"then
+					r.reduced=true;r.step(.1)
+					assert(glowing(r)==0 and r.life:counts().butterflies==0,"Reduced Motion: every glow off")
+				else
+					r.step(12)
+					assert(glowing(r)==0 and r.life:counts().butterflies==0,"all handed off and gone")
+					-- The wing decals faded with them: the last slot written shows transparent wings.
+				end
+			end
+			-- Decal writes at 10 Hz, only on change: a new butterfly's wings fade in from 1.
+			local r=rig()
+			r.step(.2)
+			local entry
+			for _,e in ipairs(r.life.flyPool)do if e.owner then entry=e end end
+			assert(entry and entry.wing>0,"a new one starts faded: "..tostring(entry and entry.wing))
+			r.step(1.5)
+			assert(entry.wing==0 and entry.decals[1].Transparency==0,"faded in")
 		end)
 
 		test("bubbles: two emitters, one fixed Size each (never written again), the roll picks which one emits",function()
@@ -440,19 +523,71 @@ return function(client)
 			assert(r.life:counts().bubbles<=Sim.cap("bubbles",0))
 		end)
 
-		test("petals follow the wind under the cap, from lime-tinted emitters at the picked crowns",function()
+		test("leaves: three emitters (the look's numbers), anchors moved to each leaf's spot round the player, under the cap at both levels",function()
+			local LifeArt=require(game:GetService("ReplicatedStorage").Shared.LifeArt)
 			local r=rig()
-			local most=0
-			for _=1,60 do r.step(1);most=math.max(most,r.life:counts().petals)end
-			assert(most>0,"a gust drops petals")
-			assert(most<=Sim.cap("petals",0)and Sim.cap("petals",0)==40)
-			local shown=0
-			for slot=1,3 do
-				local anchor=r.folder():FindFirstChild("LifePetals"..slot)
-				if not hidden(anchor)then shown+=1;assert(anchor.Transparency==1)end
+			local names={"LifeLeafA","LifeLeafB","LifeLeafPetal"}
+			local emitters={}
+			for i,name in ipairs(names)do
+				local anchor=r.folder():FindFirstChild(name)
+				assert(anchor and anchor.Transparency==1 and anchor.Size==Life.LeafAnchor,name)
+				local e=anchor:FindFirstChild("Leaves")
+				assert(e.Rate==0 and e.LockedToPart==false and e.Drag==.5 and e.LightInfluence==1 and e.LightEmission==0,name)
+				assert(e.EmissionDirection==Enum.NormalId.Bottom and e.ShapeStyle==Enum.ParticleEmitterShapeStyle.Volume,name)
+				emitters[i]=e
 			end
-			assert(shown==2,"one emitter per crown in reach: "..shown)
-			assert(r.life.colours==Life.PetalColours.lime,"lime crowns, lime petals")
+			assert(emitters[1].Texture==LifeArt.id("leafA")and emitters[2].Texture==LifeArt.id("leafB")and emitters[3].Texture==Life.PetalTexture)
+			local most,shown=0,{}
+			for _=1,60 do
+				r.step(1)
+				most=math.max(most,r.life:counts().leaves)
+				for _,name in ipairs(names)do
+					local anchor=r.folder():FindFirstChild(name)
+					if not hidden(anchor)then
+						shown[name]=true
+						local at=anchor.CFrame.Position
+						assert(math.abs(at.X-r.player.X)<=36 and math.abs(at.Z-r.player.Z)<=36 and at.Y>=14-1e-6 and at.Y<=16+1e-6,name..": "..tostring(at))
+					end
+				end
+			end
+			assert(most>=20 and most<=Sim.cap("leaves",0),"level 0: "..most)
+			assert(shown.LifeLeafA and shown.LifeLeafB and shown.LifeLeafPetal,"all three kinds fall")
+			local emitted=0
+			for _,e in ipairs(emitters)do emitted+=(e.emitted or 0)end
+			assert(emitted>=120 and emitted<=200,"about 2.4 a second x (1 + .5 g): "..emitted)
+			r.life.leaves:clear();r.level=1
+			most=0
+			for _=1,40 do r.step(1);most=math.max(most,r.life:counts().leaves)end
+			assert(most>=8 and most<=14,"level 1: "..most)
+			assert(r.life:counts().petals==r.life:counts().leaves,"petals: the old name")
+		end)
+
+		test("leaves: none where the drift reaches a roof, none off the island, none until the cover is checked (beta), the wind at 4 Hz",function()
+			local roofed=rig({cover={{name="Everywhere",x=0,z=0,r=500}}})
+			roofed.step(30)
+			assert(roofed.life:counts().leaves==0,"all under a roof: none")
+			local sky=rig({leafGround=function()return nil end})
+			sky.step(30)
+			assert(sky.life:counts().leaves==0,"off the island: none")
+			local beta=rig({leaves=false})
+			beta.step(30)
+			assert(beta.life:counts().leaves==0,"the gate closed: none")
+			for _,name in ipairs({"LifeLeafA","LifeLeafB","LifeLeafPetal"})do assert((beta.folder():FindFirstChild(name).Leaves.emitted or 0)==0)end
+			-- The Acceleration: written 4 times a second, the same on all three.
+			local r=rig()
+			local e=r.folder():FindFirstChild("LifeLeafA").Leaves
+			local writes,last=0,e.Acceleration
+			for _=1,60 do
+				r.step(1/30)
+				if not rawequal(e.Acceleration,last)then writes+=1;last=e.Acceleration end
+			end
+			assert(writes>=7 and writes<=9,"4 Hz over 2 s: "..writes)
+			assert(rawequal(r.folder():FindFirstChild("LifeLeafB").Leaves.Acceleration,last))
+			-- Lime crowns tint the petal leaves lime; pink crowns pink.
+			r.step(2.1)
+			assert(r.life.colour==Life.PetalColours.lime)
+			r.crownColour="pink";r.step(2.1)
+			assert(r.life.colour==Life.PetalColours.pink)
 		end)
 		-- Dewdrops (WORLD-PASS item 3; FRUIT-LOOK) -------------------------------------------------------------------
 		local function dewdrops(r)
@@ -488,7 +623,7 @@ return function(client)
 				assert(label and label.ClassName=="ImageLabel"and label.Image==Life.DewdropTexture and label.BackgroundTransparency==1)
 			end
 			r.step(60)
-			assert(#dewdrops(r)==16 and #r.parts()==51,"never made or destroyed in play")
+			assert(#dewdrops(r)==16 and #r.parts()==3*8+4*3+3+2+16,"never made or destroyed in play")
 		end)
 
 		test("Dewdrops: hanging under the lime crowns in reach, nearest first: 16 at level 0, 8 still ones at 1, none pink",function()

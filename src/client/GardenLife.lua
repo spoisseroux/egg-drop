@@ -1,14 +1,22 @@
--- Garden life (ALIVE-LIFE-BUILD-PLAN-2026-11-22, Alive step 5): petals off the blossom crowns in a gust, soap bubbles
--- drifting past the camera, a round bird on the crown where AmbientAudio's chirp came from, butterflies over the
--- flower patches, and Dewdrops hanging under the lime crowns that a strong gust shakes loose (WORLD-PASS item 3,
--- artifacts/world-pass-2026-11-22/FRUIT-LOOK.md). Client only and looks only: no remotes, no saves, nothing to collect.
--- LifeSim decides; this owns the parts.
+-- Garden life (ALIVE-LIFE-BUILD-PLAN-2026-11-22, Alive step 5; round 3 for beta 12 QA L1-L3:
+-- artifacts/qa-2026-11-23-beta12/GARDEN-LIFE-NEST-LOOK.md and GARDEN-LIFE-NEST-BUILD-PLAN.md): leaves always drifting
+-- down round the player, soap bubbles drifting past the camera, a small songbird on the crown where AmbientAudio's chirp
+-- came from, butterflies over the flower patches that turn into fireflies at dusk, and Dewdrops hanging under the lime
+-- crowns that a strong gust shakes loose (WORLD-PASS item 3, artifacts/world-pass-2026-11-22/FRUIT-LOOK.md). Client only
+-- and looks only: no remotes, no saves, nothing to collect. LifeSim decides; this owns the parts.
 --
 -- mount() is nil with the build ceiling off (Alive.ceiling("life")). With the switch off only the Alive signal is
--- connected and nothing exists. On: one folder EggDropLife in the workspace (birds 3 x 6 parts, butterflies 4 x 3,
--- three petal anchors and two bubble anchors, each with a ParticleEmitter, 16 Dewdrop anchors each with a BillboardGui),
--- ONE Heartbeat at 30 Hz (15 at budget level 1) and ONE BulkMoveTo a step; a part not in use is moved far away, never
--- re-parented or resized.
+-- connected and nothing exists. On: one folder EggDropLife in the workspace (birds 3 x 8 parts, butterflies 4 x 3 with
+-- a glow billboard each, three leaf anchors and two bubble anchors, each with a ParticleEmitter, 16 Dewdrop anchors
+-- each with a BillboardGui), ONE Heartbeat at 30 Hz (15 at budget level 1) and ONE BulkMoveTo a step; a part not in use
+-- is moved far away, never re-parented or resized. Textures come from LifeArt (the uploaded ids, or stand-ins until then).
+--   Leaves: three emitters (leaf A, leaf B, a pale petal) whose anchors move to a fresh spot round the player for each
+--   emit (LifeSim.leafSpot: 72 studs square, 11 over the ground, never where the drift would carry it under a roof);
+--   28 / 14 alive at most, their Acceleration (the wind) written at 4 Hz. Shown on the beta only once the covered-place
+--   list has been checked in Studio (LifeSim.LeafCoverChecked); always in Studio.
+--   Butterflies: wing decals, body and glow written at 10 Hz and only on change; at dusk (daylight under .30) each hands
+--   off to a firefly glow (LifeSim), and a park or Reduced Motion turns every glow off at once.
+--   Birds: a sitting bird with nothing moving is not written again.
 --   Dewdrops: what falls is LifeSim's Grove, a pure function of the server time over every lime crown (the gust
 --   number seeds it), so every client has the same fruit go whatever it sees or runs at. Drawing only: lime crowns
 --   within 90 studs, nearest first, 16 / 8 shown (level 0 / 1, no sway at 1), at most 3 / 2 loose; a pet within 3 studs
@@ -16,65 +24,66 @@
 --   just hang, every slot full.
 --   Parked (a hatch, the board out of Room mode, my own race): everything hidden, nothing simulated.
 --   A menu: bubbles stop starting; the rest goes on behind the shade.
---   Reduced Motion: no petals, bubbles or flight; a bird is just there on its crown, folded and still; fruit hangs.
+--   Reduced Motion: no leaves, bubbles or flight; a bird is just there on its crown, folded and still; fruit hangs.
 --   Budget level 2: nothing at all (torn down, and it never comes back up that session).
---   The garden hour (GARDEN-HOUR-BUILD-PLAN-2026-11-23 slice D): with it on, bubbles, butterflies and birds start only
---   while its daylight is above .7 (Sim.day); the ones out finish (bubbles pop on time, butterflies fly off, birds sit out
---   their stay). Petals and Dewdrops never ask. The daylight is GardenHour's, from the server clock, so the gate is the
---   same on every client; with the hour off it is nil and nothing changes. On is HollowClock.hourOn(): the hour and the
---   Aero look painting it, so a client whose AeroWorld did not start keeps today's garden under today's light.
+--   The garden hour (GARDEN-HOUR-BUILD-PLAN-2026-11-23 slice D): with it on, bubbles and birds start only while its
+--   daylight is above .7 (Sim.day); butterflies fly over .30 and spawn over .34. Leaves and Dewdrops never ask. The
+--   daylight is GardenHour's, from the server clock, so the gate is the same on every client; with the hour off it is
+--   nil and nothing changes. On is HollowClock.hourOn(): the hour and the Aero look painting it, so a client whose
+--   AeroWorld did not start keeps today's garden under today's light.
 --   The switch off, or a step that throws: everything gone in that frame.
 -- deps: ambient (the AmbientAudio instance: onChirp is set while on), dash() -> DashClient?, modalOpen(), reduced(),
 --   mode(), plus fixtures for specs: alive {ceiling, on, changed}, world, heartbeat, now, camera() -> CFrame?,
 --   root() -> Vector3?, move(parts, frames), hatching, level, spots, patches, stations, pad, course, crowns() -> "lime"|"pink",
 --   groundY, warn, seed; pets() -> {Vector3} (the garden pets this client draws, for the fruit bat), finds {Vector3},
 --   kerbs {{x, z, rx, rz}}, safe(x, z) -> boolean (walkable ground: IslandBounds.safeCell), daylight(now) -> number?
---   (the garden hour's, nil while it is off; read every Poll).
+--   (the garden hour's, nil while it is off; read every Poll), leafGround(x, z) -> y? (nil off the island), cover
+--   (the covered places), leaves() -> boolean (the leaves' gate).
 local GuiService=game:GetService("GuiService")
 local Players=game:GetService("Players")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local RunService=game:GetService("RunService")
 local Sim=require(script.Parent.LifeSim)
 local Wind=require(script.Parent.Wind)
+local LifeArt=require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("LifeArt"))
 
 local Life={};Life.__index=Life
 Life.Folder="EggDropLife"
-Life.Poll=2        -- seconds: petal crowns re-picked, crown colour and the race read again
+Life.Poll=2        -- seconds: crown colour, the race and the garden hour read again
 Life.Gate=.25      -- seconds between hatch checks
 Life.MaxStep=.1
+Life.LookHz=10     -- butterfly wing, body and glow writes a second
 Life.Hidden=CFrame.new(0,4096,0)
-Life.PetalReach=90 -- a crown farther than this from the camera drops no petals
-Life.PetalTexture="rbxassetid://112974880714881"
+Life.PetalTexture=LifeArt.Petal
 Life.BubbleTexture="rbxassetid://77828632873187"
--- LOOK-R2 5: drawn by scripts/draw_life_textures.py, uploaded 2026-11-22.
-Life.BirdEye="rbxassetid://127417519256529"
-Life.BirdWing="rbxassetid://81512459364906"
-Life.ButterflyWing="rbxassetid://108754043011076"
-Life.ButterflyWingM="rbxassetid://95949019207820" -- the mirror of ButterflyWing
 -- FRUIT-LOOK 1: assets/world/dewdrop.png (scripts/draw_world_textures.py), uploaded 2026-11-23. Billboard studs.
 Life.DewdropTexture="rbxassetid://82054526707528"
 Life.FruitSize=Vector2.new(1.1,1.28)
 local hex=Color3.fromHex
-Life.Ink=hex("#24304F")
-Life.EyeInk=hex("#161C38")
--- LOOK-R2 1, picked by perch index % 3; the wing is its decals' Color3.
-Life.BirdColours=table.freeze({
-	[0]=table.freeze({body=hex("#2A6BE0"),wing=hex("#173F9E"),beak=hex("#FF9F1C")}), -- Tide
-	[1]=table.freeze({body=hex("#FF7C6B"),wing=hex("#C93F3A"),beak=hex("#FFD23F")}), -- Coral
-	[2]=table.freeze({body=hex("#FFD23F"),wing=hex("#E08A10"),beak=hex("#FF7A1A")}), -- Sun
+local white=Color3.new(1,1,1)
+-- Round 3 (GARDEN-LIFE-NEST-LOOK 1): butterfly slot -> its wing file and mirror, full colour (Color3 white).
+Life.ButterflyArt=table.freeze({
+	table.freeze({"butterflyAmber","butterflyAmberM"}),table.freeze({"butterflyChalk","butterflyChalkM"}),
+	table.freeze({"butterflyDusk","butterflyDuskM"}),table.freeze({"butterflyMeadow","butterflyMeadowM"}),
 })
--- LOOK 2: Rose, Citrus, Iris, Tide; one of each while four are alive.
-Life.WingColours=table.freeze({hex("#FF327A"),hex("#FFCC00"),hex("#7A35F0"),hex("#0A4FD0")})
--- LOOK-R2 3, by emitter slot: lime crowns (Aero on) or pink.
-Life.PetalColours=table.freeze({
-	lime=table.freeze({hex("#FFF6C2"),hex("#FFE66B"),hex("#F4FFD0")}),
-	pink=table.freeze({hex("#FFB8D6"),hex("#FF8FBF"),hex("#FFE3EE")}),
+Life.ButterflyBody=hex("#2A2018")
+Life.Glow=table.freeze({colour=hex("#E8FF8A"),brightness=2,maxDistance=110})
+-- Round 3 (GARDEN-LIFE-NEST-LOOK 3), picked by perch index % 3; the wing is a full-colour file, the breast and tail
+-- are tinted decals.
+Life.BirdLooks=table.freeze({
+	[0]=table.freeze({name="Ember",body=hex("#EADBC2"),breast=hex("#D9713A"),head=hex("#7A6248"),tail=hex("#5E4A36"),beak=hex("#3A3028"),wing="birdWingEmber"}),
+	[1]=table.freeze({name="Slate",body=hex("#EBDCC4"),breast=hex("#E0A070"),head=hex("#6F8FB3"),tail=hex("#465E7E"),beak=hex("#2E2E33"),wing="birdWingSlate"}),
+	[2]=table.freeze({name="Moss",body=hex("#E6D788"),breast=hex("#A6A45E"),head=hex("#3F4438"),tail=hex("#4A5230"),beak=hex("#4A4038"),wing="birdWingMoss"}),
 })
--- Petals leave downwind along the ground plane at Speed, slowed by Drag; LOOK-R2's small Acceleration sinks them to
--- grass height over the life (round 1's downward heading on top of it would sink them twice, under the lawn).
-Life.PetalHeading=Wind.Direction
-Life.PetalDrag=.25
-Life.PetalSink=Vector3.new(0,-.5,0)
+Life.EyeInk=hex("#14110F")
+-- Round 3 (GARDEN-LIFE-NEST-LOOK 2): the three leaf emitters. The petal's tint follows the crowns (lime or pink).
+Life.Leaves=table.freeze({
+	table.freeze({name="LifeLeafA",texture="leafA",size={.30,.46,.08,.42}}),
+	table.freeze({name="LifeLeafB",texture="leafB",size={.26,.40,.06,.36}}),
+	table.freeze({name="LifeLeafPetal",texture=nil,size={.22,.34,.05,.30}}),
+})
+Life.PetalColours=table.freeze({lime=hex("#FFF6C2"),pink=hex("#FFB8D6")})
+Life.LeafAnchor=Vector3.new(4,2,4)
 -- Bubbles: rise .4 and drift 1.5 to 3 a second downwind.
 Life.BubbleHeading=(Wind.Direction*2.25+Vector3.new(0,Sim.BubbleRise,0)).Unit
 
@@ -95,7 +104,7 @@ local function part(folder,name,class,size,colour,shape)
 	p.TopSurface,p.BottomSurface=Enum.SurfaceType.Smooth,Enum.SurfaceType.Smooth
 	if shape then p.Shape=shape end
 	p.Size=size
-	p.Color=colour or Life.Ink
+	p.Color=colour or Life.ButterflyBody
 	p.Transparency=if colour==false then 1 else 0
 	p.CFrame=Life.Hidden
 	p.Parent=folder
@@ -115,30 +124,38 @@ local function decal(p,face,texture,colour)
 	return d
 end
 
-local function petalEmitter(anchor)
+local function keys(list)
+	local out={}
+	for _,point in ipairs(list)do table.insert(out,NumberSequenceKeypoint.new(point[1],point[2],point[3]or 0))end
+	return NumberSequence.new(out)
+end
+-- One leaf emitter (GARDEN-LIFE-NEST-LOOK 2): Emit only, from a small box GardenLife moves to each leaf's spot.
+local function leafEmitter(anchor,index)
+	local L,spec=Sim.Leaf,Life.Leaves[index]
 	local e=Instance.new("ParticleEmitter")
-	e.Name="Petals"
-	e.Texture=Life.PetalTexture
+	e.Name="Leaves"
+	e.Texture=if spec.texture then LifeArt.id(spec.texture)else Life.PetalTexture
+	e.Color=ColorSequence.new(if spec.texture then white else Life.PetalColours.lime)
 	e.Rate=0
 	e.Enabled=true
 	e.LockedToPart=false
-	e.EmissionDirection=Enum.NormalId.Front
+	e.EmissionDirection=Enum.NormalId.Bottom
 	e.Shape=Enum.ParticleEmitterShape.Box
-	e.ShapeStyle=Enum.ParticleEmitterShapeStyle.Surface
+	e.ShapeStyle=Enum.ParticleEmitterShapeStyle.Volume
 	e.Orientation=Enum.ParticleOrientation.FacingCamera
-	e.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.40),NumberSequenceKeypoint.new(.10,.68,.12),NumberSequenceKeypoint.new(1,.60,.10)})
-	e.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.08,.05),NumberSequenceKeypoint.new(.75,.05),NumberSequenceKeypoint.new(1,1)})
-	e.Squash=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.2,-.5),NumberSequenceKeypoint.new(.4,.1),
-		NumberSequenceKeypoint.new(.6,-.5),NumberSequenceKeypoint.new(.8,.1),NumberSequenceKeypoint.new(1,-.3)})
+	local s=spec.size
+	e.Size=keys({{0,s[1]},{.1,s[2],s[3]},{1,s[4]}})
+	e.Transparency=keys({{0,1},{.08,.1},{.88,.1},{1,1}})
+	e.Squash=keys({{0,0},{.25,-.35},{.5,.05},{.75,-.35},{1,0}})
 	e.Rotation=NumberRange.new(0,360)
-	e.RotSpeed=NumberRange.new(-120,120)
-	e.LightEmission,e.LightInfluence,e.Brightness=0,.5,1
+	e.RotSpeed=NumberRange.new(-45,45)
+	e.LightEmission,e.LightInfluence,e.Brightness=0,1,1
 	e.ZOffset=0
-	e.Speed=NumberRange.new(3.5,6)
-	e.SpreadAngle=Vector2.new(25,25)
-	e.Lifetime=NumberRange.new(5,Sim.PetalLife)
-	e.Drag=Life.PetalDrag
-	e.Acceleration=Life.PetalSink
+	e.Speed=NumberRange.new(L.speed[1],L.speed[2])
+	e.SpreadAngle=Vector2.new(L.spread,L.spread)
+	e.Lifetime=NumberRange.new(L.life[index][1],L.life[index][2])
+	e.Drag=L.drag
+	e.Acceleration=Sim.leafWind(0,0)
 	e.Parent=anchor
 	return e
 end
@@ -200,6 +217,46 @@ local function dewdrop(folder,slot)
 	return{anchor=anchor,gui=gui,label=label,key=nil,position=nil,rotation=0,transparency=0,w=1,h=1}
 end
 
+-- The hand-off glow (GARDEN-LIFE-NEST-LOOK 1): one billboard on each butterfly's body, off by day. No PointLight.
+local function glow(body)
+	local gui=Instance.new("BillboardGui")
+	gui.Name="Glow"
+	gui.Size=UDim2.fromScale(Sim.Butterfly.glowFrom,Sim.Butterfly.glowFrom)
+	gui.LightInfluence=0
+	gui.Brightness=Life.Glow.brightness
+	gui.AlwaysOnTop=false
+	gui.MaxDistance=Life.Glow.maxDistance
+	gui.ClipsDescendants=false
+	gui.Active=false
+	gui.Enabled=false
+	gui.Parent=body
+	local label=Instance.new("ImageLabel")
+	label.Name="Dot"
+	label.Size=UDim2.fromScale(1,1)
+	label.BackgroundTransparency=1
+	label.BorderSizePixel=0
+	label.Image=LifeArt.id("fireflyDot")
+	label.ImageColor3=Life.Glow.colour
+	label.ImageTransparency=1
+	label.ScaleType=Enum.ScaleType.Stretch
+	label.Parent=gui
+	return gui,label
+end
+
+-- Off the island's ground grid (the sky round it): no leaf there.
+local function islandGround(Shared,groundY)
+	local ok,Data=pcall(function()return require(Shared:WaitForChild("WorldV7Data"))end)
+	local G=ok and type(Data)=="table"and Data.ground
+	if type(G)~="table"or type(G.h)~="table"then return groundY end
+	return function(x,z)
+		local i,j=math.floor((x-G.x0)/G.step+.5),math.floor((z-G.z0)/G.step+.5)
+		if i<0 or j<0 or i>=G.nx or j>=G.nz then return nil end
+		local v=G.h[j*G.nx+i+1]
+		if type(v)~="number"or v<=-900 then return nil end
+		return groundY(x,z)
+	end
+end
+
 -- Mount ---------------------------------------------------------------------------------------------------------
 function Life.mount(deps)
 	deps=deps or {}
@@ -237,6 +294,8 @@ function Life.mount(deps)
 		local Hour=require(Shared:WaitForChild("GardenHour"))
 		return Hour.phase(now+Hour.offset()).daylight
 	end
+	-- The leaves wait for the covered-place probe on the beta (LifeSim.LeafCoverChecked); Studio always has them.
+	self.leavesGate=deps.leaves or function()return Sim.LeafCoverChecked==true or RunService:IsStudio()end
 	table.insert(self.connections,alive.changed("life"):Connect(function()self:sync()end))
 	self:sync()
 	return self
@@ -296,9 +355,12 @@ function Life:places()
 			table.insert(kerbs,{x=site.Center.X,z=site.Center.Z,rx=site.Radius.X,rz=site.Radius.Y})
 		end
 	end
-	self.fruitWorld={stations=self.stations,pad=self.pad,course=self.course,finds=finds,kerbs=kerbs,
-		groundY=d.groundY or require(Shared:WaitForChild("HollowWorldLayout")).groundY,
+	local groundY=d.groundY or require(Shared:WaitForChild("HollowWorldLayout")).groundY
+	self.fruitWorld={stations=self.stations,pad=self.pad,course=self.course,finds=finds,kerbs=kerbs,groundY=groundY,
 		safe=d.safe or require(Shared:WaitForChild("IslandBounds")).safeCell}
+	-- Fireflies rise from the shared ground; leaves start only over the island, never where they would drift under a roof.
+	self.ground=groundY
+	self.leafWorld={ground=d.leafGround or(if d.groundY then d.groundY else islandGround(Shared,groundY)),cover=d.cover or Sim.LeafCover}
 	self.crowns=d.crowns or function()
 		local Aero=require(Shared:WaitForChild("Aero"))
 		return if Aero.on()and Aero.trees()=="lime"then "lime"else "pink"
@@ -313,48 +375,61 @@ function Life:enable()
 	folder.Name=Life.Folder
 	self.folder=folder
 	self.shown={}
-	self.birdPool,self.flyPool,self.petalPool={},{},{}
-	-- Birds (LOOK-R2 1, REVIEW-R2): body, two eye discs (thin cylinders, the eye decal on both round caps), a beak cube
-	-- turned corner-first, two wing plates. Six parts.
+	self.birdPool,self.birdArt,self.flyPool,self.leafPool={},{},{},{}
+	-- Birds (round 3): body (the breast decal on its Front), head, beak turned corner-first, two bead eyes, two wing
+	-- plates, the tail plate. Eight parts. Each slot starts with a different wing file, so all three load at once.
 	local Face=Enum.NormalId
-	local white=Color3.new(1,1,1)
 	for slot=1,Sim.Caps.birds[1]do
-		local look=Life.BirdColours[0]
+		local look=Life.BirdLooks[(slot-1)%3]
 		local name="LifeBird"..slot.."_"
+		local bodyPart=part(folder,name.."Body","Part",Vector3.new(1.05,1.05,1.05),look.body,Enum.PartType.Ball)
+		local art={wings={},tail={}}
+		local breast=LifeArt.id("birdBreast")
+		if breast then art.breast=decal(bodyPart,Face.Front,breast,look.breast)end
 		local eyes={}
 		for _,side in ipairs({"EyeR","EyeL"})do
-			local disc=part(folder,name..side,"Part",Vector3.new(.06,.46,.46),Life.EyeInk,Enum.PartType.Cylinder)
-			decal(disc,Face.Left,Life.BirdEye,white);decal(disc,Face.Right,Life.BirdEye,white)
-			eyes[side]=disc
+			local eye=part(folder,name..side,"Part",Vector3.new(.14,.14,.14),Life.EyeInk,Enum.PartType.Ball)
+			eye.Reflectance=.2
+			eyes[side]=eye
 		end
 		local wings={}
 		for i,side in ipairs({"WingL","WingR"})do
-			local plate=part(folder,name..side,"Part",Vector3.new(.04,.66,.46),false)
-			decal(plate,Face.Left,Life.BirdWing,look.wing);decal(plate,Face.Right,Life.BirdWing,look.wing)
+			local plate=part(folder,name..side,"Part",Vector3.new(.04,.75,.55),false)
+			table.insert(art.wings,decal(plate,Face.Left,LifeArt.id(look.wing),white))
+			table.insert(art.wings,decal(plate,Face.Right,LifeArt.id(look.wing),white))
 			wings[i]=plate
 		end
+		local tail=part(folder,name.."Tail","Part",Vector3.new(.46,.68,.02),false)
+		art.tail={decal(tail,Face.Front,LifeArt.id("birdTail"),look.tail),decal(tail,Face.Back,LifeArt.id("birdTail"),look.tail)}
+		art.wing=look.wing
 		self.birdPool[slot]={
-			part(folder,name.."Body","Part",Vector3.new(1.2,1.2,1.2),look.body,Enum.PartType.Ball),
-			eyes.EyeR,
-			part(folder,name.."Beak","Part",Vector3.new(.26,.26,.26),look.beak),
+			bodyPart,
+			part(folder,name.."Head","Part",Vector3.new(.68,.68,.68),look.head,Enum.PartType.Ball),
+			part(folder,name.."Beak","Part",Vector3.new(.17,.17,.17),look.beak),
+			eyes.EyeR,eyes.EyeL,
 			wings[1],wings[2],
-			eyes.EyeL,
+			tail,
 		}
+		self.birdArt[slot]=art
 	end
-	-- Butterflies (LOOK-R2 2): body, two wing plates thin in Z; each wing's two faces carry the file and its mirror, so
-	-- from above and below the dark root touches the body and the larger lobe is forward.
+	-- Butterflies (round 3): body, two wing plates thin in Z; each wing's two faces carry the slot's file and its mirror,
+	-- so from above and below the dark root touches the body and the larger lobe is forward. A glow on the body.
 	for slot=1,Sim.Caps.butterflies[1]do
-		local wing=Life.WingColours[slot]
+		local art=Life.ButterflyArt[slot]
+		local file,mirror=LifeArt.id(art[1]),LifeArt.id(art[2])
 		local name="LifeButterfly"..slot.."_"
-		local left=part(folder,name.."WingL","Part",Vector3.new(.70,.84,.02),false)
-		decal(left,Face.Back,Life.ButterflyWingM,wing);decal(left,Face.Front,Life.ButterflyWing,wing)
-		local right=part(folder,name.."WingR","Part",Vector3.new(.70,.84,.02),false)
-		decal(right,Face.Back,Life.ButterflyWing,wing);decal(right,Face.Front,Life.ButterflyWingM,wing)
-		self.flyPool[slot]={part(folder,name.."Body","Part",Vector3.new(.10,.10,.50),Life.Ink),left,right}
+		local left=part(folder,name.."WingL","Part",Vector3.new(.56,.67,.02),false)
+		local right=part(folder,name.."WingR","Part",Vector3.new(.56,.67,.02),false)
+		local decals={decal(left,Face.Back,mirror,white),decal(left,Face.Front,file,white),
+			decal(right,Face.Back,file,white),decal(right,Face.Front,mirror,white)}
+		local bodyPart=part(folder,name.."Body","Part",Vector3.new(.08,.08,.40),Life.ButterflyBody)
+		local gui,dot=glow(bodyPart)
+		self.flyPool[slot]={parts={bodyPart,left,right},decals=decals,glow=gui,dot=dot,
+			owner=nil,wing=0,body=0,glowOn=false,glowSize=nil,glowTr=nil}
 	end
-	for slot=1,Sim.Caps.emitters[1]do
-		local anchor=part(folder,"LifePetals"..slot,"Part",Vector3.new(1,1,1),false)
-		self.petalPool[slot]={anchor=anchor,emitter=petalEmitter(anchor)}
+	for index in ipairs(Life.Leaves)do
+		local anchor=part(folder,Life.Leaves[index].name,"Part",Life.LeafAnchor,false)
+		self.leafPool[index]={anchor=anchor,emitter=leafEmitter(anchor,index)}
 	end
 	self.fruitPool={}
 	for slot=1,Sim.Fruit.pool do self.fruitPool[slot]=dewdrop(folder,slot)end
@@ -365,14 +440,16 @@ function Life:enable()
 	end
 	self.birds=Sim.Birds.new(self.seed)
 	self.flies=Sim.Butterflies.new(self.seed+1)
-	self.petals=Sim.Petals.new()
+	self.leaves=Sim.Leaves.new(self.seed+3)
 	self.bubbles=Sim.Bubbles.new(self.seed+2)
 	self.grove=Sim.Grove.new(self.spots.Crowns or {},self.fruitWorld)
 	self.loose=Sim.Loose.new()
 	self.view,self.fruitOf,self.fruitCount={},{},0
-	self.picked={}
-	self.elapsed,self.since,self.steps,self.pollIn,self.gateIn=0,0,0,0,0
-	self.parked,self.hatch,self.live,self.wasReduced,self.colours,self.lime=false,false,false,false,nil,false
+	self.birdStill={}
+	self.elapsed,self.since,self.steps,self.pollIn,self.gateIn,self.lookIn,self.windIn=0,0,0,0,0,0,0
+	self.parked,self.hatch,self.live,self.wasReduced,self.colour,self.lime=false,false,false,false,nil,false
+	local okGate,gate=pcall(self.leavesGate)
+	self.leavesOn=okGate and gate==true
 	self:readDay(self.now())
 	folder.Parent=self.world
 	local ambient=self.d.ambient
@@ -386,10 +463,13 @@ function Life:enable()
 	end)
 end
 
--- The garden hour's gate, read at enable and every Poll (a failing read is day: the garden as it was).
+-- The garden hour's gate, read at enable and every Poll (a failing read is day: the garden as it was). self.dusk is
+-- the raw daylight for the butterflies (nil: day).
 function Life:readDay(now)
 	local ok,daylight=pcall(self.daylight,now)
-	self.day=Sim.day(if ok then daylight else nil)
+	daylight=if ok and type(daylight)=="number"and daylight==daylight then daylight else nil
+	self.dusk=daylight
+	self.day=Sim.day(daylight)
 	return self.day
 end
 
@@ -402,8 +482,8 @@ function Life:disable()
 	if ambient and self.hook and ambient.onChirp==self.hook then ambient.onChirp=nil end
 	self.hook=nil
 	local folder=self.folder
-	self.folder,self.shown,self.birdPool,self.flyPool,self.petalPool,self.bubblePool=nil,nil,nil,nil,nil,nil
-	self.birds,self.flies,self.petals,self.bubbles,self.picked=nil,nil,nil,nil,nil
+	self.folder,self.shown,self.birdPool,self.birdArt,self.flyPool,self.leafPool,self.bubblePool=nil,nil,nil,nil,nil,nil,nil
+	self.birds,self.flies,self.leaves,self.bubbles,self.birdStill=nil,nil,nil,nil,nil
 	self.fruitPool,self.grove,self.loose,self.view,self.fruitOf,self.fruitCount=nil,nil,nil,nil,nil,0
 	if folder then folder:Destroy()end
 end
@@ -423,18 +503,24 @@ function Life:racing()
 end
 
 function Life:clearEmitters()
-	for _,slot in ipairs(self.petalPool)do slot.emitter:Clear()end
+	for _,slot in ipairs(self.leafPool)do slot.emitter:Clear()end
 	for _,slot in pairs(self.bubblePool)do slot.emitter:Clear()end
-	self.petals:clear()
+	self.leaves:clear()
 	self.bubbles:clear()
 end
 
--- Everything hidden in one move, every creature forgotten, every particle cleared.
+-- Every butterfly glow off at once (a park, Reduced Motion, a slot let go).
+function Life:glowOff(entry)
+	if entry.glowOn then entry.glow.Enabled=false;entry.glowOn=false end
+end
+
+-- Everything hidden in one move, every creature forgotten, every particle cleared, every glow off.
 function Life:park()
 	self.parked=true
 	self.birds:clear();self.flies:clear()
 	self:clearEmitters()
-	table.clear(self.picked)
+	for _,entry in ipairs(self.flyPool)do self:glowOff(entry);entry.owner=nil end
+	table.clear(self.birdStill)
 	self:forgetFruit()
 	local parts,frames={},{}
 	for p in pairs(self.shown)do table.insert(parts,p);table.insert(frames,Life.Hidden)end
@@ -442,17 +528,27 @@ function Life:park()
 	if #parts>0 then self.move(parts,frames)end
 end
 
--- The nearest blossom crowns (up to the level's emitter cap) within reach, none round the camera.
-function Life:pick(eye,level)
-	local near={}
-	for _,crown in ipairs(self.spots.Crowns or {})do
-		local d=(crown.position-eye).Magnitude
-		if d<=Life.PetalReach and d>=Sim.Keep.camera+crown.size.X*.5 then table.insert(near,{crown=crown,d=d})end
+-- A butterfly slot's wings, body and glow, written only when they change (force: a new butterfly in the slot).
+-- Changed by more than eps, or reaching its end (0 or 1) exactly, so a fade never stops a hair short.
+local function changed(a,b,eps)return a==nil or b==nil or math.abs(a-b)>eps or((b==0 or b==1)and a~=b)end
+function Life:paintButterfly(entry,look,force)
+	if force or changed(entry.wing,look.wing,.01)then
+		entry.wing=look.wing
+		for _,d in ipairs(entry.decals)do d.Transparency=look.wing end
 	end
-	table.sort(near,function(a,b)return a.d<b.d end)
-	local picked={}
-	for i=1,math.min(#near,Sim.cap("emitters",level))do picked[i]=near[i].crown end
-	return picked
+	if force or changed(entry.body,look.body,.01)then
+		entry.body=look.body
+		entry.parts[1].Transparency=look.body
+	end
+	local g=look.glow
+	if g then
+		if not entry.glowOn then entry.glow.Enabled=true;entry.glowOn=true end
+		if force or changed(entry.glowSize,g.size,.01)then entry.glowSize=g.size;entry.glow.Size=UDim2.fromScale(g.size,g.size)end
+		if force or changed(entry.glowTr,g.transparency,.01)then entry.glowTr=g.transparency;entry.dot.ImageTransparency=g.transparency end
+	else
+		self:glowOff(entry)
+		entry.glowSize,entry.glowTr=nil,nil
+	end
 end
 
 function Life:step(dt)
@@ -496,7 +592,7 @@ function Life:step(dt)
 	local function hide(p)
 		if self.shown[p]then self.shown[p]=nil;table.insert(parts,p);table.insert(frames,Life.Hidden)end
 	end
-	-- Every Poll seconds: the race, the crown colour and the crowns that drop petals.
+	-- Every Poll seconds: the race, the crown colour (the petal leaves' tint) and the garden hour.
 	self.pollIn-=tick
 	if self.pollIn<=0 then
 		self.pollIn=Life.Poll
@@ -506,31 +602,32 @@ function Life:step(dt)
 		self:readDay(now)
 		local okColour,colours=pcall(self.crowns)
 		self.lime=okColour and colours=="lime"
-		colours=Life.PetalColours[okColour and colours or "pink"]or Life.PetalColours.pink
-		local repaint=colours~=self.colours
-		self.colours=colours
-		local picked=if reduced then {}else self:pick(eye,level)
-		for slot,entry in ipairs(self.petalPool)do
-			local crown=picked[slot]
-			if crown~=self.picked[slot]then
-				self.picked[slot]=crown
-				if crown then
-					entry.anchor.Size=crown.size
-					put(entry.anchor,CFrame.lookAt(crown.position,crown.position+Life.PetalHeading))
-				else hide(entry.anchor)end
-			end
-			if repaint then entry.emitter.Color=ColorSequence.new(colours[slot])end
+		local colour=if self.lime then Life.PetalColours.lime else Life.PetalColours.pink
+		if colour~=self.colour then
+			self.colour=colour
+			self.leafPool[3].emitter.Color=ColorSequence.new(colour)
 		end
 	end
-	local world={camera=eye,player=self.root(),stations=self.stations,pad=self.pad,course=if self.live then self.course else nil,groundY=self.groundY}
-	-- Petals: an Emit against the live count, from the wind where each crown is.
-	local winds={}
-	for slot=1,#self.petalPool do
-		local crown=self.picked[slot]
-		winds[slot]=if crown and not reduced then Wind.at(crown.position,now)else false
-	end
-	for slot,n in ipairs(self.petals:step(now,tick,winds,Sim.cap("petals",level)))do
-		if n>0 then table.insert(emits,{self.petalPool[slot].emitter,n})end
+	local player=self.root()
+	local world={camera=eye,player=player,stations=self.stations,pad=self.pad,course=if self.live then self.course else nil,
+		groundY=self.groundY,ground=self.ground}
+	-- Leaves: round the player (the camera without a character), each emit at its own spot; the wind at 4 Hz.
+	local centre=if typeof(player)=="Vector3"then player else eye
+	if self.leavesOn and not reduced then
+		local g=Wind.gust(centre,now)
+		self.windIn-=tick
+		if self.windIn<=0 then
+			self.windIn=1/Sim.Leaf.accelHz
+			local accel=Sim.leafWind(g,now)
+			for _,entry in ipairs(self.leafPool)do entry.emitter.Acceleration=accel end
+		end
+		local leafWorld=self.leafWorld
+		local place=function(_,random)return Sim.leafSpot(random,centre,leafWorld)end
+		for _,leaf in ipairs(self.leaves:step(now,tick,g,Sim.cap("leaves",level),level,place))do
+			local entry=self.leafPool[leaf.kind]
+			put(entry.anchor,CFrame.new(leaf.at))
+			table.insert(emits,{entry.emitter,1})
+		end
 	end
 	-- Bubbles: one every 3 s ahead of the camera, never in a menu, with Reduced Motion or at night, never in the way.
 	-- The roll picks the small or the large emitter; only that one's anchor moves to the spot.
@@ -543,31 +640,50 @@ function Life:step(dt)
 			table.insert(emits,{slot.emitter,1})
 		end
 	end
-	-- Wings: two poses swapped at 7.5 Hz (every 2 steps at 30 Hz, every step at 15 Hz); held at level 1.
-	local flip=(self.steps//(if level>=1 then 1 else 2))%2==0
-	local held=level>=1
+	-- Butterflies: one continuous wing angle; wings, body and glow painted at 10 Hz (at once for a new one).
+	self.lookIn-=tick
+	local paint=self.lookIn<=0
+	if paint then self.lookIn=1/Life.LookHz end
 	local used={}
-	for _,b in ipairs(self.flies:step(now,tick,world,self.patches,Sim.cap("butterflies",level),reduced,self.day))do
-		local pool=self.flyPool[b.colour]
-		if pool then
-			used[pool]=true
-			local list=Sim.butterflyParts(Sim.butterflyRoot(b,now),Sim.butterflyFlap(b,now,flip,held))
-			for i,p in ipairs(pool)do put(p,list[i])end
+	for _,b in ipairs(self.flies:step(now,tick,world,self.patches,Sim.cap("butterflies",level),reduced,self.dusk))do
+		local entry=self.flyPool[b.colour]
+		if entry then
+			used[entry]=true
+			local list=Sim.butterflyParts(Sim.butterflyRoot(b,now,level),Sim.butterflyFlap(b,now,level))
+			for i,p in ipairs(entry.parts)do put(p,list[i])end
+			local fresh=entry.owner~=b
+			if fresh or paint then
+				entry.owner=b
+				self:paintButterfly(entry,Sim.butterflyLook(b,now),fresh)
+			end
 		end
 	end
-	for _,pool in ipairs(self.flyPool)do if not used[pool]then for _,p in ipairs(pool)do hide(p)end end end
-	for _,bird in ipairs(self.birds:step(now,world,reduced,Sim.cap("birds",level)))do
+	for _,entry in ipairs(self.flyPool)do
+		if not used[entry]then
+			for _,p in ipairs(entry.parts)do hide(p)end
+			self:glowOff(entry)
+			entry.owner=nil
+		end
+	end
+	-- Birds: a sitting bird with nothing moving keeps its last frames (no write).
+	local still=self.birdStill
+	for _,bird in ipairs(self.birds:step(now,world,reduced,Sim.cap("birds",level),level))do
 		local pool=bird.slot and self.birdPool[bird.slot]
 		if pool then
 			used[pool]=true
-			local list=Sim.birdParts(bird.root,bird.wings,bird.flick,Sim.birdFlap(flip,held))
-			for i,p in ipairs(pool)do put(p,list[i])end
+			if not(bird.still and still[bird.slot]==bird)then
+				local list=Sim.birdParts(bird.root,bird.wings,bird.flick,bird.phi,bird.turn,bird.tau,bird.tuck)
+				for i,p in ipairs(pool)do put(p,list[i])end
+			end
+			still[bird.slot]=if bird.still then bird else nil
 		end
 	end
-	for _,pool in ipairs(self.birdPool)do if not used[pool]then for _,p in ipairs(pool)do hide(p)end end end
+	for slot,pool in ipairs(self.birdPool)do
+		if not used[pool]then still[slot]=nil;for _,p in ipairs(pool)do hide(p)end end
+	end
 	self:stepFruit(now,camera,level,reduced,put,hide)
 	if #parts>0 then self.move(parts,frames)end
-	-- After the move, so a bubble or a petal leaves from where its anchor now is.
+	-- After the move, so a bubble or a leaf leaves from where its anchor now is.
 	for _,emit in ipairs(emits)do emit[1]:Emit(emit[2])end
 end
 
@@ -684,24 +800,35 @@ function Life:chirp(perch,position,_cue)
 		for slot=1,#self.birdPool do
 			if not taken[slot]then
 				bird.slot=slot
-				local look=Life.BirdColours[bird.colour]or Life.BirdColours[0]
-				local pool=self.birdPool[slot]
-				pool[1].Color,pool[3].Color=look.body,look.beak
-				for _,plate in ipairs({pool[4],pool[5]})do
-					for _,d in ipairs(plate:GetChildren())do if d:IsA("Decal")then d.Color3=look.wing end end
-				end
+				self.birdStill[slot]=nil
+				self:paintBird(slot,Life.BirdLooks[bird.colour]or Life.BirdLooks[0])
 				break
 			end
 		end
 	end
 	return result,why
 end
+-- A landing bird's colourway: body, head and beak colours, the breast and tail tints, the wing file.
+function Life:paintBird(slot,look)
+	local pool,art=self.birdPool[slot],self.birdArt[slot]
+	pool[1].Color,pool[2].Color,pool[3].Color=look.body,look.head,look.beak
+	if art.breast then art.breast.Color3=look.breast end
+	for _,d in ipairs(art.tail)do d.Color3=look.tail end
+	if art.wing~=look.wing then
+		art.wing=look.wing
+		local texture=LifeArt.id(look.wing)
+		for _,d in ipairs(art.wings)do d.Texture=texture end
+	end
+end
 
--- For specs and the perf probe: how much is alive.
+-- For specs and the perf probe: how much is alive. `petals` is `leaves` under its old name (one build).
 function Life:counts()
-	if not self.enabled then return{birds=0,butterflies=0,petals=0,bubbles=0,fruit=0,loose=0}end
+	if not self.enabled then return{birds=0,butterflies=0,leaves=0,petals=0,glows=0,bubbles=0,fruit=0,loose=0}end
 	local now=self.now()
-	return{birds=#self.birds.list,butterflies=#self.flies.list,petals=self.petals:count(now),bubbles=self.bubbles:count(now),
+	local leaves=self.leaves:count(now)
+	local glows=0
+	for _,entry in ipairs(self.flyPool)do if entry.glowOn then glows+=1 end end
+	return{birds=#self.birds.list,butterflies=#self.flies.list,leaves=leaves,petals=leaves,glows=glows,bubbles=self.bubbles:count(now),
 		fruit=if self.parked then 0 else self.fruitCount,loose=#self.loose.list}
 end
 

@@ -129,6 +129,16 @@ function Art.collision(room)
 		invisible(regions,entry.name,CFrame.new(entry.center.X,World.FloorTop+.5,entry.center.Y)*CFrame.Angles(0,entry.yaw,0),
 			Vector3.new(entry.size.X,1,entry.size.Y),false):SetAttribute("GardenBlockedRegion",true)
 	end
+	-- The Sleepy Nest in the plaza (beta 12 QA O2): drawn only on its owner's client and never colliding, so pets are
+	-- kept off its square here. Onboarding v3 places only (beta, Studio): live has no such box. The attribute is set
+	-- before the box is parented: the runtime scene hook reads it when the box arrives.
+	local okOnboard,onboard=pcall(function()return require(Shared.Onboard).ceiling()end)
+	if okOnboard and onboard==true then
+		local Nest=require(Shared.Nest)
+		local box=invisible(nil,"SleepyNest",CFrame.new(Nest.Spot.X,World.FloorTop+.5,Nest.Spot.Z),Vector3.new(Nest.Block,1,Nest.Block),false)
+		box:SetAttribute("GardenBlockedRegion",true)
+		box.Parent=regions
+	end
 	for id,span in pairs(World.WalkableSpans)do
 		invisible(room,id.."Support",CFrame.new(span.center),span.size,true):SetAttribute("GardenWalkableSpan",id)
 	end

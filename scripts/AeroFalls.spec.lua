@@ -449,10 +449,11 @@ return function(client,offline)
 			assert(south.emitter.Enabled and not east.emitter.Enabled)
 			added.destroy()
 		end)
-		test("fireflies, the look: #E8FF8A, .35 studs, emissive, 4 to 6 s with a 1 s fade, 1.5 to 4 studs up, inert",function()
+		test("fireflies, the look: #E8FF8A, .6 studs (the LifeArt dot), emissive, 4 to 6 s with a 1 s fade, 1.5 to 4 studs up, inert",function()
 			local want=Color3.fromHex("#E8FF8A")
 			assert(near(Fly.Color.R,want.R,1e-6)and near(Fly.Color.G,want.G,1e-6)and near(Fly.Color.B,want.B,1e-6),"#E8FF8A")
-			assert(Fly.Size==.35 and Fly.LightEmission==1)
+			assert(Fly.Size==.6 and Fly.LightEmission==1)
+			assert(Fly.Texture==require(Shared.LifeArt).id("fireflyDot"),"the soft dot (or its stand-in)")
 			assert(Fly.Life[1]==4 and Fly.Life[2]==6 and Fly.Fade==1 and Fly.Pulse==1.8 and Fly.Speed==.6)
 			assert(Fly.Spawn==.3 and Fly.Full==Hour.Holds.night.Daylight,"full at the night hold")
 			assert(Fly.Speed/(Fly.Drag*math.log(2))<=Fly.Reach,"the drift stays within Reach")
@@ -471,7 +472,7 @@ return function(client,offline)
 				assert(e.Texture==Fly.Texture and e.LightInfluence==0 and e.LightEmission==1 and math.abs(e.Drag-Fly.Drag)<1e-6)
 				assert(e:FindFirstChildOfClass("PointLight")==nil and box:FindFirstChildOfClass("PointLight")==nil,"no light")
 				if not offline then
-					assert(e.Lifetime.Min==4 and e.Lifetime.Max==6 and e.Size.Keypoints[1].Value==.35)
+					assert(e.Lifetime.Min==4 and e.Lifetime.Max==6 and e.Size.Keypoints[1].Value==.6)
 					local fade=e.Transparency.Keypoints
 					assert(fade[1].Value==1 and fade[#fade].Value==1 and math.abs(fade[2].Time-.2)<1e-6,"1 s in and out of 5")
 				end
@@ -485,8 +486,8 @@ return function(client,offline)
 			for _,frame in pairs(Layout.Stations)do table.insert(keep,frame.Position)end
 			for _,point in pairs(Layout.Rest)do table.insert(keep,point)end
 			for _,span in pairs(Layout.WalkableSpans or {})do table.insert(keep,span.center)end
-			-- The nest (NestClient.Spot), the creek rest nook (GardenLayout), the west bridge.
-			for _,point in ipairs({Vector3.new(86,4.33,66),Vector3.new(26,4.175,-15.5),Vector3.new(-83,4.25,35)})do table.insert(keep,point)end
+			-- The nest (Nest.Spot, the plaza since beta 12 QA O2), the creek rest nook (GardenLayout), the west bridge.
+			for _,point in ipairs({require(Shared.Nest).Spot,Vector3.new(26,4.175,-15.5),Vector3.new(-83,4.25,35)})do table.insert(keep,point)end
 			-- Wet boxes: measured with both yaw senses, so the answer holds whichever way the walk map turns them.
 			local function wet(x,z)
 				local best=math.huge

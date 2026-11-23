@@ -18,6 +18,13 @@ Nest.ToyOwnedStars=20           -- the toy egg when every toy is owned
 Nest.FutureSlack=86400          -- an `at` further ahead than this is malformed
 Nest.ReadyPing=14               -- studs: the one soft ping when a ready egg comes this near
 Nest.Charm="nest"               -- the Nest Charm: an earned rule (n >= WeekLength), no saved data
+-- Where the nest stands (beta 12 QA O2, GARDEN-LIFE-NEST-LOOK 4, spot A): the plaza's east rim, root -Z facing the
+-- plaza's middle. Y is the walk map's ground (the client raycasts it). Shared: NestClient draws the nest here and the
+-- server keeps pets off it (LoungeWorldV7Art: one GardenBlockedRegion box, Block wide, behind Onboard.ceiling).
+-- Fallback B, if Studio shows A blocked: (-22.5, 4.07, 5.5), same facing.
+Nest.Spot=Vector3.new(-17.5,4.07,-2.5)
+Nest.Facing=Vector3.new(-30,4.07,-4)
+Nest.Block=5.5                  -- studs: the square pets walk round
 
 -- The welcome-week gifts, egg 1 to 7, fixed and shown from the moment the egg lands (never rolled). `stars` is
 -- always paid with the egg. Item kinds pick at land time and store the pick in `gift`:

@@ -3,6 +3,7 @@
 -- surfaces. Keep every number in step with the plan's table.
 local Aero={}
 local hex=Color3.fromHex
+local LifeArt=require(script.Parent.LifeArt)
 
 -- Light
 Aero.Hour=10.5
@@ -104,8 +105,10 @@ Aero.GlintDaylight=.7
 -- of its box (the particles fade, never cleared).
 Aero.Fireflies=table.freeze({
 	Spawn=.3,Full=.12,
-	Color=hex("#E8FF8A"),Size=.35,LightEmission=1,
-	Texture="rbxasset://textures/particles/sparkles_main.dds", -- the glint sparkle until the 32 px soft dot is drawn
+	-- Beta 12 QA L1 (GARDEN-LIFE-NEST-LOOK 1): the soft round dot (LifeArt fireflyDot; the glint sparkle until it is
+	-- uploaded), .6 studs (was .35; .45 if it reads as a blob at night).
+	Color=hex("#E8FF8A"),Size=.6,LightEmission=1,
+	Texture=LifeArt.id("fireflyDot"),
 	Life=table.freeze({4,6}),Fade=1,Pulse=1.8, -- seconds; Fade at each end, the brightness pulse's period
 	Speed=.6,Drag=.45,Reach=2,Low=1.5,Band=.5,
 	CameraKeepOut=6,
