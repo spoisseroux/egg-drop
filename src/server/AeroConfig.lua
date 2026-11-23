@@ -46,9 +46,30 @@ function Config.new(deps)
 	return self
 end
 
+-- The Aero world kit (assets/world/AeroKit.rbxmx: split crowns, falls sheets, lips, rocks) is mounted in ServerStorage and
+-- copied to ReplicatedStorage only where the ceiling passes, so live clients never download it. Missing: nothing.
+-- deps (specs): ceiling() -> bool, from (ServerStorage), to (ReplicatedStorage). Returns the copy, or nil.
+function Config.mountKit(deps)
+	deps=deps or {}
+	local ceiling=deps.ceiling or Aero.ceiling
+	if not ceiling()then return nil end
+	local from=deps.from or game:GetService("ServerStorage")
+	local to=deps.to or game:GetService("ReplicatedStorage")
+	local kit=from:FindFirstChild("AeroKit")
+	if not kit or to:FindFirstChild("AeroKit")then return to:FindFirstChild("AeroKit")end
+	local copy=kit:Clone()
+	copy.Parent=to
+	return copy
+end
+
 local shared=Config.new({service=function()return game:GetService("ConfigService")end,
 	set=function(name,value)workspace:SetAttribute(name,value)end,
 	wait=task.wait,spawn=task.spawn,now=os.clock,ceiling=function()return Aero.ceiling()end,warn=warn})
-Config.start=shared.start
+function Config.start()
+	-- Before the switch is published, so a client that sees Aero on finds the kit already there.
+	local ok,problem=pcall(Config.mountKit)
+	if not ok then warn("[Aero] kit not mounted: "..tostring(problem))end
+	shared.start()
+end
 Config.command=shared.command
 return Config

@@ -9,6 +9,7 @@
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Values=require(Shared:WaitForChild("WorldAero"))
 local Falls=require(script.Parent:WaitForChild("AeroFalls"))
+local Fountain=require(script.Parent:WaitForChild("AeroFountain"))
 local Additions={}
 Additions.Name="EggDropAero"
 
@@ -160,22 +161,29 @@ end
 
 -- Returns {folder, emitters, falls, still(reduced), update({level, camera, daylight}), destroy(), fireflies()};
 -- everything or nothing. options: parent, data (WorldV7Data), groundY, clouds=false, falls=false, hour (GardenHour; a
--- fixture in specs).
+-- fixture in specs), kit (WorldAeroKit while the world kit stands: the falls layers fit its bowed sheets and lips).
 function Additions.build(options)
 	local folder=Instance.new("Folder")
 	folder.Name=Additions.Name
-	local clouds,falls
+	local clouds,falls,fountain
 	local groundY=options.groundY or require(Shared:WaitForChild("HollowWorldLayout")).groundY
 	local ok,emitters=pcall(function()
 		Additions.dome(folder)
 		Additions.lips(folder)
 		local list=Additions.glints(folder,groundY)
-		if options.falls~=false then falls=Falls.build(folder,options.data or require(Shared:WaitForChild("WorldV7Data")))end
+		if options.falls~=false then falls=Falls.build(folder,options.data or require(Shared:WaitForChild("WorldV7Data")),options.kit)end
+		-- LOOK-R2 3: the fountain only where the kit's fountain stone stands.
+		if options.falls~=false and options.kit and options.kit.fountain then
+			local ambient=options.ambient
+			if ambient==nil then ambient=require(script.Parent:WaitForChild("AmbientAudio")).shared end
+			fountain=Fountain.build(folder,options.kit.fountain,ambient or nil)
+		end
 		if options.clouds~=false then clouds=Additions.clouds()end
 		folder.Parent=options.parent
 		return list
 	end)
 	local function destroy()
+		if fountain then fountain.destroy()end
 		folder:Destroy()
 		if clouds then clouds:Destroy()end
 	end
@@ -218,11 +226,12 @@ function Additions.build(options)
 			fly.on=on
 		end
 	end
-	return{folder=folder,emitters=emitters,falls=falls,destroy=destroy,state=state,
+	return{folder=folder,emitters=emitters,falls=falls,fountain=fountain,destroy=destroy,state=state,
 	fireflies=function()return flies end,
 	still=function(reduced)
 		reduced=reduced==true
 		if falls then falls.apply({reduced=reduced})end
+		if fountain then fountain.apply({reduced=reduced})end
 		if reduced==state.still then return end
 		state.still=reduced
 		paint(reduced)
@@ -237,6 +246,7 @@ function Additions.build(options)
 			forward.daylight=state.daylight
 			falls.apply(forward)
 		end
+		if fountain then fountain.apply({level=changes.level,camera=changes.camera})end
 		paint(false)
 	end}
 end

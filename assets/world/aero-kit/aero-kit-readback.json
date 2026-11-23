@@ -1,0 +1,85 @@
+{
+ "assetId": "125352578844438",
+ "operationId": "9f0fb6c4-8e24-425f-94db-f2810ca11826",
+ "moderation": "Approved",
+ "fbxSha256": "d8c679542166b9d32a5ffb71fc610206dfa65894514698ee444193463e3041d5",
+ "manifestSha256": "d28ae4b00f27311b6bd2731a84be591e18e38a78cf1258531bcb78d7c64ac792",
+ "parts": [
+  {
+   "name": "W7_Kit_Crown_Blossom__foliage_blossom",
+   "meshId": "rbxassetid://137878001101005",
+   "meshSize": [
+    108.966667,
+    71.0881348,
+    83.6262054
+   ]
+  },
+  {
+   "name": "W7_Kit_Crown_Hatch__foliage",
+   "meshId": "rbxassetid://91472458364066",
+   "meshSize": [
+    287.31369,
+    149.202393,
+    270.747406
+   ]
+  },
+  {
+   "name": "W7_Kit_Crown_Round__foliage",
+   "meshId": "rbxassetid://116909537674467",
+   "meshSize": [
+    109.189835,
+    86.7487946,
+    92.8965607
+   ]
+  },
+  {
+   "name": "W7_Kit_Crown_Tall__foliage",
+   "meshId": "rbxassetid://110195283751549",
+   "meshSize": [
+    70.6841202,
+    115.27803,
+    65.728508
+   ]
+  },
+  {
+   "name": "W7_Kit_Falls__kitwater",
+   "meshId": "rbxassetid://73845431603817",
+   "meshSize": [
+    377.337219,
+    563.466431,
+    292.821869
+   ]
+  },
+  {
+   "name": "W7_Kit_Fountain__kitstone",
+   "meshId": "rbxassetid://112786401704620",
+   "meshSize": [
+    103.485199,
+    60.4632568,
+    65.5793762
+   ]
+  },
+  {
+   "name": "W7_Kit_Rest__foliage",
+   "meshId": "rbxassetid://108550412728979",
+   "meshSize": [
+    2048,
+    28.0572872,
+    1642.99121
+   ]
+  },
+  {
+   "name": "W7_Kit_Rest__foliage_blossom",
+   "meshId": "rbxassetid://91409678055408",
+   "meshSize": [
+    1806.17395,
+    21.6658535,
+    759.856201
+   ]
+  }
+ ],
+ "provenance": {
+  "recordedUtc": "2026-11-23T17:53:38.148254+00:00",
+  "note": "Open Cloud POST /assets/v1/assets (Model) through Studio MCP, operation polled to done; MeshId/MeshSize read with InsertService:LoadAsset in Studio Edit, model destroyed unparented, place not saved."
+ }
+}

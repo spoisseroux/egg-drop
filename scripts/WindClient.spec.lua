@@ -229,7 +229,7 @@ return function(client)
 
 	local function empty(r)
 		return not r.client.enabled and #r.client.links==0 and #r.client.roomLinks==0 and next(r.client.candidates)==nil
-			and #r.client.entries==0 and r.client.room==nil and r.client.folder==nil
+			and #r.client.entries==0 and r.client.room==nil and next(r.client.folders)==nil and next(r.client.folderLinks)==nil and next(r.client.owners)==nil
 	end
 
 	test("the real mover with a detached room: no throw, exact rest, nothing left connected",function()

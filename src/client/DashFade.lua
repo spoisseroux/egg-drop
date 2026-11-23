@@ -5,7 +5,8 @@
 --   * solid things answer rays: a look every Fade.Every seconds, against the named meshes alone, up to Fade.Casts deep;
 --   * the crowns do not (nor the blossom), so where they cross the view is measured offline from the world meshes
 --     (scripts/measure_dash_camera.py) and kept here as stretches of the course.
--- The island's crowns are one merged mesh, so they fade together until they are exported apart (plan slice 9).
+-- The island's crowns are one merged mesh, so they fade together. Under the Aero look the kit (AeroKit) hides that mesh
+-- and shows the same leaves as split parts: every kit part whose name ends in the zone's material fades with it.
 local Fade={};Fade.__index=Fade
 Fade.Clear=.75
 Fade.Seconds=.18
@@ -23,11 +24,17 @@ local function world()
 	local lounge=workspace:FindFirstChild(Fade.Lounge)
 	return lounge and lounge:FindFirstChild("World")
 end
--- options (specs): world() -> folder, cast(origin, direction, solids) -> part or nil
+local function kit()
+	local lounge=workspace:FindFirstChild(Fade.Lounge)
+	return lounge and lounge:FindFirstChild("AeroKit")
+end
+-- options (specs): world() -> folder, kit() -> folder or nil, cast(origin, direction, solids) -> part or nil
 function Fade.new(options)
 	options=options or {}
-	return setmetatable({world=options.world or world,cast=options.cast,records={},wait=0},Fade)
+	return setmetatable({world=options.world or world,kit=options.kit or kit,cast=options.cast,records={},wait=0},Fade)
 end
+-- "W7_Vegetation__foliage" -> "__foliage": the kit parts that hold the same leaves end in it (W7_Kit_Crown_Round__foliage).
+local function suffix(mesh)return string.match(mesh,"(__[%w_]+)$")end
 -- The meshes, looked up by name on every look: they may stream in, or be replaced, during a race.
 function Fade:find()
 	local folder=self.world()
@@ -42,7 +49,20 @@ function Fade:find()
 		local part=folder:FindFirstChild(name)
 		if part then table.insert(self.solids,part)end
 	end
-	for index,zone in ipairs(Fade.Zones)do self.crowns[index]=folder:FindFirstChild(zone.mesh)end
+	local split=self.kit()
+	for index,zone in ipairs(Fade.Zones)do
+		local list=self.crowns[index]or {}
+		table.clear(list)
+		local merged=folder:FindFirstChild(zone.mesh)
+		if merged then table.insert(list,merged)end
+		local tail=suffix(zone.mesh)
+		if split and tail then
+			for _,part in ipairs(split:GetChildren())do
+				if part:IsA("BasePart")and string.sub(part.Name,1,7)=="W7_Kit_"and string.sub(part.Name,-#tail)==tail then table.insert(list,part)end
+			end
+		end
+		self.crowns[index]=list
+	end
 end
 -- Everything solid between the eye and the pet, nearest first: each cast leaves out what was already hit.
 function Fade:look(eye,way)
@@ -86,8 +106,10 @@ function Fade:step(dt,eye,pet,cs,onStones)
 	end
 	if self.ready then
 		for index,zone in ipairs(Fade.Zones)do
-			local crown=self.crowns[index]
-			if crown and zone.stones==onStones and cs>=zone.from and cs<=zone.to then self:blocked(crown)end
+			local list=self.crowns[index]
+			if list and zone.stones==onStones and cs>=zone.from and cs<=zone.to then
+				for _,crown in ipairs(list)do self:blocked(crown)end
+			end
 		end
 		if look then self:look(eye,pet-eye)end
 	end

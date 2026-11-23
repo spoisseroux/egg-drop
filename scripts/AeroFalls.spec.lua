@@ -95,6 +95,37 @@ return function(client,offline)
 	end
 
 	local ok,problem=pcall(function()
+		test("with the world kit standing: LOOK-R2's white water at Tumble, today's layers without it",function()
+			local Kit=Look.Kit
+			local kit={falls={Water_TumbleFalls_Upper={curve=2},Water_TumbleFalls_Lower={curve=2}}}
+			local added=Additions.build({parent=holder,data=DATA,clouds=false,groundY=function()return 4.5 end,hour=false,kit=kit})
+			local names={}
+			for _,each in ipairs(added.falls.layers)do if each.group=="Tumble"then names[each.name]=(names[each.name]or 0)+1 end end
+			for _,gone in ipairs({"StrandA","StrandB","Ribbon","Lip","Foam","LedgeFoam","Rings","Mist","LedgeMist","Rainbow"})do
+				assert(names[gone]==nil,gone.." is not in the kit stack")
+			end
+			assert(names.FlowA==2 and names.FlowB==2 and names.Apron==1 and names.BoilPool==1 and names.BoilLedge==1
+				and names.Droplets==1 and names.KitMist==1)
+			for nth=1,2 do
+				local beam=layer(added,"Tumble","FlowA",nth).item
+				assert(beam.CurveSize0==0 and beam.FaceCamera==false and beam.Segments==6 and beam.Texture==Kit.Textures.White,
+					"flow beams are straight and flat on the sheet (LOOK-R2 round 4)")
+			end
+			assert(layer(added,"Tumble","FlowB",1).item.Texture==Kit.Textures.Veil)
+			local sky=layer(added,"Sky","StrandA").item
+			assert(sky.CurveSize0==0 and sky.Segments==6,"Sky Falls keeps today's layers")
+			-- 9 at Tumble near the falls, 4 at level 1, none under Reduced Motion.
+			assert(go(added,{camera=NEAR,level=0,reduced=false,daylight=.9})==9,"near Tumble: its 9 (Sky Falls is the other group)")
+			assert(go(added,{level=1})==4)
+			assert(go(added,{level=0,reduced=true})==0)
+			added.destroy()
+			-- And without it, today's flat falls exactly.
+			added=build(holder)
+			assert(layer(added,"Tumble","Lip",1)and layer(added,"Tumble","Lip",2))
+			local flat=layer(added,"Tumble","StrandA",2).item
+			assert(flat.CurveSize0==0 and flat.CurveSize1==0 and flat.Segments==6)
+			added.destroy()
+		end)
 		test("the falls the layers use are the walk map's",function()
 			local data=require(Shared.WorldV7Data)
 			local byName={}
@@ -146,7 +177,7 @@ return function(client,offline)
 			-- within it and starts above pet height (Fable r1).
 			local foamBox,mistBox=foam,mist.Parent
 			assert(math.abs((foamBox.CFrame.Position-I):Dot(n))+foamBox.Size.Z/2<=1.5+1e-3,"foam box reach")
-			assert(math.abs((mistBox.CFrame.Position-I):Dot(n))<=1.5 and mistBox.CFrame.Position.Y-mistBox.Size.Y/2>=Look.PoolTop+2.5,"mist box")
+			assert(math.abs((mistBox.CFrame.Position-I):Dot(n))<=1.5 and mistBox.CFrame.Position.Y-mistBox.Size.Y/2>=Look.PoolTop+2.5-1e-3,"mist box")
 			local rainbow=layer(added,"Tumble","Rainbow").item
 			local foot0,foot1=ends(layer(added,"Tumble","Rainbow"))
 			assert(at(foot0,Vector3.new(66.3,4.2,-76.2),.1)and at(foot1,Vector3.new(76.2,4.2,-66.3),.1),"rainbow feet")
