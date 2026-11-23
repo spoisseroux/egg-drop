@@ -38,6 +38,7 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 ## Now working on
 
+- [ ] **Garden finds, S9 (Spencer, 2026-11-22: "Keep building, what's next").** Plan `V3-FINDS-BUILD-PLAN-2026-11-22.md`, architect-reviewed (4 blockers folded in). Done: shared `Finds`, 24 spots (`scripts/build_find_spots.py`), `FindsState` save field, specs 8/8 (32ae350). Building: server host + config, client sparkles + Things row + tip 3 (two worktrees). Then: code review, Studio walk-up check, beta (7).
 - [ ] **Frutiger Aero Medium, first layer (Opus, 2026-11-22).** On the BETA (6) 21f890e; light lowered so pale pets keep their faces; trees: **lime** (Spencer, 2026-11-22; already the default, `/aero coral` kept as a beta-only test switch). Left: frame time, phone, marble and sky export. Was: built, beta only: `AeroWorld` + `AeroAdditions` (client), `Aero` + `WorldAero` (shared), `AeroConfig` (key `aero_world`; owner chat `/aero on|off|clear|lime|coral`). Next: Studio QA (dome over jelly pets, bloom on marble, phone clouds and memory). Not built: rounded signs, bubbles.
 
 - [ ] **Minigame places, onboarding and tutorials (Spencer, 2026-11-22): "we need better locations for mini games, and onboarding and tutorials that mention them".** Scoping with the Frutiger Aero look and alive steps 5-7 in one world plan: `WORLD-PLAN-2026-11-22.md` written and spot-checked. Waiting on Spencer: its six picks. Then architect, then slices 1 to 9.
