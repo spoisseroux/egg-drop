@@ -43,6 +43,7 @@ Client.ResultAfter=1.3
 Client.ResultSeconds=20
 Client.StaleSeconds=12 -- no result this long after the race must be over: let go
 Client.PromptReach=10
+Client.TagLift=2 -- studs over a racing pet's origin: its tag's anchor (DashProps)
 Client.LIVE=table.freeze({countdown=true,race=true,results=true})
 local CS=Stats.UnitsPerCs
 local NONE=table.freeze({})
@@ -443,6 +444,8 @@ function Client:readRoster()
 		if not(self.seat and self.seat.predict)then self.props:show(roster.plan,self.d.reduced())end
 	end
 	heat.phase=roster.phase
+	-- Beta 12 G4: an onlooker's hoops are up only while the race runs (countdown and race), not through the results.
+	if heat.phase=="results"and not(self.seat and self.seat.predict and self.seat.raceId==heat.raceId)then self.props:hide()end
 	table.clear(heat.byUser)
 	for _,place in ipairs(roster.seats)do
 		if type(place)~="table"or type(place.seat)~="number"then continue end
@@ -541,7 +544,7 @@ function Client:heatStep(dt,now,reduced)
 				Pose.step(visual,track.state,cs,onStones,track.lane,track.flags,heat.running,dt,reduced,heat.plan.count)
 				visual.cosmeticTime=now
 				visual:update(dt)
-				self.props:tagAt(track.seat,visual.origin+Vector3.yAxis*2)
+				self.props:tagAt(track.seat,visual.origin+Vector3.yAxis*Client.TagLift,{lane=track.lane,pal=true,finished=track.flags.finished==true})
 			end
 		elseif track.visual then self:dropPal(track)end
 	end
@@ -765,7 +768,12 @@ function Client:frame(dt,now)
 	self.props:step(dt)
 	self.props:balloon(now,reduced)
 	local pet=self.d.roomView.pet
-	if self.heat then self.props:placeTags(pet and pet.origin,self.project)end
+	local heat=self.heat
+	if heat then
+		local racer=seat~=nil and seat.predict~=nil and seat.raceId==heat.raceId
+		self.props:placeTags(pet and pet.origin,self.project,{viewer=if racer then "racer"else "onlooker",now=now,dt=dt,reduced=reduced,
+			namesUntil=if racer then heat.goAt+Props.NamesAfterGo else nil,running=heat.running==true and heat.phase=="race"})
+	end
 end
 -- RoomView's RenderStepped, before the pets are posed.
 function Client:step(dt,now)
@@ -801,7 +809,27 @@ function Client:place(visual,ownerId,dt,reduced)
 		Pose.begin(visual,state)
 	end
 	Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced,count)
+	self:tagPet(visual,ownerId,lane,flags)
 	return true
+end
+-- Beta 12 U5 / G4: a racing player's pet tells its seat's tag where it is (and its name, once). Player pets have no
+-- anchor of their own: this is the only place their tag moves, and a tag nothing moved this frame hides (DashProps).
+function Client:tagPet(visual,ownerId,lane,flags)
+	local index,track
+	if ownerId==self.userId then index=self.seat and self.seat.index
+	else
+		track=self.heat and self.heat.byUser[ownerId]
+		index=track and track.seat
+	end
+	if type(index)~="number"or not self.props then return end
+	local named=if track then track else self.seat
+	if named.tagText==nil then
+		local petId=if track then track.petId else(self.d.roomView.shownPet and self.d.roomView.shownPet.id)
+		local ok,text=pcall(function()return self.d.petName and self.d.petName(ownerId,petId)end)
+		named.tagText=if ok and type(text)=="string"then text else""
+		self.props:tag(index,named.tagText)
+	end
+	self.props:tagAt(index,visual.origin+Vector3.yAxis*Client.TagLift,{lane=lane,mine=ownerId==self.userId,finished=flags.finished==true})
 end
 -- True when the race drew this pet this frame. Anything else, and the garden draws it as before.
 function Client:drive(visual,ownerId,dt,reduced)

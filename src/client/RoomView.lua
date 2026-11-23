@@ -159,6 +159,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
  -- QA v685 R6: inspect and greet a visitor's pet (read-only card; PetInspect.lua).
  self.inspect=require(script.Parent.PetInspect).new({companions=self.companions,garden=self.garden,reduce=reduceEffects,parent=gui.Parent,
   ownPet=function()return self.pet end,
+  racing=function(userId)return type(userId)=="number"and self.dash~=nil and self.dash:racing(userId)==true end,
   canOpen=function()
    return not self.destroyed and self.mode=="Room"and self.target=="Room"and not self.focusing and not self.busy and not self.focusTransitioning
     and not self.menuOpen and not self.overlayOpen()and(self.canRoam==nil or self.canRoam()==true)

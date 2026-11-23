@@ -4559,6 +4559,14 @@ do
    strip=function()return if clientUI.tomorrow then clientUI.tomorrow()else nil end,
    state=function()return nurseryState end,canRoam=function()return roomView.canRoam()end,
    modalOpen=function()return clientUI.anyModalOpen(true)end,
+   -- Beta 12 U5: a racer's pet name for the start-line tags. Names are catalogue piece ids (the board's PetNames
+   -- attribute, the owner's own snapshot), never typed text; the species when unnamed.
+   petName=function(userId,petId)
+    local NameText=require(script.PetNameText)
+    if userId==player.UserId then return(NameText.own(nurseryState,petId))end
+    local boards=roomView.companions and roomView.companions.boards
+    return(NameText.ofBoard(boards and boards:FindFirstChild(tostring(userId)),petId))
+   end,
    closeMenus=function()
     clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
     if gameMenu and gameMenu.shade.Visible and closeMenu then closeMenu()end
