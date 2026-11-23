@@ -27,11 +27,10 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
-| 11 | **Sleepy Nest in the garden + See you tomorrow strip (Onboarding v3 D, E)** | Built offline, not reviewed, not seen in Studio | Switch `/onboard nest on`. New save: the nest beside the dais with a small egg and a clock; Tuck in at the prompt; the chip left of Menu/Deck counts down; end a round: the strip under the results (nest time, next stamp Stars, 3 new quests); Dash results too. Studio test command moves the egg's clock 8 h: it rocks, then Hatch gives the hat (rail toast) and a new egg drops in |
 
 ## Scoped, not built
 
-World pass (`WORLD-PASS-2026-11-22.md`): waterfall layers, fruit (looks only), 1-hour garden day/night, crowns swaying (after one island re-export). ASMR keycaps and crunch (`V3-SCOPE` 13, needs your sound picks). v4 Pocket Deck cartridges (`V4-POCKET-DECK-SCOPE-2026-11-22.md`).
+World pass (`WORLD-PASS-2026-11-22.md`): fruit (looks only), 1-hour garden day/night, crowns swaying (after one island re-export). ASMR keycaps and crunch (`V3-SCOPE` 13, needs your sound picks). v4 Pocket Deck cartridges (`V4-POCKET-DECK-SCOPE-2026-11-22.md`).
 
 ## Check on every device (never tested yet)
 
