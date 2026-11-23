@@ -33,3 +33,12 @@ Only players whose save is new on this join get steps 1-10 (an `onboardingStarte
 ## Tests
 
 `FirstSessionFunnel.spec.lua`: order, once-only, out-of-order refused, pcall on a throwing service, only new saves, cleanup on leave. Existing specs unchanged. Code review before the hotfix; **live publish waits for Spencer's go**.
+
+## Revision after the architect review (2026-11-23; wins over the text above)
+
+**The funnel already exists and is live:** `src/server/FirstSession.lua` (slice A, 2f5e78c) logs 9 steps (Board ready, First drop, First merge, Bear met, Garden walkthrough done, First machine opened, First quest claimed, First Stars spend, Second round started) for saves at rank 0 on join, deferred and pcall'd, live servers only. Data: `research/FUNNEL-SNAPSHOT-2026-11-23.md`. So the build is a small fix, not a new system:
+1. Log step N only after N-1 (logging N auto-completes earlier steps and hides drops); an out-of-order step goes as a custom event (`record()`) instead.
+2. Custom events (not funnel steps): `FirstSessionLoungeVisit` (exists), `FirstPet` (PetContact award / GardenCareHost accept), `FirstHatch` (hatch command), `FiveMinutes`.
+3. No ReturnedDay2 (no first-play day in the save): use Roblox's D1.
+4. `FeatureFlags.FirstSessionFunnel` off switch. Keep the 9 step numbers; only add.
+Hotfix branch from live 54dca26 plus the same change on the feature branch; live publish waits for Spencer.
