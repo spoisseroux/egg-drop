@@ -253,6 +253,18 @@ return function(server)
 			assert(c.saved(1).count==1 and p.db[p.key].hatching.lease.expiresAt==0)
 			c.run(30);assert(c.saved(1).count==1)
 		end)
+		test("leaving mid-write: settle retries the held find so the Play date write is not skipped; nothing held returns at once",function()
+			finds();local c=rig(1);c.run(1.5);assert(until_(c,2));local p=c.players[1];local board=p.board
+			p.ctl.failAfter=true;assert(c.claim(1,c.spots(1)[1]).kind=="taken");c.run(5);assert(board.nursery.pending)
+			c.boards[p]=nil;board.closing=true;c.host:leave(board)
+			local waited=0
+			c.host.wait=function(dt)waited+=dt;c.now+=dt end
+			c.host:settle(board)
+			assert(board.nursery.pending==nil and board.findsFlight==nil and c.saved(1).count==1,"settled and paid once")
+			assert(waited<=c.host.SettleSeconds+.2)
+			local before=c.now;c.host:settle(board);assert(c.now==before,"nothing held: at once")
+			local other=c.players[1].board;other.findsFlight={op="nobody"};c.host:settle(other);assert(other.findsFlight==nil)
+		end)
 		test("the save moved to another server: the board's finds stop, nothing paid",function()
 			finds();local c=rig(1);c.run(1.5);assert(until_(c,2));local p=c.players[1]
 			c.answers({"SessionLost"});local find=c.spots(1)[1];assert(c.claim(1,find).kind=="taken");c.run(5)

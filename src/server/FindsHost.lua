@@ -54,7 +54,8 @@ function Host.mount(d)
 	self.tickAt=self.clock()
 	local beat;beat=(d.heartbeat or RunService.Heartbeat):Connect(function()
 		local ok,problem=pcall(self.step,self)
-		if ok then return end
+		-- Code review: three errors in a row stop finds on this server, not three in its whole life.
+		if ok then self.errors=0;return end
 		self.errors+=1
 		warn("[Finds] host: "..tostring(problem))
 		if self.errors>=Host.MaxErrors then
@@ -365,10 +366,30 @@ function Host:flush(player,board)
 	end)
 end
 -- closeBoard: the player is leaving. Live finds go; a claim not yet written is dropped. A write the save holds as
--- pending is retried by CloseProgress.drain like any other, so no drain hook is needed.
+-- pending is retried by CloseProgress.drain like any other, so no drain hook is needed. The flight is kept on the
+-- board for settle().
 function Host:leave(board)
 	local rec=self.records[board]
 	self.records[board]=nil
-	if rec then rec.live,rec.queue={},{}end
+	if rec then
+		board.findsFlight=rec.flight
+		rec.live,rec.queue={},{}
+	end
+end
+-- closeBoard, before its own last park write (code review): a find write in flight or ambiguous is settled first, for
+-- at most SettleSeconds, so the Play date write is not skipped as pending. Nothing in flight: returns at once.
+Host.SettleSeconds=3
+function Host:settle(board)
+	local handle,deadline=board.nursery,self.clock()+Host.SettleSeconds
+	while board.findsFlight and handle and self.clock()<deadline do
+		local flight=board.findsFlight
+		if handle.busy then self.wait(.1)
+		elseif handle.pending and handle.pending.id==flight.op then
+			self.d.nursery.retry(handle)
+			self.wait(.1)
+		else
+			board.findsFlight=nil
+		end
+	end
 end
 return Host

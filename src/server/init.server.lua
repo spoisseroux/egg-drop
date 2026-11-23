@@ -978,7 +978,7 @@ local function closeBoard(board)
 		local ok, problem = pcall(garden.dashHost.leave, garden.dashHost, board)
 		if not ok then warn("[Dash] leave: " .. tostring(problem)) end
 	end
-	-- Garden finds: live sparkles and unsaved claims go; a pending find write is retried by CloseProgress.drain.
+	-- Garden finds: live sparkles and unsaved claims go; a find write in flight is settled below, then CloseProgress.drain.
 	if garden.findsHost then
 		local ok, problem = pcall(garden.findsHost.leave, garden.findsHost, board)
 		if not ok then warn("[Finds] leave: " .. tostring(problem)) end
@@ -993,6 +993,13 @@ local function closeBoard(board)
 			local ok, problem = pcall(garden.dashHost.settle, garden.dashHost, board)
 			if not ok then warn("[Dash] settle: " .. tostring(problem)) end
 			settled = os.clock() - from
+		end
+		-- Code review: a find write in flight is settled too, so the Play date write below is not skipped as pending.
+		if garden.findsHost then
+			local from = os.clock()
+			local ok, problem = pcall(garden.findsHost.settle, garden.findsHost, board)
+			if not ok then warn("[Finds] settle: " .. tostring(problem)) end
+			settled += os.clock() - from
 		end
 		-- Code review: queued Play date / parkGames counts are saved once on leave (the flush loop
 		-- stops at closing), unless a write for them is still in flight or ambiguous.
