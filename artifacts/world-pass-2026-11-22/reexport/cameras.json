@@ -1,0 +1,107 @@
+{
+ "note": "Studio Play client, ScreenGuis off, scriptable camera CFrame.lookAt(eye, at). Aero on, garden hour off (day). falls-wide, falls-close, pool-edge, falls-oblique and ledge: kit r5 (model 108202274856277, after Fable review r1); lime-tree, hub and the crown pair: r4 (same crowns).",
+ "falls-wide.jpg": {
+  "eye": [
+   50,
+   9,
+   -50
+  ],
+  "at": [
+   76,
+   21,
+   -76
+  ],
+  "like": "../waterfall-r1-wide.jpg"
+ },
+ "falls-close.jpg": {
+  "eye": [
+   58,
+   12,
+   -58
+  ],
+  "at": [
+   75,
+   14,
+   -75
+  ],
+  "like": "../waterfall-r1-close.jpg"
+ },
+ "pool-edge.jpg": {
+  "eye": [
+   53,
+   5.5,
+   -64
+  ],
+  "at": [
+   73,
+   8,
+   -73
+  ],
+  "like": "pool edge at pet height"
+ },
+ "lime-tree.jpg": {
+  "eye": [
+   60,
+   10,
+   25
+  ],
+  "at": [
+   74,
+   10,
+   11
+  ],
+  "like": "../lime-mapped.jpg"
+ },
+ "hub.jpg": {
+  "eye": [
+   10,
+   28,
+   55
+  ],
+  "at": [
+   -35,
+   8,
+   -5
+  ],
+  "like": "hub from the bridge side"
+ },
+ "hub-split-crowns.jpg / hub-merged-crowns.jpg": {
+  "eye": [
+   10,
+   28,
+   55
+  ],
+  "at": [
+   -35,
+   8,
+   -5
+  ],
+  "like": "same frame: split kit crowns vs the merged island crowns (fit check)"
+ },
+ "falls-oblique.jpg": {
+  "eye": [
+   62,
+   9,
+   -80.5
+  ],
+  "at": [
+   74.5,
+   12,
+   -71.5
+  ],
+  "like": "side view of the bow"
+ },
+ "ledge.jpg": {
+  "eye": [
+   66,
+   32,
+   -66
+  ],
+  "at": [
+   80,
+   23,
+   -80
+  ],
+  "like": "the ledge and its two flank rocks"
+ }
+}

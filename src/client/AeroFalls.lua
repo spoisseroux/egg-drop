@@ -52,10 +52,78 @@ end
 local function fallFrame(sheet)
 	local n=vector(sheet.normal).Unit
 	local t=Vector3.new(n.Z,0,-n.X).Unit
-	return{name=sheet.name,top=vector(sheet.top),bottom=vector(sheet.bottom),width0=sheet.width0,width1=sheet.width1,n=n,t=t}
+	return{name=sheet.name,top=vector(sheet.top),bottom=vector(sheet.bottom),width0=sheet.width0,width1=sheet.width1,n=n,t=t,curve=0}
 end
 
-function Falls.build(folder,data)
+-- LOOK-R2 2: the white-water stack at Tumble while the world kit stands. `b`: the builder's own helpers.
+function Falls.kitStack(b)
+	local K=Look.Kit
+	local lower,upper=b.lower,b.upper
+	local impact=Vector3.new(lower.bottom.X,Look.PoolTop,lower.bottom.Z)
+	local n,t=lower.n,lower.t
+	b.holder("Tumble",impact)
+	for _,fall in ipairs({upper,lower})do
+		-- LOOK-R2 round 4: the flow beams are straight and flat on the sheet's plane, a little in front of the chutes'
+		-- low bow (camera-facing curved beams drifted a chute off the sheet from the pool edge).
+		local flat=table.clone(fall)
+		flat.curve=0
+		b.sheetBeam("Tumble","FlowA",flat,K.FlowA,K.FlowA.length).level1=true
+		b.sheetBeam("Tumble","FlowB",flat,K.FlowB,K.FlowB.length).level1=false
+	end
+	-- The apron: a flat beam on the pool, flowing out from the foot (attachments' Axis up: it lies in the water).
+	do
+		local spec=K.Apron
+		local p=b.groups.Tumble.part
+		-- Axis up (it lies in the water), SecondaryAxis t: its width runs across the pool, its map flows along n.
+		local a0=b.attach(p,b.frame(impact+n*spec.from+UP*spec.up,UP,t,UP:Cross(t)))
+		local a1=b.attach(p,b.frame(impact+n*spec.to+UP*spec.up,UP,t,UP:Cross(t)))
+		local beam=Instance.new("Beam")
+		beam.Name="Apron"
+		beam.Attachment0,beam.Attachment1=a0,a1
+		beam.Width0,beam.Width1=spec.width0,spec.width1
+		beam.FaceCamera=false
+		beam.Texture=K.Textures.Foam
+		beam.TextureMode=Enum.TextureMode.Wrap
+		beam.TextureLength=spec.length
+		beam.TextureSpeed=spec.speed
+		beam.Segments=4
+		beam.Color=ColorSequence.new(spec.Color)
+		beam.Transparency=spec.Transparency
+		beam.LightInfluence=1
+		beam.Enabled=false
+		beam.Parent=p
+		b.add({group="Tumble",name="Apron",kind="beam",item=beam,level1=true})
+	end
+	local function spot(spec)
+		local base=if spec.at=="ledge"then lower.top else impact
+		local y=base.Y+spec.up
+		local q=base+n*spec.out
+		return b.frame(Vector3.new(q.X,y,q.Z),t,UP,n)
+	end
+	for _,spec in ipairs(K.Emitters)do
+		local layer=b.emitter("Tumble",spec.name,b.box(spec.name.."Box",spec.box,spot(spec)),spec)
+		layer.level1=spec.level1==true
+		if spec.keepOut then layer.keepOut=impact end
+		local e=layer.item
+		e.Texture=K.Textures[spec.texture]
+		e.Shape,e.ShapeStyle=Enum.ParticleEmitterShape.Box,Enum.ParticleEmitterShapeStyle.Volume
+		e.Lifetime,e.Speed=spec.Life,spec.Speed
+		e.SpreadAngle=Vector2.new(spec.Spread,spec.Spread)
+		e.Size,e.Transparency=spec.Size,spec.Transparency
+		e.Acceleration=spec.Acceleration
+		e.Drag=spec.Drag or 0
+		e.Color=ColorSequence.new(spec.Color)
+		e.LightEmission=spec.LightEmission or 0
+		e.Rotation,e.RotSpeed=NumberRange.new(0,360),NumberRange.new(-20,20)
+		if spec.ZOffset then e.ZOffset=spec.ZOffset end
+	end
+end
+
+-- kit (WorldAeroKit, while the world kit stands, with both Tumble tiers): LOOK-R2's white-water stack replaces the
+-- step-1 layers at Tumble (no strands, ribbon, lips, cloud foam, rings or rainbow): two flow beams per drop on the curve
+-- the kit's chutes bow out on (CurveSize0 = curve, CurveSize1 = -curve), a flat foam apron, boil, droplets and a quieter
+-- mist. AeroWorld switches the flat server beams off while the kit stands. Sky Falls keeps its step-1 layers.
+function Falls.build(folder,data,kit)
 	local root=Instance.new("Folder")
 	root.Name=Falls.Name
 	local layers={}
@@ -63,9 +131,15 @@ function Falls.build(folder,data)
 	local tiers={}
 	local sky
 	for _,sheet in ipairs(data and data.beams and data.beams.sheets or {})do
-		if Look.Tiers[sheet.name]then tiers[Look.Tiers[sheet.name]]=fallFrame(sheet)
+		if Look.Tiers[sheet.name]then
+			local fall=fallFrame(sheet)
+			local shaped=kit and kit.falls and kit.falls[sheet.name]
+			fall.curve=shaped and shaped.curve or 0
+			tiers[Look.Tiers[sheet.name]]=fall
 		elseif sheet.name==Look.Sky then sky=fallFrame(sheet)end
 	end
+	-- Kit mode is all or nothing: both tiers shaped, or today's layers.
+	local kitMode=tiers.Upper and tiers.Lower and tiers.Upper.curve>0 and tiers.Lower.curve>0 or false
 
 	local function add(layer)table.insert(layers,layer);return layer end
 	-- An invisible holder per falls at its anchor point; attachments are placed in world terms.
@@ -84,19 +158,24 @@ function Falls.build(folder,data)
 	local function sheetBeam(group,name,fall,spec,length)
 		local p=groups[group].part
 		local offset=fall.n*spec.out+fall.t*spec.shift
-		local back=fall.n:Cross(UP)
-		local a0=attach(p,frame(fall.top+offset,fall.n,UP,back))
-		local a1=attach(p,frame(fall.bottom+offset,fall.n,UP,back))
+		-- A Beam lays its width along its attachments' SecondaryAxis: up (today's step-1 layers) stands it edge-on to the
+		-- camera, so the kit's flow beams (spec.across) take the sheet's t.
+		local side=if spec.across then fall.t else UP
+		local back=fall.n:Cross(side)
+		local a0=attach(p,frame(fall.top+offset,fall.n,side,back))
+		local a1=attach(p,frame(fall.bottom+offset,fall.n,side,back))
 		local beam=Instance.new("Beam")
 		beam.Name=name
 		beam.Attachment0,beam.Attachment1=a0,a1
 		beam.Width0,beam.Width1=fall.width0*spec.scale+spec.grow,fall.width1*spec.scale+spec.grow
-		beam.FaceCamera=false
-		beam.Texture=if name=="Ribbon"then Look.Textures.Ribbon else Look.Textures.Strand
+		beam.CurveSize0,beam.CurveSize1=fall.curve,-fall.curve
+		-- A beam bent along its attachments' axis turns edge-on to the camera unless it faces it.
+		beam.FaceCamera=fall.curve~=0
+		beam.Texture=spec.Texture or(if name=="Ribbon"then Look.Textures.Ribbon else Look.Textures.Strand)
 		beam.TextureMode=Enum.TextureMode.Wrap
 		beam.TextureLength=length
 		beam.TextureSpeed=spec.speed
-		beam.Segments=6
+		beam.Segments=if fall.curve~=0 then 14 else 6 -- enough to follow the kit chutes' curve
 		beam.Color=ColorSequence.new(spec.Color)
 		beam.Transparency=spec.Transparency
 		beam.LightInfluence=1
@@ -126,7 +205,10 @@ function Falls.build(folder,data)
 	end
 
 	local lower=tiers.Lower
-	if lower then
+	if lower and kitMode then
+		Falls.kitStack({lower=lower,upper=tiers.Upper,holder=holder,sheetBeam=sheetBeam,emitter=emitter,box=box,
+			attach=attach,groups=groups,add=add,frame=frame})
+	elseif lower then
 		local impact=Vector3.new(lower.bottom.X,Look.PoolTop,lower.bottom.Z)
 		local n,t=lower.n,lower.t
 		holder("Tumble",impact)
@@ -243,7 +325,8 @@ function Falls.build(folder,data)
 	function self.wants(layer,state,near)
 		local level=levelOf(state)
 		if state.reduced or level>=2 then return false,true end
-		if level>=1 and(layer.group~="Tumble"or not Look.Level1[layer.name])then return false,true end
+		local keep=if layer.level1~=nil then layer.level1 else Look.Level1[layer.name]
+		if level>=1 and(layer.group~="Tumble"or not keep)then return false,true end
 		if layer.group~=near then return false end
 		if layer.keepOut and(layer.keepOut-state.camera).Magnitude<Look.MistKeepOut then return false end
 		if layer.rainbow and not(state.daylight>Look.RainbowDaylight)then return false end

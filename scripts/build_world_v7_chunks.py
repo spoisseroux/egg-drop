@@ -1312,4 +1312,7 @@ def walk_data(finals, manifest):
     (OUT / "world-v7-walk.json").write_text(json.dumps(data))
 
 
-main()
+# Importable (scripts/build_world_aero_kit.py reuses declutter, qa_fixes, join and geom_hash); Blender --python runs
+# this file as __main__.
+if __name__ == "__main__":
+    main()

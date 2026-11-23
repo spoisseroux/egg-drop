@@ -162,7 +162,10 @@ return function(client,offline)
 			switch={on=function()return r.on end,changed=function()return r.changed end,trees=function()return r.trees end,treesChanged=function()return r.treesChanged end},
 			level=function()return r.lvl end,reduced=function()return r.still end,reducedChanged=function()return r.reducedChanged end,
 			defer=function(fn)table.insert(r.deferred,fn)end,delay=function(s,fn)assert(s==AeroWorld.Interval);table.insert(r.timers,fn)end,
-			additions=r.additions,warn=function(text)table.insert(r.warnings,text)end})
+			additions=r.additions,warn=function(text)table.insert(r.warnings,text)end,
+			-- The world kit (AeroKit): none unless a case brings fixture templates, data and a builder.
+			kit=options.kit,kitData=function()return options.kitData end,templates=function()return options.templates end,
+			spawn=function(fn)fn()end,preload=function()return options.loaded~=false end})
 		function r.flip(on)r.on=on;r.aero:sync()end
 		function r.pump()events();local list=r.deferred;r.deferred={};for _,fn in ipairs(list)do fn()end;events()end
 		function r.tick()local list=r.timers;r.timers={};for _,fn in ipairs(list)do fn()end end
@@ -213,7 +216,8 @@ return function(client,offline)
 				defer=function()end,delay=function(_,fn)table.insert(r.timers,fn)end,warn=function(text)error(text)end,
 				clouds=function()return if r.cloudsGone then nil else r.clouds end,
 				-- The real additions destroy the AeroClouds with themselves (budget level 2, Aero off).
-				additions={build=function()return{still=function()end,destroy=function()if not options.keepClouds then r.cloudsGone=true end end}end}})
+				additions={build=function()return{still=function()end,destroy=function()if not options.keepClouds then r.cloudsGone=true end end}end},
+				templates=function()return nil end})
 			function r.flip(on)r.on=on;r.aero:sync()end
 			function r.paint(values)r.values=values;r.clock.apply()end
 			table.insert(live,r)
@@ -282,7 +286,15 @@ return function(client,offline)
 		test("the values are the plan's, and inside its caps",function()
 			assert(Values.Hour==10.5 and Values.Lighting.ClockTime==10.5 and Values.Bloom.Intensity==.18 and Values.Lighting.EnvironmentSpecularScale==.2)
 			assert(rgb(Values.Crowns.lime.Color)==rgb(hex("#8FD63F"))and rgb(Values.Crowns.coral.Color)==rgb(hex("#F2545B")))
-			for _,kind in ipairs({"dirt_path","pebble_bed","bark","wood_plank","palette","far_peak","ground"})do assert(Values.Surfaces[kind]==nil,kind)end
+			for _,kind in ipairs({"dirt_path","pebble_bed","bark","wood_plank","far_peak","ground"})do assert(Values.Surfaces[kind]==nil,kind)end
+			-- Slice 9: the palette is only swapped for its saturation-1.0 map, nothing else about the props moves.
+			local palette=Values.Surfaces.palette
+			assert(palette and next(palette)=="TextureID"and next(palette,"TextureID")==nil and string.match(palette.TextureID,"^rbxassetid://%d+$"))
+			-- The kit's own meshes (scripts/build_world_aero_kit.py): the falls lips and rocks are no surface, the sheets keep
+			-- their texture, and the crowns and bushes paint as the merged parts they replace.
+			assert(Values.kind("W7_Kit_Falls__kitwater")=="kitwater"and Values.Surfaces.kitwater==nil)
+			assert(Values.Surfaces.waterfall_tumble==nil and Values.kind("W7_Kit_Crown_Blossom__foliage_blossom")==Values.CrownKind)
+			assert(Values.kind("W7_Kit_Rest__foliage")=="foliage")
 			for _,kind in ipairs({"water_stream","water_pool","water"})do assert(Values.Surfaces[kind].Transparency==nil,"water stays opaque")end
 			assert(#Values.Lips<=Values.MaxLips and #Values.Glints<=Values.MaxGlints)
 			assert(#Values.Glints*Values.GlintRate*Values.GlintLife<=Values.MaxGlintsLive)
@@ -422,6 +434,58 @@ return function(client,offline)
 			end
 			r.trees="lime";r.treesChanged.fire();r.pump();assert(l.crown:FindFirstChildOfClass("SurfaceAppearance")==nil and l.crown.TextureID==Values.Crowns.lime.Texture)
 			r.trees="coral";r.treesChanged.fire();r.flip(false);r.pump();samePicture(before,picture(r.world))
+		end)
+		test("the world kit: hides what it replaces in its own records; coral, a new World, level 2 and off are exact",function()
+			local kit={built=0,dropped=0}
+			function kit.build(o)
+				kit.built+=1
+				local folder=Instance.new("Folder");folder.Name="AeroKit"
+				local crown=mesh(folder,"W7_Kit_Crown_Blossom__foliage_blossom",{matte=true})
+				crown:SetAttribute("AeroMatteLime",true) -- its own matte lime skin (AeroKit)
+				folder.Parent=o.parent
+				kit.folder,kit.crown=folder,crown
+				return{folder=folder,data=o.data,destroy=function()kit.dropped+=1;folder:Destroy()end}
+			end
+			local r=rig({kit=kit,kitData={hides={"W7_Vegetation__foliage_blossom","W7_Water__waterfall_tumble","W7_Bubbles__bubble"}},templates={}})
+			local l=lounge(r.world)
+			l.beam.Name="Water_TumbleFalls_Lower";l.beam.Enabled=true
+			local before=picture(r.world)
+			r.flip(true);r.pump()
+			assert(kit.built==1 and kit.folder.Parent==l.room)
+			assert(l.crown.Transparency==1 and l.beam.Enabled==false and l.bubble.Transparency==1,"what the kit replaces is hidden")
+			local skin=kit.crown:FindFirstChildOfClass("SurfaceAppearance")
+			assert(skin and kit.crown.TextureID=="","a matte lime kit crown keeps its own skin for lime")
+			-- Coral and back repaint every crown: the merged one stays hidden (its own records are not the surfaces').
+			r.trees="coral";r.treesChanged.fire();r.pump()
+			assert(l.crown.Transparency==1 and kit.crown:FindFirstChildOfClass("SurfaceAppearance")==nil and rgb(kit.crown.Color)==rgb(hex("#F2545B")))
+			r.trees="lime";r.treesChanged.fire();r.pump()
+			assert(l.crown.Transparency==1 and kit.crown:FindFirstChildOfClass("SurfaceAppearance")==skin,"lime again: its skin is back")
+			-- A new World under a standing kit: its crown is hidden too; the old one has its looks back.
+			local old=l.crown
+			local w2=Instance.new("Folder");w2.Name="World"
+			local crown2=mesh(w2,"W7_Vegetation__foliage_blossom",{matte=true,texture="111"})
+			l.world.Parent=nil;w2.Parent=l.room;r.pump()
+			assert(crown2.Transparency==1,"the new World's crown is hidden")
+			w2.Parent=nil;l.world.Parent=l.room;r.pump()
+			assert(old.Transparency==1)
+			-- Budget level 2: the kit goes and the merged parts come back in the same step.
+			r.lvl=2;r.tick()
+			assert(kit.dropped==1 and kit.folder.Parent==nil and l.crown.Transparency==0 and l.beam.Enabled==true)
+			assert(near(l.bubble.Transparency,Values.Surfaces.bubble.Transparency),"Aero is still on: the bubble takes the Aero look again")
+			assert(crown2.Transparency==0,"every hidden part is put back, even one that left")
+			r.flip(false);r.pump()
+			samePicture(before,picture(r.world))
+			assert(next(r.aero.hidden)==nil and #r.warnings==0,r.warnings[1])
+			-- Meshes that fail to load: nothing built, nothing hidden, one warning.
+			local r3=rig({kit=kit,kitData={hides={"W7_Vegetation__foliage_blossom"}},templates={},loaded=false});local l3=lounge(r3.world)
+			r3.flip(true);r3.pump()
+			assert(kit.built==1 and l3.crown.Transparency==0 and #r3.warnings==1)
+			r3.flip(false)
+			-- No templates (not this place): nothing built, nothing hidden.
+			local r2=rig({kit=kit,kitData={hides={"W7_Vegetation__foliage_blossom"}}});local l2=lounge(r2.world)
+			r2.flip(true);r2.pump()
+			assert(kit.built==1 and l2.crown.Transparency==0)
+			r2.flip(false)
 		end)
 		test("additions: one build a room; budget level 2 drops them for the session, the look stays",function()
 			local r=rig();local l=lounge(r.world);r.flip(true);assert(r.built==1 and #r.timers==1)

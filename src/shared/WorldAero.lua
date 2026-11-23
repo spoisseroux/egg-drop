@@ -47,12 +47,15 @@ Aero.Surfaces=table.freeze({
 	cloud={Color=hex("#FFFFFF")},
 	foam={Color=hex("#FFFFFF")},
 	bubble={Color=hex("#DEF3FF"),Transparency=.55,Reflectance=.2},
+	-- WORLD-PLAN slice 9: the props' palette at saturation 1.0, not the dusk grade's 1.1 (scripts/draw_aero_palette.py;
+	-- the island's own map is bound to the native collision checkpoint, so the swap is here).
+	palette={TextureID="rbxassetid://121108587763392"},
 })
 -- Scrolling Texture layers (LoungeWorldV7Art.WaterSkins) by layer name, then by the water under them.
 Aero.Skins=table.freeze({
 	FlowSkin={
 		water_stream={Color3=hex("#3CC8F0"),Transparency=.42},
-		water_pool={Color3=hex("#7FE0FF"),Transparency=.5},
+		water_pool={Color3=hex("#3BA3BE"),Transparency=.15}, -- LOOK-R2 2 and round 3: teal, not electric
 		water={Color3=hex("#7FE0FF"),Transparency=.5},
 	},
 	FlowGlint={water_stream={Color3=hex("#FFFFFF"),Transparency=.6}},
@@ -141,6 +144,36 @@ Aero.Waterfall=table.freeze({
 		Foam="rbxassetid://134089185354561",Ripple="rbxassetid://123065684226119",Rainbow="rbxassetid://129354894959810",
 		Mist="rbxasset://textures/particles/smoke_main.dds"}),
 	Level1=table.freeze({StrandA=true,Ribbon=true,Lip=true,Foam=true,Mist=true}),
+	-- LOOK-R2 2 (Fable, 2026-11-23): Tumble's white-water stack while the world kit stands (AeroFalls.kitStack). Drawn maps:
+	-- scripts/draw_aero_falls_textures.py. Speeds are texture lengths per second (studs per second / length). Draws 9,
+	-- level 1 keeps FlowA, Apron and BoilPool (4 with both FlowA tiers); Reduced Motion and level 2: none.
+	Kit=table.freeze({
+		Textures=table.freeze({White="rbxassetid://127390802678159",Veil="rbxassetid://138106096840651",
+			Foam="rbxassetid://73367773850066",Spray="rbxassetid://90482640070809",Speck="rbxassetid://119614715171256"}),
+		-- LOOK-R2 rounds 3 and 4: Flow A wider and nearly opaque, Flow B stronger; both straight and flat, just in front of
+		-- the chutes' furthest point (bow .5 + .05 + ledge kink .3): any nearer and the chutes cut bands through them.
+		FlowA=table.freeze({across=true,scale=1,grow=.6,out=1,shift=0,length=26,speed=14/26,Color=hex("#F4FCFF"),LightEmission=.2,
+			Texture="rbxassetid://127390802678159",Transparency=keys({{0,.35},{.12,0},{.9,0},{1,.2}})}),
+		FlowB=table.freeze({across=true,scale=1,grow=.8,out=1.2,shift=.7,length=17,speed=19/17,Color=hex("#FFFFFF"),LightEmission=.15,
+			Texture="rbxassetid://138106096840651",Transparency=keys({{0,.6},{.08,.2},{.9,.2},{1,.6}})}),
+		-- Flat on the pool, flowing out along n from `from` to `to` studs off the foot.
+		Apron=table.freeze({from=.5,to=7.5,up=.06,width0=9,width1=9.5,length=7,speed=1.5/7,Color=hex("#FFFFFF"),
+			Transparency=keys({{0,.25},{.7,.6},{1,1}})}),
+		Emitters=table.freeze({
+			table.freeze({name="BoilPool",at="pool",box=Vector3.new(10,.5,1.5),out=.6,up=.2,rate=30,rate1=15,level1=true,
+				texture="Spray",Life=NumberRange.new(.6,.9),Speed=NumberRange.new(3,6),Spread=50,Acceleration=Vector3.new(0,-9,0),
+				Drag=1,Size=keys({{0,2.5},{1,4.5}}),Transparency=keys({{0,.35},{1,1}}),Color=hex("#FFFFFF"),LightEmission=.1}),
+			table.freeze({name="BoilLedge",at="ledge",box=Vector3.new(9,.5,1.5),out=.4,up=0,rate=7,
+				texture="Spray",Life=NumberRange.new(.6,.9),Speed=NumberRange.new(3,6),Spread=50,Acceleration=Vector3.new(0,-9,0),
+				Drag=1,Size=keys({{0,1.2},{1,2.4}}),Transparency=keys({{0,.4},{1,1}}),Color=hex("#FFFFFF"),LightEmission=.1}),
+			table.freeze({name="Droplets",at="pool",box=Vector3.new(9,.3,1),out=.8,up=.3,rate=10,
+				texture="Speck",Life=NumberRange.new(.5),Speed=NumberRange.new(8,12),Spread=60,Acceleration=Vector3.new(0,-30,0),
+				Size=keys({{0,.3},{1,.15}}),Transparency=keys({{0,.1},{1,.6}}),Color=hex("#F4FCFF")}),
+			table.freeze({name="KitMist",at="pool",box=Vector3.new(10,1,1.5),out=1,up=3,rate=3,keepOut=true,
+				texture="Spray",Life=NumberRange.new(2.5,3.5),Speed=NumberRange.new(1,1.6),Spread=15,Acceleration=Vector3.new(0,.4,0),
+				Drag=.6,Size=keys({{0,4},{1,8}}),Transparency=keys({{0,1},{.25,.88},{1,1}}),Color=hex("#E9F8FF"),ZOffset=-2}),
+		}),
+	}),
 	-- grow: added to the sheet's width (scale multiplies it first); out along n; shift along t.
 	Strands=table.freeze({
 		{name="StrandA",scale=1,grow=1,out=.15,shift=0,length=20,skyLength=28,speed=.55,Color=hex("#7FE0FF"),
@@ -179,6 +212,25 @@ Aero.Waterfall=table.freeze({
 	-- 14 wide and 6 high.
 	Rainbow=table.freeze({half=7,out=2,up=1,width=1.6,curve=8,segments=16,LightEmission=.3,
 		Transparency=keys({{0,1},{.2,.84},{.5,.8},{.8,.84},{1,1}})}),
+})
+
+-- LOOK-R2 3 (Fable, 2026-11-23): the fountain in the Bubble Spring's basin, while the world kit stands (AeroFountain, in
+-- the additions). Positions come from WorldAeroKit.fountain. Jet up from the finial, a spill ring off the upper bowl, a
+-- splash ring in the basin. Level 1 keeps the jet; level 2 and Reduced Motion: none. On only within Radius of the camera.
+-- Sound: today's water_bed_loop as a positional voice through AmbientAudio (an original fountain loop is owed).
+Aero.Fountain=table.freeze({
+	Radius=90,
+	Texture="rbxassetid://119614715171256", -- the speck, stretched along the velocity into streaks
+	-- LOOK-R2 round 3: a thin streak jet, a heavier spill.
+	Jet=table.freeze({rate=40,rate1=24,Speed=NumberRange.new(11),Spread=5,Life=NumberRange.new(.6),Acceleration=Vector3.new(0,-30,0),
+		Size=keys({{0,.2},{1,.12}}),Transparency=keys({{0,.2},{1,.5}})}),
+	Spill=table.freeze({rate=40,Speed=NumberRange.new(.6),Spread=10,Life=NumberRange.new(.45),Acceleration=Vector3.new(0,-18,0),
+		Size=keys({{0,.35},{1,.25}}),Transparency=keys({{0,.25},{1,.6}})}),
+	Splash=table.freeze({rate=8,texture="rbxassetid://90482640070809",Speed=NumberRange.new(1.5,2.5),Spread=40,
+		Life=NumberRange.new(.4,.6),Acceleration=Vector3.new(0,-8,0),Size=keys({{0,.5},{1,1}}),Transparency=keys({{0,.35},{1,1}})}),
+	Color=hex("#F4FCFF"),
+	Squash=NumberSequence.new(-1.6), -- jet and spill: tall, thin streaks along their flight (positive squashes them flat)
+	Voice=table.freeze({id=71747963121003,volume=.16,speed=1.25,min=5,max=26}),
 })
 
 -- "W7_Water__cloud", "W7_Backdrop__cloud_2" -> "cloud"; nil for anything else (collision tiles, pets, props).

@@ -1,0 +1,215 @@
+<roblox version="4">
+  <Item class="Folder" referent="AeroKit">
+    <Properties>
+      <string name="Name">AeroKit</string>
+    </Properties>
+    <Item class="MeshPart" referent="AK0">
+      <Properties>
+        <string name="Name">W7_Kit_Crown_Round__foliage</string>
+        <Content name="MeshId"><url>rbxassetid://116909537674467</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>9.3906</X><Y>7.4606</Y><Z>7.9893</Z></Vector3>
+        <Vector3 name="InitialSize"><X>109.189835</X><Y>86.7487946</Y><Z>92.8965607</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">false</bool>
+        <bool name="DoubleSided">true</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="AKS0">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://108238608141638</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AK1">
+      <Properties>
+        <string name="Name">W7_Kit_Crown_Tall__foliage</string>
+        <Content name="MeshId"><url>rbxassetid://110195283751549</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>6.079</X><Y>9.9142</Y><Z>5.6528</Z></Vector3>
+        <Vector3 name="InitialSize"><X>70.6841202</X><Y>115.27803</Y><Z>65.728508</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">false</bool>
+        <bool name="DoubleSided">true</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="AKS1">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://108238608141638</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AK2">
+      <Properties>
+        <string name="Name">W7_Kit_Crown_Blossom__foliage_blossom</string>
+        <Content name="MeshId"><url>rbxassetid://137878001101005</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>9.3714</X><Y>6.1138</Y><Z>7.1921</Z></Vector3>
+        <Vector3 name="InitialSize"><X>108.966667</X><Y>71.0881348</Y><Z>83.6262054</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">false</bool>
+        <bool name="DoubleSided">true</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="AKS2">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://127425168647805</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://93359996848376</url></Content>
+          <Color3 name="Color"><R>0.9370629370629371</R><G>0.8878504672897196</G><B>0.9523809523809523</B></Color3>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AK3">
+      <Properties>
+        <string name="Name">W7_Kit_Crown_Hatch__foliage</string>
+        <Content name="MeshId"><url>rbxassetid://91472458364066</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>24.7097</X><Y>12.8318</Y><Z>23.285</Z></Vector3>
+        <Vector3 name="InitialSize"><X>287.31369</X><Y>149.202393</Y><Z>270.747406</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">false</bool>
+        <bool name="DoubleSided">true</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="AKS3">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://108238608141638</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AK4">
+      <Properties>
+        <string name="Name">W7_Kit_Rest__foliage</string>
+        <Content name="MeshId"><url>rbxassetid://108550412728979</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>176.1334</X><Y>2.413</Y><Z>141.3016</Z></Vector3>
+        <Vector3 name="InitialSize"><X>2048.0</X><Y>28.0572872</Y><Z>1642.99121</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">true</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="AKS4">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://108238608141638</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AK5">
+      <Properties>
+        <string name="Name">W7_Kit_Rest__foliage_blossom</string>
+        <Content name="MeshId"><url>rbxassetid://91409678055408</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>155.3357</X><Y>1.8633</Y><Z>65.3496</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1806.17395</X><Y>21.6658535</Y><Z>759.856201</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">true</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="AKS5">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://127425168647805</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://93359996848376</url></Content>
+          <Color3 name="Color"><R>0.9370629370629371</R><G>0.8878504672897196</G><B>0.9523809523809523</B></Color3>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AK6">
+      <Properties>
+        <string name="Name">W7_Kit_Falls__kitwater</string>
+        <Content name="MeshId"><url>rbxassetid://73845431603817</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>32.452</X><Y>48.4596</Y><Z>25.1835</Z></Vector3>
+        <Vector3 name="InitialSize"><X>377.337219</X><Y>563.466431</Y><Z>292.821869</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">false</bool>
+        <bool name="DoubleSided">true</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="Material">256</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.08</float>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="AK7">
+      <Properties>
+        <string name="Name">W7_Kit_Fountain__kitstone</string>
+        <Content name="MeshId"><url>rbxassetid://112786401704620</url></Content>
+        <Content name="TextureID"><url>rbxassetid://104706195321565</url></Content>
+        <Vector3 name="Size"><X>8.9</X><Y>5.2</Y><Z>5.64</Z></Vector3>
+        <Vector3 name="InitialSize"><X>103.485199</X><Y>60.4632568</Y><Z>65.5793762</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">false</bool>
+        <bool name="DoubleSided">true</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="Material">256</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+    </Item>
+  </Item>
+</roblox>

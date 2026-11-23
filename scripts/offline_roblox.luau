@@ -122,7 +122,13 @@ do
 		fromEulerAnglesXYZ=function(x,y,z)return make(Vector3.zero,angles(x,y,z))end,
 		fromOrientation=function(x,y,z)return make(Vector3.zero,mul(angles(0,y,0),mul(angles(x,0,0),angles(0,0,z))))end,
 		fromEulerAnglesYXZ=function(x,y,z)return make(Vector3.zero,mul(angles(0,y,0),mul(angles(x,0,0),angles(0,0,z))))end,
-		fromAxisAngle=function()return make(Vector3.zero)end}
+		-- Rodrigues' rotation (WindClient's sway poses are measured offline).
+		fromAxisAngle=function(axis,angle)
+			local u=axis.Unit
+			local x,y,z,c,s=u.X,u.Y,u.Z,math.cos(angle),math.sin(angle)
+			local t=1-c
+			return make(Vector3.zero,{t*x*x+c,t*x*y-s*z,t*x*z+s*y,t*x*y+s*z,t*y*y+c,t*y*z-s*x,t*x*z-s*y,t*y*z+s*x,t*z*z+c})
+		end}
 end
 Enum=any();UDim2=any();UDim=any();Rect=any();NumberRange=any();NumberSequence=any();NumberSequenceKeypoint=any()
 ColorSequence=any();ColorSequenceKeypoint=any();TweenInfo=any();Font=any();RaycastParams=any();OverlapParams=any();Content=any();BrickColor=any();Ray=any();Region3=any();PhysicalProperties=any()

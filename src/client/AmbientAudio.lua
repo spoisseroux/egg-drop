@@ -362,6 +362,23 @@ function Ambient:setRound(active)
 	end
 end
 
+-- Another looped world voice (the Aero fountain, LOOK-R2 3), mixed exactly like the falls: in the ambience group (master,
+-- Ambience level, ducks, the deck round's fade, device focus) and stopped with them. spec: {id, parent, volume, speed,
+-- min, max}. Returns a remover; calling it twice is nothing.
+function Ambient:addVoice(name, spec)
+	local voice = sound(name, spec.id, self.ambience, spec.parent, true)
+	voice.RollOffMode = Enum.RollOffMode.InverseTapered
+	voice.RollOffMinDistance, voice.RollOffMaxDistance = spec.min or 5, spec.max or 30
+	voice.PlaybackSpeed = spec.speed or 1
+	local entry = { voice = voice, spec = { volume = spec.volume or .2, offset = 0 } }
+	table.insert(self.falls, entry)
+	return function()
+		local at = table.find(self.falls, entry)
+		if at then table.remove(self.falls, at) end
+		pcall(function() voice:Destroy() end)
+	end
+end
+
 function Ambient:listener()
 	if self.listenerOf then return self.listenerOf() end
 	local character = Players.LocalPlayer and Players.LocalPlayer.Character
