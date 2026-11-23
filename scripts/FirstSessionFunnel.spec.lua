@@ -9,7 +9,7 @@ return function(server)
 	local function test(name,run)run();table.insert(cases,name)end
 	local function session(profile)
 		local log={}
-		local s=FS.new({Name="spec"},profile or {rank=0,newSave=true},{force=true,delay=function()end,log=function(_,kind,a,b)table.insert(log,{kind,a,b})end})
+		local s=FS.new({Name="spec"},profile or {rank=0,newSave=true},{force=true,v3=false,delay=function()end,log=function(_,kind,a,b)table.insert(log,{kind,a,b})end})
 		return s,log
 	end
 

@@ -54,6 +54,9 @@ local Dash=require(ReplicatedStorage.Shared.Dash)
 -- Garden finds (S9): the optional finds field (FindsState); off = not read, not written, no snapshot key.
 local FindsState=require(script.Parent.FindsState)
 local Finds=require(ReplicatedStorage.Shared.Finds)
+-- Onboarding v3 slice C: the optional Sleepy Nest field (NestState); off = not read, not written, no snapshot key.
+local NestState=require(script.Parent.NestState)
+local Onboard=require(ReplicatedStorage.Shared.Onboard)
 -- v2 pet names: optional names / petNames fields (NameState); earned pieces granted by catchUp.
 local Names=require(script.Parent.NameState)
 local NameCatalog=require(ReplicatedStorage.Shared.NameCatalog)
@@ -491,6 +494,8 @@ function Hatching.public(handle)
 	if Dash.on() then public.dash = DashState.public(state, dayOf(handle.adapter.now())) end
 	-- Garden finds: today's paid finds and the daily limit, only while the switch is on.
 	if Finds.on() then public.finds = FindsState.public(state, dayOf(handle.adapter.now())) end
+	-- The Sleepy Nest: the egg growing in the nest, only while the switch is on (no key until the first egg lands).
+	if Onboard.on("nest") then public.nest = NestState.public(state, handle.adapter.now()) end
 	-- Onboarding: one-time coach cards already shown (0 when the field is missing).
 	public.coachMask = Coach.mask(state.coachMask)
 	-- Bond XP per pet (slice F): {} when the field is missing. Levels come from BondCatalog.
@@ -1573,6 +1578,55 @@ function Hatching.findClaim(handle, operationId, petId)
 end
 function Hatching.findCommitted(handle, operationId) return FindsState.committed(handle.state, operationId) end
 function Hatching.findReceipt(handle, operationId) return FindsState.receipt(handle.state, operationId) end
+
+-- The Sleepy Nest (NestState, Onboarding v3 slice C). Each is one write through transact; `operationId` is the host's id,
+-- kept across retries, and a pending write resumes its own frozen candidate. The clock is read inside the write.
+-- nestLand: an egg lands for `petId` when there is none (or the saved one is malformed), keeping the count; "Growing"
+-- otherwise, writing nothing.
+local function nestId(value) return type(value) == "string" and #value >= 1 and #value <= 80 end
+local function nestPet(value) return type(value) == "string" and #value >= 1 and #value <= 40 end
+function Hatching.nestLand(handle, operationId, petId)
+	if not nestId(operationId) or not nestPet(petId) then return false, "InvalidNest" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "nestLand:" .. operationId
+	local pending = handle.pending
+	if pending and pending.signature ~= signature then return false, "Pending" end
+	local candidate = if pending then pending.candidate else table.freeze({ id = operationId, petId = petId })
+	return transact(handle, signature, handle.state.revision, function(state, captured)
+		return NestState.land(state, captured, handle.adapter.now())
+	end, candidate, operationId, nil, "nestLand:" .. candidate.petId)
+end
+-- nestClaim: hatch the egg the host saw. `n` (optional) is the count the host captured when it accepted the claim;
+-- without it the count is captured here, once, and frozen with the candidate. nest.op is the proof, so a retry, a
+-- replay or a second session pays once; the claim checks n == captured n and ready inside the write.
+function Hatching.nestClaim(handle, operationId, petId, n)
+	if not nestId(operationId) or not nestPet(petId) then return false, "InvalidNest" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	if NestState.committed(handle.state, operationId) then return true, "AlreadySaved" end
+	local signature = "nestClaim:" .. operationId
+	local pending = handle.pending
+	if pending and pending.signature ~= signature then return false, "Pending" end
+	if n ~= nil and not integer(n) then return false, "InvalidNest" end
+	local candidate = if pending then pending.candidate
+		else table.freeze({ id = operationId, petId = petId, n = if n ~= nil then n else NestState.read(handle.state, handle.adapter.now()).n })
+	return transact(handle, signature, handle.state.revision, function(state, captured)
+		return NestState.claim(state, captured, handle.adapter.now())
+	end, candidate, operationId, nil, "nestClaim:" .. candidate.n .. ":" .. candidate.petId)
+end
+-- nestTuck: Tuck in for the egg with count `n`; refused (nothing written) when it is gone or tucked already.
+function Hatching.nestTuck(handle, operationId, n)
+	if not nestId(operationId) or not integer(n) then return false, "InvalidNest" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "nestTuck:" .. operationId
+	local pending = handle.pending
+	if pending and pending.signature ~= signature then return false, "Pending" end
+	local candidate = if pending then pending.candidate else table.freeze({ id = operationId, n = n })
+	return transact(handle, signature, handle.state.revision, function(state, captured)
+		return NestState.tuck(state, captured, handle.adapter.now())
+	end, candidate, operationId, nil, "nestTuck:" .. candidate.n)
+end
+function Hatching.nestCommitted(handle, operationId) return NestState.committed(handle.state, operationId) end
+function Hatching.nestReceipt(handle, operationId) return NestState.receipt(handle.state, operationId) end
 
 -- The free daily reroll: signature reroll:<day>:<slot>; saved as `rerolled`.
 function Hatching.questReroll(handle, slot, day, boost)

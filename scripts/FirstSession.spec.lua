@@ -28,7 +28,7 @@ return function(server)
 	local function session(profile,more)
 		local service=more and more.analytics or fakeService()
 		local timers={}
-		local options={force=true,analytics=service,players=Players,flags=ON,
+		local options={force=true,analytics=service,players=Players,flags=ON,v3=false,
 			defer=function(fn,...)fn(...)end,
 			delay=function(seconds,fn)table.insert(timers,{seconds,fn})end}
 		for key,value in pairs(more or {})do options[key]=value end
@@ -135,6 +135,72 @@ return function(server)
 		local s,calls,timers=session(nil,{flags={FirstSessionFunnel=false}})
 		assert(s==nil and #calls==0 and #timers==0)
 		assert(session(nil,{flags={}})==nil)
+	end)
+
+	-- Onboarding v3 (slice F): the 11-step table, hold-and-flush, the hooks.
+	local function v3(more)
+		more=more or {};more.v3=true
+		return session(nil,more)
+	end
+	test("v3: eleven steps keep their numbers and names; off keeps the nine",function()
+		assert(#FS.V3StepNames==11 and FS.V3Steps.BoardReady==1 and FS.V3Steps.NestTucked==8 and FS.V3Steps.TenMinutes==11)
+		for key,step in pairs(FS.V3Steps)do assert(FS.V3StepKeys[step]==key)end
+		local s,calls=session()
+		for _,hook in ipairs({"BoardReady","FirstDrop","FirstMerge","BearMet","GardenWalkthrough"})do s:hit(hook)end
+		s:hit("FirstMachine","style")
+		local logged=steps(calls);assert(#logged==6 and logged[6]==6,"the old table maps the old hooks")
+		assert(not s:hit("InGarden")and not s:hit("NestTucked")and not s:hit("ToyGiven"),"v3 hooks are nothing in the old table")
+	end)
+	test("v3: in order, each step once, by hooks; First drop and the other old steps are custom events",function()
+		local s,calls,timers=v3()
+		assert(#timers==1,"one timer at the start")
+		s:hit("BoardReady");s:hit("FirstDrop");s:hit("FirstDrop");s:hit("FirstMerge");s:hit("BearMet");s:hit("InGarden")
+		s:record("FirstPet");s:hit("FirstMachine","style");s:hit("FirstMachine","hatch");s:hit("FirstSpend");s:hit("ToyGiven")
+		s:hit("NestTucked");s:roundStarted();s:roundSettled();s:hit("FirstQuest")
+		timers[1][2]();assert(#timers==2 and timers[2][1]==300,"ten minutes is five more, v3 only");timers[2][2]()
+		local logged=steps(calls);assert(#logged==11,#logged)
+		for i,step in ipairs(logged)do assert(step==i)end
+		assert(calls[2][2]=="FirstDrop"and events(calls,"FirstDrop")==1 and events(calls,"FirstMachine")==1 and events(calls,"FirstSpend")==1)
+		assert(events(calls,"FirstQuest")==1 and events(calls,"FirstPet")==1 and events(calls,"FiveMinutes")==1 and events(calls,"TenMinutes")==1)
+		for _,call in ipairs(calls)do assert(call[1]~="step"or call[3]==FS.V3StepNames[call[2]])end
+	end)
+	test("v3 hold-and-flush: an early step is held, sent once as Early_<StepKey>, and logged in order when the gap closes",function()
+		local s,calls,timers=v3()
+		s:hit("BoardReady")
+		timers[1][2]() -- FiveMinutes long before its turn
+		s:hit("NestTucked");s:hit("NestTucked");s:hit("ToyGiven")
+		assert(#steps(calls)==1 and events(calls,"Early_FiveMinutes")==1 and events(calls,"Early_NestTucked")==1 and events(calls,"Early_ToyGiven")==1)
+		s:hit("FirstMerge");s:hit("BearMet");s:hit("InGarden");s:record("FirstPet")
+		assert(#steps(calls)==5,"6 is still open: 7, 8 and 10 wait")
+		s:hit("FirstMachine","hatch")
+		local logged=steps(calls);assert(#logged==8 and logged[7]==7 and logged[8]==8,"7 and 8 flushed in order")
+		s:roundStarted();s:roundSettled()
+		logged=steps(calls);assert(#logged==10 and logged[9]==9 and logged[10]==10,"9 then the held 10")
+		timers[2][2]();assert(#steps(calls)==11)
+		assert(events(calls,"Early_FiveMinutes")==1 and events(calls,"FiveMinutes")==1,"each once")
+	end)
+	test("v3 step 9: only a round started after the Bear and then settled; the Welcome round is not it",function()
+		local s,calls=v3()
+		s:hit("BoardReady");s:hit("FirstMerge");s:roundStarted();s:roundSettled()
+		assert(#steps(calls)==2 and events(calls,"Early_SecondRoundDone")==0,"the Welcome round")
+		s:hit("BearMet");s:roundSettled();assert(events(calls,"Early_SecondRoundDone")==0,"a settle with no round started after the Bear")
+		s:roundStarted();s:roundSettled();assert(events(calls,"Early_SecondRoundDone")==1)
+	end)
+	test("the table is chosen once, at the first hook after Board ready, from the three switches",function()
+		local Onboard=require(game:GetService("ReplicatedStorage").Shared.Onboard)
+		local okRun,problem=pcall(function()
+			Onboard.inject({flags={OnboardingV3=true},studio=true})
+			local s,calls=session(nil,{v3=nil})
+			s.forced=nil
+			s:hit("BoardReady");assert(s.v3==nil,"step 1 chooses nothing")
+			Onboard.inject({flags={OnboardingV3=true},studio=true,nest=false})
+			s:hit("FirstDrop");assert(s.v3==false and #steps(calls)==2,"nest off: the old table")
+			Onboard.inject({flags={OnboardingV3=true},studio=true});s:hit("FirstMerge");assert(s.v3==false,"fixed for the session")
+			local t=session(nil,{v3=nil});t.forced=nil
+			t:hit("BoardReady");t:hit("FirstDrop");assert(t.v3==true and #steps(calls)==3)
+		end)
+		Onboard.inject(nil)
+		assert(okRun,problem)
 	end)
 
 	return {passed=#cases,cases=cases}
