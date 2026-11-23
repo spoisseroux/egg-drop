@@ -11,8 +11,8 @@
 -- Onboarding v3 (ONBOARDING-V3-PLAN-2026-11-23 section 5, slice F): while all three v3 parts are on (Onboard.on follow,
 -- needs and nest) the session uses the 11-step table V3Steps instead, strictly linear with hold-and-flush: a step that
 -- comes early is held (and sent once at once as the custom event "Early_<StepKey>") and logged, in order, as soon as the
--- gap before it closes. The table is chosen once per session at the first hook after Board ready (step 1 is the same
--- in both), so a mid-session flip never mixes them. Call sites name hooks (hit), not numbers; each table maps them.
+-- gap before it closes. The table is chosen once per session, after Board ready (step 1 is the same in both) and once
+-- the onboarding config has loaded, so a mid-session flip never mixes them. Call sites name hooks (hit), not numbers; each table maps them.
 local AnalyticsService = game:GetService("AnalyticsService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -71,16 +71,26 @@ FirstSession.V3StepKeys = table.freeze(v3Keys)
 -- Hooks (hit) that are not a v3 step become a custom event of the same name, once (the plan: First drop is one).
 FirstSession.V3Events = table.freeze({ FirstDrop = true, GardenWalkthrough = true, FirstMachine = true, FirstQuest = true,
 	FirstSpend = true, SecondRound = true })
--- Is Onboarding v3 on for this session? All three parts (the 11 steps need the Bear, the needs and the nest).
-function FirstSession.v3On()
-	return Onboard.on("follow") and Onboard.on("needs") and Onboard.on("nest")
+-- Is Onboarding v3 on for this player's session? All three parts (the 11 steps need the Bear, the needs and the nest).
+-- The follow part is the per-session capture the tour uses (Onboard.sessionFollow), so the funnel and the tour agree.
+function FirstSession.v3On(player)
+	return Onboard.sessionFollow(player) and Onboard.on("needs") and Onboard.on("nest")
+end
+-- The choice waits for the onboarding config to have loaded once (or an owner override), checking every ConfigRetry
+-- seconds; after ConfigWait it is made from what the switches say then. Hooks that come meanwhile are held and
+-- replayed in order once it is made. With the v3 build ceiling off there is nothing to wait for (the old table).
+FirstSession.ConfigRetry = 2
+FirstSession.ConfigWait = 60
+local function configReady()
+	if not Onboard.ceiling() then return true end
+	return require(script.Parent.OnboardConfig).loaded()
 end
 
 -- options (specs): {force = true} skips the live-server gate; {log = fn(player, kind, ...)}
 -- replaces AnalyticsService (kind is "step" or "event"); {analytics = service} is a stand-in
 -- AnalyticsService; {defer = fn, delay = fn} replace task.defer / task.delay; {flags = table}
 -- replaces FeatureFlags; {players = service} is the Players the player must still be in;
--- {v3 = true|false} picks the table (default: FirstSession.v3On() at the first hook after Board ready).
+-- {v3 = true|false} picks the table; {ready = fn} replaces the config-loaded check.
 function FirstSession.new(player, profile, options)
 	options = options or {}
 	local flags = options.flags or FeatureFlags
@@ -96,23 +106,25 @@ function FirstSession.new(player, profile, options)
 	local self = setmetatable({
 		player = player, logged = {}, milestones = {}, rounds = 0, sink = options.log,
 		analytics = options.analytics or AnalyticsService, players = options.players or Players,
-		defer = options.defer or task.defer, held = {}, forced = options.v3,
+		defer = options.defer or task.defer, held = {}, forced = options.v3, waiting = {},
+		ready = options.ready or configReady, delay = options.delay or task.delay,
 	}, FirstSession)
-	local delay = options.delay or task.delay
-	local ok, problem = pcall(delay, FirstSession.FiveMinutes, function()
+	local ok, problem = pcall(self.delay, FirstSession.FiveMinutes, function()
 		self:record("FiveMinutes")
-		-- v3 only: the ten-minute step, five minutes later (one timer at a time; none for the old table).
-		if self:isV3() then
-			local scheduled, failure = pcall(delay, FirstSession.TenMinutes - FirstSession.FiveMinutes, function()
-				self:record("TenMinutes")
-			end)
-			if not scheduled then warn("Egg Drop could not schedule the first-session timer:", failure) end
-		end
+		if not self:queue("afterFive") then self:afterFive() end
 	end)
 	if not ok then
 		warn("Egg Drop could not schedule the first-session timer:", problem)
 	end
 	return self
+end
+-- v3 only: the ten-minute step, five minutes after the five (one timer at a time; none for the old table).
+function FirstSession:afterFive()
+	if not self.v3 then return end
+	local ok, problem = pcall(self.delay, FirstSession.TenMinutes - FirstSession.FiveMinutes, function()
+		self:record("TenMinutes")
+	end)
+	if not ok then warn("Egg Drop could not schedule the first-session timer:", problem) end
 end
 
 -- Fire and forget: the sink (specs) or a deferred, pcall'd AnalyticsService call. Never throws.
@@ -140,17 +152,63 @@ function FirstSession:emit(kind, ...)
 	end
 end
 
--- The table for this session, fixed at the first call (see the header). True: the v3 table.
-function FirstSession:isV3()
-	if self.v3 == nil then
-		if self.forced ~= nil then
-			self.v3 = self.forced == true
-		else
-			local ok, on = pcall(FirstSession.v3On)
-			self.v3 = ok and on == true
-		end
+-- Choose the table once (see the header). True when it is chosen.
+function FirstSession:decide()
+	if self.v3 ~= nil then return true end
+	if self.forced ~= nil then
+		self.v3 = self.forced == true
+		return true
 	end
-	return self.v3
+	local okReady, ready = pcall(self.ready)
+	if not (okReady and ready == true) and not self.waitedOut then return false end
+	local ok, on = pcall(FirstSession.v3On, self.player)
+	self.v3 = ok and on == true
+	return true
+end
+function FirstSession:isV3()
+	self:decide()
+	return self.v3 == true
+end
+-- Before the choice: hold the call (method name and arguments) and answer true; after it: replay what was held, in
+-- order, and answer false (the caller goes on).
+function FirstSession:queue(method, ...)
+	if self:decide() then
+		self:replay()
+		return false
+	end
+	table.insert(self.waiting, table.pack(method, ...))
+	if not self.rechecking then
+		self.rechecking = true
+		self:recheck(0)
+	end
+	return true
+end
+function FirstSession:recheck(waited)
+	local ok, problem = pcall(self.delay, FirstSession.ConfigRetry, function()
+		waited += FirstSession.ConfigRetry
+		if waited >= FirstSession.ConfigWait then self.waitedOut = true end
+		if self:decide() then
+			self.rechecking = false
+			self:replay()
+		else
+			self:recheck(waited)
+		end
+	end)
+	if not ok then
+		warn("Egg Drop could not schedule the first-session timer:", problem)
+		self.waitedOut, self.rechecking = true, false
+		if self:decide() then self:replay() end
+	end
+end
+function FirstSession:replay()
+	if self.replaying then return end
+	self.replaying = true
+	while #self.waiting > 0 do
+		local call = table.remove(self.waiting, 1)
+		local ok, problem = pcall(self[call[1]], self, table.unpack(call, 2, call.n))
+		if not ok then warn("Egg Drop first-session replay:", problem) end
+	end
+	self.replaying = false
 end
 
 -- v3: step N logs only after N-1; an early step is held (and sent once as Early_<StepKey>) and flushed in order
@@ -181,7 +239,8 @@ end
 -- are not one. Board ready is step 1 in both, so it logs without choosing the table.
 function FirstSession:hit(hook, detail)
 	if hook == "BoardReady" then return self:advance(1) end
-	if not self:isV3() then
+	if self:queue("hit", hook, detail) then return false end
+	if not self.v3 then
 		local step = FirstSession.Steps[hook]
 		return if step then self:advanceOld(step) else false
 	end
@@ -199,7 +258,8 @@ end
 -- By number, in the session's table (older call sites and the specs).
 function FirstSession:advance(step)
 	if step == 1 and self.v3 == nil then return self:advanceOld(1) end
-	if self:isV3() then return self:advanceV3(step) end
+	if self:queue("advance", step) then return false end
+	if self.v3 then return self:advanceV3(step) end
 	return self:advanceOld(step)
 end
 
@@ -220,9 +280,13 @@ end
 -- A round began on the board. The Welcome round ends with the Bear, so the first round
 -- started after step 4 is the player's second round (step 9; it logs once step 8 has).
 function FirstSession:roundStarted()
-	if self:isV3() then
-		-- v3: a round started after the Bear was met; its settle is step 9 (roundSettled).
-		if self.logged[FirstSession.V3Steps.BearMet] then self.roundAfterBear = true end
+	if self:queue("roundStarted") then return end
+	if self.v3 then
+		-- v3: a round started after the Bear was met (the custom event SecondRound); its settle is step 9.
+		if self.logged[FirstSession.V3Steps.BearMet] then
+			self.roundAfterBear = true
+			self:record("SecondRound")
+		end
 		return
 	end
 	if not self.logged[FirstSession.Steps.BearMet] then
@@ -236,7 +300,8 @@ end
 
 -- A round's reward began to settle. v3 only: the first one started after the Bear is SecondRoundDone.
 function FirstSession:roundSettled()
-	if self:isV3() and self.roundAfterBear then
+	if self:queue("roundSettled") then return end
+	if self.v3 and self.roundAfterBear then
 		self:advanceV3(FirstSession.V3Steps.SecondRoundDone)
 	end
 end
@@ -247,9 +312,13 @@ function FirstSession:record(name)
 		self.milestones[name] = true
 		self:emit("event", name, 1)
 	end
-	if (name == "FirstPet" or name == "FiveMinutes" or name == "TenMinutes") and self:isV3() then
-		self:advanceV3(FirstSession.V3Steps[name])
+	if name == "FirstPet" or name == "FiveMinutes" or name == "TenMinutes" then
+		if self:queue("recordStep", name) then return end
+		self:recordStep(name)
 	end
+end
+function FirstSession:recordStep(name)
+	if self.v3 then self:advanceV3(FirstSession.V3Steps[name]) end
 end
 
 return FirstSession

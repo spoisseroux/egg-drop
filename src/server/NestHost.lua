@@ -45,6 +45,7 @@ Host.GiveUp=table.freeze({NotReady=true,NoEgg=true,Changed=true,NoPet=true,Growi
 function Host.mount(d)
 	if not Onboard.ceiling()then return nil end
 	local self=setmetatable({d=d,records={},isOpen=false,errors=0},Host)
+	NestState.halted=false
 	self.clock=d.clock or os.clock
 	self.spawn,self.wait=d.spawn or task.spawn,d.wait or task.wait
 	self.guid=d.guid or function()return HttpService:GenerateGUID(false)end
@@ -56,6 +57,7 @@ function Host.mount(d)
 		warn("[Nest] host: "..tostring(problem))
 		if self.errors>=Host.MaxErrors then
 			self.dead=true
+			NestState.halted=true
 			beat:Disconnect()
 			pcall(self.close,self)
 		end
@@ -179,7 +181,7 @@ function Host:tick(board,now)
 	end
 	if board.mode~="Room"or not alive(board)then return end
 	if now<rec.landAfter or self:queued(rec,"land")then return end
-	if NestState.landed(board.nursery.state,self:now(board))then return end
+	if NestState.landed(board.nursery.state,self:now(board))or Guard.other(board.nursery.state)then return end
 	local petId=board.profile and board.profile.companionId
 	if type(petId)~="string"or not Catalog.isOwned(board.nursery.state.inventoryMask or 0,petId)then return end
 	table.insert(rec.queue,{kind="land",petId=petId})
@@ -214,7 +216,6 @@ function Host:receive(player,packet)
 		return
 	end
 	table.insert(rec.queue,item)
-	if kind=="tuck"and self.d.notify then pcall(self.d.notify,board,"NestTucked")end
 	self:flush(player,board)
 end
 -- Answers ok, reason or ok, nil, the queue item. The pet and the count are captured now; the write checks them again.
@@ -225,6 +226,8 @@ function Host:check(board,rec,kind)
 	local entry=NestState.read(state,self:now(board))
 	local petId=board.profile and board.profile.companionId
 	local owned=type(petId)=="string"and Catalog.isOwned(state.inventoryMask or 0,petId)
+	-- Another save operation holds the save (a hatch reveal, a reservation): a quiet Busy, never a write that fails.
+	if kind~="claim"and Guard.other(state)then return false,"Busy"end
 	if kind=="land"then
 		if entry.at~=nil then return false,"Growing"end
 		if not owned then return false,"NoPet"end
@@ -269,6 +272,9 @@ function Host:answer(board,flight)
 			pcall(economy.source,board.player,receipt.stars,board.nursery.state.nectar,"TimedReward","SleepyNest")
 		end
 		if self.d.notify then pcall(self.d.notify,board,"NestHatched")end
+	elseif flight.kind=="tuck"and self.d.notify then
+		-- Funnel step 8 (Nest tucked) when the tuck is saved, not when it is asked for.
+		pcall(self.d.notify,board,"NestTucked")
 	end
 	self:sendState(board)
 	publish(self,board)

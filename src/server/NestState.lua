@@ -10,8 +10,11 @@
 --   receipt  what that claim paid {op, egg, kind, item, stars, pet}
 --   tucked   Tuck in pressed for this egg
 --   pet      the pet stored at land (hat and neck pieces are per pet)
+--   closed   true once a malformed count was repaired (kept on every later write; never the Nest Charm)
 -- Never part of HatchProgress.valid, never sanitised at load (FindsState pattern): it fails closed. A missing field is "no
--- egg yet" (n = 0); a malformed `n` reads as Nest.WeekLength (week done: after-week eggs only, and never the charm); a
+-- egg yet" (n = 0); a malformed `n` reads as Nest.WeekLength (week done: after-week eggs only, and never the charm: the
+-- repair is saved as `closed = true` with the next write and kept on every later one, so a clean-looking n never earns
+-- it); a
 -- malformed `at`, or one more than Nest.FutureSlack ahead, has no egg until a fresh land write that keeps `n`; a malformed
 -- gift pays only its row's own Stars; a malformed receipt reads as none.
 local Shared=game:GetService("ReplicatedStorage").Shared
@@ -23,6 +26,8 @@ local Wear=require(Shared.WearableCatalog)
 local Wearables=require(script.Parent.WearableState)
 
 local State={}
+-- Set by NestHost when it stops itself after repeated errors: no `public.nest` until the next mount.
+State.halted=false
 State.BalanceLimit=1000000000
 State.Slots=table.freeze({hat="Hat",neck="Neck"})
 
@@ -117,8 +122,10 @@ function State.read(state,now)
 	local raw=type(state)=="table"and state.nest or nil
 	if raw==nil then return{n=0,tucked=false,raw=false}end
 	-- Not a table: malformed, so closed (week done) and no egg until a land write.
-	if type(raw)~="table"then return{n=Nest.WeekLength,tucked=false,raw=true}end
+	if type(raw)~="table"then return{n=Nest.WeekLength,tucked=false,raw=true,closed=true}end
 	local out={n=Nest.count(raw.n),raw=true}
+	-- A count that was (or is) malformed stays closed: the Nest Charm is never earned from a repaired n.
+	out.closed=raw.closed==true or Nest.count(raw.n)~=raw.n
 	if Nest.sane(raw,now)then out.at=raw.at end
 	out.gift=raw.gift
 	out.pet=petOf(raw.pet)
@@ -133,11 +140,12 @@ function State.landed(state,now)return State.read(state,now).at~=nil end
 -- reads as a finished week for the eggs, never as the charm.
 function State.charmEarned(state)
 	local raw=type(state)=="table"and state.nest or nil
-	return type(raw)=="table"and integer(raw.n,Nest.WeekLength,math.huge)
+	return type(raw)=="table"and raw.closed~=true and integer(raw.n,Nest.WeekLength,math.huge)
 end
 
 local function write(state,entry)
-	state.nest={at=entry.at,n=entry.n,gift=entry.gift,op=entry.op,receipt=entry.receipt,tucked=entry.tucked==true,pet=entry.pet}
+	state.nest={at=entry.at,n=entry.n,gift=entry.gift,op=entry.op,receipt=entry.receipt,tucked=entry.tucked==true,pet=entry.pet,
+		closed=if entry.closed then true else nil}
 end
 local function ownedPet(state,petId)
 	return petOf(petId)~=nil and Eggs.isOwned(state.inventoryMask or 0,petId)
