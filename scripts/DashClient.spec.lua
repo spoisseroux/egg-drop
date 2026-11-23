@@ -124,6 +124,10 @@ return function(client,offline)
 		return r
 	end
 
+	test("STUDIO-CHECK-R2: a rival already home is ahead of a tie at the line (the pill read 1st under a 4th sheet)",function()
+		assert(Client.aheadOf(0,0,true)and not Client.aheadOf(0,0,false),"home first is ahead at the tie")
+		assert(Client.aheadOf(3,5,false)and not Client.aheadOf(5,3,true)and not Client.aheadOf(5,0,true))
+	end)
 	test("the gate card: the course from the side, the avatar in view; every way the card goes gives the camera back",function()
 		local r=rig()
 		local eye,look=Client.gateView()
