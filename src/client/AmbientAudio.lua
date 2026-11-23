@@ -31,7 +31,9 @@ Ambient.Ids = {
 }
 -- Alive step 4: leaves in the gust (assets/audio/custom/egg_drop_wind_rustle.wav, 14 s loop). Not in
 -- Ids and never in `warm`: the voice is made the first time the wind is on, and nil means no voice.
-Ambient.RustleId = 131058187750745
+-- OFF since beta (12) QA S1 (Spencer 2026-11-23): restarting the loop on every gust read as an intermittent
+-- "toilet flush". The id was 131058187750745; the code path stays, so a replacement is one id here.
+Ambient.RustleId = nil
 -- Volume at a full gust, the most it may change per second (over a gust's own .19, so a clock jump
 -- never clicks), and how long it stays silent before the loop stops.
 Ambient.RustlePeak, Ambient.RustleSlew, Ambient.RustleHold = .10, .4, 1.5

@@ -194,12 +194,30 @@ end
 function Host:place(board,rec)
 	local used={}
 	for _,find in ipairs(rec.live)do table.insert(used,find.spot)end
-	local spot=Finds.pick(self.random,used,rec.recent)
+	-- Beta (12) QA G2: near this player (finds are per player), so the sparkle lands where they can see it.
+	local part=root(board)
+	local near=if part and typeof(part.Position)=="Vector3"and finite(part.Position)then part.Position else nil
+	local spot=Finds.pick(self.random,used,rec.recent,near)
 	if not spot then return false end
 	table.insert(rec.live,{id=self.guid(),spot=spot})
 	table.insert(rec.recent,spot)
 	while #rec.recent>Finds.Recent do table.remove(rec.recent,1)end
 	self:sendSpots(board,rec)
+	return true
+end
+-- Owner test tool (beta (12) QA G2): "/finds now" places one find at once, past the timer. Only while the switch is on,
+-- the save is loaded and the waiting and daily caps have room; the timer starts again from Every. init connects it
+-- inside the owner chat block (beta or Studio) only.
+function Host.parseNow(message)
+	return type(message)=="string"and string.match(string.lower(message),"^%s*/finds%s+now%s*$")~=nil
+end
+function Host:now(board)
+	if not self:on()or not self.isOpen or board.closing or not loaded(board)then return false,"Off"end
+	local rec=self:record(board)
+	if rec.stopped then return false,"Stopped"end
+	if #rec.live>=Finds.Waiting or self:left(board,rec)<=0 then return false,"Full"end
+	if not self:place(board,rec)then return false,"NoSpot"end
+	rec.active,rec.due=0,Finds.Every
 	return true
 end
 function Host:sendSpots(board,rec)

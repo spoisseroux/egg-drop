@@ -530,23 +530,36 @@ function Focus:layoutRoamHint()
 	local key=self.hint.Text..tostring(size)..tostring(dockBottom)..tostring(dockLow)..tostring(dockLeft)..GuiService.PreferredTextSize.Name
 	if self.hintLayoutKey==key then return end;self.hintLayoutKey=key
 	Art.type(self.hint,if self.saveNotice then "Body"else "Supporting",size.Y<280)
+	local padH,padW=Focus.padHint(self.hint)
 	self.hint.AnchorPoint=Vector2.zero
 	if dockLow then
 		local room=math.max(1,dockLeft-8-12)
-		local width=math.min(room,math.max(math.min(180,room),math.min(if self.saveNotice then room else 360,Art.textWidth(self.hint)+16)))
-		local height=Art.textHeight(self.hint,width,24)+8
+		local width=math.min(room,math.max(math.min(180,room),math.min(if self.saveNotice then room else 360,Art.textWidth(self.hint)+padW)))
+		local height=Art.textHeight(self.hint,width,24)+padH
 		local dockHeight=dock.AbsoluteSize.Y
 		-- Centred on the dock's row; a tall (wrapped) line grows up from the dock's bottom edge.
 		local y=if height<=dockHeight then dockTop+(dockHeight-height)/2 else dockTop+dockHeight-height
 		self.hint.Position,self.hint.Size=UDim2.fromOffset(math.max(8,dockLeft-8-width),math.max(8,math.floor(y))),UDim2.fromOffset(width,height)
 		return
 	end
-	local width=math.min(math.max(1,size.X-24),math.max(180,math.min(if self.saveNotice then math.max(1,size.X-24)else 360,Art.textWidth(self.hint)+16)))
-	local height=Art.textHeight(self.hint,width,24)+8
+	local width=math.min(math.max(1,size.X-24),math.max(180,math.min(if self.saveNotice then math.max(1,size.X-24)else 360,Art.textWidth(self.hint)+padW)))
+	local height=Art.textHeight(self.hint,width,24)+padH
 	local y=math.max(8,math.min(dockBottom,math.max(8,size.Y-height-8)))
 	self.hint.Position,self.hint.Size=UDim2.fromOffset(math.max(8,size.X-width-12),y),UDim2.fromOffset(width,height)
 end
 
+-- Beta (12) QA U1 (Fable, DASH-DECK-UI-LOOK.md U1): the hint cards' words sat high. PettingHint and RoamPetHint
+-- get a UIPadding of 6 top, 4 bottom, 12 each side; the card is the words' height + 10 and width + 24 (was + 8 and
+-- + 16: 4 / 4 and 8 / 8). Art.type zeroes a UIPadding's top and bottom, so this runs after it, every layout.
+Focus.HintPad=table.freeze({top=6,bottom=4,side=12})
+function Focus.padHint(label)
+	local pad=Focus.HintPad
+	local inset=label:FindFirstChildOfClass("UIPadding")
+	if not inset then inset=Instance.new("UIPadding");inset.Name="HintPad";inset.Parent=label end
+	inset.PaddingTop,inset.PaddingBottom=UDim.new(0,pad.top),UDim.new(0,pad.bottom)
+	inset.PaddingLeft,inset.PaddingRight=UDim.new(0,pad.side),UDim.new(0,pad.side)
+	return pad.top+pad.bottom,pad.side*2
+end
 function Focus:layoutSaveHelper()
 	local size=self.root.AbsoluteSize
 	local value=if self.saveNotice then self.saveNotice.detail else self.helper.Text
@@ -562,8 +575,9 @@ function Focus:layoutSaveHelper()
 	end
 	if self.saveNotice then self.helper.Text=value end
 	Art.type(self.helper,"Supporting",if self.saveNotice then size.Y<280 else true)
-	local width=math.max(1,math.min(available,Art.textWidth(self.helper)+16))
-	self.helper.Size=UDim2.fromOffset(width,Art.textHeight(self.helper,width,26)+8)
+	local padH,padW=Focus.padHint(self.helper)
+	local width=math.max(1,math.min(available,Art.textWidth(self.helper)+padW))
+	self.helper.Size=UDim2.fromOffset(width,Art.textHeight(self.helper,width,26)+padH)
 	self.helper.AnchorPoint=Vector2.new(.5,if topHint then 0 else 1)
 	self.helper.Position=if topHint then UDim2.new(.5,0,0,8)else UDim2.new(.5,0,1,-14)
 end

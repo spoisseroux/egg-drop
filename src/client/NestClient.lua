@@ -24,6 +24,7 @@ local Nest=require(Shared:WaitForChild("Nest"))
 local UICopy=require(Shared:WaitForChild("UICopy"))
 local Toys=require(Shared:WaitForChild("ToyCatalog"))
 local Wear=require(Shared:WaitForChild("WearableCatalog"))
+local Pets=require(Shared:WaitForChild("PetCatalog"))
 local Models=require(Shared:WaitForChild("EggModels")).Egg
 local Client={};Client.__index=Client
 Client.Folder="EggDropSleepyNest"
@@ -42,6 +43,7 @@ Client.Pending=8        -- a claim with no answer this long settles back
 Client.BusyWait=2       -- a refused claim: the prompt returns after this long
 Client.TuckSeconds=2.6
 Client.TuckedLabel=4
+Client.TuckedFirstLabel=6 -- the first tuck-in ever holds its line longer (GARDEN-LIFE-NEST-LOOK 5)
 Client.NextLabel=3
 Client.HatchSeconds=2
 Client.StageTween=.6
@@ -49,6 +51,13 @@ Client.DropSeconds=.35
 Client.Prompt=6         -- studs (the spawn is 10 away: it never fires at arrival)
 Client.PromptOffset=Vector2.new(0,72) -- under the nest, never on the egg
 Client.Near=8           -- studs: the "Inside:" line
+Client.SecondWidth=236  -- px: the widest second-line pill; the explainer wraps inside it
+Client.SecondSize=13
+-- Beta (12) QA O1 (Fable, GARDEN-LIFE-NEST-LOOK.md section 5): the nest's words by role, so a wording change is a
+-- UICopy edit only. `how` explains the egg until the first hatch; `tuckedFirst` is the first tuck-in ever.
+Client.Copy=table.freeze({how="onb3.nest.how",howPlain="onb3.nest.howPlain",tucked="onb3.nest.tucked",
+	tuckedFirst="onb3.nest.tuckedFirst",next="onb3.nest.next",title="onb3.nest.title",chipReady="onb3.nest.chipReady",
+	ready="onb3.nest.ready"})
 Client.GroundSlack=1    -- studs: a ground hit further than this from Spot.Y is not the lawn
 Client.Assets=table.freeze({
 	chip="rbxassetid://114080030018596",flag="rbxassetid://96303130180036",leaves="rbxassetid://130921787854357",
@@ -95,7 +104,7 @@ function Client.chipText(left)
 	local kind,value=Nest.countdown(left)
 	if kind=="hours"then return UICopy.get("onb3.nest.chipHours",{hours=value}),kind end
 	if kind=="minutes"then return UICopy.get("onb3.nest.chipMinutes",{minutes=value}),kind end
-	return UICopy.get("onb3.nest.ready"),"ready"
+	return UICopy.get(Client.Copy.chipReady),"ready"
 end
 -- The gift's name for the label and the reward ("Bow Tie", "Ball", "Nest Charm"); nil for Stars.
 function Client.itemName(kind,item,pet)
@@ -107,6 +116,22 @@ function Client.itemName(kind,item,pet)
 		return if ok and found then found.name else nil
 	end
 	return nil
+end
+-- The pet's display name for a view, or nil.
+function Client.petName(view)
+	return if type(view)=="table"then Pets.petName(view.pet)else nil
+end
+-- "{pet}'s egg naps for {hours} hours. Come back to hatch a gift." ({hours} is Nest.Hours, never a typed 8).
+function Client.how(view)
+	local name=Client.petName(view)
+	if name then return UICopy.get(Client.Copy.how,{pet=name,hours=Nest.Hours})end
+	return UICopy.get(Client.Copy.howPlain,{hours=Nest.Hours})
+end
+-- The label's second line and its kind: the explainer until the first hatch (n == 0, shown at any distance the label
+-- shows), then what is inside (within Client.Near only).
+function Client.secondLine(view)
+	if view.n==0 then return Client.how(view),"how"end
+	return Client.inside(view),"inside"
 end
 -- "Inside: {item} and {stars} Stars." or "Inside: {stars} Stars."
 function Client.inside(view)
@@ -298,7 +323,7 @@ function Client:set(view,landing)
 	if landing then
 		self.drop={t=0}
 		self:play("land",1,.5)
-		self:say(UICopy.get("onb3.nest.next"),Client.NextLabel)
+		self:say(UICopy.get(Client.Copy.next,{hours=Nest.Hours}),Client.NextLabel)
 		self.shownScale=nil
 	end
 	self:paint(true)
@@ -383,7 +408,7 @@ function Client:draw()
 	local spot=inert(make("Part",nil,{Name="SleepyNestPrompt",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
 	spot.CFrame=self.root*CFrame.new(Client.PromptAt)
 	spot.Parent=folder
-	egg.prompt=make("ProximityPrompt",spot,{Name="NestPrompt",ObjectText=UICopy.get("onb3.nest.title"),ActionText=UICopy.get("onb3.nest.tuck"),
+	egg.prompt=make("ProximityPrompt",spot,{Name="NestPrompt",ObjectText=UICopy.get(Client.Copy.title),ActionText=UICopy.get("onb3.nest.tuck"),
 		HoldDuration=0,MaxActivationDistance=Client.Prompt,RequiresLineOfSight=false,Enabled=false,UIOffset=Client.PromptOffset})
 	local triggered=egg.prompt.Triggered
 	if typeof(triggered)=="RBXScriptSignal"then
@@ -437,11 +462,20 @@ function Client:paint(fresh)
 	egg.pill.Size=UDim2.fromOffset(math.max(120,math.min(236,#text*8+28)),28)
 	local textSize=if self.d.compact and self.d.compact()==true then 13 else 14
 	egg.clock.TextSize=textSize
-	-- What is inside changes only with the egg: worked out once per view.
+	-- The second line changes only with the egg: worked out once per view. The explainer wraps (two lines on a
+	-- phone); the board grows to hold it.
 	if egg.insideFor~=view then
 		egg.insideFor=view
-		egg.inside.Text=Client.inside(view)
-		egg.insidePill.Size=UDim2.fromOffset(math.min(236,math.ceil(self:measure(egg.inside.Text,13))+24),24)
+		local text,kind=Client.secondLine(view)
+		egg.secondKind=kind
+		egg.inside.Text=text
+		local inner=Client.SecondWidth-24
+		local textW=math.ceil(self:measure(text,Client.SecondSize))
+		local lines=if textW<=inner then 1 else math.ceil(textW*1.15/inner)
+		local h=if lines==1 then 24 else lines*16+8
+		egg.inside.TextWrapped=lines>1
+		egg.insidePill.Size=UDim2.fromOffset(if lines==1 then textW+24 else Client.SecondWidth,h)
+		egg.board.Size=UDim2.fromOffset(240,38+h)
 	end
 	-- Tuck in while it grows (once per egg), Hatch when it is ready; nothing while a hatch is asked for or playing.
 	local action=nil
@@ -489,6 +523,9 @@ function Client:paintChip(left,look)
 	local text,kind=Client.chipText(left)
 	local ready=kind=="ready"
 	if chip.label.Text~=text then chip.label.Text=text end
+	-- The moon icon alone did not name the thing: the chip's accessible label is the explainer (O1).
+	local named=Client.how(self.view)
+	if chip.button:GetAttribute("AccessibleLabel")~=named then chip.button:SetAttribute("AccessibleLabel",named)end
 	if chip.ready~=ready then
 		chip.ready=ready
 		chip.pill.BackgroundColor3=if ready then Client.Color.stars else Client.Color.well
@@ -519,7 +556,7 @@ function Client:buildChip(host,compact)
 	local textSize=if compact then 13 else 14
 	local button=make("TextButton",host,{Name="NestChip",Text="",AutoButtonColor=false,BackgroundTransparency=1,
 		AnchorPoint=Vector2.new(1,1),Position=UDim2.new(1,0,0,-Client.ChipGap),Size=UDim2.fromOffset(92,hit),Selectable=false,ZIndex=10})
-	button:SetAttribute("AccessibleLabel",UICopy.get("onb3.nest.title"))
+	button:SetAttribute("AccessibleLabel",if self.view then Client.how(self.view)else UICopy.get(Client.Copy.title))
 	local pill=make("Frame",button,{Name="Pill",AnchorPoint=Vector2.new(0,.5),Position=UDim2.fromScale(0,.5),Size=UDim2.new(1,0,0,pillH),
 		BackgroundColor3=Client.Color.well,BorderSizePixel=0,ZIndex=10})
 	corner(pill)
@@ -542,7 +579,7 @@ function Client:act()
 	if not self.isOpen or not self.view or self.waiting or self.hatching then return false end
 	if self.action=="tuck"then
 		if not self:send("tuck")then return false end
-		self.tuck={t=0}
+		self.tuck={t=0,first=self.view.n==0}
 		self:play("pet_coo_1",.85,.35)
 		if self.egg then pcall(function()self.egg.zzz:Emit(3)end)end
 		self:peek()
@@ -673,7 +710,12 @@ function Client:pose(dt)
 		if t<.6 then haloBoost=math.max(0,.9-halo)*(1-t/.6)end
 		if t>=Client.TuckSeconds and not self.tuck.said then
 			self.tuck.said=true
-			self:say(UICopy.get("onb3.nest.tucked"),Client.TuckedLabel)
+			if self.tuck.first then
+				-- The first tuck-in ever: the longer line, and a rail toast so it is read with the camera on the Bear.
+				local text=UICopy.get(Client.Copy.tuckedFirst,{hours=Nest.Hours})
+				self:say(text,Client.TuckedFirstLabel)
+				if self.d.toast then pcall(self.d.toast,text,nil)end
+			else self:say(UICopy.get(Client.Copy.tucked),Client.TuckedLabel)end
 		end
 	end
 	-- Waiting for the save: a fast rock on a loop.
@@ -745,7 +787,7 @@ function Client:pose(dt)
 	-- Near: the second line (what is inside, and the egg's number in the welcome week).
 	local root=self.d.root and self.d.root()
 	local near=root~=nil and(root-self.root.Position).Magnitude<=Client.Near
-	egg.insidePill.Visible=near
+	egg.insidePill.Visible=near or egg.secondKind=="how"
 	-- The pet focus (greeting) camera: no label, it would read as the Bear's speech.
 	local focus=self.d.focus~=nil and self.d.focus()==true
 	if egg.board.Enabled==focus then egg.board.Enabled=not focus end

@@ -17,12 +17,14 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LUAU = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / "build/luau-cli/luau.exe")
+LUAU = str(Path(sys.argv[1]).resolve()) if len(sys.argv) > 1 else str(ROOT / "build/luau-cli/luau.exe")
 BASE = sys.argv[2] if len(sys.argv) > 2 else "46ab954"
 LIVE = sys.argv[3] if len(sys.argv) > 3 else "aeae2d9"
 ONLY = os.environ.get("DASH_SPECS", "").split()
 SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPrize", "DashGating", "DashHost",
-         "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour", "GardenHourBook"]
+         "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour", "GardenHourBook",
+         # Beta (12) QA quick fixes: pet catch-up (G1), the fresh-save key switch (T1), finds near the player (G2).
+         "PetCatchup", "CatchupConfig", "GardenState", "ProgressKey", "FreshSave", "FindsState", "FindsHost"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
