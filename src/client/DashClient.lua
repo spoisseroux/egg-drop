@@ -278,13 +278,48 @@ function Client:gate()
 	-- Just for Fun to begin with; after that, whatever this player raced last.
 	local picked=1
 	if not self:newRacer()and self.last then picked=if self.last.kind=="trial"then 3 elseif self.last.mode=="stats"then 2 else 1 end
-	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Gate",title=UICopy.get("dash.title"),low=true,selected=picked,
-		lines={UICopy.get("dash.gate.line"),UICopy.get("dash.gate.modes")},
-		buttons={{name="Fun",text=UICopy.get("dash.fun"),primary=picked==1,act=go("join","fun")},
-			{name="Stats",text=UICopy.get("dash.stats"),primary=picked==2,act=go("join","stats")},
-			{name="Trial",text=UICopy.get("dash.trial"),primary=picked==3,act=go("trial")}}})
+	-- Beta 12 U3: the mode picker sheet (DashGateSheet): the pet on its stage, its race stats, three tiles.
+	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Gate",title=UICopy.get("dash.title"),sheet="gate",selected=picked,
+		reduced=self.d.reduced,gate=self:gateData(),lines={},
+		buttons={{name="Fun",text=UICopy.get("dash.fun"),sub=UICopy.get("dash.sub.fun"),primary=picked==1,act=go("join","fun")},
+			{name="Stats",text=UICopy.get("dash.stats"),sub=UICopy.get("dash.sub.stats"),primary=picked==2,act=go("join","stats")},
+			{name="Trial",text=UICopy.get("dash.trial"),sub=UICopy.get("dash.sub.trial"),primary=picked==3,act=go("trial")}}})
 	if not self.card then self:notify("dash.reason.other");return end
 	self.card.gate=true
+end
+-- The shown pet as the sheets draw it: catalogue entry, appearance and name (beta 12 U3, U6).
+function Client:petInfo()
+	local shown=self.d.roomView.shownPet
+	local petId=shown and shown.id
+	local pet=require(Shared.PetCatalog).byId[petId or ""]
+	local function ask(fn,...)
+		if type(fn)~="function"then return nil end
+		local ok,value=pcall(fn,...)
+		return if ok then value else nil
+	end
+	return pet,ask(self.d.appearance,petId),ask(self.d.petName,self.userId,petId)or(pet and pet.name)or""
+end
+-- What the mode picker shows (DashGateSheet): the pet, its race stats and band (Levels on), today's Stars races
+-- (prizes on), the best Time Trial.
+function Client:gateData()
+	local pet,appearance,name=self:petInfo()
+	local data={pet=pet,appearance=appearance,name=name}
+	local state=self.d.state()
+	local shown=self.d.roomView.shownPet
+	local stats=type(state)=="table"and type(state.petStats)=="table"and type(state.petStats.pets)=="table"and shown and state.petStats.pets[shown.id]or nil
+	local level=type(stats)=="table"and type(stats.level)=="table"and stats.level or nil
+	if level then
+		data.levels={}
+		for _,id in ipairs(Stats.Order)do data.levels[id]=Stats.level(level[id])end
+		local band=Stats.Bands[Stats.band(data.levels)]
+		data.band=UICopy.get("dash.band",{band=UICopy.get("stats.tier."..band.id),level=Stats.dashLevel(data.levels)})
+	end
+	local saved=self:saved()
+	if Dash.prizes()then
+		data.prizes=UICopy.get("things.dash.prizes",{done=saved and type(saved.paid)=="number"and saved.paid or 0,total=saved and type(saved.limit)=="number"and saved.limit or 5})
+	end
+	if saved and type(saved.best)=="number"then data.best=UICopy.get("dash.bestShort",{best=Results.seconds(saved.best)})end
+	return data
 end
 -- While the gate card is open the camera shows the course from the side. Any way the card goes gives it back.
 function Client:gateShot()
@@ -396,6 +431,7 @@ function Client:lock(packet)
 	seat.track={cs=0,pace=0,tick=-1,flags=NONE,draw=0}
 	local mine=self:saved()
 	seat.before=mine and mine.last and mine.last.op
+	seat.bestBefore=mine and mine.best
 	seat.first=self:newRacer()
 	seat.hints=if seat.first then Hints.new()else nil
 	self.raced=true
@@ -709,12 +745,35 @@ function Client:showResults(seat)
 	-- Onboarding v3 slice E: the See you tomorrow strip (nil with the nest off).
 	local strip=nil
 	if self.d.strip then local ok,model=pcall(self.d.strip);if ok then strip=model end end
-	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,
+	-- Beta 12 U6: the results sheet (DashResultsSheet). No close key: Race again or Done; B and Backspace are Done.
+	local pet,appearance=self:petInfo()
+	seat.names=self:fieldNames(seat)
+	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,sheet="results",
+		model=self:resultModel(seat),pet=pet,appearance=appearance,place=tonumber(seat.result.place)or 4,reduced=self.d.reduced,selected=1,
 		buttons={{name="Again",text=UICopy.get("dash.again"),primary=true,act=function()
 			self:endSeat()
 			if not self.pending then self:send(if seat.trial then "trial"else "join",if seat.trial then nil else seat.mode)end
 		end},{name="Done",text=UICopy.get("dash.done"),act=done}},back=done})
-	if self.card then self.card.results=true else done()end -- no card: never a race nobody can put away
+	if self.card then
+		self.card.results=true
+		self.card.modelKey=Results.key(self.card.options.model)
+	else done()end -- no card: never a race nobody can put away
+end
+function Client:resultModel(seat)
+	return Results.model(seat.result,self:saved(),seat.before,{prizes=Dash.prizes(),bestBefore=seat.bestBefore,names=seat.names})
+end
+-- The names the field chips show, by seat: the tags' names (your pet, the players' pets, the pals).
+function Client:fieldNames(seat)
+	local names={}
+	local heat=self.heat
+	if heat and heat.raceId==seat.raceId then
+		for index,track in pairs(heat.tracks)do
+			names[index]=track.tagText or(if track.pal then palName(track.name)else nil)
+		end
+	end
+	if seat.index then names[seat.index]=seat.tagText or select(3,self:petInfo())end
+	for index in pairs(names)do if names[index]==""then names[index]=nil end end
+	return names
 end
 
 -- Four times a second: the prompt, the line at the gate, pings, the saved receipt.
@@ -737,8 +796,13 @@ function Client:slowStep(now)
 	if not seat or seat.phase~="done"then return end
 	if seat.cardAt and clock>=seat.cardAt and not d.modalOpen()then self:showResults(seat)
 	elseif self.card and self.card.results and not self.card.closed then
-		local _,lines=Results.words(seat.result,self:saved(),seat.before)
-		for index,text in ipairs(lines)do self.card:setLine(index,text)end
+		-- The saved receipt (Stars, the best) lands on the open card.
+		local model=self:resultModel(seat)
+		local key=Results.key(model)
+		if self.card.modelKey~=key then
+			self.card.modelKey=key
+			if self.card.update then self.card:update(model)end
+		end
 		if clock>=seat.closeAt then self:endSeat()end
 	end
 end

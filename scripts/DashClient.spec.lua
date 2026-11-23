@@ -41,6 +41,8 @@ return function(client,offline)
 		card={options=options,lines=table.clone(options.lines),closed=false}
 		function card:close()self.closed=true end
 		function card:setLine(i,text)self.lines[i]=text end
+		function card:update(model)self.model=model;self.updates=(self.updates or 0)+1 end
+		card.model=options.model
 		function card:pick(name)for _,b in ipairs(options.buttons)do if b.name==name then self.closed=true;b.act();return end end;error(name)end
 		return card
 	end
@@ -144,7 +146,7 @@ return function(client,offline)
 			lost=function()r.room:leaveDash()end,
 		})do
 			r.done();r=rig()
-			r.client:gate();assert(card.options.low==true)
+			r.client:gate();assert(card.options.sheet=="gate"and card.options.gate and card.options.buttons[3].sub~=nil)
 			r.frame(2);assert(r.room.held and not r.room.hidden and r.client.shot and r.room.frames>0,name)
 			out();r.frame(40)
 			if name=="race"then assert(r.room.held and r.room.hidden and r.room.locks==1);r.client:leave()end
@@ -284,8 +286,12 @@ return function(client,offline)
 		r.fire({kind="zoom",r="old",tick=41})
 		r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=2,us=41000000})
 		assert(not device.bound and r.inputs[#r.inputs].k=="dashUp"and screen.rest and r.room.held,"the finish is still on screen")
-		r.client.seat.cardAt=-1;r.frame(20);assert(card.options.name=="Results"and card.options.title=="You finished 2nd!"and card.lines[3]=="")
-		r.saved={paid=1,limit=5,best=41000000,last={op="x",stars=2}};r.frame(20);assert(card.lines[3]=="+2 Stars (1 of 5 today)")
+		r.client.seat.cardAt=-1;r.frame(20)
+		assert(card.options.name=="Results"and card.options.sheet=="results"and card.model.headline=="You finished 2nd!"and card.model.earned.state=="saving")
+		assert(card.options.place==2 and card.options.buttons[1].name=="Again"and card.options.buttons[2].name=="Done"and card.options.back,"no close key: Done is the way out")
+		r.saved={paid=1,limit=5,best=41000000,last={op="x",stars=2}};r.frame(20)
+		assert(card.model.earned.state=="paid"and card.model.earned.stars==2 and card.model.earned.done==1 and card.model.best=="41.0"and card.updates==1)
+		r.frame(20);assert(card.updates==1,"the same receipt is not sent twice")
 		card:pick("Done");r.free("done")
 		r.done()
 	end)

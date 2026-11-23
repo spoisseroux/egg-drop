@@ -4561,6 +4561,7 @@ do
    modalOpen=function()return clientUI.anyModalOpen(true)end,
    -- Beta 12 U5: a racer's pet name for the start-line tags. Names are catalogue piece ids (the board's PetNames
    -- attribute, the owner's own snapshot), never typed text; the species when unnamed.
+   appearance=function(petId)return nurseryView.appearanceFor(petId)end, -- the sheets' stage pet (U3, U6)
    petName=function(userId,petId)
     local NameText=require(script.PetNameText)
     if userId==player.UserId then return(NameText.own(nurseryState,petId))end
