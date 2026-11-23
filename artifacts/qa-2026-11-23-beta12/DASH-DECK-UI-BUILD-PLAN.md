@@ -297,3 +297,21 @@ phone sizes for Fable's review.
    sheet modules and leave `DashCard` as the generic card only?
 5. **Names and chime scope**: other players' pet names read client-side from the public board attributes (no roster
    change), and the chime only for Things lines on the rail, not the station label tips (`onb3.tip.*`). Both OK?
+
+## Build notes (2026-11-23, after the architect review)
+
+- Commits on `worktree-agent-a38498f9260b40e53`: U5 grid and pad, tags (U5, G4), HUD (U4), sheets (U3, U6), U7 and the
+  icon ids, merge of `feat/egg-drop-arcade-polish`, U2, S2. Offline suite green (46 specs) plus DashCourse and DashSim;
+  `build_dash_course.py --check`, `build_find_spots.py --check`, `sweep_island_edges.py --check` pass on the merged tree.
+- Pad (67, -17) r 2.5 against the merged Aero kit: the stone fountain is 18 studs clear, the kit rocks are at the falls
+  (40+ away), the nearest crown (Tree_16_tall, the meadow tree already in OBSTACLES) is 1.4 studs past the pad's rim in
+  plan but its foliage starts about 7 studs up, over the sign's 8.3 top; its trunk is 5 studs from the pad's rim.
+- U7's switch is a build ceiling (`DeckLook`: the beta place or Studio), not a chat switch. The strip-under-the-panes
+  and the payout restyle apply to both pane layouts; the compact stack only to the stack (right pane under 176).
+- Player names on the start tags come from catalogue piece ids (the board's `PetNames` attribute is ids only, the text
+  is NameCatalog's), so there is no typed text to filter; names have AutoLocalize off.
+- Kept from today on purpose: the payout total keeps its one `results.inPlace.total` string (no new "Total" key); "Lv n"
+  labels and times are fixed text (numbers are never captured for translation); the HUD pad words are upper-cased like
+  every `Label` role.
+- Studio-only checks still owed: `BondView.spec` (the focus card chip), `DeckResults.spec`, `UICopy.spec`,
+  `LocalizationFit.spec`, and captures of both sheets, the HUD, the start line and the deck results on the phone sizes.

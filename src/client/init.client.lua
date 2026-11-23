@@ -4841,6 +4841,12 @@ do
    return Tips.due(ctx)
   end
   function things.blocked(roomFor,started)return Tips.blocked(gate(roomFor),started)end
+  -- Beta 12 S2: the tip chime as a tip lands on the rail (silent until it has a sound; never in a round, race or hatch).
+  local chime=require(script.TipChime).new({audio=audio,busy=function()
+   return{round=board:GetAttribute("Mode")=="Board",race=clientUI.dash~=nil and clientUI.dash:held()==true,
+    hatch=clientUI.arrivalHatch:isOpen()or(clientUI.snacks~=nil and clientUI.snacks.reveal~=nil and clientUI.snacks.reveal:isOpen())}
+  end})
+  function things.shown()chime.ring()end
   local function firstReady(state)
    if things.returning==nil and type(state)=="table"and state.status=="Ready"then things.returning=Tips.returning(state)end
   end
