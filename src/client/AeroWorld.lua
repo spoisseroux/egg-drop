@@ -6,6 +6,9 @@
 --   Lighting, its effects, the sky and the backdrop clouds   HollowClock, which paints self.look instead of WorldDusk
 --                                                            while it is Clock.look (its own 5 s pass, no new one)
 --   world meshes, water layers, beams and spray colours      this file, once per item
+--   with the garden hour on: the same light, glow_warm       HollowClock, through self.look.paint(values) (GardenHour.look)
+--   colour and the AeroClouds                                at its pace; off, the light, glow and clouds go back to
+--                                                            WorldAero's at once
 -- Never touched here: WorldMotion's CFrames, texture offsets, emitter switches and pulsing Transparency; the care
 -- machine's status colours (GardenCareClient); the wind's bushes.
 -- Every original is kept on the first write and put back exactly when the layer goes off, the room goes, or the item
@@ -15,6 +18,7 @@ local Players=game:GetService("Players")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Shared=ReplicatedStorage:WaitForChild("Shared")
 local Values=require(Shared:WaitForChild("WorldAero"))
+local Hour=require(Shared:WaitForChild("GardenHour"))
 local Additions=require(script.Parent.AeroAdditions)
 
 local World={}
@@ -74,8 +78,14 @@ end
 function World.new(options)
 	options=options or {}
 	local self=setmetatable({world=options.world or workspace,lighting=options.lighting or game:GetService("Lighting"),
-		clock=options.clock,enabled=false,turn=0,writes=0,light={},surfaces={},refused=setmetatable({},{__mode="k"}),
+		clock=options.clock,enabled=false,turn=0,writes=0,light={},surfaces={},sky={},glows={},refused=setmetatable({},{__mode="k"}),
 		connections={},roomLinks={},folderLinks={},folders={},late={}},World)
+	-- The sky's clouds the additions made (AeroAdditions.clouds); only the garden hour moves their colour.
+	self.clouds=options.clouds or function()
+		local terrain=workspace:FindFirstChildOfClass("Terrain")
+		local clouds=terrain and terrain:FindFirstChild("AeroClouds")
+		return if clouds and clouds:IsA("Clouds")then clouds else nil
+	end
 	self.data=options.data or require(Shared:WaitForChild("WorldV7Data"))
 	self.switch=options.switch or require(Shared:WaitForChild("Aero"))
 	self.level=options.level or require(script.Parent.AliveBudget).level
@@ -93,8 +103,9 @@ function World.new(options)
 		local board=boards and player and boards:FindFirstChild(tostring(player.UserId))
 		return GuiService.ReducedMotionEnabled or board~=nil and board:GetAttribute("ReducedEffects")==true
 	end
-	-- What HollowClock paints while the layer is on (Clock.look).
-	self.look={Hour=Values.Hour,Daylight=Values.Daylight,CloudColor=Values.CloudColor,paint=function()self:paintLight()end}
+	-- What HollowClock paints while the layer is on (Clock.look). paint(values): the garden hour's look, nil for WorldAero.
+	self.look={Hour=Values.Hour,Daylight=Values.Daylight,CloudColor=Values.CloudColor,
+		paint=function(values)self:paintLight(values)end,reduced=function()return self.reduced()==true end}
 	return self
 end
 
@@ -130,8 +141,12 @@ function World:restoreItem(records,item)
 end
 
 -- Light: called by HollowClock only. Effects that are not there (yet) are skipped; its next pass finds them.
-function World:paintLight()
+-- `values`: the garden hour's look (GardenHour.look: Lighting, Atmosphere, Grade, Bloom, SunRays, Sky, FaceSet,
+-- GlowWarm, Clouds); nil is WorldAero's, and exactly the pass before the hour. A hold's tables are frozen and equal,
+-- so a 5 s pass over one writes nothing.
+function World:paintLight(values)
 	if not self.enabled then return end
+	local look=values or Values
 	local lighting=self.lighting
 	-- An effect that was replaced or destroyed is let go (with its own looks, where it still takes them).
 	for _,item in ipairs(self:items(self.light))do
@@ -145,18 +160,39 @@ function World:paintLight()
 		local item=lighting:FindFirstChild(name)
 		return item and item:IsA(class)and item or nil
 	end
-	all(lighting,Values.Lighting)
-	all(lighting:FindFirstChildOfClass("Atmosphere"),Values.Atmosphere)
-	all(named("SproutHollowGrade","ColorCorrectionEffect"),Values.Grade)
-	all(named("HollowBloom","BloomEffect"),Values.Bloom)
-	all(named("HollowSunRays","SunRaysEffect"),Values.SunRays)
+	all(lighting,look.Lighting)
+	all(lighting:FindFirstChildOfClass("Atmosphere"),look.Atmosphere)
+	all(named("SproutHollowGrade","ColorCorrectionEffect"),look.Grade)
+	all(named("HollowBloom","BloomEffect"),look.Bloom)
+	all(named("HollowSunRays","SunRaysEffect"),look.SunRays)
 	local sky=named("WorldSky","Sky")
-	local faces=Values.skyFaces(self.data)
-	all(sky,Values.Sky)
+	local faces=if values then Hour.skyFaces(values.FaceSet,self.data)else Values.skyFaces(self.data)
+	all(sky,look.Sky)
 	if sky and faces then
 		for _,face in ipairs({"Bk","Dn","Ft","Lf","Rt","Up"})do self:set(self.light,sky,"Skybox"..face,faces[face])end
-		self:set(self.light,sky,"@FaceSet",Values.FaceSet)
+		self:set(self.light,sky,"@FaceSet",look.FaceSet)
 	end
+	self:paintGlow(values and values.GlowWarm)
+	self:paintClouds(values and values.Clouds)
+end
+-- glow_warm meshes: the hour's colour while it is on; once back to WorldAero's when it goes off; else nothing.
+function World:paintGlow(color)
+	if color==nil and self.glow==nil then return end
+	self.glow=color
+	local value=color or Values.Surfaces.glow_warm.Color
+	for part in pairs(self.glows)do
+		if self.surfaces[part]then self:set(self.surfaces,part,"Color",value)else self.glows[part]=nil end
+	end
+end
+-- The AeroClouds (Cover, Density, Color): the hour's while it is on; their own back when it goes off or they go.
+function World:paintClouds(clouds)
+	if not clouds and next(self.sky)==nil then return end
+	local item=self.clouds()
+	for each in pairs(table.clone(self.sky))do
+		if each.Parent==nil then self.sky[each]=nil elseif each~=item or not clouds then self:restoreItem(self.sky,each)end
+	end
+	if not clouds or not item then return end
+	for key,value in pairs(clouds)do self:set(self.sky,item,key,value)end
 end
 
 -- Surfaces: one item, from its own name and its parent's. Safe to repeat.
@@ -175,6 +211,10 @@ function World:paintPart(part)
 		elseif key=="Color"and part:GetAttribute("CareStatusSurface")==true
 			or key=="Transparency"and part:GetAttribute("WorldMotion")=="pulse"then
 			continue
+		elseif key=="Color"and kind=="glow_warm"then
+			-- The garden hour's glow (paintGlow) if it is on.
+			self.glows[part]=true
+			self:set(self.surfaces,part,key,self.glow or value)
 		else
 			self:set(self.surfaces,part,key,value)
 		end
@@ -282,6 +322,7 @@ function World:bind(room)
 	for _,link in ipairs(self.roomLinks)do link:Disconnect()end
 	table.clear(self.roomLinks);table.clear(self.late)
 	self:restoreAll(self.surfaces)
+	table.clear(self.glows)
 	table.clear(self.refused)
 	self.room,self.folders=room,{}
 	self:dropAdditions()
@@ -358,6 +399,8 @@ function World:disable()
 	self:bind(nil)
 	if self.clock.look==self.look then self.clock.look=nil end
 	self:restoreAll(self.light)
+	self.glow=nil
+	self:paintClouds(nil)
 	-- The clock's own look again at once (lamps, backdrop clouds, and the cycle's hour if it is running).
 	self.clock.apply(self.clock.now())
 end
