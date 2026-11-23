@@ -121,7 +121,7 @@ end
 function Needs:saidHi()self.live.saidHi=true end
 -- The station that beckons alone while a need (or the first trail) points at it.
 function Needs:focus()
-	local key=self.key
+	local key=self.pointing
 	local where=if key then Needs.target(key,self.f)else nil
 	return if where=="Eggs"or where=="Park"then where else nil
 end
@@ -151,6 +151,29 @@ function Needs:tap()
 	if id=="needHi"then return self.d.sayHi()==true end
 	if icon=="deck"then return self.d.playDeck()==true end
 	return self:trailTo(Needs.target(id,self.f),"tap")
+end
+-- Studio QA 2026-11-23: two more ways to do what the bubble does, while it shows.
+--  * A tap or click on the Bear itself (source "tap"): for needToy, needDeck and needPark it does the need's action
+--    instead of the greeting. needHi keeps the greeting (that is its action). The pet's own key (E / ButtonX, the
+--    "Say hi" prompt, source "key") always keeps the greeting and petting: it is never taken.
+--  * Its own key, Needs.Keys (G on a keyboard, L2 on a gamepad; nothing else in the garden uses them): the need's
+--    action, whichever need it is. The bubble's key cap shows it (Needs.keyHint).
+Needs.Keys=table.freeze({Keyboard="G",Gamepad="L2"})
+function Needs.keyHint(input)return Needs.Keys[input]end
+function Needs:claimsPetTap(source)
+	return source~="key"and self.shown==true and not self.dead and self.open~=nil and self.open~="needHi"
+end
+-- A tap on the Bear: true when the need took it (the caller then skips the greeting).
+function Needs:petTap(source)
+	if not self:claimsPetTap(source)then return false end
+	self:tap()
+	return true
+end
+-- The bubble's own key: true when it was used (sink the input), false to pass it on.
+function Needs:key()
+	if not self.shown or self.dead then return false end
+	self:tap()
+	return true
 end
 function Needs:step(now,dt)
 	local d=self.d
@@ -217,7 +240,7 @@ function Needs:step(now,dt)
 		-- The first trail starts by itself after Say hi (the ball bubble), once.
 		if id=="needToy"and self.follow and not self.autoTrail then self.autoPending=true end
 	end
-	self.key=if id then id elseif following then "follow"else nil
+	self.pointing=if id then id elseif following then "follow"else nil
 	-- Never over a machine's prompt (the bubble is always on top).
 	local show=id~=nil and now>=self.restUntil and blocked==nil and freeFor>=Needs.Return and not(d.prompt and d.prompt()==true)
 	if show then
@@ -230,10 +253,10 @@ function Needs:step(now,dt)
 		end
 	else self:hide()end
 	-- The idle hint: still this long with something open, at most IdleHints per need.
-	if self.key and blocked==nil and Tips.idleDue(self.track,self.key,gate.idleFor,now)then
+	if self.pointing and blocked==nil and Tips.idleDue(self.track,self.pointing,gate.idleFor,now)then
 		d.chirp()
 		if self.shown then d.bubble:hop()end
-		self:trailTo(Needs.target(self.key,f),"idle")
+		self:trailTo(Needs.target(self.pointing,f),"idle")
 		self.hints=(self.hints or 0)+1
 	end
 	d.bubble:step(dt)
