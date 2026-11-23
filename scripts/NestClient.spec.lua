@@ -1,5 +1,6 @@
 -- The Sleepy Nest in the garden (NestClient, Onboarding v3 slice D) with a fake network, clock and character: off is
--- nothing at all; state packets draw the nest (10 inert local parts) and the egg at its growth look; Tuck in and Hatch go
+-- nothing at all; state packets draw the nest (21 inert local parts in the plaza, beta 12 QA O2: the twig mound casts
+-- the only shadow, the sign carries the pet's name) and the egg at its growth look; Tuck in and Hatch go
 -- through the prompt's action; the reward shows only on `claimed`, never on the ask or a refusal; a refused claim settles
 -- back and waits; the next egg lands after the hatch; the switch going off clears everything within a frame; nestPlace
 -- names where the Bear's prints end; the chip counts down.
@@ -11,6 +12,10 @@ return function(client)
 	local Nest=require(Shared.Nest)
 	local Client=require(client.NestClient)
 	local UICopy=require(Shared.UICopy) -- words come from UICopy, so a wording change never breaks a case
+	local LifeArt=require(Shared.LifeArt)
+	-- Places relative to the nest (Nest.Spot, the plaza since beta 12 QA O2): dx studs east of it.
+	local SPOT=Client.Spot
+	local function from(dx)return Vector3.new(SPOT.X+dx,SPOT.Y,SPOT.Z)end
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local function signal()
@@ -30,7 +35,7 @@ return function(client)
 	local function rig(options)
 		options=options or {}
 		Onboard.inject(options.env or ON)
-		local r={sent={},sounds={},toasts={},shows=0,at=Vector3.new(96,4.33,66),open=true,menu=false,now=NOW,small=options.compact==true}
+		local r={sent={},sounds={},toasts={},shows=0,at=from(10),open=true,menu=false,now=NOW,small=options.compact==true}
 		local kids={}
 		r.remotes={ChildAdded=signal(),FindFirstChild=function(_,name)return kids[name]end}
 		function r.add(name)
@@ -96,7 +101,7 @@ return function(client)
 		assert(r.count("land")==0,"the client never lands an egg")
 		Onboard.inject(nil)
 	end)
-	test("state: the nest's ten parts and the egg, local and inert, at Fable's spot; junk and nil draw nothing",function()
+	test("state: the nest's 21 parts and the egg, local and inert, at Nest.Spot in the plaza; junk and nil draw nothing",function()
 		local r=rig()
 		r.fire({kind="state",public={at="soon",n=0}});r.fire({kind="state",public=nil});r.fire("junk");r.fire({kind="nope"})
 		assert(r.folder()==nil,"junk draws nothing")
@@ -108,15 +113,17 @@ return function(client)
 			assert(string.sub(item.Name,1,2)~="W7","no world names: "..item.Name)
 			if item.ClassName=="Part"then
 				parts+=1
-				assert(item.Anchored and not item.CanCollide and not item.CanQuery and not item.CanTouch and not item.CastShadow,item.Name)
+				assert(item.Anchored and not item.CanCollide and not item.CanQuery and not item.CanTouch,item.Name)
+				assert(item.CastShadow==(item.Name=="NestMound"),"only the mound casts a shadow: "..item.Name)
 				if string.sub(item.Name,1,4)=="Nest"then nestParts+=1 end
 			end
 		end
-		assert(nestParts==10,"ten nest parts, got "..nestParts)
-		assert(parts==13,"the ten, the egg's anchor, its body and the prompt spot")
-		local base=folder:FindFirstChild("NestBase")
-		assert(math.abs(base.CFrame.Position.X-86)<1e-6 and math.abs(base.CFrame.Position.Z-66)<1e-6,"at (86, 66)")
-		assert(#folder:FindFirstChild("NestFlag"):GetChildren()==2 and #folder:FindFirstChild("NestRim1"):GetChildren()==4,"decals and weave")
+		assert(nestParts==21,"21 nest parts, got "..nestParts)
+		assert(parts==24,"the 21, the egg's anchor, its body and the prompt spot")
+		local base=folder:FindFirstChild("NestMound")
+		assert(math.abs(base.CFrame.Position.X-SPOT.X)<1e-6 and math.abs(base.CFrame.Position.Z-SPOT.Z)<1e-6,"at the plaza spot")
+		assert(SPOT==Nest.Spot and SPOT==Vector3.new(-17.5,4.07,-2.5))
+		assert(folder:FindFirstChild("NestCushion")==nil and folder:FindFirstChild("NestFlag")==nil and folder:FindFirstChild("NestLeaves")==nil,"the old cushion, flag and leaves are gone")
 		local prompt=folder:FindFirstChild("SleepyNestPrompt"):FindFirstChild("NestPrompt")
 		assert(prompt and prompt.ClassName=="ProximityPrompt"and prompt.RequiresLineOfSight==false)
 		assert(prompt.MaxActivationDistance==6 and prompt.UIOffset==Vector2.new(0,72),"never fires at the spawn, 10 away; under the nest")
@@ -252,6 +259,55 @@ return function(client)
 		r.fire(state(60));assert(r.folder()~=nil)
 		Onboard.inject(nil)
 	end)
+	test("O2 remodel: the look's parts, sizes, faces and textures; the sign names the pet stored at land",function()
+		local r=rig()
+		r.fire(state(60))
+		local folder=r.folder()
+		local root=CFrame.lookAt(Vector3.new(SPOT.X,SPOT.Y,SPOT.Z),Vector3.new(Nest.Facing.X,SPOT.Y,Nest.Facing.Z))
+		local function localAt(name)return root:PointToObjectSpace(folder:FindFirstChild(name).CFrame.Position)end
+		local function close(a,b)return(a-b).Magnitude<1e-4 end
+		local mound=folder:FindFirstChild("NestMound")
+		assert(mound.Size==Vector3.new(.42,3.5,3.5)and close(localAt("NestMound"),Vector3.new(0,.21,0)))
+		local twigs=0
+		for _,t in ipairs(mound:GetChildren())do if t.ClassName=="Texture"then twigs+=1;assert(t.Texture==LifeArt.id("nestTwigs")and t.StudsPerTileU==2.4 and t.StudsPerTileV==1.2)end end
+		assert(twigs==4,"twigs on the four curved faces")
+		for k=0,7 do
+			local rim=folder:FindFirstChild("NestRim"..(k+1))
+			local at=localAt("NestRim"..(k+1))
+			local r0=if k%2==0 then 1.42 else 1.50
+			assert(rim.Size==Vector3.new(1.30,.66,.66)and math.abs(Vector3.new(at.X,0,at.Z).Magnitude-r0)<1e-4,"rim "..k)
+			local t=rim:FindFirstChildOfClass("Texture")
+			assert(t and math.abs(t.OffsetStudsU-.37*k)<1e-6)
+		end
+		local straw=folder:FindFirstChild("NestStraw")
+		assert(straw.Size==Vector3.new(.30,2.36,2.36)and close(localAt("NestStraw"),Vector3.new(0,.55,0)))
+		assert(straw.CFrame.RightVector.Y>.99,"the Right cap faces up")
+		local bed=straw:FindFirstChildOfClass("Decal")
+		if LifeArt.id("strawBed")then assert(bed and bed.Face==Enum.NormalId.Right)else assert(bed==nil,"no stand-in while pending")end
+		for k=1,6 do
+			local plate=folder:FindFirstChild("NestFringe"..k)
+			assert(plate.Transparency==1 and plate.Size==Vector3.new(1.9,1.05,.04))
+			local at=localAt("NestFringe"..k)
+			assert(math.abs(Vector3.new(at.X,0,at.Z).Magnitude-1.62)<1e-4 and math.abs(at.Y-.78)<1e-4)
+			-- Tipped outward: the plate's top leans away from the middle.
+			local upLocal=root:VectorToObjectSpace(plate.CFrame.UpVector)
+			assert(Vector3.new(upLocal.X,0,upLocal.Z):Dot(Vector3.new(at.X,0,at.Z).Unit)>.3,"fringe "..k.." tips out")
+			assert(#plate:GetChildren()==2)
+		end
+		for k=1,3 do assert(folder:FindFirstChild("NestTuft"..k).Size==Vector3.new(1.3,.62,.04))end
+		local post,board=folder:FindFirstChild("NestSignPost"),folder:FindFirstChild("NestSign")
+		assert(post.Material==Enum.Material.Wood and board.Material==Enum.Material.Wood and board.Size==Vector3.new(1.3,.8,.08))
+		assert(close(localAt("NestSign"),Vector3.new(-1.95,1.45,-1.03)))
+		local front=root:VectorToObjectSpace(board.CFrame.LookVector)
+		assert(front.Z<-.8 and front.X>.2,"the board faces the front, turned toward the egg: "..tostring(front))
+		local words=board:FindFirstChild("Words"):FindFirstChild("Name")
+		assert(words.Text==Client.signText(r.client.view),"the pet stored at land: "..words.Text)
+		assert(Client.signText({pet="pip"})==UICopy.get("onb3.nest.sign",{pet="Bear"}),"a named pet")
+		assert(Client.signText({pet="nobody"})==UICopy.get("onb3.nest.signPlain"))
+		assert(math.abs(Client.EggBase-.64)<1e-9 and Client.BearSpot==Vector3.new(2.2,0,-1.4))
+		assert(close(localAt("SleepyEgg"),Vector3.new(0,.64,0)),"the egg on the straw")
+		Onboard.inject(nil)
+	end)
 	test("nestPlace: the front of the nest on the raycast ground, nil without a nest",function()
 		local r=rig({ground=function()return 5 end})
 		assert(r.client:place3D()==nil)
@@ -259,13 +315,15 @@ return function(client)
 		local at=r.client:place3D()
 		assert(typeof(at)=="Vector3")
 		assert(math.abs(at.Y-6)<1e-6,"ground 5, the prompt 1 over it: "..tostring(at.Y))
-		assert(math.abs((at-Vector3.new(86,6,66)).Magnitude-2.6)<1e-6,"2.6 studs toward the dais")
-		assert(at.X>86,"toward the dais at x 96")
+		local centre=Vector3.new(SPOT.X,6,SPOT.Z)
+		assert(math.abs((at-centre).Magnitude-Nest.Front)<1e-6,"Front studs toward the plaza's middle")
+		local toward=(Vector3.new(Nest.Facing.X,6,Nest.Facing.Z)-centre).Unit
+		assert(((at-centre).Unit-toward).Magnitude<1e-6,"the front faces the plaza's middle")
 		Onboard.inject(nil)
-		-- A pet (or a player) standing on the spot is not the ground: the walk map's 4.33 is kept.
-		local onPet=rig({ground=function()return 4.33+2.4 end})
+		-- A pet (or a player) standing on the spot is not the ground: the walk map's ground is kept.
+		local onPet=rig({ground=function()return SPOT.Y+2.4 end})
 		onPet.fire(state(60))
-		assert(math.abs(onPet.client:place3D().Y-5.33)<1e-6,"the hit on the pet is ignored")
+		assert(math.abs(onPet.client:place3D().Y-(SPOT.Y+1))<1e-6,"the hit on the pet is ignored")
 		Onboard.inject(nil)
 	end)
 	test("the chip: 7 h, 40 min, Ready!; gold when ready; above the dock, never wider; hidden in the park",function()
@@ -302,18 +360,18 @@ return function(client)
 	end)
 	test("the ready ping: once per egg within 14 studs; the second line only near",function()
 		local r=rig()
-		r.at=Vector3.new(120,4,66)
+		r.at=from(34)
 		r.fire(state(Nest.Seconds,{n=1}));r.client:step(0)
 		assert(r.heard("machine_attract")==0 and r.client.egg.insidePill.Visible==false)
-		r.at=Vector3.new(96,4.33,66);r.client:step(0)
+		r.at=from(10);r.client:step(0)
 		assert(r.heard("machine_attract")==1 and r.client.egg.insidePill.Visible==false,"10 studs: the ping, not the line")
-		r.at=Vector3.new(90,4.33,66);r.client:step(0)
+		r.at=from(4);r.client:step(0)
 		assert(r.client.egg.insidePill.Visible==true,"within 8: the line")
 		assert(r.client.egg.inside.Text=="Inside: Ball and 5 Stars.",r.client.egg.inside.Text)
 		assert(r.client.egg.count==nil and r.client.egg.board:FindFirstChild("Count")==nil,"no Egg n of 7 on the world label")
 		r.focus=true;r.client:step(0);assert(r.client.egg.board.Enabled==false,"hidden during the pet focus camera")
 		r.focus=false;r.client:step(0);assert(r.client.egg.board.Enabled==true)
-		r.at=Vector3.new(120,4,66);r.client:step(0);r.at=Vector3.new(90,4.33,66);r.client:step(0)
+		r.at=from(34);r.client:step(0);r.at=from(4);r.client:step(0)
 		assert(r.heard("machine_attract")==1,"once per egg")
 		assert(r.client.egg.anchor:FindFirstChild("GiftPeek")==nil)
 		r.fire(state(Nest.Seconds,{n=8,gift={kind="stars",stars=4}}));r.client:step(0)
@@ -324,7 +382,7 @@ return function(client)
 	-- Beta (12) QA O1 (GARDEN-LIFE-NEST-LOOK 5): plain words for the napping egg.
 	test("O1: until the first hatch the label explains the egg at any distance; Nest.Hours, the pet's name, a plain fallback",function()
 		local r=rig()
-		r.at=Vector3.new(120,4,66)
+		r.at=from(34)
 		r.fire(state(60));r.client:step(0)
 		local how=Client.how(r.client.view)
 		assert(Client.how({pet="pip"})==UICopy.get("onb3.nest.how",{pet="Bear",hours=Nest.Hours}),"the pet's name from PetCatalog")

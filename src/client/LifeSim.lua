@@ -1,12 +1,17 @@
--- Garden life, the maths (ALIVE-LIFE-BUILD-PLAN-2026-11-22; look numbers artifacts/alive-life-2026-11-22/LOOK-R2.md, then LOOK.md).
+-- Garden life, the maths (ALIVE-LIFE-BUILD-PLAN-2026-11-22; look numbers artifacts/alive-life-2026-11-22/LOOK-R2.md, then LOOK.md;
+-- round 3, beta 12 QA L1-L3: artifacts/qa-2026-11-23-beta12/GARDEN-LIFE-NEST-LOOK.md and GARDEN-LIFE-NEST-BUILD-PLAN.md).
 -- Pure: no instances, no clock, no services. GardenLife owns the parts and the one stepper and asks this what to show.
 -- Everything random comes from a Random seeded by the caller, so the same seed and the same calls give the same
 -- garden. Positions are Vector3, poses are CFrame; forward is -Z, up is +Y.
---   petals       Petals:step(now, dt, winds, cap) -> how many to Emit at each emitter now
+--   leaves       Leaves:step(now, dt, gust, cap, level, place) -> {kind, at} to Emit now; Sim.leafSpot (never under a
+--                roof: Sim.LeafCover), Sim.leafWind (the emitters' Acceleration), Sim.leafDrift (how far one drifts)
 --   bubbles      Bubbles:due(now, cap, allowed), Sim.bubbleSpot(camera, random, world), Bubbles:emit(now) -> "small" | "large"
---   butterflies  Butterflies:step(now, dt, world, patches, cap, still, day) -> the live ones
---   birds        Birds:chirp(now, perch, landing, cap, world, reduced, day), Birds:step(now, dt, world, reduced)
---   day          Sim.day(daylight): the garden hour's gate for bubbles, butterflies and birds (GARDEN-HOUR-LOOK 5)
+--   butterflies  Butterflies:step(now, dt, world, patches, cap, still, daylight) -> the live ones; butterflyRoot / Flap /
+--                Look / Parts (round 3: one continuous wing angle, glides, the firefly hand-off at dusk)
+--   birds        Birds:chirp(now, perch, landing, cap, world, reduced, day), Birds:step(now, world, reduced, cap, level),
+--                Sim.birdParts (round 3: eight parts, the head on its own, the tail, bounding flight)
+--   day          Sim.day(daylight): the garden hour's gate for bubbles and birds (GARDEN-HOUR-LOOK 5); butterflies have
+--                their own (.30 / .34)
 --   dewdrops     Grove:refresh / :hanging / :active (what falls: a pure function of the server time), Loose:step
 --                (what this client draws of it), Sim.fruitPose(loose, now) (world pass item 3; look numbers
 --                artifacts/world-pass-2026-11-22/FRUIT-LOOK.md). Wind, Wind.hash and the gust number only, never a
@@ -18,9 +23,11 @@ local Wind=require(script.Parent.Wind)
 local Sim={}
 
 -- Caps by AliveBudget level 0, 1, 2 (level 1 halves every cap; level 2 shows nothing). fruit: hanging Dewdrops shown,
--- loose: Dewdrops off the tree at once (FRUIT-LOOK 4).
+-- loose: Dewdrops off the tree at once (FRUIT-LOOK 4). leaves: falling leaves alive (round 3; `petals` is the same
+-- table under its old name for one build).
+local leaves=table.freeze({28,14,0})
 Sim.Caps=table.freeze({
-	petals=table.freeze({40,20,0}),bubbles=table.freeze({8,4,0}),butterflies=table.freeze({4,2,0}),
+	leaves=leaves,petals=leaves,bubbles=table.freeze({8,4,0}),butterflies=table.freeze({4,2,0}),
 	birds=table.freeze({3,2,0}),emitters=table.freeze({3,3,0}),fruit=table.freeze({16,8,0}),loose=table.freeze({3,2,0}),
 })
 Sim.Hz=table.freeze({30,15}) -- steps a second at level 0 and 1
@@ -33,10 +40,11 @@ function Sim.level(level)
 	return math.clamp(level,0,2)
 end
 function Sim.cap(kind,level)return Sim.Caps[kind][Sim.level(level)+1]end
--- The garden hour (GARDEN-HOUR-BUILD-PLAN-2026-11-23 slice D): bubbles, butterflies and birds start only while its
--- daylight is above DayLife; the ones already out finish (bubbles pop on time, butterflies fly off, birds sit out their
--- stay). `daylight` is nil with the hour off: always day, as before. Petals and Dewdrops never ask. The daylight comes
--- from the server clock (GardenHour.phase), so every client gates on the same number.
+-- The garden hour (GARDEN-HOUR-BUILD-PLAN-2026-11-23 slice D): bubbles and birds start only while its daylight is
+-- above DayLife; the ones already out finish (bubbles pop on time, birds sit out their stay). `daylight` is nil with
+-- the hour off: always day, as before. Leaves and Dewdrops never ask; butterflies have their own gate (round 3: they
+-- fly over .30 and turn into fireflies under it, Sim.Butterfly). The daylight comes from the server clock
+-- (GardenHour.phase), so every client gates on the same number.
 Sim.DayLife=.7
 function Sim.day(daylight)
 	if type(daylight)~="number"or daylight~=daylight then return true end
@@ -96,57 +104,138 @@ function Sim.clear(position,world,keep)
 	return true
 end
 
--- Petals (brief B4; LOOK-R2 3) ---------------------------------------------------------------------------------
--- A second, at each emitter: none in the breeze (Wind.at's breeze is at most .25), 7 at a full gust.
-Sim.PetalPeak=7
-Sim.PetalCalm=.25
-Sim.PetalLife=6.5 -- the longest a petal lives (LOOK-R2: 5 to 6.5 s), so the live count never undercounts
--- A gust burst: PetalBurst at once when an emitter's wind first passes BurstAt; again only after it fell below Rearm.
-Sim.PetalBurst=6
-Sim.PetalBurstAt=.6
-Sim.PetalRearm=.3
-function Sim.petalRate(at)
-	if type(at)~="number"or at~=at then return 0 end
-	return Sim.PetalPeak*math.clamp((at-Sim.PetalCalm)/(1-Sim.PetalCalm),0,1)
+-- Falling leaves (beta 12 QA L2; GARDEN-LIFE-NEST-LOOK 2, replacing the petal bursts) --------------------------
+-- A few leaves always coming down round the player: three emitters (leaf A, leaf B, a pale petal) that GardenLife
+-- moves to a fresh spawn point for each emit. Sim.leafSpot draws that point uniform in the 72-stud square round the
+-- player, 11 +- 1 studs over the ground there, and refuses a point off the island or whose drift path crosses a
+-- covered place (Sim.LeafCover), so no leaf ever comes down under a roof; a refused emit is skipped, not redrawn.
+-- The wind term is the gust number (Wind.gust, no breeze): the look's .7 studs a second when calm, 3.3 in a full gust.
+Sim.Leaf=table.freeze({
+	share=table.freeze({.55,.30,.15}),                                       -- leaf A, leaf B, petal
+	life=table.freeze({table.freeze({9,12}),table.freeze({9,12}),table.freeze({8,10})}),
+	rate=table.freeze({2.4,1.2}),boost=.5,                                    -- emits a second at level 0 / 1, x (1 + boost g)
+	half=36,height=11,band=1,                                                 -- the square round the player; studs over the ground
+	lean=.25,gust=.9,sway=.3,swayPeriod=7,fall=.45,drag=.5,                   -- Acceleration (GardenLife writes it at accelHz)
+	speed=table.freeze({.3,.6}),spread=20,accelHz=4,
+	-- How far a leaf can drift over its longest life: along the wind (reach) and to either side (side). Derived by
+	-- LifeSim.spec from real wind sequences: Sim.leafDrift through a 12 s life from 4,000 start times over 3,000 s of
+	-- gusts, with the wind dial at 1 and at 1.5 (two gusts in one life included): at most 14.5 along and 1.3 across
+	-- (2026-11-23), rounded up with under 2 studs to spare. The gusts are short (.8 s up, 2.7 s down), so a leaf
+	-- spends most of its life in the calm lean. [check] in Studio that a leaf's real drift matches (Drag's half-life).
+	reach=16,side=2,
+})
+-- The covered places (roofs) no leaf may come down under: a flat circle each, x, z and radius in studs. From the
+-- read-only Studio probe (scripts/probe_leaf_cover.luau, Play on the beta build after the island re-export, 2026-11-23;
+-- artifacts/qa-2026-11-23-beta12/STUDIO-PROBES.md): every roof players stand under. Left out: the north aqueduct and
+-- the cave and rock overhangs (behind the cave blocker and the rocks: nobody stands there) and the 1-2 cell rails and
+-- ledges. Kept although IslandBounds.safeCell is false at their middles (pets do not walk there, players do): the
+-- rotunda (on the knoll), the arch over the bridge, the station roof and the east colonnade.
+Sim.LeafCover={
+	{name="Rotunda",x=-60,z=50,r=8.2},           -- W7_Rotunda__palette, 45 cells
+	{name="BridgeArch",x=5,z=20.6,r=14.8},       -- W7_Architecture__palette, 29 cells
+	{name="BridgeArchSide",x=-6,z=24.7,r=3.4},   -- W7_Architecture__palette, 3 cells
+	{name="WestColonnade",x=-36.4,z=-25.1,r=11.8}, -- W7_Architecture__trim, 9 cells
+	{name="StationRoof",x=-46,z=-8.7,r=3.4},     -- W7_Stations__wood_plank, 3 cells
+	{name="EastColonnade",x=85,z=57.4,r=8.4},    -- W7_Architecture__trim, 10 cells
+}
+-- The probe has run: leaves show on the beta (beta 13).
+Sim.LeafCoverChecked=true
+
+-- The Acceleration for gust g (0 to 1) at time t: downwind lean, a slow sideways sway, a gentle fall.
+function Sim.leafWind(g,t)
+	local L=Sim.Leaf
+	g=if type(g)=="number"and g==g then math.clamp(g,0,1)else 0
+	t=if type(t)=="number"and t==t then t else 0
+	local dir=Wind.Direction
+	local cross=Vector3.new(-dir.Z,0,dir.X)
+	return dir*(L.lean+L.gust*g)+cross*(L.sway*math.sin(2*math.pi*t/L.swayPeriod))+Vector3.new(0,-L.fall,0)
 end
-local Petals={};Petals.__index=Petals
-Sim.Petals=Petals
-function Petals.new()return setmetatable({live={},carry={},spent={}},Petals)end
-function Petals:count(now)
+-- How far a leaf let go at t0 drifts on the ground plane over `life` seconds under the real wind at `position`:
+-- (along the wind, across it). Exponential drag as ParticleEmitter.Drag (half the speed every 1 / drag seconds), the
+-- launch at its fastest straight downwind (the worst case).
+function Sim.leafDrift(t0,life,position,dt)
+	local L=Sim.Leaf
+	dt=dt or 1/30
+	local dir=Wind.Direction
+	local cross=Vector3.new(-dir.Z,0,dir.X)
+	local k=L.drag*math.log(2)
+	local v=dir*(L.speed[2]*math.sin(math.rad(L.spread)))
+	local x=Vector3.zero
+	local t=t0
+	while t<t0+life do
+		local a=Sim.leafWind(Wind.gust(position,t),t)
+		a=Vector3.new(a.X,0,a.Z)
+		v+=(a-v*k)*dt
+		x+=v*dt
+		t+=dt
+	end
+	return x:Dot(dir),x:Dot(cross)
+end
+-- The covered place a leaf starting over (x, z) would drift under, or nil: its path is the segment from (x, z) to
+-- reach studs downwind; refused when that passes within r + side of a cover's middle.
+function Sim.leafCovered(x,z,cover)
+	local L=Sim.Leaf
+	local dir=Wind.Direction
+	local line={x,z,x+dir.X*L.reach,z+dir.Z*L.reach}
+	for _,place in ipairs(cover or Sim.LeafCover)do
+		if Sim.lineDistance(place.x,place.z,line)<place.r+L.side then return place.name or "cover"end
+	end
+	return nil
+end
+-- A spawn point for one leaf round `centre` (the player), or nil and why: "ground" off the island (world.ground answers
+-- nil), or the covered place's name.
+function Sim.leafSpot(random,centre,world)
+	local L=Sim.Leaf
+	if typeof(centre)~="Vector3"then return nil,"centre"end
+	local x=centre.X+random:NextNumber(-L.half,L.half)
+	local z=centre.Z+random:NextNumber(-L.half,L.half)
+	local y=random:NextNumber(-L.band,L.band)
+	local ground=world and world.ground and world.ground(x,z)
+	if type(ground)~="number"or ground~=ground or math.abs(ground)==math.huge then return nil,"ground"end
+	local covered=Sim.leafCovered(x,z,world.cover)
+	if covered then return nil,covered end
+	return Vector3.new(x,ground+L.height+y,z)
+end
+
+local Leaves={};Leaves.__index=Leaves
+Sim.Leaves=Leaves
+function Leaves.new(seed)return setmetatable({random=Random.new(seed or 4),live={},carry=0},Leaves)end
+function Leaves:count(now)
 	local live=self.live
 	for i=#live,1,-1 do if live[i]<=now then table.remove(live,i)end end
 	return #live
 end
--- winds[i]: Wind.at at emitter i, or false where there is no emitter. Returns {n1, n2, ...}: how many to Emit now.
--- At the cap the fraction carries but nothing piles up, so a lull never ends in a burst. The gust burst comes out of
--- the same room (a burst the cap cut short is spent, not saved); an emitter with no crown re-arms.
-function Petals:step(now,dt,winds,cap)
-	local room=math.max(0,(cap or 0)-self:count(now))
+function Leaves:clear()table.clear(self.live);self.carry=0 end
+-- One step: {{kind = 1 | 2 | 3, at = Vector3}, ...}, at most one emit per kind a step (the rest carries). g: the gust
+-- 0 to 1. place(kind, random) -> Vector3? is Sim.leafSpot round the player; nil skips that emit (the carry is spent).
+-- The live count holds each kind's longest life, so the cap is never passed; at the cap nothing piles up.
+function Leaves:step(now,dt,g,cap,level,place)
+	local L=Sim.Leaf
 	local out={}
+	local rate=L.rate[Sim.level(level)+1]
+	cap=cap or 0
+	if not rate or cap<=0 then self.carry=0;return out end
 	dt=if type(dt)=="number"and dt==dt then math.clamp(dt,0,.25)else 0
-	for i,at in ipairs(winds)do
-		local n=0
-		if at then
-			local carry=(self.carry[i]or 0)+Sim.petalRate(at)*dt
-			local want=math.floor(carry)
-			carry-=want
-			self.carry[i]=carry
-			if type(at)=="number"then
-				if not self.spent[i]and at>=Sim.PetalBurstAt then self.spent[i]=true;want+=Sim.PetalBurst
-				elseif self.spent[i]and at<Sim.PetalRearm then self.spent[i]=nil end
-			end
-			n=math.min(want,room)
-			room-=n
-			for _=1,n do table.insert(self.live,now+Sim.PetalLife)end
-		else
-			self.carry[i]=0
-			self.spent[i]=nil
+	g=if type(g)=="number"and g==g then math.clamp(g,0,1)else 0
+	self.carry+=rate*(1+L.boost*g)*dt
+	local room=cap-self:count(now)
+	local used={}
+	while self.carry>=1 do
+		if room<=0 then self.carry=math.min(self.carry,1);break end
+		local roll,kind=self.random:NextNumber(),3
+		if roll<L.share[1]then kind=1 elseif roll<L.share[1]+L.share[2]then kind=2 end
+		if used[kind]then break end
+		used[kind]=true
+		self.carry-=1
+		local at=place and place(kind,self.random)
+		if typeof(at)=="Vector3"then
+			table.insert(self.live,now+L.life[kind][2])
+			room-=1
+			table.insert(out,{kind=kind,at=at})
 		end
-		out[i]=n
 	end
 	return out
 end
-function Petals:clear()table.clear(self.live);table.clear(self.carry);table.clear(self.spent)end
 
 -- Bubbles (brief B7; plan revision 3) --------------------------------------------------------------------------
 Sim.BubbleEvery=3
@@ -199,11 +288,21 @@ function Sim.bubbleSpot(camera,random,world)
 	return at
 end
 
--- Butterflies (brief C3; LOOK 2) -------------------------------------------------------------------------------
-Sim.Butterfly=table.freeze({reach=60,wander=3,speed=.8,restMin=2,restMax=4,low=1.2,high=2.4,perch=.35,
-	bob=.25,bobHz=1.3,wobble=20,wobbleHz=.8,pitch=10,restChance=.35,spawnGap=.5,
-	-- Night (Sim.day false): each one leaves, away from the camera and up, and is gone on arrival or after leaveTime.
-	leaveAway=10,leaveRise=6,leaveSpeed=2,leaveTime=7})
+-- Butterflies (brief C3; round 3: GARDEN-LIFE-NEST-LOOK 1) --------------------------------------------------------
+-- One continuous wing angle (a flap with glides, a slow fan at rest, every change blended), each butterfly with its
+-- own Random (drawn from the spawner's at birth), so its flight is a function of time, whatever the step rate.
+-- Night: they fly while the garden hour's daylight is over .30 and spawn over .34; under .30 each one hands off to a
+-- firefly, 1.5 s apart, colour slot 1 first (a glow at the body, wings fading), and is gone 6 s after its hand-off
+-- starts; under .24 (a jump past dusk) the wings just fade in .5 s. Every spawn fades its wings in over 1.2 s.
+local function smooth(t)t=math.clamp(t,0,1);return t*t*(3-2*t)end
+Sim.Butterfly=table.freeze({reach=60,wander=3,speed=.65,restMin=2,restMax=4,low=1.2,high=2.4,perch=.35,restChance=.35,
+	spawnGap=.5,pitch=10,
+	flapHz=table.freeze({2.2,1.6}),flapMid=22,flapAmp=38,glideAngle=28,
+	glideEvery=table.freeze({1.6,3.2}),glideFor=table.freeze({.6,1.1}),envelope=.25,glideSink=.25,climb=.6,
+	bob=.06,drift=.15,driftHz=.4,wobble=12,wobbleHz=.5,
+	restMid=62,restAmp=14,restHz=.25,blend=.5,fadeIn=1.2,
+	fly=.30,spawn=.34,handFloor=.24,handGap=1.5,handFade=1.5,handEnd=5,handGone=6,fadeOut=.5,
+	glowFrom=.2,glowTo=.9,glowLit=.1,glowDim=.55,glowPulse=1.8,glowSpeed=.25,glowRise=table.freeze({1.5,2}),glowClimb=1.2})
 local Butterflies={};Butterflies.__index=Butterflies
 Sim.Butterflies=Butterflies
 function Butterflies.new(seed)return setmetatable({random=Random.new(seed or 2),list={},spawnAt=0},Butterflies)end
@@ -212,30 +311,46 @@ local function wanderPoint(r,patch,radius,low,high)
 	local a,d=r:NextNumber()*math.pi*2,math.sqrt(r:NextNumber())*radius
 	return Vector3.new(patch.X+math.cos(a)*d,patch.Y+r:NextNumber(low,high),patch.Z+math.sin(a)*d)
 end
+-- The glide timetable runs on its own clock: catch it up to `now` (any number of glides at once).
+local function glides(b,now)
+	local B=Sim.Butterfly
+	while now>=b.glideEnd do
+		b.lastGlide=b.glideEnd
+		b.glideAt=b.glideEnd+b.clock:NextNumber(B.glideEvery[1],B.glideEvery[2])
+		b.glideEnd=b.glideAt+b.clock:NextNumber(B.glideFor[1],B.glideFor[2])
+	end
+end
+local function dark(daylight)return type(daylight)=="number"and daylight==daylight and daylight<=Sim.Butterfly.fly end
 -- patches: {Vector3} (flower patch middles on the ground). Spawns at most one every spawnGap seconds, on a patch
--- within reach of the camera that is clear (Sim.clear), one of each wing colour (1 to 4). Drops the far ones and
--- any over the cap at once. still = Reduced Motion: none. day = false (the garden hour's night): no new ones, and each
--- live one leaves (mode "leave"); nil or true is day.
-function Butterflies:step(now,dt,world,patches,cap,still,day)
-	local B,r,list=Sim.Butterfly,self.random,self.list
+-- within reach of the camera that is clear (Sim.clear), one of each wing slot (1 to 4). Drops the far ones and any
+-- over the cap at once. still = Reduced Motion: none. daylight: the garden hour's (nil with the hour off: day).
+-- world.ground(x, z) -> y? is where a firefly rises from (else the patch).
+function Butterflies:step(now,dt,world,patches,cap,still,daylight)
+	local B,list=Sim.Butterfly,self.list
 	local camera=world and world.camera
 	if still or not camera then table.clear(list);return list end
 	for i=#list,1,-1 do
 		local b=list[i]
-		if i>cap or(b.position-camera).Magnitude>Sim.Drop then table.remove(list,i)
-		elseif b.mode=="leave"and(now>=b.goneAt or(b.target-b.position).Magnitude<=.05)then table.remove(list,i)end
+		if i>cap or(b.position-camera).Magnitude>Sim.Drop
+			or(b.hand and now-b.hand>=B.handGone)or(b.fade and now-b.fade>=B.fadeOut)then table.remove(list,i)end
 	end
-	if day==false then
+	if dark(daylight)then
+		local fresh,last={},-math.huge
 		for _,b in ipairs(list)do
-			if b.mode~="leave"then
-				local away=Vector3.new(b.position.X-camera.X,0,b.position.Z-camera.Z)
-				away=if away.Magnitude>1e-3 then away.Unit else b.heading
-				b.mode,b.goneAt="leave",now+B.leaveTime
-				b.target=b.position+away*B.leaveAway+Vector3.new(0,B.leaveRise,0)
+			if b.hand then last=math.max(last,b.hand)elseif not b.fade then table.insert(fresh,b)end
+		end
+		if #fresh>0 then
+			table.sort(fresh,function(a,c)return a.colour<c.colour end)
+			if daylight>=B.handFloor then
+				local start=math.max(now,last+B.handGap)
+				for i,b in ipairs(fresh)do b.hand=start+(i-1)*B.handGap end
+			else
+				for _,b in ipairs(fresh)do b.fade=now end
 			end
 		end
 	end
-	if day~=false and #list<cap and now>=self.spawnAt and patches then
+	local spawn=not(type(daylight)=="number"and daylight==daylight and daylight<=B.spawn)
+	if spawn and #list<cap and now>=self.spawnAt and patches then
 		self.spawnAt=now+B.spawnGap
 		local near={}
 		for _,patch in ipairs(patches)do
@@ -246,32 +361,64 @@ function Butterflies:step(now,dt,world,patches,cap,still,day)
 			end
 		end
 		if #near>0 then
-			local patch=near[r:NextInteger(1,#near)]
+			local patch=near[self.random:NextInteger(1,#near)]
+			local r=Random.new(self.random:NextInteger(1,1073741823))
 			local start=wanderPoint(r,patch,B.wander,B.low,B.high)
 			if Sim.clear(start,world)then
 				local taken={}
 				for _,b in ipairs(list)do taken[b.colour]=true end
 				local colour=1
 				while taken[colour]do colour+=1 end
-				table.insert(list,{patch=patch,position=start,target=wanderPoint(r,patch,B.wander,B.low,B.high),mode="fly",
-					colour=colour,phase=r:NextNumber()*10,heading=Vector3.new(0,0,-1),born=now})
+				-- Its own clock for the glides (a Random of its own, drawn only by the timetable), so the glides are the
+				-- same whatever the step rate.
+				local clock=Random.new(r:NextInteger(1,1073741823))
+				local b={patch=patch,position=start,target=wanderPoint(r,patch,B.wander,B.low,B.high),mode="fly",random=r,
+					clock=clock,colour=colour,phase=r:NextNumber()*10,heading=Vector3.new(0,0,-1),born=now,lastGlide=-math.huge}
+				b.glideAt=now+clock:NextNumber(B.glideEvery[1],B.glideEvery[2])
+				b.glideEnd=b.glideAt+clock:NextNumber(B.glideFor[1],B.glideFor[2])
+				table.insert(list,b)
 			end
 		end
 	end
+	local ground=world and world.ground
 	for _,b in ipairs(list)do
-		if b.mode=="rest"then
+		glides(b,now)
+		local r=b.random
+		local h=b.hand and now-b.hand
+		if h and h>=B.handFade then
+			-- A firefly: no wings, slowing to .25, rising to 1.5 to 2 studs over the ground.
+			if b.mode~="glow"then
+				b.mode="glow"
+				local g=ground and ground(b.position.X,b.position.Z)
+				b.glowY=(if type(g)=="number"and g==g then g else b.patch.Y)+r:NextNumber(B.glowRise[1],B.glowRise[2])
+				b.target=wanderPoint(r,b.patch,B.wander,0,0)
+			end
+			local speed=B.speed+(B.glowSpeed-B.speed)*smooth((h-B.handFade)/(B.handEnd-B.handFade))
+			local to=Vector3.new(b.target.X-b.position.X,0,b.target.Z-b.position.Z)
+			local step=speed*dt
+			local flatAt
+			if to.Magnitude<=math.max(step,.05)then
+				flatAt=Vector3.new(b.target.X,0,b.target.Z)
+				b.target=wanderPoint(r,b.patch,B.wander,0,0)
+			else
+				flatAt=Vector3.new(b.position.X,0,b.position.Z)+to.Unit*step
+				b.heading=to.Unit
+			end
+			local y=b.position.Y+(b.glowY-b.position.Y)*math.min(1,dt*B.glowClimb)
+			b.position=Vector3.new(flatAt.X,y,flatAt.Z)
+		elseif b.mode=="rest"then
 			if now>=b.restUntil then
-				b.mode="fly";b.target=wanderPoint(r,b.patch,B.wander,B.low,B.high)
+				b.mode,b.switchAt="fly",now
+				b.target=wanderPoint(r,b.patch,B.wander,B.low,B.high)
 			end
 		else
 			local to=b.target-b.position
-			local step=(if b.mode=="leave"then B.leaveSpeed else B.speed)*dt
+			local step=B.speed*dt
 			if to.Magnitude<=math.max(step,.05)then
 				b.position=b.target
-				if b.mode=="leave"then
-					-- Arrived: removed next step.
-				elseif b.mode=="land"then
-					b.mode="rest";b.restUntil=now+r:NextNumber(B.restMin,B.restMax)
+				if b.mode=="land"then
+					b.mode,b.switchAt="rest",now
+					b.restUntil=now+r:NextNumber(B.restMin,B.restMax)
 				elseif r:NextNumber()<B.restChance then
 					b.mode="land";b.target=wanderPoint(r,b.patch,B.wander*.5,B.perch,B.perch)
 				else
@@ -287,36 +434,107 @@ function Butterflies:step(now,dt,world,patches,cap,still,day)
 	end
 	return list
 end
--- The root pose: travel heading plus a yaw wobble, nose up, a bob in flight. Resting: still on the flower.
-function Sim.butterflyRoot(b,now)
+-- 1 while flapping, 0 in a glide, smoothstepped over `envelope` each way.
+function Sim.butterflyEnvelope(b,now)
+	local B=Sim.Butterfly
+	if now<b.glideAt then return smooth(math.min(now-b.lastGlide,b.glideAt-now)/B.envelope)end
+	if now<b.glideEnd then return 0 end
+	return smooth((now-b.glideEnd)/B.envelope)
+end
+local function flightAngle(b,now,level)
+	local B=Sim.Butterfly
+	local f=B.flapHz[math.min(Sim.level(level),1)+1]
+	local flap=B.flapMid+B.flapAmp*math.sin(2*math.pi*f*(now+b.phase))
+	return B.glideAngle+(flap-B.glideAngle)*Sim.butterflyEnvelope(b,now)
+end
+local function restAngle(b,now)
+	local B=Sim.Butterfly
+	return B.restMid+B.restAmp*math.sin(2*math.pi*B.restHz*(now+b.phase))
+end
+-- How much of the flight's bob, wobble and pitch shows: 0 at rest, easing out on the way down to a flower and back in
+-- over `blend` after leaving one.
+local function airborne(b,now)
+	local B=Sim.Butterfly
+	if b.mode=="rest"then return 0 end
+	if b.mode=="land"then return math.clamp((b.target-b.position).Magnitude/.8,0,1)end
+	if b.switchAt and now-b.switchAt<B.blend then return smooth((now-b.switchAt)/B.blend)end
+	return 1
+end
+-- Wing angle (radians): the flight's flap and glides, the slow fan at rest; a change between the two blends over .5 s.
+function Sim.butterflyFlap(b,now,level)
+	local B=Sim.Butterfly
+	local resting=b.mode=="rest"
+	local current=if resting then restAngle(b,now)else flightAngle(b,now,level)
+	if b.switchAt and now-b.switchAt<B.blend then
+		local before=if resting then flightAngle(b,now,level)else restAngle(b,now)
+		current=before+(current-before)*smooth((now-b.switchAt)/B.blend)
+	end
+	return math.rad(current)
+end
+-- The root pose: travel heading with a slow yaw wobble, nose up, the bob in step with the flap (up on the down
+-- stroke) plus a slow drift, and the glide's sink.
+function Sim.butterflyRoot(b,now,level)
 	local B=Sim.Butterfly
 	local yaw=math.atan2(-b.heading.X,-b.heading.Z)
-	if b.mode=="rest"then return CFrame.new(b.position)*CFrame.Angles(0,yaw,0)end
+	if b.mode=="glow"then return CFrame.new(b.position)*CFrame.Angles(0,yaw,0)end
+	local k=airborne(b,now)
+	if k<=0 then return CFrame.new(b.position)*CFrame.Angles(0,yaw,0)end
 	local t=now+b.phase
-	yaw+=math.rad(B.wobble)*math.sin(t*math.pi*2*B.wobbleHz)
-	local bob=if b.mode=="land"then 0 else B.bob*math.sin(t*math.pi*2*B.bobHz)
-	return CFrame.new(b.position+Vector3.new(0,bob,0))*CFrame.Angles(0,yaw,0)*CFrame.Angles(math.rad(B.pitch),0,0)
+	local f=B.flapHz[math.min(Sim.level(level),1)+1]
+	local e=Sim.butterflyEnvelope(b,now)
+	local sink=0
+	if now>=b.glideAt and now<b.glideEnd then sink=B.glideSink*smooth((now-b.glideAt)/(b.glideEnd-b.glideAt))
+	elseif now-b.lastGlide<B.climb then sink=B.glideSink*(1-smooth((now-b.lastGlide)/B.climb))end
+	local bob=-B.bob*math.cos(2*math.pi*f*t)*e+B.drift*math.sin(2*math.pi*B.driftHz*t)-sink
+	yaw+=math.rad(B.wobble)*math.sin(2*math.pi*B.wobbleHz*t)*k
+	return CFrame.new(b.position+Vector3.new(0,bob*k,0))*CFrame.Angles(0,yaw,0)*CFrame.Angles(math.rad(B.pitch)*k,0,0)
 end
--- Wing angle: two poses at 7.5 Hz in flight (flip = which one), a slow sine at rest, one held pose when held.
-function Sim.butterflyFlap(b,now,flip,held)
-	if b.mode=="rest"then return math.rad(45+25*math.sin((now+b.phase)*math.pi))end
-	if held then return math.rad(30)end
-	return math.rad(if flip then 60 else -15)
+-- What to paint: {wing, body} transparencies (0 shown) and glow = nil or {size, transparency} (the hand-off).
+function Sim.butterflyLook(b,now)
+	local B=Sim.Butterfly
+	local wing=1-smooth((now-b.born)/B.fadeIn)
+	local body=0
+	local glow=nil
+	if b.fade then
+		local k=smooth((now-b.fade)/B.fadeOut)
+		wing,body=math.max(wing,k),k
+	end
+	local h=b.hand and now-b.hand
+	if h and h>=0 then
+		if h<B.handFade then
+			local k=smooth(h/B.handFade)
+			wing,body=math.max(wing,k),k
+			glow={size=B.glowFrom+(B.glowTo-B.glowFrom)*k,transparency=1-(1-B.glowLit)*k}
+		else
+			wing,body=1,1
+			local pulse=B.glowLit+(B.glowDim-B.glowLit)*(.5-.5*math.cos(2*math.pi*(h-B.handFade)/B.glowPulse))
+			if h>=B.handEnd then pulse+=(1-pulse)*smooth((h-B.handEnd)/(B.handGone-B.handEnd))end
+			glow={size=B.glowTo,transparency=math.min(1,pulse)}
+		end
+	end
+	return{wing=wing,body=body,glow=glow}
 end
--- Body, wing L, wing R (LOOK-R2 2). Each wing is a plate built standing (its Front/Back decals upright) and laid
--- flat by the last -90 about X: image top forward, the Back face up.
+-- Body, wing L, wing R (round 3: span 1.2). Each wing is a plate built standing (its Front/Back decals upright) and
+-- laid flat by the last -90 about X: image top forward, the Back face up.
 local flat90=CFrame.Angles(math.rad(-90),0,0)
 function Sim.butterflyParts(root,phi)
 	return{root,
-		root*CFrame.new(-.05,.03,0)*CFrame.Angles(0,0,-phi)*CFrame.new(-.35,0,0)*flat90,
-		root*CFrame.new(.05,.03,0)*CFrame.Angles(0,0,phi)*CFrame.new(.35,0,0)*flat90}
+		root*CFrame.new(-.04,.03,0)*CFrame.Angles(0,0,-phi)*CFrame.new(-.28,0,0)*flat90,
+		root*CFrame.new(.04,.03,0)*CFrame.Angles(0,0,phi)*CFrame.new(.28,0,0)*flat90}
 end
 
--- Birds (brief C1; LOOK 1) -------------------------------------------------------------------------------------
-Sim.Bird=table.freeze({lift=.56,land=.8,leave=1.2,stayMin=8,stayMax=20,flee=12,
+-- Birds (brief C1; round 3: GARDEN-LIFE-NEST-LOOK 3) ---------------------------------------------------------------
+-- A small round songbird: a body, a head it turns and cocks on its own, bead eyes, a short beak, folded wings, a tail
+-- that flicks on every landing and hop. Low quick hops, often in pairs; it turns by hopping; it flies in bounds (two
+-- beats, wings tucked, two beats). Everything eased; nothing is a two-pose swap. Each bird has its own Random.
+Sim.Bird=table.freeze({lift=.50,land=.8,leave=1.2,stayMin=8,stayMax=20,flee=12,
 	fromMin=9,fromMax=12,upMin=4,upMax=6,riseMin=5,riseMax=7,away=10,
-	dip=.12,dipPitch=12,dipIn=.10,dipOut=.15,hop=.35,hopTime=.22,hopDip=.06,hopDipTime=.08,flick=25,flickTime=.12,
-	turnMin=20,turnMax=45,turnEveryMin=2.5,turnEveryMax=5,turnTime=.15,crouch=.10,crouchTime=.08,diveTilt=15,level=.2})
+	dip=.12,dipPitch=12,dipIn=.10,dipOut=.15,
+	hop=.16,hopTime=.18,hopDip=.06,hopDipTime=.08,pair=.4,pairGap=.12,flick=15,flickTime=.12,
+	tail=20,tailUp=2,tailTime=.16,
+	headEveryMin=.8,headEveryMax=2.5,headMin=25,headMax=50,headTime=.12,cock=.3,cockRoll=15,
+	turnMin=20,turnMax=45,turnEveryMin=2.5,turnEveryMax=5,turnTime=.15,crouch=.10,crouchTime=.08,diveTilt=15,level=.2,
+	beatHz=table.freeze({5.5,3.5}),beats=2,beatMid=15,beatAmp=50,tuckTime=.22,tuckDip=.12,tuckBlend=.06})
 local Birds={};Birds.__index=Birds
 Sim.Birds=Birds
 function Birds.new(seed)return setmetatable({random=Random.new(seed or 3),list={}},Birds)end
@@ -326,6 +544,12 @@ function Birds:find(perch)
 	return nil
 end
 local function yawOf(direction)return math.atan2(-direction.X,-direction.Z)end
+-- A hop now, and 40% of the time a second one .12 s after it lands.
+local function hop(bird,now)
+	local B=Sim.Bird
+	bird.hopAt=now
+	bird.hop2=if bird.random:NextNumber()<B.pair then now+B.hopTime+B.pairGap else nil
+end
 -- A chirp from AmbientAudio's perch `perch` (its landing spot `landing`, or nil). "land" (a bird comes in), "hop"
 -- (one already sits there), or nil and why: no spot, the cap, a station or the camera in the way, already busy, night
 -- (day = false: the garden hour's night lands no new bird; one already sitting still hops and sits out its stay).
@@ -335,7 +559,7 @@ function Birds:chirp(now,perch,landing,cap,world,reduced,day)
 	if typeof(landing)~="Vector3"then return nil,"spot"end
 	local bird=self:find(perch)
 	if bird then
-		if bird.state=="sit"and not reduced then bird.hopAt=now;return "hop"end
+		if bird.state=="sit"and not reduced then hop(bird,now);return "hop"end
 		return nil,"busy"
 	end
 	if day==false then return nil,"night"end
@@ -346,15 +570,17 @@ function Birds:chirp(now,perch,landing,cap,world,reduced,day)
 	local a=r:NextNumber()*math.pi*2
 	local out=Vector3.new(math.cos(a),0,math.sin(a))
 	local from=landing+out*r:NextNumber(B.fromMin,B.fromMax)+Vector3.new(0,r:NextNumber(B.upMin,B.upMax),0)
-	bird={perch=perch,spot=landing,from=from,start=now,state=if reduced then "sit"else "land",colour=perch%3,
-		yaw=yawOf(-out),stayUntil=now+r:NextNumber(B.stayMin,B.stayMax),turnAt=now+r:NextNumber(B.turnEveryMin,B.turnEveryMax)}
+	local own=Random.new(r:NextInteger(1,1073741823))
+	bird={perch=perch,spot=landing,from=from,start=now,state=if reduced then "sit"else "land",colour=perch%3,random=own,
+		yaw=yawOf(-out),stayUntil=now+r:NextNumber(B.stayMin,B.stayMax),turnAt=now+r:NextNumber(B.turnEveryMin,B.turnEveryMax),
+		head={yaw=0,roll=0,fromYaw=0,fromRoll=0,at=-math.huge},headAt=now+B.land+own:NextNumber(B.headEveryMin,B.headEveryMax)}
 	if reduced then bird.landedAt=-math.huge end
 	table.insert(self.list,bird)
 	return "land"
 end
 -- Moves every bird on: landed, stayed long enough or the player within `flee`: off it goes (Reduced Motion: gone).
--- Returns the live list; each has root (CFrame), wings ("fly" | "perch") and flick (0 to 1).
-function Birds:step(now,world,reduced,cap)
+-- Returns the live list; each has root (CFrame), wings ("fly" | "perch"), flick (0 to 1), phi, tuck, head, tau.
+function Birds:step(now,world,reduced,cap,level)
 	local B,r,list=Sim.Bird,self.random,self.list
 	world=world or {}
 	for i=#list,1,-1 do
@@ -364,8 +590,14 @@ function Birds:step(now,world,reduced,cap)
 			table.remove(list,i);continue
 		end
 		if reduced and bird.state~="sit"then
-			if bird.state=="land"then bird.state="sit";bird.landedAt=-math.huge;bird.hopAt=nil
+			if bird.state=="land"then bird.state="sit";bird.landedAt=-math.huge;bird.hopAt=nil;bird.hop2=nil
 			else table.remove(list,i);continue end
+		end
+		if reduced and bird.head and(bird.head.at~=-math.huge or bird.hopAt or bird.turnStart)then
+			-- Reduced Motion while perched: head straight, no hop or turn in flight, the tail at rest, at once.
+			bird.head={yaw=0,roll=0,fromYaw=0,fromRoll=0,at=-math.huge}
+			bird.hopAt,bird.hop2,bird.turnStart=nil,nil,nil
+			bird.landedAt=-math.huge
 		end
 		if bird.state=="land"and now-bird.start>=B.land then bird.state="sit";bird.landedAt=now end
 		if bird.state=="sit"then
@@ -375,29 +607,73 @@ function Birds:step(now,world,reduced,cap)
 				local away=if player then Vector3.new(bird.spot.X-player.X,0,bird.spot.Z-player.Z)else Vector3.zero
 				if away.Magnitude<1e-3 then away=Vector3.new(-math.sin(bird.yaw),0,-math.cos(bird.yaw))end
 				bird.state,bird.leaveAt,bird.away,bird.rise="leave",now,away.Unit,r:NextNumber(B.riseMin,B.riseMax)
-			elseif not reduced and now>=bird.turnAt then
-				bird.turnAt=now+r:NextNumber(B.turnEveryMin,B.turnEveryMax)
-				bird.turnFrom,bird.turnStart=bird.yaw,now
-				bird.yaw+=math.rad(r:NextNumber(B.turnMin,B.turnMax))*(if r:NextNumber()<.5 then -1 else 1)
+			elseif not reduced then
+				local own=bird.random
+				if now>=bird.turnAt then
+					-- Birds turn by hopping.
+					bird.turnAt=now+own:NextNumber(B.turnEveryMin,B.turnEveryMax)
+					bird.turnFrom,bird.turnStart=bird.yaw,now
+					bird.yaw+=math.rad(own:NextNumber(B.turnMin,B.turnMax))*(if own:NextNumber()<.5 then -1 else 1)
+					hop(bird,now)
+				end
+				if now>=bird.headAt then
+					-- The head alone snaps to a new look, 30% of the time with a cock, and holds it.
+					local head=bird.head
+					local k=smooth((now-head.at)/B.headTime)
+					head.fromYaw=head.fromYaw+(head.yaw-head.fromYaw)*k
+					head.fromRoll=head.fromRoll+(head.roll-head.fromRoll)*k
+					head.yaw=own:NextNumber(B.headMin,B.headMax)*(if own:NextNumber()<.5 then -1 else 1)
+					head.roll=if own:NextNumber()<B.cock then B.cockRoll*(if own:NextNumber()<.5 then -1 else 1)else 0
+					head.at=now
+					bird.headAt=now+own:NextNumber(B.headEveryMin,B.headEveryMax)
+				end
 			end
 		end
 		if bird.state=="leave"and now-bird.leaveAt>=B.crouchTime+B.leave then table.remove(list,i);continue end
-		Sim.birdPose(bird,now)
+		Sim.birdPose(bird,now,level)
 	end
 	return list
 end
-local function smooth(t)t=math.clamp(t,0,1);return t*t*(3-2*t)end
--- Writes bird.root, bird.wings and bird.flick for now.
-function Sim.birdPose(bird,now)
+-- Bounding flight `t` seconds in: the wing angle (degrees), how far the wings are tucked (0 beating, 1 folded) and
+-- the root's dip while they are folded. Two beats, then a .22 s tuck; level 1 beats at 3.5 Hz.
+function Sim.birdBeat(t,level)
+	local B=Sim.Bird
+	local hz=B.beatHz[math.min(Sim.level(level),1)+1]
+	local beating=B.beats/hz
+	local c=math.max(t,0)%(beating+B.tuckTime)
+	if c<beating then
+		local tuck=math.max(1-smooth(c/B.tuckBlend),smooth((c-beating+B.tuckBlend)/B.tuckBlend))
+		return B.beatMid+B.beatAmp*math.sin(2*math.pi*hz*c),tuck,0
+	end
+	return B.beatMid,1,B.tuckDip*math.sin(math.pi*(c-beating)/B.tuckTime)
+end
+-- The tail's angle: 20 at rest, up to 2 and back over .16 s after a landing or a hop.
+local function tailAt(bird,now)
+	local B=Sim.Bird
+	local last=-math.huge
+	local a,b,c=bird.landedAt,bird.hopAt,bird.hop2
+	if a and a<=now and a>last then last=a end
+	if b and b<=now and b>last then last=b end
+	if c and c<=now and c>last then last=c end
+	local u=(now-last)/B.tailTime
+	if u<0 or u>=1 then return B.tail end
+	local k=if u<.5 then smooth(u*2)else smooth((1-u)*2)
+	return B.tail-(B.tail-B.tailUp)*k
+end
+-- Writes bird.root, wings, flick, phi (radians), tuck, head (a CFrame turn) and tau (degrees) for now.
+function Sim.birdPose(bird,now,level)
 	local B=Sim.Bird
 	local lift=Vector3.new(0,B.lift,0)
+	bird.head=bird.head or {yaw=0,roll=0,fromYaw=0,fromRoll=0,at=-math.huge}
+	bird.tau,bird.turn,bird.still=B.tail,CFrame.identity,false
 	if bird.state=="land"then
 		local t=math.clamp((now-bird.start)/B.land,0,1)
 		local s=1-(1-t)^2
-		local at=bird.from:Lerp(bird.spot,s)+Vector3.new(0,math.sin(math.pi*t)*.8,0)+lift
+		local phi,tuck,dip=Sim.birdBeat(now-bird.start,level)
+		local at=bird.from:Lerp(bird.spot,s)+Vector3.new(0,math.sin(math.pi*t)*.8-dip,0)+lift
 		local tilt=math.rad(-B.diveTilt)*math.clamp((1-t)/B.level*B.land,0,1)
 		bird.root=CFrame.new(at)*CFrame.Angles(0,bird.yaw,0)*CFrame.Angles(tilt,0,0)
-		bird.wings,bird.flick="fly",0
+		bird.wings,bird.flick,bird.phi,bird.tuck="fly",0,math.rad(phi),tuck
 		return
 	end
 	if bird.state=="leave"then
@@ -405,16 +681,17 @@ function Sim.birdPose(bird,now)
 		local yaw=yawOf(bird.away)
 		if t<B.crouchTime then
 			bird.root=CFrame.new(bird.spot+lift-Vector3.new(0,B.crouch,0))*CFrame.Angles(0,bird.yaw,0)
-			bird.wings,bird.flick="perch",0
+			bird.wings,bird.flick,bird.phi,bird.tuck="perch",0,0,0
 			return
 		end
 		local u=math.clamp((t-B.crouchTime)/B.leave,0,1)
-		local at=bird.spot+lift+bird.away*(B.away*u*u)+Vector3.new(0,bird.rise*(1-(1-u)^2),0)
+		local phi,tuck,dip=Sim.birdBeat(t-B.crouchTime,level)
+		local at=bird.spot+lift+bird.away*(B.away*u*u)+Vector3.new(0,bird.rise*(1-(1-u)^2)-dip,0)
 		bird.root=CFrame.new(at)*CFrame.Angles(0,yaw,0)
-		bird.wings,bird.flick="fly",0
+		bird.wings,bird.flick,bird.phi,bird.tuck="fly",0,math.rad(phi),tuck
 		return
 	end
-	-- Sitting: the landing squash, a hop on a repeat chirp, snappy idle turns.
+	-- Sitting: the landing squash, low hops (often a pair), turns that come with a hop, the head on its own.
 	local y,pitch,flick=0,0,0
 	local since=now-(bird.landedAt or -math.huge)
 	if since<B.dipIn then
@@ -422,43 +699,56 @@ function Sim.birdPose(bird,now)
 	elseif since<B.dipIn+B.dipOut then
 		local k=1-(since-B.dipIn)/B.dipOut;y-=B.dip*k;pitch-=B.dipPitch*k
 	end
-	if bird.hopAt then
-		local h=now-bird.hopAt
-		if h<B.hopTime then local u=h/B.hopTime;y+=B.hop*4*u*(1-u)
-		elseif h<B.hopTime+B.hopDipTime then y-=B.hopDip
-		else bird.hopAt=nil end
-		if h>=0 and h<B.flickTime then flick=1 end
+	local busy=false
+	for i=1,2 do
+		local start=if i==1 then bird.hopAt else bird.hop2
+		if start then
+			local h=now-start
+			if h>=0 and h<B.hopTime then local u=h/B.hopTime;y+=B.hop*4*u*(1-u);busy=true
+			elseif h>=0 and h<B.hopTime+B.hopDipTime then y-=B.hopDip;busy=true
+			elseif h<0 then busy=true end
+			if h>=0 and h<B.flickTime then flick=1 end
+		end
 	end
+	bird.tau=tailAt(bird,now)
+	if not busy then bird.hopAt,bird.hop2=nil,nil end
 	local yaw=bird.yaw
 	if bird.turnStart and now-bird.turnStart<B.turnTime then
 		yaw=bird.turnFrom+(bird.yaw-bird.turnFrom)*smooth((now-bird.turnStart)/B.turnTime)
 	end
+	local head=bird.head
+	local k=smooth((now-head.at)/B.headTime)
+	local hy,hr=head.fromYaw+(head.yaw-head.fromYaw)*k,head.fromRoll+(head.roll-head.fromRoll)*k
+	bird.turn=CFrame.Angles(0,math.rad(hy),0)*CFrame.Angles(0,0,math.rad(hr))
 	bird.root=CFrame.new(bird.spot+lift+Vector3.new(0,y,0))*CFrame.Angles(0,yaw,0)*CFrame.Angles(math.rad(pitch),0,0)
-	bird.wings,bird.flick="perch",flick
+	bird.wings,bird.flick,bird.phi,bird.tuck="perch",flick,0,0
+	-- Nothing moving this frame (no squash, hop, turn or head snap; the tail at rest): GardenLife skips the writes.
+	bird.still=since>=B.dipIn+B.dipOut and not busy and bird.tau==B.tail and now-head.at>=B.headTime
+		and not(bird.turnStart and now-bird.turnStart<B.turnTime)
 end
--- Body, right eye, beak, wing L, wing R, left eye (LOOK-R2 1; eyes and beak from REVIEW-R2: two discs angled out and
--- forward so a bird facing you has two eyes, and a cube turned corner-first so the beak is a point, not a square). phi: the flap angle in flight. The wing plates are thin in X with
--- the texture tip-down (part -Y): perched, the tip points back and down; flying, it points out (+90 right, -90 left).
-local tuck=CFrame.Angles(math.rad(-55),0,0)
-function Sim.birdParts(root,wings,flick,phi)
-	local parts={root,root*CFrame.new(.425,.128,-.357)*CFrame.Angles(0,math.rad(40),0)*CFrame.Angles(0,0,math.rad(13)),
-		root*CFrame.new(0,-.04,-.64)*CFrame.Angles(math.rad(-35.26),0,0)*CFrame.Angles(0,math.rad(45),0)}
-	parts[6]=root*CFrame.new(-.425,.128,-.357)*CFrame.Angles(0,math.rad(-40),0)*CFrame.Angles(0,0,math.rad(-13))
+-- The eight frames in pool order: body, head, beak, eye R, eye L, wing L, wing R, tail (GARDEN-LIFE-NEST-LOOK 3).
+-- head: the head's own turn (CFrame) under H; phi: the flap (radians) in flight; tuck 0 to 1 lerps the flying wings
+-- to the folded pose (the bound); flick 0 to 1 swings the folded tips out; tau: the tail's tilt in degrees.
+local fold=CFrame.Angles(math.rad(-55),0,0)
+function Sim.birdParts(root,wings,flick,phi,head,tau,tuck)
+	local H=root*CFrame.new(0,.37,-.35)*(head or CFrame.identity)
+	local parts={root,H,H*CFrame.new(0,-.02,-.36)*CFrame.Angles(math.rad(-35.26),0,0)*CFrame.Angles(0,math.rad(45),0),
+		H*CFrame.new(.235,.065,-.22),H*CFrame.new(-.235,.065,-.22)}
+	local out=math.rad(Sim.Bird.flick)*(flick or 0)
+	local foldL=root*CFrame.new(-.53,-.02,.15)*CFrame.Angles(0,0,-out)*CFrame.Angles(0,math.rad(12),0)*fold
+	local foldR=root*CFrame.new(.53,-.02,.15)*CFrame.Angles(0,0,out)*CFrame.Angles(0,math.rad(-12),0)*fold
 	if wings=="fly"then
-		parts[4]=root*CFrame.new(-.42,.12,.05)*CFrame.Angles(0,0,-phi)*CFrame.new(-.33,0,0)*CFrame.Angles(0,0,-math.pi/2)
-		parts[5]=root*CFrame.new(.42,.12,.05)*CFrame.Angles(0,0,phi)*CFrame.new(.33,0,0)*CFrame.Angles(0,0,math.pi/2)
+		phi=phi or 0
+		local left=root*CFrame.new(-.37,.11,.04)*CFrame.Angles(0,0,-phi)*CFrame.new(-.37,0,0)*CFrame.Angles(0,0,-math.pi/2)
+		local right=root*CFrame.new(.37,.11,.04)*CFrame.Angles(0,0,phi)*CFrame.new(.37,0,0)*CFrame.Angles(0,0,math.pi/2)
+		tuck=math.clamp(tuck or 0,0,1)
+		if tuck>0 then left,right=left:Lerp(foldL,tuck),right:Lerp(foldR,tuck)end
+		parts[6],parts[7]=left,right
 	else
-		-- The hop flick: the tip swung out by 25, before the yaw.
-		local out=math.rad(Sim.Bird.flick)*(flick or 0)
-		parts[4]=root*CFrame.new(-.60,-.06,.13)*CFrame.Angles(0,0,-out)*CFrame.Angles(0,math.rad(12),0)*tuck
-		parts[5]=root*CFrame.new(.60,-.06,.13)*CFrame.Angles(0,0,out)*CFrame.Angles(0,math.rad(-12),0)*tuck
+		parts[6],parts[7]=foldL,foldR
 	end
+	parts[8]=root*CFrame.new(0,-.09,.40)*CFrame.Angles(math.rad(tau or Sim.Bird.tail),0,0)*CFrame.new(0,0,.29)*CFrame.Angles(math.rad(-90),0,0)
 	return parts
-end
--- Flap: +50 and -20, two poses (flip = which one); held still at budget level 1.
-function Sim.birdFlap(flip,held)
-	if held then return 0 end
-	return math.rad(if flip then 50 else -20)
 end
 
 -- Dewdrops (WORLD-PASS-2026-11-22 item 3, looks only; FRUIT-LOOK) ----------------------------------------------

@@ -24,7 +24,9 @@ ONLY = os.environ.get("DASH_SPECS", "").split()
 SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPrize", "DashGating", "DashHost",
          "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour", "GardenHourBook",
          # Beta (12) QA quick fixes: pet catch-up (G1), the fresh-save key switch (T1), finds near the player (G2).
-         "PetCatchup", "CatchupConfig", "GardenState", "ProgressKey", "FreshSave", "FindsState", "FindsHost"]
+         "PetCatchup", "CatchupConfig", "GardenState", "ProgressKey", "FreshSave", "FindsState", "FindsHost",
+         # Garden life round 3 and the nest remodel (beta 12 QA O2): the nest's spot and the pets kept off it.
+         "NestSpot"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
