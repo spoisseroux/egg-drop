@@ -9,9 +9,11 @@
 -- three petal anchors and two bubble anchors, each with a ParticleEmitter, 16 Dewdrop anchors each with a BillboardGui),
 -- ONE Heartbeat at 30 Hz (15 at budget level 1) and ONE BulkMoveTo a step; a part not in use is moved far away, never
 -- re-parented or resized.
---   Dewdrops: lime crowns within 90 studs, nearest first, 16 / 8 shown (level 0 / 1, no sway at 1), at most 3 / 2 loose;
---   the gust number seeds which one falls, so every client sees the same fruit go; a pet within 3 studs bats a resting
---   one in place; never landing on a find spot, the Dash course or a park kerb. Reduced Motion: they just hang.
+--   Dewdrops: what falls is LifeSim's Grove, a pure function of the server time over every lime crown (the gust
+--   number seeds it), so every client has the same fruit go whatever it sees or runs at. Drawing only: lime crowns
+--   within 90 studs, nearest first, 16 / 8 shown (level 0 / 1, no sway at 1), at most 3 / 2 loose; a pet within 3 studs
+--   bats a resting one in place; never landing on a find spot, the Dash course or a park kerb. Reduced Motion: they
+--   just hang, every slot full.
 --   Parked (a hatch, the board out of Room mode, my own race): everything hidden, nothing simulated.
 --   A menu: bubbles stop starting; the rest goes on behind the shade.
 --   Reduced Motion: no petals, bubbles or flight; a bird is just there on its crown, folded and still; fruit hangs.
@@ -268,7 +270,8 @@ function Life:places()
 		self.pad={x=Course.Pad.x/100,z=Course.Pad.z/100,r=Course.Pad.r/100}
 	end
 	self.groundY=d.groundY
-	-- Dewdrops land only on walkable lawn, off every find spot and park kerb (FRUIT-LOOK 7).
+	-- Dewdrops land only on walkable lawn, off every find spot and park kerb (FRUIT-LOOK 7). Shared data only: the
+	-- grove decides what falls from this and the server time, never from this client's camera or settings.
 	local finds=d.finds
 	if not finds then
 		finds={}
@@ -353,8 +356,9 @@ function Life:enable()
 	self.flies=Sim.Butterflies.new(self.seed+1)
 	self.petals=Sim.Petals.new()
 	self.bubbles=Sim.Bubbles.new(self.seed+2)
-	self.orchard=Sim.Orchard.new()
-	self.stems,self.fruitOf,self.fruitShown,self.fruitCount={},{},{},0
+	self.grove=Sim.Grove.new(self.spots.Crowns or {},self.fruitWorld)
+	self.loose=Sim.Loose.new()
+	self.view,self.fruitOf,self.fruitCount={},{},0
 	self.picked={}
 	self.elapsed,self.since,self.steps,self.pollIn,self.gateIn=0,0,0,0,0
 	self.parked,self.hatch,self.live,self.wasReduced,self.colours,self.lime=false,false,false,false,nil,false
@@ -381,7 +385,7 @@ function Life:disable()
 	local folder=self.folder
 	self.folder,self.shown,self.birdPool,self.flyPool,self.petalPool,self.bubblePool=nil,nil,nil,nil,nil,nil
 	self.birds,self.flies,self.petals,self.bubbles,self.picked=nil,nil,nil,nil,nil
-	self.fruitPool,self.orchard,self.stems,self.fruitOf,self.fruitShown,self.fruitCount=nil,nil,nil,nil,nil,0
+	self.fruitPool,self.grove,self.loose,self.view,self.fruitOf,self.fruitCount=nil,nil,nil,nil,nil,0
 	if folder then folder:Destroy()end
 end
 
@@ -462,7 +466,7 @@ function Life:step(dt)
 	local now=self.now()
 	if not finite(now)then return end
 	local reduced=self.reduced()==true
-	if reduced and not self.wasReduced then self:clearEmitters();self.orchard:refill()end
+	if reduced and not self.wasReduced then self:clearEmitters();self.loose:clear()end
 	self.wasReduced=reduced
 	local eye=camera.Position
 	local parts,frames,emits={},{},{}
@@ -548,74 +552,65 @@ function Life:step(dt)
 end
 
 -- Dewdrops -------------------------------------------------------------------------------------------------------
--- Crown i's filled slots (fixed per crown: Wind.hash), worked out once.
-function Life:stemsOf(i,crown)
-	local stems=self.stems[i]
-	if not stems then stems=Sim.fruitStems(i,crown);self.stems[i]=stems end
-	return stems
-end
-
--- Parked or the crowns gone pink: no loose fruit, every pool entry free (park/hide moves the anchors away).
+-- Parked or the crowns gone pink: nothing drawn loose, every pool entry free (park/the pool loop moves the anchors
+-- away). What falls is the grove's (a pure function of the server time), so nothing about it is forgotten.
 function Life:forgetFruit()
-	if not self.orchard then return end
-	self.orchard:clear()
-	table.clear(self.fruitOf);table.clear(self.fruitShown)
+	if not self.loose then return end
+	self.loose:clear()
+	table.clear(self.fruitOf)
 	self.fruitCount=0
 	for _,entry in ipairs(self.fruitPool)do entry.key,entry.position=nil,nil end
 end
 
--- One step of fruit: the loose ones moved on (bats, fades), a drop where a crown's gust peaks, then the nearest hanging
--- slots up to the cap; each wanted fruit keeps its pool entry while it lasts, and only changed properties are written.
+-- One step of fruit. The grove (every lime crown, refreshed once a second) says what hangs and what has fallen; only
+-- the drawing is this client's: the nearest hanging slots up to the cap, the loose ones Loose draws (cap, reach, no
+-- race, bats), nothing loose and every slot full with Reduced Motion. Each drawn fruit keeps its pool entry while it
+-- lasts, and only changed properties are written.
 local function differs(a,b,eps)return math.abs(a-b)>eps end
 function Life:stepFruit(now,camera,level,reduced,put,hide)
-	local pool,orchard,F=self.fruitPool,self.orchard,Sim.Fruit
+	local pool,grove,F=self.fruitPool,self.grove,Sim.Fruit
+	if not self.lime or level>=2 then
+		-- Nothing assigned: nothing shown, nothing to walk.
+		if next(self.fruitOf)==nil and #self.loose.list==0 then return end
+		self:forgetFruit()
+		for _,entry in ipairs(pool)do hide(entry.anchor)end
+		return
+	end
+	if not grove.at or now<grove.at or now-grove.at>=Sim.Grove.Every then grove:refresh(now)end
 	local want={}
 	local hanging=0
-	if self.lime and level<2 then
-		local eye,right=camera.Position,camera.RightVector
-		local world=self.fruitWorld
-		world.camera,world.right=eye,right
-		local cap=Sim.cap("loose",level)
-		orchard:step(now,world,self.pets,cap,self.live)
-		local near={}
-		for i,crown in ipairs(self.spots.Crowns or {})do
-			local d=(crown.position-eye).Magnitude
-			if d<=F.reach then table.insert(near,{i=i,crown=crown,d=d,at=Wind.at(crown.position,now)})end
-		end
-		table.sort(near,function(a,b)return a.d<b.d end)
-		local still=reduced or level>=1
-		if not reduced and not self.live then
-			for _,entry in ipairs(near)do
-				local n=orchard:gust(entry.i,entry.crown.position,now,entry.at)
-				if n then
-					orchard:drop(entry.i,entry.crown,self:stemsOf(entry.i,entry.crown),n,now,world,cap,
-						function(slot)return Sim.fruitSway(slot.k,now,entry.at,still)end,self.fruitShown)
-				end
-			end
-		end
-		local room=math.min(Sim.cap("fruit",level),F.pool-#orchard.loose)
-		local dot=right:Dot(Wind.Direction)
-		local shown={}
-		for _,entry in ipairs(near)do
+	local eye,right=camera.Position,camera.RightVector
+	if reduced then self.loose:clear()
+	else
+		local view=self.view
+		view.camera,view.right=eye,right
+		self.loose:step(now,grove:active(now),view,self.fruitWorld,self.pets,Sim.cap("loose",level),self.live)
+	end
+	local near={}
+	for i,crown in ipairs(grove.crowns)do
+		local d=(crown.position-eye).Magnitude
+		if d<=F.reach then table.insert(near,{i=i,d=d})end
+	end
+	table.sort(near,function(x,y)return x.d<y.d end)
+	local still=reduced or level>=1
+	local room=math.min(Sim.cap("fruit",level),F.pool-#self.loose.list)
+	local dot=right:Dot(Wind.Direction)
+	for _,entry in ipairs(near)do
+		if hanging>=room then break end
+		local at=if still then 0 else Wind.at(grove.crowns[entry.i].position,now)
+		for _,slot in ipairs(grove.stems[entry.i])do
 			if hanging>=room then break end
-			for _,slot in ipairs(self:stemsOf(entry.i,entry.crown))do
-				if hanging>=room then break end
-				local scale=orchard:hanging(slot.key,now)
-				if scale then
-					hanging+=1
-					shown[slot.key]=true
-					local angle=Sim.fruitSway(slot.k,now,entry.at,still)
-					want[slot.key]={Sim.fruitHang(slot.stem,angle,scale),-angle*dot,scale,scale,0}
-				end
+			local scale=if reduced then 1 else grove:hanging(slot.key,now)
+			if scale then
+				hanging+=1
+				local angle=Sim.fruitSway(slot.k,now,at,still)
+				want[slot.key]={Sim.fruitHang(slot.stem,angle,scale),-angle*dot,scale,scale,0}
 			end
 		end
-		self.fruitShown=shown
-		for _,plan in ipairs(orchard.loose)do
-			local pose=Sim.fruitPose(plan,now)
-			want[-plan.key]={pose.position,pose.rotation,pose.w,pose.h,pose.transparency}
-		end
-	elseif #orchard.loose>0 or next(self.fruitOf)then
-		self:forgetFruit()
+	end
+	for _,loose in ipairs(self.loose.list)do
+		local pose=Sim.fruitPose(loose,now)
+		want[-loose.key]={pose.position,pose.rotation,pose.w,pose.h,pose.transparency}
 	end
 	self.fruitCount=hanging
 	local of,free=self.fruitOf,{}
@@ -686,7 +681,7 @@ function Life:counts()
 	if not self.enabled then return{birds=0,butterflies=0,petals=0,bubbles=0,fruit=0,loose=0}end
 	local now=self.now()
 	return{birds=#self.birds.list,butterflies=#self.flies.list,petals=self.petals:count(now),bubbles=self.bubbles:count(now),
-		fruit=if self.parked then 0 else self.fruitCount,loose=#self.orchard.loose}
+		fruit=if self.parked then 0 else self.fruitCount,loose=#self.loose.list}
 end
 
 return Life
