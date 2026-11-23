@@ -27,10 +27,11 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
+| 15 | **Dewdrop fruit** (Garden life, looks only) | Built on a branch, offline specs green; Studio and Fable's capture review next | Two or three glossy honey-coral drops hang under each lime tree and sway; in a strong gust one lets go, bounces twice, rolls downwind, rests, fades and grows back later. Your pet beside a fallen one bats it once. Never on a find, the race course or the park; nothing to collect. Reduced Motion: they just hang. Switch: `/alive life off` |
 
 ## Scoped, not built
 
-World pass (`WORLD-PASS-2026-11-22.md`): fruit (looks only), 1-hour garden day/night, crowns swaying (after one island re-export). ASMR keycaps and crunch (`V3-SCOPE` 13, needs your sound picks). v4 Pocket Deck cartridges (`V4-POCKET-DECK-SCOPE-2026-11-22.md`).
+World pass (`WORLD-PASS-2026-11-22.md`): 1-hour garden day/night, crowns swaying (after one island re-export). ASMR keycaps and crunch (`V3-SCOPE` 13, needs your sound picks). v4 Pocket Deck cartridges (`V4-POCKET-DECK-SCOPE-2026-11-22.md`).
 
 ## Check on every device (never tested yet)
 

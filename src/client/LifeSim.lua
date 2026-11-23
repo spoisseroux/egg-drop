@@ -6,14 +6,20 @@
 --   bubbles      Bubbles:due(now, cap, allowed), Sim.bubbleSpot(camera, random, world), Bubbles:emit(now) -> "small" | "large"
 --   butterflies  Butterflies:step(now, dt, world, patches, cap, still) -> the live ones
 --   birds        Birds:chirp(now, perch, landing, cap, world, reduced), Birds:step(now, dt, world, reduced)
+--   dewdrops     Sim.fruitStems(i, crown), Orchard:gust / :drop / :step, Sim.fruitPose(plan, now) (world pass item 3;
+--                look numbers artifacts/world-pass-2026-11-22/FRUIT-LOOK.md). Seeded from Wind.hash and the gust
+--                number, never a Random, so every client sees the same fruit fall.
 -- `world` is {camera = Vector3?, player = Vector3?, stations = {Vector3}, pad = {x, z, r}?, course = {x, z, ...}?
--- (only while a race is live), groundY = fn?}.
+-- (only while a race is live; fruit passes it always), groundY = fn?, finds = {Vector3}?, kerbs = {{x, z, rx, rz}}?,
+-- safe = fn(x, z)?, right = Vector3?}.
+local Wind=require(script.Parent.Wind)
 local Sim={}
 
--- Caps by AliveBudget level 0, 1, 2 (level 1 halves every cap; level 2 shows nothing).
+-- Caps by AliveBudget level 0, 1, 2 (level 1 halves every cap; level 2 shows nothing). fruit: hanging Dewdrops shown,
+-- loose: Dewdrops off the tree at once (FRUIT-LOOK 4).
 Sim.Caps=table.freeze({
 	petals=table.freeze({40,20,0}),bubbles=table.freeze({8,4,0}),butterflies=table.freeze({4,2,0}),
-	birds=table.freeze({3,2,0}),emitters=table.freeze({3,3,0}),
+	birds=table.freeze({3,2,0}),emitters=table.freeze({3,3,0}),fruit=table.freeze({16,8,0}),loose=table.freeze({3,2,0}),
 })
 Sim.Hz=table.freeze({30,15}) -- steps a second at level 0 and 1
 -- Never in the way: studs from the camera, a station (on the ground), the course line, past the waiting pad's edge.
@@ -423,6 +429,287 @@ end
 function Sim.birdFlap(flip,held)
 	if held then return 0 end
 	return math.rad(if flip then 50 else -20)
+end
+
+-- Dewdrops (WORLD-PASS-2026-11-22 item 3, looks only; FRUIT-LOOK) ----------------------------------------------
+-- Hanging under the lime crowns, 2 or 3 a crown; one lets go in a strong gust (the same one on every client: the
+-- gust number and Wind.hash decide), falls, bounces twice, rolls downwind, rests, fades and regrows. A pet within
+-- reach of a resting one bats it once, in place. Nothing to collect, no remote. Angles in degrees; a pose's rotation
+-- is ImageLabel.Rotation (clockwise on screen): `world.right` (the camera's right) turns world travel into screen spin.
+Sim.Fruit=table.freeze({
+	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.36,down=.80,hang=.64,pool=16,reach=90,
+	swayMin=3,swayGust=12,swayHz=2.2,
+	dropAt=.8,rearm=.5,chance=.35,
+	tug=20,letGo=.15,fall=.55,drift=1.2,turn=180,
+	bounces=table.freeze({table.freeze({height=.9,time=.34,drift=.5}),table.freeze({height=.3,time=.2,drift=.2})}),
+	squash=.06,squashW=1.15,squashH=.85,
+	rollMin=1.6,rollMax=2.4,rollTurn=25,roll=.9,spin=150,
+	rest=18,lift=.5,lean=12,rock=6,rockAt=.6,rockHz=1.1,
+	fade=1.2,quick=.3,shrink=.7,
+	regrow=45,grow=1.5,overshoot=1.12,
+	below=14,near=6,find=3,kerb=2,
+	bat=3,batUp=.7,batAway=1,batTime=.4,batBounce=.2,batBounceTime=.15,batTurn=360,poll=2,
+})
+local F=Sim.Fruit
+function Sim.fruitKey(i,k)return i*8+k end
+
+-- Crown i's filled slots: {k, key, stem} with the stem tip just inside the crown's lower skirt (FRUIT-LOOK 2).
+function Sim.fruitStems(i,crown)
+	local out={}
+	if type(i)~="number"or type(crown)~="table"or typeof(crown.position)~="Vector3"or typeof(crown.size)~="Vector3"then return out end
+	local size=crown.size
+	local top=crown.position+Vector3.new(0,size.Y/2,0)
+	local base=Wind.hash(i,12)*360
+	for k=1,F.slots do
+		if Wind.hash(i*8+k,11)<F.fill then
+			local a=math.rad(F.angles[k]+base)
+			table.insert(out,table.freeze({k=k,key=Sim.fruitKey(i,k),
+				stem=top+Vector3.new(F.out*size.X*math.cos(a),-F.down*size.Y,F.out*size.X*math.sin(a))}))
+		end
+	end
+	return out
+end
+-- The hanging pendulum, degrees toward Wind.Direction; 0 when still (Reduced Motion, budget level 1).
+function Sim.fruitSway(k,now,wind,still)
+	if still or type(now)~="number"then return 0 end
+	wind=if type(wind)=="number"and wind==wind then math.clamp(wind,0,1)else 0
+	return(F.swayMin+F.swayGust*wind)*math.sin(now*F.swayHz+k)
+end
+-- The image centre for a stem tip, swung `angle` degrees downwind, at `scale` (the stem tip stays put).
+function Sim.fruitHang(stem,angle,scale)
+	local a=math.rad(angle or 0)
+	local r=F.hang*(scale or 1)
+	return stem+Wind.Direction*(r*math.sin(a))-Vector3.new(0,r*math.cos(a),0)
+end
+-- The ground under a landing, or nil and why: no number, too far below the crown (water, off the island), or not
+-- safe walkable ground (world.safe).
+function Sim.fruitGround(x,z,crownY,world)
+	local g=world and world.groundY and world.groundY(x,z)
+	if type(g)~="number"or g~=g or math.abs(g)==math.huge then return nil,"ground"end
+	if crownY-g>F.below then return nil,"low"end
+	if world.safe and not world.safe(x,z)then return nil,"water"end
+	return g
+end
+-- A resting point: clear of the camera, stations and pad (Sim.clear), the Dash course whether or not a race is live,
+-- every find spot and every park kerb grown by 2. false and the reason when not.
+function Sim.fruitClear(position,world)
+	world=world or {}
+	local ok,why=Sim.clear(position,world)
+	if not ok then return false,why end
+	for _,spot in ipairs(world.finds or {})do
+		if flat(position,spot)<F.find then return false,"find"end
+	end
+	for _,kerb in ipairs(world.kerbs or {})do
+		local dx,dz=(position.X-kerb.x)/(kerb.rx+F.kerb),(position.Z-kerb.z)/(kerb.rz+F.kerb)
+		if dx*dx+dz*dz<=1 then return false,"kerb"end
+	end
+	return true
+end
+
+local function sign(v)return if v<0 then -1 else 1 end
+local function screen(world,direction)
+	local right=world and world.right
+	return if typeof(right)=="Vector3"then right:Dot(direction)else 1
+end
+-- The whole flight of slot `slot` of crown i in gust n, let go at `now` from a sway of `sway` degrees; nil and why
+-- when any landing has no good ground or the resting point is in the way (the fruit stays on the tree).
+function Sim.fruitPlan(i,crown,slot,n,now,world,sway)
+	world=world or {}
+	local dir=Wind.Direction
+	local seed=n*16+i
+	local crownY=crown.position.Y
+	local release=Sim.fruitHang(slot.stem,F.tug,1)
+	local function land(at)
+		local g,why=Sim.fruitGround(at.X,at.Z,crownY,world)
+		if not g then return nil,why end
+		return Vector3.new(at.X,g+F.lift,at.Z)
+	end
+	local p1,why=land(release+dir*F.drift)
+	if not p1 then return nil,why end
+	local p2;p2,why=land(p1+dir*F.bounces[1].drift)
+	if not p2 then return nil,why end
+	local p3;p3,why=land(p2+dir*F.bounces[2].drift)
+	if not p3 then return nil,why end
+	local turn=math.rad((Wind.hash(seed,16)*2-1)*F.rollTurn)
+	local heading=Vector3.new(dir.X*math.cos(turn)+dir.Z*math.sin(turn),0,-dir.X*math.sin(turn)+dir.Z*math.cos(turn))
+	local length=F.rollMin+(F.rollMax-F.rollMin)*Wind.hash(seed,15)
+	local p4;p4,why=land(p3+heading*length)
+	if not p4 then return nil,why end
+	local ok;ok,why=Sim.fruitClear(p4,world)
+	if not ok then return nil,why end
+	local dot=screen(world,dir)
+	local s,sr=sign(dot),sign(screen(world,heading))
+	local r0=-F.tug*dot
+	local r3=r0+F.turn*s
+	-- The roll turns about 150 a stud and ends leaning 12 the way it went (the nearest such angle: no snap at rest).
+	local lean=F.lean*sr
+	local r4=lean+360*math.floor((r3+sr*F.spin*length-lean)/360+.5)
+	local t1=now+F.letGo
+	local t2=t1+F.fall
+	local t3=t2+F.bounces[1].time
+	local t4=t3+F.bounces[2].time
+	local t5=t4+F.roll
+	return{i=i,key=slot.key,k=slot.k,n=n,stem=slot.stem,crownY=crownY,start=now,sway=sway or 0,dot=dot,
+		release=release,p1=p1,p2=p2,p3=p3,p4=p4,rest=p4,heading=heading,length=length,r0=r0,r3=r3,r4=r4,
+		t1=t1,t2=t2,t3=t3,t4=t4,t5=t5,t6=t5+F.rest,lands={t2,t3,t4},poll=t5,pose={}}
+end
+
+local function hop(a,b,height,u)
+	u=math.clamp(u,0,1)
+	return a:Lerp(b,u)+Vector3.new(0,height*4*u*(1-u),0)
+end
+-- Where a loose fruit is now: {position, rotation, w, h (gui scale), transparency, phase}; phase is "tug", "fall",
+-- "bounce", "roll", "rest", "bat", "fade" or "gone". Reuses plan.pose.
+function Sim.fruitPose(plan,now)
+	local pose=plan.pose
+	local w,h,position,rotation,phase=1,1,nil,nil,nil
+	if now<plan.t1 then
+		local u=math.clamp((now-plan.start)/F.letGo,0,1)
+		local angle=plan.sway+(F.tug-plan.sway)*u
+		position,rotation,phase=Sim.fruitHang(plan.stem,angle,1),-angle*plan.dot,"tug"
+	elseif now<plan.t2 then
+		local u=(now-plan.t1)/F.fall
+		local a,b=plan.release,plan.p1
+		position=Vector3.new(a.X+(b.X-a.X)*u,a.Y+(b.Y-a.Y)*u*u,a.Z+(b.Z-a.Z)*u)
+		rotation,phase=plan.r0+(plan.r3-plan.r0)*u,"fall"
+	elseif now<plan.t3 then
+		position,rotation,phase=hop(plan.p1,plan.p2,F.bounces[1].height,(now-plan.t2)/(plan.t3-plan.t2)),plan.r3,"bounce"
+	elseif now<plan.t4 then
+		position,rotation,phase=hop(plan.p2,plan.p3,F.bounces[2].height,(now-plan.t3)/(plan.t4-plan.t3)),plan.r3,"bounce"
+	elseif now<plan.t5 then
+		local e=1-(1-(now-plan.t4)/F.roll)^2
+		position,rotation,phase=plan.p3:Lerp(plan.p4,e),plan.r3+(plan.r4-plan.r3)*e,"roll"
+	else
+		position,rotation,phase=plan.rest,plan.r4,"rest"
+		local bat=plan.bat
+		if bat and now<bat.done then
+			local t=now-bat.start
+			position=if t<F.batTime then hop(bat.from,bat.to,F.batUp,t/F.batTime)else hop(bat.to,bat.to,F.batBounce,(t-F.batTime)/F.batBounceTime)
+			rotation,phase=plan.r4+bat.s*F.batTurn*smooth(t/(F.batTime+F.batBounceTime)),"bat"
+		else
+			local at=Wind.at(plan.rest,now)
+			if at>F.rockAt then rotation+=F.rock*math.clamp((at-F.rockAt)/(1-F.rockAt)*2,0,1)*math.sin(now*math.pi*2*F.rockHz)end
+		end
+	end
+	for _,landed in ipairs(plan.lands)do
+		local d=now-landed
+		if d>=0 and d<F.squash then w,h=F.squashW,F.squashH;break end
+	end
+	local fade=if now>=plan.t6 then(now-plan.t6)/F.fade else 0
+	if plan.quick then fade=math.max(fade,(now-plan.quick)/F.quick)end
+	local transparency=0
+	if fade>0 then
+		fade=math.min(fade,1)
+		local k=1-(1-F.shrink)*fade
+		w*=k;h*=k;transparency=fade
+		phase=if fade>=1 then "gone"else "fade"
+	end
+	pose.position,pose.rotation,pose.w,pose.h,pose.transparency,pose.phase=position,rotation,w,h,transparency,phase
+	return pose
+end
+
+-- A resting fruit batted by a pet at `pet`: a hop 1 stud straight away (or straight up when that spot fails the
+-- landing rules), one small bounce, a full turn. Once in its life. True when it hops.
+function Sim.fruitBat(plan,pet,now,world)
+	if plan.bat or plan.quick or now<plan.t5 or now>=plan.t6 or typeof(pet)~="Vector3"then return false end
+	local from=plan.rest
+	local away=Vector3.new(from.X-pet.X,0,from.Z-pet.Z)
+	away=if away.Magnitude>1e-3 then away.Unit else Wind.Direction
+	local to=from
+	local spot=from+away*F.batAway
+	local g=Sim.fruitGround(spot.X,spot.Z,plan.crownY,world)
+	if g then
+		local landing=Vector3.new(spot.X,g+F.lift,spot.Z)
+		if Sim.fruitClear(landing,world)then to=landing end
+	end
+	local done=now+F.batTime+F.batBounceTime
+	plan.bat={start=now,from=from,to=to,s=sign(screen(world,if to==from then away else to-from)),done=done,straight=to==from}
+	plan.rest=to
+	table.insert(plan.lands,now+F.batTime);table.insert(plan.lands,done)
+	plan.t6=math.max(plan.t6,done)
+	return true
+end
+
+-- The garden's fruit: which slots are empty (and since when), which crowns are armed for a gust, the loose ones.
+local Orchard={};Orchard.__index=Orchard
+Sim.Orchard=Orchard
+function Orchard.new()return setmetatable({armed={},last={},empty={},loose={}},Orchard)end
+-- Parked: the loose ones forgotten (their slots still regrow on time).
+function Orchard:clear()table.clear(self.loose)end
+-- Reduced Motion: none loose, every slot just filled (no regrow pop).
+function Orchard:refill()table.clear(self.loose);table.clear(self.empty)end
+-- A slot's hanging scale now: 1, 0 to 1.12 to 1 while it regrows, nil while it is empty.
+function Orchard:hanging(key,now)
+	local at=self.empty[key]
+	if not at then return 1 end
+	local t=now-at-F.regrow
+	if t<0 then return nil end
+	if t>=F.grow then self.empty[key]=nil;return 1 end
+	local u=t/F.grow
+	return if u<.7 then F.overshoot*smooth(u/.7)else F.overshoot-(F.overshoot-1)*smooth((u-.7)/.3)
+end
+-- The gust number when crown i's wind first passes dropAt (once a gust, re-armed under rearm), else nil.
+function Orchard:gust(i,position,now,at)
+	at=if type(at)=="number"then at else Wind.at(position,now)
+	if at<F.rearm then self.armed[i]=nil;return nil end
+	if at<F.dropAt or self.armed[i]==false then return nil end
+	self.armed[i]=false
+	local t=Wind.localTime(position,now)
+	if not t then return nil end
+	local n=math.floor(t/Wind.Slot+.5)
+	if self.last[i]==n then return nil end
+	self.last[i]=n
+	return n
+end
+-- Gust n at crown i: the seeded chance, then the seeded filled slot (one `shown` holds, when given), then the flight.
+-- The plan, or nil and why ("cap", "chance", "empty", "unseen", or a landing rule).
+function Orchard:drop(i,crown,stems,n,now,world,cap,sway,shown)
+	if #self.loose>=(cap or 0)then return nil,"cap"end
+	local seed=n*16+i
+	if Wind.hash(seed,13)>=F.chance then return nil,"chance"end
+	local filled={}
+	for _,slot in ipairs(stems)do if self.empty[slot.key]==nil then table.insert(filled,slot)end end
+	if #filled==0 then return nil,"empty"end
+	local slot=filled[math.floor(Wind.hash(seed,14)*#filled)+1]
+	if shown and not shown[slot.key]then return nil,"unseen"end
+	local plan,why=Sim.fruitPlan(i,crown,slot,n,now,world,if sway then sway(slot)else 0)
+	if not plan then return nil,why end
+	self.empty[slot.key]=now
+	table.insert(self.loose,plan)
+	return plan
+end
+-- Moves the loose fruit on: gone once faded, past Sim.Drop or over the cap; a quick fade near the camera or while a
+-- race is live; a bat when a pet (flat, within F.bat) is by a resting one, on arrival and every poll. The live list.
+-- pets: {Vector3} or a function returning them, called at most once a step and only when a poll is due.
+function Orchard:step(now,world,pets,cap,live)
+	local loose=self.loose
+	local camera=world and world.camera
+	local list=if type(pets)=="table"then pets else nil
+	for index=#loose,1,-1 do
+		local plan=loose[index]
+		local position=Sim.fruitPose(plan,now).position
+		if plan.pose.phase=="gone"or index>(cap or 0)or(camera and(position-camera).Magnitude>Sim.Drop)then
+			table.remove(loose,index)
+			continue
+		end
+		if not plan.quick and(live or(camera and(position-camera).Magnitude<F.near))then plan.quick=now end
+		if not plan.bat and not plan.quick and now>=plan.poll and now<plan.t6 and pets then
+			plan.poll=now+F.poll
+			if not list then
+				local ok,got=pcall(pets)
+				list=if ok and type(got)=="table"then got else {}
+			end
+			local best,nearest=F.bat,nil
+			for _,pet in ipairs(list)do
+				if typeof(pet)=="Vector3"then
+					local d=flat(plan.rest,pet)
+					if d<=best then best,nearest=d,pet end
+				end
+			end
+			if nearest then Sim.fruitBat(plan,nearest,now,world)end
+		end
+	end
+	return loose
 end
 
 return table.freeze(Sim)
