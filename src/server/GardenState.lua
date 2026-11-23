@@ -404,7 +404,10 @@ function Garden:catchUp(actor,input,position,now)
     self.Catchup=Catchup
     actor.catch=actor.catch or {}
     local gap=distance(position,input.anchor)
-    local why=Catchup.step(actor.catch,now,gap,position,actor.pairId==nil)
+    -- Stuck counts only while following or in a wanderPause: a sit (settle and its rest), a nook rest or a greeting
+    -- far from the anchor is play, not stuck (code review 2).
+    local tracking=actor.pairId==nil and(actor.behavior=="follow"or actor.action=="wanderPause")
+    local why=Catchup.step(actor.catch,now,gap,position,tracking)
     if not why then return false end
     local racing=false
     for _,race in pairs(self.racers or {})do if race then racing=true;break end end

@@ -100,6 +100,32 @@ return function(_server)
 			assert(Catchup.clear(onPad[1],onPad[2],false)or Catchup.courseDistance(onPad[1],onPad[2])<Catchup.CourseKeep)
 			assert(not Catchup.clear(onPad[1],onPad[2],true),"the pad while racing")
 		end
+		-- Code review 5: never across an island wall from the owner's anchor.
+		local w=Bounds.Walls[1]
+		local mx,mz=(w.x1+w.x2)/2,(w.z1+w.z2)/2
+		local dx,dz=w.x2-w.x1,w.z2-w.z1
+		local len=math.sqrt(dx*dx+dz*dz);local nx,nz=-dz/len,dx/len
+		assert(Catchup.crossesWall(mx-nx*2,mz-nz*2,mx+nx*2,mz+nz*2),"through the middle")
+		assert(not Catchup.crossesWall(mx-nx*2,mz-nz*2,mx-nx*1,mz-nz*1),"same side")
+		assert(not Catchup.crossesWall(w.x1-dx,w.z1-dz,w.x1-dx*.5+nx,w.z1-dz*.5+nz),"beyond its end")
+		if open then
+			local ok2=Catchup.clear(open[1],open[2],false,Vector3.new(open[1]+1,0,open[2]))
+			assert(ok2,"a short open hop is fine")
+		end
+		local across,whyAcross=false,nil
+		for _,wall in ipairs(Bounds.Walls)do
+			local cx,cz=(wall.x1+wall.x2)/2,(wall.z1+wall.z2)/2
+			local ddx,ddz=wall.x2-wall.x1,wall.z2-wall.z1
+			local l=math.sqrt(ddx*ddx+ddz*ddz);local px,pz=-ddz/l,ddx/l
+			for _,sgn in ipairs({1,-1})do
+				local tx,tz=cx+px*sgn*Catchup.WallKeep*1.5,cz+pz*sgn*Catchup.WallKeep*1.5
+				if Bounds.safeCell(tx,tz)and select(1,Catchup.clear(tx,tz,false))then
+					local okA,why2=Catchup.clear(tx,tz,false,Vector3.new(cx-px*sgn*2,0,cz-pz*sgn*2))
+					assert(not okA and why2=="across",tostring(why2));across=true
+				end
+			end
+		end
+		assert(across,"found a safe spot by a wall to test")
 		-- Off the island: never.
 		local off,whyOff=Catchup.clear(5000,5000,false);assert(not off and whyOff=="ground")
 	end)

@@ -246,6 +246,24 @@ return function(server)
         c:move(Vector3.new(120,0,0));for _=1,4 do c:step(.5)end
         assert(c.racing==true and c.garden.actors[1].hop)
     end)
+    test("G1 code review 2: a sit (settle, then its rest) or a nook rest 8-19 studs from the anchor never counts as stuck",function()
+        for _,case in ipairs({{"settle",14},{"nookRest",6}})do
+            local c=hopper(true)
+            local actor=c.garden.actors[1]
+            local far=c.inputs[1].anchor+Vector3.new(12,0,0)
+            c.garden:transition(actor,"rest",far,case[2],case[1])
+            actor.from=Activity.pack(far);actor.to=Activity.pack(far);actor.path=nil
+            for _=1,math.ceil((case[2]+6)/.5)do c:step(.5);assert(c.garden.actors[1].hop==nil,case[1].." poofed at "..c.now)end
+        end
+        -- A wanderPause far from the anchor does count (the pet is not getting back).
+        local c=hopper(true,nil,{resolveTarget=function(_,from)return from,true end})
+        local actor=c.garden.actors[1]
+        local far=c.inputs[1].anchor+Vector3.new(12,0,0)
+        c.garden:transition(actor,"rest",far,30,"wanderPause")
+        actor.from=Activity.pack(far);actor.to=Activity.pack(far);actor.path=nil
+        for _=1,12 do c:step(.5)end
+        assert(c.garden.actors[1].hop and c.garden.actors[1].hop.why=="stuck","a far wanderPause")
+    end)
     test("G1 off: the switch off writes no actor field; with no options the snapshot is today's",function()
         local plain=hopper(nil);local off=hopper(false)
         for _,c in ipairs({plain,off})do c:move(Vector3.new(120,0,0));for _=1,12 do c:step(.5)end end

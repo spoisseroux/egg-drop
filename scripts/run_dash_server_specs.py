@@ -17,7 +17,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LUAU = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / "build/luau-cli/luau.exe")
+LUAU = str(Path(sys.argv[1]).resolve()) if len(sys.argv) > 1 else str(ROOT / "build/luau-cli/luau.exe")
 BASE = sys.argv[2] if len(sys.argv) > 2 else "46ab954"
 LIVE = sys.argv[3] if len(sys.argv) > 3 else "aeae2d9"
 ONLY = os.environ.get("DASH_SPECS", "").split()

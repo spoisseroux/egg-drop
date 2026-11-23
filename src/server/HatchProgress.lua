@@ -320,7 +320,7 @@ end
 function Hatching.load(userId, profile, adapter)
 	adapter = adapter or defaultAdapter()
 	local handle = {
-		key = ProgressKey.of(userId), userId = userId, adapter = adapter, token = adapter.guid(),
+		key = if profile and type(profile.key) == "string" then profile.key else ProgressKey.of(userId), userId = userId, adapter = adapter, token = adapter.guid(),
 		status = "Loading", busy = false, nextRunSeq = 1, restricted = true,
 	}
 	if profile and profile.loadFailed then

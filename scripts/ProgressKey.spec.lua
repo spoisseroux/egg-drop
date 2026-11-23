@@ -20,7 +20,7 @@ return function(server)
 	local function test(name,run)run();table.insert(cases,name)end
 	assert(not Store.persistent,"specs only run on the in-memory store")
 	local OPEN={flags={FreshSaveCommand=true}}
-	local function clean(id)Key.forget(id);Key.inject(nil)end
+	local function clean(id)Key.forget(id);Key.markOwner(id,false);Key.inject(nil)end
 
 	test("gate: the flag, and the in-memory store or the beta place in the beta universe; never live",function()
 		local on={FreshSaveCommand=true}
@@ -44,6 +44,8 @@ return function(server)
 		Key.inject({flags={}})
 		assert(Key.resolve(11,fake)=="player_11"and reads==0,"closed: no read")
 		Key.inject(OPEN)
+		assert(Key.resolve(11,fake)=="player_11"and reads==0,"open, but not the owner: no read")
+		Key.markOwner(11,true)
 		assert(Key.resolve(11,fake)=="player_11"and reads==1 and Key.isBase(11))
 		local broken={GetAsync=function()error("DataStore down")end}
 		local key,why=Key.resolve(11,broken);assert(key==nil and why=="Locked","a failed read refuses")
@@ -58,6 +60,8 @@ return function(server)
 		local id=990001
 		Key.inject({flags={}});local k,why=Key.point(id,"fresh");assert(k==nil and why=="Closed")
 		Key.inject(OPEN)
+		k,why=Key.point(id,"fresh");assert(k==nil and why=="NotOwner","only the owner's pointer is written")
+		Key.markOwner(id,true)
 		k,why=Key.point(id,"restore");assert(k==nil and why=="NotFresh","nothing to restore")
 		assert(Key.point(id,"fresh")=="player_990001_fs1")
 		assert(Key.point(id,"fresh")=="player_990001_fs2","a second fresh save is a new key, never the old test save")
@@ -68,7 +72,7 @@ return function(server)
 	end)
 	test("loads: a fresh key is a brand-new save (newSave), the base save is untouched and comes back on restore",function()
 		local id=990002
-		Key.inject(OPEN)
+		Key.inject(OPEN);Key.markOwner(id,true)
 		Store:UpdateAsync(Key.base(id),function()return{bestScore=50,companionId="pip"}end)
 		local base=Progress.load(id)
 		assert(base.key=="player_990002"and base.newSave==false and base.bestScore==50 and not base.loadFailed)
@@ -89,7 +93,7 @@ return function(server)
 	end)
 	test("loads: an unreadable pointer refuses the load (loadFailed, nothing saved, not a new save); hydrate takes the resolved key later",function()
 		local id=990003
-		Key.inject(OPEN)
+		Key.inject(OPEN);Key.markOwner(id,true)
 		Store:UpdateAsync(Key.pointer(id),function()return{version=1,suffix="broken"}end)
 		local refused=Progress.load(id)
 		assert(refused.loadFailed==true and refused.newSave==false and refused.key=="player_990003")
@@ -104,6 +108,21 @@ return function(server)
 		local handle={status="Ready",key="player_990003_fs1",profileRecord=nil,state={inventoryMask=0}}
 		Session.hydrate(refused,handle)
 		assert(refused.key=="player_990003_fs1","the refused profile's placeholder key follows the handle")
+		clean(id)
+	end)
+	test("code review 4/6: another player on the beta never has the pointer read; HatchProgress takes the profile's key",function()
+		local id=990004
+		Key.inject(OPEN);Key.markOwner(id,false)
+		Store:UpdateAsync(Key.pointer(id),function()return{version=1,suffix=7,last=7}end)
+		local reads=0
+		local spy={GetAsync=function(_,key)reads+=1;return Store:GetAsync(key)end}
+		assert(Key.resolve(id,spy)=="player_990004"and reads==0,"not the owner: base, no read")
+		local profile=Progress.load(id)
+		assert(profile.key=="player_990004"and not profile.loadFailed,"a pointer left for a non-owner is ignored")
+		local seen={}
+		local handle=Hatching.load(id,{key="player_990004_fs9",rank=1},{now=function()return 1700000000 end,guid=function()return "g"end,
+			random=function()return .1 end,wait=function()end,update=function(key,transform)table.insert(seen,key);return transform(nil)end})
+		assert(handle.key=="player_990004_fs9"and seen[1]=="player_990004_fs9","the profile's key wins")
 		clean(id)
 	end)
 	return{passed=#cases,cases=cases}

@@ -6,8 +6,8 @@
 --
 -- Pure rules here (GardenState keeps one `catch` table per actor and asks step / done):
 --   far    the pet's flat distance to the owner's ground anchor (input.anchor) over Far for FarHold seconds
---   stuck  over StuckNear from the anchor and the pet itself has not moved StuckGain studs in StuckSeconds, whatever it
---          is doing (a far follow that stops short, or a sit or pause where it got stuck); never in a greeting
+--   stuck  over StuckNear from the anchor and the pet itself has not moved StuckGain studs in StuckSeconds, while it is
+--          following or in a wanderPause (GardenState passes `tracking`); never in a sit, a nook rest or a greeting
 --   rate   Cooldown after a hop, Retry after a search that found no landing; Burst hops in BurstWindow -> BurstQuiet
 -- Landing: rings round input.anchor (candidates), each checked by the server for walkable ground and by clear() here.
 -- Every number is a field so Studio tuning is a one-line change.
@@ -78,7 +78,8 @@ local function flat(a,b)return math.sqrt((a.X-b.X)^2+(a.Z-b.Z)^2)end
 Catchup.flat=flat
 
 -- Pure: one decide's look at a pet. `t` is the actor's own table (kept between calls), `gap` the flat studs to the
--- anchor, `at` the pet's position, `following` false in a greeting (no stuck clock). Returns "far", "stuck" or nil.
+-- anchor, `at` the pet's position, `following` true while the stuck clock may run (following or a wanderPause).
+-- Returns "far", "stuck" or nil.
 function Catchup.step(t,now,gap,at,following)
 	if t.seenAt==nil or now-t.seenAt>Catchup.Gap then t.farSince,t.still,t.stillAt=nil,nil,nil end
 	t.seenAt=now
@@ -149,14 +150,27 @@ function Catchup.courseDistance(x,z)
 	for _,points in ipairs(line)do best=math.min(best,lineDistance(x,z,points))end
 	return best
 end
--- Pure: is (x, z) clear for a landing? Safe walk-map ground (IslandGround), WallKeep from every island wall, and while
--- a race is live clear of the course and the waiting pad. false and the reason when not.
-function Catchup.clear(x,z,racing)
+-- Pure: does the flat segment (ax, az) to (bx, bz) cross an island wall's centre line? (code review 5)
+local function side(ax,az,bx,bz,cx,cz)return(bx-ax)*(cz-az)-(bz-az)*(cx-ax)end
+function Catchup.crossesWall(ax,az,bx,bz)
+	for _,w in ipairs(Bounds.Walls)do
+		local d1,d2=side(w.x1,w.z1,w.x2,w.z2,ax,az),side(w.x1,w.z1,w.x2,w.z2,bx,bz)
+		local d3,d4=side(ax,az,bx,bz,w.x1,w.z1),side(ax,az,bx,bz,w.x2,w.z2)
+		if((d1>0)~=(d2>0)or d1==0 or d2==0)and((d3>0)~=(d4>0)or d3==0 or d4==0)
+			and not(d1==0 and d2==0 and d3==0 and d4==0)then return true,w.id end
+	end
+	return false
+end
+-- Pure: is (x, z) clear for a landing? Safe walk-map ground (IslandGround), WallKeep from every island wall, not across
+-- one from `from` (the owner's anchor, a Vector3, optional), and while a race is live clear of the course and the
+-- waiting pad. false and the reason when not.
+function Catchup.clear(x,z,racing,from)
 	if type(x)~="number"or type(z)~="number"or x~=x or z~=z then return false,"spot"end
 	if not Bounds.safeCell(x,z)then return false,"ground"end
 	for _,wall in ipairs(Bounds.Walls)do
 		if Bounds.distance(wall,x,z)<Catchup.WallKeep then return false,"wall"end
 	end
+	if typeof(from)=="Vector3"and Catchup.crossesWall(from.X,from.Z,x,z)then return false,"across"end
 	if racing then
 		if Catchup.courseDistance(x,z)<Catchup.CourseKeep then return false,"course"end
 		local pad=Course.Pad

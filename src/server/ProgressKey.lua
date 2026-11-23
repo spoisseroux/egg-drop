@@ -9,8 +9,8 @@
 -- so a late write from the old session lands on the key that session loaded (profile.key, handle.key), never on the
 -- new one.
 --
--- resolve(userId) runs once per load (addPlayer, and the reload loop through Progress.load). With the gate closed it
--- reads nothing and answers the base key. With it open it reads the pointer; a failed read or a malformed pointer
+-- resolve(userId) runs once per load (addPlayer, and the reload loop through Progress.load). With the gate closed, or
+-- for anyone but the owner (markOwner, set by init before the load), it reads nothing and answers the base key. With it open it reads the pointer; a failed read or a malformed pointer
 -- answers nil, and the caller refuses the load like a lock (Progress.load: loadFailed, so nothing is saved) and tries
 -- again later: it never falls back to the base key.
 local Store=require(script.Parent.ProgressStore)
@@ -19,6 +19,7 @@ Key.BetaPlace=107705084891479   -- Pocket Pals Beta
 Key.BetaUniverse=10777916361
 Key.MaxSuffix=100000
 local active={} -- userId -> the key resolved at its last load
+local owners={} -- userId -> true: the only players whose pointer is ever read (code review 4)
 local injected=nil
 
 function Key.base(userId)return "player_"..tostring(userId)end
@@ -62,7 +63,7 @@ end
 -- The key this player loads on, or nil and "Locked" (pointer unreadable or malformed: refuse the load).
 function Key.resolve(userId,store)
 	store=store or Store
-	if not Key.enabled()then
+	if not Key.enabled()or not owners[userId]then
 		active[userId]=nil
 		return Key.base(userId)
 	end
@@ -78,6 +79,9 @@ function Key.resolve(userId,store)
 	return target
 end
 -- The key resolved at this player's last load (the base key before any resolve, or with the gate closed).
+-- init marks each joining player before Progress.load (true only for the owner, asked only with the gate open).
+function Key.markOwner(userId,owner)owners[userId]=if owner==true then true else nil end
+function Key.isOwner(userId)return owners[userId]==true end
 function Key.of(userId)
 	return active[userId]or Key.base(userId)
 end
@@ -89,6 +93,7 @@ function Key.forget(userId)active[userId]=nil end
 function Key.point(userId,action,store)
 	store=store or Store
 	if not Key.enabled()then return nil,"Closed"end
+	if not owners[userId]then return nil,"NotOwner"end
 	if action~="fresh"and action~="restore"then return nil,"Unknown"end
 	local why=nil
 	local ok,result=pcall(store.UpdateAsync,store,Key.pointer(userId),function(previous)

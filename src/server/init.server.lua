@@ -211,6 +211,7 @@ local function petState(board)
 			or(today==state.petDay and state.petCount>=Nursery.PetDailyCap)}
 end
 local gardenScene
+local sceneWatch -- the one DescendantAdded listener of the current garden scene (beta and Studio only)
 local function petAnchor(state)
 	local room=workspace:FindFirstChild("EggDropLounge")
 	local floor=room and room:FindFirstChild("Floor")
@@ -234,16 +235,21 @@ gardenScene=function()
  if not room then return nil end
  if not wanderScene or wanderScene.room~=room then
   wanderScene={room=room,wet={},stations={},solids={}}
-  -- Beta (12) QA G1 review: a blocked or wet footprint added after this cache was built (the plaza nest's
-  -- GardenBlockedRegion box, made at runtime) joins the wet list too, so pet paths, wanders and catch-up landings
-  -- reject it. Checked a frame later, so an attribute set just after parenting counts.
-  local scene=wanderScene
-  room.DescendantAdded:Connect(function(node)
-   task.defer(function()
-    if wanderScene~=scene or not node:IsA("BasePart")or not node:IsDescendantOf(room)or table.find(scene.wet,node)then return end
-    if node:GetAttribute("GardenWetRegion")==true or node:GetAttribute("GardenBlockedRegion")==true then table.insert(scene.wet,node)end
+  -- Beta (12) QA G1 (code review 3): on the beta and in Studio only (the catch-up or onboarding v3 ceiling), a blocked
+  -- or wet footprint added after this cache was built (the plaza nest's GardenBlockedRegion box) joins the wet list,
+  -- so pet paths, wanders and catch-up landings reject it. The attribute must be set before the part is parented.
+  -- One listener: a rebuilt scene disconnects the old one.
+  if sceneWatch then sceneWatch:Disconnect();sceneWatch=nil end
+  local watch=false
+  pcall(function()watch=PetCatchup.ceiling()or require(ReplicatedStorage.Shared.Onboard).ceiling()end)
+  if watch then
+   local scene=wanderScene
+   sceneWatch=room.DescendantAdded:Connect(function(node)
+    if not node:IsA("BasePart")then return end
+    if node:GetAttribute("GardenWetRegion")~=true and node:GetAttribute("GardenBlockedRegion")~=true then return end
+    if wanderScene==scene and not table.find(scene.wet,node)then table.insert(scene.wet,node)end
    end)
-  end)
+  end
   for _,node in ipairs(room:GetDescendants())do
    -- Merged island meshes span the world; their bounds would block every rest path.
    -- Park colliders (players only) never block pet rest paths; pets are visuals.
@@ -301,13 +307,15 @@ end
 local function catchupLanding(input,racing)
 	local anchor=input and input.anchor
 	if typeof(anchor)~="Vector3"then return nil end
+	-- With no garden scene nothing can be checked: refuse (resolveGardenTarget would hand the spot back unchecked).
+	if not gardenScene()then return nil end
 	local facing=nil
 	local root=input.root
 	if root and root.Parent then local look=root.CFrame.LookVector;facing=Vector3.new(look.X,0,look.Z)end
 	for _,candidate in ipairs(PetCatchup.candidates(anchor,facing))do
 		local spot=resolveGardenTarget(candidate,nil)
 		if typeof(spot)=="Vector3"and PetCatchup.flat(spot,candidate)<=.5 and math.abs(spot.Y-anchor.Y)<=PetCatchup.Rise
-			and PetCatchup.clear(spot.X,spot.Z,racing)then return spot end
+			and PetCatchup.clear(spot.X,spot.Z,racing,anchor)then return spot end
 	end
 	return nil
 end
@@ -820,6 +828,17 @@ local function addPlayer(player)
 		return
 	end
 	loading[player] = true
+	-- Beta (12) QA T1 (code review 4): only the owner's fresh-save pointer is ever read; everyone else is player_<id>
+	-- with no extra read. isOwner is asked only where the gate is open (never on live).
+	do
+		local ProgressKey = require(script.ProgressKey)
+		local owner = false
+		if ProgressKey.enabled() then
+			local ok, result = pcall(require(ReplicatedStorage.Shared.SimCheck).isOwner, player)
+			owner = ok and result == true
+		end
+		ProgressKey.markOwner(player.UserId, owner)
+	end
 	local profile = Progress.load(player.UserId)
 	local nursery = Nursery.load(player.UserId, profile)
 	-- v2 S2: the pet that earns stat XP for quests, stamps and book milestones.
@@ -913,12 +932,15 @@ local function addPlayer(player)
 	end
 	-- Private beta: the owner's test save gets a one-time 1,000 Star top-up (the Bunny is 400).
 	-- Not on a fresh test save (beta (12) QA T1): a first-session test starts with no Stars, so only the base key gets it.
-	if game.PlaceId == Nursery.BetaPlaceId and require(ReplicatedStorage.Shared.SimCheck).isOwner(player)
-		and board.nursery.key == require(script.ProgressKey).base(player.UserId) then
+	-- Checked again on every try: a refused first load (unreadable pointer) reloads later onto whatever key resolves.
+	if game.PlaceId == Nursery.BetaPlaceId and require(ReplicatedStorage.Shared.SimCheck).isOwner(player) then
+		local baseKey = require(script.ProgressKey).base(player.UserId)
 		task.spawn(function()
 			for _ = 1, 30 do
 				if boards[player] ~= board or board.closing then return end
-				if canProgress(board) and not board.nurseryBusy and not board.nursery.busy and not board.nursery.pending then
+				if canProgress(board) and board.nursery.key ~= baseKey then return end
+				if canProgress(board) and not board.nurseryBusy and not board.nursery.busy and not board.nursery.pending
+					and board.nursery.key == baseKey then
 					board.nurseryBusy = true
 					local ok, why = Nursery.betaGrantStars(board.nursery, "beta:stars:2026-11-20", 1000)
 					board.nurseryBusy = false
