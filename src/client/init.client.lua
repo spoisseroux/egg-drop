@@ -4556,6 +4556,7 @@ gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
 do
  local ok,problem=pcall(function()
   clientUI.dash=require(script.DashClient).mount({remotes=remotes,roomView=roomView,playerGui=gui.Parent,audio=audio,reduced=reduceEffects,
+   strip=function()return if clientUI.tomorrow then clientUI.tomorrow()else nil end,
    state=function()return nurseryState end,canRoam=function()return roomView.canRoam()end,
    modalOpen=function()return clientUI.anyModalOpen(true)end,
    closeMenus=function()
@@ -4598,6 +4599,67 @@ do
  end)
  if ok and clientUI.finds then gui.Destroying:Connect(function()clientUI.finds:destroy()end)
  elseif not ok then warn("[Finds] not mounted: "..tostring(problem))end
+end
+-- The Sleepy Nest in the garden (NestClient, Onboarding v3 slice D): nil with the build ceiling off; with the switch off
+-- it only watches the switch. clientUI.nestPlace is where the Bear's prints end (BearNeeds' needNest reads it), and
+-- clientUI.tomorrow is the See you tomorrow strip's model for the results screens (slice E; nil with the nest off).
+do
+ local ok,problem=pcall(function()
+  local Onboard=require(ReplicatedStorage.Shared.Onboard)
+  if not Onboard.ceiling()then return end
+  local How=require(script.HowItWorks)
+  local Confirm=require(script.ConfirmDialog)
+  local Strip=require(script.TomorrowStrip)
+  local Preview=require(script.EggPreview3D)
+  local asked=false
+  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
+  local toaster
+  clientUI.nest=require(script.NestClient).mount({remotes=remotes,player=player,
+   audio={play=function(_,name,speed,volume)
+    if clientUI.ambient and clientUI.ambient:has(name)then return clientUI.ambient:play(name,speed,volume)end
+    return audio:play(name,speed,volume)
+   end},
+   reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+   root=function()
+    local character=player.Character
+    local root=character and character:FindFirstChild("HumanoidRootPart")
+    local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+    return if root and humanoid and humanoid.Health>0 then root.Position else nil
+   end,
+   free=function()
+    return board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy
+     and not roomView.dashHeld and roomView.focusing~=true and(clientUI.dash==nil or clientUI.dash.seat==nil)
+   end,
+   busy=function()return clientUI.anyModalOpen()==true or How.isOpen()or Confirm.isOpen()or clientUI.arrivalHatch:isOpen()end,
+   compact=function()local camera=workspace.CurrentCamera;return camera~=nil and math.min(camera.ViewportSize.X,camera.ViewportSize.Y)<500 end,
+   chipHost=function()return if roomView.controls and roomView.controls.Parent then roomView.controls else nil end,
+   show=function()local things=clientUI.things;return things~=nil and things.show("nest")end,
+   toast=function(text,stars)
+    toaster=toaster or require(script.DeckKit).toaster(player:WaitForChild("PlayerGui"))
+    toaster.show(text,stars,"nest:"..text)
+   end,
+   ground=function(at)
+    local skip={}
+    for _,other in ipairs(Players:GetPlayers())do if other.Character then table.insert(skip,other.Character)end end
+    params.FilterDescendantsInstances=skip
+    local hit=workspace:Raycast(at+Vector3.new(0,6,0),Vector3.new(0,-12,0),params)
+    return hit and hit.Position.Y
+   end,
+   measure=function(text,size)return TextService:GetTextSize(text,size,Enum.Font.FredokaOne,Vector2.new(1000,100)).X end,
+   meshes=function()
+    local copies=Preview.cloneTemplates()
+    if not copies and not asked then asked=true;Preview.loadTemplates(function()end)end
+    return copies
+   end})
+  if not clientUI.nest then return end
+  clientUI.nestPlace=function()return clientUI.nest:place3D()end
+  clientUI.tomorrow=function()
+   return Strip.model({on=Onboard.on("nest"),nest=clientUI.nest:summary(),state=nurseryState})
+  end
+  clientUI.deckResults.tomorrow=clientUI.tomorrow
+ end)
+ if ok and clientUI.nest then gui.Destroying:Connect(function()clientUI.nest:destroy()end)
+ elseif not ok then warn("[Nest] not mounted: "..tostring(problem))end
 end
 -- Garden life (GardenLife, Alive step 5): nil with the build ceiling off; with the switch off it only watches the switch.
 -- Petals, bubbles, birds on the perch AmbientAudio's chirp came from (it sets clientUI.ambient.onChirp while on) and
@@ -4695,6 +4757,10 @@ do
    local from=Things.on()and rootPosition()
    if not from then return false end
    if id=="park"or id=="parkInvite"then return trail:start({position=parkGate(from),name=Copy.get("park.name")})end
+   if id=="nest"then
+    local at=clientUI.nestPlace and clientUI.nestPlace()
+    return at~=nil and trail:start({position=at,name=Copy.get("onb3.nest.title")})
+   end
    if id=="finds"or id=="findsIntro"then
     local finds=findsNow()
     if not(finds and finds.nearest)then return false end

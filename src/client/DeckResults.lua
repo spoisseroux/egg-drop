@@ -178,6 +178,9 @@ end
 -- ── Phone (2.3): sheet 732x288 under the Roblox controls ────────────────────
 function Results:buildPhone(v)
  local W,H,cw,ch=v.W,v.H,v.cw,v.ch
+ -- Onboarding v3 slice E: the See you tomorrow strip takes 42 px off the cards, between them and the buttons.
+ if self.tomorrowOn then ch-=Results.TomorrowPhone end
+ self.cardBottom,self.phoneW=64+ch,W
  local root=Kit.frame(self.host,"Screen",nil,UDim2.new(),UDim2.fromScale(1,1));self.root=root
  local sheet=Kit.sheet(root,W,H)
  local body=Kit.frame(root,"Body",nil,UDim2.new(),UDim2.fromScale(1,1));body.ZIndex=sheet.ZIndex+3
@@ -483,13 +486,15 @@ end
 function Results:placeButtons(hatch)
  if self.phone or self.compact then return end
  self.hatch.Visible=hatch
- self.replay.Position=UDim2.fromOffset(24,484)
+ -- With the See you tomorrow strip the buttons move down under it and the key hints give way.
+ local y=if self.tomorrowOn then Results.TomorrowButtonsY else 484
+ self.replay.Position=UDim2.fromOffset(24,y)
  if hatch then
-  self.hatch.Position=UDim2.fromOffset(432,484)
-  self.leave.Position,self.leave.Size=UDim2.fromOffset(664,484),UDim2.fromOffset(160,64)
+  self.hatch.Position=UDim2.fromOffset(432,y)
+  self.leave.Position,self.leave.Size=UDim2.fromOffset(664,y),UDim2.fromOffset(160,64)
   self:fitLeave(160)
  else
-  self.leave.Position,self.leave.Size=UDim2.fromOffset(432,484),UDim2.fromOffset(392,64)
+  self.leave.Position,self.leave.Size=UDim2.fromOffset(432,y),UDim2.fromOffset(392,64)
   self:fitLeave(392)
  end
  Kit.buttonState(self.leave).label.Size=UDim2.fromOffset(0,64)
@@ -644,7 +649,7 @@ function Results:paintCount(sample)
    self.newBest.root.Visible=data.newBest==true and not loss and b>0
    self.newBestScale.Scale=1.4-.4*backOut(b)
   end
-  if self.hints then self.hints.Visible=false;self.skipHint.Visible=true end
+  if self.hints then self.hints.Visible=false;self.skipHint.Visible=not self.tomorrowOn end
  else
   self.star.root.Visible=true
   self.star.root.Position=UDim2.fromOffset(self.centre.cx,self.centre.starY)
@@ -653,7 +658,7 @@ function Results:paintCount(sample)
   self.totalText.TextColor3=Kit.Color.stars
   for _,mini in ipairs(self.minis)do mini.Visible=false end
   if self.newBest then self.newBest.root.Visible=data.newBest==true and not loss;self.newBestScale.Scale=1 end
-  if self.hints then self.hints.Visible=true;self.skipHint.Visible=false end
+  if self.hints then self.hints.Visible=not self.tomorrowOn;self.skipHint.Visible=false end
   if self.wasCounting and not loss and not Kit.reduced()and not self.finaleClock then self.finaleClock=os.clock()end
   if self.wasCounting and not loss then Peek.hop()end -- T4: the pet hops when the count lands
  end
@@ -786,7 +791,15 @@ function Results:show(data,compact)
  self.feedback:setCountWindow(nil,nil)
  local opening=not self.visible
  if opening then self.spinOrigin=os.clock();self.lossCued=false end
- if not self.root or self.key~=Results.viewKey(compact)then self:build(compact)end
+ -- Onboarding v3 slice E: the See you tomorrow strip (a model from Results.tomorrow, set by the client; nil = none).
+ local tomorrow=self:tomorrowModel()
+ local tomorrowKey=if tomorrow and type(compact)=="table"then "|tomorrow"else ""
+ if not self.root or self.key~=Results.viewKey(compact)..tomorrowKey then
+  self.tomorrowOn=tomorrow~=nil
+  self:build(compact)
+  self.key=Results.viewKey(compact)..tomorrowKey
+ end
+ self.tomorrowOn=tomorrow~=nil and not self.compact
  self.data=data;self.visible=true;self.host.Parent.Visible=true
  local loss=Results.zeroPayout(data)
  -- Headline and subline.
@@ -815,6 +828,7 @@ function Results:show(data,compact)
   self.hintRight.Text="Replay keeps "..(data.difficulty or "Medium")..". Up on Replay changes difficulty."
   self:placeButtons(data.canHatch==true)
  end
+ self:paintTomorrow(tomorrow,opening)
  -- Pending save: Replay and Hatch disabled, Replay reads Saving…, focus to Leave.
  Kit.setEnabled(self.replay,not data.pending);Kit.setText(self.replay,if data.pending then "Saving…"elseif loss then "Try again"else "Replay")
  Kit.setEnabled(self.leave,data.canLeave~=false)
@@ -896,6 +910,43 @@ function Results:paintPhone(data)
  if not hatch then self.questText.Position=UDim2.fromOffset(40,0)end
  q.Active=false;q:SetAttribute("AccessibleLabel",if hatch then nil else BallThemes.strip(self.questText.Text))
  if self.focus==4 then self.focus=if hatch then 5 else 1 end
+end
+
+-- Onboarding v3 slice E ------------------------------------------------------------------------------------------
+Results.TomorrowPhone=42      -- the phone cards give up this much (36 strip + 6)
+Results.TomorrowY=472         -- desktop: under the come-back strip
+Results.TomorrowButtonsY=536  -- desktop: the buttons under it (the key hints give way)
+Results.TomorrowDelay=1       -- in after the count-up
+function Results:tomorrowModel()
+ local provider=self.tomorrow
+ if type(provider)~="function"then return nil end
+ local ok,model=pcall(provider)
+ return if ok and type(model)=="table"then model else nil
+end
+function Results:paintTomorrow(model,opening)
+ if not model or self.compact or not self.root then
+  if self.tomorrowStrip then self.tomorrowStrip:destroy();self.tomorrowStrip=nil end
+  if self.hints and not self.skipHint.Visible then self.hints.Visible=true end
+  return
+ end
+ local Strip=require(script.Parent.TomorrowStrip)
+ local strip=self.tomorrowStrip
+ if strip and(strip.root.Parent==nil or strip.phone~=self.phone)then strip:destroy();strip=nil end
+ if not strip then
+  strip=Strip.new(self.body or self.root,{phone=self.phone,wait=not self.phone})
+  strip.phone=self.phone
+  self.tomorrowStrip=strip
+ end
+ if self.hints then self.hints.Visible=false;self.skipHint.Visible=false end
+ if self.phone then
+  local width=math.max(240,(self.phoneW or 440)-40)
+  strip.root.Position=UDim2.fromOffset(20,(self.cardBottom or 0)+4)
+  strip:set(model,width)
+ else
+  strip.root.Position=UDim2.fromOffset(24,Results.TomorrowY)
+  strip:set(model,800)
+ end
+ if opening then strip:enter(Results.TomorrowDelay,Kit.reduced())end
 end
 
 function Results:hide()

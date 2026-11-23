@@ -4,6 +4,7 @@
 --   when it could not be drawn (nothing is left behind: no shade, no binding, no gui)
 --   low=true: in the bottom of the screen, so what is behind it (the pet, the course) stays in view; selected=n: the
 --   button Enter and a gamepad start on (the first one by itself).
+--   strip=<TomorrowStrip model> (Onboarding v3 slice E): the See you tomorrow strip between the lines and the buttons.
 -- Enter / A press the first (or the selected) button; B, Backspace or the round key go back.
 local ContextActionService=game:GetService("ContextActionService")
 local GuiService=game:GetService("GuiService")
@@ -15,8 +16,9 @@ Card.Action="EggDropDashCard"
 Card.DisplayOrder=15
 Card.Priority=Enum.ContextActionPriority.High.Value+820
 
--- Pure: the card for a W x H screen. `lineH` = the measured height of each line.
-function Card.layout(W,H,lineH,buttons)
+-- Pure: the card for a W x H screen. `lineH` = the measured height of each line. `strip` (optional): room for the
+-- See you tomorrow strip under the lines (44 + 8, 36 + 6 compact); its top is `stripY`.
+function Card.layout(W,H,lineH,buttons,strip)
 	local compact=H<=430 or W<=700
 	local pad=if compact then 14 else 20
 	local w=math.min(if compact then 440 else 500,W-24)
@@ -26,9 +28,12 @@ function Card.layout(W,H,lineH,buttons)
 	local lines={}
 	for index,height in ipairs(lineH)do lines[index]={y=y,h=height};y+=height+2 end
 	y+=10
+	local stripY,stripH=nil,0
+	if strip then stripY,stripH=y,if compact then 36 else 44;y+=stripH+(if compact then 6 else 8)end
 	local gap=10
 	local bw=math.floor((w-pad*2-gap*(buttons-1))/math.max(1,buttons))
-	return{compact=compact,pad=pad,w=w,h=math.min(H-8,y+bh+pad),titleH=titleH,lineW=w-pad*2,lines=lines,buttonY=y,bw=bw,bh=bh,gap=gap,text=if compact then 15 else 17}
+	return{compact=compact,pad=pad,w=w,h=math.min(H-8,y+bh+pad),titleH=titleH,lineW=w-pad*2,lines=lines,buttonY=y,bw=bw,bh=bh,gap=gap,text=if compact then 15 else 17,
+		stripY=stripY,stripH=stripH}
 end
 
 -- Pure: the low card. Small enough for the bottom of the screen: the last lines go before it passes a third of it.
@@ -94,10 +99,12 @@ function Card:build()
 	local size=self.root.AbsoluteSize
 	local W,H=math.max(320,size.X),math.max(240,size.Y)
 	local layout=if options.low then Card.lowLayout else Card.layout
-	local probe=layout(W,H,{},#options.buttons)
+	-- The strip rides the centred card only (the low card has no room for it).
+	local strip=if not options.low then options.strip else nil
+	local probe=layout(W,H,{},#options.buttons,strip~=nil)
 	local heights={}
 	for index,text in ipairs(options.lines)do heights[index]=math.max(20,math.ceil(Kit.measure(text,"Body",probe.text,probe.lineW).Y)+4)end
-	local g=layout(W,H,heights,#options.buttons)
+	local g=layout(W,H,heights,#options.buttons,strip~=nil)
 	local panel=Kit.frame(self.root,"DashCard","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(g.w,g.h),if g.compact then 16 else 22)
 	panel.AnchorPoint=Vector2.new(.5,.5);panel.Active=true;panel.ZIndex=20
 	if g.low then panel.AnchorPoint=Vector2.new(.5,1);panel.Position=UDim2.new(.5,0,1,-g.low)end
@@ -113,6 +120,17 @@ function Card:build()
 		if not g.lines[index]then break end
 		self.lines[index]=Kit.text(panel,"Body",text,"soft",{Name="Line"..index,Position=UDim2.fromOffset(g.pad,g.lines[index].y),Size=UDim2.fromOffset(g.lineW,g.lines[index].h),
 			TextSize=g.text,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
+	end
+	if strip and g.stripY then
+		local ok,problem=pcall(function()
+			local Strip=require(script.Parent.TomorrowStrip)
+			local view=Strip.new(panel,{phone=g.compact,short=g.w<Strip.NarrowCard,z=panel.ZIndex+2})
+			view.root.Position=UDim2.fromOffset(g.pad,g.stripY)
+			view:set(strip,g.lineW)
+			view:enter(.3,Kit.reduced and Kit.reduced())
+			self.strip=view
+		end)
+		if not ok then warn("[Dash] strip: "..tostring(problem))end
 	end
 	for index,spec in ipairs(options.buttons)do
 		local button=Kit.button(panel,spec.name,{variant=if spec.primary then "primary"else "secondary",text=spec.text,size=Vector2.new(g.bw,g.bh),

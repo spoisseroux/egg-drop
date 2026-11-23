@@ -28,7 +28,7 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
 # IsStudio true.
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
-          "BearNeeds", "FollowBear"]
+          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -45,7 +45,9 @@ def client_modules():
                     "AmbientAudio.lua", "AmbientPerches.lua", "AliveBudget.lua", "AeroAdditions.lua", "AeroFalls.lua",
                     # Onboarding v3 A+B: the needs, the tour gate, the station label tips and the pill's quiet stage.
                     "BearNeeds.lua", "NeedBubble.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
-                    "JournalPromptPriority.lua", "FirstSpendGuide.lua"):
+                    "JournalPromptPriority.lua", "FirstSpendGuide.lua",
+                    # Onboarding v3 D+E: the nest in the garden and the See you tomorrow strip.
+                    "NestClient.lua", "TomorrowStrip.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
