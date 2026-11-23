@@ -4,7 +4,7 @@ Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test 
 
 Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the game back as it was, `clear` follows the remote config. Use `off` to tell which piece caused a problem.
 
-## On the beta now (beta (11), runtime 9272c61)
+## On the beta now (beta (12), runtime 416ff26)
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
@@ -22,6 +22,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | 13 | **"See you tomorrow" strip** | (10) | On deck results and Dash results: nest time, tomorrow's stamp Stars, new quests | `/onboard nest off` |
 | 14 | **Waterfall layers** | (10) | Strands, white edges, foam, ripple rings, mist (fades near the camera), a faint rainbow | `/aero off` |
 | 15 | **Dewdrop fruit** | (11) | Under the lime trees: honey-coral drops with a leaf cap; in a strong gust some fall, bounce and roll, rest, then fade. Walk your pet near one: it hops. Two players see the same drops | `/alive life off` |
+| 16 | **Garden hour (1-hour day/night)** | (12) | OFF until you type `/hour on`. Then `/hour at 3100` (night: lamps, stars, fireflies; the Bear awake and readable), `/hour at 2600` (golden), `/hour at 120` (dawn), `/hour at 1000` (day); watch a blend (e.g. `/hour at 2350`) for jumps; `/hour off` puts the normal day back | `/hour off`, `/hour clear` |
 
 ## Built, not on the beta yet
 
