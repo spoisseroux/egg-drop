@@ -4,7 +4,7 @@ Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test 
 
 Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the game back as it was, `clear` follows the remote config. Use `off` to tell which piece caused a problem.
 
-## On the beta now (beta (9), runtime 6119afa)
+## On the beta now (beta (10), runtime e5edeb0)
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
@@ -17,6 +17,10 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | 7 | **Garden life** | (8) | A round bird lands on the crown where you hear a chirp, hops, flies off when you get close; butterflies over flowers; soap bubbles drift by; petals off the lime trees in gusts. Gone in deck rounds and races | `/alive life off` |
 | 8 | **Textured lime trees** | (9) | Lime crowns show leaf clumps and highlights, still lime, never olive or white | `/aero off` |
 | 9 | **Island edges** | (9) | Try to climb the mountains (east grass ramp by spawn, the north spur, behind the waterfall pool) and walk or jump off the island: blocked, or you're put back where you last stood. Pets never stuck behind a wall | `/bounds off` |
+| 11 | **New first session: follow the Bear + need bubbles** | (10) | On a NEW save: no tour cards; a hand bubble over the Bear (tap it, tap the Bear, or press G / L2) opens the greeting; then a ball bubble, paw prints and a "Hatch eggs" label; stand still 20 s for a hint. Returning saves see none of it | `/onboard follow off`, `/onboard needs off` |
+| 12 | **The Bear's Sleepy Nest + welcome week** | (10) | Next to the arch: "Ready in 8 h", walk up and Tuck in. After 8 h, Hatch: a gift (day 1 a beanie + 10 Stars ... day 7 a Nest Charm + 25), the next egg starts; HUD chip counts down. Never pays twice; nothing to buy | `/onboard nest off` |
+| 13 | **"See you tomorrow" strip** | (10) | On deck results and Dash results: nest time, tomorrow's stamp Stars, new quests | `/onboard nest off` |
+| 14 | **Waterfall layers** | (10) | Strands, white edges, foam, ripple rings, mist (fades near the camera), a faint rainbow | `/aero off` |
 
 ## Built, not on the beta yet
 
