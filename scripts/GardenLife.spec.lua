@@ -208,7 +208,7 @@ return function(client)
 			local folder=assert(r.folder())
 			assert(folder.Parent==r.world and #r.beat.list==1 and type(r.ambient.onChirp)=="function")
 			local parts=r.parts()
-			assert(#parts==3*8+4*3+3+2+16,"parts "..#parts)
+			assert(#parts==3*10+4*3+3+2+16,"parts "..#parts) -- birds: ten parts each (FABLE-REVIEW-R3 3)
 			for _,p in ipairs(parts)do
 				assert(p.Anchored==true and p.CanCollide==false and p.CanQuery==false and p.CanTouch==false and p.CastShadow==false,p.Name)
 				assert(string.sub(p.Name,1,2)~="W7",p.Name)
@@ -392,21 +392,28 @@ return function(client)
 				local name="LifeBird"..slot.."_"
 				local n=0
 				for _,p in ipairs(r.parts())do if string.sub(p.Name,1,#name)==name then n+=1 end end
-				assert(n==8,"bird parts "..n)
+				assert(n==10,"bird parts "..n)
 				local look=Life.BirdLooks[(slot-1)%3]
 				local bodyPart=folder:FindFirstChild(name.."Body")
 				-- QA-R2-LOOK 3: the songbird's shape (a Sphere-meshed egg, a small head, a wedge beak, narrow wings and tail).
-				assert(bodyPart.Size==Vector3.new(.50,.52,.82)and bodyPart.Shape~=Enum.PartType.Ball and bodyPart.Spindle.ClassName=="SpecialMesh")
+				assert(bodyPart.Size==Vector3.new(.50,.50,.74)and bodyPart.Shape~=Enum.PartType.Ball and bodyPart.Spindle.ClassName=="SpecialMesh")
 				assert(bodyPart.Color==look.body and bodyPart.Material==Life.BirdMaterial)
 				if LifeArt.id("birdBreast")then faces(bodyPart,{[Face.Front]=LifeArt.id("birdBreast")})else assert(next(decals(bodyPart))==nil,"no breast stand-in")end
 				local head=folder:FindFirstChild(name.."Head")
-				assert(head.Size==Vector3.new(.40,.40,.40)and head.Material==Life.BirdMaterial and head.Color==look.head)
+				assert(head.Size==Vector3.new(.38,.38,.38)and head.Material==Life.BirdMaterial and head.Color==look.head)
 				for _,side in ipairs({"EyeR","EyeL"})do
 					local eye=folder:FindFirstChild(name..side)
-					assert(eye.Size==Vector3.new(.08,.08,.08)and eye.Color==Life.EyeInk and eye.Reflectance==0,"no shine")
+					assert(eye.Size==Vector3.new(.09,.09,.09)and eye.Color==Life.EyeInk and eye.Reflectance==0,"no shine")
 				end
 				local beak=folder:FindFirstChild(name.."Beak")
-				assert(beak.ClassName=="WedgePart"and beak.Size==Vector3.new(.09,.08,.20),"a flat-bottomed point")
+				assert(beak.ClassName=="Part"and beak.Size==Vector3.new(.14,.12,.26)and beak.Spindle.ClassName=="SpecialMesh"and beak.Color==look.beak,"a horn spindle")
+				local function lin(x)return if x<=.04045 then x/12.92 else((x+.055)/1.055)^2.4 end
+				local function value(c)return .2126*lin(c.R)+.7152*lin(c.G)+.0722*lin(c.B)end -- relative luminance
+				assert(value(look.beak)>=value(look.head)*1.35,"the beak at least 35% brighter than the head")
+				for _,side in ipairs({"LegR","LegL"})do
+					local leg=folder:FindFirstChild(name..side)
+					assert(leg.Size==Vector3.new(.03,.16,.03)and leg.Color==look.beak,"legs in the beak's colour")
+				end
 				for _,side in ipairs({"WingL","WingR"})do
 					local plate=folder:FindFirstChild(name..side)
 					assert(plate.Size==Vector3.new(.03,.68,.32)and plate.Transparency==1,"a see-through plate")
@@ -414,8 +421,8 @@ return function(client)
 				end
 				wingsLoaded[look.wing]=true
 				local tail=folder:FindFirstChild(name.."Tail")
-				assert(tail.Size==Vector3.new(.22,.62,.02)and tail.Transparency==1)
-				for _,d in pairs(faces(tail,{[Face.Front]=LifeArt.id("birdTail"),[Face.Back]=LifeArt.id("birdTail")}))do assert(d.Color3==look.tail)end
+				assert(tail.ClassName=="WedgePart"and tail.Size==Vector3.new(.26,.10,.44)and tail.Transparency==0 and tail.Color==look.tail,"a solid tail wedge")
+				for _,d in pairs(faces(tail,{[Face.Bottom]=LifeArt.id("birdTail")}))do assert(d.Color3==look.tail)end
 			end
 			assert(wingsLoaded.birdWingEmber and wingsLoaded.birdWingSlate and wingsLoaded.birdWingMoss,"all three bird wings written at build")
 			for slot=1,4 do
@@ -531,8 +538,8 @@ return function(client)
 		test("leaves: three emitters (the look's numbers), anchors moved to each leaf's spot round the player, under the cap at both levels",function()
 			local LifeArt=require(game:GetService("ReplicatedStorage").Shared.LifeArt)
 			local r=rig()
-			-- Studio check R3: the drawn leaf is 1.44 x the emitter Size, so leaf A draws .24 (1 : 6 of a pet), not .35.
-			assert(Life.LeafDrawn==1.44 and Life.Leaves[1].size[2]==.24 and math.abs(Life.Leaves[1].size[2]/Life.LeafDrawn-.167)<.001)
+			-- FABLE-REVIEW-R3 4b: the emitter keys already allow for the 1.45 draw factor (leaf A draws .24, 1 : 6 of a pet).
+			assert(Life.LeafDrawn==nil and Life.Leaves[1].size[2]==.165 and Life.Leaves[2].size[2]==.145 and Life.Leaves[3].size[2]==.12)
 			local names={"LifeLeafA","LifeLeafB","LifeLeafPetal"}
 			local emitters={}
 			for i,name in ipairs(names)do
@@ -630,7 +637,7 @@ return function(client)
 				assert(label and label.ClassName=="ImageLabel"and label.Image==Life.DewdropTexture and label.BackgroundTransparency==1)
 			end
 			r.step(60)
-			assert(#dewdrops(r)==16 and #r.parts()==3*8+4*3+3+2+16,"never made or destroyed in play")
+			assert(#dewdrops(r)==16 and #r.parts()==3*10+4*3+3+2+16,"never made or destroyed in play")
 		end)
 
 		test("Dewdrops: hanging under the lime crowns in reach, nearest first: 16 at level 0, 8 still ones at 1, none pink",function()

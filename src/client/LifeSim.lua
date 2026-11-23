@@ -530,15 +530,15 @@ end
 -- A small round songbird: a body, a head it turns and cocks on its own, bead eyes, a short beak, folded wings, a tail
 -- that flicks on every landing and hop. Low quick hops, often in pairs; it turns by hopping; it flies in bounds (two
 -- beats, wings tucked, two beats). Everything eased; nothing is a two-pose swap. Each bird has its own Random.
--- QA-R2-LOOK 3: a songbird's silhouette, not two balls: an egg tipped 20 degrees nose-up, a small head set forward, a
--- point at the front and a long narrow tail carrying the back's line down. 1.59 studs beak tip to tail tip. `lift` is
--- the pitched body's half height (.28) less a hair, so it still sits on the perch. The tail angle here is positive DOWN
--- (Fable's spec counts up): rest 15 down (her -15), the flick to 5 above level (her +5).
-Sim.Bird=table.freeze({lift=.27,land=.8,leave=1.2,stayMin=8,stayMax=20,flee=12,
+-- QA-R2-LOOK 3 and FABLE-REVIEW-R3 3: a songbird, upright (the body 35 degrees nose-up), the head on top of the raised
+-- chest, a bright half-buried beak, a solid wedge of a tail and two thin legs. `lift` stands the feet on the perch (legs
+-- end .39 under the body's centre). The tail angle here is positive DOWN (Fable counts up): rest 10 down (her -10), the
+-- flick to 10 above level (her +10).
+Sim.Bird=table.freeze({lift=.39,land=.8,leave=1.2,stayMin=8,stayMax=20,flee=12,
 	fromMin=9,fromMax=12,upMin=4,upMax=6,riseMin=5,riseMax=7,away=10,
 	dip=.12,dipPitch=12,dipIn=.10,dipOut=.15,
 	hop=.16,hopTime=.18,hopDip=.06,hopDipTime=.08,pair=.4,pairGap=.12,flick=15,flickTime=.12,
-	tail=15,tailUp=-5,tailTime=.16,
+	tail=10,tailUp=-10,tailTime=.16,
 	headEveryMin=.8,headEveryMax=2.5,headMin=25,headMax=50,headTime=.12,cock=.3,cockRoll=15,
 	turnMin=20,turnMax=45,turnEveryMin=2.5,turnEveryMax=5,turnTime=.15,crouch=.10,crouchTime=.08,diveTilt=15,level=.2,
 	beatHz=table.freeze({5.5,3.5}),beats=2,beatMid=15,beatAmp=50,tuckTime=.22,tuckDip=.12,tuckBlend=.06})
@@ -733,25 +733,27 @@ function Sim.birdPose(bird,now,level)
 	bird.still=since>=B.dipIn+B.dipOut and not busy and bird.tau==B.tail and now-head.at>=B.headTime
 		and not(bird.turnStart and now-bird.turnStart<B.turnTime)
 end
--- The eight frames in pool order: body, head, beak, eye R, eye L, wing L, wing R, tail (GARDEN-LIFE-NEST-LOOK 3).
+-- The ten frames in pool order: body, head, beak, eye R, eye L, wing L, wing R, tail, leg R, leg L (FABLE-REVIEW-R3 3).
 -- head: the head's own turn (CFrame) under H; phi: the flap (radians) in flight; tuck 0 to 1 lerps the flying wings
--- to the folded pose (the bound); flick 0 to 1 swings the folded tips out; tau: the tail's tilt in degrees.
--- QA-R2-LOOK 3 shape, studs, root = the body's centre, -Z forward. GardenLife sizes its parts from this table.
+-- to the folded pose (the bound); flick 0 to 1 swings the folded tips out; tau: the tail's tilt in degrees. In flight the
+-- legs are nil (GardenLife parks them: hidden) and the body flies level (pitch 10).
+-- Shape, studs, root = the body's centre, -Z forward. GardenLife sizes its parts from this table.
 Sim.BirdShape=table.freeze({
-	body=Vector3.new(.50,.52,.82),pitch=20,                       -- a Sphere-meshed block, nose up
-	head=.40,headAt=Vector3.new(0,.28,-.30),                       -- head diameter : body length = 1 : 2
-	beak=Vector3.new(.09,.08,.20),beakAt=Vector3.new(0,-.02,-.27), -- a WedgePart, its thin edge forward
-	beakWedge=true,beakSpindle=Vector3.new(.07,.06,.24),           -- [check] the wedge's facing; false = the spindle
-	eye=.08,eyeAt=Vector3.new(.135,.04,-.12),
-	wing=Vector3.new(.03,.68,.32),foldAt=Vector3.new(.25,.03,.11),foldYaw=8,fold=-45, -- drooped 10 more than -55
-	shoulder=Vector3.new(.20,.10,-.04),
-	tail=Vector3.new(.22,.62,.02),tailAt=Vector3.new(0,-.01,.32),  -- tail : body length = 3 : 4
+	body=Vector3.new(.50,.50,.74),pitch=35,flyPitch=10,           -- a Sphere-meshed block, upright says songbird
+	head=.38,headAt=Vector3.new(0,.34,-.20),                       -- on top of the raised chest; head : body = 1 : 2
+	beak=Vector3.new(.14,.12,.26),beakAt=Vector3.new(0,-.03,-.20), -- a spindle, half buried: .13 out, beak : head = 1 : 3
+	eye=.09,eyeAt=Vector3.new(.125,.05,-.135),
+	wing=Vector3.new(.03,.68,.32),foldAt=Vector3.new(.22,.06,.06),foldYaw=15,fold=-55, -- along the 35 degree back
+	shoulder=Vector3.new(.20,.12,-.06),
+	tail=Vector3.new(.26,.10,.44),tailAt=Vector3.new(0,-.18,.30),tailSink=.08, -- a WedgePart; tail : body = 3 : 5
+	leg=Vector3.new(.03,.16,.03),legAt=Vector3.new(.08,-.31,.02),  -- vertical in the world (the root is level)
 })
 function Sim.birdParts(root,wings,flick,phi,head,tau,tuck)
 	local S=Sim.BirdShape
 	local H=root*CFrame.new(S.headAt)*(head or CFrame.identity)
 	local eye=S.eyeAt
-	local parts={root*CFrame.Angles(math.rad(S.pitch),0,0),H,H*CFrame.new(S.beakAt),
+	local flying=wings=="fly"
+	local parts={root*CFrame.Angles(math.rad(if flying then S.flyPitch else S.pitch),0,0),H,H*CFrame.new(S.beakAt),
 		H*CFrame.new(eye.X,eye.Y,eye.Z),H*CFrame.new(-eye.X,eye.Y,eye.Z)}
 	local out=math.rad(Sim.Bird.flick)*(flick or 0)
 	-- The folded wings lie along the pitched body, their tips across the tail root.
@@ -771,7 +773,13 @@ function Sim.birdParts(root,wings,flick,phi,head,tau,tuck)
 	else
 		parts[6],parts[7]=foldL,foldR
 	end
-	parts[8]=root*CFrame.new(S.tailAt)*CFrame.Angles(math.rad(tau or Sim.Bird.tail),0,0)*CFrame.new(0,0,S.tail.Y/2)*CFrame.Angles(math.rad(-90),0,0)
+	-- The tail wedge turned over (Rx 180): its full-height face at the root, sunk into the rump, its thin edge at the tip
+	-- and up, the flat face (the wedge's Bottom) on top in line with the back, the slope underneath.
+	parts[8]=root*CFrame.new(S.tailAt)*CFrame.Angles(math.rad(tau or Sim.Bird.tail),0,0)*CFrame.new(0,0,S.tail.Z/2-S.tailSink)*CFrame.Angles(math.pi,0,0)
+	if not flying then
+		local leg=S.legAt
+		parts[9],parts[10]=root*CFrame.new(leg.X,leg.Y,leg.Z),root*CFrame.new(-leg.X,leg.Y,leg.Z)
+	end
 	return parts
 end
 
