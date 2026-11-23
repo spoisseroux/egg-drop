@@ -400,11 +400,14 @@ function Sim.birdPose(bird,now)
 	bird.root=CFrame.new(bird.spot+lift+Vector3.new(0,y,0))*CFrame.Angles(0,yaw,0)*CFrame.Angles(math.rad(pitch),0,0)
 	bird.wings,bird.flick="perch",flick
 end
--- Body, eyes, beak, wing L, wing R (LOOK-R2 1). phi: the flap angle in flight. The wing plates are thin in X with
+-- Body, right eye, beak, wing L, wing R, left eye (LOOK-R2 1; eyes and beak from REVIEW-R2: two discs angled out and
+-- forward so a bird facing you has two eyes, and a cube turned corner-first so the beak is a point, not a square). phi: the flap angle in flight. The wing plates are thin in X with
 -- the texture tip-down (part -Y): perched, the tip points back and down; flying, it points out (+90 right, -90 left).
 local tuck=CFrame.Angles(math.rad(-55),0,0)
 function Sim.birdParts(root,wings,flick,phi)
-	local parts={root,root*CFrame.new(0,.14,-.20),root*CFrame.new(0,-.02,-.72)}
+	local parts={root,root*CFrame.new(.425,.128,-.357)*CFrame.Angles(0,math.rad(40),0)*CFrame.Angles(0,0,math.rad(13)),
+		root*CFrame.new(0,-.04,-.64)*CFrame.Angles(math.rad(-35.26),0,0)*CFrame.Angles(0,math.rad(45),0)}
+	parts[6]=root*CFrame.new(-.425,.128,-.357)*CFrame.Angles(0,math.rad(-40),0)*CFrame.Angles(0,0,math.rad(-13))
 	if wings=="fly"then
 		parts[4]=root*CFrame.new(-.42,.12,.05)*CFrame.Angles(0,0,-phi)*CFrame.new(-.33,0,0)*CFrame.Angles(0,0,-math.pi/2)
 		parts[5]=root*CFrame.new(.42,.12,.05)*CFrame.Angles(0,0,phi)*CFrame.new(.33,0,0)*CFrame.Angles(0,0,math.pi/2)

@@ -79,7 +79,7 @@ return function(client)
 			local folder=assert(r.folder())
 			assert(folder.Parent==r.world and #r.beat.list==1 and type(r.ambient.onChirp)=="function")
 			local parts=r.parts()
-			assert(#parts==3*5+4*3+3+2,"parts "..#parts)
+			assert(#parts==3*6+4*3+3+2,"parts "..#parts)
 			for _,p in ipairs(parts)do
 				assert(p.Anchored==true and p.CanCollide==false and p.CanQuery==false and p.CanTouch==false and p.CastShadow==false,p.Name)
 				assert(string.sub(p.Name,1,2)~="W7",p.Name)
@@ -260,11 +260,14 @@ return function(client)
 				local name="LifeBird"..slot.."_"
 				local n=0
 				for _,p in ipairs(r.parts())do if string.sub(p.Name,1,#name)==name then n+=1 end end
-				assert(n==5,"bird parts "..n)
-				local eyes=folder:FindFirstChild(name.."Eyes")
-				assert(eyes.Size==Vector3.new(1.18,.46,.46)and eyes.Color==Life.EyeInk and eyes.Transparency==0)
-				for _,d in pairs(faces(eyes,{[Face.Left]=Life.BirdEye,[Face.Right]=Life.BirdEye}))do local c=d.Color3;assert(c.R==1 and c.G==1 and c.B==1,"a white eye decal")end
-				assert(folder:FindFirstChild(name.."Beak").Size==Vector3.new(.34,.26,.42))
+				assert(n==6,"bird parts "..n)
+				for _,side in ipairs({"EyeR","EyeL"})do
+					local eyes=folder:FindFirstChild(name..side)
+					assert(eyes.Size==Vector3.new(.06,.46,.46)and eyes.Color==Life.EyeInk and eyes.Transparency==0)
+					for _,d in pairs(faces(eyes,{[Face.Left]=Life.BirdEye,[Face.Right]=Life.BirdEye}))do local c=d.Color3;assert(c.R==1 and c.G==1 and c.B==1,"a white eye decal")end
+				end
+				local beak=folder:FindFirstChild(name.."Beak")
+				assert(beak.Size==Vector3.new(.26,.26,.26)and beak.ClassName=="Part")
 				assert(folder:FindFirstChild(name.."Body").Size==Vector3.new(1.2,1.2,1.2))
 				for _,side in ipairs({"WingL","WingR"})do
 					local plate=folder:FindFirstChild(name..side)

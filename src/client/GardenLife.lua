@@ -3,7 +3,7 @@
 -- flower patches. Client only and looks only: no remotes, no saves. LifeSim decides; this owns the parts.
 --
 -- mount() is nil with the build ceiling off (Alive.ceiling("life")). With the switch off only the Alive signal is
--- connected and nothing exists. On: one folder EggDropLife in the workspace (birds 3 x 5 parts, butterflies 4 x 3,
+-- connected and nothing exists. On: one folder EggDropLife in the workspace (birds 3 x 6 parts, butterflies 4 x 3,
 -- three petal anchors and two bubble anchors, each with a ParticleEmitter), ONE Heartbeat at 30 Hz (15 at budget
 -- level 1) and ONE BulkMoveTo a step; a part not in use is moved far away, never re-parented or resized.
 --   Parked (a hatch, the board out of Room mode, my own race): everything hidden, nothing simulated.
@@ -244,14 +244,19 @@ function Life:enable()
 	self.folder=folder
 	self.shown={}
 	self.birdPool,self.flyPool,self.petalPool={},{},{}
-	-- Birds (LOOK-R2 1): body, eyes (a cylinder along X, the eye decal on both round caps), beak, two wing plates.
+	-- Birds (LOOK-R2 1, REVIEW-R2): body, two eye discs (thin cylinders, the eye decal on both round caps), a beak cube
+	-- turned corner-first, two wing plates. Six parts.
 	local Face=Enum.NormalId
 	local white=Color3.new(1,1,1)
 	for slot=1,Sim.Caps.birds[1]do
 		local look=Life.BirdColours[0]
 		local name="LifeBird"..slot.."_"
-		local eyes=part(folder,name.."Eyes","Part",Vector3.new(1.18,.46,.46),Life.EyeInk,Enum.PartType.Cylinder)
-		decal(eyes,Face.Left,Life.BirdEye,white);decal(eyes,Face.Right,Life.BirdEye,white)
+		local eyes={}
+		for _,side in ipairs({"EyeR","EyeL"})do
+			local disc=part(folder,name..side,"Part",Vector3.new(.06,.46,.46),Life.EyeInk,Enum.PartType.Cylinder)
+			decal(disc,Face.Left,Life.BirdEye,white);decal(disc,Face.Right,Life.BirdEye,white)
+			eyes[side]=disc
+		end
 		local wings={}
 		for i,side in ipairs({"WingL","WingR"})do
 			local plate=part(folder,name..side,"Part",Vector3.new(.04,.66,.46),false)
@@ -260,9 +265,10 @@ function Life:enable()
 		end
 		self.birdPool[slot]={
 			part(folder,name.."Body","Part",Vector3.new(1.2,1.2,1.2),look.body,Enum.PartType.Ball),
-			eyes,
-			part(folder,name.."Beak","WedgePart",Vector3.new(.34,.26,.42),look.beak),
+			eyes.EyeR,
+			part(folder,name.."Beak","Part",Vector3.new(.26,.26,.26),look.beak),
 			wings[1],wings[2],
+			eyes.EyeL,
 		}
 	end
 	-- Butterflies (LOOK-R2 2): body, two wing plates thin in Z; each wing's two faces carry the file and its mirror, so
