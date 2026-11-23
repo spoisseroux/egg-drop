@@ -4,8 +4,9 @@
 -- garden. Positions are Vector3, poses are CFrame; forward is -Z, up is +Y.
 --   petals       Petals:step(now, dt, winds, cap) -> how many to Emit at each emitter now
 --   bubbles      Bubbles:due(now, cap, allowed), Sim.bubbleSpot(camera, random, world), Bubbles:emit(now) -> "small" | "large"
---   butterflies  Butterflies:step(now, dt, world, patches, cap, still) -> the live ones
---   birds        Birds:chirp(now, perch, landing, cap, world, reduced), Birds:step(now, dt, world, reduced)
+--   butterflies  Butterflies:step(now, dt, world, patches, cap, still, day) -> the live ones
+--   birds        Birds:chirp(now, perch, landing, cap, world, reduced, day), Birds:step(now, dt, world, reduced)
+--   day          Sim.day(daylight): the garden hour's gate for bubbles, butterflies and birds (GARDEN-HOUR-LOOK 5)
 --   dewdrops     Grove:refresh / :hanging / :active (what falls: a pure function of the server time), Loose:step
 --                (what this client draws of it), Sim.fruitPose(loose, now) (world pass item 3; look numbers
 --                artifacts/world-pass-2026-11-22/FRUIT-LOOK.md). Wind, Wind.hash and the gust number only, never a
@@ -32,6 +33,15 @@ function Sim.level(level)
 	return math.clamp(level,0,2)
 end
 function Sim.cap(kind,level)return Sim.Caps[kind][Sim.level(level)+1]end
+-- The garden hour (GARDEN-HOUR-BUILD-PLAN-2026-11-23 slice D): bubbles, butterflies and birds start only while its
+-- daylight is above DayLife; the ones already out finish (bubbles pop on time, butterflies fly off, birds sit out their
+-- stay). `daylight` is nil with the hour off: always day, as before. Petals and Dewdrops never ask. The daylight comes
+-- from the server clock (GardenHour.phase), so every client gates on the same number.
+Sim.DayLife=.7
+function Sim.day(daylight)
+	if type(daylight)~="number"or daylight~=daylight then return true end
+	return daylight>Sim.DayLife
+end
 -- Seconds between steps, or nil when nothing runs (level 2).
 function Sim.rate(level)
 	local hz=Sim.Hz[Sim.level(level)+1]
@@ -191,7 +201,9 @@ end
 
 -- Butterflies (brief C3; LOOK 2) -------------------------------------------------------------------------------
 Sim.Butterfly=table.freeze({reach=60,wander=3,speed=.8,restMin=2,restMax=4,low=1.2,high=2.4,perch=.35,
-	bob=.25,bobHz=1.3,wobble=20,wobbleHz=.8,pitch=10,restChance=.35,spawnGap=.5})
+	bob=.25,bobHz=1.3,wobble=20,wobbleHz=.8,pitch=10,restChance=.35,spawnGap=.5,
+	-- Night (Sim.day false): each one leaves, away from the camera and up, and is gone on arrival or after leaveTime.
+	leaveAway=10,leaveRise=6,leaveSpeed=2,leaveTime=7})
 local Butterflies={};Butterflies.__index=Butterflies
 Sim.Butterflies=Butterflies
 function Butterflies.new(seed)return setmetatable({random=Random.new(seed or 2),list={},spawnAt=0},Butterflies)end
@@ -202,15 +214,28 @@ local function wanderPoint(r,patch,radius,low,high)
 end
 -- patches: {Vector3} (flower patch middles on the ground). Spawns at most one every spawnGap seconds, on a patch
 -- within reach of the camera that is clear (Sim.clear), one of each wing colour (1 to 4). Drops the far ones and
--- any over the cap at once. still = Reduced Motion: none.
-function Butterflies:step(now,dt,world,patches,cap,still)
+-- any over the cap at once. still = Reduced Motion: none. day = false (the garden hour's night): no new ones, and each
+-- live one leaves (mode "leave"); nil or true is day.
+function Butterflies:step(now,dt,world,patches,cap,still,day)
 	local B,r,list=Sim.Butterfly,self.random,self.list
 	local camera=world and world.camera
 	if still or not camera then table.clear(list);return list end
 	for i=#list,1,-1 do
-		if i>cap or(list[i].position-camera).Magnitude>Sim.Drop then table.remove(list,i)end
+		local b=list[i]
+		if i>cap or(b.position-camera).Magnitude>Sim.Drop then table.remove(list,i)
+		elseif b.mode=="leave"and(now>=b.goneAt or(b.target-b.position).Magnitude<=.05)then table.remove(list,i)end
 	end
-	if #list<cap and now>=self.spawnAt and patches then
+	if day==false then
+		for _,b in ipairs(list)do
+			if b.mode~="leave"then
+				local away=Vector3.new(b.position.X-camera.X,0,b.position.Z-camera.Z)
+				away=if away.Magnitude>1e-3 then away.Unit else b.heading
+				b.mode,b.goneAt="leave",now+B.leaveTime
+				b.target=b.position+away*B.leaveAway+Vector3.new(0,B.leaveRise,0)
+			end
+		end
+	end
+	if day~=false and #list<cap and now>=self.spawnAt and patches then
 		self.spawnAt=now+B.spawnGap
 		local near={}
 		for _,patch in ipairs(patches)do
@@ -240,10 +265,12 @@ function Butterflies:step(now,dt,world,patches,cap,still)
 			end
 		else
 			local to=b.target-b.position
-			local step=B.speed*dt
+			local step=(if b.mode=="leave"then B.leaveSpeed else B.speed)*dt
 			if to.Magnitude<=math.max(step,.05)then
 				b.position=b.target
-				if b.mode=="land"then
+				if b.mode=="leave"then
+					-- Arrived: removed next step.
+				elseif b.mode=="land"then
 					b.mode="rest";b.restUntil=now+r:NextNumber(B.restMin,B.restMax)
 				elseif r:NextNumber()<B.restChance then
 					b.mode="land";b.target=wanderPoint(r,b.patch,B.wander*.5,B.perch,B.perch)
@@ -300,9 +327,10 @@ function Birds:find(perch)
 end
 local function yawOf(direction)return math.atan2(-direction.X,-direction.Z)end
 -- A chirp from AmbientAudio's perch `perch` (its landing spot `landing`, or nil). "land" (a bird comes in), "hop"
--- (one already sits there), or nil and why: no spot, the cap, a station or the camera in the way, already busy.
+-- (one already sits there), or nil and why: no spot, the cap, a station or the camera in the way, already busy, night
+-- (day = false: the garden hour's night lands no new bird; one already sitting still hops and sits out its stay).
 -- Reduced Motion: it is just there, folded; no hop.
-function Birds:chirp(now,perch,landing,cap,world,reduced)
+function Birds:chirp(now,perch,landing,cap,world,reduced,day)
 	local B,r=Sim.Bird,self.random
 	if typeof(landing)~="Vector3"then return nil,"spot"end
 	local bird=self:find(perch)
@@ -310,6 +338,7 @@ function Birds:chirp(now,perch,landing,cap,world,reduced)
 		if bird.state=="sit"and not reduced then bird.hopAt=now;return "hop"end
 		return nil,"busy"
 	end
+	if day==false then return nil,"night"end
 	if #self.list>=(cap or 0)then return nil,"cap"end
 	-- A crown top: only the camera and the stations matter (the course and the pad are on the ground).
 	local ok,why=Sim.clear(landing,{camera=world and world.camera,stations=world and world.stations})

@@ -6,7 +6,9 @@
 -- plates with the uploaded textures, two fixed-size bubble emitters, the petal cap and gust burst; Dewdrops (FRUIT-LOOK):
 -- 16 billboards made once, hanging caps per level, the same simulated drops on four clients (cameras far apart, budget
 -- levels 0 and 1, Reduced Motion), Reduced Motion, parked, a live race, pink crowns skipping the pool,
--- landing rejection and the pet bat.
+-- landing rejection and the pet bat. Garden hour slice D: off (daylight nil) and day are today's garden; golden, night
+-- and dawn start no bubbles, butterflies or birds (petals and fruit as by day); the ones out finish; the gate is the
+-- server clock's, the same on four clients.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.GardenLife)(PlayerScripts.Client); offline in
 -- scripts/run_dash_server_specs.py (DASH_SPECS="GardenLife").
 return function(client)
@@ -33,13 +35,14 @@ return function(client)
 	local rigs={}
 	local function rig(options)
 		options=options or {}
-		local r={on=options.on~=false,ceiling=options.ceiling~=false,now=T0,level=options.level or 0,hatch=false,mode="Room",
+		local r={on=options.on~=false,ceiling=options.ceiling~=false,now=options.now or T0,level=options.level or 0,hatch=false,mode="Room",
 			held=false,phase="idle",menu=false,reduced=false,moves=0,warned={},ambient={}}
 		r.changed=signal();r.beat=signal()
 		r.camera=CFrame.lookAt(Vector3.new(0,10,10),Vector3.new(0,8,-10))
 		r.player=Vector3.new(0,5,8)
 		r.pets={}
 		r.crownColour="lime"
+		r.daylight=options.daylight
 		r.world=Instance.new("Folder");r.world.Name="_GardenLifeSpec";r.world.Parent=workspace
 		r.dash={held=function()return r.held end,summary=function()return{phase=r.phase}end}
 		r.life=Life.mount({ambient=r.ambient,world=r.world,heartbeat=r.beat,seed=7,
@@ -52,7 +55,9 @@ return function(client)
 			stations=options.stations or {Vector3.new(200,4,200)},pad=options.pad or {x=300,z=300,r=3},course=options.course or {400,400,500,400},
 			crowns=function()return r.crownColour end,warn=function(text)table.insert(r.warned,text)end,
 			groundY=options.groundY or function()return 4 end,safe=options.safe or function()return true end,
-			finds=options.finds or {},kerbs=options.kerbs or {},pets=function()return r.pets end})
+			finds=options.finds or {},kerbs=options.kerbs or {},pets=function()return r.pets end,
+			-- The garden hour: r.daylight (nil = the hour off), or r.hour(now) when a case drives the real clock.
+			daylight=if options.realHour then nil else function(now)if r.hour then return r.hour(now)end return r.daylight end})
 		function r.step(seconds)
 			for _=1,math.floor(seconds*30+.5)do r.now+=1/30;r.beat:Fire(1/30)end
 		end
@@ -71,6 +76,102 @@ return function(client)
 	local function body(r,slot)return r.folder():FindFirstChild("LifeBird"..slot.."_Body")end
 
 	local ok,problem=pcall(function()
+		-- Garden hour slice D (GARDEN-HOUR-BUILD-PLAN-2026-11-23; GARDEN-HOUR-LOOK 5): bubbles, butterflies and birds by day.
+		local function chirps(r)
+			for perch=1,3 do r.life:chirp(perch)end
+		end
+		test("the hour's day is today: daylight nil (off) and .9 (the day hold) give the same garden, second by second",function()
+			local off,day=rig(),rig({daylight=.9})
+			for second=1,30 do
+				if second==1 or second==24 then chirps(off);chirps(day)end
+				off.step(1);day.step(1)
+				local a,b=off.life:counts(),day.life:counts()
+				for key,value in pairs(a)do assert(b[key]==value,second..": "..key.." "..value.." vs "..tostring(b[key]))end
+			end
+			local c=day.life:counts()
+			assert(c.bubbles>0 and c.butterflies>0 and c.birds>0,"all of it by day: "..c.bubbles.." "..c.butterflies.." "..c.birds)
+		end)
+		test("golden, night and dawn: no bubbles, butterflies or birds start; petals and Dewdrops as by day",function()
+			for _,daylight in ipairs({.55,.12,.5})do
+				local day,dark=rig(),rig({daylight=daylight})
+				for second=1,24 do
+					if second==1 or second==12 then
+						chirps(day)
+						for perch=1,3 do
+							local result,why=dark.life:chirp(perch)
+							assert(result==nil and why=="night",daylight..": chirp "..tostring(why))
+						end
+					end
+					day.step(1);dark.step(1)
+					local a,b=day.life:counts(),dark.life:counts()
+					assert(b.bubbles==0 and b.butterflies==0 and b.birds==0,daylight..": nothing starts at "..second)
+					assert(a.petals==b.petals and a.fruit==b.fruit and a.loose==b.loose,daylight..": petals and fruit unchanged")
+				end
+				assert(day.life:counts().butterflies>0,"the day rig has them")
+				-- Only petal anchors and Dewdrops may show at night.
+				for _,p in ipairs(dark.parts())do
+					if not hidden(p)then assert(string.match(p.Name,"^LifePetals")or string.match(p.Name,"^LifeDewdrop"),p.Name)end
+				end
+			end
+		end)
+		test("day to night: the ones out finish (bubbles pop on time, butterflies fly off, a bird sits out its stay)",function()
+			local r=rig()
+			r.step(.2);chirps(r)
+			r.step(9)
+			local c=r.life:counts()
+			assert(c.bubbles>0 and c.butterflies>0 and c.birds>0,"out by day")
+			r.daylight=.12
+			r.step(2.1) -- the next poll reads the hour
+			local bubbles,birds=r.life:counts().bubbles,r.life:counts().birds
+			assert(r.life:counts().butterflies<=c.butterflies)
+			for _,b in ipairs(r.life.flies.list)do assert(b.mode=="leave","flying off")end
+			for second=1,25 do
+				r.step(1)
+				local now=r.life:counts()
+				assert(now.bubbles<=bubbles and now.birds<=birds,"nothing new")
+				bubbles,birds=now.bubbles,now.birds
+				if second>=Sim.Butterfly.leaveTime+1 then assert(now.butterflies==0,"butterflies gone")end
+				if second>=Sim.BubbleLife+1 then assert(now.bubbles==0,"bubbles popped")end
+			end
+			assert(r.life:counts().birds==0,"the bird left after its stay")
+			for slot=1,4 do assert(hidden(r.folder():FindFirstChild("LifeButterfly"..slot.."_Body")),"hidden "..slot)end
+			assert(select(2,r.life:chirp(2))=="night")
+			r.daylight=.9
+			r.step(4.2)
+			assert(r.life:counts().butterflies>0 and r.life:chirp(2)=="land","day again")
+		end)
+		test("the gate comes from the server clock only: four clients (far cameras, levels 0 and 1, Reduced Motion) open it together",function()
+			local Hour=require(game:GetService("ReplicatedStorage").Shared.GardenHour)
+			-- 30 s before dawn's blend reaches .7: the hold is at s = 360 + ...; start at s = 380.
+			local start=T0-T0%Hour.Period+380
+			local list={}
+			for i=1,4 do
+				local r=rig({now=start,level=if i==2 then 1 else 0})
+				r.hour=function(now)return Hour.phase(now).daylight end
+				if i==3 then r.camera=CFrame.lookAt(Vector3.new(300,40,300),Vector3.new(0,0,0))end
+				if i==4 then r.reduced=true end
+				list[i]=r
+			end
+			local flips=0
+			local was=nil
+			for _=1,60 do
+				for _,r in ipairs(list)do r.step(1)end
+				local day=list[1].life.day
+				for _,r in ipairs(list)do assert(r.life.day==day,"the same gate on every client")end
+				if was~=nil and day~=was then flips+=1 end
+				was=day
+			end
+			assert(flips==1 and was==true,"opens once, inside the dawn blend")
+		end)
+		test("the default daylight is the garden hour's: nil while it is off",function()
+			local Hour=require(game:GetService("ReplicatedStorage").Shared.GardenHour)
+			local r=rig({realHour=true})
+			local value=r.life.daylight(T0)
+			if Hour.on()then assert(value==Hour.phase(T0+Hour.offset()).daylight)else assert(value==nil,"off: "..tostring(value))end
+			r.step(2.2)
+			assert(r.life.day==(Hour.on()==false or Sim.day(value)),"the gate follows it")
+		end)
+
 		test("the ceiling off: mount is nil and nothing is connected",function()
 			local r=rig({ceiling=false})
 			assert(r.life==nil and #r.changed.list==0 and #r.beat.list==0 and r.folder()==nil and r.ambient.onChirp==nil)

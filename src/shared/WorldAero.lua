@@ -71,7 +71,8 @@ Aero.Crowns=table.freeze({
 	coral={Flat=true,Color=hex("#F2545B"),Material=Enum.Material.SmoothPlastic}, -- as a tint on the leaf texture it rendered near black
 })
 
--- Additions. Draw calls at worst, all on screen at once: dome 1, lips 3, glints 4 = 8, plus the waterfall layers below
+-- Additions. Draw calls at worst, all on screen at once: dome 1, lips 3, glints 4 = 8 by day (fireflies 5 instead at
+-- night with the garden hour on, = 9; glints and fireflies are never on together), plus the waterfall layers below
 -- (14 at Tumble Falls, only within 120 studs of it; 8 at budget level 1). Station sizes are measured on
 -- assets/world/world-v7.fbx: the egg nest is three round steps (radius 3.4 / 2.8 / 2.2, tops 4.4 / 4.6 / 4.9) with the
 -- egg and its leaves inside 2 studs up to y 7.5. The kiosk is square, so it has no lip.
@@ -89,6 +90,35 @@ Aero.Glints=table.freeze({{72,75,32,10},{32.5,-18.5,25,13},{-87.5,21.5,25,27},{-
 Aero.GlintSize=.25
 Aero.GlintTexture="rbxasset://textures/particles/sparkles_main.dds"
 Aero.GlintRate,Aero.GlintLife=3,2 -- at most 6 alive per lawn
+-- With the garden hour on (GardenHour), dew glints only while its daylight is above this (day; GARDEN-HOUR-LOOK 5).
+-- Off, they are as before: always, but for Reduced Motion.
+Aero.GlintDaylight=.7
+
+-- Fireflies (GARDEN-HOUR-LOOK 5, v7): only with the garden hour on, spawning while its daylight is under Spawn, at the
+-- full count from Full down; none under Reduced Motion. One emitter an area (5 draws): 2 on each finds lawn and 4 on the
+-- stream bank = 12 alive at most; level 1 halves them (6); level 2 drops the additions. Each area is a box `Low` to
+-- `Low + Band` studs over the ground at its centre, and a firefly drifts up to `Reach` studs from where it starts
+-- (Speed with Drag: Speed / (Drag ln 2)), so it stays 1.5 to 4 studs up. The boxes are trimmed from the Glints lawns
+-- to stay at least Keep.water studs from every WorldV7Data.wet box and Keep.station studs from every station, rest,
+-- bridge and the nest (AeroFalls.spec measures it); an area is off while the camera is within CameraKeepOut + Reach
+-- of its box (the particles fade, never cleared).
+Aero.Fireflies=table.freeze({
+	Spawn=.3,Full=.12,
+	Color=hex("#E8FF8A"),Size=.35,LightEmission=1,
+	Texture="rbxasset://textures/particles/sparkles_main.dds", -- the glint sparkle until the 32 px soft dot is drawn
+	Life=table.freeze({4,6}),Fade=1,Pulse=1.8, -- seconds; Fade at each end, the brightness pulse's period
+	Speed=.6,Drag=.45,Reach=2,Low=1.5,Band=.5,
+	CameraKeepOut=6,
+	Keep=table.freeze({water=3,station=10}),
+	-- x, z, width (along x before the yaw), depth, yaw, alive at level 0, alive at level 1.
+	Areas=table.freeze({
+		table.freeze({name="South",x=66,z=75,width=16,depth=8,yaw=0,count=2,count1=1}),
+		table.freeze({name="East",x=43,z=-16,width=5,depth=12,yaw=0,count=2,count1=1}),
+		table.freeze({name="West",x=-89,z=18,width=8,depth=14,yaw=0,count=2,count1=1}),
+		table.freeze({name="Grove",x=-66,z=-35,width=8,depth=8,yaw=0,count=2,count1=1}),
+		table.freeze({name="Bank",x=12,z=46,width=12,depth=3,yaw=.785,count=4,count1=2}),
+	}),
+})
 
 -- Waterfall layers, step 1 (artifacts/world-pass-2026-11-22/WATERFALL-LOOK.md; AeroFalls builds them from
 -- WorldV7Data.beams.sheets). Frame per fall: n its normal, t = n turned flat (Tumble t (.707, 0, .707)), "sheet" its
@@ -102,7 +132,8 @@ local function keys(list)
 	return NumberSequence.new(out)
 end
 Aero.Waterfall=table.freeze({
-	Radius=120,MistKeepOut=16,RainbowDaylight=.5,
+	-- RainbowDaylight .7 (GARDEN-HOUR-LOOK 5): golden is .55 and would show it. Aero alone reads .9, so day keeps it.
+	Radius=120,MistKeepOut=16,RainbowDaylight=.7,
 	PoolTop=3.2, -- the pool's water top (world-v7-walk surface), where the lower sheet ends
 	Tiers={Water_TumbleFalls_Upper="Upper",Water_TumbleFalls_Lower="Lower"},
 	Sky="Water_SkyFalls",
