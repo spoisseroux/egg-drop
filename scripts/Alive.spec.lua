@@ -8,13 +8,14 @@ return function(client,parent)
  local saved={}
  for _,f in ipairs(Alive.Features)do saved[f]=workspace:GetAttribute(Alive.attribute(f))end
  local ok,problem=pcall(function()
-  test("four features, their attributes and config keys; every flag is in the build",function()
-   assert(table.concat(Alive.Features," ")=="springs menus close wind")
+  test("five features, their attributes and config keys; every flag is in the build",function()
+   assert(table.concat(Alive.Features," ")=="springs menus close wind life")
    assert(Alive.attribute("wind")=="Alive_wind"and Alive.key("wind")=="alive_wind")
-   assert(Flags.AliveSprings and Flags.AliveMenus and Flags.AliveClose and Flags.AliveWind)
+   assert(Flags.AliveSprings and Flags.AliveMenus and Flags.AliveClose and Flags.AliveWind and Flags.AliveLife)
+   assert(Alive.attribute("life")=="Alive_life"and Alive.key("life")=="alive_life")
   end)
   test("ceiling: flag and (beta place or Studio); never the live place; unknown features are off",function()
-   local on={AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true}
+   local on={AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true}
    for _,f in ipairs(Alive.Features)do
     assert(Alive.ceiling(f,on,107705084891479,false),f.." on the beta")
     assert(Alive.ceiling(f,on,96451847774961,true),f.." in Studio")

@@ -151,5 +151,55 @@ return function(client, parent)
 		a:destroy();folder:Destroy();assert(ok, err)
 	end)
 
+	test("garden life's onChirp: called once per chirp that played, with its perch; nil or a throwing hook changes nothing", function()
+		local perches = {}
+		for i = 1, 8 do perches[i] = Vector3.new(i * 6, 12, 0) end
+		local shared = Ambient.shared -- the game's own, put back after each run
+		local function run(hook)
+			local audio = { master = 1, deviceActive = true, ducks = {} }
+			function audio:isMusicEnabled() return true end
+			function audio:duck() end
+			local folder = Instance.new("Folder");folder.Parent = parent or workspace
+			local clock = 0
+			local a = Ambient.new(audio, { auto = false, world = folder, seed = 5, perches = perches, wind = false,
+				listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return clock end })
+			local played, calls = {}, {}
+			local chirp = a.chirp
+			a.chirp = function(self, event)
+				local ok = chirp(self, event)
+				if ok then table.insert(played, event.perch .. " " .. event.cue) end
+				return ok
+			end
+			if hook == "throw" then
+				a.onChirp = function(perch) table.insert(calls, perch); error("hook broke") end
+			elseif hook then
+				a.onChirp = function(perch, position, cue)
+					assert(position == perches[perch] and type(cue) == "string")
+					table.insert(calls, perch)
+				end
+			end
+			local ok, err = pcall(function()
+				for _ = 1, 30 * 240 do
+					clock += 1 / 30
+					a:step(1 / 30)
+					-- Free the three voices again, so later chirps can play (a chirp is short).
+					if #played % 2 == 0 then for _, entry in ipairs(a.birdPool) do entry.voice:Stop() end end
+				end
+			end)
+			local hookAfter = a.onChirp
+			a:destroy();folder:Destroy();Ambient.shared = shared;assert(ok, err)
+			return played, calls, hookAfter
+		end
+		local plain = run(nil)
+		local played, calls, kept = run(true)
+		assert(#played >= 6, "chirps played " .. #played)
+		assert(#calls == #played, "one call per played chirp: " .. #calls .. " / " .. #played)
+		assert(table.concat(plain, ",") == table.concat(played, ","), "the hook changes no chirp")
+		assert(type(kept) == "function")
+		local broke, thrown, after = run("throw")
+		assert(#thrown == 1 and after == nil, "a hook that throws is dropped")
+		assert(table.concat(broke, ",") == table.concat(plain, ","), "and the birds sound the same")
+	end)
+
 	return { passed = #cases, cases = cases }
 end

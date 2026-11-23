@@ -426,7 +426,13 @@ function Ambient:step(dt)
 		elseif self.deckVoice.IsPlaying and self.deckMix == 0 then self.deckVoice:Stop() end
 	end
 	local events = self.birds:step(self.now(), listener, self.daylight(), self.perches, audible and not self.round and self.mix > .5)
-	for _, event in ipairs(events) do self:chirp(event) end
+	for _, event in ipairs(events) do
+		-- Garden life (GardenLife) sets onChirp while it is on: a bird appears on the perch that was heard. Only for a
+		-- chirp that really played; a hook that throws is dropped and the sound goes on as before.
+		if self:chirp(event) and self.onChirp then
+			if not pcall(self.onChirp, event.perch, event.position, event.cue) then self.onChirp = nil end
+		end
+	end
 	if self.wind and not pcall(self.stepRustle, self, dt, audible) then
 		self.wind = nil
 		self:stopRustle()

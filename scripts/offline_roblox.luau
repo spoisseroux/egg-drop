@@ -200,6 +200,11 @@ function methods:GetDescendants()local out={};local function walk(n)for _,k in i
 function methods:IsA(class)return self.ClassName==class end
 function methods:IsDescendantOf(other)local n=self;while n do if n==other then return true end;n=n.Parent end;return false end
 function methods:Destroy()self.Parent=nil end
+-- Sounds and particle emitters: Play / Stop set IsPlaying; Emit counts what was emitted, Clear how often.
+function methods:Play()self.props.IsPlaying=true end
+function methods:Stop()self.props.IsPlaying=false end
+function methods:Emit(n)self.props.emitted=(self.props.emitted or 0)+(n or 16)end
+function methods:Clear()self.props.cleared=(self.props.cleared or 0)+1 end
 function methods:FireClient(player,packet)table.insert(self.sent,{player=player,packet=packet})end
 function methods:FireAllClients(packet)table.insert(self.sent,{packet=packet})end
 function methods:GetServerTimeNow()return 0 end

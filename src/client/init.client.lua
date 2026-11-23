@@ -4599,6 +4599,21 @@ do
  if ok and clientUI.finds then gui.Destroying:Connect(function()clientUI.finds:destroy()end)
  elseif not ok then warn("[Finds] not mounted: "..tostring(problem))end
 end
+-- Garden life (GardenLife, Alive step 5): nil with the build ceiling off; with the switch off it only watches the switch.
+-- Petals, bubbles, birds on the perch AmbientAudio's chirp came from (it sets clientUI.ambient.onChirp while on) and
+-- butterflies. Parked in a hatch, out of Room mode and in my own race; bubbles stop behind a menu.
+do
+ local ok,problem=pcall(function()
+  if not require(ReplicatedStorage.Shared.Alive).ceiling("life")then return end
+  clientUI.life=require(script.GardenLife).mount({ambient=clientUI.ambient,
+   dash=function()return clientUI.dash end,
+   modalOpen=function()return clientUI.anyModalOpen()==true end,
+   reduced=function()return reduceEffects()==true end,
+   mode=function()return board:GetAttribute("Mode")end})
+ end)
+ if ok and clientUI.life then gui.Destroying:Connect(function()clientUI.life:destroy()end)
+ elseif not ok then warn("[Life] not mounted: "..tostring(problem))end
+end
 -- Things to do (Shared.Things): nothing at all with the build ceiling off; with the switch off only the switches are
 -- watched. clientUI.things is what the Pocket menu's page (MachineHub), the coach's last line (ThingsTips) and the trail
 -- (ThingsTrail) ask.

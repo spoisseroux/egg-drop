@@ -5,8 +5,8 @@ local RunService=game:GetService("RunService")
 local Flags=require(script.Parent.FeatureFlags)
 local Alive={}
 Alive.PlaceId=107705084891479 -- Pocket Pals Beta
-Alive.Features=table.freeze({"springs","menus","close","wind"})
-local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind"})
+Alive.Features=table.freeze({"springs","menus","close","wind","life"})
+local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife"})
 
 function Alive.attribute(feature)return "Alive_"..feature end
 function Alive.key(feature)return "alive_"..feature end
