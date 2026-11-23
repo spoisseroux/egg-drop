@@ -112,36 +112,38 @@ Aero.Waterfall=table.freeze({
 	Level1=table.freeze({StrandA=true,Ribbon=true,Lip=true,Foam=true,Mist=true}),
 	-- grow: added to the sheet's width (scale multiplies it first); out along n; shift along t.
 	Strands=table.freeze({
-		{name="StrandA",scale=1,grow=1,out=.15,shift=0,length=20,skyLength=28,speed=.55,Color=hex("#3CC8F0"),
-			Transparency=keys({{0,.6},{.08,.35},{.85,.35},{1,.8}})},
-		{name="StrandB",scale=.7,grow=0,out=.3,shift=.6,length=13,speed=1.1,Color=hex("#DDF6FF"),
-			Transparency=keys({{0,.7},{.08,.45},{.85,.45},{1,.85}})},
+		{name="StrandA",scale=1,grow=1,out=.15,shift=0,length=20,skyLength=28,speed=.55,Color=hex("#7FE0FF"),
+			Transparency=keys({{0,.6},{.08,.28},{.85,.28},{1,.8}})},
+		{name="StrandB",scale=.7,grow=0,out=.3,shift=.6,length=9,speed=1.1,Color=hex("#DDF6FF"),
+			Transparency=keys({{0,.7},{.08,.62},{.85,.62},{1,.85}})},
 	}),
 	Ribbon=table.freeze({scale=1,grow=1.6,out=.45,shift=0,length=16,skyLength=22,speed=1,Color=hex("#FFFFFF"),LightEmission=.25,
 		Transparency=keys({{0,.5},{.05,.2},{.85,.2},{1,.7}})}),
 	-- Along t at a tier's top, this far out along n.
-	Lips=table.freeze({Upper={length=8.8,thickness=.9,out=.3},Lower={length=11.8,thickness=1.1,out=.3}}),
-	LipLook=table.freeze({Color=hex("#FFFFFF"),Reflectance=.2}),
-	-- box: along t, up, along n. Pool boxes sit at I + n * out, at PoolTop + up; ledge boxes at the Lower top.
+	Lips=table.freeze({Upper={length=8,thickness=.5,out=.3},Lower={length=10.6,thickness=.6,out=.3}}),
+	LipLook=table.freeze({Color=hex("#F4FCFF"),Reflectance=.1}),
+	-- box: along t, up, along n. Pool boxes sit at I + n * out, at PoolTop + up; ledge boxes at the Lower top. The pool bed
+	-- is walkable, so pool boxes stay within 1.5 studs of the sheet along n and mist starts above pet height (Fable r1).
 	Foam=table.freeze({
-		{name="Foam",at="pool",box=Vector3.new(12,.6,2.5),out=1,up=.3,rate=16,rate1=8,
-			Size=keys({{0,1},{.3,1.9},{1,1.3}})},
-		{name="LedgeFoam",at="ledge",box=Vector3.new(10.5,.5,2),out=.6,up=0,rate=8,
-			Size=keys({{0,.8},{.3,1.5},{1,1}})},
+		{name="Foam",at="pool",box=Vector3.new(12,.6,1.5),out=.75,up=.3,rate=22,rate1=8,
+			Size=keys({{0,1},{.3,1.4},{1,1.3}})},
+		{name="LedgeFoam",at="ledge",box=Vector3.new(10.5,.5,2),out=.6,up=0,rate=11,
+			Size=keys({{0,.8},{.3,1.1},{1,1}})},
 	}),
-	FoamLook=table.freeze({Life=NumberRange.new(.7,1.1),Speed=NumberRange.new(2,4),Spread=35,Acceleration=Vector3.new(0,-9,0),
+	FoamLook=table.freeze({Life=NumberRange.new(.6,.8),Speed=NumberRange.new(2,4),Spread=35,Acceleration=Vector3.new(0,-9,0),
 		Drag=1,RotSpeed=NumberRange.new(-30,30),Transparency=keys({{0,.15},{.6,.35},{1,1}}),
 		Color=ColorSequence.new(hex("#FFFFFF"),hex("#F4FCFF")),LightEmission=.2}),
-	Rings=table.freeze({out=2.5,up=.08,rate=1.25,life=2.4,speed=.05,Size=keys({{0,4},{1,9}}),
+	Rings=table.freeze({out=2,up=.08,rate=1.25,life=2.4,speed=.05,Size=keys({{0,4},{1,7}}),
 		Transparency=keys({{0,.3},{.7,.6},{1,1}})}),
 	Mist=table.freeze({
-		{name="Mist",at="pool",box=Vector3.new(10,1,3),out=1.5,up=2,rate=3,rate1=1.5,Size=keys({{0,3},{1,6.5}})},
+		{name="Mist",at="pool",box=Vector3.new(10,1,1.5),out=1,up=3,rate=3,rate1=1.5,Size=keys({{0,3},{1,5}})},
 		-- Just above the ledge roll.
 		{name="LedgeMist",at="ledge",box=Vector3.new(8,1,2),out=.3,up=1.2,rate=2,Size=keys({{0,2.5},{1,5}})},
 	}),
-	SkyMist=table.freeze({box=Vector3.new(10,1,3),out=1.5,up=-3,rate=3}), -- 3 studs under the lip, pool settings
+	-- 3 studs under the lip; the pool mist's look, at its size before the r1 pool change.
+	SkyMist=table.freeze({box=Vector3.new(10,1,3),out=1.5,up=-3,rate=3,Size=keys({{0,3},{1,6.5}})}),
 	MistLook=table.freeze({Life=NumberRange.new(2.5,3.5),Speed=NumberRange.new(1,1.6),Spread=15,ZOffset=-2,
-		RotSpeed=NumberRange.new(-12,12),Transparency=keys({{0,1},{.25,.8},{1,1}}),Color=ColorSequence.new(hex("#E9F8FF"))}),
+		RotSpeed=NumberRange.new(-12,12),Transparency=keys({{0,1},{.25,.62},{1,1}}),Color=ColorSequence.new(hex("#E9F8FF"))}),
 	-- Feet 7 studs either side of I along t, 2 out along n, 1 above the pool; both axes up, so the curve sizes arc it
 	-- 14 wide and 6 high.
 	Rainbow=table.freeze({half=7,out=2,up=1,width=1.6,curve=8,segments=16,LightEmission=.3,
