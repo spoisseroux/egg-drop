@@ -1,0 +1,4417 @@
+{
+ "source": "assets/world/world-v7-walk.json",
+ "spawn": [
+  96,
+  66
+ ],
+ "model": {
+  "step": 2.0,
+  "jump": 7.0,
+  "jumpReach": 2,
+  "wallPad": 0.5,
+  "flagAboveY": 10.0,
+  "docLineY": 16.0,
+  "footY": 6.5,
+  "outsideMargin": 3.0,
+  "cell": 1
+ },
+ "limits": "1-stud render-surface heights, not collision; roofs hide floors; real walls, rails, crowns and floor detection differ. Candidates, not proof: verify each spot in Studio.",
+ "walls": [
+  {
+   "id": "east_ledge",
+   "a": [
+    92.0,
+    9.5
+   ],
+   "b": [
+    98.5,
+    9.5
+   ],
+   "base": 3.4,
+   "top": 21.0,
+   "length": 6.5,
+   "ground": [
+    4.48,
+    11.98
+   ],
+   "nearest": {
+    "what": "dash Main d=0",
+    "studs": 26.58
+   }
+  },
+  {
+   "id": "east_ramp",
+   "a": [
+    98.5,
+    9.5
+   ],
+   "b": [
+    99.5,
+    22.5
+   ],
+   "base": 3.0,
+   "top": 21.0,
+   "length": 13.04,
+   "ground": [
+    4.1,
+    11.98
+   ],
+   "nearest": {
+    "what": "dash Main d=0",
+    "studs": 31.76
+   }
+  },
+  {
+   "id": "east_shelf",
+   "a": [
+    99.5,
+    22.5
+   ],
+   "b": [
+    113.5,
+    23.0
+   ],
+   "base": 3.0,
+   "top": 21.0,
+   "length": 14.01,
+   "ground": [
+    4.01,
+    12.03
+   ],
+   "nearest": {
+    "what": "dash Main d=0",
+    "studs": 41.07
+   }
+  },
+  {
+   "id": "west_ramp",
+   "a": [
+    -84.0,
+    -34.0
+   ],
+   "b": [
+    -74.5,
+    -47.0
+   ],
+   "base": -0.8,
+   "top": 21.0,
+   "length": 16.1,
+   "ground": [
+    0.27,
+    11.65
+   ],
+   "nearest": {
+    "what": "find spot 20",
+    "studs": 5.06
+   }
+  },
+  {
+   "id": "pool_bowl",
+   "a": [
+    57.5,
+    -81.5
+   ],
+   "b": [
+    69.5,
+    -81.5
+   ],
+   "base": 3.0,
+   "top": 30.0,
+   "length": 12.0,
+   "ground": [
+    4.01,
+    21.91
+   ],
+   "nearest": {
+    "what": "find spot 11",
+    "studs": 58.64
+   }
+  },
+  {
+   "id": "spur_neck_west",
+   "a": [
+    1.0,
+    -101.0
+   ],
+   "b": [
+    9.0,
+    -91.0
+   ],
+   "base": 3.1,
+   "top": 21.0,
+   "length": 12.81,
+   "ground": [
+    4.11,
+    12.5
+   ],
+   "nearest": {
+    "what": "park kerb (-38, -46)",
+    "studs": 51.42
+   }
+  },
+  {
+   "id": "spur_west_1",
+   "a": [
+    9.0,
+    -91.0
+   ],
+   "b": [
+    11.5,
+    -84.0
+   ],
+   "base": 3.5,
+   "top": 21.0,
+   "length": 7.43,
+   "ground": [
+    4.51,
+    6.31
+   ],
+   "nearest": {
+    "what": "park kerb (-38, -46)",
+    "studs": 48.23
+   }
+  },
+  {
+   "id": "spur_west_2",
+   "a": [
+    11.5,
+    -84.0
+   ],
+   "b": [
+    11.5,
+    -72.0
+   ],
+   "base": 3.8,
+   "top": 21.0,
+   "length": 12.0,
+   "ground": [
+    4.88,
+    5.82
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 40.39
+   }
+  },
+  {
+   "id": "spur_west_3",
+   "a": [
+    11.5,
+    -72.0
+   ],
+   "b": [
+    8.5,
+    -64.0
+   ],
+   "base": 3.6,
+   "top": 21.0,
+   "length": 8.54,
+   "ground": [
+    4.62,
+    6.39
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 31.89
+   }
+  },
+  {
+   "id": "spur_west_4",
+   "a": [
+    8.5,
+    -64.0
+   ],
+   "b": [
+    6.0,
+    -55.0
+   ],
+   "base": 3.6,
+   "top": 21.0,
+   "length": 9.34,
+   "ground": [
+    4.61,
+    5.85
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 22.56
+   }
+  },
+  {
+   "id": "spur_west_5",
+   "a": [
+    6.0,
+    -55.0
+   ],
+   "b": [
+    6.0,
+    -47.0
+   ],
+   "base": 3.5,
+   "top": 21.0,
+   "length": 8.0,
+   "ground": [
+    4.57,
+    5.75
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 14.87
+   }
+  },
+  {
+   "id": "spur_west_6",
+   "a": [
+    6.0,
+    -47.0
+   ],
+   "b": [
+    9.0,
+    -38.0
+   ],
+   "base": 3.5,
+   "top": 21.0,
+   "length": 9.49,
+   "ground": [
+    4.56,
+    8.28
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 9.43
+   }
+  },
+  {
+   "id": "spur_tip_west",
+   "a": [
+    9.0,
+    -38.0
+   ],
+   "b": [
+    13.5,
+    -33.0
+   ],
+   "base": 3.6,
+   "top": 21.0,
+   "length": 6.73,
+   "ground": [
+    4.61,
+    8.28
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 9.43
+   }
+  },
+  {
+   "id": "spur_tip",
+   "a": [
+    13.5,
+    -33.0
+   ],
+   "b": [
+    21.5,
+    -33.0
+   ],
+   "base": 3.3,
+   "top": 21.0,
+   "length": 8.0,
+   "ground": [
+    4.38,
+    6.29
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 12.5
+   }
+  },
+  {
+   "id": "spur_tip_east",
+   "a": [
+    21.5,
+    -33.0
+   ],
+   "b": [
+    26.5,
+    -38.5
+   ],
+   "base": 3.3,
+   "top": 21.0,
+   "length": 7.43,
+   "ground": [
+    4.35,
+    5.43
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 20.5
+   }
+  },
+  {
+   "id": "spur_east_1",
+   "a": [
+    26.5,
+    -38.5
+   ],
+   "b": [
+    26.5,
+    -58.0
+   ],
+   "base": 3.3,
+   "top": 21.0,
+   "length": 19.5,
+   "ground": [
+    4.35,
+    6.28
+   ],
+   "nearest": {
+    "what": "find spot 11",
+    "studs": 24.3
+   }
+  },
+  {
+   "id": "spur_east_2",
+   "a": [
+    26.5,
+    -58.0
+   ],
+   "b": [
+    30.0,
+    -66.0
+   ],
+   "base": 3.5,
+   "top": 21.0,
+   "length": 8.73,
+   "ground": [
+    4.57,
+    6.35
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 35.71
+   }
+  },
+  {
+   "id": "spur_east_3",
+   "a": [
+    30.0,
+    -66.0
+   ],
+   "b": [
+    30.5,
+    -86.0
+   ],
+   "base": 3.4,
+   "top": 21.0,
+   "length": 20.01,
+   "ground": [
+    4.42,
+    11.28
+   ],
+   "nearest": {
+    "what": "station CreekNook",
+    "studs": 43.93
+   }
+  }
+ ],
+ "wallProblems": [],
+ "buriedRingBoxes": [
+  {
+   "kind": "perimeter",
+   "n": 57,
+   "centre": [
+    112.3,
+    27.0
+   ],
+   "top": 17.8,
+   "ground": 18.6
+  },
+  {
+   "kind": "perimeter",
+   "n": 58,
+   "centre": [
+    114.9,
+    21.3
+   ],
+   "top": 22.0,
+   "ground": 24.7
+  },
+  {
+   "kind": "perimeter",
+   "n": 59,
+   "centre": [
+    117.4,
+    15.4
+   ],
+   "top": 27.8,
+   "ground": 26.9
+  },
+  {
+   "kind": "perimeter",
+   "n": 60,
+   "centre": [
+    117.9,
+    9.3
+   ],
+   "top": 31.6,
+   "ground": 27.5
+  },
+  {
+   "kind": "perimeter",
+   "n": 61,
+   "centre": [
+    115.4,
+    3.1
+   ],
+   "top": 31.6,
+   "ground": 27.5
+  },
+  {
+   "kind": "perimeter",
+   "n": 62,
+   "centre": [
+    111.2,
+    -2.9
+   ],
+   "top": 31.4,
+   "ground": 25.3
+  },
+  {
+   "kind": "perimeter",
+   "n": 63,
+   "centre": [
+    107.2,
+    -8.4
+   ],
+   "top": 30.9,
+   "ground": 24.8
+  },
+  {
+   "kind": "perimeter",
+   "n": 64,
+   "centre": [
+    104.1,
+    -13.7
+   ],
+   "top": 30.8,
+   "ground": 24.8
+  },
+  {
+   "kind": "perimeter",
+   "n": 69,
+   "centre": [
+    101.2,
+    -35.9
+   ],
+   "top": 38.1,
+   "ground": 35.8
+  },
+  {
+   "kind": "perimeter",
+   "n": 70,
+   "centre": [
+    101.3,
+    -42.0
+   ],
+   "top": 41.7,
+   "ground": 41.7
+  },
+  {
+   "kind": "perimeter",
+   "n": 71,
+   "centre": [
+    101.3,
+    -48.4
+   ],
+   "top": 46.0,
+   "ground": 42.1
+  },
+  {
+   "kind": "perimeter",
+   "n": 74,
+   "centre": [
+    99.6,
+    -68.5
+   ],
+   "top": 58.4,
+   "ground": 54.8
+  },
+  {
+   "kind": "perimeter",
+   "n": 75,
+   "centre": [
+    97.9,
+    -75.2
+   ],
+   "top": 61.1,
+   "ground": 54.8
+  },
+  {
+   "kind": "perimeter",
+   "n": 80,
+   "centre": [
+    76.7,
+    -99.9
+   ],
+   "top": 58.4,
+   "ground": 56.1
+  },
+  {
+   "kind": "perimeter",
+   "n": 81,
+   "centre": [
+    70.3,
+    -102.2
+   ],
+   "top": 55.0,
+   "ground": 56.1
+  },
+  {
+   "kind": "perimeter",
+   "n": 83,
+   "centre": [
+    57.1,
+    -105.2
+   ],
+   "top": 47.1,
+   "ground": 41.8
+  },
+  {
+   "kind": "perimeter",
+   "n": 84,
+   "centre": [
+    50.7,
+    -106.3
+   ],
+   "top": 43.4,
+   "ground": 39.3
+  },
+  {
+   "kind": "perimeter",
+   "n": 99,
+   "centre": [
+    -32.7,
+    -110.6
+   ],
+   "top": 36.4,
+   "ground": 30.2
+  },
+  {
+   "kind": "perimeter",
+   "n": 100,
+   "centre": [
+    -37.6,
+    -106.3
+   ],
+   "top": 35.2,
+   "ground": 30.2
+  },
+  {
+   "kind": "perimeter",
+   "n": 101,
+   "centre": [
+    -42.1,
+    -101.6
+   ],
+   "top": 34.5,
+   "ground": 29.3
+  },
+  {
+   "kind": "perimeter",
+   "n": 102,
+   "centre": [
+    -46.2,
+    -96.9
+   ],
+   "top": 34.5,
+   "ground": 32.1
+  },
+  {
+   "kind": "perimeter",
+   "n": 103,
+   "centre": [
+    -50.0,
+    -92.2
+   ],
+   "top": 35.2,
+   "ground": 31.4
+  },
+  {
+   "kind": "perimeter",
+   "n": 104,
+   "centre": [
+    -53.8,
+    -87.8
+   ],
+   "top": 36.3,
+   "ground": 33.0
+  },
+  {
+   "kind": "perimeter",
+   "n": 105,
+   "centre": [
+    -57.6,
+    -83.8
+   ],
+   "top": 37.6,
+   "ground": 34.4
+  },
+  {
+   "kind": "perimeter",
+   "n": 106,
+   "centre": [
+    -61.6,
+    -80.3
+   ],
+   "top": 38.8,
+   "ground": 35.1
+  },
+  {
+   "kind": "perimeter",
+   "n": 107,
+   "centre": [
+    -66.0,
+    -77.2
+   ],
+   "top": 39.4,
+   "ground": 36.7
+  },
+  {
+   "kind": "perimeter",
+   "n": 108,
+   "centre": [
+    -70.7,
+    -74.4
+   ],
+   "top": 39.4,
+   "ground": 37.7
+  },
+  {
+   "kind": "perimeter",
+   "n": 109,
+   "centre": [
+    -75.6,
+    -71.7
+   ],
+   "top": 39.1,
+   "ground": 37.7
+  },
+  {
+   "kind": "perimeter",
+   "n": 110,
+   "centre": [
+    -80.6,
+    -68.8
+   ],
+   "top": 37.8,
+   "ground": 37.4
+  },
+  {
+   "kind": "perimeter",
+   "n": 111,
+   "centre": [
+    -85.4,
+    -65.5
+   ],
+   "top": 35.8,
+   "ground": 33.2
+  },
+  {
+   "kind": "perimeter",
+   "n": 112,
+   "centre": [
+    -89.0,
+    -61.1
+   ],
+   "top": 33.6,
+   "ground": 33.2
+  },
+  {
+   "kind": "perimeter",
+   "n": 113,
+   "centre": [
+    -89.8,
+    -55.1
+   ],
+   "top": 28.9,
+   "ground": 32.9
+  },
+  {
+   "kind": "perimeter",
+   "n": 114,
+   "centre": [
+    -88.0,
+    -47.9
+   ],
+   "top": 22.6,
+   "ground": 15.8
+  },
+  {
+   "kind": "cave",
+   "n": 1,
+   "centre": [
+    -7.1,
+    -101.1
+   ],
+   "top": 20.0,
+   "ground": 28.2
+  }
+ ],
+ "safeCells": 21135,
+ "passes": {
+  "walk before": {
+   "reached": 36811,
+   "highCells": 7723,
+   "outsideCells": 2692,
+   "spots": [
+    {
+     "kind": "high",
+     "cells": 7214,
+     "centre": [
+      32.1,
+      -66.2
+     ],
+     "bbox": [
+      -89,
+      -112,
+      120,
+      28
+     ],
+     "maxY": 56.1,
+     "top": [
+      76,
+      -102
+     ],
+     "codes": {
+      "G": 2564,
+      "M": 518,
+      "R": 1911,
+      "W": 283,
+      "g": 1938
+     },
+     "aboveDocLine": 6026,
+     "jumpedCells": 0,
+     "feet": [
+      {
+       "x": 100,
+       "z": 11,
+       "y": 5.8,
+       "paths": 3245
+      },
+      {
+       "x": 7,
+       "z": -54,
+       "y": 5.7,
+       "paths": 2226
+      },
+      {
+       "x": -76,
+       "z": -45,
+       "y": 5.97,
+       "paths": 1252
+      },
+      {
+       "x": 7,
+       "z": -49,
+       "y": 5.74,
+       "paths": 88
+      },
+      {
+       "x": 12,
+       "z": -35,
+       "y": 5.62,
+       "paths": 80
+      },
+      {
+       "x": 13,
+       "z": -34,
+       "y": 5.13,
+       "paths": 71
+      },
+      {
+       "x": 10,
+       "z": -89,
+       "y": 5.63,
+       "paths": 60
+      },
+      {
+       "x": 10,
+       "z": -66,
+       "y": 5.81,
+       "paths": 38
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 508,
+     "centre": [
+      -57.0,
+      45.4
+     ],
+     "bbox": [
+      -76,
+      28,
+      -42,
+      62
+     ],
+     "maxY": 14.3,
+     "top": [
+      -67,
+      46
+     ],
+     "codes": {
+      "G": 19,
+      "M": 235,
+      "R": 11,
+      "g": 243
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 0,
+     "feet": [
+      {
+       "x": -43,
+       "z": 44,
+       "y": 6.1,
+       "paths": 102
+      },
+      {
+       "x": -45,
+       "z": 50,
+       "y": 5.17,
+       "paths": 42
+      },
+      {
+       "x": -41,
+       "z": 20,
+       "y": 5.9,
+       "paths": 29
+      },
+      {
+       "x": -37,
+       "z": 31,
+       "y": 6.02,
+       "paths": 27
+      },
+      {
+       "x": -46,
+       "z": 24,
+       "y": 6.44,
+       "paths": 18
+      },
+      {
+       "x": -37,
+       "z": 29,
+       "y": 5.9,
+       "paths": 17
+      },
+      {
+       "x": -47,
+       "z": 24,
+       "y": 6.26,
+       "paths": 16
+      },
+      {
+       "x": -41,
+       "z": 21,
+       "y": 5.9,
+       "paths": 16
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -63.0,
+      63.0
+     ],
+     "bbox": [
+      -63,
+      63,
+      -63,
+      63
+     ],
+     "maxY": 10.05,
+     "top": [
+      -63,
+      63
+     ],
+     "codes": {
+      "G": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 0,
+     "feet": [
+      {
+       "x": -43,
+       "z": 44,
+       "y": 6.1,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "outside",
+     "cells": 2692,
+     "centre": [
+      106.0,
+      -68.6
+     ],
+     "bbox": [
+      40,
+      -112,
+      121,
+      34
+     ],
+     "maxY": 55.66,
+     "top": [
+      103,
+      -75
+     ],
+     "codes": {
+      "G": 221,
+      "M": 72,
+      "R": 305,
+      "g": 2094
+     },
+     "aboveDocLine": 2279,
+     "jumpedCells": 0,
+     "feet": [
+      {
+       "x": 100,
+       "z": 11,
+       "y": 5.8,
+       "paths": 2585
+      },
+      {
+       "x": 121,
+       "z": -46,
+       "y": 6.32,
+       "paths": 1
+      },
+      {
+       "x": 121,
+       "z": -45,
+       "y": 5.86,
+       "paths": 1
+      },
+      {
+       "x": 121,
+       "z": -44,
+       "y": 5.43,
+       "paths": 1
+      },
+      {
+       "x": 121,
+       "z": -43,
+       "y": 4.99,
+       "paths": 1
+      },
+      {
+       "x": 120,
+       "z": -42,
+       "y": 6.1,
+       "paths": 1
+      },
+      {
+       "x": 121,
+       "z": -42,
+       "y": 4.68,
+       "paths": 1
+      },
+      {
+       "x": 120,
+       "z": -41,
+       "y": 5.71,
+       "paths": 1
+      }
+     ]
+    }
+   ]
+  },
+  "jump before": {
+   "reached": 41130,
+   "highCells": 8189,
+   "outsideCells": 4676,
+   "spots": [
+    {
+     "kind": "high",
+     "cells": 7629,
+     "centre": [
+      29.3,
+      -66.3
+     ],
+     "bbox": [
+      -92,
+      -112,
+      120,
+      28
+     ],
+     "maxY": 60.14,
+     "top": [
+      38,
+      -101
+     ],
+     "codes": {
+      "G": 2823,
+      "M": 560,
+      "R": 2013,
+      "W": 283,
+      "g": 1950
+     },
+     "aboveDocLine": 6425,
+     "jumpedCells": 1838,
+     "feet": [
+      {
+       "x": 100,
+       "z": 14,
+       "y": 5.29,
+       "paths": 2595
+      },
+      {
+       "x": -37,
+       "z": -69,
+       "y": 4.38,
+       "paths": 427
+      },
+      {
+       "x": 30,
+       "z": -82,
+       "y": 4.67,
+       "paths": 399
+      },
+      {
+       "x": -48,
+       "z": -62,
+       "y": 5.37,
+       "paths": 379
+      },
+      {
+       "x": 30,
+       "z": -81,
+       "y": 4.85,
+       "paths": 314
+      },
+      {
+       "x": 66,
+       "z": -81,
+       "y": 5.11,
+       "paths": 312
+      },
+      {
+       "x": -19,
+       "z": -89,
+       "y": 4.44,
+       "paths": 297
+      },
+      {
+       "x": 11,
+       "z": -91,
+       "y": 6.5,
+       "paths": 238
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 508,
+     "centre": [
+      -57.0,
+      45.4
+     ],
+     "bbox": [
+      -76,
+      28,
+      -42,
+      62
+     ],
+     "maxY": 14.3,
+     "top": [
+      -67,
+      46
+     ],
+     "codes": {
+      "G": 19,
+      "M": 235,
+      "R": 11,
+      "g": 243
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 130,
+     "feet": [
+      {
+       "x": -40,
+       "z": 40,
+       "y": 5.24,
+       "paths": 139
+      },
+      {
+       "x": -48,
+       "z": 62,
+       "y": 4.6,
+       "paths": 67
+      },
+      {
+       "x": -54,
+       "z": 66,
+       "y": 5.86,
+       "paths": 38
+      },
+      {
+       "x": -40,
+       "z": 38,
+       "y": 6.3,
+       "paths": 29
+      },
+      {
+       "x": -53,
+       "z": 65,
+       "y": 5.32,
+       "paths": 26
+      },
+      {
+       "x": -39,
+       "z": 36,
+       "y": 6.26,
+       "paths": 26
+      },
+      {
+       "x": -60,
+       "z": 34,
+       "y": 6.48,
+       "paths": 23
+      },
+      {
+       "x": -39,
+       "z": 39,
+       "y": 4.93,
+       "paths": 23
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 3,
+     "centre": [
+      -33.0,
+      37.0
+     ],
+     "bbox": [
+      -34,
+      36,
+      -32,
+      38
+     ],
+     "maxY": 12.78,
+     "top": [
+      -34,
+      38
+     ],
+     "codes": {
+      "T": 3
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -33,
+       "z": 38,
+       "y": 5.57,
+       "paths": 3
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 3,
+     "centre": [
+      -97.0,
+      -16.3
+     ],
+     "bbox": [
+      -98,
+      -17,
+      -96,
+      -16
+     ],
+     "maxY": 14.48,
+     "top": [
+      -96,
+      -17
+     ],
+     "codes": {
+      "T": 3
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -97,
+       "z": -15,
+       "y": 4.0,
+       "paths": 3
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      89.5,
+      51.5
+     ],
+     "bbox": [
+      89,
+      51,
+      90,
+      52
+     ],
+     "maxY": 11.51,
+     "top": [
+      89,
+      51
+     ],
+     "codes": {
+      "M": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 91,
+       "z": 53,
+       "y": 4.54,
+       "paths": 1
+      },
+      {
+       "x": 90,
+       "z": 54,
+       "y": 4.54,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -7.5,
+      -48.0
+     ],
+     "bbox": [
+      -8,
+      -48,
+      -7,
+      -48
+     ],
+     "maxY": 10.3,
+     "top": [
+      -7,
+      -48
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -7,
+       "z": -46,
+       "y": 4.59,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      75.5,
+      -40.5
+     ],
+     "bbox": [
+      75,
+      -41,
+      76,
+      -40
+     ],
+     "maxY": 11.2,
+     "top": [
+      76,
+      -40
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 77,
+       "z": -39,
+       "y": 4.27,
+       "paths": 1
+      },
+      {
+       "x": 77,
+       "z": -38,
+       "y": 4.26,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      80.5,
+      63.5
+     ],
+     "bbox": [
+      80,
+      63,
+      81,
+      64
+     ],
+     "maxY": 11.51,
+     "top": [
+      81,
+      64
+     ],
+     "codes": {
+      "M": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 82,
+       "z": 64,
+       "y": 5.06,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      65.5,
+      26.5
+     ],
+     "bbox": [
+      65,
+      26,
+      66,
+      27
+     ],
+     "maxY": 12.35,
+     "top": [
+      66,
+      26
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 66,
+       "z": 27,
+       "y": 5.75,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -65.5,
+      28.5
+     ],
+     "bbox": [
+      -66,
+      28,
+      -65,
+      29
+     ],
+     "maxY": 10.78,
+     "top": [
+      -65,
+      29
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -64,
+       "z": 26,
+       "y": 4.66,
+       "paths": 1
+      },
+      {
+       "x": -63,
+       "z": 27,
+       "y": 4.68,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -48.5,
+      -9.0
+     ],
+     "bbox": [
+      -49,
+      -9,
+      -48,
+      -9
+     ],
+     "maxY": 11.19,
+     "top": [
+      -48,
+      -9
+     ],
+     "codes": {
+      "M": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -46,
+       "z": -11,
+       "y": 4.2,
+       "paths": 1
+      },
+      {
+       "x": -45,
+       "z": -11,
+       "y": 4.2,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      17.5,
+      43.5
+     ],
+     "bbox": [
+      17,
+      43,
+      18,
+      44
+     ],
+     "maxY": 10.39,
+     "top": [
+      17,
+      43
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 19,
+       "z": 45,
+       "y": 4.57,
+       "paths": 1
+      },
+      {
+       "x": 20,
+       "z": 46,
+       "y": 4.56,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      38.5,
+      8.0
+     ],
+     "bbox": [
+      38,
+      8,
+      39,
+      8
+     ],
+     "maxY": 11.29,
+     "top": [
+      38,
+      8
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 41,
+       "z": 6,
+       "y": 4.11,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -62.0,
+      -23.5
+     ],
+     "bbox": [
+      -62,
+      -24,
+      -62,
+      -23
+     ],
+     "maxY": 12.79,
+     "top": [
+      -62,
+      -24
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -61,
+       "z": -23,
+       "y": 5.18,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      99.5,
+      43.5
+     ],
+     "bbox": [
+      99,
+      43,
+      100,
+      44
+     ],
+     "maxY": 10.99,
+     "top": [
+      100,
+      44
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 97,
+       "z": 45,
+       "y": 4.53,
+       "paths": 1
+      },
+      {
+       "x": 98,
+       "z": 46,
+       "y": 4.52,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -69.5,
+      -44.5
+     ],
+     "bbox": [
+      -70,
+      -45,
+      -69,
+      -44
+     ],
+     "maxY": 12.09,
+     "top": [
+      -70,
+      -44
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -70,
+       "z": -45,
+       "y": 5.55,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      101.0,
+      46.0
+     ],
+     "bbox": [
+      101,
+      46,
+      101,
+      46
+     ],
+     "maxY": 10.68,
+     "top": [
+      101,
+      46
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 99,
+       "z": 48,
+       "y": 4.52,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -72.0,
+      -43.0
+     ],
+     "bbox": [
+      -72,
+      -43,
+      -72,
+      -43
+     ],
+     "maxY": 11.34,
+     "top": [
+      -72,
+      -43
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -70,
+       "z": -45,
+       "y": 5.55,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -15.0,
+      -15.0
+     ],
+     "bbox": [
+      -15,
+      -15,
+      -15,
+      -15
+     ],
+     "maxY": 10.21,
+     "top": [
+      -15,
+      -15
+     ],
+     "codes": {
+      "M": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -13,
+       "z": -17,
+       "y": 4.1,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -68.0,
+      27.0
+     ],
+     "bbox": [
+      -68,
+      27,
+      -68,
+      27
+     ],
+     "maxY": 10.53,
+     "top": [
+      -68,
+      27
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -66,
+       "z": 29,
+       "y": 4.71,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      38.0,
+      -62.0
+     ],
+     "bbox": [
+      38,
+      -62,
+      38,
+      -62
+     ],
+     "maxY": 10.27,
+     "top": [
+      38,
+      -62
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 36,
+       "z": -60,
+       "y": 4.59,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -17.0,
+      -16.0
+     ],
+     "bbox": [
+      -17,
+      -16,
+      -17,
+      -16
+     ],
+     "maxY": 11.01,
+     "top": [
+      -17,
+      -16
+     ],
+     "codes": {
+      "M": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -15,
+       "z": -14,
+       "y": 4.7,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -12.0,
+      33.0
+     ],
+     "bbox": [
+      -12,
+      33,
+      -12,
+      33
+     ],
+     "maxY": 10.08,
+     "top": [
+      -12,
+      33
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -10,
+       "z": 31,
+       "y": 4.73,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -35.0,
+      40.0
+     ],
+     "bbox": [
+      -35,
+      40,
+      -35,
+      40
+     ],
+     "maxY": 12.79,
+     "top": [
+      -35,
+      40
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -35,
+       "z": 38,
+       "y": 5.8,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -28.0,
+      56.0
+     ],
+     "bbox": [
+      -28,
+      56,
+      -28,
+      56
+     ],
+     "maxY": 11.22,
+     "top": [
+      -28,
+      56
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -26,
+       "z": 54,
+       "y": 4.5,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -11.0,
+      36.0
+     ],
+     "bbox": [
+      -11,
+      36,
+      -11,
+      36
+     ],
+     "maxY": 10.36,
+     "top": [
+      -11,
+      36
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -9,
+       "z": 34,
+       "y": 4.74,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -10.0,
+      -47.0
+     ],
+     "bbox": [
+      -10,
+      -47,
+      -10,
+      -47
+     ],
+     "maxY": 10.38,
+     "top": [
+      -10,
+      -47
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -9,
+       "z": -45,
+       "y": 4.6,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      20.0,
+      45.0
+     ],
+     "bbox": [
+      20,
+      45,
+      20,
+      45
+     ],
+     "maxY": 10.33,
+     "top": [
+      20,
+      45
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 22,
+       "z": 47,
+       "y": 4.56,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      72.0,
+      -22.0
+     ],
+     "bbox": [
+      72,
+      -22,
+      72,
+      -22
+     ],
+     "maxY": 12.54,
+     "top": [
+      72,
+      -22
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 75,
+       "z": -18,
+       "y": 4.32,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -46.0,
+      -10.0
+     ],
+     "bbox": [
+      -46,
+      -10,
+      -46,
+      -10
+     ],
+     "maxY": 11.29,
+     "top": [
+      -46,
+      -10
+     ],
+     "codes": {
+      "M": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -43,
+       "z": -10,
+       "y": 4.15,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -63.0,
+      63.0
+     ],
+     "bbox": [
+      -63,
+      63,
+      -63,
+      63
+     ],
+     "maxY": 10.05,
+     "top": [
+      -63,
+      63
+     ],
+     "codes": {
+      "G": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 0,
+     "feet": [
+      {
+       "x": -54,
+       "z": 66,
+       "y": 5.86,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -76.0,
+      16.0
+     ],
+     "bbox": [
+      -76,
+      16,
+      -76,
+      16
+     ],
+     "maxY": 11.04,
+     "top": [
+      -76,
+      16
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -74,
+       "z": 15,
+       "y": 4.5,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      52.0,
+      56.0
+     ],
+     "bbox": [
+      52,
+      56,
+      52,
+      56
+     ],
+     "maxY": 10.92,
+     "top": [
+      52,
+      56
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 54,
+       "z": 54,
+       "y": 4.52,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      36.0,
+      -62.0
+     ],
+     "bbox": [
+      36,
+      -62,
+      36,
+      -62
+     ],
+     "maxY": 10.48,
+     "top": [
+      36,
+      -62
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 34,
+       "z": -60,
+       "y": 4.58,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -44.0,
+      -11.0
+     ],
+     "bbox": [
+      -44,
+      -11,
+      -44,
+      -11
+     ],
+     "maxY": 11.19,
+     "top": [
+      -44,
+      -11
+     ],
+     "codes": {
+      "M": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -42,
+       "z": -9,
+       "y": 4.1,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      36.0,
+      -16.0
+     ],
+     "bbox": [
+      36,
+      -16,
+      36,
+      -16
+     ],
+     "maxY": 10.52,
+     "top": [
+      36,
+      -16
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 34,
+       "z": -14,
+       "y": 4.52,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -61.0,
+      -26.0
+     ],
+     "bbox": [
+      -61,
+      -26,
+      -61,
+      -26
+     ],
+     "maxY": 12.05,
+     "top": [
+      -61,
+      -26
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -61,
+       "z": -25,
+       "y": 5.22,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      74.0,
+      12.0
+     ],
+     "bbox": [
+      74,
+      12,
+      74,
+      12
+     ],
+     "maxY": 10.17,
+     "top": [
+      74,
+      12
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 72,
+       "z": 14,
+       "y": 4.77,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "outside",
+     "cells": 2692,
+     "centre": [
+      106.0,
+      -68.6
+     ],
+     "bbox": [
+      40,
+      -112,
+      121,
+      34
+     ],
+     "maxY": 55.66,
+     "top": [
+      103,
+      -75
+     ],
+     "codes": {
+      "G": 221,
+      "M": 72,
+      "R": 305,
+      "g": 2094
+     },
+     "aboveDocLine": 2279,
+     "jumpedCells": 619,
+     "feet": [
+      {
+       "x": 118,
+       "z": -30,
+       "y": 5.41,
+       "paths": 1668
+      },
+      {
+       "x": 100,
+       "z": 14,
+       "y": 5.29,
+       "paths": 389
+      },
+      {
+       "x": 100,
+       "z": 18,
+       "y": 4.37,
+       "paths": 223
+      },
+      {
+       "x": 117,
+       "z": -25,
+       "y": 6.4,
+       "paths": 52
+      },
+      {
+       "x": 118,
+       "z": -31,
+       "y": 5.63,
+       "paths": 39
+      },
+      {
+       "x": 119,
+       "z": -29,
+       "y": 4.05,
+       "paths": 22
+      },
+      {
+       "x": 118,
+       "z": -29,
+       "y": 5.31,
+       "paths": 20
+      },
+      {
+       "x": 119,
+       "z": -30,
+       "y": 4.15,
+       "paths": 19
+      }
+     ]
+    },
+    {
+     "kind": "outside",
+     "cells": 1907,
+     "centre": [
+      -79.9,
+      -83.3
+     ],
+     "bbox": [
+      -109,
+      -112,
+      -36,
+      -37
+     ],
+     "maxY": 36.36,
+     "top": [
+      -80,
+      -73
+     ],
+     "codes": {
+      "G": 373,
+      "R": 509,
+      "g": 1025
+     },
+     "aboveDocLine": 866,
+     "jumpedCells": 42,
+     "feet": [
+      {
+       "x": -37,
+       "z": -69,
+       "y": 4.38,
+       "paths": 422
+      },
+      {
+       "x": -64,
+       "z": -52,
+       "y": 5.14,
+       "paths": 314
+      },
+      {
+       "x": -48,
+       "z": -62,
+       "y": 5.37,
+       "paths": 273
+      },
+      {
+       "x": -36,
+       "z": -68,
+       "y": 4.6,
+       "paths": 135
+      },
+      {
+       "x": -28,
+       "z": -79,
+       "y": 4.61,
+       "paths": 113
+      },
+      {
+       "x": -19,
+       "z": -89,
+       "y": 4.44,
+       "paths": 68
+      },
+      {
+       "x": -95,
+       "z": -45,
+       "y": 0.7,
+       "paths": 18
+      },
+      {
+       "x": -95,
+       "z": -46,
+       "y": 1.68,
+       "paths": 7
+      }
+     ]
+    },
+    {
+     "kind": "outside",
+     "cells": 75,
+     "centre": [
+      -5.3,
+      59.2
+     ],
+     "bbox": [
+      -9,
+      54,
+      -1,
+      64
+     ],
+     "maxY": 4.3,
+     "top": [
+      -9,
+      61
+     ],
+     "codes": {
+      "M": 10,
+      "P": 3,
+      "W": 62
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 8,
+     "feet": [
+      {
+       "x": -9,
+       "z": 59,
+       "y": 4.0,
+       "paths": 1
+      },
+      {
+       "x": -9,
+       "z": 58,
+       "y": 4.0,
+       "paths": 1
+      },
+      {
+       "x": -9,
+       "z": 60,
+       "y": 4.0,
+       "paths": 1
+      },
+      {
+       "x": -8,
+       "z": 58,
+       "y": 3.16,
+       "paths": 1
+      },
+      {
+       "x": -8,
+       "z": 59,
+       "y": 3.16,
+       "paths": 1
+      },
+      {
+       "x": -8,
+       "z": 60,
+       "y": 3.16,
+       "paths": 1
+      },
+      {
+       "x": -9,
+       "z": 57,
+       "y": 4.0,
+       "paths": 1
+      },
+      {
+       "x": -8,
+       "z": 57,
+       "y": 3.16,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "outside",
+     "cells": 2,
+     "centre": [
+      -11.0,
+      58.5
+     ],
+     "bbox": [
+      -11,
+      58,
+      -11,
+      59
+     ],
+     "maxY": 2.09,
+     "top": [
+      -11,
+      59
+     ],
+     "codes": {
+      "P": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -11,
+       "z": 58,
+       "y": 1.3,
+       "paths": 1
+      },
+      {
+       "x": -11,
+       "z": 59,
+       "y": 2.09,
+       "paths": 1
+      }
+     ]
+    }
+   ]
+  },
+  "walk after": {
+   "reached": 25525,
+   "highCells": 517,
+   "outsideCells": 0,
+   "spots": [
+    {
+     "kind": "high",
+     "cells": 508,
+     "centre": [
+      -57.0,
+      45.4
+     ],
+     "bbox": [
+      -76,
+      28,
+      -42,
+      62
+     ],
+     "maxY": 14.3,
+     "top": [
+      -57,
+      57
+     ],
+     "codes": {
+      "G": 19,
+      "M": 235,
+      "R": 11,
+      "g": 243
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 0,
+     "feet": [
+      {
+       "x": -43,
+       "z": 44,
+       "y": 6.1,
+       "paths": 102
+      },
+      {
+       "x": -45,
+       "z": 50,
+       "y": 5.17,
+       "paths": 42
+      },
+      {
+       "x": -41,
+       "z": 20,
+       "y": 5.9,
+       "paths": 29
+      },
+      {
+       "x": -37,
+       "z": 31,
+       "y": 6.02,
+       "paths": 27
+      },
+      {
+       "x": -46,
+       "z": 24,
+       "y": 6.44,
+       "paths": 18
+      },
+      {
+       "x": -37,
+       "z": 29,
+       "y": 5.9,
+       "paths": 17
+      },
+      {
+       "x": -47,
+       "z": 24,
+       "y": 6.26,
+       "paths": 16
+      },
+      {
+       "x": -41,
+       "z": 21,
+       "y": 5.9,
+       "paths": 16
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 8,
+     "centre": [
+      80.4,
+      -68.4
+     ],
+     "bbox": [
+      79,
+      -70,
+      81,
+      -66
+     ],
+     "maxY": 16.04,
+     "top": [
+      81,
+      -69
+     ],
+     "codes": {
+      "M": 2,
+      "g": 6
+     },
+     "aboveDocLine": 1,
+     "jumpedCells": 0,
+     "feet": [
+      {
+       "x": 79,
+       "z": -66,
+       "y": 5.76,
+       "paths": 8
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -63.0,
+      63.0
+     ],
+     "bbox": [
+      -63,
+      63,
+      -63,
+      63
+     ],
+     "maxY": 10.05,
+     "top": [
+      -63,
+      63
+     ],
+     "codes": {
+      "G": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 0,
+     "feet": [
+      {
+       "x": -43,
+       "z": 44,
+       "y": 6.1,
+       "paths": 1
+      }
+     ]
+    }
+   ]
+  },
+  "jump after": {
+   "reached": 40717,
+   "highCells": 8159,
+   "outsideCells": 4676,
+   "spots": [
+    {
+     "kind": "high",
+     "cells": 7599,
+     "centre": [
+      29.2,
+      -66.4
+     ],
+     "bbox": [
+      -92,
+      -112,
+      120,
+      28
+     ],
+     "maxY": 60.14,
+     "top": [
+      38,
+      -101
+     ],
+     "codes": {
+      "G": 2818,
+      "M": 556,
+      "R": 1992,
+      "W": 283,
+      "g": 1950
+     },
+     "aboveDocLine": 6420,
+     "jumpedCells": 1531,
+     "feet": [
+      {
+       "x": 79,
+       "z": -14,
+       "y": 5.06,
+       "paths": 3175
+      },
+      {
+       "x": 77,
+       "z": -69,
+       "y": 3.87,
+       "paths": 1692
+      },
+      {
+       "x": -37,
+       "z": -69,
+       "y": 4.38,
+       "paths": 428
+      },
+      {
+       "x": -29,
+       "z": -79,
+       "y": 4.54,
+       "paths": 386
+      },
+      {
+       "x": -48,
+       "z": -62,
+       "y": 5.37,
+       "paths": 379
+      },
+      {
+       "x": -36,
+       "z": -68,
+       "y": 4.6,
+       "paths": 281
+      },
+      {
+       "x": -26,
+       "z": -90,
+       "y": 6.46,
+       "paths": 249
+      },
+      {
+       "x": -23,
+       "z": -89,
+       "y": 4.18,
+       "paths": 207
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 508,
+     "centre": [
+      -57.0,
+      45.4
+     ],
+     "bbox": [
+      -76,
+      28,
+      -42,
+      62
+     ],
+     "maxY": 14.3,
+     "top": [
+      -67,
+      46
+     ],
+     "codes": {
+      "G": 19,
+      "M": 235,
+      "R": 11,
+      "g": 243
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 130,
+     "feet": [
+      {
+       "x": -40,
+       "z": 40,
+       "y": 5.24,
+       "paths": 139
+      },
+      {
+       "x": -48,
+       "z": 62,
+       "y": 4.6,
+       "paths": 67
+      },
+      {
+       "x": -54,
+       "z": 66,
+       "y": 5.86,
+       "paths": 38
+      },
+      {
+       "x": -40,
+       "z": 38,
+       "y": 6.3,
+       "paths": 29
+      },
+      {
+       "x": -53,
+       "z": 65,
+       "y": 5.32,
+       "paths": 26
+      },
+      {
+       "x": -39,
+       "z": 36,
+       "y": 6.26,
+       "paths": 26
+      },
+      {
+       "x": -60,
+       "z": 34,
+       "y": 6.48,
+       "paths": 23
+      },
+      {
+       "x": -39,
+       "z": 39,
+       "y": 4.93,
+       "paths": 23
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 3,
+     "centre": [
+      -33.0,
+      37.0
+     ],
+     "bbox": [
+      -34,
+      36,
+      -32,
+      38
+     ],
+     "maxY": 12.78,
+     "top": [
+      -34,
+      38
+     ],
+     "codes": {
+      "T": 3
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -33,
+       "z": 38,
+       "y": 5.57,
+       "paths": 3
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 3,
+     "centre": [
+      -97.0,
+      -16.3
+     ],
+     "bbox": [
+      -98,
+      -17,
+      -96,
+      -16
+     ],
+     "maxY": 14.48,
+     "top": [
+      -96,
+      -17
+     ],
+     "codes": {
+      "T": 3
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -97,
+       "z": -15,
+       "y": 4.0,
+       "paths": 3
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      89.5,
+      51.5
+     ],
+     "bbox": [
+      89,
+      51,
+      90,
+      52
+     ],
+     "maxY": 11.51,
+     "top": [
+      89,
+      51
+     ],
+     "codes": {
+      "M": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 91,
+       "z": 53,
+       "y": 4.54,
+       "paths": 1
+      },
+      {
+       "x": 90,
+       "z": 54,
+       "y": 4.54,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -7.5,
+      -48.0
+     ],
+     "bbox": [
+      -8,
+      -48,
+      -7,
+      -48
+     ],
+     "maxY": 10.3,
+     "top": [
+      -7,
+      -48
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -7,
+       "z": -46,
+       "y": 4.59,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      75.5,
+      -40.5
+     ],
+     "bbox": [
+      75,
+      -41,
+      76,
+      -40
+     ],
+     "maxY": 11.2,
+     "top": [
+      76,
+      -40
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 77,
+       "z": -39,
+       "y": 4.27,
+       "paths": 1
+      },
+      {
+       "x": 77,
+       "z": -38,
+       "y": 4.26,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      80.5,
+      63.5
+     ],
+     "bbox": [
+      80,
+      63,
+      81,
+      64
+     ],
+     "maxY": 11.51,
+     "top": [
+      81,
+      64
+     ],
+     "codes": {
+      "M": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 82,
+       "z": 64,
+       "y": 5.06,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      65.5,
+      26.5
+     ],
+     "bbox": [
+      65,
+      26,
+      66,
+      27
+     ],
+     "maxY": 12.35,
+     "top": [
+      66,
+      26
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 66,
+       "z": 27,
+       "y": 5.75,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -65.5,
+      28.5
+     ],
+     "bbox": [
+      -66,
+      28,
+      -65,
+      29
+     ],
+     "maxY": 10.78,
+     "top": [
+      -65,
+      29
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -64,
+       "z": 26,
+       "y": 4.66,
+       "paths": 1
+      },
+      {
+       "x": -63,
+       "z": 27,
+       "y": 4.68,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -48.5,
+      -9.0
+     ],
+     "bbox": [
+      -49,
+      -9,
+      -48,
+      -9
+     ],
+     "maxY": 11.19,
+     "top": [
+      -48,
+      -9
+     ],
+     "codes": {
+      "M": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -46,
+       "z": -11,
+       "y": 4.2,
+       "paths": 1
+      },
+      {
+       "x": -45,
+       "z": -11,
+       "y": 4.2,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      17.5,
+      43.5
+     ],
+     "bbox": [
+      17,
+      43,
+      18,
+      44
+     ],
+     "maxY": 10.39,
+     "top": [
+      17,
+      43
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 19,
+       "z": 45,
+       "y": 4.57,
+       "paths": 1
+      },
+      {
+       "x": 20,
+       "z": 46,
+       "y": 4.56,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      38.5,
+      8.0
+     ],
+     "bbox": [
+      38,
+      8,
+      39,
+      8
+     ],
+     "maxY": 11.29,
+     "top": [
+      38,
+      8
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 41,
+       "z": 6,
+       "y": 4.11,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -62.0,
+      -23.5
+     ],
+     "bbox": [
+      -62,
+      -24,
+      -62,
+      -23
+     ],
+     "maxY": 12.79,
+     "top": [
+      -62,
+      -24
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -61,
+       "z": -23,
+       "y": 5.18,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      99.5,
+      43.5
+     ],
+     "bbox": [
+      99,
+      43,
+      100,
+      44
+     ],
+     "maxY": 10.99,
+     "top": [
+      100,
+      44
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": 97,
+       "z": 45,
+       "y": 4.53,
+       "paths": 1
+      },
+      {
+       "x": 98,
+       "z": 46,
+       "y": 4.52,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 2,
+     "centre": [
+      -69.5,
+      -44.5
+     ],
+     "bbox": [
+      -70,
+      -45,
+      -69,
+      -44
+     ],
+     "maxY": 12.09,
+     "top": [
+      -70,
+      -44
+     ],
+     "codes": {
+      "T": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -70,
+       "z": -45,
+       "y": 5.55,
+       "paths": 2
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      101.0,
+      46.0
+     ],
+     "bbox": [
+      101,
+      46,
+      101,
+      46
+     ],
+     "maxY": 10.68,
+     "top": [
+      101,
+      46
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 99,
+       "z": 48,
+       "y": 4.52,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -72.0,
+      -43.0
+     ],
+     "bbox": [
+      -72,
+      -43,
+      -72,
+      -43
+     ],
+     "maxY": 11.34,
+     "top": [
+      -72,
+      -43
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -70,
+       "z": -45,
+       "y": 5.55,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -15.0,
+      -15.0
+     ],
+     "bbox": [
+      -15,
+      -15,
+      -15,
+      -15
+     ],
+     "maxY": 10.21,
+     "top": [
+      -15,
+      -15
+     ],
+     "codes": {
+      "M": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -13,
+       "z": -17,
+       "y": 4.1,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -68.0,
+      27.0
+     ],
+     "bbox": [
+      -68,
+      27,
+      -68,
+      27
+     ],
+     "maxY": 10.53,
+     "top": [
+      -68,
+      27
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -66,
+       "z": 29,
+       "y": 4.71,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      38.0,
+      -62.0
+     ],
+     "bbox": [
+      38,
+      -62,
+      38,
+      -62
+     ],
+     "maxY": 10.27,
+     "top": [
+      38,
+      -62
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 36,
+       "z": -60,
+       "y": 4.59,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -17.0,
+      -16.0
+     ],
+     "bbox": [
+      -17,
+      -16,
+      -17,
+      -16
+     ],
+     "maxY": 11.01,
+     "top": [
+      -17,
+      -16
+     ],
+     "codes": {
+      "M": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -15,
+       "z": -14,
+       "y": 4.7,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -12.0,
+      33.0
+     ],
+     "bbox": [
+      -12,
+      33,
+      -12,
+      33
+     ],
+     "maxY": 10.08,
+     "top": [
+      -12,
+      33
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -10,
+       "z": 31,
+       "y": 4.73,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -35.0,
+      40.0
+     ],
+     "bbox": [
+      -35,
+      40,
+      -35,
+      40
+     ],
+     "maxY": 12.79,
+     "top": [
+      -35,
+      40
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -35,
+       "z": 38,
+       "y": 5.8,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -28.0,
+      56.0
+     ],
+     "bbox": [
+      -28,
+      56,
+      -28,
+      56
+     ],
+     "maxY": 11.22,
+     "top": [
+      -28,
+      56
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -26,
+       "z": 54,
+       "y": 4.5,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -11.0,
+      36.0
+     ],
+     "bbox": [
+      -11,
+      36,
+      -11,
+      36
+     ],
+     "maxY": 10.36,
+     "top": [
+      -11,
+      36
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -9,
+       "z": 34,
+       "y": 4.74,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -10.0,
+      -47.0
+     ],
+     "bbox": [
+      -10,
+      -47,
+      -10,
+      -47
+     ],
+     "maxY": 10.38,
+     "top": [
+      -10,
+      -47
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -9,
+       "z": -45,
+       "y": 4.6,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      20.0,
+      45.0
+     ],
+     "bbox": [
+      20,
+      45,
+      20,
+      45
+     ],
+     "maxY": 10.33,
+     "top": [
+      20,
+      45
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 22,
+       "z": 47,
+       "y": 4.56,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      72.0,
+      -22.0
+     ],
+     "bbox": [
+      72,
+      -22,
+      72,
+      -22
+     ],
+     "maxY": 12.54,
+     "top": [
+      72,
+      -22
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 70,
+       "z": -18,
+       "y": 4.64,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -46.0,
+      -10.0
+     ],
+     "bbox": [
+      -46,
+      -10,
+      -46,
+      -10
+     ],
+     "maxY": 11.29,
+     "top": [
+      -46,
+      -10
+     ],
+     "codes": {
+      "M": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -43,
+       "z": -10,
+       "y": 4.15,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -63.0,
+      63.0
+     ],
+     "bbox": [
+      -63,
+      63,
+      -63,
+      63
+     ],
+     "maxY": 10.05,
+     "top": [
+      -63,
+      63
+     ],
+     "codes": {
+      "G": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 0,
+     "feet": [
+      {
+       "x": -54,
+       "z": 66,
+       "y": 5.86,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -76.0,
+      16.0
+     ],
+     "bbox": [
+      -76,
+      16,
+      -76,
+      16
+     ],
+     "maxY": 11.04,
+     "top": [
+      -76,
+      16
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -74,
+       "z": 15,
+       "y": 4.5,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      52.0,
+      56.0
+     ],
+     "bbox": [
+      52,
+      56,
+      52,
+      56
+     ],
+     "maxY": 10.92,
+     "top": [
+      52,
+      56
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 54,
+       "z": 54,
+       "y": 4.52,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      36.0,
+      -62.0
+     ],
+     "bbox": [
+      36,
+      -62,
+      36,
+      -62
+     ],
+     "maxY": 10.48,
+     "top": [
+      36,
+      -62
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 34,
+       "z": -60,
+       "y": 4.58,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -44.0,
+      -11.0
+     ],
+     "bbox": [
+      -44,
+      -11,
+      -44,
+      -11
+     ],
+     "maxY": 11.19,
+     "top": [
+      -44,
+      -11
+     ],
+     "codes": {
+      "M": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -42,
+       "z": -9,
+       "y": 4.1,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      36.0,
+      -16.0
+     ],
+     "bbox": [
+      36,
+      -16,
+      36,
+      -16
+     ],
+     "maxY": 10.52,
+     "top": [
+      36,
+      -16
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 34,
+       "z": -14,
+       "y": 4.52,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      -61.0,
+      -26.0
+     ],
+     "bbox": [
+      -61,
+      -26,
+      -61,
+      -26
+     ],
+     "maxY": 12.05,
+     "top": [
+      -61,
+      -26
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": -61,
+       "z": -25,
+       "y": 5.22,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "high",
+     "cells": 1,
+     "centre": [
+      74.0,
+      12.0
+     ],
+     "bbox": [
+      74,
+      12,
+      74,
+      12
+     ],
+     "maxY": 10.17,
+     "top": [
+      74,
+      12
+     ],
+     "codes": {
+      "T": 1
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 1,
+     "feet": [
+      {
+       "x": 72,
+       "z": 14,
+       "y": 4.77,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "outside",
+     "cells": 2692,
+     "centre": [
+      106.0,
+      -68.6
+     ],
+     "bbox": [
+      40,
+      -112,
+      121,
+      34
+     ],
+     "maxY": 55.66,
+     "top": [
+      103,
+      -75
+     ],
+     "codes": {
+      "G": 221,
+      "M": 72,
+      "R": 305,
+      "g": 2094
+     },
+     "aboveDocLine": 2279,
+     "jumpedCells": 403,
+     "feet": [
+      {
+       "x": 79,
+       "z": -14,
+       "y": 5.06,
+       "paths": 2578
+      },
+      {
+       "x": 118,
+       "z": -23,
+       "y": 5.42,
+       "paths": 3
+      },
+      {
+       "x": 118,
+       "z": -22,
+       "y": 5.65,
+       "paths": 3
+      },
+      {
+       "x": 117,
+       "z": -25,
+       "y": 6.4,
+       "paths": 2
+      },
+      {
+       "x": 117,
+       "z": -24,
+       "y": 6.42,
+       "paths": 2
+      },
+      {
+       "x": 118,
+       "z": -24,
+       "y": 5.2,
+       "paths": 2
+      },
+      {
+       "x": 121,
+       "z": -46,
+       "y": 6.32,
+       "paths": 1
+      },
+      {
+       "x": 121,
+       "z": -45,
+       "y": 5.86,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "outside",
+     "cells": 1907,
+     "centre": [
+      -79.9,
+      -83.3
+     ],
+     "bbox": [
+      -109,
+      -112,
+      -36,
+      -37
+     ],
+     "maxY": 36.36,
+     "top": [
+      -80,
+      -73
+     ],
+     "codes": {
+      "G": 373,
+      "R": 509,
+      "g": 1025
+     },
+     "aboveDocLine": 866,
+     "jumpedCells": 57,
+     "feet": [
+      {
+       "x": -37,
+       "z": -69,
+       "y": 4.38,
+       "paths": 422
+      },
+      {
+       "x": -64,
+       "z": -52,
+       "y": 5.14,
+       "paths": 314
+      },
+      {
+       "x": -36,
+       "z": -68,
+       "y": 4.6,
+       "paths": 288
+      },
+      {
+       "x": -48,
+       "z": -62,
+       "y": 5.37,
+       "paths": 273
+      },
+      {
+       "x": -29,
+       "z": -79,
+       "y": 4.54,
+       "paths": 28
+      },
+      {
+       "x": -95,
+       "z": -45,
+       "y": 0.7,
+       "paths": 18
+      },
+      {
+       "x": -95,
+       "z": -46,
+       "y": 1.68,
+       "paths": 7
+      },
+      {
+       "x": -95,
+       "z": -49,
+       "y": 4.74,
+       "paths": 6
+      }
+     ]
+    },
+    {
+     "kind": "outside",
+     "cells": 75,
+     "centre": [
+      -5.3,
+      59.2
+     ],
+     "bbox": [
+      -9,
+      54,
+      -1,
+      64
+     ],
+     "maxY": 4.3,
+     "top": [
+      -9,
+      61
+     ],
+     "codes": {
+      "M": 10,
+      "P": 3,
+      "W": 62
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 8,
+     "feet": [
+      {
+       "x": -9,
+       "z": 59,
+       "y": 4.0,
+       "paths": 1
+      },
+      {
+       "x": -9,
+       "z": 58,
+       "y": 4.0,
+       "paths": 1
+      },
+      {
+       "x": -9,
+       "z": 60,
+       "y": 4.0,
+       "paths": 1
+      },
+      {
+       "x": -8,
+       "z": 58,
+       "y": 3.16,
+       "paths": 1
+      },
+      {
+       "x": -8,
+       "z": 59,
+       "y": 3.16,
+       "paths": 1
+      },
+      {
+       "x": -8,
+       "z": 60,
+       "y": 3.16,
+       "paths": 1
+      },
+      {
+       "x": -9,
+       "z": 57,
+       "y": 4.0,
+       "paths": 1
+      },
+      {
+       "x": -8,
+       "z": 57,
+       "y": 3.16,
+       "paths": 1
+      }
+     ]
+    },
+    {
+     "kind": "outside",
+     "cells": 2,
+     "centre": [
+      -11.0,
+      58.5
+     ],
+     "bbox": [
+      -11,
+      58,
+      -11,
+      59
+     ],
+     "maxY": 2.09,
+     "top": [
+      -11,
+      59
+     ],
+     "codes": {
+      "P": 2
+     },
+     "aboveDocLine": 0,
+     "jumpedCells": 2,
+     "feet": [
+      {
+       "x": -11,
+       "z": 58,
+       "y": 1.3,
+       "paths": 1
+      },
+      {
+       "x": -11,
+       "z": 59,
+       "y": 2.09,
+       "paths": 1
+      }
+     ]
+    }
+   ]
+  }
+ }
+}
