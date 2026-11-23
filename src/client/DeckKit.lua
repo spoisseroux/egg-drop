@@ -258,18 +258,53 @@ local function paintSafely(name,fallback,fn)
  end
 end
 -- Screen rise (step 2): true when it took the rise; false leaves the caller its own (today's 8 px tween).
-Kit.Rise={offset=12,frequency=3.2,damping=.55}
-Kit.arrive=paintSafely("arrive",false,function(object,goal)
+-- QA-R2-LOOK 1: a rise you can see. 28 px (22 on a phone) at 3.0 Hz, damping .42 (about 6 px past home), with the
+-- screen's own fit UIScale riding .90 to 1 on the same spring (clamped at 1.03); a phone bottom sheet comes 40 px at
+-- 3.2 Hz, .50. AliveBudget level 2: the rise only. rootScale=false keeps the rise alone everywhere (a low phone's
+-- text re-raster, Fable's [check]).
+Kit.Rise={offset=28,phone=22,frequency=3.0,damping=.42,scale=.90,top=1.03,rootScale=true,sheet=40,sheetFrequency=3.2,sheetDamping=.50}
+-- The fit UIScale (the screen's own, written by its fit code) times k: one helper keeps the fit and writes fit * k, so
+-- a re-fit mid-open (a rotation) is a foreign write that wins, and a spring cut short rests at exactly the fit.
+function Kit.rideScale(uiScale,from,top,options)
+ local fit=uiScale.Scale
+ local k=from
+ local last
+ local function write(value)k=value;uiScale.Scale=fit*math.min(value,top);last=uiScale.Scale end
+ write(from)
+ return springTo(uiScale,"ArriveScale",1,{feature="menus",frequency=options.frequency,damping=options.damping,limit=options.limit,
+  get=function()return k end,mark=function()return uiScale.Scale end,set=function(value)write(value)end,
+  done=function(reason)
+   -- Cut or replaced: back to the fit exactly (unless the fit code wrote it meanwhile).
+   if(reason=="cancel"or reason=="replaced")and uiScale.Scale==last then uiScale.Scale=fit end
+  end})
+end
+function Kit.phoneScreen()
+ local camera=workspace.CurrentCamera
+ return camera~=nil and math.min(camera.ViewportSize.X,camera.ViewportSize.Y)<500
+end
+-- options.sheet: a phone bottom sheet (the longer, softer rise from below).
+Kit.arrive=paintSafely("arrive",false,function(object,goal,options)
  if not Kit.alive("menus")then return false end
+ options=options or {}
  goal=goal or UDim2.fromScale(.5,.5)
  dropTween(object,{Position=true})
- object.Position=goal+UDim2.fromOffset(0,Kit.Rise.offset)
- springTo(object,"Position",goal,{feature="menus",frequency=Kit.Rise.frequency,damping=Kit.Rise.damping})
+ local R=Kit.Rise
+ local phone=Kit.phoneScreen()
+ local sheet=options.sheet==true and phone
+ local offset=if sheet then R.sheet elseif phone then R.phone else R.offset
+ local frequency,damping=if sheet then R.sheetFrequency else R.frequency,if sheet then R.sheetDamping else R.damping
+ object.Position=goal+UDim2.fromOffset(0,offset)
+ springTo(object,"Position",goal,{feature="menus",frequency=frequency,damping=damping})
+ local fit=object:FindFirstChildOfClass("UIScale")
+ if R.rootScale and not sheet and fit and require(script.Parent.AliveBudget).level()<2 then
+  Kit.rideScale(fit,R.scale,R.top,{frequency=frequency,damping=damping})
+ end
  return true
 end)
--- 2D art pops in, .85 to 1, one after another: the first eight shown, all done by .35 s. Its UIScale is
--- removed at rest. Never text, viewports, scrollers, canvas groups, list children or art that is scaled already.
-Kit.Pop={from=.85,top=1.06,gap=.025,count=8,time=.35,frequency=5,damping=.55}
+-- 2D art pops in, .70 to 1 (top 1.12), one after another 40 ms apart: the first eight shown, all done by .55 s
+-- (QA-R2-LOOK 1; was .85 / 1.06 / .35 s). Its UIScale is removed at rest. Never text, viewports, scrollers, canvas
+-- groups, list children or art that is scaled already.
+Kit.Pop={from=.70,top=1.12,gap=.04,count=8,time=.55,frequency=4.5,damping=.40}
 local function popAllowed(object)
  if not object:IsA("GuiObject")or object:FindFirstChildOfClass("UIScale")or Spring.stateOf(object)~="ok"then return false end
  if object.Parent:FindFirstChildWhichIsA("UIGridStyleLayout")then return false end
@@ -733,7 +768,48 @@ function Kit.paintButton(button)
 end
 -- Presses on springs (step 1): one scalar per key writes everything that drops with its face. Down stays the
 -- .06 s tween (the face also widens 2 px a side over a ledge); the release overshoots up to 2 px above rest.
-Kit.Press={over=2,widen=2,minWidth=60,frequency=6,damping=.28,epsilon=.3,limit=.35} -- under .5 px draws as rest
+-- QA-R2-LOOK 1 (Spencer R2.2, "i didnt see any springiness"): the release overshoots 5 px and rings slower and rounder
+-- (4.5 Hz, damping .32), and the face takes a press scale too. Springs off, the press is today's tween (these
+-- numbers never run).
+Kit.Press={over=5,widen=4,minWidth=60,frequency=4.5,damping=.32,epsilon=.3,limit=.6} -- under .5 px draws as rest
+-- Tiles (pressTile): the drop and its overshoot only (no Face holder: tiles carry art straight on the tile).
+Kit.TilePress={over=4,frequency=4.5,damping=.38,epsilon=.3,limit=.6}
+-- The press scale (a UIScale named PressScale on the face, never on the hit rect): down in 60 ms, back on a spring,
+-- clamped at `top`. By control: a ledge button, a ghost one, a round key.
+Kit.PressScale=table.freeze({
+ ledge=table.freeze({scale=.95,top=1.06,frequency=4.5,damping=.32,limit=.6}),
+ ghost=table.freeze({scale=.94,top=1.06,frequency=4.5,damping=.32,limit=.6}),
+ round=table.freeze({scale=.88,top=1.12,frequency=5,damping=.32,limit=.6}),
+})
+-- Kit buttons get their Face holder (Edge, Fill and Content under one frame that can scale) only on the place where
+-- springs can ever run (Alive's place ceiling, read once); the live game keeps today's button tree exactly. Specs set it.
+Kit.FaceOn=(function()local ok,on=pcall(Alive.ceiling,"springs");return ok and on==true end)()
+-- The press scale on `target` (a face or a disc, never a GuiButton): down (a 60 ms tween to spec.scale) or up (a
+-- spring back to 1, clamped at spec.top). Nothing beside a foreign UIScale or under a grid layout; springs off or
+-- Reduced Motion: none at all (rest at 1).
+function Kit.pressScale(target,down,spec)
+ if not target or target:IsA("GuiButton")or not target.Parent then return nil end
+ local scale=target:FindFirstChild("PressScale")
+ if not scale then
+  if not Kit.alive("springs")then return nil end
+  local foreign=target:FindFirstChildOfClass("UIScale")
+  if foreign or target.Parent:FindFirstChildWhichIsA("UIGridStyleLayout")then return nil end
+  scale=node("UIScale",target,{Name="PressScale",Scale=1})
+ end
+ if not Kit.alive("springs")then
+  Spring.cancel(scale,"Scale");dropTween(scale,{Scale=true});scale.Scale=1
+  return scale
+ end
+ if down then
+  Spring.cancel(scale,"Scale")
+  Kit.tween(scale,Kit.Motion.pressDown,{Scale=spec.scale})
+ else
+  dropTween(scale,{Scale=true})
+  springTo(scale,"Scale",1,{frequency=spec.frequency,damping=spec.damping,limit=spec.limit,
+   get=function()return scale.Scale end,set=function(value)scale.Scale=math.min(value,spec.top)end})
+ end
+ return scale
+end
 local FillRest=UDim2.new(1,0,1,0)
 local function dropButton(s,d)
  local y=math.floor(math.max(d,-Kit.Press.over)+.5)
@@ -745,6 +821,7 @@ local function dropButton(s,d)
  end
 end
 local function springButton(button,s,drop)
+ if s.face then Kit.pressScale(s.face,drop>0,if s.variant=="ghost"then Kit.PressScale.ghost else Kit.PressScale.ledge)end
  if drop>0 then
   Spring.cancel(s.content,"KitDrop")
   s.wide=s.ledge>0 and button.AbsoluteSize.X>=Kit.Press.minWidth and(s.wide or s.fill.Size==FillRest)or nil
@@ -792,7 +869,8 @@ function paintButtonNow(button)
  if s.drop~=drop then
   s.drop=drop
   if Kit.alive("springs")then springButton(button,s,drop);return end
-  -- Springs went off mid-press: hand the face back at its own width.
+  -- Springs went off mid-press: hand the face back at its own width (and its full size).
+  if s.face then Kit.pressScale(s.face,false,Kit.PressScale.ledge)end
   if Spring.cancel(s.content,"KitDrop")or s.wide then
    dropTween(s.fill,{Position=true,Size=true})
    s.wide=nil;s.fill.Size=FillRest;s.fill.Position=UDim2.fromOffset(0,s.fill.Position.Y.Offset)
@@ -865,14 +943,23 @@ function Kit.button(parent,name,options)
  local compact=if options.compact~=nil then options.compact==true else size.Y<=44
  local defaultLedge,defaultLip=Kit.buttonLip(variant,compact)
  local ledge=options.ledge or defaultLedge
- local edge=Kit.frame(button,"Edge",nil,UDim2.fromOffset(0,ledge),UDim2.fromScale(1,1),radius);edge.BackgroundTransparency=0
+ -- QA-R2-LOOK 1: on the beta place the drawn key lives in a Face holder (centred, the button's size, never active or
+ -- selectable) so a PressScale can shrink the key while the hit rect, focus and AccessibleLabel stay on the button.
+ local holder=button
+ local face=nil
+ if Kit.FaceOn then
+  face=node("Frame",button,{Name="Face",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(1,1),
+   BackgroundTransparency=1,BorderSizePixel=0,ZIndex=button.ZIndex,Active=false,Selectable=false})
+  holder=face
+ end
+ local edge=Kit.frame(holder,"Edge",nil,UDim2.fromOffset(0,ledge),UDim2.fromScale(1,1),radius);edge.BackgroundTransparency=0
  local edgeStroke=Kit.inner(node("UIStroke",edge,{Name="EdgeStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2,Color=Kit.Color.ink}))
- local fill=Kit.frame(button,"Fill",nil,UDim2.new(),UDim2.new(1,0,1,0),radius);fill.BackgroundTransparency=0;fill.ZIndex=edge.ZIndex+1
+ local fill=Kit.frame(holder,"Fill",nil,UDim2.new(),UDim2.new(1,0,1,0),radius);fill.BackgroundTransparency=0;fill.ZIndex=edge.ZIndex+1
  -- Glint (3.2): a 2 px light line along the top, with a break and a dot at its right end.
  local sheen=Kit.glint(fill,radius)
  local stroke=Kit.inner(node("UIStroke",fill,{Name="KitStroke",ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Thickness=2}))
  if variant~="ghost"then Kit.setSurface(button,"light")end
- local content=Kit.frame(button,"Content",nil,UDim2.new(),UDim2.fromScale(1,1));content.ZIndex=fill.ZIndex+2
+ local content=Kit.frame(holder,"Content",nil,UDim2.new(),UDim2.fromScale(1,1));content.ZIndex=fill.ZIndex+2
  local list=node("UIListLayout",content,{FillDirection=Enum.FillDirection.Horizontal,HorizontalAlignment=Enum.HorizontalAlignment.Center,
   VerticalAlignment=Enum.VerticalAlignment.Center,Padding=UDim.new(0,10),SortOrder=Enum.SortOrder.LayoutOrder})
  local glyph,repaintGlyph
@@ -882,7 +969,7 @@ function Kit.button(parent,name,options)
  local label=Kit.text(content,"Button",options.text or name,nil,{Name="Label",AutomaticSize=Enum.AutomaticSize.X,Size=UDim2.fromOffset(0,size.Y),LayoutOrder=2,TextXAlignment=Enum.TextXAlignment.Center,
   TextSize=options.textSize or(if variant=="reward"then Kit.Type.Strong[1]else Kit.Type.Button[1])})
  local state={variant=variant,enabled=true,hover=false,pressed=false,selected=false,showGlyph=options.showGlyph~=false,lip=options.lip or(if options.ledge then options.ledge else defaultLip),ledge=ledge,drop=0,
-  fill=fill,edge=edge,edgeStroke=edgeStroke,sheen=sheen,stroke=stroke,content=content,label=label,glyph=glyph,repaintGlyph=repaintGlyph,list=list,button=button}
+  fill=fill,edge=edge,edgeStroke=edgeStroke,sheen=sheen,stroke=stroke,content=content,label=label,glyph=glyph,repaintGlyph=repaintGlyph,list=list,button=button,face=face}
  buttons[button]=state
  if Kit.translating then
   state.cap=node("UISizeConstraint",label,{Name="TranslateCap"});label.TextTruncate=Enum.TextTruncate.AtEnd
@@ -1033,12 +1120,12 @@ function Kit.boing(object)
  if foreign and foreign.Name~="BoingScale"then return end
  local scale=object:FindFirstChild("BoingScale")or node("UIScale",object,{Name="BoingScale",Scale=1})
  if Kit.alive("springs")and not(object.Parent and object.Parent:FindFirstChildWhichIsA("UIGridStyleLayout"))then
-  -- At most 4 px of growth a side; a hit rect never shrinks past today's 4%.
+  -- QA-R2-LOOK 1: from .90 (.88 for art), damping .35, at most 14 px of growth in all (7 a side).
   local size=object.AbsoluteSize/math.max(scale.Scale,.01)
-  local top=1+8/math.max(size.X,size.Y,1)
-  local from=if object:IsA("GuiButton")or object:FindFirstChildWhichIsA("GuiButton",true)then .96 else .94
+  local top=1+14/math.max(size.X,size.Y,1)
+  local from=if object:IsA("GuiButton")or object:FindFirstChildWhichIsA("GuiButton",true)then .90 else .88
   scale.Scale=from
-  springTo(scale,"Scale",1,{frequency=5,damping=.45,get=function()return scale.Scale end,set=function(value)scale.Scale=math.clamp(value,from,top)end})
+  springTo(scale,"Scale",1,{frequency=5,damping=.35,get=function()return scale.Scale end,set=function(value)scale.Scale=math.clamp(value,from,top)end})
   return
  end
  local half=Kit.BoingTime/2
@@ -1111,7 +1198,7 @@ local tiles=setmetatable({},{__mode="k"})
 function Kit.tileLip(compact)return if compact then Kit.Lip.compact else Kit.Lip.tile end
 local PadDrop={PaddingTop=true,PaddingBottom=true}
 local function dropTile(state,d)
- local y=math.floor(math.max(d,-Kit.Press.over)+.5)
+ local y=math.floor(math.max(d,-Kit.TilePress.over)+.5)
  state.pad.PaddingTop,state.pad.PaddingBottom=UDim.new(0,y),UDim.new(0,-y)
  state.lipFrame.Position=UDim2.fromOffset(0,state.lip-y)
 end
@@ -1119,7 +1206,7 @@ local function springTile(state)
  dropTween(state.pad,PadDrop);dropTween(state.lipFrame,{Position=true})
  local tile=state.pad.Parent
  if not tile or not tile.Interactable or not tile.Visible then Spring.cancel(state.pad,"KitDrop");dropTile(state,0);return end
- springTo(state.pad,"KitDrop",0,{frequency=Kit.Press.frequency,damping=Kit.Press.damping,epsilon=Kit.Press.epsilon,limit=Kit.Press.limit,
+ springTo(state.pad,"KitDrop",0,{frequency=Kit.TilePress.frequency,damping=Kit.TilePress.damping,epsilon=Kit.TilePress.epsilon,limit=Kit.TilePress.limit,
   get=function()return state.pad.PaddingTop.Offset end,set=function(d)dropTile(state,d)end})
 end
 local function pressTile(state,down)
@@ -1344,7 +1431,7 @@ function Kit.toggle(parent,name)
   api.on=on==true
   paint(button,"BackgroundColor3",if api.on then "accent"else "well");stroke.Enabled=true
   knob.BackgroundColor3=if api.on then Kit.Color.ink else Kit.Color.soft
-  Kit.spring(knob,"Position",UDim2.fromOffset(if api.on then 26 else 4,4),{time=Kit.Motion.toggle,frequency=5,damping=.65,limit=.35})
+  Kit.spring(knob,"Position",UDim2.fromOffset(if api.on then 26 else 4,4),{time=Kit.Motion.toggle,frequency=4.5,damping=.45,limit=.5}) -- QA-R2: 4-5 px past
   button.BackgroundTransparency=if enabled==false then .53 else 0;button.Active=enabled~=false
  end
  api.set(false);return api
@@ -1443,8 +1530,8 @@ function Kit.tabs(parent,labels,width,height,textSize,icons,options)
     squashToken+=1;cancelMotion();inFlight=nil
     if moved then
      inFlight=index
-     local stretch=math.floor(segment*.06+.5)
-     springTo(pill,"KitPill",x,{frequency=6,damping=.7,epsilon=.3,limit=.25,get=function()return pill.Position.X.Offset end,mark=function()return pill.Position end,
+     local stretch=math.floor(segment*.14+.5) -- QA-R2: 14% at mid-flight (was 6)
+     springTo(pill,"KitPill",x,{frequency=5,damping=.5,epsilon=.3,limit=.45,get=function()return pill.Position.X.Offset end,mark=function()return pill.Position end,
       set=function(value,speed)
        -- The stretch follows the speed; the pill never leaves the track.
        local w=size.X+math.min(stretch,math.floor(math.abs(speed)*.02))
@@ -1660,10 +1747,10 @@ function Kit.wallet(parent,height,options)
  local function hop()
   if not Kit.alive("springs")or os.clock()-hoppedAt<.3 then return end
   hoppedAt=os.clock()
-  springTo(root,"KitHop",0,{frequency=5,damping=.4,velocity=416*Kit.Motion.bounce,epsilon=.1,
+  springTo(root,"KitHop",0,{frequency=5,damping=.4,velocity=620*Kit.Motion.bounce,epsilon=.1, -- QA-R2: 416 -> 620, cap 12
    get=function()return starHome.Y.Offset-star.Position.Y.Offset end,mark=function()return star.Position end,
    set=function(value)
-    star.Position=starHome-UDim2.fromOffset(0,math.floor(math.min(value,8)+.5))
+    star.Position=starHome-UDim2.fromOffset(0,math.floor(math.min(value,12)+.5))
     local shown3D=star3D.wallet;if shown3D and shown3D.holder.Parent then shown3D.holder.Position=star.Position end
    end,
    -- However a hop ends, the two Stars end on one spot.
@@ -1713,7 +1800,13 @@ function Kit.wallet(parent,height,options)
    -- opens (or, refused, that flash is the whole answer). Reduced Motion: the flash only.
    flash.BackgroundTransparency=.15
    TweenService:Create(flash,TweenInfo.new(.36,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,.06),{BackgroundTransparency=1}):Play()
-   if game:GetService("GuiService").ReducedMotionEnabled then press.Scale=1 else
+   if game:GetService("GuiService").ReducedMotionEnabled then press.Scale=1
+   elseif Kit.alive("springs")then
+    -- QA-R2-LOOK 1: 1.18 and back on a spring (5 Hz, .35), never past 1.18.
+    Spring.cancel(press,"Scale")
+    press.Scale=1.18
+    springTo(press,"Scale",1,{frequency=5,damping=.35,limit=.6,get=function()return press.Scale end,set=function(value)press.Scale=math.min(value,1.18)end})
+   else
     press.Scale=1.12
     TweenService:Create(press,TweenInfo.new(.22,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
    end
@@ -1870,9 +1963,11 @@ function Kit.backArrow(parent,compact,options)
   shadow.Visible=false
  end
  button.MouseEnter:Connect(function()hover=true;repaint()end)
- button.MouseLeave:Connect(function()hover=false;pressed=false;repaint()end)
- button.MouseButton1Down:Connect(function()pressed=api.enabled;repaint()end)
- button.MouseButton1Up:Connect(function()pressed=false;repaint()end)
+ -- QA-R2-LOOK 1: a round key's disc takes the press scale (.88, 5 Hz); a bare button (no disc) keeps today's press.
+ local function squeeze(down)if disc~=button then Kit.pressScale(disc,down,Kit.PressScale.round)end end
+ button.MouseLeave:Connect(function()local was=pressed;hover=false;pressed=false;repaint();if was then squeeze(false)end end)
+ button.MouseButton1Down:Connect(function()pressed=api.enabled;repaint();if pressed then squeeze(true)end end)
+ button.MouseButton1Up:Connect(function()local was=pressed;pressed=false;repaint();if was then squeeze(false)end end)
  function api.setEnabled(enabled)api.enabled=enabled~=false;button.Active=api.enabled;button.Interactable=api.enabled;repaint()end
  function api.setCompact(isCompact)
   local d,h=Kit.backArrowSizes(isCompact,header)
@@ -2032,7 +2127,11 @@ function Kit.helpButton(parent,compact,id)
  local function repaint(hover)Kit.paintRoundKey(disc,stroke,keyLip,true,hover,false)end
  repaint(false)
  button.MouseEnter:Connect(function()repaint(true)end)
- button.MouseLeave:Connect(function()repaint(false)end)
+ -- QA-R2-LOOK 1: the round key's press scale on its disc.
+ local down=false
+ button.MouseLeave:Connect(function()repaint(false);if down then down=false;Kit.pressScale(disc,false,Kit.PressScale.round)end end)
+ button.MouseButton1Down:Connect(function()down=true;Kit.pressScale(disc,true,Kit.PressScale.round)end)
+ button.MouseButton1Up:Connect(function()if down then down=false;Kit.pressScale(disc,false,Kit.PressScale.round)end end)
  button.Activated:Connect(function()Kit.openHelp(id)end)
  return api
 end
@@ -2440,7 +2539,8 @@ end
 -- Close plate (step 3). The close has already happened; this only paints where the screen was: one pooled
 -- plate, .35 to clear and 4% smaller in .12 s. Called first thing by the handlers that mean "the player
 -- closed this", while the screen still shows; drawn on the next Heartbeat only when the garden is bare.
-Kit.Depart={alpha=.35,shrink=.04,time=.12,displayOrder=20}
+-- QA-R2-LOOK 1: no spring on the way out: .12 s Quad In to .94 and 10 px down, fading (closing stays snappy).
+Kit.Depart={alpha=.35,shrink=.06,drop=10,time=.12,displayOrder=20}
 local shadeSerial,departToken=0,0
 local ghost -- {gui, plate, corner, tween, link}
 function Kit.inRoom()
@@ -2473,7 +2573,7 @@ local function drawDepart(holder,shape,serial)
  ghost.gui.Enabled=true
  local k=1-Kit.Depart.shrink
  ghost.tween=TweenService:Create(plate,TweenInfo.new(Kit.Depart.time,Enum.EasingStyle.Quad,Enum.EasingDirection.In),
-  {BackgroundTransparency=1,Size=UDim2.fromOffset(shape.size.X.Offset*k,shape.size.Y.Offset*k)})
+  {BackgroundTransparency=1,Size=UDim2.fromOffset(shape.size.X.Offset*k,shape.size.Y.Offset*k),Position=shape.position+UDim2.fromOffset(0,Kit.Depart.drop or 0)})
  local began=os.clock()
  ghost.link=game:GetService("RunService").Heartbeat:Connect(function()
   if os.clock()-began>=Kit.Depart.time+.02 or departBlocked(serial)then Kit.cutDepart()end

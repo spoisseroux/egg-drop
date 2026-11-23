@@ -154,12 +154,16 @@ return function(client,parent)
   for _,on in ipairs({true,false})do
    local tag=if on then " [on]"else " [off]"
    local function wait(s)if on then run(s)else task.wait(math.max(s,.25))end end
-   test("button: hit rect still, up to 2 px over, 2 px wider a side only over a ledge and 60 px; exact rest after spam"..tag,function()
+   test("button (QA-R2): hit rect still, up to 5 px over, 4 px wider a side only over a ledge and 60 px; the face back to scale 1; exact rest after spam"..tag,function()
     flags(on)
     for _,o in ipairs({{variant="primary",size=Vector2.new(200,56)},{variant="secondary",size=Vector2.new(120,44)},{variant="ghost",size=Vector2.new(120,44)},{variant="secondary",size=Vector2.new(40,40)}})do
      local b,s=Kit.button(gui,"Press",o);b.Position=UDim2.fromOffset(40,40);settle()
      local at,size=b.AbsolutePosition,b.AbsoluteSize
-     local function exact()return s.content.Position==UDim2.fromOffset(0,0)and s.fill.Position==UDim2.fromOffset(0,0)and s.fill.Size==UDim2.new(1,0,1,0)end
+     local function exact()
+      local scale=s.face and s.face:FindFirstChild("PressScale")
+      return s.content.Position==UDim2.fromOffset(0,0)and s.fill.Position==UDim2.fromOffset(0,0)and s.fill.Size==UDim2.new(1,0,1,0)
+       and(scale==nil or math.abs(scale.Scale-1)<1e-4)
+     end
      local low,wide=0,0
      local function watch()
       assert(b.AbsolutePosition==at and b.AbsoluteSize==size,"hit rect")
@@ -169,10 +173,11 @@ return function(client,parent)
      local function press(down)s.pressed=down;Kit.paintButton(b)end
      press(true);task.wait(Kit.Motion.pressDown+.06);watch();assert(s.content.Position.Y.Offset==s.lip,o.variant.." down")
      local wants=on and s.ledge>0 and size.X>=60
-     assert(s.fill.Size.X.Offset==(if wants then 4 else 0)and s.fill.Position.X.Offset==(if wants then -2 else 0))
+     assert(s.fill.Size.X.Offset==(if wants then 8 else 0)and s.fill.Position.X.Offset==(if wants then -4 else 0))
+     if on and s.face then assert(s.face.PressScale.Scale<1,"the face presses in")elseif not on and s.face then assert(s.face:FindFirstChild("PressScale")==nil,"off: no press scale")end
      press(false)
-     if on then run(.36,watch)else task.wait(Kit.Motion.pressUp+.06);watch()end
-     assert(exact()and not Spring.busy(s.content),o.variant.." rest by .35 s");assert(low>=-2 and(not on or low<0)and wide<=4,"over "..low)
+     if on then run(.61,watch)else task.wait(Kit.Motion.pressUp+.06);watch()end
+     assert(exact()and not Spring.busy(s.content),o.variant.." rest by .6 s");assert(low>=-5 and(not on or low<0)and wide<=8,"over "..low)
      for i=1,60 do press(i%2==1);if i%5==0 then task.wait()end;watch()end
      press(false);task.wait(.1);wait(1.5);assert(exact()and not Spring.busy(s.content),"after spam"..tag)
      -- Disabled, hidden and destroyed mid-release.
@@ -191,11 +196,11 @@ return function(client,parent)
      assert(tile.AbsolutePosition==at and tile.AbsoluteSize==size,"hit rect")
      if not on or s.pressed then return end -- the down tween and today's release round each side on their own
      assert(s.pad.PaddingTop.Offset==-s.pad.PaddingBottom.Offset and s.face.AbsoluteSize==size,"top = -bottom, nothing resizes")
-     assert(s.pad.PaddingTop.Offset>=-2)
+     assert(s.pad.PaddingTop.Offset>=-4)
     end
     local function exact()return s.pad.PaddingTop==UDim.new()and s.pad.PaddingBottom==UDim.new()and s.lipFrame.Position==UDim2.fromOffset(0,s.lip)end
     Kit.pressTile(tile,true);task.wait(.1);assert(s.pad.PaddingTop.Offset==4);Kit.pressTile(tile,false)
-    if on then run(.36,watch)else task.wait(.2);watch()end;assert(exact()and not Spring.busy(s.pad),"rest by .35 s")
+    if on then run(.61,watch)else task.wait(.2);watch()end;assert(exact()and not Spring.busy(s.pad),"rest by .6 s")
     for i=1,60 do Kit.pressTile(tile,i%2==1);if i%5==0 then task.wait()end;watch()end
     Kit.pressTile(tile,false);task.wait(.1);wait(1.5);assert(exact(),"after spam")
     Kit.pressTile(tile,true);task.wait(.1);Kit.pressTile(tile,false);if on then run(.04)else task.wait(.2)end;Kit.setTileLip(tile,3)
@@ -214,7 +219,7 @@ return function(client,parent)
     assert(exact(1))
     for _,i in ipairs({3,1,2,3,3,1})do
      tabs.select(i)
-     if on then run(.26,function()
+     if on then run(.46,function()
       assert(pill.Position.X.Offset>=4 and pill.Position.X.Offset+pill.Size.X.Offset<=516,"in the track: "..tostring(pill.Position))
      end)else task.wait(Kit.Motion.tab+.15)end
      assert(exact(i),"tab "..i..tag)
@@ -225,13 +230,13 @@ return function(client,parent)
     tabs.root.Visible=true;tabs.select(1);if on then run(.05)end;flags(not on);settle(2);tabs.select(1);task.wait(.4);run(1.5);assert(exact(1),"switched mid-flight")
     flags(on);tabs.select(2);still=true;tabs.select(3);settle(2);assert(exact(3),"Reduced Motion mid-flight");still=false;tabs.root:Destroy()
    end)
-   test("boing: at most 4 px a side, a hit rect at least 96%, ends at 1; list children keep today's numbers; an owner's scale is left alone"..tag,function()
+   test("boing (QA-R2): at most 7 px a side, from .90 (.88 for art), ends at 1; list children keep today's numbers; an owner's scale is left alone"..tag,function()
     flags(on)
     local b=Kit.tile(gui,"Key",{size=UDim2.fromOffset(300,120)});local plain=frame({Size=UDim2.fromOffset(60,60)})
-    for _,e in ipairs({{b,.96},{plain,if on then .94 else .96}})do
+    for _,e in ipairs({{b,if on then .90 else .96},{plain,if on then .88 else .96}})do
      Kit.boing(e[1]);local scale=e[1].BoingScale;assert(math.abs(scale.Scale-e[2])<1e-4,"starts at "..scale.Scale)
      if on then run(1.5,function()
-      assert(scale.Scale>=e[2]-1e-4 and(scale.Scale-1)*e[1].Size.X.Offset/2<=4.01)
+      assert(scale.Scale>=e[2]-1e-4 and(scale.Scale-1)*e[1].Size.X.Offset/2<=7.01)
      end)else task.wait(Kit.BoingTime+.15)end
      assert(math.abs(scale.Scale-1)<1e-3)
      for _=1,10 do Kit.boing(e[1])end;task.wait(Kit.BoingTime+.15);wait(1.5);assert(math.abs(scale.Scale-1)<1e-3)
@@ -242,7 +247,7 @@ return function(client,parent)
     local own=frame();local scale=Instance.new("UIScale");scale.Parent=own;Kit.boing(own);assert(scale.Scale==1 and not Spring.busy(scale))
     for _,o in ipairs({b,plain,list,own})do o:Destroy()end
    end)
-   test("wallet: the text changes at once; the Star hops at most 8 px on a gain, once per .3 s, and lands exactly"..tag,function()
+   test("wallet: the text changes at once; the Star hops at most 12 px on a gain, once per .3 s, and lands exactly"..tag,function()
     flags(on)
     local w=Kit.wallet(gui,44);local home=w.star.Position;settle()
     w.set(5);w.set(25);assert(w.amount.Text=="25")
@@ -251,7 +256,7 @@ return function(client,parent)
      assert(Spring.busy(w.root,"KitHop"));w.set(26);w.set(27)
      run(1.5,function()top=math.max(top,home.Y.Offset-w.star.Position.Y.Offset)
       local three=w.star3D.wallet;assert(not three or three.holder.Position==w.star.Position,"both Stars move together")end)
-     assert(top>=6 and top<=8,"hop "..top)
+     assert(top>=9 and top<=12,"hop "..top)
     else assert(not Spring.busy(w.root))end
     assert(w.star.Position==home)
     -- The Star moved by someone else mid-hop: the hop gives way and both Stars are still together.
