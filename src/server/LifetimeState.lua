@@ -4,6 +4,7 @@
 -- inside existing fenced transactions (HatchProgress.transact / award).
 local Book=require(game:GetService("ReplicatedStorage").Shared.BookCatalog)
 local RoundItems=require(game:GetService("ReplicatedStorage").Shared.RoundItems)
+local Hour=require(game:GetService("ReplicatedStorage").Shared.GardenHour)
 local State={}
 State.Counters={"rounds","winsEasy","winsMedium","winsHard","tidyWins","merges","bestChain","tierFive",
 	"itemsUsed","pets","parkGames","starsEarned","starsSpent"}
@@ -78,6 +79,13 @@ function State.bor(state,key,mask,limit)
 end
 
 local function bits(mask)local n=0;while mask>0 do n+=mask%2;mask=math.floor(mask/2)end;return n end
+-- Garden hour slice F (GARDEN-HOUR-BUILD-PLAN-2026-11-23, architect review): while the hour is on (its ceiling, the
+-- server switch, Hour_on and the Aero look), pet_night follows the hour's night, not the real hour. nil (off, or any
+-- failure) keeps Book's real-hour rule. Same bit 11, still one-way; no save change.
+function State.hourNight()
+	local ok,night=pcall(function()return if Hour.on()then Hour.isNight(Hour.time())else nil end)
+	return if ok and type(night)=="boolean"then night else nil
+end
 -- After any committed transaction: wallet and pet deltas. Robux grants are not
 -- "earned"; every debit is "spent". `now` (the transaction's clock, read inside the
 -- UpdateAsync callback) feeds the state-derived Discoveries (slice D).
@@ -99,7 +107,7 @@ function State.record(before,after,signature,now)
 	-- to the pet write alone: its bit is dropped for every other signature, whatever the
 	-- catalogue returns.
 	if type(Book.stateBits)=="function"then
-		local found=Book.stateBits(after,now,signature)
+		local found=Book.stateBits(after,now,signature,State.hourNight())
 		local night=type(Book.DiscoveryById)=="table"and Book.DiscoveryById.pet_night
 		if type(found)=="number"and found==found and found>0 and found~=math.huge then
 			found=bit32.band(math.floor(found),State.FoundMask)

@@ -11,7 +11,8 @@ local FocusTransition=require(script.Parent.FocusTransition)
 local FocusCharacterVisibility=require(script.Parent.FocusCharacterVisibility)
 local PetAffection=require(script.Parent.PetAffection)
 local HollowAmbience=require(script.Parent.HollowAmbience)
-local function HollowClockDaylight()return require(script.Parent.HollowClock).daylight()end
+-- The coo clock's daylight; garden hour E: through PetFace.moodDaylight, so pets keep the day coo wait at the hour's night.
+local function CooDaylight()return require(script.Parent.PetFace).moodDaylight(require(script.Parent.HollowClock).daylight())end
 
 local PetFactory=require(script.Parent.PetFactory)
 local GardenClient=require(script.Parent.GardenClient)
@@ -333,7 +334,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
   if self.coos then
    local root=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
    local humanoid=Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-   self.coos:step(serverNow,{enabled=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.focusTransitioning and not self.menuOpen and not self.overlayOpen()and not self.arrivalPlacementPending and not self.removingCharacter and self.focusUI.windowActive~=false and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and humanoid~=nil and humanoid.Health>0,listener=root and root.Position,identity=root,camera=workspace.CurrentCamera,daylight=HollowClockDaylight()},self.pet,self.companions.active)
+   self.coos:step(serverNow,{enabled=self.mode=="Room"and self.target=="Room"and not self.busy and not self.focusing and not self.focusTransitioning and not self.menuOpen and not self.overlayOpen()and not self.arrivalPlacementPending and not self.removingCharacter and self.focusUI.windowActive~=false and not GuiService.MenuIsOpen and not UserInputService:GetFocusedTextBox()and humanoid~=nil and humanoid.Health>0,listener=root and root.Position,identity=root,camera=workspace.CurrentCamera,daylight=CooDaylight()},self.pet,self.companions.active)
   end
 		if not self.focusKey then self.focusKey=PetFocusKey.new()end
         self.focusKey:update(workspace.CurrentCamera,self.pet,gardenFocus)

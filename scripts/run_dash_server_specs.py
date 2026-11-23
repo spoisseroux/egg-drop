@@ -22,13 +22,13 @@ BASE = sys.argv[2] if len(sys.argv) > 2 else "46ab954"
 LIVE = sys.argv[3] if len(sys.argv) > 3 else "aeae2d9"
 ONLY = os.environ.get("DASH_SPECS", "").split()
 SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPrize", "DashGating", "DashHost",
-         "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour"]
+         "DashOffParity", "DashCrossVersion", "CloseProgress", "GardenHour", "GardenHourBook"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
-          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip"]
+          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -36,6 +36,8 @@ STUBS = {
     "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
     "PetFactory": "return{}", "DeckKit": "return{focusable=function(object)return object.ok==true end}", "NotificationRail": "return{}",
     "ConfirmDialog": "return{isOpen=function()return false end}",
+    # Garden hour E: PetFace reads HollowClock.lastDaylight (the spec sets it); the real clock needs Lighting.
+    "HollowClock": "return{daylight=function()return 1 end}",
 }
 
 
@@ -47,7 +49,10 @@ def client_modules():
                     "BearNeeds.lua", "NeedBubble.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
                     "JournalPromptPriority.lua", "FirstSpendGuide.lua",
                     # Onboarding v3 D+E: the nest in the garden and the See you tomorrow strip.
-                    "NestClient.lua", "TomorrowStrip.lua"):
+                    "NestClient.lua", "TomorrowStrip.lua",
+                    # Garden hour E: the pet mood rules and the face that feeds them.
+                    "PetFace.lua", "PetExpression.lua", "PetIdleBeats.lua", "PetCoo*.lua", "CareFeedbackData.lua",
+                    "PetNightSurfaces.lua", "PetMaterial*.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
