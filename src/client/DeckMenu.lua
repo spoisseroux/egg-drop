@@ -407,6 +407,9 @@ function Menu:open()
 	self.body.CanvasPosition=Vector2.zero
 	self.safeTop=nil
 	self.shade.Visible=true;self:layout()
+	-- QA-R2-LOOK 1: the Pocket menu card rises on the menus spring (beta); off, it is there at once as before.
+	local ok,Kit=pcall(require,script.Parent.DeckKit)
+	if ok and type(Kit)=="table"and Kit.arrive then Kit.arrive(self.card,self.card.Position)end
 	if string.match(game:GetService("UserInputService"):GetLastInputType().Name,"^Gamepad") then GuiService.SelectedObject=self.closeButton end
 end
 function Menu:close()

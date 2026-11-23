@@ -609,7 +609,7 @@ function Log:show(quests,wallet,tab)
  if opening then
   self.pendingRows={};self.stampSent=nil
   self:setTab(tab or "daily")
-  if not Kit.reduced()then self.overlay.content.Position=UDim2.fromOffset(0,12);Kit.tween(self.overlay.content,Kit.Motion.screen,{Position=UDim2.new()})end
+  if not Kit.reduced()and not Kit.arrive(self.overlay.content,UDim2.new())then self.overlay.content.Position=UDim2.fromOffset(0,12);Kit.tween(self.overlay.content,Kit.Motion.screen,{Position=UDim2.new()})end
  else self:paint()end
 end
 function Log:hide()

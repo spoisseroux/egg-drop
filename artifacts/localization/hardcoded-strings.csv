@@ -51,12 +51,12 @@ src/client/CompanionsHub.lua,651, along,fragment (sentence built from parts),
 src/client/CompanionsHub.lua,651,Follow,,
 src/client/ConfirmDialog.lua,98,Alt,,
 src/client/ConfirmDialog.lua,98,Cancel,,yes
-src/client/DashClient.lua,285,Fun,,
-src/client/DashClient.lua,286,Stats,,yes
-src/client/DashClient.lua,287,Trial,,
-src/client/DashClient.lua,757,Again,,
-src/client/DashClient.lua,760,Done,,yes
-src/client/DashClient.lua,824,dash-line,,
+src/client/DashClient.lua,287,Fun,,
+src/client/DashClient.lua,288,Stats,,yes
+src/client/DashClient.lua,289,Trial,,
+src/client/DashClient.lua,760,Again,,
+src/client/DashClient.lua,763,Done,,yes
+src/client/DashClient.lua,827,dash-line,,
 src/client/DashHud.lua,171,Place,,
 src/client/DashHud.lua,174,Digits,,
 src/client/DashHud.lua,177,Word,,
@@ -538,6 +538,8 @@ src/client/SnackHost.lua,103,snack:,,
 src/client/StampCardView.lua,251, of ,fragment (sentence built from parts),
 src/client/StationAttract.lua,146,Line,,
 src/client/ThingsPage.lua,128,Line,,
+src/client/TomorrowStrip.lua,71,short.,,
+src/client/TomorrowStrip.lua,71,tiny.,,
 src/client/ToyPanel.lua,19,Toys,,yes
 src/client/ToyPanel.lua,19,Choose one toy for this pet.,,
 src/client/ToyPanel.lua,52, unlocked!,fragment (sentence built from parts),

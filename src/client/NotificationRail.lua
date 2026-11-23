@@ -38,6 +38,15 @@ Rail.DragQuiet=2 -- no auto-scroll this long after the player dragged the row
 -- Spencer 2026-11-20 (round 3): no fades on scrolling lists, so the row keeps a hard clip.
 Rail.EdgeFade=false
 Rail.Motion={enter=.22,leave=.25,slide=.2,scroll=.25,reduced=.15,press=.06,breathe=1.2}
+-- QA-R2-LOOK 1: with Alive menus on, a toast's 16 px slide in rides a spring (3.5 Hz, damping .45) instead of the
+-- Quad ease, and settles by `time`. Off (the live game), the ease as before.
+Rail.Spring={distance=16,frequency=3.5,damping=.45,time=.8}
+-- Pure: the share of the way in (0 to 1, overshooting past 1) a spring has come `t` seconds after it set off.
+function Rail.springIn(t)
+ local S=Rail.Spring
+ local w=2*math.pi*S.frequency;local z=S.damping;local wd=w*math.sqrt(1-z*z)
+ return 1-math.exp(-z*w*t)*(math.cos(wd*t)+z*w/wd*math.sin(wd*t))
+end
 -- Per bar height (spec "Card"): card height, lip, face, corner radius, disc, text size.
 -- Round 3 (Spencer: the timer clipped the text): cards 4 px taller, the text sits in the face
 -- above the timer, the timer 3 px over the face's bottom. `tight` keeps the old 32 px key for
@@ -332,6 +341,7 @@ local function frame(dt)
  local drawable=size~=nil and barW-2*Rail.Gutter>=Rail.MinWidth
  local held=Rail.held()
  local reduced=GuiService.ReducedMotionEnabled
+ local springs=Kit.alive~=nil and Kit.alive("menus")
  local list=queue:step(dt,if drawable then fitsYes else fitsNo,held)
  local key=barW*1000+barH
  local resized=key~=barKey;barKey=key
@@ -423,15 +433,21 @@ local function frame(dt)
   local item=t.item
   if t.enter<1 then t.enter=math.min(1,t.enter+dt/(if reduced then Rail.Motion.reduced else Rail.Motion.enter))end
   local alpha,scale,dx
+  local sprung=not reduced and springs
+  -- Menus switched off (or Reduced Motion) mid-entrance: the spring stops for good and the ease finishes it.
+  if sprung and t.sprung==nil then t.sprung=0 elseif not sprung and t.sprung then t.sprung=false end
+  if t.sprung and t.sprung<Rail.Spring.time then t.sprung=math.min(Rail.Spring.time,t.sprung+dt)end
   if reduced then
    alpha=t.enter*(1-math.min(1,t.leave));scale=1;dx=0
   else
    local e=ease(t.enter,Quad,Out)
    alpha=e*(1-ease(t.leave,Quad,Out))
    scale=(.9+.1*ease(t.enter,Back,Out))*(1-.08*ease(t.leave,Quad,Out))
-   dx=16*(1-e)
+   dx=if t.sprung then math.floor(Rail.Spring.distance*(1-Rail.springIn(t.sprung))+.5)else 16*(1-e)
   end
-  if t.enter>=1 and not t.leaving then alpha,scale,dx=1,1,0 end -- settled: exactly at rest
+  local still=not t.sprung or t.sprung>=Rail.Spring.time
+  if t.enter>=1 and still and not t.leaving then alpha,scale,dx=1,1,0 -- settled: exactly at rest
+  elseif t.enter>=1 and not t.leaving then alpha,scale=1,1 end
   local hitH=math.min(math.max(Rail.Hit,s.card),barH)
   local hitTop=math.clamp(math.floor(cardY+s.card/2-hitH/2),0,math.max(0,barH-hitH))
   local px,py=t.x+t.w/2+dx,hitTop+hitH/2

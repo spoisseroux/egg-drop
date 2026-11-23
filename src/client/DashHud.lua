@@ -310,6 +310,8 @@ function Hud:rest(final)
 	self.jump.Visible,self.dash.Visible,self.bar.Visible,self.leave.Visible=false,false,false,final~=true
 	self.ring.Visible,self.stones.Visible=false,false
 	self:setHint(nil)
+	-- The result is in: the sheet tells the place, so the pill goes (it showed a stale "1st" under a 4th sheet).
+	if final==true then self:setPlace(nil)end
 	self:keys()
 end
 function Hud:hide()

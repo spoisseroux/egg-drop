@@ -181,6 +181,7 @@ local CURVED={Face.Top,Face.Bottom,Face.Front,Face.Back} -- a Cylinder's round s
 local BOTH={Face.Front,Face.Back}
 local ROLL={Face.Top,Face.Bottom,Face.Front,Face.Back,Face.Left,Face.Right} -- a rim roll: its round side and both caps
 Client.SignYaw=-40 -- degrees about root Y
+Client.SignPostTop=1.08 -- the post's top (studs over the nest root), just into the board's bottom edge
 function Client.parts()
 	local list={}
 	local rad=math.rad
@@ -210,7 +211,9 @@ function Client.parts()
 		table.insert(list,{name="NestTuft"..(k+1),shape="plate",size=Vector3.new(1.3,.62,.04),
 			cf=CFrame.new(math.sin(a)*1.05,.98,math.cos(a)*1.05)*CFrame.Angles(0,a,0)*CFrame.Angles(rad(15),0,0),decal={"wisps",BOTH}})
 	end
-	table.insert(list,{name="NestSignPost",shape="block",size=Vector3.new(.14,1.5,.14),cf=CFrame.new(-1.95,.75,-.95),color="post",wood=true})
+	-- STUDIO-CHECK-R2: the board has words on both faces, so a post behind it hid the "e" of "egg" from the arrival path.
+	-- The post stops under the board (its lowest edge is about 1.0 after the 6 degree tilt), which sits on its top.
+	table.insert(list,{name="NestSignPost",shape="block",size=Vector3.new(.14,Client.SignPostTop,.14),cf=CFrame.new(-1.95,Client.SignPostTop/2,-1.03),color="post",wood=true})
 	-- The board is painted on both faces and yawed 40 toward the egg (Studio check beta 12: at 20, one face, people
 	-- coming in from the arrival path's mouth saw its edge and back). The Front reads from the prompt point and the
 	-- plaza's middle, the Back from the arrival path's mouth, each within about 35 degrees (NestClient.spec).

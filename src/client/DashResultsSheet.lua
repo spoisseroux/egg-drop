@@ -157,7 +157,7 @@ function Sheet.build(card,W,H)
 	if g.strip and o.strip then
 		local ok,problem=pcall(function()
 			local Strip=require(script.Parent.TomorrowStrip)
-			strip=Strip.new(panel,{phone=true,z=z})
+			strip=Strip.new(panel,{phone=true,z=z,source=o.stripSource,reduced=o.reduced})
 			strip.root.Position=UDim2.fromOffset(g.strip.x,g.strip.y)
 			strip:set(o.strip,g.strip.w)
 		end)

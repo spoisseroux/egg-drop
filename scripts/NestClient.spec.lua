@@ -302,6 +302,14 @@ return function(client)
 		local post,board=folder:FindFirstChild("NestSignPost"),folder:FindFirstChild("NestSign")
 		assert(post.Material==Enum.Material.Wood and board.Material==Enum.Material.Wood and board.Size==Vector3.new(1.3,.8,.08))
 		assert(close(localAt("NestSign"),Vector3.new(-1.95,1.45,-1.03)))
+		-- STUDIO-CHECK-R2: the post never rises behind the board's words (on either face); the board sits on its top.
+		local lowest=math.huge
+		for _,x in ipairs({-.65,0,.65})do for _,z in ipairs({-.04,.04})do
+			lowest=math.min(lowest,root:PointToObjectSpace(board.CFrame:PointToWorldSpace(Vector3.new(x,-.4,z))).Y)
+		end end
+		local top=root:PointToObjectSpace(post.CFrame:PointToWorldSpace(Vector3.new(0,post.Size.Y/2,0))).Y
+		assert(top>=lowest and top<=lowest+.08,"the post meets the board's bottom edge: top "..top..", board "..lowest)
+		assert(close(localAt("NestSignPost")*Vector3.new(1,0,1),Vector3.new(-1.95,0,-1.03)),"under the board's middle")
 		local front=root:VectorToObjectSpace(board.CFrame.LookVector)
 		assert(front.Z<-.7 and front.X>.5,"the board faces the front, turned toward the egg: "..tostring(front))
 		-- Studio check beta 12: the Front reads from the prompt point and the plaza's middle, the Back from the arrival

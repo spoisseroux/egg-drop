@@ -153,5 +153,12 @@ return function(client)
 		for _,kind in ipairs({"line","modes"})do assert(UICopy.has("dash.gate."..kind))end
 		assert(Wire.Modes.fun and Wire.Modes.stats)
 	end)
+	test("STUDIO-CHECK-R2: the place pill goes when the result is in (DashClient.spec has the tie at the line)",function()
+		local function object(props)return props end
+		local hud=setmetatable({shown={},place=object({Text="4th",Visible=true}),jump={},dash={},bar={},leave={},ring={},stones={},hint={}},Hud)
+		hud.keys=function()end;hud.shown.place=4
+		hud:rest(false);assert(hud.place.Visible==true,"home, not yet the result: the pill stays")
+		hud:rest(true);assert(hud.place.Visible==false and hud.place.Text=="","the result: the pill goes")
+	end)
 	return{passed=#cases,cases=cases}
 end

@@ -138,7 +138,7 @@ ui.dash.bestShort,Best {best} s,,Menu text; e.g. Best {best} s; also ui.dash.res
 ui.dash.clear,Nice!,,Menu text
 ui.dash.clover,Lucky clover!,,Menu text
 ui.dash.dash,Dash,,Menu text; also ui.r3.help.dash.c.title
-ui.dash.done,Done,,Menu text; also ui.names.reveal.done
+ui.dash.done,Done,,"Menu text; also ui.names.reveal.done, ui.onb3.strip.tiny.done"
 ui.dash.equal,All pets equal in this race,,Menu text
 ui.dash.fun,Just for Fun,,Menu text
 ui.dash.gate.line,Your pet runs. Jump the hoops. Hold Dash to zoom!,,Menu text
@@ -581,9 +581,30 @@ ui.onb3.nest.tucked,Sleep tight. It naps while you're away.,,"First-session onbo
 ui.onb3.nest.tuckedFirst,Tucked in! Come back in {hours} hours to hatch a gift.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Tucked in! Come back in 7 hours to hatch a gift."
 ui.onb3.new.line,{pet} has a nest now.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear has a nest now."
 ui.onb3.notifyPlain,Your egg is ready to hatch!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
-ui.onb3.strip.quests,3 new quests,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
-ui.onb3.strip.stamp,Stamp {count}: {stars} Stars,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Stamp 3: {stars} Stars"
-ui.onb3.strip.title,See you tomorrow,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.eggH,Egg in {hours} h,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Egg in 7 h"
+ui.onb3.strip.eggHM,Egg in {hours} h {minutes} m,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Egg in 7 h 40 m"
+ui.onb3.strip.eggM,Egg in {minutes} min,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Egg in 40 min"
+ui.onb3.strip.eggReady,Egg ready!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.eggSoon,Egg in under 1 min,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.questsDone,Quests done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.questsIn,New quests in {hours} h,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. New quests in 7 h"
+ui.onb3.strip.questsLeft,{left} quests to go,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. {left} quests to go"
+ui.onb3.strip.questsOne,1 quest to go,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.short.done,Done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.short.h,{hours} h,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 7 h"
+ui.onb3.strip.short.hm,{hours} h {minutes} m,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 7 h 40 m"
+ui.onb3.strip.short.left,{left} left,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. {left} left"
+ui.onb3.strip.short.m,{minutes} min,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 40 min"
+ui.onb3.strip.short.ready,Ready!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; also ui.onb3.strip.tiny.ready"
+ui.onb3.strip.short.soon,<1 min,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.stampIn,Stamp {count} in {hours} h,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Stamp 3 in 7 h"
+ui.onb3.strip.stampNext,Next stamp: +{stars},,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Next stamp: +{stars}"
+ui.onb3.strip.stampReady,Stamp {count} ready: +{stars},,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Stamp 3 ready: +{stars}"
+ui.onb3.strip.tiny.h,{hours}h,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 7h"
+ui.onb3.strip.tiny.hm,{hours}h {minutes}m,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 7h 40m"
+ui.onb3.strip.tiny.m,{minutes}m,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 40m"
+ui.onb3.strip.tiny.soon,<1m,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.strip.title,Coming up,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.strip.wait,"Miss a day, lose nothing.",,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.tip.companions,Care for {pet} here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Care for Bear here."
 ui.onb3.tip.hatch,{pet} found the egg machine!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear found the egg machine!"

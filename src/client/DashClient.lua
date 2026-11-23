@@ -58,6 +58,8 @@ function Client.spot(cs,stones)
 end
 -- How far a runner still has to go, in cs.
 function Client.left(cs,stones)return Course.Length-(if stones then Course.Saving else 0)-cs end
+-- Is a rival `left` from the line ahead of this pet at `mine`? A rival already home counts ahead of a tie at the line.
+function Client.aheadOf(left,mine,home)return left<mine or(home and left<=0 and mine<=0)end
 -- A rival's drawn distance: on from its last state, never more than ExtrapolateTicks.
 function Client.ahead(track,tick,unit)
 	local flags=track.flags
@@ -719,7 +721,8 @@ function Client:raceStep(seat,dt,now,reduced)
 		for _,track in pairs(heat.tracks)do
 			if track.seat~=seat.index then
 				local left=Client.left(track.draw,track.flags.stones)
-				if left<mine then place+=1 end
+				-- STUDIO-CHECK-R2: a rival already home ties this pet at 0 left on its last racing frame; home first is ahead.
+				if Client.aheadOf(left,mine,track.flags.finished==true)then place+=1 end
 				hud:setDot(track.seat,1-left/Course.Length)
 			end
 		end
@@ -752,7 +755,7 @@ function Client:showResults(seat)
 	-- Beta 12 U6: the results sheet (DashResultsSheet). No close key: Race again or Done; B and Backspace are Done.
 	local pet,appearance=self:petInfo()
 	seat.names=self:fieldNames(seat)
-	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,sheet="results",
+	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,stripSource=self.d.strip,sheet="results",
 		model=self:resultModel(seat),pet=pet,appearance=appearance,place=tonumber(seat.result.place)or 4,reduced=self.d.reduced,selected=1,
 		buttons={{name="Again",text=UICopy.get("dash.again"),primary=true,act=function()
 			self:endSeat()

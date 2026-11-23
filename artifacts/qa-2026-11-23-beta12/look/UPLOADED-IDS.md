@@ -34,3 +34,15 @@
 | jump-white.png | 132916023122268 |
 | racing-flag.png | 97444903136843 |
 | spot-wedge.png | 123828042465302 |
+
+## QA R2 ground flowers (look/r2, uploaded by the coordinator 2026-11-23)
+
+In `assets/world/world-dressing-import.json` "flowers_r2" and `WorldDressing.TexturesR2` (beta place only).
+
+| File | Asset id |
+|---|---|
+| flower_patch_bellflower.png | 119959872222036 |
+| flower_patch_buttercup.png | 139206399591457 |
+| flower_patch_daisy.png | 79653915172587 |
+| flower_patch_starbloom.png | 136157018506269 |
+| flower_patch_tulip.png | 106033616541686 |

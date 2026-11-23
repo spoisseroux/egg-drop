@@ -221,7 +221,14 @@ local Table={
    tuckedFirst="Tucked in! Come back in {hours} hours to hatch a gift.",
    tucked="Sleep tight. It naps while you're away.",next="A new egg is napping. Come back in {hours} hours.",count="Egg {count} of 7",
    chipHours="Egg {hours} h",chipMinutes="Egg {minutes} min",chipReady="Hatch egg!",got="{item} from the napping egg!"},
-  strip={title="See you tomorrow",stamp="Stamp {count}: {stars} Stars",quests="3 new quests",wait="Miss a day, lose nothing."},
+  -- QA-R2-LOOK 5 (Spencer R2.6): "Coming up", a live status of what is on its way. Whole, short and tiny forms; the
+  -- bare numbers ("+25", "2") are never sent for translation. {hours} and {minutes} are the egg's or the day's clock.
+  strip={title="Coming up",wait="Miss a day, lose nothing.",
+   eggHM="Egg in {hours} h {minutes} m",eggH="Egg in {hours} h",eggM="Egg in {minutes} min",eggSoon="Egg in under 1 min",eggReady="Egg ready!",
+   stampReady="Stamp {count} ready: +{stars}",stampNext="Next stamp: +{stars}",stampIn="Stamp {count} in {hours} h",
+   questsLeft="{left} quests to go",questsOne="1 quest to go",questsDone="Quests done!",questsIn="New quests in {hours} h",
+   short={hm="{hours} h {minutes} m",h="{hours} h",m="{minutes} min",soon="<1 min",ready="Ready!",left="{left} left",done="Done!"},
+   tiny={hm="{hours}h {minutes}m",h="{hours}h",m="{minutes}m",soon="<1m",ready="Ready!",done="Done"}},
   week={title="Welcome week done!",line="{pet} loves the garden. A new egg naps in the nest after every hatch."},
   new={title="New in the garden",line="{pet} has a nest now."},
   charm={name="Nest Charm"},
