@@ -996,7 +996,14 @@ function Kit.buttonState(button)return buttons[button]end
 function Kit.setEnabled(button,enabled)
  local s=buttons[button];if not s then return end
  s.enabled=enabled~=false;button.Active=s.enabled or s.tappable==true;button.Interactable=button.Active
- if not s.enabled then s.pressed=false;s.hover=false;Spring.settle(s.content,"KitDrop")end;Kit.paintButton(button)
+ if not s.enabled then
+  s.pressed=false;s.hover=false;Spring.settle(s.content,"KitDrop")
+  -- QA R2 Studio check R3: the face's press scale (and any boing on the key) lands at 1 too, never mid-ring.
+  for _,name in ipairs({"PressScale","BoingScale"})do
+   local scale=(s.face and s.face:FindFirstChild(name))or button:FindFirstChild(name)
+   if scale then Spring.settle(scale);dropTween(scale,{Scale=true});scale.Scale=1 end
+  end
+ end;Kit.paintButton(button)
 end
 -- Stars store access: a disabled button that still takes a press (a short buy opens the
 -- "need more Stars" card). It keeps the disabled paint; only Active / Interactable change.

@@ -41,12 +41,12 @@ return function(client)
 		local live,liveT=Flowers.textures(false)
 		assert(live==Dressing.Textures and liveT==0,"live: today's textures")
 		local beta,betaT=Flowers.textures(true)
-		assert(betaT==.08)
+		assert(math.abs(betaT-.08)<1e-6)
 		for _,kind in ipairs(Dressing.Kinds)do
 			assert(beta[kind]==Dressing.TexturesR2[kind]and beta[kind]~=Dressing.Textures[kind],"beta "..kind)
 		end
 		for _,patch in ipairs(Flowers.build({beta=true}))do
-			assert(patch.part.Flowers.Transparency==.08);patch.part:Destroy()
+			assert(math.abs(patch.part.Flowers.Transparency-.08)<1e-4,"float32: .08 reads .0799999982");patch.part:Destroy()
 		end
 		for _,patch in ipairs(Flowers.build({beta=false}))do
 			assert(patch.part.Flowers.Transparency==0);patch.part:Destroy()

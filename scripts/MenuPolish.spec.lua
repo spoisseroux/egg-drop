@@ -62,7 +62,9 @@ return function(client, parent)
 			menu:close()
 		end)
 		test("page changes keep absolute header and tab positions stable",function()
+			-- QA R2: the card opens on the 28 px menus rise; measure once it has landed (.65 s, or at once with menus off).
 			local menu=fixture();resize(menu,1649,971);menu:open();task.wait(.03)
+			local began=os.clock();repeat task.wait()until not require(client.KitSpring).busy(menu.card)or os.clock()-began>1.5
 			local headerY,tabY=menu.heading.AbsolutePosition.Y,menu.tabs.play.AbsolutePosition.Y
 			for _,key in ipairs({"daily","play","daily","play","daily"}) do
 				menu:setPage(key);task.wait(.03)

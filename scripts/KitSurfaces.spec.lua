@@ -220,7 +220,10 @@ return function(client,parent)
    local widest,started=0,os.clock()
    while os.clock()-started<Kit.Motion.tab do widest=math.max(widest,tabs.root.Pill.Size.X.Offset);game:GetService("RunService").RenderStepped:Wait()end
    assert(widest>segment+1,"the pill stretches along its travel")
-   task.wait(Kit.Motion.tab+.1);assert(math.abs(tabs.root.Pill.Size.X.Offset-segment)<1 and math.abs(tabs.root.Pill.Position.X.Offset-4)<1,"and settles")
+   -- The QA-R2 pill spring rests within its .45 s limit: wait for rest (at most 1 s), not a fixed .24 s.
+   local function rested()return math.abs(tabs.root.Pill.Size.X.Offset-segment)<1 and math.abs(tabs.root.Pill.Position.X.Offset-4)<1 end
+   local began=os.clock();repeat task.wait()until(rested()and not Kit.Spring.busy(tabs.root.Pill))or os.clock()-began>1
+   assert(rested(),"and settles")
    for _,o in ipairs({box,owned,still,chip.root,b,tile,tabs.root})do o:Destroy()end
    Kit.reduced=realReduced
   end)

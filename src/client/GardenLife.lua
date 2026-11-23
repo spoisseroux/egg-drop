@@ -80,7 +80,10 @@ Life.ButterflySize=Vector3.new(.04,.035,.18) -- QA-R2-LOOK 4 (was .09, .08, .42 
 Life.ButterflyWing=Vector3.new(.24,.29,.02)  -- span .52: 1 : 10 of the avatar, 1 : 3 of a pet
 Life.BirdMaterial=Enum.Material.Sand -- matte, fine grain (FABLE-REVIEW-R1 2; Fabric if it reads as gravel)
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 2): the three leaf emitters. The petal's tint follows the crowns (lime or pink).
--- QA-R2-LOOK 4: about x .52 (Animal Crossing sized: a leaf is 1 : 21 of the avatar, 1 : 6 of a pet).
+-- QA-R2-LOOK 4: about x .52 (Animal Crossing sized: a leaf is 1 : 21 of the avatar, 1 : 6 of a pet). These are the
+-- leaf sizes as drawn, in studs. Studio check R3: an emitter at Size .25 drew a leaf about .36 studs across beside a .5
+-- cube (the particle quad and the texture's own padding), so the emitter Size is the drawn size / LeafDrawn.
+Life.LeafDrawn=1.44
 Life.Leaves=table.freeze({
 	table.freeze({name="LifeLeafA",texture="leafA",size={.16,.24,.04,.22}}),
 	table.freeze({name="LifeLeafB",texture="leafB",size={.14,.21,.03,.19}}),
@@ -156,8 +159,8 @@ local function leafEmitter(anchor,index)
 	e.Shape=Enum.ParticleEmitterShape.Box
 	e.ShapeStyle=Enum.ParticleEmitterShapeStyle.Volume
 	e.Orientation=Enum.ParticleOrientation.FacingCamera
-	local s=spec.size
-	e.Size=keys({{0,s[1]},{.1,s[2],s[3]},{1,s[4]}})
+	local s,d=spec.size,Life.LeafDrawn
+	e.Size=keys({{0,s[1]/d},{.1,s[2]/d,s[3]/d},{1,s[4]/d}})
 	e.Transparency=keys({{0,1},{.08,.1},{.88,.1},{1,1}})
 	e.Squash=keys({{0,0},{.25,-.35},{.5,.05},{.75,-.35},{1,0}})
 	e.Rotation=NumberRange.new(0,360)

@@ -531,6 +531,8 @@ return function(client)
 		test("leaves: three emitters (the look's numbers), anchors moved to each leaf's spot round the player, under the cap at both levels",function()
 			local LifeArt=require(game:GetService("ReplicatedStorage").Shared.LifeArt)
 			local r=rig()
+			-- Studio check R3: the drawn leaf is 1.44 x the emitter Size, so leaf A draws .24 (1 : 6 of a pet), not .35.
+			assert(Life.LeafDrawn==1.44 and Life.Leaves[1].size[2]==.24 and math.abs(Life.Leaves[1].size[2]/Life.LeafDrawn-.167)<.001)
 			local names={"LifeLeafA","LifeLeafB","LifeLeafPetal"}
 			local emitters={}
 			for i,name in ipairs(names)do
