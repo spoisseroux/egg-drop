@@ -40,6 +40,15 @@ return function(client)
 		assert(Trail.route(function()return nil end,spawnAt,V(51,63))==nil and Trail.route(function()return{V(0,0)}end,spawnAt,V(51,63))==nil)
 		assert(Trail.route(straight,spawnAt,V(51,63),function()return false end)==nil,"never a line over water")
 	end)
+	test("Garden finds: every spot is dry ground, so Show me can end a trail there (never over water)",function()
+		local Finds=require(game:GetService("ReplicatedStorage").Shared.Finds)
+		for index=1,#Finds.Spots do
+			local at=Finds.position(index)
+			for _,step in ipairs({Vector3.new(1,0,0),Vector3.new(0,0,1)})do
+				assert(Trail.dry({at-step,at+step}),"spot "..index.." ("..Finds.Spots[index].lawn..")")
+			end
+		end
+	end)
 	test("fades: in one after the other, out together; Reduced Motion has none",function()
 		assert(Trail.alpha(1,0,20,false)==1 and math.abs(Trail.alpha(1,5,15,false)-Trail.Clear)<.001 and Trail.alpha(1,5,0,false)==1)
 		assert(Trail.alpha(30,.5,15,false)>Trail.alpha(1,.5,15,false)and Trail.alpha(1,0,20,true)==Trail.Clear and Trail.alpha(40,0,0,true)==Trail.Clear)

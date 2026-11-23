@@ -201,7 +201,10 @@ local Table={
  -- Things to do (V3-THINGS-TO-DO-PLAN-2026-11-22): the Pocket menu tile, its page and the trail's marker.
  things={title="Things to do",new="New",play="Play",show="Show me",tile={line="Every game in the garden",short="Things"},
   deck={name="Pocket Deck",line="Play a round"},
-  dash={gather="Race: {count} of 8",live="A race is on",idle="Start a race",prizes="Stars races today: {done} of {total}"}},
+  dash={gather="Race: {count} of 8",live="A race is on",idle="Start a race",prizes="Stars races today: {done} of {total}"},
+  finds={name="Garden finds",waiting="{count} finds waiting",one="1 find waiting",later="Come back later",done="All found today"}},
+ -- Garden finds (V3-FINDS-BUILD-PLAN-2026-11-22): the trail's marker and the Smarts a find paid.
+ finds={name="Garden find",gain="+{count} Smarts"},
  park={waitIdle="Pets are playing",count="Pets playing {count}/{capacity}",full="Park full · {count}/{capacity}",otherHasRoom="The other park has room",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
  onboarding={
@@ -549,6 +552,7 @@ local Table={
   parkInvite={title="Pet Park",what="{pet} wants to play.",next="Tap Show me and follow the trail to the park."},
   dashIntro={title="Garden Dash",what="Race your pet. It's free!",next="Tap Show me and follow the trail to the race."},
   dashNew={title="New in the garden",what="Garden Dash is open.",next="Race your pet. It's free! Tap Show me to find it."},
+  findsIntro={title="Something sparkles",what="Walk {pet} over to sniff it.",next="Tap Show me and follow the trail to it."},
  },
  -- Round 3 (Spencer 2026-11-20): the confirm dialog (ConfirmDialog) for big spends and actions
  -- that can't be undone; it replaces "press again" confirms.

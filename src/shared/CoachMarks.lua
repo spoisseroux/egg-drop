@@ -26,10 +26,12 @@ Coach.Bits=table.freeze({
 	parkInvite=11, -- the line that leads a new player to the Pet Park
 	dashIntro=12,  -- the Garden Dash line (a returning player reads "New in the garden")
 	dashSeen=13,   -- the Garden Dash row was shown, or a race joined: no New dot
+	-- Garden finds (V3-FINDS-BUILD-PLAN-2026-11-22): tip 3, the first time a find sparkles near.
+	findsIntro=14,
 })
-Coach.Order=table.freeze({"fillLine","gardenIntro","hatch","style","companions","quests","book","park","item","questDone","petArrived","parkInvite","dashIntro","dashSeen"})
+Coach.Order=table.freeze({"fillLine","gardenIntro","hatch","style","companions","quests","book","park","item","questDone","petArrived","parkInvite","dashIntro","dashSeen","findsIntro"})
 -- Cards of a build that has its own switch, and the part of it they belong to (Things.allows): refused while it is off.
-Coach.Gated=table.freeze({parkInvite="tips",dashIntro="tips",dashSeen="page"})
+Coach.Gated=table.freeze({parkInvite="tips",dashIntro="tips",dashSeen="page",findsIntro="tips"})
 Coach.Max=2^31-1 -- the stored range (bits 0..30); unknown bits from a later build are kept
 
 -- The Welcome round is the first Stars round: the starter grant pays this with the Bear,

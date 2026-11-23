@@ -177,7 +177,7 @@ return function(server)
 		assert(Coach.Bits.petArrived==10 and Coach.bit("petArrived")==1024 and Coach.validId("petArrived"))
 		assert(Coach.Order[11]=="petArrived","appended, never renumbered")
 		-- Things to do: 11 to 13 after it. A server without them drops the ids and keeps the bits.
-		assert(Coach.Bits.parkInvite==11 and Coach.Bits.dashIntro==12 and Coach.Bits.dashSeen==13 and Coach.Order[14]=="dashSeen"and #Coach.Order==14)
+		assert(Coach.Bits.parkInvite==11 and Coach.Bits.dashIntro==12 and Coach.Bits.dashSeen==13 and Coach.Order[14]=="dashSeen"and Coach.Bits.findsIntro==14 and Coach.Order[15]=="findsIntro"and #Coach.Order==15)
 		local kept=Coach.merge(Coach.bit("dashSeen"),Coach.bit("fillLine"));assert(Coach.valid({coachMask=kept})and Coach.sanitize(kept)==kept)
 		local h,db=fixture()
 		local quests=Coach.bit("questDone")
