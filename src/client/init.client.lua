@@ -4758,7 +4758,7 @@ do
   clientUI.attract.options.single=Things.on
   clientUI.attract.options.quiet=function()return clientUI.coach.garden~=nil end
   -- Onboarding v3 slices A and B (BearNeeds): follow the Bear and the need bubbles. Nothing with the build ceiling off;
-  -- with the switches off only the watching runs (the tour, the pill and the tips stay exactly as before).
+  -- with both switches off a look twice a second and no bubble (the tour, the pill and the tips stay exactly as before).
   local okNeeds,needsProblem=pcall(function()
    local Onboard=require(ReplicatedStorage.Shared.Onboard)
    if not Onboard.ceiling()then return end
@@ -4771,28 +4771,68 @@ do
    end
    local function nestAt()local f=clientUI.nestPlace;local at=type(f)=="function"and f()or nil;return if typeof(at)=="Vector3"then at else nil end
    local needs
-   local bubble=require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),adornee=petPart,
-    reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
-    onTap=function()if needs then needs:tap()end end})
+   -- The bubble's BillboardGui is made the first time a bubble shows.
+   local bubble={real=nil}
+   function bubble:set(icon,visible)
+    if visible and not self.real then
+     self.real=require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),adornee=petPart,
+      reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+      onTap=function()if needs then needs:tap()end end})
+    end
+    if self.real then self.real:set(icon,visible)end
+   end
+   function bubble:hop()if self.real then self.real:hop()end end
+   function bubble:step(dt)if self.real then self.real:step(dt)end end
+   function bubble:destroy()if self.real then self.real:destroy();self.real=nil end end
    needs=Needs.new({bubble=bubble,state=function()return nurseryState end,owned=function()return board:GetAttribute("OwnedPets")or 0 end,
     mask=function()return clientUI.coach.mask end,mark=function(id)clientUI.coach:mark(id)end,finishIntro=function()clientUI.coach:finishGarden()end,
     follow=function()return Onboard.sessionFollow()end,needs=function()return Onboard.on("needs")end,returning=function()return things.returning==true end,
-    gate=function()local since=clientUI.coach.roomSince;return gate(if since then os.clock()-since else 0)end,
+    -- Things to do itself, not its tips switch (with tips off the Bear would never start, nor the garden step's clock).
+    gate=function()local since=clientUI.coach.roomSince;return Needs.gate(gate(if since then os.clock()-since else 0),Things.on())end,
     greeting=function()return roomView.focusing==true end,inPark=function()return Attract.parkMember(rootPosition())end,
     nest=function()return nestAt()~=nil end,park=function()return Attract.parkAnchor()~=nil end,
+    prompt=function()return roomView:stationInReach()==true end,
     place=function(where)
      if where=="Eggs"then local entry=clientUI.attract.stations.Eggs;return entry and entry.base,Copy.get("r5.station.Eggs.name")end
      if where=="Park"then local from=rootPosition();return from and parkGate(from),Copy.get("park.name")end
      if where=="Nest"then return nestAt(),Copy.get("onb3.nest.title")end
      return nil
     end,
-    trail=function(target)return trail:start(target)end,trailActive=function()return trail:active()end,
+    trail=function(target)return trail:start(target)end,trailActive=function()return trail:active()end,trailTarget=function()return trail.target end,
     sayHi=function()return roomView:interactPet()end,playDeck=function()return things.act("deck")end,
     quiet=function(on)if clientUI.firstSpend then clientUI.firstSpend:setQuiet(on)end end,
     chirp=function()local shown=roomView.shownPet;if shown and shown.cue then audio:play(shown.cue,1.1,.3)end end,
     react=function(id)if id=="needHi"or id=="needPark"then roomView:cheerPet("cheer")end end})
-   clientUI.needs=needs
-   clientUI.coach.options.follow=function()return Onboard.sessionFollow()end
+   local due=things.due
+   local intent=roomView.petContactIntent
+   local saved=intent.d.saved
+   local beat,nextLook=nil,0
+   -- Gave up: the garden step is marked, the pill, the station glow and the park line are as before.
+   local function abandon(why)
+    warn("[Onboard] needs: "..tostring(why))
+    if beat then beat:Disconnect()end
+    needs:abandon();bubble:destroy()
+    clientUI.attract.options.focus=nil;clientUI.attract.options.tip=nil;clientUI.attract.options.tipShown=nil
+    things.due=due
+   end
+   beat=RunService.Heartbeat:Connect(function(dt)
+    -- Both switches off and nothing started: look twice a second, nothing else.
+    if not needs.ready then
+     if os.clock()<nextLook then return end
+     if not Onboard.on("follow")and not Onboard.on("needs")then nextLook=os.clock()+.5;return end
+    end
+    local good,why=pcall(needs.step,needs,os.clock(),dt)
+    if not good then abandon(why)end
+   end)
+   gui.Destroying:Connect(function()beat:Disconnect();bubble:destroy()end)
+   -- Mounted: only now does the rest of the game lean on it.
+   intent.d.saved=function(...)needs:saidHi();return saved(...)end
+   -- The park line gives way to need 5 (a new player this session only); no rail line while the Bear's prints run.
+   function things.due(ctx)
+    if needs.follow and trail:active()then return nil end
+    ctx.needs=needs:replacesParkLine()
+    return due(ctx)
+   end
    -- Station label tips: once each, their own bits, only for a session that follows the Bear.
    clientUI.attract.options.tip=function(id)
     local bit=Tips.stationTip(id,{follow=needs.follow,mask=clientUI.coach.mask,seen=clientUI.coach.seen,totalWins=clientUI.coach.totalWins,
@@ -4802,22 +4842,8 @@ do
    end
    clientUI.attract.options.tipShown=function(id)local bit=Tips.TipBits[id];if bit then clientUI.coach:mark(bit)end end
    clientUI.attract.options.focus=function()return needs:focus()end
-   -- The park line gives way to need 5; no rail line while the Bear's prints run.
-   local due=things.due
-   function things.due(ctx)
-    if needs.follow and trail:active()then return nil end
-    ctx.needs=Onboard.on("needs")
-    return due(ctx)
-   end
-   local intent=roomView.petContactIntent
-   local saved=intent.d.saved
-   intent.d.saved=function(...)needs:saidHi();return saved(...)end
-   local beat
-   beat=RunService.Heartbeat:Connect(function(dt)
-    local good,why=pcall(needs.step,needs,os.clock(),dt)
-    if not good then warn("[Onboard] needs: "..tostring(why));beat:Disconnect();bubble:set(nil,false);bubble.gui.Enabled=false end
-   end)
-   gui.Destroying:Connect(function()beat:Disconnect();bubble:destroy()end)
+   clientUI.needs=needs
+   clientUI.coach.options.follow=function()return Onboard.sessionFollow()end
   end)
   if not okNeeds then warn("[Onboard] not mounted: "..tostring(needsProblem))end
   -- Twice a second while on: the race's station follows the live gate, and a race joined clears the New dot.

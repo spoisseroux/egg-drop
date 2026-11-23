@@ -89,10 +89,34 @@ end
 --   follow() (Onboard.sessionFollow), needs() (Onboard.on "needs"), returning() (this session began as a returning
 --   player), gate() the ThingsTips.blocked table (with roomFor, idleFor), greeting() (the Bear's greeting shot is up),
 --   inPark(), nest() (the garden nest is drawn), park() (optional: false when there is no Pet Park), place(name) -> position, label, trail(target, how) -> bool,
---   trailActive(), sayHi(), playDeck(), quiet(on) (the pill), chirp(), react(id), bubble (NeedBubble: set(icon,
---   visible), hop(), step(dt)).
+--   trailActive(), trailTarget() (optional: the target the live trail was started with), prompt() (optional: a
+--   station prompt is in reach), sayHi(), playDeck(), quiet(on) (the pill), chirp(), react(id), bubble (NeedBubble:
+--   set(icon, visible), hop(), step(dt)).
 function Needs.new(deps)
 	return setmetatable({d=deps,live={},track={},restUntil=0,gardenFor=0,retryAt=0},Needs)
+end
+-- The ThingsTips gate as BearNeeds reads it: `on` is Things to do itself (Onboard.open already needs it), never the
+-- Things tips switch, which would hold the Bear (and the garden step, funnel step 5) back for good with tips off.
+function Needs.gate(g,thingsOn)
+	local out=if type(g)=="table"then table.clone(g)else {}
+	out.on=thingsOn==true
+	return out
+end
+-- Does need 5 take the park line's place (ThingsTips ctx.needs)? Only for a new player this session, once ready.
+function Needs:replacesParkLine()
+	return self.ready==true and not self.returning and not self.dead and self.d.needs()==true
+end
+-- Gave up (an error in step): the tour is already off for this session, so the garden step is marked here (funnel step
+-- 5), the pill comes back and the bubble goes. Safe to call twice.
+function Needs:abandon()
+	if self.dead then return end
+	self.dead=true
+	pcall(function()self:hide()end)
+	pcall(self.d.quiet,false)
+	if self.follow and not self.returning and not self.introDone then
+		self.introDone=true
+		self.d.finishIntro()
+	end
 end
 function Needs:saidHi()self.live.saidHi=true end
 -- The station that beckons alone while a need (or the first trail) points at it.
@@ -101,11 +125,21 @@ function Needs:focus()
 	local where=if key then Needs.target(key,self.f)else nil
 	return if where=="Eggs"or where=="Park"then where else nil
 end
+-- A trail the player started (Things to do, Show me) is never replaced by the Bear's own (auto, idle); a tap may.
+function Needs:trailFree()
+	local d=self.d
+	if d.trailActive()~=true then return true end
+	return d.trailTarget~=nil and self.trail~=nil and d.trailTarget()==self.trail
+end
 function Needs:trailTo(where,how)
 	if not where then return false end
+	if how~="tap"and not self:trailFree()then return false end
 	local position,label=self.d.place(where)
 	if typeof(position)~="Vector3"then return false end
-	return self.d.trail({position=position,name=label},how)==true
+	local target={position=position,name=label}
+	local ok=self.d.trail(target,how)==true
+	if ok then self.trail=target end
+	return ok
 end
 function Needs:hide()
 	if self.shown then self.shown=false;self.d.bubble:set(nil,false)end
@@ -122,7 +156,10 @@ function Needs:step(now,dt)
 	local d=self.d
 	dt=dt or 0
 	local state=d.state()
-	if type(state)~="table"or(state.status~=nil and state.status~="Ready")then self:hide();return end
+	if self.dead then return end
+	if type(state)~="table"or(state.status~=nil and state.status~="Ready")then self:hide();d.bubble:step(dt);return end
+	-- "Returning" is what the save said before this session: a garden step the tour marks today does not count.
+	if self.began==nil then self.began=Tips.returning(state)end
 	local owned=d.owned()or 0
 	local gate=d.gate()or {}
 	local blocked=Tips.blocked(gate,"shown")
@@ -138,7 +175,7 @@ function Needs:step(now,dt)
 	-- The garden is first ready: the follow switch for this session is read now, never before (the attribute may lag),
 	-- and so is "returning" (the tour, or the wins, before this session).
 	if not self.ready then
-		local returning=d.returning()==true or Coach.has(f.mask,"gardenIntro")or Coach.veteran(f.totalWins)
+		local returning=d.returning()==true or self.began==true
 		-- The pill stays away while the bubbles are on, from the first frame (the bubble takes its place).
 		d.quiet(d.needs()==true and not returning)
 		if owned>0 and not gate.revealPending and blocked==nil and(gate.roomFor or 0)>=Tips.Settle then
@@ -155,11 +192,11 @@ function Needs:step(now,dt)
 	local new=self.follow and not self.returning
 	if new and not self.introDone and not Coach.has(f.mask,"gardenIntro")then
 		if blocked==nil and gate.mode=="Room"then self.gardenFor+=dt end
-		if not needsOn and not self.autoTrail and blocked==nil and now>=self.retryAt then
+		if not needsOn and not self.autoTrail and blocked==nil and now>=self.retryAt and self:trailFree()then
 			self.retryAt=now+Needs.Retry
 			self.autoTrail=self:trailTo("Eggs","auto")
 		end
-		if self.autoTrail and d.trailActive()~=true then self.trailOver=true end
+		if self.autoTrail and not(d.trailActive()==true and self:trailFree())then self.trailOver=true end
 		if Tips.followDone({saidHi=Needs.closed("needHi",f),trailOver=self.trailOver,gardenFor=self.gardenFor,needs=needsOn})then
 			self.introDone=true
 			d.finishIntro()
@@ -181,12 +218,13 @@ function Needs:step(now,dt)
 		if id=="needToy"and self.follow and not self.autoTrail then self.autoPending=true end
 	end
 	self.key=if id then id elseif following then "follow"else nil
-	local show=id~=nil and now>=self.restUntil and blocked==nil and freeFor>=Needs.Return
+	-- Never over a machine's prompt (the bubble is always on top).
+	local show=id~=nil and now>=self.restUntil and blocked==nil and freeFor>=Needs.Return and not(d.prompt and d.prompt()==true)
 	if show then
 		local icon=Needs.icon(id,f)
 		if not self.shown or self.shownIcon~=icon then d.bubble:set(icon,true)end
 		self.shown,self.shownIcon=true,icon
-		if self.autoPending and icon=="ball"then
+		if self.autoPending and icon=="ball"and self:trailFree()then
 			self.autoPending=false
 			self.autoTrail=self:trailTo("Eggs","auto")
 		end

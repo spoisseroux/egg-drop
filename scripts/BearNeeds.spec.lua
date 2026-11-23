@@ -88,7 +88,8 @@ return function(client)
 			follow=function()return r.follow end,needs=function()return r.needsOn~=false end,returning=function()return r.returning end,
 			gate=function()return r.gate end,greeting=function()return r.greeting end,inPark=function()return r.inPark end,nest=function()return r.nest end,
 			place=function(where)return Vector3.new(#where,0,0),where end,
-			trail=function(target,how)table.insert(r.trails,{name=target.name,how=how});r.trailUp=true;return true end,trailActive=function()return r.trailUp end,
+			trail=function(target,how)table.insert(r.trails,{name=target.name,how=how});r.trailUp=true;r.trailOn=target;return true end,trailActive=function()return r.trailUp end,
+			trailTarget=function()return r.trailOn end,prompt=function()return r.prompt==true end,
 			sayHi=function()table.insert(r.acts,"hi");return true end,playDeck=function()table.insert(r.acts,"deck");return true end,
 			quiet=function(on)r.quiet=on end,chirp=function()r.chirps+=1 end,react=function(id)table.insert(r.reacts,id)end})
 		r.t=0
@@ -185,6 +186,37 @@ return function(client)
 		guide:update(state,{eligible=true});assert(guide.stage=="quiet","stays quiet across snapshots")
 		guide:setQuiet(false);assert(guide.stage=="purchase")
 		assert(Guide.shown("purchase",true)=="quiet"and Guide.shown("purchase",false)=="purchase"and Guide.shown("receipt",true)=="receipt"and Guide.shown("done",true)=="done")
+	end)
+	test("review 1: with the Things tips switch off the Bear still starts and the garden step is still marked",function()
+		local tipsOff=rig();tipsOff.gate=with(tipsOff.gate,{on=false});tipsOff.run(Tips.IntroAfter+5)
+		assert(not tipsOff.needs.ready and tipsOff.intro==0,"the tips gate as it was: held back for good")
+		local r=rig();r.gate=Needs.gate(with(r.gate,{on=false}),true);r.run(Tips.IntroAfter+5)
+		assert(r.needs.ready and r.bubble.icon=="hand"and r.intro==1,"Things on: the bubble, and gardenIntro after 60 s")
+		assert(Needs.gate(nil,false).on==false and Needs.gate({on=true,mode="Room"},false).on==false and Needs.gate({on=false},true).mode==nil)
+	end)
+	test("review 2: giving up marks the garden step, brings the pill back and hides the bubble, once",function()
+		local r=rig();r.run(4);assert(r.bubble.icon=="hand"and r.quiet==true and r.intro==0)
+		r.needs:abandon()
+		assert(r.intro==1 and r.quiet==false and r.bubble.icon==nil and r.needs.dead==true)
+		r.needs:abandon();r.run(5);assert(r.intro==1 and r.bubble.icon==nil and r.quiet==false,"once, and nothing after")
+		local done=rig({state={coachMask=Coach.with(0,"gardenIntro")}});done.run(4);done.needs:abandon()
+		assert(done.intro==0,"a returning save: nothing to mark")
+		local early=rig({owned=0});early.run(1);early.needs:abandon();assert(early.intro==0,"not ready: the tour was never skipped")
+	end)
+	test("review 4: the park line gives way only for a new player this session, once ready",function()
+		local r=rig();assert(not r.needs:replacesParkLine(),"not ready yet")
+		r.run(1);assert(r.needs:replacesParkLine())
+		local back=rig({returning=true});back.run(1);assert(not back.needs:replacesParkLine(),"returning: the park line as before")
+		local off=rig({needsOn=false});off.run(1);assert(not off.needs:replacesParkLine())
+		r.needs:abandon();assert(not r.needs:replacesParkLine(),"given up")
+		-- The tour (follow off) marks gardenIntro this session before the Bear is ready: still a new player.
+		local toured=rig({follow=false,mask=Coach.with(0,"gardenIntro")});toured.run(4)
+		assert(not toured.needs.returning and toured.needs:replacesParkLine()and toured.bubble.icon=="hand")
+	end)
+	test("never over a machine's prompt",function()
+		local r=rig();r.run(4);assert(r.bubble.icon=="hand")
+		r.prompt=true;r.run(.25);assert(r.bubble.icon==nil)
+		r.prompt=false;r.run(.25);assert(r.bubble.icon=="hand")
 	end)
 	return{passed=#cases,cases=cases}
 end
