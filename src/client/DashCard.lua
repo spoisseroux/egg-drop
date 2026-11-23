@@ -162,7 +162,7 @@ function Card:build()
 	if strip and g.stripY then
 		local ok,problem=pcall(function()
 			local Strip=require(script.Parent.TomorrowStrip)
-			local view=Strip.new(panel,{phone=g.compact,short=g.w<Strip.NarrowCard,z=panel.ZIndex+2})
+			local view=Strip.new(panel,{phone=g.compact,short=g.w<Strip.NarrowCard,z=panel.ZIndex+2,source=options.stripSource,reduced=options.reduced})
 			view.root.Position=UDim2.fromOffset(g.pad,g.stripY)
 			view:set(strip,g.lineW)
 			view:enter(.3,Kit.reduced and Kit.reduced())

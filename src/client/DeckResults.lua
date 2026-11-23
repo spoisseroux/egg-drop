@@ -917,11 +917,17 @@ Results.TomorrowPhone=42      -- the phone cards give up this much (36 strip + 6
 Results.TomorrowY=472         -- desktop: under the come-back strip
 Results.TomorrowButtonsY=536  -- desktop: the buttons under it (the key hints give way)
 Results.TomorrowDelay=1       -- in after the count-up
+-- QA R2 (architect): the strip never collapses mid-screen. While the results stay up, a nil answer (the nest summary
+-- between packets) keeps the last model; a fresh opening starts over (Results:hide clears it).
 function Results:tomorrowModel()
  local provider=self.tomorrow
  if type(provider)~="function"then return nil end
  local ok,model=pcall(provider)
- return if ok and type(model)=="table"then model else nil
+ if ok and type(model)=="table"then
+  self.lastTomorrow=model
+  return model
+ end
+ return if self.visible then self.lastTomorrow else nil
 end
 function Results:paintTomorrow(model,opening)
  if not model or self.compact or not self.root then
@@ -933,7 +939,7 @@ function Results:paintTomorrow(model,opening)
  local strip=self.tomorrowStrip
  if strip and(strip.root.Parent==nil or strip.phone~=self.phone)then strip:destroy();strip=nil end
  if not strip then
-  strip=Strip.new(self.body or self.root,{phone=self.phone,wait=not self.phone})
+  strip=Strip.new(self.body or self.root,{phone=self.phone,wait=not self.phone,source=function()return self:tomorrowModel()end,reduced=Kit.reduced})
   strip.phone=self.phone
   self.tomorrowStrip=strip
  end
@@ -950,6 +956,7 @@ function Results:paintTomorrow(model,opening)
 end
 
 function Results:hide()
+ self.lastTomorrow=nil
  if self.inPlace then
   self.visible=false;self.feedback:cancel();self.inPlace:hide();self.host.Parent.Visible=false;return
  end

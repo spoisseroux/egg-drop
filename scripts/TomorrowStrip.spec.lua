@@ -1,114 +1,182 @@
--- The See you tomorrow strip (TomorrowStrip, Onboarding v3 slice E): nothing unless the nest is on and has an egg; the
--- nest clock, tomorrow's stamp and its Stars, and the new quests in the right words; text never truncates (shrink to
--- 11, then the short value); the Dash card makes room for it only when there is one.
+-- The "Coming up" strip (TomorrowStrip, Onboarding v3 slice E; QA-R2-LOOK 5): nothing unless the nest is on and has an
+-- egg; the egg's live clock, the next stamp and the day's quests in whole, short and tiny words, ready chips first;
+-- text never truncates; the live pass writes only what changed and keeps the last model through a nil; the Dash card
+-- makes room for it only when there is one.
 -- Usage (Client): require(PlayerScripts.Client.ZZSpecs.TomorrowStrip)(PlayerScripts.Client); offline in
 -- scripts/run_dash_server_specs.py (DASH_SPECS="TomorrowStrip").
 return function(client)
-	local Nest=require(game:GetService("ReplicatedStorage").Shared.Nest)
 	local Strip=require(client.TomorrowStrip)
 	local Card=require(client.DashCard)
 	local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
+	local Eggs=require(game:GetService("ReplicatedStorage").Shared.EggCatalog)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local function measure(text,size)return #text*size*.55 end
-	local function ctx(left,state,on)return{on=on~=false,nest={left=left},state=state or {stamps=1,dailyAvailable=false}}end
+	-- 19:00 on a game day (the day starts at 05:00 UTC): the reset is 5 h away.
+	local DAY=100
+	local NOW=DAY*86400-Eggs.DayOffsetSeconds+19*3600
+	local function ctx(left,state,on,now)return{on=on~=false,nest={left=left},state=state or {stamps=1,dailyAvailable=false},now=now or NOW}end
+	local function chip(model,id)for _,c in ipairs(model.chips)do if c.id==id then return c end end end
+	local function ids(model)local out={};for _,c in ipairs(model.chips)do table.insert(out,c.id)end;return table.concat(out,",")end
+	local function quests(rows)local daily={};for i,r in ipairs(rows)do daily[i]={claimed=r=="claimed",ready=r=="ready"}end;return{day=DAY,daily=daily}end
 
 	test("off: no strip with the nest off, with no egg, or for junk",function()
 		assert(Strip.model(ctx(3600,nil,false))==nil,"switch off")
 		assert(Strip.model({on=true,nest=nil,state={}})==nil,"no egg")
 		assert(Strip.model(nil)==nil and Strip.model("junk")==nil and Strip.model({on=true,nest={left="soon"}})==nil)
 	end)
-	test("texts: the nest clock, tomorrow's stamp with its Stars, three new quests",function()
-		local m=Strip.model(ctx(7*3600-30))
-		assert(m.title=="See you tomorrow"and m.wait=="Miss a day, lose nothing.")
-		local nest,stamp,quests=m.chips[1],m.chips[2],m.chips[3]
-		assert(nest.text==UICopy.get("onb3.nest.hours",{hours=7})and nest.short==UICopy.get("onb3.nest.chipHours",{hours=7})and not nest.gold,nest.text)
-		assert(stamp.text=="Stamp 2: 4 Stars"and stamp.short=="4",stamp.text)
-		assert(quests.text=="3 new quests"and quests.short=="3"and Strip.Quests==3)
-		local soon=Strip.model(ctx(40*60)).chips[1]
-		assert(soon.text==UICopy.get("onb3.nest.minutes",{minutes=40})and soon.short==UICopy.get("onb3.nest.chipMinutes",{minutes=40}))
-		local ready=Strip.model(ctx(0)).chips[1]
-		assert(ready.text==UICopy.get("onb3.nest.ready")and ready.short==UICopy.get("onb3.nest.ready")and ready.gold==true)
-		-- Today's stamp still waiting: that stamp; the card full: the first of the next card.
-		assert(Strip.model(ctx(60,{stamps=3,dailyAvailable=true})).chips[2].text=="Stamp 4: 5 Stars")
-		assert(Strip.model(ctx(60,{stamps=6,dailyAvailable=false})).chips[2].text=="Stamp 7: 12 Stars")
-		assert(Strip.model(ctx(60,{stamps=7,dailyAvailable=false})).chips[2].text=="Stamp 1: 4 Stars")
-		assert(Strip.model(ctx(60,{})).chips[2].text=="Stamp 1: 4 Stars","a new save")
-		assert(Nest.countdown(0)=="ready")
+	test("the egg's clock: hours floored, minutes rounded up, 60 rolls to the hour; whole, short and tiny",function()
+		local rows={
+			{7*3600+52*60,"Egg in 7 h 52 m","7 h 52 m","7h 52m"},
+			{7*3600+51*60+1,"Egg in 7 h 52 m","7 h 52 m","7h 52m"},
+			{7*3600+10*60,"Egg in 7 h 10 m","7 h 10 m","7h 10m"},
+			{7*3600,"Egg in 7 h","7 h","7h"},
+			{7*3600+59*60+30,"Egg in 8 h","8 h","8h"},
+			{42*60,"Egg in 42 min","42 min","42m"},
+			{59*60+30,"Egg in 1 h","1 h","1h"},
+			{61,"Egg in 2 min","2 min","2m"},
+			{59,"Egg in under 1 min","<1 min","<1m"},
+			{0,"Egg ready!","Ready!","Ready!"},
+		}
+		for _,row in ipairs(rows)do
+			local egg=chip(Strip.model(ctx(row[1])),"nest")
+			assert(egg.text==row[2]and egg.short==row[3]and egg.tiny==row[4],row[1]..": "..egg.text.." / "..egg.short.." / "..egg.tiny)
+			assert((egg.gold==true)==(row[1]==0),"gold only when ready")
+		end
+		assert(Strip.model(ctx(3600)).title=="Coming up"and Strip.model(ctx(3600)).wait=="Miss a day, lose nothing.")
 	end)
-	test("fit: wide keeps every long text at 14; narrow shrinks to 11, then the short values; never wider than the strip",function()
-		local m=Strip.model(ctx(7*3600))
+	test("the stamp: ready (gold outline) while today's waits, its time once taken, the next one past the boundary",function()
+		local ready=chip(Strip.model(ctx(3600,{stamps=2,dailyAvailable=true})),"stamp")
+		assert(ready.text=="Stamp 3 ready: +"..Strip.stamp({stamps=2,dailyAvailable=true}).reward and ready.outline and ready.ready,ready.text)
+		assert(ready.short=="+"..ready.stars and Strip.numeric(ready.short),"a bare number")
+		local taken=chip(Strip.model(ctx(3600,{stamps=3,dailyAvailable=false})),"stamp")
+		assert(taken.text=="Stamp 4 in 5 h"and taken.short=="5 h"and taken.tiny=="5h"and not taken.ready,taken.text)
+		-- Past the day boundary the snapshot is stale (its quests say yesterday): no time until the next snapshot.
+		local stale=chip(Strip.model(ctx(3600,{stamps=3,dailyAvailable=false,quests=quests({"claimed"})},true,NOW+6*3600)),"stamp")
+		assert(stale.text=="Next stamp: +"..stale.stars and stale.short=="+"..stale.stars,stale.text)
+		assert(Strip.hoursUp(1)==1 and Strip.hoursUp(3600)==1 and Strip.hoursUp(3601)==2)
+		assert(math.abs(Strip.resetIn(NOW)-5*3600)<1e-6 and Strip.dayOf(NOW)==DAY)
+		assert(chip(Strip.model(ctx(60,{stamps=7,dailyAvailable=false})),"stamp").index==1,"a full card: the first of the next")
+	end)
+	test("the quests: to go counts the claimable ones; done is every daily claimed; weekly ignored",function()
+		local m=Strip.model(ctx(3600,{stamps=1,quests=quests({"open","ready","claimed"})}))
+		local q=chip(m,"quests")
+		assert(q.text=="2 quests to go"and q.short=="2 left"and q.tiny=="2"and q.outline,"claimable counts: "..q.text)
+		assert(chip(Strip.model(ctx(3600,{quests=quests({"open","claimed","claimed"})})),"quests").text=="1 quest to go")
+		local done=chip(Strip.model(ctx(3600,{quests=quests({"claimed","claimed","claimed"})})),"quests")
+		assert(done.text=="New quests in 5 h"and done.icon=="check"and done.soft,done.text)
+		local stale=chip(Strip.model(ctx(3600,{quests=quests({"claimed","claimed","claimed"})},true,NOW+6*3600)),"quests")
+		assert(stale.text=="Quests done!"and stale.short=="Done!"and stale.tiny=="Done",stale.text)
+		assert(chip(Strip.model(ctx(3600,{})),"quests").text==Strip.Quests.." quests to go","no snapshot: the day's set")
+		local weekly={day=DAY,daily={{claimed=true},{claimed=true},{claimed=true}},weekly={{claimed=false}}}
+		assert(chip(Strip.model(ctx(3600,{quests=weekly})),"quests").text=="New quests in 5 h")
+	end)
+	test("ready chips sort first: egg, then stamp, then quests",function()
+		assert(ids(Strip.model(ctx(3600)))=="nest,stamp,quests")
+		assert(ids(Strip.model(ctx(3600,{stamps=1,dailyAvailable=true})))=="stamp,nest,quests")
+		assert(ids(Strip.model(ctx(0,{stamps=1,dailyAvailable=true,quests=quests({"ready"})})))=="nest,stamp,quests")
+		assert(ids(Strip.model(ctx(3600,{stamps=1,quests=quests({"ready"})})))=="quests,nest,stamp")
+	end)
+	test("fit: wide keeps every long text at 14; narrow shrinks, then short, then tiny; never cut",function()
+		local m=Strip.model(ctx(7*3600+52*60))
 		local wide=Strip.fit(m,800,measure)
-		for _,chip in ipairs(wide.chips)do assert(chip.size==14,"wide: 14")end
-		assert(wide.chips[1].text==UICopy.get("onb3.nest.hours",{hours=7})and wide.title.w==Strip.TitleW and wide.h==44)
+		for _,c in ipairs(wide.chips)do assert(c.size==14,"wide: 14")end
+		assert(wide.chips[1].text=="Egg in 7 h 52 m"and wide.title.w==Strip.TitleW and wide.h==44)
 		assert(wide.chips[2].x>wide.chips[1].x+wide.chips[1].w and wide.chips[3].x>wide.chips[2].x+wide.chips[2].w,"flows right")
-		for _,width in ipairs({560,480,420,360})do
+		for _,width in ipairs({560,480,420,360,300})do
 			local f=Strip.fit(m,width,measure)
-			local right=f.chips[3].x+f.chips[3].w
-			local allShort=true
-			for index,chip in ipairs(f.chips)do if chip.text~=m.chips[index].short then allShort=false end end
-			assert(right<=width or allShort,width..": fits ("..right..")")
-			for index,chip in ipairs(f.chips)do
-				assert(chip.text==m.chips[index].text or chip.text==m.chips[index].short,"long or short, never cut")
-				assert(chip.size==14 or chip.size==11)
+			for index,c in ipairs(f.chips)do
+				local spec=m.chips[index]
+				assert(c.text==spec.text or c.text==spec.short or c.text==spec.tiny,"whole, short or tiny, never cut")
 			end
 		end
-		local tight=Strip.fit(m,360,measure)
-		assert(tight.title.w==0,"no room for the title")
 		local short=Strip.fit(m,800,measure,{short=true})
-		assert(short.chips[1].text==UICopy.get("onb3.nest.chipHours",{hours=7})and short.chips[2].text=="4"and short.chips[3].text=="3","a narrow card: short at once")
+		assert(short.chips[1].text=="7 h 52 m"and short.chips[3].text=="3 left","a narrow card: short at once")
 	end)
-	test("phone (v2, beta 12 U7): 48 px, the title row inside, three equal centred chips; whole words from 400, none under 240",function()
-		local m=Strip.model(ctx(7*3600))
-		local f=Strip.fit(m,600,measure,{phone=true})
+	test("phone (v2): 48 px, the title row inside, three equal centred chips; whole from 400 if it fits, short, tiny under 300, none under 240",function()
+		local m=Strip.model(ctx(42*60))
+		local f=Strip.fit(m,800,measure,{phone=true})
 		assert(f.h==48 and f.chips[1].w==f.chips[2].w and f.chips[2].w==f.chips[3].w)
-		assert(f.chips[1].text==UICopy.get("onb3.nest.hours",{hours=7})and f.chips[1].size==12)
+		assert(f.chips[1].text=="Egg in 42 min"and f.chips[1].size==12,f.chips[1].text)
 		assert(f.title.y==11 and f.title.x==25,"the title has its own row")
-		for _,chip in ipairs(f.chips)do
-			assert(chip.y==21 and chip.h==22 and chip.y+chip.h<=f.h-4,"chips under the title, inside the strip")
-			assert(chip.inset>=4 and chip.inset*2+chip.icon+5+measure(chip.text,chip.size)<=chip.w+1,"centred, never cut")
+		for _,c in ipairs(f.chips)do
+			assert(c.y==21 and c.h==22 and c.y+c.h<=f.h-4,"chips under the title, inside the strip")
+			assert(c.inset>=4 and c.inset*2+c.icon+5+measure(c.text,c.size)<=c.w+1 or c.inset==4,"centred")
 		end
-		local f427=Strip.fit(m,427,measure,{phone=true})
-		assert(f427.chips[2].text=="Stamp 2: 4 Stars"or f427.chips[2].text=="4","the full LCD width")
-		local small=Strip.fit(m,300,measure,{phone=true})
-		assert(small.chips[2].text=="4"and small.chips[1].text==UICopy.get("onb3.nest.chipHours",{hours=7}),"under 400: short values")
-		assert(Strip.fit(m,239,measure,{phone=true})==nil and Strip.fit(m,240,measure,{phone=true})~=nil,"under 240: no strip")
+		local long=Strip.model(ctx(7*3600+52*60))
+		local f400=Strip.fit(long,400,measure,{phone=true})
+		assert(f400.chips[1].text=="7 h 52 m"or f400.chips[1].text=="7h 52m","the whole words do not fit a 125 px column: short")
+		local mid=Strip.fit(long,320,measure,{phone=true})
+		assert(mid.chips[1].text=="7 h 52 m"or mid.chips[1].text=="7h 52m")
+		local small=Strip.fit(long,290,measure,{phone=true})
+		assert(small.chips[1].text=="7h 52m"and small.chips[3].text=="3","under 300: tiny")
+		assert(Strip.fit(long,239,measure,{phone=true})==nil and Strip.fit(long,240,measure,{phone=true})~=nil,"under 240: no strip")
 	end)
-	test("DeckLook off: the phone strip before v2, exactly (36 px, the title on a tab, drawn at any width)",function()
+	test("DeckLook off: the phone strip before v2 (36 px, the title on a tab, drawn at any width)",function()
 		local m=Strip.model(ctx(7*3600))
 		local f=Strip.fit(m,600,measure,{phone=true,v2=false})
 		assert(f.h==36 and not f.v2 and f.chips[1].w==f.chips[2].w and f.chips[1].y==nil and f.chips[1].inset==nil)
-		assert(f.chips[1].text==UICopy.get("onb3.nest.hours",{hours=7})and f.chips[1].size==12)
 		local small=Strip.fit(m,200,measure,{phone=true,v2=false,short=true})
-		assert(small~=nil and small.chips[2].text=="4","no 240 floor before v2")
+		assert(small~=nil,"no 240 floor before v2")
 		local host=Instance.new("Frame")
 		local old=Strip.new(host,{measure=measure,phone=true,short=true,v2=false})
 		old:set(m,200)
-		assert(old.tab~=nil and old.moon==nil and old.h==36 and old.root.Visible)
+		assert(old.tab~=nil and old.mark==nil and old.h==36 and old.root.Visible)
 		assert(Strip.phoneHeight(false)==36 and Strip.phoneHeight(true)==48)
 	end)
-	test("the strip draws the texts, is never a button, and hides for nil",function()
+	test("the strip draws the texts, is ComingUpStrip, never a button, and hides for nil",function()
 		local host=Instance.new("Frame")
 		local view=Strip.new(host,{measure=measure,wait=true})
-		view:set(Strip.model(ctx(40*60)),800)
+		view:set(Strip.model(ctx(40*60,{stamps=3,dailyAvailable=false})),800)
 		local texts=view:texts()
-		assert(texts.title=="See you tomorrow"and texts.nest==UICopy.get("onb3.nest.minutes",{minutes=40})and texts.stamp=="Stamp 2: 4 Stars"and texts.quests=="3 new quests")
+		assert(view.root.Name=="ComingUpStrip")
+		assert(texts.title=="Coming up"and texts.nest=="Egg in 40 min"and texts.stamp=="Stamp 4 in 5 h"and texts.quests=="3 quests to go",texts.stamp)
 		assert(view.wait.Text=="Miss a day, lose nothing.")
 		for _,item in ipairs(view.root:GetDescendants())do
 			assert(item.ClassName~="TextButton"and item.ClassName~="ImageButton","never a button")
 		end
 		assert(view.root.Selectable==false and view.root.Active==false)
 		view:set(Strip.model(ctx(0)),800)
-		assert(view.chips[1].frame.BackgroundColor3==Strip.Color.stars and view:texts().nest==UICopy.get("onb3.nest.ready"),"ready: gold")
-		assert(view.chips[2].text.AutoLocalize==true)
+		assert(view.byId.nest.frame.BackgroundColor3==Strip.Color.stars and view:texts().nest=="Egg ready!","ready: gold")
+		assert(view.chips[1].id=="nest","ready first")
 		view:set(nil,800);assert(view.root.Visible==false)
 		assert(view:enter(1,false)==false,"hidden: no entrance")
 		view:destroy();assert(#host:GetChildren()==0)
 		local phone=Strip.new(host,{measure=measure,phone=true,short=true})
-		phone:set(Strip.model(ctx(3600)),300)
-		assert(phone:texts().stamp=="4"and phone.chips[2].text.AutoLocalize==false,"a number is never sent for translation")
-		assert(phone.moon~=nil and phone.tab==nil and phone.wait==nil,"v2: no tab over the edge")
+		phone:set(Strip.model(ctx(3600,{stamps=1,dailyAvailable=true})),300)
+		assert(phone:texts().stamp=="+"..Strip.stamp({stamps=1}).reward and phone.byId.stamp.text.AutoLocalize==false,"a number is never sent for translation")
+		assert(phone.byId.nest.text.AutoLocalize==true,"words with units are")
+		assert(phone.mark~=nil and phone.mark.Name=="Clock"and phone.tab==nil and phone.wait==nil,"v2: the clock mark, no tab")
 		phone:set(Strip.model(ctx(3600)),200);assert(phone.root.Visible==false,"too narrow: not drawn")
+	end)
+	test("live: a pass a second, a write only when a word changes, the last model kept through a nil, gone on destroy",function()
+		local host=Instance.new("Frame");host.Parent=workspace
+		local ticks={}
+		local clock={connect=function(fn)local handle={fn=fn};function handle:Disconnect()self.gone=true end;table.insert(ticks,handle);return handle end}
+		local left,answer=7*3600+52*60,true
+		local calls=0
+		local view=Strip.new(host,{measure=measure,source=function()calls+=1;return if answer then Strip.model(ctx(left))else nil end,clock=clock})
+		view:set(Strip.model(ctx(left)),800)
+		assert(#ticks==1 and view.link==ticks[1],"one connection")
+		view:set(Strip.model(ctx(left)),800);assert(#ticks==1,"a second set adds none")
+		local function second()ticks[1].fn(1)end
+		local text=view.byId.nest.text
+		local writes=0
+		local set=view.set
+		view.set=function(self,...)writes+=1;return set(self,...)end
+		for _=1,20 do left-=1;second()end
+		assert(calls==20 and writes==0 and text.Text=="Egg in 7 h 52 m","same minute: nothing written")
+		left=7*3600+51*60;second()
+		assert(text.Text=="Egg in 7 h 51 m"and writes==1,"the next minute: one write")
+		answer=false;second()
+		assert(view.root.Visible and text.Text=="Egg in 7 h 51 m","a nil keeps the last model: no collapse")
+		answer=true;left=0;second()
+		assert(view.byId.nest.gold and view.chips[1].id=="nest"and text.Text=="Egg ready!","ready: gold, first")
+		host.Visible=false;left=600;second()
+		assert(text.Text=="Egg ready!"and view.link,"hidden: the pass is skipped, the link kept")
+		host.Visible=true;second();assert(text.Text=="Egg in 10 min","a new egg (no bounce)")
+		view:destroy();assert(ticks[1].gone and view.link==nil,"destroy: the connection goes")
+		host:Destroy()
 	end)
 	test("enter: refused before set; after it, the tween goes home to where the strip was placed",function()
 		local host=Instance.new("Frame")

@@ -267,7 +267,7 @@ function View:paintPayoutV3(data,pad,lw)
  local tomorrow=self.owner:tomorrowModel()
  if tomorrow and self.stripBox then
   local fresh=self.tomorrow==nil
-  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.root,{phone=true,z=self.root.ZIndex+3})end
+  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.root,{phone=true,z=self.root.ZIndex+3,source=function()return self.owner:tomorrowModel()end,reduced=function()return self:reduced()end})end
   local box=self.stripBox
   self.tomorrow.root.Position=UDim2.fromOffset(box.x,box.y)
   self.tomorrow:set(tomorrow,box.w)
@@ -323,7 +323,7 @@ function View:paint(data)
  local tomorrow=self.owner:tomorrowModel()
  if tomorrow then
   local fresh=self.tomorrow==nil
-  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.payout,{phone=true,short=true})end
+  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.payout,{phone=true,short=true,source=function()return self.owner:tomorrowModel()end,reduced=function()return self:reduced()end})end
   -- Placed and drawn first: enter() tweens back to where the strip is now, and fades the chips it has.
   local sy=if #parts>0 then y+78+#parts*17+12 else y+64
   self.tomorrow.root.Position=UDim2.fromOffset(pad,sy+8)
