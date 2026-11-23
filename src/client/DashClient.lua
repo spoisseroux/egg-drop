@@ -19,6 +19,7 @@ local Dash=require(Shared.Dash)
 local Wire=require(Shared.DashWire)
 local Sim=require(Shared.DashSim)
 local Course=require(Shared.DashCourse)
+local Grid=require(Shared.DashGrid)
 local Stats=require(Shared.DashStats)
 local UICopy=require(Shared.UICopy)
 local Predict=require(script.Parent.DashPredict)
@@ -523,7 +524,7 @@ function Client:heatStep(dt,now,reduced)
 				made=true -- one a frame
 				local pet=require(Shared.PetCatalog).byId[track.petId]
 				local ok,value=pcall(function()
-					local x,y,z=Course.at(0,false,track.lane)
+					local x,y,z=Grid.at(0,false,track.lane,heat.plan.count)
 					return require(script.Parent.PetFactory).create(workspace,Vector3.new(x,y,z),pet,0,0,false,nil,{priority=1})
 				end)
 				if ok then
@@ -537,7 +538,7 @@ function Client:heatStep(dt,now,reduced)
 			end
 			if visual then
 				local cs,onStones=Client.spot(track.draw,track.flags.stones)
-				Pose.step(visual,track.state,cs,onStones,track.lane,track.flags,heat.running,dt,reduced)
+				Pose.step(visual,track.state,cs,onStones,track.lane,track.flags,heat.running,dt,reduced,heat.plan.count)
 				visual.cosmeticTime=now
 				visual:update(dt)
 				self.props:tagAt(track.seat,visual.origin+Vector3.yAxis*2)
@@ -678,12 +679,20 @@ function Client:raceStep(seat,dt,now,reduced)
 		if racing then hud:setPlace(place)end -- home: everyone at 0 left would read 1st
 	end
 	hud:step(dt)
-	self.camera:step(dt,seat.cs,seat.onStones,seat.lane,flags.stones==true,flags.dash==true and seat.phase=="race",reduced)
+	local count=seat.plan and seat.plan.count
+	self.camera:step(dt,seat.cs,seat.onStones,seat.lane,flags.stones==true,flags.dash==true and seat.phase=="race",reduced,count)
 	local c=self.camera
-	local eye=Vector3.new(c.ex,c.ey,c.ez)
-	local px,py,pz=Course.at(seat.cs,seat.onStones,seat.lane)
+	local eye,look=Vector3.new(c.ex,c.ey,c.ez),Vector3.new(c.lx,c.ly,c.lz)
+	-- Beta 12 U5: the line-up shot until GO, easing to the rail camera.
+	local k=RaceCamera.lineupBlend(-until_,reduced)
+	if k<1 then
+		local view=workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize
+		local ex,ey,ez,lx,ly,lz=RaceCamera.lineup(if view and view.Y>0 then view.X/view.Y else nil)
+		eye=Vector3.new(ex,ey,ez):Lerp(eye,k);look=Vector3.new(lx,ly,lz):Lerp(look,k)
+	end
+	local px,py,pz=Grid.at(seat.cs,seat.onStones,seat.lane,count)
 	self.fade:step(dt,eye,Vector3.new(px,py+.8,pz),seat.cs,seat.onStones==true)
-	room:dashCamera(CFrame.lookAt(eye,Vector3.new(c.lx,c.ly,c.lz)),c.fov)
+	room:dashCamera(CFrame.lookAt(eye,look),c.fov)
 end
 function Client:showResults(seat)
 	seat.cardAt=nil
@@ -772,16 +781,18 @@ function Client:racing(userId)
 end
 function Client:place(visual,ownerId,dt,reduced)
 	local seat,heat=self.seat,self.heat
-	local cs,onStones,lane,flags,running
+	local cs,onStones,lane,flags,running,count
 	if ownerId==self.userId then
 		-- The owner's own pet: from the prediction, until the results are put away.
 		if not seat or not seat.predict or seat.cs==nil then return false end
 		cs,onStones,lane,flags,running=seat.cs,seat.onStones,seat.lane,self.ownFlags,seat.predict:started()
+		count=seat.plan and seat.plan.count
 	else
 		local track=heat and heat.byUser[ownerId]
 		if not track then return false end
 		cs,onStones=Client.spot(track.draw,track.flags.stones)
 		lane,flags,running=track.lane,track.flags,heat.running==true
+		count=heat.plan and heat.plan.count
 	end
 	local state=visual.dashState
 	if not state then
@@ -789,7 +800,7 @@ function Client:place(visual,ownerId,dt,reduced)
 		visual.dashState=state
 		Pose.begin(visual,state)
 	end
-	Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced)
+	Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced,count)
 	return true
 end
 -- True when the race drew this pet this frame. Anything else, and the garden draws it as before.

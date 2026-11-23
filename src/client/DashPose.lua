@@ -1,7 +1,7 @@
 -- Garden Dash poses (V3-DASH-BUILD-PLAN-2026-11-22, slice S7). Puts a garden pet on the course for this frame: the run,
 -- the hop, the tumble (Reduced Motion: a sit), the puff, the finish. Visual only, through the GardenPetVisual levers
 -- ParkPetPose uses; nothing here reads a clock or makes an instance, a table or a closure a frame.
-local Course=require(game:GetService("ReplicatedStorage").Shared.DashCourse)
+local Grid=require(game:GetService("ReplicatedStorage").Shared.DashGrid)
 local Follow=require(script.Parent.PetFollow)
 local Pose={}
 local TAU=math.pi*2
@@ -26,8 +26,9 @@ function Pose.clear(visual)
 	Follow.rest(visual)
 end
 -- cs, onStones, lane as Sim.spot. flags: air, tumble, stumble, puff, zoom, dash, finished. running: the race is on.
-function Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced)
-	local x,y,z,yaw=Course.at(cs,onStones,lane)
+-- count: the racers in the heat (DashGrid centres the lanes on them).
+function Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced,count)
+	local x,y,z,yaw=Grid.at(cs,onStones,lane,count)
 	local k=(visual.worldScale or Pose.StudScale)/Pose.StudScale
 	local dx,dz=x-state.x,z-state.z
 	local moved=if state.placed then math.sqrt(dx*dx+dz*dz)else 0

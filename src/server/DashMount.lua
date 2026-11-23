@@ -5,6 +5,7 @@
 -- beside the lounge rather than inside it, so players, pets and every garden raycast pass straight through.
 -- Hoops and clovers are the client's (layouts differ). Built while Dash is on; removed when it goes off.
 local Course=require(game:GetService("ReplicatedStorage").Shared.DashCourse)
+local Grid=require(game:GetService("ReplicatedStorage").Shared.DashGrid)
 local Mount={}
 Mount.ModelName="GardenDash"
 Mount.Frame=Color3.fromHex("#C9C2D6")
@@ -14,8 +15,10 @@ Mount.Stripe=Color3.fromHex("#FF6B6B")
 Mount.Cream=Color3.fromHex("#FFF4DC")
 Mount.Wait=Color3.fromHex("#8FD3FF")
 Mount.Stripes=3 -- a post
-Mount.PostHeight=10.4 -- the banner is above the race camera (9 up), and the posts outside lane 8
-Mount.PostOut=3.4
+Mount.PostHeight=10.4 -- the banner is above the race camera (9 up)
+-- Beta 12 U5: the posts outside eight racers 1.5 studs apart (DashGrid), the arch about 13 studs wide.
+Mount.PostOut=Grid.PostOut/100
+Mount.SlabWidth=Grid.StartStep/100
 
 local function part(parent,name,size,cframe,color)
 	local item=Instance.new("Part")
@@ -59,8 +62,10 @@ function Mount.build(room)
 	model:SetAttribute("DashVersion",Course.Version)
 	model:SetAttribute("Start",start);model:SetAttribute("Finish",finish)
 	startArch(model,start);arch(model,"Finish",finish)
+	-- Eight slabs side by side, one under each racer of a full heat (DashGrid's slots at the line).
 	for lane=1,Course.LaneCount do
-		part(model,"Pad_"..lane,Vector3.new(.45,.08,.9),frameAt(0,lane)*CFrame.new(0,.04,-.8),Mount.Banner)
+		local o=Grid.offset(0,false,lane,Course.LaneCount)/100
+		part(model,"Pad_"..lane,Vector3.new(Mount.SlabWidth-.08,.08,.9),start*CFrame.new(-o,.04,-.8),if lane%2==0 then Mount.Banner else Mount.Cream)
 	end
 	-- The waiting pad, off the line, and its sign on the far edge from the course.
 	local gate=CFrame.new(Mount.gate())

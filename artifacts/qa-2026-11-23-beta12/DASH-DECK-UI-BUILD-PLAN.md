@@ -215,7 +215,8 @@ this table only. `src/client/TipChime.lua`: `TipChime.SoundId=nil` (one line to 
 One block in `src/shared/UICopy.lua`, after the `Table` literal and before `freeze` (my own block, new keys only):
 `dash.sub.{fun,stats,trial}`, `dash.equal`, `dash.band`, `dash.bestShort`, `dash.label.{time,best}`,
 `dash.result.{newBest,starsShort,today,tomorrow,saving}`, `dash.racing`, `results.inPlace.hatchShort`. Then
-`python scripts/export_localization_csv.py` (sync waits for the publish, per AGENTS.md).
+`python scripts/export_localization_csv.py` to check the new rows. The coordinator runs the export and the cloud
+sync before the beta publish (not at a live publish), so every new string, "Racing" included, goes through `UICopy`.
 
 ## Phone sizes checked by specs
 
@@ -267,7 +268,23 @@ phone sizes for Fable's review.
 - **Billboards on top**: names `AlwaysOnTop` only from lock to GO + 1.5, so they never show through walls in the race.
 - **Results timing**: `setLine` callers move to `update(model)`; a receipt arriving after the 20 s close is ignored as now.
 
-## Questions for the architect
+## Architect review (2026-11-23): these win over the plan above
+
+- **Pad**: (69, -17) failed three checks. The rule is measured against the funnel only: 6.75 at the line (the posts),
+  then `3.5 * step(cs) + 0.6`, plus `r + 1`. The pad goes to **(67, -17), r 2.5** (3.5 clear of the funnel, 13.2
+  from the cliff, 10.3 from the start, inside the 12-stud join reach). Main, Branch, Layouts and Length byte-identical
+  after the rerun; Python and `DashGrid` constants kept in step by a `DashCourse.spec` case. Rechecked:
+  `build_find_spots.py --check`, `sweep_island_edges.py --check`, IslandBounds, DashCourse, DashHost, DashClient
+  (the line-up eye too).
+- Q2: centre the lanes for the whole race; an odd count stands half a slot over at the line (on the `Pad_` slabs).
+- Q3: U7 is held behind a v3 switch; the old stack path stays untouched.
+- Q4: `DashCard` stays the shell; two separate sheet modules share `DashSheetLayout` and `DashStage`.
+- Q5: both OK; the board attribute must carry the broadcast-filtered pet name; `AutoLocalize=false` on names.
+- Tags: all 8 seats' anchors are already counted, so name, chevron and Racing are GUI on those anchors. Player pets
+  get their anchor position in `Client:drive`; tags not touched in a frame hide.
+- No race outcome or save change; `Course.Version` stays 2.
+
+## Questions for the architect (answered above)
 
 1. **Pad**: move the waiting pad (script rerun, only `Course.Pad` changes, `Course.Version` stays 2), or keep it and
    start the funnel at the line so only the posts need room? The second still puts the outer pets 2.7 studs from the

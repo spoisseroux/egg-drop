@@ -88,11 +88,23 @@ return function(_, shared, offline)
 		local pad = Course.Pad
 		local px, pz, r = pad.x / 100, pad.z / 100, pad.r / 100
 		local sx, _, sz = Course.at(0)
-		assert(near({ px, pz }, { sx, sz }) < 10 and px + r <= 74)
+		-- Within the join reach of the line (DashHost.JoinReach 12), clear of the cliff.
+		assert(near({ px, pz }, { sx, sz }) < 11 and px + r <= 74)
 		for d = 0, Course.Length, 25 do
 			for _, lane in ipairs({ 1, 8 }) do
 				local lx, _, lz = Course.at(d, false, lane)
 				assert(near({ lx, lz }, { px, pz }) > r + 1, d)
+			end
+		end
+		-- Beta 12 U5: clear of the wider start grid (DashGrid) too: the posts, eight racers 1.5 apart and the funnel.
+		local Grid = require(Shared.DashGrid)
+		for _, p in ipairs(main) do
+			assert(near({ p.x, p.z }, { px, pz }) - Grid.halfWidth(p.d) >= r + 1, p.d)
+		end
+		for d = 0, Grid.FunnelTo + 100, 10 do
+			for lane = 1, 8 do
+				local gx, _, gz = Grid.at(d, false, lane, 8)
+				assert(near({ gx, gz }, { px, pz }) > r + 1, d)
 			end
 		end
 		local low, high = 1e9, -1e9
@@ -200,6 +212,19 @@ return function(_, shared, offline)
 		assert(ax == bx and ay == by and az == bz)
 		local cx, _, cz = Course.at(5000, false, 1); local dx, _, dz = Course.at(5000, false, 8)
 		assert(math.abs(near({ cx, cz }, { dx, dz }) - 3.5) < 1e-6)
+	end)
+	test("the start grid (DashGrid) and the course script measure the pad with the same numbers", function()
+		local Grid = require(Shared.DashGrid)
+		assert(Grid.RaceStep == Course.LaneStep and Grid.Slabs == Course.LaneCount)
+		local script = world.grid
+		if not script then return "script numbers offline only" end
+		assert(script.startStep * 100 == Grid.StartStep and script.laneStep * 100 == Grid.RaceStep, "steps")
+		assert(script.funnel[1] * 100 == Grid.FunnelFrom and script.funnel[2] * 100 == Grid.FunnelTo, "funnel")
+		assert(math.abs(script.post * 100 - (Grid.PostOut + Grid.PostHalf)) < 1e-6, "posts")
+		for d = 0, 1400, 50 do
+			local want = if d <= 0 then script.post else 3.5 * Grid.step(d, false) / 100 + .6
+			assert(math.abs(Grid.halfWidth(d) - want) < 1e-9, d)
+		end
 	end)
 	return { passed = #cases, cases = cases }
 end

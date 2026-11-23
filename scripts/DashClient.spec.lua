@@ -129,6 +129,11 @@ return function(client,offline)
 		local x,y,z=Course.at(0)
 		assert((eye-Vector3.new(x,y,z)).Magnitude<18 and(look-Vector3.new(x,y,z)).Magnitude<4 and eye.Y>y+3)
 		assert(math.sqrt((eye.X-Course.Pad.x/100)^2+(eye.Z-Course.Pad.z/100)^2)>Course.Pad.r/100+2,"not over the waiting players")
+		-- Beta 12 U5: nor is the line-up shot's eye, on any screen shape.
+		for _,aspect in ipairs({874/402,568/320,4/3,16/9})do
+			local ex,_,ez=require(client.DashCamera).lineup(aspect)
+			assert(math.sqrt((ex-Course.Pad.x/100)^2+(ez-Course.Pad.z/100)^2)>Course.Pad.r/100+2,"the line-up eye is not over the waiting players")
+		end
 		for name,out in pairs({
 			back=function()card.closed=true end,
 			race=function()card:pick("Fun");r.lock()end,

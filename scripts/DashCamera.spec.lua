@@ -95,5 +95,26 @@ return function(client)
 		assert(camera.ex==camera.ex)
 		camera:reset();assert(not camera.ready and camera.fov==Camera.Fov)
 	end)
+	test("the line-up shot (beta 12 U5): the whole row of eight in at most 70% of the width, behind the line by no more than the cliff allows",function()
+		local Grid=require(Shared.DashGrid)
+		local x,y,z,yaw=Course.at(0)
+		local fx,fz=math.sin(yaw),math.cos(yaw)
+		for _,size in ipairs({{874,402},{667,375},{568,320},{1024,768},{1920,1080}})do
+			local aspect=size[1]/size[2]
+			local ex,ey,ez,lx,ly,lz=Camera.lineup(aspect)
+			local back=-((ex-x)*fx+(ez-z)*fz)
+			assert(back>0 and back<=Camera.LineupBack+1e-6,"behind the line, never over the cliff")
+			assert(math.abs((ex-x)*fz-(ez-z)*fx)<1e-6,"straight behind the middle")
+			assert(ey>y+Camera.LookHeight+2.9 and ey<y+Camera.LookHeight+Camera.LineupHigh+1e-6)
+			-- The outer racers' centres plus most of a pet, as a share of the width the eye sees at their depth.
+			local depth=math.sqrt((ex-x)^2+(ey-y-Camera.LookHeight)^2+(ez-z)^2)
+			local half=math.tan(math.rad(Camera.Fov)/2)*aspect*depth
+			local row=(3.5*Grid.StartStep/100+.6)/half
+			assert(row<=Camera.RowShare+1e-6,size[1].."x"..size[2]..": "..row)
+			assert((Vector3.new(lx,ly,lz)-Vector3.new(x,y+Camera.LookHeight,z)).Magnitude<1.01)
+		end
+		assert(Camera.lineupBlend(-1,false)==0 and Camera.lineupBlend(0,false)==0 and Camera.lineupBlend(.3,false)>0 and Camera.lineupBlend(.3,false)<1)
+		assert(Camera.lineupBlend(.6,false)==1 and Camera.lineupBlend(.01,true)==1 and Camera.lineupBlend(0,true)==0,"Reduced Motion: a cut at GO")
+	end)
 	return{passed=#cases,cases=cases}
 end

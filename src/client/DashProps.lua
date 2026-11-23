@@ -3,6 +3,7 @@
 -- anchored, and never collides, touches or answers a raycast. Made once, the first time a race is shown, and reused;
 -- a frame writes a part only while the hoops rise or sink. At most Props.MaxParts parts in all.
 local Course=require(game:GetService("ReplicatedStorage").Shared.DashCourse)
+local Grid=require(game:GetService("ReplicatedStorage").Shared.DashGrid)
 local Props={};Props.__index=Props
 Props.MaxParts=60
 Props.FolderName="GardenDashLocal"
@@ -35,8 +36,8 @@ local function part(parent,name,size,color,shape)
 	item.Parent=parent
 	return item
 end
-local function frameAt(cs,lane)
-	local x,y,z,yaw=Course.at(cs,false,lane)
+local function frameAt(cs,lane,count)
+	local x,y,z,yaw=Grid.at(cs,false,lane,count)
 	return CFrame.new(x,y,z)*CFrame.Angles(0,yaw,0)
 end
 -- The clover's spot for a lane past a hurdle, in cs (pure).
@@ -83,7 +84,7 @@ function Props:show(plan,still)
 			end
 			if clover then
 				clover.lane=lane
-				if lane then clover.at=frameAt(at,lane)*CFrame.new(0,.4,0)end
+				if lane then clover.at=frameAt(at,lane,plan.count)*CFrame.new(0,.4,0)end
 				clover.taken=lane==nil
 			end
 		end

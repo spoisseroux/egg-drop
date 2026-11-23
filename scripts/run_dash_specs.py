@@ -36,7 +36,11 @@ assert len(lamps) == 7 and len(stations) == 4 and len(parks) == 2
 
 modules = "\n".join(
     f"sources.{name}=function(script,require)\n{read(f'src/shared/{name}.lua')}\nend"
-    for name in ("DashCourse", "DashStats", "DashSim"))
+    for name in ("DashCourse", "DashStats", "DashSim", "DashGrid"))
+# The start grid numbers the course script measures the waiting pad with (DashCourse.spec checks DashGrid agrees).
+script = read("scripts/build_dash_course.py")
+grid = re.search(r"START_STEP, FUNNEL, POST_HALF_WIDTH = ([\d.]+), \(([\d.]+), ([\d.]+)\), ([\d.]+)", script).groups()
+lane_step = re.search(r"LANES, LANE_STEP = \d+, ([\d.]+)", script).group(1)
 specs = "\n".join(
     f"specs.{name}=(function()\n{read(f'scripts/{name}.spec.lua')}\nend)()" for name in ("DashCourse", "DashSim"))
 bundle = f"""
@@ -57,7 +61,8 @@ local function groundY(x,z)
 end
 local world={{groundY=groundY,span={{{c[0]},{c[2]},{s[0]},{s[2]},{c[1]}+{s[1]}/2}},
  radius={{{','.join(radius)}}},parks={{{','.join('{%s,%s}' % p for p in parks)}}},
- lamps={{{','.join('{%s,%s}' % (l[0], l[2]) for l in lamps)}}},stations={{{','.join('{%s,%s}' % p for p in stations)}}}}}
+ lamps={{{','.join('{%s,%s}' % (l[0], l[2]) for l in lamps)}}},stations={{{','.join('{%s,%s}' % p for p in stations)}}},
+ grid={{startStep={grid[0]},funnel={{{grid[1]},{grid[2]}}},post={grid[3]},laneStep={lane_step}}}}}
 local require=load
 {specs}
 local failed=0

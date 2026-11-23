@@ -45,7 +45,11 @@ OBSTACLES = [
     (-3.35, 6.3, 1.9, 4.05),  # the bush round the last one
 ]
 CLIFF_X, CLIFF_ROOM = 78.0, 4.0  # nothing of the race comes nearer than this to the cliff rock east of x 78
-PAD, PAD_RADIUS = (69.0, -14.0), 3.0  # where racers wait, off the line and north of it: a pad at (70, 0) put the crown of the tree at (74, 12) in the camera of anyone walking here from spawn
+PAD, PAD_RADIUS = (67.0, -17.0), 2.5  # where racers wait, off the line and north of it: a pad at (70, 0) put the crown of the tree at (74, 12) in the camera of anyone walking here from spawn.
+# Beta 12 QA U5 moved it from (69, -14) r 3: the wider start (DashGrid) stood the outer pets and a post on it.
+# The start grid (src/shared/DashGrid.lua, kept in step by DashCourse.spec): lanes 1.5 apart at the line, easing to
+# LANE_STEP between FUNNEL[0] and FUNNEL[1] studs on, posts POST_HALF_WIDTH out (centre plus half a post).
+START_STEP, FUNNEL, POST_HALF_WIDTH = 1.5, (3.0, 11.0), 6.75
 BUSHES = [(float(x), float(z)) for x, z in re.findall(
     r"\{(-?[\d.]+),-?[\d.]+,(-?[\d.]+),", (ROOT / "src/shared/WorldDressing.lua").read_text().split("Dressing.Bushes=")[1])]
 LANES, LANE_STEP = 8, .5
@@ -172,6 +176,21 @@ def nearest(points, p):
 
 def height(x, z):
     return DECK if on_span(x, z) else ground(x, z)
+
+
+def grid_step(d):
+    """DashGrid.step on Main: START_STEP at the line, smoothstep to LANE_STEP over the funnel."""
+    if d <= FUNNEL[0]:
+        return START_STEP
+    if d >= FUNNEL[1]:
+        return LANE_STEP
+    t = (d - FUNNEL[0]) / (FUNNEL[1] - FUNNEL[0])
+    return START_STEP + (LANE_STEP - START_STEP) * t * t * (3 - 2 * t)
+
+
+def half_width(d):
+    """DashGrid.halfWidth: the posts at the line, then the outer of eight racers plus most of a pet."""
+    return POST_HALF_WIDTH if d <= 0 else (LANES - 1) / 2 * grid_step(d) + .6
 
 
 def stones_height(x, z):
@@ -305,7 +324,8 @@ def emit(control):
     rim = [(px, pz)] + [(px + PAD_RADIUS * math.cos(k * math.pi / 8), pz + PAD_RADIUS * math.sin(k * math.pi / 8)) for k in range(16)]
     if any(code(x, z)[0] not in "PGg" for x, z in rim) or max(ground(*p) for p in rim) - min(ground(*p) for p in rim) > .3:
         problems.append("pad ground")
-    if min(math.dist(PAD, p) for p in main) < PAD_RADIUS + (LANES - 1) / 2 * LANE_STEP + 1:
+    # Off the line and the start grid: measured on the module's own rounded distances along Main.
+    if min(math.dist(PAD, (row[1] / 100, row[3] / 100)) - half_width(row[0] / 100) for row in m) < PAD_RADIUS + 1:
         problems.append("pad on the line")
     if any(math.dist(PAD, o[:2]) < PAD_RADIUS + o[2] + .5 for o in OBSTACLES):
         problems.append("pad obstacle")
