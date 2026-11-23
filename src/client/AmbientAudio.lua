@@ -75,6 +75,39 @@ local function smoothstep(t)
 	return t * t * (3 - 2 * t)
 end
 
+-- Crickets at night (QA-R2-LOOK 2, Spencer R2.3). Only while the garden hour runs AND Alive life is on (Ambient.new's
+-- `night`); otherwise everything here is skipped and the birds are exactly as before. Not in Ids and never in `warm`:
+-- the voices are made the first time the night gate is open, then reused across toggles, and stopped only when silent.
+-- Ids are Roblox library recordings (Pro Sound Effects), picked by Fable from their descriptions; Spencer's ears decide.
+Ambient.Crickets = {
+	bed = { id = 9112764558, volume = .16, speed = .97, breathe = 23 },   -- Crickets Night 2, 36 s loop
+	layer = { id = 9112764023, volume = .09, speed = 1.03, breathe = 37 }, -- Crickets Canyon 2, 46.2 s loop
+	fallback = 9112762451,                                                -- Crickets And Cicadas 1 (at .10, if A + B are thin)
+	breath = .25, slew = .25, from = .45, span = .25, lowGain = -18, gust = .20,
+	near = { voices = 3, reach = 40, gapMin = 6, gapMax = 14, pitchMin = .94, pitchMax = 1.08, volume = .22, min = 6, max = 40,
+		hush = 6, hold = 4, lengthMin = 1, lengthMax = 2, source = 36 },
+}
+-- Birds full while daylight >= .40, nothing at .30 (with the night gate open).
+function Ambient.birdGain(daylight)
+	if type(daylight) ~= "number" or daylight ~= daylight then return 1 end
+	return smoothstep((daylight - .30) / .10)
+end
+-- Crickets silent at daylight >= .45, full at <= .20.
+function Ambient.cricketGain(daylight)
+	if type(daylight) ~= "number" or daylight ~= daylight then return 0 end
+	local C = Ambient.Crickets
+	return smoothstep((C.from - daylight) / C.span)
+end
+-- `value` toward `goal`, at most `rate` a second.
+function Ambient.slew(value, goal, dt, rate)
+	local most = rate * dt
+	return value + math.clamp(goal - value, -most, most)
+end
+-- One layer's slow breathing: 1 +- breath on its own sine of `period` seconds.
+function Ambient.breathe(t, period)
+	return 1 + Ambient.Crickets.breath * math.sin(2 * math.pi * t / period)
+end
+
 -- Distance on the ground plane from a point to the stream polyline (segments,
 -- not just points), less the local half width. Stream rows are {x, y, z, width}.
 function Ambient.streamDistance(point, stream)
@@ -160,12 +193,22 @@ function Birds:cancel()
 	table.clear(self.pending)
 	self.nextAt = nil
 end
-function Birds:step(now, listener, daylight, perches, active)
+-- night: the cricket gate (garden hour and Alive life). Open, the night band schedules no bird at all and every chirp
+-- fades with Ambient.birdGain; shut, the bands are as they always were.
+function Birds:step(now, listener, daylight, perches, active, night)
 	if not active or not listener or not perches or #perches == 0 then
 		self:cancel()
 		return {}
 	end
 	local band, name = Ambient.band(daylight)
+	if night == true then
+		local gain = Ambient.birdGain(daylight)
+		if name == "night" or gain <= 0 then
+			self:cancel()
+			return {}
+		end
+		if gain < 1 then band = table.clone(band); band.volume *= gain end
+	end
 	local due = {}
 	if not self.nextAt then
 		self.nextAt = now + self.random:NextNumber(band.min, band.max)
@@ -204,6 +247,54 @@ function Birds:step(now, listener, daylight, perches, active)
 	return due
 end
 
+-- Near crickets (QA-R2-LOOK 2): pure, like Birds. At night three positional crickets sit in the three nearest bushes
+-- within reach; each trills (a 1-2 s cut of the bed's own recording) every 6 to 14 s. A cricket whose bush is within
+-- `hush` of the listener goes quiet and stays quiet `hold` seconds after they leave. step() answers the trills due now
+-- as {slot, bush, position, pitch, start, length, volume}; slot 1..3 is the nearest-first rank (its own voice).
+local NearCrickets = {}
+NearCrickets.__index = NearCrickets
+Ambient.NearCrickets = NearCrickets
+function NearCrickets.new(seed)
+	return setmetatable({ random = Random.new(seed or 4), nextAt = {}, hushUntil = {} }, NearCrickets)
+end
+function NearCrickets:cancel()
+	table.clear(self.nextAt)
+end
+function NearCrickets:step(now, listener, bushes, gain)
+	local N = Ambient.Crickets.near
+	if not listener or not bushes or #bushes == 0 or not gain or gain <= .02 then
+		self:cancel()
+		return {}
+	end
+	local near = {}
+	for index, bush in ipairs(bushes) do
+		local d = (bush - listener).Magnitude
+		if d <= N.hush then self.hushUntil[index] = now + N.hold end
+		if d <= N.reach then table.insert(near, { index = index, d = d }) end
+	end
+	table.sort(near, function(a, b) return a.d < b.d end)
+	local due, chosen = {}, {}
+	for slot = 1, math.min(N.voices, #near) do
+		local index = near[slot].index
+		chosen[index] = true
+		local at = self.nextAt[index]
+		if not at then
+			self.nextAt[index] = now + self.random:NextNumber(0, N.gapMax)
+		elseif now >= at then
+			self.nextAt[index] = now + self.random:NextNumber(N.gapMin, N.gapMax)
+			if now >= (self.hushUntil[index] or -math.huge) then
+				local length = self.random:NextNumber(N.lengthMin, N.lengthMax)
+				table.insert(due, { slot = slot, bush = index, position = bushes[index], length = length,
+					pitch = self.random:NextNumber(N.pitchMin, N.pitchMax), start = self.random:NextNumber(0, N.source - length),
+					volume = N.volume * gain })
+			end
+		end
+	end
+	-- A bush that left the three nearest starts afresh when it comes back.
+	for index in pairs(self.nextAt) do if not chosen[index] then self.nextAt[index] = nil end end
+	return due
+end
+
 -- Round mix: 1 in the garden, 0 in a Pocket Deck round. Linear, rate by direction.
 function Ambient.mixToward(mix, round, dt)
 	if round then return math.max(0, mix - dt / Ambient.RoundOut) end
@@ -230,7 +321,18 @@ local function group(name)
 end
 
 -- audio: the BoardAudio instance (master volume, focus, music toggle, ducks).
--- options: {world, data, perches, now, daylight, listener, auto=false, wind={on, gust} or false, warn} (fixtures).
+-- options: {world, data, perches, now, daylight, listener, auto=false, wind={on, gust} or false, warn,
+-- night=function (the cricket gate), bushes={Vector3}} (fixtures).
+-- The cricket gate: the garden hour on (HollowClock.hourOn) and Alive life on. Off the beta place (the ceiling) it is a
+-- constant false, so the live game never asks.
+function Ambient.nightGate(Shared, clock)
+	local Alive = require(Shared:WaitForChild("Alive"))
+	if not Alive.ceiling("life") then return function() return false end end
+	return function()
+		local Clock = clock or require(script.Parent.HollowClock)
+		return Clock.hourOn() == true and Alive.on("life") == true
+	end
+end
 function Ambient.new(audio, options)
 	options = options or {}
 	local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
@@ -241,6 +343,7 @@ function Ambient.new(audio, options)
 		birds = Birds.new(options.seed or 1), voices = {}, owners = {}, connections = {},
 		now = options.now or os.clock, daylight = options.daylight or require(script.Parent.HollowClock).daylight,
 		listenerOf = options.listener, deviceActive = true, rustle = 0, rustleQuiet = 0, warn = options.warn or warn,
+		night = options.night or Ambient.nightGate(Shared), bushes = options.bushes, crickets = 0, nearCrickets = NearCrickets.new((options.seed or 1) + 11),
 	}, Ambient)
 	self.group = group("EggDropAmbientCues")
 	self.ambience = group("EggDropAmbience")
@@ -258,6 +361,7 @@ function Ambient.new(audio, options)
 		part.Parent = folder
 		return part
 	end
+	self.emitter = emitter
 	local warm = {}
 	self.bedVoice = sound("water_bed_loop", Ambient.Ids.water_bed_loop, self.ambience, SoundService, true)
 	table.insert(warm, self.bedVoice)
@@ -348,6 +452,7 @@ function Ambient:setRound(active)
 	if active then
 		self.birds:cancel()
 		for _, entry in ipairs(self.birdPool) do entry.voice:Stop() end
+		if self.cricketBed then self:stopCrickets(true) end
 		for _, voices in pairs(self.voices) do
 			for _, voice in ipairs(voices) do
 				if string.find(voice.Name, "pet_coo") then voice:Stop() end
@@ -444,7 +549,9 @@ function Ambient:step(dt)
 		if self.deckMix > 0 and master > 0 and active then startLoop(self.deckVoice, 0)
 		elseif self.deckVoice.IsPlaying and self.deckMix == 0 then self.deckVoice:Stop() end
 	end
-	local events = self.birds:step(self.now(), listener, self.daylight(), self.perches, audible and not self.round and self.mix > .5)
+	local night = self.night() == true
+	local daylight = self.daylight()
+	local events = self.birds:step(self.now(), listener, daylight, self.perches, audible and not self.round and self.mix > .5, night)
 	for _, event in ipairs(events) do
 		-- Garden life (GardenLife) sets onChirp while it is on: a bird appears on the perch that was heard. Only for a
 		-- chirp that really played; a hook that throws is dropped (said once) and the sound goes on as before.
@@ -459,6 +566,102 @@ function Ambient:step(dt)
 	if self.wind and not pcall(self.stepRustle, self, dt, audible) then
 		self.wind = nil
 		self:stopRustle()
+	end
+	if night or self.cricketBed then
+		local ok, problem = pcall(self.stepCrickets, self, dt, audible and not self.round, night, daylight, listener)
+		if not ok then
+			self.warn("[Ambient] crickets: " .. tostring(problem))
+			self.night = function() return false end
+			self:stopCrickets()
+		end
+	end
+end
+
+-- The bushes the near crickets sit in: WorldDressing.Bushes ({x, base y, z, ...}), half a stud over the base.
+function Ambient:bushPoints()
+	if not self.bushes then
+		local ok, Dressing = pcall(function() return require(game:GetService("ReplicatedStorage").Shared.WorldDressing) end)
+		local list = {}
+		if ok and type(Dressing) == "table" and type(Dressing.Bushes) == "table" then
+			for _, row in ipairs(Dressing.Bushes) do table.insert(list, Vector3.new(row[1], row[2] + .5, row[3])) end
+		end
+		self.bushes = list
+	end
+	return self.bushes
+end
+-- Made once, the first time the gate opens; reused after.
+function Ambient:makeCrickets()
+	local C = Ambient.Crickets
+	local function loop(name, spec)
+		local voice = sound(name, spec.id, self.ambience, SoundService, true)
+		voice.PlaybackSpeed = spec.speed
+		local eq = Instance.new("EqualizerSoundEffect")
+		eq.Name = "LowCut"
+		eq.LowGain, eq.MidGain, eq.HighGain = C.lowGain, 0, 0
+		eq.Parent = voice
+		return voice
+	end
+	self.cricketBed = loop("crickets_bed", C.bed)
+	self.cricketLayer = loop("crickets_layer", C.layer)
+	self.cricketPool = {}
+	for index = 1, C.near.voices do
+		local part = self.emitter("CricketBush" .. index, Vector3.new(0, -500, 0))
+		local voice = sound("cricket", C.bed.id, self.ambience, part, false)
+		voice.RollOffMode = Enum.RollOffMode.InverseTapered
+		voice.RollOffMinDistance, voice.RollOffMaxDistance = C.near.min, C.near.max
+		voice.PlaybackRegionsEnabled = true
+		self.cricketPool[index] = { part = part, voice = voice }
+	end
+	local voices = { self.cricketBed, self.cricketLayer }
+	task.spawn(function() pcall(function() ContentProvider:PreloadAsync(voices) end) end)
+end
+-- One writer per voice per step; the gain eases at most Crickets.slew a second (a clock jump still takes 4 s).
+function Ambient:stepCrickets(dt, audible, night, daylight, listener)
+	local C = Ambient.Crickets
+	local goal = if night then Ambient.cricketGain(daylight) else 0
+	self.crickets = Ambient.slew(self.crickets, goal, dt, C.slew)
+	if not self.cricketBed then
+		if self.crickets <= 0 then return end
+		self:makeCrickets()
+	end
+	local gain = self.crickets
+	if not audible or gain <= 0 then
+		self:stopCrickets(true)
+		return
+	end
+	local t = self.now()
+	local gust = 0
+	if self.wind and self.wind.gust then
+		local ok, value = pcall(self.wind.gust)
+		if ok and type(value) == "number" and value == value then gust = math.clamp(value, 0, 1) end
+	end
+	local duck = 1 - C.gust * gust
+	for _, layer in ipairs({ { self.cricketBed, C.bed, 0 }, { self.cricketLayer, C.layer, 11 } }) do
+		local voice, spec = layer[1], layer[2]
+		voice.Volume = spec.volume * gain * Ambient.breathe(t, spec.breathe) * duck
+		if voice.IsLoaded ~= false then startLoop(voice, layer[3]) end
+	end
+	for _, trill in ipairs(self.nearCrickets:step(t, listener, self:bushPoints(), gain)) do
+		local entry = self.cricketPool[trill.slot]
+		if entry and not entry.voice.IsPlaying then
+			entry.part.Position = trill.position
+			entry.voice.PlaybackRegion = NumberRange.new(trill.start, trill.start + trill.length)
+			entry.voice.PlaybackSpeed = trill.pitch
+			entry.voice.Volume = trill.volume * duck
+			entry.voice.TimePosition = trill.start
+			entry.voice:Play()
+		end
+	end
+end
+-- Silent: the loops and trills stop (never playing 0). keepGain: a round or mute, the night itself goes on.
+function Ambient:stopCrickets(keepGain)
+	if not keepGain then self.crickets = 0 end
+	self.nearCrickets:cancel()
+	for _, voice in ipairs({ self.cricketBed, self.cricketLayer }) do
+		if voice and voice.IsPlaying then voice:Stop() end
+	end
+	for _, entry in ipairs(self.cricketPool or {}) do
+		if entry.voice.IsPlaying then entry.voice:Stop() end
 	end
 end
 
@@ -561,6 +764,7 @@ function Ambient:destroy()
 	for _, voices in pairs(self.voices) do for _, voice in ipairs(voices) do voice:Destroy() end end
 	if self.deckVoice then self.deckVoice:Destroy() end
 	if self.rustleVoice then self.rustleVoice:Destroy() end
+	if self.cricketBed then self.cricketBed:Destroy(); self.cricketLayer:Destroy() end
 	self.folder:Destroy()
 	self.group:Destroy(); self.ambience:Destroy(); self.deckGroup:Destroy()
 	if Ambient.shared == self then Ambient.shared = nil end

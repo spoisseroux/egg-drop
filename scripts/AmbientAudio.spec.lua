@@ -60,7 +60,115 @@ return function(client, parent)
 		assert(mix == 1)
 	end)
 
-	test("bird gaps stay inside each daylight band and night uses only the hoo-hoo", function()
+	test("QA-R2 crickets: the bird and cricket curves, the slew, the breathing", function()
+		for _, row in ipairs({ { 1, 1 }, { .40, 1 }, { .35, .5 }, { .30, 0 }, { .12, 0 } }) do
+			assert(near(Ambient.birdGain(row[1]), row[2], .001), "birds at " .. row[1])
+		end
+		for _, row in ipairs({ { 1, 0 }, { .45, 0 }, { .325, .5 }, { .20, 1 }, { .12, 1 } }) do
+			assert(near(Ambient.cricketGain(row[1]), row[2], .001), "crickets at " .. row[1])
+		end
+		-- The overlap: between .30 and .40 both are heard (the first birds over the last crickets).
+		assert(Ambient.birdGain(.35) > 0 and Ambient.cricketGain(.35) > 0)
+		-- A clock jump from day to night still takes 4 s at .25 a second.
+		local g, t = 0, 0
+		while g < 1 do g = Ambient.slew(g, 1, 1 / 30, Ambient.Crickets.slew); t += 1 / 30 end
+		assert(near(t, 4, .05), "slew " .. t)
+		assert(near(Ambient.breathe(23 / 4, 23), 1.25) and near(Ambient.breathe(0, 37), 1))
+		local C = Ambient.Crickets
+		assert(C.bed.id == 9112764558 and C.layer.id == 9112764023 and C.fallback == 9112762451)
+		assert(C.bed.volume == .16 and C.layer.volume == .09 and C.lowGain == -18 and C.bed.speed == .97 and C.layer.speed == 1.03)
+		for _, cue in pairs(Ambient.Ids) do assert(cue ~= C.bed.id and cue ~= C.layer.id, "never warmed") end
+	end)
+
+	test("QA-R2 crickets: the gate open, the night band schedules no bird and dusk chirps fade by birdGain", function()
+		local perches = {}
+		for i = 1, 10 do perches[i] = Vector3.new(i * 5, 12, 0) end
+		for _, daylight in ipairs({ .12, .25 }) do
+			local birds = Ambient.Birds.new(7)
+			local now = 0
+			for _ = 1, 4000 do now += .1; assert(#birds:step(now, Vector3.zero, daylight, perches, true, true) == 0, "a bird at night") end
+		end
+		local birds, now, heard = Ambient.Birds.new(7), 0, 0
+		for _ = 1, 4000 do
+			now += .1
+			for _, e in ipairs(birds:step(now, Vector3.zero, .35, perches, true, true)) do
+				heard += 1;assert(near(e.volume, Ambient.Bands.dusk.volume * .5, .001), "faded " .. e.volume)
+			end
+		end
+		assert(heard >= 4, "dusk keeps its sparse chirps")
+		assert(Ambient.Bands.dusk.volume == .50, "the band table itself is untouched")
+	end)
+
+	test("QA-R2 near crickets: the three nearest bushes within 40, 6 to 14 s apart, hushed within 6 and for 4 s after", function()
+		local bushes = {}
+		for i = 1, 8 do bushes[i] = Vector3.new(i * 8, 0, 0) end
+		local near3 = Ambient.NearCrickets.new(3)
+		local now, last, seen = 0, {}, {}
+		for _ = 1, 30 * 120 do
+			now += 1 / 30
+			for _, e in ipairs(near3:step(now, Vector3.zero, bushes, 1)) do
+				assert(e.bush <= 3 and e.slot >= 1 and e.slot <= 3 and e.position == bushes[e.bush], "a far bush " .. e.bush)
+				assert(e.pitch >= .94 and e.pitch <= 1.08 and e.length >= 1 and e.length <= 2 and e.start >= 0 and e.start + e.length <= 36)
+				assert(near(e.volume, .22))
+				if last[e.bush] then local gap = now - last[e.bush];assert(gap >= 6 - .04 and gap <= 14 + .04, "gap " .. gap) end
+				last[e.bush] = now;seen[e.bush] = true
+			end
+		end
+		assert(seen[1] and seen[2] and seen[3], "all three sing")
+		-- The listener stands at bush 1: it goes quiet, and stays quiet 4 s after they leave.
+		local hush = Ambient.NearCrickets.new(5)
+		local t, leftAt, after = 0, nil, nil
+		for _ = 1, 30 * 60 do
+			t += 1 / 30
+			local at = if t < 30 then bushes[1] else Vector3.new(0, 0, 30)
+			if t >= 30 and not leftAt then leftAt = t end
+			for _, e in ipairs(hush:step(t, at, bushes, 1)) do
+				if e.bush == 1 then assert(leftAt and t >= leftAt + 4 - .04, "bush 1 sang while hushed at " .. t);after = after or t end
+			end
+		end
+		assert(after, "bush 1 sings again once the listener has gone")
+		assert(#Ambient.NearCrickets.new(1):step(10, Vector3.zero, bushes, 0) == 0, "silent at gain 0")
+		local far = Ambient.NearCrickets.new(1);for k = 1, 600 do assert(#far:step(k, Vector3.new(0, 0, 500), bushes, 1) == 0) end
+	end)
+
+	test("QA-R2 crickets in the mix: no voice made with the gate shut; open, the beds come up and duck; back to today's birds when shut", function()
+		local audio = { master = 1, deviceActive = true, ducks = {} }
+		function audio:isMusicEnabled() return true end
+		function audio:duck() end
+		local folder = Instance.new("Folder");folder.Parent = parent or workspace
+		local gate, daylight, clock, gust = false, .12, 0, 0
+		local shared = Ambient.shared
+		local a = Ambient.new(audio, { auto = false, world = folder, wind = { on = function() return true end, gust = function() return gust end },
+			listener = function() return Vector3.zero end, daylight = function() return daylight end, now = function() return clock end,
+			night = function() return gate end, bushes = { Vector3.new(10, 0, 0), Vector3.new(20, 0, 0) } })
+		local ok, err = pcall(function()
+			for _ = 1, 300 do clock += 1 / 30; a:step(1 / 30) end
+			assert(a.cricketBed == nil and a.crickets == 0, "gate shut: no cricket voice at all")
+			gate = true
+			for _ = 1, 60 do clock += 1 / 30; a:step(1 / 30) end
+			assert(a.cricketBed and near(a.crickets, .5, .02), "eases in: " .. a.crickets)
+			for _ = 1, 120 do clock += 1 / 30; a:step(1 / 30) end
+			assert(a.crickets == 1 and a.cricketBed.IsPlaying and a.cricketLayer.IsPlaying, "full at night")
+			assert(a.cricketBed.Volume <= .16 * 1.25 + 1e-6 and a.cricketBed.Volume >= .16 * .75 - 1e-6, "bed " .. a.cricketBed.Volume)
+			local calm = a.cricketBed.Volume
+			gust = 1;a:step(0);assert(near(a.cricketBed.Volume, calm * .8, .002), "a full gust ducks 20%")
+			gust = 0
+			a:setRound(true);a:step(1 / 30);assert(not a.cricketBed.IsPlaying, "a round stops them")
+			a:setRound(false);for _ = 1, 40 do clock += 1 / 30; a:step(1 / 30) end
+			assert(a.cricketBed.IsPlaying, "and they come back")
+			local made = a.cricketBed
+			gate = false
+			for _ = 1, 150 do clock += 1 / 30; a:step(1 / 30) end
+			assert(a.crickets == 0 and not a.cricketBed.IsPlaying, "shut: eased out and stopped")
+			gate = true;for _ = 1, 30 do clock += 1 / 30; a:step(1 / 30) end
+			assert(a.cricketBed == made, "the voices are made once and reused")
+			for _, entry in ipairs(a.cricketPool) do assert(entry.voice.PlaybackRegionsEnabled == true, "trills on their own voices") end
+			for _, entry in ipairs(a.birdPool) do assert(entry.voice.PlaybackRegionsEnabled ~= true, "a bird voice never cuts trills") end
+		end)
+		a:destroy();folder:Destroy();Ambient.shared = shared;assert(ok, err)
+	end)
+
+	test("bird gaps stay inside each daylight band and night uses only the hoo-hoo (the cricket gate shut: today)", function()
 		local perches = {}
 		for i = 1, 10 do perches[i] = Vector3.new(i * 5, 12, 0) end
 		for _, case in ipairs({ { 1, 6, 14 }, { .45, 12, 24 }, { .1, 25, 50 } }) do
