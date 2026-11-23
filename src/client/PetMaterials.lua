@@ -49,8 +49,19 @@ end
 -- Two-tone pets glow only after sunset: nothing while daylight is above .75,
 -- then a smoothstep ramp to full glow at full night. Daylight follows the
 -- real-time garden clock, so the fade lasts the whole dusk (about 2 hours).
-function Materials.nightGlow(daylight)
- local t=math.clamp((.75-daylight)/.75,0,1);return t*t*(3-2*t)
+-- The garden hour (Fable, GARDEN-HOUR-REVIEW-R1 fix 1): while it is on (hourOn true) the ramp stops at HourGlowCap, so
+-- a white coat at the hour's night (daylight .12, ramp .93) no longer clips. Off: the ramp as it was.
+Materials.HourGlowCap=.6
+function Materials.nightGlow(daylight,hourOn)
+ local t=math.clamp((.75-daylight)/.75,0,1);t=t*t*(3-2*t)
+ if hourOn==true and t>Materials.HourGlowCap then return Materials.HourGlowCap end
+ return t
+end
+-- HollowClock.hourOn (the hour and the Aero look painting it), required on first use; a seam for specs.
+local Clock
+function Materials.hourOn()
+ Clock=Clock or require(script.Parent.HollowClock)
+ return Clock.hourOn~=nil and Clock.hourOn()==true
 end
 function Materials.new(options)
  options=options or {}
@@ -184,7 +195,7 @@ function Owner:paint(entry,visual,daylight)
  end
  local base=entry.color or entry.faceBaseColor or entry.part.Color
  local values=Config.Profiles[if twoTone then "BodyTwoTone" else key]
- local ramp=if twoTone then Materials.nightGlow(daylight)else Materials.dusk(daylight)
+ local ramp=if twoTone then Materials.nightGlow(daylight,Materials.hourOn())else Materials.dusk(daylight)
  local strength=values.day+(values.night-values.day)*ramp
  if visual.emissionEnabled==false or entry.renderHidden==true or(key=="Charm"and(visual.charmVisible==false or(entry.charmShape or "dot")~=(visual.renderCharmShape or "dot")))then strength=0 end
  -- Emission multiplies albedo; a neutral tint avoids applying the pigment twice.

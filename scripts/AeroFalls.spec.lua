@@ -518,6 +518,32 @@ return function(client,offline)
 				assert(high-low<=.5,area.name.." ground "..low.." to "..high)
 			end
 		end)
+		test("a firefly build that throws partway leaves no boxes and is not tried again (the 5 s pass)",function()
+			local h=clock(NIGHT)
+			local failing,calls=false,0
+			local added=Additions.build({parent=holder,data=DATA,clouds=false,hour=h.fixture,groundY=function()
+				if failing then calls+=1;if calls==3 then error("ground",0)end end
+				return 4.5
+			end})
+			local ok,problem=pcall(function()
+				failing=true
+				added.still(false)
+				go(added,{level=0,camera=FAR,daylight=.9})
+				assert(calls==3 and Additions.firefliesFailed==true,"tried once, failed on the third area")
+				assert(added.fireflies()==nil,"no rows")
+				for _,item in ipairs(added.folder:GetChildren())do assert(string.sub(item.Name,1,9)~="Fireflies",item.Name)end
+				for _=1,4 do go(added,{level=0,camera=FAR})end
+				assert(calls==3 and added.fireflies()==nil,"not rebuilt")
+				assert(glints(added)==0,"the rest of the additions follow the hour")
+			end)
+			Additions.firefliesFailed=nil
+			added.destroy()
+			assert(ok,problem)
+			-- Cleared, the next build builds them.
+			local again=build(holder,h.fixture)
+			again.still(false);go(again,{level=0,camera=FAR,daylight=.9})
+			assert(#rows(again)==#Fly.Areas,"built");again.destroy()
+		end)
 		test("the hour going off at night is today again; on and off, the picture is the one before",function()
 			local h=clock(NIGHT)
 			local w=world()

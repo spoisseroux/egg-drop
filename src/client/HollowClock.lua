@@ -37,10 +37,12 @@ function Clock.hourLook()
 	return Clock.Hour.look(Clock.Hour.time(), reduced)
 end
 
-function Clock.sample(unixSeconds)
+-- `values`: the hour's look when the caller already has it (Controller:apply works it out once a pass; false is the
+-- hour off); nil works it out here.
+function Clock.sample(unixSeconds, values)
 	local look = Clock.look
 	if look then
-		local values = Clock.hourLook()
+		if values == nil then values = Clock.hourLook() end
 		if values then return values.Hour, values.Daylight end
 		return look.Hour, look.Daylight
 	end
@@ -53,10 +55,10 @@ function Clock.schedule(unixSeconds)
 	return Clock.cycle(unixSeconds)
 end
 
-function Clock.environment(unixSeconds)
-	local values = Clock.hourLook()
+function Clock.environment(unixSeconds, values)
+	if values == nil then values = Clock.hourLook() end
 	local hour, daylight
-	if values then hour, daylight = values.Hour, values.Daylight else hour, daylight = Clock.sample(unixSeconds) end
+	if values then hour, daylight = values.Hour, values.Daylight else hour, daylight = Clock.sample(unixSeconds, false) end
  Clock.lastHour,Clock.lastDaylight=hour,daylight
 	if Clock.look then
 		if values then
@@ -241,8 +243,11 @@ function Controller:bind(room)
  self.scans+=1;for _,item in ipairs(room:GetDescendants())do self:track(item)end
 end
 function Controller:apply(unixSeconds)
- local hour,daylight=self.sample(unixSeconds);self.daylight=daylight
- self.environment(unixSeconds)
+ -- The hour's look once a pass, for both (a blend is a fresh table; false: the hour is off). A clock without the hour
+ -- (its ceiling off, or a fixture) passes nil and each works it out as before.
+ local values=if self.hourCeiling then Clock.hourLook()or false else nil
+ local hour,daylight=self.sample(unixSeconds,values);self.daylight=daylight
+ self.environment(unixSeconds,values)
  for light,record in pairs(self.lights)do self:paint(light,record)end
  self.samples+=1;return hour,daylight
 end

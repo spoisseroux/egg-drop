@@ -1,7 +1,8 @@
 -- Garden hour slice E (GARDEN-HOUR-BUILD-PLAN-2026-11-23, architect review): pets stay awake through the hour's night.
 -- PetFace.moodDaylight() feeds the three mood rules (PetExpression.garden, PetIdleBeats night weights, PetCooScheduler
 -- NightWait); while GardenHour.on() it never drops below .3, so none of them reads night. Off: today's numbers, so the
--- rules behave exactly as before. Glow (Face.daylight, PetMaterials) is not touched.
+-- rules behave exactly as before. Glow reads the light (Face.daylight), but Fable R1 caps the two-tone night glow ramp
+-- (PetMaterials.nightGlow) at .6 while the hour is on (HollowClock.hourOn); off, the ramp as it was.
 -- Usage (Client): require(<ZZSpecs copy>)(StarterPlayer.StarterPlayerScripts.Client)
 return function(client)
 	local Shared=game:GetService("ReplicatedStorage").Shared
@@ -89,6 +90,24 @@ return function(client)
 			workspace:SetAttribute(Aero.Attribute,true);workspace:SetAttribute(Hour.Attribute,nil)
 			assert(Face.moodDaylight()==.12,"missing Hour_on")
 		end)
+	end)
+	test("night glow: the ramp stops at .6 while the hour is on (HollowClock.hourOn); off, the ramp as it was",function()
+		local Materials=require(client.PetMaterials)
+		assert(Materials.HourGlowCap==.6)
+		local function before(d)local t=math.clamp((.75-d)/.75,0,1);return t*t*(3-2*t)end
+		for _,d in ipairs({0,.12,.3,.5,.55,.75,.9,1})do
+			assert(Materials.nightGlow(d)==before(d)and Materials.nightGlow(d,false)==before(d),"off "..d)
+			assert(Materials.nightGlow(d,true)==math.min(before(d),.6),"on "..d)
+		end
+		assert(math.abs(Materials.nightGlow(.12)-.93)<.005 and Materials.nightGlow(.12,true)==.6,"the hour's night")
+		assert(Materials.nightGlow(.55,true)==before(.55)and Materials.nightGlow(.5,true)==before(.5),"golden and dawn under the cap")
+		local real=Clock.hourOn
+		local ok,problem=pcall(function()
+			Clock.hourOn=function()return true end;assert(Materials.hourOn()==true,"on")
+			Clock.hourOn=function()return false end;assert(Materials.hourOn()==false,"off")
+		end)
+		Clock.hourOn=real
+		assert(ok,problem)
 	end)
 	return{passed=#cases,cases=cases}
 end

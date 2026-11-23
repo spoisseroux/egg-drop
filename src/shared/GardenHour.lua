@@ -30,14 +30,18 @@ Hour.ApplyRate=table.freeze({[0]=20,[1]=10,[2]=2})
 Hour.Cover=table.freeze({Density=.06,Haze=.5,MaxDensity=.34})
 Hour.Pinch=table.freeze({depth=.45,width=.6,floor=1.1})
 
--- Golden is WorldDusk but for EnvironmentDiffuseScale (.25 [check]; Dusk has .35) and the new cloud and glow colours.
-local Golden={Hour=Dusk.Hour,Daylight=Dusk.Daylight,Atmosphere=Dusk.Atmosphere,Grade=Dusk.Grade,Bloom=Dusk.Bloom,
+-- Golden is WorldDusk but for EnvironmentDiffuseScale (.2, the same in all four phases; Dusk has .35), Atmosphere Glare
+-- (.30; Dusk has .45) and the new cloud and glow colours (Fable, GARDEN-HOUR-REVIEW-R1 fixes 2 and 3).
+local Golden={Hour=Dusk.Hour,Daylight=Dusk.Daylight,Grade=Dusk.Grade,Bloom=Dusk.Bloom,
 	SunRays=Dusk.SunRays,Sky=Dusk.Sky,FaceSet="dusk",CloudColor=Dusk.CloudColor,PeakColor=nil,
 	Clouds=table.freeze({Cover=.5,Density=.3,Color=Color3.fromHex("#FFD9E4")}),GlowWarm=Color3.fromHex("#FFC96A")}
 do
 	local lighting=table.clone(Dusk.Lighting)
-	lighting.EnvironmentDiffuseScale=.25
+	lighting.EnvironmentDiffuseScale=.2
 	Golden.Lighting=table.freeze(lighting)
+	local air=table.clone(Dusk.Atmosphere)
+	air.Glare=.3
+	Golden.Atmosphere=table.freeze(air)
 end
 
 -- One look per phase: what HollowClock paints. Keys (slices B-F read these):
@@ -74,17 +78,28 @@ local Previous={dawn="night",day="dawn",golden="day",night="golden"}
 local Handoff={night=18,dawn=6}
 
 -- Gate ----------------------------------------------------------------------------------------------------------------
--- Specs pass env = {flags, place, studio}; the game passes nothing.
-function Hour.testing(env)
-	env=env or {}
+-- Specs pass env = {flags, place, studio}; the game passes nothing, and its answers (fixed for a server's life: the
+-- frozen flags, the place, Studio) are read once, so on(), time() and offset() allocate nothing per call.
+local NoEnv=table.freeze({})
+local function testing(env)
 	local studio=env.studio
 	if studio==nil then studio=RunService:IsStudio()end
 	return(env.place or game.PlaceId)==Hour.PlaceId or studio==true
 end
-function Hour.ceiling(env)
-	env=env or {}
+local function ceiling(env)
 	if(env.flags or Flags).GardenHour~=true then return false end
-	return Hour.testing(env)
+	return testing(env)
+end
+local gameTesting,gameCeiling
+function Hour.testing(env)
+	if env~=nil then return testing(env)end
+	if gameTesting==nil then gameTesting=testing(NoEnv)end
+	return gameTesting
+end
+function Hour.ceiling(env)
+	if env~=nil then return ceiling(env)end
+	if gameCeiling==nil then gameCeiling=ceiling(NoEnv)end
+	return gameCeiling
 end
 -- Pure: a switch value. Anything but a boolean (missing, malformed) is OFF.
 function Hour.resolve(configValue,override,ceiling)
@@ -146,8 +161,15 @@ function Hour.phase(t)
 end
 -- Night finds read the phase, not daylight (look section 1).
 function Hour.isNight(t)return seconds(t)>=2880 end
--- True inside a blend window (the client's 20 Hz apply); false in holds.
-function Hour.Blending(t)return Hour.phase(t).blend~=nil end
+-- True inside a blend window (the client's 20 Hz apply); false in holds. Asked every frame, so no phase table.
+function Hour.Blending(t)
+	local s=seconds(t)
+	for _,phase in ipairs(Hour.Phases)do
+		if s<phase.stop then return s-phase.start<phase.blend end
+	end
+	local last=Hour.Phases[#Hour.Phases]
+	return s-last.start<last.blend
+end
 
 -- The point (in k) where the stepped things (sky faces, stars, sun and moon size, far peaks) change: where daylight
 -- crosses SkyThreshold in the night blends, the middle elsewhere. The haze cover peaks and the sun and moon hand over here.

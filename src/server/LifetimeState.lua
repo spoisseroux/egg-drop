@@ -81,7 +81,9 @@ end
 local function bits(mask)local n=0;while mask>0 do n+=mask%2;mask=math.floor(mask/2)end;return n end
 -- Garden hour slice F (GARDEN-HOUR-BUILD-PLAN-2026-11-23, architect review): while the hour is on (its ceiling, the
 -- server switch, Hour_on and the Aero look), pet_night follows the hour's night, not the real hour. nil (off, or any
--- failure) keeps Book's real-hour rule. Same bit 11, still one-way; no save change.
+-- failure) keeps Book's real-hour rule. Same bit 11, still one-way; no save change. That is everything the server knows:
+-- a client whose AeroWorld did not start (no Clock.look, so HollowClock.hourOn is false there) still sees its night
+-- Book find follow the hour's clock, which is the same on every client; only the light there is today's.
 function State.hourNight()
 	local ok,night=pcall(function()return if Hour.on()then Hour.isNight(Hour.time())else nil end)
 	return if ok and type(night)=="boolean"then night else nil

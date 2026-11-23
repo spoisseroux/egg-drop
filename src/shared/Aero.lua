@@ -12,9 +12,11 @@ Aero.Key="aero_world"
 Aero.TreesAttribute="AeroWorldTrees"
 Aero.Trees=table.freeze({"lime","coral"})
 
--- Specs pass env = {flags, place, studio}; the game passes nothing.
+-- Specs pass env = {flags, place, studio}; the game passes nothing (one frozen empty table: on() is asked per frame
+-- through GardenHour.on(), so it allocates nothing).
+local NoEnv=table.freeze({})
 function Aero.ceiling(env)
-	env=env or {}
+	env=env or NoEnv
 	if(env.flags or Flags).AeroWorld~=true then return false end
 	local studio=env.studio
 	if studio==nil then studio=RunService:IsStudio()end

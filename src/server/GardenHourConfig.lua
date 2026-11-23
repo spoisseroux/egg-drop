@@ -4,6 +4,7 @@
 -- With the build ceiling off nothing starts: no attribute is written and ConfigService is never asked.
 -- Owner chat on the beta and in Studio, this server only: /hour <on|off|clear>, and /hour at <seconds 0-3599>, which
 -- sets workspace Hour_offset so the hour's position becomes that second now (0 dawn, 360 day, 2400 golden, 2880 night).
+-- /hour clear also clears Hour_offset: back to the config's value on the real clock.
 local GardenHour=require(game:GetService("ReplicatedStorage").Shared.GardenHour)
 local Publisher=require(script.Parent.AliveConfig)
 local Config={Feature="hour"}
@@ -56,6 +57,7 @@ function Config.new(deps)
 		end
 		self.overrides[Config.Feature]=command.value
 		self.publish()
+		if command.value==nil then pcall(deps.offset,nil)end
 		return true
 	end
 	return self

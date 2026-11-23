@@ -163,13 +163,26 @@ return function(client)
 			end
 			assert(flips==1 and was==true,"opens once, inside the dawn blend")
 		end)
-		test("the default daylight is the garden hour's: nil while it is off",function()
+		test("the default daylight is the garden hour's: nil while it is off, or while the Aero look is not painting it",function()
 			local Hour=require(game:GetService("ReplicatedStorage").Shared.GardenHour)
+			local Clock=require(client.HollowClock)
 			local r=rig({realHour=true})
 			local value=r.life.daylight(T0)
-			if Hour.on()then assert(value==Hour.phase(T0+Hour.offset()).daylight)else assert(value==nil,"off: "..tostring(value))end
+			local on=Clock.hourOn()==true
+			if on then assert(value==Hour.phase(T0+Hour.offset()).daylight)else assert(value==nil,"off: "..tostring(value))end
 			r.step(2.2)
-			assert(r.life.day==(Hour.on()==false or Sim.day(value)),"the gate follows it")
+			assert(r.life.day==(not on or Sim.day(value)),"the gate follows it")
+			-- The gate is HollowClock.hourOn (the hour and Clock.look), not GardenHour.on alone: a client whose AeroWorld
+			-- did not start keeps today's garden.
+			local real=Clock.hourOn
+			local ok,problem=pcall(function()
+				Clock.hourOn=function()return false end
+				assert(r.life.daylight(T0)==nil,"no Aero look: today's garden")
+				Clock.hourOn=function()return true end
+				assert(r.life.daylight(T0)==Hour.phase(T0+Hour.offset()).daylight,"on: the hour's daylight")
+			end)
+			Clock.hourOn=real
+			assert(ok,problem)
 		end)
 
 		test("the ceiling off: mount is nil and nothing is connected",function()
