@@ -1,6 +1,6 @@
 -- Slice A (artifacts/slice-a-2026-11-14/PLAN.md): the 9-step onboarding funnel logs each step
--- once, when it happens (early steps are not held), step 9 is the first round started after
--- the Bear, returning players get no funnel, and the analytics helpers build Roblox's custom
+-- once, in order (funnel fix 2026-11-23: an early step is a custom event; scripts/FirstSession.spec.lua),
+-- step 9 is a round started after the Bear, returning players get no funnel, and the analytics helpers build Roblox's custom
 -- field shape. Usage (Server): require(ServerScriptService.Server.ZZSpecs.FirstSessionFunnel)(ServerScriptService.Server)
 return function(server)
 	local FS=require(server.FirstSession)
@@ -9,7 +9,7 @@ return function(server)
 	local function test(name,run)run();table.insert(cases,name)end
 	local function session(profile)
 		local log={}
-		local s=FS.new({Name="spec"},profile or {rank=0},{force=true,log=function(_,kind,a,b)table.insert(log,{kind,a,b})end})
+		local s=FS.new({Name="spec"},profile or {rank=0,newSave=true},{force=true,delay=function()end,log=function(_,kind,a,b)table.insert(log,{kind,a,b})end})
 		return s,log
 	end
 
@@ -19,27 +19,28 @@ return function(server)
 		assert(FS.StepNames[4]=="Bear met"and FS.StepNames[9]=="Second round started")
 	end)
 
-	test("steps log once each, in the order they happen (no holding)",function()
+	test("steps log once each, in order; an early step is a custom event",function()
 		local s,log=session()
 		assert(s:advance(1)and s:advance(2)and s:advance(3))
 		assert(not s:advance(2),"a repeat is dropped")
-		assert(s:advance(8),"a spend before step 4 still logs")
+		assert(not s:advance(8),"a spend before step 4 is not a step")
 		assert(s:advance(4))
-		assert(#log==5 and log[4][2]==8 and log[5][2]==4 and log[5][3]=="Bear met")
+		assert(#log==5 and log[4][1]=="event"and log[4][2]=="FunnelOutOfOrder_FirstSpend"and log[5][2]==4 and log[5][3]=="Bear met")
 		assert(not s:advance(0)and not s:advance(10),"unknown steps are ignored")
 	end)
 
 	test("step 9 is the first round started after the Bear",function()
 		local s,log=session()
 		s:roundStarted();assert(#log==0,"the Welcome round is not the second round")
-		s:advance(4);s:roundStarted();s:roundStarted()
-		assert(#log==2 and log[2][2]==9,"step 9 once")
+		for step=1,8 do s:advance(step)end;s:roundStarted();s:roundStarted()
+		assert(#log==9 and log[9][2]==9,"step 9 once")
 	end)
 
 	test("returning or failed saves get no funnel; Studio needs force",function()
-		assert(FS.new({}, {rank=1},{force=true})==nil)
-		assert(FS.new({}, {rank=0,loadFailed=true},{force=true})==nil)
-		assert(FS.new({}, {rank=0})==nil,"Studio is a no-op")
+		assert(FS.new({}, {rank=1,newSave=true},{force=true})==nil)
+		assert(FS.new({}, {rank=0},{force=true})==nil,"a returning rank-0 save")
+		assert(FS.new({}, {rank=0,newSave=true,loadFailed=true},{force=true})==nil)
+		assert(FS.new({}, {rank=0,newSave=true})==nil,"Studio is a no-op")
 	end)
 
 	test("milestones log once",function()

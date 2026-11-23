@@ -139,7 +139,11 @@ function Progress.load(userId)
 		if attempt < 3 then task.wait(attempt * .6) end
 	end
 	if not success then warn("Egg Drop could not load the player profile:", record); record = nil end
-	return decode(key, record, success)
+	local profile = decode(key, record, success)
+	-- First-session funnel: no record at all for this key before this join, so a brand-new player.
+	-- Session memory only (never saved; Progress.hydrate does not touch it).
+	profile.newSave = success and record == nil
+	return profile
 end
 
 -- Only an acquired authoritative snapshot may replace the provisional read.
