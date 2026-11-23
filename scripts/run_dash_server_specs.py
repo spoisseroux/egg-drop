@@ -29,6 +29,8 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio"]
 SPECS += CLIENT
+# Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
+CLIENT_EXTRA = ["AeroFalls"]
 STUBS = {
     "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
     "PetFactory": "return{}", "DeckKit": "return{focusable=function(object)return object.ok==true end}", "NotificationRail": "return{}",
@@ -39,7 +41,7 @@ STUBS = {
 def client_modules():
     out = {f"client/{name}": source for name, source in STUBS.items()}
     for pattern in ("Dash*.lua", "Things*.lua", "Finds*.lua", "NoticeCards.lua", "Life*.lua", "GardenLife.lua", "Wind*.lua",
-                    "AmbientAudio.lua", "AmbientPerches.lua", "AliveBudget.lua"):
+                    "AmbientAudio.lua", "AmbientPerches.lua", "AliveBudget.lua", "AeroAdditions.lua", "AeroFalls.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
@@ -97,7 +99,7 @@ bundle = "\n".join([
     "\n".join(f"specs.{name}=function(game,require)\n{(ROOT / f'scripts/{name}.spec.lua').read_text(encoding='utf-8')}\nend"
               for name in specs),
     f"local ORDER={{{','.join(repr(name) for name in specs)}}}",
-    f"local CLIENT={{{','.join(name + '=true' for name in CLIENT)}}}",
+    f"local CLIENT={{{','.join(name + '=true' for name in CLIENT + CLIENT_EXTRA)}}}",
     (ROOT / "scripts/offline_roblox.luau").read_text(encoding="utf-8"),
 ])
 lines = bundle.splitlines()

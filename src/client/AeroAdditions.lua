@@ -1,8 +1,10 @@
 -- The few things Aero Medium adds (WORLD-PLAN-2026-11-22 section 9; AeroWorld builds and drops them): a glass dome
 -- over the egg nest, white gloss lips on the round stations, dew glints on four lawns and Roblox's own clouds. All in
 -- one local folder beside the lounge: anchored, no collision, query, touch or shadow, nothing moves, nothing replicates.
+-- The waterfall layers (AeroFalls) live in it too; they move, so still() and update() switch them.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Values=require(Shared:WaitForChild("WorldAero"))
+local Falls=require(script.Parent:WaitForChild("AeroFalls"))
 local Additions={}
 Additions.Name="EggDropAero"
 
@@ -71,15 +73,17 @@ function Additions.clouds()
 	return clouds
 end
 
--- Returns {folder, still(reduced), destroy()}; everything or nothing.
+-- Returns {folder, emitters, falls, still(reduced), update({level, camera, daylight}), destroy()}; everything or nothing.
+-- options: parent, data (WorldV7Data), groundY, clouds=false, falls=false (fixtures).
 function Additions.build(options)
 	local folder=Instance.new("Folder")
 	folder.Name=Additions.Name
-	local clouds
+	local clouds,falls
 	local ok,emitters=pcall(function()
 		Additions.dome(folder)
 		Additions.lips(folder)
 		local list=Additions.glints(folder,options.groundY or require(Shared:WaitForChild("HollowWorldLayout")).groundY)
+		if options.falls~=false then falls=Falls.build(folder,options.data or require(Shared:WaitForChild("WorldV7Data")))end
 		if options.clouds~=false then clouds=Additions.clouds()end
 		folder.Parent=options.parent
 		return list
@@ -90,14 +94,17 @@ function Additions.build(options)
 	end
 	if not ok then destroy();error(emitters,0)end
 	local still
-	return{folder=folder,emitters=emitters,destroy=destroy,still=function(reduced)
+	return{folder=folder,emitters=emitters,falls=falls,destroy=destroy,still=function(reduced)
 		reduced=reduced==true
+		if falls then falls.apply({reduced=reduced})end
 		if reduced==still then return end
 		still=reduced
 		for _,emitter in ipairs(emitters)do
 			emitter.Enabled=not reduced
 			if reduced then emitter:Clear()end
 		end
+	end,update=function(state)
+		if falls then falls.apply(state)end
 	end}
 end
 return Additions
