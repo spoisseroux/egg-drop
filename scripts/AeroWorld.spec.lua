@@ -2,7 +2,9 @@
 -- parts, a fake Lighting and a fake clock: exact restore, rebuilds, late parts, double toggles, crowns, owners left
 -- alone, additions and their budget. The live room and Lighting are never touched.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.AeroWorld)(PlayerScripts.Client)
-return function(client)
+-- The garden hour cases (slice B) are all fakes and run first; a bundle with AeroWorld passes `offline` (the second
+-- argument) and the Studio cases after them are skipped.
+return function(client,offline)
 	local Shared=game:GetService("ReplicatedStorage").Shared
 	local Aero=require(Shared.Aero)
 	local Values=require(Shared.WorldAero)
@@ -174,6 +176,100 @@ return function(client)
 	end
 
 	local ok,problem=pcall(function()
+		-- The garden hour (slice B): HollowClock paints GardenHour.look through self.look.paint(values). All fakes (a
+		-- fake world, room, Lighting, glow parts and AeroClouds), so these cases also run offline.
+		local Hour=require(Shared.GardenHour)
+		local Night=require(Shared.WorldNight)
+		local HourData={sky={day=Data.sky.day,dusk=Data.sky.dusk,night={}}}
+		for _,f in ipairs(Faces)do HourData.sky.night[f]="night"..f end
+		local function hourRig(options)
+			options=options or {}
+			local r={on=false,log={writes=0},timers={},applied=0,cloudsGone=false}
+			r.lighting,r.raw=lightingOf(r.log)
+			local base=r.log.parent
+			r.terrain={}
+			r.cloudsProps={Cover=.4,Density=.2,Color=PINK}
+			r.clouds=fake("Clouds","AeroClouds",r.cloudsProps,r.log)
+			r.log.parent=function(item)
+				if item==r.clouds then return if r.cloudsGone then nil else r.terrain end
+				return base(item)
+			end
+			local function part(name,care)
+				local props={Color=PINK}
+				local item,_,attrs=fake("BasePart",name,props,r.log)
+				if care then attrs.CareStatusSurface=true end
+				return item,props
+			end
+			r.glow,r.glowProps=part("W7_LampOrbs__glow_warm")
+			r.care,r.careProps=part("W7_CradleMobile__glow_warm",true)
+			r.part=part
+			local folder={Name="World",DescendantAdded=signal(),DescendantRemoving=signal(),GetDescendants=function()return{r.glow,r.care}end}
+			local room={Name="EggDropLounge",ChildAdded=signal(),ChildRemoved=signal(),GetChildren=function()return{folder}end}
+			r.world={ChildAdded=signal(),ChildRemoved=signal(),FindFirstChild=function(_,name)return if name=="EggDropLounge"then room else nil end}
+			r.clock={now=function()return 0 end,apply=function()r.applied+=1;if r.clock.look then r.clock.look.paint(r.values)end end}
+			r.aero=AeroWorld.new({world=r.world,lighting=r.lighting,data=HourData,clock=r.clock,
+				switch={on=function()return r.on end,changed=function()return signal()end,trees=function()return "lime"end,treesChanged=function()return signal()end},
+				level=function()return 0 end,reduced=function()return false end,reducedChanged=function()return signal()end,
+				defer=function()end,delay=function(_,fn)table.insert(r.timers,fn)end,warn=function(text)error(text)end,
+				clouds=function()return if r.cloudsGone then nil else r.clouds end,
+				-- The real additions destroy the AeroClouds with themselves (budget level 2, Aero off).
+				additions={build=function()return{still=function()end,destroy=function()if not options.keepClouds then r.cloudsGone=true end end}end}})
+			function r.flip(on)r.on=on;r.aero:sync()end
+			function r.paint(values)r.values=values;r.clock.apply()end
+			table.insert(live,r)
+			return r
+		end
+		local Warm=Values.Surfaces.glow_warm.Color
+
+		test("hour: the hour's light, sky, glow_warm and clouds through the clock; off paints the Aero picture back exactly",function()
+			local r=hourRig();r.flip(true)
+			local aero=frozen(r.raw)
+			assert(rgb(r.glowProps.Color)==rgb(Warm)and r.careProps.Color==PINK and r.cloudsProps.Color==PINK and r.cloudsProps.Cover==.4)
+			r.paint(Hour.Holds.night)
+			for k,v in pairs(Night.Lighting)do assert(r.lighting[k]==v,k)end
+			for k,v in pairs(Night.Atmosphere)do assert(r.raw.Atmosphere[k]==v,k)end
+			for k,v in pairs(Night.Bloom)do assert(r.raw.BloomEffect[k]==v,k)end
+			for k,v in pairs(Night.Grade)do assert(r.raw.ColorCorrectionEffect[k]==v,k)end
+			for k,v in pairs(Night.SunRays)do assert(r.raw.SunRaysEffect[k]==v,k)end
+			assert(r.raw.Sky.SkyboxBk=="nightBk"and r.raw.Sky.SkyboxUp=="nightUp"and r.raw.attrs.FaceSet=="night"and r.raw.Sky.StarCount==Night.Sky.StarCount)
+			assert(rgb(r.glowProps.Color)==rgb(Night.GlowWarm)and r.careProps.Color==PINK,"glow_warm, never the care mobile")
+			for k,v in pairs(Night.Clouds)do assert(r.cloudsProps[k]==v,k)end
+			-- golden: the dusk faces
+			r.paint(Hour.Holds.golden);assert(r.raw.Sky.SkyboxBk=="duskBk"and r.raw.attrs.FaceSet=="dusk")
+			r.paint(nil)
+			same(aero,frozen(r.raw))
+			assert(rgb(r.glowProps.Color)==rgb(Warm)and r.cloudsProps.Color==PINK and r.cloudsProps.Cover==.4 and next(r.aero.sky)==nil)
+			r.flip(false)
+		end)
+		test("hour: a hold writes nothing pass after pass, a blend does; a glow_warm arriving under the hour takes its colour",function()
+			local r=hourRig();r.flip(true)
+			for _,hold in ipairs({Hour.Holds.night,Hour.Holds.day,Hour.Holds.dawn,Hour.Holds.golden})do
+				r.paint(hold)
+				local engine,own=r.log.writes,r.aero.writes
+				for _=1,5 do r.paint(hold)end
+				assert(r.log.writes==engine and r.aero.writes==own,hold.Phase.." hold wrote")
+			end
+			local engine=r.log.writes
+			r.paint(Hour.look(3600*1000+2950));assert(r.log.writes>engine,"a blend writes")
+			r.paint(Hour.Holds.night)
+			local late,props=r.part("W7_Late__glow_warm");r.aero:paint(late)
+			assert(rgb(props.Color)==rgb(Night.GlowWarm))
+			-- off the day hold writes nothing new either (WorldAero's own tables)
+			r.paint(Hour.Holds.day);r.paint(nil);engine=r.log.writes;r.paint(nil);assert(r.log.writes==engine)
+			r.flip(false)
+		end)
+		test("hour: Aero off mid-night puts back the light and glow; clouds the additions took are let go, kept ones put back",function()
+			for _,keep in ipairs({false,true})do
+				local r=hourRig({keepClouds=keep})
+				local before=frozen(r.raw)
+				r.flip(true);r.paint(Hour.Holds.night);r.flip(false)
+				same(before,frozen(r.raw))
+				assert(r.glowProps.Color==PINK and r.careProps.Color==PINK and r.clock.look==nil and next(r.aero.sky)==nil)
+				assert(next(r.aero.light)==nil and next(r.aero.surfaces)==nil and r.aero.glow==nil)
+				if keep then assert(r.cloudsProps.Color==PINK and r.cloudsProps.Cover==.4)end
+			end
+		end)
+		if offline then return end
 		test("the ceiling: the flag, and the beta place or Studio; the live place never; on needs the attribute",function()
 			local on={AeroWorld=true}
 			assert(Aero.ceiling({flags=on,place=Aero.PlaceId,studio=false})and Aero.ceiling({flags=on,place=1,studio=true}))

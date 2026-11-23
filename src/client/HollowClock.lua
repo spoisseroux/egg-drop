@@ -18,13 +18,32 @@ function Clock.cycle(unixSeconds)
 	return hour, sunlight * sunlight * (3 - 2 * sunlight)
 end
 
--- Another look over the garden (AeroWorld): {Hour, Daylight, CloudColor, paint()}. While set, the clock samples and
--- paints it, so Lighting keeps one writer; nil is the garden without it.
+-- Another look over the garden (AeroWorld): {Hour, Daylight, CloudColor, paint(values), reduced()}. While set, the
+-- clock samples and paints it, so Lighting keeps one writer; nil is the garden without it.
 Clock.look = nil
+
+-- The garden hour (GARDEN-HOUR-BUILD-PLAN-2026-11-23, slice B). Needs the Aero look (Clock.look): while both are on,
+-- the clock samples and paints GardenHour.look(GardenHour.time()) through Clock.look.paint(values). Off, or with the
+-- Aero look off, nothing here runs and the clock is the one before it. Specs swap Clock.Hour for a fake.
+Clock.Hour = require(Shared:WaitForChild("GardenHour"))
+function Clock.hourOn()
+	return Clock.look ~= nil and Clock.Hour.on() == true
+end
+-- The hour's look table now (nil while the hour is off). Reduced Motion (the look's reduced()) steps ClockTime.
+function Clock.hourLook()
+	local look = Clock.look
+	if not look or Clock.Hour.on() ~= true then return nil end
+	local reduced = look.reduced ~= nil and look.reduced() == true
+	return Clock.Hour.look(Clock.Hour.time(), reduced)
+end
 
 function Clock.sample(unixSeconds)
 	local look = Clock.look
-	if look then return look.Hour, look.Daylight end
+	if look then
+		local values = Clock.hourLook()
+		if values then return values.Hour, values.Daylight end
+		return look.Hour, look.Daylight
+	end
 	return Clock.schedule(unixSeconds)
 end
 
@@ -35,11 +54,18 @@ function Clock.schedule(unixSeconds)
 end
 
 function Clock.environment(unixSeconds)
-	local hour, daylight = Clock.sample(unixSeconds)
+	local values = Clock.hourLook()
+	local hour, daylight
+	if values then hour, daylight = values.Hour, values.Daylight else hour, daylight = Clock.sample(unixSeconds) end
  Clock.lastHour,Clock.lastDaylight=hour,daylight
 	if Clock.look then
-		Clock.look.paint()
-		Clock.backdrop(daylight)
+		if values then
+			Clock.look.paint(values)
+			Clock.backdrop(daylight, values)
+		else
+			Clock.look.paint()
+			Clock.backdrop(daylight)
+		end
 		return hour,daylight
 	end
 	if not Clock.DayNight then
@@ -116,7 +142,9 @@ function Clock.cloudColor(daylight)
 	local t = math.clamp((daylight - 0.1) / 0.5, 0, 1)
 	return Clock.CloudNight:Lerp(Clock.CloudDay, t * t * (3 - 2 * t))
 end
-function Clock.backdrop(daylight)
+-- `values` (the garden hour's look, nil otherwise): its CloudColor, and its PeakColor (nil keeps the texture, a Color3
+-- is the flat silhouette).
+function Clock.backdrop(daylight, values)
 	local lounge = workspace:FindFirstChild("EggDropLounge")
 	local meshes = lounge and lounge:FindFirstChild("World")
 	if not meshes then return nil end
@@ -129,6 +157,18 @@ function Clock.backdrop(daylight)
 				table.insert(Clock.peaks, part)
 			end
 		end
+	end
+	if values then
+		local color, flat = values.CloudColor, values.PeakColor
+		for _, part in ipairs(Clock.clouds) do
+			if part.Color ~= color then part.Color = color end
+		end
+		for _, part in ipairs(Clock.peaks) do
+			local texture = if flat then "" else part:GetAttribute("DayTextureID") or ""
+			if part.TextureID ~= texture then part.TextureID = texture end
+			if flat and part.Color ~= flat then part.Color = flat end
+		end
+		return color
 	end
 	local color = if Clock.look then Clock.look.CloudColor elseif Clock.DayNight then Clock.cloudColor(daylight) else Dusk.CloudColor
 	for _, part in ipairs(Clock.clouds) do
@@ -153,8 +193,10 @@ function Clock.now()
  end
  return workspace:GetServerTimeNow()
 end
--- What the birds, coos and fireflies live by: a look changes the light, never their day.
+-- What the birds, coos and fireflies live by: a look changes the light, never their day. The garden hour is their day
+-- (one daylight: this and Clock.lastDaylight agree while it is on).
 function Clock.daylight()
+ if Clock.hourOn()then return Clock.Hour.phase(Clock.Hour.time()).daylight end
  if Clock.look then return(select(2,Clock.schedule(Clock.now())))end
  return Clock.lastDaylight or select(2,Clock.sample(Clock.now()))
 end
@@ -204,10 +246,31 @@ function Controller:apply(unixSeconds)
  for light,record in pairs(self.lights)do self:paint(light,record)end
  self.samples+=1;return hour,daylight
 end
+-- Applies a second while the garden hour blends (GardenHour.ApplyRate by AliveBudget level: 20, 10, 2); nil in its
+-- holds and whenever it is off (the 5 s pass). Never asked where the build ceiling is off.
+function Controller:rate()
+ if not self.hourCeiling or not Clock.hourOn()then return nil end
+ local Hour=Clock.Hour
+ if not Hour.Blending(Hour.time())then return nil end
+ local level=self.level()
+ return Hour.ApplyRate[level]or Hour.ApplyRate[#Hour.ApplyRate]
+end
 function Controller:step(dt)
  if self.destroyed then return end
- self.elapsed+=dt;if self.elapsed<Clock.Step then return end
- self.elapsed%=Clock.Step;self:apply(self.now())
+ self.elapsed+=dt
+ local rate=self:rate()
+ -- Into or out of a blend: once at once, so a blend's last frame never lingers 5 s over a hold.
+ if(rate~=nil)~=self.blending then
+  self.blending=rate~=nil;self.elapsed=0;self:apply(self.now());return
+ end
+ local interval=if rate then 1/rate else Clock.Step
+ if self.elapsed<interval then return end
+ self.elapsed%=interval;self:apply(self.now())
+end
+-- The hour's switch or offset (/hour at) changed: paint the new look now, not on the next pass.
+function Controller:reapply()
+ if self.destroyed or not Clock.look then return end
+ self.blending=self:rate()~=nil;self.elapsed=0;self:apply(self.now())
 end
 function Controller:stats()
  local count,managed=0,0;for light in pairs(self.lights)do count+=1;if light:GetAttribute("HollowLamp")==true then managed+=1 end end
@@ -223,7 +286,15 @@ end
 function Clock.new(options)
  options=options or {};local world=options.world or workspace
  local self=setmetatable({world=world,now=options.now or Clock.now,
-  environment=options.environment or Clock.environment,sample=options.sample or Clock.sample,lights={},connections={},roomConnections={},elapsed=0,writes=0,samples=0,scans=0},Controller)
+  environment=options.environment or Clock.environment,sample=options.sample or Clock.sample,lights={},connections={},roomConnections={},elapsed=0,writes=0,samples=0,scans=0,blending=false},Controller)
+ -- The garden hour: options.hour {ceiling, changed, offsetChanged} (fixtures) or, for the game's clock, GardenHour.
+ local hour=options.hour or(options.auto and Clock.Hour)
+ self.hourCeiling=hour~=nil and hour.ceiling()==true
+ self.level=options.level or function()return require(script.Parent.AliveBudget).level()end
+ if self.hourCeiling then
+  table.insert(self.connections,hour.changed():Connect(function()self:reapply()end))
+  table.insert(self.connections,hour.offsetChanged():Connect(function()self:reapply()end))
+ end
  self.daylight=select(2,self.sample(self.now()))
  table.insert(self.connections,world.ChildAdded:Connect(function(item)if not self.destroyed and item.Name=="EggDropLounge"then self:bind(item)end end))
  table.insert(self.connections,world.ChildRemoved:Connect(function(item)if not self.destroyed and self.room==item then self:bind(nil)end end))
