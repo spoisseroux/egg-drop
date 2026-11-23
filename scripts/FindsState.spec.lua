@@ -99,6 +99,31 @@ return function(server)
 		assert(Finds.pick(random,{},all)==nil,"nothing left: nil")
 		assert(Finds.position(1).X==Spots[1].x/100 and Finds.position(99)==nil)
 	end)
+	test("G2 pick near: the NearMin..NearSpot band when it has open spots, else the nearest open one; the old rules hold",function()
+		local random=Random.new(3)
+		for index=1,24 do
+			local at=Vector3.new(Spots[index].x/100+25,5,Spots[index].z/100)
+			for _=1,20 do
+				local i=Finds.pick(random,{},{},at)
+				local d=math.sqrt((Spots[i].x/100-at.X)^2+(Spots[i].z/100-at.Z)^2)
+				local band=false
+				for j=1,24 do
+					local dj=math.sqrt((Spots[j].x/100-at.X)^2+(Spots[j].z/100-at.Z)^2)
+					if dj>=Finds.NearMin and dj<=Finds.NearSpot then band=true end
+				end
+				if band then assert(d>=Finds.NearMin and d<=Finds.NearSpot,"in the band "..d)
+				else
+					for j=1,24 do assert(d<=math.sqrt((Spots[j].x/100-at.X)^2+(Spots[j].z/100-at.Z)^2)+1e-9,"the nearest")end
+				end
+			end
+		end
+		-- Far from everything: the nearest open spot, never a live or recent one.
+		local far=Vector3.new(5000,0,5000)
+		local i=Finds.pick(random,{1},{2,3},far)
+		assert(i and i~=1 and i~=2 and i~=3)
+		local all={};for k=1,24 do all[k]=k end
+		assert(Finds.pick(random,{},all,far)==nil)
+	end)
 	test("the switch: ceiling needs the flag and the beta place or Studio; resolve defaults on",function()
 		assert(not Finds.ceiling({flags={},place=Finds.PlaceId}))
 		assert(not Finds.ceiling({flags={GardenFinds=true},place=96451847774961,studio=false}))

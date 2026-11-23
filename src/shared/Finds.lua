@@ -20,6 +20,10 @@ Finds.Sniff=8          -- the client sends the claim this near
 Finds.Notice=20        -- sparkles twinkle harder, and the tip shows, this near
 Finds.Spacing=20       -- a new find is never this near a live one
 Finds.Recent=6         -- nor one of the last six used
+-- Beta (12) QA G2: finds are per player, so a new one lands where its player can see it: among the open spots between
+-- NearMin and NearSpot flat studs of the character; with none there, the nearest open spot.
+Finds.NearSpot=45
+Finds.NearMin=10
 Finds.Spots=Spots
 
 local injected=nil
@@ -66,8 +70,10 @@ function Finds.position(index)
 	return s and Vector3.new(s.x/100,s.y/100,s.z/100)or nil
 end
 -- Pure: the index of a spot for a new find, or nil. `live` and `recent` are lists of spot indices; `random` is a
--- Random. Never a live spot or a recent one, never within Spacing of a live one; uniform over what is left.
-function Finds.pick(random,live,recent)
+-- Random. Never a live spot or a recent one, never within Spacing of a live one; uniform over what is left. With
+-- `near` (the player's position, a Vector3): uniform over the open spots in the NearMin..NearSpot band, else the
+-- nearest open spot.
+function Finds.pick(random,live,recent,near)
 	local blocked={}
 	for _,i in ipairs(live or {})do blocked[i]=true end
 	for _,i in ipairs(recent or {})do blocked[i]=true end
@@ -83,6 +89,17 @@ function Finds.pick(random,live,recent)
 		if ok then open[#open+1]=index end
 	end
 	if #open==0 then return nil end
+	if typeof(near)=="Vector3"then
+		local band,best,bestD={},nil,math.huge
+		for _,index in ipairs(open)do
+			local spot=Spots[index]
+			local d=math.sqrt((spot.x/100-near.X)^2+(spot.z/100-near.Z)^2)
+			if d>=Finds.NearMin and d<=Finds.NearSpot then table.insert(band,index)end
+			if d<bestD then best,bestD=index,d end
+		end
+		if #band>0 then return band[random:NextInteger(1,#band)]end
+		return best
+	end
 	return open[random:NextInteger(1,#open)]
 end
 

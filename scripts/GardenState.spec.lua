@@ -169,5 +169,94 @@ return function(server)
         local payload=game:GetService("HttpService"):JSONEncode(snapshot)
         assert(#payload<4096,"small authoritative snapshot exceeded its bounded payload")
     end)
+    -- Beta (12) QA G1: pets catch up. A one-pet garden on the shared lawn; options.catchup / landing injected.
+    local Catchup=require(game.ReplicatedStorage.Shared.PetCatchup)
+    local function hopper(on,landing,extra)
+        local c={now=0,inputs={},calls=0,warned={}}
+        local at=Vector3.new(0,4.025,-2)
+        c.inputs[1]={petId="pip",owned=true,alive=true,characterId=1,mode="Room",position=at+Vector3.new(0,3,0),anchor=at,yaw=0,charmVisible=true}
+        local options={now=function()return c.now end,publish=function(snapshot)c.snapshot=snapshot end,validFocus=function()return true end,sharedToyEnabled=false,
+            warn=function(text)table.insert(c.warned,text)end}
+        if on~=nil then
+            options.catchup=function()return c.on end
+            options.landing=function(input,racing)c.calls+=1;c.racing=racing;if landing then return landing(input,racing)end;return input.anchor+Vector3.new(0,0,2.5)end
+        end
+        for k,v in pairs(extra or {})do options[k]=v end
+        c.on=on
+        c.garden=Garden.new(options)
+        function c:step(dt)self.now+=dt;self.garden:step(dt,self.inputs)end
+        function c:move(by)local input=self.inputs[1];input.position+=by;input.anchor+=by end
+        c:step(.5);return c
+    end
+    local function flatGap(c)
+        local actor=c.garden.actors[1];local p=c.garden:position(actor,c.now)
+        return Vector2.new(p.X-c.inputs[1].anchor.X,p.Z-c.inputs[1].anchor.Z).Magnitude
+    end
+    test("G1 far: the owner 120 studs off; a hop after FarHold (not before), at the landing at once, hop seq and from on the snapshot",function()
+        local c=hopper(true)
+        c:step(.5)
+        local before=c.garden:position(c.garden.actors[1],c.now)
+        c:move(Vector3.new(120,0,0))
+        c:step(.5);c:step(.5);c:step(.5)
+        assert(c.garden.actors[1].hop==nil,"no hop before FarHold")
+        c:step(.5)
+        local actor=c.garden.actors[1]
+        assert(actor.hop and actor.hop.seq==1 and actor.hop.why=="far","hopped")
+        assert(actor.action=="catchup"and actor.path==nil,"a prepared hold, never a stroll path")
+        local p=c.garden:position(actor,c.now)
+        assert((p-(c.inputs[1].anchor+Vector3.new(0,0,2.5))).Magnitude<1e-6,"at the landing at once")
+        assert(flatGap(c)<=4.01)
+        local snap=c.snapshot.actors["1"]
+        assert(snap.hop.seq==1 and Activity.vector(snap.hop.from)and(Activity.vector(snap.hop.from)-before).Magnitude<60,"from is where it was")
+        assert(c.racing==false)
+        -- The rest ends, the pet follows; the seq stays for late clients.
+        for _=1,4 do c:step(.5)end
+        assert(c.garden.actors[1].behavior=="follow"and c.snapshot.actors["1"].hop.seq==1)
+    end)
+    test("G1 stuck: a pet that cannot move toward its owner for StuckSeconds hops; cooldown between hops",function()
+        local c=hopper(true,nil,{resolveTarget=function(_,from)return from,true end})
+        c:move(Vector3.new(15,0,0))
+        local t0=c.now
+        while c.garden.actors[1].hop==nil and c.now-t0<10 do c:step(.5)end
+        local actor=c.garden.actors[1]
+        assert(actor.hop and actor.hop.why=="stuck","stuck hop")
+        assert(c.now-t0>=Catchup.StuckSeconds and c.now-t0<=Catchup.StuckSeconds+1.5,tostring(c.now-t0))
+        local at=c.now
+        c:move(Vector3.new(15,0,0))
+        while c.garden.actors[1].hop.seq==1 and c.now-at<20 do c:step(.5)end
+        assert(c.garden.actors[1].hop.seq==2 and c.now-at>=Catchup.Cooldown,"cooldown "..tostring(c.now-at))
+    end)
+    test("G1 skips: a deck round (Board), a race; no landing waits Retry and changes nothing",function()
+        local c=hopper(true)
+        c.inputs[1].mode="Board";c:step(.5)
+        c:move(Vector3.new(120,0,0));for _=1,10 do c:step(.5)end
+        assert(c.garden.actors[1].hop==nil and c.calls==0,"Board")
+        c=hopper(true)
+        c.garden:setRacer(1,"race-1")
+        c:move(Vector3.new(120,0,0));for _=1,10 do c:step(.5)end
+        assert(c.garden.actors[1].hop==nil and c.calls==0,"racing")
+        c=hopper(true,function()return nil end)
+        c:move(Vector3.new(120,0,0));for _=1,4 do c:step(.5)end
+        assert(c.calls==1 and c.garden.actors[1].hop==nil,"asked once")
+        c:step(.5);c:step(.5);c:step(.5)
+        assert(c.calls==1,"Retry wait");c:step(.5);c:step(.5)
+        assert(c.calls==2,"asked again after Retry")
+        -- Someone else racing: landing is told so (the course and pad are refused there).
+        c=hopper(true);c.garden.racers={[2]="race-2"}
+        c:move(Vector3.new(120,0,0));for _=1,4 do c:step(.5)end
+        assert(c.racing==true and c.garden.actors[1].hop)
+    end)
+    test("G1 off: the switch off writes no actor field; with no options the snapshot is today's",function()
+        local plain=hopper(nil);local off=hopper(false)
+        for _,c in ipairs({plain,off})do c:move(Vector3.new(120,0,0));for _=1,12 do c:step(.5)end end
+        local actor=off.garden.actors[1]
+        assert(actor.catch==nil and actor.hop==nil and off.calls==0,"off touched the actor")
+        local Http=game:GetService("HttpService")
+        assert(Http:JSONEncode(plain.snapshot)==Http:JSONEncode(off.snapshot),"off parity")
+        assert(off.snapshot.actors["1"].hop==nil)
+        -- Turning it on later starts the hold fresh (no stale far time).
+        off.on=true;off:step(.5)
+        assert(off.garden.actors[1].hop==nil,"no instant hop on a switch flip")
+    end)
     return {passed=#cases,cases=cases}
 end

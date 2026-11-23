@@ -42,10 +42,12 @@ Rail.Motion={enter=.22,leave=.25,slide=.2,scroll=.25,reduced=.15,press=.06,breat
 -- Round 3 (Spencer: the timer clipped the text): cards 4 px taller, the text sits in the face
 -- above the timer, the timer 3 px over the face's bottom. `tight` keeps the old 32 px key for
 -- a 32 to 33 px bar.
+-- drop (beta (12) QA U1, Fable DASH-DECK-UI-LOOK.md): a timed card's disc, message, amount and chevron move down this
+-- many px (they sat high in the face above the timer); a persistent card is already centred and keeps 0.
 Rail.Sizes={
- full={card=44,lip=4,face=40,radius=12,disc=24,text=14},
- compact={card=34,lip=3,face=31,radius=10,disc=20,text=13},
- tight={card=32,lip=3,face=29,radius=10,disc=18,text=12}}
+ full={card=44,lip=4,face=40,radius=12,disc=24,text=14,drop=2},
+ compact={card=34,lip=3,face=31,radius=10,disc=20,text=13,drop=2},
+ tight={card=32,lip=3,face=29,radius=10,disc=18,text=12,drop=1}}
 -- Space under the text kept for the timer bar (3 px bar, 3 px under it, 2 px over it).
 Rail.TimerRoom=8
 -- Kinds (spec table): disc fill, icon (a Kit.icon name) or glyph, icon colour, timer bar fill.
@@ -91,6 +93,11 @@ function Rail.kind(data)
  return "info"
 end
 -- Pure: the card size for a free bar `height` (nil under 32 px: the row hides).
+-- Pure: how far a card's content moves down (U1): the size's drop for a timed card, 0 for a persistent one.
+function Rail.contentDrop(size,persistent)
+ if persistent or type(size)~="table"then return 0 end
+ return size.drop or 0
+end
 function Rail.size(height)
  if height>=56 then return Rail.Sizes.full end
  if height>=34 then return Rail.Sizes.compact end
@@ -269,20 +276,21 @@ local function configure(t,data,size,barW,barH)
  t.face.Size=UDim2.fromOffset(w,face);t.face.Position=UDim2.fromOffset(0,if t.pressed then size.lip else 0)
  t.lipCorner.CornerRadius=UDim.new(0,size.radius);t.faceCorner.CornerRadius=UDim.new(0,size.radius)
  local textH=face-(if t.persistent then 0 else Rail.TimerRoom)
- local discY=math.floor((textH-size.disc)/2)
+ local drop=Rail.contentDrop(size,t.persistent)
+ local discY=math.floor((textH-size.disc)/2)+drop
  t.disc.Size=UDim2.fromOffset(size.disc,size.disc);t.disc.Position=UDim2.fromOffset(8,discY)
  local x=8+size.disc+8
  local room=g.room-(if amount then 4+amountW else 0)
  local shownW=math.max(0,math.min(math.ceil(textW),room))
  t.message.Text=text;t.message.TextSize=size.text
- t.message.Position=UDim2.fromOffset(x,0);t.message.Size=UDim2.fromOffset(shownW+1,textH)
+ t.message.Position=UDim2.fromOffset(x,drop);t.message.Size=UDim2.fromOffset(shownW+1,textH)
  t.amount.Visible=amount~=nil
  if amount then
   t.amount.Text=amount;t.amount.TextSize=size.text
-  t.amount.Position=UDim2.fromOffset(x+shownW+4,0);t.amount.Size=UDim2.fromOffset(math.ceil(amountW)+1,textH)
+  t.amount.Position=UDim2.fromOffset(x+shownW+4,drop);t.amount.Size=UDim2.fromOffset(math.ceil(amountW)+1,textH)
  end
  t.more.Visible=tappable
- t.more.Position=UDim2.fromOffset(w-12-14,0);t.more.Size=UDim2.fromOffset(14,textH)
+ t.more.Position=UDim2.fromOffset(w-12-14,drop);t.more.Size=UDim2.fromOffset(14,textH)
  t.timer.Visible=not t.persistent
  t.timer.Position=UDim2.fromOffset(10,face-3-3);t.timer.Size=UDim2.fromOffset(math.max(0,w-20),3)
  t.root:SetAttribute("Truncated",not g.full)

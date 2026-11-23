@@ -22,6 +22,8 @@ local FeatureState=require(script.Parent.FeatureState)
 local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog)
 local FeatureCatalog=require(ReplicatedStorage.Shared.FeatureCatalog)
 local Guard=require(script.Parent.HatchGuard)
+-- Beta (12) QA T1: the save key (player_<id>, or the owner's fresh-save key on the beta), resolved by Progress.load.
+local ProgressKey=require(script.Parent.ProgressKey)
 local Purchases=require(script.Parent.PurchaseState)
 local Faceplates=require(script.Parent.FaceplateState)
 local Wearables=require(script.Parent.WearableState)
@@ -318,7 +320,7 @@ end
 function Hatching.load(userId, profile, adapter)
 	adapter = adapter or defaultAdapter()
 	local handle = {
-		key = "player_" .. userId, userId = userId, adapter = adapter, token = adapter.guid(),
+		key = ProgressKey.of(userId), userId = userId, adapter = adapter, token = adapter.guid(),
 		status = "Loading", busy = false, nextRunSeq = 1, restricted = true,
 	}
 	if profile and profile.loadFailed then
