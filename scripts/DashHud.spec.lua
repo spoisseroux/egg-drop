@@ -153,5 +153,15 @@ return function(client)
 		for _,kind in ipairs({"line","modes"})do assert(UICopy.has("dash.gate."..kind))end
 		assert(Wire.Modes.fun and Wire.Modes.stats)
 	end)
+	test("STUDIO-CHECK-R2: a rival home first is ahead at the line; the pill goes when the result is in",function()
+		local Client=require(client.DashClient)
+		assert(Client.aheadOf(0,0,true)and not Client.aheadOf(0,0,false),"home first is ahead at the tie")
+		assert(Client.aheadOf(3,5,false)and not Client.aheadOf(5,3,true)and not Client.aheadOf(5,0,true))
+		local function object(props)return props end
+		local hud=setmetatable({shown={},place=object({Text="4th",Visible=true}),jump={},dash={},bar={},leave={},ring={},stones={},hint={}},Hud)
+		hud.keys=function()end;hud.shown.place=4
+		hud:rest(false);assert(hud.place.Visible==true,"home, not yet the result: the pill stays")
+		hud:rest(true);assert(hud.place.Visible==false and hud.place.Text=="","the result: the pill goes")
+	end)
 	return{passed=#cases,cases=cases}
 end
