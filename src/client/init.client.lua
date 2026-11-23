@@ -4559,6 +4559,15 @@ do
    strip=function()return if clientUI.tomorrow then clientUI.tomorrow()else nil end,
    state=function()return nurseryState end,canRoam=function()return roomView.canRoam()end,
    modalOpen=function()return clientUI.anyModalOpen(true)end,
+   -- Beta 12 U5: a racer's pet name for the start-line tags. Names are catalogue piece ids (the board's PetNames
+   -- attribute, the owner's own snapshot), never typed text; the species when unnamed.
+   appearance=function(petId)return nurseryView.appearanceFor(petId)end, -- the sheets' stage pet (U3, U6)
+   petName=function(userId,petId)
+    local NameText=require(script.PetNameText)
+    if userId==player.UserId then return(NameText.own(nurseryState,petId))end
+    local boards=roomView.companions and roomView.companions.boards
+    return(NameText.ofBoard(boards and boards:FindFirstChild(tostring(userId)),petId))
+   end,
    closeMenus=function()
     clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
     if gameMenu and gameMenu.shade.Visible and closeMenu then closeMenu()end
@@ -4832,6 +4841,12 @@ do
    return Tips.due(ctx)
   end
   function things.blocked(roomFor,started)return Tips.blocked(gate(roomFor),started)end
+  -- Beta 12 S2: the tip chime as a tip lands on the rail (silent until it has a sound; never in a round, race or hatch).
+  local chime=require(script.TipChime).new({audio=audio,busy=function()
+   return{round=board:GetAttribute("Mode")=="Board",race=clientUI.dash~=nil and clientUI.dash:held()==true,
+    hatch=clientUI.arrivalHatch:isOpen()or(clientUI.snacks~=nil and clientUI.snacks.reveal~=nil and clientUI.snacks.reveal:isOpen())}
+  end})
+  function things.shown()chime.ring()end
   local function firstReady(state)
    if things.returning==nil and type(state)=="table"and state.status=="Ready"then things.returning=Tips.returning(state)end
   end

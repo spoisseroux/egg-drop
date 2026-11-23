@@ -607,6 +607,24 @@ local Table={
  },
 }
 
+-- Dash and Deck UI look (beta 12 QA, DASH-DECK-UI-LOOK section 10): new keys only, in their own block.
+do
+ local dash=Table.dash
+ dash.sub={fun="All pets equal",stats="Your levels count",trial="Solo. Beat the clock"}
+ dash.equal="All pets equal in this race"
+ dash.band="{band} · Dash level {level}"
+ dash.bestShort="Best {best} s"
+ dash.label={time="Time",best="Best"}
+ dash.result.newBest="New best"
+ dash.result.starsShort="+{reward} Stars"
+ dash.result.today="{done} of {total} today"
+ dash.result.tomorrow="Stars again tomorrow"
+ dash.result.saving="Saving…"
+ dash.racing="Racing"
+ dash.pad={dash="DASH",jump="JUMP",puff="PHEW!"} -- the HUD pads' words, in capitals as shown (so they localize as is)
+ Table.results.inPlace.hatchShort="Hatch"
+end
+
 local function freeze(node)
  for _,value in pairs(node)do if type(value)=="table"then freeze(value)end end
  return table.freeze(node)

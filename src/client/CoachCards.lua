@@ -521,6 +521,8 @@ function Cards:showIntro(id,notice,vars)
    current.presented=true
    self.introShown=(self.introShown or 0)+1;self.introAt=self.lastNow
    self:mark(id)
+   -- Beta 12 S2: the tip has landed (things.shown rings the tip chime).
+   if things and things.shown then pcall(things.shown,id)end
   end,
   onDone=function()if self.garden==current then self:hideGarden()end end})
  self.gardenView.root.Visible=false

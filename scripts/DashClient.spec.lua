@@ -41,6 +41,8 @@ return function(client,offline)
 		card={options=options,lines=table.clone(options.lines),closed=false}
 		function card:close()self.closed=true end
 		function card:setLine(i,text)self.lines[i]=text end
+		function card:update(model)self.model=model;self.updates=(self.updates or 0)+1 end
+		card.model=options.model
 		function card:pick(name)for _,b in ipairs(options.buttons)do if b.name==name then self.closed=true;b.act();return end end;error(name)end
 		return card
 	end
@@ -129,6 +131,11 @@ return function(client,offline)
 		local x,y,z=Course.at(0)
 		assert((eye-Vector3.new(x,y,z)).Magnitude<18 and(look-Vector3.new(x,y,z)).Magnitude<4 and eye.Y>y+3)
 		assert(math.sqrt((eye.X-Course.Pad.x/100)^2+(eye.Z-Course.Pad.z/100)^2)>Course.Pad.r/100+2,"not over the waiting players")
+		-- Beta 12 U5: nor is the line-up shot's eye, on any screen shape.
+		for _,aspect in ipairs({874/402,568/320,4/3,16/9})do
+			local ex,_,ez=require(client.DashCamera).lineup(aspect)
+			assert(math.sqrt((ex-Course.Pad.x/100)^2+(ez-Course.Pad.z/100)^2)>Course.Pad.r/100+2,"the line-up eye is not over the waiting players")
+		end
 		for name,out in pairs({
 			back=function()card.closed=true end,
 			race=function()card:pick("Fun");r.lock()end,
@@ -139,7 +146,7 @@ return function(client,offline)
 			lost=function()r.room:leaveDash()end,
 		})do
 			r.done();r=rig()
-			r.client:gate();assert(card.options.low==true)
+			r.client:gate();assert(card.options.sheet=="gate"and card.options.gate and card.options.buttons[3].sub~=nil)
 			r.frame(2);assert(r.room.held and not r.room.hidden and r.client.shot and r.room.frames>0,name)
 			out();r.frame(40)
 			if name=="race"then assert(r.room.held and r.room.hidden and r.room.locks==1);r.client:leave()end
@@ -171,15 +178,75 @@ return function(client,offline)
 		local function shown()local n=0;for _,tag in pairs(props.tags)do if tag.board.Enabled then n+=1 end end;return n end
 		for slot,tag in pairs(props.tags)do tag.part.Position=Vector3.new(slot,0,0)end
 		local function wide(p)return p.X*200,50 end
-		props:placeTags(Vector3.zero,wide);assert(shown()==7)
-		props:placeTags(Vector3.zero,function(p)return p.X*20,50 end)
+		props:untag(1) -- the player's own pet (its chevron), tagged by the last drive()
+		-- After the names (no ctx): today's rule for the pals. Each frame the pets say where they are.
+		local function place(anchor,project)
+			for slot,tag in pairs(props.tags)do if tag.info and tag.info.pal then props:tagAt(slot,Vector3.new(slot,0,0))end end
+			props:placeTags(anchor,project)
+		end
+		place(Vector3.zero,wide);assert(shown()==7)
+		place(Vector3.zero,function(p)return p.X*20,50 end)
 		local last=nil
 		for slot=1,8 do local tag=props.tags[slot];if tag and tag.board.Enabled then if last then assert(math.abs(tag.x-last)>=Props.TagSize.X+Props.TagGap)end;last=tag.x end end
 		assert(shown()>=1 and shown()<7 and props.tags[2].board.Enabled,"the nearest one wins")
-		props:placeTags(Vector3.new(-6,0,0),wide);assert(shown()==5,"12 studs")
-		props:placeTags(Vector3.zero,function()return nil end);assert(shown()==0)
-		props:placeTags(nil,wide);assert(shown()==0)
+		place(Vector3.new(-6,0,0),wide);assert(shown()==5,"12 studs")
+		place(Vector3.zero,function()return nil end);assert(shown()==0)
+		place(nil,wide);assert(shown()==0)
+		place(Vector3.zero,wide);props:placeTags(Vector3.zero,wide);assert(shown()==0,"a tag nothing moved this frame hides")
 		r.client:leave();r.done()
+	end)
+	test("start-line names (beta 12 U5): a racer sees every name from the lock to GO + 1.5 on top, none hidden; then they fade and a chevron stays",function()
+		local r=rig();r.lock("fun",8);r.frame(2)
+		local props=r.client.props
+		assert(r.client.seat.tagText~=nil and props.tags[1]and props.tags[1].info.mine,"the player's own pet is tagged through drive()")
+		local function frame(t,dt)
+			for lane=1,8 do props:tag(lane,"Pet "..lane);props:tagAt(lane,Vector3.new(lane*1.5,0,0),{lane=lane,mine=lane==1,pal=lane~=1})end
+			props:placeTags(Vector3.new(1.5,0,0),function(p)return p.X*12,100 end,{viewer="racer",now=t,dt=dt or 1/60,namesUntil=10})
+		end
+		frame(5)
+		local boxes={}
+		for lane=1,8 do
+			local tag=props.tags[lane]
+			assert(tag.board.Enabled and tag.mode=="name"and tag.board.AlwaysOnTop,lane)
+			assert(tag.label.AutoLocalize==false and tag.label.Text=="Pet "..lane,"names are never translated")
+			boxes[lane]={x=tag.x,top=tag.y-tag.tier*Props.TierPx,w=tag.width}
+		end
+		assert(props.tags[1].pill.BackgroundColor3==Props.Lemon and props.tags[2].pill.BackgroundColor3==Props.Cream,"yours is lemon")
+		for a=1,8 do for b=a+1,8 do
+			local A,B=boxes[a],boxes[b]
+			assert(math.abs(A.x-B.x)>=(A.w+B.w)/2 or math.abs(A.top-B.top)>=Props.NameH,a..","..b)
+		end end
+		assert(props.tags[1].scale.Scale<1,"they pop in: "..tostring(props.tags[1].scale.Scale));frame(5.5);assert(props.tags[8].scale.Scale==1)
+		frame(10.1,.1)
+		assert(props.tags[1].mode=="chevron"and props.tags[1].chevron.Visible,"your pet keeps its chevron")
+		assert(props.tags[5].board.Enabled and props.tags[5].alpha<1,"the others fade over 0.3 s")
+		frame(10.5,.3);assert(not props.tags[6].board.Enabled)
+		r.client:leave();r.done()
+	end)
+	test("onlookers (beta 12 G4): a Racing pill over each racing pet from GO until it is home; no names; no inspect prompt",function()
+		local r=rig()
+		r.client.seat=nil
+		local props=r.client.props
+		local function frame(t,running,finished)
+			for lane=1,3 do props:tag(lane,"Pet "..lane);props:tagAt(lane,Vector3.new(lane*4,0,0),{lane=lane,finished=finished and lane==2})end
+			props:placeTags(nil,function(p)return p.X*40,100 end,{viewer="onlooker",now=t,dt=.05,running=running})
+		end
+		frame(1,false);for lane=1,3 do assert(not props.tags[lane].board.Enabled,"not before GO")end
+		frame(1.05,true);assert(props.tags[1].mode=="racing"and props.tags[1].alpha<1,"fades in")
+		for i=1,6 do frame(1.05+i*.05,true)end
+		local tag=props.tags[1]
+		assert(tag.alpha==1 and tag.flag.Visible and tag.label.Text=="Racing"and not tag.board.AlwaysOnTop and tag.board.MaxDistance==Props.RacingReach)
+		frame(2,true,true);for i=1,5 do frame(2+i*.05,true,true)end
+		assert(not props.tags[2].board.Enabled and props.tags[1].board.Enabled,"out when that pet is home")
+		r.done()
+	end)
+	test("Props.tiers: odd lanes low, even lanes a tier up, and two that touch push the farther one up; none is hidden",function()
+		local tiers=Props.tiers({{lane=1,x=0,y=100,w=80,away=1},{lane=2,x=40,y=100,w=80,away=2},{lane=3,x=80,y=100,w=80,away=3}})
+		assert(tiers[1]==0 and tiers[2]==1 and tiers[3]==1+1,"lane 3 meets lane 1 at tier 0 and is the farther: up past lane 2 too")
+		tiers=Props.tiers({{lane=1,x=0,y=100,w=80,away=5},{lane=3,x=10,y=100,w=80,away=1}})
+		assert(tiers[1]==1 and tiers[2]==0,"the farther goes up")
+		tiers=Props.tiers({{lane=1,x=0,y=100,w=80},{lane=3,x=300,y=100,w=80}})
+		assert(tiers[1]==0 and tiers[2]==0)
 	end)
 	test("ceiling off: nil; switch off: no instances, no hooks, nothing stepped",function()
 		Dash.inject({flags={},studio=true});assert(Client.mount({})==nil)
@@ -219,9 +286,17 @@ return function(client,offline)
 		r.fire({kind="zoom",r="old",tick=41})
 		r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=2,us=41000000})
 		assert(not device.bound and r.inputs[#r.inputs].k=="dashUp"and screen.rest and r.room.held,"the finish is still on screen")
-		r.client.seat.cardAt=-1;r.frame(20);assert(card.options.name=="Results"and card.options.title=="You finished 2nd!"and card.lines[3]=="")
-		r.saved={paid=1,limit=5,best=41000000,last={op="x",stars=2}};r.frame(20);assert(card.lines[3]=="+2 Stars (1 of 5 today)")
+		r.client.seat.cardAt=-1;r.frame(20)
+		assert(card.options.name=="Results"and card.options.sheet=="results"and card.model.headline=="You finished 2nd!"and card.model.earned.state=="saving")
+		assert(card.options.place==2 and card.options.buttons[1].name=="Again"and card.options.buttons[2].name=="Done"and card.options.back,"no close key: Done is the way out")
+		r.saved={paid=1,limit=5,best=41000000,last={op="x",stars=2}};r.frame(20)
+		assert(card.model.earned.state=="paid"and card.model.earned.stars==2 and card.model.earned.done==1 and card.model.best=="41.0"and card.updates==1)
+		r.frame(20);assert(card.updates==1,"the same receipt is not sent twice")
+		-- The roster says results (the race is over for everyone): Done sinks this player's hoops at once.
+		r.roster({v=1,phase="results",raceId=r.id,mode="fun",goAt=r.goAt,plan=r.plan,seats={{seat=1,userId=7,petId="pip"}},queue={}})
+		assert(r.client.props.want==1,"a racer's hoops stay up through their own results")
 		card:pick("Done");r.free("done")
+		assert(r.client.props.want==0,"Done: an onlooker now, so the hoops sink")
 		r.done()
 	end)
 	test("Race again and back; the results close themselves",function()

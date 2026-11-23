@@ -1,11 +1,18 @@
 -- Results content in the existing device's exact three LCD regions. This module
 -- owns no wallet write, camera, shell, viewport size or transaction clock.
+-- Beta 12 QA U7 (DASH-DECK-UI-LOOK), only while DeckLook.on() (the beta and Studio): the See you tomorrow strip (v2)
+-- across the whole LCD under the panes, which give up 54 pt for it; the payout restyled (rows at 22, stat gains as
+-- coloured rows with a level pill); in the stack layout the four actions compacted to 128 pt (Replay, Difficulty,
+-- Hatch | Leave) with their own gamepad moves (DeckResultsLayout). Off: every path below is the one before.
 local Run=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Copy=require(Shared.UICopy)
 local Kit=require(script.Parent.DeckKit)
 local C=require(script.Parent.CelebrationKit)
 local Balls=require(Shared.BallThemes)
+local Look=require(Shared.DeckLook)
+local Layout=require(script.Parent.DeckResultsLayout)
+local StatCatalog=require(Shared.StatCatalog)
 local View={};View.__index=View
 local ORDER={1,3,5,2} -- Replay, difficulty, Hatch eggs, Back to garden.
 local function text(parent,name,value,size,color)
@@ -64,6 +71,14 @@ function View.new(owner,v)
  local root=Instance.new("Frame");root.Name="InPlaceResults";root.Size=UDim2.fromScale(1,1);root.BackgroundTransparency=1;root.BorderSizePixel=0;root.ClipsDescendants=true;root.ZIndex=50;root.Parent=owner.host;self.root=root;Kit.paint(root,"BackgroundColor3","well")
  local l,r=v.left,v.right
  local m=if l.h==r.h and l.y==r.y then{x=v.center.x,y=l.y,w=v.center.w,h=l.h}else v.center
+ -- U7 (v3): with the strip on, the panes give up its row and the strip runs under all three.
+ self.v3=Look.on()
+ self.stripOn=self.v3 and owner.tomorrowModel~=nil and owner:tomorrowModel()~=nil
+ if self.v3 then
+  local panes=Layout.panes(l,m,r,self.stripOn)
+  l,m,r=panes.left,panes.middle,panes.right
+  self.stripBox=panes.strip
+ end
  self.regions={left=l,right=r,middle=m}
  self.left=pane(root,"PayoutRegion",l);self.right=pane(root,"OutcomeRegion",r);self.middle=pane(root,"StarRegion",m)
  self.payout=scroll(self.left,"PayoutRows");self.goals=scroll(self.right,"Goals")
@@ -71,6 +86,12 @@ function View.new(owner,v)
  self.grid=r.w>=176 and r.h>=2*44+4+12+70
  local actionHeight=if self.grid then 2*44+4 else 4*44+3*4
  self.scrollActions=not self.grid and r.h<actionHeight+68
+ -- U7 (v3): the stack compacted to 128 pt (164 when Hatch and Leave cannot share a row).
+ if self.v3 and not self.grid then
+  self.compact=Layout.actions(r.w,{Copy.get("results.inPlace.hatchShort"),Copy.get("results.leave.narrow")},function(value,size)return Kit.measure(value,"Button",size).X end)
+  actionHeight=self.compact.total
+  self.scrollActions=false
+ end
  self.actions=self.scrollActions and scroll(self.right,"ResultActions")or Instance.new("Frame")
  if not self.scrollActions then
   self.actions.Name="ResultActions";self.actions.BackgroundTransparency=1;self.actions.BorderSizePixel=0;self.actions.ZIndex=self.right.ZIndex+2;self.actions.Parent=self.right
@@ -113,8 +134,25 @@ function View.new(owner,v)
  local cell=math.floor((r.w-12-4)/2)
  for i,id in ipairs(ORDER)do
   local size=if self.grid then Vector2.new(cell,44)else Vector2.new(math.max(44,r.w-12),44)
-  local button=Kit.button(self.actions,"Action"..id,{text=names[id],size=size,textSize=if self.grid or r.w<150 then 13 else 15,selectable=false,variant=if id==1 then "primary"else nil})
-  button.Position=if self.grid then UDim2.fromOffset(((i-1)%2)*(cell+4),math.floor((i-1)/2)*48)else UDim2.fromOffset(self.scrollActions and 6 or 0,(i-1)*48)
+  local button
+  local row=self.compact and self.compact.rows[id]
+  if row then
+   -- U7 (v3): Replay primary at 15; the cream keys with a 3 pt lip, radius 10, at 13 (or 11 to fit a half).
+   button=Kit.button(self.actions,"Action"..id,{text=names[id],size=Vector2.new(row.w,row.h),textSize=if id==1 then 15 else self.compact.textSize,selectable=false,
+    variant=if id==1 then "primary"else nil,lip=if id==1 then nil else 3,radius=if id==1 then nil else 10,compact=true})
+   button.Position=UDim2.fromOffset(row.x,row.y)
+   if id==3 then
+    -- Difficulty steps: a soft chevron 12 pt in from each side.
+    for side,glyph in pairs({[-1]="‹",[1]="›"})do
+     local mark=Kit.text(button,"Strong",glyph,"soft",{Name="Step",AnchorPoint=Vector2.new(if side<0 then 0 else 1,.5),
+      Position=UDim2.new(if side<0 then 0 else 1,side*-12,.5,0),Size=UDim2.fromOffset(12,row.h),TextSize=18,TextXAlignment=Enum.TextXAlignment.Center})
+     mark.TextColor3=Color3.fromHex("#4A4972");mark.ZIndex=button.ZIndex+6;Kit.fixedText(mark)
+    end
+   end
+  else
+   button=Kit.button(self.actions,"Action"..id,{text=names[id],size=size,textSize=if self.grid or r.w<150 then 13 else 15,selectable=false,variant=if id==1 then "primary"else nil})
+   button.Position=if self.grid then UDim2.fromOffset(((i-1)%2)*(cell+4),math.floor((i-1)/2)*48)else UDim2.fromOffset(self.scrollActions and 6 or 0,(i-1)*48)
+  end
   button:SetAttribute("ResultAction",id)
   self.buttons[id]=button
   button.Activated:Connect(function()owner.focus=id;self:paintFocus();self:activate(id)end)
@@ -123,11 +161,13 @@ function View.new(owner,v)
  local narrow=m.w<180
  self.headlineSize=if narrow then 24 else 30
  self.headline=if narrow then headline(self.middle,self.headlineSize)else C.banner(self.middle,{size=self.headlineSize,rotation=-3})
- self.headline.root.Position=UDim2.fromOffset(math.floor(m.w/2),if narrow then 28 else 36)
+ -- U7 (v3) with the strip on: the headline, name and Star's band move up so the Star stays about 80 pt.
+ local tight=self.stripOn and narrow
+ self.headline.root.Position=UDim2.fromOffset(math.floor(m.w/2),if tight then 26 elseif narrow then 28 else 36)
  self.title=self.headline.label -- the headline's own label (specs and callers read .Text)
- self.subtitle=labelAt(self.middle,"RoundTitle","",12,"soft",8,if narrow then 50 else 64,m.w-16,18);self.subtitle.TextXAlignment=Enum.TextXAlignment.Center;self.subtitle.TextWrapped=false;self.subtitle.TextTruncate=Enum.TextTruncate.AtEnd
- local top=if narrow then 70 else 86
- local foot=if narrow then 64 else 76
+ self.subtitle=labelAt(self.middle,"RoundTitle","",12,"soft",8,if tight then 46 elseif narrow then 50 else 64,m.w-16,18);self.subtitle.TextXAlignment=Enum.TextXAlignment.Center;self.subtitle.TextWrapped=false;self.subtitle.TextTruncate=Enum.TextTruncate.AtEnd
+ local top=if tight then 58 elseif narrow then 70 else 86
+ local foot=if tight then 52 elseif narrow then 64 else 76
  local starSize=math.max(36,math.min(m.w*.62,(m.h-top-foot)*.78,128))
  self.star=C.star(self.middle,starSize,{mesh=owner.options.starMesh~=false,cleanMaterial=true})
  self.star.root.Position=UDim2.fromOffset(math.floor(m.w/2),math.floor(top+(m.h-top-foot)/2))
@@ -142,6 +182,83 @@ function View:reduced()
  local value=self.owner.options.reduce
  return(type(value)=="function"and value()==true)or value==true or Kit.reduced()
 end
+-- U7 (v3): the payout pane restyled. Rows at 22, the total in Stars, today's line only without the strip, the stat
+-- gains as rows (a dot and the name in the stat's colour, the gain, a "Lv n" pill on a level-up); the strip under all
+-- three panes.
+function View:paintPayoutV3(data,pad,lw)
+ self.payoutTitle.Text=string.upper(self.payoutTitle.Text);self.payoutTitle.TextSize=11;self.payoutTitle.Position=UDim2.fromOffset(pad,8)
+ local nameWidth=lw-2*pad-self.amountWidth-4
+ local y=28
+ for i,row in ipairs(self.rows)do
+  local item=data.rows and data.rows[i]
+  local amount=self.amounts[i]
+  row.Visible=item~=nil;amount.Visible=item~=nil
+  if item then
+   row.Text=item.name
+   amount.Text=(if item.signed then "+"else "")..tostring(item.amount)
+   local height=math.max(22,math.ceil(Kit.measure(row.Text,"BodyMedium",row.TextSize,nameWidth).Y*row.LineHeight)+2)
+   row.Position=UDim2.fromOffset(pad,y);row.Size=UDim2.fromOffset(nameWidth,height)
+   amount.Position=UDim2.fromOffset(lw-pad-self.amountWidth,y);amount.Size=UDim2.fromOffset(self.amountWidth,22)
+   y+=height
+  end
+ end
+ if not data.pending and(data.earned or 0)==0 then
+  self.rows[1].Visible=true;self.rows[1].Text=Copy.get("results.inPlace.noStars");self.rows[1].Size=UDim2.fromOffset(lw-2*pad,40)
+  self.amounts[1].Visible=false;y=28+44
+ end
+ self.rule.Position=UDim2.fromOffset(pad,y+2);self.rule.Size=UDim2.fromOffset(lw-2*pad,1)
+ self.total.Position=UDim2.fromOffset(pad,y+8);self.total.TextSize=15
+ self.total.Text=Copy.get("results.inPlace.total",{count=if data.pending then "…"else data.total or data.earned or 0})
+ y+=8+24
+ self.today.Visible=not self.stripOn
+ if self.today.Visible then
+  self.today.Position=UDim2.fromOffset(pad,y);self.today.Text=Copy.get("results.today.line",{count=data.todayEarned or 0});y+=18
+ end
+ self.statsTitle.Visible=false;self.statsGains.Visible=false
+ local parts=data.stats or {}
+ self.statRows=self.statRows or {}
+ y+=14
+ for i=1,math.max(#parts,#self.statRows)do
+  local part=parts[i]
+  local row=self.statRows[i]
+  if part and not row then
+   local frame=Kit.frame(self.payout,"StatGain"..i,nil,UDim2.new(),UDim2.fromOffset(lw-2*pad,18))
+   local dot=Kit.frame(frame,"Dot",nil,UDim2.fromOffset(0,4),UDim2.fromOffset(10,10),999);dot.BackgroundTransparency=0
+   local name=Kit.text(frame,"BodyMedium","","text",{Name="Name",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(lw-2*pad-16,18),TextSize=12})
+   local gain=Kit.text(frame,"Strong","","text",{Name="Gain",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(40,18),TextSize=12});Kit.fixedText(gain)
+   local pill=Kit.frame(frame,"LevelUp",nil,UDim2.new(1,0,.5,0),UDim2.fromOffset(34,14),999);pill.AnchorPoint=Vector2.new(1,.5);pill.BackgroundTransparency=0
+   local lv=Kit.text(pill,"Title","","text",{Size=UDim2.fromScale(1,1),TextSize=10,TextXAlignment=Enum.TextXAlignment.Center});Kit.fixedText(lv)
+   lv.TextColor3=Color3.fromHex("#15143A")
+   row={frame=frame,dot=dot,name=name,gain=gain,pill=pill,lv=lv}
+   self.statRows[i]=row
+  end
+  if row then
+   row.frame.Visible=part~=nil
+   if part then
+    local stat=StatCatalog.ById[part.id]
+    local color=stat and stat.color or Color3.new(1,1,1)
+    row.frame.Position=UDim2.fromOffset(pad,y)
+    row.dot.BackgroundColor3=color
+    row.name.Text=Copy.get("stats.name."..part.id);row.name.TextColor3=color
+    local nameW=math.ceil(Kit.measure(row.name.Text,"BodyMedium",12).X)
+    row.gain.Text="+"..tostring(part.gain or 0);row.gain.Position=UDim2.fromOffset(16+nameW+6,0);row.gain.TextColor3=Color3.new(1,1,1)
+    row.pill.Visible=part.up==true and type(part.level)=="number"
+    if row.pill.Visible then row.pill.BackgroundColor3=color;row.lv.Text=Copy.get("bond.short",{count=part.level})end
+    y+=18
+   end
+  end
+ end
+ -- The strip under the three panes (the panes made room for it when the results opened).
+ local tomorrow=self.owner:tomorrowModel()
+ if tomorrow and self.stripBox then
+  local fresh=self.tomorrow==nil
+  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.root,{phone=true,z=self.root.ZIndex+3})end
+  local box=self.stripBox
+  self.tomorrow.root.Position=UDim2.fromOffset(box.x,box.y)
+  self.tomorrow:set(tomorrow,box.w)
+  if fresh then self.tomorrow:enter(self.owner.TomorrowDelay or 1,self:reduced())end
+ elseif self.tomorrow then self.tomorrow:destroy();self.tomorrow=nil end
+end
 function View:paint(data)
  self.data=data
  local headline,missed=self.owner.headline(data)
@@ -152,6 +269,7 @@ function View:paint(data)
  self.subtitle.Text=data.title or "Round"
  self.wallet.set(data.balance or 0)
  local pad=10;local lw=self.view.left.w
+ if self.v3 then self:paintPayoutV3(data,pad,lw)else
  local nameWidth=lw-2*pad-self.amountWidth-4
  local y=30
  for i,row in ipairs(self.rows)do
@@ -197,6 +315,7 @@ function View:paint(data)
   self.tomorrow:set(tomorrow,lw-2*pad)
   if fresh then self.tomorrow:enter(self.owner.TomorrowDelay or 1,self:reduced())end
  elseif self.tomorrow then self.tomorrow:destroy();self.tomorrow=nil end
+ end -- the payout before v3
  local rw=self.view.right.w
  local tight=self.tightGoals==true
  local gy=if tight then 21 else 28;local done,count=0,0
@@ -217,8 +336,8 @@ function View:paint(data)
  self.metrics.Position=UDim2.fromOffset(pad,gy+2);self.metrics.Text=Copy.get("results.inPlace.metrics",{score=data.score or 0,best=data.best or 0,chain=data.chain or 0})
  Kit.setText(self.buttons[1],Copy.get(if data.pending then "results.saved.pending"else "results.inPlace.replay"))
  Kit.setText(self.buttons[3],data.nextDifficulty or data.difficulty or "Medium")
- Kit.setText(self.buttons[5],Copy.get("results.inPlace.hatch"))
- Kit.setText(self.buttons[2],Copy.get(if self.grid or self.view.right.w<145 then "results.leave.narrow"else "results.leave.wide"))
+ Kit.setText(self.buttons[5],Copy.get(if self.compact and self.compact.paired then "results.inPlace.hatchShort"else "results.inPlace.hatch"))
+ Kit.setText(self.buttons[2],Copy.get(if self.grid or self.view.right.w<145 or(self.compact and self.compact.paired)then "results.leave.narrow"else "results.leave.wide"))
  for id,button in pairs(self.buttons)do Kit.setEnabled(button,if id==2 then data.canLeave~=false else not data.pending)end
  self.saved.Text=Copy.get(if data.pending then "results.saved.pending"else "results.saved.done")
  self.star.setMode(if self.owner.zeroPayout(data)then "glass"else "gold")
@@ -245,6 +364,18 @@ function View:move(dx,dy)
  if dx~=0 and self.owner.focus==3 then
   local callback=self.owner.callbacks.heatShift
   if callback and not self.data.pending then callback(dx);return true end
+ end
+ -- U7 (v3): the compact stack's own moves (Difficulty down to Hatch, Hatch and Leave side by side, up to Difficulty).
+ if self.compact then
+  local target=Layout.move(self.owner.focus,dx,dy,self.compact.paired)
+  if target then
+   local state=Kit.buttonState(self.buttons[target])
+   if target~=self.owner.focus and state and state.enabled then
+    self.owner.focus=target;self:paintFocus()
+    if self.owner.options.audio then self.owner.options.audio:play("aim",1,.3)end
+   end
+   return true
+  end
  end
  local at=table.find(ORDER,self.owner.focus)or 1
  local delta=if dy~=0 then math.sign(dy)else math.sign(dx)

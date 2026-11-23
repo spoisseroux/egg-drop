@@ -1,7 +1,7 @@
 -- Garden Dash poses (V3-DASH-BUILD-PLAN-2026-11-22, slice S7). Puts a garden pet on the course for this frame: the run,
 -- the hop, the tumble (Reduced Motion: a sit), the puff, the finish. Visual only, through the GardenPetVisual levers
 -- ParkPetPose uses; nothing here reads a clock or makes an instance, a table or a closure a frame.
-local Course=require(game:GetService("ReplicatedStorage").Shared.DashCourse)
+local Grid=require(game:GetService("ReplicatedStorage").Shared.DashGrid)
 local Follow=require(script.Parent.PetFollow)
 local Pose={}
 local TAU=math.pi*2
@@ -26,8 +26,9 @@ function Pose.clear(visual)
 	Follow.rest(visual)
 end
 -- cs, onStones, lane as Sim.spot. flags: air, tumble, stumble, puff, zoom, dash, finished. running: the race is on.
-function Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced)
-	local x,y,z,yaw=Course.at(cs,onStones,lane)
+-- count: the racers in the heat (DashGrid centres the lanes on them).
+function Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced,count)
+	local x,y,z,yaw=Grid.at(cs,onStones,lane,count)
 	local k=(visual.worldScale or Pose.StudScale)/Pose.StudScale
 	local dx,dz=x-state.x,z-state.z
 	local moved=if state.placed then math.sqrt(dx*dx+dz*dz)else 0
@@ -97,5 +98,65 @@ function Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced)
 		lift+=h*(1-math.cos(pitch))
 	end
 	visual.origin=Vector3.new(x,y+lift,z)
+end
+
+-- Beta 12 U3 and U6: the pet on the sheets' stage (DashStage), at the origin facing the camera's side (yaw 0).
+Pose.TreadSpeed=6.75 -- studs a second: a 100% pace at the Fun level
+Pose.PodiumHop=3     -- seconds between the happy hops on the podium
+-- The run cycle on the spot (the mode picker). Reduced Motion: standing, idle.
+function Pose.treadmill(visual,state,dt,reduced)
+	visual.reducedEffects=reduced==true
+	visual.gardenPivot,visual.gardenFocus=false,false
+	visual.yaw=0;visual.activitySit=false
+	visual.carePitch,visual.careBodyLower,visual.careHand,visual.careHeadPitch,visual.careFootForward=0,0,0,0,0
+	if reduced then
+		visual.parkPose=true
+		visual.gaitWeight,visual.movementBob,visual.travelSpeed=0,0,0
+		visual.expression="curious"
+	else
+		visual.parkPose=false
+		local speed=Pose.TreadSpeed*(visual.worldScale or Pose.StudScale)/Pose.StudScale
+		visual.travelSpeed=speed
+		visual.gaitWeight=1
+		visual.gaitPhase=((visual.gaitPhase or 0)+math.min(speed*dt/Follow.stride(speed,visual.worldScale),dt*Follow.CadenceCap)*TAU)%TAU
+		visual.movementBob=Follow.bob(visual,reduced)
+		visual.expression="joy"
+	end
+	visual.origin=Vector3.zero
+end
+-- Pure: the podium's lift in studs at `age` seconds for a finish `place` (k = the pet's size). 1st to 3rd: two hops,
+-- then one every PodiumHop s; lower: one hop. Reduced Motion: none.
+function Pose.podiumLift(age,place,k,reduced)
+	if reduced or age<0 then return 0 end
+	local hops=if place<=3 then 2 else 1
+	local u=age/Pose.JumpSeconds
+	if u<hops then return Pose.JumpHeight*k*math.abs(math.sin(math.pi*u))end
+	if place>3 then return 0 end
+	-- A hop at the end of every PodiumHop seconds after the first ones.
+	local phase=(age-hops*Pose.JumpSeconds)%Pose.PodiumHop
+	local start=Pose.PodiumHop-Pose.JumpSeconds
+	if phase<start then return 0 end
+	return Pose.JumpHeight*.6*k*math.sin(math.pi*(phase-start)/Pose.JumpSeconds)
+end
+-- The finish pose on the results stage: hops, then a happy idle (a wag of the head for 4th and lower). Never sad.
+-- Reduced Motion: sitting and smiling.
+function Pose.podium(visual,state,dt,place,reduced)
+	state.podiumAge=(state.podiumAge or 0)+dt
+	local age=state.podiumAge
+	local k=(visual.worldScale or Pose.StudScale)/Pose.StudScale
+	visual.reducedEffects=reduced==true
+	visual.gardenPivot,visual.gardenFocus=false,false
+	visual.yaw=0;visual.parkPose=true
+	visual.gaitWeight,visual.movementBob,visual.travelSpeed=0,0,0
+	visual.carePitch,visual.careBodyLower,visual.careHand,visual.careHeadPitch,visual.careFootForward=0,0,0,0,0
+	visual.expression="joy"
+	visual.activitySit=reduced==true
+	visual.careHeadRoll=0
+	if not reduced and place>3 and age>Pose.JumpSeconds then
+		local wag=(age-Pose.JumpSeconds)%Pose.PodiumHop
+		if wag<1 then visual.careHeadRoll=.14*math.sin(wag*TAU*2)end
+	end
+	visual.poseDirty=true
+	visual.origin=Vector3.new(0,Pose.podiumLift(age,place,k,reduced),0)
 end
 return Pose

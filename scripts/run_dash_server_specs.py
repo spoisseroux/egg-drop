@@ -26,11 +26,13 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Beta (12) QA quick fixes: pet catch-up (G1), the fresh-save key switch (T1), finds near the player (G2).
          "PetCatchup", "CatchupConfig", "GardenState", "ProgressKey", "FreshSave", "FindsState", "FindsHost",
          # Garden life round 3 and the nest remodel (beta 12 QA O2): the nest's spot and the pets kept off it.
-         "NestSpot"]
+         "NestSpot",
+         # Beta (12) QA Dash and Deck UI: the start grid (U5).
+         "DashGrid"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
-CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient",
+CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient", "DashSheets", "DeckResultsLayout", "FocusRow", "TipChime",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
           "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit"]
 SPECS += CLIENT
@@ -56,7 +58,7 @@ def client_modules():
                     "BearNeeds.lua", "NeedBubble.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
                     "JournalPromptPriority.lua", "FirstSpendGuide.lua",
                     # Onboarding v3 D+E: the nest in the garden and the See you tomorrow strip.
-                    "NestClient.lua", "TomorrowStrip.lua",
+                    "NestClient.lua", "TomorrowStrip.lua", "DeckResultsLayout.lua", "FocusRow.lua", "TipChime.lua",
                     # Garden hour E: the pet mood rules and the face that feeds them.
                     "PetFace.lua", "PetExpression.lua", "PetIdleBeats.lua", "PetCoo*.lua", "CareFeedbackData.lua",
                     "PetNightSurfaces.lua", "PetMaterial*.lua"):

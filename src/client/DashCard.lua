@@ -6,8 +6,12 @@
 --   button Enter and a gamepad start on (the first one by itself).
 --   strip=<TomorrowStrip model> (Onboarding v3 slice E): the See you tomorrow strip between the lines and the buttons.
 -- Enter / A press the first (or the selected) button; B, Backspace or the round key go back.
+-- Beta 12 U3 / U6: sheet="gate" | "results" draws DashGateSheet or DashResultsSheet on this shell instead (the shade,
+-- the binding, the close and the rebuild on a resize stay here); a sheet may set card.sheetStep (once a frame while
+-- open), card.stage (destroyed with the card) and card.inputAt (no press before it).
 local ContextActionService=game:GetService("ContextActionService")
 local GuiService=game:GetService("GuiService")
+local RunService=game:GetService("RunService")
 local UserInputService=game:GetService("UserInputService")
 local Kit=require(script.Parent.DeckKit)
 local UICopy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
@@ -29,7 +33,11 @@ function Card.layout(W,H,lineH,buttons,strip)
 	for index,height in ipairs(lineH)do lines[index]={y=y,h=height};y+=height+2 end
 	y+=10
 	local stripY,stripH=nil,0
-	if strip then stripY,stripH=y,if compact then 36 else 44;y+=stripH+(if compact then 6 else 8)end
+	if strip then
+		local Strip=require(script.Parent.TomorrowStrip)
+		stripY,stripH=y,if compact then Strip.phoneHeight(Strip.v2())else Strip.Height.desktop
+		y+=stripH+(if compact then 6 else 8)
+	end
 	local gap=10
 	local bw=math.floor((w-pad*2-gap*(buttons-1))/math.max(1,buttons))
 	return{compact=compact,pad=pad,w=w,h=math.min(H-8,y+bh+pad),titleH=titleH,lineW=w-pad*2,lines=lines,buttonY=y,bw=bw,bh=bh,gap=gap,text=if compact then 15 else 17,
@@ -82,6 +90,14 @@ function Card.open(options)
 		self:close()
 		return nil
 	end
+	if options.sheet then
+		self.stepConnection=RunService.RenderStepped:Connect(function(dt)
+			local step=self.sheetStep
+			if not step or self.closed then return end
+			local fine,trouble=pcall(step,dt)
+			if not fine then warn("[Dash] sheet: "..tostring(trouble));self.sheetStep=nil end
+		end)
+	end
 	ContextActionService:BindActionAtPriority(Card.Action,function(_,state,input)
 		local Confirm=require(script.Parent.ConfirmDialog)
 		if Confirm.isOpen()then return Enum.ContextActionResult.Pass end
@@ -92,12 +108,34 @@ function Card.open(options)
 	end,false,Card.Priority,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter)
 	return self
 end
+function Card:reduced()
+	local value=self.options.reduced
+	return(type(value)=="function"and value()==true)or Kit.reduced()==true
+end
+function Card:rebuild()
+	if self.closed then return end
+	local ok,problem=pcall(self.build,self)
+	if not ok then warn("[Dash] card: "..tostring(problem));self:back()end
+end
+-- A results sheet takes a newer model (the saved receipt).
+function Card:update(model)
+	if self.closed or self.options.sheet~="results"then return end
+	require(script.Parent.DashResultsSheet).update(self,model)
+end
 function Card:build()
 	local options=self.options
+	if self.stage then pcall(self.stage.destroy,self.stage);self.stage=nil end
+	if self.strip and self.strip.destroy then pcall(self.strip.destroy,self.strip)end
+	self.strip=nil
 	if self.panel then self.panel:Destroy();self.panel=nil end
 	table.clear(self.buttons);table.clear(self.lines)
 	local size=self.root.AbsoluteSize
 	local W,H=math.max(320,size.X),math.max(240,size.Y)
+	if options.sheet then
+		self.sheetStep=nil
+		require(script.Parent[if options.sheet=="gate"then "DashGateSheet"else "DashResultsSheet"]).build(self,W,H)
+		return
+	end
 	local layout=if options.low then Card.lowLayout else Card.layout
 	-- The strip rides the centred card only (the low card has no room for it).
 	local strip=if not options.low then options.strip else nil
@@ -150,6 +188,7 @@ end
 function Card:press(index)
 	local spec=self.options.buttons[index]
 	if self.closed or not spec then return end
+	if self.inputAt and os.clock()<self.inputAt then return end
 	self:close()
 	spec.act()
 end
@@ -163,6 +202,9 @@ function Card:close()
 	self.closed=true
 	ContextActionService:UnbindAction(Card.Action)
 	if self.connection then self.connection:Disconnect()end
+	if self.stepConnection then self.stepConnection:Disconnect();self.stepConnection=nil end
+	self.sheetStep=nil
+	if self.stage then pcall(self.stage.destroy,self.stage);self.stage=nil end
 	pcall(Kit.shadeClose,self)
 	local selected=GuiService.SelectedObject
 	if selected and selected:IsDescendantOf(self.gui)then GuiService.SelectedObject=nil end

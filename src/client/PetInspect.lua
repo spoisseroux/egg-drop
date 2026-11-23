@@ -208,6 +208,9 @@ function Inspect:reach(entry,from)
  if not visual or visual.destroyed or not entry.board or not entry.root or not entry.root.Parent then return nil end
  local mode=entry.board:GetAttribute("Mode")
  if mode~="Room"and mode~="Board"then return nil end
+ -- Beta 12 G4: a pet in a Garden Dash race takes no prompt or tap from onlookers.
+ local racing=self.options.racing
+ if racing and racing(visual.model and visual.model:GetAttribute("CompanionOwnerId"))then return nil end
  local d=visual.origin-from
  if math.abs(d.Y)>Rules.HeightReach then return nil end
  return Vector2.new(d.X,d.Z).Magnitude

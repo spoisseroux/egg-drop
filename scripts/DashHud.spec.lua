@@ -30,6 +30,24 @@ return function(client)
 			assert(l.zoneJump.x<=l.jump.x and l.zoneDash.w>=l.dash.x+l.dash.w)
 		end
 	end)
+	test("beta 12 U4: the pads' lips on screen, the place pill just left of the strip, the digits high, key caps by input",function()
+		for _,screen in ipairs(SCREENS)do
+			local W,H=screen[1],screen[2]
+			local l=Hud.layout(W,H)
+			for _,name in ipairs({"jump","dash"})do assert(l[name].y+l[name].h+Hud.Lip<=H,name.." lip at "..W.."x"..H)end
+			assert(l.place.x+l.place.w+8==l.strip.x and l.place.x>=Hud.Margin and l.place.w==Hud.PlaceW and l.place.h==Hud.PlaceH,"place beside the strip at "..W)
+			assert(math.abs((l.place.y+l.place.h/2)-(l.strip.y+l.strip.h/2))<=1 and l.strip.h==Hud.StripH)
+			assert(apart(l.strip,l.leave)and apart(l.place,l.leave))
+			local centre=l.digits.y+l.digits.h/2
+			assert(math.abs(centre-H*Hud.DigitsAt)<=1 or l.digits.y==l.strip.y+l.strip.h+6,"digits at 26% at "..W.."x"..H)
+			assert(l.digits.y+l.digits.h<=l.word.y,"over the GO word")
+			-- The key cap sits over the pad's top right, clear of the bar and the stones key above.
+			assert(l.bar.y+l.bar.h<=l.dash.y-Hud.Cap+Hud.CapIn and l.stones.y+l.stones.h<=l.jump.y-Hud.Cap+Hud.CapIn)
+		end
+		local jump,dash=Hud.capWords(true,false);assert(jump==""and dash=="","no caps on touch")
+		jump,dash=Hud.capWords(false,true);assert(jump=="A"and dash=="RT")
+		jump,dash=Hud.capWords(false,false);assert(jump=="Space"and dash=="Shift")
+	end)
 	test("the ring closes on the pad as the hoop comes, and is larger for a first race",function()
 		assert(Hud.ring(nil)==nil and Hud.ring(Hud.RingTicks+1)==nil and Hud.ring(-20)==nil)
 		assert(Hud.ring(0)==1 and Hud.ring(-5)==1)

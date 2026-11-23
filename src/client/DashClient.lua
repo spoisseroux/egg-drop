@@ -19,6 +19,7 @@ local Dash=require(Shared.Dash)
 local Wire=require(Shared.DashWire)
 local Sim=require(Shared.DashSim)
 local Course=require(Shared.DashCourse)
+local Grid=require(Shared.DashGrid)
 local Stats=require(Shared.DashStats)
 local UICopy=require(Shared.UICopy)
 local Predict=require(script.Parent.DashPredict)
@@ -42,6 +43,7 @@ Client.ResultAfter=1.3
 Client.ResultSeconds=20
 Client.StaleSeconds=12 -- no result this long after the race must be over: let go
 Client.PromptReach=10
+Client.TagLift=2 -- studs over a racing pet's origin: its tag's anchor (DashProps)
 Client.LIVE=table.freeze({countdown=true,race=true,results=true})
 local CS=Stats.UnitsPerCs
 local NONE=table.freeze({})
@@ -276,13 +278,48 @@ function Client:gate()
 	-- Just for Fun to begin with; after that, whatever this player raced last.
 	local picked=1
 	if not self:newRacer()and self.last then picked=if self.last.kind=="trial"then 3 elseif self.last.mode=="stats"then 2 else 1 end
-	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Gate",title=UICopy.get("dash.title"),low=true,selected=picked,
-		lines={UICopy.get("dash.gate.line"),UICopy.get("dash.gate.modes")},
-		buttons={{name="Fun",text=UICopy.get("dash.fun"),primary=picked==1,act=go("join","fun")},
-			{name="Stats",text=UICopy.get("dash.stats"),primary=picked==2,act=go("join","stats")},
-			{name="Trial",text=UICopy.get("dash.trial"),primary=picked==3,act=go("trial")}}})
+	-- Beta 12 U3: the mode picker sheet (DashGateSheet): the pet on its stage, its race stats, three tiles.
+	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Gate",title=UICopy.get("dash.title"),sheet="gate",selected=picked,
+		reduced=self.d.reduced,gate=self:gateData(),lines={},
+		buttons={{name="Fun",text=UICopy.get("dash.fun"),sub=UICopy.get("dash.sub.fun"),primary=picked==1,act=go("join","fun")},
+			{name="Stats",text=UICopy.get("dash.stats"),sub=UICopy.get("dash.sub.stats"),primary=picked==2,act=go("join","stats")},
+			{name="Trial",text=UICopy.get("dash.trial"),sub=UICopy.get("dash.sub.trial"),primary=picked==3,act=go("trial")}}})
 	if not self.card then self:notify("dash.reason.other");return end
 	self.card.gate=true
+end
+-- The shown pet as the sheets draw it: catalogue entry, appearance and name (beta 12 U3, U6).
+function Client:petInfo()
+	local shown=self.d.roomView.shownPet
+	local petId=shown and shown.id
+	local pet=require(Shared.PetCatalog).byId[petId or ""]
+	local function ask(fn,...)
+		if type(fn)~="function"then return nil end
+		local ok,value=pcall(fn,...)
+		return if ok then value else nil
+	end
+	return pet,ask(self.d.appearance,petId),ask(self.d.petName,self.userId,petId)or(pet and pet.name)or""
+end
+-- What the mode picker shows (DashGateSheet): the pet, its race stats and band (Levels on), today's Stars races
+-- (prizes on), the best Time Trial.
+function Client:gateData()
+	local pet,appearance,name=self:petInfo()
+	local data={pet=pet,appearance=appearance,name=name}
+	local state=self.d.state()
+	local shown=self.d.roomView.shownPet
+	local stats=type(state)=="table"and type(state.petStats)=="table"and type(state.petStats.pets)=="table"and shown and state.petStats.pets[shown.id]or nil
+	local level=type(stats)=="table"and type(stats.level)=="table"and stats.level or nil
+	if level then
+		data.levels={}
+		for _,id in ipairs(Stats.Order)do data.levels[id]=Stats.level(level[id])end
+		local band=Stats.Bands[Stats.band(data.levels)]
+		data.band=UICopy.get("dash.band",{band=UICopy.get("stats.tier."..band.id),level=Stats.dashLevel(data.levels)})
+	end
+	local saved=self:saved()
+	if Dash.prizes()then
+		data.prizes=UICopy.get("things.dash.prizes",{done=saved and type(saved.paid)=="number"and saved.paid or 0,total=saved and type(saved.limit)=="number"and saved.limit or 5})
+	end
+	if saved and type(saved.best)=="number"then data.best=UICopy.get("dash.bestShort",{best=Results.seconds(saved.best)})end
+	return data
 end
 -- While the gate card is open the camera shows the course from the side. Any way the card goes gives it back.
 function Client:gateShot()
@@ -348,7 +385,10 @@ function Client:event(packet)
 		elseif kind=="zoom"then
 			if seat.predict:zoom(packet.tick)then self:say("dash.zoom")end
 		elseif kind=="judged"then
-			if seat.predict.serverRender then self:say(if packet.result==1 then "dash.perfect"elseif packet.result==2 then "dash.clear"else "dash.trip")end
+			if seat.predict.serverRender then
+				self:say(if packet.result==1 then "dash.perfect"elseif packet.result==2 then "dash.clear"else "dash.trip")
+				if packet.result==1 and self.hud then self.hud:flash()end
+			end
 		elseif kind=="result"then
 			seat.phase,seat.result,seat.cardAt="done",packet,os.clock()+Client.ResultAfter
 			if self.input then self.input.close()end
@@ -391,6 +431,7 @@ function Client:lock(packet)
 	seat.track={cs=0,pace=0,tick=-1,flags=NONE,draw=0}
 	local mine=self:saved()
 	seat.before=mine and mine.last and mine.last.op
+	seat.bestBefore=mine and mine.best
 	seat.first=self:newRacer()
 	seat.hints=if seat.first then Hints.new()else nil
 	self.raced=true
@@ -419,7 +460,10 @@ function Client:endSeat()
 	if seat and seat.predict and self.props then
 		local heat=self.heat
 		if not heat then pcall(self.props.hide,self.props)
-		elseif heat.raceId~=seat.raceId then pcall(self.props.show,self.props,heat.plan,self.d.reduced())end
+		elseif heat.raceId~=seat.raceId then pcall(self.props.show,self.props,heat.plan,self.d.reduced())
+		-- Done (or the card closing itself) during this race's results: an onlooker now, and onlookers' hoops are only up
+		-- while the race runs (beta 12 G4).
+		elseif heat.phase=="results"then pcall(self.props.hide,self.props)end
 	end
 end
 
@@ -442,6 +486,8 @@ function Client:readRoster()
 		if not(self.seat and self.seat.predict)then self.props:show(roster.plan,self.d.reduced())end
 	end
 	heat.phase=roster.phase
+	-- Beta 12 G4: an onlooker's hoops are up only while the race runs (countdown and race), not through the results.
+	if heat.phase=="results"and not(self.seat and self.seat.predict and self.seat.raceId==heat.raceId)then self.props:hide()end
 	table.clear(heat.byUser)
 	for _,place in ipairs(roster.seats)do
 		if type(place)~="table"or type(place.seat)~="number"then continue end
@@ -523,7 +569,7 @@ function Client:heatStep(dt,now,reduced)
 				made=true -- one a frame
 				local pet=require(Shared.PetCatalog).byId[track.petId]
 				local ok,value=pcall(function()
-					local x,y,z=Course.at(0,false,track.lane)
+					local x,y,z=Grid.at(0,false,track.lane,heat.plan.count)
 					return require(script.Parent.PetFactory).create(workspace,Vector3.new(x,y,z),pet,0,0,false,nil,{priority=1})
 				end)
 				if ok then
@@ -537,10 +583,10 @@ function Client:heatStep(dt,now,reduced)
 			end
 			if visual then
 				local cs,onStones=Client.spot(track.draw,track.flags.stones)
-				Pose.step(visual,track.state,cs,onStones,track.lane,track.flags,heat.running,dt,reduced)
+				Pose.step(visual,track.state,cs,onStones,track.lane,track.flags,heat.running,dt,reduced,heat.plan.count)
 				visual.cosmeticTime=now
 				visual:update(dt)
-				self.props:tagAt(track.seat,visual.origin+Vector3.yAxis*2)
+				self.props:tagAt(track.seat,visual.origin+Vector3.yAxis*Client.TagLift,{lane=track.lane,pal=true,finished=track.flags.finished==true})
 			end
 		elseif track.visual then self:dropPal(track)end
 	end
@@ -550,7 +596,7 @@ end
 function Client:say(key)if self.hud then self.hud:say(UICopy.get(key))end end
 function Client:ensureHud()
 	if self.hud then return end
-	self.hud=require(script.Parent.DashHud).new(self.d.playerGui,{leave=function()self:askLeave()end})
+	self.hud=require(script.Parent.DashHud).new(self.d.playerGui,{leave=function()self:askLeave()end,reduced=function()return self.d.reduced()==true end})
 	local Confirm=require(script.Parent.ConfirmDialog)
 	self.core=RaceInput.Core.new({
 		press=function(kind)
@@ -559,6 +605,7 @@ function Client:ensureHud()
 			if not packet or not self.inputRemote then return false end
 			self.inputRemote:FireServer(packet)
 			if kind=="dashDown"then self.d.audio:play("streak_whoosh",1.1,.3)elseif kind=="jump"then self.d.audio:play("drop",1.2,.3)end
+			if self.hud then self.hud:press(kind)end
 			return true
 		end,
 		blocked=function()return GuiService.MenuIsOpen or Confirm.isOpen()or UserInputService:GetFocusedTextBox()~=nil end})
@@ -586,7 +633,7 @@ function Client:hold(seat)
 		self.holding,self.shot=true,false
 		self:ensureHud()
 		self.camera:reset()
-		self.hud:show(seat.first)
+		self.hud:show(seat.first,seat.plan)
 		if seat.home then self.hud:rest(seat.phase=="done")end
 	elseif not want and self.holding then
 		self.holding=false
@@ -641,7 +688,7 @@ function Client:raceStep(seat,dt,now,reduced)
 		local entry=NEWS[news]
 		hud:say(UICopy.get(entry[1]))
 		self.d.audio:play(entry[2],entry[3],.4)
-		if news=="clover"then self.props:pick(seat.lane)end
+		if news=="clover"then self.props:pick(seat.lane)elseif news=="perfect"then hud:flash()end
 	end
 	local racing=seat.phase=="race"and not flags.finished
 	if racing then self.input.open();self.core:step()else self.input.close()end
@@ -661,7 +708,7 @@ function Client:raceStep(seat,dt,now,reduced)
 		hud:setHint(if hint then UICopy.get("dash.hint."..hint)else nil)
 		if seat.hints.done then seat.hints=nil;hud:setHint(nil)end
 	end
-	hud:setBar(r.bar/r.cap,flags.puff)
+	hud:setBar(r.bar/r.cap,flags.puff,flags.dash==true and racing)
 	local gap=Course.Fork*CS-r.pos
 	hud:setStones(racing and not r.forked and not r.wants and gap>0 and gap<=r.step*Sim.SignpostTicks)
 	hud:setDot(seat.index,1-Client.left(raw,flags.stones)/Course.Length,true)
@@ -678,12 +725,20 @@ function Client:raceStep(seat,dt,now,reduced)
 		if racing then hud:setPlace(place)end -- home: everyone at 0 left would read 1st
 	end
 	hud:step(dt)
-	self.camera:step(dt,seat.cs,seat.onStones,seat.lane,flags.stones==true,flags.dash==true and seat.phase=="race",reduced)
+	local count=seat.plan and seat.plan.count
+	self.camera:step(dt,seat.cs,seat.onStones,seat.lane,flags.stones==true,flags.dash==true and seat.phase=="race",reduced,count)
 	local c=self.camera
-	local eye=Vector3.new(c.ex,c.ey,c.ez)
-	local px,py,pz=Course.at(seat.cs,seat.onStones,seat.lane)
+	local eye,look=Vector3.new(c.ex,c.ey,c.ez),Vector3.new(c.lx,c.ly,c.lz)
+	-- Beta 12 U5: the line-up shot until GO, easing to the rail camera.
+	local k=RaceCamera.lineupBlend(-until_,reduced)
+	if k<1 then
+		local view=workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize
+		local ex,ey,ez,lx,ly,lz=RaceCamera.lineup(if view and view.Y>0 then view.X/view.Y else nil)
+		eye=Vector3.new(ex,ey,ez):Lerp(eye,k);look=Vector3.new(lx,ly,lz):Lerp(look,k)
+	end
+	local px,py,pz=Grid.at(seat.cs,seat.onStones,seat.lane,count)
 	self.fade:step(dt,eye,Vector3.new(px,py+.8,pz),seat.cs,seat.onStones==true)
-	room:dashCamera(CFrame.lookAt(eye,Vector3.new(c.lx,c.ly,c.lz)),c.fov)
+	room:dashCamera(CFrame.lookAt(eye,look),c.fov)
 end
 function Client:showResults(seat)
 	seat.cardAt=nil
@@ -693,12 +748,35 @@ function Client:showResults(seat)
 	-- Onboarding v3 slice E: the See you tomorrow strip (nil with the nest off).
 	local strip=nil
 	if self.d.strip then local ok,model=pcall(self.d.strip);if ok then strip=model end end
-	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,
+	-- Beta 12 U6: the results sheet (DashResultsSheet). No close key: Race again or Done; B and Backspace are Done.
+	local pet,appearance=self:petInfo()
+	seat.names=self:fieldNames(seat)
+	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,sheet="results",
+		model=self:resultModel(seat),pet=pet,appearance=appearance,place=tonumber(seat.result.place)or 4,reduced=self.d.reduced,selected=1,
 		buttons={{name="Again",text=UICopy.get("dash.again"),primary=true,act=function()
 			self:endSeat()
 			if not self.pending then self:send(if seat.trial then "trial"else "join",if seat.trial then nil else seat.mode)end
 		end},{name="Done",text=UICopy.get("dash.done"),act=done}},back=done})
-	if self.card then self.card.results=true else done()end -- no card: never a race nobody can put away
+	if self.card then
+		self.card.results=true
+		self.card.modelKey=Results.key(self.card.options.model)
+	else done()end -- no card: never a race nobody can put away
+end
+function Client:resultModel(seat)
+	return Results.model(seat.result,self:saved(),seat.before,{prizes=Dash.prizes(),bestBefore=seat.bestBefore,names=seat.names})
+end
+-- The names the field chips show, by seat: the tags' names (your pet, the players' pets, the pals).
+function Client:fieldNames(seat)
+	local names={}
+	local heat=self.heat
+	if heat and heat.raceId==seat.raceId then
+		for index,track in pairs(heat.tracks)do
+			names[index]=track.tagText or(if track.pal then palName(track.name)else nil)
+		end
+	end
+	if seat.index then names[seat.index]=seat.tagText or select(3,self:petInfo())end
+	for index in pairs(names)do if names[index]==""then names[index]=nil end end
+	return names
 end
 
 -- Four times a second: the prompt, the line at the gate, pings, the saved receipt.
@@ -721,8 +799,13 @@ function Client:slowStep(now)
 	if not seat or seat.phase~="done"then return end
 	if seat.cardAt and clock>=seat.cardAt and not d.modalOpen()then self:showResults(seat)
 	elseif self.card and self.card.results and not self.card.closed then
-		local _,lines=Results.words(seat.result,self:saved(),seat.before)
-		for index,text in ipairs(lines)do self.card:setLine(index,text)end
+		-- The saved receipt (Stars, the best) lands on the open card.
+		local model=self:resultModel(seat)
+		local key=Results.key(model)
+		if self.card.modelKey~=key then
+			self.card.modelKey=key
+			if self.card.update then self.card:update(model)end
+		end
 		if clock>=seat.closeAt then self:endSeat()end
 	end
 end
@@ -756,7 +839,12 @@ function Client:frame(dt,now)
 	self.props:step(dt)
 	self.props:balloon(now,reduced)
 	local pet=self.d.roomView.pet
-	if self.heat then self.props:placeTags(pet and pet.origin,self.project)end
+	local heat=self.heat
+	if heat then
+		local racer=seat~=nil and seat.predict~=nil and seat.raceId==heat.raceId
+		self.props:placeTags(pet and pet.origin,self.project,{viewer=if racer then "racer"else "onlooker",now=now,dt=dt,reduced=reduced,
+			namesUntil=if racer then heat.goAt+Props.NamesAfterGo else nil,running=heat.running==true and heat.phase=="race"})
+	end
 end
 -- RoomView's RenderStepped, before the pets are posed.
 function Client:step(dt,now)
@@ -772,16 +860,18 @@ function Client:racing(userId)
 end
 function Client:place(visual,ownerId,dt,reduced)
 	local seat,heat=self.seat,self.heat
-	local cs,onStones,lane,flags,running
+	local cs,onStones,lane,flags,running,count
 	if ownerId==self.userId then
 		-- The owner's own pet: from the prediction, until the results are put away.
 		if not seat or not seat.predict or seat.cs==nil then return false end
 		cs,onStones,lane,flags,running=seat.cs,seat.onStones,seat.lane,self.ownFlags,seat.predict:started()
+		count=seat.plan and seat.plan.count
 	else
 		local track=heat and heat.byUser[ownerId]
 		if not track then return false end
 		cs,onStones=Client.spot(track.draw,track.flags.stones)
 		lane,flags,running=track.lane,track.flags,heat.running==true
+		count=heat.plan and heat.plan.count
 	end
 	local state=visual.dashState
 	if not state then
@@ -789,8 +879,28 @@ function Client:place(visual,ownerId,dt,reduced)
 		visual.dashState=state
 		Pose.begin(visual,state)
 	end
-	Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced)
+	Pose.step(visual,state,cs,onStones,lane,flags,running,dt,reduced,count)
+	self:tagPet(visual,ownerId,lane,flags)
 	return true
+end
+-- Beta 12 U5 / G4: a racing player's pet tells its seat's tag where it is (and its name, once). Player pets have no
+-- anchor of their own: this is the only place their tag moves, and a tag nothing moved this frame hides (DashProps).
+function Client:tagPet(visual,ownerId,lane,flags)
+	local index,track
+	if ownerId==self.userId then index=self.seat and self.seat.index
+	else
+		track=self.heat and self.heat.byUser[ownerId]
+		index=track and track.seat
+	end
+	if type(index)~="number"or not self.props then return end
+	local named=if track then track else self.seat
+	if named.tagText==nil then
+		local petId=if track then track.petId else(self.d.roomView.shownPet and self.d.roomView.shownPet.id)
+		local ok,text=pcall(function()return self.d.petName and self.d.petName(ownerId,petId)end)
+		named.tagText=if ok and type(text)=="string"then text else""
+		self.props:tag(index,named.tagText)
+	end
+	self.props:tagAt(index,visual.origin+Vector3.yAxis*Client.TagLift,{lane=lane,mine=ownerId==self.userId,finished=flags.finished==true})
 end
 -- True when the race drew this pet this frame. Anything else, and the garden draws it as before.
 function Client:drive(visual,ownerId,dt,reduced)

@@ -107,6 +107,12 @@ local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_
 table.insert(cues,"hatch_finish")
 -- Only newly reviewed v3 timestamped SFX are eligible here. Rejected/held
 -- music and superseded 6s/4s bursts are never mapped by this owner.
+-- Beta 12 S2: the new-tip chime's slot (TipChime). No voice until it has an id: play() answers false.
+do
+ local id=require(script.Parent.TipChime).SoundId
+ Audio.PendingCues.tip_chime=true
+ if id then assetIds.tip_chime=id;table.insert(cues,"tip_chime")end
+end
 for _,kind in ipairs({"bear","toy","hue","material","feature"})do
  local id=DisplayAssets.Audio["hatch_"..kind]
  if id then local cue="hatch_display_"..kind;assetIds[cue]=id;table.insert(cues,cue)end

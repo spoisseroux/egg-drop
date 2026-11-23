@@ -35,6 +35,8 @@ local HueCatalog=require(ReplicatedStorage.Shared.HueCatalog)
 local BondPips=require(script.Parent.BondPips)
 local BondCatalog=require(ReplicatedStorage.Shared.BondCatalog)
 local Levels=require(ReplicatedStorage.Shared.Levels)
+local StatCatalog=require(ReplicatedStorage.Shared.StatCatalog)
+local function statKey(stat)return if stat then stat.id..":"..stat.level else nil end -- the focus card's stat chip (beta 12 U2)
 local NameText=require(script.Parent.PetNameText)
 local PetIdleBeats=require(script.Parent.PetIdleBeats)
 
@@ -159,6 +161,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
  -- QA v685 R6: inspect and greet a visitor's pet (read-only card; PetInspect.lua).
  self.inspect=require(script.Parent.PetInspect).new({companions=self.companions,garden=self.garden,reduce=reduceEffects,parent=gui.Parent,
   ownPet=function()return self.pet end,
+  racing=function(userId)return type(userId)=="number"and self.dash~=nil and self.dash:racing(userId)==true end,
   canOpen=function()
    return not self.destroyed and self.mode=="Room"and self.target=="Room"and not self.focusing and not self.busy and not self.focusTransitioning
     and not self.menuOpen and not self.overlayOpen()and(self.canRoam==nil or self.canRoam()==true)
@@ -320,7 +323,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		self.nameClock=(self.nameClock or 0)-dt
 		if self.nameClock<=0 then
 			self.nameClock=.25
-			if self:shownName()~=self.bondNameShown or self:heartLevel()~=self.heartShown then self:syncBond(false)end
+			if self:shownName()~=self.bondNameShown or self:heartLevel()~=self.heartShown
+				or(self.heartShown and statKey(self:topStat())~=self.statShown)then self:syncBond(false)end
 		end
 		if self.park then
 			local character=Players.LocalPlayer.Character;local root=character and character:FindFirstChild("HumanoidRootPart")
@@ -549,13 +553,22 @@ function Room:trickLevel(info,heart)
 	if heart==nil then return info.shown end
 	return math.max(info.shown,BondCatalog.trickLevel(info.xp,heart))
 end
--- The focus card: the shown pet's name and pips (hidden without bond data), or its Heart level.
+-- The shown pet's top stat for the focus card's chip, nil without stats or while the track is off.
+function Room:topStat()
+	if not self.shownPet or not Levels.on("track")then return nil end
+	local state=if self.nameState then self.nameState()else nil
+	local stats=type(state)=="table"and state.petStats
+	local entry=type(stats)=="table"and type(stats.pets)=="table"and stats.pets[self.shownPet.id]or nil
+	return StatCatalog.top(type(entry)=="table"and entry.level or nil)
+end
+-- The focus card: the shown pet's name and pips (hidden without bond data), or its top stat chip.
 function Room:syncBond(animate)
 	if not self.focusUI or not self.focusUI.setBond then return end
 	local info=self:bondInfo()
 	local name=self:shownName();self.bondNameShown=name
 	local heart=self:heartLevel();self.heartShown=heart
-	self.focusUI:setBond(if self.shownPet and(info or heart)then {name=name,bond=info,heart=heart}else nil,animate)
+	local stat=if heart then self:topStat()else nil;self.statShown=statKey(stat)
+	self.focusUI:setBond(if self.shownPet and(info or heart)then {name=name,bond=info,heart=heart,stat=stat}else nil,animate)
 end
 -- The shown pet's given name (v2 pet names), or its species name without one.
 function Room:shownName()

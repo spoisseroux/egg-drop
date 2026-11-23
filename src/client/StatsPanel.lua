@@ -171,6 +171,49 @@ function Panel.heartChip(parent,compact)
  api.set(nil)
  return api
 end
+-- Beta 12 QA U2 (DASH-DECK-UI-LOOK): the focus card's stat chip, for the pet's top stat. 22 tall:
+-- `6 | icon 14 | 4 | word | 5 | level disc 18 | 2`, the word in the stat's colour lightened 60% to white, the level in a
+-- filled disc of the stat's colour (a pill for two digits) so "Heart 1" reads "Heart, level 1". Small phones drop the
+-- word: `6 | icon 14 | 5 | disc 18 | 2`. Pure geometry in FocusRow.chip.
+Panel.ChipH=22
+Panel.DiscH=18
+Panel.statChipLayout=require(script.Parent.FocusRow).chip
+function Panel.lighten(color,share)return color:Lerp(Color3.new(1,1,1),share or .6)end
+-- {root, disc, width, set(id, level, small)}.
+function Panel.statChip(parent)
+ local root=Kit.frame(parent,"StatChip","well",UDim2.new(),UDim2.fromOffset(60,Panel.ChipH),999)
+ Kit.setSurface(root,"dark")
+ local ring=Kit.node("UIStroke",root,{Name="ChipRing",Thickness=1.5,Color=Catalog.ById.heart.color,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+ local icons={}
+ local word=Kit.text(root,"Strong","",Kit.Color.white,{Name="StatWord",TextSize=12,TextTruncate=Enum.TextTruncate.AtEnd})
+ local disc=Kit.frame(root,"LevelDisc",nil,UDim2.new(),UDim2.fromOffset(Panel.DiscH,Panel.DiscH),999);disc.BackgroundTransparency=0
+ local number=Kit.text(disc,"Title","",Kit.Color.white,{Name="Level",Size=UDim2.fromScale(1,1),TextSize=12,TextXAlignment=Enum.TextXAlignment.Center})
+ number.TextColor3=Color3.fromHex("#15143A");Kit.fixedText(number)
+ local api={root=root,disc=disc,width=60,height=Panel.ChipH}
+ function api.set(id,level,small)
+  root.Visible=type(level)=="number"
+  if not root.Visible then root:SetAttribute("StatLevel",nil);return end
+  local stat=Catalog.ById[id]or Catalog.ById.heart
+  for key,image in pairs(icons)do image.Visible=key==stat.id end
+  if not icons[stat.id]then
+   local image=Panel.icon(root,stat.id,14);image.AnchorPoint=Vector2.new(0,.5);image.Position=UDim2.new(0,6,.5,0);icons[stat.id]=image
+  end
+  ring.Color=stat.color
+  local name=Panel.statName(stat.id)
+  word.Visible=small~=true
+  word.Text=name;word.TextColor3=Panel.lighten(stat.color)
+  local digits=tostring(level)
+  local g=Panel.statChipLayout(if small then nil else Kit.measure(name,"Strong",12).X,if #digits>1 then Kit.measure(digits,"Title",12).X else nil)
+  word.Position=UDim2.fromOffset(g.wordX or 0,0);word.Size=UDim2.new(0,math.max(0,g.discX-5-(g.wordX or 0)),1,0)
+  disc.Position=UDim2.fromOffset(g.discX,(Panel.ChipH-Panel.DiscH)/2);disc.Size=UDim2.fromOffset(g.discW,Panel.DiscH);disc.BackgroundColor3=stat.color
+  number.Text=digits
+  root.Size=UDim2.fromOffset(g.w,Panel.ChipH);api.width=g.w
+  root:SetAttribute("StatLevel",level);root:SetAttribute("StatId",stat.id)
+  root:SetAttribute("AccessibleLabel",UICopy.get("stats.levelUp",{name=name,count=level}))
+ end
+ api.set(nil)
+ return api
+end
 -- Pure: where the bonus tag goes in a tile and whether its word fits. Desktop: after the tier
 -- word; phone: bottom left, beside the "XP to" line. `room` is the free width there.
 function Panel.bonusFit(fullW,tagW,room)
