@@ -4633,6 +4633,14 @@ do
    busy=function()return clientUI.anyModalOpen()==true or How.isOpen()or Confirm.isOpen()or clientUI.arrivalHatch:isOpen()end,
    compact=function()local camera=workspace.CurrentCamera;return camera~=nil and math.min(camera.ViewportSize.X,camera.ViewportSize.Y)<500 end,
    chipHost=function()return if roomView.controls and roomView.controls.Parent then roomView.controls else nil end,
+   chipHidden=function()
+    local character=player.Character
+    local root=character and character:FindFirstChild("HumanoidRootPart")
+    return root~=nil and require(script.StationAttract).parkMember(root.Position)==true
+   end,
+   focus=function()
+    return roomView.focusing==true or roomView.focusTransitioning==true or(roomView.greetingCamera~=nil and roomView.greetingCamera~=false)
+   end,
    show=function()local things=clientUI.things;return things~=nil and things.show("nest")end,
    toast=function(text,stars)
     toaster=toaster or require(script.DeckKit).toaster(player:WaitForChild("PlayerGui"))
