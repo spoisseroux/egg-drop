@@ -23,3 +23,13 @@
 | nest-twigs.png | 107570749391882 |
 | straw-bed.png | 117260148385157 |
 | straw-wisps.png | 90480864928418 |
+
+## Dash UI icons (look/ui/icons)
+
+| File | Asset id |
+|---|---|
+| dash.png | 97429349017697 |
+| dash-white.png | 132239421086976 |
+| jump.png | 135761648509586 |
+| jump-white.png | 132916023122268 |
+| racing-flag.png | 97444903136843 |
