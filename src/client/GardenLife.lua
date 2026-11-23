@@ -4,7 +4,7 @@
 --
 -- mount() is nil with the build ceiling off (Alive.ceiling("life")). With the switch off only the Alive signal is
 -- connected and nothing exists. On: one folder EggDropLife in the workspace (birds 3 x 5 parts, butterflies 4 x 3,
--- three petal anchors and one bubble anchor, each with a ParticleEmitter), ONE Heartbeat at 30 Hz (15 at budget
+-- three petal anchors and two bubble anchors, each with a ParticleEmitter), ONE Heartbeat at 30 Hz (15 at budget
 -- level 1) and ONE BulkMoveTo a step; a part not in use is moved far away, never re-parented or resized.
 --   Parked (a hatch, the board out of Room mode, my own race): everything hidden, nothing simulated.
 --   A menu: bubbles stop starting; the rest goes on behind the shade.
@@ -31,24 +31,32 @@ Life.Hidden=CFrame.new(0,4096,0)
 Life.PetalReach=90 -- a crown farther than this from the camera drops no petals
 Life.PetalTexture="rbxassetid://112974880714881"
 Life.BubbleTexture="rbxassetid://77828632873187"
+-- LOOK-R2 5: drawn by scripts/draw_life_textures.py, uploaded 2026-11-22.
+Life.BirdEye="rbxassetid://127417519256529"
+Life.BirdWing="rbxassetid://81512459364906"
+Life.ButterflyWing="rbxassetid://108754043011076"
+Life.ButterflyWingM="rbxassetid://95949019207820" -- the mirror of ButterflyWing
 local hex=Color3.fromHex
 Life.Ink=hex("#24304F")
--- LOOK 1, picked by perch index % 3.
+Life.EyeInk=hex("#161C38")
+-- LOOK-R2 1, picked by perch index % 3; the wing is its decals' Color3.
 Life.BirdColours=table.freeze({
-	[0]=table.freeze({body=hex("#2A6BE0"),wing=hex("#1E4FB8"),beak=hex("#FF9F1C")}), -- Tide
-	[1]=table.freeze({body=hex("#FF7C6B"),wing=hex("#E2574C"),beak=hex("#FFD23F")}), -- Coral
-	[2]=table.freeze({body=hex("#FFD23F"),wing=hex("#F2A91E"),beak=hex("#FF7A1A")}), -- Sun
+	[0]=table.freeze({body=hex("#2A6BE0"),wing=hex("#173F9E"),beak=hex("#FF9F1C")}), -- Tide
+	[1]=table.freeze({body=hex("#FF7C6B"),wing=hex("#C93F3A"),beak=hex("#FFD23F")}), -- Coral
+	[2]=table.freeze({body=hex("#FFD23F"),wing=hex("#E08A10"),beak=hex("#FF7A1A")}), -- Sun
 })
 -- LOOK 2: Rose, Citrus, Iris, Tide; one of each while four are alive.
 Life.WingColours=table.freeze({hex("#FF327A"),hex("#FFCC00"),hex("#7A35F0"),hex("#0A4FD0")})
--- LOOK 4, by emitter slot: lime crowns (Aero on) or pink.
+-- LOOK-R2 3, by emitter slot: lime crowns (Aero on) or pink.
 Life.PetalColours=table.freeze({
-	lime=table.freeze({hex("#EFFFC4"),hex("#C8F26A"),hex("#FFF3A6")}),
-	pink=table.freeze({hex("#FFB8D6"),hex("#FF9FC8"),hex("#FFD9E8")}),
+	lime=table.freeze({hex("#FFF6C2"),hex("#FFE66B"),hex("#F4FFD0")}),
+	pink=table.freeze({hex("#FFB8D6"),hex("#FF8FBF"),hex("#FFE3EE")}),
 })
--- Petals leave downwind and a little down (no Acceleration: Speed along the wind, slowed by Drag).
-Life.PetalHeading=(Wind.Direction+Vector3.new(0,-.5,0)).Unit
-Life.PetalDrag=.4
+-- Petals leave downwind along the ground plane at Speed, slowed by Drag; LOOK-R2's small Acceleration sinks them to
+-- grass height over the life (round 1's downward heading on top of it would sink them twice, under the lawn).
+Life.PetalHeading=Wind.Direction
+Life.PetalDrag=.25
+Life.PetalSink=Vector3.new(0,-.5,0)
 -- Bubbles: rise .4 and drift 1.5 to 3 a second downwind.
 Life.BubbleHeading=(Wind.Direction*2.25+Vector3.new(0,Sim.BubbleRise,0)).Unit
 
@@ -76,6 +84,19 @@ local function part(folder,name,class,size,colour,shape)
 	return p
 end
 
+-- A see-through plate's decal (LOOK-R2: a Decal still draws on a part at Transparency 1).
+local function decal(p,face,texture,colour)
+	local d=Instance.new("Decal")
+	d.Name="Decal"..face.Name
+	d.Texture=texture
+	d.Face=face
+	d.Color3=colour
+	d.Transparency=0
+	d.ZIndex=1
+	d.Parent=p
+	return d
+end
+
 local function petalEmitter(anchor)
 	local e=Instance.new("ParticleEmitter")
 	e.Name="Petals"
@@ -85,28 +106,29 @@ local function petalEmitter(anchor)
 	e.LockedToPart=false
 	e.EmissionDirection=Enum.NormalId.Front
 	e.Shape=Enum.ParticleEmitterShape.Box
-	e.ShapeStyle=Enum.ParticleEmitterShapeStyle.Volume
+	e.ShapeStyle=Enum.ParticleEmitterShapeStyle.Surface
 	e.Orientation=Enum.ParticleOrientation.FacingCamera
-	e.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.20),NumberSequenceKeypoint.new(.10,.35,.07),NumberSequenceKeypoint.new(1,.30,.05)})
+	e.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.40),NumberSequenceKeypoint.new(.10,.68,.12),NumberSequenceKeypoint.new(1,.60,.10)})
 	e.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.08,.05),NumberSequenceKeypoint.new(.75,.05),NumberSequenceKeypoint.new(1,1)})
 	e.Squash=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.2,-.5),NumberSequenceKeypoint.new(.4,.1),
 		NumberSequenceKeypoint.new(.6,-.5),NumberSequenceKeypoint.new(.8,.1),NumberSequenceKeypoint.new(1,-.3)})
 	e.Rotation=NumberRange.new(0,360)
-	e.RotSpeed=NumberRange.new(-70,70)
-	e.LightEmission,e.LightInfluence,e.Brightness=0,1,1
+	e.RotSpeed=NumberRange.new(-120,120)
+	e.LightEmission,e.LightInfluence,e.Brightness=0,.5,1
 	e.ZOffset=0
-	e.Speed=NumberRange.new(1,2.5)
-	e.SpreadAngle=Vector2.new(35,35)
-	e.Lifetime=NumberRange.new(4.5,5.5)
+	e.Speed=NumberRange.new(3.5,6)
+	e.SpreadAngle=Vector2.new(25,25)
+	e.Lifetime=NumberRange.new(5,Sim.PetalLife)
 	e.Drag=Life.PetalDrag
-	e.Acceleration=Vector3.zero
+	e.Acceleration=Life.PetalSink
 	e.Parent=anchor
 	return e
 end
 
-local function bubbleEmitter(anchor)
+-- One fixed diameter per emitter (LOOK-R2 4): Size and Transparency are set here once and never again.
+local function bubbleEmitter(anchor,kind)
 	local e=Instance.new("ParticleEmitter")
-	e.Name="Bubbles"
+	e.Name=if kind=="small"then "BubblesSmall"else "BubblesLarge"
 	e.Texture=Life.BubbleTexture
 	e.Rate=0
 	e.Enabled=true
@@ -117,7 +139,7 @@ local function bubbleEmitter(anchor)
 	-- In over .4 s (1 to .10), out over the last .3 s of 9.
 	e.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.4/Sim.BubbleLife,.10),
 		NumberSequenceKeypoint.new(1-.3/Sim.BubbleLife,.10),NumberSequenceKeypoint.new(1,1)})
-	e.Size=NumberSequence.new(.75)
+	e.Size=NumberSequence.new(Sim.BubbleSizes[kind])
 	e.LightEmission,e.LightInfluence,e.Brightness=0,0,1
 	e.ZOffset=0
 	local drift=Sim.BubbleDrift
@@ -222,32 +244,47 @@ function Life:enable()
 	self.folder=folder
 	self.shown={}
 	self.birdPool,self.flyPool,self.petalPool={},{},{}
+	-- Birds (LOOK-R2 1): body, eyes (a cylinder along X, the eye decal on both round caps), beak, two wing plates.
+	local Face=Enum.NormalId
+	local white=Color3.new(1,1,1)
 	for slot=1,Sim.Caps.birds[1]do
 		local look=Life.BirdColours[0]
 		local name="LifeBird"..slot.."_"
+		local eyes=part(folder,name.."Eyes","Part",Vector3.new(1.18,.46,.46),Life.EyeInk,Enum.PartType.Cylinder)
+		decal(eyes,Face.Left,Life.BirdEye,white);decal(eyes,Face.Right,Life.BirdEye,white)
+		local wings={}
+		for i,side in ipairs({"WingL","WingR"})do
+			local plate=part(folder,name..side,"Part",Vector3.new(.04,.66,.46),false)
+			decal(plate,Face.Left,Life.BirdWing,look.wing);decal(plate,Face.Right,Life.BirdWing,look.wing)
+			wings[i]=plate
+		end
 		self.birdPool[slot]={
 			part(folder,name.."Body","Part",Vector3.new(1.2,1.2,1.2),look.body,Enum.PartType.Ball),
-			part(folder,name.."Eyes","Part",Vector3.new(1.2,.3,.3),Life.Ink,Enum.PartType.Cylinder),
-			part(folder,name.."Beak","WedgePart",Vector3.new(.26,.18,.34),look.beak),
-			part(folder,name.."WingL","Part",Vector3.new(.1,.62,.62),look.wing),
-			part(folder,name.."WingR","Part",Vector3.new(.1,.62,.62),look.wing),
+			eyes,
+			part(folder,name.."Beak","WedgePart",Vector3.new(.34,.26,.42),look.beak),
+			wings[1],wings[2],
 		}
 	end
+	-- Butterflies (LOOK-R2 2): body, two wing plates thin in Z; each wing's two faces carry the file and its mirror, so
+	-- from above and below the dark root touches the body and the larger lobe is forward.
 	for slot=1,Sim.Caps.butterflies[1]do
 		local wing=Life.WingColours[slot]
 		local name="LifeButterfly"..slot.."_"
-		self.flyPool[slot]={
-			part(folder,name.."Body","Part",Vector3.new(.1,.1,.46),Life.Ink),
-			part(folder,name.."WingL","Part",Vector3.new(.6,.04,.56),wing),
-			part(folder,name.."WingR","Part",Vector3.new(.6,.04,.56),wing),
-		}
+		local left=part(folder,name.."WingL","Part",Vector3.new(.70,.84,.02),false)
+		decal(left,Face.Back,Life.ButterflyWingM,wing);decal(left,Face.Front,Life.ButterflyWing,wing)
+		local right=part(folder,name.."WingR","Part",Vector3.new(.70,.84,.02),false)
+		decal(right,Face.Back,Life.ButterflyWing,wing);decal(right,Face.Front,Life.ButterflyWingM,wing)
+		self.flyPool[slot]={part(folder,name.."Body","Part",Vector3.new(.10,.10,.50),Life.Ink),left,right}
 	end
 	for slot=1,Sim.Caps.emitters[1]do
 		local anchor=part(folder,"LifePetals"..slot,"Part",Vector3.new(1,1,1),false)
 		self.petalPool[slot]={anchor=anchor,emitter=petalEmitter(anchor)}
 	end
-	local bubble=part(folder,"LifeBubbles","Part",Vector3.new(.2,.2,.2),false)
-	self.bubble={anchor=bubble,emitter=bubbleEmitter(bubble)}
+	self.bubblePool={}
+	for _,kind in ipairs({"small","large"})do
+		local anchor=part(folder,if kind=="small"then "LifeBubblesSmall"else "LifeBubblesLarge","Part",Vector3.new(.2,.2,.2),false)
+		self.bubblePool[kind]={anchor=anchor,emitter=bubbleEmitter(anchor,kind)}
+	end
 	self.birds=Sim.Birds.new(self.seed)
 	self.flies=Sim.Butterflies.new(self.seed+1)
 	self.petals=Sim.Petals.new()
@@ -276,7 +313,7 @@ function Life:disable()
 	if ambient and self.hook and ambient.onChirp==self.hook then ambient.onChirp=nil end
 	self.hook=nil
 	local folder=self.folder
-	self.folder,self.shown,self.birdPool,self.flyPool,self.petalPool,self.bubble=nil,nil,nil,nil,nil,nil
+	self.folder,self.shown,self.birdPool,self.flyPool,self.petalPool,self.bubblePool=nil,nil,nil,nil,nil,nil
 	self.birds,self.flies,self.petals,self.bubbles,self.picked=nil,nil,nil,nil,nil
 	if folder then folder:Destroy()end
 end
@@ -297,7 +334,7 @@ end
 
 function Life:clearEmitters()
 	for _,slot in ipairs(self.petalPool)do slot.emitter:Clear()end
-	self.bubble.emitter:Clear()
+	for _,slot in pairs(self.bubblePool)do slot.emitter:Clear()end
 	self.petals:clear()
 	self.bubbles:clear()
 end
@@ -402,14 +439,15 @@ function Life:step(dt)
 	for slot,n in ipairs(self.petals:step(now,tick,winds,Sim.cap("petals",level)))do
 		if n>0 then table.insert(emits,{self.petalPool[slot].emitter,n})end
 	end
-	-- Bubbles: one every 3 s ahead of the camera, never in a menu or with Reduced Motion, never in the way.
+	-- Bubbles: one every 3 s ahead of the camera, never in a menu or with Reduced Motion, never in the way. The roll
+	-- picks the small or the large emitter; only that one's anchor moves to the spot.
 	local menu=self.d.modalOpen and self.d.modalOpen()==true
 	if self.bubbles:due(now,Sim.cap("bubbles",level),not reduced and not menu)then
 		local spot=Sim.bubbleSpot(camera,self.bubbles.random,world)
 		if spot then
-			local size=self.bubbles:emit(now)
-			put(self.bubble.anchor,CFrame.lookAt(spot,spot+Life.BubbleHeading))
-			table.insert(emits,{self.bubble.emitter,1,size})
+			local slot=self.bubblePool[self.bubbles:emit(now)]
+			put(slot.anchor,CFrame.lookAt(spot,spot+Life.BubbleHeading))
+			table.insert(emits,{slot.emitter,1})
 		end
 	end
 	-- Wings: two poses swapped at 7.5 Hz (every 2 steps at 30 Hz, every step at 15 Hz); held at level 1.
@@ -436,10 +474,7 @@ function Life:step(dt)
 	for _,pool in ipairs(self.birdPool)do if not used[pool]then for _,p in ipairs(pool)do hide(p)end end end
 	if #parts>0 then self.move(parts,frames)end
 	-- After the move, so a bubble or a petal leaves from where its anchor now is.
-	for _,emit in ipairs(emits)do
-		if emit[3]then emit[1].Size=NumberSequence.new(emit[3])end
-		emit[1]:Emit(emit[2])
-	end
+	for _,emit in ipairs(emits)do emit[1]:Emit(emit[2])end
 end
 
 -- AmbientAudio calls this for each chirp it actually plays. A bird comes in to that perch's crown, or the one
@@ -464,7 +499,10 @@ function Life:chirp(perch,position,_cue)
 				bird.slot=slot
 				local look=Life.BirdColours[bird.colour]or Life.BirdColours[0]
 				local pool=self.birdPool[slot]
-				pool[1].Color,pool[3].Color,pool[4].Color,pool[5].Color=look.body,look.beak,look.wing,look.wing
+				pool[1].Color,pool[3].Color=look.body,look.beak
+				for _,plate in ipairs({pool[4],pool[5]})do
+					for _,d in ipairs(plate:GetChildren())do if d:IsA("Decal")then d.Color3=look.wing end end
+				end
 				break
 			end
 		end

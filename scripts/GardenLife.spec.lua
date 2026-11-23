@@ -2,7 +2,8 @@
 -- Heartbeat and world: nil with the ceiling off; the switch off is nothing but its signal; on is one folder of inert
 -- parts and one Heartbeat; off mid-flight destroys it all in that frame; parked (hatch, board, my race) hides
 -- everything and simulates nothing; Reduced Motion; budget level 2 shows nothing; a chirp lands a bird on that perch's
--- crown and the 4th is refused; bubbles refuse a station, a live course and a menu.
+-- crown and the 4th is refused; bubbles refuse a station, a live course and a menu; the round 2 look (LOOK-R2): decal
+-- plates with the uploaded textures, two fixed-size bubble emitters, the petal cap and gust burst.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.GardenLife)(PlayerScripts.Client); offline in
 -- scripts/run_dash_server_specs.py (DASH_SPECS="GardenLife").
 return function(client)
@@ -78,7 +79,7 @@ return function(client)
 			local folder=assert(r.folder())
 			assert(folder.Parent==r.world and #r.beat.list==1 and type(r.ambient.onChirp)=="function")
 			local parts=r.parts()
-			assert(#parts==3*5+4*3+3+1,"parts "..#parts)
+			assert(#parts==3*5+4*3+3+2,"parts "..#parts)
 			for _,p in ipairs(parts)do
 				assert(p.Anchored==true and p.CanCollide==false and p.CanQuery==false and p.CanTouch==false and p.CastShadow==false,p.Name)
 				assert(string.sub(p.Name,1,2)~="W7",p.Name)
@@ -229,12 +230,97 @@ return function(client)
 			assert(q.folder()==nil,"never back up")
 		end)
 
+		test("LOOK-R2 parts: 5 a bird, 3 a butterfly, the sizes, and decals with the uploaded ids on the named faces",function()
+			local r=rig()
+			local folder=r.folder()
+			local Face=Enum.NormalId
+			local function decals(p)
+				local out={}
+				for _,d in ipairs(p:GetChildren())do
+					if d.ClassName=="Decal"then
+						assert(d.Transparency==0 and d.ZIndex==1,p.Name)
+						out[d.Face]=d
+					end
+				end
+				return out
+			end
+			local function faces(p,want)
+				local got=decals(p)
+				local n=0
+				for _ in pairs(got)do n+=1 end
+				local m=0
+				for face,texture in pairs(want)do
+					m+=1
+					assert(got[face]and got[face].Texture==texture,p.Name..": "..tostring(face.Name))
+				end
+				assert(n==m,p.Name..": "..n.." decals")
+				return got
+			end
+			for slot=1,3 do
+				local name="LifeBird"..slot.."_"
+				local n=0
+				for _,p in ipairs(r.parts())do if string.sub(p.Name,1,#name)==name then n+=1 end end
+				assert(n==5,"bird parts "..n)
+				local eyes=folder:FindFirstChild(name.."Eyes")
+				assert(eyes.Size==Vector3.new(1.18,.46,.46)and eyes.Color==Life.EyeInk and eyes.Transparency==0)
+				for _,d in pairs(faces(eyes,{[Face.Left]=Life.BirdEye,[Face.Right]=Life.BirdEye}))do local c=d.Color3;assert(c.R==1 and c.G==1 and c.B==1,"a white eye decal")end
+				assert(folder:FindFirstChild(name.."Beak").Size==Vector3.new(.34,.26,.42))
+				assert(folder:FindFirstChild(name.."Body").Size==Vector3.new(1.2,1.2,1.2))
+				for _,side in ipairs({"WingL","WingR"})do
+					local plate=folder:FindFirstChild(name..side)
+					assert(plate.Size==Vector3.new(.04,.66,.46)and plate.Transparency==1,"a see-through plate")
+					faces(plate,{[Face.Left]=Life.BirdWing,[Face.Right]=Life.BirdWing})
+				end
+			end
+			for slot=1,4 do
+				local name="LifeButterfly"..slot.."_"
+				local n=0
+				for _,p in ipairs(r.parts())do if string.sub(p.Name,1,#name)==name then n+=1 end end
+				assert(n==3,"butterfly parts "..n)
+				assert(folder:FindFirstChild(name.."Body").Size==Vector3.new(.10,.10,.50))
+				local left,right=folder:FindFirstChild(name.."WingL"),folder:FindFirstChild(name.."WingR")
+				for _,plate in ipairs({left,right})do assert(plate.Size==Vector3.new(.70,.84,.02)and plate.Transparency==1)end
+				for _,d in pairs(faces(left,{[Face.Back]=Life.ButterflyWingM,[Face.Front]=Life.ButterflyWing}))do assert(d.Color3==Life.WingColours[slot])end
+				faces(right,{[Face.Back]=Life.ButterflyWing,[Face.Front]=Life.ButterflyWingM})
+			end
+			for _,id in ipairs({Life.BirdEye,Life.BirdWing,Life.ButterflyWing,Life.ButterflyWingM})do
+				assert(string.match(id,"^rbxassetid://%d+$"),id)
+			end
+			assert(Life.ButterflyWing~=Life.ButterflyWingM)
+			-- A landing paints the wing decals in that perch's colourway.
+			r.step(.1)
+			assert(r.life:chirp(2)=="land")
+			local bird=r.life.birds:find(2)
+			local look=Life.BirdColours[2%3]
+			local pool=r.life.birdPool[bird.slot]
+			assert(pool[1].Color==look.body and pool[3].Color==look.beak)
+			for _,plate in ipairs({pool[4],pool[5]})do for _,d in pairs(decals(plate))do assert(d.Color3==look.wing)end end
+		end)
+
+		test("bubbles: two emitters, one fixed Size each (never written again), the roll picks which one emits",function()
+			local r=rig()
+			local small=r.folder():FindFirstChild("LifeBubblesSmall")
+			local large=r.folder():FindFirstChild("LifeBubblesLarge")
+			assert(small and large and small.Transparency==1 and large.Transparency==1)
+			local es,el=small:FindFirstChild("BubblesSmall"),large:FindFirstChild("BubblesLarge")
+			assert(es and el and es.Rate==0 and el.Rate==0)
+			assert(Sim.BubbleSizes.small==.62 and Sim.BubbleSizes.large==.95 and Sim.BubbleSmall==.6)
+			local sizes,fades={es.Size,el.Size},{es.Transparency,el.Transparency}
+			r.step(90)
+			assert(rawequal(es.Size,sizes[1])and rawequal(el.Size,sizes[2]),"Size set once")
+			assert(rawequal(es.Transparency,fades[1])and rawequal(el.Transparency,fades[2]),"Transparency set once")
+			local a,b=es.emitted or 0,el.emitted or 0
+			assert(a>0 and b>0,"both used: "..a.." / "..b)
+			assert(a+b>=25 and a+b<=30,"one every 3 s: "..(a+b))
+			assert(r.life:counts().bubbles<=Sim.cap("bubbles",0))
+		end)
+
 		test("petals follow the wind under the cap, from lime-tinted emitters at the picked crowns",function()
 			local r=rig()
 			local most=0
 			for _=1,60 do r.step(1);most=math.max(most,r.life:counts().petals)end
 			assert(most>0,"a gust drops petals")
-			assert(most<=Sim.cap("petals",0))
+			assert(most<=Sim.cap("petals",0)and Sim.cap("petals",0)==40)
 			local shown=0
 			for slot=1,3 do
 				local anchor=r.folder():FindFirstChild("LifePetals"..slot)

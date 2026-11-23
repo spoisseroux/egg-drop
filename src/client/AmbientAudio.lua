@@ -228,7 +228,7 @@ local function group(name)
 end
 
 -- audio: the BoardAudio instance (master volume, focus, music toggle, ducks).
--- options: {world, data, perches, now, daylight, listener, auto=false, wind={on, gust} or false} (fixtures).
+-- options: {world, data, perches, now, daylight, listener, auto=false, wind={on, gust} or false, warn} (fixtures).
 function Ambient.new(audio, options)
 	options = options or {}
 	local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
@@ -238,7 +238,7 @@ function Ambient.new(audio, options)
 		bedClock = 0, stream = data.beams and data.beams.stream or {}, perches = options.perches or data.perches or require(script.Parent.AmbientPerches),
 		birds = Birds.new(options.seed or 1), voices = {}, owners = {}, connections = {},
 		now = options.now or os.clock, daylight = options.daylight or require(script.Parent.HollowClock).daylight,
-		listenerOf = options.listener, deviceActive = true, rustle = 0, rustleQuiet = 0,
+		listenerOf = options.listener, deviceActive = true, rustle = 0, rustleQuiet = 0, warn = options.warn or warn,
 	}, Ambient)
 	self.group = group("EggDropAmbientCues")
 	self.ambience = group("EggDropAmbience")
@@ -428,9 +428,13 @@ function Ambient:step(dt)
 	local events = self.birds:step(self.now(), listener, self.daylight(), self.perches, audible and not self.round and self.mix > .5)
 	for _, event in ipairs(events) do
 		-- Garden life (GardenLife) sets onChirp while it is on: a bird appears on the perch that was heard. Only for a
-		-- chirp that really played; a hook that throws is dropped and the sound goes on as before.
+		-- chirp that really played; a hook that throws is dropped (said once) and the sound goes on as before.
 		if self:chirp(event) and self.onChirp then
-			if not pcall(self.onChirp, event.perch, event.position, event.cue) then self.onChirp = nil end
+			local ok, problem = pcall(self.onChirp, event.perch, event.position, event.cue)
+			if not ok then
+				self.warn("[Life] chirp hook: " .. tostring(problem))
+				self.onChirp = nil
+			end
 		end
 	end
 	if self.wind and not pcall(self.stepRustle, self, dt, audible) then

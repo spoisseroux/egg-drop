@@ -151,7 +151,7 @@ return function(client, parent)
 		a:destroy();folder:Destroy();assert(ok, err)
 	end)
 
-	test("garden life's onChirp: called once per chirp that played, with its perch; nil or a throwing hook changes nothing", function()
+	test("garden life's onChirp: called once per chirp that played, with its perch; nil or a throwing hook changes nothing; a throw warns once", function()
 		local perches = {}
 		for i = 1, 8 do perches[i] = Vector3.new(i * 6, 12, 0) end
 		local shared = Ambient.shared -- the game's own, put back after each run
@@ -161,8 +161,10 @@ return function(client, parent)
 			function audio:duck() end
 			local folder = Instance.new("Folder");folder.Parent = parent or workspace
 			local clock = 0
+			local warned = {}
 			local a = Ambient.new(audio, { auto = false, world = folder, seed = 5, perches = perches, wind = false,
-				listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return clock end })
+				listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return clock end,
+				warn = function(text) table.insert(warned, text) end })
 			local played, calls = {}, {}
 			local chirp = a.chirp
 			a.chirp = function(self, event)
@@ -188,16 +190,19 @@ return function(client, parent)
 			end)
 			local hookAfter = a.onChirp
 			a:destroy();folder:Destroy();Ambient.shared = shared;assert(ok, err)
-			return played, calls, hookAfter
+			return played, calls, hookAfter, warned
 		end
-		local plain = run(nil)
-		local played, calls, kept = run(true)
+		local plain, _, _, quiet = run(nil)
+		local played, calls, kept, fine = run(true)
+		assert(#quiet == 0 and #fine == 0, "no warning without a throw")
 		assert(#played >= 6, "chirps played " .. #played)
 		assert(#calls == #played, "one call per played chirp: " .. #calls .. " / " .. #played)
 		assert(table.concat(plain, ",") == table.concat(played, ","), "the hook changes no chirp")
 		assert(type(kept) == "function")
-		local broke, thrown, after = run("throw")
+		local broke, thrown, after, warned = run("throw")
 		assert(#thrown == 1 and after == nil, "a hook that throws is dropped")
+		assert(#warned == 1 and string.find(warned[1], "[Life] chirp hook: ", 1, true) == 1 and string.find(warned[1], "hook broke", 1, true),
+			"said once: " .. tostring(warned[1]))
 		assert(table.concat(broke, ",") == table.concat(plain, ","), "and the birds sound the same")
 	end)
 

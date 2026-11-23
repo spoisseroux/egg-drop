@@ -1,9 +1,9 @@
--- Garden life, the maths (ALIVE-LIFE-BUILD-PLAN-2026-11-22; look numbers artifacts/alive-life-2026-11-22/LOOK.md).
+-- Garden life, the maths (ALIVE-LIFE-BUILD-PLAN-2026-11-22; look numbers artifacts/alive-life-2026-11-22/LOOK-R2.md, then LOOK.md).
 -- Pure: no instances, no clock, no services. GardenLife owns the parts and the one stepper and asks this what to show.
 -- Everything random comes from a Random seeded by the caller, so the same seed and the same calls give the same
 -- garden. Positions are Vector3, poses are CFrame; forward is -Z, up is +Y.
 --   petals       Petals:step(now, dt, winds, cap) -> how many to Emit at each emitter now
---   bubbles      Bubbles:due(now, cap, allowed), Sim.bubbleSpot(camera, random, world), Bubbles:emit(now)
+--   bubbles      Bubbles:due(now, cap, allowed), Sim.bubbleSpot(camera, random, world), Bubbles:emit(now) -> "small" | "large"
 --   butterflies  Butterflies:step(now, dt, world, patches, cap, still) -> the live ones
 --   birds        Birds:chirp(now, perch, landing, cap, world, reduced), Birds:step(now, dt, world, reduced)
 -- `world` is {camera = Vector3?, player = Vector3?, stations = {Vector3}, pad = {x, z, r}?, course = {x, z, ...}?
@@ -12,7 +12,7 @@ local Sim={}
 
 -- Caps by AliveBudget level 0, 1, 2 (level 1 halves every cap; level 2 shows nothing).
 Sim.Caps=table.freeze({
-	petals=table.freeze({24,12,0}),bubbles=table.freeze({8,4,0}),butterflies=table.freeze({4,2,0}),
+	petals=table.freeze({40,20,0}),bubbles=table.freeze({8,4,0}),butterflies=table.freeze({4,2,0}),
 	birds=table.freeze({3,2,0}),emitters=table.freeze({3,3,0}),
 })
 Sim.Hz=table.freeze({30,15}) -- steps a second at level 0 and 1
@@ -79,25 +79,30 @@ function Sim.clear(position,world,keep)
 	return true
 end
 
--- Petals (brief B4; LOOK 4) ------------------------------------------------------------------------------------
--- A second, at each emitter: none in the breeze (Wind.at's breeze is at most .25), 3 at a full gust.
-Sim.PetalPeak=3
+-- Petals (brief B4; LOOK-R2 3) ---------------------------------------------------------------------------------
+-- A second, at each emitter: none in the breeze (Wind.at's breeze is at most .25), 7 at a full gust.
+Sim.PetalPeak=7
 Sim.PetalCalm=.25
-Sim.PetalLife=5.5 -- the longest a petal lives (LOOK: 4.5 to 5.5 s), so the live count never undercounts
+Sim.PetalLife=6.5 -- the longest a petal lives (LOOK-R2: 5 to 6.5 s), so the live count never undercounts
+-- A gust burst: PetalBurst at once when an emitter's wind first passes BurstAt; again only after it fell below Rearm.
+Sim.PetalBurst=6
+Sim.PetalBurstAt=.6
+Sim.PetalRearm=.3
 function Sim.petalRate(at)
 	if type(at)~="number"or at~=at then return 0 end
 	return Sim.PetalPeak*math.clamp((at-Sim.PetalCalm)/(1-Sim.PetalCalm),0,1)
 end
 local Petals={};Petals.__index=Petals
 Sim.Petals=Petals
-function Petals.new()return setmetatable({live={},carry={}},Petals)end
+function Petals.new()return setmetatable({live={},carry={},spent={}},Petals)end
 function Petals:count(now)
 	local live=self.live
 	for i=#live,1,-1 do if live[i]<=now then table.remove(live,i)end end
 	return #live
 end
 -- winds[i]: Wind.at at emitter i, or false where there is no emitter. Returns {n1, n2, ...}: how many to Emit now.
--- At the cap the fraction carries but nothing piles up, so a lull never ends in a burst.
+-- At the cap the fraction carries but nothing piles up, so a lull never ends in a burst. The gust burst comes out of
+-- the same room (a burst the cap cut short is spent, not saved); an emitter with no crown re-arms.
 function Petals:step(now,dt,winds,cap)
 	local room=math.max(0,(cap or 0)-self:count(now))
 	local out={}
@@ -106,19 +111,25 @@ function Petals:step(now,dt,winds,cap)
 		local n=0
 		if at then
 			local carry=(self.carry[i]or 0)+Sim.petalRate(at)*dt
-			n=math.min(math.floor(carry),room)
-			carry-=math.floor(carry)
+			local want=math.floor(carry)
+			carry-=want
 			self.carry[i]=carry
+			if type(at)=="number"then
+				if not self.spent[i]and at>=Sim.PetalBurstAt then self.spent[i]=true;want+=Sim.PetalBurst
+				elseif self.spent[i]and at<Sim.PetalRearm then self.spent[i]=nil end
+			end
+			n=math.min(want,room)
 			room-=n
 			for _=1,n do table.insert(self.live,now+Sim.PetalLife)end
 		else
 			self.carry[i]=0
+			self.spent[i]=nil
 		end
 		out[i]=n
 	end
 	return out
 end
-function Petals:clear()table.clear(self.live);table.clear(self.carry)end
+function Petals:clear()table.clear(self.live);table.clear(self.carry);table.clear(self.spent)end
 
 -- Bubbles (brief B7; plan revision 3) --------------------------------------------------------------------------
 Sim.BubbleEvery=3
@@ -127,6 +138,9 @@ Sim.BubbleAhead=table.freeze({10,16}) -- studs in front of the camera
 Sim.BubbleSide=4
 Sim.BubbleRise=.4
 Sim.BubbleDrift=table.freeze({1.5,3})
+-- LOOK-R2 4: two emitters of one fixed diameter each (Size is never written after creation), 60% small.
+Sim.BubbleSizes=table.freeze({small=.62,large=.95})
+Sim.BubbleSmall=.6
 local Bubbles={};Bubbles.__index=Bubbles
 Sim.Bubbles=Bubbles
 function Bubbles.new(seed)return setmetatable({random=Random.new(seed or 1),live={},nextAt=nil},Bubbles)end
@@ -143,11 +157,10 @@ function Bubbles:due(now,cap,allowed)
 	self.nextAt=now+Sim.BubbleEvery
 	return allowed==true and self:count(now)<(cap or 0)
 end
--- Counts one in and returns its diameter (LOOK 3: 60% .5 to .75, 40% .75 to 1.1).
+-- Counts one in and returns which emitter it comes from: "small" (60%) or "large".
 function Bubbles:emit(now)
 	table.insert(self.live,now+Sim.BubbleLife)
-	local r=self.random
-	return if r:NextNumber()<.6 then r:NextNumber(.5,.75)else r:NextNumber(.75,1.1)
+	return if self.random:NextNumber()<Sim.BubbleSmall then "small"else "large"
 end
 function Bubbles:clear()table.clear(self.live);self.nextAt=nil end
 -- Where the next bubble starts: 10 to 16 studs ahead of the camera on the ground plane, up to 4 to a side, about
@@ -256,11 +269,13 @@ function Sim.butterflyFlap(b,now,flip,held)
 	if held then return math.rad(30)end
 	return math.rad(if flip then 60 else -15)
 end
--- Body, wing L, wing R (LOOK 2).
+-- Body, wing L, wing R (LOOK-R2 2). Each wing is a plate built standing (its Front/Back decals upright) and laid
+-- flat by the last -90 about X: image top forward, the Back face up.
+local flat90=CFrame.Angles(math.rad(-90),0,0)
 function Sim.butterflyParts(root,phi)
 	return{root,
-		root*CFrame.new(-.05,.03,0)*CFrame.Angles(0,0,-phi)*CFrame.new(-.30,0,0),
-		root*CFrame.new(.05,.03,0)*CFrame.Angles(0,0,phi)*CFrame.new(.30,0,0)}
+		root*CFrame.new(-.05,.03,0)*CFrame.Angles(0,0,-phi)*CFrame.new(-.35,0,0)*flat90,
+		root*CFrame.new(.05,.03,0)*CFrame.Angles(0,0,phi)*CFrame.new(.35,0,0)*flat90}
 end
 
 -- Birds (brief C1; LOOK 1) -------------------------------------------------------------------------------------
@@ -385,23 +400,26 @@ function Sim.birdPose(bird,now)
 	bird.root=CFrame.new(bird.spot+lift+Vector3.new(0,y,0))*CFrame.Angles(0,yaw,0)*CFrame.Angles(math.rad(pitch),0,0)
 	bird.wings,bird.flick="perch",flick
 end
--- Body, eyes, beak, wing L, wing R (LOOK 1). phi: the flap angle in flight.
+-- Body, eyes, beak, wing L, wing R (LOOK-R2 1). phi: the flap angle in flight. The wing plates are thin in X with
+-- the texture tip-down (part -Y): perched, the tip points back and down; flying, it points out (+90 right, -90 left).
+local tuck=CFrame.Angles(math.rad(-55),0,0)
 function Sim.birdParts(root,wings,flick,phi)
-	local parts={root,root*CFrame.new(0,.12,-.14),root*CFrame.new(0,-.02,-.68)}
+	local parts={root,root*CFrame.new(0,.14,-.20),root*CFrame.new(0,-.02,-.72)}
 	if wings=="fly"then
-		parts[4]=root*CFrame.new(-.40,.10,.05)*CFrame.Angles(0,0,-phi)*CFrame.new(-.31,0,0)*CFrame.Angles(0,0,math.pi/2)
-		parts[5]=root*CFrame.new(.40,.10,.05)*CFrame.Angles(0,0,phi)*CFrame.new(.31,0,0)*CFrame.Angles(0,0,math.pi/2)
+		parts[4]=root*CFrame.new(-.42,.12,.05)*CFrame.Angles(0,0,-phi)*CFrame.new(-.33,0,0)*CFrame.Angles(0,0,-math.pi/2)
+		parts[5]=root*CFrame.new(.42,.12,.05)*CFrame.Angles(0,0,phi)*CFrame.new(.33,0,0)*CFrame.Angles(0,0,math.pi/2)
 	else
+		-- The hop flick: the tip swung out by 25, before the yaw.
 		local out=math.rad(Sim.Bird.flick)*(flick or 0)
-		parts[4]=root*CFrame.new(-.56,-.04,.12)*CFrame.Angles(math.rad(-20),0,0)*CFrame.Angles(0,0,out)
-		parts[5]=root*CFrame.new(.56,-.04,.12)*CFrame.Angles(math.rad(-20),0,0)*CFrame.Angles(0,0,-out)
+		parts[4]=root*CFrame.new(-.60,-.06,.13)*CFrame.Angles(0,0,-out)*CFrame.Angles(0,math.rad(12),0)*tuck
+		parts[5]=root*CFrame.new(.60,-.06,.13)*CFrame.Angles(0,0,out)*CFrame.Angles(0,math.rad(-12),0)*tuck
 	end
 	return parts
 end
--- Flap: +55 and -25, two poses (flip = which one); held still at budget level 1.
+-- Flap: +50 and -20, two poses (flip = which one); held still at budget level 1.
 function Sim.birdFlap(flip,held)
 	if held then return 0 end
-	return math.rad(if flip then 55 else -25)
+	return math.rad(if flip then 50 else -20)
 end
 
 return table.freeze(Sim)
