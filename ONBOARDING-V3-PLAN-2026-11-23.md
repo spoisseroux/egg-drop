@@ -177,3 +177,17 @@ Fable reviews real captures of: the garden at arrival (is the nest in view?), ea
 2. **After the seventh egg, the nest keeps giving 4 Stars per egg (8 hours each)?** Recommend **yes**. The other choice is nothing after week one, which removes the reason to look at the nest.
 3. **Notifications: may we use "{pet}'s Sleepy egg is ready to hatch!" and set up a sender later?** Recommend **yes to the text, build the sender as its own slice**. It needs you to create the string in Creator Hub, and something that can send while no server is running. Nothing is prompted until then.
 4. **The first egg starts growing the moment you first stand in the garden, not only after Tuck in?** Recommend **yes**, so the half of players who leave before five minutes still have an egg waiting.
+
+## Architect review (Opus, 2026-11-23; wins over the text above)
+
+Blockers folded in:
+1. **Nest fails closed:** `nest` is never in `valid()` and never sanitised at load (FindsState pattern). Bad `n` reads as 7 (week done, 4-Star eggs only); a bad `at` or one more than a day in the future gets a fresh land write that keeps `n`.
+2. **Tour off:** `Coach.stage` returns "free" when follow-the-Bear is on (not only dropping `options.tour`, or the three beat lines come back). Switch read once per session.
+3. **Station tips use their own coach bits**, never `hatch`/`style`/`companions`/`park` (those drive funnel step 6 and the first-visit cards).
+4. **Toy gift while a toy purchase is in flight** (`toyReservation`/`pendingToyResult`): the claim refuses "Busy", never grants (else `ToyState.valid` fails every claim).
+5. **Gated coach ids** look up their own switch module (not only `Things.allows`).
+
+Slices: A follow-the-Bear (M; `parkInvite` off with need 5; old saves without `gardenIntro` get bubbles; needs close from saved facts). B need bubbles (M; `ThingsTips.blocked` for never-interrupt; 7 new bits, coachMask 22 of 31). C nest server (M): `nest={at,n,gift,op,receipt,tucked,pet}`, claim checks `n==captured.n` and ready inside the write, `op` proof, timer min(elapsed, 8 h) clamped at 0, land/claim through a queue. D nest view (M-L). E strip (S). F: the funnel fix is merged (fab30bf); add hold-and-flush for one-time events and the 11-step table only when v3 is on. G (S).
+Economy: no farming route; **the welcome week is worth about 200 Stars** with the hat (40), neck piece (40) and toy (20) (tell Spencer). Hat and neck piece are per pet: store the pet at land and check each rig has an ungated common item, or pay Stars instead. Nest Charm is an earned rule (`n>=7`), no saved data.
+Gate `src/shared/Onboard.lua` (Things pattern): `FeatureFlags.OnboardingV3`, beta or Studio, keys `onboard_follow` / `onboard_needs` / `onboard_nest`; the ceiling also needs `Things.on()`. Nest off: no snapshot key, no write.
+Split: contract commit first (`Onboard.lua`, config, flag, CoachMarks bits, `UICopy` onb3 strings, the `public.nest` shape); then **Builder 1 C** (`NestState`, `Nest`, `NestHost`, HatchProgress entry points, charm rule), **Builder 2 A+B** (`CoachCards`, `ThingsTips`, `StationAttract*`, `FirstSpendGuide`, new `BearNeeds`/`NeedBubble`, one init.client hook), **Builder 3 F** (`FirstSession`, owns `init.server`). Then D, E, G. H waits for Spencer's notification text.

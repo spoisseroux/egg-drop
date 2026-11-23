@@ -271,7 +271,7 @@ return function(client)
 			local fine,wrong=pcall(function()
 				r.flip(true);for _=1,3 do r.pump()end
 				assert(#r.deferred==0,"no retry loop");samePicture(before,picture(l.crown))
-				assert(l.crown.TextureID=="rbxassetid://111"and l.crown.Material==Enum.Material.SmoothPlastic and l.crown:FindFirstChildOfClass("SurfaceAppearance")and l.islet.TextureID==""and #r.warnings==1)
+				assert(l.crown.TextureID=="rbxassetid://111"and l.crown.Material==Enum.Material.SmoothPlastic and l.crown:FindFirstChildOfClass("SurfaceAppearance")and l.islet.TextureID==Values.Crowns.lime.Texture and #r.warnings==1)
 				refusing=false;r.treesChanged.fire();r.pump();assert(l.crown.TextureID==Values.Crowns.lime.Texture and l.crown:FindFirstChildOfClass("SurfaceAppearance")==nil)
 			end)
 			AeroWorld.write=real;assert(fine,wrong);r.flip(false);assert(l.crown.TextureID=="rbxassetid://111")
