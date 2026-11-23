@@ -1,13 +1,18 @@
 -- Studio Client, or offline: DASH_SPECS=AeroFalls python scripts/run_dash_server_specs.py <luau.exe>. The waterfall layers
 -- (AeroFalls inside AeroAdditions, WORLD-PASS-2026-11-22 item 4 step 1) on a fake world: built at the walk map's falls,
--- inert, draw counts per budget level, the 120-stud gate, the mist keep-out, daylight, Reduced Motion, and the
--- picture put back when the additions go. The live room is never touched.
+-- inert, draw counts per budget level, the 120-stud gate, the mist keep-out (fades, never cleared), daylight, Reduced
+-- Motion, touch-only devices at level 1, TextureSpeed written once, and the picture put back when the additions go. The
+-- live room is never touched.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.AeroFalls)(PlayerScripts.Client)
 return function(client,offline)
 	local Shared=game:GetService("ReplicatedStorage").Shared
 	local Values=require(Shared.WorldAero)
 	local Look=Values.Waterfall
 	local Additions=require(client.AeroAdditions)
+	-- The device is pinned to a desktop here (the touch case sets its own) and put back after.
+	local Falls=require(client.AeroFalls)
+	local realTouch=Falls.touch
+	Falls.touch=function()return false end
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local holder=Instance.new("Folder");holder.Name="_AeroFallsSpec";holder.Parent=workspace
@@ -48,6 +53,7 @@ return function(client,offline)
 		error("no layer "..group.."/"..name)
 	end
 	-- Counted from the instances, not the controller's notes.
+	local function cleared(added,group,name)return offline and(layer(added,group,name).item.cleared or 0)or 0 end
 	local function draws(added)
 		local count=0
 		for _,item in ipairs(added.falls.folder:GetDescendants())do
@@ -113,24 +119,31 @@ return function(client,offline)
 			top=ends(layer(added,"Tumble","StrandB",2))
 			assert(at(top,v(lower.top)+n*.3+t*.6),"strand B, lower")
 			local strandB=layer(added,"Tumble","StrandB",2).item
-			assert(near(strandB.Width0,11.4*.7)and strandB.TextureLength==13 and near(strandB.TextureSpeed,1.1))
+			assert(near(strandB.Width0,11.4*.7)and strandB.TextureLength==9 and near(strandB.TextureSpeed,1.1))
 			local ribbon=layer(added,"Tumble","Ribbon",2)
 			top=ends(ribbon)
 			assert(at(top,v(lower.top)+n*.45)and near(ribbon.item.Width0,13)and ribbon.item.TextureLength==16 and ribbon.item.Texture==Look.Textures.Ribbon)
 			local lipUpper,lipLower=layer(added,"Tumble","Lip",1).item,layer(added,"Tumble","Lip",2).item
-			assert(at(lipUpper.CFrame.Position,v(upper.top)+n*.3)and at(lipUpper.Size,Vector3.new(8.8,.9,.9)),"top lip")
-			assert(at(lipLower.CFrame.Position,v(lower.top)+n*.3)and at(lipLower.Size,Vector3.new(11.8,1.1,1.1)),"ledge roll")
+			assert(at(lipUpper.CFrame.Position,v(upper.top)+n*.3)and at(lipUpper.Size,Vector3.new(8,.5,.5)),"top lip")
+			assert(at(lipLower.CFrame.Position,v(lower.top)+n*.3)and at(lipLower.Size,Vector3.new(10.6,.6,.6)),"ledge roll")
 			assert(at(lipUpper.CFrame.RightVector,t),"a cylinder lies along t")
+			assert(lipUpper.Color==Look.LipLook.Color and near(lipUpper.Reflectance,.1))
 			local foam=layer(added,"Tumble","Foam").item.Parent
-			assert(at(foam.CFrame.Position,Vector3.new(I.X,Look.PoolTop+.3,I.Z)+n*1)and at(foam.Size,Vector3.new(12,.6,2.5)),"pool foam box")
+			assert(at(foam.CFrame.Position,Vector3.new(I.X,Look.PoolTop+.3,I.Z)+n*.75)and at(foam.Size,Vector3.new(12,.6,1.5)),"pool foam box")
 			assert(at(foam.CFrame.RightVector,t)and at(foam.CFrame.LookVector,-n),"the box faces n")
 			local ledge=layer(added,"Tumble","LedgeFoam").item.Parent
 			assert(at(ledge.CFrame.Position,v(lower.top)+n*.6)and at(ledge.Size,Vector3.new(10.5,.5,2)),"ledge foam box")
 			local rings=layer(added,"Tumble","Rings").item
-			assert(at(rings.Parent.CFrame.Position,Vector3.new(I.X,Look.PoolTop+.08,I.Z)+n*2.5)and rings.Texture==Look.Textures.Ripple)
+			assert(at(rings.Parent.CFrame.Position,Vector3.new(I.X,Look.PoolTop+.08,I.Z)+n*2)and rings.Texture==Look.Textures.Ripple)
 			assert(rings.Orientation==Enum.ParticleOrientation.VelocityPerpendicular)
 			local mist=layer(added,"Tumble","Mist").item
-			assert(at(mist.Parent.CFrame.Position,Vector3.new(I.X,Look.PoolTop+2,I.Z)+n*1.5)and mist.ZOffset==-2 and mist.Texture==Look.Textures.Mist)
+			assert(at(mist.Parent.CFrame.Position,Vector3.new(I.X,Look.PoolTop+3,I.Z)+n*1)and at(mist.Parent.Size,Vector3.new(10,1,1.5)),"pool mist box")
+			assert(mist.ZOffset==-2 and mist.Texture==Look.Textures.Mist)
+			-- The pool bed is walkable: the foam box ends within 1.5 studs of the sheet along n; the mist box is centred
+			-- within it and starts above pet height (Fable r1).
+			local foamBox,mistBox=foam,mist.Parent
+			assert(math.abs((foamBox.CFrame.Position-I):Dot(n))+foamBox.Size.Z/2<=1.5+1e-3,"foam box reach")
+			assert(math.abs((mistBox.CFrame.Position-I):Dot(n))<=1.5 and mistBox.CFrame.Position.Y-mistBox.Size.Y/2>=Look.PoolTop+2.5,"mist box")
 			local rainbow=layer(added,"Tumble","Rainbow").item
 			local foot0,foot1=ends(layer(added,"Tumble","Rainbow"))
 			assert(at(foot0,Vector3.new(66.3,4.2,-76.2),.1)and at(foot1,Vector3.new(76.2,4.2,-66.3),.1),"rainbow feet")
@@ -141,7 +154,10 @@ return function(client,offline)
 			assert(at(top,v(SHEETS[3].top)+Vector3.new(.0875,0,-.9962).Unit*.15)and layer(added,"Sky","StrandA").item.TextureLength==28)
 			assert(layer(added,"Sky","Ribbon").item.TextureLength==22)
 			if not offline then
-				assert(near(strandA.Transparency.Keypoints[2].Value,.35)and near(rainbow.Transparency.Keypoints[3].Value,.8))
+				assert(near(strandA.Transparency.Keypoints[2].Value,.28)and near(rainbow.Transparency.Keypoints[3].Value,.8))
+				assert(near(layer(added,"Tumble","StrandB",1).item.Transparency.Keypoints[2].Value,.62))
+				assert(near(mist.Transparency.Keypoints[2].Value,.62)and near(mist.Size.Keypoints[2].Value,5))
+				assert(near(layer(added,"Sky","Mist").item.Size.Keypoints[2].Value,6.5),"Sky Falls mist keeps its size")
 			end
 			local beams,emitters,parts,attachments=0,0,0,0
 			for _,item in ipairs(falls.folder:GetDescendants())do
@@ -165,11 +181,13 @@ return function(client,offline)
 		test("per budget level: 14 at Tumble, 8 or fewer at level 1, none at level 2",function()
 			local added=build(holder)
 			assert(go(added,{level=0,camera=NEAR,daylight=.9})==14)
+			local ledge=cleared(added,"Tumble","LedgeFoam")
 			assert(go(added,{level=1})==8)
 			for _,name in ipairs({"StrandB","LedgeFoam","LedgeMist","Rings","Rainbow"})do assert(not layer(added,"Tumble",name).item.Enabled,name)end
+			if offline then assert(cleared(added,"Tumble","LedgeFoam")==ledge+1,"the level clears what it switches off")end
 			assert(layer(added,"Tumble","Foam").item.Rate==8 and near(layer(added,"Tumble","Mist").item.Rate,1.5))
 			assert(go(added,{level=2})==0)
-			assert(go(added,{level=0})==14 and layer(added,"Tumble","Foam").item.Rate==16 and layer(added,"Tumble","Mist").item.Rate==3)
+			assert(go(added,{level=0})==14 and layer(added,"Tumble","Foam").item.Rate==22 and layer(added,"Tumble","Mist").item.Rate==3)
 			assert(go(added,{camera=SKY})==3 and layer(added,"Sky","StrandA").item.Enabled)
 			assert(go(added,{level=1})==0,"no Sky Falls at level 1")
 			added.destroy()
@@ -178,34 +196,64 @@ return function(client,offline)
 			local added=build(holder)
 			local count=#added.falls.folder:GetDescendants()
 			assert(go(added,{level=0,camera=I+t*119,daylight=.9})==14)
+			local foam=cleared(added,"Tumble","Foam")
 			assert(go(added,{camera=I+t*121})==0)
+			if offline then assert(cleared(added,"Tumble","Foam")==foam,"leaving lets the foam fade")end
 			assert(go(added,{camera=Vector3.new(400,80,-400)})==0 and #added.falls.folder:GetDescendants()==count)
 			assert(go(added,{camera=NEAR})==14)
 			added.destroy()
 		end)
-		test("the mist keeps out of the camera within 16 studs; the rainbow is day only",function()
+		test("the mist keeps out of the camera within 16 studs and fades (not cleared); the rainbow is day only",function()
 			local added=build(holder)
-			assert(go(added,{level=0,camera=I+n*10+Vector3.new(0,2,0),daylight=.9})==12)
+			go(added,{level=0,camera=NEAR,daylight=.9})
+			local mist,ledgeMist=cleared(added,"Tumble","Mist"),cleared(added,"Tumble","LedgeMist")
+			assert(go(added,{camera=I+n*10+Vector3.new(0,2,0)})==12)
 			assert(not layer(added,"Tumble","Mist").item.Enabled and not layer(added,"Tumble","LedgeMist").item.Enabled)
+			if offline then
+				assert(cleared(added,"Tumble","Mist")==mist and cleared(added,"Tumble","LedgeMist")==ledgeMist,"the keep-out lets mist fade")
+				-- Still fading when level 1 cuts the ledge mist: cleared then, once.
+				go(added,{level=1});go(added,{level=1})
+				assert(cleared(added,"Tumble","LedgeMist")==ledgeMist+1 and cleared(added,"Tumble","Mist")==mist,"a later cut clears")
+				go(added,{level=0})
+			end
 			assert(go(added,{camera=NEAR,daylight=.4})==13 and not layer(added,"Tumble","Rainbow").item.Enabled)
 			assert(go(added,{daylight=.55})==14)
 			added.destroy()
 		end)
-		test("Reduced Motion: none of the layers, beams stopped; back as they were after",function()
+		test("Reduced Motion: none of the layers, emitters cleared; back as they were after",function()
 			local added=build(holder)
 			go(added,{level=0,camera=NEAR,daylight=.9})
-			local cleared=offline and layer(added,"Tumble","Foam").item.cleared or 0
+			local foam=cleared(added,"Tumble","Foam")
 			added.still(true)
 			assert(draws(added)==0)
-			for _,each in ipairs(added.falls.layers)do
-				if each.kind=="beam"then assert(each.item.TextureSpeed==0,each.name)end
-			end
-			if offline then assert(layer(added,"Tumble","Foam").item.cleared==cleared+1,"emitters cleared")end
+			if offline then assert(cleared(added,"Tumble","Foam")==foam+1,"emitters cleared")end
 			added.update({level=0,camera=NEAR})
 			assert(draws(added)==0,"the check keeps them still")
 			added.still(false)
 			assert(draws(added)==14 and near(layer(added,"Tumble","StrandA").item.TextureSpeed,.55)and layer(added,"Tumble","Ribbon").item.TextureSpeed==1)
 			added.destroy()
+		end)
+		test("TextureSpeed is written once, at build: no check, level or Reduced Motion writes it again",function()
+			local added=build(holder)
+			local strand=layer(added,"Tumble","StrandB").item
+			assert(near(strand.TextureSpeed,1.1))
+			strand.TextureSpeed=7 -- a value only this spec writes
+			go(added,{level=0,camera=NEAR,daylight=.9});go(added,{level=1});go(added,{level=0})
+			added.still(true);added.still(false);go(added,{camera=SKY});go(added,{camera=NEAR})
+			assert(strand.TextureSpeed==7,"written again: "..strand.TextureSpeed)
+			added.destroy()
+		end)
+		test("touch-only devices start the falls on the level 1 set; the budget can still take them to 2",function()
+			Falls.touch=function()return true end
+			local added=build(holder)
+			Falls.touch=function()return false end
+			assert(go(added,{level=0,camera=NEAR,daylight=.9})==8)
+			assert(not layer(added,"Tumble","StrandB").item.Enabled and layer(added,"Tumble","Foam").item.Rate==8)
+			assert(go(added,{level=2})==0 and go(added,{level=0})==8)
+			added.destroy()
+			local desktop=build(holder)
+			assert(desktop.falls.state.touch==false,"read per build")
+			desktop.destroy()
 		end)
 		test("off: the additions go and the picture is the one before, server sheet untouched",function()
 			local w=world()
@@ -225,6 +273,7 @@ return function(client,offline)
 			assert(none.falls==nil);none.update({level=0,camera=NEAR});none.still(true);none.destroy()
 		end)
 	end)
+	Falls.touch=realTouch
 	holder:Destroy()
 	assert(ok,problem)
 	return{passed=#cases,cases=cases}

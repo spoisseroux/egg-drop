@@ -6,13 +6,20 @@
 --
 -- Everything is built switched off; apply(state) turns layers on or off (never destroys them):
 --   on only for the falls nearest the camera, within Radius; mist off within MistKeepOut of its point;
---   rainbow only while daylight > RainbowDaylight; level 1 keeps Level1 at Tumble only; level 2 or Reduced Motion: none,
---   and beams' TextureSpeed goes to 0 (still) until motion is back.
+--   rainbow only while daylight > RainbowDaylight; level 1 keeps Level1 at Tumble only; level 2 or Reduced Motion: none.
+--   Touch-only devices start at level 1 (AliveBudget starts everyone at 0); the budget can still take them to 2.
+--   TextureSpeed is written once, at build: a beam that is off does not move, so nothing needs stopping.
+--   Emitters switched off by Reduced Motion or the level are cleared; off by distance or the mist keep-out, they fade.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Values=require(Shared:WaitForChild("WorldAero"))
 local Look=Values.Waterfall
 local Falls={}
 Falls.Name="Falls"
+-- Read once per build; specs replace it.
+function Falls.touch()
+	local Input=game:GetService("UserInputService")
+	return Input.TouchEnabled==true and Input.KeyboardEnabled~=true
+end
 
 local UP=Vector3.new(0,1,0)
 -- Columns x, y, z at position p.
@@ -96,7 +103,7 @@ function Falls.build(folder,data)
 		beam.LightEmission=spec.LightEmission or 0
 		beam.Enabled=false
 		beam.Parent=p
-		return add({group=group,name=name,kind="beam",item=beam,speed=spec.speed})
+		return add({group=group,name=name,kind="beam",item=beam})
 	end
 	-- A clear box turned to the fall's frame (t, up, n), for an emitter.
 	local function box(name,size,cframe)return part(root,name,size,cframe)end
@@ -198,7 +205,7 @@ function Falls.build(folder,data)
 			beam.LightEmission,beam.LightInfluence=spec.LightEmission,0
 			beam.Enabled=false
 			beam.Parent=p
-			add({group="Tumble",name="Rainbow",kind="beam",item=beam,speed=0,rainbow=true})
+			add({group="Tumble",name="Rainbow",kind="beam",item=beam,rainbow=true})
 		end
 	end
 	if sky then
@@ -213,13 +220,15 @@ function Falls.build(folder,data)
 		local e=layer.item
 		e.Texture=Look.Textures.Mist
 		e.Shape,e.ShapeStyle=Enum.ParticleEmitterShape.Box,Enum.ParticleEmitterShapeStyle.Volume
-		e.Size=Look.Mist[1].Size
+		e.Size=spec.Size
 		foamLike(e,Look.MistLook)
 		e.ZOffset=Look.MistLook.ZOffset
 	end
 	root.Parent=folder
 
-	local self={folder=root,layers=layers,groups=groups,state={reduced=false,level=0,camera=nil,daylight=1}}
+	local self={folder=root,layers=layers,groups=groups,state={reduced=false,level=0,camera=nil,daylight=1,touch=Falls.touch()}}
+	-- The level the falls draw at: the budget's, or 1 on a touch-only device.
+	local function levelOf(state)return math.max(state.level,if state.touch then 1 else 0)end
 	-- The falls the camera is at: the nearest within Radius, or none.
 	local function nearest(camera)
 		if typeof(camera)~="Vector3"then return nil end
@@ -230,9 +239,12 @@ function Falls.build(folder,data)
 		end
 		return best
 	end
+	-- On or off, and whether the switch is Reduced Motion or the level (an emitter so switched is cleared, not faded).
 	function self.wants(layer,state,near)
-		if state.reduced or state.level>=2 or layer.group~=near then return false end
-		if state.level>=1 and(layer.group~="Tumble"or not Look.Level1[layer.name])then return false end
+		local level=levelOf(state)
+		if state.reduced or level>=2 then return false,true end
+		if level>=1 and(layer.group~="Tumble"or not Look.Level1[layer.name])then return false,true end
+		if layer.group~=near then return false end
 		if layer.keepOut and(layer.keepOut-state.camera).Magnitude<Look.MistKeepOut then return false end
 		if layer.rainbow and not(state.daylight>Look.RainbowDaylight)then return false end
 		return true
@@ -242,19 +254,22 @@ function Falls.build(folder,data)
 		local state=self.state
 		for key,value in pairs(changes or {})do state[key]=value end
 		local near=nearest(state.camera)
+		local level=levelOf(state)
 		for _,layer in ipairs(layers)do
-			local on=self.wants(layer,state,near)
+			local on,cut=self.wants(layer,state,near)
 			local item=layer.item
 			if layer.kind=="beam"then
-				local speed=if state.reduced then 0 else layer.speed
-				if item.TextureSpeed~=speed then item.TextureSpeed=speed end
 				if item.Enabled~=on then item.Enabled=on end
 			elseif layer.kind=="emitter"then
-				local rate=if state.level>=1 then layer.rate1 else layer.rate
+				local rate=if level>=1 then layer.rate1 else layer.rate
 				if item.Rate~=rate then item.Rate=rate end
+				-- Fading particles a later cut catches are cleared then.
 				if item.Enabled~=on then
 					item.Enabled=on
-					if not on then item:Clear()end
+					if on then layer.fading=nil elseif cut then item:Clear()else layer.fading=true end
+				elseif cut and layer.fading then
+					item:Clear()
+					layer.fading=nil
 				end
 			else
 				local transparency=if on then 0 else 1
