@@ -621,6 +621,7 @@ do
  dash.result.tomorrow="Stars again tomorrow"
  dash.result.saving="Saving…"
  dash.racing="Racing"
+ dash.pad={dash="DASH",jump="JUMP",puff="PHEW!"} -- the HUD pads' words, in capitals as shown (so they localize as is)
  Table.results.inPlace.hatchShort="Hatch"
 end
 

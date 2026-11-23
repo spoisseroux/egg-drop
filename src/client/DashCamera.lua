@@ -20,7 +20,10 @@ Camera.SnapStuds=24
 Camera.RowShare=.7
 Camera.RowHalf=3.5*Grid.StartStep/100+.6 -- the outer racer's centre and most of a pet
 Camera.LineupPitch=math.rad(25)
-Camera.LineupBack=6 -- studs behind the line at most (StartRoom): the cliff is at its back
+-- TUNE HERE: the one number for how far behind the start line the line-up eye may stand, in studs. 6 puts it near x 78,
+-- by the cliff rock east of the start; lower it if Studio shows the rock clipping at 16:9 or 4:3 (the eye then rises
+-- instead, up to LineupHigh, and the row may pass RowShare on wide-but-short screens).
+Camera.LineupBack=6
 Camera.LineupLow=3
 Camera.LineupHigh=10.2 -- under the start arch's banner
 Camera.LineupBlend=.6

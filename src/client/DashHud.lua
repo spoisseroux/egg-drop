@@ -94,7 +94,7 @@ function Hud.new(playerGui,options)
 	local Icons=require(script.Parent.DashIcons)
 	self.faces={}
 	-- A pad: a clear box the layout places, an ink lip, the face on it (icon, word), the key cap (keys() makes it).
-	local function pad(name,color,key,icon)
+	local function pad(name,color,key,icon,caps)
 		local frame=make("Frame",root,{Name=name,BackgroundTransparency=1,BorderSizePixel=0,ZIndex=4,Active=false})
 		local lip=make("Frame",frame,{Name="Lip",BackgroundColor3=Hud.Ink,BorderSizePixel=0,Position=UDim2.fromOffset(0,Hud.Lip),Size=UDim2.fromScale(1,1),ZIndex=4,Active=false})
 		round(lip)
@@ -106,16 +106,16 @@ function Hud.new(playerGui,options)
 		local image=Icons.image(icon)
 		local picture=nil
 		if image then picture=make("ImageLabel",holder,{Name="Picture",BackgroundTransparency=1,Image=image,Size=UDim2.fromScale(1,1),ZIndex=7})end
-		local word=Kit.text(face,"Title",string.upper(UICopy.get(key)),"text",{Name="Word",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,Hud.WordAt),
+		local word=Kit.text(face,"Title",UICopy.get(caps),"text",{Name="Word",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,Hud.WordAt),
 			Size=UDim2.new(1,-8,0,18),TextXAlignment=Enum.TextXAlignment.Center,TextSize=14})
 		word.TextColor3=Hud.Ink;word.ZIndex=7
 		frame:SetAttribute("AccessibleLabel",UICopy.get(key))
-		self.faces[name]={frame=frame,face=face,ring=ring,holder=holder,picture=picture,word=word,color=color,key=key}
+		self.faces[name]={frame=frame,face=face,ring=ring,holder=holder,picture=picture,word=word,color=color,key=key,caps=caps}
 		return frame,holder
 	end
 	local jumpIcon,dashIcon
-	self.jump,jumpIcon=pad("Jump",Hud.Jump,"dash.jump","jump")
-	self.dash,dashIcon=pad("Dash",Hud.Dash,"dash.dash","dash")
+	self.jump,jumpIcon=pad("Jump",Hud.Jump,"dash.jump","jump","dash.pad.jump")
+	self.dash,dashIcon=pad("Dash",Hud.Dash,"dash.dash","dash","dash.pad.dash")
 	if not self.faces.Jump.picture then for i=0,2 do bar(jumpIcon,.5,.3+i*.2,.62,.11,if i%2==0 then -12 else 12)end end -- a spring
 	if not self.faces.Dash.picture then bar(dashIcon,.58,.26,.16,.5,28);bar(dashIcon,.5,.5,.5,.14,-14);bar(dashIcon,.42,.74,.16,.5,28)end -- a bolt
 	local ring=make("Frame",root,{Name="Ring",AnchorPoint=Vector2.new(.5,.5),BackgroundTransparency=1,ZIndex=5,Visible=false,Active=false})
@@ -316,7 +316,7 @@ function Hud:setBar(share,puff,held)
 			face.holder.Visible=true
 			if face.picture then face.picture.ImageTransparency=if puff then .5 else 0 end
 			for _,child in ipairs(face.holder:GetChildren())do if child:IsA("Frame")then child.BackgroundTransparency=if puff then .5 else 0 end end
-			face.word.Text=string.upper(UICopy.get(if puff then "dash.puff"else face.key))
+			face.word.Text=UICopy.get(if puff then "dash.pad.puff"else face.caps)
 			face.down=nil;self:sink("Dash",self.shown.held==true)
 		end
 	end

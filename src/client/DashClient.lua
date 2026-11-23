@@ -460,7 +460,10 @@ function Client:endSeat()
 	if seat and seat.predict and self.props then
 		local heat=self.heat
 		if not heat then pcall(self.props.hide,self.props)
-		elseif heat.raceId~=seat.raceId then pcall(self.props.show,self.props,heat.plan,self.d.reduced())end
+		elseif heat.raceId~=seat.raceId then pcall(self.props.show,self.props,heat.plan,self.d.reduced())
+		-- Done (or the card closing itself) during this race's results: an onlooker now, and onlookers' hoops are only up
+		-- while the race runs (beta 12 G4).
+		elseif heat.phase=="results"then pcall(self.props.hide,self.props)end
 	end
 end
 

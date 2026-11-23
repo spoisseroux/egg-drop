@@ -10,7 +10,15 @@ local Quests=require(Shared.QuestCatalog)
 local Stamp=require(Shared.StampCard)
 local Strip={};Strip.__index=Strip
 Strip.Quests=#Quests.Pools -- one new daily quest a pool, every day
-Strip.Height=table.freeze({desktop=44,phone=48}) -- phone: v2 (beta 12 U7), the title row inside
+-- Phone v2 (beta 12 U7, DASH-DECK-UI-LOOK): 48 tall with the title row inside, held behind DeckLook.on() (the beta
+-- and Studio); off, the strip is the one before, 36 tall with its title on a tab. options.v2 overrides (specs).
+Strip.Height=table.freeze({desktop=44,phone=48,phoneOld=36})
+function Strip.v2(options)
+	if options and options.v2~=nil then return options.v2==true end
+	local ok,on=pcall(function()return require(Shared.DeckLook).on()end)
+	return ok and on==true
+end
+function Strip.phoneHeight(v2)return if v2 then Strip.Height.phone else Strip.Height.phoneOld end
 Strip.PhoneMin=240    -- a phone strip narrower than this is not drawn
 Strip.PhoneWhole=400  -- from this wide a phone strip has room for the whole words
 Strip.TitleY=11       -- the title row's middle
@@ -72,7 +80,23 @@ function Strip.fit(model,width,measure,options)
 		if options.short then return{{chip.short,big}}end
 		return{{chip.text,big},{chip.text,11},{chip.short,big}}
 	end
-	local out={phone=phone,h=if phone then Strip.Height.phone else Strip.Height.desktop,chips={}}
+	local v2=Strip.v2(options)
+	local out={phone=phone,v2=v2,h=if phone then Strip.phoneHeight(v2)else Strip.Height.desktop,chips={}}
+	if phone and not v2 then
+		-- Before v2 (DeckLook off): the title on a tab over the top edge, the chips left-aligned in three columns.
+		local gap=Strip.Gap.phone
+		local colW=math.floor((width-12-gap*2)/3)
+		out.title={x=math.floor((width-Strip.TitleW)/2),w=Strip.TitleW}
+		for index,chip in ipairs(model.chips)do
+			local pick=nil
+			for _,v in ipairs(variants(chip))do
+				pick=v
+				if chipWidth(iconSize,measure(v[1],v[2]))<=colW then break end
+			end
+			out.chips[index]={x=6+(index-1)*(colW+gap),w=colW,text=pick[1],size=pick[2],icon=iconSize}
+		end
+		return out
+	end
 	if phone then
 		-- Beta 12 U7 (strip v2): the title on its own row inside the strip, the chips under it, the words and the icon
 		-- centred in each chip. 400 wide or more: the whole words; less: the short values; under 240: no strip (nil).
@@ -161,15 +185,24 @@ function Strip.new(parent,options)
 	options=options or {}
 	local self=setmetatable({options=options,chips={}},Strip)
 	local phone=options.phone==true
-	local h=if phone then Strip.Height.phone else Strip.Height.desktop
+	local v2=Strip.v2(options)
+	self.v2=v2
+	local h=if phone then Strip.phoneHeight(v2)else Strip.Height.desktop
 	local z=options.z or((parent.ZIndex or 1)+2)
 	local root=make("Frame",parent,{Name="TomorrowStrip",BackgroundColor3=Strip.Color.well,BackgroundTransparency=0,BorderSizePixel=0,
 		Size=UDim2.fromOffset(200,h),ZIndex=z,Active=false,Selectable=false})
 	make("UICorner",root,{CornerRadius=UDim.new(0,12)})
 	make("UIStroke",root,{Color=Strip.Color.ink,Thickness=2})
 	self.root,self.h,self.z=root,h,z
-	-- The title: at the left (desktop), or on its own row inside the strip with a small moon mark (phone, v2).
-	if phone then
+	-- The title: at the left (desktop), on its own row inside the strip with a small moon mark (phone, v2), or on a small
+	-- tab centred on the top edge (phone, before v2).
+	if phone and not v2 then
+		self.tab=make("Frame",root,{Name="TitleTab",BackgroundColor3=Strip.Color.well,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,0),
+			Position=UDim2.new(.5,0,0,-7),Size=UDim2.fromOffset(Strip.TitleW,16),ZIndex=z+1})
+		make("UICorner",self.tab,{CornerRadius=UDim.new(0,8)})
+		self.title=make("TextLabel",self.tab,{Name="Title",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Font=Enum.Font.FredokaOne,
+			TextSize=11,TextColor3=Strip.Color.soft,ZIndex=z+2})
+	elseif phone then
 		local moon=make("Frame",root,{Name="Moon",BackgroundColor3=Strip.Color.soft,BorderSizePixel=0,AnchorPoint=Vector2.new(0,.5),
 			Position=UDim2.fromOffset(10,Strip.TitleY),Size=UDim2.fromOffset(10,10),ZIndex=z+1})
 		make("UICorner",moon,{CornerRadius=UDim.new(.5,0)})
@@ -196,7 +229,7 @@ function Strip:set(model,width)
 	if not model then root.Visible=false;return end
 	root.Visible=true
 	root.Size=UDim2.fromOffset(width,self.h)
-	local layout=Strip.fit(model,width,self.options.measure or Strip.measure,{phone=self.options.phone,short=self.options.short})
+	local layout=Strip.fit(model,width,self.options.measure or Strip.measure,{phone=self.options.phone,short=self.options.short,v2=self.v2})
 	self.layout=layout
 	if not layout then root.Visible=false;return end -- a phone strip too narrow to read (v2): none at all
 	self.title.Text=model.title
@@ -216,7 +249,7 @@ function Strip:set(model,width)
 			chip={frame=frame,stroke=stroke,icon=mark,text=text,id=spec.id}
 			self.chips[index]=chip
 		end
-		local chipH=fit.h or self.h-12
+		local chipH=fit.h or self.h-(if self.options.phone then 10 else 12)
 		chip.frame.Position=UDim2.fromOffset(fit.x,fit.y or math.floor((self.h-chipH)/2))
 		chip.frame.Size=UDim2.fromOffset(fit.w,chipH)
 		chip.text.Text=fit.text;chip.text.TextSize=fit.size

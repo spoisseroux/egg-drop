@@ -228,7 +228,11 @@ function Sheet.build(card,W,H)
 	card.paintEarned=paintEarned
 	card.sheetStep=function(dt)
 		local t=os.clock()-card.openedAt
-		stage:step(dt,reduced)
+		-- The pet on its own: a rig that throws stops its pose, never the timeline (medal, headline, chips, strip).
+		if not card.stageFailed then
+			local ok,problem=pcall(stage.step,stage,dt,reduced)
+			if not ok then card.stageFailed=true;warn("[Dash] stage: "..tostring(problem))end
+		end
 		if at("pet")and not fired.pet then
 			fired.pet=true
 			if fresh and not reduced then stage:dropIn(false);tween(medalScale,.25,{Scale=1},Enum.EasingStyle.Back)else medalScale.Scale=1 end
