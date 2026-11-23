@@ -161,6 +161,7 @@ return function(server)
 		local logged=steps(calls);assert(#logged==11,#logged)
 		for i,step in ipairs(logged)do assert(step==i)end
 		assert(calls[2][2]=="FirstDrop"and events(calls,"FirstDrop")==1 and events(calls,"FirstMachine")==1 and events(calls,"FirstSpend")==1)
+		assert(events(calls,"SecondRound")==1,"a round started after the Bear is its custom event")
 		assert(events(calls,"FirstQuest")==1 and events(calls,"FirstPet")==1 and events(calls,"FiveMinutes")==1 and events(calls,"TenMinutes")==1)
 		for _,call in ipairs(calls)do assert(call[1]~="step"or call[3]==FS.V3StepNames[call[2]])end
 	end)
@@ -190,18 +191,43 @@ return function(server)
 		local Onboard=require(game:GetService("ReplicatedStorage").Shared.Onboard)
 		local okRun,problem=pcall(function()
 			Onboard.inject({flags={OnboardingV3=true},studio=true})
-			local s,calls=session(nil,{v3=nil})
+			local s,calls=session(nil,{v3=nil,ready=function()return true end})
 			s.forced=nil
 			s:hit("BoardReady");assert(s.v3==nil,"step 1 chooses nothing")
 			Onboard.inject({flags={OnboardingV3=true},studio=true,nest=false})
 			s:hit("FirstDrop");assert(s.v3==false and #steps(calls)==2,"nest off: the old table")
 			Onboard.inject({flags={OnboardingV3=true},studio=true});s:hit("FirstMerge");assert(s.v3==false,"fixed for the session")
-			local t=session(nil,{v3=nil});t.forced=nil
+			local t=session(nil,{v3=nil,ready=function()return true end});t.forced=nil
 			t:hit("BoardReady");t:hit("FirstDrop");assert(t.v3==true and #steps(calls)==3)
 		end)
 		Onboard.inject(nil)
 		assert(okRun,problem)
 	end)
 
+	test("the choice waits for the onboarding config: hooks are held and replayed in order; after the wait, what the switches say",function()
+		local Onboard=require(game:GetService("ReplicatedStorage").Shared.Onboard)
+		local okRun,problem=pcall(function()
+			Onboard.inject({flags={OnboardingV3=true},studio=true})
+			local loaded=false
+			local s,calls,timers=session(nil,{ready=function()return loaded end});s.forced=nil
+			s:hit("BoardReady");s:hit("FirstDrop");s:hit("FirstMerge");s:hit("BearMet");s:hit("InGarden");s:record("FirstPet")
+			assert(s.v3==nil and #steps(calls)==1 and events(calls,"FirstPet")==1,"held: only Board ready, and the event itself")
+			assert(#timers==2 and timers[2][1]==FS.ConfigRetry,"one recheck")
+			timers[2][2]();assert(s.v3==nil and #timers==3,"still not loaded: another recheck")
+			loaded=true;timers[3][2]()
+			local logged=steps(calls);assert(s.v3==true and #logged==5,#logged)
+			for i,step in ipairs(logged)do assert(step==i)end
+			assert(events(calls,"FirstDrop")==1)
+			-- Never loaded: after ConfigWait the switches decide (here, needs off: the old table).
+			Onboard.inject({flags={OnboardingV3=true},studio=true,needs=false})
+			local t,tcalls,ttimers=session(nil,{ready=function()return false end});t.forced=nil
+			t:hit("BoardReady");t:hit("FirstDrop")
+			local guard=0
+			while t.v3==nil and guard<100 do guard+=1;ttimers[#ttimers][2]()end
+			assert(t.v3==false and guard==FS.ConfigWait/FS.ConfigRetry and #steps(tcalls)==2,"the old table, step 2 replayed")
+		end)
+		Onboard.inject(nil)
+		assert(okRun,problem)
+	end)
 	return {passed=#cases,cases=cases}
 end

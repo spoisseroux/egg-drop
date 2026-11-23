@@ -131,6 +131,14 @@ return function(server)
 			local stars=saved(db).nectar
 			assert(H.nestClaim(h,"c1","pip"));assert(saved(db).nectar==stars+Nest.AfterWeekStars and saved(db).nest.n==8)
 			assert(not Wearables.owns(saved(db),"pip","beanie"),"no week gift from a bad count")
+			-- The repaired count is written back clean (n = 8), so the save keeps it closed: never the charm, on every later write.
+			assert(saved(db).nest.closed==true and not State.charmEarned(saved(db)),"closed after the repair")
+			c.advance(Nest.Seconds);assert(H.nestClaim(h,"c1b","pip"));assert(H.nestTuck(h,"t1b",9))
+			assert(saved(db).nest.n==9 and saved(db).nest.closed==true and not State.charmEarned(saved(db)))
+			h=c.reload("x");assert(H.nestLand(h,"lx","pip"))
+			assert(saved(db).nest.n==Nest.WeekLength and saved(db).nest.closed==true and not State.charmEarned(saved(db)),"a non-table field lands closed")
+			h=c.reload({n=7,at=c.now,gift=4,pet="pip"});assert(State.charmEarned(saved(db))and saved(db).nest.closed==nil,"a clean seven earns it")
+			assert(H.nestTuck(h,"t7",7)and saved(db).nest.closed==nil,"a clean field is never marked")
 			for _,bad in ipairs({{at="soon",n=1},{at=0/0,n=1},{at={},n=1}})do
 				h=c.reload(bad);assert(H.public(h).nest==nil and State.read(saved(db),c.now).n==1)
 				k+=1;assert(H.nestLand(h,"land"..k,"pip")and saved(db).nest.n==1,"a fresh land keeps n")

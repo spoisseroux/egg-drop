@@ -495,7 +495,7 @@ function Hatching.public(handle)
 	-- Garden finds: today's paid finds and the daily limit, only while the switch is on.
 	if Finds.on() then public.finds = FindsState.public(state, dayOf(handle.adapter.now())) end
 	-- The Sleepy Nest: the egg growing in the nest, only while the switch is on (no key until the first egg lands).
-	if Onboard.on("nest") then public.nest = NestState.public(state, handle.adapter.now()) end
+	if Onboard.on("nest") and not NestState.halted then public.nest = NestState.public(state, handle.adapter.now()) end
 	-- Onboarding: one-time coach cards already shown (0 when the field is missing).
 	public.coachMask = Coach.mask(state.coachMask)
 	-- Bond XP per pet (slice F): {} when the field is missing. Levels come from BondCatalog.

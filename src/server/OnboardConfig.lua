@@ -63,4 +63,6 @@ local shared=Config.new({service=function()return game:GetService("ConfigService
 	wait=task.wait,spawn=task.spawn,now=os.clock,ceiling=function()return Onboard.ceiling()end,warn=warn})
 Config.start=shared.start
 Config.command=shared.command
+-- Has the config loaded once (or an owner set a switch)? FirstSession waits for this before choosing its funnel table.
+function Config.loaded()return shared.loaded==true or next(shared.overrides)~=nil end
 return Config

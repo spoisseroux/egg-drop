@@ -998,6 +998,8 @@ local function closeBoard(board)
 		local ok, problem = pcall(garden.nestHost.leave, garden.nestHost, board)
 		if not ok then warn("[Nest] leave: " .. tostring(problem)) end
 	end
+	-- Onboarding v3: the per-session follow capture (FirstSession's table choice) goes with the player.
+	pcall(function() require(ReplicatedStorage.Shared.Onboard).forget(board.player) end)
 	-- Island edges: the safe spot is forgotten (nil while the build ceiling is off).
 	if garden.boundsHost then
 		local ok, problem = pcall(garden.boundsHost.leave, garden.boundsHost, board)
