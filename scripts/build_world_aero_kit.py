@@ -10,9 +10,10 @@ An additive kit that only the Aero look shows (live keeps the merged island exac
   chunk script's own declutter and QA fixes, checks their geometry hash against assets/world/world-v7-manifest.json,
   and proves every placed shared crown lands on its tree's leaves (max vertex error under MAX_FIT studs).
 - Rest: what the merged crown meshes hold besides trees (the blob bushes), static, so the merged parts can hide.
-- Falls: ONE vertex-coloured mesh for Tumble Falls: both back sheets (tapered, wavy sides, bowed out), the two foam lip
-  rolls, and the wet rocks. Rock footprints are checked against the pets' surface map: only water, rock, empty or
-  ground pets cannot reach (above LEDGE_Y).
+- Falls (LOOK-R2 2): ONE vertex-coloured mesh for Tumble Falls: dark wet rock faces with ledges, five white chutes per
+  drop on the beam curve, and the wet rocks. Rock footprints are checked against the pets' surface map: only water,
+  rock, empty or ground pets cannot reach (above LEDGE_Y).
+- Fountain (LOOK-R2 3): a two-tier stone fountain inside the Bubble Spring's basin (its glass bubbles are hidden).
 
 Writes (never touches the island export, its manifest, walk map or the native collision checkpoint):
 - assets/world/aero-kit/aero-kit.fbx            every kit mesh, origin at its bounds centre
@@ -262,21 +263,12 @@ def rest(sources):
 # ------------------------------------------------------------------------------------------------------------- falls
 WALK = json.loads((ROOT / "assets/world/world-v7-walk.json").read_text())
 SHEETS = {f["name"]: f for f in WALK["falls"]}
-# Section 4 layer 1: tapered, wavy sides, bowed out BOW studs at mid-height. The bow is exactly the cubic curve a Roblox
-# Beam draws between the sheet's top and bottom attachments (axis n) with CurveSize0 = CURVE and CurveSize1 = -CURVE,
-# CURVE = BOW / .75, so AeroFalls' flow beam, strands and ribbons bend with the sheet. Top (the lip) and foot stay on
-# today's plane. Lip rolls: Fable's round 1 thickness (.5 upper,
-# .6 lower: "hard white bars ... too thick" at .9 and 1.1).
-FALLS = {
-    "Water_TumbleFalls_Upper": {"rows": 14, "cols": 6, "bow": 1.5, "wave": .3, "waves": 1.6, "phase": .1,
-                                "lip": {"over": .15, "radius": .26, "out": .2}},
-    "Water_TumbleFalls_Lower": {"rows": 14, "cols": 6, "bow": 1.5, "wave": .35, "waves": 1.3, "phase": .55,
-                                "lip": {"over": .2, "radius": .3, "out": .2}},
-}
-WHITE = (0xF4, 0xFC, 0xFF)
-# Multiplies the falls texture: full in the middle, a little deeper where the sheet turns away at its sides.
-SHEET_MIDDLE, SHEET_EDGE = (0xFF, 0xFF, 0xFF), (0xC8, 0xD8, 0xEE)
-# Fable review r1: wet and darker than the marble ring (#9AA8B4 / #5E6B76 read dry and pale).
+# The falls' white water bows out BOW studs at mid-height on exactly the cubic curve a Roblox Beam draws between the
+# drop's top and bottom attachments (axis n) with CurveSize0 = CURVE and CurveSize1 = -CURVE, CURVE = BOW / .75, so
+# AeroFalls' flow beams bend with the chutes. Top (the lip) and foot stay on today's plane. Rocks: Fable review r1 (wet,
+# darker than the marble ring, not an even row).
+# LOOK-R2 round 4: bow .5 (1.5 pushed the water a full chute off the flow beams from the pool edge).
+FALLS = {"Water_TumbleFalls_Upper": {"bow": .5}, "Water_TumbleFalls_Lower": {"bow": .5}}
 ROCK_TOP, ROCK_BOTTOM = (0x74, 0x85, 0x8C), (0x3F, 0x4E, 0x55)
 
 
@@ -302,19 +294,6 @@ def curve(name):
     return FALLS[name]["bow"] / .75
 
 
-def sheet_point(name, u, v):
-    """Roblox position on a kit sheet at beam parameter u (0 top, 1 bottom) and v -1 to 1 across (along t). A Beam with
-    both attachments' Axis n, CurveSize0 c and CurveSize1 -c runs through P0 + 3c u(1-u) n along the straight line's
-    cubic blend 3u^2 - 2u^3, and widens linearly in u: the sheet is built on the same curve."""
-    top, bottom, w0, w1, n, t = frame(name)
-    spec = FALLS[name]
-    side = 1 if v >= 0 else -1
-    h = 3 * u * u - 2 * u * u * u
-    half = (w0 + (w1 - w0) * u) / 2 + spec["wave"] * math.sin(2 * math.pi * (h * spec["waves"] + spec["phase"] + .25 * side))
-    out = 3 * curve(name) * u * (1 - u)
-    return top + (bottom - top) * h + t * (half * v) + n * out
-
-
 class Builder:
     def __init__(self, name):
         self.bm = bmesh.new()
@@ -322,15 +301,16 @@ class Builder:
         self.uv = self.bm.loops.layers.uv.new("UVMap")
         self.name = name
 
-    def quad(self, pts, colors, uvs=None):
+    def quad(self, pts, colors, uvs=None, smooth=False):
         vs = [self.bm.verts.new(bl(*p)) for p in pts]
         face = self.bm.faces.new(vs)
+        face.smooth = smooth
         for i, (loop, c) in enumerate(zip(face.loops, colors)):
             loop[self.col] = (*c, 1.0)
             loop[self.uv].uv = uvs[i] if uvs else (0.0, 0.0)
 
-    def tri(self, pts, colors):
-        self.quad(pts, colors)
+    def tri(self, pts, colors, uvs=None, smooth=False):
+        self.quad(pts, colors, uvs, smooth)
 
     def build(self, facing=None):
         """Weld shared corners first: each quad is added with its own vertices, and loose faces get arbitrary normals
@@ -352,61 +332,94 @@ class Builder:
         return obj
 
 
-def add_sheet(b, name):
-    """The sheet carries today's falls texture with today's mapping (build_world_v7.py ribbon3: U = across / 6 from the
-    middle, V = -distance down the fall / 14), so it keeps its stripes; vertex colours only shade its sides."""
-    spec = FALLS[name]
-    rows, cols = spec["rows"], spec["cols"]
-    grid = [[sheet_point(name, r / rows, -1 + 2 * c / cols) for c in range(cols + 1)] for r in range(rows + 1)]
-    top = frame(name)[0]
-    down = [0.0]
-    for r in range(1, rows + 1):
-        down.append(down[-1] + (grid[r][cols // 2] - grid[r - 1][cols // 2]).length)
+ROCK_TOP_FACE, ROCK_FOOT_FACE = (0x55, 0x66, 0x6B), (0x44, 0x54, 0x5A)  # LOOK-R2 r3: slate, no blue
+CHUTE_TOP, CHUTE_WHITE, CHUTE_EDGE = (0x7F, 0xE0, 0xFF), (0xFF, 0xFF, 0xFF), (0xEA, 0xF6, 0xFF)
+# Per drop: three ledges (fraction of the drop's height, how far proud). LOOK-R2 round 3: three chutes (width shares
+# 2.4 / 4.2 / 3.0 of the sheet) with short, staggered gaps between them: (gap width in studs, from, to as fractions of the
+# drop's height; closed in the top 20 percent and the foot 10 percent). The water kinks out KINK studs at each ledge.
+LEDGES = {"Water_TumbleFalls_Upper": ((.24, .7), (.52, 1.0), (.78, .6)),
+          "Water_TumbleFalls_Lower": ((.27, .9), (.55, .6), (.8, 1.0))}
+CHUTE_SHARES = (2.4, 4.2, 3.0)
+GAPS = {"Water_TumbleFalls_Upper": ((.35, .22, .62), (.45, .40, .86)),
+        "Water_TumbleFalls_Lower": ((.4, .30, .78), (.3, .21, .55))}
+KINK = .3  # LOOK-R2 round 4 (round 3's .8 sawtoothed the edges and banded the sheet)
 
-    def uv(r, c):
-        middle = grid[r][cols // 2]
-        across = (grid[r][c] - middle).length * (1 if c >= cols // 2 else -1)
-        return (across / 6, -down[r] / 14)
 
-    def color(r, c):
-        v = abs(-1 + 2 * c / cols)
-        return lin(mix(SHEET_MIDDLE, SHEET_EDGE, v ** 2))
+def add_rock_face(b, name, rows=16, cols=7):
+    """LOOK-R2 2: the wet rock the water falls over: today's sheet plane widened by 2, a little behind it, with three
+    ledges standing proud across it. Slate from #55666B at the top to #44545A at the foot (round 3)."""
+    top, bottom, w0, w1, n, t = frame(name)
+    rnd = random.Random(sum(map(ord, name)))
+    jitter = [[rnd.uniform(-.12, .12) for _ in range(cols + 1)] for _ in range(rows + 1)]
+    grid = []
+    for r in range(rows + 1):
+        h = r / rows
+        row = []
+        for c in range(cols + 1):
+            v = -1 + 2 * c / cols
+            half = (w0 + (w1 - w0) * h) / 2 + 1.0
+            proud = sum(p * math.exp(-((h - at) / .045) ** 2) for at, p in LEDGES[name])
+            out = -.35 + proud * (1 - .25 * abs(v)) + jitter[r][c]
+            row.append(top + (bottom - top) * h + t * (half * v) + n * out)
+        grid.append(row)
     for r in range(rows):
+        cs = [lin(mix(ROCK_TOP_FACE, ROCK_FOOT_FACE, rr / rows)) for rr in (r, r, r + 1, r + 1)]
         for c in range(cols):
-            b.quad([grid[r][c], grid[r][c + 1], grid[r + 1][c + 1], grid[r + 1][c]],
-                   [color(r, c), color(r, c + 1), color(r + 1, c + 1), color(r + 1, c)],
-                   [uv(r, c), uv(r, c + 1), uv(r + 1, c + 1), uv(r + 1, c)])
+            b.quad([grid[r][c], grid[r][c + 1], grid[r + 1][c + 1], grid[r + 1][c]], cs)
 
 
-def add_lip(b, name):
-    """A foam roll along the sheet's top edge, a little in front of it, thinning to the ends."""
-    spec = FALLS[name]["lip"]
-    _, _, _, _, n, _ = frame(name)
-    up = Vector((0, 1, 0))
-    segs, sides = 14, 6
-    over = 1 + spec["over"] / (frame(name)[2] / 2)
-    rings = []
-    for i in range(segs + 1):
-        v = -over + 2 * over * i / segs
-        centre = sheet_point(name, 0, max(-1, min(1, v))) + n * spec["out"] + up * .1
-        if abs(v) > 1:  # past the sheet's edge: carry on straight along t
-            centre += frame(name)[5] * ((abs(v) - 1) * frame(name)[2] / 2 * (1 if v > 0 else -1))
-        k = abs(v) / over
-        radius = spec["radius"] * (1 - .55 * k ** 3)
-        ring = []
-        for j in range(sides):
-            a = 2 * math.pi * j / sides
-            ring.append(centre + (n * math.cos(a) + up * math.sin(a)) * radius)
-        rings.append(ring)
-    white = lin(WHITE)
-    for i in range(segs):
-        for j in range(sides):
-            jj = (j + 1) % sides
-            b.quad([rings[i][j], rings[i][jj], rings[i + 1][jj], rings[i + 1][j]], [white] * 4)
-    for ring in (rings[0], rings[-1]):
-        c = sum(ring, Vector()) / sides
-        for j in range(sides):
-            b.tri([c, ring[j], ring[(j + 1) % sides]], [white] * 3)
+def add_chutes(b, name, rows=22):
+    """LOOK-R2 round 3: one white sheet per drop on the beam curve (bow 1.5), split into three chutes only where the
+    staggered gaps run (never at the lip or the foot), kinking out KINK studs over each ledge. White in the middle,
+    #EAF6FF at the edges, clear aqua only at the very lip. Smooth shaded."""
+    top, bottom, w0, w1, n, t = frame(name)
+    c = curve(name)
+    total = sum(CHUTE_SHARES)
+    bounds = [0.0]
+    for share in CHUTE_SHARES:
+        bounds.append(bounds[-1] + share / total)
+    # Columns: the chute edges either side of each gap, and a middle line in each chute.
+    gaps = GAPS[name]
+
+    def columns(u):
+        sheet = w0 + (w1 - w0) * u
+        xs = []
+        for i in range(len(CHUTE_SHARES)):
+            lo, hi = bounds[i] * sheet, bounds[i + 1] * sheet
+            if i > 0:
+                lo += gaps[i - 1][0] / 2
+            if i < len(CHUTE_SHARES) - 1:
+                hi -= gaps[i][0] / 2
+            xs.append((lo - sheet / 2, (lo + hi) / 2 - sheet / 2, hi - sheet / 2))
+        return xs
+
+    def point(u, x):
+        h = 3 * u * u - 2 * u * u * u
+        kink = sum(KINK * math.exp(-((h - at) / .07) ** 2) for at, _ in LEDGES[name])
+        return top + (bottom - top) * h + t * x + n * (3 * c * u * (1 - u) + .05 + kink)
+
+    def core(u):
+        return CHUTE_WHITE if u > .12 else mix(CHUTE_TOP, CHUTE_WHITE, max(0.0, (u - .04) / .08))
+
+    def edge(u):
+        return lin(mix(core(u), CHUTE_EDGE, 1.0))
+    for r in range(rows):
+        u0, u1 = r / rows, (r + 1) / rows
+        h_mid = 3 * ((u0 + u1) / 2) ** 2 - 2 * ((u0 + u1) / 2) ** 3
+        c0, c1 = columns(u0), columns(u1)
+        k0, k1 = lin(core(u0)), lin(core(u1))
+        for i in range(len(CHUTE_SHARES)):
+            (l0, m0, h0), (l1, m1, h1) = c0[i], c1[i]
+            b.quad([point(u0, l0), point(u0, m0), point(u1, m1), point(u1, l1)], [edge(u0), k0, k1, edge(u1)],
+                   smooth=True)
+            b.quad([point(u0, m0), point(u0, h0), point(u1, h1), point(u1, m1)], [k0, edge(u0), edge(u1), k1], smooth=True)
+            # A gap closed at this height: water bridges it.
+            if i < len(CHUTE_SHARES) - 1:
+                width, lo, hi = gaps[i]
+                if not (lo <= h_mid <= hi):
+                    n0, n1 = c0[i + 1], c1[i + 1]
+                    b.quad([point(u0, h0), point(u0, n0[0]), point(u1, n1[0]), point(u1, h1)], [edge(u0), edge(u0), edge(u1), edge(u1)],
+                           smooth=True)
 
 
 def rock_shape(seed, size):
@@ -526,21 +539,81 @@ def check_rocks(list_):
 
 
 def falls():
-    sheets = Builder("Sheets__waterfall_tumble")
+    """LOOK-R2 2: rock face, chutes and the wet rocks: one vertex-coloured mesh (the lip bars and the striped sheet are gone)."""
     b = Builder("Falls__kitwater")
     for name in FALLS:
-        add_sheet(sheets, name)
-        add_lip(b, name)
+        add_rock_face(b, name)
+        add_chutes(b, name)
     list_ = rocks()
     check_rocks(list_)
     for i, rock in enumerate(list_):
         add_rock(b, rock, 40 + i)
-    frames = {}
-    for name, spec in FALLS.items():
-        top, bottom, w0, w1, n, t = frame(name)
-        frames[name] = {"bow": spec["bow"], "curve": round(curve(name), 6),
-                        "lip": {"over": spec["lip"]["over"], "radius": spec["lip"]["radius"], "out": spec["lip"]["out"]}}
-    return [sheets.build(facing=frame(next(iter(FALLS)))[4]), b.build()], list_, frames
+    frames = {name: {"bow": spec["bow"], "curve": round(curve(name), 6)} for name, spec in FALLS.items()}
+    return [b.build()], list_, frames
+
+
+# LOOK-R2 3 and round 3: a two-tier garden fountain in the Bubble Spring's basin, 5.2 tall, its bowl 3.2 up and 3.2
+# across, 16 sides, one marble tint (#B9BEC2, base #9AA3A6). The old basin is an octagon inside a shared marble mesh, so a
+# round 16-sided rim and its own water (#3BA3BE) sit over it (the old water, W7_Landmarks__water, is hidden). Measured old
+# basin: outer +-4.3 by +-2.67, inner about +-3.4 by +-2.1, rim top 5.2 to 5.3, a mound in the middle up to about 1.2 out.
+FOUNTAIN = {"x": 52.0, "z": 3.0, "base": 3.95, "water": 4.7, "segs": 16,
+            # (height above the base, radius), from the foot up a pedestal that covers the old basin's mound (up to
+            # about 1.35 above the base, 1.2 out), the stem, out over the bowl, back in and up the finial
+            "profile": ((0, 1.5), (1.4, 1.45), (1.5, 1.2), (1.65, .6), (2.9, .48), (3.1, .62), (3.25, 1.2), (3.65, 1.6),
+                        (3.75, 1.62), (3.8, 1.5), (3.6, 1.15), (3.85, .22), (4.45, .32), (4.7, .18), (5.2, 0)),
+            "bowlWater": 3.7, "bowlWaterRadius": 1.4,
+            # A low rim (Fable: pets step in): top .4 over the water, raised to read full.
+            "rim": {"outer": (4.45, 2.82), "inner": (3.45, 2.05), "top": 4.95, "foot": 4.2}}  # LOOK-R2 r4: low wall
+STONE_TOP, STONE_BASE, MOSS, POOL_WATER = (0xB9, 0xBE, 0xC2), (0x9A, 0xA3, 0xA6), (0x6E, 0x8B, 0x5A), (0x3B, 0xA3, 0xBE)
+
+
+def fountain():
+    """Stem, bowl and finial as one lathe, the bowl's water, a round rim over the old octagon and the basin's water.
+    Vertex tint: one marble, a touch darker at the foot, a moss band at the waterline. UV: around (U) by height (V)."""
+    f = FOUNTAIN
+    b = Builder("Fountain__kitstone")
+    centre = Vector((f["x"], f["base"], f["z"]))
+    segs = f["segs"]
+
+    def ring(hgt, r, k, squash=(1.0, 1.0)):
+        a = math.tau * k / segs
+        return centre + Vector((math.cos(a) * r * squash[0], hgt, math.sin(a) * r * squash[1]))
+
+    def tint(hgt):
+        y = f["base"] + hgt
+        if f["water"] - .05 <= y <= f["water"] + .3:
+            return lin(MOSS)
+        return lin(mix(STONE_BASE, STONE_TOP, min(1.0, hgt / 2.0)))
+    prof = f["profile"]
+    for i in range(len(prof) - 1):
+        (h0, r0), (h1, r1) = prof[i], prof[i + 1]
+        for k in range(segs):
+            kk = k + 1
+            pts = [ring(h0, r0, k), ring(h0, r0, kk), ring(h1, r1, kk), ring(h1, r1, k)]
+            uvs = [(k / segs * 3, h0 / 2), (kk / segs * 3, h0 / 2), (kk / segs * 3, h1 / 2), (k / segs * 3, h1 / 2)]
+            b.quad(pts, [tint(h0), tint(h0), tint(h1), tint(h1)], uvs, smooth=True)
+    water = lin(POOL_WATER)
+
+    def disc(height, rx, rz):
+        mid = centre + Vector((0, height, 0))
+        for k in range(segs):
+            b.tri([mid, ring(height, 1, k + 1, (rx, rz)), ring(height, 1, k, (rx, rz))], [water] * 3)
+    disc(f["bowlWater"], f["bowlWaterRadius"], f["bowlWaterRadius"])
+    # The round rim: outer wall, top, inner wall down to the water, then the basin's water.
+    rim = f["rim"]
+    top, foot, wet = rim["top"] - f["base"], rim["foot"] - f["base"], f["water"] - f["base"]
+    for k in range(segs):
+        kk = k + 1
+        o0, o1 = ring(top, 1, k, rim["outer"]), ring(top, 1, kk, rim["outer"])
+        i0, i1 = ring(top, 1, k, rim["inner"]), ring(top, 1, kk, rim["inner"])
+        stone = lin(STONE_TOP)
+        b.quad([ring(foot, 1, k, rim["outer"]), ring(foot, 1, kk, rim["outer"]), o1, o0], [lin(STONE_BASE)] * 2 + [stone] * 2,
+               [(k / 4, 0), (kk / 4, 0), (kk / 4, .7), (k / 4, .7)])
+        b.quad([o0, o1, i1, i0], [stone] * 4, [(k / 4, 0), (kk / 4, 0), (kk / 4, .6), (k / 4, .6)])
+        b.quad([i0, i1, ring(wet, 1, kk, rim["inner"]), ring(wet, 1, k, rim["inner"])], [stone, stone, lin(MOSS), lin(MOSS)],
+               [(k / 4, 0), (kk / 4, 0), (kk / 4, .5), (k / 4, .5)])
+    disc(wet + .01, rim["inner"][0], rim["inner"][1])
+    return b.build()
 
 
 # ------------------------------------------------------------------------------------------------------------ export
@@ -565,6 +638,7 @@ def main():
     canon, instances = crowns(sources)
     rest_objs = rest(sources)
     falls_objs, rock_list, frames = falls()
+    falls_objs.append(fountain())
     meshes, export = [], []
     for name, entry in canon.items():
         obj = entry["obj"]
@@ -578,7 +652,8 @@ def main():
     for obj in rest_objs + falls_objs:
         obj.name = obj.data.name = "W7_Kit_" + obj.name
         c, size = centred(obj)
-        role = "falls" if obj.name.startswith(("W7_Kit_Falls", "W7_Kit_Sheets")) else "rest"
+        role = ("falls" if obj.name.startswith("W7_Kit_Falls") else "fountain" if obj.name.startswith("W7_Kit_Fountain")
+                else "rest")
         meshes.append({"name": obj.name, "role": role, "kind": obj.name.rsplit("__", 1)[1], "tris": C.tris(obj),
                        "size": size, "center": rb(c), "hash": geom_digest(obj.data)})
         export.append(obj)
@@ -593,11 +668,19 @@ def main():
                              colors_type="SRGB")
     hidden = {"W7_Vegetation__foliage": merged["Vegetation__foliage"],
               "W7_Vegetation__foliage_blossom": merged["Vegetation__foliage_blossom"],
-              "W7_Water__waterfall_tumble": merged["Water__waterfall_tumble"]}
+              "W7_Water__waterfall_tumble": merged["Water__waterfall_tumble"],
+              # LOOK-R2 3: the fountain replaces the spring's glass bubbles (the basin and its water stay).
+              "W7_Bubbles__bubble": ["Anim__Landmark_BubbleSpring_Bubble_0..5__bubble"],
+              # LOOK-R2 round 3: the old basin water under the kit's own, and the faceted foam at the falls' feet.
+              "W7_Landmarks__water": ["Landmark_BubbleSpring water"],
+              "W7_Water__foam": ["Anim__Water_TumbleFalls_Foam_Bottom/Ledge, Anim__Water_SkyFalls_Foam"]}
     manifest = {
         "note": "Generated by scripts/build_world_aero_kit.py. Roblox studs. Crown pivotToCentre is the mesh bounds "
                 "centre from its pivot in the tree's own frame at scale 1 (Roblox axes, before the tree's yaw).",
         "meshes": meshes, "crowns": instances, "rocks": rock_list, "falls": frames, "hides": hidden,
+        "fountain": {"centre": [FOUNTAIN["x"], FOUNTAIN["base"], FOUNTAIN["z"]], "top": FOUNTAIN["base"] + 5.2,
+                     "bowl": {"y": FOUNTAIN["base"] + 3.75, "radius": 1.6}, "water": FOUNTAIN["water"],
+                     "basin": [6.82, 4.2284]},
         "triangles": sum(m["tris"] for m in meshes)}
     (OUT / "aero-kit-manifest.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8", newline="\n")
     print("KIT", len(meshes), "meshes", manifest["triangles"], "tris,", len(instances), "crowns,", len(rock_list), "rocks")

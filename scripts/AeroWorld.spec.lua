@@ -441,23 +441,25 @@ return function(client,offline)
 				kit.built+=1
 				local folder=Instance.new("Folder");folder.Name="AeroKit"
 				local crown=mesh(folder,"W7_Kit_Crown_Blossom__foliage_blossom",{matte=true})
+				crown:SetAttribute("AeroMatteLime",true) -- its own matte lime skin (AeroKit)
 				folder.Parent=o.parent
 				kit.folder,kit.crown=folder,crown
 				return{folder=folder,data=o.data,destroy=function()kit.dropped+=1;folder:Destroy()end}
 			end
-			local r=rig({kit=kit,kitData={hides={"W7_Vegetation__foliage_blossom","W7_Water__waterfall_tumble"}},templates={}})
+			local r=rig({kit=kit,kitData={hides={"W7_Vegetation__foliage_blossom","W7_Water__waterfall_tumble","W7_Bubbles__bubble"}},templates={}})
 			local l=lounge(r.world)
 			l.beam.Name="Water_TumbleFalls_Lower";l.beam.Enabled=true
 			local before=picture(r.world)
 			r.flip(true);r.pump()
 			assert(kit.built==1 and kit.folder.Parent==l.room)
-			assert(l.crown.Transparency==1 and l.beam.Enabled==false,"what the kit replaces is hidden")
-			assert(kit.crown:FindFirstChildOfClass("SurfaceAppearance")==nil and kit.crown.TextureID==Values.Crowns.lime.Texture,"kit crowns paint lime")
+			assert(l.crown.Transparency==1 and l.beam.Enabled==false and l.bubble.Transparency==1,"what the kit replaces is hidden")
+			local skin=kit.crown:FindFirstChildOfClass("SurfaceAppearance")
+			assert(skin and kit.crown.TextureID=="","a matte lime kit crown keeps its own skin for lime")
 			-- Coral and back repaint every crown: the merged one stays hidden (its own records are not the surfaces').
 			r.trees="coral";r.treesChanged.fire();r.pump()
-			assert(l.crown.Transparency==1 and kit.crown.TextureID==""and rgb(kit.crown.Color)==rgb(hex("#F2545B")))
+			assert(l.crown.Transparency==1 and kit.crown:FindFirstChildOfClass("SurfaceAppearance")==nil and rgb(kit.crown.Color)==rgb(hex("#F2545B")))
 			r.trees="lime";r.treesChanged.fire();r.pump()
-			assert(l.crown.Transparency==1 and kit.crown.TextureID==Values.Crowns.lime.Texture)
+			assert(l.crown.Transparency==1 and kit.crown:FindFirstChildOfClass("SurfaceAppearance")==skin,"lime again: its skin is back")
 			-- A new World under a standing kit: its crown is hidden too; the old one has its looks back.
 			local old=l.crown
 			local w2=Instance.new("Folder");w2.Name="World"
@@ -469,6 +471,7 @@ return function(client,offline)
 			-- Budget level 2: the kit goes and the merged parts come back in the same step.
 			r.lvl=2;r.tick()
 			assert(kit.dropped==1 and kit.folder.Parent==nil and l.crown.Transparency==0 and l.beam.Enabled==true)
+			assert(near(l.bubble.Transparency,Values.Surfaces.bubble.Transparency),"Aero is still on: the bubble takes the Aero look again")
 			assert(crown2.Transparency==0,"every hidden part is put back, even one that left")
 			r.flip(false);r.pump()
 			samePicture(before,picture(r.world))

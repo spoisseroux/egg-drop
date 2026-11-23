@@ -111,7 +111,8 @@ class Gate(unittest.TestCase):
         self.assertEqual(len(crowns), 21)
         self.assertTrue(all(c["fit"] < 0.01 for c in crowns), "every shared crown sits on its own tree's leaves")
         self.assertEqual(sorted(self.manifest["hides"]),
-                         ["W7_Vegetation__foliage", "W7_Vegetation__foliage_blossom", "W7_Water__waterfall_tumble"])
+                         ["W7_Bubbles__bubble", "W7_Landmarks__water", "W7_Vegetation__foliage",
+                          "W7_Vegetation__foliage_blossom", "W7_Water__foam", "W7_Water__waterfall_tumble"])
         island = {p["name"]: p for p in json.loads((gate.WORLD / "world-v7-manifest.json").read_text())["parts"]}
         kit_tris = sum(m["tris"] for m in self.manifest["meshes"] if m["role"] in ("crown", "rest"))
         crown_meshes = {m["name"]: m["tris"] for m in self.manifest["meshes"]}
@@ -119,8 +120,11 @@ class Gate(unittest.TestCase):
         self.assertEqual(placed, island["W7_Vegetation__foliage"]["tris"] + island["W7_Vegetation__foliage_blossom"]["tris"],
                          "the split crowns and bushes hold exactly the merged crowns' triangles")
         self.assertGreater(kit_tris, 0)
-        falls = sum(m["tris"] for m in self.manifest["meshes"] if m["role"] == "falls")
-        self.assertLessEqual(falls - island["W7_Water__waterfall_tumble"]["tris"], 1500, "ALIVE-SAFETY 4: +1,500 triangles")
+        added = sum(m["tris"] for m in self.manifest["meshes"] if m["role"] in ("falls", "fountain"))
+        hidden = sum(island[n]["tris"] for n in ("W7_Water__waterfall_tumble", "W7_Bubbles__bubble", "W7_Water__foam",
+                                                  "W7_Landmarks__water"))
+        self.assertLessEqual(added - hidden, 1500, "ALIVE-SAFETY 4: +1,500 triangles")
+        self.assertTrue(any(m["role"] == "fountain" for m in self.manifest["meshes"]) and self.manifest["fountain"]["top"] > 0)
 
     def test_the_native_checkpoint_is_untouched(self):
         native.validate(gate.ROOT)  # raises when any bound island input or output changed

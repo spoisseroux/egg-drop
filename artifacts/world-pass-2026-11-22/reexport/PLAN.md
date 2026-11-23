@@ -176,3 +176,58 @@ under 4.7, the ring and shore height, and the two high ones are on the walled le
 
 **Before live (Fable R2):** the Ribbon layer shows a thin bright line down both tiers (a step-1 layer; fade its ends or
 trim it to each sheet); hide the old mossy rock on the ledge pool under Aero if cheap.
+
+## Round 2 plan (Spencer's beta (12) QA, Fable LOOK-R2.md)
+
+All Aero-only, through the same kit and gate (one more upload, r6). Nothing on live.
+
+1. **Matte crowns.** Lime kit template gets its own SurfaceAppearance (ColorMap = lime map, RoughnessMap = flat grey
+   235 = 0.92, metalness 0). AeroWorld.paintCrown leaves a kit crown that carries `AeroMatteLime` alone for lime (no
+   parking); coral still parks it and goes flat. Dark crowns already sit on roughness 1.
+2. **Near fade (clipping).** `AeroKit.fader`: every .15 s, Room mode only, camera inside a crown's box + 1.5 studs ->
+   LocalTransparencyModifier toward .8 (.25 s in, .4 s out); only the avatar's root inside -> .5. Outside Room mode
+   (deck, Dash race: DashFade owns that property then) it puts every crown back to 0 and writes nothing. Started by
+   AeroWorld.standKit, stopped by dropKit.
+3. **Falls rework (kit mode only; without the kit today's step-1 layers stay).** Kit mesh: the Sheets mesh goes; the
+   Falls mesh gets a dark wet rock face (3 ledges per drop, .6-1.2 proud) and 5 static white chutes per drop on the
+   beam curve (bow 1.5), lips dropped, rocks kept. AeroFalls kit stack: Flow A, Flow B (curved beams, new drawn maps
+   `fall-white`, `fall-veil`), a flat apron beam (`foam-streak`), boil and droplet emitters (`spray-soft`, speck),
+   quieter pool mist; no strands, ribbon, lips, rings or rainbow. Pool FlowSkin to #3BA3BE under Aero.
+4. **Fountain.** Kit mesh `W7_Kit_Fountain__kitstone` (stem, upper bowl, finial, water disc; vertex-tinted stone on
+   the marble map, moss band), inside the existing spring basin at (52, 3); `W7_Bubbles__bubble` joins the hides.
+   `AeroFountain` in the additions: jet, spill and splash emitters (level 1 keeps the jet), a positional
+   `water_bed_loop` voice at pitch 1.25, volume .16, InverseTapered 5..26 (an original `fountain_loop` later).
+5. **Crown reshape and leaf tiles** (LOOK-R2 step 5): after 1-4 are seen; may stay a follow-up.
+
+Draws: kit +1 (fountain) with Sheets removed (net 0 for the kit); falls layers 14 -> 9; fountain emitters +3 within
+range. New drawn textures uploaded as images. Every new piece follows Reduced Motion and the budget levels.
+
+## Round 2 result (2026-11-23, Spencer's beta (12) QA)
+
+- **Kit r9**, Model 125352578844438 (operation 9f0fb6c4-8e24-425f-94db-f2810ca11826, Approved), through the gate:
+  8 meshes. Falls: dark slate rock faces with ledges + three white chutes per drop with short staggered slits, bow .5,
+  ledge kink .3, wet rocks; the striped sheet and lip bars are gone. Fountain (new): a two-tier stone fountain,
+  5.2 tall, 16 sides, marble with a moss band, its own round rim and teal water over the old octagon basin; the spring's
+  glass bubbles, its old water and the falls' faceted foam mesh are hidden under Aero (Sky Falls loses its foam blob
+  too: it keeps its step-1 layers and the server's splash). Lime crowns: their own SurfaceAppearance, roughness .92,
+  tinted to #86BE3C (matte, no gloss). Crowns fade to .8 when the camera is inside one (roam camera only).
+- Falls layers under the kit (AeroFalls.kitStack): Flow A (`fall-white`) and Flow B (`fall-veil`) flat beams at
+  1.0 / 1.2 in front of the chutes, a flat foam apron, boil, droplets, quiet mist; 9 draws, 4 at level 1.
+  **Found:** a Beam lays its width along its attachments' SecondaryAxis; AeroFalls gave "up", so every step-1 strand
+  and ribbon has stood edge-on since beta (10) (a thin line, the reason Spencer saw no strands). The kit's beams take the
+  sheet's width there; the step-1 stack is unchanged (it only shows without the kit).
+- Fountain: jet, spill and splash emitters (squashed streaks), a `water_bed_loop` voice at pitch 1.25 through
+  AmbientAudio (ambience mix, ducks, round fade), 5 to 26 studs. An original fountain loop is still owed.
+- New drawn maps (scripts/draw_aero_falls_textures.py): fall-white, fall-veil, foam-streak, spray-soft, speck,
+  roughness-92; uploaded as images.
+- Reviews: Software Architect GO WITH CHANGES (fade gate, bubble restore order, voice through AmbientAudio, crown
+  exemption, distinct level-1 flags; all applied). Fable LOOK-R2 rounds 3-5: falls NO-GO, then GO WITH CHANGES, then
+  **GO** for the beta; fountain and lime crowns GO. Code Reviewer **GO** (two hardening notes applied).
+- Checks: offline suite 34 PASS + AeroFalls 22 + AeroKit 7; Studio WindClient 25, AeroWorld 27, AeroKit 7;
+  world_aero_kit_test 10/10; native checkpoint PASS unchanged; sweep identical; FindSpots / LifeSpots current.
+  Captures: `r4/` (pool-edge, falls-wide, fountain-5, fountain-15).
+- **Not done / not verified:** crown reshape and leaf tiles (LOOK-R2 step 5); the pool part's own cobalt texture (needs
+  a new Aero pool map, Fable's top next item); chute slits .15-.3 (another upload); a 5 s clip, a pet in the pool, a
+  phone frame and draw counts on a device; the fountain voice heard by Spencer; the near fade seen in Room mode (spec
+  only: the Studio client sits on the deck). The AeroFalls Studio run stops at a pre-existing firefly float check
+  (line 504, garden hour); offline it passes.

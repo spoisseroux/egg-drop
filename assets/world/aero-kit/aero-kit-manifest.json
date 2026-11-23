@@ -104,38 +104,38 @@
    "hash": "23a32cb068594d1e"
   },
   {
-   "name": "W7_Kit_Sheets__waterfall_tumble",
-   "role": "falls",
-   "kind": "waterfall_tumble",
-   "tris": 336,
-   "size": [
-    17.0289,
-    48.4046,
-    16.418
-   ],
-   "center": [
-    76.0524,
-    27.4023,
-    -76.0146
-   ],
-   "hash": "9d287add6b927d9e"
-  },
-  {
    "name": "W7_Kit_Falls__kitwater",
    "role": "falls",
    "kind": "kitwater",
-   "tris": 1000,
+   "tris": 1740,
    "size": [
     32.452,
-    48.7848,
+    48.4596,
     25.1835
    ],
    "center": [
     69.2624,
-    27.5374,
+    27.3748,
     -72.86
    ],
-   "hash": "8cbc28585dd18e76"
+   "hash": "c75adc2b1d8a17ee"
+  },
+  {
+   "name": "W7_Kit_Fountain__kitstone",
+   "role": "fountain",
+   "kind": "kitstone",
+   "tris": 560,
+   "size": [
+    8.9,
+    5.2,
+    5.64
+   ],
+   "center": [
+    52.0,
+    6.55,
+    3.0
+   ],
+   "hash": "c1103d4bdda6ebbe"
   }
  ],
  "crowns": [
@@ -567,22 +567,12 @@
  ],
  "falls": {
   "Water_TumbleFalls_Upper": {
-   "bow": 1.5,
-   "curve": 2.0,
-   "lip": {
-    "over": 0.15,
-    "radius": 0.26,
-    "out": 0.2
-   }
+   "bow": 0.5,
+   "curve": 0.666667
   },
   "Water_TumbleFalls_Lower": {
-   "bow": 1.5,
-   "curve": 2.0,
-   "lip": {
-    "over": 0.2,
-    "radius": 0.3,
-    "out": 0.2
-   }
+   "bow": 0.5,
+   "curve": 0.666667
   }
  },
  "hides": {
@@ -599,7 +589,33 @@
   "W7_Water__waterfall_tumble": [
    "Anim__Water_TumbleFalls_Lower__waterfall_tumble",
    "Anim__Water_TumbleFalls_Upper__waterfall_tumble"
+  ],
+  "W7_Bubbles__bubble": [
+   "Anim__Landmark_BubbleSpring_Bubble_0..5__bubble"
+  ],
+  "W7_Landmarks__water": [
+   "Landmark_BubbleSpring water"
+  ],
+  "W7_Water__foam": [
+   "Anim__Water_TumbleFalls_Foam_Bottom/Ledge, Anim__Water_SkyFalls_Foam"
   ]
  },
- "triangles": 3016
+ "fountain": {
+  "centre": [
+   52.0,
+   3.95,
+   3.0
+  ],
+  "top": 9.15,
+  "bowl": {
+   "y": 7.7,
+   "radius": 1.6
+  },
+  "water": 4.7,
+  "basin": [
+   6.82,
+   4.2284
+  ]
+ },
+ "triangles": 3980
 }

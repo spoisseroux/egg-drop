@@ -1,9 +1,9 @@
 {
- "assetId": "108202274856277",
- "operationId": "37ad92ca-c3c8-4626-bcd3-6b129b0c8c79",
+ "assetId": "125352578844438",
+ "operationId": "9f0fb6c4-8e24-425f-94db-f2810ca11826",
  "moderation": "Approved",
- "fbxSha256": "6f153c17a41916d99f0236653b6be2ae398e1c2318d5ae9e511ab92db6cc4f13",
- "manifestSha256": "340eaa53708190f939b5471214d015cf4cea85e628ee2a0c5d50ecf8278e5913",
+ "fbxSha256": "d8c679542166b9d32a5ffb71fc610206dfa65894514698ee444193463e3041d5",
+ "manifestSha256": "d28ae4b00f27311b6bd2731a84be591e18e38a78cf1258531bcb78d7c64ac792",
  "parts": [
   {
    "name": "W7_Kit_Crown_Blossom__foliage_blossom",
@@ -43,11 +43,20 @@
   },
   {
    "name": "W7_Kit_Falls__kitwater",
-   "meshId": "rbxassetid://114460533653684",
+   "meshId": "rbxassetid://73845431603817",
    "meshSize": [
     377.337219,
-    567.247253,
+    563.466431,
     292.821869
+   ]
+  },
+  {
+   "name": "W7_Kit_Fountain__kitstone",
+   "meshId": "rbxassetid://112786401704620",
+   "meshSize": [
+    103.485199,
+    60.4632568,
+    65.5793762
    ]
   },
   {
@@ -67,19 +76,10 @@
     21.6658535,
     759.856201
    ]
-  },
-  {
-   "name": "W7_Kit_Sheets__waterfall_tumble",
-   "meshId": "rbxassetid://119941462949794",
-   "meshSize": [
-    198.004013,
-    562.826904,
-    190.901154
-   ]
   }
  ],
  "provenance": {
-  "recordedUtc": "2026-11-23T17:15:40.774303+00:00",
+  "recordedUtc": "2026-11-23T17:53:38.148254+00:00",
   "note": "Open Cloud POST /assets/v1/assets (Model) through Studio MCP, operation polled to done; MeshId/MeshSize read with InsertService:LoadAsset in Studio Edit, model destroyed unparented, place not saved."
  }
 }

@@ -106,6 +106,28 @@ function World.new(options)
 	end
 	self.templates=options.templates or function()return ReplicatedStorage:FindFirstChild(Kit.Templates)end
 	self.spawn=options.spawn or task.spawn
+	-- The crowns' near fade (AeroKit.fader): on only in Room mode with the roam camera (a deck, a focus or a Dash race take
+	-- the camera: Scriptable). nil in specs unless given.
+	self.fade=options.fade
+	if self.fade==nil and options.world==nil then
+		local RunService=game:GetService("RunService")
+		self.fade={
+			active=function()
+				local camera=workspace.CurrentCamera
+				if not camera or camera.CameraType~=Enum.CameraType.Custom then return false end
+				local boards,player=ReplicatedStorage:FindFirstChild("EggDropBoards"),Players.LocalPlayer
+				local board=boards and player and boards:FindFirstChild(tostring(player.UserId))
+				return board~=nil and board:GetAttribute("Mode")=="Room"
+			end,
+			camera=function()local camera=workspace.CurrentCamera;return camera and camera.CFrame.Position end,
+			root=function()
+				local character=Players.LocalPlayer and Players.LocalPlayer.Character
+				local root=character and character:FindFirstChild("HumanoidRootPart")
+				return root and root.Position
+			end,
+			connect=function(fn)return RunService.Heartbeat:Connect(fn)end,
+		}
+	end
 	-- true when every template's mesh (and texture) loaded; yields.
 	self.preload=options.preload or function(folder)
 		local good=true
@@ -227,7 +249,8 @@ function World:paintPart(part)
 				if child:IsA("SurfaceAppearance")then self:set(self.surfaces,child,"Color",value)end
 			end
 		elseif key=="Color"and part:GetAttribute("CareStatusSurface")==true
-			or key=="Transparency"and part:GetAttribute("WorldMotion")=="pulse"then
+			or key=="Transparency"and part:GetAttribute("WorldMotion")=="pulse"
+			or key=="Transparency"and self.hidden[part]~=nil then
 			continue
 		elseif key=="Color"and kind=="glow_warm"then
 			-- The garden hour's glow (paintGlow) if it is on.
@@ -241,6 +264,8 @@ end
 function World:paintCrown(part)
 	local crown=Values.Crowns[self.switch.trees()]
 	if not crown or self.refused[part]then return end
+	-- LOOK-R2 1: a kit crown with its own matte lime SurfaceAppearance needs nothing for lime (coral still goes flat).
+	if crown.Texture and part:GetAttribute("AeroMatteLime")==true and part:FindFirstChildOfClass("SurfaceAppearance")then return end
 	local skins={}
 	for _,child in ipairs(part:GetChildren())do if child:IsA("SurfaceAppearance")then table.insert(skins,child)end end
 	if not crown.Flat then
@@ -349,8 +374,8 @@ function World:bind(room)
 	for folder in pairs(table.clone(self.folderLinks))do self:unwatch(folder)end
 	for _,link in ipairs(self.roomLinks)do link:Disconnect()end
 	table.clear(self.roomLinks);table.clear(self.late)
-	self:restoreAll(self.surfaces)
 	self:dropKit()
+	self:restoreAll(self.surfaces)
 	table.clear(self.glows)
 	table.clear(self.refused)
 	self.room,self.folders=room,{}
@@ -419,7 +444,17 @@ function World:hideMerged()
 	local meshes=self.folders.World
 	for _,name in ipairs(built.data.hides or {})do
 		local part=meshes and meshes:FindFirstChild(name)
-		if part and part:IsA("BasePart")then self:set(self.hidden,part,"Transparency",1)end
+		if part and part:IsA("BasePart")then
+			-- A part the look also paints (the bubbles' Transparency): its own value back first, so the hide keeps the
+			-- original and the paint comes back over it when the kit goes (dropKit repaints).
+			local painted=self.surfaces[part]
+			if painted and painted.was.Transparency~=nil and self.hidden[part]==nil then
+				pcall(function()part.Transparency=painted.was.Transparency end)
+				painted.was.Transparency,painted.now.Transparency,painted.want.Transparency=nil,nil,nil
+				if next(painted.was)==nil and #painted.parked==0 then self.surfaces[part]=nil end
+			end
+			self:set(self.hidden,part,"Transparency",1)
+		end
 	end
 	local flow=self.folders.WaterFlow
 	for _,beam in ipairs(flow and flow:GetDescendants()or {})do
@@ -450,7 +485,7 @@ function World:buildKit()
 	end)
 end
 function World:standKit(data,templates,turn)
-	local ok,built=pcall(self.kit.build,{data=data,templates=templates,parent=self.room})
+	local ok,built=pcall(self.kit.build,{data=data,templates=templates,parent=self.room,fade=self.fade})
 	if not ok then self:complain(built);return end
 	self.built=built
 	self:watch(built.folder)
@@ -465,7 +500,13 @@ function World:standKit(data,templates,turn)
 	self.delay(World.Interval,check)
 end
 function World:dropKit()
+	local was=self:items(self.hidden)
 	self:restoreAll(self.hidden)
+	if self.enabled and self.room then
+		for _,item in ipairs(was)do
+			if item:IsA("BasePart")and self.room:IsAncestorOf(item)then pcall(self.paintPart,self,item)end
+		end
+	end
 	local built=self.built
 	self.built=nil
 	if not built then return end

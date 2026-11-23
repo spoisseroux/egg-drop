@@ -36,8 +36,11 @@ return function(client)
 		end
 		local n=0;for _ in pairs(meshes)do n+=1 end
 		assert(n==4,"crown meshes "..n)
-		table.sort(Data.hides)
-		assert(Data.hides[1]=="W7_Vegetation__foliage"and Data.hides[2]=="W7_Vegetation__foliage_blossom"and Data.hides[3]=="W7_Water__waterfall_tumble")
+		local hides=table.clone(Data.hides);table.sort(hides)
+		assert(table.concat(hides,",")=="W7_Bubbles__bubble,W7_Landmarks__water,W7_Vegetation__foliage,W7_Vegetation__foliage_blossom,"
+			.."W7_Water__foam,W7_Water__waterfall_tumble")
+		local f=Data.fountain
+		assert(f and near(f.centre[1],52)and near(f.centre[3],3)and f.top>f.bowl.y and f.bowl.y>f.water and f.water>f.centre[2])
 		assert(#Data.rocks==10)
 		for _,rock in ipairs(Data.rocks)do assert(rock.radius>.3 and rock.radius<2,rock.kind)end
 		for name,fall in pairs(Data.falls)do assert(near(fall.curve,fall.bow/.75),name)end
@@ -62,9 +65,13 @@ return function(client)
 		local room=Instance.new("Folder")
 		local built=Kit.build({data=Data,templates=templates(),parent=room})
 		assert(built.folder.Parent==room and built.folder.Name==Kit.Folder)
-		local crowns,balls,placed=0,0,0
+		local crowns,balls,placed,stems,lime=0,0,0,0,0
 		for _,p in ipairs(built.folder:GetChildren())do
-			if p.Name=="RockCollision"then
+			if p.Name=="FountainCollision"then
+				stems+=1
+				assert(p.CanCollide==true and p.CanQuery==false and p.Transparency==1)
+				assert(near(p.CFrame.Position.X,52)and near(p.CFrame.Position.Z,3))
+			elseif p.Name=="RockCollision"then
 				balls+=1
 				assert(p.CanCollide==true and p.CanQuery==false and p.CanTouch==false and p.Transparency==1 and p.Anchored)
 			else
@@ -76,16 +83,44 @@ return function(client)
 				else
 					placed+=1
 					local mesh=Data.meshes[p.Name]
-					assert(mesh and(mesh.role=="rest"or mesh.role=="falls"))
+					assert(mesh and(mesh.role=="rest"or mesh.role=="falls"or mesh.role=="fountain"))
 					assert((p.CFrame.Position-v(mesh.center)).Magnitude<1e-3)
 				end
 			end
 		end
+		assert(stems==1,"one stem collider")
 		assert(crowns==21 and balls==#Data.rocks and placed==4,tostring(crowns).." "..tostring(balls).." "..tostring(placed))
 		built.destroy()
 		assert(built.folder.Parent==nil)
 	end)
 
+	test("near fade: the camera inside a crown clears it to .8, the avatar to .5, out of Room mode straight back to 0",function()
+		local part=Instance.new("Part");part.Size=Vector3.new(8,6,8);part.CFrame=CFrame.new(10,10,10)
+		part:SetAttribute("WorldDressing","crown")
+		assert(Kit.fadeTarget(part,Vector3.new(10,10,10),nil)==.8 and Kit.fadeTarget(part,Vector3.new(15.4,10,10),nil)==.8)
+		assert(Kit.fadeTarget(part,Vector3.new(16,10,10),nil)==0,"past the margin")
+		assert(Kit.fadeTarget(part,Vector3.new(40,10,10),Vector3.new(10,8,10))==.5,"only the avatar inside")
+		assert(Kit.fadeTarget(part,nil,nil)==0)
+		local on,cam=true,Vector3.new(10,10,10)
+		local fader=Kit.fader({part},{active=function()return on end,camera=function()return cam end,root=function()return nil end})
+		for _=1,20 do fader.step(1/30)end
+		assert(near(part.LocalTransparencyModifier,.8),"in over a quarter second: "..tostring(part.LocalTransparencyModifier))
+		cam=Vector3.new(50,10,10)
+		for _=1,8 do fader.step(1/30)end -- the next look (every .15 s), then a few frames out
+		assert(part.LocalTransparencyModifier<.8 and part.LocalTransparencyModifier>0,"easing out")
+		on=false;fader.step(1/30)
+		assert(part.LocalTransparencyModifier==0,"a race or the deck: back to 0 at once")
+		part.LocalTransparencyModifier=.75 -- another owner (DashFade) now
+		for _=1,10 do fader.step(1/30)end
+		assert(part.LocalTransparencyModifier==.75,"closed: writes nothing")
+		fader.destroy()
+		assert(part.LocalTransparencyModifier==.75,"destroy leaves another owner's value alone")
+		-- Faded when it goes: back to 0.
+		part.LocalTransparencyModifier=0;on=true;cam=Vector3.new(10,10,10)
+		local again=Kit.fader({part},{active=function()return true end,camera=function()return cam end,root=function()return nil end})
+		for _=1,20 do again.step(1/30)end
+		assert(part.LocalTransparencyModifier>.5);again.destroy();assert(part.LocalTransparencyModifier==0)
+	end)
 	test("a missing template or bad data throws before anything reaches the room",function()
 		local room=Instance.new("Folder")
 		assert(not pcall(Kit.build,{data=Data,templates=templates("W7_Kit_Crown_Tall__foliage"),parent=room}))

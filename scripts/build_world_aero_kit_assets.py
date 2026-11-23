@@ -43,6 +43,12 @@ ID = re.compile(r"^rbxassetid://([1-9][0-9]{0,19})$")
 MATTE_ROUGHNESS = "rbxassetid://132217078330162"
 MATTE_METALNESS = "rbxassetid://114363080604088"
 MATERIAL_TOKEN = {"SmoothPlastic": 272, "Plastic": 256}
+# LOOK-R2 1: the lime crowns' own matte skin: the lime map (WorldAero.Crowns.lime.Texture) at roughness .92
+# (assets/world/textures/aero/roughness-92.png), so the Aero lime is no longer a glossy SmoothPlastic part.
+LIME_MAP = "rbxassetid://127425168647805"
+# LOOK-R2 round 3: still neon at the map's mean #8FD63F; the skin's Color multiplies it to #86BE3C.
+LIME_TINT = (0x86 / 0x8F, 0xBE / 0xD6, 0x3C / 0x3F)
+ROUGH_92 = "rbxassetid://93359996848376"
 
 
 class GateError(RuntimeError):
@@ -137,10 +143,13 @@ def xml_part(index, mesh, mesh_id, raw):
     material = "SmoothPlastic"
     shadow = mesh["role"] == "rest"  # crowns move (no shadow); falls and rocks stay shadowless (+0 shadow draws)
     double = True
-    if kind in ("foliage", "foliage_blossom"):
-        matte = tex["W1_" + kind]
-    elif kind == "waterfall_tumble":
-        texture = tex["W1_waterfall_tumble"]  # today's falls texture, on today's mapping; opaque (WORLD-PASS 4 layer 1)
+    rough = MATTE_ROUGHNESS
+    if kind == "foliage":
+        matte = tex["W1_foliage"]
+    elif kind == "foliage_blossom":
+        matte, rough = LIME_MAP, ROUGH_92
+    elif kind == "kitstone":
+        texture, material = tex["W1_marble"], "Plastic"  # LOOK-R2 3: the plaza marble under a weathered vertex tint
     else:
         material = "Plastic"
     lines = [
@@ -171,7 +180,9 @@ def xml_part(index, mesh, mesh_id, raw):
             "          <token name=\"AlphaMode\">0</token>",
             f"          <Content name=\"ColorMap\"><url>{matte}</url></Content>",
             f"          <Content name=\"MetalnessMap\"><url>{MATTE_METALNESS}</url></Content>",
-            f"          <Content name=\"RoughnessMap\"><url>{MATTE_ROUGHNESS}</url></Content>",
+            f"          <Content name=\"RoughnessMap\"><url>{rough}</url></Content>",
+        ] + ([f"          <Color3 name=\"Color\"><R>{LIME_TINT[0]!r}</R><G>{LIME_TINT[1]!r}</G><B>{LIME_TINT[2]!r}</B></Color3>"]
+             if rough == ROUGH_92 else []) + [
             "        </Properties>",
             "      </Item>",
         ]
@@ -198,6 +209,7 @@ def lua(manifest, readback):
         "crowns": [{k: c[k] for k in ("tree", "mesh", "pivot", "yaw", "scale")} for c in manifest["crowns"]],
         "rocks": [{k: r[k] for k in ("kind", "center", "size", "radius")} for r in manifest["rocks"]],
         "falls": manifest["falls"],
+        "fountain": manifest.get("fountain"),
         "hides": sorted(manifest["hides"]),
         "triangles": manifest["triangles"],
     }

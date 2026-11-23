@@ -47,7 +47,7 @@ def client_modules():
     for pattern in ("Dash*.lua", "Things*.lua", "Finds*.lua", "NoticeCards.lua", "Life*.lua", "GardenLife.lua", "Wind*.lua",
                     "AmbientAudio.lua", "AmbientPerches.lua", "AliveBudget.lua", "AeroAdditions.lua", "AeroFalls.lua",
                     # The island re-export: the Aero world kit (split crowns, falls sheets, rocks).
-                    "AeroKit.lua",
+                    "AeroKit.lua", "AeroFountain.lua",
                     # Onboarding v3 A+B: the needs, the tour gate, the station label tips and the pill's quiet stage.
                     "BearNeeds.lua", "NeedBubble.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
                     "JournalPromptPriority.lua", "FirstSpendGuide.lua",
