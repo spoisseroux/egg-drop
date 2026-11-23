@@ -979,6 +979,9 @@ function Room:planGreeting(camera, root, floor)
 	local bounds,size,silhouette,focusEnvelope,sweepCached=Room.captureFocusSubject(self.pet,self.shownPet.family or self.shownPet.id)
 	local exclude = {self.pet.model}
 	for _, player in ipairs(Players:GetPlayers()) do if player.Character then table.insert(exclude,player.Character) end end
+	-- Island edge walls (beta): invisible, so never a reason to move the greeting camera.
+	local walls = workspace:FindFirstChild("IslandBounds")
+	if walls then table.insert(exclude,walls) end
 	local params=RaycastParams.new()
 	params.FilterDescendantsInstances,params.RespectCanCollide=exclude,true
 	local aspect=camera.ViewportSize.X/math.max(1,camera.ViewportSize.Y)

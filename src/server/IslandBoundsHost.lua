@@ -30,7 +30,9 @@ function Host.mount(d)
 	self.place=d.place or Host.place
 	local beat;beat=(d.heartbeat or RunService.Heartbeat):Connect(function()
 		local ok,problem=pcall(self.step,self)
-		if ok then self.errors=0;return end
+		-- Code review: count errors without resetting (as DashHost): most beats return early at the tick gate, so a
+		-- reset on success would let an error on every tick warn forever and never switch the feature off.
+		if ok then return end
 		self.errors+=1
 		warn("[Bounds] host: "..tostring(problem))
 		if self.errors>=Host.MaxErrors then

@@ -7,8 +7,9 @@
 -- Walls: hand-written top-ups at the feet of the climbable slopes `scripts/sweep_island_edges.py` found walking
 -- (artifacts/world-pass-2026-11-22/edge-sweep.md). Each is a thin invisible box from (x1, z1) to (x2, z2), standing
 -- from `base` (a stud under the lowest ground beneath it) to `top` (at least 16 over the foot, and more than a jump
--- over the highest ground beneath it). They collide with characters only in effect: CanQuery and CanTouch are off
--- (camera, prompts and pet rays pass), and pets walk the planner's grid, not physics. None comes within 3 studs of the
+-- over the highest ground beneath it). CanTouch is off; CanQuery is ignored by Roblox while CanCollide is on, so rays do
+-- hit them: the camera skips invisible parts, server rays are filtered to the room, prompts here skip line of sight,
+-- and RoomView's greeting-shot rays exclude the folder (code review). Pets walk the planner's grid, not physics. None comes within 3 studs of the
 -- Dash course, a park kerb, a find spot or a station, and none stands on a path tile (IslandBounds.spec and the sweep).
 -- Rerun the sweep after any change here or to the walk map; it rewrites IslandGround (the safe ground).
 local RunService=game:GetService("RunService")
