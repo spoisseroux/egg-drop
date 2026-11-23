@@ -636,5 +636,80 @@ return function(client)
 		assert(#grove:active(plan.gone+.01)==0,"gone from the grove once faded")
 	end)
 
+
+	-- Garden hour slice D (GARDEN-HOUR-BUILD-PLAN-2026-11-23; GARDEN-HOUR-LOOK 5): bubbles, butterflies and birds by day only.
+	test("the garden hour's gate: day only above .7; nil (the hour off) is day; the hour's own phases",function()
+		assert(Sim.DayLife==.7)
+		assert(Sim.day(nil)==true and Sim.day(0/0)==true and Sim.day("x")==true,"no number: the hour is off, always day")
+		assert(Sim.day(.9)==true and Sim.day(.71)==true and Sim.day(.7)==false and Sim.day(.55)==false and Sim.day(.12)==false)
+		local Hour=require(game:GetService("ReplicatedStorage").Shared.GardenHour)
+		local want={dawn=false,day=true,golden=false,night=false}
+		for name,hold in pairs(Hour.Holds)do assert(Sim.day(hold.Daylight)==want[name],name)end
+		-- Through the dawn to day blend the gate opens once, where the daylight passes .7, and stays open.
+		local opened
+		for s=360,450 do
+			local day=Sim.day(Hour.phase(s).daylight)
+			if opened then assert(day,"stays open")elseif day then opened=s end
+		end
+		assert(opened and opened>360 and opened<450,"opens inside the blend")
+	end)
+
+	test("butterflies at night: none start; the ones out fly off up and away from the camera and are gone",function()
+		local patches={}
+		for i=1,6 do patches[i]=Vector3.new(i*8,4,0)end
+		local flies=Sim.Butterflies.new(4)
+		local world={camera=Vector3.new(0,10,10),stations={}}
+		local now=0
+		for _=1,30*20 do now+=1/30;flies:step(now,1/30,world,patches,4,false,true)end
+		local out=#flies.list
+		assert(out>0,"some by day")
+		local before={}
+		for _,b in ipairs(flies.list)do before[b]=b.position end
+		now+=1/30;flies:step(now,1/30,world,patches,4,false,false)
+		for _,b in ipairs(flies.list)do
+			assert(b.mode=="leave","each one leaves")
+			local away=Vector3.new(b.target.X-world.camera.X,0,b.target.Z-world.camera.Z).Magnitude
+			local was=Vector3.new(before[b].X-world.camera.X,0,before[b].Z-world.camera.Z).Magnitude
+			assert(away>was and b.target.Y>before[b].Y+5,"up and away")
+		end
+		assert(#flies.list==out,"none dropped at once")
+		local gone
+		for i=1,30*10 do
+			now+=1/30
+			local list=flies:step(now,1/30,world,patches,4,false,false)
+			for _,b in ipairs(list)do assert(b.mode=="leave","no new one at night")end
+			local parts=#list>0 and Sim.butterflyParts(Sim.butterflyRoot(list[1],now),Sim.butterflyFlap(list[1],now,true,false))
+			assert(not parts or #parts==3)
+			if #list==0 then gone=i/30;break end
+		end
+		assert(gone and gone<=Sim.Butterfly.leaveTime+.1,"gone within the leave time")
+		for _=1,30*5 do now+=1/30;flies:step(now,1/30,world,patches,4,false,false)end
+		assert(#flies.list==0,"still none")
+		for _=1,30*5 do now+=1/30;flies:step(now,1/30,world,patches,4,false,nil)end
+		assert(#flies.list>0,"day again: back")
+	end)
+
+	test("birds at night: a chirp lands none; one already sitting hops and sits out its stay; bubbles wait for day",function()
+		local spot=Vector3.new(10,14,10)
+		local world={camera=Vector3.new(30,12,30),stations={}}
+		local birds=Sim.Birds.new(7)
+		local result,why=birds:chirp(0,5,spot,3,world,false,false)
+		assert(result==nil and why=="night"and #birds.list==0)
+		assert(birds:chirp(0,5,spot,3,world,false,nil)=="land","nil: the hour is off")
+		local bird=birds.list[1]
+		birds:step(1,world,false,3)
+		assert(birds:chirp(1.1,5,spot,3,world,false,false)=="hop","the one there still hops")
+		assert(select(2,birds:chirp(1.1,6,spot+Vector3.new(4,0,0),3,world,false,false))=="night","but no second lands")
+		local t=1.2
+		while #birds.list>0 and t<30 do t+=.1;birds:step(t,world,false,3)end
+		assert(#birds.list==0 and t>=bird.stayUntil,"left when its stay was over")
+		-- Bubbles: GardenLife passes the gate in `allowed`; a night slot is skipped, never saved up.
+		local bubbles=Sim.Bubbles.new(3)
+		assert(bubbles:due(0,8,false)==false)
+		assert(bubbles:due(3,8,Sim.day(.12))==false,"night: skipped")
+		assert(bubbles:due(4,8,Sim.day(.9))==false,"not saved up")
+		assert(bubbles:due(6,8,Sim.day(.9))==true)
+	end)
+
 	return{passed=#cases,cases=cases}
 end

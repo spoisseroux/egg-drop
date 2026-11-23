@@ -18,12 +18,17 @@
 --   A menu: bubbles stop starting; the rest goes on behind the shade.
 --   Reduced Motion: no petals, bubbles or flight; a bird is just there on its crown, folded and still; fruit hangs.
 --   Budget level 2: nothing at all (torn down, and it never comes back up that session).
+--   The garden hour (GARDEN-HOUR-BUILD-PLAN-2026-11-23 slice D): with it on, bubbles, butterflies and birds start only
+--   while its daylight is above .7 (Sim.day); the ones out finish (bubbles pop on time, butterflies fly off, birds sit out
+--   their stay). Petals and Dewdrops never ask. The daylight is GardenHour's, from the server clock, so the gate is the
+--   same on every client; with the hour off it is nil and nothing changes.
 --   The switch off, or a step that throws: everything gone in that frame.
 -- deps: ambient (the AmbientAudio instance: onChirp is set while on), dash() -> DashClient?, modalOpen(), reduced(),
 --   mode(), plus fixtures for specs: alive {ceiling, on, changed}, world, heartbeat, now, camera() -> CFrame?,
 --   root() -> Vector3?, move(parts, frames), hatching, level, spots, patches, stations, pad, course, crowns() -> "lime"|"pink",
 --   groundY, warn, seed; pets() -> {Vector3} (the garden pets this client draws, for the fruit bat), finds {Vector3},
---   kerbs {{x, z, rx, rz}}, safe(x, z) -> boolean (walkable ground: IslandBounds.safeCell).
+--   kerbs {{x, z, rx, rz}}, safe(x, z) -> boolean (walkable ground: IslandBounds.safeCell), daylight(now) -> number?
+--   (the garden hour's, nil while it is off; read every Poll).
 local GuiService=game:GetService("GuiService")
 local Players=game:GetService("Players")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
@@ -226,6 +231,11 @@ function Life.mount(deps)
 		return root and root.Position
 	end
 	self.pets=deps.pets or function()return{}end
+	self.daylight=deps.daylight or function(now)
+		local Hour=require(Shared:WaitForChild("GardenHour"))
+		if not Hour.on()then return nil end
+		return Hour.phase(now+Hour.offset()).daylight
+	end
 	table.insert(self.connections,alive.changed("life"):Connect(function()self:sync()end))
 	self:sync()
 	return self
@@ -362,6 +372,7 @@ function Life:enable()
 	self.picked={}
 	self.elapsed,self.since,self.steps,self.pollIn,self.gateIn=0,0,0,0,0
 	self.parked,self.hatch,self.live,self.wasReduced,self.colours,self.lime=false,false,false,false,nil,false
+	self:readDay(self.now())
 	folder.Parent=self.world
 	local ambient=self.d.ambient
 	if ambient then
@@ -372,6 +383,13 @@ function Life:enable()
 		local ok,problem=pcall(self.step,self,dt)
 		if not ok then self:fail(problem)end
 	end)
+end
+
+-- The garden hour's gate, read at enable and every Poll (a failing read is day: the garden as it was).
+function Life:readDay(now)
+	local ok,daylight=pcall(self.daylight,now)
+	self.day=Sim.day(if ok then daylight else nil)
+	return self.day
 end
 
 -- Off: nothing left but the Alive signal. Cannot throw past the folder's Destroy.
@@ -484,6 +502,7 @@ function Life:step(dt)
 		local dash=self.d.dash and self.d.dash()
 		local ok,summary=pcall(function()return dash and dash:summary()end)
 		self.live=ok and type(summary)=="table"and summary.phase=="live"
+		self:readDay(now)
 		local okColour,colours=pcall(self.crowns)
 		self.lime=okColour and colours=="lime"
 		colours=Life.PetalColours[okColour and colours or "pink"]or Life.PetalColours.pink
@@ -512,10 +531,10 @@ function Life:step(dt)
 	for slot,n in ipairs(self.petals:step(now,tick,winds,Sim.cap("petals",level)))do
 		if n>0 then table.insert(emits,{self.petalPool[slot].emitter,n})end
 	end
-	-- Bubbles: one every 3 s ahead of the camera, never in a menu or with Reduced Motion, never in the way. The roll
-	-- picks the small or the large emitter; only that one's anchor moves to the spot.
+	-- Bubbles: one every 3 s ahead of the camera, never in a menu, with Reduced Motion or at night, never in the way.
+	-- The roll picks the small or the large emitter; only that one's anchor moves to the spot.
 	local menu=self.d.modalOpen and self.d.modalOpen()==true
-	if self.bubbles:due(now,Sim.cap("bubbles",level),not reduced and not menu)then
+	if self.bubbles:due(now,Sim.cap("bubbles",level),not reduced and not menu and self.day)then
 		local spot=Sim.bubbleSpot(camera,self.bubbles.random,world)
 		if spot then
 			local slot=self.bubblePool[self.bubbles:emit(now)]
@@ -527,7 +546,7 @@ function Life:step(dt)
 	local flip=(self.steps//(if level>=1 then 1 else 2))%2==0
 	local held=level>=1
 	local used={}
-	for _,b in ipairs(self.flies:step(now,tick,world,self.patches,Sim.cap("butterflies",level),reduced))do
+	for _,b in ipairs(self.flies:step(now,tick,world,self.patches,Sim.cap("butterflies",level),reduced,self.day))do
 		local pool=self.flyPool[b.colour]
 		if pool then
 			used[pool]=true
@@ -655,7 +674,8 @@ function Life:chirp(perch,position,_cue)
 	if level>=2 or typeof(camera)~="CFrame"or not finite(now)then return nil end
 	local landing=self.spots.Landings and self.spots.Landings[perch]
 	if typeof(position)=="Vector3"and typeof(landing)=="Vector3"and Sim.flat(position,landing)>Life.SameTree then return nil,"perch"end
-	local result,why=self.birds:chirp(now,perch,landing,Sim.cap("birds",level),{camera=camera.Position,stations=self.stations},self.reduced()==true)
+	local result,why=self.birds:chirp(now,perch,landing,Sim.cap("birds",level),{camera=camera.Position,stations=self.stations},
+		self.reduced()==true,self.day)
 	if result=="land"then
 		local bird=self.birds:find(perch)
 		local taken={}

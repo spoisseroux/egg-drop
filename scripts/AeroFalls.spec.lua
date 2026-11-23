@@ -2,7 +2,9 @@
 -- (AeroFalls inside AeroAdditions, WORLD-PASS-2026-11-22 item 4 step 1) on a fake world: built at the walk map's falls,
 -- inert, draw counts per budget level, the 120-stud gate, the mist keep-out (fades, never cleared), daylight, Reduced
 -- Motion, touch-only devices at level 1, TextureSpeed written once, and the picture put back when the additions go. The
--- live room is never touched.
+-- live room is never touched. Garden hour slice C: with the hour off the additions are today's; on, the rainbow and the
+-- dew glints by day only (> .7) and the fireflies at night (12, 6 at level 1, following the blends, Reduced Motion, the
+-- camera keep-out, where the areas sit).
 -- Usage: require(PlayerScripts.Client.ZZSpecs.AeroFalls)(PlayerScripts.Client)
 return function(client,offline)
 	local Shared=game:GetService("ReplicatedStorage").Shared
@@ -42,8 +44,9 @@ return function(client,offline)
 		local mist=Instance.new("ParticleEmitter");mist.Name="Mist";mist.Rate=4;mist.Enabled=true;mist.Parent=anchor
 		return w
 	end
-	local function build(parent)
-		return Additions.build({parent=parent,data=DATA,clouds=false,groundY=function()return 4.5 end})
+	-- The garden hour is a fixture: off (false) unless a case passes one, so a Studio session's own hour never leaks in.
+	local function build(parent,hour)
+		return Additions.build({parent=parent,data=DATA,clouds=false,groundY=function()return 4.5 end,hour=hour or false})
 	end
 	local function layer(added,group,name,nth)
 		local seen=0
@@ -217,7 +220,10 @@ return function(client,offline)
 				go(added,{level=0})
 			end
 			assert(go(added,{camera=NEAR,daylight=.4})==13 and not layer(added,"Tumble","Rainbow").item.Enabled)
-			assert(go(added,{daylight=.55})==14)
+			-- RainbowDaylight .7 (garden hour slice C): golden's .55 shows none; Aero's .9 does.
+			assert(Look.RainbowDaylight==.7)
+			assert(go(added,{daylight=.55})==13 and go(added,{daylight=.7})==13,"not at .7 itself")
+			assert(go(added,{daylight=.75})==14 and go(added,{daylight=Values.Daylight})==14)
 			added.destroy()
 		end)
 		test("Reduced Motion: none of the layers, emitters cleared; back as they were after",function()
@@ -269,8 +275,263 @@ return function(client,offline)
 			local added=Additions.build({parent=holder,data={},clouds=false,groundY=function()return 4.5 end})
 			assert(#added.falls.layers==0 and go(added,{level=0,camera=NEAR,daylight=.9})==0)
 			added.destroy()
-			local none=Additions.build({parent=holder,falls=false,clouds=false,groundY=function()return 4.5 end})
+			local none=Additions.build({parent=holder,falls=false,clouds=false,groundY=function()return 4.5 end,hour=false})
 			assert(none.falls==nil);none.update({level=0,camera=NEAR});none.still(true);none.destroy()
+		end)
+
+		-- Garden hour slice C (GARDEN-HOUR-BUILD-PLAN-2026-11-23; GARDEN-HOUR-LOOK 5): the rainbow and dew glints by day
+		-- only, the v7 fireflies at night. The hour is a fixture with GardenHour's own phase().
+		local Hour=require(Shared.GardenHour)
+		local Fly=Values.Fireflies
+		local DAY,GOLDEN,NIGHT,DAWN=1000,2600,3300,200
+		local function clock(seconds,on)
+			local h={on=on~=false,t=seconds}
+			h.fixture={on=function()return h.on end,time=function()return h.t end,phase=Hour.phase}
+			return h
+		end
+		local function glints(added)
+			local n=0
+			for _,e in ipairs(added.emitters)do if e.Enabled==true then n+=1 end end
+			return n
+		end
+		local function glintsCleared(added)
+			local n=0
+			if offline then for _,e in ipairs(added.emitters)do n+=e.cleared or 0 end end
+			return n
+		end
+		local function rows(added)return added.fireflies()or {}end
+		local function row(added,name)
+			for _,each in ipairs(rows(added))do if each.area.name==name then return each end end
+			error("no firefly area "..name)
+		end
+		-- Fireflies alive at the steady rate: Rate times the longest life, over the areas switched on.
+		local function alive(added)
+			local n=0
+			for _,each in ipairs(rows(added))do
+				if each.emitter.Enabled==true then n+=each.emitter.Rate*Fly.Life[2]end
+			end
+			return n
+		end
+		local function lit(added)
+			local n=0
+			for _,each in ipairs(rows(added))do if each.emitter.Enabled==true then n+=1 end end
+			return n
+		end
+		local function fliesCleared(added)
+			local n=0
+			if offline then for _,each in ipairs(rows(added))do n+=each.emitter.cleared or 0 end end
+			return n
+		end
+		local FAR=Vector3.new(400,80,-400) -- no falls, no firefly area near
+
+		test("hour off: the additions are today's (glints at any daylight, no fireflies built, the rainbow at .7)",function()
+			for _,hour in ipairs({false,clock(NIGHT,false).fixture})do
+				local added=build(holder,hour)
+				added.still(false)
+				for _,daylight in ipairs({Values.Daylight,.55,.12})do
+					go(added,{level=0,camera=NEAR,daylight=daylight})
+					assert(glints(added)==Values.MaxGlints,"glints at "..daylight)
+					assert(added.fireflies()==nil,"no fireflies built")
+					assert(added.state.on==false and added.state.daylight==daylight)
+				end
+				for _,item in ipairs(added.folder:GetChildren())do assert(string.sub(item.Name,1,9)~="Fireflies",item.Name)end
+				assert(go(added,{daylight=Values.Daylight})==14)
+				added.destroy()
+			end
+		end)
+		test("hour on: day shows the rainbow and the glints; golden, night and dawn neither (they fade, not cleared)",function()
+			local h=clock(DAY)
+			local added=build(holder,h.fixture)
+			added.still(false)
+			-- AeroWorld's daylight is ignored while the hour is on.
+			assert(go(added,{level=0,camera=NEAR,daylight=.12})==14,"day: rainbow")
+			assert(added.state.on and added.state.daylight==Values.Daylight and glints(added)==Values.MaxGlints)
+			assert(#rows(added)==#Fly.Areas and lit(added)==0 and alive(added)==0,"fireflies built, all off by day")
+			local cleared=glintsCleared(added)
+			for _,case in ipairs({{GOLDEN,.55},{NIGHT,.12},{DAWN,.5}})do
+				h.t=case[1]
+				assert(go(added,{daylight=Values.Daylight})==13,case[1]..": no rainbow")
+				assert(math.abs(added.state.daylight-case[2])<1e-9 and glints(added)==0,case[1]..": no glints")
+			end
+			assert(glintsCleared(added)==cleared,"glints fade out, never cleared by the hour")
+			h.t=DAY
+			assert(go(added,{})==14 and glints(added)==Values.MaxGlints,"day again")
+			added.destroy()
+		end)
+		test("night: 12 fireflies in five areas, 6 at budget level 1; none by day, golden or dawn",function()
+			local h=clock(NIGHT)
+			local added=build(holder,h.fixture)
+			added.still(false)
+			go(added,{level=0,camera=FAR,daylight=.9})
+			assert(lit(added)==5 and math.abs(alive(added)-12)<1e-4,"12: "..alive(added))
+			for _,each in ipairs(rows(added))do
+				assert(math.abs(each.emitter.Rate*Fly.Life[2]-each.area.count)<1e-4,each.area.name)
+			end
+			assert(math.abs(row(added,"Bank").emitter.Rate*Fly.Life[2]-4)<1e-4,"4 along the stream bank")
+			go(added,{level=1})
+			assert(lit(added)==5 and math.abs(alive(added)-6)<1e-4,"level 1: 6")
+			go(added,{level=0})
+			assert(math.abs(alive(added)-12)<1e-4)
+			local cleared=fliesCleared(added)
+			for _,t in ipairs({DAWN,DAY,GOLDEN})do
+				h.t=t
+				go(added,{})
+				assert(lit(added)==0 and alive(added)==0,t..": none")
+			end
+			assert(fliesCleared(added)==cleared,"the last ones fade, never cleared")
+			added.destroy()
+		end)
+		test("the count follows the blends: up through golden to night, down through night to dawn, only under .3",function()
+			local h=clock(2880)
+			local added=build(holder,h.fixture)
+			added.still(false)
+			go(added,{level=0,camera=FAR})
+			local last=-1
+			for step=0,24 do
+				h.t=2880+120*step/24
+				go(added,{})
+				local daylight=added.state.daylight
+				local want=12*Additions.fireflyRamp(daylight)
+				assert(math.abs(alive(added)-want)<1e-4,"golden to night "..step)
+				assert(alive(added)>=last-1e-4,"rising")
+				assert((alive(added)>0)==(daylight<Fly.Spawn),"spawns only under .3: "..daylight)
+				last=alive(added)
+			end
+			assert(math.abs(last-12)<1e-4,"full at night")
+			for step=0,18 do
+				h.t=90*step/18
+				go(added,{})
+				local daylight=added.state.daylight
+				assert(alive(added)<=last+1e-4,"falling")
+				assert((alive(added)>0)==(daylight<Fly.Spawn),"stops at .3: "..daylight)
+				last=alive(added)
+			end
+			assert(last==0)
+			assert(Additions.fireflyRamp(.3)==0 and Additions.fireflyRamp(.12)==1 and Additions.fireflyRamp(0)==1 and Additions.fireflyRamp(nil)==0)
+			added.destroy()
+		end)
+		test("Reduced Motion: no fireflies (cleared) and no glints; back as they were after",function()
+			local h=clock(NIGHT)
+			local added=build(holder,h.fixture)
+			added.still(false)
+			go(added,{level=0,camera=FAR})
+			local cleared=fliesCleared(added)
+			added.still(true)
+			assert(lit(added)==0 and glints(added)==0)
+			if offline then assert(fliesCleared(added)==cleared+5,"cleared")end
+			go(added,{})
+			assert(lit(added)==0,"the check keeps them off")
+			added.still(false)
+			assert(math.abs(alive(added)-12)<1e-4)
+			-- Reduced Motion from the start: none are even built.
+			local still=build(holder,h.fixture)
+			still.still(true);go(still,{level=0,camera=FAR})
+			assert(still.fireflies()==nil)
+			still.still(false)
+			assert(math.abs(alive(still)-12)<1e-4)
+			added.destroy();still.destroy()
+		end)
+		test("the camera keep-out: an area within 6 studs (plus the drift) of the camera stops, and fades",function()
+			local h=clock(NIGHT)
+			local added=build(holder,h.fixture)
+			added.still(false)
+			go(added,{level=0,camera=FAR})
+			local south=row(added,"South")
+			local top=south.box.CFrame.Position+Vector3.new(0,south.box.Size.Y/2,0)
+			go(added,{level=0,camera=top+Vector3.new(0,Fly.CameraKeepOut+Fly.Reach+.5,0)})
+			assert(south.emitter.Enabled and lit(added)==5,"just outside")
+			local cleared=fliesCleared(added)
+			go(added,{camera=top+Vector3.new(0,Fly.CameraKeepOut+Fly.Reach-.5,0)})
+			assert(not south.emitter.Enabled and lit(added)==4 and math.abs(alive(added)-10)<1e-4,"inside")
+			assert(fliesCleared(added)==cleared,"faded, not cleared")
+			local east=row(added,"East")
+			go(added,{camera=east.box.CFrame.Position})
+			assert(south.emitter.Enabled and not east.emitter.Enabled)
+			added.destroy()
+		end)
+		test("fireflies, the look: #E8FF8A, .35 studs, emissive, 4 to 6 s with a 1 s fade, 1.5 to 4 studs up, inert",function()
+			local want=Color3.fromHex("#E8FF8A")
+			assert(near(Fly.Color.R,want.R,1e-6)and near(Fly.Color.G,want.G,1e-6)and near(Fly.Color.B,want.B,1e-6),"#E8FF8A")
+			assert(Fly.Size==.35 and Fly.LightEmission==1)
+			assert(Fly.Life[1]==4 and Fly.Life[2]==6 and Fly.Fade==1 and Fly.Pulse==1.8 and Fly.Speed==.6)
+			assert(Fly.Spawn==.3 and Fly.Full==Hour.Holds.night.Daylight,"full at the night hold")
+			assert(Fly.Speed/(Fly.Drag*math.log(2))<=Fly.Reach,"the drift stays within Reach")
+			assert(Fly.Low==1.5 and Fly.Low+Fly.Band+Fly.Reach<=4+1e-9,"1.5 to 4 studs up")
+			local count,count1=0,0
+			for _,area in ipairs(Fly.Areas)do count+=area.count;count1+=area.count1 end
+			assert(#Fly.Areas==5 and count==12 and count1==6)
+			local h=clock(NIGHT)
+			local added=build(holder,h.fixture)
+			added.still(false);go(added,{level=0,camera=FAR})
+			for _,each in ipairs(rows(added))do
+				local box,e=each.box,each.emitter
+				assert(box.Parent==added.folder and e.Parent==box and box.Transparency==1)
+				assert(box.Anchored and not box.CanCollide and not box.CanQuery and not box.CanTouch and not box.CastShadow,box.Name)
+				assert(math.abs(box.CFrame.Position.Y-(4.5+Fly.Low+Fly.Band/2))<1e-6 and math.abs(box.Size.Y-Fly.Band)<1e-9)
+				assert(e.Texture==Fly.Texture and e.LightInfluence==0 and e.LightEmission==1 and math.abs(e.Drag-Fly.Drag)<1e-6)
+				assert(e:FindFirstChildOfClass("PointLight")==nil and box:FindFirstChildOfClass("PointLight")==nil,"no light")
+				if not offline then
+					assert(e.Lifetime.Min==4 and e.Lifetime.Max==6 and e.Size.Keypoints[1].Value==.35)
+					local fade=e.Transparency.Keypoints
+					assert(fade[1].Value==1 and fade[#fade].Value==1 and math.abs(fade[2].Time-.2)<1e-6,"1 s in and out of 5")
+				end
+			end
+			added.destroy()
+		end)
+		test("firefly areas: on flat lawn, off the water, clear of every station, rest, bridge and the nest",function()
+			local Layout=require(Shared.HollowWorldLayout)
+			local data=require(Shared.WorldV7Data)
+			local keep={}
+			for _,frame in pairs(Layout.Stations)do table.insert(keep,frame.Position)end
+			for _,point in pairs(Layout.Rest)do table.insert(keep,point)end
+			for _,span in pairs(Layout.WalkableSpans or {})do table.insert(keep,span.center)end
+			-- The nest (NestClient.Spot), the creek rest nook (GardenLayout), the west bridge.
+			for _,point in ipairs({Vector3.new(86,4.33,66),Vector3.new(26,4.175,-15.5),Vector3.new(-83,4.25,35)})do table.insert(keep,point)end
+			-- Wet boxes: measured with both yaw senses, so the answer holds whichever way the walk map turns them.
+			local function wet(x,z)
+				local best=math.huge
+				for _,box in ipairs(data.wet)do
+					for _,sense in ipairs({1,-1})do
+						local c,s=math.cos(box.yaw*sense),math.sin(box.yaw*sense)
+						local dx,dz=x-box.center[1],z-box.center[3]
+						local lx,lz=c*dx-s*dz,s*dx+c*dz
+						local ex,ez=math.max(math.abs(lx)-box.size[1]/2,0),math.max(math.abs(lz)-box.size[3]/2,0)
+						best=math.min(best,math.sqrt(ex*ex+ez*ez))
+					end
+				end
+				return best
+			end
+			for _,area in ipairs(Fly.Areas)do
+				local c,s=math.cos(area.yaw),math.sin(area.yaw)
+				local low,high=math.huge,-math.huge
+				for a=0,8 do for b=0,8 do
+					local lx,lz=(a/8-.5)*area.width,(b/8-.5)*area.depth
+					local x,z=area.x+c*lx+s*lz,area.z-s*lx+c*lz
+					assert(wet(x,z)>=Fly.Keep.water,area.name.." over water at "..x..", "..z)
+					for _,point in ipairs(keep)do
+						local d=math.sqrt((x-point.X)^2+(z-point.Z)^2)
+						assert(d>=Fly.Keep.station,area.name.." within "..d.." of "..tostring(point))
+					end
+					local y=Layout.groundY(x,z)
+					low,high=math.min(low,y),math.max(high,y)
+				end end
+				assert(high-low<=.5,area.name.." ground "..low.." to "..high)
+			end
+		end)
+		test("the hour going off at night is today again; on and off, the picture is the one before",function()
+			local h=clock(NIGHT)
+			local w=world()
+			local before=picture(w)
+			local added=build(w,h.fixture)
+			added.still(false)
+			go(added,{level=0,camera=NEAR,daylight=Values.Daylight})
+			assert(lit(added)==5 and glints(added)==0)
+			h.on=false
+			assert(go(added,{})==14,"today's daylight: rainbow")
+			assert(lit(added)==0 and glints(added)==Values.MaxGlints and added.state.daylight==Values.Daylight)
+			added.destroy()
+			samePicture(before,picture(w))
+			assert(#w:GetChildren()==1)
 		end)
 	end)
 	Falls.touch=realTouch
