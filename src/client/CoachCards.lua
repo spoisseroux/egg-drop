@@ -40,6 +40,12 @@
 --  * A line tapped through ends when its card closes; a beat then moves on.
 --  * One line at a time, in a fixed order (first visit, the garden step, a friend arrived,
 --    first quest done, the park), and after a line leaves the rail rests Rail.Gap seconds.
+--
+-- Onboarding v3 slice A (follow the Bear, ONBOARDING-V3-PLAN-2026-11-23, architect review): with `options.follow`
+-- saying yes, the garden step is "free" (Cards.stage): no tour cards and no beat lines, ever, this session. It is asked
+-- only once the garden step could start (options.follow is Onboard.sessionFollow, captured at its first call), so a
+-- switch flip mid-session never starts or cuts the tour half way. BearNeeds marks gardenIntro (finishGarden) instead.
+-- "Show tips again" still replays the beats. Without the option, or with it saying no: exactly the tour as before.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
 local UICopy=require(Shared:WaitForChild("UICopy"))
@@ -157,6 +163,12 @@ function Cards.boardDue(ctx)
  return nil
 end
 
+-- The first-session step as this client runs it: Coach.stage, but "free" where it would be "garden" while follow the
+-- Bear is on (the tour and the beats are off; the Bear leads instead).
+function Cards.stage(ctx,follow)
+ local stage=Coach.stage(ctx)
+ return if stage=="garden"and follow==true then "free"else stage
+end
 -- Any machine screen open (open = {hatch=bool,...}).
 function Cards.menuOpen(open)
  for _,on in pairs(open or {})do if on then return true end end
@@ -457,6 +469,13 @@ function Cards:advance(id)
  self.beat=nextBeat
  if not nextBeat then self:finishGarden()end
 end
+-- Follow the Bear for this session? Asked only when the garden step could start (the first answer is kept).
+function Cards:following()
+ local follow=self.options.follow
+ if type(follow)~="function"then return false end
+ local ok,on=pcall(follow)
+ return ok and on==true
+end
 function Cards:finishGarden()
  self.beat=nil;self.gardenDone=true;self.replaying=false
  self:mark("gardenIntro")
@@ -578,7 +597,7 @@ function Cards:step(now,ctx)
    self:showGarden(machine,"once",vars,now,if ctx.open and ctx.open[machine]then machine else nil)
   elseif self.tourOpen then
    -- The tour cards are up: nothing else starts until they close.
-  elseif not self.gardenDone and Cards.beatMayStart(base,roomFor,self.replaying) then
+  elseif not self.gardenDone and Cards.beatMayStart(base,roomFor,self.replaying)and(self.replaying or Cards.stage(base,self:following())=="garden")then
    if not self:openTour()then
     self.beat=self.beat or Coach.nextBeat(nil)
     if self.beat then self:showGarden(self.beat,"beat",vars,now)end
@@ -587,6 +606,9 @@ function Cards:step(now,ctx)
    if self.starterStars and not self.toldStars then
     self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
    end
+  elseif self.starterStars and not self.toldStars and not self.gardenDone and Cards.beatMayStart(base,roomFor,false)then
+   -- Follow the Bear: no tour, but the Welcome round's Stars are still said once, when the garden step would open.
+   self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
   elseif Cards.arrivalDue(base)~=nil and Cards.arrivalReady(base,roomFor)then
    -- Slice E: a friend arrived (the 7th-stamp pet). Already the companion (the player
    -- switched in Companions first): nothing to offer, just save the bit.

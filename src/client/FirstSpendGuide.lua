@@ -74,7 +74,8 @@ function Guide:update(state,context)
 	if self.state.revision and state and state.revision and state.revision<self.state.revision then return end
 	self.state,self.context=state or {},context or self.context
 	local stage,proof=Guide.stage(self.state,self.context)
-	self.stage,self.proof=stage,proof
+	self.offer,self.proof=stage,proof
+	self.stage=Guide.shown(stage,self.quiet)
 	local flight=self.flight
 	if not flight then return stage,proof end
 	local receipt=self.state.lastToyResult
@@ -90,8 +91,18 @@ function Guide:update(state,context)
 	elseif self.d.intent.status=="Rejected"then self.flight=nil end
 	return stage,proof
 end
+-- Onboarding v3 slice B: while the Bear's need bubbles are on, the bubble offers the first egg, not the "Hatch your
+-- first egg" pill. The pill (init.client) shows only on stage "purchase", so a quiet guide reads "quiet" there; the
+-- stage itself (Guide.stage, self.offer) and every step after it are unchanged.
+function Guide.shown(stage,quiet)return if quiet==true and stage=="purchase"then "quiet"else stage end
+function Guide:setQuiet(on)
+	on=on==true
+	if self.quiet==on then return end
+	self.quiet=on
+	if self.offer~=nil then self.stage=Guide.shown(self.offer,on)end
+end
 function Guide:openEggs()
-	if not self.alive or self.stage~="purchase"or not self.d.openEggs then return false end
+	if not self.alive or self.offer~="purchase"or not self.d.openEggs then return false end
 	-- Merely selects Toy Egg. Catalog choices/Back and purchase confirmation remain.
 	return self.d.openEggs("toy")==true
 end
