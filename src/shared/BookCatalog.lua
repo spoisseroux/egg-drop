@@ -139,11 +139,13 @@ function Book.outfitSlots(petId,equipped)
 end
 -- Discovery bits the save itself has earned (slice D). Pure; call it on the state a write
 -- is about to commit, with the same `now` the write reads:
---   Book.stateBits(state, now, signature?)
+--   Book.stateBits(state, now, signature?, isNight?)
 -- `signature` is the transaction signature (optional). pet_night needs the pet write itself:
 -- with a signature it must start with "pet:"; without one the pet receipt must belong to
 -- this write (lastPetAward.sequence is operationSeq or operationSeq+1).
-function Book.stateBits(state,now,signature)
+-- `isNight` (optional, garden hour slice F): a boolean is the night the caller reads (LifetimeState passes the
+-- garden hour's night while the hour is on); anything else is the real-hour rule, Book.isNight(now). Same bit 11.
+function Book.stateBits(state,now,signature,isNight)
 	if type(state)~="table"then return 0 end
 	local mask=0
 	local function set(n)mask=bit32.bor(mask,bitOf(n))end
@@ -155,7 +157,8 @@ function Book.stateBits(state,now,signature)
 			local seq=count(state.operationSeq)
 			fresh=receipt.sequence==seq or receipt.sequence==seq+1
 		end
-		if fresh and receipt.day==Daily.dayOf(now)and Book.isNight(now)then set(11)end
+		local night=if type(isNight)=="boolean"then isNight else Book.isNight(now)
+		if fresh and receipt.day==Daily.dayOf(now)and night then set(11)end
 	end
 	local play=state.playDate
 	if type(play)=="table"and count(play.count)>=Park.PlayDate.Target then set(12)end
