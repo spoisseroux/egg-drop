@@ -6,16 +6,16 @@
   "xmlSha256": "d211cf689b4dc61f086fb9e04d4bc6c54525043fa08ceca8e29b5c909847efd4",
   "luaSha256": "4e0b78cd4f69c0ec66d930a42a8bc1b5901a68727ff4691b1578b17e8be021f8",
   "inputs": {
-    "assets/world/world-v7-manifest.json": "fdd87b2406b70156d65a2e10c7637df0941a013e6187d2fd7469ccfd1fc38ea3",
+    "assets/world/world-v7-manifest.json": "27c1f802f64e5e9c0291c20a8d72349188800ec8aef712eba19cd87c30abe69d",
     "assets/world/world-v7-walk.json": "39386b5ed9496b43eae94c9be5981a6529f5229e28fe5cdae34c386262ef369c",
     "assets/world/world-v7-studio-import.json": "c312bd34339b9bdb807515eac8defdb1175c25df05fe312fd4c6ad31f50d864a",
-    "assets/world/world-v7-uploads.json": "93fb64150fb3927f939ed1e7d65377d2c25a500e895bad4e190b4e7b081fa182",
-    "assets/world/world-v7-collision.json": "51c36f34e45c9bf1649b903a7ce977e721d7469e890421d58bc34a821168e065",
+    "assets/world/world-v7-uploads.json": "8da15c8625e8649fec844f54c9029ee4d92fe6387131b63671e0843ccf2d3c3b",
+    "assets/world/world-v7-collision.json": "378758a2e56ebf5a6388cf39d738e7523cf572b2245b5692b6ca10ea84531cd2",
     "assets/world/world-v7-collision-studio-import.json": "b9a0c8966a64aaab2b33062127b35a90e19fa1d6c64b73e1f5fb278807a31f44",
     "assets/world/world-v7-pending.json": "b143ccde82c671d290100101b914b295cd21540dbe59fafc0db7dd599f0e1c7d",
-    "assets/world/world-v7-palette.json": "7d00ea01fd910a4f2f99a8e83714dfc864996804ef5b264ce51514c4c86d77a9",
-    "assets/world/world-dressing-manifest.json": "832ba41771a3e3c028d5042379ebcf0f220fac90f6c90591a06ff78c434f36b3",
-    "assets/world/world-dressing-import.json": "445627c28b15c8a106202d01d29a4cb6359e0dd5f2411a8128f77bb4643be300",
+    "assets/world/world-v7-palette.json": "95b484211ca30d27e0a9fdfd9d242fdcf479ffbda674ddeef71fa224b5bb2da9",
+    "assets/world/world-dressing-manifest.json": "1745cb929ac499321aa407932ac52de1923cef946eb29d70aafc2a6345b026e1",
+    "assets/world/world-dressing-import.json": "c80e6123966ebc34a7c111c1937d66f4df2400d6d6dc55b5e1635f9e6c011dc5",
     "assets/world/world-v7.fbx": "b337c7ff317db4534c54e58c62c9d3cb3552a6cb4e5f7a16b3a938a3a12f4e4b",
     "assets/world/world-v7-declutter.fbx": "5b61277ac3185c0e80fa071ed3dbed83f67868a96f70220e2e7c2d97c618476e",
     "assets/world/world-v7-collision.fbx": "3ebfb766d0d9fa0e5ee65b92a696dd756cd42e2e8a52a6e03d7d4ac807055ba8",
@@ -779,5 +779,6 @@
       "W7_Backdrop__far_peak_2: 0 -> 1",
       "W7_Backdrop__far_peak_3: 0 -> 1"
     ]
-  }
+  },
+  "hashing": "Text inputs and outputs (.json, .rbxmx, .lua) are hashed with CRLF normalized to LF (content, not checkout line endings); binaries byte-exact. Re-signed 2026-11-24 from a raw-byte PASS of the same files."
 }

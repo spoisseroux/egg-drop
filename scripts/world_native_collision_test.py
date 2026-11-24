@@ -50,6 +50,21 @@ class NativeCollisionTests(unittest.TestCase):
         self.assertEqual(validate(self.root)["nativeBytes"], CURRENT_NATIVE_BYTES)
         self.run_builder(success=True)
 
+    def test_line_endings_never_stale_the_checkpoint_but_content_does(self):
+        # core.autocrlf checks text out CRLF on Windows, LF elsewhere: both pass; a content change still fails.
+        crlf, lf = bytes([13, 10]), bytes([10])
+        for name in ("assets/world/world-v7-manifest.json", XML, LUA):
+            path = self.root / name
+            data = path.read_bytes().replace(crlf, lf)
+            for variant in (data, data.replace(lf, crlf)):
+                path.write_bytes(variant)
+                validate(self.root)
+        path = self.root / "assets/world/world-v7-manifest.json"
+        path.write_bytes(path.read_bytes() + b" ")
+        self.assertRaises(RuntimeError, validate, self.root)
+        (self.root / NATIVE).write_bytes((self.root / NATIVE).read_bytes().replace(lf, crlf))
+        self.assertRaises(RuntimeError, validate, self.root)
+
     def test_binary_and_mount_tampering_refused_without_output_changes(self):
         (self.root / NATIVE).write_bytes(b"not the approved export")
         self.assertIn("native export bytes changed", self.run_builder().stderr)
