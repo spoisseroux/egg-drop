@@ -1,6 +1,6 @@
 -- Studio Client. Kit.arrive and Kit.artPop (ALIVE-BUILD-PLAN-2026-11-22 step 2, revision 9; QA-R2-LOOK 1): the springy rise
 -- on the four screens that rise today, exact rest after open / close spam, resize mid-rise, hide, destroy,
--- Reduced Motion and the switch; phones and slide-ins get none; art pops once, on art only.
+-- Reduced Motion and the switch; slide-ins get none; a phone rises only (beta 14 B1); art pops once, on art only.
 -- Usage: require(PlayerScripts.Client.ZZSpecs.KitArrive)(PlayerScripts.Client, PlayerGui)
 return function(client,parent)
  local Kit=require(client.DeckKit);local Spring=require(client.KitSpring);local Budget=require(client.AliveBudget)
@@ -128,7 +128,12 @@ return function(client,parent)
      -- (Today's tween keeps pulling the phone layout until it lands; the spring gives way at once.)
      local phone=hub.root.Position;assert(hub.view~=nil);task.wait(.3);run(1)
      if on then assert(phone.X.Scale==0 and phone.Y.Scale==0 and hub.root.Position==phone,"the phone layout is not pulled back")end
-     hub:close("x");hub:open(ctx);local at=hub.root.Position;assert(not Spring.busy(hub.root)and at.Y.Scale==0,"phones never rise");settle();assert(hub.root.Position==at and pops(hub.root)==0)
+     -- Beta 14 B1: on, a phone rises from its fit (rise only: no art pop, the fit UIScale untouched); off (live), it
+     -- opens exactly at the fit and stays there (never the desktop tween's (.5, .5) + 8 px).
+     hub:close("x");hub:open(ctx);local at=hub.root.Position
+     assert(at.X.Scale==0 and at.Y.Scale==0 and Spring.busy(hub.root,"Position")==on,"a phone rises only on the beta")
+     local fit=if on then at-UDim2.fromOffset(0,RISE)else at
+     run(2);settle();assert(hub.root.Position==fit and not Spring.busy(hub.root)and pops(hub.root)==0 and hub.scale.Scale==1,"rest at the fit "..tostring(hub.root.Position))
      h.Size=UDim2.fromOffset(1280,720);settle();assert(hub.view==nil and hub.root.Position==rest)
      -- Back from a child slides instead.
      hub:close("x");hub:open(ctx,{slideFrom=-Kit.SlideOffset});assert(hub.root.Position==rest and not Spring.busy(hub.root)and pops(hub.root)==0)
@@ -152,6 +157,19 @@ return function(client,parent)
     end)
    end
   end
+  -- Beta 14 B1 (architect 1): menus off at 844 x 390, every phone hub opens at its fit and ends exactly there.
+  test("menus off, 844 x 390: each phone hub ends exactly at its fit",function()
+   flags(false)
+   for _,def in ipairs({{name="MachineHub",make=function(h)return Machine.new(h,{})end},
+    {name="CompanionsHub",make=function(h)return Companions.new(h,{appearance=function()return{}end})end}})do
+    local h=host(844,390);local hub=def.make(h);local ctx={owned=1,wallet=5,state={inventoryMask=1},activeId="pip"}
+    hub:open(ctx);local at=hub.root.Position
+    assert(hub.view~=nil and at.X.Scale==0 and at.Y.Scale==0 and not Spring.busy(hub.root),def.name.." opens at the fit")
+    task.wait(.3);run(1);assert(hub.root.Position==at,def.name.." stays at the fit "..tostring(hub.root.Position))
+    hub:destroy();h:Destroy()
+   end
+   flags(true)
+  end)
   flags(true)
   test("artPop: art only (no text, viewport, scroller, canvas group, list child or scaled art), the first eight shown, none at level 2",function()
    local box=host(600,400)

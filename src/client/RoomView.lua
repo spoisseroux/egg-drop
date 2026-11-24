@@ -131,6 +131,26 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 	local leave = button(controls, "OpenHandheld", "Deck", UDim2.fromOffset(56, 0), Art.Cyan)
 	menu.Size, leave.Size = UDim2.fromOffset(48,48),UDim2.fromOffset(48,48)
 	Art.dockCircle(menu,"menu");Art.dockCircle(leave,"deck")
+	-- Beta 14 B1: the dock keys press on the round-key spring where springs can run (Kit.FaceOn: the beta place and
+	-- Studio). The glyph scales, never the button (its hit rect and focus stay put); live keeps the tree as it was.
+	do
+		local okKit,Kit=pcall(require,script.Parent.DeckKit)
+		if okKit and type(Kit)=="table"and Kit.FaceOn and Kit.pressScale and Kit.PressScale then
+			for _,key in ipairs({menu,leave})do
+				local glyph=key:FindFirstChild("DockGlyph")
+				if glyph then
+					local down=false
+					local function press(on)
+						if on==down then return end
+						down=on;Kit.pressScale(glyph,on,Kit.PressScale.round)
+					end
+					key.MouseButton1Down:Connect(function()press(true)end)
+					key.MouseButton1Up:Connect(function()press(false)end)
+					key.MouseLeave:Connect(function()press(false)end)
+				end
+			end
+		end
+	end
 	menu.BackgroundTransparency,leave.BackgroundTransparency=Art.dockTransparency(GuiService.PreferredTransparency),Art.dockTransparency(GuiService.PreferredTransparency)
 	-- Retain these handles for the welcome guide and old controller restoration.
 	local heading = Art.text(controls, "Heading", "Sprout Hollow", UDim2.fromOffset(0, 0), UDim2.fromOffset(1, 1), Art.Silver, 12)

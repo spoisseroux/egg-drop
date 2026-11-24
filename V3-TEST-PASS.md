@@ -37,6 +37,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
+| 25 | **Beta (14) phone fixes** (B1, B3, B6, Q3, F1; `artifacts/qa-2026-11-23-beta14/BUGFIX-PLAN.md`) | Built offline, not in Studio, not reviewed | Phone: Machines, Pets, Stats, Names and Hatch eggs rise when they open; the round Menu and Deck keys squeeze. Fresh save: the hand bubble over the Bear shows after Meet; the ball bubble squashes when tapped and lays the prints. Deck results: every stat gain shows above the wallet chip (two to a line when crowded). Bear reveal: Back and Meet clear of the card. "Coming up" chips: tap the egg (deck closes, prints to the nest), the stamp (quest log on the stamp card) or quests; gamepad down from Hatch reaches them. Switches: `/alive menus off`; the chips follow the beta place |
 
 ## Scoped, not built
 

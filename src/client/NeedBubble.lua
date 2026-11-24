@@ -24,6 +24,7 @@ Bubble.Dead=2         -- studs: the Bear moving less than this leaves the bubble
 Bubble.Settle=.15     -- studs: a chase ends this close
 Bubble.Rate=3.5       -- the spring: about 1 - e^(-Rate dt) of the way each frame
 Bubble.Snap=30        -- studs: further than this is a teleport, the bubble snaps
+Bubble.Press=table.freeze({low=.88,down=.06,rate=8,wobble=18}) -- beta 14 B3b: the squash a taken tap gives
 Bubble.Ink=Color3.fromHex("#24304F")
 Bubble.Shade=Color3.fromHex("#E6ECF7")
 
@@ -44,6 +45,22 @@ function Bubble.follow(state,target,dt,reduced)
 	if(target-at).Magnitude<=Bubble.Settle then at,state.chasing=target,false end
 	state.at=at
 	return at
+end
+
+-- Pure (beta 14 B3b): does a screen tap at `tap` land on a bubble drawn round `centre` (both Vector2, px)?
+function Bubble.hits(tap,centre)
+	if typeof(tap)~="Vector2"or typeof(centre)~="Vector2"then return false end
+	return(tap-centre).Magnitude<=Bubble.HitSize*.5
+end
+-- Pure: the press squash `t` seconds after a taken tap (1 at rest), nil once it has settled.
+function Bubble.pressScale(t)
+	local P=Bubble.Press
+	if type(t)~="number"or t<0 then return nil end
+	if t<P.down then return 1-(1-P.low)*(t/P.down)end
+	local k=t-P.down
+	local s=1-(1-P.low)*math.exp(-k*P.rate)*math.cos(k*P.wobble)
+	if k>.6 then return nil end
+	return s
 end
 
 function Bubble.new(options)
@@ -89,13 +106,38 @@ function Bubble.new(options)
 	local button=Instance.new("TextButton")
 	button.Name="Hit";button.Text="";button.AutoButtonColor=false;button.Selectable=true;button.Active=true;button.BackgroundTransparency=1
 	button.Size=UDim2.fromScale(1,1);button.BorderSizePixel=0;button.ZIndex=10;button.Parent=gui
-	button.Activated:Connect(function()
+	local function tapped()
 		if self.shown and self.alpha<.6 and options.onTap then options.onTap()end
+	end
+	button.Activated:Connect(tapped)
+	-- Beta 14 B3b: on a phone a billboard can take a touch and still fire no Activated. A touch that begins and ends on
+	-- the hit area counts too (BearNeeds keeps it to one action a tap), and the bubble holds still while a finger is on it.
+	button.InputBegan:Connect(function(input)
+		if input.UserInputType==Enum.UserInputType.Touch then self.holding={at=os.clock(),from=input.Position}end
 	end)
+	button.InputEnded:Connect(function(input)
+		if input.UserInputType~=Enum.UserInputType.Touch then return end
+		local hold=self.holding;self.holding=nil
+		-- A short tap that stayed put, never the end of a camera swipe that began on the bubble.
+		if hold and os.clock()-hold.at<=.6 and(input.Position-hold.from).Magnitude<=24 then tapped()end
+	end)
+	-- A tap no GUI took (TouchTapInWorld, PetClickTarget's pattern) within the hit area round the drawn bubble.
+	local okInput,input=pcall(function()return game:GetService("UserInputService")end)
+	if okInput and input then
+		self.worldTap=input.TouchTapInWorld:Connect(function(position,processed)
+			if processed or not self.shown or not self.gui.Enabled then return end
+			local camera=workspace.CurrentCamera
+			if not camera then return end
+			local point,onScreen=camera:WorldToViewportPoint(self.anchor.Position+self.gui.StudsOffsetWorldSpace)
+			if onScreen and point.Z>0 and Bubble.hits(Vector2.new(position.X,position.Y),Vector2.new(point.X,point.Y))then tapped()end
+		end)
+	end
+	local squash=Instance.new("UIScale");squash.Name="PressScale";squash.Scale=1;squash.Parent=art
 	anchor.Parent=options.world or workspace
 	gui.Parent=options.parent
 	self.anchor,self.gui,self.button,self.art,self.tail,self.edge,self.tailEdge,self.gloss,self.icon,self.image,self.key=
 		anchor,gui,button,art,tail,edge,tailEdge,gloss,icon,image,key
+	self.squash=squash
 	return self
 end
 function Bubble:reduced()return self.options.reduced~=nil and self.options.reduced()==true end
@@ -118,6 +160,12 @@ end
 function Bubble:hop()
 	if not self:reduced()then self.hopAt=self.time end
 end
+-- A taken tap (BearNeeds): a squash and a count on the billboard (Taps, beta diagnostics for a phone session).
+function Bubble:press()
+	self.taps=(self.taps or 0)+1
+	self.gui:SetAttribute("Taps",self.taps)
+	if not self:reduced()then self.pressAt=self.time end
+end
 function Bubble:paint()
 	local a=self.alpha
 	self.art.BackgroundTransparency=a;self.tail.BackgroundTransparency=a
@@ -139,7 +187,9 @@ function Bubble:step(dt)
 		end
 	end
 	local reduced=self:reduced()
-	if adornee then
+	-- A finger on the bubble holds it still, for a second at most (a lost InputEnded never pins it).
+	if self.holding and(not self.shown or os.clock()-self.holding.at>1)then self.holding=nil end
+	if adornee and not self.holding then
 		local at=Bubble.follow(self.spot,adornee.Position+Vector3.new(0,(self.top or 1.5)+Bubble.Lift,0),dt,reduced)
 		self.anchor.CFrame=CFrame.new(at)
 	end
@@ -156,10 +206,19 @@ function Bubble:step(dt)
 		if t>=1 or reduced then self.hopAt=nil else lift=math.sin(t*math.pi)*Bubble.HopHeight end
 	end
 	self.gui.StudsOffsetWorldSpace=Vector3.new(0,lift,0)
+	local squash=1
+	if self.pressAt then
+		local s=if reduced then nil else Bubble.pressScale(self.time-self.pressAt)
+		if s then squash=s else self.pressAt=nil end
+	end
+	if self.squash.Scale~=squash then self.squash.Scale=squash end
 	self.gui.Enabled=adornee~=nil and self.alpha<1
 	self.button.Active=self.shown==true
 	-- Out of sight: the next showing starts over the Bear, not where it was.
 	if not self.gui.Enabled then self.spot.at=nil end
 end
-function Bubble:destroy()self.gui:Destroy();self.anchor:Destroy()end
+function Bubble:destroy()
+	if self.worldTap then self.worldTap:Disconnect();self.worldTap=nil end
+	self.gui:Destroy();self.anchor:Destroy()
+end
 return Bubble

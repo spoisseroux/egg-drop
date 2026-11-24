@@ -603,12 +603,14 @@ function Log:update(quests,wallet)
  self.quests=quests;self.walletValue=wallet
  if self.visible then self:paint()end
 end
-function Log:show(quests,wallet,tab)
+-- options.focus "stamp" (beta 14 F1, the strip's stamp chip): opens on the daily tab's stamp card.
+function Log:show(quests,wallet,tab,options)
  local opening=not self.visible
  self.quests=quests;self.walletValue=wallet;self.visible=true;self.overlay.layer.Visible=true
  if opening then
   self.pendingRows={};self.stampSent=nil
   self:setTab(tab or "daily")
+  if type(options)=="table"and options.focus=="stamp"and self.tab=="daily"then self.focusIndex=Log.StampFocus;self:paintFocus()end
   if not Kit.reduced()and not Kit.arrive(self.overlay.content,UDim2.new())then self.overlay.content.Position=UDim2.fromOffset(0,12);Kit.tween(self.overlay.content,Kit.Motion.screen,{Position=UDim2.new()})end
  else self:paint()end
 end

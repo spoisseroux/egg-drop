@@ -698,6 +698,9 @@ function Screen:open(ctx,options)
 	self:paint()
 	self:paintPreview(self.petId)
 	if options.slideFrom and self.body then Kit.slideIn(self.body,options.slideFrom,Kit.headerSkip(self.header))
+	elseif self.view and not Kit.reduced()then
+		-- Beta 14 B1: a phone rises from its fitted spot (rise only); springs off: nothing, as before.
+		Kit.arrive(self.root,self.root.Position)
 	elseif not self.view and not Kit.reduced()then
 		if not Kit.arrive(self.root)then self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)}) end
 	end

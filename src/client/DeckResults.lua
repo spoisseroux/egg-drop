@@ -453,7 +453,26 @@ function Results:build(compact)
  return self:buildDesktop()
 end
 
+-- Beta 14 F1: the "Coming up" chips the focus may land on (ids 6, 7, 8), none while a save is pending.
+function Results:stripChips()
+ if self.data and self.data.pending then return {}end
+ local strip=if self.inPlace then self.inPlace.tomorrow else self.tomorrowStrip
+ return if strip then strip:targets()else {}
+end
+-- A chip tapped or chosen (onChip): the "chip" callback with its id ("nest", "stamp", "quests"); never while pending.
+function Results:chip(id)
+ if not self.visible or(self.data and self.data.pending)then return false end
+ local cb=self.callbacks.chip
+ return cb~=nil and cb(id)~=false
+end
+-- The strip's onChip, only where tappable chips are switched on (Strip.tappable: the beta place and Studio).
+function Results:chipHandler()
+ local Strip=require(script.Parent.TomorrowStrip)
+ if not Strip.tappable()then return nil end
+ return function(id)return self:chip(id)end
+end
 function Results:target(index)
+ if index>=6 then local chip=self:stripChips()[index-5];return chip and chip.frame end
  if self.inPlace then return self.inPlace.buttons[index]end
  return({self.replay,self.leave,self.difficulty,self.questButton,self.hatch})[index]
 end
@@ -461,6 +480,7 @@ function Results:hatchShown()return self.hatch~=nil and self.hatch.Visible end
 function Results:paintFocus()
  if self.inPlace then return self.inPlace:paintFocus()end
  if not self.visible then self.ring.hide();return end
+ if self.focus>=6 and not self:target(self.focus)then self.focus=1 end
  local target=self:target(self.focus)or self.replay
  self.ring.attach(target,12)
  local glyphs=not(self.phone and Kit.lastInputTouch())
@@ -939,7 +959,8 @@ function Results:paintTomorrow(model,opening)
  local strip=self.tomorrowStrip
  if strip and(strip.root.Parent==nil or strip.phone~=self.phone)then strip:destroy();strip=nil end
  if not strip then
-  strip=Strip.new(self.body or self.root,{phone=self.phone,wait=not self.phone,source=function()return self:tomorrowModel()end,reduced=Kit.reduced})
+  strip=Strip.new(self.body or self.root,{phone=self.phone,wait=not self.phone,source=function()return self:tomorrowModel()end,reduced=Kit.reduced,
+   onChip=self:chipHandler()})
   strip.phone=self.phone
   self.tomorrowStrip=strip
  end
@@ -982,8 +1003,10 @@ function Results:move(direction)
  if self.phone then order=Results.order(true,self:hatchShown(),self.questTarget~=nil)
  elseif self.compact then order={1,2}
  else order=Results.order(false,self:hatchShown(),false)end
+ order=table.clone(order)
+ for i=1,#self:stripChips()do table.insert(order,5+i)end
  local at=table.find(order,self.focus)or 1
- local function blocked(index)return pending and(index==1 or index==3 or index==5)end
+ local function blocked(index)return pending and(index==1 or index==3 or index==5 or index>=6)end
  local step=at
  repeat
   local nextAt=math.clamp(step+direction,1,#order)
@@ -1005,6 +1028,11 @@ end
 function Results:activate(index)
  if self.inPlace then return self.inPlace:activate(index)end
  if index==4 then return end -- display only (QA Q5)
+ if index>=6 then
+  local strip=self.tomorrowStrip
+  if strip and not(self.data and self.data.pending)then strip:activate(index-5)end
+  return
+ end
  local button=self:target(index);if not button then return end
  if index==5 and not button.Visible then return end
  local state=Kit.buttonState(button);if not state or not state.enabled then return end

@@ -62,7 +62,24 @@ function Layout.actions(rw,labels,measure)
 end
 -- The gamepad on the compact stack: down from Difficulty goes to Hatch; right from Hatch to Leave and left back; up
 -- from either goes to Difficulty. Answers the id to focus, or nil (no move: the caller's own rule).
-function Layout.move(focus,dx,dy,paired)
+-- Beta 14 F1: `chips` (0 to 3) "Coming up" chips under the stack take ids 6, 7, 8 (egg, stamp, quests): down from the
+-- bottom row onto them, left and right along them, up back to the row (the left ones to Hatch, the right one to Leave).
+function Layout.move(focus,dx,dy,paired,chips)
+	chips=chips or 0
+	if chips>0 then
+		local last=5+chips
+		if focus>=6 then
+			if dx>0 then return math.min(focus+1,last)end
+			if dx<0 then return math.max(focus-1,6)end
+			if dy<0 then return if not paired then 2 elseif focus==last and chips>1 then 2 else 5 end
+			return focus
+		end
+		if dy>0 and paired and focus==5 then return 6 end
+		if dy>0 and paired and focus==2 then return last end
+		if dy>0 and not paired and focus==2 then return 6 end
+	elseif focus>=6 then
+		return 1 -- the chips went away (a save pending, the strip gone): back to Replay
+	end
 	if dy<0 and(focus==5 or focus==2)then return 3 end
 	if dy>0 and focus==3 then return 5 end
 	if paired then
@@ -101,5 +118,45 @@ function Layout.statRow(paneW,pad,nameW,gainW,up,pillW)
 	out.name={x=nameX,w=math.min(nameW,room),truncated=nameW>room}
 	out.gain={x=nameX+out.name.w+gap,w=gainW}
 	return out
+end
+-- Beta 14 B6: the payout pane's blocks fitted to its scroll window (the pane less payoutFoot), tried in order:
+--   normal  rows 22, the total 32, 14 before the stats, a stat a line (the name shown);
+--   tight   rows 20, the total 28, 6 before the stats, a stat a line;
+--   paired  tight, with the stats two to a line (no name: the colour carries it; a level-up's disc takes the dot's place);
+-- and when even paired is over, `overflow` (the pane keeps its scroll and shows a fade at the window's foot).
+-- options: noStars (the 44 pt "No Stars" line in place of the rows), today (today's 18 pt line, the strip off),
+-- heights (each row's measured height: a wrapped or translated name; a row is never shorter than the mode's).
+-- The wallet chip keeps 28 (Kit.WalletSpec has no 24 with the 3D Star), so the foot stays 42.
+Layout.Payout=table.freeze({title=28,stat=18,noStars=44,today=18,pairGap=6,
+	modes=table.freeze({
+		table.freeze({name="normal",row=22,total=32,gap=14,perLine=1}),
+		table.freeze({name="tight",row=20,total=28,gap=6,perLine=1}),
+		table.freeze({name="paired",row=20,total=28,gap=6,perLine=2}),
+	})})
+function Layout.payoutPlan(paneW,paneH,rowCount,statCount,options)
+	options=options or {}
+	local P=Layout.Payout
+	local window=math.max(0,paneH-Layout.payoutFoot())
+	rowCount=math.clamp(math.floor(tonumber(rowCount)or 0),0,8)
+	statCount=math.clamp(math.floor(tonumber(statCount)or 0),0,8)
+	local plan
+	for _,mode in ipairs(P.modes)do
+		local rows=if options.noStars then P.noStars else rowCount*mode.row
+		if not options.noStars and type(options.heights)=="table"then
+			rows=0
+			for i=1,rowCount do rows+=math.max(mode.row,tonumber(options.heights[i])or 0)end
+		end
+		local lines=if statCount==0 then 0 else math.ceil(statCount/mode.perLine)
+		local height=P.title+rows+mode.total+(if options.today then P.today else 0)+(if statCount>0 then mode.gap+lines*P.stat else 0)
+		plan={mode=mode.name,row=mode.row,total=mode.total,gap=mode.gap,perLine=mode.perLine,lines=lines,height=height,window=window,
+			half=math.floor((paneW-20-P.pairGap)/2),overflow=height>window}
+		if not plan.overflow then return plan end
+	end
+	return plan
+end
+-- Pure: one stat in half a paired line `half` wide: the disc (a level-up, 14) or the dot (10) at 0, the gain 4 after it.
+function Layout.pairedStat(half,gainW,up)
+	local mark=if up then 14 else 10
+	return{mark={x=0,w=mark},gain={x=mark+4,w=math.max(0,math.min(gainW,half-mark-4))},clipped=gainW>half-mark-4}
 end
 return Layout

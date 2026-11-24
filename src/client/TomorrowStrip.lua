@@ -1,8 +1,12 @@
 -- The "Coming up" strip (ONBOARDING-V3-PLAN-2026-11-23 slice E; NEST-LOOK section 7; QA-R2-LOOK 5): one well-filled
 -- row on the results screens (DeckResults, DeckResultsInPlace, the Dash results card) while Onboard.on("nest"): a small
 -- live status of what is on its way while you play. The egg's clock (gold "Egg ready!" when it is), the next stamp and
--- the day's quests, each with a whole, a short and a tiny form; always egg, stamp, quests (ready shows as a gold outline, never sorts). Never a button, never focusable, no
+-- the day's quests, each with a whole, a short and a tiny form; always egg, stamp, quests (ready shows as a gold outline, never sorts). No
 -- sound. Nothing at all when the nest is off or there is no egg. The module keeps its old file name.
+-- Beta 14 F1: with options.onChip (only where Strip.tappable(), the beta place and Studio) each chip carries a clear hit
+-- button: a tap calls onChip(id) ("nest", "stamp" or "quests"). The hit buttons are never Selectable (the results
+-- screen owns gamepad focus and reaches them through Strip:targets() and Strip:activate(index)), and they stay inert
+-- until the enter fade is over (Strip:arm). Without onChip: never a button, never focusable, as before.
 -- Live: given a source (a function answering the model), the strip re-reads it once a second while it is shown and
 -- writes only what changed (in practice once a minute). One connection per strip, gone on hide and on Destroying.
 -- Presentation only: Strip.model is pure (spec-checked); Strip.new draws it with plain instances (the deck's colours).
@@ -37,6 +41,23 @@ Strip.Refresh=1          -- seconds between live passes
 Strip.Color=table.freeze({well=Color3.fromHex("#20234A"),ink=Color3.fromHex("#15143A"),stars=Color3.fromHex("#FFC14D"),
 	gold=Color3.fromHex("#FFE08A"),text=Color3.fromHex("#FFFFFF"),soft=Color3.fromHex("#DCE5FF"),chip=Color3.fromHex("#2C3060")})
 Strip.NestIcon="rbxassetid://114080030018596"
+-- Beta 14 F1: the build switch for tappable chips. Held to the beta place or Studio; live keeps the strip inert.
+Strip.Taps=table.freeze({PlaceId=107705084891479,Ceiling=true})
+Strip.Order=table.freeze({"nest","stamp","quests"})
+Strip.HitPad=4 -- px the hit button reaches past the chip above and below (inside the strip's own box)
+-- env = {place, studio, ceiling} for specs; the game passes nothing.
+function Strip.tappable(env)
+	env=env or {}
+	local ceiling=env.ceiling
+	if ceiling==nil then ceiling=Strip.Taps.Ceiling end
+	if ceiling~=true then return false end
+	local studio=env.studio
+	if studio==nil then
+		local ok,value=pcall(function()return game:GetService("RunService"):IsStudio()end)
+		studio=ok and value==true
+	end
+	return(env.place or game.PlaceId)==Strip.Taps.PlaceId or studio==true
+end
 
 -- ── Pure ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 local function get(key,vars)return UICopy.get("onb3.strip."..key,vars)end
@@ -335,6 +356,7 @@ local function chipFor(self,spec,size)
 			TextXAlignment=Enum.TextXAlignment.Left,ZIndex=self.z+2,TextWrapped=false})
 		chip={frame=frame,stroke=stroke,text=text,id=spec.id}
 		self.byId[spec.id]=chip
+		if self.options.onChip then self:hitFor(chip)end
 	end
 	local name=spec.icon or spec.id
 	if chip.iconName~=name or chip.iconSize~=size then
@@ -344,6 +366,56 @@ local function chipFor(self,spec,size)
 		chip.icon,chip.iconName,chip.iconSize=mark,name,size
 	end
 	return chip
+end
+-- Beta 14 F1: the chip's hit button (clear, over the chip and HitPad past it), press squash on the chip, a tap to onChip.
+function Strip:hitFor(chip)
+	local pad=Strip.HitPad
+	local hit=make("TextButton",chip.frame,{Name="Hit",Text="",AutoButtonColor=false,BackgroundTransparency=1,BorderSizePixel=0,
+		Position=UDim2.fromOffset(0,-pad),Size=UDim2.new(1,0,1,pad*2),ZIndex=self.z+4,Selectable=false,Active=self.armed==true})
+	hit.Interactable=self.armed==true
+	hit:SetAttribute("AccessibleLabel",UICopy.get("onb3.strip.go."..chip.id))
+	chip.hit=hit
+	local function squeeze(on)
+		local Kit=kit()
+		if Kit and type(Kit.pressScale)=="function"and Kit.PressScale and not(self.options.reduced and self.options.reduced()==true)then
+			pcall(Kit.pressScale,chip.frame,on,Kit.PressScale.round)
+		end
+	end
+	local down=false
+	local function press(on)if on~=down then down=on;squeeze(on)end end
+	pcall(function()
+		hit.MouseButton1Down:Connect(function()if self.armed then press(true)end end)
+		hit.MouseButton1Up:Connect(function()press(false)end)
+		hit.MouseLeave:Connect(function()press(false)end)
+		hit.Activated:Connect(function()self:tap(chip.id)end)
+	end)
+	return hit
+end
+-- A tap on chip `id` (or A on it through the results screen): onChip once armed and shown.
+function Strip:tap(id)
+	local onChip=self.options.onChip
+	if not onChip or not self.armed or not self.model or self.root.Visible==false or not self.byId[id]then return false end
+	return onChip(id)~=false
+end
+-- The hit buttons live from now (true) or not (false).
+function Strip:arm(on)
+	self.armed=on~=false
+	for _,chip in pairs(self.byId)do
+		if chip.hit then chip.hit.Active=self.armed;chip.hit.Interactable=self.armed end
+	end
+end
+-- The chips a results screen may focus, in show order: {id, frame, hit}; none before armed, without onChip or hidden.
+function Strip:targets()
+	local out={}
+	if not self.options.onChip or not self.armed or not self.model or self.root.Visible==false then return out end
+	for _,chip in ipairs(self.chips)do
+		if chip.hit then table.insert(out,{id=chip.id,frame=chip.frame,hit=chip.hit})end
+	end
+	return out
+end
+function Strip:activate(index)
+	local target=self:targets()[index]
+	return target~=nil and self:tap(target.id)
 end
 -- Draw `model` in a strip `width` px wide (the caller places root: Position; this sets its Size).
 function Strip:set(model,width)
@@ -383,6 +455,8 @@ function Strip:set(model,width)
 		chip.gold=spec.gold==true
 		chip.frame:SetAttribute("StripText",fit.text)
 	end
+	-- Beta 14 F1: a strip that is set but never entered (no entrance asked for) is live at once; enter() holds it.
+	if self.options.onChip and self.armed==nil then self:arm(true)end
 	if self.options.source then self:live()end
 end
 -- Texts as shown, for specs and the evidence pass: {title, nest, stamp, quests}.
@@ -470,6 +544,17 @@ function Strip:enter(delay,reduced)
 	if not self.model or #self.chips==0 or root.Visible==false then return false end
 	local home=root.Position
 	self.home=home
+	-- Beta 14 F1: the hit buttons wake when the last chip has faded in (never while the strip is still invisible).
+	if self.options.onChip then
+		self:arm(false)
+		self.enterToken=(self.enterToken or 0)+1
+		local token=self.enterToken
+		local wait=(delay or 0)+.1+(#self.chips-1)*.06+.2
+		local ok=pcall(function()
+			task.delay(wait,function()if self.enterToken==token and self.root.Parent then self:arm(true)end end)
+		end)
+		if not ok then self:arm(true)end
+	end
 	local ok=pcall(function()
 		local TweenService=game:GetService("TweenService")
 		root.BackgroundTransparency=1

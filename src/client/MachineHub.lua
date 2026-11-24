@@ -683,6 +683,10 @@ function Hub:open(ctx,options)
  self:focusTile(self.index,true)
  self:syncMotion()
  if options.slideFrom and self.body then Kit.slideIn(self.body,options.slideFrom,Kit.headerSkip(self.header))
+ elseif not wasOpen and self.view and not Kit.reduced()then
+  -- Beta 14 B1: a phone rises on the menus spring from its fitted spot (anchored 0,0: rise only, no art pop: the discs
+  -- sit in a clipping scroller). Springs off (live): nothing, as before.
+  Kit.arrive(self.root,self.root.Position)
  elseif not wasOpen and not self.view and not Kit.reduced()then
   -- Screen in: 160 ms with an 8 px rise (desktop); Reduced Motion is a cut.
   if Kit.arrive(self.root)then

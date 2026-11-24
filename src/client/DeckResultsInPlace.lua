@@ -191,6 +191,16 @@ end
 function View:paintPayoutV3(data,pad,lw)
  self.payoutTitle.Text=string.upper(self.payoutTitle.Text);self.payoutTitle.TextSize=11;self.payoutTitle.Position=UDim2.fromOffset(pad,8)
  local nameWidth=lw-2*pad-self.amountWidth-4
+ -- Beta 14 B6: the blocks fitted to the scroll window (Layout.payoutPlan): tighter rows and gaps, then stats two to a
+ -- line, so nothing is cut at the window's foot (shot 5: the second stat sat under the edge).
+ local shown,heights=0,{}
+ for i,row in ipairs(self.rows)do
+  local item=data.rows and data.rows[i]
+  if item then shown+=1;heights[shown]=math.ceil(Kit.measure(item.name,"BodyMedium",row.TextSize,nameWidth).Y*row.LineHeight)+2 end
+ end
+ local noStars=not data.pending and(data.earned or 0)==0
+ local plan=Layout.payoutPlan(lw,self.regions.left.h,shown,#(data.stats or {}),{noStars=noStars,today=not self.stripOn,heights=heights})
+ self.payoutPlan=plan
  local y=28
  for i,row in ipairs(self.rows)do
   local item=data.rows and data.rows[i]
@@ -199,9 +209,9 @@ function View:paintPayoutV3(data,pad,lw)
   if item then
    row.Text=item.name
    amount.Text=(if item.signed then "+"else "")..tostring(item.amount)
-   local height=math.max(22,math.ceil(Kit.measure(row.Text,"BodyMedium",row.TextSize,nameWidth).Y*row.LineHeight)+2)
+   local height=math.max(plan.row,math.ceil(Kit.measure(row.Text,"BodyMedium",row.TextSize,nameWidth).Y*row.LineHeight)+2)
    row.Position=UDim2.fromOffset(pad,y);row.Size=UDim2.fromOffset(nameWidth,height)
-   amount.Position=UDim2.fromOffset(lw-pad-self.amountWidth,y);amount.Size=UDim2.fromOffset(self.amountWidth,22)
+   amount.Position=UDim2.fromOffset(lw-pad-self.amountWidth,y);amount.Size=UDim2.fromOffset(self.amountWidth,plan.row)
    y+=height
   end
  end
@@ -212,7 +222,7 @@ function View:paintPayoutV3(data,pad,lw)
  self.rule.Position=UDim2.fromOffset(pad,y+2);self.rule.Size=UDim2.fromOffset(lw-2*pad,1)
  self.total.Position=UDim2.fromOffset(pad,y+8);self.total.TextSize=15
  self.total.Text=Copy.get("results.inPlace.total",{count=if data.pending then "…"else data.total or data.earned or 0})
- y+=8+24
+ y+=plan.total
  self.today.Visible=not self.stripOn
  if self.today.Visible then
   self.today.Position=UDim2.fromOffset(pad,y);self.today.Text=Copy.get("results.today.line",{count=data.todayEarned or 0});y+=18
@@ -220,7 +230,10 @@ function View:paintPayoutV3(data,pad,lw)
  self.statsTitle.Visible=false;self.statsGains.Visible=false
  local parts=data.stats or {}
  self.statRows=self.statRows or {}
- y+=14
+ y+=plan.gap
+ local paired=plan.perLine==2
+ local half=plan.half
+ local top=y
  for i=1,math.max(#parts,#self.statRows)do
   local part=parts[i]
   local row=self.statRows[i]
@@ -242,15 +255,33 @@ function View:paintPayoutV3(data,pad,lw)
     local stat=StatCatalog.ById[part.id]
     local color=stat and stat.color or Color3.new(1,1,1)
     row.frame.Position=UDim2.fromOffset(pad,y)
+    row.frame.Size=UDim2.fromOffset(lw-2*pad,18)
     row.dot.BackgroundColor3=color
     row.name.Text=Copy.get("stats.name."..part.id);row.name.TextColor3=color
     row.gain.Text="+"..tostring(part.gain or 0);row.gain.TextColor3=Color3.new(1,1,1)
     local up=part.up==true and type(part.level)=="number"
     local nameW=math.ceil(Kit.measure(row.name.Text,"BodyMedium",12).X)
     local gainW=math.ceil(Kit.measure(row.gain.Text,"Strong",12).X)+1
+    if paired then
+     -- Beta 14 B6: two to a line; the name gives way (its colour is the dot's), a level-up's disc takes the dot's place.
+     local col=(i-1)%2
+     row.frame.Position=UDim2.fromOffset(pad+col*(half+Layout.Payout.pairGap),top+((i-1)//2)*Layout.Payout.stat)
+     row.frame.Size=UDim2.fromOffset(half,18)
+     local g=Layout.pairedStat(half,gainW,up)
+     row.dot.Visible=not up;row.dot.Position=UDim2.fromOffset(g.mark.x,4)
+     row.name.Visible=false
+     row.gain.Position=UDim2.fromOffset(g.gain.x,0);row.gain.Size=UDim2.fromOffset(g.gain.w,18)
+     row.pill.Visible=up
+     if up then
+      row.pill.BackgroundColor3=color
+      row.pill.Position=UDim2.new(0,g.mark.x,.5,0);row.pill.Size=UDim2.fromOffset(g.mark.w,14)
+      row.lv.Text=tostring(part.level)
+     end
+     if col==1 or i==#parts then y=top+(((i-1)//2)+1)*Layout.Payout.stat end
+    else
     -- Studio check beta 12: placed by Layout.statRow, so the level never covers the gain (a disc on a narrow pane).
     local g=Layout.statRow(lw,pad,nameW,gainW,up)
-    row.dot.Position=UDim2.fromOffset(g.dot.x,4)
+    row.dot.Visible=true;row.dot.Position=UDim2.fromOffset(g.dot.x,4)
     row.name.Position=UDim2.fromOffset(g.name.x,0);row.name.Size=UDim2.fromOffset(g.name.w,18);row.name.Visible=g.name.w>0
     row.gain.Position=UDim2.fromOffset(g.gain.x,0);row.gain.Size=UDim2.fromOffset(g.gain.w,18)
     row.pill.Visible=up
@@ -260,14 +291,26 @@ function View:paintPayoutV3(data,pad,lw)
      row.lv.Text=if g.disc then tostring(part.level)else Copy.get("bond.short",{count=part.level})
     end
     y+=18
+    end
    end
   end
  end
+ -- Beta 14 B6: still over the window (a very short pane): it scrolls, with a 12 pt fade at the window's foot as the cue.
+ if not self.payoutFade then
+  local fade=Instance.new("Frame");fade.Name="PayoutFade";fade.BorderSizePixel=0;fade.Active=false;fade.ZIndex=self.payout.ZIndex+2
+  local gradient=Instance.new("UIGradient");gradient.Rotation=90;gradient.Transparency=NumberSequence.new(1,0);gradient.Parent=fade
+  fade.Parent=self.left;self.payoutFade=fade
+ end
+ -- What was painted decides (a name the plan could not foresee still shows the cue).
+ self.payoutFade.Visible=plan.overflow==true or y>plan.window
+ self.payoutFade.BackgroundColor3=self.left.BackgroundColor3
+ self.payoutFade.Position=UDim2.fromOffset(0,math.max(0,self.regions.left.h-Layout.payoutFoot()-12));self.payoutFade.Size=UDim2.new(1,0,0,12)
  -- The strip under the three panes (the panes made room for it when the results opened).
  local tomorrow=self.owner:tomorrowModel()
  if tomorrow and self.stripBox then
   local fresh=self.tomorrow==nil
-  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.root,{phone=true,z=self.root.ZIndex+3,source=function()return self.owner:tomorrowModel()end,reduced=function()return self:reduced()end})end
+  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.root,{phone=true,z=self.root.ZIndex+3,source=function()return self.owner:tomorrowModel()end,reduced=function()return self:reduced()end,
+   onChip=self.owner:chipHandler()})end
   local box=self.stripBox
   self.tomorrow.root.Position=UDim2.fromOffset(box.x,box.y)
   self.tomorrow:set(tomorrow,box.w)
@@ -366,6 +409,12 @@ function View:paintCount(sample)
  self.wallet.set(if sample and not data.pending then(data.balance or 0)-(data.earned or 0)+n else data.balance or 0)
 end
 function View:paintFocus()
+ -- Beta 14 F1: ids 6-8 are the strip's chips (Results:target); gone, the focus goes back to Replay.
+ if self.owner.focus>=6 then
+  local chip=self.owner:target(self.owner.focus)
+  if chip then self.ring.attach(chip,10);return end
+  self.owner.focus=1
+ end
  local button=self.buttons[self.owner.focus]or self.buttons[1]
  self.ring.attach(button,10)
  if self.scrollActions then
@@ -381,10 +430,11 @@ function View:move(dx,dy)
   if callback and not self.data.pending then callback(dx);return true end
  end
  -- U7 (v3): the compact stack's own moves (Difficulty down to Hatch, Hatch and Leave side by side, up to Difficulty).
+ local chips=#self.owner:stripChips()
  if self.compact then
-  local target=Layout.move(self.owner.focus,dx,dy,self.compact.paired)
+  local target=Layout.move(self.owner.focus,dx,dy,self.compact.paired,chips)
   if target then
-   local state=Kit.buttonState(self.buttons[target])
+   local state=if target>=6 then{enabled=target-5<=chips}else Kit.buttonState(self.buttons[target])
    if target~=self.owner.focus and state and state.enabled then
     self.owner.focus=target;self:paintFocus()
     if self.owner.options.audio then self.owner.options.audio:play("aim",1,.3)end
@@ -392,17 +442,23 @@ function View:move(dx,dy)
    return true
   end
  end
- local at=table.find(ORDER,self.owner.focus)or 1
+ local order=table.clone(ORDER)
+ for i=1,chips do table.insert(order,5+i)end
+ local at=table.find(order,self.owner.focus)or 1
  local delta=if dy~=0 then math.sign(dy)else math.sign(dx)
  if delta==0 then return false end
- if math.clamp(at+delta,1,#ORDER)==at then return true end
- for nextAt=math.clamp(at+delta,1,#ORDER),if delta>0 then #ORDER else 1,delta do
-  local id=ORDER[nextAt];local state=Kit.buttonState(self.buttons[id])
+ if math.clamp(at+delta,1,#order)==at then return true end
+ for nextAt=math.clamp(at+delta,1,#order),if delta>0 then #order else 1,delta do
+  local id=order[nextAt];local state=if id>=6 then{enabled=true}else Kit.buttonState(self.buttons[id])
   if state and state.enabled then self.owner.focus=id;self:paintFocus();if self.owner.options.audio then self.owner.options.audio:play("aim",1,.3)end;return true end
  end
  return true
 end
 function View:activate(id)
+ if id>=6 then
+  if not self.owner.visible or(self.data and self.data.pending)or not self.tomorrow then return false end
+  return self.tomorrow:activate(id-5)
+ end
  local button=self.buttons[id];local state=button and Kit.buttonState(button)
  if not state or not state.enabled or not self.owner.visible then return false end
  if os.clock()-self.opened<.3 and not self:reduced()then return false end

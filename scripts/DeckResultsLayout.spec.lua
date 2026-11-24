@@ -74,5 +74,57 @@ return function(client)
 		local g=Layout.statRow(125,10,math.ceil(measure("Power",12)),math.ceil(measure("+58",12)),true)
 		assert(g.disc and not g.name.truncated and g.gain.x+g.gain.w+4<=g.pill.x)
 	end)
+	test("beta 14 F1: the Coming up chips (6, 7, 8) under the stack: down onto them, along them, up back to the row",function()
+		assert(Layout.move(5,0,1,true,3)==6 and Layout.move(2,0,1,true,3)==8,"paired: Hatch to the egg, Leave to the last chip")
+		assert(Layout.move(2,0,1,false,3)==6 and Layout.move(5,0,1,false,3)==2,"two rows: Leave is the bottom")
+		assert(Layout.move(6,1,0,true,3)==7 and Layout.move(8,1,0,true,3)==8 and Layout.move(6,-1,0,true,3)==6,"along, clamped")
+		assert(Layout.move(6,0,-1,true,3)==5 and Layout.move(7,0,-1,true,3)==5 and Layout.move(8,0,-1,true,3)==2,"up: left ones to Hatch, the last to Leave")
+		assert(Layout.move(7,0,-1,false,3)==2 and Layout.move(7,0,1,true,3)==7,"two rows: up to Leave; down stays")
+		assert(Layout.move(7,1,0,true,2)==7,"two chips: 7 is the last")
+		assert(Layout.move(5,0,1,true,0)==5 and Layout.move(7,0,0,true,0)==1,"no chips: the old rule; a stale chip focus goes to Replay")
+	end)
+	test("beta 14 B6: the payout blocks fit the window above the wallet chip: shot 5 goes tight, more stats pair up, else a fade",function()
+		local foot=Layout.payoutFoot()
+		-- Shot 5: a 118 x 200 pane, three rows, two stats, the strip on: normal needs 176 of 158; tight is 158.
+		local shot=Layout.payoutPlan(118,200,3,2,{})
+		assert(shot.window==200-foot and shot.mode=="tight"and shot.height==158 and not shot.overflow,shot.mode.." "..shot.height)
+		assert(Layout.payoutPlan(118,260,3,2,{}).mode=="normal","a tall pane keeps the roomy look")
+		local four=Layout.payoutPlan(118,200,3,4,{})
+		assert(four.mode=="paired"and four.lines==2 and not four.overflow,"four stats two to a line")
+		assert(Layout.payoutPlan(118,140,4,4,{today=true}).overflow,"a very short pane scrolls (with the fade)")
+		-- Code review: a wrapped (or translated) name is measured, so the plan sees it.
+		local wrapped=Layout.payoutPlan(118,200,3,2,{heights={40,18,18}})
+		assert(wrapped.overflow and wrapped.height==28+40+20+20+28+6+18,"a two-line name tips it over "..wrapped.height)
+		assert(Layout.payoutPlan(118,200,3,2,{heights={18,18,18}}).mode=="tight","short names never under the mode's row")
+		for paneW=96,320,8 do
+			for paneH=150,300,10 do
+				for rows=0,4 do
+					for stats=0,4 do
+						for _,options in ipairs({{},{today=true},{noStars=true}})do
+							local p=Layout.payoutPlan(paneW,paneH,rows,stats,options)
+							assert(p.window==math.max(0,paneH-foot))
+							assert(p.overflow==(p.height>p.window),"overflow says so")
+							assert(p.lines==(if stats==0 then 0 else math.ceil(stats/p.perLine)))
+							if not p.overflow then assert(p.height<=p.window,"nothing under the window's foot")end
+							if p.mode~="normal"then
+								local roomy=Layout.payoutPlan(paneW,paneH+400,rows,stats,options)
+								assert(roomy.mode=="normal","only as tight as it must be")
+							end
+						end
+					end
+				end
+			end
+		end
+		-- Paired: the mark and the gain fit half a narrow pane; a level-up's 14 pt disc takes the dot's place.
+		local half=Layout.payoutPlan(118,200,3,4,{}).half
+		for _,gain in ipairs({"+2","+64","+180"})do
+			for _,up in ipairs({false,true})do
+				local g=Layout.pairedStat(half,math.ceil(measure(gain,12)),up)
+				assert(g.mark.x==0 and g.mark.w==(if up then 14 else 10)and g.gain.x==g.mark.w+4)
+				assert(g.gain.x+g.gain.w<=half,"inside its half at "..gain)
+			end
+		end
+		assert(not Layout.pairedStat(half,math.ceil(measure("+64",12)),true).clipped,"shot 5's Power +64 with its disc fits")
+	end)
 	return{passed=#cases,cases=cases}
 end

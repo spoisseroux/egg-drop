@@ -825,6 +825,9 @@ function Hub:open(ctx,options)
  -- Screen in: 160 ms fade plus an 8 px rise (desktop); Reduced Motion is a cut.
  -- Back from a child screen (Customize) slides in from the left instead (QA Q2.2).
  if options.slideFrom and self.body then Kit.slideIn(self.body,options.slideFrom,Kit.headerSkip(self.header))
+ elseif self.view and not Kit.reduced()then
+  -- Beta 14 B1: a phone rises from its fitted spot (rise only, no art pop); springs off: nothing, as before.
+  Kit.arrive(self.root,self.root.Position)
  elseif not self.view and not Kit.reduced()then
   if Kit.arrive(self.root)then self:popDiscs()
   else self.root.Position=UDim2.new(.5,0,.5,8);Kit.tween(self.root,Kit.Motion.screen,{Position=UDim2.fromScale(.5,.5)}) end
