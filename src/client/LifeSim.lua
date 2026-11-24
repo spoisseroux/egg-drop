@@ -993,6 +993,9 @@ Sim.Fruit=table.freeze({
 	regrow=45,grow=1.5,overshoot=1.12,
 	below=14,near=6,find=3,kerb=2,
 	bat=3,batUp=.7,batAway=1,batTime=.4,batBounce=.2,batBounceTime=.15,batTurn=360,poll=2,
+	-- Beta 14 D2: the player's nudge (root within `nudge`: 2 studs along their heading, shortened in .5 steps to a good
+	-- landing; one .25 bounce over .25 s and a half turn; once a second at most).
+	nudge=1.6,nudgeAway=2,nudgeStep=.5,nudgeUp=.25,nudgeTime=.25,nudgeTurn=180,nudgeGap=1,
 })
 local F=Sim.Fruit
 function Sim.fruitKey(i,k)return i*8+k end
@@ -1154,6 +1157,28 @@ function Sim.fruitCandidate(i,crown,stems,n,world)
 	return Sim.fruitPlan(i,crown,stems[math.floor(Wind.hash(seed,14)*#stems)+1],n,letgo,world)
 end
 
+-- The big breath's drops (beta 14 W3 row 1 and D2; only while the Alive `scene` switch is on, which every client reads
+-- the same): breath b lets go at a crown the first 1/60 s on its rise that its envelope reaches dropAt (it always does:
+-- the breath counts as a strong gust). Seeded apart from the gusts (salts 17 and 18, plan number -(b + 1)), with the same
+-- chance, slot and landing rules; the grove's HOLD rule covers gust and breath drops together.
+function Sim.fruitBreathTrigger(position,b)
+	if typeof(position)~="Vector3"or type(b)~="number"then return nil end
+	local start=Wind.breathStart(b)+position:Dot(Wind.Direction)/Wind.Speed
+	for step=0,math.ceil(Wind.BreathRise*60)do
+		local t=start+step/60
+		if Wind.breathEnvelope(t-start)>=F.dropAt then return t end
+	end
+	return nil
+end
+function Sim.fruitBreathCandidate(i,crown,stems,b,world)
+	if #stems==0 then return nil,"empty"end
+	local seed=b*16+i
+	if Wind.hash(seed,17)>=F.chance then return nil,"chance"end
+	local letgo=Sim.fruitBreathTrigger(crown.position,b)
+	if not letgo then return nil,"calm"end
+	return Sim.fruitPlan(i,crown,stems[math.floor(Wind.hash(seed,18)*#stems)+1],-(b+1),letgo,world)
+end
+
 -- One drawn fruit for a shared plan: the screen spin from the camera's right now (the roll turns about 150 a stud and
 -- ends leaning 12 the way it went, the nearest such angle so nothing snaps at rest), plus its own bat and fade state.
 function Sim.fruitLoose(plan,right)
@@ -1198,9 +1223,13 @@ function Sim.fruitPose(plan,now)
 		position,rotation,phase=plan.rest,plan.r4,"rest"
 		local bat=plan.bat
 		if bat and now<bat.done then
+			-- A pet's bat (F.bat*) or the player's nudge (its own numbers on `bat`).
 			local t=now-bat.start
-			position=if t<F.batTime then hop(bat.from,bat.to,F.batUp,t/F.batTime)else hop(bat.to,bat.to,F.batBounce,(t-F.batTime)/F.batBounceTime)
-			rotation,phase=plan.r4+bat.s*F.batTurn*smooth(t/(F.batTime+F.batBounceTime)),"bat"
+			local up,time,bounce,bounceTime=bat.up or F.batUp,bat.time or F.batTime,bat.bounce or F.batBounce,bat.bounceTime or F.batBounceTime
+			if t<time then position=hop(bat.from,bat.to,up,t/time)
+			elseif bounceTime>0 then position=hop(bat.to,bat.to,bounce,(t-time)/bounceTime)
+			else position=bat.to end
+			rotation,phase=(bat.r0 or plan.r4)+bat.s*(bat.turn or F.batTurn)*smooth(t/(time+bounceTime)),"bat"
 		else
 			local at=Wind.at(plan.rest,now)
 			if at>F.rockAt then rotation+=F.rock*math.clamp((at-F.rockAt)/(1-F.rockAt)*2,0,1)*math.sin(now*math.pi*2*F.rockHz)end
@@ -1245,6 +1274,44 @@ function Sim.fruitBat(plan,pet,now,world,right)
 	return true
 end
 
+-- The player walks into a resting drawn fruit (root within F.nudge, beta 14 D2): it hops 2 studs along their heading
+-- (shortened in .5 steps to the first landing that passes the rules; none: no nudge), one small bounce, a half turn it
+-- keeps. This client's view only; once a second at most; its notice is asked again (it may now be near the pet).
+function Sim.fruitNudge(plan,root,heading,now,world,right)
+	if plan.quick or now<plan.t5 or now>=plan.t6 or typeof(root)~="Vector3"then return false end
+	if plan.bat and now<plan.bat.done then return false end
+	if plan.nudgedAt and now-plan.nudgedAt<F.nudgeGap then return false end
+	local from=plan.rest
+	if flat(from,root)>F.nudge then return false end
+	local dir=if typeof(heading)=="Vector3"then Vector3.new(heading.X,0,heading.Z)else Vector3.zero
+	if dir.Magnitude<1e-3 then dir=Vector3.new(from.X-root.X,0,from.Z-root.Z)end
+	if dir.Magnitude<1e-3 then return false end
+	dir=dir.Unit
+	local to
+	local d=F.nudgeAway
+	while d>=F.nudgeStep-1e-9 do
+		local spot=from+dir*d
+		local g=Sim.fruitGround(spot.X,spot.Z,plan.crownY,world)
+		if g then
+			local landing=Vector3.new(spot.X,g+F.lift,spot.Z)
+			if Sim.fruitClear(landing,world)then to=landing;break end
+		end
+		d-=F.nudgeStep
+	end
+	if not to then return false end
+	local s=sign(screen(right,to-from))
+	local done=now+F.nudgeTime
+	plan.bat={start=now,from=from,to=to,s=s,done=done,up=F.nudgeUp,time=F.nudgeTime,bounce=0,bounceTime=0,turn=F.nudgeTurn,
+		r0=plan.r4,nudge=true}
+	plan.r4+=s*F.nudgeTurn
+	plan.rest=to
+	plan.nudgedAt=now
+	plan.noticeAt=nil
+	table.insert(plan.lands,done)
+	plan.t6=math.max(plan.t6,done)
+	return true
+end
+
 -- The grove: which fruit fall, a pure function of the server time (every lime crown, every client, whatever it can
 -- see, its budget or Reduced Motion). A candidate (Sim.fruitCandidate) falls unless the same slot had a candidate in
 -- the HOLD seconds before it; a slot is empty for HOLD after it falls, regrowing over the last F.grow. Candidates are
@@ -1254,9 +1321,10 @@ Sim.Grove=Grove
 Grove.Ahead=2   -- refresh looks this far ahead
 Grove.Every=1   -- seconds between refreshes (GardenLife)
 -- world: shared data only (groundY, safe, stations, pad, course, finds, kerbs); never a camera.
+-- world.breath: the big breath's drops too (the Alive `scene` switch; GardenLife makes a new grove when it flips).
 function Grove.new(crowns,world)
-	local self=setmetatable({crowns=crowns or {},world=world or {},stems={},cands={},drops={},at=nil},Grove)
-	for i,crown in ipairs(self.crowns)do self.stems[i]=Sim.fruitStems(i,crown);self.cands[i]={};self.drops[i]={}end
+	local self=setmetatable({crowns=crowns or {},world=world or {},stems={},cands={},bcands={},drops={},at=nil},Grove)
+	for i,crown in ipairs(self.crowns)do self.stems[i]=Sim.fruitStems(i,crown);self.cands[i]={};self.bcands[i]={};self.drops[i]={}end
 	return self
 end
 -- Gust numbers whose let-go can fall within [a, b] at this place.
@@ -1273,17 +1341,42 @@ function Grove:candidate(i,n)
 	end
 	return c or nil
 end
--- Crown i's drops let go within [a, b], oldest first.
+function Grove:breathCandidate(i,b)
+	local cands=self.bcands[i]
+	local c=cands[b]
+	if c==nil then
+		c=Sim.fruitBreathCandidate(i,self.crowns[i],self.stems[i],b,self.world)or false
+		cands[b]=c
+	end
+	return c or nil
+end
+-- Breath numbers whose let-go can fall within [a, b] at this place.
+local function breathRange(position,a,b)
+	local offset=position:Dot(Wind.Direction)/Wind.Speed
+	return math.floor((a-offset-Wind.BreathRise-Wind.BreathJitter)/Wind.BreathSlot),math.ceil((b-offset+Wind.BreathJitter)/Wind.BreathSlot)
+end
+-- Crown i's drops let go within [a, b], oldest first (gusts and, with world.breath, the big breath).
 function Grove:dropsAt(i,a,b)
-	local lo,hi=gustRange(self.crowns[i].position,a-HOLD,b)
-	local out,last={},{}
+	local position=self.crowns[i].position
+	local lo,hi=gustRange(position,a-HOLD,b)
+	local list={}
 	for n=lo,hi do
 		local c=self:candidate(i,n)
-		if c then
-			local before=last[c.key]
-			last[c.key]=c.start
-			if c.start>=a and c.start<=b and not(before and c.start-before<HOLD)then table.insert(out,c)end
+		if c then table.insert(list,c)end
+	end
+	if self.world.breath==true then
+		local blo,bhi=breathRange(position,a-HOLD,b)
+		for k=blo,bhi do
+			local c=self:breathCandidate(i,k)
+			if c then table.insert(list,c)end
 		end
+		table.sort(list,function(x,y)return x.start<y.start end)
+	end
+	local out,last={},{}
+	for _,c in ipairs(list)do
+		local before=last[c.key]
+		last[c.key]=c.start
+		if c.start>=a and c.start<=b and not(before and c.start-before<HOLD)then table.insert(out,c)end
 	end
 	return out
 end
@@ -1293,6 +1386,8 @@ function Grove:refresh(now)
 		self.drops[i]=self:dropsAt(i,now-HOLD,now+Grove.Ahead)
 		local lo=gustRange(crown.position,now-2*HOLD-Wind.Slot,now)
 		for n in pairs(self.cands[i])do if n<lo then self.cands[i][n]=nil end end
+		local blo=breathRange(crown.position,now-2*HOLD-Wind.BreathSlot,now)
+		for b in pairs(self.bcands[i])do if b<blo then self.bcands[i][b]=nil end end
 	end
 	self.at=now
 end
@@ -1329,9 +1424,11 @@ local Loose={};Loose.__index=Loose
 Sim.Loose=Loose
 function Loose.new()return setmetatable({list={},seen={}},Loose)end
 function Loose:clear()table.clear(self.list);table.clear(self.seen)end
--- active: Grove:active(now). view: {camera = Vector3, right = Vector3}. world: the grove's shared world (bat
--- landings). pets: {Vector3} or a function returning them, called at most once a step and only when a poll is due.
-function Loose:step(now,active,view,world,pets,cap,live)
+-- active: Grove:active(now). view: {camera = Vector3, right = Vector3, player = Vector3?, heading = Vector3?}. world:
+-- the grove's shared world (bat and nudge landings). pets: {Vector3} or a function returning them, called at most once a
+-- step and only when a poll is due. notice(loose, now) -> true?: asked when a drawn fruit first rests and every poll
+-- after while it rests (beta 14 D2, my pet's snack); true takes it (never asked again).
+function Loose:step(now,active,view,world,pets,cap,live,notice)
 	local list,seen=self.list,self.seen
 	local camera=view and view.camera
 	local keep={}
@@ -1359,9 +1456,17 @@ function Loose:step(now,active,view,world,pets,cap,live)
 		end
 	end
 	local pool=if type(pets)=="table"then pets else nil
+	local player=view and view.player
 	for _,loose in ipairs(list)do
 		local position=Sim.fruitPose(loose,now).position
 		if not loose.quick and(live or(camera and(position-camera).Magnitude<F.near))then loose.quick=now end
+		if typeof(player)=="Vector3"and not loose.quick then Sim.fruitNudge(loose,player,view.heading,now,world,view.right)end
+		if notice and not loose.quick and not loose.taken and now>=loose.t5 and now<loose.t6
+			and not(loose.bat and now<loose.bat.done)and(loose.noticeAt==nil or now>=loose.noticeAt)then
+			loose.noticeAt=now+F.poll
+			local ok,took=pcall(notice,loose,now)
+			if ok and took==true then loose.taken=true end
+		end
 		if not loose.bat and not loose.quick and now>=loose.poll and now<loose.t6 and pets then
 			loose.poll=now+F.poll
 			if not pool then

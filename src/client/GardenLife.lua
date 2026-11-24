@@ -351,6 +351,14 @@ function Life.mount(deps)
 		local root=character and character:FindFirstChild("HumanoidRootPart")
 		return root and root.Position
 	end
+	-- Beta 14 D2: where the player faces (the nudge's direction).
+	self.heading=deps.heading or function()
+		local character=Players.LocalPlayer and Players.LocalPlayer.Character
+		local root=character and character:FindFirstChild("HumanoidRootPart")
+		return root and root.CFrame.LookVector
+	end
+	-- Beta 14 D2: my pet's snack asks about each resting fruit (LifePet sets it; nil: no snack).
+	self.notice=deps.notice
 	self.pets=deps.pets or function()return{}end
 	-- The live kit crown parts (for the hanging fruit's sway only).
 	self.kitParts=deps.kitParts or function()
@@ -804,6 +812,12 @@ function Life:step(dt)
 		self.live=ok and type(summary)=="table"and summary.phase=="live"
 		self:readDay(now)
 		self:readScene()
+		-- The big breath's drops follow the `scene` switch (the same on every client): a new grove when it flips.
+		if(self.fruitWorld.breath==true)~=self.scene then
+			self.fruitWorld.breath=self.scene
+			self:forgetFruit()
+			self.grove=Sim.Grove.new(self.groveCrowns,self.fruitWorld)
+		end
 		local okColour,colours=pcall(self.crowns)
 		self.lime=okColour and colours=="lime"
 		local colour=if self.lime then Life.PetalColours.lime else Life.PetalColours.pink
@@ -971,7 +985,10 @@ function Life:stepFruit(now,camera,level,reduced,put,hide)
 	else
 		local view=self.view
 		view.camera,view.right=eye,right
-		self.loose:step(now,grove:active(now),view,self.fruitWorld,self.pets,Sim.cap("loose",level),self.live)
+		view.player=self.root()
+		local okHeading,heading=pcall(self.heading)
+		view.heading=if okHeading and typeof(heading)=="Vector3"then heading else nil
+		self.loose:step(now,grove:active(now),view,self.fruitWorld,self.pets,Sim.cap("loose",level),self.live,self.notice)
 	end
 	local near={}
 	for i,crown in ipairs(grove.crowns)do

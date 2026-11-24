@@ -748,6 +748,93 @@ return function(client)
 		error("no candidate")
 	end
 
+	test("Dewdrops in the big breath (scene on): it always counts as a strong gust; seeded apart; HOLD across both; off, none",function()
+		local base=math.floor(T0/Wind.BreathSlot)
+		local stems=Sim.fruitStems(1,CROWN)
+		local world=flatWorld()
+		local plans,chance=0,0
+		for b=base,base+400 do
+			local t=Sim.fruitBreathTrigger(CROWN.position,b)
+			local start=Wind.breathStart(b)+CROWN.position:Dot(Wind.Direction)/Wind.Speed
+			assert(t and t>start and t<=start+Wind.BreathRise+1e-9,"every breath lets go on its rise")
+			assert(Wind.breathEnvelope(t-start)>=F.dropAt and Wind.breathEnvelope(t-1/60-start)<F.dropAt,"the first 1/60 s it reaches .8")
+			local plan,why=Sim.fruitBreathCandidate(1,CROWN,stems,b,world)
+			if plan then
+				plans+=1
+				assert(plan.n==-(b+1)and plan.start==t and Wind.hash(b*16+1,17)<F.chance,"seeded apart")
+				assert(string.find(plan.id,":%-")~=nil,"its own id: "..plan.id)
+			else assert(why=="chance");chance+=1 end
+		end
+		assert(plans>150 and chance>150,"about half: "..plans.." / "..chance)
+		-- Through a grove: off (world.breath nil) no breath drops; on, the breath's are there, and HOLD covers both.
+		local off=Sim.Grove.new({CROWN},flatWorld())
+		local on=Sim.Grove.new({CROWN},flatWorld({breath=true}))
+		local a,z=T0,T0+3*3600
+		local offDrops,onDrops=off:dropsAt(1,a,z),on:dropsAt(1,a,z)
+		local breaths=0
+		for _,d in ipairs(offDrops)do assert(d.n>=0,"off: no breath drop")end
+		for i,d in ipairs(onDrops)do
+			if d.n<0 then breaths+=1 end
+			if i>1 then assert(onDrops[i-1].start<=d.start,"oldest first")end
+			for j=1,i-1 do
+				local e=onDrops[j]
+				assert(e.key~=d.key or d.start-e.start>=Sim.FruitHold,"a slot that fell is empty for HOLD")
+			end
+		end
+		assert(breaths>=3,"breath drops in 3 hours (slots share HOLD with the gusts): "..breaths)
+		-- Any window gives the same drops (pure): split the hour in two.
+		local first,second=on:dropsAt(1,a,a+5400),on:dropsAt(1,a+5400+1e-6,z)
+		assert(#first+#second==#onDrops,"windows agree")
+	end)
+
+	test("Dewdrops: the player's nudge: within 1.6, 2 studs along their heading (shortened to a good landing), a half turn kept, once a second",function()
+		local plan=firstCandidate()
+		local loose=Sim.fruitLoose(plan,Vector3.new(1,0,0))
+		local world=flatWorld()
+		local rest=loose.rest
+		local now=loose.t5+1
+		assert(not Sim.fruitNudge(loose,rest+Vector3.new(2,0,0),Vector3.new(-1,0,0),now,world,Vector3.new(1,0,0)),"2 studs off: no")
+		assert(not Sim.fruitNudge(loose,rest,Vector3.new(0,0,-1),loose.t5-.1,world,Vector3.new(1,0,0)),"not before it rests")
+		local r4=loose.r4
+		assert(Sim.fruitNudge(loose,rest+Vector3.new(0,0,1),Vector3.new(0,0,-1),now,world,Vector3.new(1,0,0)))
+		assert(near(Sim.flat(loose.rest,rest),2,1e-6)and(loose.rest-rest).Unit:Dot(Vector3.new(0,0,-1))>.99,"2 along the heading")
+		assert(math.abs(math.abs(loose.r4-r4)-180)<1e-9 and loose.noticeAt==nil,"a half turn it keeps; asked again")
+		local mid=Sim.fruitPose(loose,now+F.nudgeTime/2)
+		assert(mid.phase=="bat"and near(mid.position.Y,rest.Y+F.nudgeUp,1e-6),"one .25 bounce")
+		local after=Sim.fruitPose(loose,now+F.nudgeTime+.01)
+		assert(after.phase=="rest"and after.position==loose.rest and after.rotation==loose.r4,"rests, no snap")
+		assert(not Sim.fruitNudge(loose,loose.rest,Vector3.new(0,0,-1),now+.5,world,Vector3.new(1,0,0)),"once a second")
+		-- Shortened: the spot 2 studs on is a find spot, 1.5 is fine.
+		local plan2=firstCandidate()
+		local l2=Sim.fruitLoose(plan2,Vector3.new(1,0,0))
+		local r2=l2.rest
+		local blocked=flatWorld({finds={r2+Vector3.new(0,0,-2-F.find+.6)}})
+		assert(Sim.fruitNudge(l2,r2+Vector3.new(0,0,1),Vector3.new(0,0,-1),l2.t5+1,blocked,Vector3.new(1,0,0)))
+		assert(Sim.flat(l2.rest,r2)<2-1e-6 and Sim.flat(l2.rest,r2)>=.5-1e-6,"shortened: "..Sim.flat(l2.rest,r2))
+		-- Nowhere good: no nudge.
+		local plan3=firstCandidate()
+		local l3=Sim.fruitLoose(plan3,Vector3.new(1,0,0))
+		assert(not Sim.fruitNudge(l3,l3.rest,Vector3.new(0,0,-1),l3.t5+1,flatWorld({safe=function()return false end}),Vector3.new(1,0,0)))
+	end)
+
+	test("Dewdrops: notice asks once on the first rest, then every 2 s while it rests, until it is taken; never while quick",function()
+		local plan=firstCandidate()
+		local loose=Sim.Loose.new()
+		local asked,take={},false
+		local function notice(l,now)table.insert(asked,now);return take end
+		local view={camera=plan.p4+Vector3.new(0,10,30),right=Vector3.new(1,0,0)}
+		local now=plan.start
+		while now<plan.t5+5 do
+			now+=1/30
+			loose:step(now,{plan},view,flatWorld(),nil,3,false,notice)
+		end
+		assert(#asked==3,"at rest, +2, +4: "..#asked)
+		assert(asked[1]>=plan.t5 and asked[1]<plan.t5+.05,"on landing")
+		take=true
+		while now<plan.t5+9 do now+=1/30;loose:step(now,{plan},view,flatWorld(),nil,3,false,notice)end
+		assert(#asked==4,"taken: never again: "..#asked)
+	end)
+
 	test("Dewdrops: the grove is a pure function of the server time: any window, any refresh rhythm, the same drops",function()
 		local world=flatWorld()
 		local HOLD=Sim.FruitHold
