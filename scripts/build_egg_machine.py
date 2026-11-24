@@ -398,12 +398,14 @@ def pile_layout():
     out = []
     # Fable render R1: 9 at 1.15, 6 at .80, 3 at .40 (touching the glass at the front), top of the heap near 5.6.
     y0 = GLOBE_BOTTOM + .62
+    # Beta (16) fix: the bottom ring (was R 1.12 at y 3.92) poked out through the glass where it narrows, down into the
+    # collar. Now R .90 at y 4.25 (worst egg .079 inside the glass, tilts included), ring 2 up .11 to keep the mound.
     for k in range(9):
         a = 2 * math.pi * k / 9 + .2
-        out.append((1.12 * math.sin(a), y0, 1.12 * math.cos(a)))
+        out.append((.90 * math.sin(a), 4.25, .90 * math.cos(a)))
     for k in range(6):
         a = 2 * math.pi * k / 6 + .6
-        out.append((.80 * math.sin(a), y0 + .62, .80 * math.cos(a)))
+        out.append((.80 * math.sin(a), y0 + .73, .80 * math.cos(a)))
     for k in range(3):
         a = 2 * math.pi * k / 3 + 1.1
         out.append((.40 * math.sin(a), y0 + 1.18, .40 * math.cos(a)))
@@ -415,6 +417,36 @@ def pile_layout():
         a = 2 * math.pi * k / 6 + .3
         loose.append((.65 * math.sin(a) + rnd.uniform(-.05, .05), y0 + 1.62 + rnd.uniform(0, .1), .65 * math.cos(a) + .1))
     return out, loose
+
+
+GLASS_MARGIN = .05
+# Beta (16): the glass narrows to its bottom at 3.64, where no upright egg fits; four eggs lying on their sides along a
+# small ring fill it so the pile does not float. Fixed poses and colours (outside the shuffle: every other egg keeps
+# its colour and tilt).
+BOTTOM_EGGS = [((.5 * math.sin(2 * math.pi * k / 4 + .4), 4.03, .5 * math.cos(2 * math.pi * k / 4 + .4)),
+                2 * math.pi * k / 4 + .4, kind) for k, kind in enumerate(("Hue", "Toy", "Material", "Stat"))]
+
+
+def glass_inner_radius(y):
+    """The globe's inner radius at height y (the flat of its 18-sided lathe), or None outside the glass's height."""
+    prof = egg_profile(2 * GLOBE_R, GLOBE_TOP - GLOBE_BOTTOM, 11, GLOBE_BOTTOM, GLOBE_WIDEST, open_bottom=.06,
+                       roundness=GLOBE_ROUNDNESS)
+    prof.insert(1, (prof[0][0] + (prof[1][0] - prof[0][0]) * .3, prof[0][1] + (prof[1][1] - prof[0][1]) * .3))
+    for (r0, y0), (r1, y1) in zip(prof, prof[1:]):
+        if y0 <= y <= y1:
+            return (r0 + (r1 - r0) * (y - y0) / (y1 - y0)) * math.cos(math.pi / 18)
+    return None
+
+
+def assert_inside_glass(points, label):
+    """Every point (machine-local) inside the glass by GLASS_MARGIN, never below where the glass starts."""
+    worst = None
+    for x, y, z in points:
+        g = glass_inner_radius(y)
+        room = (g - math.hypot(x, z)) if g is not None else -1.0
+        worst = room if worst is None else min(worst, room)
+    assert worst is not None and worst >= GLASS_MARGIN, (label, "egg outside the glass", round(worst, 3))
+    return worst
 
 
 def build_pile(layout):
@@ -432,6 +464,10 @@ def build_pile(layout):
         # Whole eggs: a cull on face normals took fronts as well (holes); 18 x 96 is inside the budget.
         band = tuple(col[i] * .5 + lin(CREAM_BAND)[i] * .5 for i in range(3))   # 50 percent toward cream
         tris += egg_faces(m, c, col, tilt=tilt, yaw=rnd.uniform(0, 6.28), band=band, body=1.0)
+    for c, yaw, kind in BOTTOM_EGGS:                       # lying (tilt a quarter turn), long axis round the ring
+        col = lin(hexrgb(EGG_TYPES[kind]))
+        band = tuple(col[i] * .5 + lin(CREAM_BAND)[i] * .5 for i in range(3))
+        tris += egg_faces(m, c, col, tilt=math.pi / 2, yaw=yaw, band=band, body=1.0)
     return m.build(weld=True), order    # welded per egg, so the eggs shade smooth
 
 
@@ -502,6 +538,16 @@ def main():
     egg = build_egg()
     layout, loose = pile_layout()
     pile, order = build_pile(layout)
+    # Beta (16): every baked egg (the pile's vertices) and every loose egg (the egg mesh at each spot, tilted up to .3)
+    # stays inside the glass.
+    to_local = lambda v: (v.x, v.z, -v.y)
+    room = assert_inside_glass([to_local(pile.matrix_world @ v.co) for v in pile.data.vertices], "pile")
+    for k, at in enumerate(loose):
+        for tilt in (Matrix.Identity(3), Matrix.Rotation(.3, 3, "X"), Matrix.Rotation(-.3, 3, "X"),
+                     Matrix.Rotation(.3, 3, "Y"), Matrix.Rotation(-.3, 3, "Y")):
+            pts = [to_local(tilt @ v.co) for v in egg.data.vertices]
+            room = min(room, assert_inside_glass([(x + at[0], y + at[1], z + at[2]) for x, y, z in pts], f"loose {k}"))
+    print("EGG MACHINE eggs inside the glass, worst room", round(room, 3))
     # Dial sits on the base's front surface at 1.95 up; sprout on the cap.
     dial_z = base_radius_at(DIAL_CENTRE.y) * BASE_DEPTH - .02
     dial_pos = [0.0, DIAL_CENTRE.y, round(dial_z, 4)]
@@ -533,7 +579,7 @@ def main():
         "pivots": {"Dial": dial_pos, "Sprout": sprout_pos},
         "dialFace": [0, 0, 1],
         "loose": [{"at": [round(v, 4) for v in p], "type": order_all[BAKED + k]} for k, p in enumerate(loose)],
-        "pileTypes": order_all[:BAKED],
+        "pileTypes": order_all[:BAKED] + [kind for _, _, kind in BOTTOM_EGGS],
         "cup": spots["cup"], "chute": {"top": [round(v, 4) for v in spots["chuteTop"]], "end": [round(v, 4) for v in spots["chuteEnd"]]},
         "light": [0.0, 5.0, 0.0],
         "dropScale": round(DROP_SCALE, 4),
