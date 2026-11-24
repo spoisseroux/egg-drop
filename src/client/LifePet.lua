@@ -19,7 +19,8 @@
 -- it off, or its ceiling false (live), drive and pose write nothing at all. Reduced Motion: no snack (fruit never falls).
 -- deps: alive {ceiling, on}, now(), reduced(), busy() -> true while a menu, focus, a Stat snack, a hatch or a race owns
 --   the pet, owner() -> my root position?, ownerStill() -> boolean, scene() -> boolean, breath(position, now) ->
---   strength, number, world (the heart's parent), audio(cue)?, life() -> GardenLife still on (nil: assumed on).
+--   strength, number, world (the heart's parent), audio(cue)?, life() -> GardenLife still on (nil: assumed on),
+--   userId() -> my UserId, rivals() -> {{ownerId, position}} (the other garden pets at their server positions).
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 
 local Pet={};Pet.__index=Pet
@@ -104,7 +105,14 @@ function Pet:notice(loose,now)
 	if d>S.notice then self:why(string.format("refused: fruit %.1f studs off (notice %d)",d,S.notice));return false end
 	local owner=call(self.d.owner)
 	if typeof(owner)=="Vector3"and flat(owner,loose.rest)>S.leash then self:why("refused: past the owner's leash");return false end
+	-- Spencer (beta 15): never two pets on one fruit. On this client: one claim a fruit at a time.
+	local claim=Pet.Claims[loose.id]
+	if claim~=nil and claim~=self then self:why("refused: fruit claimed by another snack");return false end
+	-- Across clients (each owner draws their own pet's snack): only the pet nearest the fruit among every pet this client
+	-- knows (their server positions, the same on every client), the lowest owner UserId on a tie, may go for it.
+	if not self:nearest(loose.rest,self.sample or visual.origin)then self:why("refused: fruit claimed by a nearer pet");return false end
 	self:why(string.format("snack: going (%.1f studs)",d))
+	Pet.Claims[loose.id]=self
 	local fruit=loose.rest
 	local to=Vector3.new(fruit.X-visual.origin.X,0,fruit.Z-visual.origin.Z)
 	local stop=if to.Magnitude>S.arrive then fruit-to.Unit*S.arrive else visual.origin
@@ -114,17 +122,42 @@ function Pet:notice(loose,now)
 	return true
 end
 
+-- Fruit claims on this client (plan id -> the LifePet going for it), released on done, abort and teardown.
+Pet.Claims=setmetatable({},{__mode="v"})
+Pet.Tie=1e-3
+-- Is my pet the nearest to `fruit` among all the pets this client knows? rivals() -> {{ownerId, position}} (other
+-- owners' pets at their server positions; mine may be listed too, it is replaced by `mine`). Ties: the lowest UserId.
+function Pet:nearest(fruit,mine)
+	local me=call(self.d.userId)
+	if type(me)~="number"or typeof(mine)~="Vector3"then return true end
+	local best,bestId=flat(mine,fruit),me
+	local rivals=call(self.d.rivals)
+	for _,pet in ipairs(type(rivals)=="table"and rivals or {})do
+		local id,at=pet.ownerId,pet.position
+		if type(id)=="number"and id~=me and typeof(at)=="Vector3"then
+			local d=flat(at,fruit)
+			if d<best-Pet.Tie or(math.abs(d-best)<=Pet.Tie and id<bestId)then best,bestId=d,id end
+		end
+	end
+	return bestId==me
+end
+local function unclaim(self,a)
+	if a and a.loose and Pet.Claims[a.loose.id]==self then Pet.Claims[a.loose.id]=nil end
+end
+
 -- Hands the pet back: an ease from where it is drawn to the live sample over `back` seconds.
 function Pet:abort(now)
 	local a=self.active
 	if not a then return end
 	if a.loose and not a.loose.eaten then a.loose.taken=nil end
+	unclaim(self,a)
 	if a.phase~="back"or not a.quick then a.phase,a.at,a.quick,a.from=("back"),now or self.now(),true,a.pos end
 end
 function Pet:release(visual)
 	local a=self.active
 	self.active=nil
 	if a and a.loose and not a.loose.eaten then a.loose.taken=nil end
+	unclaim(self,a)
 	if visual and not visual.destroyed then visual.poseDirty=true end
 	self:dropHeart()
 end
@@ -145,6 +178,7 @@ function Pet:drive(visual,actor,now,dt)
 	-- Code review r1: GardenLife gone (budget level 2, `life` off): its fruit is gone, so is the snack.
 	if a and self.d.life and call(self.d.life)~=true then self:release(visual);return false end
 	local sample=visual.origin
+	self.sample=sample
 	if not a then return self:lookUp(visual,actor,now)end
 	local free,whyNot=Pet.free(actor,call(self.d.ownerStill)==true)
 	local busy=self:isBusy()

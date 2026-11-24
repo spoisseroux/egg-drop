@@ -4808,7 +4808,19 @@ do
     ownerStill=function()return roomView.ownerStillSince~=nil and workspace:GetServerTimeNow()-roomView.ownerStillSince>=1 end,
     scene=function()return Alive.on("scene")end,
     breath=function(at,now)return Wind.breath(at,now)end,
-    life=function()return clientUI.life~=nil and clientUI.life.enabled==true end})
+    life=function()return clientUI.life~=nil and clientUI.life.enabled==true end,
+    -- Never two pets on one fruit (Spencer, beta 15): the other owners' pets where the server has them.
+    userId=function()return Players.LocalPlayer.UserId end,
+    rivals=function()
+     local out={}
+     for player,entry in pairs(roomView.companions and roomView.companions.active or {})do
+      local visual=entry.visual
+      if typeof(player)=="Instance"and visual and typeof(visual.origin)=="Vector3"then
+       table.insert(out,{ownerId=player.UserId,position=visual.origin})
+      end
+     end
+     return out
+    end})
    clientUI.lifePet=pet
    local function guard(method)
     return function(...)

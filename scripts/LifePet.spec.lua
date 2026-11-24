@@ -20,9 +20,11 @@ return function(client)
 		function v:update(dt)self.updates+=1;self.time+=dt or 0 end
 		return v
 	end
+	local serial=0
 	local function fruitAt(position)
-		-- A resting drawn fruit (its pose is LifeSim's): t5 passed, t6 far.
-		local plan={id="k:1",key=1,rest=position+Vector3.new(0,.5,0),t5=0,t6=1000,start=-2,lands={},r4=0,pose={},stem=position,
+		-- A resting drawn fruit (its pose is LifeSim's): t5 passed, t6 far. Each its own id (claims are per fruit).
+		serial+=1
+		local plan={id="k:"..serial,key=1,rest=position+Vector3.new(0,.5,0),t5=0,t6=1000,start=-2,lands={},r4=0,pose={},stem=position,
 			sway=0,dot=1,release=position,p1=position,p2=position,p3=position,p4=position,length=1,heading=Vector3.new(1,0,0),
 			t1=-1.9,t2=-1.3,t3=-1.1,t4=-.9,crownY=12,gone=1001}
 		return plan
@@ -34,7 +36,9 @@ return function(client)
 		r.pet=Pet.new({alive={ceiling=function(f)return f=="snack"and r.ceiling end,on=function(f)return f=="snack"and r.on end},
 			now=function()return r.now end,busy=function()return r.busy end,reduced=function()return false end,
 			owner=function()return r.owner end,ownerStill=function()return r.still end,scene=function()return r.scene end,
-			breath=function()return r.breath[1],r.breath[2]end,world=workspace,life=function()return r.life~=false end})
+			breath=function()return r.breath[1],r.breath[2]end,world=workspace,life=function()return r.life~=false end,
+			userId=function()return r.userId end,rivals=function()return r.rivals end})
+		r.userId,r.rivals=options.userId or 10,{}
 		r.actor={mode="Room",behavior="rest",action="settle"}
 		r.visual=visual()
 		r.sample=r.visual.origin
@@ -231,6 +235,62 @@ return function(client)
 		r.now+=1/30;r.visual.origin=r.sample;r.pet:drive(r.visual,r.actor,r.now,1/30)
 		assert(r.pet.active.quick and model:GetAttribute("SnackWhy")=="aborted: park pose")
 		r.visual.parkPosedOrigin=nil
+	end)
+
+	test("never two pets on one fruit, on one client: one snack claims it; the other refuses until the claim is released",function()
+		local a,b=rig(),rig()
+		local modelB=Instance.new("Model");b.visual.model=modelB
+		a.run(.2);b.run(.2)
+		local loose=fruitAt(Vector3.new(5,4,0))
+		assert(a.pet:notice(loose,a.now))
+		assert(b.pet:notice(loose,b.now)==false and modelB:GetAttribute("SnackWhy")=="refused: fruit claimed by another snack")
+		-- A's snack aborts (the owner walks off): the claim goes with it.
+		a.sample=Vector3.new(-12,4.025,0);a.frame(1/30);a.run(.5)
+		assert(a.pet.active==nil and Pet.Claims[loose.id]==nil,"released on abort")
+		loose.taken=nil
+		assert(b.pet:notice(loose,b.now),"B may now")
+		b.pet:destroy()
+		assert(Pet.Claims[loose.id]==nil,"released on teardown")
+		-- Done: a whole snack releases it too.
+		local c=rig();c.run(.2)
+		local other=fruitAt(Vector3.new(4,4,0))
+		assert(c.pet:notice(other,c.now))
+		c.run(12)
+		assert(c.pet.active==nil and Pet.Claims[other.id]==nil,"released when done")
+	end)
+
+	test("never two pets on one fruit, across clients: only the nearest pet (server positions; lowest UserId on a tie) goes; no stealing mid-snack",function()
+		local r=rig()
+		local model=Instance.new("Model");r.visual.model=model
+		r.run(.2)
+		-- Another owner's pet nearer the fruit: refused.
+		r.rivals={{ownerId=20,position=Vector3.new(5.5,4,0)}}
+		assert(r.pet:notice(fruitAt(Vector3.new(6,4,0)),r.now)==false)
+		assert(model:GetAttribute("SnackWhy")=="refused: fruit claimed by a nearer pet")
+		-- Farther: mine.
+		r.rivals={{ownerId=20,position=Vector3.new(20,4,0)}}
+		local fruit=fruitAt(Vector3.new(6,4,0))
+		assert(r.pet:notice(fruit,r.now))
+		-- Mid-snack the rival comes nearer: no stealing (only notice time decides).
+		r.rivals={{ownerId=20,position=Vector3.new(6,4,0)}}
+		r.run(1)
+		assert(r.pet.active and not r.pet.active.quick,"still going")
+		r.pet:release(r.visual)
+		-- A tie (both 5 studs off): the lowest UserId goes.
+		local t=rig();t.run(.2)
+		t.rivals={{ownerId=5,position=Vector3.new(10,4,0)}}
+		assert(t.pet:notice(fruitAt(Vector3.new(5,4,0)),t.now)==false,"5 < 10: theirs")
+		t.userId=3
+		assert(t.pet:notice(fruitAt(Vector3.new(5,4,0)),t.now),"3 < 5: mine")
+		-- Both clients agree: from the other owner's side the same rule picks the same pet.
+		local mine,theirs=Vector3.new(0,4,0),Vector3.new(10,4,0)
+		local spot=Vector3.new(5,4,0)
+		local x,y=rig(),rig()
+		x.userId,y.userId=3,5
+		x.rivals={{ownerId=5,position=theirs}};y.rivals={{ownerId=3,position=mine}}
+		y.sample=theirs;y.visual.origin=theirs
+		x.run(.2);y.run(.2)
+		assert(x.pet:nearest(spot,mine)==true and y.pet:nearest(spot,theirs)==false,"one winner on every client")
 	end)
 
 	test("the breath look-up (scene on): the head lifts for 1.2 s once a breath; scene off or busy, none",function()
