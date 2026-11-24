@@ -176,6 +176,9 @@ RESHAPE = {
                                  (-1.3, -.6, 8.9, 1.3, .82, 5, 3)],
                       "tufts": []},
 }
+# The rim tufts a carded crown dropped (Fable R5): their triangles are no longer in the crown (the kit tests read
+# `droppedTufts` from the manifest).
+RESHAPE_TUFTS_DROPPED = {"Crown_Blossom": ((35, None), (95, None), (150, None), (215, None), (270, None), (330, None))}
 RESHAPE_KIND = {"Crown_Round": "Tree_Round", "Crown_Tall": "Tree_Tall", "Crown_Blossom": "Tree_Blossom"}
 UV_SCALE = .25          # one 4-stud leaf tile (LOOK-R3 2), box-mapped by face normal (per crown: spec "uv")
 JITTER = .13            # of each clump's radius (LOOK-R3 round 6: .08 read as regular)
@@ -313,7 +316,7 @@ def new_crown(name, material, pivot, materials):
         out = Vector((math.cos(ang), math.sin(ang), 0))
         band = [q for q in leaf_pts if abs(q.z - zc) < 1.2 and Vector((q.x - LEAN, q.y, 0)).normalized().dot(out) > .7]
         assert band, (name, "no outline for card", i)
-        edge = max(band, key=lambda q: q.dot(out))
+        edge = max(band, key=lambda q: Vector((q.x - LEAN, q.y, 0)).dot(out))   # from the trunk axis, as the band
         normal = (out + up * .25).normalized()
         e1 = up.cross(normal).normalized()
         e2 = normal.cross(e1).normalized()
@@ -392,11 +395,13 @@ def reshape(canon):
         tris = C.tris(obj)
         card_tris = sum(1 for poly, flag in zip(obj.data.polygons, obj.data.attributes["kit_card"].data) if flag.value == 1) \
             if "kit_card" in obj.data.attributes else 0
-        assert tris == spec["tris"] and tris - card_tris == C.tris(old) - 24 * (spec.get("cards", 0) > 0), \
+        dropped = 4 * len(RESHAPE_TUFTS_DROPPED.get(name, ()))
+        assert tris == spec["tris"] and tris - card_tris == C.tris(old) - dropped, \
             (name, "triangles", tris, card_tris, C.tris(old), spec["tris"])
         assert card_tris == spec.get("cards", 0) * CARD_SIDES, (name, "card triangles", card_tris)
         overhang = max(max(old_lo[i] - new_lo[i], new_hi[i] - old_hi[i]) for i in range(3))
-        limit = CARD_RADIUS[1] if spec.get("cards") else OVERHANG_MAX   # a card lies along the outline: up to its radius
+        # A card lies along the outline: up to its largest rim (radius x (1 + .2 + .06)).
+        limit = CARD_RADIUS[1] * 1.26 if spec.get("cards") else OVERHANG_MAX
         assert overhang <= limit, (name, "overhang", overhang, limit)
         trunk_depth = entry["pivot"].z - spec["floor"]     # the pivot is the trunk top
         assert trunk_depth >= TRUNK_DEPTH_MIN, (name, "trunk depth", trunk_depth)
@@ -404,7 +409,7 @@ def reshape(canon):
         degenerate = sum(1 for poly in obj.data.polygons if poly.area < 1e-6)
         assert degenerate == 0, (name, "zero-area triangles", degenerate)
         entry["reshape"] = {"overhang": round(overhang, 4), "overhangMax": limit, "floor": round(-trunk_depth, 4), "trunkDepth": round(trunk_depth, 4),
-                            "cardTris": card_tris, "tuftTris": 0 if spec.get("cards") else 4 * len(spec["tufts"]),
+                            "cardTris": card_tris, "droppedTufts": dropped, "cardBudget": CARD_BUDGET,
                             "oldBounds": [rb(old_lo), rb(old_hi)], "newBounds": [rb(new_lo), rb(new_hi)], "tris": tris}
         bpy.data.objects.remove(old, do_unlink=True)
         entry["obj"] = obj

@@ -124,7 +124,8 @@ function Falls.kitStack(b)
 		beam.LightEmission=0
 		beam.Enabled=false
 		beam.Parent=p
-		b.add({group="Tumble",name="MistCard",kind="beam",item=beam,level1=card.level1==true})
+		local layer=b.add({group="Tumble",name="MistCard",kind="beam",item=beam,level1=card.level1==true})
+		layer.keepOut=base -- code review r5: off within MistKeepOut of its card, like every mist (a 6-stud card fills the view)
 	end
 	-- The apron: a flat beam on the pool, flowing out from the foot (attachments' Axis up: it lies in the water).
 	do

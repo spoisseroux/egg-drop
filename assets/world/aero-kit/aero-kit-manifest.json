@@ -23,7 +23,8 @@
     "floor": -2.3384,
     "trunkDepth": 2.3384,
     "cardTris": 0,
-    "tuftTris": 24,
+    "droppedTufts": 0,
+    "cardBudget": 1000,
     "oldBounds": [
      [
       -4.4775,
@@ -73,7 +74,8 @@
     "floor": -1.908,
     "trunkDepth": 1.908,
     "cardTris": 0,
-    "tuftTris": 28,
+    "droppedTufts": 0,
+    "cardBudget": 1000,
     "oldBounds": [
      [
       -2.9296,
@@ -119,11 +121,12 @@
    "hash": "6776c50ae0ee32de",
    "reshape": {
     "overhang": 1.1075,
-    "overhangMax": 1.5,
+    "overhangMax": 1.8900000000000001,
     "floor": -1.9968,
     "trunkDepth": 1.9968,
     "cardTris": 120,
-    "tuftTris": 0,
+    "droppedTufts": 24,
+    "cardBudget": 1000,
     "oldBounds": [
      [
       -4.306,
