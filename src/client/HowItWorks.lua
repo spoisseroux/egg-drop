@@ -241,8 +241,8 @@ function How.buildList()
  local fy=panelH-footerH+(if compact then 10 else 16)
  local bw,bh=if compact then 140 else 180,if compact then 44 else 48
  -- Fable R8 FIX 3: the "A" glyph only for a gamepad player.
- local pad=string.match(UserInputService:GetLastInputType().Name,"^Gamepad")~=nil
- local done=Kit.button(panel,"GotIt",{variant="primary",text=model.button or UICopy.get("r3.help.done"),glyph=if pad then "A"else nil,size=Vector2.new(bw,bh),textSize=if compact then 15 else 17})
+ local gamepad=string.match(UserInputService:GetLastInputType().Name,"^Gamepad")~=nil
+ local done=Kit.button(panel,"GotIt",{variant="primary",text=model.button or UICopy.get("r3.help.done"),glyph=if gamepad then "A"else nil,size=Vector2.new(bw,bh),textSize=if compact then 15 else 17})
  done.Position=UDim2.fromOffset(panelW-pad-bw,fy);done.ZIndex=panel.ZIndex+2
  done.Activated:Connect(function()How.close("done")end)
  state.done=done
