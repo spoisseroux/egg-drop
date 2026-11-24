@@ -95,11 +95,11 @@
     <Item class="MeshPart" referent="EM4">
       <Properties>
         <string name="Name">EggPile</string>
-        <Content name="MeshId"><url>rbxassetid://137897227710148</url></Content>
+        <Content name="MeshId"><url>rbxassetid://120063203700281</url></Content>
         <Content name="TextureID"><url /></Content>
-        <CoordinateFrame name="CFrame"><X>0.0315</X><Y>4.5102</Y><Z>-0.0174</Z><R00>-1.0</R00><R01>0.0</R01><R02>1.2246467991473532e-16</R02><R10>0.0</R10><R11>1.0</R11><R12>0.0</R12><R20>-1.2246467991473532e-16</R20><R21>0.0</R21><R22>-1.0</R22></CoordinateFrame>
-        <Vector3 name="Size"><X>2.8274</X><Y>2.0368</Y><Z>2.8345</Z></Vector3>
-        <Vector3 name="InitialSize"><X>282.73822021484375</X><Y>203.675048828125</Y><Z>283.44573974609375</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.0064</X><Y>4.6149</Y><Z>-0.0544</Z><R00>-1.0</R00><R01>0.0</R01><R02>1.2246467991473532e-16</R02><R10>0.0</R10><R11>1.0</R11><R12>0.0</R12><R20>-1.2246467991473532e-16</R20><R21>0.0</R21><R22>-1.0</R22></CoordinateFrame>
+        <Vector3 name="Size"><X>2.4873</X><Y>1.8275</Y><Z>2.4774</Z></Vector3>
+        <Vector3 name="InitialSize"><X>248.73324584960938</X><Y>182.75027465820312</Y><Z>247.73770141601562</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>

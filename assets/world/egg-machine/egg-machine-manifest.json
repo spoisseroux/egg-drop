@@ -73,17 +73,17 @@
   {
    "name": "EggMachine_EggPile",
    "part": "EggPile",
-   "tris": 2400,
+   "tris": 2784,
    "size": [
-    2.8274,
-    2.0368,
-    2.8345
+    2.4873,
+    1.8275,
+    2.4774
    ],
-   "hash": "33e4bc449936fba2",
+   "hash": "6b4b7f7ec0039bf3",
    "center": [
-    0.0315,
-    4.5102,
-    -0.0174
+    -0.0064,
+    4.6149,
+    -0.0544
    ]
   },
   {
@@ -195,7 +195,11 @@
   "Toy",
   "Hue",
   "Hue",
-  "Material"
+  "Material",
+  "Hue",
+  "Toy",
+  "Material",
+  "Stat"
  ],
  "cup": [
   1.25,
@@ -227,5 +231,5 @@
   "Feature": "#9CFFDD",
   "Stat": "#FF8A5C"
  },
- "triangles": 5254
+ "triangles": 5638
 }
