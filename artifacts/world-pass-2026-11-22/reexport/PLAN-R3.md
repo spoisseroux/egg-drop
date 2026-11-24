@@ -90,3 +90,35 @@ Spencer's ears on the fountain loop (Audio 96991688758765 was "Reviewing" at upl
 the voice falls back to the stand-in); a phone frame and draw counts (+2 beams near Tumble, +1 at level 1); the foot
 shade seen from the side; garden hour on the new crowns (no vertex shading under a SurfaceAppearance). Fable's Later
 list (LOOK-R3 round 6) stays open: curved glint redraw, base net lift, fountain basin water colour, Hatch/bush UVs.
+
+## Beta (14) items W1, W2, Q4, B4 (LOOK-R4, 2026-11-23)
+
+Spencer's beta (14) test (feat `artifacts/qa-2026-11-23-beta14/FEEDBACK.md`). Beta 14 still had kit r9, the cobalt pool and
+the stand-in fountain sound; everything here builds on ef16513. Fable spec `LOOK-R4.md` (rounds 1-3), code review GO with
+changes (applied).
+
+- **B4 (fountain not heard), cause:** the stand-in fountain voice was the same asset as the brook bed
+  (`water_bed_loop` 71747963121003), and that bed plays 2D everywhere at .12 or more, so the fountain was masked by itself.
+  Fixed by the original loop (ef16513) plus the quiet mix below; fountain now .20 / min 7 / max 30.
+- **Q4, quiet water mix (beta only):** `AmbientAudio.Quiet`, active while `Aero.on()` (so `/aero off` and live keep
+  today's): bed floor 0, peak .10, full within 6 studs of the stream, silent by 28, eased .6 s, paused after 2 s of
+  silence; Tumble .18 / 6 / 38, Sky Falls .10 / 4 / 26. Today's mix is unchanged when quiet is false (reviewed).
+- **W1, falls without motion:** the beam/emitter layers only run within 120 studs and at budget level under 2, so the
+  static mesh now carries the read: one sheet per drop (slits closed) UV-mapped to a drawn streak atlas
+  (`falls-atlas`, 140121240617654; render-compensated R x1.21, B x.90), sheet shading normals leaning to the sky (facing
+  out it rendered ~50 darker), wet-stone frames warmed, and the foam (ledge and foot rolls, 0.5-stud lip lines, apron) as
+  its own part `W7_Kit_Falls__kitfoam` with a SurfaceAppearance white emissive lift (.45): the cliff shades the foot, so
+  lit only by the blue sky the foam rendered grey-blue. Found: game scripts cannot write
+  `SurfaceAppearance.EmissiveMaskContent` (Plugin capability), and a SurfaceAppearance cannot be parented at runtime;
+  `EmissiveStrength`/`Tint` can be written, so the mask is authored on the kit template (Rojo carries it). Kit r17
+  Model 108299380611863. Fable round 3: static falls GO, four checks pass (static sheet (146,192,224) vs layers-on
+  (150,192,224); foam (228,255,255)).
+- **W2, denser leaves:** 512 px per 4 studs, leaves 0.20-0.31 stud in sprigs of 5-7 hanging down, four layers, gap 8%
+  (2,641 leaves: Fable's 1,100-1,300 cannot close the gaps at that size), midribs and half-shade. lime 102153964898944,
+  dark 104251374979550. Fable: GO.
+- Specs: offline 47/47 + AeroFalls 22; Studio AeroWorld 27, AeroFalls 22, AeroKit 7, WindClient 26; AmbientAudio's
+  Studio run still stops at beta 14's crickets case (line 151), the new quiet and fallback cases pass offline.
+- Captures: `r7/` (before), `r8/`, `r9/` (falls at 45 / 70 / 105 static-only and with layers), `r8/lime-tree`, `under-round`.
+- Not verified: anything by ear (Spencer's four listening checks in LOOK-R4), the foam's emissive at night (Fable: drop to
+  ~.2 if it glows) and up close, phones. Later (LOOK-R4 rounds 2-3): drop the apron (does not read at 45), the upper drop's
+  restart seam, a leaf normal map trial.

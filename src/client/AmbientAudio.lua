@@ -61,6 +61,18 @@ Ambient.Falls = {
 	W7_Water__waterfall_tumble = { anchor = "bottom", lift = 5.8, volume = .22, min = 6, max = 44, speed = .92, offset = 0 },
 	W7_Water__waterfall_sky = { anchor = "top", lift = -.75, volume = .15, min = 4, max = 30, speed = 1.08, offset = 3.7 },
 }
+-- LOOK-R4 Q4 (Spencer, beta 14: "the constant water ambience is too loud and annoying"): the beta's quieter water
+-- mix, only while the Aero look is on (Aero.on(): the beta place or Studio, and the /aero switch); live and /aero off
+-- keep the numbers above. bed: the brook bed's floor, peak and range; falls: each fall's volume and rolloff.
+-- LOOK-R4 (Fable): the bed is full within `full` studs of the stream, smoothstep to silent at `range`, eased over `ease` s,
+-- and paused after `pause` s at 0.
+Ambient.Quiet = table.freeze({
+	bed = table.freeze({ floor = 0, peak = .10, full = 6, range = 28, ease = .6, pause = 2 }),
+	falls = table.freeze({
+		W7_Water__waterfall_tumble = table.freeze({ volume = .18, min = 6, max = 38 }),
+		W7_Water__waterfall_sky = table.freeze({ volume = .10, min = 4, max = 26 }),
+	}),
+})
 -- A5 birds.
 Ambient.BirdVoices, Ambient.BirdReach, Ambient.BirdChoices = 3, 70, 6
 Ambient.BirdMin, Ambient.BirdMax = 12, 85
@@ -128,9 +140,28 @@ function Ambient.streamDistance(point, stream)
 	return best
 end
 
-function Ambient.bedGain(distance)
-	if type(distance) ~= "number" or distance ~= distance then return Ambient.BedFloor end
-	return Ambient.BedFloor + (Ambient.BedPeak - Ambient.BedFloor) * smoothstep(1 - distance / Ambient.BedRange)
+-- quiet: nil for today's bed, or Ambient.Quiet.bed {floor, peak, range}.
+function Ambient.bedGain(distance, quiet)
+	local floor = if quiet then quiet.floor else Ambient.BedFloor
+	local peak = if quiet then quiet.peak else Ambient.BedPeak
+	local range = if quiet then quiet.range else Ambient.BedRange
+	if type(distance) ~= "number" or distance ~= distance then return floor end
+	local full = if quiet then quiet.full or 0 else 0
+	return floor + (peak - floor) * smoothstep(1 - math.max(0, distance - full) / (range - full))
+end
+
+-- The falls' live numbers: today's spec, or its Quiet overrides (volume, min, max). Writes only on a change.
+function Ambient:applyQuiet(quiet)
+	if self.quietOn == quiet then return end
+	self.quietOn = quiet
+	for _, fall in ipairs(self.falls) do
+		if fall.name then
+			local base, over = Ambient.Falls[fall.name], quiet and Ambient.Quiet.falls[fall.name]
+			fall.spec = if over then table.freeze({ anchor = base.anchor, lift = base.lift, speed = base.speed, offset = base.offset,
+				volume = over.volume, min = over.min, max = over.max }) else base
+			fall.voice.RollOffMinDistance, fall.voice.RollOffMaxDistance = fall.spec.min, fall.spec.max
+		end
+	end
 end
 
 function Ambient.band(daylight)
@@ -375,10 +406,16 @@ function Ambient.new(audio, options)
 			voice.RollOffMode = Enum.RollOffMode.InverseTapered
 			voice.RollOffMinDistance, voice.RollOffMaxDistance = spec.min, spec.max
 			voice.PlaybackSpeed = spec.speed
-			table.insert(self.falls, { voice = voice, spec = spec })
+			table.insert(self.falls, { voice = voice, spec = spec, name = beam.name })
 			table.insert(warm, voice)
 		end
 	end
+	-- LOOK-R4 Q4: the quiet mix follows the Aero look (options.quiet: a function for specs).
+	self.quiet = options.quiet or function()
+		local ok, on = pcall(function() return require(Shared:WaitForChild("Aero")).on() end)
+		return ok and on == true
+	end
+	self:applyQuiet(self.quiet() == true)
 	self.birdPool = {}
 	for index = 1, Ambient.BirdVoices do
 		local part = emitter("BirdPerch" .. index, Vector3.new(0, -500, 0))
@@ -588,13 +625,21 @@ function Ambient:step(dt)
 	self.bedClock += dt
 	if self.bedClock >= Ambient.BedSample and listener then
 		self.bedClock = 0
-		self.bedTarget = Ambient.bedGain(Ambient.streamDistance(listener, self.stream))
+		self:applyQuiet(self.quiet() == true)
+		self.bedTarget = Ambient.bedGain(Ambient.streamDistance(listener, self.stream), if self.quietOn then Ambient.Quiet.bed else nil)
 	end
-	self.bed += (self.bedTarget - self.bed) * math.min(1, dt / Ambient.BedEase)
+	self.bed += (self.bedTarget - self.bed) * math.min(1, dt / (if self.quietOn then Ambient.Quiet.bed.ease else Ambient.BedEase))
 	local audible = self.ambience.Volume > 0
 	if audible then
 		self.bedVoice.Volume = self.bed
-		startLoop(self.bedVoice, 0)
+		-- LOOK-R4 Q4: the quiet bed is silent away from the stream: stop it there instead of playing silence.
+		if self.bed > .002 then
+			self.bedSilent = 0
+			startLoop(self.bedVoice, 0)
+		else
+			self.bedSilent = (self.bedSilent or 0) + dt
+			if self.bedSilent >= Ambient.Quiet.bed.pause and self.bedVoice.IsPlaying then self.bedVoice:Stop() end
+		end
 		for _, fall in ipairs(self.falls) do
 			fall.voice.Volume = fall.spec.volume
 			startLoop(fall.voice, fall.spec.offset)

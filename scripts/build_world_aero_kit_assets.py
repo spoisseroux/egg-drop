@@ -52,8 +52,11 @@ ROUGH_92 = "rbxassetid://93359996848376"
 # LOOK-R3 2: the reshaped crowns (a manifest mesh with "reshape") wear the drawn leaf-cluster tiles
 # (scripts/draw_aero_r3_textures.py, 4 studs a tile) and their roughness map; the lime tile holds its final colours, so
 # its skin stays white. The Hatch crown and the bushes keep the island map (their UVs are ~8 studs a tile).
-LEAF_DARK = "rbxassetid://94198650524622"
-LEAF_LIME = "rbxassetid://119756604191368"
+# LOOK-R4 W2: denser tiles (512 px for 4 studs, sprigs in four layers; scripts/draw_aero_r4_textures.py).
+LEAF_DARK = "rbxassetid://104251374979550"
+LEAF_LIME = "rbxassetid://102153964898944"
+# LOOK-R4 W1: the falls atlas (streaks for the sheet faces, a white block for everything else).
+FALLS_ATLAS = "rbxassetid://140121240617654"
 LEAF_ROUGH = "rbxassetid://125570475932961"  # LOOK-R3 round 6: flat 1.0
 
 
@@ -151,6 +154,7 @@ def xml_part(index, mesh, mesh_id, raw):
     double = True
     rough = MATTE_ROUGHNESS
     tint = None
+    glow = None
     if "reshape" in mesh and kind == "foliage":
         matte, rough = LEAF_DARK, LEAF_ROUGH
     elif "reshape" in mesh and kind == "foliage_blossom":
@@ -159,6 +163,13 @@ def xml_part(index, mesh, mesh_id, raw):
         matte = tex["W1_foliage"]
     elif kind == "foliage_blossom":
         matte, rough, tint = LIME_MAP, ROUGH_92, LIME_TINT
+    elif kind == "kitwater":
+        texture, material = FALLS_ATLAS, "Plastic"
+    elif kind == "kitfoam":
+        # LOOK-R4 round 2: a matte skin on the atlas's white block; the client sets its emissive lift at build
+        # (a SurfaceAppearance cannot be parented at runtime, its emissive properties can be written).
+        matte, rough, material = FALLS_ATLAS, MATTE_ROUGHNESS, "Plastic"
+        glow = FALLS_ATLAS  # its white block is the emissive mask (game scripts cannot write the mask; strength they can)
     elif kind == "kitstone":
         texture, material = tex["W1_marble"], "Plastic"  # LOOK-R2 3: the plaza marble under a weathered vertex tint
     else:
@@ -180,7 +191,7 @@ def xml_part(index, mesh, mesh_id, raw):
         "        <token name=\"CollisionFidelity\">2</token>",
         f"        <token name=\"Material\">{MATERIAL_TOKEN[material]}</token>",
         f"        <Color3uint8 name=\"Color3uint8\">{(0xFF << 24) | 0xFFFFFF}</Color3uint8>",
-        f"        <float name=\"Reflectance\">{0.08 if kind == 'kitwater' else 0.0!r}</float>",  # wet rocks and foam only
+        "        <float name=\"Reflectance\">0.0</float>",  # LOOK-R4: no Reflectance on the falls either
         "      </Properties>",
     ]
     if matte:
@@ -193,7 +204,11 @@ def xml_part(index, mesh, mesh_id, raw):
             f"          <Content name=\"MetalnessMap\"><url>{MATTE_METALNESS}</url></Content>",
             f"          <Content name=\"RoughnessMap\"><url>{rough}</url></Content>",
         ] + ([f"          <Color3 name=\"Color\"><R>{tint[0]!r}</R><G>{tint[1]!r}</G><B>{tint[2]!r}</B></Color3>"]
-             if tint else []) + [
+             if tint else []) + ([
+            f"          <Content name=\"EmissiveMaskContent\"><url>{glow}</url></Content>",
+            "          <float name=\"EmissiveStrength\">0.45</float>",
+            "          <Color3 name=\"EmissiveTint\"><R>1</R><G>1</G><B>1</B></Color3>",
+        ] if glow else []) + [
             "        </Properties>",
             "      </Item>",
         ]

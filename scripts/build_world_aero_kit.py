@@ -494,22 +494,26 @@ def curve(name):
 
 
 class Builder:
-    def __init__(self, name):
+    def __init__(self, name, default_uv=(0.0, 0.0)):
         self.bm = bmesh.new()
         self.col = self.bm.loops.layers.float_color.new("Col")
         self.uv = self.bm.loops.layers.uv.new("UVMap")
         self.name = name
+        self.default_uv = default_uv
+        self.normals = {}  # face -> shading normal (Roblox axes), for faces that ask for one
 
-    def quad(self, pts, colors, uvs=None, smooth=False):
+    def quad(self, pts, colors, uvs=None, smooth=False, normal=None):
         vs = [self.bm.verts.new(bl(*p)) for p in pts]
         face = self.bm.faces.new(vs)
         face.smooth = smooth
+        if normal is not None:
+            self.normals[face] = (bl(*normal) - bl(0, 0, 0)).normalized()
         for i, (loop, c) in enumerate(zip(face.loops, colors)):
             loop[self.col] = (*c, 1.0)
-            loop[self.uv].uv = uvs[i] if uvs else (0.0, 0.0)
+            loop[self.uv].uv = uvs[i] if uvs else self.default_uv
 
-    def tri(self, pts, colors, uvs=None, smooth=False):
-        self.quad(pts, colors, uvs, smooth)
+    def tri(self, pts, colors, uvs=None, smooth=False, normal=None):
+        self.quad(pts, colors, uvs, smooth, normal)
 
     def build(self, facing=None):
         """Weld shared corners first: each quad is added with its own vertices, and loose faces get arbitrary normals
@@ -524,23 +528,32 @@ class Builder:
                 face.normal_update()
                 if face.normal.dot(want) < 0:
                     face.normal_flip()
+        custom = None
+        if self.normals:
+            # LOOK-R4 W1: faces that carry their own shading normal (the falls sheet leans its shading toward the sky so
+            # it lights like water, not like a wall in shade); every other loop keeps its smooth or flat normal.
+            self.bm.normal_update()
+            custom = []
+            for face in self.bm.faces:
+                for loop in face.loops:
+                    n = self.normals.get(face)
+                    custom.append(tuple(n) if n is not None else tuple(loop.vert.normal if face.smooth else face.normal))
         self.bm.to_mesh(me)
         self.bm.free()
+        if custom is not None:
+            me.normals_split_custom_set(custom)
         obj = bpy.data.objects.new(self.name, me)
         bpy.context.scene.collection.objects.link(obj)
         return obj
 
 
-ROCK_TOP_FACE, ROCK_FOOT_FACE = (0x55, 0x66, 0x6B), (0x44, 0x54, 0x5A)  # LOOK-R2 r3: slate, no blue
-CHUTE_TOP, CHUTE_WHITE, CHUTE_EDGE = (0x7F, 0xE0, 0xFF), (0xFF, 0xFF, 0xFF), (0xEA, 0xF6, 0xFF)
-# Per drop: three ledges (fraction of the drop's height, how far proud). LOOK-R2 round 3: three chutes (width shares
-# 2.4 / 4.2 / 3.0 of the sheet) with short, staggered gaps between them: (gap width in studs, from, to as fractions of the
-# drop's height; closed in the top 20 percent and the foot 10 percent). The water kinks out KINK studs at each ledge.
+# LOOK-R4: wet stone, darker than the boulders, no blue. Round 2: they rendered (35, 60, 75) (shade turns them blue), so
+# their shading leans toward the sky (ROCK_SKY) and the vertex colours are warmed to land in R 60-80, G 72-88, B 76-92.
+ROCK_TOP_FACE, ROCK_FOOT_FACE = (116, 94, 83), (100, 80, 71)  # r16 rendered (57-66, 84-91, 90-102): warmed toward the middle
+ROCK_SKY = .6
+# Per drop: three ledges (fraction of the drop's height, how far proud).
 LEDGES = {"Water_TumbleFalls_Upper": ((.24, .7), (.52, 1.0), (.78, .6)),
           "Water_TumbleFalls_Lower": ((.27, .9), (.55, .6), (.8, 1.0))}
-CHUTE_SHARES = (2.4, 4.2, 3.0)
-GAPS = {"Water_TumbleFalls_Upper": ((.35, .22, .62), (.45, .40, .86)),
-        "Water_TumbleFalls_Lower": ((.4, .30, .78), (.3, .21, .55))}
 KINK = .3  # LOOK-R2 round 4 (round 3's .8 sawtoothed the edges and banded the sheet)
 
 
@@ -561,64 +574,151 @@ def add_rock_face(b, name, rows=16, cols=7):
             out = -.35 + proud * (1 - .25 * abs(v)) + jitter[r][c]
             row.append(top + (bottom - top) * h + t * (half * v) + n * out)
         grid.append(row)
+    sky = (n + Vector((0, ROCK_SKY, 0))).normalized()
     for r in range(rows):
         cs = [lin(mix(ROCK_TOP_FACE, ROCK_FOOT_FACE, rr / rows)) for rr in (r, r, r + 1, r + 1)]
         for c in range(cols):
-            b.quad([grid[r][c], grid[r][c + 1], grid[r + 1][c + 1], grid[r + 1][c]], cs)
+            b.quad([grid[r][c], grid[r][c + 1], grid[r + 1][c + 1], grid[r + 1][c]], cs, normal=sky)
 
 
-def add_chutes(b, name, rows=22):
-    """LOOK-R2 round 3: one white sheet per drop on the beam curve (bow 1.5), split into three chutes only where the
-    staggered gaps run (never at the lip or the foot), kinking out KINK studs over each ledge. White in the middle,
-    #EAF6FF at the edges, clear aqua only at the very lip. Smooth shaded."""
+# LOOK-R4 W1 (Fable): the static falls carry the read with no motion. One sheet per drop (the slits are closed), its
+# faces UV-mapped to the streak region of the falls atlas (scripts/draw_aero_r4_textures.py: 16 studs across, 24 down,
+# periodic down so a taller drop restarts at a cut row); everything else samples the atlas's white block and keeps its
+# vertex colour. Hue lives in the map: the sheet's vertices go near-white.
+ATLAS_U_STUDS, ATLAS_V_STUDS, ATLAS_STREAK_V = 16.0, 24.0, 384 / 512
+WHITE_UV = (0.5, 1 - 456 / 512)
+SHEET_TOP, SHEET_LOW = (226, 238, 246), (255, 255, 255)
+FOAM, FOAM_LOW, LIP = (250, 252, 253), (226, 241, 246), (250, 253, 254)
+APRON_IN, APRON_OUT = (226, 241, 246), (190, 222, 232)
+SHEET_COLS = 6
+SHEET_SKY = 1.0   # the sheet's shading normal: n + SHEET_SKY * up, normalised (Studio r13: facing out it rendered ~50 darker)
+
+
+def falls_h(u):
+    return 3 * u * u - 2 * u * u * u
+
+
+def add_sheet(b, name, lip_b, rows=22):
+    """One sheet per drop on the beam curve (bow .5, ledge kink .3), UV-mapped to the atlas streaks; its lip line goes in
+    `lip_b` (the foam part)."""
     top, bottom, w0, w1, n, t = frame(name)
     c = curve(name)
-    total = sum(CHUTE_SHARES)
-    bounds = [0.0]
-    for share in CHUTE_SHARES:
-        bounds.append(bounds[-1] + share / total)
-    # Columns: the chute edges either side of each gap, and a middle line in each chute.
-    gaps = GAPS[name]
-
-    def columns(u):
-        sheet = w0 + (w1 - w0) * u
-        xs = []
-        for i in range(len(CHUTE_SHARES)):
-            lo, hi = bounds[i] * sheet, bounds[i + 1] * sheet
-            if i > 0:
-                lo += gaps[i - 1][0] / 2
-            if i < len(CHUTE_SHARES) - 1:
-                hi -= gaps[i][0] / 2
-            xs.append((lo - sheet / 2, (lo + hi) / 2 - sheet / 2, hi - sheet / 2))
-        return xs
+    length = (bottom - top).length
 
     def point(u, x):
-        h = 3 * u * u - 2 * u * u * u
+        h = falls_h(u)
         kink = sum(KINK * math.exp(-((h - at) / .07) ** 2) for at, _ in LEDGES[name])
         return top + (bottom - top) * h + t * x + n * (3 * c * u * (1 - u) + .05 + kink)
 
-    def core(u):
-        return CHUTE_WHITE if u > .12 else mix(CHUTE_TOP, CHUTE_WHITE, max(0.0, (u - .04) / .08))
+    # Row boundaries in u, plus one exactly where the streak map restarts (every ATLAS_V_STUDS down the drop).
+    us = [r / rows for r in range(rows + 1)]
+    k = 1
+    while k * ATLAS_V_STUDS < length:
+        target = k * ATLAS_V_STUDS / length
+        lo, hi = 0.0, 1.0
+        for _ in range(60):
+            mid = (lo + hi) / 2
+            lo, hi = (mid, hi) if falls_h(mid) < target else (lo, mid)
+        us.append((lo + hi) / 2)
+        k += 1
+    us = sorted(set(round(u, 9) for u in us))
 
-    def edge(u):
-        return lin(mix(core(u), CHUTE_EDGE, 1.0))
-    for r in range(rows):
-        u0, u1 = r / rows, (r + 1) / rows
-        h_mid = 3 * ((u0 + u1) / 2) ** 2 - 2 * ((u0 + u1) / 2) ** 3
-        c0, c1 = columns(u0), columns(u1)
-        k0, k1 = lin(core(u0)), lin(core(u1))
-        for i in range(len(CHUTE_SHARES)):
-            (l0, m0, h0), (l1, m1, h1) = c0[i], c1[i]
-            b.quad([point(u0, l0), point(u0, m0), point(u1, m1), point(u1, l1)], [edge(u0), k0, k1, edge(u1)],
-                   smooth=True)
-            b.quad([point(u0, m0), point(u0, h0), point(u1, h1), point(u1, m1)], [k0, edge(u0), edge(u1), k1], smooth=True)
-            # A gap closed at this height: water bridges it.
-            if i < len(CHUTE_SHARES) - 1:
-                width, lo, hi = gaps[i]
-                if not (lo <= h_mid <= hi):
-                    n0, n1 = c0[i + 1], c1[i + 1]
-                    b.quad([point(u0, h0), point(u0, n0[0]), point(u1, n1[0]), point(u1, h1)], [edge(u0), edge(u0), edge(u1), edge(u1)],
-                           smooth=True)
+    def colour(u):
+        return lin(mix(SHEET_TOP, SHEET_LOW, min(1.0, falls_h(u) / .4)))
+    sky = (n + Vector((0, SHEET_SKY, 0))).normalized()
+    for r in range(len(us) - 1):
+        u0, u1 = us[r], us[r + 1]
+        s0, s1 = falls_h(u0) * length, falls_h(u1) * length
+        seg = math.floor(s0 / ATLAS_V_STUDS + 1e-6)
+        v0 = 1 - (s0 - seg * ATLAS_V_STUDS) / ATLAS_V_STUDS * ATLAS_STREAK_V
+        v1 = 1 - (s1 - seg * ATLAS_V_STUDS) / ATLAS_V_STUDS * ATLAS_STREAK_V
+        assert v1 >= 1 - ATLAS_STREAK_V - 1e-6, (name, "a row crosses the streak restart", s0, s1)
+        sw0, sw1 = w0 + (w1 - w0) * falls_h(u0), w0 + (w1 - w0) * falls_h(u1)
+        for col in range(SHEET_COLS):
+            a, bb = col / SHEET_COLS, (col + 1) / SHEET_COLS
+            xa0, xb0 = (a - .5) * sw0, (bb - .5) * sw0
+            xa1, xb1 = (a - .5) * sw1, (bb - .5) * sw1
+            uvs = [((xa0 + sw0 / 2) / ATLAS_U_STUDS, v0), ((xb0 + sw0 / 2) / ATLAS_U_STUDS, v0),
+                   ((xb1 + sw1 / 2) / ATLAS_U_STUDS, v1), ((xa1 + sw1 / 2) / ATLAS_U_STUDS, v1)]
+            b.quad([point(u0, xa0), point(u0, xb0), point(u1, xb1), point(u1, xa1)],
+                   [colour(u0), colour(u0), colour(u1), colour(u1)], uvs=uvs, smooth=True, normal=sky)
+    # The lip line: a 0.5-stud white strip along the top edge, just in front of the sheet, lit like the sheet.
+    lo, hi = 0.0, 1.0
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if falls_h(mid) * length < .5 else (lo, mid)
+    du = (lo + hi) / 2
+    for col in range(SHEET_COLS):
+        a, bb = col / SHEET_COLS, (col + 1) / SHEET_COLS
+        xa, xb = (a - .5) * w0, (bb - .5) * w0
+        lift = n * .06
+        lip_b.quad([point(0, xa) + lift, point(0, xb) + lift, point(du, xb) + lift, point(du, xa) + lift], [lin(LIP)] * 4,
+                   smooth=True, normal=sky)
+
+
+FOAM_SKY = 1.4   # foam faces: outward + FOAM_SKY * up (round 2: facing out they rendered grey, darker than the water)
+
+
+def add_lobe(b, centre, n, t, width, height, proud, low, high):
+    """A foam roll lobe: a half-dome on the water against the sheet, 4 around by 3 up (20 triangles). The bottom row
+    takes `low`, the rest `high`."""
+    up = Vector((0, 1, 0))  # Roblox axes, as frame() and Builder.quad
+
+    def lit(pts):
+        mid = sum(pts, Vector((0, 0, 0))) / len(pts)
+        return ((mid - centre).normalized() + up * FOAM_SKY).normalized()
+    A, E = 4, 3
+    ring = []
+    for e in range(E + 1):
+        th = math.pi / 2 * e / E
+        row = []
+        for a in range(A + 1):
+            ph = math.pi * a / A
+            row.append(centre + t * (width / 2 * math.cos(ph) * math.cos(th)) + n * (proud * math.sin(ph) * math.cos(th))
+                       + up * (height * math.sin(th)))
+        ring.append(row)
+    for e in range(E):
+        c0 = lin(mix(low, high, min(1.0, e / 1.0)))
+        c1 = lin(mix(low, high, min(1.0, (e + 1) / 1.0)))
+        for a in range(A):
+            if e == E - 1:
+                pts = [ring[e][a + 1], ring[e][a], ring[e + 1][0]]
+                b.tri(pts, [c0, c0, c1], smooth=True, normal=lit(pts))
+            else:
+                pts = [ring[e][a + 1], ring[e][a], ring[e + 1][a], ring[e + 1][a + 1]]
+                b.quad(pts, [c0, c0, c1, c1], smooth=True, normal=lit(pts))
+
+
+def add_foam(b):
+    """Ledge roll (5 lobes, 1.6 tall, .6 proud), the foot roll (7 lobes 1.0-1.8 wide, 1.4-2.6 tall, .8 proud, the sheet
+    plus .6 each side) and a scalloped apron fanning 3.5 studs out on the pool, .08 above the water."""
+    rnd = random.Random(4421)
+    for name, lobes, tall, proud, extra in (("Water_TumbleFalls_Upper", 5, (1.6, 1.6), .6, 0.0),
+                                            ("Water_TumbleFalls_Lower", 7, (1.4, 2.6), .8, .6)):
+        top, bottom, w0, w1, n, t = frame(name)
+        foot = bottom + n * .05
+        span = w1 + 2 * extra
+        widths = [rnd.uniform(1.0, 1.8) for _ in range(lobes)]
+        scale = span / sum(widths) * 1.15                      # lobes overlap a little: no gaps in the roll
+        x = -span / 2
+        for wd in widths:
+            wd *= scale
+            centre = foot + t * (x + wd / 2 / 1.15)
+            add_lobe(b, centre, n, t, wd, rnd.uniform(*tall), proud, FOAM_LOW, FOAM)
+            x += wd / 1.15
+    # The apron: a scalloped half-fan in front of the lower foot.
+    top, bottom, w0, w1, n, t = frame("Water_TumbleFalls_Lower")
+    water = bottom.y + .08
+    centre = Vector((bottom.x, water, bottom.z)) + n * .4
+    segs = 12
+    rim = []
+    for i in range(segs + 1):
+        ph = math.pi * i / segs
+        r = 3.5 + (.5 if i % 2 else -.3) + rnd.uniform(-.15, .15)
+        rx = (w1 / 2 + .6) * math.cos(ph)
+        rim.append(centre + t * rx + n * (r * math.sin(ph)))
+    for i in range(segs):
+        b.tri([centre, rim[i + 1], rim[i]], [lin(APRON_IN), lin(APRON_OUT), lin(APRON_OUT)], smooth=True, normal=(0, 1, 0))
 
 
 def rock_shape(seed, size):
@@ -739,16 +839,20 @@ def check_rocks(list_):
 
 def falls():
     """LOOK-R2 2: rock face, chutes and the wet rocks: one vertex-coloured mesh (the lip bars and the striped sheet are gone)."""
-    b = Builder("Falls__kitwater")
+    b = Builder("Falls__kitwater", default_uv=WHITE_UV)
+    # LOOK-R4 round 2: the foam (rolls, lips, apron) is its own part: the cliff shades the foot, so lit only by the blue
+    # sky it rendered grey-blue; its own SurfaceAppearance takes a small white emissive lift (AeroKit, WorldAero.FallsFoam).
+    fb = Builder("Falls__kitfoam", default_uv=WHITE_UV)
     for name in FALLS:
         add_rock_face(b, name)
-        add_chutes(b, name)
+        add_sheet(b, name, fb)
+    add_foam(fb)
     list_ = rocks()
     check_rocks(list_)
     for i, rock in enumerate(list_):
         add_rock(b, rock, 40 + i)
     frames = {name: {"bow": spec["bow"], "curve": round(curve(name), 6)} for name, spec in FALLS.items()}
-    return [b.build()], list_, frames
+    return [b.build(), fb.build()], list_, frames
 
 
 # LOOK-R2 3 and round 3: a two-tier garden fountain in the Bubble Spring's basin, 5.2 tall, its bowl 3.2 up and 3.2

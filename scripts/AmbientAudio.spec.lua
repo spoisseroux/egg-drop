@@ -138,7 +138,7 @@ return function(client, parent)
 		local folder = Instance.new("Folder");folder.Parent = parent or workspace
 		local gate, daylight, clock, gust = false, .12, 0, 0
 		local shared = Ambient.shared
-		local a = Ambient.new(audio, { auto = false, world = folder, wind = { on = function() return true end, gust = function() return gust end },
+		local a = Ambient.new(audio, { auto = false, world = folder, quiet = function() return false end, wind = { on = function() return true end, gust = function() return gust end },
 			listener = function() return Vector3.zero end, daylight = function() return daylight end, now = function() return clock end,
 			night = function() return gate end, bushes = { Vector3.new(10, 0, 0), Vector3.new(20, 0, 0) } })
 		local ok, err = pcall(function()
@@ -235,7 +235,7 @@ return function(client, parent)
 		function audio:petSpeechBusy() return false end
 		local folder = Instance.new("Folder");folder.Parent = parent or workspace
 		local listener = Vector3.new(2.5, 7, 21)
-		local a = Ambient.new(audio, { auto = false, world = folder, listener = function() return listener end, daylight = function() return 1 end, now = function() return 0 end })
+		local a = Ambient.new(audio, { auto = false, world = folder, quiet = function() return false end, listener = function() return listener end, daylight = function() return 1 end, now = function() return 0 end })
 		local ok, err = pcall(function()
 			a:setRound(false);for _ = 1, 30 do a:step(1 / 30) end
 			assert(a.ambience.Volume > .99 and a.group.Volume == 1, "garden not audible")
@@ -336,6 +336,43 @@ return function(client, parent)
 		a:destroy();folder:Destroy();assert(ok, err)
 	end)
 
+	test("LOOK-R4 Q4: the quiet water mix follows its switch: bed silent away from the stream, falls tighter; off is today's", function()
+		local audio = { master = 1, deviceActive = true, ducks = {}, music = true }
+		function audio:isMusicEnabled() return self.music end
+		function audio:duck() end
+		function audio:petSpeechBusy() return false end
+		local folder = Instance.new("Folder");folder.Parent = parent or workspace
+		local quiet = true
+		local listener = Vector3.new(96, 4, 66) -- the arrival dais: far from the stream
+		local a = Ambient.new(audio, { auto = false, world = folder, quiet = function() return quiet end,
+			listener = function() return listener end, daylight = function() return 1 end, now = function() return 0 end })
+		local ok, err = pcall(function()
+			assert(Ambient.bedGain(0 / 0) == Ambient.BedFloor and Ambient.bedGain(0 / 0, Ambient.Quiet.bed) == Ambient.Quiet.bed.floor)
+			assert(Ambient.bedGain(0, Ambient.Quiet.bed) == Ambient.Quiet.bed.peak and Ambient.bedGain(Ambient.Quiet.bed.range, Ambient.Quiet.bed) == Ambient.Quiet.bed.floor)
+			-- Eased out over .6 s, then paused after 2 s at silence.
+			assert(#a.falls == 2, "both falls have voices")
+			for _ = 1, 180 do a:step(1 / 30) end
+			assert(Ambient.bedGain(Ambient.Quiet.bed.full, Ambient.Quiet.bed) == Ambient.Quiet.bed.peak, "full within `full` studs")
+			assert(a.quietOn == true and a.bed < .002 and not a.bedVoice.IsPlaying, "quiet: the bed is silent away from water " .. a.bed)
+			for _, fall in ipairs(a.falls) do
+				local over = Ambient.Quiet.falls[fall.name]
+				assert(fall.voice.RollOffMaxDistance == over.max and fall.voice.RollOffMinDistance == over.min and near(fall.voice.Volume, over.volume, 1e-4), fall.name)
+			end
+			listener = Vector3.new(2.5, 7, 21) -- on the bridge, over the stream
+			for _ = 1, 60 do a:step(1 / 30) end
+			assert(a.bed > Ambient.Quiet.bed.peak * .9 and a.bedVoice.IsPlaying, "quiet: the bed still plays at the stream " .. a.bed)
+			quiet = false
+			listener = Vector3.new(96, 4, 66)
+			for _ = 1, 60 do a:step(1 / 30) end
+			assert(a.quietOn == false and a.bed > Ambient.BedFloor * .95 and a.bedVoice.IsPlaying, "off: today's bed floor " .. a.bed)
+			for _, fall in ipairs(a.falls) do
+				assert(fall.spec == Ambient.Falls[fall.name] and fall.voice.RollOffMaxDistance == fall.spec.max
+					and fall.voice.RollOffMinDistance == fall.spec.min and near(fall.voice.Volume, fall.spec.volume, 1e-4), fall.name)
+			end
+		end)
+		a:destroy();folder:Destroy();assert(ok, err)
+	end)
+
 	test("garden life's onChirp: called once per chirp that played, with its perch; nil or a throwing hook changes nothing; a throw warns once", function()
 		local perches = {}
 		for i = 1, 8 do perches[i] = Vector3.new(i * 6, 12, 0) end
@@ -347,7 +384,7 @@ return function(client, parent)
 			local folder = Instance.new("Folder");folder.Parent = parent or workspace
 			local clock = 0
 			local warned = {}
-			local a = Ambient.new(audio, { auto = false, world = folder, seed = 5, perches = perches, wind = false,
+			local a = Ambient.new(audio, { auto = false, world = folder, quiet = function() return false end, seed = 5, perches = perches, wind = false,
 				listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return clock end,
 				warn = function(text) table.insert(warned, text) end })
 			local played, calls = {}, {}

@@ -1,9 +1,9 @@
 {
- "assetId": "119297492044861",
- "operationId": "0aff4529-3a1b-4489-b376-a2ef05458b50",
+ "assetId": "108299380611863",
+ "operationId": "d2980314-abb2-4f41-99bf-5e1752addd44",
  "moderation": "Approved",
- "fbxSha256": "e24177dfc3d4817646b7d5c3f6db2360ad2bdedca900c3e8eb842f2c0fc343ed",
- "manifestSha256": "b3552e2beb1334eab049afb48eddcd6c5e85e74fb1735b0f12020d5befa3ed9c",
+ "fbxSha256": "37dcaa95891be019cb1d86c16cc3de760caf04a0e46e13a7fdf5bb326bba0471",
+ "manifestSha256": "56d8ebd9c2d55e0de3505aee7611e2a77ff7db0c47427a523f9a987e60337e10",
  "parts": [
   {
    "meshId": "rbxassetid://128302677860915",
@@ -42,7 +42,16 @@
    ]
   },
   {
-   "meshId": "rbxassetid://73845431603817",
+   "meshId": "rbxassetid://105399603929639",
+   "name": "W7_Kit_Falls__kitfoam",
+   "meshSize": [
+    202.68994140625,
+    562.826904296875,
+    202.00347900390625
+   ]
+  },
+  {
+   "meshId": "rbxassetid://71091194202757",
    "name": "W7_Kit_Falls__kitwater",
    "meshSize": [
     377.33721923828125,
@@ -79,7 +88,7 @@
   }
  ],
  "provenance": {
-  "recordedUtc": "2026-11-24T02:08:17.036425+00:00",
+  "recordedUtc": "2026-11-24T02:36:14.651084+00:00",
   "note": "Open Cloud POST /assets/v1/assets (Model) through Studio MCP, operation polled to done; MeshId/MeshSize read with InsertService:LoadAsset in Studio Edit, model destroyed unparented, place not saved."
  }
 }

@@ -148,7 +148,7 @@ def foot_shade(report):
     report["foot-shade"] = {"px": size, "foot_row_peak": int(a[0].max()), "outer_edges_max": int(max(a[:, 0].max(), a[:, -1].max(), a[-1].max()))}
 
 
-def leaf_tiles(report):
+def leaf_tiles(report, colour=True):
     """One leaf layout (256 px = 4 studs), two palettes and one roughness map."""
     size, ss = 256, 4
     big = size * ss
@@ -202,7 +202,8 @@ def leaf_tiles(report):
         lut = np.array([G, M, M * 1.06, L, np.minimum(L * 1.05, 255)])
         rgb = lut[small]
         img = Image.fromarray(rgb.round().astype(np.uint8), "RGB").resize((size, size), Image.LANCZOS)
-        img.save(os.path.join(OUT, tile + ".png"))
+        if colour:
+            img.save(os.path.join(OUT, tile + ".png"))
         out[tile] = [round(float(v), 1) for v in np.array(img).reshape(-1, 3).mean(0)]
     # LOOK-R3 round 6: leaves .88 left a grey-tan sheen on shaded faces; leaves and gaps both 1.0 (flat 255).
     rough = np.full(small.shape, 255, np.uint8)
@@ -228,8 +229,9 @@ def main():
     pool_tile(report)
     glint_tile(report)
     foot_shade(report)
-    leaf_tiles(report)
-    for name in ("pool-aero", "pool-glint", "leaf-dark", "leaf-lime"):
+    # The leaf tiles moved to scripts/draw_aero_r4_textures.py (LOOK-R4 W2, denser); leaf-rough stays drawn here (flat 1.0).
+    leaf_tiles(report, colour=False)
+    for name in ("pool-aero", "pool-glint"):
         seam_sheet(name)
     with open(os.path.join(EVIDENCE, "textures-report.json"), "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)

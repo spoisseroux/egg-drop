@@ -172,6 +172,9 @@ Aero.Waterfall=table.freeze({
 		-- Flat on the pool, flowing out along n from `from` to `to` studs off the foot.
 		-- LOOK-R3 1: darker water at the foot, a static flat beam under the Apron (foot-shade: row 0 at the foot). The ledge
 		-- pool gets a smaller one, dropped at level 1.
+		-- LOOK-R4 round 2: the kit's foam part (rolls, lips, apron) sits in the cliff's shade; a small white emissive lift on
+		-- its SurfaceAppearance keeps it whiter than the water. Written by AeroKit.build on the cloned part.
+		FoamGlow=table.freeze({Strength=.45,Tint=hex("#FFFFFF")}), -- the mask (the atlas white block) is on the template
 		PoolShade=table.freeze({Texture="rbxassetid://135109259637937",Color=hex("#1F6F8A"),Transparency=.3,up=.03,
 			pool=table.freeze({width=12,out=5}),ledge=table.freeze({width=7,out=2.5})}),
 		Apron=table.freeze({from=.5,to=7.5,up=.06,width0=9,width1=9.5,length=7,speed=1.5/7,Color=hex("#FFFFFF"),
@@ -249,7 +252,8 @@ Aero.Fountain=table.freeze({
 	Squash=NumberSequence.new(-1.6), -- jet and spill: tall, thin streaks along their flight (positive squashes them flat)
 	-- LOOK-R3 3: the original loop (scripts/synth_fountain_loop.py, 32 s), from a random point, never restarted by distance.
 	-- The library stand-in (water_bed_loop at 1.25) plays if the loop does not load. Spencer's ears decide.
-	Voice=table.freeze({id=96991688758765,volume=.14,speed=1,min=5,max=26,fallback=table.freeze({id=71747963121003,speed=1.25,volume=.16})}),
+	Voice=table.freeze({id=96991688758765,volume=.20,speed=1,min=7,max=30, -- LOOK-R4 B4: heard within ~15 studs, gone by 30
+		fallback=table.freeze({id=71747963121003,speed=1.25,volume=.16})}),
 })
 
 -- "W7_Water__cloud", "W7_Backdrop__cloud_2" -> "cloud"; nil for anything else (collision tiles, pets, props).

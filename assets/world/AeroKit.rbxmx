@@ -25,7 +25,7 @@
         <Properties>
           <string name="Name">MatteFinish</string>
           <token name="AlphaMode">0</token>
-          <Content name="ColorMap"><url>rbxassetid://94198650524622</url></Content>
+          <Content name="ColorMap"><url>rbxassetid://104251374979550</url></Content>
           <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
           <Content name="RoughnessMap"><url>rbxassetid://125570475932961</url></Content>
         </Properties>
@@ -53,7 +53,7 @@
         <Properties>
           <string name="Name">MatteFinish</string>
           <token name="AlphaMode">0</token>
-          <Content name="ColorMap"><url>rbxassetid://94198650524622</url></Content>
+          <Content name="ColorMap"><url>rbxassetid://104251374979550</url></Content>
           <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
           <Content name="RoughnessMap"><url>rbxassetid://125570475932961</url></Content>
         </Properties>
@@ -81,7 +81,7 @@
         <Properties>
           <string name="Name">MatteFinish</string>
           <token name="AlphaMode">0</token>
-          <Content name="ColorMap"><url>rbxassetid://119756604191368</url></Content>
+          <Content name="ColorMap"><url>rbxassetid://102153964898944</url></Content>
           <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
           <Content name="RoughnessMap"><url>rbxassetid://125570475932961</url></Content>
         </Properties>
@@ -175,8 +175,8 @@
     <Item class="MeshPart" referent="AK6">
       <Properties>
         <string name="Name">W7_Kit_Falls__kitwater</string>
-        <Content name="MeshId"><url>rbxassetid://73845431603817</url></Content>
-        <Content name="TextureID"><url /></Content>
+        <Content name="MeshId"><url>rbxassetid://71091194202757</url></Content>
+        <Content name="TextureID"><url>rbxassetid://140121240617654</url></Content>
         <Vector3 name="Size"><X>32.452</X><Y>48.4596</Y><Z>25.1835</Z></Vector3>
         <Vector3 name="InitialSize"><X>377.33721923828125</X><Y>563.4664306640625</Y><Z>292.8218688964844</Z></Vector3>
         <bool name="Anchored">true</bool>
@@ -188,10 +188,41 @@
         <token name="CollisionFidelity">2</token>
         <token name="Material">256</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-        <float name="Reflectance">0.08</float>
+        <float name="Reflectance">0.0</float>
       </Properties>
     </Item>
     <Item class="MeshPart" referent="AK7">
+      <Properties>
+        <string name="Name">W7_Kit_Falls__kitfoam</string>
+        <Content name="MeshId"><url>rbxassetid://105399603929639</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>17.4319</X><Y>48.4046</Y><Z>17.3728</Z></Vector3>
+        <Vector3 name="InitialSize"><X>202.68994140625</X><Y>562.826904296875</Y><Z>202.00347900390625</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">false</bool>
+        <bool name="DoubleSided">true</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="Material">256</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="AKS7">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://140121240617654</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+          <Content name="EmissiveMaskContent"><url>rbxassetid://140121240617654</url></Content>
+          <float name="EmissiveStrength">0.45</float>
+          <Color3 name="EmissiveTint"><R>1</R><G>1</G><B>1</B></Color3>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AK8">
       <Properties>
         <string name="Name">W7_Kit_Fountain__kitstone</string>
         <Content name="MeshId"><url>rbxassetid://112786401704620</url></Content>

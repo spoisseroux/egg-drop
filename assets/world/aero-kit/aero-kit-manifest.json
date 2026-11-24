@@ -197,7 +197,7 @@
    "name": "W7_Kit_Falls__kitwater",
    "role": "falls",
    "kind": "kitwater",
-   "tris": 1740,
+   "tris": 1628,
    "size": [
     32.452,
     48.4596,
@@ -208,7 +208,24 @@
     27.3748,
     -72.86
    ],
-   "hash": "c75adc2b1d8a17ee"
+   "hash": "6077eca33cf7a24b"
+  },
+  {
+   "name": "W7_Kit_Falls__kitfoam",
+   "role": "falls",
+   "kind": "kitfoam",
+   "tris": 276,
+   "size": [
+    17.4319,
+    48.4046,
+    17.3728
+   ],
+   "center": [
+    75.6015,
+    27.4023,
+    -75.6311
+   ],
+   "hash": "3cbf2a184d8e8ced"
   },
   {
    "name": "W7_Kit_Fountain__kitstone",
@@ -707,5 +724,5 @@
    4.2284
   ]
  },
- "triangles": 3980
+ "triangles": 4144
 }
