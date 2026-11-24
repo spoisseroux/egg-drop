@@ -325,6 +325,10 @@ end
 -- Layout (1.2). Desktop numbers are authored at 1920x1080 and phone numbers at
 -- 812x354, then scaled; left items keep their left offset, right items their
 -- right offset, so wider screens open up the middle.
+-- Beta 14 Q3: on a phone the button row keeps RowClear px clear of the stage card (shot 2: Back sat 8 px inside it at
+-- 844 x 390). Back (the short label) gives way first, down to PlayMin; then the card narrows (never under 1.3 pet boxes).
+Stage.RowClear=12
+Stage.PlayMin=110
 function Stage.geometry(W,H)
  local L={W=W,H=H,phone=Kit.compactRule(W,H)or W<760}
  if L.phone then
@@ -341,6 +345,14 @@ function Stage.geometry(W,H)
   L.btnH=48;L.btnY=H-L.btnH-math.floor(14*s);L.meetW=math.max(120,math.floor(176*s));L.playW=math.max(110,math.floor(150*s))
   L.margin=24;L.gap=10;L.btnText=16
   L.hintX,L.hintY,L.hintSize=L.petX,H-math.floor(16*s),12
+  local wellRight=L.petX+math.floor(math.min(L.petBox*1.7,L.petX*2-32))/2
+  local rowLeft=W-L.margin-L.meetW-L.gap-L.playW
+  local need=math.ceil(wellRight+Stage.RowClear-rowLeft)
+  if need>0 then
+   local give=math.min(need,math.max(0,L.playW-Stage.PlayMin))
+   L.playW-=give;rowLeft+=give;need-=give
+   if need>0 then L.wellW=math.max(math.floor(L.petBox*1.3),math.floor((rowLeft-Stage.RowClear-L.petX)*2))end
+  end
  else
   local s=math.min(W/1920,H/1080);L.s=s
   L.petX=math.floor(W*800/1920);L.feet=H-math.floor(238*s);L.petH=590*s;L.petBox=700*s
@@ -738,7 +750,7 @@ end
 function Stage.wellRect(L)
  local top=math.max(16,math.floor(L.feet-L.petH*1.55))
  local bottom=math.min(L.H-8,math.floor(L.feet+math.max(30,L.petH*.2)))
- local w=math.floor(math.min(L.petBox*1.7,L.petX*2-32))
+ local w=L.wellW or math.floor(math.min(L.petBox*1.7,L.petX*2-32))
  return math.floor(L.petX-w/2),top,w,bottom-top
 end
 function Stage:paintBackdrop()
