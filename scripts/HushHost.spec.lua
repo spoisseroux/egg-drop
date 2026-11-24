@@ -15,7 +15,7 @@ return function(server)
 	local ON={flags={Hush=true},studio=true}
 	local OFF={flags={Hush=true},studio=true,on=false}
 	local NORTH=Vector3.new(-7,7,-113.5)  -- in the north trigger
-	local HOME=Hush.at(0,-22.5,9)         -- in the return trigger
+	local HOME=Hush.at(0,-22.5,Hush.SillH+3) -- in the return trigger
 	local LAWN=Vector3.new(40,7,50)
 
 	local function rig(options)

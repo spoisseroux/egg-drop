@@ -148,7 +148,7 @@ return function(server)
 		return math.abs(p.X-c.X)<=s.X+pad and math.abs(p.Y-c.Y)<=s.Y+pad and math.abs(p.Z-c.Z)<=s.Z+pad
 	end
 	local function solidAt(p)
-		for _,row in ipairs(Rows)do if row.collide and row.name~="W7H_Ramp"and inside(row,p)then return row end end
+		for _,row in ipairs(Rows)do if row.collide and row.name~="W7H_Ramp"and not row.angled and inside(row,p)then return row end end
 		return nil
 	end
 	test("greybox rows: W7H_ names, unique, finite, at most 60; lights are inert; nothing textured",function()
@@ -177,7 +177,7 @@ return function(server)
 		end
 		-- The return trigger is in the open tunnel, in front of its end wall.
 		local t=Hush.Doors.home.trigger
-		assert(not solidAt((t.min+t.max)/2)and solidAt(Vector3.new(-7,-10,t.max.Z+.6)))
+		assert(not solidAt((t.min+t.max)/2)and solidAt(Vector3.new(-7,(t.min.Y+t.max.Y)/2,t.max.Z+.6)))
 		-- Walls: west and east all along; north except the shelf gap (closed by the shelf's stop); south except the tunnel.
 		for v=-3,127 do
 			assert(solidAt(Hush.at(-77,v,20))and solidAt(Hush.at(77,v,20)),"side wall open at v "..v)
@@ -186,8 +186,9 @@ return function(server)
 			local north=solidAt(Hush.at(u,126,20))
 			if u>-5 and u<15 then assert(not north and solidAt(Hush.at(u,138.3,10)),"shelf at u "..u)
 			else assert(north,"north wall open at u "..u)end
-			local south=solidAt(Hush.at(u,-2,10))
-			if u>-3 and u<3 then assert(not south and solidAt(Hush.at(u,-2,3))and solidAt(Hush.at(u,-2,20)),"tunnel gap at u "..u)
+			-- The tunnel's flared mouth is the Sill's width at the wall face (Fable R5).
+			local south=solidAt(Hush.at(u,-2,Hush.SillH+4))
+			if u>-7 and u<7 then assert(not south and solidAt(Hush.at(u,-2,Hush.SillH-1))and solidAt(Hush.at(u,-2,Hush.SillH+12)),"tunnel gap at u "..u)
 			else assert(south,"south wall open at u "..u)end
 		end
 		-- 40 high everywhere a wall stands.
@@ -201,9 +202,48 @@ return function(server)
 		local half=(ramp.size.X-1)/2
 		local top=ramp.cframe*Vector3.new(-half,ramp.size.Y/2,0)
 		local foot=ramp.cframe*Vector3.new(half,ramp.size.Y/2,0)
-		assert((top-Hush.at(8,5,6)).Magnitude<.05 and(foot-Hush.at(40,5,0)).Magnitude<.05,tostring(top).." "..tostring(foot))
-		local sill=solidAt(Hush.at(0,5,5.9))
-		assert(sill and sill.name=="W7H_Sill"and math.abs(sill.cframe.Position.Y+sill.size.Y/2-Hush.at(0,0,6).Y)<1e-6)
+		assert((top-Hush.at(8,5,Hush.SillH)).Magnitude<.05 and(foot-Hush.at(Hush.RampFootU,5,0)).Magnitude<.05,tostring(top).." "..tostring(foot))
+		local slope=math.deg(math.atan2(Hush.SillH,Hush.RampFootU-8))
+		assert(Hush.SillH>=10 and slope>=11 and slope<=14,slope) -- Fable R5: look down from +10; about 13 degrees
+		local sill=solidAt(Hush.at(0,5,Hush.SillH-.1))
+		assert(sill and sill.name=="W7H_Sill"and math.abs(sill.cframe.Position.Y+sill.size.Y/2-Hush.at(0,0,Hush.SillH).Y)<1e-6)
+	end)
+
+	test("greybox: the tunnel's flare is sealed: its walls meet the straight walls and the wall face; its roof covers it",function()
+		local flares={}
+		for _,row in ipairs(Rows)do if row.angled then flares[row.name]=row end end
+		for _,side in ipairs({-1,1})do
+			local row=flares[if side<0 then "W7H_TunnelFlareWest"else "W7H_TunnelFlareEast"]
+			assert(row)
+			local back=row.cframe*Vector3.new(0,0,row.size.Z/2)
+			local front=row.cframe*Vector3.new(0,0,-row.size.Z/2)
+			assert((back-Hush.at(side*3.5,-8,Hush.SillH+4)).Magnitude<.05 and(front-Hush.at(side*7.5,0,Hush.SillH+4)).Magnitude<.05)
+			assert(row.size.Y==8)
+			-- The straight wall ends where the flare starts; the wall face starts where it ends.
+			assert(solidAt(Hush.at(side*3.5,-8.2,Hush.SillH+4))and solidAt(Hush.at(side*7.5,-.2,Hush.SillH+4)))
+			-- Roofed over the whole flare (the mouth roof, then the lintel).
+			for v=-7.5,-.5,1 do assert(solidAt(Hush.at(side*(3+(v+8)*.5),v,Hush.SillH+8.5)),"open roof at v "..v)end
+		end
+	end)
+
+	test("greybox: five clumps 18 to 24 wide and 14 high, clear of the pool, the ramp, the Sill, the doors and each other",function()
+		assert(#Hush.Clumps==5)
+		local pool={u1=-22,v1=65,u2=22,v2=91}
+		local keep={pool,{u1=-8,v1=0,u2=Hush.RampFootU+2,v2=12},{u1=-5,v1=116,u2=15,v2=138}}
+		local function apart(a,b,gap)return a.u2+gap<=b.u1 or b.u2+gap<=a.u1 or a.v2+gap<=b.v1 or b.v2+gap<=a.v1 end
+		for k,c in ipairs(Hush.Clumps)do
+			local long=math.max(c.u2-c.u1,c.v2-c.v1)
+			assert(long>=18 and long<=24,c.name)
+			assert(c.u1>=-73 and c.u2<=73 and c.v1>=12 and c.v2<=122,c.name.." is not on the floor")
+			for _,area in ipairs(keep)do assert(apart(c,area,3),c.name)end
+			for j=k+1,#Hush.Clumps do assert(apart(c,Hush.Clumps[j],8),c.name)end
+			local row
+			for _,r in ipairs(Rows)do if r.name=="W7H_"..c.name then row=r end end
+			assert(row and row.collide and math.abs(row.size.Y-Hush.ClumpHeight)<1e-6 and Hush.ClumpHeight==14,c.name)
+			local mid=Hush.at((c.u1+c.u2)/2,(c.v1+c.v2)/2,0)
+			assert(not Hush.safeCell(mid.X,mid.Z)and not Hush.safeCell(Hush.at(c.u1-1,c.v1,0).X,Hush.at(c.u1-1,c.v1,0).Z),c.name)
+			assert(Hush.safeCell(Hush.at(c.u1-2,c.v1,0).X,Hush.at(c.u1-2,c.v1,0).Z),c.name)
+		end
 	end)
 
 	return{passed=#cases,cases=cases}

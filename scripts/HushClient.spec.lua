@@ -78,7 +78,7 @@ return function(client)
 		r.at=to;r.grounded=false;r.run(.5);assert(r.black()==1) -- streamed out
 		r.grounded=true;r.step();r.run(Hush.FadeIn+.05);assert(r.black()==0)
 		-- Nothing under our feet for GroundWait: in anyway.
-		r.at=Hush.at(0,-22.5,9);r.step()
+		r.at=Hush.at(0,-22.5,Hush.SillH+3);r.step()
 		assert(#r.sent==2 and r.sent[2].door=="home")
 		r.run(.5);r.remote.OnClientEvent:Fire({kind="arrived",seq=2,at=POCKET});r.grounded=false
 		r.run(Hush.GroundWait-.2);assert(r.black()==1)
