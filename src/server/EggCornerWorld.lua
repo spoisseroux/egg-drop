@@ -317,7 +317,7 @@ function World.landmarkTemplate(storage)
 	storage=storage or ServerStorage
 	local template=storage:FindFirstChild(Landmark.Template)
 	local version=template and template:FindFirstChild("LandmarkVersion")
-	if template and template:IsA("Model")and version and version.Value==Landmark.Version then return template:Clone(),false end
+	if template and template:IsA("Model")and version and version.Value==Landmark.Version then local copy=template:Clone();copy.WorldPivot=CFrame.new();return copy,false end -- Rojo drops the PrimaryPart ref (Studio R10): without it the pivot is the bounding box (Body sank 3.3, turned 180)
 	return World.landmarkGreybox(Landmark.data()),true
 end
 -- The plaza floor under the nest: one ray down with the old station's parts left out (its steps stand there until the
