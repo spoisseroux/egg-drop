@@ -1,12 +1,12 @@
 {
- "assetId": "88879682248822",
- "operationId": "d73a7d8b-bb9b-46e2-9d06-e2f869a04c1c",
+ "assetId": "91898637344879",
+ "operationId": "cde891ff-63e8-43f7-a964-b2461cf96209",
  "moderation": "Approved",
- "fbxSha256": "9b5907e510ba1c90a42e78ff436eda3149355305bae0b4e64bb742068408c6e9",
- "manifestSha256": "189990c46d3ea12b29c025e2fce62faa35f298562f8be74cf9e363ef5dbb99f3",
+ "fbxSha256": "cc9a408c43a577a0b631c610f32533ef57fb5d9afb0d199b1419a7da7e890ed9",
+ "manifestSha256": "fae382c85d72f2c4adefe296c32a6ca26d4f5f08c0a4b9182ed761ae11bc1e04",
  "parts": [
   {
-   "meshId": "rbxassetid://95484267342554",
+   "meshId": "rbxassetid://107637306471348",
    "name": "EggMachine_Body",
    "meshSize": [
     419.9999694824219,
@@ -33,16 +33,16 @@
    ]
   },
   {
-   "meshId": "rbxassetid://91504958362601",
+   "meshId": "rbxassetid://137897227710148",
    "name": "EggMachine_EggPile",
    "meshSize": [
-    286.30303955078125,
-    203.0086669921875,
-    284.70233154296875
+    282.73822021484375,
+    203.675048828125,
+    283.44573974609375
    ]
   },
   {
-   "meshId": "rbxassetid://105920639595158",
+   "meshId": "rbxassetid://75273539368906",
    "name": "EggMachine_Globe",
    "meshSize": [
     342.398193359375,
@@ -60,5 +60,5 @@
    ]
   }
  ],
- "recorded": "2026-11-24T08:11:05Z"
+ "recorded": "2026-11-24T10:25:00Z"
 }
