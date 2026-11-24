@@ -60,6 +60,9 @@
 -- Hush (HUSH-GREYBOX-BUILD-PLAN, artifacts/qa-2026-11-23-beta14): the build ceiling for the cave passage, the Underway and the
 -- Hush greybox. Also needs the beta place or Studio (Hush.PlaceId) and the server's switch (HushConfig: garden_hush).
 -- Missing = off: the cave stays blocked and nothing is built.
+-- Hush = false (2026-11-24, architect): retired with Spencer's upper-tier direction; its code stays until the tier is
+-- approved, then goes. Tier (UPPER-TIER-BUILD-PLAN, artifacts/qa-2026-11-24-beta15): the build ceiling for the upper
+-- tier greybox. Also needs the beta place or Studio (Tier.PlaceId) and the server's switch (TierConfig: garden_tier).
 -- FreshSaveCommand (beta (12) QA T1): the owner's /freshsave and /freshsave restore (ProgressKey, FreshSave). Also needs
 -- the beta place and universe, or the in-memory store (Studio). Missing = off: every save is player_<id>, as before.
 -- WorldFeel (beta 14 QA W4): the build ceiling for the lower arrival camera, the zoom cap, the haze and the walk speed
@@ -69,4 +72,4 @@ return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,D
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
- PetCatchup=true,FreshSaveCommand=true,Hush=true,WorldFeel=true})
+ PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true})
