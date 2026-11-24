@@ -768,6 +768,25 @@ function Birds:chirp(now,perch,landing,cap,world,reduced,day)
 	table.insert(self.list,bird)
 	return "land"
 end
+-- The big breath (beta 14 W3 row 1, `scene` on): each sitting bird does one hop pair (the tail and wing tips flick on
+-- each hop) as the breath reaches it, once a breath. breathAt(position) -> strength, breath number. Reduced Motion: none.
+-- Returns how many hopped.
+function Birds:breathe(now,breathAt,reduced)
+	local B=Sim.Bird
+	if reduced or type(breathAt)~="function"then return 0 end
+	local n=0
+	for _,bird in ipairs(self.list)do
+		if bird.state=="sit"then
+			local v,b=breathAt(bird.spot)
+			if b~=nil and type(v)=="number"and v>.5 and bird.breath~=b then
+				bird.breath=b
+				bird.hopAt,bird.hop2=now,now+B.hopTime+B.pairGap
+				n+=1
+			end
+		end
+	end
+	return n
+end
 -- Moves every bird on: landed, stayed long enough or the player within `flee`: off it goes (Reduced Motion: gone).
 -- Returns the live list; each has root (CFrame), wings ("fly" | "perch"), flick (0 to 1), phi, tuck, head, tau.
 function Birds:step(now,world,reduced,cap,level)

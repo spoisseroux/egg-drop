@@ -1193,6 +1193,25 @@ return function(client)
 		assert(bubbles:due(6,8,Sim.day(.9))==true)
 	end)
 
+	test("birds in the big breath: each sitting bird hops a pair once a breath as it arrives; none with Reduced Motion",function()
+		local B=Sim.Bird
+		local birds=Sim.Birds.new(9)
+		local world={camera=Vector3.new(40,12,40),stations={}}
+		assert(birds:chirp(0,1,Vector3.new(0,14,0),3,world,false,nil)=="land")
+		assert(birds:chirp(0,2,Vector3.new(20,14,0),3,world,false,nil)=="land")
+		birds:step(1,world,false,3)
+		local strength,number=0,nil
+		local function breathAt()return strength,number end
+		assert(birds:breathe(1.1,breathAt,false)==0,"no breath")
+		strength,number=.9,77
+		assert(birds:breathe(1.2,breathAt,true)==0,"Reduced Motion: none")
+		assert(birds:breathe(1.2,breathAt,false)==2,"both hop")
+		for _,bird in ipairs(birds.list)do assert(bird.hopAt==1.2 and near(bird.hop2,1.2+B.hopTime+B.pairGap),"a pair")end
+		assert(birds:breathe(1.5,breathAt,false)==0,"once a breath")
+		number=78
+		assert(birds:breathe(400,breathAt,false)==2,"the next breath")
+	end)
+
 	-- Beta 14 QA B2: night fireflies (GARDEN-LIFE-BUILD-PLAN section 3) ---------------------------------------------
 	local FF=Sim.Firefly
 	local function fireWorld()

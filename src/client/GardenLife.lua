@@ -958,7 +958,9 @@ function Life:step(dt)
 		end
 	end
 	self:stepFireflies(now,tick,world,level,reduced,put,hide)
-	-- Birds: a sitting bird with nothing moving keeps its last frames (no write).
+	-- Birds: a sitting bird with nothing moving keeps its last frames (no write). In the big breath (`scene` on) each
+	-- sitting bird hops a pair once.
+	if self.scene then self.birds:breathe(now,function(at)return Wind.breath(at,now)end,reduced)end
 	local still=self.birdStill
 	for _,bird in ipairs(self.birds:step(now,world,reduced,Sim.cap("birds",level),level))do
 		local pool=bird.slot and self.birdPool[bird.slot]
