@@ -1,5 +1,5 @@
 {
- "note": "Meshes changed by the last build_world_v7_chunks.py run. Upload world-v7-declutter.fbx, read back each MeshPart's MeshId and MeshSize into world-v7-studio-import.json, then run scripts/build_world_v7_assets.py --confirm-upload READBACK_JSON. Retain this pending file.",
+ "note": "Verified world upload checkpoint; retain this file. Any changed geometry/import/file binding aborts runtime asset generation until a new upload is confirmed.",
  "changed": [
   "W7_Stations__marble",
   "W7_Stations__marble_smooth",
@@ -145,6 +145,112 @@
    ],
    "top": 5.6,
    "hash": "7df7822cda4d7565"
+  }
+ },
+ "confirmedImport": {
+  "W7_EggsStation__foliage": {
+   "hash": "7df7822cda4d7565",
+   "import": [
+    "132809598445653",
+    3.9651,
+    0.51952,
+    4.15772
+   ]
+  },
+  "W7_EggsStation__glow_warm": {
+   "hash": "6da551bb6e8cece0",
+   "import": [
+    "112583451635109",
+    2.85704,
+    0.11906,
+    2.85704
+   ]
+  },
+  "W7_EggsStation__marble": {
+   "hash": "e0042999cff853f7",
+   "import": [
+    "112503731572594",
+    85.01799011230469,
+    13.515193939208984,
+    85.01802825927734
+   ]
+  },
+  "W7_EggsStation__marble_smooth": {
+   "hash": "16747626eebda649",
+   "import": [
+    "117417099494951",
+    17.427505493164062,
+    24.78444480895996,
+    11.456045150756836
+   ]
+  },
+  "W7_EggsStation__palette": {
+   "hash": "b965dedd9c7dc4e1",
+   "import": [
+    "102678251837735",
+    56.5150260925293,
+    32.786834716796875,
+    36.97788619995117
+   ]
+  },
+  "W7_EggsStation__trim": {
+   "hash": "5e267900a3fcd174",
+   "import": [
+    "76120243598182",
+    55.26172637939453,
+    3.0033833980560303,
+    55.26172637939453
+   ]
+  },
+  "W7_Stations__marble": {
+   "hash": "b053f54226391d0c",
+   "import": [
+    "90548626220394",
+    2048.0,
+    91.60294342041016,
+    1320.7628173828125
+   ]
+  },
+  "W7_Stations__marble_smooth": {
+   "hash": "f53ec92208706f72",
+   "import": [
+    "75280128629743",
+    1759.1011962890625,
+    55.399940490722656,
+    1212.487060546875
+   ]
+  },
+  "W7_Stations__palette": {
+   "hash": "69d1cb2cff77c190",
+   "import": [
+    "139337794781013",
+    1760.602783203125,
+    92.47891998291016,
+    1212.2451171875
+   ]
+  },
+  "W7_Stations__trim": {
+   "hash": "f5a4b2432566dba6",
+   "import": [
+    "131873352220196",
+    1841.439208984375,
+    29.658374786376953,
+    1308.370849609375
+   ]
+  }
+ },
+ "upload": {
+  "assetId": "118362972104444",
+  "operationId": "1cfa104d-5b24-4fa0-b304-fffd6f090089",
+  "checkpoint": {
+   "fbxSha256": "5b61277ac3185c0e80fa071ed3dbed83f67868a96f70220e2e7c2d97c618476e",
+   "manifestSha256": "fdd87b2406b70156d65a2e10c7637df0941a013e6187d2fd7469ccfd1fc38ea3",
+   "previousMeshIds": {
+    "W7_Stations__marble": "126589987182505",
+    "W7_Stations__marble_smooth": "125972227162285",
+    "W7_Stations__palette": "71188520415952",
+    "W7_Stations__trim": "132095006963916"
+   }
   }
  }
 }

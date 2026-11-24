@@ -1,0 +1,120 @@
+{
+ "old": {
+  "nativeBytes": 325290,
+  "nativeSha256": "68118c32144cdaa025c18043850b3c3acd31ce492dd4299ad822951e71f889eb",
+  "counts": {
+   "descendants": 202,
+   "meshParts": 170,
+   "surfaceAppearances": 30
+  }
+ },
+ "new": {
+  "nativeBytes": 326424,
+  "nativeSha256": "49973794a90b1d7d26259b7ad016fb3d18c8185533355659473dd099907ba9c0",
+  "counts": {
+   "descendants": 206,
+   "meshParts": 174,
+   "surfaceAppearances": 30
+  }
+ },
+ "changed": {
+  "W7_Stations__marble": {
+   "from": "rbxassetid://126589987182505",
+   "to": "rbxassetid://90548626220394",
+   "bufferFrom": 5292,
+   "bufferTo": 4851
+  },
+  "W7_Stations__marble_smooth": {
+   "from": "rbxassetid://125972227162285",
+   "to": "rbxassetid://75280128629743",
+   "bufferFrom": 2241,
+   "bufferTo": 1781
+  },
+  "W7_Stations__palette": {
+   "from": "rbxassetid://71188520415952",
+   "to": "rbxassetid://139337794781013",
+   "bufferFrom": 15,
+   "bufferTo": 15
+  },
+  "W7_Stations__trim": {
+   "from": "rbxassetid://132095006963916",
+   "to": "rbxassetid://131873352220196",
+   "bufferFrom": 1620,
+   "bufferTo": 1391
+  }
+ },
+ "added": {
+  "W7_EggsStation__foliage": {
+   "mesh": "rbxassetid://132809598445653",
+   "buffer": 15,
+   "canCollide": "false"
+  },
+  "W7_EggsStation__glow_warm": {
+   "mesh": "rbxassetid://112583451635109",
+   "buffer": 15,
+   "canCollide": "false"
+  },
+  "W7_EggsStation__marble": {
+   "mesh": "rbxassetid://112503731572594",
+   "buffer": 745,
+   "canCollide": "true"
+  },
+  "W7_EggsStation__marble_smooth": {
+   "mesh": "rbxassetid://117417099494951",
+   "buffer": 516,
+   "canCollide": "true"
+  },
+  "W7_EggsStation__palette": {
+   "mesh": "rbxassetid://102678251837735",
+   "buffer": 15,
+   "canCollide": "false"
+  },
+  "W7_EggsStation__trim": {
+   "mesh": "rbxassetid://76120243598182",
+   "buffer": 301,
+   "canCollide": "true"
+  }
+ },
+ "renamed": {
+  "W7_EggsStation__foliage": "W7_Stations__foliage",
+  "W7_EggsStation__glow_warm": "W7_NestHalo__glow_warm"
+ },
+ "dropped": [
+  "W7_NestHalo__glow_warm",
+  "W7_Stations__foliage"
+ ],
+ "untouchedInstancesIdentical": 197,
+ "engineNoiseAllowed": {
+  "float32 CFrame": 104,
+  "TexturePackContent": 31,
+  "cached mass (UnscaledCofm)": 1,
+  "cached mass (UnscaledVolInertiaDiags)": 1,
+  "cached mass (UnscaledVolInertiaOffDiags)": 1,
+  "cached mass (UnscaledVolume)": 1,
+  "cached mass (VertexCount)": 1
+ },
+ "protectedBuffersIdentical": 165,
+ "stagedXmlPartsChanged": [
+  "W7_EggsStation__foliage",
+  "W7_EggsStation__glow_warm",
+  "W7_EggsStation__marble",
+  "W7_EggsStation__marble_smooth",
+  "W7_EggsStation__palette",
+  "W7_EggsStation__trim",
+  "W7_NestHalo__glow_warm",
+  "W7_Stations__foliage",
+  "W7_Stations__marble",
+  "W7_Stations__marble_smooth",
+  "W7_Stations__palette",
+  "W7_Stations__trim"
+ ],
+ "proofInputsMoving": [
+  "assets/world/world-dressing-import.json",
+  "assets/world/world-v7-declutter.fbx",
+  "assets/world/world-v7-manifest.json",
+  "assets/world/world-v7-pending.json",
+  "assets/world/world-v7-studio-import.json",
+  "assets/world/world-v7.fbx"
+ ],
+ "problems": []
+}

@@ -1,28 +1,40 @@
 {
   "schemaVersion": 1,
   "nativePath": "assets/world/WorldAssetsNative.rbxm",
-  "nativeBytes": 325290,
-  "nativeSha256": "68118c32144cdaa025c18043850b3c3acd31ce492dd4299ad822951e71f889eb",
-  "xmlSha256": "093271d1480415b82cfdb8448cdefa33e4c780fde4eadd68e0ec25ab3060588e",
-  "luaSha256": "e9c381d252e661f6f62cd1f9b7e2992af176872d8fbe0efbfd27ab09374bc0de",
+  "nativeBytes": 326424,
+  "nativeSha256": "49973794a90b1d7d26259b7ad016fb3d18c8185533355659473dd099907ba9c0",
+  "xmlSha256": "d211cf689b4dc61f086fb9e04d4bc6c54525043fa08ceca8e29b5c909847efd4",
+  "luaSha256": "4e0b78cd4f69c0ec66d930a42a8bc1b5901a68727ff4691b1578b17e8be021f8",
   "inputs": {
-    "assets/world/world-v7-manifest.json": "9ad4b7af9abfd4df054ce053141ab54b4a35e92f86f4521b5d69af44011d6945",
+    "assets/world/world-v7-manifest.json": "fdd87b2406b70156d65a2e10c7637df0941a013e6187d2fd7469ccfd1fc38ea3",
     "assets/world/world-v7-walk.json": "39386b5ed9496b43eae94c9be5981a6529f5229e28fe5cdae34c386262ef369c",
-    "assets/world/world-v7-studio-import.json": "70bdbc11688ea975f4e49c13c6cd89b79640f5e36c4a9989e34aa32f0001d046",
+    "assets/world/world-v7-studio-import.json": "c312bd34339b9bdb807515eac8defdb1175c25df05fe312fd4c6ad31f50d864a",
     "assets/world/world-v7-uploads.json": "93fb64150fb3927f939ed1e7d65377d2c25a500e895bad4e190b4e7b081fa182",
     "assets/world/world-v7-collision.json": "51c36f34e45c9bf1649b903a7ce977e721d7469e890421d58bc34a821168e065",
     "assets/world/world-v7-collision-studio-import.json": "b9a0c8966a64aaab2b33062127b35a90e19fa1d6c64b73e1f5fb278807a31f44",
-    "assets/world/world-v7-pending.json": "381c2c54bd8c000c82fc8db1484748d26a13d2c39fc98b9dd0d167caf1c7c24f",
+    "assets/world/world-v7-pending.json": "b143ccde82c671d290100101b914b295cd21540dbe59fafc0db7dd599f0e1c7d",
     "assets/world/world-v7-palette.json": "7d00ea01fd910a4f2f99a8e83714dfc864996804ef5b264ce51514c4c86d77a9",
     "assets/world/world-dressing-manifest.json": "832ba41771a3e3c028d5042379ebcf0f220fac90f6c90591a06ff78c434f36b3",
-    "assets/world/world-dressing-import.json": "10565b2ef1b558e59c56c0f16c3a9e735be188dbc9cd6ecd7890cf5df9dc3b92",
-    "assets/world/world-v7.fbx": "8dbe44392dcad7e793833b136fd8edc8b08af7bf9c3417e0023686c86b3df995",
-    "assets/world/world-v7-declutter.fbx": "bc84ef09792224f3efe41a946e71a7bad3da98e30857f180d753b9fba59a3520",
+    "assets/world/world-dressing-import.json": "445627c28b15c8a106202d01d29a4cb6359e0dd5f2411a8128f77bb4643be300",
+    "assets/world/world-v7.fbx": "b337c7ff317db4534c54e58c62c9d3cb3552a6cb4e5f7a16b3a938a3a12f4e4b",
+    "assets/world/world-v7-declutter.fbx": "5b61277ac3185c0e80fa071ed3dbed83f67868a96f70220e2e7c2d97c618476e",
     "assets/world/world-v7-collision.fbx": "3ebfb766d0d9fa0e5ee65b92a696dd756cd42e2e8a52a6e03d7d4ac807055ba8",
     "assets/world/world-dressing.fbx": "00bab0f2e37b7299f11593c056708e947b55329884fb9771c0416ceae09ad174",
     "assets/world/textures/palette-roblox.png": "702f605a8413c7f8228bd78bb9128ed05536fc756a624990963e98122bec4153"
   },
   "physicalConfigData": {
+    "W7D_FrondFan": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7D_FrondSpray": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
+    "W7D_LeafTuft": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    },
     "W7_CastleFlag_3__far_peak": {
       "bytes": 15,
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
@@ -231,9 +243,9 @@
       "bytes": 15,
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
-    "W7_LampOrbs__glow_warm": {
-      "bytes": 15,
-      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    "W7_Stations__marble": {
+      "bytes": 4851,
+      "sha256": "72b568c964236580f4cf569dbbeabac8a00da0b29ff18a9aba001dec82731aab"
     },
     "W7_Landmarks__grass": {
       "bytes": 1174,
@@ -263,7 +275,7 @@
       "bytes": 15,
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
-    "W7_NestHalo__glow_warm": {
+    "W7_EggsStation__glow_warm": {
       "bytes": 15,
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
@@ -303,7 +315,7 @@
       "bytes": 291,
       "sha256": "25555c400035fc70fa919b3867b5e09ca64eeb3ea0cdfea74f6ed585ccc6a3e5"
     },
-    "W7_Stations__foliage": {
+    "W7_EggsStation__foliage": {
       "bytes": 15,
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
@@ -328,8 +340,8 @@
       "sha256": "5c2ef6aa7f62cc8759448e03a6297a8e1b155157211da6fce67d7223a1aa79cc"
     },
     "W7_Stations__trim": {
-      "bytes": 1620,
-      "sha256": "d53290ef4ed86248e6486177f179a43f64b420246c94204e28f84b18f45b21ed"
+      "bytes": 1391,
+      "sha256": "f9736dd6d09283da886fd69b70c1886fd2517ca0606aec48235eef4ad423a0d9"
     },
     "W7_Architecture__trim": {
       "bytes": 1589,
@@ -351,9 +363,9 @@
       "bytes": 15,
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
-    "W7_Stations__marble_smooth": {
-      "bytes": 2241,
-      "sha256": "e638be162d70a58b8e8b40623bda98313f8cd9f00f505e5abe2c85886c61a601"
+    "W7_LampOrbs__glow_warm": {
+      "bytes": 15,
+      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
     "W7_Trunks__bark": {
       "bytes": 15323,
@@ -651,9 +663,9 @@
       "bytes": 1195,
       "sha256": "c9fa2bf62cb9d293acbbfd9f9cbdb7d3dcd92ed6c01a0103f923a73605b2b63f"
     },
-    "W7_Stations__palette": {
-      "bytes": 15,
-      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    "W7_Stations__marble_smooth": {
+      "bytes": 1781,
+      "sha256": "ef24dfba235ebdd384c5d7c23f704415101f6f29cdb3329bf0b3d4bf1bfff388"
     },
     "W7_Vegetation__foliage_blossom": {
       "bytes": 15,
@@ -687,39 +699,59 @@
       "bytes": 15,
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
-    "W7_Stations__marble": {
-      "bytes": 5292,
-      "sha256": "ba0bfbab053558f7dedbd83b4c1a532984740f813d97da9b95aa5d37ebaef13c"
-    },
-    "W7D_FrondFan": {
+    "W7_Stations__palette": {
       "bytes": 15,
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
-    "W7D_FrondSpray": {
+    "W7_EggsStation__marble": {
+      "bytes": 745,
+      "sha256": "2ba411d450de444bed1d7cbc3771719cfcbc6c89994f5b231619ad32bd0e8fa3"
+    },
+    "W7_EggsStation__marble_smooth": {
+      "bytes": 516,
+      "sha256": "e4dbe19de06200b5bb6a4bd2fb0173c082226113a01a8e7a0cd069a5e6074d44"
+    },
+    "W7_EggsStation__palette": {
       "bytes": 15,
       "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
     },
-    "W7D_LeafTuft": {
-      "bytes": 15,
-      "sha256": "a680944135e0d33999d4641ee0d22205dd26a29f366c2b8f3b80c6497377323f"
+    "W7_EggsStation__trim": {
+      "bytes": 301,
+      "sha256": "bcc04afad202d58a02dc31445e0ff9c179aa5cf3b76fd10983f7f30a94967d3c"
     }
   },
   "provenance": {
-    "source": "artifacts/qa-2026-11-14-v685/w2-lamp/WorldAssetsNative-lamp3.rbxm",
-    "method": "Studio Edit SerializationService:SerializeInstancesAsync({ServerStorage.WorldAssets}) after ApplyMesh of the three lamp-3 parts (QA v685 W2)",
-    "descendants": 202,
-    "meshParts": 170,
+    "source": "artifacts/qa-2026-11-24-beta15/eggs-split/WorldAssetsNative-eggs-split.rbxm",
+    "method": "Studio Edit SerializationService:SerializeInstancesAsync of an unparented clone of ServerStorage.WorldAssets after the Eggs station split: 4 Stations parts ApplyMesh, 4 new parts cloned from their sibling + ApplyMesh, 2 renamed (EGG-CORNER-BUILD-PLAN 6.2). The place's own WorldAssets was not modified.",
+    "descendants": 206,
+    "meshParts": 174,
     "surfaceAppearances": 30,
-    "previousNativeSha256": "98a95633da48bdfb54af5a16311502a03f7f711d02814a4be83417e870890003",
+    "previousNativeSha256": "68118c32144cdaa025c18043850b3c3acd31ce492dd4299ad822951e71f889eb",
     "changedMeshParts": [
-      "W7_LampOrbs__glow_warm",
+      "W7_Stations__marble",
       "W7_Stations__marble_smooth",
-      "W7_Stations__palette"
+      "W7_Stations__palette",
+      "W7_Stations__trim"
     ],
-    "protectedBuffersIdentical": 169,
-    "uploadReadback": "artifacts/qa-2026-11-14-v685/w2-lamp/upload-readback.json",
-    "evidence": "artifacts/qa-2026-11-14-v685/w2-lamp/native-promotion.json",
-    "note": "Deserialized round trip of this export probed in Studio Edit: post hit 12/12 at Studio (-9, 28), 0/12 at the old spot (-9, 23), 0/11 rays blocked across the bridge mouth. 169 of 170 collision buffers byte-identical to the previous pack; only W7_Stations__marble_smooth (the post) changed. Place not saved by this step.",
+    "addedMeshParts": [
+      "W7_EggsStation__marble",
+      "W7_EggsStation__marble_smooth",
+      "W7_EggsStation__palette",
+      "W7_EggsStation__trim"
+    ],
+    "renamedMeshParts": {
+      "W7_EggsStation__foliage": "W7_Stations__foliage",
+      "W7_EggsStation__glow_warm": "W7_NestHalo__glow_warm"
+    },
+    "droppedMeshParts": [
+      "W7_NestHalo__glow_warm",
+      "W7_Stations__foliage"
+    ],
+    "protectedBuffersIdentical": 165,
+    "uploadReadback": "artifacts/qa-2026-11-24-beta15/eggs-split/upload-readback.json",
+    "evidence": "artifacts/qa-2026-11-24-beta15/eggs-split/native-promotion.json",
+    "dressingImportRebound": "world-dressing-import.json was stale since 2f60802; its regenerated XML/Lua equal canonical (checked: staged XML/Lua differ only in the split parts)",
+    "note": "Deserialized round trip probed in Studio Edit (temporary WorldModels under ServerStorage, removed): 21,452 rays down over the Stations footprint, 1,344 sideways at 0.2 stud heights, 841 character blockcasts. Eggs station: no holes (3,407 samples inside the footprint all land on it); steps now match the Blender surface exactly (4.350 vs 4.35; the old shared bake floated 0.08-0.10 above and bulged 0.5 stud past the riser). Elsewhere 18,143 rays: one 5x5 stud patch near (-17,-13) where the re-baked shared Stations marble reads up to 0.17 below the surface (old within 0.02). Play: character climbs the station from W, S and E to its top (4.88) on both packs, ending at the same spots; halo pulses (region NestHalo). Captures old vs new at ClockTime 14 in captures/: edge shimmer only. Place not saved.",
     "retexture": {
       "previousNativeSha256": "1ea0749f9516f957f1c589e757e2729d63bb11c2bd9cf835a8d61b68106e9970",
       "chunks": 126,
@@ -733,7 +765,7 @@
       "note": "Texture ids only (scripts/retexture_world_native.py). Geometry, collision flags and PhysicalConfigData chunks byte-identical; not re-exported from Studio."
     }
   },
-  "promotion": "Explicit texture-only promotion (scripts/retexture_world_native.py); validator never rewrites this manifest.",
+  "promotion": "Explicit Eggs station split promotion (2026-11-24, artifacts/qa-2026-11-24-beta15/eggs-split/promote_native_eggs_split.py); validator never rewrites this manifest.",
   "fidelity": {
     "note": "W7_Backdrop__* RenderFidelity Precise (scripts/world_backdrop_fidelity.py); only that property chunk moved",
     "previousNativeSha256": "4f007fb7cb0067647cbef2fb49ea3add67650e5b9dc20cb3134931945ab3b33f",

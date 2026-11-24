@@ -65,3 +65,26 @@ Branch `claude/eggs-station-split` from feat efc846c. No publish.
   are checked to hold only the split's parts.
 - Live: every other part's collision buffer is byte-identical by construction (checked); the station and the four
   shared Stations meshes get new buffers from Studio's precise bake (probed).
+
+## Studio pass (2026-11-24, Studio 53800d7d, Edit and Play, place not saved, Rojo not used)
+
+- Upload: `world-v7-declutter.fbx` -> Model 118362972104444 (operation 1cfa104d-...), readback in Edit
+  (`eggs-split/upload-readback.json`). The 2 renames keep their live ids (this upload's copies recorded, unused).
+- Staged with `--stage-native-rebuild`; staged XML/Lua differ from canonical only in the 10 parts (Lua by meaning:
+  halo keeps region NestHalo and its pulse; meshParts 99 -> 103).
+- Native rebuild on an unparented clone of `ServerStorage.WorldAssets` (the place's own tree untouched): 4 ApplyMesh,
+  4 new parts cloned from their sibling + ApplyMesh, 2 renamed; every property checked against the staged XML.
+  Export 326,424 bytes, sha 49973794..., out through the Studio log (`WorldAssetsNative-eggs-split.rbxm`).
+- Promoter (`eggs-split/promote_native_eggs_split.py`, evidence `native-promotion.json`): counts +4/+4/0, 165 collision
+  buffers byte-identical, 197 untouched instances identical apart from engine noise (float32 placement rounding, the
+  engine-only SurfaceAppearance TexturePackContent this Studio adds, cached mass fields on the one unchanged-buffer
+  part); proof inputs moving exactly the six expected. `world_native_collision.py --check` PASS.
+- Collision (round trip deserialized from the export): 21,452 rays down, 1,344 sideways, 841 character blockcasts.
+  Station: no holes; the steps now match the Blender surface exactly (4.350 vs 4.35), where the old shared bake floated
+  0.08-0.10 above and bulged 0.5 stud past the top riser. Elsewhere one 5x5 stud patch near (-17, -13): the re-baked
+  shared Stations marble reads up to 0.17 below the surface (91 of ~2,700 samples at 0.1 grid; the old bake was right).
+  Over the 0.05 tolerance; precise decomposition of a different mesh, not fixable by settings. Flagged for the walk test.
+- Play (pack and data swapped in, then restored byte-exact): a character climbs the station from W, S and E to its top
+  (4.88) on both packs and stops at the same spots (the nest); the halo pulses.
+- Captures at ClockTime 14, old vs new (`eggs-split/captures/`): overview, station, seam close-up. Differences are edge
+  shimmer across the whole frame (untouched stairs and roots too) and the animated lantern glow.
