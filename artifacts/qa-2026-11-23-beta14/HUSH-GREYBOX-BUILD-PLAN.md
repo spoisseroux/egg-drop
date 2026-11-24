@@ -449,3 +449,10 @@ re-export merges into feat** (rebase first), before probe P1.
 the sightline from home at max zoom, the camera clamp on the greybox, a real crossing each way with the pet, the
 evacuation, respawn, music and grade, memory). Translations: no new player text; run the export and sync anyway at
 publish.
+
+**Code review (2026-11-24: GO WITH CHANGES, live safety holds), fixed:** (1) closing also carries any pet still in the
+Hush whose owner is not there (a reset or respawn home) to the evacuation landing (`HushHost:rescuePet`, spec'd);
+(2) the island bounds never return a player to a recorded safe spot that is itself off the island now (a Hush spot
+after the Hush closed): the arrival spawn instead (spec'd); cosmetic: `Hush.ClientTimeout` = StreamWait + FadeOut +
+1.5 s (3.85 s), so a streamed arrival never fades in early. Runner 53/53. **For the art pass (not fixed):** Hush parts
+carry `WorldMesh`, so pet paths ignore the walls and clumps.

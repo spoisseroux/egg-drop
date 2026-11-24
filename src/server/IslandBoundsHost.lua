@@ -148,7 +148,8 @@ function Host:rescue(board,view,rec,now)
 	if view.seated or view.anchored then return end
 	if now-rec.returnedAt<Bounds.Cooldown or now-rec.externalAt<Bounds.Quiet then return end
 	local target
-	if rec.safe then
+	-- Code review 2: a recorded spot that is itself gone now (in the Hush after it closed) is never a target.
+	if rec.safe and not Bounds.gone(rec.safe,self.regions)then
 		local look=Vector3.new(view.look.X,0,view.look.Z)
 		local at=rec.safe+Vector3.new(0,Bounds.Lift,0)
 		target=if look.Magnitude>1e-3 then CFrame.lookAt(at,at+look.Unit)else CFrame.new(at)

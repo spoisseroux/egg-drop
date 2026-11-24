@@ -168,6 +168,23 @@ return function(server)
 		c.host:arrived({UserId=99},arrival)
 	end)
 
+	test("code review 2: a safe spot in the Hush is never used once the Hush is closed; the arrival spawn instead",function()
+		local Hush=require(Shared.Hush)
+		local regions=Hush.BoundsRegions
+		local c=rig()
+		c.host.d.regions=function()return regions end
+		local p,b=c.player(1)
+		c.at(0)
+		local arrival=Hush.Doors.north.arrival.Position+Vector3.new(0,3,0)
+		b.view.position=arrival;c.host:arrived(p,arrival);c.at(1)
+		assert(c.safe(p)==arrival)
+		-- The Hush closes but this player's evacuation failed: they are still out there, now off the island.
+		regions=nil
+		c.at(4)
+		assert(#c.placed==1 and c.placed[1].cframe==SPAWN)
+		c.at(8);assert(#c.placed==2 and c.placed[2].cframe==SPAWN) -- the fake does not move: again the spawn, never the Hush
+	end)
+
 	Bounds.inject(nil)
 	return{passed=#cases,cases=cases}
 end

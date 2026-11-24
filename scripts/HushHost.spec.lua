@@ -49,6 +49,7 @@ return function(server)
 			stream=function(_,position)table.insert(c.log,"stream");c.streamedTo=position end,
 			carry=function(board,spot)table.insert(c.log,"carry");table.insert(c.carried,{board=board,spot=spot});return true end,
 			arrived=function(player,spot)table.insert(c.log,"arrived");c.arrivedAt[player]=spot end,
+			petPosition=function(actor)return actor.at end,
 			warn=function(text)table.insert(c.warnings,text)end})
 		function c.player(id,at)
 			local p={UserId=id}
@@ -256,6 +257,30 @@ return function(server)
 		assert(c.last(p).kind=="evacuated"and c.last(q).kind=="evacuated"and c.last(r)==nil)
 		assert(c.arrivedAt[p]and c.arrivedAt[q]and #c.carried==2)
 		assert(not c.host.open and c.blocker.CanCollide==true and not c.room:FindFirstChild(Hush.Model))
+		Hush.inject(nil)
+	end)
+
+	test("code review 1: closing also brings out a pet left in the Hush by an owner who reset home; never one twice, never one at home",function()
+		Hush.inject(ON)
+		local c=rig();c.tick()
+		local p,b=c.player(1,LAWN)                 -- respawned home; the pet is still on the Hush floor
+		c.garden.actors[1]={at=Hush.at(0,60,0)}
+		local q,b2=c.player(2,Hush.at(5,60,3))     -- in the Hush with the pet: evacuated, the pet with them
+		c.garden.actors[2]={at=Hush.at(6,60,0)}
+		local r=c.player(3,LAWN)                   -- home with the pet at home
+		c.garden.actors[3]={at=Vector3.new(41,4,50)}
+		c.player(4,LAWN)                           -- no pet out
+		Hush.inject(OFF);c.tick()
+		assert(#c.carried==2,#c.carried)
+		local seen={}
+		for _,m in ipairs(c.carried)do
+			seen[m.board]=true
+			assert(Hush.regionAt(m.spot)==nil and m.spot.Z>-90 and m.spot.Z<-75,tostring(m.spot))
+		end
+		assert(seen[b]and seen[b2])
+		assert(#c.placed==1 and c.placed[1].board==b2) -- only the owner who was inside is moved
+		assert(c.last(p)==nil and c.last(r)==nil)
+		assert(not c.host.open and not c.room:FindFirstChild(Hush.Model))
 		Hush.inject(nil)
 	end)
 

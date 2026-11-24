@@ -25,11 +25,12 @@ Hush.Duck="hush"            -- BoardAudio duck name: the world music is out whil
 Hush.FadeOut=.35       -- the client's fade to black; the server moves this long after the request arrives
 Hush.FadeIn=.5
 Hush.GroundWait=2      -- the client holds black at most this long for the far side to be under its feet
-Hush.ClientTimeout=3   -- no answer: the client fades back in
 Hush.Cooldown=1.5      -- between two passages of one player
 Hush.Slack=3           -- studs the server's view of the root may sit outside a trigger box
 Hush.Rate=4            -- packets a second per player; more are dropped
 Hush.StreamWait=2      -- RequestStreamAroundAsync timeout when streaming is on
+-- No answer in this long: the client fades back in. Covers the server's stream wait and fade, plus 1.5 s of round trip.
+Hush.ClientTimeout=Hush.StreamWait+Hush.FadeOut+1.5
 Hush.MaxErrors=3       -- errors before the host gives up (evacuates, closes, restores the blocker)
 Hush.Tick=.1           -- the host's step
 Hush.EffectsEvery=.5   -- the client's region pass (grade, the duck refreshed for DuckFor seconds)

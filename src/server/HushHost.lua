@@ -17,13 +17,15 @@ local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Hush=require(Shared.Hush)
 local Rows=require(Shared.HushGreybox)
+local Activity=require(Shared.GardenActivity)
 
 local Host={};Host.__index=Host
 
 -- d: boards (player -> board), remotes (Folder), room() -> EggDropLounge, garden (actors), carry(board, spot) -> bool,
 -- arrived(player, rootPosition) (island bounds), moved(player) (Lounge.moved: bounds quiet when arrived is absent).
 -- Specs may replace clock, heartbeat, remote, spawn, wait, read(board) -> view, place(board, view, cframe),
--- ground(position) -> y?, streaming() -> bool, stream(player, position), warn.
+-- ground(position) -> y?, streaming() -> bool, stream(player, position), warn, petPosition(actor) -> Vector3? (default:
+-- the garden's shared path sampled at server time).
 function Host.mount(d)
 	if not Hush.ceiling()then return nil end
 	local self=setmetatable({d=d,records={},open=false,errors=0,dead=false,tickAt=-math.huge,slots={},warned={}},Host)
@@ -36,6 +38,10 @@ function Host.mount(d)
 	self.streaming=d.streaming or function()return workspace.StreamingEnabled==true end
 	self.stream=d.stream or function(player,position)pcall(player.RequestStreamAroundAsync,player,position,Hush.StreamWait)end
 	self.warn=d.warn or warn
+	self.petPosition=d.petPosition or function(actor)
+		local sample=Activity.sample(actor,workspace:GetServerTimeNow())
+		return sample and sample.position
+	end
 	local remote=d.remote
 	if not remote then
 		remote=d.remotes:FindFirstChild(Hush.Remote)or Instance.new("RemoteEvent")
@@ -153,10 +159,20 @@ function Host:openUp()
 end
 function Host:close()
 	if self.open then
+		local moved={}
 		for player,board in pairs(self.d.boards)do
 			if not board.closing then
-				local ok,problem=pcall(self.evacuate,self,player,board)
-				if not ok then pcall(self.warn,"[Hush] evacuate: "..tostring(problem))end
+				local ok,result=pcall(self.evacuate,self,player,board)
+				if not ok then pcall(self.warn,"[Hush] evacuate: "..tostring(result))
+				elseif result then moved[player]=true end
+			end
+		end
+		-- Code review 1: a pet still in the Hush whose owner is not (a reset, a respawn home) comes out too, or it would be
+		-- left on nothing once the model goes and the pet floors close.
+		for player,board in pairs(self.d.boards)do
+			if not board.closing and not moved[player]then
+				local ok,problem=pcall(self.rescuePet,self,player,board)
+				if not ok then pcall(self.warn,"[Hush] pet: "..tostring(problem))end
 			end
 		end
 	end
@@ -307,6 +323,20 @@ function Host:evacuate(player,board)
 	self:move(player,board,view,Hush.Evacuation.arrival,Hush.Evacuation.landing,"evacuation")
 	self:fire(player,{kind="evacuated"})
 	return true
+end
+-- Closing: this player's pet, if it is in the Hush, to the evacuation landing.
+function Host:rescuePet(player,board)
+	local actor=self.d.garden and self.d.garden.actors[player.UserId]
+	if not actor then return false end
+	local at=self.petPosition(actor)
+	if typeof(at)~="Vector3"or Hush.regionAt(at)~="hush"then return false end
+	local slot=(self.slots.evacuation or 0)%#Hush.ArrivalOffsets+1
+	self.slots.evacuation=slot
+	local arrival=Hush.Evacuation.arrival
+	local spot=Hush.Evacuation.landing+arrival:VectorToWorldSpace(Hush.ArrivalOffsets[slot])
+	local y=self.ground(spot)
+	if type(y)=="number"then spot=Vector3.new(spot.X,y+.025,spot.Z)end
+	return self.d.carry~=nil and self.d.carry(board,spot)==true
 end
 -- The player left: forget them.
 function Host:leave(board)
