@@ -214,6 +214,8 @@ function methods:Clear()self.props.cleared=(self.props.cleared or 0)+1 end
 function methods:FireClient(player,packet)table.insert(self.sent,{player=player,packet=packet})end
 function methods:FireAllClients(packet)table.insert(self.sent,{packet=packet})end
 function methods:GetServerTimeNow()return 0 end
+-- WorldMotion's movers (beta 14 chimes): a bulk move writes each CFrame.
+function methods:BulkMoveTo(parts,frames)for i,p in ipairs(parts)do p.CFrame=frames[i]end end
 Instance={new=function(class,parent)local i=instance(class);if parent then i.Parent=parent end;return i end}
 workspace=instance("Workspace")
 

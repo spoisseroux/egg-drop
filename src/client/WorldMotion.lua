@@ -34,6 +34,27 @@ function Motion.pose(kind,rest,pivot,amp,period,phase,t)
 	return rest
 end
 
+-- Beta 14 QA W3 row 2 (WORLD-AND-NEST-LOOK section 1): with the Alive `scene` switch on (the beta place and Studio:
+-- its ceiling), the five arrival chimes swing along the wind about their hanging point:
+-- angle = (3 + 11 g) * sin(2 pi .45 t + 1.3 k) degrees, g the gust (or the big breath) where they hang, k the chime's
+-- number; written at 15 Hz (8 at budget level 1) and only within 70 studs of the camera. Off: today's sway exactly.
+-- [check] in Studio that W7_Chime_1..5 are separate movers after the re-export (Fable saw them still); their saturation
+-- x .75 is the island session's (a palette texture).
+Motion.Chime=table.freeze({rest=3,gust=11,hz=.45,phase=1.3,range=70,rate=15,slowRate=8,sceneEvery=1})
+local Wind=require(script.Parent.Wind)
+local Side=Vector3.new(-Wind.Direction.Z,0,Wind.Direction.X)
+function Motion.chimeNumber(region)
+	if type(region)~="string"or region:sub(1,6)~="Chime_"then return nil end
+	return tonumber(region:sub(7))
+end
+function Motion.chimePose(rest,pivot,g,t,k)
+	local C=Motion.Chime
+	g=if type(g)=="number"and g==g then math.clamp(g,0,1)else 0
+	local angle=math.rad((C.rest+C.gust*g)*math.sin(TAU*C.hz*t+k*C.phase))
+	local at=pivot or rest.Position
+	return CFrame.new(at)*CFrame.fromAxisAngle(Side,angle)*CFrame.new(-at)*rest
+end
+
 function Motion.gustGain(kind,region)
 	if kind=="flag"then return Motion.FlagGust end
 	if kind~="sway"or type(region)~="string"then return nil end
@@ -64,6 +85,7 @@ function Motion:bind(room)
 					pivot=part:GetAttribute("WorldPivot"),amp=part:GetAttribute("WorldMotionAmp")or 0,
 					period=math.max(part:GetAttribute("WorldMotionPeriod")or 1,.1),phase=part:GetAttribute("WorldMotionPhase")or 0,
 					gain=Motion.gustGain(kind,part:GetAttribute("WorldRegion")),
+					chime=if kind=="sway"then Motion.chimeNumber(part:GetAttribute("WorldRegion"))else nil,chimeAt=0,
 					far=part:GetAttribute("WorldMotionFar")==true,transparency=part.Transparency})
 			end
 		end
@@ -84,6 +106,22 @@ end
 
 function Motion:reduced()
 	return GuiService.ReducedMotionEnabled
+end
+-- The Alive `scene` switch, read at most once a second (false on the live place: the ceiling). Specs replace it.
+function Motion:sceneOn(t)
+	if self.sceneAt and t<self.sceneAt then return self.scene==true end
+	self.sceneAt=t+Motion.Chime.sceneEvery
+	local ok,on=pcall(function()
+		local Alive=self.alive or require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Alive"))
+		return Alive.on("scene")
+	end)
+	self.scene=ok and on==true
+	return self.scene
+end
+-- Budget level 1 or more (the chimes' slower rate).
+function Motion:slow()
+	local ok,level=pcall(function()return require(script.Parent.AliveBudget).level()end)
+	return ok and type(level)=="number"and level>=1
 end
 
 function Motion:rest()
@@ -119,10 +157,23 @@ function Motion:apply(t)
 	local camera=workspace.CurrentCamera
 	local eye=camera and camera.CFrame.Position
 	local parts,frames={},{}
+	local scene=self:sceneOn(t)
 	for _,e in ipairs(self.entries)do
 		local part=e.part
 		if not part.Parent then continue end
 		if eye and not e.far and(e.rest.Position-eye).Magnitude>Motion.Range+part.Size.Magnitude*.5 then continue end
+		if e.chime and scene then
+			-- Beta 14 W3 row 2: the chime's own swing, at its own rate, near the camera only.
+			if t<e.chimeAt or(eye and(e.rest.Position-eye).Magnitude>Motion.Chime.range)then continue end
+			e.chimeAt=t+1/(if self:slow()then Motion.Chime.slowRate else Motion.Chime.rate)
+			local gust=0
+			if self.gust then
+				local ok,value=pcall(self.gust,e)
+				if ok then gust=value else self.gust=nil end
+			end
+			table.insert(parts,part);table.insert(frames,Motion.chimePose(e.rest,e.pivot,gust,t,e.chime))
+			continue
+		end
 		if e.kind=="pulse"then
 			part.Transparency=e.transparency+e.amp*(.5+.5*math.sin(TAU*(t/e.period+e.phase)))
 		else

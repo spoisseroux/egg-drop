@@ -37,7 +37,7 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient", "DashSheets", "DeckResultsLayout", "FocusRow", "TipChime",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
           "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit",
-          "HushClient", "DashLine", "WorldFeel", "LifeSceneSim", "LifeScene"]
+          "HushClient", "DashLine", "WorldFeel", "LifeSceneSim", "LifeScene", "WorldMotion"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -66,7 +66,9 @@ def client_modules():
                     "PetFace.lua", "PetExpression.lua", "PetIdleBeats.lua", "PetCoo*.lua", "CareFeedbackData.lua",
                     "PetNightSurfaces.lua", "PetMaterial*.lua",
                     # The Hush: the passage's fade and the region effects.
-                    "HushClient.lua"):
+                    "HushClient.lua",
+                    # Beta 14 garden life: the arch chimes (WorldMotion).
+                    "WorldMotion.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
