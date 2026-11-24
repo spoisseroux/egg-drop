@@ -30,7 +30,7 @@ Nest.Charm="nest"               -- the Nest Charm: an earned rule (n >= WeekLeng
 -- plaza's middle, same facing. PENDING Studio probe P1 (scripts/probe_nest_spot.luau): if the station's base edge is
 -- nearer than 2.6 to the root, slide along e (at most to (-23.79, -10.00)); if it fails outright, back to spot A
 -- (-17.5, 4.07, -2.5). The position is never saved, so a tucked egg simply shows here.
-Nest.Spot=Vector3.new(-25.27,4.07,-9.80)
+Nest.Spot=Vector3.new(-25.12,4.07,-9.82) -- E1 slid .15 along e (probe P1, STUDIO-CHECK-R5: station marble 2.55 -> 2.68)
 Nest.Facing=Vector3.new(-30,4.07,-4)
 -- Pets keep Block / 2 + .35 (GardenWalkability's margin) = 2.45 studs off the middle: over the rim and the straw, at
 -- most grazing the see-through fringe's tips (2.57). The prompt, the Show me trail's end and a catch-up landing beside

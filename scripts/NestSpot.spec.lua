@@ -26,10 +26,10 @@ return function(server)
 	local spot=Nest.Spot
 	local Hub=Layout.Landmarks.Hub
 
-	test("E1: (-25.27, 4.07, -9.80) at the Eggs station's east foot, 5.85 from it, 7.48 from the marble circle's middle, facing it",function()
-		assert(spot==Vector3.new(-25.27,4.07,-9.80),tostring(spot))
+	test("E1 slid .15 along e (probe P1): (-25.12, 4.07, -9.82) at the Eggs station's east foot, 6.00 from it, 7.59 from the marble circle's middle, facing it",function()
+		assert(spot==Vector3.new(-25.12,4.07,-9.82),tostring(spot))
 		local S=Layout.Stations.Eggs.Position
-		assert(math.abs(flat(spot,S.X,S.Z)-5.85)<.05 and math.abs(flat(spot,-30,-4)-7.48)<.05)
+		assert(math.abs(flat(spot,S.X,S.Z)-6.00)<.05 and math.abs(flat(spot,-30,-4)-7.59)<.05)
 		-- Fable's (-30, -4), not the layout's Hub (-30, 4): the Studio probe put the Hub facing's prompt on a trim strip.
 		assert(Nest.Facing==Vector3.new(-30,4.07,-4)and Hub==Vector2.new(-30,4))
 		assert(Nest.Block==4.2 and Nest.Front==2.6)
