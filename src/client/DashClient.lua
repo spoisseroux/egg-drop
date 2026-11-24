@@ -289,11 +289,17 @@ function Client:askLeave(action)
 	local Confirm=require(script.Parent.ConfirmDialog)
 	if Confirm.isOpen()then return true end
 	if self.core then self.core:loseAll()end
-	self.asked=Confirm.ask({title=UICopy.get("dash.ask.title"),line=UICopy.get("dash.ask.line"),confirm=UICopy.get("dash.ask.yes"),cancel=UICopy.get("dash.ask.no"),
-		onConfirm=function()
+	-- Fable R5 item 7: the safe choice is the primary key on the right (Keep racing: Enter / A, the gamepad's first
+	-- focus; B, Esc and the shade keep racing too); Leave is the quiet alt key (X / ButtonX), ignored AltAfter after
+	-- it opens, and re-checks the seat is still this race's before it leaves.
+	local seat=self.seat
+	self.asked=Confirm.ask({title=UICopy.get("dash.ask.title"),line=UICopy.get("dash.ask.line"),confirm=UICopy.get("dash.ask.no"),
+		onConfirm=function()end,
+		alt={text=UICopy.get("dash.ask.yes"),after=Client.AltAfter,onSelect=function()
+			if not self.isOpen or self.seat~=seat or seat.phase=="done"then return end
 			self:leave()
 			if action then action()end
-		end})
+		end}})
 	return self.asked~=nil
 end
 function Client:leave()

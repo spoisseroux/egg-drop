@@ -337,7 +337,7 @@ return function(client,offline)
 			deck=function(r)r.room.target="Board";r.frame();assert(r.requests[#r.requests].kind=="leave")end,
 			error=function(r)r.client.seat.predict.runner=nil;r.frame();assert(r.client.errors==1)end,
 			drive=function(r)r.room.pet.dashState={};r.frame();assert(r.client.errors==1)end,
-			leave=function(r)assert(r.client:askLeave(function()r.acted=true end));assert(r.room.held,"asked first");asked.onConfirm();assert(r.acted and r.requests[#r.requests].kind=="leave")end,
+			leave=function(r)assert(r.client:askLeave(function()r.acted=true end));assert(r.room.held,"asked first");assert(asked.confirm==UICopy.get("dash.ask.no")and asked.alt.text==UICopy.get("dash.ask.yes")and asked.alt.after==Client.AltAfter,"Fable R5 7: Keep racing is the primary");asked.onConfirm();assert(r.room.held and not r.acted,"Keep racing stays");asked.alt.onSelect();assert(r.acted and r.requests[#r.requests].kind=="leave")end,
 			stale=function(r)now+=200;r.frame();assert(r.requests[#r.requests].kind=="leave")end,
 			newRace=function(r)r.fire({kind="joined",raceId="other",seat=1,mode="fun"});r.fire({kind="refused",raceId="other",reason="Far"})end,
 		})do
