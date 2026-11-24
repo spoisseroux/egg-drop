@@ -70,6 +70,9 @@
       },
       "EggMachine": {
         "$path": "assets/world/EggMachine.rbxmx"
+      },
+      "NestLandmark": {
+        "$path": "assets/world/NestLandmark.rbxmx"
       }
     },
     "ServerScriptService": {
