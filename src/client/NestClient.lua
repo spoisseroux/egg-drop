@@ -827,9 +827,10 @@ function Client:poseLandmark(dt,look,tucked,reduced)
 	end
 end
 -- The landmark's pill and peek: a fixed world offset from the egg's anchor, `height` over the root and PillForward in
--- front of it (Fable R10 2).
+-- front of it (Fable R10 2). StudsOffsetWorldSpace is in the adornee's object space (Studio R11: a world vector put the
+-- pill 1 behind the root, under the awning leaf); the anchor stands on the root's frame, so this is nest-local.
 function Client:landmarkOffset(height)
-	return self.root:VectorToWorldSpace(Vector3.new(0,height-(self.eggBase or Land.EggBase),-Land.PillForward))
+	return Vector3.new(0,height-(self.eggBase or Land.EggBase),-Land.PillForward)
 end
 -- Does the shared landmark's root (NestRoot) differ from the one this nest was drawn on?
 function Client:landmarkMoved()

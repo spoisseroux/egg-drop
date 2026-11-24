@@ -46,3 +46,46 @@ on locally). 10 avatar standing in the bowl. Not captured: the "Hatch!" pin (Alw
 
 At the end: Studio in Edit; Rojo disconnected in the plugin and only my serve (34872) stopped; the 2 `ZZSpecs`
 folders (329 instances) removed from Edit, 0 left; the foliage probe clones removed.
+
+---
+
+# R11 recheck (Opus, 2026-11-24)
+
+`feat/egg-drop-arcade-polish` at **646dfa7**, Rojo on 34872, Studio 53800d7d. Before Play, Edit held the repo's LF byte
+lengths: NestLandmark 8,980, NestLandmarkData 1,964, EggCorner 9,370, GardenWalkability 5,174, server init 150,820,
+EggCornerWorld 23,131, GardenState 31,671, client init 319,067, NestClient 79,857 (80,031 after the fix, confirmed in Edit
+before Play 2). Play 1 found the pill bug; Play 2 ran the fix (fresh save, Bear by the welcome remotes, ack). States
+forged as in R10 (`NestEvent:FireClient`); Tuck in was a real prompt. Nothing saved or published. Captures in `studio/r11/`.
+
+## Fix committed (offline runner 66/66)
+
+| What |
+|---|
+| `NestClient:landmarkOffset` returns the nest-local vector `(0, height - 2.15, -1.0)`. **`StudsOffsetWorldSpace` is in the adornee's object space**, not world space. The egg anchor stands on the root's frame, so the old world vector (root:VectorToWorldSpace) was turned twice: the pill sat at nest-local **(0.14, 5.2, +0.99)**, 1 stud *behind* the root, under the awning leaf (leaf Z 0.17 to 2.50), and read "Ha[leaf]n 8 h" (00a, 00b). Probe (00c): a billboard on a part at (0.75, 5.5, -1) drew over the leaf; one on the egg anchor with the world vector for (0.35, 5.5, -1) drew at X -0.2, Z +1.04. The Peek tile uses the same offset, so it is fixed too (not captured). `NestClient.spec` now reads the offset through the anchor's frame. |
+
+Same bug class, not checked: `PetAffection` sets `StudsOffsetWorldSpace` from `body.CFrame.RightVector` (a world
+vector on a rotated adornee).
+
+## Results (Play 2, after the fix)
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Ring arc on marble | **PASS.** 25 segments, angles -97.5 to +97.5, max reach 3.08. 675 samples: **512 marble, 163 trim, 0 grass**. Sweep every 0.5 deg over +-97: r 3.0 and r 3.075 (outer edge) **0 off**; r 3.15 (outside the ring) off only at 96.5 to 97. The west tip sits just inside the marble edge (09). |
+| 2 | Bowl, feet, mat, height | **PASS.** Root (-31, **4.1275**, -11) = the marble under the spot (4.1275; R10 was 0.057 low). Body bottom 4.128, Collider bottom 4.127. Feet and mat on the marble, no orange shards (04a, 10, 10b). Not told apart: whether the boot ray or the 3 s retry seated it. |
+| 3 | Pill, every state | **PASS after the fix** (FAIL before). Readable at play distance and close: untucked "Hatches in 8 h" (04a, 04b), tucked "Tucked in! Come back in 8 hours to hatch a gift." (05), rocking "Hatches in 2 h" (06b), ready "Hatch me!" gold (07). `AlwaysOnTop` false. Ray probe against precise copies of Body, Awning and Moon: **0/70** pill samples blocked from each of 5 cameras (nest-local (0, 6.5, -11), (0, 5.5, -8), (+-3, 6, -9), (0, 8, -14)). |
+| 3 | Egg scale per state | **PASS.** Top shell size small 1.49, rocking 1.76, ready 1.87: ratios **1.18** (1.9/1.6 = 1.19) and **1.26** (2.0/1.6 = 1.25). Box tops (rotated box corners, so high): small 4.29 to 4.37, rocking 4.86, ready 5.28. In 07 the ready egg's top is just under the pill, no overlap. |
+| 3 | Tucked + rocking under the quilt | **PASS, one note.** Draped quilt Y 2.19 to 3.11, half width 1.19; the egg reads tucked (06b). Close up (06c) the rocking shell touches the quilt's back collar on the left. That is Fable's call (her R10 1 remedy: scale the draped quilt's X and Z). |
+| 4 | Empty landmark | **PASS.** Fresh player (Board mode, no egg): `EggDropSleepyNestIdle` stands. Forged empty after `/hour at 3000`: own nest folder gone, idle on; MoonLight **on**, brightness 0.60, range 9, `#FFE9A6`, Moon tint `#FFE9A6` (`RestColor` white); sway over 20 s: moon **0 to 1.87 deg**, awning **0.23 to 1.98 deg**; sign present, both faces blank with the painted moon; folded quilt on the rim (06a). |
+| 5 | Pet on the mat | **PASS.** With the player 2.7 from the mat, the Bear walked onto it at **13.3 s** (Play 2 rerun: 14.8 s). It rested at nest-local (-2.93, 0.27, -2.08), **0.04** from BearSpot, for **6 s** (the garden's nook rest), then went back to its follow spot. A second visit came at 34.7 s: 2 visits in 72 s (the nook timer is 18 s from each approach). Closest to the bowl centre **3.44** (collider r 2.4), never on the bowl. It sits (IdleBeat `sit`); it does not curl (10). SnackWhy only "refused: fruit N studs off (notice 8)", unrelated. |
+| 6 | Handoff idle <-> own nest | **PASS.** Idle to own: NestSign (0, 1.15, -2.45) tilt 10 and MoonLamp (2, 4.25, -0.5) identical to 0.001 from the first frame; egg anchor at (0, 2.15, 0) on `NestRoot`. Own to idle: the idle folder mounts in the same frame, sign identical, awning continuous. **Minor:** the moon steps 0.06 (pivot X 2.055 to 2.116) as its sway phase restarts. The quilt flips draped to folded at once (expected with no egg). |
+| 7 | Output log | **PASS.** Known lines only (ConfigService keys, Assistant notices, EditableImage, `Player:Move`, 203785492) plus one error from my own probe. Nothing from EggCornerWorld, NestClient or NestLandmark. |
+
+## Captures (`studio/r11/`)
+
+00a / 00b before the fix: pill behind the leaf (play distance, close). 00c billboard offset probe. 01 / 03 plaza pair
+from the path mouth (-20, 13), noon / dusk. 04a / 04b untucked, noon (play distance, close). 05 tucked small, noon.
+06a empty, dusk (moon lit, blank sign). 06b / 06c tucked + rocking (close, quilt). 07 ready, noon, close. 09 ring from
+above. 10 Bear on the mat. 10b mat and feet from the side.
+
+At the end: Studio in Edit. The Rojo plugin was disconnected and only my serve (34872) was stopped. The 2 `ZZSpecs`
+folders (329 instances) were removed from Edit, 0 left.
