@@ -51,12 +51,12 @@ src/client/CompanionsHub.lua,651, along,fragment (sentence built from parts),
 src/client/CompanionsHub.lua,651,Follow,,
 src/client/ConfirmDialog.lua,98,Alt,,
 src/client/ConfirmDialog.lua,98,Cancel,,yes
-src/client/DashClient.lua,340,Fun,,
-src/client/DashClient.lua,341,Stats,,yes
-src/client/DashClient.lua,342,Trial,,
-src/client/DashClient.lua,824,Again,,
-src/client/DashClient.lua,827,Done,,yes
-src/client/DashClient.lua,901,dash-line,,
+src/client/DashClient.lua,352,Fun,,
+src/client/DashClient.lua,353,Stats,,yes
+src/client/DashClient.lua,354,Trial,,
+src/client/DashClient.lua,836,Again,,
+src/client/DashClient.lua,839,Done,,yes
+src/client/DashClient.lua,913,dash-line,,
 src/client/DashHud.lua,171,Place,,
 src/client/DashHud.lua,174,Digits,,
 src/client/DashHud.lua,177,Word,,
@@ -633,4 +633,4 @@ src/client/init.client.lua,3736,Not finished yet,,
 src/client/init.client.lua,3736,New quests arrived,,
 src/client/init.client.lua,3736,Try again,,
 src/client/init.client.lua,4387,%s\n%d/%d Stars,,
-src/client/init.client.lua,4721,nest:,,
+src/client/init.client.lua,4743,nest:,,
