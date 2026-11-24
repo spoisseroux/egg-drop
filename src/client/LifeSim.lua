@@ -975,15 +975,20 @@ end
 -- reach of a resting one bats it once, in place (that client's view only). Nothing to collect, no remote. Angles in
 -- degrees; a pose's rotation is ImageLabel.Rotation (clockwise on screen): the camera's right turns world travel
 -- into screen spin.
+-- Beta 14 QA D2 / B5 (WORLD-AND-NEST-LOOK 7): the fruit hangs with its top third inside the leaves of the Aero kit's
+-- crowns (read from WorldAeroKit at runtime, Sim.kitCrowns): the stem tip `down` .62 of the height under the crown's top
+-- and `out` .30 of its width out, kept inside the crown's ellipsoid at `stemIn` of its radius there; the image (now with
+-- a drawn stem, 1.1 x 1.5 studs) hangs `hang` .50 under it. More fall (`chance` .5) and they rest longer (`rest` 30).
+-- [check] on the reshaped crowns: tune `down` until the top third is hidden on the three most-seen lime trees.
 Sim.Fruit=table.freeze({
-	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.36,down=.80,hang=.64,pool=16,reach=90,
+	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.30,down=.62,hang=.50,stemIn=.82,pool=16,reach=90,
 	swayMin=3,swayGust=12,swayHz=2.2,
-	dropAt=.8,chance=.35,
+	dropAt=.8,chance=.5,
 	tug=20,letGo=.15,fall=.55,drift=1.2,turn=180,
 	bounces=table.freeze({table.freeze({height=.9,time=.34,drift=.5}),table.freeze({height=.3,time=.2,drift=.2})}),
 	squash=.06,squashW=1.15,squashH=.85,
 	rollMin=1.6,rollMax=2.4,rollTurn=25,roll=.9,spin=150,
-	rest=18,lift=.5,lean=12,rock=6,rockAt=.6,rockHz=1.1,
+	rest=30,lift=.5,lean=12,rock=6,rockAt=.6,rockHz=1.1,
 	fade=1.2,quick=.3,shrink=.7,
 	regrow=45,grow=1.5,overshoot=1.12,
 	below=14,near=6,find=3,kerb=2,
@@ -992,18 +997,54 @@ Sim.Fruit=table.freeze({
 local F=Sim.Fruit
 function Sim.fruitKey(i,k)return i*8+k end
 
--- Crown i's filled slots: {k, key, stem} with the stem tip just inside the crown's lower skirt (FRUIT-LOOK 2).
+-- The Aero kit's crowns from its data module (beta 14 B5; never from client-built parts, architect r1): {position, size,
+-- cframe, pivot, tree, mesh} by `crownFrame` (AeroKit.crownFrame), only the mesh kinds in `kinds` (a set; nil: all),
+-- sorted by tree name so the index (the grove's seed) is stable. Throws on malformed data: the caller pcalls and falls
+-- back to LifeSpots.Crowns.
+function Sim.kitCrowns(data,crownFrame,kinds)
+	assert(type(data)=="table"and type(data.crowns)=="table"and type(data.meshes)=="table","kit data: no crowns or meshes")
+	assert(type(crownFrame)=="function","kit data: no crownFrame")
+	local function triple(v)return type(v)=="table"and type(v[1])=="number"and type(v[2])=="number"and type(v[3])=="number"end
+	local out={}
+	for index,crown in ipairs(data.crowns)do
+		assert(type(crown)=="table"and type(crown.mesh)=="string"and type(crown.tree)=="string","kit crown "..index)
+		local mesh=data.meshes[crown.mesh]
+		assert(type(mesh)=="table","kit crown "..index..": no mesh "..crown.mesh)
+		if not kinds or kinds[mesh.kind]then
+			assert(triple(crown.pivot)and type(crown.scale)=="number"and type(crown.yaw)=="number","kit crown "..index..": pivot, scale, yaw")
+			assert(triple(mesh.size)and triple(mesh.pivotToCentre),"kit mesh "..crown.mesh..": size, pivotToCentre")
+			local cframe,size,pivot=crownFrame(crown,mesh)
+			assert(typeof(cframe)=="CFrame"and typeof(size)=="Vector3"and typeof(pivot)=="Vector3","kit crown "..index..": frame")
+			table.insert(out,table.freeze({position=cframe.Position,size=size,cframe=cframe,pivot=pivot,tree=crown.tree,mesh=crown.mesh}))
+		end
+	end
+	table.sort(out,function(a,b)return a.tree<b.tree end)
+	return out
+end
+
+-- Crown i's filled slots: {k, key, stem, local}. The stem tip `down` of the height under the crown's top and `out` of
+-- its width out (FRUIT-LOOK 2; beta 14 B5), in the crown's own frame (crown.cframe: a kit crown, yawed; else its axes),
+-- pulled in so it lies inside the crown's ellipsoid at `stemIn` of its radius at that height. `local` is the tip in the
+-- crown's frame (GardenLife moves hanging fruit with the crown's sway from it).
 function Sim.fruitStems(i,crown)
 	local out={}
 	if type(i)~="number"or type(crown)~="table"or typeof(crown.position)~="Vector3"or typeof(crown.size)~="Vector3"then return out end
 	local size=crown.size
-	local top=crown.position+Vector3.new(0,size.Y/2,0)
+	local frame=if typeof(crown.cframe)=="CFrame"then crown.cframe else CFrame.new(crown.position)
+	local hx,hy,hz=size.X/2,size.Y/2,size.Z/2
+	local y=hy-F.down*size.Y
+	local ring=if hy>0 then math.sqrt(math.max(0,1-(y/hy)^2))else 0
 	local base=Wind.hash(i,12)*360
 	for k=1,F.slots do
 		if Wind.hash(i*8+k,11)<F.fill then
 			local a=math.rad(F.angles[k]+base)
-			table.insert(out,table.freeze({k=k,key=Sim.fruitKey(i,k),
-				stem=top+Vector3.new(F.out*size.X*math.cos(a),-F.down*size.Y,F.out*size.X*math.sin(a))}))
+			local x,z=F.out*size.X*math.cos(a),F.out*size.Z*math.sin(a)
+			if ring>0 and hx>0 and hz>0 then
+				local q=math.sqrt((x/(hx*ring))^2+(z/(hz*ring))^2)
+				if q>F.stemIn then x,z=x*F.stemIn/q,z*F.stemIn/q end
+			end
+			local tip=Vector3.new(x,y,z)
+			table.insert(out,table.freeze({k=k,key=Sim.fruitKey(i,k),stem=frame*tip,tip=tip}))
 		end
 	end
 	return out

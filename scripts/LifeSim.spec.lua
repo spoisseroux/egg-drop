@@ -609,11 +609,12 @@ return function(client)
 		return world
 	end
 
-	test("Dewdrops: caps 16/8/0 hanging and 3/2/0 loose; 2 or 3 a crown under the lower skirt, the same every time",function()
+	test("Dewdrops: caps 16/8/0 hanging and 3/2/0 loose; 2 or 3 a crown inside the leaves (beta 14 B5), the same every time",function()
 		for level=0,2 do
 			assert(Sim.cap("fruit",level)==({16,8,0})[level+1]and Sim.cap("loose",level)==({3,2,0})[level+1],"level "..level)
 		end
-		assert(F.pool==16 and F.reach==90 and F.chance==.35 and F.dropAt==.8)
+		assert(F.pool==16 and F.reach==90 and F.chance==.5 and F.dropAt==.8 and F.rest==30)
+		assert(F.down==.62 and F.out==.30 and F.hang==.50 and F.stemIn==.82)
 		local total,twoOrMore=0,0
 		for i,crown in ipairs(Spots.Crowns)do
 			local stems=Sim.fruitStems(i,crown)
@@ -624,18 +625,25 @@ return function(client)
 			local top=crown.position.Y+crown.size.Y/2
 			for j,slot in ipairs(stems)do
 				assert(slot.stem==again[j].stem and slot.key==Sim.fruitKey(i,slot.k),"seeded")
-				assert(near(slot.stem.Y,top-.8*crown.size.Y,1e-4),"just inside the lower skirt")
-				assert(near(Sim.flat(slot.stem,crown.position),.36*crown.size.X,1e-3),"out .36 of the width")
-				-- Hanging, the image centre .64 under the stem tip; a sway swings it downwind and keeps the tip.
+				assert(near(slot.stem.Y,top-.62*crown.size.Y,1e-4),"inside the leaves: .62 under the top")
+				assert(near(Sim.flat(slot.stem,crown.position),.30*crown.size.X,1e-3),"out .30 of the width")
+				-- Hanging, the image centre .50 under the stem tip; a sway swings it downwind and keeps the tip.
 				local still=Sim.fruitHang(slot.stem,0,1)
-				assert(near((slot.stem-still).Magnitude,.64,1e-6)and still.Y<slot.stem.Y)
+				assert(near((slot.stem-still).Magnitude,.5,1e-6)and still.Y<slot.stem.Y)
 				local swung=Sim.fruitHang(slot.stem,15,1)
-				assert(near((slot.stem-swung).Magnitude,.64,1e-6)and(swung-still):Dot(Wind.Direction)>0)
+				assert(near((slot.stem-swung).Magnitude,.5,1e-6)and(swung-still):Dot(Wind.Direction)>0)
 			end
 		end
 		assert(twoOrMore>=#Spots.Crowns*.6,"2 or 3 on most crowns: "..twoOrMore.." of "..#Spots.Crowns)
 		assert(total<=36)
 		assert(Sim.fruitStems(1,nil)[1]==nil and #Sim.fruitStems("x",CROWN)==0)
+		-- A long, narrow crown: the tip is pulled inside its ellipsoid (stemIn of the radius at that height).
+		local thin={position=Vector3.new(0,12,0),size=Vector3.new(10,6,2)}
+		for _,slot in ipairs(Sim.fruitStems(3,thin))do
+			local hy=3;local y=slot.tip.Y;local ring=math.sqrt(1-(y/hy)^2)
+			local q=math.sqrt((slot.tip.X/(5*ring))^2+(slot.tip.Z/(1*ring))^2)
+			assert(q<=F.stemIn+1e-9,"inside the thin crown: "..q)
+		end
 		-- Sway: 3 to 15 degrees, toward the wind; none when still.
 		assert(Sim.fruitSway(1,T0,1,true)==0)
 		for i=0,200 do
@@ -643,6 +651,52 @@ return function(client)
 			assert(math.abs(a)<=15+1e-9)
 			assert(math.abs(Sim.fruitSway(2,T0+i/10,0,false))<=3+1e-9)
 		end
+	end)
+
+	test("Dewdrops on the kit's crowns (beta 14 B5): read from WorldAeroKit by AeroKit.crownFrame, sorted, every stem inside the leaves",function()
+		local Kit=require(client.AeroKit)
+		local data=require(game:GetService("ReplicatedStorage").Shared.WorldAeroKit)
+		local lime=Sim.kitCrowns(data,Kit.crownFrame,{foliage_blossom=true})
+		local all=Sim.kitCrowns(data,Kit.crownFrame)
+		assert(#all==#data.crowns and #lime>=6 and #lime<#all,"lime crowns: "..#lime.." of "..#all)
+		local names={}
+		for i,crown in ipairs(lime)do
+			names[crown.tree]=true
+			if i>1 then assert(lime[i-1].tree<crown.tree,"sorted by tree")end
+			assert(data.meshes[crown.mesh].kind=="foliage_blossom")
+		end
+		assert(names.Landmark_BlossomPointTree and names.Tree_05_blossom,"Blossom Point and the plaza's tree")
+		-- The same frame AeroKit builds the part with (one formula, called, not copied).
+		for _,raw in ipairs(data.crowns)do
+			if raw.tree=="Tree_05_blossom"then
+				local cframe,size,pivot=Kit.crownFrame(raw,data.meshes[raw.mesh])
+				for _,crown in ipairs(lime)do
+					if crown.tree==raw.tree then assert(crown.cframe.Position==cframe.Position and crown.cframe.LookVector==cframe.LookVector and crown.size==size and crown.pivot==pivot)end
+				end
+			end
+		end
+		local twoOrMore=0
+		for i,crown in ipairs(lime)do
+			local stems=Sim.fruitStems(i,crown)
+			assert(#stems<=3)
+			if #stems>=2 then twoOrMore+=1 end
+			local h=crown.size/2
+			for _,slot in ipairs(stems)do
+				local tip=slot.tip
+				assert(tip.Y<0,"below the crown's middle")
+				assert(math.abs(tip.Y-(h.Y-F.down*crown.size.Y))<1e-6)
+				local ring=math.sqrt(1-(tip.Y/h.Y)^2)
+				local q=math.sqrt((tip.X/(h.X*ring))^2+(tip.Z/(h.Z*ring))^2)
+				assert(q<=F.stemIn+1e-9,crown.tree..": inside the leaves "..q)
+				assert((crown.cframe*tip-slot.stem).Magnitude<1e-6,"the world stem is the crown's frame on the tip")
+			end
+		end
+		assert(twoOrMore>=#lime*.5,"2 or 3 on most: "..twoOrMore)
+		-- Malformed data throws (GardenLife pcalls it and falls back to LifeSpots with one warning).
+		assert(not pcall(Sim.kitCrowns,{crowns={{mesh="x",tree="t"}},meshes={}},Kit.crownFrame),"a crown with no mesh")
+		assert(not pcall(Sim.kitCrowns,{crowns={},meshes={}},nil),"no crownFrame")
+		assert(not pcall(Sim.kitCrowns,nil,Kit.crownFrame),"no data")
+		assert(not pcall(Sim.kitCrowns,{crowns={{mesh="m",tree="t",pivot={1,2},scale=1,yaw=0}},meshes={m={kind="foliage_blossom",size={1,1,1},pivotToCentre={0,0,0}}}},Kit.crownFrame),"a short pivot")
 	end)
 
 	test("Dewdrops: the trigger is the wind alone: a gust whose peak passes .8 lets go the first 1/60 s it does",function()
@@ -673,10 +727,10 @@ return function(client)
 			local plan,why=Sim.fruitCandidate(1,CROWN,stems,n,flatWorld())
 			if plan then
 				plans+=1
-				assert(Wind.hash(n*16+1,13)<.35 and plan.start==Sim.fruitTrigger(CROWN.position,n))
+				assert(Wind.hash(n*16+1,13)<F.chance and plan.start==Sim.fruitTrigger(CROWN.position,n))
 				assert(plan.key==stems[math.floor(Wind.hash(n*16+1,14)*#stems)+1].key,"the seeded slot")
 				assert(plan.id==plan.key..":"..n and table.isfrozen(plan),"shared and frozen")
-			elseif why=="chance"then chance+=1;assert(Wind.hash(n*16+1,13)>=.35)
+			elseif why=="chance"then chance+=1;assert(Wind.hash(n*16+1,13)>=F.chance)
 			elseif why=="calm"then calm+=1 end
 		end
 		assert(plans>10 and chance>plans and calm>0,plans.." / "..chance.." / "..calm)
@@ -755,7 +809,7 @@ return function(client)
 		assert(#low:dropsAt(1,T0,T0+600)==0,"too far down")
 	end)
 
-	test("Dewdrops: the flight: tug, fall, two bounces with a squash, a roll downwind, 18 s at rest leaning 12, fade, gone",function()
+	test("Dewdrops: the flight: tug, fall, two bounces with a squash, a roll downwind, 30 s at rest leaning 12, fade, gone",function()
 		local plan=firstCandidate()
 		local slot={stem=plan.stem}
 		local loose=Sim.fruitLoose(plan,Vector3.new(1,0,0))
@@ -767,13 +821,13 @@ return function(client)
 		assert(plan.heading:Dot(dir)>=math.cos(math.rad(25))-1e-9,"within 25 of the wind")
 		for _,p in ipairs({plan.p1,plan.p2,plan.p3,plan.p4})do assert(near(p.Y,4.5,1e-9),"centre .5 over the ground")end
 		local times={plan.t1-plan.start,plan.t2-plan.t1,plan.t3-plan.t2,plan.t4-plan.t3,plan.t5-plan.t4,plan.t6-plan.t5,plan.gone-plan.t6}
-		for i,want in ipairs({.15,.55,.34,.2,.9,18,1.2})do assert(near(times[i],want,1e-6),"phase "..i)end
+		for i,want in ipairs({.15,.55,.34,.2,.9,30,1.2})do assert(near(times[i],want,1e-6),"phase "..i)end
 		local p=Sim.fruitPose(loose,plan.start+.075)
-		assert(p.phase=="tug"and near((p.position-slot.stem).Magnitude,.64,1e-6),"the stem still holds it")
+		assert(p.phase=="tug"and near((p.position-slot.stem).Magnitude,.5,1e-6),"the stem still holds it")
 		p=Sim.fruitPose(loose,plan.t1+.3)
 		assert(p.phase=="fall"and p.position.Y<plan.release.Y and p.position.Y>plan.p1.Y)
 		local mid=plan.release.Y+(plan.p1.Y-plan.release.Y)*.25
-		assert(near(Sim.fruitPose(loose,plan.t1+.275).position.Y,mid,1e-6),"speeding up")
+		assert(near(Sim.fruitPose(loose,plan.t1+.275).position.Y,mid,1e-4),"speeding up") -- 1e-4: server-time precision
 		p=Sim.fruitPose(loose,plan.t2+.01)
 		assert(p.phase=="bounce"and p.w==1.15 and p.h==.85,"the landing squash")
 		assert(Sim.fruitPose(loose,plan.t2+.1).w==1,"for .06 s")

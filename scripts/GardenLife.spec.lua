@@ -59,7 +59,7 @@ return function(client)
 			groundY=options.groundY or function()return 4 end,safe=options.safe or function()return true end,
 			finds=options.finds or {},kerbs=options.kerbs or {},pets=function()return r.pets end,
 			cover=options.cover or {},leafGround=options.leafGround,leaves=function()return options.leaves~=false end,
-			report=options.report or function()end,banks=options.banks or {},
+			report=options.report or function()end,banks=options.banks or {},groveCrowns=options.groveCrowns,kitParts=options.kitParts,
 			-- The garden hour: r.daylight (nil = the hour off), or r.hour(now) when a case drives the real clock.
 			daylight=if options.realHour then nil else function(now)if r.hour then return r.hour(now)end return r.daylight end})
 		function r.step(seconds)
@@ -702,7 +702,7 @@ return function(client)
 			for _,p in ipairs(shownFruit(r))do
 				local best=math.huge
 				for _,entry in pairs(stems)do best=math.min(best,(p.CFrame.Position-entry.slot.stem).Magnitude)end
-				assert(best<.64+1e-3,"under a stem: "..best)
+				assert(best<Sim.Fruit.hang+1e-3,"under a stem: "..best)
 			end
 			for key in pairs(r.life.fruitOf)do if key>0 then assert(stems[key].i<10,"not the far crown")end end
 			r.level=1
@@ -723,6 +723,56 @@ return function(client)
 			r.step(.5)
 			assert(entry.anchor.CFrame.Position==Vector3.new(1,2,3),"pink: the pool is not walked")
 			entry.anchor.CFrame=Life.Hidden
+		end)
+
+		test("Dewdrops follow their crown's sway at level 0 (a kit part matched by pivot); static at level 1 or with no match",function()
+			local pivot=Vector3.new(0,10,-25)
+			local crown={position=Vector3.new(0,12,-25),size=Vector3.new(8,5,8),pivot=pivot}
+			local rest=CFrame.new(crown.position)
+			local p=Instance.new("Part")
+			p.CFrame=rest
+			p:SetAttribute("WorldPivot",pivot+Vector3.new(.03,0,0))
+			p:SetAttribute("WorldRestCFrame",rest)
+			p.Parent=workspace -- a live part (a removed one is not followed)
+			local r=rig({groveCrowns={crown},kitParts=function()return{p}end})
+			r.step(.2)
+			assert(r.life.follow[1]and r.life.follow[1].part==p,"matched within .05")
+			local before={}
+			for _,a in ipairs(shownFruit(r))do before[a]=a.CFrame.Position end
+			assert(next(before),"fruit hangs")
+			-- The crown leans: the hanging fruit moves with it.
+			p.CFrame=CFrame.new(pivot)*CFrame.Angles(0,0,math.rad(4))*CFrame.new(-pivot)*rest
+			r.step(1/30)
+			local moved=0
+			for a,was in pairs(before)do if(a.CFrame.Position-was).Magnitude>.05 then moved+=1 end end
+			assert(moved>0,"moved with the crown")
+			-- No match (a part elsewhere): static stems.
+			local q=Instance.new("Part")
+			q.CFrame=rest;q:SetAttribute("WorldPivot",pivot+Vector3.new(.2,0,0));q:SetAttribute("WorldRestCFrame",rest)
+			local s=rig({groveCrowns={crown},kitParts=function()return{q}end})
+			s.step(.2)
+			assert(s.life.follow[1]==nil,"no match: static")
+			p:Destroy()
+		end)
+
+		test("Dewdrops: the default crowns are the kit's lime crowns; none in the kit falls back to LifeSpots with one warning",function()
+			local Spots=require(client.LifeSpots)
+			local warned={}
+			local fake={d={},spots=Spots,warn=function(text)table.insert(warned,text)end}
+			local crowns=Life.readCrowns(fake)
+			assert(#crowns>=6 and crowns[1].cframe~=nil and #warned==0,"the kit's: "..#crowns)
+			local kinds=Life.KitKinds
+			Life.KitKinds={none=true}
+			Life.crownWarned=nil
+			local ok,problem=pcall(function()
+				local back=Life.readCrowns(fake)
+				assert(back==Spots.Crowns and #warned==1,"LifeSpots, one warning")
+				Life.readCrowns(fake)
+				assert(#warned==1,"only once")
+			end)
+			Life.KitKinds=kinds
+			Life.crownWarned=nil
+			assert(ok,problem)
 		end)
 
 		test("Dewdrops: every client simulates the same drops: cameras far apart, budget levels 0 and 1, Reduced Motion",function()
@@ -753,7 +803,7 @@ return function(client)
 			for id,drop in pairs(seen[1])do
 				n+=1
 				for c=2,4 do assert(seen[c][id]and seen[c][id].start==drop.start and seen[c][id].p4==drop.p4,"client "..c.." has "..id)end
-				assert(Wind.hash(drop.n*16+drop.i,13)<.35)
+				assert(Wind.hash(drop.n*16+drop.i,13)<Sim.Fruit.chance)
 				assert(math.abs(drop.p4.Y-4.5)<1e-6,"rests .5 over the lawn")
 			end
 			for c=2,4 do for id in pairs(seen[c])do assert(seen[1][id],"client "..c.." has nothing extra: "..id)end end

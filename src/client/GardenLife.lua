@@ -58,8 +58,11 @@ Life.Hidden=CFrame.new(0,4096,0)
 Life.PetalTexture=LifeArt.Petal
 Life.BubbleTexture="rbxassetid://77828632873187"
 -- FRUIT-LOOK 1: assets/world/dewdrop.png (scripts/draw_world_textures.py), uploaded 2026-11-23. Billboard studs.
-Life.DewdropTexture="rbxassetid://82054526707528"
-Life.FruitSize=Vector2.new(1.1,1.28)
+-- Beta 14 B5 (WORLD-AND-NEST-LOOK 7): the fruit with a drawn stem (LifeArtR4 dewdropStem: today's fruit until it is
+-- uploaded), 1.1 x 1.5 studs, 10% darker so it sits with the ambient.
+Life.DewdropTexture=LifeArtR4.id("dewdropStem")
+Life.FruitSize=Vector2.new(1.1,1.5)
+Life.FruitColour=Color3.fromHex("#E6E6DC")
 local hex=Color3.fromHex
 local white=Color3.new(1,1,1)
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 1): butterfly slot -> its wing file and mirror, full colour (Color3 white).
@@ -267,7 +270,7 @@ local function dewdrop(folder,slot)
 	label.BackgroundTransparency=1
 	label.BorderSizePixel=0
 	label.Image=Life.DewdropTexture
-	label.ImageColor3=Color3.new(1,1,1)
+	label.ImageColor3=Life.FruitColour
 	label.ImageTransparency=0
 	label.ScaleType=Enum.ScaleType.Stretch
 	label.Rotation=0
@@ -349,6 +352,16 @@ function Life.mount(deps)
 		return root and root.Position
 	end
 	self.pets=deps.pets or function()return{}end
+	-- The live kit crown parts (for the hanging fruit's sway only).
+	self.kitParts=deps.kitParts or function()
+		local room=workspace:FindFirstChild("EggDropLounge")
+		local kit=room and room:FindFirstChild("AeroKit")
+		local out={}
+		for _,p in ipairs(kit and kit:GetChildren()or {})do
+			if p:IsA("BasePart")and p:GetAttribute("WorldDressing")=="crown"then table.insert(out,p)end
+		end
+		return out
+	end
 	self.daylight=deps.daylight or function(now)
 		if not require(script.Parent.HollowClock).hourOn()then return nil end
 		local Hour=require(Shared:WaitForChild("GardenHour"))
@@ -381,11 +394,54 @@ function Life:fail(problem)
 	self.warn("[Life] stopped: "..tostring(problem))
 end
 
+-- The grove's crowns (beta 14 B5; architect r1): the Aero kit's lime-able crowns from its data module
+-- (WorldAeroKit through AeroKit.crownFrame, Sim.kitCrowns), validated in a pcall; anything wrong (or none) is
+-- LifeSpots.Crowns with one warning. A fixture's `groveCrowns`, or `spots` with crowns, is used as given.
+Life.KitKinds=table.freeze({foliage_blossom=true})
+function Life:readCrowns()
+	local d=self.d
+	if d.groveCrowns then return d.groveCrowns end
+	if d.spots then return d.spots.Crowns or {}end
+	local Shared=ReplicatedStorage:WaitForChild("Shared")
+	local ok,crowns=pcall(function()
+		local data=require(Shared:WaitForChild("WorldAeroKit"))
+		local Kit=require(script.Parent.AeroKit)
+		return Sim.kitCrowns(data,Kit.crownFrame,Life.KitKinds)
+	end)
+	if ok and type(crowns)=="table"and #crowns>0 then return crowns end
+	if not Life.crownWarned then
+		Life.crownWarned=true
+		self.warn("[Life] Dewdrops on the old crown list: "..(if ok then "the kit has no lime crowns"else tostring(crowns)))
+	end
+	return self.spots.Crowns or {}
+end
+-- Hanging fruit follows its crown's sway (beta 14 B5): each grove crown with a pivot is matched (within .05) to a live
+-- kit part (WorldDressing "crown" with WorldPivot and WorldRestCFrame); no match is a static stem. Drawing only: what
+-- falls never reads a part. Re-read every Poll (the kit is rebuilt on an Aero switch).
+Life.FollowMatch=.05
+function Life:followCrowns()
+	self.follow={}
+	local ok,parts=pcall(self.kitParts)
+	if not ok or type(parts)~="table"then return end
+	for i,crown in ipairs(self.groveCrowns or {})do
+		if typeof(crown.pivot)=="Vector3"then
+			for _,p in ipairs(parts)do
+				local pivot,rest=p:GetAttribute("WorldPivot"),p:GetAttribute("WorldRestCFrame")
+				if typeof(pivot)=="Vector3"and typeof(rest)=="CFrame"and(pivot-crown.pivot).Magnitude<=Life.FollowMatch then
+					self.follow[i]={part=p,inverse=rest:Inverse()}
+					break
+				end
+			end
+		end
+	end
+end
+
 -- The world's places, read once a switch-on (data, never instances: crowns are merged meshes, revision 1).
 function Life:places()
 	local d=self.d
 	local Shared=ReplicatedStorage:WaitForChild("Shared")
 	self.spots=d.spots or require(script.Parent.LifeSpots)
+	self.groveCrowns=self:readCrowns()
 	local stations=d.stations
 	if not stations then
 		stations={}
@@ -563,7 +619,8 @@ function Life:enable()
 	self.leaves=Sim.Leaves.new(self.seed+3)
 	self.skitter=Sim.Skitters.new(self.seed+5)
 	self.bubbles=Sim.Bubbles.new(self.seed+2)
-	self.grove=Sim.Grove.new(self.spots.Crowns or {},self.fruitWorld)
+	self.grove=Sim.Grove.new(self.groveCrowns,self.fruitWorld)
+	self:followCrowns()
 	self.loose=Sim.Loose.new()
 	self.view,self.fruitOf,self.fruitCount={},{},0
 	self.birdStill={}
@@ -754,6 +811,7 @@ function Life:step(dt)
 			self.colour=colour
 			self.leafPool[Life.Petal].emitter.Color=ColorSequence.new(colour)
 		end
+		self:followCrowns()
 	end
 	local player=self.root()
 	local world={camera=eye,player=player,stations=self.stations,pad=self.pad,course=if self.live then self.course else nil,
@@ -926,14 +984,20 @@ function Life:stepFruit(now,camera,level,reduced,put,hide)
 	local dot=right:Dot(Wind.Direction)
 	for _,entry in ipairs(near)do
 		if hanging>=room then break end
-		local at=if still then 0 else Wind.at(grove.crowns[entry.i].position,now)
+		local crownAt=grove.crowns[entry.i].position
+		-- Beta 14 W3: with `scene` on the fruit sways with the big breath too (Wind.swayAt); what falls never reads it.
+		local at=if still then 0 elseif self.scene then Wind.swayAt(crownAt,now)else Wind.at(crownAt,now)
+		-- Beta 14 B5: at level 0, hanging from the crown's live pose (its sway), when the crown's part was found.
+		local follow=not still and self.follow and self.follow[entry.i]
+		local delta=follow and follow.part.Parent and follow.part.CFrame*follow.inverse
 		for _,slot in ipairs(grove.stems[entry.i])do
 			if hanging>=room then break end
 			local scale=if reduced then 1 else grove:hanging(slot.key,now)
 			if scale then
 				hanging+=1
 				local angle=Sim.fruitSway(slot.k,now,at,still)
-				want[slot.key]={Sim.fruitHang(slot.stem,angle,scale),-angle*dot,scale,scale,0}
+				local stem=if delta then delta*slot.stem else slot.stem
+				want[slot.key]={Sim.fruitHang(stem,angle,scale),-angle*dot,scale,scale,0}
 			end
 		end
 	end
