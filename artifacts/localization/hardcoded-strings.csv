@@ -51,12 +51,12 @@ src/client/CompanionsHub.lua,651, along,fragment (sentence built from parts),
 src/client/CompanionsHub.lua,651,Follow,,
 src/client/ConfirmDialog.lua,98,Alt,,
 src/client/ConfirmDialog.lua,98,Cancel,,yes
-src/client/DashClient.lua,352,Fun,,
-src/client/DashClient.lua,353,Stats,,yes
-src/client/DashClient.lua,354,Trial,,
-src/client/DashClient.lua,836,Again,,
-src/client/DashClient.lua,839,Done,,yes
-src/client/DashClient.lua,913,dash-line,,
+src/client/DashClient.lua,358,Fun,,
+src/client/DashClient.lua,359,Stats,,yes
+src/client/DashClient.lua,360,Trial,,
+src/client/DashClient.lua,842,Again,,
+src/client/DashClient.lua,845,Done,,yes
+src/client/DashClient.lua,919,dash-line,,
 src/client/DashHud.lua,171,Place,,
 src/client/DashHud.lua,174,Digits,,
 src/client/DashHud.lua,177,Word,,
@@ -526,12 +526,12 @@ src/client/RevealStage.lua,622,Drag to spin,,
 src/client/RevealStage.lua,625,NEXT,,
 src/client/RoomCompanions.lua,77,Docked,,
 src/client/RoomView.lua,157,Sprout Hollow,,
-src/client/RoomView.lua,499,Docked,,
-src/client/RoomView.lua,508,Say hi,,yes
-src/client/RoomView.lua,532,Sprout Hollow · ,fragment (sentence built from parts),
-src/client/RoomView.lua,778,Say hi,,yes
-src/client/RoomView.lua,937,Say hi,,yes
-src/client/RoomView.lua,1152,Roam,,
+src/client/RoomView.lua,507,Docked,,
+src/client/RoomView.lua,516,Say hi,,yes
+src/client/RoomView.lua,540,Sprout Hollow · ,fragment (sentence built from parts),
+src/client/RoomView.lua,786,Say hi,,yes
+src/client/RoomView.lua,945,Say hi,,yes
+src/client/RoomView.lua,1160,Roam,,
 src/client/SimCheckClient.lua,31,Sim check: match (%d hashes),,
 src/client/SimCheckClient.lua,45,Sim check: no answer,,
 src/client/SnackHost.lua,103,snack:,,
