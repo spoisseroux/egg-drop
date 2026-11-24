@@ -456,3 +456,18 @@ Hush whose owner is not there (a reset or respawn home) to the evacuation landin
 after the Hush closed): the arrival spawn instead (spec'd); cosmetic: `Hush.ClientTimeout` = StreamWait + FadeOut +
 1.5 s (3.85 s), so a streamed arrival never fades in early. Runner 53/53. **For the art pass (not fixed):** Hush parts
 carry `WorldMesh`, so pet paths ignore the walls and clumps.
+
+**Fable R5 greybox fixes (2026-11-24, Opus, offline):** the Sill and tunnel floor at **+10** (`Hush.SillH`), ramp to
+u 51 (about 44 long, 13 degrees); the tunnel's last 8 studs **flare** from 6 wide to the Sill's 16 at the wall face
+(v 0), with their own roof, so the side walls leave the view from the Sill (they already ended at v 0: the slab in
+capture 04 is the tunnel wall seen by a camera still inside the tunnel); **five clumps** (`Hush.Clumps`) 20 to 24
+long, 6 thick, 14 high, placed to hide the Crunch room, the Quiet Shelf, the Moss Beds and the two north corners,
+kept off the pool, ramp, Sill and shelf; `safeCell` keeps landings 1.5 studs off them. `FallY` and the hollow's region
+now follow `FloorY`. Specs: Hush 10 cases (flare sealed, clumps), runner 60/60.
+
+**Wall tops over the ridge with the zoom cap off: not cheap, not changed.** `scripts/measure_hush_sightline.py`
+(terrain = the 4-stud ground grid only, so it overstates what shows; R5 saw nothing at zoom 22) puts cameras at every
+find spot and station, yaw every 15 degrees, pitch -10 to 80. Lowering the floor from -20 to -80 takes zoom 22 from
+2222 to 1 sightline of 7422, but zoom 60 only from 5528 to 3255 of 6967, and zoom 120 barely moves: a camera 60+ studs
+out and up sees over the ridge whatever the depth. Keep WorldFeel's zoom cap (22) on wherever the Hush is open, or
+cap zoom near the north ridge. The floor stays at -20.

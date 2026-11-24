@@ -41,6 +41,20 @@ Hush.OriginX=-7
 Hush.FloorY=-20
 Hush.MouthZ=-226
 function Hush.at(u,v,h)return Vector3.new(Hush.OriginX+u,Hush.FloorY+(h or 0),Hush.MouthZ-v)end
+-- Fable R5: the Sill (and the tunnel floor) stand SillH over the floor so you look down into the hollow; the ramp runs
+-- from the Sill's east edge (u 8) down to the floor at u RampFootU (about 43 long, about 13 degrees).
+Hush.SillH=10
+Hush.RampFootU=51
+-- Fable R5: clumps 18 to 24 wide and 14 high so the floor reads as rooms that hide each other. Hush-local footprints
+-- {name, u1, v1, u2, v2}; HushGreybox builds them and safeCell keeps landings off them.
+Hush.ClumpHeight=14
+Hush.Clumps=table.freeze({
+	table.freeze({name="ClumpScreen",u1=-27,v1=40,u2=-21,v2=62}),      -- hides the west (Crunch) room from the walk
+	table.freeze({name="ClumpShrub",u1=-12,v1=97,u2=12,v2=103}),       -- north of the pool, hides the Quiet Shelf
+	table.freeze({name="ClumpEast",u1=38,v1=60,u2=44,v2=80}),          -- hides the Moss Beds pocket
+	table.freeze({name="ClumpNorthWest",u1=-58,v1=82,u2=-36,v2=88}),
+	table.freeze({name="ClumpNorthEast",u1=48,v1=104,u2=68,v2=110}),
+})
 local function box(minimum,maximum)
 	return table.freeze({min=Vector3.new(math.min(minimum.X,maximum.X),math.min(minimum.Y,maximum.Y),math.min(minimum.Z,maximum.Z)),
 		max=Vector3.new(math.max(minimum.X,maximum.X),math.max(minimum.Y,maximum.Y),math.max(minimum.Z,maximum.Z))})
@@ -56,9 +70,9 @@ function Hush.inBox(b,p,slack)
 end
 
 -- Regions. `hush`: the hollow, its tunnel and the Quiet Shelf. `underway`: the pocket behind the blocker line (z -99.5),
--- for evacuation and the client. FallY: below it a root in that region has fallen (the Hush floor is y -20).
-Hush.FallY=-32
-Hush.Hollow=box(Vector3.new(-86,-40,-366),Vector3.new(72,60,-200))
+-- for evacuation and the client. FallY: below it a root in that region has fallen (12 under the Hush floor).
+Hush.FallY=Hush.FloorY-12
+Hush.Hollow=box(Vector3.new(-86,Hush.FloorY-20,-366),Vector3.new(72,Hush.FloorY+80,-200))
 Hush.Pocket=box(Vector3.new(-14,0,-116),Vector3.new(0,26,-99))
 -- Pure: "hush", "underway" or nil.
 function Hush.regionAt(p)
@@ -74,6 +88,10 @@ Hush.Safe=table.freeze({
 })
 function Hush.safeCell(x,z)
 	if type(x)~="number"or type(z)~="number"or x~=x or z~=z then return false end
+	local u,v=x-Hush.OriginX,Hush.MouthZ-z
+	for _,c in ipairs(Hush.Clumps)do
+		if u>=c.u1-1.5 and u<=c.u2+1.5 and v>=c.v1-1.5 and v<=c.v2+1.5 then return false end
+	end
 	for _,b in ipairs(Hush.Safe)do
 		if x>=b.min.X and x<=b.max.X and z>=b.min.Z and z<=b.max.Z then return true end
 	end
@@ -106,10 +124,10 @@ local function facing(at,toward)return CFrame.lookAt(at,Vector3.new(toward.X,at.
 Hush.Doors=table.freeze({
 	north=table.freeze({id="north",from="underway",to="hush",
 		trigger=centred(Vector3.new(-7,8,-113.75),Vector3.new(6,8,2.5)),
-		arrival=facing(Hush.at(0,-17,6),Hush.at(0,0,6)),
-		landing=Hush.at(0,-12,6.025)}),
+		arrival=facing(Hush.at(0,-17,Hush.SillH),Hush.at(0,0,Hush.SillH)),
+		landing=Hush.at(0,-12,Hush.SillH+.025)}),
 	home=table.freeze({id="home",from="hush",to="underway",
-		trigger=centred(Hush.at(0,-22.5,10),Vector3.new(6,8,3)),
+		trigger=centred(Hush.at(0,-22.5,Hush.SillH+4),Vector3.new(6,8,3)),
 		arrival=facing(Vector3.new(-7,4,-108),Vector3.new(-7,4,-100)),
 		-- Inside the home Floor (it ends at z -90): home pet code only ever sees home positions.
 		landing=Vector3.new(-7,4.625,-88)}),
