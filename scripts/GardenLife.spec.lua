@@ -48,7 +48,7 @@ return function(client)
 		r.world=Instance.new("Folder");r.world.Name="_GardenLifeSpec";r.world.Parent=workspace
 		r.dash={held=function()return r.held end,summary=function()return{phase=r.phase}end}
 		r.life=Life.mount({ambient=r.ambient,world=r.world,heartbeat=r.beat,seed=7,
-			alive={ceiling=function(f)return f=="life"and r.ceiling end,on=function(f)return f=="life"and r.on end,changed=function()return r.changed end},
+			alive={ceiling=function(f)return f=="life"and r.ceiling end,on=function(f)return(f=="life"and r.on)or(f=="scene"and r.on and r.scene==true)end,changed=function()return r.changed end},
 			now=function()return r.now end,camera=function()return r.camera end,root=function()return r.player end,
 			level=function()return r.level end,hatching=function()return r.hatch end,mode=function()return r.mode end,
 			dash=function()return r.dash end,modalOpen=function()return r.menu end,reduced=function()return r.reduced end,
@@ -537,12 +537,12 @@ return function(client)
 			assert(r.life:counts().bubbles<=Sim.cap("bubbles",0))
 		end)
 
-		test("leaves: three emitters (the look's numbers), anchors moved to each leaf's spot round the player, under the cap at both levels",function()
-			local LifeArt=require(game:GetService("ReplicatedStorage").Shared.LifeArt)
+		test("leaves (beta 14 Q5): the sheet, the petal and the scud, anchors moved to each leaf's spot round the player, under the caps at both levels",function()
+			local LifeArtR4=require(game:GetService("ReplicatedStorage").Shared.LifeArtR4)
 			local r=rig()
 			-- FABLE-REVIEW-R4 2: the keys allow for the 1.5 to 1.65 draw factor (drawn long side .25 or less with the envelope).
-			assert(Life.LeafDrawn==nil and Life.Leaves[1].size[2]==.135 and Life.Leaves[2].size[2]==.125 and Life.Leaves[3].size[2]==.12)
-			local names={"LifeLeafA","LifeLeafB","LifeLeafPetal"}
+			assert(Life.LeafDrawn==nil and Life.Leaves[1].size[2]==.135 and Life.Leaves[2].size[2]==.12 and Life.Leaves[3].size[2]==.135)
+			local names={"LifeLeafSheet","LifeLeafPetal"}
 			local emitters={}
 			for i,name in ipairs(names)do
 				local anchor=r.folder():FindFirstChild(name)
@@ -552,7 +552,14 @@ return function(client)
 				assert(e.EmissionDirection==Enum.NormalId.Bottom and e.ShapeStyle==Enum.ParticleEmitterShapeStyle.Volume,name)
 				emitters[i]=e
 			end
-			assert(emitters[1].Texture==LifeArt.id("leafA")and emitters[2].Texture==LifeArt.id("leafB")and emitters[3].Texture==Life.PetalTexture)
+			assert(emitters[1].Texture==LifeArtR4.id("leafSheet")and emitters[2].Texture==Life.PetalTexture)
+			-- The sheet's grid waits for its own upload (the stand-in is one leaf on the whole image).
+			assert((emitters[1].FlipbookLayout~=nil)==LifeArtR4.uploaded("leafSheet"),"the grid only once uploaded")
+			-- The scud: its own small anchor, along the wind, flat, no fall.
+			local scudAnchor=r.folder():FindFirstChild("LifeLeafSkitter")
+			local scud=scudAnchor:FindFirstChild("Leaves")
+			assert(scudAnchor.Size==Life.SkitterAnchor and scud.EmissionDirection==Enum.NormalId.Front and scud.Drag==1.2)
+			assert(scud.Acceleration==Vector3.zero and scud.Texture==LifeArtR4.id("leafSheet"))
 			local most,shown=0,{}
 			for _=1,60 do
 				r.step(1)
@@ -565,17 +572,52 @@ return function(client)
 						assert(math.abs(at.X-r.player.X)<=36 and math.abs(at.Z-r.player.Z)<=36 and at.Y>=14-1e-6 and at.Y<=16+1e-6,name..": "..tostring(at))
 					end
 				end
+				if not hidden(scudAnchor)then
+					local at=scudAnchor.CFrame.Position
+					assert(math.abs(at.Y-4.12)<1e-6,"the scud starts on the ground: "..tostring(at))
+					assert(scudAnchor.CFrame.LookVector:Dot(Wind.Direction)>.99,"facing downwind")
+				end
 			end
-			assert(most>=20 and most<=Sim.cap("leaves",0),"level 0: "..most)
-			assert(shown.LifeLeafA and shown.LifeLeafB and shown.LifeLeafPetal,"all three kinds fall")
+			assert(most>=30 and most<=Sim.cap("leaves",0),"level 0: "..most)
+			assert(shown.LifeLeafSheet and shown.LifeLeafPetal,"both kinds fall")
 			local emitted=0
 			for _,e in ipairs(emitters)do emitted+=(e.emitted or 0)end
-			assert(emitted>=120 and emitted<=200,"about 2.4 a second x (1 + .5 g): "..emitted)
+			assert(emitted>=200 and emitted<=420,"about 4 a second x (1 + 1.5 g), held by the 44 cap: "..emitted)
+			assert((scud.emitted or 0)>0 and(scud.emitted or 0)<=60*6*.35,"the scud only near a gust's top: "..tostring(scud.emitted))
+			assert(r.life.skitter:count(r.now)<=Sim.cap("skitter",0))
 			r.life.leaves:clear();r.level=1
 			most=0
 			for _=1,40 do r.step(1);most=math.max(most,r.life:counts().leaves)end
-			assert(most>=8 and most<=14,"level 1: "..most)
+			assert(most>=12 and most<=22,"level 1: "..most)
 			assert(r.life:counts().petals==r.life:counts().leaves,"petals: the old name")
+		end)
+
+		test("leaves: the breath (scene on) triples the rate and runs the scud; scene off, the breath is nothing; the fall's wind is the gust alone",function()
+			local base=math.floor(T0/Wind.BreathSlot)
+			local function breathAt(r)
+				-- The first moment the breath is held at the player.
+				return Wind.breathStart(base+1)+r.player:Dot(Wind.Direction)/Wind.Speed+Wind.BreathRise
+			end
+			local on=rig({now=T0});on.scene=true
+			local off=rig({now=T0})
+			local t=breathAt(on)
+			on.now,off.now=t-.5,t-.5
+			on.step(2.2);off.step(2.2) -- a poll reads the switch
+			local a0,b0=on.folder():FindFirstChild("LifeLeafSheet").Leaves.emitted or 0,off.folder():FindFirstChild("LifeLeafSheet").Leaves.emitted or 0
+			local s0,z0=on.folder():FindFirstChild("LifeLeafSkitter").Leaves.emitted or 0,off.folder():FindFirstChild("LifeLeafSkitter").Leaves.emitted or 0
+			on.life.leaves:clear();off.life.leaves:clear()
+			on.step(2);off.step(2)
+			local a=(on.folder():FindFirstChild("LifeLeafSheet").Leaves.emitted or 0)-a0
+			local b=(off.folder():FindFirstChild("LifeLeafSheet").Leaves.emitted or 0)-b0
+			local s=(on.folder():FindFirstChild("LifeLeafSkitter").Leaves.emitted or 0)-s0
+			local z=(off.folder():FindFirstChild("LifeLeafSkitter").Leaves.emitted or 0)-z0
+			assert(on.life.scene==true and off.life.scene==false)
+			assert(a>=2*b and a>=15,"x 3 in the breath: "..a.." vs "..b)
+			assert(s>=5 and z<=s/2 and on.life.skitter:count(on.now)<=Sim.cap("skitter",0),"the scud runs in the breath (held by its 14 cap): "..s.." vs "..z)
+			-- The fall's Acceleration is the gust's, scene or not.
+			local accel=on.folder():FindFirstChild("LifeLeafSheet").Leaves.Acceleration
+			local g=Wind.gust(on.player,on.now)
+			assert((accel-Sim.leafWind(g,on.now)).Magnitude<.6,"the gust's wind, never the breath's")
 		end)
 
 		test("leaves: none where the drift reaches a roof, none off the island, none until the cover is checked (beta), the wind at 4 Hz",function()
@@ -588,22 +630,24 @@ return function(client)
 			local beta=rig({leaves=false})
 			beta.step(30)
 			assert(beta.life:counts().leaves==0,"the gate closed: none")
-			for _,name in ipairs({"LifeLeafA","LifeLeafB","LifeLeafPetal"})do assert((beta.folder():FindFirstChild(name).Leaves.emitted or 0)==0)end
-			-- The Acceleration: written 4 times a second, the same on all three.
+			for _,name in ipairs({"LifeLeafSheet","LifeLeafPetal","LifeLeafSkitter"})do assert((beta.folder():FindFirstChild(name).Leaves.emitted or 0)==0)end
+			-- The Acceleration: written 4 times a second, the same on the sheet and the petal; the scud's stays zero.
 			local r=rig()
-			local e=r.folder():FindFirstChild("LifeLeafA").Leaves
+			local e=r.folder():FindFirstChild("LifeLeafSheet").Leaves
 			local writes,last=0,e.Acceleration
 			for _=1,60 do
 				r.step(1/30)
 				if not rawequal(e.Acceleration,last)then writes+=1;last=e.Acceleration end
 			end
 			assert(writes>=7 and writes<=9,"4 Hz over 2 s: "..writes)
-			assert(rawequal(r.folder():FindFirstChild("LifeLeafB").Leaves.Acceleration,last))
+			assert(rawequal(r.folder():FindFirstChild("LifeLeafPetal").Leaves.Acceleration,last))
+			assert(r.folder():FindFirstChild("LifeLeafSkitter").Leaves.Acceleration==Vector3.zero)
 			-- Lime crowns tint the petal leaves lime; pink crowns pink.
 			r.step(2.1)
 			assert(r.life.colour==Life.PetalColours.lime)
 			r.crownColour="pink";r.step(2.1)
 			assert(r.life.colour==Life.PetalColours.pink)
+			assert(r.folder():FindFirstChild("LifeLeafPetal").Leaves.Color~=nil)
 		end)
 		-- Dewdrops (WORLD-PASS item 3; FRUIT-LOOK) -------------------------------------------------------------------
 		local function dewdrops(r)

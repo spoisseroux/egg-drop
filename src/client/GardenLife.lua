@@ -46,6 +46,7 @@ local RunService=game:GetService("RunService")
 local Sim=require(script.Parent.LifeSim)
 local Wind=require(script.Parent.Wind)
 local LifeArt=require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("LifeArt"))
+local LifeArtR4=require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("LifeArtR4"))
 
 local Life={};Life.__index=Life
 Life.Folder="EggDropLife"
@@ -80,18 +81,24 @@ Life.EyeInk=hex("#14110F")
 Life.ButterflySize=Vector3.new(.04,.035,.18) -- QA-R2-LOOK 4 (was .09, .08, .42 with the 1.2 span)
 Life.ButterflyWing=Vector3.new(.24,.29,.02)  -- span .52: 1 : 10 of the avatar, 1 : 3 of a pet
 Life.BirdMaterial=Enum.Material.Sand -- matte, fine grain (FABLE-REVIEW-R1 2; Fabric if it reads as gravel)
--- Round 3 (GARDEN-LIFE-NEST-LOOK 2): the three leaf emitters. The petal's tint follows the crowns (lime or pink).
--- QA-R2-LOOK 4, FABLE-REVIEW-R3 4b and R4 2: emitter Size keys. An emitter draws its leaf 1.5 to 1.65 x Size (Studio
--- check R4, beside a .5 cube); the keys hold the drawn long side at .25 studs or less with the envelope (leaf A .135
--- peak, B .125). The petal (.12 peak) is unchanged.
+-- The three leaf emitters (the cap stays 3). Beta 14 QA Q5 (WORLD-AND-NEST-LOOK 6): the leaf sheet (four leaves on one
+-- 2 x 2 flipbook, LifeArtR4 leafSheet; each leaf keeps its start cell: FlipbookStartRandom, framerate 0), the petal
+-- (tint follows the crowns, lime or pink) and the scud along the ground (the sheet again). QA-R2-LOOK 4, FABLE-REVIEW-R3
+-- 4b and R4 2: emitter Size keys. An emitter draws its leaf 1.5 to 1.65 x Size (Studio check R4, beside a .5 cube); the
+-- keys hold the drawn long side at .25 studs or less with the envelope (leaf A's .135 peak, kept for the sheet's cells,
+-- 96 px as leaf A). The petal (.12 peak) is unchanged. [check] a leaf keeps one cell in flight (else the fallback, two
+-- 1 x 2 sheets, leafSheetAC / leafSheetBD, and no scud).
 Life.Leaves=table.freeze({
-	table.freeze({name="LifeLeafA",texture="leafA",size={.09,.135,.015,.12}}),
-	table.freeze({name="LifeLeafB",texture="leafB",size={.08,.125,.015,.11}}),
+	table.freeze({name="LifeLeafSheet",sheet="leafSheet",size={.09,.135,.015,.12}}),
 	table.freeze({name="LifeLeafPetal",texture=nil,size={.075,.12,.02,.105}}),
+	table.freeze({name="LifeLeafSkitter",sheet="leafSheet",size={.09,.135,.015,.12},skitter=true}),
 })
+Life.Petal=2   -- the petal emitter's index (its tint follows the crowns)
+Life.Skitter=3 -- the scud's
 -- FABLE-REVIEW-R4 3: matte, no brighter than #F1E6C8 (pink follows the same rule).
 Life.PetalColours=table.freeze({lime=hex("#F1E6C8"),pink=hex("#F0B4CE")})
 Life.LeafAnchor=Vector3.new(4,2,4)
+Life.SkitterAnchor=Vector3.new(1,.1,1)
 -- Bubbles: rise .4 and drift 1.5 to 3 a second downwind.
 Life.BubbleHeading=(Wind.Direction*2.25+Vector3.new(0,Sim.BubbleRise,0)).Unit
 
@@ -151,8 +158,42 @@ local function leafEmitter(anchor,index)
 	local L,spec=Sim.Leaf,Life.Leaves[index]
 	local e=Instance.new("ParticleEmitter")
 	e.Name="Leaves"
-	e.Texture=if spec.texture then LifeArt.id(spec.texture)else Life.PetalTexture
-	e.Color=ColorSequence.new(if spec.texture then white else Life.PetalColours.lime)
+	local art=spec.sheet or spec.texture
+	e.Texture=if spec.sheet then LifeArtR4.id(spec.sheet)elseif spec.texture then LifeArt.id(spec.texture)else Life.PetalTexture
+	e.Color=ColorSequence.new(if art then white else Life.PetalColours.lime)
+	-- The sheet's grid only once its own file is uploaded (the stand-in is one leaf on the whole image).
+	if spec.sheet and LifeArtR4.uploaded(spec.sheet)then
+		e.FlipbookLayout=Enum.ParticleFlipbookLayout.Grid2x2
+		e.FlipbookMode=Enum.ParticleFlipbookMode.Loop
+		e.FlipbookFramerate=NumberRange.new(0)
+		e.FlipbookStartRandom=true
+	end
+	if spec.skitter then
+		-- The scud (Q5): along the wind from an anchor turned to face it, flat, no fall, tumbling.
+		local S=Sim.Skitter
+		e.Rate=0
+		e.Enabled=true
+		e.LockedToPart=false
+		e.EmissionDirection=Enum.NormalId.Front
+		e.Shape=Enum.ParticleEmitterShape.Box
+		e.ShapeStyle=Enum.ParticleEmitterShapeStyle.Volume
+		e.Orientation=Enum.ParticleOrientation.FacingCamera
+		local s=spec.size
+		e.Size=keys({{0,s[1]},{.1,s[2],s[3]},{1,s[4]}})
+		e.Transparency=keys({{0,1},{.1,.1},{.75,.1},{1,1}})
+		e.Squash=keys({{0,0},{.2,-.5},{.35,0},{.6,-.5},{.75,0},{1,0}})
+		e.Rotation=NumberRange.new(0,360)
+		e.RotSpeed=NumberRange.new(-S.rotSpeed,S.rotSpeed)
+		e.LightEmission,e.LightInfluence,e.Brightness=0,1,1
+		e.ZOffset=0
+		e.Speed=NumberRange.new(S.speed[1],S.speed[2])
+		e.SpreadAngle=Vector2.new(S.spread,0)
+		e.Lifetime=NumberRange.new(S.life[1],S.life[2])
+		e.Drag=S.drag
+		e.Acceleration=Vector3.zero
+		e.Parent=anchor
+		return e
+	end
 	e.Rate=0
 	e.Enabled=true
 	e.LockedToPart=false
@@ -165,7 +206,7 @@ local function leafEmitter(anchor,index)
 	e.Transparency=keys({{0,1},{.08,.1},{.88,.1},{1,1}})
 	e.Squash=keys({{0,0},{.25,-.35},{.5,.05},{.75,-.35},{1,0}})
 	e.Rotation=NumberRange.new(0,360)
-	e.RotSpeed=NumberRange.new(-45,45)
+	e.RotSpeed=NumberRange.new(-L.rotSpeed,L.rotSpeed)
 	e.LightEmission,e.LightInfluence,e.Brightness=0,1,1
 	e.ZOffset=0
 	e.Speed=NumberRange.new(L.speed[1],L.speed[2])
@@ -498,7 +539,7 @@ function Life:enable()
 			owner=nil,wing=0,body=0,glowOn=false,glowSize=nil,glowTr=nil}
 	end
 	for index in ipairs(Life.Leaves)do
-		local anchor=part(folder,Life.Leaves[index].name,"Part",Life.LeafAnchor,false)
+		local anchor=part(folder,Life.Leaves[index].name,"Part",if Life.Leaves[index].skitter then Life.SkitterAnchor else Life.LeafAnchor,false)
 		self.leafPool[index]={anchor=anchor,emitter=leafEmitter(anchor,index)}
 	end
 	-- Beta 14 B2: the night fireflies, one invisible anchor and one glow billboard each (no PointLight).
@@ -520,6 +561,7 @@ function Life:enable()
 	self.birds=Sim.Birds.new(self.seed)
 	self.flies=Sim.Butterflies.new(self.seed+1)
 	self.leaves=Sim.Leaves.new(self.seed+3)
+	self.skitter=Sim.Skitters.new(self.seed+5)
 	self.bubbles=Sim.Bubbles.new(self.seed+2)
 	self.grove=Sim.Grove.new(self.spots.Crowns or {},self.fruitWorld)
 	self.loose=Sim.Loose.new()
@@ -529,9 +571,16 @@ function Life:enable()
 	self.parked,self.hatch,self.live,self.wasReduced,self.colour,self.lime=false,false,false,false,nil,false
 	-- One spot function for every step: round self.leafCentre (the player), never under a roof.
 	self.leafPlace=function(_,random)return Sim.leafSpot(random,self.leafCentre,self.leafWorld)end
+	-- The scud's: the same square, on the ground, never on the course while a race is live (self.skitterWorld.course).
+	self.skitterWorld={ground=self.leafWorld.ground,cover=self.leafWorld.cover,course=nil}
+	self.skitterPlace=function(random)return Sim.skitterSpot(random,self.leafCentre,self.skitterWorld)end
 	local okGate,gate=pcall(self.leavesGate)
 	self.leavesOn=okGate and gate==true
 	self:readDay(self.now())
+	self:readScene()
+	-- Beta 14 W3: the `scene` switch (the big breath and the scene's additions) is read every Poll; a flip polls at once.
+	-- Connected only while on, so with `life` off nothing but its own signal is connected.
+	self.sceneLink=self.alive.changed("scene"):Connect(function()self.pollIn=0 end)
 	folder.Parent=self.world
 	local ambient=self.d.ambient
 	if ambient then
@@ -554,17 +603,25 @@ function Life:readDay(now)
 	return self.day
 end
 
+-- The Alive `scene` switch (beta 14 W3): read at enable and every Poll; a failing read is off.
+function Life:readScene()
+	local ok,on=pcall(function()return self.alive.on("scene")end)
+	self.scene=ok and on==true
+	return self.scene
+end
+
 -- Off: nothing left but the Alive signal. Cannot throw past the folder's Destroy.
 function Life:disable()
 	if not self.enabled then return end
 	self.enabled=false
 	if self.beat then self.beat:Disconnect();self.beat=nil end
+	if self.sceneLink then self.sceneLink:Disconnect();self.sceneLink=nil end
 	local ambient=self.d.ambient
 	if ambient and self.hook and ambient.onChirp==self.hook then ambient.onChirp=nil end
 	self.hook=nil
 	local folder=self.folder
 	self.folder,self.shown,self.birdPool,self.birdArt,self.flyPool,self.leafPool,self.bubblePool=nil,nil,nil,nil,nil,nil,nil
-	self.birds,self.flies,self.leaves,self.bubbles,self.birdStill=nil,nil,nil,nil,nil
+	self.birds,self.flies,self.leaves,self.bubbles,self.birdStill,self.skitter=nil,nil,nil,nil,nil,nil
 	self.fruitPool,self.grove,self.loose,self.view,self.fruitOf,self.fruitCount=nil,nil,nil,nil,nil,0
 	self.firePool,self.fireflies=nil,nil
 	if folder then folder:Destroy()end
@@ -588,6 +645,7 @@ function Life:clearEmitters()
 	for _,slot in ipairs(self.leafPool)do slot.emitter:Clear()end
 	for _,slot in pairs(self.bubblePool)do slot.emitter:Clear()end
 	self.leaves:clear()
+	self.skitter:clear()
 	self.bubbles:clear()
 end
 
@@ -688,32 +746,44 @@ function Life:step(dt)
 		local ok,summary=pcall(function()return dash and dash:summary()end)
 		self.live=ok and type(summary)=="table"and summary.phase=="live"
 		self:readDay(now)
+		self:readScene()
 		local okColour,colours=pcall(self.crowns)
 		self.lime=okColour and colours=="lime"
 		local colour=if self.lime then Life.PetalColours.lime else Life.PetalColours.pink
 		if colour~=self.colour then
 			self.colour=colour
-			self.leafPool[3].emitter.Color=ColorSequence.new(colour)
+			self.leafPool[Life.Petal].emitter.Color=ColorSequence.new(colour)
 		end
 	end
 	local player=self.root()
 	local world={camera=eye,player=player,stations=self.stations,pad=self.pad,course=if self.live then self.course else nil,
 		groundY=self.groundY,ground=self.ground,safe=self.fruitWorld.safe}
-	-- Leaves: round the player (the camera without a character), each emit at its own spot; the wind at 4 Hz.
+	-- Leaves: round the player (the camera without a character), each emit at its own spot; the wind at 4 Hz (the
+	-- falling ones only: the scud has none). The fall's wind is the gust alone (never the breath: architect r1); the
+	-- big breath (`scene` on) triples the rate and runs the scud.
 	local centre=if typeof(player)=="Vector3"then player else eye
 	if self.leavesOn and not reduced then
 		local g=Wind.gust(centre,now)
+		local breath=if self.scene then(Wind.breath(centre,now))else 0
 		self.windIn-=tick
 		if self.windIn<=0 then
 			self.windIn=1/Sim.Leaf.accelHz
 			local accel=Sim.leafWind(g,now)
-			for _,entry in ipairs(self.leafPool)do entry.emitter.Acceleration=accel end
+			for index,entry in ipairs(self.leafPool)do
+				if index~=Life.Skitter then entry.emitter.Acceleration=accel end
+			end
 		end
 		self.leafCentre=centre
-		for _,leaf in ipairs(self.leaves:step(now,tick,g,Sim.cap("leaves",level),level,self.leafPlace))do
+		for _,leaf in ipairs(self.leaves:step(now,tick,g,Sim.cap("leaves",level),level,self.leafPlace,breath>0))do
 			local entry=self.leafPool[leaf.kind]
 			put(entry.anchor,CFrame.new(leaf.at))
 			table.insert(emits,{entry.emitter,1})
+		end
+		self.skitterWorld.course=if self.live then self.course else nil
+		local scud=self.leafPool[Life.Skitter]
+		for _,at in ipairs(self.skitter:step(now,tick,math.max(g,breath),Sim.cap("skitter",level),level,self.skitterPlace))do
+			put(scud.anchor,CFrame.lookAt(at,at+Wind.Direction))
+			table.insert(emits,{scud.emitter,1})
 		end
 	end
 	-- Bubbles: one every 3 s ahead of the camera, never in a menu, with Reduced Motion or at night, never in the way.

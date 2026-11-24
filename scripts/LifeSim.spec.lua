@@ -19,8 +19,8 @@ return function(client)
 	local function near(a,b,eps)return math.abs(a-b)<=(eps or 1e-6)end
 	local T0=1795300000
 
-	test("caps per budget level: 28/14/0 leaves (petals the same table), 8/4/0 bubbles, 4/2/0 butterflies, 3/2/0 birds; 30 and 15 Hz, nothing at 2",function()
-		for kind,want in pairs({leaves={28,14,0},petals={28,14,0},bubbles={8,4,0},butterflies={4,2,0},birds={3,2,0}})do
+	test("caps per budget level: 44/22/0 leaves (petals the same table), 14/7/0 scudding, 8/4/0 bubbles, 4/2/0 butterflies, 3/2/0 birds; 30 and 15 Hz, nothing at 2",function()
+		for kind,want in pairs({leaves={44,22,0},petals={44,22,0},skitter={14,7,0},bubbles={8,4,0},butterflies={4,2,0},birds={3,2,0}})do
 			for level=0,2 do assert(Sim.cap(kind,level)==want[level+1],kind.." at "..level)end
 		end
 		assert(rawequal(Sim.Caps.petals,Sim.Caps.leaves),"petals is leaves under its old name")
@@ -31,13 +31,17 @@ return function(client)
 	-- Falling leaves (beta 12 QA L2; GARDEN-LIFE-NEST-LOOK 2) ------------------------------------------------------
 	local L=Sim.Leaf
 	test("leaves: the drift reach is derived from real wind: every 12 s life over 3,000 s of gusts (the dial at 1 and 1.5) fits",function()
-		-- The look's terminal speeds: a .7 studs a second lean when calm, 3.3 in a full gust, a 1.3 fall.
+		-- Beta 14 Q5 terminal speeds: a 1.3 studs a second lean when calm, 5.05 in a full gust, a 1.3 fall.
 		local k=L.drag*math.log(2)
 		local calm,full=Sim.leafWind(0,0):Dot(Wind.Direction)/k,Sim.leafWind(1,0):Dot(Wind.Direction)/k
-		assert(near(calm,.72,.01)and near(full,3.32,.01)and near(-Sim.leafWind(.5,3).Y/k,1.3,.01),calm.." "..full)
+		assert(near(calm,1.30,.01)and near(full,5.05,.01)and near(-Sim.leafWind(.5,3).Y/k,1.3,.01),calm.." "..full)
 		local along,across=0,0
 		local position=Vector3.new(-60,20,50)
 		local dial=Wind.Strength
+		-- Architect r1: the falling leaves never read the big breath (so this reach holds with the breath on).
+		local breath,blow,sway=Wind.breath,Wind.blow,Wind.swayAt
+		local function refuse()error("the leaves read the breath")end
+		Wind.breath,Wind.blow,Wind.swayAt=refuse,refuse,refuse
 		local ok,problem=pcall(function()
 			for _,strength in ipairs({1,1.5})do
 				Wind.Strength=strength
@@ -48,20 +52,21 @@ return function(client)
 			end
 		end)
 		Wind.Strength=dial
+		Wind.breath,Wind.blow,Wind.swayAt=breath,blow,sway
 		assert(ok,problem)
 		print(string.format("leaf drift over a 12 s life: along %.2f (reach %d), across %.2f (side %d)",along,L.reach,across,L.side))
 		assert(along<=L.reach and across<=L.side,"the drift fits: "..along.." / "..across)
 		assert(L.reach-along<2 and L.side-across<2,"and is not padded: "..along.." / "..across)
 	end)
 
-	test("leaves: 2.4 / 1.2 a second x (1 + .5 g), at most one a kind a step, the live cap exact, 55 / 30 / 15",function()
-		local function run(level,g,seconds,cap,hz)
+	test("leaves: 4 / 2 a second x (1 + 1.5 g), x 3 in the breath, at most one a kind a step, the live cap exact, 90 / 10",function()
+		local function run(level,g,seconds,cap,hz,breath)
 			local leaves=Sim.Leaves.new(3)
-			local n,most,kinds=0,0,{0,0,0}
+			local n,most,kinds=0,0,{0,0}
 			hz=hz or 30
 			for i=1,seconds*hz do
 				local now=i/hz
-				local out=leaves:step(now,1/hz,g,cap,level,function(_,r)return Vector3.new(r:NextNumber(),0,0)end)
+				local out=leaves:step(now,1/hz,g,cap,level,function(_,r)return Vector3.new(r:NextNumber(),0,0)end,breath)
 				local seen={}
 				for _,leaf in ipairs(out)do
 					assert(not seen[leaf.kind],"one a kind a step");seen[leaf.kind]=true
@@ -72,14 +77,17 @@ return function(client)
 			end
 			return n,most,kinds
 		end
-		local n=run(0,0,100,1000);assert(n>=238 and n<=241,"calm, level 0: "..n)
-		n=run(1,0,100,1000,15);assert(n>=118 and n<=121,"calm, level 1: "..n)
-		n=run(0,1,100,1000);assert(n>=358 and n<=361,"full gust: "..n)
-		assert(run(2,1,10,28)==0,"level 2: none")
-		local _,most=run(0,1,120,28);assert(most==28,"the level 0 cap: "..most)
-		_,most=run(1,1,120,14,15);assert(most==14,"the level 1 cap: "..most)
-		local _,_,kinds=run(0,1,1000,100000)
-		local total=kinds[1]+kinds[2]+kinds[3]
+		local n=run(0,0,100,100000);assert(n>=398 and n<=401,"calm, level 0: "..n)
+		n=run(1,0,100,100000,15);assert(n>=198 and n<=201,"calm, level 1: "..n)
+		n=run(0,1,100,100000);assert(n>=998 and n<=1001,"full gust: "..n)
+		n=run(0,0,10,100000,30,true);assert(n>=118 and n<=121,"calm in the breath, x 3: "..n)
+		n=run(0,1,10,100000,30,true);assert(n>=290 and n<=301,"a full breath: 30 a second: "..n)
+		assert(run(2,1,10,44)==0,"level 2: none")
+		local _,most=run(0,1,120,44);assert(most==44,"the level 0 cap: "..most)
+		_,most=run(1,1,120,22,15);assert(most==22,"the level 1 cap: "..most)
+		_,most=run(0,1,60,44,30,true);assert(most==44,"the breath never passes the cap: "..most)
+		local _,_,kinds=run(0,0,1000,100000)
+		local total=kinds[1]+kinds[2]
 		for i,want in ipairs(L.share)do assert(math.abs(kinds[i]/total-want)<.03,"share "..i..": "..kinds[i]/total)end
 		-- A refused spot is skipped, not redrawn: nothing counted, and the rate is spent the same.
 		local skip=Sim.Leaves.new(3)
@@ -89,11 +97,50 @@ return function(client)
 		-- At the cap nothing piles up: one emit when room comes back, not a burst.
 		local full=Sim.Leaves.new(5)
 		local now=0
-		for _=1,30*60 do now+=1/30;full:step(now,1/30,1,28,0,function()return Vector3.zero end)end
+		for _=1,30*60 do now+=1/30;full:step(now,1/30,1,44,0,function()return Vector3.zero end)end
 		local before=full:count(now)
 		local burst=#full:step(now+.01,1/30,1,before+5,0,function()return Vector3.zero end)
 		assert(burst<=1,"no burst: "..burst)
-		assert(L.life[1][2]==12 and L.life[3][2]==10 and L.rate[1]==2.4 and L.rate[2]==1.2)
+		assert(L.life[1][2]==12 and L.life[2][2]==10 and L.rate[1]==4 and L.rate[2]==2 and L.boost==1.5 and L.breathRate==3)
+		assert(L.lean==.45 and L.gust==1.3 and L.sway==.35 and L.rotSpeed==70)
+	end)
+
+	test("the scud (Q5): 6 / 3 a second only while g is over .5, its own 14 / 7 cap, on the ground, never under a roof or on a live course",function()
+		local S=Sim.Skitter
+		local function run(level,g,seconds,cap,hz)
+			local skitter=Sim.Skitters.new(4)
+			local n,most=0,0
+			hz=hz or 30
+			for i=1,seconds*hz do
+				local now=i/hz
+				n+=#skitter:step(now,1/hz,g,cap,level,function(r)return Vector3.new(r:NextNumber(),0,0)end)
+				most=math.max(most,skitter:count(now))
+			end
+			return n,most
+		end
+		assert(run(0,.5,20,1000)==0 and run(0,.3,20,1000)==0,"not at .5 or under")
+		local n=run(0,.8,10,1000);assert(n>=59 and n<=61,"6 a second: "..n)
+		n=run(1,.8,10,1000,15);assert(n>=29 and n<=31,"3 a second at level 1: "..n)
+		assert(run(2,1,10,14)==0,"level 2: none")
+		local _,most=run(0,1,30,14);assert(most==14,"the cap: "..most)
+		assert(S.life[2]==3 and S.speed[1]==3 and S.speed[2]==5 and S.drag==1.2 and S.rotSpeed==220 and S.height==.12)
+		local r=Random.new(9)
+		for _=1,200 do
+			local at=assert(Sim.skitterSpot(r,Vector3.new(10,5,-20),{ground=function()return 4 end,cover={}}))
+			assert(near(at.Y,4.12,1e-6)and math.abs(at.X-10)<=36 and math.abs(at.Z+20)<=36)
+		end
+		-- Its own short reach: 15 studs (a 5 studs a second leaf for 3 s), not the falling leaves'.
+		local roof={name="Roof",x=0,z=0,r=4}
+		local function covered(d)return Sim.leafCovered(-Wind.Direction.X*d,-Wind.Direction.Z*d,{roof},S.reach,S.side)end
+		assert(covered(14)=="Roof"and covered(S.reach+roof.r+S.side+1)==nil)
+		local spot,why=Sim.skitterSpot(r,Vector3.zero,{ground=function()return nil end})
+		assert(spot==nil and why=="ground")
+		local refused=0
+		for _=1,300 do
+			local at,reason=Sim.skitterSpot(r,Vector3.zero,{ground=function()return 4 end,cover={},course={-40,0,40,0}})
+			if at then assert(math.abs(at.Z)>=Sim.Keep.course-1e-6,"on the course")else assert(reason=="course");refused+=1 end
+		end
+		assert(refused>0,"the live course refuses some")
 	end)
 
 	test("leaf spots: in the 72-stud square 10 to 12 over the ground, none off the island, none whose drift reaches a roof",function()

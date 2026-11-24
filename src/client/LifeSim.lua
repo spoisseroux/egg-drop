@@ -25,8 +25,10 @@ local Sim={}
 -- Caps by AliveBudget level 0, 1, 2 (level 1 halves every cap; level 2 shows nothing). fruit: hanging Dewdrops shown,
 -- loose: Dewdrops off the tree at once (FRUIT-LOOK 4). leaves: falling leaves alive (round 3; `petals` is the same
 -- table under its old name for one build).
-local leaves=table.freeze({28,14,0})
+-- Beta 14 QA Q5 (WORLD-AND-NEST-LOOK 6): 44 / 22 falling, plus 14 / 7 scudding along the ground in a gust.
+local leaves=table.freeze({44,22,0})
 Sim.Caps=table.freeze({
+	skitter=table.freeze({14,7,0}),
 	leaves=leaves,petals=leaves,bubbles=table.freeze({8,4,0}),butterflies=table.freeze({4,2,0}),
 	birds=table.freeze({3,2,0}),emitters=table.freeze({3,3,0}),fruit=table.freeze({16,8,0}),loose=table.freeze({3,2,0}),
 	-- Beta 14 QA B2: the night fireflies (a population of their own, GARDEN-LIFE-BUILD-PLAN section 3).
@@ -106,26 +108,33 @@ function Sim.clear(position,world,keep)
 	return true
 end
 
--- Falling leaves (beta 12 QA L2; GARDEN-LIFE-NEST-LOOK 2, replacing the petal bursts) --------------------------
--- A few leaves always coming down round the player: three emitters (leaf A, leaf B, a pale petal) that GardenLife
--- moves to a fresh spawn point for each emit. Sim.leafSpot draws that point uniform in the 72-stud square round the
--- player, 11 +- 1 studs over the ground there, and refuses a point off the island or whose drift path crosses a
--- covered place (Sim.LeafCover), so no leaf ever comes down under a roof; a refused emit is skipped, not redrawn.
--- The wind term is the gust number (Wind.gust, no breeze): the look's .7 studs a second when calm, 3.3 in a full gust.
+-- Falling leaves (beta 12 QA L2; GARDEN-LIFE-NEST-LOOK 2, replacing the petal bursts; beta 14 QA Q5) ---------------
+-- Leaves always coming down round the player: two emitters (the leaf sheet: four leaves on one 2 x 2 flipbook, and a
+-- pale petal) that GardenLife moves to a fresh spawn point for each emit, plus a third that scuds leaves along the ground
+-- in a gust (Sim.Skitter). Sim.leafSpot draws that point uniform in the 72-stud square round the player, 11 +- 1 studs
+-- over the ground there, and refuses a point off the island or whose drift path crosses a covered place
+-- (Sim.LeafCover), so no leaf ever comes down under a roof; a refused emit is skipped, not redrawn.
+-- The wind term is the gust number (Wind.gust, no breeze, NEVER the big breath: architect r1, so the reach below holds;
+-- the breath only multiplies the rate by breathRate and runs the scud).
 Sim.Leaf=table.freeze({
-	share=table.freeze({.55,.30,.15}),                                       -- leaf A, leaf B, petal
-	life=table.freeze({table.freeze({9,12}),table.freeze({9,12}),table.freeze({8,10})}),
-	rate=table.freeze({2.4,1.2}),boost=.5,                                    -- emits a second at level 0 / 1, x (1 + boost g)
+	share=table.freeze({.90,.10}),                                            -- the leaf sheet, the petal
+	life=table.freeze({table.freeze({9,12}),table.freeze({8,10})}),
+	rate=table.freeze({4.0,2.0}),boost=1.5,breathRate=3,                      -- emits a second at level 0 / 1, x (1 + boost g), x 3 in a breath
 	half=36,height=11,band=1,                                                 -- the square round the player; studs over the ground
-	lean=.25,gust=.9,sway=.3,swayPeriod=7,fall=.45,drag=.5,                   -- Acceleration (GardenLife writes it at accelHz)
-	speed=table.freeze({.3,.6}),spread=20,accelHz=4,
+	lean=.45,gust=1.3,sway=.35,swayPeriod=7,fall=.45,drag=.5,                 -- Acceleration (GardenLife writes it at accelHz)
+	speed=table.freeze({.3,.6}),spread=20,accelHz=4,rotSpeed=70,
 	-- How far a leaf can drift over its longest life: along the wind (reach) and to either side (side). Derived by
 	-- LifeSim.spec from real wind sequences: Sim.leafDrift through a 12 s life from 4,000 start times over 3,000 s of
-	-- gusts, with the wind dial at 1 and at 1.5 (two gusts in one life included): at most 14.5 along and 1.3 across
-	-- (2026-11-23), rounded up with under 2 studs to spare. The gusts are short (.8 s up, 2.7 s down), so a leaf
-	-- spends most of its life in the calm lean. [check] in Studio that a leaf's real drift matches (Drag's half-life).
-	reach=16,side=2,
+	-- gusts, with the wind dial at 1 and at 1.5 (two gusts in one life included), rounded up with under 2 studs to
+	-- spare. Round 3 (lean .25, gust .9): 14.5 along, 1.3 across -> 16 / 2. Beta 14 Q5 (lean .45, gust 1.3, sway .35):
+	-- 23.1 along, 1.5 across (2026-11-23) -> 24 / 2. [check] in Studio that a leaf's real drift matches (Drag's half-life).
+	reach=24,side=2,
 })
+-- The scud (beta 14 QA Q5): leaves tumbling along the ground while the gust (or the big breath, with `scene` on) is
+-- over `over`. Same square, .12 over the ground, never where a 3 s scud would cross a roof (its own short reach), never
+-- on the course while a race is live.
+Sim.Skitter=table.freeze({rate=table.freeze({6,3}),life=table.freeze({2,3}),speed=table.freeze({3,5}),spread=12,drag=1.2,
+	rotSpeed=220,height=.12,over=.5,reach=15,side=1})
 -- The covered places (roofs) no leaf may come down under: a flat circle each, x, z and radius in studs. From the
 -- read-only Studio probe (scripts/probe_leaf_cover.luau, Play on the beta build after the island re-export, 2026-11-23;
 -- artifacts/qa-2026-11-23-beta12/STUDIO-PROBES.md): every roof players stand under. Left out: the north aqueduct and
@@ -174,15 +183,31 @@ function Sim.leafDrift(t0,life,position,dt)
 	return x:Dot(dir),x:Dot(cross)
 end
 -- The covered place a leaf starting over (x, z) would drift under, or nil: its path is the segment from (x, z) to
--- reach studs downwind; refused when that passes within r + side of a cover's middle.
-function Sim.leafCovered(x,z,cover)
+-- reach studs downwind; refused when that passes within r + side of a cover's middle. reach and side default to the
+-- falling leaves' (the scud passes its own).
+function Sim.leafCovered(x,z,cover,reach,side)
 	local L=Sim.Leaf
+	reach,side=reach or L.reach,side or L.side
 	local dir=Wind.Direction
-	local line={x,z,x+dir.X*L.reach,z+dir.Z*L.reach}
+	local line={x,z,x+dir.X*reach,z+dir.Z*reach}
 	for _,place in ipairs(cover or Sim.LeafCover)do
-		if Sim.lineDistance(place.x,place.z,line)<place.r+L.side then return place.name or "cover"end
+		if Sim.lineDistance(place.x,place.z,line)<place.r+side then return place.name or "cover"end
 	end
 	return nil
+end
+-- A spot for one scudding leaf round `centre`, or nil and why: off the island, under cover (the scud's own reach), or
+-- on the course while a race is live (world.course).
+function Sim.skitterSpot(random,centre,world)
+	local L,S=Sim.Leaf,Sim.Skitter
+	if typeof(centre)~="Vector3"then return nil,"centre"end
+	local x=centre.X+random:NextNumber(-L.half,L.half)
+	local z=centre.Z+random:NextNumber(-L.half,L.half)
+	local ground=world and world.ground and world.ground(x,z)
+	if type(ground)~="number"or ground~=ground or math.abs(ground)==math.huge then return nil,"ground"end
+	local covered=Sim.leafCovered(x,z,world.cover,S.reach,S.side)
+	if covered then return nil,covered end
+	if world.course and Sim.lineDistance(x,z,world.course)<Sim.Keep.course then return nil,"course"end
+	return Vector3.new(x,ground+S.height,z)
 end
 -- A spawn point for one leaf round `centre` (the player), or nil and why: "ground" off the island (world.ground answers
 -- nil), or the covered place's name.
@@ -208,10 +233,11 @@ function Leaves:count(now)
 	return #live
 end
 function Leaves:clear()table.clear(self.live);self.carry=0 end
--- One step: {{kind = 1 | 2 | 3, at = Vector3}, ...}, at most one emit per kind a step (the rest carries). g: the gust
--- 0 to 1. place(kind, random) -> Vector3? is Sim.leafSpot round the player; nil skips that emit (the carry is spent).
+-- One step: {{kind = 1 | 2, at = Vector3}, ...} (1 the leaf sheet, 2 the petal), at most one emit per kind a step (the
+-- rest carries). g: the gust 0 to 1. breath: true while the big breath blows here (`scene` on): the rate x breathRate.
+-- place(kind, random) -> Vector3? is Sim.leafSpot round the player; nil skips that emit (the carry is spent).
 -- The live count holds each kind's longest life, so the cap is never passed; at the cap nothing piles up.
-function Leaves:step(now,dt,g,cap,level,place)
+function Leaves:step(now,dt,g,cap,level,place,breath)
 	local L=Sim.Leaf
 	local out={}
 	local rate=L.rate[Sim.level(level)+1]
@@ -219,13 +245,12 @@ function Leaves:step(now,dt,g,cap,level,place)
 	if not rate or cap<=0 then self.carry=0;return out end
 	dt=if type(dt)=="number"and dt==dt then math.clamp(dt,0,.25)else 0
 	g=if type(g)=="number"and g==g then math.clamp(g,0,1)else 0
-	self.carry+=rate*(1+L.boost*g)*dt
+	self.carry+=rate*(1+L.boost*g)*(if breath==true then L.breathRate else 1)*dt
 	local room=cap-self:count(now)
 	local used={}
 	while self.carry>=1 do
 		if room<=0 then self.carry=math.min(self.carry,1);break end
-		local roll,kind=self.random:NextNumber(),3
-		if roll<L.share[1]then kind=1 elseif roll<L.share[1]+L.share[2]then kind=2 end
+		local kind=if self.random:NextNumber()<L.share[1]then 1 else 2
 		if used[kind]then break end
 		used[kind]=true
 		self.carry-=1
@@ -235,6 +260,36 @@ function Leaves:step(now,dt,g,cap,level,place)
 			room-=1
 			table.insert(out,{kind=kind,at=at})
 		end
+	end
+	return out
+end
+
+-- The scud (beta 14 QA Q5): one emitter, only while g is over Sim.Skitter.over, at most one emit a step, its own cap.
+local Skitters={};Skitters.__index=Skitters
+Sim.Skitters=Skitters
+function Skitters.new(seed)return setmetatable({random=Random.new(seed or 6),live={},carry=0},Skitters)end
+Skitters.count=Leaves.count
+function Skitters:clear()table.clear(self.live);self.carry=0 end
+-- {Vector3, ...}: where to emit now. place(random) -> Vector3? (Sim.skitterSpot round the player).
+function Skitters:step(now,dt,g,cap,level,place)
+	local S=Sim.Skitter
+	local out={}
+	local rate=S.rate[Sim.level(level)+1]
+	cap=cap or 0
+	g=if type(g)=="number"and g==g then g else 0
+	if not rate or cap<=0 or g<=S.over then self.carry=0;return out end
+	dt=if type(dt)=="number"and dt==dt then math.clamp(dt,0,.25)else 0
+	self.carry+=rate*dt
+	if self.carry>=1 then
+		self.carry-=1
+		if self:count(now)<cap then
+			local at=place and place(self.random)
+			if typeof(at)=="Vector3"then
+				table.insert(self.live,now+S.life[2])
+				table.insert(out,at)
+			end
+		end
+		self.carry=math.min(self.carry,1)
 	end
 	return out
 end
