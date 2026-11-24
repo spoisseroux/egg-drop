@@ -11,6 +11,9 @@ import unittest
 from world_native_collision import INPUTS, LUA, NATIVE, PROOF, XML, input_hashes, sha, stage_directory, validate
 
 ROOT = Path(__file__).resolve().parents[1]
+# The current native checkpoint: its upload readback and pack size (update both with each promotion).
+CURRENT_READBACK = "artifacts/qa-2026-11-24-beta15/eggs-split/upload-readback.json"
+CURRENT_NATIVE_BYTES = 326424  # Eggs station split (EGG-CORNER-BUILD-PLAN 6.2)
 
 
 class NativeCollisionTests(unittest.TestCase):
@@ -44,7 +47,7 @@ class NativeCollisionTests(unittest.TestCase):
         return result
 
     def test_current_real_checkpoint_passes_and_builder_is_byte_idempotent(self):
-        self.assertEqual(validate(self.root)["nativeBytes"], 325270)  # QA v735 W1 grounded retexture
+        self.assertEqual(validate(self.root)["nativeBytes"], CURRENT_NATIVE_BYTES)
         self.run_builder(success=True)
 
     def test_binary_and_mount_tampering_refused_without_output_changes(self):
@@ -93,7 +96,7 @@ class NativeCollisionTests(unittest.TestCase):
 
     def proof(self):
         path = self.root / "readback.json"
-        proof = json.loads((ROOT / "artifacts/qa-2026-11-14-v685/w2-lamp/upload-readback.json").read_text())
+        proof = json.loads((ROOT / CURRENT_READBACK).read_text())
         proof["operationId"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         path.write_text(json.dumps(proof))
         return path

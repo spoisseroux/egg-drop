@@ -1,2 +1,7 @@
 assets/world/aero-kit/** -text
 assets/world/AeroKit.rbxmx -text
+# Written with LF by scripts/build_world_v7_assets.py and bound by those bytes in world-v7-native-collision.json:
+# keep them LF on checkout (core.autocrlf would make every Windows checkout read the native checkpoint as stale).
+assets/world/WorldAssets.rbxmx eol=lf
+src/shared/WorldV7Data.lua eol=lf
+assets/world/world-v7-pending.json eol=lf
