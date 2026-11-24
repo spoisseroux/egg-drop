@@ -614,7 +614,7 @@ return function(client)
 			assert(Sim.cap("fruit",level)==({16,8,0})[level+1]and Sim.cap("loose",level)==({3,2,0})[level+1],"level "..level)
 		end
 		assert(F.pool==16 and F.reach==90 and F.chance==.5 and F.dropAt==.8 and F.rest==30)
-		assert(F.down==.62 and F.out==.30 and F.hang==.50 and F.stemIn==.82)
+		assert(F.down==.75 and F.out==.30 and F.hang==.50 and F.stemIn==.82)
 		local total,twoOrMore=0,0
 		for i,crown in ipairs(Spots.Crowns)do
 			local stems=Sim.fruitStems(i,crown)
@@ -625,7 +625,7 @@ return function(client)
 			local top=crown.position.Y+crown.size.Y/2
 			for j,slot in ipairs(stems)do
 				assert(slot.stem==again[j].stem and slot.key==Sim.fruitKey(i,slot.k),"seeded")
-				assert(near(slot.stem.Y,top-.62*crown.size.Y,1e-4),"inside the leaves: .62 under the top")
+				assert(near(slot.stem.Y,top-.75*crown.size.Y,1e-4),"inside the leaves: .75 under the top")
 				assert(near(Sim.flat(slot.stem,crown.position),.30*crown.size.X,1e-3),"out .30 of the width")
 				-- Hanging, the image centre .50 under the stem tip; a sway swings it downwind and keeps the tip.
 				local still=Sim.fruitHang(slot.stem,0,1)

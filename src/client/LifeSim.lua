@@ -999,8 +999,10 @@ end
 -- and `out` .30 of its width out, kept inside the crown's ellipsoid at `stemIn` of its radius there; the image (now with
 -- a drawn stem, 1.1 x 1.5 studs) hangs `hang` .50 under it. More fall (`chance` .5) and they rest longer (`rest` 30).
 -- [check] on the reshaped crowns: tune `down` until the top third is hidden on the three most-seen lime trees.
+-- STUDIO-CHECK-R5: at .62 every fruit sat inside the reshaped crowns (none showed); .75 (precise hulls: about .44
+-- hidden on average, hulls overstate the leaves) shows the lower part under the leaves.
 Sim.Fruit=table.freeze({
-	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.30,down=.62,hang=.50,stemIn=.82,pool=16,reach=90,
+	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.30,down=.75,hang=.50,stemIn=.82,pool=16,reach=90,
 	swayMin=3,swayGust=12,swayHz=2.2,
 	dropAt=.8,chance=.5,
 	tug=20,letGo=.15,fall=.55,drift=1.2,turn=180,
