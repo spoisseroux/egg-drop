@@ -257,7 +257,7 @@ function World:apply(on)
 	local room=self.room
 	local sign=room:FindFirstChild("EggsSign")
 	local old=sign and sign:FindFirstChildOfClass("ProximityPrompt")
-	if old then old:SetAttribute("PocketClubStation",if on then nil else "Eggs")end
+	if old then old:SetAttribute("PocketClubStation",if on then nil else "Eggs");old.Enabled=not on end -- a client that joins after the swap never owned it, so LoungeStations never disables it
 	self.prompt:SetAttribute("PocketClubStation",if on then "Eggs"else nil)
 	self.model.Parent=if on then room else self.park
 	local block=room:FindFirstChild(World.Block)
