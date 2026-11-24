@@ -50,13 +50,16 @@ REGION = {  # x0, y0, x1, y1 in atlas pixels (image y down): scripts/draw_nest_l
 TRI_CAP = 5000              # the whole landmark: these meshes + the code egg (cap 320) + code parts (about 60)
 CODE_EGG_CAP, CODE_PARTS = 320, 60
 EGG_BASE, EGG_W, EGG_H = 2.15, 1.6, 2.1
-MOON_R, MOON_BITE_C, MOON_BITE_R = .4, (.26, .06), .36       # the painter's crescent (bite toward +u)
-MOON_CENTRE, CROOK_TIP = Vector((1.7, 4.25, -.3)), Vector((1.7, 5.0, -.3))
+MOON_R, MOON_BITE_C, MOON_BITE_R = .5, (.325, .075), .45     # the painter's crescent (bite toward +u); Fable R1 4
+MOON_UV = 1.2                                                    # studs across the MOON region (128 px)
+MOON_CENTRE, CROOK_TIP = Vector((2.0, 4.25, -.5)), Vector((2.0, 5.1, -.5))
 CROOK_APEX = Vector((1.2, 6.45, .9))
 SIGN = {"centre": [0.0, 1.15, -2.45], "size": [1.7, .85, .1], "tiltBack": 10}
 MAT = {"centre": [-2.9, 0.0, -2.0], "radius": 1.1}
 FOLDED_CENTRE = Vector((-1.5, 2.9, -1.1))
-AWNING_ENDS = (Vector((-.85, 5.45, 1.45)), Vector((.05, 5.12, 2.36)), Vector((1.85, 5.25, 2.4)))
+AWNING_YAWS = (20.0, 75.0, 130.0)   # degrees from +Z toward -X (Fable R2 2)
+AWNING_DROP = (0.0, .2, .4)          # attach heights staggered .2 (Fable R2 2)
+AWNING_ATTACH = Vector((-.05, -.5, .22))   # below and behind the apex (Fable R1 1)
 COLLIDER_R, COLLIDER_H = 2.4, 2.75
 VERSION = 1   # NestLandmarkData.version and the template's LandmarkVersion value: a stale template falls back
 
@@ -67,7 +70,7 @@ def r4(v):
 
 def awning_axis():
     """Horizontal, across the leaves' mean direction, signed so a positive (right-handed) turn raises their tips."""
-    mean = sum((e - CROOK_APEX for e in AWNING_ENDS), Vector()) / len(AWNING_ENDS)
+    mean = sum((Vector((-math.sin(math.radians(a)), -.27, math.cos(math.radians(a)))) for a in AWNING_YAWS), Vector())
     axis = Vector((mean.z, 0, -mean.x)).normalized()
     if axis.cross(mean).y < 0:
         axis = -axis
@@ -223,7 +226,7 @@ def catmull(points, per):
 # ------------------------------------------------------------------------------------------------------------- body
 BOWL = [(0.0, .35), (1.6, .36), (1.92, .55), (2.2, .95), (2.35, 1.35), (2.4, 1.62), (2.4, 1.75), (2.3, 1.8),
         (2.2, 1.75), (2.05, 1.5)]
-FEET = ((-1.0, -.75), (1.0, -.75), (0.0, 1.2))          # two front (-Z), one back
+FEET = ((-1.169, -.675), (1.169, -.675), (0.0, 1.35))   # two front (-Z), one back, at radius 1.35 (Fable R1 8)
 NEST_R, NEST_Y, NEST_TUBE = 1.8, 2.25, .5
 
 
@@ -241,8 +244,8 @@ def build_collar(m, segs=36):
     for i in range(segs + 1):
         a = 2 * math.pi * i / segs + math.pi / 8
         f = lobe(a)
-        ring = [(2.1, 2.08), (2.32, 2.05), (2.3 + .12 * f, 1.86 - .04 * f), (2.28 + .17 * f, 1.62 + .22 * (1 - f)),
-                (2.3 + .2 * f, 1.55 + .24 * (1 - f))]
+        ring = [(2.1, 2.08), (2.43, 2.05), (2.45 + .03 * f, 1.88 - .06 * f), (2.45 + .04 * f, 1.66 + .2 * (1 - f)),
+                (2.45 + .05 * f, 1.55 + .3 * (1 - f))]
         rows.append([V(r * math.sin(a), y, r * math.cos(a)) for r, y in ring])
     for i in range(segs):
         a = 2 * math.pi * (i + .5) / segs + math.pi / 8
@@ -298,13 +301,13 @@ def build_nest(m, rnd):
         start = V(0, y + h, 0) + radial * (r + .3)
         d = radial * rnd.uniform(.5, 1.0) + tangent * rnd.uniform(-.7, .7) + V(0, rnd.uniform(-.15, .6), 0)
         d.normalize()
-        length = rnd.uniform(.45, .8)
+        length = rnd.uniform(.25, .6)
         tip = start + d * length
         if math.hypot(tip.x, tip.z) > 2.52 or tip.y > 3.05:
             continue
         mid = start + d * length * .5 + V(0, .03, 0)
-        tube(m, [start - d * .2, mid, tip], [.05, .04, 0.0], 4,
-             lambda k, s: region_uv("twigend", k / 2 * .999, s / 4), cap_end=False)
+        tube(m, [start - d * .2, mid, tip], [.06, .05, .035], 4,
+             lambda k, s: region_uv("twigend", .97 if k == 2 else k * .4, s / 4), cap_end=True)
         count += 1
     assert count == 24, ("twig ends", count)
 
@@ -336,11 +339,11 @@ def build_bed(m):
 
 
 def build_crook(m):
-    pts = [V(1.5, 1.75, 1.9), V(1.48, 3.5, 1.92), V(1.4, 5.2, 1.78), V(1.3, 6.18, 1.42), CROOK_APEX, V(1.33, 6.32, .3),
-           V(1.58, 5.76, -.13), CROOK_TIP]
+    pts = [V(1.5, 1.75, 1.9), V(1.66, 3.0, 2.08), V(1.85, 4.0, 2.25), V(1.72, 5.1, 1.98), V(1.4, 6.05, 1.5), CROOK_APEX,
+           V(1.42, 6.36, .3), V(1.8, 5.86, -.32), CROOK_TIP]
     spine = catmull(pts, 3)
     n = len(spine)
-    radii = [.225 - (.225 - .1) * (k / (n - 1)) ** .8 for k in range(n)]
+    radii = [.225 - (.225 - .1) * k / (n - 1) for k in range(n)]                # Fable R1 1: a visible linear taper
     tube(m, spine, radii, 6, lambda k, s: region_uv("crook", k / (n - 1), s / 6), cap_end=True, cap_start=False)
     # two small leaf buds on the outside of the bend
     for k, side in ((int(n * .45), 1), (int(n * .72), -1)):
@@ -392,41 +395,48 @@ def build_body(rnd):
 
 # ----------------------------------------------------------------------------------------------------------- awning
 def build_awning():
-    """Three leaves from the crook's apex over the back half only (z .3 to 2.5, y 5.0 to 6.4)."""
+    """Fable R1 1: three broad leaves with rounded tips (2.2 long, .95 wide, the machine sprout's shape), attached .5
+    below the apex on its back side, 35 degrees apart, drooping 15 degrees, over the back half only (the arch and droop
+    keep each chord inside z .3 .. 2.5)."""
     m = Mesh("Awning")
-    ends = list(AWNING_ENDS)
-    start = CROOK_APEX + V(0, -.08, .12)
-    for end in ends:
-        d = end - start
-        length = d.length
-        d.normalize()
-        across = d.cross(V(0, 1, 0))
-        if across.length < 1e-3:
-            across = V(1, 0, 0)
-        across.normalize()
+    lengths = []
+    for yaw, drop in zip(AWNING_YAWS, AWNING_DROP):
+        attach = CROOK_APEX + AWNING_ATTACH - V(0, drop, 0)
+        a = math.radians(yaw)
+        flat = V(-math.sin(a), 0, math.cos(a))                 # yaw from +Z toward -X
+        d = (flat * math.cos(math.radians(15)) + V(0, -math.sin(math.radians(15)), 0)).normalized()
+        across = d.cross(V(0, 1, 0)).normalized()
         up = across.cross(d).normalized()
         if up.y < 0:
             up = -up
-        n = 8
+        n = 9
+        per = .92 * math.cos(math.radians(15)) * math.cos(a)        # tip z per stud of leaf
+        length = 2.2
+        if per > 0:
+            length = min(length, (2.5 - attach.z) / per)
+        elif per < 0:
+            length = min(length, (attach.z - .3) / -per)
+        lengths.append(round(length, 3))
         top_rows, bot_rows = [], []
         for k in range(n + 1):
             t = k / n
-            c = start + d * (length * t) + up * (.22 * math.sin(math.pi * t) - .25 * t * t)   # arches then droops
-            w = .5 * math.sin(math.pi * min(1, t * 1.08)) ** .8
-            fold = .07 * w / .5                                                           # V along the midrib
-            row = [c + across * (-w) - up * fold, c + up * .0, c + across * w - up * fold]
+            c = attach + d * (length * .92 * t) + up * (.28 * math.sin(math.pi * t)) - V(0, .18 * t * t, 0)
+            w = .475 * math.sin(math.pi * min(1.0, t)) ** .5          # rounded at the tip, a short stalk at the base
+            fold = .06 * w / .475
+            row = [c + across * (-w) - up * fold, c, c + across * w - up * fold]
             top_rows.append(row)
-            bot_rows.append([p - up * .02 for p in row])
+            bot_rows.append([q - up * .02 for q in row])
         for k in range(n):
-            for s in range(2):
-                q = [top_rows[k][s], top_rows[k][s + 1], top_rows[k + 1][s + 1], top_rows[k + 1][s]]
-                uv = [region_uv("awning", k / n, .05 + .2 * s), region_uv("awning", k / n, .05 + .2 * (s + 1)),
-                      region_uv("awning", (k + 1) / n, .05 + .2 * (s + 1)), region_uv("awning", (k + 1) / n, .05 + .2 * s)]
+            for sd in range(2):
+                q = [top_rows[k][sd], top_rows[k][sd + 1], top_rows[k + 1][sd + 1], top_rows[k + 1][sd]]
+                uv = [region_uv("awning", k / n, .05 + .2 * sd), region_uv("awning", k / n, .05 + .2 * (sd + 1)),
+                      region_uv("awning", (k + 1) / n, .05 + .2 * (sd + 1)), region_uv("awning", (k + 1) / n, .05 + .2 * sd)]
                 m.face(q, uv, up)
-                qb = [bot_rows[k][s], bot_rows[k][s + 1], bot_rows[k + 1][s + 1], bot_rows[k + 1][s]]
+                qb = [bot_rows[k][sd], bot_rows[k][sd + 1], bot_rows[k + 1][sd + 1], bot_rows[k + 1][sd]]
                 m.face(qb, [region_uv("awning", .5, .8)] * 4, -up)
-        # a short stem back into the apex
-        tube(m, [CROOK_APEX, start + d * .05], [.05, .04], 4, lambda k, s: region_uv("crook", .9, .5), cap_end=False)
+        tube(m, [attach + V(.06, .05, -.08), attach + d * .12], [.05, .04], 4, lambda k, s2: region_uv("crook", .9, .5),
+             cap_end=False)
+    print("AWNING leaf lengths", lengths)
     return m
 
 
@@ -464,7 +474,7 @@ def build_moon():
     half = .09
     c = MOON_CENTRE
     def uv(x, y):                       # planar: the painter's crescent has its bite to +u; the mesh's is to -X
-        return region_uv("moon", .5 - x / 1.0, .5 - y / 1.0)
+        return region_uv("moon", .5 - x / MOON_UV, .5 - y / MOON_UV)
     front = [c + V(x, y, -half) for x, y in outline]
     back = [c + V(x, y, half) for x, y in outline]
     m.face(front, [uv(x, y) for x, y in outline], V(0, 0, -1))
@@ -503,11 +513,12 @@ def build_draped(name="BlanketDraped", top_frac=.45, slipped=False):
     ready pose): down to 20 percent, the east corner (toward the Bear) slid off the rim and hanging down the bowl."""
     m = Mesh(name)
     top = EGG_BASE + top_frac * EGG_H
+    low = EGG_BASE + min(top_frac, .25) * EGG_H                     # the top edge at the ends (Fable R2 1: 25 percent)
     path = []
-    for k in range(5):                                   # down the egg's face
-        y = top - (top - (EGG_BASE + .12)) * k / 4
-        path.append((egg_radius(y) + CLEAR, y))
-    path += [(1.0 + .05, 2.25), (1.3, 2.4), (1.58, 2.72), (1.86, 2.84), (2.14, 2.76), (2.38, 2.5), (2.47, 2.22)]
+    for k in range(6):                                   # down the egg's face; the stand-off widens .05 -> .15
+        y = top - (top - (EGG_BASE + .35)) * k / 5
+        path.append((egg_radius(y) + .05 + (CLEAR - .05) * k / 5, y))
+    path += [(1.22, 2.55), (1.56, 2.8), (1.86, 2.9), (2.14, 2.8), (2.38, 2.52), (2.47, 2.22)]   # taut over the crest
     if slipped:
         path += [(2.52, 1.92), (2.5, 1.62)]             # the corner's extra length, down the collar and bowl
     lens = [0.0]
@@ -526,13 +537,19 @@ def build_draped(name="BlanketDraped", top_frac=.45, slipped=False):
     spill = lens[len(path) - (3 if slipped else 1)] / total           # the arc share up to the front spill's end
     for i in range(cols + 1):
         th = math.radians(-120 + 240 * i / cols)
-        reach = (.36 + .64 * max(0.0, math.cos(th)) ** 3) * spill        # the spill only at the front
+        half = math.degrees(.9 / 2.4)                                  # the flap: 1.8 wide at the rim (r 2.4)
+        edge = max(0.0, min(1.0, (abs(math.degrees(th)) - half) / 16))
+        flap = .5 + .5 * math.cos(math.pi * edge)                      # 1 across the flap, rounded off over 16 degrees
+        reach = (.36 + .64 * (max(0.0, math.cos(th)) ** 3 if slipped else flap)) * spill   # slipped: R1's accepted pose
         if slipped:
             corner = math.exp(-((math.degrees(th) + 65) / 28) ** 2)        # the east corner, about 65 degrees round
             reach = reach + (1 - reach) * corner
         row = []
-        drop = .55 * (1 - math.cos(th)) / 2 * (EGG_H * top_frac)              # the top edge lower toward the sides
-        start = min(lens[4] * .9, drop * 1.1)
+        side = min(1.0, abs(math.degrees(th)) / 120)
+        drop_to = top - (top - low) * side ** 1.5                     # 45 percent at the front, 25 at the ends
+        start = 0.0
+        while start < lens[5] and at(start)[1] > drop_to:
+            start += .01
         for j in range(rows + 1):
             r, y = at(start + (total * reach - start) * j / rows)
             sag = .03 * math.sin(math.pi * i / cols * 6) * (j / rows)    # soft folds
@@ -556,48 +573,41 @@ def build_draped(name="BlanketDraped", top_frac=.45, slipped=False):
 
 
 def build_folded():
-    """Three folded layers (1.1 x 0.8 x 0.35 in all), the folds rounded on alternate sides, along the rim's tangent."""
+    """Fable R1 10: one soft block 1.1 x 0.8 x 0.35, bevel .08, its +z long edge fully rounded (the fold), along the
+    rim's tangent. A subdivided box pushed out from an inner box (each point's radius by its side)."""
     m = Mesh("BlanketFolded")
     c = FOLDED_CENTRE
-    yaw = math.atan2(c.x, c.z) + math.pi / 2                         # long side along the ring
+    yaw = math.atan2(c.x, c.z) + math.pi / 2
     rot = Matrix.Rotation(yaw, 3, "Y")
-    L, W, layer = 1.1, .8, .35 / 3
+    hx, hy, hz = .55, .175, .4
+    n = 4
 
-    def P(x, y, z):
-        return c + rot @ V(x, y, z)
-    for k in range(3):
-        y0 = -.175 + k * layer
-        y1 = y0 + layer * .92
-        inset = .03 * k
-        x0, x1 = -L / 2 + .06 + inset, L / 2 - .06 - inset
-        z0, z1 = -W / 2 + inset, W / 2 - inset
-        quilt = lambda u, v: region_uv("quilt", .3 + u * .4, .2 + v * .5)
-        # top and bottom
-        m.face([P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1)],
-               [quilt(0, 0), quilt(1, 0), quilt(1, 1), quilt(0, 1)], rot @ V(0, 1, 0))
-        m.face([P(x0, y0, z0), P(x1, y0, z0), P(x1, y0, z1), P(x0, y0, z1)], [quilt(.5, .5)] * 4, rot @ V(0, -1, 0))
-        # long sides (stitch edge)
-        for z, sgn in ((z0, -1), (z1, 1)):
-            m.face([P(x0, y0, z), P(x1, y0, z), P(x1, y1, z), P(x0, y1, z)],
-                   [region_uv("quilt", .14, .32), region_uv("quilt", .2, .32), region_uv("quilt", .2, .36), region_uv("quilt", .14, .36)],
-                   rot @ V(0, 0, sgn))
-        # the fold: a half round on one end, flat on the other
-        fold_x, flat_x = (x1, x0) if k % 2 == 0 else (x0, x1)
-        sgn = 1 if fold_x == x1 else -1
-        rad, mid = (y1 - y0) / 2, (y0 + y1) / 2
-        segs = 5
-        arc = [(fold_x + sgn * rad * math.sin(math.pi * s / segs), mid - rad * math.cos(math.pi * s / segs)) for s in range(segs + 1)]
-        for s in range(segs):
-            (xa, ya), (xb, yb) = arc[s], arc[s + 1]
-            out = rot @ V(sgn * math.sin(math.pi * (s + .5) / segs), -math.cos(math.pi * (s + .5) / segs), 0)
-            m.face([P(xa, ya, z0), P(xb, yb, z0), P(xb, yb, z1), P(xa, ya, z1)],
-                   [region_uv("quilt", .14 + .01 * s, .3), region_uv("quilt", .15 + .01 * s, .3),
-                    region_uv("quilt", .15 + .01 * s, .4), region_uv("quilt", .14 + .01 * s, .4)], out)
-            for z, zs in ((z0, -1), (z1, 1)):
-                m.face([P(fold_x, mid, z), P(xa, ya, z), P(xb, yb, z)], [region_uv("quilt", .17, .34)] * 3, rot @ V(0, 0, zs))
-        m.face([P(flat_x, y0, z0), P(flat_x, y1, z0), P(flat_x, y1, z1), P(flat_x, y0, z1)],
-               [region_uv("quilt", .14, .32), region_uv("quilt", .14, .36), region_uv("quilt", .2, .36), region_uv("quilt", .2, .32)],
-               rot @ V(-sgn, 0, 0))
+    def shape(p):
+        r = hy if p.z > 0 else .08
+        inner = V(max(-hx + r, min(hx - r, p.x)), max(-hy + r, min(hy - r, p.y)), max(-hz + r, min(hz - r, p.z)))
+        off = p - inner
+        return inner + (off.normalized() * r if off.length > 1e-9 else V(0, 0, 0))
+    faces = ((V(1, 0, 0), V(0, 1, 0), V(0, 0, 1)), (V(-1, 0, 0), V(0, 0, 1), V(0, 1, 0)),
+             (V(0, 1, 0), V(0, 0, 1), V(1, 0, 0)), (V(0, -1, 0), V(1, 0, 0), V(0, 0, 1)),
+             (V(0, 0, 1), V(1, 0, 0), V(0, 1, 0)), (V(0, 0, -1), V(0, 1, 0), V(1, 0, 0)))
+    ext = V(hx, hy, hz)
+    for normal, a, b in faces:
+        grid = []
+        for i in range(n + 1):
+            row = []
+            for j in range(n + 1):
+                u, v = i / n * 2 - 1, j / n * 2 - 1
+                q = V(normal.x * ext.x, normal.y * ext.y, normal.z * ext.z) + V(a.x * ext.x, a.y * ext.y, a.z * ext.z) * u \
+                    + V(b.x * ext.x, b.y * ext.y, b.z * ext.z) * v
+                row.append(shape(q))
+            grid.append(row)
+        for i in range(n):
+            for j in range(n):
+                q = [grid[i][j], grid[i + 1][j], grid[i + 1][j + 1], grid[i][j + 1]]
+                world = [c + rot @ x for x in q]
+                mid = sum(q, Vector()) / 4
+                uv = [region_uv("quilt", .3 + .4 * (x.x / hx * .5 + .5), .25 + .5 * (x.z / hz * .5 + .5)) for x in q]
+                m.face(world, uv, rot @ (mid - V(0, 0, 0)))
     return m
 
 
@@ -665,8 +675,10 @@ def main():
         r = math.hypot(c.x, c.y)
         return Vector((0, 0, c.z)) if (.5 < c.z < 1.45 and r > 2.0 and r < 2.42) else None   # under the collar
     check_outward(body, bowl_ref, "bowl wall")
-    front = [p for p in moon.data.polygons if abs(p.normal.y) > .9 and -p.center.y > 0]   # Roblox -Z = Blender +y
-    assert all(p.normal.y > 0 for p in moon.data.polygons if abs(p.normal.y) > .9 and p.center.y > .3 + 0), "moon"
+    # The moon's two faces: the one nearer the front (-Z nest-local = +y Blender) must face front (+y), the other back.
+    plus = [p.center.y for p in moon.data.polygons if p.normal.y > .9]
+    minus = [p.center.y for p in moon.data.polygons if p.normal.y < -.9]
+    assert plus and minus and sum(plus) / len(plus) > sum(minus) / len(minus), "moon faces wound inward"
     world = bounds([body, awning, moon, draped, slipped, folded])
     objs = [(body, "Body"), (awning, "Awning"), (moon, "Moon"), (draped, "BlanketDraped"), (slipped, "BlanketSlipped"),
             (folded, "BlanketFolded")]
@@ -694,7 +706,7 @@ def main():
         # Architect: every pivot with its axis, nest-local (the import's pi turn is in the parts' CFrames, not here).
         "pivots": {
             # sway +-2 degrees, and the ready lift: a positive turn about `axis` raises the leaf tips
-            "Awning": {"at": r4(CROOK_APEX), "axis": r4(awning_axis())},
+            "Awning": {"at": r4(CROOK_APEX + AWNING_ATTACH), "axis": r4(awning_axis())},
             # sway +-3 degrees about the cord's top, side to side in the crescent's plane
             "Moon": {"at": r4(CROOK_TIP), "axis": [0.0, 0.0, 1.0]},
             # unrolls from its lower front edge: scale along `up` from `at` (0.2 to 1)

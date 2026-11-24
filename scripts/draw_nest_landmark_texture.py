@@ -48,11 +48,12 @@ TWIGS, TWIG_SHADOW, SNAPPED = [hexrgb(c) for c in ("#6B4A2C", "#5A3D24", "#7D5A3
 STRAW, STRAW_HI, STRAW_DARK = hexrgb("#B8974F"), hexrgb("#C9A560"), hexrgb("#8A6A3A")
 CROOK, BARK = hexrgb("#A47E50"), hexrgb("#6B4A2B")
 PAPER, SUN, CORD = hexrgb("#FFF3C4"), hexrgb("#FFC83C"), hexrgb("#8A6A3A")
-TEAL, STITCH = hexrgb("#6FB3AE"), hexrgb("#38694A")
+TEAL, STITCH = hexrgb("#76ACA7"), hexrgb("#38694A")   # Fable R1 5: #6FB3AE rendered cyan; painted a step greyer
 ALBEDO = .9   # the machine's lesson: cream reads white at noon, so the map holds it at .9
 
 # The crescent (shared with build_nest_landmark.py): outer circle at the origin, the bite a circle to +x.
-MOON_R, MOON_BITE_C, MOON_BITE_R = .4, (.26, .06), .36
+MOON_R, MOON_BITE_C, MOON_BITE_R = .5, (.325, .075), .45     # Fable R1 4: 1.0 tall, .75 wide
+MOON_UV = 1.2                                                    # studs across the MOON region
 
 
 def wrapped_noise(rng, w, h, cycles, octaves=8):
@@ -92,41 +93,41 @@ def bowl(img, rng):
         cy = (1.75 - 1.175) * px_v
         dx, dy = (xx - cx) / px_u, (yy - cy) / px_v            # studs
         if k % 2 == 0:
-            r = .13
+            r = .145
             outer = np.hypot(dx, dy)
             bite = np.hypot(dx - .07, dy + .02)
             inside = (outer < r) & (bite > r * .82)
             edge = (np.abs(outer - r) < .012) & (bite > r * .82) | (np.abs(bite - r * .82) < .012) & (outer < r)
         else:
             d = np.hypot(dx, dy)
-            inside = d < .055
-            edge = np.abs(d - .055) < .012
+            inside = d < .06
+            edge = np.abs(d - .06) < .012
         col = blend(col, GREEN, inside.astype(float) * .95)
         col = col * (1 - .25 * edge[..., None])
     # Two small rim chips (one per half would repeat: the bowl repeats the half twice, so one chip on the half = 2).
     for cx in (rng.uniform(60, 200),):
         d = np.hypot(xx - cx, (yy - 3) * 1.4)
-        chip = np.clip(1 - d / 6, 0, 1)
+        chip = np.clip(1 - d / 5, 0, 1)
         col = blend(col, hexrgb("#D9C9A6"), chip * .8)
     img[0:128, 0:512] = np.clip(col * ALBEDO, 0, 255)
 
 
 def twig(img, rng):
+    """Fable R1 3: strands #6B4A2C with #7D5A38 highlight grain; #3A2616 only in the narrow gaps between the plies
+    (v near 0 and 1 round each strand); loose twigs the same browns with the pale snapped end."""
     w, h = 256, 128
     yy, xx = np.mgrid[0:h, 0:w] + .5
     strands = yy < 96
-    # four browns in bands along the strand, bark grain along u, shadow between the plies (v round the strand: 0 and 1)
-    which = ((xx / w * 7 + wrapped_noise(rng, w, h, 3) * .6).astype(int)) % 4
-    col = np.zeros((h, w, 3))
-    for k, c in enumerate(TWIGS[:3] + [TWIGS[1]]):
-        col[which == k] = c
-    grain = .5 + .5 * np.sin(yy * 1.7 + wrapped_noise(rng, w, h, 5) * 3)
-    col = col * (1 - .12 * grain[..., None])
+    base = np.array(hexrgb("#6B4A2C"), float)
+    col = np.zeros((h, w, 3)) + base
+    grain = np.clip(np.sin(yy * 1.9 + wrapped_noise(rng, w, h, 5) * 3) * 1.4 - .3, 0, 1)
+    col = blend(col, hexrgb("#7D5A38"), grain * .85)
+    col = blend(col, hexrgb("#5A3D24"), np.clip(-np.sin(yy * .7 + xx * .02) - .7, 0, 1) * 1.5 * .5)
     v = np.where(strands, yy / 96, (yy - 96) / 32)
-    shade = np.clip(np.abs(v - .5) * 2 - .55, 0, 1) / .45
-    col = blend(col, TWIG_SHADOW, np.where(strands, shade * .85, shade * .4))
+    gap = np.clip((np.abs(v - .5) * 2 - .82) / .18, 0, 1)
+    col = blend(col, TWIG_SHADOW, np.where(strands, gap, 0.0))
     snapped = (~strands) & (xx > w * .92)
-    col[snapped] = np.array(SNAPPED, float) * (1 + .05 * rng.normal(0, 1, (snapped.sum(), 1)))
+    col[snapped] = np.array(SNAPPED, float)
     col *= 1 + .04 * wrapped_noise(rng, w, h, 9)[..., None]
     img[128:256, 0:256] = np.clip(col, 0, 255)
 
@@ -135,7 +136,8 @@ def leaf(img, rng, y0, colour):
     w, h = 256, 64
     v = np.arange(h)[:, None] / (h - 1)
     under = np.clip((v - .5) * 6, 0, 1)
-    col = np.array(colour, float) * (1 - under[..., None]) + np.array(LEAF_UNDER, float) * under[..., None]
+    below = LEAF_UNDER if colour != AWNING else hexrgb("#5DA562")       # Fable R1 1: the awning is seen from below
+    col = np.array(colour, float) * (1 - under[..., None]) + np.array(below, float) * under[..., None]
     col = np.repeat(col, w, 1)
     col = col * (1 + .03 * wrapped_noise(rng, w, h, 10)[..., None])
     yy, xx = np.mgrid[0:h, 0:w]
@@ -162,6 +164,9 @@ def straw(img, rng):
             x, y = int(x0 + math.cos(a) * ln * t) % w, int(y0 + math.sin(a) * ln * t) % h
             col[y, x] = np.array(c, float) * .7 + col[y, x] * .3
     col *= 1 + .04 * wrapped_noise(rng, w, h, 8)[..., None]
+    du, dv = (xx + .5 - 64) / 128 * 2.8, (yy + .5 - 64) / 128 * 2.8
+    dent = np.clip((1 - (du / .65) ** 2 - (dv / .55) ** 2) * 4, 0, 1)
+    col = blend(col, STRAW_DARK, dent * .3)
     img[256:384, 0:128] = np.clip(col, 0, 255)
 
 
@@ -170,8 +175,8 @@ def crook(img, rng):
     col = np.zeros((h, w, 3)) + np.array(CROOK, float)
     yy, xx = np.mgrid[0:h, 0:w]
     grain = .5 + .5 * np.sin(yy * 1.3 + wrapped_noise(rng, w, h, 4) * 2.5)
-    col = col * (1 - .07 * grain[..., None])
-    patches = wrapped_noise(rng, w, h, 4) > .42
+    col = col * (1 - .03 * grain[..., None])                          # Fable R1 1: peeled, light grain
+    patches = wrapped_noise(rng, w, h, 4) > .7                        # bark patches only
     col = blend(col, BARK, patches * .9)
     img[256:320, 128:256] = np.clip(col, 0, 255)
 
@@ -179,11 +184,11 @@ def crook(img, rng):
 def moon(img, rng):
     s = 128
     yy, xx = np.mgrid[0:s, 0:s] + .5
-    x, y = (xx - 64) / 128, -(yy - 64) / 128                   # studs, y up
+    x, y = (xx - 64) / 128 * MOON_UV, -(yy - 64) / 128 * MOON_UV  # studs, y up
     outer = np.hypot(x, y)
     bite = np.hypot(x - MOON_BITE_C[0], y - MOON_BITE_C[1])
     inside = (outer < MOON_R) & (bite > MOON_BITE_R)
-    edge = ((MOON_R - outer < .022) | (bite - MOON_BITE_R < .022)) & inside
+    edge = ((MOON_R - outer < .03) | (bite - MOON_BITE_R < .03)) & inside
     col = np.zeros((s, s, 3)) + np.array(PAPER, float)
     col *= 1 + .025 * wrapped_noise(rng, s, s, 10)[..., None]      # paper fibre
     col = blend(col, SUN, edge.astype(float))
@@ -215,40 +220,43 @@ def quilt(img, rng):
     col = np.zeros((h, w, 3)) + np.array(TEAL, float)
     col = blend(col, PAPER, ((i + j * 2) % 3 == 0).astype(float))
     # the star patch: cell (4, 2), a five-point star filling 80 percent of the square
-    in_cell = (i == 4) & (j == 2)
-    col = blend(col, TEAL, in_cell.astype(float))
-    # a five-point star (outer .42, inner .18 of the square), drawn in the square's own scale (the cell is 28 x 18 px)
-    sw, sh = w / 9, h / 7
-    cx, cy = 4.5 * sw, 2.5 * sh
-    pts = []
-    for k in range(10):
-        a = -math.pi / 2 + k * math.pi / 5
-        r = .42 if k % 2 == 0 else .18
-        pts.append((cx + r * sw * math.cos(a), cy + r * sh * math.sin(a)))
-    mask = Image.new("L", (w, h), 0)
-    ImageDraw.Draw(mask).polygon(pts, fill=255)
-    col = blend(col, SUN, np.asarray(mask, float) / 255)
     # quilting: soft darker lines on the square edges, a puff in the middle of each square
     du, dv = np.abs(cu - np.round(cu)), np.abs(cv - np.round(cv))
     col = col * (1 - .16 * np.clip(1 - np.minimum(du * w / 9, dv * h / 7) / 1.6, 0, 1)[..., None])
     puff = np.cos((cu % 1 - .5) * math.pi) * np.cos((cv % 1 - .5) * math.pi)
     col = col * (.93 + .1 * puff[..., None])
     col *= 1 + .03 * wrapped_noise(rng, w, h, 14)[..., None]                    # wool
-    # blanket stitch: a green border 3 px, with ticks every 8 px reaching in 4 px
-    border = (xx < 3) | (xx > w - 3) | (yy < 3) | (yy > h - 3)
-    ticks = (((xx < 7) | (xx > w - 7)) & (yy.astype(int) % 8 < 2)) | (((yy < 7) | (yy > h - 7)) & (xx.astype(int) % 8 < 2))
+    # Fable R1 5: the sunflower star on the front flap (u .5, v .9 of the drape), .35 across
+    sw, sh = w / 4.2, h / 3.4                                  # px per stud across and along the drape
+    cx, cy = .5 * w, .9 * h
+    pts = []
+    for k in range(10):
+        a = -math.pi / 2 + k * math.pi / 5
+        r = .175 if k % 2 == 0 else .075
+        pts.append((cx + r * sw * math.cos(a), cy + r * sh * math.sin(a)))
+    mask = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mask).polygon(pts, fill=255)
+    col = blend(col, SUN, np.asarray(mask, float) / 255)
+    # blanket stitch: a thin green edge with ticks .06 long every .15 (about 4 px long every 9 px)
+    border = (xx < 1.6) | (xx > w - 1.6) | (yy < 1.6) | (yy > h - 1.6)
+    ticks = (((xx < 4.5) | (xx > w - 4.5)) & (yy.astype(int) % 9 == 0)) | (((yy < 4.5) | (yy > h - 4.5)) & (xx.astype(int) % 9 == 0))
     col = blend(col, STITCH, (border | ticks).astype(float))
     img[384:512, 0:256] = np.clip(col, 0, 255)
 
 
 def mat(img, rng):
+    """Fable R1 9: coils in #C9A560 and #B8974F; #8A6A3A only as a thin line between them."""
     w = h = 128
     yy, xx = np.mgrid[0:h, 0:w] + .5
-    ring = .5 + .5 * np.cos(yy / h * 9 * 2 * math.pi)               # 9 coils from the centre out
-    col = blend(np.zeros((h, w, 3)) + np.array(STRAW_DARK, float), STRAW_HI, np.clip(ring * 1.4 - .2, 0, 1))
-    wrap = .5 + .5 * np.sin(xx / w * 2 * math.pi * 40 + yy * .3)    # the binding wraps across the coil
-    col = col * (1 - .08 * wrap[..., None])
-    col *= 1 + .04 * wrapped_noise(rng, w, h, 8)[..., None]
+    phase = (yy / h * 9) % 1.0
+    which = ((yy / h * 9).astype(int)) % 2
+    col = np.where(which[..., None] == 0, np.array(STRAW_HI, float), np.array(STRAW, float))
+    col = col * (.94 + .1 * np.sin(np.pi * phase)[..., None])                 # each coil rounded
+    line = np.clip(1 - np.minimum(phase, 1 - phase) * h / 9 / 1.1, 0, 1)
+    col = blend(col, STRAW_DARK, line * .9)
+    wrap = .5 + .5 * np.sin(xx / w * 2 * math.pi * 40 + yy * .3)
+    col = col * (1 - .05 * wrap[..., None])
+    col *= 1 + .03 * wrapped_noise(rng, w, h, 8)[..., None]
     img[384:512, 256:384] = np.clip(col, 0, 255)
 
 
@@ -284,7 +292,7 @@ def main():
     mask = np.zeros((s, s), np.uint8)
     k = s / 512
     yy, xx = np.mgrid[0:int(128 * k), 0:int(128 * k)] + .5
-    x, y = (xx - 64 * k) / (128 * k), -(yy - 64 * k) / (128 * k)
+    x, y = (xx - 64 * k) / (128 * k) * MOON_UV, -(yy - 64 * k) / (128 * k) * MOON_UV
     inside = (np.hypot(x, y) < MOON_R + .01) & (np.hypot(x - MOON_BITE_C[0], y - MOON_BITE_C[1]) > MOON_BITE_R - .01)
     mask[int(256 * k):int(384 * k), int(256 * k):int(384 * k)] = inside * 255
     mask[int(320 * k):int(352 * k), int(224 * k):int(256 * k)] = 255            # SUN: the edge faces
