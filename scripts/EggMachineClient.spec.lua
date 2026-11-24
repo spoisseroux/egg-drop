@@ -228,10 +228,10 @@ return function(client)
 		r.advance(1)
 		assert(r.count("land")==1,"its own egg still rolls")
 	end)
-	test("Studio check R9: the machine's attract ring is a 200 degree front arc, every sample on the front side",function()
+	test("Studio check R9, Fable R10: the machine's attract ring is a 194 degree front arc, every sample on the front side",function()
 		local Attract=require(client.StationAttract)
 		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
-		assert(Corner.RingArc==200 and Corner.Ring==3)
+		assert(Corner.RingArc==194 and Corner.Ring==3)
 		local facing=Corner.facing()
 		local want=(Corner.Face-Corner.Spot)
 		assert(math.abs(facing:Dot(Vector3.new(want.X,0,want.Z).Unit)-1)<1e-9,"centred on the machine's facing")
@@ -251,21 +251,22 @@ return function(client)
 				local a=math.rad(segment.angle)+(k/8-.5)*math.rad(2*half)
 				local sample=Vector3.new(math.cos(a),0,math.sin(a))
 				local fromFacing=math.deg(math.abs(a))
-				assert(fromFacing<=100.8,string.format("%.2f",fromFacing))
+				assert(fromFacing<=97.8,string.format("%.2f",fromFacing))
 				assert(fromFacing<105,"never in R9's grass sector (105 to 167 from the facing)")
 				assert(sample.Magnitude>0)
 			end
 		end
-		assert(near(covered,200,1e-6),"the segments cover 200 degrees: "..covered)
-		assert(low>=-100.8 and high<=100.8,low..","..high)
-		-- At r 3 the whole arc stays inside the paving (r 15.5 round (-30, -4)); 3.6 would not.
+		assert(near(covered,194,1e-6),"the segments cover 194 degrees: "..covered)
+		assert(low>=-97.8 and high<=97.8,low..","..high)
+		-- At r 3 the whole arc stays well inside the paving (r 15.5 round (-30, -4)).
 		for _,radius in ipairs({3,3.6})do
 			local worst=0
 			for _,segment in ipairs(Attract.arcSegments(radius,Corner.RingArc,facing))do
 				local p=Corner.Spot+segment.offset
 				worst=math.max(worst,math.sqrt((p.X+30)^2+(p.Z+4)^2))
 			end
-			if radius==3 then assert(worst<15.5,worst)else assert(worst>15.5,worst)end
+			-- At 194 degrees r 3.6 would graze the paving's edge (15.47 of 15.5): the ring stays 3.
+			if radius==3 then assert(worst<15.2,worst)else assert(worst>15.4,worst)end
 		end
 	end)
 	return{passed=#cases,cases=cases}

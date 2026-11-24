@@ -189,6 +189,25 @@ function World.mount(room,deps)
 	local built,problem=pcall(self.buildLandmark,self)
 	if not built then warn("[EggCorner] landmark: "..tostring(problem))end
 	self:placeLandmark(self.on)
+	-- Studio check R10: the floor may not answer at boot (the world still building, the old Eggs sign still queryable):
+	-- look again a little later and re-seat the landmark if the marble is elsewhere.
+	task.delay(World.FloorRetry,function()
+		if self.destroyed or not self.landmarkModel then return end
+		local root=self.landmarkModel:GetAttribute("NestRoot")
+		local y=(self.d.floor or World.nestFloor)(self.room,Corner.NestSpot)
+		if y and typeof(root)=="CFrame"and math.abs(root.Y-y)>.005 then
+			if pcall(self.buildLandmark,self)then self:placeLandmark(self.on)end
+		end
+	end)
+	-- The Bear's mat as a rest anchor while the landmark stands (GardenState's own nook rest, server-authoritative).
+	local okGarden,Garden=pcall(require,script.Parent.GardenState)
+	if okGarden then
+		Garden.extraRests=function()
+			if self.destroyed or not self:landmark(self.on)or not self.landmarkModel then return nil end
+			local root=self.landmarkModel:GetAttribute("NestRoot")
+			return if typeof(root)=="CFrame"then{Landmark.restAnchor(root)}else nil
+		end
+	end
 	local landmarkChanged=deps.landmarkChanged or Onboard.changed("landmark")
 	table.insert(self.connections,landmarkChanged:Connect(function()task.defer(function()
 		if not self.destroyed then self:nestBox(self.on);self:light(self.on);self:placeLandmark(self.on)end
@@ -261,6 +280,9 @@ function World:nestBox(on)
 	local box=old:Clone()
 	box.CFrame=CFrame.lookAt(Vector3.new(spot.X,y,spot.Z),Vector3.new(Nest.Facing.X,y,Nest.Facing.Z))
 	box.Size=Vector3.new(block,1,block)
+	-- Studio check R10: the Bear's mat is a hole in the landmark's box (box-local = nest-local, both face the plaza).
+	box:SetAttribute("GardenBlockedHole",if block==Landmark.Block then Landmark.BearSpot else nil)
+	box:SetAttribute("GardenBlockedHoleRadius",if block==Landmark.Block then Landmark.HoleRadius else nil)
 	box:SetAttribute("GardenBlockedRegion",true)
 	old:Destroy()
 	box.Parent=regions
@@ -322,21 +344,28 @@ function World.landmarkTemplate(storage)
 end
 -- The plaza floor under the nest: one ray down with the old station's parts left out (its steps stand there until the
 -- split hides them), within .6 of the spot's height. nil: the spot's own height.
+World.FloorRetry=3
+-- Studio check R10: an Include filter on the island's own meshes (never a prompt anchor, the old EggsSign, a pet or a
+-- player), less the old station's.
+function World.floorParts(meshes)
+	local keep={}
+	for _,part in ipairs(meshes:GetChildren())do
+		local name=part.Name
+		if part:IsA("BasePart")and not(string.sub(name,1,#Corner.SplitPrefix)==Corner.SplitPrefix or string.sub(name,1,13)=="W7_Stations__"
+			or string.sub(name,1,12)=="W7_NestHalo_"or string.sub(name,1,4)=="W7C_")then
+			table.insert(keep,part)
+		end
+	end
+	return keep
+end
 function World.nestFloor(room,spot)
 	local meshes=room and room:FindFirstChild("World")
 	if not meshes then return nil end
-	local skip={}
-	for _,part in ipairs(meshes:GetChildren())do
-		local name=part.Name
-		if string.sub(name,1,#Corner.SplitPrefix)==Corner.SplitPrefix or string.sub(name,1,13)=="W7_Stations__"or string.sub(name,1,12)=="W7_NestHalo_"then
-			table.insert(skip,part)
-		end
-	end
 	local params=RaycastParams.new()
-	params.FilterType=Enum.RaycastFilterType.Exclude
-	params.FilterDescendantsInstances=skip
+	params.FilterType=Enum.RaycastFilterType.Include
+	params.FilterDescendantsInstances=World.floorParts(meshes)
 	local hit=workspace:Raycast(Vector3.new(spot.X,spot.Y+6,spot.Z),Vector3.new(0,-10,0),params)
-	local y=hit and hit.Instance:IsDescendantOf(meshes)and hit.Position.Y
+	local y=hit and hit.Position.Y
 	return if y and math.abs(y-spot.Y)<=.6 then y else nil
 end
 -- Builds (or rebuilds) the shared copy at the nest's corner spot; parked while the landmark does not apply.

@@ -4897,6 +4897,20 @@ function clientUI.eggCornerMount(Onboard)
   end
  end
  Onboard.changed("corner"):Connect(function()task.delay(.5,attract)end)
+ -- Studio check R10: the empty Sleepy Nest landmark keeps its idle life (moon by the hour, sway, quilt, a "Sleepy Nest"
+ -- sign) whenever this player's own nest is not animating it (no egg, or the nest off).
+ do
+  local NestClient=require(script.NestClient)
+  local idle=NestClient.idleMount({reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end})
+  local beat=RunService.Heartbeat:Connect(function(dt)
+   local ok,problem=pcall(function()
+    local mine=clientUI.nest
+    idle:idleStep(dt,not(mine and mine:animatesLandmark()))
+   end)
+   if not ok then warn("[Nest] idle landmark: "..tostring(problem))end
+  end)
+  gui.Destroying:Connect(function()beat:Disconnect();pcall(idle.idleClose,idle)end)
+ end
  -- Studio check R8: the "?" card goes when the corner turns off (NestClient asks, as it moves the nest).
  function clientUI.closeNestHelp()
   if How.isOpen()and How.openId()=="nest"then How.close("off")end

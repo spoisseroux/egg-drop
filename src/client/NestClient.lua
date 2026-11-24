@@ -391,7 +391,7 @@ function Client:open()
 	self.promptAt=if self.landmark then Land.PromptAt else Client.PromptAt
 	self.bearSpot=if self.landmark then Land.BearSpot else Client.BearSpot
 	self.eggBase=if self.landmark then Land.EggBase else Client.EggBase
-	self.eggScale=if self.landmark then Land.EggScale else 1
+	self.eggScales=if self.landmark then Land.EggScales else Client.Scale
 	-- Beta 14 D1: the station's E / ButtonX steps aside where the nest's prompt can act and is nearer. Not in the egg
 	-- corner: the station is the machine, far from the nest.
 	self.yield=function(position,part)return self:claims(position,part)end
@@ -531,7 +531,14 @@ function Client:draw()
 	local folder=make("Folder",self.world,{Name=Client.Folder})
 	self.folder=folder
 	self.root=Client.frame(self:groundY(),self.spot,self.facing)
-	for _,spec in ipairs(if self.landmark then Client.landmarkParts()else Client.parts())do
+	for _,spec in ipairs(if self.landmark then Client.landmarkParts()else Client.parts())do self:drawPart(folder,spec)end
+	if self.landmark then self:drawLandmark(folder)end
+	if self.corner and self.spot==Corner.NestSpot then self:drawGround(folder)end
+	self:drawEgg(folder)
+end
+-- One code part of the nest from its spec (the twig parts, or the landmark's sign board with the words).
+function Client:drawPart(folder,spec)
+	do
 		local p=inert(make("Part",nil,{Name=spec.name}))
 		p.Material=if spec.wood then Enum.Material.Wood else Enum.Material.SmoothPlastic
 		p.Size=spec.size
@@ -566,8 +573,8 @@ function Client:draw()
 		end
 		p.Parent=folder
 	end
-	if self.landmark then self:drawLandmark(folder)end
-	if self.corner and self.spot==Corner.NestSpot then self:drawGround(folder)end
+end
+function Client:drawEgg(folder)
 	-- The egg: an invisible anchor at its base carries the halo, the label, the light and the emitters; the shells
 	-- (or a lilac ball until the meshes load) are posed from it every frame.
 	local anchor=inert(make("Part",nil,{Name="SleepyEgg",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
@@ -812,6 +819,53 @@ function Client:poseLandmark(dt,look,tucked,reduced)
 		end
 	end
 end
+-- The landmark's pill and peek: a fixed world offset from the egg's anchor, `height` over the root and PillForward in
+-- front of it (Fable R10 2).
+function Client:landmarkOffset(height)
+	return self.root:VectorToWorldSpace(Vector3.new(0,height-(self.eggBase or Land.EggBase),-Land.PillForward))
+end
+-- Is this player's nest animating the shared landmark now? (The empty landmark's idle life steps aside then.)
+function Client:animatesLandmark()
+	return self.isOpen==true and self.landmarkState~=nil
+end
+-- ── The empty landmark (Studio check R10) ───────────────────────────────────────────────────────────────────────────
+-- With no nest of this player's open (no egg, or the nest switched off) the shared landmark keeps its idle life here:
+-- the moon by the hour, the moon and awning swaying, the folded quilt, and the sign board on the bowl's rope loops
+-- (blank but for its painted moon: Fable R10 4). Only the pill, the prompt and the Zzz go. init steps it every frame with `active` = the landmark stands and this player's nest does not
+-- animate it. Its root is the server's (NestRoot). deps as mount: world, reduced, daylight, landmarkModel.
+Client.IdleFolder="EggDropSleepyNestIdle"
+function Client.idleMount(deps)
+	local self=setmetatable({d=deps or {},clock=0,landmark=true,idle=true,isOpen=true,beats={},connections={}},Client)
+	self.world=self.d.world or workspace
+	return self
+end
+function Client:idleClose()
+	pcall(self.restLandmark,self)
+	self.landmarkState=nil
+	if self.folder then self.folder:Destroy();self.folder=nil end
+	self.signWords,self.root=nil,nil
+end
+function Client:idleStep(dt,active)
+	local model=active and self:landmarkModelNow()
+	local root=model and model:GetAttribute("NestRoot")
+	if typeof(root)~="CFrame"then
+		if self.folder then self:idleClose()end
+		return false
+	end
+	if not self.folder or self.root~=root then
+		self:idleClose()
+		self.root,self.promptAt,self.bearSpot,self.eggBase=root,Land.PromptAt,Land.BearSpot,Land.EggBase
+		local folder=make("Folder",self.world,{Name=Client.IdleFolder})
+		self.folder=folder
+		for _,spec in ipairs(Client.landmarkParts())do self:drawPart(folder,spec)end
+		-- Fable R10 4: no egg, no name: the board stays, blank but for its painted moon.
+		for _,words in ipairs(self.signWords or {})do words.Text=""end
+		self:drawLandmark(folder)
+	end
+	self.clock+=dt or 0
+	self:poseLandmark(dt or 0,"small",false,self:reduced())
+	return true
+end
 -- The Show me pin over the landmark: Land.PinAt straight over the bowl's centre (nil: the trail's own pin).
 function Client:pinAt()
 	if not self.landmark or not self.isOpen or not self.root then return nil end
@@ -929,7 +983,7 @@ function Client:paint(fresh)
 	local look=Client.look(view,now)
 	self.lookNow=look
 	if fresh or self.paintedLook~=look then
-		if self.paintedLook and self.paintedLook~=look and not fresh then self.stage={from=self.shownScale or Client.Scale[look],t=0}end
+		if self.paintedLook and self.paintedLook~=look and not fresh then self.stage={from=self.shownScale or(self.eggScales or Client.Scale)[look],t=0}end
 		self.paintedLook=look
 	end
 	-- Tuck in while it grows (once per egg), Hatch when it is ready; nothing while a hatch is asked for or playing.
@@ -1055,7 +1109,7 @@ end
 function Client:peek()
 	local egg,view=self.egg,self.view
 	if not egg or not view then return end
-	local board=make("BillboardGui",egg.anchor,{Name="GiftPeek",LightInfluence=0,AlwaysOnTop=true,MaxDistance=60,Size=UDim2.fromOffset(120,96)})
+	local board=make("BillboardGui",egg.anchor,{Name="GiftPeek",LightInfluence=0,AlwaysOnTop=not self.landmark,MaxDistance=60,Size=UDim2.fromOffset(120,96)})
 	local tile=make("Frame",board,{Name="Tile",AnchorPoint=Vector2.new(.5,0),Position=UDim2.fromScale(.5,0),Size=UDim2.fromOffset(96,72),
 		BackgroundColor3=Client.Color.cream,BorderSizePixel=0})
 	make("UICorner",tile,{CornerRadius=UDim.new(0,12)})
@@ -1072,7 +1126,11 @@ function Client:peek()
 		BackgroundColor3=Client.Color.stars,BorderSizePixel=0})
 	corner(chip)
 	local stars=label(chip,"Count",14,Client.Color.ink);stars.Text="+"..view.gift.stars;stars.AutoLocalize=false
-	board.StudsOffset=if self.landmark then Vector3.new(0,Land.PeekAt-self.eggBase,0)else Vector3.new(0,(self.shownScale or 1.25)*1.3+1.6,0)
+	if self.landmark then
+		board.StudsOffsetWorldSpace=self:landmarkOffset(Land.PeekAt)
+	else
+		board.StudsOffset=Vector3.new(0,(self.shownScale or 1.25)*1.3+1.6,0)
+	end
 	table.insert(self.beats,{kind="peek",board=board,t=0,parts={tile,chip},labels={item,count,stars}})
 end
 -- A beat (beta 14 Q2, rows 1 to 3): the pill says `text` for `seconds`, over the other rows, and holds the need bubble
@@ -1164,7 +1222,7 @@ function Client:pose(dt)
 	local egg,view=self.egg,self.view
 	local look=self.lookNow or "small"
 	local reduced=self:reduced()
-	local target=Client.Scale[look]
+	local target=(self.eggScales or Client.Scale)[look]
 	local scale=target
 	if self.stage and not reduced then
 		self.stage.t+=dt
@@ -1227,7 +1285,7 @@ function Client:pose(dt)
 		drop=if reduced then 0 else 1.5*(1-p)*(1-p)-(if p>.7 then .08*math.sin((p-.7)/.3*math.pi)else 0)
 		if p>=1 then self.drop=nil end
 	end
-	local s=scale*breath*(self.eggScale or 1)
+	local s=scale*breath
 	local rise=0
 	if self.landmark and look~="ready"and not self.hatching then
 		-- The landmark's sleeping breath (LOOK 4): taller and a touch narrower, rising a little.
@@ -1254,7 +1312,12 @@ function Client:pose(dt)
 	egg.light.Enabled=look~="small"
 	egg.sparks.Rate=if look=="ready"and not reduced then 6 else 0
 	-- The landmark's pill is fixed at Land.PillAt over the root (it never rides the egg's scale).
-	egg.board.StudsOffset=if self.landmark then Vector3.new(0,Land.PillAt-self.eggBase,0)else Vector3.new(0,1.3*s+.6,0)
+	if self.landmark then
+		local offset=self:landmarkOffset(Land.PillAt)
+		if egg.board.StudsOffsetWorldSpace~=offset then egg.board.StudsOffsetWorldSpace=offset end
+	else
+		egg.board.StudsOffset=Vector3.new(0,1.3*s+.6,0)
+	end
 	if self.landmark then self:poseLandmark(dt,look,tucked,reduced)end
 	egg.stillZ.Enabled=reduced and look~="ready"
 	egg.stillZ.StudsOffset=Vector3.new(.3,1.3*s+.3,0)
@@ -1318,7 +1381,7 @@ function Client:paintPill()
 		end
 		egg.pill.Position=UDim2.new(.5,0,1,if row.lift then -P.lift else 0)
 		egg.pill.BackgroundColor3=if row.gold then Client.Color.stars else Client.Color.cream
-		egg.board.AlwaysOnTop=row.onTop
+		egg.board.AlwaysOnTop=row.onTop and not self.landmark -- Fable R10 2: never over the landmark
 		egg.row=row
 	end
 	if egg.alpha~=alpha then
