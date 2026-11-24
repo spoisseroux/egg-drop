@@ -60,7 +60,7 @@ end
 -- The pool from the walk map (Water_Pool_Falls; WorldAero.Look.PoolTop agrees). [check] with the island session after
 -- its pool repaint: centre, size, surface, and that the water shows the koi (else `over`).
 Scene.Pool=table.freeze({centre=Vector3.new(64.5,3.2,-66),half=Vector2.new(13.5,12),share=.6})
-Scene.Koi=table.freeze({speed=.5,tail=8,tailHz=1.1,depth=.25,over=false,overLift=.02,overTransparency=.35,
+Scene.Koi=table.freeze({speed=.5,tail=8,tailHz=1.1,depth=.25,over=true,overLift=.02,overTransparency=.35,
 	-- The plate: 1.3 long along its travel (-Z under lookAt), .5 wide; the texture is portrait, head at the top [check] the
 	-- Top decal's orientation in Studio (flip the image if a koi swims tail first).
 	scales=table.freeze({1,.85,.7}),phases=table.freeze({0,2.1,4.2}),size=Vector3.new(.5,.02,1.3),

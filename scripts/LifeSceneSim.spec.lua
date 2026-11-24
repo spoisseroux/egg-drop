@@ -54,7 +54,8 @@ return function(client)
 				local frame,at=Sim.koiPose(k,t,Vector3.zero,0)
 				local dx,dz=(at.X-P.centre.X)/P.half.X,(at.Z-P.centre.Z)/P.half.Y
 				assert(math.sqrt(dx*dx+dz*dz)<=.62,"inside 60% of the pool: "..k)
-				assert(near(at.Y,P.centre.Y-.25,1e-9),"under the surface")
+				-- STUDIO-CHECK-R5: the pool mesh is opaque (surface y 3.200), so Fable's fallback: on the surface + .02.
+				assert(Sim.Koi.over and near(at.Y,P.centre.Y+.02,1e-9),"on the surface (the over fallback)")
 				if last then travelled+=(at-last).Magnitude end
 				last=at
 			end

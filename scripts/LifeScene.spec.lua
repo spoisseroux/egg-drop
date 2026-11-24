@@ -123,7 +123,8 @@ return function(client)
 			assert(r.shown("SceneKoi")==3)
 			for k=1,3 do
 				local at=r.folder():FindFirstChild("SceneKoi"..k).CFrame.Position
-				assert(math.abs(at.Y-(3.2-.25))<1e-6 and(Vector3.new(at.X,0,at.Z)-Vector3.new(64.5,0,-66)).Magnitude<12,"in the pool")
+				-- STUDIO-CHECK-R5: the over fallback (the pool mesh is opaque): on the surface + .02, decal .35.
+				assert(math.abs(at.Y-(3.2+.02))<1e-6 and(Vector3.new(at.X,0,at.Z)-Vector3.new(64.5,0,-66)).Magnitude<12,"in the pool")
 			end
 			local rose=false
 			for _=1,16 do r.step(1);if r.shown("SceneRipple")>0 then rose=true end end
