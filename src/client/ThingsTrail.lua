@@ -195,6 +195,8 @@ function Trail:start(target)
 	if type(target)~="table"or typeof(target.position)~="Vector3"or not root or self.d.free()~=true then return false end
 	self:ensure()
 	self.target,self.age=target,0
+	-- target.lift: the pin's height over the target (the Sleepy Nest landmark's 8.2 over its root); default 4.
+	self.pin.StudsOffsetWorldSpace=Vector3.new(0,if type(target.lift)=="number"then target.lift else 4,0)
 	self.spot=flat(root,target.position)<=Trail.Arrive
 	self.plate.Text=Trail.label(target)
 	self.marker.CFrame=CFrame.new(target.position)

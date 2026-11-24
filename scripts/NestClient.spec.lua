@@ -660,5 +660,77 @@ return function(client)
 		assert(r.client.pulse==nil and r.client.egg.helpScale.Scale==1 and r.pulsed==1)
 		Onboard.inject(nil)
 	end)
+	-- ── The Sleepy Nest landmark (NEST-LANDMARK-LOOK; NestLandmark) ───────────────────────────────────────────────────
+	local Land=require(Shared.NestLandmark)
+	local function landRig(options)
+		options=options or {}
+		local r
+		r=cornerRig({deps={split=function()return true end,landmark=function()return r==nil or r.landmarkOn~=false end,
+			template=function()return nil end,daylight=function()return r and r.daylight or 1 end}})
+		r.landmarkOn=options.landmarkOn
+		if options.landmarkOn==false then r.client:close();r.client:sync()end
+		return r
+	end
+	test("landmark: at the corner's spot the twig parts give way to the model (a greybox until mounted) and a sign on the bowl",function()
+		local r=landRig()
+		r.fire(state(60));r.step(.1)
+		local folder=r.folder()
+		assert(r.client.landmark==true and folder:FindFirstChild("NestLandmark")and folder:FindFirstChild("NestMound")==nil)
+		local L=r.client.landmarkParts
+		for _,name in ipairs(Client.LandmarkNames)do assert(L.parts[name],name)end
+		assert(L.greybox==true and L.parts.Collider.CanCollide==true and L.parts.Body.CanCollide==false)
+		local sign=folder:FindFirstChild("NestSign")
+		local into=r.client.root:PointToObjectSpace(sign.CFrame.Position)
+		assert(math.abs(into.Z+2.45)<1e-6 and math.abs(into.Y-1.15)<1e-6,"the sign on the bowl's front")
+		local prompt=r.client.root:PointToObjectSpace(r.client:place3D())
+		assert(math.abs(prompt.Z+3.5)<1e-6 and math.abs(prompt.Y-1)<1e-6,"the prompt at (0, 1, -3.5)")
+		assert(r.client.bearSpot==Land.BearSpot and r.client.eggBase==2.15 and r.client.eggScale==1.3)
+		assert(math.abs(r.client.egg.board.StudsOffset.Y-(Land.PillAt-2.15))<1e-6,"the pill fixed at 5.2")
+		assert(math.abs(r.client:pinLift()-7.2)<1e-6,"the Show me pin at 8.2 over the root")
+		local shadow=folder:FindFirstChild("NestShadow")
+		assert(math.abs(shadow.Size.X-6.6)<1e-6,"the shadow r 3.3")
+		Onboard.inject(nil)
+	end)
+	test("landmark: the blanket folded, draped after Tuck in (unrolling), slipped when ready, folded again after the hatch",function()
+		local r=landRig()
+		r.fire(state(60));r.step(.1)
+		local P=r.client.landmarkParts.parts
+		assert(P.BlanketFolded.Transparency<1 and P.BlanketDraped.Transparency==1 and P.BlanketSlipped.Transparency==1)
+		r.client:act();r.step(.1)
+		assert(P.BlanketDraped.Transparency<1 and P.BlanketFolded.Transparency==1,"tucked: draped")
+		local unrolling=P.BlanketDraped.Size.Y
+		r.step(1)
+		assert(P.BlanketDraped.Size.Y>unrolling,"it unrolls from its lower edge")
+		r.now+=Nest.Seconds;r.step(.1)
+		assert(P.BlanketSlipped.Transparency<1 and P.BlanketDraped.Transparency==1,"ready: slipped")
+		r.client:act();r.fire({kind="claimed",receipt={kind="stars",stars=5}})
+		for _=1,30 do r.step(.1)end
+		r.fire(state(NOW-r.now,{n=1}));r.step(.1) -- a new egg that landed just now
+		assert(P.BlanketFolded.Transparency<1 and P.BlanketSlipped.Transparency==1,"the next egg: folded")
+		Onboard.inject(nil)
+	end)
+	test("landmark: the moon lantern off by day, lit at dusk (fading in), gold when ready at any hour",function()
+		local r=landRig()
+		r.fire(state(60));r.step(.1)
+		local L=r.client.landmarkParts
+		assert(not L.light.Enabled and not L.halo.Enabled,"day: no light, no halo")
+		r.daylight=.1
+		r.step(.1);assert(L.light.Brightness<.1,"it fades in with the lamps, not at once")
+		for _=1,100 do r.step(.1)end
+		assert(L.light.Enabled and math.abs(L.light.Brightness-.6)<.05 and L.light.Range==9 and L.halo.Enabled)
+		r.daylight=1;r.now+=Nest.Seconds;r.step(.1)
+		assert(L.light.Enabled and L.light.Range==10 and L.light.Brightness>=.8*.8-1e-6,"ready: lit by day too")
+		assert(L.light.Color==Land.Moon.ready.color)
+		Onboard.inject(nil)
+	end)
+	test("landmark: off (its own switch) draws the twig nest at the same spot; a flip re-opens it",function()
+		local r=landRig({landmarkOn=false})
+		r.fire(state(60));r.step(.1)
+		assert(r.client.landmark==false and r.folder():FindFirstChild("NestMound")and r.folder():FindFirstChild("NestLandmark")==nil)
+		assert(r.client.spot==Corner.NestSpot and r.client:pinLift()==nil)
+		r.landmarkOn=true;r.client:relocate()
+		assert(r.client.landmark==true,"re-opened as the landmark")
+		Onboard.inject(nil)
+	end)
 	return{passed=#cases,cases=cases}
 end

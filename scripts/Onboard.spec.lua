@@ -40,7 +40,7 @@ return function(server)
 		assert(not Onboard.resolve(true,false,true)and Onboard.resolve(false,true,true))
 	end)
 	test("three parts with their keys and attributes; each switches alone; unknown parts are off",function()
-		assert(table.concat(Onboard.Features,",")=="follow,needs,nest,corner")
+		assert(table.concat(Onboard.Features,",")=="follow,needs,nest,corner,landmark")
 		for _,feature in ipairs(Onboard.Features)do
 			assert(Onboard.key(feature)=="onboard_"..feature and Onboard.attribute(feature)=="Onboard_"..feature,feature)
 		end
@@ -134,13 +134,13 @@ return function(server)
 		local r=rig(function()return{GetConfigAsync=function()return coroutine.yield()end}end)
 		r.config.start()
 		assert(r.is(false,false,false))
-		assert(table.concat(r.log,",")=="hold follow false,set Onboard_follow false,hold needs false,set Onboard_needs false,hold nest false,set Onboard_nest false,hold corner false,set Onboard_corner false")
+		assert(table.concat(r.log,",")=="hold follow false,set Onboard_follow false,hold needs false,set Onboard_needs false,hold nest false,set Onboard_nest false,hold corner false,set Onboard_corner false,hold landmark false,set Onboard_landmark false")
 	end)
 	test("config: once loaded a missing or malformed key is on, each key its own part, no other key is read",function()
 		for _,case in ipairs({{nil,nil,nil,true,true,true},{false,nil,"x",false,true,true},{true,false,0,true,false,true},{false,false,false,false,false,false}})do
 			local s=snapshot({onboard_follow=case[1],onboard_needs=case[2],onboard_nest=case[3],things_to_do=false})
 			local r=rig(of(s));r.config.start();assert(r.is(case[4],case[5],case[6]))
-			for _,key in ipairs(s.asked)do assert(key=="onboard_follow"or key=="onboard_needs"or key=="onboard_nest"or key=="onboard_corner",key)end
+			for _,key in ipairs(s.asked)do assert(key=="onboard_follow"or key=="onboard_needs"or key=="onboard_nest"or key=="onboard_corner"or key=="onboard_landmark",key)end
 		end
 	end)
 	test("config: Things off publishes every part off; a Things flip republishes at once",function()
@@ -181,7 +181,7 @@ return function(server)
 		end
 		for _,odd in ipairs({5,{},true})do assert(not r.config.command(odd))end
 		assert(not r.config.command(nil))
-		local parsed=Config.parse("/onboard all on");assert(#parsed.features==4 and parsed.value==true)
+		local parsed=Config.parse("/onboard all on");assert(#parsed.features==5 and parsed.value==true)
 		assert(Config.parse("/onboard needs clear").value==nil and Config.parse("/onboard needs clear").features[1]=="needs")
 	end)
 

@@ -12,6 +12,7 @@
 local ServerStorage=game:GetService("ServerStorage")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Corner=require(Shared.EggCorner)
+local Landmark=require(Shared.NestLandmark)
 local Onboard=require(Shared.Onboard)
 local UICopy=require(Shared.UICopy)
 local World={};World.__index=World
@@ -184,6 +185,12 @@ function World.mount(room,deps)
 	self:apply(on())
 	local changed=deps.changed or Onboard.changed("corner")
 	table.insert(self.connections,changed:Connect(function()task.defer(function()if not self.destroyed then self:apply(on())end end)end))
+	-- The landmark's switch moves only the nest's box and the light.
+	pcall(World.shareLandmark,deps.storage)
+	local landmarkChanged=deps.landmarkChanged or Onboard.changed("landmark")
+	table.insert(self.connections,landmarkChanged:Connect(function()task.defer(function()
+		if not self.destroyed then self:nestBox(self.on);self:light(self.on)end
+	end)end))
 	return self
 end
 
@@ -225,17 +232,24 @@ end
 
 -- The nest's pet box at the nest's spot (destroyed and made again: the scene cache learns parts only when they arrive,
 -- and every reader checks part.Parent). Built only where LoungeWorldV7Art.collision built one.
+-- The Sleepy Nest landmark stands here now (NestLandmark): the corner on, the station split out, its own switch on.
+function World:landmark(on)
+	local landmarkOn=if self.d.landmark then self.d.landmark()==true else Landmark.on()
+	return Landmark.applies(landmarkOn,on==true and Corner.split(self.world))
+end
 function World:nestBox(on)
 	local regions=self.room:FindFirstChild("PetRegions")
 	local old=regions and regions:FindFirstChild("SleepyNest")
 	if not old then return end
 	local spot=Corner.nestSpot(on,Corner.split(self.world))
-	if math.abs(old.Position.X-spot.X)<.01 and math.abs(old.Position.Z-spot.Z)<.01 then return end
 	local Nest=require(Shared.Nest)
+	-- The landmark's bowl is wider: pets keep Landmark.Block / 2 + .35 off its middle (NEST-LANDMARK-LOOK 2).
+	local block=if self:landmark(on)then Landmark.Block else Nest.Block
+	if math.abs(old.Position.X-spot.X)<.01 and math.abs(old.Position.Z-spot.Z)<.01 and math.abs(old.Size.X-block)<.01 then return end
 	local y=old.Position.Y
 	local box=old:Clone()
 	box.CFrame=CFrame.lookAt(Vector3.new(spot.X,y,spot.Z),Vector3.new(Nest.Facing.X,y,Nest.Facing.Z))
-	box.Size=Vector3.new(Nest.Block,1,Nest.Block)
+	box.Size=Vector3.new(block,1,block)
 	box:SetAttribute("GardenBlockedRegion",true)
 	old:Destroy()
 	box.Parent=regions
@@ -249,6 +263,18 @@ function World:light(on)
 	local offset,range=Corner.light(on)
 	fixture.CFrame=CFrame.new(Layout.Stations.Eggs.Position+offset)
 	light.Range=range
+	-- The landmark's moon lantern replaces this light (NEST-LANDMARK-LOOK 4: never two).
+	light.Enabled=not self:landmark(on)
+end
+-- The landmark's template for the clients (beta only: this module only runs under the ceiling). Each client clones it.
+function World.shareLandmark(storage,replicated)
+	storage=storage or ServerStorage
+	replicated=replicated or game:GetService("ReplicatedStorage")
+	local template=storage:FindFirstChild(Landmark.Template)
+	if not template or replicated:FindFirstChild(Landmark.Template)then return replicated:FindFirstChild(Landmark.Template)end
+	local copy=template:Clone()
+	copy.Parent=replicated
+	return copy
 end
 function World:apply(on)
 	on=on==true
