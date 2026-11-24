@@ -19,8 +19,12 @@
    "hash": "1c95c3e4d2bf2d29",
    "reshape": {
     "overhang": 0.4256,
+    "overhangMax": 1.0,
     "floor": -2.3384,
     "trunkDepth": 2.3384,
+    "cardTris": 0,
+    "droppedTufts": 0,
+    "cardBudget": 1000,
     "oldBounds": [
      [
       -4.4775,
@@ -66,8 +70,12 @@
    "hash": "712bfe7f63f6a9f4",
    "reshape": {
     "overhang": 0.2811,
+    "overhangMax": 1.0,
     "floor": -1.908,
     "trunkDepth": 1.908,
+    "cardTris": 0,
+    "droppedTufts": 0,
+    "cardBudget": 1000,
     "oldBounds": [
      [
       -2.9296,
@@ -99,22 +107,26 @@
    "name": "W7_Kit_Crown_Blossom__foliage_blossom",
    "role": "crown",
    "kind": "foliage_blossom",
-   "tris": 240,
+   "tris": 336,
    "size": [
-    9.3115,
-    5.8263,
-    7.8072
+    10.0918,
+    7.1379,
+    9.3254
    ],
    "pivotToCentre": [
-    0.3481,
-    0.5663,
-    0.0752
+    0.3108,
+    -0.0895,
+    -0.0017
    ],
-   "hash": "0debe146acbfa47c",
+   "hash": "6776c50ae0ee32de",
    "reshape": {
-    "overhang": 0.3437,
+    "overhang": 1.1075,
+    "overhangMax": 1.8900000000000001,
     "floor": -1.9968,
     "trunkDepth": 1.9968,
+    "cardTris": 120,
+    "droppedTufts": 24,
+    "cardBudget": 1000,
     "oldBounds": [
      [
       -4.306,
@@ -129,17 +141,17 @@
     ],
     "newBounds": [
      [
-      -4.3076,
-      1.6532,
-      3.9788
+      -4.7351,
+      0.3416,
+      4.661
      ],
      [
-      5.0039,
+      5.3567,
       7.4795,
-      -3.8284
+      -4.6644
      ]
     ],
-    "tris": 240
+    "tris": 336
    }
   },
   {
@@ -197,7 +209,7 @@
    "name": "W7_Kit_Falls__kitwater",
    "role": "falls",
    "kind": "kitwater",
-   "tris": 1628,
+   "tris": 1456,
    "size": [
     32.452,
     48.4596,
@@ -208,24 +220,24 @@
     27.3748,
     -72.86
    ],
-   "hash": "6077eca33cf7a24b"
+   "hash": "de0ae0454fada988"
   },
   {
    "name": "W7_Kit_Falls__kitfoam",
    "role": "falls",
    "kind": "kitfoam",
-   "tris": 276,
+   "tris": 160,
    "size": [
-    17.4319,
+    16.9294,
     48.4046,
-    17.3728
+    17.1513
    ],
    "center": [
-    75.6015,
+    75.3526,
     27.4023,
-    -75.6311
+    -75.5022
    ],
-   "hash": "3cbf2a184d8e8ced"
+   "hash": "b26dd67a941248b5"
   },
   {
    "name": "W7_Kit_Fountain__kitstone",
@@ -724,5 +736,5 @@
    4.2284
   ]
  },
- "triangles": 4144
+ "triangles": 3952
 }

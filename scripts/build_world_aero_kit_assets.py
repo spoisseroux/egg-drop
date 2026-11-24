@@ -54,9 +54,9 @@ ROUGH_92 = "rbxassetid://93359996848376"
 # its skin stays white. The Hatch crown and the bushes keep the island map (their UVs are ~8 studs a tile).
 # LOOK-R4 W2: denser tiles (512 px for 4 studs, sprigs in four layers; scripts/draw_aero_r4_textures.py).
 LEAF_DARK = "rbxassetid://104251374979550"
-LEAF_LIME = "rbxassetid://102153964898944"
+LEAF_LIME = "rbxassetid://96924676602525"  # Fable R5: saturation -15, value -10
 # LOOK-R4 W1: the falls atlas (streaks for the sheet faces, a white block for everything else).
-FALLS_ATLAS = "rbxassetid://140121240617654"
+FALLS_ATLAS = "rbxassetid://122555017086176"  # Fable R5: bands, body #BFD9EA, feathered sides
 LEAF_ROUGH = "rbxassetid://125570475932961"  # LOOK-R3 round 6: flat 1.0
 
 
@@ -206,7 +206,7 @@ def xml_part(index, mesh, mesh_id, raw):
         ] + ([f"          <Color3 name=\"Color\"><R>{tint[0]!r}</R><G>{tint[1]!r}</G><B>{tint[2]!r}</B></Color3>"]
              if tint else []) + ([
             f"          <Content name=\"EmissiveMaskContent\"><url>{glow}</url></Content>",
-            "          <float name=\"EmissiveStrength\">0.45</float>",
+            "          <float name=\"EmissiveStrength\">0.3</float>",  # Fable R5: matte, lower
             "          <Color3 name=\"EmissiveTint\"><R>1</R><G>1</G><B>1</B></Color3>",
         ] if glow else []) + [
             "        </Properties>",

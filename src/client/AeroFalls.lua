@@ -98,6 +98,35 @@ function Falls.kitStack(b)
 	end
 	shade("PoolShade",impact,lower,K.PoolShade.pool,true)
 	shade("LedgeShade",Vector3.new(upper.bottom.X,lower.top.Y,upper.bottom.Z),upper,K.PoolShade.ledge,false)
+	-- Fable R5: soft mist cards at the foot and over the step: camera-facing static beams from `up` to `up + tall`
+	-- (a beam stands between its two attachments; FaceCamera turns its width to the camera).
+	for index,card in ipairs(K.MistCards.Cards)do
+		local spec=K.MistCards
+		local fall=if card.at=="ledge"then upper else lower
+		local foot=if card.at=="ledge"then Vector3.new(upper.bottom.X,lower.top.Y,upper.bottom.Z)else impact
+		local base=foot+fall.t*card.along+fall.n*card.out
+		local p=b.groups.Tumble.part
+		local a0=b.attach(p,b.frame(base+UP*card.up,fall.n,fall.t,fall.n:Cross(fall.t)))
+		local a1=b.attach(p,b.frame(base+UP*(card.up+card.tall),fall.n,fall.t,fall.n:Cross(fall.t)))
+		local beam=Instance.new("Beam")
+		beam.Name="MistCard"
+		beam.Attachment0,beam.Attachment1=a0,a1
+		beam.Width0,beam.Width1=card.width,card.width*.85
+		beam.FaceCamera=true
+		beam.Texture=spec.Texture
+		beam.TextureMode=Enum.TextureMode.Stretch
+		beam.TextureLength=1
+		beam.TextureSpeed=0
+		beam.Segments=1
+		beam.Color=ColorSequence.new(spec.Color)
+		beam.Transparency=NumberSequence.new(spec.Transparency)
+		beam.LightInfluence=1
+		beam.LightEmission=0
+		beam.Enabled=false
+		beam.Parent=p
+		local layer=b.add({group="Tumble",name="MistCard",kind="beam",item=beam,level1=card.level1==true})
+		layer.keepOut=base -- code review r5: off within MistKeepOut of its card, like every mist (a 6-stud card fills the view)
+	end
 	-- The apron: a flat beam on the pool, flowing out from the foot (attachments' Axis up: it lies in the water).
 	do
 		local spec=K.Apron

@@ -154,6 +154,10 @@ def sub_object(src, vert_ids, name):
 # rim tufts, at today's triangle counts. Clump 0 is today's, so the trunk top (the pivot) and the sway do not move.
 # Clumps: (x, y, z, radius, squash, segments, latitude bands): an ellipsoid of 2 * segments * (bands - 1) triangles.
 # Tufts: (angle in degrees, z of a shoulder tuft or None for the rim). A tuft is a 4-sided spike with no base, 4 triangles.
+UV_SCALE_DENSE = .375  # Fable R5: the lime leaves at about 0.5 stud (1.5x the tile)
+CARD_SIDES = 10        # a leaf-cluster card: a scalloped disc of 10 triangles
+CARD_RADIUS = (1.0, 1.5)
+CARD_BUDGET = 1000     # extra triangles all placed crowns' cards may add (ALIVE-SAFETY: counted on their own)
 RESHAPE = {
     "Crown_Round": {"floor": 5.6, "tris": 240,
                     "clumps": [(0, 0, 8.5, 3.6, .78, 8, 4), (2.5, .7, 7.2, 2.7, .74, 8, 3), (-2.3, -1, 7.4, 2.5, .74, 8, 3),
@@ -164,14 +168,19 @@ RESHAPE = {
                    "clumps": [(0, 0, 8.8, 3, .82, 11, 3), (.5, .3, 10.9, 2.5, .86, 10, 3), (-.4, -.4, 12.8, 2, .9, 6, 4),
                               (.1, .1, 14.6, 1.3, 1, 6, 3), (1.6, -.8, 9.5, 1.6, .78, 6, 3), (-1.5, .9, 10.2, 1.4, .78, 6, 3)],
                    "tufts": [(30, None), (120, None), (210, None), (300, None), (75, 9.6), (195, 11.6), (315, 13.6)]},
-    "Crown_Blossom": {"floor": 4.9, "tris": 240,
+    # Fable R5 (W2): the lime crown's edge is leaves, not facets: 12 leaf-cluster cards on the outline (10 triangles
+    # each), the skirt's spikes gone, and its leaf tile 1.5x denser.
+    "Crown_Blossom": {"floor": 4.9, "tris": 216 + 12 * 10, "cards": 12, "uv": UV_SCALE_DENSE,
                       "clumps": [(0, 0, 7.4, 3.4, .74, 8, 4), (2.4, -.5, 6.6, 2.6, .72, 8, 3), (-2.2, 1, 6.8, 2.5, .72, 8, 3),
                                  (.4, 2.1, 8.3, 1.9, .78, 8, 3), (-.5, -2.2, 8, 1.9, .78, 8, 3), (1.4, .9, 9.1, 1.5, .8, 5, 3),
                                  (-1.3, -.6, 8.9, 1.3, .82, 5, 3)],
-                      "tufts": [(35, None), (95, None), (150, None), (215, None), (270, None), (330, None)]},
+                      "tufts": []},
 }
+# The rim tufts a carded crown dropped (Fable R5): their triangles are no longer in the crown (the kit tests read
+# `droppedTufts` from the manifest).
+RESHAPE_TUFTS_DROPPED = {"Crown_Blossom": ((35, None), (95, None), (150, None), (215, None), (270, None), (330, None))}
 RESHAPE_KIND = {"Crown_Round": "Tree_Round", "Crown_Tall": "Tree_Tall", "Crown_Blossom": "Tree_Blossom"}
-UV_SCALE = .25          # one 4-stud leaf tile (LOOK-R3 2), box-mapped by face normal
+UV_SCALE = .25          # one 4-stud leaf tile (LOOK-R3 2), box-mapped by face normal (per crown: spec "uv")
 JITTER = .13            # of each clump's radius (LOOK-R3 round 6: .08 read as regular)
 TILT = (20, 40)         # degrees each clump's pole leans, random direction (round 6: all poles up made lids)
 TUFT_IN = .3            # studs a tuft's root sits inside the leaves (round 6: rim roots floated in clear air)
@@ -202,6 +211,8 @@ def new_crown(name, material, pivot, materials):
     spec = RESHAPE[name]
     name = name + "__" + material
     rng = random.Random(name)
+    uv_scale = spec.get("uv", UV_SCALE)
+    card_faces = set()
     floor = spec["floor"]
     clumps = spec["clumps"]
     top = max(c[2] + c[3] * c[4] for c in clumps)
@@ -209,6 +220,7 @@ def new_crown(name, material, pivot, materials):
     bm = bmesh.new()
     col = bm.loops.layers.float_color.new("Col")
     uvl = bm.loops.layers.uv.new("UVMap")
+    tag = bm.faces.layers.int.new("kit_card")  # made before any face: adding a layer later invalidates face references
     normal_of, shade_of = {}, {}
 
     def shade(p, own):
@@ -293,6 +305,38 @@ def new_crown(name, material, pivot, materials):
     # Code review r3: the clump fans and quads were wound inward (only the tufts faced out); each clump and tuft is its
     # own closed or open island, so recalculating faces them all out, as Builder.build does.
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    # Leaf-cluster cards (Fable R5): on the outline, round the crown at three heights, each a scalloped disc lying on
+    # the surface and facing out, centred on the leaf vertex that reaches furthest that way.
+    up = Vector((0, 0, 1))
+    leaf_pts = [v.co + pivot for v in bm.verts]
+    lo_z, hi_z = floor + 1.0, top - 1.2
+    for i in range(spec.get("cards", 0)):
+        ang = 2 * math.pi * i / spec["cards"] + rng.uniform(-.2, .2)
+        zc = lo_z + (hi_z - lo_z) * ((i * 0.38) % 1.0)
+        out = Vector((math.cos(ang), math.sin(ang), 0))
+        band = [q for q in leaf_pts if abs(q.z - zc) < 1.2 and Vector((q.x - LEAN, q.y, 0)).normalized().dot(out) > .7]
+        assert band, (name, "no outline for card", i)
+        edge = max(band, key=lambda q: Vector((q.x - LEAN, q.y, 0)).dot(out))   # from the trunk axis, as the band
+        normal = (out + up * .25).normalized()
+        e1 = up.cross(normal).normalized()
+        e2 = normal.cross(e1).normalized()
+        r = rng.uniform(*CARD_RADIUS)
+        centre = edge + normal * .05
+        cv = bm.verts.new(centre - pivot)
+        normal_of[cv] = normal
+        shade_of[cv] = shade(edge, -1)
+        rim = []
+        for k in range(CARD_SIDES):
+            a = 2 * math.pi * k / CARD_SIDES
+            rr = r * (1 + (.2 if k % 2 else -.1) + rng.uniform(-.06, .06))
+            q = centre + e1 * (rr * math.cos(a)) + e2 * (rr * math.sin(a))
+            v = bm.verts.new(q - pivot)
+            normal_of[v] = normal
+            shade_of[v] = shade_of[cv]
+            rim.append(v)
+        for k in range(CARD_SIDES):
+            f = bm.faces.new((cv, rim[k], rim[(k + 1) % CARD_SIDES]))
+            card_faces.add(f)
     bm.normal_update()
     for face in bm.faces:
         face.smooth = True
@@ -301,15 +345,17 @@ def new_crown(name, material, pivot, materials):
         for loop in face.loops:
             q = loop.vert.co + pivot                    # tree frame: the tile does not move with the pivot
             if ax == 0:
-                loop[uvl].uv = (q.y * UV_SCALE, q.z * UV_SCALE)
+                loop[uvl].uv = (q.y * uv_scale, q.z * uv_scale)
             elif ax == 1:
-                loop[uvl].uv = (q.x * UV_SCALE, q.z * UV_SCALE)
+                loop[uvl].uv = (q.x * uv_scale, q.z * uv_scale)
             else:
-                loop[uvl].uv = (q.x * UV_SCALE, q.y * UV_SCALE)
+                loop[uvl].uv = (q.x * uv_scale, q.y * uv_scale)
             c = shade_of[loop.vert]
             loop[col] = (c[0], c[1], c[2], 1.0)
     order = list(bm.verts)
     normals = [tuple(normal_of[v]) for v in order]
+    for f in card_faces:
+        f[tag] = 1
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me)
     bm.free()
@@ -347,15 +393,23 @@ def reshape(canon):
         obj = new_crown(name, entry["material"], entry["pivot"], list(old.data.materials))
         new_lo, new_hi = bounds([v.co for v in obj.data.vertices])
         tris = C.tris(obj)
-        assert tris == C.tris(old) == spec["tris"], (name, "triangles", tris, C.tris(old), spec["tris"])
+        card_tris = sum(1 for poly, flag in zip(obj.data.polygons, obj.data.attributes["kit_card"].data) if flag.value == 1) \
+            if "kit_card" in obj.data.attributes else 0
+        dropped = 4 * len(RESHAPE_TUFTS_DROPPED.get(name, ()))
+        assert tris == spec["tris"] and tris - card_tris == C.tris(old) - dropped, \
+            (name, "triangles", tris, card_tris, C.tris(old), spec["tris"])
+        assert card_tris == spec.get("cards", 0) * CARD_SIDES, (name, "card triangles", card_tris)
         overhang = max(max(old_lo[i] - new_lo[i], new_hi[i] - old_hi[i]) for i in range(3))
-        assert overhang <= OVERHANG_MAX, (name, "overhang", overhang)
+        # A card lies along the outline: up to its largest rim (radius x (1 + .2 + .06)).
+        limit = CARD_RADIUS[1] * 1.26 if spec.get("cards") else OVERHANG_MAX
+        assert overhang <= limit, (name, "overhang", overhang, limit)
         trunk_depth = entry["pivot"].z - spec["floor"]     # the pivot is the trunk top
         assert trunk_depth >= TRUNK_DEPTH_MIN, (name, "trunk depth", trunk_depth)
         assert in_clump(entry["pivot"], c0, .999), (name, "trunk top outside clump 0")
         degenerate = sum(1 for poly in obj.data.polygons if poly.area < 1e-6)
         assert degenerate == 0, (name, "zero-area triangles", degenerate)
-        entry["reshape"] = {"overhang": round(overhang, 4), "floor": round(-trunk_depth, 4), "trunkDepth": round(trunk_depth, 4),
+        entry["reshape"] = {"overhang": round(overhang, 4), "overhangMax": limit, "floor": round(-trunk_depth, 4), "trunkDepth": round(trunk_depth, 4),
+                            "cardTris": card_tris, "droppedTufts": dropped, "cardBudget": CARD_BUDGET,
                             "oldBounds": [rb(old_lo), rb(old_hi)], "newBounds": [rb(new_lo), rb(new_hi)], "tris": tris}
         bpy.data.objects.remove(old, do_unlink=True)
         entry["obj"] = obj
@@ -569,7 +623,7 @@ def add_rock_face(b, name, rows=16, cols=7):
         row = []
         for c in range(cols + 1):
             v = -1 + 2 * c / cols
-            half = (w0 + (w1 - w0) * h) / 2 + 1.0
+            half = (w0 + (w1 - w0) * h) / 2 - .5   # Fable R5: behind the sheet (the two dark frame slabs go)
             proud = sum(p * math.exp(-((h - at) / .045) ** 2) for at, p in LEDGES[name])
             out = -.35 + proud * (1 - .25 * abs(v)) + jitter[r][c]
             row.append(top + (bottom - top) * h + t * (half * v) + n * out)
@@ -590,7 +644,8 @@ WHITE_UV = (0.5, 1 - 456 / 512)
 SHEET_TOP, SHEET_LOW = (226, 238, 246), (255, 255, 255)
 FOAM, FOAM_LOW, LIP = (250, 252, 253), (226, 241, 246), (250, 253, 254)
 APRON_IN, APRON_OUT = (226, 241, 246), (190, 222, 232)
-SHEET_COLS = 6
+SHEET_COLS = 4   # Fable R5: the edge fade is in the atlas now (u spans each sheet), so fewer columns
+LOBE = .45       # Fable R5: each side edge breaks into 3-5 uneven lobes, up to 2 x LOBE studs in
 SHEET_SKY = 1.0   # the sheet's shading normal: n + SHEET_SKY * up, normalised (Studio r13: facing out it rendered ~50 darker)
 
 
@@ -598,12 +653,21 @@ def falls_h(u):
     return 3 * u * u - 2 * u * u * u
 
 
-def add_sheet(b, name, lip_b, rows=22):
-    """One sheet per drop on the beam curve (bow .5, ledge kink .3), UV-mapped to the atlas streaks; its lip line goes in
-    `lip_b` (the foam part)."""
+def add_sheet(b, name, lip_b, rows=22, lip=True):
+    """One sheet per drop on the beam curve (bow .5, ledge kink .3), UV-mapped to the atlas streaks: u runs 0..1 across
+    the sheet between its lobed edges (the atlas draws the far-read bands and the edge fade), v down the drop. The top
+    lip line (only where `lip`) goes in `lip_b` (the foam part)."""
     top, bottom, w0, w1, n, t = frame(name)
     c = curve(name)
     length = (bottom - top).length
+    rnd = random.Random(name + "-lobes")
+    waves = [(rnd.uniform(1.6, 2.4), rnd.uniform(0, 2 * math.pi), rnd.uniform(3.2, 4.4), rnd.uniform(0, 2 * math.pi))
+             for _ in range(2)]
+
+    def inset(side, h):
+        k1, p1, k2, p2 = waves[side]
+        wave = .6 * math.sin(2 * math.pi * k1 * h + p1) + .4 * math.sin(2 * math.pi * k2 * h + p2)
+        return LOBE + LOBE * max(-1.0, min(1.0, wave))
 
     def point(u, x):
         h = falls_h(u)
@@ -633,24 +697,29 @@ def add_sheet(b, name, lip_b, rows=22):
         v0 = 1 - (s0 - seg * ATLAS_V_STUDS) / ATLAS_V_STUDS * ATLAS_STREAK_V
         v1 = 1 - (s1 - seg * ATLAS_V_STUDS) / ATLAS_V_STUDS * ATLAS_STREAK_V
         assert v1 >= 1 - ATLAS_STREAK_V - 1e-6, (name, "a row crosses the streak restart", s0, s1)
-        sw0, sw1 = w0 + (w1 - w0) * falls_h(u0), w0 + (w1 - w0) * falls_h(u1)
+        h0, h1 = falls_h(u0), falls_h(u1)
+        sw0, sw1 = w0 + (w1 - w0) * h0, w0 + (w1 - w0) * h1
+        l0, r0 = -sw0 / 2 + inset(0, h0), sw0 / 2 - inset(1, h0)
+        l1, r1 = -sw1 / 2 + inset(0, h1), sw1 / 2 - inset(1, h1)
         for col in range(SHEET_COLS):
             a, bb = col / SHEET_COLS, (col + 1) / SHEET_COLS
-            xa0, xb0 = (a - .5) * sw0, (bb - .5) * sw0
-            xa1, xb1 = (a - .5) * sw1, (bb - .5) * sw1
-            uvs = [((xa0 + sw0 / 2) / ATLAS_U_STUDS, v0), ((xb0 + sw0 / 2) / ATLAS_U_STUDS, v0),
-                   ((xb1 + sw1 / 2) / ATLAS_U_STUDS, v1), ((xa1 + sw1 / 2) / ATLAS_U_STUDS, v1)]
+            xa0, xb0 = l0 + (r0 - l0) * a, l0 + (r0 - l0) * bb
+            xa1, xb1 = l1 + (r1 - l1) * a, l1 + (r1 - l1) * bb
+            uvs = [(a, v0), (bb, v0), (bb, v1), (a, v1)]
             b.quad([point(u0, xa0), point(u0, xb0), point(u1, xb1), point(u1, xa1)],
                    [colour(u0), colour(u0), colour(u1), colour(u1)], uvs=uvs, smooth=True, normal=sky)
+    if not lip:
+        return
     # The lip line: a 0.5-stud white strip along the top edge, just in front of the sheet, lit like the sheet.
     lo, hi = 0.0, 1.0
     for _ in range(60):
         mid = (lo + hi) / 2
         lo, hi = (mid, hi) if falls_h(mid) * length < .5 else (lo, mid)
     du = (lo + hi) / 2
+    l0, r0 = -w0 / 2 + inset(0, 0.0), w0 / 2 - inset(1, 0.0)
     for col in range(SHEET_COLS):
         a, bb = col / SHEET_COLS, (col + 1) / SHEET_COLS
-        xa, xb = (a - .5) * w0, (bb - .5) * w0
+        xa, xb = l0 + (r0 - l0) * a, l0 + (r0 - l0) * bb
         lift = n * .06
         lip_b.quad([point(0, xa) + lift, point(0, xb) + lift, point(du, xb) + lift, point(du, xa) + lift], [lin(LIP)] * 4,
                    smooth=True, normal=sky)
@@ -689,12 +758,33 @@ def add_lobe(b, centre, n, t, width, height, proud, low, high):
                 b.quad(pts, [c0, c0, c1, c1], smooth=True, normal=lit(pts))
 
 
+def add_step_lip(b):
+    """Fable R5: no white line across the step: a dark rock lip there instead (wet stone, lit like the rock face)."""
+    top, bottom, w0, w1, n, t = frame("Water_TumbleFalls_Upper")
+    up = Vector((0, 1, 0))
+    half, tall, deep = w1 / 2 + .4, .5, .55
+    base = bottom + n * .05 - up * .1
+    corners = {}
+    for sx in (-1, 1):
+        for sy in (0, 1):
+            for sz in (0, 1):
+                corners[(sx, sy, sz)] = base + t * (sx * half) + up * (sy * tall) + n * (sz * deep)
+    c_top, c_foot = lin(ROCK_TOP_FACE), lin(ROCK_FOOT_FACE)
+    sky = (n + Vector((0, ROCK_SKY, 0))).normalized()
+    faces = [((-1, 0, 1), (1, 0, 1), (1, 1, 1), (-1, 1, 1), sky),                      # front
+             ((-1, 1, 1), (1, 1, 1), (1, 1, 0), (-1, 1, 0), (n * .3 + up).normalized()),  # top
+             ((-1, 0, 0), (-1, 0, 1), (-1, 1, 1), (-1, 1, 0), (-t + up * .5).normalized()),
+             ((1, 0, 1), (1, 0, 0), (1, 1, 0), (1, 1, 1), (t + up * .5).normalized())]
+    for *keys, normal in faces:
+        b.quad([corners[k] for k in keys], [c_foot if k[1] == 0 else c_top for k in keys], normal=normal)
+
+
 def add_foam(b):
     """Ledge roll (5 lobes, 1.6 tall, .6 proud), the foot roll (7 lobes 1.0-1.8 wide, 1.4-2.6 tall, .8 proud, the sheet
     plus .6 each side) and a scalloped apron fanning 3.5 studs out on the pool, .08 above the water."""
     rnd = random.Random(4421)
-    for name, lobes, tall, proud, extra in (("Water_TumbleFalls_Upper", 5, (1.6, 1.6), .6, 0.0),
-                                            ("Water_TumbleFalls_Lower", 7, (1.4, 2.6), .8, .6)):
+    # Fable R5: only the foot keeps a roll, low and uneven (at most .8 tall); the step's roll and line are gone.
+    for name, lobes, tall, proud, extra in (("Water_TumbleFalls_Lower", 7, (.45, .8), .6, .6),):
         top, bottom, w0, w1, n, t = frame(name)
         foot = bottom + n * .05
         span = w1 + 2 * extra
@@ -845,7 +935,8 @@ def falls():
     fb = Builder("Falls__kitfoam", default_uv=WHITE_UV)
     for name in FALLS:
         add_rock_face(b, name)
-        add_sheet(b, name, fb)
+        add_sheet(b, name, fb, lip=name == "Water_TumbleFalls_Upper")
+    add_step_lip(b)
     add_foam(fb)
     list_ = rocks()
     check_rocks(list_)

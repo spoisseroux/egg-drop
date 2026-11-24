@@ -115,10 +115,24 @@ class Gate(unittest.TestCase):
                           "W7_Vegetation__foliage_blossom", "W7_Water__foam", "W7_Water__waterfall_tumble"])
         island = {p["name"]: p for p in json.loads((gate.WORLD / "world-v7-manifest.json").read_text())["parts"]}
         kit_tris = sum(m["tris"] for m in self.manifest["meshes"] if m["role"] in ("crown", "rest"))
-        crown_meshes = {m["name"]: m["tris"] for m in self.manifest["meshes"]}
-        placed = sum(crown_meshes[c["mesh"]] for c in crowns) + sum(m["tris"] for m in self.manifest["meshes"] if m["role"] == "rest")
+        crown_meshes = {m["name"]: m for m in self.manifest["meshes"]}
+
+        def own(name):
+            """A crown mesh's triangles without its leaf-cluster cards (counted from the mesh's tagged faces) and with
+            the rim tufts a carded crown dropped (Fable R5), i.e. what it holds of the merged crowns."""
+            mesh = crown_meshes[name]
+            r = mesh.get("reshape", {})
+            return mesh["tris"] - r.get("cardTris", 0) + r.get("droppedTufts", 0)
+        placed = sum(own(c["mesh"]) for c in crowns) + sum(m["tris"] for m in self.manifest["meshes"] if m["role"] == "rest")
         self.assertEqual(placed, island["W7_Vegetation__foliage"]["tris"] + island["W7_Vegetation__foliage_blossom"]["tris"],
-                         "the split crowns and bushes hold exactly the merged crowns' triangles")
+                         "the split crowns and bushes hold exactly the merged crowns' triangles (cards apart)")
+        cards = sum(crown_meshes[c["mesh"]].get("reshape", {}).get("cardTris", 0) for c in crowns)
+        budgets = {m["reshape"]["cardBudget"] for m in crown_meshes.values() if "reshape" in m}
+        self.assertEqual(len(budgets), 1)
+        self.assertLessEqual(cards, budgets.pop(), "leaf-cluster cards on all placed crowns stay inside their budget")
+        for name, mesh in crown_meshes.items():
+            want = 120 if name == "W7_Kit_Crown_Blossom__foliage_blossom" else 0
+            self.assertEqual(mesh.get("reshape", {}).get("cardTris", 0), want, name)
         self.assertGreater(kit_tris, 0)
         added = sum(m["tris"] for m in self.manifest["meshes"] if m["role"] in ("falls", "fountain"))
         hidden = sum(island[n]["tris"] for n in ("W7_Water__waterfall_tumble", "W7_Bubbles__bubble", "W7_Water__foam",
@@ -135,8 +149,9 @@ class Gate(unittest.TestCase):
         for name, mesh in reshaped.items():
             r = mesh["reshape"]
             self.assertEqual(r["tris"], mesh["tris"], name)
-            self.assertEqual(mesh["tris"], {"Round": 240, "Tall": 220, "Blossom": 240}[name.split("_")[3]], name)
-            self.assertLessEqual(r["overhang"], 1.0, name)
+            self.assertEqual(mesh["tris"], {"Round": 240, "Tall": 220, "Blossom": 336}[name.split("_")[3]], name)
+            self.assertLessEqual(r["overhang"], r["overhangMax"], name)
+            self.assertLessEqual(r["overhangMax"], 1.9 if r["cardTris"] else 1.0, name)
             self.assertGreaterEqual(r["trunkDepth"], .5, name)
             self.assertAlmostEqual(r["floor"], -r["trunkDepth"], places=3)
         xml = (gate.WORLD / "AeroKit.rbxmx").read_text(encoding="utf-8")

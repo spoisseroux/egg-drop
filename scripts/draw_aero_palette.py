@@ -5,7 +5,7 @@ props). Under the Aero day light that push is no longer wanted, but the island's
 collision checkpoint, so the Aero look swaps in this map at runtime instead (WorldAero.Surfaces.palette, AeroWorld's
 records put the original back). Same swatch layout: slot i at column i % side, row i // side from the bottom.
 
-    python scripts/draw_aero_palette.py          write assets/world/textures/aero/palette-aero.png
+    python scripts/draw_aero_palette.py          write assets/world/textures/aero/palette-aero.png (and palette-chimes.png)
     python scripts/draw_aero_palette.py --check  fail when the committed file differs
 """
 import colorsys
@@ -20,6 +20,10 @@ ROOT = Path(__file__).resolve().parents[1]
 WORLD = ROOT / "assets" / "world"
 OUT = WORLD / "textures" / "aero" / "palette-aero.png"
 SATURATION = 1.0
+# Beta 14 QA W3 / Fable R5 item 9: the five arrival chimes (W7_Chime_N__palette) at saturation x .75 of the Aero palette,
+# so they sit under the pets (WorldAero.Named "W7_Chime_").
+CHIMES = WORLD / "textures" / "aero" / "palette-chimes.png"
+CHIME_SATURATION = SATURATION * .75
 
 
 def draw(saturation=SATURATION):
@@ -42,16 +46,19 @@ def draw(saturation=SATURATION):
 
 def main(argv):
     data = draw()
+    chimes = draw(CHIME_SATURATION)
     if "--check" in argv:
         ok = OUT.exists() and OUT.read_bytes() == data
-        print("palette-aero.png", "matches" if ok else "STALE")
-        return 0 if ok else 1
+        ok_chimes = CHIMES.exists() and CHIMES.read_bytes() == chimes
+        print("palette-aero.png", "matches" if ok else "STALE", "/ palette-chimes.png", "matches" if ok_chimes else "STALE")
+        return 0 if ok and ok_chimes else 1
     # The same drawing at 1.1 must be the island's own bound palette, or the layout read here is not the one shipped.
     if draw(1.1) != (WORLD / "textures" / "palette-roblox.png").read_bytes():
         raise RuntimeError("palette layout differs from palette-roblox.png; refusing to draw a mismatched swap")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_bytes(data)
-    print("wrote", OUT.relative_to(ROOT))
+    CHIMES.write_bytes(chimes)
+    print("wrote", OUT.relative_to(ROOT), "and", CHIMES.relative_to(ROOT))
     return 0
 
 

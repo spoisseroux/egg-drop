@@ -123,9 +123,13 @@ return function(client,offline)
 			assert(layer(added,"Tumble","FlowB",1).item.Texture==Kit.Textures.Veil)
 			local sky=layer(added,"Sky","StrandA").item
 			assert(sky.CurveSize0==0 and sky.Segments==6,"Sky Falls keeps today's layers")
-			-- 11 at Tumble near the falls (LOOK-R3: + the two foot shades), 5 at level 1, none under Reduced Motion.
-			assert(go(added,{camera=NEAR,level=0,reduced=false,daylight=.9})==11,"near Tumble: its 11 (Sky Falls is the other group)")
-			assert(go(added,{level=1})==5)
+			-- 15 at Tumble near the falls (LOOK-R3: + the two foot shades; Fable R5: + 4 mist cards), 7 at level 1 (2 of the
+			-- cards), none under Reduced Motion.
+			assert(names.MistCard==4,"four mist cards")
+			local card=layer(added,"Tumble","MistCard",1).item
+			assert(card.FaceCamera==true and card.TextureSpeed==0 and card.LightEmission==0 and card.Texture==Kit.MistCards.Texture)
+			assert(go(added,{camera=NEAR,level=0,reduced=false,daylight=.9})==15,"near Tumble: its 15 (Sky Falls is the other group)")
+			assert(go(added,{level=1})==7)
 			assert(go(added,{level=0,reduced=true})==0)
 			added.destroy()
 			-- And without it, today's flat falls exactly.

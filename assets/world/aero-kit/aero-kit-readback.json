@@ -1,17 +1,17 @@
 {
- "assetId": "108299380611863",
- "operationId": "d2980314-abb2-4f41-99bf-5e1752addd44",
+ "assetId": "123637475971654",
+ "operationId": "e41ef912-4069-44cc-982c-b0b1244aae4e",
  "moderation": "Approved",
- "fbxSha256": "37dcaa95891be019cb1d86c16cc3de760caf04a0e46e13a7fdf5bb326bba0471",
- "manifestSha256": "56d8ebd9c2d55e0de3505aee7611e2a77ff7db0c47427a523f9a987e60337e10",
+ "fbxSha256": "fd6b180e9dd99a1ae6d70482beaa7c60678bc1effeb89d2299470de816834a23",
+ "manifestSha256": "ef5e2e4f7d783fd1732334b1b2e8d9143182adf9f642f99713ec05ba7b2e7f2c",
  "parts": [
   {
-   "meshId": "rbxassetid://128302677860915",
+   "meshId": "rbxassetid://88796218592580",
    "name": "W7_Kit_Crown_Blossom__foliage_blossom",
    "meshSize": [
-    108.26978302001953,
-    67.74508666992188,
-    90.77910614013672
+    117.34319305419922,
+    82.99592590332031,
+    108.43154907226562
    ]
   },
   {
@@ -42,16 +42,16 @@
    ]
   },
   {
-   "meshId": "rbxassetid://105399603929639",
+   "meshId": "rbxassetid://86421315156302",
    "name": "W7_Kit_Falls__kitfoam",
    "meshSize": [
-    202.68994140625,
+    196.84783935546875,
     562.826904296875,
-    202.00347900390625
+    199.4281005859375
    ]
   },
   {
-   "meshId": "rbxassetid://71091194202757",
+   "meshId": "rbxassetid://73382470502072",
    "name": "W7_Kit_Falls__kitwater",
    "meshSize": [
     377.33721923828125,
@@ -88,7 +88,7 @@
   }
  ],
  "provenance": {
-  "recordedUtc": "2026-11-24T02:36:14.651084+00:00",
+  "recordedUtc": "2026-11-24T07:00:39.623341+00:00",
   "note": "Open Cloud POST /assets/v1/assets (Model) through Studio MCP, operation polled to done; MeshId/MeshSize read with InsertService:LoadAsset in Studio Edit, model destroyed unparented, place not saved."
  }
 }

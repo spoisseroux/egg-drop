@@ -241,7 +241,7 @@ function World:paintPart(part)
 	-- The backdrop ring is the clock's.
 	if not kind or string.sub(part.Name,1,12)=="W7_Backdrop_"then return end
 	if kind==Values.CrownKind then self:paintCrown(part);return end
-	local surface=Values.Surfaces[kind]
+	local surface=Values.namedSurface(part.Name,kind)or Values.Surfaces[kind]
 	if not surface then return end
 	for key,value in pairs(surface)do
 		if key=="Tint"then
