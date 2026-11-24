@@ -587,3 +587,46 @@ for the mote (or `heart-mote.png` 64 x 64 if Fable wants a softer one: question 
   surface and see-through; LampOrbs dim until the halos run (or separate orbs); lowest solid branch points if the crowns
   become cards.
 - **C3.** Aero area fireflies: keep alongside the new population, and drop their camera keep-out?
+
+---
+
+## 12. As built (2026-11-24), architect r1 "GO WITH CHANGES" applied
+
+Branch `worktree-agent-a25638addc7cc4aa6` (rebased onto feat 8ea11da). Offline runner green (52 specs). Nothing seen in
+Studio. Architect answers: A1 clamp (falling leaves read `Wind.gust` only; the breath raises the rate x3 and runs the
+scud; `LifeSim.spec` replaces `Wind.breath/blow/swayAt` with a thrower during the drift run); A2 detour approved, notice
+reach **8**, abort when the drawn pet is 8+ studs from its server spot, built last; A3 new Alive features **`scene`** and
+**`snack`**; A5 opt-in, `Wind.at` untouched, the breath-aware sway is `Wind.swayAt`, read only with `scene` on (WindClient,
+hanging Dewdrops); A6 a separate firefly population (8 / 4 / 0), adopting butterflies at hand-off.
+
+| Item | Where | Differs from the plan |
+|---|---|---|
+| Big breath | `Wind.breath / blow / swayAt / breathStart / breathEnvelope` (slot 300 +-30, 2.5 / 3 / 5) | none |
+| Q5 leaves | `Sim.Leaf` (4 / 2, boost 1.5, x3 breath, caps 44 / 22, lean .45, gust 1.3, sway .35, rot 70), `Sim.Skitters` (6 / 3, cap 14 / 7, own 15-stud cover reach), GardenLife emitters sheet / petal / scud | **reach 24, side 2** (23.1 / 1.5 measured); the sheet's flipbook grid is only set once `leafSheet` is uploaded |
+| B5 hang | `Sim.kitCrowns` (WorldAeroKit via `AeroKit.crownFrame`, called directly: no side effects), ellipsoid stems (.62 / .30 / .50, stemIn .82), sway-follow by pivot match (static otherwise), `#E6E6DC`, 1.1 x 1.5 | fallback LifeSpots + one warning |
+| D2 fall | chance .5, rest 30, breath drops (salts 17 / 18, plan n = -(b+1), HOLD shared), `Sim.fruitNudge`, `notice` hook | none |
+| D2 snack | `LifePet` (Alive `snack`), RoomView `lifePetDrive` / `lifePetPose`, `PetExpression` `contentUntil`, init guard (a throw drops it) | heart = the Stat atlas heart decal tinted #F4A9C4; nibble cue `dewdrop_nibble` not wired (waits for Fable's sound) |
+| B2 fireflies | `Sim.Fireflies` + GardenLife pool, `AliveLevel` attribute | none |
+| W3 scene | `LifeSceneSim` (pure) + `LifeScene` (parts in GardenLife's folder and move) | koi plate .5 x 1.3 along travel, texture portrait 48 x 128 (Fable said 128 x 48); one star Beam (not 2); lamp halos use `fireflyDot` tinted |
+| Chimes | `WorldMotion` (Chime_k movers, scene on) | saturation x .75 not done (island session) |
+| Ground plates | `scripts/build_ground_dressing.py` -> `GroundDressing.lua`; `WorldDressingClient` | runtime y from `HollowWorldLayout.groundY` (stored y as fallback) |
+| Birds | `Birds:breathe` (a hop pair once a breath) | none |
+| The Hush | GardenLife `quiet()` dep (`clientUI.hush:inHush()`): no new leaves, bubbles, birds; fireflies fade | added at the coordinator's request |
+
+**Live safety specs:** `GardenLife` ceiling false -> no mount; `LifePet` with the snack ceiling false or the switch off
+writes nothing; `WorldMotion` on the live place keeps today's sway; `WorldDressingClient` builds zero plates on live;
+`PetExpression` content only with `contentUntil` (only LifePet sets it).
+
+**Specs:** offline `Wind`, `LifeSim`, `GardenLife`, `LifeSceneSim`, `LifeScene`, `LifePet`, `WorldMotion`, `GroundDressing`;
+Studio only (not run) `scripts/GardenLifeStudio.spec.lua`, probe `scripts/probe_life_scene.luau`; `WindClient.spec` mock
+keeps `scene` off.
+
+**Textures to upload** (`artifacts/qa-2026-11-23-beta14/look/`, gate `python scripts/check_life_art.py r4`): leaf-sheet
+192x192, leaf-sheet-ac / -bd 192x96 (fallback only), dewdrop-stem 192x262, dapple 256x256, koi-a / b / c 48x128,
+litter 256x256, lawn-patch-a / b 256x256, path-fray 256x96. Until uploaded: the sheet is today's leaf A, the fruit
+today's dewdrop; dapple, koi, litter, lawn and fray build nothing.
+
+**Unverified (Studio):** a sheet leaf keeps its cell in flight; the reach vs Drag in the engine; crown underside vs
+`down` on the reshaped crowns (probe); chimes are separate movers; koi decal orientation and the pool's see-through;
+lamp halo heights (orbs at y 9 assumed) and the merged orbs lighting at once; dapple overdraw on a phone; the pet
+detour's look next to the need bubble, the nest pill and click targets; `careHeadPitch` sign for "looks up".
