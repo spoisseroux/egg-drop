@@ -16,7 +16,7 @@ return function(client)
 		test("ground plates: a Top-face Decal each, flat, inert, at the look's lift",function()
 			local Flowers=require(client.WorldDressingClient)
 			local plates=Flowers.groundPlates({scene=true,art=function()return "rbxassetid://129048015089227"end})
-			assert(#plates==30,"30 plates: "..#plates)
+			assert(#plates==38,"38 plates (R5: 20 fray): "..#plates)
 			for _,plate in ipairs(plates)do
 				local p=plate.part
 				table.insert(made,p)

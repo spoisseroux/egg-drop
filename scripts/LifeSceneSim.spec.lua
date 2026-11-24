@@ -19,11 +19,12 @@ return function(client)
 		end
 	end)
 
-	test("dapple: .72 by day (and the hour off), gone under .30, eased between; drifts .35 along the wind (+.5 in a gust), turns +-4",function()
-		assert(Sim.dappleTransparency(nil)==.72 and Sim.dappleTransparency(.9)==.72 and Sim.dappleTransparency(.45)==.72)
+	test("dapple: .55 by day (and the hour off, FABLE-REVIEW-R5), gone under .30, eased between; drifts .35 along the wind (+.5 in a gust), turns +-4",function()
+		assert(Sim.dappleTransparency(nil)==.55 and Sim.dappleTransparency(.9)==.55 and Sim.dappleTransparency(.45)==.55)
+		assert(Sim.Dapple.size==11)
 		assert(Sim.dappleTransparency(.30)==1 and Sim.dappleTransparency(.12)==1)
 		local mid=Sim.dappleTransparency(.375)
-		assert(mid>.72 and mid<1 and near(mid,.86,1e-6),"half way: "..mid)
+		assert(mid>.55 and mid<1 and near(mid,.775,1e-6),"half way: "..mid)
 		local centre=Vector3.new(10,4,-20)
 		local most,turn=0,0
 		for i=0,400 do

@@ -1001,8 +1001,10 @@ end
 -- [check] on the reshaped crowns: tune `down` until the top third is hidden on the three most-seen lime trees.
 -- STUDIO-CHECK-R5: at .62 every fruit sat inside the reshaped crowns (none showed); .75 (precise hulls: about .44
 -- hidden on average, hulls overstate the leaves) shows the lower part under the leaves.
+-- FABLE-REVIEW-R5 3: keep .75; hang from the skirt only, never a crown's side face (a fruit there is a sticker in
+-- front of the leaves): `out` at most .30, and every tip pulled in to `skirt` .60 of the crown's radius at that height.
 Sim.Fruit=table.freeze({
-	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.30,down=.75,hang=.50,stemIn=.82,pool=16,reach=90,
+	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.30,down=.75,hang=.50,stemIn=.82,skirt=.60,pool=16,reach=90,
 	swayMin=3,swayGust=12,swayHz=2.2,
 	dropAt=.8,chance=.5,
 	tug=20,letGo=.15,fall=.55,drift=1.2,turn=180,
@@ -1067,7 +1069,8 @@ function Sim.fruitStems(i,crown)
 			local x,z=F.out*size.X*math.cos(a),F.out*size.Z*math.sin(a)
 			if ring>0 and hx>0 and hz>0 then
 				local q=math.sqrt((x/(hx*ring))^2+(z/(hz*ring))^2)
-				if q>F.stemIn then x,z=x*F.stemIn/q,z*F.stemIn/q end
+				local most=math.min(F.stemIn,F.skirt)
+				if q>most then x,z=x*most/q,z*most/q end
 			end
 			local tip=Vector3.new(x,y,z)
 			table.insert(out,table.freeze({k=k,key=Sim.fruitKey(i,k),stem=frame*tip,tip=tip}))

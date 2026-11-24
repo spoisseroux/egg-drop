@@ -9,12 +9,12 @@ Writes to artifacts/qa-2026-11-23-beta14/look/ :
                                  C lime heart with a saw-tooth edge #8FA83E (midrib #C9D08A), D dry curl #A8762E / #5C3D1C.
                                  Stem down, no outline, the shade half 12% darker, a 2 px rim on the shade side only.
   leaf-sheet-ac.png     192x96   the flipbook fallback (A + C); leaf-sheet-bd.png 192x96 (B + D).
-  dewdrop-stem.png      192x262  assets/world/dewdrop.png with a 2 px #5A4A2A stem from the fruit to the top edge.
+  dewdrop-stem.png      192x262  the fruit redrawn matte (no outline, a 35% highlight; R5) with a 2 px #5A4A2A stem.
   dapple.png            256x256  soft leaf shade (white; the Decal tints it #1E2A16), alpha, fading to the edges.
   koi-a/b/c.png         48x128   seen from above, head at the top: orange and white, pale gold, slate. No outline.
-  litter.png            256x256  the four leaves at rest, scattered, alpha.
+  litter.png            256x256  the four leaves at rest, 32 of them (R5), leaf D an open curl, alpha.
   lawn-patch-a.png      256x256  mown stripes, grey value, soft alpha (the Decal tints it); lawn-patch-b.png clover.
-  path-fray.png         256x96   dirt (bottom) breaking into grass tufts (top), alpha fading at the ends.
+  path-fray.png         256x96   the path's brown (bottom) breaking into the lawn's green tufts (top), ends feathered 25%.
   preview-r4.png                 a contact sheet (not for upload).
 
 Run:  python scripts/draw_garden_life_r4_textures.py
@@ -82,15 +82,27 @@ def draw_leaf(kind: str, size: int = 96, seed: int = 1) -> Image.Image:
     d = ImageDraw.Draw(img)
     cx, cy = S / 2, S / 2 - 4 * SS
     if kind == "D":
-        # A dry leaf seen side-on, curled into a "C", a notch out of one edge.
-        outside, inside = rgb("#A8762E"), rgb("#5C3D1C")
-        box = (S * .18, S * .16, S * .82, S * .80)
-        d.pieslice(box, 200, 520, fill=outside + (255,))
-        inner = (S * .30, S * .28, S * .70, S * .68)
-        d.pieslice(inner, 210, 510, fill=inside + (255,))
-        d.ellipse((S * .40, S * .40, S * .60, S * .60), fill=(0, 0, 0, 0))
-        d.polygon([(S * .70, S * .30), (S * .86, S * .36), (S * .74, S * .42)], fill=(0, 0, 0, 0))  # the notch
-        d.line([(S * .5, S * .78), (S * .48, S * .94)], fill=rgb("#6B4A2B") + (255,), width=3 * SS)  # stalk
+        # FABLE-REVIEW-R5 5: a dry leaf in an OPEN curl (a 130 degree gap, never a closed ring), the ochre 20% less
+        # saturated (#A8762E -> #A88046, the inside #5C3D1C -> #5C4329). A tapered band: thin at both tips, the curl's
+        # inner edge in shade, a notch out of the outer edge, a short stalk.
+        outside, inside = rgb("#A88046"), rgb("#5C4329")
+        R, W = S * .27, S * .17
+        a0, sweep = math.radians(160), math.radians(230)
+        outer, inner, shade = [], [], []
+        n = 48
+        for i in range(n + 1):
+            t = i / n
+            a = a0 + sweep * t
+            w = W * (math.sin(math.pi * t) ** .55) + SS
+            ca, sa = math.cos(a), math.sin(a)
+            notch = .55 * W if .58 < t < .64 else 0
+            outer.append((cx + ca * (R + w / 2 - notch), cy + 4 * SS + sa * (R + w / 2 - notch)))
+            inner.append((cx + ca * (R - w / 2), cy + 4 * SS + sa * (R - w / 2)))
+            shade.append((cx + ca * (R - w / 2 + w * .4), cy + 4 * SS + sa * (R - w / 2 + w * .4)))
+        d.polygon(outer + inner[::-1], fill=outside + (255,))
+        d.polygon(shade + inner[::-1], fill=inside + (255,))
+        tip = outer[0]
+        d.line([tip, (tip[0] - 4 * SS, tip[1] + 9 * SS)], fill=rgb("#6B4A2B") + (255,), width=3 * SS)  # stalk
     else:
         base = {"A": rgb("#5E8F3A"), "B": rgb("#7C7A3A"), "C": rgb("#8FA83E")}[kind]
         tip = rgb("#7A5A30") if kind == "B" else base
@@ -129,18 +141,39 @@ def leaf_sheet(cells: list[Image.Image], cols: int, rows: int, cell: int = 96) -
 
 
 def dewdrop_stem() -> Image.Image:
-    fruit = Image.open(ROOT / "assets/world/dewdrop.png").convert("RGBA")
-    w, h = fruit.size  # 192 x 224
-    out = Image.new("RGBA", (w, 262), (0, 0, 0, 0))
-    out.paste(fruit, (0, 262 - h), fruit)
-    alpha = np.asarray(out.split()[3])
-    col = w // 2
-    top = next(y for y in range(out.size[1]) if alpha[y, col] > 128)
-    big = out.resize((w * SS, 262 * SS), Image.LANCZOS)
-    d = ImageDraw.Draw(big)
-    stem = rgb("#5A4A2A") + (255,)
-    d.line([(col * SS, 0), (col * SS + 2 * SS, (top + 3) * SS)], fill=stem, width=2 * SS)
-    return down(big, (w, 262))
+    """FABLE-REVIEW-R5 3: redrawn matte, no dark outline, the highlight at 35% alpha (ImageColor3 #CFCFC4 dims it in game).
+    The fruit at the bottom (as assets/world/dewdrop.png sits), two small leaves at its top, a 2 px #5A4A2A stem."""
+    w, h = 192, 262
+    W, H = w * SS, h * SS
+    cx, cy, r = W / 2, H - 92 * SS, 72 * SS
+    y, x = np.mgrid[0:H, 0:W].astype(np.float32)
+    dist = np.hypot(x - cx, y - cy)
+    a = np.clip((r - dist) / (1.2 * SS), 0, 1)
+    # Lit from the upper left: a soft three-tone gradient, a slight bottom bounce, no rim line.
+    lx, ly = cx - .45 * r, cy - .5 * r
+    k = np.clip(np.hypot(x - lx, y - ly) / (1.7 * r), 0, 1)
+    lit, body, dark = np.array(rgb("#F0A45E")), np.array(rgb("#DE7C40")), np.array(rgb("#B05A2E"))
+    col = np.where(k[..., None] < .5, lit + (body - lit) * (k[..., None] / .5), body + (dark - body) * ((k[..., None] - .5) / .5))
+    col *= (.97 + .06 * noise((H, W), 81, 3 * SS))[..., None]
+    img = Image.fromarray(np.dstack([np.clip(col, 0, 255), a * 255]).astype(np.uint8), "RGBA")
+    # The highlight: a soft oval, white at 35% alpha.
+    glint = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(glint).ellipse((cx - .62 * r, cy - .66 * r, cx - .22 * r, cy - .18 * r), fill=255)
+    glint = glint.filter(ImageFilter.GaussianBlur(4 * SS))
+    white = Image.new("RGBA", (W, H), (255, 255, 255, 0))
+    white.putalpha(Image.fromarray((np.asarray(glint, dtype=np.float32) * .35 * a).astype(np.uint8), "L"))
+    img.alpha_composite(white)
+    d = ImageDraw.Draw(img)
+    green, vein = rgb("#5E8F3A"), rgb("#4C7A2F")
+    top = cy - r
+    for side in (-1, 1):
+        base = (cx + side * 4 * SS, top + 4 * SS)
+        tipx, tipy = cx + side * 34 * SS, top - 14 * SS
+        leaf = [base, (cx + side * 22 * SS, top - 18 * SS), (tipx, tipy), (cx + side * 26 * SS, top + 2 * SS)]
+        d.polygon(leaf, fill=green + (255,))
+        d.line([base, (tipx, tipy)], fill=vein + (255,), width=SS)
+    d.line([(cx, 0), (cx + 2 * SS, top + 6 * SS)], fill=rgb("#5A4A2A") + (255,), width=2 * SS)
+    return down(img, (w, h))
 
 
 def dapple() -> Image.Image:
@@ -185,7 +218,8 @@ def litter(cells: list[Image.Image]) -> Image.Image:
     S = 256
     rng = random.Random(51)
     out = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    for i in range(16):
+    # FABLE-REVIEW-R5 5: twice the leaves (the plate is 5 studs now, was 3).
+    for i in range(32):
         leaf = cells[i % 4]
         k = rng.uniform(.38, .55)
         small = leaf.resize((int(96 * k), int(96 * k)), Image.LANCZOS).rotate(rng.uniform(0, 360), expand=True, resample=Image.BICUBIC)
@@ -223,10 +257,12 @@ def lawn_patch(kind: str) -> Image.Image:
 
 
 def path_fray() -> Image.Image:
+    # FABLE-REVIEW-R5 6: the lawn's own green and the path's own brown (sampled from studio/r5/07-path-fray.jpg: lawn
+    # #2E8743, path #826249), blades leaning up to 25 degrees either way, the last 25% of each short end feathered out.
     W, H = 256 * SS, 96 * SS
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    dirt, dirtDark, grass = rgb("#8A6A45"), rgb("#6E5234"), rgb("#4E7F3A")
+    dirt, dirtDark, grass = rgb("#826249"), rgb("#6E523D"), rgb("#2E8743")
     rng = random.Random(71)
     # Dirt crumbs in the bottom half, thinning upward.
     for _ in range(900):
@@ -238,12 +274,13 @@ def path_fray() -> Image.Image:
     for _ in range(260):
         x, base = rng.uniform(0, W), rng.uniform(H * .05, H * .55)
         for _ in range(3):
-            length, lean = rng.uniform(8, 20) * SS, rng.uniform(-4, 4) * SS
-            col = lerp(grass, (120, 140, 70), rng.random() * .4)
-            d.line([(x, base), (x + lean, base + length)], fill=col + (255,), width=int(1.5 * SS))
+            length = rng.uniform(8, 20) * SS
+            angle = math.radians(rng.uniform(-25, 25))
+            col = lerp(grass, rgb("#3E9A52") if rng.random() < .5 else rgb("#24713A"), rng.random() * .6)
+            d.line([(x, base), (x + math.sin(angle) * length, base + math.cos(angle) * length)], fill=col + (255,), width=int(1.5 * SS))
     a = np.asarray(img.split()[3], dtype=np.float32) / 255
     xs = np.arange(W)[None, :] / W
-    ends = np.clip(np.minimum(xs, 1 - xs) / .18, 0, 1)
+    ends = np.clip(np.minimum(xs, 1 - xs) / .25, 0, 1) ** 1.5
     img.putalpha(Image.fromarray((a * ends * 255).astype(np.uint8), "L"))
     return down(img, (256, 96))
 
