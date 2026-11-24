@@ -366,6 +366,8 @@ function Client:relocate()
 	if not self.isOpen or self.dead then return end
 	local on,spot=self:placeNow()
 	if on==self.corner and spot==self.spot then return end
+	-- Studio check R8: the corner off takes the "?" card with it (the nest only moves, so nothing else would close it).
+	if self.corner and not on and self.d.helpClose then pcall(self.d.helpClose)end
 	self:close()
 	self:sync()
 end

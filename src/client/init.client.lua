@@ -4740,6 +4740,7 @@ do
    help=function(nest)return clientUI.openNestHelp~=nil and clientUI.openNestHelp(nest)==true end,
    helpPulse=function()return clientUI.nestHelpDue~=nil and clientUI.nestHelpDue()==true end,
    helpPulsed=function()if clientUI.nestHelpSeen then clientUI.nestHelpSeen()end end,
+   helpClose=function()if clientUI.closeNestHelp then clientUI.closeNestHelp()end end,
    -- Beta 14 Q2: the need bubble (BubbleHold's state and the pet), so the pill never shares the screen with it.
    bubble=function()
     local hold=clientUI.needBubble
@@ -4808,7 +4809,13 @@ function clientUI.eggCornerMount(Onboard)
    return root and root.Position or nil
   end,
   camera=function()local camera=workspace.CurrentCamera;return camera and camera.CFrame.Position or nil end,
-  audio={play=function(_,name,speed,volume)return audio:play(name,speed,volume)end},haptic=haptic})
+  audio={play=function(_,name,speed,volume)return audio:play(name,speed,volume)end},haptic=haptic,
+  -- An armed buy the server refused (Fable R8: the hello nudge, no crank): its intent says Rejected.
+  rejected=function(action)
+   local intent=({toyBuy=clientUI.toyIntent,hueBuy=clientUI.hueIntent,lookBuy=clientUI.hueIntent,materialBuy=clientUI.materialIntent,
+    featureBuy=clientUI.featureIntent})[action]
+   return intent~=nil and intent.status=="Rejected"
+  end})
  clientUI.eggMachine=machine
  gui.Destroying:Connect(function()machine:destroy()end)
  -- The machine's model (the server's), or nil while the corner is off.
@@ -4841,7 +4848,19 @@ function clientUI.eggCornerMount(Onboard)
  if intent and type(intent.send)=="function"then
   local send=intent.send
   intent.send=function(self,action,payload,...)
-   if action=="statEggBuy"then pcall(clientUI.eggPressed,action,nil)end
+   if action=="statEggBuy"then
+    pcall(clientUI.eggPressed,action,nil)
+    -- Studio check R8: the crank turns only for a buy the server saved (its egg drops); a refusal turns nothing.
+    local callback=select(1,...)
+    if type(callback)=="function"then
+     local rest={select(2,...)}
+     return send(self,action,payload,function(message)
+      if type(message)=="table"and message.status=="Saved"and on()then pcall(machine.confirm,machine,nil)
+      elseif type(message)=="table"and message.status~="Retrying"then pcall(machine.refuse,machine)end
+      return callback(message)
+     end,table.unpack(rest))
+    end
+   end
    return send(self,action,payload,...)
   end
  end
@@ -4878,6 +4897,10 @@ function clientUI.eggCornerMount(Onboard)
   end
  end
  Onboard.changed("corner"):Connect(function()task.delay(.5,attract)end)
+ -- Studio check R8: the "?" card goes when the corner turns off (NestClient asks, as it moves the nest).
+ function clientUI.closeNestHelp()
+  if How.isOpen()and How.openId()=="nest"then How.close("off")end
+ end
  local room=lounge()
  if room then room.ChildAdded:Connect(function(child)if child.Name=="EggMachine"then task.defer(attract)end end)end
  attract()

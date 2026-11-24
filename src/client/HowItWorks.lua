@@ -201,7 +201,7 @@ function How.buildList()
  local icon=56
  local inner=panelW-pad*2
  local function measure(text,sz,width)return math.ceil(Kit.measure(text,"Small",sz,width).Y*Kit.LineHeight)+2 end
- local liveH=measure(model.live or "",13,inner-icon-12)
+ local liveH=measure(model.live or "",How.ListLine,inner-icon-12)
  local top=math.max(icon,liveH)+12
  local room=H-(if compact then 12 else 48)-headerH-footerH-top
  local lines,linesH=How.listFit(model.lines or {},inner,room,measure,model.drop or "next")
@@ -226,8 +226,9 @@ function How.buildList()
  state.body=body
  local picture=make("ImageLabel",body,{Name="Icon",BackgroundTransparency=1,Image=model.icon or "",Size=UDim2.fromOffset(icon,icon),ZIndex=panel.ZIndex+1})
  picture:SetAttribute("Icon",true)
- state.live=txt(body,"Small",model.live or "","soft",{Name="Live",Position=UDim2.fromOffset(icon+12,0),Size=UDim2.fromOffset(inner-icon-12,math.max(icon,liveH)),
-  TextSize=13,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Center})
+ -- Fable R8 FIX 3: the live line answers the child's question: body size (How.ListLine, 14 px), in the text colour.
+ state.live=txt(body,"Small",model.live or "","text",{Name="Live",Position=UDim2.fromOffset(icon+12,0),Size=UDim2.fromOffset(inner-icon-12,math.max(icon,liveH)),
+  TextSize=How.ListLine,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Center})
  local y=top
  for index,line in ipairs(lines)do
   local h=measure(line.text,How.ListLine,inner-How.ListDot)
@@ -239,7 +240,9 @@ function How.buildList()
  end
  local fy=panelH-footerH+(if compact then 10 else 16)
  local bw,bh=if compact then 140 else 180,if compact then 44 else 48
- local done=Kit.button(panel,"GotIt",{variant="primary",text=model.button or UICopy.get("r3.help.done"),glyph="A",size=Vector2.new(bw,bh),textSize=if compact then 15 else 17})
+ -- Fable R8 FIX 3: the "A" glyph only for a gamepad player.
+ local pad=string.match(UserInputService:GetLastInputType().Name,"^Gamepad")~=nil
+ local done=Kit.button(panel,"GotIt",{variant="primary",text=model.button or UICopy.get("r3.help.done"),glyph=if pad then "A"else nil,size=Vector2.new(bw,bh),textSize=if compact then 15 else 17})
  done.Position=UDim2.fromOffset(panelW-pad-bw,fy);done.ZIndex=panel.ZIndex+2
  done.Activated:Connect(function()How.close("done")end)
  state.done=done

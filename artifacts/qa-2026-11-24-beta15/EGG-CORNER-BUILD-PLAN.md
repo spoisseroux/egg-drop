@@ -549,6 +549,13 @@ What was built differs from sections 4 to 8 here; this section wins.
   landed (a landed egg lingering in the cup never blocks it), and when it is refused init opens the screen at once, so a
   press is never eaten; the cup egg fades 1.5 s after the Hatch eggs or egg-page shade hides (`revealClosed` is wired);
   a Stat Egg buy makes no gate; the "?" card closes when the nest's model is gone (the ticker, and a resize rebuild).
+- **Studio check R8 and Fable R8:** the buy crank now starts on the **result**, not the press (a press only arms it):
+  the reveal starting confirms it (the Stat Egg: its Saved answer), and the 1 s hold starts with it. A refused press
+  (its intent says Rejected, or the Stat Egg's answer is not Saved) gets the hello nudge and one click, no crank, and
+  never counts as a streak step; an unconfirmed press lapses after 3 s. The machine's attract ring is r **3.0** (its
+  back arc showed on grass at 3.6). The "?" card: the live line at body size (14 px, text colour); body lines are 14 px
+  (set explicitly); the Got it "A" glyph only for a gamepad; `/onboard corner off` closes it (NestClient asks as it
+  moves the nest).
 - **Known on the beta:** with `/onboard corner off` the Eggs label still reads the v3 line ("Toys, looks and snacks for
   your pet"), not the beta 15 "Your napping egg is here too": the `EggsNest` line is retired for good (its translations
   are deleted at the next sync). Everything else is as beta 15.
