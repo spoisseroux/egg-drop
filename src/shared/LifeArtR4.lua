@@ -16,18 +16,18 @@ local DEWDROP="rbxassetid://82054526707528"  -- assets/world/dewdrop.png (FRUIT-
 -- so the beta never falls back a step; the row still counts as pending for the publish gate.
 local function f(file,id,fallback,previous)return table.freeze({file=file,id=id,fallback=fallback,previous=previous})end
 Art.Files=table.freeze({
-	leafSheet=f("leaf-sheet.png",nil,LEAFA,"rbxassetid://110992705844163"),             -- 192x192, 2x2 cells: broad, willow, lime heart, dry curl; redrawn: leaf D an open curl (R5)
+	leafSheet=f("leaf-sheet.png","rbxassetid://91767071907179",LEAFA),             -- 192x192, 2x2 cells: broad, willow, lime heart, dry curl; redrawn: leaf D an open curl (R5)
 	leafSheetAC=f("leaf-sheet-ac.png","rbxassetid://106095864802247",LEAFA),        -- 192x96, the flipbook fallback (A + C)
-	leafSheetBD=f("leaf-sheet-bd.png",nil,LEAFA,"rbxassetid://91636175312520"),        -- 192x96, the flipbook fallback (B + D); redrawn: leaf D an open curl (R5)
-	dewdropStem=f("dewdrop-stem.png",nil,DEWDROP,"rbxassetid://126842815810909"),       -- 192x262, the fruit with a 2 px stem to the top edge; redrawn: matte, no outline, 35% highlight (R5)
+	leafSheetBD=f("leaf-sheet-bd.png","rbxassetid://123638549080784",LEAFA),        -- 192x96, the flipbook fallback (B + D); redrawn: leaf D an open curl (R5)
+	dewdropStem=f("dewdrop-stem.png","rbxassetid://119564411112297",DEWDROP),       -- 192x262, the fruit with a 2 px stem to the top edge; redrawn: matte, no outline, 35% highlight (R5)
 	dapple=f("dapple.png","rbxassetid://120288217535252",nil),                       -- 256x256, soft leaf shade, alpha
 	koiA=f("koi-a.png","rbxassetid://132817360758283",nil),                          -- 48x128 portrait (head up), from above: orange and white
 	koiB=f("koi-b.png","rbxassetid://90064874654430",nil),                          -- 48x128, pale gold
 	koiC=f("koi-c.png","rbxassetid://103115409839382",nil),                          -- 48x128, slate
-	litter=f("litter.png",nil,nil,"rbxassetid://136605144807747"),                       -- 256x256, the four leaves at rest, alpha; redrawn: 32 leaves, D an open curl (R5)
+	litter=f("litter.png","rbxassetid://100799991684565",nil),                       -- 256x256, the four leaves at rest, alpha; redrawn: 32 leaves, D an open curl (R5)
 	lawnPatchA=f("lawn-patch-a.png","rbxassetid://81843438528903",nil),             -- 256x256, mown, grey value, alpha (tinted by the Decal)
 	lawnPatchB=f("lawn-patch-b.png","rbxassetid://139754611256358",nil),             -- 256x256, clover, grey value, alpha (tinted by the Decal)
-	pathFray=f("path-fray.png",nil,nil,"rbxassetid://122187412484099"),                  -- 256x96, dirt breaking into grass along the long side; redrawn: lawn and path colours, blades +-25, ends feathered 25% (R5)
+	pathFray=f("path-fray.png","rbxassetid://128826869961447",nil),                  -- 256x96, dirt breaking into grass along the long side; redrawn: lawn and path colours, blades +-25, ends feathered 25% (R5)
 })
 
 -- The uploaded id, else the previous upload of this file, else the fallback (nil: nothing to draw yet).
