@@ -128,6 +128,12 @@ return function(_server)
 		assert(across,"found a safe spot by a wall to test")
 		-- Off the island: never.
 		local off,whyOff=Catchup.clear(5000,5000,false);assert(not off and whyOff=="ground")
+		-- The Hush, while open: more safe ground from extraSafe; without it, the Hush is off the island as before.
+		local Hush=require(game:GetService("ReplicatedStorage").Shared.Hush)
+		local h=Hush.at(0,60,0)
+		assert(not Catchup.clear(h.X,h.Z,false)and not Catchup.clear(h.X,h.Z,false,nil,nil))
+		assert(Catchup.clear(h.X,h.Z,false,h,Hush.safeCell)and Catchup.clear(h.X,h.Z,true,h,Hush.safeCell))
+		assert(not Catchup.clear(5000,5000,false,nil,Hush.safeCell))
 	end)
 	return{passed=#cases,cases=cases}
 end

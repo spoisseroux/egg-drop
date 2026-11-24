@@ -423,6 +423,26 @@ function Garden:catchUp(actor,input,position,now)
     actor.hop={seq=(actor.hop and actor.hop.seq or 0)+1,from=Activity.pack(position),why=why}
     return true
 end
+-- The Hush passage (HushHost): the owner was just moved, so the pet comes in the same step, the catch-up move without
+-- its rules (a prepared rest hold at `spot`, then follow; `hop` with why "passage" so every client poofs and snaps).
+-- No actor: nothing. A pet in the park, in care, racing or holding the toy is refused (the passage refuses those first).
+function Garden:carry(id,spot)
+    local actor=self.actors[id]
+    if not actor or typeof(spot)~="Vector3"or not self.inputs[id]then return false end
+    if actor.park or actor.care or actor.dash or actor.toyReservation then return false end
+    local Catchup=self.Catchup or require(Shared.PetCatchup)
+    self.Catchup=Catchup
+    local now=self.options.now()
+    local sample=Activity.sample(actor,now)
+    local position=sample and sample.position or spot
+    self:release(actor)
+    actor.idleSince=now
+    self:transition(actor,"rest",spot,Catchup.Rest,"catchup",nil,nil,{path=nil,duration=Catchup.Rest})
+    actor.from=Activity.pack(spot);actor.to=Activity.pack(spot)
+    actor.hop={seq=(actor.hop and actor.hop.seq or 0)+1,from=Activity.pack(position),why="passage"}
+    actor.catch={}
+    return true
+end
 function Garden:remove(id)
     local actor=self.actors[id]
     if actor then self:release(actor);self.actors[id]=nil;self.inputs[id]=nil;self.dirty=true end

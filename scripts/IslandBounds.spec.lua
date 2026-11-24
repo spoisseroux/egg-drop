@@ -101,6 +101,21 @@ return function(server)
 		assert(Bounds.gone(Vector3.new(r.X+Bounds.Margin+.5,5,r.Y)))
 	end)
 
+	test("extra regions (the Hush while open): gone only below the region's fallY inside it; none is the island alone",function()
+		local Hush=require(Shared.Hush)
+		local R=Hush.BoundsRegions
+		local floor=Hush.at(0,60,3)
+		assert(Bounds.gone(floor)and Bounds.gone(floor,nil)and Bounds.gone(floor,{}))
+		assert(not Bounds.gone(floor,R)and not Bounds.gone(Hush.at(0,60,Hush.FallY-Hush.FloorY+.1),R))
+		assert(Bounds.gone(Vector3.new(floor.X,Hush.FallY-.1,floor.Z),R))
+		-- The island's own rules are untouched with the regions given.
+		for _,p in ipairs({Vector3.new(96,7,66),Vector3.new(200,5,0),Vector3.new(96,Bounds.FallY-.1,66),Vector3.new(0,5,-150)})do
+			assert(Bounds.gone(p,R)==Bounds.gone(p),tostring(p))
+		end
+		assert(Bounds.regionSafe(R,floor)and not Bounds.regionSafe(nil,floor)and not Bounds.regionSafe(R,Vector3.new(56,7,74)))
+		assert(not Bounds.regionSafe(R,Hush.at(77,60,3)))
+	end)
+
 	test("safe ground: every find spot's lawn is; the dais, the spur, the east mountain and the void are not",function()
 		for k,s in ipairs(Spots)do assert(Bounds.safeCell(s.x/100,s.z/100),"find spot "..k)end
 		assert(Bounds.safeCell(56,74)and Bounds.safeCell(0,0)and Bounds.safeCell(69,-14))

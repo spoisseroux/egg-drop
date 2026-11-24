@@ -276,5 +276,25 @@ return function(server)
         off.on=true;off:step(.5)
         assert(off.garden.actors[1].hop==nil,"no instant hop on a switch flip")
     end)
+    test("the Hush passage: carry puts the pet at the spot at once with a passage hop; a busy pet or no actor is refused",function()
+        local c=hopper(nil)
+        c:step(.5)
+        local before=c.garden:position(c.garden.actors[1],c.now)
+        local spot=Vector3.new(-7,-13.975,-214)
+        c.garden.actors[1].catch={farSince=1}
+        assert(c.garden:carry(1,spot))
+        local actor=c.garden.actors[1]
+        assert(actor.hop.seq==1 and actor.hop.why=="passage"and actor.action=="catchup"and actor.path==nil)
+        assert((c.garden:position(actor,c.now)-spot).Magnitude<1e-6 and next(actor.catch)==nil)
+        assert((Activity.vector(actor.hop.from)-before).Magnitude<1e-6)
+        c:step(.5);assert(c.snapshot.actors["1"].hop.seq==1)
+        assert(c.garden:carry(1,spot)and c.garden.actors[1].hop.seq==2)
+        assert(not c.garden:carry(2,spot)and not c.garden:carry(1,"x"))
+        for _,busy in ipairs({"park","care","dash","toyReservation"})do
+            local d=hopper(nil);d:step(.5)
+            d.garden.actors[1][busy]=1
+            assert(not d.garden:carry(1,spot)and d.garden.actors[1].hop==nil,busy)
+        end
+    end)
     return {passed=#cases,cases=cases}
 end

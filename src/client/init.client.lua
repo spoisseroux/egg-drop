@@ -4651,6 +4651,28 @@ do
  if ok and clientUI.finds then gui.Destroying:Connect(function()clientUI.finds:destroy()end)
  elseif not ok then warn("[Finds] not mounted: "..tostring(problem))end
 end
+-- The Hush (HushClient): nil with the build ceiling off. The cave passage's fade and the Hush's own music duck and grade;
+-- a door asks only while the garden is free (Room mode, no menu or card, no race seat, no close-up).
+do
+ local ok,problem=pcall(function()
+  clientUI.hush=require(script.HushClient).mount({remotes=remotes,player=player,audio=audio,
+   lighting=game:GetService("Lighting"),gui=player:WaitForChild("PlayerGui"),
+   character=function()return player.Character end,
+   root=function()
+    local character=player.Character
+    local root=character and character:FindFirstChild("HumanoidRootPart")
+    local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+    return if root and humanoid and humanoid.Health>0 then root else nil
+   end,
+   free=function()
+    return board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy
+     and not roomView.dashHeld and roomView.focusing~=true and roomView.focusTransitioning~=true
+     and(clientUI.dash==nil or clientUI.dash.seat==nil)and clientUI.anyModalOpen()~=true
+   end})
+ end)
+ if ok and clientUI.hush then gui.Destroying:Connect(function()clientUI.hush:destroy()end)
+ elseif not ok then warn("[Hush] not mounted: "..tostring(problem))end
+end
 -- The Sleepy Nest in the garden (NestClient, Onboarding v3 slice D): nil with the build ceiling off; with the switch off
 -- it only watches the switch. clientUI.nestPlace is where the Bear's prints end (BearNeeds' needNest reads it), and
 -- clientUI.tomorrow is the See you tomorrow strip's model for the results screens (slice E; nil with the nest off).

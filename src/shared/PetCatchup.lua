@@ -163,10 +163,10 @@ function Catchup.crossesWall(ax,az,bx,bz)
 end
 -- Pure: is (x, z) clear for a landing? Safe walk-map ground (IslandGround), WallKeep from every island wall, not across
 -- one from `from` (the owner's anchor, a Vector3, optional), and while a race is live clear of the course and the
--- waiting pad. false and the reason when not.
-function Catchup.clear(x,z,racing,from)
+-- waiting pad. false and the reason when not. extraSafe(x, z), optional: more safe ground (the Hush, while it is open).
+function Catchup.clear(x,z,racing,from,extraSafe)
 	if type(x)~="number"or type(z)~="number"or x~=x or z~=z then return false,"spot"end
-	if not Bounds.safeCell(x,z)then return false,"ground"end
+	if not Bounds.safeCell(x,z)and not(extraSafe and extraSafe(x,z))then return false,"ground"end
 	for _,wall in ipairs(Bounds.Walls)do
 		if Bounds.distance(wall,x,z)<Catchup.WallKeep then return false,"wall"end
 	end
