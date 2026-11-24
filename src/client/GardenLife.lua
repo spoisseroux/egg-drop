@@ -63,7 +63,8 @@ Life.BubbleTexture="rbxassetid://77828632873187"
 Life.DewdropTexture=LifeArtR4.id("dewdropStem")
 -- (Code review r1: today's stemless fruit keeps 1.1 x 1.28 until dewdropStem is uploaded, unstretched.)
 Life.FruitSize=if LifeArtR4.uploaded("dewdropStem")then Vector2.new(1.1,1.5)else Vector2.new(1.1,1.28)
-Life.FruitColour=Color3.fromHex("#E6E6DC")
+-- FABLE-REVIEW-R5 3: #CFCFC4 (was #E6E6DC); the redrawn image has no outline and a 35% highlight.
+Life.FruitColour=Color3.fromHex("#CFCFC4")
 local hex=Color3.fromHex
 local white=Color3.new(1,1,1)
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 1): butterfly slot -> its wing file and mirror, full colour (Color3 white).

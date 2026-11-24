@@ -3,25 +3,26 @@
 -- drawn by WorldDressingClient on the beta (Alive `scene`), static at every budget level. Pure data, shared.
 -- Each row: {x, ground y, z, size (studs across; fray: the long side), yaw (radians), tag}.
 local Ground={}
--- Plate sizes and looks (Fable): litter 3 x 3 at .15; lawn 7 to 11 at .55, tinted darker (a) or lighter (b); fray
--- 4 x 1.5 at 0. Heights over the lawn so overlapping plates never fight: lawn .040, fray .045, litter .050 (the
+-- Plate sizes and looks (Fable, R5): litter 5 x 5 at .15; lawn 7 to 11 at .40, tinted 10% darker (a) or lighter (b);
+-- fray 3 to 6 x 1.5 at 0 (the texture feathers its short ends).
+-- Heights over the lawn so overlapping plates never fight: lawn .040, fray .045, litter .050 (the
 -- moving dapple .055, flowers .06).
 Ground.Look=table.freeze({
 	litter=table.freeze({texture="litter",transparency=.15,lift=.05,depth=nil}),
-	lawn=table.freeze({a="lawnPatchA",b="lawnPatchB",colourA=Color3.fromHex("#2E7A34"),colourB=Color3.fromHex("#4C9A45"),transparency=.55,lift=.04}),
+	lawn=table.freeze({a="lawnPatchA",b="lawnPatchB",colourA=Color3.fromHex("#246F2F"),colourB=Color3.fromHex("#56A54B"),transparency=.40,lift=.04}),
 	fray=table.freeze({texture="pathFray",transparency=0,lift=.045,depth=1.5}),
 })
 -- The clear rules the generator used (GroundDressing.spec checks them against the live modules).
 Ground.Keep=table.freeze({course=4,pad=6,find=3,kerb=2,station=4.9,nest=1,water=1})
 Ground.Litter=table.freeze({
-	table.freeze({-59.94,4.64,-25.09,3.0,1.0,"Tree_01_round"}),
-	table.freeze({-31.66,4.7,37.04,3.0,0.56,"Tree_08_round"}),
-	table.freeze({67.97,4.68,25.36,3.0,1.17,"Tree_13_round"}),
-	table.freeze({-75.7,4.53,-22.52,3.0,2.67,"Tree_21_blossom"}),
-	table.freeze({76.91,4.29,-40.97,3.0,0.7,"Tree_18_round"}),
-	table.freeze({38.92,4.63,-62.54,3.0,1.77,"Tree_17_blossom"}),
-	table.freeze({101.32,4.5,44.12,3.0,5.96,"Tree_20_round"}),
-	table.freeze({19.68,4.57,43.92,3.0,5.17,"Tree_10_blossom"}),
+	table.freeze({-60.01,4.64,-25.36,5.0,1.0,"Tree_01_round"}),
+	table.freeze({-31.64,4.7,36.77,5.0,0.56,"Tree_08_round"}),
+	table.freeze({68.05,4.68,25.11,5.0,1.17,"Tree_13_round"}),
+	table.freeze({-75.75,4.53,-22.54,5.0,2.67,"Tree_21_blossom"}),
+	table.freeze({76.68,4.29,-40.99,5.0,0.7,"Tree_18_round"}),
+	table.freeze({38.95,4.63,-62.58,5.0,1.77,"Tree_17_blossom"}),
+	table.freeze({101.51,4.49,44.22,5.0,5.96,"Tree_20_round"}),
+	table.freeze({19.64,4.57,43.94,5.0,5.17,"Tree_10_blossom"}),
 })
 Ground.Lawn=table.freeze({
 	table.freeze({32.0,4.52,12.0,7.48,1.29,"a"}),
@@ -36,17 +37,25 @@ Ground.Lawn=table.freeze({
 	table.freeze({72.0,4.69,24.0,9.24,1.19,"b"}),
 })
 Ground.Fray=table.freeze({
-	table.freeze({57.55,4.78,32.78,4.0,4.25,"edge"}),
-	table.freeze({51.35,4.75,38.65,4.0,2.36,"edge"}),
-	table.freeze({76.65,4.54,54.35,4.0,5.5,"edge"}),
-	table.freeze({88.22,4.59,56.55,4.0,2.68,"edge"}),
-	table.freeze({41.16,4.66,31.53,4.0,2.82,"edge"}),
-	table.freeze({60.84,4.62,49.47,4.0,5.96,"edge"}),
-	table.freeze({88.65,4.08,64.35,4.0,5.5,"edge"}),
-	table.freeze({73.35,4.65,46.65,4.0,2.36,"edge"}),
-	table.freeze({60.65,4.78,23.65,4.0,3.93,"edge"}),
-	table.freeze({52.65,4.75,45.35,4.0,5.5,"edge"}),
-	table.freeze({82.16,4.56,51.53,4.0,2.82,"edge"}),
-	table.freeze({37.0,4.54,37.5,4.0,0.0,"edge"}),
+	table.freeze({57.55,4.78,32.78,4.05,4.25,"edge"}),
+	table.freeze({51.35,4.75,38.65,4.79,2.36,"edge"}),
+	table.freeze({76.65,4.54,54.35,4.55,5.5,"edge"}),
+	table.freeze({88.22,4.59,56.55,3.86,2.68,"edge"}),
+	table.freeze({41.16,4.66,31.53,5.27,2.82,"edge"}),
+	table.freeze({60.84,4.62,49.47,3.69,5.96,"edge"}),
+	table.freeze({88.65,4.08,64.35,4.6,5.5,"edge"}),
+	table.freeze({73.35,4.65,46.65,4.8,2.36,"edge"}),
+	table.freeze({60.65,4.78,23.65,3.1,3.93,"edge"}),
+	table.freeze({52.65,4.75,45.35,5.06,5.5,"edge"}),
+	table.freeze({82.16,4.56,51.53,3.15,2.82,"edge"}),
+	table.freeze({37.0,4.54,37.5,5.63,0.0,"edge"}),
+	table.freeze({63.47,4.72,30.16,5.61,1.25,"edge"}),
+	table.freeze({-17.5,4.46,26.0,5.58,4.71,"edge"}),
+	table.freeze({63.0,4.65,42.5,3.4,3.14,"edge"}),
+	table.freeze({81.65,4.57,58.35,4.65,5.5,"edge"}),
+	table.freeze({43.65,4.75,39.35,4.0,5.5,"edge"}),
+	table.freeze({46.35,4.72,34.65,3.24,2.36,"edge"}),
+	table.freeze({107.5,4.19,36.0,5.21,4.71,"edge"}),
+	table.freeze({57.5,4.67,41.0,4.03,1.57,"edge"}),
 })
 return table.freeze(Ground)

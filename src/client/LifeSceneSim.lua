@@ -26,7 +26,8 @@ function Scene.cap(kind,level)
 end
 
 -- Row 3: dapple under the 6 crowns nearest the camera ------------------------------------------------------------
-Scene.Dapple=table.freeze({size=9,lift=.055,colour=hex("#1E2A16"),day=.72,full=.45,gone=.30,drift=.35,period=9,turn=4,
+-- FABLE-REVIEW-R5 5: .55 by day (was .72: too faint to read), 11 studs (was 9). If it reads as a sticker, .62.
+Scene.Dapple=table.freeze({size=11,lift=.055,colour=hex("#1E2A16"),day=.55,full=.45,gone=.30,drift=.35,period=9,turn=4,
 	turnPeriod=13,gust=.5,hz=10,pick=1,fade=.3})
 -- The decal's transparency for the garden hour's daylight: .72 by day (and with the hour off), 1 under .30.
 function Scene.dappleTransparency(daylight)

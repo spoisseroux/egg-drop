@@ -83,7 +83,7 @@ return function(client)
 			assert(live.life==nil,"the live place: GardenLife never mounts")
 		end)
 
-		test("on: inert parts in GardenLife's folder, hidden until used; dapple under the 6 nearest crowns (3 at level 1), .72 by day",function()
+		test("on: inert parts in GardenLife's folder, hidden until used; dapple under the 6 nearest crowns (3 at level 1), .55 by day",function()
 			local r=rig()
 			local parts=r.sceneParts()
 			assert(#parts==6+3+3+10+6+2,"scene parts: "..#parts)
@@ -97,7 +97,7 @@ return function(client)
 			for slot=1,6 do
 				local plate=r.folder():FindFirstChild("SceneDapple"..slot)
 				local decal=plate:FindFirstChildOfClass("Decal")
-				assert(math.abs(decal.Transparency-.72)<.02,"shade by day: "..decal.Transparency)
+				assert(math.abs(decal.Transparency-.55)<.02,"shade by day: "..decal.Transparency)
 			end
 			for slot=1,6 do
 				assert(r.folder():FindFirstChild("SceneDapple"..slot).CFrame.Position.X>-55,"the two farthest crowns are not picked")

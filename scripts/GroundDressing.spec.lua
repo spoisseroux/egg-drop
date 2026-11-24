@@ -41,17 +41,17 @@ return function(client)
 	end
 
 	test("the plates: 8 litter 3 x 3, 10 lawn 7 to 11 (a and b), 12 path fray 4 x 1.5; the look's numbers",function()
-		assert(#Ground.Litter==8 and #Ground.Lawn==10 and #Ground.Fray==12)
-		for _,row in ipairs(Ground.Litter)do assert(row[4]==3)end
+		assert(#Ground.Litter==8 and #Ground.Lawn==10 and #Ground.Fray==20)
+		for _,row in ipairs(Ground.Litter)do assert(row[4]==5)end -- FABLE-REVIEW-R5 (was 3)
 		local a,b=0,0
 		for _,row in ipairs(Ground.Lawn)do
 			assert(row[4]>=7 and row[4]<=11,"lawn size "..row[4])
 			if row[6]=="a"then a+=1 elseif row[6]=="b"then b+=1 end
 		end
 		assert(a==5 and b==5)
-		for _,row in ipairs(Ground.Fray)do assert(row[4]==4)end
+		for _,row in ipairs(Ground.Fray)do assert(row[4]>=3 and row[4]<=6)end -- R5: 3 to 6 long
 		local L=Ground.Look
-		assert(L.litter.transparency==.15 and L.lawn.transparency==.55 and L.fray.transparency==0 and L.fray.depth==1.5)
+		assert(L.litter.transparency==.15 and L.lawn.transparency==.40 and L.fray.transparency==0 and L.fray.depth==1.5) -- R5: lawn .40
 		assert(L.lawn.lift<L.fray.lift and L.fray.lift<L.litter.lift and L.litter.lift<.055,"stacked under the dapple (.055) and flowers (.06)")
 	end)
 
@@ -89,10 +89,10 @@ return function(client)
 		print(string.format("ground plates: %d near the nest (warnings, not failures)",warnings))
 	end)
 
-	test("the client builds them only with scene on: 30 inert flat plates with the look's decals; none for a pending texture",function()
+	test("the client builds them only with scene on: 38 inert flat plates with the look's decals; none for a pending texture",function()
 		assert(#Flowers.groundPlates({scene=false,art=function()return "rbxassetid://1"end})==0,"scene off: none")
 		local plates=Flowers.groundPlates({scene=true,art=function(key)return "rbxassetid://"..#key end,groundY=function()return 4 end})
-		assert(#plates==30,"30 plates: "..#plates)
+		assert(#plates==38,"38 plates (R5: 20 fray): "..#plates)
 		local looks={GroundLitter=Ground.Look.litter,GroundLawn=Ground.Look.lawn,GroundFray=Ground.Look.fray}
 		for _,plate in ipairs(plates)do
 			local p=plate.part

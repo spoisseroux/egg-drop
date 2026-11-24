@@ -630,3 +630,16 @@ today's dewdrop; dapple, koi, litter, lawn and fray build nothing.
 `down` on the reshaped crowns (probe); chimes are separate movers; koi decal orientation and the pool's see-through;
 lamp halo heights (orbs at y 9 assumed) and the merged orbs lighting at once; dapple overdraw on a phone; the pet
 detour's look next to the need bubble, the nest pill and click targets; `careHeadPitch` sign for "looks up".
+
+## 13. FABLE-REVIEW-R5 fixes 3, 5, 6 (2026-11-24)
+
+- **Dewdrops:** `down` .75 kept; skirt only: `out` .30 and every tip pulled in to `skirt` .60 of the crown's radius
+  (no fruit on a side face); `ImageColor3` #CFCFC4; dewdrop-stem.png redrawn matte, no outline, highlight at 35% alpha.
+- **Dapple:** day transparency .55 (was .72), plate 11 studs (was 9); if it reads as a sticker, .62.
+- **Litter:** plates 5 studs (was 3), 32 leaves on the texture (was 16), leaf D an open curl (130 degree gap), ochre
+  20% less saturated (#A88046 / #5C4329), in litter and the falling leaf sheet.
+- **Lawn patches:** transparency .40 (was .55), tints 10% (#246F2F / #56A54B, were #2E7A34 / #4C9A45).
+- **Path fray:** 20 plates 3 to 6 studs long (was 12 of 4); blades +-25 degrees; the lawn's #2E8743 and the path's
+  #826249 (sampled from studio/r5/07); the last 25% of each short end feathered out.
+- **Upload:** leaf-sheet, leaf-sheet-bd, dewdrop-stem, litter, path-fray (LifeArtR4 rows pending; their previous
+  uploads stay drawn until then via the new `previous` field).

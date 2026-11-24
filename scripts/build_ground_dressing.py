@@ -4,10 +4,10 @@
 
 Writes src/shared/GroundDressing.lua: three hand-placed-by-rule lists of flat decal plates that WorldDressingClient draws
 on the beta (Alive `scene`), static at every budget level:
-  litter  8 plates 3 x 3 under the 8 largest Aero kit crowns, 1 to 2 studs downwind (hash);
+  litter  8 plates 5 x 5 (FABLE-REVIEW-R5; was 3) under the 8 largest Aero kit crowns, 1 to 2 studs downwind (hash);
   lawn    10 plates 7 to 11 across on grass (walk map surface "G"), all grass under them, 14+ apart, in the most-seen
           lawns (the arrival lawn, round the plaza, the spring meadow);
-  fray    12 plates 4 x 1.5 where the dirt path ("P") meets grass, long side along the edge, on the arrival path and
+  fray    20 plates 3 to 6 x 1.5 (FABLE-REVIEW-R5; was 12 of 4) where the dirt path ("P") meets grass, long side along the edge, on the arrival path and
           round the plaza, 6+ apart.
 Clear of: the Dash course line (4) and pad (radius 4 for the rope ring, + 2), find spots (3), park kerbs (+2), stations
 (4.9), the nest's blocked square (+1), water (+1). scripts/GroundDressing.spec.lua re-checks every plate against the
@@ -131,9 +131,9 @@ def litter(rng: random.Random) -> list[tuple]:
         off = 1 + rng.random()
         x, z = crown["x"] + WIND[0] * off, crown["z"] + WIND[1] * off
         y = height(x, z)
-        if y is None or cell(x, z) not in "Gg" or clear(x, z, 1.5):
+        if y is None or cell(x, z) not in "Gg" or clear(x, z, 2.5):
             continue
-        out.append((r2(x), r2(y), r2(z), 3.0, r2(rng.random() * math.tau), crown["tree"]))
+        out.append((r2(x), r2(y), r2(z), 5.0, r2(rng.random() * math.tau), crown["tree"]))
         if len(out) == 8:
             break
     return out
@@ -203,14 +203,15 @@ def fray(rng: random.Random) -> list[tuple]:
         nx, nz = nx / m, nz / m
         cx, cz = x + nx * .5, z + nz * .5   # on the boundary, the grass side of the path cell
         y = height(cx, cz)
-        if y is None or clear(cx, cz, 2):
+        length = round(3 + rng.random() * 3, 2)
+        if y is None or clear(cx, cz, length / 2):
             continue
-        if any(math.hypot(cx - p[0], cz - p[2]) < 6 for p in out):
+        if any(math.hypot(cx - p[0], cz - p[2]) < (length + p[3]) / 2 + 1.5 for p in out):
             continue
         # The plate's long side (X) along the edge: its local Z points into the grass (the normal).
         yaw = math.atan2(-nx, -nz) + math.pi
-        out.append((r2(cx), r2(y), r2(cz), 4.0, r2(yaw % math.tau), "edge"))
-        if len(out) == 12:
+        out.append((r2(cx), r2(y), r2(cz), length, r2(yaw % math.tau), "edge"))
+        if len(out) == 20:
             break
     return out
 
@@ -224,12 +225,13 @@ def main() -> None:
         "-- drawn by WorldDressingClient on the beta (Alive `scene`), static at every budget level. Pure data, shared.",
         "-- Each row: {x, ground y, z, size (studs across; fray: the long side), yaw (radians), tag}.",
         "local Ground={}",
-        "-- Plate sizes and looks (Fable): litter 3 x 3 at .15; lawn 7 to 11 at .55, tinted darker (a) or lighter (b); fray",
-        "-- 4 x 1.5 at 0. Heights over the lawn so overlapping plates never fight: lawn .040, fray .045, litter .050 (the",
+        "-- Plate sizes and looks (Fable, R5): litter 5 x 5 at .15; lawn 7 to 11 at .40, tinted 10% darker (a) or lighter (b);",
+        "-- fray 3 to 6 x 1.5 at 0 (the texture feathers its short ends).",
+        "-- Heights over the lawn so overlapping plates never fight: lawn .040, fray .045, litter .050 (the",
         "-- moving dapple .055, flowers .06).",
         "Ground.Look=table.freeze({",
         "\tlitter=table.freeze({texture=\"litter\",transparency=.15,lift=.05,depth=nil}),",
-        "\tlawn=table.freeze({a=\"lawnPatchA\",b=\"lawnPatchB\",colourA=Color3.fromHex(\"#2E7A34\"),colourB=Color3.fromHex(\"#4C9A45\"),transparency=.55,lift=.04}),",
+        "\tlawn=table.freeze({a=\"lawnPatchA\",b=\"lawnPatchB\",colourA=Color3.fromHex(\"#246F2F\"),colourB=Color3.fromHex(\"#56A54B\"),transparency=.40,lift=.04}),",
         "\tfray=table.freeze({texture=\"pathFray\",transparency=0,lift=.045,depth=1.5}),",
         "})",
         "-- The clear rules the generator used (GroundDressing.spec checks them against the live modules).",

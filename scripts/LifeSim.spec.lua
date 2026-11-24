@@ -614,7 +614,10 @@ return function(client)
 			assert(Sim.cap("fruit",level)==({16,8,0})[level+1]and Sim.cap("loose",level)==({3,2,0})[level+1],"level "..level)
 		end
 		assert(F.pool==16 and F.reach==90 and F.chance==.5 and F.dropAt==.8 and F.rest==30)
-		assert(F.down==.75 and F.out==.30 and F.hang==.50 and F.stemIn==.82)
+		assert(F.down==.75 and F.out<=.30 and F.hang==.50 and F.stemIn==.82 and F.skirt==.60)
+		-- FABLE-REVIEW-R5 3: the skirt only: at .75 down an .30 tip sits at .69 of the radius, pulled in to .60.
+		local ring=math.sqrt(1-(.5)^2)
+		local outAt=F.out*math.min(1,F.skirt/(F.out/(.5*ring)))
 		local total,twoOrMore=0,0
 		for i,crown in ipairs(Spots.Crowns)do
 			local stems=Sim.fruitStems(i,crown)
@@ -626,7 +629,7 @@ return function(client)
 			for j,slot in ipairs(stems)do
 				assert(slot.stem==again[j].stem and slot.key==Sim.fruitKey(i,slot.k),"seeded")
 				assert(near(slot.stem.Y,top-.75*crown.size.Y,1e-4),"inside the leaves: .75 under the top")
-				assert(near(Sim.flat(slot.stem,crown.position),.30*crown.size.X,1e-3),"out .30 of the width")
+				assert(near(Sim.flat(slot.stem,crown.position),outAt*crown.size.X,1e-3),"under the skirt: "..Sim.flat(slot.stem,crown.position)/crown.size.X)
 				-- Hanging, the image centre .50 under the stem tip; a sway swings it downwind and keeps the tip.
 				local still=Sim.fruitHang(slot.stem,0,1)
 				assert(near((slot.stem-still).Magnitude,.5,1e-6)and still.Y<slot.stem.Y)
@@ -642,7 +645,7 @@ return function(client)
 		for _,slot in ipairs(Sim.fruitStems(3,thin))do
 			local hy=3;local y=slot.tip.Y;local ring=math.sqrt(1-(y/hy)^2)
 			local q=math.sqrt((slot.tip.X/(5*ring))^2+(slot.tip.Z/(1*ring))^2)
-			assert(q<=F.stemIn+1e-9,"inside the thin crown: "..q)
+			assert(q<=F.skirt+1e-9,"under the thin crown's skirt: "..q)
 		end
 		-- Sway: 3 to 15 degrees, toward the wind; none when still.
 		assert(Sim.fruitSway(1,T0,1,true)==0)
@@ -687,7 +690,7 @@ return function(client)
 				assert(math.abs(tip.Y-(h.Y-F.down*crown.size.Y))<1e-6)
 				local ring=math.sqrt(1-(tip.Y/h.Y)^2)
 				local q=math.sqrt((tip.X/(h.X*ring))^2+(tip.Z/(h.Z*ring))^2)
-				assert(q<=F.stemIn+1e-9,crown.tree..": inside the leaves "..q)
+				assert(q<=F.skirt+1e-9,crown.tree..": under the skirt, never the side face "..q)
 				assert((crown.cframe*tip-slot.stem).Magnitude<1e-6,"the world stem is the crown's frame on the tip")
 			end
 		end
