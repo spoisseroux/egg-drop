@@ -14,18 +14,18 @@ local DEWDROP="rbxassetid://82054526707528"  -- assets/world/dewdrop.png (FRUIT-
 -- f(file, uploaded id or nil, fallback or nil). One row a line: check_life_art.py reads them.
 local function f(file,id,fallback)return table.freeze({file=file,id=id,fallback=fallback})end
 Art.Files=table.freeze({
-	leafSheet=f("leaf-sheet.png",nil,LEAFA),             -- 192x192, 2x2 cells: broad, willow, lime heart, dry curl
-	leafSheetAC=f("leaf-sheet-ac.png",nil,LEAFA),        -- 192x96, the flipbook fallback (A + C)
-	leafSheetBD=f("leaf-sheet-bd.png",nil,LEAFA),        -- 192x96, the flipbook fallback (B + D)
-	dewdropStem=f("dewdrop-stem.png",nil,DEWDROP),       -- 192x262, the fruit with a 2 px stem to the top edge
-	dapple=f("dapple.png",nil,nil),                       -- 256x256, soft leaf shade, alpha
-	koiA=f("koi-a.png",nil,nil),                          -- 48x128 portrait (head up), from above: orange and white
-	koiB=f("koi-b.png",nil,nil),                          -- 48x128, pale gold
-	koiC=f("koi-c.png",nil,nil),                          -- 48x128, slate
-	litter=f("litter.png",nil,nil),                       -- 256x256, the four leaves at rest, alpha
-	lawnPatchA=f("lawn-patch-a.png",nil,nil),             -- 256x256, mown, grey value, alpha (tinted by the Decal)
-	lawnPatchB=f("lawn-patch-b.png",nil,nil),             -- 256x256, clover, grey value, alpha (tinted by the Decal)
-	pathFray=f("path-fray.png",nil,nil),                  -- 256x96, dirt breaking into grass along the long side
+	leafSheet=f("leaf-sheet.png","rbxassetid://110992705844163",LEAFA),             -- 192x192, 2x2 cells: broad, willow, lime heart, dry curl
+	leafSheetAC=f("leaf-sheet-ac.png","rbxassetid://106095864802247",LEAFA),        -- 192x96, the flipbook fallback (A + C)
+	leafSheetBD=f("leaf-sheet-bd.png","rbxassetid://91636175312520",LEAFA),        -- 192x96, the flipbook fallback (B + D)
+	dewdropStem=f("dewdrop-stem.png","rbxassetid://126842815810909",DEWDROP),       -- 192x262, the fruit with a 2 px stem to the top edge
+	dapple=f("dapple.png","rbxassetid://120288217535252",nil),                       -- 256x256, soft leaf shade, alpha
+	koiA=f("koi-a.png","rbxassetid://132817360758283",nil),                          -- 48x128 portrait (head up), from above: orange and white
+	koiB=f("koi-b.png","rbxassetid://90064874654430",nil),                          -- 48x128, pale gold
+	koiC=f("koi-c.png","rbxassetid://103115409839382",nil),                          -- 48x128, slate
+	litter=f("litter.png","rbxassetid://136605144807747",nil),                       -- 256x256, the four leaves at rest, alpha
+	lawnPatchA=f("lawn-patch-a.png","rbxassetid://81843438528903",nil),             -- 256x256, mown, grey value, alpha (tinted by the Decal)
+	lawnPatchB=f("lawn-patch-b.png","rbxassetid://139754611256358",nil),             -- 256x256, clover, grey value, alpha (tinted by the Decal)
+	pathFray=f("path-fray.png","rbxassetid://122187412484099",nil),                  -- 256x96, dirt breaking into grass along the long side
 })
 
 -- The uploaded id, else the fallback (nil: nothing to draw yet).
