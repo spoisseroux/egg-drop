@@ -193,9 +193,13 @@ function View:paintPayoutV3(data,pad,lw)
  local nameWidth=lw-2*pad-self.amountWidth-4
  -- Beta 14 B6: the blocks fitted to the scroll window (Layout.payoutPlan): tighter rows and gaps, then stats two to a
  -- line, so nothing is cut at the window's foot (shot 5: the second stat sat under the edge).
- local shown=0;for i=1,#self.rows do if data.rows and data.rows[i]then shown+=1 end end
+ local shown,heights=0,{}
+ for i,row in ipairs(self.rows)do
+  local item=data.rows and data.rows[i]
+  if item then shown+=1;heights[shown]=math.ceil(Kit.measure(item.name,"BodyMedium",row.TextSize,nameWidth).Y*row.LineHeight)+2 end
+ end
  local noStars=not data.pending and(data.earned or 0)==0
- local plan=Layout.payoutPlan(lw,self.regions.left.h,shown,#(data.stats or {}),{noStars=noStars,today=not self.stripOn})
+ local plan=Layout.payoutPlan(lw,self.regions.left.h,shown,#(data.stats or {}),{noStars=noStars,today=not self.stripOn,heights=heights})
  self.payoutPlan=plan
  local y=28
  for i,row in ipairs(self.rows)do
@@ -297,7 +301,8 @@ function View:paintPayoutV3(data,pad,lw)
   local gradient=Instance.new("UIGradient");gradient.Rotation=90;gradient.Transparency=NumberSequence.new(1,0);gradient.Parent=fade
   fade.Parent=self.left;self.payoutFade=fade
  end
- self.payoutFade.Visible=plan.overflow==true
+ -- What was painted decides (a name the plan could not foresee still shows the cue).
+ self.payoutFade.Visible=plan.overflow==true or y>plan.window
  self.payoutFade.BackgroundColor3=self.left.BackgroundColor3
  self.payoutFade.Position=UDim2.fromOffset(0,math.max(0,self.regions.left.h-Layout.payoutFoot()-12));self.payoutFade.Size=UDim2.new(1,0,0,12)
  -- The strip under the three panes (the panes made room for it when the results opened).

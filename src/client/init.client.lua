@@ -3181,7 +3181,6 @@ do
   if roomFree()and not recap.visible then return step()end -- already in the garden (the Dash results card)
   clientUI.stripRouting=true
   if not clientUI.leaveDeck()then clientUI.stripRouting=nil;return false end
-  clientUI.accepted("confirm")
   clientUI.afterGarden(step,8)
   return true
  end

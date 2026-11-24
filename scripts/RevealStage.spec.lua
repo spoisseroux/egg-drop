@@ -81,13 +81,18 @@ return function(client,parent)
   end)
   test("beta 14 Q3: on a phone the buttons keep clear of the stage card (shot 2 at 844 x 390)",function()
    for _,size in ipairs({{667,375},{740,360},{812,354},{812,375},{844,390},{932,430}})do
-    local L=Stage.geometry(size[1],size[2])
+    local L=Stage.geometry(size[1],size[2],true)
+    -- Off (live): today's layout exactly: Back at its own width, the card at today's width.
+    local off=Stage.geometry(size[1],size[2],false);local s=math.min(size[1]/812,size[2]/354)
+    local ox,_,ow=Stage.wellRect(off)
+    assert(off.wellW==nil and off.playW==math.max(110,math.floor(150*s))and ow==math.floor(math.min(off.petBox*1.7,off.petX*2-32))
+     and ox==math.floor(off.petX-ow/2),"live unchanged at "..size[1].."x"..size[2])
     local x,_,w=Stage.wellRect(L)
     local rowLeft=L.W-L.margin-L.meetW-L.gap-L.playW
     assert(L.phone and L.playW>=Stage.PlayMin and w>=math.floor(L.petBox*1.3),size[1].."x"..size[2])
     assert(rowLeft>=x+w+Stage.RowClear,"buttons clear of the card at "..size[1].."x"..size[2]..": "..rowLeft.." vs "..(x+w))
    end
-   local d=Stage.geometry(1920,1080);assert(d.wellW==nil and d.playW==240,"desktop unchanged")
+   local d=Stage.geometry(1920,1080,true);assert(d.wellW==nil and d.playW==240,"desktop unchanged")
   end)
   test("pet descriptions exist, one line of at most 60 characters; Bear's is the approved line",function()
    assert(Pets.byId.pip.description=="Soft as a nap. Hugs first, asks questions never.")

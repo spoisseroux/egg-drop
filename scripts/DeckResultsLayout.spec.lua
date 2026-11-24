@@ -92,6 +92,10 @@ return function(client)
 		local four=Layout.payoutPlan(118,200,3,4,{})
 		assert(four.mode=="paired"and four.lines==2 and not four.overflow,"four stats two to a line")
 		assert(Layout.payoutPlan(118,140,4,4,{today=true}).overflow,"a very short pane scrolls (with the fade)")
+		-- Code review: a wrapped (or translated) name is measured, so the plan sees it.
+		local wrapped=Layout.payoutPlan(118,200,3,2,{heights={40,18,18}})
+		assert(wrapped.overflow and wrapped.height==28+40+20+20+28+6+18,"a two-line name tips it over "..wrapped.height)
+		assert(Layout.payoutPlan(118,200,3,2,{heights={18,18,18}}).mode=="tight","short names never under the mode's row")
 		for paneW=96,320,8 do
 			for paneH=150,300,10 do
 				for rows=0,4 do

@@ -329,8 +329,15 @@ end
 -- 844 x 390). Back (the short label) gives way first, down to PlayMin; then the card narrows (never under 1.3 pet boxes).
 Stage.RowClear=12
 Stage.PlayMin=110
-function Stage.geometry(W,H)
+-- Held to the beta place and Studio (DeckLook.on); live keeps today's layout exactly.
+function Stage.rowClearOn()
+ local ok,on=pcall(function()return require(ReplicatedStorage.Shared.DeckLook).on()end)
+ return ok and on==true
+end
+-- clear (specs): true / false forces the Q3 row rule on or off; nil asks Stage.rowClearOn().
+function Stage.geometry(W,H,clear)
  local L={W=W,H=H,phone=Kit.compactRule(W,H)or W<760}
+ if clear==nil then clear=Stage.rowClearOn()end
  if L.phone then
   local s=math.min(W/812,H/354);L.s=s
   local top=60
@@ -348,7 +355,7 @@ function Stage.geometry(W,H)
   local wellRight=L.petX+math.floor(math.min(L.petBox*1.7,L.petX*2-32))/2
   local rowLeft=W-L.margin-L.meetW-L.gap-L.playW
   local need=math.ceil(wellRight+Stage.RowClear-rowLeft)
-  if need>0 then
+  if clear and need>0 then
    local give=math.min(need,math.max(0,L.playW-Stage.PlayMin))
    L.playW-=give;rowLeft+=give;need-=give
    if need>0 then L.wellW=math.max(math.floor(L.petBox*1.3),math.floor((rowLeft-Stage.RowClear-L.petX)*2))end

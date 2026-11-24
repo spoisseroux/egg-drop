@@ -124,7 +124,8 @@ end
 --   tight   rows 20, the total 28, 6 before the stats, a stat a line;
 --   paired  tight, with the stats two to a line (no name: the colour carries it; a level-up's disc takes the dot's place);
 -- and when even paired is over, `overflow` (the pane keeps its scroll and shows a fade at the window's foot).
--- options: noStars (the 44 pt "No Stars" line in place of the rows), today (today's 18 pt line, the strip off).
+-- options: noStars (the 44 pt "No Stars" line in place of the rows), today (today's 18 pt line, the strip off),
+-- heights (each row's measured height: a wrapped or translated name; a row is never shorter than the mode's).
 -- The wallet chip keeps 28 (Kit.WalletSpec has no 24 with the 3D Star), so the foot stays 42.
 Layout.Payout=table.freeze({title=28,stat=18,noStars=44,today=18,pairGap=6,
 	modes=table.freeze({
@@ -141,6 +142,10 @@ function Layout.payoutPlan(paneW,paneH,rowCount,statCount,options)
 	local plan
 	for _,mode in ipairs(P.modes)do
 		local rows=if options.noStars then P.noStars else rowCount*mode.row
+		if not options.noStars and type(options.heights)=="table"then
+			rows=0
+			for i=1,rowCount do rows+=math.max(mode.row,tonumber(options.heights[i])or 0)end
+		end
 		local lines=if statCount==0 then 0 else math.ceil(statCount/mode.perLine)
 		local height=P.title+rows+mode.total+(if options.today then P.today else 0)+(if statCount>0 then mode.gap+lines*P.stat else 0)
 		plan={mode=mode.name,row=mode.row,total=mode.total,gap=mode.gap,perLine=mode.perLine,lines=lines,height=height,window=window,

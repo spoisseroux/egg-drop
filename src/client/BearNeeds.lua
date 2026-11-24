@@ -148,13 +148,17 @@ end
 -- touch-in-world fallback): one action a step frame, and with deps.clock one every TapGap seconds. Every taken tap
 -- squashes the bubble (bubble:press()); a tap that repeats a trail already on the ground also hops it and chirps.
 Needs.TapGap=.3
+function Needs:recentTap()
+	local clock=self.d.clock and self.d.clock()or nil
+	if self.tapFrame~=nil and self.tapFrame==self.stepAt then return true end
+	return clock~=nil and self.tapClock~=nil and clock-self.tapClock<Needs.TapGap
+end
+function Needs:markTap()self.tapFrame,self.tapClock=self.stepAt,(self.d.clock and self.d.clock()or nil)end
 function Needs:tap()
 	local id=self.open
 	if not id or not self.shown then return false end
-	local clock=self.d.clock and self.d.clock()or nil
-	if self.tapFrame~=nil and self.tapFrame==self.stepAt then return true end
-	if clock and self.tapClock and clock-self.tapClock<Needs.TapGap then return true end
-	self.tapFrame,self.tapClock=self.stepAt,clock
+	if self:recentTap()then return true end
+	self:markTap()
 	self.taps=(self.taps or 0)+1
 	local bubble=self.d.bubble
 	if bubble.press then pcall(bubble.press,bubble)end
@@ -181,6 +185,12 @@ function Needs:claimsPetTap(source)
 end
 -- A tap on the Bear: true when the need took it (the caller then skips the greeting).
 function Needs:petTap(source)
+	-- The hand bubble: the greeting itself is the action; a tap already taken this frame (the bubble's own fallback)
+	-- swallows the Bear's, so one physical tap is one greeting.
+	if source~="key"and self.shown==true and not self.dead and self.open=="needHi"then
+		if self:recentTap()then return true end
+		self:markTap();return false
+	end
 	if not self:claimsPetTap(source)then return false end
 	self:tap()
 	return true
