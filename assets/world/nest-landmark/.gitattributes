@@ -1,0 +1,2 @@
+# The gate (scripts/nest_landmark_assets.py) binds these by their LF bytes: keep LF on a Windows checkout.
+*.json eol=lf
