@@ -26,7 +26,7 @@ Tier.FloorY=29        -- the terrace top (architect: 29, so no crest bump pokes 
 Tier.FootY=4.6        -- the lawn at the path's foot
 Tier.Length,Tier.Width=76,44
 Tier.SkirtY=-8        -- outer skirt and end closers reach down to here (the outer corners' ground is -4..+3)
-Tier.WallTop=40       -- invisible walls (players only) up to here
+Tier.WallTop=54       -- invisible walls (players only) up to here (Studio R8: at 40 one player cleared it from the 3-4 high lips; at 48 a player on another's head on a lip still did, root 51.3)
 Tier.RegionY=20       -- the bounds region starts here, over the lawn
 Tier.Grow=1.5         -- the pet-blocked footprints are the solids grown by this much
 
