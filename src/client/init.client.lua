@@ -4902,12 +4902,18 @@ function clientUI.eggCornerMount(Onboard)
  do
   local NestClient=require(script.NestClient)
   local idle=NestClient.idleMount({reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end})
-  local beat=RunService.Heartbeat:Connect(function(dt)
+  local beat
+  beat=RunService.Heartbeat:Connect(function(dt)
    local ok,problem=pcall(function()
     local mine=clientUI.nest
     idle:idleStep(dt,not(mine and mine:animatesLandmark()))
    end)
-   if not ok then warn("[Nest] idle landmark: "..tostring(problem))end
+   -- One warning, then it stops (code review of de31e8a: never a warning a frame).
+   if not ok then
+    warn("[Nest] idle landmark stopped: "..tostring(problem))
+    beat:Disconnect()
+    pcall(idle.idleClose,idle)
+   end
   end)
   gui.Destroying:Connect(function()beat:Disconnect();pcall(idle.idleClose,idle)end)
  end

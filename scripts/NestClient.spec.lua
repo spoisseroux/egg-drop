@@ -808,5 +808,18 @@ return function(client)
 		assert(not r.client:animatesLandmark())
 		Onboard.inject(nil)
 	end)
+	test("code review of de31e8a: this nest stands on the server's root (NestRoot) and follows a re-seat; the moon's rest colour is the server's",function()
+		local r=landRig()
+		local seated=CFrame.new(0,.06,0)*r.model:GetAttribute("NestRoot")
+		r.model:SetAttribute("NestRoot",seated)
+		r.model.Moon:SetAttribute("RestColor",Color3.new(1,0,0))
+		r.fire(state(60));r.step(.1)
+		assert(math.abs(r.client.root.Y-seated.Y)<1e-6,"drawn on the server's root, not this client's ground ray")
+		assert(r.client.landmarkState.rest.Moon.color==r.model.Moon:GetAttribute("RestColor"))
+		local reseat=CFrame.new(0,.01,0)*seated
+		r.model:SetAttribute("NestRoot",reseat);r.step(.1)
+		assert(math.abs(r.client.root.Y-reseat.Y)<1e-6 and r.client.egg~=nil and r.client.view~=nil,"re-seated, the egg still there")
+		Onboard.inject(nil)
+	end)
 	return{passed=#cases,cases=cases}
 end

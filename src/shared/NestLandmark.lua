@@ -20,7 +20,9 @@ Land.BearSpot=Vector3.new(-2.9,0,-2.0) -- on the baked straw mat
 -- The mat as a pet rest anchor (Studio check R10): the Bear curls there through the garden's own nook rest (exclusive,
 -- one pet), and the nest's pet box has a hole of this radius round it so the way in is allowed (that spot only).
 Land.RestId="sleepy_nest"
-Land.HoleRadius=1.3
+-- Code review of de31e8a: .8, so the hole never reaches the bowl's collider (r 2.4; the mat is 3.52 from the middle, the
+-- hole's inner edge 2.72): its only way in is across the box's -X edge (the walk-in side), about 1.5 studs of it.
+Land.HoleRadius=.8
 -- The nest's rest anchor in world space for a nest root (CFrame on the floor): {id, position, exclusive}.
 function Land.restAnchor(root)
 	local at=root*Land.BearSpot

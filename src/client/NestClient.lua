@@ -531,6 +531,13 @@ function Client:draw()
 	local folder=make("Folder",self.world,{Name=Client.Folder})
 	self.folder=folder
 	self.root=Client.frame(self:groundY(),self.spot,self.facing)
+	-- The landmark: the server's root (NestRoot), so this nest and the idle landmark share one frame (code review of
+	-- de31e8a); a re-seat is picked up in step().
+	if self.landmark then
+		local model=self:landmarkModelNow()
+		local root=model and model:GetAttribute("NestRoot")
+		if typeof(root)=="CFrame"then self.root=root end
+	end
 	for _,spec in ipairs(if self.landmark then Client.landmarkParts()else Client.parts())do self:drawPart(folder,spec)end
 	if self.landmark then self:drawLandmark(folder)end
 	if self.corner and self.spot==Corner.NestSpot then self:drawGround(folder)end
@@ -700,7 +707,7 @@ function Client:bindLandmark()
 		if part then
 			L.parts[name]=part
 			L.rest[name]={cf=part:GetAttribute("WorldRestCFrame")or part.CFrame,size=part.Size,transparency=part:GetAttribute("RestTransparency")or part.Transparency,
-				color=part.Color}
+				color=part:GetAttribute("RestColor")or part.Color}
 		end
 	end
 	local root=model:GetAttribute("NestRoot")
@@ -823,6 +830,12 @@ end
 -- front of it (Fable R10 2).
 function Client:landmarkOffset(height)
 	return self.root:VectorToWorldSpace(Vector3.new(0,height-(self.eggBase or Land.EggBase),-Land.PillForward))
+end
+-- Does the shared landmark's root (NestRoot) differ from the one this nest was drawn on?
+function Client:landmarkMoved()
+	local model=self:landmarkModelNow()
+	local root=model and model:GetAttribute("NestRoot")
+	return typeof(root)=="CFrame"and self.root~=nil and(root.Position-self.root.Position).Magnitude>.005
 end
 -- Is this player's nest animating the shared landmark now? (The empty landmark's idle life steps aside then.)
 function Client:animatesLandmark()
@@ -1188,6 +1201,13 @@ function Client:step(dt)
 	if self.beat and self.clock>=self.beat.untilT then self.beat=nil end
 	self:stepBeats(dt)
 	if not self.view or not self.egg then return end
+	-- The landmark arrived or was re-seated since this nest was drawn: draw it again on the server's root.
+	if self.landmark and not self.hatching and self:landmarkMoved()then
+		local view=self.view
+		self:clear()
+		self:set(view)
+		if not self.egg then return end
+	end
 	if not self.egg.mesh then self:meshes()end
 	if self.waiting then
 		self.waiting.t+=dt
