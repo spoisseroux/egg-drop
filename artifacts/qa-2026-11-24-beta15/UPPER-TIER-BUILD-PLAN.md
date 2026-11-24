@@ -254,3 +254,47 @@ an attribute or ConfigService on the hot path.
 6. **Floor y 28 with up to 1-stud bumps, or 29** (no bumps, 25 over the lawn)?
 7. **`GreyboxRows` extraction** touches the retired `HushGreybox` / `HushHost` (behaviour unchanged, specs prove it),
    or should the tier copy the 40 lines instead?
+
+---
+
+## 10. Architect verdict (2026-11-24: GO WITH CHANGES) and what was built
+
+**Answers:** 76 x 44 at (-60, **29**, -96); new `garden_tier` / `/tier`; the Hush retired now (`FeatureFlags.Hush =
+false`; the bounds `regions` dep returns one list); pets wait at the foot (by design, T0); no safe spots on the tier;
+`GreyboxRows.lua` new, for the tier only (`HushGreybox` / `HushHost` untouched).
+
+**Required changes, all built:** `Tier.ringAside` / `Tier.closers` run inside `TierHost.mount`'s pcall, never at
+require (bad data = closed with one warning; spec). Skirts and closers from y **-8** to the wall top **40** (spec checks
+the ground under the outer skirt). Bounds region from y 20 to 80. Close evacuates, puts back only the ring boxes that
+still exist (references kept), and destroys the model and footprints in one step; a rebuilt lounge drops the state.
+Pet-blocked footprints are the solids grown 1.5; a catch-up spot on the foot leg's low end is refused (spec, through
+`GardenWalkability.resolveAnchor`). The 4-stud checks include garden-life perches and crowns, lamps, routes, ground
+dressing (litter, lawn patches, path fray), bushes, find spots, stations, rest spots, the nest, the Dash course and
+pad, park kerbs and island walls; a flood fill proves no lawn is closed off. The pet floor chain closed equals today's
+line on a grid, the Floor's exact edges and NaN. Ring boxes come from geometry (today 98 to 111, neighbours 97 and
+112). The tier code is its own block in `init.server.lua`; the other edits there are the require, the `tierHost`
+local, the three pet floor lines, the bounds `regions` dep, the `/tier` chat line and the config start.
+
+**One deviation, forced by the world (for Fable and Spencer):** the Pet Park **grove** (centre (-38, -46), 16 x 11)
+fills the cliff foot south-west of the cave, so Fable's two 44-stud legs along the foot cannot fit (they ran through
+the park). The free lawn between the cave mouth, the park, Tree_05 and lamp 4 is about 26 along the cliff by 38 out.
+So the path is **a zigzag of four legs running out from the cliff and back**, side by side: each 6 wide (7 did not
+fit), 25.5 run, rising 6.1 (**13.5 degrees**), with a near landing against the cliff (y 16.8), two far landings out
+in the lawn (y 10.7 and 22.9) and a top platform from leg 4 back over the cliff onto the terrace's garden edge. The foot
+is leg 1's near end on the cave side; every leg is open-sided with kerbs; solid supports below. It is visible from the
+plaza and climbs about the same 100 studs of walking. Alternatives if Fable dislikes it: move the grove park, or put
+the path south-west of the park (crowded: three find spots and Tree_04). Any flowers and bushes under the path's
+solid supports are hidden (the spec counts them, at most 12); the art pass re-scatters them.
+
+**As built** (branch `worktree-agent-aa0edfc9059d09a19`, offline, not seen in Studio, not code reviewed):
+`src/shared/Tier.lua`, `TierGreybox.lua` (at most 70 rows, spec), `GreyboxRows.lua`; `src/server/TierConfig.lua`,
+`TierHost.lua`; `FeatureFlags` (`Tier = true`, `Hush = false`); `init.server.lua` as above; specs `Tier` (11 cases),
+`TierConfig` (3), `TierHost` (7). Offline runner **63/63**.
+
+**Studio probes (unchanged list, adjusted for the zigzag):** T-P1 floor at 29 against the crest, the retaining face,
+the outer skirt; T-P2 walk the four legs and three landings on PC and at 844 x 390 (camera clamp at the near landing
+against the cliff, the far landings over the lawn); T-P3 the rim, both ends where the ring stood aside, the closers,
+**rerun `scripts/sweep_island_edges.py`** with the tier on; T-P4 bounds (60 s on the tier, a forced fall past the ring);
+T-P5 pets wait at the foot and never walk under the path; T-P6 `/tier off` with players on the terrace and on a far
+landing; T-P7 Fable's captures; T-P8 reset, a deck round, a race call up there; T-P9 the cave blocker still collides,
+the grove park, finds and the Dash course unchanged; T-P10 memory and frame time on the phone.

@@ -43,6 +43,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
+| 31 | **Upper tier greybox (T0): a level above the garden** (beta 16 candidate; `UPPER-TIER-BUILD-PLAN.md`) | Built offline; not in Studio yet | West of the cave mouth, a grey zigzag path climbs out from the cliff and back four times (13.5 degrees) to a flat grey terrace on the ridge, 24 studs above the lawn. Walk up, walk round the terrace (two clumps, three flat pads, a pale pole for the tree), look down over the balustrade at the plaza; people below can see you. **Your pet waits at the foot of the path, by design in T0** (pets walking up is the next slice). The cave stays closed and the Hush is retired (`/hush` does nothing now). Switch: `/tier off` (anyone up there is moved to the lawn by the foot) |
 
 ## Scoped, not built
 

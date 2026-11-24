@@ -30,7 +30,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Beta (12) QA Dash and Deck UI: the start grid (U5).
          "DashGrid",
          # The Hush greybox (HUSH-GREYBOX-BUILD-PLAN): the gate and data, the switch, the host; the island edges it extends.
-         "Hush", "HushConfig", "HushHost", "IslandBounds", "IslandBoundsHost"]
+         "Hush", "HushConfig", "HushHost", "IslandBounds", "IslandBoundsHost",
+         # The upper tier, greybox T0 (UPPER-TIER-BUILD-PLAN).
+         "Tier", "TierConfig", "TierHost"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
