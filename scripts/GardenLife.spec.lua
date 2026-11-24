@@ -60,6 +60,7 @@ return function(client)
 			finds=options.finds or {},kerbs=options.kerbs or {},pets=function()return r.pets end,
 			cover=options.cover or {},leafGround=options.leafGround,leaves=function()return options.leaves~=false end,
 			report=options.report or function()end,banks=options.banks or {},groveCrowns=options.groveCrowns,kitParts=options.kitParts,
+			quiet=options.quiet,
 			-- The garden hour: r.daylight (nil = the hour off), or r.hour(now) when a case drives the real clock.
 			daylight=if options.realHour then nil else function(now)if r.hour then return r.hour(now)end return r.daylight end})
 		function r.step(seconds)
@@ -918,6 +919,34 @@ return function(client)
 			night.reduced=false;night.daylight=.9;night.step(12)
 			assert(lit(night)==0,"day again: none")
 		end)
+		test("the Hush: while quiet() no leaves, bubbles, birds or fireflies follow the player (the ones out fade); nil-safe",function()
+			local hush=false
+			local r=rig({daylight=.12,quiet=function()return hush end})
+			for _=1,15 do r.step(1)end
+			assert(r.life:counts().fireflies==8,"out at night")
+			local function emitted()
+				local n=0
+				for _,name in ipairs({"LifeLeafSheet","LifeLeafPetal","LifeLeafSkitter"})do n+=(r.folder():FindFirstChild(name).Leaves.emitted or 0)end
+				return n
+			end
+			hush=true
+			r.step(.1)
+			local before=emitted()
+			r.step(12)
+			assert(emitted()==before,"no new leaves in the Hush")
+			assert(r.life:counts().bubbles==0,"no bubbles")
+			assert(select(2,r.life:chirp(1))=="quiet","no bird lands")
+			assert(r.life:counts().fireflies==0 and #r.life.fireflies.list==0,"the fireflies faded")
+			hush=false
+			r.step(12)
+			assert(emitted()>before and r.life:counts().fireflies>0,"back out: the garden again")
+			-- A quiet() that throws is not quiet; none at all is today's garden.
+			local broken=rig({quiet=function()error("no hush yet")end})
+			broken.step(3)
+			assert(broken.life.hushed==false and broken.life.enabled)
+			table.clear(broken.warned)
+		end)
+
 		test("the budget level is reported once per change (AliveLevel), including the step down to 2",function()
 			local seen={}
 			local r=rig({report=function(level)table.insert(seen,level)end})

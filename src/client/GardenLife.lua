@@ -359,6 +359,9 @@ function Life.mount(deps)
 	end
 	-- Beta 14 D2: my pet's snack asks about each resting fruit (LifePet sets it; nil: no snack).
 	self.notice=deps.notice
+	-- The Hush (Fable's garden expansion through the cave): quiet() true while the player is in it, so no leaves,
+	-- bubbles, birds or fireflies follow them in (the ones out finish or fade). Optional, nil-safe; a throw is not quiet.
+	self.quiet=deps.quiet
 	self.pets=deps.pets or function()return{}end
 	-- The live kit crown parts (for the hanging fruit's sway only).
 	self.kitParts=deps.kitParts or function()
@@ -854,6 +857,12 @@ function Life:step(dt)
 	local now=self.now()
 	if not finite(now)then return end
 	local reduced=self.reduced()==true
+	local quiet=false
+	if self.quiet then
+		local okQuiet,value=pcall(self.quiet)
+		quiet=okQuiet and value==true
+	end
+	self.hushed=quiet
 	if reduced and not self.wasReduced then self:clearEmitters();self.loose:clear()end
 	self.wasReduced=reduced
 	local eye=camera.Position
@@ -897,7 +906,7 @@ function Life:step(dt)
 	-- falling ones only: the scud has none). The fall's wind is the gust alone (never the breath: architect r1); the
 	-- big breath (`scene` on) triples the rate and runs the scud.
 	local centre=if typeof(player)=="Vector3"then player else eye
-	if self.leavesOn and not reduced then
+	if self.leavesOn and not reduced and not quiet then
 		local g=Wind.gust(centre,now)
 		local breath=if self.scene then(Wind.breath(centre,now))else 0
 		self.windIn-=tick
@@ -924,7 +933,7 @@ function Life:step(dt)
 	-- Bubbles: one every 3 s ahead of the camera, never in a menu, with Reduced Motion or at night, never in the way.
 	-- The roll picks the small or the large emitter; only that one's anchor moves to the spot.
 	local menu=self.d.modalOpen and self.d.modalOpen()==true
-	if self.bubbles:due(now,Sim.cap("bubbles",level),not reduced and not menu and self.day)then
+	if self.bubbles:due(now,Sim.cap("bubbles",level),not reduced and not menu and not quiet and self.day)then
 		local spot=Sim.bubbleSpot(camera,self.bubbles.random,world)
 		if spot then
 			local slot=self.bubblePool[self.bubbles:emit(now)]
@@ -1006,7 +1015,8 @@ function Life:stepFireflies(now,tick,world,level,reduced,put,hide)
 	local write=self.fireIn<=0
 	if write then self.fireIn=1/Sim.Firefly.hz end
 	local used={}
-	for _,f in ipairs(self.fireflies:step(now,tick,world,self.fireflySpots,cap,reduced,self.dusk))do
+	-- In the Hush the wanted count is none: the ones out fade, none follow.
+	for _,f in ipairs(self.fireflies:step(now,tick,world,self.fireflySpots,cap,reduced,if self.hushed then nil else self.dusk))do
 		local entry=self.firePool[f.slot]
 		if entry then
 			used[entry]=true
@@ -1136,6 +1146,7 @@ end
 Life.SameTree=4
 function Life:chirp(perch,position,_cue)
 	if not self.enabled or self.parked or type(perch)~="number"then return nil end
+	if self.hushed then return nil,"quiet"end
 	local level=Sim.level(self.level())
 	local camera=self.camera()
 	local now=self.now()

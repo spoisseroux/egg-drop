@@ -4795,6 +4795,11 @@ do
    end,
    modalOpen=function()return clientUI.anyModalOpen()==true end,
    reduced=function()return reduceEffects()==true end,
+   -- The Hush (its builder sets clientUI.hush): no leaves, bubbles, birds or fireflies follow the player in.
+   quiet=function()
+    local hush=clientUI.hush
+    return hush~=nil and type(hush.inHush)=="function"and hush:inHush()==true
+   end,
    mode=function()return board:GetAttribute("Mode")end})
  end)
  if ok and clientUI.life then gui.Destroying:Connect(function()clientUI.life:destroy()end)
