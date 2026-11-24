@@ -25,7 +25,12 @@ Nest.Charm="nest"               -- the Nest Charm: an earned rule (n >= WeekLeng
 -- the Studio probe (artifacts/qa-2026-11-23-beta12/STUDIO-PROBES.md, scripts/probe_nest_spot.luau) put this facing's
 -- prompt on open marble (y 4.09) and the Hub facing's on a raised trim strip (y 4.20). Spot A is clear all round.
 -- Fallback B (also clear): (-22.5, 4.07, 5.5), same facing.
-Nest.Spot=Vector3.new(-17.5,4.07,-2.5)
+-- Beta 14 D1 (WORLD-AND-NEST-LOOK 3 and its Nest merge rulings R2; NEST-AND-RACE-LINE-BUILD-PLAN): one place for eggs.
+-- The nest stands at the Eggs station's east foot, E1 = S + 5.5 e + 2.0 f from the station S (-31, -11) toward the
+-- plaza's middle, same facing. PENDING Studio probe P1 (scripts/probe_nest_spot.luau): if the station's base edge is
+-- nearer than 2.6 to the root, slide along e (at most to (-23.79, -10.00)); if it fails outright, back to spot A
+-- (-17.5, 4.07, -2.5). The position is never saved, so a tucked egg simply shows here.
+Nest.Spot=Vector3.new(-25.27,4.07,-9.80)
 Nest.Facing=Vector3.new(-30,4.07,-4)
 -- Pets keep Block / 2 + .35 (GardenWalkability's margin) = 2.45 studs off the middle: over the rim and the straw, at
 -- most grazing the see-through fringe's tips (2.57). The prompt, the Show me trail's end and a catch-up landing beside

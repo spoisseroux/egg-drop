@@ -1,4 +1,5 @@
--- The nest in the plaza (beta 12 QA O2; GARDEN-LIFE-NEST-LOOK 4, spot A): Nest.Spot keeps Fable's clearances from
+-- Beta 14 D1 (WORLD-AND-NEST-LOOK 3, Nest merge rulings R2): the nest at the Eggs station's east foot (E1), one place
+-- for eggs. Earlier: the plaza (beta 12 QA O2; GARDEN-LIFE-NEST-LOOK 4, spot A). Nest.Spot keeps Fable's clearances from
 -- the stations, the Dash course and pad, the arrival walking line, the flower patches and the firefly areas, faces the
 -- plaza's middle, and the server keeps pets off its square (one GardenBlockedRegion box in LoungeWorldV7Art, only
 -- with the onboarding v3 ceiling: beta and Studio). Pure data plus the world build; no Studio needed.
@@ -25,20 +26,30 @@ return function(server)
 	local spot=Nest.Spot
 	local Hub=Layout.Landmarks.Hub
 
-	test("spot A: (-17.5, 4.07, -2.5) on the plaza's east rim, 12.6 from the marble circle's middle, facing it",function()
-		assert(spot==Vector3.new(-17.5,4.07,-2.5),tostring(spot))
+	test("E1: (-25.27, 4.07, -9.80) at the Eggs station's east foot, 5.85 from it, 7.48 from the marble circle's middle, facing it",function()
+		assert(spot==Vector3.new(-25.27,4.07,-9.80),tostring(spot))
+		local S=Layout.Stations.Eggs.Position
+		assert(math.abs(flat(spot,S.X,S.Z)-5.85)<.05 and math.abs(flat(spot,-30,-4)-7.48)<.05)
 		-- Fable's (-30, -4), not the layout's Hub (-30, 4): the Studio probe put the Hub facing's prompt on a trim strip.
 		assert(Nest.Facing==Vector3.new(-30,4.07,-4)and Hub==Vector2.new(-30,4))
-		assert(math.abs(flat(spot,-30,-4)-12.59)<.05,"on the rim")
 		assert(Nest.Block==4.2 and Nest.Front==2.6)
 	end)
 
 	test("clear of every station, the Dash course and pad, the arrival walking line, the flowers and the firefly areas",function()
-		local want={Journal=12,Eggs=15,Customize=25,ToyLawn=20,ArrivalDais=100}
+		-- Beside the Eggs station (part of its corner), clear of every other station.
+		local want={Journal=9,Eggs=5.5,Customize=18,ToyLawn=20,ArrivalDais=100}
 		for name,frame in pairs(Layout.Stations)do
 			local d=flat(spot,frame.Position.X,frame.Position.Z)
 			assert(d>=(want[name]or 8),name..": "..d)
 		end
+		local eggs=Layout.Stations.Eggs.Position
+		assert(flat(spot,eggs.X,eggs.Z)<=6.5,"part of the egg corner")
+		-- The prompt point is past the nest's own reach from the station's middle, and the walk from the plaza's hub to
+		-- the station passes the nest's box by a stride.
+		local root=CFrame.lookAt(Vector3.new(spot.X,spot.Y,spot.Z),Vector3.new(Nest.Facing.X,spot.Y,Nest.Facing.Z))
+		local front=root*Vector3.new(0,0,-Nest.Front)
+		assert(flat(front,eggs.X,eggs.Z)>=4.5,"the prompt point and the station: "..flat(front,eggs.X,eggs.Z))
+		assert(segment(spot.X,spot.Z,Hub.X,Hub.Y,eggs.X,eggs.Z)>=Nest.Block/2+1,"the hub-to-Eggs walk")
 		local best=math.huge
 		for _,list in ipairs({Course.Main,Course.Branch})do
 			for i=1,#list//4-1 do

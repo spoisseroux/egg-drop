@@ -42,7 +42,10 @@ Client.Claim="NestClaim"
 Client.Spot=Nest.Spot                  -- the plaza's east rim (spot A); the walk map's ground, raycast when it can be
 Client.Facing=Nest.Facing              -- the plaza's middle: root -Z points at it
 Client.PromptAt=Vector3.new(0,1,-Nest.Front) -- root-local: the prompt, and where the Bear's prints end (outside the pets' box)
-Client.BearSpot=Vector3.new(2.2,0,-1.4) -- the Bear curls here (the fringe is wider); the sign is on the other side
+-- Beta 14 D1 (Fable R2): beside the Eggs station the station side carries nothing; the Bear curls on the outer (-X)
+-- side in front, the sign stands behind it. PENDING Studio probe P1 (scripts/probe_nest_spot.luau).
+Client.BearSpot=Vector3.new(-2.2,0,-1.4) -- the Bear curls here (was +2.2 at the plaza rim)
+Client.SignAt=Vector3.new(-1.7,0,1.6)  -- the sign post and board, root-local X and Z (was -1.95, -1.03)
 Client.EggBase=.64     -- .06 into the straw bed
 Client.Scale=table.freeze({small=1.25,glow=1.6,rocking=2,ready=2})
 Client.Halo=table.freeze({glow={.25,.5},rocking={.45,.7},ready={.85,.85}})
@@ -244,7 +247,7 @@ local Face=Enum.NormalId
 local CURVED={Face.Top,Face.Bottom,Face.Front,Face.Back} -- a Cylinder's round side (its caps are Left and Right)
 local BOTH={Face.Front,Face.Back}
 local ROLL={Face.Top,Face.Bottom,Face.Front,Face.Back,Face.Left,Face.Right} -- a rim roll: its round side and both caps
-Client.SignYaw=-40 -- degrees about root Y
+Client.SignYaw=50 -- degrees about root Y (beta 14 D1, Fable R2: the Front looks forward-left; was -40)
 Client.SignPostTop=1.08 -- the post's top (studs over the nest root), just into the board's bottom edge
 function Client.parts()
 	local list={}
@@ -277,12 +280,12 @@ function Client.parts()
 	end
 	-- STUDIO-CHECK-R2: the board has words on both faces, so a post behind it hid the "e" of "egg" from the arrival path.
 	-- The post stops under the board (its lowest edge is about 1.0 after the 6 degree tilt), which sits on its top.
-	table.insert(list,{name="NestSignPost",shape="block",size=Vector3.new(.14,Client.SignPostTop,.14),cf=CFrame.new(-1.95,Client.SignPostTop/2,-1.03),color="post",wood=true})
+	table.insert(list,{name="NestSignPost",shape="block",size=Vector3.new(.14,Client.SignPostTop,.14),cf=CFrame.new(Client.SignAt.X,Client.SignPostTop/2,Client.SignAt.Z),color="post",wood=true})
 	-- The board is painted on both faces and yawed 40 toward the egg (Studio check beta 12: at 20, one face, people
 	-- coming in from the arrival path's mouth saw its edge and back). The Front reads from the prompt point and the
 	-- plaza's middle, the Back from the arrival path's mouth, each within about 35 degrees (NestClient.spec).
 	table.insert(list,{name="NestSign",shape="block",size=Vector3.new(1.3,.8,.08),
-		cf=CFrame.new(-1.95,1.45,-1.03)*CFrame.Angles(0,rad(Client.SignYaw),0)*CFrame.Angles(rad(6),0,0),color="board",wood=true,
+		cf=CFrame.new(Client.SignAt.X,1.45,Client.SignAt.Z)*CFrame.Angles(0,rad(Client.SignYaw),0)*CFrame.Angles(rad(6),0,0),color="board",wood=true,
 		decal={"sign",BOTH},sign=true})
 	return list
 end

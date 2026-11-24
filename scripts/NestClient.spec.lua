@@ -122,7 +122,7 @@ return function(client)
 		assert(parts==24,"the 21, the egg's anchor, its body and the prompt spot")
 		local base=folder:FindFirstChild("NestMound")
 		assert(math.abs(base.CFrame.Position.X-SPOT.X)<1e-6 and math.abs(base.CFrame.Position.Z-SPOT.Z)<1e-6,"at the plaza spot")
-		assert(SPOT==Nest.Spot and SPOT==Vector3.new(-17.5,4.07,-2.5))
+		assert(SPOT==Nest.Spot and SPOT==Vector3.new(-25.27,4.07,-9.80),"beta 14 D1: E1, the Eggs station's foot")
 		assert(folder:FindFirstChild("NestCushion")==nil and folder:FindFirstChild("NestFlag")==nil and folder:FindFirstChild("NestLeaves")==nil,"the old cushion, flag and leaves are gone")
 		local prompt=folder:FindFirstChild("SleepyNestPrompt"):FindFirstChild("NestPrompt")
 		assert(prompt and prompt.ClassName=="ProximityPrompt"and prompt.RequiresLineOfSight==false)
@@ -301,7 +301,7 @@ return function(client)
 		for k=1,3 do assert(folder:FindFirstChild("NestTuft"..k).Size==Vector3.new(1.3,.62,.04))end
 		local post,board=folder:FindFirstChild("NestSignPost"),folder:FindFirstChild("NestSign")
 		assert(post.Material==Enum.Material.Wood and board.Material==Enum.Material.Wood and board.Size==Vector3.new(1.3,.8,.08))
-		assert(close(localAt("NestSign"),Vector3.new(-1.95,1.45,-1.03)))
+		assert(close(localAt("NestSign"),Vector3.new(-1.7,1.45,1.6)),"beta 14 D1 (Fable R2): the outer side, behind the Bear")
 		-- STUDIO-CHECK-R2: the post never rises behind the board's words (on either face); the board sits on its top.
 		local lowest=math.huge
 		for _,x in ipairs({-.65,0,.65})do for _,z in ipairs({-.04,.04})do
@@ -309,21 +309,20 @@ return function(client)
 		end end
 		local top=root:PointToObjectSpace(post.CFrame:PointToWorldSpace(Vector3.new(0,post.Size.Y/2,0))).Y
 		assert(top>=lowest and top<=lowest+.08,"the post meets the board's bottom edge: top "..top..", board "..lowest)
-		assert(close(localAt("NestSignPost")*Vector3.new(1,0,1),Vector3.new(-1.95,0,-1.03)),"under the board's middle")
+		assert(close(localAt("NestSignPost")*Vector3.new(1,0,1),Vector3.new(-1.7,0,1.6)),"under the board's middle")
 		local front=root:VectorToObjectSpace(board.CFrame.LookVector)
-		assert(front.Z<-.7 and front.X>.5,"the board faces the front, turned toward the egg: "..tostring(front))
-		-- Studio check beta 12: the Front reads from the prompt point and the plaza's middle, the Back from the arrival
-		-- path's mouth (-17, 7) (GARDEN-LIFE-NEST-LOOK 4), each within 40 degrees of square on.
+		assert(front.Z<-.5 and front.X<-.5,"beta 14 D1: the board's Front looks forward-left: "..tostring(front))
+		-- Fable R2: the Front reads along the walk in, within 40 degrees of square on at the path mouth, the bridge, two
+		-- points on the way and the hub.
 		local at=board.CFrame.Position
 		local function facing(point,normal)
 			local to=Vector3.new(point.X-at.X,0,point.Z-at.Z).Unit
 			return to:Dot(Vector3.new(normal.X,0,normal.Z).Unit)
 		end
-		local prompt=root*Vector3.new(0,0,-Nest.Front)
 		local look=board.CFrame.LookVector
-		assert(facing(prompt,look)>math.cos(math.rad(40)),"Front toward the prompt point")
-		assert(facing(Vector3.new(Nest.Facing.X,0,Nest.Facing.Z),look)>math.cos(math.rad(40)),"Front toward the plaza's middle")
-		assert(facing(Vector3.new(-17,0,7),-look)>math.cos(math.rad(40)),"Back toward the arrival path's mouth")
+		for _,p in ipairs({Vector3.new(14,0,21),Vector3.new(2.5,0,21),Vector3.new(-10,0,12),Vector3.new(-20,0,8),Vector3.new(-30,0,4)})do
+			assert(facing(p,look)>math.cos(math.rad(40)),"the Front from "..tostring(p).." "..math.deg(math.acos(facing(p,look))))
+		end
 		local words=board:FindFirstChild("Words"):FindFirstChild("Name")
 		local back=board:FindFirstChild("WordsBack")
 		assert(back and back.Face==Enum.NormalId.Back and back.AlwaysOnTop==false)
@@ -334,7 +333,7 @@ return function(client)
 		if LifeArt.id("nestSign")then assert(signDecals[Enum.NormalId.Front]and signDecals[Enum.NormalId.Back],"painted on both faces")end
 		assert(Client.signText({pet="pip"})==UICopy.get("onb3.nest.sign",{pet="Bear"}),"a named pet")
 		assert(Client.signText({pet="nobody"})==UICopy.get("onb3.nest.signPlain"))
-		assert(math.abs(Client.EggBase-.64)<1e-9 and Client.BearSpot==Vector3.new(2.2,0,-1.4))
+		assert(math.abs(Client.EggBase-.64)<1e-9 and Client.BearSpot==Vector3.new(-2.2,0,-1.4),"beta 14 D1: the Bear on the outer side")
 		assert(close(localAt("SleepyEgg"),Vector3.new(0,.64,0)),"the egg on the straw")
 		Onboard.inject(nil)
 	end)
