@@ -78,7 +78,7 @@ def awning_axis():
 
 
 def folded_long():
-    yaw = math.atan2(FOLDED_CENTRE.x, FOLDED_CENTRE.z) + math.pi / 2
+    yaw = math.atan2(FOLDED_CENTRE.x, FOLDED_CENTRE.z)
     return Matrix.Rotation(yaw, 3, "Y") @ Vector((1, 0, 0))
 
 
@@ -205,7 +205,7 @@ def tube(m, spine, radii, sides, uvfn, cap_end=True, cap_start=False):
         if want and radii[k] > 0:
             d = spine[k] - spine[k - 1 if k else 1]
             ring = rings[k][:sides]
-            m.face(ring, [uvfn(k, s) for s in range(sides)], d if k else -d)
+            m.face(ring, [uvfn(k, s) for s in range(sides)], d)
     return rings
 
 
@@ -477,8 +477,8 @@ def build_moon():
         return region_uv("moon", .5 - x / MOON_UV, .5 - y / MOON_UV)
     front = [c + V(x, y, -half) for x, y in outline]
     back = [c + V(x, y, half) for x, y in outline]
-    m.face(front, [uv(x, y) for x, y in outline], V(0, 0, -1))
-    m.face(back, [uv(x, y) for x, y in outline], V(0, 0, 1))
+    m.face(front, [uv(x, y) for x, y in outline], V(0, 0, -1), smooth=False)
+    m.face(back, [uv(x, y) for x, y in outline], V(0, 0, 1), smooth=False)
     n = len(outline)
     for k in range(n):
         a, b = outline[k], outline[(k + 1) % n]
@@ -489,7 +489,7 @@ def build_moon():
         # outward: away from the crescent's interior (test a point a hair along the normal)
         probe = mid + normal.normalized() * .01
         inside = math.hypot(probe.x, probe.y) < MOON_R and math.hypot(probe.x + MOON_BITE_C[0], probe.y - MOON_BITE_C[1]) > MOON_BITE_R
-        m.face(q, [region_uv("sun", .5, .5)] * 4, -normal if inside else normal)
+        m.face(q, [region_uv("sun", .5, .5)] * 4, -normal if inside else normal, smooth=False)
     top = max(outline, key=lambda p: p[1])
     tube(m, [CROOK_TIP + V(0, .02, 0), c + V(top[0], top[1] - .02, 0)], [.022, .022], 4,
          lambda k, s: region_uv("cord", .5, s / 4), cap_end=False)
@@ -577,7 +577,7 @@ def build_folded():
     rim's tangent. A subdivided box pushed out from an inner box (each point's radius by its side)."""
     m = Mesh("BlanketFolded")
     c = FOLDED_CENTRE
-    yaw = math.atan2(c.x, c.z) + math.pi / 2
+    yaw = math.atan2(c.x, c.z)                                    # long side (x) along the rim's tangent
     rot = Matrix.Rotation(yaw, 3, "Y")
     hx, hy, hz = .55, .175, .4
     n = 4
@@ -718,7 +718,7 @@ def main():
         "blanketFit": {"egg": [EGG_W, EGG_H], "clear": CLEAR, "drapedTop": round(EGG_BASE + .45 * EGG_H, 4),
                        "slippedTop": round(EGG_BASE + .2 * EGG_H, 4)},
         "moonLight": [round(v, 4) for v in MOON_CENTRE],
-        "cordTop": [round(v, 4) for v in cord_top],
+        "moonTop": [round(v, 4) for v in cord_top],          # the cord's lower end; its upper end is the Moon pivot
         "egg": {"base": EGG_BASE, "size": [EGG_W, EGG_H, EGG_W], "centre": [0.0, EGG_BASE + EGG_H / 2, 0.0]},
         "dent": {"centre": [0.0, 2.1, 0.0], "size": [1.56, .1, 1.32]},
         "bed": {"top": 2.2, "radius": 1.3},                     # where the blanket drops on a hatch
@@ -726,7 +726,8 @@ def main():
         "sign": SIGN,
         "mat": MAT,
         "bearSpot": [-2.9, 0.0, -2.0],
-        # a Y cylinder (architect: a 4.8 box's corners reach the mat); CanQuery off, so pets and trails never stand on it
+        # a Y cylinder (architect: a 4.8 box's corners reach the mat). It collides, so it is also queryable (Roblox ignores
+        # CanQuery while CanCollide is on): the code side keeps pets' and trails' rays off it (collision group or exclude).
         "collider": {"centre": [0.0, COLLIDER_H / 2, 0.0], "radius": COLLIDER_R, "height": COLLIDER_H},
         "version": VERSION,
         "footprintRadius": round(reach, 3),
@@ -896,8 +897,8 @@ def render(by, manifest):
         folded.hide_render = not st["folded"]
         moon.data.materials.clear()
         moon.data.materials.append(moon_mat_ready if st["ready"] else paper)
-        # the ready lift: 6 degrees about the awning's axis through the apex (Blender's axes are mirrored: negate)
-        turn = (Matrix.Translation(apex) @ Matrix.Rotation(math.radians(-6 if st["ready"] else 0), 4, lift_axis)
+        # the ready lift: +6 degrees about the awning's axis through its pivot raises the tips (code review)
+        turn = (Matrix.Translation(apex) @ Matrix.Rotation(math.radians(6 if st["ready"] else 0), 4, lift_axis)
                 @ Matrix.Translation(-apex))
         awning.matrix_world = turn @ awning_home
         for label, eye in views:

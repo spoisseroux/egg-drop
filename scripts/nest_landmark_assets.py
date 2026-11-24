@@ -15,8 +15,9 @@ Template: Model `NestLandmark`, every part placed nest-local (front -Z, origin o
   BlanketDraped   SurfaceAppearance, double-sided, hidden (Transparency 1) until the code tucks
   BlanketSlipped  SurfaceAppearance, double-sided, hidden: the ready pose
   BlanketFolded   SurfaceAppearance, shown: the template's default state (napping, not tucked)
-  Collider        a plain cylinder Part (radius 2.4, 2.75 high), invisible, CanCollide, CanQuery false (pets and trails
-                  never stand on it); the Model's PrimaryPart with PivotOffset = its CFrame inverse, so GetPivot() is
+  Collider        a plain cylinder Part (radius 2.4, 2.75 high), invisible, CanCollide (and so queryable: Roblox ignores
+                  CanQuery while CanCollide is on; the code side keeps pet and trail rays off it with a collision group
+                  or its exclude list); the Model's PrimaryPart with PivotOffset = its CFrame inverse, so GetPivot() is
                   the origin without WorldPivotData (which Rojo will not take as a plain CFrame)
   LandmarkVersion IntValue = NestLandmarkData.version: a stale template falls back to the twig nest
 All meshes Box collision fidelity (none of them collides). The Roblox import turns each mesh by pi about Y; the CFrames
@@ -205,7 +206,7 @@ def collider(manifest):
         f"        <Vector3 name=\"size\"><X>{h!r}</X><Y>{2 * r!r}</Y><Z>{2 * r!r}</Z></Vector3>",
         "        <bool name=\"Anchored\">true</bool>",
         "        <bool name=\"CanCollide\">true</bool>",
-        "        <bool name=\"CanQuery\">false</bool>",
+        "        <bool name=\"CanQuery\">true</bool>",          # Roblox ignores false while CanCollide is on (code review)
         "        <bool name=\"CanTouch\">false</bool>",
         "        <bool name=\"CastShadow\">false</bool>",
         "        <float name=\"Transparency\">1</float>",
@@ -230,7 +231,7 @@ def rbxmx(manifest, bound):
 
 
 def lua(manifest, readback):
-    keep = ("front", "bounds", "pivots", "blanketFit", "moonLight", "cordTop", "egg", "dent", "bed", "rim", "sign", "mat",
+    keep = ("front", "bounds", "pivots", "blanketFit", "moonLight", "moonTop", "egg", "dent", "bed", "rim", "sign", "mat",
             "bearSpot", "collider", "footprintRadius", "triangles", "version")
     data = {k: manifest[k] for k in keep}
     data.update({
