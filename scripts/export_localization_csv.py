@@ -56,6 +56,10 @@ SECTION_NOTES = {
     "onboarding": "First-round coaching", "coach": "First-round coaching",
     "onb3": "First-session onboarding: pet bubbles, Sleepy Nest, results strip",
 }
+# One key's own note, for a word that is ambiguous on its own (EGG-CORNER-LOOK 1: "Turn" is the egg machine's prompt).
+KEY_NOTES = {
+    "r5.station.Eggs.turn": "Garden prompt on the egg machine: turn the handle of a toy machine (a verb, one word)",
+}
 SAMPLE = {"count": 3, "heat": "Medium", "low": 6, "high": 8, "pet": "Bear", "reward": 5, "item": "Squeaky Bone",
           "owned": 3, "total": 12, "target": 3, "name": "Pet Park", "level": 10,
           "hours": 7, "minutes": 40}
@@ -296,7 +300,7 @@ def main():
         if not source.strip():
             continue
         if kind == "ui":
-            note = SECTION_NOTES.get(key.split(".")[0], "Menu text")
+            note = KEY_NOTES.get(key) or SECTION_NOTES.get(key.split(".")[0], "Menu text")
             if "{" in source:
                 note += "; e.g. " + extra
             full_key = "ui." + key

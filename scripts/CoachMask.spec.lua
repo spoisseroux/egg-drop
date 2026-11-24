@@ -181,9 +181,9 @@ return function(server)
 		-- Onboarding v3: 15 to 26, station tips on their own bits (never hatch/style/companions/park), within 31 bits.
 		local v3={"tipHatch","tipStyle","tipCompanions","tipPark","tipNest","needHi","needToy","needDeck","needNest","needPark","nestIntro","weekDone"}
 		for i,id in ipairs(v3)do assert(Coach.Bits[id]==14+i and Coach.Order[15+i]==id and Coach.validId(id),id)end
-		assert(#Coach.Order==27 and Coach.Bits.weekDone<=30 and Coach.bit("weekDone")<=Coach.Max)
+		assert(#Coach.Order==28 and Coach.Bits.nestHelp==27 and Coach.Bits.weekDone<=30 and Coach.bit("weekDone")<=Coach.Max)
 		assert(Coach.Bits.hatch==2 and Coach.Bits.style==3 and Coach.Bits.companions==4 and Coach.Bits.park==7,"the station bits are untouched")
-		local all=0;for _,id in ipairs(Coach.Order)do all=Coach.with(all,id)end;assert(all==2^27-1 and Coach.valid({coachMask=all}))
+		local all=0;for _,id in ipairs(Coach.Order)do all=Coach.with(all,id)end;assert(all==2^28-1 and Coach.valid({coachMask=all}))
 		local kept=Coach.merge(Coach.bit("dashSeen"),Coach.bit("fillLine"));assert(Coach.valid({coachMask=kept})and Coach.sanitize(kept)==kept)
 		local h,db=fixture()
 		local quests=Coach.bit("questDone")

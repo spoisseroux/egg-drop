@@ -361,6 +361,17 @@ function Art.dressing(room)
 	return folder
 end
 
+-- The egg corner (EGG-CORNER-BUILD-PLAN; EggCornerWorld): the egg machine as station Eggs, the old station's glass and
+-- glow hidden, the nest's box and light following the nest. Onboarding v3 places only (beta, Studio): live builds none
+-- of it and keeps exactly the world above. Its own function, after the stations and lights it moves.
+function Art.eggCorner(room)
+	local okOnboard,onboard=pcall(function()return require(Shared.Onboard).ceiling()end)
+	if not(okOnboard and onboard==true)then return nil end
+	local ok,corner=pcall(function()return require(script.Parent.EggCornerWorld).mount(room)end)
+	if not ok then warn("[EggCorner] not mounted: "..tostring(corner));return nil end
+	return corner
+end
+
 function Art.build(room)
 	Art.lighting()
 	Art.meshes(room)
@@ -370,6 +381,7 @@ function Art.build(room)
 	Art.careStatus(room)
 	Art.water(room)
 	Art.dressing(room)
+	Art.eggCorner(room)
 	room:SetAttribute("WorldVersion","v7")
 end
 

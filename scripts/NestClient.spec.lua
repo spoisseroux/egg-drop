@@ -29,8 +29,10 @@ return function(client)
 		function s:Fire(...)for _,fn in ipairs(table.clone(s.list))do fn(...)end end
 		return s
 	end
-	local ON={flags={OnboardingV3=true},studio=true}
-	local OFF={flags={OnboardingV3=true},studio=true,nest=false}
+	-- The cases below are the nest before the egg corner (its own cases are at the end, CORNER).
+	local ON={flags={OnboardingV3=true},studio=true,corner=false}
+	local CORNER={flags={OnboardingV3=true},studio=true}
+	local OFF={flags={OnboardingV3=true},studio=true,nest=false,corner=false}
 	local NOW=1800000000
 	local function rig(options)
 		options=options or {}
@@ -48,13 +50,15 @@ return function(client)
 		r.player={CharacterAdded=signal()}
 		r.world=Instance.new("Folder")
 		r.host=Instance.new("Frame")
-		r.client=Client.mount({remotes=r.remotes,world=r.world,player=r.player,step=false,now=function()return r.now end,
+		local deps={remotes=r.remotes,world=r.world,player=r.player,step=false,now=function()return r.now end,
 			root=function()return r.at end,free=function()return r.open end,busy=function()return r.menu end,
 			reduced=function()return r.still==true end,compact=function()return r.small end,chipHost=function()return r.host end,
 			focus=function()return r.focus==true end,chipHidden=function()return r.inPark==true end,
 			ground=options.ground,measure=function(text,size)return #text*size*.5 end,show=function()r.shows+=1 end,
 			toast=function(text,stars)table.insert(r.toasts,{text=text,stars=stars})end,
-			audio={play=function(_,name)table.insert(r.sounds,name);return true end}})
+			audio={play=function(_,name)table.insert(r.sounds,name);return true end}}
+		for key,value in pairs(options.deps or {})do deps[key]=value end
+		r.client=Client.mount(deps)
 		function r.fire(packet)(r.event or kids[Client.Event]).OnClientEvent:Fire(packet)end
 		function r.folder()return r.world:FindFirstChild(Client.Folder)end
 		function r.count(kind)
@@ -540,6 +544,111 @@ return function(client)
 		held=false;hold:step(.1);assert(log[2][1]=="toy"and log[2][2]==true and hold:state().shown,"back after the beat")
 		held=true;hold:step(.1);assert(log[3][2]==false)
 		hold:set(nil,false);held=false;hold:step(.1);assert(log[4][2]==false and #log==4,"a hidden bubble stays hidden")
+	end)
+	-- ── The egg corner (EGG-CORNER-BUILD-PLAN 8; EGG-CORNER-LOOK 3, R2 3) ───────────────────────────────────────────
+	local Corner=require(Shared.EggCorner)
+	local function cornerRig(options)
+		options=options or {}
+		local r
+		local helps={}
+		local deps={help=function(nest)table.insert(helps,nest);return true end,split=function()return r and r.split==true end,
+			gui=function()return r and r.gui end,helpPulse=function()return r and r.pulseDue==true end,
+			helpPulsed=function()if r then r.pulsed=(r.pulsed or 0)+1;r.pulseDue=false end end}
+		for key,value in pairs(options.deps or {})do deps[key]=value end
+		r=rig({env=options.env or CORNER,deps=deps})
+		r.helps=helps
+		r.gui=Instance.new("Folder")
+		return r
+	end
+	test("corner: the nest stays at E1 until the island split, then stands at (-31, -11) facing the plaza; no Yield either way",function()
+		local Stations=require(client.LoungeStations)
+		Stations.Yield.Eggs=nil
+		local r=cornerRig()
+		r.fire(state(60))
+		assert(r.client.corner==true and r.client.spot==Nest.Spot and Stations.Yield.Eggs==nil,"not split: E1, no Yield")
+		local split=cornerRig()
+		split.split=true;split.client:close();split.client:sync();split.fire(state(60))
+		assert(split.client.spot==Corner.NestSpot and split.client.facing==Corner.nestFacing())
+		local root=split.client.root
+		assert(math.abs(root.X+31)<1e-6 and math.abs(root.Z+11)<1e-6)
+		local toward=(Vector3.new(Corner.NestFacing.X,root.Y,Corner.NestFacing.Z)-root.Position).Unit
+		assert(root.LookVector:Dot(toward)>.9999,"root -Z faces the plaza middle")
+		local straw,leaves,shadow=0,0,split.folder():FindFirstChild("NestShadow")
+		for _,part in ipairs(split.folder():GetChildren())do
+			if string.match(part.Name,"^ScatterStraw")then straw+=1 elseif string.match(part.Name,"^ScatterLeaf")then leaves+=1 end
+		end
+		assert(straw==12 and leaves==3 and shadow~=nil,"the scatter and the contact shadow on plain marble: "..straw..","..leaves..","..tostring(shadow~=nil))
+		assert(r.folder():FindFirstChild("NestShadow")==nil,"none at E1")
+		Onboard.inject(nil)
+	end)
+	test("corner: a switch flip closes and re-opens the nest where it now stands; off gives the station's Yield back",function()
+		local Stations=require(client.LoungeStations)
+		Stations.Yield.Eggs=nil
+		local r=cornerRig()
+		r.split=true;r.client:close();r.client:sync();r.fire(state(60))
+		assert(r.client.spot==Corner.NestSpot)
+		Onboard.inject(ON);r.client:relocate()
+		assert(r.client.isOpen and r.client.corner==false and r.client.spot==Nest.Spot and Stations.Yield.Eggs~=nil)
+		assert(r.count("sync")>=2,"asks for the nest again")
+		Onboard.inject(nil)
+		Stations.Yield.Eggs=nil
+	end)
+	test("corner rows: napping is the clock and the disc (no explainer, no Inside); ready is Hatch me! without it",function()
+		local view=Client.parse(public(60))
+		local row=Client.row(view,{look="small",left=Nest.Seconds-60,near=2,tucked=false,corner=true})
+		assert(row.row==7 and row.help==true and row.text==(Client.clock(Nest.Seconds-60)))
+		local later=Client.parse(public(60,{n=2,tucked=true}))
+		row=Client.row(later,{look="glow",left=100,near=2,tucked=true,corner=true})
+		assert(row.row==7 and row.help==true,"no Inside row near the nest")
+		row=Client.row(view,{look="ready",left=0,corner=true})
+		assert(row.row==4 and row.gold and not row.help)
+		row=Client.row(view,{beat={row=1,text="Tucked in!"},look="small",left=100,corner=true})
+		assert(row.row==1 and not row.help,"the beats stay")
+		local old=Client.row(view,{look="small",left=100,near=2,tucked=false})
+		assert(old.row==5 and not old.help,"off: as before")
+	end)
+	test("corner prompt: Tuck in, then Peek (the card, no packet), then Hatch; the disc, the pill and Peek all call help()",function()
+		local r=cornerRig()
+		r.fire(state(60));r.step(.1)
+		assert(r.client.action=="tuck"and r.client:act())
+		r.fire(state(60,{tucked=true}));r.step(.1)
+		assert(r.client.action=="peek"and r.client.egg.prompt.ActionText==UICopy.get("onb3.nest.peek"))
+		local sent=#r.sent
+		assert(r.client:act()==true and #r.helps==1 and #r.sent==sent,"Peek sends nothing")
+		r.menu=true;r.step(.1);assert(not r.client.egg.prompt.Enabled,"hidden behind the open card (busy)")
+		r.menu=false
+		r.now+=Nest.Seconds;r.step(.1)
+		assert(r.client.action=="hatch")
+		assert(r.client.egg.help~=nil and r.client.egg.helpTap~=nil,"the disc and the pill's tap target")
+		assert(r.client.egg.board.Parent==r.gui and r.client.egg.board.Adornee==r.client.egg.anchor,"the board lives in PlayerGui")
+		assert(#r.toasts==0,"no rail toast on tuck (beta 14 Q2 stays)")
+		Onboard.inject(nil)
+	end)
+	test("corner card: what, time, gift, inside, free, next, wait; the live clock with Egg n of 7; Hatch me! once ready",function()
+		local r=cornerRig()
+		r.fire(state(3600,{n=1,gift={kind="stars",stars=15}}))
+		local card=r.client:helpNow()
+		assert(card.title==UICopy.get("onb3.nest.help.title")and card.button==UICopy.get("onb3.nest.help.button"))
+		local keys={}
+		for _,line in ipairs(card.lines)do table.insert(keys,line.key)end
+		assert(table.concat(keys,",")=="what,time,gift,inside,free,next,wait",table.concat(keys,","))
+		assert(card.lines[2].text==UICopy.get("onb3.nest.help.time",{hours=Nest.Hours}))
+		assert(card.lines[4].text==UICopy.get("onb3.nest.insideStars",{stars=15}))
+		assert(string.find(card.live,UICopy.get("onb3.nest.count",{count=2}),1,true),card.live)
+		r.now+=Nest.Seconds
+		card=r.client:helpNow()
+		assert(card.ready and card.live==UICopy.get("onb3.nest.ready"),"an egg that wakes while the card is open says so")
+		Onboard.inject(nil)
+	end)
+	test("corner: the disc's first-time pulse is asked once, saved once, and plays twice (none with Reduced Motion)",function()
+		local r=cornerRig()
+		r.pulseDue=true
+		r.fire(state(60,{tucked=true}));r.at=from(1)
+		for _=1,5 do r.step(.1)end
+		assert(r.pulsed==1 and r.client.pulse~=nil)
+		for _=1,12 do r.step(.1)end
+		assert(r.client.pulse==nil and r.client.egg.helpScale.Scale==1 and r.pulsed==1)
+		Onboard.inject(nil)
 	end)
 	return{passed=#cases,cases=cases}
 end

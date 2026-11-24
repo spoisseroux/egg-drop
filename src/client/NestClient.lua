@@ -24,6 +24,12 @@
 --   wrapper asks holdsBubble() so a beat holds the bubble back). No second pill, no tuck-in rail toast.
 -- Beta 14 QA D1: the nest sits beside the Eggs station; while its prompt can act and the player stands nearer to it,
 --   the station's prompt steps aside (LoungeStations.Yield.Eggs). menuRow(summary) is the Hatch eggs screen's row.
+-- The egg corner (Onboard.on("corner"), EGG-CORNER-BUILD-PLAN 8; EGG-CORNER-LOOK 3 and R2 3): the nest stands at
+--   EggCorner.nestSpot() (the old station's spot once the island split lands), faces EggCorner.nestFacing(), and
+--   re-opens when the switch flips; no Yield (the machine is far away); the napping pill is the clock plus a "?" disc
+--   (44 px hit; the board lives in deps.gui() so it can be tapped), the prompt's third verb is Peek, and the disc, the
+--   pill and Peek all call help() (deps.help(self): the "?" card). At (-31, -11) it also lays a straw scatter and a soft
+--   contact shadow on the marble. Off: exactly the nest before.
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Onboard=require(Shared:WaitForChild("Onboard"))
@@ -35,6 +41,7 @@ local Pets=require(Shared:WaitForChild("PetCatalog"))
 local LifeArt=require(Shared:WaitForChild("LifeArt"))
 local Models=require(Shared:WaitForChild("EggModels")).Egg
 local Stations=require(script.Parent:WaitForChild("LoungeStations"))
+local Corner=require(Shared:WaitForChild("EggCorner"))
 local Client={};Client.__index=Client
 Client.Folder="EggDropSleepyNest"
 Client.Event="NestEvent"
@@ -67,6 +74,9 @@ Client.Near=8           -- studs: the "Inside:" line
 -- if a sentence would need three lines), two lines at most; 28 px tall for one line, 46 for two. The board is 220 x 80
 -- with the pill at its bottom, so it lifts 34 px over the need bubble without moving anything else.
 Client.Pill=table.freeze({max=220,wrap=196,pad=12,min=120,one=28,two=46,text=14,sentence=13,small=12,lift=34,board=Vector2.new(220,80)})
+-- The egg corner's "?" disc on the napping pill (EGG-CORNER-LOOK 3): drawn 24, hit 44, 6 px from the clock; two
+-- first-time pulses to 1.15 (coach bit nestHelp).
+Client.Help=table.freeze({drawn=24,hit=44,gap=6,pulse=1.15,pulseSeconds=.5,pulses=2})
 -- Shown within `near` studs of the player's root (not the camera), fading in to `full`.
 Client.Show=table.freeze({near=table.freeze({12,10}),ready=table.freeze({18,15}),beat=table.freeze({18,18})})
 Client.BeatIn=.25;Client.BeatOut=.4
@@ -183,6 +193,11 @@ function Client.row(view,ctx)
 			hidden=false,lift=ctx.bubble==true}
 	end
 	local hidden=ctx.bubble==true
+	-- The egg corner: the explainer and "Inside" live in the "?" card; the napping pill is the clock and the disc.
+	if ctx.corner then
+		return{row=7,text=(Client.clock(ctx.left or 0)),size=if ctx.compact then P.sentence else P.text,gold=false,onTop=false,show=Client.Show.near,
+			hidden=hidden,lift=false,help=true}
+	end
 	if not ctx.tucked and view.n==0 then
 		return{row=5,text=Client.how(view),size=P.sentence,gold=false,onTop=false,show=Client.Show.near,hidden=hidden,lift=false}
 	end
@@ -237,9 +252,10 @@ end
 -- Back Out over 0..1 (the stage change).
 function Client.backOut(x)local c1=1.70158;local c3=c1+1;return 1+c3*(x-1)^3+c1*(x-1)^2 end
 -- The root frame on ground `y`: -Z at the dais.
-function Client.frame(y)
-	local at=Vector3.new(Client.Spot.X,y,Client.Spot.Z)
-	return CFrame.lookAt(at,Vector3.new(Client.Facing.X,y,Client.Facing.Z))
+function Client.frame(y,spot,facing)
+	spot,facing=spot or Client.Spot,facing or Client.Facing
+	local at=Vector3.new(spot.X,y,spot.Z)
+	return CFrame.lookAt(at,Vector3.new(facing.X,y,facing.Z))
 end
 -- The 21 nest parts, root-local (GARDEN-LIFE-NEST-LOOK 4; degrees, root -Z the front). shape: "cylinder" (axis along
 -- X), "block" or "plate" (a see-through decal plate). texture = {key, faces, u, v, offsetU}; decal = {key, faces}.
@@ -322,6 +338,8 @@ function Client.mount(deps)
 	self.world=deps.world or workspace
 	self.now=deps.now or function()return workspace:GetServerTimeNow()end
 	self.changed=Onboard.changed("nest"):Connect(function()self:sync()end)
+	-- The egg corner moves the nest (and drops the station's Yield): a flip closes and re-opens it where it now stands.
+	self.cornerChanged=Onboard.changed("corner"):Connect(function()self:relocate()end)
 	self:sync()
 	return self
 end
@@ -333,13 +351,33 @@ function Client:sync()
 		if not ok then warn("[Nest] not opened: "..tostring(problem));self.dead=true;pcall(self.close,self)end
 	else self:close()end
 end
+-- The egg corner's switch and the nest's place, read when the nest opens (specs inject deps.corner / deps.split).
+function Client:cornerOn()
+	if self.d.corner~=nil then return self.d.corner()==true end
+	return Corner.on()
+end
+function Client:placeNow()
+	local on=self:cornerOn()
+	local split=if self.d.split~=nil then self.d.split()==true else nil
+	return on,Corner.nestSpot(on,split),if on then Corner.nestFacing()else Client.Facing
+end
+-- A corner flip while open: close and open again at the new place (the view comes back with the next sync).
+function Client:relocate()
+	if not self.isOpen or self.dead then return end
+	local on,spot=self:placeNow()
+	if on==self.corner and spot==self.spot then return end
+	self:close()
+	self:sync()
+end
 function Client:open()
 	self.isOpen=true
 	self.synced=false
 	local d=self.d
-	-- Beta 14 D1: the station's E / ButtonX steps aside where the nest's prompt can act and is nearer.
+	self.corner,self.spot,self.facing=self:placeNow()
+	-- Beta 14 D1: the station's E / ButtonX steps aside where the nest's prompt can act and is nearer. Not in the egg
+	-- corner: the station is the machine, far from the nest.
 	self.yield=function(position,part)return self:claims(position,part)end
-	Stations.Yield.Eggs=self.yield
+	if not self.corner then Stations.Yield.Eggs=self.yield end
 	-- Per-frame work only while on (off: the switch is watched, nothing else).
 	if d.step~=false and not self.heartbeat then
 		-- R5: the connection has its own field (self.beat is the speech beat; sharing it crashed the first frame).
@@ -383,6 +421,7 @@ function Client:send(kind)
 end
 function Client:clear()
 	if self.folder then self.folder:Destroy();self.folder=nil end
+	if self.hosted then self.hosted:Destroy();self.hosted=nil end
 	self.signWords=nil
 	if self.chip then self.chip.button:Destroy();self.chip=nil end
 	self.view,self.drawn,self.egg,self.hatching,self.waiting,self.queued,self.tuck=nil,nil,nil,nil,nil,nil,nil
@@ -403,6 +442,7 @@ function Client:destroy()
 	if self.destroyed then return end
 	self.destroyed=true;self.dead=true
 	self.changed:Disconnect()
+	if self.cornerChanged then self.cornerChanged:Disconnect()end
 	self:close()
 end
 function Client:play(name,speed,volume)
@@ -455,19 +495,20 @@ function Client:paintSign()
 	for _,words in ipairs(list)do if words.Text~=text then words.Text=text end end
 end
 function Client:groundY()
-	local y=Client.Spot.Y
+	local spot=self.spot or Client.Spot
+	local y=spot.Y
 	local ground=self.d.ground
 	if ground then
-		local ok,hit=pcall(ground,Client.Spot)
+		local ok,hit=pcall(ground,spot)
 		-- Only the lawn: a hit far from the walk map's ground is a pet, a player or a prop standing there.
-		if ok and finite(hit)and math.abs(hit-Client.Spot.Y)<=Client.GroundSlack then y=hit end
+		if ok and finite(hit)and math.abs(hit-spot.Y)<=Client.GroundSlack then y=hit end
 	end
 	return y
 end
 function Client:draw()
 	local folder=make("Folder",self.world,{Name=Client.Folder})
 	self.folder=folder
-	self.root=Client.frame(self:groundY())
+	self.root=Client.frame(self:groundY(),self.spot,self.facing)
 	for _,spec in ipairs(Client.parts())do
 		local p=inert(make("Part",nil,{Name=spec.name}))
 		p.Material=if spec.wood then Enum.Material.Wood else Enum.Material.SmoothPlastic
@@ -503,6 +544,7 @@ function Client:draw()
 		end
 		p.Parent=folder
 	end
+	if self.corner and self.spot==Corner.NestSpot then self:drawGround(folder)end
 	-- The egg: an invisible anchor at its base carries the halo, the label, the light and the emitters; the shells
 	-- (or a lilac ball until the meshes load) are posed from it every frame.
 	local anchor=inert(make("Part",nil,{Name="SleepyEgg",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
@@ -531,8 +573,12 @@ function Client:draw()
 	-- 220 x 80 with the pill at its bottom (SizeOffset lifts the board so its bottom sits where the old pill's top
 	-- line did), so a one-line pill never jumps when the text changes. MaxDistance is a backstop; paintPill shows it.
 	local P=Client.Pill
-	local board=make("BillboardGui",anchor,{Name="Label",LightInfluence=0,AlwaysOnTop=false,MaxDistance=60,Size=UDim2.fromOffset(P.board.X,P.board.Y),
-		SizeOffset=Vector2.new(0,.5),Enabled=false})
+	-- The egg corner: a billboard under a workspace part never gets clicks, so the board lives in deps.gui() (PlayerGui)
+	-- with the egg's anchor as its Adornee; it goes with the folder (clear()).
+	local host=if self.corner and self.d.gui then self.d.gui()else nil
+	local board=make("BillboardGui",host or anchor,{Name="Label",LightInfluence=0,AlwaysOnTop=false,MaxDistance=60,Size=UDim2.fromOffset(P.board.X,P.board.Y),
+		SizeOffset=Vector2.new(0,.5),Enabled=false,Adornee=anchor,Active=host~=nil,ResetOnSpawn=false})
+	if host then self.hosted=board end
 	local pill=make("Frame",board,{Name="Pill",AnchorPoint=Vector2.new(.5,1),Position=UDim2.fromScale(.5,1),Size=UDim2.fromOffset(160,P.one),
 		BackgroundColor3=Client.Color.cream,BorderSizePixel=0})
 	corner(pill)
@@ -540,6 +586,7 @@ function Client:draw()
 	egg.clock=label(pill,"Clock",P.text,Client.Color.ink)
 	make("UIPadding",pill,{PaddingLeft=UDim.new(0,P.pad),PaddingRight=UDim.new(0,P.pad)})
 	egg.board,egg.pill=board,pill
+	if self.corner then self:buildHelp(egg)end
 	-- The prompt, at the front of the nest (where the Bear's prints end).
 	local spot=inert(make("Part",nil,{Name="SleepyNestPrompt",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
 	spot.CFrame=self.root*CFrame.new(Client.PromptAt)
@@ -556,6 +603,86 @@ function Client:draw()
 	self.egg=egg
 	self.drawn=true
 	self:meshes()
+end
+-- The egg corner's nest on plain marble (R2 3): a soft contact shadow (concentric see-through discs on one plate) and
+-- the straw and leaf scatter (EggCorner.scatter), root-local, inert, no shadow.
+Client.ScatterColor=table.freeze({straw=Color3.fromHex("#C9A560"),leaf=Color3.fromHex("#5E8A3A")})
+function Client:drawGround(folder)
+	local S=Corner.Shadow
+	local plate=inert(make("Part",nil,{Name="NestShadow",Transparency=1,Size=Vector3.new(S.radius*2,.02,S.radius*2)}))
+	plate.CFrame=self.root*CFrame.new(0,.012,0)
+	local surface=make("SurfaceGui",plate,{Name="Shadow",Face=Enum.NormalId.Top,LightInfluence=1,
+		SizingMode=Enum.SurfaceGuiSizingMode.PixelsPerStud,PixelsPerStud=20})
+	for k=1,S.rings do
+		local scale=k/S.rings
+		local ring=make("Frame",surface,{Name="Ring"..k,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(scale,scale),
+			BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=S.transparency,BorderSizePixel=0})
+		corner(ring)
+	end
+	plate.Parent=folder
+	local prompt=Vector3.new(Client.PromptAt.X,0,Client.PromptAt.Z)
+	for index,bit in ipairs(Corner.scatter(self.root,Client.BearSpot,prompt))do
+		local p=inert(make("Part",nil,{Name=(if bit.leaf then "ScatterLeaf"else "ScatterStraw")..index,Material=Enum.Material.SmoothPlastic,
+			Color=if bit.leaf then Client.ScatterColor.leaf else Client.ScatterColor.straw,
+			Size=if bit.leaf then Vector3.new(.22,.02,bit.length)else Vector3.new(.06,.02,bit.length)}))
+		p.CFrame=self.root*CFrame.new(bit.at.X,.02,bit.at.Z)*CFrame.Angles(0,math.rad(bit.yaw),0)
+		p.Parent=folder
+	end
+end
+-- The egg corner's "?" disc on the pill (44 px hit, 24 drawn) and a tap target over the pill's words; both call help().
+function Client:buildHelp(egg)
+	local H=Client.Help
+	local pill=egg.pill
+	local function tapped()
+		local ok,problem=pcall(self.help,self)
+		if not ok then warn("[Nest] "..tostring(problem))end
+	end
+	local tap=make("TextButton",pill,{Name="HelpTap",Text="",BackgroundTransparency=1,AutoButtonColor=false,Selectable=false,
+		Size=UDim2.new(1,-(H.drawn+H.gap),1,0),ZIndex=3})
+	local hit=make("TextButton",pill,{Name="HelpDisc",Text="",BackgroundTransparency=1,AutoButtonColor=false,Selectable=false,
+		AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,(H.hit-H.drawn)/2+4,.5,0),Size=UDim2.fromOffset(H.hit,H.hit),ZIndex=4,Visible=false})
+	hit:SetAttribute("AccessibleLabel",UICopy.get("onb3.nest.helpAsk"))
+	local disc=make("Frame",hit,{Name="Disc",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(H.drawn,H.drawn),
+		BackgroundColor3=Client.Color.cream,BorderSizePixel=0,ZIndex=4})
+	corner(disc)
+	egg.helpStroke=make("UIStroke",disc,{Color=Client.Color.ink,Thickness=2})
+	local mark=label(disc,"Mark",15,Client.Color.ink)
+	mark.Text="?";mark.ZIndex=5;mark.AutoLocalize=false
+	egg.helpScale=make("UIScale",disc,{Scale=1})
+	egg.help,egg.helpDisc,egg.helpMark,egg.helpTap=hit,disc,mark,tap
+	for _,button in ipairs({tap,hit})do
+		local activated=button.Activated
+		if typeof(activated)=="RBXScriptSignal"then table.insert(self.connections,activated:Connect(tapped))end
+	end
+end
+-- The "?" card (the disc, the pill, or Peek): deps.help(self). False when there is nothing to explain.
+function Client:help()
+	if not self.isOpen or not self.view or not self.d.help then return false end
+	local ok,shown=pcall(self.d.help,self)
+	return ok and shown~=false
+end
+-- The card's words for the view (EGG-CORNER-LOOK 3; UICopy onb3.nest.help). Pure: {title, live, lines = {{key, text}}}.
+-- `live` is the clock line ("Hatches in 8 h", and "Egg 2 of 7" in the welcome week); a ready egg says "Hatch me!".
+Client.HelpOrder=table.freeze({"what","time","gift","inside","free","next","wait"})
+Client.HelpDropFirst="next"
+function Client.helpCard(view,now)
+	local left=Client.left(view,now)
+	local live=(Client.clock(left))
+	if left>0 and view.egg<=Nest.WeekLength then live=live.." · "..UICopy.get("onb3.nest.count",{count=view.egg})end
+	local lines={}
+	for _,key in ipairs(Client.HelpOrder)do
+		local text=if key=="inside"then Client.inside(view)
+			elseif key=="time"then UICopy.get("onb3.nest.help.time",{hours=Nest.Hours})
+			else UICopy.get("onb3.nest.help."..key)
+		table.insert(lines,{key=key,text=text})
+	end
+	return{title=UICopy.get("onb3.nest.help.title"),live=live,ready=left<=0,lines=lines,button=UICopy.get("onb3.nest.help.button"),
+		icon=Client.Assets.chip}
+end
+-- The card's model now (nil without a view): init's card asks it once a second while it is open.
+function Client:helpNow()
+	if not self.isOpen or not self.view then return nil end
+	return Client.helpCard(self.view,self.now())
 end
 -- The real shells (the existing egg mesh with the Sleepy ColorMap) take the ball's place once they load.
 function Client:meshes()
@@ -591,11 +718,14 @@ function Client:paint(fresh)
 	end
 	-- Tuck in while it grows (once per egg), Hatch when it is ready; nothing while a hatch is asked for or playing.
 	local action=nil
-	if look=="ready"then action="hatch"elseif not view.tucked and not self.tuck then action="tuck"end
+	if look=="ready"then action="hatch"elseif not view.tucked and not self.tuck then action="tuck"
+	elseif self.corner and self.d.help and(view.tucked or(self.tuck~=nil and self.tuck.t>=Client.TuckSeconds))then
+		action="peek" -- the egg corner: Peek opens the "?" card
+	end
 	local free=(self.d.free==nil or self.d.free()==true)and(self.d.busy==nil or self.d.busy()~=true)
 	local enabled=action~=nil and free and not self.waiting and not self.hatching and self.clock>=(self.promptAfter or -math.huge)
 	self.action=action
-	local actionText=UICopy.get(if action=="hatch"then "onb3.nest.hatch"else "onb3.nest.tuck")
+	local actionText=UICopy.get(if action=="hatch"then "onb3.nest.hatch"elseif action=="peek"then "onb3.nest.peek"else "onb3.nest.tuck")
 	if egg.prompt.ActionText~=actionText then egg.prompt.ActionText=actionText end
 	if egg.prompt.Enabled~=enabled then egg.prompt.Enabled=enabled end
 	self:paintChip(left,look)
@@ -700,6 +830,8 @@ function Client:act()
 		if not self:send("claim")then return false end
 		self.waiting={t=0}
 		return true
+	elseif self.action=="peek"then
+		return self:help()
 	end
 	return false
 end
@@ -927,7 +1059,7 @@ function Client:paintPill()
 	end
 	local beat=self.beat
 	local row=Client.row(view,{beat=beat,look=self.lookNow,left=Client.left(view,self.now()),near=distance,tucked=view.tucked or self.tuck~=nil,
-		bubble=bubble,compact=d.compact~=nil and d.compact()==true})
+		bubble=bubble,compact=d.compact~=nil and d.compact()==true,corner=self.corner==true})
 	local alpha=Client.fade(distance,row.show[1],row.show[2])
 	if beat then
 		local t,length=self.clock-beat.at,beat.untilT-beat.at
@@ -938,7 +1070,7 @@ function Client:paintPill()
 	for _,item in ipairs(self.beats)do if item.kind=="peek"then alpha=1 end end
 	if d.focus~=nil and d.focus()==true then alpha=1 end
 	if self:reduced()and alpha<1 then alpha=0 end
-	local key=row.row..":"..row.text..":"..row.size..":"..tostring(row.lift)
+	local key=row.row..":"..row.text..":"..row.size..":"..tostring(row.lift)..":"..tostring(row.help)
 	if egg.rowKey~=key then
 		egg.rowKey=key
 		local P=Client.Pill
@@ -949,7 +1081,14 @@ function Client:paintPill()
 		if small then size=P.small end
 		egg.clock.TextSize=size
 		egg.clock.TextWrapped=lines>1
+		if row.help and egg.help then width+=Client.Help.drawn+Client.Help.gap end
 		egg.pill.Size=UDim2.fromOffset(width,height)
+		if egg.help then
+			egg.help.Visible=row.help==true
+			egg.helpTap.Visible=row.help==true
+			-- The words keep left of the disc.
+			egg.clock.Size=if row.help then UDim2.new(1,-(Client.Help.drawn+Client.Help.gap),1,0)else UDim2.fromScale(1,1)
+		end
 		egg.pill.Position=UDim2.new(.5,0,1,if row.lift then -P.lift else 0)
 		egg.pill.BackgroundColor3=if row.gold then Client.Color.stars else Client.Color.cream
 		egg.board.AlwaysOnTop=row.onTop
@@ -959,7 +1098,30 @@ function Client:paintPill()
 		egg.alpha=alpha
 		egg.board.Enabled=alpha<1
 		egg.pill.BackgroundTransparency=alpha;egg.pillStroke.Transparency=alpha;egg.clock.TextTransparency=alpha
+		if egg.helpDisc then egg.helpDisc.BackgroundTransparency=alpha;egg.helpStroke.Transparency=alpha;egg.helpMark.TextTransparency=alpha end
 	end
+	self:paintPulse(egg,row,alpha)
+end
+-- The "?" disc's two first-time pulses (once ever: deps.helpPulse() says it is due, deps.helpPulsed() saves the bit),
+-- the first time the disc shows after a tuck-in. Reduced Motion: none (the bit is still saved).
+function Client:paintPulse(egg,row,alpha)
+	if not egg.helpScale then return end
+	local H=Client.Help
+	local pulse=self.pulse
+	if not pulse and row.help and alpha<.5 and self.view and(self.view.tucked or self.view.n>=1)and not self.pulseAsked then
+		self.pulseAsked=true
+		local d=self.d
+		if d.helpPulse and d.helpPulse()==true then
+			if d.helpPulsed then pcall(d.helpPulsed)end
+			if not self:reduced()then self.pulse={at=self.clock};pulse=self.pulse end
+		end
+	end
+	if not pulse then return end
+	local t=self.clock-pulse.at
+	local length=H.pulseSeconds*H.pulses
+	if t>=length then self.pulse=nil;egg.helpScale.Scale=1;return end
+	local p=(t%H.pulseSeconds)/H.pulseSeconds
+	egg.helpScale.Scale=1+(H.pulse-1)*math.sin(p*math.pi)
 end
 function Client:place(frame,s,squash,top,bottomFade,core)
 	local egg=self.egg

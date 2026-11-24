@@ -43,15 +43,16 @@ Coach.Bits=table.freeze({
 	needPark=24,
 	nestIntro=25,     -- the "New in the garden" / "{pet} has a nest now." ticket for returning and veteran saves
 	weekDone=26,      -- the "Welcome week done!" card after the seventh Sleepy egg
+	nestHelp=27,      -- the egg corner: the napping egg's "?" pulsed its two first-time pulses (EGG-CORNER-LOOK 3)
 })
 Coach.Order=table.freeze({"fillLine","gardenIntro","hatch","style","companions","quests","book","park","item","questDone","petArrived","parkInvite","dashIntro","dashSeen","findsIntro",
-	"tipHatch","tipStyle","tipCompanions","tipPark","tipNest","needHi","needToy","needDeck","needNest","needPark","nestIntro","weekDone"})
+	"tipHatch","tipStyle","tipCompanions","tipPark","tipNest","needHi","needToy","needDeck","needNest","needPark","nestIntro","weekDone","nestHelp"})
 -- Cards of a build that has its own switch, and the part of it they belong to: refused while it is off.
 Coach.Gated=table.freeze({parkInvite="tips",dashIntro="tips",dashSeen="page",findsIntro="tips",
 	tipHatch="follow",tipStyle="follow",tipCompanions="follow",tipPark="follow",tipNest="nest",
-	needHi="needs",needToy="needs",needDeck="needs",needNest="nest",needPark="needs",nestIntro="nest",weekDone="nest"})
+	needHi="needs",needToy="needs",needDeck="needs",needNest="nest",needPark="needs",nestIntro="nest",weekDone="nest",nestHelp="corner"})
 -- The switch module (a Shared sibling) that owns each part named in Gated; its .allows(part) decides.
-Coach.GateOwner=table.freeze({page="Things",tips="Things",follow="Onboard",needs="Onboard",nest="Onboard"})
+Coach.GateOwner=table.freeze({page="Things",tips="Things",follow="Onboard",needs="Onboard",nest="Onboard",corner="Onboard"})
 Coach.Max=2^31-1 -- the stored range (bits 0..30); unknown bits from a later build are kept
 
 -- The Welcome round is the first Stars round: the starter grant pays this with the Bear,

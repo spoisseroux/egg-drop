@@ -502,7 +502,18 @@ function Cinematic:refreshOwner()
  self:publishDiagnostics("clockReady")
 end
 -- A host stage holding the clock (its toy lid is still closing, or it waits for the scene).
-function Cinematic:held()return self.clockHold~=nil and self.clockHold()==true end
+-- The egg corner's buy crank (EggMachineClient): Cinematic.gate(cinematic) holds the clock of the one reveal the buy
+-- started until the egg lands in the machine's cup (at most 1 s after the press). Cinematic.onPlay(cinematic) tells it
+-- which reveal that is. Both nil (live, the corner off): exactly as before.
+Cinematic.gate=nil
+Cinematic.onPlay=nil
+function Cinematic:gated()
+ local gate=Cinematic.gate
+ if gate==nil then return false end
+ local ok,held=pcall(gate,self)
+ return ok and held==true
+end
+function Cinematic:held()return(self.clockHold~=nil and self.clockHold()==true)or self:gated()end
 function Cinematic:playBody()
  if not self.bodyPending or self:held()or self.age<(self.timing and self.timing.bodyAt or 0)then return end
  self.bodyPending=false
@@ -576,6 +587,7 @@ function Cinematic:play(result,onComplete,options)
  self.nativeDisplay=options.nativeDisplay==true
  self.reducedIntro=self.nativeDisplay and self.freshReveal and self:reduced()
  self.tier=RarityCue.tier(self.kind,result);self.bodyPending=false
+ if Cinematic.onPlay then pcall(Cinematic.onPlay,self)end
  self.timing=RarityCue.timing(self.tier,self.kind,false)
  local T=RarityCue.timing(self.tier,self.kind,self.reducedIntro)
  self.rarityState=if self.nativeDisplay then RarityCue.new(self.kind,result,T.ready,self.reducedIntro)else nil
@@ -586,6 +598,8 @@ function Cinematic:play(result,onComplete,options)
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end
 function Cinematic:skip()
+ -- The crank beat cannot be skipped (it is under a second); finishStatic would ignore the hold.
+ if self:gated()then return false end
  if self.nativeScene and self.presentationSample and self.presentationSample.receiptReady then return false end
  -- v2 (2.2): the first hatch of each egg type plays in full; the host says (canSkip).
  if self.canSkip and not self.canSkip()then return false end

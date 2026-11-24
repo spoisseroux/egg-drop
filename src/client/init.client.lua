@@ -707,7 +707,7 @@ roomView.canRoam=function()return LoungeStations.canRoam(stationContext())end
 roomView.stations=LoungeStations.new({player=player,read=stationContext,
 	lounge=function()return workspace:FindFirstChild("EggDropLounge")end,
 	triggered=ProximityPromptService.PromptTriggered,routes={
-		Customize=function()if openPicker("Shell",nil,"workbench")then clientUI.accepted("confirm")end end,Journal=function()if roomView.care and roomView.care:station()then clientUI.accepted("confirm")end end,Eggs=function()if visitEggs()then clientUI.accepted("confirm")end end,
+		Customize=function()if openPicker("Shell",nil,"workbench")then clientUI.accepted("confirm")end end,Journal=function()if roomView.care and roomView.care:station()then clientUI.accepted("confirm")end end,Eggs=function()if clientUI.eggCornerTurn and clientUI.eggCornerTurn(visitEggs)then return end;if visitEggs()then clientUI.accepted("confirm")end end,
 	}})
 -- W2 station attract (icon, shaft, ring, ping); "used" is session memory on this client.
 clientUI.attract=require(script.StationAttract).new({player=player,read=stationContext,triggered=ProximityPromptService.PromptTriggered,
@@ -962,6 +962,12 @@ end)
 nurseryView = NurseryView.new(safeOverlays, audio, reduceEffects, function(actionName, value, revision)
 	nurseryRequest:FireServer(actionName, value, revision)
 end)
+-- The item eggs' sends (hue, look, material, toy, feature): the egg corner's buy crank hears each press first
+-- (clientUI.eggPressed, set only where the corner is mounted; a retried send carries the same value.id).
+function clientUI.sendNursery(action,value,revision)
+ if clientUI.eggPressed then pcall(clientUI.eggPressed,action,value)end
+ nurseryRequest:FireServer(action,value,revision)
+end
 -- Robux store page inside the egg shop. Server-initiated prompts only.
 clientUI.storeView=require(script.StoreView).new(nurseryView.shade,{reduceEffects=reduceEffects,
  request=function(actionName,key)if clientUI.storeRequest then clientUI.storeRequest:FireServer(actionName,key)end end})
@@ -1027,16 +1033,16 @@ end
 clientUI.hueIntent=clientUI.HueIntent.new({
  id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("hue")end,
- send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.materialIntent=require(script.MaterialIntent).new({id=function()return HttpService:GenerateGUID(false)end,
- available=function()return clientUI.itemAvailable("material")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ available=function()return clientUI.itemAvailable("material")end,send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.toyIntent=require(script.ToyIntent).new({id=function()return HttpService:GenerateGUID(false)end,
- available=function()return clientUI.itemAvailable("toy")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ available=function()return clientUI.itemAvailable("toy")end,send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.syncFirstSpend then clientUI.syncFirstSpend(clientUI.toyIntent.state)end;if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.featureIntent=require(script.FeatureIntent).new({id=function()return HttpService:GenerateGUID(false)end,
- available=function()return clientUI.itemAvailable("feature")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ available=function()return clientUI.itemAvailable("feature")end,send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  materialIntent=clientUI.materialIntent,toyIntent=clientUI.toyIntent,featureIntent=clientUI.featureIntent,
@@ -4729,6 +4735,11 @@ do
     return roomView.focusing==true or roomView.focusTransitioning==true or(roomView.greetingCamera~=nil and roomView.greetingCamera~=false)
    end,
    show=function()local things=clientUI.things;return things~=nil and things.show("nest")end,
+   -- The egg corner (its own block below): the pill's board host, the "?" card and its first-time pulse.
+   gui=function()return player:FindFirstChildOfClass("PlayerGui")end,
+   help=function(nest)return clientUI.openNestHelp~=nil and clientUI.openNestHelp(nest)==true end,
+   helpPulse=function()return clientUI.nestHelpDue~=nil and clientUI.nestHelpDue()==true end,
+   helpPulsed=function()if clientUI.nestHelpSeen then clientUI.nestHelpSeen()end end,
    -- Beta 14 Q2: the need bubble (BubbleHold's state and the pet), so the pill never shares the screen with it.
    bubble=function()
     local hold=clientUI.needBubble
@@ -4760,7 +4771,8 @@ do
   -- Beta 14 D1: the Hatch eggs screen's quiet napping-egg row. In the garden a tap lays the trail; from the Deck it
   -- leaves first (F1's stripRoute("nest")).
   nurseryView.nest={
-   row=function()return if Onboard.on("nest")then require(script.NestClient).menuRow(clientUI.nest:summary())else nil end,
+   -- The egg corner removes the row (EGG-CORNER-LOOK 4): the list starts at the first egg type.
+   row=function()return if Onboard.on("nest")and not Onboard.on("corner")then require(script.NestClient).menuRow(clientUI.nest:summary())else nil end,
    garden=function()return board:GetAttribute("Mode")=="Room"end,
    show=function()
     if board:GetAttribute("Mode")=="Room"then local things=clientUI.things;return things~=nil and things.show("nest")==true end
@@ -4773,6 +4785,114 @@ do
  end)
  if ok and clientUI.nest then gui.Destroying:Connect(function()clientUI.nest:destroy()end)
  elseif not ok then warn("[Nest] not mounted: "..tostring(problem))end
+end
+function clientUI.eggCornerMount(Onboard)
+ local Corner=require(ReplicatedStorage.Shared.EggCorner)
+ local Coach=require(ReplicatedStorage.Shared.CoachMarks)
+ local How=require(script.HowItWorks)
+ local Haptics=game:GetService("HapticService")
+ local function on()return Onboard.on("corner")end
+ local function lounge()return workspace:FindFirstChild("EggDropLounge")end
+ local function haptic(strength)
+  -- Gamepads only: Roblox has no phone haptics.
+  local pad=Enum.UserInputType.Gamepad1
+  if not Haptics:IsVibrationSupported(pad)or not Haptics:IsMotorSupported(pad,Enum.VibrationMotor.Small)then return end
+  Haptics:SetMotor(pad,Enum.VibrationMotor.Small,if strength=="medium"then .6 else .3)
+  task.delay(if strength=="medium"then .06 else .035,function()pcall(Haptics.SetMotor,Haptics,pad,Enum.VibrationMotor.Small,0)end)
+ end
+ local machine=require(script.EggMachineClient).new({room=lounge,corner=on,
+  reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+  root=function()
+   local character=player.Character
+   local root=character and character:FindFirstChild("HumanoidRootPart")
+   return root and root.Position or nil
+  end,
+  camera=function()local camera=workspace.CurrentCamera;return camera and camera.CFrame.Position or nil end,
+  audio={play=function(_,name,speed,volume)return audio:play(name,speed,volume)end},haptic=haptic})
+ clientUI.eggMachine=machine
+ gui.Destroying:Connect(function()machine:destroy()end)
+ -- The machine's model (the server's), or nil while the corner is off.
+ local function model()local room=lounge();local found=room and room:FindFirstChild("EggMachine");return found end
+ -- `Turn`: the open crank, then the screen at .3 (visitEggs checks again then); a second press inside a crank is ignored.
+ function clientUI.eggCornerTurn(visit)
+  if not on()then return false end
+  if machine:openCrank()then
+   task.delay(require(script.EggMachineClient).Open.openAt,function()if visit()then clientUI.accepted("confirm")end end)
+  elseif visit()then
+   -- Review 1: a crank is still turning: the screen opens at once, the press is never eaten.
+   clientUI.accepted("confirm")
+  end
+  return true
+ end
+ -- A buy press (before the remote): the buy crank. value.id makes a retried send the same press.
+ function clientUI.eggPressed(action,value)
+  if not on()then return end
+  machine:bought(action,type(value)=="table"and value.id or nil)
+ end
+ -- The egg in the cup fades FadeAfter after the hatch screen that showed its reveal closes (Hatch eggs or the egg page).
+ local function watchClose(shade)
+  if not shade then return end
+  shade:GetPropertyChangedSignal("Visible"):Connect(function()if not shade.Visible then machine:revealClosed()end end)
+ end
+ watchClose(nurseryView and nurseryView.shade)
+ watchClose(clientUI.hueView and clientUI.hueView.shade)
+ local snacks=clientUI.snacks
+ local intent=snacks and snacks.intent
+ if intent and type(intent.send)=="function"then
+  local send=intent.send
+  intent.send=function(self,action,payload,...)
+   if action=="statEggBuy"then pcall(clientUI.eggPressed,action,nil)end
+   return send(self,action,payload,...)
+  end
+ end
+ -- The Hatch eggs trail's end, in front of the machine.
+ function clientUI.eggCornerPlace()
+  if not on()then return nil end
+  local found=model()
+  local y=if found then found:GetPivot().Y else nil
+  return Corner.trailEnd(y)
+ end
+ -- The "?" card: the nest's words, asked again once a second while open.
+ function clientUI.openNestHelp(nest)
+  if not on()or How.isOpen()then return false end
+  return How.open("nest",{list=function()return nest:helpNow()end})
+ end
+ function clientUI.nestHelpDue()
+  return on()and clientUI.coach~=nil and not Coach.has(clientUI.coach.mask,"nestHelp")and Coach.allows("nestHelp")
+ end
+ function clientUI.nestHelpSeen()if clientUI.coach then clientUI.coach:mark("nestHelp")end end
+ -- The Eggs pin and ring: over the machine (top + 1.6, ring r 3.6) while on, back on the old station while off.
+ local function attract()
+  local entries=clientUI.attract
+  if not entries then return end
+  local found=on()and model()
+  if found then
+   local pivot=found:GetPivot()
+   local _,size=found:GetBoundingBox()
+   local top=(found:GetBoundingBox().Position.Y+size.Y/2)-pivot.Y
+   entries:move("Eggs",pivot.Position,{iconHeight=Corner.pinHeight(top),ring=Corner.Ring})
+  else
+   local World=require(ReplicatedStorage.Shared.HollowWorldLayout)
+   local station=World.Stations and World.Stations.Eggs
+   if station then entries:move("Eggs",station.Position,nil)end
+  end
+ end
+ Onboard.changed("corner"):Connect(function()task.delay(.5,attract)end)
+ local room=lounge()
+ if room then room.ChildAdded:Connect(function(child)if child.Name=="EggMachine"then task.defer(attract)end end)end
+ attract()
+end
+-- The egg corner (EGG-CORNER-BUILD-PLAN; EggCorner, EggMachineClient): onboarding v3 places only (beta, Studio). The
+-- egg machine's motion, its open and buy cranks and the reveal hold; the Eggs pin and ring follow the machine; the
+-- nest's "?" card and its first-time pulse; the Hatch eggs trail's end. With the corner off every hook answers nil and
+-- the garden is the one before. Live: the ceiling is false and none of this exists.
+do
+ local ok,problem=pcall(function()
+  local Onboard=require(ReplicatedStorage.Shared.Onboard)
+  if not Onboard.ceiling()then return end
+  clientUI.eggCornerMount(Onboard)
+ end)
+ if not ok then warn("[EggCorner] not mounted: "..tostring(problem))end
 end
 -- Garden life (GardenLife, Alive step 5): nil with the build ceiling off; with the switch off it only watches the switch.
 -- Petals, bubbles, birds on the perch AmbientAudio's chirp came from (it sets clientUI.ambient.onChirp while on) and
@@ -5060,7 +5180,11 @@ do
     nest=function()return nestAt()~=nil end,park=function()return Attract.parkAnchor()~=nil end,
     prompt=function()return roomView:stationInReach()==true end,
     place=function(where)
-     if where=="Eggs"then local entry=clientUI.attract.stations.Eggs;return entry and entry.base,Copy.get("r5.station.Eggs.name")end
+     if where=="Eggs"then
+      local machine=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
+      if machine then return machine,Copy.get("r5.station.Eggs.name")end
+      local entry=clientUI.attract.stations.Eggs;return entry and entry.base,Copy.get("r5.station.Eggs.name")
+     end
      if where=="Park"then local from=rootPosition();return from and parkGate(from),Copy.get("park.name")end
      if where=="Nest"then return nestAt(),Copy.get("onb3.nest.title")end
      return nil
