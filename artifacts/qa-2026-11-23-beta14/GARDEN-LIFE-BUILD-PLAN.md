@@ -592,7 +592,7 @@ for the mote (or `heart-mote.png` 64 x 64 if Fable wants a softer one: question 
 
 ## 12. As built (2026-11-24), architect r1 "GO WITH CHANGES" applied
 
-Branch `worktree-agent-a25638addc7cc4aa6` (rebased onto feat 82a9a8d, the Hush merge). Offline runner green (58 specs). Nothing seen in
+Branch `worktree-agent-a25638addc7cc4aa6` (rebased onto feat 6b23b91, after the Hush and nest/race line merges). Offline runner green (60 specs). Code review r1 fixes applied (walk-back checks, fruit size until upload, release on teardown). Nothing seen in
 Studio. Architect answers: A1 clamp (falling leaves read `Wind.gust` only; the breath raises the rate x3 and runs the
 scud; `LifeSim.spec` replaces `Wind.breath/blow/swayAt` with a thrower during the drift run); A2 detour approved, notice
 reach **8**, abort when the drawn pet is 8+ studs from its server spot, built last; A3 new Alive features **`scene`** and
