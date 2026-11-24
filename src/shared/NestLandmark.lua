@@ -17,11 +17,25 @@ Land.Block=5.6          -- the pets' box (was Nest.Block 4.2)
 Land.Front=3.5          -- the prompt, the Show me trail's end and a catch-up landing (was Nest.Front 2.6)
 Land.PromptAt=Vector3.new(0,1.0,-3.5)
 Land.BearSpot=Vector3.new(-2.9,0,-2.0) -- on the baked straw mat
+-- The mat as a pet rest anchor (Studio check R10): the Bear curls there through the garden's own nook rest (exclusive,
+-- one pet), and the nest's pet box has a hole of this radius round it so the way in is allowed (that spot only).
+Land.RestId="sleepy_nest"
+Land.HoleRadius=1.3
+-- The nest's rest anchor in world space for a nest root (CFrame on the floor): {id, position, exclusive}.
+function Land.restAnchor(root)
+	local at=root*Land.BearSpot
+	return{id=Land.RestId,position=Vector3.new(at.X,root.Y+.025,at.Z),exclusive=true}
+end
 Land.PillAt=5.2         -- the pill's bottom edge over the root, fixed (it no longer rides the egg's scale)
 Land.PeekAt=5.6         -- the gift peek tile's bottom
+-- Fable R10 2: the pill moves forward off the awning's front leaf, not the leaf: both sit 1.0 in front of the root
+-- (nest-local -Z), a fixed world offset, never AlwaysOnTop.
+Land.PillForward=1.0
 Land.ZzzAt=Vector3.new(.4,4.6,0)
 Land.PinAt=8.2          -- the "Hatch!" pin (Show me) over the root: the top + 1.6
-Land.EggScale=1.3       -- every look of today's egg, times this
+-- Fable R10 1: the egg's scale per look (today's twig-nest scales are 1.25 / 1.6 / 2 / 2): ready is today's ready egg,
+-- its top at 4.75, .45 under the pill.
+Land.EggScales=table.freeze({small=1.6,glow=1.75,rocking=1.9,ready=2.0})
 Land.EggBase=2.15       -- the egg's base over the root (the straw bed's dent)
 Land.Sign=table.freeze({centre=Vector3.new(0,1.15,-2.45),size=Vector3.new(1.7,.85,.1),tiltBack=10})
 Land.Shadow=3.3         -- the contact shadow's radius (was 3.0)

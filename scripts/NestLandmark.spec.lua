@@ -26,8 +26,10 @@ return function(server)
 		assert(d.pivots.Moon and d.pivots.Awning and d.pivots.BlanketDraped and d.pivots.BlanketFolded)
 		assert(d.collider.radius==2.4 and d.collider.height==2.75)
 		for _,name in ipairs({"Body","Awning","Moon","BlanketDraped","BlanketSlipped","BlanketFolded"})do assert(d.parts[name],name)end
-		-- Today's egg (1.25 x 1.63 at its ready look) times 1.3 is the landmark's 1.6 x 2.1.
-		assert(near(1.25*Land.EggScale,1.625,1e-9)and near(1.63*Land.EggScale,2.119,1e-9))
+		-- Fable R10 1: per-look scales; ready is today's ready egg (scale 2: 1.3 tall at 1, so its top at 2.15 + 2.6 = 4.75).
+		local S=Land.EggScales
+		assert(S.small==1.6 and S.glow==1.75 and S.rocking==1.9 and S.ready==2.0)
+		assert(near(Land.EggBase+1.3*S.ready,4.75,1e-9)and near(Land.PillAt-(Land.EggBase+1.3*S.ready),.45,1e-9))
 	end)
 	test("footprint: pets keep Block / 2 + .35 off; the prompt stands outside that box and the collider; the Bear on the mat",function()
 		assert(Land.Block==5.6 and Land.Front==3.5 and Land.PromptAt==Vector3.new(0,1,-3.5))
@@ -41,7 +43,8 @@ return function(server)
 		local d=Land.data()
 		assert(Land.PillAt>d.moonTop[2]and Land.PeekAt>Land.PillAt)
 		assert(near(Land.PinAt,6.6+1.6,1e-9))
-		assert(Land.EggBase+d.egg.size[2]<Land.PillAt,"the ready egg's top under the pill")
+		assert(Land.EggBase+1.3*Land.EggScales.ready<Land.PillAt,"the ready egg's top under the pill")
+		assert(Land.PillForward==1.0)
 	end)
 	test("the blanket: folded when empty or untucked, draped when tucked, slipped when ready",function()
 		assert(Land.blanket(false,false,false)=="folded"and Land.blanket(false,true,true)=="folded")
@@ -72,6 +75,35 @@ return function(server)
 	end)
 	test("the unroll: .2 to 1 over .6 s",function()
 		assert(near(Land.unroll(0),.2)and near(Land.unroll(Land.Unroll),1)and Land.unroll(5)==1 and Land.unroll(.3)>.6)
+	end)
+	test("Studio check R10: the Bear's mat is a rest anchor and a hole in the nest's pet box, for that spot only",function()
+		local root=CFrame.lookAt(Vector3.new(-31,4.13,-11),Vector3.new(-30,4.13,-4))
+		local rest=Land.restAnchor(root)
+		assert(rest.id=="sleepy_nest"and rest.exclusive==true and near(rest.position.Y,4.155))
+		local mat=root*Land.BearSpot
+		assert(near(rest.position.X,mat.X)and near(rest.position.Z,mat.Z))
+		local Walk=require(Shared.GardenWalkability)
+		local box=Instance.new("Part")
+		box.CFrame=CFrame.lookAt(Vector3.new(-31,4.5,-11),Vector3.new(-30,4.5,-4));box.Size=Vector3.new(Land.Block,1,Land.Block)
+		box:SetAttribute("GardenBlockedRegion",true);box.Parent=Instance.new("Folder") -- a part that is gone is skipped
+		local wet={box}
+		local function at(x,z)return box.CFrame*Vector3.new(x,0,z)end
+		assert(not Walk.segmentAllowed(at(-2.9,-2),at(-2.9,-2),wet),"no hole (live, or the twig nest): blocked as before")
+		box:SetAttribute("GardenBlockedHole",Land.BearSpot);box:SetAttribute("GardenBlockedHoleRadius",Land.HoleRadius)
+		assert(Walk.segmentAllowed(at(-2.9,-2),at(-2.9,-2),wet),"standing on the mat")
+		assert(Walk.segmentAllowed(at(-5,-2.2),at(-2.9,-2),wet),"walking in from the east (outside the box)")
+		assert(Walk.segmentAllowed(at(-3,-4.5),at(-2.9,-2),wet),"walking in from the front")
+		assert(not Walk.segmentAllowed(at(0,0),at(0,0),wet),"the bowl's middle stays blocked")
+		assert(not Walk.segmentAllowed(at(5,-2),at(-2.9,-2),wet),"never across the bowl to the mat")
+		assert(not Walk.segmentAllowed(at(-1.2,-1.2),at(-1.2,-1.2),wet),"the hole is the mat's, not the bowl's")
+		local Garden=require(server.GardenState)
+		local Layout=require(Shared.GardenLayout)
+		Garden.extraRests=nil
+		assert(Garden.restAnchors()==Layout.RestAnchors,"live: the layout's own anchors, the same table")
+		Garden.extraRests=function()return{rest}end
+		local all=Garden.restAnchors()
+		assert(#all==#Layout.RestAnchors+1 and all[#all]==rest)
+		Garden.extraRests=nil
 	end)
 	return{passed=#cases,cases=cases}
 end

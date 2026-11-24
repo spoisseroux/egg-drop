@@ -11,6 +11,16 @@ function Garden.new(options)
         toy={position=Activity.pack(Layout.Toy)},pairs={},nextGreeting=0},Garden)
 end
 function Garden:token() self.serial+=1;return self.serial end
+-- Extra rest anchors that come and go (beta only: the Sleepy Nest landmark's straw mat, set by EggCornerWorld while the
+-- landmark stands). nil (live): Layout.RestAnchors alone, exactly as before.
+Garden.extraRests=nil
+function Garden.restAnchors()
+    local extra=Garden.extraRests and Garden.extraRests()
+    if type(extra)~="table"or #extra==0 then return Layout.RestAnchors end
+    local all=table.clone(Layout.RestAnchors)
+    for _,rest in ipairs(extra)do table.insert(all,rest)end
+    return all
+end
 function Garden:position(actor,now)
     local sample=Activity.sample(actor,now);return sample and sample.position or self.inputs[actor.ownerId].anchor
 end
@@ -242,7 +252,7 @@ function Garden:wander(actor,input,now)
     local from=self:position(actor,now)
     if now>=(actor.nextNookAt or 0)then
         local eligible={}
-        for _,rest in ipairs(Layout.RestAnchors)do
+        for _,rest in ipairs(Garden.restAnchors())do
             local gap=distance(input.position,rest.position)
             if gap<=4 and math.abs(input.position.Y-rest.position.Y)<=6 and(from-rest.position).Magnitude<=8 then
                 table.insert(eligible,{rest=rest,gap=gap})

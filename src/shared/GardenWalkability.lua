@@ -23,7 +23,18 @@ function Walk.segmentAllowed(from,to,wet)
   local a,b=water.CFrame:PointToObjectSpace(from),water.CFrame:PointToObjectSpace(to)
   local lo,hi=interval(a.X,b.X,-water.Size.X*.5-.35,water.Size.X*.5+.35,0,1)
   if lo then lo,hi=interval(a.Z,b.Z,-water.Size.Z*.5-.35,water.Size.Z*.5+.35,lo,hi)end
-  if lo and water:GetAttribute("GardenBlockedRegion")==true then return false end
+  if lo and water:GetAttribute("GardenBlockedRegion")==true then
+   -- A hole in a blocked box (beta only: the Sleepy Nest landmark's straw mat, where the Bear curls): a segment whose
+   -- part inside the box's margin lies wholly within the hole's radius is allowed. No attribute (live): as before.
+   local hole,radius=water:GetAttribute("GardenBlockedHole"),water:GetAttribute("GardenBlockedHoleRadius")
+   if typeof(hole)~="Vector3"or type(radius)~="number"then return false end
+   local function inHole(t)
+    local p=a:Lerp(b,t)
+    return Vector2.new(p.X-hole.X,p.Z-hole.Z).Magnitude<=radius
+   end
+   if not(inHole(lo)and inHole(hi))then return false end
+   continue
+  end
   if lo then
    local enter,leave=from:Lerp(to,lo),from:Lerp(to,hi)
    local span,id=Walk.spanAt(enter)

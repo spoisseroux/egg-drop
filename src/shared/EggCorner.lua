@@ -23,7 +23,7 @@ Corner.Ring=3                          -- the Eggs attract ring at the machine (
 -- Studio check R9: at r 3 the back still crossed grass (105 to 167 degrees from the facing) and no radius fixes it, so
 -- the ring is a front arc, RingArc degrees centred on the facing (+-100 clears every R9 sample; 220 did not). r 3.6 with
 -- the arc would reach 15.67 from the paving's middle (edge 15.5), so it stays 3.
-Corner.RingArc=200
+Corner.RingArc=194 -- Fable R10 3
 -- The machine's facing, flat (front +Z of the frame): what the ring's arc is centred on.
 function Corner.facing()
 	local d=Corner.Face-Corner.Spot

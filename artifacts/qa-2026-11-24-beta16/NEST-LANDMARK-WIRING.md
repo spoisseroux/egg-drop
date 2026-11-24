@@ -63,3 +63,22 @@ the fifth part. `EggCornerWorld` (box size, light, template share) is server cod
   property. Its daylight comes from HollowClock through `Client.daylightFrom`: `daylight()` (the module has it, line
   204), else `lastDaylight`, else `sample(now)`'s second value.
 - **Show me pin:** `target.pinAt` puts it 8.2 straight over the bowl's centre; the prints still end at the prompt.
+
+## Studio check R10 and Fable R10
+
+- **Bear on the mat (kept; Fable called it LATER, but it is in and safe):** the mat is a rest anchor (`sleepy_nest`,
+  exclusive) through GardenState's own nook rest: `Garden.extraRests` (nil on live: `Layout.RestAnchors` alone, the
+  same table), set by `EggCornerWorld` while the landmark stands. The nest's 5.6 pet box gets a hole of radius 1.3 round
+  the mat (`GardenBlockedHole` / `...Radius`, box-local): `GardenWalkability.segmentAllowed` lets a segment through
+  only when its part inside the box's margin lies wholly in the hole. No attribute (live, the twig nest): as before.
+  The Bear sits there with the nook rest's own pose (no new curl animation).
+- **Empty nest:** the landmark never switches off. With no nest of this player's animating it, `NestClient.idleMount`
+  (stepped by init's corner block) keeps its idle life: the moon by the hour, the moon and awning swaying, the folded
+  quilt, the sign board on its loops, blank but for its painted moon (Fable R10 4). Only the pill, prompt and Zzz go.
+- **Height:** the floor ray is an Include filter on the island's own meshes less the old station's (never the old
+  EggsSign anchor), and the server looks again 3 s after boot, re-seating the landmark if the marble is elsewhere.
+- **Egg:** per-look scales small 1.6, glow 1.75, rocking 1.9, ready 2.0 (`Land.EggScales`; ready's top 4.75, .45 under
+  the pill). Tucked + rocking against the quilt is a Studio look.
+- **Pill:** bottom edge at (0, 5.2, -1.0) nest-local as a fixed world offset (`StudsOffsetWorldSpace`), the peek at
+  (0, 5.6, -1.0), never AlwaysOnTop over the landmark.
+- **Ring:** the machine's front arc is 194 degrees, r 3.
