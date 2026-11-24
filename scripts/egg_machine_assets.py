@@ -169,8 +169,7 @@ def xml_part(i, part, mesh_id, raw, manifest):
 def rbxmx(manifest, bound):
     out = ["<roblox version=\"4\">\n",
            f"  <Item class=\"Model\" referent=\"EggMachine\">\n    <Properties>\n      <string name=\"Name\">{MODEL_NAME}</string>\n"
-           "      <CoordinateFrame name=\"WorldPivotData\"><X>0</X><Y>0</Y><Z>0</Z><R00>1</R00><R01>0</R01><R02>0</R02>"
-           "<R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>\n    </Properties>\n"]
+           "    </Properties>\n"]  # no WorldPivotData: Rojo rejects a plain CFrame for that OptionalCFrame property
     for i, part in enumerate(manifest["parts"]):
         mesh_id, raw = bound[part["name"]]
         out.append(xml_part(i, part, mesh_id, raw, manifest))

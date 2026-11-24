@@ -67,6 +67,9 @@
       },
       "AeroKit": {
         "$path": "assets/world/AeroKit.rbxmx"
+      },
+      "EggMachine": {
+        "$path": "assets/world/EggMachine.rbxmx"
       }
     },
     "ServerScriptService": {
