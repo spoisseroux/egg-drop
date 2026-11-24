@@ -9,7 +9,8 @@
 -- Never more than once in Gap seconds; silent during a deck round, a race or a hatch, and when the sound setting is
 -- off (the UI group's volume). Reduced Motion does not change it.
 local Chime={}
-Chime.SoundIds={nil,nil,nil,nil,nil,nil} -- rbxassetid numbers, filled after upload (index = variant)
+-- Uploaded 2026-11-24 (Open Cloud, egg_drop_tip_chime_1..6.wav; moderation was "Reviewing" at upload).
+Chime.SoundIds={94133043779022,125465430145663,75661963561307,111226161629556,136364750494302,98660563416876}
 Chime.Count=6
 Chime.Volume=.25  -- under the Stars pickup
 Chime.Gap=20
