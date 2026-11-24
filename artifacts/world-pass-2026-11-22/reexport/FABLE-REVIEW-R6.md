@@ -35,3 +35,17 @@ Opus's deviations, all accepted: three bands (four would have left no body colou
 - Lime crown at dusk: the yellow leaf highlights speckle. Pull the texture's highlight down about 10% in value.
 - Dewdrops at dusk are the most saturated thing in `lime-dusk-2900.jpg`. They should take the grade too.
 - Chimes: the sky blue rod is a touch stronger than the other four. Minus 10% saturation on that one.
+
+## Round 7 (layers on, 2026-11-24)
+
+Reviewed the six captures in `r12/` (kit r18, garden day, moving layers on). Stills only, so motion is still unjudged.
+
+- **Falls: GO** for the private beta. No blocking items.
+- **+.30 on both flow beams is right.** Before, the white streaks covered the body and the bands were gone. At +.15 they were half back. At +.30 the three bands read at 45 studs and the falls still look wet and moving, not flat. Stop here: at 120 and from the race gate side the bands are already faint, and more transparency would lose the white streaks that sell it as water.
+- Race gate side at 80: paler and more finely streaked than the lawn view, bands only just there. It reads as falling water and is not the brightest thing in the frame. Accepted.
+- **Mist cards: keep as they are.** At 25 studs they show as a soft pale haze on the drop's edges with no card edge or corner. Not stronger: the foam fringe already carries the base, and more mist would wash the bands out again up close.
+
+Later (added to the list above):
+- A thin pale strand hangs detached to the right of the lower drop, clear of the water's edge. Pull it into the sheet or drop it.
+- The lower drop's top is a straight, square-cornered line under the step. Part of the rock lip item.
+- Check the mist cards and the +.30 beams once in a clip at dusk, where the lilac grade may lift them.

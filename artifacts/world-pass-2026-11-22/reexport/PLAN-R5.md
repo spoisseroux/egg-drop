@@ -52,3 +52,10 @@ Model), readback, Rojo, Play captures from the plaza, the lawn and the arrival d
   the moving layers ON (the two spots plus ~80 studs on the race-gate side); if they wash the bands out, raise those
   layers' Transparency in .15 steps. Mist cards not yet seen. Later: crown cards read as cut paper (one edge-on, one flap
   below the skirt); the upper drop's restart line.
+
+## Falls recapture with the moving layers on (2026-11-24)
+
+Layers on (budget level 0, 11 Tumble beams; last time's "off" came from the parked character). At today's transparency
+the flow beams washed the bands out; both flow beams +0.30 (FlowA .65/.3/.3/.5, FlowB .9/.5/.5/.9). Captures `r12/`.
+Fable R6 round 7: falls GO for the private beta; +.30 is the ceiling; mist cards kept as they are. Later: a thin detached
+strand right of the lower drop, the lower drop's square top corners, a dusk clip of the mist and beams.

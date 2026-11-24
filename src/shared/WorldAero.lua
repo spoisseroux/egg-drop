@@ -177,9 +177,9 @@ Aero.Waterfall=table.freeze({
 		-- LOOK-R2 rounds 3 and 4: Flow A wider and nearly opaque, Flow B stronger; both straight and flat, just in front of
 		-- the chutes' furthest point (bow .5 + .05 + ledge kink .3): any nearer and the chutes cut bands through them.
 		FlowA=table.freeze({across=true,scale=1,grow=.6,out=1,shift=0,length=26,speed=14/26,Color=hex("#F4FCFF"),LightEmission=.2,
-			Texture="rbxassetid://127390802678159",Transparency=keys({{0,.35},{.12,0},{.9,0},{1,.2}})}),
+			Texture="rbxassetid://127390802678159",Transparency=keys({{0,.65},{.12,.3},{.9,.3},{1,.5}})}), -- Fable R6: +.3 so the static bands read through
 		FlowB=table.freeze({across=true,scale=1,grow=.8,out=1.2,shift=.7,length=17,speed=19/17,Color=hex("#FFFFFF"),LightEmission=.15,
-			Texture="rbxassetid://138106096840651",Transparency=keys({{0,.6},{.08,.2},{.9,.2},{1,.6}})}),
+			Texture="rbxassetid://138106096840651",Transparency=keys({{0,.9},{.08,.5},{.9,.5},{1,.9}})}), -- Fable R6: +.3
 		-- Flat on the pool, flowing out along n from `from` to `to` studs off the foot.
 		-- LOOK-R3 1: darker water at the foot, a static flat beam under the Apron (foot-shade: row 0 at the foot). The ledge
 		-- pool gets a smaller one, dropped at level 1.
