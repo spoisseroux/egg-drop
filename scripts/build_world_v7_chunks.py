@@ -94,7 +94,8 @@ def classify(name):
         if obj.startswith("Station_ArrivalDais_Glow"):
             return "ArrivalGlow__" + mat, False, "pulse", "ArrivalGlow"
         if obj.startswith("Station_EggNest_Glow"):
-            return "NestHalo__" + mat, False, "pulse", "NestHalo"
+            # EGG-CORNER-BUILD-PLAN 6.2: the Eggs station is its own region, so the beta can remove it by name.
+            return "EggsStation__" + mat, False, "pulse", "EggsStation"
         return obj + "__" + mat, False, None, obj
     if cat.startswith("Terrain_Ground"):
         return "Ground__" + mat, True, None, "Ground"
@@ -114,6 +115,10 @@ def classify(name):
         return "Architecture__" + mat, mat in COLLIDE_MATERIALS or mat == "palette", None, "Architecture"
     if cat == "Landmarks":
         return "Landmarks__" + mat, mat in COLLIDE_MATERIALS, None, "Landmarks"
+    if cat == "Stations_EggNest":
+        # EGG-CORNER-BUILD-PLAN 6.2 (architect GO): the Eggs station's steps, cup, egg and stele leave the island-wide
+        # Stations__* meshes for W7_EggsStation__<mat> (collide as today); live looks and collides the same.
+        return "EggsStation__" + mat, mat in ("marble", "marble_smooth", "wood_plank", "trim"), None, "EggsStation"
     if cat.startswith("Stations_"):
         return "Stations__" + mat, mat in ("marble", "marble_smooth", "wood_plank", "trim"), None, "Stations"
     if cat == "Props":
@@ -1094,7 +1099,8 @@ def surface_map(finals):
     trees = []
     for o, key in finals:
         group = key.split("__")[0]
-        if group.startswith(skip) or key == "Water__cloud":
+        # The Eggs station's halo was NestHalo (skipped); in EggsStation it is still a glow, not a surface.
+        if group.startswith(skip) or key in ("Water__cloud", "EggsStation__glow_warm"):
             continue
         bm = bmesh.new()
         bm.from_mesh(o.data)
@@ -1269,7 +1275,8 @@ def walk_data(finals, manifest):
     data["falls"] = falls_planes()
     data["foam"] = foam_boxes()
     # Ground heights: top-down rays against the collidable ground-ish meshes on a 2-stud grid.
-    targets = [o for o, key in finals if key.split("__")[0] in ("Ground", "Rocks", "Rotunda", "Bridge", "Architecture", "Landmarks", "Stations", "Props", "Balustrades", "Trunks", "Aqueduct")]
+    targets = [o for o, key in finals if key.split("__")[0] in ("Ground", "Rocks", "Rotunda", "Bridge", "Architecture", "Landmarks", "Stations", "Props", "Balustrades", "Trunks", "Aqueduct")
+               or (key.startswith("EggsStation__") and key != "EggsStation__glow_warm")]
     trees = []
     for o in targets:
         bm = bmesh.new()
@@ -1289,7 +1296,9 @@ def walk_data(finals, manifest):
                 if hit[0] is not None and (best is None or hit[0].z > best):
                     best, who = hit[0].z, name
             row.append(None if best is None else round(best + 4, 2))
-            names.append(who.split("__")[0] if who else "")
+            group = who.split("__")[0] if who else ""
+            # EGG-CORNER-BUILD-PLAN 6.2: the split Eggs station still reads as Stations in the walk map (unchanged for live).
+            names.append("W7_Stations" if group == "W7_EggsStation" else group)
         grid["heights"].append(row)
         grid["hits"].append(names)
     data["grid"] = grid

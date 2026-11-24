@@ -1,34 +1,44 @@
 {
- "note": "Verified world upload checkpoint; retain this file. Any changed geometry/import/file binding aborts runtime asset generation until a new upload is confirmed.",
+ "note": "Meshes changed by the last build_world_v7_chunks.py run. Upload world-v7-declutter.fbx, read back each MeshPart's MeshId and MeshSize into world-v7-studio-import.json, then run scripts/build_world_v7_assets.py --confirm-upload READBACK_JSON. Retain this pending file.",
  "changed": [
-  "W7_LampOrbs__glow_warm",
+  "W7_Stations__marble",
   "W7_Stations__marble_smooth",
-  "W7_Stations__palette"
+  "W7_Stations__palette",
+  "W7_Stations__trim"
  ],
- "added": [],
- "dropped": [],
+ "added": [
+  "W7_EggsStation__foliage",
+  "W7_EggsStation__glow_warm",
+  "W7_EggsStation__marble",
+  "W7_EggsStation__marble_smooth",
+  "W7_EggsStation__palette",
+  "W7_EggsStation__trim"
+ ],
+ "dropped": [
+  "W7_NestHalo__glow_warm",
+  "W7_Stations__foliage"
+ ],
  "previous": {
-  "W7_LampOrbs__glow_warm": {
-   "name": "W7_LampOrbs__glow_warm",
-   "group": "LampOrbs__glow_warm",
-   "material": "W1_glow_warm",
-   "tris": 140,
-   "collide": false,
-   "anim": "pulse",
-   "region": "LampOrbs",
+  "W7_Stations__marble": {
+   "name": "W7_Stations__marble",
+   "group": "Stations__marble",
+   "material": "W1_marble",
+   "tris": 1414,
+   "collide": true,
+   "anim": null,
+   "region": "Stations",
    "center": [
-    -0.175,
-    9.037,
-    3.985
+    18.472,
+    7.41,
+    17.5288
    ],
    "size": [
-    140.6875,
-    1.48,
-    96.9567
+    163.6559,
+    7.32,
+    105.5423
    ],
-   "top": 9.777,
-   "hash": "7b031524c7893aad",
-   "note": "Orb parts only: Neon glow on at night with a slow 5 percent brightness pulse."
+   "top": 11.07,
+   "hash": "0a55be270ebc0f77"
   },
   "W7_Stations__marble_smooth": {
    "name": "W7_Stations__marble_smooth",
@@ -49,7 +59,7 @@
     96.89
    ],
    "top": 8.477,
-   "hash": "97d9f4e4544858a1"
+   "hash": "f514e8b97a68a632"
   },
   "W7_Stations__palette": {
    "name": "W7_Stations__palette",
@@ -70,49 +80,71 @@
     96.8707
    ],
    "top": 11.8,
-   "hash": "eaa342ed0545397a"
-  }
- },
- "confirmedImport": {
-  "W7_LampOrbs__glow_warm": {
-   "hash": "25783f4aa2eeafc9",
-   "import": [
-    "111376211885197",
-    2047.9639892578125,
-    21.543922424316406,
-    1411.3824462890625
-   ]
+   "hash": "02ca117510d52d42"
   },
-  "W7_Stations__marble_smooth": {
-   "hash": "f514e8b97a68a632",
-   "import": [
-    "125972227162285",
-    2046.2532958984375,
-    64.44331359863281,
-    1410.410888671875
-   ]
+  "W7_Stations__trim": {
+   "name": "W7_Stations__trim",
+   "group": "Stations__trim",
+   "material": "W1_trim",
+   "tris": 200,
+   "collide": true,
+   "anim": null,
+   "region": "Stations",
+   "center": [
+    25.7252,
+    5.265,
+    17.024
+   ],
+   "size": [
+    147.1497,
+    2.37,
+    104.5521
+   ],
+   "top": 6.45,
+   "hash": "b396dcb81cdf76df"
   },
-  "W7_Stations__palette": {
-   "hash": "02ca117510d52d42",
-   "import": [
-    "71188520415952",
-    2048.0,
-    107.57498168945312,
-    1410.1295166015625
-   ]
-  }
- },
- "upload": {
-  "assetId": "94799462047807",
-  "operationId": "ce9e44fa-4901-4d62-9c6d-7a2c2bbf0bdd",
-  "checkpoint": {
-   "fbxSha256": "bc84ef09792224f3efe41a946e71a7bad3da98e30857f180d753b9fba59a3520",
-   "manifestSha256": "9ad4b7af9abfd4df054ce053141ab54b4a35e92f86f4521b5d69af44011d6945",
-   "previousMeshIds": {
-    "W7_LampOrbs__glow_warm": "116409916215490",
-    "W7_Stations__marble_smooth": "119204983359532",
-    "W7_Stations__palette": "116040760150477"
-   }
+  "W7_NestHalo__glow_warm": {
+   "name": "W7_NestHalo__glow_warm",
+   "group": "NestHalo__glow_warm",
+   "material": "W1_glow_warm",
+   "tris": 24,
+   "collide": false,
+   "anim": "pulse",
+   "region": "NestHalo",
+   "center": [
+    -31.0,
+    5.245,
+    -11.0
+   ],
+   "size": [
+    2.6397,
+    0.11,
+    2.6397
+   ],
+   "top": 5.3,
+   "hash": "6da551bb6e8cece0",
+   "note": "Soft brightness pulse; brighter when an egg is ready."
+  },
+  "W7_Stations__foliage": {
+   "name": "W7_Stations__foliage",
+   "group": "Stations__foliage",
+   "material": "W1_foliage",
+   "tris": 36,
+   "collide": false,
+   "anim": null,
+   "region": "Stations",
+   "center": [
+    -31.0,
+    5.36,
+    -11.0
+   ],
+   "size": [
+    3.6635,
+    0.48,
+    3.8415
+   ],
+   "top": 5.6,
+   "hash": "7df7822cda4d7565"
   }
  }
 }

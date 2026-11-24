@@ -964,6 +964,133 @@
    "note": "Bob 0.6 studs and rotate slowly."
   },
   {
+   "name": "W7_EggsStation__foliage",
+   "group": "EggsStation__foliage",
+   "material": "W1_foliage",
+   "tris": 36,
+   "collide": false,
+   "anim": null,
+   "region": "EggsStation",
+   "center": [
+    -31.0,
+    5.36,
+    -11.0
+   ],
+   "size": [
+    3.6635,
+    0.48,
+    3.8415
+   ],
+   "top": 5.6,
+   "hash": "7df7822cda4d7565"
+  },
+  {
+   "name": "W7_EggsStation__glow_warm",
+   "group": "EggsStation__glow_warm",
+   "material": "W1_glow_warm",
+   "tris": 24,
+   "collide": false,
+   "anim": "pulse",
+   "region": "EggsStation",
+   "center": [
+    -31.0,
+    5.245,
+    -11.0
+   ],
+   "size": [
+    2.6397,
+    0.11,
+    2.6397
+   ],
+   "top": 5.3,
+   "hash": "6da551bb6e8cece0",
+   "note": "Soft brightness pulse; brighter when an egg is ready."
+  },
+  {
+   "name": "W7_EggsStation__marble",
+   "group": "EggsStation__marble",
+   "material": "W1_marble",
+   "tris": 178,
+   "collide": true,
+   "anim": null,
+   "region": "EggsStation",
+   "center": [
+    -31.0,
+    4.34,
+    -11.0
+   ],
+   "size": [
+    6.7938,
+    1.08,
+    6.7938
+   ],
+   "top": 4.88,
+   "hash": "e0042999cff853f7"
+  },
+  {
+   "name": "W7_EggsStation__marble_smooth",
+   "group": "EggsStation__marble_smooth",
+   "material": "W1_marble_smooth",
+   "tris": 54,
+   "collide": true,
+   "anim": null,
+   "region": "EggsStation",
+   "center": [
+    -28.1081,
+    5.3353,
+    -10.9025
+   ],
+   "size": [
+    1.3926,
+    1.9805,
+    0.9155
+   ],
+   "top": 6.3255,
+   "hash": "16747626eebda649"
+  },
+  {
+   "name": "W7_EggsStation__palette",
+   "group": "EggsStation__palette",
+   "material": "W1_palette",
+   "tris": 260,
+   "collide": false,
+   "anim": null,
+   "region": "EggsStation",
+   "center": [
+    -30.2194,
+    6.19,
+    -11.0
+   ],
+   "size": [
+    4.5161,
+    2.62,
+    2.9549
+   ],
+   "top": 7.5,
+   "hash": "b965dedd9c7dc4e1"
+  },
+  {
+   "name": "W7_EggsStation__trim",
+   "group": "EggsStation__trim",
+   "material": "W1_trim",
+   "tris": 32,
+   "collide": true,
+   "anim": null,
+   "region": "EggsStation",
+   "center": [
+    -31.0,
+    4.74,
+    -11.0
+   ],
+   "size": [
+    4.416,
+    0.24,
+    4.416
+   ],
+   "top": 4.86,
+   "hash": "5e267900a3fcd174"
+  },
+  {
    "name": "W7_Ground__dirt_path",
    "group": "Ground__dirt_path",
    "material": "W1_dirt_path",
@@ -1525,28 +1652,6 @@
    "note": "Slow swing +-4 degrees; light on at night."
   },
   {
-   "name": "W7_NestHalo__glow_warm",
-   "group": "NestHalo__glow_warm",
-   "material": "W1_glow_warm",
-   "tris": 24,
-   "collide": false,
-   "anim": "pulse",
-   "region": "NestHalo",
-   "center": [
-    -31.0,
-    5.245,
-    -11.0
-   ],
-   "size": [
-    2.6397,
-    0.11,
-    2.6397
-   ],
-   "top": 5.3,
-   "hash": "6da551bb6e8cece0",
-   "note": "Soft brightness pulse; brighter when an egg is ready."
-  },
-  {
    "name": "W7_Pennant_1__palette",
    "group": "Pennant_1__palette",
    "material": "W1_palette",
@@ -1738,27 +1843,6 @@
    "hash": "44137b9d29822534"
   },
   {
-   "name": "W7_Stations__foliage",
-   "group": "Stations__foliage",
-   "material": "W1_foliage",
-   "tris": 36,
-   "collide": false,
-   "anim": null,
-   "region": "Stations",
-   "center": [
-    -31.0,
-    5.36,
-    -11.0
-   ],
-   "size": [
-    3.6635,
-    0.48,
-    3.8415
-   ],
-   "top": 5.6,
-   "hash": "7df7822cda4d7565"
-  },
-  {
    "name": "W7_Stations__glow_aqua",
    "group": "Stations__glow_aqua",
    "material": "W1_glow_aqua",
@@ -1804,7 +1888,7 @@
    "name": "W7_Stations__marble",
    "group": "Stations__marble",
    "material": "W1_marble",
-   "tris": 1414,
+   "tris": 1236,
    "collide": true,
    "anim": null,
    "region": "Stations",
@@ -1819,13 +1903,13 @@
     105.5423
    ],
    "top": 11.07,
-   "hash": "0a55be270ebc0f77"
+   "hash": "b053f54226391d0c"
   },
   {
    "name": "W7_Stations__marble_smooth",
    "group": "Stations__marble_smooth",
    "material": "W1_marble_smooth",
-   "tris": 978,
+   "tris": 924,
    "collide": true,
    "anim": null,
    "region": "Stations",
@@ -1840,13 +1924,13 @@
     96.89
    ],
    "top": 8.477,
-   "hash": "f514e8b97a68a632"
+   "hash": "f53ec92208706f72"
   },
   {
    "name": "W7_Stations__palette",
    "group": "Stations__palette",
    "material": "W1_palette",
-   "tris": 2068,
+   "tris": 1808,
    "collide": false,
    "anim": null,
    "region": "Stations",
@@ -1861,13 +1945,13 @@
     96.8707
    ],
    "top": 11.8,
-   "hash": "02ca117510d52d42"
+   "hash": "69d1cb2cff77c190"
   },
   {
    "name": "W7_Stations__trim",
    "group": "Stations__trim",
    "material": "W1_trim",
-   "tris": 200,
+   "tris": 168,
    "collide": true,
    "anim": null,
    "region": "Stations",
@@ -1882,7 +1966,7 @@
     104.5521
    ],
    "top": 6.45,
-   "hash": "b396dcb81cdf76df"
+   "hash": "f5a4b2432566dba6"
   },
   {
    "name": "W7_Stations__wood_plank",
@@ -2164,6 +2248,6 @@
    "note": "Fast scroll down the fall, about 1.2 tiles/s. V runs down the fall and tiles. A Beam with the same texture also works."
   }
  ],
- "count": 99,
+ "count": 103,
  "triangles": 66844
 }
