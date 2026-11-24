@@ -72,6 +72,16 @@ function Motion.new(world)
 	return self
 end
 
+-- A part's own transparency: a part the egg corner hides keeps it in CornerWas ("<transparency>|...").
+function Motion.restTransparency(part)
+	if part:GetAttribute("WorldHidden")==true then
+		local was=part:GetAttribute("CornerWas")
+		local t=type(was)=="string"and tonumber(string.match(was,"^([^|]+)"))
+		if t then return t end
+	end
+	return part.Transparency
+end
+
 function Motion:bind(room)
 	table.clear(self.entries);table.clear(self.beams);table.clear(self.skins);table.clear(self.emitters)
 	self.room=room
@@ -86,7 +96,7 @@ function Motion:bind(room)
 					period=math.max(part:GetAttribute("WorldMotionPeriod")or 1,.1),phase=part:GetAttribute("WorldMotionPhase")or 0,
 					gain=Motion.gustGain(kind,part:GetAttribute("WorldRegion")),
 					chime=if kind=="sway"then Motion.chimeNumber(part:GetAttribute("WorldRegion"))else nil,chimeAt=0,
-					far=part:GetAttribute("WorldMotionFar")==true,transparency=part.Transparency})
+					far=part:GetAttribute("WorldMotionFar")==true,transparency=Motion.restTransparency(part)})
 			end
 		end
 		-- Scrolling water skins (Texture on the water meshes, LoungeWorldV7Art.WaterSkins).
@@ -128,7 +138,8 @@ function Motion:rest()
 	local parts,frames={},{}
 	for _,e in ipairs(self.entries)do
 		if e.part.Parent then
-			if e.kind=="pulse"then e.part.Transparency=e.transparency
+			-- The egg corner hides the old station's halo (WorldHidden, EggCornerWorld): a pulse never shows it again.
+			if e.kind=="pulse"then if e.part:GetAttribute("WorldHidden")~=true then e.part.Transparency=e.transparency end
 			else table.insert(parts,e.part);table.insert(frames,e.rest)end
 		end
 	end
@@ -175,6 +186,7 @@ function Motion:apply(t)
 			continue
 		end
 		if e.kind=="pulse"then
+			if part:GetAttribute("WorldHidden")==true then continue end
 			part.Transparency=e.transparency+e.amp*(.5+.5*math.sin(TAU*(t/e.period+e.phase)))
 		else
 			local amp=e.amp

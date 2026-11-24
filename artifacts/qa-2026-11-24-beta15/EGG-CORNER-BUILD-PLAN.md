@@ -507,3 +507,41 @@ the `V3-TEST-PASS.md` rows and translations synced.
   to keep (both stay; only the label differs).
 - **F6.** The buy crank's sounds while the player is far from the machine (the screen opened from the Pocket menu):
   play them (my pick: they are the buy's feedback) or only near the machine?
+
+---
+
+## 15. Build notes (step 3, after the architect's GO WITH CHANGES and Fable's Placement rulings R2)
+
+What was built differs from sections 4 to 8 here; this section wins.
+
+- **Spot:** the machine is at **M5 (-41, 2)**, reach **7**, front toward (-26, 7). The island session found the west
+  bench, both egg statues and `Pad_Future_B` already gone in the 2026-11-13 declutter, so there is no M4 interim and no
+  bench-keyed switch. Attract ring r **3.6**, pin = model top + 1.6. One constant, `EggCorner.Spot`.
+- **Station split:** the island export names the old station `W7_EggsStation__<material>` (marble, marble_smooth and
+  trim collide; palette, foliage and glow_warm do not; the halo keeps region `NestHalo`). `EggCorner.split()` and the
+  hides go **by that name prefix**. Until it lands the beta hides `W7_NestHalo__glow_warm`, `W7_Stations__foliage`, the
+  Aero `EggDome` and `GlossLip_Eggs`, and the nest stays at E1 beside the bare dais (A1: beta only).
+- **Machine model:** `EggCornerWorld` (server) clones `ServerStorage.EggMachine` (the r3 template: `Body`, `Globe`,
+  `Dial`, `Sprout`, `EggPile`, `Egg`; nothing renamed) or a greybox with the same names, makes `Loose1..6` and `DropEgg`
+  from `Egg`, adds the six attachments and the globe light, sets `WorldRestCFrame` and `ModelStreamingMode =
+  Persistent`, and parks the model in `ServerStorage.EggCornerParked` while the corner is off. `EggMachineData` is read
+  when the module is there; `EggCorner.MachineData` is its copy until the machine branch merges. **The Rojo mount
+  `ServerStorage.EggMachine` <- `assets/world/EggMachine.rbxmx` is not in `default.project.json` on this branch** (the
+  file is on `claude/egg-machine`, and a missing path would break the build): add it with the merge.
+- **Halo pulse:** `WorldMotion` skips a part with `WorldHidden`, and reads its own transparency from `CornerWas` when
+  bound while hidden, so the pulse never undoes the hide and comes back right after a flip off.
+- **Hold:** `HatchCinematic.gate` / `onPlay`; `skip()` refuses while the gate holds. The gate holds only the reveal that
+  started after the press, until the landing, at most 1 s from the first press. A retried send (same `value.id`) never
+  starts another crank; a press during a buy crank merges into it. The egg rolls only once that reveal has started (a
+  refused buy drops nothing). **Reduced Motion:** the reveal's static path never asks the hold (documented in
+  `EggMachineClient`); the crank and its sounds still play. **The Stat Egg** (its own reveal) is not held; its egg rolls
+  on schedule.
+- **Not built in this slice:** the preview-egg shake on the Hatch eggs screen (section 7); the cup egg fading 1.5 s
+  after the reveal closes (it fades 6 s after landing; `EggMachineClient:revealClosed()` is there for the hook); others
+  seeing your crank (A4); the machine's sounds (pending cues, silent).
+- **Coach bit:** `nestHelp` = **27**, gated by the `corner` part.
+- **Specs:** `EggCorner.spec` (11), `EggMachineClient.spec` (12), 6 new `NestClient` cases; `Onboard.spec` and
+  `CoachMask.spec` updated and green offline. `StationAttract.spec`, `UICopy.spec` and `LocalizationFit.spec` are
+  Studio-only (one `StationAttract` assertion updated for the retired `EggsNest` line). `EggCornerWorld` has no offline
+  spec (the mocks have no Model, PivotTo or raycasts): its checks are Studio P1 to P6.
+- **Probe:** `probe_egg_corner.luau` tries M5 first; rule A1 accepts the inlay ring (trim) within .25.

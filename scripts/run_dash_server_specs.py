@@ -32,7 +32,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # The Hush greybox (HUSH-GREYBOX-BUILD-PLAN): the gate and data, the switch, the host; the island edges it extends.
          "Hush", "HushConfig", "HushHost", "IslandBounds", "IslandBoundsHost",
          # The upper tier, greybox T0 (UPPER-TIER-BUILD-PLAN).
-         "Tier", "TierConfig", "TierHost"]
+         "Tier", "TierConfig", "TierHost",
+         # The egg corner (EGG-CORNER-BUILD-PLAN): its numbers and switches.
+         "EggCorner"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -40,7 +42,7 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
           "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit",
           "HushClient", "DashLine", "WorldFeel", "LifeSceneSim", "LifeScene", "WorldMotion",
-          "GroundDressing", "LifePet"]
+          "GroundDressing", "LifePet", "EggMachineClient"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -71,7 +73,9 @@ def client_modules():
                     # The Hush: the passage's fade and the region effects.
                     "HushClient.lua",
                     # Beta 14 garden life: the arch chimes (WorldMotion).
-                    "WorldMotion.lua", "WorldDressingClient.lua"):
+                    "WorldMotion.lua", "WorldDressingClient.lua",
+                    # The egg corner: the machine's motion, cranks and reveal hold.
+                    "EggMachineClient.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

@@ -118,6 +118,11 @@ do
   if id then assetIds[cue]=id;table.insert(cues,cue)end
  end
 end
+-- The egg corner's machine (EggMachineClient; EGG-CORNER-LOOK 2): no files yet, so no voice and play() is a quiet no-op
+-- until their ids land here. The landing thud is `land`.
+for _,cue in ipairs({"egg_tok_1","egg_tok_2","egg_tok_3","crank_click_1","crank_click_2","crank_click_3","crank_clunk","egg_roll"})do
+ Audio.PendingCues[cue]=true
+end
 for _,kind in ipairs({"bear","toy","hue","material","feature"})do
  local id=DisplayAssets.Audio["hatch_"..kind]
  if id then local cue="hatch_display_"..kind;assetIds[cue]=id;table.insert(cues,cue)end

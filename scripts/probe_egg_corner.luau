@@ -5,10 +5,10 @@
 -- `Architecture__*`), so bounds queries cannot see them. Prints PASS / FAIL per check and the numbers to act on.
 --
 --   A  the machine spot, for each candidate M, M2, M3, M4 (front looks at Face):
---      A1 the centre and 16 rays down on a ring r 2.8: all on plaza marble, within .1 of each other
+--      A1 the centre and 16 rays down on a ring r 2.8: all on plaza marble or the inlay ring, within .25 (Fable R2 1)
 --      A2 the footprint is clear: a .5-stud grid of rays down inside the 4.8 x 4.4 box (turned with the machine) meets
 --         only the floor (nothing standing: bench slats, a statue, a step, a lamp post)
---      A3 no dirt path, trim strip, lawn or meadow within 4.0 (rings r 3.0, 3.5, 4.0)
+--      A3 no dirt path, lawn or meadow within 4.0 (rings r 3.0, 3.5, 4.0)
 --      A4 sight lines 5 up from (2.5, 21), (-9, 21), (-20, 12) to the machine's middle (M + 5 up): nothing first
 --      A5 sight lines from the same three points to the nest (-31, -11) + 2 up, with the machine's box (4.8 x 7.2 x 4.4)
 --         in the way (worked out in the probe, nothing is placed): clear
@@ -35,7 +35,7 @@ local BearSpot,SignAt,SignYaw,Front=Vector3.new(-2.2,0,-1.4),Vector3.new(-1.7,0,
 local Face=Vector3.new(-26,0,7)                       -- the machine's front looks here (EGG-CORNER-LOOK 1)
 local NestAt,NestFacing=Vector3.new(-31,0,-11),Vector3.new(-30,0,-4)
 local Machine=Vector3.new(4.8,7.2,4.4)                -- the block box and the mesh's height
-local Candidates={{"M",-44,4},{"M2",-41.5,2.5},{"M3",-17.5,-2.5},{"M4 (plan)",-38.5,1.5}}
+local Candidates={{"M5 (built)",-41,2},{"M4",-38.5,1.5},{"M",-44,4},{"M2",-41.5,2.5},{"M3",-17.5,-2.5}}
 local Walkins={Vector2.new(2.5,21),Vector2.new(-9,21),Vector2.new(-20,12)}
 local Neighbours={{"nest",-31,-11},{"Style deck",-46,-9},{"care arch",-17,-15},{"toy lawn",-30,18.5}}
 
@@ -116,7 +116,8 @@ for _,c in ipairs(Candidates)do
 	say("A %s (%.1f, %.1f): floor %.2f on %s; front yaw %.1f deg",name,x,z,centreY,centreOn,math.deg(math.atan2(frame.LookVector.X,frame.LookVector.Z)))
 	-- A1
 	local lowY,highY,bad=centreY,centreY,{}
-	if material(centreOn)~="marble"and material(centreOn)~="marble_smooth"then table.insert(bad,"centre "..centreOn)end
+	local function paving(m)return m=="marble"or m=="marble_smooth"or m=="trim"end -- R2 1: the inlay ring (trim) counts
+	if not paving(material(centreOn))then table.insert(bad,"centre "..centreOn)end
 	for k=0,15 do
 		local a=k/16*math.pi*2
 		local y,on=down(x+math.cos(a)*2.8,z+math.sin(a)*2.8)
@@ -124,11 +125,11 @@ for _,c in ipairs(Candidates)do
 		else
 			lowY,highY=math.min(lowY,y),math.max(highY,y)
 			local m=material(on)
-			if m~="marble"and m~="marble_smooth"then table.insert(bad,string.format("%d deg: %s y %.2f",k*360/16,on,y))end
+			if not paving(m)then table.insert(bad,string.format("%d deg: %s y %.2f",k*360/16,on,y))end
 		end
 	end
 	local spread=highY-lowY
-	say("  A1 ring r 2.8: %s (spread %.2f)%s",(#bad==0 and spread<=.1)and "PASS"or "FAIL",spread,#bad>0 and "\n     "..table.concat(bad,"\n     ")or "")
+	say("  A1 ring r 2.8: %s (spread %.2f)%s",(#bad==0 and spread<=.25)and "PASS"or "FAIL",spread,#bad>0 and "\n     "..table.concat(bad,"\n     ")or "")
 	-- A2
 	local standing,worst={},0
 	for i=-4.8/2,4.8/2+1e-6,.5 do
@@ -151,7 +152,7 @@ for _,c in ipairs(Candidates)do
 			local a=k/24*math.pi*2
 			local y,on=down(x+math.cos(a)*r,z+math.sin(a)*r)
 			local m=material(on)
-			if m=="dirt_path"or m=="trim"or m=="grass"or m=="meadow"or m=="ground"then
+			if m=="dirt_path"or m=="grass"or m=="meadow"or m=="ground"then
 				if not near or r<near.r then near={r=r,on=on,deg=k*15}end
 			end
 		end

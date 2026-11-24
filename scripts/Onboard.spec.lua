@@ -40,7 +40,7 @@ return function(server)
 		assert(not Onboard.resolve(true,false,true)and Onboard.resolve(false,true,true))
 	end)
 	test("three parts with their keys and attributes; each switches alone; unknown parts are off",function()
-		assert(table.concat(Onboard.Features,",")=="follow,needs,nest")
+		assert(table.concat(Onboard.Features,",")=="follow,needs,nest,corner")
 		for _,feature in ipairs(Onboard.Features)do
 			assert(Onboard.key(feature)=="onboard_"..feature and Onboard.attribute(feature)=="Onboard_"..feature,feature)
 		end
@@ -134,13 +134,13 @@ return function(server)
 		local r=rig(function()return{GetConfigAsync=function()return coroutine.yield()end}end)
 		r.config.start()
 		assert(r.is(false,false,false))
-		assert(table.concat(r.log,",")=="hold follow false,set Onboard_follow false,hold needs false,set Onboard_needs false,hold nest false,set Onboard_nest false")
+		assert(table.concat(r.log,",")=="hold follow false,set Onboard_follow false,hold needs false,set Onboard_needs false,hold nest false,set Onboard_nest false,hold corner false,set Onboard_corner false")
 	end)
 	test("config: once loaded a missing or malformed key is on, each key its own part, no other key is read",function()
 		for _,case in ipairs({{nil,nil,nil,true,true,true},{false,nil,"x",false,true,true},{true,false,0,true,false,true},{false,false,false,false,false,false}})do
 			local s=snapshot({onboard_follow=case[1],onboard_needs=case[2],onboard_nest=case[3],things_to_do=false})
 			local r=rig(of(s));r.config.start();assert(r.is(case[4],case[5],case[6]))
-			for _,key in ipairs(s.asked)do assert(key=="onboard_follow"or key=="onboard_needs"or key=="onboard_nest",key)end
+			for _,key in ipairs(s.asked)do assert(key=="onboard_follow"or key=="onboard_needs"or key=="onboard_nest"or key=="onboard_corner",key)end
 		end
 	end)
 	test("config: Things off publishes every part off; a Things flip republishes at once",function()
@@ -171,6 +171,9 @@ return function(server)
 		local r=rig(of(snapshot({onboard_follow=false})));r.config.start();assert(r.is(false,true,true))
 		assert(r.config.command(" /ONBOARD Follow On ")and r.is(true,true,true))
 		assert(r.config.command("/onboard nest off")and r.is(true,true,false))
+		-- The egg corner is a part too: /onboard corner off (EGG-CORNER-BUILD-PLAN 3).
+		assert(r.config.command("/onboard corner off")and r.held.corner==false and r.attr.Onboard_corner==false)
+		assert(r.config.command("/onboard corner on")and r.held.corner==true and r.attr.Onboard_corner==true)
 		assert(r.config.command("/onboard all off")and r.is(false,false,false))
 		assert(r.config.command("/onboard all clear")and r.is(false,true,true),"clear: back to the config")
 		for _,odd in ipairs({"/onboard","/onboard on","/onboard follow","/onboard tour on","/onboard follow maybe","onboard follow on","/todo on","/onboard follow on now"})do
@@ -178,7 +181,7 @@ return function(server)
 		end
 		for _,odd in ipairs({5,{},true})do assert(not r.config.command(odd))end
 		assert(not r.config.command(nil))
-		local parsed=Config.parse("/onboard all on");assert(#parsed.features==3 and parsed.value==true)
+		local parsed=Config.parse("/onboard all on");assert(#parsed.features==4 and parsed.value==true)
 		assert(Config.parse("/onboard needs clear").value==nil and Config.parse("/onboard needs clear").features[1]=="needs")
 	end)
 

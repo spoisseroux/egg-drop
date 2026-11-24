@@ -57,6 +57,10 @@ How.Sets=table.freeze({
   -- Things to do: one more card while it is on.
   table.freeze({key="f",icon="smiley",when="things"})})}),
  -- Garden Dash: only while Things to do and the race are on; what it pays only while its prizes are.
+ -- The egg corner's "?" card on the napping egg (EGG-CORNER-LOOK 3): one card of short dotted lines, not a row of
+ -- cards. Its words come from the opener (options.list() -> NestClient.helpCard), asked again once a second while open.
+ -- Not in Order: it is not a machine's set.
+ nest=table.freeze({tint="companions",list=true,cards=table.freeze({})}),
  dash=table.freeze({tint="quests",when="dash",cards=table.freeze({
   table.freeze({key="a",icon="paw"}),table.freeze({key="b",icon="target"}),table.freeze({key="c",icon="sparkle"}),
   table.freeze({key="d",icon="star",when="prizes"})})}),
@@ -167,9 +171,104 @@ end
 
 local function txt(parent,role,content,color,props)return Kit.text(parent,role,content,color,props)end
 
+-- ── The list card (the egg corner's "?") ─────────────────────────────────────
+-- Pure: the lines that fit `inner` px wide in `room` px tall at `size`, dropping `drop` first (EGG-CORNER-LOOK 3: at
+-- 320 wide, `next` goes before anything scrolls). measure(text, size, width) -> height. Returns lines, total height.
+How.ListLine=14;How.ListGap=6;How.ListDot=14
+function How.listFit(lines,inner,room,measure,drop)
+ local function total(list)
+  local h=0
+  for index,line in ipairs(list)do h+=measure(line.text,How.ListLine,inner-How.ListDot)+(if index>1 then How.ListGap else 0)end
+  return h
+ end
+ local h=total(lines)
+ if h<=room or not drop then return lines,h end
+ local kept={}
+ for _,line in ipairs(lines)do if line.key~=drop then table.insert(kept,line)end end
+ return kept,total(kept)
+end
+function How.buildList()
+ local root=state.root
+ local ok,model=pcall(state.list)
+ if not ok or type(model)~="table"then return nil end
+ state.listModel=model
+ local size=root.AbsoluteSize
+ local W,H=math.max(320,size.X),math.max(240,size.Y)
+ local compact=Kit.compactRule(W,H)
+ local pad=if compact then 16 else 24
+ local panelW=math.floor(math.min(W-(if compact then 24 else 48),520))
+ local headerH=if compact then 52 else 72;local footerH=if compact then 64 else 80
+ local icon=56
+ local inner=panelW-pad*2
+ local function measure(text,sz,width)return math.ceil(Kit.measure(text,"Small",sz,width).Y*Kit.LineHeight)+2 end
+ local liveH=measure(model.live or "",13,inner-icon-12)
+ local top=math.max(icon,liveH)+12
+ local room=H-(if compact then 12 else 48)-headerH-footerH-top
+ local lines,linesH=How.listFit(model.lines or {},inner,room,measure,model.drop or "next")
+ local panelH=math.min(headerH+top+linesH+footerH,H-(if compact then 12 else 48))
+ local set=How.Sets[state.id]
+ local panel=Kit.frame(root,"HowItWorks","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(panelW,panelH),if compact then 16 else 24)
+ panel.AnchorPoint=Vector2.new(.5,.5);panel.Active=true;panel.ZIndex=20;Kit.stroke(panel)
+ panel:SetAttribute("HelpId",state.id);panel:SetAttribute("Layout",if compact then "phone"else "regular")
+ panel:SetAttribute("ListLines",#lines)
+ state.panel=panel
+ local titleY=if compact then 14 else 32
+ local title=txt(panel,"Title",model.title or "","text",{Name="Title",Position=UDim2.fromOffset(pad,titleY),Size=UDim2.fromOffset(panelW-pad*2-56,if compact then 24 else 30),
+  TextSize=if compact then 20 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
+ Kit.squiggle(panel,title,set.tint)
+ local close=Kit.backArrow(panel,compact,{header=true});close.root.AnchorPoint=Vector2.new(1,0)
+ close.root.Position=UDim2.fromOffset(panelW-(if compact then 10 else 16),if compact then 4 else 14);close.root.ZIndex=panel.ZIndex+5
+ close.root:SetAttribute("AccessibleLabel",UICopy.get("r3.help.close"))
+ close.root.Activated:Connect(function()How.close("back")end)
+ local body=make("ScrollingFrame",panel,{Name="Lines",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(pad,headerH),
+  Size=UDim2.fromOffset(inner,math.max(40,panelH-headerH-footerH)),CanvasSize=UDim2.fromOffset(0,top+linesH),ScrollBarThickness=3,
+  ScrollingDirection=Enum.ScrollingDirection.Y,ZIndex=panel.ZIndex+1,ClipsDescendants=true})
+ state.body=body
+ local picture=make("ImageLabel",body,{Name="Icon",BackgroundTransparency=1,Image=model.icon or "",Size=UDim2.fromOffset(icon,icon),ZIndex=panel.ZIndex+1})
+ picture:SetAttribute("Icon",true)
+ state.live=txt(body,"Small",model.live or "","soft",{Name="Live",Position=UDim2.fromOffset(icon+12,0),Size=UDim2.fromOffset(inner-icon-12,math.max(icon,liveH)),
+  TextSize=13,TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Center})
+ local y=top
+ for index,line in ipairs(lines)do
+  local h=measure(line.text,How.ListLine,inner-How.ListDot)
+  local dot=make("Frame",body,{Name="Dot"..index,Position=UDim2.fromOffset(2,y+7),Size=UDim2.fromOffset(6,6),BackgroundColor3=Kit.color("text"),BorderSizePixel=0,ZIndex=panel.ZIndex+1})
+  Kit.corner(dot,999)
+  txt(body,"Small",line.text,"text",{Name="Line_"..line.key,Position=UDim2.fromOffset(How.ListDot,y),Size=UDim2.fromOffset(inner-How.ListDot,h),TextSize=How.ListLine,
+   TextWrapped=true,TextTruncate=Enum.TextTruncate.None,TextYAlignment=Enum.TextYAlignment.Top})
+  y+=h+How.ListGap
+ end
+ local fy=panelH-footerH+(if compact then 10 else 16)
+ local bw,bh=if compact then 140 else 180,if compact then 44 else 48
+ local done=Kit.button(panel,"GotIt",{variant="primary",text=model.button or UICopy.get("r3.help.done"),glyph="A",size=Vector2.new(bw,bh),textSize=if compact then 15 else 17})
+ done.Position=UDim2.fromOffset(panelW-pad-bw,fy);done.ZIndex=panel.ZIndex+2
+ done.Activated:Connect(function()How.close("done")end)
+ state.done=done
+ if not Kit.reduced()then
+  local scale=make("UIScale",panel,{Scale=.96})
+  Kit.tween(scale,Kit.Motion.screen,{Scale=1})
+ end
+ return panel
+end
+-- The open list card's live line, once a second (the clock; "Hatch me!" once the egg is ready).
+local function tickList(id)
+ task.spawn(function()
+  while state.open and state.id==id and state.list do
+   task.wait(1)
+   if not(state.open and state.id==id and state.list)then return end
+   local ok,model=pcall(state.list)
+   if ok and type(model)=="table"and state.live and state.live.Parent and model.live~=state.live.Text then state.live.Text=model.live end
+  end
+ end)
+end
+
 -- Builds the panel for the open set at the current size.
 function How.build()
  local root=state.root;if not root or not state.id then return nil end
+ if state.list then
+  if state.panel then state.panel:Destroy();state.panel=nil end
+  if state.stamp then state.stamp:destroy();state.stamp=nil end
+  return How.buildList()
+ end
  if state.panel then state.panel:Destroy();state.panel=nil end
  if state.stamp then state.stamp:destroy();state.stamp=nil end
  local notice=state.notice
@@ -334,12 +433,17 @@ function How.open(id,options)
  if not ensureGui()then return false end
  if state.open and state.id==id and not options.notice then return true end
  state.id=id;state.onClosed=options.onClosed;state.notice=options.notice
+ -- A list set (the egg corner's "?") needs its words: options.list() -> {title, live, lines, button, icon, drop}.
+ local set=How.Sets[id]
+ state.list=if set and set.list then options.list else nil
+ if set and set.list and type(state.list)~="function"then state.id=nil;return false end
  if not state.open then
   state.previous=GuiService.SelectedObject
   state.open=true
   bind()
  end
  How.build()
+ if state.list then tickList(id)end
  state.gui.Enabled=true
  Kit.shadeOpen(owner,state.shade,nil,{overlay=true})
  state.root:SetAttribute("HelpId",id)
@@ -355,7 +459,7 @@ function How.close(reason)
  Kit.shadeClose(owner)
  if state.stamp then state.stamp:destroy();state.stamp=nil end
  if state.panel then state.panel:Destroy();state.panel=nil end
- state.done=nil;state.body=nil;state.goButton=nil;state.notice=nil
+ state.done=nil;state.body=nil;state.goButton=nil;state.notice=nil;state.list=nil;state.live=nil;state.listModel=nil
  local previous=state.previous;state.previous=nil
  if previous and previous.Parent and gamepad()then GuiService.SelectedObject=previous end
  local id,callback=state.id,state.onClosed

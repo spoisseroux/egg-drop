@@ -40,7 +40,8 @@ return function(client, parent)
 		-- Beta 14 D1: live keeps the Eggs line; the onboarding v3 places get Fable's, and the nest's while it is on.
 		assert(select(2, Attract.labelText("Eggs", true, { ceiling = false })) == UICopy.get("r5.station.Eggs.line"))
 		assert(select(2, Attract.labelText("Eggs", true, { ceiling = true, nest = false })) == UICopy.get("r5.station.EggsV3.line"))
-		assert(select(2, Attract.labelText("Eggs", true, { ceiling = true, nest = true })) == UICopy.get("r5.station.EggsNest.line"))
+		-- The egg corner retired the nest's line: the v3 line whatever the nest does.
+		assert(select(2, Attract.labelText("Eggs", true, { ceiling = true, nest = true })) == UICopy.get("r5.station.EggsV3.line"))
 	end)
 
 	test("Things to do: the race's station is outside Order, comes and goes with its gate, and only the nearest unlearned one beckons", function()

@@ -48,15 +48,14 @@ end
 
 -- The label copy: name + line the first time (intro), the name alone after.
 -- Beta 14 D1 (WORLD-AND-NEST-LOOK, Nest merge rulings R2 3): on the onboarding v3 places the Eggs station's line names
--- what its eggs give, and with the nest on it also says the napping egg is here. `env` = {ceiling, nest} for specs;
--- the game reads Onboard. Off the ceiling (live): exactly the line before.
+-- what its eggs give. The egg corner retired the nest's own line (EggsNest): the nest is not at the station any more.
+-- `env` = {ceiling} for specs; the game reads Onboard. Off the ceiling (live): exactly the line before.
 function Attract.labelText(id, intro, env)
 	local key = id
 	if id == "Eggs" and intro then
 		local okOn, Onboard = pcall(require, Shared:WaitForChild("Onboard"))
 		local ceiling = if env and env.ceiling ~= nil then env.ceiling else okOn and Onboard.ceiling()
-		local nest = if env and env.nest ~= nil then env.nest else okOn and ceiling and Onboard.on("nest")
-		if ceiling then key = if nest then "EggsNest" else "EggsV3" end
+		if ceiling then key = "EggsV3" end
 	end
 	local name = UICopy.get("r5.station." .. id .. ".name")
 	return name, if intro then UICopy.get("r5.station." .. key .. ".line") else nil
@@ -158,8 +157,11 @@ local function buildLabel(anchor, id, spec, hue)
 	return label, title, sub
 end
 
-local function build(folder, id, base)
+-- opts (the egg corner's machine, Attract:move): iconHeight and ring radius instead of the station's own.
+local function build(folder, id, base, opts)
+	opts = opts or {}
 	local spec = Data.Stations[id]
+	local iconHeight, ringRadius = opts.iconHeight or spec.iconHeight, opts.ring or Data.RingRadius
 	local hue, light = Color3.fromHex(spec.hue), Color3.fromHex(spec.light)
 	local anchor = part(folder, id .. "Attract", Vector3.new(.2, .2, .2), CFrame.new(base))
 	local glow = Instance.new("PointLight")
@@ -182,7 +184,7 @@ local function build(folder, id, base)
 	shaft.Enabled = false
 	shaft.Parent = anchor
 	-- Ground ring: a rounded frame's stroke on a flat surface (no texture upload).
-	local span = Data.RingRadius * 2 + 1.2
+	local span = ringRadius * 2 + 1.2
 	local ringPart = part(folder, id .. "AttractRing", Vector3.new(span, .05, span), CFrame.new(base + Vector3.new(0, .08, 0)))
 	local surface = Instance.new("SurfaceGui")
 	surface.Face, surface.LightInfluence, surface.AlwaysOnTop = Enum.NormalId.Top, 0, false
@@ -200,13 +202,13 @@ local function build(folder, id, base)
 		frame.Parent = surface
 		return frame, stroke
 	end
-	local ring = circle("Ring", Data.RingRadius * 2 / span, 6, .1)
-	local ripple, rippleStroke = circle("Ripple", Data.RingRadius * 2 / span, 4, 1)
+	local ring = circle("Ring", ringRadius * 2 / span, 6, .1)
+	local ripple, rippleStroke = circle("Ripple", ringRadius * 2 / span, 4, 1)
 	-- The marker: one billboard holding the round icon and its pointer as one pin shape.
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name, billboard.Adornee = "AttractIcon", anchor
 	billboard.Size = UDim2.fromScale(Data.IconSize, Data.IconSize * Data.MarkerAspect)
-	billboard.StudsOffsetWorldSpace = Vector3.new(0, spec.iconHeight, 0)
+	billboard.StudsOffsetWorldSpace = Vector3.new(0, iconHeight, 0)
 	billboard.MaxDistance, billboard.AlwaysOnTop, billboard.LightInfluence = Data.IconMaxDistance, false, 0
 	billboard.ResetOnSpawn, billboard.Enabled = false, false
 	billboard.Parent = anchor
@@ -257,7 +259,7 @@ local function build(folder, id, base)
 	sparkles.Transparency = NumberSequence.new(.2, 1)
 	sparkles.Enabled = false
 	sparkles.Parent = sparkAt
-	return { id = id, base = base, spec = spec, anchor = anchor, ringPart = ringPart, glow = glow, shaft = shaft, surface = surface, ring = ring,
+	return { id = id, base = base, spec = spec, iconHeight = iconHeight, ringRadius = ringRadius, anchor = anchor, ringPart = ringPart, glow = glow, shaft = shaft, surface = surface, ring = ring,
 		ripple = ripple, rippleStroke = rippleStroke, billboard = billboard, icon = icon, pointer = pointer, sparkles = sparkles,
 		label = label, labelName = labelName, labelLine = labelLine, introLine = labelLine.Text, intro = true, state = "hidden" }
 end
@@ -365,6 +367,23 @@ function Attract:extra(id, position, learned)
 	if position and learned then self:learn(id) end
 end
 
+-- The egg corner (EGG-CORNER-BUILD-PLAN 4): a station that moves (the Eggs pin and ring to the machine, and back). opts
+-- = {iconHeight, ring}; nil opts and the station's own position put it back. Used/learned memory is kept.
+function Attract:move(id, position, opts)
+	local entry = self.stations[id]
+	if not entry or not position or self.destroyed then return false end
+	opts = opts or {}
+	local height = opts.iconHeight or entry.spec.iconHeight
+	local ring = opts.ring or Data.RingRadius
+	if (entry.base - position).Magnitude <= .05 and entry.iconHeight == height and entry.ringRadius == ring then return false end
+	entry.anchor:Destroy()
+	entry.ringPart:Destroy()
+	local fresh = build(self.folder, id, position, opts)
+	fresh.intro, fresh.tipDone = entry.intro, entry.tipDone
+	self.stations[id] = fresh
+	return true
+end
+
 function Attract:visible(state)
 	if self.now() < self.hiddenUntil then return false end
 	return state ~= nil and LoungeStations.canRoam(state)
@@ -452,14 +471,14 @@ function Attract:step(dt)
 		entry.sparkles.Enabled = mode == "invite" and not reduced
 		-- The marker bobs while it beckons and hops (as one piece) while it invites; a learned marker holds still.
 		local lift = if mode == "invite" then hop elseif mode == "beckon" then bob else 0
-		local height = entry.spec.iconHeight + lift
+		local height = (entry.iconHeight or entry.spec.iconHeight) + lift
 		entry.billboard.StudsOffsetWorldSpace = Vector3.new(0, height, 0)
 		-- The label's bottom sits just above the icon disc (the billboard is centred on `height`).
 		entry.label.StudsOffsetWorldSpace = Vector3.new(0, height + Data.IconSize * Data.MarkerAspect / 2 + .15, 0)
 		self:paintLabel(entry, Attract.showsLabel(mode, distance), dt)
 		if mode == "invite" and not reduced then
 			local t = (self.time % Data.RippleEvery) / Data.RippleEvery
-			local base = Data.RingRadius * 2 / entry.ringPart.Size.X
+			local base = (entry.ringRadius or Data.RingRadius) * 2 / entry.ringPart.Size.X
 			entry.ripple.Size = UDim2.fromScale(base * (1 + t * .12), base * (1 + t * .12))
 			entry.rippleStroke.Transparency = .2 + .8 * t
 		else

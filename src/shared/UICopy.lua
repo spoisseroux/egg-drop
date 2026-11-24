@@ -223,7 +223,12 @@ local Table={
    tuckedFirst="Tucked in! Come back in {hours} hours to hatch a gift.",
    tucked="Sleep tight. It naps while you're away.",next="A new egg is napping. Come back in {hours} hours.",count="Egg {count} of 7",
    chipHours="Egg {hours} h",chipMinutes="Egg {minutes} min",chipReady="Hatch egg!",got="{item} from the napping egg!",
-   pinReady="Hatch!"}, -- beta 14 Q1: the Show me pin over a ready egg
+   pinReady="Hatch!", -- beta 14 Q1: the Show me pin over a ready egg
+   -- The egg corner (EGG-CORNER-LOOK 3): Peek (the nest prompt while it naps), the "?" disc's label, and the "?" card.
+   peek="Peek",helpAsk="What is this?",
+   help={title="Napping egg",what="Your pet's egg is asleep in the nest.",time="It naps for {hours} hours, even when you're not playing.",
+    gift="When it wakes up, come back and hatch it for a gift.",free="It's always free. You never need Stars for it.",
+    next="Hatch it, and a new egg starts its nap.",wait="Naps can't be hurried. Go play, it will be here.",button="Got it"}},
   -- QA-R2-LOOK 5 (Spencer R2.6): "Coming up", a live status of what is on its way. Whole, short and tiny forms; the
   -- bare numbers ("+25", "2") are never sent for translation. {hours} and {minutes} are the egg's or the day's clock.
   strip={title="Coming up",wait="Miss a day, lose nothing.",
@@ -380,10 +385,10 @@ local Table={
  -- up to a station the label reads name + line; after that the name only.
  r5={
   station={
-   Eggs={name="Hatch eggs",line="Spend Stars on new eggs"},
-   -- Beta 14 D1 (Fable R2): the onboarding v3 places only; the nest's line while the nest is on.
+   -- turn: the egg machine's prompt (the egg corner): "turn the handle of a toy machine" (EGG-CORNER-LOOK 1).
+   Eggs={name="Hatch eggs",line="Spend Stars on new eggs",turn="Turn"},
+   -- Beta 14 D1 (Fable R2): the onboarding v3 places only. The egg corner retired the nest's line (EggsNest).
    EggsV3={name="Hatch eggs",line="Toys, looks and snacks for your pet"},
-   EggsNest={name="Hatch eggs",line="Toys, looks and snacks. Your napping egg is here too."},
    Customize={name="Deck style",line="Faceplates, backgrounds and balls"},
    Journal={name="Companions",line="Dress up and care for your pets"},
    Park={name="Pet Park",line="Pets play here. Play dates pay Stars"},
