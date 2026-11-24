@@ -7,13 +7,32 @@ Branch `claude/eggs-station-split` from feat efc846c. No publish.
 ## Done offline (this branch)
 
 - `build_world_v7_chunks.classify`: `Stations_EggNest*` -> region `EggsStation`, groups `EggsStation__<mat>` (collide as
-  today); the halo (`Anim__Station_EggNest_Glow_Halo`) joins as `EggsStation__glow_warm` (anim `pulse`).
+  today); the halo (`Anim__Station_EggNest_Glow_Halo`) is named `EggsStation__glow_warm` but keeps region `NestHalo`
+  (architect: motion is picked by region, so live keeps its pulse).
+- Fable's placement rulings R2 asked to split `Station_BenchWest`, both `Statue_Egg` and `Pad_Future_B` too. They are
+  already gone from the game: the 2026-11-13 declutter (`world-v7-declutter.json`) deleted `Plaza_Ornament_09` / `_10`
+  (the egg statues at (-42, 9.5) and (-18, 9.5)), `Pad_Future_B`, and both benches' seat slats and supports (all a bench
+  is); the export makes no part for any of them and the live walk map shows bare ground there. Nothing to split.
 - Walk map: `EggsStation` parts are ray-cast like Stations and report as `W7_Stations`; the surface map skips the halo as it
   skipped `NestHalo`. Result: `world-v7-walk.json` byte-identical.
 - Chunk build: 103 parts (was 99), 66,844 triangles (unchanged). Changed: `W7_Stations__marble` 1414 -> 1236,
   `__marble_smooth` 978 -> 924, `__palette` 2068 -> 1808, `__trim` 200 -> 168. Added: `W7_EggsStation__marble` 178,
   `__marble_smooth` 54, `__trim` 32 (all collide), `__palette` 260, `__foliage` 36, `__glow_warm` 24 (pulse). Dropped:
   `W7_NestHalo__glow_warm`, `W7_Stations__foliage`. No other mesh hash moved. `world-v7-declutter.fbx` holds the 10.
+
+## Architect review (2026-11-24): sound, with changes (applied or planned below)
+
+- Halo keeps region `NestHalo` (applied). `EggsStation__foliage` and `__glow_warm` are renames (same geometry hash as
+  `Stations__foliage` / `NestHalo__glow_warm`): rename them in the pack and keep their mesh ids and raw sizes; only the
+  4 changed and 4 truly new parts take uploaded ids. New parts: clone a sibling, then `ApplyMesh`.
+- Promoter asserts: MeshParts and descendants +4, SurfaceAppearances unchanged; every MeshPart property matches the staged
+  XML by name; SA children exact; no attributes or tags; parent `WorldV7`; a real Precise collision buffer on the 3 new
+  colliding parts; the 2 renamed keep their bytes; XML compared by part name (referents shift), Lua by meaning
+  (incl. `motion`); changed input hashes exactly manifest, pending, studio-import, both FBXs and dressing-import.
+- Dressing re-sign: proven a no-op (feat's inputs regenerate the canonical XML and Lua identically, line endings apart).
+- Probes: sideways rays at several heights (risers, stele, cup), a character blockcast, a Play walk up the steps;
+  0.05 stud tolerance on the 4 rebuilt Stations meshes, exact elsewhere; captures at a frozen ClockTime incl. a close-up
+  of the station's seam with the plaza; the halo pulses in Play. Live also gains 4 draw calls.
 
 ## Studio steps (ask the coordinator first)
 

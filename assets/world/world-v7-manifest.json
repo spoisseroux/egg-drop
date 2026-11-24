@@ -991,7 +991,7 @@
    "tris": 24,
    "collide": false,
    "anim": "pulse",
-   "region": "EggsStation",
+   "region": "NestHalo",
    "center": [
     -31.0,
     5.245,
