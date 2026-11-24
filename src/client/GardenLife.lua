@@ -235,10 +235,12 @@ local function dewdrop(folder,slot)
 end
 
 -- The hand-off glow (GARDEN-LIFE-NEST-LOOK 1): one billboard on each butterfly's body, off by day. No PointLight.
-local function glow(body)
+-- size: studs (the butterfly's starts small; a night firefly's is Sim.Firefly.size).
+local function glow(body,size)
+	size=size or Sim.Butterfly.glowFrom
 	local gui=Instance.new("BillboardGui")
 	gui.Name="Glow"
-	gui.Size=UDim2.fromScale(Sim.Butterfly.glowFrom,Sim.Butterfly.glowFrom)
+	gui.Size=UDim2.fromScale(size,size)
 	gui.LightInfluence=0
 	gui.Brightness=Life.Glow.brightness
 	gui.AlwaysOnTop=false
@@ -313,6 +315,12 @@ function Life.mount(deps)
 	end
 	-- The leaves wait for the covered-place probe on the beta (LifeSim.LeafCoverChecked); Studio always has them.
 	self.leavesGate=deps.leaves or function()return Sim.LeafCoverChecked==true or RunService:IsStudio()end
+	-- Beta 14 B2 diagnostics: the budget level on the local player, one write per change (a phone at level 2 shows no
+	-- garden life at all).
+	self.report=deps.report or function(level)
+		local player=Players.LocalPlayer
+		if player then player:SetAttribute("AliveLevel",level)end
+	end
 	table.insert(self.connections,alive.changed("life"):Connect(function()self:sync()end))
 	self:sync()
 	return self
@@ -382,6 +390,36 @@ function Life:places()
 		local Aero=require(Shared:WaitForChild("Aero"))
 		return if Aero.on()and Aero.trees()=="lime"then "lime"else "pink"
 	end
+	-- Beta 14 B2: the night fireflies hover over the flower patches and the water's banks (WorldV7Data.wet).
+	self.fireflySpots={patches=self.patches,banks=d.banks or Life.banks(Shared)}
+end
+
+-- Points just inside the water's banks, every Sim.Firefly bank step along each wet box's edge (data only). A missing or
+-- malformed table is no banks.
+Life.BankStep,Life.BankInset=4,1.5
+function Life.banks(Shared)
+	local out={}
+	local ok,Data=pcall(function()return require(Shared:WaitForChild("WorldV7Data"))end)
+	local wet=ok and type(Data)=="table"and Data.wet
+	if type(wet)~="table"then return out end
+	for _,box in ipairs(wet)do
+		local c,s=box.center,box.size
+		if type(c)=="table"and type(s)=="table"and #c==3 and #s==3 then
+			local frame=CFrame.new(c[1],c[2],c[3])*CFrame.Angles(0,tonumber(box.yaw)or 0,0)
+			local hx,hz=s[1]/2-Life.BankInset,s[3]/2-Life.BankInset
+			if hx>0 and hz>0 then
+				for _,edge in ipairs({{-hx,-hz,hx,-hz},{hx,-hz,hx,hz},{hx,hz,-hx,hz},{-hx,hz,-hx,-hz}})do
+					local ax,az,bx,bz=edge[1],edge[2],edge[3],edge[4]
+					local n=math.max(1,math.floor(math.sqrt((bx-ax)^2+(bz-az)^2)/Life.BankStep))
+					for i=0,n-1 do
+						local u=i/n
+						table.insert(out,frame*Vector3.new(ax+(bx-ax)*u,0,az+(bz-az)*u))
+					end
+				end
+			end
+		end
+	end
+	return out
 end
 
 function Life:enable()
@@ -463,6 +501,15 @@ function Life:enable()
 		local anchor=part(folder,Life.Leaves[index].name,"Part",Life.LeafAnchor,false)
 		self.leafPool[index]={anchor=anchor,emitter=leafEmitter(anchor,index)}
 	end
+	-- Beta 14 B2: the night fireflies, one invisible anchor and one glow billboard each (no PointLight).
+	self.firePool={}
+	for slot=1,Sim.Caps.fireflies[1]do
+		local anchor=part(folder,"LifeFirefly"..slot,"Part",Vector3.new(.2,.2,.2),false)
+		local gui,dot=glow(anchor,Sim.Firefly.size)
+		self.firePool[slot]={anchor=anchor,glow=gui,dot=dot,glowOn=false,glowTr=nil}
+	end
+	self.fireflies=Sim.Fireflies.new(self.seed+4)
+	self.fireIn=0
 	self.fruitPool={}
 	for slot=1,Sim.Fruit.pool do self.fruitPool[slot]=dewdrop(folder,slot)end
 	self.bubblePool={}
@@ -519,6 +566,7 @@ function Life:disable()
 	self.folder,self.shown,self.birdPool,self.birdArt,self.flyPool,self.leafPool,self.bubblePool=nil,nil,nil,nil,nil,nil,nil
 	self.birds,self.flies,self.leaves,self.bubbles,self.birdStill=nil,nil,nil,nil,nil
 	self.fruitPool,self.grove,self.loose,self.view,self.fruitOf,self.fruitCount=nil,nil,nil,nil,nil,0
+	self.firePool,self.fireflies=nil,nil
 	if folder then folder:Destroy()end
 end
 
@@ -554,6 +602,8 @@ function Life:park()
 	self.birds:clear();self.flies:clear()
 	self:clearEmitters()
 	for _,entry in ipairs(self.flyPool)do self:glowOff(entry);entry.owner=nil end
+	self.fireflies:clear()
+	for _,entry in ipairs(self.firePool)do self:glowOff(entry)end
 	table.clear(self.birdStill)
 	self:forgetFruit()
 	local parts,frames={},{}
@@ -591,6 +641,10 @@ function Life:step(dt)
 	dt=math.min(dt,Life.MaxStep)
 	self.elapsed+=dt;self.since+=dt
 	local level=Sim.level(self.level())
+	if level~=self.reported then
+		self.reported=level
+		pcall(self.report,level)
+	end
 	if level>=2 then self:disable();return end
 	local rate=Sim.rate(level)
 	if self.elapsed<rate then return end
@@ -644,7 +698,7 @@ function Life:step(dt)
 	end
 	local player=self.root()
 	local world={camera=eye,player=player,stations=self.stations,pad=self.pad,course=if self.live then self.course else nil,
-		groundY=self.groundY,ground=self.ground}
+		groundY=self.groundY,ground=self.ground,safe=self.fruitWorld.safe}
 	-- Leaves: round the player (the camera without a character), each emit at its own spot; the wind at 4 Hz.
 	local centre=if typeof(player)=="Vector3"then player else eye
 	if self.leavesOn and not reduced then
@@ -698,6 +752,7 @@ function Life:step(dt)
 			entry.owner=nil
 		end
 	end
+	self:stepFireflies(now,tick,world,level,reduced,put,hide)
 	-- Birds: a sitting bird with nothing moving keeps its last frames (no write).
 	local still=self.birdStill
 	for _,bird in ipairs(self.birds:step(now,world,reduced,Sim.cap("birds",level),level))do
@@ -719,6 +774,40 @@ function Life:step(dt)
 	if #parts>0 then self.move(parts,frames)end
 	-- After the move, so a bubble or a leaf leaves from where its anchor now is.
 	for _,emit in ipairs(emits)do emit[1]:Emit(emit[2])end
+end
+
+-- Night fireflies (beta 14 QA B2) ---------------------------------------------------------------------------------
+-- Butterflies whose hand-off finished are adopted first; the population follows the garden hour's daylight (self.dusk,
+-- read every Poll). Positions written at Sim.Firefly.hz, the glow's transparency only on change.
+function Life:stepFireflies(now,tick,world,level,reduced,put,hide)
+	local cap=Sim.cap("fireflies",level)
+	for _,at in ipairs(self.flies.handed)do self.fireflies:adopt(now,at,cap)end
+	table.clear(self.flies.handed)
+	self.fireIn-=tick
+	local write=self.fireIn<=0
+	if write then self.fireIn=1/Sim.Firefly.hz end
+	local used={}
+	for _,f in ipairs(self.fireflies:step(now,tick,world,self.fireflySpots,cap,reduced,self.dusk))do
+		local entry=self.firePool[f.slot]
+		if entry then
+			used[entry]=true
+			local fresh=entry.owner~=f
+			entry.owner=f
+			if write or fresh then put(entry.anchor,CFrame.new(f.position))end
+			local transparency=Sim.fireflyLook(f,now)
+			if not entry.glowOn then entry.glow.Enabled=true;entry.glowOn=true end
+			if fresh or entry.glowTr==nil or math.abs(entry.glowTr-transparency)>.01 or(transparency>=1 and entry.glowTr<1)then
+				entry.glowTr=transparency;entry.dot.ImageTransparency=transparency
+			end
+		end
+	end
+	for _,entry in ipairs(self.firePool)do
+		if not used[entry]then
+			hide(entry.anchor)
+			self:glowOff(entry)
+			entry.owner,entry.glowTr=nil,nil
+		end
+	end
 end
 
 -- Dewdrops -------------------------------------------------------------------------------------------------------
@@ -859,13 +948,14 @@ end
 
 -- For specs and the perf probe: how much is alive. `petals` is `leaves` under its old name (one build).
 function Life:counts()
-	if not self.enabled then return{birds=0,butterflies=0,leaves=0,petals=0,glows=0,bubbles=0,fruit=0,loose=0}end
+	if not self.enabled then return{birds=0,butterflies=0,leaves=0,petals=0,glows=0,bubbles=0,fruit=0,loose=0,fireflies=0}end
 	local now=self.now()
 	local leaves=self.leaves:count(now)
-	local glows=0
+	local glows,fireflies=0,0
 	for _,entry in ipairs(self.flyPool)do if entry.glowOn then glows+=1 end end
+	for _,entry in ipairs(self.firePool)do if entry.glowOn then fireflies+=1 end end
 	return{birds=#self.birds.list,butterflies=#self.flies.list,leaves=leaves,petals=leaves,glows=glows,bubbles=self.bubbles:count(now),
-		fruit=if self.parked then 0 else self.fruitCount,loose=#self.loose.list}
+		fruit=if self.parked then 0 else self.fruitCount,loose=#self.loose.list,fireflies=fireflies}
 end
 
 return Life

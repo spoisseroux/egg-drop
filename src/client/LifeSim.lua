@@ -29,6 +29,8 @@ local leaves=table.freeze({28,14,0})
 Sim.Caps=table.freeze({
 	leaves=leaves,petals=leaves,bubbles=table.freeze({8,4,0}),butterflies=table.freeze({4,2,0}),
 	birds=table.freeze({3,2,0}),emitters=table.freeze({3,3,0}),fruit=table.freeze({16,8,0}),loose=table.freeze({3,2,0}),
+	-- Beta 14 QA B2: the night fireflies (a population of their own, GARDEN-LIFE-BUILD-PLAN section 3).
+	fireflies=table.freeze({8,4,0}),
 })
 Sim.Hz=table.freeze({30,15}) -- steps a second at level 0 and 1
 -- Never in the way: studs from the camera, a station (on the ground), the course line, past the waiting pad's edge.
@@ -305,8 +307,8 @@ Sim.Butterfly=table.freeze({reach=60,wander=3,speed=.65,restMin=2,restMax=4,low=
 	glowFrom=.2,glowTo=.9,glowLit=.1,glowDim=.55,glowPulse=1.8,glowSpeed=.25,glowRise=table.freeze({1.5,2}),glowClimb=1.2})
 local Butterflies={};Butterflies.__index=Butterflies
 Sim.Butterflies=Butterflies
-function Butterflies.new(seed)return setmetatable({random=Random.new(seed or 2),list={},spawnAt=0},Butterflies)end
-function Butterflies:clear()table.clear(self.list);self.spawnAt=0 end
+function Butterflies.new(seed)return setmetatable({random=Random.new(seed or 2),list={},spawnAt=0,handed={}},Butterflies)end
+function Butterflies:clear()table.clear(self.list);table.clear(self.handed);self.spawnAt=0 end
 local function wanderPoint(r,patch,radius,low,high)
 	local a,d=r:NextNumber()*math.pi*2,math.sqrt(r:NextNumber())*radius
 	return Vector3.new(patch.X+math.cos(a)*d,patch.Y+r:NextNumber(low,high),patch.Z+math.sin(a)*d)
@@ -331,8 +333,13 @@ function Butterflies:step(now,dt,world,patches,cap,still,daylight)
 	if still or not camera then table.clear(list);return list end
 	for i=#list,1,-1 do
 		local b=list[i]
-		if i>cap or(b.position-camera).Magnitude>Sim.Drop
-			or(b.hand and now-b.hand>=B.handGone)or(b.fade and now-b.fade>=B.fadeOut)then table.remove(list,i)end
+		local gone=b.hand~=nil and now-b.hand>=B.handGone
+		local far=(b.position-camera).Magnitude>Sim.Drop
+		if i>cap or far or gone or(b.fade and now-b.fade>=B.fadeOut)then
+			table.remove(list,i)
+			-- Beta 14 B2: a glow that finished its hand-off is passed on to the night population (GardenLife adopts it).
+			if gone and i<=cap and not far then table.insert(self.handed,b.position)end
+		end
 	end
 	if dark(daylight)then
 		local fresh,last={},-math.huge
@@ -524,6 +531,127 @@ function Sim.butterflyParts(root,phi)
 	return{root*CFrame.new(0,0,-W.forward),
 		root*CFrame.new(-W.hinge,0,0)*CFrame.Angles(0,0,-phi)*CFrame.new(-W.half,0,0)*flat90,
 		root*CFrame.new(W.hinge,0,0)*CFrame.Angles(0,0,phi)*CFrame.new(W.half,0,0)*flat90}
+end
+
+-- Fireflies at night (beta 14 QA B2; GARDEN-LIFE-BUILD-PLAN section 3) ----------------------------------------------
+-- A population of their own while the garden hour is dark: the count follows the shared daylight (none over .34, the
+-- full cap by .20), so they come out through dusk and leave at dawn, staggered. Each one hovers over a flower patch or a
+-- point on a water bank within reach of the camera, else on a ring round the player; 1.5 to 3 studs up, wandering
+-- slowly, with a soft pulse. A butterfly whose hand-off finished is adopted where it is (GardenLife passes it on). The
+-- hour off (daylight nil): none. Reduced Motion: none. Each firefly has its own Random.
+Sim.Firefly=table.freeze({start=.34,full=.20,spawnGap=1.5,fadeIn=1.2,fadeOut=2,fadeGap=.8,reach=40,ring=table.freeze({6,18}),
+	low=1.5,high=3,speed=.25,wander=2.5,pulse=1.8,lit=.1,dim=.55,size=.9,pool=.6,tries=4,hz=15,climb=1.2})
+-- How many fireflies the daylight wants out of `cap` (0 by day and with the hour off).
+function Sim.fireflyWanted(daylight,cap)
+	local F=Sim.Firefly
+	if type(daylight)~="number"or daylight~=daylight or type(cap)~="number"or cap<=0 then return 0 end
+	local ramp=math.clamp((F.start-daylight)/(F.start-F.full),0,1)
+	return math.min(cap,math.floor(cap*ramp+.5))
+end
+local Fireflies={};Fireflies.__index=Fireflies
+Sim.Fireflies=Fireflies
+function Fireflies.new(seed)return setmetatable({random=Random.new(seed or 5),list={},spawnAt=-math.huge,serial=0},Fireflies)end
+function Fireflies:clear()table.clear(self.list);self.spawnAt=-math.huge end
+local function fireflyEntry(self,now,spot,at,glowY,lit)
+	local F=Sim.Firefly
+	self.serial+=1
+	local r=Random.new(self.random:NextInteger(1,1073741823))
+	local taken={}
+	for _,f in ipairs(self.list)do taken[f.slot]=true end
+	local slot=1
+	while taken[slot]do slot+=1 end
+	local f={id=self.serial,slot=slot,spot=spot,position=at,glowY=glowY,random=r,phase=r:NextNumber()*F.pulse,
+		born=if lit then now-F.fadeIn else now}
+	f.target=Vector3.new(spot.X+r:NextNumber(-F.wander,F.wander),0,spot.Z+r:NextNumber(-F.wander,F.wander))
+	table.insert(self.list,f)
+	return f
+end
+-- A spot to hover over, or nil: a flower patch or a bank point within reach of the camera (from that pool 60% of the
+-- time), else a point on the ring round the player on safe ground; Sim.clear always, never a spot already in use.
+function Sim.fireflySpot(random,world,spots,used)
+	local F=Sim.Firefly
+	local camera=world and world.camera
+	if typeof(camera)~="Vector3"then return nil end
+	used=used or {}
+	local pool={}
+	for _,list in ipairs({spots and spots.patches or {},spots and spots.banks or {}})do
+		for _,spot in ipairs(list)do
+			if typeof(spot)=="Vector3"and not used[spot]and(spot-camera).Magnitude<=F.reach and Sim.clear(spot,world)then table.insert(pool,spot)end
+		end
+	end
+	local function fromPool()return if #pool>0 then pool[random:NextInteger(1,#pool)]else nil end
+	if #pool>0 and random:NextNumber()<F.pool then return fromPool()end
+	local centre=if typeof(world.player)=="Vector3"then world.player else camera
+	for _=1,F.tries do
+		local a,d=random:NextNumber()*math.pi*2,random:NextNumber(F.ring[1],F.ring[2])
+		local x,z=centre.X+math.cos(a)*d,centre.Z+math.sin(a)*d
+		local g=world.ground and world.ground(x,z)
+		if type(g)=="number"and g==g and math.abs(g)<math.huge and(not world.safe or world.safe(x,z))then
+			local at=Vector3.new(x,g,z)
+			if Sim.clear(at,world)then return at end
+		end
+	end
+	return fromPool()
+end
+-- A butterfly whose hand-off finished stays a firefly: adopted where it is, already lit. False at the cap or when
+-- `position` is not a place.
+function Fireflies:adopt(now,position,cap)
+	if typeof(position)~="Vector3"or #self.list>=(cap or 0)then return false end
+	fireflyEntry(self,now,Vector3.new(position.X,position.Y-Sim.Firefly.low,position.Z),position,position.Y,true)
+	return true
+end
+-- One step: the live list. world {camera, player, ground(x, z), safe(x, z), stations, pad, course}; spots {patches,
+-- banks}; still = Reduced Motion (none); daylight: the garden hour's (nil: none).
+function Fireflies:step(now,dt,world,spots,cap,still,daylight)
+	local F,list=Sim.Firefly,self.list
+	local camera=world and world.camera
+	cap=cap or 0
+	if still or typeof(camera)~="Vector3"or cap<=0 then table.clear(list);return list end
+	for i=#list,1,-1 do
+		local f=list[i]
+		if i>cap or(f.position-camera).Magnitude>Sim.Drop or(f.fade and now-f.fade>=F.fadeOut)then table.remove(list,i)end
+	end
+	local live={}
+	for _,f in ipairs(list)do if not f.fade then table.insert(live,f)end end
+	local wanted=Sim.fireflyWanted(daylight,cap)
+	if #live>wanted then
+		-- The farthest from the camera go first, fadeGap apart.
+		table.sort(live,function(a,b)return(a.position-camera).Magnitude>(b.position-camera).Magnitude end)
+		for i=1,#live-wanted do live[i].fade=now+(i-1)*F.fadeGap end
+	elseif #live<wanted and #list<cap and now>=self.spawnAt then
+		self.spawnAt=now+F.spawnGap
+		local used={}
+		for _,f in ipairs(list)do used[f.spot]=true end
+		local spot=Sim.fireflySpot(self.random,world,spots,used)
+		if spot then
+			local glowY=spot.Y+self.random:NextNumber(F.low,F.high)
+			fireflyEntry(self,now,spot,Vector3.new(spot.X,glowY,spot.Z),glowY,false)
+		end
+	end
+	dt=if type(dt)=="number"and dt==dt then math.clamp(dt,0,.25)else 0
+	for _,f in ipairs(list)do
+		local to=Vector3.new(f.target.X-f.position.X,0,f.target.Z-f.position.Z)
+		local step=F.speed*dt
+		local flat
+		if to.Magnitude<=math.max(step,.05)then
+			flat=Vector3.new(f.target.X,0,f.target.Z)
+			local r=f.random
+			f.target=Vector3.new(f.spot.X+r:NextNumber(-F.wander,F.wander),0,f.spot.Z+r:NextNumber(-F.wander,F.wander))
+		else
+			flat=Vector3.new(f.position.X,0,f.position.Z)+to.Unit*step
+		end
+		local y=f.position.Y+(f.glowY-f.position.Y)*math.min(1,dt*F.climb)
+		f.position=Vector3.new(flat.X,y,flat.Z)
+	end
+	return list
+end
+-- The glow's transparency now (0 shown, 1 gone): the soft pulse, faded in after birth and out after `fade`.
+function Sim.fireflyLook(f,now)
+	local F=Sim.Firefly
+	local pulse=F.lit+(F.dim-F.lit)*(.5-.5*math.cos(2*math.pi*(now-f.born+f.phase)/F.pulse))
+	local shown=smooth((now-f.born)/F.fadeIn)
+	if f.fade then shown*=1-smooth((now-f.fade)/F.fadeOut)end
+	return 1-(1-pulse)*shown
 end
 
 -- Birds (brief C1; round 3: GARDEN-LIFE-NEST-LOOK 3) ---------------------------------------------------------------

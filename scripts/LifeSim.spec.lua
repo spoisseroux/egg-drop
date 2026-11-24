@@ -1005,5 +1005,99 @@ return function(client)
 		assert(bubbles:due(6,8,Sim.day(.9))==true)
 	end)
 
+	-- Beta 14 QA B2: night fireflies (GARDEN-LIFE-BUILD-PLAN section 3) ---------------------------------------------
+	local FF=Sim.Firefly
+	local function fireWorld()
+		return{camera=Vector3.new(0,10,10),player=Vector3.new(0,4,6),stations={},ground=function()return 4 end,safe=function()return true end}
+	end
+	test("fireflies: 8 / 4 / 0; none by day or with the hour off; the count follows the daylight (.34 none, .20 all)",function()
+		assert(Sim.cap("fireflies",0)==8 and Sim.cap("fireflies",1)==4 and Sim.cap("fireflies",2)==0)
+		assert(Sim.fireflyWanted(nil,8)==0 and Sim.fireflyWanted(.9,8)==0 and Sim.fireflyWanted(.34,8)==0)
+		assert(Sim.fireflyWanted(.20,8)==8 and Sim.fireflyWanted(.12,8)==8 and Sim.fireflyWanted(.27,8)==4 and Sim.fireflyWanted(.12,4)==4)
+		assert(Sim.fireflyWanted(.12,0)==0 and Sim.fireflyWanted(0/0,8)==0)
+		local spots={patches={Vector3.new(8,4,0),Vector3.new(-8,4,-4)},banks={Vector3.new(0,3.2,-12)}}
+		for _,daylight in ipairs({.9,.5,.34,nil})do
+			local flies=Sim.Fireflies.new(1)
+			local now=0
+			for _=1,30*20 do now+=1/30;flies:step(now,1/30,fireWorld(),spots,8,false,daylight)end
+			assert(#flies.list==0,"none at "..tostring(daylight))
+		end
+	end)
+	test("fireflies at night: 1.5 s apart up to the cap, past 6 s and on; over a patch, a bank or the ring; never in the way",function()
+		local spots={patches={Vector3.new(8,4,0),Vector3.new(-8,4,-4),Vector3.new(200,4,200)},banks={Vector3.new(0,3.2,-12)}}
+		local world=fireWorld()
+		world.stations={Vector3.new(-8,4,-4)} -- that patch is beside a station: never used
+		local flies=Sim.Fireflies.new(2)
+		local now,counts=0,{}
+		for second=1,30 do
+			for _=1,30 do now+=1/30;flies:step(now,1/30,world,spots,8,false,.12)end
+			counts[second]=#flies.list
+		end
+		assert(counts[1]==1 and counts[2]==2 and counts[11]==8 and counts[30]==8,"1.5 s apart, then the cap: "..table.concat(counts,","))
+		local slots={}
+		for _,f in ipairs(flies.list)do
+			assert(not slots[f.slot]and f.slot>=1 and f.slot<=8,"one slot each");slots[f.slot]=true
+			assert((f.spot-Vector3.new(-8,4,-4)).Magnitude>1e-6,"not beside a station")
+			assert((f.spot-Vector3.new(200,4,200)).Magnitude>1e-6,"not out of reach")
+			assert(f.position.Y>=f.spot.Y+FF.low-.01 and f.position.Y<=f.spot.Y+FF.high+.01,"1.5 to 3 up: "..f.position.Y-f.spot.Y)
+			local flat=Vector3.new(f.position.X-f.spot.X,0,f.position.Z-f.spot.Z).Magnitude
+			assert(flat<=FF.wander*1.5,"wanders round its spot: "..flat)
+			local look=Sim.fireflyLook(f,now)
+			assert(look>=FF.lit-1e-6 and look<=FF.dim+1e-6,"lit, pulsing .1 to .55: "..look)
+		end
+		-- A new one fades in over 1.2 s.
+		local f=flies.list[1]
+		assert(Sim.fireflyLook({born=10,phase=0},10)>.99 and Sim.fireflyLook({born=10,phase=0},11.2)<=FF.dim+1e-6)
+		-- Reduced Motion and level 2: none at once.
+		flies:step(now+.1,.1,world,spots,8,true,.12);assert(#flies.list==0)
+		assert(f)
+	end)
+	test("fireflies at dawn: the extra ones fade (farthest first, .8 s apart, 2 s each) and go; a camera jump drops them",function()
+		local spots={patches={},banks={}}
+		local flies=Sim.Fireflies.new(3)
+		local world=fireWorld()
+		local now=0
+		for _=1,30*15 do now+=1/30;flies:step(now,1/30,world,spots,8,false,.12)end
+		assert(#flies.list==8,"the ring alone fills it: "..#flies.list)
+		now+=1/30;flies:step(now,1/30,world,spots,8,false,.5)
+		local fades={}
+		for _,f in ipairs(flies.list)do assert(f.fade,"all fade by day");table.insert(fades,f.fade)end
+		table.sort(fades)
+		for i=2,#fades do assert(near(fades[i]-fades[i-1],FF.fadeGap,1e-6),"staggered")end
+		for _=1,30*9 do now+=1/30;flies:step(now,1/30,world,spots,8,false,.5)end
+		assert(#flies.list==0,"gone by "..now)
+		-- Night again, then the camera jumps 200 studs: all dropped, refilled near the new camera.
+		for _=1,30*15 do now+=1/30;flies:step(now,1/30,world,spots,8,false,.12)end
+		world.camera=Vector3.new(400,10,10);world.player=Vector3.new(400,4,6)
+		now+=1/30;flies:step(now,1/30,world,spots,8,false,.12)
+		assert(#flies.list<=1,"dropped")
+		for _=1,30*15 do now+=1/30;flies:step(now,1/30,world,spots,8,false,.12)end
+		for _,f in ipairs(flies.list)do assert((f.position-world.camera).Magnitude<40,"refilled near the camera")end
+	end)
+	test("fireflies: a butterfly whose hand-off finished is adopted, lit, where it is (never over the cap)",function()
+		local patches={}
+		for i=1,4 do patches[i]=Vector3.new(i*8,4,0)end
+		local butterflies=Sim.Butterflies.new(4)
+		local flies=Sim.Fireflies.new(4)
+		local world={camera=Vector3.new(0,10,10),stations={},ground=function()return 4 end}
+		local now=0
+		for _=1,30*20 do now+=1/30;butterflies:step(now,1/30,world,patches,4,false,.9)end
+		local out=#butterflies.list
+		local adopted=0
+		for _=1,30*16 do
+			now+=1/30
+			butterflies:step(now,1/30,world,patches,4,false,.28)
+			for _,at in ipairs(butterflies.handed)do
+				assert(flies:adopt(now,at,8));adopted+=1
+				local f=flies.list[#flies.list]
+				assert(f.position==at and Sim.fireflyLook(f,now)<=FF.dim+1e-6,"lit where it was")
+			end
+			table.clear(butterflies.handed)
+		end
+		assert(adopted==out,"each one adopted: "..adopted.." of "..out)
+		assert(not flies:adopt(now,Vector3.new(1,5,1),adopted),"never over the cap")
+		assert(not flies:adopt(now,nil,8))
+	end)
+
 	return{passed=#cases,cases=cases}
 end

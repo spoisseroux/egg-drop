@@ -92,6 +92,44 @@ return function(client)
 		Wind.Strength=strength
 	end)
 
+	-- The big breath (beta 14 QA W3 row 1; GARDEN-LIFE-BUILD-PLAN section 4) ---------------------------------------
+	test("the big breath: every 240 to 360 s, 2.5 s up, 3 held, 5 down, a front like a gust",function()
+		local base=math.floor(T0/Wind.BreathSlot)
+		for b=base,base+2000 do
+			local gap=Wind.breathStart(b+1)-Wind.breathStart(b)
+			assert(gap>=240-1e-6 and gap<=360+1e-6,"breath gap "..gap)
+		end
+		local E=Wind.breathEnvelope
+		assert(E(0)==0 and E(-1)==0 and E(10.5)==0 and E(0/0)==0 and E(2.5)==1 and E(5.4)==1)
+		assert(math.abs(E(1.25)-.5)<1e-9 and math.abs(E(8)-.5)<1e-9,"halfway up and down")
+		-- One breath, found and walked: it travels at 14 studs a second, and its number is the same everywhere.
+		local start=Wind.breathStart(base+1)+here:Dot(Wind.Direction)/Wind.Speed
+		local v,b=Wind.breath(here,start+4)
+		assert(v==1 and b==base+1,"held at the top: "..tostring(v).." "..tostring(b))
+		local far,fb=Wind.breath(here+Wind.Direction*70,start+4+5)
+		assert(math.abs(far-v)<1e-9 and fb==b,"the front travels")
+		assert(Wind.breath(here,start-1)==0 and select(2,Wind.breath(here,start-1))==nil,"not before")
+		assert(Wind.breath(here,0/0)==0 and Wind.breath(nil,T0)==0)
+	end)
+
+	test("the breath is opt-in: gust and at never read it; blow and swayAt are never under them",function()
+		local base=math.floor(T0/Wind.BreathSlot)
+		local start=Wind.breathStart(base+1)+here:Dot(Wind.Direction)/Wind.Speed
+		local seen=0
+		for i=0,400 do
+			local t=start-2+i*.05
+			local gust,at,breath=Wind.gust(here,t),Wind.at(here,t),Wind.breath(here,t)
+			local blow,sway=Wind.blow(here,t),Wind.swayAt(here,t)
+			assert(blow>=gust and blow>=breath and math.abs(blow-math.max(gust,breath))<1e-12,"blow")
+			assert(sway>=at-1e-12,"swayAt under at")
+			if breath>.99 then seen+=1;assert(gust<.99 or at>.99,"gust follows the gust slots only")end
+		end
+		assert(seen>10,"walked through a held breath")
+		-- Outside every breath, swayAt is Wind.at exactly.
+		local quiet=Wind.breathStart(base+1)-60
+		for i=0,200 do local t=quiet+i*.1;assert(Wind.swayAt(here,t)==Wind.at(here,t),"swayAt off a breath")end
+	end)
+
 	end)
 	Wind.Strength=strength
 	assert(ok,err)

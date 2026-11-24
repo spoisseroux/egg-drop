@@ -59,6 +59,7 @@ return function(client)
 			groundY=options.groundY or function()return 4 end,safe=options.safe or function()return true end,
 			finds=options.finds or {},kerbs=options.kerbs or {},pets=function()return r.pets end,
 			cover=options.cover or {},leafGround=options.leafGround,leaves=function()return options.leaves~=false end,
+			report=options.report or function()end,banks=options.banks or {},
 			-- The garden hour: r.daylight (nil = the hour off), or r.hour(now) when a case drives the real clock.
 			daylight=if options.realHour then nil else function(now)if r.hour then return r.hour(now)end return r.daylight end})
 		function r.step(seconds)
@@ -113,10 +114,11 @@ return function(client)
 				end
 				assert(day.life:counts().butterflies>0,"the day rig has them")
 				if daylight>.34 then assert(dark.life:counts().butterflies>0,daylight..": golden light and dawn keep butterflies")end
-				-- Only leaf anchors and Dewdrops (and butterflies over .30) may show.
+				-- Only leaf anchors and Dewdrops (and butterflies over .30, beta 14 B2 night fireflies under .34) may show.
 				for _,p in ipairs(dark.parts())do
 					if not hidden(p)then
-						assert(string.match(p.Name,"^LifeLeaf")or string.match(p.Name,"^LifeDewdrop")or(daylight>.3 and string.match(p.Name,"^LifeButterfly")),p.Name)
+						assert(string.match(p.Name,"^LifeLeaf")or string.match(p.Name,"^LifeDewdrop")or(daylight>.3 and string.match(p.Name,"^LifeButterfly"))
+							or(daylight<.34 and string.match(p.Name,"^LifeFirefly")),p.Name)
 					end
 				end
 			end
@@ -208,7 +210,7 @@ return function(client)
 			local folder=assert(r.folder())
 			assert(folder.Parent==r.world and #r.beat.list==1 and type(r.ambient.onChirp)=="function")
 			local parts=r.parts()
-			assert(#parts==3*10+4*3+3+2+16,"parts "..#parts) -- birds: ten parts each (FABLE-REVIEW-R3 3)
+			assert(#parts==3*10+4*3+3+2+16+8,"parts "..#parts) -- birds: ten parts each (FABLE-REVIEW-R3 3); 8 night fireflies (B2)
 			for _,p in ipairs(parts)do
 				assert(p.Anchored==true and p.CanCollide==false and p.CanQuery==false and p.CanTouch==false and p.CastShadow==false,p.Name)
 				assert(string.sub(p.Name,1,2)~="W7",p.Name)
@@ -637,7 +639,7 @@ return function(client)
 				assert(label and label.ClassName=="ImageLabel"and label.Image==Life.DewdropTexture and label.BackgroundTransparency==1)
 			end
 			r.step(60)
-			assert(#dewdrops(r)==16 and #r.parts()==3*10+4*3+3+2+16,"never made or destroyed in play")
+			assert(#dewdrops(r)==16 and #r.parts()==3*10+4*3+3+2+16+8,"never made or destroyed in play")
 		end)
 
 		test("Dewdrops: hanging under the lime crowns in reach, nearest first: 16 at level 0, 8 still ones at 1, none pink",function()
@@ -797,6 +799,40 @@ return function(client)
 			r.pets={plan.rest}
 			r.step(2.2)
 			assert(plan.bat==bat,"once in its life")
+		end)
+
+		-- Beta 14 QA B2: night fireflies (GARDEN-LIFE-BUILD-PLAN section 3).
+		test("night fireflies: the cap's glows lit by the hour's night (8, 4 at level 1), none by day; parked and Reduced Motion off at once",function()
+			local function lit(r)
+				local n=0
+				for slot=1,Sim.Caps.fireflies[1]do
+					local anchor=r.folder():FindFirstChild("LifeFirefly"..slot)
+					local gui=anchor and anchor:FindFirstChild("Glow")
+					if gui and gui.Enabled and not hidden(anchor)then n+=1 end
+				end
+				return n
+			end
+			local day,night,slow=rig({daylight=.9}),rig({daylight=.12}),rig({daylight=.12,level=1})
+			for _=1,15 do day.step(1);night.step(1);slow.step(1)end
+			assert(lit(day)==0 and day.life:counts().fireflies==0,"none by day")
+			assert(lit(night)==8 and night.life:counts().fireflies==8,"8 at night: "..lit(night))
+			assert(lit(slow)==4,"4 at level 1: "..lit(slow))
+			night.hatch=true;night.step(.5)
+			assert(lit(night)==0 and #night.life.fireflies.list==0,"parked: gone")
+			night.hatch=false;night.reduced=true;night.step(2)
+			assert(lit(night)==0,"Reduced Motion: none")
+			night.reduced=false;night.daylight=.9;night.step(12)
+			assert(lit(night)==0,"day again: none")
+		end)
+		test("the budget level is reported once per change (AliveLevel), including the step down to 2",function()
+			local seen={}
+			local r=rig({report=function(level)table.insert(seen,level)end})
+			r.step(1);r.step(1)
+			assert(#seen==1 and seen[1]==0,"once at the start")
+			r.level=1;r.step(1);r.step(1)
+			assert(#seen==2 and seen[2]==1,"once at 1")
+			r.level=2;r.step(.2)
+			assert(#seen==3 and seen[3]==2 and r.folder()==nil,"reported, then torn down")
 		end)
 	end)
 	for _,r in ipairs(rigs)do

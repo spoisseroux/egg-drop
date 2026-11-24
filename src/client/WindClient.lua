@@ -354,7 +354,8 @@ function Client:stepMovers(tick,time,calm)
 	end
 	for _,entry in ipairs(entries)do
 		if entry.gain then
-			self.gusts[entry]=toward(self.gusts[entry]or 0,Wind.gust(entry.rest.Position,time),Client.Slew*tick)
+			local gust=if self.scene then Wind.blow(entry.rest.Position,time)else Wind.gust(entry.rest.Position,time)
+			self.gusts[entry]=toward(self.gusts[entry]or 0,gust,Client.Slew*tick)
 		end
 	end
 end
@@ -383,6 +384,10 @@ function Client:step(dt)
 		self.selectIn=Client.Select
 		local ok,hatch=pcall(self.hatching)
 		self.hatch=ok and hatch==true
+		-- Beta 14 W3 row 1: the big breath only while the Alive `scene` switch is on (architect r1: the wind feature must
+		-- not answer the breath without it).
+		local okScene,scene=pcall(function()return self.alive.on("scene")end)
+		self.scene=okScene and scene==true
 	end
 	local calm=level>=2 or self.hatch==true or self.mode()~="Room"
 	local time=self.now()
@@ -397,7 +402,8 @@ function Client:step(dt)
 		if e.weight>0 then
 			busy=true
 			if e.part:IsDescendantOf(workspace)then
-				e.wind=toward(e.wind,Wind.at(e.rest.Position,time),Client.Slew*tick)
+				local wind=if self.scene then Wind.swayAt(e.rest.Position,time)else Wind.at(e.rest.Position,time)
+				e.wind=toward(e.wind,wind,Client.Slew*tick)
 				e.still=false
 				local shown=e.weight*e.weight*(3-2*e.weight)
 				local turn=self.clock/e.period+e.phase
