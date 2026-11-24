@@ -304,7 +304,8 @@ function View:paintPayoutV3(data,pad,lw)
  local tomorrow=self.owner:tomorrowModel()
  if tomorrow and self.stripBox then
   local fresh=self.tomorrow==nil
-  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.root,{phone=true,z=self.root.ZIndex+3,source=function()return self.owner:tomorrowModel()end,reduced=function()return self:reduced()end})end
+  if fresh then self.tomorrow=require(script.Parent.TomorrowStrip).new(self.root,{phone=true,z=self.root.ZIndex+3,source=function()return self.owner:tomorrowModel()end,reduced=function()return self:reduced()end,
+   onChip=self.owner:chipHandler()})end
   local box=self.stripBox
   self.tomorrow.root.Position=UDim2.fromOffset(box.x,box.y)
   self.tomorrow:set(tomorrow,box.w)
@@ -403,6 +404,12 @@ function View:paintCount(sample)
  self.wallet.set(if sample and not data.pending then(data.balance or 0)-(data.earned or 0)+n else data.balance or 0)
 end
 function View:paintFocus()
+ -- Beta 14 F1: ids 6-8 are the strip's chips (Results:target); gone, the focus goes back to Replay.
+ if self.owner.focus>=6 then
+  local chip=self.owner:target(self.owner.focus)
+  if chip then self.ring.attach(chip,10);return end
+  self.owner.focus=1
+ end
  local button=self.buttons[self.owner.focus]or self.buttons[1]
  self.ring.attach(button,10)
  if self.scrollActions then
@@ -418,10 +425,11 @@ function View:move(dx,dy)
   if callback and not self.data.pending then callback(dx);return true end
  end
  -- U7 (v3): the compact stack's own moves (Difficulty down to Hatch, Hatch and Leave side by side, up to Difficulty).
+ local chips=#self.owner:stripChips()
  if self.compact then
-  local target=Layout.move(self.owner.focus,dx,dy,self.compact.paired)
+  local target=Layout.move(self.owner.focus,dx,dy,self.compact.paired,chips)
   if target then
-   local state=Kit.buttonState(self.buttons[target])
+   local state=if target>=6 then{enabled=target-5<=chips}else Kit.buttonState(self.buttons[target])
    if target~=self.owner.focus and state and state.enabled then
     self.owner.focus=target;self:paintFocus()
     if self.owner.options.audio then self.owner.options.audio:play("aim",1,.3)end
@@ -429,17 +437,23 @@ function View:move(dx,dy)
    return true
   end
  end
- local at=table.find(ORDER,self.owner.focus)or 1
+ local order=table.clone(ORDER)
+ for i=1,chips do table.insert(order,5+i)end
+ local at=table.find(order,self.owner.focus)or 1
  local delta=if dy~=0 then math.sign(dy)else math.sign(dx)
  if delta==0 then return false end
- if math.clamp(at+delta,1,#ORDER)==at then return true end
- for nextAt=math.clamp(at+delta,1,#ORDER),if delta>0 then #ORDER else 1,delta do
-  local id=ORDER[nextAt];local state=Kit.buttonState(self.buttons[id])
+ if math.clamp(at+delta,1,#order)==at then return true end
+ for nextAt=math.clamp(at+delta,1,#order),if delta>0 then #order else 1,delta do
+  local id=order[nextAt];local state=if id>=6 then{enabled=true}else Kit.buttonState(self.buttons[id])
   if state and state.enabled then self.owner.focus=id;self:paintFocus();if self.owner.options.audio then self.owner.options.audio:play("aim",1,.3)end;return true end
  end
  return true
 end
 function View:activate(id)
+ if id>=6 then
+  if not self.owner.visible or(self.data and self.data.pending)or not self.tomorrow then return false end
+  return self.tomorrow:activate(id-5)
+ end
  local button=self.buttons[id];local state=button and Kit.buttonState(button)
  if not state or not state.enabled or not self.owner.visible then return false end
  if os.clock()-self.opened<.3 and not self:reduced()then return false end

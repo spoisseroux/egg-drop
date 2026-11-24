@@ -3146,6 +3146,47 @@ recap:on("picker",function()
 end)
 recap:on("heatShift",function(delta)clientUI.cycleResultsHeat(delta)end)
 -- The results quest cell is progress only (QA Q5): no route to the quest log here.
+-- Beta 14 F1 (Spencer: tapping a "Coming up" chip closes the Pocket Deck and opens what it points at): egg -> the paw
+-- trail to the nest, stamp -> the quest log on its stamp card, quests -> the quest log. From the deck it leaves first and
+-- runs the garden step once the room is back (clientUI.afterGarden, 8 s at most); a latch keeps it to one route at a
+-- time; nothing while a save is pending. Only where TomorrowStrip.tappable() gives the strip its onChip.
+do
+ local function gardenStep(id)
+  if id=="nest"then return function()return clientUI.things~=nil and clientUI.things.show("nest")==true end end
+  if id=="stamp"then return function()return clientUI.openQuestLog("daily",{focus="stamp"})==true end end
+  if id=="quests"then return function()return clientUI.openQuestLog("daily")==true end end
+  return nil
+ end
+ local function roomFree()
+  return board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy
+ end
+ -- fn once the garden is back and free, within `timeout` seconds; a newer call replaces an older one.
+ function clientUI.afterGarden(fn,timeout)
+  local token={};clientUI.gardenIntent=token
+  local deadline=os.clock()+(timeout or 8)
+  local link
+  link=RunService.Heartbeat:Connect(function()
+   if clientUI.gardenIntent~=token then link:Disconnect();return end
+   if os.clock()>deadline then link:Disconnect();clientUI.gardenIntent=nil;clientUI.stripRouting=nil;return end
+   if not roomFree()then return end
+   link:Disconnect();clientUI.gardenIntent=nil;clientUI.stripRouting=nil
+   local ok,problem=pcall(fn)
+   if not ok then warn("[Strip] route: "..tostring(problem))end
+  end)
+ end
+ function clientUI.stripRoute(id)
+  local step=gardenStep(id)
+  if not step or clientUI.stripRouting then return false end
+  if recap.data and recap.data.pending then return false end
+  if roomFree()and not recap.visible then return step()end -- already in the garden (the Dash results card)
+  clientUI.stripRouting=true
+  if not clientUI.leaveDeck()then clientUI.stripRouting=nil;return false end
+  clientUI.accepted("confirm")
+  clientUI.afterGarden(step,8)
+  return true
+ end
+ recap:on("chip",function(id)return clientUI.stripRoute(id)end)
+end
 -- ── Round items (BUILD-PLAN 2026-11-13, R2) ─────────────────────────────────
 -- B (keyboard B, gamepad B or X, the deck's B, the phone item button) opens the
 -- carousel in a live round; it freezes the round through syncPause. The server
@@ -3574,7 +3615,7 @@ function clientUI.openQuestLog(tab,options)
  clearPlayInputs()
  if GuiService.SelectedObject then GuiService.SelectedObject=nil end
  clientUI.questFromHub=options.fromHub==true
- clientUI.questLog:show(nurseryState and nurseryState.quests,nurseryState and nurseryState.nectar or 0,tab)
+ clientUI.questLog:show(nurseryState and nurseryState.quests,nurseryState and nurseryState.nectar or 0,tab,{focus=options.focus})
  -- Both are translucent LCD layers: the log hides the picker under it until it closes.
  if clientUI.heatPicker.visible then clientUI.heatPicker.overlay.layer.Visible=false end
  clientUI.syncPause()

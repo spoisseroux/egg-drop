@@ -62,7 +62,24 @@ function Layout.actions(rw,labels,measure)
 end
 -- The gamepad on the compact stack: down from Difficulty goes to Hatch; right from Hatch to Leave and left back; up
 -- from either goes to Difficulty. Answers the id to focus, or nil (no move: the caller's own rule).
-function Layout.move(focus,dx,dy,paired)
+-- Beta 14 F1: `chips` (0 to 3) "Coming up" chips under the stack take ids 6, 7, 8 (egg, stamp, quests): down from the
+-- bottom row onto them, left and right along them, up back to the row (the left ones to Hatch, the right one to Leave).
+function Layout.move(focus,dx,dy,paired,chips)
+	chips=chips or 0
+	if chips>0 then
+		local last=5+chips
+		if focus>=6 then
+			if dx>0 then return math.min(focus+1,last)end
+			if dx<0 then return math.max(focus-1,6)end
+			if dy<0 then return if not paired then 2 elseif focus==last and chips>1 then 2 else 5 end
+			return focus
+		end
+		if dy>0 and paired and focus==5 then return 6 end
+		if dy>0 and paired and focus==2 then return last end
+		if dy>0 and not paired and focus==2 then return 6 end
+	elseif focus>=6 then
+		return 1 -- the chips went away (a save pending, the strip gone): back to Replay
+	end
 	if dy<0 and(focus==5 or focus==2)then return 3 end
 	if dy>0 and focus==3 then return 5 end
 	if paired then
