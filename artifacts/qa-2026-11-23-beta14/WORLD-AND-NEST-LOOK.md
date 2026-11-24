@@ -406,3 +406,85 @@ Phone-sized, day hold unless said.
   one across the plaza marble; the four leaf shapes close; live counts at levels 0 and 1.
 - **D2:** three lime trees with fruit hanging, from below and side-on; one clip of fall, rest, the pet's notice, trot,
   three nibbles and the hop; the player nudging one.
+
+---
+
+## Nest merge rulings (R2)
+
+Fable, 2026-11-23, answering Opus's plan (`NEST-AND-RACE-LINE-BUILD-PLAN.md`, section 0 and question F1). These
+replace the matching lines of section 3. Numbers are offline arithmetic from `Nest.Spot` / `Nest.Facing` and
+`HollowWorldLayout`; nothing here has been seen in Studio yet.
+
+### 1. Position, facing, Bear, sign
+
+Opus is right: at E1 the station sits front-right of the nest (root-local about +5.2 X, 2.7 forward), so the +X side
+has no room for anything, and my "mirror the curl, sign on +X" fallback put the sign between nest and station. Rule:
+**the station side of the nest carries nothing. Bear and sign both go on the outer (-X) side**, Bear in front, sign
+behind. The outer side is also the arrival side: the arrival path's mouth is almost exactly on root-local -X.
+
+| Thing | Root-local | World (x, z) | From station centre |
+|---|---|---|---|
+| Nest root (`Nest.Spot`) | (0, 0, 0) | **(-25.27, -9.80)**, E1 unchanged | 5.85 |
+| `Nest.Facing` | | **(-30, y, -4)** unchanged | |
+| Prompt point | (0, 1, -2.6) unchanged | (-26.92, -7.78) | 5.2 |
+| `BearSpot` | **(-2.2, 0, -1.4)** (was +2.2) | (-24.45, -7.33) | 7.7 |
+| Sign post and board | **(-1.7, y, +1.6)** (was (-1.95, y, -1.03)) | (-22.94, -9.97) | 8.1 |
+| `SignYaw` | **+50** (was -40), the 6 degree tilt stays | | |
+
+- Sign heights stay (post top 1.08, board centre 1.45), both faces painted as today. Sign to Bear: 3.0 studs. Sign to
+  Journal: 7.8. Sign radius from the root 2.33, inside the 2.6 clear ring.
+- Why +50: the board's Front then looks forward-left. Along the walk in it is off square by about 39 degrees at the
+  path mouth (14, 21), 29 at the bridge (2.5, 21), 20 at (-10, 12), 2 at (-20, 8), 38 at the hub (-30, 4). It no
+  longer faces the prompt point; the nest pill (section 4) does that job up close. Update the NestClient.spec reading
+  test to these five points, limit 40 degrees.
+- The egg's tuck lean follows `BearSpot`, so it now leans to -X. Good: it leans toward the arriving player.
+- From the plaza's middle, left to right: station, nest and egg, Bear low in front, sign standing behind. Unchanged
+  intent.
+- **E2 is dropped.** It has the same problem mirrored and sits further from the arrival side.
+
+**Probe Opus must run (P1, `scripts/probe_nest_spot.luau`, read-only, before any `src/` edit):**
+
+1. The 16-ray ring at r 2.6, three heights, as planned.
+2. Rays down at the Bear spot (-24.45, -7.33) and the sign post (-22.94, -9.97): both must land on plaza marble
+   within 0.1 of the root's ground height. Not the dais, not a trim strip.
+3. **Station base edge:** step rays down from the root toward the station centre every 0.25 studs and report where the
+   surface stops being plaza marble. Pass = that edge is **2.6 or more** from the root (0.5 clear of the fringe at
+   2.1). This is the number we do not have.
+4. Sight line: from (2.5, 21), (-10, 12) and (-20, 8) at 5 studs over the ground, one ray to the board's centre. Pass =
+   nothing hit first.
+5. The 9 points on the hub-to-Eggs walking line clear the nest box, as planned.
+
+If 3 fails, slide the root along `e` by the shortfall, at most 1.5 studs, to no further than
+`S + 7.0 e + 2.0 f` = (-23.79, -10.00); everything else is root-local and follows. If 2 or 4 fails for the sign, try
+(-1.9, y, +1.2) then tell me. If it still fails, keep spot A and do only the marker and screen-row parts.
+
+Also corrected: the station prompt's reach is **7**, not 9 (section 3's table). The nest's stays 4.5 and the flicker
+`[check]` stands.
+
+### 2. Sign side
+
+**Outer side (-X), behind the Bear**, as in the table. Never between the nest and the station.
+
+### 3. Station words and the Napping egg row
+
+"Hatch new friends" was my line and it is wrong: nothing here hatches a pet. The eggs give toys, colours and
+materials, and stat snacks. Withdrawn.
+
+| Key | Text |
+|---|---|
+| `r5.station.Eggs.name`, `r5.station.EggsNest.name` | **`Hatch eggs`** (unchanged: it matches the screen title and the Deck menu; not `Eggs`) |
+| `r5.station.Eggs.line` | **`Toys, looks and snacks for your pet`** |
+| `r5.station.EggsNest.line` (while `Onboard.on("nest")`) | **`Toys, looks and snacks. Your napping egg is here too.`** |
+
+- The world prompt stays `Browse eggs`. Check both lines at 320 px; if the nest line wraps to three lines, cut it to
+  `Toys, looks and snacks. Your egg naps here.`
+- No "friends", "pets" or "new pets" anywhere on this station or screen.
+
+**The Napping egg row stays at the top.** It belongs: it is an egg, and it hatches an item, the same family as
+everything else on the screen. It is free, so it goes above the rows that cost Stars, and it is the one row that
+changes during the day. Conditions:
+
+- Quiet as specified (no lip, `well` background, 44 / 56 px). It must never look like a purchase row: no price, no
+  Stars paint except the gold `Hatch me!`.
+- First gamepad focus stays on the first egg type, not on this row, unless the egg is ready. Then the row takes it.
+- Board mode: display-only, as Opus proposes (D1-2). The `"nest"` close reason is approved.
