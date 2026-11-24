@@ -147,3 +147,26 @@ that with E and Back before the snack test, but it may have skewed Play 2.
 - `user_mouse_input` with an `instance_path` into a BillboardGui (`EggDropNeedBubble.Hit`) sends the input, but `Activated` does not fire. A real computer-use click on the bubble does.
 
 Studio is left in Edit; Rojo is disconnected in the plugin and the serve process stopped. No src change in R6.
+
+---
+
+## R7 snack and fruit (Opus, 2026-11-24)
+
+**2c3cd41**, Rojo live on 34872. Edit held feat's scripts, at the repo's LF byte lengths: LifePet 15,549, GardenLife
+55,861, Client.RoomView 81,716, Client 309,494. One Studio Play on the place file (Studio counts as beta): fresh save,
+Skip tutorial, Quit to garden, Meet Bear, Back. Then I stood still on the lawn at (22.7, 8.0, 48.1), by the tree whose
+fruit lands near (21.5, 5.1, 41.0). Nothing was saved or published. No src change. Captures are in `studio/r7/`.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Dewdrops hang below the crowns | **PASS.** From the lawn, with the camera 6.5 high: at 10 studs from the west crown (`W7_Kit_Crown_Blossom`, centre (-11.6, 11.55, 34.6), AABB bottom 8.90), two fruits hang fully below the crown with stems. The right one's stem clearly reaches the crown (01). At 8 studs from the east crown (73.9, 11.84, 12.7), three fruits hang fully below it with stems (02). The image centres are at Y 8.82 to 9.07 and the billboard is 1.1 x 1.5, so the bottoms are at about 8.1 to 8.3. Fable should judge the look. |
+| 2 | Pet snack | **PASS, 3 of 3.** In 300 s, three fruits came to rest within 8 studs, each after the 90 s cooldown, and the Bear ate all three. Frame samples of snack 2: **turn** .3 s (yaw -128 to -135); **pause** .4 s; **trot** 1.8 s over 6.3 studs (3.5 studs/s), stopping .87 to .91 from the fruit; **three nibbles** in 1.05 s, with the fruit image shrinking 1.10, then .71/.79, then .45/.50; **hop** to +.35 and back in .3 s; **one heart** rising from Y 5.65 to 6.65 over .8 s and fading in the last .3 s. Then 1.5 s content and a trot back to the server's sample. No `aborted:` value appeared. Snack 3 (03) shows the content face at the fruit, which the trunk hides. |
+| 2a | Every `SnackWhy` value seen | `refused: a need bubble` (at spawn); `refused: following a moving owner`; `refused: fruit N studs off (notice 8)` (N from 61 to 103: every resting fruit on the island is asked about, so this cycles every 2 s); `refused: busy with investigate/wander`; `snack: going (7.6 / 7.2 / 7.1 studs)`; `snack: ate it`; `refused: cooldown N s` (counting down from 83). |
+| 3 | Output log | **PASS.** No LifePet, GardenLife or RoomView line. Only the known lines appeared (ConfigService keys, EditableImage, `Player:Move`, 203785492, the Assistant version notice), plus one `BoardSnapshot ... 1 events dropped` at join and my own probe's `AssistantCommand:4` error. |
+
+**Why R6 saw no snack:** it was the park-branch actor (fixed in e4544cf). R6's "batted" fruit was the pet walking
+through it with no actor. With the actor passed, the gate passes as soon as the pet is resting or pausing.
+**Notes:** all three fruits fell to nearly the same spot (21.4 to 21.6, 40.5 to 41.5), as the deterministic Grove
+places them. `screen_capture` with a camera did not freeze the player camera (`CameraType` stayed Custom).
+
+Studio is left in Edit; Rojo is disconnected in the plugin and the serve process is stopped.
