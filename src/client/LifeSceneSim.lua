@@ -61,7 +61,9 @@ end
 -- its pool repaint: centre, size, surface, and that the water shows the koi (else `over`).
 Scene.Pool=table.freeze({centre=Vector3.new(64.5,3.2,-66),half=Vector2.new(13.5,12),share=.6})
 Scene.Koi=table.freeze({speed=.5,tail=8,tailHz=1.1,depth=.25,over=false,overLift=.02,overTransparency=.35,
-	scales=table.freeze({1,.85,.7}),phases=table.freeze({0,2.1,4.2}),size=Vector3.new(1.3,.02,.5),
+	-- The plate: 1.3 long along its travel (-Z under lookAt), .5 wide; the texture is portrait, head at the top [check] the
+	-- Top decal's orientation in Studio (flip the image if a koi swims tail first).
+	scales=table.freeze({1,.85,.7}),phases=table.freeze({0,2.1,4.2}),size=Vector3.new(.5,.02,1.3),
 	shy=3,shift=.4,shiftSpeed=1.2,back=4,rise=table.freeze({9,15}),
 	ripple=table.freeze({from=.4,to=1.6,start=.3,time=1.4,lift=.02}),hz=15})
 -- The figure of eight's length for half extents (a, b), measured once.
