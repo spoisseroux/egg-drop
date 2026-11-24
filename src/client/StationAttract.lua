@@ -204,6 +204,20 @@ local function build(folder, id, base, opts)
 	end
 	local ring = circle("Ring", ringRadius * 2 / span, 6, .1)
 	local ripple, rippleStroke = circle("Ripple", ringRadius * 2 / span, 4, 1)
+	-- opts.arc (the egg corner's machine, Studio check R9): no full circle and no ripple; a front arc of segments.
+	local arc = nil
+	if opts.arc and opts.facing then
+		ring.Visible, ripple.Visible = false, false
+		arc = {}
+		for index, segment in ipairs(Attract.arcSegments(ringRadius, opts.arc, opts.facing)) do
+			local at = base + Vector3.new(0, .08, 0) + segment.offset
+			local tangent = Vector3.new(-segment.offset.Z, 0, segment.offset.X)
+			local p = part(ringPart, "Arc" .. index, Vector3.new(Attract.ArcThickness, .05, segment.length), CFrame.lookAt(at, at + tangent))
+			p.Material, p.Color, p.Transparency = Enum.Material.SmoothPlastic, hue, 1
+			p:SetAttribute("ArcAngle", segment.angle)
+			table.insert(arc, p)
+		end
+	end
 	-- The marker: one billboard holding the round icon and its pointer as one pin shape.
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name, billboard.Adornee = "AttractIcon", anchor
@@ -259,9 +273,30 @@ local function build(folder, id, base, opts)
 	sparkles.Transparency = NumberSequence.new(.2, 1)
 	sparkles.Enabled = false
 	sparkles.Parent = sparkAt
-	return { id = id, base = base, spec = spec, iconHeight = iconHeight, ringRadius = ringRadius, anchor = anchor, ringPart = ringPart, glow = glow, shaft = shaft, surface = surface, ring = ring,
+	return { id = id, base = base, spec = spec, iconHeight = iconHeight, ringRadius = ringRadius, arc = arc, arcSpan = opts.arc, anchor = anchor, ringPart = ringPart, glow = glow, shaft = shaft, surface = surface, ring = ring,
 		ripple = ripple, rippleStroke = rippleStroke, billboard = billboard, icon = icon, pointer = pointer, sparkles = sparkles,
 		label = label, labelName = labelName, labelLine = labelLine, introLine = labelLine.Text, intro = true, state = "hidden" }
+end
+
+-- The egg corner's machine ring (Studio check R9): a front arc only, `span` degrees centred on `facing` (a flat
+-- direction), at `radius`, as short tangent segments `step` degrees apart. Pure: {{offset, angle (degrees from the
+-- facing), length}}; offsets are flat, relative to the ring's centre.
+Attract.ArcStep = 8
+Attract.ArcThickness = .15
+function Attract.arcSegments(radius, span, facing, step)
+	step = step or Attract.ArcStep
+	local centre = math.atan2(facing.Z, facing.X)
+	local count = math.max(1, math.ceil(span / step))
+	local each = span / count
+	local out = {}
+	for k = 0, count - 1 do
+		local from = -span / 2 + each * (k + .5)
+		local a = centre + math.rad(from)
+		-- The chord plus a hair, so the segments meet.
+		table.insert(out, { offset = Vector3.new(math.cos(a) * radius, 0, math.sin(a) * radius), angle = from,
+			length = 2 * radius * math.sin(math.rad(each) / 2) + .04 })
+	end
+	return out
 end
 
 -- Things to do: only the nearest unlearned station beckons. Pure: its id, or nil.
@@ -375,7 +410,7 @@ function Attract:move(id, position, opts)
 	opts = opts or {}
 	local height = opts.iconHeight or entry.spec.iconHeight
 	local ring = opts.ring or Data.RingRadius
-	if (entry.base - position).Magnitude <= .05 and entry.iconHeight == height and entry.ringRadius == ring then return false end
+	if (entry.base - position).Magnitude <= .05 and entry.iconHeight == height and entry.ringRadius == ring and entry.arcSpan == opts.arc then return false end
 	entry.anchor:Destroy()
 	entry.ringPart:Destroy()
 	local fresh = build(self.folder, id, position, opts)
@@ -467,6 +502,10 @@ function Attract:step(dt)
 		entry.glow.Brightness = Data.GlowBrightness * (if reduced then 1 else Attract.breath(mode, self.time))
 		entry.shaft.Enabled = active
 		entry.surface.Enabled = active
+		if entry.arc and entry.arcShown ~= active then
+			entry.arcShown = active
+			for _, p in ipairs(entry.arc) do p.Transparency = if active then .1 else 1 end
+		end
 		entry.billboard.Enabled = Attract.showsMarker(mode)
 		entry.sparkles.Enabled = mode == "invite" and not reduced
 		-- The marker bobs while it beckons and hops (as one piece) while it invites; a learned marker holds still.

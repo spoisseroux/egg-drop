@@ -4889,7 +4889,7 @@ function clientUI.eggCornerMount(Onboard)
    local pivot=found:GetPivot()
    local _,size=found:GetBoundingBox()
    local top=(found:GetBoundingBox().Position.Y+size.Y/2)-pivot.Y
-   entries:move("Eggs",pivot.Position,{iconHeight=Corner.pinHeight(top),ring=Corner.Ring})
+   entries:move("Eggs",pivot.Position,{iconHeight=Corner.pinHeight(top),ring=Corner.Ring,arc=Corner.RingArc,facing=Corner.facing()})
   else
    local World=require(ReplicatedStorage.Shared.HollowWorldLayout)
    local station=World.Stations and World.Stations.Eggs

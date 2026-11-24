@@ -228,5 +228,45 @@ return function(client)
 		r.advance(1)
 		assert(r.count("land")==1,"its own egg still rolls")
 	end)
+	test("Studio check R9: the machine's attract ring is a 200 degree front arc, every sample on the front side",function()
+		local Attract=require(client.StationAttract)
+		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
+		assert(Corner.RingArc==200 and Corner.Ring==3)
+		local facing=Corner.facing()
+		local want=(Corner.Face-Corner.Spot)
+		assert(math.abs(facing:Dot(Vector3.new(want.X,0,want.Z).Unit)-1)<1e-9,"centred on the machine's facing")
+		local segments=Attract.arcSegments(Corner.Ring,Corner.RingArc,facing)
+		assert(#segments==25,#segments)
+		local low,high,covered=math.huge,-math.huge,0
+		for _,segment in ipairs(segments)do
+			assert(near(segment.offset.Magnitude,Corner.Ring,1e-9)and segment.offset.Y==0)
+			-- Both ends of every segment, from the facing: never past +-100 (R9: grass from 105).
+			local half=math.deg(segment.length/2/Corner.Ring)
+			low=math.min(low,segment.angle-half);high=math.max(high,segment.angle+half)
+			local measured=math.deg(math.acos(math.clamp(segment.offset.Unit:Dot(facing),-1,1)))
+			assert(near(measured,math.abs(segment.angle),1e-6),"each angle is measured from the facing")
+			covered+=math.deg(2*math.asin((segment.length-.04)/2/Corner.Ring))
+			-- Every sample along the segment (the R9 probe's 128 rays would land inside these).
+			for k=0,8 do
+				local a=math.rad(segment.angle)+(k/8-.5)*math.rad(2*half)
+				local sample=Vector3.new(math.cos(a),0,math.sin(a))
+				local fromFacing=math.deg(math.abs(a))
+				assert(fromFacing<=100.8,string.format("%.2f",fromFacing))
+				assert(fromFacing<105,"never in R9's grass sector (105 to 167 from the facing)")
+				assert(sample.Magnitude>0)
+			end
+		end
+		assert(near(covered,200,1e-6),"the segments cover 200 degrees: "..covered)
+		assert(low>=-100.8 and high<=100.8,low..","..high)
+		-- At r 3 the whole arc stays inside the paving (r 15.5 round (-30, -4)); 3.6 would not.
+		for _,radius in ipairs({3,3.6})do
+			local worst=0
+			for _,segment in ipairs(Attract.arcSegments(radius,Corner.RingArc,facing))do
+				local p=Corner.Spot+segment.offset
+				worst=math.max(worst,math.sqrt((p.X+30)^2+(p.Z+4)^2))
+			end
+			if radius==3 then assert(worst<15.5,worst)else assert(worst>15.5,worst)end
+		end
+	end)
 	return{passed=#cases,cases=cases}
 end

@@ -556,6 +556,11 @@ What was built differs from sections 4 to 8 here; this section wins.
   back arc showed on grass at 3.6). The "?" card: the live line at body size (14 px, text colour); body lines are 14 px
   (set explicitly); the Got it "A" glyph only for a gamepad; `/onboard corner off` closes it (NestClient asks as it
   moves the nest).
+- **Studio check R9, the ring:** no radius keeps a full ring off the grass, so the machine's attract ring is a
+  **200 degree front arc** centred on its facing (`EggCorner.RingArc`, `Corner.facing()`), r **3.0**: 25 tangent
+  segments, no ripple (`StationAttract.arcSegments`, `Attract:move(..., {arc, facing})`; the other stations keep their
+  full ring). r 3.6 with the arc would reach 15.67 from the paving's middle (edge 15.5), so it stays 3. Beta only:
+  only the corner passes `arc`.
 - **Known on the beta:** with `/onboard corner off` the Eggs label still reads the v3 line ("Toys, looks and snacks for
   your pet"), not the beta 15 "Your napping egg is here too": the `EggsNest` line is retired for good (its translations
   are deleted at the next sync). Everything else is as beta 15.

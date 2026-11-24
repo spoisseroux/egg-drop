@@ -20,6 +20,15 @@ Corner.Block=Vector3.new(4.8,1,4.4)     -- the pets' box, turned with the machin
 Corner.TrailAhead=3                     -- the Hatch eggs trail ends this far in front
 Corner.PinLift=1.6                      -- the Eggs pin over the machine's top
 Corner.Ring=3                          -- the Eggs attract ring at the machine (Fable R8 FIX 2: 3.6 showed its back arc on grass)
+-- Studio check R9: at r 3 the back still crossed grass (105 to 167 degrees from the facing) and no radius fixes it, so
+-- the ring is a front arc, RingArc degrees centred on the facing (+-100 clears every R9 sample; 220 did not). r 3.6 with
+-- the arc would reach 15.67 from the paving's middle (edge 15.5), so it stays 3.
+Corner.RingArc=200
+-- The machine's facing, flat (front +Z of the frame): what the ring's arc is centred on.
+function Corner.facing()
+	local d=Corner.Face-Corner.Spot
+	return Vector3.new(d.X,0,d.Z).Unit
+end
 Corner.Height=7.2                       -- the machine's height when no model is there to measure
 -- The nest (R2 3): on plain marble at the old station's spot once the station is split out; until then E1 (beta only).
 Corner.NestSpot=Vector3.new(-31,4.07,-11)
