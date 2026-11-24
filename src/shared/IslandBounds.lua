@@ -142,10 +142,26 @@ function Bounds.ringDistance(x,z)
 	end
 	return math.sqrt(best)
 end
--- Pure: has a root at this position left the island (fallen below FallY, or outside the ring by more than Margin)?
-function Bounds.gone(position)
+-- Extra regions (the Hush, while HushHost is open): {min, max, fallY, safe(x, z)} boxes outside the ring. nil or empty is
+-- the island alone, exactly as before.
+local function within(region,p)
+	return p.X>=region.min.X and p.X<=region.max.X and p.Y>=region.min.Y and p.Y<=region.max.Y and p.Z>=region.min.Z and p.Z<=region.max.Z
+end
+-- Pure: has a root at this position left the island (fallen below FallY, or outside the ring by more than Margin)? Inside
+-- one of `regions` it has left only below that region's fallY.
+function Bounds.gone(position,regions)
+	for _,region in ipairs(regions or {})do
+		if region.fallY and within(region,position)then return position.Y<region.fallY end
+	end
 	if position.Y<Bounds.FallY then return true end
 	return not Bounds.inside(position.X,position.Z)and Bounds.ringDistance(position.X,position.Z)>Bounds.Margin
+end
+-- Pure: is this root inside one of `regions` and over that region's safe ground?
+function Bounds.regionSafe(regions,position)
+	for _,region in ipairs(regions or {})do
+		if region.safe and within(region,position)and region.safe(position.X,position.Z)then return true end
+	end
+	return false
 end
 -- Pure: is the walk-map cell under (x, z) safe ground (IslandGround)?
 function Bounds.safeCell(x,z)

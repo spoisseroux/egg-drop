@@ -39,6 +39,7 @@ local GardenLayout = require(ReplicatedStorage.Shared.GardenLayout)
 local GardenActivity = require(ReplicatedStorage.Shared.GardenActivity)
 local GardenWalkability=require(ReplicatedStorage.Shared.GardenWalkability)
 local PetCatchup=require(ReplicatedStorage.Shared.PetCatchup)
+local Hush=require(ReplicatedStorage.Shared.Hush)
 local GardenPathPlanner=require(ReplicatedStorage.Shared.GardenPathPlanner)
 local PetAppearance = require(script.PetAppearance)
 local StoreService = require(script.StoreService)
@@ -122,6 +123,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.GardenHourC
 task.spawn(function()local ok,problem=pcall(function()require(script.IslandBoundsConfig).start()end);if not ok then warn("[Bounds] config not started: "..tostring(problem))end end)
 -- Pet catch-up off switch (CatchupConfig, beta (12) QA G1): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.CatchupConfig).start()end);if not ok then warn("[Catchup] config not started: "..tostring(problem))end end)
+-- The Hush off switch (HushConfig): the same way, one key. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.HushConfig).start()end);if not ok then warn("[Hush] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -211,14 +214,15 @@ local function petState(board)
 			or(today==state.petDay and state.petCount>=Nursery.PetDailyCap)}
 end
 local gardenScene
+-- The Hush (HushHost, mounted below): its own `open` flag is what the pet floor checks read. nil on live.
+local hushHost
 local sceneWatch -- the one DescendantAdded listener of the current garden scene (beta and Studio only)
 local function petAnchor(state)
 	local room=workspace:FindFirstChild("EggDropLounge")
 	local floor=room and room:FindFirstChild("Floor")
 	if not floor or not state.root then return nil end
 	local position=state.position-state.root.CFrame.LookVector*3+state.root.CFrame.RightVector*2.6
-	local at=floor.CFrame:PointToObjectSpace(position)
-	if math.abs(at.X)>floor.Size.X*.5-1 or math.abs(at.Z)>floor.Size.Z*.5-1 then return nil end
+	if not Hush.onPetFloor(floor,position,hushHost~=nil and hushHost.open)then return nil end
 	local params=RaycastParams.new();params.RespectCanCollide=true
 	params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
 	local hit=workspace:Raycast(position+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
@@ -264,8 +268,7 @@ local function validWander(input,target,from)
  local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
  if not floor or typeof(target)~="Vector3"or typeof(from)~="Vector3"then return nil end
  gardenScene()
- local at=floor.CFrame:PointToObjectSpace(target)
- if math.abs(at.X)>floor.Size.X*.5-1 or math.abs(at.Z)>floor.Size.Z*.5-1 then return nil end
+ if not Hush.onPetFloor(floor,target,hushHost~=nil and hushHost.open)then return nil end
  for _,station in ipairs(wanderScene.stations)do if station.Parent and Vector2.new(target.X-station.Position.X,target.Z-station.Position.Z).Magnitude<3 then return nil end end
  local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
  local hit=workspace:Raycast(target+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
@@ -315,7 +318,7 @@ local function catchupLanding(input,racing)
 	for _,candidate in ipairs(PetCatchup.candidates(anchor,facing))do
 		local spot=resolveGardenTarget(candidate,nil)
 		if typeof(spot)=="Vector3"and PetCatchup.flat(spot,candidate)<=.5 and math.abs(spot.Y-anchor.Y)<=PetCatchup.Rise
-			and PetCatchup.clear(spot.X,spot.Z,racing,anchor)then return spot end
+			and PetCatchup.clear(spot.X,spot.Z,racing,anchor,if hushHost~=nil and hushHost.open then Hush.safeCell else nil)then return spot end
 	end
 	return nil
 end
@@ -343,8 +346,7 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
 	validFocus=function(input,target)
 		local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
 		if not floor then return false end
-		local at=floor.CFrame:PointToObjectSpace(target)
-		if math.abs(at.X)>floor.Size.X*.5-1 or math.abs(at.Z)>floor.Size.Z*.5-1 then return false end
+		if not Hush.onPetFloor(floor,target,hushHost~=nil and hushHost.open)then return false end
 		local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
 		local hit=workspace:Raycast(target+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
 		return hit~=nil and math.abs(hit.Position.Y+.025-target.Y)<.3
@@ -916,6 +918,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.GardenHourConfig).command(message) end) end)
 		-- "/catchup <on|off|clear>": pets hop to their owner when far or stuck (beta (12) QA G1), this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.CatchupConfig).command(message) end) end)
+		-- "/hush <on|off|clear>": the Hush switch; "/hush go" and "/hush home": the owner's own passage. This server only.
+		player.Chatted:Connect(function(message) pcall(function() if not require(script.HushConfig).command(message) and garden.hushHost then garden.hushHost:command(board, message) end end) end)
 		-- "/freshsave" and "/freshsave restore": the owner's next join is a brand-new save, or the old one again
 		-- (beta (12) QA T1). One pointer write and a kick; FreshSave refuses unless ProgressKey's gate is open.
 		player.Chatted:Connect(function(message) pcall(function() require(script.FreshSave).command(player, message) end) end)
@@ -1073,6 +1077,11 @@ local function closeBoard(board)
 	end
 	-- Onboarding v3: the per-session follow capture (FirstSession's table choice) goes with the player.
 	pcall(function() require(ReplicatedStorage.Shared.Onboard).forget(board.player) end)
+	-- The Hush: the passage record is forgotten (nil while the build ceiling is off).
+	if garden.hushHost then
+		local ok, problem = pcall(garden.hushHost.leave, garden.hushHost, board)
+		if not ok then warn("[Hush] leave: " .. tostring(problem)) end
+	end
 	-- Island edges: the safe spot is forgotten (nil while the build ceiling is off).
 	if garden.boundsHost then
 		local ok, problem = pcall(garden.boundsHost.leave, garden.boundsHost, board)
@@ -2184,11 +2193,24 @@ do
 		local host = require(script.IslandBoundsHost).mount({ boards = boards,
 			spawnFrame = function(board, view)
 				return Lounge.spawnFrame(board.player.UserId % 5 + 1, view.humanoid, view.root, workspace:FindFirstChild("EggDropLounge"))
-			end })
+			end,
+			regions = function() return if hushHost ~= nil and hushHost.open then Hush.BoundsRegions else nil end })
 		garden.boundsHost = host
 		if host then Lounge.moved = function(player) host:moved(player) end end
 	end)
 	if not ok then warn("[Bounds] not mounted: " .. tostring(problem)) end
+end
+-- The Hush (FeatureFlags.Hush, HUSH-GREYBOX-BUILD-PLAN): nil and nothing made with the build ceiling off. The greybox, the
+-- open cave, the passage (the pet carried with its owner) and the evacuation, on its own protected connections.
+do
+	local ok, problem = pcall(function()
+		hushHost = require(script.HushHost).mount({ boards = boards, remotes = remotes, garden = garden,
+			room = function() return workspace:FindFirstChild("EggDropLounge") end,
+			carry = function(board, spot) board.groundAnchor = spot; return garden:carry(board.player.UserId, spot) end,
+			arrived = function(player, spot) if garden.boundsHost then garden.boundsHost:arrived(player, spot) end end })
+		garden.hushHost = hushHost
+	end)
+	if not ok then warn("[Hush] not mounted: " .. tostring(problem)) end
 end
 
 -- Levels matter: when the runtime switch flips, every player gets a fresh snapshot (medal credit) and

@@ -37,6 +37,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
+| 24 | **The Hush greybox: a second garden through the cave** | Built offline; not in Studio yet | Walk into the cave behind the garden: the Underway, three doorways (amber and blue ones sealed). Walk into the north one: a short black, you and your pet come out of a tunnel on a ledge above a big grey hollow (the Hush). Ramp down, walk round, the Quiet Shelf at the far end. No music in there. Walk back into the tunnel's end to come home. Switch: `/hush off` (moves anyone inside back out, cave blocked as before); `/hush go` / `/hush home` jump you through |
 
 ## Scoped, not built
 

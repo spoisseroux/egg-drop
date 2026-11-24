@@ -28,13 +28,15 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Garden life round 3 and the nest remodel (beta 12 QA O2): the nest's spot and the pets kept off it.
          "NestSpot",
          # Beta (12) QA Dash and Deck UI: the start grid (U5).
-         "DashGrid"]
+         "DashGrid",
+         # The Hush greybox (HUSH-GREYBOX-BUILD-PLAN): the gate and data, the switch, the host; the island edges it extends.
+         "Hush", "HushConfig", "HushHost", "IslandBounds", "IslandBoundsHost"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient", "DashSheets", "DeckResultsLayout", "FocusRow", "TipChime",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
-          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit"]
+          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit", "HushClient"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -61,7 +63,9 @@ def client_modules():
                     "NestClient.lua", "TomorrowStrip.lua", "DeckResultsLayout.lua", "FocusRow.lua", "TipChime.lua",
                     # Garden hour E: the pet mood rules and the face that feeds them.
                     "PetFace.lua", "PetExpression.lua", "PetIdleBeats.lua", "PetCoo*.lua", "CareFeedbackData.lua",
-                    "PetNightSurfaces.lua", "PetMaterial*.lua"):
+                    "PetNightSurfaces.lua", "PetMaterial*.lua",
+                    # The Hush: the passage's fade and the region effects.
+                    "HushClient.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

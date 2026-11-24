@@ -142,6 +142,32 @@ return function(server)
 		Bounds.inject(ON)
 	end)
 
+	test("the Hush: with its regions a root there is never returned home; arrived() makes the Hush arrival the safe spot",function()
+		local Hush=require(Shared.Hush)
+		local regions=nil
+		local c=rig()
+		c.host.d.regions=function()return regions end
+		local p,b=c.player(1)
+		c.at(0);c.at(2.5);assert(c.safe(p)==LAWN)
+		-- Closed: a root in the Hush is off the island and goes back to the lawn.
+		b.view.position=Hush.at(0,60,3);c.at(3);assert(#c.placed==1)
+		-- Open: the passage moves the player and says where.
+		regions=Hush.BoundsRegions
+		local arrival=Hush.Doors.north.arrival.Position+Vector3.new(0,3,0)
+		b.view.position=arrival;c.host:arrived(p,arrival)
+		assert(c.safe(p)==arrival)
+		c.at(4);c.at(6);c.at(10);assert(#c.placed==1)
+		-- (The walk from the tunnel reads as a leap in this fake, so a quiet first.)
+		b.view.position=Hush.at(10,60,3);c.at(11.5);c.at(12.6);c.at(13.7);assert(c.safe(p)==Hush.at(10,60,3))
+		-- A fall in the Hush returns to the Hush.
+		b.view.position=Hush.at(10,60,Hush.FallY-Hush.FloorY-1);c.at(14)
+		assert(#c.placed==2 and near(c.placed[2].cframe,Hush.at(10,60,3)+Vector3.new(0,Bounds.Lift,0)))
+		-- arrived() for a player not seen yet records them with their character, so the next check keeps the spot.
+		local q,b2=c.player(2)
+		b2.view.position=arrival;c.host:arrived(q,arrival);c.at(20);assert(c.safe(q)==arrival)
+		c.host:arrived({UserId=99},arrival)
+	end)
+
 	Bounds.inject(nil)
 	return{passed=#cases,cases=cases}
 end

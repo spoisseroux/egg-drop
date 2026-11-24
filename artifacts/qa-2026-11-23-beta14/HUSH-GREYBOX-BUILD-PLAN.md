@@ -4,8 +4,9 @@ Spencer, 2026-11-23: "Yes, greybox it", on Fable's `GARDEN-EXPANSION-LOOK.md` wi
 teleport), a short fade in the tunnel, open from day 1, "the Underway" (the cave room) and "the Hush" (a sunken mossy
 hollow, about 150 x 110, still pool, no music), the two sealed doors visible from the first build.
 
-Step 1 of a review-driven build: **plan only, no src changes in this commit.** Beta place only, behind a build ceiling,
-a ConfigService switch and an owner chat command. Off = the cave blocked exactly as today.
+Step 1 of a review-driven build. Beta place only, behind a build ceiling, a ConfigService switch and an owner chat
+command. Off = the cave blocked exactly as today. **The architect's verdict (section 13) wins over anything above it;
+section 13 also records what was built.**
 
 **Scope delta from the spec's G0.** The spec's G0 leaves the pet waiting in the Underway. The brief for this slice
 says the pet comes through the fade and walks in the Hush, so this slice also takes the minimum of G1 (the server's
@@ -107,7 +108,8 @@ h up from the floor). Moving the whole Hush is one constant.
 | Pool outline (optional) | (0, 78), flat | (-7, -19.9, -304) | 44 x .2 x 26 | Dark plate, no collision, not wet: only to judge scale. |
 
 **Pet floors** (invisible, no collision, attribute `GardenFloor`): Hush interior u -73..73, v 1..122; the tunnel
-u -2.5..2.5, v -23..0; the Quiet Shelf u -5..15, v 124..137; the Underway x -11..-3, z -89..-112 (it overlaps the home Floor, which ends at z -90, so the strip at the mouth is covered).
+u -2.5..2.5, v -23..0; the Quiet Shelf u -5..15, v 124..137. No Underway pet floor (the architect: the pet waits at
+the mouth while you are in the pocket). As built these are data boxes, not parts.
 
 **Regions** (`Hush.regionAt(position)`, plain boxes): `hush` = x -86..72, z -200..-366, y -40..60; `underway` =
 x -14..0, z -99.5..-116, y 0..26. Hush fall line y -32 (floor -20 less 12).
@@ -131,8 +133,8 @@ every piece.
 | Door | Owner arrives | Facing | Pet lands | Distance from the opposite trigger |
 |---|---|---|---|---|
 | Into the Hush | (-7, -14 + lift, -209) (u 0, v -17) | north (-Z) | (-7, -13.975, -214) (5 ahead, toward the Sill) | 4 studs from the return trigger |
-| Back to the Underway | (-7, 4 + lift, -108) | south (+Z) | (-7, 4.025, -104) (toward the mouth) | 4.5 studs from the north trigger |
-| Evacuation (switch off) | (-7, ground + lift, -88) on the lawn, inside the home Floor | south | 4 ahead | n/a |
+| Back to the Underway | (-7, 4 + lift, -108) | south (+Z) | (-7, 4.625, -88), inside the home Floor | 4.5 studs from the north trigger |
+| Evacuation (switch off) | (-7, 4.6 + lift, -86) on the lawn, inside the home Floor | south | (-7, 4.625, -82) | n/a |
 
 `lift` is `Lounge.spawnFrame`'s (HipHeight + half the root + .1, plus the leg for R6). Hush return trigger:
 (-7, -10, -203.5), 6 x 8 x 3. Arriving facing the way you were walking means the default camera, which keeps its
@@ -153,7 +155,7 @@ backs #101412). Walls `CastShadow` on (the sunken read), the rest off.
   `CanQuery` = `CanCollide` (pet rays and the clamp need the solids; invisible walls `CanQuery` false like the
   perimeter); attribute `WorldMesh = true` so `gardenScene` solids, greeting-shot blockers and other bounds-based
   scans skip the big boxes (rays still hit them).
-- `HushHost` builds them into **`EggDropLounge.Hush`** (a Model, `ModelStreamingMode = Atomic` if streaming is on)
+- `HushHost` builds them into **`EggDropLounge.Hush`** (a Model, `ModelStreamingMode = Persistent`)
   when the switch turns on, and destroys it when it turns off.
 - **The blocker:** `HushHost` finds `EggDropLounge.CaveBlocker` and sets `CanCollide` / `CanQuery` false while open,
   back to true / true when closed (today's values; the spec asserts both). `LoungeWorldV7Art` and `WorldV7Data` are
@@ -214,8 +216,8 @@ Not in G0 (G3): the bend, exposure overshoot, the tick, the chirp and echo, the 
 - **Pet floors** in `init.server.lua`: one local `onPetFloor(position, margin)` = inside `room.Floor` as today, **or**
   (only while `Hush.on()`) inside one of the `GardenFloor` boxes. Used by `petAnchor`, `validWander` and
   `validFocus` in place of their three copies of the Floor test. Off = the old test exactly. This is what lets the
-  anchor, and so the follow, live in the tunnel, on the Sill, on the floor and on the Quiet Shelf, and the pet
-  follow you into the Underway.
+  anchor, and so the follow, live in the tunnel, on the Sill, on the floor and on the Quiet Shelf. (No Underway pet
+  floor: section 13.)
 - **Catch-up backstop:** `PetCatchup.clear(x, z, racing, from, extraSafe)`; `catchupLanding` passes
   `Hush.safeCell` while on. A carry that failed (no actor yet, a race starting the same tick) is then fixed by the
   next far hop.
@@ -233,8 +235,8 @@ Not in G0 (G3): the bend, exposure overshoot, the tick, the chirp and echo, the 
   the local root is in the `hush` region, set during the black. It is a separate effect, so `AeroWorld` (which
   writes only `SproutHollowGrade`) and the garden hour are untouched `[probe P10: how it stacks with dawn, dusk,
   night]`.
-- **No music in the Hush:** `audio:duck("hush", 1e6, 0)` when the region becomes `hush`, `audio:duck("hush", 0, 1)`
-  when it stops, both during the black, so the step is never heard. The region comes from the root's position every
+- **No music in the Hush:** `audio:duck("hush", 2, 0)` refreshed every region pass (.5 s) while in the Hush (a stall
+  gives the music back within 2 s), `audio:duck("hush", 0, 1)` when it stops; both change during the black. The region comes from the root's position every
   pass, never stored, so a respawn or an evacuation clears it by itself.
 - **Hooks I need from owners of files I must not touch** (each optional, pcall-guarded; G0 ships without them):
   - `AmbientAudio`: `Ambient:setQuiet(name, on)` (or a `quiet()` dep) that takes birds, crickets and the bed to 0
@@ -385,3 +387,65 @@ Offline: `python scripts/run_dash_server_specs.py "C:/Users/skunk/Documents/Deve
    toggle the blocker? Mine keeps "off = today" literal at the cost of a build burst per flip.
 8. **Hush height:** keep the spec's floor y -20 until P12 says otherwise, or start at -40?
 9. **`W7H_` naming for the camera clamp**, or a `WorldSolid` attribute check added to `CameraClamp` instead?
+
+---
+
+## 13. Architect verdict (2026-11-23: GO WITH CHANGES) and what was built
+
+**Answers.** (1) The pet follows spec G0: no Underway pet floor. In the pocket the pet waits at the mouth (its last
+ground anchor, as today); the passage carries it into the Hush; on the way home it lands inside `room.Floor` at
+z -88, so home pet code only ever sees home positions. (2) Missing `garden_hush` = **on**; `HushConfig` is
+`IslandBoundsConfig` exactly (a failed refresh keeps the last good value); the ceiling allows only the beta place and
+Studio, with specs that live mounts nothing. (3) A pet in the Park (or in care, racing, holding the toy) refuses the
+passage with `PetBusy`, as a snack feed does (`init.server.lua`); HushHost never ends a park session. (4) The camera
+clamp picks the parts up by the `W7H_` prefix; `CameraClamp` is unchanged.
+
+**Required changes, all built:**
+- The Hush region (island bounds) and the pet floor checks read **`HushHost.open`**, which goes false only after the
+  evacuation has finished; the evacuation calls `arrived(player, evac spot)`.
+- The model is `ModelStreamingMode = Persistent`.
+- The delayed move runs in a pcall, always clears the in-flight flag, and its errors count toward the 3-error
+  shutdown (which evacuates, closes and restores the blocker).
+- `Hush.onPetFloor(floor, position, open)` is pure; init passes `hushHost ~= nil and hushHost.open` (a field read; no
+  ConfigService or attribute on the hot path). `Hush.spec` proves closed (`false`, `nil`, anything not `true`) equals
+  the old Floor test exactly on a grid, at the exact edges either side of `Size/2 - 1`, for NaN and on a turned floor.
+- Music and grade: `duck("hush", 2, 0)` refreshed every pass, no long duck; the grade goes on destroy and on a new
+  character.
+- A missing or renamed `CaveBlocker`: the Hush stays closed with one warning.
+- Two players arriving together take the next of five arrival offsets (door-local), and so do their pets.
+
+**As built** (branch `worktree-agent-aa0edfc9059d09a19`, Opus, offline only, not seen in Studio, not code reviewed):
+
+| File | What |
+|---|---|
+| `src/shared/Hush.lua` | Gate (`Hush_on`, `garden_hush`, beta + Studio), origin (x -7, floor y -20, mouth z -226), regions, safe ground, pet floors, `onPetFloor`, doors (trigger, arrival, landing), evacuation, arrival offsets, timings. |
+| `src/shared/HushGreybox.lua` | 39 rows: the hollow (floor, walls 40 high with the tunnel and shelf gaps, the Sill with its lip and stops, the ramp as a tilted slab, three clumps, the pool outline, a tunnel light) and the Underway (the north alcove, two sealed throats, three throat lights). |
+| `src/server/HushConfig.lua` | `IslandBoundsConfig` on `garden_hush`; `/hush on|off|clear`. |
+| `src/server/HushHost.lua` | Open/close, the passage (`HushPassage` remote), `/hush go|home`, evacuation, `leave`, protected heartbeat and remote, the 3-error shutdown. |
+| `src/client/HushClient.lua` | Trigger watch, fade (out .35 s, in .5 s, ground wait 2 s, timeout 3 s), the duck and `Lighting.HushGrade`, `inHush()`. |
+| `src/shared/IslandBounds.lua` | `gone(position, regions)`, `regionSafe(regions, position)`; nil regions = as before. |
+| `src/server/IslandBoundsHost.lua` | `d.regions()`, region safe samples, `arrived(player, spot)`. |
+| `src/shared/PetCatchup.lua` | `clear(..., extraSafe)`. |
+| `src/server/GardenState.lua` | `Garden:carry(id, spot)` (a function added, nothing else). |
+| `src/server/init.server.lua` | The mount, the three floor-test swaps, `catchupLanding`'s parameter, the bounds `regions` dep, the chat line, `leave`, the config start. |
+| `src/client/init.client.lua` | The mount. |
+| `src/shared/FeatureFlags.lua` | `Hush = true`. |
+
+**Specs:** `python scripts/run_dash_server_specs.py ".../build/luau-cli/luau.exe"`: **53/53 pass** (47 before, plus
+Hush 8, HushConfig 3, HushHost 12, HushClient 5, and IslandBounds 8 and IslandBoundsHost 8 now in the default run;
+GardenState 20 and PetCatchup with their new cases). `Hush.spec`'s clearance cases read `WorldV7Data`,
+`HollowWorldLayout.V7`, the find spots, the Dash course, the nest and the island walls: **rerun them after the island
+re-export merges into feat** (rebase first), before probe P1.
+
+**Hooks owed by others** (nothing of theirs was edited):
+- **Island / AmbientAudio owner:** a quiet hook (`Ambient:setQuiet("hush", on)` or a `quiet()` dep) taking birds,
+  crickets and the beds to 0 over 1 s; `clientUI.hush:inHush()` answers it.
+- **Garden-life builder (GardenLife / LifeSim):** a `quiet()` dep: no leaves round the player, no bubbles, no birds
+  while `clientUI.hush:inHush()`.
+- **Nest / race builder (Dash*):** G2's race call-back: what the race card says to a player in the Hush (today "Join"
+  answers Far). A "take me there" button would need a server entry point on `HushHost` like `/hush home`.
+
+**Unverified:** everything in Studio and on a phone (probes P1 to P13: the pocket's true size and roof, streaming,
+the sightline from home at max zoom, the camera clamp on the greybox, a real crossing each way with the pet, the
+evacuation, respawn, music and grade, memory). Translations: no new player text; run the export and sync anyway at
+publish.

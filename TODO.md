@@ -40,6 +40,7 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 ## Now working on
 
+- [ ] **The Hush greybox (G0, Fable `GARDEN-EXPANSION-LOOK.md`; Spencer 2026-11-23 "Yes, greybox it"), beta only.** Plan + architect verdict (GO WITH CHANGES) in `artifacts/qa-2026-11-23-beta14/HUSH-GREYBOX-BUILD-PLAN.md`. **Built** offline (Opus, 2026-11-23, `worktree-agent-aa0edfc9059d09a19`), not seen in Studio, not code reviewed: `FeatureFlags.Hush`, `Shared.Hush` + `HushGreybox` (39 parts), `HushConfig` (`garden_hush`, missing = on, `/hush on|off|clear`), `HushHost` (open/close, passage, evacuation; `/hush go|home`), `HushClient` (fade, music duck, grade), island bounds regions + `arrived`, `PetCatchup.clear` extraSafe, `GardenState:carry`. Offline runner 53/53. Next: rebase onto feat after the island re-export merges and rerun `Hush.spec`; code review; Studio probes P1-P13; translations (no new strings); beta publish on Spencer's go.
 - [ ] **Leftovers while Spencer tests beta (14) (Opus, 2026-11-23; Spencer: "Do 3").** Test checklist `artifacts/qa-2026-11-23-beta14/TEST-RUN.md` (also in his vault). Nothing goes on the beta until he says so.
   - [ ] World (island re-export session, local_a0f7d8a7): Aero pool map off cobalt, crown reshape + leaf tiles (kit r10), an original fountain loop.
   - [ ] Fable R4 small fixes (here): ready chips sort after egg and stamp, petal colour, folded wing tips from the front, leaf A size.

@@ -20,7 +20,8 @@ local Host={};Host.__index=Host
 Host.Tick=.1        -- the fall check's step
 Host.MaxErrors=3    -- errors in a row before this server gives up on the feature (walls down)
 
--- d: boards (player -> board), spawnFrame(board, view) -> CFrame (the arrival dais).
+-- d: boards (player -> board), spawnFrame(board, view) -> CFrame (the arrival dais), regions() -> the extra regions while
+-- the Hush is open (HushHost's own flag; nil otherwise: the island alone, as before).
 -- Specs may replace clock(), heartbeat, parent (the folder's parent), read(board) -> view, place(board, view, cframe).
 function Host.mount(d)
 	if not Bounds.ceiling()then return nil end
@@ -104,6 +105,7 @@ function Host:step()
 	if now-self.tickAt<Host.Tick then return end
 	self.tickAt=now
 	local boards=self.d.boards
+	self.regions=if self.d.regions then self.d.regions()else nil
 	for player,rec in pairs(self.records)do
 		if boards[player]~=rec.board then self.records[player]=nil end
 	end
@@ -128,7 +130,7 @@ function Host:check(player,board,now)
 		rec.movedAt,rec.externalAt=now,now
 	end
 	if not view.alive or Host.held(board)then rec.last=nil;return end
-	if Bounds.gone(view.position)then
+	if Bounds.gone(view.position,self.regions)then
 		self:rescue(board,view,rec,now)
 		return
 	end
@@ -139,7 +141,7 @@ function Host:check(player,board,now)
 	if now-rec.movedAt<Bounds.Quiet then return end
 	if last and(at-last).Magnitude>Bounds.Leap then rec.movedAt=now;return end
 	if not view.grounded or view.seated or view.anchored or at.Y>Bounds.SafeTopY then return end
-	if not Bounds.safeCell(at.X,at.Z)then return end
+	if not Bounds.safeCell(at.X,at.Z)and not Bounds.regionSafe(self.regions,at)then return end
 	rec.safe=at
 end
 function Host:rescue(board,view,rec,now)
@@ -165,6 +167,21 @@ function Host:moved(player)
 	if not rec then return end
 	local now=self.clock()
 	rec.movedAt,rec.externalAt,rec.last=now,now,nil
+end
+-- The Hush passage (HushHost): a server move that also ends somewhere safe, so a later fall returns there, never to a
+-- safe spot on the far side of the mountain. A player not seen yet is recorded with their character now.
+function Host:arrived(player,spot)
+	local board=self.d.boards[player]
+	if not board then return end
+	local rec=self.records[player]
+	if not rec or rec.board~=board then
+		rec=self:record(player,board)
+		local view=self.read(board)
+		rec.character=view and view.character
+	end
+	local now=self.clock()
+	rec.movedAt,rec.externalAt,rec.last=now,now,nil
+	if typeof(spot)=="Vector3"then rec.safe=spot end
 end
 -- closeBoard: the player is leaving.
 function Host:leave(board)
