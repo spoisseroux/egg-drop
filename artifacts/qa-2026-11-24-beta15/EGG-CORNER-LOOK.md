@@ -356,3 +356,98 @@ and "?"; the card on desktop and at 844 x 390; a phone clip with sound of open-c
 - `[check]` Whether others see the crank (remote cost).
 - `[check]` The "?" card's phone layout and the six lines at 320 px.
 - `[check]` Every card line against `Nest.lua` behaviour.
+
+---
+
+## Placement rulings (R2) (Fable, 2026-11-24)
+
+Answers F1 to F6 in `EGG-CORNER-BUILD-PLAN.md` and its section 2 list. Where this differs from sections 1 and 6 above,
+this wins.
+
+**Seen:** the builder's plan (sections 1, 2, 5, 9, 14) and the four machine captures in `egg-machine/studio-r1/` (the
+machine standing at M, on lawn). **Not seen:** the machine at M4 or M5, the west bench or either egg statue (I cannot
+pick them out in the captures), the plaza with the old station gone. Every angle below is arithmetic from the
+builder's coordinates; the kiosk's width (about 7 studs) is read off pixels in `noon-path-mouth.jpg`. The captures at
+the end are what confirm it.
+
+### 1. The machine spot
+
+M and M2 are dead (bench, lawn). M4 works but has two faults, so it is the interim, not the final.
+
+| | **M4 = (-38.5, 1.5)** interim | **M5 = (-41, 2)** final |
+|---|---|---|
+| Needs | nothing; ships now | `Station_BenchWest` removed (same island re-export as the station split) |
+| From plaza middle (-30, -4) | 10.1 | 12.5 (footprint ring reaches 15.3; paving edge 15.5) |
+| To kiosk / nest / hub (-30, 4) | 12.9 / 14.6 / 8.9 | 12.1 / 16.4 / 11.2 |
+| To Blossom mouth / Knoll mouth | 6.6 / 8.5 | 5.0 / 8.5 |
+| Bearing from path mouth (-20, 12) | about 60 left, 21.3 away | about 65 left, 23.3 away |
+| Against the kiosk (51 left) from the path mouth | edges overlap about 2 degrees | clear by about 2 degrees |
+| Same from (-9, 21) / (2.5, 21) | overlap 2 / touching | clear by 1 / clear by 2 |
+| `Turn` prompt anchor to the hub | 6.3: the prompt shows on arrival | 8.6: it does not |
+
+- **Why not stay at M4:** the bench at (-43, 5) faces the plaza middle, and M4 is 5.2 studs straight down that line.
+  The bench would stare at the pot's back across 2.3 studs. And the machine clips the Style deck's left post through
+  the whole walk in, which breaks "nothing hides behind anything".
+- **Ruling:** build at **M4 now**; `EggCorner.Spot` moves to **M5** in the build that carries the re-export. One
+  constant. If the M5 capture shows the kiosk is wider than I measured and they still touch, tell me before moving.
+- **Facing, both spots:** front (+Z) looks at **(-26, 7)**, unchanged. At M5 that is 7 degrees off the path mouth,
+  8 off the hub, 12 off (-9, 21): face-on for the whole walk.
+- **Fan from the path mouth at M5:** machine 65, kiosk 51, nest 26, arch 6 right. Gaps 14, 25, 32.
+- **Reach:** `Turn` reach **6 while at M4** (keeps it off the hub), back to 7 at M5.
+- **Inlay ring:** both spots stand across `Plaza_InlayRing` (r 10.4 to 11.9, 0.2 proud). Probe rule 1 becomes: all
+  17 rays on marble or inlay, within **0.25**. Seat the machine on the highest hit; a foot may sink 0.2 (feet are
+  0.35 tall). No shim.
+- **Attract ring at the machine:** r **3.6**, not 4.7 (at M5 4.7 spills 1.7 onto lawn). `[check]` if the back arc
+  still shows on grass, clip it and tell me.
+- Pin (top + 1.6), block box, trail end (front x 3.0): unchanged.
+- M3 east stays the last resort. Probe M5 in the same run as M4 (rule A2 will fail on the bench; I expect that).
+
+### 2. The plaza list
+
+"Re-export" means the island re-export of plan section 6.2. Until it lands, those pieces stay where they are.
+
+| Element | Ruling |
+|---|---|
+| `Plaza_Paving`, `Plaza_InlayRing` | Keep. |
+| `Plaza_InlayStar` (-30, -4) | Keep. **F5:** this is the drawn star. My table's "(-30, 4)" was the hub route point, which has nothing drawn on it. Both stay. |
+| `Station_EggNest`: steps, cup, glow egg, halo, gold trim ring, stele | **Remove, all of it** (top step 2.2 < 3.0). Now, under the switch: hide `W7_NestHalo__glow_warm`, `W7_Stations__foliage`, the `AeroAdditions` dome and `GlossLip_Eggs`. Steps, egg and stele go in the re-export, which fills the floor under r 3.6 with paving marble in the same plank pattern. |
+| `Station_BenchWest` (-43, 5) | **Remove** in the re-export. The machine takes its side of the plaza. |
+| `Station_BenchEast` (-17, 5) | Keep. |
+| `Statue_Egg` (-42, 9.5) | **Remove** in the re-export (**F2**). 7.6 from M5 and 19 degrees off it from the path mouth: a third egg shape on the machine's side. Plinth goes too; grass or paving as underneath. |
+| `Statue_Egg` (-18, 9.5) | **Remove** with its twin. It stands 3.2 from the path mouth and 1.6 to 2.3 studs off the line from the bridge head (2.5, 21) to the machine. Eggs on the plaza are then only the machine's and the nest's. |
+| Kiosk + `Pad_Workbench`, care cradle + pad | Keep, untouched. |
+| `Urn` (-46.5, -17), `Urn` (-13.5, 5) | Keep both. |
+| Colonnade columns, entablature, `Colonnade_FallenDrum` | Keep. |
+| Hatch tree, lantern, `LanternLight` | Keep. |
+| `Pad_Future_A` (-48, -22) | Keep, empty. |
+| `Pad_Future_B` (-13, -4) | **Remove** in the re-export. It is 11.7 from the care arch, so under the 12-stud rule nothing interactive can ever stand on it; an empty disc in the walk-in view promises something that will not come. |
+| `Station_ToyLawn`, `Station_PicnicWest`, lamp 5, flower patch, path mouths | Keep. |
+| Attract pins and rings: Customize, Journal | Keep. |
+| Eggs pin and ring | To the machine (ring r 3.6). |
+| `EggNestLight` | At the nest, **+2.5 over the marble**, range 8. `KioskLight`, `CradleLight`, `PlazaLight`: keep. |
+| **F4** nest trail pin while napping | Allowed, only while a Show me trail is drawn, no ring. It goes when the trail goes. |
+| **F6** buy crank sounds away from the machine | Play them, flat (not positioned), with the screen. The world motion only runs inside 60 studs. |
+
+### 3. The nest on plain marble
+
+**Confirmed: (-31, -11), on the paving, no dais.** It sits 7.1 from the star's middle: the fringe (r 2.57) spans 4.5
+to 9.6, so it clears the star (r 3.2) by 1.3 and the inlay ring (10.4) by 0.8. It lands in the plain band between
+them. Do not nudge it.
+
+- **No rim, no rug, no plinth.** The nest already stands on bare marble at today's spot (bottom right of
+  `noon-path-mouth.jpg`) and reads fine. A rug or rim would make it a second "station".
+- **It gets two small things so it sits, not floats** (root-local, part of the nest, no collision):
+  1. **Straw scatter:** 12 flat strands and 3 small fallen leaves on the marble, radius 2.7 to 3.6, two thirds of
+     them on the tree side (north-west). Strands 0.5 to 0.9 long, 0.02 over the floor, the nest's own straw texture,
+     matte. Budget 40 triangles. None inside the Bear spot's 1.0 radius or on the prompt point.
+  2. **Contact shadow:** one soft dark disc under the nest, r 3.0, black at 22% in the middle fading to 0 at the
+     edge. `[check]` if `Nest.lua` already draws one, keep that and skip this.
+- Bear spot, sign, `SignYaw` 50: as section 1; the probe's B5 decides the yaw. With no steps, the "step edge" rule for
+  Bear is void.
+- **Interim (plan A1):** while the bare steps and glow egg cannot be removed, the nest may stay at its old spot beside
+  them **on the beta only**. The corner does not go live until the re-export has landed and the nest is at (-31, -11).
+
+### Captures that settle this
+
+Noon and dusk from (2.5, 21), (-9, 21), (-20, 12) and the hub: once at M4 now, again at M5 after the re-export with
+the bench, both statues, pad B and the station gone and the nest moved. Plus one from the east bench looking west.
