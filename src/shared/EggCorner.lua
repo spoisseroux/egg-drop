@@ -123,7 +123,8 @@ end
 -- nest), none within 1.0 of the Bear spot or on the prompt point. Fixed, so every client draws the same.
 Corner.Tree=Vector3.new(-36,0,-18)
 Corner.ScatterAvoid=1.0
-function Corner.scatter(root,bear,prompt)
+function Corner.scatter(root,bear,prompt,inner,outer)
+	inner,outer=inner or 2.7,outer or 3.6
 	local toTree=root:VectorToObjectSpace(Vector3.new(Corner.Tree.X-root.X,0,Corner.Tree.Z-root.Z)).Unit
 	local treeAngle=math.atan2(toTree.X,toTree.Z)
 	local out={}
@@ -140,7 +141,7 @@ function Corner.scatter(root,bear,prompt)
 		local spread=if near then math.rad(70)else math.rad(110)
 		local base=if near then treeAngle else treeAngle+math.pi
 		local a=base+spread*(((k*0.618034)%1)*2-1)
-		local r=2.7+.9*((k*0.381966)%1)
+		local r=inner+(outer-inner)*((k*0.381966)%1)
 		local p=Vector3.new(math.sin(a)*r,0,math.cos(a)*r)
 		if free(p)then
 			local leaf=#out>=12

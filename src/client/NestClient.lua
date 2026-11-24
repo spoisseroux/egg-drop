@@ -30,6 +30,13 @@
 --   (44 px hit; the board lives in deps.gui() so it can be tapped), the prompt's third verb is Peek, and the disc, the
 --   pill and Peek all call help() (deps.help(self): the "?" card). At (-31, -11) it also lays a straw scatter and a soft
 --   contact shadow on the marble. Off: exactly the nest before.
+-- The Sleepy Nest landmark (Onboard.on("landmark"), NestLandmark; NEST-LANDMARK-LOOK, NEST-LANDMARK-BUILD-PLAN): at the
+--   corner's spot the 21 twig parts give way to the NestLandmark model (ReplicatedStorage.NestLandmark, cloned locally;
+--   a greybox with the same names until it is there) and a code sign board on the bowl's front. The egg is 1.3x and
+--   sits in the bed at 2.15, breathes every 4.5 s; the blanket folds, drapes (tucked, unrolling in .6 s) or slips
+--   (ready); the moon and the awning sway, the awning lifts 6 degrees when ready; the moon lantern is the nest's light
+--   (off by day, lit at dusk, gold and pulsing when ready). Prompt at (0, 1, -3.5), pill fixed at 5.2, Bear on the mat
+--   at (-2.9, 0, -2.0), the Show me pin at 8.2. Off (or anywhere else): the twig nest as before.
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Onboard=require(Shared:WaitForChild("Onboard"))
@@ -42,6 +49,7 @@ local LifeArt=require(Shared:WaitForChild("LifeArt"))
 local Models=require(Shared:WaitForChild("EggModels")).Egg
 local Stations=require(script.Parent:WaitForChild("LoungeStations"))
 local Corner=require(Shared:WaitForChild("EggCorner"))
+local Land=require(Shared:WaitForChild("NestLandmark"))
 local Client={};Client.__index=Client
 Client.Folder="EggDropSleepyNest"
 Client.Event="NestEvent"
@@ -340,6 +348,7 @@ function Client.mount(deps)
 	self.changed=Onboard.changed("nest"):Connect(function()self:sync()end)
 	-- The egg corner moves the nest (and drops the station's Yield): a flip closes and re-opens it where it now stands.
 	self.cornerChanged=Onboard.changed("corner"):Connect(function()self:relocate()end)
+	self.landmarkChanged=Onboard.changed("landmark"):Connect(function()self:relocate()end)
 	self:sync()
 	return self
 end
@@ -359,13 +368,15 @@ end
 function Client:placeNow()
 	local on=self:cornerOn()
 	local split=if self.d.split~=nil then self.d.split()==true else nil
-	return on,Corner.nestSpot(on,split),if on then Corner.nestFacing()else Client.Facing
+	local spot=Corner.nestSpot(on,split)
+	local landmarkOn=if self.d.landmark~=nil then self.d.landmark()==true else Land.on()
+	return on,spot,if on then Corner.nestFacing()else Client.Facing,Land.applies(landmarkOn,on and spot==Corner.NestSpot)
 end
 -- A corner flip while open: close and open again at the new place (the view comes back with the next sync).
 function Client:relocate()
 	if not self.isOpen or self.dead then return end
-	local on,spot=self:placeNow()
-	if on==self.corner and spot==self.spot then return end
+	local on,spot,_,landmark=self:placeNow()
+	if on==self.corner and spot==self.spot and landmark==self.landmark then return end
 	-- Studio check R8: the corner off takes the "?" card with it (the nest only moves, so nothing else would close it).
 	if self.corner and not on and self.d.helpClose then pcall(self.d.helpClose)end
 	self:close()
@@ -375,7 +386,12 @@ function Client:open()
 	self.isOpen=true
 	self.synced=false
 	local d=self.d
-	self.corner,self.spot,self.facing=self:placeNow()
+	self.corner,self.spot,self.facing,self.landmark=self:placeNow()
+	-- Root-local numbers for this nest (the landmark's, or the twig nest's).
+	self.promptAt=if self.landmark then Land.PromptAt else Client.PromptAt
+	self.bearSpot=if self.landmark then Land.BearSpot else Client.BearSpot
+	self.eggBase=if self.landmark then Land.EggBase else Client.EggBase
+	self.eggScale=if self.landmark then Land.EggScale else 1
 	-- Beta 14 D1: the station's E / ButtonX steps aside where the nest's prompt can act and is nearer. Not in the egg
 	-- corner: the station is the machine, far from the nest.
 	self.yield=function(position,part)return self:claims(position,part)end
@@ -422,6 +438,9 @@ function Client:send(kind)
 	return true
 end
 function Client:clear()
+	-- The landmark is the server's shared copy: put it back as it was, and forget it (code review of 443346b).
+	pcall(self.restLandmark,self)
+	self.landmarkState=nil
 	if self.folder then self.folder:Destroy();self.folder=nil end
 	if self.hosted then self.hosted:Destroy();self.hosted=nil end
 	self.signWords=nil
@@ -445,6 +464,7 @@ function Client:destroy()
 	self.destroyed=true;self.dead=true
 	self.changed:Disconnect()
 	if self.cornerChanged then self.cornerChanged:Disconnect()end
+	if self.landmarkChanged then self.landmarkChanged:Disconnect()end
 	self:close()
 end
 function Client:play(name,speed,volume)
@@ -511,7 +531,7 @@ function Client:draw()
 	local folder=make("Folder",self.world,{Name=Client.Folder})
 	self.folder=folder
 	self.root=Client.frame(self:groundY(),self.spot,self.facing)
-	for _,spec in ipairs(Client.parts())do
+	for _,spec in ipairs(if self.landmark then Client.landmarkParts()else Client.parts())do
 		local p=inert(make("Part",nil,{Name=spec.name}))
 		p.Material=if spec.wood then Enum.Material.Wood else Enum.Material.SmoothPlastic
 		p.Size=spec.size
@@ -546,11 +566,12 @@ function Client:draw()
 		end
 		p.Parent=folder
 	end
+	if self.landmark then self:drawLandmark(folder)end
 	if self.corner and self.spot==Corner.NestSpot then self:drawGround(folder)end
 	-- The egg: an invisible anchor at its base carries the halo, the label, the light and the emitters; the shells
 	-- (or a lilac ball until the meshes load) are posed from it every frame.
 	local anchor=inert(make("Part",nil,{Name="SleepyEgg",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
-	anchor.CFrame=self.root*CFrame.new(0,Client.EggBase,0)
+	anchor.CFrame=self.root*CFrame.new(0,self.eggBase or Client.EggBase,0)
 	anchor.Parent=folder
 	local egg={anchor=anchor,shells={}}
 	-- A Ball part is always round: a block with a sphere mesh stretches to the egg's 1 x 1.3.
@@ -563,7 +584,7 @@ function Client:draw()
 		ImageColor3=Client.Color.halo,ImageTransparency=1})
 	egg.light=make("PointLight",anchor,{Name="Glow",Range=6,Brightness=.4,Color=Client.Color.halo,Enabled=false,Shadows=false})
 	egg.zzz=make("ParticleEmitter",anchor,{Name="Zzz",Texture=Client.Assets.z,Rate=0,Lifetime=NumberRange.new(2.2),Speed=NumberRange.new(.6),
-		Rotation=NumberRange.new(-12,12),LightInfluence=0,Acceleration=Vector3.new(.25,0,0),EmissionDirection=Enum.NormalId.Top,
+		Rotation=NumberRange.new(-12,12),LightInfluence=0,Acceleration=Vector3.new(if self.landmark then -.25 else .25,0,0),EmissionDirection=Enum.NormalId.Top,
 		Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.35),NumberSequenceKeypoint.new(1,.6)}),
 		Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.09,0),NumberSequenceKeypoint.new(.73,0),NumberSequenceKeypoint.new(1,1)})})
 	egg.sparks=make("ParticleEmitter",anchor,{Name="Sparks",Texture=Client.Spark,Rate=0,Lifetime=NumberRange.new(.6,1),Speed=NumberRange.new(.6,1.4),
@@ -591,7 +612,7 @@ function Client:draw()
 	if self.corner then self:buildHelp(egg)end
 	-- The prompt, at the front of the nest (where the Bear's prints end).
 	local spot=inert(make("Part",nil,{Name="SleepyNestPrompt",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
-	spot.CFrame=self.root*CFrame.new(Client.PromptAt)
+	spot.CFrame=self.root*CFrame.new(self.promptAt or Client.PromptAt)
 	spot.Parent=folder
 	egg.prompt=make("ProximityPrompt",spot,{Name="NestPrompt",ObjectText=UICopy.get(Client.Copy.title),ActionText=UICopy.get("onb3.nest.tuck"),
 		HoldDuration=0,MaxActivationDistance=Client.Prompt,RequiresLineOfSight=false,Enabled=false,UIOffset=Client.PromptOffset})
@@ -606,12 +627,203 @@ function Client:draw()
 	self.drawn=true
 	self:meshes()
 end
+-- ── The Sleepy Nest landmark ─────────────────────────────────────────────────────────────────────────────────────
+-- Its sign board, a code part with the words, on the bowl's front (LOOK 1): the only code part besides the egg.
+function Client.landmarkParts()
+	local S=Land.Sign
+	return{{name="NestSign",shape="block",size=S.size,cf=CFrame.new(S.centre)*CFrame.Angles(math.rad(S.tiltBack),0,0),color="board",wood=true,
+		decal={"sign",BOTH},sign=true}}
+end
+Client.LandmarkNames=table.freeze({"Body","Awning","Moon","BlanketDraped","BlanketSlipped","BlanketFolded","Collider"})
+Client.LandmarkMoving=table.freeze({"Awning","Moon","BlanketDraped","BlanketSlipped","BlanketFolded"})
+-- The daylight the moon follows, from HollowClock's real shape: daylight() when it is there, else lastDaylight, else
+-- the second value of sample(now). 1 (day) when none answers.
+function Client.daylightFrom(Clock,now)
+	if type(Clock)~="table"then return 1 end
+	if type(Clock.daylight)=="function"then
+		local ok,value=pcall(Clock.daylight)
+		if ok and type(value)=="number"then return value end
+	end
+	if type(Clock.lastDaylight)=="number"then return Clock.lastDaylight end
+	if type(Clock.sample)=="function"then
+		local ok,_,value=pcall(Clock.sample,now or workspace:GetServerTimeNow())
+		if ok and type(value)=="number"then return value end
+	end
+	return 1
+end
+function Client:daylight()
+	if self.d.daylight then return self.d.daylight()end
+	local ok,Clock=pcall(function()return require(script.Parent:WaitForChild("HollowClock"))end)
+	return Client.daylightFrom(if ok then Clock else nil)
+end
+-- The shared model (the server's one copy, code review of 443346b): this client animates it locally.
+function Client:landmarkModelNow()
+	if self.d.landmarkModel then return self.d.landmarkModel()end
+	local room=workspace:FindFirstChild("EggDropLounge")
+	return room and room:FindFirstChild(Land.Template)
+end
+-- The moon lantern's light and halo (this client's): it replaces EggNestLight while the landmark stands.
+function Client:drawLandmark(folder)
+	local data=Land.data()
+	local function v(list)return Vector3.new(list[1],list[2],list[3])end
+	local lamp=inert(make("Part",nil,{Name="MoonLamp",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
+	lamp.CFrame=self.root*CFrame.new(v(data.moonLight))
+	lamp.Parent=folder
+	local L={data=data,lamp=lamp,fade=0,brightness=0}
+	L.light=make("PointLight",lamp,{Name="MoonLight",Color=Land.Moon.night.color,Range=Land.Moon.night.range,Brightness=0,Enabled=false,Shadows=false})
+	L.halo=make("BillboardGui",lamp,{Name="MoonHalo",LightInfluence=0,AlwaysOnTop=false,MaxDistance=Client.HaloDistance,Enabled=false,
+		Size=UDim2.fromScale(1.6,1.6)})
+	L.haloImage=make("ImageLabel",L.halo,{Name="Glow",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Image=Client.Assets.halo,
+		ImageColor3=Land.Moon.night.color,ImageTransparency=1})
+	self.landmarkState=L
+	self:bindLandmark()
+	return L
+end
+-- Finds the shared model (it may stream in, or be swapped from the greybox to the template): its parts, their rest
+-- poses (the server's WorldRestCFrame / RestTransparency) and the pivots, in world space, from its own root.
+function Client:bindLandmark()
+	local L=self.landmarkState
+	if not L then return nil end
+	local model=self:landmarkModelNow()
+	if model==L.model and(model==nil or model.Parent~=nil)then return L end
+	L.model,L.parts,L.rest=model,{},{}
+	if not model then return L end
+	for _,name in ipairs(Client.LandmarkNames)do
+		local part=model:FindFirstChild(name)
+		if part then
+			L.parts[name]=part
+			L.rest[name]={cf=part:GetAttribute("WorldRestCFrame")or part.CFrame,size=part.Size,transparency=part:GetAttribute("RestTransparency")or part.Transparency,
+				color=part.Color}
+		end
+	end
+	local root=model:GetAttribute("NestRoot")
+	if typeof(root)~="CFrame"then root=self.root end
+	local data=L.data
+	local function v(list)return Vector3.new(list[1],list[2],list[3])end
+	L.root=root
+	L.moonPivot=root*v(data.pivots.Moon.at)
+	L.moonAxis=root:VectorToWorldSpace(v(data.pivots.Moon.axis or {0,0,1}))
+	L.awningPivot=root*v(data.pivots.Awning.at)
+	L.awningAxis=root:VectorToWorldSpace(v(data.pivots.Awning.axis or {1,0,0}))
+	L.drapePivot=root*v(data.pivots.BlanketDraped.at)
+	L.skinState={}
+	return L
+end
+-- Puts the shared model back as the server left it (this client's nest closed: no egg, the switch off, a re-open).
+function Client:restLandmark()
+	local L=self.landmarkState
+	if not L or not L.parts then return end
+	for _,name in ipairs(Client.LandmarkMoving)do
+		local part,rest=L.parts[name],L.rest[name]
+		if part and rest and part.Parent then
+			part.CFrame,part.Size,part.Transparency=rest.cf,rest.size,rest.transparency
+			if name=="Moon"then
+				part.Color=rest.color
+				local skin=part:FindFirstChildOfClass("SurfaceAppearance")
+				if skin then
+					pcall(function()skin.EmissiveStrength=0 end)
+					pcall(function()skin.Color=Color3.new(1,1,1)end)
+				end
+			end
+		end
+	end
+end
+-- The blanket for this frame: which of the three shows, the tuck's unroll and the breath's ripple; the moon and the
+-- awning sway; the moon lantern's light by the hour and the egg's state (a 3 s linear fade in and out; ready snaps).
+function Client:poseLandmark(dt,look,tucked,reduced)
+	local L=self:bindLandmark()
+	if not L then return end
+	local ready=look=="ready"
+	local P=L.parts or {}
+	if L.model then
+		local hasEgg=self.view~=nil and not(self.hatching and self.hatching.t>=Land.Drop)
+		local state=Land.blanket(hasEgg,tucked,ready)
+		if self.hatching and self.hatching.t<Land.Drop then state="dropping"end
+		local function show(name,visible,alpha)
+			local part=P[name]
+			if not part then return end
+			-- The template hides the draped and slipped blankets (Transparency 1); shown, every blanket is opaque.
+			local want=if visible then(alpha or 0)else 1
+			if part.Transparency~=want then part.Transparency=want end
+		end
+		local dropAlpha=if state=="dropping"then math.clamp(self.hatching.t/Land.Drop,0,1)else nil
+		show("BlanketFolded",state=="folded")
+		show("BlanketDraped",state=="draped"or(state=="dropping"and not ready),dropAlpha)
+		show("BlanketSlipped",state=="slipped"or(state=="dropping"and ready),dropAlpha)
+		-- The draped blanket: unrolls from its lower edge on Tuck in, then follows the breath .15 s late.
+		local draped=P.BlanketDraped
+		if draped and state=="draped"then
+			local unroll=if self.tuck and not reduced then Land.unroll(self.tuck.t)else 1
+			local B=Land.Breath
+			local _,_,rise=Land.breath(self.clock-B.blanketLag,reduced)
+			local ripple=if B.rise>0 then rise/B.rise*B.blanketScale else 0
+			local rest=L.rest.BlanketDraped
+			local local3=L.root:VectorToObjectSpace(rest.cf.Position-L.drapePivot)
+			local scaled=Vector3.new(local3.X*(1+ripple),local3.Y*unroll*(1+ripple),local3.Z*(1+ripple))
+			draped.Size=Vector3.new(rest.size.X*(1+ripple),rest.size.Y*unroll*(1+ripple),rest.size.Z*(1+ripple))
+			draped.CFrame=(rest.cf-rest.cf.Position)+L.drapePivot+L.root:VectorToWorldSpace(scaled)
+		end
+		-- Sway.
+		local moonAngle,awningAngle=Land.sway(self.clock,ready,reduced)
+		local function about(part,pivot,axis,angle)
+			if not part then return end
+			part.CFrame=CFrame.new(pivot)*CFrame.fromAxisAngle(axis,math.rad(angle))*CFrame.new(-pivot)*L.rest[part.Name].cf
+		end
+		about(P.Moon,L.moonPivot,L.moonAxis,moonAngle)
+		about(P.Awning,L.awningPivot,L.awningAxis,awningAngle)
+	end
+	-- The moon lantern: lit at dusk and night (a 3 s linear fade with the lamps), gold and pulsing when ready.
+	local M=Land.moon(ready,self:daylight())
+	if ready then L.fade=1
+	elseif M.lit then L.fade=math.min(1,L.fade+dt/3)
+	else L.fade=math.max(0,L.fade-dt/3)end
+	local lit=if M.lit then M else(if L.fade>0 then Land.Moon.night else M) -- fading out keeps the night look
+	local pulse=if ready then Land.pulse(self.clock,reduced)else 1
+	L.brightness=lit.brightness*L.fade*pulse
+	L.light.Enabled=L.brightness>.01
+	L.light.Brightness=L.brightness
+	L.light.Range=lit.range
+	if lit.color then L.light.Color=lit.color end
+	local haloAlpha=lit.haloAlpha*L.fade*pulse
+	L.halo.Enabled=lit.halo>0 and haloAlpha>.01
+	if lit.halo>0 then
+		L.halo.Size=UDim2.fromScale(lit.halo,lit.halo)
+		L.haloImage.ImageColor3=lit.color
+		L.haloImage.ImageTransparency=1-haloAlpha
+	end
+	local moon=P.Moon
+	if moon and L.rest.Moon then
+		local want=if L.fade>0 and lit.color then L.rest.Moon.color:Lerp(lit.color,L.fade)else L.rest.Moon.color
+		if moon.Color~=want then moon.Color=want end
+		-- The template's moon wears a SurfaceAppearance (Part.Color is ignored under it): its tint and its emissive mask
+		-- (game scripts may write Strength and Tint, not the mask). One pcall per property: an engine without one keeps
+		-- the others.
+		local skin=moon:FindFirstChildOfClass("SurfaceAppearance")
+		if skin then
+			local strength=L.fade*pulse*(if ready then 1 else .6)
+			local tint=if L.fade>0 and lit.color then Color3.new(1,1,1):Lerp(lit.color,L.fade)else Color3.new(1,1,1)
+			local seen=L.skinState
+			if seen.strength==nil or math.abs(seen.strength-strength)>.01 or seen.tint~=tint then
+				seen.strength,seen.tint=strength,tint
+				pcall(function()skin.Color=tint end)
+				pcall(function()skin.EmissiveStrength=strength end)
+				pcall(function()skin.EmissiveTint=lit.color or tint end)
+			end
+		end
+	end
+end
+-- The Show me pin over the landmark: Land.PinAt straight over the bowl's centre (nil: the trail's own pin).
+function Client:pinAt()
+	if not self.landmark or not self.isOpen or not self.root then return nil end
+	return(self.root*CFrame.new(0,Land.PinAt,0)).Position
+end
 -- The egg corner's nest on plain marble (R2 3): a soft contact shadow (concentric see-through discs on one plate) and
 -- the straw and leaf scatter (EggCorner.scatter), root-local, inert, no shadow.
 Client.ScatterColor=table.freeze({straw=Color3.fromHex("#C9A560"),leaf=Color3.fromHex("#5E8A3A")})
 function Client:drawGround(folder)
 	local S=Corner.Shadow
-	local plate=inert(make("Part",nil,{Name="NestShadow",Transparency=1,Size=Vector3.new(S.radius*2,.02,S.radius*2)}))
+	local radius=if self.landmark then Land.Shadow else S.radius
+	local plate=inert(make("Part",nil,{Name="NestShadow",Transparency=1,Size=Vector3.new(radius*2,.02,radius*2)}))
 	plate.CFrame=self.root*CFrame.new(0,.012,0)
 	local surface=make("SurfaceGui",plate,{Name="Shadow",Face=Enum.NormalId.Top,LightInfluence=1,
 		SizingMode=Enum.SurfaceGuiSizingMode.PixelsPerStud,PixelsPerStud=20})
@@ -622,8 +834,10 @@ function Client:drawGround(folder)
 		corner(ring)
 	end
 	plate.Parent=folder
-	local prompt=Vector3.new(Client.PromptAt.X,0,Client.PromptAt.Z)
-	for index,bit in ipairs(Corner.scatter(self.root,Client.BearSpot,prompt))do
+	local at=self.promptAt or Client.PromptAt
+	local prompt=Vector3.new(at.X,0,at.Z)
+	local ring=if self.landmark then Land.Scatter else {}
+	for index,bit in ipairs(Corner.scatter(self.root,self.bearSpot or Client.BearSpot,prompt,ring.inner,ring.outer))do
 		local p=inert(make("Part",nil,{Name=(if bit.leaf then "ScatterLeaf"else "ScatterStraw")..index,Material=Enum.Material.SmoothPlastic,
 			Color=if bit.leaf then Client.ScatterColor.leaf else Client.ScatterColor.straw,
 			Size=if bit.leaf then Vector3.new(.22,.02,bit.length)else Vector3.new(.06,.02,bit.length)}))
@@ -858,7 +1072,7 @@ function Client:peek()
 		BackgroundColor3=Client.Color.stars,BorderSizePixel=0})
 	corner(chip)
 	local stars=label(chip,"Count",14,Client.Color.ink);stars.Text="+"..view.gift.stars;stars.AutoLocalize=false
-	board.StudsOffset=Vector3.new(0,(self.shownScale or 1.25)*1.3+1.6,0)
+	board.StudsOffset=if self.landmark then Vector3.new(0,Land.PeekAt-self.eggBase,0)else Vector3.new(0,(self.shownScale or 1.25)*1.3+1.6,0)
 	table.insert(self.beats,{kind="peek",board=board,t=0,parts={tile,chip},labels={item,count,stars}})
 end
 -- A beat (beta 14 Q2, rows 1 to 3): the pill says `text` for `seconds`, over the other rows, and holds the need bubble
@@ -875,7 +1089,7 @@ end
 function Client:claims(position,part)
 	local egg=self.egg
 	if not self.isOpen or not egg or not egg.prompt.Enabled or not self.root then return false end
-	local at=(self.root*CFrame.new(Client.PromptAt)).Position
+	local at=(self.root*CFrame.new(self.promptAt or Client.PromptAt)).Position
 	local function flat(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
 	local mine=flat(position,at)
 	if mine>Client.Prompt then return false end
@@ -1013,10 +1227,19 @@ function Client:pose(dt)
 		drop=if reduced then 0 else 1.5*(1-p)*(1-p)-(if p>.7 then .08*math.sin((p-.7)/.3*math.pi)else 0)
 		if p>=1 then self.drop=nil end
 	end
-	local s=scale*breath
-	local frame=self.root*CFrame.new(0,Client.EggBase+sink+drop,0)
+	local s=scale*breath*(self.eggScale or 1)
+	local rise=0
+	if self.landmark and look~="ready"and not self.hatching then
+		-- The landmark's sleeping breath (LOOK 4): taller and a touch narrower, rising a little.
+		local tall,wide
+		tall,wide,rise=Land.breath(self.clock,reduced)
+		s*=wide
+		squash*=tall/wide
+	end
+	local frame=self.root*CFrame.new(0,(self.eggBase or Client.EggBase)+sink+drop+rise,0)
 	if lean~=0 then
-		local d=Vector3.new(Client.BearSpot.X,0,Client.BearSpot.Z).Unit
+		local bear=self.bearSpot or Client.BearSpot
+		local d=Vector3.new(bear.X,0,bear.Z).Unit
 		frame=frame*CFrame.fromAxisAngle(Vector3.new(d.Z,0,-d.X),math.rad(lean))
 	end
 	frame=frame*CFrame.Angles(0,0,math.rad(rock))*CFrame.new(0,hop,0)*CFrame.Angles(0,math.pi,0) -- the face looks at the dais
@@ -1030,7 +1253,9 @@ function Client:pose(dt)
 	egg.haloImage.ImageColor3=if look=="ready"then Client.Color.gold else Client.Color.halo
 	egg.light.Enabled=look~="small"
 	egg.sparks.Rate=if look=="ready"and not reduced then 6 else 0
-	egg.board.StudsOffset=Vector3.new(0,1.3*s+.6,0)
+	-- The landmark's pill is fixed at Land.PillAt over the root (it never rides the egg's scale).
+	egg.board.StudsOffset=if self.landmark then Vector3.new(0,Land.PillAt-self.eggBase,0)else Vector3.new(0,1.3*s+.6,0)
+	if self.landmark then self:poseLandmark(dt,look,tucked,reduced)end
 	egg.stillZ.Enabled=reduced and look~="ready"
 	egg.stillZ.StudsOffset=Vector3.new(.3,1.3*s+.3,0)
 	local every=Client.ZzzEvery[look]
@@ -1163,7 +1388,7 @@ end
 -- Where the Bear's prints end (the front of the nest), or nil while there is no nest drawn.
 function Client:place3D()
 	if not self.isOpen or not self.drawn or not self.view then return nil end
-	return(self.root*CFrame.new(Client.PromptAt)).Position
+	return(self.root*CFrame.new(self.promptAt or Client.PromptAt)).Position
 end
 -- {left, look, ready, kind, item, stars} for the strip, or nil.
 function Client:summary()

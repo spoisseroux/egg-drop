@@ -34,7 +34,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # The upper tier, greybox T0 (UPPER-TIER-BUILD-PLAN).
          "Tier", "TierConfig", "TierHost",
          # The egg corner (EGG-CORNER-BUILD-PLAN): its numbers and switches.
-         "EggCorner"]
+         "EggCorner",
+         # The Sleepy Nest landmark (NEST-LANDMARK-LOOK): its numbers and states.
+         "NestLandmark"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

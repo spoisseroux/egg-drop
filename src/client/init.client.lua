@@ -5095,7 +5095,10 @@ do
      local summary=clientUI.nest and clientUI.nest:summary()
      return Copy.get(if summary and summary.ready then "onb3.nest.pinReady"else "onb3.nest.title")
     end
-    return at~=nil and trail:start({position=at,name=name})
+    -- The Sleepy Nest landmark: its pin stands 8.2 over the bowl's centre (NEST-LANDMARK-LOOK 5); the prints still end at
+    -- the prompt point.
+    local pinAt=clientUI.nest and clientUI.nest:pinAt()
+    return at~=nil and trail:start({position=at,name=name,pinAt=pinAt})
    end
    if id=="finds"or id=="findsIntro"then
     local finds=findsNow()

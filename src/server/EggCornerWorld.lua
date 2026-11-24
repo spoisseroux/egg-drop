@@ -12,6 +12,7 @@
 local ServerStorage=game:GetService("ServerStorage")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Corner=require(Shared.EggCorner)
+local Landmark=require(Shared.NestLandmark)
 local Onboard=require(Shared.Onboard)
 local UICopy=require(Shared.UICopy)
 local World={};World.__index=World
@@ -184,6 +185,23 @@ function World.mount(room,deps)
 	self:apply(on())
 	local changed=deps.changed or Onboard.changed("corner")
 	table.insert(self.connections,changed:Connect(function()task.defer(function()if not self.destroyed then self:apply(on())end end)end))
+	-- The landmark's switch moves only the nest's box and the light.
+	local built,problem=pcall(self.buildLandmark,self)
+	if not built then warn("[EggCorner] landmark: "..tostring(problem))end
+	self:placeLandmark(self.on)
+	local landmarkChanged=deps.landmarkChanged or Onboard.changed("landmark")
+	table.insert(self.connections,landmarkChanged:Connect(function()task.defer(function()
+		if not self.destroyed then self:nestBox(self.on);self:light(self.on);self:placeLandmark(self.on)end
+	end)end))
+	-- A template mounted after boot (a late Rojo sync in Studio) replaces the greybox.
+	local storage=deps.storage or ServerStorage
+	table.insert(self.connections,storage.ChildAdded:Connect(function(child)
+		if child.Name==Landmark.Template and not self.destroyed and self.landmarkModel and self.landmarkModel:GetAttribute("LandmarkGreybox")then
+			task.defer(function()
+				if pcall(self.buildLandmark,self)then self:placeLandmark(self.on)end
+			end)
+		end
+	end))
 	return self
 end
 
@@ -225,17 +243,24 @@ end
 
 -- The nest's pet box at the nest's spot (destroyed and made again: the scene cache learns parts only when they arrive,
 -- and every reader checks part.Parent). Built only where LoungeWorldV7Art.collision built one.
+-- The Sleepy Nest landmark stands here now (NestLandmark): the corner on, the station split out, its own switch on.
+function World:landmark(on)
+	local landmarkOn=if self.d.landmark then self.d.landmark()==true else Landmark.on()
+	return Landmark.applies(landmarkOn,on==true and Corner.split(self.world))
+end
 function World:nestBox(on)
 	local regions=self.room:FindFirstChild("PetRegions")
 	local old=regions and regions:FindFirstChild("SleepyNest")
 	if not old then return end
 	local spot=Corner.nestSpot(on,Corner.split(self.world))
-	if math.abs(old.Position.X-spot.X)<.01 and math.abs(old.Position.Z-spot.Z)<.01 then return end
 	local Nest=require(Shared.Nest)
+	-- The landmark's bowl is wider: pets keep Landmark.Block / 2 + .35 off its middle (NEST-LANDMARK-LOOK 2).
+	local block=if self:landmark(on)then Landmark.Block else Nest.Block
+	if math.abs(old.Position.X-spot.X)<.01 and math.abs(old.Position.Z-spot.Z)<.01 and math.abs(old.Size.X-block)<.01 then return end
 	local y=old.Position.Y
 	local box=old:Clone()
 	box.CFrame=CFrame.lookAt(Vector3.new(spot.X,y,spot.Z),Vector3.new(Nest.Facing.X,y,Nest.Facing.Z))
-	box.Size=Vector3.new(Nest.Block,1,Nest.Block)
+	box.Size=Vector3.new(block,1,block)
 	box:SetAttribute("GardenBlockedRegion",true)
 	old:Destroy()
 	box.Parent=regions
@@ -249,6 +274,108 @@ function World:light(on)
 	local offset,range=Corner.light(on)
 	fixture.CFrame=CFrame.new(Layout.Stations.Eggs.Position+offset)
 	light.Range=range
+	-- The landmark's moon lantern replaces this light (NEST-LANDMARK-LOOK 4: never two).
+	light.Enabled=not self:landmark(on)
+end
+-- The landmark's template for the clients (beta only: this module only runs under the ceiling). Each client clones it.
+-- ── The Sleepy Nest landmark: ONE shared copy (code review of 443346b) ────────────────────────────────────────────
+-- The server places it at the nest's corner spot while the landmark applies: anchored, its Collider solid for everyone
+-- (a player with no egg never sees others float), Persistent streaming. Each client animates the moon, awning, blankets
+-- (and its own egg) on it locally: client writes to anchored parts never replicate, so each player still sees their
+-- own nest's state. Template ServerStorage.NestLandmark (LandmarkVersion 1), else a greybox with the same names.
+World.Landmark="NestLandmark"
+World.LandmarkMoving=table.freeze({"Awning","Moon","BlanketDraped","BlanketSlipped","BlanketFolded"})
+function World.landmarkGreybox(data)
+	local model=Instance.new("Model")
+	model.Name=World.Landmark
+	local function v(list)return Vector3.new(list[1],list[2],list[3])end
+	local function add(name,shape,size,at,color,transparency)
+		local p=Instance.new("Part")
+		p.Name,p.Shape,p.Size,p.CFrame,p.Color=name,shape,size,CFrame.new(at),color
+		p.Material=Enum.Material.SmoothPlastic
+		p.Transparency=transparency or 0
+		p.Parent=model
+		return p
+	end
+	local parts=data.parts
+	local function box(name,color,transparency)return add(name,Enum.PartType.Block,v(parts[name].size),v(parts[name].center),color,transparency)end
+	add("Body",Enum.PartType.Block,Vector3.new(4.8,2.75,4.8),Vector3.new(0,1.375,0),Color3.fromHex("#F4E8CF"))
+	box("Awning",Color3.fromHex("#63AD68"))
+	box("Moon",Color3.fromHex("#FFF3C4"))
+	box("BlanketDraped",Color3.fromHex("#6FB3AE"),1)
+	box("BlanketSlipped",Color3.fromHex("#6FB3AE"),1)
+	box("BlanketFolded",Color3.fromHex("#6FB3AE"))
+	local c=data.collider
+	local collider=add("Collider",Enum.PartType.Cylinder,Vector3.new(c.height,c.radius*2,c.radius*2),v(c.centre),Color3.new(1,1,1),1)
+	collider.CFrame=CFrame.new(v(c.centre))*CFrame.Angles(0,0,math.pi/2)
+	model.WorldPivot=CFrame.new()
+	model:SetAttribute("LandmarkGreybox",true)
+	return model
+end
+-- The template's clone (its pivot is the nest-local origin) or the greybox (WorldPivot at the origin).
+function World.landmarkTemplate(storage)
+	storage=storage or ServerStorage
+	local template=storage:FindFirstChild(Landmark.Template)
+	local version=template and template:FindFirstChild("LandmarkVersion")
+	if template and template:IsA("Model")and version and version.Value==Landmark.Version then return template:Clone(),false end
+	return World.landmarkGreybox(Landmark.data()),true
+end
+-- The plaza floor under the nest: one ray down with the old station's parts left out (its steps stand there until the
+-- split hides them), within .6 of the spot's height. nil: the spot's own height.
+function World.nestFloor(room,spot)
+	local meshes=room and room:FindFirstChild("World")
+	if not meshes then return nil end
+	local skip={}
+	for _,part in ipairs(meshes:GetChildren())do
+		local name=part.Name
+		if string.sub(name,1,#Corner.SplitPrefix)==Corner.SplitPrefix or string.sub(name,1,13)=="W7_Stations__"or string.sub(name,1,12)=="W7_NestHalo_"then
+			table.insert(skip,part)
+		end
+	end
+	local params=RaycastParams.new()
+	params.FilterType=Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances=skip
+	local hit=workspace:Raycast(Vector3.new(spot.X,spot.Y+6,spot.Z),Vector3.new(0,-10,0),params)
+	local y=hit and hit.Instance:IsDescendantOf(meshes)and hit.Position.Y
+	return if y and math.abs(y-spot.Y)<=.6 then y else nil
+end
+-- Builds (or rebuilds) the shared copy at the nest's corner spot; parked while the landmark does not apply.
+function World:buildLandmark()
+	if self.landmarkModel then self.landmarkModel:Destroy();self.landmarkModel=nil end
+	local model,greybox=World.landmarkTemplate(self.d.storage)
+	local spot=Corner.NestSpot
+	local y=(self.d.floor or World.nestFloor)(self.room,spot)or spot.Y
+	local root=CFrame.lookAt(Vector3.new(spot.X,y,spot.Z),Vector3.new(Corner.NestFacing.X,y,Corner.NestFacing.Z))
+	model:PivotTo(root)
+	pcall(function()model.ModelStreamingMode=Enum.ModelStreamingMode.Persistent end)
+	for _,part in ipairs(model:GetDescendants())do
+		if part:IsA("BasePart")then
+			part.Anchored=true
+			part.CanTouch=false
+			if part.Name=="Collider"then
+				part.CanCollide=true;part.Transparency=1;part.CastShadow=false
+			else
+				part.CanCollide=false;part.CanQuery=false
+			end
+		end
+	end
+	for _,name in ipairs(World.LandmarkMoving)do
+		local part=model:FindFirstChild(name)
+		if part then part:SetAttribute("WorldRestCFrame",part.CFrame);part:SetAttribute("RestTransparency",part.Transparency)end
+	end
+	model:SetAttribute("NestRoot",root)
+	model:SetAttribute("LandmarkGreybox",greybox==true)
+	model.Name=World.Landmark
+	model.Parent=self.park
+	self.landmarkModel=model
+	return model
+end
+-- Stands in the room while the landmark applies (corner on, split, its switch on), else parked.
+function World:placeLandmark(on)
+	local model=self.landmarkModel
+	if not model then return end
+	local want=if self:landmark(on)then self.room else self.park
+	if model.Parent~=want then model.Parent=want end
 end
 function World:apply(on)
 	on=on==true
@@ -272,6 +399,7 @@ function World:apply(on)
 	end
 	self:nestBox(on)
 	self:light(on)
+	self:placeLandmark(on)
 	for _,part in ipairs(self:stationParts())do World.hide(part,on)end
 end
 function World:destroy()
@@ -280,5 +408,6 @@ function World:destroy()
 	self.destroyed=true
 	for _,connection in ipairs(self.connections)do connection:Disconnect()end
 	if self.model then self.model:Destroy()end
+	if self.landmarkModel then self.landmarkModel:Destroy()end
 end
 return World
