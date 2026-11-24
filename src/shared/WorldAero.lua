@@ -59,6 +59,17 @@ Aero.Surfaces=table.freeze({
 	palette={TextureID="rbxassetid://121108587763392"},
 })
 -- Scrolling Texture layers (LoungeWorldV7Art.WaterSkins) by layer name, then by the water under them.
+-- Fable R5 / beta 14 W3 row 2: named parts that take their own surface before their kind's (an ordered prefix list).
+-- The five arrival chimes: the Aero palette at saturation x .75 (scripts/draw_aero_palette.py palette-chimes).
+Aero.Named=table.freeze({
+	table.freeze({prefix="W7_Chime_",kind="palette",surface=table.freeze({TextureID="rbxassetid://0"})}),
+})
+function Aero.namedSurface(name,kind)
+	for _,entry in ipairs(Aero.Named)do
+		if entry.kind==kind and string.sub(name,1,#entry.prefix)==entry.prefix then return entry.surface end
+	end
+	return nil
+end
 Aero.Skins=table.freeze({
 	FlowSkin={
 		-- LOOK-R3 1 (Studio r5): the stream takes the pool's glint too, so pool and stream match in the hub.
@@ -174,7 +185,16 @@ Aero.Waterfall=table.freeze({
 		-- pool gets a smaller one, dropped at level 1.
 		-- LOOK-R4 round 2: the kit's foam part (rolls, lips, apron) sits in the cliff's shade; a small white emissive lift on
 		-- its SurfaceAppearance keeps it whiter than the water. Written by AeroKit.build on the cloned part.
-		FoamGlow=table.freeze({Strength=.45,Tint=hex("#FFFFFF")}), -- the mask (the atlas white block) is on the template
+		FoamGlow=table.freeze({Strength=.3,Tint=hex("#FFFFFF")}), -- the mask (the atlas white block) is on the template
+		-- Fable R5: soft mist cards, camera-facing, at the foot (3, about 6 wide) and over the step's rock lip (1): `along`
+		-- across the sheet, `out` in front of it, from `up` to `up + tall`. Static (no TextureSpeed); level1 per card.
+		MistCards=table.freeze({Texture="rbxassetid://0",Color=hex("#EEF6FA"),Transparency=.6,
+			Cards=table.freeze({
+				table.freeze({at="pool",along=-3.4,out=1.4,up=-.2,tall=3,width=6,level1=true}),
+				table.freeze({at="pool",along=.2,out=1.8,up=-.2,tall=3.4,width=6.5,level1=true}),
+				table.freeze({at="pool",along=3.3,out=1.3,up=-.2,tall=2.8,width=5.5,level1=false}),
+				table.freeze({at="ledge",along=0,out=.9,up=-.3,tall=2,width=6,level1=false}),
+			})}),
 		PoolShade=table.freeze({Texture="rbxassetid://135109259637937",Color=hex("#1F6F8A"),Transparency=.3,up=.03,
 			pool=table.freeze({width=12,out=5}),ledge=table.freeze({width=7,out=2.5})}),
 		Apron=table.freeze({from=.5,to=7.5,up=.06,width0=9,width1=9.5,length=7,speed=1.5/7,Color=hex("#FFFFFF"),

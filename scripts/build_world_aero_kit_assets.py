@@ -206,7 +206,7 @@ def xml_part(index, mesh, mesh_id, raw):
         ] + ([f"          <Color3 name=\"Color\"><R>{tint[0]!r}</R><G>{tint[1]!r}</G><B>{tint[2]!r}</B></Color3>"]
              if tint else []) + ([
             f"          <Content name=\"EmissiveMaskContent\"><url>{glow}</url></Content>",
-            "          <float name=\"EmissiveStrength\">0.45</float>",
+            "          <float name=\"EmissiveStrength\">0.3</float>",  # Fable R5: matte, lower
             "          <Color3 name=\"EmissiveTint\"><R>1</R><G>1</G><B>1</B></Color3>",
         ] if glow else []) + [
             "        </Properties>",

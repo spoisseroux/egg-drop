@@ -1,0 +1,60 @@
+{
+  "falls-atlas": {
+    "px": 512,
+    "streak_rows": 384,
+    "studs": [
+      "one sheet",
+      24
+    ],
+    "shares": {
+      "base": 0.686,
+      "deep": 0.026,
+      "mid": 0.138,
+      "wide": 0.151,
+      "band": 0.491
+    },
+    "streak_mean": [
+      179.6,
+      183.4,
+      188.6
+    ],
+    "streak_min": [
+      87,
+      83,
+      77
+    ],
+    "periodic_in_v": true
+  },
+  "leaf-tiles": {
+    "px": 512,
+    "studs": 4,
+    "leaves": 2641,
+    "shares": {
+      "gap": 0.083,
+      "layer1": 0.257,
+      "layer2": 0.316,
+      "layer3": 0.29,
+      "tips": 0.054
+    },
+    "means": {
+      "leaf-lime": [
+        99.0,
+        144.3,
+        57.5
+      ],
+      "leaf-dark": [
+        43.5,
+        110.7,
+        55.1
+      ]
+    }
+  },
+  "mist-card": {
+    "px": [
+      256,
+      128
+    ],
+    "alpha_max": 251,
+    "edge_max": 0
+  }
+}
