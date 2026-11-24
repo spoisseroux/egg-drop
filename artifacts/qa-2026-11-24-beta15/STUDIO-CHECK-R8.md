@@ -97,3 +97,47 @@ Nothing from Tier, TierHost, EggCornerWorld, EggMachineClient or NestClient.
 Not captured: 844 x 390, the hub and (-9, 21) points, a phone.
 
 Studio is left in Edit; Rojo is disconnected in the plugin and only my serve process (34872) was stopped.
+
+# R9 recheck (Opus, 2026-11-24)
+
+`feat/egg-drop-arcade-polish` at **17b4142**, Rojo on 34872, Studio 53800d7d (place file, Studio counts as beta). Edit
+held the repo's LF lengths: Tier 12,627, TierGreybox 6,374, GreyboxRows 4,126, EggCorner 8,760, EggCornerWorld 14,220,
+TierHost 8,912, server init 150,820, EggMachineClient 22,772, HowItWorks 29,733 (29,741 after e10cb3e), NestClient
+63,423, client init 317,910. Two Plays (fresh save: Skip tutorial, Meet Bear, Back). Nothing saved or published.
+Captures in `studio/r9/`.
+
+## Fix committed (offline runner 65/65)
+
+| Commit | What |
+|---|---|
+| **e10cb3e** | `HowItWorks.buildList`: the new `local pad` (the gamepad check) **shadowed the panel padding**, so `panelW-pad-bw` threw. Got it sat at the panel's top-left **(0, 0), over the title**, and its `Activated` was never connected: **Got it did nothing**. Renamed to `gamepad`. After: Got it at (316, 332) in the 520 x 396 panel, and a real click closes the card. |
+
+## Results
+
+| Check | Result |
+|---|---|
+| 1. Tier walls at 54 (server) | **PASS.** Server model: 68 parts, 7 stops, every top **54.00**. Stacked case on one account: an anchored 2 x 5.3 x 1 stand-in made on the server, standing on the lip line at lip height (rim 33, balustrade 32), the player on its head, W + Space held 5 s outward (real keys). Max root: outer rim **51.61** / 51.00, NE end **50.31**, SW end **50.64**, balustrade **49.82**. All held (feet at most 48.2, so 5.8 under the stop top). |
+| 1. Tier colours | **PASS** (as coded). Lawn `#17702C` Grass x5, cliff `#6B7465` Slate x27, marble `#B2B1B3` Marble x16, dirt `#815C3F` Ground x4, clumps `#5A6256` Slate x3, pads x3, pole x1. Look notes for Fable: the kerbs and balustrade in Roblox Marble read **cool blue-grey with cracks**, not the plaza's warm white (06b, 08). The stack still reads as one block from the plaza, now dark rock with a green strip (04, 06). |
+| 2. Hatch another on a Toy result | **PASS.** 4 presses: the dial nudges **14.8 to 15.0 deg** out and back, starting 0.10 to 0.16 s after the press. No full turn, the egg stays hidden, and the Toy Egg panel opens ("The toy was not changed"). |
+| 2. No streak step | **PASS.** Refused press at 76.13, then a buy at 78.15 (15.7 s after the last landing): **192.1 deg** (2nd step, a half turn), not the quarter. |
+| 2. Normal buy | **PASS.** The crank starts **0.113 to 0.134 s** after the press, in the same frame the reveal opens (Stat Egg: 0.116 s, at Saved). Full turn 371.6 to 374.2 deg. The egg shows about 0.6 s after the crank starts and lands at **0.85 s**. |
+| 2. Hold up to 1 s | **Not isolated.** Toy reveals (held) show the name 2.47 to 2.49 s after the stage opens. A corner-off Customization egg (no machine) showed it at 2.16 s. Both corner-on Customization eggs were rare charms (3.98 s), so there is no like-for-like pair. The Stat Egg reveal is not held. |
+| 2. Turn right after a buy | **PASS.** Turn pressed about 0.5 s after a Stat buy's egg landed: the open crank started 0.016 s later (101.8 deg) and the screen opened at 0.33 s. Note: the prompt fired while the Stat reveal card was still up, and the screen opened underneath it. |
+| 3. Attract ring off the grass | **FAIL.** Ring part 7.2 (r 3.0) at (-41, 4.21, 2). Of 128 rays at r 3.0, **24 (67.5 deg)** are off marble and trim: world 121 to 186 deg, which is **105 to 167 deg from the facing**, on the west side. Seen on a fresh save's natural attract (16) and from above (15, forced on locally). No radius fixes it: r 2.6 has 11 rays off, 2.8 has 18, 3.2 has 28. Only r 2.4 or less is clear, and that is inside the body (bbox 4.2 x 4.3). Smallest fix: Fable's front arc. **200 deg (+-100)** clears every ray. Her 220 deg still leaves 105 to 110 deg (about 0.26 studs) on grass. |
+| 4. "?" card with a mouse | **PASS after e10cb3e.** The live line is 14 px `#FFFFFF`, the body 14, the title 24. Got it has a label only, no glyph (last input MouseButton1). Before the fix: see the commit above. |
+| 4. `/onboard corner off` | **PASS.** The open card closes **0.05 to 0.07 s** after the chat line (both Plays). The machine parks; `corner on` brings it back. |
+| 5. Output log | **PASS** (Play 2: known lines only). Play 1 is flooded with my own watcher's errors (`NameGroup is not a valid member`, AssistantCommand). Nothing came from Tier, TierHost, EggCornerWorld, EggMachineClient or NestClient. The HowItWorks throw never printed. |
+
+## Captures (`studio/r9/`, noon 10.5, camera set at the R8 spots)
+
+- 01: the plaza from the path mouth (-20, 12).
+- 04: the tier from the plaza's east side.
+- 06: the zigzag from the lawn (the orange tree in front).
+- 06b: the zigzag close, from the east foot (marble kerbs).
+- 08: the terrace lookout.
+- 14: the "?" card with a mouse, after the fix.
+- 15: the machine ring from above (forced on locally).
+- 16: the machine ring on a fresh save, west arc on grass.
+
+At the end: Studio is in Edit. Rojo is disconnected in the plugin, and only my serve process (34872) was stopped. The
+stand-ins are gone. The `ZZSpecs` folders Rojo mapped in (327 instances) were removed from Edit; 0 are left.
