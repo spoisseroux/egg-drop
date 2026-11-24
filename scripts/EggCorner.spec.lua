@@ -60,8 +60,8 @@ return function(server)
 		assert(Corner.split({parts={W7_EggsStation__marble={region="EggsStation"}}}))
 		assert(not Corner.split({}))
 		assert(Corner.SplitPrefix=="W7_EggsStation__")
-		-- Today's island has no split yet.
-		assert(Corner.split()==false)
+		-- The island carries the split now (claude/eggs-station-split, native pack 326424 bytes).
+		assert(Corner.split()==true)
 	end)
 	test("what the beta hides now: the halo, the cup's leaves, the Aero dome and the Eggs lip",function()
 		assert(table.find(Corner.Hide,"W7_NestHalo__glow_warm")and table.find(Corner.Hide,"W7_Stations__foliage")and #Corner.Hide==2)

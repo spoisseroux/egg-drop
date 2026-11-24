@@ -27,8 +27,19 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+# Text is bound by its content, not its line endings: core.autocrlf (Windows) checks these out CRLF and other machines
+# LF, and the files were written either way. Binary files (FBX, PNG, the native rbxm) stay byte-exact.
+TEXT_SUFFIXES = (".json", ".rbxmx", ".lua")
+
+
+def content_sha(name, data):
+    if str(name).endswith(TEXT_SUFFIXES):
+        data = data.replace(b"\r\n", b"\n")
+    return sha(data)
+
+
 def input_hashes(root):
-    return {name: sha((root / name).read_bytes()) if (root / name).is_file() else None for name in INPUTS}
+    return {name: content_sha(name, (root / name).read_bytes()) if (root / name).is_file() else None for name in INPUTS}
 
 
 def validate(root, xml=None, lua=None):
@@ -51,11 +62,11 @@ def validate(root, xml=None, lua=None):
             raise ValueError("native input bindings changed: " + ", ".join(changed or ["input path set"]))
         for name, candidate, key in ((XML, xml, "xmlSha256"), (LUA, lua, "luaSha256")):
             existing = (root / name).read_bytes()
-            if sha(existing) != proof.get(key):
+            if content_sha(name, existing) != proof.get(key):
                 raise ValueError(name + " canonical bytes changed")
             if candidate is not None:
                 data = candidate.encode("utf-8") if isinstance(candidate, str) else candidate
-                if sha(data) != proof.get(key):
+                if content_sha(name, data) != proof.get(key):
                     raise ValueError(name + " generated candidate differs from approved native checkpoint")
         return proof
     except (OSError, ValueError, KeyError, TypeError) as exc:

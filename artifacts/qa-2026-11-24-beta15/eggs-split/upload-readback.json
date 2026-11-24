@@ -1,0 +1,125 @@
+{
+ "assetId": "118362972104444",
+ "operationId": "1cfa104d-5b24-4fa0-b304-fffd6f090089",
+ "note": "InsertService:LoadAsset readback in Studio Edit (model destroyed, never parented), 2026-11-24. The two renamed parts (reusedFrom) are geometry-hash-identical to the live parts they replace and keep those parts' mesh ids and raw sizes (architect review); this upload's copies are recorded under uploadedCopy and are not used.",
+ "checkpoint": {
+  "fbxSha256": "5b61277ac3185c0e80fa071ed3dbed83f67868a96f70220e2e7c2d97c618476e",
+  "manifestSha256": "fdd87b2406b70156d65a2e10c7637df0941a013e6187d2fd7469ccfd1fc38ea3",
+  "previousMeshIds": {
+   "W7_Stations__marble": "126589987182505",
+   "W7_Stations__marble_smooth": "125972227162285",
+   "W7_Stations__palette": "71188520415952",
+   "W7_Stations__trim": "132095006963916"
+  }
+ },
+ "parts": [
+  {
+   "name": "W7_EggsStation__foliage",
+   "meshId": "132809598445653",
+   "meshSize": [
+    3.9651,
+    0.51952,
+    4.15772
+   ],
+   "reusedFrom": "W7_Stations__foliage",
+   "uploadedCopy": {
+    "meshId": "128200887610104",
+    "meshSize": [
+     45.84517288208008,
+     6.006751537322998,
+     48.072174072265625
+    ]
+   }
+  },
+  {
+   "name": "W7_EggsStation__glow_warm",
+   "meshId": "112583451635109",
+   "meshSize": [
+    2.85704,
+    0.11906,
+    2.85704
+   ],
+   "reusedFrom": "W7_NestHalo__glow_warm",
+   "uploadedCopy": {
+    "meshId": "129725890382795",
+    "meshSize": [
+     33.0335693359375,
+     1.3765511512756348,
+     33.033599853515625
+    ]
+   }
+  },
+  {
+   "name": "W7_EggsStation__marble",
+   "meshId": "112503731572594",
+   "meshSize": [
+    85.01799011230469,
+    13.515193939208984,
+    85.01802825927734
+   ]
+  },
+  {
+   "name": "W7_EggsStation__marble_smooth",
+   "meshId": "117417099494951",
+   "meshSize": [
+    17.427505493164062,
+    24.78444480895996,
+    11.456045150756836
+   ]
+  },
+  {
+   "name": "W7_EggsStation__palette",
+   "meshId": "102678251837735",
+   "meshSize": [
+    56.5150260925293,
+    32.786834716796875,
+    36.97788619995117
+   ]
+  },
+  {
+   "name": "W7_EggsStation__trim",
+   "meshId": "76120243598182",
+   "meshSize": [
+    55.26172637939453,
+    3.0033833980560303,
+    55.26172637939453
+   ]
+  },
+  {
+   "name": "W7_Stations__marble",
+   "meshId": "90548626220394",
+   "meshSize": [
+    2048.0,
+    91.60294342041016,
+    1320.7628173828125
+   ]
+  },
+  {
+   "name": "W7_Stations__marble_smooth",
+   "meshId": "75280128629743",
+   "meshSize": [
+    1759.1011962890625,
+    55.399940490722656,
+    1212.487060546875
+   ]
+  },
+  {
+   "name": "W7_Stations__palette",
+   "meshId": "139337794781013",
+   "meshSize": [
+    1760.602783203125,
+    92.47891998291016,
+    1212.2451171875
+   ]
+  },
+  {
+   "name": "W7_Stations__trim",
+   "meshId": "131873352220196",
+   "meshSize": [
+    1841.439208984375,
+    29.658374786376953,
+    1308.370849609375
+   ]
+  }
+ ]
+}

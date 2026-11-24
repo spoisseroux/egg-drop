@@ -887,6 +887,135 @@
       </Item>
       <Item class="MeshPart" referent="W7P43">
         <Properties>
+          <string name="Name">W7_EggsStation__foliage</string>
+          <Content name="MeshId"><url>rbxassetid://132809598445653</url></Content>
+          <Content name="TextureID"><url>rbxassetid://108238608141638</url></Content>
+          <Vector3 name="Size"><X>3.6635</X><Y>0.48</Y><Z>3.8415</Z></Vector3>
+          <Vector3 name="InitialSize"><X>3.9651</X><Y>0.51952</Y><Z>4.15772</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-31.0</X><Y>5.36</Y><Z>-11.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+        <Item class="SurfaceAppearance" referent="W7S43">
+          <Properties>
+            <string name="Name">MatteFinish</string>
+            <token name="AlphaMode">0</token>
+            <Content name="ColorMap"><url>rbxassetid://108238608141638</url></Content>
+            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="MeshPart" referent="W7P44">
+        <Properties>
+          <string name="Name">W7_EggsStation__glow_warm</string>
+          <Content name="MeshId"><url>rbxassetid://112583451635109</url></Content>
+          <Content name="TextureID"><url /></Content>
+          <Vector3 name="Size"><X>2.6397</X><Y>0.11</Y><Z>2.6397</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2.85704</X><Y>0.11906</Y><Z>2.85704</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-31.0</X><Y>5.245</Y><Z>-11.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">false</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">288</token>
+          <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P45">
+        <Properties>
+          <string name="Name">W7_EggsStation__marble</string>
+          <Content name="MeshId"><url>rbxassetid://112503731572594</url></Content>
+          <Content name="TextureID"><url>rbxassetid://104706195321565</url></Content>
+          <Vector3 name="Size"><X>6.7938</X><Y>1.08</Y><Z>6.7938</Z></Vector3>
+          <Vector3 name="InitialSize"><X>85.01799011230469</X><Y>13.515193939208984</Y><Z>85.01802825927734</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-31.0</X><Y>4.34</Y><Z>-11.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">256</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P46">
+        <Properties>
+          <string name="Name">W7_EggsStation__marble_smooth</string>
+          <Content name="MeshId"><url>rbxassetid://117417099494951</url></Content>
+          <Content name="TextureID"><url>rbxassetid://104807740847343</url></Content>
+          <Vector3 name="Size"><X>1.3926</X><Y>1.9805</Y><Z>0.9155</Z></Vector3>
+          <Vector3 name="InitialSize"><X>17.427505493164062</X><Y>24.78444480895996</Y><Z>11.456045150756836</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-28.1081</X><Y>5.3353</Y><Z>-10.9025</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">256</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P47">
+        <Properties>
+          <string name="Name">W7_EggsStation__palette</string>
+          <Content name="MeshId"><url>rbxassetid://102678251837735</url></Content>
+          <Content name="TextureID"><url>rbxassetid://99161618321835</url></Content>
+          <Vector3 name="Size"><X>4.5161</X><Y>2.62</Y><Z>2.9549</Z></Vector3>
+          <Vector3 name="InitialSize"><X>56.5150260925293</X><Y>32.786834716796875</Y><Z>36.97788619995117</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-30.2194</X><Y>6.19</Y><Z>-11.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">256</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P48">
+        <Properties>
+          <string name="Name">W7_EggsStation__trim</string>
+          <Content name="MeshId"><url>rbxassetid://76120243598182</url></Content>
+          <Content name="TextureID"><url>rbxassetid://122324655251820</url></Content>
+          <Vector3 name="Size"><X>4.416</X><Y>0.24</Y><Z>4.416</Z></Vector3>
+          <Vector3 name="InitialSize"><X>55.26172637939453</X><Y>3.0033833980560303</Y><Z>55.26172637939453</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-31.0</X><Y>4.74</Y><Z>-11.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanQuery">true</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">true</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">3</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P49">
+        <Properties>
           <string name="Name">W7_Ground__dirt_path</string>
           <Content name="MeshId"><url>rbxassetid://81728450205382</url></Content>
           <Content name="TextureID"><url>rbxassetid://73826688135223</url></Content>
@@ -904,7 +1033,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S43">
+        <Item class="SurfaceAppearance" referent="W7S49">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -914,7 +1043,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P44">
+      <Item class="MeshPart" referent="W7P50">
         <Properties>
           <string name="Name">W7_Ground__grass</string>
           <Content name="MeshId"><url>rbxassetid://102204123803785</url></Content>
@@ -933,7 +1062,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S44">
+        <Item class="SurfaceAppearance" referent="W7S50">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -943,7 +1072,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P45">
+      <Item class="MeshPart" referent="W7P51">
         <Properties>
           <string name="Name">W7_Ground__ground</string>
           <Content name="MeshId"><url>rbxassetid://111959760536340</url></Content>
@@ -963,7 +1092,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P46">
+      <Item class="MeshPart" referent="W7P52">
         <Properties>
           <string name="Name">W7_Ground__meadow</string>
           <Content name="MeshId"><url>rbxassetid://70773878057627</url></Content>
@@ -982,7 +1111,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S46">
+        <Item class="SurfaceAppearance" referent="W7S52">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -992,7 +1121,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P47">
+      <Item class="MeshPart" referent="W7P53">
         <Properties>
           <string name="Name">W7_Ground__pebble_bed</string>
           <Content name="MeshId"><url>rbxassetid://107285940407252</url></Content>
@@ -1011,7 +1140,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S47">
+        <Item class="SurfaceAppearance" referent="W7S53">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -1021,7 +1150,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P48">
+      <Item class="MeshPart" referent="W7P54">
         <Properties>
           <string name="Name">W7_IsletsA__bark</string>
           <Content name="MeshId"><url>rbxassetid://92107551209820</url></Content>
@@ -1029,171 +1158,6 @@
           <Vector3 name="Size"><X>146.5905</X><Y>45.4051</Y><Z>141.4846</Z></Vector3>
           <Vector3 name="InitialSize"><X>158.65915</X><Y>49.14325</Y><Z>153.1329</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>96.5189</X><Y>5.048</Y><Z>86.4006</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CastShadow">false</bool>
-          <bool name="DoubleSided">true</bool>
-          <token name="CollisionFidelity">2</token>
-          <token name="Material">272</token>
-          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-          <float name="Transparency">0.0</float>
-        </Properties>
-        <Item class="SurfaceAppearance" referent="W7S48">
-          <Properties>
-            <string name="Name">MatteFinish</string>
-            <token name="AlphaMode">0</token>
-            <Content name="ColorMap"><url>rbxassetid://95896755980970</url></Content>
-            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
-            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="MeshPart" referent="W7P49">
-        <Properties>
-          <string name="Name">W7_IsletsA__cliff_rock</string>
-          <Content name="MeshId"><url>rbxassetid://105127547746115</url></Content>
-          <Content name="TextureID"><url>rbxassetid://89518320013489</url></Content>
-          <Vector3 name="Size"><X>175.7054</X><Y>59.8362</Y><Z>166.8107</Z></Vector3>
-          <Vector3 name="InitialSize"><X>190.17101</X><Y>64.76238</Y><Z>180.54402</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>96.0312</X><Y>-12.3181</Y><Z>88.1551</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CastShadow">false</bool>
-          <bool name="DoubleSided">true</bool>
-          <token name="CollisionFidelity">2</token>
-          <token name="Material">272</token>
-          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-          <float name="Transparency">0.0</float>
-        </Properties>
-        <Item class="SurfaceAppearance" referent="W7S49">
-          <Properties>
-            <string name="Name">MatteFinish</string>
-            <token name="AlphaMode">0</token>
-            <Content name="ColorMap"><url>rbxassetid://89518320013489</url></Content>
-            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
-            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="MeshPart" referent="W7P50">
-        <Properties>
-          <string name="Name">W7_IsletsA__foliage</string>
-          <Content name="MeshId"><url>rbxassetid://133772732055094</url></Content>
-          <Content name="TextureID"><url>rbxassetid://108238608141638</url></Content>
-          <Vector3 name="Size"><X>140.2084</X><Y>44.6423</Y><Z>137.8216</Z></Vector3>
-          <Vector3 name="InitialSize"><X>151.75165</X><Y>48.31768</Y><Z>149.16833</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>102.5841</X><Y>9.2923</Y><Z>82.0689</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CastShadow">false</bool>
-          <bool name="DoubleSided">true</bool>
-          <token name="CollisionFidelity">2</token>
-          <token name="Material">272</token>
-          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-          <float name="Transparency">0.0</float>
-        </Properties>
-        <Item class="SurfaceAppearance" referent="W7S50">
-          <Properties>
-            <string name="Name">MatteFinish</string>
-            <token name="AlphaMode">0</token>
-            <Content name="ColorMap"><url>rbxassetid://108238608141638</url></Content>
-            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
-            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="MeshPart" referent="W7P51">
-        <Properties>
-          <string name="Name">W7_IsletsA__foliage_blossom</string>
-          <Content name="MeshId"><url>rbxassetid://99653091329346</url></Content>
-          <Content name="TextureID"><url>rbxassetid://80989149935634</url></Content>
-          <Vector3 name="Size"><X>145.0054</X><Y>31.8223</Y><Z>141.3531</Z></Vector3>
-          <Vector3 name="InitialSize"><X>156.94351</X><Y>34.44212</Y><Z>152.99048</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>93.1788</X><Y>13.9883</Y><Z>88.8981</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CastShadow">false</bool>
-          <bool name="DoubleSided">true</bool>
-          <token name="CollisionFidelity">2</token>
-          <token name="Material">272</token>
-          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-          <float name="Transparency">0.0</float>
-        </Properties>
-        <Item class="SurfaceAppearance" referent="W7S51">
-          <Properties>
-            <string name="Name">MatteFinish</string>
-            <token name="AlphaMode">0</token>
-            <Content name="ColorMap"><url>rbxassetid://80989149935634</url></Content>
-            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
-            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="MeshPart" referent="W7P52">
-        <Properties>
-          <string name="Name">W7_IsletsA__grass</string>
-          <Content name="MeshId"><url>rbxassetid://110779389299939</url></Content>
-          <Content name="TextureID"><url>rbxassetid://109820826774624</url></Content>
-          <Vector3 name="Size"><X>174.9162</X><Y>38.5</Y><Z>163.2145</Z></Vector3>
-          <Vector3 name="InitialSize"><X>189.31683</X><Y>41.66964</Y><Z>176.65179</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>96.8193</X><Y>0.85</Y><Z>88.3301</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CastShadow">false</bool>
-          <bool name="DoubleSided">true</bool>
-          <token name="CollisionFidelity">2</token>
-          <token name="Material">272</token>
-          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-          <float name="Transparency">0.0</float>
-        </Properties>
-        <Item class="SurfaceAppearance" referent="W7S52">
-          <Properties>
-            <string name="Name">MatteFinish</string>
-            <token name="AlphaMode">0</token>
-            <Content name="ColorMap"><url>rbxassetid://109820826774624</url></Content>
-            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
-            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="MeshPart" referent="W7P53">
-        <Properties>
-          <string name="Name">W7_IsletsA__marble</string>
-          <Content name="MeshId"><url>rbxassetid://80489462648218</url></Content>
-          <Content name="TextureID"><url>rbxassetid://104706195321565</url></Content>
-          <Vector3 name="Size"><X>22.1639</X><Y>7.5627</Y><Z>22.1637</Z></Vector3>
-          <Vector3 name="InitialSize"><X>23.98859</X><Y>8.18529</Y><Z>23.98839</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>28.0001</X><Y>-3.7187</Y><Z>149.9999</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CastShadow">false</bool>
-          <bool name="DoubleSided">true</bool>
-          <token name="CollisionFidelity">2</token>
-          <token name="Material">256</token>
-          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-          <float name="Transparency">0.0</float>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="W7P54">
-        <Properties>
-          <string name="Name">W7_IsletsB__bark</string>
-          <Content name="MeshId"><url>rbxassetid://85388897655983</url></Content>
-          <Content name="TextureID"><url>rbxassetid://95896755980970</url></Content>
-          <Vector3 name="Size"><X>146.5974</X><Y>87.5583</Y><Z>354.4288</Z></Vector3>
-          <Vector3 name="InitialSize"><X>158.66656</X><Y>94.76676</Y><Z>383.60849</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-106.8437</X><Y>13.8991</Y><Z>44.4607</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanQuery">false</bool>
@@ -1217,12 +1181,12 @@
       </Item>
       <Item class="MeshPart" referent="W7P55">
         <Properties>
-          <string name="Name">W7_IsletsB__cliff_rock</string>
-          <Content name="MeshId"><url>rbxassetid://73421172456059</url></Content>
+          <string name="Name">W7_IsletsA__cliff_rock</string>
+          <Content name="MeshId"><url>rbxassetid://105127547746115</url></Content>
           <Content name="TextureID"><url>rbxassetid://89518320013489</url></Content>
-          <Vector3 name="Size"><X>182.8432</X><Y>127.6627</Y><Z>386.2912</Z></Vector3>
-          <Vector3 name="InitialSize"><X>197.89647</X><Y>138.17291</Y><Z>418.09412</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-102.1345</X><Y>-16.2313</Y><Z>51.1183</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <Vector3 name="Size"><X>175.7054</X><Y>59.8362</Y><Z>166.8107</Z></Vector3>
+          <Vector3 name="InitialSize"><X>190.17101</X><Y>64.76238</Y><Z>180.54402</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>96.0312</X><Y>-12.3181</Y><Z>88.1551</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanQuery">false</bool>
@@ -1246,12 +1210,12 @@
       </Item>
       <Item class="MeshPart" referent="W7P56">
         <Properties>
-          <string name="Name">W7_IsletsB__foliage</string>
-          <Content name="MeshId"><url>rbxassetid://75167136279406</url></Content>
+          <string name="Name">W7_IsletsA__foliage</string>
+          <Content name="MeshId"><url>rbxassetid://133772732055094</url></Content>
           <Content name="TextureID"><url>rbxassetid://108238608141638</url></Content>
-          <Vector3 name="Size"><X>151.9064</X><Y>85.1703</Y><Z>354.2339</Z></Vector3>
-          <Vector3 name="InitialSize"><X>164.41266</X><Y>92.18217</Y><Z>383.39755</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-106.7018</X><Y>18.9241</Y><Z>41.917</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <Vector3 name="Size"><X>140.2084</X><Y>44.6423</Y><Z>137.8216</Z></Vector3>
+          <Vector3 name="InitialSize"><X>151.75165</X><Y>48.31768</Y><Z>149.16833</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>102.5841</X><Y>9.2923</Y><Z>82.0689</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanQuery">false</bool>
@@ -1275,12 +1239,12 @@
       </Item>
       <Item class="MeshPart" referent="W7P57">
         <Properties>
-          <string name="Name">W7_IsletsB__foliage_blossom</string>
-          <Content name="MeshId"><url>rbxassetid://120609278024812</url></Content>
+          <string name="Name">W7_IsletsA__foliage_blossom</string>
+          <Content name="MeshId"><url>rbxassetid://99653091329346</url></Content>
           <Content name="TextureID"><url>rbxassetid://80989149935634</url></Content>
-          <Vector3 name="Size"><X>138.2953</X><Y>63.8223</Y><Z>258.1385</Z></Vector3>
-          <Vector3 name="InitialSize"><X>149.68094</X><Y>69.07661</Y><Z>279.39081</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-106.6083</X><Y>7.9883</Y><Z>95.169</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <Vector3 name="Size"><X>145.0054</X><Y>31.8223</Y><Z>141.3531</Z></Vector3>
+          <Vector3 name="InitialSize"><X>156.94351</X><Y>34.44212</Y><Z>152.99048</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>93.1788</X><Y>13.9883</Y><Z>88.8981</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanQuery">false</bool>
@@ -1304,12 +1268,12 @@
       </Item>
       <Item class="MeshPart" referent="W7P58">
         <Properties>
-          <string name="Name">W7_IsletsB__grass</string>
-          <Content name="MeshId"><url>rbxassetid://116659075171139</url></Content>
+          <string name="Name">W7_IsletsA__grass</string>
+          <Content name="MeshId"><url>rbxassetid://110779389299939</url></Content>
           <Content name="TextureID"><url>rbxassetid://109820826774624</url></Content>
-          <Vector3 name="Size"><X>180.2046</X><Y>80.32</Y><Z>381.5085</Z></Vector3>
-          <Vector3 name="InitialSize"><X>195.04063</X><Y>86.93259</Y><Z>412.91769</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-102.5794</X><Y>9.76</Y><Z>50.6609</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <Vector3 name="Size"><X>174.9162</X><Y>38.5</Y><Z>163.2145</Z></Vector3>
+          <Vector3 name="InitialSize"><X>189.31683</X><Y>41.66964</Y><Z>176.65179</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>96.8193</X><Y>0.85</Y><Z>88.3301</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanQuery">false</bool>
@@ -1333,6 +1297,171 @@
       </Item>
       <Item class="MeshPart" referent="W7P59">
         <Properties>
+          <string name="Name">W7_IsletsA__marble</string>
+          <Content name="MeshId"><url>rbxassetid://80489462648218</url></Content>
+          <Content name="TextureID"><url>rbxassetid://104706195321565</url></Content>
+          <Vector3 name="Size"><X>22.1639</X><Y>7.5627</Y><Z>22.1637</Z></Vector3>
+          <Vector3 name="InitialSize"><X>23.98859</X><Y>8.18529</Y><Z>23.98839</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>28.0001</X><Y>-3.7187</Y><Z>149.9999</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">256</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="W7P60">
+        <Properties>
+          <string name="Name">W7_IsletsB__bark</string>
+          <Content name="MeshId"><url>rbxassetid://85388897655983</url></Content>
+          <Content name="TextureID"><url>rbxassetid://95896755980970</url></Content>
+          <Vector3 name="Size"><X>146.5974</X><Y>87.5583</Y><Z>354.4288</Z></Vector3>
+          <Vector3 name="InitialSize"><X>158.66656</X><Y>94.76676</Y><Z>383.60849</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-106.8437</X><Y>13.8991</Y><Z>44.4607</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+        <Item class="SurfaceAppearance" referent="W7S60">
+          <Properties>
+            <string name="Name">MatteFinish</string>
+            <token name="AlphaMode">0</token>
+            <Content name="ColorMap"><url>rbxassetid://95896755980970</url></Content>
+            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="MeshPart" referent="W7P61">
+        <Properties>
+          <string name="Name">W7_IsletsB__cliff_rock</string>
+          <Content name="MeshId"><url>rbxassetid://73421172456059</url></Content>
+          <Content name="TextureID"><url>rbxassetid://89518320013489</url></Content>
+          <Vector3 name="Size"><X>182.8432</X><Y>127.6627</Y><Z>386.2912</Z></Vector3>
+          <Vector3 name="InitialSize"><X>197.89647</X><Y>138.17291</Y><Z>418.09412</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-102.1345</X><Y>-16.2313</Y><Z>51.1183</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+        <Item class="SurfaceAppearance" referent="W7S61">
+          <Properties>
+            <string name="Name">MatteFinish</string>
+            <token name="AlphaMode">0</token>
+            <Content name="ColorMap"><url>rbxassetid://89518320013489</url></Content>
+            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="MeshPart" referent="W7P62">
+        <Properties>
+          <string name="Name">W7_IsletsB__foliage</string>
+          <Content name="MeshId"><url>rbxassetid://75167136279406</url></Content>
+          <Content name="TextureID"><url>rbxassetid://108238608141638</url></Content>
+          <Vector3 name="Size"><X>151.9064</X><Y>85.1703</Y><Z>354.2339</Z></Vector3>
+          <Vector3 name="InitialSize"><X>164.41266</X><Y>92.18217</Y><Z>383.39755</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-106.7018</X><Y>18.9241</Y><Z>41.917</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+        <Item class="SurfaceAppearance" referent="W7S62">
+          <Properties>
+            <string name="Name">MatteFinish</string>
+            <token name="AlphaMode">0</token>
+            <Content name="ColorMap"><url>rbxassetid://108238608141638</url></Content>
+            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="MeshPart" referent="W7P63">
+        <Properties>
+          <string name="Name">W7_IsletsB__foliage_blossom</string>
+          <Content name="MeshId"><url>rbxassetid://120609278024812</url></Content>
+          <Content name="TextureID"><url>rbxassetid://80989149935634</url></Content>
+          <Vector3 name="Size"><X>138.2953</X><Y>63.8223</Y><Z>258.1385</Z></Vector3>
+          <Vector3 name="InitialSize"><X>149.68094</X><Y>69.07661</Y><Z>279.39081</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-106.6083</X><Y>7.9883</Y><Z>95.169</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+        <Item class="SurfaceAppearance" referent="W7S63">
+          <Properties>
+            <string name="Name">MatteFinish</string>
+            <token name="AlphaMode">0</token>
+            <Content name="ColorMap"><url>rbxassetid://80989149935634</url></Content>
+            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="MeshPart" referent="W7P64">
+        <Properties>
+          <string name="Name">W7_IsletsB__grass</string>
+          <Content name="MeshId"><url>rbxassetid://116659075171139</url></Content>
+          <Content name="TextureID"><url>rbxassetid://109820826774624</url></Content>
+          <Vector3 name="Size"><X>180.2046</X><Y>80.32</Y><Z>381.5085</Z></Vector3>
+          <Vector3 name="InitialSize"><X>195.04063</X><Y>86.93259</Y><Z>412.91769</Z></Vector3>
+          <CoordinateFrame name="CFrame"><X>-102.5794</X><Y>9.76</Y><Z>50.6609</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CastShadow">false</bool>
+          <bool name="DoubleSided">true</bool>
+          <token name="CollisionFidelity">2</token>
+          <token name="Material">272</token>
+          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+          <float name="Transparency">0.0</float>
+        </Properties>
+        <Item class="SurfaceAppearance" referent="W7S64">
+          <Properties>
+            <string name="Name">MatteFinish</string>
+            <token name="AlphaMode">0</token>
+            <Content name="ColorMap"><url>rbxassetid://109820826774624</url></Content>
+            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="MeshPart" referent="W7P65">
+        <Properties>
           <string name="Name">W7_IsletsB__marble</string>
           <Content name="MeshId"><url>rbxassetid://128418467794983</url></Content>
           <Content name="TextureID"><url>rbxassetid://104706195321565</url></Content>
@@ -1351,7 +1480,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P60">
+      <Item class="MeshPart" referent="W7P66">
         <Properties>
           <string name="Name">W7_LampOrbs__glow_warm</string>
           <Content name="MeshId"><url>rbxassetid://111376211885197</url></Content>
@@ -1371,7 +1500,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P61">
+      <Item class="MeshPart" referent="W7P67">
         <Properties>
           <string name="Name">W7_Landmarks__cliff_rock</string>
           <Content name="MeshId"><url>rbxassetid://121517105851554</url></Content>
@@ -1390,7 +1519,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S61">
+        <Item class="SurfaceAppearance" referent="W7S67">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -1400,7 +1529,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P62">
+      <Item class="MeshPart" referent="W7P68">
         <Properties>
           <string name="Name">W7_Landmarks__grass</string>
           <Content name="MeshId"><url>rbxassetid://132068383333881</url></Content>
@@ -1419,7 +1548,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S62">
+        <Item class="SurfaceAppearance" referent="W7S68">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -1429,7 +1558,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P63">
+      <Item class="MeshPart" referent="W7P69">
         <Properties>
           <string name="Name">W7_Landmarks__marble</string>
           <Content name="MeshId"><url>rbxassetid://111377172193133</url></Content>
@@ -1449,7 +1578,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P64">
+      <Item class="MeshPart" referent="W7P70">
         <Properties>
           <string name="Name">W7_Landmarks__palette</string>
           <Content name="MeshId"><url>rbxassetid://121301068289444</url></Content>
@@ -1469,7 +1598,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P65">
+      <Item class="MeshPart" referent="W7P71">
         <Properties>
           <string name="Name">W7_Landmarks__trim</string>
           <Content name="MeshId"><url>rbxassetid://123308025747841</url></Content>
@@ -1489,7 +1618,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P66">
+      <Item class="MeshPart" referent="W7P72">
         <Properties>
           <string name="Name">W7_Landmarks__water</string>
           <Content name="MeshId"><url>rbxassetid://127218808949087</url></Content>
@@ -1509,7 +1638,7 @@
           <float name="Transparency">0.12</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P67">
+      <Item class="MeshPart" referent="W7P73">
         <Properties>
           <string name="Name">W7_Lantern__bark</string>
           <Content name="MeshId"><url>rbxassetid://105789070353260</url></Content>
@@ -1528,7 +1657,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S67">
+        <Item class="SurfaceAppearance" referent="W7S73">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -1538,7 +1667,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P68">
+      <Item class="MeshPart" referent="W7P74">
         <Properties>
           <string name="Name">W7_Lantern__glow_warm</string>
           <Content name="MeshId"><url>rbxassetid://99109183539377</url></Content>
@@ -1558,27 +1687,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P69">
-        <Properties>
-          <string name="Name">W7_NestHalo__glow_warm</string>
-          <Content name="MeshId"><url>rbxassetid://112583451635109</url></Content>
-          <Content name="TextureID"><url /></Content>
-          <Vector3 name="Size"><X>2.6397</X><Y>0.11</Y><Z>2.6397</Z></Vector3>
-          <Vector3 name="InitialSize"><X>2.85704</X><Y>0.11906</Y><Z>2.85704</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-31.0</X><Y>5.245</Y><Z>-11.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CastShadow">false</bool>
-          <bool name="DoubleSided">false</bool>
-          <token name="CollisionFidelity">2</token>
-          <token name="Material">288</token>
-          <Color3uint8 name="Color3uint8">4294957193</Color3uint8>
-          <float name="Transparency">0.0</float>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="W7P70">
+      <Item class="MeshPart" referent="W7P75">
         <Properties>
           <string name="Name">W7_Pennant_1__palette</string>
           <Content name="MeshId"><url>rbxassetid://117588073880027</url></Content>
@@ -1598,7 +1707,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P71">
+      <Item class="MeshPart" referent="W7P76">
         <Properties>
           <string name="Name">W7_Pennant_2__palette</string>
           <Content name="MeshId"><url>rbxassetid://122862407343486</url></Content>
@@ -1618,7 +1727,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P72">
+      <Item class="MeshPart" referent="W7P77">
         <Properties>
           <string name="Name">W7_Props__marble</string>
           <Content name="MeshId"><url>rbxassetid://130742388728712</url></Content>
@@ -1638,7 +1747,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P73">
+      <Item class="MeshPart" referent="W7P78">
         <Properties>
           <string name="Name">W7_Rocks__boulder_rock</string>
           <Content name="MeshId"><url>rbxassetid://75002359329138</url></Content>
@@ -1657,7 +1766,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S73">
+        <Item class="SurfaceAppearance" referent="W7S78">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -1667,7 +1776,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P74">
+      <Item class="MeshPart" referent="W7P79">
         <Properties>
           <string name="Name">W7_Rocks__cliff_rock</string>
           <Content name="MeshId"><url>rbxassetid://123739677800706</url></Content>
@@ -1686,7 +1795,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S74">
+        <Item class="SurfaceAppearance" referent="W7S79">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -1696,7 +1805,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P75">
+      <Item class="MeshPart" referent="W7P80">
         <Properties>
           <string name="Name">W7_Rocks__grass</string>
           <Content name="MeshId"><url>rbxassetid://101283862123365</url></Content>
@@ -1715,7 +1824,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S75">
+        <Item class="SurfaceAppearance" referent="W7S80">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -1725,7 +1834,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P76">
+      <Item class="MeshPart" referent="W7P81">
         <Properties>
           <string name="Name">W7_Rotunda__marble</string>
           <Content name="MeshId"><url>rbxassetid://119765879062476</url></Content>
@@ -1745,7 +1854,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P77">
+      <Item class="MeshPart" referent="W7P82">
         <Properties>
           <string name="Name">W7_Rotunda__palette</string>
           <Content name="MeshId"><url>rbxassetid://119075529657844</url></Content>
@@ -1765,7 +1874,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P78">
+      <Item class="MeshPart" referent="W7P83">
         <Properties>
           <string name="Name">W7_Rotunda__trim</string>
           <Content name="MeshId"><url>rbxassetid://112301225432735</url></Content>
@@ -1785,36 +1894,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P79">
-        <Properties>
-          <string name="Name">W7_Stations__foliage</string>
-          <Content name="MeshId"><url>rbxassetid://132809598445653</url></Content>
-          <Content name="TextureID"><url>rbxassetid://108238608141638</url></Content>
-          <Vector3 name="Size"><X>3.6635</X><Y>0.48</Y><Z>3.8415</Z></Vector3>
-          <Vector3 name="InitialSize"><X>3.9651</X><Y>0.51952</Y><Z>4.15772</Z></Vector3>
-          <CoordinateFrame name="CFrame"><X>-31.0</X><Y>5.36</Y><Z>-11.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CastShadow">true</bool>
-          <bool name="DoubleSided">true</bool>
-          <token name="CollisionFidelity">2</token>
-          <token name="Material">272</token>
-          <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-          <float name="Transparency">0.0</float>
-        </Properties>
-        <Item class="SurfaceAppearance" referent="W7S79">
-          <Properties>
-            <string name="Name">MatteFinish</string>
-            <token name="AlphaMode">0</token>
-            <Content name="ColorMap"><url>rbxassetid://108238608141638</url></Content>
-            <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
-            <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="MeshPart" referent="W7P80">
+      <Item class="MeshPart" referent="W7P84">
         <Properties>
           <string name="Name">W7_Stations__glow_aqua</string>
           <Content name="MeshId"><url>rbxassetid://77431353182171</url></Content>
@@ -1834,7 +1914,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P81">
+      <Item class="MeshPart" referent="W7P85">
         <Properties>
           <string name="Name">W7_Stations__glow_warm</string>
           <Content name="MeshId"><url>rbxassetid://102268639485159</url></Content>
@@ -1854,13 +1934,13 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P82">
+      <Item class="MeshPart" referent="W7P86">
         <Properties>
           <string name="Name">W7_Stations__marble</string>
-          <Content name="MeshId"><url>rbxassetid://126589987182505</url></Content>
+          <Content name="MeshId"><url>rbxassetid://90548626220394</url></Content>
           <Content name="TextureID"><url>rbxassetid://104706195321565</url></Content>
           <Vector3 name="Size"><X>163.6559</X><Y>7.32</Y><Z>105.5423</Z></Vector3>
-          <Vector3 name="InitialSize"><X>1545.41943359375</X><Y>69.12351989746094</Y><Z>996.6467895507812</Z></Vector3>
+          <Vector3 name="InitialSize"><X>2048.0</X><Y>91.60294342041016</Y><Z>1320.7628173828125</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>18.472</X><Y>7.41</Y><Z>17.5288</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1874,13 +1954,13 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P83">
+      <Item class="MeshPart" referent="W7P87">
         <Properties>
           <string name="Name">W7_Stations__marble_smooth</string>
-          <Content name="MeshId"><url>rbxassetid://125972227162285</url></Content>
+          <Content name="MeshId"><url>rbxassetid://75280128629743</url></Content>
           <Content name="TextureID"><url>rbxassetid://104807740847343</url></Content>
           <Vector3 name="Size"><X>140.57</X><Y>4.427</Y><Z>96.89</Z></Vector3>
-          <Vector3 name="InitialSize"><X>2046.2532958984375</X><Y>64.44331359863281</Y><Z>1410.410888671875</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1759.1011962890625</X><Y>55.399940490722656</Y><Z>1212.487060546875</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-0.175</X><Y>6.2635</Y><Z>3.985</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1894,13 +1974,13 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P84">
+      <Item class="MeshPart" referent="W7P88">
         <Properties>
           <string name="Name">W7_Stations__palette</string>
-          <Content name="MeshId"><url>rbxassetid://71188520415952</url></Content>
+          <Content name="MeshId"><url>rbxassetid://139337794781013</url></Content>
           <Content name="TextureID"><url>rbxassetid://99161618321835</url></Content>
           <Vector3 name="Size"><X>140.69</X><Y>7.39</Y><Z>96.8707</Z></Vector3>
-          <Vector3 name="InitialSize"><X>2048.0</X><Y>107.57498168945312</Y><Z>1410.1295166015625</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1760.602783203125</X><Y>92.47891998291016</Y><Z>1212.2451171875</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>-0.175</X><Y>8.105</Y><Z>3.985</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
@@ -1914,13 +1994,13 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P85">
+      <Item class="MeshPart" referent="W7P89">
         <Properties>
           <string name="Name">W7_Stations__trim</string>
-          <Content name="MeshId"><url>rbxassetid://132095006963916</url></Content>
+          <Content name="MeshId"><url>rbxassetid://131873352220196</url></Content>
           <Content name="TextureID"><url>rbxassetid://122324655251820</url></Content>
           <Vector3 name="Size"><X>147.1497</X><Y>2.37</Y><Z>104.5521</Z></Vector3>
-          <Vector3 name="InitialSize"><X>159.2643</X><Y>2.56512</Y><Z>113.15974</Z></Vector3>
+          <Vector3 name="InitialSize"><X>1841.439208984375</X><Y>29.658374786376953</Y><Z>1308.370849609375</Z></Vector3>
           <CoordinateFrame name="CFrame"><X>25.7252</X><Y>5.265</Y><Z>17.024</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
@@ -1934,7 +2014,7 @@
           <float name="Transparency">0.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P86">
+      <Item class="MeshPart" referent="W7P90">
         <Properties>
           <string name="Name">W7_Stations__wood_plank</string>
           <Content name="MeshId"><url>rbxassetid://138267671811694</url></Content>
@@ -1953,7 +2033,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S86">
+        <Item class="SurfaceAppearance" referent="W7S90">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -1963,7 +2043,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P87">
+      <Item class="MeshPart" referent="W7P91">
         <Properties>
           <string name="Name">W7_Trunks__bark</string>
           <Content name="MeshId"><url>rbxassetid://136929554219571</url></Content>
@@ -1982,7 +2062,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S87">
+        <Item class="SurfaceAppearance" referent="W7S91">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -1992,7 +2072,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P88">
+      <Item class="MeshPart" referent="W7P92">
         <Properties>
           <string name="Name">W7_Underside__bark</string>
           <Content name="MeshId"><url>rbxassetid://91724884340856</url></Content>
@@ -2011,7 +2091,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S88">
+        <Item class="SurfaceAppearance" referent="W7S92">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -2021,7 +2101,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P89">
+      <Item class="MeshPart" referent="W7P93">
         <Properties>
           <string name="Name">W7_Underside__cliff_rock</string>
           <Content name="MeshId"><url>rbxassetid://79105253840702</url></Content>
@@ -2040,7 +2120,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S89">
+        <Item class="SurfaceAppearance" referent="W7S93">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -2050,7 +2130,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P90">
+      <Item class="MeshPart" referent="W7P94">
         <Properties>
           <string name="Name">W7_Underside__foliage</string>
           <Content name="MeshId"><url>rbxassetid://118511023060923</url></Content>
@@ -2069,7 +2149,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S90">
+        <Item class="SurfaceAppearance" referent="W7S94">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -2079,7 +2159,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P91">
+      <Item class="MeshPart" referent="W7P95">
         <Properties>
           <string name="Name">W7_Vegetation__foliage</string>
           <Content name="MeshId"><url>rbxassetid://107244050589043</url></Content>
@@ -2098,7 +2178,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S91">
+        <Item class="SurfaceAppearance" referent="W7S95">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -2108,7 +2188,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P92">
+      <Item class="MeshPart" referent="W7P96">
         <Properties>
           <string name="Name">W7_Vegetation__foliage_blossom</string>
           <Content name="MeshId"><url>rbxassetid://136715169285013</url></Content>
@@ -2127,7 +2207,7 @@
           <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
           <float name="Transparency">0.0</float>
         </Properties>
-        <Item class="SurfaceAppearance" referent="W7S92">
+        <Item class="SurfaceAppearance" referent="W7S96">
           <Properties>
             <string name="Name">MatteFinish</string>
             <token name="AlphaMode">0</token>
@@ -2137,7 +2217,7 @@
           </Properties>
         </Item>
       </Item>
-      <Item class="MeshPart" referent="W7P93">
+      <Item class="MeshPart" referent="W7P97">
         <Properties>
           <string name="Name">W7_Water__cloud</string>
           <Content name="MeshId"><url>rbxassetid://92131219943089</url></Content>
@@ -2157,7 +2237,7 @@
           <float name="Transparency">0.35</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P94">
+      <Item class="MeshPart" referent="W7P98">
         <Properties>
           <string name="Name">W7_Water__foam</string>
           <Content name="MeshId"><url>rbxassetid://103535974953611</url></Content>
@@ -2177,7 +2257,7 @@
           <float name="Transparency">0.15</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P95">
+      <Item class="MeshPart" referent="W7P99">
         <Properties>
           <string name="Name">W7_Water__water_pool</string>
           <Content name="MeshId"><url>rbxassetid://73517314085792</url></Content>
@@ -2197,7 +2277,7 @@
           <float name="Transparency">0.12</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P96">
+      <Item class="MeshPart" referent="W7P100">
         <Properties>
           <string name="Name">W7_Water__water_stream</string>
           <Content name="MeshId"><url>rbxassetid://73086328279317</url></Content>
@@ -2217,7 +2297,7 @@
           <float name="Transparency">0.12</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P97">
+      <Item class="MeshPart" referent="W7P101">
         <Properties>
           <string name="Name">W7_Water__waterfall_sky</string>
           <Content name="MeshId"><url>rbxassetid://123141503639398</url></Content>
@@ -2237,7 +2317,7 @@
           <float name="Transparency">0.08</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P98">
+      <Item class="MeshPart" referent="W7P102">
         <Properties>
           <string name="Name">W7_Water__waterfall_tumble</string>
           <Content name="MeshId"><url>rbxassetid://133999394898061</url></Content>
@@ -2257,7 +2337,7 @@
           <float name="Transparency">0.08</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P99">
+      <Item class="MeshPart" referent="W7P103">
         <Properties>
           <string name="Name">W7C_Ground_01</string>
           <Content name="MeshId"><url>rbxassetid://111334426177399</url></Content>
@@ -2277,7 +2357,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P100">
+      <Item class="MeshPart" referent="W7P104">
         <Properties>
           <string name="Name">W7C_Ground_02</string>
           <Content name="MeshId"><url>rbxassetid://117834237826777</url></Content>
@@ -2297,7 +2377,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P101">
+      <Item class="MeshPart" referent="W7P105">
         <Properties>
           <string name="Name">W7C_Ground_03</string>
           <Content name="MeshId"><url>rbxassetid://119526550103753</url></Content>
@@ -2317,7 +2397,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P102">
+      <Item class="MeshPart" referent="W7P106">
         <Properties>
           <string name="Name">W7C_Ground_04</string>
           <Content name="MeshId"><url>rbxassetid://92258821156927</url></Content>
@@ -2337,7 +2417,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P103">
+      <Item class="MeshPart" referent="W7P107">
         <Properties>
           <string name="Name">W7C_Ground_05</string>
           <Content name="MeshId"><url>rbxassetid://104746378474911</url></Content>
@@ -2357,7 +2437,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P104">
+      <Item class="MeshPart" referent="W7P108">
         <Properties>
           <string name="Name">W7C_Ground_06</string>
           <Content name="MeshId"><url>rbxassetid://89768338673677</url></Content>
@@ -2377,7 +2457,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P105">
+      <Item class="MeshPart" referent="W7P109">
         <Properties>
           <string name="Name">W7C_Ground_07</string>
           <Content name="MeshId"><url>rbxassetid://124589172244630</url></Content>
@@ -2397,7 +2477,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P106">
+      <Item class="MeshPart" referent="W7P110">
         <Properties>
           <string name="Name">W7C_Ground_08</string>
           <Content name="MeshId"><url>rbxassetid://102413271537986</url></Content>
@@ -2417,7 +2497,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P107">
+      <Item class="MeshPart" referent="W7P111">
         <Properties>
           <string name="Name">W7C_Ground_09</string>
           <Content name="MeshId"><url>rbxassetid://92519515589246</url></Content>
@@ -2437,7 +2517,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P108">
+      <Item class="MeshPart" referent="W7P112">
         <Properties>
           <string name="Name">W7C_Ground_10</string>
           <Content name="MeshId"><url>rbxassetid://111154395425095</url></Content>
@@ -2457,7 +2537,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P109">
+      <Item class="MeshPart" referent="W7P113">
         <Properties>
           <string name="Name">W7C_Ground_11</string>
           <Content name="MeshId"><url>rbxassetid://95669103411019</url></Content>
@@ -2477,7 +2557,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P110">
+      <Item class="MeshPart" referent="W7P114">
         <Properties>
           <string name="Name">W7C_Ground_12</string>
           <Content name="MeshId"><url>rbxassetid://75453102880075</url></Content>
@@ -2497,7 +2577,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P111">
+      <Item class="MeshPart" referent="W7P115">
         <Properties>
           <string name="Name">W7C_Ground_13</string>
           <Content name="MeshId"><url>rbxassetid://96550116769216</url></Content>
@@ -2517,7 +2597,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P112">
+      <Item class="MeshPart" referent="W7P116">
         <Properties>
           <string name="Name">W7C_Ground_14</string>
           <Content name="MeshId"><url>rbxassetid://132940521400096</url></Content>
@@ -2537,7 +2617,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P113">
+      <Item class="MeshPart" referent="W7P117">
         <Properties>
           <string name="Name">W7C_Ground_15</string>
           <Content name="MeshId"><url>rbxassetid://135677258754251</url></Content>
@@ -2557,7 +2637,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P114">
+      <Item class="MeshPart" referent="W7P118">
         <Properties>
           <string name="Name">W7C_Ground_16</string>
           <Content name="MeshId"><url>rbxassetid://114321211030723</url></Content>
@@ -2577,7 +2657,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P115">
+      <Item class="MeshPart" referent="W7P119">
         <Properties>
           <string name="Name">W7C_Ground_17</string>
           <Content name="MeshId"><url>rbxassetid://76477924312223</url></Content>
@@ -2597,7 +2677,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P116">
+      <Item class="MeshPart" referent="W7P120">
         <Properties>
           <string name="Name">W7C_Ground_18</string>
           <Content name="MeshId"><url>rbxassetid://74307544093256</url></Content>
@@ -2617,7 +2697,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P117">
+      <Item class="MeshPart" referent="W7P121">
         <Properties>
           <string name="Name">W7C_Ground_19</string>
           <Content name="MeshId"><url>rbxassetid://102292194339669</url></Content>
@@ -2637,7 +2717,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P118">
+      <Item class="MeshPart" referent="W7P122">
         <Properties>
           <string name="Name">W7C_Ground_20</string>
           <Content name="MeshId"><url>rbxassetid://71137066242794</url></Content>
@@ -2657,7 +2737,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P119">
+      <Item class="MeshPart" referent="W7P123">
         <Properties>
           <string name="Name">W7C_Ground_21</string>
           <Content name="MeshId"><url>rbxassetid://74553639843167</url></Content>
@@ -2677,7 +2757,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P120">
+      <Item class="MeshPart" referent="W7P124">
         <Properties>
           <string name="Name">W7C_Ground_22</string>
           <Content name="MeshId"><url>rbxassetid://93706360527739</url></Content>
@@ -2697,7 +2777,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P121">
+      <Item class="MeshPart" referent="W7P125">
         <Properties>
           <string name="Name">W7C_Ground_23</string>
           <Content name="MeshId"><url>rbxassetid://112812970401076</url></Content>
@@ -2717,7 +2797,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P122">
+      <Item class="MeshPart" referent="W7P126">
         <Properties>
           <string name="Name">W7C_Ground_24</string>
           <Content name="MeshId"><url>rbxassetid://103471722401163</url></Content>
@@ -2737,7 +2817,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P123">
+      <Item class="MeshPart" referent="W7P127">
         <Properties>
           <string name="Name">W7C_Ground_25</string>
           <Content name="MeshId"><url>rbxassetid://85120625997770</url></Content>
@@ -2757,7 +2837,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P124">
+      <Item class="MeshPart" referent="W7P128">
         <Properties>
           <string name="Name">W7C_Ground_26</string>
           <Content name="MeshId"><url>rbxassetid://77705173721331</url></Content>
@@ -2777,7 +2857,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P125">
+      <Item class="MeshPart" referent="W7P129">
         <Properties>
           <string name="Name">W7C_Ground_27</string>
           <Content name="MeshId"><url>rbxassetid://85074890134309</url></Content>
@@ -2797,7 +2877,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P126">
+      <Item class="MeshPart" referent="W7P130">
         <Properties>
           <string name="Name">W7C_Ground_28</string>
           <Content name="MeshId"><url>rbxassetid://126557521861771</url></Content>
@@ -2817,7 +2897,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P127">
+      <Item class="MeshPart" referent="W7P131">
         <Properties>
           <string name="Name">W7C_Ground_29</string>
           <Content name="MeshId"><url>rbxassetid://139253039565460</url></Content>
@@ -2837,7 +2917,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P128">
+      <Item class="MeshPart" referent="W7P132">
         <Properties>
           <string name="Name">W7C_Ground_30</string>
           <Content name="MeshId"><url>rbxassetid://140105776864302</url></Content>
@@ -2857,7 +2937,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P129">
+      <Item class="MeshPart" referent="W7P133">
         <Properties>
           <string name="Name">W7C_Ground_31</string>
           <Content name="MeshId"><url>rbxassetid://72339928360013</url></Content>
@@ -2877,7 +2957,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P130">
+      <Item class="MeshPart" referent="W7P134">
         <Properties>
           <string name="Name">W7C_Ground_32</string>
           <Content name="MeshId"><url>rbxassetid://90722758420294</url></Content>
@@ -2897,7 +2977,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P131">
+      <Item class="MeshPart" referent="W7P135">
         <Properties>
           <string name="Name">W7C_Ground_33</string>
           <Content name="MeshId"><url>rbxassetid://100478481588509</url></Content>
@@ -2917,7 +2997,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P132">
+      <Item class="MeshPart" referent="W7P136">
         <Properties>
           <string name="Name">W7C_Ground_34</string>
           <Content name="MeshId"><url>rbxassetid://78293144944681</url></Content>
@@ -2937,7 +3017,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P133">
+      <Item class="MeshPart" referent="W7P137">
         <Properties>
           <string name="Name">W7C_Ground_35</string>
           <Content name="MeshId"><url>rbxassetid://97376747222102</url></Content>
@@ -2957,7 +3037,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P134">
+      <Item class="MeshPart" referent="W7P138">
         <Properties>
           <string name="Name">W7C_Ground_36</string>
           <Content name="MeshId"><url>rbxassetid://107938639267543</url></Content>
@@ -2977,7 +3057,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P135">
+      <Item class="MeshPart" referent="W7P139">
         <Properties>
           <string name="Name">W7C_Ground_37</string>
           <Content name="MeshId"><url>rbxassetid://132760877732732</url></Content>
@@ -2997,7 +3077,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P136">
+      <Item class="MeshPart" referent="W7P140">
         <Properties>
           <string name="Name">W7C_Ground_38</string>
           <Content name="MeshId"><url>rbxassetid://125191307159192</url></Content>
@@ -3017,7 +3097,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P137">
+      <Item class="MeshPart" referent="W7P141">
         <Properties>
           <string name="Name">W7C_Ground_39</string>
           <Content name="MeshId"><url>rbxassetid://96850832019009</url></Content>
@@ -3037,7 +3117,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P138">
+      <Item class="MeshPart" referent="W7P142">
         <Properties>
           <string name="Name">W7C_Ground_40</string>
           <Content name="MeshId"><url>rbxassetid://82989961112327</url></Content>
@@ -3057,7 +3137,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P139">
+      <Item class="MeshPart" referent="W7P143">
         <Properties>
           <string name="Name">W7C_Ground_41</string>
           <Content name="MeshId"><url>rbxassetid://99307539291041</url></Content>
@@ -3077,7 +3157,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P140">
+      <Item class="MeshPart" referent="W7P144">
         <Properties>
           <string name="Name">W7C_Ground_42</string>
           <Content name="MeshId"><url>rbxassetid://85445775239730</url></Content>
@@ -3097,7 +3177,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P141">
+      <Item class="MeshPart" referent="W7P145">
         <Properties>
           <string name="Name">W7C_Ground_43</string>
           <Content name="MeshId"><url>rbxassetid://70630048641894</url></Content>
@@ -3117,7 +3197,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P142">
+      <Item class="MeshPart" referent="W7P146">
         <Properties>
           <string name="Name">W7C_Ground_44</string>
           <Content name="MeshId"><url>rbxassetid://80100582599430</url></Content>
@@ -3137,7 +3217,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P143">
+      <Item class="MeshPart" referent="W7P147">
         <Properties>
           <string name="Name">W7C_Ground_45</string>
           <Content name="MeshId"><url>rbxassetid://124970141850919</url></Content>
@@ -3157,7 +3237,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P144">
+      <Item class="MeshPart" referent="W7P148">
         <Properties>
           <string name="Name">W7C_Ground_46</string>
           <Content name="MeshId"><url>rbxassetid://79271775345921</url></Content>
@@ -3177,7 +3257,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P145">
+      <Item class="MeshPart" referent="W7P149">
         <Properties>
           <string name="Name">W7C_Ground_47</string>
           <Content name="MeshId"><url>rbxassetid://122386422641603</url></Content>
@@ -3197,7 +3277,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P146">
+      <Item class="MeshPart" referent="W7P150">
         <Properties>
           <string name="Name">W7C_Ground_48</string>
           <Content name="MeshId"><url>rbxassetid://133535735685780</url></Content>
@@ -3217,7 +3297,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P147">
+      <Item class="MeshPart" referent="W7P151">
         <Properties>
           <string name="Name">W7C_Ground_49</string>
           <Content name="MeshId"><url>rbxassetid://76610759583424</url></Content>
@@ -3237,7 +3317,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P148">
+      <Item class="MeshPart" referent="W7P152">
         <Properties>
           <string name="Name">W7C_Ground_50</string>
           <Content name="MeshId"><url>rbxassetid://90081612262240</url></Content>
@@ -3257,7 +3337,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P149">
+      <Item class="MeshPart" referent="W7P153">
         <Properties>
           <string name="Name">W7C_Ground_51</string>
           <Content name="MeshId"><url>rbxassetid://106253674334466</url></Content>
@@ -3277,7 +3357,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P150">
+      <Item class="MeshPart" referent="W7P154">
         <Properties>
           <string name="Name">W7C_Ground_52</string>
           <Content name="MeshId"><url>rbxassetid://77872947073831</url></Content>
@@ -3297,7 +3377,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P151">
+      <Item class="MeshPart" referent="W7P155">
         <Properties>
           <string name="Name">W7C_Ground_53</string>
           <Content name="MeshId"><url>rbxassetid://129179430598626</url></Content>
@@ -3317,7 +3397,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P152">
+      <Item class="MeshPart" referent="W7P156">
         <Properties>
           <string name="Name">W7C_Ground_54</string>
           <Content name="MeshId"><url>rbxassetid://139303435298713</url></Content>
@@ -3337,7 +3417,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P153">
+      <Item class="MeshPart" referent="W7P157">
         <Properties>
           <string name="Name">W7C_Ground_55</string>
           <Content name="MeshId"><url>rbxassetid://112021001635754</url></Content>
@@ -3357,7 +3437,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P154">
+      <Item class="MeshPart" referent="W7P158">
         <Properties>
           <string name="Name">W7C_Ground_56</string>
           <Content name="MeshId"><url>rbxassetid://135922010155356</url></Content>
@@ -3377,7 +3457,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P155">
+      <Item class="MeshPart" referent="W7P159">
         <Properties>
           <string name="Name">W7C_Ground_57</string>
           <Content name="MeshId"><url>rbxassetid://102638836072522</url></Content>
@@ -3397,7 +3477,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P156">
+      <Item class="MeshPart" referent="W7P160">
         <Properties>
           <string name="Name">W7C_Ground_58</string>
           <Content name="MeshId"><url>rbxassetid://102423340694489</url></Content>
@@ -3417,7 +3497,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P157">
+      <Item class="MeshPart" referent="W7P161">
         <Properties>
           <string name="Name">W7C_Ground_59</string>
           <Content name="MeshId"><url>rbxassetid://76720226136982</url></Content>
@@ -3437,7 +3517,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P158">
+      <Item class="MeshPart" referent="W7P162">
         <Properties>
           <string name="Name">W7C_Ground_60</string>
           <Content name="MeshId"><url>rbxassetid://107073136436557</url></Content>
@@ -3457,7 +3537,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P159">
+      <Item class="MeshPart" referent="W7P163">
         <Properties>
           <string name="Name">W7C_Ground_61</string>
           <Content name="MeshId"><url>rbxassetid://126390882831983</url></Content>
@@ -3477,7 +3557,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P160">
+      <Item class="MeshPart" referent="W7P164">
         <Properties>
           <string name="Name">W7C_Ground_62</string>
           <Content name="MeshId"><url>rbxassetid://93391853627724</url></Content>
@@ -3497,7 +3577,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P161">
+      <Item class="MeshPart" referent="W7P165">
         <Properties>
           <string name="Name">W7C_Ground_63</string>
           <Content name="MeshId"><url>rbxassetid://98615891751230</url></Content>
@@ -3517,7 +3597,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P162">
+      <Item class="MeshPart" referent="W7P166">
         <Properties>
           <string name="Name">W7C_Ground_64</string>
           <Content name="MeshId"><url>rbxassetid://119662628342100</url></Content>
@@ -3537,7 +3617,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P163">
+      <Item class="MeshPart" referent="W7P167">
         <Properties>
           <string name="Name">W7C_Ground_65</string>
           <Content name="MeshId"><url>rbxassetid://116457868664684</url></Content>
@@ -3557,7 +3637,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P164">
+      <Item class="MeshPart" referent="W7P168">
         <Properties>
           <string name="Name">W7C_Ground_66</string>
           <Content name="MeshId"><url>rbxassetid://86776776529032</url></Content>
@@ -3577,7 +3657,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P165">
+      <Item class="MeshPart" referent="W7P169">
         <Properties>
           <string name="Name">W7C_Ground_67</string>
           <Content name="MeshId"><url>rbxassetid://74785807492988</url></Content>
@@ -3597,7 +3677,7 @@
           <float name="Transparency">1.0</float>
         </Properties>
       </Item>
-      <Item class="MeshPart" referent="W7P166">
+      <Item class="MeshPart" referent="W7P170">
         <Properties>
           <string name="Name">W7C_Ground_68</string>
           <Content name="MeshId"><url>rbxassetid://128191523659759</url></Content>

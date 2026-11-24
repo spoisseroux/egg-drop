@@ -94,7 +94,10 @@ def classify(name):
         if obj.startswith("Station_ArrivalDais_Glow"):
             return "ArrivalGlow__" + mat, False, "pulse", "ArrivalGlow"
         if obj.startswith("Station_EggNest_Glow"):
-            return "NestHalo__" + mat, False, "pulse", "NestHalo"
+            # EGG-CORNER-BUILD-PLAN 6.2: named with the station (W7_EggsStation__glow_warm, hidden by prefix on the beta)
+            # but keeps region NestHalo: motion is picked by region (build_world_v7_assets parts_data), so live keeps
+            # its pulse (architect review).
+            return "EggsStation__" + mat, False, "pulse", "NestHalo"
         return obj + "__" + mat, False, None, obj
     if cat.startswith("Terrain_Ground"):
         return "Ground__" + mat, True, None, "Ground"
@@ -114,6 +117,13 @@ def classify(name):
         return "Architecture__" + mat, mat in COLLIDE_MATERIALS or mat == "palette", None, "Architecture"
     if cat == "Landmarks":
         return "Landmarks__" + mat, mat in COLLIDE_MATERIALS, None, "Landmarks"
+    if cat == "Stations_BenchWest":
+        # EGG-CORNER-LOOK placement rulings R2: the west bench goes on the beta (the machine takes its side).
+        return "BenchWest__" + mat, mat in ("marble", "marble_smooth", "wood_plank", "trim"), None, "BenchWest"
+    if cat == "Stations_EggNest":
+        # EGG-CORNER-BUILD-PLAN 6.2 (architect GO): the Eggs station's steps, cup, egg and stele leave the island-wide
+        # Stations__* meshes for W7_EggsStation__<mat> (collide as today); live looks and collides the same.
+        return "EggsStation__" + mat, mat in ("marble", "marble_smooth", "wood_plank", "trim"), None, "EggsStation"
     if cat.startswith("Stations_"):
         return "Stations__" + mat, mat in ("marble", "marble_smooth", "wood_plank", "trim"), None, "Stations"
     if cat == "Props":
@@ -900,6 +910,12 @@ def coplanar_fixes(sources):
     print("FLICKER colonnade gold caps turned", flipped, "span faces lifted", lifted, "+ high spring and sky-falls channel nudges")
 
 
+# EGG-CORNER-LOOK placement rulings R2 (Fable, 2026-11-24): the split regions the beta removes. The walk map keeps
+# reporting them under the group they came from (unchanged for live). The two egg statues (Plaza_Ornament_09 / 10) and
+# Pad_Future_B were already deleted by the 2026-11-13 declutter (world-v7-declutter.json), so nothing to split there.
+WALK_AS = {"EggsStation": "W7_Stations", "BenchWest": "W7_Stations"}
+
+
 def qa_fixes(sources, remaining=True):
     move_lamps(sources)
     sources = split_castle_flags(sources)
@@ -1094,7 +1110,8 @@ def surface_map(finals):
     trees = []
     for o, key in finals:
         group = key.split("__")[0]
-        if group.startswith(skip) or key == "Water__cloud":
+        # The Eggs station's halo was NestHalo (skipped); in EggsStation it is still a glow, not a surface.
+        if group.startswith(skip) or key in ("Water__cloud", "EggsStation__glow_warm"):
             continue
         bm = bmesh.new()
         bm.from_mesh(o.data)
@@ -1269,7 +1286,8 @@ def walk_data(finals, manifest):
     data["falls"] = falls_planes()
     data["foam"] = foam_boxes()
     # Ground heights: top-down rays against the collidable ground-ish meshes on a 2-stud grid.
-    targets = [o for o, key in finals if key.split("__")[0] in ("Ground", "Rocks", "Rotunda", "Bridge", "Architecture", "Landmarks", "Stations", "Props", "Balustrades", "Trunks", "Aqueduct")]
+    targets = [o for o, key in finals if key.split("__")[0] in ("Ground", "Rocks", "Rotunda", "Bridge", "Architecture", "Landmarks", "Stations", "Props", "Balustrades", "Trunks", "Aqueduct")
+               or (key.split("__")[0] in WALK_AS and key != "EggsStation__glow_warm")]
     trees = []
     for o in targets:
         bm = bmesh.new()
@@ -1289,7 +1307,9 @@ def walk_data(finals, manifest):
                 if hit[0] is not None and (best is None or hit[0].z > best):
                     best, who = hit[0].z, name
             row.append(None if best is None else round(best + 4, 2))
-            names.append(who.split("__")[0] if who else "")
+            group = who.split("__")[0] if who else ""
+            # EGG-CORNER-BUILD-PLAN 6.2 / placement rulings R2: split pieces read as their old groups (unchanged for live).
+            names.append(WALK_AS.get(group[len("W7_"):], group) if group else group)
         grid["heights"].append(row)
         grid["hits"].append(names)
     data["grid"] = grid
