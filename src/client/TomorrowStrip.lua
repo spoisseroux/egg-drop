@@ -1,7 +1,7 @@
 -- The "Coming up" strip (ONBOARDING-V3-PLAN-2026-11-23 slice E; NEST-LOOK section 7; QA-R2-LOOK 5): one well-filled
 -- row on the results screens (DeckResults, DeckResultsInPlace, the Dash results card) while Onboard.on("nest"): a small
 -- live status of what is on its way while you play. The egg's clock (gold "Egg ready!" when it is), the next stamp and
--- the day's quests, each with a whole, a short and a tiny form; ready chips first. Never a button, never focusable, no
+-- the day's quests, each with a whole, a short and a tiny form; always egg, stamp, quests (ready shows as a gold outline, never sorts). Never a button, never focusable, no
 -- sound. Nothing at all when the nest is off or there is no egg. The module keeps its old file name.
 -- Live: given a source (a function answering the model), the strip re-reads it once a second while it is shown and
 -- writes only what changed (in practice once a minute). One connection per strip, gone on hide and on Destroying.
@@ -103,7 +103,7 @@ function Strip.quests(state)
 end
 -- ctx = {on = Onboard.on("nest"), nest = NestClient:summary() ({left, view}) or nil, state = the owner snapshot,
 -- now = server time (GetServerTimeNow; specs pass it)}. Answers nil (no strip) or {title, wait, chips}, the chips in
--- show order (ready first: egg, stamp, quests); each {id, text, short, tiny, gold?, ready?, outline?, soft?, icon}.
+-- show order (always egg, stamp, quests; FABLE-REVIEW-R4 4: ready never sorts, it shows as the gold outline); each {id, text, short, tiny, gold?, ready?, outline?, soft?, icon}.
 function Strip.model(ctx)
 	if type(ctx)~="table"or ctx.on~=true or type(ctx.nest)~="table"or type(ctx.nest.left)~="number"then return nil end
 	local now=ctx.now
@@ -144,10 +144,7 @@ function Strip.model(ctx)
 	else
 		chip={id="quests",text=get("questsDone"),short=get("short.done"),tiny=get("tiny.done"),icon="check",soft=true}
 	end
-	local chips={}
-	for _,c in ipairs({nest,stamp,chip})do if c.ready then table.insert(chips,c)end end
-	for _,c in ipairs({nest,stamp,chip})do if not c.ready then table.insert(chips,c)end end
-	return{title=get("title"),wait=get("wait"),chips=chips}
+	return{title=get("title"),wait=get("wait"),chips={nest,stamp,chip}}
 end
 -- A model's words in one string (the live pass compares it).
 function Strip.signature(model)

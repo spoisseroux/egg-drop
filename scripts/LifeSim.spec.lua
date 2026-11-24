@@ -308,7 +308,7 @@ return function(client)
 		local turned=Sim.birdParts(root,"perch",0,0,CFrame.Angles(0,math.rad(40),0),B.tail,0)
 		assert(close(turned[1].Position,perched[1].Position)and close(turned[2].Position,perched[2].Position))
 		assert(turned[3].Position.X<-.1,"the beak swings with the head")
-		assert(close(perched[6].Position,Vector3.new(-.22,.06,.06))and close(perched[7].Position,Vector3.new(.22,.06,.06)))
+		assert(close(perched[6].Position,Vector3.new(-.205,0,.17))and close(perched[7].Position,Vector3.new(.205,0,.17)),"FABLE-REVIEW-R4 1: seated back")
 		for i=6,7 do
 			local tip=-perched[i].UpVector -- the texture is tip-down
 			assert(tip.Y<-.5 and tip.Z>.6,"folded tip back and down along the back: "..tostring(tip))
@@ -329,7 +329,8 @@ return function(client)
 		local bound=Sim.birdParts(root,"fly",0,math.rad(15),nil,B.tail,1)
 		assert(close(bound[6].Position,perched[6].Position)and close(bound[7].Position,perched[7].Position),"tucked in the bound")
 		local span=(Sim.birdParts(root,"fly",0,0,nil,B.tail,0)[7]*CFrame.new(0,-S.wing.Y/2,0)).Position.X*2
-		assert(near(math.abs(span),1.76,.02),"span tip to tip "..span)
+		-- FABLE-REVIEW-R4 1 shortened the plate (.68 -> .48), so the flight span went 1.76 -> 1.36 (Fable to rule on the captures).
+		assert(near(math.abs(span),1.36,.02),"span tip to tip "..span)
 		-- The tail wedge: sunk in the rump, the tip back and 10 down at rest, its flat face up; the flick 10 above level.
 		local tail=perched[8]
 		local tip=tail.LookVector

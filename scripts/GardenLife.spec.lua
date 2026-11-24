@@ -416,7 +416,7 @@ return function(client)
 				end
 				for _,side in ipairs({"WingL","WingR"})do
 					local plate=folder:FindFirstChild(name..side)
-					assert(plate.Size==Vector3.new(.03,.68,.32)and plate.Transparency==1,"a see-through plate")
+					assert(plate.Size==Vector3.new(.03,.48,.22)and plate.Transparency==1,"a see-through plate (FABLE-REVIEW-R4 1)")
 					for _,d in pairs(faces(plate,{[Face.Left]=LifeArt.id(look.wing),[Face.Right]=LifeArt.id(look.wing)}))do assert(isWhite(d.Color3))end
 				end
 				wingsLoaded[look.wing]=true
@@ -538,8 +538,8 @@ return function(client)
 		test("leaves: three emitters (the look's numbers), anchors moved to each leaf's spot round the player, under the cap at both levels",function()
 			local LifeArt=require(game:GetService("ReplicatedStorage").Shared.LifeArt)
 			local r=rig()
-			-- FABLE-REVIEW-R3 4b: the emitter keys already allow for the 1.45 draw factor (leaf A draws .24, 1 : 6 of a pet).
-			assert(Life.LeafDrawn==nil and Life.Leaves[1].size[2]==.165 and Life.Leaves[2].size[2]==.145 and Life.Leaves[3].size[2]==.12)
+			-- FABLE-REVIEW-R4 2: the keys allow for the 1.5 to 1.65 draw factor (drawn long side .25 or less with the envelope).
+			assert(Life.LeafDrawn==nil and Life.Leaves[1].size[2]==.135 and Life.Leaves[2].size[2]==.125 and Life.Leaves[3].size[2]==.12)
 			local names={"LifeLeafA","LifeLeafB","LifeLeafPetal"}
 			local emitters={}
 			for i,name in ipairs(names)do

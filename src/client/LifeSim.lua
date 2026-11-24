@@ -743,7 +743,9 @@ Sim.BirdShape=table.freeze({
 	head=.38,headAt=Vector3.new(0,.34,-.20),                       -- on top of the raised chest; head : body = 1 : 2
 	beak=Vector3.new(.14,.12,.26),beakAt=Vector3.new(0,-.03,-.20), -- a spindle, half buried: .13 out, beak : head = 1 : 3
 	eye=.09,eyeAt=Vector3.new(.125,.05,-.135),
-	wing=Vector3.new(.03,.68,.32),foldAt=Vector3.new(.22,.06,.06),foldYaw=15,fold=-55, -- along the 35 degree back
+	-- FABLE-REVIEW-R4 1: a shorter, narrower plate seated further back with less yaw and a 22 degree roll (top edge toward
+	-- the spine), so from the front nothing wing-coloured sticks out past the body; the three-quarter file still shows.
+	wing=Vector3.new(.03,.48,.22),foldAt=Vector3.new(.205,0,.17),foldYaw=8,fold=-55,foldRoll=22, -- along the 35 degree back
 	shoulder=Vector3.new(.20,.12,-.06),
 	tail=Vector3.new(.26,.10,.44),tailAt=Vector3.new(0,-.18,.30),tailSink=.08, -- a WedgePart; tail : body = 3 : 5
 	leg=Vector3.new(.03,.16,.03),legAt=Vector3.new(.08,-.31,.02),  -- vertical in the world (the root is level)
@@ -759,8 +761,9 @@ function Sim.birdParts(root,wings,flick,phi,head,tau,tuck)
 	-- The folded wings lie along the pitched body, their tips across the tail root.
 	local fold=CFrame.Angles(math.rad(S.fold),0,0)
 	local at=S.foldAt
-	local foldL=root*CFrame.new(-at.X,at.Y,at.Z)*CFrame.Angles(0,0,-out)*CFrame.Angles(0,math.rad(S.foldYaw),0)*fold
-	local foldR=root*CFrame.new(at.X,at.Y,at.Z)*CFrame.Angles(0,0,out)*CFrame.Angles(0,math.rad(-S.foldYaw),0)*fold
+	local roll=math.rad(S.foldRoll or 0) -- about the plate's long axis, applied last
+	local foldL=root*CFrame.new(-at.X,at.Y,at.Z)*CFrame.Angles(0,0,-out)*CFrame.Angles(0,math.rad(S.foldYaw),0)*fold*CFrame.Angles(0,roll,0)
+	local foldR=root*CFrame.new(at.X,at.Y,at.Z)*CFrame.Angles(0,0,out)*CFrame.Angles(0,math.rad(-S.foldYaw),0)*fold*CFrame.Angles(0,-roll,0)
 	if wings=="fly"then
 		phi=phi or 0
 		-- Half the wing out from the shoulder, so the root stays at the shoulder.

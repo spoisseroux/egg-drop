@@ -1,5 +1,5 @@
 -- The "Coming up" strip (TomorrowStrip, Onboarding v3 slice E; QA-R2-LOOK 5): nothing unless the nest is on and has an
--- egg; the egg's live clock, the next stamp and the day's quests in whole, short and tiny words, ready chips first;
+-- egg; the egg's live clock, the next stamp and the day's quests in whole, short and tiny words, always egg, stamp, quests (ready never sorts);
 -- text never truncates; the live pass writes only what changed and keeps the last model through a nil; the Dash card
 -- makes room for it only when there is one.
 -- Usage (Client): require(PlayerScripts.Client.ZZSpecs.TomorrowStrip)(PlayerScripts.Client); offline in
@@ -79,11 +79,11 @@ return function(client)
 		local weekly={day=DAY,daily={{claimed=true},{claimed=true},{claimed=true}},weekly={{claimed=false}}}
 		assert(chip(Strip.model(ctx(3600,{quests=weekly})),"quests").text=="New quests in 5 h")
 	end)
-	test("ready chips sort first: egg, then stamp, then quests",function()
+	test("FABLE-REVIEW-R4 4: always egg, stamp, quests; ready never sorts (it shows as the outline)",function()
 		assert(ids(Strip.model(ctx(3600)))=="nest,stamp,quests")
-		assert(ids(Strip.model(ctx(3600,{stamps=1,dailyAvailable=true})))=="stamp,nest,quests")
+		assert(ids(Strip.model(ctx(3600,{stamps=1,dailyAvailable=true})))=="nest,stamp,quests")
 		assert(ids(Strip.model(ctx(0,{stamps=1,dailyAvailable=true,quests=quests({"ready"})})))=="nest,stamp,quests")
-		assert(ids(Strip.model(ctx(3600,{stamps=1,quests=quests({"ready"})})))=="quests,nest,stamp")
+		assert(ids(Strip.model(ctx(3600,{stamps=1,quests=quests({"ready"})})))=="nest,stamp,quests")
 	end)
 	test("fit: wide keeps every long text at 14; narrow shrinks, then short, then tiny; never cut",function()
 		local m=Strip.model(ctx(7*3600+52*60))
@@ -150,7 +150,7 @@ return function(client)
 		assert(view.root.Selectable==false and view.root.Active==false)
 		view:set(Strip.model(ctx(0)),800)
 		assert(view.byId.nest.frame.BackgroundColor3==Strip.Color.stars and view:texts().nest=="Egg ready!","ready: gold")
-		assert(view.chips[1].id=="nest","ready first")
+		assert(view.chips[1].id=="nest","egg first")
 		view:set(nil,800);assert(view.root.Visible==false)
 		assert(view:enter(1,false)==false,"hidden: no entrance")
 		view:destroy();assert(#host:GetChildren()==0)

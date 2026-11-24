@@ -81,15 +81,16 @@ Life.ButterflySize=Vector3.new(.04,.035,.18) -- QA-R2-LOOK 4 (was .09, .08, .42 
 Life.ButterflyWing=Vector3.new(.24,.29,.02)  -- span .52: 1 : 10 of the avatar, 1 : 3 of a pet
 Life.BirdMaterial=Enum.Material.Sand -- matte, fine grain (FABLE-REVIEW-R1 2; Fabric if it reads as gravel)
 -- Round 3 (GARDEN-LIFE-NEST-LOOK 2): the three leaf emitters. The petal's tint follows the crowns (lime or pink).
--- QA-R2-LOOK 4, FABLE-REVIEW-R3 4b: emitter Size keys. An emitter draws its leaf about 1.45 x Size (Studio check R3,
--- beside a .5 cube), and these already allow for it: leaf A draws .24 studs at its peak (1 : 6 of a pet), B .21, the
--- petal .17.
+-- QA-R2-LOOK 4, FABLE-REVIEW-R3 4b and R4 2: emitter Size keys. An emitter draws its leaf 1.5 to 1.65 x Size (Studio
+-- check R4, beside a .5 cube); the keys hold the drawn long side at .25 studs or less with the envelope (leaf A .135
+-- peak, B .125). The petal (.12 peak) is unchanged.
 Life.Leaves=table.freeze({
-	table.freeze({name="LifeLeafA",texture="leafA",size={.11,.165,.03,.15}}),
-	table.freeze({name="LifeLeafB",texture="leafB",size={.10,.145,.02,.13}}),
+	table.freeze({name="LifeLeafA",texture="leafA",size={.09,.135,.015,.12}}),
+	table.freeze({name="LifeLeafB",texture="leafB",size={.08,.125,.015,.11}}),
 	table.freeze({name="LifeLeafPetal",texture=nil,size={.075,.12,.02,.105}}),
 })
-Life.PetalColours=table.freeze({lime=hex("#FFF6C2"),pink=hex("#FFB8D6")})
+-- FABLE-REVIEW-R4 3: matte, no brighter than #F1E6C8 (pink follows the same rule).
+Life.PetalColours=table.freeze({lime=hex("#F1E6C8"),pink=hex("#F0B4CE")})
 Life.LeafAnchor=Vector3.new(4,2,4)
 -- Bubbles: rise .4 and drift 1.5 to 3 a second downwind.
 Life.BubbleHeading=(Wind.Direction*2.25+Vector3.new(0,Sim.BubbleRise,0)).Unit

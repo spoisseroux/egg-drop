@@ -40,6 +40,11 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 ## Now working on
 
+- [ ] **Leftovers while Spencer tests beta (14) (Opus, 2026-11-23; Spencer: "Do 3").** Test checklist `artifacts/qa-2026-11-23-beta14/TEST-RUN.md` (also in his vault). Nothing goes on the beta until he says so.
+  - [ ] World (island re-export session, local_a0f7d8a7): Aero pool map off cobalt, crown reshape + leaf tiles (kit r10), an original fountain loop.
+  - [ ] Fable R4 small fixes (here): ready chips sort after egg and stamp, petal colour, folded wing tips from the front, leaf A size.
+  - [x] Tip chime: three original candidates (`scripts/synth_tip_chime.py`, `assets/audio/drafts/tip_chime_*.wav`) sent to Spencer to pick; upload and set `TipChime.SoundId` after his pick.
+
 - [x] **QA R2 build (Opus, 2026-11-23), in beta (14) runtime 95cc5db:** Fable's `QA-R2-LOOK.md` (springs, crickets, bird silhouette, smaller butterflies and leaves, "Coming up" strip, lawn flowers) plus the nest post and the stale Dash place pill from `STUDIO-CHECK-R2.md`. Plan `artifacts/qa-2026-11-23-beta12/QA-R2-BUILD-PLAN.md`, architect review applied. **Built** on `worktree-agent-a7dee87aeb0fd1221`, offline specs 47/47; V3-TEST-PASS row 23. Next: code review; Studio run of KitArrive / KitSpring / KitSurfaces / WorldDressing / UICopy specs (Studio-only); Fable's capture review (bird wedge beak facing and breast decal on the meshed body, fold droop -45, flower night [check], root UIScale text cost on a low phone); listen to the cricket candidates on the beta; localization sync at publish (CSV re-exported, new and removed `onb3.strip` keys).
   - Found: the Dash pill "1st" was a tie at the line (a rival already home and this pet both at 0 left on its last racing frame), not a stale cache (`Hud:show` already clears it).
   - Not built: the phone bottom-sheet rise (no screen is a bottom sheet today; `Kit.arrive(..., {sheet=true})` is ready); the flower night tint toward #C8D0E0 (Fable's [check]).
