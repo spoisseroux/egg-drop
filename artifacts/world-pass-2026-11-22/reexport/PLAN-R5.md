@@ -35,3 +35,20 @@ Source: Fable's `artifacts/qa-2026-11-23-beta14/FABLE-REVIEW-R5.md` items 1, 2, 
 
 Offline first (textures, kit build, gate code, specs). Then ask the coordinator for Studio: uploads (images, kit r18
 Model), readback, Rojo, Play captures from the plaza, the lawn and the arrival dais, Fable on captures.
+
+## Results (Studio, kit r18, 2026-11-24)
+
+- Architect: GO with changes (applied: edge fade in the atlas, mist as camera-facing Beams, opaque foam, card triangles
+  counted from a mesh face attribute with exact equality kept). Code review: GO with changes (applied: mist keep-out,
+  dropped tufts and card budget read from the manifest, honest overhang limit, card edges from the trunk axis).
+- Uploads: falls atlas 122555017086176, lime tile 96924676602525, mist card 108518466669868, chime palette
+  97924490156376, kit r18 Model 123637475971654 (Approved; Roblox's text filter blanked its display name, harmless).
+- Captures `r11/`: falls from the centre lawn (~120) and the lawn (~45) with the static mesh only (the moving layers
+  were off in that Studio for a reason not pinned down; check the budget level next time), plaza arch, lime crown day
+  and dusk (hour 2900), chimes.
+- Specs: offline 60/60; Studio AeroWorld 28 (new chime case), AeroFalls 22, AeroKit 7. Kit tests 10/11: the native
+  checkpoint test fails on feat already (`world-dressing-import.json`, unchanged here).
+- Fable R6 (`FABLE-REVIEW-R6.md`): lime crowns GO, chimes GO, falls GO WITH CHANGES. Blocking: recapture the falls with
+  the moving layers ON (the two spots plus ~80 studs on the race-gate side); if they wash the bands out, raise those
+  layers' Transparency in .15 steps. Mist cards not yet seen. Later: crown cards read as cut paper (one edge-on, one flap
+  below the skirt); the upper drop's restart line.

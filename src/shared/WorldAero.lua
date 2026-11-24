@@ -62,7 +62,7 @@ Aero.Surfaces=table.freeze({
 -- Fable R5 / beta 14 W3 row 2: named parts that take their own surface before their kind's (an ordered prefix list).
 -- The five arrival chimes: the Aero palette at saturation x .75 (scripts/draw_aero_palette.py palette-chimes).
 Aero.Named=table.freeze({
-	table.freeze({prefix="W7_Chime_",kind="palette",surface=table.freeze({TextureID="rbxassetid://0"})}),
+	table.freeze({prefix="W7_Chime_",kind="palette",surface=table.freeze({TextureID="rbxassetid://97924490156376"})}),
 })
 function Aero.namedSurface(name,kind)
 	for _,entry in ipairs(Aero.Named)do
@@ -188,7 +188,7 @@ Aero.Waterfall=table.freeze({
 		FoamGlow=table.freeze({Strength=.3,Tint=hex("#FFFFFF")}), -- the mask (the atlas white block) is on the template
 		-- Fable R5: soft mist cards, camera-facing, at the foot (3, about 6 wide) and over the step's rock lip (1): `along`
 		-- across the sheet, `out` in front of it, from `up` to `up + tall`. Static (no TextureSpeed); level1 per card.
-		MistCards=table.freeze({Texture="rbxassetid://0",Color=hex("#EEF6FA"),Transparency=.6,
+		MistCards=table.freeze({Texture="rbxassetid://108518466669868",Color=hex("#EEF6FA"),Transparency=.6,
 			Cards=table.freeze({
 				table.freeze({at="pool",along=-3.4,out=1.4,up=-.2,tall=3,width=6,level1=true}),
 				table.freeze({at="pool",along=.2,out=1.8,up=-.2,tall=3.4,width=6.5,level1=true}),
