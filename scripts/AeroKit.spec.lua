@@ -89,7 +89,9 @@ return function(client)
 			end
 		end
 		assert(stems==1,"one stem collider")
-		assert(crowns==21 and balls==#Data.rocks and placed==4,tostring(crowns).." "..tostring(balls).." "..tostring(placed))
+		-- placed: the two rest meshes, the falls (water and, LOOK-R4 round 2, its foam part) and the fountain.
+		assert(crowns==21 and balls==#Data.rocks and placed==5,tostring(crowns).." "..tostring(balls).." "..tostring(placed))
+		assert(built.folder:FindFirstChild("W7_Kit_Falls__kitfoam"),"the falls foam is its own part")
 		built.destroy()
 		assert(built.folder.Parent==nil)
 	end)

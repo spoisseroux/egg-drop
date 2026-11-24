@@ -1,0 +1,35 @@
+{
+  "seconds": 32.0,
+  "sample_rate": 44100,
+  "seed": 20261123,
+  "peak_dbfs": -6.0,
+  "rms_dbfs": -21.95,
+  "rms_0_5s_spread_db": 1.18,
+  "rms_0_5s_min_max_dbfs": [
+    -22.52,
+    -21.34
+  ],
+  "seam_rms_vs_mean_db": -0.09,
+  "seam_step": 0.0228,
+  "energy_share_db": {
+    "below_350": -97.1,
+    "350_500": -73.0,
+    "500_9000": -0.0,
+    "9000_11000": -63.6,
+    "above_11000": -82.2
+  },
+  "peak_density_vs_max_db": {
+    "below_350": -86.4,
+    "at_400": -64.9,
+    "at_11000_up": -86.9
+  },
+  "file": "assets/audio/custom/egg_drop_fountain_loop.wav",
+  "in_game": {
+    "volume": 0.14,
+    "speed": 1.0,
+    "min": 5,
+    "max": 26,
+    "rolloff": "InverseTapered",
+    "start": "random TimePosition, never restarted while the garden is loaded"
+  }
+}

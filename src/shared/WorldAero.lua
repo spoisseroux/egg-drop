@@ -28,7 +28,7 @@ Aero.Clouds=table.freeze({Cover=.5,Density=.3,Color=hex("#FFFFFF")})
 function Aero.skyFaces(data)return data and data.sky and data.sky[Aero.FaceSet]end
 
 -- Surfaces, by the material after "__" in a world mesh's name. Tint is SurfaceAppearance.Color (it multiplies);
--- the rest are properties of the part. dirt_path, pebble_bed and bark stay as they are.
+-- the rest are properties of the part. dirt_path and bark stay as they are.
 Aero.Surfaces=table.freeze({
 	grass={Tint=hex("#F0FFD6")},
 	meadow={Tint=hex("#E4FFC8")},
@@ -39,8 +39,14 @@ Aero.Surfaces=table.freeze({
 	marble_smooth={Reflectance=.12},
 	trim={Reflectance=.18},
 	-- Water stays opaque: transparent, it sorted through pet heads.
-	water_stream={Reflectance=.22},
-	water_pool={Reflectance=.22},
+	-- LOOK-R3 1: the pool (and the stream, so they match) on a calm teal tile with a broken light net, not the cobalt
+	-- water map (scripts/draw_aero_r3_textures.py pool-aero, 14 studs like the part's UVs). Drawn darker than it shows:
+	-- the Aero sun lifts it about 1.2 x green and 1.3 x blue (Studio r5).
+	-- LOOK-R3 round 6: the pebble bed peeks above the waterline at the pool rims as a saturated blue strip; tinted, it
+	-- renders as the pool's teal.
+	pebble_bed={Tint=Color3.new(.98,1,.83)},
+	water_stream={Reflectance=.22,TextureID="rbxassetid://135229051638910"},
+	water_pool={Reflectance=.22,TextureID="rbxassetid://135229051638910"},
 	water={Reflectance=.22},
 	glow_warm={Color=hex("#FFE08A")},
 	glow_aqua={Color=hex("#4FE6FF")},
@@ -55,11 +61,15 @@ Aero.Surfaces=table.freeze({
 -- Scrolling Texture layers (LoungeWorldV7Art.WaterSkins) by layer name, then by the water under them.
 Aero.Skins=table.freeze({
 	FlowSkin={
-		water_stream={Color3=hex("#3CC8F0"),Transparency=.42},
-		water_pool={Color3=hex("#3BA3BE"),Transparency=.15}, -- LOOK-R2 2 and round 3: teal, not electric
+		-- LOOK-R3 1 (Studio r5): the stream takes the pool's glint too, so pool and stream match in the hub.
+		water_stream={Texture="rbxassetid://82414579008999",StudsPerTileU=9,StudsPerTileV=9,Color3=hex("#E4F7FA"),Transparency=.72},
+		-- LOOK-R3 1: a sparse glint layer over the new pool tile (at .15 a colour wash would hide it), 9 studs so it never
+		-- sits in step with the 14-stud base.
+		water_pool={Texture="rbxassetid://82414579008999",StudsPerTileU=9,StudsPerTileV=9,Color3=hex("#E4F7FA"),Transparency=.72},
 		water={Color3=hex("#7FE0FF"),Transparency=.5},
 	},
-	FlowGlint={water_stream={Color3=hex("#FFFFFF"),Transparency=.6}},
+	-- The stream's second layer drew the cobalt water map at .6 (white tint keeps it blue): the glint at 6 studs instead.
+	FlowGlint={water_stream={Texture="rbxassetid://82414579008999",StudsPerTileU=6,StudsPerTileV=6,Color3=hex("#FFFFFF"),Transparency=.72}},
 })
 -- Beams and emitters under the room's WaterFlow folder.
 Aero.Falls=ColorSequence.new(hex("#DDF6FF"))
@@ -160,6 +170,13 @@ Aero.Waterfall=table.freeze({
 		FlowB=table.freeze({across=true,scale=1,grow=.8,out=1.2,shift=.7,length=17,speed=19/17,Color=hex("#FFFFFF"),LightEmission=.15,
 			Texture="rbxassetid://138106096840651",Transparency=keys({{0,.6},{.08,.2},{.9,.2},{1,.6}})}),
 		-- Flat on the pool, flowing out along n from `from` to `to` studs off the foot.
+		-- LOOK-R3 1: darker water at the foot, a static flat beam under the Apron (foot-shade: row 0 at the foot). The ledge
+		-- pool gets a smaller one, dropped at level 1.
+		-- LOOK-R4 round 2: the kit's foam part (rolls, lips, apron) sits in the cliff's shade; a small white emissive lift on
+		-- its SurfaceAppearance keeps it whiter than the water. Written by AeroKit.build on the cloned part.
+		FoamGlow=table.freeze({Strength=.45,Tint=hex("#FFFFFF")}), -- the mask (the atlas white block) is on the template
+		PoolShade=table.freeze({Texture="rbxassetid://135109259637937",Color=hex("#1F6F8A"),Transparency=.3,up=.03,
+			pool=table.freeze({width=12,out=5}),ledge=table.freeze({width=7,out=2.5})}),
 		Apron=table.freeze({from=.5,to=7.5,up=.06,width0=9,width1=9.5,length=7,speed=1.5/7,Color=hex("#FFFFFF"),
 			Transparency=keys({{0,.25},{.7,.6},{1,1}})}),
 		Emitters=table.freeze({
@@ -233,7 +250,10 @@ Aero.Fountain=table.freeze({
 		Life=NumberRange.new(.4,.6),Acceleration=Vector3.new(0,-8,0),Size=keys({{0,.5},{1,1}}),Transparency=keys({{0,.35},{1,1}})}),
 	Color=hex("#F4FCFF"),
 	Squash=NumberSequence.new(-1.6), -- jet and spill: tall, thin streaks along their flight (positive squashes them flat)
-	Voice=table.freeze({id=71747963121003,volume=.16,speed=1.25,min=5,max=26}),
+	-- LOOK-R3 3: the original loop (scripts/synth_fountain_loop.py, 32 s), from a random point, never restarted by distance.
+	-- The library stand-in (water_bed_loop at 1.25) plays if the loop does not load. Spencer's ears decide.
+	Voice=table.freeze({id=96991688758765,volume=.20,speed=1,min=7,max=30, -- LOOK-R4 B4: heard within ~15 studs, gone by 30
+		fallback=table.freeze({id=71747963121003,speed=1.25,volume=.16})}),
 })
 
 -- "W7_Water__cloud", "W7_Backdrop__cloud_2" -> "cloud"; nil for anything else (collision tiles, pets, props).

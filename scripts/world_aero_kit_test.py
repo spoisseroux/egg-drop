@@ -126,6 +126,31 @@ class Gate(unittest.TestCase):
         self.assertLessEqual(added - hidden, 1500, "ALIVE-SAFETY 4: +1,500 triangles")
         self.assertTrue(any(m["role"] == "fountain" for m in self.manifest["meshes"]) and self.manifest["fountain"]["top"] > 0)
 
+    def test_reshaped_crowns_stay_on_their_trunks(self):
+        """LOOK-R3 2 (architect r3): the reshaped shared crowns keep today's triangles, stay within a stud of today's
+        bounds, keep the flat underside at least half a stud under the trunk top, and wear the leaf tiles."""
+        reshaped = {m["name"]: m for m in self.manifest["meshes"] if "reshape" in m}
+        self.assertEqual(sorted(reshaped), ["W7_Kit_Crown_Blossom__foliage_blossom", "W7_Kit_Crown_Round__foliage",
+                                            "W7_Kit_Crown_Tall__foliage"])
+        for name, mesh in reshaped.items():
+            r = mesh["reshape"]
+            self.assertEqual(r["tris"], mesh["tris"], name)
+            self.assertEqual(mesh["tris"], {"Round": 240, "Tall": 220, "Blossom": 240}[name.split("_")[3]], name)
+            self.assertLessEqual(r["overhang"], 1.0, name)
+            self.assertGreaterEqual(r["trunkDepth"], .5, name)
+            self.assertAlmostEqual(r["floor"], -r["trunkDepth"], places=3)
+        xml = (gate.WORLD / "AeroKit.rbxmx").read_text(encoding="utf-8")
+        for name, leaf in (("W7_Kit_Crown_Round__foliage", gate.LEAF_DARK), ("W7_Kit_Crown_Blossom__foliage_blossom", gate.LEAF_LIME),
+                           ("W7_Kit_Crown_Hatch__foliage", None)):
+            part = xml[xml.index(f">{name}<"):]
+            part = part[:part.index("</Item>\n    </Item>") if "SurfaceAppearance" in part[:part.index("</Item>")] else part.index("</Item>")]
+            if leaf:
+                self.assertIn(leaf, part, name)
+                self.assertIn(gate.LEAF_ROUGH, part, name)
+                self.assertNotIn("<Color3 name=\"Color\">", part, name + ": the leaf tiles hold their final colours")
+            else:
+                self.assertNotIn(gate.LEAF_DARK, part, "the Hatch crown keeps the island map (its UVs are ~8 studs a tile)")
+
     def test_the_native_checkpoint_is_untouched(self):
         native.validate(gate.ROOT)  # raises when any bound island input or output changed
         project = json.loads((gate.ROOT / "default.project.json").read_text(encoding="utf-8-sig"))

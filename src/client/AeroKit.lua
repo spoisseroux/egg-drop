@@ -5,7 +5,8 @@
 --   * crowns: the island's tree crowns as separate parts (3 shared meshes + the Hatch Tree's), each at rest on its tree,
 --     WorldDressing "crown" with WorldRestCFrame and WorldPivot (the trunk top), so WindClient sways them;
 --   * rest: the blob bushes the merged crown meshes also hold, static;
---   * falls (LOOK-R2 2): dark wet rock faces with ledges, white chutes and wet rocks, one vertex-coloured mesh, plus one
+--   * falls (LOOK-R2 2, LOOK-R4): wet rock faces with ledges, one streaked sheet per drop and wet rocks (one vertex-coloured
+--     mesh on the falls atlas), the foam rolls, lips and apron as their own part (Kit.glow), plus one
 --     invisible ball per rock that the local avatar cannot walk through (pets never reach a rock:
 --     build_world_aero_kit.py checks it);
 --   * fountain (LOOK-R2 3): a two-tier stone fountain in the Bubble Spring's basin, an invisible column at its stem.
@@ -44,6 +45,21 @@ end
 
 -- options: data (WorldAeroKit), templates (folder of MeshParts), parent (the room). Returns {folder, data, parts,
 -- destroy} or throws (a missing template, bad data): AeroWorld catches it and keeps the merged garden.
+-- LOOK-R4 round 2: the falls foam's emissive lift (WorldAero.Waterfall.Kit.FoamGlow) on its own SurfaceAppearance. A
+-- missing skin or an engine without the properties leaves the foam as drawn.
+function Kit.glow(part)
+	local ok,Values=pcall(function()
+		return require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("WorldAero"))
+	end)
+	local look=ok and Values.Waterfall and Values.Waterfall.Kit.FoamGlow
+	local skin=part:FindFirstChildOfClass("SurfaceAppearance")
+	if not(look and skin)then return false end
+	-- The mask is authored on the template (build_world_aero_kit_assets.py): game scripts cannot write it.
+	return pcall(function()
+		skin.EmissiveStrength=look.Strength
+		skin.EmissiveTint=look.Tint
+	end)
+end
 function Kit.build(options)
 	local data,templates=options.data,options.templates
 	assert(type(data)=="table"and type(data.meshes)=="table"and type(data.crowns)=="table","no kit data")
@@ -81,6 +97,7 @@ function Kit.build(options)
 		local cframe,size=Kit.placedFrame(data.meshes[name])
 		local p=clone(name)
 		p.Size,p.CFrame=size,cframe
+		if string.sub(name,-#"__kitfoam")=="__kitfoam"then Kit.glow(p)end
 		p.Parent=folder
 	end
 	for index,rock in ipairs(data.rocks or {})do
