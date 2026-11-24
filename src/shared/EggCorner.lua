@@ -19,7 +19,7 @@ Corner.PromptAt=Vector3.new(0,2.2,2.6)  -- machine-local: in front of the dial, 
 Corner.Block=Vector3.new(4.8,1,4.4)     -- the pets' box, turned with the machine
 Corner.TrailAhead=3                     -- the Hatch eggs trail ends this far in front
 Corner.PinLift=1.6                      -- the Eggs pin over the machine's top
-Corner.Ring=3.6                         -- the Eggs attract ring at the machine (R2 1; 4.7 elsewhere)
+Corner.Ring=3                          -- the Eggs attract ring at the machine (Fable R8 FIX 2: 3.6 showed its back arc on grass)
 Corner.Height=7.2                       -- the machine's height when no model is there to measure
 -- The nest (R2 3): on plain marble at the old station's spot once the station is split out; until then E1 (beta only).
 Corner.NestSpot=Vector3.new(-31,4.07,-11)

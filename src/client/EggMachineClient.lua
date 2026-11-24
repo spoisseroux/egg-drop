@@ -6,13 +6,17 @@
 --   hello  coming within 10 studs: the dial nudges 15 degrees and springs back (.4 s), one click; re-armed past 12, 20 s apart
 --   open   `Turn`: a quarter turn (.28 s, overshoot 6), clicks at 0 / 90 / 180 ms, the loose eggs hop at .1; the screen
 --          opens at .3 (init); a second press inside a running crank is ignored
---   buy    the press (before the remote): a full turn and 5 clicks (.6 s), clunk, the bought colour's egg rolls down the
---          chute and lands in the cup at .85 with the landing thud (once). Hatch another within 20 s: a half turn (.45 s,
---          3 clicks), then a quarter (.25 s, 1 click). A press while a buy crank runs merges into it (no second crank or
---          egg; the 1 s cap still counts from the first press); a retried send of the same action never starts another.
---   hold   HatchCinematic.gate holds the clock of the one reveal that started after the press until the egg lands, at
---          most 1 s after the first press; a skip is refused meanwhile. The egg rolls only once that reveal has started
---          (a refused buy drops nothing); the Stat Egg's reveal is not the cinematic, so its egg rolls on schedule.
+--   buy    a press (before the remote) only arms the crank; it turns when the buy is confirmed: the reveal it started
+--          begins (HatchCinematic.onPlay), or for the Stat Egg (its own reveal) its Saved answer (confirm()). A press
+--          the server refuses (Studio check R8: Hatch another on a Toy result came back "This toy was not changed")
+--          turns nothing and never counts toward a streak: it gets the hello nudge and one click (Fable R8), as soon
+--          as the press is known refused (deps.rejected(action), or refuse() from the Stat Egg's answer). Then a full turn and 5 clicks (.6 s), clunk, the bought
+--          colour's egg rolls down the chute and lands in the cup .85 after the confirmation with the landing thud
+--          (once). Hatch another within 20 s of the last landing: a half turn (.45 s, 3 clicks), then a quarter (.25 s,
+--          1 click). A press while a buy crank runs merges into it; a retried send of the same action never arms another.
+--   hold   HatchCinematic.gate holds the clock of the reveal that confirmed the buy until the egg lands, at most 1 s
+--          after the confirmation (the hold starts with the crank); a skip is refused meanwhile. The Stat Egg's reveal
+--          is never held.
 --          Reduced Motion: the reveal shows its static card at once (the cinematic never asks the hold); the crank,
 --          its sounds and the egg still play.
 -- Sounds play flat with the screen (Fable R2 F6); the world motion only within Range of the camera. The old station's
@@ -42,7 +46,8 @@ Machine.Cap=1           -- the hold never outlasts this, from the first press
 Machine.StreakWindow=20 -- Hatch another: a buy this soon after the last landing
 Machine.FadeAfter=1.5   -- the egg in the cup fades this long after the reveal ends (or at Linger)
 Machine.Linger=6
-Machine.Unclaimed=table.freeze({Stat=true}) -- reveals that are not the cinematic: the egg rolls on schedule
+Machine.Unclaimed=table.freeze({Stat=true}) -- reveals that are not the cinematic: confirmed by their Saved answer
+Machine.ConfirmWindow=3 -- an armed press with no confirmation this long after it lapses (no turn, no streak)
 -- Volumes (from Fable's dB): -16 .16, -20 .1, -24 .063, -26 .05.
 Machine.Volume=table.freeze({click=.1,clunk=.16,roll=.1,tok=.05,tokCrank=.063,hello=.063,land=.5})
 
@@ -154,21 +159,38 @@ function Machine:bought(action,id)
 	local now=self.clock()
 	local crank=self.crank
 	if crank and crank.kind=="buy"and not crank.landed and now-crank.at<Machine.Cap then return false end -- merged
-	self.streakCount=Machine.streak(self.streakCount,self.lastLand,now)
-	local sched=Machine.schedule(self.streakCount)
-	local unclaimed=Machine.Unclaimed[kind]==true
-	self.crank={kind="buy",at=now,sched=sched,type=kind,fired={},claimed=unclaimed}
-	-- Review 2: a reveal that is not the cinematic (the Stat Egg) gets no gate, so no other reveal is ever caught by it.
-	self.gate=if unclaimed then nil else {from=now,cap=now+Machine.Cap,owner=nil,crank=self.crank}
+	-- A newer press replaces an armed one that was never confirmed (a refused buy leaves nothing behind).
+	self.armed={at=now,type=kind,action=action,unclaimed=Machine.Unclaimed[kind]==true}
 	return true
 end
--- HatchCinematic.onPlay: the first reveal to start after the press is the one the gate holds.
+-- The armed press is confirmed (its reveal started, or the Stat Egg's Saved answer): the crank turns now. `cinematic`
+-- (the reveal that confirmed it) is the one the gate holds. False with nothing armed, or an armed press that lapsed.
+function Machine:confirm(cinematic)
+	local armed=self.armed
+	local now=self.clock()
+	if not armed or now-armed.at>Machine.ConfirmWindow or not self:on()then self.armed=nil;return false end
+	self.armed=nil
+	-- Review R8: only a confirmed buy counts toward a streak (from the last landing, never from a press).
+	self.streakCount=Machine.streak(self.streakCount,self.lastLand,now)
+	local sched=Machine.schedule(self.streakCount)
+	if self.crank and not self.crank.done then self:finish(self.crank)end
+	self.crank={kind="buy",at=now,pressed=armed.at,sched=sched,type=armed.type,fired={},claimed=true}
+	-- Review 2: the Stat Egg's reveal is not the cinematic: no gate, so no other reveal is ever caught by it.
+	self.gate=if cinematic and not armed.unclaimed then {from=now,cap=now+Machine.Cap,owner=cinematic,crank=self.crank}else nil
+	return true
+end
+-- The armed press was refused (Fable R8): no crank, no streak step; the hello nudge and one click instead.
+function Machine:refuse()
+	if not self.armed then return false end
+	self.armed=nil
+	self.helloAt=self.clock()
+	self:play("crank_click_1",Machine.Volume.hello)
+	return true
+end
+-- HatchCinematic.onPlay: the first reveal to start after an armed press confirms it (the Stat Egg confirms by its answer).
 function Machine:claim(cinematic)
-	local gate=self.gate
-	if gate and gate.owner==nil and self.clock()>=gate.from and self.clock()<gate.cap then
-		gate.owner=cinematic
-		gate.crank.claimed=true
-	end
+	local armed=self.armed
+	if armed and not armed.unclaimed and self.clock()>=armed.at then self:confirm(cinematic)end
 end
 -- HatchCinematic.gate: hold this reveal? Only the claimed one, only until the egg lands, never past the cap.
 function Machine:holds(cinematic)
@@ -200,6 +222,13 @@ end
 -- ── Per frame ──────────────────────────────────────────────────────────────────────────────────────────────────
 -- The sounds and beats of the running crank (always, flat), then the world motion (near only).
 function Machine:beats()
+	-- An armed press nobody confirmed (a refused buy) lapses quietly: no turn, no streak.
+	if self.armed and self.clock()-self.armed.at>Machine.ConfirmWindow then self.armed=nil end
+	-- Known refused (the intent said Rejected): the nudge now, not a silent lapse.
+	if self.armed and self.d.rejected then
+		local ok,no=pcall(self.d.rejected,self.armed.action)
+		if ok and no==true then self:refuse()end
+	end
 	local crank=self.crank
 	if not crank or crank.done then return end
 	local t=self.clock()-crank.at
