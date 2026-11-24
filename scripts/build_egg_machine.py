@@ -79,7 +79,13 @@ class Mesh:
         self.uv = self.bm.loops.layers.uv.new("UVMap")
         self.col = self.bm.loops.layers.float_color.new("Col")
 
-    def face(self, pts, uvs=None, cols=None, smooth=True):
+    def face(self, pts, uvs=None, cols=None, smooth=True, out=None):
+        if out is not None:
+            p0, p1, p2 = (Vector(q) for q in pts[:3])
+            if (p1 - p0).cross(p2 - p0).dot(Vector(out)) < 0:   # wound the other way: reverse (with its uvs, colours)
+                pts = pts[::-1]
+                uvs = uvs[::-1] if uvs else uvs
+                cols = cols[::-1] if cols else cols
         vs = [self.bm.verts.new(bl(p)) for p in pts]
         f = self.bm.faces.new(vs)
         f.smooth = smooth
@@ -89,10 +95,11 @@ class Mesh:
             loop[self.col] = (*c, 1.0)
         return f
 
-    def build(self, weld=True):
+    def build(self, weld=True, recalc=True):
         if weld:
             bmesh.ops.remove_doubles(self.bm, verts=self.bm.verts, dist=1e-5)
-        bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces)
+        if recalc:
+            bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces)
         bmesh.ops.triangulate(self.bm, faces=self.bm.faces)
         me = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(me)
@@ -262,10 +269,11 @@ def build_dial():
     front_c = (0.0, 0.0, .3)
     for i in range(n):
         a, b = outline[i], outline[(i + 1) % n]
-        m.face([front_c, (a[0], a[1], .22), (b[0], b[1], .22)], [duv(0, 0), duv(*a), duv(*b)])     # front
-        m.face([(0, 0, 0), (b[0], b[1], 0), (a[0], a[1], 0)], [duv(0, 0), duv(*b), duv(*a)])          # back
+        mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, 0)
+        m.face([front_c, (a[0], a[1], .22), (b[0], b[1], .22)], [duv(0, 0), duv(*a), duv(*b)], out=(0, 0, 1))    # front
+        m.face([(0, 0, 0), (b[0], b[1], 0), (a[0], a[1], 0)], [duv(0, 0), duv(*b), duv(*a)], out=(0, 0, -1))     # back
         m.face([(a[0], a[1], 0), (b[0], b[1], 0), (b[0], b[1], .22), (a[0], a[1], .22)],
-               [duv(*a), duv(*b), duv(*b), duv(*a)])                                                  # side
+               [duv(*a), duv(*b), duv(*b), duv(*a)], out=mid)                                                   # side
     # Knob at radius .5 straight up, .55 proud, cream.
     kx, ky, kr, segs = 0.0, .5, .275, 12                 # Fable render R1: .55 across, .3 proud, domed
     ring = [(kx + kr * math.cos(2 * math.pi * i / segs), ky + kr * math.sin(2 * math.pi * i / segs)) for i in range(segs)]
@@ -273,17 +281,21 @@ def build_dial():
         a, b = ring[i], ring[(i + 1) % segs]
         mid_a = (a[0] * .8 + kx * .2, a[1] * .8 + ky * .2)
         mid_b = (b[0] * .8 + kx * .2, b[1] * .8 + ky * .2)
-        m.face([(a[0], a[1], .24), (b[0], b[1], .24), (b[0], b[1], .42), (a[0], a[1], .42)], [region_uv("knob", .5, .5)] * 4)
-        m.face([(a[0], a[1], .42), (b[0], b[1], .42), (mid_b[0], mid_b[1], .5), (mid_a[0], mid_a[1], .5)], [region_uv("knob", .5, .5)] * 4)
-        m.face([(kx, ky, .54), (mid_a[0], mid_a[1], .5), (mid_b[0], mid_b[1], .5)], [region_uv("knob", .5, .5)] * 3)
+        side = ((a[0] + b[0]) / 2 - kx, (a[1] + b[1]) / 2 - ky, 0)
+        m.face([(a[0], a[1], .24), (b[0], b[1], .24), (b[0], b[1], .42), (a[0], a[1], .42)], [region_uv("knob", .5, .5)] * 4, out=side)
+        m.face([(a[0], a[1], .42), (b[0], b[1], .42), (mid_b[0], mid_b[1], .5), (mid_a[0], mid_a[1], .5)], [region_uv("knob", .5, .5)] * 4,
+               out=(side[0], side[1], .6))
+        m.face([(kx, ky, .54), (mid_a[0], mid_a[1], .5), (mid_b[0], mid_b[1], .5)], [region_uv("knob", .5, .5)] * 3, out=(0, 0, 1))
     # Embossed egg in the middle: a raised egg outline .04 above the face.
     eg = [(0.0, -.24), (.13, -.2), (.17, -.06), (.14, .1), (.08, .2), (0.0, .24), (-.08, .2), (-.14, .1), (-.17, -.06), (-.13, -.2)]
     for i in range(len(eg)):
         a, b = eg[i], eg[(i + 1) % len(eg)]
-        m.face([(0, -.06, .345), (a[0], a[1] - .06, .335), (b[0], b[1] - .06, .335)], [region_uv("emboss", .5, .5)] * 3)
+        m.face([(0, -.06, .345), (a[0], a[1] - .06, .335), (b[0], b[1] - .06, .335)], [region_uv("emboss", .5, .5)] * 3, out=(0, 0, 1))
         m.face([(a[0], a[1] - .06, .29), (b[0], b[1] - .06, .29), (b[0], b[1] - .06, .335), (a[0], a[1] - .06, .335)],
-               [region_uv("emboss", .5, .5)] * 4)
-    return m.build(weld=False)
+               [region_uv("emboss", .5, .5)] * 4, out=((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, 0))
+    # Studio r1: recalc_face_normals cannot orient the open knob and emboss (half the front faced in and Roblox culled
+    # it), so every face is wound to its own outward direction above and nothing is recalculated.
+    return m.build(weld=True, recalc=False)
 
 
 # ----------------------------------------------------------------------------------------------------------- sprout
@@ -470,6 +482,10 @@ def main():
     body, spots = build_body()
     globe = build_globe()
     dial = build_dial()
+    # The dial's face must point out (+Z machine-local = -y in Blender): Roblox culls back faces.
+    front = [poly for poly in dial.data.polygons if (poly.center.y * -1) > .25 and abs(poly.normal.y) > .5]
+    outward = sum(1 for poly in front if -poly.normal.y > 0)
+    assert front and outward / len(front) > .95, ("dial front faces point inward", outward, len(front))
     sprout = build_sprout()
     egg = build_egg()
     layout, loose = pile_layout()

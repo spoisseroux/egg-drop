@@ -36,8 +36,8 @@ FBX, MANIFEST, READBACK = DIR / "egg-machine.fbx", DIR / "egg-machine-manifest.j
 XML_OUT = ROOT / "assets" / "world" / "EggMachine.rbxmx"
 LUA_OUT = ROOT / "src" / "shared" / "EggMachineData.lua"
 ID = re.compile(r"^rbxassetid://([1-9][0-9]{0,19})$")
-TEXTURE = "rbxassetid://0"           # the uploaded egg-machine.png (set after the image upload)
-ROUGH_60 = "rbxassetid://0"          # a flat .6 roughness map (set after upload)
+TEXTURE = "rbxassetid://105887136822595"   # egg-machine.png
+ROUGH_60 = "rbxassetid://94721521279119"   # egg-machine-rough60.png
 METAL_0 = "rbxassetid://114363080604088"   # the island's flat no-metal map (build_world_v7_assets MATTE_METALNESS)
 # Instance names: the egg-corner build plan's contract (EGG-CORNER-BUILD-PLAN.md) fills these.
 MODEL_NAME = "EggMachine"
