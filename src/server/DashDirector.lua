@@ -8,7 +8,8 @@
 --
 -- options: now(), guid(), seed() (1..2^32-1), day(), prizes(),
 --   check(userId, stage) -> ok, reason   stage "join", "queue" (in line), "promote" (from the line into a race; ok with
---                            "Closer" is seated but must walk up before the countdown), "countdown", "seat" (cheap)
+--                            "Closer" is seated but must walk up before the countdown), "countdown", "seat" (cheap),
+--                            "gather" (a gather seat, every CheckEvery: where it stands only, beta 14 F2)
 --   levels(userId) -> {speed,energy,jump} from the save; pet(userId) -> petId
 --   tag(userId, raceId|nil), event(userId, packet), state(userId|nil for everyone, raceId, race),
 --   finished(userId, result) (DashState.validResult shape), publish(roster), warn(text)
@@ -382,11 +383,16 @@ function Director:checkAll(now)
 			self:call("event",entry.userId,{kind="refused",reason=reason})
 		end
 	end
-	local function seated(userId)
-		local ok,reason=self:check(userId,"seat")
+	local function seated(userId,stage)
+		local ok,reason=self:check(userId,stage or "seat")
 		if not ok then self:leave(userId,reason)end
 	end
-	if self.heat and self.heat.phase~="results"then for _,record in ipairs(table.clone(self.heat.seats))do seated(record.userId)end end
+	-- A gather seat waits in the rope ring like the line (beta 14 F2): "gather" checks where it stands.
+	local heat=self.heat
+	if heat and heat.phase~="results"then
+		local stage=if heat.phase=="gather"then "gather"else "seat"
+		for _,record in ipairs(table.clone(heat.seats))do seated(record.userId,stage)end
+	end
 	for userId in pairs(table.clone(self.trials))do seated(userId)end
 end
 function Director:stepHeat(now)

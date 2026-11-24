@@ -11,7 +11,7 @@
 --     cannot show. handle.cancel() closes it if it is still this ask (call it from the caller's
 --     own close(), so a screen that closes underneath never leaves the dialog up).
 --   Confirm.isOpen(), Confirm.close(reason) (cancels), Confirm.panel() (specs)
---   Optional `alt` (Stars store access, 2026-11-21): {text, onSelect()} turns the left key into
+--   Optional `alt` (Stars store access, 2026-11-21): {text, onSelect(), after = seconds the key is ignored} turns the left key into
 --   a second choice (X / ButtonX) and adds a round close key top right; B / Esc / the shade
 --   still cancel.
 local ContextActionService=game:GetService("ContextActionService")
@@ -156,6 +156,9 @@ end
 function Confirm.accept()return finish(true,"confirm")end
 function Confirm.chooseAlt()
 	if not(state.open and state.options and state.options.alt)then return false end
+	-- alt.after (seconds, beta 14 F2): the alt key is ignored this long after the ask, so the press that opened the
+	-- dialog (a prompt on the same X / ButtonX) cannot also choose it.
+	if state.altAt and os.clock()<state.altAt then return false end
 	return finish(false,"alt",true)
 end
 function Confirm.close(reason)return finish(false,reason or "close")end
@@ -167,6 +170,7 @@ function Confirm.ask(options)
 	if state.open then finish(false,"replaced")end
 	state.options=options
 	state.open=true
+	state.altAt=if options.alt and type(options.alt.after)=="number"then os.clock()+options.alt.after else nil
 	state.previous=GuiService.SelectedObject
 	bind()
 	Confirm.build()

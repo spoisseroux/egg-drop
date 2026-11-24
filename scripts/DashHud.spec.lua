@@ -143,8 +143,12 @@ return function(client)
 		for place=1,9 do assert(Results.words({place=place},nil,nil)~="")end
 	end)
 	test("every word the client can ask for exists and is short",function()
-		for _,key in ipairs({"title","prompt","fun","stats","trial","jump","dash","stones","go","perfect","clear","trip","clover","zoom","puff","leave","again","done","newCup","queue"})do
+		for _,key in ipairs({"title","prompt","fun","stats","trial","jump","dash","stones","go","perfect","clear","trip","clover","zoom","puff","leave","again","done","newCup"})do
 			local text=UICopy.get("dash."..key);assert(text~="dash."..key and #text<=24,key)
+		end
+		-- Beta 14 F2: the rail's line and the leave confirm are read standing still, not while running.
+		for _,key in ipairs({"queue","line.title","line.line","line.yes","line.no","line.left","line.prompt"})do
+			local text=UICopy.get("dash."..key);assert(text~="dash."..key and #text<=44,key)
 		end
 		for _,reason in ipairs({"Far","NoPet","NoCharacter","Carried","Busy","Petting","Hatching","Saving","Queued","WrongBand","Full","Off","Error","Empty","Deck","Left","PetChanged","AlreadySeated","Throttled","StalePet","other"})do
 			assert(UICopy.has("dash.reason."..reason),reason)

@@ -26,6 +26,15 @@ Trail.Bank=1        -- the Bubble Spring's box holds this much rim: a way that b
 Trail.Color=Color3.fromHex("#FFF4DC")
 Trail.Ink=Color3.fromHex("#24304F")
 Trail.Agent=table.freeze({AgentRadius=2,AgentHeight=5,AgentCanJump=false,WaypointSpacing=4})
+-- Beta 14 QA Q1 (WORLD-AND-NEST-LOOK 4): the pin shows only near the end (a fixed-pixel tag 90 studs off stood over the
+-- arch): full from PinFull in, fading out to PinNear, none further; the paw prints lead until then. With no dry way the
+-- pin is the only guide, so it shows at any distance. Smaller too, for every destination.
+Trail.PinNear=28
+Trail.PinFull=22
+Trail.PinSize=Vector2.new(150,48)
+Trail.PinText=15
+Trail.PlateHeight=34
+Trail.Pointer=14
 
 local function flat(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
 -- Pure: up to `count` prints along a polyline: {position, yaw, side}. None under the player or under the marker.
@@ -131,6 +140,21 @@ function Trail.pathfind(from,to)
 	for _,waypoint in ipairs(path:GetWaypoints())do table.insert(out,waypoint.Position)end
 	return out
 end
+-- Pure: the pin's see-through (0 shown .. 1 gone) at `distance` flat studs from the end; `way` is the folder's Way.
+function Trail.pinAlpha(distance,way)
+	if way=="none"then return 0 end
+	if type(distance)~="number"or distance~=distance then return 1 end
+	return math.clamp((distance-Trail.PinFull)/(Trail.PinNear-Trail.PinFull),0,1)
+end
+-- Pure: a target's pin text; `name` may be a function (asked each step, for a pin that changes, the nest's "Hatch!").
+function Trail.label(target)
+	local name=type(target)=="table"and target.name
+	if type(name)=="function"then
+		local ok,text=pcall(name)
+		name=if ok then text else nil
+	end
+	return if type(name)=="string"then name else ""
+end
 -- Pure: a print's transparency `age` seconds in, with `left` seconds to go.
 function Trail.alpha(index,age,left,reduced)
 	if reduced then return Trail.Clear end
@@ -151,19 +175,18 @@ function Trail:ensure()
 	local anchor=Instance.new("Part");anchor.Name="Marker";anchor.Size=Vector3.new(.2,.2,.2);anchor.Transparency=1
 	still(anchor)
 	-- The pin: a pointer tucked under a name plate, over everything, so it can be found from any side.
-	local gui=Instance.new("BillboardGui");gui.Name="Pin";gui.Adornee=anchor;gui.Size=UDim2.fromOffset(190,64);gui.SizeOffset=Vector2.new(0,.5)
+	local gui=Instance.new("BillboardGui");gui.Name="Pin";gui.Adornee=anchor;gui.Size=UDim2.fromOffset(Trail.PinSize.X,Trail.PinSize.Y);gui.SizeOffset=Vector2.new(0,.5)
 	gui.StudsOffsetWorldSpace=Vector3.new(0,4,0);gui.AlwaysOnTop=true;gui.LightInfluence=0;gui.ResetOnSpawn=false;gui.Active=false
-	local point=Instance.new("Frame");point.Name="Pointer";point.AnchorPoint=Vector2.new(.5,.5);point.Position=UDim2.new(.5,0,1,-18)
-	point.Size=UDim2.fromOffset(18,18);point.Rotation=45;point.BackgroundColor3=Trail.Ink;point.BorderSizePixel=0;point.Parent=gui
-	local plate=Instance.new("TextLabel");plate.Name="Name";plate.Size=UDim2.new(1,0,0,40);plate.BackgroundColor3=Trail.Color
-	plate.TextColor3=Trail.Ink;plate.Font=Enum.Font.FredokaOne;plate.TextScaled=true;plate.TextWrapped=true;plate.ZIndex=2;plate.Parent=gui
+	local point=Instance.new("Frame");point.Name="Pointer";point.AnchorPoint=Vector2.new(.5,.5);point.Position=UDim2.new(.5,0,1,-Trail.Pointer)
+	point.Size=UDim2.fromOffset(Trail.Pointer,Trail.Pointer);point.Rotation=45;point.BackgroundColor3=Trail.Ink;point.BorderSizePixel=0;point.Parent=gui
+	local plate=Instance.new("TextLabel");plate.Name="Name";plate.Size=UDim2.new(1,0,0,Trail.PlateHeight);plate.BackgroundColor3=Trail.Color
+	plate.TextColor3=Trail.Ink;plate.Font=Enum.Font.FredokaOne;plate.TextScaled=false;plate.TextSize=Trail.PinText;plate.TextWrapped=true;plate.ZIndex=2;plate.Parent=gui
 	local corner=Instance.new("UICorner");corner.CornerRadius=UDim.new(0,14);corner.Parent=plate
 	local stroke=Instance.new("UIStroke");stroke.Color=Trail.Ink;stroke.Thickness=2;stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;stroke.Parent=plate
-	local pad=Instance.new("UIPadding");pad.PaddingLeft=UDim.new(0,10);pad.PaddingRight=UDim.new(0,10);pad.PaddingTop=UDim.new(0,6);pad.PaddingBottom=UDim.new(0,6);pad.Parent=plate
-	local size=Instance.new("UITextSizeConstraint");size.MinTextSize=10;size.MaxTextSize=20;size.Parent=plate
+	local pad=Instance.new("UIPadding");pad.PaddingLeft=UDim.new(0,10);pad.PaddingRight=UDim.new(0,10);pad.PaddingTop=UDim.new(0,4);pad.PaddingBottom=UDim.new(0,4);pad.Parent=plate
 	gui.Parent=anchor
 	anchor.Parent=folder
-	self.folder,self.marker,self.plate=folder,anchor,plate
+	self.folder,self.marker,self.plate,self.pin,self.pointer,self.pinStroke=folder,anchor,plate,gui,point,stroke
 end
 -- target = {position, name}. True when the marker is up (the prints follow once the way is known).
 function Trail:start(target)
@@ -173,9 +196,11 @@ function Trail:start(target)
 	self:ensure()
 	self.target,self.age=target,0
 	self.spot=flat(root,target.position)<=Trail.Arrive
-	self.plate.Text=target.name or ""
+	self.plate.Text=Trail.label(target)
 	self.marker.CFrame=CFrame.new(target.position)
+	self.pinAlphaShown=nil
 	self.folder:SetAttribute("Way","finding")
+	self:paintPin(flat(root,target.position))
 	self.folder.Parent=self.d.world or workspace
 	local mine=self.generation
 	if not self.spot then
@@ -227,8 +252,10 @@ function Trail:step(dt)
 	local root=self.d.root()
 	if not root or self.d.free()~=true then self:stop("left");return end
 	if self.age>Trail.MenuGrace and self.d.busy()==true then self:stop("menu");return end
-	local near=flat(root,target.position)<=Trail.Arrive
+	local distance=flat(root,target.position)
+	local near=distance<=Trail.Arrive
 	if near and(not self.spot or self.age>=Trail.Near)then self:stop("arrived");return end
+	self:paintPin(distance)
 	local left=Trail.Seconds-self.age
 	if left<=0 then self:stop("time");return end
 	local reduced=self.d.reduced~=nil and self.d.reduced()==true
@@ -239,6 +266,18 @@ function Trail:step(dt)
 		for index,part in ipairs(self.live)do part.Transparency=Trail.alpha(index,since,left,false)end
 		self.painted=settled
 	end
+end
+-- The pin by distance (Q1), written only when it changes; the name too, for a pin that changes (Trail.label).
+function Trail:paintPin(distance)
+	if not self.pin then return end
+	local alpha=Trail.pinAlpha(distance,self.folder:GetAttribute("Way"))
+	local text=Trail.label(self.target)
+	if self.plate.Text~=text then self.plate.Text=text end
+	if self.pinAlphaShown==alpha then return end
+	self.pinAlphaShown=alpha
+	self.pin.Enabled=alpha<1
+	self.plate.BackgroundTransparency=alpha;self.plate.TextTransparency=alpha
+	self.pointer.BackgroundTransparency=alpha;self.pinStroke.Transparency=alpha
 end
 -- Takes every part out of the world. The pool is kept for the next one.
 function Trail:stop(reason)

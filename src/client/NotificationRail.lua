@@ -38,6 +38,7 @@ Rail.DragQuiet=2 -- no auto-scroll this long after the player dragged the row
 -- Spencer 2026-11-20 (round 3): no fades on scrolling lists, so the row keeps a hard clip.
 Rail.EdgeFade=false
 Rail.Motion={enter=.22,leave=.25,slide=.2,scroll=.25,reduced=.15,press=.06,breathe=1.2}
+Rail.PulseSeconds=.3;Rail.PulseScale=.06 -- handle:pulse() (beta 14 F2)
 -- QA-R2-LOOK 1: with Alive menus on, a toast's 16 px slide in rides a spring (3.5 Hz, damping .45) instead of the
 -- Quad ease, and settles by `time`. Off (the live game), the ease as before.
 Rail.Spring={distance=16,frequency=3.5,damping=.45,time=.8}
@@ -456,6 +457,13 @@ local function frame(dt)
    t.hitW,t.hitH,t.hitTop=t.w,hitH,hitTop
    t.root.Size=UDim2.fromOffset(t.w,hitH);t.card.Position=UDim2.fromOffset(0,cardY-hitTop)
   end
+  -- Beta 14 F2: a status line can pulse once (handle:pulse(), the race line's rope): 1 to 1.06 to 1. None under
+  -- Reduced Motion. A line nobody pulses never reads this.
+  local pulseAt=item and item.pulseAt
+  if pulseAt then
+   local p=(now-pulseAt)/Rail.PulseSeconds
+   if p>=1 or p<0 then item.pulseAt=nil elseif not reduced then scale*=1+Rail.PulseScale*math.sin(p*math.pi)end
+  end
   if t.scale.Scale~=scale then t.scale.Scale=scale end
   local active=t.tappable==true and not t.leaving
   if t.root.Active~=active then
@@ -484,7 +492,7 @@ local function watch(owner)
  end
 end
 local function add(owner,key,data,persistent)
- if stopped then return{update=function()end,cancel=function()end,isVisible=function()return false end}end
+ if stopped then return{update=function()end,cancel=function()end,pulse=function()end,isVisible=function()return false end}end
  watch(owner);ensure()
  local item=queue:add(owner,key,data,persistent)
  local handle={}
@@ -493,6 +501,7 @@ local function add(owner,key,data,persistent)
   local nextData=table.clone(item.data);for k,v in pairs(values)do nextData[k]=v end;item.data=nextData
  end
  function handle:cancel()queue:cancel(item)end
+ function handle:pulse()if item and not item.cancelled then item.pulseAt=os.clock()end end
  function handle:isVisible()
   local t=item and tickets[item]
   return item~=nil and queue:visible(item)and t~=nil and not t.leaving and row~=nil and row.Visible

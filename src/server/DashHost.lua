@@ -20,6 +20,7 @@ local Director=require(script.Parent.DashDirector)
 local DashState=require(script.Parent.DashState)
 local Guard=require(script.Parent.HatchGuard)
 local Mount=require(script.Parent.DashMount)
+local Ring=require(Shared.DashRing)
 local StatState=require(script.Parent.StatState)
 
 local Host={};Host.__index=Host
@@ -42,7 +43,7 @@ Host.MaxErrors=3
 -- Specs may replace clock (), now(), guid(), seed(), remote(class, name), heartbeat, spawn, wait.
 function Host.mount(d)
 	if not Dash.ceiling()then return nil end
-	local self=setmetatable({d=d,clients={},isOpen=false,errors=0,marksAt=-math.huge},Host)
+	local self=setmetatable({d=d,clients={},lines={},isOpen=false,errors=0,marksAt=-math.huge},Host)
 	local random=Random.new()
 	self.clock=d.clock or os.clock
 	self.spawn,self.wait=d.spawn or task.spawn,d.wait or task.wait
@@ -191,6 +192,13 @@ function Host:check(userId,stage)
 	if stage=="seat"then
 		return true
 	end
+	-- Beta 14 F2: a gather seat waits in the rope ring like the line. Only where the player stands counts here (no
+	-- save, pet or character checks: those come at the countdown); no character just now keeps the seat.
+	if stage=="gather"then
+		local root=self:root(board)
+		if not root then return true end
+		return self:line(userId,root.Position)
+	end
 	local handle=board.nursery
 	-- A save in flight must not cost a seat already taken or a place in line; a new join waits for it.
 	if stage=="join"then
@@ -204,10 +212,10 @@ function Host:check(userId,stage)
 	if not root or not humanoid or humanoid.Health<=0 or not character:IsDescendantOf(workspace)then return false,"NoCharacter"end
 	local at,gate=root.Position,Mount.gate()
 	if not(finite(at.X)and finite(at.Y)and finite(at.Z))then return false,"Far"end
-	local reach=if stage=="queue"or stage=="promote"then Host.QueueReach else Host.JoinReach
+	if stage=="queue"then return self:line(userId,at)end
+	local reach=if stage=="promote"then Host.QueueReach else Host.JoinReach
 	local far=Vector2.new(at.X-gate.X,at.Z-gate.Z).Magnitude
 	if far>reach or math.abs(at.Y-gate.Y)>Host.HeightReach then return false,"Far"end
-	if stage=="queue"then return true end
 	local actor=d.garden.actors[userId]
 	if not actor or actor.petId~=petId then return false,"NoPet"end
 	if actor.care or board.careEquip or board.careHeld then return false,"Carried"end
@@ -215,6 +223,23 @@ function Host:check(userId,stage)
 	if board.petContact and board.petContact.lease then return false,"Petting"end
 	if Guard.other(state)then return false,"Hatching"end
 	return true,if far>Host.JoinReach then"Closer"else nil
+end
+function Host:root(board)
+	local character=board.player.Character
+	local root=character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+	if not root or not humanoid or humanoid.Health<=0 or not character:IsDescendantOf(workspace)then return nil end
+	return root
+end
+-- The rope ring's rule for a player waiting (in the line or a gather seat), DashRing.rule: once their root has been
+-- inside Ring.Enter, more than Ring.Stray out for Ring.StraySeconds leaves the line ("Strayed"); before that the old
+-- QueueReach holds. The latch starts fresh at every join (answer).
+function Host:line(userId,at)
+	if not(finite(at.X)and finite(at.Y)and finite(at.Z))then return false,"Far"end
+	local gate=Mount.gate()
+	local rec=self.lines[userId]
+	if not rec then rec={};self.lines[userId]=rec end
+	return Ring.rule(rec,Vector2.new(at.X-gate.X,at.Z-gate.Z).Magnitude,math.abs(at.Y-gate.Y),self.clock(),Host.QueueReach,Host.HeightReach)
 end
 -- Saved XP of the pet that is out: never a public attribute, never a packet.
 function Host:levels(userId)
@@ -305,6 +330,7 @@ function Host:answer(player,board,clean,reply)
 	-- A join may come before the garden's first 2 Hz actor (as focus does); refresh only this one.
 	if board.mode=="Room"then self.d.garden:syncOne(userId,self.d.gardenInput(board))end
 	if clean.kind=="trial"then return reply(director:trial(userId))end
+	self.lines[userId]=nil -- a new wait: the ring's latch starts again
 	local ok,reason,raceId=director:join(userId,clean.mode)
 	director:flush()
 	return reply(ok,reason,raceId)
@@ -433,7 +459,7 @@ function Host:leave(board)
 	local userId=board.player.UserId
 	self.director:leave(userId)
 	self.director:flush()
-	self.clients[userId]=nil
+	self.clients[userId]=nil;self.lines[userId]=nil
 	board.dashHeld=nil
 	self.d.garden:setRacer(userId,nil)
 end

@@ -36,7 +36,7 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
 # IsStudio true.
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient", "DashSheets", "DeckResultsLayout", "FocusRow", "TipChime",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
-          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit", "HushClient"]
+          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit", "HushClient", "DashLine"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
