@@ -65,7 +65,7 @@ end
 function World.template(data,storage)
 	storage=storage or ServerStorage
 	local found=storage:FindFirstChild(World.Model)
-	if found and found:IsA("Model")and found:FindFirstChild("Body")and found:FindFirstChild("Egg")then return found:Clone()end
+	if found and found:IsA("Model")and found:FindFirstChild("Body")and found:FindFirstChild("Egg")then local copy=found:Clone();copy.WorldPivot=CFrame.new();return copy end -- the rbxmx carries no WorldPivotData (Rojo): the parts are machine-local, so the pivot is the origin
 	return World.greybox(data)
 end
 -- Builds the clones and attachments on a machine-local model (before PivotTo): Loose1..6 and DropEgg from Egg (then Egg
