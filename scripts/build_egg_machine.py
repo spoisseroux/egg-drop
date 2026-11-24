@@ -37,10 +37,12 @@ ATLAS = 512.0
 REGION = {  # x0, y0, x1, y1 in atlas pixels (image y down), see scripts/draw_egg_machine_texture.py
     "base": (0, 0, 256, 256), "leaf": (256, 0, 512, 128), "straw": (256, 128, 512, 256),
     "dial": (0, 256, 256, 512), "green": (256, 256, 384, 384), "knob": (384, 256, 512, 384),
-    "emboss": (256, 384, 384, 512),
+    "emboss": (256, 384, 384, 512), "collar": (384, 384, 512, 512),
 }
 EGG_TYPES = {"Toy": "#FFB340", "Hue": "#FF7AB8", "Material": "#8FF0E4", "Feature": "#9CFFDD", "Stat": "#FF8A5C"}
-MIX = ["Toy"] * 6 + ["Stat"] * 5 + ["Hue"] * 5 + ["Material"] * 4 + ["Feature"] * 4   # 24: 18 baked + 6 loose
+# 31: 25 baked (18 + the shoulder ring of 7, Fable Studio R1) + 6 loose
+MIX = ["Toy"] * 8 + ["Stat"] * 7 + ["Hue"] * 6 + ["Material"] * 5 + ["Feature"] * 5
+BAKED = 25
 TRI_CAP = 6000
 GLOBE_BOTTOM, GLOBE_TOP, GLOBE_R, GLOBE_WIDEST = 3.3, 7.05, 1.75, .40
 GLOBE_ROUNDNESS = .65            # Fable render R1: a fuller shoulder and a blunt top (was a teardrop)
@@ -166,8 +168,8 @@ def build_collar(m, segs=64):
         for j in range(4):
             pts = [rows[i][j], rows[i + 1][j], rows[i + 1][j + 1], rows[i][j + 1]]
             u0, u1 = (i * 8 / segs) % 1.0, ((i + 1) * 8 / segs) % 1.0 or 1.0
-            uvs = [region_uv("leaf", u0, .1 + .1 * j), region_uv("leaf", u1, .1 + .1 * j),
-                   region_uv("leaf", u1, .1 + .1 * (j + 1)), region_uv("leaf", u0, .1 + .1 * (j + 1))]
+            uvs = [region_uv("collar", u0, .25 * j), region_uv("collar", u1, .25 * j),
+                   region_uv("collar", u1, .25 * (j + 1)), region_uv("collar", u0, .25 * (j + 1))]
             m.face(pts, uvs)
 
 
@@ -244,12 +246,19 @@ def build_globe():
     tint = tuple(c * .9 for c in tint)
     prof = egg_profile(2 * GLOBE_R, GLOBE_TOP - GLOBE_BOTTOM, 11, GLOBE_BOTTOM, GLOBE_WIDEST, open_bottom=.06,
                        roundness=GLOBE_ROUNDNESS)
+    prof.insert(1, (prof[0][0] + (prof[1][0] - prof[0][0]) * .3, prof[0][1] + (prof[1][1] - prof[0][1]) * .3))  # rim row
+
+    rim = lin(hexrgb("#6FBF73"))
 
     def colour(p):
-        # one painted highlight streak upper left (seen from the front): brighter vertices
+        # Fable Studio R1: the highlight streak upper left (seen from the front) at 35 percent white, and a thin green
+        # rim where the glass meets the collar.
         a = math.atan2(p[0], p[2])
-        hl = math.exp(-((a + .75) / .3) ** 2) * math.exp(-((p[1] - 5.9) / .6) ** 2)
-        return tuple(min(1.0, c + .1 * hl) for c in tint)
+        hl = math.exp(-((a + .7) / .22) ** 2) * math.exp(-((p[1] - 5.9) / .7) ** 2)
+        c = tuple(min(1.0, x + .35 * hl) for x in tint)
+        if p[1] < GLOBE_BOTTOM + .25:
+            c = rim
+        return c
     lathe(m, prof, 18, lambda u, t, r, y: (0.0, 0.0), colfn=colour)
     return m.build()
 
@@ -398,6 +407,9 @@ def pile_layout():
     for k in range(3):
         a = 2 * math.pi * k / 3 + 1.1
         out.append((.40 * math.sin(a), y0 + 1.18, .40 * math.cos(a)))
+    for k in range(7):                                 # Fable Studio R1: a shoulder ring, so the heap is a mound
+        a = 2 * math.pi * k / 7 + .45
+        out.append((.95 * math.sin(a), 4.7, .95 * math.cos(a)))
     loose = []
     for k in range(6):                                 # loose on top, front-weighted
         a = 2 * math.pi * k / 6 + .3
@@ -520,8 +532,8 @@ def main():
         "parts": parts,
         "pivots": {"Dial": dial_pos, "Sprout": sprout_pos},
         "dialFace": [0, 0, 1],
-        "loose": [{"at": [round(v, 4) for v in p], "type": order_all[18 + k]} for k, p in enumerate(loose)],
-        "pileTypes": order_all[:18],
+        "loose": [{"at": [round(v, 4) for v in p], "type": order_all[BAKED + k]} for k, p in enumerate(loose)],
+        "pileTypes": order_all[:BAKED],
         "cup": spots["cup"], "chute": {"top": [round(v, 4) for v in spots["chuteTop"]], "end": [round(v, 4) for v in spots["chuteEnd"]]},
         "light": [0.0, 5.0, 0.0],
         "dropScale": round(DROP_SCALE, 4),
@@ -565,7 +577,7 @@ def render(objs, dial_pos, sprout_pos, loose, egg):
     for k, p in enumerate(loose):
         e = by["Egg"].copy()
         e.data = by["Egg"].data.copy()
-        col = lin(hexrgb(EGG_TYPES[order[18 + k]]))
+        col = lin(hexrgb(EGG_TYPES[order[BAKED + k]]))
         attr = e.data.color_attributes["Col"]
         for item in attr.data:
             v = item.color

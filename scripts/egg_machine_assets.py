@@ -9,7 +9,7 @@ template the client clones and its data module. Never touches the island, its ma
 
 Template (a Model, its parts as the egg-corner build plan names them; NAMES below):
   Body     textured (SurfaceAppearance: the 512 px map at roughness .6), anchored, collides, Box collision
-  Globe    clear: SmoothPlastic, Transparency .78, vertex tint, no collision, no shadow
+  Globe    clear: SmoothPlastic, Transparency .62, vertex tint (streak, green rim), no collision, no shadow
   Dial     textured (TextureID on SmoothPlastic: the one satin part), no collision; pivot in the data module
   Sprout   vertex green, no collision, no shadow; pivot in the data module
   EggPile  vertex-coloured baked eggs, no collision
@@ -126,7 +126,7 @@ def xml_part(i, part, mesh_id, raw, manifest):
     cf = cframe(*at)
     sx, sy, sz = part["size"]
     collide = kind == "Body"
-    transparency = .78 if kind == "Globe" else 0.0
+    transparency = .62 if kind == "Globe" else 0.0   # Fable Studio R1: .78 made the glass nearly invisible
     texture = TEXTURE if kind == "Dial" else ""
     shadow = kind not in ("Globe", "Sprout")
     lines = [

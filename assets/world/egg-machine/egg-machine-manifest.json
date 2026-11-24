@@ -25,13 +25,13 @@
   {
    "name": "EggMachine_Globe",
    "part": "Globe",
-   "tris": 342,
+   "tris": 378,
    "size": [
     3.424,
     3.4091,
     3.4768
    ],
-   "hash": "6763e8c38d34c53b",
+   "hash": "b0240939f043677d",
    "center": [
     0.0,
     5.3455,
@@ -73,17 +73,17 @@
   {
    "name": "EggMachine_EggPile",
    "part": "EggPile",
-   "tris": 1728,
+   "tris": 2400,
    "size": [
-    2.863,
-    2.0301,
-    2.847
+    2.8274,
+    2.0368,
+    2.8345
    ],
-   "hash": "0f226602732ab56a",
+   "hash": "33e4bc449936fba2",
    "center": [
-    0.0145,
-    4.5056,
-    -0.0006
+    0.0315,
+    4.5102,
+    -0.0174
    ]
   },
   {
@@ -127,7 +127,7 @@
     5.5551,
     0.721
    ],
-   "type": "Material"
+   "type": "Feature"
   },
   {
    "at": [
@@ -151,7 +151,7 @@
     5.5907,
     -0.521
    ],
-   "type": "Feature"
+   "type": "Hue"
   },
   {
    "at": [
@@ -159,7 +159,7 @@
     5.5834,
     -0.0441
    ],
-   "type": "Material"
+   "type": "Feature"
   },
   {
    "at": [
@@ -167,28 +167,35 @@
     5.5491,
     0.5768
    ],
-   "type": "Hue"
+   "type": "Stat"
   }
  ],
  "pileTypes": [
   "Hue",
+  "Stat",
+  "Stat",
+  "Stat",
   "Material",
+  "Stat",
   "Feature",
   "Toy",
+  "Material",
+  "Toy",
+  "Stat",
+  "Stat",
+  "Toy",
+  "Toy",
+  "Toy",
   "Feature",
-  "Stat",
   "Toy",
   "Hue",
-  "Toy",
-  "Stat",
+  "Hue",
+  "Material",
   "Toy",
   "Toy",
   "Hue",
-  "Stat",
-  "Stat",
   "Hue",
-  "Toy",
-  "Stat"
+  "Material"
  ],
  "cup": [
   1.25,
@@ -220,5 +227,5 @@
   "Feature": "#9CFFDD",
   "Stat": "#FF8A5C"
  },
- "triangles": 4546
+ "triangles": 5254
 }

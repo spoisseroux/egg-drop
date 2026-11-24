@@ -11,7 +11,7 @@ Atlas (pixel rectangles x0, y0, x1, y1; image y down). scripts/build_egg_machine
   GREEN (256, 256, 384, 384) deep garden green, matte (feet, cap)
   KNOB  (384, 256, 512, 384) knob cream
   EMBOSS (256, 384, 384, 512) darker sunflower #E0A422 (the dial's embossed egg)
-  (384, 384, 512, 512): spare, cream
+  COLLAR (384, 384, 512, 512) one leaf lobe per u (tip at 0 and 1, notch at .5)
 
 Run from the repository root:  python -I scripts/draw_egg_machine_texture.py
 Writes assets/world/egg-machine/egg-machine.png and egg-machine-rough60.png
@@ -25,7 +25,8 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets", "world", "egg-machine", "egg-machine.png")
 
-CREAM, BAND = (0xF4, 0xE8, 0xCF), (0xE2, 0xD2, 0xB0)
+CREAM, BAND = (0xF4, 0xE8, 0xCF), (0xD2, 0xBE, 0x94)   # Fable Studio R1: band #D2BE94, crisp
+ALBEDO = .9                                             # the base read white at noon: the map holds cream x .9
 LEAF, LEAF_UNDER = (0x6F, 0xBF, 0x73), (0x4E, 0x9A, 0x5A)
 SUN, KNOB = (0xFF, 0xC8, 0x3C), (0xFF, 0xF3, 0xC4)
 GREEN = (0x38, 0x69, 0x4A)
@@ -53,8 +54,9 @@ def base(img, rng):
     w = h = 256
     v = np.arange(h)[:, None] / (h - 1)                  # 0 top .. 1 foot
     height = 2.95 - v * 2.6                               # studs up the base
-    band = np.clip(1 - np.abs(height - 1.4) / .15, 0, 1) ** .6
-    band = band * (.85 + .15 * wrapped_noise(rng, w, h, 6)[:, :] ** 2)    # hand-painted: uneven edge
+    # Fable Studio R1: 0.5 tall with crisp edges (a hand-painted wobble of a few px only).
+    wobble = .03 * wrapped_noise(rng, w, h, 6)
+    band = np.clip((.25 - np.abs(height - 1.4 + wobble)) / .02, 0, 1)
     col = np.array(CREAM, float) * (1 - band[..., None]) + np.array(BAND, float) * band[..., None]
     grain = wrapped_noise(rng, w, h, 40, 14) * .025 + np.repeat(rng.normal(0, .012, (1, w)), h, 0)  # vertical brush grain
     col = col * (1 + grain[..., None])
@@ -64,7 +66,25 @@ def base(img, rng):
         yy, xx = np.mgrid[0:h, 0:w]
         d = np.hypot((xx - cx + w / 2) % w - w / 2, yy - cy)
         col = col * (1 - .10 * np.clip(1 - d / rng.uniform(2, 4.5), 0, 1)[..., None])
-    img[0:256, 0:256] = np.clip(col, 0, 255)
+    img[0:256, 0:256] = np.clip(col * ALBEDO, 0, 255)
+
+
+def collar(img, rng):
+    """COLLAR (384, 384, 512, 512): one leaf lobe per u 0..1 (tip at u 0 and 1, the notch at u .5), v down the collar.
+    Fable Studio R1: veins, a dark notch line #4E9A5A between the lobes, lighter tips."""
+    w = h = 128
+    yy, xx = np.mgrid[0:h, 0:w] + .5
+    u, v = xx / w, yy / h
+    tip = np.cos(np.pi * 2 * u) * .5 + .5              # 1 at the tips, 0 at the notch
+    col = np.array(LEAF_UNDER, float) * (1 - tip[..., None]) + np.array(LEAF, float) * tip[..., None]
+    col = col * (1 + .10 * np.clip(tip - .7, 0, 1)[..., None] / .3)          # lighter tips
+    notch = np.clip(1 - np.abs(u - .5) * w / 2.5, 0, 1)
+    col = col * (1 - notch[..., None]) + np.array(LEAF_UNDER, float) * .8 * notch[..., None]
+    for k in (.2, .35, .65, .8):                         # side veins fanning from the lobe's middle
+        d = np.abs((u - k) * w - (v - .5) * h * .4 * np.sign(k - .5))
+        col = col * (1 - .08 * np.clip(1 - d / 1.2, 0, 1)[..., None])
+    col *= 1 + .03 * wrapped_noise(rng, w, h, 6)[..., None]
+    img[384:512, 384:512] = np.clip(col, 0, 255)
 
 
 def leaf(img, rng):
@@ -125,11 +145,14 @@ def main():
     g = img[256:384, 256:384] * (1 + .03 * wrapped_noise(rng, 128, 128, 6)[..., None])
     img[256:384, 256:384] = np.clip(g, 0, 255)
     fill(img, (384, 256, 512, 384), KNOB)
+    collar(img, rng)
     fill(img, (256, 384, 384, 512), (0xE0, 0xA4, 0x22))   # EMBOSS: darker sunflower (Fable render R1)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     Image.fromarray(img.round().astype(np.uint8), "RGB").save(OUT)
-    # The body's flat roughness .6 (painted enamel), 8 x 8 grey 153.
-    Image.new("L", (8, 8), 153).save(os.path.join(os.path.dirname(OUT), "egg-machine-rough60.png"))
+    # The body's roughness in the atlas's layout at 64 px: .6 (grey 153) everywhere, the collar .8 (204).
+    rough = np.full((64, 64), 153, np.uint8)
+    rough[48:64, 48:64] = 204
+    Image.fromarray(rough, "L").save(os.path.join(os.path.dirname(OUT), "egg-machine-rough60.png"))
     print("wrote", os.path.relpath(OUT, ROOT), "and egg-machine-rough60.png")
 
 
