@@ -82,3 +82,14 @@ the fifth part. `EggCornerWorld` (box size, light, template share) is server cod
 - **Pill:** bottom edge at (0, 5.2, -1.0) nest-local as a fixed world offset (`StudsOffsetWorldSpace`), the peek at
   (0, 5.6, -1.0), never AlwaysOnTop over the landmark.
 - **Ring:** the machine's front arc is 194 degrees, r 3.
+
+## Code review of de31e8a
+
+- The mat's hole is r **.8** (was 1.3): its inner edge stays 2.72 from the middle, outside the bowl's collider (2.4), so
+  no pet target can land on the bowl; the way in is across the box's -X edge only. The collider is not added to the
+  server's scene solids (`init.server.lua`, the tier builder's file): with the 5.6 box round it and the hole clear of
+  it, no rest path can reach it.
+- The player's own nest is drawn on the server's `NestRoot` (as the idle landmark) and redraws on a re-seat.
+- The idle landmark's heartbeat warns once and stops on an error.
+- The moon's rest colour is the server's `RestColor` attribute (with `WorldRestCFrame` and `RestTransparency`).
+- Any pet may take the mat, one at a time (the nook rest's `exclusive`).

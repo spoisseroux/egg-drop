@@ -390,7 +390,11 @@ function World:buildLandmark()
 	end
 	for _,name in ipairs(World.LandmarkMoving)do
 		local part=model:FindFirstChild(name)
-		if part then part:SetAttribute("WorldRestCFrame",part.CFrame);part:SetAttribute("RestTransparency",part.Transparency)end
+		if part then
+			part:SetAttribute("WorldRestCFrame",part.CFrame);part:SetAttribute("RestTransparency",part.Transparency)
+			-- Code review of de31e8a: the rest colour too, so a client never reads one another client-side pose left.
+			part:SetAttribute("RestColor",part.Color)
+		end
 	end
 	model:SetAttribute("NestRoot",root)
 	model:SetAttribute("LandmarkGreybox",greybox==true)
