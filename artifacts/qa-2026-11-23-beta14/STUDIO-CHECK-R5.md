@@ -98,3 +98,52 @@ probe. The server shows only the 203785492 lines.
 
 Studio is left in Edit. Rojo was disconnected in the plugin and the serve process stopped. The `GardenLifeStudio` ZZSpecs
 copy was removed; the 222 + 105 earlier ZZSpecs files remain, as before.
+
+---
+
+## R6 recheck (Opus, 2026-11-24)
+
+Same setup as R5: Rojo live on 34872, Studio Play on the place file (Studio counts as beta), nothing saved or published,
+no ZZSpecs copies needed. Captures are in `studio/r6/`.
+
+**Three Plays.** Play 1 ran **d90d3f8** (Edit's NestClient was byte for byte the repo file, 53,760 bytes, with
+`self.heartbeat`; LifeSceneSim had `face=180`). While I worked, five commits landed on the branch (5b4a593 to 42fb0d7:
+race confirm, Dewdrops skirt and matte art, dapple, Hush). Rojo synced them, so Plays 2 and 3 ran **42fb0d7**. Items 1,
+2, 3 and 5 are from Play 1; item 4 is from Plays 1 to 3.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Output log | **PASS.** No `[Nest]` line in any of the three Plays. The nest draws at the Hatch eggs corner: 26 parts in `EggDropSleepyNest`, mound at (-25.12, 4.34, -9.82), `NestPrompt` "Tuck in" (reach 4.5) and the HUD chip "Egg 8 h" (03, 07). Only the known lines remain (ConfigService keys, EditableImage, `Player:Move`, 203785492). The new R5 uploads first logged "content representation is being generated", and that cleared. |
+| 2a | Nest from the arrival path, 8 studs | **PASS** (03, at 8.16 studs). One nest billboard: "Bear's egg naps for 8 hours. Come back to hatch a gift." The need bubble was hidden there. |
+| 2b | One nest bubble only | **PASS.** Within 12 studs only `SleepyEgg.Label` has text. The station icons carry no words. |
+| 2c | P2: two prompts at the corner | **PASS** (keyboard; pad and phone not run). 13 points on and around the line from the station prompt to the nest prompt, each facing 0/90/180/270 (52 samples): **exactly one** prompt was shown every time. The nearer one wins: nest 2.0 vs station 3.3 gives NestPrompt, nest 3.3 vs station 2.0 gives BrowseEggs. At the 2.6/2.6 midpoint the Bear's own `PetInteraction` showed. No flicker, so the nest reach stays 4.5. |
+| 2d | "Coming up" strip on deck results | **PASS.** After a full field round (45 drops, `RoundOver`), `InPlaceResults.ComingUpStrip` shows "Coming up": **Egg in 7 h 53 m**, Stamp 1 in 22 h 18 m, 2 ready to claim (05). |
+| 2e | The strip at 844x390 (host trick) | **PASS** (06). The strip is at (233, 327) and is 417 x 48 inside the 844 x 390 frame. The stamp chip shortens to "22 h 18 m". |
+| 2f | Tapping the egg chip | **PASS.** From 27 studs away, after a second round: the deck closes (Mode Room) and `EggDropShowMe` lays the Show me pin **"Napping egg"** at the nest prompt (-26.79, 5.13, -7.83) (08). |
+| 2g | Hatch eggs "Napping egg" row | **PASS** (04). The top row reads "Napping egg / Hatches in 8 h", quiet, with no price. Focus starts on Toy Egg. A tap on `NestRow` closes the shop. |
+| 3 | Koi head first | **PASS.** For each plate, the dot of LookVector with its 1 s travel is **-0.99, -1.00, -0.98**, so the plate turns away from travel, which is the R5 fix. From above, with travel pointing up in the frame (10, then 11 a few seconds later), the heads lead. From the bank (12) the koi read, with a rise ring. Koi 1 and 2 were side by side in both samples; they may just have crossed paths, so this is worth a look in the review. |
+| 4a | Live Dewdrops hanging | **Seen, but they barely show at 42fb0d7.** Play 1 (d90d3f8, previous art id 126842815810909): a whole orange fruit hangs under the crown (13), but no stem shows at 60 px. Play 2 (42fb0d7, matte art 119564411112297, `skirt` .60): from 6 studs below, only a **thin brown crescent** of each fruit shows under the skirt (14), and from the player camera nearly nothing (15). The stem never shows (it is about 0.6 px at this size). Fable should judge whether `down` .75 with the skirt pull-in hides too much. |
+| 4b | A fruit falls | **PASS.** Falls in ordinary gusts every 30 to 60 s, for example Dewdrop4 from (18.1, 9.2, 42.3) to rest at (19.4, 5.4, 41.8) in 0.8 s. The big breath was not forced (there is no command): breath b5985010 arrived at t 123 s and a fruit fell on its rise (t 121). A fruit rests about 32 s, then goes back to the pool and regrows on the stem. |
+| 4c | Pet snack | **NOT SEEN** (see below). |
+| 5 | Fresh save, Bear greeting | **PASS with mouse.** Fresh Play save, welcome skip, real Bear reveal, Meet (00). With pet focus closed, the **hand bubble** shows over the Bear about 4 s later (01; anchor 4.47 above the body, `AlwaysOnTop`). A real mouse click on it counts (`Taps` 1) and opens the greeting focus. After Back, the **ball bubble** shows within 3 s, with paw prints toward Hatch eggs (02). A click on the ball counts (`Taps` 2) and restarts the trail. Real touch is **unverified**. In Play 3 the hand bubble showed right after Meet, with no focus step. |
+
+### 4c. Why no snack (numbers)
+Play 3 (42fb0d7), with the need bubble hidden ("away" after 20 s idle, so the bubble did not make the pet busy). Two
+fruits rested near the Bear:
+- t 278 to 310: Dewdrop1 at rest at (19.8, 5.1, 41.5). The Bear was at 2.3 to 4.3 flat studs from it, wandering and pausing. No turn, no trot, no heart.
+- t 317 to 348: Dewdrop1 at rest at (22.2, 5.5, 43.9). The Bear walked to 0.2 studs of it and then the fruit sat at (25.4, 4.95, 43.2): it was **batted**, not eaten (no heart, the image never shrank, the cooldown never showed).
+- Play 2: a fruit rested 5.7 to 7.0 studs from the Bear; no snack.
+
+The switches are on (`Alive` snack/life/scene ceiling and on, AliveLevel 0). The gate that refuses can't be seen from
+outside: `Pet.free` reads the server actor's behavior and action, and `isBusy` reads clientUI. **Smallest next step**
+(not a one-line fix, so I left it): a Studio-only attribute on the Bear with `LifePet:notice`'s refusal reason (busy,
+not free, notice distance, leash, cooldown), then one Play. Note the header says `notice=8`; the plan's 2c table says
+12. **Harness caveat:** when an `execute_luau` spans a camera change (Meet), the Assistant puts `CameraType` back to
+Scriptable. The garden camera then stays frozen at the arrival, and the garden reads as a greeting. In Play 3 I undid
+that with E and Back before the snack test, but it may have skewed Play 2.
+
+### Studio notes
+- `screen_capture` with no camera draws the Assistant's own view, not the player's. For live UI and billboards I used computer-use screenshots of the viewport.
+- `user_mouse_input` with an `instance_path` into a BillboardGui (`EggDropNeedBubble.Hit`) sends the input, but `Activated` does not fire. A real computer-use click on the bubble does.
+
+Studio is left in Edit; Rojo is disconnected in the plugin and the serve process stopped. No src change in R6.
