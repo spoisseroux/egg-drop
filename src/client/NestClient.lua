@@ -341,8 +341,9 @@ function Client:open()
 	self.yield=function(position,part)return self:claims(position,part)end
 	Stations.Yield.Eggs=self.yield
 	-- Per-frame work only while on (off: the switch is watched, nothing else).
-	if d.step~=false and not self.beat then
-		self.beat=RunService.Heartbeat:Connect(function(dt)
+	if d.step~=false and not self.heartbeat then
+		-- R5: the connection has its own field (self.beat is the speech beat; sharing it crashed the first frame).
+		self.heartbeat=RunService.Heartbeat:Connect(function(dt)
 			local ok,problem=pcall(self.step,self,dt)
 			if not ok then warn("[Nest] "..tostring(problem));self.dead=true;pcall(self.close,self)end
 		end)
@@ -392,7 +393,7 @@ function Client:close()
 	self.isOpen=false
 	if self.yield and Stations.Yield.Eggs==self.yield then Stations.Yield.Eggs=nil end
 	self.yield=nil
-	if self.beat then self.beat:Disconnect();self.beat=nil end
+	if self.heartbeat then self.heartbeat:Disconnect();self.heartbeat=nil end
 	for _,connection in ipairs(self.connections)do connection:Disconnect()end
 	table.clear(self.connections)
 	self:clear()

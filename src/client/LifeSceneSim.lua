@@ -65,7 +65,7 @@ Scene.Koi=table.freeze({speed=.5,tail=8,tailHz=1.1,depth=.25,over=true,overLift=
 	-- Top decal's orientation in Studio (flip the image if a koi swims tail first).
 	scales=table.freeze({1,.85,.7}),phases=table.freeze({0,2.1,4.2}),size=Vector3.new(.5,.02,1.3),
 	shy=3,shift=.4,shiftSpeed=1.2,back=4,rise=table.freeze({9,15}),
-	ripple=table.freeze({from=.4,to=1.6,start=.3,time=1.4,lift=.02}),hz=15})
+	ripple=table.freeze({from=.4,to=1.6,start=.3,time=1.4,lift=.02}),hz=15,face=180})
 -- The figure of eight's length for half extents (a, b), measured once.
 local lengths={}
 local function eightLength(a,b)
@@ -96,7 +96,8 @@ function Scene.koiPose(k,t,shift,f)
 	local y=if K.over then P.centre.Y+K.overLift else P.centre.Y-K.depth
 	local position=Vector3.new(at.X,y,at.Z)
 	local sway=math.rad(K.tail)*math.sin(TAU*K.tailHz*t+k)
-	return CFrame.lookAt(position,position+dir)*CFrame.Angles(0,sway,0),position
+	-- R5 Studio check: the Top decal drew the koi tail first, so the plate turns 180 (Koi.face).
+	return CFrame.lookAt(position,position+dir)*CFrame.Angles(0,sway+math.rad(K.face),0),position
 end
 -- The shy offset: a player within 3 studs of the bank pushes the koi toward the far side (up to 40% of the shorter half
 -- extent, at 1.2 studs a second); away, they drift back over 4 s. Returns the new shift and f (0 to 1).
