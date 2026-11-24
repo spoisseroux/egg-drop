@@ -144,13 +144,29 @@ end
 function Needs:hide()
 	if self.shown then self.shown=false;self.d.bubble:set(nil,false)end
 end
+-- Beta 14 B3b: one physical tap can reach up to three handlers (the bubble's button, the Bear's click target and the
+-- touch-in-world fallback): one action a step frame, and with deps.clock one every TapGap seconds. Every taken tap
+-- squashes the bubble (bubble:press()); a tap that repeats a trail already on the ground also hops it and chirps.
+Needs.TapGap=.3
 function Needs:tap()
 	local id=self.open
 	if not id or not self.shown then return false end
+	local clock=self.d.clock and self.d.clock()or nil
+	if self.tapFrame~=nil and self.tapFrame==self.stepAt then return true end
+	if clock and self.tapClock and clock-self.tapClock<Needs.TapGap then return true end
+	self.tapFrame,self.tapClock=self.stepAt,clock
+	self.taps=(self.taps or 0)+1
+	local bubble=self.d.bubble
+	if bubble.press then pcall(bubble.press,bubble)end
 	local icon=Needs.icon(id,self.f)
 	if id=="needHi"then return self.d.sayHi()==true end
 	if icon=="deck"then return self.d.playDeck()==true end
-	return self:trailTo(Needs.target(id,self.f),"tap")
+	local where=Needs.target(id,self.f)
+	local again=self.trail~=nil and self.d.trailActive()==true and self.d.trailTarget~=nil and self.d.trailTarget()==self.trail
+		and self.trail.name~=nil and select(2,self.d.place(where))==self.trail.name
+	local ok=self:trailTo(where,"tap")
+	if ok and again then bubble:hop();self.d.chirp()end
+	return ok
 end
 -- Studio QA 2026-11-23: two more ways to do what the bubble does, while it shows.
 --  * A tap or click on the Bear itself (source "tap"): for needToy, needDeck and needPark it does the need's action
@@ -188,7 +204,12 @@ function Needs:step(now,dt)
 	local blocked=Tips.blocked(gate,"shown")
 	if blocked==nil then self.freeSince=self.freeSince or now else self.freeSince=nil end
 	local freeFor=if self.freeSince then now-self.freeSince else 0
-	if owned>0 and d.greeting()==true then self.live.saidHi=true end
+	self.stepAt=now
+	-- Beta 14 B3a: with the bubbles on for this session, a greeting counts as "said hi" only once the hand bubble has
+	-- shown (the first Meet's automatic greeting shot comes before it and used to close need 1 unseen). Bubbles off or a
+	-- returning save: any greeting counts, as before. Petting (Needs:saidHi) and a tap on the bubble count any time.
+	local asking=d.needs()==true and not(if self.ready then self.returning else(d.returning()==true or self.began==true))
+	if owned>0 and d.greeting()==true and(self.hiShown or not asking)then self.live.saidHi=true end
 	if d.inPark()==true then self.live.inPark=true end
 	self.live.mask=d.mask()
 	self.live.nest=d.nest()==true
@@ -247,6 +268,7 @@ function Needs:step(now,dt)
 		local icon=Needs.icon(id,f)
 		if not self.shown or self.shownIcon~=icon then d.bubble:set(icon,true)end
 		self.shown,self.shownIcon=true,icon
+		if id=="needHi"then self.hiShown=true end
 		if self.autoPending and icon=="ball"and self:trailFree()then
 			self.autoPending=false
 			self.autoTrail=self:trailTo("Eggs","auto")

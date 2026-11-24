@@ -83,6 +83,7 @@ return function(client)
 		r.bubble={sets={},hops=0}
 		function r.bubble:set(icon,visible)table.insert(self.sets,{icon=icon,visible=visible});self.icon=if visible then icon else nil end
 		function r.bubble:hop()self.hops+=1 end
+		function r.bubble:press()self.presses=(self.presses or 0)+1 end
 		function r.bubble:step()end
 		r.needs=Needs.new({bubble=r.bubble,state=function()return r.state end,owned=function()return r.owned end,mask=function()return r.mask end,
 			mark=function(id)table.insert(r.marked,id);r.mask=Coach.with(r.mask,id)end,finishIntro=function()r.intro+=1;r.mask=Coach.with(r.mask,"gardenIntro")end,
@@ -119,6 +120,44 @@ return function(client)
 		assert(r.reacts[1]=="needHi")
 		assert(#r.trails==1 and r.trails[1].name=="Eggs"and r.trails[1].how=="auto","the first trail starts by itself after Say hi")
 		assert(r.needs:focus()=="Eggs","only Hatch eggs beckons")
+	end)
+	test("beta 14 B3a: the first Meet's greeting shot, before the bubbles are ready, never closes need 1",function()
+		local r=rig({gate={on=true,mode="Room",canRoam=true,idleFor=5,awayFor=0,roomFor=0,windowActive=true,railEmpty=true,parkPending=0,action="idle"}})
+		r.greeting=true;r.gate.greeting=true;r.run(1)
+		assert(not r.needs.ready and not r.needs.live.saidHi,"the automatic greeting does not count")
+		r.greeting=false;r.gate.greeting=nil;r.gate.roomFor=5;r.run(.25+Needs.Return)
+		assert(r.bubble.icon=="hand"and not table.find(r.marked,"needHi"),"the hand bubble still asks")
+		r.greeting=true;r.gate.greeting=true;r.run(.5)
+		assert(r.needs.live.saidHi and table.find(r.marked,"needHi"),"a greeting once it has shown closes it")
+	end)
+	test("beta 14 B3a: bubbles off or a returning save: any greeting counts, as before",function()
+		local off=rig({needsOn=false});off.greeting=true;off.run(.5)
+		assert(off.needs.live.saidHi==true,"bubbles off")
+		local back=rig({returning=true});back.greeting=true;back.run(.5)
+		assert(back.needs.live.saidHi==true,"returning")
+	end)
+	test("beta 14 B3b: one action a tap (three handlers in one frame), a squash each, a repeated trail hops and chirps",function()
+		local r=rig({state={coachMask=Coach.with(0,"needHi")}})
+		r.run(4);assert(r.bubble.icon=="ball"and #r.trails==1 and r.trails[1].how=="auto")
+		local hops,chirps=r.bubble.hops,r.chirps
+		assert(r.needs:tap()and r.needs:tap()and r.needs:petTap("tap"),"all three report taken")
+		assert(#r.trails==2 and r.trails[2].how=="tap"and r.bubble.presses==1,"one action and one squash")
+		assert(r.bubble.hops==hops+1 and r.chirps==chirps+1,"the same trail again: a hop and a chirp")
+		r.run(.25);assert(r.needs:tap()and #r.trails==3 and r.bubble.presses==2,"the next frame is a new tap")
+		local timed=rig({state={coachMask=Coach.with(0,"needHi")}});local now=0
+		timed.needs.d.clock=function()return now end
+		timed.run(4);assert(timed.needs:tap());timed.run(.25);now=.1
+		assert(timed.needs:tap()and #timed.trails==2,"within TapGap: still the one tap")
+		now=.5;timed.run(.25);assert(timed.needs:tap()and #timed.trails==3)
+	end)
+	test("beta 14 B3b: the bubble's screen hit area and its press squash",function()
+		local c=Vector2.new(400,200)
+		assert(Bubble.hits(c+Vector2.new(Bubble.HitSize*.5-1,0),c)and not Bubble.hits(c+Vector2.new(Bubble.HitSize*.5+1,0),c))
+		assert(not Bubble.hits(nil,c)and not Bubble.hits(c,nil))
+		assert(Bubble.pressScale(0)==1 and math.abs(Bubble.pressScale(Bubble.Press.down)-Bubble.Press.low)<1e-6)
+		assert(Bubble.pressScale(-1)==nil and Bubble.pressScale(Bubble.Press.down+.7)==nil,"settled")
+		local low=1;for t=0,.6,.01 do low=math.min(low,Bubble.pressScale(t)or 1)end
+		assert(low>=Bubble.Press.low-1e-6,"never below the squash")
 	end)
 	test("each one tap away: the ball lays the prints, the deck opens a round",function()
 		local r=rig({state={coachMask=Coach.with(0,"needHi")}})

@@ -4883,6 +4883,7 @@ do
     if self.real then self.real:set(icon,visible)end
    end
    function bubble:hop()if self.real then self.real:hop()end end
+   function bubble:press()if self.real then self.real:press()end end
    function bubble:step(dt)if self.real then self.real:step(dt)end end
    function bubble:destroy()if self.real then self.real:destroy();self.real=nil end end
    -- Studio QA: a tap on the Bear does the open need's action too; its own key (E / ButtonX) keeps petting.
@@ -4891,7 +4892,7 @@ do
    local petKeys=UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode==Enum.KeyCode.E or input.KeyCode==Enum.KeyCode.ButtonX then petKeyAt=os.clock()end
    end)
-   needs=Needs.new({bubble=bubble,state=function()return nurseryState end,owned=function()return board:GetAttribute("OwnedPets")or 0 end,
+   needs=Needs.new({bubble=bubble,clock=os.clock,state=function()return nurseryState end,owned=function()return board:GetAttribute("OwnedPets")or 0 end,
     mask=function()return clientUI.coach.mask end,mark=function(id)clientUI.coach:mark(id)end,finishIntro=function()clientUI.coach:finishGarden()end,
     follow=function()return Onboard.sessionFollow()end,needs=function()return Onboard.on("needs")end,returning=function()return things.returning==true end,
     -- Things to do itself, not its tips switch (with tips off the Bear would never start, nor the garden step's clock).
