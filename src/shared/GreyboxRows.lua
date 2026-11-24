@@ -1,7 +1,7 @@
 -- Greybox rows (the upper tier T0; the Hush's row shapes, for the tier only): pure rows from a local frame, and the
 -- server's builder that turns rows into anchored matte Parts. A frame is a CFrame whose local X runs "a", local -Z
--- runs "b", and world heights are given directly. Row: {name, size, cframe, color (hex), collide, visible, shadow,
--- tilted, light = {color, range, brightness}}.
+-- runs "b", and world heights are given directly. Row: {name, size, cframe, color (hex), material (an Enum.Material name,
+-- default SmoothPlastic), collide, visible, shadow, tilted, light = {color, range, brightness}}.
 local Rows={}
 
 function Rows.new(prefix)
@@ -12,21 +12,23 @@ function Rows.new(prefix)
 		options=options or {}
 		local mid=Vector3.new((a1+a2)/2,(y1+y2)/2-frame.Position.Y,-(b1+b2)/2)
 		return add({name=self.prefix..name,size=Vector3.new(math.abs(a2-a1),math.abs(y2-y1),math.abs(b2-b1)),
-			cframe=frame*CFrame.new(mid),color=color,collide=options.collide~=false,visible=options.visible~=false,
-			shadow=options.shadow==true})
+			cframe=frame*CFrame.new(mid),color=color,material=options.material,collide=options.collide~=false,
+			visible=options.visible~=false,shadow=options.shadow==true})
 	end
 	-- An invisible wall (players only).
 	function self.wall(name,frame,a1,b1,y1,a2,b2,y2)
 		return self.block(name,frame,a1,b1,y1,a2,b2,y2,"#FFFFFF",{visible=false})
 	end
 	-- A slab tilted along a: its top runs from height ya at a1 to yb at a2 (over b1..b2), `thick` deep.
-	function self.slab(name,frame,a1,a2,b1,b2,ya,yb,thick,color)
+	function self.slab(name,frame,a1,a2,b1,b2,ya,yb,thick,color,options)
+		options=options or {}
 		local run,rise=a2-a1,yb-ya
 		local length=math.sqrt(run*run+rise*rise)
 		local mid=Vector3.new((a1+a2)/2,(ya+yb)/2-frame.Position.Y,-(b1+b2)/2)
 		local turn=CFrame.Angles(0,0,math.atan2(rise,run))
 		return add({name=self.prefix..name,size=Vector3.new(length,thick,math.abs(b2-b1)),
-			cframe=frame*CFrame.new(mid)*turn*CFrame.new(0,-thick/2,0),color=color,collide=true,visible=true,shadow=false,tilted=true})
+			cframe=frame*CFrame.new(mid)*turn*CFrame.new(0,-thick/2,0),color=color,material=options.material,collide=true,visible=true,
+			shadow=false,tilted=true})
 	end
 	-- A wall 1 thick along a plan segment (from, to: Vector3, heights ignored), from y1 to y2.
 	function self.segment(name,from,to,y1,y2,options)
@@ -57,7 +59,8 @@ function Rows.build(rows,name)
 		part.CanQuery=row.collide and row.visible
 		part.Transparency=if row.visible then 0 else 1
 		part.CastShadow=row.shadow
-		part.Material=Enum.Material.SmoothPlastic
+		local ok,material=pcall(function()return Enum.Material[row.material or "SmoothPlastic"]end)
+		part.Material=if ok and material then material else Enum.Material.SmoothPlastic
 		part.Color=Color3.fromHex(row.color)
 		part.TopSurface,part.BottomSurface=Enum.SurfaceType.Smooth,Enum.SurfaceType.Smooth
 		part:SetAttribute("WorldMesh",true)

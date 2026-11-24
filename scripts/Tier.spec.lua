@@ -285,6 +285,36 @@ return function(server,offline)
 		end
 	end)
 
+	test("Fable R8 FIX 1: home's palette, matte: lawn tops, cliff-grey faces and supports, marble lip and kerbs, dirt treads",function()
+		local Look=Greybox.Look
+		local function is(r,colour,material)return r.color==colour and r.material==material end
+		local counted=0
+		for _,r in ipairs(rows)do
+			local name=string.sub(r.name,5)
+			if not r.visible or r.light then continue end
+			counted+=1
+			if name=="Floor"or name=="TopPlatform"or name=="NearLanding"or string.match(name,"^FarLanding[AB]$")then
+				assert(is(r,Look.lawn,"Grass"),name)
+			elseif string.match(name,"^Leg%d$")then
+				assert(is(r,Look.dirt,"Ground"),name)
+			elseif string.find(name,"Kerb")or string.match(name,"^Balustrade")or name=="NearLandingBank"then
+				assert(is(r,Look.marble,"Marble"),name)
+			elseif string.find(name,"Support")or string.find(name,"Base$")or string.match(name,"^Skirt")or string.match(name,"^Rim")
+				or name=="FaceGarden"then
+				assert(is(r,Look.cliff,"Slate"),name)
+			elseif string.match(name,"^Clump")or name=="LandingStone"then
+				assert(is(r,Look.clump,"Slate"),name)
+			else
+				assert(string.match(name,"^Pad")or name=="TreePole",name.." has no palette rule")
+			end
+		end
+		assert(counted>=40)
+		-- Nothing glossy: no visible row on SmoothPlastic but the pads and the pole; no neon, no glass.
+		for _,r in ipairs(rows)do
+			if r.visible and r.material then assert(r.material~="Neon"and r.material~="Glass"and r.material~="SmoothPlastic",r.name)end
+		end
+	end)
+
 	test("rows: W7T_ names, unique, finite, at most 60; the balustrade gap is the top platform",function()
 		assert(#rows>=30 and #rows<=70,#rows)
 		local seen={}
