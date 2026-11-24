@@ -661,24 +661,46 @@ return function(client)
 		Onboard.inject(nil)
 	end)
 	-- ── The Sleepy Nest landmark (NEST-LANDMARK-LOOK; NestLandmark) ───────────────────────────────────────────────────
+	-- The server's ONE shared model (code review of 443346b): a stand-in with the template's names, rest poses and root.
 	local Land=require(Shared.NestLandmark)
+	local function sharedModel()
+		local data=Land.data()
+		local root=CFrame.lookAt(Vector3.new(Corner.NestSpot.X,Corner.NestSpot.Y,Corner.NestSpot.Z),
+			Vector3.new(Corner.NestFacing.X,Corner.NestSpot.Y,Corner.NestFacing.Z))
+		local model=Instance.new("Model");model.Name="NestLandmark"
+		for _,name in ipairs(Client.LandmarkNames)do
+			local p=Instance.new("Part");p.Name=name
+			local info=data.parts[name]
+			p.Size=if info then Vector3.new(info.size[1],info.size[2],info.size[3])else Vector3.new(4.8,2.75,4.8)
+			p.CFrame=root*CFrame.new(if info then Vector3.new(info.center[1],info.center[2],info.center[3])else Vector3.new(0,1.375,0))
+			p.Transparency=if name=="BlanketDraped"or name=="BlanketSlipped"or name=="Collider"then 1 else 0
+			p.Color=Color3.new(1,1,1)
+			p.CanCollide=name=="Collider"
+			p:SetAttribute("WorldRestCFrame",p.CFrame);p:SetAttribute("RestTransparency",p.Transparency)
+			p.Parent=model
+		end
+		model:SetAttribute("NestRoot",root)
+		return model
+	end
 	local function landRig(options)
 		options=options or {}
 		local r
 		r=cornerRig({deps={split=function()return true end,landmark=function()return r==nil or r.landmarkOn~=false end,
-			template=function()return nil end,daylight=function()return r and r.daylight or 1 end}})
+			landmarkModel=function()return r and r.model end,daylight=function()return r and r.daylight or 1 end}})
 		r.landmarkOn=options.landmarkOn
+		r.model=if options.model==false then nil else sharedModel()
 		if options.landmarkOn==false then r.client:close();r.client:sync()end
 		return r
 	end
-	test("landmark: at the corner's spot the twig parts give way to the model (a greybox until mounted) and a sign on the bowl",function()
+	test("landmark: the server's shared model, animated here; no twig parts, a sign on the bowl, prompt, pill and pin",function()
 		local r=landRig()
 		r.fire(state(60));r.step(.1)
 		local folder=r.folder()
-		assert(r.client.landmark==true and folder:FindFirstChild("NestLandmark")and folder:FindFirstChild("NestMound")==nil)
-		local L=r.client.landmarkParts
-		for _,name in ipairs(Client.LandmarkNames)do assert(L.parts[name],name)end
-		assert(L.greybox==true and L.parts.Collider.CanCollide==true and L.parts.Body.CanCollide==false)
+		assert(r.client.landmark==true and folder:FindFirstChild("NestMound")==nil)
+		assert(folder:FindFirstChild("NestLandmark")==nil,"no local copy: the shared one is the server's")
+		local L=r.client.landmarkState
+		assert(L.model==r.model and L.parts.Collider==r.model:FindFirstChild("Collider"))
+		assert(r.model.Collider.CanCollide==true,"solid for everyone (the server's), untouched here")
 		local sign=folder:FindFirstChild("NestSign")
 		local into=r.client.root:PointToObjectSpace(sign.CFrame.Position)
 		assert(math.abs(into.Z+2.45)<1e-6 and math.abs(into.Y-1.15)<1e-6,"the sign on the bowl's front")
@@ -686,15 +708,15 @@ return function(client)
 		assert(math.abs(prompt.Z+3.5)<1e-6 and math.abs(prompt.Y-1)<1e-6,"the prompt at (0, 1, -3.5)")
 		assert(r.client.bearSpot==Land.BearSpot and r.client.eggBase==2.15 and r.client.eggScale==1.3)
 		assert(math.abs(r.client.egg.board.StudsOffset.Y-(Land.PillAt-2.15))<1e-6,"the pill fixed at 5.2")
-		assert(math.abs(r.client:pinLift()-7.2)<1e-6,"the Show me pin at 8.2 over the root")
-		local shadow=folder:FindFirstChild("NestShadow")
-		assert(math.abs(shadow.Size.X-6.6)<1e-6,"the shadow r 3.3")
+		local pin=r.client.root:PointToObjectSpace(r.client:pinAt())
+		assert(math.abs(pin.Y-8.2)<1e-6 and math.abs(pin.X)<1e-6 and math.abs(pin.Z)<1e-6,"the pin over the bowl's centre")
+		assert(math.abs(folder:FindFirstChild("NestShadow").Size.X-6.6)<1e-6,"the shadow r 3.3")
 		Onboard.inject(nil)
 	end)
 	test("landmark: the blanket folded, draped after Tuck in (unrolling), slipped when ready, folded again after the hatch",function()
 		local r=landRig()
 		r.fire(state(60));r.step(.1)
-		local P=r.client.landmarkParts.parts
+		local P=r.client.landmarkState.parts
 		assert(P.BlanketFolded.Transparency<1 and P.BlanketDraped.Transparency==1 and P.BlanketSlipped.Transparency==1)
 		r.client:act();r.step(.1)
 		assert(P.BlanketDraped.Transparency<1 and P.BlanketFolded.Transparency==1,"tucked: draped")
@@ -709,25 +731,49 @@ return function(client)
 		assert(P.BlanketFolded.Transparency<1 and P.BlanketSlipped.Transparency==1,"the next egg: folded")
 		Onboard.inject(nil)
 	end)
-	test("landmark: the moon lantern off by day, lit at dusk (fading in), gold when ready at any hour",function()
+	test("landmark: the moon lantern off by day, a 3 s linear fade at dusk (halo too), gold when ready at any hour",function()
 		local r=landRig()
 		r.fire(state(60));r.step(.1)
-		local L=r.client.landmarkParts
+		local L=r.client.landmarkState
 		assert(not L.light.Enabled and not L.halo.Enabled,"day: no light, no halo")
 		r.daylight=.1
-		r.step(.1);assert(L.light.Brightness<.1,"it fades in with the lamps, not at once")
-		for _=1,100 do r.step(.1)end
-		assert(L.light.Enabled and math.abs(L.light.Brightness-.6)<.05 and L.light.Range==9 and L.halo.Enabled)
-		r.daylight=1;r.now+=Nest.Seconds;r.step(.1)
-		assert(L.light.Enabled and L.light.Range==10 and L.light.Brightness>=.8*.8-1e-6,"ready: lit by day too")
-		assert(L.light.Color==Land.Moon.ready.color)
+		r.step(1.5)
+		assert(math.abs(L.light.Brightness-.3)<1e-6,"half way through the fade: half bright")
+		assert(math.abs(L.haloImage.ImageTransparency-(1-.4*.5))<1e-6,"the halo fades with it")
+		r.step(1.5)
+		assert(L.light.Enabled and math.abs(L.light.Brightness-.6)<1e-6 and L.light.Range==9 and L.halo.Enabled)
+		r.daylight=1;r.step(1.5)
+		assert(math.abs(L.light.Brightness-.3)<1e-6,"fades out the same way")
+		r.now+=Nest.Seconds;r.step(.1)
+		assert(L.light.Enabled and L.light.Range==10 and L.light.Brightness>=.8*.8-1e-6 and L.light.Color==Land.Moon.ready.color,"ready: lit by day too")
+		Onboard.inject(nil)
+	end)
+	test("landmark: the moon's daylight from HollowClock's real shape (daylight(), lastDaylight, sample's second value)",function()
+		assert(Client.daylightFrom({daylight=function()return .2 end})==.2)
+		assert(Client.daylightFrom({lastDaylight=.15})==.15)
+		assert(Client.daylightFrom({sample=function(t)return 21.5,.05,t end},100)==.05)
+		assert(Client.daylightFrom({daylight=function()error("no")end,lastDaylight=.4})==.4)
+		assert(Client.daylightFrom(nil)==1 and Client.daylightFrom({})==1)
+	end)
+	test("landmark: closing the nest puts the shared model back as the server left it; a late model is bound when it comes",function()
+		local r=landRig({model=false})
+		r.fire(state(60,{tucked=true}));r.step(.1)
+		assert(r.client.landmarkState.model==nil,"no model yet: the egg and the sign still draw")
+		r.model=sharedModel();r.step(.1)
+		local P=r.client.landmarkState.parts
+		assert(P.BlanketDraped and P.BlanketDraped.Transparency==0,"bound the moment it arrives")
+		local rest=r.model.Moon:GetAttribute("WorldRestCFrame")
+		r.step(1)
+		r.client:close()
+		assert(r.model.BlanketDraped.Transparency==1 and r.model.BlanketFolded.Transparency==0 and r.model.Moon.CFrame==rest,"restored")
+		assert(r.client.landmarkState==nil)
 		Onboard.inject(nil)
 	end)
 	test("landmark: off (its own switch) draws the twig nest at the same spot; a flip re-opens it",function()
 		local r=landRig({landmarkOn=false})
 		r.fire(state(60));r.step(.1)
-		assert(r.client.landmark==false and r.folder():FindFirstChild("NestMound")and r.folder():FindFirstChild("NestLandmark")==nil)
-		assert(r.client.spot==Corner.NestSpot and r.client:pinLift()==nil)
+		assert(r.client.landmark==false and r.folder():FindFirstChild("NestMound"))
+		assert(r.client.spot==Corner.NestSpot and r.client:pinAt()==nil)
 		r.landmarkOn=true;r.client:relocate()
 		assert(r.client.landmark==true,"re-opened as the landmark")
 		Onboard.inject(nil)

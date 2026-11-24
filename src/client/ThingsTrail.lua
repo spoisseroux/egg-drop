@@ -195,11 +195,13 @@ function Trail:start(target)
 	if type(target)~="table"or typeof(target.position)~="Vector3"or not root or self.d.free()~=true then return false end
 	self:ensure()
 	self.target,self.age=target,0
-	-- target.lift: the pin's height over the target (the Sleepy Nest landmark's 8.2 over its root); default 4.
-	self.pin.StudsOffsetWorldSpace=Vector3.new(0,if type(target.lift)=="number"then target.lift else 4,0)
+	-- target.pinAt: where the pin stands, when not over the end of the way (the Sleepy Nest landmark's: 8.2 over the
+	-- bowl's centre, while the prints end at its prompt). Default: 4 over the target.
+	local pinAt=if typeof(target.pinAt)=="Vector3"then target.pinAt else nil
+	self.pin.StudsOffsetWorldSpace=if pinAt then Vector3.zero else Vector3.new(0,4,0)
 	self.spot=flat(root,target.position)<=Trail.Arrive
 	self.plate.Text=Trail.label(target)
-	self.marker.CFrame=CFrame.new(target.position)
+	self.marker.CFrame=CFrame.new(pinAt or target.position)
 	self.pinAlphaShown=nil
 	self.folder:SetAttribute("Way","finding")
 	self:paintPin(flat(root,target.position))

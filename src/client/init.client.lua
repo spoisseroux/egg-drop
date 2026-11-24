@@ -4741,11 +4741,6 @@ do
    helpPulse=function()return clientUI.nestHelpDue~=nil and clientUI.nestHelpDue()==true end,
    helpPulsed=function()if clientUI.nestHelpSeen then clientUI.nestHelpSeen()end end,
    helpClose=function()if clientUI.closeNestHelp then clientUI.closeNestHelp()end end,
-   -- The landmark's moon lantern follows the hour (lit below .3 daylight, as the lamps).
-   daylight=function()
-    local ok,value=pcall(function()return require(script.HollowClock).daylight()end)
-    return if ok and type(value)=="number"then value else 1
-   end,
    -- Beta 14 Q2: the need bubble (BubbleHold's state and the pet), so the pill never shares the screen with it.
    bubble=function()
     local hold=clientUI.needBubble
@@ -5100,9 +5095,10 @@ do
      local summary=clientUI.nest and clientUI.nest:summary()
      return Copy.get(if summary and summary.ready then "onb3.nest.pinReady"else "onb3.nest.title")
     end
-    -- The Sleepy Nest landmark: its pin stands at 8.2 over the root (NEST-LANDMARK-LOOK 5).
-    local lift=clientUI.nest and clientUI.nest:pinLift()
-    return at~=nil and trail:start({position=at,name=name,lift=lift})
+    -- The Sleepy Nest landmark: its pin stands 8.2 over the bowl's centre (NEST-LANDMARK-LOOK 5); the prints still end at
+    -- the prompt point.
+    local pinAt=clientUI.nest and clientUI.nest:pinAt()
+    return at~=nil and trail:start({position=at,name=name,pinAt=pinAt})
    end
    if id=="finds"or id=="findsIntro"then
     local finds=findsNow()

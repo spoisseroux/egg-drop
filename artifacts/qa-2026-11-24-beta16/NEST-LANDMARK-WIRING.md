@@ -46,3 +46,20 @@ it does not merge that branch. Beta only; live unchanged.
 `NestClient.spec` (+4): the model and sign at the corner spot, the blanket through tuck / ready / the next egg, the
 moon by day / dusk / ready, the switch off drawing the twig nest and a flip re-opening it. `Onboard.spec` updated for
 the fifth part. `EggCornerWorld` (box size, light, template share) is server code without an offline mock: Studio.
+
+## Code review of 443346b (GO WITH CHANGES): what changed
+
+- **One shared model.** The server (`EggCornerWorld:buildLandmark`) places ONE copy of the template (or its greybox) at
+  the nest's corner spot, on the plaza floor found with the old station left out: anchored, its `Collider` solid for
+  everyone, `ModelStreamingMode` Persistent, `WorldRestCFrame` / `RestTransparency` on the moving parts and its root
+  in `NestRoot`. It stands in the room while the landmark applies and is parked otherwise. A template mounted after
+  boot replaces the greybox. The ReplicatedStorage copy is gone. Players without an egg see the bowl with its folded
+  quilt and stand on it like everyone else; nothing is rebuilt under anyone.
+- **Each client animates that copy locally** (writes to anchored parts never replicate, so each player sees their own
+  nest's state): `NestClient:bindLandmark` finds it every frame (a streamed or swapped model is picked up), and
+  `restLandmark` puts it back as the server left it whenever this client's nest closes. The field is
+  `landmarkState` (no clash with `Client.landmarkParts`), cleared in `clear()`.
+- **Moon:** a 3 s linear fade in and out (ready snaps to lit), the halo fades with it, one pcall per SurfaceAppearance
+  property. Its daylight comes from HollowClock through `Client.daylightFrom`: `daylight()` (the module has it, line
+  204), else `lastDaylight`, else `sample(now)`'s second value.
+- **Show me pin:** `target.pinAt` puts it 8.2 straight over the bowl's centre; the prints still end at the prompt.

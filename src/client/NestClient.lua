@@ -438,6 +438,9 @@ function Client:send(kind)
 	return true
 end
 function Client:clear()
+	-- The landmark is the server's shared copy: put it back as it was, and forget it (code review of 443346b).
+	pcall(self.restLandmark,self)
+	self.landmarkState=nil
 	if self.folder then self.folder:Destroy();self.folder=nil end
 	if self.hosted then self.hosted:Destroy();self.hosted=nil end
 	self.signWords=nil
@@ -632,176 +635,187 @@ function Client.landmarkParts()
 		decal={"sign",BOTH},sign=true}}
 end
 Client.LandmarkNames=table.freeze({"Body","Awning","Moon","BlanketDraped","BlanketSlipped","BlanketFolded","Collider"})
--- A greybox with the template's names at the data's sizes (nest-local), until the model is mounted.
-function Client.landmarkGreybox(data)
-	local model=Instance.new("Model")
-	model.Name=Land.Template
-	local function v(list)return Vector3.new(list[1],list[2],list[3])end
-	local function add(name,shape,size,at,color,transparency)
-		local p=Instance.new("Part")
-		p.Name,p.Shape,p.Size,p.CFrame,p.Color=name,shape,size,CFrame.new(at),color
-		p.Material=Enum.Material.SmoothPlastic
-		p.Transparency=transparency or 0
-		p.Parent=model
-		return p
+Client.LandmarkMoving=table.freeze({"Awning","Moon","BlanketDraped","BlanketSlipped","BlanketFolded"})
+-- The daylight the moon follows, from HollowClock's real shape: daylight() when it is there, else lastDaylight, else
+-- the second value of sample(now). 1 (day) when none answers.
+function Client.daylightFrom(Clock,now)
+	if type(Clock)~="table"then return 1 end
+	if type(Clock.daylight)=="function"then
+		local ok,value=pcall(Clock.daylight)
+		if ok and type(value)=="number"then return value end
 	end
-	local parts=data.parts
-	local function box(name,color,transparency)return add(name,Enum.PartType.Block,v(parts[name].size),v(parts[name].center),color,transparency)end
-	add("Body",Enum.PartType.Block,Vector3.new(4.8,2.75,4.8),Vector3.new(0,1.375,0),Color3.fromHex("#F4E8CF"))
-	box("Awning",Color3.fromHex("#63AD68"))
-	box("Moon",Color3.fromHex("#FFF3C4"))
-	box("BlanketDraped",Color3.fromHex("#6FB3AE"),1)
-	box("BlanketSlipped",Color3.fromHex("#6FB3AE"),1)
-	box("BlanketFolded",Color3.fromHex("#6FB3AE"))
-	local c=data.collider
-	local collider=add("Collider",Enum.PartType.Cylinder,Vector3.new(c.height,c.radius*2,c.radius*2),v(c.centre),Color3.new(1,1,1),1)
-	collider.CFrame=CFrame.new(v(c.centre))*CFrame.Angles(0,0,math.pi/2)
-	model.PrimaryPart=collider
-	model:SetAttribute("LandmarkGreybox",true)
-	return model
-end
--- The model for this nest: a clone of the mounted template (its LandmarkVersion must be Land.Version), else the greybox.
-function Client:landmarkModel()
-	local template=if self.d.template then self.d.template()else game:GetService("ReplicatedStorage"):FindFirstChild(Land.Template)
-	local version=template and template:FindFirstChild("LandmarkVersion")
-	if template and template:IsA("Model")and version and version.Value==Land.Version then
-		local ok,copy=pcall(function()return template:Clone()end)
-		if ok and copy then return copy,false end
+	if type(Clock.lastDaylight)=="number"then return Clock.lastDaylight end
+	if type(Clock.sample)=="function"then
+		local ok,_,value=pcall(Clock.sample,now or workspace:GetServerTimeNow())
+		if ok and type(value)=="number"then return value end
 	end
-	return Client.landmarkGreybox(Land.data()),true
+	return 1
 end
+function Client:daylight()
+	if self.d.daylight then return self.d.daylight()end
+	local ok,Clock=pcall(function()return require(script.Parent:WaitForChild("HollowClock"))end)
+	return Client.daylightFrom(if ok then Clock else nil)
+end
+-- The shared model (the server's one copy, code review of 443346b): this client animates it locally.
+function Client:landmarkModelNow()
+	if self.d.landmarkModel then return self.d.landmarkModel()end
+	local room=workspace:FindFirstChild("EggDropLounge")
+	return room and room:FindFirstChild(Land.Template)
+end
+-- The moon lantern's light and halo (this client's): it replaces EggNestLight while the landmark stands.
 function Client:drawLandmark(folder)
 	local data=Land.data()
-	local model,greybox=self:landmarkModel()
-	local function basePart(x)return x:IsA("BasePart")or x.ClassName=="Part"or x.ClassName=="MeshPart"end
-	if greybox then
-		-- The greybox is built nest-local: place each part by hand (its PrimaryPart is the collider, not the origin).
-		for _,part in ipairs(model:GetChildren())do if basePart(part)then part.CFrame=self.root*part.CFrame end end
-	else
-		-- The template's pivot is the nest-local origin (Collider's PivotOffset), so this places it.
-		model:PivotTo(self.root)
-	end
-	local L={model=model,parts={},rest={},data=data,greybox=greybox}
-	for _,part in ipairs(model:GetDescendants())do
-		if basePart(part)then
-			part.Anchored=true
-			part.CanTouch=false
-			if part.Name=="Collider"then
-				-- The bowl and nest: the local player stands on it, never walks through it (only this client's avatar).
-				part.CanCollide=true;part.Transparency=1;part.CastShadow=false
-			else
-				part.CanCollide=false;part.CanQuery=false
-			end
-			L.parts[part.Name]=part
-			L.rest[part.Name]={cf=part.CFrame,size=part.Size,transparency=part.Transparency}
-		end
-	end
 	local function v(list)return Vector3.new(list[1],list[2],list[3])end
-	-- Pivots in world space (root * nest-local).
-	L.moonPivot=self.root*CFrame.new(v(data.pivots.Moon.at))
-	L.moonAxis=self.root:VectorToWorldSpace(v(data.pivots.Moon.axis or {0,0,1}))
-	L.awningPivot=self.root*CFrame.new(v(data.pivots.Awning.at))
-	L.awningAxis=self.root:VectorToWorldSpace(v(data.pivots.Awning.axis or {1,0,0}))
-	L.drapePivot=self.root*v(data.pivots.BlanketDraped.at)
-	-- The moon lantern's light (it replaces EggNestLight) and halo.
 	local lamp=inert(make("Part",nil,{Name="MoonLamp",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
 	lamp.CFrame=self.root*CFrame.new(v(data.moonLight))
 	lamp.Parent=folder
-	L.lamp=lamp
-	L.light=make("PointLight",lamp,{Name="MoonLight",Color=Land.Moon.night.color,Range=Land.Moon.night.range,Brightness=0,Shadows=false})
+	local L={data=data,lamp=lamp,fade=0,brightness=0}
+	L.light=make("PointLight",lamp,{Name="MoonLight",Color=Land.Moon.night.color,Range=Land.Moon.night.range,Brightness=0,Enabled=false,Shadows=false})
 	L.halo=make("BillboardGui",lamp,{Name="MoonHalo",LightInfluence=0,AlwaysOnTop=false,MaxDistance=Client.HaloDistance,Enabled=false,
 		Size=UDim2.fromScale(1.6,1.6)})
 	L.haloImage=make("ImageLabel",L.halo,{Name="Glow",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Image=Client.Assets.halo,
 		ImageColor3=Land.Moon.night.color,ImageTransparency=1})
-	L.moonColor=L.parts.Moon and L.parts.Moon.Color
-	L.brightness=0
-	model.Parent=folder
-	self.landmarkParts=L
-	-- Zzz drift away from the moon (toward -X).
+	self.landmarkState=L
+	self:bindLandmark()
 	return L
 end
--- The blanket for this frame: which of the three shows, the tuck's unroll and the breath's ripple; the moon and the
--- awning sway; the moon lantern's light by the hour and the egg's state.
-function Client:poseLandmark(dt,look,tucked,reduced)
-	local L=self.landmarkParts
-	if not L then return end
-	local ready=look=="ready"
-	local hasEgg=self.view~=nil and not(self.hatching and self.hatching.t>=Land.Drop)
-	local state=Land.blanket(hasEgg,tucked,ready)
-	if self.hatching and self.hatching.t<Land.Drop then state="dropping"end
-	local function show(name,visible,alpha)
-		local part=L.parts[name]
-		if not part then return end
-		-- The template hides the draped and slipped blankets (Transparency 1); shown, every blanket is opaque.
-		local want=if visible then(alpha or 0)else 1
-		if part.Transparency~=want then part.Transparency=want end
+-- Finds the shared model (it may stream in, or be swapped from the greybox to the template): its parts, their rest
+-- poses (the server's WorldRestCFrame / RestTransparency) and the pivots, in world space, from its own root.
+function Client:bindLandmark()
+	local L=self.landmarkState
+	if not L then return nil end
+	local model=self:landmarkModelNow()
+	if model==L.model and(model==nil or model.Parent~=nil)then return L end
+	L.model,L.parts,L.rest=model,{},{}
+	if not model then return L end
+	for _,name in ipairs(Client.LandmarkNames)do
+		local part=model:FindFirstChild(name)
+		if part then
+			L.parts[name]=part
+			L.rest[name]={cf=part:GetAttribute("WorldRestCFrame")or part.CFrame,size=part.Size,transparency=part:GetAttribute("RestTransparency")or part.Transparency,
+				color=part.Color}
+		end
 	end
-	local dropAlpha=if state=="dropping"then math.clamp(self.hatching.t/Land.Drop,0,1)else nil
-	show("BlanketFolded",state=="folded")
-	show("BlanketDraped",state=="draped"or(state=="dropping"and not ready),dropAlpha)
-	show("BlanketSlipped",state=="slipped"or(state=="dropping"and ready),dropAlpha)
-	-- The draped blanket: unrolls from its lower edge on Tuck in, then follows the breath .15 s late.
-	local draped=L.parts.BlanketDraped
-	if draped and state=="draped"then
-		local unroll=if self.tuck and not reduced then Land.unroll(self.tuck.t)else 1
-		local B=Land.Breath
-		local _,_,rise=Land.breath(self.clock-B.blanketLag,reduced)
-		local ripple=if B.rise>0 then rise/B.rise*B.blanketScale else 0
-		local rest=L.rest.BlanketDraped
-		local pivot=L.drapePivot
-		local local3=self.root:VectorToObjectSpace(rest.cf.Position-pivot)
-		local scaled=Vector3.new(local3.X*(1+ripple),local3.Y*unroll*(1+ripple),local3.Z*(1+ripple))
-		draped.Size=Vector3.new(rest.size.X*(1+ripple),rest.size.Y*unroll*(1+ripple),rest.size.Z*(1+ripple))
-		draped.CFrame=(rest.cf-rest.cf.Position)+pivot+self.root:VectorToWorldSpace(scaled)
-	end
-	-- Sway.
-	local moonAngle,awningAngle=Land.sway(self.clock,ready,reduced)
-	local function about(part,pivot,axis,angle)
-		if not part then return end
-		local turn=CFrame.fromAxisAngle(axis,math.rad(angle))
-		local p=pivot.Position
-		part.CFrame=CFrame.new(p)*turn*CFrame.new(-p)*L.rest[part.Name].cf
-	end
-	about(L.parts.Moon,L.moonPivot,L.moonAxis,moonAngle)
-	about(L.parts.Awning,L.awningPivot,L.awningAxis,awningAngle)
-	-- The moon lantern.
-	local daylight=if self.d.daylight then self.d.daylight()else 1
-	local M=Land.moon(ready,daylight)
-	local target=M.brightness*(if ready then Land.pulse(self.clock,reduced)else 1)
-	-- Fades with the lamps (3 s), straight to the pulse once ready.
-	local rate=if ready then 1 else math.min(1,dt/3)
-	L.brightness+=(target-L.brightness)*rate
-	L.light.Enabled=L.brightness>.01
-	L.light.Brightness=L.brightness
-	L.light.Range=M.range
-	if M.color then L.light.Color=M.color end
-	L.halo.Enabled=M.halo>0
-	if M.halo>0 then
-		L.halo.Size=UDim2.fromScale(M.halo,M.halo)
-		L.haloImage.ImageColor3=M.color
-		L.haloImage.ImageTransparency=1-M.haloAlpha*(if ready then Land.pulse(self.clock,reduced)else 1)
-	end
-	local moon=L.parts.Moon
-	if moon and L.moonColor then
-		local want=M.color or L.moonColor
-		if moon.Color~=want then moon.Color=want end
-	end
-	-- The template's moon wears a SurfaceAppearance (Part.Color is ignored under it): its tint and its emissive mask
-	-- (game scripts may write Strength and Tint, not the mask) carry the dusk lift and the ready gold.
-	local skin=moon and moon:FindFirstChildOfClass("SurfaceAppearance")
-	if skin then
-		local strength=if M.lit then L.brightness/math.max(.01,Land.Moon.ready.brightness)else 0
-		local tint=M.color or Color3.new(1,1,1)
-		if L.skinStrength==nil or math.abs(L.skinStrength-strength)>.01 or L.skinTint~=tint then
-			L.skinStrength,L.skinTint=strength,tint
-			pcall(function()skin.Color=tint;skin.EmissiveStrength=strength;skin.EmissiveTint=tint end)
+	local root=model:GetAttribute("NestRoot")
+	if typeof(root)~="CFrame"then root=self.root end
+	local data=L.data
+	local function v(list)return Vector3.new(list[1],list[2],list[3])end
+	L.root=root
+	L.moonPivot=root*v(data.pivots.Moon.at)
+	L.moonAxis=root:VectorToWorldSpace(v(data.pivots.Moon.axis or {0,0,1}))
+	L.awningPivot=root*v(data.pivots.Awning.at)
+	L.awningAxis=root:VectorToWorldSpace(v(data.pivots.Awning.axis or {1,0,0}))
+	L.drapePivot=root*v(data.pivots.BlanketDraped.at)
+	L.skinState={}
+	return L
+end
+-- Puts the shared model back as the server left it (this client's nest closed: no egg, the switch off, a re-open).
+function Client:restLandmark()
+	local L=self.landmarkState
+	if not L or not L.parts then return end
+	for _,name in ipairs(Client.LandmarkMoving)do
+		local part,rest=L.parts[name],L.rest[name]
+		if part and rest and part.Parent then
+			part.CFrame,part.Size,part.Transparency=rest.cf,rest.size,rest.transparency
+			if name=="Moon"then
+				part.Color=rest.color
+				local skin=part:FindFirstChildOfClass("SurfaceAppearance")
+				if skin then
+					pcall(function()skin.EmissiveStrength=0 end)
+					pcall(function()skin.Color=Color3.new(1,1,1)end)
+				end
+			end
 		end
 	end
 end
--- The Show me pin over the landmark: Land.PinAt over the root, from the prompt point (nil: the trail's own height).
-function Client:pinLift()
-	if not self.landmark or not self.isOpen then return nil end
-	return Land.PinAt-(self.promptAt or Client.PromptAt).Y
+-- The blanket for this frame: which of the three shows, the tuck's unroll and the breath's ripple; the moon and the
+-- awning sway; the moon lantern's light by the hour and the egg's state (a 3 s linear fade in and out; ready snaps).
+function Client:poseLandmark(dt,look,tucked,reduced)
+	local L=self:bindLandmark()
+	if not L then return end
+	local ready=look=="ready"
+	local P=L.parts or {}
+	if L.model then
+		local hasEgg=self.view~=nil and not(self.hatching and self.hatching.t>=Land.Drop)
+		local state=Land.blanket(hasEgg,tucked,ready)
+		if self.hatching and self.hatching.t<Land.Drop then state="dropping"end
+		local function show(name,visible,alpha)
+			local part=P[name]
+			if not part then return end
+			-- The template hides the draped and slipped blankets (Transparency 1); shown, every blanket is opaque.
+			local want=if visible then(alpha or 0)else 1
+			if part.Transparency~=want then part.Transparency=want end
+		end
+		local dropAlpha=if state=="dropping"then math.clamp(self.hatching.t/Land.Drop,0,1)else nil
+		show("BlanketFolded",state=="folded")
+		show("BlanketDraped",state=="draped"or(state=="dropping"and not ready),dropAlpha)
+		show("BlanketSlipped",state=="slipped"or(state=="dropping"and ready),dropAlpha)
+		-- The draped blanket: unrolls from its lower edge on Tuck in, then follows the breath .15 s late.
+		local draped=P.BlanketDraped
+		if draped and state=="draped"then
+			local unroll=if self.tuck and not reduced then Land.unroll(self.tuck.t)else 1
+			local B=Land.Breath
+			local _,_,rise=Land.breath(self.clock-B.blanketLag,reduced)
+			local ripple=if B.rise>0 then rise/B.rise*B.blanketScale else 0
+			local rest=L.rest.BlanketDraped
+			local local3=L.root:VectorToObjectSpace(rest.cf.Position-L.drapePivot)
+			local scaled=Vector3.new(local3.X*(1+ripple),local3.Y*unroll*(1+ripple),local3.Z*(1+ripple))
+			draped.Size=Vector3.new(rest.size.X*(1+ripple),rest.size.Y*unroll*(1+ripple),rest.size.Z*(1+ripple))
+			draped.CFrame=(rest.cf-rest.cf.Position)+L.drapePivot+L.root:VectorToWorldSpace(scaled)
+		end
+		-- Sway.
+		local moonAngle,awningAngle=Land.sway(self.clock,ready,reduced)
+		local function about(part,pivot,axis,angle)
+			if not part then return end
+			part.CFrame=CFrame.new(pivot)*CFrame.fromAxisAngle(axis,math.rad(angle))*CFrame.new(-pivot)*L.rest[part.Name].cf
+		end
+		about(P.Moon,L.moonPivot,L.moonAxis,moonAngle)
+		about(P.Awning,L.awningPivot,L.awningAxis,awningAngle)
+	end
+	-- The moon lantern: lit at dusk and night (a 3 s linear fade with the lamps), gold and pulsing when ready.
+	local M=Land.moon(ready,self:daylight())
+	if ready then L.fade=1
+	elseif M.lit then L.fade=math.min(1,L.fade+dt/3)
+	else L.fade=math.max(0,L.fade-dt/3)end
+	local lit=if M.lit then M else(if L.fade>0 then Land.Moon.night else M) -- fading out keeps the night look
+	local pulse=if ready then Land.pulse(self.clock,reduced)else 1
+	L.brightness=lit.brightness*L.fade*pulse
+	L.light.Enabled=L.brightness>.01
+	L.light.Brightness=L.brightness
+	L.light.Range=lit.range
+	if lit.color then L.light.Color=lit.color end
+	local haloAlpha=lit.haloAlpha*L.fade*pulse
+	L.halo.Enabled=lit.halo>0 and haloAlpha>.01
+	if lit.halo>0 then
+		L.halo.Size=UDim2.fromScale(lit.halo,lit.halo)
+		L.haloImage.ImageColor3=lit.color
+		L.haloImage.ImageTransparency=1-haloAlpha
+	end
+	local moon=P.Moon
+	if moon and L.rest.Moon then
+		local want=if L.fade>0 and lit.color then L.rest.Moon.color:Lerp(lit.color,L.fade)else L.rest.Moon.color
+		if moon.Color~=want then moon.Color=want end
+		-- The template's moon wears a SurfaceAppearance (Part.Color is ignored under it): its tint and its emissive mask
+		-- (game scripts may write Strength and Tint, not the mask). One pcall per property: an engine without one keeps
+		-- the others.
+		local skin=moon:FindFirstChildOfClass("SurfaceAppearance")
+		if skin then
+			local strength=L.fade*pulse*(if ready then 1 else .6)
+			local tint=if L.fade>0 and lit.color then Color3.new(1,1,1):Lerp(lit.color,L.fade)else Color3.new(1,1,1)
+			local seen=L.skinState
+			if seen.strength==nil or math.abs(seen.strength-strength)>.01 or seen.tint~=tint then
+				seen.strength,seen.tint=strength,tint
+				pcall(function()skin.Color=tint end)
+				pcall(function()skin.EmissiveStrength=strength end)
+				pcall(function()skin.EmissiveTint=lit.color or tint end)
+			end
+		end
+	end
+end
+-- The Show me pin over the landmark: Land.PinAt straight over the bowl's centre (nil: the trail's own pin).
+function Client:pinAt()
+	if not self.landmark or not self.isOpen or not self.root then return nil end
+	return(self.root*CFrame.new(0,Land.PinAt,0)).Position
 end
 -- The egg corner's nest on plain marble (R2 3): a soft contact shadow (concentric see-through discs on one plate) and
 -- the straw and leaf scatter (EggCorner.scatter), root-local, inert, no shadow.
