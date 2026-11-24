@@ -1,85 +1,85 @@
 {
- "assetId": "125352578844438",
- "operationId": "9f0fb6c4-8e24-425f-94db-f2810ca11826",
+ "assetId": "119297492044861",
+ "operationId": "0aff4529-3a1b-4489-b376-a2ef05458b50",
  "moderation": "Approved",
- "fbxSha256": "d8c679542166b9d32a5ffb71fc610206dfa65894514698ee444193463e3041d5",
- "manifestSha256": "d28ae4b00f27311b6bd2731a84be591e18e38a78cf1258531bcb78d7c64ac792",
+ "fbxSha256": "e24177dfc3d4817646b7d5c3f6db2360ad2bdedca900c3e8eb842f2c0fc343ed",
+ "manifestSha256": "b3552e2beb1334eab049afb48eddcd6c5e85e74fb1735b0f12020d5befa3ed9c",
  "parts": [
   {
+   "meshId": "rbxassetid://128302677860915",
    "name": "W7_Kit_Crown_Blossom__foliage_blossom",
-   "meshId": "rbxassetid://137878001101005",
    "meshSize": [
-    108.966667,
-    71.0881348,
-    83.6262054
+    108.26978302001953,
+    67.74508666992188,
+    90.77910614013672
    ]
   },
   {
-   "name": "W7_Kit_Crown_Hatch__foliage",
    "meshId": "rbxassetid://91472458364066",
+   "name": "W7_Kit_Crown_Hatch__foliage",
    "meshSize": [
-    287.31369,
-    149.202393,
-    270.747406
+    287.3136901855469,
+    149.202392578125,
+    270.7474060058594
    ]
   },
   {
+   "meshId": "rbxassetid://118006868471276",
    "name": "W7_Kit_Crown_Round__foliage",
-   "meshId": "rbxassetid://116909537674467",
    "meshSize": [
-    109.189835,
-    86.7487946,
-    92.8965607
+    109.40508270263672,
+    80.53730773925781,
+    98.58350372314453
    ]
   },
   {
+   "meshId": "rbxassetid://139919493573618",
    "name": "W7_Kit_Crown_Tall__foliage",
-   "meshId": "rbxassetid://110195283751549",
    "meshSize": [
-    70.6841202,
-    115.27803,
-    65.728508
+    71.2110824584961,
+    113.28052520751953,
+    72.0191650390625
    ]
   },
   {
-   "name": "W7_Kit_Falls__kitwater",
    "meshId": "rbxassetid://73845431603817",
+   "name": "W7_Kit_Falls__kitwater",
    "meshSize": [
-    377.337219,
-    563.466431,
-    292.821869
+    377.33721923828125,
+    563.4664306640625,
+    292.8218688964844
    ]
   },
   {
-   "name": "W7_Kit_Fountain__kitstone",
    "meshId": "rbxassetid://112786401704620",
+   "name": "W7_Kit_Fountain__kitstone",
    "meshSize": [
-    103.485199,
-    60.4632568,
-    65.5793762
+    103.48519897460938,
+    60.4632568359375,
+    65.57937622070312
    ]
   },
   {
-   "name": "W7_Kit_Rest__foliage",
    "meshId": "rbxassetid://108550412728979",
+   "name": "W7_Kit_Rest__foliage",
    "meshSize": [
     2048,
-    28.0572872,
-    1642.99121
+    28.057287216186523,
+    1642.9912109375
    ]
   },
   {
-   "name": "W7_Kit_Rest__foliage_blossom",
    "meshId": "rbxassetid://91409678055408",
+   "name": "W7_Kit_Rest__foliage_blossom",
    "meshSize": [
-    1806.17395,
-    21.6658535,
-    759.856201
+    1806.1739501953125,
+    21.66585350036621,
+    759.856201171875
    ]
   }
  ],
  "provenance": {
-  "recordedUtc": "2026-11-23T17:53:38.148254+00:00",
+  "recordedUtc": "2026-11-24T02:08:17.036425+00:00",
   "note": "Open Cloud POST /assets/v1/assets (Model) through Studio MCP, operation polled to done; MeshId/MeshSize read with InsertService:LoadAsset in Studio Edit, model destroyed unparented, place not saved."
  }
 }

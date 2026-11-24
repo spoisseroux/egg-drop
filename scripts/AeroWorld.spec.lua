@@ -97,7 +97,8 @@ return function(client,offline)
 		return p
 	end
 	local function skin(part,name)
-		local t=Instance.new("Texture");t.Name=name;t.Face=Enum.NormalId.Top;t.Transparency=.6;t.Color3=hex("#FFEEEE");t.Parent=part
+		local t=Instance.new("Texture");t.Name=name;t.Face=Enum.NormalId.Top;t.Transparency=.6;t.Color3=hex("#FFEEEE")
+		t.Texture="rbxassetid://79678594491030";t.StudsPerTileU,t.StudsPerTileV=14,14;t.Parent=part
 		return t
 	end
 	local function lounge(world)
@@ -126,7 +127,7 @@ return function(client,offline)
 		room.Parent=world
 		return r
 	end
-	local Props={"Color","Material","Transparency","Reflectance","TextureID","Color3","Enabled","CFrame"}
+	local Props={"Color","Material","Transparency","Reflectance","TextureID","Color3","Enabled","CFrame","Texture","StudsPerTileU","StudsPerTileV"}
 	local function picture(room)
 		local out={}
 		for _,item in ipairs(room:GetDescendants())do
@@ -286,7 +287,9 @@ return function(client,offline)
 		test("the values are the plan's, and inside its caps",function()
 			assert(Values.Hour==10.5 and Values.Lighting.ClockTime==10.5 and Values.Bloom.Intensity==.18 and Values.Lighting.EnvironmentSpecularScale==.2)
 			assert(rgb(Values.Crowns.lime.Color)==rgb(hex("#8FD63F"))and rgb(Values.Crowns.coral.Color)==rgb(hex("#F2545B")))
-			for _,kind in ipairs({"dirt_path","pebble_bed","bark","wood_plank","far_peak","ground"})do assert(Values.Surfaces[kind]==nil,kind)end
+			for _,kind in ipairs({"dirt_path","bark","wood_plank","far_peak","ground"})do assert(Values.Surfaces[kind]==nil,kind)end
+			-- LOOK-R3 round 6: the pebble bed only takes a tint (it peeks above the pool rims).
+			local pebble=Values.Surfaces.pebble_bed;assert(pebble.Tint and next(pebble,next(pebble))==nil,"pebble bed: tint only")
 			-- Slice 9: the palette is only swapped for its saturation-1.0 map, nothing else about the props moves.
 			local palette=Values.Surfaces.palette
 			assert(palette and next(palette)=="TextureID"and next(palette,"TextureID")==nil and string.match(palette.TextureID,"^rbxassetid://%d+$"))
@@ -318,7 +321,11 @@ return function(client,offline)
 			assert(r.clock.look==r.aero.look and r.aero.look.Daylight==.9 and r.applied==1)
 			assert(painted(l)and rgb(l.path:FindFirstChildOfClass("SurfaceAppearance").Color)=="255/255/255","paths stay")
 			assert(near(l.marble.Reflectance,.06)and near(l.trim.Reflectance,.18)and near(l.stream.Reflectance,.22)and l.stream.Transparency==0)
-			assert(rgb(l.flowSkin.Color3)==rgb(hex("#3CC8F0"))and near(l.flowSkin.Transparency,.42)and near(l.glint.Transparency,.6)and near(l.poolSkin.Transparency,.15)and rgb(l.poolSkin.Color3)==rgb(hex("#3BA3BE")))
+			assert(rgb(l.flowSkin.Color3)==rgb(hex("#E4F7FA"))and near(l.flowSkin.Transparency,.72)and near(l.glint.Transparency,.72)and near(l.poolSkin.Transparency,.72)and rgb(l.poolSkin.Color3)==rgb(hex("#E4F7FA")))
+			-- LOOK-R3 1: the pool and the stream on the drawn teal tile; the pool skin is a sparse 9-stud glint.
+			assert(l.pool.TextureID==Values.Surfaces.water_pool.TextureID and l.stream.TextureID==Values.Surfaces.water_stream.TextureID)
+			assert(l.poolSkin.Texture==Values.Skins.FlowSkin.water_pool.Texture and l.poolSkin.StudsPerTileU==9 and l.poolSkin.StudsPerTileV==9)
+			assert(l.flowSkin.Texture==l.poolSkin.Texture and l.glint.Texture==l.poolSkin.Texture and l.glint.StudsPerTileU==6,"the stream glints like the pool")
 			assert(near(l.bubble.Transparency,.55)and rgb(l.cloud.Color)=="255/255/255"and near(l.cloud.Transparency,.35))
 			assert(rgb(l.beam.Color.Keypoints[1].Value)==rgb(hex("#DDF6FF"))and rgb(l.splash.Color.Keypoints[1].Value)==rgb(hex("#F4FCFF")))
 			assert(l.crown:FindFirstChildOfClass("SurfaceAppearance")==nil and l.crown.TextureID==Values.Crowns.lime.Texture and l.crown.Material==Enum.Material.SmoothPlastic and rgb(l.crown.Color)==rgb(Color3.new(1,1,1)))
@@ -416,10 +423,11 @@ return function(client,offline)
 			r.pump()
 			assert(rgb(meadow:FindFirstChildOfClass("SurfaceAppearance").Color)==rgb(Values.Surfaces.meadow.Tint)and crown.TextureID==Values.Crowns.lime.Texture)
 			local sa=Instance.new("SurfaceAppearance");sa.Parent=crown;r.pump();assert(sa.Parent==nil,"taken off the crown")
-			local water=mesh(w,"W7_Water__water_pool");r.pump();local t=skin(water,"FlowSkin");r.pump();assert(near(t.Transparency,.15))
+			local water=mesh(w,"W7_Water__water_pool");r.pump();local t=skin(water,"FlowSkin");r.pump();assert(near(t.Transparency,.72)and t.StudsPerTileU==9)
 			crown.Parent=nil;r.pump();assert(sa.Parent==crown and crown.TextureID=="rbxassetid://222"and crown.Material==Enum.Material.SmoothPlastic)
 			crown.Parent=w;r.pump();assert(sa.Parent==nil and crown.TextureID==Values.Crowns.lime.Texture)
 			r.flip(false);assert(sa.Parent==crown and near(t.Transparency,.6)and near(water.Reflectance,0)and #r.warnings==0)
+			assert(t.StudsPerTileU==14 and t.Texture=="rbxassetid://79678594491030"and water.TextureID=="","the pool skin and tile restored")
 		end)
 		test("arrivals queued when the layer goes off are not painted",function()
 			local r=rig();local l=lounge(r.world);r.flip(true)

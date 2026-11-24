@@ -259,6 +259,83 @@ return function(client, parent)
 		a:destroy();folder:Destroy();assert(ok, err)
 	end)
 
+	test("LOOK-R3 3: an added voice falls back once when its asset fails to load, never when it loads or is gone; starts at its share", function()
+		local audio = { master = 1, deviceActive = true, ducks = {}, music = true }
+		function audio:isMusicEnabled() return self.music end
+		function audio:duck() end
+		function audio:petSpeechBusy() return false end
+		local folder = Instance.new("Folder");folder.Parent = parent or workspace
+		local a = Ambient.new(audio, { auto = false, world = folder, listener = function() return Vector3.new(0, 6, 0) end, daylight = function() return 1 end, now = function() return 0 end })
+		local preload, length, wait = Ambient.preload, Ambient.length, Ambient.wait
+		local slept = 0
+		Ambient.wait = function(seconds) slept += seconds;return seconds end
+		local ok, err = pcall(function()
+			local host = Instance.new("Part");host.Parent = folder
+			local spec = { id = 111, speed = 1, volume = .14, min = 5, max = 26, parent = host, start = .5, fallback = { id = 222, speed = 1.25, volume = .16 } }
+			local function added()
+				for _, entry in ipairs(a.falls) do if entry.voice.Parent == host then return entry end end
+			end
+			-- Lengths by id: 111 is 32 s, 222 is 20 s; anything else (or a failed load) holds nothing.
+			local held = {}
+			Ambient.length = function(voice) return held[voice.SoundId] end
+			Ambient.preload = function(list, callback) callback(list[1].SoundId, "Failure") end
+			held = { ["rbxassetid://222"] = 20 }
+			local remove = a:addVoice("fountain", spec)
+			local entry = added()
+			assert(entry and entry.fellBack == true, "no fallback on a failed load")
+			assert(entry.voice.SoundId == "rbxassetid://222" and entry.voice.PlaybackSpeed == 1.25 and entry.spec.volume == .16, "fallback id/speed/volume " .. entry.voice.SoundId)
+			assert(math.abs(entry.spec.offset - 9.8) < 1e-6, "fallback starts at its share: " .. entry.spec.offset)
+			remove()
+			assert(added() == nil, "remover left the voice")
+			-- Success that never loaded (a clip the place may not use): falls back too, after the load grace.
+			Ambient.preload = function(list, callback) callback(list[1].SoundId, Enum.AssetFetchStatus.Success) end
+			held = {};slept = 0
+			remove = a:addVoice("fountain", spec)
+			assert(added().fellBack == true, "an empty Success kept the silent clip")
+			assert(slept >= Ambient.LoadGrace and slept < Ambient.LoadGrace + .5, "waited the grace: " .. slept)
+			remove()
+			-- Success whose IsLoaded lags: it loads during the grace and keeps the new clip.
+			local polls = 0
+			Ambient.length = function(voice)
+				polls += 1
+				return if polls >= 3 and voice.SoundId == "rbxassetid://111" then 32 else nil
+			end
+			remove = a:addVoice("fountain", spec)
+			entry = added()
+			assert(entry.fellBack == nil and entry.voice.SoundId == "rbxassetid://111", "a lagging load fell back")
+			remove()
+			Ambient.length = function(voice) return held[voice.SoundId] end
+			held = { ["rbxassetid://111"] = 32 }
+			remove = a:addVoice("fountain", spec)
+			entry = added()
+			assert(entry.fellBack == nil and entry.voice.SoundId == "rbxassetid://111" and entry.voice.PlaybackSpeed == 1, "fell back on a good load")
+			assert(math.abs(entry.spec.offset - 15.68) < 1e-6, "start share of 32 s: " .. entry.spec.offset)
+			remove()
+			-- A load still in flight when the fountain goes (PreloadAsync yields): the late failure must not touch it.
+			local later
+			Ambient.preload = function(list, callback)
+				local thread = coroutine.running()
+				later = function() callback(list[1].SoundId, "Failure");coroutine.resume(thread) end
+				coroutine.yield()
+			end
+			remove = a:addVoice("fountain", spec)
+			entry = added()
+			remove()
+			later()
+			assert(entry.fellBack == nil and entry.voice.SoundId == "rbxassetid://111", "a removed voice switched")
+			Ambient.preload = function() error("offline") end
+			remove = a:addVoice("fountain", spec)
+			assert(added().fellBack == true, "a preload that throws counts as failed")
+			remove()
+			remove = a:addVoice("fountain", { id = 111, parent = host })
+			entry = added()
+			assert(entry.fellBack == nil and entry.spec.offset == 0, "no fallback or start given: nothing to do")
+			remove()
+		end)
+		Ambient.preload, Ambient.length, Ambient.wait = preload, length, wait
+		a:destroy();folder:Destroy();assert(ok, err)
+	end)
+
 	test("garden life's onChirp: called once per chirp that played, with its perch; nil or a throwing hook changes nothing; a throw warns once", function()
 		local perches = {}
 		for i = 1, 8 do perches[i] = Vector3.new(i * 6, 12, 0) end

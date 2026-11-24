@@ -70,6 +70,34 @@ function Falls.kitStack(b)
 		b.sheetBeam("Tumble","FlowA",flat,K.FlowA,K.FlowA.length).level1=true
 		b.sheetBeam("Tumble","FlowB",flat,K.FlowB,K.FlowB.length).level1=false
 	end
+	-- LOOK-R3 1: deeper water at each foot. A static flat beam under the Apron, its map stretched once (foot-shade: image
+	-- row 0 at Attachment0, the foot). The ledge pool's smaller one is dropped at level 1.
+	local function shade(name,foot,fall,size,level1)
+		local spec=K.PoolShade
+		local p=b.groups.Tumble.part
+		local out,across=fall.n,fall.t
+		local a0=b.attach(p,b.frame(foot+UP*spec.up,UP,across,UP:Cross(across)))
+		local a1=b.attach(p,b.frame(foot+out*size.out+UP*spec.up,UP,across,UP:Cross(across)))
+		local beam=Instance.new("Beam")
+		beam.Name=name
+		beam.Attachment0,beam.Attachment1=a0,a1
+		beam.Width0,beam.Width1=size.width,size.width
+		beam.FaceCamera=false
+		beam.Texture=spec.Texture
+		beam.TextureMode=Enum.TextureMode.Stretch
+		beam.TextureLength=1
+		beam.TextureSpeed=0
+		beam.Segments=1
+		beam.Color=ColorSequence.new(spec.Color)
+		beam.Transparency=NumberSequence.new(spec.Transparency)
+		beam.LightInfluence=1
+		beam.LightEmission=0
+		beam.Enabled=false
+		beam.Parent=p
+		b.add({group="Tumble",name=name,kind="beam",item=beam,level1=level1})
+	end
+	shade("PoolShade",impact,lower,K.PoolShade.pool,true)
+	shade("LedgeShade",Vector3.new(upper.bottom.X,lower.top.Y,upper.bottom.Z),upper,K.PoolShade.ledge,false)
 	-- The apron: a flat beam on the pool, flowing out from the foot (attachments' Axis up: it lies in the water).
 	do
 		local spec=K.Apron

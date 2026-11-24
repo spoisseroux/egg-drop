@@ -105,7 +105,16 @@ return function(client,offline)
 				assert(names[gone]==nil,gone.." is not in the kit stack")
 			end
 			assert(names.FlowA==2 and names.FlowB==2 and names.Apron==1 and names.BoilPool==1 and names.BoilLedge==1
-				and names.Droplets==1 and names.KitMist==1)
+				and names.Droplets==1 and names.KitMist==1 and names.PoolShade==1 and names.LedgeShade==1)
+			-- LOOK-R3 1: the foot shades lie flat on the water under the Apron, static, the foot at Attachment0.
+			local shade=layer(added,"Tumble","PoolShade",1).item
+			local a0,a1=shade.Attachment0,shade.Attachment1
+			local p0,p1=(a0.Parent.CFrame*a0.CFrame),(a1.Parent.CFrame*a1.CFrame)
+			local apron=layer(added,"Tumble","Apron",1).item.Attachment0
+			assert(shade.TextureSpeed==0 and shade.FaceCamera==false and shade.Width0==Kit.PoolShade.pool.width
+				and shade.Texture==Kit.PoolShade.Texture and near((p1.Position-p0.Position).Magnitude,Kit.PoolShade.pool.out),"pool shade frame")
+			assert(((p0*Vector3.new(1,0,0))-p0.Position):Dot(Vector3.new(0,1,0))>.99 and p0.Position.Y<(apron.Parent.CFrame*apron.CFrame).Position.Y,"flat, under the apron")
+			assert(layer(added,"Tumble","LedgeShade",1).level1==false and layer(added,"Tumble","PoolShade",1).level1==true)
 			for nth=1,2 do
 				local beam=layer(added,"Tumble","FlowA",nth).item
 				assert(beam.CurveSize0==0 and beam.FaceCamera==false and beam.Segments==6 and beam.Texture==Kit.Textures.White,
@@ -114,9 +123,9 @@ return function(client,offline)
 			assert(layer(added,"Tumble","FlowB",1).item.Texture==Kit.Textures.Veil)
 			local sky=layer(added,"Sky","StrandA").item
 			assert(sky.CurveSize0==0 and sky.Segments==6,"Sky Falls keeps today's layers")
-			-- 9 at Tumble near the falls, 4 at level 1, none under Reduced Motion.
-			assert(go(added,{camera=NEAR,level=0,reduced=false,daylight=.9})==9,"near Tumble: its 9 (Sky Falls is the other group)")
-			assert(go(added,{level=1})==4)
+			-- 11 at Tumble near the falls (LOOK-R3: + the two foot shades), 5 at level 1, none under Reduced Motion.
+			assert(go(added,{camera=NEAR,level=0,reduced=false,daylight=.9})==11,"near Tumble: its 11 (Sky Falls is the other group)")
+			assert(go(added,{level=1})==5)
 			assert(go(added,{level=0,reduced=true})==0)
 			added.destroy()
 			-- And without it, today's flat falls exactly.

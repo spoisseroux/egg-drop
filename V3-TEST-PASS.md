@@ -37,6 +37,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
+| 25 | **World leftovers: calm pool, leafy crowns, fountain sound** | Built on branch `claude/island-reexport-337cd0`, checked in Studio, Fable GO, code review applied; waits for the beta publish | The waterfall pool and the stream are calm teal with a soft light net instead of electric blue, darker right under the falls. Trees are lumpier (5 to 7 clumps, a flat underside, ragged tufts at the rim) and you can see leaves on them, dark green and lime. Walk up to the fountain: a light, steady splash with a little patter, no swell (your ears decide; if you don't like it, it goes back to the old water sound or silent). `/aero off` puts everything back |
 
 ## Scoped, not built
 

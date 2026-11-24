@@ -1,0 +1,59 @@
+{
+  "pool-aero": {
+    "px": 512,
+    "studs": 14.0,
+    "points": 24,
+    "edges": 72,
+    "broken": 21,
+    "mean_shift": [
+      -6.8,
+      -30.2,
+      -42.7
+    ],
+    "mean": [
+      58.9,
+      133.6,
+      147.3
+    ],
+    "max": [
+      83,
+      149,
+      159
+    ]
+  },
+  "pool-glint": {
+    "px": 256,
+    "studs": 9.0,
+    "cells": 25,
+    "kept_edges": 25,
+    "of": 74,
+    "lit_share": 0.081
+  },
+  "foot-shade": {
+    "px": 128,
+    "foot_row_peak": 255,
+    "outer_edges_max": 0
+  },
+  "leaf-tiles": {
+    "px": 256,
+    "studs": 4,
+    "leaves": 346,
+    "cover": {
+      "gap": 0.263,
+      "mid": 0.547,
+      "light": 0.19
+    },
+    "means": {
+      "leaf-dark": [
+        42.2,
+        120.3,
+        60.2
+      ],
+      "leaf-lime": [
+        128.7,
+        186.2,
+        61.0
+      ]
+    }
+  }
+}

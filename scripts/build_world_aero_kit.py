@@ -52,10 +52,6 @@ FIRST_CLUMP = {"Tree_Round": (0, 0, 8.5, 3.6, .78), "Tree_Tall": (0, 0, 8.8, 3.0
 KIND = {"Tree_Round": ("Crown_Round", "foliage"), "Tree_Tall": ("Crown_Tall", "foliage"),
         "Tree_Blossom": ("Crown_Blossom", "foliage_blossom")}
 
-# WORLD-PASS 1B: lime crowns shade from a cooler, darker underside to full colour on top. Vertex colours multiply the
-# lime map (AeroWorld writes it on a white part), so the top is 1 and the underside is #5FAE2A over the map's #8FD63F.
-LIME_UNDER = (95 / 143, 174 / 214, 42 / 63)
-LIME_TOP = (1.0, 1.0, 1.0)
 
 
 def rb(v):
@@ -154,6 +150,218 @@ def sub_object(src, vert_ids, name):
 
 
 # ------------------------------------------------------------------------------------------------------------ crowns
+# LOOK-R3 2 (Fable, 2026-11-23): Round, Tall and Blossom rebuilt as 5-7 uneven clumps with a flat underside and ragged
+# rim tufts, at today's triangle counts. Clump 0 is today's, so the trunk top (the pivot) and the sway do not move.
+# Clumps: (x, y, z, radius, squash, segments, latitude bands): an ellipsoid of 2 * segments * (bands - 1) triangles.
+# Tufts: (angle in degrees, z of a shoulder tuft or None for the rim). A tuft is a 4-sided spike with no base, 4 triangles.
+RESHAPE = {
+    "Crown_Round": {"floor": 5.6, "tris": 240,
+                    "clumps": [(0, 0, 8.5, 3.6, .78, 8, 4), (2.5, .7, 7.2, 2.7, .74, 8, 3), (-2.3, -1, 7.4, 2.5, .74, 8, 3),
+                               (.4, 2.3, 9.4, 2.1, .8, 8, 3), (-.6, -2.4, 8.8, 2, .78, 8, 3), (-1.3, .9, 10.7, 1.8, .82, 5, 3),
+                               (1.5, -1.2, 10.3, 1.4, .85, 5, 3)],
+                    "tufts": [(20, None), (75, None), (140, None), (200, None), (255, None), (320, None)]},
+    "Crown_Tall": {"floor": 6.4, "tris": 220,
+                   "clumps": [(0, 0, 8.8, 3, .82, 11, 3), (.5, .3, 10.9, 2.5, .86, 10, 3), (-.4, -.4, 12.8, 2, .9, 6, 4),
+                              (.1, .1, 14.6, 1.3, 1, 6, 3), (1.6, -.8, 9.5, 1.6, .78, 6, 3), (-1.5, .9, 10.2, 1.4, .78, 6, 3)],
+                   "tufts": [(30, None), (120, None), (210, None), (300, None), (75, 9.6), (195, 11.6), (315, 13.6)]},
+    "Crown_Blossom": {"floor": 4.9, "tris": 240,
+                      "clumps": [(0, 0, 7.4, 3.4, .74, 8, 4), (2.4, -.5, 6.6, 2.6, .72, 8, 3), (-2.2, 1, 6.8, 2.5, .72, 8, 3),
+                                 (.4, 2.1, 8.3, 1.9, .78, 8, 3), (-.5, -2.2, 8, 1.9, .78, 8, 3), (1.4, .9, 9.1, 1.5, .8, 5, 3),
+                                 (-1.3, -.6, 8.9, 1.3, .82, 5, 3)],
+                      "tufts": [(35, None), (95, None), (150, None), (215, None), (270, None), (330, None)]},
+}
+RESHAPE_KIND = {"Crown_Round": "Tree_Round", "Crown_Tall": "Tree_Tall", "Crown_Blossom": "Tree_Blossom"}
+UV_SCALE = .25          # one 4-stud leaf tile (LOOK-R3 2), box-mapped by face normal
+JITTER = .13            # of each clump's radius (LOOK-R3 round 6: .08 read as regular)
+TILT = (20, 40)         # degrees each clump's pole leans, random direction (round 6: all poles up made lids)
+TUFT_IN = .3            # studs a tuft's root sits inside the leaves (round 6: rim roots floated in clear air)
+CREASE = .85            # a vertex inside another clump
+UNDER = {"foliage": (0xA6 / 255, 0xB8 / 255, 0xAE / 255), "foliage_blossom": (0xA1 / 255, 0xCE / 255, 0xB7 / 255)}
+OVERHANG_MAX = 1.0      # studs the new crown may stand outside today's bounds (rim tufts), any side
+TRUNK_DEPTH_MIN = .5    # the trunk top sits this far above the flat underside at least
+RING_PHI = {3: (0, 48, 108, 180), 4: (0, 36, 74, 118, 180)}  # latitudes (degrees from the top) per band count
+
+
+def smooth01(k):
+    k = min(max(k, 0.0), 1.0)
+    return k * k * (3 - 2 * k)
+
+
+def in_clump(p, cl, k=1.0):
+    x, y, z, r, sq = cl[:5]
+    return ((p.x - x - LEAN) / (r * k)) ** 2 + ((p.y - y) / (r * k)) ** 2 + ((p.z - z) / (r * sq * k)) ** 2 < 1
+
+
+def rim_radius(cl, z):
+    x, y, cz, r, sq = cl[:5]
+    return r * math.sqrt(max(0.0, 1 - ((z - cz) / (r * sq)) ** 2))
+
+
+def new_crown(name, material, pivot, materials):
+    """The reshaped crown in its tree's frame at scale 1, pivot at the origin (as the shared crowns are)."""
+    spec = RESHAPE[name]
+    name = name + "__" + material
+    rng = random.Random(name)
+    floor = spec["floor"]
+    clumps = spec["clumps"]
+    top = max(c[2] + c[3] * c[4] for c in clumps)
+    under = UNDER[material]
+    bm = bmesh.new()
+    col = bm.loops.layers.float_color.new("Col")
+    uvl = bm.loops.layers.uv.new("UVMap")
+    normal_of, shade_of = {}, {}
+
+    def shade(p, own):
+        c = mix(under, (1.0, 1.0, 1.0), smooth01((p.z - floor) / (top - floor)))
+        if any(in_clump(p, cl) for i, cl in enumerate(clumps) if i != own):
+            c = tuple(v * CREASE for v in c)
+        return c
+
+    for ci, cl in enumerate(clumps):
+        x, y, z, r, sq, seg, bands = cl
+        cen = Vector((x + LEAN, y, z))
+        lean_dir = rng.uniform(0, 2 * math.pi)
+        tilt = Matrix.Rotation(math.radians(rng.uniform(*TILT)), 3, Vector((math.cos(lean_dir), math.sin(lean_dir), 0)))
+        rows = []
+        # Studio r5: evenly spaced latitudes put a 3-band clump's two rings at the same radius (a prism: the crowns read
+        # as boxes). Uneven latitudes give a rounded top and a fuller lower belly at the same triangle count.
+        phis = RING_PHI[bands]
+        for b_ in range(bands + 1):
+            phi = math.radians(phis[b_]) + (rng.uniform(-6, 6) * math.pi / 180 if 0 < b_ < bands else 0)
+            row = []
+            for s_ in range(1 if b_ in (0, bands) else seg):
+                th = 2 * math.pi * (s_ + (.5 if b_ % 2 else 0)) / seg + ci * .7
+                d = Vector((math.sin(phi) * math.cos(th), math.sin(phi) * math.sin(th), math.cos(phi)))
+                j = 1 + rng.uniform(-JITTER, JITTER)
+                p = cen + tilt @ Vector((d.x * r * j, d.y * r * j, d.z * r * sq * j))
+                clamped = p.z < floor
+                if clamped:
+                    p.z = floor                         # the flat underside: clamp, no cap (caps cost triangles)
+                v = bm.verts.new(p - pivot)
+                n = (tilt @ Vector((d.x / r, d.y / r, d.z / (r * sq)))).normalized()
+                normal_of[v] = (n + Vector((0, 0, -1))).normalized() if clamped else n
+                shade_of[v] = shade(p, ci)
+                row.append(v)
+            rows.append(row)
+        for b_ in range(bands):
+            a_, b2 = rows[b_], rows[b_ + 1]
+            for s_ in range(seg):
+                if len(a_) == 1:
+                    bm.faces.new((a_[0], b2[(s_ + 1) % seg], b2[s_]))
+                elif len(b2) == 1:
+                    bm.faces.new((a_[s_], a_[(s_ + 1) % seg], b2[0]))
+                else:
+                    p0, p1, q0, q1 = a_[s_], a_[(s_ + 1) % seg], b2[s_], b2[(s_ + 1) % seg]
+                    bm.faces.new((p0, p1, q1))
+                    bm.faces.new((p0, q1, q0))
+    # Tufts, rooted on the built mesh (round 6): the leaf vertex that reaches furthest out at that angle, in the rim band
+    # (just above the flat underside) or on the shoulder band, pulled TUFT_IN studs back into the leaves.
+    leaf_pts = [v.co + pivot for v in bm.verts]
+    for angle, shoulder in spec["tufts"]:
+        th = math.radians(angle)
+        out = Vector((math.cos(th), math.sin(th), 0))
+        band = []
+        for reach, cone in ((.9, .85), (1.5, .75), (2.2, .6)):    # widen until some leaves face that way
+            lo, hi = (floor, floor + reach) if shoulder is None else (shoulder - reach, shoulder + reach)
+            band = [q for q in leaf_pts if lo <= q.z <= hi and Vector((q.x - LEAN, q.y, 0)).normalized().dot(out) > cone]
+            if band:
+                break
+        assert band, (name, "no leaves for the tuft at", angle, shoulder)
+        edge = max(band, key=lambda q: q.dot(out))
+        root = edge - out * TUFT_IN
+        root.z = max(root.z, floor + .25)
+        if shoulder is None:
+            tip = root + out * (TUFT_IN + rng.uniform(.5, .8)) + Vector((0, 0, -.6))
+        else:
+            down = (out * math.cos(math.radians(20)) - Vector((0, 0, math.sin(math.radians(20))))).normalized()
+            tip = root + down * (TUFT_IN + rng.uniform(.5, .8))
+        side = Vector((-out.y, out.x, 0))
+        half = .45
+        base = [root + side * half, root + Vector((0, 0, half * .8)), root - side * half, root - Vector((0, 0, half * .5))]
+        c = shade(root, -1)
+        tv = bm.verts.new(tip - pivot)
+        normal_of[tv] = (tip - root).normalized()
+        shade_of[tv] = c
+        bv = []
+        for q in base:
+            v = bm.verts.new(q - pivot)
+            normal_of[v] = ((q - root).normalized() + out).normalized()
+            shade_of[v] = c
+            bv.append(v)
+        for k in range(4):
+            bm.faces.new((bv[k], bv[(k + 1) % 4], tv))
+    # Code review r3: the clump fans and quads were wound inward (only the tufts faced out); each clump and tuft is its
+    # own closed or open island, so recalculating faces them all out, as Builder.build does.
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.normal_update()
+    for face in bm.faces:
+        face.smooth = True
+        fn = face.normal
+        ax = max(range(3), key=lambda k: abs(fn[k]))
+        for loop in face.loops:
+            q = loop.vert.co + pivot                    # tree frame: the tile does not move with the pivot
+            if ax == 0:
+                loop[uvl].uv = (q.y * UV_SCALE, q.z * UV_SCALE)
+            elif ax == 1:
+                loop[uvl].uv = (q.x * UV_SCALE, q.z * UV_SCALE)
+            else:
+                loop[uvl].uv = (q.x * UV_SCALE, q.y * UV_SCALE)
+            c = shade_of[loop.vert]
+            loop[col] = (c[0], c[1], c[2], 1.0)
+    order = list(bm.verts)
+    normals = [tuple(normal_of[v]) for v in order]
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    # The shading is authored as sRGB values (FBX colors_type SRGB, as the falls and the old lime gradient).
+    attr = me.color_attributes["Col"]
+    for i in range(len(me.loops)):
+        c = tuple(attr.data[i].color)
+        attr.data[i].color_srgb = (c[0], c[1], c[2], 1.0)
+    me.color_attributes.active_color = attr
+    me.normals_split_custom_set_from_vertices(normals)
+    for m in materials:
+        me.materials.append(m)
+    obj = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(obj)
+    return obj
+
+
+def bounds(vs):
+    lo = Vector([min(v[i] for v in vs) for i in range(3)])
+    hi = Vector([max(v[i] for v in vs) for i in range(3)])
+    return lo, hi
+
+
+def reshape(canon):
+    """Swap the proven shared crowns' geometry for LOOK-R3's. Every tree was proven on today's geometry (its crown sits
+    on its own leaves: pivot, yaw and scale), so checking the new geometry against today's in the shared frame covers
+    every tree: today's triangle count, inside today's bounds by OVERHANG_MAX, the flat underside at least
+    TRUNK_DEPTH_MIN below the trunk top, the trunk top inside clump 0, no zero-area triangle."""
+    for name, spec in RESHAPE.items():
+        entry = canon[name]
+        old = entry["obj"]
+        c0 = FIRST_CLUMP[RESHAPE_KIND[name]]
+        assert tuple(spec["clumps"][0][:5]) == tuple(c0), (name, "clump 0 moved")
+        old_lo, old_hi = bounds([v.co for v in old.data.vertices])
+        obj = new_crown(name, entry["material"], entry["pivot"], list(old.data.materials))
+        new_lo, new_hi = bounds([v.co for v in obj.data.vertices])
+        tris = C.tris(obj)
+        assert tris == C.tris(old) == spec["tris"], (name, "triangles", tris, C.tris(old), spec["tris"])
+        overhang = max(max(old_lo[i] - new_lo[i], new_hi[i] - old_hi[i]) for i in range(3))
+        assert overhang <= OVERHANG_MAX, (name, "overhang", overhang)
+        trunk_depth = entry["pivot"].z - spec["floor"]     # the pivot is the trunk top
+        assert trunk_depth >= TRUNK_DEPTH_MIN, (name, "trunk depth", trunk_depth)
+        assert in_clump(entry["pivot"], c0, .999), (name, "trunk top outside clump 0")
+        degenerate = sum(1 for poly in obj.data.polygons if poly.area < 1e-6)
+        assert degenerate == 0, (name, "zero-area triangles", degenerate)
+        entry["reshape"] = {"overhang": round(overhang, 4), "floor": round(-trunk_depth, 4), "trunkDepth": round(trunk_depth, 4),
+                            "oldBounds": [rb(old_lo), rb(old_hi)], "newBounds": [rb(new_lo), rb(new_hi)], "tris": tris}
+        bpy.data.objects.remove(old, do_unlink=True)
+        entry["obj"] = obj
+        print("KIT reshape", name, entry["reshape"])
+
+
 def placements():
     data = json.loads((ROOT / "artifacts/world1-mockup/v7/vegetation-placements.json").read_text())["instances"]
     removed = set(json.loads((ROOT / "assets/world/world-v7-declutter.json").read_text())["removed"])
@@ -238,16 +446,7 @@ def crowns(sources):
     assert len(pts) == len(entry["verts"]) and err < MAX_FIT, ("Landmark_BlossomPointTree", err)
     instances.append({"tree": point["object"], "mesh": "Crown_Blossom", "material": "foliage_blossom", "pivot": rb(m.translation),
                       "yaw": round(point["yaw_rad"], 6), "scale": round(point["scale"], 6), "fit": round(err, 6)})
-    # 1B: lime shading by height inside each crown (its own clumps keep their round form from the old colours).
-    blossom = canon["Crown_Blossom"]["obj"].data
-    zs = [v.co.z for v in blossom.vertices]
-    z0, z1 = min(zs), max(zs)
-    colors = blossom.color_attributes.active_color or blossom.color_attributes.new("Col", "FLOAT_COLOR", "CORNER")
-    assert colors.domain == "CORNER", colors.domain
-    for loop in blossom.loops:
-        k = (blossom.vertices[loop.vertex_index].co.z - z0) / max(z1 - z0, 1e-6)
-        k = k * k * (3 - 2 * k)
-        colors.data[loop.index].color_srgb = tuple(LIME_UNDER[i] + (LIME_TOP[i] - LIME_UNDER[i]) * k for i in range(3)) + (1.0,)
+    reshape(canon)
     return canon, instances
 
 
@@ -647,7 +846,7 @@ def main():
         c, size = centred(obj)
         meshes.append({"name": obj.name, "role": "crown", "kind": entry["material"], "tris": C.tris(obj), "size": size,
                        "pivotToCentre": [round(c.x, 4), round(c.z, 4), round(-c.y, 4)],
-                       "hash": geom_digest(obj.data)})
+                       "hash": geom_digest(obj.data), **({"reshape": entry["reshape"]} if "reshape" in entry else {})})
         export.append(obj)
     for obj in rest_objs + falls_objs:
         obj.name = obj.data.name = "W7_Kit_" + obj.name

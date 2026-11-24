@@ -469,7 +469,21 @@ end
 
 -- Another looped world voice (the Aero fountain, LOOK-R2 3), mixed exactly like the falls: in the ambience group (master,
 -- Ambience level, ducks, the deck round's fade, device focus) and stopped with them. spec: {id, parent, volume, speed,
--- min, max}. Returns a remover; calling it twice is nothing.
+-- min, max, start = 0..1 share of the clip, fallback = {id, speed, volume}}. Returns a remover; calling it twice is nothing.
+-- fallback (LOOK-R3 3): if the asset does not load (moderation, deleted, offline), the voice switches to the fallback id
+-- and speed once, so a new loop can never leave the place silent where the stand-in played.
+Ambient.preload = function(instances, callback)
+	ContentProvider:PreloadAsync(instances, callback)
+end
+Ambient.LoadGrace = 4
+Ambient.wait = function(seconds)
+	return task.wait(seconds)
+end
+-- The clip's length once a Sound really holds audio, else nil (specs replace both).
+Ambient.length = function(voice)
+	local seconds = if voice.IsLoaded == true then tonumber(voice.TimeLength) or 0 else 0
+	return if seconds > 0 then seconds else nil
+end
 function Ambient:addVoice(name, spec)
 	local voice = sound(name, spec.id, self.ambience, spec.parent, true)
 	voice.RollOffMode = Enum.RollOffMode.InverseTapered
@@ -477,7 +491,53 @@ function Ambient:addVoice(name, spec)
 	voice.PlaybackSpeed = spec.speed or 1
 	local entry = { voice = voice, spec = { volume = spec.volume or .2, offset = 0 } }
 	table.insert(self.falls, entry)
+	local removed = false
+	local fallback = spec.fallback
+	local function startAt()
+		-- spec.start: where in the clip to begin, as a share of its length (only known once it has loaded).
+		local seconds = spec.start and Ambient.length(voice)
+		if seconds then
+			entry.spec.offset = spec.start * seconds * .98
+			-- Already started from 0 while it loaded: one jump now, while it has barely begun.
+			if voice.IsPlaying then voice.TimePosition = entry.spec.offset end
+		end
+	end
+	if (fallback and fallback.id and fallback.id ~= spec.id) or spec.start then
+		task.spawn(function()
+			local failed = false
+			local ok = pcall(Ambient.preload, { voice }, function(_, status)
+				if status ~= Enum.AssetFetchStatus.Success then failed = true end
+			end)
+			if removed or self.destroyed then return end
+			-- Architect r3: a clip the place may not use can report Success and still never load; trust the Sound too.
+			-- Code review r3: IsLoaded can lag a Success by a moment; give it LoadGrace seconds before falling back.
+			if ok and not failed then
+				local waited = 0
+				while Ambient.length(voice) == nil and waited < Ambient.LoadGrace do
+					waited += Ambient.wait(.25)
+					if removed or self.destroyed then return end
+				end
+			end
+			local loaded = ok and not failed and Ambient.length(voice) ~= nil
+			if loaded or not (fallback and fallback.id and fallback.id ~= spec.id) then
+				if loaded then startAt() end
+				return
+			end
+			pcall(function()
+				if voice.IsPlaying then voice:Stop() end
+				voice.SoundId = "rbxassetid://" .. fallback.id
+				voice.PlaybackSpeed = fallback.speed or 1
+				if fallback.volume then entry.spec.volume = fallback.volume end
+			end)
+			entry.fellBack = true
+			entry.spec.offset = 0
+			-- The stand-in's own length: start it at the same share once it is in.
+			pcall(Ambient.preload, { voice }, function() end)
+			if not removed and not self.destroyed then startAt() end
+		end)
+	end
 	return function()
+		removed = true
 		local at = table.find(self.falls, entry)
 		if at then table.remove(self.falls, at) end
 		pcall(function() voice:Destroy() end)

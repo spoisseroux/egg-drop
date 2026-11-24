@@ -49,6 +49,12 @@ LIME_MAP = "rbxassetid://127425168647805"
 # LOOK-R2 round 3: still neon at the map's mean #8FD63F; the skin's Color multiplies it to #86BE3C.
 LIME_TINT = (0x86 / 0x8F, 0xBE / 0xD6, 0x3C / 0x3F)
 ROUGH_92 = "rbxassetid://93359996848376"
+# LOOK-R3 2: the reshaped crowns (a manifest mesh with "reshape") wear the drawn leaf-cluster tiles
+# (scripts/draw_aero_r3_textures.py, 4 studs a tile) and their roughness map; the lime tile holds its final colours, so
+# its skin stays white. The Hatch crown and the bushes keep the island map (their UVs are ~8 studs a tile).
+LEAF_DARK = "rbxassetid://94198650524622"
+LEAF_LIME = "rbxassetid://119756604191368"
+LEAF_ROUGH = "rbxassetid://125570475932961"  # LOOK-R3 round 6: flat 1.0
 
 
 class GateError(RuntimeError):
@@ -144,10 +150,15 @@ def xml_part(index, mesh, mesh_id, raw):
     shadow = mesh["role"] == "rest"  # crowns move (no shadow); falls and rocks stay shadowless (+0 shadow draws)
     double = True
     rough = MATTE_ROUGHNESS
-    if kind == "foliage":
+    tint = None
+    if "reshape" in mesh and kind == "foliage":
+        matte, rough = LEAF_DARK, LEAF_ROUGH
+    elif "reshape" in mesh and kind == "foliage_blossom":
+        matte, rough = LEAF_LIME, LEAF_ROUGH
+    elif kind == "foliage":
         matte = tex["W1_foliage"]
     elif kind == "foliage_blossom":
-        matte, rough = LIME_MAP, ROUGH_92
+        matte, rough, tint = LIME_MAP, ROUGH_92, LIME_TINT
     elif kind == "kitstone":
         texture, material = tex["W1_marble"], "Plastic"  # LOOK-R2 3: the plaza marble under a weathered vertex tint
     else:
@@ -181,8 +192,8 @@ def xml_part(index, mesh, mesh_id, raw):
             f"          <Content name=\"ColorMap\"><url>{matte}</url></Content>",
             f"          <Content name=\"MetalnessMap\"><url>{MATTE_METALNESS}</url></Content>",
             f"          <Content name=\"RoughnessMap\"><url>{rough}</url></Content>",
-        ] + ([f"          <Color3 name=\"Color\"><R>{LIME_TINT[0]!r}</R><G>{LIME_TINT[1]!r}</G><B>{LIME_TINT[2]!r}</B></Color3>"]
-             if rough == ROUGH_92 else []) + [
+        ] + ([f"          <Color3 name=\"Color\"><R>{tint[0]!r}</R><G>{tint[1]!r}</G><B>{tint[2]!r}</B></Color3>"]
+             if tint else []) + [
             "        </Properties>",
             "      </Item>",
         ]
