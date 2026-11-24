@@ -101,4 +101,53 @@ function Wind.at(position,time)
 	return math.clamp((breeze+(1-breeze)*rawGust(t))*strength(),0,1)
 end
 
+-- The big breath (beta 14 QA W3 row 1, WORLD-AND-NEST-LOOK section 1; GARDEN-LIFE-BUILD-PLAN): a long, strong gust on
+-- its own schedule on top of the normal gusts, the same on every client. Breath b starts at b * BreathSlot moved by up
+-- to BreathJitter (so every gap is 240 to 360 s), eases up over BreathRise, holds BreathHold, eases out over BreathFade,
+-- and crosses the island as a front like a gust. Opt in only (architect r1): Wind.gust and Wind.at never include it;
+-- consumers read Wind.breath / Wind.blow / Wind.swayAt, and only while the Alive `scene` switch is on.
+Wind.BreathSlot,Wind.BreathJitter=300,30
+Wind.BreathRise,Wind.BreathHold,Wind.BreathFade=2.5,3,5
+Wind.BreathLength=Wind.BreathRise+Wind.BreathHold+Wind.BreathFade
+
+-- Seconds at which breath b passes the world origin.
+function Wind.breathStart(b)
+	return b*Wind.BreathSlot+(Wind.hash(b,21)*2-1)*Wind.BreathJitter
+end
+-- 0 to 1 to 0 for a breath that reached this place `age` seconds ago.
+function Wind.breathEnvelope(age)
+	if type(age)~="number"or age~=age or age<=0 or age>=Wind.BreathLength then return 0 end
+	if age<Wind.BreathRise then return smooth(age/Wind.BreathRise)end
+	if age<Wind.BreathRise+Wind.BreathHold then return 1 end
+	return 1-smooth((age-Wind.BreathRise-Wind.BreathHold)/Wind.BreathFade)
+end
+-- The breath at the wind's local time t: its strength (0 to 1) and its number (nil when none is blowing).
+local function rawBreath(t)
+	local base=math.floor(t/Wind.BreathSlot)
+	for b=base,base+1 do
+		local shape=Wind.breathEnvelope(t-Wind.breathStart(b))
+		if shape>0 then return shape,b end
+	end
+	return 0,nil
+end
+-- 0 at rest, up to 1 while the breath passes this place; and the breath's number.
+function Wind.breath(position,time)
+	local t=Wind.localTime(position,time)
+	if not t then return 0,nil end
+	local shape,b=rawBreath(t)
+	return math.clamp(shape*strength(),0,1),b
+end
+-- The gust or the breath, whichever is stronger here (0 to 1): what leaves' spawn rate and the scud answer.
+function Wind.blow(position,time)
+	return math.max(Wind.gust(position,time),(Wind.breath(position,time)))
+end
+-- Wind.at with the breath in it: for swaying things whose owner has the `scene` switch on (crowns, chimes, flags,
+-- hanging Dewdrops). Never used for what falls (LifeSim's drops read Wind.at).
+function Wind.swayAt(position,time)
+	local t=Wind.localTime(position,time)
+	if not t then return 0 end
+	local breeze=rawBreeze(t)
+	return math.clamp((breeze+(1-breeze)*math.max(rawGust(t),(rawBreath(t))))*strength(),0,1)
+end
+
 return Wind

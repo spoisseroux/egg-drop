@@ -2,6 +2,8 @@
 
     python scripts/check_life_art.py            fails (exit 1) on any problem, including an id still nil
     python scripts/check_life_art.py --draft    the same checks, but nil ids are listed, not failed
+    python scripts/check_life_art.py r4 [--draft]   the beta 14 table instead: src/shared/LifeArtR4.lua (12 rows),
+                                                    artifacts/qa-2026-11-23-beta14/look/, draw_garden_life_r4_textures.py
 
 Reads src/shared/LifeArt.lua (one `key=f("file",id,fallback)` row a line) and checks:
   1. every file exists in artifacts/qa-2026-11-23-beta12/look/;
@@ -22,6 +24,12 @@ ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "src/shared/LifeArt.lua"
 LOOK = ROOT / "artifacts/qa-2026-11-23-beta12/look"
 DRAW = ROOT / "scripts/draw_garden_life_r3_textures.py"
+ROWS = 21
+if "r4" in sys.argv:
+    ART = ROOT / "src/shared/LifeArtR4.lua"
+    LOOK = ROOT / "artifacts/qa-2026-11-23-beta14/look"
+    DRAW = ROOT / "scripts/draw_garden_life_r4_textures.py"
+    ROWS = 12
 ROW = re.compile(r'^\s*(\w+)=f\("([^"]+)",(nil|"rbxassetid://\d+"),')
 
 
@@ -51,8 +59,8 @@ def main() -> int:
     draft = "--draft" in sys.argv
     table = rows()
     problems, pending = [], []
-    if len(table) != 21:
-        problems.append(f"LifeArt has {len(table)} rows, want 21")
+    if len(table) != ROWS:
+        problems.append(f"{ART.name} has {len(table)} rows, want {ROWS}")
     for key, file, uid in table:
         if not (LOOK / file).exists():
             problems.append(f"{key}: {file} missing from {LOOK.relative_to(ROOT)}")

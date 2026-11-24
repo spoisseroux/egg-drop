@@ -58,6 +58,75 @@ function Flowers.build(options)
 	return patches
 end
 
+-- Beta 14 QA W3 row 7 (GARDEN-LIFE-BUILD-PLAN section 4): texture on the ground (GroundDressing: leaf litter under the
+-- largest crowns, mown and clover lawn patches, frayed path edges). Static plates culled with the flowers, at every budget
+-- level; only while the Alive `scene` switch is on (the beta place and Studio: its ceiling; never on live). A texture still
+-- pending upload (LifeArtR4 id nil) builds no plate for it. options (specs): scene (boolean, else Alive.on("scene")),
+-- art(key) -> id?, groundY(x, z).
+function Flowers.sceneOn(options)
+	if options and options.scene~=nil then return options.scene==true end
+	local ok,on=pcall(function()return require(Shared:WaitForChild("Alive")).on("scene")end)
+	return ok and on==true
+end
+function Flowers.groundPlates(options)
+	options=options or {}
+	local plates={}
+	if not Flowers.sceneOn(options)then return plates end
+	local Ground=require(Shared:WaitForChild("GroundDressing"))
+	local art=options.art or function(key)return require(Shared:WaitForChild("LifeArtR4")).id(key)end
+	local groundY=options.groundY or World.groundY
+	local Look=Ground.Look
+	local function plate(name,row,size,texture,colour,look)
+		if type(texture)~="string"or texture==""then return end
+		local x,z=row[1],row[3]
+		local okY,y=pcall(groundY,x,z)
+		if not okY or type(y)~="number"or y~=y then y=row[2]end
+		local part=Instance.new("Part")
+		part.Name=name
+		part.Anchored,part.CanCollide,part.CanQuery,part.CanTouch=true,false,false,false
+		part.CastShadow,part.Transparency=false,1
+		part.Material=Enum.Material.SmoothPlastic
+		part.Size=size
+		part.CFrame=CFrame.new(x,y+look.lift,z)*CFrame.Angles(0,row[5],0)
+		local decal=Instance.new("Decal")
+		decal.Name="Ground"
+		decal.Face=Enum.NormalId.Top
+		decal.Texture=texture
+		decal.Color3=colour or Color3.new(1,1,1)
+		decal.Transparency=look.transparency
+		decal.Parent=part
+		table.insert(plates,{part=part,position=part.Position,ground=true})
+	end
+	for _,row in ipairs(Ground.Litter)do
+		plate("GroundLitter",row,Vector3.new(row[4],Dressing.Thickness,row[4]),art(Look.litter.texture),nil,Look.litter)
+	end
+	for _,row in ipairs(Ground.Lawn)do
+		local b=row[6]=="b"
+		plate("GroundLawn",row,Vector3.new(row[4],Dressing.Thickness,row[4]),art(if b then Look.lawn.b else Look.lawn.a),
+			if b then Look.lawn.colourB else Look.lawn.colourA,Look.lawn)
+	end
+	for _,row in ipairs(Ground.Fray)do
+		plate("GroundFray",row,Vector3.new(row[4],Dressing.Thickness,Look.fray.depth),art(Look.fray.texture),nil,Look.fray)
+	end
+	return plates
+end
+-- The ground plates follow the `scene` switch: built on, destroyed off (the flowers are untouched).
+function Controller:syncGround(options)
+	local on=Flowers.sceneOn(options)
+	if on==(self.ground~=nil)then return end
+	if on then
+		self.ground=Flowers.groundPlates(options)
+		for _,plate in ipairs(self.ground)do table.insert(self.patches,plate)end
+	else
+		for i=#self.patches,1,-1 do
+			if self.patches[i].ground then self.patches[i].part:Destroy();table.remove(self.patches,i)end
+		end
+		self.ground=nil
+	end
+	local camera=workspace.CurrentCamera
+	if camera then self:cull(camera.CFrame.Position)end
+end
+
 function Flowers.cullDistance(touch)
 	return if touch then Dressing.CullPhone else Dressing.CullDesktop
 end
@@ -89,6 +158,7 @@ function Controller:destroy()
 	if self.destroyed then return end
 	self.destroyed=true
 	if self.connection then self.connection:Disconnect()end
+	if self.sceneLink then self.sceneLink:Disconnect()end
 	for _,patch in ipairs(self.patches)do patch.part:Destroy()end
 	table.clear(self.patches)
 	self.folder:Destroy()
@@ -103,6 +173,7 @@ function Flowers.new(options)
 	if touch==nil then touch=UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled end
 	local self=setmetatable({folder=folder,patches=Flowers.build(options),distance=options.distance or Flowers.cullDistance(touch),
 		elapsed=0,shown=0},Controller)
+	self:syncGround(options)
 	folder.Parent=options.parent or workspace
 	if options.auto then
 		self.connection=RunService.Heartbeat:Connect(function(dt)self:step(dt)end)
@@ -117,6 +188,13 @@ function Flowers.start()
 	if World.WorldVersion~="v7"then return nil end
 	if Flowers.controller and not Flowers.controller.destroyed then return Flowers.controller end
 	Flowers.controller=Flowers.new({auto=true})
+	-- Beta 14: the ground plates follow the `scene` switch (only where its ceiling passes: never on live).
+	pcall(function()
+		local Alive=require(Shared:WaitForChild("Alive"))
+		if not Alive.ceiling("scene")then return end
+		local controller=Flowers.controller
+		controller.sceneLink=Alive.changed("scene"):Connect(function()controller:syncGround()end)
+	end)
 	return Flowers.controller
 end
 

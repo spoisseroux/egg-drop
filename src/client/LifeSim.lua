@@ -25,10 +25,14 @@ local Sim={}
 -- Caps by AliveBudget level 0, 1, 2 (level 1 halves every cap; level 2 shows nothing). fruit: hanging Dewdrops shown,
 -- loose: Dewdrops off the tree at once (FRUIT-LOOK 4). leaves: falling leaves alive (round 3; `petals` is the same
 -- table under its old name for one build).
-local leaves=table.freeze({28,14,0})
+-- Beta 14 QA Q5 (WORLD-AND-NEST-LOOK 6): 44 / 22 falling, plus 14 / 7 scudding along the ground in a gust.
+local leaves=table.freeze({44,22,0})
 Sim.Caps=table.freeze({
+	skitter=table.freeze({14,7,0}),
 	leaves=leaves,petals=leaves,bubbles=table.freeze({8,4,0}),butterflies=table.freeze({4,2,0}),
 	birds=table.freeze({3,2,0}),emitters=table.freeze({3,3,0}),fruit=table.freeze({16,8,0}),loose=table.freeze({3,2,0}),
+	-- Beta 14 QA B2: the night fireflies (a population of their own, GARDEN-LIFE-BUILD-PLAN section 3).
+	fireflies=table.freeze({8,4,0}),
 })
 Sim.Hz=table.freeze({30,15}) -- steps a second at level 0 and 1
 -- Never in the way: studs from the camera, a station (on the ground), the course line, past the waiting pad's edge.
@@ -104,26 +108,33 @@ function Sim.clear(position,world,keep)
 	return true
 end
 
--- Falling leaves (beta 12 QA L2; GARDEN-LIFE-NEST-LOOK 2, replacing the petal bursts) --------------------------
--- A few leaves always coming down round the player: three emitters (leaf A, leaf B, a pale petal) that GardenLife
--- moves to a fresh spawn point for each emit. Sim.leafSpot draws that point uniform in the 72-stud square round the
--- player, 11 +- 1 studs over the ground there, and refuses a point off the island or whose drift path crosses a
--- covered place (Sim.LeafCover), so no leaf ever comes down under a roof; a refused emit is skipped, not redrawn.
--- The wind term is the gust number (Wind.gust, no breeze): the look's .7 studs a second when calm, 3.3 in a full gust.
+-- Falling leaves (beta 12 QA L2; GARDEN-LIFE-NEST-LOOK 2, replacing the petal bursts; beta 14 QA Q5) ---------------
+-- Leaves always coming down round the player: two emitters (the leaf sheet: four leaves on one 2 x 2 flipbook, and a
+-- pale petal) that GardenLife moves to a fresh spawn point for each emit, plus a third that scuds leaves along the ground
+-- in a gust (Sim.Skitter). Sim.leafSpot draws that point uniform in the 72-stud square round the player, 11 +- 1 studs
+-- over the ground there, and refuses a point off the island or whose drift path crosses a covered place
+-- (Sim.LeafCover), so no leaf ever comes down under a roof; a refused emit is skipped, not redrawn.
+-- The wind term is the gust number (Wind.gust, no breeze, NEVER the big breath: architect r1, so the reach below holds;
+-- the breath only multiplies the rate by breathRate and runs the scud).
 Sim.Leaf=table.freeze({
-	share=table.freeze({.55,.30,.15}),                                       -- leaf A, leaf B, petal
-	life=table.freeze({table.freeze({9,12}),table.freeze({9,12}),table.freeze({8,10})}),
-	rate=table.freeze({2.4,1.2}),boost=.5,                                    -- emits a second at level 0 / 1, x (1 + boost g)
+	share=table.freeze({.90,.10}),                                            -- the leaf sheet, the petal
+	life=table.freeze({table.freeze({9,12}),table.freeze({8,10})}),
+	rate=table.freeze({4.0,2.0}),boost=1.5,breathRate=3,                      -- emits a second at level 0 / 1, x (1 + boost g), x 3 in a breath
 	half=36,height=11,band=1,                                                 -- the square round the player; studs over the ground
-	lean=.25,gust=.9,sway=.3,swayPeriod=7,fall=.45,drag=.5,                   -- Acceleration (GardenLife writes it at accelHz)
-	speed=table.freeze({.3,.6}),spread=20,accelHz=4,
+	lean=.45,gust=1.3,sway=.35,swayPeriod=7,fall=.45,drag=.5,                 -- Acceleration (GardenLife writes it at accelHz)
+	speed=table.freeze({.3,.6}),spread=20,accelHz=4,rotSpeed=70,
 	-- How far a leaf can drift over its longest life: along the wind (reach) and to either side (side). Derived by
 	-- LifeSim.spec from real wind sequences: Sim.leafDrift through a 12 s life from 4,000 start times over 3,000 s of
-	-- gusts, with the wind dial at 1 and at 1.5 (two gusts in one life included): at most 14.5 along and 1.3 across
-	-- (2026-11-23), rounded up with under 2 studs to spare. The gusts are short (.8 s up, 2.7 s down), so a leaf
-	-- spends most of its life in the calm lean. [check] in Studio that a leaf's real drift matches (Drag's half-life).
-	reach=16,side=2,
+	-- gusts, with the wind dial at 1 and at 1.5 (two gusts in one life included), rounded up with under 2 studs to
+	-- spare. Round 3 (lean .25, gust .9): 14.5 along, 1.3 across -> 16 / 2. Beta 14 Q5 (lean .45, gust 1.3, sway .35):
+	-- 23.1 along, 1.5 across (2026-11-23) -> 24 / 2. [check] in Studio that a leaf's real drift matches (Drag's half-life).
+	reach=24,side=2,
 })
+-- The scud (beta 14 QA Q5): leaves tumbling along the ground while the gust (or the big breath, with `scene` on) is
+-- over `over`. Same square, .12 over the ground, never where a 3 s scud would cross a roof (its own short reach), never
+-- on the course while a race is live.
+Sim.Skitter=table.freeze({rate=table.freeze({6,3}),life=table.freeze({2,3}),speed=table.freeze({3,5}),spread=12,drag=1.2,
+	rotSpeed=220,height=.12,over=.5,reach=15,side=1})
 -- The covered places (roofs) no leaf may come down under: a flat circle each, x, z and radius in studs. From the
 -- read-only Studio probe (scripts/probe_leaf_cover.luau, Play on the beta build after the island re-export, 2026-11-23;
 -- artifacts/qa-2026-11-23-beta12/STUDIO-PROBES.md): every roof players stand under. Left out: the north aqueduct and
@@ -172,15 +183,31 @@ function Sim.leafDrift(t0,life,position,dt)
 	return x:Dot(dir),x:Dot(cross)
 end
 -- The covered place a leaf starting over (x, z) would drift under, or nil: its path is the segment from (x, z) to
--- reach studs downwind; refused when that passes within r + side of a cover's middle.
-function Sim.leafCovered(x,z,cover)
+-- reach studs downwind; refused when that passes within r + side of a cover's middle. reach and side default to the
+-- falling leaves' (the scud passes its own).
+function Sim.leafCovered(x,z,cover,reach,side)
 	local L=Sim.Leaf
+	reach,side=reach or L.reach,side or L.side
 	local dir=Wind.Direction
-	local line={x,z,x+dir.X*L.reach,z+dir.Z*L.reach}
+	local line={x,z,x+dir.X*reach,z+dir.Z*reach}
 	for _,place in ipairs(cover or Sim.LeafCover)do
-		if Sim.lineDistance(place.x,place.z,line)<place.r+L.side then return place.name or "cover"end
+		if Sim.lineDistance(place.x,place.z,line)<place.r+side then return place.name or "cover"end
 	end
 	return nil
+end
+-- A spot for one scudding leaf round `centre`, or nil and why: off the island, under cover (the scud's own reach), or
+-- on the course while a race is live (world.course).
+function Sim.skitterSpot(random,centre,world)
+	local L,S=Sim.Leaf,Sim.Skitter
+	if typeof(centre)~="Vector3"then return nil,"centre"end
+	local x=centre.X+random:NextNumber(-L.half,L.half)
+	local z=centre.Z+random:NextNumber(-L.half,L.half)
+	local ground=world and world.ground and world.ground(x,z)
+	if type(ground)~="number"or ground~=ground or math.abs(ground)==math.huge then return nil,"ground"end
+	local covered=Sim.leafCovered(x,z,world.cover,S.reach,S.side)
+	if covered then return nil,covered end
+	if world.course and Sim.lineDistance(x,z,world.course)<Sim.Keep.course then return nil,"course"end
+	return Vector3.new(x,ground+S.height,z)
 end
 -- A spawn point for one leaf round `centre` (the player), or nil and why: "ground" off the island (world.ground answers
 -- nil), or the covered place's name.
@@ -206,10 +233,11 @@ function Leaves:count(now)
 	return #live
 end
 function Leaves:clear()table.clear(self.live);self.carry=0 end
--- One step: {{kind = 1 | 2 | 3, at = Vector3}, ...}, at most one emit per kind a step (the rest carries). g: the gust
--- 0 to 1. place(kind, random) -> Vector3? is Sim.leafSpot round the player; nil skips that emit (the carry is spent).
+-- One step: {{kind = 1 | 2, at = Vector3}, ...} (1 the leaf sheet, 2 the petal), at most one emit per kind a step (the
+-- rest carries). g: the gust 0 to 1. breath: true while the big breath blows here (`scene` on): the rate x breathRate.
+-- place(kind, random) -> Vector3? is Sim.leafSpot round the player; nil skips that emit (the carry is spent).
 -- The live count holds each kind's longest life, so the cap is never passed; at the cap nothing piles up.
-function Leaves:step(now,dt,g,cap,level,place)
+function Leaves:step(now,dt,g,cap,level,place,breath)
 	local L=Sim.Leaf
 	local out={}
 	local rate=L.rate[Sim.level(level)+1]
@@ -217,13 +245,12 @@ function Leaves:step(now,dt,g,cap,level,place)
 	if not rate or cap<=0 then self.carry=0;return out end
 	dt=if type(dt)=="number"and dt==dt then math.clamp(dt,0,.25)else 0
 	g=if type(g)=="number"and g==g then math.clamp(g,0,1)else 0
-	self.carry+=rate*(1+L.boost*g)*dt
+	self.carry+=rate*(1+L.boost*g)*(if breath==true then L.breathRate else 1)*dt
 	local room=cap-self:count(now)
 	local used={}
 	while self.carry>=1 do
 		if room<=0 then self.carry=math.min(self.carry,1);break end
-		local roll,kind=self.random:NextNumber(),3
-		if roll<L.share[1]then kind=1 elseif roll<L.share[1]+L.share[2]then kind=2 end
+		local kind=if self.random:NextNumber()<L.share[1]then 1 else 2
 		if used[kind]then break end
 		used[kind]=true
 		self.carry-=1
@@ -233,6 +260,36 @@ function Leaves:step(now,dt,g,cap,level,place)
 			room-=1
 			table.insert(out,{kind=kind,at=at})
 		end
+	end
+	return out
+end
+
+-- The scud (beta 14 QA Q5): one emitter, only while g is over Sim.Skitter.over, at most one emit a step, its own cap.
+local Skitters={};Skitters.__index=Skitters
+Sim.Skitters=Skitters
+function Skitters.new(seed)return setmetatable({random=Random.new(seed or 6),live={},carry=0},Skitters)end
+Skitters.count=Leaves.count
+function Skitters:clear()table.clear(self.live);self.carry=0 end
+-- {Vector3, ...}: where to emit now. place(random) -> Vector3? (Sim.skitterSpot round the player).
+function Skitters:step(now,dt,g,cap,level,place)
+	local S=Sim.Skitter
+	local out={}
+	local rate=S.rate[Sim.level(level)+1]
+	cap=cap or 0
+	g=if type(g)=="number"and g==g then g else 0
+	if not rate or cap<=0 or g<=S.over then self.carry=0;return out end
+	dt=if type(dt)=="number"and dt==dt then math.clamp(dt,0,.25)else 0
+	self.carry+=rate*dt
+	if self.carry>=1 then
+		self.carry-=1
+		if self:count(now)<cap then
+			local at=place and place(self.random)
+			if typeof(at)=="Vector3"then
+				table.insert(self.live,now+S.life[2])
+				table.insert(out,at)
+			end
+		end
+		self.carry=math.min(self.carry,1)
 	end
 	return out
 end
@@ -305,8 +362,8 @@ Sim.Butterfly=table.freeze({reach=60,wander=3,speed=.65,restMin=2,restMax=4,low=
 	glowFrom=.2,glowTo=.9,glowLit=.1,glowDim=.55,glowPulse=1.8,glowSpeed=.25,glowRise=table.freeze({1.5,2}),glowClimb=1.2})
 local Butterflies={};Butterflies.__index=Butterflies
 Sim.Butterflies=Butterflies
-function Butterflies.new(seed)return setmetatable({random=Random.new(seed or 2),list={},spawnAt=0},Butterflies)end
-function Butterflies:clear()table.clear(self.list);self.spawnAt=0 end
+function Butterflies.new(seed)return setmetatable({random=Random.new(seed or 2),list={},spawnAt=0,handed={}},Butterflies)end
+function Butterflies:clear()table.clear(self.list);table.clear(self.handed);self.spawnAt=0 end
 local function wanderPoint(r,patch,radius,low,high)
 	local a,d=r:NextNumber()*math.pi*2,math.sqrt(r:NextNumber())*radius
 	return Vector3.new(patch.X+math.cos(a)*d,patch.Y+r:NextNumber(low,high),patch.Z+math.sin(a)*d)
@@ -331,8 +388,13 @@ function Butterflies:step(now,dt,world,patches,cap,still,daylight)
 	if still or not camera then table.clear(list);return list end
 	for i=#list,1,-1 do
 		local b=list[i]
-		if i>cap or(b.position-camera).Magnitude>Sim.Drop
-			or(b.hand and now-b.hand>=B.handGone)or(b.fade and now-b.fade>=B.fadeOut)then table.remove(list,i)end
+		local gone=b.hand~=nil and now-b.hand>=B.handGone
+		local far=(b.position-camera).Magnitude>Sim.Drop
+		if i>cap or far or gone or(b.fade and now-b.fade>=B.fadeOut)then
+			table.remove(list,i)
+			-- Beta 14 B2: a glow that finished its hand-off is passed on to the night population (GardenLife adopts it).
+			if gone and i<=cap and not far then table.insert(self.handed,b.position)end
+		end
 	end
 	if dark(daylight)then
 		local fresh,last={},-math.huge
@@ -526,6 +588,127 @@ function Sim.butterflyParts(root,phi)
 		root*CFrame.new(W.hinge,0,0)*CFrame.Angles(0,0,phi)*CFrame.new(W.half,0,0)*flat90}
 end
 
+-- Fireflies at night (beta 14 QA B2; GARDEN-LIFE-BUILD-PLAN section 3) ----------------------------------------------
+-- A population of their own while the garden hour is dark: the count follows the shared daylight (none over .34, the
+-- full cap by .20), so they come out through dusk and leave at dawn, staggered. Each one hovers over a flower patch or a
+-- point on a water bank within reach of the camera, else on a ring round the player; 1.5 to 3 studs up, wandering
+-- slowly, with a soft pulse. A butterfly whose hand-off finished is adopted where it is (GardenLife passes it on). The
+-- hour off (daylight nil): none. Reduced Motion: none. Each firefly has its own Random.
+Sim.Firefly=table.freeze({start=.34,full=.20,spawnGap=1.5,fadeIn=1.2,fadeOut=2,fadeGap=.8,reach=40,ring=table.freeze({6,18}),
+	low=1.5,high=3,speed=.25,wander=2.5,pulse=1.8,lit=.1,dim=.55,size=.9,pool=.6,tries=4,hz=15,climb=1.2})
+-- How many fireflies the daylight wants out of `cap` (0 by day and with the hour off).
+function Sim.fireflyWanted(daylight,cap)
+	local F=Sim.Firefly
+	if type(daylight)~="number"or daylight~=daylight or type(cap)~="number"or cap<=0 then return 0 end
+	local ramp=math.clamp((F.start-daylight)/(F.start-F.full),0,1)
+	return math.min(cap,math.floor(cap*ramp+.5))
+end
+local Fireflies={};Fireflies.__index=Fireflies
+Sim.Fireflies=Fireflies
+function Fireflies.new(seed)return setmetatable({random=Random.new(seed or 5),list={},spawnAt=-math.huge,serial=0},Fireflies)end
+function Fireflies:clear()table.clear(self.list);self.spawnAt=-math.huge end
+local function fireflyEntry(self,now,spot,at,glowY,lit)
+	local F=Sim.Firefly
+	self.serial+=1
+	local r=Random.new(self.random:NextInteger(1,1073741823))
+	local taken={}
+	for _,f in ipairs(self.list)do taken[f.slot]=true end
+	local slot=1
+	while taken[slot]do slot+=1 end
+	local f={id=self.serial,slot=slot,spot=spot,position=at,glowY=glowY,random=r,phase=r:NextNumber()*F.pulse,
+		born=if lit then now-F.fadeIn else now}
+	f.target=Vector3.new(spot.X+r:NextNumber(-F.wander,F.wander),0,spot.Z+r:NextNumber(-F.wander,F.wander))
+	table.insert(self.list,f)
+	return f
+end
+-- A spot to hover over, or nil: a flower patch or a bank point within reach of the camera (from that pool 60% of the
+-- time), else a point on the ring round the player on safe ground; Sim.clear always, never a spot already in use.
+function Sim.fireflySpot(random,world,spots,used)
+	local F=Sim.Firefly
+	local camera=world and world.camera
+	if typeof(camera)~="Vector3"then return nil end
+	used=used or {}
+	local pool={}
+	for _,list in ipairs({spots and spots.patches or {},spots and spots.banks or {}})do
+		for _,spot in ipairs(list)do
+			if typeof(spot)=="Vector3"and not used[spot]and(spot-camera).Magnitude<=F.reach and Sim.clear(spot,world)then table.insert(pool,spot)end
+		end
+	end
+	local function fromPool()return if #pool>0 then pool[random:NextInteger(1,#pool)]else nil end
+	if #pool>0 and random:NextNumber()<F.pool then return fromPool()end
+	local centre=if typeof(world.player)=="Vector3"then world.player else camera
+	for _=1,F.tries do
+		local a,d=random:NextNumber()*math.pi*2,random:NextNumber(F.ring[1],F.ring[2])
+		local x,z=centre.X+math.cos(a)*d,centre.Z+math.sin(a)*d
+		local g=world.ground and world.ground(x,z)
+		if type(g)=="number"and g==g and math.abs(g)<math.huge and(not world.safe or world.safe(x,z))then
+			local at=Vector3.new(x,g,z)
+			if Sim.clear(at,world)then return at end
+		end
+	end
+	return fromPool()
+end
+-- A butterfly whose hand-off finished stays a firefly: adopted where it is, already lit. False at the cap or when
+-- `position` is not a place.
+function Fireflies:adopt(now,position,cap)
+	if typeof(position)~="Vector3"or #self.list>=(cap or 0)then return false end
+	fireflyEntry(self,now,Vector3.new(position.X,position.Y-Sim.Firefly.low,position.Z),position,position.Y,true)
+	return true
+end
+-- One step: the live list. world {camera, player, ground(x, z), safe(x, z), stations, pad, course}; spots {patches,
+-- banks}; still = Reduced Motion (none); daylight: the garden hour's (nil: none).
+function Fireflies:step(now,dt,world,spots,cap,still,daylight)
+	local F,list=Sim.Firefly,self.list
+	local camera=world and world.camera
+	cap=cap or 0
+	if still or typeof(camera)~="Vector3"or cap<=0 then table.clear(list);return list end
+	for i=#list,1,-1 do
+		local f=list[i]
+		if i>cap or(f.position-camera).Magnitude>Sim.Drop or(f.fade and now-f.fade>=F.fadeOut)then table.remove(list,i)end
+	end
+	local live={}
+	for _,f in ipairs(list)do if not f.fade then table.insert(live,f)end end
+	local wanted=Sim.fireflyWanted(daylight,cap)
+	if #live>wanted then
+		-- The farthest from the camera go first, fadeGap apart.
+		table.sort(live,function(a,b)return(a.position-camera).Magnitude>(b.position-camera).Magnitude end)
+		for i=1,#live-wanted do live[i].fade=now+(i-1)*F.fadeGap end
+	elseif #live<wanted and #list<cap and now>=self.spawnAt then
+		self.spawnAt=now+F.spawnGap
+		local used={}
+		for _,f in ipairs(list)do used[f.spot]=true end
+		local spot=Sim.fireflySpot(self.random,world,spots,used)
+		if spot then
+			local glowY=spot.Y+self.random:NextNumber(F.low,F.high)
+			fireflyEntry(self,now,spot,Vector3.new(spot.X,glowY,spot.Z),glowY,false)
+		end
+	end
+	dt=if type(dt)=="number"and dt==dt then math.clamp(dt,0,.25)else 0
+	for _,f in ipairs(list)do
+		local to=Vector3.new(f.target.X-f.position.X,0,f.target.Z-f.position.Z)
+		local step=F.speed*dt
+		local flat
+		if to.Magnitude<=math.max(step,.05)then
+			flat=Vector3.new(f.target.X,0,f.target.Z)
+			local r=f.random
+			f.target=Vector3.new(f.spot.X+r:NextNumber(-F.wander,F.wander),0,f.spot.Z+r:NextNumber(-F.wander,F.wander))
+		else
+			flat=Vector3.new(f.position.X,0,f.position.Z)+to.Unit*step
+		end
+		local y=f.position.Y+(f.glowY-f.position.Y)*math.min(1,dt*F.climb)
+		f.position=Vector3.new(flat.X,y,flat.Z)
+	end
+	return list
+end
+-- The glow's transparency now (0 shown, 1 gone): the soft pulse, faded in after birth and out after `fade`.
+function Sim.fireflyLook(f,now)
+	local F=Sim.Firefly
+	local pulse=F.lit+(F.dim-F.lit)*(.5-.5*math.cos(2*math.pi*(now-f.born+f.phase)/F.pulse))
+	local shown=smooth((now-f.born)/F.fadeIn)
+	if f.fade then shown*=1-smooth((now-f.fade)/F.fadeOut)end
+	return 1-(1-pulse)*shown
+end
+
 -- Birds (brief C1; round 3: GARDEN-LIFE-NEST-LOOK 3) ---------------------------------------------------------------
 -- A small round songbird: a body, a head it turns and cocks on its own, bead eyes, a short beak, folded wings, a tail
 -- that flicks on every landing and hop. Low quick hops, often in pairs; it turns by hopping; it flies in bounds (two
@@ -584,6 +767,25 @@ function Birds:chirp(now,perch,landing,cap,world,reduced,day)
 	if reduced then bird.landedAt=-math.huge end
 	table.insert(self.list,bird)
 	return "land"
+end
+-- The big breath (beta 14 W3 row 1, `scene` on): each sitting bird does one hop pair (the tail and wing tips flick on
+-- each hop) as the breath reaches it, once a breath. breathAt(position) -> strength, breath number. Reduced Motion: none.
+-- Returns how many hopped.
+function Birds:breathe(now,breathAt,reduced)
+	local B=Sim.Bird
+	if reduced or type(breathAt)~="function"then return 0 end
+	local n=0
+	for _,bird in ipairs(self.list)do
+		if bird.state=="sit"then
+			local v,b=breathAt(bird.spot)
+			if b~=nil and type(v)=="number"and v>.5 and bird.breath~=b then
+				bird.breath=b
+				bird.hopAt,bird.hop2=now,now+B.hopTime+B.pairGap
+				n+=1
+			end
+		end
+	end
+	return n
 end
 -- Moves every bird on: landed, stayed long enough or the player within `flee`: off it goes (Reduced Motion: gone).
 -- Returns the live list; each has root (CFrame), wings ("fly" | "perch"), flick (0 to 1), phi, tuck, head, tau.
@@ -792,35 +994,81 @@ end
 -- reach of a resting one bats it once, in place (that client's view only). Nothing to collect, no remote. Angles in
 -- degrees; a pose's rotation is ImageLabel.Rotation (clockwise on screen): the camera's right turns world travel
 -- into screen spin.
+-- Beta 14 QA D2 / B5 (WORLD-AND-NEST-LOOK 7): the fruit hangs with its top third inside the leaves of the Aero kit's
+-- crowns (read from WorldAeroKit at runtime, Sim.kitCrowns): the stem tip `down` .62 of the height under the crown's top
+-- and `out` .30 of its width out, kept inside the crown's ellipsoid at `stemIn` of its radius there; the image (now with
+-- a drawn stem, 1.1 x 1.5 studs) hangs `hang` .50 under it. More fall (`chance` .5) and they rest longer (`rest` 30).
+-- [check] on the reshaped crowns: tune `down` until the top third is hidden on the three most-seen lime trees.
 Sim.Fruit=table.freeze({
-	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.36,down=.80,hang=.64,pool=16,reach=90,
+	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.30,down=.62,hang=.50,stemIn=.82,pool=16,reach=90,
 	swayMin=3,swayGust=12,swayHz=2.2,
-	dropAt=.8,chance=.35,
+	dropAt=.8,chance=.5,
 	tug=20,letGo=.15,fall=.55,drift=1.2,turn=180,
 	bounces=table.freeze({table.freeze({height=.9,time=.34,drift=.5}),table.freeze({height=.3,time=.2,drift=.2})}),
 	squash=.06,squashW=1.15,squashH=.85,
 	rollMin=1.6,rollMax=2.4,rollTurn=25,roll=.9,spin=150,
-	rest=18,lift=.5,lean=12,rock=6,rockAt=.6,rockHz=1.1,
+	rest=30,lift=.5,lean=12,rock=6,rockAt=.6,rockHz=1.1,
 	fade=1.2,quick=.3,shrink=.7,
 	regrow=45,grow=1.5,overshoot=1.12,
 	below=14,near=6,find=3,kerb=2,
 	bat=3,batUp=.7,batAway=1,batTime=.4,batBounce=.2,batBounceTime=.15,batTurn=360,poll=2,
+	-- Beta 14 D2: the player's nudge (root within `nudge`: 2 studs along their heading, shortened in .5 steps to a good
+	-- landing; one .25 bounce over .25 s and a half turn; once a second at most).
+	nudge=1.6,nudgeAway=2,nudgeStep=.5,nudgeUp=.25,nudgeTime=.25,nudgeTurn=180,nudgeGap=1,
+	-- Beta 14 D2: my pet eats it in three nibbles, .35 s each (scale 1, .72, .45, then gone), squashing .9 x 1.1 on each.
+	nibble=.35,bites=table.freeze({1,.72,.45,0}),biteSquash=.12,biteW=.9,biteH=1.1,
 })
 local F=Sim.Fruit
 function Sim.fruitKey(i,k)return i*8+k end
 
--- Crown i's filled slots: {k, key, stem} with the stem tip just inside the crown's lower skirt (FRUIT-LOOK 2).
+-- The Aero kit's crowns from its data module (beta 14 B5; never from client-built parts, architect r1): {position, size,
+-- cframe, pivot, tree, mesh} by `crownFrame` (AeroKit.crownFrame), only the mesh kinds in `kinds` (a set; nil: all),
+-- sorted by tree name so the index (the grove's seed) is stable. Throws on malformed data: the caller pcalls and falls
+-- back to LifeSpots.Crowns.
+function Sim.kitCrowns(data,crownFrame,kinds)
+	assert(type(data)=="table"and type(data.crowns)=="table"and type(data.meshes)=="table","kit data: no crowns or meshes")
+	assert(type(crownFrame)=="function","kit data: no crownFrame")
+	local function triple(v)return type(v)=="table"and type(v[1])=="number"and type(v[2])=="number"and type(v[3])=="number"end
+	local out={}
+	for index,crown in ipairs(data.crowns)do
+		assert(type(crown)=="table"and type(crown.mesh)=="string"and type(crown.tree)=="string","kit crown "..index)
+		local mesh=data.meshes[crown.mesh]
+		assert(type(mesh)=="table","kit crown "..index..": no mesh "..crown.mesh)
+		if not kinds or kinds[mesh.kind]then
+			assert(triple(crown.pivot)and type(crown.scale)=="number"and type(crown.yaw)=="number","kit crown "..index..": pivot, scale, yaw")
+			assert(triple(mesh.size)and triple(mesh.pivotToCentre),"kit mesh "..crown.mesh..": size, pivotToCentre")
+			local cframe,size,pivot=crownFrame(crown,mesh)
+			assert(typeof(cframe)=="CFrame"and typeof(size)=="Vector3"and typeof(pivot)=="Vector3","kit crown "..index..": frame")
+			table.insert(out,table.freeze({position=cframe.Position,size=size,cframe=cframe,pivot=pivot,tree=crown.tree,mesh=crown.mesh}))
+		end
+	end
+	table.sort(out,function(a,b)return a.tree<b.tree end)
+	return out
+end
+
+-- Crown i's filled slots: {k, key, stem, local}. The stem tip `down` of the height under the crown's top and `out` of
+-- its width out (FRUIT-LOOK 2; beta 14 B5), in the crown's own frame (crown.cframe: a kit crown, yawed; else its axes),
+-- pulled in so it lies inside the crown's ellipsoid at `stemIn` of its radius at that height. `local` is the tip in the
+-- crown's frame (GardenLife moves hanging fruit with the crown's sway from it).
 function Sim.fruitStems(i,crown)
 	local out={}
 	if type(i)~="number"or type(crown)~="table"or typeof(crown.position)~="Vector3"or typeof(crown.size)~="Vector3"then return out end
 	local size=crown.size
-	local top=crown.position+Vector3.new(0,size.Y/2,0)
+	local frame=if typeof(crown.cframe)=="CFrame"then crown.cframe else CFrame.new(crown.position)
+	local hx,hy,hz=size.X/2,size.Y/2,size.Z/2
+	local y=hy-F.down*size.Y
+	local ring=if hy>0 then math.sqrt(math.max(0,1-(y/hy)^2))else 0
 	local base=Wind.hash(i,12)*360
 	for k=1,F.slots do
 		if Wind.hash(i*8+k,11)<F.fill then
 			local a=math.rad(F.angles[k]+base)
-			table.insert(out,table.freeze({k=k,key=Sim.fruitKey(i,k),
-				stem=top+Vector3.new(F.out*size.X*math.cos(a),-F.down*size.Y,F.out*size.X*math.sin(a))}))
+			local x,z=F.out*size.X*math.cos(a),F.out*size.Z*math.sin(a)
+			if ring>0 and hx>0 and hz>0 then
+				local q=math.sqrt((x/(hx*ring))^2+(z/(hz*ring))^2)
+				if q>F.stemIn then x,z=x*F.stemIn/q,z*F.stemIn/q end
+			end
+			local tip=Vector3.new(x,y,z)
+			table.insert(out,table.freeze({k=k,key=Sim.fruitKey(i,k),stem=frame*tip,tip=tip}))
 		end
 	end
 	return out
@@ -930,6 +1178,28 @@ function Sim.fruitCandidate(i,crown,stems,n,world)
 	return Sim.fruitPlan(i,crown,stems[math.floor(Wind.hash(seed,14)*#stems)+1],n,letgo,world)
 end
 
+-- The big breath's drops (beta 14 W3 row 1 and D2; only while the Alive `scene` switch is on, which every client reads
+-- the same): breath b lets go at a crown the first 1/60 s on its rise that its envelope reaches dropAt (it always does:
+-- the breath counts as a strong gust). Seeded apart from the gusts (salts 17 and 18, plan number -(b + 1)), with the same
+-- chance, slot and landing rules; the grove's HOLD rule covers gust and breath drops together.
+function Sim.fruitBreathTrigger(position,b)
+	if typeof(position)~="Vector3"or type(b)~="number"then return nil end
+	local start=Wind.breathStart(b)+position:Dot(Wind.Direction)/Wind.Speed
+	for step=0,math.ceil(Wind.BreathRise*60)do
+		local t=start+step/60
+		if Wind.breathEnvelope(t-start)>=F.dropAt then return t end
+	end
+	return nil
+end
+function Sim.fruitBreathCandidate(i,crown,stems,b,world)
+	if #stems==0 then return nil,"empty"end
+	local seed=b*16+i
+	if Wind.hash(seed,17)>=F.chance then return nil,"chance"end
+	local letgo=Sim.fruitBreathTrigger(crown.position,b)
+	if not letgo then return nil,"calm"end
+	return Sim.fruitPlan(i,crown,stems[math.floor(Wind.hash(seed,18)*#stems)+1],-(b+1),letgo,world)
+end
+
 -- One drawn fruit for a shared plan: the screen spin from the camera's right now (the roll turns about 150 a stud and
 -- ends leaning 12 the way it went, the nearest such angle so nothing snaps at rest), plus its own bat and fade state.
 function Sim.fruitLoose(plan,right)
@@ -974,9 +1244,13 @@ function Sim.fruitPose(plan,now)
 		position,rotation,phase=plan.rest,plan.r4,"rest"
 		local bat=plan.bat
 		if bat and now<bat.done then
+			-- A pet's bat (F.bat*) or the player's nudge (its own numbers on `bat`).
 			local t=now-bat.start
-			position=if t<F.batTime then hop(bat.from,bat.to,F.batUp,t/F.batTime)else hop(bat.to,bat.to,F.batBounce,(t-F.batTime)/F.batBounceTime)
-			rotation,phase=plan.r4+bat.s*F.batTurn*smooth(t/(F.batTime+F.batBounceTime)),"bat"
+			local up,time,bounce,bounceTime=bat.up or F.batUp,bat.time or F.batTime,bat.bounce or F.batBounce,bat.bounceTime or F.batBounceTime
+			if t<time then position=hop(bat.from,bat.to,up,t/time)
+			elseif bounceTime>0 then position=hop(bat.to,bat.to,bounce,(t-time)/bounceTime)
+			else position=bat.to end
+			rotation,phase=(bat.r0 or plan.r4)+bat.s*(bat.turn or F.batTurn)*smooth(t/(time+bounceTime)),"bat"
 		else
 			local at=Wind.at(plan.rest,now)
 			if at>F.rockAt then rotation+=F.rock*math.clamp((at-F.rockAt)/(1-F.rockAt)*2,0,1)*math.sin(now*math.pi*2*F.rockHz)end
@@ -985,6 +1259,18 @@ function Sim.fruitPose(plan,now)
 	for _,landed in ipairs(plan.lands)do
 		local d=now-landed
 		if d>=0 and d<F.squash then w,h=F.squashW,F.squashH;break end
+	end
+	-- Eaten by my pet (LifePet, this client's view only): smaller with each nibble, gone after the third.
+	if plan.eaten and now>=plan.eaten then
+		local t=now-plan.eaten
+		local bite=math.floor(t/F.nibble)
+		local scale=F.bites[math.min(bite,#F.bites-1)+1]
+		w*=scale;h*=scale
+		if bite>=1 and t-bite*F.nibble<F.biteSquash then w*=F.biteW;h*=F.biteH end
+		if scale<=0 then
+			pose.position,pose.rotation,pose.w,pose.h,pose.transparency,pose.phase=position,rotation,0,0,1,"gone"
+			return pose
+		end
 	end
 	local fade=if now>=plan.t6 then(now-plan.t6)/F.fade else 0
 	if plan.quick then fade=math.max(fade,(now-plan.quick)/F.quick)end
@@ -1002,7 +1288,7 @@ end
 -- A resting drawn fruit batted by a pet at `pet` (this client's view only): a hop 1 stud straight away (straight up
 -- when that spot fails the landing rules), one small bounce, a full turn. Once in its life. True when it hops.
 function Sim.fruitBat(plan,pet,now,world,right)
-	if plan.bat or plan.quick or now<plan.t5 or now>=plan.t6 or typeof(pet)~="Vector3"then return false end
+	if plan.bat or plan.quick or plan.eaten or plan.taken or now<plan.t5 or now>=plan.t6 or typeof(pet)~="Vector3"then return false end
 	local from=plan.rest
 	local away=Vector3.new(from.X-pet.X,0,from.Z-pet.Z)
 	away=if away.Magnitude>1e-3 then away.Unit else Wind.Direction
@@ -1021,6 +1307,44 @@ function Sim.fruitBat(plan,pet,now,world,right)
 	return true
 end
 
+-- The player walks into a resting drawn fruit (root within F.nudge, beta 14 D2): it hops 2 studs along their heading
+-- (shortened in .5 steps to the first landing that passes the rules; none: no nudge), one small bounce, a half turn it
+-- keeps. This client's view only; once a second at most; its notice is asked again (it may now be near the pet).
+function Sim.fruitNudge(plan,root,heading,now,world,right)
+	if plan.quick or plan.eaten or plan.taken or now<plan.t5 or now>=plan.t6 or typeof(root)~="Vector3"then return false end
+	if plan.bat and now<plan.bat.done then return false end
+	if plan.nudgedAt and now-plan.nudgedAt<F.nudgeGap then return false end
+	local from=plan.rest
+	if flat(from,root)>F.nudge then return false end
+	local dir=if typeof(heading)=="Vector3"then Vector3.new(heading.X,0,heading.Z)else Vector3.zero
+	if dir.Magnitude<1e-3 then dir=Vector3.new(from.X-root.X,0,from.Z-root.Z)end
+	if dir.Magnitude<1e-3 then return false end
+	dir=dir.Unit
+	local to
+	local d=F.nudgeAway
+	while d>=F.nudgeStep-1e-9 do
+		local spot=from+dir*d
+		local g=Sim.fruitGround(spot.X,spot.Z,plan.crownY,world)
+		if g then
+			local landing=Vector3.new(spot.X,g+F.lift,spot.Z)
+			if Sim.fruitClear(landing,world)then to=landing;break end
+		end
+		d-=F.nudgeStep
+	end
+	if not to then return false end
+	local s=sign(screen(right,to-from))
+	local done=now+F.nudgeTime
+	plan.bat={start=now,from=from,to=to,s=s,done=done,up=F.nudgeUp,time=F.nudgeTime,bounce=0,bounceTime=0,turn=F.nudgeTurn,
+		r0=plan.r4,nudge=true}
+	plan.r4+=s*F.nudgeTurn
+	plan.rest=to
+	plan.nudgedAt=now
+	plan.noticeAt=nil
+	table.insert(plan.lands,done)
+	plan.t6=math.max(plan.t6,done)
+	return true
+end
+
 -- The grove: which fruit fall, a pure function of the server time (every lime crown, every client, whatever it can
 -- see, its budget or Reduced Motion). A candidate (Sim.fruitCandidate) falls unless the same slot had a candidate in
 -- the HOLD seconds before it; a slot is empty for HOLD after it falls, regrowing over the last F.grow. Candidates are
@@ -1030,9 +1354,10 @@ Sim.Grove=Grove
 Grove.Ahead=2   -- refresh looks this far ahead
 Grove.Every=1   -- seconds between refreshes (GardenLife)
 -- world: shared data only (groundY, safe, stations, pad, course, finds, kerbs); never a camera.
+-- world.breath: the big breath's drops too (the Alive `scene` switch; GardenLife makes a new grove when it flips).
 function Grove.new(crowns,world)
-	local self=setmetatable({crowns=crowns or {},world=world or {},stems={},cands={},drops={},at=nil},Grove)
-	for i,crown in ipairs(self.crowns)do self.stems[i]=Sim.fruitStems(i,crown);self.cands[i]={};self.drops[i]={}end
+	local self=setmetatable({crowns=crowns or {},world=world or {},stems={},cands={},bcands={},drops={},at=nil},Grove)
+	for i,crown in ipairs(self.crowns)do self.stems[i]=Sim.fruitStems(i,crown);self.cands[i]={};self.bcands[i]={};self.drops[i]={}end
 	return self
 end
 -- Gust numbers whose let-go can fall within [a, b] at this place.
@@ -1049,17 +1374,42 @@ function Grove:candidate(i,n)
 	end
 	return c or nil
 end
--- Crown i's drops let go within [a, b], oldest first.
+function Grove:breathCandidate(i,b)
+	local cands=self.bcands[i]
+	local c=cands[b]
+	if c==nil then
+		c=Sim.fruitBreathCandidate(i,self.crowns[i],self.stems[i],b,self.world)or false
+		cands[b]=c
+	end
+	return c or nil
+end
+-- Breath numbers whose let-go can fall within [a, b] at this place.
+local function breathRange(position,a,b)
+	local offset=position:Dot(Wind.Direction)/Wind.Speed
+	return math.floor((a-offset-Wind.BreathRise-Wind.BreathJitter)/Wind.BreathSlot),math.ceil((b-offset+Wind.BreathJitter)/Wind.BreathSlot)
+end
+-- Crown i's drops let go within [a, b], oldest first (gusts and, with world.breath, the big breath).
 function Grove:dropsAt(i,a,b)
-	local lo,hi=gustRange(self.crowns[i].position,a-HOLD,b)
-	local out,last={},{}
+	local position=self.crowns[i].position
+	local lo,hi=gustRange(position,a-HOLD,b)
+	local list={}
 	for n=lo,hi do
 		local c=self:candidate(i,n)
-		if c then
-			local before=last[c.key]
-			last[c.key]=c.start
-			if c.start>=a and c.start<=b and not(before and c.start-before<HOLD)then table.insert(out,c)end
+		if c then table.insert(list,c)end
+	end
+	if self.world.breath==true then
+		local blo,bhi=breathRange(position,a-HOLD,b)
+		for k=blo,bhi do
+			local c=self:breathCandidate(i,k)
+			if c then table.insert(list,c)end
 		end
+		table.sort(list,function(x,y)return x.start<y.start end)
+	end
+	local out,last={},{}
+	for _,c in ipairs(list)do
+		local before=last[c.key]
+		last[c.key]=c.start
+		if c.start>=a and c.start<=b and not(before and c.start-before<HOLD)then table.insert(out,c)end
 	end
 	return out
 end
@@ -1069,6 +1419,8 @@ function Grove:refresh(now)
 		self.drops[i]=self:dropsAt(i,now-HOLD,now+Grove.Ahead)
 		local lo=gustRange(crown.position,now-2*HOLD-Wind.Slot,now)
 		for n in pairs(self.cands[i])do if n<lo then self.cands[i][n]=nil end end
+		local blo=breathRange(crown.position,now-2*HOLD-Wind.BreathSlot,now)
+		for b in pairs(self.bcands[i])do if b<blo then self.bcands[i][b]=nil end end
 	end
 	self.at=now
 end
@@ -1105,9 +1457,11 @@ local Loose={};Loose.__index=Loose
 Sim.Loose=Loose
 function Loose.new()return setmetatable({list={},seen={}},Loose)end
 function Loose:clear()table.clear(self.list);table.clear(self.seen)end
--- active: Grove:active(now). view: {camera = Vector3, right = Vector3}. world: the grove's shared world (bat
--- landings). pets: {Vector3} or a function returning them, called at most once a step and only when a poll is due.
-function Loose:step(now,active,view,world,pets,cap,live)
+-- active: Grove:active(now). view: {camera = Vector3, right = Vector3, player = Vector3?, heading = Vector3?}. world:
+-- the grove's shared world (bat and nudge landings). pets: {Vector3} or a function returning them, called at most once a
+-- step and only when a poll is due. notice(loose, now) -> true?: asked when a drawn fruit first rests and every poll
+-- after while it rests (beta 14 D2, my pet's snack); true takes it (never asked again).
+function Loose:step(now,active,view,world,pets,cap,live,notice)
 	local list,seen=self.list,self.seen
 	local camera=view and view.camera
 	local keep={}
@@ -1135,9 +1489,17 @@ function Loose:step(now,active,view,world,pets,cap,live)
 		end
 	end
 	local pool=if type(pets)=="table"then pets else nil
+	local player=view and view.player
 	for _,loose in ipairs(list)do
 		local position=Sim.fruitPose(loose,now).position
 		if not loose.quick and(live or(camera and(position-camera).Magnitude<F.near))then loose.quick=now end
+		if typeof(player)=="Vector3"and not loose.quick then Sim.fruitNudge(loose,player,view.heading,now,world,view.right)end
+		if notice and not loose.quick and not loose.taken and now>=loose.t5 and now<loose.t6
+			and not(loose.bat and now<loose.bat.done)and(loose.noticeAt==nil or now>=loose.noticeAt)then
+			loose.noticeAt=now+F.poll
+			local ok,took=pcall(notice,loose,now)
+			if ok and took==true then loose.taken=true end
+		end
 		if not loose.bat and not loose.quick and now>=loose.poll and now<loose.t6 and pets then
 			loose.poll=now+F.poll
 			if not pool then

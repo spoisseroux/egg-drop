@@ -297,6 +297,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			end
 			local reduced=self.reduceEffects()
 			self.pet.reducedEffects=reduced
+			-- Beta 14 D2: the garden actor this frame's activity drew (LifePet's snack layers on it; nil drops it).
+			local lifeActor=nil
 			if self.dash and self.dash:drive(self.pet,Players.LocalPlayer.UserId,dt,reduced)then self.followState=nil
 			elseif root and character~=self.removingCharacter and humanoid and humanoid.Health>0 and not self.focusing and not self.busy and not self.arrivalPlacementPending then
 				local actor=self.garden:renderActor(Players.LocalPlayer.UserId,self.shownPet.id,character)
@@ -304,9 +306,11 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
                 self.pet.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
                 require(script.Parent.PersonalToyOpportunity).apply(self.pet,actor,serverNow)
 				if actor and self.park then self.followState=self.park:drive(self.pet,actor,serverNow,dt,self.followState,reduced)
-				elseif actor then self.followState=PetFollow.activity(self.pet,actor,serverNow,dt,self.followState,reduced)
+				elseif actor then self.followState=PetFollow.activity(self.pet,actor,serverNow,dt,self.followState,reduced);lifeActor=actor
 				else self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)end
 			else self.followState=nil;PetFollow.rest(self.pet)end
+			-- Beta 14 D2 (LifePet, Alive `snack`; nil off the beta): my pet's Dewdrop snack on top of the server's path.
+			if self.lifePetDrive then self.lifePetDrive(self.pet,lifeActor,serverNow,dt)end
 			if self.focusing and self.reduceEffects() and self.cameraTween then
 				self:cancelCameraTween()
 				if workspace.CurrentCamera then workspace.CurrentCamera.FieldOfView = PetGreetingShot.Fov end
@@ -331,6 +335,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
             self.pet.hello=require(script.Parent.PetHelloPose).read(self.progress)
             if self.pet.hello and serverNow-self.pet.hello.at<1.3 then self.pet.poseDirty=true end
             self.pet:update(dt)
+            -- Beta 14 D2: the nibble's head dip on this frame's pose (LifePet; nil off the beta).
+            if self.lifePetPose then self.lifePetPose(self.pet,dt)end
 			self.pet.focused=self.focusing==true
 			PetPrestige.update(self.pet, dt, self.reduceEffects())
 			if self.petTarget and self.petTarget.pet == self.pet then PetClickTarget.sync(self.petTarget) end

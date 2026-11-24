@@ -43,7 +43,7 @@ return function(client)
 		r.world=Instance.new("Folder");r.world.Parent=holder
 		if count then r.room,r.folder,r.parts=lounge(r.world,count,options)end
 		r.client=WindClient.new({world=r.world,motion=options.motion,auto=false,touch=options.touch==true,
-			alive={on=function()return r.on end},level=function()return r.lvl end,now=function()return r.time end,
+			alive={on=function(feature)return feature~="scene"and r.on end},level=function()return r.lvl end,now=function()return r.time end,
 			eye=function()return r.eye end,reduced=function()return r.still end,mode=function()return r.state end,hatching=function()return r.hatch end,
 			warn=function(text)r.warned=(r.warned or 0)+1;r.problem=text end,
 			move=if options.realMove then nil else function(parts,frames)if r.broken then error("move failed")end;r.moves+=1;r.written+=#parts;for i,p in ipairs(parts)do p.CFrame=frames[i]end end})

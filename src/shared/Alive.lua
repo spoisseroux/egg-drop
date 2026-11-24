@@ -5,8 +5,11 @@ local RunService=game:GetService("RunService")
 local Flags=require(script.Parent.FeatureFlags)
 local Alive={}
 Alive.PlaceId=107705084891479 -- Pocket Pals Beta
-Alive.Features=table.freeze({"springs","menus","close","wind","life"})
-local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife"})
+-- Beta 14 (GARDEN-LIFE-BUILD-PLAN, architect r1): `scene` is the W3 additions (the big breath, chimes, dapple, koi, the
+-- far flock, lamps and the shooting star, dragonflies, ground plates); `snack` is my pet's Dewdrop snack alone.
+Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack"})
+local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
+ scene="AliveScene",snack="AliveSnack"})
 
 function Alive.attribute(feature)return "Alive_"..feature end
 function Alive.key(feature)return "alive_"..feature end
