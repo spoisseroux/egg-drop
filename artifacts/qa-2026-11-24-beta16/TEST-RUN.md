@@ -8,7 +8,11 @@
 
 ## 1. Egg corner (plaza)
 
-- [ ] The old egg station is gone. The **nest** now sits alone at the back of the plaza, on plain marble, with a little straw and leaves around it.
+- [ ] The old egg station is gone. The **Sleepy Nest** now sits alone at the back of the plaza: a cream stoneware bowl on green feet, a fat woven nest, the egg under a teal quilt, a branch with a leaf awning and a paper moon lantern. It's built to pair with the egg machine.
+  - Tuck in: the quilt unrolls over the egg. The egg breathes; the moon and awning sway. Ready: the quilt slips off, the awning lifts, the moon pulses gold.
+  - At dusk the moon lantern lights up (even with no egg). Your pet sometimes rests on the straw mat beside it.
+  - **Substantial enough now? Do the machine and nest read as a pair?**
+  - Switch: `/onboard landmark off` shows the old twig nest in the same spot.
   - **Does the egg area read as "just the egg nest" now?**
 - [ ] The **egg machine** stands at the plaza's west edge: a glass globe full of eggs, a sunflower dial, a leaf chute into a little woven cup, a sprout on top. Eggs rock gently; every ~10 s one settles.
   - **Does it read as a capsule machine full of eggs?**
@@ -19,7 +23,7 @@
 - [ ] Hatch eggs no longer has a "Napping egg" row.
 - [ ] **Less crowded?** Walk in from the path and the arrival dais.
 - Switch: `/onboard corner off` puts the old plaza back.
-- Known: a thin gold ring arc can show on the grass behind the machine. No machine sounds yet.
+- Known: no machine sounds yet. Standing in the nest's bowl, the egg can clip through your legs.
 
 ## 2. The upper tier
 
