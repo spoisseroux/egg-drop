@@ -444,3 +444,63 @@ after W4-2 is answered** (they need assets this repo does not have).
   station) but today's sign lands 3.7 from the station centre. Today's sign and curl spot sit on opposite sides, and
   only the outer side has room.
 - **Copy (for Fable):** "Hatch new friends" on a station that sells toys and looks.
+
+---
+
+## 10. Build status (after the architect review: GO WITH CHANGES, and Fable's Nest merge rulings R2)
+
+The architect's changes are built as ruled. They replace the matching lines above:
+
+- **Pad and ring:** the pad is at (64.5, -21), with a ring of R 4.0. `build_dash_course.py` now checks the ring with
+  the pad rules (lawn, line, obstacles, cliff). `DashCourse.lua` was regenerated and only its Pad row changed (y 4.70).
+- **Who counts as in line:** gather seats count. The new server stage `"gather"` checks only where the player stands
+  and the stray clock. It never removes anyone for Saving or NoPet.
+- **No wall parts.** `DashLine` clamps the waiting player's root to R - 0.6 in Stepped and removes outward velocity.
+  The server's "entered" latch is also at R - 0.6 (`DashRing.Enter`). The latch resets at every join.
+- **The leave confirm** uses ConfirmDialog's `alt` key. Stay in line is the primary key, and B, Esc and the shade
+  also stay. `handle.cancel()` runs whenever the wait ends any other way (promotion, countdown, removal, Dash off,
+  Deck). Leave checks that the player is still in the same wait and not held by a race. A new `alt.after` (0.3 s)
+  ignores the X key just after the dialog opens. The gate prompt is off while the dialog is open.
+- **The gate prompt** reads "Leave line" while the player waits, with HoldDuration 0.4.
+- **WorldFeel** has its own beta ceiling (`FeatureFlags.WorldFeel`) and two keys, `world_feel` and `world_walk`
+  (`/feel` in chat). The walk speed is written on the client when each character arrives, and never over a lock.
+  With both switches off, nothing is written.
+- **W4b is deferred** (far islets, sightline clumps). Nothing reads AeroKit.
+- **The two prompts at the egg corner:** where the nest's prompt can act and the player is nearer to it, the station's
+  prompt steps aside locally (`LoungeStations.Yield.Eggs`, set by NestClient while it is open).
+- **The Napping egg row** sits at the top of Hatch eggs. It is quiet, with no lip and no price. Gamepad focus starts on
+  the first egg type unless the egg is ready. A tap uses close reason `"nest"`. From the Deck it routes through F1's
+  `stripRoute("nest")`.
+- **F1 on the Dash results card:** a chip puts the card away first, then routes through `afterGarden`
+  (`clientUI.stripStep`).
+- **Live parity rows:**
+  - StationAttract keeps the live Eggs line. The new lines are `EggsV3` and `EggsNest`, used on the beta only.
+  - LoungeStations with no claim behaves as before.
+  - BubbleHold with no hold passes every call through unchanged.
+  - GardenHour.hazed(0) returns the same table.
+  - WorldFeel off keeps the old arrival offset and haze 0, and mounts nothing.
+  - NotificationRail pulse is additive. RoomView's arrival reads `WorldFeel.arrival()`, which is (5, 6, 12) when off.
+
+Commits on `worktree-agent-a3f1ef9860d7fba2e`:
+
+- 48566eb: F2, Q2, Q1.
+- 391a419: nest wiring, the Hatch eggs row, the F1 Dash hookup.
+- 1298ae0: WorldFeel (W4a).
+- db71e52: **pending P1**. Nest.Spot E1, the Bear and sign on the outer side, the pad move, and probes P1, P6 and P7.
+
+Specs: the offline runner passes 49 of 49, and AeroFalls passes 22. New: DashLine (6) and WorldFeel (6). Extended:
+DashHost (24), DashClient (29), NestClient (22), ThingsTrail (9), NestSpot (for E1), DashHud, and StationAttract
+(Studio). Localization was exported (13 rows added or changed) and is not synced.
+
+**Waiting on Studio:**
+
+| Probe | What it covers |
+|---|---|
+| P1, `scripts/probe_nest_spot.luau` | Fable's five checks; on failure, slide along `e` or fall back to spot A |
+| P6 and P7, `scripts/probe_dash_pad.luau` | The ring's rays and stakes; the beta 12 camera line |
+| P2 | Prompt contention at the corner |
+| P8 | Two players at the race line |
+| P3 and P9 | Captures for Fable |
+
+The far islets and sightline clumps (W4b) wait on assets. `V3-TEST-PASS.md` and `TODO.md` rows are left for the
+integrating coordinator, to avoid conflicts with other branches.
