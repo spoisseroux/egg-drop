@@ -12,6 +12,9 @@ return function(client)
 	local function near(a,b,eps)return math.abs(a-b)<=(eps or 1e-6)end
 	local LIVE=96451847774961
 	local side=Vector3.new(-Wind.Direction.Z,0,Wind.Direction.X)
+	-- The camera near the chimes (other specs may leave theirs anywhere); restored at the end.
+	local savedCamera=workspace.CurrentCamera
+	workspace.CurrentCamera={CFrame=CFrame.new(80,12,60)}
 
 	-- A room with one chime and one pennant mover.
 	local function room()
@@ -85,5 +88,6 @@ return function(client)
 		assert(Alive.ceiling("scene",nil,LIVE,false)==false and Alive.ceiling("snack",nil,LIVE,false)==false,"never on live")
 	end)
 
+	workspace.CurrentCamera=savedCamera
 	return{passed=#cases,cases=cases}
 end

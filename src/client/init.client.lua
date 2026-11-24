@@ -4780,8 +4780,49 @@ end
 -- Parked in a hatch, out of Room mode and in my own race; bubbles stop behind a menu.
 do
  local ok,problem=pcall(function()
-  if not require(ReplicatedStorage.Shared.Alive).ceiling("life")then return end
+  local Alive=require(ReplicatedStorage.Shared.Alive)
+  if not Alive.ceiling("life")then return end
+  -- Beta 14 D2 (GARDEN-LIFE-BUILD-PLAN 2c): my pet's Dewdrop snack, its own Alive `snack` switch (beta and Studio only).
+  -- A presentation layer on the server's path (RoomView calls drive after PetFollow.activity and pose after the pet's
+  -- update); a throw drops the snack for the session and hands the pet back.
+  if Alive.ceiling("snack")then
+   local Wind=require(script.Wind)
+   local pet=require(script.LifePet).new({
+    busy=function()
+     local dash=clientUI.dash
+     return clientUI.anyModalOpen()==true or roomView.focusing==true or(clientUI.needs~=nil and clientUI.needs.shown==true)
+      or(clientUI.snacks~=nil and clientUI.snacks.busy==true)or(dash~=nil and dash:engaged()==true)
+      or require(script.WindClient).hatching()==true
+    end,
+    reduced=function()return reduceEffects()==true end,
+    owner=function()
+     local character=Players.LocalPlayer.Character
+     local root=character and character:FindFirstChild("HumanoidRootPart")
+     return root and root.Position
+    end,
+    ownerStill=function()return roomView.ownerStillSince~=nil and workspace:GetServerTimeNow()-roomView.ownerStillSince>=1 end,
+    scene=function()return Alive.on("scene")end,
+    breath=function(at,now)return Wind.breath(at,now)end})
+   clientUI.lifePet=pet
+   local function guard(method)
+    return function(...)
+     if clientUI.lifePet~=pet then return end
+     local ok,problem=pcall(method,pet,...)
+     if not ok then
+      clientUI.lifePet=nil;roomView.lifePetDrive=nil;roomView.lifePetPose=nil
+      pcall(pet.destroy,pet)
+      warn("[LifePet] stopped: "..tostring(problem))
+     end
+    end
+   end
+   roomView.lifePetDrive=guard(pet.drive)
+   roomView.lifePetPose=guard(pet.pose)
+  end
   clientUI.life=require(script.GardenLife).mount({ambient=clientUI.ambient,
+   notice=function(loose,now)
+    local pet=clientUI.lifePet
+    return pet~=nil and pet:notice(loose,now)==true
+   end,
    dash=function()return clientUI.dash end,
    pets=function()
     local out={}

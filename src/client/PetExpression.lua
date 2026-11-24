@@ -21,6 +21,8 @@ function Expression.name(visual)
  if visual.petting or(visual.affection or 0)>.15 then return "affectionate"end
  -- Joy: the owner is back from a round (RoomView sets joyUntil on the visual clock).
  if visual.joyUntil and(visual.time or 0)<visual.joyUntil then return "joy"end
+ -- Beta 14 D2: content after a Dewdrop snack (only LifePet sets contentUntil, and only on the beta: its ceiling).
+ if visual.contentUntil and(visual.time or 0)<visual.contentUntil then return "content"end
  return if poses[visual.expression]then visual.expression else "neutral"
 end
 -- Garden rest faces (B2): a rest is no longer sleepy from its first second.

@@ -1015,6 +1015,8 @@ Sim.Fruit=table.freeze({
 	-- Beta 14 D2: the player's nudge (root within `nudge`: 2 studs along their heading, shortened in .5 steps to a good
 	-- landing; one .25 bounce over .25 s and a half turn; once a second at most).
 	nudge=1.6,nudgeAway=2,nudgeStep=.5,nudgeUp=.25,nudgeTime=.25,nudgeTurn=180,nudgeGap=1,
+	-- Beta 14 D2: my pet eats it in three nibbles, .35 s each (scale 1, .72, .45, then gone), squashing .9 x 1.1 on each.
+	nibble=.35,bites=table.freeze({1,.72,.45,0}),biteSquash=.12,biteW=.9,biteH=1.1,
 })
 local F=Sim.Fruit
 function Sim.fruitKey(i,k)return i*8+k end
@@ -1258,6 +1260,18 @@ function Sim.fruitPose(plan,now)
 		local d=now-landed
 		if d>=0 and d<F.squash then w,h=F.squashW,F.squashH;break end
 	end
+	-- Eaten by my pet (LifePet, this client's view only): smaller with each nibble, gone after the third.
+	if plan.eaten and now>=plan.eaten then
+		local t=now-plan.eaten
+		local bite=math.floor(t/F.nibble)
+		local scale=F.bites[math.min(bite,#F.bites-1)+1]
+		w*=scale;h*=scale
+		if bite>=1 and t-bite*F.nibble<F.biteSquash then w*=F.biteW;h*=F.biteH end
+		if scale<=0 then
+			pose.position,pose.rotation,pose.w,pose.h,pose.transparency,pose.phase=position,rotation,0,0,1,"gone"
+			return pose
+		end
+	end
 	local fade=if now>=plan.t6 then(now-plan.t6)/F.fade else 0
 	if plan.quick then fade=math.max(fade,(now-plan.quick)/F.quick)end
 	local transparency=0
@@ -1274,7 +1288,7 @@ end
 -- A resting drawn fruit batted by a pet at `pet` (this client's view only): a hop 1 stud straight away (straight up
 -- when that spot fails the landing rules), one small bounce, a full turn. Once in its life. True when it hops.
 function Sim.fruitBat(plan,pet,now,world,right)
-	if plan.bat or plan.quick or now<plan.t5 or now>=plan.t6 or typeof(pet)~="Vector3"then return false end
+	if plan.bat or plan.quick or plan.eaten or plan.taken or now<plan.t5 or now>=plan.t6 or typeof(pet)~="Vector3"then return false end
 	local from=plan.rest
 	local away=Vector3.new(from.X-pet.X,0,from.Z-pet.Z)
 	away=if away.Magnitude>1e-3 then away.Unit else Wind.Direction
@@ -1297,7 +1311,7 @@ end
 -- (shortened in .5 steps to the first landing that passes the rules; none: no nudge), one small bounce, a half turn it
 -- keeps. This client's view only; once a second at most; its notice is asked again (it may now be near the pet).
 function Sim.fruitNudge(plan,root,heading,now,world,right)
-	if plan.quick or now<plan.t5 or now>=plan.t6 or typeof(root)~="Vector3"then return false end
+	if plan.quick or plan.eaten or plan.taken or now<plan.t5 or now>=plan.t6 or typeof(root)~="Vector3"then return false end
 	if plan.bat and now<plan.bat.done then return false end
 	if plan.nudgedAt and now-plan.nudgedAt<F.nudgeGap then return false end
 	local from=plan.rest
