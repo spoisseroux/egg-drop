@@ -256,7 +256,9 @@ local function tickList(id)
    task.wait(1)
    if not(state.open and state.id==id and state.list)then return end
    local ok,model=pcall(state.list)
-   if ok and type(model)=="table"and state.live and state.live.Parent and model.live~=state.live.Text then state.live.Text=model.live end
+   -- Review 3: the nest went (closed, switched off, re-opened elsewhere): the card goes with it.
+   if not ok or type(model)~="table"then How.close("gone");return end
+   if state.live and state.live.Parent and model.live~=state.live.Text then state.live.Text=model.live end
   end
  end)
 end
@@ -267,7 +269,10 @@ function How.build()
  if state.list then
   if state.panel then state.panel:Destroy();state.panel=nil end
   if state.stamp then state.stamp:destroy();state.stamp=nil end
-  return How.buildList()
+  local panel=How.buildList()
+  -- Review 3: nothing to show (a resize after the nest closed): close, never leave the shade up.
+  if not panel then task.defer(How.close,"gone")end
+  return panel
  end
  if state.panel then state.panel:Destroy();state.panel=nil end
  if state.stamp then state.stamp:destroy();state.stamp=nil end

@@ -4818,6 +4818,9 @@ function clientUI.eggCornerMount(Onboard)
   if not on()then return false end
   if machine:openCrank()then
    task.delay(require(script.EggMachineClient).Open.openAt,function()if visit()then clientUI.accepted("confirm")end end)
+  elseif visit()then
+   -- Review 1: a crank is still turning: the screen opens at once, the press is never eaten.
+   clientUI.accepted("confirm")
   end
   return true
  end
@@ -4826,6 +4829,13 @@ function clientUI.eggCornerMount(Onboard)
   if not on()then return end
   machine:bought(action,type(value)=="table"and value.id or nil)
  end
+ -- The egg in the cup fades FadeAfter after the hatch screen that showed its reveal closes (Hatch eggs or the egg page).
+ local function watchClose(shade)
+  if not shade then return end
+  shade:GetPropertyChangedSignal("Visible"):Connect(function()if not shade.Visible then machine:revealClosed()end end)
+ end
+ watchClose(nurseryView and nurseryView.shade)
+ watchClose(clientUI.hueView and clientUI.hueView.shade)
  local snacks=clientUI.snacks
  local intent=snacks and snacks.intent
  if intent and type(intent.send)=="function"then

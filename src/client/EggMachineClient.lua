@@ -125,10 +125,18 @@ function Machine:buzz(strength)
 	if self.d.haptic then pcall(self.d.haptic,strength or "light")end
 end
 
--- The open crank (the `Turn` prompt). False while any crank runs (the second press is ignored).
+-- The open crank (the `Turn` prompt). False only while an open crank runs or a buy crank has not landed yet (review
+-- 1: a landed buy's egg lingering in the cup never blocks Turn; it goes when the new crank starts). init opens the
+-- screen at once when this refuses, so a press is never eaten.
+function Machine:busy()
+	local crank=self.crank
+	if not crank or crank.done then return false end
+	if crank.kind=="open"then return true end
+	return not crank.landed
+end
 function Machine:openCrank()
-	if not self:on()then return false end
-	if self.crank and not self.crank.done then return false end
+	if not self:on()or self:busy()then return false end
+	if self.crank and not self.crank.done then self:finish(self.crank)end
 	self.crank={kind="open",at=self.clock(),fired={}}
 	return true
 end
@@ -148,8 +156,10 @@ function Machine:bought(action,id)
 	if crank and crank.kind=="buy"and not crank.landed and now-crank.at<Machine.Cap then return false end -- merged
 	self.streakCount=Machine.streak(self.streakCount,self.lastLand,now)
 	local sched=Machine.schedule(self.streakCount)
-	self.crank={kind="buy",at=now,sched=sched,type=kind,fired={},claimed=Machine.Unclaimed[kind]==true}
-	self.gate={from=now,cap=now+Machine.Cap,owner=nil,crank=self.crank}
+	local unclaimed=Machine.Unclaimed[kind]==true
+	self.crank={kind="buy",at=now,sched=sched,type=kind,fired={},claimed=unclaimed}
+	-- Review 2: a reveal that is not the cinematic (the Stat Egg) gets no gate, so no other reveal is ever caught by it.
+	self.gate=if unclaimed then nil else {from=now,cap=now+Machine.Cap,owner=nil,crank=self.crank}
 	return true
 end
 -- HatchCinematic.onPlay: the first reveal to start after the press is the one the gate holds.
