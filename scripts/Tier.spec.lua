@@ -279,6 +279,10 @@ return function(server,offline)
 		end
 		assert(Tier.onIt(Tier.T(0,0,Tier.FloorY+3))and Tier.onIt(Tier.P(20,23,Tier.legY(Tier.Legs[1],20)+3))and Tier.onIt(Tier.P(Tier.Far+3,6,Tier.Landings[3].y+3)))
 		assert(not Tier.onIt(Tier.P(20,29,7.5))and not Tier.onIt(Tier.P(Tier.Near+1,23,5)))
+		-- Code review: a player standing on the lawn right beside the path (root about 3.4 over it) is never moved.
+		for _,p in ipairs({Tier.P(20,26.8),Tier.P(20,-.3),Tier.P(Tier.Far+6.8,10),Tier.P(Tier.Near-.3,23)})do
+			assert(not Tier.onIt(Vector3.new(p.X,Tier.FootY+3.4,p.Z)),tostring(p))
+		end
 	end)
 
 	test("rows: W7T_ names, unique, finite, at most 60; the balustrade gap is the top platform",function()

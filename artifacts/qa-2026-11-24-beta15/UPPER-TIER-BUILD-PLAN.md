@@ -294,7 +294,18 @@ solid supports are hidden (the spec counts them, at most 12); the art pass re-sc
 **Studio probes (unchanged list, adjusted for the zigzag):** T-P1 floor at 29 against the crest, the retaining face,
 the outer skirt; T-P2 walk the four legs and three landings on PC and at 844 x 390 (camera clamp at the near landing
 against the cliff, the far landings over the lawn); T-P3 the rim, both ends where the ring stood aside, the closers,
-**rerun `scripts/sweep_island_edges.py`** with the tier on; T-P4 bounds (60 s on the tier, a forced fall past the ring);
+**rerun `scripts/sweep_island_edges.py`** with the tier on, and **two accounts stacked** (one standing on the other's
+head) jumping at the outer wall top (y 40) and the balustrade stop; T-P4 bounds (60 s on the tier, a forced fall past the ring);
 T-P5 pets wait at the foot and never walk under the path; T-P6 `/tier off` with players on the terrace and on a far
 landing; T-P7 Fable's captures; T-P8 reset, a deck round, a race call up there; T-P9 the cave blocker still collides,
 the grove park, finds and the Dash course unchanged; T-P10 memory and frame time on the phone.
+
+**Code review (2026-11-24: GO), fixed:** the stood-aside boxes must be one contiguous run that does not wrap past 1 / n
+(`Tier.ringRunOk`, checked inside mount's pcall; anything else keeps the tier closed); the path pieces count a root as
+"up there" only above lawn + 4 (`Tier.PathMinY`), so `/tier off` never moves a player standing beside the path; the
+model, the footprints and each ring box's value are held before they are parented or changed, so a throw part-way
+through opening orphans nothing and the retry reuses them; T-P3 gains the stacked-players case. **Note:** the
+pet-blocked footprints reach pets only through the garden scene's `DescendantAdded` watcher in `init.server.lua`, which
+is connected only when the `PetCatchup` or onboarding v3 ceiling is open (the beta and Studio today). If both of those
+ceilings ever close while the tier's stays open, the footprints would be made but not seen by the pet planner (pets
+could path under the legs); `Tier.covers` still keeps anchors off the path.

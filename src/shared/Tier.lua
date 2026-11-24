@@ -76,12 +76,15 @@ Tier.PathFrame=frame(Tier.F0,Tier.A,Tier.Out)
 
 -- Footprints in plan: {name, frame = "tier" | "path", a1, b1, a2, b2} with (a, b) = (s, t) or (u, o). The solids a
 -- player can stand on (covers) and the pet-blocked footprints (pieces 2 on, grown by Grow) both come from these.
+-- minY: a root above this over a path piece is "up there" (switch-off evacuation). Lawn level plus 4, so a player standing
+-- on the lawn beside the path (root about 3 over the ground) is never moved.
+Tier.PathMinY=Tier.FootY+4
 Tier.Pieces=table.freeze({
 	table.freeze({name="Terrace",frame="tier",a1=-38,b1=-22,a2=38,b2=22,minY=Tier.RegionY}),
-	table.freeze({name="TopPlatform",frame="path",a1=Tier.Top.u1,b1=Tier.Top.o1,a2=Tier.Top.u2,b2=Tier.Top.o2,minY=7}),
-	table.freeze({name="Legs",frame="path",a1=Tier.Near,b1=0,a2=Tier.Far,b2=26.5,minY=7}),
-	table.freeze({name="NearLanding",frame="path",a1=-1,b1=7,a2=Tier.Near,b2=20,minY=7}),
-	table.freeze({name="FarLandings",frame="path",a1=Tier.Far,b1=0,a2=Tier.Far+6.5,b2=26.5,minY=7}),
+	table.freeze({name="TopPlatform",frame="path",a1=Tier.Top.u1,b1=Tier.Top.o1,a2=Tier.Top.u2,b2=Tier.Top.o2,minY=Tier.PathMinY}),
+	table.freeze({name="Legs",frame="path",a1=Tier.Near,b1=0,a2=Tier.Far,b2=26.5,minY=Tier.PathMinY}),
+	table.freeze({name="NearLanding",frame="path",a1=-1,b1=7,a2=Tier.Near,b2=20,minY=Tier.PathMinY}),
+	table.freeze({name="FarLandings",frame="path",a1=Tier.Far,b1=0,a2=Tier.Far+6.5,b2=26.5,minY=Tier.PathMinY}),
 })
 local function local2(piece,x,z)
 	if piece.frame=="tier"then
@@ -182,6 +185,14 @@ function Tier.closers(perimeter,before,after)
 		end
 	end
 	return out
+end
+
+-- Pure: are the stood-aside indices one contiguous run that does not wrap past 1 / n? (TierHost refuses anything else.)
+function Tier.ringRunOk(aside,n)
+	if type(aside)~="table"or #aside==0 or type(n)~="number"then return false end
+	if aside[1]<=1 or aside[#aside]>=n then return false end
+	for k=2,#aside do if aside[k]~=aside[k-1]+1 then return false end end
+	return true
 end
 
 local injected=nil

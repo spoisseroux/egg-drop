@@ -80,6 +80,39 @@ return function(server)
 		Tier.inject(nil)
 	end)
 
+	test("code review: ring boxes that are not one run, or that wrap past 1 / n, keep the tier closed",function()
+		Tier.inject(ON)
+		local far={center={500,0,500},size={5,10,1},yaw=0}
+		local hit={center={Tier.C.X,25,Tier.C.Z},size={5,10,1},yaw=0}
+		for _,list in ipairs({{far,hit,far,hit,far},{hit,far,far,far},{far,far,far,hit}})do
+			local c=rig({perimeter=list});c.tick()
+			assert(not c.host.open and c.host.broken and #c.warnings==1)
+		end
+		assert(Tier.ringRunOk({3,4,5},9)and not Tier.ringRunOk({3,5},9)and not Tier.ringRunOk({1,2},9)and not Tier.ringRunOk({8,9},9))
+		assert(not Tier.ringRunOk({},9)and not Tier.ringRunOk(nil,9))
+		Tier.inject(nil)
+	end)
+
+	test("code review: a throw part-way through opening orphans nothing; the retry reuses the model and keeps each box's value",function()
+		Tier.inject(ON)
+		local c=rig()
+		local footprints=Host.footprints
+		Host.footprints=function()error("boom")end
+		c.tick()
+		Host.footprints=footprints
+		assert(not c.host.open and c.host.errors==1)
+		local models=0
+		for _,child in ipairs(c.room:GetChildren())do if child.Name==Tier.Model then models+=1 end end
+		assert(models==1)
+		c.tick()
+		models=0
+		for _,child in ipairs(c.room:GetChildren())do if child.Name==Tier.Model then models+=1 end end
+		assert(c.host.open and models==1 and c.box(aside[1]).CanCollide==false)
+		Tier.inject(OFF);c.tick()
+		assert(not c.room:FindFirstChild(Tier.Model)and c.box(aside[1]).CanCollide==true)
+		Tier.inject(nil)
+	end)
+
 	test("on: the greybox, the pet-blocked footprints, only the found ring boxes stand aside, then open; off puts all back",function()
 		Tier.inject(OFF)
 		local c=rig()

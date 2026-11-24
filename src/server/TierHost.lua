@@ -33,6 +33,8 @@ function Host.mount(d)
 		local perimeter=d.perimeter or require(Shared.WorldV7Data).perimeter
 		local aside,before,after=Tier.ringAside(perimeter)
 		if #aside==0 or not before or not after then error("no ring box meets the tier")end
+		-- Code review: one contiguous run, never wrapping past 1 / n (anything else is bad data: stay closed).
+		if not Tier.ringRunOk(aside,#perimeter)then error("the ring boxes that meet the tier are not one run")end
 		self.aside,self.neighbours=aside,{before,after}
 		self.rows=Greybox.rows(Tier.closers(perimeter,before,after))
 	end)
@@ -118,25 +120,34 @@ function Host:openUp(room)
 			return false
 		end
 	end
-	local model=GreyboxRows.build(self.rows,Tier.Model)
-	model.Parent=room
+	-- Code review: the model and the footprints are held before they are parented, so a throw part-way leaves nothing
+	-- orphaned (the next step reuses them, or close() destroys them).
+	self.builtIn=room
+	if not self.model then self.model=GreyboxRows.build(self.rows,Tier.Model)end
+	self.model.Parent=room
 	local regions=room:FindFirstChild("PetRegions")or room
-	local blocked={}
-	for _,f in ipairs(Host.footprints())do
-		local part=Instance.new("Part")
-		part.Name,part.CFrame,part.Size=f.name,f.cframe,f.size
-		part.Anchored,part.CanCollide,part.CanQuery,part.CanTouch=true,false,false,false
-		part.Transparency,part.CastShadow=1,false
-		part:SetAttribute("GardenBlockedRegion",true) -- before parenting: the garden scene's watcher reads it on arrival
-		part.Parent=regions
-		table.insert(blocked,part)
+	if not self.blocked then
+		self.blocked={}
+		for _,f in ipairs(Host.footprints())do
+			local part=Instance.new("Part")
+			table.insert(self.blocked,part)
+			part.Name,part.CFrame,part.Size=f.name,f.cframe,f.size
+			part.Anchored,part.CanCollide,part.CanQuery,part.CanTouch=true,false,false,false
+			part.Transparency,part.CastShadow=1,false
+			part:SetAttribute("GardenBlockedRegion",true) -- before parenting: the garden scene's watcher reads it on arrival
+		end
 	end
-	self.ring={}
+	for _,part in ipairs(self.blocked)do part.Parent=regions end
+	-- Each box's own value is recorded before it is changed, once (a retry after a throw keeps the first record).
+	self.ring=self.ring or {}
+	local held={}
+	for _,entry in ipairs(self.ring)do held[entry.box]=true end
 	for _,box in ipairs(refs)do
-		table.insert(self.ring,{box=box,collide=box.CanCollide})
-		box.CanCollide=false
+		if not held[box]then
+			table.insert(self.ring,{box=box,collide=box.CanCollide})
+			box.CanCollide=false
+		end
 	end
-	self.model,self.blocked,self.builtIn=model,blocked,room
 	self.open=true
 	return true
 end
