@@ -58,6 +58,11 @@ return function(client)
 		humanoid.WalkSpeed=14;feel:apply(false);assert(humanoid.WalkSpeed==16,"off: the place's speed back")
 		Feel.inject({flags={WorldFeel=true},studio=true,feel=false,walk=false});feel:apply(false)
 		assert(player.CameraMaxZoomDistance==128)
+		-- Code review: the walk test switched off while a lock (PetFocusUI) holds 0; the lock lets go and writes back the
+		-- 14 it saved; the WalkSpeed watcher puts the place's speed back.
+		Feel.inject(ON);humanoid.WalkSpeed=16;feel:apply(true);assert(humanoid.WalkSpeed==14)
+		humanoid.WalkSpeed=0;Feel.inject({flags={WorldFeel=true},studio=true,walk=false});feel:apply(false);assert(humanoid.WalkSpeed==0)
+		humanoid.WalkSpeed=14;feel:walk(humanoid,false);assert(humanoid.WalkSpeed==16,"the default, not the held 14")
 		Feel.inject(nil)
 	end)
 	test("the haze: GardenHour.hazed adds to a copy; 0 is the very same look (a frozen hold stays as it is)",function()

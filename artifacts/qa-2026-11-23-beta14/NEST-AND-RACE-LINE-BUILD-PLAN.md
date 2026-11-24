@@ -504,3 +504,15 @@ DashHost (24), DashClient (29), NestClient (22), ThingsTrail (9), NestSpot (for 
 
 The far islets and sightline clumps (W4b) wait on assets. `V3-TEST-PASS.md` and `TODO.md` rows are left for the
 integrating coordinator, to avoid conflicts with other branches.
+
+**Code review fixes (GO WITH CHANGES):**
+
+- **A.** The edge latch now resets when the root changes, so a respawn on the dais is not pulled into the ring. The
+  edge also never drags a root that is beyond `DashRing.Stray`: that is a teleport, and the server's stray rule
+  decides.
+- **B.** `DashClient:fail()` clears the line: `queued`, the edge, and the open confirm.
+- "You left the line." is said once when a Leave and a Strayed refusal cross (2 s).
+- WorldFeelClient watches WalkSpeed. When `world_walk` turns off while a lock holds 0, the lock's restore of 14 is put
+  back to the place's default.
+- **Accepted behaviour change:** a gather seat more than 16 studs from the pad (one that never got into the ring) is
+  now removed as Far during the gather, not only at the countdown.

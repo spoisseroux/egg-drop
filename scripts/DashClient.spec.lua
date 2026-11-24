@@ -453,6 +453,23 @@ return function(client,offline)
 		r.frame(30);assert(r.client.prompt.ActionText==UICopy.get("dash.prompt")and r.client.prompt.HoldDuration==0)
 		r.done()
 	end)
+	test("code review B: an error lets go of the line (never penned); You left the line. is said once when Leave and Strayed cross",function()
+		local r=rig();r.frame(2)
+		r.client:gate();card:pick("Fun");local join=r.requests[#r.requests]
+		r.fire({kind="reply",request="join",seq=join.seq,ok=true,reason="Queued"});r.frame(30)
+		assert(r.client:waiting()=="line"and r.client.line.waiting)
+		r.client:fail("boom");r.frame(2)
+		assert(r.client:waiting()==nil and not r.client.line.waiting and not r.client.queued,"the edge is off")
+		r.done()
+		r=rig();r.frame(2)
+		r.client:gate();card:pick("Fun");join=r.requests[#r.requests]
+		r.fire({kind="reply",request="join",seq=join.seq,ok=true,reason="Queued"});r.frame(30)
+		asked=nil;r.lineData.activate();asked.alt.onSelect()
+		r.fire({kind="refused",reason="Strayed"});r.frame(2)
+		local said=0;for _,key in ipairs(r.notes)do if key=="dash.line.left"then said+=1 end end
+		assert(said==1,"once: "..said)
+		r.done()
+	end)
 	test("rivals and pals: drawn from the states, at most 400 ms on; parts stay under the cap; another race's state is ignored",function()
 		local r=rig();r.lock("fun",8);r.frame(12)
 		local heat=r.client.heat

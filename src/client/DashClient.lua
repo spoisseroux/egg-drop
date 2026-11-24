@@ -208,6 +208,10 @@ function Client:fail(problem)
 	self.errors+=1
 	pcall(self.send,self,"leave")
 	pcall(self.endSeat,self)
+	-- Out of the line too: nothing may keep the rope's edge on after an error.
+	self.queued=nil
+	if self.line then pcall(self.line.setWaiting,self.line,false)end
+	if self.lineAsk then pcall(self.lineAsk.cancel);self.lineAsk=nil end
 	if self.errors>=Client.MaxErrors then
 		self.dead=true
 		self:sync()
@@ -268,6 +272,14 @@ function Client:leaveLine()
 	self:send("leave")
 	self.queued=nil
 	if self.seat and self.seat.phase=="gather"then self:endSeat()end
+	self:leftLine()
+end
+-- "You left the line." once, whether the Leave key or a Strayed refusal says it first (they can cross).
+Client.LeftQuiet=2
+function Client:leftLine()
+	local now=os.clock()
+	if self.leftAt and now-self.leftAt<Client.LeftQuiet then return end
+	self.leftAt=now
 	self:notify("dash.line.left")
 end
 -- Opening the Pocket Deck gives up a seat: ask first. True when the question is up (do nothing else yet).
@@ -427,7 +439,7 @@ function Client:event(packet)
 		self.queued=nil
 		if seat and seat.phase~="done"and(packet.raceId==nil or packet.raceId==seat.raceId)then self:endSeat()end
 		-- Beta 14 F2: out of the rope ring for too long reads as leaving (the same sentence as the Leave key).
-		self:notify(if packet.reason=="Strayed"then "dash.line.left"else "dash.reason."..tostring(packet.reason))
+		if packet.reason=="Strayed"then self:leftLine()else self:notify("dash.reason."..tostring(packet.reason))end
 	elseif kind=="aborted"then
 		if seat and packet.r==seat.raceId then self:endSeat();self:notify("dash.reason."..tostring(packet.reason))end
 	elseif kind=="cup"then self:notify("dash.newCup")

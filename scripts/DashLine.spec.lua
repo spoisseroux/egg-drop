@@ -89,5 +89,25 @@ return function(client)
 		at(centre+Vector3.new(5,3,0));assert(not line:clampStep()and root.Position.X==centre.X+5,"not waiting: free")
 		line:destroy()
 	end)
+	test("code review A: a respawn is not pulled into the ring, nor is a teleport; the server's stray rule decides",function()
+		local function rootAt(v)local r={Position=v,AssemblyLinearVelocity=Vector3.zero};r.CFrame=CFrame.new(v);return r end
+		local current=rootAt(centre+Vector3.new(1,3,0))
+		local line=Line.new({world=workspace,stepped=false,clock=function()return 0 end,root=function()return current end,
+			reduced=function()return false end,level=function()return 0 end})
+		line:frame(1/30,true,0);line:setWaiting(true)
+		line:clampStep();assert(line.entered)
+		-- Respawned on the arrival dais: a new root far away.
+		local dais=Vector3.new(96,4.5,66)
+		current=rootAt(dais)
+		assert(not line:clampStep()and current.Position==dais and not line.entered,"the new character stays where it spawned")
+		-- It walks back in: latched again, clamped again.
+		current.Position=centre+Vector3.new(1,3,0);line:clampStep();assert(line.entered)
+		current.Position=centre+Vector3.new(5,3,0);current.CFrame=CFrame.new(current.Position);assert(line:clampStep())
+		-- The same root moved far in one step (a teleport): left alone.
+		local far=centre+Vector3.new(30,3,0)
+		current.Position=far;current.CFrame=CFrame.new(far)
+		assert(not line:clampStep()and current.Position==far and not line.entered)
+		line:destroy()
+	end)
 	return{passed=#cases,cases=cases}
 end

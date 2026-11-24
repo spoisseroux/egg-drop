@@ -41,10 +41,19 @@ function Client.mount(deps)
 	if deps.step~=false then
 		on(Feel.changed("feel"),function()self:apply(false)end)
 		on(Feel.changed("walk"),function()self:apply(false)end)
+		local function watch(humanoid)
+			-- A lock (PetFocusUI) that lets go writes back the speed it saved: with the switch off by then, the place's
+			-- speed goes back instead of the 14 it held.
+			if self.walkConn then self.walkConn:Disconnect()end
+			self.walkConn=humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()self:walk(humanoid,false)end)
+		end
 		on(player.CharacterAdded,function(character)
 			local humanoid=character:WaitForChild("Humanoid",10)
-			if humanoid then self:walk(humanoid,true)end
+			if humanoid then self:walk(humanoid,true);watch(humanoid)end
 		end)
+		local character=player.Character
+		local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+		if humanoid then watch(humanoid)end
 	end
 	self:apply(true)
 	return self
@@ -64,5 +73,6 @@ end
 function Client:destroy()
 	for _,connection in ipairs(self.connections)do connection:Disconnect()end
 	table.clear(self.connections)
+	if self.walkConn then self.walkConn:Disconnect();self.walkConn=nil end
 end
 return Client

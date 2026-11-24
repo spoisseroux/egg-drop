@@ -188,10 +188,15 @@ function Line:clampStep()
 	if not self.waiting then return false end
 	local root=self.d.root and self.d.root()
 	if not root then return false end
+	-- A new character (a respawn on the dais) has not walked in: the latch starts again for it.
+	if root~=self.rootRef then self.rootRef=root;self.entered=false end
 	local centre=self.centre or Ring.centre()
 	local at=root.Position
-	if Ring.distance(at,centre)<=Ring.Enter then self.entered=true end
+	local distance=Ring.distance(at,centre)
+	if distance<=Ring.Enter then self.entered=true end
 	if not self.entered then return false end
+	-- Further than the stray reach is a teleport, not a walk: never drag it back (the server's stray rule decides).
+	if distance>Ring.Stray then self.entered=false;return false end
 	local back,out=Ring.clamp(at,centre,Ring.Enter)
 	if not back then return false end
 	root.CFrame=root.CFrame+(back-at)
