@@ -809,7 +809,17 @@ function Client:showResults(seat)
 	-- Beta 12 U6: the results sheet (DashResultsSheet). No close key: Race again or Done; B and Backspace are Done.
 	local pet,appearance=self:petInfo()
 	seat.names=self:fieldNames(seat)
-	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,stripSource=self.d.strip,sheet="results",
+	-- Beta 14 F1: a Coming up chip puts the card away, then routes once the garden is back (d.stripChip: afterGarden).
+	-- Only where the strip's chips can be tapped (TomorrowStrip.tappable).
+	local onChip=nil
+	if strip and self.d.stripChip and require(script.Parent.TomorrowStrip).tappable()then
+		onChip=function(id)
+			if self.card==nil or self.card.closed then return false end
+			done()
+			return self.d.stripChip(id)==true
+		end
+	end
+	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,stripSource=self.d.strip,sheet="results",onChip=onChip,
 		model=self:resultModel(seat),pet=pet,appearance=appearance,place=tonumber(seat.result.place)or 4,reduced=self.d.reduced,selected=1,
 		buttons={{name="Again",text=UICopy.get("dash.again"),primary=true,act=function()
 			self:endSeat()

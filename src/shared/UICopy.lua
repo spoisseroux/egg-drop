@@ -222,7 +222,8 @@ local Table={
    hours="Hatches in {hours} h",minutes="Hatches in {minutes} min",ready="Hatch me!",tuck="Tuck in",hatch="Hatch",
    tuckedFirst="Tucked in! Come back in {hours} hours to hatch a gift.",
    tucked="Sleep tight. It naps while you're away.",next="A new egg is napping. Come back in {hours} hours.",count="Egg {count} of 7",
-   chipHours="Egg {hours} h",chipMinutes="Egg {minutes} min",chipReady="Hatch egg!",got="{item} from the napping egg!"},
+   chipHours="Egg {hours} h",chipMinutes="Egg {minutes} min",chipReady="Hatch egg!",got="{item} from the napping egg!",
+   pinReady="Hatch!"}, -- beta 14 Q1: the Show me pin over a ready egg
   -- QA-R2-LOOK 5 (Spencer R2.6): "Coming up", a live status of what is on its way. Whole, short and tiny forms; the
   -- bare numbers ("+25", "2") are never sent for translation. {hours} and {minutes} are the egg's or the day's clock.
   strip={title="Coming up",wait="Miss a day, lose nothing.",

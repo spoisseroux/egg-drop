@@ -304,6 +304,22 @@ return function(client,offline)
 		assert(r.client.props.want==0,"Done: an onlooker now, so the hoops sink")
 		r.done()
 	end)
+	test("beta 14 F1: a Coming up chip on the results card puts the card away first, then routes (afterGarden); none without a strip",function()
+		local r=rig()
+		local routed={}
+		r.client.d.strip=function()return{chips={}}end
+		r.client.d.stripChip=function(id)assert(card.closed and not r.room.held,"the card and the room are given back first");table.insert(routed,id);return true end
+		r.lock();r.frame(5)
+		r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=1,us=41000000});r.client.seat.cardAt=-1;r.frame(20)
+		assert(card.options.onChip and card.options.strip)
+		assert(card.options.onChip("nest")==true and routed[1]=="nest"and r.client.seat==nil)
+		assert(card.options.onChip("stamp")==false and #routed==1,"once: the card is gone")
+		r.done()
+		r=rig();r.client.d.stripChip=function()error("no strip, no chips")end
+		r.lock();r.frame(5)
+		r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=1,us=41000000});r.client.seat.cardAt=-1;r.frame(20)
+		assert(card.options.onChip==nil);card:pick("Done");r.done()
+	end)
 	test("Race again and back; the results close themselves",function()
 		local r=rig()
 		r.lock();r.frame(5)

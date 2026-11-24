@@ -519,5 +519,28 @@ return function(client)
 		Onboard.inject(OFF);r.client:step(0);assert(Stations.Yield.Eggs==nil,"the switch off takes the claim away")
 		Onboard.inject(nil)
 	end)
+	test("Q2: the need bubble's wrapper (BubbleHold): no hold passes every call through as before; a nest beat holds it and lets it back",function()
+		local Hold=require(client.BubbleHold)
+		local log={}
+		local function make()
+			local real={}
+			function real:set(icon,visible)table.insert(log,{icon,visible})end
+			function real:hop()table.insert(log,"hop")end;function real:press()table.insert(log,"press")end
+			function real:step()end;function real:destroy()table.insert(log,"gone")end
+			return real
+		end
+		local plain=Hold.new(make,nil)
+		plain:set("toy",false);assert(plain.real==nil and #log==0,"made only when a bubble shows")
+		plain:set("toy",true);plain:hop();plain:press();plain:step(.1);plain:set(nil,false);plain:destroy()
+		assert(log[1][1]=="toy"and log[1][2]==true and log[2]=="hop"and log[3]=="press"and log[4][2]==false and log[5]=="gone"and #log==5,"as before")
+		table.clear(log)
+		local held=true
+		local hold=Hold.new(make,function()return held end)
+		hold:set("toy",true);assert(log[1][2]==false and hold:state().held and not hold:state().shown,"held back by the beat")
+		hold:step(.1);assert(#log==1,"no rewrite while still held")
+		held=false;hold:step(.1);assert(log[2][1]=="toy"and log[2][2]==true and hold:state().shown,"back after the beat")
+		held=true;hold:step(.1);assert(log[3][2]==false)
+		hold:set(nil,false);held=false;hold:step(.1);assert(log[4][2]==false and #log==4,"a hidden bubble stays hidden")
+	end)
 	return{passed=#cases,cases=cases}
 end

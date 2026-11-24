@@ -1061,7 +1061,7 @@ function View:renderBody()
  local left=self.body:FindFirstChild("EggColumn")
  for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
  left=left or Kit.frame(self.body,"EggColumn",nil,UDim2.fromOffset(0,0),UDim2.fromOffset(100,100))
- local keep={GetStars=true}
+ local keep={GetStars=true,NestRow=true}
  for _,id in ipairs(liveOrder)do keep["Recipe_"..id]=true end
  for _,child in ipairs(left:GetChildren())do if not keep[child.Name]then child:Destroy()end end
  local w=g.list.w-10 -- 3 px inset each side plus the 4 px scrollbar
@@ -1074,8 +1074,9 @@ function View:renderBody()
  if phone then
   rowGap,noteH,tail=6,22,2
   local fixed=3+#liveOrder*rowGap+noteH+(if self.store then 44+tail else 0)+4
-  rowH=math.clamp(math.floor((View.listWindow(self.body)-fixed)/math.max(1,#liveOrder)),44,g.rowH)
+  rowH=math.clamp(math.floor((View.listWindow(self.body)-fixed-(if self:nestRowModel()then 44+rowGap else 0))/math.max(1,#liveOrder)),44,g.rowH)
  end
+ y=self:layoutNestRow(left,y,w,phone,rowGap)
  for _,id in ipairs(liveOrder)do
   local recipe=shopRecipe(id);local copy=View.EggCopy[id]or {}
   local n=left:FindFirstChild("Recipe_"..id)
@@ -1131,6 +1132,70 @@ function View:renderBody()
  self.shelfEffects:setEggs({self.eggArt})
  self:restoreBodyFocus(previous,action,owner)
  if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(left)then self:queueSelectedRecipe()end
+end
+-- Beta 14 D1 (WORLD-AND-NEST-LOOK, Nest merge rulings R2 3): the napping egg's quiet row at the top of the list, above
+-- the eggs that cost Stars. No lip, no price: the nest icon, "Napping egg" and its clock ("Hatch me!" in gold when
+-- ready). A tap (or A) closes the screen ("nest": no menu reopens) and self.nest.show() lays the trail, from the Deck
+-- by leaving it first. Set by init's nest mount (self.nest = {row, show}); nil: no row, the list as before.
+View.NestIcon="rbxassetid://114080030018596"
+function View:nestRowModel()
+ local nest=self.nest
+ if type(nest)~="table"or type(nest.row)~="function"then return nil end
+ local ok,model=pcall(nest.row)
+ return if ok and type(model)=="table"then model else nil
+end
+function View:layoutNestRow(left,y,w,phone,rowGap)
+ local model=self:nestRowModel()
+ local row=left:FindFirstChild("NestRow")
+ if not model then if row then row:Destroy()end;self.nestRow=nil;return y end
+ local h=if phone then 44 else 56
+ if not row then
+  row=Instance.new("TextButton");row.Name="NestRow";row.Text="";row.AutoButtonColor=false;row.BorderSizePixel=0;row.Selectable=true
+  row.ZIndex=left.ZIndex+1
+  Kit.paint(row,"BackgroundColor3","well");Kit.corner(row,12)
+  local stroke=Instance.new("UIStroke");stroke.Thickness=1;stroke.Transparency=.86;stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;stroke.Parent=row
+  Kit.paint(stroke,"Color",function()return Kit.color("ink")end)
+  local icon=Instance.new("ImageLabel");icon.Name="NestIcon";icon.BackgroundTransparency=1;icon.Image=View.NestIcon;icon.AnchorPoint=Vector2.new(0,.5)
+  icon.ZIndex=row.ZIndex+1;icon.Parent=row
+  Kit.text(row,"Name","","text",{Name="Title",TextTruncate=Enum.TextTruncate.AtEnd})
+  Kit.text(row,"Counter","","soft",{Name="Clock",TextXAlignment=Enum.TextXAlignment.Right})
+  row.Activated:Connect(function()
+   if not liveShopTarget(row,self.shade)then return end
+   self:actNestRow()
+  end)
+  row.Parent=left
+ end
+ local icon,title,clock=row.NestIcon,row.Title,row.Clock
+ local size=if phone then 22 else 28
+ row.Position,row.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,h)
+ icon.Size,icon.Position=UDim2.fromOffset(size,size),UDim2.new(0,12,.5,0)
+ title.TextSize=if phone then 14 else 16;clock.TextSize=if phone then 13 else 15
+ title.Position,title.Size=UDim2.fromOffset(12+size+8,0),UDim2.fromOffset(w-(12+size+8)-104,h)
+ clock.Position,clock.Size=UDim2.fromOffset(w-112,0),UDim2.fromOffset(100,h)
+ self.nestRow=row
+ self:paintNestRow(model)
+ return y+h+rowGap
+end
+function View:paintNestRow(model)
+ local row=self.nestRow
+ if not row or not row.Parent then return end
+ model=model or self:nestRowModel()
+ if not model then return end
+ if row.Title.Text~=model.title then row.Title.Text=model.title end
+ if row.Clock.Text~=model.clock then row.Clock.Text=model.clock end
+ if row:GetAttribute("Ready")~=model.ready then
+  row:SetAttribute("Ready",model.ready)
+  Kit.paint(row.Clock,"TextColor3",if model.ready then "stars"else "soft")
+ end
+ row.Interactable,row.Selectable=not self.pending,not self.pending
+ row:SetAttribute("AccessibleLabel",model.label)
+end
+function View:actNestRow()
+ local nest=self.nest
+ if self.pending or type(nest)~="table"or type(nest.show)~="function"then return false end
+ self:close("nest")
+ local ok,shown=pcall(nest.show)
+ return ok and shown==true
 end
 -- The right pane for the selected egg. Preview swaps at once, then a 120 ms settle.
 function View:paintEggPane()
@@ -1414,6 +1479,9 @@ function View:openingFocusTarget()
 	if self.state.lastHatch and not self.ackReady then return nil end
 	if not self.state.lastHatch and self.shopRoot then
 		local column=self.body:FindFirstChild("EggColumn");local row=column and column:FindFirstChild("Recipe_"..self.selected)
+		-- Beta 14 D1: the first egg type, unless the napping egg is ready (then its row).
+		local nest=self.nestRow
+		if nest and nest.Parent==column and nest:GetAttribute("Ready")==true and nest.Selectable then return nest end
 		return row or self.shopBackButton
 	end
 	local target = if self.state.lastHatch then self.meetButton else self.action
@@ -1429,6 +1497,17 @@ function View:open(state)
 	self.errorMessage = nil
 	local fresh = not self.shade.Visible
 	self.shade.Visible = true
+	-- Beta 14 D1: the napping egg row's clock, once a second while the screen is up (text only, no relayout).
+	if fresh and self.nest then
+		self.nestTicker = (self.nestTicker or 0) + 1
+		local ticker = self.nestTicker
+		task.spawn(function()
+			while not self.destroyed and self.nestTicker == ticker and self.shade.Visible do
+				task.wait(1)
+				if self.nestTicker == ticker and self.shade.Visible then pcall(self.paintNestRow, self) end
+			end
+		end)
+	end
 	self:update(state or self.state)
  if not self.state.lastHatch then self:queueSelectedRecipe()end
  -- Beta 14 B1: a fresh shop open rises on the menus spring (the panel from its fitted spot); never a hatch result or
