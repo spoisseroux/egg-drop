@@ -35,12 +35,22 @@ local function finite(n)return type(n)=="number"and n==n and math.abs(n)<math.hu
 
 -- Is the server's pet free for a snack? Its own business only: in the garden, no care, greeting, race or park, and
 -- resting or pausing (a follow only while the owner stands still).
+-- Second answer: why not (the SnackWhy diagnostic). STUDIO-CHECK-R5 R6: the snapshot's actor carries `parkId` and
+-- `peerId` (GardenState:snapshot), never `park` or `pairId`; both spellings are read.
 function Pet.free(actor,ownerStill)
-	if type(actor)~="table"or actor.mode~="Room"then return false end
-	if actor.care or actor.pairId or actor.dash or actor.park then return false end
-	if actor.action=="greet"or actor.action=="focus"then return false end
+	if type(actor)~="table"then return false,"no garden actor (park, race, focus or a hop drew the pet)"end
+	if actor.mode~="Room"then return false,"mode "..tostring(actor.mode)end
+	if actor.care then return false,"care"end
+	if actor.dash then return false,"race"end
+	if actor.parkId or actor.park then return false,"park"end
+	if actor.peerId or actor.pairId or actor.action=="greet"then return false,"greeting"end
+	if actor.action=="focus"then return false,"focus"end
 	if actor.behavior=="rest"or actor.action=="wanderPause"or actor.action=="settle"then return true end
-	return actor.behavior=="follow"and ownerStill==true
+	if actor.behavior=="follow"then
+		if ownerStill==true then return true end
+		return false,"following a moving owner"
+	end
+	return false,"busy with "..tostring(actor.behavior).."/"..tostring(actor.action)
 end
 
 function Pet.new(deps)
@@ -61,17 +71,40 @@ local function call(fn,...)
 	local ok,value=pcall(fn,...)
 	return if ok then value else nil
 end
-function Pet:isBusy()return call(self.d.busy)==true or call(self.d.reduced)==true end
+-- Busy: the busy dep's reason (a string, or true) or Reduced Motion; false when free.
+function Pet:isBusy()
+	local busy=call(self.d.busy)
+	if busy==true or(type(busy)=="string"and busy~="")then return if type(busy)=="string"then busy else "busy"end
+	if call(self.d.reduced)==true then return "reduced motion"end
+	return false
+end
+-- The SnackWhy diagnostic (STUDIO-CHECK-R5 R6): the last refusal or step, as an attribute on my pet's model, written
+-- only on change. LifePet exists only where the `snack` ceiling passes (the beta place and Studio).
+function Pet:why(reason)
+	if reason==self.lastWhy then return end
+	self.lastWhy=reason
+	local model=self.visual and self.visual.model
+	if model then pcall(function()model:SetAttribute("SnackWhy",reason)end)end
+end
 
 -- GardenLife's Loose asks about a resting drawn fruit: true takes it (my pet goes for it).
 function Pet:notice(loose,now)
-	if self.active or not self:on()or self:isBusy()or now<self.cooldownUntil then return false end
+	if self.active then return false end
+	if not self:on()then return false end
+	local busy=self:isBusy()
+	if busy then self:why("refused: "..busy);return false end
+	if now<self.cooldownUntil then self:why(string.format("refused: cooldown %.0f s",self.cooldownUntil-now));return false end
 	local visual,actor=self.visual,self.lastActor
-	if not visual or visual.destroyed or typeof(visual.origin)~="Vector3"or typeof(loose.rest)~="Vector3"then return false end
-	if not Pet.free(actor,call(self.d.ownerStill)==true)then return false end
-	if flat(visual.origin,loose.rest)>S.notice then return false end
+	if not visual or visual.destroyed or typeof(visual.origin)~="Vector3"or typeof(loose.rest)~="Vector3"then
+		self:why("refused: no pet drawn");return false
+	end
+	local free,whyNot=Pet.free(actor,call(self.d.ownerStill)==true)
+	if not free then self:why("refused: "..whyNot);return false end
+	local d=flat(visual.origin,loose.rest)
+	if d>S.notice then self:why(string.format("refused: fruit %.1f studs off (notice %d)",d,S.notice));return false end
 	local owner=call(self.d.owner)
-	if typeof(owner)=="Vector3"and flat(owner,loose.rest)>S.leash then return false end
+	if typeof(owner)=="Vector3"and flat(owner,loose.rest)>S.leash then self:why("refused: past the owner's leash");return false end
+	self:why(string.format("snack: going (%.1f studs)",d))
 	local fruit=loose.rest
 	local to=Vector3.new(fruit.X-visual.origin.X,0,fruit.Z-visual.origin.Z)
 	local stop=if to.Magnitude>S.arrive then fruit-to.Unit*S.arrive else visual.origin
@@ -113,9 +146,15 @@ function Pet:drive(visual,actor,now,dt)
 	if a and self.d.life and call(self.d.life)~=true then self:release(visual);return false end
 	local sample=visual.origin
 	if not a then return self:lookUp(visual,actor,now)end
-	local free=Pet.free(actor,call(self.d.ownerStill)==true)and not self:isBusy()
-	-- Code review r1: the walk back is checked too (a walking owner, a care pickup); only the quick ease is exempt.
-	if not a.quick and(not free or flat(a.pos,sample)>S.drift or(a.loose.quick and not a.loose.eaten))then self:abort(now)end
+	local free,whyNot=Pet.free(actor,call(self.d.ownerStill)==true)
+	local busy=self:isBusy()
+	if not a.quick then
+		-- A park pose owns the pet this frame (ParkClient:drive) as much as a race does.
+		local reason=if not free then whyNot elseif busy then busy elseif visual.parkPosedOrigin~=nil then "park pose"
+			elseif flat(a.pos,sample)>S.drift then "8+ studs from the server's pet" elseif a.loose.quick and not a.loose.eaten then "the fruit faded"
+			else nil
+		if reason then self:why("aborted: "..reason);self:abort(now)end
+	end
 	local t=now-a.at
 	local pos,moving=a.pos,0
 	if a.phase=="turn"then
@@ -147,6 +186,7 @@ function Pet:drive(visual,actor,now,dt)
 		end
 		if t>=S.nibble*S.nibbles then
 			a.phase,a.at="glad",now
+			self:why("snack: ate it")
 			visual.contentUntil=(visual.time or 0)+S.content
 			self:heart(visual,now)
 		end

@@ -614,10 +614,10 @@ return function(client)
 			assert(Sim.cap("fruit",level)==({16,8,0})[level+1]and Sim.cap("loose",level)==({3,2,0})[level+1],"level "..level)
 		end
 		assert(F.pool==16 and F.reach==90 and F.chance==.5 and F.dropAt==.8 and F.rest==30)
-		assert(F.down==.75 and F.out<=.30 and F.hang==.50 and F.stemIn==.82 and F.skirt==.60)
-		-- FABLE-REVIEW-R5 3: the skirt only: at .75 down an .30 tip sits at .69 of the radius, pulled in to .60.
-		local ring=math.sqrt(1-(.5)^2)
-		local outAt=F.out*math.min(1,F.skirt/(F.out/(.5*ring)))
+		assert(F.down==nil and F.under==.10 and F.out<=.30 and F.hang==.50 and F.stemIn==.82 and F.skirt==.60)
+		-- STUDIO-CHECK-R5 R6: under the skirt (.30 out is .60 of a round crown's half width: the skirt limit exactly),
+		-- the tip on the ellipsoid's underside there, .10 below it.
+		local outAt=F.out*math.min(1,F.skirt/(F.out/.5))
 		local total,twoOrMore=0,0
 		for i,crown in ipairs(Spots.Crowns)do
 			local stems=Sim.fruitStems(i,crown)
@@ -628,7 +628,9 @@ return function(client)
 			local top=crown.position.Y+crown.size.Y/2
 			for j,slot in ipairs(stems)do
 				assert(slot.stem==again[j].stem and slot.key==Sim.fruitKey(i,slot.k),"seeded")
-				assert(near(slot.stem.Y,top-.75*crown.size.Y,1e-4),"inside the leaves: .75 under the top")
+				local q=math.min(F.skirt,F.out/.5)
+				assert(near(slot.stem.Y,crown.position.Y-crown.size.Y/2*math.sqrt(1-q*q)-F.under,1e-4),"on the underside, .10 below")
+				assert(slot.stem.Y<crown.position.Y and top>slot.stem.Y,"under the crown")
 				assert(near(Sim.flat(slot.stem,crown.position),outAt*crown.size.X,1e-3),"under the skirt: "..Sim.flat(slot.stem,crown.position)/crown.size.X)
 				-- Hanging, the image centre .50 under the stem tip; a sway swings it downwind and keeps the tip.
 				local still=Sim.fruitHang(slot.stem,0,1)
@@ -643,8 +645,8 @@ return function(client)
 		-- A long, narrow crown: the tip is pulled inside its ellipsoid (stemIn of the radius at that height).
 		local thin={position=Vector3.new(0,12,0),size=Vector3.new(10,6,2)}
 		for _,slot in ipairs(Sim.fruitStems(3,thin))do
-			local hy=3;local y=slot.tip.Y;local ring=math.sqrt(1-(y/hy)^2)
-			local q=math.sqrt((slot.tip.X/(5*ring))^2+(slot.tip.Z/(1*ring))^2)
+			local q=math.sqrt((slot.tip.X/5)^2+(slot.tip.Z/1)^2) -- R6: the skirt rule is on the half extents
+			assert(slot.tip.Y<-3*math.sqrt(1-q*q)+1e-6,"below the thin crown's underside")
 			assert(q<=F.skirt+1e-9,"under the thin crown's skirt: "..q)
 		end
 		-- Sway: 3 to 15 degrees, toward the wind; none when still.
@@ -687,9 +689,9 @@ return function(client)
 			for _,slot in ipairs(stems)do
 				local tip=slot.tip
 				assert(tip.Y<0,"below the crown's middle")
-				assert(math.abs(tip.Y-(h.Y-F.down*crown.size.Y))<1e-6)
-				local ring=math.sqrt(1-(tip.Y/h.Y)^2)
-				local q=math.sqrt((tip.X/(h.X*ring))^2+(tip.Z/(h.Z*ring))^2)
+				local qq=math.min(F.skirt,math.sqrt((tip.X/h.X)^2+(tip.Z/h.Z)^2)+1e-12)
+				assert(math.abs(tip.Y-(-h.Y*math.sqrt(1-qq*qq)-F.under))<1e-4,"the whole fruit below the skirt")
+				local q=math.sqrt((tip.X/h.X)^2+(tip.Z/h.Z)^2)
 				assert(q<=F.skirt+1e-9,crown.tree..": under the skirt, never the side face "..q)
 				assert((crown.cframe*tip-slot.stem).Magnitude<1e-6,"the world stem is the crown's frame on the tip")
 			end

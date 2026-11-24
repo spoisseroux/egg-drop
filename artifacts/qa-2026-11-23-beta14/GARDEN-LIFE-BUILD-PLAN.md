@@ -643,3 +643,16 @@ detour's look next to the need bubble, the nest pill and click targets; `careHea
   #826249 (sampled from studio/r5/07); the last 25% of each short end feathered out.
 - **Upload:** leaf-sheet, leaf-sheet-bd, dewdrop-stem, litter, path-fray (LifeArtR4 rows pending; their previous
   uploads stay drawn until then via the new `previous` field).
+
+## 14. STUDIO-CHECK-R5 R6 fixes (2026-11-24)
+
+- **Why the snack never happened:** RoomView creates a ParkClient whenever the Park flag is on (RoomView.lua:180), so
+  the `self.park:drive` branch (which runs PetFollow.activity first) always won and `lifeActor` stayed nil: LifePet
+  dropped everything every frame and `notice` saw no actor (`Pet.free(nil)`). Fixed: the park branch passes the actor
+  too; LifePet aborts while a park pose holds the pet (`visual.parkPosedOrigin`). Also `Pet.free` read `park` / `pairId`,
+  which the snapshot never carries: it now reads `parkId` / `peerId` too. Notice reach stays **8** (the architect's).
+- **SnackWhy:** an attribute on my pet's model with the last refusal or step ("refused: a menu", "refused: fruit 9.0
+  studs off (notice 8)", "refused: busy with investigate/wander", "snack: going", "snack: ate it", "aborted: ...").
+  LifePet exists only where the `snack` ceiling passes (beta, Studio).
+- **Dewdrops below the skirt:** the stem tip sits on the crown's ellipsoid underside right above its spot (`out` .30,
+  pulled to `skirt` .60), `under` .10 below it: the whole fruit and the drawn stem hang under the skirt. `down` is gone.

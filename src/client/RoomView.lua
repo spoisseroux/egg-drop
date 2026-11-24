@@ -305,7 +305,9 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
                 self.pet.personalPlayEnabled=self.pet.personalPlayEnabled and actor~=nil and actor.mode=="Room"
                 self.pet.personalActorIdentity=actor and(tostring(actor.characterId)..":"..tostring(actor.petGeneration))or nil
                 require(script.Parent.PersonalToyOpportunity).apply(self.pet,actor,serverNow)
-				if actor and self.park then self.followState=self.park:drive(self.pet,actor,serverNow,dt,self.followState,reduced)
+				-- (ParkClient exists whenever the Park flag is on and runs PetFollow.activity first: the actor is drawn here too;
+				-- STUDIO-CHECK-R5 R6: without it LifePet never saw an actor. LifePet steps aside while a park pose holds the pet.)
+				if actor and self.park then self.followState=self.park:drive(self.pet,actor,serverNow,dt,self.followState,reduced);lifeActor=actor
 				elseif actor then self.followState=PetFollow.activity(self.pet,actor,serverNow,dt,self.followState,reduced);lifeActor=actor
 				else self.followState = PetFollow.step(self.pet, root, dt, self.followState,reduced)end
 			else self.followState=nil;PetFollow.rest(self.pet)end
