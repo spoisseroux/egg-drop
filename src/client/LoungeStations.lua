@@ -71,6 +71,16 @@ end
 function Stations:watch(signal)
 	table.insert(self.connections,signal:Connect(function()self:refresh()end))
 end
+-- Beta 14 D1: another prompt on the same key may claim a station's E / ButtonX where it stands (the napping egg's nest
+-- beside the Eggs station: NestClient sets Yield.Eggs while it is open). Yield[id](position, part) -> true to step
+-- aside. Empty (live, the nest off): nothing changes.
+Stations.Yield={}
+function Stations.yields(id,position,part)
+	local claim=Stations.Yield[id]
+	if claim==nil or position==nil then return false end
+	local ok,yes=pcall(claim,position,part)
+	return ok and yes==true
+end
 function Stations:eligible(prompt,state)
 	local lounge=self.lounge
 	local part=prompt.Parent
@@ -79,6 +89,7 @@ function Stations:eligible(prompt,state)
 		and lounge==self.dependencies.lounge() and lounge:IsDescendantOf(workspace)
 		and prompt:IsDescendantOf(lounge) and part~=nil and part:IsA("BasePart") and part:IsDescendantOf(lounge)
 		and (id~="Eggs" or Stations.canVisitEggs(state.snapshot,state.rank,state.trials))
+		and not Stations.yields(id,state.position,part)
 end
 function Stations:nearest(state)
 	if not state.position or not Stations.canRoam(state) then return nil end

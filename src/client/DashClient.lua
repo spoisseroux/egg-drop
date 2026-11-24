@@ -30,6 +30,8 @@ local Props=require(script.Parent.DashProps)
 local Fade=require(script.Parent.DashFade)
 local Hints=require(script.Parent.DashHints)
 local Results=require(script.Parent.DashResults)
+local Ring=require(Shared.DashRing)
+local Line=require(script.Parent.DashLine)
 local Client={};Client.__index=Client
 Client.MaxErrors=3
 Client.ExtrapolateTicks=40
@@ -43,6 +45,8 @@ Client.ResultAfter=1.3
 Client.ResultSeconds=20
 Client.StaleSeconds=12 -- no result this long after the race must be over: let go
 Client.PromptReach=10
+Client.LeaveHold=.4 -- the gate prompt while waiting ("Leave line"): held, since the pet's prompt is on E / ButtonX too
+Client.AltAfter=.3  -- the confirm's Leave key is ignored this long after it opens
 Client.TagLift=2 -- studs over a racing pet's origin: its tag's anchor (DashProps)
 Client.LIVE=table.freeze({countdown=true,race=true,results=true})
 local CS=Stats.UnitsPerCs
@@ -129,6 +133,17 @@ function Client:open()
 	local found=ReplicatedStorage:FindFirstChild("GardenState")
 	if found then folder(found)else on(ReplicatedStorage.ChildAdded,folder)end
 	self.props=Props.new(workspace)
+	-- Beta 14 F2: the rope ring round the waiting pad, and the edge while this player waits.
+	self.line=Line.new({world=workspace,stepped=d.lineStepped,reduced=d.reduced,
+		level=function()local ok,level=pcall(function()return require(script.Parent.AliveBudget).level()end);return if ok and type(level)=="number"then level else 0 end,
+		root=function()
+			local character=Players.LocalPlayer.Character
+			local root=character and character:FindFirstChild("HumanoidRootPart")
+			local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+			return if root and humanoid and humanoid.Health>0 then root else nil
+		end,
+		humanoid=function()local character=Players.LocalPlayer.Character;return character and character:FindFirstChildOfClass("Humanoid")end,
+		onPush=function()if self.rail and self.rail.pulse then self.rail:pulse()end end})
 	self.camera=RaceCamera.new()
 	self.fade=Fade.new()
 	self.project=function(position)
@@ -175,6 +190,8 @@ function Client:close()
 	if self.input then self.input.destroy();self.input,self.core=nil,nil end
 	if self.hud then self.hud:destroy();self.hud=nil end
 	if self.props then self.props:destroy();self.props=nil end
+	if self.line then self.line:destroy();self.line=nil end
+	if self.lineAsk then pcall(self.lineAsk.cancel);self.lineAsk=nil end
 	if self.fade then pcall(self.fade.release,self.fade);self.fade=nil end
 	if self.rail then pcall(self.rail.cancel,self.rail);self.rail=nil end
 	self.lineText=nil
@@ -191,6 +208,10 @@ function Client:fail(problem)
 	self.errors+=1
 	pcall(self.send,self,"leave")
 	pcall(self.endSeat,self)
+	-- Out of the line too: nothing may keep the rope's edge on after an error.
+	self.queued=nil
+	if self.line then pcall(self.line.setWaiting,self.line,false)end
+	if self.lineAsk then pcall(self.lineAsk.cancel);self.lineAsk=nil end
 	if self.errors>=Client.MaxErrors then
 		self.dead=true
 		self:sync()
@@ -216,12 +237,55 @@ function Client:summary()
 	end
 	return{phase=if phase=="gather"then"gather"elseif phase~=nil and Client.LIVE[phase]then"live"else"idle",count=count,raced=not self:newRacer()}
 end
+-- Beta 14 F2: waiting for a race, in the line or in a gather seat ("in line" both), and not held by one.
+function Client:waiting()
+	if self.queued==true then return "line"end
+	local seat=self.seat
+	if seat and seat.phase=="gather"and not seat.trial then return "gather"end
+	return nil
+end
+-- "Leave the line?": Stay in line is the primary key (Enter / A, on the right) and B, Esc or the shade stay too; Leave
+-- is the quiet alt key (X / ButtonX), ignored AltAfter after it opens. It closes itself when the wait ends any other
+-- way (slowStep), and Leave re-checks that this player still waits before it sends. True when the question is up.
+function Client:askLine(action)
+	local Confirm=require(script.Parent.ConfirmDialog)
+	if Confirm.isOpen()then return true end
+	local kind=self:waiting()
+	if not kind then return false end
+	local handle
+	handle=Confirm.ask({title=UICopy.get("dash.line.title"),line=UICopy.get("dash.line.line"),confirm=UICopy.get("dash.line.no"),
+		onConfirm=function()end,
+		onClosed=function()if self.lineAsk==handle then self.lineAsk=nil end end,
+		alt={text=UICopy.get("dash.line.yes"),after=Client.AltAfter,onSelect=function()
+			-- Still the wait it asked about (not promoted since, not held by a race).
+			if not self.isOpen or self:waiting()~=kind or self:held()then return end
+			self:leaveLine()
+			if action then action()end
+		end}})
+	self.lineAsk=handle
+	if handle then self.lineAskKind=kind end
+	return handle~=nil
+end
+-- Out of the line (or the gather seat) by choice: the edge lets go at once, then the toast.
+function Client:leaveLine()
+	if self.line then self.line:setWaiting(false)end
+	self:send("leave")
+	self.queued=nil
+	if self.seat and self.seat.phase=="gather"then self:endSeat()end
+	self:leftLine()
+end
+-- "You left the line." once, whether the Leave key or a Strayed refusal says it first (they can cross).
+Client.LeftQuiet=2
+function Client:leftLine()
+	local now=os.clock()
+	if self.leftAt and now-self.leftAt<Client.LeftQuiet then return end
+	self.leftAt=now
+	self:notify("dash.line.left")
+end
 -- Opening the Pocket Deck gives up a seat: ask first. True when the question is up (do nothing else yet).
 function Client:askLeave(action)
-	if not self.seat or self.seat.phase=="done"then
-		if self.queued then self:send("leave");self.queued=nil end
-		return false
-	end
+	if self:waiting()then return self:askLine(action)end
+	if not self.seat or self.seat.phase=="done"then return false end
 	local Confirm=require(script.Parent.ConfirmDialog)
 	if Confirm.isOpen()then return true end
 	if self.core then self.core:loseAll()end
@@ -270,6 +334,7 @@ function Client:send(kind,mode)
 	return true
 end
 function Client:gate()
+	if self:waiting()then self:askLine();return end
 	if self.seat or self.queued or self:panelOpen()or not self.d.canRoam()or self.d.modalOpen()then return end
 	local function go(kind,mode)
 		return function()
@@ -373,7 +438,8 @@ function Client:event(packet)
 	elseif kind=="refused"then
 		self.queued=nil
 		if seat and seat.phase~="done"and(packet.raceId==nil or packet.raceId==seat.raceId)then self:endSeat()end
-		self:notify("dash.reason."..tostring(packet.reason))
+		-- Beta 14 F2: out of the rope ring for too long reads as leaving (the same sentence as the Leave key).
+		if packet.reason=="Strayed"then self:leftLine()else self:notify("dash.reason."..tostring(packet.reason))end
 	elseif kind=="aborted"then
 		if seat and packet.r==seat.raceId then self:endSeat();self:notify("dash.reason."..tostring(packet.reason))end
 	elseif kind=="cup"then self:notify("dash.newCup")
@@ -755,7 +821,17 @@ function Client:showResults(seat)
 	-- Beta 12 U6: the results sheet (DashResultsSheet). No close key: Race again or Done; B and Backspace are Done.
 	local pet,appearance=self:petInfo()
 	seat.names=self:fieldNames(seat)
-	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,stripSource=self.d.strip,sheet="results",
+	-- Beta 14 F1: a Coming up chip puts the card away, then routes once the garden is back (d.stripChip: afterGarden).
+	-- Only where the strip's chips can be tapped (TomorrowStrip.tappable).
+	local onChip=nil
+	if strip and self.d.stripChip and require(script.Parent.TomorrowStrip).tappable()then
+		onChip=function(id)
+			if self.card==nil or self.card.closed then return false end
+			done()
+			return self.d.stripChip(id)==true
+		end
+	end
+	self.card=require(script.Parent.DashCard).open({playerGui=self.d.playerGui,name="Results",title=title,lines=lines,strip=strip,stripSource=self.d.strip,sheet="results",onChip=onChip,
 		model=self:resultModel(seat),pet=pet,appearance=appearance,place=tonumber(seat.result.place)or 4,reduced=self.d.reduced,selected=1,
 		buttons={{name="Again",text=UICopy.get("dash.again"),primary=true,act=function()
 			self:endSeat()
@@ -793,8 +869,16 @@ function Client:slowStep(now)
 		self.pingAt=clock+Client.PingEvery
 		self:send("ping")
 	end
+	-- Beta 14 F2: the confirm goes when the wait it asked about ends any other way (promotion, countdown, removal).
+	local waiting=self:waiting()
+	if self.lineAsk and(waiting~=self.lineAskKind or self:held())then pcall(self.lineAsk.cancel);self.lineAsk=nil end
 	if self.prompt then
-		local open=seat==nil and not self.queued and not self:panelOpen()and d.canRoam()==true
+		local asking=self.lineAsk~=nil
+		local open=if waiting then not asking and d.canRoam()==true else seat==nil and not self.queued and not self:panelOpen()and d.canRoam()==true
+		local text=UICopy.get(if waiting then "dash.line.prompt"else "dash.prompt")
+		if self.prompt.ActionText~=text then self.prompt.ActionText=text end
+		local hold=if waiting then Client.LeaveHold else 0
+		if self.prompt.HoldDuration~=hold then self.prompt.HoldDuration=hold end
 		if self.prompt.Enabled~=open then self.prompt.Enabled=open end
 	end
 	-- The gate card closes with the garden.
@@ -822,11 +906,13 @@ function Client:gatherLine(now)
 	elseif self.queued then text=UICopy.get("dash.queue")end
 	if self.lineText==text then return end
 	self.lineText=text
+	-- Beta 14 F2: a tap on the line asks to leave it (the rail's chevron shows it can be tapped).
+	local function activate()return self:askLine()end
 	if not self.rail then
 		if text==""or not self.owner then return end
-		self.rail=require(script.Parent.NotificationRail).status(self.owner,"dash-line",{text=text,active=true,priority=2})
+		self.rail=require(script.Parent.NotificationRail).status(self.owner,"dash-line",{text=text,active=true,priority=2,activate=activate})
 	end
-	self.rail:update({text=text,active=text~=""})
+	self.rail:update({text=text,active=text~="",activate=activate})
 end
 function Client:frame(dt,now)
 	local reduced=self.d.reduced()==true
@@ -840,6 +926,10 @@ function Client:frame(dt,now)
 	local seat=self.seat
 	if seat and seat.predict then self:raceStep(seat,dt,now,reduced)end
 	if not self.props then return end -- closed by what the race just did
+	if self.line then
+		self.line:setWaiting(self:waiting()~=nil and not self:held())
+		self.line:frame(dt,Ring.wanted(self.roster),os.clock())
+	end
 	self.props:step(dt)
 	self.props:balloon(now,reduced)
 	local pet=self.d.roomView.pet

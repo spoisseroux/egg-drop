@@ -8,6 +8,7 @@ return function(client,offline)
 	local Sim=require(Shared.DashSim)
 	local Wire=require(Shared.DashWire)
 	local Stats=require(Shared.DashStats)
+	local UICopy=require(Shared.UICopy)
 	local HttpService=game:GetService("HttpService")
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
@@ -85,7 +86,7 @@ return function(client,offline)
 			leaveDash=function(room)if room.held then room.held=false;room.dashHeld=nil;room.locks-=1;room.hidden=false end end,
 			dashCamera=function(room)assert(room.held,"the camera only while held");room.frames+=1 end}
 		Rail.enqueue=function(_,key)table.insert(r.notes,key)end
-		Rail.status=function()return{update=function(_,v)r.line=v.text end,cancel=function()r.line=nil end}end
+		Rail.status=function(_,_,data)r.lineData=data;return{update=function(_,v)r.line=v.text;r.lineData=v end,cancel=function()r.line=nil end,pulse=function()r.pulses=(r.pulses or 0)+1 end}end
 		Rail.holder=nil
 		r.client=Client.mount({remotes=remotes,roomView=r.room,playerGui=r.gui,audio={play=function()end},reduced=function()return r.reduced==true end,
 			state=function()return{dash=r.saved}end,canRoam=function()return r.roam end,modalOpen=function()return r.modal end,closeMenus=function()r.menusClosed+=1 end})
@@ -303,6 +304,22 @@ return function(client,offline)
 		assert(r.client.props.want==0,"Done: an onlooker now, so the hoops sink")
 		r.done()
 	end)
+	test("beta 14 F1: a Coming up chip on the results card puts the card away first, then routes (afterGarden); none without a strip",function()
+		local r=rig()
+		local routed={}
+		r.client.d.strip=function()return{chips={}}end
+		r.client.d.stripChip=function(id)assert(card.closed and not r.room.held,"the card and the room are given back first");table.insert(routed,id);return true end
+		r.lock();r.frame(5)
+		r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=1,us=41000000});r.client.seat.cardAt=-1;r.frame(20)
+		assert(card.options.onChip and card.options.strip)
+		assert(card.options.onChip("nest")==true and routed[1]=="nest"and r.client.seat==nil)
+		assert(card.options.onChip("stamp")==false and #routed==1,"once: the card is gone")
+		r.done()
+		r=rig();r.client.d.stripChip=function()error("no strip, no chips")end
+		r.lock();r.frame(5)
+		r.fire({kind="result",r="race-1",mode="fun",seats={},seat=1,place=1,us=41000000});r.client.seat.cardAt=-1;r.frame(20)
+		assert(card.options.onChip==nil);card:pick("Done");r.done()
+	end)
 	test("Race again and back; the results close themselves",function()
 		local r=rig()
 		r.lock();r.frame(5)
@@ -397,7 +414,7 @@ return function(client,offline)
 		open.card=true;assert(any()and not any(true))
 		ui.names,ui.snacks=nil,nil;open.card=false;assert(not any(true));ui.hub=closed();assert(not any(true))
 	end)
-	test("gather: the player walks and the garden is not held; the Deck asks; a queue is left quietly",function()
+	test("gather: the player walks and the garden is not held; the Deck asks; a queue is asked too (beta 14 F2)",function()
 		local r=rig()
 		r.fire({kind="joined",raceId="race-1",seat=1,mode="fun"})
 		r.roster({v=1,phase="gather",raceId="race-1",mode="fun",endsAt=12,seats={{seat=1,userId=7,petId="pip"}},queue={}})
@@ -409,7 +426,48 @@ return function(client,offline)
 		r.fire({kind="refused",raceId="race-2",reason="Far"})
 		r.client:gate();card:pick("Stats");local join=r.requests[#r.requests]
 		r.fire({kind="reply",request="join",seq=join.seq,ok=true,reason="WrongBand"});assert(r.client.queued)
-		assert(not r.client:askLeave(function()end)and r.requests[#r.requests].kind=="leave"and not r.client.queued)
+		local played=false
+		assert(r.client:askLeave(function()played=true end)and asked and asked.title==UICopy.get("dash.line.title")and r.requests[#r.requests].kind~="leave")
+		asked.alt.onSelect();assert(played and r.requests[#r.requests].kind=="leave"and not r.client.queued and r.notes[#r.notes]=="dash.line.left")
+		r.done()
+	end)
+	test("the line (beta 14 F2): a tappable rail line; Stay keeps the place; the gate prompt reads Leave line, held; promotion closes the question; Strayed reads as leaving",function()
+		local r=rig();r.frame(2)
+		r.client:gate();card:pick("Fun");local join=r.requests[#r.requests]
+		r.fire({kind="reply",request="join",seq=join.seq,ok=true,reason="Queued"});r.frame(30)
+		assert(r.client:waiting()=="line"and r.line==UICopy.get("dash.queue")and r.lineData.activate,"the line can be tapped")
+		asked=nil;assert(r.lineData.activate()and asked)
+		assert(asked.title==UICopy.get("dash.line.title")and asked.confirm==UICopy.get("dash.line.no")and asked.alt.text==UICopy.get("dash.line.yes")and asked.alt.after==Client.AltAfter)
+		r.frame(30);assert(not r.client.prompt.Enabled,"the gate prompt is off while the question is up")
+		asked.onConfirm();asked.onClosed(true);assert(r.client.queued and r.client.lineAsk==nil,"Stay in line keeps the place")
+		r.frame(30);assert(r.client.prompt.Enabled and r.client.prompt.ActionText==UICopy.get("dash.line.prompt")and r.client.prompt.HoldDuration==Client.LeaveHold)
+		-- Promotion from the line into a gather seat: the open question goes, and its Leave does nothing any more.
+		asked=nil;r.lineData.activate();local stale=asked
+		r.fire({kind="joined",raceId="race-1",seat=1,mode="fun",promoted=true});r.frame(30)
+		assert(asked==nil and r.client:waiting()=="gather","closed by the promotion")
+		local sent=#r.requests;stale.alt.onSelect();assert(#r.requests==sent and r.client.seat,"a stale Leave sends nothing")
+		r.roster({v=1,phase="gather",raceId="race-1",mode="fun",endsAt=1e9,seats={{seat=1,userId=7,petId="pip"}},queue={}});r.frame(30)
+		assert(r.lineData.activate and string.find(r.line,"Just for Fun",1,true),"the gather line can be tapped too")
+		r.fire({kind="refused",raceId="race-1",reason="Strayed"});r.frame(30)
+		assert(r.notes[#r.notes]=="dash.line.left"and r.client:waiting()==nil and r.line=="")
+		r.frame(30);assert(r.client.prompt.ActionText==UICopy.get("dash.prompt")and r.client.prompt.HoldDuration==0)
+		r.done()
+	end)
+	test("code review B: an error lets go of the line (never penned); You left the line. is said once when Leave and Strayed cross",function()
+		local r=rig();r.frame(2)
+		r.client:gate();card:pick("Fun");local join=r.requests[#r.requests]
+		r.fire({kind="reply",request="join",seq=join.seq,ok=true,reason="Queued"});r.frame(30)
+		assert(r.client:waiting()=="line"and r.client.line.waiting)
+		r.client:fail("boom");r.frame(2)
+		assert(r.client:waiting()==nil and not r.client.line.waiting and not r.client.queued,"the edge is off")
+		r.done()
+		r=rig();r.frame(2)
+		r.client:gate();card:pick("Fun");join=r.requests[#r.requests]
+		r.fire({kind="reply",request="join",seq=join.seq,ok=true,reason="Queued"});r.frame(30)
+		asked=nil;r.lineData.activate();asked.alt.onSelect()
+		r.fire({kind="refused",reason="Strayed"});r.frame(2)
+		local said=0;for _,key in ipairs(r.notes)do if key=="dash.line.left"then said+=1 end end
+		assert(said==1,"once: "..said)
 		r.done()
 	end)
 	test("rivals and pals: drawn from the states, at most 400 ms on; parts stay under the cap; another race's state is ignored",function()

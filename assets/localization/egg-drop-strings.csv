@@ -132,7 +132,7 @@ ui.dash.again,Race again,,Menu text
 ui.dash.ask.line,"Your pet runs on, but you won't get a ribbon.",,Menu text
 ui.dash.ask.no,Keep racing,,Menu text
 ui.dash.ask.title,Leave the race?,,Menu text
-ui.dash.ask.yes,Leave,,Menu text; also ui.results.leave.narrow
+ui.dash.ask.yes,Leave,,"Menu text; also ui.dash.line.yes, ui.results.leave.narrow"
 ui.dash.band,{band} · Dash level {level},,Menu text; e.g. {band} · Dash level 10
 ui.dash.bestShort,Best {best} s,,Menu text; e.g. Best {best} s; also ui.dash.result.best
 ui.dash.clear,Nice!,,Menu text
@@ -151,6 +151,11 @@ ui.dash.jump,Jump,,"Menu text; also ui.r3.help.dash.b.title, ui.stats.name.jump"
 ui.dash.label.best,Best,,Menu text
 ui.dash.label.time,Time,,Menu text
 ui.dash.leave,Leave race,,Menu text
+ui.dash.line.left,You left the line.,,Menu text
+ui.dash.line.line,You'll lose your spot for the next race.,,Menu text
+ui.dash.line.no,Stay in line,,Menu text
+ui.dash.line.prompt,Leave line,,Menu text
+ui.dash.line.title,Leave the line?,,Menu text
 ui.dash.medal.bronze,Bronze cup time!,,Menu text
 ui.dash.medal.gold,Gold cup time!,,Menu text
 ui.dash.medal.silver,Silver cup time!,,Menu text
@@ -169,7 +174,7 @@ ui.dash.pad.puff,PHEW!,,Menu text
 ui.dash.perfect,Perfect!,,Menu text
 ui.dash.prompt,Race,,Menu text
 ui.dash.puff,Phew!,,Menu text
-ui.dash.queue,You're next in line,,Menu text; also ui.dash.reason.Queued
+ui.dash.queue,You're in line. Tap to leave.,,Menu text
 ui.dash.racing,Racing,,Menu text
 ui.dash.reason.AlreadySeated,You're already in,,Menu text
 ui.dash.reason.Busy,Your pet is busy,,Menu text; also ui.dash.reason.Petting
@@ -182,6 +187,7 @@ ui.dash.reason.Hatching,Finish hatching first,,Menu text
 ui.dash.reason.NoCharacter,Try again in a moment,,"Menu text; also ui.dash.reason.StalePet, ui.shop.reason.throttled"
 ui.dash.reason.NoPet,Bring your pet with you,,Menu text
 ui.dash.reason.PetChanged,You changed pets,,Menu text
+ui.dash.reason.Queued,You're in line for the next race!,,Menu text
 ui.dash.reason.Saving,Saving. Try again soon,,Menu text
 ui.dash.reason.Throttled,One moment,,Menu text
 ui.dash.reason.WrongBand,That race is for other levels. You're next!,,Menu text
@@ -572,6 +578,7 @@ ui.onb3.nest.inside,Inside: {item} and {stars} Stars.,,"First-session onboarding
 ui.onb3.nest.insideStars,Inside: {stars} Stars.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Inside: {stars} Stars."
 ui.onb3.nest.minutes,Hatches in {minutes} min,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Hatches in 40 min"
 ui.onb3.nest.next,A new egg is napping. Come back in {hours} hours.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. A new egg is napping. Come back in 7 hours."
+ui.onb3.nest.pinReady,Hatch!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.ready,Hatch me!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.sign,{pet}'s egg,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear's egg"
 ui.onb3.nest.signPlain,Your egg,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
@@ -788,6 +795,8 @@ ui.r4.wardrobe.noneNote,Nothing in this slot,,Menu text
 ui.r4.wardrobe.slot,Slot,,Menu text
 ui.r4.wardrobe.takeOff,Take off,,Menu text
 ui.r5.station.Eggs.line,Spend Stars on new eggs,,Menu text
+ui.r5.station.EggsNest.line,"Toys, looks and snacks. Your napping egg is here too.",,Menu text
+ui.r5.station.EggsV3.line,"Toys, looks and snacks for your pet",,Menu text
 ui.r5.station.Journal.line,Dress up and care for your pets,,Menu text
 ui.r5.station.Park.line,Pets play here. Play dates pay Stars,,Menu text
 ui.report.about,What's it about?,,Bug report sheet

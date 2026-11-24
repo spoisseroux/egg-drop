@@ -3157,6 +3157,7 @@ do
   if id=="quests"then return function()return clientUI.openQuestLog("daily")==true end end
   return nil
  end
+ clientUI.stripStep=gardenStep -- the Dash results card routes through afterGarden with it (DashClient's onChip)
  local function roomFree()
   return board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy
  end
@@ -4592,13 +4593,26 @@ end
 clientUI.movementLock=require(script.MovementLock).shared()
 clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui"),movement=clientUI.movementLock})
 gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
+-- Beta 14 W4 world feel (WorldFeelClient): the zoom cap and the walk speed test; nil with the build ceiling off, and
+-- with both switches off it writes nothing.
+do
+ local ok,problem=pcall(function()clientUI.feel=require(script.WorldFeelClient).mount({player=player})end)
+ if ok and clientUI.feel then gui.Destroying:Connect(function()clientUI.feel:destroy()end)
+ elseif not ok then warn("[Feel] not mounted: "..tostring(problem))end
+end
 -- Garden Dash (DashClient): nil with the build ceiling off; with the switch off it only watches for the switch.
 do
  local ok,problem=pcall(function()
   clientUI.dash=require(script.DashClient).mount({remotes=remotes,roomView=roomView,playerGui=gui.Parent,audio=audio,reduced=reduceEffects,
    strip=function()return if clientUI.tomorrow then clientUI.tomorrow()else nil end,
    -- Beta 14 F1: a Coming up chip on the Dash results card routes like the deck's (the Dash side wires it).
-   stripChip=function(id)return clientUI.stripRoute~=nil and clientUI.stripRoute(id)==true end,
+   -- The card is put away first (DashClient), so the garden step waits for the room through afterGarden.
+   stripChip=function(id)
+    local step=clientUI.stripStep and clientUI.stripStep(id)
+    if not step or not clientUI.afterGarden or clientUI.stripRouting then return false end
+    clientUI.afterGarden(step,8)
+    return true
+   end,
    state=function()return nurseryState end,canRoam=function()return roomView.canRoam()end,
    modalOpen=function()return clientUI.anyModalOpen(true)end,
    -- Beta 12 U5: a racer's pet name for the start-line tags. Names are catalogue piece ids (the board's PetNames
@@ -4715,6 +4729,15 @@ do
     return roomView.focusing==true or roomView.focusTransitioning==true or(roomView.greetingCamera~=nil and roomView.greetingCamera~=false)
    end,
    show=function()local things=clientUI.things;return things~=nil and things.show("nest")end,
+   -- Beta 14 Q2: the need bubble (BubbleHold's state and the pet), so the pill never shares the screen with it.
+   bubble=function()
+    local hold=clientUI.needBubble
+    if not hold then return nil end
+    local state=hold:state()
+    local pet=roomView.pet
+    state.pet=if pet and typeof(pet.origin)=="Vector3"then pet.origin else nil
+    return state
+   end,
    toast=function(text,stars)
     toaster=toaster or require(script.DeckKit).toaster(player:WaitForChild("PlayerGui"))
     toaster.show(text,stars,"nest:"..text)
@@ -4734,6 +4757,15 @@ do
    end})
   if not clientUI.nest then return end
   clientUI.nestPlace=function()return clientUI.nest:place3D()end
+  -- Beta 14 D1: the Hatch eggs screen's quiet napping-egg row. In the garden a tap lays the trail; from the Deck it
+  -- leaves first (F1's stripRoute("nest")).
+  nurseryView.nest={
+   row=function()return if Onboard.on("nest")then require(script.NestClient).menuRow(clientUI.nest:summary())else nil end,
+   garden=function()return board:GetAttribute("Mode")=="Room"end,
+   show=function()
+    if board:GetAttribute("Mode")=="Room"then local things=clientUI.things;return things~=nil and things.show("nest")==true end
+    return clientUI.stripRoute~=nil and clientUI.stripRoute("nest")==true
+   end}
   clientUI.tomorrow=function()
    return Strip.model({on=Onboard.on("nest"),nest=clientUI.nest:summary(),state=nurseryState})
   end
@@ -4851,7 +4883,12 @@ do
    if id=="park"or id=="parkInvite"then return trail:start({position=parkGate(from),name=Copy.get("park.name")})end
    if id=="nest"then
     local at=clientUI.nestPlace and clientUI.nestPlace()
-    return at~=nil and trail:start({position=at,name=Copy.get("onb3.nest.title")})
+    -- Beta 14 Q1: the pin says Hatch! once the egg is ready (asked each step).
+    local function name()
+     local summary=clientUI.nest and clientUI.nest:summary()
+     return Copy.get(if summary and summary.ready then "onb3.nest.pinReady"else "onb3.nest.title")
+    end
+    return at~=nil and trail:start({position=at,name=name})
    end
    if id=="finds"or id=="findsIntro"then
     local finds=findsNow()
@@ -4936,20 +4973,14 @@ do
    local function nestAt()local f=clientUI.nestPlace;local at=type(f)=="function"and f()or nil;return if typeof(at)=="Vector3"then at else nil end
    local needs
    -- The bubble's BillboardGui is made the first time a bubble shows.
-   local bubble={real=nil}
-   function bubble:set(icon,visible)
-    if visible and not self.real then
-     self.real=require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),adornee=petPart,
-      reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
-      keyHint=function()return Needs.keyHint(clientUI.inputKind())end,
-      onTap=function()if needs then needs:tap()end end})
-    end
-    if self.real then self.real:set(icon,visible)end
-   end
-   function bubble:hop()if self.real then self.real:hop()end end
-   function bubble:press()if self.real then self.real:press()end end
-   function bubble:step(dt)if self.real then self.real:step(dt)end end
-   function bubble:destroy()if self.real then self.real:destroy();self.real=nil end end
+   -- Beta 14 Q2 (BubbleHold): the napping egg's beat holds the bubble back; without a nest, exactly as before.
+   local bubble=require(script.BubbleHold).new(function()
+    return require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),adornee=petPart,
+     reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+     keyHint=function()return Needs.keyHint(clientUI.inputKind())end,
+     onTap=function()if needs then needs:tap()end end})
+   end,function()local nest=clientUI.nest;return nest~=nil and nest:holdsBubble()==true end)
+   clientUI.needBubble=bubble
    -- Studio QA: a tap on the Bear does the open need's action too; its own key (E / ButtonX) keeps petting.
    local interact=roomView.interactPet
    local petKeyAt=-math.huge

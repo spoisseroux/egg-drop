@@ -19,6 +19,11 @@
 --   meshes() -> {TopShell, BottomShell, Core}? (fresh MeshPart copies, or nil while they load), focus() (the pet focus
 --   camera is on: the label hides), chipHidden() (in the Pet Park: the chip hides), measure(text, size) -> px,
 --   plus world, player ({CharacterAdded}), now() (server unix time) and step=false (no Heartbeat; specs call :step).
+-- Beta 14 QA Q2 (WORLD-AND-NEST-LOOK 4): one pill with one message (Client.row's seven rows), shown by the player's
+--   distance and never under the pet's need bubble: bubble() -> {shown, pet = Vector3?} (optional; init's bubble
+--   wrapper asks holdsBubble() so a beat holds the bubble back). No second pill, no tuck-in rail toast.
+-- Beta 14 QA D1: the nest sits beside the Eggs station; while its prompt can act and the player stands nearer to it,
+--   the station's prompt steps aside (LoungeStations.Yield.Eggs). menuRow(summary) is the Hatch eggs screen's row.
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Onboard=require(Shared:WaitForChild("Onboard"))
@@ -29,6 +34,7 @@ local Wear=require(Shared:WaitForChild("WearableCatalog"))
 local Pets=require(Shared:WaitForChild("PetCatalog"))
 local LifeArt=require(Shared:WaitForChild("LifeArt"))
 local Models=require(Shared:WaitForChild("EggModels")).Egg
+local Stations=require(script.Parent:WaitForChild("LoungeStations"))
 local Client={};Client.__index=Client
 Client.Folder="EggDropSleepyNest"
 Client.Event="NestEvent"
@@ -36,7 +42,10 @@ Client.Claim="NestClaim"
 Client.Spot=Nest.Spot                  -- the plaza's east rim (spot A); the walk map's ground, raycast when it can be
 Client.Facing=Nest.Facing              -- the plaza's middle: root -Z points at it
 Client.PromptAt=Vector3.new(0,1,-Nest.Front) -- root-local: the prompt, and where the Bear's prints end (outside the pets' box)
-Client.BearSpot=Vector3.new(2.2,0,-1.4) -- the Bear curls here (the fringe is wider); the sign is on the other side
+-- Beta 14 D1 (Fable R2): beside the Eggs station the station side carries nothing; the Bear curls on the outer (-X)
+-- side in front, the sign stands behind it. PENDING Studio probe P1 (scripts/probe_nest_spot.luau).
+Client.BearSpot=Vector3.new(-2.2,0,-1.4) -- the Bear curls here (was +2.2 at the plaza rim)
+Client.SignAt=Vector3.new(-1.7,0,1.6)  -- the sign post and board, root-local X and Z (was -1.95, -1.03)
 Client.EggBase=.64     -- .06 into the straw bed
 Client.Scale=table.freeze({small=1.25,glow=1.6,rocking=2,ready=2})
 Client.Halo=table.freeze({glow={.25,.5},rocking={.45,.7},ready={.85,.85}})
@@ -47,15 +56,23 @@ Client.BusyWait=2       -- a refused claim: the prompt returns after this long
 Client.TuckSeconds=2.6
 Client.TuckedLabel=4
 Client.TuckedFirstLabel=6 -- the first tuck-in ever holds its line longer (GARDEN-LIFE-NEST-LOOK 5)
-Client.NextLabel=3
+Client.NextLabel=5 -- beta 14 Q2: a new egg's beat holds 5 s (was 3)
 Client.HatchSeconds=2
 Client.StageTween=.6
 Client.DropSeconds=.35
-Client.Prompt=6         -- studs: only within reach of the nest's front
+Client.Prompt=4.5       -- studs: only within reach of the nest's front (beta 14 D1: 6, beside the station now)
 Client.PromptOffset=Vector2.new(0,72) -- under the nest, never on the egg
 Client.Near=8           -- studs: the "Inside:" line
-Client.SecondWidth=236  -- px: the widest second-line pill; the explainer wraps inside it
-Client.SecondSize=13
+-- Beta 14 Q2: the one pill. At most 220 px, wrapping at 196, 14 px for the clock and "Hatch me!", 13 for sentences (12
+-- if a sentence would need three lines), two lines at most; 28 px tall for one line, 46 for two. The board is 220 x 80
+-- with the pill at its bottom, so it lifts 34 px over the need bubble without moving anything else.
+Client.Pill=table.freeze({max=220,wrap=196,pad=12,min=120,one=28,two=46,text=14,sentence=13,small=12,lift=34,board=Vector2.new(220,80)})
+-- Shown within `near` studs of the player's root (not the camera), fading in to `full`.
+Client.Show=table.freeze({near=table.freeze({12,10}),ready=table.freeze({18,15}),beat=table.freeze({18,18})})
+Client.BeatIn=.25;Client.BeatOut=.4
+Client.BubbleNear=6     -- studs, the pet from the nest's root: the need bubble and the pill would overlap
+Client.BubbleAfter=.3   -- the bubble comes back this long after a beat
+Client.HaloDistance=80;Client.ZzzDistance=40
 -- Beta (12) QA O1 (Fable, GARDEN-LIFE-NEST-LOOK.md section 5): the nest's words by role, so a wording change is a
 -- UICopy edit only. `how` explains the egg until the first hatch; `tuckedFirst` is the first tuck-in ever.
 Client.Copy=table.freeze({how="onb3.nest.how",howPlain="onb3.nest.howPlain",tucked="onb3.nest.tucked",
@@ -144,6 +161,56 @@ function Client.inside(view)
 	if name then return UICopy.get("onb3.nest.inside",{item=name,stars=view.gift.stars})end
 	return UICopy.get("onb3.nest.insideStars",{stars=view.gift.stars})
 end
+-- Pure (beta 14 Q2): the pill's see-through for a distance, shown within `near` and fading in to `full`; nil = no root.
+function Client.fade(distance,near,full)
+	if type(distance)~="number"or distance~=distance or distance>near then return 1 end
+	if near<=full then return 0 end
+	return math.clamp((distance-full)/(near-full),0,1)
+end
+-- Pure (beta 14 Q2): the pill's one message, first true row wins (WORLD-AND-NEST-LOOK 4):
+--   1 to 3  beats (ctx.beat = {row, text}): the first tuck-in ever, a later one, a new egg landed
+--   4  ready: "Hatch me!", gold      5  untucked, no egg hatched yet: the explainer
+--   6  within Near and n >= 1: what is inside      7  the clock
+-- ctx = {beat, look, left, near (studs), tucked, bubble (the need bubble shows with the pet near), compact}.
+-- Returns {row, text, size, gold, onTop, show = {near, full}, hidden, lift}.
+function Client.row(view,ctx)
+	local P=Client.Pill
+	if ctx.beat then
+		return{row=ctx.beat.row,text=ctx.beat.text,size=P.sentence,gold=false,onTop=true,show=Client.Show.beat,hidden=false,lift=false}
+	end
+	if ctx.look=="ready"then
+		return{row=4,text=UICopy.get(Client.Copy.ready),size=if ctx.compact then P.sentence else P.text,gold=true,onTop=false,show=Client.Show.ready,
+			hidden=false,lift=ctx.bubble==true}
+	end
+	local hidden=ctx.bubble==true
+	if not ctx.tucked and view.n==0 then
+		return{row=5,text=Client.how(view),size=P.sentence,gold=false,onTop=false,show=Client.Show.near,hidden=hidden,lift=false}
+	end
+	if view.n>=1 and type(ctx.near)=="number"and ctx.near<=Client.Near then
+		return{row=6,text=Client.inside(view),size=P.sentence,gold=false,onTop=false,show=Client.Show.near,hidden=hidden,lift=false}
+	end
+	return{row=7,text=(Client.clock(ctx.left or 0)),size=if ctx.compact then P.sentence else P.text,gold=false,onTop=false,show=Client.Show.near,
+		hidden=hidden,lift=false}
+end
+-- Pure (beta 14 Q2): the pill's size for text `textW` px wide at its size: lines (1 or 2), width, height, and whether
+-- the text must drop to the small size first (a sentence that would need three lines).
+function Client.pillSize(textW,smallW)
+	local P=Client.Pill
+	local function lines(w)return if w<=P.wrap then 1 else math.ceil(w*1.15/P.wrap)end
+	local n,small=lines(textW),false
+	if n>2 and smallW then n,small=math.min(2,lines(smallW)),true end
+	n=math.min(n,2)
+	if n==1 then return 1,math.clamp(math.ceil(textW)+P.pad*2,P.min,P.max),P.one,small end
+	return 2,P.max,P.two,small
+end
+-- Pure (beta 14 D1): the Hatch eggs screen's quiet top row from summary() (nil: no row).
+function Client.menuRow(summary)
+	if type(summary)~="table"or type(summary.left)~="number"then return nil end
+	local ready=summary.left<=0
+	local clock=Client.clock(summary.left)
+	local title=UICopy.get(Client.Copy.title)
+	return{title=title,clock=clock,ready=ready,label=title..", "..clock}
+end
 -- The egg's pose for a look at clock t: scale multiplier, rock (degrees), hop (studs), squash Y, halo opacity.
 -- Reduced Motion: no rock, hop or breath; the halo steady.
 function Client.motion(look,t,reduced)
@@ -180,7 +247,7 @@ local Face=Enum.NormalId
 local CURVED={Face.Top,Face.Bottom,Face.Front,Face.Back} -- a Cylinder's round side (its caps are Left and Right)
 local BOTH={Face.Front,Face.Back}
 local ROLL={Face.Top,Face.Bottom,Face.Front,Face.Back,Face.Left,Face.Right} -- a rim roll: its round side and both caps
-Client.SignYaw=-40 -- degrees about root Y
+Client.SignYaw=50 -- degrees about root Y (beta 14 D1, Fable R2: the Front looks forward-left; was -40)
 Client.SignPostTop=1.08 -- the post's top (studs over the nest root), just into the board's bottom edge
 function Client.parts()
 	local list={}
@@ -213,12 +280,12 @@ function Client.parts()
 	end
 	-- STUDIO-CHECK-R2: the board has words on both faces, so a post behind it hid the "e" of "egg" from the arrival path.
 	-- The post stops under the board (its lowest edge is about 1.0 after the 6 degree tilt), which sits on its top.
-	table.insert(list,{name="NestSignPost",shape="block",size=Vector3.new(.14,Client.SignPostTop,.14),cf=CFrame.new(-1.95,Client.SignPostTop/2,-1.03),color="post",wood=true})
+	table.insert(list,{name="NestSignPost",shape="block",size=Vector3.new(.14,Client.SignPostTop,.14),cf=CFrame.new(Client.SignAt.X,Client.SignPostTop/2,Client.SignAt.Z),color="post",wood=true})
 	-- The board is painted on both faces and yawed 40 toward the egg (Studio check beta 12: at 20, one face, people
 	-- coming in from the arrival path's mouth saw its edge and back). The Front reads from the prompt point and the
 	-- plaza's middle, the Back from the arrival path's mouth, each within about 35 degrees (NestClient.spec).
 	table.insert(list,{name="NestSign",shape="block",size=Vector3.new(1.3,.8,.08),
-		cf=CFrame.new(-1.95,1.45,-1.03)*CFrame.Angles(0,rad(Client.SignYaw),0)*CFrame.Angles(rad(6),0,0),color="board",wood=true,
+		cf=CFrame.new(Client.SignAt.X,1.45,Client.SignAt.Z)*CFrame.Angles(0,rad(Client.SignYaw),0)*CFrame.Angles(rad(6),0,0),color="board",wood=true,
 		decal={"sign",BOTH},sign=true})
 	return list
 end
@@ -270,6 +337,9 @@ function Client:open()
 	self.isOpen=true
 	self.synced=false
 	local d=self.d
+	-- Beta 14 D1: the station's E / ButtonX steps aside where the nest's prompt can act and is nearer.
+	self.yield=function(position,part)return self:claims(position,part)end
+	Stations.Yield.Eggs=self.yield
 	-- Per-frame work only while on (off: the switch is watched, nothing else).
 	if d.step~=false and not self.beat then
 		self.beat=RunService.Heartbeat:Connect(function(dt)
@@ -315,10 +385,13 @@ function Client:clear()
 	self.signWords=nil
 	if self.chip then self.chip.button:Destroy();self.chip=nil end
 	self.view,self.drawn,self.egg,self.hatching,self.waiting,self.queued,self.tuck=nil,nil,nil,nil,nil,nil,nil
+	self.beat,self.beatUntil=nil,nil
 	table.clear(self.beats)
 end
 function Client:close()
 	self.isOpen=false
+	if self.yield and Stations.Yield.Eggs==self.yield then Stations.Yield.Eggs=nil end
+	self.yield=nil
 	if self.beat then self.beat:Disconnect();self.beat=nil end
 	for _,connection in ipairs(self.connections)do connection:Disconnect()end
 	table.clear(self.connections)
@@ -366,7 +439,7 @@ function Client:set(view,landing)
 	if landing then
 		self.drop={t=0}
 		self:play("land",1,.5)
-		self:say(UICopy.get(Client.Copy.next,{hours=Nest.Hours}),Client.NextLabel)
+		self:say(UICopy.get(Client.Copy.next,{hours=Nest.Hours}),Client.NextLabel,3)
 		self.shownScale=nil
 	end
 	self:paint(true)
@@ -440,7 +513,7 @@ function Client:draw()
 		Size=Vector3.new(1,1.3,1)}))
 	make("SpecialMesh",egg.ball,{Name="Shape",MeshType=Enum.MeshType.Sphere})
 	egg.ball.Parent=folder
-	egg.halo=make("BillboardGui",anchor,{Name="Halo",LightInfluence=0,AlwaysOnTop=false,MaxDistance=120,Enabled=false})
+	egg.halo=make("BillboardGui",anchor,{Name="Halo",LightInfluence=0,AlwaysOnTop=false,MaxDistance=Client.HaloDistance,Enabled=false})
 	egg.haloImage=make("ImageLabel",egg.halo,{Name="Glow",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Image=Client.Assets.halo,
 		ImageColor3=Client.Color.halo,ImageTransparency=1})
 	egg.light=make("PointLight",anchor,{Name="Glow",Range=6,Brightness=.4,Color=Client.Color.halo,Enabled=false,Shadows=false})
@@ -451,23 +524,21 @@ function Client:draw()
 	egg.sparks=make("ParticleEmitter",anchor,{Name="Sparks",Texture=Client.Spark,Rate=0,Lifetime=NumberRange.new(.6,1),Speed=NumberRange.new(.6,1.4),
 		SpreadAngle=Vector2.new(180,180),LightEmission=1,LightInfluence=0,Color=ColorSequence.new(Client.Color.gold),
 		Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.25),NumberSequenceKeypoint.new(1,0)})})
-	egg.stillZ=make("BillboardGui",anchor,{Name="StillZ",LightInfluence=0,AlwaysOnTop=false,MaxDistance=80,Enabled=false,Size=UDim2.fromOffset(20,20)})
+	egg.stillZ=make("BillboardGui",anchor,{Name="StillZ",LightInfluence=0,AlwaysOnTop=false,MaxDistance=Client.ZzzDistance,Enabled=false,Size=UDim2.fromOffset(20,20)})
 	make("ImageLabel",egg.stillZ,{Name="Z",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Image=Client.Assets.z})
-	-- The label: a cream pill (gold when ready) with the clock; near, a second line with what is inside.
-	local board=make("BillboardGui",anchor,{Name="Label",LightInfluence=0,AlwaysOnTop=true,MaxDistance=60,Size=UDim2.fromOffset(240,62),Enabled=true})
-	local pill=make("Frame",board,{Name="Pill",AnchorPoint=Vector2.new(.5,0),Position=UDim2.fromScale(.5,0),Size=UDim2.fromOffset(160,28),
+	-- The label (beta 14 Q2): one cream pill (gold when ready) with one message, Client.row. The board is a fixed
+	-- 220 x 80 with the pill at its bottom (SizeOffset lifts the board so its bottom sits where the old pill's top
+	-- line did), so a one-line pill never jumps when the text changes. MaxDistance is a backstop; paintPill shows it.
+	local P=Client.Pill
+	local board=make("BillboardGui",anchor,{Name="Label",LightInfluence=0,AlwaysOnTop=false,MaxDistance=60,Size=UDim2.fromOffset(P.board.X,P.board.Y),
+		SizeOffset=Vector2.new(0,.5),Enabled=false})
+	local pill=make("Frame",board,{Name="Pill",AnchorPoint=Vector2.new(.5,1),Position=UDim2.fromScale(.5,1),Size=UDim2.fromOffset(160,P.one),
 		BackgroundColor3=Client.Color.cream,BorderSizePixel=0})
 	corner(pill)
 	egg.pillStroke=make("UIStroke",pill,{Color=Client.Color.ink,Thickness=2})
-	egg.clock=label(pill,"Clock",14,Client.Color.ink)
-	-- Near (Client.Near): what is inside, in its own cream pill 4 px under the clock (Fable R1; "Egg n of 7" stays
-	-- on the gift tile, not here).
-	local insidePill=make("Frame",board,{Name="InsidePill",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,32),Size=UDim2.fromOffset(200,24),
-		BackgroundColor3=Client.Color.cream,BorderSizePixel=0,Visible=false})
-	corner(insidePill)
-	make("UIStroke",insidePill,{Color=Client.Color.ink,Thickness=2})
-	egg.inside=label(insidePill,"Inside",13,Client.Color.ink)
-	egg.board,egg.pill,egg.insidePill=board,pill,insidePill
+	egg.clock=label(pill,"Clock",P.text,Client.Color.ink)
+	make("UIPadding",pill,{PaddingLeft=UDim.new(0,P.pad),PaddingRight=UDim.new(0,P.pad)})
+	egg.board,egg.pill=board,pill
 	-- The prompt, at the front of the nest (where the Bear's prints end).
 	local spot=inert(make("Part",nil,{Name="SleepyNestPrompt",Transparency=1,Size=Vector3.new(.2,.2,.2)}))
 	spot.CFrame=self.root*CFrame.new(Client.PromptAt)
@@ -516,30 +587,6 @@ function Client:paint(fresh)
 	if fresh or self.paintedLook~=look then
 		if self.paintedLook and self.paintedLook~=look and not fresh then self.stage={from=self.shownScale or Client.Scale[look],t=0}end
 		self.paintedLook=look
-	end
-	local text=Client.clock(left)
-	local hold=self.labelUntil and self.clock<self.labelUntil
-	if hold then text=self.labelText end
-	if egg.clock.Text~=text then egg.clock.Text=text end
-	local ready=look=="ready"and not hold
-	egg.pill.BackgroundColor3=if ready then Client.Color.stars else Client.Color.cream
-	egg.pill.Size=UDim2.fromOffset(math.max(120,math.min(236,#text*8+28)),28)
-	local textSize=if self.d.compact and self.d.compact()==true then 13 else 14
-	egg.clock.TextSize=textSize
-	-- The second line changes only with the egg: worked out once per view. The explainer wraps (two lines on a
-	-- phone); the board grows to hold it.
-	if egg.insideFor~=view then
-		egg.insideFor=view
-		local text,kind=Client.secondLine(view)
-		egg.secondKind=kind
-		egg.inside.Text=text
-		local inner=Client.SecondWidth-24
-		local textW=math.ceil(self:measure(text,Client.SecondSize))
-		local lines=if textW<=inner then 1 else math.ceil(textW*1.15/inner)
-		local h=if lines==1 then 24 else lines*16+8
-		egg.inside.TextWrapped=lines>1
-		egg.insidePill.Size=UDim2.fromOffset(if lines==1 then textW+24 else Client.SecondWidth,h)
-		egg.board.Size=UDim2.fromOffset(240,38+h)
 	end
 	-- Tuck in while it grows (once per egg), Hatch when it is ready; nothing while a hatch is asked for or playing.
 	local action=nil
@@ -679,10 +726,25 @@ function Client:peek()
 	board.StudsOffset=Vector3.new(0,(self.shownScale or 1.25)*1.3+1.6,0)
 	table.insert(self.beats,{kind="peek",board=board,t=0,parts={tile,chip},labels={item,count,stars}})
 end
--- The label holds `text` for `seconds` (Sleep tight, A new egg is growing), then the clock again.
-function Client:say(text,seconds)
-	self.labelText=text
-	self.labelUntil=self.clock+seconds
+-- A beat (beta 14 Q2, rows 1 to 3): the pill says `text` for `seconds`, over the other rows, and holds the need bubble
+-- back until BubbleAfter after it ends.
+function Client:say(text,seconds,row)
+	self.beat={row=row or 2,text=text,at=self.clock,untilT=self.clock+seconds}
+	self.beatUntil=self.beat.untilT
+end
+-- Is a beat up (or just over)? init's need bubble wrapper hides the bubble while this is true.
+function Client:holdsBubble()
+	return self.isOpen==true and self.beatUntil~=nil and self.clock<self.beatUntil+Client.BubbleAfter
+end
+-- Does the nest's prompt claim E / ButtonX at `position` over the station's (`part`)? LoungeStations.Yield.Eggs.
+function Client:claims(position,part)
+	local egg=self.egg
+	if not self.isOpen or not egg or not egg.prompt.Enabled or not self.root then return false end
+	local at=(self.root*CFrame.new(Client.PromptAt)).Position
+	local function flat(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
+	local mine=flat(position,at)
+	if mine>Client.Prompt then return false end
+	return part==nil or mine<flat(position,part.Position)
 end
 -- The hatch, only once the save has it: the reward shows only now.
 function Client:claimed(receipt)
@@ -716,7 +778,7 @@ function Client:step(dt)
 	if self.isOpen and not Onboard.on("nest")then self:close()end -- off: gone within the frame, whatever the signal does
 	if not self.isOpen then return end
 	self.clock+=dt
-	if self.labelUntil and self.clock>=self.labelUntil then self.labelUntil,self.labelText=nil,nil end
+	if self.beat and self.clock>=self.beat.untilT then self.beat=nil end
 	self:stepBeats(dt)
 	if not self.view or not self.egg then return end
 	if not self.egg.mesh then self:meshes()end
@@ -774,12 +836,9 @@ function Client:pose(dt)
 		if t<.6 then haloBoost=math.max(0,.9-halo)*(1-t/.6)end
 		if t>=Client.TuckSeconds and not self.tuck.said then
 			self.tuck.said=true
-			if self.tuck.first then
-				-- The first tuck-in ever: the longer line, and a rail toast so it is read with the camera on the Bear.
-				local text=UICopy.get(Client.Copy.tuckedFirst,{hours=Nest.Hours})
-				self:say(text,Client.TuckedFirstLabel)
-				if self.d.toast then pcall(self.d.toast,text,nil)end
-			else self:say(UICopy.get(Client.Copy.tucked),Client.TuckedLabel)end
+			-- Beta 14 Q2: the pill says it once; no rail toast (the pill is in front of the player, the chip keeps it).
+			if self.tuck.first then self:say(UICopy.get(Client.Copy.tuckedFirst,{hours=Nest.Hours}),Client.TuckedFirstLabel,1)
+			else self:say(UICopy.get(Client.Copy.tucked),Client.TuckedLabel,2)end
 		end
 	end
 	-- Waiting for the save: a fast rock on a loop.
@@ -836,7 +895,7 @@ function Client:pose(dt)
 	egg.haloImage.ImageColor3=if look=="ready"then Client.Color.gold else Client.Color.halo
 	egg.light.Enabled=look~="small"
 	egg.sparks.Rate=if look=="ready"and not reduced then 6 else 0
-	egg.board.StudsOffset=Vector3.new(0,1.3*s+.9,0)
+	egg.board.StudsOffset=Vector3.new(0,1.3*s+.6,0)
 	egg.stillZ.Enabled=reduced and look~="ready"
 	egg.stillZ.StudsOffset=Vector3.new(.3,1.3*s+.3,0)
 	local every=Client.ZzzEvery[look]
@@ -848,13 +907,58 @@ function Client:pose(dt)
 			pcall(function()egg.zzz:Emit(1)end)
 		end
 	end
-	-- Near: the second line (what is inside, and the egg's number in the welcome week).
-	local root=self.d.root and self.d.root()
-	local near=root~=nil and(root-self.root.Position).Magnitude<=Client.Near
-	egg.insidePill.Visible=near or egg.secondKind=="how"
-	-- The pet focus (greeting) camera: no label, it would read as the Bear's speech.
-	local focus=self.d.focus~=nil and self.d.focus()==true
-	if egg.board.Enabled==focus then egg.board.Enabled=not focus end
+	self:paintPill()
+end
+-- The pill (beta 14 Q2), every frame: which row, how far the player is, the need bubble, the peek and the focus camera.
+-- Writes only what changed.
+function Client:paintPill()
+	local egg,view=self.egg,self.view
+	if not egg or not view then return end
+	local d=self.d
+	local function flat(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
+	local centre=self.root.Position
+	local root=d.root and d.root()
+	local distance=if typeof(root)=="Vector3"then flat(root,centre)else nil
+	local bubble=false
+	if d.bubble then
+		local ok,b=pcall(d.bubble)
+		bubble=ok and type(b)=="table"and b.shown==true and typeof(b.pet)=="Vector3"and flat(b.pet,centre)<=Client.BubbleNear
+	end
+	local beat=self.beat
+	local row=Client.row(view,{beat=beat,look=self.lookNow,left=Client.left(view,self.now()),near=distance,tucked=view.tucked or self.tuck~=nil,
+		bubble=bubble,compact=d.compact~=nil and d.compact()==true})
+	local alpha=Client.fade(distance,row.show[1],row.show[2])
+	if beat then
+		local t,length=self.clock-beat.at,beat.untilT-beat.at
+		alpha=math.max(alpha,math.clamp(1-t/Client.BeatIn,0,1),math.clamp((t-(length-Client.BeatOut))/Client.BeatOut,0,1))
+	end
+	if row.hidden then alpha=1 end
+	-- The gift peek is up, or the pet focus (greeting) camera: no pill (it would read as the Bear's speech).
+	for _,item in ipairs(self.beats)do if item.kind=="peek"then alpha=1 end end
+	if d.focus~=nil and d.focus()==true then alpha=1 end
+	if self:reduced()and alpha<1 then alpha=0 end
+	local key=row.row..":"..row.text..":"..row.size..":"..tostring(row.lift)
+	if egg.rowKey~=key then
+		egg.rowKey=key
+		local P=Client.Pill
+		egg.clock.Text=row.text
+		local size=row.size
+		local w=self:measure(row.text,size)
+		local lines,width,height,small=Client.pillSize(w,if size>P.small then self:measure(row.text,P.small)else nil)
+		if small then size=P.small end
+		egg.clock.TextSize=size
+		egg.clock.TextWrapped=lines>1
+		egg.pill.Size=UDim2.fromOffset(width,height)
+		egg.pill.Position=UDim2.new(.5,0,1,if row.lift then -P.lift else 0)
+		egg.pill.BackgroundColor3=if row.gold then Client.Color.stars else Client.Color.cream
+		egg.board.AlwaysOnTop=row.onTop
+		egg.row=row
+	end
+	if egg.alpha~=alpha then
+		egg.alpha=alpha
+		egg.board.Enabled=alpha<1
+		egg.pill.BackgroundTransparency=alpha;egg.pillStroke.Transparency=alpha;egg.clock.TextTransparency=alpha
+	end
 end
 function Client:place(frame,s,squash,top,bottomFade,core)
 	local egg=self.egg

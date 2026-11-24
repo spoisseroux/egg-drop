@@ -36,6 +36,7 @@ local BondPips=require(script.Parent.BondPips)
 local BondCatalog=require(ReplicatedStorage.Shared.BondCatalog)
 local Levels=require(ReplicatedStorage.Shared.Levels)
 local StatCatalog=require(ReplicatedStorage.Shared.StatCatalog)
+local WorldFeel=require(ReplicatedStorage.Shared.WorldFeel) -- beta 14 W4: the arrival camera (off: as before)
 local function statKey(stat)return if stat then stat.id..":"..stat.level else nil end -- the focus card's stat chip (beta 12 U2)
 local NameText=require(script.Parent.PetNameText)
 local PetIdleBeats=require(script.Parent.PetIdleBeats)
@@ -854,7 +855,7 @@ function Room:leaveDash()
 			camera.FieldOfView=65
 			if root then
 				local target=root.Position+Vector3.new(0,1,0)
-				camera.CFrame=CFrame.lookAt(target+Vector3.new(5,6,12),target)
+				camera.CFrame=CFrame.lookAt(target+WorldFeel.arrival(),target)
 				camera.Focus=CFrame.new(target)
 			end
 		end
@@ -956,7 +957,7 @@ function Room:_useRoomCamera(animate, arriving)
 	if not restored then camera.FieldOfView = 65 end
 	if root and (placing or not self.roamed) and not restored then
 		local target = root.Position + Vector3.new(0, 1, 0)
-		camera.CFrame = CFrame.lookAt(target + Vector3.new(5, 6, 12), target)
+		camera.CFrame = CFrame.lookAt(target + WorldFeel.arrival(), target)
 		camera.Focus = CFrame.new(target)
 	end
 	self.roamed = true

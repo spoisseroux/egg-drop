@@ -48,7 +48,11 @@ CLIFF_X, CLIFF_ROOM = 78.0, 4.0  # nothing of the race comes nearer than this to
 # Studio check beta 12 (2026-11-23) moved it from (67, -17): after Done the camera looks west along the course from
 # behind the avatar, and the north start post stood 2.6 studs to the side of that line, across the avatar. At (66, -21)
 # the post is 6.6 studs to the side of it (and 5.5 across it for a camera from the south), and still 6 from the tree.
-PAD, PAD_RADIUS = (66.0, -21.0), 2.5  # where racers wait, off the line and north of it: a pad at (70, 0) put the crown of the tree at (74, 12) in the camera of anyone walking here from spawn.
+# Beta 14 F2 (NEST-AND-RACE-LINE-BUILD-PLAN 0, architect review): the rope ring (src/shared/DashRing.lua, RING_RADIUS)
+# stands round the pad, and at (66, -21) a ring of 4 ran through the meadow tree and its rocks (72, -22, r 3): the pad
+# moved 1.5 studs west, where the ring keeps every pad rule. PENDING Studio probe P7 (the beta 12 camera line).
+RING_RADIUS = 4.0
+PAD, PAD_RADIUS = (64.5, -21.0), 2.5  # where racers wait, off the line and north of it: a pad at (70, 0) put the crown of the tree at (74, 12) in the camera of anyone walking here from spawn.
 # Beta 12 QA U5 moved it from (69, -14) r 3: the wider start (DashGrid) stood the outer pets and a post on it.
 # The start grid (src/shared/DashGrid.lua, kept in step by DashCourse.spec): lanes 1.5 apart at the line, easing to
 # LANE_STEP between FUNNEL[0] and FUNNEL[1] studs on, posts POST_HALF_WIDTH out (centre plus half a post).
@@ -322,16 +326,20 @@ def emit(control):
         problems.append(f"length {total}")
     if min(cliff_distance(x, z) for x, z in main[:20] + [PAD]) < CLIFF_ROOM:
         problems.append("cliff")
-    # The waiting pad: level lawn, off every lane, clear of the solid things.
+    # The waiting pad and its rope ring (beta 14 F2): level lawn, off every lane, clear of the solid things and the cliff,
+    # all at the ring's radius (it is the wider of the two).
     px, pz = PAD
-    rim = [(px, pz)] + [(px + PAD_RADIUS * math.cos(k * math.pi / 8), pz + PAD_RADIUS * math.sin(k * math.pi / 8)) for k in range(16)]
+    reach = max(PAD_RADIUS, RING_RADIUS)
+    rim = [(px, pz)] + [(px + r * math.cos(k * math.pi / 16), pz + r * math.sin(k * math.pi / 16)) for r in (PAD_RADIUS, reach) for k in range(32)]
     if any(code(x, z)[0] not in "PGg" for x, z in rim) or max(ground(*p) for p in rim) - min(ground(*p) for p in rim) > .3:
         problems.append("pad ground")
     # Off the line and the start grid: measured on the module's own rounded distances along Main.
-    if min(math.dist(PAD, (row[1] / 100, row[3] / 100)) - half_width(row[0] / 100) for row in m) < PAD_RADIUS + 1:
+    if min(math.dist(PAD, (row[1] / 100, row[3] / 100)) - half_width(row[0] / 100) for row in m) < reach + 1:
         problems.append("pad on the line")
-    if any(math.dist(PAD, o[:2]) < PAD_RADIUS + o[2] + .5 for o in OBSTACLES):
+    if any(math.dist(PAD, o[:2]) < reach + o[2] + .5 for o in OBSTACLES):
         problems.append("pad obstacle")
+    if cliff_distance(px, pz) - reach < CLIFF_ROOM:
+        problems.append("ring at the cliff")
     if min(kerb_distance(x, z) for x, z in main + branch) < KEEP or min(grove_distance(x, z) for x, z in main + branch) < KEEP:
         problems.append("kerb or grove")
     if problems:

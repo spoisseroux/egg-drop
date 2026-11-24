@@ -256,6 +256,24 @@ return function(server)
 			assert(c.got(9,"joined")[1].closer and c.got(11,"joined")[1].promoted and not c.got(11,"joined")[1].closer and c.players[10].board.dashHeld==nil and #c.got(10,"refused")==0)
 			c.run(24);assert(c.got(9,"refused")[1].reason=="Far"and c.players[9].board.dashHeld==nil)
 		end)
+		-- Beta 14 F2: the rope ring (DashRing): Enter 3.4, Stray 6.5 for 1 s.
+		test("the rope ring, a gather seat: walk in from 10 studs; once in, 6.4 stays, 6.6 for a second leaves as Strayed; a new join latches afresh",function()
+			dash();local c=rig(1);c.run(1);local p=c.players[1];local function at(dx)p.root.Position=Vector3.new(gx+dx,gy+3,gz)end
+			at(10);assert(c.ask(1,"join",1).ok);c.run(2);assert(#c.host.director.heat.seats==1,"walking in from the prompt is not straying")
+			p.board.profileReady=false;c.run(1);assert(#c.host.director.heat.seats==1,"a gather seat is not removed for a save in flight");p.board.profileReady=true
+			at(1);c.run(.6);at(6.4);c.run(3);assert(#c.host.director.heat.seats==1,"6.4 studs out is inside the stray reach")
+			at(6.6);c.run(.6);at(1);c.run(.6);at(6.6);c.run(.6);assert(#c.host.director.heat.seats==1,"coming back clears the clock")
+			c.run(1);assert(c.host.director.heat==nil or #c.host.director.heat.seats==0)
+			assert(c.got(1,"refused")[1].reason=="Strayed"and p.board.dashHeld==nil)
+			at(10);assert(c.ask(1,"join",2).ok);c.run(2);assert(#c.host.director.heat.seats==1,"the latch starts again")
+		end)
+		test("the rope ring, the line: a queued player who strays is refused as Strayed; one who never got in keeps the old reach",function()
+			dash();local c=rig(10);c.run(1);for id=1,10 do c.ask(id,"join",1)end;c.run(1)
+			assert(#c.host.director.queue==2)
+			local function at(id,dx)c.players[id].root.Position=Vector3.new(gx+dx,gy+3,gz)end
+			at(9,7);c.run(1.6);assert(c.got(9,"refused")[1].reason=="Strayed"and #c.host.director.queue==1)
+			at(10,1);c.run(.1);c.host.lines[10]=nil;at(10,13);c.run(2);assert(#c.got(10,"refused")==0 and #c.host.director.queue==1,"never inside: 16 studs")
+		end)
 		test("closing with a Dash write in flight or ambiguous settles it first, so the last park write is not skipped",function()
 			dash();local c=rig(1);c.run(1);local p=c.players[1];local board=p.board
 			p.ctl.failAfter=true;c.host:finished(1,table.clone(WIN));c.run(1);assert(board.nursery.pending and select(2,H.parkPlay(board.nursery,"lost",1,"pip"))=="Pending")

@@ -47,9 +47,19 @@ function Attract.showsLabel(state, distance)
 end
 
 -- The label copy: name + line the first time (intro), the name alone after.
-function Attract.labelText(id, intro)
+-- Beta 14 D1 (WORLD-AND-NEST-LOOK, Nest merge rulings R2 3): on the onboarding v3 places the Eggs station's line names
+-- what its eggs give, and with the nest on it also says the napping egg is here. `env` = {ceiling, nest} for specs;
+-- the game reads Onboard. Off the ceiling (live): exactly the line before.
+function Attract.labelText(id, intro, env)
+	local key = id
+	if id == "Eggs" and intro then
+		local okOn, Onboard = pcall(require, Shared:WaitForChild("Onboard"))
+		local ceiling = if env and env.ceiling ~= nil then env.ceiling else okOn and Onboard.ceiling()
+		local nest = if env and env.nest ~= nil then env.nest else okOn and ceiling and Onboard.on("nest")
+		if ceiling then key = if nest then "EggsNest" else "EggsV3" end
+	end
 	local name = UICopy.get("r5.station." .. id .. ".name")
-	return name, if intro then UICopy.get("r5.station." .. id .. ".line") else nil
+	return name, if intro then UICopy.get("r5.station." .. key .. ".line") else nil
 end
 
 -- Ping gate: one per station per 45 s, one of any kind per 20 s, none in the first 10 s.

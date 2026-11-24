@@ -187,7 +187,9 @@ local Table={
  dash={title="Garden Dash",prompt="Race",fun="Just for Fun",stats="Stats On",trial="Time Trial",jump="Jump",dash="Dash",stones="Take the stones",
   go="GO!",perfect="Perfect!",clear="Nice!",trip="Oops!",clover="Lucky clover!",zoom="Zoomies!",puff="Phew!",leave="Leave race",again="Race again",done="Done",
   hint={jump="Tap Jump now!",dash="Hold Dash!"},
-  newCup="You won a cup!",gather="{name} · {count} of 8 · {left}",queue="You're next in line",
+  newCup="You won a cup!",gather="{name} · {count} of 8 · {left}",queue="You're in line. Tap to leave.",
+  -- Beta 14 F2 (WORLD-AND-NEST-LOOK 5): leaving the line, by its rail line, the gate's prompt or the rope ring.
+  line={title="Leave the line?",line="You'll lose your spot for the next race.",yes="Leave",no="Stay in line",left="You left the line.",prompt="Leave line"},
   gate={line="Your pet runs. Jump the hoops. Hold Dash to zoom!",modes="Just for Fun: all pets equal. Stats On: your pet's levels count."},
   ask={title="Leave the race?",line="Your pet runs on, but you won't get a ribbon.",yes="Leave",no="Keep racing"},
   ordinal={p1="1st",p2="2nd",p3="3rd",p4="4th",p5="5th",p6="6th",p7="7th",p8="8th"},
@@ -195,7 +197,7 @@ local Table={
   result={place="You finished {place}!",trial="{time} s!",noTime="Almost home!",time="Time {time} s",home="Almost home!",tryAgain="Try again for a cup!",best="Best {best} s",
    stars="+{reward} Stars ({done} of {total} today)"},
   reason={Far="Come closer to the gate",NoPet="Bring your pet with you",NoCharacter="Try again in a moment",Carried="Put your pet down first",Busy="Your pet is busy",
-   Petting="Your pet is busy",Hatching="Finish hatching first",Saving="Saving. Try again soon",Queued="You're next in line",WrongBand="That race is for other levels. You're next!",
+   Petting="Your pet is busy",Hatching="Finish hatching first",Saving="Saving. Try again soon",Queued="You're in line for the next race!",WrongBand="That race is for other levels. You're next!",
    Full="The line is full",Off="The race has stopped",Error="The race has stopped",Empty="The race has stopped",Deck="You left the race",Left="You left the race",
    PetChanged="You changed pets",AlreadySeated="You're already in",Throttled="One moment",StalePet="Try again in a moment",other="Can't race right now"}},
  -- Things to do (V3-THINGS-TO-DO-PLAN-2026-11-22): the Pocket menu tile, its page and the trail's marker.
@@ -220,7 +222,8 @@ local Table={
    hours="Hatches in {hours} h",minutes="Hatches in {minutes} min",ready="Hatch me!",tuck="Tuck in",hatch="Hatch",
    tuckedFirst="Tucked in! Come back in {hours} hours to hatch a gift.",
    tucked="Sleep tight. It naps while you're away.",next="A new egg is napping. Come back in {hours} hours.",count="Egg {count} of 7",
-   chipHours="Egg {hours} h",chipMinutes="Egg {minutes} min",chipReady="Hatch egg!",got="{item} from the napping egg!"},
+   chipHours="Egg {hours} h",chipMinutes="Egg {minutes} min",chipReady="Hatch egg!",got="{item} from the napping egg!",
+   pinReady="Hatch!"}, -- beta 14 Q1: the Show me pin over a ready egg
   -- QA-R2-LOOK 5 (Spencer R2.6): "Coming up", a live status of what is on its way. Whole, short and tiny forms; the
   -- bare numbers ("+25", "2") are never sent for translation. {hours} and {minutes} are the egg's or the day's clock.
   strip={title="Coming up",wait="Miss a day, lose nothing.",
@@ -378,6 +381,9 @@ local Table={
  r5={
   station={
    Eggs={name="Hatch eggs",line="Spend Stars on new eggs"},
+   -- Beta 14 D1 (Fable R2): the onboarding v3 places only; the nest's line while the nest is on.
+   EggsV3={name="Hatch eggs",line="Toys, looks and snacks for your pet"},
+   EggsNest={name="Hatch eggs",line="Toys, looks and snacks. Your napping egg is here too."},
    Customize={name="Deck style",line="Faceplates, backgrounds and balls"},
    Journal={name="Companions",line="Dress up and care for your pets"},
    Park={name="Pet Park",line="Pets play here. Play dates pay Stars"},
