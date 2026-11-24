@@ -61,7 +61,8 @@ Life.BubbleTexture="rbxassetid://77828632873187"
 -- Beta 14 B5 (WORLD-AND-NEST-LOOK 7): the fruit with a drawn stem (LifeArtR4 dewdropStem: today's fruit until it is
 -- uploaded), 1.1 x 1.5 studs, 10% darker so it sits with the ambient.
 Life.DewdropTexture=LifeArtR4.id("dewdropStem")
-Life.FruitSize=Vector2.new(1.1,1.5)
+-- (Code review r1: today's stemless fruit keeps 1.1 x 1.28 until dewdropStem is uploaded, unstretched.)
+Life.FruitSize=if LifeArtR4.uploaded("dewdropStem")then Vector2.new(1.1,1.5)else Vector2.new(1.1,1.28)
 Life.FruitColour=Color3.fromHex("#E6E6DC")
 local hex=Color3.fromHex
 local white=Color3.new(1,1,1)

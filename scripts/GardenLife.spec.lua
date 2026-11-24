@@ -673,6 +673,9 @@ return function(client)
 		test("Dewdrops: 16 billboards made once (the uploaded texture, FRUIT-LOOK sizes), inert anchors",function()
 			local r=rig()
 			assert(Life.DewdropTexture=="rbxassetid://82054526707528")
+			-- Code review r1: the stemmed 1.5 height only once dewdropStem is uploaded (today's fruit is not stretched).
+			local LifeArtR4=require(game:GetService("ReplicatedStorage").Shared.LifeArtR4)
+			assert(Life.FruitSize.Y==(if LifeArtR4.uploaded("dewdropStem")then 1.5 else 1.28)and Life.FruitSize.X==1.1)
 			local list=dewdrops(r)
 			assert(#list==16)
 			for _,anchor in ipairs(list)do

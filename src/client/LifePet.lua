@@ -19,7 +19,7 @@
 -- it off, or its ceiling false (live), drive and pose write nothing at all. Reduced Motion: no snack (fruit never falls).
 -- deps: alive {ceiling, on}, now(), reduced(), busy() -> true while a menu, focus, a Stat snack, a hatch or a race owns
 --   the pet, owner() -> my root position?, ownerStill() -> boolean, scene() -> boolean, breath(position, now) ->
---   strength, number, world (the heart's parent), audio(cue)?.
+--   strength, number, world (the heart's parent), audio(cue)?, life() -> GardenLife still on (nil: assumed on).
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 
 local Pet={};Pet.__index=Pet
@@ -109,10 +109,13 @@ function Pet:drive(visual,actor,now,dt)
 	dt=if finite(dt)then math.clamp(dt,0,.1)else 0
 	if not visual or visual.destroyed or typeof(visual.origin)~="Vector3"then if a then self:release(nil)end return false end
 	if not actor then if a then self:release(visual)end self.look=nil return false end
+	-- Code review r1: GardenLife gone (budget level 2, `life` off): its fruit is gone, so is the snack.
+	if a and self.d.life and call(self.d.life)~=true then self:release(visual);return false end
 	local sample=visual.origin
 	if not a then return self:lookUp(visual,actor,now)end
 	local free=Pet.free(actor,call(self.d.ownerStill)==true)and not self:isBusy()
-	if a.phase~="back"and(not free or flat(a.pos,sample)>S.drift or(a.loose.quick and not a.loose.eaten))then self:abort(now)end
+	-- Code review r1: the walk back is checked too (a walking owner, a care pickup); only the quick ease is exempt.
+	if not a.quick and(not free or flat(a.pos,sample)>S.drift or(a.loose.quick and not a.loose.eaten))then self:abort(now)end
 	local t=now-a.at
 	local pos,moving=a.pos,0
 	if a.phase=="turn"then

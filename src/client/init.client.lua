@@ -4802,7 +4802,8 @@ do
     end,
     ownerStill=function()return roomView.ownerStillSince~=nil and workspace:GetServerTimeNow()-roomView.ownerStillSince>=1 end,
     scene=function()return Alive.on("scene")end,
-    breath=function(at,now)return Wind.breath(at,now)end})
+    breath=function(at,now)return Wind.breath(at,now)end,
+    life=function()return clientUI.life~=nil and clientUI.life.enabled==true end})
    clientUI.lifePet=pet
    local function guard(method)
     return function(...)

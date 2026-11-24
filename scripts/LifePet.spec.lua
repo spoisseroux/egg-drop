@@ -34,7 +34,7 @@ return function(client)
 		r.pet=Pet.new({alive={ceiling=function(f)return f=="snack"and r.ceiling end,on=function(f)return f=="snack"and r.on end},
 			now=function()return r.now end,busy=function()return r.busy end,reduced=function()return false end,
 			owner=function()return r.owner end,ownerStill=function()return r.still end,scene=function()return r.scene end,
-			breath=function()return r.breath[1],r.breath[2]end,world=workspace})
+			breath=function()return r.breath[1],r.breath[2]end,world=workspace,life=function()return r.life~=false end})
 		r.actor={mode="Room",behavior="rest",action="settle"}
 		r.visual=visual()
 		r.sample=r.visual.origin
@@ -161,6 +161,45 @@ return function(client)
 		c.now+=1/30;c.visual.origin=c.sample
 		c.pet:drive(c.visual,nil,c.now,1/30)
 		assert(c.pet.active==nil and c.visual.origin==c.sample)
+	end)
+
+	test("code review r1: the walk back is checked too: the owner walks off or a care pickup turns it into the quick ease",function()
+		local function toBack(r)
+			r.run(.2)
+			assert(r.pet:notice(fruitAt(Vector3.new(5,4,0)),r.now))
+			for _=1,30*8 do r.frame(1/30);if r.pet.active and r.pet.active.phase=="back"then return end end
+			error("never walked back")
+		end
+		for _,change in ipairs({
+			function(r)r.actor={mode="Room",behavior="follow"};r.still=false end,
+			function(r)r.actor={mode="Room",behavior="rest",care={state="Carried"}}end,
+		})do
+			local r=rig()
+			toBack(r)
+			assert(not r.pet.active.quick,"a plain walk back first")
+			change(r)
+			r.frame(1/30)
+			assert(r.pet.active and r.pet.active.quick,"turned into the quick ease")
+			r.run(.4)
+			assert(r.pet.active==nil and r.visual.origin==r.sample,"handed back within .35 s")
+		end
+		-- The owner walks away during the walk back: the drawn pet 8+ studs from its server spot.
+		local r=rig()
+		toBack(r)
+		r.sample=r.sample+Vector3.new(-12,0,0)
+		r.frame(1/30)
+		assert(r.pet.active.quick,"drift past 8 studs")
+	end)
+
+	test("code review r1: garden life torn down mid-snack (budget level 2, life off): the snack is released at once",function()
+		local r=rig()
+		r.run(.2)
+		assert(r.pet:notice(fruitAt(Vector3.new(6,4,0)),r.now))
+		r.run(1)
+		assert(r.pet.active)
+		r.life=false
+		r.frame(1/30)
+		assert(r.pet.active==nil and r.visual.origin==r.sample,"released")
 	end)
 
 	test("the breath look-up (scene on): the head lifts for 1.2 s once a breath; scene off or busy, none",function()
