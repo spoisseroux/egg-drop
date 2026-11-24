@@ -34,7 +34,11 @@ function Clock.hourLook()
 	local look = Clock.look
 	if not look or Clock.Hour.on() ~= true then return nil end
 	local reduced = look.reduced ~= nil and look.reduced() == true
-	return Clock.Hour.look(Clock.Hour.time(), reduced)
+	local values = Clock.Hour.look(Clock.Hour.time(), reduced)
+	-- Beta 14 W4 (WorldFeel "feel"): a little more haze; off (or no such helper) the look as it was.
+	local okFeel, haze = pcall(function() return require(Shared:WaitForChild("WorldFeel")).haze() end)
+	if okFeel and type(haze) == "number" and haze > 0 and Clock.Hour.hazed then values = Clock.Hour.hazed(values, haze) end
+	return values
 end
 
 -- `values`: the hour's look when the caller already has it (Controller:apply works it out once a pass; false is the

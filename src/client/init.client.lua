@@ -4593,6 +4593,13 @@ end
 clientUI.movementLock=require(script.MovementLock).shared()
 clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui"),movement=clientUI.movementLock})
 gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
+-- Beta 14 W4 world feel (WorldFeelClient): the zoom cap and the walk speed test; nil with the build ceiling off, and
+-- with both switches off it writes nothing.
+do
+ local ok,problem=pcall(function()clientUI.feel=require(script.WorldFeelClient).mount({player=player})end)
+ if ok and clientUI.feel then gui.Destroying:Connect(function()clientUI.feel:destroy()end)
+ elseif not ok then warn("[Feel] not mounted: "..tostring(problem))end
+end
 -- Garden Dash (DashClient): nil with the build ceiling off; with the switch off it only watches for the switch.
 do
  local ok,problem=pcall(function()

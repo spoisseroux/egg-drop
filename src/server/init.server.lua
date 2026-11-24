@@ -115,6 +115,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.AeroConfig)
 task.spawn(function()local ok,problem=pcall(function()require(script.ThingsConfig).start()end);if not ok then warn("[Things] config not started: "..tostring(problem))end end)
 -- Onboarding v3 off switches (OnboardConfig): the same way, three keys, each also off while Things to do is off.
 task.spawn(function()local ok,problem=pcall(function()require(script.OnboardConfig).start()end);if not ok then warn("[Onboard] config not started: "..tostring(problem))end end)
+-- Beta 14 W4 world feel switches (WorldFeelConfig): the same way, two keys. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.WorldFeelConfig).start()end);if not ok then warn("[Feel] config not started: "..tostring(problem))end end)
 -- Garden finds off switch (FindsConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.FindsConfig).start()end);if not ok then warn("[Finds] config not started: "..tostring(problem))end end)
 -- Garden hour off switch (GardenHourConfig): the same way, one key, but missing = off. With its build ceiling off nothing starts.
@@ -905,6 +907,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.ThingsConfig).command(message) end) end)
 		-- "/onboard <follow|needs|nest|all> <on|off|clear>": the onboarding v3 switches, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.OnboardConfig).command(message) end) end)
+		-- "/feel <feel|walk|all> <on|off|clear>": the beta 14 world feel switches, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.WorldFeelConfig).command(message) end) end)
 		-- "/bounds <on|off|clear>": the island edges switch (wall top-ups, safe-spot return), this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.IslandBoundsConfig).command(message) end) end)
 		-- "/finds <on|off|clear>": the Garden finds switch, this server only.

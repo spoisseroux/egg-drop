@@ -62,8 +62,11 @@
 -- Missing = off: the cave stays blocked and nothing is built.
 -- FreshSaveCommand (beta (12) QA T1): the owner's /freshsave and /freshsave restore (ProgressKey, FreshSave). Also needs
 -- the beta place and universe, or the in-memory store (Studio). Missing = off: every save is player_<id>, as before.
+-- WorldFeel (beta 14 QA W4): the build ceiling for the lower arrival camera, the zoom cap, the haze and the walk speed
+-- test. Also needs the beta place or Studio (WorldFeel.PlaceId) and the server's switches (WorldFeelConfig: world_feel,
+-- world_walk). Missing = off.
 return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
- PetCatchup=true,FreshSaveCommand=true,Hush=true})
+ PetCatchup=true,FreshSaveCommand=true,Hush=true,WorldFeel=true})

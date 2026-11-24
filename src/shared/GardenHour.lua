@@ -243,6 +243,16 @@ function Hour.look(t,reduced)
 	return out
 end
 
+-- Pure (beta 14 W4, WorldFeel): a look with `extra` more Atmosphere density (the haze that sets the island in a bigger
+-- place). 0 or less: the very same table (frozen holds stay untouched). Otherwise a copy with its own Atmosphere.
+function Hour.hazed(look,extra)
+	if type(extra)~="number"or extra<=0 or type(look)~="table"or type(look.Atmosphere)~="table"then return look end
+	local out=table.clone(look)
+	local air=table.clone(look.Atmosphere)
+	air.Density=math.min((air.Density or 0)+extra,1)
+	out.Atmosphere=air
+	return out
+end
 -- The six faces for a look's FaceSet (dusk falls back to day until the painted dusk faces are uploaded).
 function Hour.skyFaces(faceSet,data)
 	local sky=data and data.sky

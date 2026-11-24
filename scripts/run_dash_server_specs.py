@@ -36,7 +36,7 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
 # IsStudio true.
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient", "DashSheets", "DeckResultsLayout", "FocusRow", "TipChime",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
-          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit", "HushClient", "DashLine"]
+          "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit", "HushClient", "DashLine", "WorldFeel"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -57,7 +57,7 @@ def client_modules():
                     # The island re-export: the Aero world kit (split crowns, falls sheets, rocks).
                     "AeroKit.lua", "AeroFountain.lua",
                     # Onboarding v3 A+B: the needs, the tour gate, the station label tips and the pill's quiet stage.
-                    "BearNeeds.lua", "NeedBubble.lua", "BubbleHold.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
+                    "BearNeeds.lua", "NeedBubble.lua", "BubbleHold.lua", "WorldFeelClient.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
                     "JournalPromptPriority.lua", "FirstSpendGuide.lua",
                     # Onboarding v3 D+E: the nest in the garden and the See you tomorrow strip.
                     "NestClient.lua", "TomorrowStrip.lua", "DeckResultsLayout.lua", "FocusRow.lua", "TipChime.lua",
@@ -71,7 +71,8 @@ def client_modules():
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
     hooks = room[room.index("function Room:enterDash("):room.index("function Room:retryArrivalPlacement()")]
     out["client/RoomViewDash"] = (
-        "local Room={};Room.__index=Room\nRoom.lock=require(script.Parent.MovementLock).new({})\nlocal MovementLock={shared=function()return Room.lock end}\n"
+        "local Room={};Room.__index=Room\nlocal WorldFeel=require(game:GetService(\"ReplicatedStorage\").Shared.WorldFeel)\n"
+        "Room.lock=require(script.Parent.MovementLock).new({})\nlocal MovementLock={shared=function()return Room.lock end}\n"
         "Room.hidden=0\nlocal FocusCharacterVisibility={acquire=function(character)Room.hidden+=1;local scope={character=character}\n"
         "function scope:release()if not self.released then self.released=true;Room.hidden-=1 end end\nreturn scope end}\n"
         "local GuiService={}\nRoom.gui=GuiService\nlocal PetGreetingShot={capture=function(camera,root)return{camera=camera,root=root,position=root and root.Position,"
