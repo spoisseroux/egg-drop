@@ -55,7 +55,12 @@ class Gate(unittest.TestCase):
             rb = readback(m)
             rb["parts"].pop()
             self.assertRaises(gate.GateError, gate.validate, m, rb, "f", "m")      # missing part
-        self.assertRaises(gate.GateError, gate.validate, m, readback(m), "f", "m")  # ids not set yet
+        saved = gate.TEXTURE
+        gate.TEXTURE = "rbxassetid://0"
+        try:
+            self.assertRaises(gate.GateError, gate.validate, m, readback(m), "f", "m")  # an id not set
+        finally:
+            gate.TEXTURE = saved
 
     def test_template_builds_with_rojo_and_pivots_at_the_origin(self):
         m = manifest()

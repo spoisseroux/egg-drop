@@ -42,9 +42,9 @@ XML_OUT = ROOT / "assets" / "world" / "NestLandmark.rbxmx"
 LUA_OUT = ROOT / "src" / "shared" / "NestLandmarkData.lua"
 ID = re.compile(r"^rbxassetid://([1-9][0-9]{0,19})$")
 # Filled in from the Studio upload of each image (Open Cloud Decal -> image id), then --confirm.
-TEXTURE = "rbxassetid://0"    # nest-landmark.png
-ROUGH = "rbxassetid://0"      # nest-landmark-rough.png (.85; bowl .8, quilt .9)
-EMISSIVE = "rbxassetid://0"   # nest-landmark-emissive.png (the crescent and its edge)
+TEXTURE = "rbxassetid://109068066768047"    # nest-landmark.png
+ROUGH = "rbxassetid://103072598458589"      # nest-landmark-rough.png (.85; bowl .8, quilt .9)
+EMISSIVE = "rbxassetid://117442342557145"   # nest-landmark-emissive.png (the crescent and its edge)
 METAL_0 = "rbxassetid://114363080604088"   # the island's flat no-metal map (build_world_v7_assets MATTE_METALNESS)
 MODEL_NAME = "NestLandmark"
 NAMES = {"Body": "Body", "Awning": "Awning", "Moon": "Moon", "BlanketDraped": "BlanketDraped",

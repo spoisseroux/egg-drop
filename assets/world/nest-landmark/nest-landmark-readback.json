@@ -1,0 +1,64 @@
+{
+ "assetId": "120174604036650",
+ "operationId": "9259010c-780a-42db-9cd7-9e124ee8a959",
+ "moderation": "Approved",
+ "fbxSha256": "ecf1edd1582781464f72e4ef1d121276614d1a2d016ca21ec6d524578b36d75f",
+ "manifestSha256": "fad6dbf4bc8cd21c6751930c320009e75b626829867f15b5bf54285a26a9665d",
+ "parts": [
+  {
+   "name": "NestLandmark_Awning",
+   "meshId": "rbxassetid://114283673855486",
+   "meshSize": [
+    212.47567749023438,
+    103.7886962890625,
+    233.1784210205078
+   ]
+  },
+  {
+   "name": "NestLandmark_BlanketDraped",
+   "meshId": "rbxassetid://108480275229741",
+   "meshSize": [
+    233.2908935546875,
+    90.42481994628906,
+    305.4862365722656
+   ]
+  },
+  {
+   "name": "NestLandmark_BlanketFolded",
+   "meshId": "rbxassetid://85707427530315",
+   "meshSize": [
+    119.12278747558594,
+    35,
+    125.57402038574219
+   ]
+  },
+  {
+   "name": "NestLandmark_BlanketSlipped",
+   "meshId": "rbxassetid://128392523333976",
+   "meshSize": [
+    383.2472839355469,
+    127.66877746582031,
+    321.0882568359375
+   ]
+  },
+  {
+   "name": "NestLandmark_Body",
+   "meshId": "rbxassetid://122345245747756",
+   "meshSize": [
+    649.7088623046875,
+    659.4122314453125,
+    559.9065551757812
+   ]
+  },
+  {
+   "name": "NestLandmark_Moon",
+   "meshId": "rbxassetid://79354638626801",
+   "meshSize": [
+    82.96115112304688,
+    137.00701904296875,
+    18.000019073486328
+   ]
+  }
+ ],
+ "recorded": "2026-11-24T16:19:22Z"
+}
