@@ -40,6 +40,8 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 ## Now working on
 
+- [ ] **Beta (14) phone fixes (Opus, 2026-11-23; plan `artifacts/qa-2026-11-23-beta14/BUGFIX-PLAN.md`, architect GO WITH CHANGES applied).** Built offline on `worktree-agent-a77aa87743a9295b1`, runner 47/47, not in Studio, not reviewed: B1 phone hub/Hatch eggs rise + dock key press, B3a hand bubble after Meet, B3b bubble taps (touch fallbacks, Taps attribute, one action a tap), B6 payout fit, Q3 reveal buttons, F1 tappable "Coming up" chips (beta switch). Routed: B2 fireflies (garden-life builder), F1 Dash card (Dash owner); moved: B5, Q1. Next: Studio ZZSpecs (KitArrive, RevealStage), code review, Fable phone captures, translations sync at publish (3 new `onb3.strip.go.*`).
+
 - [ ] **Leftovers while Spencer tests beta (14) (Opus, 2026-11-23; Spencer: "Do 3").** Test checklist `artifacts/qa-2026-11-23-beta14/TEST-RUN.md` (also in his vault). Nothing goes on the beta until he says so.
   - [ ] World (island re-export session, local_a0f7d8a7): Aero pool map off cobalt, crown reshape + leaf tiles (kit r10), an original fountain loop.
   - [ ] Fable R4 small fixes (here): ready chips sort after egg and stamp, petal colour, folded wing tips from the front, leaf A size.

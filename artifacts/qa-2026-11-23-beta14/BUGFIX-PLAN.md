@@ -451,6 +451,48 @@ worth the nest builder's look while they are there.
 
 ---
 
+## Built (step 2, after the architect's GO WITH CHANGES)
+
+Offline runner: 47 suites, 0 failures (BearNeeds 20 -> 24, DeckResultsLayout 5 -> 7, TomorrowStrip 12 -> 13). Nothing seen
+in Studio or on a phone. Where the build differs from the plan above, this section wins.
+
+| Commit | Item | What landed |
+|---|---|---|
+| 0c1e16a | B1 | Each of MachineHub, CompanionsHub, StatsPanel and NameScreen has its own phone branch, `Kit.arrive(self.root, self.root.Position)`, which does nothing when it returns false (live: no tween, so an anchored-0,0 root never flies off); no art pop on a phone. Hatch eggs rises only on a fresh shop open (not a result, a reveal, the store page or a reopen). The dock Menu and Deck keys squeeze their glyph on the round-key spring under `Kit.FaceOn` (the button itself never scales). **Not changed:** `Kit.slideIn`, `Kit.Rise.phone`, Wardrobe, Book (they keep their slide-in). `KitArrive.spec` (Studio): the phone rise and a menus-off 844 x 390 case that ends exactly at the fit. |
+| a1c6cc5 | B3a | With the bubbles on, a greeting counts as "said hi" only once the hand bubble has shown (`hiShown`); bubbles off or a returning save count any greeting, as before; petting and a tap count any time. |
+| a1c6cc5 | B3b | `Needs:tap()` keeps one action a tap (a step frame, and `TapGap` .3 s with the game's clock). Every taken tap squashes the bubble and bumps `EggDropNeedBubble:GetAttribute("Taps")`; a tap that repeats the live trail also hops the bubble and chirps. NeedBubble: a short touch that begins and ends on the hit area counts even with no `Activated`; a `TouchTapInWorld` (no GUI took it) within `HitSize/2` of the drawn bubble counts (PetClickTarget's pattern); the bubble holds still under a finger (1 s at most). **Dropped:** the "within 8 studs open Hatch eggs" branch. |
+| 5b1681c | B6 | `Layout.payoutPlan`: normal, tight (rows 20, total 28, gap 6), paired (stats two to a line, the disc in the dot's place), else a 12 pt fade at the window's foot. **Kept** the 28 chip and 42 foot: `Kit.WalletSpec` has no 24 (its fallback Star would be flat). Shot 5 lands on "tight" at exactly 158 of 158. |
+| 8d3701f | Q3 | Phone geometry keeps the button row 12 px clear of the card: Back narrows first (to 110), then the card (never under 1.3 pet boxes). Clear at 667x375, 740x360, 812x354, 812x375, 844x390 and 932x430. **Residual:** 568 x 320 still overlaps (the card is at its floor). `RevealStage.spec` (Studio) covers the six sizes. |
+| b42578e + next | F1 | `TomorrowStrip.tappable()` (its own beta-place/Studio switch; live stays inert). With `onChip`, each chip gets a clear hit button: never Selectable, inert until the enter fade ends (`Strip:arm`), press squash, AccessibleLabel `onb3.strip.go.*`. Deck results reach the chips as focus ids 6-8 (`Layout.move` with a `chips` count; the desktop order appends them), only while the strip is visible and armed and never while a save is pending; a stale chip focus goes back to Replay. `clientUI.stripRoute`: a latch, no route while pending, `leaveDeck()` first and `afterGarden` only if it returned true (8 s, a newer route replaces it), then egg -> `things.show("nest")`, stamp -> quest log on its stamp card (`QuestLog:show` option `focus="stamp"`), quests -> quest log. Already in the garden (the Dash card): the step at once. Copy exported (3 new keys), **not synced**. |
+
+**ROUTE status:** B2 (garden-life builder) unchanged from the B2 section above. F1 Dash: `init.client.lua` now passes
+`stripChip(id)` into the Dash mount (it calls `clientUI.stripRoute`); the Dash owner adds `onChip` only when
+`TomorrowStrip.tappable()`, calls `card:back()` then `self.d.stripChip(id)`, and appends `strip:targets()` to the sheet's
+selection (the hit buttons are not Selectable; focus by index as the deck results do).
+
+### Studio steps (coordinator; no Studio here)
+
+1. ZZSpecs: KitArrive, RevealStage, KitSurfaces, MenuPolish, DeckResults (the last two unchanged, rerun for regressions).
+2. B1, Device emulator at 844 x 390 with menus on: open the machine hub, Pets, Stats, Names and Hatch eggs (fresh): each
+   root/panel steps from fit + 22 to the fit; with `/alive menus off` (or the attribute false) each opens at its fit with
+   no motion. Press the dock keys: the glyph dips to .88 and springs back.
+3. B3b, the bubble on a phone (emulator, touch): fresh save, `/onboard needs on`, wait for the ball bubble. Then:
+   (a) click the bubble: does the hit button's `Activated` fire (watch `Taps` go up by one, and the trail restart)?
+   (b) `PlayerGui:GetGuiObjectsAtPosition(x, y)` at the bubble's centre: what is listed above `EggDropNeedBubble.Hit`
+   (anything Active over it would take the touch)?
+   (c) the thumbstick zone: with the bubble over the left 40 % of the screen, does the dynamic thumbstick take the touch?
+   (d) a camera swipe that starts on the bubble must not count as a tap (`Taps` unchanged).
+   On Spencer's phone: `Taps` in the bug report sheet, or `/onboard` after tapping, settles whether taps arrive at all.
+4. B3a: fresh save through the Bear reveal and Meet: the hand bubble shows once the garden settles.
+5. B6: in-place results at 844 x 390 after a round with two and with four stat gains: nothing below the scroll window.
+6. F1: in-place results, wait for the strip's fade, tap each chip: the deck closes and the trail / quest log (stamp
+   focused) opens; gamepad down from Hatch reaches the chips; during "Saving…" the chips do nothing.
+
+### Unverified
+
+Everything visual and every input path above (no Studio, no phone). The phone billboard input question in B3b is still
+open; the build covers both candidates. The `luau.exe` used for the export was a local copy, removed, never committed.
+
 ## Order, review and evidence
 
 1. Plan review (architect) of this file. 2. Build in this order, one commit each with its specs: B3a, Q3, B6, B1, B3b,

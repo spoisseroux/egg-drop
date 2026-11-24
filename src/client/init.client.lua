@@ -4598,6 +4598,8 @@ do
  local ok,problem=pcall(function()
   clientUI.dash=require(script.DashClient).mount({remotes=remotes,roomView=roomView,playerGui=gui.Parent,audio=audio,reduced=reduceEffects,
    strip=function()return if clientUI.tomorrow then clientUI.tomorrow()else nil end,
+   -- Beta 14 F1: a Coming up chip on the Dash results card routes like the deck's (the Dash side wires it).
+   stripChip=function(id)return clientUI.stripRoute~=nil and clientUI.stripRoute(id)==true end,
    state=function()return nurseryState end,canRoam=function()return roomView.canRoam()end,
    modalOpen=function()return clientUI.anyModalOpen(true)end,
    -- Beta 12 U5: a racer's pet name for the start-line tags. Names are catalogue piece ids (the board's PetNames
