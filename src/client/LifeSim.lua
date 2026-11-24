@@ -1003,8 +1003,12 @@ end
 -- hidden on average, hulls overstate the leaves) shows the lower part under the leaves.
 -- FABLE-REVIEW-R5 3: keep .75; hang from the skirt only, never a crown's side face (a fruit there is a sticker in
 -- front of the leaves): `out` at most .30, and every tip pulled in to `skirt` .60 of the crown's radius at that height.
+-- STUDIO-CHECK-R5 R6: at .75 down only a thin crescent showed under the skirt and the stem never did. Now the whole
+-- fruit hangs BELOW the skirt: the stem tip sits on the crown's underside (its ellipsoid) right above the stem's spot,
+-- `under` .10 under it, so the drawn stem (the image's top .22) rises into the leaves and the fruit's top meets the
+-- underside; the whole fruit and stem show from the lawn at 8 to 12 studs. `down` is no longer used.
 Sim.Fruit=table.freeze({
-	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.30,down=.75,hang=.50,stemIn=.82,skirt=.60,pool=16,reach=90,
+	slots=3,fill=.8,angles=table.freeze({40,160,285}),out=.30,under=.10,hang=.50,stemIn=.82,skirt=.60,pool=16,reach=90,
 	swayMin=3,swayGust=12,swayHz=2.2,
 	dropAt=.8,chance=.5,
 	tug=20,letGo=.15,fall=.55,drift=1.2,turn=180,
@@ -1060,18 +1064,17 @@ function Sim.fruitStems(i,crown)
 	local size=crown.size
 	local frame=if typeof(crown.cframe)=="CFrame"then crown.cframe else CFrame.new(crown.position)
 	local hx,hy,hz=size.X/2,size.Y/2,size.Z/2
-	local y=hy-F.down*size.Y
-	local ring=if hy>0 then math.sqrt(math.max(0,1-(y/hy)^2))else 0
 	local base=Wind.hash(i,12)*360
 	for k=1,F.slots do
 		if Wind.hash(i*8+k,11)<F.fill then
 			local a=math.rad(F.angles[k]+base)
 			local x,z=F.out*size.X*math.cos(a),F.out*size.Z*math.sin(a)
-			if ring>0 and hx>0 and hz>0 then
-				local q=math.sqrt((x/(hx*ring))^2+(z/(hz*ring))^2)
-				local most=math.min(F.stemIn,F.skirt)
-				if q>most then x,z=x*most/q,z*most/q end
-			end
+			-- Under the skirt only: at most `skirt` of the crown's half extents out (never a side face).
+			local q=if hx>0 and hz>0 then math.sqrt((x/hx)^2+(z/hz)^2)else 0
+			local most=math.min(F.stemIn,F.skirt)
+			if q>most then x,z,q=x*most/q,z*most/q,most end
+			-- On the underside right above that spot, then `under` under it.
+			local y=-hy*math.sqrt(math.max(0,1-q*q))-F.under
 			local tip=Vector3.new(x,y,z)
 			table.insert(out,table.freeze({k=k,key=Sim.fruitKey(i,k),stem=frame*tip,tip=tip}))
 		end

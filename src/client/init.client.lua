@@ -4788,11 +4788,16 @@ do
   if Alive.ceiling("snack")then
    local Wind=require(script.Wind)
    local pet=require(script.LifePet).new({
+    -- The reason it is busy (SnackWhy), or false.
     busy=function()
      local dash=clientUI.dash
-     return clientUI.anyModalOpen()==true or roomView.focusing==true or(clientUI.needs~=nil and clientUI.needs.shown==true)
-      or(clientUI.snacks~=nil and clientUI.snacks.busy==true)or(dash~=nil and dash:engaged()==true)
-      or require(script.WindClient).hatching()==true
+     if clientUI.anyModalOpen()==true then return "a menu"end
+     if roomView.focusing==true then return "pet focus"end
+     if clientUI.needs~=nil and clientUI.needs.shown==true then return "a need bubble"end
+     if clientUI.snacks~=nil and clientUI.snacks.busy==true then return "a Stat snack"end
+     if dash~=nil and dash:engaged()==true then return "the race"end
+     if require(script.WindClient).hatching()==true then return "a hatch"end
+     return false
     end,
     reduced=function()return reduceEffects()==true end,
     owner=function()

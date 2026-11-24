@@ -202,6 +202,37 @@ return function(client)
 		assert(r.pet.active==nil and r.visual.origin==r.sample,"released")
 	end)
 
+	test("STUDIO-CHECK-R5 R6: the snapshot's spellings (parkId, peerId) refuse; a park pose aborts; SnackWhy says why",function()
+		local free,why=Pet.free({mode="Room",behavior="rest",parkId="arrival"},true)
+		assert(free==false and why=="park")
+		free,why=Pet.free({mode="Room",behavior="rest",peerId=7},true)
+		assert(free==false and why=="greeting")
+		free,why=Pet.free(nil,true)
+		assert(free==false and string.find(why,"no garden actor",1,true))
+		free,why=Pet.free({mode="Room",behavior="investigate",action="wander"},true)
+		assert(free==false and string.find(why,"investigate/wander",1,true))
+		assert(Pet.free({mode="Room",behavior="rest",action="wanderPause"},false)==true,"a wander pause is free")
+		-- SnackWhy on my pet's model: the last refusal, written only on change.
+		local r=rig()
+		local model=Instance.new("Model")
+		r.visual.model=model
+		r.run(.2)
+		r.pet:notice(fruitAt(Vector3.new(9,4,0)),r.now)
+		assert(string.find(model:GetAttribute("SnackWhy"),"9.0 studs off",1,true),tostring(model:GetAttribute("SnackWhy")))
+		r.busy="a menu"
+		r.pet:notice(fruitAt(Vector3.new(5,4,0)),r.now)
+		assert(model:GetAttribute("SnackWhy")=="refused: a menu")
+		r.busy=false
+		assert(r.pet:notice(fruitAt(Vector3.new(5,4,0)),r.now))
+		assert(string.find(model:GetAttribute("SnackWhy"),"snack: going",1,true))
+		-- A park pose (ParkClient set parkPosedOrigin this frame): aborted.
+		r.run(.5)
+		r.visual.parkPosedOrigin=r.visual.origin
+		r.now+=1/30;r.visual.origin=r.sample;r.pet:drive(r.visual,r.actor,r.now,1/30)
+		assert(r.pet.active.quick and model:GetAttribute("SnackWhy")=="aborted: park pose")
+		r.visual.parkPosedOrigin=nil
+	end)
+
 	test("the breath look-up (scene on): the head lifts for 1.2 s once a breath; scene off or busy, none",function()
 		local r=rig({scene=true})
 		r.breath={.9,41}
