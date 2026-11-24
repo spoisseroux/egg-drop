@@ -497,6 +497,40 @@ function Life:places()
 	end
 	-- Beta 14 B2: the night fireflies hover over the flower patches and the water's banks (WorldV7Data.wet).
 	self.fireflySpots={patches=self.patches,banks=d.banks or Life.banks(Shared)}
+	-- Beta 14 W3 (LifeScene): the ground under every kit crown (dapple), the water boxes (dragonflies), the garden hour's
+	-- clock and daylight (lamps, the star), the scene's textures.
+	self.sceneData=d.scene or Life.sceneData(Shared,groundY)
+end
+
+-- The scene's data from the shared modules (beta 14 W3); a missing piece is empty, never an error.
+Life.Ripple="rbxassetid://123065684226119" -- the uploaded pool ring (WorldAero.Look.Textures.Ripple, AeroFalls)
+function Life.sceneData(Shared,groundY)
+	local data={crowns={},boxes={}}
+	pcall(function()
+		local kit=Sim.kitCrowns(require(Shared:WaitForChild("WorldAeroKit")),require(script.Parent.AeroKit).crownFrame)
+		for _,crown in ipairs(kit)do
+			local p=crown.position
+			local g=groundY(p.X,p.Z)
+			if type(g)=="number"and g==g and math.abs(g)<math.huge then table.insert(data.crowns,Vector3.new(p.X,g,p.Z))end
+		end
+	end)
+	pcall(function()
+		for _,box in ipairs(require(Shared:WaitForChild("WorldV7Data")).wet or {})do
+			local c,s=box.center,box.size
+			table.insert(data.boxes,{frame=CFrame.new(c[1],c[2],c[3])*CFrame.Angles(0,tonumber(box.yaw)or 0,0),hx=s[1]/2,hz=s[3]/2,y=c[2]})
+		end
+	end)
+	data.hourClock=function(now)
+		if not require(script.Parent.HollowClock).hourOn()then return nil end
+		return now+require(Shared:WaitForChild("GardenHour")).offset()
+	end
+	data.hourDaylight=function(s)return require(Shared:WaitForChild("GardenHour")).phase(s).daylight end
+	data.art=function(key)
+		if key=="ripple"then return Life.Ripple end
+		if key=="halo"then return LifeArt.id("fireflyDot")end
+		return LifeArtR4.id(key)
+	end
+	return data
 end
 
 -- Points just inside the water's banks, every Sim.Firefly bank step along each wet box's edge (data only). A missing or
@@ -643,6 +677,7 @@ function Life:enable()
 	self.leavesOn=okGate and gate==true
 	self:readDay(self.now())
 	self:readScene()
+	self:syncScene()
 	-- Beta 14 W3: the `scene` switch (the big breath and the scene's additions) is read every Poll; a flip polls at once.
 	-- Connected only while on, so with `life` off nothing but its own signal is connected.
 	self.sceneLink=self.alive.changed("scene"):Connect(function()self.pollIn=0 end)
@@ -674,6 +709,32 @@ function Life:readScene()
 	self.scene=ok and on==true
 	return self.scene
 end
+-- LifeScene's parts exist only while `scene` is on. A scene that fails to build or step is dropped with a warning;
+-- the rest of garden life carries on.
+function Life:syncScene()
+	if self.scene and not self.sceneParts and not self.sceneFailed then
+		local data=self.sceneData
+		local ok,scene=pcall(function()
+			return require(script.Parent.LifeScene).new({kit={folder=self.folder,part=part,decal=decal,spindle=spindle},
+				art=data.art,crowns=data.crowns,boxes=data.boxes,hourClock=data.hourClock,hourDaylight=data.hourDaylight,seed=self.seed+11})
+		end)
+		if ok then self.sceneParts=scene else self:dropScene(scene)end
+	elseif not self.scene and self.sceneParts then
+		self:dropScene(nil)
+	end
+end
+function Life:dropScene(problem)
+	local scene=self.sceneParts
+	self.sceneParts=nil
+	if scene then
+		local ok,parts=pcall(scene.destroy,scene)
+		if ok then for _,p in ipairs(parts)do self.shown[p]=nil end end
+	end
+	if problem~=nil then
+		self.sceneFailed=true
+		self.warn("[Life] scene stopped: "..tostring(problem))
+	end
+end
 
 -- Off: nothing left but the Alive signal. Cannot throw past the folder's Destroy.
 function Life:disable()
@@ -688,7 +749,7 @@ function Life:disable()
 	self.folder,self.shown,self.birdPool,self.birdArt,self.flyPool,self.leafPool,self.bubblePool=nil,nil,nil,nil,nil,nil,nil
 	self.birds,self.flies,self.leaves,self.bubbles,self.birdStill,self.skitter=nil,nil,nil,nil,nil,nil
 	self.fruitPool,self.grove,self.loose,self.view,self.fruitOf,self.fruitCount=nil,nil,nil,nil,nil,0
-	self.firePool,self.fireflies=nil,nil
+	self.firePool,self.fireflies,self.sceneParts,self.sceneFailed=nil,nil,nil,nil
 	if folder then folder:Destroy()end
 end
 
@@ -727,6 +788,7 @@ function Life:park()
 	for _,entry in ipairs(self.flyPool)do self:glowOff(entry);entry.owner=nil end
 	self.fireflies:clear()
 	for _,entry in ipairs(self.firePool)do self:glowOff(entry)end
+	if self.sceneParts then pcall(self.sceneParts.park,self.sceneParts)end
 	table.clear(self.birdStill)
 	self:forgetFruit()
 	local parts,frames={},{}
@@ -812,6 +874,7 @@ function Life:step(dt)
 		self.live=ok and type(summary)=="table"and summary.phase=="live"
 		self:readDay(now)
 		self:readScene()
+		self:syncScene()
 		-- The big breath's drops follow the `scene` switch (the same on every client): a new grove when it flips.
 		if(self.fruitWorld.breath==true)~=self.scene then
 			self.fruitWorld.breath=self.scene
@@ -913,6 +976,18 @@ function Life:step(dt)
 		if not used[pool]then still[slot]=nil;for _,p in ipairs(pool)do hide(p)end end
 	end
 	self:stepFruit(now,camera,level,reduced,put,hide)
+	local scene=self.sceneParts
+	if scene then
+		local ok,problem=pcall(scene.step,scene,{now=now,tick=tick,level=level,reduced=reduced,eye=eye,camera=camera,player=player,
+			daylight=self.dusk,blow=Wind.blow,put=put,hide=hide})
+		if not ok then
+			self:dropScene(problem)
+			-- This step's move never touches a destroyed part.
+			for i=#parts,1,-1 do
+				if parts[i].Parent==nil then table.remove(parts,i);table.remove(frames,i)end
+			end
+		end
+	end
 	if #parts>0 then self.move(parts,frames)end
 	-- After the move, so a bubble or a leaf leaves from where its anchor now is.
 	for _,emit in ipairs(emits)do emit[1]:Emit(emit[2])end
