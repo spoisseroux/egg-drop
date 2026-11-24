@@ -1427,9 +1427,15 @@ function View:open(state)
 		self.body.CanvasPosition = Vector2.zero
 	end
 	self.errorMessage = nil
+	local fresh = not self.shade.Visible
 	self.shade.Visible = true
 	self:update(state or self.state)
  if not self.state.lastHatch then self:queueSelectedRecipe()end
+ -- Beta 14 B1: a fresh shop open rises on the menus spring (the panel from its fitted spot); never a hatch result or
+ -- reveal, never the store page, never a reopen. Springs off (live) or Reduced Motion: nothing, as before.
+ if fresh and not self.state.lastHatch and not self:isStoreOpen() and self.shopPanel and self.shopRoot and self.shopRoot.Visible then
+  Kit.arrive(self.shopPanel, self.shopPanel.Position)
+ end
 	if self:ownsInput() and string.match(UserInputService:GetLastInputType().Name, "^Gamepad") then
 		GuiService.SelectedObject = self:openingFocusTarget()
 	end
