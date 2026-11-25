@@ -953,6 +953,7 @@ end, function(actionName)
 end)
 
 nurseryView = NurseryView.new(safeOverlays, audio, reduceEffects, function(actionName, value, revision)
+	clientUI.lastNurseryRequestAt = os.clock() -- HatchFlow spaces its follow-up buys from this (hotfix v1055)
 	nurseryRequest:FireServer(actionName, value, revision)
 end)
 -- Robux store page inside the egg shop. Server-initiated prompts only.
@@ -1020,16 +1021,16 @@ end
 clientUI.hueIntent=clientUI.HueIntent.new({
  id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("hue")end,
- send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ send=function(action,value,revision)clientUI.lastNurseryRequestAt=os.clock();nurseryRequest:FireServer(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.materialIntent=require(script.MaterialIntent).new({id=function()return HttpService:GenerateGUID(false)end,
- available=function()return clientUI.itemAvailable("material")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ available=function()return clientUI.itemAvailable("material")end,send=function(action,value,revision)clientUI.lastNurseryRequestAt=os.clock();nurseryRequest:FireServer(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.toyIntent=require(script.ToyIntent).new({id=function()return HttpService:GenerateGUID(false)end,
- available=function()return clientUI.itemAvailable("toy")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ available=function()return clientUI.itemAvailable("toy")end,send=function(action,value,revision)clientUI.lastNurseryRequestAt=os.clock();nurseryRequest:FireServer(action,value,revision)end,
  changed=function()if clientUI.syncFirstSpend then clientUI.syncFirstSpend(clientUI.toyIntent.state)end;if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.featureIntent=require(script.FeatureIntent).new({id=function()return HttpService:GenerateGUID(false)end,
- available=function()return clientUI.itemAvailable("feature")end,send=function(action,value,revision)nurseryRequest:FireServer(action,value,revision)end,
+ available=function()return clientUI.itemAvailable("feature")end,send=function(action,value,revision)clientUI.lastNurseryRequestAt=os.clock();nurseryRequest:FireServer(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  materialIntent=clientUI.materialIntent,toyIntent=clientUI.toyIntent,featureIntent=clientUI.featureIntent,
@@ -1133,7 +1134,8 @@ roomView.care.closeMachine=function()
 end
 do
  -- QA v685 H4 / v842: direct hatch from Hatch eggs (HatchFlow, shared with the hatch spec).
- local flow=require(script.HatchFlow).new({intents=clientUI,state=function()return nurseryState end,view=clientUI.hueView,openHue=function(...)return clientUI.openHue(...)end})
+ local flow=require(script.HatchFlow).new({intents=clientUI,state=function()return nurseryState end,view=clientUI.hueView,openHue=function(...)return clientUI.openHue(...)end,
+  lastRequest=function()return clientUI.lastNurseryRequestAt end})
  clientUI.hatchFlow=flow
  local function open(kind,purchase)flow:open(kind,purchase)end
  nurseryView.onOpenHue=function(purchase)open("hue",purchase)end
