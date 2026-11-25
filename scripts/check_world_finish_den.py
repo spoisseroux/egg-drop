@@ -41,7 +41,9 @@ def main():
         bars.hide_viewport = True
     bpy.context.view_layer.update()
     dg = bpy.context.evaluated_depsgraph_get()
+    # Fable world R1 1: five heights, up to the dome (12.5 to 15), so the whole dome is seen
     eyes = [(-7, 6.5, -108), (-18, 6, -112), (3, 6, -112), (-7, 6, -117.5), (-19, 9.5, -103), (4, 9.5, -103),
+            (-7, 12.5, -110), (-15, 13, -112), (1, 13, -112), (-7, 14.5, -109), (-12, 11.5, -104), (-2, 11.5, -116),
             (-7, 11, -110), (-12, 5, -102.5), (-2, 5, -102.5)]
     bad, escaped, total = {}, 0, 0
     for e in eyes:
@@ -105,7 +107,7 @@ def main():
         for z in range(-118, -101):
             if not S.den_inside(x + .5, z + .5, -.5):
                 continue
-            if Den.JW - .7 <= x + .5 <= Den.JE + .7 and z + .5 > -101.7:
+            if Den.JW - 1.7 <= x + .5 <= Den.JE + 1.7 and z + .5 > -101.7:
                 continue                    # the threshold over the live marble sill (it collides at 4.4)
             hit = ftree.ray_cast(L.bl((x + .5, 8, z + .5)), Vector((0, 0, -1)), 10)
             if hit[0] is not None:

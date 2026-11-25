@@ -95,14 +95,20 @@ return function(server)
 			part("W7D_LanternBracket3",model).Transparency=0
 			local paw=part("W7D_Bay1Paw",model);paw.CFrame=CFrame.new(-18,4.23,-112);paw.Size=Vector3.new(.9,.06,.9);paw.Transparency=0
 			local apron=part("W7D_ApronFront",model);apron.CanCollide=true;apron.Transparency=0
-			return model,lamp,light,paw,apron
+			local sill=part("W7D_FrameThreshold",model);sill.CanCollide=false;sill.Transparency=0
+			local deck=part("W7D_bay2Deck",model);deck.Color=Color3.fromHex("#B8AE98");deck.Transparency=0
+			local screen=part("W7D_bay2DeckScreen",model);screen.Color=Color3.fromHex("#9BE3C9")
+			return model,lamp,light,paw,apron,sill,deck,screen
 		end
 		local model,lamp=greybox()
 		assert(Mount.dressDen(model,room,{storage=storage,data=d,cliffVersion="c1"})==0 and lamp.Transparency==0,"no slice: no dress")
 		Mount.world(world,{storage=storage,data=d,cliffVersion="c1"})
-		local light,paw,apron
-		model,lamp,light,paw,apron=greybox()
-		assert(Mount.dressDen(model,room,{storage=storage,data=d,cliffVersion="c1"})==5)
+		local light,paw,apron,sill,deck,screen
+		model,lamp,light,paw,apron,sill,deck,screen=greybox()
+		assert(Mount.dressDen(model,room,{storage=storage,data=d,cliffVersion="c1"})==7)
+		assert(sill.Transparency==1 and sill.CanCollide==false,"the gravel threshold row hides (the floor's shows)")
+		assert(math.abs(deck.Color.R-0x5C/255)<1e-3 and math.abs(deck.Color.B-0x30/255)<1e-3 and deck.Transparency==0,"the Deck's body takes the stump's wood")
+		assert(math.abs(screen.Color.G-0xE3/255)<1e-3,"the screen itself is untouched")
 		assert(lamp.Transparency==1 and light.Shadows==false and model.W7D_Lantern3Cap.Transparency==1)
 		assert(model.W7_F_Lantern__cage and model.W7_F_Lantern__pane and model.W7D_LanternCordF3,"the lantern and its cord")
 		assert(model.W7D_LanternBracket3.Transparency==1 and paw.Transparency==1 and model.W7_F_Stone__flat)

@@ -130,7 +130,16 @@ def wall_and_shoulders():
             pts.append((back, hgt))
         elif rest > 0:
             pts.append((max(back, u), hgt))
-        pts.append((max(back, u) + .6, hgt + .15))
+        # Fable world R1 8: the cut closes to the kept island rock: its cap runs on up the old slope 3.4 behind the cut's
+        # line (the re-cut takes the island faces in that band), so no hole opens over the wall
+        ub = max(back, u)
+        v_prev = hgt
+        for du in (1.2, 3.4):
+            x, _, z = P(s, -s["w"] / 2 - ub - du, 0)
+            g = S.ground(x, z)
+            v = max(v_prev, (g - s["h"]) if g is not None else v_prev) + .2
+            pts.append((ub + du, v))
+            v_prev = v
         return pts, bow
 
     for s0, s1 in zip(S_, S_[1:]):
@@ -461,11 +470,24 @@ def facet(obj, cell=3.5, depth=.35):
 def recut_test(points):
     """A face of a visual island part that reaches into the new cut's lower envelope (tread to 3.5 over it, from 2.8
     behind the inner edge to 0.3 past the outer) goes: the old island poked through the new wall and talus there."""
+    # Fable world R1 8: by volume, the cut's whole box: from 0.3 past the outer edge to 3.6 behind the old cut line (the
+    # new wall's cap reaches 3.4 behind it), from under the tread to 1.0 over the cap
     for p in points:
         s = S._nearest(p[0], p[2])
         along = (p[0] - s["x"]) * s["dir"][0] + (p[2] - s["z"]) * s["dir"][1]
         a = (p[0] - s["x"]) * s["out"][0] + (p[2] - s["z"]) * s["out"][1]
-        if abs(along) <= .9 and -s["w"] / 2 - 2.8 <= a <= s["w"] / 2 + .3 and s["h"] - .25 < p[1] < s["h"] + 3.5:
+        if abs(along) > 1.0:
+            continue
+        if s["back"] <= .05:                     # no cut wall here: only the low envelope over the tread
+            if -s["w"] / 2 - 2.8 <= a <= s["w"] / 2 + .3 and s["h"] - .25 < p[1] < s["h"] + 3.5:
+                return True
+            continue
+        if not (-s["w"] / 2 - s["back"] - 3.6 <= a <= s["w"] / 2 + .3):
+            continue
+        x, _, z = P(s, -s["w"] / 2 - s["back"] - 3.4, 0)
+        g = S.ground(x, z)
+        roof = max(s["top"], g if g is not None else s["top"]) + 1.0
+        if s["h"] - .3 < p[1] < roof:
             return True
     return False
 
@@ -495,7 +517,11 @@ def foot_stones():
         a = side * (foot["w"] / 2 + 1.6)
         at = P(foot, a, S.ground(*P(foot, a, 0)[::2]) or foot["h"])
         out.append({"kit": 4, "at": [round(v, 3) for v in at], "yaw": round(along, 3), "scale": [1.0, 1.6, 2.2]})
-    out.append({"kit": 5, "at": [-22.0, round((S.ground(-22.0, -78.0) or 4.6) + .25, 3), -78.0], "yaw": .3, "scale": [1.5, 2.2, 3.8]})
+    # the white column stub at the path's foot (x -23.4..-20.6, z -79.4..-76.6, up to y 9.5; Fable world R1 7): one big
+    # boulder over it and a smaller one in front, so it is buried from CAM-MOUTH30 and CAM-FOOT
+    g = S.ground(-22.0, -78.0) or 4.6
+    out.append({"kit": 5, "at": [-22.0, round(g - .1, 3), -78.0], "yaw": .3, "scale": [1.8, 3.4, 6.0]})
+    out.append({"kit": 3, "at": [-20.4, round(g - .1, 3), -75.6], "yaw": 1.2, "scale": [1.4, 2.0, 2.6]})
     shelf1 = [s for s in S_ if 10 <= s["d"] <= 40]
     for k in range(6):
         s = shelf1[int(k * (len(shelf1) - 1) / 5)]

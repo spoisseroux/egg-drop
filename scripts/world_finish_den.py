@@ -107,7 +107,7 @@ def wall_offset(px, y, pz, nrm, detail=False):
     # Fable R1 7: deeper scoops (0 to 0.7, the clamp below keeps them within +1.0) and alcoves (a full 1.0)
     off = BASE + scoop(p, .7)
     if detail:
-        off += .09 * (L.fbm(p * .8, 3, seed=11) - .5) * 2
+        off += .18 * (L.fbm(p * .8, 3, seed=11) - .5) * 2      # Fable world R1 4: the mid-frequency rock x2
     for ax, az in ALCOVES:
         along = np.hypot(px - ax, pz - az)
         w = _smooth(2.9, 1.9, along)
@@ -264,7 +264,7 @@ def build_shell(name, spacing, row_step, rings, tunnel_steps, detail=False, bvh=
     P = np.array([L.rb(bm.verts[i].co) for i in dome_ids])
     push = scoop(P, .75)
     if detail:
-        push += .12 * (L.fbm(P * .8, 3, seed=11) - .5) * 2
+        push += .24 * (L.fbm(P * .8, 3, seed=11) - .5) * 2
     for i, d in zip(dome_ids, push):
         v = bm.verts[i]
         out = -v.normal
@@ -397,6 +397,33 @@ def unwrap(obj, info, wall_share=.76):
     return {"wall_area": round(a3w, 1), "dome_area": round(a3d, 1), "total": round(a3, 1)}
 
 
+def build_lid(shell, name="W7_F_DenLid__cliff_rock", out=1.35):
+    """Fable world R1 fixes 1 and 3: an outward-facing rock skin over the dome and the upper walls (over y 9, behind the
+    front wall), 1.35 out from the shell: it closes from outside whatever the volume re-cut opened in the hill (the cut
+    takes island faces within 1.5) and it stands between the sky and the room (the den was lit by sky light)."""
+    bm = bmesh.new()
+    bm.from_mesh(shell.data)
+    bm.normal_update()
+    # over y 9 behind the front wall, and over 12 everywhere (the volume cut opens the cliff over the brow too)
+    keep = [f for f in bm.faces if (L.rb(f.calc_center_median())[1] > 9.0 and L.rb(f.calc_center_median())[2] < -102.0)
+            or L.rb(f.calc_center_median())[1] > 12.0]
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f not in set(keep)], context="FACES")
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    bm.normal_update()
+    for v in bm.verts:
+        v.co = v.co - v.normal * out            # the shell's normals face in: minus is outward
+    for f in bm.faces:
+        f.normal_flip()
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    obj = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(obj)
+    for p in obj.data.polygons:
+        p.use_smooth = False
+    return obj
+
+
 def split_halves(obj, xcut):
     """Two copies of the shell, faces with centres west / east of xcut. The cut follows vertex columns (x -8 on the back
     wall, the column next to it over the mouth), so the halves share those vertices exactly. Seams carry over."""
@@ -456,10 +483,15 @@ def shell_colour(pos, ao, mask):
     tone = (L.fbm(p * .18, 3, seed=2) - .5) * .16
     grain = (L.fbm(p * 3.1, 3, seed=3) - .5) * .12
     col = base * (1 + tone + grain)[:, None]
-    # faint horizontal bedding every 1.2 to 2 studs (the period wanders), thin darker lines
+    # Fable world R1 4: broken value patches 2 to 4 studs across, +-8%
+    patch = (L.value_noise(np.floor(p / 3.0) + .5, seed=29) - .5) * .16
+    col = col * (1 + patch * _smooth(.3, .6, L.fbm(p * .4, 2, seed=31)))[:, None]
+    # faint horizontal bedding every 1.2 to 2 studs (the period wanders), thin darker lines, broken so no line runs
+    # more than about 5 studs (Fable world R1 4)
     period = 1.2 + .8 * L.fbm(np.stack([x * .05, np.zeros_like(x), z * .05], 1), 2, seed=7)
     phase = (y + .5 * (L.fbm(p * .2, 2, seed=8) - .5)) / period
     line = np.exp(-((phase - np.round(phase)) * period / .12) ** 2)
+    line = line * _smooth(.42, .52, L.value_noise(np.stack([(x + z) / 2.5, np.round(phase), (x - z) / 2.5], 1), seed=37))
     col = col * (1 - .45 * line)[:, None] + np.array(BED_C) * (.45 * line)[:, None]
     # hairline cracks: Voronoi borders (cells ~2.6 studs), only where a sparse mask allows, under 0.15 stud wide
     # Fable R1 8: short hairlines only (dashes about 1.2 long, under 0.1 wide, at most 25% darker)
@@ -495,12 +527,15 @@ def build_floor(name, spacing=1.9):
     xs = np.arange(D["x0"] - grow, D["x1"] + grow + 1e-6, spacing)
     zs = np.arange(D["z0"] - grow, -93.2 + 1e-6, spacing)
     # exact rows at the threshold's edges (it eases over 0.3 at the sill's edges, so the walkable floor stays at 4.2)
-    zs = np.array(sorted(set(np.round(np.append(zs, [-101.65, -101.35, -98.8, -98.45, -93.2]), 4))))
+    zs = np.array(sorted(set(np.round(np.append(zs, [-101.65, -101.35, -98.0, -97.65, -93.2]), 4))))
     zs = zs[zs <= -93.2 + 1e-6]
+    xs = np.array(sorted(set(np.round(np.append(xs, [JW - 1.9, JW - 1.6, JE + 1.6, JE + 1.9]), 4))))   # the threshold's ends exactly
     index, verts, faces, uvs = {}, [], [], []
 
     def keep(cx, cz):
         if S.den_inside(cx, cz, grow) and cz <= Z1 + 1.2:     # under the front wall too (Fable R1 11)
+            return True
+        if JW - 2.0 <= cx <= JE + 2.0 and Z1 - .5 <= cz <= -97.6:      # the threshold under the timber jambs too
             return True
         return JW - .6 <= cx <= JE + .6 and Z1 - .5 <= cz <= -93.2
 
@@ -509,13 +544,13 @@ def build_floor(name, spacing=1.9):
         v = (z - CENTRE[1]) / ((D["z1"] - D["z0"]) / 2)
         # the threshold: earth over the live marble sill (top 4.4, z -101.32..-98.82, it collides), easing to the
         # floor a stud and a half either side
-        if JW - .7 <= x <= JE + .7:
-            if -101.35 <= z <= -98.8:
+        if JW - 1.6 <= x <= JE + 1.6:      # Fable world R1 7: wide enough to bury the sill's ends at the jamb feet
+            if -101.35 <= z <= -98.0:
                 return THRESHOLD
             if -101.65 < z < -101.35:
                 return FLOOR + (THRESHOLD - FLOOR) * (z + 101.65) / .3
-            if -98.8 < z < -98.45:
-                return THRESHOLD + (FLOOR - THRESHOLD) * (z + 98.8) / .35
+            if -98.0 < z < -97.65:
+                return THRESHOLD + (FLOOR - THRESHOLD) * (z + 98.0) / .35
         if z > Z1:
             return FLOOR
         return FLOOR + .01 - .1 * max(0.0, 1 - u * u) * max(0.0, 1 - v * v)
@@ -718,6 +753,9 @@ MOUTH_BLOBS = [
     # the brow: one mass over x -17..3, its face 1 stud lawnward of the timber lintel (z -96.4), its lower edge 0.5
     # over the sign's top (12.1); and the rock it hangs from
     ((-7.0, 13.9, -99.4), (10.4, 1.8, 3.0), 0), ((-7.0, 16.0, -101.3), (9.2, 2.1, 2.6), 0),
+    # Fable world R1 fix 2: backing masses over the tan hole west of the mouth (about 14 x 10) and the gap east of the brow
+    ((-25.5, 9.6, -100.4), (5.6, 5.4, 2.6), 8), ((-21.5, 14.0, -101.0), (4.0, 3.0, 2.4), -5),
+    ((7.8, 12.2, -100.9), (3.0, 3.2, 2.3), -10),
 ]
 # (x0, y0, z0, x1, y1, z1, push axes): nothing of the surround inside these
 MOUTH_KEEP_OUT = [

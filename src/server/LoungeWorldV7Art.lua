@@ -382,10 +382,14 @@ function Art.dressing(room)
 			place(entry)
 		end
 		local row=CliffDressing.MouthBoulder
-		task.spawn(function()
-			local ok,problem=pcall(function()require(script.Parent.ParkHollowMount).stone(row,room)end)
-			if not ok then warn("[CliffDen] mouth boulder: "..tostring(problem))end
-		end)
+		-- Fable world R1 2: with the world finish den in, its mouth surround replaces this round boulder
+		local world=room:FindFirstChild("World")
+		if not(world and world:GetAttribute("WorldFinish_den")==true)then
+			task.spawn(function()
+				local ok,problem=pcall(function()require(script.Parent.ParkHollowMount).stone(row,room)end)
+				if not ok then warn("[CliffDen] mouth boulder: "..tostring(problem))end
+			end)
+		end
 	end
 	folder:SetAttribute("Bushes",count)
 	folder.Parent=room
