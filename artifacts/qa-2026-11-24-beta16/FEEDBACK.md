@@ -9,7 +9,7 @@ Spencer's words: "wtf is that horrible ada compliant ramp up to the new area? i 
 - **B1 The crank never plays on the beta.** Turn opens Hatch eggs at once; buying hatches as before (no full turn, no clunk, no egg in the cup). Worked in Studio (R8/R9). Suspects: the client can't find the shared machine parts on the real server (streaming, PrimaryPart/pivot, the template copy), the switch path, or Reduced Motion.
 - **B2 The prompt says only "Turn".** It should say what it does.
 - **B3 The hatching egg is sometimes off centre in its square** (Hatch eggs screen tile / preview).
-- **B4 The Bunny's eyes still clip into its head** (the eye on the viewer's right, outer edge). The 2026-11-21 conform fixed the Bear's eyes and the shared eye items, not the Bunny's own eyes.
+- **B4 The Bunny's eyes still clip into its head** (the eye on the viewer's right, outer edge). The 2026-11-21 conform fixed the Bear's eyes and the shared eye items, not the Bunny's own eyes. **Fixed offline 2026-11-24 (Opus), not on the beta yet:** the curious glance slid the eyes straight sideways and sank EyeR's outer edge; the glance now turns round the head and the Bunny's eyes and blush are conformed (Model 113373205980294). Renders and numbers: `bunny-eyes/`, `assets/art-source/pets/bunny-export/bunny-eye-conform.json`.
 
 ## Changes
 - **C1 The tier's way up:** the zigzag reads as an ugly accessibility ramp. Integrate it into the landscape: a path cut into the cliff to the left of the cave.

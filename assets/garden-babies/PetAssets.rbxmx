@@ -9619,25 +9619,25 @@
         <Properties>
           <string name="Name">Bunny__EyeL</string>
           <Content name="MeshId">
-            <url>rbxassetid://111517888173642</url>
+            <url>rbxassetid://111729099378548</url>
           </Content>
           <Content name="TextureID">
             <url>rbxassetid://115519818938598</url>
           </Content>
           <Vector3 name="Size">
-            <X>0.15872010231018066</X>
-            <Y>0.2025677490234375</Y>
-            <Z>0.09454391479492187</Z>
+            <X>0.158720102</X>
+            <Y>0.202567749</Y>
+            <Z>0.0960724258</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>15.872010231018066</X>
-            <Y>20.25677490234375</Y>
-            <Z>9.454391479492188</Z>
+            <X>15.8720102</X>
+            <Y>20.2567749</Y>
+            <Z>9.60724258</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.233691</X>
             <Y>0.944598</Y>
-            <Z>-0.396033</Z>
+            <Z>-0.399087</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -9659,25 +9659,25 @@
         <Properties>
           <string name="Name">Bunny__EyeR</string>
           <Content name="MeshId">
-            <url>rbxassetid://121049110650502</url>
+            <url>rbxassetid://109907362492843</url>
           </Content>
           <Content name="TextureID">
             <url>rbxassetid://115519818938598</url>
           </Content>
           <Vector3 name="Size">
-            <X>0.15871851921081542</X>
-            <Y>0.20256866455078126</Y>
-            <Z>0.09312454223632813</Z>
+            <X>0.158718519</X>
+            <Y>0.202568665</Y>
+            <Z>0.0967039108</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>15.871851921081543</X>
-            <Y>20.256866455078125</Y>
-            <Z>9.312454223632812</Z>
+            <X>15.8718519</X>
+            <Y>20.2568665</Y>
+            <Z>9.67039108</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.233691</X>
             <Y>0.9446</Y>
-            <Z>-0.396155</Z>
+            <Z>-0.399337</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -9699,25 +9699,25 @@
         <Properties>
           <string name="Name">Bunny__BlushL</string>
           <Content name="MeshId">
-            <url>rbxassetid://88716167667832</url>
+            <url>rbxassetid://119525106885700</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17504434585571288</X>
-            <Y>0.10271865844726563</Y>
-            <Z>0.21178916931152345</Z>
+            <X>0.175044346</X>
+            <Y>0.102718658</Y>
+            <Z>0.204549904</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>17.50443458557129</X>
-            <Y>10.271865844726562</Y>
-            <Z>21.178916931152344</Z>
+            <X>17.5044346</X>
+            <Y>10.2718658</Y>
+            <Z>20.4549904</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0.336785</X>
             <Y>0.843414</Y>
-            <Z>-0.257224</Z>
+            <Z>-0.263137</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -9748,25 +9748,25 @@
         <Properties>
           <string name="Name">Bunny__BlushR</string>
           <Content name="MeshId">
-            <url>rbxassetid://136041970035838</url>
+            <url>rbxassetid://94868648788095</url>
           </Content>
           <Content name="TextureID">
             <url />
           </Content>
           <Vector3 name="Size">
-            <X>0.17504438400268554</X>
-            <Y>0.10271980285644532</Y>
-            <Z>0.21283348083496093</Z>
+            <X>0.17504438400000003</X>
+            <Y>0.102719803</Y>
+            <Z>0.20161251100000002</Z>
           </Vector3>
           <Vector3 name="InitialSize">
-            <X>17.504438400268555</X>
-            <Y>10.271980285644531</Y>
-            <Z>21.283348083496094</Z>
+            <X>17.5044384</X>
+            <Y>10.2719803</Y>
+            <Z>20.1612511</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-0.336784</X>
             <Y>0.843415</Y>
-            <Z>-0.257465</Z>
+            <Z>-0.263852</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>

@@ -185,12 +185,12 @@
    "source": "PetBunny__EyeL",
    "centerBlender": [
     -0.23369,
-    -0.39603,
+    -0.39909,
     0.9446
    ],
    "sizeBlender": [
     0.15872,
-    0.09454,
+    0.09607,
     0.20257
    ],
    "triangles": 72,
@@ -203,12 +203,12 @@
    "source": "PetBunny__EyeR",
    "centerBlender": [
     0.23369,
-    -0.39616,
+    -0.39934,
     0.9446
    ],
    "sizeBlender": [
     0.15872,
-    0.09312,
+    0.0967,
     0.20257
    ],
    "triangles": 72,
@@ -221,12 +221,12 @@
    "source": "PetBunny__BlushL",
    "centerBlender": [
     -0.33678,
-    -0.25722,
+    -0.26314,
     0.84341
    ],
    "sizeBlender": [
     0.17504,
-    0.21179,
+    0.20455,
     0.10272
    ],
    "triangles": 36,
@@ -239,12 +239,12 @@
    "source": "PetBunny__BlushR",
    "centerBlender": [
     0.33678,
-    -0.25747,
+    -0.26385,
     0.84341
    ],
    "sizeBlender": [
     0.17504,
-    0.21283,
+    0.20161,
     0.10272
    ],
    "triangles": 36,
@@ -1882,5 +1882,6 @@
     ]
    }
   }
- ]
+ ],
+ "eyeConform": "2026-11-24: EyeL, EyeR, BlushL, BlushR conformed by conform_bunny_eyes.py (depth only); patch bunny-eye-conform.fbx"
 }
