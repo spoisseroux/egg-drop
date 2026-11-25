@@ -522,7 +522,8 @@ function Life.sceneData(Shared,groundY)
 	pcall(function()
 		for _,box in ipairs(require(Shared:WaitForChild("WorldV7Data")).wet or {})do
 			local c,s=box.center,box.size
-			table.insert(data.boxes,{frame=CFrame.new(c[1],c[2],c[3])*CFrame.Angles(0,tonumber(box.yaw)or 0,0),hx=s[1]/2,hz=s[3]/2,y=c[2]})
+			table.insert(data.boxes,{frame=CFrame.new(c[1],c[2],c[3])*CFrame.Angles(0,tonumber(box.yaw)or 0,0),hx=s[1]/2,hz=s[3]/2,y=c[2],
+				name=box.name})
 		end
 	end)
 	data.hourClock=function(now)
@@ -530,8 +531,17 @@ function Life.sceneData(Shared,groundY)
 		return now+require(Shared:WaitForChild("GardenHour")).offset()
 	end
 	data.hourDaylight=function(s)return require(Shared:WaitForChild("GardenHour")).phase(s).daylight end
+	-- Beta 17 (1.3 B): the river stones and bridge piers the flow rings sit round and the leaves skirt; the rings round
+	-- the stones show while the Dash gate is the fete set (its stones are built).
+	data.obstacles={}
+	pcall(function()data.obstacles=require(Shared:WaitForChild("RiverStones")).obstacles()end)
+	data.stones=function()
+		local gate=workspace:FindFirstChild("GardenDash")
+		return gate~=nil and gate:GetAttribute("Fete")==true
+	end
 	data.art=function(key)
 		if key=="ripple"then return Life.Ripple end
+		if key=="leaf"then return LifeArt.id("leafA")end
 		if key=="halo"then return LifeArt.id("fireflyDot")end
 		return LifeArtR4.id(key)
 	end
@@ -721,7 +731,8 @@ function Life:syncScene()
 		local data=self.sceneData
 		local ok,scene=pcall(function()
 			return require(script.Parent.LifeScene).new({kit={folder=self.folder,part=part,decal=decal,spindle=spindle},
-				art=data.art,crowns=data.crowns,boxes=data.boxes,hourClock=data.hourClock,hourDaylight=data.hourDaylight,seed=self.seed+11})
+				art=data.art,crowns=data.crowns,boxes=data.boxes,hourClock=data.hourClock,hourDaylight=data.hourDaylight,seed=self.seed+11,
+				obstacles=data.obstacles,stones=data.stones})
 		end)
 		if ok then self.sceneParts=scene else self:dropScene(scene)end
 	elseif not self.scene and self.sceneParts then

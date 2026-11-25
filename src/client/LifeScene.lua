@@ -9,8 +9,12 @@
 --   Budget level 1: 3 dapple, 2 koi, 3 birds, 1 dragonfly, no PointLights. Level 2: GardenLife is torn down.
 -- deps: kit {folder, part, decal, spindle}, art(key) -> id?, crowns {Vector3} (the ground under every kit crown),
 --   boxes {{frame, hx, hz, y}} (the water), hourClock(now) -> the garden hour's clock (server time + its offset; nil
---   with the hour off: no lamps, no star), hourDaylight(s) -> daylight at hour-second s (to place the lamps' dusk), seed.
+--   with the hour off: no lamps, no star), hourDaylight(s) -> daylight at hour-second s (to place the lamps' dusk), seed;
+--   beta 17 (1.3 B): obstacles {{x, z, size, stone}} (RiverStones.obstacles: the flow rings' places, what the leaves
+--   skirt), stones() -> are the river stones built (the Dash fete set: the rings round them show only then).
+--   Things on the water: Reduced Motion: rings still at 1.2 x, no leaves. Level 1: 3 leaves.
 local Sim=require(script.Parent.LifeSceneSim)
+local Wind=require(script.Parent.Wind)
 
 local Scene={};Scene.__index=Scene
 local Face=Enum.NormalId
@@ -140,6 +144,29 @@ function Scene.new(deps)
 	beam.Enabled=false
 	beam.Parent=self.starAnchor
 	self.star={tail=tail,head=head,beam=beam,on=false,key=nil,camera=nil}
+	-- Things on the water (beta 17, 1.3 B): 6 leaves plus 2 for the big breath, and a flow ring round each obstacle.
+	self.path=Sim.streamPath(deps.boxes)
+	self.obstacles=deps.obstacles or {}
+	self.leaves,self.flows={},{}
+	local W=Sim.Water
+	local leaf=art("leaf")
+	if leaf and #self.path.points>=2 then
+		for k=1,Sim.Caps.leaves[1]+W.extra do
+			local p,d=flatPlate(kit,"SceneLeaf"..k,W.leaf,leaf)
+			d.Transparency=1
+			self.leaves[k]={part=p,decal=d,shown=1}
+		end
+	end
+	local ripple=art("ripple")
+	if ripple then
+		for i,o in ipairs(self.obstacles)do
+			local p,d=flatPlate(kit,"SceneFlow"..i,Vector3.new(o.size,.02,o.size),ripple)
+			d.Transparency=1
+			self.flows[i]={part=p,decal=d,obstacle=o,size=o.size,phase=(i*1.37)%Sim.Water.ringPeriod,placed=false,shown=1}
+		end
+	end
+	self.waterIn=0
+	self.stonesIn,self.stonesUp=0,false
 	self.dappleIn,self.koiIn,self.flockIn=0,0,0
 	self.cross=nil
 	return self
@@ -223,6 +250,65 @@ function Scene:step(ctx)
 	end
 	self:stepLamps(ctx)
 	self:stepStar(ctx)
+	self:stepWater(ctx)
+end
+
+-- Things on the water (beta 17, 1.3 B): leaves on the shared clock at 15 Hz, only within Water.far of the camera; two
+-- more while the big breath blows here; the flow rings pulse in place (placed once, resized while they change).
+function Scene:stepWater(ctx)
+	if #self.leaves==0 and #self.flows==0 then return end
+	local W=Sim.Water
+	self.waterIn-=ctx.tick
+	if self.waterIn>0 then return end
+	self.waterIn=1/W.hz
+	local now,eye,reduced=ctx.now,ctx.eye,ctx.reduced
+	self.stonesIn-=1/W.hz
+	if self.stonesIn<=0 then
+		self.stonesIn=1
+		local ok,up=pcall(function()return self.d.stones and self.d.stones()end)
+		self.stonesUp=ok and up==true
+	end
+	local count=if reduced then 0 else Sim.cap("leaves",ctx.level)
+	local base=Sim.Caps.leaves[1]
+	local extra,breath=0,0
+	if count>0 and typeof(eye)=="Vector3"then
+		breath=(Wind.breath(eye,now))
+		if breath>W.breathAt then extra=if ctx.level==0 then W.extra else 1 end
+	end
+	for k,entry in ipairs(self.leaves)do
+		local frame,transparency
+		if k<=count then
+			frame,transparency=Sim.leaf(self.path,k,count,now,self.obstacles)
+		elseif k>base and k-base<=extra then
+			-- A leaf that lands in the breath: its own loop, faded in by the breath.
+			frame,transparency=Sim.leaf(self.path,k-base,W.extra,now+37.3,self.obstacles)
+			if frame then transparency=1-(1-transparency)*math.clamp((breath-W.breathAt)/(1-W.breathAt)*2,0,1)end
+		end
+		if frame and typeof(eye)=="Vector3"and(frame.Position-eye).Magnitude<=W.far then
+			if math.abs(entry.shown-transparency)>.01 then entry.shown=transparency;entry.decal.Transparency=transparency end
+			entry.out=true
+			ctx.put(entry.part,frame)
+		elseif entry.out then
+			entry.out=false
+			entry.shown=1;entry.decal.Transparency=1
+			ctx.hide(entry.part)
+		end
+	end
+	for _,ring in ipairs(self.flows)do
+		local o=ring.obstacle
+		if o.stone and not self.stonesUp then
+			if ring.placed then ring.placed=false;ring.shown=1;ring.decal.Transparency=1;ctx.hide(ring.part)end
+		else
+			local scale,transparency=Sim.flowRing(now,ring.phase,reduced)
+			local size=o.size*scale
+			if math.abs(size-ring.size)>.02 then ring.size=size;ring.part.Size=Vector3.new(size,.02,size)end
+			if math.abs(ring.shown-transparency)>.01 then ring.shown=transparency;ring.decal.Transparency=transparency end
+			if not ring.placed then
+				ring.placed=true
+				ctx.put(ring.part,CFrame.new(o.x,W.surface+W.ringLift,o.z))
+			end
+		end
+	end
 end
 
 -- Dapple: the nearest crowns re-picked every second; a plate moving to another crown fades out and in; static shade
@@ -314,6 +400,9 @@ function Scene:park()
 	for _,entry in ipairs(self.dapple)do entry.crown=nil;entry.shown=nil end
 	for _,ring in ipairs(self.rings)do ring.start=nil end
 	if self.star.on then self.star.on=false;self.star.beam.Enabled=false end
+	-- GardenLife's park has hidden the water's parts too: place the rings again when it comes back.
+	for _,ring in ipairs(self.flows)do ring.placed=false end
+	for _,entry in ipairs(self.leaves)do entry.out=false;entry.shown=1;entry.decal.Transparency=1 end
 end
 
 function Scene:destroy()
@@ -325,6 +414,8 @@ function Scene:destroy()
 	for _,ring in ipairs(self.rings)do table.insert(parts,ring.part)end
 	for _,pair in ipairs(self.flock)do table.insert(parts,pair[1]);table.insert(parts,pair[2])end
 	for _,list in ipairs(self.flies)do for _,p in ipairs(list)do table.insert(parts,p)end end
+	for _,entry in ipairs(self.leaves)do table.insert(parts,entry.part)end
+	for _,ring in ipairs(self.flows)do table.insert(parts,ring.part)end
 	for _,p in ipairs(parts)do pcall(function()p:Destroy()end)end
 	return parts
 end
@@ -336,7 +427,10 @@ function Scene:counts()
 		if lamp.level>0 then lamps+=1 end
 		if lamp.lit then lights+=1 end
 	end
-	return{dapple=#self.dapple,koi=#self.koi,flies=#self.dragonflies.list,lamps=lamps,lights=lights,star=self.star.on}
+	local leaves,flows=0,0
+	for _,entry in ipairs(self.leaves)do if entry.out then leaves+=1 end end
+	for _,ring in ipairs(self.flows)do if ring.placed then flows+=1 end end
+	return{dapple=#self.dapple,koi=#self.koi,flies=#self.dragonflies.list,lamps=lamps,lights=lights,star=self.star.on,leaves=leaves,flows=flows}
 end
 
 return Scene

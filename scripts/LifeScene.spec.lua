@@ -38,7 +38,9 @@ return function(client)
 				Vector3.new(30,4,-30),Vector3.new(-50,4,0),Vector3.new(-60,4,0),Vector3.new(-70,4,0)},
 			boxes={{frame=CFrame.new(64.5,3.2,-66),hx=13.5,hz=12,y=3.2},{frame=CFrame.new(35,3.2,-40),hx=10.5,hz=7.5,y=3.2}},
 			hourClock=function()return r.clock end,hourDaylight=function(s)return Hour.phase(s).daylight end,
-			art=function(key)return "rbxassetid://"..#key end}
+			art=function(key)return "rbxassetid://"..#key end,
+			-- Beta 17 1.3 B: a stone (its ring only while the stones are built) and a pier.
+			obstacles={{x=50,z=-52,size=2.6,stone=true},{x=40,z=-48,size=1.6}},stones=function()return r.stones==true end}
 		if options.broken then data.crowns={"not a place"}end
 		r.life=Life.mount({world=r.world,heartbeat=r.beat,seed=11,
 			alive={ceiling=function(f)return f=="life"and r.ceiling end,
@@ -86,7 +88,8 @@ return function(client)
 		test("on: inert parts in GardenLife's folder, hidden until used; dapple under the 6 nearest crowns (3 at level 1), .55 by day",function()
 			local r=rig()
 			local parts=r.sceneParts()
-			assert(#parts==6+3+3+10+6+2,"scene parts: "..#parts)
+			-- dapple, koi, rings, flock, dragonflies, lamp and star anchors; beta 17: 8 leaves and 2 flow rings.
+			assert(#parts==6+3+3+10+6+2+8+2,"scene parts: "..#parts)
 			for _,p in ipairs(parts)do
 				assert(p.Anchored and not p.CanCollide and not p.CanQuery and not p.CanTouch and not p.CastShadow,p.Name)
 			end
@@ -185,6 +188,32 @@ return function(client)
 			local still=rig({clock=times[1]-.2,reduced=true})
 			still.step(.4)
 			assert(still.life.sceneParts:counts().star==false)
+		end)
+
+		test("beta 17 1.3 B: 6 leaves on the water (3 at level 1, none with Reduced Motion); rings pulse, round a stone only while it stands",function()
+			local r=rig()
+			r.step(1)
+			local counts=r.life.sceneParts:counts()
+			assert(counts.leaves==6,"6 leaves: "..counts.leaves)
+			assert(counts.flows==1,"the pier's ring, not the stone's: "..counts.flows)
+			local pier=r.folder():FindFirstChild("SceneFlow2")
+			local sizes={}
+			for _=1,12 do r.step(.25);table.insert(sizes,pier.Size.X)end
+			local lo,hi=math.huge,-math.huge
+			for _,v in ipairs(sizes)do lo=math.min(lo,v);hi=math.max(hi,v)end
+			assert(lo>=1.6*1.15-.05 and hi<=1.6*1.5+.05 and hi-lo>.3,"pulses "..lo.." "..hi)
+			assert(math.abs(pier.CFrame.Position.Y-(3.2+.03))<1e-6 and math.abs(pier.CFrame.Position.X-40)<1e-6)
+			r.stones=true;r.step(1.2)
+			assert(r.life.sceneParts:counts().flows==2,"the stone's ring once it stands")
+			r.level=1;r.step(.5)
+			assert(r.life.sceneParts:counts().leaves==3,"level 1: 3")
+			local still=rig({reduced=true})
+			still.step(1)
+			assert(still.life.sceneParts:counts().leaves==0,"no leaves with Reduced Motion")
+			local ring=still.folder():FindFirstChild("SceneFlow2")
+			local size=ring.Size.X
+			still.step(1.3)
+			assert(math.abs(size-1.6*1.2)<.03 and ring.Size.X==size,"rings still at 1.2 x")
 		end)
 
 		test("parked hides every moving scene part; the switch off destroys the scene; on again builds it",function()

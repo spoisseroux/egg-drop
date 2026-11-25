@@ -115,7 +115,7 @@ end
 -- Every point the flow rings and the leaves treat as an obstacle: the three stones and the piers, {x, z, size}.
 function Stones.obstacles()
 	local out={}
-	for _,stone in ipairs(Stones.Rows)do table.insert(out,{x=stone.x,z=stone.z,size=math.max(stone.length,stone.width)})end
+	for _,stone in ipairs(Stones.Rows)do table.insert(out,{x=stone.x,z=stone.z,size=math.max(stone.length,stone.width),stone=true})end
 	for _,pier in ipairs(Stones.Piers)do table.insert(out,{x=pier.x,z=pier.z,size=pier.size})end
 	return out
 end

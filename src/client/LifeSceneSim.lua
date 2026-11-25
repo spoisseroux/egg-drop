@@ -19,7 +19,9 @@ local hex=Color3.fromHex
 -- Caps by AliveBudget level 0, 1, 2 (level 2: GardenLife is torn down, so none). lights: the lamps' PointLights (phone:
 -- cut first, so level 0 only).
 Scene.Caps=table.freeze({dapple=table.freeze({6,3,0}),koi=table.freeze({3,2,0}),flock=table.freeze({5,3,0}),
-	dragonflies=table.freeze({2,1,0}),lights=table.freeze({4,0,0})})
+	dragonflies=table.freeze({2,1,0}),lights=table.freeze({4,0,0}),
+	-- Beta 17 1.3 B: drifting leaves on the stream, and the flow rings round the stones and piers.
+	leaves=table.freeze({6,3,0}),rings=table.freeze({7,7,0})})
 function Scene.cap(kind,level)
 	level=math.clamp(math.floor(tonumber(level)or 0),0,2)
 	return Scene.Caps[kind][level+1]
@@ -360,6 +362,103 @@ function Scene.starStreak(hour,j,u,camera)
 	local dir=(side+Vector3.new(0,-.4,0)).Unit
 	local head=centre+dir*(S.travel*(u-.5))
 	return head,head-dir*S.length
+end
+
+-- Beta 17 (WORLD-ALIVE-LOOK 1.3 B): things on the water --------------------------------------------------------------
+-- Drifting leaves ride the stream's centre line (the Water_Stream boxes in order, north to south: the stream runs from
+-- the Sky Falls channel down to the falls pool [check] that this is the way its texture scrolls) at 1.1 studs a second,
+-- each `side` x 35% of the half width off the line, wandering .3 x sin(2 pi t / 7), spinning 8 to 20 degrees a second,
+-- fading in over the first second and out over the last. Within 1.5 studs of a stone or pier they ease round it. The
+-- clock is the server's, so every client sees the same leaves. Flow rings: one plate round each stone and pier, the
+-- ripple texture, pulsing 1.15 to 1.5 x its footprint over 2.6 s and fading .55 to .9, each on its own phase.
+Scene.Water=table.freeze({surface=3.2,lift=.02,speed=1.1,side=.35,wander=.3,wanderPeriod=7,spinMin=8,spinMax=20,fade=1,
+	leaf=Vector3.new(.7,.02,.45),clear=1.5,hz=15,far=110,extra=2,breathAt=.5,
+	ringFrom=1.15,ringTo=1.5,ringPeriod=2.6,ringClear=.55,ringGone=.9,ringStill=1.2,ringLift=.03})
+-- The centre line from the stream boxes ({frame, hx, hz, y, name}) in order: points, half widths (the box's smaller
+-- half extent, so a leaf stays on the water however the box is turned) and the distance along at each point.
+function Scene.streamPath(boxes)
+	local points,halves,along={},{},{}
+	local total=0
+	for _,box in ipairs(boxes or {})do
+		if box.name==nil or box.name=="Water_Stream"then
+			local p=box.frame.Position
+			local at=Vector3.new(p.X,Scene.Water.surface+Scene.Water.lift,p.Z)
+			if #points>0 then total+=(at-points[#points]).Magnitude end
+			table.insert(points,at);table.insert(halves,math.min(box.hx,box.hz));table.insert(along,total)
+		end
+	end
+	return{points=points,halves=halves,along=along,total=total}
+end
+-- The point `s` studs down the path: position, unit heading (flat) and the half width there.
+function Scene.pathAt(path,s)
+	local points,along=path.points,path.along
+	local n=#points
+	if n<2 then return nil end
+	s=math.clamp(s,0,path.total)
+	local i=1
+	while i<n-1 and along[i+1]<s do i+=1 end
+	local span=along[i+1]-along[i]
+	local u=if span>0 then(s-along[i])/span else 0
+	local a,b=points[i],points[i+1]
+	local heading=Vector3.new(b.X-a.X,0,b.Z-a.Z)
+	heading=if heading.Magnitude>1e-6 then heading.Unit else Vector3.new(0,0,-1)
+	return a:Lerp(b,u),heading,path.halves[i]+(path.halves[i+1]-path.halves[i])*u
+end
+-- The sideways offset that keeps a leaf `clear` studs off each obstacle ({x, z, size}) near it, eased in and out along
+-- the stream so it slides round instead of jumping. `prefer` (the lap's own side, without the wander) picks which way
+-- round, so the choice never flips while the leaf passes.
+function Scene.skirt(at,heading,side,obstacles,prefer)
+	local W=Scene.Water
+	local normal=Vector3.new(-heading.Z,0,heading.X)
+	prefer=prefer or side
+	for _,o in ipairs(obstacles or {})do
+		local d=Vector3.new(o.x-at.X,0,o.z-at.Z)
+		local ahead,across=d:Dot(heading),d:Dot(normal)
+		local radius=(o.size or 0)/2
+		local reach=radius+2*W.clear
+		if math.abs(ahead)<reach then
+			local need=radius+.3 -- the leaf's own half size
+			local w=smooth(1-math.abs(ahead)/reach)
+			if prefer>=across then
+				local goal=across+need
+				if side<goal then side+=(goal-side)*w end
+			else
+				local goal=across-need
+				if side>goal then side+=(goal-side)*w end
+			end
+		end
+	end
+	return side
+end
+-- Leaf k of `count` at server time `now`: its frame and the decal's transparency (0 shown .. 1 gone), or nil past the
+-- ends. The leaves are evenly spaced along the loop; each lap rolls its own side and spin (Wind.hash).
+function Scene.leaf(path,k,count,now,obstacles)
+	local W=Scene.Water
+	if not path or path.total<=0 or count<=0 then return nil end
+	local lap=path.total/W.speed
+	local t=now+(k-1)*lap/count
+	local n=math.floor(t/lap)
+	local age=t-n*lap
+	local s=age*W.speed
+	local at,heading,half=Scene.pathAt(path,s)
+	if not at then return nil end
+	local seed=n*16+k
+	local base=(Wind.hash(seed,61)*2-1)*W.side*half
+	local side=base+W.wander*math.sin(TAU*(t+k*1.3)/W.wanderPeriod)
+	side=Scene.skirt(at,heading,side,obstacles,base)
+	local spin=(W.spinMin+(W.spinMax-W.spinMin)*Wind.hash(seed,62))*(if Wind.hash(seed,63)<.5 then -1 else 1)
+	local normal=Vector3.new(-heading.Z,0,heading.X)
+	local position=at+normal*side
+	local yaw=math.rad(spin*age)+Wind.hash(seed,64)*TAU
+	local fade=math.min(smooth(age/W.fade),smooth((lap-age)/W.fade))
+	return CFrame.new(position)*CFrame.Angles(0,yaw,0),1-fade
+end
+-- A flow ring's size multiplier and the decal's transparency at `now` for phase `phase` (seconds); Reduced Motion: still.
+function Scene.flowRing(now,phase,reduced)
+	local W=Scene.Water
+	if reduced then return W.ringStill,W.ringClear end
+	local u=((now+(phase or 0))%W.ringPeriod)/W.ringPeriod
+	return W.ringFrom+(W.ringTo-W.ringFrom)*u,W.ringClear+(W.ringGone-W.ringClear)*smooth(u)
 end
 
 return table.freeze(Scene)
