@@ -50,7 +50,7 @@ return function(server,offline)
 		local F={Tier=true}
 		assert(Tier.ceiling({flags=F,studio=false,place=Tier.PlaceId})and Tier.ceiling({flags=F,studio=true,place=1}))
 		assert(not Tier.ceiling({flags=F,studio=false,place=LIVE})and not Tier.ceiling({flags={},studio=true}))
-		assert(Tier.resolve(nil,nil,true)==true and Tier.resolve("x",nil,true)==true and Tier.resolve(false,nil,true)==false)
+		assert(Tier.resolve(nil,nil,true)==false and Tier.resolve("x",nil,true)==false and Tier.resolve(true,nil,true)==true and Tier.resolve(false,nil,true)==false and Tier.resolve(nil,true,true)==true)
 		assert(Tier.resolve(true,true,false)==false and Tier.Key=="garden_tier"and Tier.Attribute=="Tier_on")
 		Tier.inject({flags=F,studio=false,place=LIVE});assert(not Tier.on())
 		Tier.inject({flags=F,studio=true,on=false});assert(not Tier.on())

@@ -210,7 +210,8 @@ function Tier.resolve(configValue,override,ceiling)
 	if not ceiling then return false end
 	if type(override)=="boolean"then return override end
 	if type(configValue)=="boolean"then return configValue end
-	return true
+	-- Spencer 2026-11-24: the terrace is closed until the cliff path lands (missing = off); `/tier on` opens it.
+	return false
 end
 -- Server only (TierConfig): the resolved value TierHost reads. Off until it is set.
 local switch=false
