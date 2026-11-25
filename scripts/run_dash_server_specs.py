@@ -42,7 +42,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Beta (17) QA U8: the care hold the owner never asked for (forced), offline too.
          "GardenCare",
          # Beta 17 world (WORLD-ALIVE-LOOK): the Dash fete set and the river stones.
-         "DashFete"]
+         "DashFete",
+         # The park sites and the Hollow (WORLD-ALIVE-LOOK section 2): the pinned arrival and grove, the multi-site director.
+         "ParkSites", "MultipleParks", "ParkDirector"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

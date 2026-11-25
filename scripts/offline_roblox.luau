@@ -99,6 +99,11 @@ do
 	function methods.ToWorldSpace(a,b)return a*b end
 	function methods.ToObjectSpace(a,b)return methods.Inverse(a)*b end
 	function methods.Lerp(a,b,t)return make(a.Position:Lerp(b.Position,t),a.r)end
+	-- R = Ry*Rx*Rz (ParkPoseData reads the slide's yaw; the park specs run offline).
+	function methods.ToEulerAnglesYXZ(a)
+		local r=a.r
+		return math.asin(math.clamp(-r[6],-1,1)),math.atan2(r[3],r[9]),math.atan2(r[4],r[5])
+	end
 	meta.__index=function(a,key)
 		local r=rawget(a,"r")
 		if key=="LookVector"then return Vector3.new(-r[3],-r[6],-r[9])end
@@ -328,7 +333,9 @@ local function build(name)
 	return{server=folders.server,shared=folders.shared,client=folders.client,game=game,require=requireModule}
 end
 local new,base,live=build("new"),build("base"),build("live")
-local offline={base=base,live=live,new=new,encode=encode,Instance=Instance,signal=signal,heartbeat=heartbeat,services=services,warnings=quiet}
+local offline={base=base,live=live,new=new,encode=encode,Instance=Instance,signal=signal,heartbeat=heartbeat,services=services,warnings=quiet,
+	-- A second copy of a tree with its own module cache (a spec that needs a module loaded under other conditions).
+	fresh=build}
 local failed=0
 for _,name in ipairs(ORDER)do
 	local start=os.clock()

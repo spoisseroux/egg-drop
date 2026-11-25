@@ -37,7 +37,9 @@ Tier.N=Vector2.new(-Tier.D.Y,Tier.D.X)           -- toward the garden
 if Tier.N.X*(-30-Tier.C.X)+Tier.N.Y*(4-Tier.C.Z)<0 then Tier.N=Vector2.new(Tier.D.Y,-Tier.D.X)end
 
 -- The path (build: the Pet Park "grove" at (-38, -46) fills the cliff foot south-west of here, so Fable's two 44-stud legs
--- along the foot cannot fit; the lawn between the cave mouth, the park, Tree_05 and lamp 4 is about 26 along the cliff
+-- along the foot cannot fit. On the beta that site is now the Hollow, a 14-stud circle at (-42, -51) whose rim comes 2.9
+-- studs from Leg 4's park side: a known clash while `/tier on` shows both, gone when the cliff path replaces this zigzag
+-- (Tier.spec holds everything else of the Hollow 4 studs clear). The lawn between the cave mouth, the park, Tree_05 and lamp 4 is about 26 along the cliff
 -- by 38 out). A compact zigzag of four legs running out from the cliff and back, 6 wide, about 13.5 degrees. Frame: F0
 -- on the cliff foot at the park side; u out from the cliff into the lawn (A), o along the cliff toward the cave (Out).
 Tier.F0=Vector3.new(-41.82,Tier.FootY,-74.07)

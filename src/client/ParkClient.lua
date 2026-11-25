@@ -214,7 +214,11 @@ function Client:animate(t)
 	-- Balls.
 	local positionA,spinA,positionB,spinB,active=Data.balls(slots and slots.ball1,slots and slots.ball2,t)
 	local ballA,ballB=self.parts.Park_BallA,self.parts.Park_BallB
-	local axis=if active=="B"then Vector3.zAxis else -Vector3.zAxis -- rolling +X (ball1 east) or -X (ball2 west)
+	-- Rolling along the ball corner's +X (ball1 toward ball2) or -X: the spin axis is the corner's own Z. The Hollow's
+	-- corner is turned, so it uses its own axis; the arrival's is world Z, and the old grove (live) keeps world Z as it
+	-- always has (its turned balls spin backwards; left as shipped).
+	local z=if Park.Natural then roots.BallCorner:VectorToWorldSpace(Vector3.zAxis)else Vector3.zAxis
+	local axis=if active=="B"then z else -z
 	if ballA.position~=positionA or ballA.spin~=spinA or not ballA.lastFrame then
 		ballA.position,ballA.spin=positionA,spinA
 		setFrame(ballA,CFrame.new(positionA)*CFrame.fromAxisAngle(axis,spinA))

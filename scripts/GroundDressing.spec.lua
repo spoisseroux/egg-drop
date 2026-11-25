@@ -67,7 +67,7 @@ return function(client)
 			for _,spot in ipairs(Finds)do
 				assert(math.sqrt((x-spot.x/100)^2+(z-spot.z/100)^2)>=K.find+r-.75,"on a find spot: "..where)
 			end
-			for _,site in ipairs(Park.Sites or {Park})do
+			for _,site in ipairs({Park,Park.build(Park.Specs.grove),Park.build(Park.Specs.hollow)})do -- arrival, old grove (live), Hollow (beta)
 				local dx,dz=(x-site.Center.X)/(site.Radius.X+K.kerb),(z-site.Center.Z)/(site.Radius.Y+K.kerb)
 				assert(dx*dx+dz*dz>1,"on a park kerb: "..where)
 			end
