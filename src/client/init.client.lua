@@ -4873,12 +4873,26 @@ function clientUI.eggCornerMount(Onboard)
   end
  end
  -- A tap, a click, A, Space or Enter during the shot jumps to the landing (never the first drop of an egg type).
- local skipKeys={[Enum.KeyCode.ButtonA]=true,[Enum.KeyCode.Space]=true,[Enum.KeyCode.Return]=true}
- local skipInput=UserInputService.InputBegan:Connect(function(input)
-  if not machine:shotActive()then return end
-  if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch or skipKeys[input.KeyCode]then
-   machine:skipShot()
+ -- Code review of 071d8a6: the keys are a ContextActionService action bound only while the shot plays (the machine
+ -- calls skipInput), sinking them only then, so Space never jumps and chat typing never skips. Taps and clicks the game
+ -- or the touch controls already took (gameProcessed: the thumbstick, jump, chat) never skip either.
+ local SkipAction="EggDropCapsuleSkip"
+ machine.d.skipInput=function(on)
+  if on then
+   ContextActionService:BindActionAtPriority(SkipAction,function(_,state)
+    if state~=Enum.UserInputState.Begin or not machine:shotActive()or UserInputService:GetFocusedTextBox()then
+     return Enum.ContextActionResult.Pass
+    end
+    machine:skipShot()
+    return Enum.ContextActionResult.Sink
+   end,false,Enum.ContextActionPriority.High.Value+2100,Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.ButtonA)
+  else
+   ContextActionService:UnbindAction(SkipAction)
   end
+ end
+ local skipInput=UserInputService.InputBegan:Connect(function(input,gameProcessed)
+  if gameProcessed or not machine:shotActive()then return end
+  if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then machine:skipShot()end
  end)
  -- The camera is always given back: on respawn too.
  local respawn=player.CharacterAdded:Connect(function()machine:returnCamera(true)end)

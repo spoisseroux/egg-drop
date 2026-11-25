@@ -454,5 +454,38 @@ return function(client)
 		assert(r.machine.shot==nil and r.camera.CameraType=="Custom")
 		r.advance(.8);assert(r.cinematic.gate(reveal));r.advance(.1);assert(not r.cinematic.gate(reveal),"released at the .85 landing")
 	end)
+	test("code review of 071d8a6: the camera held at Shot B goes back when the next buy is a pocket one",function()
+		local r=capsuleRig()
+		r.buy("v-1");r.advance(2.2)
+		assert(r.camera.CameraType~="Custom","held at Shot B behind the reveal")
+		r.root=Vector3.new(-41,4,60) -- walked off
+		r.buy("v-2")
+		assert(r.machine.shot.mode=="pocket"and r.camera.CameraType=="Custom"and r.ghost[#r.ghost]==0,"given back at once")
+	end)
+	test("code review of 071d8a6: a second reveal during the shot waits for the shot's reveal; the skip keys are bound only while it plays",function()
+		local r=capsuleRig()
+		local bound={}
+		r.machine.d.skipInput=function(on)table.insert(bound,on)end
+		local first=r.buy("q-1")
+		assert(bound[1]==true,"bound with the shot")
+		r.advance(.5)
+		local second={}
+		r.cinematic.onPlay(second)
+		assert(r.cinematic.gate(second),"queued behind the shot")
+		r.advance(1.4)
+		assert(r.cinematic.gate(second)and r.cinematic.gate(first))
+		r.advance(.15)
+		assert(not r.cinematic.gate(second)and not r.cinematic.gate(first),"both go when the shot's reveal starts")
+		assert(bound[#bound]==false,"unbound when the shot is over")
+	end)
+	test("code review of 071d8a6: the tuck stops at the screen's shade (SafeContent's child), never SafeContent",function()
+		local gui=Instance.new("ScreenGui");gui.Name="EggDropOverlays"
+		local safe=Instance.new("Frame");safe.Name="SafeContent";safe.Parent=gui
+		local shade=Instance.new("Frame");shade.Name="EggHatchView";shade.Parent=safe
+		local card=Instance.new("Frame");card.Name="Card";card.Parent=shade
+		local frame=Instance.new("Frame");frame.Name="HatchCinematic";frame.Parent=card
+		local roots=Machine.panelRoots({frame=frame})
+		assert(#roots==1 and roots[1]==shade,tostring(roots[1]and roots[1].Name))
+	end)
 	return{passed=#cases,cases=cases}
 end

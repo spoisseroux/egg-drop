@@ -447,6 +447,7 @@ function Client:clear()
 	if self.chip then self.chip.button:Destroy();self.chip=nil end
 	self.view,self.drawn,self.egg,self.hatching,self.waiting,self.queued,self.tuck=nil,nil,nil,nil,nil,nil,nil
 	self.beat,self.beatUntil=nil,nil
+	self.looking=nil -- code review of 071d8a6: a Peek never outlives its nest
 	table.clear(self.beats)
 end
 function Client:close()

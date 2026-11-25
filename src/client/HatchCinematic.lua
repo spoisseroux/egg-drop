@@ -609,6 +609,19 @@ function Cinematic:play(result,onComplete,options)
  if self.reducedIntro then self.timing=T end
  self.frame:SetAttribute("HatchPresentationTier",if self.rarityState then self.rarityState.tier else "Neutral")
  self.active=self.freshReveal and(not self:reduced()or self.reducedIntro);self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
+ -- Code review of 071d8a6 (Reduced Motion, a seen reveal): with the capsule shot's hold on, the static card waits for
+ -- the hold (the thud) before it paints, then goes on exactly as below.
+ if not self.active and self:gated()then
+  local epoch=self.epoch
+  local function later()
+   if self.destroyed or self.epoch~=epoch then return end
+   if self:gated()then task.delay(.05,later);return end
+   self.age=self.duration;self:paint();self:handoff(true);if self.epoch~=epoch then return end
+   self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
+  end
+  task.delay(.05,later)
+  return
+ end
  if not self.active then self.age=self.duration;self:paint();local epoch=self.epoch;self:handoff(true);if self.epoch~=epoch then return end end
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end

@@ -250,10 +250,25 @@ end
 -- HatchCinematic.onPlay: the first reveal to start after an armed press confirms it (the Stat Egg confirms by its answer).
 function Machine:claim(cinematic)
 	local armed=self.armed
-	if armed and not armed.unclaimed and self.clock()>=armed.at then self:confirm(cinematic)end
+	if armed and not armed.unclaimed and self.clock()>=armed.at then self:confirm(cinematic);return end
+	-- Code review of 071d8a6: another reveal starting while the capsule shot runs (a second buy merged into it) waits for
+	-- the shot's own reveal to start, so it never plays inside the tucked panel.
+	local shot=self.shot
+	if shot and shot.mode=="shot"and cinematic~=shot.cinematic and self:shotActive()then
+		local release=shot.at+shot.sched.start
+		self.queued={owner=cinematic,shot=shot,release=release,cap=release+Machine.ShotCap}
+	end
 end
 -- HatchCinematic.gate: hold this reveal? Only the claimed one, only until the egg lands, never past the cap.
 function Machine:holds(cinematic)
+	local queued=self.queued
+	if queued and queued.owner==cinematic then
+		local now=self.clock()
+		-- Held until the shot's reveal starts (a skip moves that earlier), never past its cap.
+		local release=if queued.shot.skipped and self.gate and self.gate.release then math.min(queued.release,self.gate.release)else queued.release
+		if now>=release or now>=queued.cap or self.shot~=queued.shot then self.queued=nil;return false end
+		return true
+	end
 	local gate=self.gate
 	if not gate then return false end
 	local now=self.clock()
@@ -596,11 +611,14 @@ local function isGui(x)
 end
 function Machine.panelRoots(cinematic)
 	local out={}
+	-- Code review of 071d8a6: the walk stops at the screen's own shade (the child of SafeContent, which holds every
+	-- overlay and is positioned by init's alignSafeContent), so a resize mid-shot never leaves the overlays offset.
 	local function top(node)
 		local last=nil
 		while node and node.Parent do
 			if node.ClassName=="ScreenGui"or node:IsA("ScreenGui")then break end
 			if isGui(node)then last=node end
+			if node.Parent.Name=="SafeContent"then break end
 			node=node.Parent
 		end
 		if last and not table.find(out,last)then table.insert(out,last)end
@@ -622,10 +640,17 @@ function Machine:startShot(cinematic,armed,now)
 	self.gate=if cinematic and not armed.unclaimed then {from=now,cap=now+sched.start+Machine.ShotCap,release=now+sched.start,owner=cinematic,crank=self.crank}else nil
 	local previous=self.shot
 	local shot={mode=mode,at=now,sched=sched,cinematic=cinematic,kind=armed.type,frames=frames,crank=self.crank}
-	if previous and previous.camera and mode=="shot"then shot.camera=previous.camera end
+	if previous and previous.camera then
+		if mode=="shot"then shot.camera=previous.camera
+		-- Code review of 071d8a6: the next buy is a pocket or Reduced Motion one (walked off, streamed out, blocked,
+		-- the Stat Egg): the camera held at Shot B goes back now, never left Scriptable.
+		else self:giveBack(previous)end
+	end
 	if previous and previous~=shot then self:restorePanel(previous)end
 	self.shot=shot
 	if mode=="shot"then
+		-- The skip keys (Space, Enter, A) are bound only while the shot plays (init: ContextActionService).
+		if self.d.skipInput then pcall(self.d.skipInput,true);shot.skipBound=true end
 		shot.roots={}
 		for _,gui in ipairs(Machine.panelRoots(cinematic))do table.insert(shot.roots,{gui=gui,position=gui.Position})end
 		self:play("screen_tuck",Machine.Volume.tuck)
@@ -663,12 +688,20 @@ function Machine:restorePanel(shot)
 	if shot.mode=="shot"and self.d.hud then pcall(self.d.hud,true)end
 end
 -- Per frame: the panel's tuck and rise, the camera's moves, the hand-off, the cap.
+-- The skip keys go back to the game the moment the shot is over (or skipped).
+function Machine:unbindSkip(shot)
+	if shot and shot.skipBound then
+		shot.skipBound=false
+		if self.d.skipInput then pcall(self.d.skipInput,false)end
+	end
+end
 function Machine:shotStep()
 	local shot=self.shot
 	if not shot then return end
 	local now=self.clock()
 	local s=shot.sched
 	local t=now-shot.at
+	if shot.skipBound and not self:shotActive()then self:unbindSkip(shot)end
 	if shot.mode=="shot"and not shot.panelBack then
 		local amount
 		if shot.forceRise then
@@ -718,6 +751,7 @@ function Machine:returnCamera(instant)
 	if not cam.returning then cam.returning=self.clock();cam.returnFrom=cam.object.CFrame end
 end
 function Machine:giveBack(shot)
+	self:unbindSkip(shot)
 	local cam=shot.camera
 	if cam then
 		pcall(function()cam.object.CFrame=cam.savedCFrame end)
