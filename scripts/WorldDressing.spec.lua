@@ -58,7 +58,7 @@ return function(client)
 		local hollow=Park.build(Park.Specs.hollow)
 		local inside=0
 		for _,entry in ipairs(Dressing.Flowers)do if hollow.inside(Vector3.new(entry[1],0,entry[3]),0)then inside+=1 end end
-		assert(inside==8,"patches inside the Hollow "..inside)
+		assert(inside==5,"patches inside the Hollow "..inside)
 		local built=Flowers.build({textures=stand,parks={hollow}})
 		assert(#built==#Dressing.Flowers-inside,"built "..#built)
 		for _,patch in ipairs(built)do

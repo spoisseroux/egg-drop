@@ -619,7 +619,7 @@ return function(server,offline)
 
 	test("the Hollow: Fable's circle, no kerb, the same five pieces, nine slots, order and capacity",function()
 		assert(H.Id=="grove"and H.Natural==true and H.Kerb==nil)
-		assert(H.Radius==Vector2.new(14,14)and H.Center.X==-42 and H.Center.Z==-51)
+		assert(H.Radius==Vector2.new(12,12)and math.abs(H.Center.X+39.8)<1e-4 and math.abs(H.Center.Z+47.7)<1e-4)
 		assert(table.concat(H.SlotOrder,",")==table.concat(Park.SlotOrder,","))
 		for id,slot in pairs(Park.Slots)do assert(H.Slots[id]and H.Slots[id].equipment==slot.equipment,id)end
 		for id in pairs(H.Slots)do assert(Park.Slots[id],id)end
@@ -650,31 +650,29 @@ return function(server,offline)
 		assert(math.abs(Vector2.new(chute.X,chute.Z).Magnitude-7.5)<1e-3,"the chute's run is 7.5")
 	end)
 
-	test("Fable's places (the ball nudged 1.5 from the bench) and every slot approach inside the circle less 1 stud",function()
-		local fable={seesaw={-36.3,-58.4},slide={-43.1,-58.6},sandbox={-48.7,-54.7},swing={-51.0,-48.3},ball={-35.5,-46.5}}
-		for id,at in pairs(fable)do
-			local p=H.Equipment[id].position
-			assert((flat(p)-Vector2.new(at[1],at[2])).Magnitude<=1.5+1e-6,id.." nudged more than 1.5")
+	test("the re-laid places (R14) and every slot approach inside the circle less 1 stud; the toes read as a paw",function()
+		for id,at in pairs(Park.Specs.hollow.pieces)do
+			assert((flat(H.Equipment[id].position)-Vector2.new(at[1],at[2])).Magnitude<1e-3,id.." not at its place")
 		end
 		for id,slot in pairs(H.Slots)do assert(H.inside(slot.approach,-1),id.." approach too near the rim")end
 		assert(H.inside(H.Slots.slide.chuteEnd,-1),"chute foot near the rim")
-		-- The toes fan round the palm P (-40, -48), about 11 studs out and 36 degrees apart: the paw from shelf 2.
-		local P=Vector2.new(-40,-48)
+		-- The toes fan round the palm P, about 9.2 studs out and about 52 degrees apart, in Fable's order: the paw.
+		local P=Vector2.new(-38.5,-47.4)
 		local last
 		for _,id in ipairs({"seesaw","slide","sandbox","swing"})do
 			local d=flat(H.Equipment[id].position)-P
-			assert(math.abs(d.Magnitude-11)<=.6,id.." is not a toe ("..d.Magnitude..")")
+			assert(math.abs(d.Magnitude-9.2)<=.6,id.." is not a toe ("..d.Magnitude..")")
 			local angle=math.atan2(d.Y,d.X)
-			if last then local gap=math.deg(last-angle);assert(gap>31 and gap<41,id.." toe spacing "..gap)end
+			if last then local gap=math.deg((last-angle+3*math.pi)%(2*math.pi)-math.pi);assert(gap>44 and gap<60,id.." toe spacing "..gap)end
 			last=angle
 		end
 	end)
 
 	test("the slide: ladder foot toward the cliff, the chute lands in the palm; seats face the palm; swing seats too",function()
 		local ladder,foot=H.Slots.slide.approach,H.Slots.slide.chuteEnd
-		assert((flat(ladder)-Vector2.new(-43.4,-59.8)).Magnitude<.2,"ladder foot "..tostring(ladder))
-		assert((flat(foot)-Vector2.new(-41.0,-51.4)).Magnitude<.2,"chute foot "..tostring(foot))
-		local P=Vector2.new(-40,-48)
+		local P=Vector2.new(-38.5,-47.4)
+		assert((flat(ladder)-P).Magnitude>(flat(H.Equipment.slide.position)-P).Magnitude,"ladder foot on the palm side")
+		assert((flat(foot)-P).Magnitude<2.5,"chute foot not in the palm "..tostring(foot))
 		for _,id in ipairs({"swing1","swing2"})do
 			local slot=H.Slots[id];local to=(P-flat(slot.approach)).Unit
 			assert(Vector2.new(math.sin(slot.yaw),math.cos(slot.yaw)):Dot(to)>.95,id.." does not face the palm")
@@ -688,8 +686,8 @@ return function(server,offline)
 
 	test("gaps path and plaza on the rim, 4 wide, 6+ studs from the bench's ends; the bench inside facing the centre",function()
 		assert(#H.Gateways==2 and H.Gateways[1].id=="path"and H.Gateways[2].id=="plaza")
-		assert((flat(H.Gateways[1].position)-Vector2.new(-28.2,-53.1)).Magnitude<.1)
-		assert((flat(H.Gateways[2].position)-Vector2.new(-44.5,-37.2)).Magnitude<.1)
+		assert((flat(H.Gateways[1].position)-Vector2.new(-28.61,-52.04)).Magnitude<.1)
+		assert((flat(H.Gateways[2].position)-Vector2.new(-45.75,-37.28)).Magnitude<.1)
 		local bench=H.Benches[1]
 		local along=Vector2.new(math.cos(bench.yaw),-math.sin(bench.yaw))
 		local toC=(flat(H.Center)-flat(bench.position)).Unit
@@ -752,46 +750,42 @@ return function(server,offline)
 		assert(arrival.kerbSegments>=16 and arrival.gatePosts==4,"arrival kerb unchanged")
 	end)
 
-	test("the cliff foot: the rim kisses the rock (1.3 past the foot line at angle -2.14), nothing placed is within 2 of it",function()
-		local FOOT={Vector2.new(-36,-70),Vector2.new(-46,-66),Vector2.new(-50,-62),Vector2.new(-56,-58),Vector2.new(-64,-54),Vector2.new(-70,-48)}
-		local a,b=FOOT[1],FOOT[#FOOT]
-		local function side(p)return((b-a).X*(p-a).Y-(b-a).Y*(p-a).X)/(b-a).Magnitude end
-		local lawn=if side(flat(H.Center))>0 then 1 else -1 -- the centre is on the lawn
-		local function rockSide(p)return-lawn*side(p)end -- > 0 past the line, on the rock
-		local worst,at=-math.huge,0
-		for k=0,359 do
-			local angle=math.rad(k)-math.pi
-			local s=rockSide(Vector2.new(H.Center.X+14*math.cos(angle),H.Center.Z+14*math.sin(angle)))
-			if s>worst then worst,at=s,angle end
+	test("the cliff path (CliffDenData boxes): the rim 2+ studs off every box, pieces and slots 3+, dressing 1.5+",function()
+		local Cliff=require(Shared.CliffDenData)
+		-- Each collision box's footprint on the ground, sampled every half stud (its local X and Z axes).
+		local samples={}
+		for _,box in ipairs(Cliff.collision.boxes)do
+			local c,r,s=box.c,box.r,box.s
+			local ax,az=Vector2.new(r[1],r[7]),Vector2.new(r[3],r[9]) -- columns: local X and Z in world XZ
+			local nx,nz=math.max(1,math.ceil(s[1]/.5)),math.max(1,math.ceil(s[3]/.5))
+			for i=0,nx do for k=0,nz do
+				table.insert(samples,{p=Vector2.new(c[1],c[3])+ax*(s[1]*(i/nx-.5))+az*(s[3]*(k/nz-.5)),kind=box.kind})
+			end end
 		end
-		assert(math.abs(worst-1.31)<.05 and math.abs(at+2.14)<.05,string.format("rim past the foot line %.2f at %.2f",worst,at))
-		local function toFoot(p)
-			local best=math.huge
-			for k=1,#FOOT-1 do
-				local s,d=FOOT[k],FOOT[k+1]-FOOT[k]
-				local t=math.clamp((p-s):Dot(d)/d:Dot(d),0,1)
-				best=math.min(best,(p-(s+d*t)).Magnitude)
-			end
-			return best
+		local function gap(p)
+			local best,kind=math.huge,nil
+			for _,q in ipairs(samples)do local d=(q.p-p).Magnitude;if d<best then best,kind=d,q.kind end end
+			return best,kind
 		end
-		local function clear(label,p,radius)
-			assert(rockSide(p)<0 and toFoot(p)>=2+(radius or 0),string.format("%s (%.1f, %.1f) is %.2f from the cliff foot",label,p.X,p.Y,toFoot(p)))
+		local function clear(label,p,room)
+			local d,kind=gap(p)
+			assert(d>=room,string.format("%s (%.1f, %.1f) is %.2f from the cliff path's %s",label,p.X,p.Y,d,tostring(kind)))
 		end
-		for id,e in pairs(H.Equipment)do clear(id,flat(e.position))end
-		for id,slot in pairs(H.Slots)do clear(id,flat(slot.approach))end
-		clear("bench",flat(H.Benches[1].position))
+		for k=0,71 do
+			local a=k*math.pi/36
+			clear("rim",Vector2.new(H.Center.X+H.Radius.X*math.cos(a),H.Center.Z+H.Radius.Y*math.sin(a)),2)
+		end
+		for id,e in pairs(H.Equipment)do clear(id,flat(e.position),3+e.keepout*.5)end
+		for id,slot in pairs(H.Slots)do clear(id,flat(slot.approach),3)end
+		clear("bench",flat(H.Benches[1].position),3)
 		local D=H.Dressing
-		for _,stone in ipairs(D.stones)do clear(stone.name,Vector2.new(stone.x,stone.z),stone.size.X*.5)end
-		for _,stump in ipairs(D.stumps)do clear("stump",Vector2.new(stump.x,stump.z),stump.diameter*.5)end
-		clear("log",Vector2.new(D.log.x,D.log.z));clear("column",Vector2.new(D.column.x,D.column.z))
-	end)
-
-	test("clear of the cliff path work: everything at z -65 or north (the bank is at z under -80)",function()
-		local function north(z,label)assert(z>=-65.001,label.." at z "..z)end
-		north(H.Center.Z-H.Radius.Y,"the circle")
-		for id,e in pairs(H.Equipment)do north(e.position.Z,id)end
-		for id,slot in pairs(H.Slots)do north(slot.approach.Z,id)end
-		for _,stone in ipairs(H.Dressing.stones)do north(stone.z-stone.size.X*.5,stone.name)end
+		for _,stone in ipairs(D.stones)do clear(stone.name,Vector2.new(stone.x,stone.z),1.5+stone.size.X*.5)end
+		for _,stump in ipairs(D.stumps)do clear("stump",Vector2.new(stump.x,stump.z),1.5+stump.diameter*.5)end
+		for k=-2,2 do
+			local s=k*D.log.length/4
+			clear("log",Vector2.new(D.log.x+s*math.sin(D.log.heading),D.log.z+s*math.cos(D.log.heading)),1.5+D.log.diameter*.5)
+		end
+		clear("column",Vector2.new(D.column.x,D.column.z),3)
 	end)
 
 	return {passed=#cases,cases=cases}

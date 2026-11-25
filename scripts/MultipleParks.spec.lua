@@ -33,8 +33,8 @@ return function(server)
 		assert(g.Benches[1].position.Z>g.Center.Z,"grove bench opens toward hub")
 		if g.Natural then
 			-- The Hollow (beta and Studio, ParkSites.spec): its path gap faces the dirt path east, its plaza gap the hub.
-			assert(g.Gateways[1].id=="path"and g.Gateways[1].position.X>g.Center.X+13,"path gap opens east")
-			assert(g.Gateways[2].id=="plaza"and g.Gateways[2].position.Z>g.Center.Z+13,"plaza gap opens toward the hub")
+			assert(g.Gateways[1].id=="path"and g.Gateways[1].position.X>g.Center.X+g.Radius.X*.8,"path gap opens east")
+			assert(g.Gateways[2].id=="plaza"and g.Gateways[2].position.Z>g.Center.Z+g.Radius.Y*.8,"plaza gap opens toward the hub")
 		else
 			assert(g.Gateways[1].position.X>g.Center.X+14,"east path gateway does not rotate west")
 		end

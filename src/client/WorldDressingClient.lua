@@ -31,8 +31,8 @@ function Flowers.textures(beta)
 	return out,Dressing.TransparencyR2 or 0
 end
 -- The natural park sites (the Hollow, beta and Studio: ParkLayout's place switch); none on live. The Hollow brings its
--- own flower drift, so the old patches whose centre falls inside its circle (8 today: by the log, on the slide's toe,
--- by the see-saw, in the palm) are not drawn there.
+-- own flower drift, so the old patches whose centre falls inside its circle (5 since the R14 re-lay) are not drawn
+-- there.
 function Flowers.naturalParks()
 	local ok,Park=pcall(function()return require(Shared:WaitForChild("ParkLayout"))end)
 	local out={}

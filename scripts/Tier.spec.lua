@@ -134,37 +134,14 @@ return function(server,offline)
 		-- Every park site, whichever the place switch picked: the arrival, the old grove (live) and the Hollow (beta).
 		local sites={Park,Park.build(Park.Specs.grove),Park.build(Park.Specs.hollow)}
 		for _,site in ipairs(sites)do
-			if not site.Natural then
-				for k=0,63 do local t=k*math.pi/32;clear("kerb "..site.Id,site.Center.X+site.Radius.X*math.cos(t),site.Center.Z+site.Radius.Y*math.sin(t),true)end
-				continue
-			end
-			-- The Hollow (WORLD-ALIVE-LOOK 2) is laid out for the cliff path that replaces this zigzag (claude/cliff-den-build
-			-- 2e44d7ab). KNOWN CLASH, to be removed with the zigzag: the rim comes 2.9 studs from Leg 4's park side and the
-			-- east-rim stones' and the stump circle's keepouts reach within 4 of Legs and the top platform, while `/tier on` shows both. The terrace
-			-- and every slot approach are held to 4 studs; only the zigzag's own pieces may clash, and only with the rim and the dressing.
-			local ZIGZAG={TopPlatform=true,Legs=true,NearLanding=true,FarLandings=true}
-			local clash={}
-			local function hollow(label,x,z,grow)
-				assert(not Tier.inPiece(Tier.Pieces[1],x,z,grow),string.format("hollow %s (%.1f, %.1f) is within %.1f of the terrace",label,x,z,grow))
-				for k=2,#Tier.Pieces do
-					local piece=Tier.Pieces[k]
-					if Tier.inPiece(piece,x,z,grow)then
-						assert(ZIGZAG[piece.name],string.format("hollow %s (%.1f, %.1f) is within %.1f of %s",label,x,z,grow,piece.name))
-						clash[label]=piece.name
-					end
+			for k=0,63 do local t=k*math.pi/32;clear("kerb "..site.Id,site.Center.X+site.Radius.X*math.cos(t),site.Center.Z+site.Radius.Y*math.sin(t),true)end
+			if site.Natural then
+				-- The Hollow (no kerb): its slot approaches 4 studs clear, its keepout circles 4 past their own radius.
+				for id,slot in pairs(site.Slots)do clear("hollow approach "..id,slot.approach.X,slot.approach.Z,true)end
+				for _,zone in ipairs(site.Keepout)do
+					assert(not Tier.inPiece(Tier.Pieces[1],zone.center.X,zone.center.Y,4+zone.radius),
+						string.format("hollow keepout (%.1f, %.1f) is within 4 studs of the terrace",zone.center.X,zone.center.Y))
 				end
-			end
-			for k=0,63 do local t=k*math.pi/32;hollow("rim",site.Center.X+site.Radius.X*math.cos(t),site.Center.Z+site.Radius.Y*math.sin(t),4)end
-			for id,slot in pairs(site.Slots)do
-				hollow("approach "..id,slot.approach.X,slot.approach.Z,4)
-				assert(not clash["approach "..id],"a Hollow slot approach is within 4 studs of the zigzag's "..tostring(clash["approach "..id]))
-			end
-			-- Keepouts: the dressing's (east-rim stones, the stump circle) are the known clash; equipment, chute and bench stay clear.
-			for k,zone in ipairs(site.Keepout)do
-				local label="keepout "..k
-				hollow(label,zone.center.X,zone.center.Y,4+zone.radius)
-				assert(not clash[label]or zone.dressing==true,
-					string.format("Hollow keepout (%.1f, %.1f) within 4 of the zigzag's %s",zone.center.X,zone.center.Y,tostring(clash[label])))
 			end
 		end
 		for _,w in ipairs(Bounds.Walls)do for k=0,10 do clear("wall "..w.id,w.x1+(w.x2-w.x1)*k/10,w.z1+(w.z2-w.z1)*k/10,true)end end
