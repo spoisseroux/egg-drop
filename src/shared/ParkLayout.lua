@@ -400,32 +400,34 @@ Specs.arrival=table.freeze({id="arrival",x=36,z=66,rx=16,rz=11,
 Specs.grove=table.freeze({id="grove",x=-38,z=-46,rx=16,rz=11,rotation=math.pi,
 	gaps=table.freeze({table.freeze({"east",-.26,4,fixed=true}),table.freeze({"southwest",-2.09,4})}),
 	bench=table.freeze({-38+.5,-46-8.4})})
--- The Hollow (Fable, WORLD-ALIVE-LOOK section 2): a round glade backed into the cliff, no kerb. The four toes fan
--- round the palm P (-40, -48) toward the cliff so that from shelf 2 of the cliff path the worn patches read as a paw
--- print. Same site id as the old grove (sessions, snapshots, the client), so only the look and the numbers change.
--- Fable's numbers from the one-stud surface map, good to about 1 stud; every one needs probe_park_hollow.luau in Studio.
--- Nudged (Fable allows 1.5): the ball (-35.5, -46.5) moved 1.5 studs away from the bench to (-35.97, -47.92): the
--- mat's back edge sat on the bench's footprint (centres 3.2 apart, mat 4.4 wide).
-Specs.hollow=table.freeze({id="grove",x=-42,z=-51,rx=14,rz=14,natural=true,
-	gaps=table.freeze({table.freeze({"path",-.15,4}),table.freeze({"plaza",1.75,4})}),
-	bench=table.freeze({-34.5,-43.5}),
+-- The Hollow (Fable, WORLD-ALIVE-LOOK section 2): a round glade backed toward the cliff, no kerb. The four toes fan
+-- round the palm P toward the cliff so that from the cliff path above the worn patches read as a paw print. Same site
+-- id as the old grove (sessions, snapshots, the client), so only the look and the numbers change.
+-- Re-laid 2026-11-25 (Studio R13/R14): the cliff path pack (CliffDenData: treads, lip, back wall, cliff_rock_1818) runs
+-- 3 to 4 studs further onto this lawn than the surface map's cliff foot, over Fable's south rim and the swing and dig
+-- spot. The circle shrank 14 -> 12 and moved 3.6 studs out from the path (its rim 3 studs off the path's base, measured
+-- by a Studio top-down ray sweep with the pack in); the fan keeps Fable's order and headings round P, 9.2 studs out and
+-- about 52 degrees apart (36 no longer fits r 12). Every number checked by probe_park_hollow.luau with the pack in.
+Specs.hollow=table.freeze({id="grove",x=-39.8,z=-47.7,rx=12,rz=12,natural=true,
+	gaps=table.freeze({table.freeze({"path",-.37,4}),table.freeze({"plaza",2.09,4})}),
+	bench=table.freeze({-34.15,-40.55}),
 	pieces=table.freeze({
-		seesaw=table.freeze({-36.3,-58.4,-.34}),   -- toe 1: beam across the fan, riders wait on the palm side
-		slide=table.freeze({-43.1,-58.6,.29}),     -- toe 2: deck; ladder foot toward the cliff, the chute lands in the palm
-		sandbox=table.freeze({-48.7,-54.7,.91}),   -- toe 3: the dig spot, in the cove nearest the cliff
-		swing=table.freeze({-51.0,-48.3,1.54}),    -- toe 4: seats face the palm
-		ball=table.freeze({-35.97,-47.92,.6}),     -- in the palm's east half
+		seesaw=table.freeze({-32.3,-54.1,-.75}),   -- toe 1: beam across the fan, riders wait on the palm side
+		slide=table.freeze({-39.85,-56.45,.15}),   -- toe 2: deck; ladder foot toward the cliff, the chute lands in the palm
+		sandbox=table.freeze({-46.45,-51.95,1.05}),-- toe 3: the dig spot, nearest the cliff
+		swing=table.freeze({-47.0,-44.0,1.95}),    -- toe 4: seats face the palm
+		ball=table.freeze({-34.75,-45.8,.6}),      -- in the palm's east half
 	}),
 	dressing=table.freeze({
-		palm=table.freeze({-40,-48}),
-		-- The cliff foot runs (-36, -70) to (-70, -48): its direction, for the palm plates.
-		cliffLine=table.freeze({-34/math.sqrt(34*34+22*22),22/math.sqrt(34*34+22*22)}),
-		-- {rim angle, radius from C, across}: between the stump circle (angle -.48) and the cliff.
-		rimBoulders=table.freeze({{-.75,14.3,2.4},{-.88,14.6,1.9},{-1.0,14.2,1.5},{-1.12,14.5,1.2},{-1.24,14.1,.9}}),
+		palm=table.freeze({-38.5,-47.4}),
+		-- The cliff path's base runs (-69, -45) to (-31, -70): its direction, for the palm plates.
+		cliffLine=table.freeze({-38/math.sqrt(38*38+25*25),25/math.sqrt(38*38+25*25)}),
+		-- {rim angle, radius from C, across}: on the south-east rim between the stump circle and the slide, off the path.
+		rimBoulders=table.freeze({{-1.02,12.6,2.4},{-1.14,12.9,1.9},{-1.26,12.5,1.5},{-1.37,12.8,1.2},{-1.47,12.4,.9}}),
 		-- {local x, local z, across} in the slide's frame (+Z down the chute): behind the deck, off the ladder line.
 		deckBoulders=table.freeze({{-1.7,-2.5,1.6},{1.6,-2.8,1.3},{-2.4,-.3,1.0}}),
-		stumps=table.freeze({-30.5,-57}),
-		log=table.freeze({-54.5,-44.5}),
+		stumps=table.freeze({-29.4,-57.6}),        -- just past the south-east rim, by the see-saw (the east gap is full)
+		log=table.freeze({-50.4,-41.4}),           -- along the west rim
 	}),
 })
 -- The Hollow is a place gate (FeatureFlags.ParkHollow): the beta place or Studio. Read once at require time on both

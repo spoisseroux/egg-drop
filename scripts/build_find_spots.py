@@ -30,9 +30,9 @@ LAWNS = [
     ("grove", -88, -58, -58, -28),
 ]
 SPAWN = (96.0, 66.0)
-# The Hollow (WORLD-ALIVE-LOOK section 2; ParkLayout.Specs.hollow, beta and Studio): a 14-stud circle with no kerb. The
+# The Hollow (WORLD-ALIVE-LOOK section 2; ParkLayout.Specs.hollow, beta and Studio; re-laid R14): a 12-stud circle, no kerb. The
 # old grove ellipse stays in D.kerb_distance (live), so a spot keeps clear of both.
-HOLLOW = (-42.0, -51.0, 14.0)
+HOLLOW = (-39.8, -47.7, 12.0)
 
 
 def lua_points(name):
