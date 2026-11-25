@@ -156,7 +156,7 @@ if south<-67.01 then flag("H6 a point at z %.2f, south of the rim+2 ring",south)
 local FOOT={Vector2.new(-36,-70),Vector2.new(-46,-66),Vector2.new(-50,-62),Vector2.new(-56,-58),Vector2.new(-64,-54),Vector2.new(-70,-48)}
 local function side(a,b,p)return((b-a).X*(p-a).Y-(b-a).Y*(p-a).X)/(b-a).Magnitude end -- signed distance from a->b
 local lawnSide=side(FOOT[1],FOOT[#FOOT],Vector2.new(H.Center.X,H.Center.Z))>0
-local function past(a,b,p)local s=side(a,b,p);return if lawnSide then -s else s end end -- > 0: on the rock side
+local function past(a,b,p)local s=side(a,b,p);return if lawnSide then -s else s end -- > 0: on the rock side
 local function polyline(p)
 	local best,bestPast=math.huge,-math.huge
 	for k=1,#FOOT-1 do
