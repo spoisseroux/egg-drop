@@ -123,11 +123,17 @@ function Host:open()
 		request.OnServerEvent:Connect(function(player,packet)self:request(player,packet)end)
 		input.OnServerEvent:Connect(function(player,packet)self:input(player,packet)end)
 	end
-	if d.room then
-		local ok,problem=pcall(Mount.build,d.room)
-		if not ok then warn("[Dash] gate: "..tostring(problem))end
-	end
+	self:mountGate()
 	self.director.dirty=true
+end
+-- The gate's props; built again when the Alive `scene` switch flips while Dash is open (the fete set, beta 17).
+function Host:mountGate()
+	local d=self.d
+	if not d.room then return end
+	local fete=if d.fete then d.fete()==true else Mount.fete()
+	self.feteBuilt=fete
+	local ok,problem=pcall(Mount.build,d.room,{fete=fete})
+	if not ok then warn("[Dash] gate: "..tostring(problem))end
 end
 function Host:close()
 	self.isOpen=false
@@ -151,6 +157,13 @@ function Host:step()
 		if on then self:open()else self:close()end
 	end
 	if not on then return end
+	-- The fete set follows the `scene` switch, read at most once a second.
+	local now=os.clock()
+	if self.d.room and now>=(self.feteCheck or 0)then
+		self.feteCheck=now+1
+		local fete=if self.d.fete then self.d.fete()==true else Mount.fete()
+		if fete~=self.feteBuilt then self:mountGate()end
+	end
 	-- The Deck, another pet or a lost character shows here at once (the rest is the director's half second).
 	local director=self.director
 	local heat=director.heat

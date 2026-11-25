@@ -4,8 +4,12 @@
 -- three stepping stones. With DashProps.MaxParts in mind: both together stay under 60 parts. Everything is anchored and non-colliding, non-queryable and non-touching,
 -- beside the lounge rather than inside it, so players, pets and every garden raycast pass straight through.
 -- Hoops and clovers are the client's (layouts differ). Built while Dash is on; removed when it goes off.
-local Course=require(game:GetService("ReplicatedStorage").Shared.DashCourse)
-local Grid=require(game:GetService("ReplicatedStorage").Shared.DashGrid)
+-- Beta 17 (WORLD-ALIVE-LOOK sections 3 and 4), while the Alive `scene` switch is on (Mount.fete): the fete set
+-- (DashFete) in place of the arches, slabs and pad, and the river stones (RiverStones, carved by StoneBuilder) with
+-- their walkable colliders in place of the three tiles. Off (and on live): exactly the build before it.
+local Shared=game:GetService("ReplicatedStorage").Shared
+local Course=require(Shared.DashCourse)
+local Grid=require(Shared.DashGrid)
 local Mount={}
 Mount.ModelName="GardenDash"
 Mount.Frame=Color3.fromHex("#C9C2D6")
@@ -55,7 +59,17 @@ function Mount.gate()
 	local pad=Course.Pad
 	return Vector3.new(pad.x/100,pad.y/100,pad.z/100)
 end
-function Mount.build(room)
+-- The Alive `scene` switch (beta and Studio only): the fete set and the river stones. A failing read is off.
+function Mount.fete()
+	local ok,on=pcall(function()return require(Shared.Alive).on("scene")end)
+	return ok and on==true
+end
+-- options (specs): {fete = bool (nil: Mount.fete()), carve, spawn (StoneBuilder's options)}.
+function Mount.build(room,options)
+	options=options or {}
+	local fete=options.fete
+	if fete==nil then fete=Mount.fete()end
+	if fete then return Mount.buildFete(room,options)end
 	Mount.remove(room)
 	local model=Instance.new("Model");model.Name=Mount.ModelName
 	local start,finish=frameAt(0),frameAt(Course.Length)
@@ -76,6 +90,113 @@ function Mount.build(room)
 	for index,stone in ipairs(Course.Stones)do
 		part(model,"Stone_"..index,Vector3.new(2.2,.3,2.2),CFrame.new(stone.x/100,stone.y/100-.15,stone.z/100),Mount.Stone)
 	end
+	model.Parent=room
+	return model
+end
+-- The fete set ------------------------------------------------------------------------------------------------------
+local Materials={Wood=Enum.Material.Wood,Marble=Enum.Material.Marble,SmoothPlastic=Enum.Material.SmoothPlastic,
+	Fabric=Enum.Material.Fabric,Slate=Enum.Material.Slate,Ground=Enum.Material.Ground}
+local Shapes={Block=Enum.PartType.Block,Cylinder=Enum.PartType.Cylinder,Ball=Enum.PartType.Ball}
+local function title()
+	local ok,text=pcall(function()return require(Shared.UICopy).dash.title end)
+	return if ok and type(text)=="string"then text else "Garden Dash"
+end
+-- The existing Dash title (no new words), cream on timber, on the given faces.
+local function words(item,faces)
+	for _,face in ipairs(faces)do
+		local gui=Instance.new("SurfaceGui")
+		gui.Name="Words"..face;gui.Face=Enum.NormalId[face];gui.SizingMode=Enum.SurfaceGuiSizingMode.PixelsPerStud
+		gui.PixelsPerStud=60;gui.LightInfluence=1
+		local label=Instance.new("TextLabel")
+		label.Name="Title";label.BackgroundTransparency=1;label.Size=UDim2.fromScale(.92,.8);label.Position=UDim2.fromScale(.04,.1)
+		label.Text=title();label.TextScaled=true;label.Font=Enum.Font.FredokaOne;label.TextColor3=Mount.Cream
+		label.Parent=gui
+		gui.Parent=item
+	end
+end
+-- One frame's pieces and ropes (DashFete) under `parent`. The ropes hang between attachments on one invisible anchor.
+local function place(parent,frame,pieces,ropes,group)
+	for _,p in ipairs(pieces)do
+		local item=part(parent,p.name,p.size,frame*p.at,p.colour)
+		item.Shape=Shapes[p.shape]or Enum.PartType.Block
+		item.Material=Materials[p.material]or Enum.Material.SmoothPlastic
+		item.Transparency=p.transparency or 0
+		item.CastShadow=p.shadow==true
+		if p.words then words(item,p.words)end
+	end
+	if #ropes==0 then return end
+	local anchor=part(parent,group.."Anchor",Vector3.new(.2,.2,.2),frame,Mount.Cream)
+	anchor.Transparency=1
+	local colour=ColorSequence.new(require(Shared.DashFete).Rope)
+	local function attach(at)
+		local a=Instance.new("Attachment")
+		-- The attachment's axis (its X) points down, so positive CurveSize sags the rope (DashLine).
+		a.CFrame=CFrame.new(at)*CFrame.Angles(0,0,-math.pi/2)
+		a.Parent=anchor
+		return a
+	end
+	for _,r in ipairs(ropes)do
+		local beam=Instance.new("Beam");beam.Name=r.name
+		beam.Attachment0,beam.Attachment1=attach(r.a),attach(r.b)
+		beam.Width0,beam.Width1=r.width,r.width;beam.Segments=if r.sag>0 then 10 else 1;beam.FaceCamera=true
+		beam.Color=colour;beam.LightEmission=0;beam.LightInfluence=1
+		local curve=r.sag/.75 -- DashRing.curve: a cubic Bezier's middle drops .75 x CurveSize
+		beam.CurveSize0,beam.CurveSize1=curve,-curve
+		beam.Parent=anchor
+	end
+end
+-- The river stones (WORLD-ALIVE-LOOK section 4): each walkable stone carved (StoneBuilder) over a darker wet band, a
+-- moss plate on top, the company stones, the two landings in the kerb, and one invisible collider per stone.
+Mount.StonesName="RiverStones"
+function Mount.buildStones(parent,options)
+	options=options or {}
+	local Stones=require(Shared.RiverStones)
+	local Builder=require(script.Parent.StoneBuilder)
+	local folder=Instance.new("Model");folder.Name=Mount.StonesName
+	local carve={carve=options.carve,spawn=options.spawn}
+	local okMoss,moss=pcall(function()return require(Shared.LifeArtR4).id(Stones.Moss.texture)end)
+	for index,stone in ipairs(Stones.Rows)do
+		Builder.stone(folder,Stones.band(stone),carve)
+		local model=Builder.stone(folder,stone,carve)
+		model:SetAttribute("Index",index)
+		local M=Stones.Moss
+		local plate=part(model,"Moss",Vector3.new(stone.length*M.share,.02,stone.width*M.share),
+			CFrame.new(stone.x,stone.top+M.lift,stone.z)*CFrame.Angles(0,math.rad(stone.turn),0),M.colour)
+		plate.Transparency=1
+		if okMoss and moss then
+			local decal=Instance.new("Decal");decal.Face=Enum.NormalId.Top;decal.Texture=moss;decal.Color3=M.colour
+			decal.Transparency=M.transparency;decal.Parent=plate
+		end
+		-- Players walk on these (Spencer, beta 17); pets ignore the whole Dash model (PetFollow.ground) and the server's
+		-- pet floor reads only the lounge.
+		local centre,depth,across=Stones.collider(stone)
+		local collider=part(folder,"Collider_"..index,Vector3.new(depth,across,across),CFrame.new(centre)*CFrame.Angles(0,0,math.pi/2),Mount.Stone)
+		collider.Shape=Enum.PartType.Cylinder;collider.Transparency=1
+		collider.CanCollide=true;collider.CanQuery=true
+		collider:SetAttribute("DashPart",nil);collider:SetAttribute("StoneCollider",true)
+	end
+	for _,stone in ipairs(Stones.Company)do Builder.stone(folder,stone,carve)end
+	for _,stone in ipairs(Stones.Landings)do Builder.stone(folder,stone,carve)end
+	folder.Parent=parent
+	return folder
+end
+function Mount.buildFete(room,options)
+	local Fete=require(Shared.DashFete)
+	Mount.remove(room)
+	local model=Instance.new("Model");model.Name=Mount.ModelName
+	local start,finish=frameAt(0),frameAt(Course.Length)
+	model:SetAttribute("DashVersion",Course.Version)
+	model:SetAttribute("Start",start);model:SetAttribute("Finish",finish)
+	model:SetAttribute("Fete",true)
+	local lanes={}
+	for lane=1,Course.LaneCount do lanes[lane]=Grid.offset(0,false,lane,Course.LaneCount)/100 end
+	local pieces,ropes=Fete.start(Mount.PostOut,lanes)
+	place(model,start,pieces,ropes,"Start")
+	pieces,ropes=Fete.finish()
+	place(model,finish,pieces,ropes,"Finish")
+	pieces,ropes=Fete.pad(Course.Pad.r/100)
+	place(model,CFrame.new(Mount.gate()),pieces,ropes,"Pad")
+	Mount.buildStones(model,options)
 	model.Parent=room
 	return model
 end

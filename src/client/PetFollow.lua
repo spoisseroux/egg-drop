@@ -28,6 +28,9 @@ function Follow.ground(position, visual, fallback)
 	-- Pet Park player colliders and seats are not pet ground.
 	local park = workspace:FindFirstChild("PetPark")
 	if park then table.insert(exclude, park) end
+	-- Nor the river stones' player colliders (beta 17: the Garden Dash model; its props never collide).
+	local dash = workspace:FindFirstChild("GardenDash")
+	if dash then table.insert(exclude, dash) end
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player.Character then table.insert(exclude, player.Character) end
 	end

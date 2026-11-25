@@ -1025,6 +1025,9 @@ function Room:planGreeting(camera, root, floor)
 	-- Island edge walls (beta): invisible, so never a reason to move the greeting camera.
 	local walls = workspace:FindFirstChild("IslandBounds")
 	if walls then table.insert(exclude,walls) end
+	-- Nor the river stones' invisible colliders (beta 17, inside the Garden Dash model).
+	local dash = workspace:FindFirstChild("GardenDash")
+	if dash then table.insert(exclude,dash) end
 	local params=RaycastParams.new()
 	params.FilterDescendantsInstances,params.RespectCanCollide=exclude,true
 	local aspect=camera.ViewportSize.X/math.max(1,camera.ViewportSize.Y)
