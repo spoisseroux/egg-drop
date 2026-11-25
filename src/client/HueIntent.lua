@@ -114,7 +114,7 @@ function Intent:receive(packet)
  if packet.id~=p.value.id or packet.petId~=p.value.petId or packet.action~=p.action then return false end
  if p.savedReceipt and packet.status~="Saved"then return false end
  if packet.status=="Retrying"then self.status="Retrying";self.message="Save is pending. Retry the same change."
- elseif packet.status=="Rejected"then self.pending=nil;self.status="Rejected";self.message=messages[packet.reason]or "That change was not saved. Review your current inventory."
+ elseif packet.status=="Rejected"then self.pending=nil;self.status="Rejected";self.reason=packet.reason;self.message=messages[packet.reason]or "That change was not saved. Review your current inventory."
  elseif packet.status=="Saved"then
   local r=packet.receipt
   if type(r)~="table"or r.id~=p.value.id or r.action~=p.action or r.petId~=p.value.petId or type(r.revision)~="number"then return false end

@@ -14,6 +14,10 @@
 -- is free whenever one says it is open. A registered card frees the cursor and sinks the
 -- right button; only the screen list (options.isOpen) also takes the "modal" movement
 -- lock, so a card keeps its own key handling (and PetInspect still closes on walking away).
+-- Beta (17) R13: E on the nest's "?" card also fired the Bear's pet prompt behind it (the prompt
+-- takes E before the card's ContextAction). While a registered card is open the client's
+-- ProximityPrompts are off (options.prompts, ProximityPromptService.Enabled), and the value from
+-- before is put back on the close edge (every close path: the edge is read each frame) or destroy.
 local Cursor={}
 Cursor.__index=Cursor
 Cursor.Action="EggDropModalCursor"
@@ -50,7 +54,7 @@ end
 -- movement (MovementLock; optional): QA v2 R2.1/R2.2, the avatar cannot walk while a
 -- modal screen is open; the lock is taken as reason "modal" on the open edge.
 function Cursor.new(options)
- local self=setmetatable({isOpen=options.isOpen,input=options.input,run=options.run,actions=options.actions,movement=options.movement,open=false,free=false,connections={},refocused=0},Cursor)
+ local self=setmetatable({isOpen=options.isOpen,input=options.input,run=options.run,actions=options.actions,movement=options.movement,prompts=options.prompts,open=false,free=false,card=false,connections={},refocused=0},Cursor)
  if options.parent then
   local gui=Instance.new("ScreenGui");gui.Name="EggDropModalCursor";gui.ResetOnSpawn=false;gui.DisplayOrder=0;gui.Enabled=true
   local button=Instance.new("TextButton");button.Name="Modal";button.Text="";button.BackgroundTransparency=1;button.Size=UDim2.fromOffset(1,1)
@@ -74,6 +78,20 @@ function Cursor:setOpen(open)
  if self.open==open then return end
  self.open=open
  if self.movement then self.movement:set("modal",open)end
+end
+-- A registered card's edge: the world's prompts off while it is open, back as they were after.
+function Cursor:setCard(card)
+ card=card==true
+ if self.card==card then return end
+ self.card=card
+ local prompts=self.prompts;if not prompts then return end
+ if card then
+  self.promptsBefore=prompts.Enabled
+  prompts.Enabled=false
+ else
+  local before=self.promptsBefore;self.promptsBefore=nil
+  if before~=nil then prompts.Enabled=before end
+ end
 end
 -- A screen or a registered card: the Modal button and the sunk right button.
 function Cursor:setFree(free)
@@ -100,7 +118,9 @@ function Cursor:step()
  local ok,open=pcall(self.isOpen)
  open=ok and open==true
  self:setOpen(open)
- self:setFree(open or Cursor.cardOpen())
+ local card=Cursor.cardOpen()
+ self:setCard(card)
+ self:setFree(open or card)
  -- A lock taken before the PlayerModule loaded (the deck at boot) or controls another
  -- script re-enabled are disabled here; one cached read per frame when nothing is held.
  if self.movement then self.movement:enforce()end
@@ -123,6 +143,7 @@ function Cursor:destroy()
  for _,c in ipairs(self.connections)do c:Disconnect()end
  if self.bound then pcall(function()self.run:UnbindFromRenderStep(Cursor.Action)end)end
  if self.actions and self.free then self.actions:UnbindAction(Cursor.Action)end
+ self:setCard(false)
  if self.movement then self.movement:release("modal")end
  if self.gui then self.gui:Destroy()end
 end

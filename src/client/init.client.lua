@@ -968,12 +968,14 @@ end, function(actionName)
 end)
 
 nurseryView = NurseryView.new(safeOverlays, audio, reduceEffects, function(actionName, value, revision)
+	clientUI.lastNurseryRequestAt = os.clock() -- HatchFlow spaces its follow-up buys from this (beta 17 R13)
 	nurseryRequest:FireServer(actionName, value, revision)
 end)
 -- The item eggs' sends (hue, look, material, toy, feature): the egg corner's buy crank hears each press first
 -- (clientUI.eggPressed, set only where the corner is mounted; a retried send carries the same value.id).
 function clientUI.sendNursery(action,value,revision)
  if clientUI.eggPressed then pcall(clientUI.eggPressed,action,value)end
+ clientUI.lastNurseryRequestAt=os.clock() -- HatchFlow spaces its follow-up buys from this (beta 17 R13)
  nurseryRequest:FireServer(action,value,revision)
 end
 -- Robux store page inside the egg shop. Server-initiated prompts only.
@@ -1154,7 +1156,8 @@ roomView.care.closeMachine=function()
 end
 do
  -- QA v685 H4 / v842: direct hatch from Hatch eggs (HatchFlow, shared with the hatch spec).
- local flow=require(script.HatchFlow).new({intents=clientUI,state=function()return nurseryState end,view=clientUI.hueView,openHue=function(...)return clientUI.openHue(...)end})
+ local flow=require(script.HatchFlow).new({intents=clientUI,state=function()return nurseryState end,view=clientUI.hueView,openHue=function(...)return clientUI.openHue(...)end,
+  lastRequest=function()return clientUI.lastNurseryRequestAt end})
  clientUI.hatchFlow=flow
  local function open(kind,purchase)flow:open(kind,purchase)end
  nurseryView.onOpenHue=function(purchase)open("hue",purchase)end
@@ -4614,7 +4617,8 @@ end
 -- HatchCinematic and the Meet screen live in nurseryView.shade, so they count too. The
 -- deck ("deck") and pet focus ("focus") hold it from RoomView.
 clientUI.movementLock=require(script.MovementLock).shared()
-clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui"),movement=clientUI.movementLock})
+clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui"),movement=clientUI.movementLock,
+ prompts=game:GetService("ProximityPromptService")}) -- not the top-level local: init.client is at the 200-register limit
 gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
 -- Beta 14 W4 world feel (WorldFeelClient): the zoom cap and the walk speed test; nil with the build ceiling off, and
 -- with both switches off it writes nothing.

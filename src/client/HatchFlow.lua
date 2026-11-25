@@ -19,9 +19,35 @@ Flow.Kinds=table.freeze({
 })
 
 -- d: {intents = {hueIntent=..., toyIntent=..., ...}, state = function() -> snapshot,
---  view = HueEggView, openHue = function(page, petId, back) -> bool}
+--  view = HueEggView, openHue = function(page, petId, back) -> bool,
+--  lastRequest = function() -> os.clock() of the last nursery request sent (optional),
+--  clock = function() -> seconds (default os.clock), after = function(seconds, fn) (default task.delay)}
 function Flow.new(d)
  return setmetatable({d=d,direct=nil,queued=nil},Flow)
+end
+-- Beta (17) R13: the server takes one hatch-family request per 0.3 s per player (init.server
+-- lastHatchRequest: buys, stores, acks, equips). Hatch another sent its buy the moment the store
+-- landed (~20 ms after the store request), so it was refused "Throttled" and nothing happened.
+-- The automatic follow-up (Hatch another, a queued egg) now waits until Spacing after the last
+-- request, and a buy refused "Throttled" is sent again once, Spacing later.
+Flow.Spacing=.35
+function Flow:clock()return if self.d.clock then self.d.clock()else os.clock()end
+function Flow:after(seconds,fn)if self.d.after then self.d.after(seconds,fn)else task.delay(seconds,fn)end end
+-- Seconds until a request may go (0 = now).
+function Flow:wait()
+ local last=self.d.lastRequest and self.d.lastRequest()
+ if type(last)~="number"then return 0 end
+ return math.max(0,Flow.Spacing-(self:clock()-last))
+end
+-- Too soon: sync again when the gap has passed (one timer at a time). True when it had to wait.
+function Flow:hold()
+ local wait=self:wait()
+ if wait<=0 then return false end
+ if not self.holding then
+  self.holding=true
+  self:after(wait+.01,function()self.holding=false;self:sync()end)
+ end
+ return true
 end
 function Flow:intent(kind)return self.d.intents[Flow.Kinds[kind].intent]end
 -- The server keeps one unopened result at a time (HatchGuard), so hatching another egg first
@@ -36,9 +62,11 @@ function Flow.otherPending(kind,state)
  end
  return nil
 end
--- Hatch (purchase=true) or open (false) the egg `kind` from Hatch eggs.
-function Flow:open(kind,purchase)
+-- Hatch (purchase=true) or open (false) the egg `kind` from Hatch eggs. `retry`: the one
+-- re-send after a Throttled refusal (any other open starts a fresh request that may retry once).
+function Flow:open(kind,purchase,retry)
  local k=Flow.Kinds[kind];if not k then return false end
+ if purchase then self.retried=retry==true;self.retryKind=nil end
  -- One request at a time: a Hatch another waiting on its store takes no second purchase.
  if purchase and self.againKind then return false end
  local intent=self:intent(kind);local state=self.d.state()
@@ -70,10 +98,10 @@ end
 -- card keeps its shell up until then). A store that never answers gives up after the timeout.
 function Flow:againPending()
  if self.againKind and os.clock()-(self.againAt or 0)>Flow.AgainTimeout then self.againKind=nil end
- if self.againDirect and self.direct~=self.againDirect then self.againDirect=nil end
+ if self.againDirect and self.direct~=self.againDirect and self.retryKind~=self.againDirect then self.againDirect=nil end
  return self.againKind~=nil or self.againDirect~=nil
 end
-function Flow:cancelAgain()self.againKind=nil;self.againDirect=nil end
+function Flow:cancelAgain()self.againKind=nil;self.againDirect=nil;self.retryKind=nil end
 function Flow:syncAgain(state)
  local kind=self.againKind;if not kind then return false end
  local k=Flow.Kinds[kind];local intent=self:intent(kind)
@@ -83,6 +111,8 @@ function Flow:syncAgain(state)
   return false
  end
  if intent and(intent.pending or(intent.state and intent.state[k.pending]))then return false end
+ -- The store just went: the buy waits out the server's request spacing.
+ if self:hold()then return false end
  self.againKind=nil
  local opened=self:open(kind,true)
  if opened and self.direct==kind then self.againDirect=kind end
@@ -102,7 +132,10 @@ function Flow:sync()
   -- land too, or its buy is refused ("Store or use your saved egg first").
   local target=self:intent(queued)
   if not other and target and target.state and Flow.otherPending(queued,target.state)then return false end
-  if not other then self.queued=nil;return self:open(queued,true)end
+  if not other then
+   if self:hold()then return false end
+   self.queued=nil;return self:open(queued,true)
+  end
   -- The store was refused: stop, the saved result stays where it is (a store that landed
   -- before its snapshot just waits for the snapshot).
   local holder=self:intent(other)
@@ -116,6 +149,13 @@ function Flow:sync()
   self.direct=nil;self.d.view.directHatch=kind
   if not self.d.openHue(k.page or "buy",nil,"eggs")then self.d.view.directHatch=nil;return false end
   return true
+ elseif intent and not intent.pending and intent.status=="Rejected"and intent.reason=="Throttled"and not self.retried then
+  -- Refused only for coming too soon: send it again once, after the spacing.
+  self.direct=nil;self.retried=true;self.retryKind=kind
+  self:after(math.max(self:wait(),Flow.Spacing),function()
+   if self.retryKind~=kind then return end
+   self:open(kind,true,true)
+  end)
  elseif intent and(intent.status=="Retrying"or not intent.pending)then
   self.direct=nil;if k.page then self.d.openHue(k.page,nil,"eggs")end
  end
