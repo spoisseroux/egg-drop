@@ -2,8 +2,11 @@
 -- execute_luau on the SERVER in Play mode (Clients and Servers, 1 to 3 players, each with a pet out), beta place or
 -- Studio, tier open (/tier on), /tierpets and /catchup not off. It walks every player's character up and down the cliff
 -- path with Humanoid:MoveTo along CliffDenData's centre line (real walking, real collision), samples each pet from the
--- garden snapshot every frame and prints PASS / FAIL per climb and per check, then the numbers. It changes no save; it
--- flips /tier and /den off and back on (overrides on this server; /tier clear, /den clear after) for probe 5.
+-- garden snapshot every frame and prints PASS / FAIL per climb and per check, then the numbers. It changes no save.
+-- execute_luau has its own module cache (studio-r1/PROBES.md): this probe reads only instance state (the workspace switch
+-- attributes, the garden snapshot, characters) and uses the shared modules for pure geometry only. Probe 5 closes the
+-- tier and the den the way the server's own modules see it: it writes the workspace attributes Tier_on / Den_on to
+-- false (Tier.on and Den.on need the attribute), waits, and writes them back to what they were.
 --   probe 4  every pet point on the path: within .8 of the tread under it (a ray, so the drawn collision is measured),
 --            in the middle 3 studs (+.15), never past the lip (half width - .5); the pet on the terrace within 6 s of
 --            its owner; no stall over 2 s while more than 10 route studs behind; catch-up hops counted (allowed, never
@@ -16,7 +19,6 @@ local Players=game:GetService("Players")
 local HttpService=game:GetService("HttpService")
 local RunService=game:GetService("RunService")
 local RS=game:GetService("ReplicatedStorage")
-local SSS=game:GetService("ServerScriptService")
 local Shared=RS:WaitForChild("Shared")
 local Tier=require(Shared.Tier)
 local Pets=require(Shared.TierPets)
@@ -32,8 +34,11 @@ local room=workspace:FindFirstChild("EggDropLounge")
 local params=RaycastParams.new();params.RespectCanCollide=true
 params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
 
-if workspace:GetAttribute(Tier.Attribute)~=true then say("FAIL the tier is closed (Tier_on): /tier on first");return table.concat(out,"\n")end
-if not Pets.on()then say("FAIL the pets' switch is off (TierPets_on): /tierpets on");return table.concat(out,"\n")end
+-- The gate from instance state (never this probe's copy of the modules).
+for _,name in ipairs({Tier.Attribute,Pets.Attribute,"Catchup_on"})do
+	if workspace:GetAttribute(name)~=true then say("FAIL "..name.." is not true: /tier on, /tierpets on, /catchup on first");return table.concat(out,"\n")end
+end
+if not(room and room:FindFirstChild(Tier.Model))then say("FAIL the terrace is not built (EggDropLounge."..Tier.Model..")");return table.concat(out,"\n")end
 
 local function actorOf(player)
 	local ok,data=pcall(function()return HttpService:JSONDecode(folder:GetAttribute("Snapshot"))end)
@@ -153,15 +158,14 @@ end
 
 -- Probe 5 -------------------------------------------------------------------------------------------------------
 if PROBE5 then
-	local TierConfig=require(SSS.Server.TierConfig)
-	local DenConfig=require(SSS.Server.DenConfig)
 	local player=players[1]
+	local function setSwitch(attribute,value)workspace:SetAttribute(attribute,value)end
 	local den=DenLayout.current()
 	local spots={
-		{"turn",Pets.pointAt(Pets.turnU(P),0,P),"/tier"},
-		{"flight",P.points[#P.points-3],"/tier"},
-		{"bench",Tier.T(0,-6,Tier.FloorY),"/tier"},
-		{"den",den and Vector3.new((den.room.min.X+den.room.max.X)/2,den.floorY,den.room.min.Z+5)or nil,"/den"},
+		{"turn",Pets.pointAt(Pets.turnU(P),0,P),Tier.Attribute},
+		{"flight",P.points[#P.points-3],Tier.Attribute},
+		{"bench",Tier.T(0,-6,Tier.FloorY),Tier.Attribute},
+		{"den",den and Vector3.new((den.room.min.X+den.room.max.X)/2,den.floorY,den.room.min.Z+5)or nil,"Den_on"},
 	}
 	for _,s in ipairs(spots)do
 		local name,at,command=s[1],s[2],s[3]
@@ -171,16 +175,17 @@ if PROBE5 then
 		task.wait(6) -- the pet follows (or hops) up
 		local pet=petOf(player)
 		local petUp=pet and(if name=="den"then DenLayout.inRoom(den,pet,0)else Pets.zone(pet)~="lawn")
-		if command=="/tier"then TierConfig.command("/tier off")else DenConfig.command("/den off")end
+		local was=workspace:GetAttribute(command)
+		setSwitch(command,false)
 		task.wait(1.5)
 		pet=petOf(player);root=rootOf(player)
 		local ownerDown=root and Pets.zone(root.Position-Vector3.new(0,3,0))=="lawn"and not(den and DenLayout.inRoom(den,root.Position-Vector3.new(0,3,0),0))
 		local petDown=pet and Pets.zone(pet)=="lawn"and not(den and DenLayout.inRoom(den,pet,0))
 		say(string.format("%s probe 5 %s: pet was up %s; owner moved %s, pet moved %s",
 			if petUp and ownerDown and petDown then "PASS"else "FAIL",name,tostring(petUp),tostring(ownerDown),tostring(petDown)))
-		-- Back on (an override on this server; "/tier clear" and "/den clear" hand it back to the config afterwards).
-		if command=="/tier"then TierConfig.command("/tier on")else DenConfig.command("/den on")end
+		setSwitch(command,was)
 		task.wait(2)
+		if command==Tier.Attribute and not room:FindFirstChild(Tier.Model)then say("FAIL the terrace did not come back ("..command..")")end
 	end
 end
 return table.concat(out,"\n")

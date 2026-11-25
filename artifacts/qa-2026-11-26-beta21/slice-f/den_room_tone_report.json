@@ -1,0 +1,9 @@
+{
+  "seconds": 24.0,
+  "sample_rate": 44100,
+  "peak_dbfs": -10.64,
+  "rms_dbfs": -24.0,
+  "seam_step": 0.00095,
+  "largest_step": 0.03088,
+  "sha256": "74cf4ee2e087dfd13ba14854e6d14621d7c05e1c938c948d0cd294b7c572bdd4"
+}

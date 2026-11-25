@@ -450,7 +450,7 @@ src/client/MaterialPanel.lua,76, · Use for ,fragment (sentence built from parts
 src/client/MaterialPanel.lua,76,this pet,,
 src/client/MaterialPanel.lua,82,All materials owned,,
 src/client/MaterialPanel.lua,82,Material Egg · 16 Stars,,
-src/client/ParkClient.lua,416,park-progress,,
+src/client/ParkClient.lua,418,park-progress,,
 src/client/ParkThrowControl.lua,29,fetch-result,,
 src/client/ParkThrowControl.lua,111,fetch-timeout,,
 src/client/PetAffection.lua,55,1 Star saved,,

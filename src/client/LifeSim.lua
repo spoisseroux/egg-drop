@@ -629,7 +629,9 @@ function Sim.fireflySpot(random,world,spots,used)
 	if typeof(camera)~="Vector3"then return nil end
 	used=used or {}
 	local pool={}
-	for _,list in ipairs({spots and spots.patches or {},spots and spots.banks or {}})do
+	-- spots.terrace (WORLD-FINISH-LOOK slice F): the terrace's hover points, only set at budget level 0 with the hill's
+	-- gate open; nil adds nothing (the same pool and the same draws as before).
+	for _,list in ipairs({spots and spots.patches or {},spots and spots.banks or {},spots and spots.terrace or {}})do
 		for _,spot in ipairs(list)do
 			if typeof(spot)=="Vector3"and not used[spot]and(spot-camera).Magnitude<=F.reach and Sim.clear(spot,world)then table.insert(pool,spot)end
 		end

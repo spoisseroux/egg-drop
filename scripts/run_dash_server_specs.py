@@ -53,7 +53,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Pets go up and the Top Lawn (WORLD-FINISH-LOOK slices A and B).
          "TierPets",
          # The world finish art (WORLD-FINISH-ART-BUILD.md): the mount and its data.
-         "WorldFinish"]
+         "WorldFinish",
+         # The hill's sound zones and night (WORLD-FINISH-LOOK slice F).
+         "HillNight"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -72,7 +74,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "PetEyeGlance",
           # Live growth cuts G1 + G2, ported to the beta (PORT-TO-BETA.md): the strip, the nudge, the coach rules, the
           # trail, pill and calm deck rules.
-          "TomorrowChips", "ResultsNudge", "GrowthCoach", "GrowthG2", "GrowthPort"]
+          "TomorrowChips", "ResultsNudge", "GrowthCoach", "GrowthG2", "GrowthPort",
+          # The hill at night (WORLD-FINISH-LOOK slice F): the lanterns, the glow-caps, the terrace fireflies.
+          "HillNightClient"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -121,7 +125,9 @@ def client_modules():
                     # Beta (19): the curious glance.
                     "PetEyeGlance.lua",
                     # Live growth cuts G1 + G2 (ported): the strip, the nudge, the round-two pill, the trail, the calm deck.
-                    "TomorrowChips.lua", "ResultsNudge.lua", "GrowthNudge.lua", "PetTrail.lua", "DeckCalm.lua", "PetLookAt.lua"):
+                    "TomorrowChips.lua", "ResultsNudge.lua", "GrowthNudge.lua", "PetTrail.lua", "DeckCalm.lua", "PetLookAt.lua",
+                    # The hill at night (WORLD-FINISH-LOOK slice F).
+                    "HillNightClient.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

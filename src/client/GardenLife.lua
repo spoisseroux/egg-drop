@@ -522,6 +522,27 @@ function Life:places()
 	end
 	-- Beta 14 B2: the night fireflies hover over the flower patches and the water's banks (WorldV7Data.wet).
 	self.fireflySpots={patches=self.patches,banks=d.banks or Life.banks(Shared)}
+	-- WORLD-FINISH-LOOK slice F: fireflies may use the terrace at night at budget level 0 only (HillNight's spots), while
+	-- the `scene` switch is on, the island's sculpt is in and the tier is open. d.hill (specs): fn() -> bool; d.terrace:
+	-- the spots. Live: the `scene` ceiling is closed, so `terrace` is never set and the pool is today's.
+	-- The ceiling is read once here (code review: live never pays a per-step check); the switches at most once a second.
+	if d.hill then self.hillOn=d.hill
+	else
+		local Alive=require(Shared:WaitForChild("Alive"))
+		if Alive.ceiling("scene")then
+			local Tier=require(Shared:WaitForChild("Tier"))
+			local at,answer=-math.huge,false
+			self.hillOn=function()
+				local now=os.clock()
+				if now-at>=1 then
+					at=now
+					answer=Alive.on("scene")==true and workspace:GetAttribute("CliffDen")==true and Tier.on()==true
+				end
+				return answer
+			end
+		end
+	end
+	self.terraceFireflies=d.terrace
 	-- Beta 14 W3 (LifeScene): the ground under every kit crown (dapple), the water boxes (dragonflies), the garden hour's
 	-- clock and daylight (lamps, the star), the scene's textures.
 	self.sceneData=d.scene or Life.sceneData(Shared,groundY)
@@ -1050,6 +1071,13 @@ end
 -- read every Poll). Positions written at Sim.Firefly.hz, the glow's transparency only on change.
 function Life:stepFireflies(now,tick,world,level,reduced,put,hide)
 	local cap=Sim.cap("fireflies",level)
+	-- Slice F: the terrace's hover points join the pool at level 0 with the hill's gate open (nil otherwise: today's).
+	local terrace=nil
+	if level==0 and self.hillOn and self.hillOn()==true then
+		if not self.terraceFireflies then self.terraceFireflies=require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("HillNight")).terraceSpots()end
+		terrace=self.terraceFireflies
+	end
+	self.fireflySpots.terrace=terrace
 	for _,at in ipairs(self.flies.handed)do self.fireflies:adopt(now,at,cap)end
 	table.clear(self.flies.handed)
 	self.fireIn-=tick

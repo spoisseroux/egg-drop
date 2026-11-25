@@ -48,6 +48,14 @@ Ambient.WindBed = table.freeze({ floor = .012, gain = .07, up = .12, down = .05,
 -- its WetLevel eased from Off to Wet over Ease seconds while the camera is inside the Play Den (DenLayout).
 Ambient.Echo = table.freeze({ decay = 1.6, density = .8, diffusion = .8, dry = 0, wet = -14, off = -60, ease = .6, sample = .25,
 	groups = { "EggDropAmbience", "EggDropAmbientCues", "EggDropSFX" } })
+-- The hill's sound zones (WORLD-FINISH-LOOK section 5, slice F; HillNight holds the numbers): by the camera, eased over
+-- .6 s, the water (bed and falls), the birds and the wind bed scaled, the world music held to 50% in the den by its own
+-- duck (ZoneDuck, written straight into BoardAudio's ducks as the race song's is, never timed, gone at full), and the
+-- den's room tone (RoomToneId: 0 until the coordinator uploads assets/audio/custom/egg_drop_den_room_tone.wav, silent
+-- until then). The `scene` switch and the island's sculpt gate it (live: the ceiling is closed, nothing runs).
+Ambient.ZoneDuck = "hillZone"
+Ambient.RoomToneId = 0
+Ambient.RoomToneVolume = .08
 function Ambient.windBedVolume(blow)
 	if type(blow) ~= "number" or blow ~= blow then blow = 0 end
 	blow = math.clamp(blow, 0, 1)
@@ -508,6 +516,26 @@ function Ambient.new(audio, options)
 	self.bedRandom = Random.new((options.seed or 1) + 23)
 	if options.windBed ~= nil then self.windBedOf = options.windBed or nil end
 	if options.echo ~= nil then self.echoOf = options.echo or nil end
+	-- Slice F: the hill's sound zones. options.zones (specs): {on(), camera(), zone(point) -> zone, h} or false. By
+	-- default only for the game's own instance (auto), so fixtures never read the real camera.
+	if options.zones ~= nil then
+		self.zonesOf = options.zones or nil
+	elseif options.auto ~= false then
+		task.spawn(function()
+			local Alive = require(Shared:WaitForChild("Alive"))
+			if not Alive.ceiling("scene") then return end
+			local Night = require(Shared:WaitForChild("HillNight"))
+			local Layout = require(Shared:WaitForChild("DenLayout"))
+			self.zonesOf = {
+				on = function() return Alive.on("scene") == true and workspace:GetAttribute("CliffDen") == true end,
+				camera = function()
+					local current = workspace.CurrentCamera
+					return current and current.CFrame.Position
+				end,
+				zone = function(point) return Night.zone(point, Layout.current(), nil, Layout) end,
+			}
+		end)
+	end
 	if options.windBed == nil or options.echo == nil then
 		task.spawn(function()
 			local Alive = require(Shared:WaitForChild("Alive"))
@@ -781,8 +809,8 @@ function Ambient:master()
 	if not audio then return 1, true, 1, true end
 	local duck = 1
 	for name, gain in pairs(audio.ducks or {}) do
-		-- The deck round's and the race song's ducks hold out the world music only, never these groups.
-		if name ~= Ambient.DeckDuck and name ~= Ambient.RaceDuck then duck = math.min(duck, gain) end
+		-- The deck round's, the race song's and the hill zones' ducks hold the world music only, never these groups.
+		if name ~= Ambient.DeckDuck and name ~= Ambient.RaceDuck and name ~= Ambient.ZoneDuck then duck = math.min(duck, gain) end
 	end
 	local music = if audio.isMusicEnabled then audio:isMusicEnabled() else true
 	return audio.master or 0, audio.deviceActive ~= false, duck, music
@@ -808,6 +836,16 @@ function Ambient:step(dt)
 	self.ambience.Volume = master * device * self.level * duck * self.mix
 	self.deckGroup.Volume = master * device * duck
 	local listener = self:listener()
+	if self.zonesOf then
+		local ok, problem = pcall(self.stepZones, self, dt)
+		if not ok then
+			self.warn("[Ambient] hill zones: " .. tostring(problem))
+			self.zonesOf = nil
+			pcall(self.dropZones, self)
+		end
+	end
+	local zone = self.zoneGains
+	local water = if zone then zone.water else 1
 	-- Bed: 4 Hz distance sample, eased.
 	self.bedClock += dt
 	if self.bedClock >= Ambient.BedSample and listener then
@@ -818,9 +856,9 @@ function Ambient:step(dt)
 	self.bed += (self.bedTarget - self.bed) * math.min(1, dt / (if self.quietOn then Ambient.Quiet.bed.ease else Ambient.BedEase))
 	local audible = self.ambience.Volume > 0
 	if audible then
-		self.bedVoice.Volume = self.bed
+		self.bedVoice.Volume = self.bed * water
 		-- LOOK-R4 Q4: the quiet bed is silent away from the stream: stop it there instead of playing silence.
-		if self.bed > .002 then
+		if self.bed * water > .002 then
 			self.bedSilent = 0
 			startLoop(self.bedVoice, 0)
 		else
@@ -828,7 +866,7 @@ function Ambient:step(dt)
 			if self.bedSilent >= Ambient.Quiet.bed.pause and self.bedVoice.IsPlaying then self.bedVoice:Stop() end
 		end
 		for _, fall in ipairs(self.falls) do
-			fall.voice.Volume = fall.spec.volume
+			fall.voice.Volume = fall.spec.volume * water
 			startLoop(fall.voice, fall.spec.offset)
 		end
 	else
@@ -1035,7 +1073,7 @@ function Ambient:stepWindBed(dt)
 	local blow = bed.blow()
 	if type(blow) ~= "number" or blow ~= blow then blow = 0 end
 	self.windBedLevel = Ambient.windBedSlew(self.windBedLevel or 0, Ambient.windBedVolume(blow), dt)
-	voice.Volume = self.windBedLevel
+	voice.Volume = self.windBedLevel * (if self.zoneGains then self.zoneGains.wind else 1)
 	voice.PlaybackSpeed = Ambient.windBedSpeed(blow)
 	if not voice.IsPlaying and voice.IsLoaded then
 		local length = tonumber(voice.TimeLength) or 0
@@ -1089,6 +1127,81 @@ function Ambient:stepEcho(dt)
 		if math.abs(reverb.WetLevel - self.echoWet) > .05 then reverb.WetLevel = self.echoWet end
 	end
 end
+-- The hill's sound zones (slice F): the camera sampled every HillNight.Sample s, the dB mix eased toward its place's.
+-- At home with the gate off and everything back at 0 dB the zones drop out entirely (no duck, no room tone, gains nil).
+function Ambient:stepZones(dt)
+	local Night = self.night_ or require(game:GetService("ReplicatedStorage").Shared.HillNight)
+	self.night_ = Night
+	local zones = self.zonesOf
+	-- The gate and the camera at the sample rate only (code review: nothing per frame once settled or dropped).
+	self.zoneClock = (self.zoneClock or Night.Sample) + dt
+	local sample = self.zoneClock >= Night.Sample or self.zoneOn == nil
+	if sample then
+		self.zoneClock = 0
+		self.zoneOn = zones.on() == true
+	end
+	local on = self.zoneOn
+	if not on and self.zoneDb == nil then return end
+	local goal = self.zoneGoal
+	if sample or not goal then
+		local place, h = "home", 0
+		if on then
+			local at = zones.camera and zones.camera()
+			if typeof(at) == "Vector3" then place, h = zones.zone(at) end
+			if type(h) ~= "number" or h ~= h then h = 0 end
+		end
+		-- For Studio probes (their own module cache): the place on this client's ambience folder, written on change.
+		if place ~= self.zone and self.folder then self.folder:SetAttribute("HillZone", place) end
+		self.zone = place
+		goal = Night.mix(place or "home", h)
+	end
+	-- A new goal: the blend starts again from where the mix is now, Ease seconds the whole way.
+	local fresh = not self.zoneGoal or not Night.same(goal, self.zoneGoal)
+	if fresh then
+		self.zoneGoal, self.zoneFrom, self.zoneT = goal, self.zoneDb or Night.mix("home", 0), 0
+	elseif (self.zoneT or 0) >= Night.Ease and self.zoneGains then
+		return -- settled on its goal: the gains, the duck and the room tone stand as they are
+	end
+	self.zoneT = (self.zoneT or 0) + dt
+	self.zoneDb = Night.ease(self.zoneFrom, self.zoneGoal, self.zoneT)
+	if not on and Night.same(self.zoneDb, Night.Mix.home) then
+		self:dropZones()
+		return
+	end
+	local gains = Night.gains(self.zoneDb)
+	self.zoneGains = gains
+	-- The world music: BoardAudio's own duck, written straight in (never timed), refreshed only on a real change.
+	local audio = self.audio
+	if audio and audio.ducks then
+		local want = if gains.music < .995 then gains.music else nil
+		local have = audio.ducks[Ambient.ZoneDuck]
+		if (want == nil) ~= (have == nil) or (want and have and math.abs(want - have) > .005) then
+			audio.ducks[Ambient.ZoneDuck] = want
+			if audio.refreshLoops then audio:refreshLoops() end
+		end
+	end
+	-- The den's room tone: a voice only with an id, playing only while it is heard.
+	if Ambient.RoomToneId and Ambient.RoomToneId ~= 0 and gains.room > 0 and not self.round then
+		if not self.roomVoice then
+			self.roomVoice = sound("den_room_tone", Ambient.RoomToneId, self.ambience, SoundService, true)
+		end
+		self.roomVoice.Volume = Ambient.RoomToneVolume * gains.room
+		if not self.roomVoice.IsPlaying and self.roomVoice.IsLoaded then self.roomVoice:Play() end
+	elseif self.roomVoice and self.roomVoice.IsPlaying then
+		self.roomVoice:Stop()
+		self.roomVoice.Volume = 0
+	end
+end
+function Ambient:dropZones()
+	self.zoneGains, self.zoneDb, self.zoneGoal, self.zone, self.zoneFrom, self.zoneT = nil, nil, nil, nil, nil, nil
+	if self.folder and self.folder:GetAttribute("HillZone") ~= nil then self.folder:SetAttribute("HillZone", nil) end
+	local audio = self.audio
+	if audio and audio.ducks and audio.ducks[Ambient.ZoneDuck] ~= nil then
+		audio.ducks[Ambient.ZoneDuck] = nil
+		if audio.refreshLoops then audio:refreshLoops() end
+	end
+	if self.roomVoice then self.roomVoice:Stop(); self.roomVoice.Volume = 0 end
+end
 function Ambient:dropEcho()
 	for _, reverb in ipairs(self.echoEffects or {}) do reverb:Destroy() end
 	self.echoEffects = nil
@@ -1106,7 +1219,7 @@ function Ambient:chirp(event)
 	free.part.Position = event.position
 	free.voice.SoundId = "rbxassetid://" .. id
 	free.voice.PlaybackSpeed = event.pitch or 1
-	free.voice.Volume = event.volume or .5
+	free.voice.Volume = (event.volume or .5) * (if self.zoneGains then self.zoneGains.birds else 1)
 	free.voice.TimePosition = 0
 	free.voice:Play()
 	return true
@@ -1163,6 +1276,8 @@ function Ambient:destroy()
 	if self.rustleVoice then self.rustleVoice:Destroy() end
 	if self.windBedVoice then self.windBedVoice:Destroy() end
 	self:dropEcho()
+	self:dropZones()
+	if self.roomVoice then self.roomVoice:Destroy(); self.roomVoice = nil end
 	if self.cricketBed then self.cricketBed:Destroy(); self.cricketLayer:Destroy() end
 	self.folder:Destroy()
 	self.group:Destroy(); self.ambience:Destroy(); self.deckGroup:Destroy()

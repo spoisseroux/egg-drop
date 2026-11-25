@@ -5330,6 +5330,13 @@ do
  if ok and clientUI.life then gui.Destroying:Connect(function()clientUI.life:destroy()end)
  elseif not ok then warn("[Life] not mounted: "..tostring(problem))end
 end
+-- The hill at night (WORLD-FINISH-LOOK slice F, HillNightClient): the den's lanterns' night lift and the glow-caps. nil
+-- (nothing made) where the `scene` ceiling is closed (live).
+do
+ local ok,hill=pcall(function()return require(script.HillNightClient).mount()end)
+ if ok and hill then gui.Destroying:Connect(function()hill:destroy()end)
+ elseif not ok then warn("[HillNight] not mounted: "..tostring(hill))end
+end
 -- Things to do (Shared.Things): nothing at all with the build ceiling off; with the switch off only the switches are
 -- watched. clientUI.things is what the Pocket menu's page (MachineHub), the coach's last line (ThingsTips) and the trail
 -- (ThingsTrail) ask.
