@@ -48,6 +48,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
+| 11 | **Beta (17) QA fixes U2, U4, U6, U8** | Built offline, not on the beta | PC: open the napping egg "?" card with Shift Lock on and click Got it (Esc and E work too); Hatch eggs at a small and a big window, the glow and shadow sit under the egg; hatch a toy, its shadow is under it; dock your pet, walk up the cliff above the den, the pet lands on the lawn and no put-down arrow shows |
 
 ## Scoped, not built
 
