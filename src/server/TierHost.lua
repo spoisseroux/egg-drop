@@ -134,7 +134,12 @@ function Host:openUp(room)
 	-- Code review: the model and the footprints are held before they are parented, so a throw part-way leaves nothing
 	-- orphaned (the next step reuses them, or close() destroys them).
 	self.builtIn=room
-	if not self.model then self.model=GreyboxRows.build(self.rows,Tier.Model)end
+	if not self.model then
+		self.model=GreyboxRows.build(self.rows,Tier.Model)
+		-- The world finish art's terrace dress, only when its terrace slice is in this room's World (WorldFinishMount).
+		local ok,problem=pcall(function()require(script.Parent.WorldFinishMount).dressTier(self.model,room)end)
+		if not ok then warn("[WorldFinish] terrace dress: "..tostring(problem))end
+	end
 	self.model.Parent=room
 	local regions=room:FindFirstChild("PetRegions")or room
 	if not self.blocked then
