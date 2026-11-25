@@ -67,8 +67,8 @@ function Art.meshes(room)
 	local world=template:Clone()
 	world.Name="World"
 	-- The beta's cliff path / Play Den / terrace top (CliffDenSwap): swapped in the clone at start, never at runtime.
-	local carved=CliffDen.apply(world)
-	Art.carved=carved -- Art.collision moves the cave blocker to the den's mouth
+	local carved,mode=CliffDen.apply(world)
+	Art.carved=if mode=="den"then carved else nil -- Art.collision moves the cave blocker to the den's mouth
 	local count,tris=0,0
 	for _,part in ipairs(world:GetChildren())do
 		if not part:IsA("BasePart")then continue end
@@ -99,6 +99,7 @@ function Art.meshes(room)
 	world:SetAttribute("MeshParts",count)
 	world:SetAttribute("Triangles",Data.triangles)
 	world.Parent=room
+	CliffDen.bars(world,carved) -- the cave's bars hide while the Play Den is open (either layer)
 	return world
 end
 

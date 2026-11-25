@@ -319,6 +319,14 @@ of the east jamb and one at (-9, -94) past the floor's edge (a rock shoulder and
 Note for the code side: `DenLayout.fromData`'s room floor box (room inset 1) reaches the rounded back corners: its corner
 safe cells sit .05 inside the wall's arc (radius 5). `CliffDenData.safe` keeps 1 off the walls.
 
+**The cave's bars (Studio R12: open, the den read as a cage):** on the beta the gold bars and their teal plate
+(`Landmarks__gold`, `Landmarks__teal`) leave the palette for their own part, `W7_CD_CaveBars__palette` (244 triangles,
+never collides, never carved: they fit the new mouth under the trim). The world hides them (Transparency 1) while
+workspace `Den_open` is true and shows them again when it clears (`CliffDenSwap.bars`, from `LoungeWorldV7Art.meshes`).
+Two layers in one pack, picked by `FeatureFlags.CliffDen`: true swaps the sculpt (`CliffDenData.swap`, 21 pairs,
+DenLayout's room); false swaps only `CliffDenData.pocket` (the palette for `W7_CD_Pocket__palette`, the live palette
+less the bars, 264 + 244 = 508 triangles, and the bars: DenLayout's pocket). No pack: the live island, bars and all.
+
 **Left:** Studio (ask first): upload `world-v7-beta.fbx` and `world-v7-beta-collision.fbx`, readback, build the native
 `WorldBeta` pack (WorldBeta.WorldV7 with every `show` part, precise collision, `Version` attribute = `CliffDenData.version`),
 mount it in `default.project.json`, probes (rays, blockcasts, walk the path and the den, the phone camera at the back

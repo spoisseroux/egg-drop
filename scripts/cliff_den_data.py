@@ -16,6 +16,8 @@ The module (world studs, as WorldV7Data):
                                           clone); show = nil: a new part, hide = nil: none
   parts[name] = {region, collide, center, size[, motion]}   every shown part (carved copies keep their live entry's
                                           region and motion: the crystals pulse)
+  pocket = {{hide, show}, ...}            step A's layer (FeatureFlags.CliffDen false): the bars split out only
+  bars                                    the bars' part (both layers): hidden while workspace Den_open is true
   schema                                  this module's shape (1: DenLayout.fromData, PLAY-DEN-BUILD-PLAN section 10)
   den, path, terrace, evacuate            anchors (cliff_den_sculpt.anchors); den.mouth.blocker = the CaveBlocker
   safe = {rows = {{z, x0, x1}}}           one-stud safe cells: the den floor, the mouth, the apron to z -89
@@ -35,6 +37,8 @@ ROOT = Path(__file__).resolve().parents[1]
 WORLD = ROOT / "assets" / "world"
 OUT = ROOT / "src" / "shared" / "CliffDenData.lua"
 SCHEMA = 1        # the shape of this module (the code checks it); separate from the live-world stamp
+POCKET = "W7_CD_Pocket__palette"   # step A's palette: the live one less the bars (uncarved)
+BARS = "W7_CD_CaveBars__palette"   # the old cave's bars, hidden while the Play Den is open (both layers)
 
 
 def sha_text(path: Path) -> str:
@@ -107,6 +111,9 @@ def build():
     live = live_data()
     swap, parts = [], {}
     for e in manifest["parts"]:
+        if e["name"] == POCKET:
+            parts[e["name"]] = {"region": "Landmarks", "collide": False, "center": e["center"], "size": e["size"]}
+            continue                      # step A's layer only
         if e["replaces"] is not None:
             was = live["parts"][e["replaces"]]
             entry = {"region": was["region"], "collide": was["collide"]}
@@ -143,6 +150,15 @@ def build():
         for i in range(ls["nx"]):
             if ls["rows"][j][i] != bs["rows"][j][i] or abs(ls["h"][j][i] - bs["h"][j][i]) > .02:
                 surface.append([i, j, bs["rows"][j][i], bs["h"][j][i]])
+    # Step A's layer (FeatureFlags.CliffDen false): only the bars split out, with its own palette copy (the carve also
+    # takes palette faces in the den, the path and the terrace): its triangles are the live palette's less the bars'.
+    bars = next(e for e in manifest["parts"] if e["name"] == BARS)
+    pal = next(e for e in manifest["parts"] if e["name"] == POCKET)
+    live_pal = next(e for e in json.loads((WORLD / "world-v7-manifest.json").read_text())["parts"]
+                    if e["name"] == "W7_Landmarks__palette")
+    assert pal["tris"] + bars["tris"] == live_pal["tris"], ("step A's palette is not the live one less the bars",
+                                                           pal["tris"], bars["tris"], live_pal["tris"])
+    pocket = [{"hide": "W7_Landmarks__palette", "show": POCKET}, {"hide": None, "show": BARS}]
     m = anchors["den"]["mouth"]
     bad = []
     for z in range(int(m["z"]) + 1, -89):
@@ -159,6 +175,8 @@ def build():
         "live": {"worldV7Data": sha_text(ROOT / "src" / "shared" / "WorldV7Data.lua"),
                  "walk": sha_text(WORLD / "world-v7-walk.json")},
         "swap": swap,
+        "pocket": pocket,
+        "bars": BARS,
         "parts": parts,
         "den": anchors["den"], "path": anchors["path"], "terrace": anchors["terrace"], "evacuate": anchors["evacuate"],
         "safe": safe_cells(anchors),

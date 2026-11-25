@@ -72,6 +72,10 @@ COLLIDE_MATERIALS = {"marble", "marble_smooth", "wood_plank", "trim", "cliff_roc
                      "meadow", "pebble_bed", "boulder_rock", "bark", "deck_cream", "deck_shell", "teal", "gold"}
 
 
+POCKET_KEY = "CD_Pocket__palette"
+CAVE_BARS = ("gold", "teal")   # Landmarks__gold (the bars) and Landmarks__teal (their plate): only at the cave mouth
+
+
 def classify(name):
     """Return (group key, collide, anim, region)."""
     cat = name.rsplit("__", 1)[0]
@@ -127,6 +131,12 @@ def classify(name):
         return "Aqueduct__" + mat, True, None, "Aqueduct"
     if cat.startswith("Architecture_"):
         return "Architecture__" + mat, mat in COLLIDE_MATERIALS or mat == "palette", None, "Architecture"
+    if cat == "CDPocket":
+        return "CD_Pocket__" + mat, False, None, "Landmarks"     # --beta: step A's palette (live less the bars)
+    if BETA and cat == "Landmarks" and raw_material(name) in CAVE_BARS:
+        # --beta (Studio R12): the old cave's gold bars and teal plate leave the palette for their own part, so the
+        # world can hide them while the Play Den is open (step A's pocket and step B's room alike). Never collide.
+        return "CD_CaveBars__" + mat, False, None, "CaveBars"
     if cat == "Landmarks":
         return "Landmarks__" + mat, mat in COLLIDE_MATERIALS, None, "Landmarks"
     if cat == "Stations_BenchWest":
@@ -992,7 +1002,12 @@ def main():
     if BETA and not BETA_BASE:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import cliff_den_sculpt
+        # Step A's palette (FeatureFlags.CliffDen false): the live palette less the cave's bars, copied before the carve
+        # (which also takes palette faces in the den, the path and the terrace). Never in the beta walk map.
+        pocket = [duplicate(o, "CDPocket__" + raw_material(o.name)) for o in sources
+                  if o.name.startswith("Landmarks__") and material_of(o.name) == "palette" and raw_material(o.name) not in CAVE_BARS]
         sources, carved, new_pieces = cliff_den_sculpt.apply(sources)
+        sources = sources + pocket
         print("CLIFFDEN carved", sorted(carved), "new", sorted(new_pieces))
     groups = defaultdict(list)
     meta = {}
@@ -1110,8 +1125,10 @@ def main():
 def beta_outputs(finals, manifest, meta, carved, new_pieces):
     """--beta: the walk map of the sculpted island, then the carved groups renamed W7_CD_<group> and the new ones
     (already CD_), exported alone with their manifest (each carved part names the live part it replaces)."""
-    walk_data(finals, manifest, OUT / "world-v7-beta-walk.json")
+    island = [(f, m) for f, m in zip(finals, manifest) if f[1] != POCKET_KEY]   # step A's palette is not the sculpt
+    walk_data([f for f, _ in island], [m for _, m in island], OUT / "world-v7-beta-walk.json")
     affected = {key for key, m in meta.items() if key.startswith("CD_") or carved.intersection(m["sources"])}
+    affected.add("Landmarks__palette")      # the cave's bars left it (CD_CaveBars), carved or not
     live = json.loads((OUT / "world-v7-manifest.json").read_text())["parts"]
     live_names = {e["name"] for e in live}
     out, parts = [], []
@@ -1138,7 +1155,7 @@ def beta_outputs(finals, manifest, meta, carved, new_pieces):
     preview = __import__("os").environ.get("WORLD_V7_PREVIEW_BLEND")
     if preview:
         # Review renders only: the sculpted island's merged meshes (the import .blend itself is never saved).
-        keep = {obj.name for obj, _ in finals}
+        keep = {obj.name for obj, key in finals if key != POCKET_KEY}
         for o in list(bpy.data.objects):
             if o.type == "MESH" and o.name not in keep:
                 bpy.data.objects.remove(o, do_unlink=True)

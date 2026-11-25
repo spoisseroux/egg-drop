@@ -272,7 +272,7 @@ def in_cut(x, y, z):
 
 # ---------------------------------------------------------------------------------------------------------- carving
 CARVE = ("Rocks_Walls__", "Terrain_Ground__", "Landmarks__", "Anim__Landmark_GlowGrotto_Crystals__")
-KEEP = ("Landmarks__trim",)          # the lintel over the mouth stays
+KEEP = ("Landmarks__trim", "Landmarks__gold", "Landmarks__teal")   # the lintel stays; the bars are hidden while open
 
 
 def _roblox(v):

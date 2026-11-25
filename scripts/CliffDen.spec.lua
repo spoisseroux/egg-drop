@@ -24,6 +24,7 @@ return function(server)
 		pack:SetAttribute("Version",version or Data.version)
 		local v7=Instance.new("Folder");v7.Name="WorldV7";v7.Parent=pack
 		for _,pair in ipairs(Data.swap)do if pair.show and pair.show~=missing then part(pair.show,v7)end end
+		for _,pair in ipairs(Data.pocket)do if pair.show~=missing and not v7:FindFirstChild(pair.show)then part(pair.show,v7)end end
 		return world,storage,Instance.new("Workspace")
 	end
 	local function names(world)local out={};for _,k in ipairs(world:GetChildren())do out[k.Name]=true end;return out end
@@ -102,6 +103,42 @@ return function(server)
 		assert(#den.doorstep.at==3 and #den.doorstep.landing==3 and #den.pin==3 and #den.board.at==3 and #den.lanterns==4)
 		assert(#Data.safe.rows>10)
 		assert(#Data.ground>0 and #Data.walk.grid>0 and #Data.walk.surface>0)
+	end)
+	test("step A's layer (CliffDen false): only the cave's bars split out of the palette; no CliffDen, the sculpt untouched",function()
+		local world,storage,ws=rig()
+		local got,mode=Swap.apply(world,{flags={Tier=true,CliffDen=false},place=Swap.PlaceId,storage=storage,data=Data,workspace=ws})
+		assert(got==Data and mode=="pocket")
+		local now=names(world)
+		assert(not now["W7_Landmarks__palette"]and now["W7_CD_Pocket__palette"]and now[Data.bars]and not now["W7_CD_Landmarks__palette"])
+		assert(now["W7_Rocks__cliff_rock"]and not now["W7_CD_Rocks__cliff_rock"]and not now["W7_CD_PlayDen__cliff_rock"])
+		assert(world:GetAttribute("CliffDen")==nil and ws:GetAttribute("CliffDen")==nil)
+		assert(#Data.pocket==2 and Data.parts[Data.bars].collide==false and Data.parts[Data.bars].region=="CaveBars")
+		local _,den=Swap.apply(rig(),{flags={Tier=true},place=Swap.PlaceId,storage=storage,data=Data,workspace=Instance.new("Workspace")})
+		assert(den=="den")
+		local listed=false
+		for _,pair in ipairs(Data.swap)do if pair.show==Data.bars then listed=true end end
+		assert(listed,"the room's layer has the bars too")
+	end)
+	test("the bars hide while Den_open is true and come back when it clears; no bars part, nothing",function()
+		local Den=require(Shared.PlayDen)
+		local world=Instance.new("Model")
+		local bars=part(Data.bars,world)
+		local attrs,listeners={},{}
+		local ws={
+			GetAttribute=function(_,k)return attrs[k]end,
+			GetAttributeChangedSignal=function(_,k)
+				return{Connect=function(_,f)listeners[k]=f;return{Disconnect=function()listeners[k]=nil end}end}
+			end,
+		}
+		local function set(v)attrs[Den.OpenAttribute]=v;if listeners[Den.OpenAttribute]then listeners[Den.OpenAttribute]()end end
+		assert(Swap.bars(world,Data,{workspace=ws}))
+		assert(bars.Transparency==0)
+		set(true);assert(bars.Transparency==1)
+		set(nil);assert(bars.Transparency==0)
+		attrs[Den.OpenAttribute]=true
+		local w2=Instance.new("Model");local b2=part(Data.bars,w2)
+		Swap.bars(w2,Data,{workspace=ws});assert(b2.Transparency==1,"already open at start")
+		assert(Swap.bars(Instance.new("Model"),Data,{workspace=ws})==nil and Swap.bars(world,nil,{workspace=ws})==nil)
 	end)
 	test("the Play Den reads it: DenLayout.fromData (schema 1) gives the room, DenHost takes the world's blocker, the greybox fits",function()
 		local Layout=require(Shared.DenLayout)
