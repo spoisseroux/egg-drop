@@ -4,9 +4,9 @@ Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test 
 
 Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the game back as it was, `clear` follows the remote config. Use `off` to tell which piece caused a problem.
 
-## On the beta now (beta (20), runtime 08a68168)
+## On the beta now (beta (21), runtime 0c8d30ea)
 
-Beta (20), 2026-11-25: the Bear eye fix (row 49). Beta (19), 2026-11-25: rows 45 (ASMR hatch, vibration) and 46 (beta (18) known issues) are new; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN-BETA19.md`. Beta (18), 2026-11-26: rows 36-44 (race audio, beta 17 fixes, capsule shot, Peek, HUD chips, flat bubbles, world alive, the Hollow, cliff path + Play Den) are on the beta now; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN.md`.
+Beta (21), 2026-11-25: the live retention changes (row 50; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA21.md`). Beta (20), 2026-11-25: the Bear eye fix (row 49). Beta (19), 2026-11-25: rows 45 (ASMR hatch, vibration) and 46 (beta (18) known issues) are new; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN-BETA19.md`. Beta (18), 2026-11-26: rows 36-44 (race audio, beta 17 fixes, capsule shot, Peek, HUD chips, flat bubbles, world alive, the Hollow, cliff path + Play Den) are on the beta now; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN.md`.
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
@@ -56,6 +56,7 @@ Beta (20), 2026-11-25: the Bear eye fix (row 49). Beta (19), 2026-11-25: rows 45
 | 45 | **ASMR hatch and vibration** (`ASMR-AND-SCALE-LOOK.md` 1-2; original synthesis, not heard yet) | (19) | Hatch any egg: before the shell opens a soft settle, two dry cracks, a creak that builds into a crunchy pop right on the burst, crumbs ticking after it, then a quiet beat and (first hatch, then every third in a row) a soft exhale. Hatch ten in a row: no two sound quite the same. A Rare item: a longer creak over the wind-up into the jackpot. On a phone or a pad: a tick on each crack, a rising buzz under the creak, one big thump on the pop. Pocket Deck: each merge ticks, stronger with the tier and the chain, a clear thumps; a long chain never buzzes non-stop. Settings: **Vibration: On/Off** (on by default; turning it on buzzes once; hidden on PC without a pad). Switch: `/alive asmr off` (exactly today's hatch, no buzz) | `/alive asmr off` |
 | 46 | **Beta (18) known issues** | (19) | Open a Stat Egg from Hatch eggs or from pet focus over the garden: the top bar stays hidden for the whole reveal and comes back after Close (also during Hatch another). River stones: each landing is a rock slab laid over the kerb, so you step lawn → landing → stones with no kerb to climb. The den mouth has bushes and a boulder over the tan faces; the den crystals glow amber, not lemon. Known: the den wall seams need a mesh pass. | `/alive scene off`, `/den off` |
 | 49 | **The Bear's eye no longer sinks into his head** (Spencer, beta 19) | (20) | Meet Bear / pet focus facing the camera, and curious moments in the garden: both eyes stay whole and round, the right one too. Also on live (v1202). | — |
+| 50 | **Live retention changes on the beta (G1 + G2)**: calm first deck, paw trail, first hello +3, welcome bonus +12/+4/+4, toy pill; v3 bubbles/strip win while their switches are on | (21) | Fresh save: see TEST-RUN-BETA21 sections 1-2. | `/onboard follow|needs|nest off` for the live version |
 
 ## Built, not on the beta yet
 
