@@ -4,7 +4,7 @@
   "model": {
    "file": "world-finish-den.fbx",
    "sha256": "fbf9a8596e9c8cd1865f1bbc0c349e12d23fbb7330285ca54375ecccca930596",
-   "manifestSha256": "5bbe54538f47994ec9d07f17985f1af9bc45f62826a012821c0801399483effd",
+   "manifestSha256": "290c3f14181a571d13528cabb4173e2769d024a19d00a5e2a59ea6e9af5121b3",
    "operation": "6be904a8-353f-4641-a39f-5a3df6ee0315",
    "assetId": "74414403763324",
    "moderation": "Approved",
@@ -12,6 +12,17 @@
     "assetId": "93629425333486",
     "operation": "037f7420-a04a-4bb9-9433-b9ba9ecf654a",
     "why": "Fable world R1 must-fixes (round 2)"
+   },
+   "manifestCorrected": {
+    "was": "5bbe54538f47994ec9d07f17985f1af9bc45f62826a012821c0801399483effd",
+    "parts": [
+     "W7_F_OverLandmarks__cliff_rock_1916",
+     "W7_F_OverLandmarks__cliff_rock_2016",
+     "W7_CD_Region__cliff_rock",
+     "W7_CD_Region__grass",
+     "W7_F_OverRocks__cliff_rock_1916"
+    ],
+    "why": "after upload: these parts' centre and size were measured before the shard pass removed faces (bounds kept the gone faces' vertices); now from the exported meshes' face vertices, as Roblox measures them. The FBX (and model 74414403763324) is unchanged."
    }
   },
   "images": {
