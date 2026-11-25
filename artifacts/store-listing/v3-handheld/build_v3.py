@@ -18,7 +18,7 @@ import os
 import sys
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 V2 = os.path.join(HERE, "..", "v2-new-look")
@@ -145,38 +145,49 @@ def shard(c, cx, cy, r, rot, col=("#FFC629", "#E08A00")):
 
 
 # ---------------------------------------------------------------- the hero: a pal hatching on the handheld
-def hero(c, ox=0, oy=0, k=1.0, beanie=False, tilt=-3.0, extras=True):
+def hero(c, ox=0, oy=0, k=1.0, beanie=False, tilt=-3.0, extras=True, deck="drawn", deck_w=968, deck_y=506,
+         lift=0, pal=1.0, light=True):
     """Drawn in the 1024 icon frame, then placed at (ox, oy) scaled by k.
     Back to front: light, the deck with its screen lit, the cap flying off, the egg's inside, the Bear, the cup,
-    his paws on its rim, shell chips and sparkles."""
+    his paws on its rim, shell chips and sparkles.
+    deck: "drawn" (icon J's pastel screen), a real frozen frame's name in captures/set (e.g. "D-bigmerge"), or None.
+    lift raises the egg and the Bear over the deck; pal scales them about the egg's crack."""
     def X(x):
         return ox + x * k
 
     def Y(y):
         return oy + y * k
 
-    ex, rim_y = 512, 642  # the egg's centre line and the height of its crack, in the icon frame
-    glow(c, X(ex), Y(560), 900 * k, 0.42)
-    rays(c, X(ex), Y(600), n=18, alpha=0.11, length=1500 * k)
+    ex, rim_y = 512, 642 - lift  # the egg's centre line and the height of its crack, in the icon frame
+    p = pal
 
-    # the deck
-    deck = bi.deck_with_hero(hatch_screen)
-    deck = scaled(deck, 968 * k / deck.width, tilt)
-    dxy = (int(X(ex) - deck.width / 2), int(Y(506)))
-    bi.contact(c, X(ex), Y(1000), deck.width * 0.40, 20 * k, alpha=90, blur=int(18 * k))
-    bi.soft_shadow(c, deck, dxy, dx=int(12 * k), dy=int(14 * k), blur=int(20 * k), alpha=0.34)
-    bi.paste(c, deck, dxy)
-    glow(c, X(ex), Y(740), 520 * k, 0.55, (255, 244, 190))  # the screen's light, spilling up over the shell
+    def R(dx, dy):
+        return X(ex + dx * p), Y(rim_y + dy * p)
+
+    if light:
+        glow(c, X(ex), Y(560 - lift * 0.5), 900 * k, 0.42)
+        rays(c, X(ex), Y(600 - lift * 0.5), n=18, alpha=0.11, length=1500 * k)
+
+    if deck:
+        dk = bi.deck_with_hero(hatch_screen) if deck == "drawn" else bs.cut(deck, 1.0, cool=0)
+        dk = scaled(dk, deck_w * k / dk.width, tilt)
+        dxy = (int(X(ex) - dk.width / 2), int(Y(deck_y)))
+        bi.contact(c, X(ex), Y(deck_y) + dk.height - 12 * k, dk.width * 0.40, 20 * k, alpha=90, blur=int(18 * k))
+        bi.soft_shadow(c, dk, dxy, dx=int(12 * k), dy=int(14 * k), blur=int(20 * k), alpha=0.34)
+        bi.paste(c, dk, dxy)
+        if deck == "drawn":
+            glow(c, X(ex), Y(740), 520 * k, 0.55, (255, 244, 190))  # the screen's light, spilling up over the shell
+        else:
+            glow(c, *R(0, 40), 420 * k * p, 0.45, (255, 244, 190))
 
     cap, cup = egg_parts()
-    e = 1.04 * k  # egg scale: 405 wide capture -> about 420 in the icon frame
-    etop = Y(rim_y) - 240 * e  # capture row 240 (mid zigzag) sits on rim_y
-    exy = (int(X(ex) - 405 * e / 2), int(etop))
+    e = 1.04 * k * p  # egg scale: 405 wide capture -> about 420 in the icon frame
+    rx, ry = R(0, 0)
+    exy = (int(rx - 405 * e / 2), int(ry - 240 * e))  # capture row 240 (mid zigzag) sits on the crack
 
     # the cap, thrown up and to the right, behind the Bear's ear
-    cp = cap.crop((0, 0, 405, 285))
-    cp = scaled(cp, e * 0.78, -32)
-    cxy = (int(X(668)), int(Y(28)))
+    cp = scaled(cap.crop((0, 0, 405, 285)), e * 0.78, -32)
+    cxy = tuple(int(v) for v in R(156, -614))
     bi.soft_shadow(c, cp, cxy, dx=int(8 * k), dy=int(12 * k), blur=int(12 * k), alpha=0.22)
     bi.paste(c, cp, cxy)
 
@@ -187,17 +198,21 @@ def hero(c, ox=0, oy=0, k=1.0, beanie=False, tilt=-3.0, extras=True):
     ImageDraw.Draw(mouth).ellipse((0, 0, mw * s - 1, mh * s - 1), fill=(214, 120, 12, 255))
     ImageDraw.Draw(mouth).ellipse((mw * s * 0.14, mh * s * 0.16, mw * s * 0.86, mh * s * 0.9), fill=(255, 226, 120, 255))
     mouth = mouth.resize((mw, mh), Image.LANCZOS).filter(ImageFilter.GaussianBlur(2 * k))
-    bi.paste(c, mouth, (int(X(ex) - mw / 2), int(Y(rim_y) - mh * 0.62)))
+    bi.paste(c, mouth, (int(rx - mw / 2), int(ry - mh * 0.62)))
 
     # the Bear, rising out of it
     if beanie:
-        body, _, _ = bs.bear_parts(1.22 * k)
-        head = body.crop((0, 0, body.width, round(640 * 1.22 * k)))
-        bxy = (int(X(ex + 8) - 402 * 1.22 * k), int(Y(rim_y - 30) - 482 * 1.22 * k))
+        bsz = 1.22 * k * p
+        body, _, _ = bs.bear_parts(bsz)
+        head = body.crop((0, 0, body.width, round(640 * bsz)))
+        hx, hy = R(8, -30)
+        bxy = (int(hx - 402 * bsz), int(hy - 482 * bsz))
     else:
+        bsz = 0.76 * k * p
         head = bi.load(os.path.join(CAP, "S3.png"))
-        head = bi.relight(scaled(head.crop((0, 0, head.width, 652)), 0.76 * k), cool=0.14)  # shoulders stay in the egg
-        bxy = (int(X(ex + 14) - head.width / 2), int(Y(rim_y + 8) - 640 * 0.76 * k))
+        head = bi.relight(scaled(head.crop((0, 0, head.width, 652)), bsz), cool=0.14)  # shoulders stay in the egg
+        hx, hy = R(14, 8)
+        bxy = (int(hx - head.width / 2), int(hy - 640 * bsz))
     bi.soft_shadow(c, head, bxy, dx=int(12 * k), dy=int(8 * k), blur=int(16 * k), alpha=0.18)
     bi.paste(c, head, bxy)
 
@@ -206,18 +221,19 @@ def hero(c, ox=0, oy=0, k=1.0, beanie=False, tilt=-3.0, extras=True):
     bi.soft_shadow(c, cupc, exy, dx=0, dy=int(-10 * k), blur=int(10 * k), alpha=0.22)  # up onto his chin
     bi.soft_shadow(c, cupc, exy, dx=int(10 * k), dy=int(12 * k), blur=int(14 * k), alpha=0.30)  # onto the screen
     bi.paste(c, cupc, exy)
-    pl, pr = paws(0.78 * k)
-    for paw, px, r in ((pl, ex - 186, 16), (pr, ex + 188, -16)):
+    pl, pr = paws(0.78 * k * p)
+    for paw, dx_, r in ((pl, -186, 16), (pr, 188, -16)):
         paw = paw.rotate(r, Image.BICUBIC, expand=True)
-        xy = (int(X(px) - paw.width / 2), int(Y(rim_y + 22) - paw.height * 0.55))
+        qx, qy = R(dx_, 22)
+        xy = (int(qx - paw.width / 2), int(qy - paw.height * 0.55))
         bi.soft_shadow(c, paw, xy, dx=int(4 * k), dy=int(12 * k), blur=int(8 * k), alpha=0.34)
         bi.paste(c, paw, xy)
 
     if extras:
-        for x, y, r, rot in ((250, 470, 26, 20), (196, 330, 18, -30), (800, 430, 22, 200), (905, 330, 15, 60)):
-            shard(c, X(x), Y(y), r * k, rot)
-        for x, y, r in ((150, 210, 30), (880, 80, 22), (300, 120, 16), (940, 470, 18), (86, 430, 16)):
-            sparkle(c, X(x), Y(y), r * k)
+        for x, y, r, rot in ((-262, -172, 26, 20), (-316, -312, 18, -30), (288, -212, 22, 200), (393, -312, 15, 60)):
+            shard(c, *R(x, y), r * k * p, rot)
+        for x, y, r in ((-362, -432, 30), (368, -562, 22), (-212, -522, 16), (428, -172, 18), (-426, -212, 16)):
+            sparkle(c, *R(x, y), r * k * p)
 
 
 # ---------------------------------------------------------------- icon K
@@ -230,7 +246,7 @@ def icon_k(beanie=False):
     return c
 
 
-# ---------------------------------------------------------------- thumbnails
+# ---------------------------------------------------------------- thumbnails and ads
 W, H = bs.W, bs.H
 
 
@@ -250,27 +266,193 @@ def step_chip(n, text, size=44):
     return ch
 
 
-def t1(words=NAME, steps=True, mark=False, bunny=True):
-    """The lead frame and the Home Page tile: the name, the hatch on the handheld, and the first minute in three
-    numbered chips. The Rose Bunny watches from the left (the second pal, bottom corner, clearly smaller).
-    The ad drops the Bunny and the chips: one hero, one line, the name as a small mark."""
+def prop(c, name, scale, cx, cy, rot=0.0):
+    """A toy, jar, egg or snack floating free, with a small shadow."""
+    im = bs.cut(name, scale, rot=rot, cool=0)
+    bi.soft_shadow(c, im, (int(cx - im.width / 2), int(cy - im.height / 2)), dx=6, dy=8, blur=8, alpha=0.2)
+    bs.paste_center(c, im, cx, cy)
+
+
+def stat_icon(c, sid, cx, cy, size=84):
+    """One of the six stat icons (assets/ui/stat-icons) on a white glass disc."""
+    s = 3
+    r = int(size * 0.66)
+    disc = Image.new("RGBA", (r * 2 * s, r * 2 * s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(disc)
+    d.ellipse((0, 0, r * 2 * s - 1, r * 2 * s - 1), fill=bs.NAVY + (255,))
+    d.ellipse((5 * s, 5 * s, r * 2 * s - 5 * s, r * 2 * s - 5 * s), fill=(255, 255, 255, 245))
+    disc = disc.resize((r * 2, r * 2), Image.LANCZOS)
+    ic = Image.open(os.path.join(bs.REPO, "assets", "ui", "stat-icons", f"icon-{sid}-128.png")).convert("RGBA").resize((size, size), Image.LANCZOS)
+    disc.alpha_composite(ic, (r - size // 2, r - size // 2))
+    bs.paste_center(c, bs.drop(disc, 6, 0.25, 6), cx, cy)
+
+
+def t1():
+    """The lead frame and the Home Page tile: the name, the hatch on the handheld, the first minute in three
+    numbered chips, and what comes after it on the left: three pals in their colours and outfits, a Feast snack,
+    a Stat Egg and a Customization Egg, toys and dye jars flying. Every item is a real capture."""
     c = bs.base(0.86)
-    bs.bubbles(c, [(820, 96, 70), (1880, 560, 56), (60, 560, 44)])
-    hero(c, ox=790, oy=8, k=0.985)
-    if bunny:
-        bun = bs.cut("B2", 0.80)
-        bs.put(c, bun, 196, bottom=1048)
-    wm = bs.caption(list(words), 800, [0.0, 0.0])
+    bs.bubbles(c, [(1880, 560, 56), (40, 250, 40)])
+    hero(c, ox=806, oy=8, k=0.985)
+    # toys and jars, tumbling from the hatch toward the name
+    for name, sc, x, y, r in (("P-toy-ball", 0.34, 930, 250, 0), ("P-toy-carrot", 0.32, 1010, 96, 30),
+                              ("P-toy-top", 0.30, 790, 372, -14), ("P-jar-tide", 0.25, 912, 452, -10),
+                              ("P-toy-bone", 0.28, 760, 560, 16), ("P-toy-sparkler", 0.32, 1186, 76, -28),
+                              ("P-jar-rose", 0.24, 1856, 330, 12), ("P-jar-citrus", 0.22, 1540, 62, 10)):
+        prop(c, name, sc, x, y, r)
+    for x, y, r, rot in ((884, 56, 24, -80), (1080, 392, 20, -100), (700, 470, 18, -75), (1420, 60, 20, -95)):
+        bs.gold_star(c, x, y, r, rot)
+    # the pals on the floor: back two first, then the Bunny in front
+    bs.put(c, bs.cut("C7a", 0.74), 396, bottom=1010)
+    bs.put(c, bs.cut("C7c", 0.74), 640, bottom=1016)
+    bs.put(c, bs.cut("B2", 0.86), 150, bottom=1052)
+    bs.put(c, bs.cut("P-feast", 0.40, cool=0), 300, bottom=1058)
+    bs.put(c, bs.cut("P-egg-stat", 0.32, cool=0), 520, bottom=1060)
+    bs.put(c, bs.cut("P-egg-hue", 0.32, cool=0), 764, bottom=1058)
+    for sx, sy, r in ((560, 600, 16), (276, 640, 14), (746, 668, 14)):
+        sparkle(c, sx, sy, r)
+    wm = bs.caption(list(NAME), 800, [0.0, 0.0])
     bi.paste(c, wm, (36, 16))
-    if steps:
-        y = 16 + wm.height + 2
-        for i, txt in enumerate(("merge balls", "hatch your pal", "raise it in the garden")):
-            ch = step_chip(i + 1, txt, 46)
-            bi.paste(c, ch, (40 + i * 34, y))
-            y += ch.height - 22
-    if mark:
-        m = name_mark(470)
-        bi.paste(c, m, (40, H - m.height - 176))  # clear of the bottom 15%
+    y = 16 + wm.height + 2
+    for i, txt in enumerate(("play your handheld", "hatch your pal", "raise it in the garden")):
+        ch = step_chip(i + 1, txt, 46)
+        bi.paste(c, ch, (40 + i * 34, y))
+        y += ch.height - 22
+    return c
+
+
+def ad_d():
+    """Ad D, the first minute: the real deck frozen mid-merge (Chain x4), the Bear bursting out of his egg on
+    top of it, balls and toys flying, three more pals watching. Headline: merge balls. hatch a pal."""
+    c = bs.base(0.88)
+    bs.bubbles(c, [(1890, 420, 60), (760, 330, 44)])
+    k, ox, oy = 1.08, 790, -64
+    glow(c, ox + 512 * k, 520, 1100, 0.40)
+    rays(c, ox + 512 * k, 520, n=20, alpha=0.12, length=1700)
+    for x, y, t, kk in ((880, 420, 1, 5), (1836, 300, 2, 5), (1764, 130, 0, 5), (960, 250, 3, 4)):
+        bs.loose_ball(c, x, y, t, kk)
+    for name, sc, x, y, r in (("P-toy-ball", 0.36, 1000, 96, 0), ("P-toy-carrot", 0.30, 1040, 508, 30),
+                              ("P-toy-bone", 0.28, 1650, 420, 16)):
+        prop(c, name, sc, x, y, r)
+    hero(c, ox=ox, oy=oy, k=k, deck="D-bigmerge", deck_w=1010, deck_y=548, lift=126, pal=0.84, tilt=-2.0, light=False)
+    b = bs.burst("×4", 72)
+    bs.paste_center(c, b, 1790, 606)  # on the deck's top corner, clear of the A button
+    for x, y, r, rot in ((1100, 60, 24, -80), (850, 300, 20, -100), (1700, 250, 22, -75), (1880, 180, 18, -95)):
+        bs.gold_star(c, x, y, r, rot)
+    # the pals who are waiting for him
+    bs.put(c, bs.cut("C7a", 0.80), 430, bottom=1012)
+    bs.put(c, bs.cut("F7b", 0.80), 668, bottom=1024)
+    bs.put(c, bs.cut("B2", 1.00), 176, bottom=1056)
+    bs.put(c, bs.cut("P-feast", 0.40, cool=0), 330, bottom=1062)
+    bs.put(c, bs.cut("P-egg-stat", 0.30, cool=0), 560, bottom=1064)
+    cap = bs.caption(["merge balls.", "hatch a pal."], 860, [0.0, 0.0])
+    bi.paste(c, cap, (30, 10))
+    ch = bs.chip("then raise it in the garden", 44)
+    bi.paste(c, ch, (40, 10 + cap.height - 6))
+    m = name_mark(330)
+    bi.paste(c, m, (W - m.width - 16, H - m.height - 6))
+    return c
+
+
+def ad_e():
+    """Ad E, the pals: the Bear hatching in the middle of six pals in their colours and outfits,
+    the four dye jars and a handful of toys. Headline: hatch a pal. make it yours."""
+    c = bs.base(0.84)
+    glow(c, 1000, 640, 1200, 0.36)
+    rays(c, 1000, 640, n=20, alpha=0.10, length=1700)
+    bs.bubbles(c, [(1880, 380, 60), (30, 420, 44)])
+    floor = 990
+    bs.put(c, bs.cut("C7c", 0.84), 668, bottom=floor - 30)
+    bs.put(c, bs.cut("F7b", 0.84), 1318, bottom=floor - 30)
+    hero(c, ox=1000 - 512 * 0.86, oy=140, k=0.86, deck=None, light=False)
+    bs.put(c, bs.cut("C7a", 1.00), 170, bottom=floor + 40)
+    bs.put(c, bs.cut("B2", 1.00), 420, bottom=floor + 56)
+    bs.put(c, bs.cut("C13", 1.00), 1548, bottom=floor + 56)
+    bs.put(c, bs.cut("C1", 1.04), 1792, bottom=floor + 44)
+    x = 1010
+    for jar in ("rose", "tide", "citrus", "iris"):
+        j = bs.cut("P-jar-" + jar, 0.30, cool=0)
+        bi.paste(c, bs.drop(j, 6, 0.22), (x, 26))
+        x += j.width + 2
+    ch = bs.chip(f"hats · outfits · 4 dyes · {bs.N_CHARMS} charms", 34)
+    bi.paste(c, ch, (1010, 176))
+    for name, sc, x, y, r in (("P-toy-ball", 0.32, 690, 336, 0), ("P-toy-top", 0.28, 1520, 330, 14)):
+        prop(c, name, sc, x, y, r)
+    for x, y, r, rot in ((800, 262, 22, -80), (1270, 470, 20, -100), (1700, 300, 20, -75)):
+        bs.gold_star(c, x, y, r, rot)
+    for hx, hy, r, rot in ((560, 400, 22, -12), (1420, 420, 20, 14)):
+        bs.heart(c, hx, hy, r, rot=rot)
+    cap = bs.caption(["hatch a pal.", "make it yours."], 900, [0.0, 0.0])
+    bi.paste(c, cap, (30, 10))
+    m = name_mark(330)
+    bi.paste(c, m, (W - m.width - 16, 14))
+    return c
+
+
+def ad_f():
+    """Ad F, raising it: the Pet Park (the real plate, as T5's flat silhouette), the Bear up front with a
+    Feast snack, pals on the swing and the see-saw, a Bunny mid-jump, the six stat icons in an arc.
+    Headline: raise your pal."""
+    ox = 150
+    c, k = bs.park_silhouette(ox)
+
+    def P(px, py):
+        return (px - ox) * k, py * k
+
+    def pal_(name, scale, px, py, rot=0.0, ry=10, flip=False, sh=90):
+        im = bs.cut(name, scale, rot, cool=0)
+        if flip:
+            im = ImageOps.mirror(im)
+        x, y = P(px, py)
+        if sh:
+            bi.contact(c, x, y - 4, im.width * 0.40, ry, alpha=sh, blur=10)
+        bi.paste(c, im, (int(x - im.width / 2), int(y - im.height)))
+        return x, y - im.height
+
+    pal_("A-C7c-stretch", 0.40, 1185, 455, rot=-4, ry=6, sh=50)
+    x, y = pal_("A-C7a-sit", 0.52, 410, 540, rot=7, ry=1, sh=0, flip=True)
+    bi.contact(c, x + 10, P(0, 560)[1], 70, 10, alpha=80, blur=10)
+    pal_("A-F7b-ride", 0.58, 768, 574, rot=6, ry=6, sh=50)
+    pal_("A-J3-ride", 0.55, 985, 502, rot=-8, ry=5, sh=40)
+    for name, s, px, py, rot in (("P-toy-top", 0.26, 452, 662, 14), ("P-toy-bone", 0.28, 1075, 640, -12),
+                                 ("P-toy-ball", 0.34, 700, 700, 0)):
+        im = bs.cut(name, s, rot, cool=0)
+        x, y = P(px, py)
+        bi.contact(c, x, y - 6, im.width * 0.40, 10, alpha=90, blur=10)
+        bi.paste(c, im, (int(x - im.width / 2), int(y - im.height)))
+    bun = bs.cut("A-B2-sit", 1.10, cool=0)
+    bi.contact(c, 168, 1046, bun.width * 0.46, 22, alpha=120, blur=14)
+    bi.paste(c, bun, (168 - bun.width // 2, 1066 - bun.height))
+    # the Bear, big, waving, with his snack and the handheld toy
+    bear = bs.cut("B1", 1.16, cool=0)  # the wave capture is too small to hold up at this size
+    bx = 1480
+    bi.contact(c, bx, 1052, bear.width * 0.42, 22, alpha=110, blur=14)
+    bi.paste(c, bear, (bx - bear.width // 2, 1074 - bear.height))
+    fe = bs.cut("P-feast", 0.50, cool=0)
+    bi.contact(c, 1190, 1050, fe.width * 0.42, 14, alpha=100, blur=10)
+    bi.paste(c, fe, (1190 - fe.width // 2, 1062 - fe.height))
+    td = bs.cut("P-toy-deck", 0.56, rot=-8, cool=0)
+    bi.contact(c, 1790, 1052, td.width * 0.40, 12, alpha=100, blur=10)
+    bi.paste(c, td, (1790 - td.width // 2, 1066 - td.height))
+    # six stats in an arc over him
+    ids = [s[0] for s in bs.STATS]
+    for i, sid in enumerate(ids):
+        a = np.radians(210 + i * 24)
+        stat_icon(c, sid, bx + 400 * np.cos(a), 590 + 330 * np.sin(a), 78)
+    b = bs.burst("+1", 50, fill=bi.rgb("#B9EE5A"), ink=(30, 120, 40))
+    bs.paste_center(c, b, bx + 330, 170)
+    lv = bs.chip("LEVEL UP!", 38)
+    bi.paste(c, lv, (bx - lv.width // 2, 130))
+    for hx_, hy_, r, rot in ((1200, 640, 24, -12), (330, 440, 22, -10), (860, 400, 20, 12)):
+        bs.heart(c, hx_, hy_, r, rot=rot)
+    for sx, sy, r in ((930, 300, 22), (1130, 420, 16), (40, 460, 18), (1880, 620, 18)):
+        sparkle(c, sx, sy, r)
+    cap = bs.caption(["raise your pal"], 900, [0.0])
+    bi.paste(c, cap, (30, 10))
+    ch = bs.chip("feed · train · dress up · play", 46)
+    bi.paste(c, ch, (40, 10 + cap.height - 6))
+    m = name_mark(330)
+    bi.paste(c, m, (36, 10 + cap.height + ch.height - 20))
     return c
 
 
@@ -284,15 +466,19 @@ def retitled(fn, *a, pos="tr", **k):
 
 
 SET_LIST = [
-    ("T1-hatch-a-handheld-pal", lambda: t1()),
+    ("T1-hatch-a-handheld-pal", t1),
     ("T2-merge", lambda: retitled(bs.t3, ("merge", "big chains"))),
     ("T3-hatch-eggs", lambda: retitled(bs.t4)),
     ("T4-level-up", lambda: retitled(bs.t7)),
     ("T5-dress-up", lambda: retitled(bs.t2)),
     ("T6-play", lambda: retitled(bs.t5)),
     ("T7-decks", lambda: retitled(bs.t6, pos="br")),
-    ("ad-D-merge-hatch", lambda: t1(("merge balls.", "hatch a pal."), steps=False, mark=True, bunny=False)),
+    ("ad-D-merge-hatch", ad_d),
+    ("ad-E-pals", ad_e),
+    ("ad-F-raise", ad_f),
+    ("ad-B-control", lambda: retitled(bs.t3, ("merge. hatch.", "repeat."))),
 ]
+AD_SIZES = ((728, 410), (480, 270), (256, 144), (150, 84))  # 16:9 tiles, large to the small Home sort
 
 
 def contact(names):
@@ -305,6 +491,27 @@ def contact(names):
         d.text((x, y), n, font=bs.font(22), fill=bi.INK)
         out.paste(Image.open(os.path.join(HERE, n + "-480.png")), (x, y + 28))
     out.save(os.path.join(HERE, "contact.png"))
+
+
+def ad_sizes(names):
+    """Each ad at the tile sizes a player meets it at, on Roblox's dark and light page colours."""
+    pad = 20
+    roww = sum(w for w, _ in AD_SIZES) + pad * (len(AD_SIZES) + 1)
+    rowh = AD_SIZES[0][1] + 44
+    out = Image.new("RGB", (roww, rowh * len(names) + pad), (25, 27, 29))
+    d = ImageDraw.Draw(out)
+    for i, n in enumerate(names):
+        y = pad + i * rowh
+        if i % 2:
+            d.rectangle((0, y - 10, roww, y + rowh - 10), fill=(242, 244, 245))
+        d.text((pad, y - 4), n, font=bs.font(22), fill=(255, 255, 255) if i % 2 == 0 else bi.INK)
+        full = Image.open(os.path.join(HERE, n + ".png"))
+        x = pad
+        for w, h in AD_SIZES:
+            im = bi.rounded(full.resize((w, h), Image.LANCZOS).convert("RGBA"), max(4, w // 40))
+            out.paste(im, (x, y + 26), im)
+            x += w + pad
+    out.save(os.path.join(HERE, "ads-at-size.png"))
 
 
 def icon_sheet(icons):
@@ -345,4 +552,6 @@ if __name__ == "__main__":
         im.save(os.path.join(HERE, name + ".png"))
         im.resize((480, 270), Image.LANCZOS).save(os.path.join(HERE, name + "-480.png"))
         print("wrote", name)
-    contact([n for n, _ in SET_LIST if os.path.exists(os.path.join(HERE, n + "-480.png"))])
+    have = [n for n, _ in SET_LIST if os.path.exists(os.path.join(HERE, n + "-480.png"))]
+    contact(have)
+    ad_sizes([n for n in have if n.startswith("ad-")])
