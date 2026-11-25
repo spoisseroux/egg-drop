@@ -19,12 +19,10 @@
 ## 3. The den
 
 - [ ] Inside it's one warm, dark rock cave with no seams, lit by the lanterns. The card table, race gate and notice board work as before.
-- [ ] Known: one small grey shard at the top of the back wall (being fixed).
 
-## 4. Known, being fixed (round 3)
+## 4. Fixed in beta (23)
 
-- The path's cut wall shows stretched rock strips and thin slivers up close.
-- Some rock clutter to the left of the den mouth.
+- The path's cut wall is one continuous rock face; the den's back wall is clean; the tan patch left of the den mouth is covered.
 - Not done yet: sound zones up the hill, night lantern glow, fireflies on the terrace (slice F).
 
 ## Notes

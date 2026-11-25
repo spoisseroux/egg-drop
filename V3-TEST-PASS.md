@@ -4,9 +4,9 @@ Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test 
 
 Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the game back as it was, `clear` follows the remote config. Use `off` to tell which piece caused a problem.
 
-## On the beta now (beta (22), runtime 53fdbd40)
+## On the beta now (beta (23), runtime 6c18c13d)
 
-Beta (22), 2026-11-25: the den, cliff path and terrace art, pets go up, the Top Lawn and the Paw Glade (row 51; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA22.md`). Beta (21), 2026-11-25: the live retention changes (row 50; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA21.md`). Beta (20), 2026-11-25: the Bear eye fix (row 49). Beta (19), 2026-11-25: rows 45 (ASMR hatch, vibration) and 46 (beta (18) known issues) are new; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN-BETA19.md`. Beta (18), 2026-11-26: rows 36-44 (race audio, beta 17 fixes, capsule shot, Peek, HUD chips, flat bubbles, world alive, the Hollow, cliff path + Play Den) are on the beta now; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN.md`.
+Beta (23), 2026-11-25: the hill art rounds 3-4 (path wall, den back, mouth). Beta (22), 2026-11-25: the den, cliff path and terrace art, pets go up, the Top Lawn and the Paw Glade (row 51; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA22.md`). Beta (21), 2026-11-25: the live retention changes (row 50; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA21.md`). Beta (20), 2026-11-25: the Bear eye fix (row 49). Beta (19), 2026-11-25: rows 45 (ASMR hatch, vibration) and 46 (beta (18) known issues) are new; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN-BETA19.md`. Beta (18), 2026-11-26: rows 36-44 (race audio, beta 17 fixes, capsule shot, Peek, HUD chips, flat bubbles, world alive, the Hollow, cliff path + Play Den) are on the beta now; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN.md`.
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
