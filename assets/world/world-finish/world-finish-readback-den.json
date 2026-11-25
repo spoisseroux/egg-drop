@@ -1,6 +1,6 @@
 {
  "slice": "den",
- "assetId": "93629425333486",
+ "assetId": "74414403763324",
  "parts": [
   {
    "meshId": "rbxassetid://123101549190510",
@@ -12,7 +12,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://125333515273566",
+   "meshId": "rbxassetid://104283635123176",
    "name": "W7_CD_Ground__grass",
    "meshSize": [
     1789.0574951171875,
@@ -21,7 +21,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://138780664844288",
+   "meshId": "rbxassetid://136133091462784",
    "name": "W7_CD_Ground__ground",
    "meshSize": [
     2048,
@@ -30,12 +30,21 @@
    ]
   },
   {
-   "meshId": "rbxassetid://108018574066526",
+   "meshId": "rbxassetid://110821972203164",
    "name": "W7_CD_Region__cliff_rock",
    "meshSize": [
-    629.0313110351562,
-    192.97657775878906,
-    533.08349609375
+    614.0935668945312,
+    180.1372833251953,
+    525.096923828125
+   ]
+  },
+  {
+   "meshId": "rbxassetid://103868096658739",
+   "name": "W7_CD_Region__grass",
+   "meshSize": [
+    258.5145263671875,
+    130.9560546875,
+    174.13624572753906
    ]
   },
   {
@@ -48,12 +57,30 @@
    ]
   },
   {
-   "meshId": "rbxassetid://105686764279527",
+   "meshId": "rbxassetid://112859763346715",
+   "name": "W7_F_DenLid__cliff_rock",
+   "meshSize": [
+    256.98291015625,
+    74.83130645751953,
+    181.11111450195312
+   ]
+  },
+  {
+   "meshId": "rbxassetid://82037462920460",
    "name": "W7_F_DenMouth__cliff_rock",
    "meshSize": [
-    230.2882537841797,
-    120.02291107177734,
-    54.72743606567383
+    325.31573486328125,
+    121.06089782714844,
+    54.599082946777344
+   ]
+  },
+  {
+   "meshId": "rbxassetid://95361910082994",
+   "name": "W7_F_DenSkin__cliff_rock",
+   "meshSize": [
+    471.4689025878906,
+    266.3271484375,
+    142.95265197753906
    ]
   },
   {
@@ -66,11 +93,11 @@
    ]
   },
   {
-   "meshId": "rbxassetid://120659901799021",
+   "meshId": "rbxassetid://72456012918370",
    "name": "W7_F_Den__floor",
    "meshSize": [
     238.54100036621094,
-    2.7438111305236816,
+    2.743812322616577,
     216.57012939453125
    ]
   },
@@ -111,7 +138,34 @@
    ]
   },
   {
-   "meshId": "rbxassetid://133241357569150",
+   "meshId": "rbxassetid://98402671157449",
+   "name": "W7_F_OverLandmarks__cliff_rock_1916",
+   "meshSize": [
+    199.6358642578125,
+    117.14039611816406,
+    187.3866729736328
+   ]
+  },
+  {
+   "meshId": "rbxassetid://138165859630856",
+   "name": "W7_F_OverLandmarks__cliff_rock_2016",
+   "meshSize": [
+    93.90343475341797,
+    117.77799224853516,
+    122.32736206054688
+   ]
+  },
+  {
+   "meshId": "rbxassetid://133064180955702",
+   "name": "W7_F_OverRocks__cliff_rock_1916",
+   "meshSize": [
+    285.5802001953125,
+    235.75042724609375,
+    208.2500457763672
+   ]
+  },
+  {
+   "meshId": "rbxassetid://76535318911534",
    "name": "W7_F_OverRocks__cliff_rock_2016",
    "meshSize": [
     295.14208984375,
