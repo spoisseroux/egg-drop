@@ -68,6 +68,7 @@ function Art.meshes(room)
 	world.Name="World"
 	-- The beta's cliff path / Play Den / terrace top (CliffDenSwap): swapped in the clone at start, never at runtime.
 	local carved=CliffDen.apply(world)
+	Art.carved=carved -- Art.collision moves the cave blocker to the den's mouth
 	local count,tris=0,0
 	for _,part in ipairs(world:GetChildren())do
 		if not part:IsA("BasePart")then continue end
@@ -113,7 +114,9 @@ function Art.collision(room)
 		local cf,size=box(entry)
 		invisible(walls,"Wall"..i,cf,size,true).CanQuery=false
 	end
-	local cf,size=box(Data.caveBlocker)
+	-- The Play Den (CliffDenSwap): the world owns the closer, a colliding blocker on the new mouth line, closed by
+	-- default; the code (DenHost) only opens it.
+	local cf,size=box(Art.carved and Art.carved.den.mouth.blocker or Data.caveBlocker)
 	invisible(room,"CaveBlocker",cf,size,true)
 	cf,size=box(Data.fallCatch)
 	local catch=invisible(room,"FallCatch",cf,size,false)

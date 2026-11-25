@@ -33,7 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORLD = ROOT / "assets" / "world"
 OUT = ROOT / "src" / "shared" / "CliffDenData.lua"
-VERSION = 1
+SCHEMA = 1        # the shape of this module (the code checks it); separate from the live-world stamp
 
 
 def sha_text(path: Path) -> str:
@@ -43,6 +43,54 @@ def sha_text(path: Path) -> str:
 def live_data():
     text = (ROOT / "src" / "shared" / "WorldV7Data.lua").read_text(encoding="utf-8")
     return json.loads(re.search(r"\[=\[(.*)\]=\]", text, re.S).group(1))
+
+
+def ring():
+    """IslandGround's perimeter ring (tenths of a stud, x then z), as (x, z) studs."""
+    text = (ROOT / "src" / "shared" / "IslandGround.lua").read_text(encoding="utf-8")
+    body = re.search(r"Ring=table\.freeze\(\{(.*?)\}\)", text, re.S).group(1)
+    nums = [int(v) for v in re.findall(r"-?\d+", body)]
+    return [(nums[k] / 10, nums[k + 1] / 10) for k in range(0, len(nums), 2)]
+
+
+def _inside(x, z, poly):
+    hit = False
+    for (x0, z0), (x1, z1) in zip(poly, poly[1:] + poly[:1]):
+        if (z0 > z) != (z1 > z) and x < x0 + (z - z0) * (x1 - x0) / (z1 - z0):
+            hit = not hit
+    return hit
+
+
+def _seg_dist(px, pz, a, b):
+    dx, dz = b[0] - a[0], b[1] - a[1]
+    t = max(0.0, min(1.0, ((px - a[0]) * dx + (pz - a[1]) * dz) / max(1e-9, dx * dx + dz * dz)))
+    return ((px - a[0] - t * dx) ** 2 + (pz - a[1] - t * dz) ** 2) ** .5
+
+
+def safe_cells(anchors):
+    """The den floor, the mouth and the apron out to the home Floor's edge (z -89) as IslandGround's one-stud safe
+    cells (IslandGround's rule: 3 studs inside the ring), 1 stud off the den's walls. Rows: {z, x0, x1} inclusive runs
+    of cell centres (cells are whole studs, as IslandGround: x = X0 + index)."""
+    den = anchors["den"]
+    outline = [tuple(p) for p in den["outline"]]
+    m = den["mouth"]
+    loop = ring()
+    def ok(x, z):
+        on = (_inside(x, z, outline) and min(_seg_dist(x, z, a, b) for a, b in zip(outline, outline[1:] + outline[:1])) >= 1.0)             or (m["x0"] + 1 <= x <= m["x1"] - 1 and m["z"] - 1 <= z <= -89)
+        return on and min(_seg_dist(x, z, a, b) for a, b in zip(loop, loop[1:] + loop[:1])) >= 3.0
+    rows = []
+    for z in range(-120, -88):
+        run = None
+        for x in range(-24, 9):
+            if ok(x, z):
+                run = [z, x, x] if run is None else [z, run[1], x]
+            elif run is not None:
+                rows.append(run)
+                run = None
+        if run is not None:
+            rows.append(run)
+    return {"note": "one-stud cells, rows {z, x0, x1}, as IslandGround (3 studs inside the ring, 1 off the den walls)",
+            "rows": rows}
 
 
 def r(v, n=3):
@@ -95,13 +143,16 @@ def build():
             if ls["rows"][j][i] != bs["rows"][j][i] or abs(ls["h"][j][i] - bs["h"][j][i]) > .02:
                 surface.append([i, j, bs["rows"][j][i], bs["h"][j][i]])
     data = {
-        "version": VERSION,
+        # The pack's stamp (code review): a hash of the beta outputs, so a pack built from older outputs never matches.
+        "version": hashlib.sha256((WORLD / "world-v7-beta-manifest.json").read_bytes().replace(b"\r\n", b"\n")
+                                  + (WORLD / "world-v7-beta-collision.json").read_bytes().replace(b"\r\n", b"\n")).hexdigest()[:16],
+        "schema": SCHEMA,
         "live": {"worldV7Data": sha_text(ROOT / "src" / "shared" / "WorldV7Data.lua"),
                  "walk": sha_text(WORLD / "world-v7-walk.json")},
         "swap": swap,
         "parts": parts,
         "den": anchors["den"], "path": anchors["path"], "terrace": anchors["terrace"], "evacuate": anchors["evacuate"],
-        "caveBlocker": False,
+        "safe": safe_cells(anchors),
         "ground": ground,
         "walk": {"grid": grid, "surface": surface},
         "pack": "WorldBeta",

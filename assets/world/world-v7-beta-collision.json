@@ -4,21 +4,6 @@
  "thickness": 1.5,
  "parts": [
   {
-   "name": "W7C_CD_Ground_11",
-   "tris": 800,
-   "center": [
-    -80.0,
-    9.3701,
-    -48.0
-   ],
-   "size": [
-    32.0,
-    31.7402,
-    32.0
-   ],
-   "replaces": "W7C_Ground_11"
-  },
-  {
    "name": "W7C_CD_Ground_12",
    "tris": 792,
    "center": [
@@ -35,7 +20,7 @@
   },
   {
    "name": "W7C_CD_Ground_18",
-   "tris": 800,
+   "tris": 820,
    "center": [
     -48.0,
     14.0514,
@@ -50,7 +35,7 @@
   },
   {
    "name": "W7C_CD_Ground_19",
-   "tris": 768,
+   "tris": 764,
    "center": [
     -48.0,
     14.9712,
@@ -65,7 +50,7 @@
   },
   {
    "name": "W7C_CD_Ground_27",
-   "tris": 968,
+   "tris": 964,
    "center": [
     -16.0,
     13.1617,
@@ -95,7 +80,7 @@
   },
   {
    "name": "W7C_CD_Ground_36",
-   "tris": 964,
+   "tris": 968,
    "center": [
     16.0,
     20.2116,
@@ -111,16 +96,16 @@
   {
    "name": "W7C_CD_CliffPath",
    "replaces": null,
-   "tris": 1140,
+   "tris": 1156,
    "center": [
-    -50.3922,
+    -50.029,
     16.05,
-    -68.2185
+    -67.7007
    ],
    "size": [
-    64.6994,
+    63.9729,
     25.9,
-    44.8029
+    45.8385
    ]
   }
  ],

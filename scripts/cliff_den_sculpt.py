@@ -88,12 +88,13 @@ PATH_CTRL = [
     (-4.0, 34.2, 11.5, 6.0),
     (4.0, 32.6, 13.8, 6.0),
     (12.0, 32.0, 16.1, 6.0),
-    (20.0, 31.0, 18.4, 6.0),
-    (28.0, 29.0, 20.7, 6.0),
-    (34.0, 28.5, 22.5, 7.0),
-    (38.5, 28.5, 23.0, 8.0),     # the turn pocket
-    (41.5, 25.5, 23.0, 8.0),
-    (30.5, 20.5, 29.0, 6.0),     # the arrival (on the terrace, through the notch)
+    (20.0, 31.5, 18.4, 6.0),
+    (28.0, 31.0, 20.7, 6.0),     # code review: the outbound leg stays at t 31 to the turn, so the return leg (t 25)
+    (35.0, 31.0, 22.7, 6.0),     # is a full width away from it (it overhung it at knee height)
+    (40.0, 30.0, 23.0, 7.0),     # the turn pocket
+    (42.0, 26.5, 23.0, 7.0),
+    (37.5, 25.0, 24.6, 6.0),     # the return leg (outside the terrace footprint, t >= 22)
+    (30.0, 22.0, 29.0, 6.0),     # the arrival (on the terrace's garden edge, through the notch)
 ]
 STEPS_FROM = 10                  # the return leg (PATH_CTRL[10] -> [11]) is drawn as steps
 STEP_COUNT = 6
@@ -141,13 +142,20 @@ def path_samples():
         p = curve[k].lerp(curve[k + 1], f)
         x, z = tier_xz(p[0], p[1])
         out.append({"x": x, "z": z, "h": p[2], "w": p[3], "seg": seg_of[k], "d": d})
+    prev = None
     for i, s in enumerate(out):
         a, b = out[max(0, i - 1)], out[min(len(out) - 1, i + 1)]
         hx, hz = _unit(b["x"] - a["x"], b["z"] - a["z"])
-        ox, oz = -hz, hx
-        if ox * TIER_N[0] + oz * TIER_N[1] < 0:
-            ox, oz = -ox, -oz
-        s["dir"], s["out"] = (hx, hz), (ox, oz)
+        sx, sz = -hz, hx
+        if prev is None:
+            if sx * TIER_N[0] + sz * TIER_N[1] < 0:
+                sx, sz = -sx, -sz
+        elif sx * prev[0] + sz * prev[1] < 0:
+            sx, sz = -sx, -sz                  # keep turning with the curve: ribbons never twist at the hairpin
+        prev = (sx, sz)
+        flip = 1 if sx * TIER_N[0] + sz * TIER_N[1] >= 0 else -1
+        s["dir"], s["side"], s["flip"] = (hx, hz), (sx, sz), flip
+        s["out"] = (sx * flip, sz * flip)      # the lawn side (walls, supports, the lip)
         s["step"] = s["seg"] >= STEPS_FROM
     # The steps: the return leg's heights quantised into STEP_COUNT treads (drawn); `h` stays the smooth ramp.
     leg = [s for s in out if s["step"]]
@@ -155,7 +163,7 @@ def path_samples():
         h0, h1 = leg[0]["h"], leg[-1]["h"]
         for s in leg:
             f = (s["h"] - h0) / max(1e-9, h1 - h0)
-            s["tread"] = h0 + (h1 - h0) * min(STEP_COUNT - 1, int(f * STEP_COUNT)) / (STEP_COUNT - 1)
+            s["tread"] = h0 + (h1 - h0) * round(f * (STEP_COUNT - 1)) / (STEP_COUNT - 1)   # within half a step of the ramp
     # The back wall: where the ground behind the inner edge is above the path, a wall leaning back 20 degrees up to
     # where it meets the ground; `back` is how far behind the inner edge its top stands.
     for s in out:
@@ -229,6 +237,17 @@ def den_roof(x, z):
     return d["wall"] + (d["peak"] - d["wall"]) * max(0.0, 1 - u * u) * max(0.0, 1 - v * v)
 
 
+def den_floor_plan(x, z):
+    """Over the den's floor: the room (grown .3) or the mouth's floor trapezoid."""
+    if den_inside(x, z, .3):
+        return True
+    m = MOUTH
+    if m["x0"] - .1 <= x <= m["x1"] + .1:
+        reach = m["west_to"] if x < (m["x0"] + m["x1"]) / 2 else m["east_to"]
+        return DEN["z1"] - .5 <= z <= reach + .1
+    return False
+
+
 def in_den_cut(x, y, z):
     d = DEN
     if den_inside(x, z, .3) and d["floor"] + .05 < y < den_roof(x, z) + .3:
@@ -286,11 +305,39 @@ def carve(objs):
             if abs(st[0]) <= TIER_HALF[0] and abs(st[1]) <= TIER_HALF[1] and max(ys) > 28.5:
                 doomed.append(f)
                 continue
+            # Fable blockout R1 1: one floor at the threshold. Any old floor or sill over the room and the mouth goes
+            # (the new floor covers it): the dark triangle and the raised sill at the mouth.
+            if all(den_floor_plan(q[0], q[2]) for q in corners) and max(ys) > DEN["floor"] - .8 and min(ys) < DEN["floor"] + 2.5:
+                doomed.append(f)
+                continue
             if any(in_den_cut(*p) or (in_path_cut(*p) and _nearest(p[0], p[2])["h"] + .3 < p[1] < _nearest(p[0], p[2])["h"] + 6)
                    for p in corners):
                 doomed.append(f)
         if doomed:
             bmesh.ops.delete(bm, geom=doomed, context="FACES")
+            # Fable blockout R1 5: orphan shards left over the terrace (small islands of faces) go too.
+            seen, shards = set(), []
+            bm.faces.ensure_lookup_table()
+            for f in bm.faces:
+                if f.index in seen:
+                    continue
+                stack, island = [f], []
+                seen.add(f.index)
+                while stack:
+                    g = stack.pop()
+                    island.append(g)
+                    for e in g.edges:
+                        for h in e.link_faces:
+                            if h.index not in seen:
+                                seen.add(h.index)
+                                stack.append(h)
+                if len(island) <= 8:
+                    cs = [_roblox(mw @ g.calc_center_median()) for g in island]
+                    if all(abs(tier_st(q[0], q[2])[0]) <= TIER_HALF[0] + 3 and abs(tier_st(q[0], q[2])[1]) <= TIER_HALF[1] + 3
+                           and q[1] > 25 for q in cs):
+                        shards += island
+            if shards:
+                bmesh.ops.delete(bm, geom=shards, context="FACES")
             bm.to_mesh(o.data)
             o.data.update()
             changed.append(o.name)
@@ -401,17 +448,22 @@ def build_path(objs):
 
     def P(s, a, y):
         return (s["x"] + s["out"][0] * a, y, s["z"] + s["out"][1] * a)
+
+    def Q(s, a, y):                                   # along the consistent side (ribbons)
+        return (s["x"] + s["side"][0] * a, y, s["z"] + s["side"][1] * a)
     for s0, s1 in zip(S, S[1:]):
         w0, w1 = s0["w"] / 2, s1["w"] / 2
         if s0["step"] and s1["step"]:
-            # drawn steps: flat treads (rock) and risers where the tread changes
+            # drawn steps (the walk-surface group: they never collide; the smooth ramp carries feet), treads and risers
             y0, y1 = s0["tread"], s1["tread"]
-            rock.face([P(s0, -w0, y0), P(s0, w0, y0), P(s1, w1, y0), P(s1, -w1, y0)], (0, 1, 0))
+            dirt.face([Q(s0, -w0, y0), Q(s0, w0, y0), Q(s1, w1, y0), Q(s1, -w1, y0)], (0, 1, 0))
             if abs(y1 - y0) > 1e-3:
-                rock.face([P(s1, -w1, y0), P(s1, w1, y0), P(s1, w1, y1), P(s1, -w1, y1)],
+                dirt.face([Q(s1, -w1, y0), Q(s1, w1, y0), Q(s1, w1, y1), Q(s1, -w1, y1)],
                           (-s1["dir"][0], 0, -s1["dir"][1]))
         else:
-            dirt.face([P(s0, -w0, s0["h"]), P(s0, w0, s0["h"]), P(s1, w1, s1["h"]), P(s1, -w1, s1["h"])], (0, 1, 0))
+            dirt.face([Q(s0, -w0, s0["h"]), Q(s0, w0, s0["h"]), Q(s1, w1, s1["h"]), Q(s1, -w1, s1["h"])], (0, 1, 0))
+        if s0["flip"] != s1["flip"]:
+            continue                                  # the hairpin's apex: the lawn side swaps; no wall or bank quad here
         # the back wall (cut face), leaning back 20 degrees up to the ground, with a .6 cap into the hill
         if s0["back"] > .05 or s1["back"] > .05:
             b0, b1 = s0["back"], s1["back"]
@@ -448,7 +500,7 @@ def build_path(objs):
             c = P(s, s["w"] / 2 + .35, s["h"] + hgt / 2 - .15)
             rock.box(c, (2.0, hgt, .7), yaw=math.atan2(-s["dir"][1], s["dir"][0]), rnd=rnd, jitter=.12)
     # the rock fin hiding the turn (10 wide, top 28), and the notch's two rocks at the arrival
-    fx, fz = tier_xz(39.0, 34.0)
+    fx, fz = tier_xz(41.0, 38.0)
     fg = ground(fx, fz) or 5.0
     yaw = math.atan2(-TIER_D[1], TIER_D[0])        # local X along the ridge
     rock.box((fx, (fg - 1 + 28) / 2, fz), (10.0, 28 - fg + 1, 2.4), yaw=yaw, rnd=rnd, jitter=.4)
@@ -488,6 +540,7 @@ def build_den(objs):
     line((d["x0"], d["z0"] + r), (d["x0"], d["z1"]), 8)
     line((d["x0"], d["z1"]), (m["x0"], d["z1"]), 4)
     pts.append((m["x0"], d["z1"]))
+    pts = [p for i, p in enumerate(pts) if i == 0 or (abs(p[0] - pts[i - 1][0]) > 1e-6 or abs(p[1] - pts[i - 1][1]) > 1e-6)]
     noise = lambda x, z: .25 * math.sin(x * 1.3 + z * .7) * math.cos(z * 1.1 - x * .4)
     cx, cz = (d["x0"] + d["x1"]) / 2, (d["z0"] + d["z1"]) / 2
     rows_n = 4
@@ -524,10 +577,13 @@ def build_den(objs):
     # the floor: the room (fan from its middle over the boundary) and the mouth
     centre = (cx, d["floor"], cz)
     ring = [(x, d["floor"], z) for x, z in pts]
-    for a, b in zip(ring, ring[1:]):
+    for a, b in zip(ring, ring[1:] + ring[:1]):           # closed: the last wedge spans the mouth's width
         floor.face([centre, a, b], (0, 1, 0))
-    floor.face([(m["x0"], d["floor"], d["z1"]), (m["x1"], d["floor"], d["z1"]), (m["x1"], d["floor"], m["east_to"]),
-                (m["x0"], d["floor"], m["west_to"])], (0, 1, 0))
+    # the mouth's floor: two halves to the same reach as the cut (west to -95, east to -99), .6 over the lawn (no seam)
+    mid = (m["x0"] + m["x1"]) / 2
+    for xa, xb, reach in ((m["x0"], mid, m["west_to"]), (mid, m["x1"], m["east_to"])):
+        floor.face([(xa, d["floor"], d["z1"]), (xb, d["floor"], d["z1"]), (xb, d["floor"], reach + .6),
+                    (xa, d["floor"], reach + .6)], (0, 1, 0))
     return [rock.build(), floor.build()]
 
 
@@ -548,7 +604,7 @@ def path_collision():
         w = s["w"] / 2
         row_t, row_b = [], []
         for a in (-w, w):
-            x, z = s["x"] + s["out"][0] * a, s["z"] + s["out"][1] * a
+            x, z = s["x"] + s["side"][0] * a, s["z"] + s["side"][1] * a
             row_t.append(bm.verts.new((x, -z, s["h"] - 4)))
             row_b.append(bm.verts.new((x, -z, s["h"] - 4 - 1.5)))
         top.append(row_t)
@@ -577,19 +633,32 @@ def anchors():
     centre_line = [{"x": round(s["x"], 3), "y": round(s["h"], 3), "z": round(s["z"], 3), "width": s["w"],
                     "steps": s["step"]} for s in S[::max(1, int(2.0 / SAMPLE))]]
     foot, arrival = S[0], S[-1]
-    turn = min(S, key=lambda s: (s["x"] - tier_xz(38.5, 28.5)[0]) ** 2 + (s["z"] - tier_xz(38.5, 28.5)[1]) ** 2)
+    turn = min(S, key=lambda s: (s["x"] - tier_xz(41.0, 28.5)[0]) ** 2 + (s["z"] - tier_xz(41.0, 28.5)[1]) ** 2)
     outline = []
     for x, z in [(d["x1"], d["z1"]), (d["x1"], d["z0"] + d["corner"])] + [
             (d["x1"] - d["corner"] + d["corner"] * math.cos(-math.pi / 2 * k / 6), d["z0"] + d["corner"] + d["corner"] * math.sin(-math.pi / 2 * k / 6)) for k in range(7)] + [
             (d["x0"] + d["corner"] + d["corner"] * math.cos(-math.pi / 2 - math.pi / 2 * k / 6), d["z0"] + d["corner"] + d["corner"] * math.sin(-math.pi / 2 - math.pi / 2 * k / 6)) for k in range(7)] + [
             (d["x0"], d["z1"])]:
-        outline.append([round(x, 3), round(z, 3)])
+        if not outline or [round(x, 3), round(z, 3)] != outline[-1]:
+            outline.append([round(x, 3), round(z, 3)])
     roof = {"x0": d["x0"], "z0": d["z0"], "step": 1.0, "nx": int(d["x1"] - d["x0"]) + 1, "nz": int(d["z1"] - d["z0"]) + 1,
             "y": [[round(den_roof(d["x0"] + i, d["z0"] + j), 2) for i in range(int(d["x1"] - d["x0"]) + 1)]
                   for j in range(int(d["z1"] - d["z0"]) + 1)]}
     return {
         "den": {"floorY": d["floor"], "outline": outline, "roof": roof, "wallY": d["wall"], "peakY": d["peak"],
-                "mouth": {"x0": m["x0"], "x1": m["x1"], "top": m["top"], "z": d["z1"]},
+                # The closer (Play Den architect review): the world builds a colliding CaveBlocker here, closed by
+                # default; the code only opens it. A box on the mouth line, into each jamb .3, floor to the lintel.
+                "mouth": {"x0": m["x0"], "x1": m["x1"], "top": m["top"], "z": d["z1"],
+                          "blocker": {"center": [round((m["x0"] + m["x1"]) / 2, 3), round((d["floor"] + 10.2) / 2, 3), d["z1"]],
+                                      "size": [round(m["x1"] - m["x0"] + .6, 3), round(10.2 - d["floor"], 3), 1.0], "yaw": 0}},
+                # Fable's five bays along the back wall, facing the mouth (+Z); roof = the dome over each.
+                "bays": [{"name": n, "use": u, "at": [x, d["floor"], z], "facing": [0, 0, 1], "width": 7.0,
+                          "roof": round(den_roof(x, z), 2)} for n, u, x, z in (
+                    ("Bay1", "DashGate", -18.0, -110.0), ("Bay2", "Niche", -12.0, -116.0), ("Bay3", "DeckTable", -7.0, -117.0),
+                    ("Bay4", "Niche", -2.0, -116.0), ("Bay5", "Niche", 4.0, -110.0))],
+                "doorstep": [-7.0, d["floor"], -98.5],        # just outside the mouth, on the threshold floor
+                "pin": [-7.0, 12.0, -99.5],                    # a Show me pin over the mouth (the lintel is 10.2)
+                "notice": {"at": [3.0, round(ground(3.0, -96.0) or 4.2, 2), -96.0], "facing": [0, 0, 1]},
                 "backWallZ": d["z0"], "sign": {"under": "W7_Landmarks__trim", "y": 10.2, "x": -7.0, "z": -100.07},
                 "lanterns": [[-15.5, 7.0, -98.0], [1.5, 7.0, -98.0], [-14.0, 8.0, -117.0], [0.0, 8.0, -117.0]],
                 "region": {"min": [d["x0"], d["floor"], d["z0"]], "max": [d["x1"], d["peak"], d["z1"]]}},

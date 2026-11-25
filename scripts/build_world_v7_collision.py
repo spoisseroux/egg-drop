@@ -71,6 +71,33 @@ def beta(sources):
         p["name"], p["replaces"] = p["obj"].name, replaces
         keep.append(p)
     gone = sorted(c for c in by_cell if c not in {p["cell"] for p in after})
+    # The den floor answers the server's ground rays (Play Den architect review): rays down from 3 over the floor, over
+    # the room, the mouth and the apron, hit the beta's tiles at the floor (4.2) or the lawn (within .6), never nothing.
+    from mathutils.bvhtree import BVHTree
+    bpy.context.view_layer.update()     # the tiles were recentred: refresh their world matrices before casting
+    trees = []
+    for p in after:
+        tb = bmesh.new()
+        tb.from_mesh(p["obj"].data)
+        tb.transform(p["obj"].matrix_world)
+        trees.append(BVHTree.FromBMesh(tb))
+        tb.free()
+    bad, probes = [], 0
+    for x in range(-20, 5, 2):
+        for z in range(-117, -88, 2):
+            if not (cd.den_floor_plan(x, z) or (cd.MOUTH["x0"] + 1 <= x <= cd.MOUTH["x1"] - 1 and z >= cd.DEN["z1"])):
+                continue
+            if cd.den_floor_plan(x, z) and not cd.den_inside(x, z, -1.0) and z < cd.DEN["z1"]:
+                continue
+            probes += 1
+            # from 3 over the floor, as a player's or a pet's ground ray (the hill over the room is above this)
+            hits = [t.ray_cast(Vector((x, -z, cd.DEN["floor"] + 3 - 4)), Vector((0, 0, -1))) for t in trees]
+            ys = [h[0].z + 4 for h in hits if h[0] is not None]
+            top = max(ys) if ys else None
+            if top is None or abs(top - cd.DEN["floor"]) > .6:
+                bad.append((x, z, None if top is None else round(top, 2)))
+    assert not bad, ("den floor / apron rays", bad[:8])
+    print("COLLISION BETA den floor rays", probes, "all at the floor")
     ramp = cd.path_collision()
     vs = [v.co for v in ramp.data.vertices]
     lo = Vector([min(v[k] for v in vs) for k in range(3)])
@@ -151,7 +178,10 @@ def tiles(sources, prefix=""):
                           "size": [round(size.x, 4), round(size.z, 4), round(size.y, 4)]})
             parts[-1]["obj"] = obj
             parts[-1]["cell"] = (gx, gy)
-            parts[-1]["digest"] = __import__("hashlib").sha1(";".join(sorted("%.3f,%.3f,%.3f" % tuple(v.co) for v in mesh.vertices)).encode()).hexdigest()   # order-free
+            parts[-1]["digest"] = __import__("hashlib").sha1((";".join(sorted("%.3f,%.3f,%.3f" % tuple(v.co) for v in mesh.vertices))
+                                                         + "|area %.2f" % sum(f.area for f in mesh.polygons)).encode()).hexdigest()
+            # vertices (order-free) and the surface area: triangulation-proof, and a strip of deleted faces whose corners
+            # all survive still moves the area (code review)
             if not prefix:
                 obj.name = mesh.name
     bm.free()

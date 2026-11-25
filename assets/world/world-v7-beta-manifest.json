@@ -5,44 +5,44 @@
    "name": "W7_CD_CliffPath__cliff_rock",
    "group": "CD_CliffPath__cliff_rock",
    "material": "W1_cliff_rock",
-   "tris": 1066,
+   "tris": 1008,
    "collide": true,
    "anim": null,
    "region": "CliffPath",
    "center": [
-    -53.1648,
-    17.699,
-    -66.7728
+    -52.851,
+    17.7568,
+    -65.2809
    ],
    "size": [
-    69.5462,
-    28.6019,
-    56.7737
+    68.917,
+    28.4864,
+    59.7577
    ],
    "top": 32.0,
-   "hash": "aef433c93e019a0e",
+   "hash": "754834b83919bc94",
    "replaces": null
   },
   {
    "name": "W7_CD_CliffPath__dirt_path",
    "group": "CD_CliffPath__dirt_path",
    "material": "W1_dirt_path",
-   "tris": 244,
+   "tris": 298,
    "collide": false,
    "anim": null,
    "region": "CliffPath",
    "center": [
-    -50.3922,
-    13.8469,
-    -68.2185
+    -50.029,
+    16.8,
+    -67.7007
    ],
    "size": [
-    64.6994,
-    18.4938,
-    44.8029
+    63.9729,
+    24.4,
+    45.8385
    ],
-   "top": 23.0938,
-   "hash": "d1e1453bddd0912b",
+   "top": 29.0,
+   "hash": "80872d541f97563a",
    "replaces": null
   },
   {
@@ -64,29 +64,29 @@
     24.179
    ],
    "top": 15.9805,
-   "hash": "cef3c3b8bf1cea1e",
+   "hash": "f7c78f5b1aabd8b8",
    "replaces": null
   },
   {
    "name": "W7_CD_PlayDen__dirt_path",
    "group": "CD_PlayDen__dirt_path",
    "material": "W1_dirt_path",
-   "tris": 54,
+   "tris": 57,
    "collide": false,
    "anim": null,
    "region": "PlayDen",
    "center": [
     -8.0,
     4.2,
-    -107.0
+    -106.7
    ],
    "size": [
     28.0,
     0.0,
-    24.0
+    24.6
    ],
    "top": 4.2,
-   "hash": "ef9c391e41ce8368",
+   "hash": "b98572c270ef9b68",
    "replaces": null
   },
   {
@@ -139,7 +139,7 @@
    "name": "W7_CD_Ground__grass",
    "group": "Ground__grass",
    "material": "W1_grass",
-   "tris": 5576,
+   "tris": 5575,
    "collide": true,
    "anim": null,
    "region": "Ground",
@@ -154,14 +154,14 @@
     210.0
    ],
    "top": 50.6513,
-   "hash": "9a40ef760024fe89",
+   "hash": "a4201682ea250e22",
    "replaces": "W7_Ground__grass"
   },
   {
    "name": "W7_CD_Ground__ground",
    "group": "Ground__ground",
    "material": "W1_ground",
-   "tris": 5407,
+   "tris": 5413,
    "collide": true,
    "anim": null,
    "region": "Ground",
@@ -176,14 +176,14 @@
     249.0
    ],
    "top": 50.6477,
-   "hash": "2286ea508df49a4d",
+   "hash": "829d2ae1029ede3a",
    "replaces": "W7_Ground__ground"
   },
   {
    "name": "W7_CD_Landmarks__cliff_rock",
    "group": "Landmarks__cliff_rock",
    "material": "W1_cliff_rock",
-   "tris": 1072,
+   "tris": 1071,
    "collide": true,
    "anim": null,
    "region": "Landmarks",
@@ -198,7 +198,7 @@
     83.5307
    ],
    "top": 55.4033,
-   "hash": "72c0936c43ccb70c",
+   "hash": "4d2c3b2c1b0610e7",
    "replaces": "W7_Landmarks__cliff_rock"
   },
   {
@@ -249,7 +249,7 @@
    "name": "W7_CD_Rocks__cliff_rock",
    "group": "Rocks__cliff_rock",
    "material": "W1_cliff_rock",
-   "tris": 3556,
+   "tris": 3557,
    "collide": true,
    "anim": null,
    "region": "Rocks",
@@ -264,14 +264,14 @@
     201.4282
    ],
    "top": 42.4127,
-   "hash": "5fc23f1298b72fa4",
+   "hash": "17262cfeac78db02",
    "replaces": "W7_Rocks__cliff_rock"
   },
   {
    "name": "W7_CD_Rocks__grass",
    "group": "Rocks__grass",
    "material": "W1_grass",
-   "tris": 296,
+   "tris": 294,
    "collide": true,
    "anim": null,
    "region": "Rocks",
@@ -286,11 +286,11 @@
     197.3646
    ],
    "top": 42.4127,
-   "hash": "8dd2b6dd8ef47c8b",
+   "hash": "a3de95392531b54c",
    "replaces": "W7_Rocks__grass"
   }
  ],
  "count": 13,
- "triangles": 18743,
+ "triangles": 18745,
  "liveManifestSha256": "27c1f802f64e5e9c0291c20a8d72349188800ec8aef712eba19cd87c30abe69d"
 }

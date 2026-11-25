@@ -7,20 +7,20 @@
 -- never has it): WorldBeta.WorldV7 holds W7_CD_* (carved copies and new art) and W7C_CD_* (invisible collision), and
 -- WorldBeta's `Version` attribute must equal CliffDenData.version, or nothing is swapped (a stale pack falls back to
 -- the live island whole). Applied: workspace and the world model get the attribute CliffDen = true.
-local RunService=game:GetService("RunService")
 local ServerStorage=game:GetService("ServerStorage")
 local Shared=game:GetService("ReplicatedStorage").Shared
+local Tier=require(Shared.Tier)
 
 local Swap={}
 Swap.PlaceId=107705084891479 -- Pocket Pals Beta
 Swap.Attribute="CliffDen"
 Swap.Pack="WorldBeta"
 
+-- The tier's ceiling (code review): FeatureFlags.Tier and the beta place or Studio. Studio sessions of the live place
+-- count, as for the tier: Studio evidence of the live island is taken without the WorldBeta pack mounted.
 function Swap.allowed(env)
 	env=env or {}
-	local studio=env.studio
-	if studio==nil then studio=RunService:IsStudio()end
-	return(env.place or game.PlaceId)==Swap.PlaceId or studio==true
+	return Tier.ceiling({flags=env.flags,place=env.place,studio=env.studio})
 end
 
 -- world: the clone of ServerStorage.WorldAssets.WorldV7, not yet parented. Returns CliffDenData when applied, else nil.

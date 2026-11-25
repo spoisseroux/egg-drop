@@ -178,6 +178,8 @@ def build_palette():
         sx, sy = i % side, i // side
         slots[name] = ((sx + 0.5) / side, (sy + 0.5) / side)
     # The PNG is written by scripts/build_world_v7_assets.py (Blender's image save wrote black here).
+    if BETA:
+        return slots                                  # --beta writes only beta outputs (code review)
     (OUT / "world-v7-palette.json").write_text(json.dumps({
         "side": side, "px": 8, "order": names, "srgb": {n: [round(c, 5) for c in FLAT[n]] for n in names},
         "note": "Slot i sits at column i % side, row i // side counted from the BOTTOM in Blender UV space."}, indent=1))
