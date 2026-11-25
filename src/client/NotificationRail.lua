@@ -66,7 +66,9 @@ Rail.Kinds={
  done={disc="go",icon="check",color="ink",bar="go"},
  level={disc="selected",glyph="▲",color="ink",bar="go"},
  info={disc="tray",glyph="•",color="onShell",bar="inkSoft"},
- warning={disc="tomato",glyph="!",color="white",bar="tomato"}}
+ warning={disc="tomato",glyph="!",color="white",bar="tomato"},
+ -- G2 (RoundTwoNudge): an action line in the accent (go) disc; it names its icon with data.kitIcon.
+ round={disc="go",glyph="•",color="ink",bar="go"}}
 local How -- HowItWorks, required on first use (it requires DeckKit, which uses this rail)
 function Rail.held()
  if How==nil then
@@ -330,7 +332,7 @@ local function configure(t,data,size,barW,barH)
  local spec=Rail.Kinds[kind]
  -- An info line keeps its own glyph ("?", an item's glyph, "•").
  local glyph=if spec.glyph then(if kind=="info"and type(data.icon)=="string"and data.icon~=""then data.icon else spec.glyph)else nil
- if kind=="info"and type(data.kitIcon)=="string"and data.kitIcon~=""then glyph="@"..data.kitIcon end
+ if(kind=="info"or kind=="round")and type(data.kitIcon)=="string"and data.kitIcon~=""then glyph="@"..data.kitIcon end
  if t.discSize~=t.paintedDisc then t.paintedDisc=t.discSize;t.kind=nil end
  paintKind(t,kind,glyph,data.image)
  paintFace(t) -- a status line's tone can change (the egg ticket turns gold when it is ready)

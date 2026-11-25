@@ -683,7 +683,19 @@ clientUI.petContactRemote=remotes:WaitForChild("PetContact")
 roomView.petContactIntent=clientUI.PetContactIntent.new({now=os.clock,
  send=function(actionName,payload)clientUI.petContactRemote:FireServer(actionName,payload)end,
  eligible=function(context)return roomView:contactEligible(context)end,
- saved=function()if roomView.affection then roomView.affection:showSaved(reduceEffects())end end,
+ saved=function(receipt)
+  -- G2: any saved pet ends the paw prints; the first hello (FirstHelloBonus) shows the receipt's own total, and the
+  -- garden pills wait out its moment (Nothing else speaks for HelloQuiet s).
+  clientUI.petSavedAt=os.clock()
+  local hello=type(receipt)=="table"and receipt.hello or nil
+  local Hello=require(ReplicatedStorage.Shared.FirstHello)
+  if require(ReplicatedStorage.Shared.FeatureFlags).FirstHelloBonus==true and Hello.integer(hello,Hello.Stored)and hello>0 then
+   clientUI.helloQuietUntil=os.clock()+2.5
+   if roomView.affection then roomView.affection:showHello(1+hello,roomView.pet and roomView.pet.secondaryColor,reduceEffects())end
+   return
+  end
+  if roomView.affection then roomView.affection:showSaved(reduceEffects())end
+ end,
  -- QA Q2.7: the day's five pets are used; say so on the pet (at most every 20 s).
  capped=function()
   local now=os.clock();if now-(clientUI.petCapToldAt or -math.huge)<20 or not roomView.affection then return end
@@ -3345,6 +3357,76 @@ do
  end)
  gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy();clientUI.arrivalHatch:destroy();for _,link in ipairs(cs.links)do link:Disconnect()end end)
 end
+-- G2 (PetTrail, G2-FIRST-SESSION-LOOK 1a): the paw prints to the pet. CoachCards raises `trailDue` when the say-hi
+-- line shows (or a first-visit tour closes); the trail then runs until the first saved pet, 30 s, a menu or machine,
+-- or the deck. Hidden, not ended, while the garden is busy (the focus view, a transition). Contained in its own
+-- function: the top-level chunk is at Luau's 200-register limit.
+do
+ (function()
+ local Flags=require(ReplicatedStorage.Shared.FeatureFlags)
+ if Flags.PetTrail==true then
+  local Trail=require(script.PetTrail)
+  local Kit=require(script.DeckKit)
+  local trail=Trail.new({gui=overlayGui,ringColor=Kit.Tint.companions,chipColor=Kit.Tint.companions})
+  local state={pet=nil}
+  local function face(visual)
+   if state.pet and state.pet~=visual then state.pet.faceOwner=nil;state.pet.poseDirty=true end
+   state.pet=visual
+   if visual then visual.faceOwner=true end
+  end
+  local function release()if state.pet then state.pet.faceOwner=nil;state.pet.poseDirty=true;state.pet=nil end end
+  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Include
+  local function ground(x,z,lineY)
+   local room=workspace:FindFirstChild("EggDropLounge")
+   if not room then return nil end
+   params.FilterDescendantsInstances={room,workspace.Terrain}
+   local result=workspace:Raycast(Vector3.new(x,lineY+Trail.RayUp,z),Vector3.new(0,-Trail.RayDown,0),params)
+   if not result then return nil end
+   local hit=result.Instance
+   local regions=room:FindFirstChild("PetRegions")
+   local function inside(point)
+    for _,region in ipairs(regions and regions:GetChildren()or {})do
+     if region:IsA("BasePart")and(region:GetAttribute("GardenWetRegion")==true or region:GetAttribute("GardenBlockedRegion")==true)
+      and Trail.inFootprint(region.CFrame:PointToObjectSpace(point),region.Size)then return true end
+    end
+    return false
+   end
+   local info={position=result.Position,normal=result.Normal,
+    ground=hit:IsA("Terrain")or hit:GetAttribute("WorldMesh")==true or hit:GetAttribute("GardenWalkableSpan")~=nil,
+    water=result.Material==Enum.Material.Water or string.sub(hit.Name,1,8)=="W7_Water"}
+   return if Trail.ground(info,lineY,inside)then info else nil
+  end
+  local link
+  link=RunService.RenderStepped:Connect(function()
+   local now=os.clock()
+   -- Shown once a session: once it has drawn and gone, nothing here runs again.
+   if state.started and not trail.active then link:Disconnect();return end
+   local coach=clientUI.coach
+   if coach and coach.trailDue then
+    coach.trailDue=false
+    if not trail.active and not state.started then state.started=true;state.savedBefore=clientUI.petSavedAt;trail:start(now)end
+   end
+   if not trail.active then return end
+   local ctx=stationContext()
+   local menu=ctx.overlay or ctx.menuOpen or ctx.coreMenu or(clientUI.hub~=nil and clientUI.hub:isOpen())or clientUI.questLog.visible==true
+    or(clientUI.book~=nil and clientUI.book:isOpen())or clientUI.arrivalHatch:isOpen()
+   local reason=Trail.endReason(now-trail.startedAt,{hello=clientUI.petSavedAt~=state.savedBefore,menu=menu,deck=board:GetAttribute("Mode")~="Room"})
+   if reason then trail:stop(now);release()end
+   local character=player.Character
+   local root=character and character:FindFirstChild("HumanoidRootPart")
+   local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+   local pet=roomView.pet
+   local visible=not trail.leaving and roomView.canRoam()and root~=nil and humanoid~=nil and pet~=nil and pet.model and pet.model.Parent~=nil
+   if visible and not trail.leaving then face(pet)elseif not trail.leaving then release()end
+   local camera=workspace.CurrentCamera
+   trail:step(now,{visible=visible,player=if visible then root.Position-Vector3.new(0,humanoid.HipHeight+root.Size.Y*.5,0)else nil,
+    pet=if visible then pet.origin else nil,camera=camera,viewport=camera and camera.ViewportSize,
+    reducedMotion=reduceEffects(),ground=ground})
+  end)
+  gui.Destroying:Connect(function()link:Disconnect();release();trail:destroy()end)
+ end
+ end)()
+end
 -- Remaining Welcome/first-spend work: contained ownership keeps the top-level
 -- Luau local budget unchanged. Server owns timer/demo/grant and all toy writes.
 do
@@ -3449,17 +3531,50 @@ do
    clientUI.deck.boot.maxMs=1200
   else clientUI.deck.boot.maxMs=nil end
   local stage=clientUI.firstSpend.stage
-  local canOffer=stage=="purchase"and board:GetAttribute("Mode")=="Room"and roomView.canRoam()and focused
+  local free=board:GetAttribute("Mode")=="Room"and roomView.canRoam()and focused
    and not clientUI.coach.gardenView.root.Visible and not roomView.focusing and not roomView.busy
+  -- G2 (FirstHelloBonus): the first hello's moment is its own; the garden pills wait it out.
+  local quiet=os.clock()<(clientUI.helloQuietUntil or 0)
+  local canOffer=stage=="purchase"and free and not quiet
+  local growthFlags=require(ReplicatedStorage.Shared.FeatureFlags)
+  local Nudge=require(script.GrowthNudge)
+  local petName=(Pets.byId[board:GetAttribute("CompanionId")or ""]or Pets.active[1]or Pets[1]).name
   spendButton.Visible=false
   if canOffer then
+   -- G2 (ToyPillCopy): the pill and its card name the pet (refreshed if the name changes); off = today's words.
+   local toy=Nudge.toyCopy(growthFlags)
+   local vars=if toy.named then{pet=petName}else nil
+   local run=function()clientUI.firstSpend:openEggs()end
    if not clientUI.firstSpendRail then
-    clientUI.firstSpendRail=require(script.NotificationRail).status(clientUI.coach.host,"firstSpend",{text=Copy.get("notice.pill.firstSpend"),icon="★",priority=1,
+    clientUI.firstSpendRail=require(script.NotificationRail).status(clientUI.coach.host,"firstSpend",{text=Copy.get(toy.pill,vars),icon="★",priority=1,
      -- QA v735 H5: a tap explains it first; the card's button opens Hatch eggs on the Toy Egg.
-     detail=require(script.NoticeCards).detail("firstSpend",nil,function()clientUI.firstSpend:openEggs()end)})
+     detail=require(script.NoticeCards).detail(toy.card,vars,run)})
+    clientUI.firstSpendName=petName
+   elseif toy.named and clientUI.firstSpendName~=petName then
+    clientUI.firstSpendName=petName
+    clientUI.firstSpendRail:update({text=Copy.get(toy.pill,vars),detail=require(script.NoticeCards).detail(toy.card,vars,run)})
    end
    clientUI.firstSpendRail:update({active=true})
   elseif clientUI.firstSpendRail then clientUI.firstSpendRail:update({active=false})end
+  -- G2 (RoundTwoNudge): after the toy (or with no Stars for one), one pill that taps straight into round two. It waits
+  -- Nudge.Delay s in a free garden, never shows with the toy pill (another stage) and never again once a field
+  -- round has started this session (a new session brings it back until one is saved).
+  -- "Started" = a ball dropped in a field round (not just the deck open, a menu or the hatch reveal).
+  if(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Board"and clientUI.attr("FieldPhase")~="Welcome"
+   and(clientUI.attr("Drops")or 0)>0 then clientUI.roundTwoStarted=true end
+  -- On the beta the need bubbles (Onboard.on("needs")) own round two (the deck bubble): no pill while they are on.
+  local roundTwo=if require(ReplicatedStorage.Shared.Onboard).on("needs")then nil else Nudge.variant(stage,nurseryState,growthFlags,clientUI.roundTwoStarted)
+  if roundTwo and free and not quiet then clientUI.roundTwoSince=clientUI.roundTwoSince or os.clock()else clientUI.roundTwoSince=nil end
+  if clientUI.roundTwoSince and os.clock()-clientUI.roundTwoSince>=Nudge.Delay then
+   local key,vars=Nudge.copy(roundTwo,petName)
+   local text=Copy.get(key,vars)
+   if not clientUI.roundTwoRail then
+    clientUI.roundTwoRail=require(script.NotificationRail).status(clientUI.coach.host,"roundTwo",{text=text,kind="round",kitIcon="ball",priority=1,
+     activate=function()if clientUI.playRoundForStars()then clientUI.accepted("confirm");return true end;return false end})
+   elseif clientUI.roundTwoText~=text then clientUI.roundTwoRail:update({text=text})end
+   clientUI.roundTwoText=text
+   clientUI.roundTwoRail:update({active=true})
+  elseif clientUI.roundTwoRail then clientUI.roundTwoRail:update({active=false})end
   local flight=clientUI.firstSpend.flight
   if flight then
    local humanoid=player.Character and player.Character:FindFirstChildOfClass("Humanoid")
@@ -3479,6 +3594,7 @@ do
  gui.Destroying:Connect(function()
   for _,link in ipairs(links)do link:Disconnect()end
   if clientUI.firstSpendRail then clientUI.firstSpendRail:cancel();clientUI.firstSpendRail=nil end
+  if clientUI.roundTwoRail then clientUI.roundTwoRail:cancel();clientUI.roundTwoRail=nil end
   clientUI.firstSpend:destroy();clientUI.deck:destroyWelcome();legacy:destroy();legacySkip:Destroy();legacyGesture:Destroy();spendButton:Destroy()
  end)
  end)()
@@ -5483,6 +5599,9 @@ do
    end,false,Enum.ContextActionPriority.Medium.Value,Enum.KeyCode.G,Enum.KeyCode.ButtonL2)
    clientUI.needs=needs
    clientUI.coach.options.follow=function()return Onboard.sessionFollow()end
+   -- G2 (PetTrail) on the beta: following the Bear with the need bubbles, the paw prints lead to the pet while the
+   -- needHi bubble asks for a hello (the Bear's own prints to the machine start after it).
+   clientUI.coach.options.followTrail=function()return Onboard.on("needs")end
   end)
   if not okNeeds then warn("[Onboard] not mounted: "..tostring(needsProblem))end
   -- Twice a second while on: the race's station follows the live gate, and a race joined clears the New dot.

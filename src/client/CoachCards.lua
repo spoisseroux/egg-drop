@@ -444,6 +444,8 @@ function Cards:showGarden(id,kind,vars,now,machine)
    if self.garden==current then current.presented=true;if kind=="once"then self:mark(id)end end
    -- Growth cuts: the say-hi line is the garden step; it is saved the moment it shows.
    if kind=="sayHi"then self:mark("gardenIntro")end
+   -- G2 (PetTrail): the paw prints draw with the say-hi line, from the moment it shows.
+   if kind=="sayHi"and self.garden==current then self.trailDue=true end
   end,
   onDone=function()
    if self.garden~=current then return end
@@ -532,7 +534,17 @@ function Cards:v3Tomorrow()
  local ok,on=pcall(own)
  return ok and on==true
 end
+-- G2 on the beta: do the paw prints to the pet run with follow the Bear (options.followTrail: the need bubbles on)?
+function Cards:followTrail()
+ local own=self.options.followTrail
+ if type(own)~="function"then return false end
+ local ok,on=pcall(own)
+ return ok and on==true
+end
 function Cards:finishGarden()
+ -- G2 (PetTrail): a first visit's garden step (not a replay) ends: the paw prints may draw (init.client reads it).
+ -- Follow the Bear on (BearNeeds ends the step): never here; step raises it with the needHi bubble instead.
+ if not self.replaying and not self:following()then self.trailDue=true end
  self.beat=nil;self.gardenDone=true;self.replaying=false
  self:mark("gardenIntro")
 end
@@ -679,6 +691,11 @@ function Cards:step(now,ctx)
    if self.starterStars and not self.toldStars then
     self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
    end
+  elseif self.flags.PetTrail==true and not self.followTrailRaised and not self.replaying and not self.gardenDone
+   and Cards.sayHiMayStart(base,roomFor)and Coach.stage(base)=="garden"and self:following()and self:followTrail()then
+   -- G2 (PetTrail) on the beta: following the Bear with the need bubbles, the prints lead to the pet as the step
+   -- would have opened (the needHi bubble asks for the hello). Once a session; the next frame goes on below.
+   self.followTrailRaised=true;self.trailDue=true
   elseif self.starterStars and not self.toldStars and not self.gardenDone and Cards.beatMayStart(base,roomFor,false)then
    -- Follow the Bear: no tour, but the Welcome round's Stars are still said once, when the garden step would open.
    self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))

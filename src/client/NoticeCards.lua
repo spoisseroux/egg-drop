@@ -8,7 +8,8 @@ local UICopy=require(Shared:WaitForChild("UICopy"))
 local Notice={}
 -- tint: a Kit.Tint family; icon / nextIcon: Kit.icon names for the two cards; go: where the
 -- button leads ("quests" | "hatch" | "companions" | "menu"), nil for no button.
-local function define(tint,icon,nextIcon,go)return table.freeze({tint=tint,icon=icon,nextIcon=nextIcon,go=go})end
+-- nextFrom: another notice whose `next` line this one reuses (G2: firstToy keeps firstSpend's, no new string).
+local function define(tint,icon,nextIcon,go,nextFrom)return table.freeze({tint=tint,icon=icon,nextIcon=nextIcon,go=go,nextFrom=nextFrom})end
 Notice.ById=table.freeze({
  -- The Welcome round and its Stars.
  welcome=define("results","egg","target",nil),
@@ -28,6 +29,8 @@ Notice.ById=table.freeze({
  questClaimed=define("quests","star","egg","hatch"),
  -- The first egg, and bond.
  firstSpend=define("hatch","star","egg","hatch"),
+ -- G2 (ToyPillCopy): the same card in the new words.
+ firstToy=define("hatch","star","egg","hatch","firstSpend"),
  bond=define("companions","paw","smiley","companions"),
  -- Things to do (ThingsTips): the button lays the trail (each line brings its own `run`).
  parkInvite=define("companions","paw","target","show"),
@@ -38,7 +41,7 @@ Notice.ById=table.freeze({
  tomorrow=define("quests","check","quests","quests"),
 })
 Notice.Order=table.freeze({"welcome","firstStars","locked","machines","hub","quest","customize","fillLine","item",
- "questDone","questReady","questClaimed","firstSpend","bond","parkInvite","dashIntro","dashNew","findsIntro","tomorrow"})
+ "questDone","questReady","questClaimed","firstSpend","firstToy","bond","parkInvite","dashIntro","dashNew","findsIntro","tomorrow"})
 Notice.Targets=table.freeze({"quests","hatch","companions","menu","show"})
 -- Values every line can be filled from when the caller has none.
 Notice.Defaults=table.freeze({pet="your pet",reward="",quest="A quest"})
@@ -55,7 +58,7 @@ function Notice.cards(id,vars)
  local values=fill(vars)
  return{
   {key="what",icon=row.icon,title=UICopy.get("notice.label.what"),line=UICopy.get("notice."..id..".what",values)},
-  {key="next",icon=row.nextIcon,title=UICopy.get("notice.label.next"),line=UICopy.get("notice."..id..".next",values)},
+  {key="next",icon=row.nextIcon,title=UICopy.get("notice.label.next"),line=UICopy.get("notice."..(row.nextFrom or id)..".next",values)},
  }
 end
 -- The button: {target, text}, or nil when the notice leads nowhere.

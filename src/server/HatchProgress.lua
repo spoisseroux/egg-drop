@@ -33,6 +33,8 @@ local PlayDate=require(script.Parent.PlayDateState)
 local Coach=require(ReplicatedStorage.Shared.CoachMarks)
 -- Growth cuts (2026-11-25): the Welcome bonus on a new save's first three field rounds (optional `starterRounds`).
 local StarterBonus=require(ReplicatedStorage.Shared.StarterBonus)
+-- G2 (2026-11-25): the first hello, +2 Stars on a new save's first paid pet (optional `firstHello`).
+local FirstHello=require(ReplicatedStorage.Shared.FirstHello)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 local StampCard=require(ReplicatedStorage.Shared.StampCard)
@@ -110,6 +112,8 @@ local function defaultAdapter()
 		-- Growth cuts: the live adapter pays the Welcome bonus (with FeatureFlags.StarterBonus). Specs build their
 		-- own adapters and keep their exact payouts unless they opt in (scripts/StarterBonus.spec.lua).
 		starterBonus = true,
+		-- G2: the live adapter pays the first hello (with FeatureFlags.FirstHelloBonus); spec adapters opt in.
+		firstHello = true,
 	}
 end
 
@@ -226,7 +230,8 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- Customization Egg (2026-11-16): optional additive finishInventory, petFinish, charmUnlocks,
 -- lookCharmMisses and lookFound on v11 (LookState.valid, run inside HueState.valid).
 -- Welcome bonus (growth cuts 2026-11-25): optional additive `starterRounds` on v11, valid when missing (no version bump).
-local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and StarterBonus.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+-- First hello (G2 2026-11-25): optional additive `firstHello` on v11, valid when missing (no version bump).
+local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and StarterBonus.valid(state)and FirstHello.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -356,6 +361,8 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and state.coachMask ~= nil then state.coachMask = Coach.sanitize(state.coachMask) end
 		-- A malformed Welcome bonus counter is dropped (then read as a save that has played: no bonus), never a failed load.
 		if type(state) == "table" and state.starterRounds ~= nil then state.starterRounds = StarterBonus.sanitize(state.starterRounds) end
+		-- G2: a malformed first-hello field is dropped (then read by its rule: a save with a paid pet is done), never a failed load.
+		if type(state) == "table" and state.firstHello ~= nil then state.firstHello = FirstHello.sanitize(state.firstHello) end
 		-- Malformed bond XP is repaired (bad entries dropped), never a failed load.
 		if type(state) == "table" and state.bond ~= nil then state.bond = Bond.sanitize(state.bond) end
 		-- v2 stats (S1): malformed stat fields are repaired, never a failed load.
@@ -915,7 +922,11 @@ function Hatching.awardPet(handle,candidate)
 	local receipt=handle.state.lastPetAward
 	if receipt and receipt.id==candidate.id and receipt.sequence==candidate.sequence and receipt.day==candidate.day and receipt.petId==candidate.petId then return true,"AlreadySaved"end
 	if candidate.sequence~=handle.state.operationSeq+1 then return false,"StalePetAward"end
-	local fixed=table.freeze(clone(candidate))
+	-- G2: the first-hello switch is read once here, after the key check, and frozen with the candidate (a retry
+	-- resumes the pending candidate, so it pays the same way).
+	local fixed=clone(candidate)
+	fixed.hello=FeatureFlags.FirstHelloBonus==true and handle.adapter.firstHello==true
+	fixed=table.freeze(fixed)
 	return transact(handle,"pet:"..fixed.id,handle.state.revision,function(state,captured)
 		local current=dayOf(handle.adapter.now())
 		if captured.day~=current then return false,"ExpiredDay"end
@@ -924,9 +935,13 @@ function Hatching.awardPet(handle,candidate)
 		if not Catalog.isOwned(state.inventoryMask,captured.petId)then return false,"PetChanged"end
 		local count=if tonumber(current)>tonumber(state.petDay)then 0 else state.petCount
 		if count>=Hatching.PetDailyCap then return false,"PetCap"end
-		if state.nectar>=1000000000 then return false,"BalanceLimit"end
-		state.nectar+=1;state.petDay=current;state.petCount=count+1
-		state.lastPetAward={id=captured.id,sequence=state.operationSeq+1,day=current,petId=captured.petId}
+		-- G2: the first hello is read from this snapshot BEFORE lastPetAward (its "never petted" marker) is written.
+		local hello=if captured.hello and FirstHello.due(state)then FirstHello.Bonus else 0
+		if state.nectar+1+hello>1000000000 then hello=0 end -- never refuse the pet itself for the hello
+		if state.nectar+1>1000000000 then return false,"BalanceLimit"end
+		if hello>0 then FirstHello.apply(state)end
+		state.nectar+=1+hello;state.petDay=current;state.petCount=count+1
+		state.lastPetAward={id=captured.id,sequence=state.operationSeq+1,day=current,petId=captured.petId,hello=if hello>0 then hello else nil}
 		-- Bond (slice F): +1 XP per paid pet, so at most PetDailyCap a day. Never fails.
 		Bond.add(state,captured.petId,Bond.XP.pet)
 		-- v2 S2: Heart for an accepted petting pulse (already capped by PetDailyCap).
