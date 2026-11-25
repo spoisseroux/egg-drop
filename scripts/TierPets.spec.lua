@@ -34,6 +34,15 @@ return function(server)
 		assert(Pets.resolve(nil,nil,true)==true and Pets.resolve("x",nil,true)==true and Pets.resolve(false,nil,true)==false)
 		assert(Pets.resolve(false,true,true)==true and Pets.resolve(true,false,true)==false and Pets.resolve(true,true,false)==false)
 		assert(Pets.Key=="garden_tier_pets"and Pets.Attribute=="TierPets_on")
+		-- The server needs its own value and the attribute both: the attribute alone is a real kill path (Studio probes
+		-- drive instance state only, never this module's copy).
+		if Pets.ceiling()then
+			local was=workspace:GetAttribute(Pets.Attribute)
+			Pets.setSwitch(true);workspace:SetAttribute(Pets.Attribute,true);assert(Pets.on()==true)
+			workspace:SetAttribute(Pets.Attribute,false);assert(Pets.on()==false,"the attribute off closes it")
+			workspace:SetAttribute(Pets.Attribute,true);Pets.setSwitch(false);assert(Pets.on()==false,"the server's own value off closes it")
+			workspace:SetAttribute(Pets.Attribute,was)
+		end
 		local Config=require(server.TierPetsConfig)
 		assert(Config.parse("/tierpets on").value==true and Config.parse(" /TierPets OFF ").value==false and Config.parse("/tierpets clear").value==nil)
 		assert(Config.parse("/tier on")==nil and Config.parse("/tierpets")==nil and Config.parse("/tierpets maybe")==nil)

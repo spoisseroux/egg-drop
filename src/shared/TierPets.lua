@@ -64,10 +64,14 @@ function Pets.setSwitch(value)
 	return true
 end
 -- The switch alone (the server's gate also needs TierHost.open and the catch-up switch).
+-- The server needs its own value and the attribute both (as Tier.on and Den.on), so writing the workspace attribute is a
+-- real kill path (Studio probes run in their own module cache: they can only drive instance state). A client reads the
+-- attribute alone.
 function Pets.on()
 	if injected then return injected.on~=false and Pets.ceiling(injected)end
 	if not Pets.ceiling()then return false end
-	return switch
+	if RunService:IsServer()and not switch then return false end
+	return workspace:GetAttribute(Pets.Attribute)==true
 end
 function Pets.inject(env)
 	if not RunService:IsStudio()then return false end
