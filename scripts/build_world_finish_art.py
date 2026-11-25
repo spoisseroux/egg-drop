@@ -191,6 +191,18 @@ def recut(source_name, new_name, doomed, corner=None):
     return o, len(gone)
 
 
+def remeasure(rows):
+    """Right before a manifest is written: every row's centre, size and triangles again from its object's face vertices
+    as exported (Roblox's MeshSize ignores loose vertices). The den's shard pass once removed faces after its rows were
+    measured, and five parts missed the one import scale."""
+    for r in rows:
+        o = bpy.data.objects[r["name"]]
+        c, s = L.bounds_rb(o)
+        if r["role"] == "template":
+            c = [c[0], round(c[1] - 4, 4), c[2]]
+        r["centre"], r["size"], r["triangles"] = c, s, L.tris(o)
+
+
 def manifest_row(obj, role, look, slice_, extra=None):
     centre, size = L.bounds_rb(obj)
     row = {"name": obj.name, "slice": slice_, "role": role, "centre": centre, "size": size, "triangles": L.tris(obj),
@@ -488,6 +500,7 @@ def slice_den():
         ([skin] if skin else [])
     report["apron"] = L.tris(apron)
     L.export_fbx(exported, OUT / "world-finish-den.fbx")
+    remeasure(rows)
     (OUT / "world-finish-den.json").write_text(json.dumps({"slice": "den", "parts": rows, "place": place,
                                                             "hide": Den.HIDE, "report": report}, indent=1) + "\n",
                                                encoding="utf-8")
@@ -654,6 +667,7 @@ def slice_path():
     report["stepMaxDeviation"] = max((s["dev"] for s in step_rows), default=0)
     print("WORLDFINISH path", json.dumps(report))
     L.export_fbx(parts + kit + [st] + cuts, OUT / "world-finish-path.fbx")
+    remeasure(rows)
     (OUT / "world-finish-path.json").write_text(json.dumps({"slice": "path", "parts": rows, "place": place,
                                                              "hide": ["W7_CD_CliffPath__cliff_rock",
                                                                       "W7_CD_CliffPath__dirt_path"],
@@ -719,6 +733,7 @@ def slice_terrace():
     report["fixedTotal"] = sum(r["triangles"] for r in rows if r["role"] == "fixed")
     print("WORLDFINISH terrace", json.dumps(report))
     L.export_fbx(parts + [log, trunk], OUT / "world-finish-terrace.fbx")
+    remeasure(rows)
     (OUT / "world-finish-terrace.json").write_text(json.dumps({"slice": "terrace", "parts": rows, "place": place,
                                                                 "hide": [], "report": report}, indent=1) + "\n",
                                                     encoding="utf-8")
