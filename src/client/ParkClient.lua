@@ -404,6 +404,8 @@ function Client.new(options)
 	if not primary then return nil end
 	primary.sites={[DefaultPark.Id]=primary}
 	for _,layout in ipairs(DefaultPark.Sites)do
+		-- WORLD-FINISH-LOOK slice B: the Top Lawn (a terrace site) only with the island's sculpt in, as the server mounts it.
+		if layout.Terrace and workspace:GetAttribute("CliffDen")~=true and not(options and options.cliff==true)then continue end
 		if layout.Id~=DefaultPark.Id then
 			local childOptions=table.clone(options or {})
 			-- An injected single-site fixture remains a single-site source.

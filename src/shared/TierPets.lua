@@ -269,7 +269,8 @@ end
 
 -- Rest spots up there: two on the terrace, one at the turn pocket (3.5 studs short of CliffDenData's path.turn).
 -- {id, position}, never exclusive (no rest-path solid check: architect).
-Pets.TerraceRests=table.freeze({{"tier_ne",-22,-12},{"tier_sw",24,6}})
+-- (s, t): clear of the greybox clumps (TierGreybox) and the Top Lawn's circle by 3+.
+Pets.TerraceRests=table.freeze({{"tier_ne",-17,-8},{"tier_sw",24,6}})
 Pets.TurnRestShort=3.5
 local restCache=setmetatable({},{__mode="k"})
 function Pets.turnU(p,data)

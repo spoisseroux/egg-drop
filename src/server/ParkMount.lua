@@ -145,23 +145,50 @@ end
 local Mount=build(DefaultPark)
 local singleBuild=Mount.build
 local cache={}
+-- WORLD-FINISH-LOOK slice B: the Top Lawn (a terrace site) stands only with the island's sculpt in (workspace CliffDen,
+-- set at server start before this runs): without it there is no terrace and no way up. options.cliff (specs) overrides.
+local function terraceReady(options)
+	if options.cliff~=nil then return options.cliff==true end
+	return require(Shared.Tier).cliff()
+end
+-- The Paw Glade (ParkLayout.Glade, only with the Top Lawn on): the Hollow's dressing that stays and its own bench, beside
+-- the parks (never in the lounge). options as Mount.build (createMesh, carve, async).
+function Mount.buildGlade(room,options)
+	options=options or {}
+	local Glade=DefaultPark.Glade
+	if not Glade or typeof(room)~="Instance"then return nil end
+	local Data=DataModule.forSite(DefaultPark)
+	local static,colliders,seats=Data.benchParts(Glade.bench)
+	local logBox=if Glade.log then Data.logBox(Glade.log)else nil
+	local function makePart(name)
+		local part=Mount.makePart(name,options.createMesh)
+		part.PivotOffset=Data.pivotOffset(name)
+		return part
+	end
+	return require(script.Parent.ParkHollowMount).buildGlade(room,Glade,{static=static,colliders=colliders,seats=seats},
+		logBox,makePart,options.carve,options.async)
+end
 function Mount.build(room,options)
 	options=options or {}
 	if options.siteId then
 		local layout=DefaultPark.ById[options.siteId]
 		if not layout then return nil end
 		if layout.Id==DefaultPark.Id then return singleBuild(room,options)end
+		if layout.Terrace and not terraceReady(options)then return nil end
 		cache[layout.Id]=cache[layout.Id]or build(layout)
 		return cache[layout.Id].build(room,options)
 	end
 	local primary=singleBuild(room,options)
 	if not primary then return nil end
 	for _,layout in ipairs(DefaultPark.Sites)do
-		if layout.Id~=DefaultPark.Id then
+		if layout.Id~=DefaultPark.Id and not(layout.Terrace and not terraceReady(options))then
 			cache[layout.Id]=cache[layout.Id]or build(layout)
 			cache[layout.Id].build(room,options)
 		end
 	end
+	-- The glade with the Top Lawn only (code review: a Studio session without the sculpt keeps the cliff foot as it is,
+	-- with neither; the Hollow comes back only with ParkTopLawn off).
+	if DefaultPark.Glade and terraceReady(options)then Mount.buildGlade(room,options)end
 	return primary
 end
 return Mount

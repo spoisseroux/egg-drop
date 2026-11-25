@@ -96,6 +96,7 @@ function Hollow.stone(row,parent,carve)
 end
 
 -- Everything but the stones (cheap, synchronous): ground plates, the flower drift, the log, the stumps, the column.
+-- `Park` is a site with Dressing (the Hollow, the Top Lawn: no log, stumps or column), or {Dressing = Glade}.
 function Hollow.buildStatic(folder,Park)
 	local D=Park.Dressing
 	for _,row in ipairs(D.plates)do
@@ -111,23 +112,27 @@ function Hollow.buildStatic(folder,Park)
 	end
 	-- The fallen log along the rim, sunk .25, its length along `heading`; the lighter end cap at the +X end.
 	local log=D.log
-	local frame=CFrame.new(log.x,log.y+log.diameter*.5-log.sink,log.z)*CFrame.Angles(0,log.heading-math.pi*.5,0)
-	cylinder("HollowLog",Vector3.new(log.length,log.diameter,log.diameter),frame,hex(log.colour),Enum.Material.Wood,folder)
-	cylinder("HollowLogCap",Vector3.new(.06,log.diameter*.9,log.diameter*.9),frame*CFrame.new(log.length*.5+.02,0,0),hex(log.cap),Enum.Material.Wood,folder)
+	if log then
+		local frame=CFrame.new(log.x,log.y+log.diameter*.5-log.sink,log.z)*CFrame.Angles(0,log.heading-math.pi*.5,0)
+		cylinder("HollowLog",Vector3.new(log.length,log.diameter,log.diameter),frame,hex(log.colour),Enum.Material.Wood,folder)
+		cylinder("HollowLogCap",Vector3.new(.06,log.diameter*.9,log.diameter*.9),frame*CFrame.new(log.length*.5+.02,0,0),hex(log.cap),Enum.Material.Wood,folder)
+	end
 	-- The stump circle: upright cylinders with a pale cut top.
 	local upright=CFrame.Angles(0,0,math.pi*.5)
-	for index,stump in ipairs(D.stumps)do
+	for index,stump in ipairs(D.stumps or {})do
 		local at=CFrame.new(stump.x,stump.y,stump.z)*CFrame.Angles(0,index*1.9,0)
 		cylinder("HollowStump",Vector3.new(stump.height,stump.diameter,stump.diameter),at*CFrame.new(0,stump.height*.5-.05,0)*upright,WOOD,Enum.Material.Wood,folder)
 		cylinder("HollowStumpTop",Vector3.new(.04,stump.diameter*.92,stump.diameter*.92),at*CFrame.new(0,stump.height-.05+.02,0)*upright,
-			hex(log.cap),Enum.Material.Wood,folder)
+			hex(if log then log.cap else "#B79A72"),Enum.Material.Wood,folder)
 	end
 	-- The fallen column, leaned 20 degrees, 60% under the sand, one gold band.
 	local column=D.column
-	local axis=CFrame.new(column.x,column.y,column.z)*CFrame.Angles(0,column.heading-math.pi*.5,0)*CFrame.Angles(0,0,column.lean)
-	cylinder("HollowColumn",Vector3.new(column.length,column.diameter,column.diameter),axis,hex(column.colour),Enum.Material.Marble,folder)
-	cylinder("HollowColumnBand",Vector3.new(column.bandWidth,column.diameter+.06,column.diameter+.06),axis*CFrame.new(column.length*.22,0,0),
-		hex(column.band),Enum.Material.Metal,folder)
+	if column then
+		local axis=CFrame.new(column.x,column.y,column.z)*CFrame.Angles(0,column.heading-math.pi*.5,0)*CFrame.Angles(0,0,column.lean)
+		cylinder("HollowColumn",Vector3.new(column.length,column.diameter,column.diameter),axis,hex(column.colour),Enum.Material.Marble,folder)
+		cylinder("HollowColumnBand",Vector3.new(column.bandWidth,column.diameter+.06,column.diameter+.06),axis*CFrame.new(column.length*.22,0,0),
+			hex(column.band),Enum.Material.Metal,folder)
+	end
 end
 
 -- The stones (GeometryService yields: ParkMount calls this inside its mesh task).
@@ -136,6 +141,61 @@ function Hollow.buildStones(folder,Park,carve)
 		if not folder.Parent then return end
 		Hollow.stone(row,folder,carve)
 	end
+end
+
+-- The Paw Glade (WORLD-FINISH-LOOK slice B; ParkLayout.Glade): the Hollow's dressing that stays, as above, plus its own
+-- long bench (ParkPoseData.benchParts: the mesh, two player colliders, five seats with a Sit prompt each, as the park's)
+-- and the log's player collider. `bench` = {static, colliders, seats} from benchParts; `logBox` = {cframe, size} or nil;
+-- `makePart(name)` -> the bench mesh part (ParkMount's, a grey box when the mesh fails). Returns the model.
+Hollow.GladeName="PawGlade"
+function Hollow.buildGlade(parent,Glade,bench,logBox,makePart,carve,async)
+	local existing=parent:FindFirstChild(Hollow.GladeName)
+	if existing then existing:Destroy()end
+	local model=Instance.new("Model");model.Name=Hollow.GladeName
+	local dressing=Instance.new("Folder");dressing.Name="Dressing";dressing.Parent=model
+	local site={Dressing=Glade}
+	Hollow.buildStatic(dressing,site)
+	local colliders=Instance.new("Folder");colliders.Name="Colliders";colliders.Parent=model
+	local boxes=table.clone(bench.colliders)
+	if logBox then table.insert(boxes,logBox)end
+	for index,box in ipairs(boxes)do
+		local part=Instance.new("Part");part.Name="GladeCollider"..index;part.Size=box.size;part.CFrame=box.cframe
+		part.Anchored=true;part.CanCollide=true;part.CanQuery=false;part.CanTouch=false
+		part.Transparency=1;part.CastShadow=false
+		part:SetAttribute("ParkCollider",true)
+		part.Parent=colliders
+	end
+	local seats=Instance.new("Folder");seats.Name="Seats";seats.Parent=model
+	for _,spot in ipairs(bench.seats)do
+		local seat=Instance.new("Seat")
+		seat.Name="Bench_"..spot.bench.."_"..spot.index;seat.Size=spot.size;seat.CFrame=spot.cframe
+		seat.Anchored=true;seat.CanCollide=false;seat.CanQuery=false;seat.CanTouch=false
+		seat.Transparency=1;seat.CastShadow=false
+		seat:SetAttribute("ParkSeat",true)
+		local prompt=Instance.new("ProximityPrompt")
+		prompt.Name="SitPrompt";prompt.ActionText="Sit";prompt.ObjectText="Bench"
+		prompt.MaxActivationDistance=7;prompt.RequiresLineOfSight=false;prompt.HoldDuration=0
+		prompt.Parent=seat
+		prompt.Triggered:Connect(function(player)
+			local humanoid=player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+			if humanoid and not seat.Occupant and humanoid.Health>0 and not humanoid.Sit then seat:Sit(humanoid)end
+		end)
+		seat.Parent=seats
+	end
+	model.Parent=parent
+	local function slow()
+		for index,entry in ipairs(bench.static)do
+			if not model.Parent then return end
+			local part=makePart(entry.mesh)
+			part.Name=entry.mesh.."_glade_"..index
+			part.Size=entry.size;part.CFrame=entry.cframe
+			part.Parent=model
+		end
+		Hollow.buildStones(dressing,site,carve)
+		model:SetAttribute("GladeReady",true)
+	end
+	if async==false then slow()else task.spawn(slow)end
+	return model
 end
 
 return Hollow

@@ -8,7 +8,14 @@ return function(server)
 	local Data=require(Shared.ParkPoseData)
 	local Activities=require(Shared.ParkActivities)
 	local cases={}
-	local function test(name,run)run();table.insert(cases,name)end
+	-- The Top Lawn's gate (WORLD-FINISH-LOOK slice B): open for these cases, the server's own put back after (code review).
+	local savedGate=Park.terraceGate()
+	Park.setTerraceGate(function()return true end)
+	local function test(name,run)
+		local ok,problem=pcall(run)
+		if not ok then Park.setTerraceGate(savedGate);error(problem,0)end
+		table.insert(cases,name)
+	end
 	local function fixture(count)
 		local state={now=1000,inputs={},finished={},busy={}}
 		local function set(id,site)
@@ -30,15 +37,29 @@ return function(server)
 		local g=Park.ById.grove;local d=Data.forSite(g)
 		assert(d~=Data and d==Data.forSite("grove"),"immutable data cached per site")
 		assert((d.Roots.SwingSet.Position-g.Equipment.swing.position).Magnitude<.001)
-		assert(g.Benches[1].position.Z>g.Center.Z,"grove bench opens toward hub")
-		if g.Natural then
+		if g.Terrace then
+			-- The Top Lawn (WORLD-FINISH-LOOK slice B, ParkSites.spec): on the terrace's floor, its gaps toward the
+			-- path's arrival and the lookout, the bench on the outer side facing the centre (the view over the garden).
+			assert(math.abs(g.Center.Y-g.FloorY-.025)<1e-6 and g.Gateways[1].id=="path"and g.Gateways[2].id=="lookout")
+			local bench=g.Benches[1]
+			assert(Vector2.new(math.sin(bench.yaw),math.cos(bench.yaw)):Dot(Vector2.new(g.Center.X-bench.position.X,g.Center.Z-bench.position.Z).Unit)>.999)
+			assert(not g.member(g.Center-Vector3.new(0,10,0),false),"not from the lawn under it")
+		else
+			assert(g.Benches[1].position.Z>g.Center.Z,"grove bench opens toward hub")
+		end
+		if g.Terrace then
+			-- The slide's chute runs from the lip toward the centre.
+			local deck,foot=g.Equipment.slide.position,g.Slots.slide.chuteEnd
+			assert(Vector2.new(foot.X-g.Center.X,foot.Z-g.Center.Z).Magnitude<Vector2.new(deck.X-g.Center.X,deck.Z-g.Center.Z).Magnitude,"slide choreography turns together")
+		elseif g.Natural then
 			-- The Hollow (beta and Studio, ParkSites.spec): its path gap faces the dirt path east, its plaza gap the hub.
 			assert(g.Gateways[1].id=="path"and g.Gateways[1].position.X>g.Center.X+g.Radius.X*.8,"path gap opens east")
 			assert(g.Gateways[2].id=="plaza"and g.Gateways[2].position.Z>g.Center.Z+g.Radius.Y*.8,"plaza gap opens toward the hub")
+			assert(g.Slots.slide.chuteEnd.Z>g.Equipment.slide.position.Z,"slide choreography rotates together")
 		else
 			assert(g.Gateways[1].position.X>g.Center.X+14,"east path gateway does not rotate west")
+			assert(g.Slots.slide.chuteEnd.Z>g.Equipment.slide.position.Z,"slide choreography rotates together")
 		end
-		assert(g.Slots.slide.chuteEnd.Z>g.Equipment.slide.position.Z,"slide choreography rotates together")
 		for _,site in ipairs(Park.Sites)do
 			assert(#site.SlotOrder==9 and site.member(site.Center,false))
 			assert(Park.siteAt(site.Center,nil)==site)
@@ -118,5 +139,6 @@ return function(server)
 		assert(four.park==nil and next(grove.sessions)==nil and c.director.sessions[arrivalSession],"care cleanup isolated")
 	end)
 
+	Park.setTerraceGate(savedGate)
 	return {passed=#cases,cases=cases}
 end

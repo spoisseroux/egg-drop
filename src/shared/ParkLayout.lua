@@ -27,13 +27,30 @@
 --                       its play side. Without it, the pieces stand in the arrival arrangement round the centre.
 --   rotation            legacy: turn the whole site about its centre (the old grove; a `fixed` gap does not turn)
 --   natural, dressing   the Hollow: no kerb, no star-orb posts, the dressing list instead (ParkMount)
+--   floorY              the Top Lawn (WORLD-FINISH-LOOK section 1, slice B): flat ground at floorY (the terrace), and
+--                       membership only standing up there (Y >= floorY - 4) while the gate is open (the server's:
+--                       setTerraceGate, the TierPets gate; a client reads the switches the server publishes)
+--   lawnDressing        the Top Lawn's list (patches under the pieces, gap stones, rim boulders, the flower drift)
 -- Each piece moves as a rigid group about its own root: the root, its slots (approach, pose, seat, pivot, ladder,
 -- chute, castle, ball points) and its keepout circle turn together. Nothing inside a piece changes (seat heights,
 -- arcs, the chute's 7.5 run, SeatStepOut), so the pose data and choreography are untouched. ParkSites.spec pins the
 -- arrival's numbers (and the old grove's) as they were before the specs.
 local World=require(script.Parent.HollowWorldLayout)
 local Flags=require(script.Parent.FeatureFlags)
+local Tier=require(script.Parent.Tier)
 local RunService=game:GetService("RunService")
+-- The Top Lawn's membership gate. The server's is set by init.server (the TierPets gate). A client has none set: it reads
+-- the switches the server publishes (code review: the client's ring and chip agree with the server's membership).
+-- Specs (no client, no gate set): no gate.
+local terraceGate=nil
+local function gateOpen()
+	if terraceGate~=nil then return terraceGate()==true end
+	if RunService:IsClient()then
+		return workspace:GetAttribute("CliffDen")==true and workspace:GetAttribute("Tier_on")==true
+			and workspace:GetAttribute("TierPets_on")==true and workspace:GetAttribute("Catchup_on")==true
+	end
+	return true
+end
 -- The heading of each piece's play side in the arrival arrangement (see the equipment comments below): the swing's
 -- seats, the slide's chute and the see-saw's waiting side face -Z; the sand box and ball corner are symmetric and
 -- face +Z. A spec yaw is the same heading at the new site, so delta = yaw - Face.
@@ -46,17 +63,23 @@ Park.Enabled=World.WorldVersion=="v7"
 Park.Version=1
 
 -- Original arrival centre (36,66). -- Studio raycast sweep 2026-11-13: every anchor, the rim and a ring 2 studs outside it land on flat W7C ground (y 4.55); (45,67) clipped a collision hole at x 54-62, z 64-72, and (39,70) put the south-west gate on the trunk at (30,59.5)
-local function ground(x,z)return World.groundY(x,z)+.025 end -- [RAYCAST in Studio]
+local function worldGround(x,z)return World.groundY(x,z)+.025 end -- [RAYCAST in Studio]
+-- The site's ground: the lawn under the point, or a flat floor (the Top Lawn's terrace at spec.floorY).
+local floorY=spec.floorY
+local function ground(x,z)if floorY then return floorY+.025 end return worldGround(x,z)end
 local function at(dx,dz)return Vector3.new(CX+dx,ground(CX+dx,CZ+dz),CZ+dz)end
 -- The pieces are authored round a centre: this site's, or for a site with `pieces` the arrival lawn (Arrangement),
 -- where every point's height over the ground is the arrival's; each piece then moves to its place as a rigid group.
 local BX,BZ=if spec.pieces then Arrangement[1]else CX,if spec.pieces then Arrangement[2]else CZ
-local function piece(dx,dz)return Vector3.new(BX+dx,ground(BX+dx,BZ+dz),BZ+dz)end
+-- The arrangement's own ground: the arrival lawn's for a site with `pieces` (then re-grounded at the site), else the site's.
+local aground=if spec.pieces then worldGround else ground
+local function piece(dx,dz)return Vector3.new(BX+dx,aground(BX+dx,BZ+dz),BZ+dz)end
 local function lift(position,height)return position+Vector3.new(0,height,0)end
 local PI=math.pi
 local EAST,WEST,NORTH,SOUTH=PI*.5,-PI*.5,0,PI -- yaw facing +X, -X, +Z, -Z
 
 Park.Center=at(0,0)
+if floorY then Park.FloorY=floorY;Park.Terrace=true end
 -- Kerb ellipse radii (X, Z): 32 x 22 studs outside, ankle-high. A natural site keeps the radii (membership) but no kerb.
 Park.Radius=Vector2.new(spec.rx or 16,spec.rz or 11)
 if spec.natural then Park.Natural=true else Park.Kerb=table.freeze({height=.35,width=.6})end -- K2 art guide, not gameplay
@@ -120,33 +143,33 @@ end
 -- seat, rides, hops forward and lands where it started, instead of landing in front and walking back.
 Park.SeatStepOut=1.25
 local function swingSlot(id,dx)
-	local base=Vector3.new(swingCenter.X+dx,ground(swingCenter.X+dx,swingCenter.Z),swingCenter.Z)
+	local base=Vector3.new(swingCenter.X+dx,aground(swingCenter.X+dx,swingCenter.Z),swingCenter.Z)
 	-- Seats face the swing set's front (-Z, toward the lawn); the pet waits 1.25 studs in front.
 	local x,z=base.X,base.Z-Park.SeatStepOut
-	local approach=Vector3.new(x,ground(x,z),z)
+	local approach=Vector3.new(x,aground(x,z),z)
 	return slot(id,"swing",approach,SOUTH,{position=lift(base,1.5),yaw=SOUTH},
 		{seatGround=base,pivot=lift(base,5.6),rope=4.1,axis="X",amplitude=.5}) -- pendulum about the bar (X axis), arcs along Z
 end
 local function seesawSlot(id,side)
-	local base=Vector3.new(seesawCenter.X+side*2.6,ground(seesawCenter.X+side*2.6,seesawCenter.Z),seesawCenter.Z)
+	local base=Vector3.new(seesawCenter.X+side*2.6,aground(seesawCenter.X+side*2.6,seesawCenter.Z),seesawCenter.Z)
 	-- Seat 1 (west) faces east, seat 2 (east) faces west: the pets face each other. Each waits off
 	-- the beam's park-centre side (-Z) beside its own seat.
 	local x,z=base.X,base.Z-Park.SeatStepOut
-	local approach=Vector3.new(x,ground(x,z),z)
+	local approach=Vector3.new(x,aground(x,z),z)
 	return slot(id,"seesaw",approach,if side<0 then EAST else WEST,{position=lift(base,1.25),yaw=if side<0 then EAST else WEST},
 		{seatGround=base,pivot=lift(seesawCenter,1.1),arm=2.6*side})
 end
 local function sandSlot(id,side)
-	local base=Vector3.new(sandCenter.X+side*1.6,ground(sandCenter.X+side*1.6,sandCenter.Z),sandCenter.Z)
+	local base=Vector3.new(sandCenter.X+side*1.6,aground(sandCenter.X+side*1.6,sandCenter.Z),sandCenter.Z)
 	return slot(id,"sandbox",base,if side<0 then EAST else WEST,{position=lift(base,.25),yaw=if side<0 then EAST else WEST},
 		{castle=lift(sandCenter,.25)})
 end
 local function ballSlot(id,side)
-	local base=Vector3.new(ballCenter.X+side*2,ground(ballCenter.X+side*2,ballCenter.Z),ballCenter.Z)
+	local base=Vector3.new(ballCenter.X+side*2,aground(ballCenter.X+side*2,ballCenter.Z),ballCenter.Z)
 	return slot(id,"ball",base,if side<0 then EAST else WEST,{position=base,yaw=if side<0 then EAST else WEST},
 		{ball=lift(ballCenter,.45)}) -- ball rest centre (radius ~.45)
 end
-local ladder=Vector3.new(slideBase.X,ground(slideBase.X,slideBase.Z+1.2),slideBase.Z+1.2) -- ladder foot (54, 74.2)
+local ladder=Vector3.new(slideBase.X,aground(slideBase.X,slideBase.Z+1.2),slideBase.Z+1.2) -- ladder foot (54, 74.2)
 Park.Slots=table.freeze({
 	swing1=swingSlot("swing1",-1.4),
 	swing2=swingSlot("swing2",1.4),
@@ -178,7 +201,7 @@ if spec.pieces then
 			if typeof(value)=="Vector3"then
 				local dx,dz=value.X-root.X,value.Z-root.Z
 				local x,z=place[1]+dx*c+dz*s,place[2]-dx*s+dz*c
-				return Vector3.new(x,ground(x,z)+value.Y-ground(value.X,value.Z),z)
+				return Vector3.new(x,ground(x,z)+value.Y-aground(value.X,value.Z),z)
 			elseif type(value)=="number"and key=="yaw"then return value+delta
 			elseif type(value)=="table"then
 				local result={};for k,v in pairs(value)do result[k]=moved(v,k)end;return table.freeze(result)
@@ -329,6 +352,67 @@ if spec.dressing then
 	Park.Dressing=table.freeze({plates=table.freeze(plates),stones=table.freeze(stones),stumps=table.freeze(stumps),
 		flowers=table.freeze(flowers),log=log,column=column,palm=Vector3.new(PX,lawn(PX,PZ),PZ)})
 end
+-- The Top Lawn's dressing (WORLD-FINISH-LOOK section 1, "Reused dressing"): the same builders and colours as the Hollow,
+-- on the terrace's flat floor. Five worn patches under the pieces (earth, the dig spot's sand, the ball's palm green),
+-- two gap stones a gap, three rim boulders by the dig spot, the eight-plate flower drift behind the bench. No log,
+-- stumps or column (they stay below, in the Paw Glade).
+if spec.lawnDressing then
+	local D=spec.lawnDressing
+	local y=floorY or World.groundY(CX,CZ)
+	local function heading(x,z,tx,tz)return math.atan2(tx-x,tz-z)end
+	local function pieceLocal(id,lx,lz)
+		local root,h=Park.Equipment[id].position,spec.pieces[id][3]
+		return root.X+lx*math.cos(h)+lz*math.sin(h),root.Z-lx*math.sin(h)+lz*math.cos(h)
+	end
+	local function rimPoint(angle,r)return CX+r*math.cos(angle),CZ+r*math.sin(angle)end
+	local plates,stones,flowers={},{},{}
+	local function plate(name,x,z,sx,sz,yaw,art,colour,transparency)
+		table.insert(plates,table.freeze({name=name,x=x,y=y,z=z,size=Vector2.new(sx,sz),yaw=yaw,art=art,
+			colour=colour,transparency=transparency,lift=.04}))
+	end
+	for _,toe in ipairs({{"seesaw",0,0,"#9A7B55"},{"slide",0,1.5,"#9A7B55"},{"swing",0,0,"#9A7B55"},{"sandbox",0,0,"#D9C29A"}})do
+		local x,z=pieceLocal(toe[1],toe[2],toe[3])
+		plate("TopLawnPatch_"..toe[1],x,z,5.5,6.5,heading(x,z,CX,CZ),"lawnPatchA",toe[4],.30)
+	end
+	do
+		local ball=Park.Equipment.ball.position
+		plate("TopLawnPatch_ball",ball.X,ball.Z,6.5,6.5,heading(ball.X,ball.Z,CX,CZ),"lawnPatchB","#6FA85A",.45)
+	end
+	local GREYS={"#8A8580","#7F847F","#948E84"}
+	local function stone(name,x,z,size,yaw,seed)
+		table.insert(stones,table.freeze({name=name,x=x,y=y,z=z,size=size,yaw=yaw,seed=seed,colour=GREYS[seed%3+1]}))
+		table.insert(keepout,table.freeze({center=Vector2.new(x,z),radius=size.X*.5+.4,dressing=true}))
+	end
+	for g,gap in ipairs(spec.gaps)do
+		for k,side in ipairs({-1,1})do
+			local angle=gap[2]+side*(gap[3]*.5+.6)/Park.Radius.X
+			local x,z=rimPoint(angle,Park.Radius.X)
+			stone("TopLawnGapStone",x,z,Vector3.new(1.2,1.8,1.0),heading(x,z,CX,CZ)+(k-1.5)*.3,20261126+g*10+k)
+		end
+	end
+	-- Rim boulders on the rim behind the dig spot: {angle off the dig spot's own rim angle, radius, across}.
+	do
+		local sand=Park.Equipment.sandbox.position
+		local base=math.atan2(sand.Z-CZ,sand.X-CX)
+		for k,row in ipairs(D.rimBoulders)do
+			local x,z=rimPoint(base+row[1],row[2])
+			stone("TopLawnRimBoulder",x,z,Vector3.new(row[3],row[3]*.55,row[3]*.85),base*1.7+k,20261160+k)
+		end
+	end
+	-- The flower drift: eight plates over 16 studs, just behind the bench (its distance from the centre + driftOut).
+	do
+		local bench=spec.bench
+		local mid=math.atan2(bench[2]-CZ,bench[1]-CX)
+		local r=math.sqrt((bench[1]-CX)^2+(bench[2]-CZ)^2)+D.driftOut
+		for k=0,7 do
+			local angle=mid+(k-3.5)*(16/7)/r
+			local x,z=rimPoint(angle,r-.4+(k%2)*.8)
+			table.insert(flowers,table.freeze({x=x,y=y,z=z,size=2.4+(k%3)*.4,yaw=k*.9,kind=k%5+1}))
+		end
+	end
+	Park.Dressing=table.freeze({plates=table.freeze(plates),stones=table.freeze(stones),stumps=table.freeze({}),
+		flowers=table.freeze(flowers),palm=Vector3.new(CX,y,CZ)})
+end
 table.sort(keepout,function(a,b)return if a.center.X==b.center.X then a.center.Y<b.center.Y else a.center.X<b.center.X end)
 Park.Keepout=table.freeze(keepout)
 
@@ -343,6 +427,8 @@ function Park.inside(position,outset)return Park.normalized(position,outset)<=1 
 -- Owner membership with hysteresis: members stay until 1.5 studs outside; others join 0.5 inside.
 function Park.member(position,wasMember)
 	if typeof(position)~="Vector3"then return false end
+	-- The Top Lawn: only standing up there, and only while the server's gate is open.
+	if floorY and(position.Y<floorY-4 or not gateOpen())then return false end
 	if wasMember then return Park.inside(position,Park.LeaveOutset)end
 	return Park.inside(position,-Park.EnterInset)
 end
@@ -430,6 +516,35 @@ Specs.hollow=table.freeze({id="grove",x=-39.8,z=-47.7,rx=12,rz=12,natural=true,
 		log=table.freeze({-50.4,-41.4}),           -- along the west rim
 	}),
 })
+-- The Top Lawn (Fable, WORLD-FINISH-LOOK section 1): the second park on the terrace, in the terrace's frame (Tier.T(s, t):
+-- s along the ridge, t toward the garden, the lip at t 22). Same five pieces, nine slots and site id as the Hollow (the
+-- grove: sessions, snapshots and the client unchanged); natural (no kerb, no star orbs); flat at Tier.FloorY. The circle
+-- K (0, 5) r 13: its rim 4 studs inside the garden lip, so every slot approach keeps 3+ inside the terrace. The tall
+-- pieces stand on the lip side so they show on the skyline from the Hub. Yaws (the heading of each piece's play side,
+-- Opus from "faces K", 2026-11-25): swing seats face K; the slide's chute runs toward K (lands about (0.2, 6.5));
+-- the see-saw's beam lies along the lip with its riders on K's side (-t); the dig spot and the ball face K. The bench
+-- (Fable's (0, -7)) is nudged 1 stud toward K to (0, -6) so both its ends sit inside the circle less 1.
+do
+	local K=Tier.T(0,5)
+	local function at(s,t)local p=Tier.T(s,t);return p.X,p.Z end
+	local function faces(s,t)local x,z=at(s,t);return math.atan2(K.X-x,K.Z-z)end
+	local function rimAngle(s,t)local x,z=at(s,t);return math.atan2(z-K.Z,x-K.X)end
+	local function place(s,t,yaw)local x,z=at(s,t);return table.freeze({x,z,yaw})end
+	local inward=math.atan2(-Tier.N.X,-Tier.N.Y) -- -t: from the lip toward K
+	Specs.topLawn=table.freeze({id="grove",x=K.X,z=K.Z,rx=13,rz=13,natural=true,floorY=Tier.FloorY,
+		gaps=table.freeze({table.freeze({"path",rimAngle(13,4),4}),table.freeze({"lookout",rimAngle(-13,5),4})}),
+		bench=table.freeze({at(0,-6)}),
+		pieces=table.freeze({
+			swing=place(-7,12,faces(-7,12)),     -- the bar across the view, seats face K; tallest, nearest the lip
+			slide=place(1,14,faces(1,14)),       -- the deck; ladder on the lip side, the chute runs toward K
+			seesaw=place(8,11.5,inward),         -- the beam along the lip; pets face each other, riders wait on K's side
+			sandbox=place(-9,0,faces(-9,0)),     -- the dig spot, outer side, beside the rim boulders
+			ball=place(6,0,faces(6,0)),          -- the open middle; fetch throws go along s
+		}),
+		-- {angle off the dig spot's rim angle, radius from K, across}: three boulders, the biggest straight behind it.
+		lawnDressing=table.freeze({rimBoulders=table.freeze({{0,13.6,2.0},{.14,13.4,1.5},{-.13,13.4,1.1}}),driftOut=1.6}),
+	})
+end
 -- The Hollow is a place gate (FeatureFlags.ParkHollow): the beta place or Studio. Read once at require time on both
 -- sides, so the server and every client of one place agree. Live (and the flag off) keeps the old grove exactly.
 local HollowPlaceId=107705084891479 -- Pocket Pals Beta
@@ -440,10 +555,68 @@ local function hollowOn(env)
 	if studio==nil then studio=RunService:IsStudio()end
 	return(env.place or game.PlaceId)==HollowPlaceId or studio==true
 end
+-- The Top Lawn is a place gate too (FeatureFlags.ParkTopLawn, WORLD-FINISH-LOOK slice B): the beta place or Studio. It
+-- wins over the Hollow; off, the Hollow (or the old grove) exactly as before.
+local function topLawnOn(env)
+	env=env or {}
+	if(env.flags or Flags).ParkTopLawn~=true then return false end
+	local studio=env.studio
+	if studio==nil then studio=RunService:IsStudio()end
+	return(env.place or game.PlaceId)==HollowPlaceId or studio==true
+end
+
+-- The Paw Glade (WORLD-FINISH-LOOK section 1): the Hollow's spot once the park has moved up. Its equipment, ball mat,
+-- earth patches and circle go; the fallen log (a player collider), the stump circle, the half-buried column, the rim
+-- boulders and the flower drift stay where they were; the four toe plates turn to clover (lawn-patch-b #7FB069 at
+-- .35) with three flower plates each, the palm stays clover, so from shelf 2 it still reads as a paw; a second long
+-- bench at the Hollow's bench spot, turned to look up at the path (mid shelf 2, PathView). No prompts, no park logic.
+-- Pure data from the Hollow's own layout; ParkMount builds it (ParkHollowMount.buildGlade).
+local PathView=Vector2.new(-53,-61.8) -- CliffDenData's centre line mid shelf 2 (u about 45), fixed: no data read here
+local function glade(H)
+	local D=H.Dressing
+	local plates,flowers,stones={}, {}, {}
+	local toes={}
+	for _,row in ipairs(D.plates)do
+		if string.find(row.name,"^HollowToe_")then
+			table.insert(plates,table.freeze({name=string.gsub(row.name,"^HollowToe_","GladeToe_"),x=row.x,y=row.y,z=row.z,
+				size=row.size,yaw=row.yaw,art="lawnPatchB",colour="#7FB069",transparency=.35,lift=row.lift}))
+			table.insert(toes,row)
+		else
+			table.insert(plates,table.freeze({name=string.gsub(row.name,"^Hollow","Glade"),x=row.x,y=row.y,z=row.z,
+				size=row.size,yaw=row.yaw,art=row.art,colour=row.colour,transparency=row.transparency,lift=row.lift}))
+		end
+	end
+	for _,row in ipairs(D.flowers)do table.insert(flowers,row)end
+	-- Three flower plates on each toe, along its length (a toe's length runs along its yaw).
+	for t,toe in ipairs(toes)do
+		local ax,az=math.sin(toe.yaw),math.cos(toe.yaw)
+		for k,along in ipairs({-1.8,0,1.8})do
+			local side=(k-2)*.4
+			local x,z=toe.x+ax*along+az*side,toe.z+az*along-ax*side
+			table.insert(flowers,table.freeze({x=x,y=World.groundY(x,z),z=z,size=2+(k%2)*.4,yaw=t*1.3+k*.8,kind=(t+k)%5+1}))
+		end
+	end
+	for _,row in ipairs(D.stones)do
+		if row.name=="HollowRimBoulder"then table.insert(stones,row)end
+	end
+	local bench=H.Benches[1]
+	local position=bench.position
+	return table.freeze({
+		plates=table.freeze(plates),flowers=table.freeze(flowers),stones=table.freeze(stones),
+		-- The column lay 60% under the dig spot's sand (its height over the lawn): with the sand gone it sinks by that much.
+		stumps=D.stumps,log=D.log,palm=D.palm,center=H.Center,
+		column=table.freeze({x=D.column.x,y=D.column.y-H.Equipment.sandbox.sandHeight,z=D.column.z,length=D.column.length,
+			diameter=D.column.diameter,heading=D.column.heading,lean=D.column.lean,colour=D.column.colour,band=D.column.band,
+			bandWidth=D.column.bandWidth,sand=D.column.sand-H.Equipment.sandbox.sandHeight}),
+		bench=table.freeze({id="glade",position=position,yaw=math.atan2(PathView.X-position.X,PathView.Y-position.Z),
+			seats=bench.seats,mesh=bench.mesh,length=bench.length}),
+	})
+end
 
 local arrival=makeLayout(Specs.arrival)
 local HollowOn=hollowOn()
-local grove=makeLayout(if HollowOn then Specs.hollow else Specs.grove)
+local TopLawnOn=topLawnOn()
+local grove=makeLayout(if TopLawnOn then Specs.topLawn elseif HollowOn then Specs.hollow else Specs.grove)
 local sites=table.freeze({arrival,grove})
 local byId=table.freeze({arrival=arrival,grove=grove})
 arrival.Sites=sites;arrival.ById=byId
@@ -451,6 +624,15 @@ arrival.Specs=table.freeze(Specs)
 arrival.HollowOn=HollowOn
 arrival.HollowPlaceId=HollowPlaceId
 arrival.hollowOn=hollowOn
+arrival.TopLawnOn=TopLawnOn
+arrival.topLawnOn=topLawnOn
+-- The Paw Glade's data while the Top Lawn is on (else nil: the Hollow, or the old grove, is the second park).
+arrival.Glade=if TopLawnOn then glade(makeLayout(Specs.hollow))else nil
+arrival.glade=glade
+-- Server only: the Top Lawn's membership gate (fn() -> bool). Clients never set it.
+arrival.setTerraceGate=function(fn)terraceGate=if type(fn)=="function"then fn else nil end
+-- The gate as set (specs save and restore it around their own).
+arrival.terraceGate=function()return terraceGate end
 -- Specs and the Studio probe build a site from a spec without touching the live sites.
 arrival.build=function(spec)return table.freeze(makeLayout(spec))end
 function arrival.siteAt(position,currentId)

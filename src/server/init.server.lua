@@ -457,6 +457,9 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
 	end})
 -- Pets go up (TierPets): the rest spots on the terrace and at the path's turn while the gate is open; nil otherwise.
 GardenState.tierRests=function()if petsUp()then return TierPets.rests()end;return nil end
+-- The Top Lawn (ParkLayout, WORLD-FINISH-LOOK slice B): membership up there only while pets can go up. No effect on a
+-- site without a floor (the arrival, the Hollow, the old grove: live).
+require(ReplicatedStorage.Shared.ParkLayout).setTerraceGate(petsUp)
 -- Pets stay on the ground level: an owner on a terrace, ramp, pillar, ledge or
 -- bench leaves the pet at the last ground anchor (bridges and other authored
 -- spans still count as ground). Kept out of petAnchor so care reach is unchanged.
