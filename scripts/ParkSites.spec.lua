@@ -752,6 +752,40 @@ return function(server,offline)
 		assert(arrival.kerbSegments>=16 and arrival.gatePosts==4,"arrival kerb unchanged")
 	end)
 
+	test("the cliff foot: the rim kisses the rock (1.3 past the foot line at angle -2.14), nothing placed is within 2 of it",function()
+		local FOOT={Vector2.new(-36,-70),Vector2.new(-46,-66),Vector2.new(-50,-62),Vector2.new(-56,-58),Vector2.new(-64,-54),Vector2.new(-70,-48)}
+		local a,b=FOOT[1],FOOT[#FOOT]
+		local function side(p)return((b-a).X*(p-a).Y-(b-a).Y*(p-a).X)/(b-a).Magnitude end
+		local lawn=if side(flat(H.Center))>0 then 1 else -1 -- the centre is on the lawn
+		local function rockSide(p)return-lawn*side(p)end -- > 0 past the line, on the rock
+		local worst,at=-math.huge,0
+		for k=0,359 do
+			local angle=math.rad(k)-math.pi
+			local s=rockSide(Vector2.new(H.Center.X+14*math.cos(angle),H.Center.Z+14*math.sin(angle)))
+			if s>worst then worst,at=s,angle end
+		end
+		assert(math.abs(worst-1.31)<.05 and math.abs(at+2.14)<.05,string.format("rim past the foot line %.2f at %.2f",worst,at))
+		local function toFoot(p)
+			local best=math.huge
+			for k=1,#FOOT-1 do
+				local s,d=FOOT[k],FOOT[k+1]-FOOT[k]
+				local t=math.clamp((p-s):Dot(d)/d:Dot(d),0,1)
+				best=math.min(best,(p-(s+d*t)).Magnitude)
+			end
+			return best
+		end
+		local function clear(label,p,radius)
+			assert(rockSide(p)<0 and toFoot(p)>=2+(radius or 0),string.format("%s (%.1f, %.1f) is %.2f from the cliff foot",label,p.X,p.Y,toFoot(p)))
+		end
+		for id,e in pairs(H.Equipment)do clear(id,flat(e.position))end
+		for id,slot in pairs(H.Slots)do clear(id,flat(slot.approach))end
+		clear("bench",flat(H.Benches[1].position))
+		local D=H.Dressing
+		for _,stone in ipairs(D.stones)do clear(stone.name,Vector2.new(stone.x,stone.z),stone.size.X*.5)end
+		for _,stump in ipairs(D.stumps)do clear("stump",Vector2.new(stump.x,stump.z),stump.diameter*.5)end
+		clear("log",Vector2.new(D.log.x,D.log.z));clear("column",Vector2.new(D.column.x,D.column.z))
+	end)
+
 	test("clear of the cliff path work: everything at z -65 or north (the bank is at z under -80)",function()
 		local function north(z,label)assert(z>=-65.001,label.." at z "..z)end
 		north(H.Center.Z-H.Radius.Y,"the circle")

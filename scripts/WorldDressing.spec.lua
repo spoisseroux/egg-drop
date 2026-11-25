@@ -30,7 +30,7 @@ return function(client)
 
 	test("deterministic: the baked tables match their checksum and two builds agree",function()
 		assert(Dressing.checksum(Dressing.Flowers,Dressing.Bushes)==Dressing.Checksum,"tables edited by hand; rerun scripts/build_world_v7_dressing.py")
-		local a,b=Flowers.build({textures=stand}),Flowers.build({textures=stand})
+		local a,b=Flowers.build({textures=stand,parks={}}),Flowers.build({textures=stand,parks={}})
 		assert(#a==#Dressing.Flowers and #a==#b)
 		for i=1,#a do
 			assert(a[i].part.CFrame==b[i].part.CFrame and a[i].part.Size==b[i].part.Size)
@@ -51,6 +51,21 @@ return function(client)
 		for _,patch in ipairs(Flowers.build({beta=false}))do
 			assert(patch.part.Flowers.Transparency==0);patch.part:Destroy()
 		end
+	end)
+
+	test("the Hollow (beta): no old patch inside its circle, the rest drawn; live (no natural park) draws them all",function()
+		local Park=require(Shared.ParkLayout)
+		local hollow=Park.build(Park.Specs.hollow)
+		local inside=0
+		for _,entry in ipairs(Dressing.Flowers)do if hollow.inside(Vector3.new(entry[1],0,entry[3]),0)then inside+=1 end end
+		assert(inside==8,"patches inside the Hollow "..inside)
+		local built=Flowers.build({textures=stand,parks={hollow}})
+		assert(#built==#Dressing.Flowers-inside,"built "..#built)
+		for _,patch in ipairs(built)do
+			table.insert(cleanup,patch.part)
+			assert(not hollow.inside(patch.part.Position,0),"a patch inside the Hollow")
+		end
+		assert(#Flowers.naturalParks()==(if Park.HollowOn then 1 else 0),"natural parks follow the place switch")
 	end)
 
 	test("patches are flat, upward-facing decals on invisible, non-interactive parts",function()

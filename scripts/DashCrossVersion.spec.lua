@@ -75,7 +75,8 @@ return function(_,offline)
 		RunService.IsStudio=function()return false end
 		local ok,Layout=pcall(liveNew.require,liveNew.shared.ParkLayout)
 		RunService.IsStudio=studio
-		assert(ok and not Layout.HollowOn,"ParkLayout off Studio keeps the old grove")
+		assert(ok,"ParkLayout off Studio failed to load: "..tostring(Layout))
+		assert(not Layout.HollowOn,"ParkLayout off Studio keeps the old grove")
 		local a,b=garden(base),garden(liveNew);assert(#a==#b and #a>400)
 		for i=1,#a do assert(a[i]==b[i],"snapshot "..i)end
 	end)

@@ -29,14 +29,28 @@ function Flowers.textures(beta)
 	end
 	return out,Dressing.TransparencyR2 or 0
 end
--- Builds the patch parts (unparented). Kinds without an uploaded texture are skipped.
+-- The natural park sites (the Hollow, beta and Studio: ParkLayout's place switch); none on live. The Hollow brings its
+-- own flower drift, so the old patches whose centre falls inside its circle (8 today: by the log, on the slide's toe,
+-- by the see-saw, in the palm) are not drawn there.
+function Flowers.naturalParks()
+	local ok,Park=pcall(function()return require(Shared:WaitForChild("ParkLayout"))end)
+	local out={}
+	if ok and type(Park)=="table"then for _,site in ipairs(Park.Sites or {})do if site.Natural then table.insert(out,site)end end end
+	return out
+end
+-- Builds the patch parts (unparented). Kinds without an uploaded texture are skipped, and patches inside a natural park.
+-- options (specs): textures, transparency, beta, parks (the natural sites; default Flowers.naturalParks()).
 function Flowers.build(options)
 	options=options or {}
 	local textures,transparency=options.textures,options.transparency or 0
 	if not textures then textures,transparency=Flowers.textures(options.beta)end
+	local parks=options.parks or Flowers.naturalParks()
 	local patches={}
 	for index,entry in ipairs(Dressing.Flowers)do
 		if index>Dressing.MaxFlowers then break end
+		local inside=false
+		for _,site in ipairs(parks)do if site.inside(Vector3.new(entry[1],0,entry[3]),0)then inside=true;break end end
+		if inside then continue end
 		local kind=Dressing.Kinds[entry[6]]
 		local texture=textures[kind]
 		if type(texture)~="string"or texture==""then continue end

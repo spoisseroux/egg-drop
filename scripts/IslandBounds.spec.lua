@@ -11,6 +11,8 @@ return function(server)
 	local Spots=require(Shared.FindSpots)
 	local V7=require(Shared.HollowWorldLayout).V7
 	local Park=require(Shared.ParkLayout)
+	-- Every park site, whichever the place switch picked: the arrival, the old grove (live) and the Hollow (beta).
+	local parkSites={Park,Park.build(Park.Specs.grove),Park.build(Park.Specs.hollow)}
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local CLEAR=3
@@ -64,7 +66,7 @@ return function(server)
 		for k,s in ipairs(Spots)do add("find "..k,s.x/100,s.z/100)end
 		for id,cf in pairs(V7.Stations)do add("station "..id,cf.Position.X,cf.Position.Z)end
 		for id,at in pairs(V7.Rest)do add("rest "..id,at.X,at.Z)end
-		for _,site in ipairs(Park.Sites)do
+		for _,site in ipairs(parkSites)do
 			for k=0,127 do
 				local t=k*math.pi/64
 				add("kerb "..site.Id,site.Center.X+site.Radius.X*math.cos(t),site.Center.Z+site.Radius.Y*math.sin(t))
@@ -76,7 +78,7 @@ return function(server)
 				local d=Bounds.distance(w,p.x,p.z)
 				assert(d>=CLEAR,string.format("%s is %.2f studs from %s",w.id,d,p.label))
 			end
-			for _,site in ipairs(Park.Sites)do
+			for _,site in ipairs(parkSites)do
 				for _,e in ipairs({{w.x1,w.z1},{w.x2,w.z2},{(w.x1+w.x2)/2,(w.z1+w.z2)/2}})do
 					local u,v=(e[1]-site.Center.X)/site.Radius.X,(e[2]-site.Center.Z)/site.Radius.Y
 					assert(u*u+v*v>=1,w.id.." is inside the park "..site.Id)

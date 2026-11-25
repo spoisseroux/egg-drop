@@ -230,7 +230,8 @@ end
 
 -- The Hollow's dressing in place of a kerb (WORLD-ALIVE-LOOK section 2, "What you see instead of a kerb"). Pure data;
 -- ParkMount builds it (parts and decal plates only). Every y is the lawn top under the point (HollowWorldLayout, the
--- exported grid: ParkHollowProbe sweeps the real ground in Studio). The stones, stumps and log keep pets off them.
+-- exported grid: probe_park_hollow.luau sweeps the real ground in Studio). The stones, stumps and log keep pets off them
+-- (their keepout circles carry dressing = true).
 if spec.dressing then
 	local D=spec.dressing
 	local PX,PZ=D.palm[1],D.palm[2]
@@ -265,7 +266,7 @@ if spec.dressing then
 	local GREYS={"#8A8580","#7F847F","#948E84"}
 	local function stone(name,x,z,size,yaw,seed,keep)
 		table.insert(stones,table.freeze({name=name,x=x,y=lawn(x,z),z=z,size=size,yaw=yaw,seed=seed,colour=GREYS[seed%3+1]}))
-		if keep then table.insert(keepout,table.freeze({center=Vector2.new(x,z),radius=size.X*.5+.4}))end
+		if keep then table.insert(keepout,table.freeze({center=Vector2.new(x,z),radius=size.X*.5+.4,dressing=true}))end
 	end
 	-- Gap stones: one each side of each gap, their inner faces the gap's width apart; standing, across the rim.
 	for g,gap in ipairs(spec.gaps)do
@@ -293,7 +294,7 @@ if spec.dressing then
 			local x,z=cx+1.1*math.cos(row[1]),cz+1.1*math.sin(row[1])
 			table.insert(stumps,table.freeze({x=x,y=lawn(x,z),z=z,diameter=1.2,height=row[2]}))
 		end
-		table.insert(keepout,table.freeze({center=Vector2.new(cx,cz),radius=2.2}))
+		table.insert(keepout,table.freeze({center=Vector2.new(cx,cz),radius=2.2,dressing=true}))
 	end
 	-- The fallen log along the rim: 9 long, 1.4 across, sunk .25; `heading` is the direction of its length.
 	local log
@@ -303,7 +304,7 @@ if spec.dressing then
 		log=table.freeze({x=x,y=lawn(x,z),z=z,length=9,diameter=1.4,sink=.25,heading=h,colour="#6B4E37",cap="#B79A72"})
 		for k=-2,2 do
 			local s=k*1.8
-			table.insert(keepout,table.freeze({center=Vector2.new(x+s*math.sin(h),z+s*math.cos(h)),radius=1.2}))
+			table.insert(keepout,table.freeze({center=Vector2.new(x+s*math.sin(h),z+s*math.cos(h)),radius=1.2,dressing=true}))
 		end
 	end
 	-- Flower drift: eight flat flower plates behind the bench, 16 studs along the rim.
@@ -402,7 +403,7 @@ Specs.grove=table.freeze({id="grove",x=-38,z=-46,rx=16,rz=11,rotation=math.pi,
 -- The Hollow (Fable, WORLD-ALIVE-LOOK section 2): a round glade backed into the cliff, no kerb. The four toes fan
 -- round the palm P (-40, -48) toward the cliff so that from shelf 2 of the cliff path the worn patches read as a paw
 -- print. Same site id as the old grove (sessions, snapshots, the client), so only the look and the numbers change.
--- Fable's numbers from the one-stud surface map, good to about 1 stud; every one needs ParkHollowProbe in Studio.
+-- Fable's numbers from the one-stud surface map, good to about 1 stud; every one needs probe_park_hollow.luau in Studio.
 -- Nudged (Fable allows 1.5): the ball (-35.5, -46.5) moved 1.5 studs away from the bench to (-35.97, -47.92): the
 -- mat's back edge sat on the bench's footprint (centres 3.2 apart, mat 4.4 wide).
 Specs.hollow=table.freeze({id="grove",x=-42,z=-51,rx=14,rz=14,natural=true,

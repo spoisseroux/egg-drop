@@ -12,7 +12,10 @@ return function(_, shared, offline)
 		local span = V7.WalkableSpans.MainBridge
 		world = { groundY = V7.groundY, parks = {}, radius = { Park.Radius.X, Park.Radius.Y },
 			span = { span.center.X, span.center.Z, span.size.X, span.size.Z, span.center.Y + span.size.Y * .5 }, lamps = {}, stations = {} }
-		for _, site in ipairs(Park.Sites) do table.insert(world.parks, { site.Center.X, site.Center.Z, site.Radius.X, site.Radius.Y }) end
+		-- Every park site, whichever the place switch picked: the arrival, the old grove (live) and the Hollow (beta).
+		for _, site in ipairs({ Park, Park.build(Park.Specs.grove), Park.build(Park.Specs.hollow) }) do
+			table.insert(world.parks, { site.Center.X, site.Center.Z, site.Radius.X, site.Radius.Y })
+		end
 		for _, lamp in ipairs(V7.Lamps) do table.insert(world.lamps, { lamp.X, lamp.Z }) end
 		for _, id in ipairs({ "Eggs", "Journal", "Customize", "ToyLawn" }) do
 			table.insert(world.stations, { V7.Stations[id].Position.X, V7.Stations[id].Position.Z })

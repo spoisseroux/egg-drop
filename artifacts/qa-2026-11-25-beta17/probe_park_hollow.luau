@@ -13,6 +13,8 @@
 --      from the piece root (the phone camera check wants the wall 6+ studs behind toe 3).
 --   H5 rim inside: every slot approach and the chute foot inside the circle less 1 stud (data, repeated for the record).
 --   H6 north limit: the most southern point of everything (z); the cliff path bank is at z under -80, keep 15 clear.
+--   H7 the cliff foot ((-36, -70) to (-70, -48)): how far the rim reaches past the foot line (about 1.3 at angle -2.14
+--      from the map) and the polyline, the ground there; FLAG anything placed past it or within 2 studs of it.
 -- Prints a report and returns it as a string. Paste the FLAG lines back into the build notes.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Park=require(Shared:WaitForChild("ParkLayout"))
@@ -145,6 +147,51 @@ local south=math.huge
 for _,p in ipairs(points)do south=math.min(south,p[3])end
 say("H6 most southern point z %.2f (rim+2 included); the cliff path bank is at z under -80: %.1f studs clear",south,south+80)
 if south<-67.01 then flag("H6 a point at z %.2f, south of the rim+2 ring",south)end
+
+-- H7 ---------------------------------------------------------------------------------------------------------------
+-- The cliff foot (Fable's surface-map points, (-36, -70) to (-70, -48)). From the map the circle reaches about 1.3
+-- studs past the straight foot line round rim angle -2.14 (it "kisses the rock"): membership only, fine. Here: how far
+-- the rim gets past the foot line and the polyline, where, and what the ground is there; and nothing placed (a piece,
+-- a slot approach, the bench, any dressing) may be past either line or within 2 studs of the polyline.
+local FOOT={Vector2.new(-36,-70),Vector2.new(-46,-66),Vector2.new(-50,-62),Vector2.new(-56,-58),Vector2.new(-64,-54),Vector2.new(-70,-48)}
+local function side(a,b,p)return((b-a).X*(p-a).Y-(b-a).Y*(p-a).X)/(b-a).Magnitude end -- signed distance from a->b
+local lawnSide=side(FOOT[1],FOOT[#FOOT],Vector2.new(H.Center.X,H.Center.Z))>0
+local function past(a,b,p)local s=side(a,b,p);return if lawnSide then -s else s end end -- > 0: on the rock side
+local function polyline(p)
+	local best,bestPast=math.huge,-math.huge
+	for k=1,#FOOT-1 do
+		local a,b=FOOT[k],FOOT[k+1];local d=b-a
+		local t=math.clamp((p-a):Dot(d)/d:Dot(d),0,1)
+		local gap=(p-(a+d*t)).Magnitude
+		if gap<best then best,bestPast=gap,past(a,b,p)end
+	end
+	return best,bestPast
+end
+local worstLine,worstAngle,worstPoly,polyAngle=-math.huge,0,-math.huge,0
+for k=0,359 do
+	local a=math.rad(k)-math.pi
+	local p=Vector2.new(H.Center.X+H.Radius.X*math.cos(a),H.Center.Z+H.Radius.Y*math.sin(a))
+	local line=past(FOOT[1],FOOT[#FOOT],p)
+	if line>worstLine then worstLine,worstAngle=line,a end
+	local gap,over=polyline(p)
+	local signed=if over>0 then gap else -gap
+	if signed>worstPoly then worstPoly,polyAngle=signed,a end
+end
+local function at(a)return H.Center.X+H.Radius.X*math.cos(a),H.Center.Z+H.Radius.Y*math.sin(a)end
+local lx,lz=at(worstAngle);local px,pz=at(polyAngle)
+local lineHit,polyHit=down(lx,lz),down(px,pz)
+say("H7 rim past the straight foot line by %.2f at angle %.2f (%.1f, %.1f), ground %s",worstLine,worstAngle,lx,lz,
+	lineHit and string.format("%.2f on %s",lineHit.Position.Y,lineHit.Instance.Name)or "none")
+say("H7 rim past the foot polyline by %.2f at angle %.2f (%.1f, %.1f), ground %s",worstPoly,polyAngle,px,pz,
+	polyHit and string.format("%.2f on %s",polyHit.Position.Y,polyHit.Instance.Name)or "none")
+if worstLine>2 then flag("H7 the rim reaches %.2f past the foot line (map said about 1.3)",worstLine)end
+for _,p in ipairs(points)do
+	if not string.find(p[1],"^rim")then
+		local q=Vector2.new(p[2],p[3])
+		local gap,over=polyline(q)
+		if past(FOOT[1],FOOT[#FOOT],q)>0 or over>0 or gap<2 then flag("H7 %s (%.1f, %.1f) is %.2f from the cliff foot%s",p[1],p[2],p[3],gap,if over>0 then ", on the rock side"else "")end
+	end
+end
 
 say("%d FLAG(s). Hollow centre (%.1f, %.1f) radius %.1f; switch on here: %s",flags,H.Center.X,H.Center.Z,H.Radius.X,tostring(Park.HollowOn))
 local report=table.concat(out,"\n")
