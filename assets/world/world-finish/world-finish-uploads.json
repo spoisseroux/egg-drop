@@ -3,15 +3,15 @@
  "den": {
   "model": {
    "file": "world-finish-den.fbx",
-   "sha256": "a7862e0638c0e2d5f496278c552fd2725a96b1a7d7136a05f7f5b0a10ded1cd4",
-   "manifestSha256": "5672acad598047e64e8db3f24d039de13ed75a854f87fb53c8e00ce7e12e7f1c",
-   "operation": "eee6e340-5126-4f85-858f-6741d061da01",
-   "assetId": "122736005677248",
+   "sha256": "4b7cb3b143c698511f44ddd9cb4832e2a5e89cf9e669de2f88d6b0a7a65832f0",
+   "manifestSha256": "abc2e7efbd2bf97cca35d04f39a292ae606ff296e2fb21b020587715ac26a883",
+   "operation": "fffd9955-eb54-4459-b14e-807593811492",
+   "assetId": "106683942316413",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "74414403763324",
-    "operation": "6be904a8-353f-4641-a39f-5a3df6ee0315",
-    "why": "round 3 (studio-r2: path wall strips, den-back shard, mouth clutter)"
+    "assetId": "122736005677248",
+    "operation": "eee6e340-5126-4f85-858f-6741d061da01",
+    "why": "round 4 (studio-r3/01: tan ground wall left of the mouth exposed)"
    }
   },
   "images": {
