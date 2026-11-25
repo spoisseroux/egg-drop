@@ -1,0 +1,34 @@
+{
+ "uploaded": "2026-11-25",
+ "creator": {
+  "userId": "10716920546"
+ },
+ "made_by": "scripts/synth_asmr.py (original synthesis)",
+ "moderation": "Reviewing at upload",
+ "assets": {
+  "asmr_crack1_a": 100082344769041,
+  "asmr_crack1_b": 116139382558903,
+  "asmr_crack1_c": 132946195308632,
+  "asmr_crack2_a": 138539714613953,
+  "asmr_crack2_b": 108722985448276,
+  "asmr_crack2_c": 99067855392633,
+  "asmr_creak_a": 126603149907488,
+  "asmr_creak_b": 72365513392085,
+  "asmr_creak_c": 102137827815721,
+  "asmr_creak_long_a": 93250848249221,
+  "asmr_creak_long_b": 123124469154959,
+  "asmr_egg_set_a": 91020394353931,
+  "asmr_egg_set_b": 104868695089653,
+  "asmr_egg_set_c": 74341448004566,
+  "asmr_exhale_a": 87983689729719,
+  "asmr_exhale_b": 118403792986106,
+  "asmr_flake_a": 100519844449210,
+  "asmr_flake_b": 140450768912203,
+  "asmr_flake_c": 131572750296508,
+  "asmr_flake_d": 129417574885837,
+  "asmr_flake_e": 103272400540919,
+  "asmr_pop_a": 116724339672082,
+  "asmr_pop_b": 101514901903620,
+  "asmr_pop_c": 95490790955615
+ }
+}

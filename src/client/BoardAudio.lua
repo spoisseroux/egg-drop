@@ -166,15 +166,15 @@ end
 -- yet. TODO(upload): the coordinator uploads each file and puts its asset id here; 0 = not uploaded = no voice (play()
 -- answers false, quietly; the buzz still plays). Only where the switch can be on (Alive "asmr": the beta place and
 -- Studio): the live game makes no voice for them.
-Audio.AsmrIds=table.freeze({
- asmr_egg_set_a=0,asmr_egg_set_b=0,asmr_egg_set_c=0,
- asmr_crack1_a=0,asmr_crack1_b=0,asmr_crack1_c=0,
- asmr_crack2_a=0,asmr_crack2_b=0,asmr_crack2_c=0,
- asmr_creak_a=0,asmr_creak_b=0,asmr_creak_c=0,
- asmr_creak_long_a=0,asmr_creak_long_b=0,
- asmr_pop_a=0,asmr_pop_b=0,asmr_pop_c=0,
- asmr_flake_a=0,asmr_flake_b=0,asmr_flake_c=0,asmr_flake_d=0,asmr_flake_e=0,
- asmr_exhale_a=0,asmr_exhale_b=0,
+Audio.AsmrIds=table.freeze({ -- uploaded 2026-11-25 (scripts/synth_asmr.py), artifacts/qa-2026-11-26-beta18/asmr-sounds/asset-ids.json
+ asmr_egg_set_a=91020394353931,asmr_egg_set_b=104868695089653,asmr_egg_set_c=74341448004566,
+ asmr_crack1_a=100082344769041,asmr_crack1_b=116139382558903,asmr_crack1_c=132946195308632,
+ asmr_crack2_a=138539714613953,asmr_crack2_b=108722985448276,asmr_crack2_c=99067855392633,
+ asmr_creak_a=126603149907488,asmr_creak_b=72365513392085,asmr_creak_c=102137827815721,
+ asmr_creak_long_a=93250848249221,asmr_creak_long_b=123124469154959,
+ asmr_pop_a=116724339672082,asmr_pop_b=101514901903620,asmr_pop_c=95490790955615,
+ asmr_flake_a=100519844449210,asmr_flake_b=140450768912203,asmr_flake_c=131572750296508,asmr_flake_d=129417574885837,asmr_flake_e=103272400540919,
+ asmr_exhale_a=87983689729719,asmr_exhale_b=118403792986106,
 })
 function Audio.asmrCeiling()
  local ok,on=pcall(function()
