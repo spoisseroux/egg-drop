@@ -60,5 +60,12 @@ return function(client)
 		assert(P.ready>P.date and P.date>P.clock and P.ready<1)
 	end)
 
+	test("Fable R13 (5): the rail hides over a full screen (menu, reveal, result card) and the capsule shot, beta only",function()
+		assert(Chips.hideRail({on=true,modal=true})and Chips.hideRail({on=true,shot=true}))
+		assert(not Chips.hideRail({on=true,modal=false,shot=false}),"the garden: shown")
+		assert(not Chips.hideRail({on=false,modal=true,shot=true}),"live: the rail stays above menus")
+		assert(not Chips.hideRail(nil))
+	end)
+
 	return{passed=#cases,cases=cases}
 end

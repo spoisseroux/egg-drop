@@ -93,8 +93,11 @@ Machine.ShotCap=.2       -- the reveal starts at the latest this long after its 
 Machine.PocketRange=24   -- farther than this from the machine: the pocket version
 Machine.ReturnSeconds=.30
 -- The two shots in the machine's frame (+Z the front, +X the cup's side, up from the ground): camera at, looks at.
-Machine.ShotA=table.freeze({at=Vector3.new(1.5,4.2,10),look=Vector3.new(0,2.6,1.9)})
-Machine.ShotB=table.freeze({at=Vector3.new(2.0,2.4,5.5),look=Vector3.new(.6,1.0,1.7)})
+-- Fable R13 (FABLE-REVIEW-R13 3, 4): Shot A closer, lower and the dial left of centre (the machine about 62% of the
+-- frame height); Shot B lower and closer, so the cup is about 17% of a 16:9 frame (14% on a 19.5:9 phone) and the
+-- runner edge-on. The field of view stays the player's (the cup clears 14% on 16:9 without the FOV 58 fallback).
+Machine.ShotA=table.freeze({at=Vector3.new(1.8,4.0,8.0),look=Vector3.new(-.4,3.4,1.9)})
+Machine.ShotB=table.freeze({at=Vector3.new(2.3,1.8,4.4),look=Vector3.new(1.0,.9,1.7)})
 
 -- ── Pure ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 -- The buy crank for a streak (1, 2, 3 or more): turn (degrees), seconds, clicks, clunk, roll and landing times.
@@ -681,6 +684,17 @@ function Machine:placePanel(shot,amount)
 		end
 	end
 end
+-- Fable R13 (4, 02a): the reveal's full-screen stage opens after the confirmation (when the result lands), so it was
+-- never in the tucked set and its 2D waiting egg stood in front of the dial. Any panel root that appears mid-shot is
+-- recorded at its own home and tucked with the rest (and comes back with them).
+function Machine:lateRoots(shot)
+	if not shot.roots then return end
+	for _,gui in ipairs(Machine.panelRoots(shot.cinematic))do
+		local known=false
+		for _,entry in ipairs(shot.roots)do if entry.gui==gui then known=true;break end end
+		if not known then table.insert(shot.roots,{gui=gui,position=gui.Position})end
+	end
+end
 function Machine:restorePanel(shot)
 	if not shot or shot.panelBack then return end
 	shot.panelBack=true
@@ -703,6 +717,7 @@ function Machine:shotStep()
 	local t=now-shot.at
 	if shot.skipBound and not self:shotActive()then self:unbindSkip(shot)end
 	if shot.mode=="shot"and not shot.panelBack then
+		self:lateRoots(shot)
 		local amount
 		if shot.forceRise then
 			amount=1-math.clamp((now-shot.forceRise)/.12,0,1)
