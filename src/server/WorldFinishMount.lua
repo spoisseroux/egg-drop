@@ -93,18 +93,31 @@ function Mount.world(world,env)
 			if why~="no pack"and why~="not packed"then warn("[WorldFinish] "..name..": "..tostring(why))end
 			continue
 		end
-		local missing
-		for _,n in ipairs(slice.hide or {})do if not world:FindFirstChild(n)then missing=n end end
-		for _,row in ipairs(slice.fixed)do
-			local target=row.replaces or row.overlays
-			if target and not world:FindFirstChild(target)then missing=target end
+		-- Resolve every target now (code review 3): each named once, each in the world, or the slice is left out.
+		local problem
+		local seen,destroy,overlay={},{},{}
+		local function claim(n,list)
+			if seen[n]then problem="named twice: "..n;return end
+			seen[n]=true
+			local target=world:FindFirstChild(n)
+			if not target then problem="the world has no "..n;return end
+			table.insert(list,target)
 		end
-		if missing then warn("[WorldFinish] "..name..": the world has no "..missing.."; left as it is");continue end
+		for _,n in ipairs(slice.hide or {})do claim(n,destroy)end
+		local replaced={}
+		for _,row in ipairs(slice.fixed)do
+			if row.replaces then claim(row.replaces,destroy);replaced[row.name]=world:FindFirstChild(row.replaces)end
+			if row.overlays then claim(row.overlays,overlay)end
+		end
+		if problem then warn("[WorldFinish] "..name..": "..problem.."; left as it is");continue end
 		-- Clone everything first.
 		local made={}
 		for _,row in ipairs(slice.fixed)do
 			local part=still(pack[row.name]:Clone())
 			part.Size,part.CFrame=vector(row.size),cframe(row.cframe)
+			-- a re-cut copy keeps whatever the pack part carried (code review 4); Art.meshes then sets its own on top
+			local old=replaced[row.name]
+			if old then for key,value in pairs(old:GetAttributes())do part:SetAttribute(key,value)end end
 			table.insert(made,part)
 		end
 		for _,row in ipairs(slice.instances or {})do
@@ -117,16 +130,15 @@ function Mount.world(world,env)
 			p.Name=Mount.BoxPrefix..tostring(b.kind).."_F"..i
 			p.Anchored=true;p.CanCollide=true;p.CanQuery=true;p.CanTouch=false;p.CastShadow=false
 			p.Transparency=1;p.Material=Enum.Material.SmoothPlastic
-			p.Size,p.CFrame=vector(b.s),CFrame.new(b.c[1],b.c[2],b.c[3])
+			local r=b.r
+			p.Size=vector(b.s)
+			p.CFrame=if r then CFrame.new(b.c[1],b.c[2],b.c[3],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9])else CFrame.new(b.c[1],b.c[2],b.c[3])
 			table.insert(made,p)
 		end
 		for _,bush in ipairs(tufts(slice.tufts or {},env))do table.insert(made,bush)end
 		-- Then hide and show.
-		for _,n in ipairs(slice.hide or {})do world[n]:Destroy()end
-		for _,row in ipairs(slice.fixed)do
-			if row.replaces then world[row.replaces]:Destroy()end
-			if row.overlays then world[row.overlays].Transparency=1 end -- still colliding: its hulls never move
-		end
+		for _,old in ipairs(destroy)do old:Destroy()end
+		for _,tile in ipairs(overlay)do tile.Transparency=1 end -- still colliding: its hulls never move
 		for _,part in ipairs(made)do part.Parent=world end
 		world:SetAttribute("WorldFinish_"..name,true)
 		world:SetAttribute("WorldFinishTriangles",(world:GetAttribute("WorldFinishTriangles")or 0)+(slice.triangles or 0))
@@ -148,6 +160,7 @@ function Mount.dressDen(model,room,env)
 	local function add(template,cf,size)
 		local part=still(pack[template]:Clone())
 		part.Size,part.CFrame=size,cf
+		part:SetAttribute("WorldMesh",true) -- as GreyboxRows marks every den part (code review 5: RoomView's blockers)
 		table.insert(made,part)
 		return part
 	end
@@ -173,7 +186,7 @@ function Mount.dressDen(model,room,env)
 					local cord=still(Instance.new("Part"))
 					cord.Name="W7D_LanternCordF"..lamp;cord.Material=Enum.Material.Fabric;cord.Color=Color3.fromHex("#3A3028")
 					cord.Size=Vector3.new(.06,length,.06);cord.CFrame=CFrame.new(at.X,top+length/2,at.Z)
-					cord.CastShadow=false
+					cord.CastShadow=false;cord:SetAttribute("WorldMesh",true)
 					table.insert(made,cord)
 				end
 			end

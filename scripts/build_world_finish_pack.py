@@ -45,7 +45,10 @@ TURN = (-1, 0, 0, 0, 1, 0, 0, 0, -1)                   # Ry(pi): the Roblox FBX 
 
 
 def sha(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    data = path.read_bytes()
+    if path.suffix == ".json":                       # text: a CRLF checkout (core.autocrlf) must still bind
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def cliff_den_version() -> str:
@@ -57,12 +60,16 @@ def island_textures() -> dict:
     return json.loads((ROOT / "assets" / "world" / "world-v7-uploads.json").read_text(encoding="utf-8"))["textures"]
 
 
-def island_look(material: str) -> dict:
-    """The live island's look for a pack part's material (build_world_v7_assets.look), so a re-cut copy matches."""
+def island_look(beta_part: dict) -> dict:
+    """The live island's look for a pack part (build_world_v7_assets.look and double_sided on its real material and
+    region), so a re-cut copy matches it: texture, colour, material, shadow, double-sided (code review 2)."""
     sys.path.insert(0, str(ROOT / "scripts"))
     import importlib
     v7 = importlib.import_module("build_world_v7_assets")
-    return v7.look({"material": material, "region": "Rocks"})
+    part = {"material": beta_part["material"], "region": beta_part["region"], "name": beta_part["name"]}
+    lk = dict(v7.look(part))
+    lk["doubleSided"] = v7.double_sided(part, lk)
+    return lk
 
 
 # ------------------------------------------------------------------------------------------------------- binding
@@ -124,6 +131,7 @@ def colour3(hexs: str) -> int:
 def xml_part(ref: str, part: dict, row: dict, images: dict) -> str:
     look = part["look"]
     texture, colour, material, transparency, sa = "", "#FFFFFF", "SmoothPlastic", 0.0, None
+    shadow, double = bool(part.get("shadow")), bool(part.get("doubleSided"))
     kind = look["kind"]
     if kind in ("baked", "tile"):
         sa = {"ColorMap": images[look["color"]], "NormalMap": images[look["normal"]]}
@@ -131,10 +139,11 @@ def xml_part(ref: str, part: dict, row: dict, images: dict) -> str:
         sa = {"ColorMap": island_textures()["W1_" + look["material"]]}
     elif kind == "copy":
         beta = json.loads((ROOT / "assets" / "world" / "world-v7-beta-manifest.json").read_text(encoding="utf-8"))
-        lk = island_look(next(p["material"] for p in beta["parts"] if p["name"] == look["of"]))
+        lk = island_look(next(p for p in beta["parts"] if p["name"] == look["of"]))
         texture = lk["texture"]
         colour = "#%02X%02X%02X" % tuple(lk["color"])
-        material = lk["material"]
+        material, transparency = lk["material"], lk["transparency"]
+        shadow, double = lk["shadow"], lk["doubleSided"]
         if lk.get("matte"):
             sa = {"ColorMap": lk["texture"]}
     elif kind == "flat":
@@ -153,8 +162,8 @@ def xml_part(ref: str, part: dict, row: dict, images: dict) -> str:
         '        <bool name="CanCollide">false</bool>',
         '        <bool name="CanQuery">false</bool>',
         '        <bool name="CanTouch">false</bool>',
-        f'        <bool name="CastShadow">{"true" if part.get("shadow") else "false"}</bool>',
-        f'        <bool name="DoubleSided">{"true" if part.get("doubleSided") else "false"}</bool>',
+        f'        <bool name="CastShadow">{"true" if shadow else "false"}</bool>',
+        f'        <bool name="DoubleSided">{"true" if double else "false"}</bool>',
         '        <token name="CollisionFidelity">2</token>',
         f'        <token name="Material">{MATERIAL[material]}</token>',
         f'        <Color3uint8 name="Color3uint8">{colour3(colour)}</Color3uint8>',
@@ -218,7 +227,7 @@ def slice_data(manifest: dict) -> dict:
         out["dress"] = {
             "lantern": {name: {"offset": parts[name]["centre"], "size": parts[name]["size"]}
                         for name in ("W7_F_Lantern__cage", "W7_F_Lantern__pane")},
-            "light": lan.get("light"), "ledgeY": lan.get("ledgeY"), "cord": lan.get("cord"),
+            "ledgeY": lan.get("ledgeY"),
             "paw": dict(place.get("paw", {}), offset=parts["W7_F_Stone__flat"]["centre"],
                         unit=parts["W7_F_Stone__flat"]["size"]),
         }
