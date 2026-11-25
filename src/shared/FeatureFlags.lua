@@ -39,5 +39,11 @@
 -- GardenTourCut: new players get one "say hi" rail line instead of the four "Your garden" cards (Show tips again keeps them).
 -- StarterBonus: +12, +4, +4 Welcome bonus on a new save's first three field rounds (StarterBonus.lua) and the
 -- results nudge line ("{egg}: you have enough!").
-return table.freeze({TomorrowStrip=true,GardenTourCut=true,StarterBonus=true,FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
+-- G2 first session (G2-FIRST-SESSION-LOOK 2026-11-25), each false = today's behaviour exactly:
+-- PetTrail: paw prints from the player to the pet, a ring at the pet and a screen-edge chip, with the say-hi line.
+-- FirstHelloBonus: the first paid pet on a new save pays +2 more ("First hello! +3 ★"), once per save (FirstHello.lua).
+-- RoundTwoNudge: the round-two pill after the first toy; a tap starts a round.
+-- ToyPillCopy: "Hatch a toy for {pet}" / "A toy for {pet}" instead of "Hatch your first egg" / "Your first egg".
+-- CalmFirstDeck: the Welcome round's deck shows the board, Next, the egg and the coach card only (DeckCalm.lua).
+return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPillCopy=true,CalmFirstDeck=true,TomorrowStrip=true,GardenTourCut=true,StarterBonus=true,FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})

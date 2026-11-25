@@ -158,7 +158,8 @@ local Table={
  wardrobe={empty="Nothing to wear yet. {pet} doesn't mind.",emptySolo="Nothing to wear yet.",emptySlot="Nothing for this slot yet."},
  companions={wearing={none="Nothing yet"},toys={name="Toys",line="Something to carry and chase"}},
  -- QA Q2.7: petting pays +1 Star, five times a day.
- pet={star="+1 ★",capped="{pet}'s had plenty of pets today",cappedSolo="Plenty of pets today"},
+ -- G2 (FirstHelloBonus): the first paid pet on a new save, gold over the pet; {count} is the receipt's total.
+ pet={star="+1 ★",hello="First hello! +{count} ★",capped="{pet}'s had plenty of pets today",cappedSolo="Plenty of pets today"},
  -- Play-forever F2: collection book, stamp card, restricted eggs.
  book={
   title="Collection book",eyebrow="Garden",
@@ -191,6 +192,8 @@ local Table={
   firstStars={toast="First round cleared"},
   -- Growth cuts (2026-11-25): with GardenTourCut, the one garden line that replaces the four tour cards.
   sayHi={touch="Tap {pet} to say hi",key="Press E near {pet} to say hi",pad="Press X near {pet} to say hi"},
+  -- G2 (RoundTwoNudge): the round-two pill after the first toy; {count} is StarterBonus's first bonus, never typed in.
+  roundTwo={bonus="Round two: ★ {count} Welcome bonus",toy="Round two: hatch a toy for {pet}",plain="Play round two on your Pocket Deck"},
   machines={title="Machines",line="Walk up to a glowing machine to use it."},
   hub={title="Pocket menu",key="Press M for every machine, any time.",pad="Press Y for every machine, any time.",touch="Tap Menu for every machine, any time."},
   quest={title="Quests",line="Today's quests pay Stars. Find them in the menu."},
@@ -477,7 +480,8 @@ local Table={
  notice={
   label={what="What it means",next="What to do next"},
   go={quests="Open Quests",hatch="Open Hatch eggs",companions="Open Companions",menu="Open the Menu"},
-  pill={tip="Tip: {title}",firstSpend="Hatch your first egg"},
+  -- G2 (ToyPillCopy): firstToy replaces firstSpend while the switch is on; the old keys stay for off.
+  pill={tip="Tip: {title}",firstSpend="Hatch your first egg",firstToy="Hatch a toy for {pet}"},
   welcome={title="Your first round",what="Drop balls into the deck. Two of the same kind merge into a bigger one.",
    next="Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars."},
   firstStars={title="Your first Stars",what="Stars are the one wallet. Rounds, quests and the daily stamp all pay them.",
@@ -504,6 +508,8 @@ local Table={
    next="Spend Stars at Hatch eggs, or save up. New daily quests arrive every day."},
   firstSpend={title="Your first egg",what="You have enough Stars for an egg. A Toy Egg hatches a toy for {pet} to carry and play with.",
    next="Open Hatch eggs and choose the Toy Egg. The odds are on every label."},
+  -- G2 (ToyPillCopy): the same card in the new words (its `next` is firstSpend.next, NoticeCards.ById.firstToy).
+  firstToy={title="A toy for {pet}",what="You have enough Stars for a Toy Egg. It hatches a toy for {pet} to carry and play with."},
   -- Growth cuts (2026-11-25): the garden's Tomorrow line opens this (`next` is the stamp card's promise).
   tomorrow={title="See you tomorrow",what="A new stamp, three new quests and three Stat Eggs arrive every day.",
    next="No streaks. Miss a day, lose nothing."},

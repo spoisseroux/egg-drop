@@ -428,6 +428,8 @@ function Cards:showGarden(id,kind,vars,now,machine)
    if self.garden==current then current.presented=true;if kind=="once"then self:mark(id)end end
    -- Growth cuts: the say-hi line is the garden step; it is saved the moment it shows.
    if kind=="sayHi"then self:mark("gardenIntro")end
+   -- G2 (PetTrail): the paw prints draw with the say-hi line, from the moment it shows.
+   if kind=="sayHi"and self.garden==current then self.trailDue=true end
   end,
   onDone=function()
    if self.garden~=current then return end
@@ -502,6 +504,8 @@ function Cards:advance(id)
  if not nextBeat then self:finishGarden()end
 end
 function Cards:finishGarden()
+ -- G2 (PetTrail): a first visit's garden step (not a replay) ends: the paw prints may draw (init.client reads it).
+ if not self.replaying then self.trailDue=true end
  self.beat=nil;self.gardenDone=true;self.replaying=false
  self:mark("gardenIntro")
 end

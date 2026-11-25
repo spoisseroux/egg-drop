@@ -2,6 +2,15 @@
 
 Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private v685 published 2026-11-14** (reviewed runtime70e0440; current v3 music retained for phone QA). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
+## G2 first session, live line (branch growth/v1057, 2026-11-25)
+
+Plan: `artifacts/growth-2026-11-26/G2-PLAN.md`; look: Fable's G2-FIRST-SESSION-LOOK. Switches `PetTrail`, `FirstHelloBonus`, `RoundTwoNudge`, `ToyPillCopy`, `CalmFirstDeck`.
+- [x] Built offline: paw prints + ring + edge chip, first hello +2 (saved `firstHello`, receipt `hello`), toy pill "Hatch a toy for {pet}", round-two pill, calm Welcome deck (Step A). Specs: FirstHello, GrowthG2; PetAward, StatState and the G1 specs still pass.
+- [ ] Studio pass by the coordinator (Play Solo is always a fresh save; see the plan): Fable's nine screens; the paw toes point at the pet (else `PetTrail.TopFaceYaw = math.pi`); prints readable at night.
+- [ ] Translations: sync (7 new strings).
+- [ ] Stale module copies at StarterPlayerScripts' root (StatsPanel, StatsHost, CompanionsHub, PetFocusUI, DeckResultsInPlace, DeckResults, RoomView): delete in Studio (nothing requires them).
+- Not built: Step B (no landscape phone squeezes the board at the spec sizes), the second trail to a deck spot (the garden has none).
+
 ## Growth cuts, live hotfix v1056 (branch growth/v1056, 2026-11-25)
 
 Plan: `artifacts/growth-2026-11-26/GROWTH-CUTS-PLAN.md`; look: Fable's GROWTH-CUTS-LOOK. Switches `TomorrowStrip`, `GardenTourCut`, `StarterBonus`.

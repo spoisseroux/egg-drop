@@ -95,6 +95,9 @@ ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, 
 ui.coach.questDone.line,"Claim its Stars in Quests, in the menu.",,First-round coaching
 ui.coach.questDone.title,Quest done!,,"First-round coaching; also ui.notice.questDone.title, ui.notice.questReady.title"
 ui.coach.quests.line,"Three a day, three a week. Each one pays Stars.",,First-round coaching
+ui.coach.roundTwo.bonus,Round two: ★ {count} Welcome bonus,,First-round coaching; e.g. Round two: ★ 3 Welcome bonus
+ui.coach.roundTwo.plain,Play round two on your Pocket Deck,,First-round coaching
+ui.coach.roundTwo.toy,Round two: hatch a toy for {pet},,First-round coaching; e.g. Round two: hatch a toy for Bear
 ui.coach.sayHi.key,Press E near {pet} to say hi,,First-round coaching; e.g. Press E near Bear to say hi
 ui.coach.sayHi.pad,Press X near {pet} to say hi,,First-round coaching; e.g. Press X near Bear to say hi
 ui.coach.sayHi.touch,Tap {pet} to say hi,,First-round coaching; e.g. Tap Bear to say hi
@@ -422,6 +425,8 @@ ui.notice.firstSpend.what,You have enough Stars for an egg. A Toy Egg hatches a 
 ui.notice.firstStars.next,Spend Stars on eggs at Hatch eggs. The Menu lists every machine.,,Menu text
 ui.notice.firstStars.title,Your first Stars,,Menu text
 ui.notice.firstStars.what,"Stars are the one wallet. Rounds, quests and the daily stamp all pay them.",,Menu text
+ui.notice.firstToy.title,A toy for {pet},,Menu text; e.g. A toy for Bear; also ui.onboarding.spend.ready
+ui.notice.firstToy.what,You have enough Stars for a Toy Egg. It hatches a toy for {pet} to carry and play with.,,Menu text; e.g. You have enough Stars for a Toy Egg. It hatches a toy for Bear to carry and play with.
 ui.notice.go.companions,Open Companions,,Menu text
 ui.notice.go.hatch,Open Hatch eggs,,Menu text
 ui.notice.go.menu,Open the Menu,,Menu text
@@ -437,6 +442,7 @@ ui.notice.locked.what,The garden and its machines open once you have a pet.,,Men
 ui.notice.machines.next,"Walk up to a machine to use it, or open the Menu to jump to any of them.",,Menu text
 ui.notice.machines.what,"Each glowing machine in the garden does one job: Hatch eggs, Deck style, Companions and the Pocket Deck.",,Menu text
 ui.notice.pill.firstSpend,Hatch your first egg,,Menu text
+ui.notice.pill.firstToy,Hatch a toy for {pet},,Menu text; e.g. Hatch a toy for Bear
 ui.notice.pill.tip,Tip: {title},,Menu text; e.g. Tip: {title}
 ui.notice.quest.next,Open the Menu and pick Quests. Stamp the card each day and claim every finished quest.,,Menu text
 ui.notice.quest.title,Quests and dailies,,Menu text; also ui.r3.help.garden.b.title
@@ -455,7 +461,6 @@ ui.notice.welcome.title,Your first round,,Menu text
 ui.notice.welcome.what,Drop balls into the deck. Two of the same kind merge into a bigger one.,,Menu text
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
-ui.onboarding.spend.ready,A toy for {pet},,First-round coaching; e.g. A toy for Bear
 ui.onboarding.spend.store,Store,,First-round coaching
 ui.onboarding.welcome.egg,Mystery egg,,First-round coaching
 ui.onboarding.welcome.friend,Hatch a friend,,First-round coaching; also ui.r1.welcomePill.narrow
@@ -481,6 +486,7 @@ ui.park.throw,Throw,,Pet Park chip
 ui.park.waitIdle,Pets are playing,,Pet Park chip
 ui.pet.capped,{pet}'s had plenty of pets today,,Petting reward; e.g. Bear's had plenty of pets today
 ui.pet.cappedSolo,Plenty of pets today,,Petting reward
+ui.pet.hello,First hello! +{count} ★,,Petting reward; e.g. First hello! +3 ★
 ui.pet.star,+1 ★,,Petting reward
 ui.phoneDeck.b.items,Items,,Menu text
 ui.pool3.charm.dot.rule,Rare in the Customization Egg,,"Menu text; also ui.pool3.charm.egg.rule, ui.pool3.charm.pebble.rule, ui.pool3.charm.ring.rule"
