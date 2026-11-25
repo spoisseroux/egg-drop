@@ -46,4 +46,11 @@ function Chips.dateText(date,state,narrow)
 	if state=="playing"then return UICopy.get("park.date.playing",vars)end
 	return UICopy.get(if narrow then "park.playDate"else "park.date.games",vars)
 end
+-- Pure (Fable R13 5, captures 02c, 02e, 05b, 05c): the notification rail (the egg ticket with it) is off the screen
+-- while a full-screen screen is up: a menu or the Hatch eggs screen with its reveal and result card (init's
+-- anyModalOpen, the same test the cursor and the movement lock use) and the capsule shot. state = {on, modal, shot}.
+-- Beta only: `on` is Chips.on(); off, the rail stays above game menus as on live.
+function Chips.hideRail(state)
+	return type(state)=="table"and state.on==true and(state.modal==true or state.shot==true)
+end
 return table.freeze(Chips)

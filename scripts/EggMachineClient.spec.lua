@@ -487,5 +487,28 @@ return function(client)
 		local roots=Machine.panelRoots({frame=frame})
 		assert(#roots==1 and roots[1]==shade,tostring(roots[1]and roots[1].Name))
 	end)
+	test("Fable R13 (4): a reveal stage that opens mid-shot (its waiting egg) tucks with the panel and comes back with it",function()
+		local r=capsuleRig()
+		local gui=Instance.new("ScreenGui");gui.Name="EggDropOverlays"
+		local safe=Instance.new("Frame");safe.Name="SafeContent";safe.Parent=gui
+		local shade=Instance.new("Frame");shade.Name="EggHatchView";shade.Parent=safe
+		local frame=Instance.new("Frame");frame.Name="HatchCinematic";frame.Parent=shade
+		local stageShade=Instance.new("Frame");stageShade.Name="RevealHost";stageShade.Parent=safe
+		local stageRoot=Instance.new("Frame");stageRoot.Name="ItemRevealStage";stageRoot.Parent=stageShade
+		r.at=r.now
+		assert(r.machine:bought("toyBuy","w-1"))
+		local reveal={frame=frame}
+		r.cinematic.onPlay(reveal)
+		r.advance(.1)
+		reveal.borrowedStage={root=stageRoot} -- the result landed: the stage opens over the tucked panel
+		local shot=r.machine.shot
+		local function tucked(gui)for _,entry in ipairs(shot.roots)do if entry.gui==gui then return true end end;return false end
+		assert(tucked(shade)and not tucked(stageShade),"the stage was not there at the confirmation")
+		r.advance(.2)
+		assert(tucked(shade)and tucked(stageShade)and #shot.roots==2,"the stage is tucked with the panel (its shade, once)")
+		r.advance(.2);assert(#shot.roots==2)
+		r.advance(1.6)
+		assert(shot.panelBack,"and comes back with it")
+	end)
 	return{passed=#cases,cases=cases}
 end

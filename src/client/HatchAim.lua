@@ -27,4 +27,12 @@ function Aim.footprint(parts)
 	if loX==math.huge then return nil end
 	return(loX+hiX)*.5,(loZ+hiZ)*.5
 end
+-- Fable R13 (6, capture 05c): a toy that floats over the stage floor (its lowest point clear of the 2D floor line in the
+-- well: the Bone, the Ball) drew two shadows, the scene's small dark contact one under it and the stage's wide soft one
+-- on the floor, which read as two lights. Those keep only the wide one. A toy standing on its point (the Wobble Top)
+-- and every other result keep the contact shadow. result: the reveal's result table.
+Aim.Floats=table.freeze({bone=true,ball=true})
+function Aim.floats(result)
+	return type(result)=="table"and type(result.toyId)=="string"and Aim.Floats[result.toyId]==true
+end
 return table.freeze(Aim)

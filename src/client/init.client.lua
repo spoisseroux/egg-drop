@@ -4620,6 +4620,16 @@ clientUI.movementLock=require(script.MovementLock).shared()
 clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui"),movement=clientUI.movementLock,
  prompts=game:GetService("ProximityPromptService")}) -- not the top-level local: init.client is at the 200-register limit
 gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
+-- Fable R13 (5): the notification rail (the egg ticket with it) is off the screen over any full screen and the capsule
+-- shot, beta only (HudChips.hideRail; NotificationRail holds its notices meanwhile).
+do
+ local Chips=require(script.HudChips)
+ require(script.NotificationRail).hider=function()
+  if not Chips.on()then return false end
+  local machine=clientUI.eggMachine
+  return Chips.hideRail({on=true,modal=clientUI.anyModalOpen()==true,shot=machine~=nil and machine:shotActive()==true})
+ end
+end
 -- Beta 14 W4 world feel (WorldFeelClient): the zoom cap and the walk speed test; nil with the build ceiling off, and
 -- with both switches off it writes nothing.
 do

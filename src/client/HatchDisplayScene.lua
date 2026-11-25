@@ -96,6 +96,7 @@ function Scene.new(parent,options)
   else self.failure="PetRendererUnavailable"end
  else
   self.item=require(script.Parent.HatchDisplayItem).create(self.heroWorld,self.itemGui,options.result,options.resultBuilder,self.height,options.reduced==true)
+  self.floats=require(script.Parent.HatchAim).floats(options.result) -- Fable R13 (6): one shadow, the stage's wide one
   -- v842 phone notes: the Sparkler sparks in the reveal. A ViewportFrame draws no particles,
   -- so its sparks are 2D (UISparks) thrown from the tip's projected position.
   local tip=options.result and options.result.toyId=="sparkler"and self.item and self.item.model and self.item.model:FindFirstChild("GlowTip",true)
@@ -373,6 +374,7 @@ function Scene:render(sample)
  -- On a bare stage there is no floor pool: the pet stage draws its own shadow, and an item's
  -- shadow (it sits where the item will land) only belongs once the shell has opened.
  if self.bare and(self.heroHidden or sample.shellAlpha>.02)then self.shadow.Transparency=1 end
+ if self.floats and self.item then self.shadow.Transparency=1 end
  -- v2 (R1.3): the Rare lift and shiver, and a volume-keeping squash pivoted at the foot.
  local shiver=(sample.shiver or 0)*math.rad(1.6)*math.sin((sample.age or 0)*71)
  local egg=CFrame.new(0,(sample.eggLift or 0)*self.height*.06,0)*CFrame.Angles(sample.rock*.25,0,sample.rock+shiver)

@@ -75,7 +75,17 @@ function Rail.held()
   How=if module and ok and type(value)=="table"then value else false
  end
  if Rail.holder~=nil and Rail.holder()==true then return true end -- Garden Dash: notices wait for the race
+ if Rail.hidden()then return true end
  return How~=false and How.isOpen()==true
+end
+-- Fable R13 (5): the rail is off the screen over a full-screen reveal, the result card, a menu and the capsule shot
+-- (Rail.hider, set by init from HudChips.hideRail; nil, the live game, never). Hidden is held too: no clock runs and
+-- nothing new enters, so a notice waits and shows when the screen closes.
+Rail.hider=nil
+function Rail.hidden()
+ if Rail.hider==nil then return false end
+ local ok,hide=pcall(Rail.hider)
+ return ok and hide==true
 end
 function Rail.tappable(data)return type(data)=="table"and(data.activate~=nil or type(data.detail)=="table")end
 -- A tap on a ticket: its own action, else its notice card. True when something answered.
@@ -384,7 +394,7 @@ local function frame(dt)
    if t.leave>=1 then release(t)end
   end
  end
- if not drawable or #order==0 then row.Visible=false;return end
+ if not drawable or #order==0 or Rail.hidden()then row.Visible=false;return end
  local contentW=layout(reduced)
  -- Place the row in the free bar.
  local origin=root.AbsolutePosition
