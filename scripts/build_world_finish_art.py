@@ -269,8 +269,11 @@ def den_recuts(Den, rows, shell):
         hit = tree.find_nearest(L.bl(p), 1.5)
         return hit[0] is not None
 
+    # Fable R3: the island rock blade standing in front of the west post (seen from the path's approach) goes
+    blade = lambda p: -18.5 < p[0] < -12.5 and -96.8 < p[2] < -90.5 and 4.6 < p[1] < 16.0
+
     def spans(points):
-        return any(inside(p) or near_shell(p) for p in points)
+        return any(inside(p) or near_shell(p) or blade(p) for p in points)
 
     for name in candidates:
         o = bpy.data.objects[name]
@@ -284,18 +287,22 @@ def den_recuts(Den, rows, shell):
         if not hits:
             continue
         doomed = lambda c, e=doomed_extra: inside(c) or (e is not None and e(c))
-        if parts[name]["collide"]:
+        collide = parts[name]["collide"]
+        if collide:
             copy, gone = recut(name, "W7_F_Over" + name[len("W7_CD_"):], doomed, spans)
             bpy.data.objects[name + "__pack"].name = name          # the original stays (invisible, colliding)
-            rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "den",
-                                     {"overlays": name, "facesRemoved": gone, "collide": False}))
         else:
             copy, gone = recut(name, name, doomed, spans)
-            rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "den",
-                                     {"replaces": name, "facesRemoved": gone, "collide": False}))
-        # Fable world R1 fix 2: loose shards left near the mouth (islands of 30 faces or fewer, R2) go too
-        rows[-1]["facesRemoved"] += drop_shards(copy, lambda c: -45 < c[0] < 25 and -112 < c[2] < -80, 30)
-        rows[-1]["triangles"] = L.tris(copy)
+        # Fable world R1 fix 2: loose shards left near the mouth (islands of 60 faces or fewer, R3) go too
+        gone += drop_shards(copy, lambda c: -50 < c[0] < 25 and -112 < c[2] < -78, 60)
+        if not copy.data.polygons:
+            # nothing left to show: a visual part is simply hidden; a colliding one stays invisible, colliding
+            bpy.data.objects.remove(copy)
+            (Den.HIDE_VISUAL if collide else Den.HIDE).append(name)
+            continue
+        extra = {"overlays": name} if collide else {"replaces": name}
+        extra.update(facesRemoved=gone, collide=False)
+        rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "den", extra))
         out.append(copy)
     return out
 
@@ -336,6 +343,38 @@ def rock_skin(name, where):
     triplanar_uv(obj, rock_density())
     obj.data.materials.append(island_material("cliff_rock"))
     return obj
+
+
+def push_out_of_shell(obj, tree, margin, vertical=False):
+    """Round 3: no vertex of `obj` inside the den shell (a ray straight up meets the shell): each one moves to the
+    nearest point of the shell and `margin` beyond it (outward). The lid's offset folded through the dome where it is
+    scooped, and the mouth's rock reached past the front corners; the den's checker now counts both."""
+    from mathutils import Vector
+    up = Vector((0, 0, 1))
+    moved = 0
+    mw = obj.matrix_world
+    inv = mw.inverted()
+    for v in obj.data.vertices:
+        w = mw @ v.co
+        hit = tree.ray_cast(w, up, 30)
+        if hit[0] is None:
+            continue
+        if vertical:
+            # over the highest shell layer above it (the dome's apex folds; the nearest point can be the wrong side)
+            top = hit[0]
+            while True:
+                nxt = tree.ray_cast(top + up * .01, up, 30)
+                if nxt[0] is None:
+                    break
+                top = nxt[0]
+            v.co = inv @ (top + up * margin)
+        else:
+            loc, nrm, _, _ = tree.find_nearest(w)
+            if loc is None:
+                continue
+            v.co = inv @ (loc - nrm.normalized() * margin)       # the shell's normals face in
+        moved += 1
+    return moved
 
 
 def drop_shards(obj, where, most):
@@ -385,7 +424,10 @@ def slice_den():
     high, _ = Den.build_shell("WF_ShellHigh", .3, .27, 27, 12, detail=True, bvh=bvh)
     cut_objs = den_recuts(Den, rows, low)
     rock_k = rock_density()
+    from mathutils.bvhtree import BVHTree
+    shell_tree = BVHTree.FromObject(low, bpy.context.evaluated_depsgraph_get())
     lid = Den.build_lid(low)
+    push_out_of_shell(lid, shell_tree, .4, vertical=True)
     triplanar_uv(lid, rock_k)
     lid.data.materials.append(island_material("cliff_rock"))
     Den.mark_seams(low, info)
@@ -445,6 +487,7 @@ def slice_den():
                              {"collide": False, "shadow": True, "uvPerStud": round(rock_k, 5)}))
     # the mouth surround
     mouth = Den.build_mouth("W7_F_DenMouth__cliff_rock")
+    push_out_of_shell(mouth, shell_tree, .3)
     triplanar_uv(mouth, rock_k)
     mouth.data.materials.append(island_material("cliff_rock"))
     rows.append(manifest_row(mouth, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
@@ -491,7 +534,8 @@ def slice_den():
     print("WORLDFINISH den", json.dumps(report))
     # export: fixed parts carry world coordinates (their centre is where the part goes); templates are authored about
     # their placement point, so their centre is the offset from it (Roblox centres a MeshPart on its mesh's bounds)
-    skin = rock_skin("W7_F_DenSkin__cliff_rock", lambda c: -44 < c[0] < 24 and -106 < c[2] < -86 and c[1] > 4.8)
+    # round 3: east of the mouth only (on the left its loose sheets read as clutter; the rock masses cover that side)
+    skin = rock_skin("W7_F_DenSkin__cliff_rock", lambda c: 2 < c[0] < 24 and -106 < c[2] < -86 and c[1] > 4.8)
     if skin:
         rows.append(manifest_row(skin, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
                                  {"collide": False, "shadow": True, "doubleSided": True}))
@@ -502,7 +546,7 @@ def slice_den():
     L.export_fbx(exported, OUT / "world-finish-den.fbx")
     remeasure(rows)
     (OUT / "world-finish-den.json").write_text(json.dumps({"slice": "den", "parts": rows, "place": place,
-                                                            "hide": Den.HIDE, "report": report}, indent=1) + "\n",
+                                                            "hide": Den.HIDE, "hideVisual": Den.HIDE_VISUAL, "report": report}, indent=1) + "\n",
                                                encoding="utf-8")
     if RENDERS:
         studio_look()
@@ -571,9 +615,10 @@ def den_render_dressing(Den, cage, panes, crystal, stone):
 
 def island_object(mesh, kind, uv_from=None):
     """Build a Mesh as an island-material part: world-projected UVs at the island's density for that material."""
-    obj = mesh.build(None)
     k = rock_density() if kind == "cliff_rock" else (island_density(uv_from) if uv_from else .25)
-    triplanar_uv(obj, k)
+    obj = mesh.build(k)
+    if not obj.get("own_uvs"):
+        triplanar_uv(obj, k)
     obj.data.materials.append(island_material(kind))
     return obj, k
 
@@ -599,7 +644,8 @@ def slice_path():
         if mesh is wall_m:
             Pth.facet(obj)
             Pth.tuck(obj)
-            triplanar_uv(obj, k)
+            if not obj.get("own_uvs"):
+                triplanar_uv(obj, k)
         parts.append(obj)
         rows.append(manifest_row(obj, "fixed", {"kind": "island", "material": kind}, "path",
                                  {"collide": False, "shadow": kind in ("cliff_rock", "boulder_rock"), "doubleSided": True,
@@ -629,21 +675,27 @@ def slice_path():
     # Fable D1 1: re-cuts of the visual island parts that poke into the new cut. Run on the den's saved scene, these
     # carry the den's cuts too, so the path slice requires the den slice (data: requires = "den").
     parts_cd = cliff_den_parts()["parts"]
-    cuts = []
+    cuts, path_hide, path_hide_visual = [], [], []
+    test = lambda pts: Pth.recut_test(pts) or Pth.in_fin(pts)       # round 3: and inside the fin cluster
     for o in [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render and o.name in parts_cd
               and o.name != "W7_CD_CaveBars__palette" and "glow" not in o.name]:
         mw = o.matrix_world
-        if not any(Pth.recut_test([L.rb(mw @ o.data.vertices[k].co) for k in p.vertices]) for p in o.data.polygons):
+        if not any(test([L.rb(mw @ o.data.vertices[k].co) for k in p.vertices]) for p in o.data.polygons):
             continue
         name = o.name
-        if parts_cd[name]["collide"]:
+        collide = parts_cd[name]["collide"]
+        if collide:
             # a colliding tile keeps its hulls: it stays invisible and colliding under a visual re-cut copy
-            copy, gone = recut(name, "W7_F_PathOver" + name[len("W7_CD_"):], lambda c: False, Pth.recut_test)
+            copy, gone = recut(name, "W7_F_PathOver" + name[len("W7_CD_"):], lambda c: False, test)
             bpy.data.objects[name + "__pack"].name = name
-            extra = {"overlays": name, "facesRemoved": gone, "collide": False}
         else:
-            copy, gone = recut(name, name, lambda c: False, Pth.recut_test)
-            extra = {"replaces": name, "facesRemoved": gone, "collide": False}
+            copy, gone = recut(name, name, lambda c: False, test)
+        if not copy.data.polygons:
+            bpy.data.objects.remove(copy)
+            (path_hide_visual if collide else path_hide).append(name)
+            continue
+        extra = {"overlays": name} if collide else {"replaces": name}
+        extra.update(facesRemoved=gone, collide=False)
         cuts.append(copy)
         rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "path", extra))
     # Fable world R1 9 (R2): the hill's steep tan ground faces near the path get the rock skin too
@@ -670,7 +722,8 @@ def slice_path():
     remeasure(rows)
     (OUT / "world-finish-path.json").write_text(json.dumps({"slice": "path", "parts": rows, "place": place,
                                                              "hide": ["W7_CD_CliffPath__cliff_rock",
-                                                                      "W7_CD_CliffPath__dirt_path"],
+                                                                      "W7_CD_CliffPath__dirt_path"] + path_hide,
+                                                             "hideVisual": path_hide_visual,
                                                              "report": report}, indent=1) + "\n", encoding="utf-8")
     if RENDERS:
         studio_look()

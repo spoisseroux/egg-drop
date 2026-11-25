@@ -3,26 +3,15 @@
  "den": {
   "model": {
    "file": "world-finish-den.fbx",
-   "sha256": "fbf9a8596e9c8cd1865f1bbc0c349e12d23fbb7330285ca54375ecccca930596",
-   "manifestSha256": "290c3f14181a571d13528cabb4173e2769d024a19d00a5e2a59ea6e9af5121b3",
-   "operation": "6be904a8-353f-4641-a39f-5a3df6ee0315",
-   "assetId": "74414403763324",
+   "sha256": "a7862e0638c0e2d5f496278c552fd2725a96b1a7d7136a05f7f5b0a10ded1cd4",
+   "manifestSha256": "5672acad598047e64e8db3f24d039de13ed75a854f87fb53c8e00ce7e12e7f1c",
+   "operation": "eee6e340-5126-4f85-858f-6741d061da01",
+   "assetId": "122736005677248",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "93629425333486",
-    "operation": "037f7420-a04a-4bb9-9433-b9ba9ecf654a",
-    "why": "Fable world R1 must-fixes (round 2)"
-   },
-   "manifestCorrected": {
-    "was": "5bbe54538f47994ec9d07f17985f1af9bc45f62826a012821c0801399483effd",
-    "parts": [
-     "W7_F_OverLandmarks__cliff_rock_1916",
-     "W7_F_OverLandmarks__cliff_rock_2016",
-     "W7_CD_Region__cliff_rock",
-     "W7_CD_Region__grass",
-     "W7_F_OverRocks__cliff_rock_1916"
-    ],
-    "why": "after upload: these parts' centre and size were measured before the shard pass removed faces (bounds kept the gone faces' vertices); now from the exported meshes' face vertices, as Roblox measures them. The FBX (and model 74414403763324) is unchanged."
+    "assetId": "74414403763324",
+    "operation": "6be904a8-353f-4641-a39f-5a3df6ee0315",
+    "why": "round 3 (studio-r2: path wall strips, den-back shard, mouth clutter)"
    }
   },
   "images": {
@@ -89,15 +78,15 @@
  "path": {
   "model": {
    "file": "world-finish-path.fbx",
-   "sha256": "b60f91ade30e71fb6089d92dbcdde74fdae40295666415543c70a6ff045095cb",
-   "manifestSha256": "e348bad65101da3c70e89d418cfda47e7a99c85237cda34ed06d119b64781023",
-   "operation": "564c4560-258d-4e88-9508-f4e6384fb0ea",
-   "assetId": "111926656336412",
+   "sha256": "6f6a79eca6fad5dcab3f35198cd3461c782a6dd9f23c15d64daf062b49f041fb",
+   "manifestSha256": "d8a9ee36c89d3084e5483b84333c7503e5b6cc96885aa21815a0adde98410788",
+   "operation": "45f9e201-2c2c-4400-8d96-d1d25a9c8c02",
+   "assetId": "111136020424731",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "132211469689954",
-    "operation": "15edb2d1-4fef-4bf6-b082-a394c2e9060e",
-    "why": "Fable world R1 must-fixes (round 2)"
+    "assetId": "111926656336412",
+    "operation": "564c4560-258d-4e88-9508-f4e6384fb0ea",
+    "why": "round 3 (studio-r2: path wall strips, den-back shard, mouth clutter)"
    }
   },
   "images": {}
@@ -118,5 +107,6 @@
   },
   "images": {}
  },
- "note2": "Round 2 also uploaded den r3 (operation ea97d46d-70ad-4034-ba0e-a624b522c0c4) and path r2 (operation 141e8972-bbfe-4e93-b992-79880ec27eae) before the rock skins; both superseded, never bound."
+ "note2": "Round 2 also uploaded den r3 (operation ea97d46d-70ad-4034-ba0e-a624b522c0c4) and path r2 (operation 141e8972-bbfe-4e93-b992-79880ec27eae) before the rock skins; both superseded, never bound.",
+ "note3": "Round 3 also uploaded den r5 (operation bb0e4145-869c-428c-9deb-4d7d3793afa1) and path r4 (operation 1cf530ee-8a38-449a-91ac-41829049eafc) before the last fixes; both superseded, never bound."
 }

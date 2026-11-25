@@ -138,6 +138,19 @@ return function(server)
 		assert(Mount.dressTier(model,room,{storage=storage,data=d,cliffVersion="c1"})==2)
 		assert(rim.Transparency==1 and rim.CanCollide==true and clump.Parent==nil and floor.Transparency==0)
 	end)
+	test("hideVisual: the tile goes invisible and keeps colliding; missing or named twice, nothing mounts",function()
+		local d=data();d.slices.den.hideVisual={"W7_Bridge__marble"}
+		local world,storage=rig(d)
+		local bridge=world.W7_Bridge__marble;bridge.CanCollide=true;bridge.Transparency=0
+		assert(Mount.world(world,{storage=storage,data=d,cliffVersion="c1"})[1]=="den")
+		assert(bridge.Transparency==1 and bridge.CanCollide==true)
+		local missing=data();missing.slices.den.hideVisual={"W7_Nowhere"}
+		local w2,s2=rig(missing)
+		assert(#Mount.world(w2,{storage=s2,data=missing,cliffVersion="c1"})==0)
+		local twice=data();twice.slices.den.hideVisual={"W7_CD_Rocks__cliff_rock_2016"}
+		local w3,s3=rig(twice)
+		assert(#Mount.world(w3,{storage=s3,data=twice,cliffVersion="c1"})==0 and w3.W7_CD_Rocks__cliff_rock_2016.Transparency==0)
+	end)
 	test("the generated data: every slice names its templates and is bound to a sculpt",function()
 		local ok,gen=pcall(function()return require(server.WorldFinishData)end)
 		assert(ok and type(gen.version)=="string"and type(gen.cliffDen)=="string")

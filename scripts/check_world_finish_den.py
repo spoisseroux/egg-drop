@@ -21,7 +21,7 @@ import cliff_den_sculpt as S  # noqa: E402
 import world_finish_den as Den  # noqa: E402
 import world_finish_lib as L  # noqa: E402
 
-OK_PREFIX = ("W7_F_", "WF_")
+OK_PREFIX = ("W7_F_Den__", "W7_F_Lantern", "W7_F_Stone", "WF_")   # round 3: the mouth rock, lid and skin may not show inside
 
 
 def fib(n):
