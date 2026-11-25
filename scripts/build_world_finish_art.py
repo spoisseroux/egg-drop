@@ -307,7 +307,7 @@ def den_recuts(Den, rows, shell):
     return out
 
 
-def rock_skin(name, where):
+def rock_skin(name, where, steep=.65):
     """Fable world R1 fixes 2 and 9 (R2): the island's steep ground faces (W1_ground, tan in game) that show where the
     sculpt took the rock in front of them get a rock skin 0.12 proud along their normals, in the island's cliff rock at
     the hill's cell size. The ground faces stay behind it (nothing opens)."""
@@ -321,7 +321,7 @@ def rock_skin(name, where):
         for p in o.data.polygons:
             c = L.rb(mw @ p.center)
             n = (rot @ p.normal).normalized()
-            if abs(n.z) >= .65 or not where(c):
+            if not where(c) or abs(n.z) >= (steep(c) if callable(steep) else steep):
                 continue
             base = len(verts)
             for k in p.vertices:
@@ -534,8 +534,20 @@ def slice_den():
     print("WORLDFINISH den", json.dumps(report))
     # export: fixed parts carry world coordinates (their centre is where the part goes); templates are authored about
     # their placement point, so their centre is the offset from it (Roblox centres a MeshPart on its mesh's bounds)
-    # round 3: east of the mouth only (on the left its loose sheets read as clutter; the rock masses cover that side)
-    skin = rock_skin("W7_F_DenSkin__cliff_rock", lambda c: 2 < c[0] < 24 and -106 < c[2] < -86 and c[1] > 4.8)
+    # rock skin: east of the mouth (round 3), and the one contiguous tan wall left of the mouth over the path's foot (round 4,
+    # studio-r3/01: x -42..-17, y 5..24; every ground face there short of a near-flat top, so the skin is one surface
+    # following the ground, not loose sheets)
+    import cliff_den_sculpt as S
+
+    def off_path(c):                      # never over the cliff path's tread
+        s = S._nearest(c[0], c[2])
+        a = (c[0] - s["x"]) * s["out"][0] + (c[2] - s["z"]) * s["out"][1]
+        return not (abs(a) < s["w"] / 2 + .6 and c[1] < s["h"] + 1.5)
+
+    left = lambda c: -42 < c[0] < -17 and -104 < c[2] < -84 and 5.0 < c[1] < 24.5 and off_path(c)
+    skin = rock_skin("W7_F_DenSkin__cliff_rock",
+                     lambda c: (2 < c[0] < 24 and -106 < c[2] < -86 and c[1] > 4.8) or left(c),
+                     steep=lambda c: .85 if c[0] < 0 else .65)
     if skin:
         rows.append(manifest_row(skin, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
                                  {"collide": False, "shadow": True, "doubleSided": True}))

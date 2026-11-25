@@ -10,7 +10,7 @@
 -- and src/server/WorldFinishData.lua (the pack then carries the bound slices' templates); `--check` must then PASS
 -- without a "no Studio readback" note. Commit the three files.
 local MODELS = {
-	{ slice = "den", id = 122736005677248 },
+	{ slice = "den", id = 106683942316413 },
 	{ slice = "path", id = 111136020424731 },
 	{ slice = "terrace", id = 127139808708242 },
 }
