@@ -76,7 +76,10 @@ function Hatch.new(playerGui,audio)
  gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.ScreenInsets=Enum.ScreenInsets.None;gui.IgnoreGuiInset=true;gui.Enabled=false;gui.Parent=playerGui
  local host=Instance.new("Frame");host.Name="StageHost";host.BackgroundTransparency=1;host.Size=UDim2.fromScale(1,1);host.Parent=gui
  local home=Instance.new("Frame");home.Name="ArrivalSceneHome";home.BackgroundTransparency=1;home.Size=UDim2.fromScale(1,1);home.Visible=false;home.Parent=gui
- return setmetatable({gui=gui,host=host,home=home,audio=audio,open=false,age=0},Hatch)
+ local self=setmetatable({gui=gui,host=host,home=home,audio=audio,open=false,age=0},Hatch)
+ -- Beta (17) U2: the Meet button needs a free PC cursor (ModalCursor's registry).
+ self.unregisterCursor=require(script.Parent.ModalCursor).register(self,function()return self.open end)
+ return self
 end
 function Hatch:isOpen()return self.open end
 function Hatch:play(petId,info)
@@ -171,6 +174,7 @@ function Hatch:destroy()
  self.onDone=nil
  if self.open then self:close()end
  if self.audio and type(self.audio.stopOwner)=="function"and self.owner then pcall(function()self.audio:stopOwner(self.owner)end)end
+ if self.unregisterCursor then self.unregisterCursor()end
  self.destroyed=true;self.gui:Destroy()
 end
 return Hatch

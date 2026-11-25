@@ -87,7 +87,10 @@ function Reveal.new(playerGui,audio)
 	local done=Instance.new("TextButton");done.Name="Done";done.Size=UDim2.fromOffset(0,0);done.BackgroundTransparency=1;done.TextTransparency=1;done.Parent=gui
 	local use=Instance.new("TextButton");use.Name="UseIt";use.Size=UDim2.fromOffset(0,0);use.BackgroundTransparency=1;use.TextTransparency=1;use.Parent=gui
 	done.Text=UICopy.get("names.reveal.done");use.Text=UICopy.get("names.reveal.use")
-	return setmetatable({gui=gui,host=host,doneSource=done,useSource=use,audio=audio,open=false},Reveal)
+	local self=setmetatable({gui=gui,host=host,doneSource=done,useSource=use,audio=audio,open=false},Reveal)
+	-- Beta (17) U2: the reveal's buttons need a free PC cursor (ModalCursor's registry).
+	self.unregisterCursor=require(script.Parent.ModalCursor).register(self,function()return self.open==true end)
+	return self
 end
 function Reveal:isOpen()return self.open end
 -- receipt: the server's Names Egg receipt {piece, cost, mode}. info: {odds(), pity(), again()}.
@@ -195,5 +198,5 @@ function Reveal:close(reason,handover)
 	local _=reason
 	return true
 end
-function Reveal:destroy()self:close("destroy");self.gui:Destroy()end
+function Reveal:destroy()self:close("destroy");if self.unregisterCursor then self.unregisterCursor()end;self.gui:Destroy()end
 return Reveal

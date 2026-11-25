@@ -802,6 +802,8 @@ function Screen.mount(deps)
 		return screen:open(context(),options)
 	end
 	function api.isOpen()return screen:isOpen()or reveal:isOpen()end
+	-- Beta (17) U2: the naming screen frees the PC cursor wherever it opens (ModalCursor's registry).
+	require(script.Parent.ModalCursor).register("NameScreen",function()return screen:isOpen()end)
 	-- The store route reopens this screen as it was (nil while only the reveal shows).
 	function api.current()return if screen:isOpen()then{petId=screen.petId,from=if screen.from=="hub"then "hub"else nil,tab=screen.tab}else nil end
 	function api.close(reason)reveal:close(reason or "close");return screen:close(reason or "close")end

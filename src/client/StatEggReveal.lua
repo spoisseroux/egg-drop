@@ -83,7 +83,10 @@ function Reveal.new(playerGui,audio)
 	local keep=Instance.new("TextButton");keep.Name="Keep";keep.Visible=true;keep.Size=UDim2.fromOffset(0,0);keep.BackgroundTransparency=1;keep.TextTransparency=1;keep.Parent=gui
 	local feed=Instance.new("TextButton");feed.Name="FeedNow";feed.Visible=true;feed.Size=UDim2.fromOffset(0,0);feed.BackgroundTransparency=1;feed.TextTransparency=1;feed.Parent=gui
 	keep.Text=UICopy.get("hatch.stat.reveal.keep");feed.Text=UICopy.get("hatch.stat.reveal.feed")
-	return setmetatable({gui=gui,host=host,keepSource=keep,feedSource=feed,audio=audio,open=false,seen=false},Reveal)
+	local self=setmetatable({gui=gui,host=host,keepSource=keep,feedSource=feed,audio=audio,open=false,seen=false},Reveal)
+	-- Beta (17) U2: the reveal's buttons need a free PC cursor (ModalCursor's registry).
+	self.unregisterCursor=require(script.Parent.ModalCursor).register(self,function()return self.open==true end)
+	return self
 end
 function Reveal:isOpen()return self.open end
 function Reveal:reduced()return Kit.reduced()end
@@ -219,5 +222,5 @@ function Reveal:close(reason,handover)
 	local _=reason
 	return true
 end
-function Reveal:destroy()self:close("destroy");self.gui:Destroy()end
+function Reveal:destroy()self:close("destroy");if self.unregisterCursor then self.unregisterCursor()end;self.gui:Destroy()end
 return Reveal

@@ -206,5 +206,7 @@ function Confirm.cancelFor(owner)
 	if owner.confirmHandle then owner.confirmHandle.cancel("owner");owner.confirmHandle=nil end
 end
 function Confirm.isOpen()return state.open end
+-- Beta (17) U2: an open dialog frees the PC cursor (ModalCursor's registry).
+require(script.Parent.ModalCursor).register("ConfirmDialog",Confirm.isOpen)
 function Confirm.panel()return state.panel end
 return Confirm
