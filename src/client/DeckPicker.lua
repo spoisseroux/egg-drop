@@ -83,6 +83,10 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  self.sound=button(scroll,"SoundSetting","SFX: On",function()self:changeSetting("sound")end)
  self.music=button(scroll,"MusicSetting","Music: On",function()self:changeSetting("music")end)
  self.motion=button(scroll,"MotionSetting","Motion: Full",function()self:changeSetting("motion")end)
+ -- ASMR-AND-SCALE-LOOK 2: Vibration On / Off (Haptics). Shown only where the device can buzz and the switch is on
+ -- (init.client calls setVibration).
+ self.vibration=button(scroll,"VibrationSetting",require(Shared.UICopy).get("inspect.vibration.on"),function()self:changeSetting("vibration")end)
+ self.vibration.Visible=false
  -- QA v685 R6: "Let visitors greet my pet" (a brief wave, no rewards). On by default.
  self.greet=button(scroll,"GreetSetting",require(Shared.UICopy).get("inspect.setting.on"),function()self:changeSetting("greetings")end)
  -- Toy Shell R1.1: "Menu colours: Match my deck / Classic Shell" (a saved profile setting).
@@ -171,8 +175,8 @@ function Picker:layout()
    local h=Art.textHeight(self.saveDetail,bodyW-8,24)
    place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
   end
-  for _,control in ipairs({self.sound,self.music,self.motion,self.greet,self.menuColours,self.reportButton,self.tipsButton})do
-   if control==self.tipsButton and not control.Visible then continue end
+  for _,control in ipairs({self.sound,self.music,self.motion,self.vibration,self.greet,self.menuColours,self.reportButton,self.tipsButton})do
+   if(control==self.tipsButton or control==self.vibration)and not control.Visible then continue end
    styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
    place(control,4,y,bodyW-8,h);y+=h+8
   end
@@ -236,6 +240,7 @@ function Picker:showTab(active)
  else self.shop:close()end
  local settings=active=="Settings"
  self.sound.Visible,self.music.Visible,self.motion.Visible=settings,settings,settings
+ self.vibration.Visible=settings and self.vibrationShown==true
  self.greet.Visible=settings
  self.menuColours.Visible=settings
  self.reportButton.Visible=settings and self.onReport~=nil
@@ -292,7 +297,7 @@ function Picker:replayTips()
  if self.onAccepted then self.onAccepted("confirm")end;return true
 end
 function Picker:changeSetting(key)
- local control=if key=="sound"then self.sound elseif key=="music"then self.music elseif key=="motion"then self.motion elseif key=="greetings"then self.greet elseif key=="menuColours"then self.menuColours else nil
+ local control=if key=="sound"then self.sound elseif key=="music"then self.music elseif key=="motion"then self.motion elseif key=="vibration"then self.vibration elseif key=="greetings"then self.greet elseif key=="menuColours"then self.menuColours else nil
  if not self.shade.Visible or self.active~="Settings"or not control or not control.Interactable then return false end
  self.onSetting(key);if self.onAccepted then self.onAccepted("confirm")end;return true
 end
@@ -343,6 +348,15 @@ end
 function Picker:setMenuColours(mode)
  local text=require(Shared.UICopy).get(if mode=="classic"then "inspect.menuColours.classic"else "inspect.menuColours.deck")
  if self.menuColours.Text~=text then self.menuColours.Text=text;if self.shade.Visible and self.active=="Settings"then self:layout()end end
+end
+-- ASMR-AND-SCALE-LOOK 2: the Vibration row. `shown`: the device can buzz and the switch is on; `on`: Haptics is enabled.
+function Picker:setVibration(shown,on)
+ local text=require(Shared.UICopy).get(if on==false then "inspect.vibration.off"else "inspect.vibration.on")
+ shown=shown==true
+ if self.vibration.Text==text and self.vibrationShown==shown then return end
+ self.vibration.Text=text;self.vibrationShown=shown
+ self.vibration.Visible=shown and self.active=="Settings"
+ if self.shade.Visible and self.active=="Settings"then self:layout()end
 end
 -- R6: the visitor-greetings setting (the owner's board attribute GreetingsOff, inverted).
 function Picker:setGreetings(on)

@@ -441,6 +441,8 @@ ui.inspect.statsNone,No stats to show yet.,,Menu text
 ui.inspect.statsPrivate,"Levels only. XP, Stars and history stay private.",,Menu text
 ui.inspect.tab.outfit,Outfit,,Menu text
 ui.inspect.tab.stats,Stats,,"Menu text; also ui.names.tab.stat, ui.stats.open, ui.stats.results.label, ui.stats.snacks.back"
+ui.inspect.vibration.off,Vibration: Off,,Menu text
+ui.inspect.vibration.on,Vibration: On,,Menu text
 ui.inspect.wait,In a moment,,Menu text
 ui.inspect.you,You {count},,Menu text; e.g. You 3
 ui.items.note.empty,You have no items,,Round item notes

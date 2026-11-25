@@ -9,9 +9,11 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- far flock, lamps and the shooting star, dragonflies, ground plates); `snack` is my pet's Dewdrop snack alone.
 -- Beta 17 (WORLD-ALIVE-LOOK 1.3 D): `windbed` is the continuous wind bed (AmbientAudio) for Spencer to hear first; it is
 -- the one feature whose missing value is OFF (Alive.Defaults).
-Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed"})
+-- ASMR-AND-SCALE-LOOK 1 and 2: `asmr` is the ASMR hatch (HatchAsmr: layered cracks and the pop) and the vibration
+-- (Haptics: the hatch beats, Pocket Deck merges, the Vibration setting). Missing = on.
+Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
- scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed"})
+ scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr"})
 -- What a missing or malformed config value means, where it is not on.
 Alive.Defaults=table.freeze({windbed=false})
 

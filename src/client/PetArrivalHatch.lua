@@ -20,6 +20,7 @@ local Kit=require(script.Parent.DeckKit)
 local RevealStage=require(script.Parent.RevealStage)
 local Pose=require(script.Parent.HatchDisplayPose)
 local Rarity=require(script.Parent.HatchRarityCue)
+local Asmr=require(script.Parent.HatchAsmr)
 local Lock=require(script.Parent.MovementLock)
 local Hatch={};Hatch.__index=Hatch
 Hatch.DisplayOrder=16;Hatch.Action="EggDropArrivalHatch";Hatch.Priority=Enum.ContextActionPriority.High.Value+830
@@ -92,7 +93,7 @@ function Hatch:play(petId,info)
  self.age,self.owner,self.skippedAt=0,{},nil
  self.timing=Rarity.timing(tier,"companion",reduced)
  self.endAt=Hatch.clockEnd(tier,reduced)
- self.cue=Rarity.new("companion",result,self.timing.ready,reduced)
+ self.cue=Rarity.new("companion",result,self.timing.ready,reduced,Asmr.layer("companion",result,reduced))
  -- Open before the stage starts, so its first frame sees an owned stage.
  self.open=true;self.gui.Enabled=true
  local ok,problem=pcall(function()
@@ -136,6 +137,7 @@ function Hatch:step(dt)
  if not ready or not self.audio or type(self.audio.play)~="function"then return end
  for _,event in ipairs(self.cue:due(self.age,sample.receiptReady==true,true))do
   pcall(function()self.audio:play(event.cue,event.speed,event.gain,self.owner)end)
+  Asmr.fire(event)
  end
 end
 -- A settling press (RevealStage already settled itself; canSkip held it until the receipt):

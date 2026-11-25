@@ -939,6 +939,9 @@ local function canPlay()
 		and clientUI.attr("FieldReady") ~= false
 end
 
+-- ASMR-AND-SCALE-LOOK 1, 2: the one vibration module (beta only: Alive "asmr"); the hatch, the deck merges and the
+-- egg machine buzz through it, and Settings shows its Vibration row where the device can buzz.
+clientUI.feel = require(script.Haptics)
 picker = DeckPicker.new(safeOverlays, make, label, function()end, function(reason)
 	local selected = GuiService.SelectedObject
 	if selected and selected:IsDescendantOf(picker.shade) then
@@ -962,6 +965,13 @@ end, function(actionName)
 		audio:setMusicEnabled(not audio:isMusicEnabled())
 		picker.music.Text = if audio:isMusicEnabled() then "Music: On" else "Music: Off"
 		picker:layout()
+		return
+	end
+	if actionName == "vibration" then
+		-- Turning it on plays one sample buzz, so the player feels what they chose (section 2 "The setting").
+		local on = clientUI.feel.setEnabled(not clientUI.feel.isEnabled())
+		if on then clientUI.feel.play("sample") end
+		picker:setVibration(clientUI.feel.available(), on)
 		return
 	end
 	request:FireServer(actionName)
@@ -2007,6 +2017,8 @@ local function updateClub()
 	local sound = board:GetAttribute("SoundLevel") or Settings.DefaultSound
 	picker:setGreetings(board:GetAttribute("GreetingsOff")~=true)
 	picker:setMenuColours(board:GetAttribute("MenuColours"))
+	-- The Vibration row: shown where the device can buzz and the ASMR switch is on (a pad may connect later).
+	picker:setVibration(clientUI.feel.available(), clientUI.feel.isEnabled())
 	picker:updateClub(board:GetAttribute("OwnedPets") or 0, board:GetAttribute("TrialMask") or 0,
 		clientUI.attr("PeakChain") or 0, clientUI.attr("Score") or 0, sound,
 		board:GetAttribute("ReducedEffects") == true, GuiService.ReducedMotionEnabled, board:GetAttribute("InventoryMask"),audio:isMusicEnabled(),nurseryState and nurseryState.totalWins,nurseryState and nurseryState.masteryRanks)
@@ -4077,6 +4089,7 @@ if clientUI.dropIntent and require(ReplicatedStorage.Shared.FeatureFlags).DeckNe
    if not rendererPresentation.canPresent(serial)then return end
    local now,id,reduced=os.clock(),-P.result.token,reduceEffects()
    audio:play(if P.tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(1,id),.56)
+   clientUI.feel.merge(P.tier,1,false)
    if lcdEnabled()and not reduced then
     if #pixelMerges>=6 then table.remove(pixelMerges,1)end
     table.insert(pixelMerges,{first=pixelPoint(Vector2.new(P.fromX,P.fromY)),second=pixelPoint(Vector2.new(P.otherX,P.otherY)),point=pixelPoint(Vector2.new(P.x,P.y)),
@@ -4198,6 +4211,7 @@ function clientUI.playMerge(position,tier,chain,first,second,id,cleared,serial)
  mergeBurst=if now-lastMerge<.08 then math.min(mergeBurst+1,2)else 0;lastMerge=now
  clientUI.ballFaces:merged(id,now)
  audio:play(if tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(chain,id),.56*.68^mergeBurst)
+ clientUI.feel.merge(tier,chain,cleared) -- a light tick that grows with the tier and the chain (beta only; capped)
  -- G1: every chain step pings (0.09 s guard, was 0.18), one note higher and a little louder.
  if(chain>1 or cleared)and now-lastChainAccent>=.09 then
   lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))
@@ -4244,6 +4258,8 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
   if(chain>1 or cleared)and now-lastChainAccent>=.09 then
    lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))
   end
+  -- The predicted buzz was a plain merge: a chain climbs and a clear thumps now (the server's chain; capped).
+  if chain>1 or cleared then clientUI.feel.merge(tier,chain,cleared)end
   rendererPresentation.fx:pop(project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,Config.mergeScore(tier,chain,cleared),now)
   return
  end
@@ -4272,6 +4288,13 @@ local function refreshMotion()
 	end
 end
 board:GetAttributeChangedSignal("ReducedEffects"):Connect(refreshMotion)
+-- The Vibration row follows the ASMR switch when it arrives or flips (and a pad connecting).
+pcall(function()
+	local function vibrationRow() picker:setVibration(clientUI.feel.available(), clientUI.feel.isEnabled()) end
+	require(ReplicatedStorage.Shared.Alive).changed("asmr"):Connect(vibrationRow)
+	UserInputService.GamepadConnected:Connect(vibrationRow)
+	UserInputService.GamepadDisconnected:Connect(vibrationRow)
+end)
 board:GetAttributeChangedSignal("GreetingsOff"):Connect(function()picker:setGreetings(board:GetAttribute("GreetingsOff")~=true)end)
 -- Toy Shell R1.1: menus follow the equipped deck or the Classic Shell (Settings), and the
 -- moving checker rests under the game's own Motion: Low as well as Reduced Motion.
@@ -4835,6 +4858,8 @@ function clientUI.eggCornerMount(Onboard)
  local function on()return Onboard.on("corner")end
  local function lounge()return workspace:FindFirstChild("EggDropLounge")end
  local function haptic(strength)
+  -- The ASMR switch on (beta): through the one vibration module (its cap and the Vibration setting; phones too).
+  if clientUI.feel.switch()then clientUI.feel.play(if strength=="medium"then "machine_medium"else "machine_light");return end
   -- Gamepads only: Roblox has no phone haptics.
   local pad=Enum.UserInputType.Gamepad1
   if not Haptics:IsVibrationSupported(pad)or not Haptics:IsMotorSupported(pad,Enum.VibrationMotor.Small)then return end

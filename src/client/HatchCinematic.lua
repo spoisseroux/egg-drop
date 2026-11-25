@@ -13,6 +13,7 @@ local Factory=require(script.Parent.PetFactory)
 local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local DisplayPose=require(script.Parent.HatchDisplayPose)
 local RarityCue=require(script.Parent.HatchRarityCue)
+local Asmr=require(script.Parent.HatchAsmr)
 local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24;Cinematic.HeroDelay=.12
 local live=setmetatable({},{__mode="k"});local visibleOwner;local seen={};local seenOrder={};local drainInput
 Input.InputEnded:Connect(function(input)if drainInput==input then task.delay(.05,function()if drainInput==input then drainInput=nil end end)end end)
@@ -557,6 +558,7 @@ function Cinematic:step(dt)
    for _,event in ipairs(self.rarityState:due(self.age,sample and sample.receiptReady==true,liveCue))do
     if self.audio and self:owned()then
      self.audio:play(event.cue or RarityCue.Cue,event.speed,event.gain,self.accentOwner)
+     Asmr.fire(event) -- the ASMR hatch's buzz, in the same frame as its sound (beta only: the event has none otherwise)
      if event.cue==(RarityCue.Sting[self.tier]or RarityCue.Sting.Common).cue then self.stingPlayed=true end
     end
    end
@@ -605,7 +607,10 @@ function Cinematic:play(result,onComplete,options)
  if Cinematic.onPlay then pcall(Cinematic.onPlay,self)end
  self.timing=RarityCue.timing(self.tier,self.kind,false)
  local T=RarityCue.timing(self.tier,self.kind,self.reducedIntro)
- self.rarityState=if self.nativeDisplay then RarityCue.new(self.kind,result,T.ready,self.reducedIntro)else nil
+ -- The ASMR hatch (HatchAsmr, beta only): its cracks, creak, pop and flakes ride the tier line's clock.
+ local asmr=if self.nativeDisplay and self.freshReveal then Asmr.layer(self.kind,result,self.reducedIntro)else nil
+ self.asmrOn=asmr~=nil
+ self.rarityState=if self.nativeDisplay then RarityCue.new(self.kind,result,T.ready,self.reducedIntro,asmr)else nil
  if self.reducedIntro then self.timing=T end
  self.frame:SetAttribute("HatchPresentationTier",if self.rarityState then self.rarityState.tier else "Neutral")
  self.active=self.freshReveal and(not self:reduced()or self.reducedIntro);self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
@@ -643,6 +648,7 @@ function Cinematic:skip()
  if ring and self.audio then
   local sting=RarityCue.Sting[self.tier]or RarityCue.Sting.Common
   self.stingPlayed=true;self.audio:play(sting.cue,1,sting.gain,self.accentOwner)
+  if self.asmrOn then Asmr.fire({haptic="skip"})end
  end
  return true
 end

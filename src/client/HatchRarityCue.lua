@@ -153,13 +153,23 @@ function Policy.events(classification,readyAt,reduced,kind)
  end
  return {{at=Policy.BurstAt-s.hit,cue=s.cue,speed=1,gain=s.gain,pre=true}}
 end
-function Policy.new(kind,result,readyAt,reduced)
+-- `extra` (optional): more events on the same clock, merged in time order. The ASMR hatch (HatchAsmr.layer, beta only)
+-- passes its cracks, creak, pop and flakes here; without it the line is exactly as before.
+function Policy.new(kind,result,readyAt,reduced,extra)
  local classification=Policy.tier(kind,result)
  -- Round 3: pets get the tier line too (the Bear's rarity_common lands as the shell opens);
  -- RevealStage.Cues stay as the entrance after it.
  -- The egg foley leads in (not under Reduced Motion); Policy.events stays the tier's own line.
  local events=Policy.events(classification,readyAt,reduced,kind)
  if not reduced then events=withFoley(events)end
+ if type(extra)=="table"and #extra>0 then
+  local merged=table.clone(events)
+  for _,e in ipairs(extra)do table.insert(merged,e)end
+  -- Stable on ties: the tier line first, then the extra layer in its own order.
+  local rank={};for i,e in ipairs(merged)do rank[e]=i end
+  table.sort(merged,function(a,b)if a.at~=b.at then return a.at<b.at end;return rank[a]<rank[b]end)
+  events=merged
+ end
  return setmetatable({tier=classification,events=events,cursor=1,lastAge=0,readyAt=readyAt},Cue)
 end
 function Cue:cancel()self.cancelled=true;self.cursor=#self.events+1 end
