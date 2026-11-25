@@ -96,3 +96,12 @@ malformed field, flag off), `TomorrowChips`, `ResultsNudge`, `GrowthCoach` (Coac
   only the in-place (lateral) view reserves the row. S1: the coordinator checks a real Studio join pays +12.
 - S7 (live today, outside this change): `lastRunReward.bonus = total - roundStars` folds the 2x share into
   "Supporter" and hides the 2x row. Logged in TODO, not fixed here.
+
+## Code review (2026-11-25): APPROVE, notes applied
+
+- A say-hi line cancelled before the rail showed it no longer ends the garden step for the session; saying hi
+  before it shows saves `gardenIntro` (so the Tomorrow line is not blocked).
+- The egg preselect expires after 5 s (the deck-to-garden walk opens Hatch eggs within 4 s or not at all).
+- A phone TOMORROW block is cleared if the snapshot goes away; the two-line nudge sits 3 px lower.
+- Left for the Studio pass: gold `stars` text on the raised panes (same role as the existing Total line), the
+  bonus-round default focus on Hatch eggs (as specified), the ball copy is the one change with every switch off (as planned).

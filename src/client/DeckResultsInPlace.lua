@@ -293,6 +293,8 @@ function View:paint(data)
   below=math.max(0,h-18)
  else
   self.today.Visible=true
+  -- A phone block drawn earlier (the snapshot went away) leaves with it.
+  if self.view.phone and self.stripKey then clearStrip(self);self.stripKey=nil;self.phoneHeight=0 end
   self:paintStrip(data)
  end
  local parts=data.stats or {}
@@ -337,7 +339,7 @@ function View:paint(data)
   Kit.paint(self.saved,"TextColor3",if not data.pending and line and line.ready then "stars"else "soft")
   local m=self.regions.middle
   local two=Kit.measure(value,"BodyMedium",12).X>m.w-16
-  self.saved.Position=UDim2.fromOffset(8,if two then m.h-34 else m.h-26);self.saved.Size=UDim2.fromOffset(m.w-16,if two then 30 else 18)
+  self.saved.Position=UDim2.fromOffset(8,if two then m.h-31 else m.h-26);self.saved.Size=UDim2.fromOffset(m.w-16,if two then 28 else 18)
   -- Ready in a Welcome bonus round: Hatch eggs is the gold button and takes the default focus once.
   local primary=data.hatchPrimary==true
   if self.hatchPrimary~=primary then
