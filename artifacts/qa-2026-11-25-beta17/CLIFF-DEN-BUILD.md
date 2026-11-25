@@ -58,6 +58,30 @@ corner (`W7_CD_Rocks__cliff_rock_1916` at 9.9 to 11.5, one stud from the wall) a
 over any tread (960 samples, a body's height). Terrace crest: under the floor (29) but 7 samples at the end rims (29.3
 to 32). Export: 134,706 bytes, sha 48d42001..., round trip exact (201 parts, 2,958 rays identical).
 
+## Studio Play probe (2026-11-25, Studio 53800d7d, Rojo on 34872 from this branch with a serve project that leaves out
+the two native packs; the exported `WorldBeta` put in ServerStorage by hand; streaming off as the place; fresh save,
+Bear by the welcome remotes; nothing saved or published)
+
+| Check | Result |
+|---|---|
+| Server start | **PASS.** `CliffDen` true, 323 `W7_CD_`/`W7C_CD_` parts and 123 collision boxes in the world, live cliff rock gone, live marble kept; `Tier_on`, `Den_on`, `Den_open` all true with no config (missing = on); the terrace greybox built, no gates; `CaveBlocker` on the new mouth line (-7, 7.2, -100.5) open; the cave bars hidden. No `[CliffDen]`, `[Tier]` or `[Den]` warning. |
+| Walk the cliff path up and down | **PASS.** `Humanoid:MoveTo` along the 49 centre-line points from the lawn by the den to the arrival and back: never stuck (no point missed by more than 2), feet within -0.8..+0.7 of the treads. Up the last steps through the notch and onto the terrace floor (feet 29.0, Grass). |
+| Terrace edges | **PASS.** Walking and jumping at the outer rim, both end rims and the garden balustrade: held at s -36.5 / +36.5, t -20.5 / +20.5 (no gap where the ring stands aside). |
+| `/tier off` | **PASS.** The player on the terrace moved to (-14, 8.1, -79); greybox gone; `TierGates` built; climbing from the foot stops at (-23.3, -85.5), before the foot gate. `/tier clear` reopens (gates gone). |
+| The den | **PASS.** Walked from the lawn through the mouth into the room (floor: the collision boxes). Gate, table and board prompts at the layout's spots, enabled once the egg shop that opens on arrival is closed. Fired (see below): gate opens the Dash picker (Just for Fun / Stats On / Time Trial), table switches to the Deck (Mode Board; back with mode Room), board opens Things to do. |
+| Pets into the den | **FAIL, then fixed and PASS.** First Play: the Bear stopped at the mouth (z -97.6). Cause: `petAnchor` (and `resolveGardenTarget`) cast their ground ray from 8 over the point; in the room that is above the collision ceiling (12.2), so the ray landed on the ceiling and the anchor was refused. Fix: `DenLayout.groundRayTop` starts the ray at most 6 over the den floor inside the waiting area (elsewhere +8 exactly, spec'd). Second Play: the Bear in the room 3.1 s after the owner, 25 of 30 samples inside, on the floor (y 4.4 to 4.7). |
+| Pets and the path | **PASS.** Owner on the path (mid, y 20): the Bear stays on the lawn by the den (-9.6, 5.1, -90.1) for 10 s; it never climbs. |
+| `/den off` with the player inside | **PASS.** Moved to the doorstep (-7, 8, -87), Bear to the lawn, blocker colliding, bars shown, greybox gone; `/den clear` reopens. |
+
+**Prompts and the pet's prompt (unverified for a real player):** with the Bear following, the den prompts (and the
+meadow's Dash gate) never showed in Studio: `PromptShown` fired only for the Bear's `PetInteraction` (also E,
+`OnePerButton`), even with the den prompt nearer (3.6 vs 6.7). With `AlwaysShow` set for the test each fired at once.
+Studio's camera here is the Assistant's, not the player's, which may decide the winner; check on the beta that E at
+the gate, table and board picks them over the pet. If not, give the den prompts priority (another key or `AlwaysShow`).
+
+Captures: `studio/world/01-path-from-lawn.jpg`, `02-den-mouth.jpg`, `03-den-inside.jpg`, `04-terrace-arrival.jpg`,
+`05-avatar-on-path.jpg`.
+
 ## Known, not fixed tonight
 
 - The cliff-rock collision on the beta is not live's (tiled bake; closer to the drawn rock, but a slope may climb or

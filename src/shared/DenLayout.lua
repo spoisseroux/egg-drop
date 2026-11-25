@@ -216,6 +216,16 @@ function Layout.boundsRegions(L)
 	return table.freeze({table.freeze({name="den",min=Vector3.new(w.min.X-2,L.floorY-Layout.FallDepth,w.min.Z-2),
 		max=Vector3.new(w.max.X+2,L.roofY+10,w.max.Z),fallY=L.floorY-Layout.FallDepth,safe=function(x,z)return Layout.safeCell(L,x,z)end})})
 end
+-- Studio R2 (CLIFF-DEN-BUILD): the room has a collision ceiling (its top box at 12.2, the CliffDen boxes), lower than
+-- the 8 studs over a root the pets' ground rays start from, so a ray from there lands on the ceiling and the pet never
+-- follows in. In the waiting area (the room and the apron, `L` the open layout) a ground ray starts at most CeilingRay
+-- over the floor; anywhere else (or with no layout) it is `p.Y + above` exactly as before.
+Layout.CeilingRay=6
+function Layout.groundRayTop(L,p,above)
+	local top=p.Y+above
+	if L~=nil and Layout.inWait(L,p,1)then return math.min(top,L.floorY+Layout.CeilingRay)end
+	return top
+end
 -- Where each prompt stands: {gate = Vector3?, deck = Vector3?, board = Vector3}.
 function Layout.prompts(L)
 	local out={board=(L.board*CFrame.new(0,3.6,-.6)).Position}

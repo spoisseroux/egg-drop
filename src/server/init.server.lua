@@ -240,7 +240,9 @@ local function petAnchor(state)
 	if not PetFloors.ok(floor,position,hushHost~=nil and hushHost.open,tierHost~=nil and tierHost.open,denLive())then return nil end
 	local params=RaycastParams.new();params.RespectCanCollide=true
 	params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
-	local hit=workspace:Raycast(position+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
+	-- The Play Den's ceiling is lower than 8 over a root in it (DenLayout.groundRayTop; elsewhere exactly +8).
+	local top=DenLayout.groundRayTop(denLive(),position,8)
+	local hit=workspace:Raycast(Vector3.new(position.X,top,position.Z),Vector3.new(0,-80,0),params)
 	if not hit or hit.Position.Y>state.position.Y+1 or hit.Position.Y<state.position.Y-6 then return nil end
     local grounded=Vector3.new(position.X,hit.Position.Y+.025,position.Z)
     local scene=gardenScene and gardenScene()
@@ -311,7 +313,7 @@ local function resolveGardenTarget(target,from)
         local resolved=GardenWalkability.resolveAnchor(target,scene.wet)
         if not resolved then return from,true end
         local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={scene.room}
-        local hit=workspace:Raycast(resolved+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
+        local hit=workspace:Raycast(Vector3.new(resolved.X,DenLayout.groundRayTop(denLive(),resolved,8),resolved.Z),Vector3.new(0,-80,0),params)
         local span,id=GardenWalkability.spanAt(resolved)
         if not hit or(span and hit.Instance:GetAttribute("GardenWalkableSpan")~=id)then return from,true end
         local grounded=Vector3.new(resolved.X,hit.Position.Y+.025,resolved.Z)

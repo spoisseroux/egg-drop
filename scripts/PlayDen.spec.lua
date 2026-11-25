@@ -162,6 +162,10 @@ return function(server)
 		assert(Layout.petFloor(L,Vector3.new(-7,4.3,-90),true)and Layout.petFloor(L,Vector3.new(-10,4.3,-110),true))
 		local s=Layout.prompts(L);assert((s.gate-s.deck).Magnitude>=7)
 		assert(#Greybox.rows(L)<=Greybox.MaxParts)
+		-- Studio R2: ground rays in the room start under its collision ceiling (12.2); elsewhere +8 exactly.
+		assert(Layout.groundRayTop(L,Vector3.new(-7,7.6,-110),8)==L.floorY+Layout.CeilingRay and L.floorY+Layout.CeilingRay<12.2)
+		assert(Layout.groundRayTop(L,Vector3.new(-7,4.2,-98),8)==L.floorY+Layout.CeilingRay)
+		assert(Layout.groundRayTop(L,Vector3.new(40,7,50),8)==15 and Layout.groundRayTop(nil,Vector3.new(-7,7.6,-110),8)==15.6)
 		-- current(): only with CliffDen; the pocket is retired (2026-11-25): no room otherwise, and a reason.
 		local none,why=Layout.current({cliffDen=false});assert(none==nil and type(why)=="string")
 		assert(Layout.current({cliffDen=true,data=cliff()}).variant=="room")
