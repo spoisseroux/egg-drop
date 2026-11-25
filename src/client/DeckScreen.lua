@@ -1194,11 +1194,11 @@ function Screen:buildCompactHud(g)
  local eggs=screenCard(host,"EggsLeft",er)
  h.welcomeMeter=eggs
  if g.layout=="wide"then
-  txt(eggs,"Label","EGGS LEFT","dim",12,0,100,er.h,12)
+  txt(eggs,"Label","BALLS LEFT","dim",12,0,100,er.h,12)
   h.budget=txt(eggs,"Counter","/24","soft",er.w-12-40,1,40,er.h,13,right)
   h.eggs=txt(eggs,"Counter","0","text",er.w-12-40-4-60,0,60,er.h,18,right);h.eggsRow=true
  else
-  txt(eggs,"Label",if narrow then "EGGS LEFT"else "EGGS","dim",10,5,er.w-20,14,12)
+  txt(eggs,"Label",if narrow then "BALLS LEFT"else "BALLS","dim",10,5,er.w-20,14,12)
   h.eggs=txt(eggs,"Counter","0","text",10,21,40,22,18)
   if er.w>=88 then h.budget=txt(eggs,"Counter","/24","soft",40,24,40,20,13)end
  end
@@ -1373,7 +1373,7 @@ function Screen:buildHud(g)
   h.thenLabel=txt(nextCard,"Label","THEN","dim",132,42,60,16)
   h.next[2]=egg(nextCard,40);h.next[2].ball.Position=UDim2.fromOffset(150-20,92-20)
   h.next[3]=egg(nextCard,40);h.next[3].ball.Position=UDim2.fromOffset(math.min(col-46,196-20),92-20)
-  local eggs=card(host,"EggsLeft",{rightX,160,col,96},"EGGS LEFT",pad)
+  local eggs=card(host,"EggsLeft",{rightX,160,col,96},"BALLS LEFT",pad)
   h.welcomeMeter=eggs
   h.eggs=txt(eggs,"CounterL","0","text",14,30,70,40);h.eggs.AutomaticSize=Enum.AutomaticSize.X
   h.budget=txt(eggs,"Counter","/24","dim",70,40,80,24)
@@ -1418,7 +1418,7 @@ function Screen:buildHud(g)
   local nextCard=card(host,"Next",{rightX,6,col,84},"NEXT",pad)
   h.next={egg(nextCard,40),egg(nextCard,24)}
   h.next[1].ball.Position=UDim2.fromOffset(12,30);h.next[2].ball.Position=UDim2.fromOffset(66,42)
-  local eggs=card(host,"EggsLeft",{rightX,96,col,64},"EGGS LEFT",pad)
+  local eggs=card(host,"EggsLeft",{rightX,96,col,64},"BALLS LEFT",pad)
   h.welcomeMeter=eggs
   h.eggs=txt(eggs,"CounterL","0","text",8,22,50,26);h.budget=txt(eggs,"Counter","/24","dim",50,26,56,20,{TextSize=15})
   h.eggBar=Kit.progress(eggs,5);h.eggBar.root.Position=UDim2.fromOffset(8,52);h.eggBar.root.Size=UDim2.fromOffset(col-16,5)
