@@ -4820,6 +4820,33 @@ function clientUI.eggCornerMount(Onboard)
  end
  local machine=require(script.EggMachineClient).new({room=lounge,corner=on,
   warn=function(text)warn(text)end,
+  -- The capsule shot (beta 17 U5; CAPSULE-AND-HUD-LOOK 1): its switch, the camera, the HUD, this player's character,
+  -- the line checks and the pocket drop in the Hatch eggs preview well.
+  capsule=function()return Onboard.on("capsule")end,
+  cameraObject=function()return workspace.CurrentCamera end,
+  hud=function(visible)clientUI.capsuleHud(visible)end,
+  ghost=function(alpha)
+   local character=player.Character
+   if not character then return end
+   for _,part in ipairs(character:GetDescendants())do
+    if part:IsA("BasePart")or part:IsA("Decal")then part.LocalTransparencyModifier=alpha end
+   end
+  end,
+  blocked=function(from,to)
+   local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
+   local skip={}
+   for _,other in ipairs(Players:GetPlayers())do if other.Character then table.insert(skip,other.Character)end end
+   local room=lounge()
+   local found=room and room:FindFirstChild("EggMachine")
+   if found then table.insert(skip,found)end
+   for _,name in ipairs({"EggDropSleepyNest","EggDropShowMe","EggDropStationAttract"})do local f=workspace:FindFirstChild(name);if f then table.insert(skip,f)end end
+   params.FilterDescendantsInstances=skip
+   return workspace:Raycast(from,to-from,params)~=nil
+  end,
+  pocket=function(kind)
+   local egg=nurseryView and nurseryView.egg3D
+   if egg and nurseryView:isOpen()then egg:capsule(kind)end
+  end,
   reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
   root=function()
    local character=player.Character
@@ -4835,6 +4862,27 @@ function clientUI.eggCornerMount(Onboard)
    return intent~=nil and intent.status=="Rejected"
   end})
  clientUI.eggMachine=machine
+ -- The capsule shot: the dock hides while the camera looks at the machine (its own visibility is kept and put back).
+ do
+  local hidden=nil
+  function clientUI.capsuleHud(visible)
+   local dock=roomView.controls
+   if not dock then return end
+   if not visible and hidden==nil then hidden=dock.Visible;dock.Visible=false
+   elseif visible and hidden~=nil then dock.Visible=hidden;hidden=nil end
+  end
+ end
+ -- A tap, a click, A, Space or Enter during the shot jumps to the landing (never the first drop of an egg type).
+ local skipKeys={[Enum.KeyCode.ButtonA]=true,[Enum.KeyCode.Space]=true,[Enum.KeyCode.Return]=true}
+ local skipInput=UserInputService.InputBegan:Connect(function(input)
+  if not machine:shotActive()then return end
+  if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch or skipKeys[input.KeyCode]then
+   machine:skipShot()
+  end
+ end)
+ -- The camera is always given back: on respawn too.
+ local respawn=player.CharacterAdded:Connect(function()machine:returnCamera(true)end)
+ gui.Destroying:Connect(function()skipInput:Disconnect();respawn:Disconnect()end)
  gui.Destroying:Connect(function()machine:destroy()end)
  -- The machine's model (the server's), or nil while the corner is off.
  local function model()local room=lounge();local found=room and room:FindFirstChild("EggMachine");return found end

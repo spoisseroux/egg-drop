@@ -1003,7 +1003,7 @@ function Client:paint(fresh)
 	-- Tuck in while it grows (once per egg), Hatch when it is ready; nothing while a hatch is asked for or playing.
 	local action=nil
 	if look=="ready"then action="hatch"elseif not view.tucked and not self.tuck then action="tuck"
-	elseif self.corner and self.d.help and(view.tucked or(self.tuck~=nil and self.tuck.t>=Client.TuckSeconds))then
+	elseif self.corner and(view.tucked or(self.tuck~=nil and self.tuck.t>=Client.TuckSeconds))then
 		action="peek" -- the egg corner: Peek opens the "?" card
 	end
 	local free=(self.d.free==nil or self.d.free()==true)and(self.d.busy==nil or self.d.busy()~=true)
@@ -1115,12 +1115,39 @@ function Client:act()
 		self.waiting={t=0}
 		return true
 	elseif self.action=="peek"then
-		return self:help()
+		-- Beta 17 U3 (CAPSULE-AND-HUD-LOOK 3): Peek shows the egg; only the "?" opens the card.
+		return self:peekLook()
 	end
 	return false
 end
 -- The gift peek over the egg on Tuck in: what is inside, and its Stars.
-function Client:peek()
+-- Peek (beta 17 U3): a 1.6 s look, no card, no camera: the egg stirs (lifts .15, tilts 8 degrees toward the player,
+-- three Zzz puffs, the tuck-in rustle quietly), the gift tile fades in at .1, holds to 1.3 and fades by 1.6; the pill
+-- keeps its clock. The prompt is off while it plays and .6 s after, so E never stacks peeks. Reduced Motion: the tile
+-- only.
+Client.Look=table.freeze({seconds=1.6,lift=.15,tilt=8,tileIn=.1,tileHold=1.3,promptRest=.6})
+local function easeOutQuad(x)return 1-(1-x)*(1-x)end
+function Client:peekLook()
+	if not self.isOpen or not self.view or not self.egg or self.looking then return false end
+	self.looking={t=0}
+	self.promptAfter=self.clock+Client.Look.seconds+Client.Look.promptRest
+	self:play("pet_coo_1",.85,.2)
+	pcall(function()self.egg.zzz:Emit(3)end)
+	self:peek(Client.Look)
+	return true
+end
+-- The egg's stir for the look at t: (lift, tilt degrees); the settle's one small rock from 1.3 to 1.6.
+function Client.lookPose(t,reduced)
+	local L=Client.Look
+	if reduced or t>=L.seconds then return 0,0 end
+	if t<L.tileHold then
+		local p=math.min(1,t/.25)
+		return L.lift*easeOutQuad(p),L.tilt*easeOutQuad(p)
+	end
+	local p=(t-L.tileHold)/(L.seconds-L.tileHold)
+	return L.lift*(1-p),L.tilt*(1-p)+3*math.sin(p*math.pi)
+end
+function Client:peek(timing)
 	local egg,view=self.egg,self.view
 	if not egg or not view then return end
 	local board=make("BillboardGui",egg.anchor,{Name="GiftPeek",LightInfluence=0,AlwaysOnTop=not self.landmark,MaxDistance=60,Size=UDim2.fromOffset(120,96)})
@@ -1145,7 +1172,8 @@ function Client:peek()
 	else
 		board.StudsOffset=Vector3.new(0,(self.shownScale or 1.25)*1.3+1.6,0)
 	end
-	table.insert(self.beats,{kind="peek",board=board,t=0,parts={tile,chip},labels={item,count,stars}})
+	table.insert(self.beats,{kind="peek",board=board,t=0,parts={tile,chip},labels={item,count,stars},timing=timing,
+		keepPill=timing~=nil}) -- the look keeps the pill's clock showing
 end
 -- A beat (beta 14 Q2, rows 1 to 3): the pill says `text` for `seconds`, over the other rows, and holds the need bubble
 -- back until BubbleAfter after it ends.
@@ -1225,10 +1253,18 @@ function Client:stepBeats(dt)
 		beat.t+=dt
 		local done=false
 		if beat.kind=="peek"then
-			local fade=if beat.t<.2 then 1-beat.t/.2 elseif beat.t<2.2 then 0 else math.min(1,(beat.t-2.2)/.3)
+			local fade
+			local T=beat.timing
+			if T then
+				local inEnd=T.tileIn+.15
+				fade=if beat.t<T.tileIn then 1 elseif beat.t<inEnd then 1-(beat.t-T.tileIn)/.15 elseif beat.t<T.tileHold then 0
+					else math.min(1,(beat.t-T.tileHold)/(T.seconds-T.tileHold))
+			else
+				fade=if beat.t<.2 then 1-beat.t/.2 elseif beat.t<2.2 then 0 else math.min(1,(beat.t-2.2)/.3)
+			end
 			for _,part in ipairs(beat.parts)do part.BackgroundTransparency=fade end
 			for _,text in ipairs(beat.labels)do text.TextTransparency=fade end
-			done=beat.t>=2.5
+			done=beat.t>=(if beat.timing then beat.timing.seconds else 2.5)
 		elseif beat.kind=="float"then
 			if not reduced then beat.board.StudsOffset=Vector3.new(0,2.6+math.min(1,beat.t/1.4)*1.6,0)end
 			local fade=math.clamp((beat.t-.77)/.63,0,1)
@@ -1270,6 +1306,15 @@ function Client:pose(dt)
 		end
 	end
 	-- Waiting for the save: a fast rock on a loop.
+	-- Peek's look (beta 17 U3): the stir, toward the player.
+	local lookLift=0
+	if self.looking then
+		self.looking.t+=dt
+		local lifted,tilted=Client.lookPose(self.looking.t,reduced)
+		lookLift=lifted
+		rock+=tilted
+		if self.looking.t>=Client.Look.seconds then self.looking=nil end
+	end
 	if self.waiting and not reduced then rock=14*math.sin(self.clock*6*2*math.pi);hop=0 end
 	local top,bottomFade,core=0,0,nil
 	if self.hatching then
@@ -1315,7 +1360,7 @@ function Client:pose(dt)
 		s*=wide
 		squash*=tall/wide
 	end
-	local frame=self.root*CFrame.new(0,(self.eggBase or Client.EggBase)+sink+drop+rise,0)
+	local frame=self.root*CFrame.new(0,(self.eggBase or Client.EggBase)+sink+drop+rise+lookLift,0)
 	if lean~=0 then
 		local bear=self.bearSpot or Client.BearSpot
 		local d=Vector3.new(bear.X,0,bear.Z).Unit
@@ -1378,7 +1423,7 @@ function Client:paintPill()
 	end
 	if row.hidden then alpha=1 end
 	-- The gift peek is up, or the pet focus (greeting) camera: no pill (it would read as the Bear's speech).
-	for _,item in ipairs(self.beats)do if item.kind=="peek"then alpha=1 end end
+	for _,item in ipairs(self.beats)do if item.kind=="peek"and not item.keepPill then alpha=1 end end
 	if d.focus~=nil and d.focus()==true then alpha=1 end
 	if self:reduced()and alpha<1 then alpha=0 end
 	local key=row.row..":"..row.text..":"..row.size..":"..tostring(row.lift)..":"..tostring(row.help)

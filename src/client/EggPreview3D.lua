@@ -396,6 +396,14 @@ function Preview:step(dt)
   -- Quantised so the core MeshPart is resized only on 0.005 steps.
   coreScale=1+math.floor((.05*math.sin(now*math.pi*2/1.6)+.08*env)*200+.5)/200
  end
+ -- The capsule shot's pocket version (beta 17 U5; CAPSULE-AND-HUD-LOOK 1): the egg shakes on three clicks, slips out of
+ -- the bottom of the well, and the bought egg drops in from above with one small bounce (1.0 s).
+ if self.capsuleAt then
+  local t=now-self.capsuleAt
+  tilt,hop=Preview.capsulePose(t)
+  if t>=.46 and not self.capsuleSwitched then self.capsuleSwitched=true;self:setType(self.capsuleKind,true)end
+  if t>=1 then self.capsuleAt=nil end
+ end
  self:pose(self.yaw,tilt,hop,sy,lift,topUp,topTip,topFade,coreScale)
  -- 2D overlays follow the hop.
  local hopPx=hop*g.k
@@ -422,6 +430,30 @@ function Preview:step(dt)
   self.sheen.BackgroundTransparency=.78;self.sheen.Position=UDim2.fromScale(-.2+1.4*e,.5)
  else self.sheen.BackgroundTransparency=1;self.sweepStart=nil end
  self:stepSparkles(now)
+end
+-- Pure: the pocket drop's (tilt degrees, hop studs) at t: 6 degree shakes on the clicks at 0, .15, .30; out of the
+-- bottom by .45; empty to .47; the new egg falls in from 2.4 above to rest at .75 with one small bounce; then still.
+function Preview.capsulePose(t)
+ if t<.45 then
+  local k=(t%.15)/.15
+  local tilt=6*math.sin(k*math.pi)*(if math.floor(t/.15)%2==0 then 1 else -1)
+  local hop=if t>.30 then -3*((t-.30)/.15)^2 else 0
+  return tilt,hop
+ elseif t<.47 then return 0,-3
+ elseif t<.75 then
+  local p=(t-.47)/.28
+  return 0,2.4*(1-p)*(1-p)
+ elseif t<.85 then
+  return 0,.06*math.sin((t-.75)/.10*math.pi)
+ end
+ return 0,0
+end
+-- Starts the pocket drop toward egg type `kind` (toy, hue, material, feature, stat). Reduced Motion: the colour only.
+function Preview:capsule(kind)
+ if self.destroyed then return false end
+ if self:reduced()then self:setType(kind,true);return true end
+ self.capsuleAt=self.clock;self.capsuleKind=kind;self.capsuleSwitched=false
+ return true
 end
 function Preview:setActive(on)
  on=on==true and not self.destroyed

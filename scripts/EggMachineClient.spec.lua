@@ -311,5 +311,148 @@ return function(client)
 		assert(Aim.target(Vector3.new(1.7,2.5,-.8),3)==Vector3.new(0,2.5,0))
 		assert((Aim.target(nil,3)-Vector3.new(0,1.8,0)).Magnitude<1e-9)
 	end)
+	-- ── The capsule shot (beta 17 U5; CAPSULE-AND-HUD-LOOK 1) ─────────────────────────────────────────────────────────
+	local function capsuleRig(options)
+		options=options or {}
+		local r={now=100,sounds={},pockets={},hud={},ghost={},on=true,capsule=options.capsule~=false,root=Vector3.new(-41,4.13,8),
+			blocked=options.blocked or function()return false end}
+		r.cinematic={}
+		r.camera={CameraType="Custom",CFrame=CFrame.new(-30,10,20)}
+		local lounge=Instance.new("Folder");lounge.Name="EggDropLounge"
+		if options.model~=false then
+			local model=Instance.new("Model");model.Name="EggMachine"
+			local body=Instance.new("Part");body.Name="Body";body.Position=Vector3.new(-41,4.13+3.56,2);body.Size=Vector3.new(4.2,7.12,4.3);body.Parent=model
+			local dial=Instance.new("Part");dial.Name="Dial";dial.CFrame=CFrame.new(-41,6,3.7);dial.Parent=model
+			local pivot=Instance.new("Attachment");pivot.Name="DialPivot";pivot.WorldCFrame=CFrame.new(-41,6,3.7);pivot.Parent=body
+			model.Parent=lounge
+		end
+		r.machine=Machine.new({step=false,clock=function()return r.now end,cinematic=r.cinematic,corner=function()return r.on end,
+			room=function()return lounge end,tagged=function()return{}end,random=Random.new(9),reduced=function()return r.reduced==true end,
+			root=function()return r.root end,capsule=function()return r.capsule end,cameraObject=function()return r.camera end,
+			hud=function(visible)table.insert(r.hud,visible)end,ghost=function(alpha)table.insert(r.ghost,alpha)end,
+			blocked=function(a,b)return r.blocked(a,b)end,pocket=function(kind,sched)table.insert(r.pockets,{kind=kind,sched=sched})end,
+			warn=function()end,audio={play=function(_,name)table.insert(r.sounds,{name=name,at=r.now});return true end}})
+		function r.advance(seconds,step)
+			step=step or 1/60
+			local left=seconds
+			while left>1e-9 do local dt=math.min(step,left);r.now+=dt;left-=dt;r.machine:step(dt)end
+		end
+		function r.heard(name)for _,s in ipairs(r.sounds)do if s.name==name then return s.at-r.at end end;return nil end
+		function r.buy(id,action)
+			r.at=r.now
+			assert(r.machine:bought(action or "toyBuy",id))
+			local reveal={}
+			r.cinematic.onPlay(reveal)
+			return reveal
+		end
+		return r
+	end
+	test("capsule: the schedules: first 2.0 s (roll .40 s, land 1.35), 2nd 1.30, 3rd .95, pocket 1.0, Reduced Motion on the thud",function()
+		local S=Machine.Shots
+		assert(S.first.start==2.00 and near(S.first.land,1.35)and near(S.first.rollSeconds,.40)and near(S.first.clunk,.90)and #S.first.clicks==5)
+		assert(near(S.first.roll+S.first.rollSeconds,S.first.land)and S.first.shine==1.50 and near(S.first.rise+S.first.riseSeconds,S.first.start))
+		assert(S.second.start==1.30 and near(S.second.land,.87)and #S.second.clicks==3)
+		assert(S.third.start==.95 and near(S.third.land,.62)and #S.third.clicks==1)
+		assert(S.pocket.start==1.00 and near(S.pocket.land,.75)and #S.pocket.clicks==3)
+		assert(S.reduced.start==S.reduced.land and near(S.reduced.land,.62))
+		for _,s in pairs(S)do assert(near(s.turnFrom+s.seconds,s.clunk),s.mode)end
+		assert(Machine.shotSchedule("shot",1)==S.first and Machine.shotSchedule("shot",2)==S.second and Machine.shotSchedule("shot",7)==S.third)
+		assert(Machine.shotSchedule("pocket",3)==S.pocket and Machine.shotSchedule("reduced",1)==S.reduced)
+	end)
+	test("capsule: at the machine: the panel tucks, the camera goes A then B, the reveal is held to 2.0 s (cap 2.2), the thud once",function()
+		local r=capsuleRig()
+		local reveal=r.buy("c-1")
+		local shot=r.machine.shot
+		assert(shot and shot.mode=="shot"and shot.frames and r.camera.CameraType~="Custom","Scriptable on the confirmation")
+		assert(r.hud[1]==false and r.ghost[1]==1,"the dock hides, the player goes see-through")
+		assert(r.cinematic.gate(reveal),"the reveal's clock is held")
+		r.advance(.3)
+		assert((r.camera.CFrame.Position-shot.frames.A.Position).Magnitude<.05,"Shot A by .30")
+		r.advance(1.0)
+		assert((r.camera.CFrame.Position-shot.frames.B.Position).Magnitude<.05,"Shot B by 1.30")
+		r.advance(.6)
+		assert(near(r.heard("land")or -1,1.35,.03)and near(r.heard("crank_clunk")or -1,.90,.03)and r.heard("cup_shine"))
+		assert(r.cinematic.gate(reveal),"still held at 1.9")
+		r.advance(.12)
+		assert(not r.cinematic.gate(reveal),"the reveal starts at 2.0")
+		assert(shot.panelBack and r.hud[#r.hud]==true,"the panel and the dock are back")
+		local lands=0;for _,s in ipairs(r.sounds)do if s.name=="land"then lands+=1 end end
+		assert(lands==1,"one egg, one landing")
+		r.advance(3)
+		assert(r.camera.CameraType~="Custom","the camera holds at Shot B while the reveal is up")
+		r.machine:revealClosed();r.advance(.4)
+		assert(r.camera.CameraType=="Custom"and r.machine.shot==nil and r.ghost[#r.ghost]==0,"given back on close")
+	end)
+	test("capsule: Hatch another starts at Shot B (1.30 s, then .95 s); after the camera went back, a first shot again",function()
+		local r=capsuleRig()
+		r.buy("h-1");r.advance(2.2)
+		local second=r.buy("h-2")
+		assert(r.machine.shot.sched==Machine.Shots.second)
+		r.advance(1.25);assert(r.cinematic.gate(second));r.advance(.1);assert(not r.cinematic.gate(second))
+		r.buy("h-3");assert(r.machine.shot.sched==Machine.Shots.third)
+		r.advance(1);r.machine:revealClosed();r.advance(.5)
+		r.buy("h-4")
+		assert(r.machine.shot.sched==Machine.Shots.first,"the camera had gone back: Shot A again")
+	end)
+	test("capsule: the pocket version: no model, more than 24 studs off, both line checks blocked, or the Stat Egg",function()
+		for _,case in ipairs({{model=false},{far=true},{blocked=function()return true end},{stat=true}})do
+			local r=capsuleRig({model=case.model,blocked=case.blocked})
+			if case.far then r.root=Vector3.new(-41,4,40)end
+			r.at=r.now
+			if case.stat then r.machine:bought("statEggBuy",nil);r.machine:confirm(nil)
+			else r.buy("p-1","hueBuy")end
+			assert(r.machine.shot.mode=="pocket"and r.camera.CameraType=="Custom"and #r.hud==0,"no camera, no tuck")
+			if not case.stat then
+				assert(r.pockets[1].kind=="hue","the preview well's drop, in the bought type")
+				local gate=r.machine.gate
+				assert(near(gate.release-r.at,1.0),"the reveal at 1.0 s")
+			end
+		end
+		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
+		local frame=Corner.frame(4.13)
+		local mirrored=capsuleRig({blocked=function(_,at)return frame:PointToObjectSpace(at).X>0 end})
+		mirrored.buy("m-1")
+		assert(mirrored.machine.shot.mode=="shot","the mirrored side is clear: still the shot")
+	end)
+	test("capsule: Reduced Motion: no tuck, no camera; the static card waits for the thud (.62 s)",function()
+		local r=capsuleRig()
+		r.reduced=true
+		local reveal=r.buy("r-1")
+		assert(r.machine.shot.mode=="reduced"and r.camera.CameraType=="Custom"and #r.hud==0)
+		r.advance(.6);assert(r.cinematic.gate(reveal));r.advance(.05);assert(not r.cinematic.gate(reveal))
+		assert(near(r.heard("land"),.62,.02))
+	end)
+	test("capsule: skip jumps to the landing (the thud plays, the reveal .12 s later); never the first drop of a type",function()
+		local r=capsuleRig()
+		local reveal=r.buy("s-1")
+		reveal.canSkip=function()return false end
+		r.advance(.2)
+		assert(r.machine:shotActive()and not r.machine:skipShot(),"the first drop of this type")
+		reveal.canSkip=function()return true end
+		local before=#r.sounds
+		assert(r.machine:skipShot())
+		r.advance(.02)
+		local clicks=0;for i=before+1,#r.sounds do if string.match(r.sounds[i].name,"^crank_click")then clicks+=1 end end
+		assert(clicks==0,"no burst of clicks")
+		assert(r.heard("land"),"the thud is never skipped")
+		r.advance(.08);assert(r.cinematic.gate(reveal));r.advance(.05);assert(not r.cinematic.gate(reveal),"the reveal .12 s later")
+		assert(not r.machine:skipShot(),"once")
+		assert(r.cinematic.onGateSkip~=nil,"the reveal's own skip asks the machine")
+	end)
+	test("capsule: the camera is given back at once when the corner or the capsule switch goes off, or on respawn (returnCamera)",function()
+		local r=capsuleRig()
+		r.buy("g-1");r.advance(.5)
+		r.capsule=false;r.advance(.02)
+		assert(r.camera.CameraType=="Custom"and r.machine.shot==nil and r.machine.gate==nil or not r.cinematic.gate({}))
+		local again=capsuleRig()
+		again.buy("g-2");again.advance(.5);again.machine:returnCamera(true)
+		assert(again.camera.CameraType=="Custom")
+	end)
+	test("capsule off: the crank and its 1 s hold exactly as before",function()
+		local r=capsuleRig({capsule=false})
+		local reveal=r.buy("o-1")
+		assert(r.machine.shot==nil and r.camera.CameraType=="Custom")
+		r.advance(.8);assert(r.cinematic.gate(reveal));r.advance(.1);assert(not r.cinematic.gate(reveal),"released at the .85 landing")
+	end)
 	return{passed=#cases,cases=cases}
 end

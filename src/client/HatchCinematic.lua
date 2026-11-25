@@ -474,7 +474,10 @@ function Cinematic:refreshOwner()
     self.bodyPending=true;self:playBody()
    end
   end
-  if self.nativeFailed or(self:reduced()and not self.reducedIntro)or(self.reducedIntro and not self:reduced())or not self.active then self:finishStatic();return end
+  if self.nativeFailed or(self:reduced()and not self.reducedIntro)or(self.reducedIntro and not self:reduced())or not self.active then
+   if self:waitGate()then return end
+   self:finishStatic();return
+  end
   if not self.connection then
    local epoch=self.epoch;self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0
    self.connection=RunService.RenderStepped:Connect(function(dt)if self.epoch==epoch then self:step(dt)end end)
@@ -495,7 +498,11 @@ function Cinematic:refreshOwner()
   end
   if self.active and not self:reduced()then self:cue("charge",.92,.18)end
  end
- if self:reduced()then self:disconnectClock();if self.active or not self.quietPainted then self:finishStatic()end;return end
+ if self:reduced()then
+  self:disconnectClock()
+  if self:waitGate()then return end
+  if self.active or not self.quietPainted then self:finishStatic()end;return
+ end
  self.quietPainted=nil
  if not self.active then self:disconnectClock();self:complete();return end
  if not self.connection then self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0;self.connection=RunService.RenderStepped:Connect(function(dt)if self.epoch==epoch then self:step(dt)end end)end
@@ -507,6 +514,14 @@ end
 -- which reveal that is. Both nil (live, the corner off): exactly as before.
 Cinematic.gate=nil
 Cinematic.onPlay=nil
+Cinematic.onGateSkip=nil
+-- Reduced Motion (the capsule shot, LOOK 1): the static card waits for the hold too, so it shows on the thud.
+function Cinematic:waitGate()
+ if not self:gated()then return false end
+ local epoch=self.epoch
+ task.delay(.05,function()if not self.destroyed and self.epoch==epoch then self:refreshOwner()end end)
+ return true
+end
 function Cinematic:gated()
  local gate=Cinematic.gate
  if gate==nil then return false end
@@ -598,8 +613,12 @@ function Cinematic:play(result,onComplete,options)
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end
 function Cinematic:skip()
- -- The crank beat cannot be skipped (it is under a second); finishStatic would ignore the hold.
- if self:gated()then return false end
+ -- The crank beat cannot be skipped (it is under a second); finishStatic would ignore the hold. The capsule shot
+ -- (EggMachineClient) jumps to its landing instead, when its own rule allows (Cinematic.onGateSkip).
+ if self:gated()then
+  if Cinematic.onGateSkip then pcall(Cinematic.onGateSkip,self)end
+  return false
+ end
  if self.nativeScene and self.presentationSample and self.presentationSample.receiptReady then return false end
  -- v2 (2.2): the first hatch of each egg type plays in full; the host says (canSkip).
  if self.canSkip and not self.canSkip()then return false end
