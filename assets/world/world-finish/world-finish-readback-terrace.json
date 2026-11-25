@@ -1,0 +1,78 @@
+{
+ "slice": "terrace",
+ "assetId": "127139808708242",
+ "parts": [
+  {
+   "meshId": "rbxassetid://106607958143308",
+   "name": "W7_F_TerraceEarth__dirt_path",
+   "meshSize": [
+    127.17007446289062,
+    5.227008296060376e-05,
+    122.15602111816406
+   ]
+  },
+  {
+   "meshId": "rbxassetid://136694394015690",
+   "name": "W7_F_TerraceFace__cliff_rock",
+   "meshSize": [
+    2048,
+    369.0106201171875,
+    1771.571533203125
+   ]
+  },
+  {
+   "meshId": "rbxassetid://78624187401447",
+   "name": "W7_F_TerraceLog__bark",
+   "meshSize": [
+    128.45895385742188,
+    16.22812271118164,
+    19.268842697143555
+   ]
+  },
+  {
+   "meshId": "rbxassetid://73709001071447",
+   "name": "W7_F_TerraceRocks__cliff_rock",
+   "meshSize": [
+    1003.3556518554688,
+    124.1938247680664,
+    435.5005187988281
+   ]
+  },
+  {
+   "meshId": "rbxassetid://139694857987658",
+   "name": "W7_F_TerraceSlab__boulder_rock",
+   "meshSize": [
+    129.46395874023438,
+    13.274091720581055,
+    130.88909912109375
+   ]
+  },
+  {
+   "meshId": "rbxassetid://106885263362513",
+   "name": "W7_F_TerraceTongues__grass",
+   "meshSize": [
+    1380.057373046875,
+    144.20745849609375,
+    951.8092041015625
+   ]
+  },
+  {
+   "meshId": "rbxassetid://102068820964573",
+   "name": "W7_F_TerraceTrunk__bark",
+   "meshSize": [
+    37.89539337158203,
+    203.39334106445312,
+    34.25572204589844
+   ]
+  },
+  {
+   "meshId": "rbxassetid://119746876808743",
+   "name": "W7_F_Terrace__grass",
+   "meshSize": [
+    1817.61376953125,
+    26.73870849609375,
+    1643.2266845703125
+   ]
+  }
+ ]
+}
