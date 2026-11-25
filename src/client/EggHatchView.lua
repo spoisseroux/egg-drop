@@ -904,12 +904,13 @@ function View:buildShopChrome(view)
  self.peekRect={x=wellR.w-140,y=0,w=128,h=wellR.h}
  local eggH=math.min(wellR.h-36,if phone then 120 else 112);local eggW=math.floor(eggH*.78)
  local floorY=if phone then wellR.h*.5+eggH*.5+8 else wellR.h-22
- local shadow=Kit.frame(well,"EggShadow",nil,UDim2.fromOffset(wellR.w/2,floorY),UDim2.fromOffset(eggW*1.1,10),999)
+ -- Beta (17) U4: centred on the well itself (the RoundedContent clip is 4 px narrower than wellR).
+ local shadow=Kit.frame(well,"EggShadow",nil,UDim2.new(.5,0,0,floorY),UDim2.fromOffset(eggW*1.1,10),999)
  shadow.AnchorPoint=Vector2.new(.5,.5);shadow.BackgroundTransparency=.55;shadow.BackgroundColor3=Color3.new(0,0,0)
- local turntable=Kit.frame(well,"Turntable",nil,UDim2.fromOffset(wellR.w/2,floorY+2),UDim2.fromOffset(eggW*1.9,14),999)
+ local turntable=Kit.frame(well,"Turntable",nil,UDim2.new(.5,0,0,floorY+2),UDim2.fromOffset(eggW*1.9,14),999)
  turntable.AnchorPoint=Vector2.new(.5,.5);turntable.BackgroundTransparency=1
  -- No outlined turntable ring: it read as a stray green pill under the egg (Studio 2026-11-13).
- local holder=Kit.frame(well,"EggPreview",nil,UDim2.fromOffset(wellR.w/2,floorY),UDim2.fromOffset(eggW,eggH))
+ local holder=Kit.frame(well,"EggPreview",nil,UDim2.new(.5,0,0,floorY),UDim2.fromOffset(eggW,eggH))
  holder.AnchorPoint=Vector2.new(.5,1)
  self.eggHolder,self.eggShadow,self.eggSize,self.eggFloor=holder,shadow,Vector2.new(eggW,eggH),floorY
  self.eggArtId=nil
@@ -1293,7 +1294,7 @@ function View:syncEggClock()
  self.eggClock=game:GetService("RunService").RenderStepped:Connect(function()
   local holder=self.eggHolder;if not holder or not holder.Parent then return end
   if self:eggReduced()or GuiService.MenuIsOpen then
-   holder.Rotation=0;holder.Size=UDim2.fromOffset(self.eggSize.X,self.eggSize.Y);holder.Position=UDim2.new(0,holder.Position.X.Offset,0,self.eggFloor);return
+   holder.Rotation=0;holder.Size=UDim2.fromOffset(self.eggSize.X,self.eggSize.Y);holder.Position=UDim2.new(holder.Position.X.Scale,holder.Position.X.Offset,0,self.eggFloor);return
   end
   local now=os.clock()
   if not self.beatStart and now>=(self.nextBeat or now)then
@@ -1308,7 +1309,7 @@ function View:syncEggClock()
   local sway=2*math.sin(now*1.3)
   holder.Rotation=rotation+sway
   holder.Size=UDim2.fromOffset(self.eggSize.X*(2-squash),self.eggSize.Y*squash)
-  holder.Position=UDim2.new(0,holder.Position.X.Offset,0,self.eggFloor-hop)
+  holder.Position=UDim2.new(holder.Position.X.Scale,holder.Position.X.Offset,0,self.eggFloor-hop)
   if self.eggShadow then self.eggShadow.BackgroundTransparency=.55+hop*.04 end
  end)
 end
