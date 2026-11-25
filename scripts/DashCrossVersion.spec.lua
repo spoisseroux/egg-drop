@@ -68,7 +68,15 @@ return function(_,offline)
 			end
 			return out
 		end
-		local a,b=garden(base),garden(new);assert(#a==#b and #a>400)
+		-- The Hollow (ParkLayout, WORLD-ALIVE-LOOK 2) is a beta-or-Studio place gate and the mocks answer IsStudio true:
+		-- this build is compared as a live server loads it, with the old grove (a fresh tree, ParkLayout required off Studio).
+		local liveNew=offline.fresh("new")
+		local RunService=offline.services.RunService;local studio=RunService.IsStudio
+		RunService.IsStudio=function()return false end
+		local ok,Layout=pcall(liveNew.require,liveNew.shared.ParkLayout)
+		RunService.IsStudio=studio
+		assert(ok and not Layout.HollowOn,"ParkLayout off Studio keeps the old grove")
+		local a,b=garden(base),garden(liveNew);assert(#a==#b and #a>400)
 		for i=1,#a do assert(a[i]==b[i],"snapshot "..i)end
 	end)
 	test("a save with races in it: the live build loads it, plays, keeps the field exactly, and this build carries on",function()

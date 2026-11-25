@@ -114,6 +114,10 @@ function Mount.build(room,options)
 		end)
 		seat.Parent=seats
 	end
+	-- A natural site (the Hollow): no kerb or star-orb posts in layout.static; its dressing instead (ParkHollowMount).
+	-- options.carve=false (specs) builds the stones as their cylinder fallback without GeometryService.
+	local dressing=if Park.Natural and Park.Dressing then folder(model,"Dressing")else nil
+	if dressing then require(script.Parent.ParkHollowMount).buildStatic(dressing,Park)end
 	model.Parent=room
 	local function mountMeshes()
 		for index,entry in ipairs(layout.static)do
@@ -129,6 +133,7 @@ function Mount.build(room,options)
 			end
 			part.Parent=meshes
 		end
+		if dressing then require(script.Parent.ParkHollowMount).buildStones(dressing,Park,options.carve)end
 		model:SetAttribute("ParkMeshesReady",true)
 	end
 	if options.async==false then mountMeshes()else task.spawn(mountMeshes)end

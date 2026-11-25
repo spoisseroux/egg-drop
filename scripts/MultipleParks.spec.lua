@@ -31,7 +31,13 @@ return function(server)
 		assert(d~=Data and d==Data.forSite("grove"),"immutable data cached per site")
 		assert((d.Roots.SwingSet.Position-g.Equipment.swing.position).Magnitude<.001)
 		assert(g.Benches[1].position.Z>g.Center.Z,"grove bench opens toward hub")
-		assert(g.Gateways[1].position.X>g.Center.X+14,"east path gateway does not rotate west")
+		if g.Natural then
+			-- The Hollow (beta and Studio, ParkSites.spec): its path gap faces the dirt path east, its plaza gap the hub.
+			assert(g.Gateways[1].id=="path"and g.Gateways[1].position.X>g.Center.X+13,"path gap opens east")
+			assert(g.Gateways[2].id=="plaza"and g.Gateways[2].position.Z>g.Center.Z+13,"plaza gap opens toward the hub")
+		else
+			assert(g.Gateways[1].position.X>g.Center.X+14,"east path gateway does not rotate west")
+		end
 		assert(g.Slots.slide.chuteEnd.Z>g.Equipment.slide.position.Z,"slide choreography rotates together")
 		for _,site in ipairs(Park.Sites)do
 			assert(#site.SlotOrder==9 and site.member(site.Center,false))

@@ -149,6 +149,30 @@ return function(server,parent)
 			part:Destroy()
 		end)
 
+		test("the Hollow (WORLD-ALIVE-LOOK 2): no kerb or star orbs, its dressing instead, all non-colliding; the log is a player box",function()
+			local site=Park.ById.grove
+			if not site.Natural then return end -- live place: the old grove, covered by the kerb cases above
+			local hollow=Mount.build(host,{enabled=true,createMesh=fakeMesh,async=false,siteId="grove",carve=false})
+			assert(hollow and hollow:FindFirstChild("Dressing"),"no dressing folder")
+			for _,part in ipairs(hollow.Meshes:GetChildren())do
+				assert(not string.find(part.Name,"^Park_Kerb")and not string.find(part.Name,"^Park_Gate"),"kerb or post at the Hollow: "..part.Name)
+			end
+			local stones,parts=0,0
+			for _,node in ipairs(hollow.Dressing:GetDescendants())do
+				if node:IsA("BasePart")then
+					parts+=1
+					assert(node.Anchored and not node.CanCollide and not node.CanQuery and not node.CanTouch and not node.CastShadow,node.Name)
+					assert(Mount.isParkPart(node)or node.Parent:IsA("Model"),node.Name.." untagged")
+				end
+			end
+			for _,child in ipairs(hollow.Dressing:GetChildren())do if string.find(child.Name,"Stone$")or string.find(child.Name,"Boulder$")then stones+=1 end end
+			assert(stones==#site.Dressing.stones and parts>=30,"stones "..stones.." parts "..parts)
+			local logs=0
+			for _,part in ipairs(hollow.Colliders:GetChildren())do if string.find(part.Name,"^LogCollider")then logs+=1;assert(part.CanCollide and not part.CanQuery)end end
+			assert(logs==1,"log collider")
+			hollow:Destroy()
+		end)
+
 		test("rebuilding replaces the old model",function()
 			local again=Mount.build(host,{enabled=true,createMesh=fakeMesh,async=false})
 			local count=0

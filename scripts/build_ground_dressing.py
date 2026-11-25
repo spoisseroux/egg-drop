@@ -72,7 +72,8 @@ COURSE = course_points()
 PAD = (66.0, -21.0, 4.0)
 FINDS = [(float(x) / 100, float(z) / 100) for x, z in
          re.findall(r"x=(-?\d+),y=-?\d+,z=(-?\d+)", (ROOT / "src/shared/FindSpots.lua").read_text(encoding="utf-8"))]
-KERBS = [(36.0, 66.0, 16.0, 11.0), (-38.0, -46.0, 16.0, 11.0)]
+# The arrival, the old grove (live) and the Hollow (beta: ParkLayout.Specs.hollow, a 14-stud circle with no kerb).
+KERBS = [(36.0, 66.0, 16.0, 11.0), (-38.0, -46.0, 16.0, 11.0), (-42.0, -51.0, 14.0, 14.0)]
 STATIONS = [(-31, -11), (-17, -15), (-46, -9), (-30, 18.5), (96, 66)]
 NEST = (-17.5, -2.5, 4.2)
 WET = [(b["center"][0], b["center"][2], b["size"][0], b["size"][2], b.get("yaw", 0)) for b in WALK["wet"]]

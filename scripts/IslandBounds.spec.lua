@@ -67,7 +67,7 @@ return function(server)
 		for _,site in ipairs(Park.Sites)do
 			for k=0,127 do
 				local t=k*math.pi/64
-				add("kerb "..site.Id,site.Center.X+Park.Radius.X*math.cos(t),site.Center.Z+Park.Radius.Y*math.sin(t))
+				add("kerb "..site.Id,site.Center.X+site.Radius.X*math.cos(t),site.Center.Z+site.Radius.Y*math.sin(t))
 			end
 		end
 		assert(#points>150)
@@ -78,7 +78,7 @@ return function(server)
 			end
 			for _,site in ipairs(Park.Sites)do
 				for _,e in ipairs({{w.x1,w.z1},{w.x2,w.z2},{(w.x1+w.x2)/2,(w.z1+w.z2)/2}})do
-					local u,v=(e[1]-site.Center.X)/Park.Radius.X,(e[2]-site.Center.Z)/Park.Radius.Y
+					local u,v=(e[1]-site.Center.X)/site.Radius.X,(e[2]-site.Center.Z)/site.Radius.Y
 					assert(u*u+v*v>=1,w.id.." is inside the park "..site.Id)
 				end
 			end

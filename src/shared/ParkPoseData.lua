@@ -224,7 +224,9 @@ function Data.layout()
 	put("Sandbox","Park_SandboxFrame",Data.frame("Park_SandboxFrame",roots.Sandbox))
 	put("Sandbox","Park_SandToys",Data.frame("Park_SandToys",roots.Sandbox))
 	put("BallCorner","Park_BallMat",Data.frame("Park_BallMat",roots.BallCorner))
-	local segments,posts=kerbLayout()
+	-- A natural site (the Hollow) has no kerb and no star-orb posts: its edge is the dressing ParkMount builds.
+	local segments,posts={},{}
+	if not Park.Natural then segments,posts=kerbLayout()end
 	local kerb=meshes.Park_KerbSegment
 	for _,segment in ipairs(segments)do
 		-- The mesh's rounded ends overlap at the authored 3.3 stud chord; stretch to the actual chord.
@@ -252,6 +254,13 @@ function Data.layout()
 		for index,seat in ipairs(BENCH_SEATS[name])do
 			table.insert(seats,table.freeze({bench=bench.id,index=index,cframe=root*CFrame.new(seat.center)*CFrame.Angles(0,math.pi,0),size=seat.size}))
 		end
+	end
+	-- The Hollow's fallen log: players collide with one simple box (the visual sits .25 into the lawn).
+	local log=Park.Dressing and Park.Dressing.log
+	if log then
+		local h=log.diameter-log.sink
+		local cframe=CFrame.new(log.x,log.y+h*.5,log.z)*CFrame.Angles(0,log.heading-math.pi*.5,0)
+		table.insert(colliders,table.freeze({group="Log",cframe=cframe,size=Vector3.new(log.length,h,log.diameter*.85)}))
 	end
 	for group,boxes in pairs(COLLIDERS)do
 		if group=="Bench"or group=="BenchLong"then continue end
@@ -461,11 +470,13 @@ end
 return Data
 end
 local default=build(DefaultPark)
-local cache={[DefaultPark.Id]=default}
+local cache={}
 function default.forSite(site)
 	if type(site)=="string"then site=DefaultPark.ById[site]end
 	if not site then return nil end
-	if not cache[site.Id]then cache[site.Id]=table.freeze(build(site))end
-	return cache[site.Id]
+	-- Cached per layout table (not its id): ParkSites.spec builds the old grove and the Hollow, both id "grove".
+	if site==DefaultPark then return default end
+	if not cache[site]then cache[site]=table.freeze(build(site))end
+	return cache[site]
 end
 return table.freeze(default)

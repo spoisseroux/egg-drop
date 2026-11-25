@@ -156,7 +156,16 @@ return function(server,offline)
 		for _,list in ipairs({Course.Main,Course.Branch})do for k=1,#list,4 do clear("dash d="..list[k],list[k+1]/100,list[k+3]/100,true)end end
 		clear("dash pad",Course.Pad.x/100,Course.Pad.z/100,true)
 		for _,site in ipairs(Park.Sites)do
-			for k=0,63 do local t=k*math.pi/32;clear("kerb "..site.Id,site.Center.X+Park.Radius.X*math.cos(t),site.Center.Z+Park.Radius.Y*math.sin(t),true)end
+			-- Each site's own radii. The Hollow (natural, beta; WORLD-ALIVE-LOOK 2) is laid out for the cliff path that
+			-- retires this zigzag (claude/cliff-den-build 2e44d7ab; garden_tier missing = off until then): its rim is 2.9
+			-- studs from Leg 4's park side, so only the terrace is checked against it.
+			for k=0,63 do
+				local t=k*math.pi/32
+				local x,z=site.Center.X+site.Radius.X*math.cos(t),site.Center.Z+site.Radius.Y*math.sin(t)
+				if site.Natural then
+					assert(not Tier.inPiece(Tier.Pieces[1],x,z,4),string.format("kerb %s (%.1f, %.1f) is within 4 studs of the terrace",site.Id,x,z))
+				else clear("kerb "..site.Id,x,z,true)end
+			end
 		end
 		for _,w in ipairs(Bounds.Walls)do for k=0,10 do clear("wall "..w.id,w.x1+(w.x2-w.x1)*k/10,w.z1+(w.z2-w.z1)*k/10,true)end end
 		for _,list in ipairs({GroundDressing.Litter,GroundDressing.Lawn,GroundDressing.Fray})do

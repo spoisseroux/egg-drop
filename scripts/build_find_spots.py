@@ -30,6 +30,9 @@ LAWNS = [
     ("grove", -88, -58, -58, -28),
 ]
 SPAWN = (96.0, 66.0)
+# The Hollow (WORLD-ALIVE-LOOK section 2; ParkLayout.Specs.hollow, beta and Studio): a 14-stud circle with no kerb. The
+# old grove ellipse stays in D.kerb_distance (live), so a spot keeps clear of both.
+HOLLOW = (-42.0, -51.0, 14.0)
 
 
 def lua_points(name):
@@ -60,6 +63,7 @@ def clear(x, z):
             and near(COURSE, KEEP + D.LANES / 2 * D.LANE_STEP) and math.dist(p, PAD[:2]) >= PAD[2] + KEEP
             and all(math.dist(p, o[:2]) >= o[2] + KEEP for o in D.OBSTACLES)
             and D.kerb_distance(x, z) >= KEEP and D.grove_distance(x, z) >= KEEP
+            and math.dist(p, HOLLOW[:2]) - HOLLOW[2] >= KEEP
             and not any(D.in_box(x, z, box, KEEP) for box in D.WET + D.BLOCKED)
             and not D.on_span(x, z, -KEEP) and math.dist(p, SPAWN) >= 12)
 

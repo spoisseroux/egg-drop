@@ -30,9 +30,10 @@ span = re.search(r"MainBridge=table.freeze\(\{center=Vector3.new\(([^)]*)\),size
 c, s = ([float(v) for v in g.split(",")] for g in span.groups())
 lamps = [g.split(",") for g in re.findall(r"Vector3.new\(([^)]*)\)", v7[v7.index("Lamps=points("):v7.index("LitLamps")])]
 stations = [(x, z) for x, z in re.findall(r"(?:Eggs|Journal|Customize|ToyLawn)=CFrame.new\(([-\d.]+),[-\d.]+,([-\d.]+)\)", v7)]
-parks = re.findall(r"makeLayout\((-?\d+),(-?\d+),\"", park)
-radius = re.search(r"Park.Radius=Vector2.new\((\d+),(\d+)\)", park).groups()
-assert len(lamps) == 7 and len(stations) == 4 and len(parks) == 2
+# Every park site spec (the arrival, the old grove and the Hollow), each with its own radii: the course keeps clear of all.
+parks = re.findall(r"Specs\.\w+=table\.freeze\(\{id=\"\w+\",x=(-?\d+),z=(-?\d+),rx=(\d+),rz=(\d+)", park)
+radius = parks[0][2:]
+assert len(lamps) == 7 and len(stations) == 4 and len(parks) == 3
 
 modules = "\n".join(
     f"sources.{name}=function(script,require)\n{read(f'src/shared/{name}.lua')}\nend"
@@ -60,7 +61,7 @@ local function groundY(x,z)
  return at(i,j)*(1-u)*(1-v)+at(i+1,j)*u*(1-v)+at(i,j+1)*(1-u)*v+at(i+1,j+1)*u*v
 end
 local world={{groundY=groundY,span={{{c[0]},{c[2]},{s[0]},{s[2]},{c[1]}+{s[1]}/2}},
- radius={{{','.join(radius)}}},parks={{{','.join('{%s,%s}' % p for p in parks)}}},
+ radius={{{','.join(radius)}}},parks={{{','.join('{%s,%s,%s,%s}' % p for p in parks)}}},
  lamps={{{','.join('{%s,%s}' % (l[0], l[2]) for l in lamps)}}},stations={{{','.join('{%s,%s}' % p for p in stations)}}},
  grid={{startStep={grid[0]},funnel={{{grid[1]},{grid[2]}}},post={grid[3]},laneStep={lane_step}}}}}
 local require=load
