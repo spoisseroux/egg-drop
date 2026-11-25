@@ -4622,12 +4622,20 @@ clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOp
 gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
 -- Fable R13 (5): the notification rail (the egg ticket with it) is off the screen over any full screen and the capsule
 -- shot, beta only (HudChips.hideRail; NotificationRail holds its notices meanwhile).
+-- Beta 18: and over every hatch reveal wherever it opened (the Stat Egg over the garden was not a modal): any stage on
+-- screen (HudChips.revealUp), or the Stat Egg / arrival hatch host while it is open.
 do
- local Chips=require(script.HudChips)
+ -- One local (init.client is at the 200-register limit): the chip rules, the live stage sets, the on-screen test.
+ local R={chips=require(script.HudChips),stages={require(script.HatchItemStage).live,require(script.RevealStage).live},
+  onScreen=require(script.CelebrationKit).onScreen}
  require(script.NotificationRail).hider=function()
+  local Chips=R.chips
   if not Chips.on()then return false end
   local machine=clientUI.eggMachine
-  return Chips.hideRail({on=true,modal=clientUI.anyModalOpen()==true,shot=machine~=nil and(machine:shotActive()or machine:cameraHeld())})
+  local reveal=Chips.revealUp(R.stages,R.onScreen)
+   or(clientUI.snacks~=nil and clientUI.snacks.reveal~=nil and clientUI.snacks.reveal:isOpen()==true)
+   or(clientUI.arrivalHatch~=nil and clientUI.arrivalHatch:isOpen()==true)
+  return Chips.hideRail({on=true,modal=clientUI.anyModalOpen()==true,shot=machine~=nil and(machine:shotActive()or machine:cameraHeld()),reveal=reveal})
  end
 end
 -- Beta 14 W4 world feel (WorldFeelClient): the zoom cap and the walk speed test; nil with the build ceiling off, and

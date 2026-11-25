@@ -146,7 +146,7 @@ local function place(parent,frame,pieces,ropes,group)
 	end
 end
 -- The river stones (WORLD-ALIVE-LOOK section 4): each walkable stone carved (StoneBuilder) over a darker wet band, a
--- moss plate on top, the company stones, the two landings in the kerb, and one invisible collider per stone.
+-- moss plate on top, the company stones, the two landings in the kerb, and one invisible collider per stone and landing.
 Mount.StonesName="RiverStones"
 function Mount.buildStones(parent,options)
 	options=options or {}
@@ -176,7 +176,15 @@ function Mount.buildStones(parent,options)
 		collider:SetAttribute("DashPart",nil);collider:SetAttribute("StoneCollider",true)
 	end
 	for _,stone in ipairs(Stones.Company)do Builder.stone(folder,stone,carve)end
-	for _,stone in ipairs(Stones.Landings)do Builder.stone(folder,stone,carve)end
+	-- The landings sit in the kerb (beta 18): each its own collider, so you walk lawn, landing, first stone at their tops.
+	for index,stone in ipairs(Stones.Landings)do
+		Builder.stone(folder,stone,carve)
+		local centre,depth,across=Stones.landingCollider(stone)
+		local collider=part(folder,"LandingCollider_"..index,Vector3.new(depth,across,across),CFrame.new(centre)*CFrame.Angles(0,0,math.pi/2),Mount.Stone)
+		collider.Shape=Enum.PartType.Cylinder;collider.Transparency=1
+		collider.CanCollide=true;collider.CanQuery=true
+		collider:SetAttribute("DashPart",nil);collider:SetAttribute("LandingCollider",true)
+	end
 	folder.Parent=parent
 	return folder
 end

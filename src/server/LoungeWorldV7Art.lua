@@ -350,12 +350,9 @@ function Art.dressing(room)
 	if not templates then warn("[World v7] WorldAssets.Dressing is missing; frond bushes skipped")return nil end
 	local folder=Instance.new("Folder");folder.Name="Dressing"
 	local count=0
-	for index,entry in ipairs(Dressing.Bushes)do
-		if index>Dressing.MaxBushes then break end
-		-- The beta's sculpt (CliffDenSwap): bushes over the terrace top or in the cliff path's cut are skipped.
-		if Art.carved and CliffDressing.skip(entry[1],entry[3],true)then continue end
+	local function place(entry)
 		local template=templates:FindFirstChild(Dressing.BushKinds[entry[4]])
-		if not template then continue end
+		if not template then return end
 		local cframe,size=Dressing.bushPlacement(entry)
 		local bush=template:Clone()
 		bush.Anchored,bush.CanCollide,bush.CanQuery,bush.CanTouch,bush.CastShadow=true,false,false,false,false
@@ -365,6 +362,25 @@ function Art.dressing(room)
 		bush:SetAttribute("WorldRestCFrame",bush.CFrame)
 		bush.Parent=folder
 		count+=1
+	end
+	for index,entry in ipairs(Dressing.Bushes)do
+		if index>Dressing.MaxBushes then break end
+		-- The beta's sculpt (CliffDenSwap): bushes over the terrace top or in the cliff path's cut are skipped.
+		if Art.carved and CliffDressing.skip(entry[1],entry[3],true)then continue end
+		place(entry)
+	end
+	-- Fable cliff-den fix 9: the den's mouth, with the sculpt in: four bushes on the tan faces at the jambs (within the
+	-- budget the skipped ones leave) and one Hollow boulder on the slope left of the mouth (it carves on its own thread).
+	if Art.carved then
+		for _,entry in ipairs(CliffDressing.MouthBushes)do
+			if count>=Dressing.MaxBushes then break end
+			place(entry)
+		end
+		local row=CliffDressing.MouthBoulder
+		task.spawn(function()
+			local ok,problem=pcall(function()require(script.Parent.ParkHollowMount).stone(row,room)end)
+			if not ok then warn("[CliffDen] mouth boulder: "..tostring(problem))end
+		end)
 	end
 	folder:SetAttribute("Bushes",count)
 	folder.Parent=room

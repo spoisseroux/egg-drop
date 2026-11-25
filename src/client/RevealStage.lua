@@ -389,6 +389,9 @@ local function fill(parent,name,color,transparency)
  local f=Kit.frame(parent,name,nil,UDim2.new(),UDim2.fromOffset(1,1));f.BackgroundTransparency=transparency or 0;f.BackgroundColor3=color;return f
 end
 
+-- Beta 18 (the Stat Egg rail): every pet stage that is up, a leaving one too, as HatchItemStage.live, so the
+-- notification rail hides over any hatch reveal wherever it was opened (HudChips.revealUp; init's rail hider).
+Stage.live=setmetatable({},{__mode="k"})
 function Stage.show(parent,options)
  options=options or {}
  local pet=options.pet or Pets.byId.pip
@@ -408,6 +411,7 @@ function Stage.show(parent,options)
  Kit.paint(root,"BackgroundColor3","shell")
  root:SetAttribute("AccessibleLabel",(pet.name or "Pet").." revealed")
  self.root=root
+ Stage.live[self]=true
  self:build()
  self.reducedStart=self:reduced()
  self.openedAt=os.clock()
@@ -1600,7 +1604,7 @@ end
 
 function Stage:destroy()
  if self.destroyed then return end
- self.destroyed=true
+ self.destroyed=true;Stage.live[self]=nil
  if self.connection then self.connection:Disconnect();self.connection=nil end
  for _,c in ipairs(self.connections)do c:Disconnect()end;table.clear(self.connections)
  if self.audio and self.audio.stopOwner then self.audio:stopOwner(self)end
