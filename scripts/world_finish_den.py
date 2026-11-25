@@ -410,6 +410,7 @@ def split_halves(obj, xcut):
         bm.from_mesh(o.data)
         gone = [f for f in bm.faces if (L.rb(f.calc_center_median())[0] < xcut) != west]
         bmesh.ops.delete(bm, geom=gone, context="FACES")
+        bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")   # no loose vertices
         bm.to_mesh(o.data)
         bm.free()
         out.append((o, side))

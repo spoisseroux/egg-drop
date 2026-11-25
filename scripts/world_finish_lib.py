@@ -67,8 +67,11 @@ def tris(obj):
 
 
 def bounds_rb(obj):
-    """World-space bounds in Roblox studs: (centre, size)."""
-    ws = [rb(obj.matrix_world @ v.co) for v in obj.data.vertices]
+    """World-space bounds in Roblox studs: (centre, size), of the vertices faces use (Roblox's MeshSize ignores loose
+    ones; the den shell's split once left 120 per half and the halves' sizes missed the import scale)."""
+    me = obj.data
+    used = {k for p in me.polygons for k in p.vertices} or set(range(len(me.vertices)))
+    ws = [rb(obj.matrix_world @ me.vertices[k].co) for k in used]
     lo = [min(p[i] for p in ws) for i in range(3)]
     hi = [max(p[i] for p in ws) for i in range(3)]
     return [round((a + b) / 2, 4) for a, b in zip(lo, hi)], [round(b - a, 4) for a, b in zip(lo, hi)]
