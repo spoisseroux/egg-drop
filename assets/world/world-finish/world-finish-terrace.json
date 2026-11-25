@@ -1,0 +1,652 @@
+{
+ "slice": "terrace",
+ "parts": [
+  {
+   "name": "W7_F_Terrace__grass",
+   "slice": "terrace",
+   "role": "fixed",
+   "centre": [
+    -60.4027,
+    28.4256,
+    -96.2074
+   ],
+   "size": [
+    84.8962,
+    1.2489,
+    76.7511
+   ],
+   "triangles": 1248,
+   "look": {
+    "kind": "island",
+    "material": "grass"
+   },
+   "collide": false,
+   "shadow": false,
+   "doubleSided": true
+  },
+  {
+   "name": "W7_F_TerraceFace__cliff_rock",
+   "slice": "terrace",
+   "role": "fixed",
+   "centre": [
+    -61.0346,
+    19.9645,
+    -96.6082
+   ],
+   "size": [
+    95.657,
+    17.2356,
+    82.7457
+   ],
+   "triangles": 728,
+   "look": {
+    "kind": "island",
+    "material": "cliff_rock"
+   },
+   "collide": false,
+   "shadow": true,
+   "doubleSided": true
+  },
+  {
+   "name": "W7_F_TerraceTongues__grass",
+   "slice": "terrace",
+   "role": "fixed",
+   "centre": [
+    -68.664,
+    25.2745,
+    -98.3123
+   ],
+   "size": [
+    64.4591,
+    6.7356,
+    44.4566
+   ],
+   "triangles": 46,
+   "look": {
+    "kind": "island",
+    "material": "grass"
+   },
+   "collide": false,
+   "shadow": false,
+   "doubleSided": true
+  },
+  {
+   "name": "W7_F_TerraceEarth__dirt_path",
+   "slice": "terrace",
+   "role": "fixed",
+   "centre": [
+    -72.5863,
+    29.07,
+    -64.1308
+   ],
+   "size": [
+    5.9398,
+    0.0,
+    5.7056
+   ],
+   "triangles": 14,
+   "look": {
+    "kind": "island",
+    "material": "dirt_path"
+   },
+   "collide": false,
+   "shadow": false,
+   "doubleSided": true
+  },
+  {
+   "name": "W7_F_TerraceRocks__cliff_rock",
+   "slice": "terrace",
+   "role": "fixed",
+   "centre": [
+    -55.8834,
+    30.9511,
+    -115.7862
+   ],
+   "size": [
+    46.8643,
+    5.8008,
+    20.3412
+   ],
+   "triangles": 1293,
+   "look": {
+    "kind": "island",
+    "material": "cliff_rock"
+   },
+   "collide": false,
+   "shadow": true,
+   "doubleSided": true
+  },
+  {
+   "name": "W7_F_TerraceSlab__boulder_rock",
+   "slice": "terrace",
+   "role": "fixed",
+   "centre": [
+    -23.8653,
+    29.01,
+    -102.2677
+   ],
+   "size": [
+    6.0469,
+    0.62,
+    6.1135
+   ],
+   "triangles": 30,
+   "look": {
+    "kind": "island",
+    "material": "boulder_rock"
+   },
+   "collide": false,
+   "shadow": true,
+   "doubleSided": true
+  },
+  {
+   "name": "W7_F_TerraceLog__bark",
+   "slice": "terrace",
+   "role": "template",
+   "centre": [
+    0.0,
+    0.401,
+    0.0
+   ],
+   "size": [
+    6.0,
+    0.758,
+    0.9
+   ],
+   "triangles": 36,
+   "look": {
+    "kind": "island",
+    "material": "bark"
+   },
+   "collide": false,
+   "shadow": true,
+   "doubleSided": true
+  },
+  {
+   "name": "W7_F_TerraceTrunk__bark",
+   "slice": "terrace",
+   "role": "template",
+   "centre": [
+    0.085,
+    4.25,
+    0.0
+   ],
+   "size": [
+    1.77,
+    9.5,
+    1.6
+   ],
+   "triangles": 48,
+   "look": {
+    "kind": "island",
+    "material": "bark"
+   },
+   "collide": false,
+   "shadow": true,
+   "doubleSided": true
+  }
+ ],
+ "place": {
+  "lips": [
+   {
+    "kit": 4,
+    "at": [
+     -25.626,
+     28.75,
+     -92.423
+    ],
+    "yaw": -2.6172
+   },
+   {
+    "kit": 4,
+    "at": [
+     -28.358,
+     28.75,
+     -90.765
+    ],
+    "yaw": -2.2747
+   },
+   {
+    "kit": 1,
+    "at": [
+     -30.267,
+     28.75,
+     -89.106
+    ],
+    "yaw": -2.2361
+   },
+   {
+    "kit": 1,
+    "at": [
+     -35.488,
+     28.75,
+     -85.211
+    ],
+    "yaw": -2.9312
+   },
+   {
+    "kit": 2,
+    "at": [
+     -37.192,
+     28.75,
+     -84.199
+    ],
+    "yaw": -2.2417
+   },
+   {
+    "kit": 3,
+    "at": [
+     -39.125,
+     28.75,
+     -82.566
+    ],
+    "yaw": -2.3869
+   },
+   {
+    "kit": 1,
+    "at": [
+     -42.829,
+     28.75,
+     -79.92
+    ],
+    "yaw": -2.669
+   },
+   {
+    "kit": 2,
+    "at": [
+     -44.582,
+     28.75,
+     -79.102
+    ],
+    "yaw": -2.2607
+   },
+   {
+    "kit": 4,
+    "at": [
+     -46.613,
+     28.75,
+     -77.425
+    ],
+    "yaw": -2.7232
+   },
+   {
+    "kit": 2,
+    "at": [
+     -52.953,
+     28.75,
+     -72.499
+    ],
+    "yaw": -2.0903
+   },
+   {
+    "kit": 2,
+    "at": [
+     -55.062,
+     28.75,
+     -71.49
+    ],
+    "yaw": -2.2948
+   },
+   {
+    "kit": 1,
+    "at": [
+     -56.331,
+     28.75,
+     -70.292
+    ],
+    "yaw": -2.6859
+   },
+   {
+    "kit": 2,
+    "at": [
+     -60.571,
+     28.75,
+     -67.566
+    ],
+    "yaw": -2.8025
+   },
+   {
+    "kit": 4,
+    "at": [
+     -62.618,
+     28.75,
+     -65.819
+    ],
+    "yaw": -2.252
+   },
+   {
+    "kit": 1,
+    "at": [
+     -64.335,
+     28.75,
+     -64.344
+    ],
+    "yaw": -2.7608
+   },
+   {
+    "kit": 3,
+    "at": [
+     -77.582,
+     28.75,
+     -54.927
+    ],
+    "yaw": -2.6808
+   },
+   {
+    "kit": 4,
+    "at": [
+     -79.882,
+     28.75,
+     -53.022
+    ],
+    "yaw": -2.3902
+   }
+  ],
+  "tufts": [
+   [
+    -17.99,
+    29.0,
+    -98.732,
+    3,
+    3.78,
+    0.96
+   ],
+   [
+    -45.997,
+    29.0,
+    -133.527,
+    3,
+    0.51,
+    1.1
+   ],
+   [
+    -23.958,
+    29.0,
+    -94.443,
+    3,
+    3.63,
+    0.99
+   ],
+   [
+    -52.754,
+    29.0,
+    -128.671,
+    3,
+    4.94,
+    1.01
+   ],
+   [
+    -29.247,
+    29.0,
+    -90.641,
+    3,
+    0.81,
+    0.98
+   ],
+   [
+    -57.007,
+    29.0,
+    -125.614,
+    3,
+    5.91,
+    0.83
+   ],
+   [
+    -34.36,
+    29.0,
+    -86.966,
+    3,
+    2.24,
+    0.88
+   ],
+   [
+    -62.498,
+    29.0,
+    -121.667,
+    3,
+    4.0,
+    1.04
+   ],
+   [
+    -40.567,
+    29.0,
+    -82.505,
+    3,
+    2.24,
+    1.04
+   ],
+   [
+    -69.038,
+    29.0,
+    -116.966,
+    3,
+    4.91,
+    1.04
+   ],
+   [
+    -44.945,
+    29.0,
+    -79.358,
+    3,
+    3.85,
+    1.0
+   ],
+   [
+    -74.741,
+    29.0,
+    -112.867,
+    3,
+    0.09,
+    1.07
+   ],
+   [
+    -50.567,
+    29.0,
+    -75.318,
+    3,
+    3.96,
+    0.91
+   ],
+   [
+    -79.571,
+    29.0,
+    -109.396,
+    3,
+    4.55,
+    1.06
+   ],
+   [
+    -56.707,
+    29.0,
+    -70.904,
+    3,
+    3.46,
+    0.88
+   ],
+   [
+    -85.087,
+    29.0,
+    -105.431,
+    3,
+    0.94,
+    0.97
+   ],
+   [
+    -61.54,
+    29.0,
+    -67.43,
+    3,
+    3.54,
+    0.85
+   ],
+   [
+    -90.924,
+    29.0,
+    -101.236,
+    3,
+    2.78,
+    0.98
+   ],
+   [
+    -96.647,
+    29.0,
+    -97.123,
+    3,
+    1.87,
+    0.99
+   ],
+   [
+    -102.341,
+    29.0,
+    -93.03,
+    3,
+    1.35,
+    1.0
+   ],
+   [
+    -62.322,
+    29.0,
+    -114.651,
+    2,
+    4.07,
+    1.4
+   ],
+   [
+    -76.824,
+    29.0,
+    -104.843,
+    2,
+    2.25,
+    1.4
+   ]
+  ],
+  "extraBoxes": [
+   {
+    "kind": "trunk",
+    "c": [
+     -83.244,
+     33.5,
+     -94.071
+    ],
+    "s": [
+     1.2,
+     9.0,
+     1.2
+    ],
+    "yaw": 0.0
+   },
+   {
+    "kind": "outcrop",
+    "c": [
+     -60.858,
+     31.2,
+     -118.782
+    ],
+    "s": [
+     8.0,
+     4.4,
+     4.0
+    ],
+    "yaw": -2.5184
+   },
+   {
+    "kind": "outcrop",
+    "c": [
+     -77.123,
+     30.3,
+     -107.83
+    ],
+    "s": [
+     3.6,
+     2.6,
+     3.2
+    ],
+    "yaw": -2.5184
+   },
+   {
+    "kind": "outcrop",
+    "c": [
+     -35.665,
+     29.8,
+     -122.111
+    ],
+    "s": [
+     4.0,
+     1.6,
+     7.0
+    ],
+    "yaw": -2.5184
+   }
+  ],
+  "requires": "path",
+  "logs": [
+   {
+    "template": "W7_F_TerraceLog__bark",
+    "at": [
+     -24.738232499442674,
+     29.3,
+     -102.62553792054945
+    ],
+    "yaw": -2.518393323655727
+   }
+  ],
+  "trunks": [
+   {
+    "template": "W7_F_TerraceTrunk__bark",
+    "at": [
+     -83.24394000468517,
+     29.0,
+     -94.07146349306106
+    ],
+    "yaw": 0.4
+   }
+  ],
+  "kitCrowns": [
+   {
+    "template": "W7_Kit_Crown_Round__foliage",
+    "at": [
+     -82.74394000468517,
+     40.6,
+     -94.07146349306106
+    ],
+    "yaw": 0.7,
+    "scale": 1.15
+   }
+  ],
+  "dressTier": {
+   "hide": [
+    "FaceGarden",
+    "SkirtOuter",
+    "SkirtNorthEast",
+    "SkirtSouthWest",
+    "BalustradeNorth",
+    "BalustradeSouth",
+    "RimOuter",
+    "RimNorthEast",
+    "RimSouthWest"
+   ],
+   "remove": [
+    "ClumpOne",
+    "ClumpOneTop",
+    "ClumpTwo",
+    "PadCrunch",
+    "PadPop",
+    "PadMoss",
+    "TreePole"
+   ],
+   "prefix": "W7T_"
+  }
+ },
+ "hide": [],
+ "report": {
+  "W7_F_Terrace__grass": 1248,
+  "W7_F_TerraceFace__cliff_rock": 728,
+  "W7_F_TerraceTongues__grass": 46,
+  "W7_F_TerraceEarth__dirt_path": 14,
+  "W7_F_TerraceRocks__cliff_rock": 1293,
+  "W7_F_TerraceSlab__boulder_rock": 30,
+  "W7_F_TerraceLog__bark": 36,
+  "W7_F_TerraceTrunk__bark": 48,
+  "fixedTotal": 3359
+ }
+}

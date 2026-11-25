@@ -1,0 +1,1096 @@
+{
+ "slice": "path",
+ "parts": [
+  {
+   "name": "W7_F_Path__dirt_path",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -52.4868,
+    14.9866,
+    -65.2136
+   ],
+   "size": [
+    58.5827,
+    16.6165,
+    40.8642
+   ],
+   "triangles": 112,
+   "look": {
+    "kind": "island",
+    "material": "dirt_path"
+   },
+   "collide": false,
+   "shadow": false,
+   "doubleSided": true,
+   "uvPerStud": 0.125
+  },
+  {
+   "name": "W7_F_PathGrass__grass",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -51.2827,
+    15.0266,
+    -63.775
+   ],
+   "size": [
+    56.3899,
+    16.6365,
+    38.2866
+   ],
+   "triangles": 110,
+   "look": {
+    "kind": "island",
+    "material": "grass"
+   },
+   "collide": false,
+   "shadow": false,
+   "doubleSided": true,
+   "uvPerStud": 0.10651
+  },
+  {
+   "name": "W7_F_PathWall__cliff_rock",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -51.6331,
+    16.175,
+    -64.821
+   ],
+   "size": [
+    67.5882,
+    25.75,
+    52.1317
+   ],
+   "triangles": 2234,
+   "look": {
+    "kind": "island",
+    "material": "cliff_rock"
+   },
+   "collide": false,
+   "shadow": true,
+   "doubleSided": true,
+   "uvPerStud": 0.05997
+  },
+  {
+   "name": "W7_F_PathFoot__dirt_path",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -45.7432,
+    13.648,
+    -72.7381
+   ],
+   "size": [
+    38.3981,
+    15.0782,
+    29.5766
+   ],
+   "triangles": 164,
+   "look": {
+    "kind": "island",
+    "material": "dirt_path"
+   },
+   "collide": false,
+   "shadow": false,
+   "doubleSided": true,
+   "uvPerStud": 0.125
+  },
+  {
+   "name": "W7_F_PathSteps__boulder_rock",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -49.881,
+    16.4052,
+    -69.9144
+   ],
+   "size": [
+    64.1835,
+    24.9263,
+    41.6566
+   ],
+   "triangles": 400,
+   "look": {
+    "kind": "island",
+    "material": "boulder_rock"
+   },
+   "collide": false,
+   "shadow": true,
+   "doubleSided": true,
+   "uvPerStud": 0.34653
+  },
+  {
+   "name": "W7_F_PathRocks__cliff_rock",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -71.5515,
+    18.356,
+    -51.2959
+   ],
+   "size": [
+    11.4894,
+    27.9026,
+    27.429
+   ],
+   "triangles": 1800,
+   "look": {
+    "kind": "island",
+    "material": "cliff_rock"
+   },
+   "collide": false,
+   "shadow": true
+  },
+  {
+   "name": "W7_F_Lip1__boulder_rock",
+   "slice": "path",
+   "role": "template",
+   "centre": [
+    0.0254,
+    0.1478,
+    -0.0074
+   ],
+   "size": [
+    1.1839,
+    0.8956,
+    0.9836
+   ],
+   "triangles": 80,
+   "look": {
+    "kind": "island",
+    "material": "boulder_rock"
+   },
+   "collide": false,
+   "shadow": false,
+   "uvPerStud": 0.34653
+  },
+  {
+   "name": "W7_F_Lip2__boulder_rock",
+   "slice": "path",
+   "role": "template",
+   "centre": [
+    0.021,
+    0.2693,
+    -0.0219
+   ],
+   "size": [
+    1.7697,
+    1.1386,
+    0.9596
+   ],
+   "triangles": 80,
+   "look": {
+    "kind": "island",
+    "material": "boulder_rock"
+   },
+   "collide": false,
+   "shadow": false,
+   "uvPerStud": 0.34653
+  },
+  {
+   "name": "W7_F_Lip3__boulder_rock",
+   "slice": "path",
+   "role": "template",
+   "centre": [
+    -0.0338,
+    0.3626,
+    0.0081
+   ],
+   "size": [
+    2.2796,
+    1.3252,
+    0.8636
+   ],
+   "triangles": 80,
+   "look": {
+    "kind": "island",
+    "material": "boulder_rock"
+   },
+   "collide": false,
+   "shadow": false,
+   "uvPerStud": 0.34653
+  },
+  {
+   "name": "W7_F_Lip4__boulder_rock",
+   "slice": "path",
+   "role": "template",
+   "centre": [
+    0.0169,
+    0.4841,
+    0.0066
+   ],
+   "size": [
+    3.0365,
+    1.5681,
+    0.8869
+   ],
+   "triangles": 80,
+   "look": {
+    "kind": "island",
+    "material": "boulder_rock"
+   },
+   "collide": false,
+   "shadow": false,
+   "uvPerStud": 0.34653
+  },
+  {
+   "name": "W7_F_Lip5__boulder_rock",
+   "slice": "path",
+   "role": "template",
+   "centre": [
+    0.0006,
+    0.5462,
+    -0.0212
+   ],
+   "size": [
+    3.1393,
+    1.6925,
+    0.8818
+   ],
+   "triangles": 80,
+   "look": {
+    "kind": "island",
+    "material": "boulder_rock"
+   },
+   "collide": false,
+   "shadow": false,
+   "uvPerStud": 0.34653
+  },
+  {
+   "name": "W7_F_Stake__wood",
+   "slice": "path",
+   "role": "template",
+   "centre": [
+    0.0,
+    1.085,
+    0.0
+   ],
+   "size": [
+    0.35,
+    2.97,
+    0.35
+   ],
+   "triangles": 10,
+   "look": {
+    "kind": "flat",
+    "color": "#5C4330",
+    "material": "Wood"
+   },
+   "collide": false,
+   "shadow": false,
+   "doubleSided": true
+  },
+  {
+   "name": "W7_CD_Ground__grass",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    9.0,
+    27.2333,
+    -21.0
+   ],
+   "size": [
+    228.0,
+    46.836,
+    210.0
+   ],
+   "triangles": 5559,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Ground__grass"
+   },
+   "replaces": "W7_CD_Ground__grass",
+   "facesRemoved": 2,
+   "collide": false
+  },
+  {
+   "name": "W7_CD_Ground__ground",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    16.5,
+    22.8239,
+    -34.5
+   ],
+   "size": [
+    261.0,
+    55.6477,
+    249.0
+   ],
+   "triangles": 5386,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Ground__ground"
+   },
+   "replaces": "W7_CD_Ground__ground",
+   "facesRemoved": 24,
+   "collide": false
+  },
+  {
+   "name": "W7_CD_Region__cliff_rock",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -28.7567,
+    12.602,
+    -89.7591
+   ],
+   "size": [
+    78.5413,
+    22.0246,
+    67.9369
+   ],
+   "triangles": 157,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Region__cliff_rock"
+   },
+   "replaces": "W7_CD_Region__cliff_rock",
+   "facesRemoved": 19,
+   "collide": false
+  },
+  {
+   "name": "W7_CD_Region__grass",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -30.5695,
+    18.7336,
+    -86.082
+   ],
+   "size": [
+    75.8744,
+    16.6892,
+    52.1927
+   ],
+   "triangles": 12,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Region__grass"
+   },
+   "replaces": "W7_CD_Region__grass",
+   "facesRemoved": 2,
+   "collide": false
+  }
+ ],
+ "place": {
+  "lips": [
+   {
+    "kit": 4,
+    "at": [
+     -23.068,
+     6.817,
+     -80.636
+    ],
+    "yaw": -2.202,
+    "box": {
+     "c": [
+      -23.068,
+      7.417,
+      -80.636
+     ],
+     "s": [
+      2.61,
+      1.8,
+      0.8
+     ],
+     "yaw": -2.202
+    }
+   },
+   {
+    "kit": 1,
+    "at": [
+     -25.33,
+     7.969,
+     -77.738
+    ],
+    "yaw": -1.9513,
+    "box": {
+     "c": [
+      -25.33,
+      8.219,
+      -77.738
+     ],
+     "s": [
+      1.08,
+      1.1,
+      0.8
+     ],
+     "yaw": -1.9513
+    }
+   },
+   {
+    "kit": 3,
+    "at": [
+     -26.326,
+     8.455,
+     -76.195
+    ],
+    "yaw": -2.0223,
+    "box": {
+     "c": [
+      -26.326,
+      8.955,
+      -76.195
+     ],
+     "s": [
+      2.16,
+      1.6,
+      0.8
+     ],
+     "yaw": -2.0223
+    }
+   },
+   {
+    "kit": 5,
+    "at": [
+     -34.678,
+     11.485,
+     -67.545
+    ],
+    "yaw": -2.654,
+    "box": {
+     "c": [
+      -34.678,
+      12.235,
+      -67.545
+     ],
+     "s": [
+      3.06,
+      2.1,
+      0.8
+     ],
+     "yaw": -2.654
+    }
+   },
+   {
+    "kit": 4,
+    "at": [
+     -39.778,
+     12.834,
+     -65.211
+    ],
+    "yaw": -2.7227,
+    "box": {
+     "c": [
+      -39.778,
+      13.434,
+      -65.211
+     ],
+     "s": [
+      2.61,
+      1.8,
+      0.8
+     ],
+     "yaw": -2.7227
+    }
+   },
+   {
+    "kit": 2,
+    "at": [
+     -43.589,
+     14.183,
+     -63.395
+    ],
+    "yaw": -2.4741,
+    "box": {
+     "c": [
+      -43.589,
+      14.533,
+      -63.395
+     ],
+     "s": [
+      1.62,
+      1.3,
+      0.8
+     ],
+     "yaw": -2.4741
+    }
+   },
+   {
+    "kit": 3,
+    "at": [
+     -50.543,
+     16.584,
+     -58.991
+    ],
+    "yaw": -2.4226,
+    "box": {
+     "c": [
+      -50.543,
+      17.084,
+      -58.991
+     ],
+     "s": [
+      2.16,
+      1.6,
+      0.8
+     ],
+     "yaw": -2.4226
+    }
+   },
+   {
+    "kit": 1,
+    "at": [
+     -53.599,
+     17.613,
+     -57.139
+    ],
+    "yaw": -2.7981,
+    "box": {
+     "c": [
+      -53.599,
+      17.863,
+      -57.139
+     ],
+     "s": [
+      1.08,
+      1.1,
+      0.8
+     ],
+     "yaw": -2.7981
+    }
+   },
+   {
+    "kit": 3,
+    "at": [
+     -58.136,
+     19.158,
+     -54.171
+    ],
+    "yaw": -2.3853,
+    "box": {
+     "c": [
+      -58.136,
+      19.658,
+      -54.171
+     ],
+     "s": [
+      2.16,
+      1.6,
+      0.8
+     ],
+     "yaw": -2.3853
+    }
+   },
+   {
+    "kit": 3,
+    "at": [
+     -70.077,
+     22.939,
+     -45.946
+    ],
+    "yaw": -2.3705,
+    "box": {
+     "c": [
+      -70.077,
+      23.439,
+      -45.946
+     ],
+     "s": [
+      2.16,
+      1.6,
+      0.8
+     ],
+     "yaw": -2.3705
+    }
+   },
+   {
+    "kit": 5,
+    "at": [
+     -75.611,
+     23.005,
+     -43.936
+    ],
+    "yaw": 2.8842,
+    "box": {
+     "c": [
+      -75.611,
+      23.755,
+      -43.936
+     ],
+     "s": [
+      3.06,
+      2.1,
+      0.8
+     ],
+     "yaw": 2.8842
+    }
+   }
+  ],
+  "stakes": [
+   {
+    "at": [
+     -18.674,
+     4.568,
+     -84.994
+    ],
+    "yaw": 1.846,
+    "lean": 0.0812
+   },
+   {
+    "at": [
+     -20.872,
+     4.603,
+     -83.06
+    ],
+    "yaw": 0.367,
+    "lean": 0.0655
+   },
+   {
+    "at": [
+     -22.872,
+     4.627,
+     -81.154
+    ],
+    "yaw": 0.585,
+    "lean": 0.058
+   },
+   {
+    "at": [
+     -72.165,
+     16.637,
+     -53.218
+    ],
+    "yaw": 0.018,
+    "lean": 0.0863
+   },
+   {
+    "at": [
+     -68.605,
+     22.36,
+     -58.782
+    ],
+    "yaw": 0.326,
+    "lean": 0.085
+   },
+   {
+    "at": [
+     -66.997,
+     5.614,
+     -48.517
+    ],
+    "yaw": 1.339,
+    "lean": 0.077
+   },
+   {
+    "at": [
+     -70.251,
+     5.216,
+     -46.256
+    ],
+    "yaw": 0.344,
+    "lean": 0.07
+   },
+   {
+    "at": [
+     -76.678,
+     6.976,
+     -44.44
+    ],
+    "yaw": 2.525,
+    "lean": 0.056
+   }
+  ],
+  "ropes": [
+   [
+    [
+     -18.674,
+     6.768,
+     -84.994
+    ],
+    [
+     -20.872,
+     6.803,
+     -83.06
+    ]
+   ],
+   [
+    [
+     -20.872,
+     6.803,
+     -83.06
+    ],
+    [
+     -22.872,
+     6.827,
+     -81.154
+    ]
+   ],
+   [
+    [
+     -72.165,
+     18.837,
+     -53.218
+    ],
+    [
+     -68.605,
+     24.56,
+     -58.782
+    ]
+   ],
+   [
+    [
+     -66.997,
+     7.814,
+     -48.517
+    ],
+    [
+     -70.251,
+     7.416,
+     -46.256
+    ]
+   ],
+   [
+    [
+     -70.251,
+     7.416,
+     -46.256
+    ],
+    [
+     -76.678,
+     9.176,
+     -44.44
+    ]
+   ]
+  ],
+  "tufts": [
+   [
+    -27.463,
+    6.579,
+    -86.537,
+    1,
+    4.85,
+    0.9
+   ],
+   [
+    -34.669,
+    9.716,
+    -77.481,
+    1,
+    2.72,
+    1.0
+   ],
+   [
+    -43.513,
+    13.267,
+    -71.459,
+    1,
+    1.21,
+    0.91
+   ],
+   [
+    -53.386,
+    16.341,
+    -65.81,
+    3,
+    3.8,
+    0.87
+   ],
+   [
+    -62.498,
+    19.429,
+    -60.109,
+    3,
+    2.92,
+    0.72
+   ]
+  ],
+  "steps": [
+   {
+    "flight": "foot",
+    "top": 5.142,
+    "front": 0.0,
+    "back": 1.79,
+    "dev": 0.542
+   },
+   {
+    "flight": "foot",
+    "top": 5.655,
+    "front": 1.79,
+    "back": 3.59,
+    "dev": 0.542
+   },
+   {
+    "flight": "foot",
+    "top": 6.168,
+    "front": 3.59,
+    "back": 5.38,
+    "dev": 0.542
+   },
+   {
+    "flight": "foot",
+    "top": 6.679,
+    "front": 5.38,
+    "back": 7.17,
+    "dev": 0.54
+   },
+   {
+    "flight": "return",
+    "top": 23.465,
+    "front": 73.54,
+    "back": 75.11,
+    "dev": 0.365
+   },
+   {
+    "flight": "return",
+    "top": 23.984,
+    "front": 75.11,
+    "back": 76.68,
+    "dev": 0.385
+   },
+   {
+    "flight": "return",
+    "top": 24.667,
+    "front": 76.68,
+    "back": 78.25,
+    "dev": 0.452
+   },
+   {
+    "flight": "return",
+    "top": 25.245,
+    "front": 78.25,
+    "back": 79.82,
+    "dev": 0.499
+   },
+   {
+    "flight": "return",
+    "top": 26.196,
+    "front": 79.82,
+    "back": 81.39,
+    "dev": 0.523
+   },
+   {
+    "flight": "return",
+    "top": 27.187,
+    "front": 81.39,
+    "back": 82.96,
+    "dev": 0.533
+   },
+   {
+    "flight": "return",
+    "top": 27.858,
+    "front": 82.96,
+    "back": 84.53,
+    "dev": 0.536
+   },
+   {
+    "flight": "return",
+    "top": 28.868,
+    "front": 84.53,
+    "back": 86.1,
+    "dev": 0.536
+   }
+  ],
+  "boulders": [
+   {
+    "kit": 4,
+    "at": [
+     -16.974,
+     4.626,
+     -84.964
+    ],
+    "yaw": -2.41,
+    "scale": [
+     1.0,
+     1.6,
+     2.2
+    ]
+   },
+   {
+    "kit": 4,
+    "at": [
+     -23.119,
+     11.485,
+     -91.811
+    ],
+    "yaw": -2.41,
+    "scale": [
+     1.0,
+     1.6,
+     2.2
+    ]
+   },
+   {
+    "kit": 5,
+    "at": [
+     -22.0,
+     5.32,
+     -78.0
+    ],
+    "yaw": 0.3,
+    "scale": [
+     1.5,
+     2.2,
+     3.8
+    ]
+   },
+   {
+    "kit": 2,
+    "at": [
+     -22.094,
+     4.959,
+     -77.432
+    ],
+    "yaw": 1.867,
+    "scale": [
+     0.806,
+     0.806,
+     0.806
+    ]
+   },
+   {
+    "kit": 1,
+    "at": [
+     -24.873,
+     4.716,
+     -72.477
+    ],
+    "yaw": 1.936,
+    "scale": [
+     0.773,
+     0.773,
+     0.773
+    ]
+   },
+   {
+    "kit": 2,
+    "at": [
+     -30.141,
+     4.71,
+     -67.963
+    ],
+    "yaw": 1.403,
+    "scale": [
+     0.965,
+     0.965,
+     0.965
+    ]
+   },
+   {
+    "kit": 1,
+    "at": [
+     -37.439,
+     4.685,
+     -64.559
+    ],
+    "yaw": 5.359,
+    "scale": [
+     0.927,
+     0.927,
+     0.927
+    ]
+   },
+   {
+    "kit": 2,
+    "at": [
+     -40.808,
+     4.724,
+     -59.501
+    ],
+    "yaw": 2.369,
+    "scale": [
+     0.735,
+     0.735,
+     0.735
+    ]
+   },
+   {
+    "kit": 3,
+    "at": [
+     -46.856,
+     4.262,
+     -58.812
+    ],
+    "yaw": 4.451,
+    "scale": [
+     0.734,
+     0.734,
+     0.734
+    ]
+   }
+  ],
+  "hideBoxes": [
+   "lip",
+   "fin"
+  ],
+  "extraBoxes": [
+   {
+    "kind": "finrock",
+    "c": [
+     -71.114,
+     8.114,
+     -41.214
+    ],
+    "s": [
+     6.9,
+     6.46,
+     4.48
+    ],
+    "yaw": -2.5184
+   },
+   {
+    "kind": "finrock",
+    "c": [
+     -69.404,
+     7.314,
+     -44.66
+    ],
+    "s": [
+     5.1,
+     4.93,
+     3.92
+    ],
+    "yaw": -2.5184
+   },
+   {
+    "kind": "finrock",
+    "c": [
+     -74.297,
+     6.914,
+     -40.159
+    ],
+    "s": [
+     4.5,
+     4.25,
+     3.5
+    ],
+    "yaw": -2.5184
+   }
+  ],
+  "requires": "den",
+  "rope": {
+   "color": "#B79A66",
+   "width": 0.1,
+   "sag": 0.35
+  }
+ },
+ "hide": [
+  "W7_CD_CliffPath__cliff_rock",
+  "W7_CD_CliffPath__dirt_path"
+ ],
+ "report": {
+  "W7_F_Path__dirt_path": 112,
+  "W7_F_PathGrass__grass": 110,
+  "W7_F_PathWall__cliff_rock": 2234,
+  "W7_F_PathFoot__dirt_path": 164,
+  "W7_F_PathSteps__boulder_rock": 400,
+  "W7_F_PathRocks__cliff_rock": 1800,
+  "W7_F_Lip1__boulder_rock": 80,
+  "W7_F_Lip2__boulder_rock": 80,
+  "W7_F_Lip3__boulder_rock": 80,
+  "W7_F_Lip4__boulder_rock": 80,
+  "W7_F_Lip5__boulder_rock": 80,
+  "W7_F_Stake__wood": 10,
+  "W7_CD_Ground__grass": 5559,
+  "W7_CD_Ground__ground": 5386,
+  "W7_CD_Region__cliff_rock": 157,
+  "W7_CD_Region__grass": 12,
+  "fixedTotal": 15934,
+  "lipStones": 11,
+  "stakes": 8,
+  "stepMaxDeviation": 0.542
+ }
+}

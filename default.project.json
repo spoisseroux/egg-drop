@@ -65,6 +65,9 @@
       "WorldBeta": {
         "$path": "assets/world/WorldBeta.rbxm"
       },
+      "WorldFinish": {
+        "$path": "assets/world/WorldFinish.rbxmx"
+      },
       "PocketDeckSlim": {
         "$path": "assets/deck/PocketDeckSlim.rbxmx"
       },

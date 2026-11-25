@@ -1,0 +1,89 @@
+{
+ "note": "Open Cloud POST /assets/v1/assets through Studio MCP open_cloud_invoke (creator user 10716920546), operations polled to done. sha256 of each file as uploaded; scripts/build_world_finish_pack.py refuses a file whose bytes differ.",
+ "den": {
+  "model": {
+   "file": "world-finish-den.fbx",
+   "sha256": "c1f235c07423df673a2e318aa3491cb61fb2d460fe00b006333408f02413861e",
+   "manifestSha256": "f6a5091c6f594131e50c498600b5db8e018aeda511a4c0072769ee2a8fada225",
+   "operation": "037f7420-a04a-4bb9-9433-b9ba9ecf654a",
+   "assetId": "93629425333486",
+   "moderation": "Approved",
+   "superseded": {
+    "assetId": "120231666679986",
+    "operation": "e73d2e4f-bef7-406b-8ebe-fa63096b6e40",
+    "why": "r1 exported without vertex colours (the ground re-cut needs them)"
+   }
+  },
+  "images": {
+   "den_shell_west_color": {
+    "file": "textures/den_shell_west_color.png",
+    "sha256": "c456d559d64483b46d601d8a7564e0905f133657a95c5ad6acfd9283cb451e5a",
+    "operation": "9f98ff1a-b528-4fcf-8c3f-7079a2e4aa62",
+    "assetId": "71575845230571",
+    "moderation": "Approved"
+   },
+   "den_shell_east_color": {
+    "file": "textures/den_shell_east_color.png",
+    "sha256": "2a881c1e5683dc2528851349f46519710cbffe38004f0cce2c5df77a7a029ace",
+    "operation": "4bbcc832-bee3-41f6-ae5f-f7ff28e52b2a",
+    "assetId": "90370447380293",
+    "moderation": "Approved"
+   },
+   "den_shell_west_normal": {
+    "file": "textures/den_shell_west_normal.png",
+    "sha256": "88b1b2911f4d5ba97aa175de802e276392deeef2fb68875d043018df8983fb12",
+    "operation": "e8bec617-df8f-4741-81a6-2d651bb470d9",
+    "assetId": "110901372689201",
+    "moderation": "Approved"
+   },
+   "den_shell_east_normal": {
+    "file": "textures/den_shell_east_normal.png",
+    "sha256": "c0601b4d26b9e6dfffa609d58e722eabfdc65d4166ac8db64164a0669eeaa03f",
+    "operation": "c70090b5-4833-4ca3-bfe7-0bade6196c3b",
+    "assetId": "78338420884303",
+    "moderation": "Approved"
+   },
+   "den_floor_color": {
+    "file": "textures/den_floor_color.png",
+    "sha256": "205f652a9e2f1c83ca8dcabe73a38691661cd43d793c7f19ddf8137df759d0f4",
+    "operation": "733e2248-ec33-4b4c-aa48-acbc4ec6d609",
+    "assetId": "100619571457692",
+    "moderation": "Approved"
+   },
+   "den_floor_normal": {
+    "file": "textures/den_floor_normal.png",
+    "sha256": "d88fe9d9ce44771b10ee4560905e88bcdeea8cb6d61f59e490273cb846041e05",
+    "operation": "be72547b-6684-402e-b689-c5274feb5970",
+    "assetId": "92282764718442",
+    "moderation": "Approved"
+   }
+  }
+ },
+ "path": {
+  "model": {
+   "file": "world-finish-path.fbx",
+   "sha256": "aecec5ac4570248cb5034316677ec313c16c80ff7c1901865fe5ad843bc584be",
+   "manifestSha256": "964d07dbc5d7f44c0bce4363ae72e114ebe4a843cbf55fec805bf0e827a2b482",
+   "operation": "15edb2d1-4fef-4bf6-b082-a394c2e9060e",
+   "assetId": "132211469689954",
+   "moderation": "Approved"
+  },
+  "images": {}
+ },
+ "terrace": {
+  "model": {
+   "file": "world-finish-terrace.fbx",
+   "sha256": "0561448ebe2e951688211b06763a1103cf6a3bcf4fc4c3e0d71eb50d1ffe2b63",
+   "manifestSha256": "2dee18cb94b3bade4f735c63439ee7b67a286768bcff94759aa3aeabe7db976a",
+   "operation": "7d74c9a6-0b86-4dac-abd8-bc344e726682",
+   "assetId": "127139808708242",
+   "moderation": "Approved",
+   "superseded": {
+    "assetId": "94964737287819",
+    "operation": "d7aa8e41-20d9-461e-a8f9-728bced13e46",
+    "why": "Fable E1 fixes (rim, outcrops, lips, trunk) after upload"
+   }
+  },
+  "images": {}
+ }
+}

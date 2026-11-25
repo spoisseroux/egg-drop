@@ -137,7 +137,12 @@ function Host:openUp(room)
 	end
 	-- Held before they are parented (TierHost's rule): a throw part-way leaves nothing orphaned.
 	self.builtIn=room
-	if not self.model then self.model=GreyboxRows.build(Greybox.rows(layout),Den.Model)end
+	if not self.model then
+		self.model=GreyboxRows.build(Greybox.rows(layout),Den.Model)
+		-- The world finish art's dress (lanterns, paw stones, apron), only when its den slice is in this room's World.
+		local ok,problem=pcall(function()require(script.Parent.WorldFinishMount).dressDen(self.model,room)end)
+		if not ok then warn("[WorldFinish] den dress: "..tostring(problem))end
+	end
 	self.model.Parent=room
 	local regions=room:FindFirstChild("PetRegions")or room
 	if not self.blocked then

@@ -1,0 +1,13 @@
+<roblox version="4">
+  <Item class="Folder" referent="WorldFinish">
+    <Properties>
+      <string name="Name">WorldFinish</string>
+    </Properties>
+    <Item class="StringValue" referent="WorldFinishVersion">
+      <Properties>
+        <string name="Name">Version</string>
+        <string name="Value">c33b9b9291a23a62</string>
+      </Properties>
+    </Item>
+  </Item>
+</roblox>

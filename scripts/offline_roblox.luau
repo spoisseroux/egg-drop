@@ -204,6 +204,7 @@ function methods:SetAttribute(name,value)
 	local s=self.signals[name];if s then s:Fire()end
 end
 function methods:GetAttribute(name)return self.attrs[name]end
+function methods:GetAttributes()return table.clone(self.attrs)end
 function methods:GetAttributeChangedSignal(name)self.signals[name]=self.signals[name]or signal();return self.signals[name]end
 function methods:FindFirstChild(name)for _,kid in ipairs(self.kids)do if kid.Name==name then return kid end end return nil end
 methods.WaitForChild=methods.FindFirstChild

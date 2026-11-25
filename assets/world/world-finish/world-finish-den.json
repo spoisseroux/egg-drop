@@ -1,0 +1,822 @@
+{
+ "slice": "den",
+ "parts": [
+  {
+   "name": "W7_CD_Crystals__glow_pink",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    0.5317,
+    -57.0915,
+    3.5356
+   ],
+   "size": [
+    94.3273,
+    65.6288,
+    95.7132
+   ],
+   "triangles": 180,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Crystals__glow_pink"
+   },
+   "replaces": "W7_CD_Crystals__glow_pink",
+   "facesRemoved": 32,
+   "collide": false
+  },
+  {
+   "name": "W7_CD_Ground__grass",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    9.0,
+    27.2333,
+    -21.0
+   ],
+   "size": [
+    228.0,
+    46.836,
+    210.0
+   ],
+   "triangles": 5561,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Ground__grass"
+   },
+   "replaces": "W7_CD_Ground__grass",
+   "facesRemoved": 14,
+   "collide": false
+  },
+  {
+   "name": "W7_CD_Ground__ground",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    16.5,
+    22.8239,
+    -34.5
+   ],
+   "size": [
+    261.0,
+    55.6477,
+    249.0
+   ],
+   "triangles": 5410,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Ground__ground"
+   },
+   "replaces": "W7_CD_Ground__ground",
+   "facesRemoved": 3,
+   "collide": false
+  },
+  {
+   "name": "W7_CD_Region__cliff_rock",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -29.5683,
+    13.8863,
+    -89.7591
+   ],
+   "size": [
+    80.1646,
+    24.5932,
+    67.9369
+   ],
+   "triangles": 176,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Region__cliff_rock"
+   },
+   "replaces": "W7_CD_Region__cliff_rock",
+   "facesRemoved": 9,
+   "collide": false
+  },
+  {
+   "name": "W7_F_OverRocks__cliff_rock_2016",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    16.0624,
+    19.0487,
+    -111.4726
+   ],
+   "size": [
+    37.6133,
+    37.215,
+    36.855
+   ],
+   "triangles": 220,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__cliff_rock_2016"
+   },
+   "overlays": "W7_CD_Rocks__cliff_rock_2016",
+   "facesRemoved": 4,
+   "collide": false
+  },
+  {
+   "name": "W7_F_Den__shellWest",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -11.7525,
+    10.2064,
+    -108.69
+   ],
+   "size": [
+    22.455,
+    13.2128,
+    22.58
+   ],
+   "triangles": 1919,
+   "look": {
+    "kind": "baked",
+    "color": "den_shell_west_color",
+    "normal": "den_shell_west_normal",
+    "roughness": 0.9,
+    "material": "Slate"
+   },
+   "pxPerStud": {
+    "walls": 27.3,
+    "all": 27.5
+   },
+   "collide": false,
+   "shadow": true
+  },
+  {
+   "name": "W7_F_Den__shellEast",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -3.1882,
+    10.2214,
+    -108.69
+   ],
+   "size": [
+    20.5736,
+    13.2428,
+    22.58
+   ],
+   "triangles": 1903,
+   "look": {
+    "kind": "baked",
+    "color": "den_shell_east_color",
+    "normal": "den_shell_east_normal",
+    "roughness": 0.9,
+    "material": "Slate"
+   },
+   "pxPerStud": {
+    "walls": 28.4,
+    "all": 28.2
+   },
+   "collide": false,
+   "shadow": true
+  },
+  {
+   "name": "W7_F_Den__floor",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -8.6,
+    4.2852,
+    -107.0
+   ],
+   "size": [
+    30.4,
+    0.3497,
+    27.6
+   ],
+   "triangles": 520,
+   "look": {
+    "kind": "tile",
+    "color": "den_floor_color",
+    "normal": "den_floor_normal",
+    "studsPerTile": 6.0,
+    "material": "Ground"
+   },
+   "collide": false,
+   "shadow": false
+  },
+  {
+   "name": "W7_F_DenMouth__cliff_rock",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -7.2792,
+    10.4617,
+    -99.9936
+   ],
+   "size": [
+    29.3483,
+    15.2959,
+    6.9745
+   ],
+   "triangles": 2331,
+   "look": {
+    "kind": "island",
+    "material": "cliff_rock"
+   },
+   "collide": false,
+   "shadow": true,
+   "uvPerStud": 0.05997
+  },
+  {
+   "name": "W7_F_DenApron__dirt_path",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -11.0,
+    4.56,
+    -94.3
+   ],
+   "size": [
+    30.0,
+    0.82,
+    10.0
+   ],
+   "triangles": 334,
+   "look": {
+    "kind": "island",
+    "material": "dirt_path"
+   },
+   "collide": false,
+   "shadow": false,
+   "doubleSided": true,
+   "uvPerStud": 0.125
+  },
+  {
+   "name": "W7_F_Lantern__cage",
+   "slice": "den",
+   "role": "template",
+   "centre": [
+    0.0,
+    0.2164,
+    0.0
+   ],
+   "size": [
+    1.0,
+    1.5729,
+    1.0
+   ],
+   "triangles": 134,
+   "look": {
+    "kind": "flat",
+    "color": "#3A3028",
+    "material": "Metal"
+   },
+   "collide": false,
+   "shadow": false
+  },
+  {
+   "name": "W7_F_Lantern__pane",
+   "slice": "den",
+   "role": "template",
+   "centre": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "size": [
+    0.66,
+    0.92,
+    0.66
+   ],
+   "triangles": 8,
+   "look": {
+    "kind": "flat",
+    "color": "#C9772E",
+    "material": "Neon"
+   },
+   "collide": false,
+   "shadow": false
+  },
+  {
+   "name": "W7_F_Den__crystal",
+   "slice": "den",
+   "role": "template",
+   "centre": [
+    0.0,
+    0.4986,
+    0.0
+   ],
+   "size": [
+    0.46,
+    0.9972,
+    0.3984
+   ],
+   "triangles": 28,
+   "look": {
+    "kind": "flat",
+    "color": "#C98A3C",
+    "material": "Neon",
+    "transparency": 0.4
+   },
+   "collide": false,
+   "shadow": false
+  },
+  {
+   "name": "W7_F_Stone__flat",
+   "slice": "den",
+   "role": "template",
+   "centre": [
+    -0.0005,
+    -0.03,
+    0.0178
+   ],
+   "size": [
+    0.9016,
+    0.54,
+    0.9509
+   ],
+   "triangles": 40,
+   "look": {
+    "kind": "flat",
+    "color": "#8A8378",
+    "material": "Slate"
+   },
+   "collide": false,
+   "shadow": false
+  }
+ ],
+ "place": {
+  "lanterns": {
+   "light": {
+    "color": "#FFB870",
+    "brightness": 0.9,
+    "range": 14,
+    "shadows": false
+   },
+   "ledgeY": 9.4,
+   "cord": 0.8
+  },
+  "crystals": [
+   {
+    "at": [
+     -16.595,
+     4.85,
+     -96.229
+    ],
+    "yaw": 5.972,
+    "scale": 1.5
+   },
+   {
+    "at": [
+     -17.117,
+     4.85,
+     -96.125
+    ],
+    "yaw": 5.961,
+    "scale": 0.6
+   },
+   {
+    "at": [
+     -16.974,
+     4.85,
+     -96.742
+    ],
+    "yaw": 2.66,
+    "scale": 1.0
+   },
+   {
+    "at": [
+     3.238,
+     4.593,
+     -96.509
+    ],
+    "yaw": 1.875,
+    "scale": 1.0
+   },
+   {
+    "at": [
+     2.66,
+     4.593,
+     -96.855
+    ],
+    "yaw": 0.578,
+    "scale": 0.6
+   },
+   {
+    "at": [
+     -20.751,
+     4.05,
+     -110.47
+    ],
+    "yaw": 1.488,
+    "scale": 1.0
+   },
+   {
+    "at": [
+     -21.439,
+     4.05,
+     -110.415
+    ],
+    "yaw": 3.658,
+    "scale": 1.5
+   },
+   {
+    "at": [
+     -21.246,
+     4.05,
+     -110.818
+    ],
+    "yaw": 2.721,
+    "scale": 0.6
+   },
+   {
+    "at": [
+     5.306,
+     4.05,
+     -109.717
+    ],
+    "yaw": 3.213,
+    "scale": 1.0
+   },
+   {
+    "at": [
+     4.904,
+     4.05,
+     -110.29
+    ],
+    "yaw": 0.508,
+    "scale": 0.6
+   }
+  ],
+  "stones": [
+   {
+    "at": [
+     -9.2,
+     4.2,
+     -101.6
+    ],
+    "size": [
+     1.6,
+     0.208,
+     1.2
+    ],
+    "yaw": 0.3
+   },
+   {
+    "at": [
+     -4.6,
+     4.2,
+     -102.4
+    ],
+    "size": [
+     1.3,
+     0.208,
+     1.0
+    ],
+    "yaw": 1.1
+   },
+   {
+    "at": [
+     -11.9,
+     4.2,
+     -103.1
+    ],
+    "size": [
+     1.2,
+     0.208,
+     0.9
+    ],
+    "yaw": 2.0
+   },
+   {
+    "at": [
+     -9.6,
+     4.2,
+     -114.4
+    ],
+    "size": [
+     1.5,
+     0.208,
+     1.1
+    ],
+    "yaw": 0.7
+   },
+   {
+    "at": [
+     -4.4,
+     4.2,
+     -114.0
+    ],
+    "size": [
+     1.3,
+     0.208,
+     1.0
+    ],
+    "yaw": 2.4
+   },
+   {
+    "at": [
+     -16.0,
+     4.2,
+     -107.9
+    ],
+    "size": [
+     1.4,
+     0.208,
+     1.0
+    ],
+    "yaw": 1.6
+   },
+   {
+    "at": [
+     2.4,
+     4.2,
+     -107.6
+    ],
+    "size": [
+     1.2,
+     0.208,
+     0.9
+    ],
+    "yaw": 0.2
+   },
+   {
+    "at": [
+     -16.395,
+     5.0,
+     -96.479
+    ],
+    "size": [
+     0.55,
+     0.583,
+     0.45
+    ],
+    "yaw": 5.972
+   },
+   {
+    "at": [
+     -16.774,
+     5.0,
+     -96.992
+    ],
+    "size": [
+     0.55,
+     0.583,
+     0.45
+    ],
+    "yaw": 2.66
+   },
+   {
+    "at": [
+     2.8600000000000003,
+     4.743,
+     -97.105
+    ],
+    "size": [
+     0.55,
+     0.583,
+     0.45
+    ],
+    "yaw": 0.578
+   },
+   {
+    "at": [
+     -21.239,
+     4.2,
+     -110.665
+    ],
+    "size": [
+     0.55,
+     0.583,
+     0.45
+    ],
+    "yaw": 3.658
+   },
+   {
+    "at": [
+     5.506,
+     4.2,
+     -109.967
+    ],
+    "size": [
+     0.55,
+     0.583,
+     0.45
+    ],
+    "yaw": 3.213
+   }
+  ],
+  "mouthBoxes": [
+   {
+    "kind": "buttress",
+    "c": [
+     -18.2,
+     7.4,
+     -99.5
+    ],
+    "s": [
+     4.4,
+     7.0,
+     4.0
+    ]
+   },
+   {
+    "kind": "buttress",
+    "c": [
+     3.9,
+     7.4,
+     -99.5
+    ],
+    "s": [
+     4.2,
+     7.0,
+     4.0
+    ]
+   },
+   {
+    "kind": "brow",
+    "c": [
+     -7.0,
+     13.9,
+     -98.4
+    ],
+    "s": [
+     20.0,
+     3.4,
+     3.4
+    ]
+   }
+  ],
+  "apronStones": [
+   {
+    "at": [
+     -25.6,
+     4.98,
+     -92.6
+    ],
+    "size": [
+     1.1,
+     1.417,
+     0.8
+    ],
+    "yaw": 0.4
+   },
+   {
+    "at": [
+     -23.4,
+     4.08,
+     -89.3
+    ],
+    "size": [
+     1.3,
+     1.667,
+     0.9
+    ],
+    "yaw": 1.9
+   },
+   {
+    "at": [
+     -17.9,
+     4.454000000000001,
+     -88.9
+    ],
+    "size": [
+     0.9,
+     1.25,
+     0.7
+    ],
+    "yaw": 0.8
+   },
+   {
+    "at": [
+     -12.6,
+     4.557,
+     -89.1
+    ],
+    "size": [
+     1.4,
+     1.75,
+     1.0
+    ],
+    "yaw": 2.6
+   },
+   {
+    "at": [
+     -6.1,
+     4.5760000000000005,
+     -88.8
+    ],
+    "size": [
+     0.8,
+     1.167,
+     0.65
+    ],
+    "yaw": 1.3
+   },
+   {
+    "at": [
+     -1.2,
+     4.58,
+     -89.2
+    ],
+    "size": [
+     1.2,
+     1.5,
+     0.85
+    ],
+    "yaw": 0.1
+   },
+   {
+    "at": [
+     3.4,
+     4.587000000000001,
+     -89.9
+    ],
+    "size": [
+     1.0,
+     1.333,
+     0.8
+    ],
+    "yaw": 2.2
+   },
+   {
+    "at": [
+     4.6,
+     4.399,
+     -93.4
+    ],
+    "size": [
+     0.9,
+     1.25,
+     0.7
+    ],
+    "yaw": 0.9
+   }
+  ],
+  "tufts": [
+   [
+    -24.8,
+    5.0,
+    -90.6,
+    3,
+    0.3,
+    1.1
+   ],
+   [
+    -21.0,
+    4.302,
+    -88.9,
+    3,
+    2.2,
+    0.9
+   ],
+   [
+    1.6,
+    4.607,
+    -88.7,
+    3,
+    1.1,
+    1.0
+   ],
+   [
+    4.9,
+    4.55,
+    -91.8,
+    3,
+    2.9,
+    0.9
+   ]
+  ],
+  "paw": {
+   "size": [
+    0.95,
+    0.333,
+    0.85
+   ],
+   "sink": 0.03,
+   "color": "#8A8378"
+  }
+ },
+ "hide": [
+  "W7_CD_PlayDen__cliff_rock",
+  "W7_CD_PlayDen__dirt_path"
+ ],
+ "report": {
+  "shell": 3822,
+  "floor": 520,
+  "mouth": 2331,
+  "lantern": 142,
+  "crystal": 28,
+  "stone": 40,
+  "pxPerStud": {
+   "west": {
+    "walls": 27.3,
+    "all": 27.5
+   },
+   "east": {
+    "walls": 28.4,
+    "all": 28.2
+   }
+  },
+  "areas": {
+   "west": 775.9,
+   "east": 769.1
+  },
+  "apron": 334
+ }
+}

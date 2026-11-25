@@ -51,7 +51,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # and the HatchProgress fixture).
          "StarterBonus", "FirstHello",
          # Pets go up and the Top Lawn (WORLD-FINISH-LOOK slices A and B).
-         "TierPets"]
+         "TierPets",
+         # The world finish art (WORLD-FINISH-ART-BUILD.md): the mount and its data.
+         "WorldFinish"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
