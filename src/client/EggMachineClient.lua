@@ -27,6 +27,18 @@
 --   nothing moved. It retries every BindRetry seconds; after WarnAfter seconds on without a whole model it warns once with
 --   the reason, and a Turn pressed meanwhile warns once too. A step error warns once per message, not every frame. The
 --   range check measures from the Body, not the model's pivot.
+-- The capsule shot (beta 17 U5; artifacts/qa-2026-11-25-beta17/CAPSULE-AND-HUD-LOOK.md 1), behind deps.capsule() (the
+--   onboarding v3 part `capsule`): on the confirmation the Hatch eggs panel tucks away, the camera looks at the machine
+--   (Shot A, then the cup, Shot B), the dial turns, the egg rolls .40 s into the cup with the landing thud, a .4 s beat,
+--   and the panel rises with the reveal, whose clock starts only then (2.0 s; Hatch another 1.30 s then .95 s; a hard
+--   cap .2 s after). Bought away from the machine (not bound whole, more than 24 studs off, or both line checks
+--   blocked), or the Stat Egg: the pocket version (the panel stays up, the preview egg slips out and the bought egg drops
+--   in, the reveal at 1.0 s). Reduced Motion: no tuck, no camera; the 3rd-in-a-row sounds and the reveal's static card
+--   on the thud (.62 s). A tap / click / A / Space / Enter during the shot jumps to the landing (never the first drop of
+--   an egg type). The camera stays at Shot B while the reveal is up and is always given back (the screen closing,
+--   respawn, the model unbinding, the corner or capsule off, destroy). Off: the crank and 1 s hold as before.
+-- deps (capsule): capsule() -> bool, cameraObject() -> Camera, hud(visible), ghost(alpha) (this player's character
+--   see-through), blocked(from, to) -> bool (world geometry between), pocket(kind) (the preview well's drop).
 -- deps: room() -> the lounge or nil, root() -> Vector3?, camera() -> Vector3?, reduced(), audio {play(name, speed,
 --   volume)}, haptic(strength) (optional), corner() (the switch), clock (default os.clock), random (default Random.new()),
 --   cinematic (the HatchCinematic module; default required), step=false (specs call :step).
@@ -58,7 +70,31 @@ Machine.WarnAfter=10
 Machine.Unclaimed=table.freeze({Stat=true}) -- reveals that are not the cinematic: confirmed by their Saved answer
 Machine.ConfirmWindow=3 -- an armed press with no confirmation this long after it lapses (no turn, no streak)
 -- Volumes (from Fable's dB): -16 .16, -20 .1, -24 .063, -26 .05.
-Machine.Volume=table.freeze({click=.1,clunk=.16,roll=.1,tok=.05,tokCrank=.063,hello=.063,land=.5})
+Machine.Volume=table.freeze({click=.1,clunk=.16,roll=.1,tok=.05,tokCrank=.063,hello=.063,land=.5,tuck=.08,rise=.063,shine=.08})
+-- The capsule shot's schedules (LOOK 1), t = 0 at the confirmation. `start` is when the reveal's clock starts.
+local function clicks(from,seconds,count)
+	local out={}
+	for i=0,count-1 do table.insert(out,from+seconds*i/count)end
+	return table.freeze(out)
+end
+Machine.Shots=table.freeze({
+	first=table.freeze({mode="shot",turn=360,turnFrom=.30,seconds=.6,clicks=clicks(.30,.6,5),clunk=.90,roll=.95,rollSeconds=.40,land=1.35,
+		shine=1.50,start=2.00,tuck=.18,rise=1.75,riseSeconds=.25,camA=0,camASeconds=.30,camB=.90,camBSeconds=.40}),
+	second=table.freeze({mode="shot",turn=180,turnFrom=.10,seconds=.45,clicks=clicks(.10,.45,3),clunk=.55,roll=.57,rollSeconds=.30,land=.87,
+		start=1.30,tuck=.15,rise=1.07,riseSeconds=.23,camB=0,camBSeconds=.30}),
+	third=table.freeze({mode="shot",turn=90,turnFrom=.10,seconds=.25,clicks=clicks(.10,.25,1),clunk=.35,roll=.37,rollSeconds=.25,land=.62,
+		start=.95,tuck=.15,rise=.75,riseSeconds=.20,camB=0,camBSeconds=.30}),
+	pocket=table.freeze({mode="pocket",turn=180,turnFrom=0,seconds=.45,clicks=table.freeze({0,.15,.30}),clunk=.45,roll=.47,rollSeconds=.28,
+		land=.75,start=1.00}),
+	reduced=table.freeze({mode="reduced",turn=90,turnFrom=.10,seconds=.25,clicks=clicks(.10,.25,1),clunk=.35,roll=.37,rollSeconds=.25,
+		land=.62,start=.62}),
+})
+Machine.ShotCap=.2       -- the reveal starts at the latest this long after its schedule's start
+Machine.PocketRange=24   -- farther than this from the machine: the pocket version
+Machine.ReturnSeconds=.30
+-- The two shots in the machine's frame (+Z the front, +X the cup's side, up from the ground): camera at, looks at.
+Machine.ShotA=table.freeze({at=Vector3.new(1.5,4.2,10),look=Vector3.new(0,2.6,1.9)})
+Machine.ShotB=table.freeze({at=Vector3.new(2.0,2.4,5.5),look=Vector3.new(.6,1.0,1.7)})
 
 -- ── Pure ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 -- The buy crank for a streak (1, 2, 3 or more): turn (degrees), seconds, clicks, clunk, roll and landing times.
@@ -67,6 +103,13 @@ function Machine.schedule(streak)
 	local clunk=row.seconds
 	return{turn=row.turn,seconds=row.seconds,clicks=row.clicks,clunk=clunk,roll=clunk+Machine.RollDelay,
 		land=clunk+Machine.RollDelay+Machine.RollSeconds}
+end
+-- The capsule schedule for a mode ("shot", "pocket", "reduced") and a streak (1, 2, 3+).
+function Machine.shotSchedule(mode,streak)
+	if mode=="pocket"then return Machine.Shots.pocket end
+	if mode=="reduced"then return Machine.Shots.reduced end
+	local n=math.clamp(math.floor(tonumber(streak)or 1),1,3)
+	return if n==1 then Machine.Shots.first elseif n==2 then Machine.Shots.second else Machine.Shots.third
 end
 -- The streak a press at `now` starts: one more than the last when the last egg landed within StreakWindow.
 function Machine.streak(last,lastLand,now)
@@ -97,8 +140,8 @@ function Machine.buyAngle(sched,t)
 end
 -- Where the dropped egg is along the chute at t seconds into its roll (0 .. RollSeconds): a, b, c are ChuteTop, ChuteEnd,
 -- CupSeat; the leaf is the first 60% of the time, the drop into the cup the rest.
-function Machine.rollAt(a,b,c,t)
-	local p=math.clamp(t/Machine.RollSeconds,0,1)
+function Machine.rollAt(a,b,c,t,seconds)
+	local p=math.clamp(t/(seconds or Machine.RollSeconds),0,1)
 	if p<.6 then
 		local q=p/.6
 		return a:Lerp(b,q*q)
@@ -120,6 +163,8 @@ function Machine.new(deps)
 	if self.cinematic then
 		self.cinematic.gate=function(c)return self:holds(c)end
 		self.cinematic.onPlay=function(c)self:claim(c)end
+		-- A skip pressed on the held reveal: the capsule shot jumps to the landing (LOOK 1, Skip).
+		self.cinematic.onGateSkip=function()self:skipShot()end
 	end
 	if deps.step~=false then
 		self.heartbeat=RunService.Heartbeat:Connect(function(dt)
@@ -172,6 +217,7 @@ function Machine:bought(action,id)
 	local now=self.clock()
 	local crank=self.crank
 	if crank and crank.kind=="buy"and not crank.landed and now-crank.at<Machine.Cap then return false end -- merged
+	if self:shotActive()then return false end -- a press during the capsule shot merges into it (never two cranks)
 	-- A newer press replaces an armed one that was never confirmed (a refused buy leaves nothing behind).
 	self.armed={at=now,type=kind,action=action,unclaimed=Machine.Unclaimed[kind]==true}
 	return true
@@ -187,6 +233,7 @@ function Machine:confirm(cinematic)
 	self.streakCount=Machine.streak(self.streakCount,self.lastLand,now)
 	local sched=Machine.schedule(self.streakCount)
 	if self.crank and not self.crank.done then self:finish(self.crank)end
+	if self:capsuleOn()then return self:startShot(cinematic,armed,now)end
 	self.crank={kind="buy",at=now,pressed=armed.at,sched=sched,type=armed.type,fired={},claimed=true}
 	-- Review 2: the Stat Egg's reveal is not the cinematic: no gate, so no other reveal is ever caught by it.
 	self.gate=if cinematic and not armed.unclaimed then {from=now,cap=now+Machine.Cap,owner=cinematic,crank=self.crank}else nil
@@ -203,15 +250,31 @@ end
 -- HatchCinematic.onPlay: the first reveal to start after an armed press confirms it (the Stat Egg confirms by its answer).
 function Machine:claim(cinematic)
 	local armed=self.armed
-	if armed and not armed.unclaimed and self.clock()>=armed.at then self:confirm(cinematic)end
+	if armed and not armed.unclaimed and self.clock()>=armed.at then self:confirm(cinematic);return end
+	-- Code review of 071d8a6: another reveal starting while the capsule shot runs (a second buy merged into it) waits for
+	-- the shot's own reveal to start, so it never plays inside the tucked panel.
+	local shot=self.shot
+	if shot and shot.mode=="shot"and cinematic~=shot.cinematic and self:shotActive()then
+		local release=shot.at+shot.sched.start
+		self.queued={owner=cinematic,shot=shot,release=release,cap=release+Machine.ShotCap}
+	end
 end
 -- HatchCinematic.gate: hold this reveal? Only the claimed one, only until the egg lands, never past the cap.
 function Machine:holds(cinematic)
+	local queued=self.queued
+	if queued and queued.owner==cinematic then
+		local now=self.clock()
+		-- Held until the shot's reveal starts (a skip moves that earlier), never past its cap.
+		local release=if queued.shot.skipped and self.gate and self.gate.release then math.min(queued.release,self.gate.release)else queued.release
+		if now>=release or now>=queued.cap or self.shot~=queued.shot then self.queued=nil;return false end
+		return true
+	end
 	local gate=self.gate
 	if not gate then return false end
 	local now=self.clock()
 	local crank=gate.crank
-	if now>=gate.cap or crank.landed or self.crank~=crank then self.gate=nil;return false end
+	local over=if gate.release then now>=gate.release else crank.landed
+	if now>=gate.cap or over or self.crank~=crank then self.gate=nil;return false end
 	return gate.owner~=nil and gate.owner==cinematic
 end
 -- Seconds into the running crank, or nil.
@@ -267,20 +330,22 @@ function Machine:beats()
 	-- The roll waits for the reveal to start (a refused buy drops nothing); at the cap without one, the crank ends.
 	if not crank.rollAt then
 		if crank.claimed and t>=sched.roll then
-			crank.rollAt=t
+			-- The capsule shot keeps to its schedule (the landing is the reveal's hand-off), not to the frame it saw.
+			crank.rollAt=if crank.shot then sched.roll else t
 			self:play("egg_roll",Machine.Volume.roll)
 		elseif t>=Machine.Cap then
 			crank.landed=true;self.gate=nil;self:finish(crank)
 			return
 		end
 	end
-	if crank.rollAt and not crank.landed and t>=crank.rollAt+Machine.RollSeconds then
+	if sched.shine then once("shine",sched.shine,function()self:play("cup_shine",Machine.Volume.shine)end)end
+	if crank.rollAt and not crank.landed and t>=crank.rollAt+(sched.rollSeconds or Machine.RollSeconds)then
 		crank.landed=true
 		crank.landedAt=t
 		self.lastLand=self.clock()
 		self:play("land",Machine.Volume.land)
 		self:buzz("medium")
-		if self.gate and self.gate.crank==crank then self.gate=nil end
+		if self.gate and self.gate.crank==crank and not crank.shot then self.gate=nil end -- the shot holds to its own start
 	end
 	if crank.landed and self.clock()>=self:fadeStart(crank)+.5 then self:finish(crank)end
 end
@@ -392,6 +457,7 @@ function Machine:step(dt)
 	self.t+=dt or 0
 	self:aero()
 	self:beats()
+	self:shotStep()
 	if not self:on()then self:rest();self.unboundSince=nil;return end
 	local parts=self:bind()
 	if not parts then
@@ -423,7 +489,7 @@ function Machine:step(dt)
 	-- The dial.
 	local angle=0
 	if crank and not crank.done then
-		angle=if crank.kind=="open"then Machine.openAngle(age)else Machine.buyAngle(crank.sched,age)
+		angle=if crank.kind=="open"then Machine.openAngle(age)else Machine.buyAngle(crank.sched,age-(crank.sched.turnFrom or 0))
 	end
 	local hello=now-self.helloAt
 	if hello<Machine.Hello.seconds then angle+=Machine.Hello.angle*math.sin(hello/Machine.Hello.seconds*math.pi)end
@@ -441,7 +507,7 @@ function Machine:step(dt)
 		if crank.kind=="open"then
 			local h=(age-Machine.Open.hopAt)/Machine.Open.hopSeconds
 			if h>0 and h<1 then hop=Machine.Open.hop*math.sin(h*math.pi)end
-		elseif age>=.1 and age<crank.sched.clunk then
+		elseif age>=(crank.sched.turnFrom or 0)+.1 and age<crank.sched.clunk then
 			hop=.2*math.abs(math.sin((age-.1)*7*math.pi))
 		end
 	end
@@ -483,7 +549,7 @@ function Machine:step(dt)
 			local fade=math.clamp((now-self:fadeStart(crank))/.5,0,1)
 			if fade<1 then
 				shown=true
-				local p=Machine.rollAt(parts.chuteTop.Position,parts.chuteEnd.Position,parts.cup.Position,u)
+				local p=Machine.rollAt(parts.chuteTop.Position,parts.chuteEnd.Position,parts.cup.Position,u,crank.sched.rollSeconds)
 				local rockLand=if crank.landedAt and age-crank.landedAt<.3 then math.rad(8)*math.sin((age-crank.landedAt)/.3*math.pi)else 0
 				drop.part.CFrame=CFrame.new(p)*(parts.cup-parts.cup.Position)*CFrame.Angles(rockLand,0,0)
 				drop.part.Color=Color3.fromHex((Corner.machineData().eggTypes or {})[crank.type]or "#FFFFFF")
@@ -496,14 +562,251 @@ end
 -- The reveal the buy started has ended: the egg in the cup fades FadeAfter later.
 function Machine:revealClosed()
 	self.revealEndedAt=self.clock()
+	-- The hatch screen closed: the camera goes back to the player (LOOK 1, "Coming back").
+	self:returnCamera(false)
+end
+
+-- ── The capsule shot ──────────────────────────────────────────────────────────────────────────────────────────────
+function Machine:capsuleOn()return self.d.capsule~=nil and self.d.capsule()==true end
+-- The machine's frame on its floor (+Z the front), from the Body (never the model's pivot: B1).
+function Machine:frame()
+	local parts=self.parts
+	if not parts or not parts.body then return nil end
+	local body=parts.body
+	local bottom=body.Position.Y-body.Size.Y/2
+	return Corner.frame(bottom)
+end
+-- The two shots in world space, mirrored to the other side when the first is blocked; nil when both are.
+function Machine:shotFrames()
+	local frame=self:frame()
+	if not frame then return nil end
+	local blocked=self.d.blocked or function()return false end
+	local function shot(spec,side)
+		local at=frame*Vector3.new(spec.at.X*side,spec.at.Y,spec.at.Z)
+		local look=frame*spec.look
+		if blocked(look,at)then return nil end
+		return CFrame.lookAt(at,look)
+	end
+	for _,side in ipairs({1,-1})do
+		local a,b=shot(Machine.ShotA,side),shot(Machine.ShotB,side)
+		if a and b then return{A=a,B=b}end
+	end
+	return nil
+end
+-- Which version plays for this confirmation: "reduced", "pocket" or "shot" (with its frames).
+function Machine:shotMode(kind)
+	if self:reduced()then return "reduced"end
+	if Machine.Unclaimed[kind]then return "pocket"end -- the Stat Egg: its own reveal, sounds only (LOOK 1, left alone)
+	local parts=self:bind()
+	if not parts then return "pocket"end
+	local root=self.d.root and self.d.root()
+	if typeof(root)~="Vector3"or(root-parts.body.Position).Magnitude>Machine.PocketRange then return "pocket"end
+	local frames=self:shotFrames()
+	if not frames then return "pocket"end
+	return "shot",frames
+end
+-- The panel's top GuiObjects (the cinematic's host, and a borrowed full-screen stage): what the tuck slides away.
+local function isGui(x)
+	return x:IsA("GuiObject")or x.ClassName=="Frame"or x.ClassName=="CanvasGroup"or x.ClassName=="ImageLabel"or x.ClassName=="TextButton"
+end
+function Machine.panelRoots(cinematic)
+	local out={}
+	-- Code review of 071d8a6: the walk stops at the screen's own shade (the child of SafeContent, which holds every
+	-- overlay and is positioned by init's alignSafeContent), so a resize mid-shot never leaves the overlays offset.
+	local function top(node)
+		local last=nil
+		while node and node.Parent do
+			if node.ClassName=="ScreenGui"or node:IsA("ScreenGui")then break end
+			if isGui(node)then last=node end
+			if node.Parent.Name=="SafeContent"then break end
+			node=node.Parent
+		end
+		if last and not table.find(out,last)then table.insert(out,last)end
+	end
+	if type(cinematic)=="table"then
+		if typeof(cinematic.frame)=="Instance"then top(cinematic.frame)end
+		local stage=cinematic.borrowedStage
+		if type(stage)=="table"and typeof(stage.root)=="Instance"then top(stage.root)end
+	end
+	return out
+end
+function Machine:startShot(cinematic,armed,now)
+	local mode,frames=self:shotMode(armed.type)
+	local streak=self.streakCount
+	-- Hatch another starts from Shot B: a 2nd / 3rd in a row needs the camera still there; else a first shot.
+	if mode=="shot"and streak>1 and not(self.shot and self.shot.camera)then streak=1 end
+	local sched=Machine.shotSchedule(mode,streak)
+	self.crank={kind="buy",at=now,pressed=armed.at,sched=sched,type=armed.type,fired={},claimed=true,shot=true}
+	self.gate=if cinematic and not armed.unclaimed then {from=now,cap=now+sched.start+Machine.ShotCap,release=now+sched.start,owner=cinematic,crank=self.crank}else nil
+	local previous=self.shot
+	local shot={mode=mode,at=now,sched=sched,cinematic=cinematic,kind=armed.type,frames=frames,crank=self.crank}
+	if previous and previous.camera then
+		if mode=="shot"then shot.camera=previous.camera
+		-- Code review of 071d8a6: the next buy is a pocket or Reduced Motion one (walked off, streamed out, blocked,
+		-- the Stat Egg): the camera held at Shot B goes back now, never left Scriptable.
+		else self:giveBack(previous)end
+	end
+	if previous and previous~=shot then self:restorePanel(previous)end
+	self.shot=shot
+	if mode=="shot"then
+		-- The skip keys (Space, Enter, A) are bound only while the shot plays (init: ContextActionService).
+		if self.d.skipInput then pcall(self.d.skipInput,true);shot.skipBound=true end
+		shot.roots={}
+		for _,gui in ipairs(Machine.panelRoots(cinematic))do table.insert(shot.roots,{gui=gui,position=gui.Position})end
+		self:play("screen_tuck",Machine.Volume.tuck)
+		if self.d.hud then pcall(self.d.hud,false)end
+		self:takeCamera(shot)
+	elseif mode=="pocket"and self.d.pocket then
+		pcall(self.d.pocket,string.lower(armed.type or "toy"),sched)
+	end
+	return true
+end
+-- The camera: Scriptable from where it is now (or Shot B, for Hatch another), and given back later.
+function Machine:takeCamera(shot)
+	local camera=self.d.cameraObject and self.d.cameraObject()
+	if not camera then return end
+	if not shot.camera then
+		shot.camera={object=camera,savedType=camera.CameraType,savedCFrame=camera.CFrame}
+		pcall(function()camera.CameraType=Enum.CameraType.Scriptable end)
+		if self.d.ghost then pcall(self.d.ghost,1)end
+	end
+	shot.camera.from=camera.CFrame
+end
+local function easeInOut(x)return if x<.5 then 4*x*x*x else 1-(-2*x+2)^3/2 end
+-- The panel slid away by `amount` (0 home, 1 off the bottom of the screen).
+function Machine:placePanel(shot,amount)
+	for _,entry in ipairs(shot.roots or {})do
+		if entry.gui.Parent then
+			entry.gui.Position=entry.position+UDim2.new(0,0,amount,math.floor(40*amount))
+		end
+	end
+end
+function Machine:restorePanel(shot)
+	if not shot or shot.panelBack then return end
+	shot.panelBack=true
+	self:placePanel(shot,0)
+	if shot.mode=="shot"and self.d.hud then pcall(self.d.hud,true)end
+end
+-- Per frame: the panel's tuck and rise, the camera's moves, the hand-off, the cap.
+-- The skip keys go back to the game the moment the shot is over (or skipped).
+function Machine:unbindSkip(shot)
+	if shot and shot.skipBound then
+		shot.skipBound=false
+		if self.d.skipInput then pcall(self.d.skipInput,false)end
+	end
+end
+function Machine:shotStep()
+	local shot=self.shot
+	if not shot then return end
+	local now=self.clock()
+	local s=shot.sched
+	local t=now-shot.at
+	if shot.skipBound and not self:shotActive()then self:unbindSkip(shot)end
+	if shot.mode=="shot"and not shot.panelBack then
+		local amount
+		if shot.forceRise then
+			amount=1-math.clamp((now-shot.forceRise)/.12,0,1)
+		elseif t<s.tuck then amount=t/s.tuck
+		elseif t<s.rise then amount=1
+		else amount=1-math.clamp((t-s.rise)/s.riseSeconds,0,1)end
+		self:placePanel(shot,amount)
+		if amount<=0 and t>=s.tuck then
+			shot.panelBack=true
+			if self.d.hud then pcall(self.d.hud,true)end
+		end
+		if t>=s.rise and not shot.rose then shot.rose=true;self:play("screen_rise",Machine.Volume.rise)end
+	end
+	-- The hard cap: the panel is always back by then.
+	if t>=s.start+Machine.ShotCap and not shot.panelBack then self:restorePanel(shot)end
+	local cam=shot.camera
+	if cam and shot.frames and not cam.returning then
+		local object=cam.object
+		local target
+		if s.camA and t<s.camB then
+			local p=math.clamp((t-s.camA)/s.camASeconds,0,1)
+			target=cam.from:Lerp(shot.frames.A,easeOut(p))
+		else
+			local from=if s.camA then shot.frames.A else cam.from
+			local p=math.clamp((t-s.camB)/s.camBSeconds,0,1)
+			target=from:Lerp(shot.frames.B,easeInOut(p))
+		end
+		object.CFrame=target
+	end
+	if cam and cam.returning then
+		local p=math.clamp((now-cam.returning)/Machine.ReturnSeconds,0,1)
+		cam.object.CFrame=cam.returnFrom:Lerp(cam.savedCFrame,easeInOut(p))
+		if p>=1 then self:giveBack(shot)end
+	end
+	-- The model unbound, or the corner / capsule off, mid-shot: the camera goes back at once.
+	if cam and(not self:on()or not self:capsuleOn()or(self.parts==nil and t>.05))then self:returnCamera(true)end
+end
+-- Eases the camera back (instant = at once) and ends the shot's hold on the screen.
+function Machine:returnCamera(instant)
+	local shot=self.shot
+	if not shot then return end
+	self:restorePanel(shot)
+	local cam=shot.camera
+	if not cam then self.shot=nil;return end
+	if instant then self:giveBack(shot);return end
+	if not cam.returning then cam.returning=self.clock();cam.returnFrom=cam.object.CFrame end
+end
+function Machine:giveBack(shot)
+	self:unbindSkip(shot)
+	local cam=shot.camera
+	if cam then
+		pcall(function()cam.object.CFrame=cam.savedCFrame end)
+		pcall(function()cam.object.CameraType=cam.savedType end)
+		if self.d.ghost then pcall(self.d.ghost,0)end
+		shot.camera=nil
+	end
+	self:restorePanel(shot)
+	if self.shot==shot then self.shot=nil end
+end
+-- Is a shot playing (the panel tucked or the egg not yet landed)?
+function Machine:shotActive()
+	local shot=self.shot
+	return shot~=nil and shot.mode=="shot"and not shot.skipped and(self.clock()-shot.at)<shot.sched.start
+end
+-- A tap / click / A / Space / Enter during the shot: jump to the landing (never the first drop of a type). The thud
+-- always plays; the panel rises .12 s later.
+function Machine:skipShot()
+	local shot=self.shot
+	if not shot or shot.mode~="shot"or shot.skipped then return false end
+	-- The first drop of each egg type cannot be skipped: the same canSkip the reveal itself asks (asked now, not at the
+	-- confirmation: the stage sets it when it opens).
+	local c=shot.cinematic
+	if type(c)=="table"and type(c.canSkip)=="function"then
+		local ok,allowed=pcall(c.canSkip)
+		if ok and allowed==false then return false end
+	end
+	local crank=shot.crank
+	local now=self.clock()
+	if crank.landed or now-shot.at>=shot.sched.land then return false end
+	shot.skipped=true
+	local s=shot.sched
+	-- Everything before the landing counts as played (no burst of clicks), the egg is in the cup.
+	for index in ipairs(s.clicks)do crank.fired["click"..index]=true end
+	crank.fired.churn1,crank.fired.churn2,crank.fired.clunk=true,true,true
+	crank.at=now-s.land
+	shot.at=crank.at
+	crank.rollAt=crank.rollAt or s.roll
+	shot.forceRise=now
+	if self.gate and self.gate.crank==crank then
+		self.gate.release=now+.12
+		self.gate.cap=now+.12+Machine.ShotCap
+	end
+	if shot.camera and shot.frames then shot.camera.from=shot.frames.B end
+	return true
 end
 function Machine:destroy()
 	if self.destroyed then return end
 	self.destroyed=true
 	if self.heartbeat then self.heartbeat:Disconnect();self.heartbeat=nil end
+	pcall(self.returnCamera,self,true)
 	if self.cinematic then
 		if self.cinematic.gate then self.cinematic.gate=nil end
 		if self.cinematic.onPlay then self.cinematic.onPlay=nil end
+		if self.cinematic.onGateSkip then self.cinematic.onGateSkip=nil end
 	end
 	pcall(self.rest,self)
 end

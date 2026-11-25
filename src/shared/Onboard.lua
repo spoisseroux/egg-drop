@@ -7,6 +7,7 @@
 --   Onboard.on("nest")    the Sleepy Nest: save field, snapshot key, garden egg, chip, strip nest chip
 --   Onboard.on("corner")  the egg corner (EGG-CORNER-BUILD-PLAN): the egg machine is station Eggs, the old station's
 --                         glass and glow hidden, the nest's "?" card and Peek, no Napping egg row (EggCorner)
+--   Onboard.on("capsule")  the egg machine's capsule shot on a buy (EggMachineClient; CAPSULE-AND-HUD-LOOK 1)
 --   Onboard.on("landmark") the Sleepy Nest as a landmark (bowl, woven nest, moon lantern) at the corner's spot (NestLandmark)
 -- ConfigService keys `onboard_follow`, `onboard_needs`, `onboard_nest` (server OnboardConfig): off until the config has
 -- loaded once, then missing or malformed = on. The server publishes `Onboard_<feature>` as its own value AND Things.on()
@@ -19,9 +20,9 @@ local Flags=require(script.Parent.FeatureFlags)
 local Things=require(script.Parent.Things)
 local Onboard={}
 Onboard.PlaceId=107705084891479 -- Pocket Pals Beta
-Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark"})
-Onboard.Attributes=table.freeze({follow="Onboard_follow",needs="Onboard_needs",nest="Onboard_nest",corner="Onboard_corner",landmark="Onboard_landmark"})
-Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="onboard_nest",corner="onboard_corner",landmark="onboard_landmark"})
+Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark","capsule"})
+Onboard.Attributes=table.freeze({follow="Onboard_follow",needs="Onboard_needs",nest="Onboard_nest",corner="Onboard_corner",landmark="Onboard_landmark",capsule="Onboard_capsule"})
+Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="onboard_nest",corner="onboard_corner",landmark="onboard_landmark",capsule="onboard_capsule"})
 function Onboard.attribute(feature)return Onboard.Attributes[feature]end
 function Onboard.key(feature)return Onboard.Keys[feature]end
 
@@ -51,7 +52,7 @@ function Onboard.resolve(configValue,override,ceiling)
 	return true
 end
 -- Server only (OnboardConfig): the resolved values every server check reads. Off until they are set.
-local switches={follow=false,needs=false,nest=false,corner=false,landmark=false}
+local switches={follow=false,needs=false,nest=false,corner=false,landmark=false,capsule=false}
 function Onboard.setSwitch(feature,value)
 	if not RunService:IsServer()or switches[feature]==nil then return false end
 	switches[feature]=value==true
