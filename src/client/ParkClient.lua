@@ -13,6 +13,7 @@
 -- a small chevron, local only) and the park chip (name + Play date) while the owner is inside the kerb.
 local Players=game:GetService("Players")
 local AssetService=game:GetService("AssetService")
+local GuiService=game:GetService("GuiService")
 local HttpService=game:GetService("HttpService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local UICopy=require(Shared.UICopy)
@@ -25,6 +26,7 @@ local FetchMotion=require(Shared.ParkFetchMotion)
 local Levels=require(Shared.Levels)
 local Perks=require(Shared.ParkPerks)
 local StatCatalog=require(Shared.StatCatalog)
+local Chips=require(script.Parent.HudChips)
 local NONE=table.freeze({})
 local function build(Park)
 local Data=DataModule.forSite(Park)
@@ -407,7 +409,7 @@ function Client.new(options)
 	end
 	if not(options and options.park)then
 		for _,child in pairs(primary.sites)do child.statusManaged=true end
-		primary.railStatus=require(script.Parent.NotificationRail).status(primary.folder,"park-progress",{text="",active=false,priority=-100})
+		primary.railStatus=require(script.Parent.NotificationRail).status(primary.folder,"park-progress",{text="",active=false,priority=Chips.Priority.date})
 	end
 	primary.throwControl=require(script.Parent.ParkThrowControl).new(primary,options or {})
 	function primary:step(serverNow,context)
@@ -427,8 +429,14 @@ function Client.new(options)
 			local board=self.garden and self.garden.boards and self.garden.boards:FindFirstChild(tostring(self.garden.playerId))
 			local pending=board and board:GetAttribute("ParkGamesPending")or 0
 			local playing=actor and type(actor.action)=="string"and string.sub(actor.action,1,4)=="park"and actor.action~="parkApproach"
-			local key=if date.done then "park.done"elseif pending>0 then "park.saving"elseif playing then "park.playing"else "park.games"
-			local label=UICopy.get(key,{count=count,target=target,reward=date.reward or 4})
+			local label
+			if Chips.on()then
+				-- Beta (17) U1: "Play date 1/3 · +4 ★" (HudChips); a phone's top bar drops the reward.
+				label=Chips.dateText(date,Chips.dateState(date,pending,playing),Chips.narrow(GuiService.TopbarInset.Width,Chips.NarrowDate))
+			else
+				local key=if date.done then "park.done"elseif pending>0 then "park.saving"elseif playing then "park.playing"else "park.games"
+				label=UICopy.get(key,{count=count,target=target,reward=date.reward or 4})
+			end
 			if self.statusText~=label or self.statusActive~=active then
 				self.statusText,self.statusActive=label,active
 				self.railStatus:update({text=label,active=active,icon="●"})

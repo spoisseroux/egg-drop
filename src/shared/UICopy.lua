@@ -252,7 +252,12 @@ local Table={
   charm={name="Nest Charm"},
   notify="{pet}'s egg is ready to hatch!",notifyPlain="Your egg is ready to hatch!",
  },
- park={waitIdle="Pets are playing",count="Pets playing {count}/{capacity}",full="Park full · {count}/{capacity}",otherHasRoom="The other park has room",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
+ park={waitIdle="Pets are playing",count="Pets playing {count}/{capacity}",full="Park full · {count}/{capacity}",otherHasRoom="The other park has room",games="Games {count}/{target}",playing="Playing · {count}/{target}",saving="Saving · {count}/{target}",name="Pet Park",playDate="Play date {count}/{target}",done="+{reward} ★ today",
+  -- Beta (17) U1 (CAPSULE-AND-HUD-LOOK 2): the rail's play date ticket, with the Things page's name. 3 is the day's
+  -- target, not a limit. The phone line (a top bar under 600 px) is park.playDate.
+  date={games="Play date {count}/{target} · +{reward} ★",playing="Play date {count}/{target} · playing",
+   saving="Play date {count}/{target} · saving",done="Play date done · +{reward} ★"},
+  throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
  onboarding={
   welcome={friend="Hatch a friend",match="Match",more="One more!",skip="Skip tutorial",saving="Saving…",static="↓",gamepad="D-pad · A",keyboard="← → · SPACE",egg="Mystery egg"},

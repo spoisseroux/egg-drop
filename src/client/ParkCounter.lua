@@ -30,13 +30,14 @@ end
 
 -- sites: ParkLayout.Sites. Returns {count, capacity, full, other = the first other site with
 -- room (or nil), text, lines}. A crowd past capacity still reads capacity/capacity.
-function Counter.status(actors,site,sites)
+-- quiet (beta (17) U1, HudChips.on()): only "Park full" speaks; a park with room has no text (nil) and no pill.
+function Counter.status(actors,site,sites,quiet)
 	local capacity=Counter.capacity(site)
 	local count=Counter.members(actors,site.Id)
 	local full=capacity>0 and count>=capacity
 	local status={count=math.min(count,capacity),capacity=capacity,full=full,lines=1}
 	if not full then
-		status.text=Copy.get("park.count",{count=status.count,capacity=capacity})
+		status.text=if quiet then nil else Copy.get("park.count",{count=status.count,capacity=capacity})
 		return status
 	end
 	for _,candidate in ipairs(sites or {})do

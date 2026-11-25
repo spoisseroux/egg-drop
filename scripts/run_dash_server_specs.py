@@ -50,7 +50,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "HushClient", "DenClient", "DashLine", "WorldFeel", "LifeSceneSim", "LifeScene", "WorldMotion",
           "GroundDressing", "LifePet", "EggMachineClient",
           # Beta (17) QA U2, U4, U6, U8: the cursor registry, the preview's UI scale, the shadow spot, the set-down search.
-          "Beta17Fixes"]
+          "Beta17Fixes",
+          # Beta (17) U1: the HUD chip rules (the play date ticket, the egg ticket's slot order).
+          "HudChips"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -89,7 +91,9 @@ def client_modules():
                     # Beta (16) B3: the hatch reveal's aim.
                     "HatchAim.lua",
                     # Beta (17) QA U2 and U4: the modal cursor registry and the UI scale space.
-                    "ModalCursor.lua", "UIScaleSpace.lua"):
+                    "ModalCursor.lua", "UIScaleSpace.lua",
+                    # Beta (17) U1: the HUD chip rules.
+                    "HudChips.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

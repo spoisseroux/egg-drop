@@ -5,7 +5,7 @@
 -- On: the nest (21 parts: a twig mound, rim rolls, a straw bed, twig and straw fringes, a wooden sign with the pet's
 -- name) and the napping egg at Nest.Spot as local inert parts in one folder (anchored, nothing can touch, stand on or
 -- query them; only the mound casts a shadow), the egg's growth look from Nest.look (small, glow, rocking, ready), a label with
--- the clock, a ProximityPrompt to Tuck in or Hatch, a HUD chip with the countdown, and clientUI.nestPlace for the Bear.
+-- the clock, a ProximityPrompt to Tuck in or Hatch, a rail ticket with the countdown, and clientUI.nestPlace for the Bear.
 -- The server is the truth (NestHost):
 --   NestEvent {kind="state", public}    the egg, its clock and its gift (public = nil: no nest, everything goes)
 --   NestEvent {kind="claimed", receipt} the egg hatched and was saved: only now is the reward shown
@@ -14,10 +14,11 @@
 -- Remotes are bound through remotes.ChildAdded, never waited for; {kind="sync"} once both are there, again on each
 -- switch-on and on respawn. Presentation only: nothing here pays, times or decides anything.
 -- deps: remotes, audio ({play(name, speed, volume)}), reduced(), root() -> Vector3?, free() (Room mode, nothing
---   in the way), busy() (a menu or card is up), compact() (phone), chipHost() -> GuiObject? (the garden dock),
+--   in the way), busy() (a menu or card is up), compact() (phone), status(data) -> handle (the rail's egg ticket, beta
+--   (17) U1; it replaced the dock chip), narrow() (a top bar under 360 px),
 --   show() (lay the Show me trail to the nest), toast(text, stars) (the rail), petName(), ground(at) -> y?,
 --   meshes() -> {TopShell, BottomShell, Core}? (fresh MeshPart copies, or nil while they load), focus() (the pet focus
---   camera is on: the label hides), chipHidden() (in the Pet Park: the chip hides), measure(text, size) -> px,
+--   camera is on: the label hides), measure(text, size) -> px,
 --   plus world, player ({CharacterAdded}), now() (server unix time) and step=false (no Heartbeat; specs call :step).
 -- Beta 14 QA Q2 (WORLD-AND-NEST-LOOK 4): one pill with one message (Client.row's seven rows), shown by the player's
 --   distance and never under the pet's need bubble: bubble() -> {shown, pet = Vector3?} (optional; init's bubble
@@ -81,6 +82,7 @@ Client.Near=8           -- studs: the "Inside:" line
 -- Beta 14 Q2: the one pill. At most 220 px, wrapping at 196, 14 px for the clock and "Hatch me!", 13 for sentences (12
 -- if a sentence would need three lines), two lines at most; 28 px tall for one line, 46 for two. The board is 220 x 80
 -- with the pill at its bottom, so it lifts 34 px over the need bubble without moving anything else.
+Client.PillLip=3;Client.PillLipOpacity=.25 -- beta (17) U7: the pill's drawn lip (px below, ink opacity)
 Client.Pill=table.freeze({max=220,wrap=196,pad=12,min=120,one=28,two=46,text=14,sentence=13,small=12,lift=34,board=Vector2.new(220,80)})
 -- The egg corner's "?" disc on the napping pill (EGG-CORNER-LOOK 3): drawn 24, hit 44, 6 px from the clock; two
 -- first-time pulses to 1.15 (coach bit nestHelp).
@@ -444,7 +446,7 @@ function Client:clear()
 	if self.folder then self.folder:Destroy();self.folder=nil end
 	if self.hosted then self.hosted:Destroy();self.hosted=nil end
 	self.signWords=nil
-	if self.chip then self.chip.button:Destroy();self.chip=nil end
+	self:dropTicket()
 	self.view,self.drawn,self.egg,self.hatching,self.waiting,self.queued,self.tuck=nil,nil,nil,nil,nil,nil,nil
 	self.beat,self.beatUntil=nil,nil
 	self.looking=nil -- code review of 071d8a6: a Peek never outlives its nest
@@ -617,6 +619,11 @@ function Client:drawEgg(folder)
 	local board=make("BillboardGui",host or anchor,{Name="Label",LightInfluence=0,AlwaysOnTop=false,MaxDistance=60,Size=UDim2.fromOffset(P.board.X,P.board.Y),
 		SizeOffset=Vector2.new(0,.5),Enabled=false,Adornee=anchor,Active=host~=nil,ResetOnSpawn=false})
 	if host then self.hosted=board end
+	-- Beta (17) U7: depth from a drawn lip (the pill again, PillLip px lower, ink at 25%), never from light. A sibling
+	-- drawn first, so it sits under the pill; paintPill keeps its size, place and fade with the pill's.
+	egg.pillLip=make("Frame",board,{Name="PillLip",AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,Client.PillLip),
+		Size=UDim2.fromOffset(160,P.one),BackgroundColor3=Client.Color.ink,BackgroundTransparency=1,BorderSizePixel=0,ZIndex=0})
+	corner(egg.pillLip)
 	local pill=make("Frame",board,{Name="Pill",AnchorPoint=Vector2.new(.5,1),Position=UDim2.fromScale(.5,1),Size=UDim2.fromOffset(160,P.one),
 		BackgroundColor3=Client.Color.cream,BorderSizePixel=0})
 	corner(pill)
@@ -1013,20 +1020,17 @@ function Client:paint(fresh)
 	local actionText=UICopy.get(if action=="hatch"then "onb3.nest.hatch"elseif action=="peek"then "onb3.nest.peek"else "onb3.nest.tuck")
 	if egg.prompt.ActionText~=actionText then egg.prompt.ActionText=actionText end
 	if egg.prompt.Enabled~=enabled then egg.prompt.Enabled=enabled end
-	self:paintChip(left,look)
+	self:paintTicket(left)
 end
 
--- The HUD chip: the nest icon and the clock; gold when ready. A tap lays the Show me trail. It sits above the garden
--- dock, right-aligned with it and never wider: the dock's own row (left of it) is the save notice and feedback line
--- (PetFocusUI), so the two never meet. In the Pet Park the lane above the dock is the Throw button's: the chip hides.
-Client.ChipGap=8
-Client.ChipIconGap=6
-function Client.chipWidth(iconSize,textW)return math.ceil(10+iconSize+Client.ChipIconGap+textW+12)end
--- Pure: the chip's rect for a dock rect {x, y, w, h} (screen px), `w` wide and `hit` tall.
-function Client.chipRect(dock,w,hit)
-	w=math.min(w,dock.w)
-	return{x=dock.x+dock.w-w,y=dock.y-Client.ChipGap-hit,w=w,h=hit}
-end
+-- The egg ticket (beta (17) QA U1, CAPSULE-AND-HUD-LOOK 2): the egg's clock is a status ticket in the notification rail
+-- (deps.status(data) -> a NotificationRail status handle), not a chip in the lane above the dock (that lane is the
+-- Throw button's and, rarely, "Park full"). The nest icon on its disc, "Egg 4 h" / "Egg 12 min" ("4 h" when
+-- deps.narrow(): a top bar under 360 px), and "Hatch egg!" in gold when ready; the accessible label explains the egg;
+-- a tap lays the Show me trail. Priority (HudChips.Priority): ready > the play date (in a park) > the clock. The rail
+-- hides it where it hides everything (rounds, the Deck, full screens). Without deps.status there is no ticket.
+Client.TicketKey="nest-egg"
+Client.TicketPriority=table.freeze({ready=.5,clock=-200}) -- HudChips.Priority (the play date is -100)
 function Client:measure(text,size)
 	if self.d.measure then
 		local ok,w=pcall(self.d.measure,text,size)
@@ -1034,70 +1038,39 @@ function Client:measure(text,size)
 	end
 	return #text*size*.6
 end
-function Client:paintChip(left,look)
-	local host=self.d.chipHost and self.d.chipHost()
-	if not host then
-		if self.chip then self.chip.button:Destroy();self.chip=nil end
-		return
-	end
-	local compact=self.d.compact and self.d.compact()==true
-	local chip=self.chip
-	if not chip or chip.host~=host or chip.compact~=compact then
-		if chip then chip.button:Destroy()end
-		chip=self:buildChip(host,compact)
-		self.chip=chip
-	end
-	local text,kind=Client.chipText(left)
-	local ready=kind=="ready"
-	if chip.label.Text~=text then chip.label.Text=text end
-	-- The moon icon alone did not name the thing: the chip's accessible label is the explainer (O1).
-	local named=Client.how(self.view)
-	if chip.button:GetAttribute("AccessibleLabel")~=named then chip.button:SetAttribute("AccessibleLabel",named)end
-	if chip.ready~=ready then
-		chip.ready=ready
-		chip.pill.BackgroundColor3=if ready then Client.Color.stars else Client.Color.well
-		chip.label.TextColor3=if ready then Client.Color.ink else Client.Color.text
-		chip.stroke.Color=if ready then Client.Color.gold else Client.Color.ink
-	end
-	-- Measured only when the words change (once a minute at most).
-	if chip.measured~=text then
-		chip.measured=text
-		local dockW=host.AbsoluteSize and host.AbsoluteSize.X
-		local size=chip.textSize
-		local w=Client.chipWidth(chip.iconSize,self:measure(text,size))
-		if typeof(dockW)=="number"and dockW>0 and w>dockW then size=12;w=math.min(dockW,Client.chipWidth(chip.iconSize,self:measure(text,size)))end
-		chip.label.TextSize=size
-		chip.width=w
-		chip.button.Size=UDim2.fromOffset(w,chip.hit)
-		local iconW=chip.iconSize+Client.ChipIconGap
-		chip.label.Position=UDim2.fromOffset(10+iconW,0);chip.label.Size=UDim2.new(1,-(10+iconW),1,0)
-	end
-	chip.button.Visible=not(self.d.chipHidden and self.d.chipHidden()==true)
-	local bob=if ready and not self:reduced()then math.floor(2*math.sin(self.clock*1.2*2*math.pi)+.5)else 0
-	chip.icon.Position=UDim2.new(0,10,.5,-bob)
+-- Pure: the ticket's words and kind ("hours", "minutes", "ready") for `left` seconds; `narrow` drops the word Egg.
+function Client.ticketText(left,narrow)
+	if not narrow then return Client.chipText(left)end
+	local kind,value=Nest.countdown(left)
+	if kind=="hours"then return UICopy.get("onb3.strip.short.h",{hours=value}),kind end
+	if kind=="minutes"then return UICopy.get("onb3.strip.short.m",{minutes=value}),kind end
+	return UICopy.get(Client.Copy.chipReady),"ready"
 end
-function Client:buildChip(host,compact)
-	local pillH=if compact then 26 else 30
-	local hit=if compact then 44 else 36
-	local iconSize=if compact then 18 else 22
-	local textSize=if compact then 13 else 14
-	local button=make("TextButton",host,{Name="NestChip",Text="",AutoButtonColor=false,BackgroundTransparency=1,
-		AnchorPoint=Vector2.new(1,1),Position=UDim2.new(1,0,0,-Client.ChipGap),Size=UDim2.fromOffset(92,hit),Selectable=false,ZIndex=10})
-	button:SetAttribute("AccessibleLabel",if self.view then Client.how(self.view)else UICopy.get(Client.Copy.title))
-	local pill=make("Frame",button,{Name="Pill",AnchorPoint=Vector2.new(0,.5),Position=UDim2.fromScale(0,.5),Size=UDim2.new(1,0,0,pillH),
-		BackgroundColor3=Client.Color.well,BorderSizePixel=0,ZIndex=10})
-	corner(pill)
-	local stroke=make("UIStroke",pill,{Color=Client.Color.ink,Thickness=2})
-	local icon=make("ImageLabel",pill,{Name="NestIcon",BackgroundTransparency=1,Image=Client.Assets.chip,AnchorPoint=Vector2.new(0,.5),
-		Position=UDim2.new(0,10,.5,0),Size=UDim2.fromOffset(iconSize,iconSize),ZIndex=11})
-	local text=label(pill,"Clock",textSize,Client.Color.text)
-	text.ZIndex=11;text.TextXAlignment=Enum.TextXAlignment.Left;text.AutoLocalize=true
-	local chip={host=host,compact=compact,button=button,pill=pill,stroke=stroke,icon=icon,label=text,hit=hit,iconSize=iconSize,textSize=textSize}
-	local activated=button.Activated
-	if typeof(activated)=="RBXScriptSignal"then
-		activated:Connect(function()if self.d.show then pcall(self.d.show)end end)
+-- Pure: the rail data for the ticket (activate is added by paintTicket).
+function Client.ticketData(view,left,narrow)
+	local text,kind=Client.ticketText(left,narrow)
+	local ready=kind=="ready"
+	return{text=text,kind="info",image=Client.Assets.chip,label=Client.how(view),tone=if ready then "gold"else "plain",
+		priority=if ready then Client.TicketPriority.ready else Client.TicketPriority.clock,active=true}
+end
+function Client:paintTicket(left)
+	local status=self.d.status
+	if not status or not self.view then return end
+	local narrow=self.d.narrow~=nil and self.d.narrow()==true
+	local data=Client.ticketData(self.view,left,narrow)
+	local key=data.text.."|"..data.label.."|"..tostring(data.tone)
+	if self.ticket and self.ticketKey==key then return end
+	self.ticketKey=key
+	if not self.ticket then
+		data.activate=function()if self.d.show then pcall(self.d.show)end;return true end
+		self.ticket=status(data)
+	else
+		self.ticket:update(data)
 	end
-	return chip
+end
+function Client:dropTicket()
+	if self.ticket then pcall(self.ticket.cancel,self.ticket)end
+	self.ticket,self.ticketKey=nil,nil
 end
 
 -- Actions ---------------------------------------------------------------------------------------------------------
@@ -1447,6 +1420,9 @@ function Client:paintPill()
 			egg.clock.Size=if row.help then UDim2.new(1,-(Client.Help.drawn+Client.Help.gap),1,0)else UDim2.fromScale(1,1)
 		end
 		egg.pill.Position=UDim2.new(.5,0,1,if row.lift then -P.lift else 0)
+		if egg.pillLip then
+			egg.pillLip.Size=egg.pill.Size;egg.pillLip.Position=UDim2.new(.5,0,1,(if row.lift then -P.lift else 0)+Client.PillLip)
+		end
 		egg.pill.BackgroundColor3=if row.gold then Client.Color.stars else Client.Color.cream
 		egg.board.AlwaysOnTop=row.onTop and not self.landmark -- Fable R10 2: never over the landmark
 		egg.row=row
@@ -1455,6 +1431,7 @@ function Client:paintPill()
 		egg.alpha=alpha
 		egg.board.Enabled=alpha<1
 		egg.pill.BackgroundTransparency=alpha;egg.pillStroke.Transparency=alpha;egg.clock.TextTransparency=alpha
+		if egg.pillLip then egg.pillLip.BackgroundTransparency=1-Client.PillLipOpacity*(1-alpha)end
 		if egg.helpDisc then egg.helpDisc.BackgroundTransparency=alpha;egg.helpStroke.Transparency=alpha;egg.helpMark.TextTransparency=alpha end
 	end
 	self:paintPulse(egg,row,alpha)

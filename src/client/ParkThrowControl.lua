@@ -10,6 +10,7 @@ local Copy=require(ReplicatedStorage.Shared.UICopy)
 local Park=require(ReplicatedStorage.Shared.ParkLayout)
 local Rail=require(script.Parent.NotificationRail)
 local Counter=require(script.Parent.ParkCounter)
+local Chips=require(script.Parent.HudChips) -- beta (17) U1: on, the counter shows only "Park full"
 local Control={};Control.__index=Control
 function Control.new(parkClient,options)
 	local self=setmetatable({park=parkClient,garden=options.garden,guiParent=options.gui,connections={},seq=0},Control)
@@ -86,13 +87,17 @@ function Control:step(_,context)
 	if not self.gui and not self:makeGui()then return end
 	self.gui.Enabled=true
 	local snapshot=self.garden and self.garden.snapshot
-	local status=Counter.status(snapshot and snapshot.actors,site,Park.Sites)
+	local status=Counter.status(snapshot and snapshot.actors,site,Park.Sites,Chips.on())
 	local throwAt,countAt,height=Counter.layout(context.dockPosition or UDim2.new(1,-16,1,-16),show,status.lines)
-	if self.count.Text~=status.text then
-		self.count.Text=status.text;self.count.Size=UDim2.fromOffset(0,height)
-		self.count.TextColor3=Color3.fromHex(if status.full then "#FDE68A"else "#E6F4EE")
+	if status.text==nil then
+		self.count.Visible=false
+	else
+		if self.count.Text~=status.text then
+			self.count.Text=status.text;self.count.Size=UDim2.fromOffset(0,height)
+			self.count.TextColor3=Color3.fromHex(if status.full then "#FDE68A"else "#E6F4EE")
+		end
+		self.count.Position=countAt;self.count.Visible=true
 	end
-	self.count.Position=countAt;self.count.Visible=true
 	self.button.Visible=show
 	if not show then return end
 	self.button.Position=throwAt

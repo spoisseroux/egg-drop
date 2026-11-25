@@ -1,6 +1,10 @@
 -- Onboarding v3 slice B: the need bubble over the Bear (ONBOARDING-V3-PLAN-2026-11-23 section 4 and the art table).
--- A white glossy round bubble with a tail, a 2 px ink outline, a soft gloss arc and one icon, no words. Stand-in glyphs
--- until the six script-drawn icons are uploaded (IconIds). BearNeeds decides what shows and when.
+-- Beta (17) QA U7 (artifacts/qa-2026-11-25-beta17/CAPSULE-AND-HUD-LOOK.md section 4): a flat sticker, not a lit ball. A
+-- billboard turns to the camera, so a drawn highlight turned with it and never agreed with the sun. Flat cream-white
+-- fill, 2 px ink outline, a tail, and depth from a drawn lip (the same disc 3 px lower, ink at 25%, the Kit.tile lip):
+-- no gradient, no gloss, no rotation (the press squash is scale only; the hop is a lift). One icon, no words: the flat
+-- icons (artifacts/qa-2026-11-25-beta17/look/need-icons, two flat colours and an ink line) once their ids are in
+-- IconIds; the emoji glyphs until then (they carry their own baked shine). BearNeeds decides what shows and when.
 --
 -- Studio QA (2026-11-23): the Bear shuttles between idle spots ~3 studs apart in its first minute, and the bubble jumped
 -- ~60 px with it, so taps missed. Now:
@@ -14,7 +18,8 @@
 --   world = where the anchor part lives (default workspace)}
 local Bubble={};Bubble.__index=Bubble
 Bubble.Glyph=table.freeze({hand="👋",ball="🎾",deck="🎮",moon="🌙",paws="🐾",egg="🥚"})
-Bubble.IconIds=table.freeze({}) -- icon = asset id, once uploaded; a glyph until then
+Bubble.IconIds=table.freeze({hand=125214220825448,ball=107242483076374,deck=83400081676425,moon=127648287993869,
+ paws=80004221456977,egg=116751717038768}) -- flat icons (beta 17 U7), uploaded 2026-11-25; a glyph if one is missing
 Bubble.Size=72        -- px, the drawn bubble
 Bubble.HitSize=108    -- px, the tap target round it
 Bubble.Lift=2.2       -- studs over the top of the pet
@@ -26,7 +31,8 @@ Bubble.Rate=3.5       -- the spring: about 1 - e^(-Rate dt) of the way each fram
 Bubble.Snap=30        -- studs: further than this is a teleport, the bubble snaps
 Bubble.Press=table.freeze({low=.88,down=.06,rate=8,wobble=18}) -- beta 14 B3b: the squash a taken tap gives
 Bubble.Ink=Color3.fromHex("#24304F")
-Bubble.Shade=Color3.fromHex("#E6ECF7")
+Bubble.Fill=Color3.fromHex("#FFFDF6") -- U7: flat cream-white, no shading
+Bubble.Lip=table.freeze({drop=3,opacity=.25}) -- U7: px below the face, ink opacity
 
 -- Pure: where the bubble hangs now. state = {at, chasing} (kept by the caller), target = over the Bear now.
 function Bubble.follow(state,target,dt,reduced)
@@ -76,20 +82,19 @@ function Bubble.new(options)
 	-- The drawn bubble, centred in the hit area, its tail below it.
 	local art=Instance.new("Frame")
 	art.Name="Art";art.AnchorPoint=Vector2.new(.5,.5);art.Position=UDim2.new(.5,0,.5,-6);art.Size=UDim2.fromOffset(Bubble.Size,Bubble.Size)
-	art.BackgroundColor3=Color3.new(1,1,1);art.BorderSizePixel=0;art.ZIndex=2;art.Parent=gui
+	art.BackgroundColor3=Bubble.Fill;art.BorderSizePixel=0;art.ZIndex=2;art.Parent=gui
+	-- U7: the lip, a sibling drawn under the face (a child would draw over it), 3 px lower; it squashes with the face.
+	local lip=Instance.new("Frame")
+	lip.Name="Lip";lip.AnchorPoint=art.AnchorPoint;lip.Position=art.Position+UDim2.fromOffset(0,Bubble.Lip.drop);lip.Size=art.Size
+	lip.BackgroundColor3=Bubble.Ink;lip.BackgroundTransparency=1-Bubble.Lip.opacity;lip.BorderSizePixel=0;lip.ZIndex=1;lip.Parent=gui
+	local lipCorner=Instance.new("UICorner");lipCorner.CornerRadius=UDim.new(.5,0);lipCorner.Parent=lip
+	local lipSquash=Instance.new("UIScale");lipSquash.Name="PressScale";lipSquash.Scale=1;lipSquash.Parent=lip
 	local tail=Instance.new("Frame")
 	tail.Name="Tail";tail.AnchorPoint=Vector2.new(.5,.5);tail.Position=UDim2.new(.5,0,1,-3);tail.Size=UDim2.fromOffset(16,16)
-	tail.Rotation=45;tail.BackgroundColor3=Color3.new(1,1,1);tail.BorderSizePixel=0;tail.ZIndex=1;tail.Parent=art
+	tail.Rotation=45;tail.BackgroundColor3=Bubble.Fill;tail.BorderSizePixel=0;tail.ZIndex=1;tail.Parent=art
 	local tailEdge=Instance.new("UIStroke");tailEdge.Color=Bubble.Ink;tailEdge.Thickness=2;tailEdge.Parent=tail
 	local corner=Instance.new("UICorner");corner.CornerRadius=UDim.new(.5,0);corner.Parent=art
 	local edge=Instance.new("UIStroke");edge.Color=Bubble.Ink;edge.Thickness=2;edge.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;edge.Parent=art
-	local shade=Instance.new("UIGradient");shade.Rotation=90
-	shade.Color=ColorSequence.new(Color3.new(1,1,1),Bubble.Shade);shade.Parent=art
-	-- The gloss arc: a soft white crescent over the top left.
-	local gloss=Instance.new("Frame")
-	gloss.Name="Gloss";gloss.AnchorPoint=Vector2.new(.5,0);gloss.Position=UDim2.fromScale(.42,.1);gloss.Size=UDim2.fromScale(.56,.2)
-	gloss.BackgroundColor3=Color3.new(1,1,1);gloss.BackgroundTransparency=.15;gloss.BorderSizePixel=0;gloss.Rotation=-18;gloss.ZIndex=3;gloss.Parent=art
-	local glossCorner=Instance.new("UICorner");glossCorner.CornerRadius=UDim.new(.5,0);glossCorner.Parent=gloss
 	local icon=Instance.new("TextLabel")
 	icon.Name="Icon";icon.AnchorPoint=Vector2.new(.5,.5);icon.Position=UDim2.fromScale(.5,.54);icon.Size=UDim2.fromScale(.6,.6)
 	icon.BackgroundTransparency=1;icon.TextScaled=true;icon.Font=Enum.Font.FredokaOne;icon.TextColor3=Bubble.Ink;icon.ZIndex=4;icon.Parent=art
@@ -109,13 +114,15 @@ function Bubble.new(options)
 	local function tapped()
 		if self.shown and self.alpha<.6 and options.onTap then options.onTap()end
 	end
-	button.Activated:Connect(tapped)
+	-- Signals only where they exist (the offline spec mocks have none; NestClient's pattern).
+	local function on(signal,fn)if typeof(signal)=="RBXScriptSignal"then return signal:Connect(fn)end;return nil end
+	on(button.Activated,tapped)
 	-- Beta 14 B3b: on a phone a billboard can take a touch and still fire no Activated. A touch that begins and ends on
 	-- the hit area counts too (BearNeeds keeps it to one action a tap), and the bubble holds still while a finger is on it.
-	button.InputBegan:Connect(function(input)
+	on(button.InputBegan,function(input)
 		if input.UserInputType==Enum.UserInputType.Touch then self.holding={at=os.clock(),from=input.Position}end
 	end)
-	button.InputEnded:Connect(function(input)
+	on(button.InputEnded,function(input)
 		if input.UserInputType~=Enum.UserInputType.Touch then return end
 		local hold=self.holding;self.holding=nil
 		-- A short tap that stayed put, never the end of a camera swipe that began on the bubble.
@@ -124,7 +131,7 @@ function Bubble.new(options)
 	-- A tap no GUI took (TouchTapInWorld, PetClickTarget's pattern) within the hit area round the drawn bubble.
 	local okInput,input=pcall(function()return game:GetService("UserInputService")end)
 	if okInput and input then
-		self.worldTap=input.TouchTapInWorld:Connect(function(position,processed)
+		self.worldTap=on(input.TouchTapInWorld,function(position,processed)
 			if processed or not self.shown or not self.gui.Enabled then return end
 			local camera=workspace.CurrentCamera
 			if not camera then return end
@@ -135,9 +142,9 @@ function Bubble.new(options)
 	local squash=Instance.new("UIScale");squash.Name="PressScale";squash.Scale=1;squash.Parent=art
 	anchor.Parent=options.world or workspace
 	gui.Parent=options.parent
-	self.anchor,self.gui,self.button,self.art,self.tail,self.edge,self.tailEdge,self.gloss,self.icon,self.image,self.key=
-		anchor,gui,button,art,tail,edge,tailEdge,gloss,icon,image,key
-	self.squash=squash
+	self.anchor,self.gui,self.button,self.art,self.tail,self.edge,self.tailEdge,self.lip,self.icon,self.image,self.key=
+		anchor,gui,button,art,tail,edge,tailEdge,lip,icon,image,key
+	self.squash,self.lipSquash=squash,lipSquash
 	return self
 end
 function Bubble:reduced()return self.options.reduced~=nil and self.options.reduced()==true end
@@ -170,7 +177,7 @@ function Bubble:paint()
 	local a=self.alpha
 	self.art.BackgroundTransparency=a;self.tail.BackgroundTransparency=a
 	self.edge.Transparency=a;self.tailEdge.Transparency=a
-	self.gloss.BackgroundTransparency=.15+.85*a
+	self.lip.BackgroundTransparency=1-Bubble.Lip.opacity*(1-a)
 	self.icon.TextTransparency=a;self.image.ImageTransparency=a
 	self.key.BackgroundTransparency=a;self.key.TextTransparency=a
 end
@@ -211,7 +218,7 @@ function Bubble:step(dt)
 		local s=if reduced then nil else Bubble.pressScale(self.time-self.pressAt)
 		if s then squash=s else self.pressAt=nil end
 	end
-	if self.squash.Scale~=squash then self.squash.Scale=squash end
+	if self.squash.Scale~=squash then self.squash.Scale=squash;self.lipSquash.Scale=squash end
 	self.gui.Enabled=adornee~=nil and self.alpha<1
 	self.button.Active=self.shown==true
 	-- Out of sight: the next showing starts over the Bear, not where it was.

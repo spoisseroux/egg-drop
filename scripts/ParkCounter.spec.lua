@@ -53,6 +53,13 @@ return function(client,parent)
 		assert(mirrored.full and mirrored.other==arrival)
 	end)
 
+	test("beta (17) U1 quiet: a park with room says nothing; Park full and its pointer stay",function()
+		local room=Counter.status(actors(arrival,3,grove,9),arrival,Park.Sites,true)
+		assert(room.text==nil and room.count==3 and not room.full,"no Pets playing 3/9")
+		local full=Counter.status(actors(arrival,9,grove,4),arrival,Park.Sites,true)
+		assert(full.full and full.text==Copy.get("park.full",{count=9,capacity=9}).."\n"..Copy.get("park.otherHasRoom"),full.text)
+	end)
+
 	test("both parks full: no pointer; a crowd past capacity still reads 9/9",function()
 		local status=Counter.status(actors(arrival,11,grove,9),arrival,Park.Sites)
 		assert(status.full and status.other==nil and status.lines==1 and status.count==9)

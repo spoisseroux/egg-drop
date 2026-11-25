@@ -190,14 +190,18 @@ local function ensure()
  return true
 end
 -- Kind paint: the disc fill, the icon or glyph, the timer bar fill (only when it changes).
-local function paintKind(t,kind,glyph)
- if t.kind==kind and t.glyphText==glyph then return end
- t.kind,t.glyphText=kind,glyph
+-- `image` (beta (17) U1, data.image: an asset id, the egg ticket's nest icon) draws that image on the disc instead.
+local function paintKind(t,kind,glyph,image)
+ if t.kind==kind and t.glyphText==glyph and t.imageId==image then return end
+ t.kind,t.glyphText,t.imageId=kind,glyph,image
  local spec=Rail.Kinds[kind]
  Kit.paint(t.disc,"BackgroundColor3",spec.disc)
  if t.icon then t.icon:Destroy();t.icon=nil end
  local d=t.discSize or Rail.Sizes.full.disc
- if spec.icon then
+ if type(image)=="string"and image~=""then
+  t.icon=node("ImageLabel",t.disc,{Name="Image",BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),
+   Size=UDim2.fromOffset(math.floor(d*.86),math.floor(d*.86)),Image=image,ScaleType=Enum.ScaleType.Fit,Active=false})
+ elseif spec.icon then
   t.icon=Kit.icon(t.disc,spec.icon,math.floor(d*(if spec.icon=="check"then .82 else .78)),spec.color)
   t.icon.AnchorPoint,t.icon.Position=Vector2.new(.5,.5),UDim2.fromScale(.5,.5)
  else
@@ -211,11 +215,14 @@ local function paintKind(t,kind,glyph)
  t.iconAlpha=nil
  t.barRole=nil
 end
+-- A gold status ticket (data.tone = "gold", beta (17) U1: "Hatch egg!") is the Stars gold on a deeper gold lip.
+Rail.Gold={face=Kit.Color.stars,lip=Color3.fromHex("#C98A1E")}
 local function paintFace(t)
- local role=if t.hover then "white"elseif t.persistent then "selected"else "cream"
- if t.faceRole~=role then t.faceRole=role;Kit.paint(t.face,"BackgroundColor3",role)end
- local lipRole=if t.persistent then "selectedLip"else "creamLip"
- if t.lipRole~=lipRole then t.lipRole=lipRole;Kit.paint(t.lip,"BackgroundColor3",lipRole)end
+ local gold=t.persistent and type(t.data)=="table"and t.data.tone=="gold"
+ local role=if t.hover then "white"elseif gold then "gold"elseif t.persistent then "selected"else "cream"
+ if t.faceRole~=role then t.faceRole=role;Kit.paint(t.face,"BackgroundColor3",if role=="gold"then Rail.Gold.face else role)end
+ local lipRole=if gold then "goldLip"elseif t.persistent then "selectedLip"else "creamLip"
+ if t.lipRole~=lipRole then t.lipRole=lipRole;Kit.paint(t.lip,"BackgroundColor3",if lipRole=="goldLip"then Rail.Gold.lip else lipRole)end
 end
 local function press(t,down)
  if t.pressed==down then return end
@@ -310,7 +317,10 @@ local function configure(t,data,size,barW,barH)
  -- An info line keeps its own glyph ("?", an item's glyph, "•").
  local glyph=if spec.glyph then(if kind=="info"and type(data.icon)=="string"and data.icon~=""then data.icon else spec.glyph)else nil
  if t.discSize~=t.paintedDisc then t.paintedDisc=t.discSize;t.kind=nil end
- paintKind(t,kind,glyph)
+ paintKind(t,kind,glyph,data.image)
+ paintFace(t) -- a status line's tone can change (the egg ticket turns gold when it is ready)
+ -- data.label: the accessible name when the words alone do not say it ("Egg 4 h" -> what the napping egg is).
+ t.root:SetAttribute("AccessibleLabel",if type(data.label)=="string"then data.label else nil)
  t.alpha=nil;t.iconAlpha=nil
 end
 -- Slot targets: cumulative widths in slot order (leaving tickets keep their slot).
