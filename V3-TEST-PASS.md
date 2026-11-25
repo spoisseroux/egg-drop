@@ -4,9 +4,9 @@ Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test 
 
 Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the game back as it was, `clear` follows the remote config. Use `off` to tell which piece caused a problem.
 
-## On the beta now (beta (21), runtime 0c8d30ea)
+## On the beta now (beta (22), runtime 53fdbd40)
 
-Beta (21), 2026-11-25: the live retention changes (row 50; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA21.md`). Beta (20), 2026-11-25: the Bear eye fix (row 49). Beta (19), 2026-11-25: rows 45 (ASMR hatch, vibration) and 46 (beta (18) known issues) are new; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN-BETA19.md`. Beta (18), 2026-11-26: rows 36-44 (race audio, beta 17 fixes, capsule shot, Peek, HUD chips, flat bubbles, world alive, the Hollow, cliff path + Play Den) are on the beta now; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN.md`.
+Beta (22), 2026-11-25: the den, cliff path and terrace art, pets go up, the Top Lawn and the Paw Glade (row 51; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA22.md`). Beta (21), 2026-11-25: the live retention changes (row 50; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA21.md`). Beta (20), 2026-11-25: the Bear eye fix (row 49). Beta (19), 2026-11-25: rows 45 (ASMR hatch, vibration) and 46 (beta (18) known issues) are new; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN-BETA19.md`. Beta (18), 2026-11-26: rows 36-44 (race audio, beta 17 fixes, capsule shot, Peek, HUD chips, flat bubbles, world alive, the Hollow, cliff path + Play Den) are on the beta now; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN.md`.
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
@@ -57,6 +57,7 @@ Beta (21), 2026-11-25: the live retention changes (row 50; checklist `artifacts/
 | 46 | **Beta (18) known issues** | (19) | Open a Stat Egg from Hatch eggs or from pet focus over the garden: the top bar stays hidden for the whole reveal and comes back after Close (also during Hatch another). River stones: each landing is a rock slab laid over the kerb, so you step lawn → landing → stones with no kerb to climb. The den mouth has bushes and a boulder over the tan faces; the den crystals glow amber, not lemon. Known: the den wall seams need a mesh pass. | `/alive scene off`, `/den off` |
 | 49 | **The Bear's eye no longer sinks into his head** (Spencer, beta 19) | (20) | Meet Bear / pet focus facing the camera, and curious moments in the garden: both eyes stay whole and round, the right one too. Also on live (v1202). | — |
 | 50 | **Live retention changes on the beta (G1 + G2)**: calm first deck, paw trail, first hello +3, welcome bonus +12/+4/+4, toy pill; v3 bubbles/strip win while their switches are on | (21) | Fresh save: see TEST-RUN-BETA21 sections 1-2. | `/onboard follow|needs|nest off` for the live version |
+| 51 | **The finished hill: den art, cliff path art, terrace art; pets follow you up; the Top Lawn (second park up top) and the Paw Glade** (`WORLD-FINISH-LOOK.md`) | (22) | Walk up with your pet; play date and fetch on the Top Lawn; the glade as a paw from the path; inside the den. See TEST-RUN-BETA22. | `/tierpets`, `/tier`, `/den` |
 
 ## Built, not on the beta yet
 
