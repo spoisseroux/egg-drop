@@ -1802,6 +1802,36 @@
    "context": "",
    "example": "First-round coaching"
   },
+  "ui.coach.roundTwo.bonus": {
+   "source": "Round two: ★ {count} Welcome bonus",
+   "context": "",
+   "example": "First-round coaching; e.g. Round two: ★ 3 Welcome bonus"
+  },
+  "ui.coach.roundTwo.plain": {
+   "source": "Play round two on your Pocket Deck",
+   "context": "",
+   "example": "First-round coaching"
+  },
+  "ui.coach.roundTwo.toy": {
+   "source": "Round two: hatch a toy for {pet}",
+   "context": "",
+   "example": "First-round coaching; e.g. Round two: hatch a toy for Bear"
+  },
+  "ui.coach.sayHi.key": {
+   "source": "Press E near {pet} to say hi",
+   "context": "",
+   "example": "First-round coaching; e.g. Press E near Bear to say hi"
+  },
+  "ui.coach.sayHi.pad": {
+   "source": "Press X near {pet} to say hi",
+   "context": "",
+   "example": "First-round coaching; e.g. Press X near Bear to say hi"
+  },
+  "ui.coach.sayHi.touch": {
+   "source": "Tap {pet} to say hi",
+   "context": "",
+   "example": "First-round coaching; e.g. Tap Bear to say hi"
+  },
   "ui.coach.skip": {
    "source": "Skip",
    "context": "",
@@ -3383,7 +3413,7 @@
    "example": "Menu text; e.g. Colour jars, charms, toys and outfits change how Bear looks. Looks only."
   },
   "ui.notice.fillLine.next": {
-   "source": "Merge to make room, and drop each egg next to its match.",
+   "source": "Merge to make room, and drop each ball next to its match.",
    "context": "",
    "example": "Menu text"
   },
@@ -3416,6 +3446,16 @@
    "source": "Stars are the one wallet. Rounds, quests and the daily stamp all pay them.",
    "context": "",
    "example": "Menu text"
+  },
+  "ui.notice.firstToy.title": {
+   "source": "A toy for {pet}",
+   "context": "",
+   "example": "Menu text; e.g. A toy for Bear; also ui.onboarding.spend.ready"
+  },
+  "ui.notice.firstToy.what": {
+   "source": "You have enough Stars for a Toy Egg. It hatches a toy for {pet} to carry and play with.",
+   "context": "",
+   "example": "Menu text; e.g. You have enough Stars for a Toy Egg. It hatches a toy for Bear to carry and play with."
   },
   "ui.notice.go.companions": {
    "source": "Open Companions",
@@ -3492,6 +3532,11 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.notice.pill.firstToy": {
+   "source": "Hatch a toy for {pet}",
+   "context": "",
+   "example": "Menu text; e.g. Hatch a toy for Bear"
+  },
   "ui.notice.pill.tip": {
    "source": "Tip: {title}",
    "context": "",
@@ -3542,6 +3587,21 @@
    "context": "",
    "example": "Menu text; e.g. {quest} is finished. It pays ★ 5 when you claim it."
   },
+  "ui.notice.tomorrow.next": {
+   "source": "No streaks. Miss a day, lose nothing.",
+   "context": "",
+   "example": "Menu text; also ui.stamp.promise"
+  },
+  "ui.notice.tomorrow.title": {
+   "source": "See you tomorrow",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.notice.tomorrow.what": {
+   "source": "A new stamp, three new quests and three Stat Eggs arrive every day.",
+   "context": "",
+   "example": "Menu text"
+  },
   "ui.notice.welcome.next": {
    "source": "Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars.",
    "context": "",
@@ -3553,7 +3613,7 @@
    "example": "Menu text"
   },
   "ui.notice.welcome.what": {
-   "source": "Drop eggs into the deck. Two of the same kind merge into a bigger one.",
+   "source": "Drop balls into the deck. Two of the same kind merge into a bigger one.",
    "context": "",
    "example": "Menu text"
   },
@@ -3566,11 +3626,6 @@
    "source": "Choose a Toy Egg when you're ready.",
    "context": "",
    "example": "First-round coaching"
-  },
-  "ui.onboarding.spend.ready": {
-   "source": "A toy for {pet}",
-   "context": "",
-   "example": "First-round coaching; e.g. A toy for Bear"
   },
   "ui.onboarding.spend.store": {
    "source": "Store",
@@ -3598,7 +3653,7 @@
    "example": "First-round coaching"
   },
   "ui.onboarding.welcome.match": {
-   "source": "Match",
+   "source": "Merge",
    "context": "",
    "example": "First-round coaching"
   },
@@ -3697,6 +3752,11 @@
    "context": "",
    "example": "Petting reward"
   },
+  "ui.pet.hello": {
+   "source": "First hello! +{count} ★",
+   "context": "",
+   "example": "Petting reward; e.g. First hello! +3 ★"
+  },
   "ui.pet.star": {
    "source": "+1 ★",
    "context": "",
@@ -3758,7 +3818,7 @@
    "example": "Menu text; e.g. Say hi to Bear"
   },
   "ui.qa.coach.welcome": {
-   "source": "Match eggs. Hatch a friend.",
+   "source": "Merge balls. Hatch a friend.",
    "context": "",
    "example": "Menu text"
   },
@@ -4532,6 +4592,21 @@
    "context": "",
    "example": "Round results screen"
   },
+  "ui.results.next.ready": {
+   "source": "{egg}: you have enough!",
+   "context": "",
+   "example": "Round results screen; e.g. Toy Egg: you have enough!"
+  },
+  "ui.results.next.short": {
+   "source": "{egg}: {count} more Stars",
+   "context": "",
+   "example": "Round results screen; e.g. Toy Egg: 3 more Stars"
+  },
+  "ui.results.next.shortOne": {
+   "source": "{egg}: 1 more Star",
+   "context": "",
+   "example": "Round results screen; e.g. Toy Egg: 1 more Star"
+  },
   "ui.results.nudge.again": {
    "source": "A win on {heat} pays {low} to {high}",
    "context": "",
@@ -4544,6 +4619,11 @@
   },
   "ui.results.saved.done": {
    "source": "Tucked into your wallet",
+   "context": "",
+   "example": "Round results screen"
+  },
+  "ui.results.starter.row": {
+   "source": "Welcome bonus",
    "context": "",
    "example": "Round results screen"
   },
@@ -4686,11 +4766,6 @@
    "source": "Today's stamp: ★ {reward}",
    "context": "",
    "example": "Stamp card; e.g. Today's stamp: ★ 5"
-  },
-  "ui.stamp.promise": {
-   "source": "No streaks. Miss a day, lose nothing.",
-   "context": "",
-   "example": "Stamp card"
   },
   "ui.stamp.tomorrow": {
    "source": "Next stamp tomorrow: ★ {reward}",
@@ -5057,6 +5132,16 @@
    "context": "",
    "example": "Menu text"
   },
+  "ui.store.banner.pass": {
+   "source": "It's yours!",
+   "context": "",
+   "example": "Menu text"
+  },
+  "ui.store.banner.stars": {
+   "source": "+{count} Stars",
+   "context": "",
+   "example": "Menu text; e.g. +3 Stars"
+  },
   "ui.store.best": {
    "source": "BEST VALUE",
    "context": "",
@@ -5221,6 +5306,56 @@
    "source": "Fixed prices. No random plates.",
    "context": "",
    "example": "Deck style screen"
+  },
+  "ui.tomorrow.claim": {
+   "source": "{count} to claim",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line; e.g. 3 to claim"
+  },
+  "ui.tomorrow.claimOne": {
+   "source": "1 to claim",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line"
+  },
+  "ui.tomorrow.label": {
+   "source": "TOMORROW",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line"
+  },
+  "ui.tomorrow.quests": {
+   "source": "{count} new quests",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line; e.g. 3 new quests"
+  },
+  "ui.tomorrow.rail": {
+   "source": "Tomorrow: Stamp {count} ★ {reward} · {quests} new quests",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line; e.g. Tomorrow: Stamp 3 ★ 5 · 3 new quests"
+  },
+  "ui.tomorrow.railToday": {
+   "source": "Today's stamp is waiting  ★ {reward}",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line; e.g. Today's stamp is waiting  ★ 5"
+  },
+  "ui.tomorrow.stamp": {
+   "source": "Stamp {count}  ★ {reward}",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line; e.g. Stamp 3  ★ 5"
+  },
+  "ui.tomorrow.stampPet": {
+   "source": "Stamp 7  {pet} + ★ {reward}",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line; e.g. Stamp 7  Bear + ★ 5"
+  },
+  "ui.tomorrow.stampToday": {
+   "source": "Today's stamp  ★ {reward}",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line; e.g. Today's stamp  ★ 5"
+  },
+  "ui.tomorrow.statEggs": {
+   "source": "{count} Stat Eggs",
+   "context": "",
+   "example": "Results TOMORROW strip and garden line; e.g. 3 Stat Eggs"
   },
   "ui.v2.adopt.button": {
    "source": "Adopt for ★ {price}",
