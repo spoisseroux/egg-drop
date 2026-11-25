@@ -222,7 +222,8 @@ function Scene:groundPoint()
 end
 function Scene:layout()
  if self.destroyed then return end
- local h=self.height;local target=self.envelopeCenter or Vector3.new(0,h*.60,0);local distance=3.6*h
+ -- Beta (16) B3: aimed over the egg (HatchAim), never pulled sideways by the item's flight.
+ local h=self.height;local target=require(script.Parent.HatchAim).target(self.envelopeCenter,h);local distance=3.6*h
  local size=self.root.AbsoluteSize;local aspect=math.max(.4,size.X/math.max(1,size.Y))
  local vertical=math.clamp(math.deg(2*math.atan(math.tan(math.rad(19))/aspect)),20,75)
  self.stageCamera.FieldOfView=vertical;self.heroCamera.FieldOfView=vertical

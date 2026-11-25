@@ -385,8 +385,8 @@ local Table={
  -- up to a station the label reads name + line; after that the name only.
  r5={
   station={
-   -- turn: the egg machine's prompt (the egg corner): "turn the handle of a toy machine" (EGG-CORNER-LOOK 1).
-   Eggs={name="Hatch eggs",line="Spend Stars on new eggs",turn="Turn"},
+   -- machine: the egg corner's prompt names the machine; its action is `name` (beta 16 B2: "Turn" said nothing).
+   Eggs={name="Hatch eggs",line="Spend Stars on new eggs",machine="Egg machine"},
    -- Beta 14 D1 (Fable R2): the onboarding v3 places only. The egg corner retired the nest's line (EggsNest).
    EggsV3={name="Hatch eggs",line="Toys, looks and snacks for your pet"},
    Customize={name="Deck style",line="Faceplates, backgrounds and balls"},

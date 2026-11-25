@@ -564,3 +564,11 @@ What was built differs from sections 4 to 8 here; this section wins.
 - **Known on the beta:** with `/onboard corner off` the Eggs label still reads the v3 line ("Toys, looks and snacks for
   your pet"), not the beta 15 "Your napping egg is here too": the `EggsNest` line is retired for good (its translations
   are deleted at the next sync). Everything else is as beta 15.
+
+- **Beta (16) fixes:** B1, the crank never showed on the real server: the client cached the machine's model the first
+  time it saw it, even if its Dial or the DialPivot attachment had not replicated yet, and never looked again, so
+  nothing moved (Studio had the whole model before the first look). Now a bind is kept only once whole, retries every
+  .5 s, also finds the model by its tag (`EggCornerMachine`), measures range from the Body, and warns once with the
+  reason (and once on a Turn with nothing to turn). B2: the prompt reads **Hatch eggs** on the **Egg machine**
+  (`r5.station.Eggs.name` / `.machine`; `turn` retired). B3: the hatch reveal's camera aims over the egg
+  (`HatchAim`), not at the middle of the egg-and-item envelope, which an item flying to one side pulled sideways.
