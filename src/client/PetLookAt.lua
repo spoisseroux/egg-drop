@@ -21,7 +21,11 @@ function Look.step(visual, dt, allowed)
 	local owner = visual.ownerPosition
 	local time = visual.time or 0
 	local target = 0
-	if allowed and typeof(owner) == "Vector3" and not visual.reducedEffects then
+	-- G2 (PetTrail): while the paw prints lead the owner to the pet, `faceOwner` holds the head on the owner at any
+	-- distance (the same 35 degree head turn, no new animation). Cleared whenever the trail ends.
+	if allowed and typeof(owner) == "Vector3" and visual.faceOwner == true and not visual.reducedEffects then
+		target = math.clamp(Look.relative(visual.origin, visual.yaw, owner), -Look.Max, Look.Max)
+	elseif allowed and typeof(owner) == "Vector3" and not visual.reducedEffects then
 		local flat = Vector3.new(owner.X - visual.origin.X, 0, owner.Z - visual.origin.Z).Magnitude
 		if flat <= Look.Range then
 			local moving = visual.ownerMoving == true

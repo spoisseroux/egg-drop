@@ -63,7 +63,7 @@ return function(client,parent)
   end)
   local function build()
    local sent,greeted={},{}
-   local cards=Cards.new({gui=holder,send=function(id)table.insert(sent,id)end,sayHi=function(petId)table.insert(greeted,petId)end})
+   local cards=Cards.new({flags={},gui=holder,send=function(id)table.insert(sent,id)end,sayHi=function(petId)table.insert(greeted,petId)end})
    return cards,sent,greeted
   end
   -- Drives the real step with the arrival gate swapped in (the card reads ctx.earned).
@@ -146,7 +146,7 @@ return function(client,parent)
    assert(Cards.arrivalAction(earnedId,"pip",false)=="card"and Cards.arrivalAction(earnedId,nil,false)=="card"and Cards.arrivalAction(earnedId,earnedId,false)=="mark")
    local function hatched(answer,companion)
     local sent,greeted,opened,finish={},{},{},nil
-    local cards=Cards.new({gui=holder,send=function(id)table.insert(sent,id)end,sayHi=function(petId)table.insert(greeted,petId)end,
+    local cards=Cards.new({flags={},gui=holder,send=function(id)table.insert(sent,id)end,sayHi=function(petId)table.insert(greeted,petId)end,
      arrivalHatch=function(petId,done)table.insert(opened,petId);finish=done;return answer end})
     cards:sync({coachMask=Coach.with(0,"gardenIntro"),totalWins=40,inventoryMask=every})
     step(cards,0,{companionId=companion});step(cards,Coach.GardenSettle+.1,{companionId=companion})

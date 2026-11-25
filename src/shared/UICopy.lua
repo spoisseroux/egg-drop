@@ -10,7 +10,7 @@ local UICopy={}
 
 local Table={
  care={notice={busy="Machine busy · keep carrying",dry="Find a clear dry patch",closer="Move closer to your pet or machine",changed="Your pet changed · try again",ended="Machine session ended",saving="Wait for your pet save",retry="Couldn't complete · try again"}},
- qa={coach={welcome="Match eggs. Hatch a friend.",sayHi="Say hi to {pet}"},shortfall="{count} more Stars needed",shortfallOne="{count} more Star needed",loading="Getting the preview ready…",retryPreview="Retry preview"},
+ qa={coach={welcome="Merge balls. Hatch a friend.",sayHi="Say hi to {pet}"},shortfall="{count} more Stars needed",shortfallOne="{count} more Star needed",loading="Getting the preview ready…",retryPreview="Retry preview"},
  hatch={
   material={random="16 Stars · one unowned material. No duplicates.",fixed="16 Stars · one guaranteed material. No duplicates.",oddsPromise="No duplicates. Odds update with your collection.",nextPromise="No duplicates. Your next material is shown above."},
   display={charm="A charm for your pet",finish="A material for your pet",wait="A little surprise",line="The display wakes up",loading="Preparing your surprise…",material="Material for your pet",friend="New friend",firstFriend="Your first friend",owned="Already owned",refund="Already owned · {count} Stars back"},
@@ -108,6 +108,9 @@ local Table={
    narrow="Leave",
   },
   saved={done="Tucked into your wallet",pending="Saving…"},
+  -- Growth cuts (2026-11-25): the Welcome bonus payout row and the next-egg nudge under the Star.
+  starter={row="Welcome bonus"},
+  next={ready="{egg}: you have enough!",short="{egg}: {count} more Stars",shortOne="{egg}: 1 more Star"},
   -- QA Q5: the come-back strip's left cell (Stars earned from rounds today, no cap).
   today={label="TODAY",line="★ {count} earned",short="Today: ★ {count}"},
   nudge={
@@ -160,7 +163,8 @@ local Table={
  wardrobe={empty="Nothing to wear yet. {pet} doesn't mind.",emptySolo="Nothing to wear yet.",emptySlot="Nothing for this slot yet."},
  companions={wearing={none="Nothing yet"},toys={name="Toys",line="Something to carry and chase"}},
  -- QA Q2.7: petting pays +1 Star, five times a day.
- pet={star="+1 ★",capped="{pet}'s had plenty of pets today",cappedSolo="Plenty of pets today"},
+ -- G2 (FirstHelloBonus): the first paid pet on a new save, gold over the pet; {count} is the receipt's total.
+ pet={star="+1 ★",hello="First hello! +{count} ★",capped="{pet}'s had plenty of pets today",cappedSolo="Plenty of pets today"},
  -- Play-forever F2: collection book, stamp card, restricted eggs.
  book={
   title="Collection book",eyebrow="Garden",
@@ -260,7 +264,7 @@ local Table={
   throw="Throw",ballOut="Ball is out",fetching="They’re on it.",fetchWait="Give them a moment.",fetchUnavailable="The ball needs a clear lane."},
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
  onboarding={
-  welcome={friend="Hatch a friend",match="Match",more="One more!",skip="Skip tutorial",saving="Saving…",static="↓",gamepad="D-pad · A",keyboard="← → · SPACE",egg="Mystery egg"},
+  welcome={friend="Hatch a friend",match="Merge",more="One more!",skip="Skip tutorial",saving="Saving…",static="↓",gamepad="D-pad · A",keyboard="← → · SPACE",egg="Mystery egg"},
   spend={hatch="Hatch eggs",give="Give to {pet}",store="Store",ready="A toy for {pet}",line="Choose a Toy Egg when you're ready."},
  },
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).
@@ -269,6 +273,10 @@ local Table={
   skip="Skip",gotIt="Got it",next="Next",
   welcome={title="Hatch your first friend",line="Merge to crack the egg. Stars come with it."},
   firstStars={toast="First round cleared"},
+  -- Growth cuts (2026-11-25): with GardenTourCut, the one garden line that replaces the four tour cards.
+  sayHi={touch="Tap {pet} to say hi",key="Press E near {pet} to say hi",pad="Press X near {pet} to say hi"},
+  -- G2 (RoundTwoNudge): the round-two pill after the first toy; {count} is StarterBonus's first bonus, never typed in.
+  roundTwo={bonus="Round two: ★ {count} Welcome bonus",toy="Round two: hatch a toy for {pet}",plain="Play round two on your Pocket Deck"},
   machines={title="Machines",line="Walk up to a glowing machine to use it."},
   hub={title="Pocket menu",key="Press M for every machine, any time.",pad="Press Y for every machine, any time.",touch="Tap Menu for every machine, any time."},
   quest={title="Quests",line="Today's quests pay Stars. Find them in the menu."},
@@ -298,6 +306,10 @@ local Table={
   reply={limited="That's plenty for now. Try again later.",full="Our mailbox is full today. Try tomorrow.",busy="Still sending the last one…",
    invalid="That didn't send. Try again.",timeout="No answer yet. Try again in a bit."},
  },
+ -- Growth cuts (2026-11-25): the TOMORROW strip on the results screen and its garden rail line.
+ tomorrow={label="TOMORROW",stamp="Stamp {count}  ★ {reward}",stampPet="Stamp 7  {pet} + ★ {reward}",stampToday="Today's stamp  ★ {reward}",
+  quests="{count} new quests",claim="{count} to claim",claimOne="1 to claim",statEggs="{count} Stat Eggs",
+  rail="Tomorrow: Stamp {count} ★ {reward} · {quests} new quests",railToday="Today's stamp is waiting  ★ {reward}"},
  stamp={
   title="Stamp card",
   promise="No streaks. Miss a day, lose nothing.",
@@ -576,8 +588,9 @@ local Table={
  notice={
   label={what="What it means",next="What to do next"},
   go={quests="Open Quests",hatch="Open Hatch eggs",companions="Open Companions",menu="Open the Menu",show="Show me"},
-  pill={tip="Tip: {title}",firstSpend="Hatch your first egg"},
-  welcome={title="Your first round",what="Drop eggs into the deck. Two of the same kind merge into a bigger one.",
+  -- G2 (ToyPillCopy): firstToy replaces firstSpend while the switch is on; the old keys stay for off.
+  pill={tip="Tip: {title}",firstSpend="Hatch your first egg",firstToy="Hatch a toy for {pet}"},
+  welcome={title="Your first round",what="Drop balls into the deck. Two of the same kind merge into a bigger one.",
    next="Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars."},
   firstStars={title="Your first Stars",what="Stars are the one wallet. Rounds, quests and the daily stamp all pay them.",
    next="Spend Stars on eggs at Hatch eggs. The Menu lists every machine."},
@@ -592,7 +605,7 @@ local Table={
   customize={title="Customize your pet",what="Colour jars, charms, toys and outfits change how {pet} looks. Looks only.",
    next="Open Companions and pick Customize or Wardrobe. New pieces hatch from eggs."},
   fillLine={title="Fill line",what="Keep the pile under the line. Stay over it too long and the round ends.",
-   next="Merge to make room, and drop each egg next to its match."},
+   next="Merge to make room, and drop each ball next to its match."},
   item={title="An item!",what="Power-up merges earn items. They wait for you on the item button.",
    next="Tap Items to use one when the pile gets tight."},
   questDone={title="Quest done!",what="You finished a quest. Its Stars are waiting to be claimed.",
@@ -603,6 +616,11 @@ local Table={
    next="Spend Stars at Hatch eggs, or save up. New daily quests arrive every day."},
   firstSpend={title="Your first egg",what="You have enough Stars for an egg. A Toy Egg hatches a toy for {pet} to carry and play with.",
    next="Open Hatch eggs and choose the Toy Egg. The odds are on every label."},
+  -- G2 (ToyPillCopy): the same card in the new words (its `next` is firstSpend.next, NoticeCards.ById.firstToy).
+  firstToy={title="A toy for {pet}",what="You have enough Stars for a Toy Egg. It hatches a toy for {pet} to carry and play with."},
+  -- Growth cuts (2026-11-25): the garden's Tomorrow line opens this (`next` is the stamp card's promise).
+  tomorrow={title="See you tomorrow",what="A new stamp, three new quests and three Stat Eggs arrive every day.",
+   next="No streaks. Miss a day, lose nothing."},
   bond={title="Bond grew",what="Hearts show how close you and {pet} are. Each new level unlocks a trick.",
    next="Keep petting, playing rounds and going on Play dates. The hearts are in Companions."},
   -- Things to do: the lines that lead to a game (ThingsTips).

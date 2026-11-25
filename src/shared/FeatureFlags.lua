@@ -79,7 +79,22 @@
 -- ParkHollow (WORLD-ALIVE-LOOK section 2, 2026-11-25): the second park becomes the Hollow (a round glade backed into the
 -- cliff, no kerb). Shared layout data read at require time, so it is a place gate only, no server switch: the beta
 -- place or Studio (ParkLayout.HollowPlaceId). false, or any other place (live), keeps the old grove park exactly.
-return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
+-- Growth cuts (GROWTH-CUTS-LOOK 2026-11-25, live G1, ported 2026-11-25), each false = the game before them. On the beta
+-- an onboarding v3 part that owns the same moment wins while its switch is on (artifacts/growth-2026-11-26/PORT-TO-BETA.md):
+-- TomorrowStrip: the TOMORROW chips on every field-round results screen and one garden rail line a session
+-- (Onboard.on("nest") on: the v3 Coming up strip and the nest ticket instead).
+-- GardenTourCut: new players get one "say hi" rail line instead of the four "Your garden" cards (Show tips again keeps them)
+-- (follow the Bear on: the need bubbles instead).
+-- StarterBonus: +12, +4, +4 Welcome bonus on a new save's first three field rounds (StarterBonus.lua) and the
+-- results nudge line ("{egg}: you have enough!").
+-- G2 first session (G2-FIRST-SESSION-LOOK 2026-11-25, live G2, ported 2026-11-25), each false = the game before them:
+-- PetTrail: paw prints from the player to the pet, a ring at the pet and a screen-edge chip, with the say-hi line (on the
+-- beta with follow the Bear on: when the garden step would have opened, before the need bubbles' own prints).
+-- FirstHelloBonus: the first paid pet on a new save pays +2 more ("First hello! +3 ★"), once per save (FirstHello.lua).
+-- RoundTwoNudge: the round-two pill after the first toy; a tap starts a round (the need bubbles on: the deck bubble instead).
+-- ToyPillCopy: "Hatch a toy for {pet}" / "A toy for {pet}" instead of "Hatch your first egg" / "Your first egg".
+-- CalmFirstDeck: the Welcome round's deck shows the board, Next, the egg and the coach card only (DeckCalm.lua).
+return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPillCopy=true,CalmFirstDeck=true,TomorrowStrip=true,GardenTourCut=true,StarterBonus=true,FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,
  -- AliveAsmr (ASMR-AND-SCALE-LOOK 1, 2): the ASMR hatch sounds and the vibration (HatchAsmr, Haptics); beta and Studio only.

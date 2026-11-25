@@ -788,17 +788,20 @@ end
 -- petName, result (RecapFeedback observe record), loss, questDone, questCount
 function Results:showInPlace(data,view)
  local opening=not self.visible
- local key=Results.viewKey(view)
+ -- Beta port: the strip the panes make room for is chosen when a results screen opens (kept while it stays up).
+ local InPlace=require(script.Parent.DeckResultsInPlace)
+ local strip=if opening or not self.inPlace then InPlace.stripChoice(self,view)else self.inPlaceStrip
+ local key=Results.viewKey(view)..":"..tostring(strip)
  if not self.inPlace or self.key~=key then
   local prior=self.inPlace and self.inPlace.opened
   if self.inPlace then self.inPlace:destroy()elseif self.root then self.root:Destroy()end
   self:stopIdle();self:stopFace()
-  self.inPlace=require(script.Parent.DeckResultsInPlace).new(self,view)
+  self.inPlace=InPlace.new(self,view)
   if prior and not opening then self.inPlace.opened=prior end
-  self.root=self.inPlace.root;self.key=key
+  self.root=self.inPlace.root;self.key=key;self.inPlaceStrip=strip
  end
  self.data=data;self.visible=true;self.host.Parent.Visible=true
- if opening then self.inPlace.opened=os.clock();self.focus=if data.pending then 2 else 1 end
+ if opening then self.inPlace.opened=os.clock();self.inPlace:reset();self.focus=if data.pending then 2 else 1 end
  self.inPlace:paint(data)
  self.feedback:setCountWindow(.30,.35);self.feedback:setBeats({})
  if data.result then self.feedback:observe(data.result,true)end

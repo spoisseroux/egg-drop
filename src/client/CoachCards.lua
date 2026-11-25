@@ -46,8 +46,21 @@
 -- only once the garden step could start (options.follow is Onboard.sessionFollow, captured at its first call), so a
 -- switch flip mid-session never starts or cuts the tour half way. BearNeeds marks gardenIntro (finishGarden) instead.
 -- "Show tips again" still replays the beats. Without the option, or with it saying no: exactly the tour as before.
+--
+-- Growth cuts (2026-11-25, GROWTH-CUTS-LOOK sections 1 and 2; live G1, ported to the beta: PORT-TO-BETA.md):
+--  * GardenTourCut: a new player gets no cards. Where the tour would have opened (minus the stand-still wait) one
+--    rail line says how to say hi ("Tap Bear to say hi", per input), up to SayHiSeconds; it saves gardenIntro the
+--    moment it shows and ends when the player says hi (the pet focus view), a menu or the deck opens, or on a tap.
+--    "Show tips again" (replayGarden) still opens the four "Your garden" cards. Follow the Bear on wins: the garden
+--    step is "free" then, so neither the tour nor the say-hi line runs (the need bubbles say hi instead).
+--  * TomorrowStrip: once a session, the lowest-priority line (after the Things to do lines): what tomorrow brings
+--    (TomorrowChips.rail), the first free moment after a results screen or TomorrowChips.RailAfter seconds in; a tap
+--    opens the "See you tomorrow" card. options.v3Tomorrow() saying yes (the Sleepy Nest on: its Coming up strip and
+--    egg ticket) wins: no line.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
+local FeatureFlags=require(Shared:WaitForChild("FeatureFlags"))
+local Chips=require(script.Parent.TomorrowChips)
 local UICopy=require(Shared:WaitForChild("UICopy"))
 local Pets=require(Shared:WaitForChild("PetCatalog"))
 local Eggs=require(Shared:WaitForChild("EggCatalog"))
@@ -73,6 +86,9 @@ Cards.WelcomeFadeIn=.25;Cards.WelcomeFadeOut=.4
 Cards.BoardSeconds=6  -- fill-line and item cards on the board
 Cards.ArrivalSeconds=20 -- the "a friend arrived" card (it has a button, so it stays longer)
 Cards.IntroSeconds=7 -- a Things to do line (it leads somewhere, so it stays a little longer)
+Cards.SayHiSeconds=12 -- growth cuts: the say-hi line's time on screen at most
+-- A coach built without Cards.new (the older specs) reads every growth switch off: the game before them.
+Cards.NoFlags=table.freeze({})
 Cards.Width=460
 Cards.Machines=table.freeze({"hatch","style","companions","quests","book"})
 -- Tint (Kit.Tint key) and icon per card.
@@ -83,6 +99,7 @@ Cards.Spec=table.freeze({
  hatch={tint="hatch",icon="egg"},style={tint="style",icon="faceplate"},companions={tint="companions",icon="paw"},
  quests={tint="quests",icon="quests"},book={tint="book",icon="book"},park={tint="companions",icon="paw"},
  petArrived={tint="companions",icon="paw"},
+ sayHi={tint="companions",icon="paw"},
 })
 
 -- ── Pure rules (spec-checked) ───────────────────────────────────────────────
@@ -90,6 +107,7 @@ Cards.Spec=table.freeze({
 function Cards.copy(id,vars)
  vars=vars or {}
  local fill={pet=vars.pet or "Bear",reward=vars.reward or Coach.WelcomeStars}
+ if id=="sayHi"then return UICopy.get(Cards.sayHiKey(vars.input),fill),""end
  if id=="hub"then
   local key=if vars.input=="Gamepad"then "coach.hub.pad"elseif vars.input=="Touch"then "coach.hub.touch"else "coach.hub.key"
   return UICopy.get("coach.hub.title"),UICopy.get(key)
@@ -103,6 +121,8 @@ end
 -- The arrival line keeps its own wording and action (Say hi).
 function Cards.railLine(id,kind,vars,hasHelp)
  local title=Cards.copy(id,vars)
+ -- Growth cuts: the say-hi line has no card behind it (a tap just closes it) and the pet's paw in its disc.
+ if kind=="sayHi"then return{text=title,kitIcon="paw",kind="info"}end
  if kind=="arrival"then return{text=UICopy.get("qa.coach.sayHi",{pet=type(vars)=="table"and vars.pet or nil})}end
  if kind=="once"and hasHelp then return{text=UICopy.get("notice.pill.tip",{title=title}),icon="?",help=id}end
  return{text=title,icon="?",notice=if Notices.has(id)then id else nil}
@@ -193,6 +213,26 @@ function Cards.beatMayStart(ctx,roomFor,replay)
  if replay then return(ctx.owned or 0)>0 and not ctx.revealPending end
  return Coach.gardenReady({mask=ctx.mask,seen=ctx.seen,totalWins=ctx.totalWins,owned=ctx.owned,revealPending=ctx.revealPending,canRoam=true,roomFor=roomFor})
 end
+-- Growth cuts: the say-hi line's copy key for an input kind ("Touch" | "Gamepad" | anything else = keyboard).
+function Cards.sayHiKey(input)
+ return if input=="Touch"then "coach.sayHi.touch"elseif input=="Gamepad"then "coach.sayHi.pad"else "coach.sayHi.key"
+end
+-- Growth cuts (GardenTourCut): may the say-hi line start? As beatMayStart for a first visit, minus the stand-still
+-- wait (the line blocks nothing). Never on a replay (Show tips again opens the cards).
+function Cards.sayHiMayStart(ctx,roomFor)
+ if not Cards.gardenFree(ctx)then return false end
+ if(ctx.awayFor or 0)>=Cards.AwaySeconds then return false end
+ if(roomFor or 0)<Coach.GardenSettle then return false end
+ return Coach.gardenReady({mask=ctx.mask,seen=ctx.seen,totalWins=ctx.totalWins,owned=ctx.owned,revealPending=ctx.revealPending,canRoam=true,roomFor=roomFor})
+end
+-- Growth cuts (TomorrowStrip): may the garden's Tomorrow line show now? Free, settled garden with onboarding done,
+-- once a session, after a results screen or TomorrowChips.RailAfter seconds in.
+function Cards.tomorrowReady(ctx,roomFor,state)
+ if ctx.mode~="Room"or not Cards.gardenFree(ctx)or ctx.revealPending then return false end
+ if(ctx.awayFor or 0)>=Cards.AwaySeconds or(roomFor or 0)<Coach.GardenSettle then return false end
+ if(ctx.owned or 0)<=0 or Coach.stage(ctx)~="free"then return false end
+ return Chips.railDue(state)
+end
 -- Does a shown card's clock run? Paused while the window is unfocused or the player is
 -- away; a beat also pauses while the garden is not free (it hides then).
 function Cards.clockRuns(ctx,kind)
@@ -240,7 +280,9 @@ end
 function Cards.new(options)
  options=options or {}
  local self=setmetatable({options=options,mask=0,totalWins=0,owned=0,seen={},beat=nil,garden=nil,boardCard=nil,
-  questDone=false,questToldPending=false,starterStars=nil,toldStars=false,roomSince=nil},Cards)
+  questDone=false,questToldPending=false,starterStars=nil,toldStars=false,roomSince=nil,
+  -- Growth cuts: the switches (specs pass options.flags), the session clock and the Tomorrow line's state.
+  flags=options.flags or FeatureFlags,bornAt=nil,sawResults=false,tomorrowShown=false,snapshot=nil},Cards)
  local gui=Kit.node("ScreenGui",options.gui,{Name="EggDropCoach",ResetOnSpawn=false,DisplayOrder=14,IgnoreGuiInset=false,
   ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,ZIndexBehavior=Enum.ZIndexBehavior.Sibling})
  self.gui=gui
@@ -313,6 +355,7 @@ end
 -- Snapshot (owner): the saved mask, wins, the starter receipt and quest progress.
 function Cards:sync(snapshot)
  if type(snapshot)~="table"then return end
+ self.snapshot=snapshot -- growth cuts: the Tomorrow line reads the stamp card from it
  self.mask=Coach.merge(self.mask,Coach.mask(snapshot.coachMask))
  self.totalWins=type(snapshot.totalWins)=="number"and snapshot.totalWins or self.totalWins
  if type(snapshot.inventoryMask)=="number"then self.inventoryMask=snapshot.inventoryMask end
@@ -383,15 +426,17 @@ function Cards:showGarden(id,kind,vars,now,machine)
  local Rail=require(script.Parent.NotificationRail)
  local title=Cards.copy(id,vars)
  local current={id=id,kind=kind,shownAt=now,elapsed=0,machine=machine,
-  petId=if kind=="arrival"and type(vars)=="table"then vars.petId else nil,duration=3.86}
+  petId=if kind=="arrival"and type(vars)=="table"then vars.petId else nil,duration=if kind=="sayHi"then Cards.SayHiSeconds else 3.86}
  self.garden=current
  local How=require(script.Parent.HowItWorks)
  local line=Cards.railLine(id,kind,vars,How.has(id))
  current.line=line
- current.rail=Rail.enqueue(self.host,"garden:"..id,{text=line.text,icon=line.icon,priority=-1,active=false,
+ current.rail=Rail.enqueue(self.host,"garden:"..id,{text=line.text,icon=line.icon,kitIcon=line.kitIcon,kind=line.kind,priority=-1,active=false,
+  duration=if kind=="sayHi"then current.duration else nil,
   activate=function()
    if self.garden~=current then return end
    if kind=="arrival"then self:sayHi();return end
+   if kind=="sayHi"then self:hideGarden();return end
    -- The line stays its time on the rail (a beat still moves on by itself); the tap
    -- only opens what explains it.
    if line.help then How.open(line.help)
@@ -399,6 +444,10 @@ function Cards:showGarden(id,kind,vars,now,machine)
   end,
   onShown=function()
    if self.garden==current then current.presented=true;if kind=="once"then self:mark(id)end end
+   -- Growth cuts: the say-hi line is the garden step; it is saved the moment it shows.
+   if kind=="sayHi"then self:mark("gardenIntro")end
+   -- G2 (PetTrail): the paw prints draw with the say-hi line, from the moment it shows.
+   if kind=="sayHi"and self.garden==current then self.trailDue=true end
   end,
   onDone=function()
    if self.garden~=current then return end
@@ -412,6 +461,9 @@ end
 function Cards:hideGarden()
  local current=self.garden
  self.garden=nil
+ -- Growth cuts (code review): a say-hi line cancelled before the rail ever showed it was not the garden step yet;
+ -- it may start again this session (gardenIntro is saved only when it shows).
+ if current and current.kind=="sayHi"and not current.presented then self.gardenDone=false end
  if current and current.rail then current.rail:cancel()end
  self.gardenView.root.Visible=false
  self.gardenView.root:SetAttribute("CoachCard",nil)
@@ -476,7 +528,26 @@ function Cards:following()
  local ok,on=pcall(follow)
  return ok and on==true
 end
+-- Growth cuts on the beta: does onboarding v3 own the "tomorrow" moment (the Sleepy Nest on)? Then the live Tomorrow
+-- rail line stays off. No option (live, specs): no.
+function Cards:v3Tomorrow()
+ local own=self.options.v3Tomorrow
+ if type(own)~="function"then return false end
+ local ok,on=pcall(own)
+ return ok and on==true
+end
+-- The beta's need bubbles on (options.bubbles, Onboard.on("needs"))? Then the needHi bubble is the one hello prompt (no
+-- say-hi line), and with follow the Bear on the paw prints to the pet run with it. No option (live, specs): no.
+function Cards:bubbles()
+ local own=self.options.bubbles
+ if type(own)~="function"then return false end
+ local ok,on=pcall(own)
+ return ok and on==true
+end
 function Cards:finishGarden()
+ -- G2 (PetTrail): a first visit's garden step (not a replay) ends: the paw prints may draw (init.client reads it).
+ -- Follow the Bear on (BearNeeds ends the step): never here; step raises it with the needHi bubble instead.
+ if not self.replaying and not self:following()then self.trailDue=true end
  self.beat=nil;self.gardenDone=true;self.replaying=false
  self:mark("gardenIntro")
 end
@@ -574,10 +645,14 @@ function Cards:step(now,ctx)
   local elapsed=current.elapsed
   local gone=elapsed>=current.duration
    or(current.kind=="intro"and self:introBlocked(now,current))
-   or((current.kind=="beat"or current.kind=="arrival")and not Cards.gardenOpen(ctx))
+   or((current.kind=="beat"or current.kind=="arrival"or current.kind=="sayHi")and not Cards.gardenOpen(ctx))
    or(current.machine and not(ctx.open and ctx.open[current.machine]))
+   -- Growth cuts: the say-hi line ends for good once the player says hi (it never comes back).
+   or(current.kind=="sayHi"and ctx.focusing==true)
   if gone then
    self:hideGarden()
+   -- Growth cuts: the player said hi before (or while) the line showed: the garden step is done.
+   if current.kind=="sayHi"and ctx.focusing==true then self.gardenDone=true;self:mark("gardenIntro")end
    -- A beat that ran out moves on; one hidden by a menu shows again when the garden is free.
    if current.kind=="beat"and elapsed>=current.duration then self:advance(current.id)end
    -- The arrival card that ran its full time is done (shown once ever); one hidden by a
@@ -589,6 +664,7 @@ function Cards:step(now,ctx)
  end
  -- Time free in the garden (no menu, no open reveal): the garden step waits for it.
  if ctx.mode=="Room"and Cards.gardenFree(ctx)and not self.revealPending then self.roomSince=self.roomSince or now else self.roomSince=nil end
+ self.bornAt=self.bornAt or now
  if not self.garden then
   local vars={pet=ctx.pet,input=ctx.input,reward=self.starterStars}
   local machine=Cards.machineDue(ctx.open,ctx.used,base)
@@ -599,7 +675,23 @@ function Cards:step(now,ctx)
    self:showGarden(machine,"once",vars,now,if ctx.open and ctx.open[machine]then machine else nil)
   elseif self.tourOpen then
    -- The tour cards are up: nothing else starts until they close.
-  elseif not self.gardenDone and Cards.beatMayStart(base,roomFor,self.replaying)and(self.replaying or Cards.stage(base,self:following())=="garden")then
+  elseif (self.flags or Cards.NoFlags).GardenTourCut==true and not self.replaying and not self.gardenDone and Cards.sayHiMayStart(base,roomFor)
+   and Cards.stage(base,self:following())=="garden"then
+   -- Growth cuts: one say-hi line instead of the tour (it saves gardenIntro when it shows), then the first Stars.
+   -- Follow the Bear on: the stage reads "free" and this never runs (the needHi bubble says hi). Follow off with the
+   -- need bubbles on (the beta): the needHi bubble is the one hello prompt, so no line; the step is saved here (BearNeeds
+   -- saves it only while following) and the paw prints lead to the pet as they would with the line.
+   self.gardenDone=true
+   if self:bubbles()then
+    self:mark("gardenIntro");self.trailDue=true
+   else
+    self:showGarden("sayHi","sayHi",vars,now)
+   end
+   if self.starterStars and not self.toldStars then
+    self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
+   end
+  elseif not self.gardenDone and(self.replaying or (self.flags or Cards.NoFlags).GardenTourCut~=true)and Cards.beatMayStart(base,roomFor,self.replaying)
+   and(self.replaying or Cards.stage(base,self:following())=="garden")then
    if not self:openTour()then
     self.beat=self.beat or Coach.nextBeat(nil)
     if self.beat then self:showGarden(self.beat,"beat",vars,now)end
@@ -608,6 +700,11 @@ function Cards:step(now,ctx)
    if self.starterStars and not self.toldStars then
     self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
    end
+  elseif (self.flags or Cards.NoFlags).PetTrail==true and not self.followTrailRaised and not self.replaying and not self.gardenDone
+   and Cards.sayHiMayStart(base,roomFor)and Coach.stage(base)=="garden"and self:following()and self:bubbles()then
+   -- G2 (PetTrail) on the beta: following the Bear with the need bubbles, the prints lead to the pet as the step
+   -- would have opened (the needHi bubble asks for the hello). Once a session; the next frame goes on below.
+   self.followTrailRaised=true;self.trailDue=true
   elseif self.starterStars and not self.toldStars and not self.gardenDone and Cards.beatMayStart(base,roomFor,false)then
    -- Follow the Bear: no tour, but the Welcome round's Stars are still said once, when the garden step would open.
    self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
@@ -627,6 +724,17 @@ function Cards:step(now,ctx)
    self:showGarden("park","once",vars,now)
   else
    self:stepIntro(now,base,vars,roomFor)
+   -- Growth cuts: the lowest line, once a session, only when no Things to do line took the rail; a tap opens
+   -- "See you tomorrow" (its button opens Quests). The Sleepy Nest on (options.v3Tomorrow): v3's strip and ticket.
+   if not self.garden and not self.tomorrowShown and Chips.live({flags=(self.flags or Cards.NoFlags),nest=self:v3Tomorrow()})
+    and Cards.tomorrowReady(base,roomFor,{sawResults=self.sawResults,sessionFor=now-self.bornAt,shown=self.tomorrowShown})then
+    local text=Chips.rail(self.snapshot)
+    if text then
+     self.tomorrowShown=true
+     self.tomorrowRail=require(script.Parent.NotificationRail).enqueue(self.host,"tomorrow",{text=text,icon="✓",priority=-2,
+      duration=Chips.RailSeconds,detail=Notices.detail("tomorrow")})
+    end
+   end
   end
  end
  -- Board ------------------------------------------------------------------

@@ -18,6 +18,9 @@ local Sprite=require(script.Parent.JellySprite)
 -- Round item icons (QA 2026-11-13 Q1 item 9) on the phone item button.
 local ItemIcons=require(script.Parent.ItemIcons)
 local UICopy=require(Shared.UICopy)
+-- G2: the calm Welcome-round screen (switch CalmFirstDeck).
+local FeatureFlags=require(Shared.FeatureFlags)
+local Calm=require(script.Parent.DeckCalm)
 local L=Assets.Layout
 local Screen={}
 Screen.__index=Screen
@@ -1168,7 +1171,7 @@ function Screen:buildCompactHud(g)
  if nr.h>=64 then
   txt(nextCard,"Label","NEXT","dim",12,5,50,14,12)
   h.next[1]=egg(nextCard,36);h.next[1].ball.Position=UDim2.fromOffset(12,22)
-  txt(nextCard,"Label","THEN","dim",70,5,60,14,12)
+  h.thenLabel=txt(nextCard,"Label","THEN","dim",70,5,60,14,12)
   h.next[2]=egg(nextCard,24);h.next[2].ball.Position=UDim2.fromOffset(70,30)
   if nr.w>=150 then h.next[3]=egg(nextCard,24);h.next[3].ball.Position=UDim2.fromOffset(98,30)end
  else
@@ -1367,7 +1370,7 @@ function Screen:buildHud(g)
   -- Right panel.
   local nextCard=card(host,"Next",{rightX,12,col,140},"NEXT",pad)
   h.next={egg(nextCard,68)};h.next[1].ball.Position=UDim2.fromOffset(62-34,82-34)
-  txt(nextCard,"Label","THEN","dim",132,42,60,16)
+  h.thenLabel=txt(nextCard,"Label","THEN","dim",132,42,60,16)
   h.next[2]=egg(nextCard,40);h.next[2].ball.Position=UDim2.fromOffset(150-20,92-20)
   h.next[3]=egg(nextCard,40);h.next[3].ball.Position=UDim2.fromOffset(math.min(col-46,196-20),92-20)
   local eggs=card(host,"EggsLeft",{rightX,160,col,96},"EGGS LEFT",pad)
@@ -1669,7 +1672,8 @@ function Screen:setCompactHud(data)
  -- Card height follows the goal count (a status message gets two rows, three in a narrow column).
  local n=if data.welcome then 3 elseif h.status.Visible then(if h.layout=="narrow"then 3 else 2)else math.max(1,#goals)
  local cardH=24+n*h.goalPitch+6
- if h.cardH~=cardH then
+ -- G2 (CalmFirstDeck): the calm Welcome screen owns the coach card's size; restoring it clears h.cardH.
+ if h.cardH~=cardH and not h.calm then
   h.cardH=cardH
   h.goalsCard.Size=UDim2.fromOffset(h.goalsCard.Size.X.Offset,cardH)
   h.status.Size=UDim2.fromOffset(h.status.Size.X.Offset,n*h.goalPitch)
@@ -1767,6 +1771,10 @@ function Screen:setWelcome(snapshot,dependencies)
   h.welcomeStatusSize=h.status.Size;h.welcomeStatusAlignment=h.status.TextYAlignment
  end
  local wanted=snapshot.phase=="Welcome"and(snapshot.owned or 0)==0
+ -- G2 (CalmFirstDeck): applied and restored only on a change, per HUD instance (a rebuilt HUD starts clean),
+ -- before the coach card's size is read below.
+ local calm=Calm.wanted(snapshot,FeatureFlags)
+ if calm and not h.calm then self:applyCalm(h)elseif not calm and h.calm then self:restoreCalm(h)end
  for _,child in ipairs(h.welcomeMeter:GetChildren())do
   if child:IsA("GuiObject")and child~=self.welcomeMeterHost then
    if wanted then
@@ -1801,6 +1809,52 @@ function Screen:setWelcome(snapshot,dependencies)
  end
  self.welcomeGesture.Visible=self.visible==true
  return self.welcomeView:update(snapshot)
+end
+-- G2 (CalmFirstDeck, DeckCalm): hide the panels a Welcome round does not need and give their room to the coach card
+-- and the egg. Every changed property is saved on this HUD (h.calm) and put back by restoreCalm; nothing here
+-- touches the board, its geometry or the play hit areas (the hidden quest card's open button rests with it).
+local CalmNames={"Score","Chain","Goals","DailyQuests","QuestHandle","Next","EggsLeft","Difficulty","WinPays","Controls"}
+function Screen:applyCalm(h)
+ local host=self.hudRoot;if not host or h.calm then return end
+ local saved={}
+ local function keep(object,property)
+  if not object then return end
+  saved[object]=saved[object]or {}
+  if saved[object][property]==nil then saved[object][property]=object[property]end
+ end
+ local function hide(object)if object then keep(object,"Visible");object.Visible=false end end
+ local cards,rects={},{}
+ for _,name in ipairs(CalmNames)do
+  local c=host:FindFirstChild(name)
+  if c and c:IsA("GuiObject")then
+   cards[name]=c
+   rects[name]={x=c.Position.X.Offset,y=c.Position.Y.Offset,w=c.Size.X.Offset,h=c.Size.Y.Offset}
+  end
+ end
+ local layout=if h.phone then h.layout elseif self.geometry and self.geometry.compact then "small"else "regular"
+ local plan=Calm.plan(layout,rects)
+ for _,name in ipairs(plan.hide)do hide(cards[name])end
+ -- A chain counter in the Goals header, the THEN balls and their THEN label (with its tab).
+ if h.chainInGoals then hide(h.chain)end
+ for index=2,#(h.next or {})do hide(h.next[index].ball)end
+ if h.thenLabel then hide(h.thenLabel);hide(Kit.hudTabOf(h.thenLabel))end
+ local function place(object,r)
+  if not object or not r then return end
+  keep(object,"Position");keep(object,"Size")
+  object.Position=UDim2.fromOffset(r.x,r.y);object.Size=UDim2.fromOffset(r.w,r.h)
+ end
+ place(cards.Goals,plan.coach);place(cards.EggsLeft,plan.egg)
+ if h.status then keep(h.status,"TextSize");h.status.TextSize=Calm.textSize(h.phone==true)end
+ h.calm={saved=saved}
+end
+function Screen:restoreCalm(h)
+ local calm=h.calm;if not calm then return end
+ h.calm=nil
+ for object,props in pairs(calm.saved)do
+  if object.Parent then for property,value in pairs(props)do object[property]=value end end
+ end
+ -- The compact HUD re-applies the coach card's own height on its next paint.
+ h.cardH=nil
 end
 function Screen:stepWelcome(dt)if self.welcomeView then self.welcomeView:step(dt)end end
 function Screen:welcomeInput()if self.welcomeView then self.welcomeView:input()end end

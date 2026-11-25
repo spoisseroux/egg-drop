@@ -1047,7 +1047,14 @@ local function addPlayer(player)
 			board.nurseryBusy=true;publishNursery(board)
 			local walletBefore=board.nursery.state.nectar
 			local petOk,petReason=Nursery.awardPet(board.nursery,candidate)
-			if petOk and petReason~="AlreadySaved"then Economy.source(player,board.nursery.state.nectar-walletBefore,board.nursery.state.nectar,"Gameplay","PetCare")end
+			if petOk and petReason~="AlreadySaved"then
+				-- G2: the first hello's extra Stars are their own source (Onboarding / FirstHello), never petting income.
+				local receipt=board.nursery.state.lastPetAward
+				local hello=if type(receipt)=="table"and receipt.id==candidate.id and type(receipt.hello)=="number"and receipt.hello>0 then receipt.hello else 0
+				local after=board.nursery.state.nectar
+				Economy.source(player,after-walletBefore-hello,after-hello,"Gameplay","PetCare")
+				if hello>0 then Economy.source(player,hello,after,"Onboarding","FirstHello")end
+			end
 			if petOk and petReason~="AlreadySaved"and board.firstSession then board.firstSession:record("FirstPet")end
 			if petOk and petReason~="AlreadySaved"and board.nursery.state.petCount==(Nursery.PetDailyCap or 10)then Economy.event(player,"PettingCapReached")end
 			board.nurseryBusy=false
@@ -2041,7 +2048,11 @@ settleReward = function(player, board)
 					board.folder:SetAttribute("DailyAward", saved and saved.sequence == board.runSequence and saved.daily or 0)
 					board.folder:SetAttribute("RewardStatus", "Saved")
 					if saved and saved.sequence == board.runSequence then
-						Economy.source(player, saved.total, Nursery.public(board.nursery).nectar, "Gameplay", "RoundReward:" .. (summary.heat or "medium"))
+						-- Growth cuts: the Welcome bonus is its own source, so it is never read as round income.
+						local starter = if type(saved.starter) == "number" and saved.starter > 0 then saved.starter else 0
+						local balance = Nursery.public(board.nursery).nectar
+						Economy.source(player, saved.total - starter, balance - starter, "Gameplay", "RoundReward:" .. (summary.heat or "medium"))
+						if starter > 0 then Economy.source(player, starter, balance, "Onboarding", "StarterBonus") end
 					end
 					Economy.event(player, if summary.success then "RoundWon" else "RoundLost")
 					board.sessionRounds = (board.sessionRounds or 0) + 1

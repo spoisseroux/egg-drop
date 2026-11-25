@@ -219,6 +219,21 @@ function Affection:showSaved(reduced)
  if shown then self.lastBurst=self:burst(reduced)end
  return shown
 end
+-- G2 (FirstHelloBonus): the first paid pet on a new save. The same gold plate held HelloSeconds reading
+-- "First hello! +{count} ★" (count = the receipt's total), the sparkle and chime, and the six bond hearts in the
+-- pet's secondary colour (none under Reduced Effects: the text carries it). Returns whether the plate showed.
+Affection.HelloSeconds=1.6
+function Affection:showHello(count,secondary,reduced)
+ if self.destroyed or not self.pet or not self.pet.model.Parent then return false end
+ local text=UICopy.get("pet.hello",{count=count})
+ local shown=self:showPlate(text,Affection.HelloSeconds,reduced)
+ self.label:SetAttribute("AccessibleLabel",text)
+ if shown then
+  self.lastBurst=self:burst(reduced)
+  self.lastHelloHearts=self:bondBurst(secondary,reduced)
+ end
+ return shown
+end
 -- The "+1 ★" / notice plate: rises and holds, then fades over its last 40%.
 function Affection:stepAward(dt,reduced)
  if not self.awardUntil then return end

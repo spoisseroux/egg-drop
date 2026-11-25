@@ -124,6 +124,8 @@ do
 			return make(Vector3.new(x,y,z),if select("#",...)==9 then{...}else nil)
 		end,
 		Angles=function(x,y,z)return make(Vector3.zero,angles(x,y,z))end,
+		-- Columns right, up, back (back defaults to right x up), as Roblox's (PetTrail lays prints on the ground).
+		fromMatrix=function(p,x,y,z)z=z or x:Cross(y);return make(p,{x.X,y.X,z.X,x.Y,y.Y,z.Y,x.Z,y.Z,z.Z})end,
 		fromEulerAnglesXYZ=function(x,y,z)return make(Vector3.zero,angles(x,y,z))end,
 		fromOrientation=function(x,y,z)return make(Vector3.zero,mul(angles(0,y,0),mul(angles(x,0,0),angles(0,0,z))))end,
 		fromEulerAnglesYXZ=function(x,y,z)return make(Vector3.zero,mul(angles(0,y,0),mul(angles(x,0,0),angles(0,0,z))))end,

@@ -157,7 +157,7 @@ return function(client,parent)
   test("coach: with a tour the garden step opens it once, by the beat rules, and closing it saves the step",function()
    local gui=Instance.new("ScreenGui");gui.Name="_NoticeTourSpec";gui.Parent=parent
    local sent,opened,done={},0,nil
-   local cards=Cards.new({gui=parent,send=function(id)table.insert(sent,id)end,tour=function(finish)opened+=1;done=finish;return true end})
+   local cards=Cards.new({flags={},gui=parent,send=function(id)table.insert(sent,id)end,tour=function(finish)opened+=1;done=finish;return true end})
    local good,why=pcall(function()
     local function step(t,extra)
      local ctx={mode="Room",canRoam=true,presented=false,owned=1,input="Touch",open={},used={},pet="Bear"}
@@ -179,7 +179,7 @@ return function(client,parent)
    -- The cards could not open: the three beat lines run instead.
    local gui2=Instance.new("ScreenGui");gui2.Name="_NoticeTourSpec2";gui2.Parent=parent
    local tried=0
-   local fallback=Cards.new({gui=parent,send=function()end,tour=function()tried+=1;return false end})
+   local fallback=Cards.new({flags={},gui=parent,send=function()end,tour=function()tried+=1;return false end})
    local good2,why2=pcall(function()
     fallback:sync({coachMask=0,totalWins=0,quests={daily={}}})
     local ctx={mode="Room",canRoam=true,presented=false,owned=1,input="Touch",open={},used={},pet="Bear",idleFor=5}

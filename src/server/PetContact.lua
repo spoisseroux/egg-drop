@@ -60,7 +60,8 @@ function Contact:reconcile()
 		if live then lease.windowStart=now end
 		if live or late then
 			self:reply({status="Saved",requestGeneration=lease.generation,leaseId=lease.id,petId=lease.petId,
-				receipt={id=receipt.id,sequence=receipt.sequence,day=receipt.day,petId=receipt.petId}})
+				-- G2: `hello` (the first hello's extra Stars) rides the receipt when this award paid it.
+				receipt={id=receipt.id,sequence=receipt.sequence,day=receipt.day,petId=receipt.petId,hello=receipt.hello}})
 		end
 	elseif state and not state.busy and state.pendingId~=issued.candidate.id then
 		self.issued=nil -- A definitive refusal, expiry, or unrecoverable fence loss.
