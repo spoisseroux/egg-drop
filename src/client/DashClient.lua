@@ -7,8 +7,8 @@
 --     ExtrapolateTicks on; drive() is the hook RoomView and RoomCompanions put a racing pet through;
 --   * held() is true from the countdown to the end of the results: menus, prompts and notices wait for it. Any other
 --     screen that opens anyway takes the camera and controls back until it closes.
--- deps: remotes, roomView, playerGui, audio, state() -> nursery snapshot, reduced(), closeMenus(), modalOpen() (any
--- other screen), canRoam().
+-- deps: remotes, roomView, playerGui, audio, ambient (AmbientAudio: the race song; optional), state() -> nursery
+-- snapshot, reduced(), closeMenus(), modalOpen() (any other screen), canRoam().
 local Players=game:GetService("Players")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local HttpService=game:GetService("HttpService")
@@ -579,6 +579,10 @@ function Client:endSeat()
 	local seat=self.seat
 	if self.input then pcall(self.input.close)end -- lets Dash go while there is still a race to tell
 	self.seat,self.holding,self.shot=nil,false,false
+	-- The song fades and the world music comes back; a sting still ringing is cut short.
+	if seat and seat.songGo then self:song("off")end
+	local audio=self.d.audio
+	if self.stingOwner and type(audio.fadeOwner)=="function"then pcall(audio.fadeOwner,audio,self.stingOwner,Client.StingCut)end
 	pcall(self.d.roomView.leaveDash,self.d.roomView)
 	if self.fade then pcall(self.fade.release,self.fade)end
 	if self.hud then pcall(self.hud.hide,self.hud)end
@@ -738,11 +742,65 @@ function Client:ensureHud()
 		blocked=function()return GuiService.MenuIsOpen or Confirm.isOpen()or UserInputService:GetFocusedTextBox()~=nil end})
 	self.input=RaceInput.mount({core=self.core,zones=self.hud.zones,stones=self.hud.stones,leave=function()self:askLeave()end})
 end
+-- The race song and the finish cues (RACE-AND-MUSIC-LOOK 1.2 to 1.5, 2.1; Spencer 2026-11-25): placeholders, this
+-- player's own race only. d.ambient (AmbientAudio) plays the song; a missing one (specs) or one that throws never
+-- touches the race.
+Client.SongResync=.05
+Client.clock=os.clock -- the song's clock (AmbientAudio's `now`); specs replace both
+function Client:song(state,go,fade)
+	local ambient=self.d.ambient
+	if not ambient or type(ambient.setRace)~="function"then return false end
+	local ok,taken=pcall(ambient.setRace,ambient,state,go,fade)
+	if not ok then warn("[Dash] race song: "..tostring(taken))end
+	return ok and taken==true
+end
+-- Which card show a result gets (1.3): "win" (1st of two or more, a Time Trial cup), "placed" (2nd, 3rd), "best" (a
+-- Time Trial new best with no cup) or "finished" (the rest: 4th and lower, a race of one, a trial with no best). Pure.
+function Client.finishShow(packet,newBest)
+	if type(packet)~="table"then return "finished"end
+	if packet.trial then
+		if type(packet.medal)=="string"and Results.CupColor[packet.medal]then return "win"end
+		return if newBest==true then "best"else "finished"
+	end
+	local field=if type(packet.seats)=="table"then #packet.seats else 0
+	local place=tonumber(packet.place)or 8
+	if field<2 then return "finished"end
+	return if place<=1 then "win"elseif place<=3 then "placed"else "finished"
+end
+-- Each show's cues from the card opening: {seconds, cue, volume}. "best?" is the new-best beat inside a Win, Placed or
+-- Finished show: it plays only if the saved best says so by then (the receipt can land after the card opens).
+Client.Stings=table.freeze({
+	win=table.freeze({{.15,"dash_win",.6},{2.10,"best?",.5}}),
+	placed=table.freeze({{.15,"dash_place",.5},{1.90,"best?",.5}}),
+	finished=table.freeze({{.15,"dash_place",.4},{1.90,"best?",.5}}),
+	best=table.freeze({{.15,"dash_place",.5},{1.15,"dash_best",.5}}),
+})
+Client.StingCut=.15 -- the card going (Done, Race again, a chip) cuts what still rings
+function Client:sting(cue,volume)
+	self.stingOwner=self.stingOwner or {}
+	return self.d.audio:play(cue,1,volume,self.stingOwner)
+end
+-- The cues due by `now` on the open results card. The card gone: none.
+function Client:stingStep(now)
+	local seat=self.seat
+	local plan=seat and seat.stings
+	if not plan then return end
+	if not(self.card and self.card.results and not self.card.closed)then seat.stings=nil;return end
+	while plan.list[plan.next]and now-plan.at>=plan.list[plan.next][1]do
+		local entry=plan.list[plan.next]
+		plan.next+=1
+		if entry[2]~="best?"then self:sting(entry[2],entry[3])
+		elseif self:resultModel(seat).newBest then self:sting("dash_best",entry[3])end
+	end
+	if not plan.list[plan.next]then seat.stings=nil end
+end
 -- The pet is over the line (the result waits for the others, at most 20 s).
 function Client:home(seat)
 	if seat.home then return end
 	seat.home=true
-	self.d.audio:play("quest_complete",1,.5)
+	-- Placeholder `dash_line` (two wood notes); the old cue while it has no voice (not loaded, the ceiling off).
+	if not self.d.audio:play("dash_line",1,.5)then self.d.audio:play("quest_complete",1,.5)end
+	self:song("line")
 end
 -- Takes or gives back the camera and controls as this frame needs them.
 function Client:hold(seat)
@@ -785,6 +843,14 @@ function Client:raceStep(seat,dt,now,reduced)
 		if now<seat.goAt-.35 then predict.lead=Predict.lead(self:rtt())end
 	end
 	predict:step(now,dt)
+	-- The race song: the lead-in under the 3, 2, 1, GO on the downbeat of bar 1 (on the song's own clock, os.clock).
+	if not seat.home and seat.phase~="done"then
+		local go=Client.clock()+(seat.goAt-predict.lead-now)
+		if seat.songGo==nil or math.abs(go-seat.songGo)>Client.SongResync then
+			seat.songGo=go
+			self:song("play",go)
+		end
+	end
 	if seat.phase=="countdown"and predict:started()then
 		seat.phase="race"
 		self.d.audio:play("retry",1.1,.35)
@@ -868,8 +934,13 @@ function Client:raceStep(seat,dt,now,reduced)
 	self.fade:step(dt,eye,Vector3.new(px,py+.8,pz),seat.cs,seat.onStones==true)
 	room:dashCamera(CFrame.lookAt(eye,look),c.fov)
 end
-function Client:showResults(seat)
+function Client:showResults(seat,now)
 	seat.cardAt=nil
+	-- The song goes as the card comes in; the show's sting starts 0.15 s in (stingStep).
+	self:song("card")
+	local show=Client.finishShow(seat.result,self:resultModel(seat).newBest)
+	seat.show=show
+	seat.stings={list=Client.Stings[show],next=1,at=now or 0}
 	seat.closeAt=os.clock()+Client.ResultSeconds
 	local title,lines=Results.words(seat.result,self:saved(),seat.before)
 	local function done()self:endSeat()end
@@ -941,7 +1012,7 @@ function Client:slowStep(now)
 	if self.card and not self.card.closed and not self.card.results and(d.roomView.target~="Room"or d.modalOpen())then self.card:close();self.card=nil end
 	self:gatherLine(now)
 	if not seat or seat.phase~="done"then return end
-	if seat.cardAt and clock>=seat.cardAt and not d.modalOpen()then self:showResults(seat)
+	if seat.cardAt and clock>=seat.cardAt and not d.modalOpen()then self:showResults(seat,now)
 	elseif self.card and self.card.results and not self.card.closed then
 		-- The saved receipt (Stars, the best) lands on the open card.
 		local model=self:resultModel(seat)
@@ -981,6 +1052,7 @@ function Client:frame(dt,now)
 	self:heatStep(dt,now,reduced)
 	local seat=self.seat
 	if seat and seat.predict then self:raceStep(seat,dt,now,reduced)end
+	self:stingStep(now)
 	if not self.props then return end -- closed by what the race just did
 	if self.line then
 		-- The rope's edge is the meadow's: a player waiting in the Play Den is never pulled toward the pad.

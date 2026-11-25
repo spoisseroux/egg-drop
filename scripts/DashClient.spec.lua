@@ -88,7 +88,19 @@ return function(client,offline)
 		Rail.enqueue=function(_,key)table.insert(r.notes,key)end
 		Rail.status=function(_,_,data)r.lineData=data;return{update=function(_,v)r.line=v.text;r.lineData=v end,cancel=function()r.line=nil end,pulse=function()r.pulses=(r.pulses or 0)+1 end}end
 		Rail.holder=nil
-		r.client=Client.mount({remotes=remotes,roomView=r.room,playerGui=r.gui,audio={play=function()end},reduced=function()return r.reduced==true end,
+		-- The sounds and the race song, recorded. r.voiced = {cue = true}: only those cues have a voice (nil: every cue).
+		r.sounds,r.songs={},{}
+		local audio={play=function(_,name,_,volume,owner)
+			table.insert(r.sounds,{name=name,volume=volume,owner=owner,at=now})
+			return r.voiced==nil or r.voiced[name]==true
+		end,fadeOwner=function(_,owner,seconds)table.insert(r.sounds,{name="fade",owner=owner,seconds=seconds,at=now})end}
+		local ambient={setRace=function(_,state,go,fade)
+			if r.songThrows then error("song broke")end
+			table.insert(r.songs,{state=state,go=go,fade=fade,at=now})
+			return true
+		end}
+		Client.clock=function()return now end
+		r.client=Client.mount({remotes=remotes,roomView=r.room,playerGui=r.gui,audio=audio,ambient=ambient,reduced=function()return r.reduced==true end,
 			state=function()return{dash=r.saved}end,canRoam=function()return r.roam end,modalOpen=function()return r.modal end,closeMenus=function()r.menusClosed+=1 end})
 		function r.fire(packet)r.event.OnClientEvent:Fire(packet)end
 		function r.frame(count,dt)
@@ -303,6 +315,68 @@ return function(client,offline)
 		card:pick("Done");r.free("done")
 		assert(r.client.props.want==0,"Done: an onlooker now, so the hoops sink")
 		r.done()
+	end)
+	test("placeholder race song and finish cues (Spencer 2026-11-25): the song from the lock, GO on bar 1, down at the line, out for the card, off with it; the stings",function()
+		local function named(r,name)local out={};for _,e in ipairs(r.sounds)do if e.name==name then table.insert(out,e)end end;return out end
+		local function four()return{{seat=1,place=1},{seat=2,place=2},{seat=3,place=3},{seat=4,place=4}}end
+		-- A win in a race of four, with a new best landing while the card is open.
+		local r=rig()
+		r.lock("fun",4);r.frame(2)
+		local first=r.songs[1]
+		assert(first and first.state=="play"and math.abs(first.go-(r.goAt-r.client.seat.predict.lead))<.02,"the song starts at the lock, GO on the downbeat")
+		r.frame(260);for _,song in ipairs(r.songs)do assert(song.state=="play")end
+		assert(#r.songs<=2,"timed once, re-timed only when the lead is fixed: "..#r.songs)
+		r.fire({kind="result",r="race-1",mode="fun",seats=four(),seat=1,place=1,us=41000000})
+		local line=named(r,"dash_line")
+		assert(#line==1 and line[1].volume==.5 and #named(r,"quest_complete")==0,"dash_line at the line")
+		assert(r.songs[#r.songs].state=="line","the song drops at the line and keeps playing")
+		r.frame(30);assert(r.songs[#r.songs].state=="line"and #named(r,"dash_line")==1,"once")
+		local function open()
+			r.client.seat.cardAt=-1
+			for _=1,30 do r.frame(1);if r.client.seat.show then return now end end
+			error("no card")
+		end
+		local opened=open()
+		assert(card.options.name=="Results"and r.songs[#r.songs].state=="card"and r.client.seat.show=="win","the card: the song goes")
+		r.frame(12)
+		local win=named(r,"dash_win")
+		assert(#win==1 and win[1].volume==.6 and win[1].at-opened>=.15-1e-6 and win[1].at-opened<.2 and win[1].owner~=nil,"dash_win 0.15 s in")
+		assert(#named(r,"dash_place")==0 and #named(r,"dash_best")==0)
+		r.saved={best=41000000};r.frame(130)
+		local best=named(r,"dash_best")
+		assert(#best==1 and best[1].at-opened>=2.10-1e-6 and best[1].owner==win[1].owner,"the new-best beat at 2.10")
+		card:pick("Done")
+		local last=r.sounds[#r.sounds]
+		assert(r.songs[#r.songs].state=="off"and last.name=="fade"and last.owner==win[1].owner and last.seconds==.15,"Done: the song off, the stings cut")
+		r.free("done");r.done()
+		-- 2nd: dash_place .5 and no best beat without a new best; Race again turns the song off and the next race starts it again.
+		r=rig();r.lock("fun",4);r.frame(5)
+		r.fire({kind="result",r="race-1",mode="fun",seats=four(),seat=1,place=2,us=41000000});r.client.seat.cardAt=-1;r.frame(150)
+		assert(#named(r,"dash_place")==1 and named(r,"dash_place")[1].volume==.5 and #named(r,"dash_win")==0 and #named(r,"dash_best")==0)
+		card:pick("Again");assert(r.songs[#r.songs].state=="off")
+		r.lock("fun",4);r.frame(2);assert(r.songs[#r.songs].state=="play","the next race's song")
+		r.client:leave();assert(r.songs[#r.songs].state=="off","leaving: off");r.done()
+		-- 4th: dash_place at .4. A cue with no voice yet: the old line cue.
+		r=rig();r.voiced={};r.lock("fun",4);r.frame(5)
+		r.fire({kind="result",r="race-1",mode="fun",seats=four(),seat=1,place=4,us=41000000})
+		assert(#named(r,"dash_line")==1 and #named(r,"quest_complete")==1,"no dash_line voice: quest_complete")
+		r.client.seat.cardAt=-1;r.frame(40);assert(named(r,"dash_place")[1].volume==.4);card:pick("Done");r.done()
+		-- The card closing before 0.15 s: no sting at all.
+		r=rig();r.lock("fun",4);r.frame(5)
+		r.fire({kind="result",r="race-1",mode="fun",seats=four(),seat=1,place=1,us=41000000})
+		r.client.seat.cardAt=-1;for _=1,30 do r.frame(1);if r.client.seat.show then break end end
+		assert(r.client.seat.show=="win");card:pick("Done");r.frame(30);assert(#named(r,"dash_win")==0,"the card went first");r.done()
+		-- A song that throws never touches the race.
+		r=rig();r.songThrows=true;r.lock("fun",4);r.frame(60);assert(r.client.seat and r.client.errors==0 and r.room.held,"the race runs on")
+		r.client:leave();r.free("song threw");r.done()
+		-- The shows (1.3).
+		local S=Client.finishShow
+		assert(S({place=1,seats=four()})=="win"and S({place=2,seats=four()})=="placed"and S({place=3,seats=four()})=="placed"and S({place=4,seats=four()})=="finished")
+		assert(S({place=1,seats={{seat=1}}})=="finished","a race of one")
+		assert(S({trial=true,medal="gold"})=="win"and S({trial=true,medal="bronze"},true)=="win"and S({trial=true},true)=="best"and S({trial=true},false)=="finished")
+		assert(S(nil)=="finished")
+		local best=Client.Stings.best
+		assert(best[1][2]=="dash_place"and best[2][2]=="dash_best"and best[2][1]==1.15)
 	end)
 	test("beta 14 F1: a Coming up chip on the results card puts the card away first, then routes (afterGarden); none without a strip",function()
 		local r=rig()

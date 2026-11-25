@@ -4626,7 +4626,7 @@ end
 -- Garden Dash (DashClient): nil with the build ceiling off; with the switch off it only watches for the switch.
 do
  local ok,problem=pcall(function()
-  clientUI.dash=require(script.DashClient).mount({remotes=remotes,roomView=roomView,playerGui=gui.Parent,audio=audio,reduced=reduceEffects,
+  clientUI.dash=require(script.DashClient).mount({remotes=remotes,roomView=roomView,playerGui=gui.Parent,audio=audio,ambient=clientUI.ambient,reduced=reduceEffects,
    strip=function()return if clientUI.tomorrow then clientUI.tomorrow()else nil end,
    -- Beta 14 F1: a Coming up chip on the Dash results card routes like the deck's (the Dash side wires it).
    -- The card is put away first (DashClient), so the garden step waits for the room through afterGarden.

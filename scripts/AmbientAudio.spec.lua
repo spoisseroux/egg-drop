@@ -259,6 +259,65 @@ return function(client, parent)
 		a:destroy();folder:Destroy();assert(ok, err)
 	end)
 
+	test("placeholder race song (Spencer 2026-11-25): lead-in from 3 s before GO, the 3..35 loop, the line, the card, off; the world music held out and back; music toggle and focus", function()
+		local R = Ambient.Race
+		-- Where in the file: the lead-in once, then 3..35 round and round.
+		assert(near(Ambient.racePosition(-3), 0) and near(Ambient.racePosition(0), 3) and near(Ambient.racePosition(31.5), 34.5))
+		assert(near(Ambient.racePosition(32), 3) and near(Ambient.racePosition(40), 11) and near(Ambient.racePosition(64 + 1), 4))
+		assert(R.lead == 3 and R.loopEnd == 35 and R.line == .35 and R.lineFade == .4 and R.cardFade == .15 and R.back == 1.0)
+		assert(Ambient.RaceSongId == 100659120200214 and R.volume == Ambient.DeckMusicVolume)
+		local refreshed = 0
+		local audio = { master = 1, deviceActive = true, ducks = {}, music = true }
+		function audio:isMusicEnabled() return self.music end
+		function audio:duck() end
+		function audio:refreshLoops() refreshed += 1 end
+		function audio:petSpeechBusy() return false end
+		local folder = Instance.new("Folder");folder.Parent = parent or workspace
+		local clock = 100
+		local a = Ambient.new(audio, { auto = false, world = folder, quiet = function() return false end, listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return clock end })
+		local function run(seconds) for _ = 1, math.floor(seconds * 30 + .5) do clock += 1 / 30; a:step(1 / 30) end end
+		local ok, err = pcall(function()
+			assert(a.raceVoice == nil and not a:setRace("line") and not a:setRace("off"), "no voice and nothing to do until a race asks")
+			run(1);assert(audio.ducks[Ambient.RaceDuck] == nil and refreshed == 0, "nothing per frame without a race")
+			-- Locked 6 s before GO: silent, the world music still up, until the lead-in.
+			assert(a:setRace("play", clock + 6))
+			local voice = a.raceVoice
+			assert(voice and voice.Looped and voice.SoundGroup == a.deckGroup and voice.SoundId == "rbxassetid://" .. Ambient.RaceSongId)
+			assert(a.raceLoop == "region" and voice.PlaybackRegionsEnabled == true and voice.LoopRegion ~= nil, "LoopRegion 3..35")
+			run(2);assert(not voice.IsPlaying and audio.ducks[Ambient.RaceDuck] == nil, "before the lead-in")
+			run(.8);assert(audio.ducks[Ambient.RaceDuck] ~= nil and audio.ducks[Ambient.RaceDuck] < 1, "the world music fades out just before the lead-in")
+			run(.4);assert(voice.IsPlaying, "the lead-in at 3 s to GO");assert(voice.TimePosition < .4, "from the top " .. tostring(voice.TimePosition))
+			assert(audio.ducks[Ambient.RaceDuck] == 0, "the world held out " .. tostring(audio.ducks[Ambient.RaceDuck]))
+			run(.2);assert(near(voice.Volume, R.volume), "full " .. voice.Volume)
+			-- Re-timed by a small lead change: no jump; by a big one: one jump.
+			local go = a.race.go
+			a:setRace("play", go + .02);assert(a.race.go == go and not a.race.seek)
+			a:setRace("play", go - .5);assert(a.race.seek);run(1 / 30);assert(not a.race.seek and voice.IsPlaying)
+			-- The music toggle stops it; on again it comes back where the race is.
+			audio.music = false;run(.1);assert(not voice.IsPlaying)
+			audio.music = true;run(1 / 30);assert(voice.IsPlaying and near(voice.TimePosition, Ambient.racePosition(clock - a.race.go), .05))
+			audio.deviceActive = false;run(.1);assert(not voice.IsPlaying, "unfocused");audio.deviceActive = true;run(1 / 30);assert(voice.IsPlaying)
+			-- Over the line: .35 in .4 s, still playing; the deck group still follows the master volume.
+			assert(a:setRace("line"));run(.2);assert(voice.Volume < R.volume and voice.Volume > R.volume * R.line)
+			run(.3);assert(near(voice.Volume, R.volume * R.line) and voice.IsPlaying)
+			assert(not a:setRace("play", a.race.go), "never back up once over the line")
+			assert(near(a.deckGroup.Volume, 1), "the race duck holds out the world music only")
+			-- The card: out in .15 s; the world music stays held out under the card.
+			assert(a:setRace("card"));run(.2);assert(voice.Volume == 0 and not voice.IsPlaying and audio.ducks[Ambient.RaceDuck] == 0)
+			-- Off: the world music back over 1 s, then the duck gone.
+			assert(a:setRace("off"));run(.5);assert(a.race == nil and audio.ducks[Ambient.RaceDuck] > .3 and audio.ducks[Ambient.RaceDuck] < .7, "half way back")
+			run(.6);assert(audio.ducks[Ambient.RaceDuck] == nil and a.raceWorld == 1)
+			local before = refreshed;run(1);assert(refreshed == before, "nothing per frame once back")
+			-- Left mid-race: out in .4 s from full.
+			a:setRace("play", clock + .5);run(1);assert(voice.IsPlaying)
+			a:setRace("off");run(.2);assert(voice.Volume > 0);run(.3);assert(not voice.IsPlaying and a.race == nil)
+			-- Muted: never plays.
+			audio.master = 0;a:setRace("play", clock);run(.5);assert(not voice.IsPlaying);a:setRace("off");run(1.5)
+		end)
+		a:destroy();folder:Destroy();assert(ok, err)
+		assert(audio.ducks[Ambient.RaceDuck] == nil, "destroy lets the world music go")
+	end)
+
 	test("LOOK-R3 3: an added voice falls back once when its asset fails to load, never when it loads or is gone; starts at its share", function()
 		local audio = { master = 1, deviceActive = true, ducks = {}, music = true }
 		function audio:isMusicEnabled() return self.music end
