@@ -40,7 +40,7 @@ return function(server)
 		function beat:Connect(fn)table.insert(self.list,fn);return{Disconnect=function()table.clear(self.list)end}end
 		c.beat=beat
 		c.host=Host.mount({boards=c.boards,room=function()return c.room end,heartbeat=beat,clock=function()return c.now end,
-			garden={actors=c.actors},layout=options.layout,hushOpen=function()return c.hush end,
+			garden={actors=c.actors},layout=options.layout or function()return P end,hushOpen=function()return c.hush end,
 			read=function(board)if board.boom then error("read failed")end return board.view end,
 			place=function(board,view,cframe)
 				local blocker=c.room:FindFirstChild(Den.Blocker)

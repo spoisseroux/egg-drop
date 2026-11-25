@@ -69,8 +69,13 @@
 -- WorldFeel (beta 14 QA W4): the build ceiling for the lower arrival camera, the zoom cap, the haze and the walk speed
 -- test. Also needs the beta place or Studio (WorldFeel.PlaceId) and the server's switches (WorldFeelConfig: world_feel,
 -- world_walk). Missing = off.
+-- CliffDen (CLIFF-DEN-ISLAND-SCOPE): with the WorldBeta pack mounted (under Tier's ceiling), true swaps in the sculpted
+-- island (the cliff path, the Play Den's room, the terrace top: DenLayout's step B); false swaps only the cave's bars
+-- out of the palette (no room then: step A's pocket is retired, so the den and the terrace stay closed). Either way the
+-- bars hide while the den is open. No pack: the live island.
 -- PlayDen (PLAY-DEN-BUILD-PLAN, artifacts/qa-2026-11-24-beta16): the build ceiling for the Play Den (the cave as the games
--- room). Also needs the beta place or Studio (PlayDen.PlaceId) and the server's switch (DenConfig: play_den, missing = off).
+-- room). Also needs the beta place or Studio (PlayDen.PlaceId), the server's switch (DenConfig: play_den, missing = on) and the
+-- island's sculpt (CliffDen) for its room.
 -- ParkHollow (WORLD-ALIVE-LOOK section 2, 2026-11-25): the second park becomes the Hollow (a round glade backed into the
 -- cliff, no kerb). Shared layout data read at require time, so it is a place gate only, no server switch: the beta
 -- place or Studio (ParkLayout.HollowPlaceId). false, or any other place (live), keeps the old grove park exactly.
@@ -78,4 +83,4 @@ return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,D
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
- PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true,PlayDen=true,ParkHollow=true})
+ PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true})

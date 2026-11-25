@@ -5,3 +5,4 @@ assets/world/AeroKit.rbxmx -text
 assets/world/WorldAssets.rbxmx eol=lf
 src/shared/WorldV7Data.lua eol=lf
 assets/world/world-v7-pending.json eol=lf
+assets/world/WorldBeta.rbxm -text

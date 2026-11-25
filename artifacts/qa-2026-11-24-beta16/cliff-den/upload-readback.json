@@ -1,0 +1,383 @@
+{
+ "version": "05ed5063532d23bd",
+ "models": {
+  "beta": 97626448020165,
+  "collision": 118642606557048
+ },
+ "parts": [
+  {
+   "name": "W7_CD_CaveBars__palette",
+   "template": "W7_Landmarks__palette",
+   "mesh": 124283141364863,
+   "model": 97626448020165,
+   "collide": false,
+   "center": [
+    -6.9977,
+    7.8,
+    -100.0723
+   ],
+   "size": [
+    17.2418,
+    6.8,
+    2.3969
+   ]
+  },
+  {
+   "name": "W7_CD_CliffPath__cliff_rock",
+   "template": "W7_Rocks__cliff_rock",
+   "mesh": 106316147121055,
+   "model": 97626448020165,
+   "collide": true,
+   "center": [
+    -52.851,
+    17.7568,
+    -65.2809
+   ],
+   "size": [
+    68.917,
+    28.4864,
+    59.7577
+   ]
+  },
+  {
+   "name": "W7_CD_CliffPath__dirt_path",
+   "template": "W7_Ground__dirt_path",
+   "mesh": 126269146836994,
+   "model": 97626448020165,
+   "collide": false,
+   "center": [
+    -50.029,
+    16.8,
+    -67.7007
+   ],
+   "size": [
+    63.9729,
+    24.4,
+    45.8385
+   ]
+  },
+  {
+   "name": "W7_CD_PlayDen__cliff_rock",
+   "template": "W7_Rocks__cliff_rock",
+   "mesh": 85879678839252,
+   "model": 97626448020165,
+   "collide": true,
+   "center": [
+    -7.9802,
+    9.9402,
+    -107.0895
+   ],
+   "size": [
+    28.4331,
+    12.0805,
+    24.179
+   ]
+  },
+  {
+   "name": "W7_CD_PlayDen__dirt_path",
+   "template": "W7_Ground__dirt_path",
+   "mesh": 95770608526708,
+   "model": 97626448020165,
+   "collide": false,
+   "center": [
+    -8.0,
+    4.075,
+    -106.1
+   ],
+   "size": [
+    28.0,
+    0.25,
+    25.8
+   ]
+  },
+  {
+   "name": "W7_CD_Pocket__palette",
+   "template": "W7_Landmarks__palette",
+   "mesh": 135681066741092,
+   "model": 97626448020165,
+   "collide": false,
+   "center": [
+    1.3175,
+    11.7397,
+    -80.5573
+   ],
+   "size": [
+    35.5703,
+    16.4794,
+    76.4378
+   ]
+  },
+  {
+   "name": "W7_CD_Crystals__glow_aqua",
+   "template": "W7_Crystals__glow_aqua",
+   "mesh": 126165072432602,
+   "model": 97626448020165,
+   "collide": false,
+   "center": [
+    9.9599,
+    -50.9019,
+    -8.3804
+   ],
+   "size": [
+    158.6748,
+    65.6041,
+    127.64
+   ]
+  },
+  {
+   "name": "W7_CD_Crystals__glow_pink",
+   "template": "W7_Crystals__glow_pink",
+   "mesh": 134380001187039,
+   "model": 97626448020165,
+   "collide": false,
+   "center": [
+    0.5317,
+    -41.7983,
+    -23.0881
+   ],
+   "size": [
+    94.3273,
+    96.2153,
+    148.9607
+   ]
+  },
+  {
+   "name": "W7_CD_Ground__grass",
+   "template": "W7_Ground__grass",
+   "mesh": 122893526414752,
+   "model": 97626448020165,
+   "collide": false,
+   "center": [
+    9.0,
+    27.2333,
+    -21.0
+   ],
+   "size": [
+    228.0,
+    46.836,
+    210.0
+   ]
+  },
+  {
+   "name": "W7_CD_Ground__ground",
+   "template": "W7_Ground__ground",
+   "mesh": 84764750855645,
+   "model": 97626448020165,
+   "collide": false,
+   "center": [
+    16.5,
+    22.8239,
+    -34.5
+   ],
+   "size": [
+    261.0,
+    55.6477,
+    249.0
+   ]
+  },
+  {
+   "name": "W7_CD_Landmarks__cliff_rock",
+   "template": "W7_Landmarks__cliff_rock",
+   "mesh": 123261497055498,
+   "model": 97626448020165,
+   "collide": true,
+   "center": [
+    41.8303,
+    26.8631,
+    -81.4958
+   ],
+   "size": [
+    137.4132,
+    57.0803,
+    83.5307
+   ]
+  },
+  {
+   "name": "W7_CD_Landmarks__marble",
+   "template": "W7_Landmarks__marble",
+   "mesh": 106548713231183,
+   "model": 97626448020165,
+   "collide": true,
+   "center": [
+    20.314,
+    7.3,
+    -47.8291
+   ],
+   "size": [
+    71.972,
+    7.2,
+    106.9901
+   ]
+  },
+  {
+   "name": "W7_CD_Landmarks__palette",
+   "template": "W7_Landmarks__palette",
+   "mesh": 103300557764676,
+   "model": 97626448020165,
+   "collide": false,
+   "center": [
+    16.7545,
+    17.2143,
+    -44.6785
+   ],
+   "size": [
+    4.6964,
+    5.5302,
+    4.6802
+   ]
+  },
+  {
+   "name": "W7_CD_Rocks__cliff_rock",
+   "template": "W7_Rocks__cliff_rock",
+   "mesh": 127765526960158,
+   "model": 97626448020165,
+   "collide": true,
+   "center": [
+    15.6582,
+    17.1268,
+    -32.1691
+   ],
+   "size": [
+    233.056,
+    50.5718,
+    201.4282
+   ]
+  },
+  {
+   "name": "W7_CD_Rocks__grass",
+   "template": "W7_Rocks__grass",
+   "mesh": 100380891763671,
+   "model": 97626448020165,
+   "collide": true,
+   "center": [
+    17.3261,
+    23.3314,
+    -30.8816
+   ],
+   "size": [
+    226.2603,
+    38.1626,
+    197.3646
+   ]
+  },
+  {
+   "name": "W7C_CD_Ground_12",
+   "template": "W7C_Ground_12",
+   "mesh": 88395119544631,
+   "model": 118642606557048,
+   "collide": true,
+   "center": [
+    -80.0,
+    11.2493,
+    -80.0
+   ],
+   "size": [
+    32.0,
+    32.5768,
+    32.0
+   ]
+  },
+  {
+   "name": "W7C_CD_Ground_18",
+   "template": "W7C_Ground_18",
+   "mesh": 88015980411089,
+   "model": 118642606557048,
+   "collide": true,
+   "center": [
+    -48.0,
+    14.0514,
+    -48.0
+   ],
+   "size": [
+    32.0,
+    23.0984,
+    32.0
+   ]
+  },
+  {
+   "name": "W7C_CD_Ground_19",
+   "template": "W7C_Ground_19",
+   "mesh": 90564173448658,
+   "model": 118642606557048,
+   "collide": true,
+   "center": [
+    -48.0,
+    14.9712,
+    -80.0
+   ],
+   "size": [
+    32.0,
+    24.9329,
+    32.0
+   ]
+  },
+  {
+   "name": "W7C_CD_Ground_27",
+   "template": "W7C_Ground_27",
+   "mesh": 102502452581155,
+   "model": 118642606557048,
+   "collide": true,
+   "center": [
+    -16.0,
+    13.1365,
+    -80.0
+   ],
+   "size": [
+    32.0,
+    21.373,
+    32.0
+   ]
+  },
+  {
+   "name": "W7C_CD_Ground_28",
+   "template": "W7C_Ground_28",
+   "mesh": 81561548350515,
+   "model": 118642606557048,
+   "collide": true,
+   "center": [
+    -16.0,
+    16.3872,
+    -112.0
+   ],
+   "size": [
+    32.0,
+    27.8744,
+    32.0
+   ]
+  },
+  {
+   "name": "W7C_CD_Ground_36",
+   "template": "W7C_Ground_36",
+   "mesh": 136389459252374,
+   "model": 118642606557048,
+   "collide": true,
+   "center": [
+    16.0,
+    20.1843,
+    -112.0
+   ],
+   "size": [
+    32.0,
+    35.4686,
+    32.0
+   ]
+  },
+  {
+   "name": "W7C_CD_CliffPath",
+   "template": "W7C_Ground_12",
+   "mesh": 99549806334201,
+   "model": 118642606557048,
+   "collide": true,
+   "center": [
+    -50.029,
+    16.05,
+    -67.7007
+   ],
+   "size": [
+    63.9729,
+    25.9,
+    45.8385
+   ]
+  }
+ ]
+}

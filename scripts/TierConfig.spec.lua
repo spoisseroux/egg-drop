@@ -36,10 +36,10 @@ return function(server)
 		return s
 	end
 	local function of(s)return function()return{GetConfigAsync=function()return s end}end end
-	test("off before the config loads; once loaded a missing key is off (closed until the cliff path), true is on; only garden_tier is read",function()
+	test("off before the config loads; once loaded a missing key is on (the cliff path is the way up, 2026-11-25), true is on; only garden_tier is read",function()
 		local r=rig(function()return{GetConfigAsync=function()return coroutine.yield()end}end)
 		r.config.start();assert(r.is(false)and table.concat(r.log,",")=="hold false,set Tier_on false",table.concat(r.log,","))
-		for _,case in ipairs({{nil,false},{false,false},{true,true},{"false",false}})do
+		for _,case in ipairs({{nil,true},{false,false},{true,true},{"false",true}})do
 			local s=snapshot({garden_tier=case[1],garden_hush=false})
 			local q=rig(of(s));q.config.start();assert(q.is(case[2]),tostring(case[1]))
 			for _,key in ipairs(s.asked)do assert(key=="garden_tier",key)end

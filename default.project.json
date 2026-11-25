@@ -62,6 +62,9 @@
       "WorldAssets": {
         "$path": "assets/world/WorldAssetsNative.rbxm"
       },
+      "WorldBeta": {
+        "$path": "assets/world/WorldBeta.rbxm"
+      },
       "PocketDeckSlim": {
         "$path": "assets/deck/PocketDeckSlim.rbxmx"
       },

@@ -23,11 +23,11 @@ return function(server)
 	local LIVE=96451847774961
 	local P=Layout.Pocket
 
-	test("gate: the flag and the beta place or Studio; missing or malformed is off; clients follow Den_open only",function()
+	test("gate: the flag and the beta place or Studio; missing or malformed is on (2026-11-25); clients follow Den_open only",function()
 		assert(Den.ceiling({flags={PlayDen=true},studio=false,place=Den.PlaceId}))
 		assert(not Den.ceiling({flags={PlayDen=true},studio=false,place=LIVE}))
 		assert(not Den.ceiling({flags={},studio=true}))
-		assert(Den.resolve(nil,nil,true)==false and Den.resolve("yes",nil,true)==false and Den.resolve(true,nil,true)==true)
+		assert(Den.resolve(nil,nil,true)==true and Den.resolve("yes",nil,true)==true and Den.resolve(true,nil,true)==true and Den.resolve(false,nil,true)==false)
 		assert(Den.resolve(true,nil,false)==false and Den.resolve(false,true,true)==true and Den.resolve(true,false,true)==false)
 		Den.inject({flags={PlayDen=true},studio=true,open=true});assert(Den.isOpen())
 		Den.inject({flags={PlayDen=true},studio=true});assert(not Den.isOpen(),"missing Den_open is closed")
@@ -162,8 +162,26 @@ return function(server)
 		assert(Layout.petFloor(L,Vector3.new(-7,4.3,-90),true)and Layout.petFloor(L,Vector3.new(-10,4.3,-110),true))
 		local s=Layout.prompts(L);assert((s.gate-s.deck).Magnitude>=7)
 		assert(#Greybox.rows(L)<=Greybox.MaxParts)
-		-- current(): only with CliffDen; the pocket otherwise.
-		assert(Layout.current({cliffDen=false})==Layout.Pocket)
+		-- Fable cliff-den review: warm dim lamps with caps and bases, the timber frame over the mouth (no lantern posts),
+		-- the sign on the beam, the mat, the apron (colliding, top 4.65, skipping the mouth's own floor).
+		local byName={}
+		for _,r in ipairs(Greybox.rows(L))do byName[r.name]=r end
+		assert(Layout.Light.color=="#FFB870"and Layout.Light.brightness==.9 and Greybox.Look.lamp=="#D98A3A")
+		assert(byName.W7D_FrameLintel and byName.W7D_FrameJamb1 and byName.W7D_FrameThreshold and byName.W7D_Mat and byName.W7D_MatInner)
+		assert(byName.W7D_LanternPost1==nil and byName.W7D_LanternPost2==nil and byName.W7D_Lantern1Cap and byName.W7D_Lantern3Base)
+		local beam=byName.W7D_FrameLintel
+		assert(math.abs(byName.W7D_Sign.cframe.Position.Y-beam.cframe.Position.Y)<1e-6 and byName.W7D_Sign.cframe.Position.Z>beam.cframe.Position.Z)
+		for _,n in ipairs({"W7D_ApronFront","W7D_ApronWest","W7D_ApronEast"})do
+			local r=byName[n];assert(r and r.collide and math.abs(r.cframe.Position.Y+r.size.Y/2-Greybox.Apron.top)<1e-6,n)
+			local lo,hi=r.cframe.Position-r.size/2,r.cframe.Position+r.size/2
+			assert(hi.X<=L.mouth.x1 or lo.X>=L.mouth.x2 or lo.Z>=L.mouth.z+7.3-1e-6,n.." covers the mouth's floor")
+		end
+		-- Studio R2: ground rays in the room start under its collision ceiling (12.2); elsewhere +8 exactly.
+		assert(Layout.groundRayTop(L,Vector3.new(-7,7.6,-110),8)==L.floorY+Layout.CeilingRay and L.floorY+Layout.CeilingRay<12.2)
+		assert(Layout.groundRayTop(L,Vector3.new(-7,4.2,-98),8)==L.floorY+Layout.CeilingRay)
+		assert(Layout.groundRayTop(L,Vector3.new(40,7,50),8)==15 and Layout.groundRayTop(nil,Vector3.new(-7,7.6,-110),8)==15.6)
+		-- current(): only with CliffDen; the pocket is retired (2026-11-25): no room otherwise, and a reason.
+		local none,why=Layout.current({cliffDen=false});assert(none==nil and type(why)=="string")
 		assert(Layout.current({cliffDen=true,data=cliff()}).variant=="room")
 	end)
 

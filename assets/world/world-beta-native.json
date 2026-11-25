@@ -1,0 +1,10 @@
+{
+ "schemaVersion": 1,
+ "note": "The beta overlay pack (CLIFF-DEN-ISLAND-SCOPE): built in Studio Edit from the readback ids (AssetService:CreateMeshPartAsync, precise collision where CliffDenData.parts says collide, Box and no query otherwise; each part a clone of its live template with the mesh applied, TextureID restored), exported with SerializationService:SerializeInstancesAsync and checked by a round trip (201 parts, 2958 rays identical). Mounted by default.project.json only; scripts/world_beta_pack.py --check binds it.",
+ "nativePath": "assets/world/WorldBeta.rbxm",
+ "nativeBytes": 134706,
+ "nativeSha256": "48d42001de1cfc866cca7db00e5ed9d91291f056629630abf48a752a35e690dd",
+ "version": "861c072272ad9afb",
+ "parts": 201,
+ "readback": "artifacts/qa-2026-11-25-beta17/cliff-den/upload-readback-r2.json"
+}

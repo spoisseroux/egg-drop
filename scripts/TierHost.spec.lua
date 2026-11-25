@@ -1,7 +1,8 @@
 -- The upper tier host (UPPER-TIER-BUILD-PLAN.md, architect verdict applied): nothing on live; bad ring data keeps it
 -- closed; open builds, adds the pet-blocked footprints, stands only the found ring boxes aside; a missing box keeps it
 -- closed with one warning; close evacuates first, puts back only the boxes that still exist, destroys everything, in
--- one step; a rebuilt lounge drops the state; three errors close it. Fake room, ring, boards, clock and heartbeat.
+-- one step; a rebuilt lounge drops the state; three errors close it; the cliff path gated while closed, no terrace
+-- without it. Fake room, ring, boards, clock and heartbeat.
 -- Usage (Server): require(ServerScriptService.Server.ZZSpecs.TierHost)(ServerScriptService.Server)
 -- Offline: python scripts/run_dash_server_specs.py
 return function(server)
@@ -121,7 +122,7 @@ return function(server)
 		local model=c.room:FindFirstChild(Tier.Model)
 		assert(c.host.open and model and #model:GetChildren()==#c.host.rows)
 		for _,part in ipairs(model:GetChildren())do assert(part.Anchored==true and part.CanTouch==false and part:GetAttribute("WorldMesh")==true,part.Name)end
-		local feet=blocked(c.room);assert(#feet==#Tier.Pieces-1)
+		local feet=blocked(c.room);assert(#feet==#Host.footprints()and #feet>=8)
 		for _,part in ipairs(feet)do assert(part.CanCollide==false and part.CanQuery==false and part.Transparency==1)end
 		for i=1,#Data.perimeter do
 			assert(c.box(i).CanCollide==(table.find(aside,i)==nil),"ring box "..i)
@@ -143,15 +144,17 @@ return function(server)
 		Tier.inject(nil)
 	end)
 
-	test("off with people up there: each moved to the lawn by the foot while it is still open, then everything closed",function()
+	test("off with people up there (the terrace, the path off the lawn): each moved to the lawn by the path's foot while it is still open, then everything closed",function()
 		Tier.inject(ON)
 		local c=rig();c.tick()
 		local p=c.player(1,Tier.T(0,0,Tier.FloorY+3))
-		local q=c.player(2,Tier.P(20,23,Tier.legY(Tier.Legs[1],20)+3))
+		local q=c.player(2,Tier.T(-30,10,Tier.FloorY+3))
 		local r=c.player(3,LAWN)
+		local onPath=c.player(5,Tier.path().points[30]+Vector3.new(0,3,0)) -- code review: the gates are built across the path
+		local atFoot=c.player(6,Tier.path().points[1]+Vector3.new(0,3,0)) -- on the lawn at the foot: stays
 		local _,closing=c.player(4,Tier.T(5,5,Tier.FloorY+3));closing.closing=true
 		Tier.inject(OFF);c.tick()
-		assert(#c.placed==2)
+		assert(#c.placed==3 and c.arrivedAt[onPath]and not c.arrivedAt[atFoot])
 		for _,m in ipairs(c.placed)do
 			assert(m.open and m.ringOff,"moved after the tier closed")
 			local at=m.cframe.Position
@@ -161,6 +164,25 @@ return function(server)
 		assert((c.placed[1].cframe.Position-c.placed[2].cframe.Position).Magnitude>1)
 		assert(c.arrivedAt[p]and c.arrivedAt[q]and not c.arrivedAt[r])
 		assert(not c.host.open and c.box(aside[1]).CanCollide==true)
+		Tier.inject(nil)
+	end)
+
+	test("the cliff path: closed, its foot and notch are gated (invisible, colliding); open, the gates go; no path, no terrace",function()
+		Tier.inject(OFF)
+		local c=rig();c.tick()
+		local gates=c.room:FindFirstChild(Tier.Gates)
+		assert(gates and #gates:GetChildren()==2 and not c.host.open)
+		for _,part in ipairs(gates:GetChildren())do assert(part.CanCollide==true and part.Transparency==1 and part.Anchored==true,part.Name)end
+		local foot=Tier.path().points[Tier.GateFoot]
+		local at=gates:FindFirstChild("W7T_GateFoot").CFrame.Position
+		assert((Vector3.new(at.X,0,at.Z)-Vector3.new(foot.X,0,foot.Z)).Magnitude<.01)
+		Tier.inject(ON);c.tick()
+		assert(c.host.open and c.room:FindFirstChild(Tier.Gates)==nil and gates.Parent==nil)
+		Tier.inject(OFF);c.tick();assert(c.room:FindFirstChild(Tier.Gates))
+		-- No sculpt on this server (no WorldBeta pack): never opens, nothing gated (there is no path to gate).
+		Tier.inject({flags={Tier=true},studio=true,cliffDen=false})
+		local d=rig();d.tick();d.tick()
+		assert(not d.host.open and d.room:FindFirstChild(Tier.Model)==nil and d.room:FindFirstChild(Tier.Gates)==nil)
 		Tier.inject(nil)
 	end)
 

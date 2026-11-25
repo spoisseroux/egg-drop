@@ -11,6 +11,8 @@ local Data=require(Shared.WorldV7Data)
 local Flags=require(Shared.FeatureFlags)
 local Dusk=require(Shared.WorldDusk)
 local Dressing=require(Shared.WorldDressing)
+local CliffDen=require(script.Parent.CliffDenSwap)
+local CliffDressing=require(Shared.CliffDenDressing)
 
 local Art={}
 
@@ -65,6 +67,9 @@ function Art.meshes(room)
 	if not template then warn("[World v7] ServerStorage.WorldAssets.WorldV7 is missing; the island will be empty")return nil end
 	local world=template:Clone()
 	world.Name="World"
+	-- The beta's cliff path / Play Den / terrace top (CliffDenSwap): swapped in the clone at start, never at runtime.
+	local carved,mode=CliffDen.apply(world)
+	Art.carved=if mode=="den"then carved else nil -- Art.collision moves the cave blocker to the den's mouth
 	local count,tris=0,0
 	for _,part in ipairs(world:GetChildren())do
 		if not part:IsA("BasePart")then continue end
@@ -74,7 +79,7 @@ function Art.meshes(room)
 		-- through pet heads. Keep their authored assets intact; only the live
 		-- cloned substrate is opaque. Flow Texture layers retain their alpha.
 		if part.Name=="W7_Water__water_stream"or part.Name=="W7_Water__water_pool"then part.Transparency=0 end
-		local info=Data.parts[part.Name]
+		local info=Data.parts[part.Name]or(carved and carved.parts[part.Name])
 		-- Merged meshes span the island: bounds-based queries (overlap boxes,
 		-- camera blockers, rest-path solids) skip them and use rays instead.
 		part:SetAttribute("WorldMesh",true)
@@ -95,6 +100,7 @@ function Art.meshes(room)
 	world:SetAttribute("MeshParts",count)
 	world:SetAttribute("Triangles",Data.triangles)
 	world.Parent=room
+	CliffDen.bars(world,carved) -- the cave's bars hide while the Play Den is open (either layer)
 	return world
 end
 
@@ -110,7 +116,9 @@ function Art.collision(room)
 		local cf,size=box(entry)
 		invisible(walls,"Wall"..i,cf,size,true).CanQuery=false
 	end
-	local cf,size=box(Data.caveBlocker)
+	-- The Play Den (CliffDenSwap): the world owns the closer, a colliding blocker on the new mouth line, closed by
+	-- default; the code (DenHost) only opens it.
+	local cf,size=box(Art.carved and Art.carved.den.mouth.blocker or Data.caveBlocker)
 	invisible(room,"CaveBlocker",cf,size,true)
 	cf,size=box(Data.fallCatch)
 	local catch=invisible(room,"FallCatch",cf,size,false)
@@ -344,6 +352,8 @@ function Art.dressing(room)
 	local count=0
 	for index,entry in ipairs(Dressing.Bushes)do
 		if index>Dressing.MaxBushes then break end
+		-- The beta's sculpt (CliffDenSwap): bushes over the terrace top or in the cliff path's cut are skipped.
+		if Art.carved and CliffDressing.skip(entry[1],entry[3],true)then continue end
 		local template=templates:FindFirstChild(Dressing.BushKinds[entry[4]])
 		if not template then continue end
 		local cframe,size=Dressing.bushPlacement(entry)

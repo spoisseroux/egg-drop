@@ -405,7 +405,16 @@ function Room:visitorBeats()
  end
 end
 function Room:stationInReach()
-	return self.stations~=nil and self.stations:inReach()
+	if self.stations~=nil and self.stations:inReach()then return true end
+	-- Code review (cliff den): the Garden Dash gate and the Play Den's prompts count too (DashClient / DenClient
+	-- :inReach), so the pet's E never wins over them.
+	for _,other in ipairs({self.dash,self.den})do
+		if other~=nil and type(other.inReach)=="function"then
+			local ok,near=pcall(other.inReach,other)
+			if ok and near==true then return true end
+		end
+	end
+	return false
 end
 
 function Room:updateControls()
@@ -1049,7 +1058,7 @@ function Room:planGreeting(camera, root, floor)
 		actualOrigin=self.focusPublicOrigin or self.pet.origin,aspect=aspect,floor={cf=floor.CFrame,size=floor.Size},preferredBearing=self.focusStageBearing,preferredOrigin=self.focusStageOrigin,
 		ground=function(position)
 			groundQueries += 1
-			local hit=workspace:Raycast(position+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
+			local hit=workspace:Raycast(Vector3.new(position.X,PetFollow.rayTop(position,8),position.Z),Vector3.new(0,-80,0),params)
 			return hit and hit.Position.Y+.025 or nil
 		end,
 		clear=function(position,target,origin)

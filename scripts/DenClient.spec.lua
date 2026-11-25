@@ -39,6 +39,7 @@ return function(client,offline)
 		local r={open=options.open~=false,free=true,things=true,used={},changed=signal(),beat=signal(),world=real("Folder")}
 		r.dash=options.dash
 		r.client=Client.mount({world=r.world,heartbeat=r.beat,changed=r.changed,isOpen=function()return r.open end,
+			layout=options.layout or function()return Layout.Pocket end, -- the retired pocket: the specs' small fixture
 			dash=function()return r.dash end,deck=function()table.insert(r.used,"deck")end,things=function()table.insert(r.used,"things")end,
 			free=function()return r.free end,thingsOn=function()return r.things end,lounge=function()return nil end})
 		function r.step(dt)r.beat:Fire(dt or .3)end

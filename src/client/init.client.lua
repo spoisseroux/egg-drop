@@ -5416,7 +5416,7 @@ do
  if not ok then warn("[Things] not mounted: "..tostring(problem))end
  end)()
 end
--- The Play Den, step A (Shared.PlayDen, PLAY-DEN-BUILD-PLAN): nothing at all with the build ceiling off; it follows
+-- The Play Den (Shared.PlayDen, PLAY-DEN-BUILD-PLAN; the room, step B): nothing at all with the build ceiling off; it follows
 -- Den_open (the room really open). The gate, the Deck table and the notice board's prompts.
 do
  local ok,problem=pcall(function()
@@ -5432,6 +5432,7 @@ do
      and roomView.canRoam()==true and clientUI.anyModalOpen()~=true
    end})
   if clientUI.den then gui.Destroying:Connect(function()clientUI.den:destroy()end)end
+  roomView.den=clientUI.den -- its prompts count as a station in reach (the pet's E steps aside)
  end)
  if not ok then warn("[Den] not mounted: "..tostring(problem))end
 end

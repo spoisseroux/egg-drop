@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import math
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -36,6 +37,13 @@ ROOT = Path(bpy.data.filepath).resolve().parents[3]
 OUT = ROOT / "assets" / "world"
 OUT.mkdir(parents=True, exist_ok=True)
 TRI_CAP = 9000
+# --beta (CLIFF-DEN-ISLAND-SCOPE): the cliff path, the Play Den and the terrace top, carved and built by
+# scripts/cliff_den_sculpt.py. Writes ONLY world-v7-beta.fbx, world-v7-beta-manifest.json and world-v7-beta-walk.json:
+# every live output (world-v7.fbx, the manifest, the walk map, pending) is left untouched.
+BETA = "--beta" in sys.argv
+# --beta-base: the same builder without the sculpt, walk map only (world-v7-beta-base-walk.json), so the beta's walk
+# patch holds only what the sculpt changed (the committed live walk map has drifted from today's builder).
+BETA_BASE = "--beta-base" in sys.argv
 BACKDROP_SPAN = 1900.0  # keeps every backdrop MeshPart under Roblox's 2048-stud limit
 
 
@@ -62,6 +70,10 @@ def material_of(name):
 
 COLLIDE_MATERIALS = {"marble", "marble_smooth", "wood_plank", "trim", "cliff_rock", "grass", "ground", "dirt_path",
                      "meadow", "pebble_bed", "boulder_rock", "bark", "deck_cream", "deck_shell", "teal", "gold"}
+
+
+POCKET_KEY = "CD_Pocket__palette"
+CAVE_BARS = ("gold", "teal")   # Landmarks__gold (the bars) and Landmarks__teal (their plate): only at the cave mouth
 
 
 def classify(name):
@@ -99,6 +111,19 @@ def classify(name):
             # its pulse (architect review).
             return "EggsStation__" + mat, False, "pulse", "NestHalo"
         return obj + "__" + mat, False, None, obj
+    if cat.startswith("CD_"):
+        # --beta new pieces: CD_CliffPath / CD_PlayDen. Never collide (Studio R1: their hulls filled the room and the
+        # path); the server builds the den's and the path's collision from boxes (CliffDenData.collision).
+        return cat + "__" + mat, False, None, cat[len("CD_"):]
+    if cat.startswith("CDRegion_"):
+        # --beta: colliding island faces near the den and the path, now visual only (cliff_den_sculpt.split_region)
+        region = classify(cat[len("CDRegion_"):] + "__" + raw_material(name))[3]
+        return "CD_Region__" + mat, False, None, region
+    if cat.startswith("CDTile"):
+        # --beta: what is left of a colliding island mesh near the region, one 32-stud tile per part (small hulls)
+        number, rest = cat[len("CDTile"):].split("_", 1)
+        key, collide, anim, region = classify(rest + "__" + raw_material(name))
+        return "CD_" + key + "_" + number, collide, anim, region
     if cat.startswith("Terrain_Ground"):
         return "Ground__" + mat, True, None, "Ground"
     if cat == "Rocks_Underside":
@@ -115,6 +140,12 @@ def classify(name):
         return "Aqueduct__" + mat, True, None, "Aqueduct"
     if cat.startswith("Architecture_"):
         return "Architecture__" + mat, mat in COLLIDE_MATERIALS or mat == "palette", None, "Architecture"
+    if cat == "CDPocket":
+        return "CD_Pocket__" + mat, False, None, "Landmarks"     # --beta: step A's palette (live less the bars)
+    if BETA and cat == "Landmarks" and raw_material(name) in CAVE_BARS:
+        # --beta (Studio R12): the old cave's gold bars and teal plate leave the palette for their own part, so the
+        # world can hide them while the Play Den is open (step A's pocket and step B's room alike). Never collide.
+        return "CD_CaveBars__" + mat, False, None, "CaveBars"
     if cat == "Landmarks":
         return "Landmarks__" + mat, mat in COLLIDE_MATERIALS, None, "Landmarks"
     if cat == "Stations_BenchWest":
@@ -166,6 +197,8 @@ def build_palette():
         sx, sy = i % side, i // side
         slots[name] = ((sx + 0.5) / side, (sy + 0.5) / side)
     # The PNG is written by scripts/build_world_v7_assets.py (Blender's image save wrote black here).
+    if BETA:
+        return slots                                  # --beta writes only beta outputs (code review)
     (OUT / "world-v7-palette.json").write_text(json.dumps({
         "side": side, "px": 8, "order": names, "srgb": {n: [round(c, 5) for c in FLAT[n]] for n in names},
         "note": "Slot i sits at column i % side, row i // side counted from the BOTTOM in Blender UV space."}, indent=1))
@@ -913,7 +946,9 @@ def coplanar_fixes(sources):
 # EGG-CORNER-LOOK placement rulings R2 (Fable, 2026-11-24): the split regions the beta removes. The walk map keeps
 # reporting them under the group they came from (unchanged for live). The two egg statues (Plaza_Ornament_09 / 10) and
 # Pad_Future_B were already deleted by the 2026-11-13 declutter (world-v7-declutter.json), so nothing to split there.
-WALK_AS = {"EggsStation": "W7_Stations", "BenchWest": "W7_Stations"}
+WALK_AS = {"EggsStation": "W7_Stations", "BenchWest": "W7_Stations", "CD_CliffPath": "W7_Ground", "CD_PlayDen": "W7_Ground",
+           # --beta split (Studio R1): the island's own surfaces, in 32-stud tiles or made visual only near the den/path
+           "CD_Rocks": "W7_Rocks", "CD_Landmarks": "W7_Landmarks", "CD_Region": "W7_Rocks"}
 
 
 def qa_fixes(sources, remaining=True):
@@ -974,6 +1009,20 @@ def main():
     sources = [o for o in bpy.data.objects if o.type == "MESH" and any(c.name.startswith("Import_") for c in o.users_collection)]
     sources = declutter(sources)
     sources = qa_fixes(sources)
+    carved, new_pieces = set(), set()
+    if BETA and not BETA_BASE:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import cliff_den_sculpt
+        # Step A's palette (FeatureFlags.CliffDen false): the live palette less the cave's bars, copied before the carve
+        # (which also takes palette faces in the den, the path and the terrace). Never in the beta walk map.
+        pocket = [duplicate(o, "CDPocket__" + raw_material(o.name)) for o in sources
+                  if o.name.startswith("Landmarks__") and material_of(o.name) == "palette" and raw_material(o.name) not in CAVE_BARS]
+        sources, carved, new_pieces = cliff_den_sculpt.apply(sources)
+        sources, split = cliff_den_sculpt.split_region(sources, lambda n: classify(n)[1])
+        carved = set(carved) | split
+        print("CLIFFDEN split", sorted(split))
+        sources = sources + pocket
+        print("CLIFFDEN carved", sorted(carved), "new", sorted(new_pieces))
     groups = defaultdict(list)
     meta = {}
     for o in sources:
@@ -1035,6 +1084,15 @@ def main():
         entry.update(EXTRA_META.get(key, {}))
         assert max(entry["size"]) < 2040, (obj.name, entry["size"])
         manifest.append(entry)
+    # recentre() moved every object: the live run's FBX export refreshed their world matrices before walk_data; the
+    # beta runs sample the walk map first, so refresh them here (else every ray hits stale positions).
+    bpy.context.view_layer.update()
+    if BETA_BASE:
+        walk_data(finals, manifest, OUT / "world-v7-beta-base-walk.json")
+        return
+    if BETA:
+        beta_outputs(finals, manifest, meta, carved, new_pieces)
+        return
     previous_path = OUT / "world-v7-manifest.json"
     previous = {e["name"]: e for e in json.loads(previous_path.read_text())["parts"]} if previous_path.exists() else {}
     export(finals, OUT / "world-v7.fbx")
@@ -1078,6 +1136,50 @@ def main():
         bpy.ops.wm.save_as_mainfile(filepath=preview, copy=True)
 
 
+def beta_outputs(finals, manifest, meta, carved, new_pieces):
+    """--beta: the walk map of the sculpted island, then the carved groups renamed W7_CD_<group> and the new ones
+    (already CD_), exported alone with their manifest (each carved part names the live part it replaces)."""
+    island = [(f, m) for f, m in zip(finals, manifest) if f[1] != POCKET_KEY]   # step A's palette is not the sculpt
+    walk_data([f for f, _ in island], [m for _, m in island], OUT / "world-v7-beta-walk.json")
+    affected = {key for key, m in meta.items() if key.startswith("CD_") or carved.intersection(m["sources"])}
+    affected.add("Landmarks__palette")      # the cave's bars left it (CD_CaveBars), carved or not
+    live = json.loads((OUT / "world-v7-manifest.json").read_text())["parts"]
+    live_names = {e["name"] for e in live}
+    out, parts = [], []
+    for (obj, key), entry in zip(finals, manifest):
+        if key not in affected:
+            continue
+        replaces = None if key.startswith("CD_") else obj.name
+        if replaces is not None:
+            assert replaces in live_names, ("a carved group split differently from live", replaces)
+        obj.name = "W7_" + (key if key.startswith("CD_") else "CD_" + key)
+        entry = dict(entry, name=obj.name, replaces=replaces)
+        out.append((obj, key))
+        parts.append(entry)
+    export(out, OUT / "world-v7-beta.fbx")
+    # A live group the sculpt emptied (every face carved or moved to CD_Region, e.g. the lintel's trim): hidden only.
+    kept = {key for _, key in finals}
+    removed = sorted({"W7_" + classify(n)[0] for n in carved if classify(n)[0] not in kept} & live_names)
+    (OUT / "world-v7-beta-manifest.json").write_text(json.dumps({
+        "removed": removed,
+        "note": "Generated by scripts/build_world_v7_chunks.py --beta (CLIFF-DEN-ISLAND-SCOPE): the beta's carved copies "
+                "(replaces = the live part) and new pieces. Live never mounts these.",
+        "parts": parts, "count": len(parts), "triangles": sum(e["tris"] for e in parts),
+        "liveManifestSha256": __import__("hashlib").sha256((OUT / "world-v7-manifest.json").read_bytes()
+                                                           .replace(b"\r\n", b"\n")).hexdigest()}, indent=1))
+    import cliff_den_sculpt
+    (OUT / "world-v7-beta-anchors.json").write_text(json.dumps(cliff_den_sculpt.anchors(), indent=1))
+    print("CLIFFDEN beta parts", [(e["name"], e["replaces"], e["tris"]) for e in parts])
+    preview = __import__("os").environ.get("WORLD_V7_PREVIEW_BLEND")
+    if preview:
+        # Review renders only: the sculpted island's merged meshes (the import .blend itself is never saved).
+        keep = {obj.name for obj, key in finals if key != POCKET_KEY}
+        for o in list(bpy.data.objects):
+            if o.type == "MESH" and o.name not in keep:
+                bpy.data.objects.remove(o, do_unlink=True)
+        bpy.ops.wm.save_as_mainfile(filepath=preview, copy=True)
+
+
 def export(finals, path):
     bpy.ops.object.select_all(action="DESELECT")
     for obj, _ in finals:
@@ -1097,7 +1199,7 @@ def surface_code(name):
         mat = mat.rsplit("_", 1)[0]
     if group == "Water" or mat.startswith("water") or mat == "foam":
         return "W"
-    if group in ("Ground", "Rocks", "Trunks"):
+    if group in ("Ground", "Rocks", "Trunks", "CD_CliffPath", "CD_PlayDen", "CD_Rocks", "CD_Region"):
         return SURFACE.get(mat, "M")
     return "M"
 
@@ -1195,7 +1297,7 @@ def foam_boxes():
     return out
 
 
-def walk_data(finals, manifest):
+def walk_data(finals, manifest, path=None):
     data = {}
     # Perimeter wall: a ring mesh. Slice it into ~6-stud boxes along its loop.
     wall = bpy.data.objects["PerimeterWall"]
@@ -1329,7 +1431,7 @@ def walk_data(finals, manifest):
         gg["heights"].append(row)
     data["ground"] = gg
     data["surface"] = surface_map(finals)
-    (OUT / "world-v7-walk.json").write_text(json.dumps(data))
+    (path or OUT / "world-v7-walk.json").write_text(json.dumps(data))
 
 
 # Importable (scripts/build_world_aero_kit.py reuses declutter, qa_fixes, join and geom_hash); Blender --python runs

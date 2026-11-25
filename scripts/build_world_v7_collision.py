@@ -21,12 +21,141 @@ from mathutils import Vector
 
 ROOT = Path(bpy.data.filepath).resolve().parents[3]
 OUT = ROOT / "assets" / "world"
+BETA = "--beta" in __import__("sys").argv
 TILE = 32.0
 THICK = 1.5
 
 
 def main():
     sources = [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("Terrain_Ground__")]
+    if BETA:
+        return beta(sources)
+    parts = tiles(sources)
+    bpy.ops.object.select_all(action="DESELECT")
+    for p in parts:
+        p.pop("obj").select_set(True)
+        p.pop("cell")
+        p.pop("digest")
+    bpy.ops.export_scene.fbx(filepath=str(OUT / "world-v7-collision.fbx"), use_selection=True, axis_forward="-Z", axis_up="Y",
+                             global_scale=1.0, apply_unit_scale=True, use_mesh_modifiers=False, object_types={"MESH"},
+                             add_leaf_bones=False, bake_anim=False, path_mode="STRIP", mesh_smooth_type="FACE")
+    (OUT / "world-v7-collision.json").write_text(json.dumps({"tile": TILE, "thickness": THICK, "parts": parts}, indent=1))
+    print("COLLISION", len(parts), sum(p["tris"] for p in parts), max(p["tris"] for p in parts))
+
+
+SUB = 8.0   # Studio R1: the beta's changed tiles are re-cut into 8-stud cells, one part per connected piece
+
+
+def _piece(bm, name, col):
+    """A closed bmesh as a recentred object; returns the part entry."""
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    obj = bpy.data.objects.new(name, mesh)
+    col.objects.link(obj)
+    vs = [v.co for v in mesh.vertices]
+    lo = Vector([min(v[k] for v in vs) for k in range(3)])
+    hi = Vector([max(v[k] for v in vs) for k in range(3)])
+    c = (lo + hi) / 2
+    mesh.transform(__import__("mathutils").Matrix.Translation(-c))
+    obj.location = c
+    size = hi - lo
+    return {"name": name, "tris": len(mesh.polygons), "obj": obj, "center": [round(c.x, 4), round(c.z + 4, 4), round(-c.y, 4)],
+            "size": [round(size.x, 4), round(size.z, 4), round(size.y, 4)]}
+
+
+def split_tile(p, number):
+    """A changed 32-stud tile as 8-stud cells, each split into its connected pieces (stacked sheets, the lawn and the
+    cliff top 22 studs over it, never share a part: their hulls bridged the apron and the path, Studio R1)."""
+    obj = p["obj"]
+    src = bmesh.new()
+    src.from_mesh(obj.data)
+    src.transform(__import__("mathutils").Matrix.Translation(obj.location))   # matrix_world is stale after recentring
+    gx, gy = p["cell"]
+    col = bpy.context.scene.collection
+    out, k = [], 0
+    n = int(TILE / SUB)
+    for i in range(n):
+        for j in range(n):
+            t = src.copy()
+            x0, y0 = gx * TILE + i * SUB, gy * TILE + j * SUB
+            for co, no in (((x0, 0, 0), (-1, 0, 0)), ((x0 + SUB, 0, 0), (1, 0, 0)),
+                           ((0, y0, 0), (0, -1, 0)), ((0, y0 + SUB, 0), (0, 1, 0))):
+                geom = t.verts[:] + t.edges[:] + t.faces[:]
+                res = bmesh.ops.bisect_plane(t, geom=geom, plane_co=Vector(co), plane_no=Vector(no), clear_outer=True)
+                cut = [e for e in res["geom_cut"] if isinstance(e, bmesh.types.BMEdge)]
+                if cut:
+                    bmesh.ops.holes_fill(t, edges=cut, sides=0)
+            if not t.faces:
+                t.free()
+                continue
+            t.faces.ensure_lookup_table()
+            seen = set()
+            for f in t.faces:
+                if f.index in seen:
+                    continue
+                stack, island = [f], []
+                seen.add(f.index)
+                while stack:
+                    g = stack.pop()
+                    island.append(g.index)
+                    for e in g.edges:
+                        for h in e.link_faces:
+                            if h.index not in seen:
+                                seen.add(h.index)
+                                stack.append(h)
+                one = t.copy()
+                one.faces.ensure_lookup_table()
+                keep = set(island)
+                bmesh.ops.delete(one, geom=[g for g in one.faces if g.index not in keep], context="FACES")
+                if len(one.faces) >= 4:
+                    k += 1
+                    out.append(_piece(one, f"W7C_CD_Ground_{number:02d}_{k:02d}", col))
+                one.free()
+            t.free()
+    src.free()
+    bpy.data.objects.remove(obj, do_unlink=True)
+    return out
+
+
+def beta(sources):
+    """--beta (CLIFF-DEN-ISLAND-SCOPE, Studio R1): the tiles the sculpt changes, re-cut into 8-stud cells and split into
+    their connected pieces (W7C_CD_Ground_NN_kk, replacing the live W7C_Ground_NN). The den's floor and the path are
+    not here: the server builds them from boxes (CliffDenData.collision). Writes ONLY world-v7-beta-collision.fbx/.json."""
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import cliff_den_sculpt as cd
+    live = tiles(sources, "live_")
+    by_cell = {p["cell"]: p for p in live}
+    cd.carve(sources)
+    after = tiles(sources, "beta_")
+    keep = []
+    for p in after:
+        was = by_cell.get(p["cell"])
+        if was is not None and was["digest"] == p["digest"]:
+            continue
+        assert was is not None, ("a tile the live island never had", p["cell"])
+        number = int(was["name"].rsplit("_", 1)[1])
+        for piece in split_tile(p, number):
+            piece["replaces"] = was["name"]
+            keep.append(piece)
+    gone = sorted(c for c in by_cell if c not in {p["cell"] for p in after})
+    bpy.ops.object.select_all(action="DESELECT")
+    for p in keep:
+        p.pop("obj").select_set(True)
+    bpy.ops.export_scene.fbx(filepath=str(OUT / "world-v7-beta-collision.fbx"), use_selection=True, axis_forward="-Z", axis_up="Y",
+                             global_scale=1.0, apply_unit_scale=True, use_mesh_modifiers=False, object_types={"MESH"},
+                             add_leaf_bones=False, bake_anim=False, path_mode="STRIP", mesh_smooth_type="FACE")
+    removed = [by_cell[c]["name"] for c in gone]
+    (OUT / "world-v7-beta-collision.json").write_text(json.dumps({
+        "note": "Generated by scripts/build_world_v7_collision.py --beta: the tiles the cliff path / Play Den / terrace "
+                "sculpt changed, as 8-stud connected pieces (replaces = the live tile). removed = live tiles with nothing left.",
+        "tile": TILE, "sub": SUB, "thickness": THICK, "parts": keep, "removed": removed}, indent=1))
+    print("COLLISION BETA", len(keep), "pieces from", sorted({p["replaces"] for p in keep}), "removed", removed,
+          "max tris", max(p["tris"] for p in keep))
+
+
+def tiles(sources, prefix=""):
     bm = bmesh.new()
     for o in sources:
         tmp = bmesh.new()
@@ -64,7 +193,7 @@ def main():
                 continue
             bmesh.ops.triangulate(t, faces=t.faces[:])
             i += 1
-            mesh = bpy.data.meshes.new(f"W7C_Ground_{i:02d}")
+            mesh = bpy.data.meshes.new(f"{prefix}W7C_Ground_{i:02d}")
             t.to_mesh(mesh)
             t.free()
             obj = bpy.data.objects.new(mesh.name, mesh)
@@ -76,18 +205,17 @@ def main():
             mesh.transform(__import__("mathutils").Matrix.Translation(-c))
             obj.location = c
             size = hi - lo
-            parts.append({"name": obj.name, "tris": len(mesh.polygons), "center": [round(c.x, 4), round(c.z + 4, 4), round(-c.y, 4)],
+            parts.append({"name": obj.name[len(prefix):], "tris": len(mesh.polygons), "center": [round(c.x, 4), round(c.z + 4, 4), round(-c.y, 4)],
                           "size": [round(size.x, 4), round(size.z, 4), round(size.y, 4)]})
             parts[-1]["obj"] = obj
+            parts[-1]["cell"] = (gx, gy)
+            parts[-1]["digest"] = __import__("hashlib").sha1(("tris %d|area %.1f" % (len(mesh.polygons), sum(f.area for f in mesh.polygons))).encode()).hexdigest()
+            # the triangle count and the surface area: a carve deletes faces (both move); vertex positions flicker with
+            # remove_doubles' order (a far tile read as changed)
+            if not prefix:
+                obj.name = mesh.name
     bm.free()
-    bpy.ops.object.select_all(action="DESELECT")
-    for p in parts:
-        p.pop("obj").select_set(True)
-    bpy.ops.export_scene.fbx(filepath=str(OUT / "world-v7-collision.fbx"), use_selection=True, axis_forward="-Z", axis_up="Y",
-                             global_scale=1.0, apply_unit_scale=True, use_mesh_modifiers=False, object_types={"MESH"},
-                             add_leaf_bones=False, bake_anim=False, path_mode="STRIP", mesh_smooth_type="FACE")
-    (OUT / "world-v7-collision.json").write_text(json.dumps({"tile": TILE, "thickness": THICK, "parts": parts}, indent=1))
-    print("COLLISION", len(parts), sum(p["tris"] for p in parts), max(p["tris"] for p in parts))
+    return parts
 
 
 main()

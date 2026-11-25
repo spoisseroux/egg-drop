@@ -1,7 +1,7 @@
 -- The Play Den runtime switch (PLAY-DEN-BUILD-PLAN.md): AliveConfig's publisher on one key, IslandBoundsConfig exactly.
 -- ConfigService `play_den` = false moves anyone in the den out to its doorstep, closes the cave and takes the greybox
 -- down without a publish. Off until the config has loaded once (or an owner override), then follows
--- it: missing or malformed = off (architect 2026-11-24: Spencer opens it); a later failed or errored snapshot keeps the last good value.
+-- it: missing or malformed = on (Spencer 2026-11-25: the real room is in on the beta); a later failed or errored snapshot keeps the last good value.
 -- With the build ceiling off nothing starts: no attribute is written and ConfigService is never asked.
 -- Owner chat on the beta and in Studio: /den <on|off|clear>, this server only.
 local Den=require(game:GetService("ReplicatedStorage").Shared.PlayDen)

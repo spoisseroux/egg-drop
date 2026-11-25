@@ -1,9 +1,9 @@
 -- The Play Den's numbers (PLAY-DEN-BUILD-PLAN.md, architect verdict applied). Shared and pure: every piece of den code
 -- (the greybox, the prompts, the Dash anchor, the pet floor, catch-up, the island bounds, the trail) reads a layout
 -- from here, and nothing else hard-codes a den number. Two variants:
---   "pocket" (step A): today's small pocket behind the CaveBlocker, measured in Studio R5 (floor y 4.0 from z -101 to
---     -113, back rock z -114.2, roof 15.0 to 18.6) and the ground grid (flat 4.0 for x about -10..-6, rising past -12
---     and -4). About 7 x 12 of flat floor: three bays (the Dash gate, one roped niche, the Deck table).
+--   "pocket" (step A, RETIRED 2026-11-25): the small pocket behind the old CaveBlocker, measured in Studio R5. The game
+--     never chooses it any more (Layout.current answers nil without the sculpt); Layout.Pocket stays only as the specs'
+--     small fixture for the host, the prompts and the Dash anchor.
 --   "room" (step B): the enlarged room from the island session's generated Shared.CliffDenData (`den`), used only when
 --     the server set the workspace attribute `CliffDen` at start. A schema mismatch or a missing field is no layout at
 --     all (the den stays closed with one warning): the pocket is gone on such a server, so it is never a fallback.
@@ -16,7 +16,8 @@ local World=require(script.Parent.HollowWorldLayout).V7
 local Layout={}
 Layout.Schema=1                 -- CliffDenData.schema this file reads
 Layout.BayKinds=table.freeze({"dash","niche","deck","niche","niche"}) -- step B's bays in order (Fable's table)
-Layout.Light=table.freeze({color="#FFC98A",range=14,brightness=1.2}) -- four of them: the whole light budget
+-- Four of them: the whole light budget. Fable cliff-den review fix 1: warmer and dimmer (#FFC98A at 1.2 blew out white).
+Layout.Light=table.freeze({color="#FFB870",range=14,brightness=.9})
 -- Each kind's footprint in its bay frame (x1, z1, x2, z2; -z toward the players), before the pets' Grow.
 Layout.Kinds=table.freeze({
 	dash=table.freeze({foot=table.freeze({-2.4,-1.0,2.4,.5}),prompt=Vector3.new(0,3.2,0)}),
@@ -136,19 +137,20 @@ function Layout.fromData(data)
 end
 
 -- Which layout this server uses. env (specs): {cliffDen = bool, data = table}. The game reads the `CliffDen` attribute
--- (set at server start) and Shared.CliffDenData. Answers the layout, or nil and why.
+-- (set at server start) and Shared.CliffDenData. Answers the layout, or nil and why. Without the sculpt there is no
+-- room: step A's pocket is retired (Spencer 2026-11-25: "the play den [small cave] sucks"), so the den stays closed.
 local cache={}
 function Layout.current(env)
 	local cliff,data
 	if env then cliff,data=env.cliffDen==true,env.data
 	else
 		cliff=workspace:GetAttribute("CliffDen")==true
-		if not cliff then return Layout.Pocket end
+		if not cliff then return nil,"no room (the island's sculpt is not swapped in)" end
 		if cache.done then return cache.layout,cache.why end
 		local ok,module=pcall(function()return require(script.Parent:FindFirstChild("CliffDenData"))end)
 		data=if ok then module else nil
 	end
-	if not cliff then return Layout.Pocket end
+	if not cliff then return nil,"no room (the island's sculpt is not swapped in)" end
 	local layout,why=Layout.fromData(data)
 	if not env then cache.done,cache.layout,cache.why=true,layout,why end
 	return layout,why
@@ -214,6 +216,16 @@ function Layout.boundsRegions(L)
 	local w=L.wait
 	return table.freeze({table.freeze({name="den",min=Vector3.new(w.min.X-2,L.floorY-Layout.FallDepth,w.min.Z-2),
 		max=Vector3.new(w.max.X+2,L.roofY+10,w.max.Z),fallY=L.floorY-Layout.FallDepth,safe=function(x,z)return Layout.safeCell(L,x,z)end})})
+end
+-- Studio R2 (CLIFF-DEN-BUILD): the room has a collision ceiling (its top box at 12.2, the CliffDen boxes), lower than
+-- the 8 studs over a root the pets' ground rays start from, so a ray from there lands on the ceiling and the pet never
+-- follows in. In the waiting area (the room and the apron, `L` the open layout) a ground ray starts at most CeilingRay
+-- over the floor; anywhere else (or with no layout) it is `p.Y + above` exactly as before.
+Layout.CeilingRay=6
+function Layout.groundRayTop(L,p,above)
+	local top=p.Y+above
+	if L~=nil and Layout.inWait(L,p,1)then return math.min(top,L.floorY+Layout.CeilingRay)end
+	return top
 end
 -- Where each prompt stands: {gate = Vector3?, deck = Vector3?, board = Vector3}.
 function Layout.prompts(L)

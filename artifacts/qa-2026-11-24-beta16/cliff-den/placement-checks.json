@@ -1,0 +1,95 @@
+{
+ "checked": 406,
+ "conflicts": [
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -74.84,
+    36.26,
+    -73.33
+   ],
+   "where": "terrace top"
+  },
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -58.68,
+    27.05,
+    -72.32
+   ],
+   "where": "terrace top"
+  },
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -21.44,
+    4.67,
+    -81.72
+   ],
+   "where": "path corridor"
+  },
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -41.68,
+    19.0,
+    -73.44
+   ],
+   "where": "path cut (may float or block)"
+  },
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -50.31,
+    24.39,
+    -71.08
+   ],
+   "where": "path cut (may float or block)"
+  },
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -62.75,
+    32.56,
+    -79.44
+   ],
+   "where": "terrace top"
+  },
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -70.51,
+    32.64,
+    -82.03
+   ],
+   "where": "terrace top"
+  },
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -67.2,
+    35.72,
+    -73.81
+   ],
+   "where": "terrace top"
+  },
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -29.24,
+    17.43,
+    -84.71
+   ],
+   "where": "path cut (may float or block)"
+  }
+ ]
+}
