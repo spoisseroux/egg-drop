@@ -54,7 +54,7 @@ Ambient.Echo = table.freeze({ decay = 1.6, density = .8, diffusion = .8, dry = 0
 -- den's room tone (RoomToneId: 0 until the coordinator uploads assets/audio/custom/egg_drop_den_room_tone.wav, silent
 -- until then). The `scene` switch and the island's sculpt gate it (live: the ceiling is closed, nothing runs).
 Ambient.ZoneDuck = "hillZone"
-Ambient.RoomToneId = 0
+Ambient.RoomToneId = 106077128620977
 Ambient.RoomToneVolume = .08
 function Ambient.windBedVolume(blow)
 	if type(blow) ~= "number" or blow ~= blow then blow = 0 end
