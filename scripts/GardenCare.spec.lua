@@ -100,5 +100,21 @@ return function(server)
   local f=fixture();f:request(1,"carePickup");f.now=4;f.dry=false;f.g:sync(f.inputs);assert(f.g.actors[1].mode=="Carried")
   f.dry=true;f.g:sync(f.inputs);assert(f.g.actors[1].mode=="Room"and not f.g.actors[1].care)
  end)
+ test("beta (17) U8: a hold the owner never asked for is forced: no lease from pulses, lands the moment there is ground",function()
+  -- The bay lets go on a cliff (no dry point near the owner): handed back, forced.
+  local f=fixture();f:dock(1);f.dry=false
+  f.inputs[1].position=L.Dock+Vector3.new(L.LeaveReach+6,12,0);f.g:sync(f.inputs)
+  local a=f.g.actors[1];assert(a.mode=="Carried"and a.care.forced==true and not f.care.bay)
+  assert(f:request(1,"carePulse").status=="Accepted"and a.care.expiresAt<=f.now,"a pulse never extends a forced hold")
+  f.now+=10;f.g:sync(f.inputs);assert(a.mode=="Carried","still no ground: safely held, never an arbitrary anchor")
+  f.dry=true;f.g:sync(f.inputs);assert(a.mode=="Room"and not a.care,"lands at the first supported point")
+  -- A release with no dry point is forced too; an ordinary pickup is not, and its pulses keep it.
+  local g=fixture();g:dock(1);g.dry=false
+  assert(g:request(1,"careRelease").status=="Accepted"and g.g.actors[1].mode=="Carried"and g.g.actors[1].care.forced==true)
+  g.dry=true;g.now=.1;g.g:sync(g.inputs);assert(g.g.actors[1].mode=="Room")
+  local h=fixture();assert(h:request(1,"carePickup").status=="Accepted");local held=h.g.actors[1]
+  assert(held.care.forced==nil);h.now=1;assert(h:request(1,"carePulse").status=="Accepted"and held.care.expiresAt>h.now+1)
+  assert(h.g:snapshot().actors["1"].care.forced==nil)
+ end)
  return {passed=#cases,cases=cases}
 end

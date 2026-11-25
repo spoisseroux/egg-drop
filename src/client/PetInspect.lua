@@ -157,6 +157,8 @@ end
 --   parent       where the ScreenGui goes (default PlayerGui)
 function Inspect.new(options)
  local self=setmetatable({options=options,seq=0,connections={},spin=0},Inspect)
+ -- Beta (17) U2: the open card's buttons need a free PC cursor (ModalCursor's registry).
+ self.unregisterCursor=require(script.Parent.ModalCursor).register(self,function()return self.card~=nil and not self.destroyed end)
  local gui=Instance.new("ScreenGui")
  gui.Name="PetInspect";gui.ResetOnSpawn=false;gui.DisplayOrder=11;gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
  gui.Enabled=true;gui.Parent=options.parent or Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -754,6 +756,7 @@ function Inspect:destroy()
  self:setCandidate(nil)
  for _,connection in ipairs(self.connections)do connection:Disconnect()end
  table.clear(self.connections)
+ if self.unregisterCursor then self.unregisterCursor()end
  self.chip:Destroy();self.gui:Destroy()
 end
 return Inspect

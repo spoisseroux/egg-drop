@@ -124,6 +124,10 @@ function Item.create(world,gui,result,builder,height,reduced)
     local offset=Vector3.new(0,.0021-lowest.Y+(sample.hop or 0)*height,(sample.forward or 0)*height)
     for _,entry in ipairs(self.entries)do entry.part.CFrame+=offset end
     self.minimum=.0021+(sample.hop or 0)*height;self.contact=lowest+offset
+    -- Beta (17) U6: the contact shadow's spot, under the middle of the item (HatchAim.footprint).
+    if not self.partList then self.partList={};for _,entry in ipairs(self.entries)do table.insert(self.partList,entry.part)end end
+    local fx,fz=require(script.Parent.HatchAim).footprint(self.partList)
+    self.footprint=if fx then Vector3.new(fx,self.contact.Y,fz)else self.contact
    end
    function self:destroy()self.destroyed=true;self.handle:destroy()end
    if handle.placeholder then
@@ -139,7 +143,7 @@ function Item.create(world,gui,result,builder,height,reduced)
        self.handle.destroy();made.Parent=world
        local _,size2=made:GetBoundingBox()
        self.scale=height*1.45/math.max(.01,size2.X,size2.Y)
-       table.clear(self.entries)
+       table.clear(self.entries);self.partList=nil
        for _,part in ipairs(made:GetDescendants())do if part:IsA("BasePart")then table.insert(self.entries,{part=part,frame=part.CFrame,size=part.Size})end end
        self.model=made;self.handle={model=made,destroy=function()made:Destroy()end,snack=true}
        if self.lastSample then self:pose(self.lastSample)end

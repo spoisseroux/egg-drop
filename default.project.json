@@ -84,7 +84,8 @@
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "$properties": {
-        "DevCameraOcclusionMode": "Zoom"
+        "DevCameraOcclusionMode": "Zoom",
+        "EnableMouseLockOption": false
       },
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",

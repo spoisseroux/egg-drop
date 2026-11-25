@@ -9,6 +9,7 @@ local GuiService=game:GetService("GuiService")
 local Models=require(game:GetService("ReplicatedStorage").Shared.EggModels)
 local Kit=require(script.Parent.DeckKit)
 local Warmup=require(script.Parent.UIAssetWarmup)
+local Space=require(script.Parent.UIScaleSpace)
 local Preview={};Preview.__index=Preview
 local Parts={"BottomShell","TopShell","Core"}
 
@@ -168,15 +169,15 @@ function Preview:reduced()
  return GuiService.ReducedMotionEnabled or(self.options.reduced and self.options.reduced()==true)or false
 end
 -- The well's size in its own offset units. AbsoluteSize includes every ancestor UIScale
--- (the Hatch eggs panel scales up to 1.2), and positions written from it landed off to the
--- right of the egg by that factor (QA v2 R1.7). Offset-sized wells use their offsets.
-function Preview.wellSize(size,absolute)
- if size.X.Scale==0 and size.Y.Scale==0 and size.X.Offset>0 and size.Y.Offset>0 then return size.X.Offset,size.Y.Offset end
- return absolute.X,absolute.Y
-end
+-- (the Hatch eggs panel scales between about 0.85 and 1.2), and positions written from it
+-- landed off the egg by that factor (QA v2 R1.7). Offset-sized wells use their offsets.
+-- Beta (17) U4: Kit.previewWell's well is the RoundedContent CanvasGroup, sized (1,-4,1,-4),
+-- so the offset branch never ran and the bloom, shadow and sparkles drifted with the window
+-- size; `scale` (UIScaleSpace.scaleOf) takes the UIScales back out.
+function Preview.wellSize(size,absolute,scale)return Space.localSize(size,absolute,scale)end
 -- Screen geometry of the egg in the well (camera: FOV 20 at 5.2 studs -> 1.834 studs tall; closer since 2026-11-13 so the egg fills the well).
 function Preview:measure()
- local sx,sy=Preview.wellSize(self.well.Size,self.well.AbsoluteSize);local H=math.max(1,sy);local W=math.max(1,sx)
+ local sx,sy=Preview.wellSize(self.well.Size,self.well.AbsoluteSize,Space.scaleOf(self.well));local H=math.max(1,sy);local W=math.max(1,sx)
  local k=H/1.834
  self.geo={W=W,H=H,k=k,cx=W/2,cy=H/2+.05*k,ew=1.0*k,eh=1.3*k,phone=math.min(W,H)<=150}
  local g=self.geo

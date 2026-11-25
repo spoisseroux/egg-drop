@@ -31,7 +31,7 @@ function Host:bind(board)
     if actor then
      local point=self.d.place(input,input.anchor)
      self.d.garden:release(actor);actor.petId=board.profile.companionId;actor.petGeneration=board.companionGeneration or 0
-     if point then self.care:follow(actor,input,point)else self.care:hold(actor,input,"Carried",input.carryPosition or self.d.garden:position(actor,workspace:GetServerTimeNow()))end
+     if point then self.care:follow(actor,input,point)else self.care:hold(actor,input,"Carried",input.carryPosition or self.d.garden:position(actor,workspace:GetServerTimeNow()),nil,true)end
     end
    end
    self.d.garden:syncOne(board.player.UserId,input);self.d.garden:publish()

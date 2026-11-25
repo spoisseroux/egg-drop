@@ -26,13 +26,34 @@ function Placement.clear(point,room,wet)
  end
  return grounded
 end
+-- Where a set-down looks, in order (pure). First beside the owner (eight spots around the root, at the
+-- ground anchor's height). Beta (17) U8: on the cliff above the den (or any terrace or ledge) none of those
+-- is ground, so a carried pet could never be set down there and a pet leaving the care bay was handed back
+-- to the owner, floating at the carry point. Then the remembered ground anchor (the spot the pet follows
+-- from while its owner is up high; init.server groundAnchor) and a ring around it: the nearest valid ground.
+-- Each candidate is still checked by Placement.clear and the path rules, so a bad anchor places nothing.
+Placement.Near={Vector3.new(2.6,0,-2),Vector3.new(-2.6,0,-2),Vector3.new(0,0,-3),Vector3.new(3,0,0),Vector3.new(-3,0,0),Vector3.new(2,0,2),Vector3.new(-2,0,2),Vector3.new(0,0,3)}
+Placement.Ground={Vector3.zero,Vector3.new(2.5,0,0),Vector3.new(-2.5,0,0),Vector3.new(0,0,2.5),Vector3.new(0,0,-2.5),
+ Vector3.new(2.5,0,2.5),Vector3.new(-2.5,0,2.5),Vector3.new(2.5,0,-2.5),Vector3.new(-2.5,0,-2.5)}
+function Placement.candidates(input)
+ local list={}
+ local anchor=input and input.anchor
+ if typeof(anchor)~="Vector3"then return list end
+ local root=input.root
+ if root then
+  local cf=root.CFrame
+  for _,offset in ipairs(Placement.Near)do local p=cf:PointToWorldSpace(offset);table.insert(list,Vector3.new(p.X,anchor.Y,p.Z))end
+ end
+ for _,offset in ipairs(Placement.Ground)do table.insert(list,anchor+offset)end
+ return list
+end
 function Placement.find(input,room,wet,solids)
  if not input.root then return nil end
- local cf=input.root.CFrame
- for _,offset in ipairs({Vector3.new(2.6,0,-2),Vector3.new(-2.6,0,-2),Vector3.new(0,0,-3),Vector3.new(3,0,0),Vector3.new(-3,0,0),Vector3.new(2,0,2),Vector3.new(-2,0,2),Vector3.new(0,0,3)})do
-  local p=cf:PointToWorldSpace(offset);p=Vector3.new(p.X,input.anchor.Y,p.Z)
+ for _,p in ipairs(Placement.candidates(input))do
   local supported=Placement.clear(p,room,wet)
   if supported and math.abs(supported.Y-input.anchor.Y)<1 then
+   -- The anchor itself: nothing to walk (a zero-length plan has no last leg to check).
+   if Vector2.new(supported.X-input.anchor.X,supported.Z-input.anchor.Z).Magnitude<.05 then return supported end
    local path=Planner.plan(input.anchor,supported,Vector3.zero,3,0,input.yaw,nil,Vector3.zero,wet)
    local last=path[#path]
    if last and not last.safetyStop and(Vector3.new(table.unpack(last.to))-supported).Magnitude<.05 and Walk.pathAllowed(path,wet)and Planner.restPathClear(path,solids)then return supported end

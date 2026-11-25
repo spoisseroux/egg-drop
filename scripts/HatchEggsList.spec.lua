@@ -260,6 +260,8 @@ return function(client,parent)
    local Preview=require(client.EggPreview3D)
    local w,h=Preview.wellSize(UDim2.fromOffset(424,152),Vector2.new(509,182));assert(w==424 and h==152)
    w,h=Preview.wellSize(UDim2.fromScale(1,1),Vector2.new(300,100));assert(w==300 and h==100)
+   -- Beta (17) U4: the RoundedContent well has a Scale part; the panel's UIScale is taken back out.
+   w,h=Preview.wellSize(UDim2.new(1,-4,1,-4),Vector2.new(255,102),.85);assert(math.abs(w-300)<1e-6 and math.abs(h-120)<1e-6)
    local g={cx=212,cy=80,ew=80,eh=104}
    for i=0,20 do local x,y=Preview.sparkleSpot(g,i/20,(i%3)/3)
     assert(math.abs(x-g.cx)<=g.ew*.7 and math.abs(y-g.cy)<=g.eh*.7,"sparkles start on the egg's outline")end
