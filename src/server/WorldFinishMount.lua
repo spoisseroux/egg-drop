@@ -84,6 +84,22 @@ local function tufts(rows,env)
 	return out
 end
 
+-- Aero kit crowns (the terrace's one tree): clones of ServerStorage.AeroKit templates, when the kit is there.
+local function crowns(rows,env)
+	local out={}
+	local kit=#rows>0 and(env.storage or ServerStorage):FindFirstChild("AeroKit")
+	if not kit then return out end
+	for _,row in ipairs(rows)do
+		local template=kit:FindFirstChild(row.template)
+		if template then
+			local crown=still(template:Clone())
+			crown.CastShadow=false;crown.Size,crown.CFrame=vector(row.size),cframe(row.cframe)
+			table.insert(out,crown)
+		end
+	end
+	return out
+end
+
 function Mount.world(world,env)
 	env=env or {}
 	local mounted={}
@@ -93,8 +109,8 @@ function Mount.world(world,env)
 			if why~="no pack"and why~="not packed"then warn("[WorldFinish] "..name..": "..tostring(why))end
 			continue
 		end
-		-- Resolve every target now (code review 3): each named once, each in the world, or the slice is left out.
-		local problem
+		-- A slice whose re-cuts carry an earlier slice's cuts mounts only on top of it (the path's on the den's).
+		local problem=if slice.requires and world:GetAttribute("WorldFinish_"..slice.requires)~=true then "needs "..slice.requires else nil
 		local seen,destroy,overlay={},{},{}
 		local function claim(n,list)
 			if seen[n]then problem="named twice: "..n;return end
@@ -108,6 +124,13 @@ function Mount.world(world,env)
 		for _,row in ipairs(slice.fixed)do
 			if row.replaces then claim(row.replaces,destroy);replaced[row.name]=world:FindFirstChild(row.replaces)end
 			if row.overlays then claim(row.overlays,overlay)end
+		end
+		-- boxes of these kinds that CliffDenSwap built go (the slice brings its own: the lip stones' replace the lip's)
+		for _,kind in ipairs(slice.hideBoxes or {})do
+			local prefix=Mount.BoxPrefix..kind.."_"
+			for _,child in ipairs(world:GetChildren())do
+				if string.sub(child.Name,1,#prefix)==prefix then table.insert(destroy,child)end
+			end
 		end
 		if problem then warn("[WorldFinish] "..name..": "..problem.."; left as it is");continue end
 		-- Clone everything first.
@@ -136,6 +159,22 @@ function Mount.world(world,env)
 			table.insert(made,p)
 		end
 		for _,bush in ipairs(tufts(slice.tufts or {},env))do table.insert(made,bush)end
+		for _,crown in ipairs(crowns(slice.kitCrowns or {},env))do table.insert(made,crown)end
+		-- ropes: each span sags in four segments between its stakes' tops (the Dash ring's rope look)
+		local R=slice.rope
+		for i,span in ipairs(slice.ropes or {})do
+			local a,b=vector(span[1]),vector(span[2])
+			local function at(t)return a:Lerp(b,t)-Vector3.new(0,R.sag*4*t*(1-t),0)end
+			for k=1,4 do
+				local p,q=at((k-1)/4),at(k/4)
+				local seg=still(Instance.new("Part"))
+				seg.Name="W7_F_Rope"..i.."_"..k;seg.Shape=Enum.PartType.Cylinder
+				seg.Material=Enum.Material.Fabric;seg.Color=Color3.fromHex(R.color);seg.CastShadow=false
+				seg.Size=Vector3.new((q-p).Magnitude+.04,R.width,R.width)
+				seg.CFrame=CFrame.lookAt((p+q)/2,q)*CFrame.Angles(0,math.pi/2,0)
+				table.insert(made,seg)
+			end
+		end
 		-- Then hide and show.
 		for _,old in ipairs(destroy)do old:Destroy()end
 		for _,tile in ipairs(overlay)do tile.Transparency=1 end -- still colliding: its hulls never move
@@ -205,6 +244,31 @@ function Mount.dressDen(model,room,env)
 	for _,row in ipairs(hide)do row.Transparency=1 end
 	for _,part in ipairs(made)do part.Parent=model end
 	return #hide
+end
+
+-- The terrace greybox's dress (TierHost, right after GreyboxRows.build, before parenting): only with the terrace slice
+-- in the room's World. Its visible faces, skirts, balustrades and rims go invisible and keep colliding (the invisible
+-- walls do the safety; the drawn cap, face and lip stones show instead); the clumps, pads and pole go (the outcrops and
+-- the tree replace them). The floor slab stays: the cap lies 0.05 over it. Returns the number of rows it changed.
+function Mount.dressTier(model,room,env)
+	env=env or {}
+	local world=room and room:FindFirstChild("World")
+	if not(model and world and world:GetAttribute("WorldFinish_terrace")==true)then return 0 end
+	local _,slice=Mount.ready("terrace",env)
+	local dress=slice and slice.dressTier
+	if not dress then return 0 end
+	local hide,remove={},{}
+	for _,n in ipairs(dress.hide or {})do
+		local row=model:FindFirstChild(dress.prefix..n)
+		if row then table.insert(hide,row)end
+	end
+	for _,n in ipairs(dress.remove or {})do
+		local row=model:FindFirstChild(dress.prefix..n)
+		if row then table.insert(remove,row)end
+	end
+	for _,row in ipairs(hide)do row.Transparency=1 end
+	for _,row in ipairs(remove)do row:Destroy()end
+	return #hide+#remove
 end
 
 return Mount

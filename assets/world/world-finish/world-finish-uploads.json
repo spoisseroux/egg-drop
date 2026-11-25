@@ -58,5 +58,27 @@
     "moderation": "Approved"
    }
   }
+ },
+ "path": {
+  "model": {
+   "file": "world-finish-path.fbx",
+   "sha256": "aecec5ac4570248cb5034316677ec313c16c80ff7c1901865fe5ad843bc584be",
+   "manifestSha256": "964d07dbc5d7f44c0bce4363ae72e114ebe4a843cbf55fec805bf0e827a2b482",
+   "operation": "15edb2d1-4fef-4bf6-b082-a394c2e9060e",
+   "assetId": "132211469689954",
+   "moderation": "Approved"
+  },
+  "images": {}
+ },
+ "terrace": {
+  "model": {
+   "file": "world-finish-terrace.fbx",
+   "sha256": "69c262d52a8eee93ebcdc16e00c53bdaf0192ca0b0e480bdf3a5b840077f8527",
+   "manifestSha256": "a0196d315c97d0234febe0bf153a546456070999d022dd885b1b6db2acdd4107",
+   "operation": "d7aa8e41-20d9-461e-a8f9-728bced13e46",
+   "assetId": "94964737287819",
+   "moderation": "Approved"
+  },
+  "images": {}
  }
 }

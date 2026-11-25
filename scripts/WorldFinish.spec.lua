@@ -108,6 +108,30 @@ return function(server)
 		assert(model.W7D_LanternBracket3.Transparency==1 and paw.Transparency==1 and model.W7_F_Stone__flat)
 		assert(apron.Transparency==1 and apron.CanCollide==true,"the slab keeps colliding")
 	end)
+	test("a slice that needs another mounts only on top of it; the terrace dress hides the greybox but keeps it colliding",function()
+		local d=data()
+		d.slices.path={packed=true,requires="den",templates={"W7_F_Den__crystal"},fixed={},
+			instances={{template="W7_F_Den__crystal",cframe=cf(0,20,-60),size={.4,1,.4}}},hideBoxes={"lip"}}
+		d.slices.terrace={packed=true,requires="path",templates={},fixed={},
+			dressTier={prefix="W7T_",hide={"RimOuter"},remove={"ClumpOne"}}}
+		local world,storage=rig(d)
+		local oldLip=part(Mount.BoxPrefix.."lip_3",world)
+		local keep=part(Mount.BoxPrefix.."lipstone_F1",world)
+		local alone=table.clone(d.slices);alone.den=nil
+		local d2=data({slices=alone})
+		local w2,s2=rig(d)
+		assert(#Mount.world(w2,{storage=s2,data=d2,cliffVersion="c1"})==0,"path without den: nothing")
+		local got=Mount.world(world,{storage=storage,data=d,cliffVersion="c1"})
+		assert(#got==3 and got[2]=="path"and got[3]=="terrace")
+		assert(oldLip.Parent==nil and keep.Parent==world,"only the lip_ boxes go")
+		local room=Instance.new("Model");world.Parent=room
+		local model=Instance.new("Model")
+		local rim=part("W7T_RimOuter",model);rim.CanCollide=true;rim.Transparency=0
+		local clump=part("W7T_ClumpOne",model)
+		local floor=part("W7T_Floor",model);floor.Transparency=0
+		assert(Mount.dressTier(model,room,{storage=storage,data=d,cliffVersion="c1"})==2)
+		assert(rim.Transparency==1 and rim.CanCollide==true and clump.Parent==nil and floor.Transparency==0)
+	end)
 	test("the generated data: every slice names its templates and is bound to a sculpt",function()
 		local ok,gen=pcall(function()return require(server.WorldFinishData)end)
 		assert(ok and type(gen.version)=="string"and type(gen.cliffDen)=="string")

@@ -443,7 +443,173 @@ def den_render_dressing(Den, cage, panes, crystal, stone):
         place_copy(stone, f"WF_Stone{k}", s["at"], yaw=s["yaw"], scale=(s["size"][0], s["size"][2], s["size"][1]))
 
 
+def island_object(mesh, kind, uv_from=None):
+    """Build a Mesh as an island-material part: world-projected UVs at the island's density for that material."""
+    obj = mesh.build(None)
+    k = island_density(uv_from) if uv_from else .25
+    triplanar_uv(obj, k)
+    obj.data.materials.append(island_material(kind))
+    return obj, k
+
+
+def slice_path():
+    import cliff_den_sculpt as S
+    import world_finish_path as Pth
+    OUT.mkdir(parents=True, exist_ok=True)
+    S.build_path(list(bpy.data.objects))           # fills PATH_BLOCKS (the fin and notch boxes); its meshes are dropped
+    for o in [o for o in bpy.data.objects if o.name.startswith("CD_CliffPath__")]:
+        bpy.data.objects.remove(o)
+    hide_for_render(["W7_CD_CliffPath__cliff_rock", "W7_CD_CliffPath__dirt_path"])
+    rows, place = [], {}
+    dirt_m, grass_m = Pth.tread()
+    wall_m, foot_m = Pth.wall_and_shoulders()
+    steps_m, step_rows = Pth.steps()
+    parts = []
+    for mesh, kind, uv in ((dirt_m, "dirt_path", "W7_CD_CliffPath__dirt_path"), (grass_m, "grass", "W7_CD_Rocks__grass"),
+                           (wall_m, "cliff_rock", "W7_CD_Region__cliff_rock"),
+                           (foot_m, "dirt_path", "W7_CD_CliffPath__dirt_path"),
+                           (steps_m, "boulder_rock", "W7_CD_Rocks__boulder_rock")):
+        obj, k = island_object(mesh, kind, uv)
+        if mesh is wall_m:
+            Pth.facet(obj)
+            Pth.tuck(obj)
+            triplanar_uv(obj, k)
+        parts.append(obj)
+        rows.append(manifest_row(obj, "fixed", {"kind": "island", "material": kind}, "path",
+                                 {"collide": False, "shadow": kind in ("cliff_rock", "boulder_rock"), "doubleSided": True,
+                                  "uvPerStud": round(k, 5)}))
+    rocks = Pth.fin_and_notch()
+    triplanar_uv(rocks, island_density("W7_CD_Region__cliff_rock"))
+    rocks.data.materials.append(island_material("cliff_rock"))
+    parts.append(rocks)
+    rows.append(manifest_row(rocks, "fixed", {"kind": "island", "material": "cliff_rock"}, "path",
+                             {"collide": False, "shadow": True}))
+    # the kit: five lip stones and the stake (templates about their base point)
+    kit = [Pth.lip_stone(k) for k in range(5)]
+    bk = island_density("W7_CD_Rocks__boulder_rock")
+    for o in kit:
+        triplanar_uv(o, bk)
+        o.data.materials.append(island_material("boulder_rock"))
+        row = manifest_row(o, "template", {"kind": "island", "material": "boulder_rock"}, "path",
+                           {"collide": False, "shadow": False, "uvPerStud": round(bk, 5)})
+        row["centre"][1] = round(row["centre"][1] - 4, 4)
+        rows.append(row)
+    st = Pth.stake()
+    st.data.materials.append(L.material("WF_Stake", L.hexrgb("#5C4330")))
+    row = manifest_row(st, "template", {"kind": "flat", "color": "#5C4330", "material": "Wood"}, "path",
+                       {"collide": False, "shadow": False, "doubleSided": True})
+    row["centre"][1] = round(row["centre"][1] - 4, 4)
+    rows.append(row)
+    # Fable D1 1: re-cuts of the visual island parts that poke into the new cut. Run on the den's saved scene, these
+    # carry the den's cuts too, so the path slice requires the den slice (data: requires = "den").
+    parts_cd = cliff_den_parts()["parts"]
+    cuts = []
+    for o in [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render and o.name in parts_cd
+              and not parts_cd[o.name]["collide"] and o.name != "W7_CD_CaveBars__palette" and "glow" not in o.name]:
+        mw = o.matrix_world
+        if not any(Pth.recut_test([L.rb(mw @ o.data.vertices[k].co) for k in p.vertices]) for p in o.data.polygons):
+            continue
+        name = o.name
+        copy, gone = recut(name, name, lambda c: False, Pth.recut_test)
+        cuts.append(copy)
+        rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "path",
+                                 {"replaces": name, "facesRemoved": gone, "collide": False}))
+    lips = Pth.lip_layout()
+    stakes, ropes = Pth.stake_layout()
+    boulders = Pth.foot_stones()
+    place.update(lips=lips, stakes=stakes, ropes=ropes, tufts=Pth.tufts(), steps=step_rows, boulders=boulders,
+                 hideBoxes=["lip", "fin"], extraBoxes=Pth.fin_boxes(), requires="den" if cuts else None,
+                 rope={"color": "#B79A66", "width": .1, "sag": .35})
+    report = {r["name"]: r["triangles"] for r in rows}
+    report["fixedTotal"] = sum(r["triangles"] for r in rows if r["role"] == "fixed")
+    report["lipStones"], report["stakes"] = len(lips), len(stakes)
+    report["stepMaxDeviation"] = max((s["dev"] for s in step_rows), default=0)
+    print("WORLDFINISH path", json.dumps(report))
+    L.export_fbx(parts + kit + [st] + cuts, OUT / "world-finish-path.fbx")
+    (OUT / "world-finish-path.json").write_text(json.dumps({"slice": "path", "parts": rows, "place": place,
+                                                             "hide": ["W7_CD_CliffPath__cliff_rock",
+                                                                      "W7_CD_CliffPath__dirt_path"],
+                                                             "report": report}, indent=1) + "\n", encoding="utf-8")
+    if RENDERS:
+        studio_look()
+        for i, lp in enumerate(lips):
+            place_copy(kit[lp["kit"] - 1], f"WF_Lip{i}", lp["at"], yaw=lp["yaw"])
+        for i, s in enumerate(stakes):
+            place_copy(st, f"WF_Stake{i}", s["at"], yaw=s["yaw"])
+        for i, b in enumerate(boulders):
+            place_copy(kit[b["kit"] - 1], f"WF_Boulder{i}", b["at"], yaw=b["yaw"], scale=(b["scale"][0], b["scale"][2], b["scale"][1]))
+        Path(RENDERS).mkdir(parents=True, exist_ok=True)
+        for label in ("CAM-HUB", "CAM-FOOT", "CAM-SHELF2", "CAM-TURN", "CAM-ARRIVE"):
+            W.render(label, RENDERS)
+
+
+def slice_terrace():
+    import world_finish_terrace as Ter
+    OUT.mkdir(parents=True, exist_ok=True)
+    rows, parts = [], []
+    cap, face_m, ol, cols = Ter.cap_and_face()
+    triplanar_uv(cap, island_density("W7_CD_Rocks__grass"))
+    cap.data.materials.append(island_material("grass"))
+    parts.append(cap)
+    for mesh, kind, uv in ((face_m, "cliff_rock", "W7_CD_Region__cliff_rock"),
+                           (Ter.tongues(cols, ol), "grass", "W7_CD_Rocks__grass"),
+                           (Ter.earth_patch(), "dirt_path", "W7_CD_CliffPath__dirt_path")):
+        obj, k = island_object(mesh, kind, uv)
+        parts.append(obj)
+    rocks, slab_m = Ter.outcrops_and_slab()
+    triplanar_uv(rocks, island_density("W7_CD_Region__cliff_rock"))
+    rocks.data.materials.append(island_material("cliff_rock"))
+    slab, _ = island_object(slab_m, "boulder_rock", "W7_CD_Rocks__boulder_rock")
+    parts += [rocks, slab]
+    for o in parts:
+        kind = o.name.rsplit("__", 1)[1]
+        rows.append(manifest_row(o, "fixed", {"kind": "island", "material": kind}, "terrace",
+                                 {"collide": False, "shadow": kind in ("cliff_rock", "boulder_rock"), "doubleSided": True}))
+    log, trunk = Ter.log_bench(), Ter.trunk()
+    bark_k = island_density("W7_Trunks__bark") if bpy.data.objects.get("W7_Trunks__bark") else .25
+    for o in (log, trunk):
+        triplanar_uv(o, bark_k)
+        o.data.materials.append(island_material("bark"))
+        row = manifest_row(o, "template", {"kind": "island", "material": "bark"}, "terrace",
+                           {"collide": False, "shadow": True, "doubleSided": True})
+        row["centre"][1] = round(row["centre"][1] - 4, 4)
+        rows.append(row)
+    import math as _m
+    yaw = _m.atan2(-Ter.S.TIER_D[1], Ter.S.TIER_D[0])
+    lx, _, lz = Ter.T(Ter.LOOKOUT[0] + .5, Ter.LOOKOUT[1] - .8)
+    tx, _, tz = Ter.T(20.0, -12.0)
+    place = {"lips": Ter.lip_layout(ol), "tufts": Ter.plants(), "extraBoxes": Ter.outcrop_boxes(), "requires": "path",
+             "logs": [{"template": "W7_F_TerraceLog__bark", "at": [lx, Ter.Y + .3, lz], "yaw": yaw}],
+             "trunks": [{"template": "W7_F_TerraceTrunk__bark", "at": [tx, Ter.Y, tz], "yaw": .4}],
+             "kitCrowns": [{"template": "W7_Kit_Crown_Round__foliage", "at": [tx + .5, Ter.Y + 11.6, tz], "yaw": .7,
+                            "scale": 1.15}],
+             "dressTier": {"hide": ["FaceGarden", "SkirtOuter", "SkirtNorthEast", "SkirtSouthWest", "BalustradeNorth",
+                                    "BalustradeSouth", "RimOuter", "RimNorthEast", "RimSouthWest"],
+                           "remove": ["ClumpOne", "ClumpOneTop", "ClumpTwo", "PadCrunch", "PadPop", "PadMoss", "TreePole"],
+                           "prefix": "W7T_"}}
+    report = {r["name"]: r["triangles"] for r in rows}
+    report["fixedTotal"] = sum(r["triangles"] for r in rows if r["role"] == "fixed")
+    print("WORLDFINISH terrace", json.dumps(report))
+    L.export_fbx(parts + [log, trunk], OUT / "world-finish-terrace.fbx")
+    (OUT / "world-finish-terrace.json").write_text(json.dumps({"slice": "terrace", "parts": rows, "place": place,
+                                                                "hide": [], "report": report}, indent=1) + "\n",
+                                                    encoding="utf-8")
+    if RENDERS:
+        studio_look()
+        place_copy(log, "WF_Log", place["logs"][0]["at"], yaw=yaw)
+        place_copy(trunk, "WF_Trunk", place["trunks"][0]["at"], yaw=.4)
+        kit = {o.name: o for o in bpy.data.objects if o.name.startswith("W7_F_Lip")}
+        for i, lp in enumerate(place["lips"]):
+            t = kit.get(f"W7_F_Lip{lp['kit']}__boulder_rock")
+            if t:
+                place_copy(t, f"WF_TLip{i}", lp["at"], yaw=lp["yaw"])
+        hide_for_render([o.name for o in bpy.data.objects if o.name.startswith("WF_Slab")])
+        Path(RENDERS).mkdir(parents=True, exist_ok=True)
+        for label in ("CAM-HUB", "CAM-LAWN01", "CAM-ARRIVE", "CAM-LOOKOUT", "CAM-BENCH"):
+            W.render(label, RENDERS)
+
+
 if __name__ == "__main__":
-    {"den": slice_den}[SLICE]()
+    {"den": slice_den, "path": slice_path, "terrace": slice_terrace}[SLICE]()
     if "--save" in ARGS:              # a copy of the finished scene, for section views (never over the preview blend)
         bpy.ops.wm.save_as_mainfile(filepath=ARGS[ARGS.index("--save") + 1], copy=True)

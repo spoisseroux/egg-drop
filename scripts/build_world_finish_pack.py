@@ -40,7 +40,7 @@ SLICES = ("den", "path", "terrace")
 SCALE_TOLERANCE = 3e-3
 MATTE_ROUGHNESS = "rbxassetid://132217078330162"     # build_world_v7_assets.py: white roughness (1), black metalness
 MATTE_METALNESS = "rbxassetid://114363080604088"
-MATERIAL = {"SmoothPlastic": 272, "Plastic": 256, "Neon": 288, "Slate": 800, "Metal": 1088, "Fabric": 1312}
+MATERIAL = {"SmoothPlastic": 272, "Plastic": 256, "Neon": 288, "Slate": 800, "Metal": 1088, "Fabric": 1312, "Wood": 512}
 TURN = (-1, 0, 0, 0, 1, 0, 0, 0, -1)                   # Ry(pi): the Roblox FBX import turns each mesh (AeroKit.Turn)
 
 
@@ -184,19 +184,35 @@ def xml_part(ref: str, part: dict, row: dict, images: dict) -> str:
 
 
 # ------------------------------------------------------------------------------------------------------ the data
-def cf(pos, yaw=0.0, offset=(0, 0, 0)):
-    """CFrame components (12 numbers) for CFrame.new(pos) * Ry(yaw) * CFrame.new(offset) * Ry(pi)."""
-    c, s = math.cos(yaw), math.sin(yaw)
-    # Ry(yaw) applied to the offset
+def _mul(a, b):
+    return [sum(a[3 * i + k] * b[3 * k + j] for k in range(3)) for i in range(3) for j in range(3)]
+
+
+def _ry(t):
+    c, s = math.cos(t), math.sin(t)
+    return [c, 0, s, 0, 1, 0, -s, 0, c]
+
+
+def _rz(t):
+    c, s = math.cos(t), math.sin(t)
+    return [c, -s, 0, s, c, 0, 0, 0, 1]
+
+
+def cf(pos, yaw=0.0, offset=(0, 0, 0), tilt=0.0):
+    """CFrame components (12 numbers) for CFrame.new(pos) * Ry(yaw) * Rz(tilt) * CFrame.new(offset) * Ry(pi)."""
+    r = _mul(_ry(yaw), _rz(tilt))
     ox, oy, oz = offset
-    px, py, pz = pos[0] + c * ox + s * oz, pos[1] + oy, pos[2] - s * ox + c * oz
-    # rotation Ry(yaw) * Ry(pi) = Ry(yaw + pi)
-    a = yaw + math.pi
-    ca, sa = math.cos(a), math.sin(a)
-    return [round(v, 5) for v in (px, py, pz, ca, 0, sa, 0, 1, 0, -sa, 0, ca)]
+    p = [pos[i] + r[3 * i] * ox + r[3 * i + 1] * oy + r[3 * i + 2] * oz for i in range(3)]
+    rot = _mul(r, _ry(math.pi))
+    return [round(v, 5) for v in p + rot]
 
 
-def slice_data(manifest: dict) -> dict:
+def rot_rows(yaw):
+    """CliffDenSwap box rotation rows (CFrame.new's nine numbers) for Ry(yaw)."""
+    return [round(v, 6) for v in _ry(yaw)]
+
+
+def slice_data(manifest: dict, allparts: dict | None = None) -> dict:
     parts = {p["name"]: p for p in manifest["parts"]}
     place = manifest.get("place", {})
     out = {"hide": manifest.get("hide", []), "fixed": [], "instances": [], "boxes": [], "tufts": [],
@@ -210,18 +226,47 @@ def slice_data(manifest: dict) -> dict:
                 row[k] = p[k]
         out["fixed"].append(row)
 
-    def inst(template, at, yaw, scale):
-        t = parts[template]
+    def inst(template, at, yaw, scale, tilt=0.0):
+        t = (allparts or parts)[template]
         size = [round(a * b, 4) for a, b in zip(t["size"], scale)]
         off = [a * b for a, b in zip(t["centre"], scale)]
-        return {"template": template, "cframe": cf(at, yaw, off), "size": size}
+        return {"template": template, "cframe": cf(at, yaw, off, tilt), "size": size}
 
     for c in place.get("crystals", []):
         out["instances"].append(inst("W7_F_Den__crystal", c["at"], c["yaw"], (c["scale"],) * 3))
     for s in place.get("stones", []) + place.get("apronStones", []):
         out["instances"].append(inst("W7_F_Stone__flat", s["at"], s["yaw"], s["size"]))
-    out["boxes"] = place.get("mouthBoxes", [])
+    for lp in place.get("lips", []):
+        out["instances"].append(inst(f"W7_F_Lip{lp['kit']}__boulder_rock", lp["at"], lp["yaw"], (1, 1, 1)))
+    for b in place.get("boulders", []):
+        out["instances"].append(inst(f"W7_F_Lip{b['kit']}__boulder_rock", b["at"], b["yaw"], b["scale"]))
+    for row in place.get("logs", []) + place.get("trunks", []):
+        out["instances"].append(inst(row["template"], row["at"], row["yaw"], (1, 1, 1)))
+    if place.get("kitCrowns"):
+        kit = open(ROOT / "assets" / "world" / "AeroKit.rbxmx", encoding="utf-8").read()
+        out["kitCrowns"] = []
+        for row in place["kitCrowns"]:
+            m = re.search(r'<string name="Name">' + re.escape(row["template"]) + r'</string>.*?<Vector3 name="Size"><X>([^<]+)</X>'
+                          r'<Y>([^<]+)</Y><Z>([^<]+)</Z>', kit, re.S)
+            size = [round(float(v) * row["scale"], 4) for v in m.groups()]
+            out["kitCrowns"].append({"template": row["template"], "cframe": cf(row["at"], row["yaw"]), "size": size})
+    if place.get("dressTier"):
+        out["dressTier"] = place["dressTier"]
+    for s in place.get("stakes", []):
+        out["instances"].append(inst("W7_F_Stake__wood", s["at"], s["yaw"], (1, 1, 1), s.get("lean", 0.0)))
+    out["boxes"] = list(place.get("mouthBoxes", [])) + [
+        {"kind": "lipstone", "c": lp["box"]["c"], "s": lp["box"]["s"], "r": rot_rows(lp["box"]["yaw"])}
+        for lp in place.get("lips", []) if "box" in lp] + [
+        {"kind": b["kind"], "c": b["c"], "s": b["s"], "r": rot_rows(b["yaw"])} for b in place.get("extraBoxes", [])]
+    if place.get("requires"):
+        out["requires"] = place["requires"]
+    # templates borrowed from an earlier slice (the terrace's lip stones are the path's kit): the mount checks them too
+    out["templates"] = sorted(set(out["templates"]) | {i["template"] for i in out["instances"]})
     out["tufts"] = place.get("tufts", [])
+    if place.get("ropes"):
+        out["ropes"], out["rope"] = place["ropes"], place["rope"]
+    if place.get("hideBoxes"):
+        out["hideBoxes"] = place["hideBoxes"]
     if "W7_F_Lantern__cage" in parts:
         lan = place.get("lanterns", {})
         out["dress"] = {
@@ -255,7 +300,7 @@ def build():
     items, notes = [], []
     for s, m in manifests.items():
         rows, scale, problems = bind(s, m, uploads)
-        d = slice_data(m)
+        d = slice_data(m, {p["name"]: p for mm in manifests.values() for p in mm["parts"]})
         d["packed"] = not problems
         data["slices"][s] = d
         if problems:
