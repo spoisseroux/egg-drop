@@ -27,13 +27,13 @@ live cut runs as on live.
 
 | Feature | v3 equivalent | Decision |
 |---|---|---|
-| **GardenTourCut** (say-hi rail line instead of the four tour cards) | follow the Bear + the needHi bubble ("Say hi to {pet}.") | **v3 wins while `follow` is on.** The say-hi line now runs only where the tour would (`Cards.stage(base, following) == "garden"`); follow on reads the stage "free", so neither the tour nor the line runs and the bubble says hi. Follow off: the line, as live. Why: the bubble sits on the Bear and is the v3 first-minute language; two "say hi" prompts at once would compete. |
-| **TomorrowStrip** (TOMORROW chips on results + one garden line) | the Sleepy Nest's "Coming up" strip (results) and its egg ticket on the rail | **v3 wins while `nest` is on** (`TomorrowChips.live()`): no live model in the results data, no live row reserved under the panes (PC) or phone block, no Tomorrow rail line. Nest off: the live strip and line, including on the v3 results layout (DeckLook): the PC row under the panes, the phone block in place of the TODAY line. Why: both strips answer "why come back"; the v3 one carries the nest egg, which is the beta's main come-back hook. The beta never built the plan's "60 s rail showing" of its strip; the egg ticket covers the rail. The Tomorrow line is also now the last line on the rail, after the Things to do lines. |
+| **GardenTourCut** (say-hi rail line instead of the four tour cards) | follow the Bear + the needHi bubble ("Say hi to {pet}.") | **v3 wins while `follow` is on.** The say-hi line now runs only where the tour would (`Cards.stage(base, following) == "garden"`); follow on reads the stage "free", so neither the tour nor the line runs and the bubble says hi. Follow off with `needs` on: still no line (the needHi bubble is the one hello prompt), and `gardenIntro` is saved at that moment instead (BearNeeds saves it only while following). Follow and needs both off: the line, as live. Why: the bubble sits on the Bear and is the v3 first-minute language; two "say hi" prompts at once would compete. |
+| **TomorrowStrip** (TOMORROW chips on results + one garden line) | the Sleepy Nest's "Coming up" strip (results) and its egg ticket on the rail | **v3 wins while `nest` is on** (`TomorrowChips.live()`): no live model in the results data, no live row reserved under the panes (PC) or phone block, no Tomorrow rail line. Nest off: the live strip and line, including on the v3 results layout (DeckLook): the PC row under the panes, the phone block in place of the TODAY line. Which strip the panes make room for (`DeckResultsInPlace.stripChoice`) is part of the results view key, chosen when a results screen opens, so a switch flip takes effect on the next results screen, never mid-screen. Why: both strips answer "why come back"; the v3 one carries the nest egg, which is the beta's main come-back hook. The beta never built the plan's "60 s rail showing" of its strip; the egg ticket covers the rail. The Tomorrow line is also now the last line on the rail, after the Things to do lines. |
 | **StarterBonus** (+12/+4/+4, saved `starterRounds`) + **ResultsNudge** | none | **On.** The gold "Welcome bonus" row also paints in the v3 payout. |
 | **"balls" copy** | none | **On** (no switch, as live). |
-| **PetTrail** (paw prints to the pet) | the need bubble sits over the Bear but nothing leads to it when it is off to one side; v3's own prints (ThingsTrail) go to the machine | **On, both ways.** Follow off: with the say-hi line, as live. Follow on with the need bubbles: raised once as the garden step would have opened (`CoachCards` `options.followTrail` = `Onboard.on("needs")`), so the prints lead to the Bear while the needHi bubble asks for a hello; they end on that hello, and BearNeeds' prints to the machine start after it (a hand-off, never two trails at once). Follow on without bubbles: v3's prints go to the machine at once, so no trail to the pet. `finishGarden` from BearNeeds never raises it. |
+| **PetTrail** (paw prints to the pet) | the need bubble sits over the Bear but nothing leads to it when it is off to one side; v3's own prints (ThingsTrail) go to the machine | **On, both ways.** Follow off: with the say-hi line, as live. Need bubbles on (`CoachCards` `options.bubbles` = `Onboard.on("needs")`), follow on or off: raised once as the garden step would have opened, so the prints lead to the Bear while the needHi bubble asks for a hello; they end on that hello (a saved pet, or BearNeeds' own `saidHi`, which a greeting also sets) or as soon as BearNeeds starts its prints to the machine: a hand-off, never two trails at once. Follow on without bubbles: v3's prints go to the machine at once, so no trail to the pet. `finishGarden` from BearNeeds never raises it. |
 | **FirstHelloBonus** (+2 on the first paid pet, saved `firstHello`) | none (needHi's hello is the same petting award) | **On.** The needHi tap goes through PetContact, so the bubble's hello pays and shows "First hello! +3 ★". |
-| **RoundTwoNudge** (round-two pill) | the needDeck bubble | **v3 wins while `needs` is on**: no pill. Needs off: the pill, as live. |
+| **RoundTwoNudge** (round-two pill) | the needDeck bubble | **v3 wins while the bubbles run for this session** (`needs` on, BearNeeds mounted and alive, not a returning save): no pill. Needs off, or a returning save (bubbles never show for it, e.g. a new player back the next day before round two): the pill, as live. |
 | **ToyPillCopy** ("Hatch a toy for {pet}") | none: with `needs` on the pill is already quiet (`FirstSpendGuide` stage "quiet", the needToy bubble) | **On.** Applies whenever the pill shows. |
 | **CalmFirstDeck** (Welcome round shows only the board, Next, the egg and the coach card) | none | **On.** Same card names on the beta HUD; `CalmDeck.spec` is Studio-only (not run here). |
 
@@ -90,7 +90,22 @@ Default (all switches on):
    affordable), the v3 Coming up strip at the foot and **no** TOMORROW row. Rounds three and four: +4 each; five: none.
 6. Back in the garden: the nest egg ticket, **no** "Tomorrow: Stamp ..." line.
 
+Mixed: `/onboard follow off` alone: no tour, no say-hi line, the needHi bubble with the paw prints to the Bear.
+
 Live first session on the beta (`/onboard follow off`, `/onboard needs off`, `/onboard nest off` before the Bear;
 follow is read once a session, so set it in the Welcome round): the say-hi line with the prints, "Hatch a toy for
 Bear" pill, the round-two pill "Round two: ★ 12 Welcome bonus", the TOMORROW row (PC under the panes, phone block in
-the Payout pane) and one "Tomorrow:" line after a results screen. `/onboard nest on` again: the Coming up strip only.
+the Payout pane) and one "Tomorrow:" line after a results screen. `/onboard nest on` again: the next results screen
+has the Coming up strip only.
+
+## Code review (Code Reviewer subagent, 2026-11-25): GO WITH CHANGES, all applied
+
+1. The round-two pill was gated on the `needs` switch, not on the bubbles running: a returning new player (back the
+   next day before round two) got neither. Now gated on BearNeeds being live and not returning.
+2. The strip choice was fixed at `View.new` and the view is reused across screens: a nest flip left an empty gap or no
+   strip. Now part of the view key, chosen on open.
+3. Follow off with needs on showed the say-hi line and the needHi bubble together. Now the bubble only; the step is
+   saved there; the prints run.
+4. The trail to the pet ended only on a saved pet; a greeting closes needHi without one, so BearNeeds' prints could
+   start beside it. Now it also ends on BearNeeds' `saidHi` or its first trail.
+5. A comment moved back onto `Chips.entry`.

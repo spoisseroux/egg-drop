@@ -46,7 +46,7 @@ return function(client)
 
 	test("follow the Bear on: neither the say-hi line nor the tour (the need bubbles say hi)",function()
 		local toured=0
-		local c=coach({GardenTourCut=true,PetTrail=true},{follow=yes,followTrail=no,tour=function()toured+=1;return true end})
+		local c=coach({GardenTourCut=true,PetTrail=true},{follow=yes,bubbles=no,tour=function()toured+=1;return true end})
 		c.run(0,Coach.GardenSettle+4)
 		assert(#c.shown==0 and toured==0,"nothing on the rail")
 		assert(not c.trailDue,"follow on without the bubbles: v3's own prints only")
@@ -55,7 +55,7 @@ return function(client)
 	end)
 
 	test("follow the Bear on with the need bubbles: the prints to the pet, once, as the step would open",function()
-		local c=coach({GardenTourCut=true,PetTrail=true},{follow=yes,followTrail=yes,tour=function()return true end})
+		local c=coach({GardenTourCut=true,PetTrail=true},{follow=yes,bubbles=yes,tour=function()return true end})
 		c.run(0,Coach.GardenSettle-1)
 		assert(not c.trailDue,"after the garden settles")
 		c.run(Coach.GardenSettle,Coach.GardenSettle+1)
@@ -63,9 +63,18 @@ return function(client)
 		c.trailDue=false
 		c.run(Coach.GardenSettle+1.5,Coach.GardenSettle+6)
 		assert(not c.trailDue,"once a session")
-		local off=coach({GardenTourCut=true,PetTrail=false},{follow=yes,followTrail=yes})
+		local off=coach({GardenTourCut=true,PetTrail=false},{follow=yes,bubbles=yes})
 		off.run(0,Coach.GardenSettle+2)
 		assert(not off.trailDue,"PetTrail off")
+	end)
+
+	test("follow the Bear off with the need bubbles on: no say-hi line (the needHi bubble asks), the step saved, the prints",function()
+		local sent={}
+		local c=coach({GardenTourCut=true,PetTrail=true},{follow=no,bubbles=yes})
+		c.options.send=function(id)table.insert(sent,id)end
+		c.run(0,Coach.GardenSettle+4)
+		assert(#c.shown==0,"one hello prompt: the bubble")
+		assert(table.find(sent,"gardenIntro")and c.gardenDone==true and c.trailDue==true)
 	end)
 
 	test("the say-hi line still lays the prints; a tour closing without follow does too (as live)",function()

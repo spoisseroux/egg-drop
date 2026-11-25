@@ -3410,7 +3410,11 @@ do
    local ctx=stationContext()
    local menu=ctx.overlay or ctx.menuOpen or ctx.coreMenu or(clientUI.hub~=nil and clientUI.hub:isOpen())or clientUI.questLog.visible==true
     or(clientUI.book~=nil and clientUI.book:isOpen())or clientUI.arrivalHatch:isOpen()
-   local reason=Trail.endReason(now-trail.startedAt,{hello=clientUI.petSavedAt~=state.savedBefore,menu=menu,deck=board:GetAttribute("Mode")~="Room"})
+   -- On the beta the need bubbles' hello (a greeting counts there even when no pet is saved) and their own prints to
+   -- the machine end it too: never two trails at once.
+   local needs=clientUI.needs
+   local greeted=needs~=nil and((needs.f~=nil and needs.f.saidHi==true)or(needs.autoTrail~=nil and needs.autoTrail~=false))
+   local reason=Trail.endReason(now-trail.startedAt,{hello=clientUI.petSavedAt~=state.savedBefore or greeted,menu=menu,deck=board:GetAttribute("Mode")~="Room"})
    if reason then trail:stop(now);release()end
    local character=player.Character
    local root=character and character:FindFirstChild("HumanoidRootPart")
@@ -3562,8 +3566,12 @@ do
   -- "Started" = a ball dropped in a field round (not just the deck open, a menu or the hatch reveal).
   if(board:GetAttribute("OwnedPets")or 0)>0 and board:GetAttribute("Mode")=="Board"and clientUI.attr("FieldPhase")~="Welcome"
    and(clientUI.attr("Drops")or 0)>0 then clientUI.roundTwoStarted=true end
-  -- On the beta the need bubbles (Onboard.on("needs")) own round two (the deck bubble): no pill while they are on.
-  local roundTwo=if require(ReplicatedStorage.Shared.Onboard).on("needs")then nil else Nudge.variant(stage,nurseryState,growthFlags,clientUI.roundTwoStarted)
+  -- On the beta the need bubbles own round two (the deck bubble): no pill while they run for this session (switch on,
+  -- BearNeeds mounted and alive, not a returning save; not yet known = theirs). A returning save gets the pill, as live.
+  local needs=clientUI.needs
+  local bubbles=needs~=nil and not needs.dead and not(if needs.ready then needs.returning else needs.began==true)
+   and require(ReplicatedStorage.Shared.Onboard).on("needs")
+  local roundTwo=if bubbles then nil else Nudge.variant(stage,nurseryState,growthFlags,clientUI.roundTwoStarted)
   if roundTwo and free and not quiet then clientUI.roundTwoSince=clientUI.roundTwoSince or os.clock()else clientUI.roundTwoSince=nil end
   if clientUI.roundTwoSince and os.clock()-clientUI.roundTwoSince>=Nudge.Delay then
    local key,vars=Nudge.copy(roundTwo,petName)
@@ -5599,9 +5607,9 @@ do
    end,false,Enum.ContextActionPriority.Medium.Value,Enum.KeyCode.G,Enum.KeyCode.ButtonL2)
    clientUI.needs=needs
    clientUI.coach.options.follow=function()return Onboard.sessionFollow()end
-   -- G2 (PetTrail) on the beta: following the Bear with the need bubbles, the paw prints lead to the pet while the
-   -- needHi bubble asks for a hello (the Bear's own prints to the machine start after it).
-   clientUI.coach.options.followTrail=function()return Onboard.on("needs")end
+   -- Live growth cuts on the beta: with the need bubbles on, the needHi bubble is the one hello prompt (no say-hi line)
+   -- and the paw prints lead to the pet while it asks (the Bear's own prints to the machine start after it).
+   clientUI.coach.options.bubbles=function()return Onboard.on("needs")end
   end)
   if not okNeeds then warn("[Onboard] not mounted: "..tostring(needsProblem))end
   -- Twice a second while on: the race's station follows the live gate, and a race joined clears the New dot.

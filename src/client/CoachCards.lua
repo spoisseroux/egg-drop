@@ -536,9 +536,10 @@ function Cards:v3Tomorrow()
  local ok,on=pcall(own)
  return ok and on==true
 end
--- G2 on the beta: do the paw prints to the pet run with follow the Bear (options.followTrail: the need bubbles on)?
-function Cards:followTrail()
- local own=self.options.followTrail
+-- The beta's need bubbles on (options.bubbles, Onboard.on("needs"))? Then the needHi bubble is the one hello prompt (no
+-- say-hi line), and with follow the Bear on the paw prints to the pet run with it. No option (live, specs): no.
+function Cards:bubbles()
+ local own=self.options.bubbles
  if type(own)~="function"then return false end
  local ok,on=pcall(own)
  return ok and on==true
@@ -677,9 +678,15 @@ function Cards:step(now,ctx)
   elseif (self.flags or Cards.NoFlags).GardenTourCut==true and not self.replaying and not self.gardenDone and Cards.sayHiMayStart(base,roomFor)
    and Cards.stage(base,self:following())=="garden"then
    -- Growth cuts: one say-hi line instead of the tour (it saves gardenIntro when it shows), then the first Stars.
-   -- Follow the Bear on: the stage reads "free" and this never runs (the needHi bubble says hi).
+   -- Follow the Bear on: the stage reads "free" and this never runs (the needHi bubble says hi). Follow off with the
+   -- need bubbles on (the beta): the needHi bubble is the one hello prompt, so no line; the step is saved here (BearNeeds
+   -- saves it only while following) and the paw prints lead to the pet as they would with the line.
    self.gardenDone=true
-   self:showGarden("sayHi","sayHi",vars,now)
+   if self:bubbles()then
+    self:mark("gardenIntro");self.trailDue=true
+   else
+    self:showGarden("sayHi","sayHi",vars,now)
+   end
    if self.starterStars and not self.toldStars then
     self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
    end
@@ -694,7 +701,7 @@ function Cards:step(now,ctx)
     self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
    end
   elseif (self.flags or Cards.NoFlags).PetTrail==true and not self.followTrailRaised and not self.replaying and not self.gardenDone
-   and Cards.sayHiMayStart(base,roomFor)and Coach.stage(base)=="garden"and self:following()and self:followTrail()then
+   and Cards.sayHiMayStart(base,roomFor)and Coach.stage(base)=="garden"and self:following()and self:bubbles()then
    -- G2 (PetTrail) on the beta: following the Bear with the need bubbles, the prints lead to the pet as the step
    -- would have opened (the needHi bubble asks for the hello). Once a session; the next frame goes on below.
    self.followTrailRaised=true;self.trailDue=true

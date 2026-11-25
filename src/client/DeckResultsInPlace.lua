@@ -70,6 +70,14 @@ local function headline(parent,size)
  end
  return api
 end
+-- Which strip the panes make room for: "v3" (the Coming up strip, DeckLook on and a model), "live" (the TOMORROW
+-- row, PC only: TomorrowChips.live), or "none". Part of DeckResults' view key, so a switch flip between two results
+-- screens rebuilds the view (never mid-screen).
+function View.stripChoice(owner,v)
+ if Look.on()and owner.tomorrowModel~=nil and owner:tomorrowModel()~=nil then return "v3"end
+ if not v.phone and Chips.live()then return "live"end
+ return "none"
+end
 function View.new(owner,v)
  local self=setmetatable({owner=owner,view=v,buttons={},opened=os.clock()},View)
  local root=Instance.new("Frame");root.Name="InPlaceResults";root.Size=UDim2.fromScale(1,1);root.BackgroundTransparency=1;root.BorderSizePixel=0;root.ClipsDescendants=true;root.ZIndex=50;root.Parent=owner.host;self.root=root;Kit.paint(root,"BackgroundColor3","well")
@@ -77,7 +85,8 @@ function View.new(owner,v)
  local m=if l.h==r.h and l.y==r.y then{x=v.center.x,y=l.y,w=v.center.w,h=l.h}else v.center
  -- U7 (v3): with the strip on, the panes give up its row and the strip runs under all three.
  self.v3=Look.on()
- self.stripOn=self.v3 and owner.tomorrowModel~=nil and owner:tomorrowModel()~=nil
+ local choice=View.stripChoice(owner,v)
+ self.stripOn=choice=="v3"
  if self.v3 then
   local panes=Layout.panes(l,m,r,self.stripOn)
   l,m,r=panes.left,panes.middle,panes.right
@@ -87,7 +96,7 @@ function View.new(owner,v)
  -- each give up 42 px (the strip's height and its 6 px gap). Reserved whenever the live strip applies (never with the
  -- v3 strip, nor while the Sleepy Nest owns the moment); it stays empty while the round saves. Phones keep their panes
  -- and get a block in the Payout pane instead (paint).
- if not self.stripOn and not v.phone and Chips.live()then
+ if choice=="live"then
   local bottom=math.max(l.y+l.h,r.y+r.h,m.y+m.h)
   local top=bottom-Chips.Height
   local function cut(rect)return{x=rect.x,y=rect.y,w=rect.w,h=math.max(48,math.min(rect.h,top-Chips.Gap-rect.y))}end

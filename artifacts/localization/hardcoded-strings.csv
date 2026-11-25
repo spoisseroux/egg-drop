@@ -30,8 +30,8 @@ src/client/BookView.lua,375,Claim,,yes
 src/client/BookView.lua,631, to claim,fragment (sentence built from parts),
 src/client/CelebrationKit.lua,41,WONDER,,
 src/client/CoachCards.lua,434,garden:,,
-src/client/CoachCards.lua,583,things:,,
-src/client/CoachCards.lua,762,.short,,
+src/client/CoachCards.lua,584,things:,,
+src/client/CoachCards.lua,769,.short,,
 src/client/CompanionsHub.lua,107, OWNED,fragment (sentence built from parts),
 src/client/CompanionsHub.lua,116, NEW ITEM,fragment (sentence built from parts),
 src/client/CompanionsHub.lua,116, NEW ITEMS,fragment (sentence built from parts),
@@ -142,24 +142,24 @@ src/client/DeckResults.lua,711,0 Stars,,
 src/client/DeckResults.lua,713,Saving…,,yes
 src/client/DeckResults.lua,713,Star,,yes
 src/client/DeckResults.lua,713,Stars,,yes
-src/client/DeckResults.lua,830,Round,,
-src/client/DeckResults.lua,830,Medium,,
-src/client/DeckResults.lua,848,Replay keeps ,fragment (sentence built from parts),
-src/client/DeckResults.lua,848,Medium,,
-src/client/DeckResults.lua,848,. Up on Replay changes difficulty.,,
-src/client/DeckResults.lua,853,Saving…,,yes
-src/client/DeckResults.lua,853,Try again,,
-src/client/DeckResults.lua,853,Replay,,yes
-src/client/DeckResults.lua,908,Hatch ,fragment (sentence built from parts),
-src/client/DeckResults.lua,908,Hatch,,yes
-src/client/DeckResults.lua,918,Quest done,,
-src/client/DeckResults.lua,919,DONE,,
-src/client/DeckResults.lua,926,Quest,,
-src/client/DeckResults.lua,926,Quests ,fragment (sentence built from parts),
-src/client/DeckResultsInPlace.lua,448,Round,,
-src/client/DeckResultsInPlace.lua,529,Goals  %d/%d,,
-src/client/DeckResultsInPlace.lua,529,Goals,,
-src/client/DeckResultsInPlace.lua,532,Medium,,
+src/client/DeckResults.lua,833,Round,,
+src/client/DeckResults.lua,833,Medium,,
+src/client/DeckResults.lua,851,Replay keeps ,fragment (sentence built from parts),
+src/client/DeckResults.lua,851,Medium,,
+src/client/DeckResults.lua,851,. Up on Replay changes difficulty.,,
+src/client/DeckResults.lua,856,Saving…,,yes
+src/client/DeckResults.lua,856,Try again,,
+src/client/DeckResults.lua,856,Replay,,yes
+src/client/DeckResults.lua,911,Hatch ,fragment (sentence built from parts),
+src/client/DeckResults.lua,911,Hatch,,yes
+src/client/DeckResults.lua,921,Quest done,,
+src/client/DeckResults.lua,922,DONE,,
+src/client/DeckResults.lua,929,Quest,,
+src/client/DeckResults.lua,929,Quests ,fragment (sentence built from parts),
+src/client/DeckResultsInPlace.lua,457,Round,,
+src/client/DeckResultsInPlace.lua,538,Goals  %d/%d,,
+src/client/DeckResultsInPlace.lua,538,Goals,,
+src/client/DeckResultsInPlace.lua,541,Medium,,
 src/client/DeckScreen.lua,467,D-pad ,fragment (sentence built from parts),
 src/client/DeckScreen.lua,483,Menu,,yes
 src/client/DeckScreen.lua,484,MENU,,
@@ -622,15 +622,15 @@ src/client/init.client.lua,2807,Menu,,yes
 src/client/init.client.lua,2807,Lounge,,
 src/client/init.client.lua,2861,Meet,,
 src/client/init.client.lua,2862,Play,,yes
-src/client/init.client.lua,3886,Win this round to meet your first pet,,
-src/client/init.client.lua,3917,Quest done: ,fragment (sentence built from parts),
-src/client/init.client.lua,3927,Quest claimed,,yes
-src/client/init.client.lua,3930,No reroll left today,,
-src/client/init.client.lua,3930,Only unstarted quests can be rerolled,,
-src/client/init.client.lua,3930,"Saving, try again",,
-src/client/init.client.lua,3930,One moment…,,yes
-src/client/init.client.lua,3930,Not finished yet,,
-src/client/init.client.lua,3930,New quests arrived,,
-src/client/init.client.lua,3930,Try again,,
-src/client/init.client.lua,4592,%s\n%d/%d Stars,,
-src/client/init.client.lua,4974,nest:,,
+src/client/init.client.lua,3894,Win this round to meet your first pet,,
+src/client/init.client.lua,3925,Quest done: ,fragment (sentence built from parts),
+src/client/init.client.lua,3935,Quest claimed,,yes
+src/client/init.client.lua,3938,No reroll left today,,
+src/client/init.client.lua,3938,Only unstarted quests can be rerolled,,
+src/client/init.client.lua,3938,"Saving, try again",,
+src/client/init.client.lua,3938,One moment…,,yes
+src/client/init.client.lua,3938,Not finished yet,,
+src/client/init.client.lua,3938,New quests arrived,,
+src/client/init.client.lua,3938,Try again,,
+src/client/init.client.lua,4600,%s\n%d/%d Stars,,
+src/client/init.client.lua,4982,nest:,,

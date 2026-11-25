@@ -145,7 +145,6 @@ function Chips.railDue(ctx)
 	if type(ctx)~="table"or ctx.shown then return false end
 	return ctx.sawResults==true or(ctx.sessionFor or 0)>=Chips.RailAfter
 end
--- Entry progress (0..1) at `t` s since the count-up ended (nil = not ended).
 -- Beta port (PORT-TO-BETA.md): does the live strip and its rail line apply? The switch on, and onboarding v3's Sleepy
 -- Nest not owning the moment (Onboard.on("nest"): its Coming up strip on the results and its egg ticket on the rail).
 -- env = {flags, nest} for specs; the game passes nothing. An Onboard that cannot be read counts as off (live).
@@ -164,6 +163,7 @@ function Chips.live(env)
 	end
 	return nest~=true
 end
+-- Entry progress (0..1) at `t` s since the count-up ended (nil = not ended).
 function Chips.entry(t)
 	if type(t)~="number"then return 0 end
 	return math.clamp((t-Chips.Delay)/Chips.Fade,0,1)
