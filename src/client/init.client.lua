@@ -4258,6 +4258,8 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
   if(chain>1 or cleared)and now-lastChainAccent>=.09 then
    lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))
   end
+  -- The predicted buzz was a plain merge: a chain climbs and a clear thumps now (the server's chain; capped).
+  if chain>1 or cleared then clientUI.feel.merge(tier,chain,cleared)end
   rendererPresentation.fx:pop(project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,Config.mergeScore(tier,chain,cleared),now)
   return
  end
@@ -4286,6 +4288,13 @@ local function refreshMotion()
 	end
 end
 board:GetAttributeChangedSignal("ReducedEffects"):Connect(refreshMotion)
+-- The Vibration row follows the ASMR switch when it arrives or flips (and a pad connecting).
+pcall(function()
+	local function vibrationRow() picker:setVibration(clientUI.feel.available(), clientUI.feel.isEnabled()) end
+	require(ReplicatedStorage.Shared.Alive).changed("asmr"):Connect(vibrationRow)
+	UserInputService.GamepadConnected:Connect(vibrationRow)
+	UserInputService.GamepadDisconnected:Connect(vibrationRow)
+end)
 board:GetAttributeChangedSignal("GreetingsOff"):Connect(function()picker:setGreetings(board:GetAttribute("GreetingsOff")~=true)end)
 -- Toy Shell R1.1: menus follow the equipped deck or the Classic Shell (Settings), and the
 -- moving checker rests under the game's own Motion: Low as well as Reduced Motion.

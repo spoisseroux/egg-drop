@@ -209,12 +209,15 @@ local function stopPad(e,slot)
 		e.haptic:SetMotor(slot,Enum.VibrationMotor.Large,0)
 	end)
 end
+-- Stops whatever plays and bumps the epoch, so every delayed key and stop of an earlier play goes quiet. Every start
+-- calls it first (one token per play: an earlier play's late stop can never cut, or re-arm, a later one). The last pad
+-- used is always zeroed, even after its own final stop.
 function Haptics.stop()
 	local e=engine
 	if not e then return end
 	e.epoch+=1
 	if e.current then pcall(function()e.current:Stop()end);e.current=nil end
-	if e.padSlot then stopPad(e,e.padSlot);e.padSlot=nil end
+	if e.lastSlot then stopPad(e,e.lastSlot)end
 end
 
 local function playPad(e,slot,p)
@@ -224,12 +227,12 @@ local function playPad(e,slot,p)
 		if ok and yes then motor=Enum.VibrationMotor.Large end
 	end
 	local epoch=e.epoch
-	e.padSlot=slot
+	e.lastSlot=slot
 	for _,k in ipairs(Haptics.keys(p))do
 		local function set()if e.epoch==epoch then pcall(function()e.haptic:SetMotor(slot,motor,k[2])end)end end
 		if k[1]<=0 then set()else task.delay(k[1]/1000,set)end
 	end
-	task.delay(p.length+Haptics.StopMargin,function()if e.epoch==epoch then stopPad(e,slot);e.padSlot=nil end end)
+	task.delay(p.length+Haptics.StopMargin,function()if e.epoch==epoch then stopPad(e,slot)end end)
 end
 local function playEffect(e,name,p)
 	local effect=effectFor(name,p)
@@ -249,9 +252,9 @@ function Haptics.play(name,p)
 	if not p or not enabled or not focused or not Haptics.switch()then return false end
 	local e=services()
 	if not e.ready then return false end
-	local ok,cut=gate:try(p,clock())
+	local ok=gate:try(p,clock())
 	if not ok then return false end
-	if cut then Haptics.stop()end
+	Haptics.stop()
 	local played=false
 	pcall(function()
 		local slot=padType()
