@@ -14,6 +14,7 @@ local Kit=require(script.Parent.DeckKit)
 local Stage=require(script.Parent.HatchItemStage)
 local Pose=require(script.Parent.HatchDisplayPose)
 local Rarity=require(script.Parent.HatchRarityCue)
+local Asmr=require(script.Parent.HatchAsmr)
 local Reveal={}
 Reveal.__index=Reveal
 Reveal.Kind="name"
@@ -108,7 +109,7 @@ function Reveal:show(receipt,info,callbacks)
 	self.scene=nameScene(receipt)
 	self.age=0;self.reducedStart=reduced
 	self.timing=Rarity.timing(tier,Reveal.Kind,reduced)
-	self.cue=Rarity.new(Reveal.Kind,receipt,self.timing.ready,reduced)
+	self.cue=Rarity.new(Reveal.Kind,receipt,self.timing.ready,reduced,Asmr.layer(Reveal.Kind,receipt,reduced))
 	self.owner={}
 	local stage=Stage.show(self.host,{scene=self.scene,kind=Reveal.Kind,tier=tier,result=receipt,cover=false,fullScreen=true,zIndex=20,lid=not handover,
 		reduced=function()return self.reducedStart end,owns=function()return self.open end,
@@ -163,6 +164,7 @@ function Reveal:step(dt)
 	if self.cue and self.audio then
 		for _,event in ipairs(self.cue:due(self.age,true,true))do
 			pcall(function()self.audio:play(event.cue,event.speed,event.gain,self.owner)end)
+			Asmr.fire(event)
 		end
 	end
 end

@@ -161,6 +161,35 @@ do
   if built then assetIds[cue]=Audio.MachineIds[cue];table.insert(cues,cue)end
  end
 end
+-- The ASMR hatch (HatchAsmr; ASMR-AND-SCALE-LOOK 1): settle, two cracks, creaks, the pop, flakes and the exhale, 24
+-- one-shots. Original synthesis (scripts/synth_asmr.py, assets/audio/custom/egg_drop_<cue>.wav), not heard by Spencer
+-- yet. TODO(upload): the coordinator uploads each file and puts its asset id here; 0 = not uploaded = no voice (play()
+-- answers false, quietly; the buzz still plays). Only where the switch can be on (Alive "asmr": the beta place and
+-- Studio): the live game makes no voice for them.
+Audio.AsmrIds=table.freeze({
+ asmr_egg_set_a=0,asmr_egg_set_b=0,asmr_egg_set_c=0,
+ asmr_crack1_a=0,asmr_crack1_b=0,asmr_crack1_c=0,
+ asmr_crack2_a=0,asmr_crack2_b=0,asmr_crack2_c=0,
+ asmr_creak_a=0,asmr_creak_b=0,asmr_creak_c=0,
+ asmr_creak_long_a=0,asmr_creak_long_b=0,
+ asmr_pop_a=0,asmr_pop_b=0,asmr_pop_c=0,
+ asmr_flake_a=0,asmr_flake_b=0,asmr_flake_c=0,asmr_flake_d=0,asmr_flake_e=0,
+ asmr_exhale_a=0,asmr_exhale_b=0,
+})
+function Audio.asmrCeiling()
+ local ok,on=pcall(function()
+  return require(game:GetService("ReplicatedStorage"):WaitForChild("Shared",5):WaitForChild("Alive",5)).ceiling("asmr")
+ end)
+ return ok and on==true
+end
+do
+ local built=Audio.asmrCeiling()
+ for _,cue in ipairs(require(script.Parent.HatchAsmr).cues())do
+  Audio.PendingCues[cue]=true
+  local id=Audio.AsmrIds[cue]
+  if built and type(id)=="number"and id>0 then assetIds[cue]=id;table.insert(cues,cue)end
+ end
+end
 for _,kind in ipairs({"bear","toy","hue","material","feature"})do
  local id=DisplayAssets.Audio["hatch_"..kind]
  if id then local cue="hatch_display_"..kind;assetIds[cue]=id;table.insert(cues,cue)end
