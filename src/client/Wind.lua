@@ -150,4 +150,13 @@ function Wind.swayAt(position,time)
 	return math.clamp((breeze+(1-breeze)*math.max(rawGust(t),(rawBreath(t))))*strength(),0,1)
 end
 
+-- The sky on the same wind (beta 17, WORLD-ALIVE-LOOK 1.3 A; the Alive `scene` switch, HollowClock): workspace.GlobalWind
+-- (studs a second, which the dynamic clouds drift on) for `blow` (Wind.blow at the camera, 0 to 1): SkyBase in still
+-- air, SkyBase + SkyGain at full, along Direction. Anything but a number is still air.
+Wind.SkyBase,Wind.SkyGain=3,9
+function Wind.sky(blow)
+	if type(blow)~="number"or blow~=blow then blow=0 end
+	return Wind.Direction*(Wind.SkyBase+Wind.SkyGain*math.clamp(blow,0,1))
+end
+
 return Wind

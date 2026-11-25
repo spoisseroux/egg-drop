@@ -253,6 +253,76 @@ function Hour.hazed(look,extra)
 	out.Atmosphere=air
 	return out
 end
+-- A cloud across the sun (beta 17, WORLD-ALIVE-LOOK 1.3 A; the Alive `scene` switch, HollowClock) ----------------------
+-- By day only, on the shared clock: one cloud a Slot (100 s) moved by up to Jitter (30 s), easing in over In (4 s),
+-- holding 5 to 9 s, easing out over Out (6 s). At full: Lighting.Brightness x .90, SunRays x .30, Clouds Cover +.06,
+-- the grade's Brightness -.02. Daylight from Day (.7) to Day + Ramp is the cloud's share (none at dawn, golden, night).
+Hour.Cloud=table.freeze({Slot=100,Jitter=30,In=4,HoldMin=5,HoldMax=9,Out=6,Day=.7,Ramp=.1,
+	Brightness=.90,SunRays=.30,Cover=.06,Grade=-.02})
+-- A hash in [0, 1) of (n, salt): the same on every client.
+local function roll(n,salt)
+	local h=(n*374761393+salt*668265263)%4294967296
+	h=bit32.bxor(h,bit32.rshift(h,13))
+	h=(h*1274126177)%4294967296
+	h=bit32.bxor(h,bit32.rshift(h,16))
+	return h/4294967296
+end
+-- Cloud n's start (seconds of `t`'s clock) and its whole length.
+function Hour.cloudTimes(n)
+	local C=Hour.Cloud
+	local start=n*C.Slot+(roll(n,7)*2-1)*C.Jitter
+	local hold=C.HoldMin+(C.HoldMax-C.HoldMin)*roll(n,11)
+	return start,C.In+hold+C.Out,hold
+end
+-- Pure: how much a cloud covers the sun at `t` (server time plus the hour's offset), 0 to 1, for `daylight` (nil: full
+-- day). The second answer is true while a cloud's window is open (HollowClock paints faster then), even at daylight 0.
+function Hour.cloud(t,daylight)
+	if not finite(t)then return 0,false end
+	local C=Hour.Cloud
+	local base=math.floor(t/C.Slot)
+	for n=base-1,base+1 do
+		local start,length,hold=Hour.cloudTimes(n)
+		local age=t-start
+		if age>=0 and age<length then
+			local k
+			if age<C.In then k=smooth(age/C.In)
+			elseif age<C.In+hold then k=1
+			else k=1-smooth((age-C.In-hold)/C.Out)end
+			local day=if finite(daylight)then smooth(math.clamp((daylight-C.Day)/C.Ramp,0,1))else 1
+			return k*day,true
+		end
+	end
+	return 0,false
+end
+-- Pure: a look with a cloud `k` (0 to 1) across the sun. 0 or less: the very same table (frozen holds stay untouched);
+-- otherwise a copy with its own Lighting, SunRays, Clouds and Grade.
+function Hour.shaded(look,k)
+	if type(k)~="number"or k~=k or k<=0 or type(look)~="table"then return look end
+	k=math.min(k,1)
+	local C=Hour.Cloud
+	local out=table.clone(look)
+	if type(look.Lighting)=="table"and type(look.Lighting.Brightness)=="number"then
+		local light=table.clone(look.Lighting)
+		light.Brightness*=1-(1-C.Brightness)*k
+		out.Lighting=light
+	end
+	if type(look.SunRays)=="table"and type(look.SunRays.Intensity)=="number"then
+		local rays=table.clone(look.SunRays)
+		rays.Intensity*=1-(1-C.SunRays)*k
+		out.SunRays=rays
+	end
+	if type(look.Clouds)=="table"and type(look.Clouds.Cover)=="number"then
+		local clouds=table.clone(look.Clouds)
+		clouds.Cover=math.min(clouds.Cover+C.Cover*k,1)
+		out.Clouds=clouds
+	end
+	if type(look.Grade)=="table"and type(look.Grade.Brightness)=="number"then
+		local grade=table.clone(look.Grade)
+		grade.Brightness+=C.Grade*k
+		out.Grade=grade
+	end
+	return out
+end
 -- The six faces for a look's FaceSet (dusk falls back to day until the painted dusk faces are uploaded).
 function Hour.skyFaces(faceSet,data)
 	local sky=data and data.sky
