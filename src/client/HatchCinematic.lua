@@ -57,7 +57,7 @@ function Cinematic.new(parent,audio,reduceEffects,owns)
  watch(GuiService:GetPropertyChangedSignal("MenuIsOpen"),function()self:refreshOwner()end)
  watch(GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"),function()self:refreshOwner()end)
  watch(Input.WindowFocusReleased,function()self.windowActive=false;self:refreshOwner()end)
- watch(Input.WindowFocused,function()self.windowActive=true;self:refreshOwner()end)
+ watch(Input.WindowFocused,function()self.windowActive=true;task.defer(function()if not self.destroyed then self:refreshOwner()end end)end) -- after BoardAudio's own handler sets deviceActive (Studio R13: later connections run first)
  watch(Input.InputBegan,function(input)
   if self.active and self:owned()and(input.KeyCode==Enum.KeyCode.Space or input.KeyCode==Enum.KeyCode.Return or input.KeyCode==Enum.KeyCode.ButtonA)then
    self:skipInputBegan(input)
