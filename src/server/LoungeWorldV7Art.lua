@@ -11,6 +11,7 @@ local Data=require(Shared.WorldV7Data)
 local Flags=require(Shared.FeatureFlags)
 local Dusk=require(Shared.WorldDusk)
 local Dressing=require(Shared.WorldDressing)
+local CliffDen=require(script.Parent.CliffDenSwap)
 
 local Art={}
 
@@ -65,6 +66,8 @@ function Art.meshes(room)
 	if not template then warn("[World v7] ServerStorage.WorldAssets.WorldV7 is missing; the island will be empty")return nil end
 	local world=template:Clone()
 	world.Name="World"
+	-- The beta's cliff path / Play Den / terrace top (CliffDenSwap): swapped in the clone at start, never at runtime.
+	local carved=CliffDen.apply(world)
 	local count,tris=0,0
 	for _,part in ipairs(world:GetChildren())do
 		if not part:IsA("BasePart")then continue end
@@ -74,7 +77,7 @@ function Art.meshes(room)
 		-- through pet heads. Keep their authored assets intact; only the live
 		-- cloned substrate is opaque. Flow Texture layers retain their alpha.
 		if part.Name=="W7_Water__water_stream"or part.Name=="W7_Water__water_pool"then part.Transparency=0 end
-		local info=Data.parts[part.Name]
+		local info=Data.parts[part.Name]or(carved and carved.parts[part.Name])
 		-- Merged meshes span the island: bounds-based queries (overlap boxes,
 		-- camera blockers, rest-path solids) skip them and use rays instead.
 		part:SetAttribute("WorldMesh",true)

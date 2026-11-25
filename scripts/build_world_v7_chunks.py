@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import math
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -36,6 +37,13 @@ ROOT = Path(bpy.data.filepath).resolve().parents[3]
 OUT = ROOT / "assets" / "world"
 OUT.mkdir(parents=True, exist_ok=True)
 TRI_CAP = 9000
+# --beta (CLIFF-DEN-ISLAND-SCOPE): the cliff path, the Play Den and the terrace top, carved and built by
+# scripts/cliff_den_sculpt.py. Writes ONLY world-v7-beta.fbx, world-v7-beta-manifest.json and world-v7-beta-walk.json:
+# every live output (world-v7.fbx, the manifest, the walk map, pending) is left untouched.
+BETA = "--beta" in sys.argv
+# --beta-base: the same builder without the sculpt, walk map only (world-v7-beta-base-walk.json), so the beta's walk
+# patch holds only what the sculpt changed (the committed live walk map has drifted from today's builder).
+BETA_BASE = "--beta-base" in sys.argv
 BACKDROP_SPAN = 1900.0  # keeps every backdrop MeshPart under Roblox's 2048-stud limit
 
 
@@ -99,6 +107,10 @@ def classify(name):
             # its pulse (architect review).
             return "EggsStation__" + mat, False, "pulse", "NestHalo"
         return obj + "__" + mat, False, None, obj
+    if cat.startswith("CD_"):
+        # --beta new pieces: CD_CliffPath / CD_PlayDen. Rock collides (precise); the walk surfaces do not (the path's
+        # smooth ramp and the ground tiles carry them).
+        return cat + "__" + mat, mat in ("cliff_rock", "grass"), None, cat[len("CD_"):]
     if cat.startswith("Terrain_Ground"):
         return "Ground__" + mat, True, None, "Ground"
     if cat == "Rocks_Underside":
@@ -913,7 +925,7 @@ def coplanar_fixes(sources):
 # EGG-CORNER-LOOK placement rulings R2 (Fable, 2026-11-24): the split regions the beta removes. The walk map keeps
 # reporting them under the group they came from (unchanged for live). The two egg statues (Plaza_Ornament_09 / 10) and
 # Pad_Future_B were already deleted by the 2026-11-13 declutter (world-v7-declutter.json), so nothing to split there.
-WALK_AS = {"EggsStation": "W7_Stations", "BenchWest": "W7_Stations"}
+WALK_AS = {"EggsStation": "W7_Stations", "BenchWest": "W7_Stations", "CD_CliffPath": "W7_Ground", "CD_PlayDen": "W7_Ground"}
 
 
 def qa_fixes(sources, remaining=True):
@@ -974,6 +986,12 @@ def main():
     sources = [o for o in bpy.data.objects if o.type == "MESH" and any(c.name.startswith("Import_") for c in o.users_collection)]
     sources = declutter(sources)
     sources = qa_fixes(sources)
+    carved, new_pieces = set(), set()
+    if BETA and not BETA_BASE:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import cliff_den_sculpt
+        sources, carved, new_pieces = cliff_den_sculpt.apply(sources)
+        print("CLIFFDEN carved", sorted(carved), "new", sorted(new_pieces))
     groups = defaultdict(list)
     meta = {}
     for o in sources:
@@ -1035,6 +1053,15 @@ def main():
         entry.update(EXTRA_META.get(key, {}))
         assert max(entry["size"]) < 2040, (obj.name, entry["size"])
         manifest.append(entry)
+    # recentre() moved every object: the live run's FBX export refreshed their world matrices before walk_data; the
+    # beta runs sample the walk map first, so refresh them here (else every ray hits stale positions).
+    bpy.context.view_layer.update()
+    if BETA_BASE:
+        walk_data(finals, manifest, OUT / "world-v7-beta-base-walk.json")
+        return
+    if BETA:
+        beta_outputs(finals, manifest, meta, carved, new_pieces)
+        return
     previous_path = OUT / "world-v7-manifest.json"
     previous = {e["name"]: e for e in json.loads(previous_path.read_text())["parts"]} if previous_path.exists() else {}
     export(finals, OUT / "world-v7.fbx")
@@ -1078,6 +1105,44 @@ def main():
         bpy.ops.wm.save_as_mainfile(filepath=preview, copy=True)
 
 
+def beta_outputs(finals, manifest, meta, carved, new_pieces):
+    """--beta: the walk map of the sculpted island, then the carved groups renamed W7_CD_<group> and the new ones
+    (already CD_), exported alone with their manifest (each carved part names the live part it replaces)."""
+    walk_data(finals, manifest, OUT / "world-v7-beta-walk.json")
+    affected = {key for key, m in meta.items() if key.startswith("CD_") or carved.intersection(m["sources"])}
+    live = json.loads((OUT / "world-v7-manifest.json").read_text())["parts"]
+    live_names = {e["name"] for e in live}
+    out, parts = [], []
+    for (obj, key), entry in zip(finals, manifest):
+        if key not in affected:
+            continue
+        replaces = None if key.startswith("CD_") else obj.name
+        if replaces is not None:
+            assert replaces in live_names, ("a carved group split differently from live", replaces)
+        obj.name = "W7_" + (key if key.startswith("CD_") else "CD_" + key)
+        entry = dict(entry, name=obj.name, replaces=replaces)
+        out.append((obj, key))
+        parts.append(entry)
+    export(out, OUT / "world-v7-beta.fbx")
+    (OUT / "world-v7-beta-manifest.json").write_text(json.dumps({
+        "note": "Generated by scripts/build_world_v7_chunks.py --beta (CLIFF-DEN-ISLAND-SCOPE): the beta's carved copies "
+                "(replaces = the live part) and new pieces. Live never mounts these.",
+        "parts": parts, "count": len(parts), "triangles": sum(e["tris"] for e in parts),
+        "liveManifestSha256": __import__("hashlib").sha256((OUT / "world-v7-manifest.json").read_bytes()
+                                                           .replace(b"\r\n", b"\n")).hexdigest()}, indent=1))
+    import cliff_den_sculpt
+    (OUT / "world-v7-beta-anchors.json").write_text(json.dumps(cliff_den_sculpt.anchors(), indent=1))
+    print("CLIFFDEN beta parts", [(e["name"], e["replaces"], e["tris"]) for e in parts])
+    preview = __import__("os").environ.get("WORLD_V7_PREVIEW_BLEND")
+    if preview:
+        # Review renders only: the sculpted island's merged meshes (the import .blend itself is never saved).
+        keep = {obj.name for obj, _ in finals}
+        for o in list(bpy.data.objects):
+            if o.type == "MESH" and o.name not in keep:
+                bpy.data.objects.remove(o, do_unlink=True)
+        bpy.ops.wm.save_as_mainfile(filepath=preview, copy=True)
+
+
 def export(finals, path):
     bpy.ops.object.select_all(action="DESELECT")
     for obj, _ in finals:
@@ -1097,7 +1162,7 @@ def surface_code(name):
         mat = mat.rsplit("_", 1)[0]
     if group == "Water" or mat.startswith("water") or mat == "foam":
         return "W"
-    if group in ("Ground", "Rocks", "Trunks"):
+    if group in ("Ground", "Rocks", "Trunks", "CD_CliffPath", "CD_PlayDen"):
         return SURFACE.get(mat, "M")
     return "M"
 
@@ -1195,7 +1260,7 @@ def foam_boxes():
     return out
 
 
-def walk_data(finals, manifest):
+def walk_data(finals, manifest, path=None):
     data = {}
     # Perimeter wall: a ring mesh. Slice it into ~6-stud boxes along its loop.
     wall = bpy.data.objects["PerimeterWall"]
@@ -1329,7 +1394,7 @@ def walk_data(finals, manifest):
         gg["heights"].append(row)
     data["ground"] = gg
     data["surface"] = surface_map(finals)
-    (OUT / "world-v7-walk.json").write_text(json.dumps(data))
+    (path or OUT / "world-v7-walk.json").write_text(json.dumps(data))
 
 
 # Importable (scripts/build_world_aero_kit.py reuses declutter, qa_fixes, join and geom_hash); Blender --python runs
