@@ -20,6 +20,7 @@ return function(server)
 		return out
 	end
 	local PostOut=Grid.PostOut/100
+	local extent
 
 	test("stones: three, centres within .3 of DashCourse.Stones (where the hop is judged), tops .75 to .95 over the water",function()
 		assert(#Stones.Rows==#Course.Stones and #Stones.Rows==3)
@@ -54,10 +55,75 @@ return function(server)
 			assert(across>=math.max(stone.length,stone.width)/2,stone.name.." "..across)
 		end
 	end)
-	test("wet band 1.12 x as wide, 35% darker, top 3.25; colliders 2.9 across, .03 under each top, 1.2 deep",function()
+	-- How far the carved stone reaches from its centre along flat `dir` at its base height (marching out in .02 steps
+	-- until a block cuts it or the ball ends).
+	local function inBlock(frame,size,point)
+		local q=frame:Inverse()*point
+		return math.abs(q.X)<=size/2 and math.abs(q.Y)<=size/2 and math.abs(q.Z)<=size/2
+	end
+	function extent(stone,dir)
+		local frames,size=Stones.blocks(stone)
+		local base=stone.base or Stones.Water
+		local diameter=(stone.ball or Stones.Ball)*stone.length
+		local centre=Vector3.new(stone.x,stone.top-diameter/2,stone.z)
+		local d=0
+		while d<20 do
+			local point=Vector3.new(stone.x,base+.01,stone.z)+dir*(d+.02)
+			if(point-centre).Magnitude>diameter/2 then break end
+			local cut=false
+			for _,frame in ipairs(frames)do if inBlock(frame,size,point)then cut=true;break end end
+			if cut then break end
+			d+=.02
+		end
+		return d
+	end
+	test("Studio R13 acceptance: water between every pair of stones and between each end stone and its landing, .35 at least",function()
+		local rows=Stones.Rows
+		local pairs_={{rows[1],rows[2]},{rows[2],rows[3]},{Stones.band(rows[1]),Stones.band(rows[2])},{Stones.band(rows[2]),Stones.band(rows[3])},
+			{rows[1],Stones.Landings[1]},{rows[3],Stones.Landings[2]}}
+		for _,pair in ipairs(pairs_)do
+			local a,b=pair[1],pair[2]
+			local d=Vector3.new(b.x-a.x,0,b.z-a.z)
+			local gap=d.Magnitude-extent(a,d.Unit)-extent(b,-d.Unit)
+			assert(gap>=.35,a.name.." to "..b.name.." "..gap)
+		end
+	end)
+	test("Studio R13: the carve cuts AWAY: no block reaches the stone's middle, every point a little past the footprint is in a block",function()
+		local inside=inBlock
+		local all={}
+		for _,stone in ipairs(Stones.Rows)do table.insert(all,stone);table.insert(all,Stones.band(stone))end
+		for _,stone in ipairs(Stones.Landings)do table.insert(all,stone)end
+		for _,stone in ipairs(Stones.Company)do table.insert(all,stone)end
+		for _,stone in ipairs(all)do
+			local frames,size=Stones.blocks(stone)
+			assert(size>=60 and #frames==#Stones.cuts(stone)+1)
+			local base=stone.base or Stones.Water
+			local middle=Vector3.new(stone.x,(base+stone.top)/2,stone.z)
+			for _,frame in ipairs(frames)do assert(not inside(frame,size,middle),stone.name.." middle cut")end
+			-- Round the footprint at the base: 70% in is kept, and what is kept never reaches 1.6 x the footprint (the ball
+			-- rounds the polygon's corners), so no slab can spread.
+			for k=0,35 do
+				local dir=Vector3.new(math.cos(k/36*math.pi*2),0,-math.sin(k/36*math.pi*2))
+				local reach=extent(stone,dir)
+				local theta=k/36*math.pi*2-math.rad(stone.turn)
+				local r=Stones.radius(stone,theta)
+				assert(reach>=.7*r,stone.name.." keeps 70% (the faces stand at 85% of the radius at their own angle) "..reach.." of "..r)
+				assert(reach<=1.6*r,stone.name.." spreads "..reach.." of "..r)
+			end
+			-- And the ball is gone a little under the water.
+			local under=Vector3.new(stone.x,base-Stones.Floor-.1,stone.z)
+			local cut=false
+			for _,frame in ipairs(frames)do cut=cut or inside(frame,size,under)end
+			assert(cut,stone.name.." floor")
+			-- Nothing is wider than its kerb gap: the ball is at most 6 x the stone (no 28-stud balls).
+			assert((stone.ball or Stones.Ball)<=6,stone.name)
+		end
+		assert(#Stones.Company==5 and Stones.Rows[1].colour.R<.5,"darker rows, five company stones")
+	end)
+	test("R13 wet band 1.04 x as wide, 45% darker, top 3.45; colliders 2.9 across, .03 under each top, 1.2 deep",function()
 		for _,stone in ipairs(Stones.Rows)do
 			local band=Stones.band(stone)
-			assert(near(band.length,stone.length*1.12)and near(band.top,3.25)and near(band.colour.R,stone.colour.R*.65))
+			assert(near(band.length,stone.length*1.04)and near(band.top,3.45)and near(band.colour.R,stone.colour.R*.55))
 			local centre,depth,across,top=Stones.collider(stone)
 			assert(across==2.9 and depth==1.2 and near(top,stone.top-.03)and near(centre.Y,top-.6))
 		end
@@ -77,7 +143,7 @@ return function(server)
 		end
 		-- The company stones stand clear of the walk and low.
 		for _,small in ipairs(Stones.Company)do
-			assert(small.top>=3.4 and small.top<=3.6 and math.max(small.length,small.width)<=1.1)
+			assert(small.top>=3.38-1e-9 and small.top<=3.6 and math.max(small.length,small.width)<=1.1)
 			for _,stone in ipairs(rows)do
 				assert(Vector2.new(small.x-stone.x,small.z-stone.z).Magnitude>Stones.Collider.diameter/2+small.length/2,small.name)
 			end
@@ -152,8 +218,8 @@ return function(server)
 		assert(colliders==3,colliders)
 		assert(props>=40 and props<=60,"props "..props)
 		assert(beams==6,"ropes "..beams) -- start rope, two drops, two guy lines; the finish rope
-		-- three stones, three bands, three company, two landings
-		assert(stones==11,stones)
+		-- three stones, three bands, five company (R13), two landings
+		assert(stones==13,stones)
 		local off=Instance.new("Folder")
 		local old=Mount.build(off,{fete=false})
 		assert(old:GetAttribute("Fete")==nil and old:FindFirstChild(Mount.StonesName)==nil and old:FindFirstChild("Stone_1"))
@@ -165,7 +231,7 @@ return function(server)
 		local carved=Instance.new("Part")
 		local seen
 		local model=Builder.stone(folder,stone,{carve=function(ball,blocks)seen={ball=ball,blocks=blocks};return carved end,spawn=function(fn)fn()end})
-		assert(seen and #seen.blocks>=5 and #seen.blocks<=7)
+		assert(seen and #seen.blocks>=6 and #seen.blocks<=8,"5 to 7 cuts and the floor")
 		assert(near(seen.ball.Size.X,1.5*stone.length)and near(seen.ball.CFrame.Position.Y+seen.ball.Size.X/2,stone.top))
 		assert(model:GetAttribute("Carved")==true and carved.Parent==model and #model:GetChildren()==1)
 		assert(carved.CanCollide==false and carved.Anchored==true)

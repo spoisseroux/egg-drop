@@ -373,7 +373,10 @@ end
 -- ripple texture, pulsing 1.15 to 1.5 x its footprint over 2.6 s and fading .55 to .9, each on its own phase.
 Scene.Water=table.freeze({surface=3.2,lift=.02,speed=1.1,side=.35,wander=.3,wanderPeriod=7,spinMin=8,spinMax=20,fade=1,
 	leaf=Vector3.new(.7,.02,.45),clear=1.5,hz=15,far=110,extra=2,breathAt=.5,
-	ringFrom=1.15,ringTo=1.5,ringPeriod=2.6,ringClear=.55,ringGone=.9,ringStill=1.2,ringLift=.03})
+	ringFrom=1.15,ringTo=1.5,ringPeriod=2.6,ringClear=.45,ringGone=.85,ringStill=1.2,ringLift=.02,
+	-- FABLE-REVIEW-R13 fix 2: pale rings (.45 to .85), and a wake 1.5 studs downstream (-Z) of each river stone, 1.2
+	-- wide x 2.6 long, pulsing .6 to .85 over 1.8 s: a ring says "something is in the water", a wake "the water moves".
+	ringColour=hex("#EAF6F8"),wake=Vector3.new(1.2,.02,2.6),wakeBack=1.5,wakePeriod=1.8,wakeClear=.6,wakeGone=.85,wakeStill=.7})
 -- The centre line from the stream boxes ({frame, hx, hz, y, name}) in order: points, half widths (the box's smaller
 -- half extent, so a leaf stays on the water however the box is turned) and the distance along at each point.
 function Scene.streamPath(boxes)
@@ -452,6 +455,13 @@ function Scene.leaf(path,k,count,now,obstacles)
 	local yaw=math.rad(spin*age)+Wind.hash(seed,64)*TAU
 	local fade=math.min(smooth(age/W.fade),smooth((lap-age)/W.fade))
 	return CFrame.new(position)*CFrame.Angles(0,yaw,0),1-fade
+end
+-- A wake's decal transparency at `now` for phase `phase`: a soft pulse; Reduced Motion: still.
+function Scene.wake(now,phase,reduced)
+	local W=Scene.Water
+	if reduced then return W.wakeStill end
+	local u=((now+(phase or 0))%W.wakePeriod)/W.wakePeriod
+	return W.wakeClear+(W.wakeGone-W.wakeClear)*(.5-.5*math.cos(TAU*u))
 end
 -- A flow ring's size multiplier and the decal's transparency at `now` for phase `phase` (seconds); Reduced Motion: still.
 function Scene.flowRing(now,phase,reduced)

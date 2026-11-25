@@ -161,7 +161,7 @@ function Mount.buildStones(parent,options)
 		model:SetAttribute("Index",index)
 		local M=Stones.Moss
 		local plate=part(model,"Moss",Vector3.new(stone.length*M.share,.02,stone.width*M.share),
-			CFrame.new(stone.x,stone.top+M.lift,stone.z)*CFrame.Angles(0,math.rad(stone.turn),0),M.colour)
+			CFrame.new(stone.x,stone.top+M.lift,stone.z+(M.upstream or 0))*CFrame.Angles(0,math.rad(stone.turn),0),M.colour)
 		plate.Transparency=1
 		if okMoss and moss then
 			local decal=Instance.new("Decal");decal.Face=Enum.NormalId.Top;decal.Texture=moss;decal.Color3=M.colour

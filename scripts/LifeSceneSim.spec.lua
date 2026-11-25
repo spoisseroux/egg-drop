@@ -250,16 +250,20 @@ return function(client)
 		assert(f1==f2 or(f1.Position-f2.Position).Magnitude<1e-9,"the same for everyone")
 		assert(Sim.leaf(Sim.streamPath({}),1,6,T0)==nil and Sim.cap("leaves",0)==6 and Sim.cap("leaves",1)==3 and Sim.cap("leaves",2)==0)
 	end)
-	test("beta 17 1.3 B: flow rings pulse 1.15 to 1.5 x over 2.6 s, fading .55 to .9; Reduced Motion: still at 1.2 x",function()
+	test("beta 17 1.3 B (R13): flow rings pulse 1.15 to 1.5 x over 2.6 s, fading .45 to .85; wakes .6 to .85 over 1.8 s; Reduced Motion still",function()
 		local lo,hi=math.huge,-math.huge
 		for i=0,52 do
 			local size,transparency=Sim.flowRing(T0+i*.05,.3,false)
 			lo,hi=math.min(lo,size),math.max(hi,size)
-			assert(transparency>=.55-1e-9 and transparency<=.9+1e-9)
+			assert(transparency>=.45-1e-9 and transparency<=.85+1e-9)
 		end
 		assert(lo<1.17 and hi>1.48 and lo>=1.15-1e-9 and hi<=1.5+1e-9)
 		local size,transparency=Sim.flowRing(T0,0,true)
-		assert(size==1.2 and transparency==.55)
+		assert(size==1.2 and transparency==.45)
+		local wlo,whi=math.huge,-math.huge
+		for i=0,36 do local t=Sim.wake(T0+i*.05,.2,false);wlo,whi=math.min(wlo,t),math.max(whi,t)end
+		assert(wlo>=.6-1e-9 and whi<=.85+1e-9 and whi-wlo>.2 and Sim.wake(T0,0,true)==.7)
+		assert(near(Sim.Water.surface+Sim.Water.ringLift,3.22))
 	end)
 
 	return{passed=#cases,cases=cases}
