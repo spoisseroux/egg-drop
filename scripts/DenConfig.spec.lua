@@ -36,10 +36,10 @@ return function(server)
 		return s
 	end
 	local function of(s)return function()return{GetConfigAsync=function()return s end}end end
-	test("off before the config loads; once loaded a missing key is off (Spencer opens it), true is on; only play_den is read",function()
+	test("off before the config loads; once loaded a missing key is on (Spencer 2026-11-25: the real room is in), true is on; only play_den is read",function()
 		local r=rig(function()return{GetConfigAsync=function()return coroutine.yield()end}end)
 		r.config.start();assert(r.is(false)and table.concat(r.log,",")=="hold false,set Den_on false",table.concat(r.log,","))
-		for _,case in ipairs({{nil,false},{false,false},{true,true},{"false",false}})do
+		for _,case in ipairs({{nil,true},{false,false},{true,true},{"false",true}})do
 			local s=snapshot({play_den=case[1],garden_hush=false})
 			local q=rig(of(s));q.config.start();assert(q.is(case[2]),tostring(case[1]))
 			for _,key in ipairs(s.asked)do assert(key=="play_den",key)end

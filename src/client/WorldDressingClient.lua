@@ -7,6 +7,7 @@ local UserInputService=game:GetService("UserInputService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local World=require(Shared:WaitForChild("HollowWorldLayout"))
 local Dressing=require(Shared:WaitForChild("WorldDressing"))
+local CliffDressing=require(Shared:WaitForChild("CliffDenDressing"))
 
 local Flowers={}
 Flowers.Interval=.25
@@ -46,11 +47,15 @@ function Flowers.build(options)
 	if not textures then textures,transparency=Flowers.textures(options.beta)end
 	local parks=options.parks or Flowers.naturalParks()
 	local patches={}
+	local cliff=options.cliffDen
+	if cliff==nil then cliff=workspace:GetAttribute(CliffDressing.Attribute)==true end
 	for index,entry in ipairs(Dressing.Flowers)do
 		if index>Dressing.MaxFlowers then break end
 		local inside=false
 		for _,site in ipairs(parks)do if site.inside(Vector3.new(entry[1],0,entry[3]),0)then inside=true;break end end
 		if inside then continue end
+		-- The beta's sculpt: patches over the terrace top or in the cliff path's corridor are skipped.
+		if cliff and CliffDressing.skip(entry[1],entry[3],true)then continue end
 		local kind=Dressing.Kinds[entry[6]]
 		local texture=textures[kind]
 		if type(texture)~="string"or texture==""then continue end

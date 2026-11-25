@@ -1,7 +1,8 @@
--- The upper tier host, greybox T0 (UPPER-TIER-BUILD-PLAN.md, architect verdict applied). mount() answers nil with the
--- build ceiling off (live): nothing made, nothing connected, no world data read. There is no remote and no client code:
--- players walk up; pets wait at the foot (by design in T0: Tier.covers in the server's pet floor checks, and the
--- pet-blocked footprints made here).
+-- The upper tier host (UPPER-TIER-BUILD-PLAN.md, architect verdict applied; the way up is the island's cliff path,
+-- CLIFF-DEN-BUILD.md). mount() answers nil with the build ceiling off (live): nothing made, nothing connected, no world
+-- data read. There is no remote and no client code: players walk up the cliff path; pets wait at its foot (Tier.covers
+-- in the server's pet floor checks, and the pet-blocked footprints made here). The terrace opens only with the path in
+-- (workspace CliffDen, set at start by CliffDenSwap); while it is closed the path's foot and notch are gated.
 --
 -- Mount (protected): the ring boxes that stand aside (Tier.ringAside) and the end closers (Tier.closers) from
 -- WorldV7Data.perimeter; any failure, or no box found, keeps the tier closed with one warning.
@@ -63,6 +64,7 @@ function Host:fail(problem)
 	pcall(function()self.connection:Disconnect()end)
 	local ok,again=pcall(self.close,self)
 	if not ok then pcall(self.warn,"[Tier] close: "..tostring(again))end
+	pcall(self.gate,self,self:room(),Tier.cliff()) -- closed for good on this server: the path is gated
 end
 function Host:room()
 	if self.d.room then return self.d.room()end
@@ -87,17 +89,26 @@ function Host.place(_,view,cframe)
 	view.root.AssemblyAngularVelocity=Vector3.zero
 end
 
--- The pet-blocked footprints: the top platform, the legs and the landing grown by Grow, as {name, cframe, size} at
--- lawn height. Pure (spec'd: a catch-up spot on leg A's low end is refused).
-function Host.footprints()
+-- The pet-blocked footprints: the cliff path where it has left the lawn (Tier.PathLift), grown by Grow, one box per
+-- PathBlock centre-line segments, as {name, cframe, size} at lawn height. Pure (spec'd: a catch-up spot on the path's
+-- treads is refused). None without the path.
+function Host.footprints(p)
+	p=p or Tier.path()
 	local out={}
-	for k=2,#Tier.Pieces do
-		local piece=Tier.Pieces[k]
-		local g=Tier.Grow
-		local frame=if piece.frame=="tier"then Tier.TierFrame else Tier.PathFrame
-		local a1,a2,b1,b2=piece.a1-g,piece.a2+g,piece.b1-g,piece.b2+g
-		local mid=Vector3.new((a1+a2)/2,Tier.FootY+.5-frame.Position.Y,-(b1+b2)/2)
-		table.insert(out,{name=Tier.Blocked..piece.name,cframe=frame*CFrame.new(mid),size=Vector3.new(a2-a1,1,b2-b1)})
+	if not p then return out end
+	local pts,n=p.points,#p.points
+	local i=1
+	while i<n do
+		local j=math.min(i+Tier.PathBlock,n)
+		if math.max(pts[i].Y,pts[j].Y)>=Tier.FootY+Tier.PathLift then
+			local a,b=Vector3.new(pts[i].X,Tier.FootY+.5,pts[i].Z),Vector3.new(pts[j].X,Tier.FootY+.5,pts[j].Z)
+			local w=0
+			for k=i,j do w=math.max(w,p.widths[k])end
+			local len=(b-a).Magnitude
+			table.insert(out,{name=Tier.Blocked.."Path"..#out+1,cframe=CFrame.lookAt((a+b)/2,b),
+				size=Vector3.new(w+2*Tier.Grow,1,len+2*Tier.Grow)})
+		end
+		i=j
 	end
 	return out
 end
@@ -190,8 +201,27 @@ function Host:step()
 	if self.builtIn and room~=self.builtIn then
 		self.ring,self.model,self.blocked,self.builtIn,self.open=nil,nil,nil,nil,false
 	end
-	local on=not self.broken and Tier.on()and room~=nil
+	local cliff=Tier.cliff()
+	local on=not self.broken and cliff and Tier.on()and room~=nil
 	if on and not self.open then self:openUp(room)
 	elseif not on and(self.open or self.model)then self:close()end
+	-- The path's foot and notch are gated while the terrace is closed (the path is part of the island: it stays).
+	self:gate(room,cliff and room~=nil and not self.open)
+end
+-- The gates: built into the lounge while wanted, destroyed otherwise (a rebuilt lounge gets fresh ones).
+function Host:gate(room,want)
+	if want and self.gatesIn~=room then
+		if self.gateModel then self.gateModel:Destroy()end
+		self.gateModel,self.gatesIn=nil,nil
+		local gates=Tier.gates()
+		if not gates then return end
+		local model=GreyboxRows.build(Greybox.gates(gates),Tier.Gates)
+		self.gateModel=model
+		model.Parent=room
+		self.gatesIn=room
+	elseif not want and self.gateModel then
+		self.gateModel:Destroy()
+		self.gateModel,self.gatesIn=nil,nil
+	end
 end
 return Host

@@ -12,6 +12,7 @@ local Flags=require(Shared.FeatureFlags)
 local Dusk=require(Shared.WorldDusk)
 local Dressing=require(Shared.WorldDressing)
 local CliffDen=require(script.Parent.CliffDenSwap)
+local CliffDressing=require(Shared.CliffDenDressing)
 
 local Art={}
 
@@ -351,6 +352,8 @@ function Art.dressing(room)
 	local count=0
 	for index,entry in ipairs(Dressing.Bushes)do
 		if index>Dressing.MaxBushes then break end
+		-- The beta's sculpt (CliffDenSwap): bushes over the terrace top or in the cliff path's cut are skipped.
+		if Art.carved and CliffDressing.skip(entry[1],entry[3],true)then continue end
 		local template=templates:FindFirstChild(Dressing.BushKinds[entry[4]])
 		if not template then continue end
 		local cframe,size=Dressing.bushPlacement(entry)

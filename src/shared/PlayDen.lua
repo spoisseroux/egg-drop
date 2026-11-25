@@ -2,7 +2,7 @@
 -- CLIFF-PATH-AND-ARCADE-CAVE-LOOK.md section 2): the north cave as a walk-in room with one object per game. Shared and
 -- pure, the Tier pattern: FeatureFlags.PlayDen is the build ceiling and opens only on the beta place or in Studio; the
 -- server's switch (DenConfig, ConfigService `play_den`: off until the config has loaded once, then missing or malformed =
--- off) reaches clients as `Den_on`. DenHost writes `Den_open` only once the room is really open (built, the cave
+-- on, Spencer 2026-11-25: "lets build out the play den") reaches clients as `Den_on`. DenHost writes `Den_open` only once the room is really open (built, the cave
 -- blocker off) and clears it before it closes: clients follow `Den_open`, never `Den_on`, so a den that failed to open
 -- leaves every player on today's flow (the meadow's "Race" picker). Off is the game before this build.
 local RunService=game:GetService("RunService")
@@ -27,13 +27,15 @@ function Den.ceiling(env)
 	if studio==nil then studio=RunService:IsStudio()end
 	return(env.place or game.PlaceId)==Den.PlaceId or studio==true
 end
--- Pure: a switch value. Anything but a boolean (missing, malformed) is off: Spencer opens it with `/den on` or the key.
+-- Pure: a switch value. Anything but a boolean (missing, malformed) is the shipped default, on (Spencer 2026-11-25: the
+-- real room through the cave is in on the beta); `/den off` or the key closes it. The room itself needs the island's
+-- sculpt (DenLayout.current): with no WorldBeta pack the den stays closed whatever the switch says.
 function Den.resolve(configValue,override,ceiling)
 	if ceiling==nil then ceiling=Den.ceiling()end
 	if not ceiling then return false end
 	if type(override)=="boolean"then return override end
 	if type(configValue)=="boolean"then return configValue end
-	return false
+	return true
 end
 -- Server only (DenConfig): the resolved value DenHost reads. Off until it is set.
 local switch=false

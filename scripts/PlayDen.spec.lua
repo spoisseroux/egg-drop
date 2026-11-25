@@ -23,11 +23,11 @@ return function(server)
 	local LIVE=96451847774961
 	local P=Layout.Pocket
 
-	test("gate: the flag and the beta place or Studio; missing or malformed is off; clients follow Den_open only",function()
+	test("gate: the flag and the beta place or Studio; missing or malformed is on (2026-11-25); clients follow Den_open only",function()
 		assert(Den.ceiling({flags={PlayDen=true},studio=false,place=Den.PlaceId}))
 		assert(not Den.ceiling({flags={PlayDen=true},studio=false,place=LIVE}))
 		assert(not Den.ceiling({flags={},studio=true}))
-		assert(Den.resolve(nil,nil,true)==false and Den.resolve("yes",nil,true)==false and Den.resolve(true,nil,true)==true)
+		assert(Den.resolve(nil,nil,true)==true and Den.resolve("yes",nil,true)==true and Den.resolve(true,nil,true)==true and Den.resolve(false,nil,true)==false)
 		assert(Den.resolve(true,nil,false)==false and Den.resolve(false,true,true)==true and Den.resolve(true,false,true)==false)
 		Den.inject({flags={PlayDen=true},studio=true,open=true});assert(Den.isOpen())
 		Den.inject({flags={PlayDen=true},studio=true});assert(not Den.isOpen(),"missing Den_open is closed")
@@ -162,8 +162,8 @@ return function(server)
 		assert(Layout.petFloor(L,Vector3.new(-7,4.3,-90),true)and Layout.petFloor(L,Vector3.new(-10,4.3,-110),true))
 		local s=Layout.prompts(L);assert((s.gate-s.deck).Magnitude>=7)
 		assert(#Greybox.rows(L)<=Greybox.MaxParts)
-		-- current(): only with CliffDen; the pocket otherwise.
-		assert(Layout.current({cliffDen=false})==Layout.Pocket)
+		-- current(): only with CliffDen; the pocket is retired (2026-11-25): no room otherwise, and a reason.
+		local none,why=Layout.current({cliffDen=false});assert(none==nil and type(why)=="string")
 		assert(Layout.current({cliffDen=true,data=cliff()}).variant=="room")
 	end)
 

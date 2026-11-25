@@ -227,5 +227,23 @@ return function(server)
 			if l.post then assert(l.at.Z>Data.den.mouth.z+1,"post in the mouth")end
 		end
 	end)
+	test("Studio R2: the dressing the sculpt leaves floating is skipped only while the sculpt is in; marble and trim stay live",function()
+		local Hide=require(Shared.CliffDenDressing)
+		local Dressing=require(Shared.WorldDressing)
+		assert(#Data.dressingHide>=9)
+		local skipped=0
+		for _,list in ipairs({Dressing.Flowers,Dressing.Bushes})do
+			for _,row in ipairs(list)do
+				if Hide.skip(row[1],row[3],true,Data)then skipped+=1 end
+				assert(not Hide.skip(row[1],row[3],false,Data),"skipped with the sculpt out")
+			end
+		end
+		assert(skipped==#Data.dressingHide,skipped)
+		local hidden={}
+		for _,pair in ipairs(Data.swap)do if pair.hide then hidden[pair.hide]=true end end
+		assert(not hidden.W7_Landmarks__marble and not hidden.W7_Landmarks__trim,"the carved marble re-baked a hull over the plaza")
+		assert(hidden.W7_Rocks__cliff_rock and hidden.W7_Ground__ground and Data.parts.W7_CD_Ground__ground.collide==false)
+		for name,info in pairs(Data.parts)do assert(info.size[1]>=.05 and info.size[2]>=.05 and info.size[3]>=.05,name.." is a sliver")end
+	end)
 	return{passed=#cases,cases=cases}
 end

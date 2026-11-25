@@ -1,9 +1,9 @@
 -- The Play Den's numbers (PLAY-DEN-BUILD-PLAN.md, architect verdict applied). Shared and pure: every piece of den code
 -- (the greybox, the prompts, the Dash anchor, the pet floor, catch-up, the island bounds, the trail) reads a layout
 -- from here, and nothing else hard-codes a den number. Two variants:
---   "pocket" (step A): today's small pocket behind the CaveBlocker, measured in Studio R5 (floor y 4.0 from z -101 to
---     -113, back rock z -114.2, roof 15.0 to 18.6) and the ground grid (flat 4.0 for x about -10..-6, rising past -12
---     and -4). About 7 x 12 of flat floor: three bays (the Dash gate, one roped niche, the Deck table).
+--   "pocket" (step A, RETIRED 2026-11-25): the small pocket behind the old CaveBlocker, measured in Studio R5. The game
+--     never chooses it any more (Layout.current answers nil without the sculpt); Layout.Pocket stays only as the specs'
+--     small fixture for the host, the prompts and the Dash anchor.
 --   "room" (step B): the enlarged room from the island session's generated Shared.CliffDenData (`den`), used only when
 --     the server set the workspace attribute `CliffDen` at start. A schema mismatch or a missing field is no layout at
 --     all (the den stays closed with one warning): the pocket is gone on such a server, so it is never a fallback.
@@ -136,19 +136,20 @@ function Layout.fromData(data)
 end
 
 -- Which layout this server uses. env (specs): {cliffDen = bool, data = table}. The game reads the `CliffDen` attribute
--- (set at server start) and Shared.CliffDenData. Answers the layout, or nil and why.
+-- (set at server start) and Shared.CliffDenData. Answers the layout, or nil and why. Without the sculpt there is no
+-- room: step A's pocket is retired (Spencer 2026-11-25: "the play den [small cave] sucks"), so the den stays closed.
 local cache={}
 function Layout.current(env)
 	local cliff,data
 	if env then cliff,data=env.cliffDen==true,env.data
 	else
 		cliff=workspace:GetAttribute("CliffDen")==true
-		if not cliff then return Layout.Pocket end
+		if not cliff then return nil,"no room (the island's sculpt is not swapped in)" end
 		if cache.done then return cache.layout,cache.why end
 		local ok,module=pcall(function()return require(script.Parent:FindFirstChild("CliffDenData"))end)
 		data=if ok then module else nil
 	end
-	if not cliff then return Layout.Pocket end
+	if not cliff then return nil,"no room (the island's sculpt is not swapped in)" end
 	local layout,why=Layout.fromData(data)
 	if not env then cache.done,cache.layout,cache.why=true,layout,why end
 	return layout,why

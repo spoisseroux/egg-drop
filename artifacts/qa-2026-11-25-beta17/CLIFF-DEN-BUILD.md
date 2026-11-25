@@ -1,0 +1,68 @@
+# Cliff path, Play Den (step B) and terrace top: build (Opus, overnight 2026-11-25)
+
+Spencer (2026-11-25): "the play den [small cave] sucks, lets just test / build out the cliff path and larger cave now".
+Takes over the island session's `claude/cliff-den-scope` (out of usage until Nov 29). Branch `claude/cliff-den-build`
+(that branch rebased on `feat/egg-drop-arcade-polish`). Beta only; live unchanged.
+
+## Plan (compressed review-driven-build)
+
+1. **Collision.** The island session's last WIP (691f1bc: den and path collide on server-built boxes from
+   `CliffDenData.collision`; island meshes near them visual only) was never probed. Upload it, build the native
+   `WorldBeta` pack in Studio Edit, probe the colliders (room floor and headroom, apron, path treads, terrace crest,
+   carved copies against live), fix what fails, export the pack with its own proof.
+2. **Mount** `ServerStorage.WorldBeta` in `default.project.json` only (`world_beta_pack.py --check` binds the bytes to
+   the proof and to `CliffDenData.version`; it fails if `launch.project.json` ever mounts it).
+3. **Wire step B.** `DenLayout.current` answers the room from `CliffDenData` when the sculpt is in, and nothing
+   otherwise (step A's pocket retired: the den stays closed without the pack). The world owns the closer
+   (`CaveBlocker` on the new mouth line, closed by default; `DenHost` only opens it). The cave bars hide while the den
+   is open (already on the branch). `play_den` missing = on.
+4. **Terrace.** The zigzag retired: `Tier` keeps only the terrace (floor 29 over the sculpt's regrade, balustrade gap
+   s 26..34 where the path arrives = `CliffDenData.terrace.gap`). Opens only with the cliff path in (`CliffDen`), and
+   `garden_tier` missing = on again; `/tier` still works. Closed, the path's foot and notch are gated (invisible
+   walls). Pets: `Tier.covers` covers the path where it has left the lawn (pets wait at the foot, as T0); pet-blocked
+   footprints along it.
+5. **Dressing** the sculpt leaves floating (flowers and bushes over the terrace top or in the path's cut) skipped
+   while the sculpt is in (`CliffDenData.dressingHide`, `CliffDenDressing`).
+6. Offline runner, pipeline gates, Rojo builds; a Studio Play walk; captures to `studio/world/`.
+
+## Architect checklist (own judgement)
+
+| Concern | Answer |
+|---|---|
+| Live safety | Live builds from `launch.project.json`: no `WorldBeta`, so `CliffDenSwap.apply` finds no pack and the island is today's. Every new path is behind `FeatureFlags.Tier` / `PlayDen` ceilings (beta place or Studio). `CliffDenData` is never required on live (lazy reads only when the ceiling is open). `world_native_collision.py --check` PASS (live checkpoint untouched). |
+| A stale pack | `CliffDenSwap.apply` refuses a pack whose `Version` is not `CliffDenData.version` (the live island stays, one warning); `world_beta_pack.py --check` refuses it before a build. |
+| Bounds | The path is inside the perimeter ring everywhere (9.6 studs at its closest; spec: no path point reads as gone). The terrace keeps its bounds region (y 20 up). The den keeps `DenLayout.boundsRegions` while open. The island-bounds walls (`west_ramp` top 21) stay under the path where it passes (the path is at 23 there). |
+| Pets | `Tier.covers` (open) refuses targets over the path off the lawn, so the anchor stays at the foot; footprints keep catch-up landings off it. In the den, `DenLayout.floors` (R12 fix) as before. |
+| Evacuation | Terrace switch-off moves people up there to the lawn south-east of the path's foot (-14, -79): inside the home Floor, safe ground, out of the den's waiting area, 8+ from the doorstep (spec). People on the path are not moved (it is island); the notch gate stops them at the top. Den close: the doorstep, as step A. |
+| Runtime swap | Never: the sculpt is swapped at server start only (architect review of the scope); the switches only open/close the terrace greybox, the gates and the den. |
+| Collision fidelity | Probed in Studio (below); the remaining known misfits are listed. |
+
+## Studio R2 (2026-11-25, Studio 53800d7d, Edit only, nothing saved or published)
+
+**Uploads** (Open Cloud, creator user 10716920546, all Approved): `world-v7-beta.fbx` (R1 WIP) -> 136528276089470
+(superseded), `world-v7-beta-collision.fbx` -> 85946264544648, the re-exported `world-v7-beta.fbx` (rock tiled) ->
+103926272368523. Readback: `cliff-den/upload-readback-r2.json`.
+
+**Probes on the WIP and what they found** (rays against the live colliders less the swapped ones plus the pack's):
+
+| Finding | Fix |
+|---|---|
+| `W7_CD_Ground__ground` / `__grass` built precise and colliding (the manifest's `collide`); live's ground meshes do not collide (the W7C tiles do). Their hulls filled 208 of 470 room cells. | The pack follows `CliffDenData.parts.collide` (false): Box, no collision, no query. |
+| The carved `W7_CD_Landmarks__marble` re-baked one long hull at y 7.1 to 7.5 from the mouth to z -22 over bare lawn (2,799 of 9,234 samples off live). A fresh bake of the live marble mesh matches live exactly. | Marble and trim stay live (not carved). The live marble leaves the new mouth open: a 4.4 sill (floor 4.2), posts on the new jambs (x -15 and 1), the trim lintel at 10.5. The old frame stays drawn round the new mouth until the art pass. |
+| The carved island-wide `W7_CD_Rocks__cliff_rock` re-baked differently everywhere (up to 10 studs on the east mountain; the decomposition is global). | `TILE_ALL`: the cliff rock (Rocks and Landmarks) tiled whole into 32-stud parts (19 new). Against the drawn surface (EditableMesh rays) the tiled bake is closer than live's: mean 3.34 vs 3.85, over by 1+ at 142 vs 153 of 563 samples. Still not identical to live: the east mountain's hulls moved. |
+| Five zero-width ground-collision slivers (one at x 0 inside the den's ceiling). | Left out (`DEGENERATE`). |
+
+**Probes on the final pack:** room (470 cells): nothing over the floor, nothing under the 12.2 ceiling but the west back
+corner (`W7_CD_Rocks__cliff_rock_1916` at 9.9 to 11.5, one stud from the wall) and the east front corner (ground tile
+36_01 at 11.1 to 11.9). Apron and mouth (168 cells): no hole past the floor box; the trim lintel at 10.55. Path: no mesh
+over any tread (960 samples, a body's height). Terrace crest: under the floor (29) but 7 samples at the end rims (29.3
+to 32). Export: 134,706 bytes, sha 48d42001..., round trip exact (201 parts, 2,958 rays identical).
+
+## Known, not fixed tonight
+
+- The cliff-rock collision on the beta is not live's (tiled bake; closer to the drawn rock, but a slope may climb or
+  stop differently, notably the east mountain). Walk the island once on the beta.
+- The walk-map patch (`CliffDenData.walk`, `ground`) is still not read by `HollowWorldLayout` or the pets' planner:
+  pets plan on live's map (fine: they wait at the path's foot and use `DenLayout.floors` in the den).
+- The old marble frame and trim round the new mouth (art pass).
+- `CliffDenSwap`'s "pocket" layer (`FeatureFlags.CliffDen=false`) still exists but no layout uses it.
