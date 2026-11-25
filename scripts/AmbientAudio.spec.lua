@@ -487,5 +487,83 @@ return function(client, parent)
 		assert(table.concat(broke, ",") == table.concat(plain, ","), "and the birds sound the same")
 	end)
 
+	test("beta 17 1.3 D: the wind bed never restarts per gust: always playing from a random point, volume and speed follow the blow", function()
+		assert(near(Ambient.windBedVolume(0), .012, 1e-9) and near(Ambient.windBedVolume(1), .082, 1e-9) and near(Ambient.windBedVolume(.5), .0295, 1e-9))
+		assert(near(Ambient.windBedSpeed(0), .92, 1e-9) and near(Ambient.windBedSpeed(1), 1.02, 1e-9) and Ambient.windBedVolume(0 / 0) == .012)
+		assert(near(Ambient.windBedSlew(0, 1, 1), .12, 1e-9) and near(Ambient.windBedSlew(1, 0, 1), .95, 1e-9))
+		local audio = { master = 1, deviceActive = true, ducks = {} }
+		function audio:isMusicEnabled() return true end
+		function audio:duck() end
+		local folder = Instance.new("Folder");folder.Parent = parent or workspace
+		local on, blow, hushed = false, 0, false
+		local shared = Ambient.shared
+		local a = Ambient.new(audio, { auto = false, world = folder, quiet = function() return false end, wind = false, echo = false,
+			windBed = { on = function() return on end, blow = function() return blow end, hushed = function() return hushed end },
+			listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return 0 end })
+		local ok, err = pcall(function()
+			a:step(1 / 30)
+			assert(a.windBedVoice == nil, "off (the switch's default): no voice at all")
+			on = true
+			a:step(1 / 30)
+			local voice = a.windBedVoice
+			assert(voice and voice.Looped and voice:FindFirstChildOfClass("EqualizerSoundEffect").HighGain == -6)
+			voice.IsLoaded, voice.TimeLength = true, 14
+			a:step(1 / 30)
+			assert(voice.IsPlaying and voice.TimePosition >= 0 and voice.TimePosition < 14, "plays from a random point")
+			-- It only ever starts from stopped, so playing through every step is never a restart.
+			local at = voice.TimePosition
+			for k = 1, 600 do
+				blow = if (math.floor(k / 60) % 2) == 0 then 1 else 0
+				a:step(1 / 30)
+				assert(voice.IsPlaying, "gusts never stop or restart it")
+			end
+			assert(voice.TimePosition == at or voice.TimePosition > at, "never sent back")
+			assert(voice.Volume >= .012 - 1e-9 and voice.Volume <= .082 + 1e-9)
+			blow = 1;for _ = 1, 30 * 4 do a:step(1 / 30) end
+			assert(near(voice.Volume, .082, 1e-6) and near(voice.PlaybackSpeed, 1.02, 1e-9), "full: " .. voice.Volume)
+			blow = 0;for _ = 1, 4 do a:step(.25) end;assert(near(voice.Volume, .082 - .05, 1e-6), "down .05 a second")
+			a:setRound(true);a:step(1 / 30);assert(not voice.IsPlaying, "a round stops it")
+			a:setRound(false);a:step(1 / 30);assert(voice.IsPlaying, "back after")
+			hushed = true;a:step(1 / 30);assert(not voice.IsPlaying, "the Hush stops it")
+			hushed = false;on = false;a:step(1 / 30);assert(not voice.IsPlaying, "the switch off stops it")
+		end)
+		a:destroy();folder:Destroy();Ambient.shared = shared;assert(ok, err)
+	end)
+
+	test("beta 17 1.3 D: the Den's echo: a reverb on the ambience and SFX groups (never music), wet -14 inside, eased over .6 s, gone outside", function()
+		local E = Ambient.Echo
+		assert(near(Ambient.echoToward(-60, true, .3), -37, 1e-9) and near(Ambient.echoToward(-60, true, 1), -14, 1e-9))
+		assert(near(Ambient.echoToward(-14, false, 1), -60, 1e-9))
+		local audio = { master = 1, deviceActive = true, ducks = {} }
+		function audio:isMusicEnabled() return true end
+		function audio:duck() end
+		local folder = Instance.new("Folder");folder.Parent = parent or workspace
+		local on, inside = true, false
+		local shared = Ambient.shared
+		local a = Ambient.new(audio, { auto = false, world = folder, quiet = function() return false end, wind = false, windBed = false,
+			echo = { on = function() return on end, camera = function() return Vector3.new(1, 2, 3) end, inside = function() return inside end },
+			listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return 0 end })
+		local ok, err = pcall(function()
+			for _ = 1, 30 do a:step(1 / 30) end
+			assert(a.echoEffects == nil, "outside: no effect")
+			inside = true
+			for _ = 1, 9 do a:step(1 / 30) end
+			assert(a.echoEffects and #a.echoEffects >= 2, "on the ambience and cue groups")
+			for _, reverb in ipairs(a.echoEffects) do
+				assert(reverb.Parent ~= a.deckGroup and reverb.Parent.Name ~= "EggDropMusic", "never the music")
+				assert(reverb.DecayTime == E.decay and reverb.Density == E.density and reverb.Diffusion == E.diffusion and reverb.DryLevel == 0)
+			end
+			for _ = 1, 30 do a:step(1 / 30) end
+			assert(near(a.echoWet, -14, 1e-6) and near(a.echoEffects[1].WetLevel, -14, .06), "wet " .. a.echoWet)
+			inside = false
+			for _ = 1, 30 do a:step(1 / 30) end
+			assert(a.echoEffects == nil, "eased out and removed")
+			inside = true;on = false
+			for _ = 1, 30 do a:step(1 / 30) end
+			assert(a.echoEffects == nil, "the switch off: none")
+		end)
+		a:destroy();folder:Destroy();Ambient.shared = shared;assert(ok, err)
+	end)
+
 	return { passed = #cases, cases = cases }
 end

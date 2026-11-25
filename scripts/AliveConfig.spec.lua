@@ -24,7 +24,14 @@ return function(server)
    r.at=target
   end
   function r.get(f)return r.attrs[Alive.attribute(f)]end
-  function r.all(value)for _,f in ipairs(Alive.Features)do if r.get(f)~=value then return false end end;return true end
+  -- "true" is every feature at its shipped default (beta 17: windbed's is off); false is every one off.
+  function r.all(value)
+   for _,f in ipairs(Alive.Features)do
+    local want=if value==true then Alive.resolve(f,nil,nil,true)else value
+    if r.get(f)~=want then return false end
+   end
+   return true
+  end
   return r
  end
  local function snapshot(values)

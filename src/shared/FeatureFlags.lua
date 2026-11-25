@@ -34,6 +34,7 @@
 -- owner-only check has done its job. True again re-runs it for SimCheck.isOwner accounts.
 -- Alive* (ALIVE-BUILD-PLAN-2026-11-22): the build ceiling for springs, menu rises, the close plate and the
 -- wind; AliveLife (ALIVE-LIFE-BUILD-PLAN-2026-11-22) for the garden life (petals, bubbles, birds, butterflies). Each also needs the beta place or Studio (Alive.PlaceId) and the server's switch (AliveConfig).
+-- AliveWindbed (beta 17, WORLD-ALIVE-LOOK 1.3 D): the continuous wind bed; its switch alone is OFF when missing.
 -- LevelsMatter (V3-LEVELS-BUILD-PLAN-2026-11-22): the build ceiling for levels, gates, medals and deck juice. Also
 -- needs the beta place or Studio (Levels.PlaceId) and the server's switch (LevelsConfig). Missing = off.
 -- GardenDash (V3-DASH-BUILD-PLAN-2026-11-22): the build ceiling for the pet race. Also needs the beta place or
@@ -72,6 +73,6 @@
 -- room). Also needs the beta place or Studio (PlayDen.PlaceId) and the server's switch (DenConfig: play_den, missing = off).
 return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
- AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,
+ AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true,PlayDen=true})
