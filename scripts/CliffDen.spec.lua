@@ -79,7 +79,7 @@ return function(server)
 	test("the anchors: the den inside the ring's rule (rounded back corners), the mouth under the lintel, the path foot to arrival",function()
 		local den=Data.den
 		assert(den.floorY>4 and den.floorY<4.5 and den.peakY==16 and den.wallY==11)
-		assert(den.mouth.top<10.2 and den.mouth.x0<den.mouth.x1 and den.mouth.x1-den.mouth.x0>=15)
+		assert(den.mouth.top<10.2 and den.mouth.x1<den.mouth.x2 and den.mouth.x2-den.mouth.x1>=15)
 		assert(den.sign.under=="W7_Landmarks__trim")
 		local p=Data.path
 		assert(math.abs(p.foot[2]-4.6)<.05 and math.abs(p.arrival[2]-29)<.05 and p.turn[2]>22 and p.turn[2]<24)
@@ -95,13 +95,56 @@ return function(server)
 		-- The closer (Play Den architect review): on the mouth line, spanning it into both jambs, floor to the lintel.
 		local b=den.mouth.blocker
 		assert(b.center[3]==den.mouth.z,"blocker off the mouth line")
-		assert(b.size[1]>den.mouth.x1-den.mouth.x0,"blocker narrower than the mouth")
+		assert(b.size[1]>den.mouth.x2-den.mouth.x1,"blocker narrower than the mouth")
 		assert(math.abs(b.center[2]-b.size[2]/2-den.floorY)<.01,"blocker not on the floor")
 		assert(#den.bays==5 and den.bays[1].use=="DashGate"and den.bays[3].use=="DeckTable")
 		for _,bay in ipairs(den.bays)do assert(bay.roof>=11 and bay.roof<=16 and bay.at[2]==den.floorY,bay.name)end
-		assert(#den.doorstep==3 and #den.pin==3 and den.notice and #den.notice.at==3)
+		assert(#den.doorstep.at==3 and #den.doorstep.landing==3 and #den.pin==3 and #den.board.at==3 and #den.lanterns==4)
 		assert(#Data.safe.rows>10)
 		assert(#Data.ground>0 and #Data.walk.grid>0 and #Data.walk.surface>0)
+	end)
+	test("the Play Den reads it: DenLayout.fromData (schema 1) gives the room, DenHost takes the world's blocker, the greybox fits",function()
+		local Layout=require(Shared.DenLayout)
+		local Greybox=require(Shared.DenGreybox)
+		local Host=require(server.DenHost)
+		local L,why=Layout.fromData(Data)
+		assert(L,why)
+		assert(L.variant=="room"and #L.bays==5 and L.bays[1].kind=="dash"and L.bays[3].kind=="deck")
+		local b=Data.den.mouth.blocker
+		assert(Host.blockerFits({Position=Vector3.new(b.center[1],b.center[2],b.center[3]),Size=Vector3.new(b.size[1],b.size[2],b.size[3])},L))
+		-- The doorstep and its landing are out of everything the close clears (room, waiting area, pets' floor; slack 1).
+		local d=L.doorstep
+		for _,p in ipairs({d.at,d.landing})do
+			assert(not Layout.inRoom(L,p,1)and not Layout.inWait(L,p,1)and not Layout.petFloor(L,p,true),"doorstep in the den")
+		end
+		assert(math.abs(L.pin.Y-Data.den.floorY)<.01 and L.pin.Z>Data.den.mouth.z)   -- Show me's pin: on the floor out of the mouth
+		local s=Layout.prompts(L);assert((s.gate-s.deck).Magnitude>=7)
+		assert(#Greybox.rows(L)<=Greybox.MaxParts)
+		-- Every bay's furniture (its footprint, not grown) and every safe cell in the room stand inside the den's outline.
+		local poly=Data.den.outline
+		local function inside(x,z)
+			local hit=false
+			for i=1,#poly do
+				local a,c=poly[i],poly[i%#poly+1]
+				if(a[2]>z)~=(c[2]>z)and x<a[1]+(z-a[2])*(c[1]-a[1])/(c[2]-a[2])then hit=not hit end
+			end
+			return hit
+		end
+		for _,f in ipairs(Layout.feet(L,0))do
+			if string.sub(f.name,1,3)=="bay"then
+				for _,q in ipairs({{f.x1,f.z1},{f.x1,f.z2},{f.x2,f.z1},{f.x2,f.z2}})do
+					local w=f.frame:PointToWorldSpace(Vector3.new(q[1],0,q[2]))
+					assert(inside(w.X,w.Z),f.name.." pokes out of the den")
+				end
+			end
+		end
+		for x=-22,6 do for z=-119,-102 do   -- the room (the mouth line is the outline's edge; the apron is out of it)
+			if Layout.safeCell(L,x+.5,z+.5)then assert(inside(x+.5,z+.5),"safe cell outside the den "..x..","..z)end
+		end end
+		-- The posts stand out of the mouth (the blocker's volume and the passage stay clear).
+		for _,l in ipairs(L.lanterns)do
+			if l.post then assert(l.at.Z>Data.den.mouth.z+1,"post in the mouth")end
+		end
 	end)
 	return{passed=#cases,cases=cases}
 end

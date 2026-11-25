@@ -170,6 +170,116 @@ motion):
 **Collision:** `W7C_CD_Ground_12`, `W7C_CD_Ground_18`, `W7C_CD_Ground_19`, `W7C_CD_Ground_27`, `W7C_CD_Ground_28`, `W7C_CD_Ground_36`, `W7C_CD_CliffPath`. Each `W7C_CD_Ground_NN` replaces the live `W7C_Ground_NN`; `W7C_CD_CliffPath` is the path's
 smooth ramp (6 wide, 7 at the turn, 1.5 thick) under the drawn steps (which never collide).
 
+**`CliffDenData` (schema 1 = `DenLayout.fromData`'s contract, PLAY-DEN-BUILD-PLAN section 10; pack stamp `version` 256a9b33a9a86fb0):**
+- `swap` (20 pairs) and `parts` (region, collide, center, size, motion) for every shown part.
+- `den` (points {x, y, z}; a spot is {at, facing}, facing a point to look toward): `floorY` 4.2, `roofY`
+  12.33 (the lowest roof over a bay), `room` {min, max} [-22.0, 4.2, -119.0]..[6.0, 16.0, -100.5], `mouth`
+  {x1 -14.5, x2 0.5, z -100.5, top 9.85} with `blocker` (center
+  [-7.0, 7.2, -100.5], size [15.6, 6.0, 1.0]: the world's CaveBlocker; `DenHost.blockerFits` takes it);
+  `bays` (by order dash, niche, deck, niche, niche): Bay1 DashGate at (-18.0, -110.0) looking at (-7.0, -106.0), roof 13.45; Bay2 Niche at (-12.0, -116.0) looking at (-12.0, -100.0), roof 13.5; Bay3 DeckTable at (-7.0, -117.0) looking at (-7.0, -100.0), roof 12.92; Bay4 Niche at (-2.0, -116.0) looking at (-2.0, -100.0), roof 13.22; Bay5 Niche at (4.0, -110.0) looking at (-7.0, -106.0), roof 12.33; `sign` at [-7.0, 8.7, -100.07] (under `W7_Landmarks__trim`);
+  `board` at [3.0, 4.14, -96.0]; `pin` [-7.0, 4.2, -96.0]; `doorstep` at [-7.0, 4.6, -87.0], landing [-7.0, 4.63, -84.0],
+  facing out; `lanterns`: posts at [-13.8, 4.2, -94.6] and [1.6, 4.51, -97.8], wall lamps at
+  [-14.0, 8.0, -118.4] and [0.0, 8.0, -118.4]. Also `outline`, `roof` (1-stud grid), `wallY` 11, `peakY` 16, `backWallZ`.
+- `path`: `foot` (-21.5, 4.6, -90.5), `turn` (-76, 23, -52), `arrival` (-71.5, 29, -60.6), the centre line as points
+  `{x, y, z, width}` every 2 studs with true heights (pets later), and the walk surface as plan polygons with heights
+  (for IslandBounds and catch-up).
+- `terrace`: the regraded top (`maxGroundY` under the floor, 28) and the new balustrade gap s 26..34.
+- `evacuate`: about (-27, y, -84) (Fable: the old spot is now the den's doorstep). `caveBlocker`: off on the beta (the
+  den has walls); the blocker box comes from the den's back wall instead.
+
+## Order
+
+0. Fable's A0 (code only, the small pocket) can run now: nothing here blocks it.
+1. **Grey blockout** of all three (sculpt pass with flat grey, collision, data) -> Studio walk, probes, phone camera.
+   Fable's own order.
+2. Art pass on the same geometry (home's cliff rock and dirt, the lip, glow-caps), Fable renders, Studio captures.
+
+## Cost (island session)
+
+- Blockout: sculpt pass + collision + data + gate about 1.5 to 2 days of work, one Studio pass about 3 hours (uploads,
+  native rebuild of the beta pack, probes, a walk, captures).
+- Art pass: about 1 day plus Fable's render rounds and one Studio pass.
+
+## Risks
+
+- **Cutting non-manifold island sheets.** The rock and ground are open shells, so booleans are unreliable: the cut is
+  "delete inside, add overlapping new pieces". Seams and z-fighting at the overlap are the main visual risk; Fable
+  reviews the blockout from the Hub and up close.
+- **Precise collision of the big copies** (Rocks__cliff_rock and grass, Landmarks__cliff_rock) decomposes differently
+  on the beta: probes over the whole island with the swap on, as for the Eggs split.
+- **The swap at runtime** (the switch flips while players stand on the path or in the den): the code side moves them
+  (the tier's evacuation) before the swap.
+- **Data consumers:** IslandBounds, pets and the walk map must read the beta patch while the switch is on, or pets will
+  path into the new rock. Code side.
+- **One tree** (`Vegetation_Trees__foliage`, 39 triangles in the corridor): keep the path clear of it rather than swap
+  the island's whole foliage mesh (3,240 triangles) `[check]` at blockout.
+- **The perimeter ring:** the den stays inside it (Fable); the turn is 6+ from boxes 112 to 114. No ring rebuild.
+- Memory on the beta: about 17k more triangles held (the hidden originals), none drawn twice.
+
+## Architect review (2026-11-24): overlay right, with these changes (applied above or adopted)
+
+- **Swap only at server start, on the beta place, never at runtime.** `LoungeWorldV7Art.meshes` replaces the parts in the
+  template (`ServerStorage.WorldAssets.WorldV7`) before it clones, then sets `MeshParts`. The originals never reach
+  clients; one `CliffDen` attribute set at start tells every consumer. The tier switch only opens or closes the foot
+  and the notch. (A runtime swap breaks WorldMotion's bound list, EggCornerWorld's floor include list, AeroWorld's
+  paint records, and anyone standing on the rock.)
+- **Names:** `W7_CD_*` for carved copies and new art parts (Aero's `kind` reads only `W7_`), `W7C_CD_*` for invisible
+  collision (the `W7C_` floor filters). New names carry their `parts` entries (region, motion: the crystals pulse).
+- **Data contract adds:** a version stamp (hash of the live WorldV7Data and walk json, checked by a spec); the walk-grid
+  patch applied inside `HollowWorldLayout`'s lookups (it freezes `Data.ground` at require); a beta `IslandGround` and new
+  `Tier.BoundsRegions`; checks of the generated dressing, find spots, Dash course and AeroKit trees against the cut
+  volumes with a hide list; `W7_Trunks__bark` (collides) and Aero `Tree_04_round` at (-70.4, 13, -43.9), about 8 from
+  the turn, to check at blockout.
+- **Native beta pack with its own proof,** not a runtime precise bake (seconds at each server start, varies by Roblox
+  version, no proof). The Eggs split promoter is the route; the pack is designed as the future live split if the den
+  goes live.
+- **Order:** the blockout uses the final names and the server-start swap, so the art pass changes meshes only. Cost
+  +0.5 day (walk patch, beta safe ground, dressing and find-spot checks, data specs). Gate probe added: spawn on the
+  beta with Aero on and off, capture the cut seams with Aero's paint.
+
+## Amendment (Play Den architect review, 2026-11-24)
+
+- The world owns the den's closer: `LoungeWorldV7Art.collision` builds the colliding `CaveBlocker` on the NEW mouth line
+  from `CliffDenData.den.mouth.blocker` when the den is in (closed by default); the code's DenHost only opens it.
+- `CliffDenData.schema` (the module's shape, checked by the code) is separate from the live-world stamp (`live`) and the
+  pack stamp (`version`).
+- Anchors for the code: five named bays (Dash gate, Deck table, three niches) with the roof over each, the doorstep, the
+  mouth pin, the notice board spot; the den floor answers ground rays; safe cells for the den floor, the mouth and the
+  apron to the home Floor's edge (z -89).
+
+## Blockout as built (2026-11-24, branch `claude/cliff-den-scope`)
+
+Offline, not uploaded. Live untouched (`world_native_collision.py --check` PASS; the live chunk and collision builders
+reproduce the committed outputs; `launch.project.json` never mounts `WorldBeta`).
+
+Rebuild (background Blender on `world1-mockup-v7-import.blend`, never saved): `build_world_v7_chunks.py -- --beta
+--beta-base` (baseline walk map = the committed live one), `build_world_v7_chunks.py -- --beta` (the sculpt:
+`world-v7-beta.fbx`, `-manifest.json`, `-walk.json`, `-anchors.json`), `build_world_v7_collision.py -- --beta`
+(`world-v7-beta-collision.fbx/.json`; asserts the den floor rays), then `python scripts/cliff_den_data.py`
+(`src/shared/CliffDenData.lua`), `python scripts/cliff_den_checks.py`, `scripts/render_cliff_den.py`.
+
+**Parts in the beta pack** (13 meshes, 18745 triangles; carved copies keep the live part's region and
+motion):
+
+| Part | Replaces | Triangles | Collides |
+|---|---|---|---|
+| `W7_CD_CliffPath__cliff_rock` | new | 1008 | yes |
+| `W7_CD_CliffPath__dirt_path` | new | 298 | no |
+| `W7_CD_PlayDen__cliff_rock` | new | 714 | yes |
+| `W7_CD_PlayDen__dirt_path` | new | 57 | no |
+| `W7_CD_Crystals__glow_aqua` | `W7_Crystals__glow_aqua` | 180 | no |
+| `W7_CD_Crystals__glow_pink` | `W7_Crystals__glow_pink` | 244 | no |
+| `W7_CD_Ground__grass` | `W7_Ground__grass` | 5575 | yes |
+| `W7_CD_Ground__ground` | `W7_Ground__ground` | 5413 | yes |
+| `W7_CD_Landmarks__cliff_rock` | `W7_Landmarks__cliff_rock` | 1071 | yes |
+| `W7_CD_Landmarks__marble` | `W7_Landmarks__marble` | 140 | yes |
+| `W7_CD_Landmarks__palette` | `W7_Landmarks__palette` | 194 | no |
+| `W7_CD_Rocks__cliff_rock` | `W7_Rocks__cliff_rock` | 3557 | yes |
+| `W7_CD_Rocks__grass` | `W7_Rocks__grass` | 294 | yes |
+
+**Collision:** `W7C_CD_Ground_12`, `W7C_CD_Ground_18`, `W7C_CD_Ground_19`, `W7C_CD_Ground_27`, `W7C_CD_Ground_28`, `W7C_CD_Ground_36`, `W7C_CD_CliffPath`. Each `W7C_CD_Ground_NN` replaces the live `W7C_Ground_NN`; `W7C_CD_CliffPath` is the path's
+smooth ramp (6 wide, 7 at the turn, 1.5 thick) under the drawn steps (which never collide).
+
 **`CliffDenData` (schema 1, pack stamp `version` d984b1ca92e854bf):**
 - `swap` (20 pairs) and `parts` (region, collide, center, size, motion) for every shown part.
 - `den`: `floorY` 4.2, `outline`, `roof` (1-stud grid), `wallY` 11, `peakY` 16, `mouth` (x -14.5..0.5,
@@ -190,7 +300,7 @@ the outbound leg at t 31 to the turn and the return leg at t 25 (a full width ap
 steps at about 26 degrees outside the terrace footprint, arrival at (30, 22) on the garden edge through the notch.
 Fin 10 x 2.4, top 28, at s 41, t 38 (beyond the lip); notch rocks top 32; lip stones 2.0 long, 1.2 to 1.8 high, gaps 1.2.
 
-**Checks:** den floor rays (142, from 3 over the floor: room, mouth, apron) all hit the beta tiles at the floor;
+**Checks:** den floor rays (562, one stud apart, from 3 over the floor: room, mouth, apron) all hit the beta tiles at the floor; the beta's top surface over the mouth and the apron is the floor or the lawn (`cliff_den_data.py` asserts it); `CliffDen.spec` runs the real data through `DenLayout.fromData`, `DenHost.blockerFits` and the greybox (bays and safe cells inside the outline, the doorstep out of everything the close clears);
 placement checks: 406 items, 9 `WorldDressing` conflicts (hide list `cliff-den/placement-checks.json`); finds, Dash
 course and Aero kit clear; no island tree in the corridor or the den. `CliffDen.spec` (swap gate, all or nothing, data,
 anchors, blocker, bays, safe cells) and the offline runner pass.
@@ -200,6 +310,14 @@ orphan shards removed). Code review GO WITH CHANGES, applied: the closer at the 
 hairpin, no overhanging legs, drawn steps never collide (within half a step of the ramp), pack stamp = hash of the beta
 outputs, the swap gated by the tier's ceiling, a triangulation-proof tile fingerprint (vertices + area), no duplicate
 outline points, `--beta` never writes the live palette.
+
+**Play Den schema check (2026-11-24, after the rebase on feat's step A):** `den` reshaped to `DenLayout.fromData`
+(was: `mouth.x0/x1`, direction `facing`s, a bare `doorstep`, `notice`, plain lantern points, `region`, no `roofY`). Two
+blockout bugs found by it and fixed: the mouth's soffit reached the jambs' reach (z -95 west) under open sky, so the
+lawn's top surface in front of the mouth read 9.8 (now to z -99.8, under the trim); the mouth's cut left a 2 x 2 hole east
+of the east jamb and one at (-9, -94) past the floor's edge (a rock shoulder and a floor skirt under the lawn).
+Note for the code side: `DenLayout.fromData`'s room floor box (room inset 1) reaches the rounded back corners: its corner
+safe cells sit .05 inside the wall's arc (radius 5). `CliffDenData.safe` keeps 1 off the walls.
 
 **Left:** Studio (ask first): upload `world-v7-beta.fbx` and `world-v7-beta-collision.fbx`, readback, build the native
 `WorldBeta` pack (WorldBeta.WorldV7 with every `show` part, precise collision, `Version` attribute = `CliffDenData.version`),

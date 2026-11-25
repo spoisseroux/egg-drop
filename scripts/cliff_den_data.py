@@ -16,8 +16,9 @@ The module (world studs, as WorldV7Data):
                                           clone); show = nil: a new part, hide = nil: none
   parts[name] = {region, collide, center, size[, motion]}   every shown part (carved copies keep their live entry's
                                           region and motion: the crystals pulse)
-  den, path, terrace, evacuate            anchors (cliff_den_sculpt.anchors)
-  caveBlocker = false                     the den has walls
+  schema                                  this module's shape (1: DenLayout.fromData, PLAY-DEN-BUILD-PLAN section 10)
+  den, path, terrace, evacuate            anchors (cliff_den_sculpt.anchors); den.mouth.blocker = the CaveBlocker
+  safe = {rows = {{z, x0, x1}}}           one-stud safe cells: the den floor, the mouth, the apron to z -89
   ground = {i (1-based, row-major as WorldV7Data.ground.h), h}   the 4-stud bare-ground patch
   walk = {grid = {{i, j, h}}, surface = {{i, j, code, h}}}  the 2-stud height grid and 1-stud surface map patches
                                           (0-based cell indices, as world-v7-walk.json)
@@ -76,7 +77,7 @@ def safe_cells(anchors):
     m = den["mouth"]
     loop = ring()
     def ok(x, z):
-        on = (_inside(x, z, outline) and min(_seg_dist(x, z, a, b) for a, b in zip(outline, outline[1:] + outline[:1])) >= 1.0)             or (m["x0"] + 1 <= x <= m["x1"] - 1 and m["z"] - 1 <= z <= -89)
+        on = (_inside(x, z, outline) and min(_seg_dist(x, z, a, b) for a, b in zip(outline, outline[1:] + outline[:1])) >= 1.0)             or (m["x1"] + 1 <= x <= m["x2"] - 1 and m["z"] - 1 <= z <= -89)
         return on and min(_seg_dist(x, z, a, b) for a, b in zip(loop, loop[1:] + loop[:1])) >= 3.0
     rows = []
     for z in range(-120, -88):
@@ -142,6 +143,14 @@ def build():
         for i in range(ls["nx"]):
             if ls["rows"][j][i] != bs["rows"][j][i] or abs(ls["h"][j][i] - bs["h"][j][i]) > .02:
                 surface.append([i, j, bs["rows"][j][i], bs["h"][j][i]])
+    m = anchors["den"]["mouth"]
+    bad = []
+    for z in range(int(m["z"]) + 1, -89):
+        for x in range(int(m["x1"]), int(m["x2"]) + 4):
+            h = bs["h"][z - bs["z0"]][x - bs["x0"]]
+            if h == -999 or (x <= m["x2"] and h > anchors["den"]["floorY"] + 1.5):
+                bad.append((x, z, h))
+    assert not bad, ("the apron's top surface is not the floor or the lawn (a soffit or a hole)", bad[:8])
     data = {
         # The pack's stamp (code review): a hash of the beta outputs, so a pack built from older outputs never matches.
         "version": hashlib.sha256((WORLD / "world-v7-beta-manifest.json").read_bytes().replace(b"\r\n", b"\n")

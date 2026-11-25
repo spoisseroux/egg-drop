@@ -49,7 +49,7 @@
    "name": "W7_CD_PlayDen__cliff_rock",
    "group": "CD_PlayDen__cliff_rock",
    "material": "W1_cliff_rock",
-   "tris": 714,
+   "tris": 716,
    "collide": true,
    "anim": null,
    "region": "PlayDen",
@@ -64,29 +64,29 @@
     24.179
    ],
    "top": 15.9805,
-   "hash": "f7c78f5b1aabd8b8",
+   "hash": "f9df17c7035c72e9",
    "replaces": null
   },
   {
    "name": "W7_CD_PlayDen__dirt_path",
    "group": "CD_PlayDen__dirt_path",
    "material": "W1_dirt_path",
-   "tris": 57,
+   "tris": 61,
    "collide": false,
    "anim": null,
    "region": "PlayDen",
    "center": [
     -8.0,
-    4.2,
-    -106.7
+    4.075,
+    -106.1
    ],
    "size": [
     28.0,
-    0.0,
-    24.6
+    0.25,
+    25.8
    ],
    "top": 4.2,
-   "hash": "b98572c270ef9b68",
+   "hash": "6ae9f0d64c79f0ee",
    "replaces": null
   },
   {
@@ -291,6 +291,6 @@
   }
  ],
  "count": 13,
- "triangles": 18745,
+ "triangles": 18751,
  "liveManifestSha256": "27c1f802f64e5e9c0291c20a8d72349188800ec8aef712eba19cd87c30abe69d"
 }

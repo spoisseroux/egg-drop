@@ -83,8 +83,8 @@ def beta(sources):
         trees.append(BVHTree.FromBMesh(tb))
         tb.free()
     bad, probes = [], 0
-    for x in range(-20, 5, 2):
-        for z in range(-117, -88, 2):
+    for x in range(-20, 5):
+        for z in range(-117, -88):
             if not (cd.den_floor_plan(x, z) or (cd.MOUTH["x0"] + 1 <= x <= cd.MOUTH["x1"] - 1 and z >= cd.DEN["z1"])):
                 continue
             if cd.den_floor_plan(x, z) and not cd.den_inside(x, z, -1.0) and z < cd.DEN["z1"]:
@@ -94,7 +94,7 @@ def beta(sources):
             hits = [t.ray_cast(Vector((x, -z, cd.DEN["floor"] + 3 - 4)), Vector((0, 0, -1))) for t in trees]
             ys = [h[0].z + 4 for h in hits if h[0] is not None]
             top = max(ys) if ys else None
-            if top is None or abs(top - cd.DEN["floor"]) > .6:
+            if top is None or abs(top - cd.DEN["floor"]) > .6 or (z > cd.DEN["z1"] + .5 and top > cd.DEN["floor"] + .6):
                 bad.append((x, z, None if top is None else round(top, 2)))
     assert not bad, ("den floor / apron rays", bad[:8])
     print("COLLISION BETA den floor rays", probes, "all at the floor")

@@ -215,6 +215,7 @@ def in_path_cut(x, y, z):
 # ---------------------------------------------------------------------------------------------------------- the den
 DEN = {"x0": -22.0, "x1": 6.0, "z0": -119.0, "z1": -100.5, "floor": 4.2, "wall": 11.0, "peak": 16.0, "corner": 5.0}
 MOUTH = {"x0": -14.5, "x1": .5, "top": 9.85, "west_to": -95.0, "east_to": -99.0}   # under the lintel trim (y 10.2)
+SOFFIT_TO = -99.8                                 # the soffit's outer edge: just past the lintel trim (z -100.07)
 
 
 def den_inside(x, z, grow=0.0):
@@ -572,8 +573,16 @@ def build_den(objs):
     for x, sgn, reach in ((m["x0"], 1, m["west_to"]), (m["x1"], -1, m["east_to"])):
         rock.face([(x, d["floor"] - .3, d["z1"]), (x, d["floor"] - .3, reach), (x, m["top"], reach), (x, m["top"], d["z1"])],
                   (sgn, 0, 0))
-    rock.face([(m["x0"], m["top"], d["z1"] + .2), (m["x1"], m["top"], d["z1"] + .2), (m["x1"], m["top"], m["east_to"]),
-               (m["x0"], m["top"], m["west_to"])], (0, -1, 0))
+    # The soffit only spans the cliff's thickness, under the lintel trim (z -100.07): out to the jambs' reach it lay
+    # under open sky on the west half and was the lawn's top surface (Play Den schema check, 2026-11-24).
+    rock.face([(m["x0"], m["top"], d["z1"] + .2), (m["x1"], m["top"], d["z1"] + .2), (m["x1"], m["top"], SOFFIT_TO),
+               (m["x0"], m["top"], SOFFIT_TO)], (0, -1, 0))
+    # East of the east jamb the mouth's cut took the whole old ground face (a corner was in it): a rock shoulder from
+    # the jamb's top down to the live ground covers the hole (x .5..3.5, z -100.5..-99).
+    sx = m["x1"] + 3.0
+    shoulder = [(m["x1"], m["top"], d["z1"]), (m["x1"], m["top"], m["east_to"]),
+                (sx, (ground(sx, m["east_to"]) or 5.0) - .1, m["east_to"]), (sx, (ground(sx, d["z1"]) or 12.0) - .1, d["z1"])]
+    rock.face(shoulder, (0, 1, 0))
     # the floor: the room (fan from its middle over the boundary) and the mouth
     centre = (cx, d["floor"], cz)
     ring = [(x, d["floor"], z) for x, z in pts]
@@ -584,6 +593,10 @@ def build_den(objs):
     for xa, xb, reach in ((m["x0"], mid, m["west_to"]), (mid, m["x1"], m["east_to"])):
         floor.face([(xa, d["floor"], d["z1"]), (xb, d["floor"], d["z1"]), (xb, d["floor"], reach + .6),
                     (xa, d["floor"], reach + .6)], (0, 1, 0))
+        # a skirt under the lawn's edge, sloping .25 down: the carve takes whole lawn faces that reach into the mouth's
+        # cut, which left a hole past the floor's edge at (-9, -94) (Play Den schema check, 2026-11-24)
+        floor.face([(xa, d["floor"], reach + .6), (xb, d["floor"], reach + .6), (xb, d["floor"] - .25, reach + 1.8),
+                    (xa, d["floor"] - .25, reach + 1.8)], (0, 1, 0))
     return [rock.build(), floor.build()]
 
 
@@ -644,24 +657,42 @@ def anchors():
     roof = {"x0": d["x0"], "z0": d["z0"], "step": 1.0, "nx": int(d["x1"] - d["x0"]) + 1, "nz": int(d["z1"] - d["z0"]) + 1,
             "y": [[round(den_roof(d["x0"] + i, d["z0"] + j), 2) for i in range(int(d["x1"] - d["x0"]) + 1)]
                   for j in range(int(d["z1"] - d["z0"]) + 1)]}
+    def lawn(x, z):
+        return round(ground(x, z) or 4.6, 2)
+    # Fable's five bays, each a point it stands on and a point it looks toward (DenLayout: CFrame.lookAt): the side
+    # bays face the room's middle, the back ones the mouth. roof = the dome over each.
+    bays = [{"name": n, "use": u, "at": [x, d["floor"], z], "facing": [fx, d["floor"], fz], "width": 7.0,
+             "roof": round(den_roof(x, z), 2)} for n, u, x, z, fx, fz in (
+        ("Bay1", "DashGate", -18.0, -110.0, -7.0, -106.0), ("Bay2", "Niche", -12.0, -116.0, -12.0, -100.0),
+        ("Bay3", "DeckTable", -7.0, -117.0, -7.0, -100.0), ("Bay4", "Niche", -2.0, -116.0, -2.0, -100.0),
+        ("Bay5", "Niche", 4.0, -110.0, -7.0, -106.0))]
+    # DenLayout.fromData's contract (schema 1, PLAY-DEN-BUILD-PLAN section 10): points as {x, y, z}; a spot is
+    # {at, facing} with facing a point to look toward.
     return {
-        "den": {"floorY": d["floor"], "outline": outline, "roof": roof, "wallY": d["wall"], "peakY": d["peak"],
+        "den": {"floorY": d["floor"], "roofY": min(b["roof"] for b in bays), "outline": outline, "roof": roof,
+                "wallY": d["wall"], "peakY": d["peak"], "backWallZ": d["z0"],
+                "room": {"min": [d["x0"], d["floor"], d["z0"]], "max": [d["x1"], d["peak"], d["z1"]]},
                 # The closer (Play Den architect review): the world builds a colliding CaveBlocker here, closed by
                 # default; the code only opens it. A box on the mouth line, into each jamb .3, floor to the lintel.
-                "mouth": {"x0": m["x0"], "x1": m["x1"], "top": m["top"], "z": d["z1"],
+                "mouth": {"x1": m["x0"], "x2": m["x1"], "top": m["top"], "z": d["z1"],
                           "blocker": {"center": [round((m["x0"] + m["x1"]) / 2, 3), round((d["floor"] + 10.2) / 2, 3), d["z1"]],
                                       "size": [round(m["x1"] - m["x0"] + .6, 3), round(10.2 - d["floor"], 3), 1.0], "yaw": 0}},
-                # Fable's five bays along the back wall, facing the mouth (+Z); roof = the dome over each.
-                "bays": [{"name": n, "use": u, "at": [x, d["floor"], z], "facing": [0, 0, 1], "width": 7.0,
-                          "roof": round(den_roof(x, z), 2)} for n, u, x, z in (
-                    ("Bay1", "DashGate", -18.0, -110.0), ("Bay2", "Niche", -12.0, -116.0), ("Bay3", "DeckTable", -7.0, -117.0),
-                    ("Bay4", "Niche", -2.0, -116.0), ("Bay5", "Niche", 4.0, -110.0))],
-                "doorstep": [-7.0, d["floor"], -98.5],        # just outside the mouth, on the threshold floor
-                "pin": [-7.0, 12.0, -99.5],                    # a Show me pin over the mouth (the lintel is 10.2)
-                "notice": {"at": [3.0, round(ground(3.0, -96.0) or 4.2, 2), -96.0], "facing": [0, 0, 1]},
-                "backWallZ": d["z0"], "sign": {"under": "W7_Landmarks__trim", "y": 10.2, "x": -7.0, "z": -100.07},
-                "lanterns": [[-15.5, 7.0, -98.0], [1.5, 7.0, -98.0], [-14.0, 8.0, -117.0], [0.0, 8.0, -117.0]],
-                "region": {"min": [d["x0"], d["floor"], d["z0"]], "max": [d["x1"], d["peak"], d["z1"]]}},
+                "bays": bays,
+                # The sign hangs under the lintel trim (y 10.2), its top under the mouth's top, facing the lawn.
+                "sign": {"at": [-7.0, 8.7, -100.07], "facing": [-7.0, 8.7, -80.0], "under": "W7_Landmarks__trim"},
+                # The notice board on the lawn east of the mouth, facing the lawn.
+                "board": {"at": [3.0, lawn(3.0, -96.0), -96.0], "facing": [3.0, lawn(3.0, -96.0), -80.0]},
+                # Show me's pin: on the mouth's floor just out of the mouth.
+                "pin": [-7.0, d["floor"], -96.0],
+                # Where the close puts players (past the waiting area and the apron, on the home Floor), facing out,
+                # and their pets' landing.
+                "doorstep": {"at": [-7.0, lawn(-7.0, -87.0), -87.0], "facing": [-7.0, lawn(-7.0, -87.0), -70.0],
+                             "landing": [-7.0, lawn(-7.0, -84.0), -84.0]},
+                # Two posts out of the mouth (the west one past the jamb's end, on the mouth's floor; the east one on
+                # the lawn past the east jamb) and two wall lamps on the back wall.
+                "lanterns": [{"at": [-13.8, d["floor"], -94.6], "post": True},
+                             {"at": [1.6, lawn(1.6, -97.8), -97.8], "post": True},
+                             {"at": [-14.0, 8.0, -118.4], "post": False}, {"at": [0.0, 8.0, -118.4], "post": False}]},
         "path": {"foot": [round(foot["x"], 3), foot["h"], round(foot["z"], 3)],
                  "turn": [round(turn["x"], 3), turn["h"], round(turn["z"], 3)],
                  "arrival": [round(arrival["x"], 3), arrival["h"], round(arrival["z"], 3)],

@@ -62,7 +62,7 @@ def classify(x, y, z):
     if inside_polygon(x, z, outline) and den["floorY"] - 1 <= y <= den["peakY"] + 1:
         return "den"
     m = den["mouth"]
-    if m["x0"] - .5 <= x <= m["x1"] + .5 and m["z"] - .5 <= z <= m["z"] + 5 and y < m["top"] + .5:
+    if m["x1"] - .5 <= x <= m["x2"] + .5 and m["z"] - .5 <= z <= m["z"] + 5 and y < m["top"] + .5:
         return "den mouth"
     d, h, half = path_near(x, z)
     if d <= half + 1.5 and h - 2 <= y <= h + 5:
