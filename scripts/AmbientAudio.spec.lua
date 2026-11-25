@@ -603,8 +603,8 @@ return function(client, parent)
 			-- The gate off: eased back home, then dropped (no gains, no duck).
 			place = "den";run(1);on = false;run(1)
 			assert(a.zoneGains == nil and audio.ducks[Ambient.ZoneDuck] == nil, "off: dropped")
-			-- The room tone has no id yet: no voice is ever made.
-			assert(Ambient.RoomToneId == 0 and a.roomVoice == nil)
+			-- The room tone (uploaded 106077128620977): off, no room voice is left playing.
+			assert(type(Ambient.RoomToneId) == "number" and a.roomVoice == nil, "off: no room voice")
 		end)
 		a:destroy();folder:Destroy();Ambient.shared = shared;assert(ok, err)
 		-- A fixture that passes no zones and auto = false never reads the camera.
