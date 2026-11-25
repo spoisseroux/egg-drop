@@ -38,7 +38,9 @@
 --   an egg type). The camera stays at Shot B while the reveal is up and is always given back (the screen closing,
 --   respawn, the model unbinding, the corner or capsule off, destroy). Off: the crank and 1 s hold as before.
 -- deps (capsule): capsule() -> bool, cameraObject() -> Camera, hud(visible), ghost(alpha) (this player's character
---   see-through), blocked(from, to) -> bool (world geometry between), pocket(kind) (the preview well's drop).
+--   see-through), blocked(from, to) -> bool (world geometry between), pocket(kind) (the preview well's drop),
+--   stageHold(amount) (Studio R15: every reveal stage slides by the panel's tuck, HatchItemStage.holdAll), againPending()
+--   (Hatch another is waiting: the camera stays at Shot B through the gap).
 -- deps: room() -> the lounge or nil, root() -> Vector3?, camera() -> Vector3?, reduced(), audio {play(name, speed,
 --   volume)}, haptic(strength) (optional), corner() (the switch), clock (default os.clock), random (default Random.new()),
 --   cinematic (the HatchCinematic module; default required), step=false (specs call :step).
@@ -461,6 +463,7 @@ function Machine:step(dt)
 	self:aero()
 	self:beats()
 	self:shotStep()
+	self:gapStep()
 	if not self:on()then self:rest();self.unboundSince=nil;return end
 	local parts=self:bind()
 	if not parts then
@@ -565,8 +568,36 @@ end
 -- The reveal the buy started has ended: the egg in the cup fades FadeAfter later.
 function Machine:revealClosed()
 	self.revealEndedAt=self.clock()
+	-- Studio R15 (2): Hatch another closes the screen while it waits out the server's request spacing. The camera stays
+	-- at Shot B through that gap, so the next buy chains (the 2nd / 3rd schedule) instead of a new first shot.
+	if self:againWaiting()and self.shot and self.shot.camera then self.gap={at=self.revealEndedAt};return end
 	-- The hatch screen closed: the camera goes back to the player (LOOK 1, "Coming back").
 	self:returnCamera(false)
+end
+-- A Hatch another is waiting for its buy, or a buy is pressed and not yet confirmed.
+function Machine:againWaiting()
+	local armed=self.armed
+	if armed and self.clock()-armed.at<=Machine.ConfirmWindow then return true end
+	return self.d.againPending~=nil and self.d.againPending()==true
+end
+-- The gap ended with no buy (refused, timed out): the camera goes back GapGrace after it went quiet.
+Machine.GapGrace=.5
+function Machine:gapStep()
+	local gap=self.gap
+	if not gap then return end
+	if not self.shot or not self.shot.camera then self.gap=nil;return end
+	if self:againWaiting()then gap.quiet=nil;return end
+	local now=self.clock()
+	gap.quiet=gap.quiet or now
+	if now-gap.quiet>=Machine.GapGrace then self.gap=nil;self:returnCamera(false)end
+end
+-- The camera is the machine's (a shot, the reveal behind it, or a Hatch another gap): the top rail stays hidden.
+function Machine:cameraHeld()return self.shot~=nil and self.shot.camera~=nil end
+-- How far every reveal stage is slid off the screen now (0 home, 1 gone): the panel's tuck during a shot.
+function Machine:stageAmount()
+	local shot=self.shot
+	if not shot or shot.mode~="shot"or shot.panelBack then return 0 end
+	return shot.amount or 0
 end
 
 -- ── The capsule shot ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -640,6 +671,7 @@ function Machine:startShot(cinematic,armed,now)
 	if mode=="shot"and streak>1 and not(self.shot and self.shot.camera)then streak=1 end
 	local sched=Machine.shotSchedule(mode,streak)
 	self.crank={kind="buy",at=now,pressed=armed.at,sched=sched,type=armed.type,fired={},claimed=true,shot=true}
+	self.gap=nil
 	self.gate=if cinematic and not armed.unclaimed then {from=now,cap=now+sched.start+Machine.ShotCap,release=now+sched.start,owner=cinematic,crank=self.crank}else nil
 	local previous=self.shot
 	local shot={mode=mode,at=now,sched=sched,cinematic=cinematic,kind=armed.type,frames=frames,crank=self.crank}
@@ -655,7 +687,7 @@ function Machine:startShot(cinematic,armed,now)
 		-- The skip keys (Space, Enter, A) are bound only while the shot plays (init: ContextActionService).
 		if self.d.skipInput then pcall(self.d.skipInput,true);shot.skipBound=true end
 		shot.roots={}
-		for _,gui in ipairs(Machine.panelRoots(cinematic))do table.insert(shot.roots,{gui=gui,position=gui.Position})end
+		self:lateRoots(shot)
 		self:play("screen_tuck",Machine.Volume.tuck)
 		if self.d.hud then pcall(self.d.hud,false)end
 		self:takeCamera(shot)
@@ -678,18 +710,29 @@ end
 local function easeInOut(x)return if x<.5 then 4*x*x*x else 1-(-2*x+2)^3/2 end
 -- The panel slid away by `amount` (0 home, 1 off the bottom of the screen).
 function Machine:placePanel(shot,amount)
+	shot.amount=amount
 	for _,entry in ipairs(shot.roots or {})do
 		if entry.gui.Parent then
 			entry.gui.Position=entry.position+UDim2.new(0,0,amount,math.floor(40*amount))
 		end
 	end
+	-- Studio R15 (1): the reveal's stage keeps itself over the whole screen (DeckKit.coverScreen), so moving its parent
+	-- never moved it and it hid the shot. Every stage slides by the same amount through its own cover (CoverShift).
+	if self.d.stageHold then pcall(self.d.stageHold,amount)end
 end
 -- Fable R13 (4, 02a): the reveal's full-screen stage opens after the confirmation (when the result lands), so it was
 -- never in the tucked set and its 2D waiting egg stood in front of the dial. Any panel root that appears mid-shot is
 -- recorded at its own home and tucked with the rest (and comes back with them).
+-- Studio R16: the screen the buy was pressed on (Hatch eggs) is not the reveal's host, so it stayed over the shot; the
+-- hatch screens (deps.screens() -> {GuiObject}) slide away with it.
 function Machine:lateRoots(shot)
 	if not shot.roots then return end
-	for _,gui in ipairs(Machine.panelRoots(shot.cinematic))do
+	local list=Machine.panelRoots(shot.cinematic)
+	if self.d.screens then
+		local ok,screens=pcall(self.d.screens)
+		if ok and type(screens)=="table"then for _,gui in ipairs(screens)do if typeof(gui)=="Instance"and not table.find(list,gui)then table.insert(list,gui)end end end
+	end
+	for _,gui in ipairs(list)do
 		local known=false
 		for _,entry in ipairs(shot.roots)do if entry.gui==gui then known=true;break end end
 		if not known then table.insert(shot.roots,{gui=gui,position=gui.Position})end

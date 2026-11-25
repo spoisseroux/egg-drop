@@ -2489,7 +2489,13 @@ function Kit.coverRect(screenPosition,screenSize,parentPosition)
  local origin=screenPosition-parentPosition
  return UDim2.fromOffset(math.floor(origin.X),math.floor(origin.Y)),UDim2.fromOffset(math.ceil(screenSize.X)+1,math.ceil(screenSize.Y)+1)
 end
--- Keeps `frame` covering the whole screen whatever insets its ScreenGui uses.
+-- Pure (Studio R15, the capsule shot): px a covering frame is slid down for its `CoverShift` attribute (0 home, 1 the
+-- screen's height plus 40 px, fully off the bottom, as the tucked panel). Anything else is 0.
+function Kit.coverShift(screenHeight,shift)
+ if type(shift)~="number"or shift~=shift or shift<=0 or type(screenHeight)~="number"then return 0 end
+ return math.floor(math.min(shift,1)*(screenHeight+40))
+end
+-- Keeps `frame` covering the whole screen whatever insets its ScreenGui uses (slid down by its CoverShift attribute).
 function Kit.coverScreen(frame)
  local probe=Kit.screenProbe(frame)
  if not probe then frame.Position=UDim2.new();frame.Size=UDim2.fromScale(1,1);return false end
@@ -2497,6 +2503,7 @@ function Kit.coverScreen(frame)
   local parent=frame.Parent
   if not parent or not parent:IsA("GuiBase2d")then return end
   local position,size=Kit.coverRect(probe.AbsolutePosition,probe.AbsoluteSize,parent.AbsolutePosition)
+  position=position+UDim2.fromOffset(0,Kit.coverShift(probe.AbsoluteSize.Y,frame:GetAttribute("CoverShift")))
   if frame.Position~=position then frame.Position=position end
   if frame.Size~=size then frame.Size=size end
  end
@@ -2506,6 +2513,7 @@ function Kit.coverScreen(frame)
  local parent=frame.Parent
  if parent and parent:IsA("GuiBase2d")then watch(parent:GetPropertyChangedSignal("AbsolutePosition"))end
  watch(frame:GetPropertyChangedSignal("Visible"))
+ watch(frame:GetAttributeChangedSignal("CoverShift"))
  frame.Destroying:Connect(function()for _,link in ipairs(links)do link:Disconnect()end end)
  frame:SetAttribute("CoversScreen",true)
  sync();return true
