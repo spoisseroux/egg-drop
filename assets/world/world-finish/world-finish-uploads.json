@@ -4,7 +4,7 @@
   "model": {
    "file": "world-finish-den.fbx",
    "sha256": "c1f235c07423df673a2e318aa3491cb61fb2d460fe00b006333408f02413861e",
-   "manifestSha256": "f6a5091c6f594131e50c498600b5db8e018aeda511a4c0072769ee2a8fada225",
+   "manifestSha256": "71f93330f52bf35f895b0eaaa51621aa54cc56fe5e10b1da41f4d1709ec1554d",
    "operation": "037f7420-a04a-4bb9-9433-b9ba9ecf654a",
    "assetId": "93629425333486",
    "moderation": "Approved",
@@ -12,6 +12,10 @@
     "assetId": "120231666679986",
     "operation": "e73d2e4f-bef7-406b-8ebe-fa63096b6e40",
     "why": "r1 exported without vertex colours (the ground re-cut needs them)"
+   },
+   "manifestCorrected": {
+    "was": "f6a5091c6f594131e50c498600b5db8e018aeda511a4c0072769ee2a8fada225",
+    "why": "after upload: the shell halves' centre and size counted 120 loose vertices each left by the split (Roblox ignores them, so their raw MeshSize x was off the one import scale); now from face vertices only, as the FBX's faces. The FBX is unchanged."
    }
   },
   "images": {
