@@ -1,0 +1,62 @@
+{
+ "note": "Open Cloud POST /assets/v1/assets through Studio MCP open_cloud_invoke (creator user 10716920546), operations polled to done. sha256 of each file as uploaded; scripts/build_world_finish_pack.py refuses a file whose bytes differ.",
+ "den": {
+  "model": {
+   "file": "world-finish-den.fbx",
+   "sha256": "c1f235c07423df673a2e318aa3491cb61fb2d460fe00b006333408f02413861e",
+   "manifestSha256": "3d35652979595248f01fb997b95b71581d1d5d85e293bc34549dedd86fcd3bf4",
+   "operation": "037f7420-a04a-4bb9-9433-b9ba9ecf654a",
+   "assetId": "93629425333486",
+   "moderation": "Approved",
+   "superseded": {
+    "assetId": "120231666679986",
+    "operation": "e73d2e4f-bef7-406b-8ebe-fa63096b6e40",
+    "why": "r1 exported without vertex colours (the ground re-cut needs them)"
+   }
+  },
+  "images": {
+   "den_shell_west_color": {
+    "file": "textures/den_shell_west_color.png",
+    "sha256": "c456d559d64483b46d601d8a7564e0905f133657a95c5ad6acfd9283cb451e5a",
+    "operation": "9f98ff1a-b528-4fcf-8c3f-7079a2e4aa62",
+    "assetId": "71575845230571",
+    "moderation": "Approved"
+   },
+   "den_shell_east_color": {
+    "file": "textures/den_shell_east_color.png",
+    "sha256": "2a881c1e5683dc2528851349f46519710cbffe38004f0cce2c5df77a7a029ace",
+    "operation": "4bbcc832-bee3-41f6-ae5f-f7ff28e52b2a",
+    "assetId": "90370447380293",
+    "moderation": "Approved"
+   },
+   "den_shell_west_normal": {
+    "file": "textures/den_shell_west_normal.png",
+    "sha256": "88b1b2911f4d5ba97aa175de802e276392deeef2fb68875d043018df8983fb12",
+    "operation": "e8bec617-df8f-4741-81a6-2d651bb470d9",
+    "assetId": "110901372689201",
+    "moderation": "Approved"
+   },
+   "den_shell_east_normal": {
+    "file": "textures/den_shell_east_normal.png",
+    "sha256": "c0601b4d26b9e6dfffa609d58e722eabfdc65d4166ac8db64164a0669eeaa03f",
+    "operation": "c70090b5-4833-4ca3-bfe7-0bade6196c3b",
+    "assetId": "78338420884303",
+    "moderation": "Approved"
+   },
+   "den_floor_color": {
+    "file": "textures/den_floor_color.png",
+    "sha256": "205f652a9e2f1c83ca8dcabe73a38691661cd43d793c7f19ddf8137df759d0f4",
+    "operation": "733e2248-ec33-4b4c-aa48-acbc4ec6d609",
+    "assetId": "100619571457692",
+    "moderation": "Approved"
+   },
+   "den_floor_normal": {
+    "file": "textures/den_floor_normal.png",
+    "sha256": "d88fe9d9ce44771b10ee4560905e88bcdeea8cb6d61f59e490273cb846041e05",
+    "operation": "be72547b-6684-402e-b689-c5274feb5970",
+    "assetId": "92282764718442",
+    "moderation": "Approved"
+   }
+  }
+ }
+}

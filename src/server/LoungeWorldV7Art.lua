@@ -70,6 +70,11 @@ function Art.meshes(room)
 	-- The beta's cliff path / Play Den / terrace top (CliffDenSwap): swapped in the clone at start, never at runtime.
 	local carved,mode=CliffDen.apply(world)
 	Art.carved=if mode=="den"then carved else nil -- Art.collision moves the cave blocker to the den's mouth
+	-- The world finish art (WorldFinishMount; beta pack only, never on live), before the attribute loop below.
+	if mode=="den"then
+		local ok,problem=pcall(function()require(script.Parent.WorldFinishMount).world(world)end)
+		if not ok then warn("[WorldFinish] "..tostring(problem))end
+	end
 	local count,tris=0,0
 	for _,part in ipairs(world:GetChildren())do
 		if not part:IsA("BasePart")then continue end

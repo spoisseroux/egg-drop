@@ -1,0 +1,449 @@
+"""The world finish art (WORLD-FINISH-LOOK.md, Fable 2026-11-25): the den (slice C), the cliff path (D) and the terrace (E),
+modelled and textured from code in BACKGROUND Blender. Original art only: no generated meshes or images, no outside assets.
+
+  1. The beta island preview (the scene the art is fitted to and rendered in; see scripts/world_finish_scene.py):
+       WORLD_V7_PREVIEW_BLEND=<tmp>/cliff-den-preview.blend blender -b assets/art-source/environment/world1-mockup-v7-import.blend \
+           --python scripts/build_world_finish_art.py ...   (no: build_world_v7_chunks.py -- --beta; then
+       git checkout -- assets/world/world-v7-beta.fbx)
+  2. blender -b <tmp>/cliff-den-preview.blend --python scripts/build_world_finish_art.py -- den [--renders DIR] [--no-bake]
+
+Writes (per slice, assets/world/world-finish/):
+  world-finish-<slice>.fbx          the meshes to upload (Open Cloud, one Model per slice)
+  world-finish-<slice>.json         the manifest: every mesh (name, role, Roblox centre/size, triangles, look) and the
+                                    placements (src/shared/WorldFinishData.lua is generated from these by
+                                    scripts/build_world_finish_pack.py, with the upload readback)
+  textures/*.png                    the baked maps (den shell 1024 colour + normal, den floor 512 tile colour + normal)
+Renders of Fable's camera spots go to --renders (artifacts/qa-2026-11-26-beta21/art/).
+"""
+from __future__ import annotations
+
+import json
+import math
+import sys
+from pathlib import Path
+
+import bpy
+import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import world_finish_lib as L  # noqa: E402
+import world_finish_scene as W  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "assets" / "world" / "world-finish"
+TEX = OUT / "textures"
+GROUNDED = ROOT / "assets" / "world" / "textures" / "grounded"
+ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+SLICE = ARGS[0] if ARGS else "den"
+RENDERS = str((ROOT / ARGS[ARGS.index("--renders") + 1]).resolve()) if "--renders" in ARGS else None
+NO_BAKE = "--no-bake" in ARGS
+# The island's surface looks (WorldAero.Surfaces tints on the grounded maps, as Studio shows them).
+AERO_TINT = {"cliff_rock": "#E2EAF0", "boulder_rock": "#E2EAF0", "grass": "#F0FFD6", "meadow": "#E4FFC8",
+             "foliage": "#E6FFE0", "foliage_blossom": None, "dirt_path": None, "pebble_bed": "#FAFFD4", "bark": None,
+             "wood_plank": None}
+# Parts the den, the path and the terrace hide while open (the bars) or replace, never drawn in the review renders.
+RENDER_HIDE = ["W7_CD_CaveBars__palette"]
+
+
+def studio_look():
+    """The review renders show the island as Studio does: SurfaceAppearance maps (the grounded textures) with the Aero
+    tints, no vertex colours (SurfaceAppearance drops them)."""
+    for o in bpy.data.objects:
+        if o.type != "MESH" or o.name.startswith(("W7_F_", "WF_")):
+            continue
+        for slot in o.material_slots:
+            m = slot.material
+            kind = m.name[3:] if m and m.name.startswith("W1_") else None
+            if kind in AERO_TINT and (GROUNDED / f"W1_{kind}.png").exists():
+                slot.material = island_material(kind)
+    hide_for_render(RENDER_HIDE)
+
+
+def island_density(name_prefix):
+    """UV units per stud of an island material (median over the first faces of a preview object)."""
+    o = next((o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith(name_prefix)), None)
+    if o is None or not o.data.uv_layers:
+        return .25
+    me = o.data
+    uv = me.uv_layers.active.data
+    ratios = []
+    for p in list(me.polygons)[:400]:
+        li = list(p.loop_indices)
+        for a, b in zip(li, li[1:] + li[:1]):
+            va, vb = me.vertices[me.loops[a].vertex_index].co, me.vertices[me.loops[b].vertex_index].co
+            d = (vb - va).length
+            if d > .2:
+                ratios.append((uv[b].uv - uv[a].uv).length / d)
+    ratios.sort()
+    return ratios[len(ratios) // 2] if ratios else .25
+
+
+def triplanar_uv(obj, k):
+    """World-projected UVs per face on its dominant axis (as cliff_den_sculpt.Piece), k uv units per stud."""
+    me = obj.data
+    if not me.uv_layers:
+        me.uv_layers.new(name="UVMap")
+    uv = me.uv_layers.active.data
+    mw = obj.matrix_world
+    for p in me.polygons:
+        n = p.normal
+        ax = max(range(3), key=lambda i: abs(n[i]))
+        a, b = [(1, 2), (0, 2), (0, 1)][ax]
+        for li in p.loop_indices:
+            co = mw @ me.vertices[me.loops[li].vertex_index].co
+            uv[li].uv = (co[a] * k, co[b] * k)
+
+
+def island_material(kind):
+    """A render material for an island surface: the grounded map (as uploaded) times the Aero tint."""
+    name = "WF_" + kind
+    if name in bpy.data.materials:
+        return bpy.data.materials[name]
+    path = GROUNDED / f"W1_{kind}.png"
+    mat = L.image_material(name, path)
+    bsdf = next(n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    tint = AERO_TINT.get(kind)
+    if tint:
+        nt = mat.node_tree
+        tex = next(n for n in nt.nodes if n.type == "TEX_IMAGE")
+        mix = nt.nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        mix.blend_type = "MULTIPLY"
+        mix.inputs["Factor"].default_value = 1.0
+        nt.links.new(tex.outputs["Color"], mix.inputs[6])
+        mix.inputs[7].default_value = (*L.srgb_to_lin(L.hexrgb(tint)), 1)
+        nt.links.new(mix.outputs[2], bsdf.inputs["Base Color"])
+    return mat
+
+
+def hide_for_render(names):
+    for n in names:
+        o = bpy.data.objects.get(n)
+        if o:
+            o.hide_render = True
+            o.hide_viewport = True
+
+
+def solo(objs):
+    """Hide every other object from render (bakes see only these); returns the restore list."""
+    keep = set(objs)
+    was = [(o, o.hide_render) for o in bpy.data.objects]
+    for o in bpy.data.objects:
+        if o not in keep and o.type == "MESH":
+            o.hide_render = True
+    return was
+
+
+def restore(was):
+    for o, h in was:
+        o.hide_render = h
+
+
+def recut(source_name, new_name, doomed, corner=None):
+    """A copy of an island pack part with the faces `doomed(centre_roblox)` removed (its UVs and material kept). The
+    pack's part is hidden by the mount and this copy shown in its place (visual-only parts only: never a colliding
+    one, whose hulls a cut would move)."""
+    src = bpy.data.objects[source_name]
+    src.name = source_name + "__pack"         # the copy takes the pack part's own name (Aero, CliffDenData.parts)
+    o = src.copy()
+    o.data = src.data.copy()
+    o.name = new_name
+    assert o.name == new_name, o.name
+    bpy.context.scene.collection.objects.link(o)
+    import bmesh as _bm
+    bm = _bm.new()
+    bm.from_mesh(o.data)
+    mw = o.matrix_world
+    # a face goes when doomed(centre) is true (or, with corner, when corner(points) is for its sample points)
+    def samples(f):
+        cs = [L.rb(mw @ v.co) for v in f.verts]
+        out = list(cs)
+        for a in range(len(cs)):
+            for b in range(a + 1, len(cs)):
+                out.append(tuple((cs[a][i] + cs[b][i]) / 2 for i in range(3)))
+        out.append(tuple(sum(c[i] for c in cs) / len(cs) for i in range(3)))
+        return out
+    gone = [f for f in bm.faces if doomed(L.rb(mw @ f.calc_center_median())) or (corner and corner(samples(f)))]
+    _bm.ops.delete(bm, geom=gone, context="FACES")
+    bm.to_mesh(o.data)
+    bm.free()
+    src.hide_render = True
+    src.hide_viewport = True
+    return o, len(gone)
+
+
+def manifest_row(obj, role, look, slice_, extra=None):
+    centre, size = L.bounds_rb(obj)
+    row = {"name": obj.name, "slice": slice_, "role": role, "centre": centre, "size": size, "triangles": L.tris(obj),
+           "look": look}
+    row.update(extra or {})
+    return row
+
+
+def place_copy(template, name, cframe_pos, yaw=0.0, scale=(1, 1, 1), collection=None):
+    """A render copy of a template at a Roblox position, yawed about +y (radians, Roblox's CFrame.Angles(0, yaw, 0))."""
+    o = template.copy()
+    o.name = name
+    o.location = L.bl(cframe_pos)          # templates are authored about their placement point (mesh_object local)
+    o.rotation_euler = (0, 0, yaw)
+    o.scale = scale
+    (collection or bpy.context.scene.collection).objects.link(o)
+    return o
+
+
+# ------------------------------------------------------------------------------------------------------------ den
+def cliff_den_parts():
+    import re
+    text = (ROOT / "src" / "shared" / "CliffDenData.lua").read_text(encoding="utf-8")
+    return json.loads(re.search(r"\[=\[(.*)\]=\]", text, re.S).group(1))
+
+
+def den_recuts(Den, rows, shell):
+    """Island pack parts against the new shell (architect review: re-cuts keep the pack part's own name, so
+    CliffDenData.parts, WorldMotion and the Aero named surfaces still apply).
+
+    * Any face of an island pack part with its centre or a corner inside the shell (a ray straight up from it meets the
+      shell) goes: the sculpt carved only 0.3 past the collision walls and under the old, lower roof, so rock and ground
+      poked through the new walls and dome. A visual-only part is re-cut under its own name; a colliding tile (whose
+      convex hulls a cut would move) stays in place, invisible and still colliding, and a visual re-cut copy
+      `W7_F_Over<name>` shows instead (`overlays`).
+    * The grotto crystals lose the clusters at the mouth's feet (the new amber shards stand there), and the lawn and the
+      ground lose what stands over the mouth's floor (it collides at 4.2; the drawn lawn stood up to 4.9 over it)."""
+    from mathutils import Vector
+    from mathutils.bvhtree import BVHTree
+    dg = bpy.context.evaluated_depsgraph_get()
+    tree = BVHTree.FromObject(shell, dg)
+    up = Vector((0, 0, 1))
+
+    def inside(c):
+        if c[1] < Den.FLOOR - .3 or not (-25 < c[0] < 10 and -122 < c[2] < Den.COLLAR_END):
+            return False
+        return tree.ray_cast(L.bl(c), up, 30)[0] is not None
+
+    in_mouth = lambda c: Den.JW - .4 < c[0] < Den.JE + .4 and -101.6 < c[2] < -93.0 and c[1] < 5.8
+    extra = {"W7_CD_Crystals__glow_pink": lambda c: -26 < c[0] < 10 and -101 < c[2] < -86,
+             "W7_CD_Ground__grass": in_mouth, "W7_CD_Ground__ground": in_mouth}
+    parts = cliff_den_parts()["parts"]
+    out = []
+    candidates = [o.name for o in bpy.data.objects if o.type == "MESH" and not o.hide_render
+                  and o.name.startswith("W7_CD_") and o.name in parts and o.name != "W7_CD_CaveBars__palette"]
+    # A face whose sample points (corners, edge middles, centre) reach inside the shell goes, if it lies under the hill's
+    # skin (all corners under 13.5: the rock in the walls; the skin over the dome is never cut, the dome is kept under
+    # it instead, so the hill top shows no hole).
+    def spans(points):
+        return max(p[1] for p in points) < 13.5 and any(inside(p) for p in points)
+
+    for name in candidates:
+        o = bpy.data.objects[name]
+        mw = o.matrix_world
+        doomed_extra = extra.get(name)
+        hits = 0
+        for p in o.data.polygons:
+            c = L.rb(mw @ p.center)
+            if inside(c) or (doomed_extra and doomed_extra(c)) or spans([L.rb(mw @ o.data.vertices[k].co) for k in p.vertices] + [c]):
+                hits += 1
+        if not hits:
+            continue
+        doomed = lambda c, e=doomed_extra: inside(c) or (e is not None and e(c))
+        if parts[name]["collide"]:
+            copy, gone = recut(name, "W7_F_Over" + name[len("W7_CD_"):], doomed, spans)
+            bpy.data.objects[name + "__pack"].name = name          # the original stays (invisible, colliding)
+            rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "den",
+                                     {"overlays": name, "facesRemoved": gone, "collide": False}))
+        else:
+            copy, gone = recut(name, name, doomed, spans)
+            rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "den",
+                                     {"replaces": name, "facesRemoved": gone, "collide": False}))
+        out.append(copy)
+    return out
+
+
+def slice_den():
+    import world_finish_den as Den
+    OUT.mkdir(parents=True, exist_ok=True)
+    TEX.mkdir(parents=True, exist_ok=True)
+    rows, place = [], {"lanterns": [], "crystals": [], "stones": [], "mouthBoxes": []}
+    # the shell, low and high, kept in front of the colliding island tiles where it can be (0.28 inside the collision
+    # face at most); whatever still pokes through is re-cut from the island (den_recuts)
+    hide_for_render(["W7_CD_PlayDen__cliff_rock", "W7_CD_PlayDen__dirt_path"])
+    parts = cliff_den_parts()["parts"]
+    solid = [o.name for o in bpy.data.objects if o.type == "MESH" and not o.hide_render and o.name in parts
+             and "glow" not in o.name and o.name != "W7_CD_CaveBars__palette"]
+    bvh = Den.obstacles(solid)
+    low, info = Den.build_shell("W7_F_Den__shell", .9, .8, 9, 4, bvh=bvh)
+    high, _ = Den.build_shell("WF_ShellHigh", .3, .27, 27, 12, detail=True, bvh=bvh)
+    cut_objs = den_recuts(Den, rows, low)
+    Den.mark_seams(low, info)
+    # Fable R1 9 (the brief's fallback): two welded halves, each with its own 1024 maps. The cut runs along x -8 (the
+    # back wall's seam, the cut over the mouth's middle and the collar soffit's seam); the halves share the cut's
+    # vertices exactly, so nothing opens between them.
+    halves = Den.split_halves(low, -8.0)
+    high.data.materials.append(L.material("WF_ShellHighMat", L.hexrgb("#7E6B58")))
+    floor = Den.build_floor("W7_F_Den__floor")
+    floor.data.materials.append(L.material("WF_FloorBake", L.hexrgb("#6B5240")))
+    fcol_path, fnrm_path = TEX / "den_floor_color.png", TEX / "den_floor_normal.png"
+    size = (1024, 1024)
+    density = {}
+    for half, side in halves:
+        Den.unwrap_half(half)
+        half.data.materials.append(L.material("WF_ShellBake" + side, L.hexrgb("#7E6B58")))
+    if not NO_BAKE:
+        was = solo([h for h, _ in halves] + [high, floor])
+        for half, side in halves:
+            high.hide_render = True
+            lo_b, hi_b = (-26.0, 2.0, -124.0), (10.0, 18.0, -92.0)
+            pos, _ = L.bake_position(half, size, lo_b, hi_b)
+            ao, _ = L.bake_ao(half, size, distance=3.5, samples=48)
+            high.hide_render = False
+            nrm, _ = L.bake_normal(high, half, size, extrusion=.45, ray=1.0)
+            colour = Den.shell_colour(pos, ao, None)
+            L.save_png(colour, TEX / f"den_shell_{side}_color.png", size)
+            L.save_png(nrm, TEX / f"den_shell_{side}_normal.png", size, srgb_input=False)
+        restore(was)
+        fc, fn = Den.floor_tile(512)
+        L.save_png(fc, fcol_path, (512, 512))
+        L.save_png(fn, fnrm_path, (512, 512), srgb_input=False)
+    bpy.data.objects.remove(high)
+    areas = {}
+    for half, side in halves:
+        half.data.materials.clear()
+        half.data.materials.append(L.image_material("WF_Shell" + side, TEX / f"den_shell_{side}_color.png",
+                                                    TEX / f"den_shell_{side}_normal.png"))
+        walls = [p for p in half.data.polygons if abs(p.normal.z) < .5]
+        density[side] = {"walls": round(Den.texel_density(half, 1024, walls), 1),
+                         "all": round(Den.texel_density(half, 1024), 1)}
+        areas[side] = round(sum(p.area for p in half.data.polygons), 1)
+        rows.append(manifest_row(half, "fixed", {"kind": "baked", "color": f"den_shell_{side}_color",
+                                                 "normal": f"den_shell_{side}_normal", "roughness": .9,
+                                                 "material": "Slate"}, "den",
+                                 {"pxPerStud": density[side], "collide": False, "shadow": True}))
+    floor.data.materials.clear()
+    floor.data.materials.append(L.image_material("WF_Floor", fcol_path, fnrm_path))
+    low = halves[0][0]
+    rows.append(manifest_row(floor, "fixed", {"kind": "tile", "color": "den_floor_color", "normal": "den_floor_normal",
+                                              "studsPerTile": Den.FLOOR_TILE, "material": "Ground"}, "den",
+                             {"collide": False, "shadow": False}))
+    # the mouth surround
+    rock_k = island_density("W7_CD_Region__cliff_rock")
+    mouth = Den.build_mouth("W7_F_DenMouth__cliff_rock")
+    triplanar_uv(mouth, rock_k)
+    mouth.data.materials.append(island_material("cliff_rock"))
+    rows.append(manifest_row(mouth, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
+                             {"collide": False, "shadow": True, "uvPerStud": round(rock_k, 5)}))
+    place["mouthBoxes"] = Den.MOUTH_BOXES
+    # the apron: worn earth over the greybox slabs, rolling into the lawn
+    dirt_k = island_density("W7_CD_CliffPath__dirt_path")    # the sculpt's path: the garden path's density
+    apron = Den.build_apron("W7_F_DenApron__dirt_path", dirt_k)
+    apron.data.materials.append(island_material("dirt_path"))
+    rows.append(manifest_row(apron, "fixed", {"kind": "island", "material": "dirt_path"}, "den",
+                             {"collide": False, "shadow": False, "doubleSided": True, "uvPerStud": round(dirt_k, 5)}))
+    place["apronStones"] = Den.APRON_STONES
+    place["tufts"] = Den.APRON_TUFTS
+    place["paw"] = Den.PAW
+    # templates: lantern (cage + panes), crystal, flat stone
+    cage, panes = Den.build_lantern()
+    crystal = Den.build_crystal()
+    stone = Den.build_flat_stone()
+    iron = L.material("WF_Iron", L.hexrgb("#3A3028"), rough=.7)
+    glow = L.material("WF_Pane", L.hexrgb("#C9772E"), emission=L.hexrgb("#C9772E"), strength=4.0)
+    amber = L.material("WF_Crystal", L.hexrgb("#C98A3C"), emission=L.hexrgb("#C98A3C"), strength=1.6)
+    pawc = L.material("WF_Stone", L.hexrgb("#8A8378"), rough=.95)
+    cage.data.materials.append(iron)
+    panes.data.materials.append(glow)
+    crystal.data.materials.append(amber)
+    stone.data.materials.append(pawc)
+    for t, look in ((cage, {"kind": "flat", "color": "#3A3028", "material": "Metal"}),
+                    (panes, {"kind": "flat", "color": "#C9772E", "material": "Neon"}),
+                    (crystal, {"kind": "flat", "color": "#C98A3C", "material": "Neon", "transparency": .4}),
+                    (stone, {"kind": "flat", "color": "#8A8378", "material": "Slate"})):
+        row = manifest_row(t, "template", look, "den", {"collide": False, "shadow": False})
+        row["centre"][1] = round(row["centre"][1] - 4, 4)     # local: the offset of the mesh's centre from its point
+        rows.append(row)
+    # placements: the crystals (two clusters at the mouth's feet, one in each alcove), the stones pressed into the floor
+    place["crystals"] = Den.CRYSTALS
+    place["stones"] = Den.FLOOR_STONES
+    place["lanterns"] = {"light": {"color": "#FFB870", "brightness": .9, "range": 14, "shadows": False},
+                         "ledgeY": Den.LEDGE_Y, "cord": .8}
+    tri = {r["name"]: r["triangles"] for r in rows}
+    report = {"shell": tri["W7_F_Den__shellWest"] + tri["W7_F_Den__shellEast"], "floor": tri["W7_F_Den__floor"],
+              "mouth": tri["W7_F_DenMouth__cliff_rock"],
+              "lantern": tri["W7_F_Lantern__cage"] + tri["W7_F_Lantern__pane"], "crystal": tri["W7_F_Den__crystal"],
+              "stone": tri["W7_F_Stone__flat"], "pxPerStud": density, "areas": areas}
+    print("WORLDFINISH den", json.dumps(report))
+    # export: fixed parts carry world coordinates (their centre is where the part goes); templates are authored about
+    # their placement point, so their centre is the offset from it (Roblox centres a MeshPart on its mesh's bounds)
+    exported = [h for h, _ in halves] + [floor, mouth, apron, cage, panes, crystal, stone] + cut_objs
+    report["apron"] = L.tris(apron)
+    L.export_fbx(exported, OUT / "world-finish-den.fbx")
+    (OUT / "world-finish-den.json").write_text(json.dumps({"slice": "den", "parts": rows, "place": place,
+                                                            "hide": Den.HIDE, "report": report}, indent=1) + "\n",
+                                               encoding="utf-8")
+    if RENDERS:
+        studio_look()
+        den_render_dressing(Den, cage, panes, crystal, stone)
+        Path(RENDERS).mkdir(parents=True, exist_ok=True)
+        for label in ("CAM-MOUTH30", "CAM-DEN-IN", "CAM-DEN-BACK", "CAM-MOUTH-WEST", "CAM-MOUTH-EAST"):
+            W.render(label, RENDERS)
+        W.render("CAM-MOUTH30", RENDERS, night=True)
+        W.render("CAM-DEN-IN", RENDERS, night=True)
+
+
+def den_render_dressing(Den, cage, panes, crystal, stone):
+    """Review-render stand-ins for the den's Roblox props (DenGreybox rows: the timber frame, the sign, the mat, the
+    Deck stump and screen, the Dash gate, the crates) plus the four lanterns with their lights, the crystals and the
+    paw stones, placed as WorldFinishMount places them."""
+    wood, dark = L.material("WF_Wood", L.hexrgb("#7A5A3A")), L.material("WF_Dark", L.hexrgb("#5C4330"))
+    cloth = L.material("WF_Cloth", L.hexrgb("#B8AE98"))
+    red = L.material("WF_Red", L.hexrgb("#D9725E"))
+    screen = L.material("WF_Screen", L.hexrgb("#9BE3C9"), emission=L.hexrgb("#9BE3C9"), strength=3.0)
+
+    def box(name, c, s, mat, rot=(0, 0, 0)):
+        bpy.ops.mesh.primitive_cube_add(size=1)
+        o = bpy.context.object
+        o.name = name
+        o.location = L.bl(c)
+        o.scale = (s[0], s[2], s[1])
+        o.rotation_euler = rot
+        o.data.materials.append(mat)
+        return o
+
+    def disc(name, c, d, h, mat):
+        bpy.ops.mesh.primitive_cylinder_add(radius=d / 2, depth=h, vertices=32)
+        o = bpy.context.object
+        o.name = name
+        o.location = L.bl(c)
+        o.data.materials.append(mat)
+        return o
+
+    box("WF_FrameLintel", (-7, 10.5, -98), (17.5, 1.3, 1.2), dark)
+    for x in (-15, 1):
+        box("WF_FrameJamb", (x, 7.025, -98), (1.5, 5.65, 1.5), dark)
+    box("WF_Sign", (-7, 10.5, -97.26), (8, 2.2, .25), wood, rot=(math.radians(-8), 0, 0))
+    disc("WF_Mat", (-8, 4.24, -108), 8, .08, cloth)
+    disc("WF_MatInner", (-8, 4.25, -108), 6.4, .08, red)
+    disc("WF_Stump", (-7, 5.3, -117), 5, 2.2, dark)
+    box("WF_DeckScreen", (-7, 7.45, -115.8), (2.8, .05, 1.7), screen, rot=(math.radians(55), 0, 0))
+    for side in (-1, 1):
+        box("WF_GatePost", (-18 + side * 2 * .34, 6.7, -110 + side * 2 * .94), (.5, 5, .5), wood)
+    for x, z in ((-12, -116), (-2, -116), (4, -110)):
+        box("WF_Crate", (x, 5.0, z), (1.6, 1.6, 1.6), wood)
+    for i, (lx, ly, lz) in enumerate(Den.LANTERNS):
+        place_copy(cage, f"WF_Cage{i}", (lx, ly, lz))
+        place_copy(panes, f"WF_Pane{i}", (lx, ly, lz))
+        light = bpy.data.lights.new(f"WF_Lamp{i}", "POINT")
+        light.color = L.hexrgb("#FFB870")
+        light.energy = 420
+        light.shadow_soft_size = .3
+        lo = bpy.data.objects.new(f"WF_Lamp{i}", light)
+        lo.location = L.bl((lx, ly, lz))
+        bpy.context.scene.collection.objects.link(lo)
+    for k, c in enumerate(Den.CRYSTALS):
+        place_copy(crystal, f"WF_Crystal{k}", c["at"], yaw=c["yaw"], scale=(c["scale"], c["scale"], c["scale"]))
+    for k, s in enumerate(Den.FLOOR_STONES + Den.APRON_STONES):
+        place_copy(stone, f"WF_Stone{k}", s["at"], yaw=s["yaw"], scale=(s["size"][0], s["size"][2], s["size"][1]))
+
+
+if __name__ == "__main__":
+    {"den": slice_den}[SLICE]()
+    if "--save" in ARGS:              # a copy of the finished scene, for section views (never over the preview blend)
+        bpy.ops.wm.save_as_mainfile(filepath=ARGS[ARGS.index("--save") + 1], copy=True)
