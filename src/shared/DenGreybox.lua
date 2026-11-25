@@ -14,7 +14,9 @@ Greybox.Look=table.freeze({wood="#7A5A3A",dark="#5C4330",stone="#8E8A80",cloth="
 -- jambs, a dirt threshold over the white sill), the mouth lanterns hung from the beam's ends (no posts), the sign on the
 -- beam, a mat mid-room, the apron slab joining the mouth and the cliff path's foot. Lamps #D98A3A with caps and bases.
 Greybox.Frame=table.freeze({beamY=10.5,beam=Vector3.new(17.5,1.3,1.2),out=2.5,jamb=1.5,cord=.8,tilt=8})
-Greybox.Apron=table.freeze({x1=-25,x2=3,z1=-100,z2=-90,top=4.65,thick=.4})
+-- top 4.95 (Fable asked 4.65, lawn + .05): the drawn lawn by the mouth stands up to about 4.9 over its 4.2 to 4.6 collision,
+-- so at 4.65 the slab showed only as a frame round the grass (Studio R3).
+Greybox.Apron=table.freeze({x1=-25,x2=3,z1=-100,z2=-90,top=4.95,thick=.6})
 Greybox.Mat=table.freeze({at=Vector2.new(-8,-108),d=8,inner=6.4})
 local L=Greybox.Look
 Greybox.MaxParts=80 -- Fable cliff-den review: the frame, caps, mat, apron and board rows (was 60)

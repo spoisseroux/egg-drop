@@ -172,7 +172,7 @@ return function(server)
 		local beam=byName.W7D_FrameLintel
 		assert(math.abs(byName.W7D_Sign.cframe.Position.Y-beam.cframe.Position.Y)<1e-6 and byName.W7D_Sign.cframe.Position.Z>beam.cframe.Position.Z)
 		for _,n in ipairs({"W7D_ApronFront","W7D_ApronWest","W7D_ApronEast"})do
-			local r=byName[n];assert(r and r.collide and math.abs(r.cframe.Position.Y+r.size.Y/2-4.65)<1e-6,n)
+			local r=byName[n];assert(r and r.collide and math.abs(r.cframe.Position.Y+r.size.Y/2-Greybox.Apron.top)<1e-6,n)
 			local lo,hi=r.cframe.Position-r.size/2,r.cframe.Position+r.size/2
 			assert(hi.X<=L.mouth.x1 or lo.X>=L.mouth.x2 or lo.Z>=L.mouth.z+7.3-1e-6,n.." covers the mouth's floor")
 		end

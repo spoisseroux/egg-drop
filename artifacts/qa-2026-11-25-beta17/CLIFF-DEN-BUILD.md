@@ -90,3 +90,23 @@ Captures: `studio/world/01-path-from-lawn.jpg`, `02-den-mouth.jpg`, `03-den-insi
   pets plan on live's map (fine: they wait at the path's foot and use `DenLayout.floors` in the den).
 - The old marble frame and trim round the new mouth (art pass).
 - `CliffDenSwap`'s "pocket" layer (`FeatureFlags.CliffDen=false`) still exists but no layout uses it.
+
+## Fable R1 fixes and code review (2026-11-25), Studio R3
+
+Fable fixes 1 to 8, 10 and 11 built (rows, tints, numbers; no meshes); code review fixes 1 to 3 and the nits. Rebased on
+`feat/egg-drop-arcade-polish` (capsule, HUD, race audio, world-alive W1, the Hollow). Deviations: the `ClumpOneTop` step
+sits at s 8..12 (Fable's s 12..18 is 8 from the gap, against its own 14-stud rule); the apron slab's top is 4.95, not
+4.65 (the drawn lawn by the mouth stands up to about 4.9 over its 4.2 to 4.6 collision, so at 4.65 the slab showed only
+as a frame round the grass).
+
+Studio R3 Play (Rojo from this branch; the exported pack loaded through a test-copy Model upload, 133050222362651,
+checked equal to the export: 201 parts, 188 precise, the same hull heights): E at the gate, table and board now shows
+their prompt and the pet's prompt is off (`PromptShown`: Den_gate / Den_deck / Den_board; pet prompt false), the gate
+fires with OnePerButton; away from them the pet's E shows (3.7 studs). `/tier off` with the player on the path (y 20)
+moves them to the lawn spot (-14, 8.1, -79). The Bear follows into the den on the floor (y 4.68). Captures
+`studio/world/r3/01` to `06` (06: the mouth at night, `/hour at 3400`).
+
+Open for Fable: the crystals at #E8C468 still read lemon in Neon (a number to lower); the glassy vertical panes in the
+den are not collision boxes (every `W7C_CD_Box_` is Transparency 1, and no part in the room is partly transparent):
+they are the den wall mesh's own panels and seams, a mesh fix. Not done: fix 9 (dressing over the tan faces), phone
+844 x 390 captures, the turn and shelf 2 shots.
