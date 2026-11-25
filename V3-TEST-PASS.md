@@ -46,6 +46,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
+| 34 | **Bunny eyes no longer sink into her head (beta 16 B4)** | Built offline, specs green; not Studio-checked | Watch the Bunny's face when she looks curious (greeting you, a glance aside): both eyes stay whole, the one on your right too, front and from either side; her blush is a whole soft oval. The Bear's curious glance gets the same smoother move. Squinting faces still tuck the bottom of the eye in (unchanged, same as the Bear). No switch (art + glance) |
 
 ## Scoped, not built
 

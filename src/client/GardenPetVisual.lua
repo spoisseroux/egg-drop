@@ -25,6 +25,19 @@ local function authoredFrame(def,scale)
  local a=def.xyzEulerDeg
  return CFrame.new(v(def.center)*scale)*CFrame.Angles(math.rad(a[1]),math.rad(a[2]),math.rad(a[3]))
 end
+-- Curious glance: the eyes look .018 aside (along the eye part's own X) and .01 up. Beta 16 B4:
+-- a straight slide sank the inward eye's outer edge into a round head (the Bunny), so the
+-- sideways part turns the eye round the head's upright axis through the Head piece's centre
+-- instead: the same sideways travel, and the eye keeps its height over the curve.
+local function glance(self,head,cf)
+ local s=self.scale;local inHead=head:ToObjectSpace(cf)
+ local aside=inHead:VectorToWorldSpace(Vector3.new(.018*s,0,0)).X
+ local centre;for _,def in ipairs(self.definition.pieces)do if def.name=="Head"then centre=v(def.center)*s;break end end
+ local reach=centre and inHead.Position.Z-centre.Z
+ if not reach or reach<=math.abs(aside)then return cf*CFrame.new(.018*s,.01*s,0)end
+ local turn=CFrame.new(centre)*CFrame.Angles(0,math.asin(aside/reach),0)*CFrame.new(-centre)
+ return head*CFrame.new(0,.01*s,0)*turn*inHead
+end
 local function configure(part,color)
  part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.CastShadow=true
  part.Material=Enum.Material.SmoothPlastic;part.Color=color
@@ -428,7 +441,7 @@ function Visual:update(dt)
    hidden=hidden or mouth=="open"or mouth=="line"
    if mouth=="soft"then size*=.78 end
   end
-  if(name=="EyeL"or name=="EyeR"or name=="GlintL"or name=="GlintR")and self.expression=="curious"then cf*=CFrame.new(.018*self.scale,.01*self.scale,0)end
+  if(name=="EyeL"or name=="EyeR"or name=="GlintL"or name=="GlintR")and self.expression=="curious"then cf=glance(self,head,cf)end
   entry.renderHidden=hidden
   if reveal then
    local stretch=reveal.stretch or 0;local scale=reveal.heroScale or 1

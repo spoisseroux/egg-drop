@@ -1,0 +1,315 @@
+{
+ "schema": 1,
+ "date": "2026-11-24",
+ "builtBy": "assets/art-source/pets/conform_bunny_eyes.py",
+ "sourceBlend": "assets/art-source/pets/pet-bunny.blend",
+ "fbx": "assets/art-source/pets/bunny-export/bunny-eye-conform.fbx",
+ "minVertexHeight": 0.005,
+ "minFaceHeight": 0.0035,
+ "headCentreBlender": [
+  0.0,
+  -0.03054,
+  1.01062
+ ],
+ "glance": {
+  "sideways": 0.018,
+  "up": 0.01,
+  "eyeHeight": 1.16,
+  "how": "turn round the upright axis through the Head centre (GardenPetVisual, 2026-11-24); glanceRuntime is the direction the game uses, glanceMirror the other"
+ },
+ "note": "Heights are distances to the Head + Muzzle surface in studs, positive outside; deepest/mean over vertices, faceDeepest also samples inside every triangle, facesUnder is the share of face samples under the head. before = the shipped mesh. glanceShippedSlide is the old straight slide, for comparison. Only Blender y (depth) changed per vertex.",
+ "meshes": [
+  {
+   "name": "Bunny__EyeL",
+   "source": "PetBunny__EyeL",
+   "vertices": 49,
+   "triangles": 72,
+   "nudgedVertices": 16,
+   "largestMove": 0.0065,
+   "meanMove": 0.001,
+   "poses": {
+    "rest": {
+     "before": {
+      "deepest": 0.005,
+      "mean": 0.0129,
+      "faceDeepest": 0.0039,
+      "facesUnder": 0.0
+     },
+     "after": {
+      "deepest": 0.0052,
+      "mean": 0.0137,
+      "faceDeepest": 0.0047,
+      "facesUnder": 0.0
+     }
+    },
+    "glanceRuntime": {
+     "before": {
+      "deepest": 0.0006,
+      "mean": 0.0111,
+      "faceDeepest": -0.0014,
+      "facesUnder": 0.002
+     },
+     "after": {
+      "deepest": 0.005,
+      "mean": 0.0119,
+      "faceDeepest": 0.0035,
+      "facesUnder": 0.0
+     }
+    },
+    "glanceMirror": {
+     "before": {
+      "deepest": 0.0039,
+      "mean": 0.0148,
+      "faceDeepest": 0.0029,
+      "facesUnder": 0.0
+     },
+     "after": {
+      "deepest": 0.0061,
+      "mean": 0.0155,
+      "faceDeepest": 0.0041,
+      "facesUnder": 0.0
+     }
+    },
+    "startled": {
+     "before": {
+      "deepest": 0.0018,
+      "mean": 0.0176,
+      "faceDeepest": 0.0012,
+      "facesUnder": 0.0
+     },
+     "after": {
+      "deepest": 0.0053,
+      "mean": 0.0184,
+      "faceDeepest": 0.0049,
+      "facesUnder": 0.0
+     }
+    },
+    "glanceShippedSlide": {
+     "before": {
+      "deepest": 0.011,
+      "mean": 0.0211,
+      "faceDeepest": 0.0089,
+      "facesUnder": 0.0
+     },
+     "after": {
+      "deepest": 0.0124,
+      "mean": 0.0219,
+      "faceDeepest": 0.0102,
+      "facesUnder": 0.0
+     }
+    }
+   },
+   "centerBlender": [
+    -0.23369,
+    -0.39909,
+    0.9446
+   ],
+   "sizeBlender": [
+    0.15872,
+    0.09607,
+    0.20257
+   ],
+   "centerRuntime": [
+    -0.23369,
+    0.9446,
+    0.39909
+   ],
+   "sizeRuntime": [
+    0.15872,
+    0.20257,
+    0.09607
+   ]
+  },
+  {
+   "name": "Bunny__EyeR",
+   "source": "PetBunny__EyeR",
+   "vertices": 49,
+   "triangles": 72,
+   "nudgedVertices": 15,
+   "largestMove": 0.0065,
+   "meanMove": 0.001,
+   "poses": {
+    "rest": {
+     "before": {
+      "deepest": 0.0053,
+      "mean": 0.0125,
+      "faceDeepest": 0.0039,
+      "facesUnder": 0.0
+     },
+     "after": {
+      "deepest": 0.0053,
+      "mean": 0.0134,
+      "faceDeepest": 0.0048,
+      "facesUnder": 0.0
+     }
+    },
+    "glanceRuntime": {
+     "before": {
+      "deepest": 0.0032,
+      "mean": 0.0144,
+      "faceDeepest": 0.0028,
+      "facesUnder": 0.0
+     },
+     "after": {
+      "deepest": 0.0059,
+      "mean": 0.0152,
+      "faceDeepest": 0.0041,
+      "facesUnder": 0.0
+     }
+    },
+    "glanceMirror": {
+     "before": {
+      "deepest": 0.0,
+      "mean": 0.0107,
+      "faceDeepest": -0.0013,
+      "facesUnder": 0.002
+     },
+     "after": {
+      "deepest": 0.005,
+      "mean": 0.0116,
+      "faceDeepest": 0.0035,
+      "facesUnder": 0.0
+     }
+    },
+    "startled": {
+     "before": {
+      "deepest": 0.001,
+      "mean": 0.0173,
+      "faceDeepest": 0.0008,
+      "facesUnder": 0.0
+     },
+     "after": {
+      "deepest": 0.0055,
+      "mean": 0.0181,
+      "faceDeepest": 0.005,
+      "facesUnder": 0.0
+     }
+    },
+    "glanceShippedSlide": {
+     "before": {
+      "deepest": -0.0057,
+      "mean": 0.0051,
+      "faceDeepest": -0.0066,
+      "facesUnder": 0.101
+     },
+     "after": {
+      "deepest": -0.001,
+      "mean": 0.006,
+      "faceDeepest": -0.0018,
+      "facesUnder": 0.028
+     }
+    }
+   },
+   "centerBlender": [
+    0.23369,
+    -0.39934,
+    0.9446
+   ],
+   "sizeBlender": [
+    0.15872,
+    0.0967,
+    0.20257
+   ],
+   "centerRuntime": [
+    0.23369,
+    0.9446,
+    0.39934
+   ],
+   "sizeRuntime": [
+    0.15872,
+    0.20257,
+    0.0967
+   ]
+  },
+  {
+   "name": "Bunny__BlushL",
+   "source": "PetBunny__BlushL",
+   "vertices": 25,
+   "triangles": 36,
+   "nudgedVertices": 25,
+   "largestMove": 0.0116,
+   "meanMove": 0.006,
+   "poses": {
+    "rest": {
+     "before": {
+      "deepest": 0.0033,
+      "mean": 0.0037,
+      "faceDeepest": -0.0009,
+      "facesUnder": 0.017
+     },
+     "after": {
+      "deepest": 0.005,
+      "mean": 0.007,
+      "faceDeepest": 0.0035,
+      "facesUnder": 0.0
+     }
+    }
+   },
+   "centerBlender": [
+    -0.33678,
+    -0.26314,
+    0.84341
+   ],
+   "sizeBlender": [
+    0.17504,
+    0.20455,
+    0.10272
+   ],
+   "centerRuntime": [
+    -0.33678,
+    0.84341,
+    0.26314
+   ],
+   "sizeRuntime": [
+    0.17504,
+    0.10272,
+    0.20455
+   ]
+  },
+  {
+   "name": "Bunny__BlushR",
+   "source": "PetBunny__BlushR",
+   "vertices": 25,
+   "triangles": 36,
+   "nudgedVertices": 25,
+   "largestMove": 0.0136,
+   "meanMove": 0.0058,
+   "poses": {
+    "rest": {
+     "before": {
+      "deepest": 0.0026,
+      "mean": 0.0038,
+      "faceDeepest": -0.0013,
+      "facesUnder": 0.024
+     },
+     "after": {
+      "deepest": 0.005,
+      "mean": 0.0069,
+      "faceDeepest": 0.0035,
+      "facesUnder": 0.0
+     }
+    }
+   },
+   "centerBlender": [
+    0.33678,
+    -0.26385,
+    0.84341
+   ],
+   "sizeBlender": [
+    0.17504,
+    0.20161,
+    0.10272
+   ],
+   "centerRuntime": [
+    0.33678,
+    0.84341,
+    0.26385
+   ],
+   "sizeRuntime": [
+    0.17504,
+    0.10272,
+    0.20161
+   ]
+  }
+ ]
+}
