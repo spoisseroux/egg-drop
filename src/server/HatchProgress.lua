@@ -31,6 +31,8 @@ local BallThemes=require(script.Parent.BallThemeState)
 local Lifetime=require(script.Parent.LifetimeState)
 local PlayDate=require(script.Parent.PlayDateState)
 local Coach=require(ReplicatedStorage.Shared.CoachMarks)
+-- Growth cuts (2026-11-25): the Welcome bonus on a new save's first three field rounds (optional `starterRounds`).
+local StarterBonus=require(ReplicatedStorage.Shared.StarterBonus)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 local StampCard=require(ReplicatedStorage.Shared.StampCard)
@@ -105,6 +107,9 @@ local function defaultAdapter()
 		update = function(key, transform)
 			return store:UpdateAsync(key, transform)
 		end,
+		-- Growth cuts: the live adapter pays the Welcome bonus (with FeatureFlags.StarterBonus). Specs build their
+		-- own adapters and keep their exact payouts unless they opt in (scripts/StarterBonus.spec.lua).
+		starterBonus = true,
 	}
 end
 
@@ -220,7 +225,8 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- Bond levels (overnight 2026-11-14, slice F): optional additive `bond` on v11, valid when missing (no version bump).
 -- Customization Egg (2026-11-16): optional additive finishInventory, petFinish, charmUnlocks,
 -- lookCharmMisses and lookFound on v11 (LookState.valid, run inside HueState.valid).
-local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+-- Welcome bonus (growth cuts 2026-11-25): optional additive `starterRounds` on v11, valid when missing (no version bump).
+local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and StarterBonus.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -348,6 +354,8 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and state.playDate ~= nil then state.playDate = PlayDate.sanitize(state.playDate) end
 		-- A malformed coach mask is dropped (reads 0), never a failed load.
 		if type(state) == "table" and state.coachMask ~= nil then state.coachMask = Coach.sanitize(state.coachMask) end
+		-- A malformed Welcome bonus counter is dropped (then read as a save that has played: no bonus), never a failed load.
+		if type(state) == "table" and state.starterRounds ~= nil then state.starterRounds = StarterBonus.sanitize(state.starterRounds) end
 		-- Malformed bond XP is repaired (bad entries dropped), never a failed load.
 		if type(state) == "table" and state.bond ~= nil then state.bond = Bond.sanitize(state.bond) end
 		-- v2 stats (S1): malformed stat fields are repaired, never a failed load.
@@ -1428,14 +1436,20 @@ function Hatching.award(handle, runSequence, amount, summary, boost, petId)
 	local heat = if summary and summary.heat then summary.heat else BoardConfig.DefaultHeat
 	-- Copy once: the host's mutable board and day clock must never alter a
 	-- pending transaction when DataStore invokes its callback again later.
-	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()), multiplier = multiplier, bonus = bonus, userId = handle.userId, petId = petId }
+	-- Growth cuts: the Welcome bonus switch is read once here and frozen in the candidate (a retry pays the same way).
+	local starter = FeatureFlags.StarterBonus == true and handle.adapter.starterBonus == true
+	local candidate = { summary = clone(summary), day = dayOf(handle.adapter.now()), multiplier = multiplier, bonus = bonus, userId = handle.userId, petId = petId, starter = starter }
 	local signature = "award:" .. runSequence .. ":" .. amount .. ":" .. heat
 	return transact(handle, signature, handle.state.revision, function(state, captured)
 		if runSequence <= state.lastAwardSeq then return false, "AwardChanged" end
 		local run = captured.summary
 		local marks, promoted = 0, 0
+		-- Welcome bonus (growth cuts): read from this snapshot before the round is counted, flat (no heat, pass or
+		-- Supporter), saved in this same write. StarterBonus.apply writes `starterRounds` only when it pays.
+		local starter = 0
 		if run then
 			if not Mastery.ownsFamily(state.inventoryMask, run.family) then return false, "FamilyChanged" end
+			if captured.starter then starter = StarterBonus.apply(state) end
 			if run.success then
 				-- Saved wins still unlock independent cosmetics; family facts are archived.
 				state.totalWins += 1
@@ -1450,11 +1464,13 @@ function Hatching.award(handle, runSequence, amount, summary, boost, petId)
 		-- round with a goal met adds the flat finish pay (onboarding v1, no heat multiplier).
 		local missPay = if run then HeatPayout.missStars(run.success, run.goalsMet, run) else 0
 		local roundStars = HeatPayout.roundStars(amount, heat) + missPay
-		local total = roundStars * (captured.multiplier or 1) + (if run then captured.bonus or 0 else 0)
+		local paid = roundStars * (captured.multiplier or 1) + (if run then captured.bonus or 0 else 0)
+		-- `total` includes the Welcome bonus; `bonus` keeps its meaning (the pass and Supporter share of the round).
+		local total = paid + starter
 		if state.nectar + total + credited > 1000000000 then return false, "BalanceLimit" end
 		state.nectar += total + credited
 		state.lastAwardSeq = runSequence
-		state.lastRunReward = { sequence = runSequence, base = amount, heat = heat, roundStars = roundStars, total = total, bonus = total - roundStars, missPay = missPay,
+		state.lastRunReward = { sequence = runSequence, base = amount, heat = heat, roundStars = roundStars, total = total, bonus = paid - roundStars, missPay = missPay, starter = starter,
 			questAuto = credited, quests = moved, masteryPoints = marks, family = if run then run.family else nil, promotedTo = promoted }
 		-- Bond (slice F): a saved round finished with this companion. Ownership is checked
 		-- inside Bond.add against this snapshot; it can never fail the award.

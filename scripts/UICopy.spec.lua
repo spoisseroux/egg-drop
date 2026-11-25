@@ -21,7 +21,9 @@ return function(client,parent)
   -- Stars store packs.
   stars=60,
   -- Dash level band.
-  band="Full Bloom"}
+  band="Full Bloom",
+  -- Growth cuts (2026-11-25): the Tomorrow rail and the next-egg nudge.
+  quests=3,egg="Toy Egg"}
  local function width(text,role,size)
   local params=Instance.new("GetTextBoundsParams")
   params.Text=text;params.Font=Kit.faceFor(role,size);params.Size=size;params.Width=10000

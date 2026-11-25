@@ -2041,7 +2041,11 @@ settleReward = function(player, board)
 					board.folder:SetAttribute("DailyAward", saved and saved.sequence == board.runSequence and saved.daily or 0)
 					board.folder:SetAttribute("RewardStatus", "Saved")
 					if saved and saved.sequence == board.runSequence then
-						Economy.source(player, saved.total, Nursery.public(board.nursery).nectar, "Gameplay", "RoundReward:" .. (summary.heat or "medium"))
+						-- Growth cuts: the Welcome bonus is its own source, so it is never read as round income.
+						local starter = if type(saved.starter) == "number" and saved.starter > 0 then saved.starter else 0
+						local balance = Nursery.public(board.nursery).nectar
+						Economy.source(player, saved.total - starter, balance - starter, "Gameplay", "RoundReward:" .. (summary.heat or "medium"))
+						if starter > 0 then Economy.source(player, starter, balance, "Onboarding", "StarterBonus") end
 					end
 					Economy.event(player, if summary.success then "RoundWon" else "RoundLost")
 					board.sessionRounds = (board.sessionRounds or 0) + 1

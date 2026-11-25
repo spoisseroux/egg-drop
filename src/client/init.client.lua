@@ -1581,6 +1581,11 @@ openNursery = function()
 	journal:close()
     if clientUI.hueView then clientUI.hueView:close("forced")end
 	if nurseryState then nurseryView:open(nurseryState) end
+	-- Growth cuts: the results nudge's egg, picked once on this open if it is still on sale (never a later open).
+	local pick=clientUI.eggPick;clientUI.eggPick=nil
+	if pick and nurseryView:isOpen()and os.clock()-pick.at<60 and(pick.id~="look"or require(ReplicatedStorage.Shared.LookEggCatalog).EnablePurchases==true and nurseryState.lookAvailable~=false)then
+		nurseryView:selectRecipe(pick.id)
+	end
 end
 hatchNavigation = require(script.HatchNavigation).new({
 	get = function(name) return board:GetAttribute(name) end,
@@ -2342,6 +2347,9 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
   local roundStars=reward.roundStars or base
   local ok,win=pcall(Payout.roundStars,math.min(base,Payout.Win),heat.key)
   win=if ok then math.min(win,roundStars)else roundStars
+  -- Growth cuts (StarterBonus): the Welcome bonus row first, in gold (flat: never in the 2x or Supporter rows).
+  local starterRow=require(script.ResultsNudge).starterRow(reward)
+  if starterRow then table.insert(rows,starterRow)end
   -- Onboarding v1: a missed round with a goal met pays a flat finish pay ("Goal met").
   local missPay=if type(reward.missPay)=="number"then reward.missPay else 0
   if missPay>0 then table.insert(rows,{name=require(ReplicatedStorage.Shared.UICopy).get(if missPay==1 then "coach.effortPay"else "coach.missPay"),amount=missPay})
@@ -2349,7 +2357,7 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
   table.insert(rows,{name="Round win",amount=win})
   if roundStars>win then table.insert(rows,{name="Tidy stack",amount=roundStars-win,signed=true})end
   end
-  local doubled=(reward.total or roundStars)-roundStars-(reward.bonus or 0)
+  local doubled=(reward.total or roundStars)-roundStars-(reward.bonus or 0)-(if starterRow then starterRow.amount else 0)
   if doubled>0 then table.insert(rows,{name="2× Stars",amount=doubled,signed=true})end
   if(reward.bonus or 0)>0 then table.insert(rows,{name="Supporter",amount=reward.bonus,signed=true})end
  end
@@ -2382,6 +2390,21 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
   table.insert(strip,(if moved.scope=="weekly"then "Weekly: "else "")..(clientUI.questTitle(moved.id)or moved.id).." "..moved.count.."/"..moved.target..(if moved.done then "  · CLAIM IN LOG"else ""))
  end
  local balance=nurseryState and nurseryState.nectar or 0
+ -- Growth cuts (GROWTH-CUTS-LOOK sections 1 and 3), each behind its own switch; off leaves these nil.
+ local growth={}
+ do
+  local Flags=require(ReplicatedStorage.Shared.FeatureFlags)
+  -- On the beta the v3 Coming up strip wins while the Sleepy Nest is on (TomorrowChips.live): no live model then.
+  if Flags.TomorrowStrip==true and nurseryState and require(script.TomorrowChips).live()then
+   growth.tomorrow={phone=require(script.TomorrowChips).model(nurseryState,{phone=true}),wide=require(script.TomorrowChips).model(nurseryState,{phone=false})}
+  end
+  if Flags.StarterBonus==true and nurseryState then
+   local Nudge=require(script.ResultsNudge)
+   growth.egg=Nudge.egg(nurseryState)
+   growth.line=Nudge.line(growth.egg,balance)
+   growth.hatchPrimary=not pending and Nudge.hatchPrimary(growth.line,reward)
+  end
+ end
  return{outcome=if success==true then "clear"elseif reason=="Overflow"then "overflow"else "missed",
   title=if objective and not objective.empty and objective.title then objective.title else "Round",difficulty=heat.name,nextDifficulty=clientUI.resultsHeatName(),multiplierLine=heat.name.." "..heatLabel,
   pending=pending,earned=reward and reward.total or 0,total=reward and reward.total or 0,rows=rows,balance=balance,
@@ -2400,6 +2423,8 @@ function clientUI.resultsData(final,runReceipt,score,best,peakChain)
    local ps=nurseryState and nurseryState.petStats;local e=type(ps)=="table"and type(ps.pets)=="table"and ps.pets[board:GetAttribute("CompanionId")or ""]
    return type(e)=="table"and e.xp or nil end)()),
   quest=quest,nudge=nudge,petName=(Pets.byId[board:GetAttribute("CompanionId")or ""]or Pets.active[1]or Pets[1]).name,
+  -- Growth cuts: the TOMORROW strip (live snapshot only; nil hides it) and the next-egg nudge under the Star.
+  tomorrow=growth.tomorrow,nextLine=growth.line,nextEgg=growth.egg,hatchPrimary=growth.hatchPrimary,
   result={status=status,receiptPending=status=="Saved"and runReceipt==nil,reward=runReceipt,sequence=board:GetAttribute("RunSequence")}}
 end
 -- The view's back arrow: shown on every deck screen, hidden under sheets and the
@@ -2569,6 +2594,8 @@ updateHud = function()
 		recap:show(clientUI.resultsData(final,runReceipt,score,best,peakChain),if clientUI.deckView~=nil then clientUI.deckView else clientUI.deckCompact==true)
 	else recap:hide() end
 	if resultsOpened then GuiService.SelectedObject=nil;if layout then task.defer(layout)end end
+	-- Growth cuts (TomorrowStrip): the garden's Tomorrow line waits for the first free moment after a results screen.
+	if resultsOpened and clientUI.coach then clientUI.coach.sawResults=true end
 	modalTitle.Text = "You hatched " .. (hatchName or "") .. "!"
 	readout.Text = if owned > 0 then tostring(nurseryState and nurseryState.nectar or 0) else tostring(score)
 	scoreCaption.Text = if owned > 0 then "Stars" else "SCORE"
@@ -3174,7 +3201,15 @@ recap:on("leave",function()clientUI.leaveDeck()end)
 -- Results Hatch button (celebrations 2.6): the same garden route as Menu > Eggs.
 recap:on("hatch",function()
 	if recap.data and recap.data.pending then return end
-	if visitEggs()then recap:hide();clientUI.accepted("confirm")end
+	-- Growth cuts (StarterBonus): Hatch eggs opens with the nudge's egg picked (one shot, on the next open).
+	local egg=recap.data and recap.data.nextEgg
+	clientUI.eggPick=if type(egg)=="table"then{id=egg.id,at=os.clock()}else nil
+	if visitEggs()then recap:hide();clientUI.accepted("confirm")else clientUI.eggPick=nil end
+end)
+-- Growth cuts (TomorrowStrip): a "today" chip (today's stamp, a quest to claim) opens Quests over the results.
+recap:on("quests",function()
+	if recap.data and recap.data.pending then return end
+	if clientUI.openQuestLog("daily")then clientUI.accepted("confirm")end
 end)
 -- Compact results: change difficulty (the touch route for "Up on Replay") and the quest shortcut.
 recap:on("picker",function()
@@ -3253,7 +3288,9 @@ do
   learned=function(station)if clientUI.attract then clientUI.attract:learn(station)end end,
   -- QA v735 H5: the garden step is the "Your garden" tour (machines, Quests and dailies,
   -- customize, the Menu); closing it ends the step.
-  tour=function(done)return require(script.HowItWorks).open("garden",{onClosed=done})end})
+  tour=function(done)return require(script.HowItWorks).open("garden",{onClosed=done})end,
+  -- Live growth cuts on the beta (PORT-TO-BETA.md): the Sleepy Nest on owns the "tomorrow" moment (no Tomorrow line).
+  v3Tomorrow=function()return require(ReplicatedStorage.Shared.Onboard).on("nest")end})
  clientUI.coach:place(viewport.Position,viewport.Size)
  local stopCoachSnapshot=clientUI.ownerSnapshot.subscribe(function(state)clientUI.coach:sync(state);clientUI.coach:learned()end)
  local function beltCount()
@@ -3301,6 +3338,8 @@ do
    pressure=clientUI.attr("OverflowPressure")or 0,belt=clientUI.coachBelt or 0,owned=board:GetAttribute("OwnedPets")or 0,
    input=clientUI.inputKind(),open=open,used=clientUI.attract and clientUI.attract.used or nil,pet=companion and companion.name or "Bear",
    companionId=board:GetAttribute("CompanionId"),
+   -- Growth cuts: the say-hi line ends when the player says hi (the pet focus view).
+   focusing=roomView.focusing==true,
    drops=clientUI.attr("Drops")or 0,windowActive=cs.window,idleFor=os.clock()-cs.stillSince,awayFor=os.clock()-cs.inputAt})
  end)
  gui.Destroying:Connect(function()coachStep:Disconnect();stopCoachSnapshot();clientUI.coach:destroy();clientUI.arrivalHatch:destroy();for _,link in ipairs(cs.links)do link:Disconnect()end end)

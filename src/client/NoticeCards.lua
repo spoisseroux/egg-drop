@@ -34,9 +34,11 @@ Notice.ById=table.freeze({
  dashIntro=define("quests","trophy","target","show"),
  dashNew=define("quests","trophy","target","show"),
  findsIntro=define("results","sparkle","target","show"),
+ -- Growth cuts (2026-11-25): the garden's Tomorrow line (TomorrowStrip).
+ tomorrow=define("quests","check","quests","quests"),
 })
 Notice.Order=table.freeze({"welcome","firstStars","locked","machines","hub","quest","customize","fillLine","item",
- "questDone","questReady","questClaimed","firstSpend","bond","parkInvite","dashIntro","dashNew","findsIntro"})
+ "questDone","questReady","questClaimed","firstSpend","bond","parkInvite","dashIntro","dashNew","findsIntro","tomorrow"})
 Notice.Targets=table.freeze({"quests","hatch","companions","menu","show"})
 -- Values every line can be filled from when the caller has none.
 Notice.Defaults=table.freeze({pet="your pet",reward="",quest="A quest"})

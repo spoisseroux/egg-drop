@@ -55,6 +55,7 @@ SECTION_NOTES = {
     "book": "Collection book", "park": "Pet Park chip", "things": "Things to do page", "stamp": "Stamp card", "report": "Bug report sheet",
     "onboarding": "First-round coaching", "coach": "First-round coaching",
     "onb3": "First-session onboarding: pet bubbles, Sleepy Nest, results strip",
+    "tomorrow": "Results TOMORROW strip and garden line",
 }
 # One key's own note, for a word that is ambiguous on its own (EGG-CORNER-LOOK 1: "Turn" is the egg machine's prompt).
 KEY_NOTES = {
@@ -62,7 +63,7 @@ KEY_NOTES = {
 }
 SAMPLE = {"count": 3, "heat": "Medium", "low": 6, "high": 8, "pet": "Bear", "reward": 5, "item": "Squeaky Bone",
           "owned": 3, "total": 12, "target": 3, "name": "Pet Park", "level": 10,
-          "hours": 7, "minutes": 40}
+          "hours": 7, "minutes": 40, "quests": 3, "egg": "Toy Egg"}
 
 HARNESS = r'''
 local Sources = SOURCES
