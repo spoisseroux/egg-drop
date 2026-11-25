@@ -26,13 +26,20 @@ function Care:release(actor)
  if c and self.bay and self.bay.ownerId==actor.ownerId and self.bay.id==c.claimId then self.bay=nil end
  actor.care=nil
 end
-function Care:hold(actor,input,state,position,claimId)
+-- Beta (17) U8: `forced` marks a hold the owner never asked for (no dry ground when the bay, a release or a
+-- late equip let go). The pet stays safely at the owner (never an arbitrary anchor), but the client shows no
+-- put-down control for it and its pulses do not extend it: the lease is already spent, so every tick tries
+-- the ground again (GardenCarePlacement.find, which now also tries the owner's remembered ground spot) and
+-- the pet lands the moment there is somewhere to stand.
+function Care:hold(actor,input,state,position,claimId,forced)
  self.garden:release(actor)
  actor.mode=state;actor.generation+=1;actor.path=nil;actor.actionId=self.garden:token()
  actor.behavior,actor.action="rest",if state=="Carried"then "carry"elseif state=="Docked"then "dock"else "placed"
  actor.from,actor.to=A.pack(position),A.pack(position);actor.startTime=self.options.now();actor.endTime=actor.startTime+1
  actor.yaw=if state=="Docked"then 0 else input.yaw or 0;actor.focusUntil=nil
- actor.care={state=state,claimId=claimId,holderId=actor.ownerId,characterId=actor.characterId,expiresAt=if state=="Carried"then self.options.now()+L.LeaseSeconds else nil}
+ forced=state=="Carried"and forced==true
+ actor.care={state=state,claimId=claimId,holderId=actor.ownerId,characterId=actor.characterId,forced=if forced then true else nil,
+  expiresAt=if state=="Carried"then self.options.now()+(if forced then 0 else L.LeaseSeconds)else nil}
  self.garden.dirty=true
 end
 function Care:follow(actor,input,point)
@@ -50,8 +57,8 @@ function Care:tick(actor,input)
   if not self.bay or self.bay.id~=c.claimId or self.bay.ownerId~=actor.ownerId or now>self.bay.expiresAt or horizontal(input.position,L.Dock)>L.LeaveReach then
    local point=self.options.place(input,L.Dock)
    if point then self:follow(actor,input,point)else
-    -- An unsafe floor never strands the bay: return to the live holder.
-    self:hold(actor,input,"Carried",input.carryPosition or input.anchor)
+    -- An unsafe floor never strands the bay: return to the live holder (forced: it lands when it can).
+    self:hold(actor,input,"Carried",input.carryPosition or input.anchor,nil,true)
    end
   end
  elseif c.state=="Placed"and horizontal(input.position,A.vector(actor.to))>L.PlacedReach then
@@ -72,7 +79,10 @@ function Care:request(id,packet)
  if not actor or not input or not input.alive or not input.owned or input.mode~="Room"or packet.petId~=actor.petId or packet.characterId~=actor.characterId or packet.petGeneration~=actor.petGeneration or packet.actorGeneration~=actor.generation then return reject("IdentityChanged")end
  local response
  if packet.kind=="carePulse"then
-  if actor.mode=="Carried"and actor.care and packet.claimId==nil then actor.care.expiresAt=self.options.now()+L.LeaseSeconds;return self:response(packet,"Accepted")end
+  if actor.mode=="Carried"and actor.care and packet.claimId==nil then
+   if not actor.care.forced then actor.care.expiresAt=self.options.now()+L.LeaseSeconds end
+   return self:response(packet,"Accepted")
+  end
   if not self.bay or self.bay.id~=packet.claimId or self.bay.ownerId~=id or actor.mode~="Docked"then return reject("ClaimChanged")end
   self.bay.expiresAt=self.options.now()+L.LeaseSeconds;return self:response(packet,"Accepted",nil,packet.claimId)
  end
@@ -97,7 +107,7 @@ function Care:request(id,packet)
   local point=self.options.place(input,self.garden:position(actor,self.options.now()))
   if not point then
    if packet.kind=="careRelease"then
-    self:hold(actor,input,"Carried",input.carryPosition or self.garden:position(actor,self.options.now()))
+    self:hold(actor,input,"Carried",input.carryPosition or self.garden:position(actor,self.options.now()),nil,true)
    else return reject("NoDrySpace")end
   elseif packet.kind=="careSetDown"then self:hold(actor,input,"Placed",point)else self:follow(actor,input,point)end
   response=self:response(packet,"Accepted")
@@ -131,7 +141,7 @@ function Care:complete(id,entry,status,petId,petGeneration)
   if stay then
    self:hold(actor,input,"Docked",point,claim.id);claim.petId,claim.petGeneration=petId,petGeneration;self.bay=claim
   elseif point then self:follow(actor,input,point)
-  else self:hold(actor,input,"Carried",input.carryPosition or self.garden:position(actor,self.options.now()))end
+  else self:hold(actor,input,"Carried",input.carryPosition or self.garden:position(actor,self.options.now()),nil,true)end
  end
  entry.response=self:response(entry.packet,status,nil,if self.bay and self.bay.ownerId==id then self.bay.id else nil)
  if self.options.result then self.options.result(id,entry.response)end

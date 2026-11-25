@@ -122,7 +122,10 @@ function Client:step()
  -- DeckArt's Interactable watcher restyle each button off and back on every frame.
  self.pickup:SetAttribute("AccessibleLabel",if pickupPending then "Picking up companion…"else "Pick up companion")
  self.pickup:SetAttribute("Pending",pickupPending)
- self.setDown.Visible=state=="Carried"and room.mode=="Room"and not room.busy and not room.menuOpen and not room.overlayOpen()
+ -- Beta (17) U8: a hold the server forced (no dry ground when the bay or a release let go) is not the
+ -- player carrying: no put-down arrow, no lease pulse; the server lands the pet when it can.
+ local forced=state=="Carried"and actor.care.forced==true
+ self.setDown.Visible=state=="Carried"and not forced and room.mode=="Room"and not room.busy and not room.menuOpen and not room.overlayOpen()
  self.setDown:SetAttribute("AccessibleLabel",if setDownPending then "Setting companion down…"else "Set companion down")
  self.setDown:SetAttribute("Pending",setDownPending)
  Art.control(self.pickup,pickupPending,not pickupPending);Art.control(self.setDown,setDownPending,not setDownPending)
@@ -135,7 +138,7 @@ function Client:step()
  end
  if state=="Docked"or state=="Carried"then
   local uiLive=self.gui.Parent~=nil and(if self.gui:IsA("ScreenGui")then self.gui.Enabled else self.gui.Visible)
-  local owns=uiLive and room.mode=="Room"and room.target=="Room"and(state=="Carried"or(self.wantMachine and(not self.isMachineOpen or self.isMachineOpen(actor.care.claimId))))
+  local owns=uiLive and room.mode=="Room"and room.target=="Room"and((state=="Carried"and not forced)or(self.wantMachine and(not self.isMachineOpen or self.isMachineOpen(actor.care.claimId))))
   if owns and not self.releasing and now>=self.pulseAt then
    self.pulseAt=now+.5;self.seq+=1
    self:send({kind="carePulse",seq=self.seq,petId=actor.petId,characterId=actor.characterId,petGeneration=actor.petGeneration,actorGeneration=actor.generation,claimId=actor.care.claimId})
