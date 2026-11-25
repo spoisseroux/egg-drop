@@ -4627,7 +4627,7 @@ do
  require(script.NotificationRail).hider=function()
   if not Chips.on()then return false end
   local machine=clientUI.eggMachine
-  return Chips.hideRail({on=true,modal=clientUI.anyModalOpen()==true,shot=machine~=nil and machine:shotActive()==true})
+  return Chips.hideRail({on=true,modal=clientUI.anyModalOpen()==true,shot=machine~=nil and(machine:shotActive()or machine:cameraHeld())})
  end
 end
 -- Beta 14 W4 world feel (WorldFeelClient): the zoom cap and the walk speed test; nil with the build ceiling off, and
@@ -4858,6 +4858,16 @@ function clientUI.eggCornerMount(Onboard)
    params.FilterDescendantsInstances=skip
    return workspace:Raycast(from,to-from,params)~=nil
   end,
+  -- Studio R15: every reveal stage slides with the tucked panel (its cover keeps it over the screen otherwise), and a
+  -- Hatch another waiting out the request spacing keeps the camera at Shot B.
+  stageHold=function(amount)require(script.HatchItemStage).holdAll(amount)end,
+  screens=function()
+   local out={}
+   if nurseryView and nurseryView.shade then table.insert(out,nurseryView.shade)end
+   if clientUI.hueView and clientUI.hueView.shade then table.insert(out,clientUI.hueView.shade)end
+   return out
+  end,
+  againPending=function()return clientUI.hatchFlow~=nil and clientUI.hatchFlow:againPending()==true end,
   pocket=function(kind)
    local egg=nurseryView and nurseryView.egg3D
    if egg and nurseryView:isOpen()then egg:capsule(kind)end
@@ -4877,6 +4887,7 @@ function clientUI.eggCornerMount(Onboard)
    return intent~=nil and intent.status=="Rejected"
   end})
  clientUI.eggMachine=machine
+ require(script.HatchItemStage).hold=function()return machine:stageAmount()end
  -- The capsule shot: the dock hides while the camera looks at the machine (its own visibility is kept and put back).
  do
   local hidden=nil

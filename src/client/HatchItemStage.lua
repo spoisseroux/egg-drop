@@ -391,6 +391,27 @@ end
 -- "First hatch of each egg type plays in full" (2.2): session memory (the saved bits are
 -- the next step; a rejoin plays the first one in full again).
 Stage.seenTypes={}
+-- Studio R15 (1): the egg corner's capsule shot slides the Hatch eggs panel off the screen, and a covering stage never
+-- moves with its parent (DeckKit.coverScreen). Every open stage, a leaving one too (its own ScreenGui), slides through
+-- its cover instead: the CoverShift attribute. Stage.hold() -> 0..1 (set by init from the machine; nil: always 0).
+-- Sliding, not Visible: a hidden stage stops its own clock (Stage:owned), and its lid must open under the shot.
+Stage.live=setmetatable({},{__mode="k"})
+Stage.hold=nil
+function Stage.heldAmount()
+ if Stage.hold==nil then return 0 end
+ local ok,amount=pcall(Stage.hold)
+ return if ok and type(amount)=="number"then math.clamp(amount,0,1)else 0
+end
+function Stage.applyHold(stage,amount)
+ local root=stage and stage.root
+ if not root then return end
+ local value=if amount>0 then amount else nil
+ if root:GetAttribute("CoverShift")~=value then root:SetAttribute("CoverShift",value)end
+end
+function Stage.holdAll(amount)
+ amount=if type(amount)=="number"then math.clamp(amount,0,1)else 0
+ for stage in pairs(Stage.live)do if not stage.destroyed then Stage.applyHold(stage,amount)end end
+end
 function Stage.firstOfType(kind)return Stage.seenTypes[kind]~=true end
 
 -- ── View ────────────────────────────────────────────────────────────────────
@@ -479,6 +500,8 @@ function Stage.show(parent,options)
  root.ZIndex=options.zIndex or 80;root.BackgroundTransparency=1;root.Active=true;root.ClipsDescendants=true
  root:SetAttribute("RevealTier",tier);root:SetAttribute("RevealKind",self.kind);root:SetAttribute("PopOutStage",true)
  self.root=root
+ -- Studio R15 (the capsule shot): a stage that opens while the shot has the panel slid away starts slid away with it.
+ Stage.live[self]=true;Stage.applyHold(self,Stage.heldAmount())
  if options.cover~=false then Kit.coverScreen(root)end
  -- Round 3: a host whose own ScreenGui already spans the whole screen (the Stat and Names Egg
  -- reveals: ScreenInsets None, IgnoreGuiInset) says fullScreen, so the safe area and the top
@@ -1418,7 +1441,7 @@ function Stage:getStats()
 end
 function Stage:destroy()
  if self.destroyed then return end
- self.destroyed=true
+ self.destroyed=true;Stage.live[self]=nil
  if Stage.handover==self then Stage.handover=nil end
  if self.connection then self.connection:Disconnect();self.connection=nil end
  for _,c in ipairs(self.connections)do c:Disconnect()end;table.clear(self.connections)

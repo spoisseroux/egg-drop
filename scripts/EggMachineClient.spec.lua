@@ -510,5 +510,49 @@ return function(client)
 		r.advance(1.6)
 		assert(shot.panelBack,"and comes back with it")
 	end)
+	test("Studio R15 (1): every reveal stage slides with the panel (all the way off while tucked) and is home when it rises",function()
+		local r=capsuleRig()
+		local held={}
+		r.machine.d.stageHold=function(amount)table.insert(held,amount)end
+		r.buy("st-1")
+		assert(r.machine:stageAmount()==0,"the tuck starts from home")
+		r.advance(.25)
+		assert(held[#held]==1 and r.machine:stageAmount()==1,"off the screen once tucked")
+		r.advance(1.0);assert(held[#held]==1,"still off during the crank")
+		r.advance(.8)
+		assert(held[#held]==0 and r.machine:stageAmount()==0,"home with the panel (the reveal starts)")
+		local any=false;for _,amount in ipairs(held)do if amount>0 and amount<1 then any=true end end
+		assert(any,"it slides, it does not jump")
+	end)
+	test("Studio R16: the screen the buy was pressed on (deps.screens) slides away with the reveal's host, once each",function()
+		local r=capsuleRig()
+		local shop=Instance.new("Frame");shop.Name="EggHatchView"
+		local host=Instance.new("Frame");host.Name="HueEggView"
+		r.machine.d.screens=function()return{shop,host}end
+		r.buy("sc-1")
+		local roots=r.machine.shot.roots
+		assert(#roots==2 and roots[1].gui==shop and roots[2].gui==host,tostring(#roots))
+		r.advance(.5);assert(#r.machine.shot.roots==2,"never twice")
+	end)
+	test("Studio R15 (2): Hatch another's gap keeps the camera at Shot B, so the next buy chains (2nd schedule); no buy: back",function()
+		local r=capsuleRig()
+		local again=false
+		r.machine.d.againPending=function()return again end
+		r.buy("ga-1");r.advance(2.4)
+		again=true -- Hatch another pressed: the store, then the screen closes while the buy waits
+		r.machine:revealClosed()
+		assert(r.camera.CameraType~="Custom"and r.machine:cameraHeld(),"held through the gap")
+		r.advance(.38)
+		assert(r.camera.CameraType~="Custom")
+		again=false
+		r.buy("ga-2")
+		assert(r.machine.shot.sched==Machine.Shots.second,"chained from Shot B")
+		r.advance(1.5)
+		-- A refused Hatch another: the gap goes quiet and the camera goes back after GapGrace.
+		again=true;r.machine:revealClosed();r.advance(.2)
+		again=false;r.advance(Machine.GapGrace+.1)
+		assert(r.machine.gap==nil);r.advance(Machine.ReturnSeconds+.05)
+		assert(r.camera.CameraType=="Custom"and not r.machine:cameraHeld(),"given back")
+	end)
 	return{passed=#cases,cases=cases}
 end
