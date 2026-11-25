@@ -4,7 +4,9 @@ Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test 
 
 Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the game back as it was, `clear` follows the remote config. Use `off` to tell which piece caused a problem.
 
-## On the beta now (beta (17), runtime 63845ca)
+## On the beta now (beta (18), runtime 08d2ebf8)
+
+Beta (18), 2026-11-26: rows 36-44 (race audio, beta 17 fixes, capsule shot, Peek, HUD chips, flat bubbles, world alive, the Hollow, cliff path + Play Den) are on the beta now; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN.md`.
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
