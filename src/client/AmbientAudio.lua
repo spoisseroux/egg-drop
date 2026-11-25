@@ -564,8 +564,8 @@ function Ambient:setRace(state, go, fade)
 			if voice.IsPlaying then voice:Stop() end
 			race = { gain = 0, go = go }
 			self.race = race
+		elseif race.state == "line" or race.state == "card" then return false -- never back up once over the line
 		elseif math.abs(go - race.go) > R.resync then race.go, race.seek = go, true end
-		if race.state == "line" or race.state == "card" then return false end -- never back up once over the line
 		race.state, race.target, race.fade = "play", 1, R.inFade
 	elseif not race then return false
 	elseif state == "line" then

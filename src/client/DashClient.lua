@@ -775,6 +775,7 @@ Client.Stings=table.freeze({
 	finished=table.freeze({{.15,"dash_place",.4},{1.90,"best?",.5}}),
 	best=table.freeze({{.15,"dash_place",.5},{1.15,"dash_best",.5}}),
 })
+Client.StingLate=.3 -- a cue this late (a frame hitch) is dropped
 Client.StingCut=.15 -- the card going (Done, Race again, a chip) cuts what still rings
 function Client:sting(cue,volume)
 	self.stingOwner=self.stingOwner or {}
@@ -789,6 +790,7 @@ function Client:stingStep(now)
 	while plan.list[plan.next]and now-plan.at>=plan.list[plan.next][1]do
 		local entry=plan.list[plan.next]
 		plan.next+=1
+		if now-plan.at-entry[1]>Client.StingLate then continue end -- a hitch: drop a late cue, never stack two
 		if entry[2]~="best?"then self:sting(entry[2],entry[3])
 		elseif self:resultModel(seat).newBest then self:sting("dash_best",entry[3])end
 	end
