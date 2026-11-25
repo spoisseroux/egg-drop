@@ -82,7 +82,7 @@ function Intent:receive(packet)
   if not matches(p,packet.receipt)then return false end
   p.savedReceipt=packet.receipt;self.status="Pending";self:waitFor(p);self:reconcile()
  elseif packet.status=="Retrying"then self.status="Retrying";self.message="Try again."
- elseif packet.status=="Rejected"then self.pending=nil;self.status="Rejected";self.message=if packet.reason=="Max"or packet.reason=="Capped"then "Max · 5/5 grown"elseif packet.reason=="Insufficient"or packet.reason=="NeedStars"then "You need more Stars."else "This feature was not changed. Review your items."
+ elseif packet.status=="Rejected"then self.pending=nil;self.status="Rejected";self.reason=packet.reason;self.message=if packet.reason=="Max"or packet.reason=="Capped"then "Max · 5/5 grown"elseif packet.reason=="Insufficient"or packet.reason=="NeedStars"then "You need more Stars."else "This feature was not changed. Review your items."
  else return false end
  self:notify();return true
 end

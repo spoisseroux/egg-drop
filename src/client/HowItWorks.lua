@@ -398,13 +398,14 @@ local function bind()
   local key=input.KeyCode
   if key==Enum.KeyCode.Up or key==Enum.KeyCode.W or key==Enum.KeyCode.DPadUp then How.scroll(-1)
   elseif key==Enum.KeyCode.Down or key==Enum.KeyCode.S or key==Enum.KeyCode.DPadDown then How.scroll(1)
-  elseif key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace or key==Enum.KeyCode.Escape then How.close("back")
-  -- Beta (17) U2: every card closes from the keyboard; E presses the main button too.
+  elseif key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace then How.close("back")
+  -- Beta (17) U2: every card closes from the keyboard; E presses the main button too (Esc stays Roblox's menu).
+  -- R13: the world's ProximityPrompts are off while a card is open (ModalCursor), so E reaches this.
   elseif key==Enum.KeyCode.Return or key==Enum.KeyCode.Space or key==Enum.KeyCode.KeypadEnter or key==Enum.KeyCode.E then How.accept()
   elseif key==Enum.KeyCode.ButtonA then How.accept()end
   return Enum.ContextActionResult.Sink
  end,false,Enum.ContextActionPriority.High.Value+2000,
-  Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,Enum.KeyCode.Escape,Enum.KeyCode.Return,Enum.KeyCode.Space,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,
+  Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,Enum.KeyCode.Return,Enum.KeyCode.Space,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,
   -- Everything else a menu listens for is swallowed while the cards are up.
   Enum.KeyCode.DPadLeft,Enum.KeyCode.DPadRight,Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,Enum.KeyCode.ButtonL1,Enum.KeyCode.ButtonR1,
   Enum.KeyCode.Left,Enum.KeyCode.Right,Enum.KeyCode.Up,Enum.KeyCode.Down,Enum.KeyCode.Q,Enum.KeyCode.E,Enum.KeyCode.A,Enum.KeyCode.D,

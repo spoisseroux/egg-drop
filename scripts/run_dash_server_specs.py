@@ -98,6 +98,8 @@ def client_modules():
                     "HatchAim.lua",
                     # Beta (17) QA U2 and U4: the modal cursor registry and the UI scale space.
                     "ModalCursor.lua", "UIScaleSpace.lua",
+                    # Beta (17) R13: Hatch another waits out the server's request spacing.
+                    "HatchFlow.lua",
                     # Beta (17) U1: the HUD chip rules.
                     "HudChips.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
