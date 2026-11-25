@@ -61,6 +61,7 @@ Beta (19), 2026-11-25: rows 45 (ASMR hatch, vibration) and 46 (beta (18) known i
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 47 | **Live growth cuts G1 (live line `growth/v1056`): tomorrow strip, no garden tour (say-hi line), welcome bonus +12/+4/+4, "balls"** (`artifacts/growth-2026-11-26/GROWTH-CUTS-LOOK.md`) | Built, reviewed (architect + code review), offline specs green; not run in Studio; goes to live, not the beta | Fresh save: after the Bear, no cards, one "Tap {pet} to say hi" line; round two pays +12 and names an egg you can afford; every results screen ends with a TOMORROW row. |
+| 49 | **The Bear's eye no longer sinks into his head (beta 19, live too)** | Built offline on `fix/bear-eye-clip` (PetEyeGlance spec 7 cases); not seen in Studio; for the beta AND the live line | Fresh save, "Meet Bear": in the pet focus view (curious face) both eyes stay whole and round, the one on your right too; look again from either side. In the garden, any curious moment: eyes glance aside without sinking. Squinting faces (joy, content, sits) no longer glance. No switch. |
 | 48 | **Live first-session G2: paw trail to the pet, first hello +3, round-two nudge, toy pill, calm first deck** (`G2-FIRST-SESSION-LOOK.md`) | Building (live line `growth/v1057`) | — |
 
 ## Scoped, not built
