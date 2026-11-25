@@ -60,11 +60,11 @@ local function pocket()
 		variant="pocket",floorY=floorY,roofY=roofY,
 		room=box(Vector3.new(-12.5,floorY-Layout.Below,-114.5),Vector3.new(-1.5,roofY,-99.5)),
 		wait=box(Vector3.new(mouth.x1,floorY-Layout.Below,-114.5),Vector3.new(mouth.x2,roofY,mouth.z+Layout.WaitApron)),
-		-- The pets: the flat floor less a stud, and the apron from the mouth to the home Floor's edge (it ends at z -90,
+		-- The pets (R12: boxes reach the roof, since the pet's target is taken at the owner's root height): the flat floor less a stud, and the apron from the mouth to the home Floor's edge (it ends at z -90,
 		-- less its 1-stud margin), overlapping both by half a stud.
 		floors=table.freeze({
-			box(Vector3.new(-10.5,floorY-Layout.Below,-113),Vector3.new(-4.5,floorY+3,-99.5)),
-			box(Vector3.new(-12,floorY-Layout.Below,-100),Vector3.new(1,floorY+3,-88.5)),
+			box(Vector3.new(-10.5,floorY-Layout.Below,-113),Vector3.new(-4.5,roofY,-99.5)),
+			box(Vector3.new(-12,floorY-Layout.Below,-100),Vector3.new(1,roofY,-88.5)),
 		}),
 		mouth=mouth,
 		sign=facing(Vector3.new(-6,8.9,-99.6),Vector3.new(-6,8.9,-90)),
@@ -125,8 +125,8 @@ function Layout.fromData(data)
 		variant="room",floorY=floorY,roofY=roofY,room=room,
 		wait=box(Vector3.new(math.min(lo.X,m.x1),floorY-Layout.Below,lo.Z),Vector3.new(math.max(hi.X,m.x2),roofY,math.max(hi.Z,outZ))),
 		floors=table.freeze({
-			box(Vector3.new(lo.X+1,floorY-Layout.Below,lo.Z+1),Vector3.new(hi.X-1,floorY+3,hi.Z)),
-			box(Vector3.new(m.x1+1,floorY-Layout.Below,math.min(m.z,hi.Z)-.5),Vector3.new(m.x2-1,floorY+3,-88.5)),
+			box(Vector3.new(lo.X+1,floorY-Layout.Below,lo.Z+1),Vector3.new(hi.X-1,roofY,hi.Z)),
+			box(Vector3.new(m.x1+1,floorY-Layout.Below,math.min(m.z,hi.Z)-.5),Vector3.new(m.x2-1,roofY,-88.5)),
 		}),
 		mouth=table.freeze({x1=m.x1,x2=m.x2,z=m.z,top=m.top}),
 		sign=facing(v(d.sign.at),v(d.sign.facing)),lanterns=table.freeze(lanterns),
