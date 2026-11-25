@@ -75,7 +75,8 @@ return function(server)
 		end
 		assert(Data.parts["W7_CD_Crystals__glow_aqua"].motion.kind=="pulse")
 		assert(Data.parts["W7_CD_CliffPath__cliff_rock"].region=="CliffPath"and Data.parts["W7_CD_PlayDen__cliff_rock"].region=="PlayDen")
-		assert(Data.parts["W7C_CD_CliffPath"].collide==true)
+		assert(Data.parts["W7C_CD_CliffPath"]==nil and Data.parts["W7_CD_CliffPath__cliff_rock"].collide==false and Data.parts["W7_CD_PlayDen__cliff_rock"].collide==false)
+		for name,e in pairs(Data.parts)do if string.sub(name,1,10)=="W7_CD_Regi"then assert(e.collide==false,name)end end   -- Studio R1
 	end)
 	test("the anchors: the den inside the ring's rule (rounded back corners), the mouth under the lintel, the path foot to arrival",function()
 		local den=Data.den
@@ -139,6 +140,49 @@ return function(server)
 		local w2=Instance.new("Model");local b2=part(Data.bars,w2)
 		Swap.bars(w2,Data,{workspace=ws});assert(b2.Transparency==1,"already open at start")
 		assert(Swap.bars(Instance.new("Model"),Data,{workspace=ws})==nil and Swap.bars(world,nil,{workspace=ws})==nil)
+	end)
+	test("the collision boxes: the den's floor at the floor under every safe cell, headroom to 11.5, the path's treads under its centre line and nothing over it",function()
+		local boxes=Data.collision.boxes
+		assert(#boxes>40)
+		local frames={}
+		for i,b in ipairs(boxes)do
+			local r=b.r
+			frames[i]={cf=CFrame.new(b.c[1],b.c[2],b.c[3],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9]),h=Vector3.new(b.s[1]/2,b.s[2]/2,b.s[3]/2),kind=b.kind}
+			-- orthonormal and right-handed
+			local X,Y,Z=Vector3.new(r[1],r[4],r[7]),Vector3.new(r[2],r[5],r[8]),Vector3.new(r[3],r[6],r[9])
+			assert(math.abs(X.Magnitude-1)<1e-3 and math.abs(Y.Magnitude-1)<1e-3 and math.abs(X:Dot(Y))<1e-3 and (X:Cross(Y)-Z).Magnitude<1e-3,b.kind)
+		end
+		local function solid(p)
+			for _,f in ipairs(frames)do
+				local q=f.cf:PointToObjectSpace(p)
+				if math.abs(q.X)<=f.h.X and math.abs(q.Y)<=f.h.Y and math.abs(q.Z)<=f.h.Z then return f.kind end
+			end
+			return nil
+		end
+		local F=Data.den.floorY
+		local n=0
+		for _,row in ipairs(Data.safe.rows)do
+			local z=row[1]
+			if z<=-96 then
+				for x=row[2],row[3]do
+					n+=1
+					assert(solid(Vector3.new(x,F-.05,z)),"no floor at "..x..","..z)
+					local head=if z>Data.den.mouth.z-1 then Data.den.mouth.top-.3 else 11.5   -- under the lintel: the mouth's height
+					for _,y in ipairs({F+.05,F+2,F+5,head})do assert(not solid(Vector3.new(x,y,z)),"blocked at "..x..","..y..","..z)end
+				end
+			end
+		end
+		assert(n>400,n)
+		local samples=0
+		for _,c in ipairs(Data.path.centreLine)do
+			samples+=1
+			assert(solid(Vector3.new(c.x,c.y-.1,c.z))=="tread","no tread under "..c.x..","..c.z)
+			for _,dy in ipairs({.15,1.5,3,5})do
+				local k=solid(Vector3.new(c.x,c.y+dy,c.z))
+				assert(not k,string.format("%s over the path at %.1f,%.1f +%.2f",tostring(k),c.x,c.z,dy))
+			end
+		end
+		assert(samples>30)
 	end)
 	test("the Play Den reads it: DenLayout.fromData (schema 1) gives the room, DenHost takes the world's blocker, the greybox fits",function()
 		local Layout=require(Shared.DenLayout)

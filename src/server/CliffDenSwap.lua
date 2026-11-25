@@ -69,10 +69,30 @@ function Swap.apply(world,env)
 		if pair.show then source[pair.show]:Clone().Parent=world end
 	end
 	if mode=="den"then
+		Swap.boxes(world,data.collision and data.collision.boxes)
 		world:SetAttribute(Swap.Attribute,true)
 		;(env.workspace or workspace):SetAttribute(Swap.Attribute,true)
 	end
 	return data,mode
+end
+
+-- The den's and the path's collision (Studio R1: no island mesh collides near them, their convex hulls filled the
+-- room and bridged the path): invisible boxes in the world clone, named W7C_CD_Box_<kind>_<n> (W7C: the camera clamp's
+-- "world", never a floor of the egg corner's), WorldMesh set with the rest by LoungeWorldV7Art (the pets' ground rays).
+Swap.BoxPrefix="W7C_CD_Box_"
+function Swap.boxes(world,boxes)
+	if type(boxes)~="table"then return 0 end
+	for i,b in ipairs(boxes)do
+		local p=Instance.new("Part")
+		p.Name=Swap.BoxPrefix..tostring(b.kind).."_"..i
+		p.Anchored=true;p.CanCollide=true;p.CanQuery=true;p.CanTouch=false;p.CastShadow=false
+		p.Transparency=1;p.Material=Enum.Material.SmoothPlastic
+		p.Size=Vector3.new(b.s[1],b.s[2],b.s[3])
+		local r=b.r
+		p.CFrame=CFrame.new(b.c[1],b.c[2],b.c[3],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9])
+		p.Parent=world
+	end
+	return #boxes
 end
 
 -- The cave's bars (Studio R12: open, the den read as a cage): hidden while workspace Den_open is true (DenHost writes it

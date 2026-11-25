@@ -21,6 +21,9 @@ The module (world studs, as WorldV7Data):
   schema                                  this module's shape (1: DenLayout.fromData, PLAY-DEN-BUILD-PLAN section 10)
   den, path, terrace, evacuate            anchors (cliff_den_sculpt.anchors); den.mouth.blocker = the CaveBlocker
   safe = {rows = {{z, x0, x1}}}           one-stud safe cells: the den floor, the mouth, the apron to z -89
+  collision = {boxes = {{kind, c, s, r}}} the den's and the path's collision (Studio R1): invisible boxes the server
+                                          builds in the world clone (CFrame.new(c, r...), size s); no island mesh
+                                          collides near them
   ground = {i (1-based, row-major as WorldV7Data.ground.h), h}   the 4-stud bare-ground patch
   walk = {grid = {{i, j, h}}, surface = {{i, j, code, h}}}  the 2-stud height grid and 1-stud surface map patches
                                           (0-based cell indices, as world-v7-walk.json)
@@ -124,6 +127,8 @@ def build():
         entry.update(center=e["center"], size=e["size"])
         parts[e["name"]] = entry
         swap.append({"hide": e["replaces"], "show": e["name"]})
+    for name in manifest.get("removed", []):
+        swap.append({"hide": name, "show": None})
     for e in collision["parts"]:
         parts[e["name"]] = {"region": "GroundCollision", "collide": True, "center": e["center"], "size": e["size"]}
         swap.append({"hide": e["replaces"], "show": e["name"]})
@@ -179,6 +184,7 @@ def build():
         "bars": BARS,
         "parts": parts,
         "den": anchors["den"], "path": anchors["path"], "terrace": anchors["terrace"], "evacuate": anchors["evacuate"],
+        "collision": anchors["collision"],
         "safe": safe_cells(anchors),
         "ground": ground,
         "walk": {"grid": grid, "surface": surface},

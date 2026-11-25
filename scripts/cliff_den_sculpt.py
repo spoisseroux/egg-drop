@@ -438,8 +438,12 @@ def _density_and_colour(objs, source_name, fallback=.25):
     return (ratios[len(ratios) // 2] if ratios else fallback), colour
 
 
+PATH_BLOCKS = []   # (kind, centre, size, yaw) of the lip stones, the fin and the notch rocks, as build_path placed them
+
+
 def build_path(objs):
     """CD_CliffPath__dirt_path (the walk surface), CD_CliffPath__cliff_rock (back wall, banks, steps, lip, fin, notch)."""
+    PATH_BLOCKS.clear()
     rock_k, rock_c = _density_and_colour(objs, "Rocks_Walls__cliff_rock")
     dirt_k, dirt_c = _density_and_colour(objs, "Terrain_Ground__dirt_path")
     dirt = Piece("CD_CliffPath__dirt_path", dirt_k, dirt_c)
@@ -500,16 +504,22 @@ def build_path(objs):
             hgt = rnd.uniform(1.2, 1.8)
             c = P(s, s["w"] / 2 + .35, s["h"] + hgt / 2 - .15)
             rock.box(c, (2.0, hgt, .7), yaw=math.atan2(-s["dir"][1], s["dir"][0]), rnd=rnd, jitter=.12)
+            PATH_BLOCKS.append(("lip", c, (2.0, hgt, .7), math.atan2(-s["dir"][1], s["dir"][0])))
     # the rock fin hiding the turn (10 wide, top 28), and the notch's two rocks at the arrival
     fx, fz = tier_xz(41.0, 38.0)
     fg = ground(fx, fz) or 5.0
     yaw = math.atan2(-TIER_D[1], TIER_D[0])        # local X along the ridge
     rock.box((fx, (fg - 1 + 28) / 2, fz), (10.0, 28 - fg + 1, 2.4), yaw=yaw, rnd=rnd, jitter=.4)
-    end = PATH_CTRL[-1]
-    for ds in (-4.2, 4.2):
-        nx, nz = tier_xz(end[0] + ds, end[1] + .6)
+    PATH_BLOCKS.append(("fin", (fx, (fg - 1 + 28) / 2, fz), (10.0, 28 - fg + 1, 2.4), yaw))
+    # the notch's rocks stand either side of the arrival, across the path (Studio R1: placed along the ridge, one stood
+    # in the path's last run, which also runs along the ridge)
+    last = S[-1]
+    for side in (-1, 1):
+        off = last["w"] / 2 + 1.5
+        nx, nz = last["x"] + last["side"][0] * off * side, last["z"] + last["side"][1] * off * side
         ng = ground(nx, nz) or 23.0
         rock.box((nx, (ng - .5 + 32.0) / 2, nz), (2.6, 32.0 - ng + .5, 2.6), yaw=yaw, rnd=rnd, jitter=.3)
+        PATH_BLOCKS.append(("notch", (nx, (ng - .5 + 32.0) / 2, nz), (2.6, 32.0 - ng + .5, 2.6), yaw))
     return [dirt.build(), rock.build()]
 
 
@@ -600,43 +610,208 @@ def build_den(objs):
     return [rock.build(), floor.build()]
 
 
+# ------------------------------------------------------------------------------------------- collision (Studio R1)
+# Roblox bakes a colliding mesh into a few convex hulls, solid behind single-sided faces: on the carved island those
+# hulls filled the room, bridged the apron and the path (STUDIO-PROBE-R1). So near the den and the path no island mesh
+# collides: their faces there move to non-colliding visual parts (CD_Region__<mat>), what is left of each colliding mesh
+# near the region is cut into 32-stud tiles (small hulls), and the den and the path collide on boxes the server builds
+# from CliffDenData.collision (architect review: primitives, exact, nothing to upload).
+REGION_TOP = 18.0
+TILE = 32.0
+
+
+def in_region(x, y, z):
+    """Where no island mesh may collide: the den (grown 2.5) under REGION_TOP, the mouth and its jambs, the path's
+    corridor from its cut back wall to past the lawn edge, 6 under to 1 over the wall's top."""
+    d, m = DEN, MOUTH
+    if den_inside(x, z, 2.5) and y < REGION_TOP:
+        return True
+    if m["x0"] - 1.5 <= x <= m["x1"] + 1.5 and d["z1"] - .5 <= z <= m["west_to"] + 1.0 and y < 12.0:
+        return True
+    s = _nearest(x, z)
+    a = (x - s["x"]) * s["out"][0] + (z - s["z"]) * s["out"][1]       # toward the lawn
+    along = abs((x - s["x"]) * s["dir"][0] + (z - s["z"]) * s["dir"][1])
+    return (along <= 1.5 and -(s["w"] / 2 + s["back"] + 1.5) <= a <= s["w"] / 2 + 3.0
+            and s["h"] - 6.0 <= y <= s["top"] + 1.0)
+
+
+def _tile_number(x, z):
+    return (math.floor(x / TILE) + 20) * 100 + (math.floor(z / TILE) + 20)
+
+
+def split_region(objs, collides):
+    """Colliding island meshes: faces in the region move to CDRegion_<cat>__<mat> (visual, never colliding); faces in
+    the 32-stud tiles around the region move to CDTile<NN>_<cat>__<mat> (colliding, small); the rest stays. Returns
+    (objects, names changed)."""
+    ring = set()
+    for x in range(-110, 40, 4):
+        for z in range(-140, -20, 4):
+            for y in (5.0, 12.0, 20.0, 27.0):
+                if in_region(x, y, z):
+                    for dx in (-TILE, 0, TILE):
+                        for dz in (-TILE, 0, TILE):
+                            ring.add(_tile_number(x + dx, z + dz))
+                    break
+    out, changed = [], set()
+    col = bpy.context.scene.collection
+    for o in objs:
+        if not (o.name.startswith(("Rocks_", "Landmarks__")) and collides(o.name)):
+            out.append(o)
+            continue
+        cat, mat = o.name.rsplit("__", 1)
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        mw = o.matrix_world
+        where = {}
+        for f in bm.faces:
+            c = _roblox(mw @ f.calc_center_median())
+            if in_region(*c):
+                where[f.index] = "CDRegion_" + cat
+            else:
+                n = _tile_number(c[0], c[2])
+                if n in ring:
+                    where[f.index] = f"CDTile{n}_" + cat
+        bm.free()
+        if not where:
+            out.append(o)
+            continue
+        for name in sorted(set(where.values())):
+            keep = {i for i, v in where.items() if v == name}
+            piece = o.copy()
+            piece.data = o.data.copy()
+            pb = bmesh.new()
+            pb.from_mesh(piece.data)
+            pb.faces.ensure_lookup_table()
+            bmesh.ops.delete(pb, geom=[f for f in pb.faces if f.index not in keep], context="FACES")
+            pb.to_mesh(piece.data)
+            pb.free()
+            piece.name = name + "__" + mat
+            col.objects.link(piece)
+            out.append(piece)
+        rb_ = bmesh.new()
+        rb_.from_mesh(o.data)
+        rb_.faces.ensure_lookup_table()
+        bmesh.ops.delete(rb_, geom=[f for f in rb_.faces if f.index in where], context="FACES")
+        rb_.to_mesh(o.data)
+        rb_.free()
+        o.data.update()
+        changed.add(o.name)
+        if len(o.data.polygons):
+            out.append(o)
+    return out, changed
+
+
+def _cross(a, b):
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+
+
+def _norm(a):
+    n = math.sqrt(sum(v * v for v in a)) or 1.0
+    return tuple(v / n for v in a)
+
+
+def _dot(a, b):
+    return sum(p * q for p, q in zip(a, b))
+
+
+def _box(kind, centre, size, X=(1.0, 0.0, 0.0), Y=(0.0, 1.0, 0.0)):
+    """A collision box: centre, size along its own X, Y, Z (Z = X cross Y), r = CFrame.new's nine numbers by rows."""
+    X, Y = _norm(X), _norm(Y)
+    Z = _cross(X, Y)
+    return {"kind": kind, "c": [round(v, 4) for v in centre], "s": [round(max(v, .05), 4) for v in size],
+            "r": [round(v, 6) for v in (X[0], Y[0], Z[0], X[1], Y[1], Z[1], X[2], Y[2], Z[2])]}
+
+
+def _aabb(kind, lo, hi):
+    return _box(kind, [(a + b) / 2 for a, b in zip(lo, hi)], [b - a for a, b in zip(lo, hi)])
+
+
+def collision_boxes():
+    """The den, the mouth and the path as boxes (CliffDenData.collision.boxes): exact, every top a walk surface."""
+    d, m = DEN, MOUTH
+    F, top = d["floor"], 12.2
+    out = [_aabb("floor", (d["x0"], F - 2, d["z0"]), (d["x1"], F, d["z1"]))]
+    # the mouth and the apron's first studs: one slab to the west jamb's reach (the lawn there sits 4.1 to 4.5)
+    out.append(_aabb("floor", (m["x0"], F - 2, d["z1"] - .5), (m["x1"], F, m["west_to"] + 1.8)))
+    # the walls: each outline edge but the front, 2 thick outward, from under the floor to the ceiling
+    pts = [(x, z) for x, z in anchors_outline()]
+    cx = sum(p[0] for p in pts) / len(pts)
+    cz = sum(p[1] for p in pts) / len(pts)
+    for (ax, az), (bx, bz) in zip(pts, pts[1:] + pts[:1]):
+        if abs(az - d["z1"]) < 1e-6 and abs(bz - d["z1"]) < 1e-6:
+            continue
+        ln = math.hypot(bx - ax, bz - az)
+        if ln < 1e-6:
+            continue
+        X = ((bx - ax) / ln, 0.0, (bz - az) / ln)
+        nx, nz = -X[2], X[0]
+        mx, mz = (ax + bx) / 2, (az + bz) / 2
+        if nx * (mx - cx) + nz * (mz - cz) < 0:
+            nx, nz = -nx, -nz
+        out.append(_box("wall", (mx + nx, (F - 1 + top + 1) / 2, mz + nz), (ln + .6, top + 1 - (F - 1), 2.0), X, (0, 1, 0)))
+    # the front either side of the mouth (thin: the lawn beside the east jamb stays walkable), the jambs, the lintel
+    for xa, xb in ((d["x0"] - 2, m["x0"]), (m["x1"], d["x1"] + 2)):
+        out.append(_aabb("front", (xa, F - 1, d["z1"]), (xb, REGION_TOP, d["z1"] + .6)))
+    out.append(_aabb("jamb", (m["x0"] - 1.0, F - 1, d["z1"]), (m["x0"], 12.0, m["west_to"])))
+    out.append(_aabb("jamb", (m["x1"], F - 1, d["z1"]), (m["x1"] + 1.0, 12.0, m["east_to"])))
+    out.append(_aabb("lintel", (m["x0"] - 1.0, m["top"], d["z1"]), (m["x1"] + 1.0, REGION_TOP, SOFFIT_TO)))
+    out.append(_aabb("ceiling", (d["x0"] - 2, top, d["z0"] - 2), (d["x1"] + 2, top + 1.5, d["z1"])))
+    # the path: treads on the smooth ramp (1.5 thick, each run overlapping the next), the cut back wall, the blocks
+    S = path_samples()
+    run = S[::3] + ([S[-1]] if (len(S) - 1) % 3 else [])
+    for a, b in zip(run, run[1:]):
+        pa, pb = (a["x"], a["h"], a["z"]), (b["x"], b["h"], b["z"])
+        f = tuple(q - p for p, q in zip(pa, pb))
+        ln = math.sqrt(_dot(f, f))
+        X = _norm(f)
+        Y = _norm(tuple(u - _dot((0, 1, 0), X) * x for u, x in zip((0, 1, 0), X)))
+        c = tuple((p + q) / 2 - y * .75 for p, q, y in zip(pa, pb, Y))
+        out.append(_box("tread", c, (ln + .5, 1.5, max(a["w"], b["w"]) + .2), X, Y))
+    for s0, s1 in zip(run, run[1:]):
+        if s0["flip"] != s1["flip"] or not (s0["back"] > .05 or s1["back"] > .05):
+            continue
+        w0, w1 = s0["w"] / 2, s1["w"] / 2
+
+        def P(s, a, y):
+            return (s["x"] + s["out"][0] * a, y, s["z"] + s["out"][1] * a)
+        A0, A1 = P(s0, -w0, s0["h"] - .6), P(s1, -w1, s1["h"] - .6)
+        B0, B1 = P(s0, -w0 - s0["back"], s0["top"] + .5), P(s1, -w1 - s1["back"], s1["top"] + .5)
+        Am = tuple((p + q) / 2 for p, q in zip(A0, A1))
+        Bm = tuple((p + q) / 2 for p, q in zip(B0, B1))
+        X = _norm(tuple(q - p for p, q in zip(A0, A1)))
+        up = tuple(q - p for p, q in zip(Am, Bm))
+        Y = _norm(tuple(u - _dot(up, X) * x for u, x in zip(up, X)))
+        Z = _cross(X, Y)
+        hill = (-s0["out"][0], 0.0, -s0["out"][1])
+        if _dot(Z, hill) < 0:
+            X = tuple(-v for v in X)
+            Z = _cross(X, Y)
+        hgt = abs(_dot(up, Y))
+        c = tuple((p + q) / 2 + z * .75 for p, q, z in zip(Am, Bm, Z))
+        out.append(_box("backwall", c, (math.dist(A0, A1) + .6, hgt + .4, 1.5), X, Y))
+    assert PATH_BLOCKS, "build_path first"
+    for kind, c, size, yaw in PATH_BLOCKS:
+        out.append(_box(kind, c, size, (math.cos(yaw), 0.0, -math.sin(yaw)), (0, 1, 0)))
+    return out
+
+
+def anchors_outline():
+    d = DEN
+    outline = []
+    for x, z in [(d["x1"], d["z1"]), (d["x1"], d["z0"] + d["corner"])] + [
+            (d["x1"] - d["corner"] + d["corner"] * math.cos(-math.pi / 2 * k / 6), d["z0"] + d["corner"] + d["corner"] * math.sin(-math.pi / 2 * k / 6)) for k in range(7)] + [
+            (d["x0"] + d["corner"] + d["corner"] * math.cos(-math.pi / 2 - math.pi / 2 * k / 6), d["z0"] + d["corner"] + d["corner"] * math.sin(-math.pi / 2 - math.pi / 2 * k / 6)) for k in range(7)] + [
+            (d["x0"], d["z1"])]:
+        if not outline or [round(x, 3), round(z, 3)] != outline[-1]:
+            outline.append([round(x, 3), round(z, 3)])
+    return outline
+
+
 def apply(sources):
     """--beta: carve the sources in place and add the new pieces. Returns (sources + new, carved names, new names)."""
     carved = carve(sources)
     new = build_path(sources) + build_den(sources)
     return sources + new, set(carved), {o.name for o in new}
-
-
-def path_collision():
-    """W7C_CD_CliffPath: the walk surface as one smooth ramp (the drawn steps never catch a foot), thickened down 1.5
-    into a closed slab like the ground tiles, in Blender coordinates."""
-    bm = bmesh.new()
-    S = path_samples()
-    top, bot = [], []
-    for s in S:
-        w = s["w"] / 2
-        row_t, row_b = [], []
-        for a in (-w, w):
-            x, z = s["x"] + s["side"][0] * a, s["z"] + s["side"][1] * a
-            row_t.append(bm.verts.new((x, -z, s["h"] - 4)))
-            row_b.append(bm.verts.new((x, -z, s["h"] - 4 - 1.5)))
-        top.append(row_t)
-        bot.append(row_b)
-    for i in range(len(S) - 1):
-        bm.faces.new([top[i][0], top[i][1], top[i + 1][1], top[i + 1][0]])
-        bm.faces.new([bot[i][0], bot[i + 1][0], bot[i + 1][1], bot[i][1]])
-        for k in (0, 1):
-            bm.faces.new([top[i][k], top[i + 1][k], bot[i + 1][k], bot[i][k]])
-    for row_t, row_b in ((top[0], bot[0]), (top[-1], bot[-1])):
-        bm.faces.new([row_t[0], row_b[0], row_b[1], row_t[1]])
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    bmesh.ops.triangulate(bm, faces=bm.faces[:])
-    me = bpy.data.meshes.new("W7C_CD_CliffPath")
-    bm.to_mesh(me)
-    bm.free()
-    obj = bpy.data.objects.new("W7C_CD_CliffPath", me)
-    bpy.context.scene.collection.objects.link(obj)
-    return obj
 
 
 def anchors():
@@ -699,4 +874,5 @@ def anchors():
                  "centreLine": centre_line, "control": [list(c) for c in PATH_CTRL]},
         "terrace": {"maxGroundY": 27.0, "gap": {"s": [26.0, 34.0]}},
         "evacuate": [-27.0, ground(-27.0, -84.0) or 4.6, -84.0],
+        "collision": {"boxes": collision_boxes()},
     }

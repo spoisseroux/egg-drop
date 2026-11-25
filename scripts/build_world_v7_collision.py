@@ -43,85 +43,116 @@ def main():
     print("COLLISION", len(parts), sum(p["tris"] for p in parts), max(p["tris"] for p in parts))
 
 
+SUB = 8.0   # Studio R1: the beta's changed tiles are re-cut into 8-stud cells, one part per connected piece
+
+
+def _piece(bm, name, col):
+    """A closed bmesh as a recentred object; returns the part entry."""
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    obj = bpy.data.objects.new(name, mesh)
+    col.objects.link(obj)
+    vs = [v.co for v in mesh.vertices]
+    lo = Vector([min(v[k] for v in vs) for k in range(3)])
+    hi = Vector([max(v[k] for v in vs) for k in range(3)])
+    c = (lo + hi) / 2
+    mesh.transform(__import__("mathutils").Matrix.Translation(-c))
+    obj.location = c
+    size = hi - lo
+    return {"name": name, "tris": len(mesh.polygons), "obj": obj, "center": [round(c.x, 4), round(c.z + 4, 4), round(-c.y, 4)],
+            "size": [round(size.x, 4), round(size.z, 4), round(size.y, 4)]}
+
+
+def split_tile(p, number):
+    """A changed 32-stud tile as 8-stud cells, each split into its connected pieces (stacked sheets, the lawn and the
+    cliff top 22 studs over it, never share a part: their hulls bridged the apron and the path, Studio R1)."""
+    obj = p["obj"]
+    src = bmesh.new()
+    src.from_mesh(obj.data)
+    src.transform(__import__("mathutils").Matrix.Translation(obj.location))   # matrix_world is stale after recentring
+    gx, gy = p["cell"]
+    col = bpy.context.scene.collection
+    out, k = [], 0
+    n = int(TILE / SUB)
+    for i in range(n):
+        for j in range(n):
+            t = src.copy()
+            x0, y0 = gx * TILE + i * SUB, gy * TILE + j * SUB
+            for co, no in (((x0, 0, 0), (-1, 0, 0)), ((x0 + SUB, 0, 0), (1, 0, 0)),
+                           ((0, y0, 0), (0, -1, 0)), ((0, y0 + SUB, 0), (0, 1, 0))):
+                geom = t.verts[:] + t.edges[:] + t.faces[:]
+                res = bmesh.ops.bisect_plane(t, geom=geom, plane_co=Vector(co), plane_no=Vector(no), clear_outer=True)
+                cut = [e for e in res["geom_cut"] if isinstance(e, bmesh.types.BMEdge)]
+                if cut:
+                    bmesh.ops.holes_fill(t, edges=cut, sides=0)
+            if not t.faces:
+                t.free()
+                continue
+            t.faces.ensure_lookup_table()
+            seen = set()
+            for f in t.faces:
+                if f.index in seen:
+                    continue
+                stack, island = [f], []
+                seen.add(f.index)
+                while stack:
+                    g = stack.pop()
+                    island.append(g.index)
+                    for e in g.edges:
+                        for h in e.link_faces:
+                            if h.index not in seen:
+                                seen.add(h.index)
+                                stack.append(h)
+                one = t.copy()
+                one.faces.ensure_lookup_table()
+                keep = set(island)
+                bmesh.ops.delete(one, geom=[g for g in one.faces if g.index not in keep], context="FACES")
+                if len(one.faces) >= 4:
+                    k += 1
+                    out.append(_piece(one, f"W7C_CD_Ground_{number:02d}_{k:02d}", col))
+                one.free()
+            t.free()
+    src.free()
+    bpy.data.objects.remove(obj, do_unlink=True)
+    return out
+
+
 def beta(sources):
-    """--beta (CLIFF-DEN-ISLAND-SCOPE): the tiles the sculpt changes, under their live numbers (W7C_CD_Ground_NN, the
-    tile they replace), new cells numbered on from the last live tile, and the path's smooth ramp (W7C_CD_CliffPath).
-    Writes ONLY world-v7-beta-collision.fbx/.json."""
+    """--beta (CLIFF-DEN-ISLAND-SCOPE, Studio R1): the tiles the sculpt changes, re-cut into 8-stud cells and split into
+    their connected pieces (W7C_CD_Ground_NN_kk, replacing the live W7C_Ground_NN). The den's floor and the path are
+    not here: the server builds them from boxes (CliffDenData.collision). Writes ONLY world-v7-beta-collision.fbx/.json."""
     import sys as _sys
     _sys.path.insert(0, str(Path(__file__).resolve().parent))
     import cliff_den_sculpt as cd
     live = tiles(sources, "live_")
     by_cell = {p["cell"]: p for p in live}
     cd.carve(sources)
-    floor = [o for o in cd.build_den(list(bpy.data.objects)) if o.name.startswith("CD_PlayDen__dirt_path")
-             or bpy.data.objects.remove(o, do_unlink=True)]
-    after = tiles(sources + floor, "beta_")
-    next_number = len(live) + 1
+    after = tiles(sources, "beta_")
     keep = []
     for p in after:
         was = by_cell.get(p["cell"])
         if was is not None and was["digest"] == p["digest"]:
             continue
-        if was is not None:
-            number, replaces = int(was["name"].rsplit("_", 1)[1]), was["name"]
-        else:
-            number, replaces = next_number, None
-            next_number += 1
-        p["obj"].name = p["obj"].data.name = f"W7C_CD_Ground_{number:02d}"
-        p["name"], p["replaces"] = p["obj"].name, replaces
-        keep.append(p)
+        assert was is not None, ("a tile the live island never had", p["cell"])
+        number = int(was["name"].rsplit("_", 1)[1])
+        for piece in split_tile(p, number):
+            piece["replaces"] = was["name"]
+            keep.append(piece)
     gone = sorted(c for c in by_cell if c not in {p["cell"] for p in after})
-    # The den floor answers the server's ground rays (Play Den architect review): rays down from 3 over the floor, over
-    # the room, the mouth and the apron, hit the beta's tiles at the floor (4.2) or the lawn (within .6), never nothing.
-    from mathutils.bvhtree import BVHTree
-    bpy.context.view_layer.update()     # the tiles were recentred: refresh their world matrices before casting
-    trees = []
-    for p in after:
-        tb = bmesh.new()
-        tb.from_mesh(p["obj"].data)
-        tb.transform(p["obj"].matrix_world)
-        trees.append(BVHTree.FromBMesh(tb))
-        tb.free()
-    bad, probes = [], 0
-    for x in range(-20, 5):
-        for z in range(-117, -88):
-            if not (cd.den_floor_plan(x, z) or (cd.MOUTH["x0"] + 1 <= x <= cd.MOUTH["x1"] - 1 and z >= cd.DEN["z1"])):
-                continue
-            if cd.den_floor_plan(x, z) and not cd.den_inside(x, z, -1.0) and z < cd.DEN["z1"]:
-                continue
-            probes += 1
-            # from 3 over the floor, as a player's or a pet's ground ray (the hill over the room is above this)
-            hits = [t.ray_cast(Vector((x, -z, cd.DEN["floor"] + 3 - 4)), Vector((0, 0, -1))) for t in trees]
-            ys = [h[0].z + 4 for h in hits if h[0] is not None]
-            top = max(ys) if ys else None
-            if top is None or abs(top - cd.DEN["floor"]) > .6 or (z > cd.DEN["z1"] + .5 and top > cd.DEN["floor"] + .6):
-                bad.append((x, z, None if top is None else round(top, 2)))
-    assert not bad, ("den floor / apron rays", bad[:8])
-    print("COLLISION BETA den floor rays", probes, "all at the floor")
-    ramp = cd.path_collision()
-    vs = [v.co for v in ramp.data.vertices]
-    lo = Vector([min(v[k] for v in vs) for k in range(3)])
-    hi = Vector([max(v[k] for v in vs) for k in range(3)])
-    c = (lo + hi) / 2
-    ramp.data.transform(__import__("mathutils").Matrix.Translation(-c))
-    ramp.location = c
-    size = hi - lo
-    keep.append({"name": ramp.name, "replaces": None, "obj": ramp, "tris": len(ramp.data.polygons),
-                 "center": [round(c.x, 4), round(c.z + 4, 4), round(-c.y, 4)], "size": [round(size.x, 4), round(size.z, 4), round(size.y, 4)]})
     bpy.ops.object.select_all(action="DESELECT")
     for p in keep:
         p.pop("obj").select_set(True)
-        p.pop("cell", None)
-        p.pop("digest", None)
     bpy.ops.export_scene.fbx(filepath=str(OUT / "world-v7-beta-collision.fbx"), use_selection=True, axis_forward="-Z", axis_up="Y",
                              global_scale=1.0, apply_unit_scale=True, use_mesh_modifiers=False, object_types={"MESH"},
                              add_leaf_bones=False, bake_anim=False, path_mode="STRIP", mesh_smooth_type="FACE")
     removed = [by_cell[c]["name"] for c in gone]
     (OUT / "world-v7-beta-collision.json").write_text(json.dumps({
-        "note": "Generated by scripts/build_world_v7_collision.py --beta: tiles the cliff path / Play Den / terrace sculpt "
-                "changed (replaces = the live tile) and the path's smooth ramp. removed = live tiles with nothing left.",
-        "tile": TILE, "thickness": THICK, "parts": keep, "removed": removed}, indent=1))
-    print("COLLISION BETA", [(p["name"], p["replaces"], p["tris"]) for p in keep], "removed", removed)
+        "note": "Generated by scripts/build_world_v7_collision.py --beta: the tiles the cliff path / Play Den / terrace "
+                "sculpt changed, as 8-stud connected pieces (replaces = the live tile). removed = live tiles with nothing left.",
+        "tile": TILE, "sub": SUB, "thickness": THICK, "parts": keep, "removed": removed}, indent=1))
+    print("COLLISION BETA", len(keep), "pieces from", sorted({p["replaces"] for p in keep}), "removed", removed,
+          "max tris", max(p["tris"] for p in keep))
 
 
 def tiles(sources, prefix=""):
@@ -178,10 +209,9 @@ def tiles(sources, prefix=""):
                           "size": [round(size.x, 4), round(size.z, 4), round(size.y, 4)]})
             parts[-1]["obj"] = obj
             parts[-1]["cell"] = (gx, gy)
-            parts[-1]["digest"] = __import__("hashlib").sha1((";".join(sorted("%.3f,%.3f,%.3f" % tuple(v.co) for v in mesh.vertices))
-                                                         + "|area %.2f" % sum(f.area for f in mesh.polygons)).encode()).hexdigest()
-            # vertices (order-free) and the surface area: triangulation-proof, and a strip of deleted faces whose corners
-            # all survive still moves the area (code review)
+            parts[-1]["digest"] = __import__("hashlib").sha1(("tris %d|area %.1f" % (len(mesh.polygons), sum(f.area for f in mesh.polygons))).encode()).hexdigest()
+            # the triangle count and the surface area: a carve deletes faces (both move); vertex positions flicker with
+            # remove_doubles' order (a far tile read as changed)
             if not prefix:
                 obj.name = mesh.name
     bm.free()
