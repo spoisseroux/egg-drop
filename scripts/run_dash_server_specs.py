@@ -46,7 +46,10 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # The park sites and the Hollow (WORLD-ALIVE-LOOK section 2): the pinned arrival and grove, the multi-site director.
          "ParkSites", "MultipleParks", "ParkDirector",
          # The cliff path / Play Den / terrace top (CLIFF-DEN-ISLAND-SCOPE): the beta's server-start swap and its data.
-         "CliffDen"]
+         "CliffDen",
+         # Live growth cuts G1 + G2, ported to the beta (PORT-TO-BETA.md): the Welcome bonus and the first hello (pure
+         # and the HatchProgress fixture).
+         "StarterBonus", "FirstHello"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -62,7 +65,10 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The ASMR hatch and the vibration cap (ASMR-AND-SCALE-LOOK 1, 2): the variation picker, the beat schedule, the gate.
           "HatchAsmr",
           # Beta (19): the Bear's eye in his head (the curious glance, PetEyeGlance).
-          "PetEyeGlance"]
+          "PetEyeGlance",
+          # Live growth cuts G1 + G2, ported to the beta (PORT-TO-BETA.md): the strip, the nudge, the coach rules, the
+          # trail, pill and calm deck rules.
+          "TomorrowChips", "ResultsNudge", "GrowthCoach", "GrowthG2", "GrowthPort"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -109,7 +115,9 @@ def client_modules():
                     # The ASMR hatch: its schedule and the one vibration module.
                     "HatchAsmr.lua", "Haptics.lua",
                     # Beta (19): the curious glance.
-                    "PetEyeGlance.lua"):
+                    "PetEyeGlance.lua",
+                    # Live growth cuts G1 + G2 (ported): the strip, the nudge, the round-two pill, the trail, the calm deck.
+                    "TomorrowChips.lua", "ResultsNudge.lua", "GrowthNudge.lua", "PetTrail.lua", "DeckCalm.lua", "PetLookAt.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

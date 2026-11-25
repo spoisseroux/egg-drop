@@ -87,6 +87,8 @@ Cards.BoardSeconds=6  -- fill-line and item cards on the board
 Cards.ArrivalSeconds=20 -- the "a friend arrived" card (it has a button, so it stays longer)
 Cards.IntroSeconds=7 -- a Things to do line (it leads somewhere, so it stays a little longer)
 Cards.SayHiSeconds=12 -- growth cuts: the say-hi line's time on screen at most
+-- A coach built without Cards.new (the older specs) reads every growth switch off: the game before them.
+Cards.NoFlags=table.freeze({})
 Cards.Width=460
 Cards.Machines=table.freeze({"hatch","style","companions","quests","book"})
 -- Tint (Kit.Tint key) and icon per card.
@@ -672,7 +674,7 @@ function Cards:step(now,ctx)
    self:showGarden(machine,"once",vars,now,if ctx.open and ctx.open[machine]then machine else nil)
   elseif self.tourOpen then
    -- The tour cards are up: nothing else starts until they close.
-  elseif self.flags.GardenTourCut==true and not self.replaying and not self.gardenDone and Cards.sayHiMayStart(base,roomFor)
+  elseif (self.flags or Cards.NoFlags).GardenTourCut==true and not self.replaying and not self.gardenDone and Cards.sayHiMayStart(base,roomFor)
    and Cards.stage(base,self:following())=="garden"then
    -- Growth cuts: one say-hi line instead of the tour (it saves gardenIntro when it shows), then the first Stars.
    -- Follow the Bear on: the stage reads "free" and this never runs (the needHi bubble says hi).
@@ -681,7 +683,7 @@ function Cards:step(now,ctx)
    if self.starterStars and not self.toldStars then
     self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
    end
-  elseif not self.gardenDone and(self.replaying or self.flags.GardenTourCut~=true)and Cards.beatMayStart(base,roomFor,self.replaying)
+  elseif not self.gardenDone and(self.replaying or (self.flags or Cards.NoFlags).GardenTourCut~=true)and Cards.beatMayStart(base,roomFor,self.replaying)
    and(self.replaying or Cards.stage(base,self:following())=="garden")then
    if not self:openTour()then
     self.beat=self.beat or Coach.nextBeat(nil)
@@ -691,7 +693,7 @@ function Cards:step(now,ctx)
    if self.starterStars and not self.toldStars then
     self.toldStars=true;self.toaster.show(UICopy.get("coach.firstStars.toast"),self.starterStars,nil,Notices.detail("firstStars"))
    end
-  elseif self.flags.PetTrail==true and not self.followTrailRaised and not self.replaying and not self.gardenDone
+  elseif (self.flags or Cards.NoFlags).PetTrail==true and not self.followTrailRaised and not self.replaying and not self.gardenDone
    and Cards.sayHiMayStart(base,roomFor)and Coach.stage(base)=="garden"and self:following()and self:followTrail()then
    -- G2 (PetTrail) on the beta: following the Bear with the need bubbles, the prints lead to the pet as the step
    -- would have opened (the needHi bubble asks for the hello). Once a session; the next frame goes on below.
@@ -717,7 +719,7 @@ function Cards:step(now,ctx)
    self:stepIntro(now,base,vars,roomFor)
    -- Growth cuts: the lowest line, once a session, only when no Things to do line took the rail; a tap opens
    -- "See you tomorrow" (its button opens Quests). The Sleepy Nest on (options.v3Tomorrow): v3's strip and ticket.
-   if not self.garden and not self.tomorrowShown and Chips.live({flags=self.flags,nest=self:v3Tomorrow()})
+   if not self.garden and not self.tomorrowShown and Chips.live({flags=(self.flags or Cards.NoFlags),nest=self:v3Tomorrow()})
     and Cards.tomorrowReady(base,roomFor,{sawResults=self.sawResults,sessionFor=now-self.bornAt,shown=self.tomorrowShown})then
     local text=Chips.rail(self.snapshot)
     if text then

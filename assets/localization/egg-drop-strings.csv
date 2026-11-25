@@ -103,6 +103,12 @@ ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, 
 ui.coach.questDone.line,"Claim its Stars in Quests, in the menu.",,First-round coaching
 ui.coach.questDone.title,Quest done!,,"First-round coaching; also ui.notice.questDone.title, ui.notice.questReady.title"
 ui.coach.quests.line,"Three a day, three a week. Each one pays Stars.",,First-round coaching
+ui.coach.roundTwo.bonus,Round two: ★ {count} Welcome bonus,,First-round coaching; e.g. Round two: ★ 3 Welcome bonus
+ui.coach.roundTwo.plain,Play round two on your Pocket Deck,,First-round coaching
+ui.coach.roundTwo.toy,Round two: hatch a toy for {pet},,First-round coaching; e.g. Round two: hatch a toy for Bear
+ui.coach.sayHi.key,Press E near {pet} to say hi,,First-round coaching; e.g. Press E near Bear to say hi
+ui.coach.sayHi.pad,Press X near {pet} to say hi,,First-round coaching; e.g. Press X near Bear to say hi
+ui.coach.sayHi.touch,Tap {pet} to say hi,,First-round coaching; e.g. Tap Bear to say hi
 ui.coach.skip,Skip,,First-round coaching
 ui.coach.style.line,"Faceplates, backgrounds and balls. Looks only.",,First-round coaching
 ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.name, ui.r3.help.style.title, ui.r5.station.Customize.name"
@@ -525,7 +531,7 @@ ui.notice.dashIntro.what,Race your pet. It's free!,,Menu text; also ui.r5.statio
 ui.notice.dashNew.next,Race your pet. It's free! Tap Show me to find it.,,Menu text
 ui.notice.dashNew.title,New in the garden,,Menu text; also ui.onb3.new.title
 ui.notice.dashNew.what,Garden Dash is open.,,Menu text
-ui.notice.fillLine.next,"Merge to make room, and drop each egg next to its match.",,Menu text
+ui.notice.fillLine.next,"Merge to make room, and drop each ball next to its match.",,Menu text
 ui.notice.findsIntro.next,Tap Show me and follow the trail to it.,,Menu text
 ui.notice.findsIntro.title,Something sparkles,,Menu text
 ui.notice.findsIntro.what,Walk {pet} over to sniff it.,,Menu text; e.g. Walk Bear over to sniff it.
@@ -535,6 +541,8 @@ ui.notice.firstSpend.what,You have enough Stars for an egg. A Toy Egg hatches a 
 ui.notice.firstStars.next,Spend Stars on eggs at Hatch eggs. The Menu lists every machine.,,Menu text
 ui.notice.firstStars.title,Your first Stars,,Menu text
 ui.notice.firstStars.what,"Stars are the one wallet. Rounds, quests and the daily stamp all pay them.",,Menu text
+ui.notice.firstToy.title,A toy for {pet},,Menu text; e.g. A toy for Bear; also ui.onboarding.spend.ready
+ui.notice.firstToy.what,You have enough Stars for a Toy Egg. It hatches a toy for {pet} to carry and play with.,,Menu text; e.g. You have enough Stars for a Toy Egg. It hatches a toy for Bear to carry and play with.
 ui.notice.go.companions,Open Companions,,Menu text
 ui.notice.go.hatch,Open Hatch eggs,,Menu text
 ui.notice.go.menu,Open the Menu,,Menu text
@@ -553,6 +561,7 @@ ui.notice.machines.what,"Each glowing machine in the garden does one job: Hatch 
 ui.notice.parkInvite.next,Tap Show me and follow the trail to the park.,,Menu text
 ui.notice.parkInvite.what,{pet} wants to play.,,Menu text; e.g. Bear wants to play.
 ui.notice.pill.firstSpend,Hatch your first egg,,Menu text
+ui.notice.pill.firstToy,Hatch a toy for {pet},,Menu text; e.g. Hatch a toy for Bear
 ui.notice.pill.tip,Tip: {title},,Menu text; e.g. Tip: {title}
 ui.notice.quest.next,Open the Menu and pick Quests. Stamp the card each day and claim every finished quest.,,Menu text
 ui.notice.quest.title,Quests and dailies,,Menu text; also ui.r3.help.garden.b.title
@@ -563,9 +572,12 @@ ui.notice.questClaimed.what,★ {reward} went into your wallet.,,Menu text; e.g.
 ui.notice.questDone.next,Open Quests and press Claim. Stars buy eggs at Hatch eggs.,,Menu text; also ui.notice.questReady.next
 ui.notice.questDone.what,You finished a quest. Its Stars are waiting to be claimed.,,Menu text
 ui.notice.questReady.what,{quest} is finished. It pays ★ {reward} when you claim it.,,Menu text; e.g. {quest} is finished. It pays ★ 5 when you claim it.
+ui.notice.tomorrow.next,"No streaks. Miss a day, lose nothing.",,Menu text; also ui.stamp.promise
+ui.notice.tomorrow.title,See you tomorrow,,Menu text
+ui.notice.tomorrow.what,"A new stamp, three new quests and three Stat Eggs arrive every day.",,Menu text
 ui.notice.welcome.next,"Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars.",,Menu text
 ui.notice.welcome.title,Your first round,,Menu text
-ui.notice.welcome.what,Drop eggs into the deck. Two of the same kind merge into a bigger one.,,Menu text
+ui.notice.welcome.what,Drop balls into the deck. Two of the same kind merge into a bigger one.,,Menu text
 ui.onb3.charm.name,Nest Charm,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.need.deck,{pet} wants to watch you play.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear wants to watch you play."
 ui.onb3.need.egg,{pet}'s egg is ready to hatch!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear's egg is ready to hatch!; also ui.onb3.notify"
@@ -646,13 +658,12 @@ ui.onb3.week.line,{pet} loves the garden. A new egg naps in the nest after every
 ui.onb3.week.title,Welcome week done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
-ui.onboarding.spend.ready,A toy for {pet},,First-round coaching; e.g. A toy for Bear
 ui.onboarding.spend.store,Store,,First-round coaching
 ui.onboarding.welcome.egg,Mystery egg,,First-round coaching
 ui.onboarding.welcome.friend,Hatch a friend,,First-round coaching; also ui.r1.welcomePill.narrow
 ui.onboarding.welcome.gamepad,D-pad · A,,First-round coaching
 ui.onboarding.welcome.keyboard,← → · SPACE,,First-round coaching
-ui.onboarding.welcome.match,Match,,First-round coaching
+ui.onboarding.welcome.match,Merge,,First-round coaching
 ui.onboarding.welcome.more,One more!,,First-round coaching
 ui.onboarding.welcome.skip,Skip tutorial,,First-round coaching
 ui.onboarding.welcome.static,↓,,First-round coaching
@@ -676,6 +687,7 @@ ui.park.throw,Throw,,Pet Park chip
 ui.park.waitIdle,Pets are playing,,Pet Park chip
 ui.pet.capped,{pet}'s had plenty of pets today,,Petting reward; e.g. Bear's had plenty of pets today
 ui.pet.cappedSolo,Plenty of pets today,,Petting reward
+ui.pet.hello,First hello! +{count} ★,,Petting reward; e.g. First hello! +3 ★
 ui.pet.star,+1 ★,,Petting reward
 ui.phoneDeck.b.items,Items,,Menu text
 ui.pool3.charm.dot.rule,Rare in the Customization Egg,,"Menu text; also ui.pool3.charm.egg.rule, ui.pool3.charm.pebble.rule, ui.pool3.charm.ring.rule"
@@ -688,7 +700,7 @@ ui.pool3.charm.locked,Locked,,Menu text
 ui.pool3.charm.none,"No charm yet. Charms are rare in the Customization Egg, or earned.",,Menu text
 ui.pool3.charm.star.rule,Claim 4 weekly bonuses,,Menu text
 ui.qa.coach.sayHi,Say hi to {pet},,Menu text; e.g. Say hi to Bear
-ui.qa.coach.welcome,Match eggs. Hatch a friend.,,Menu text
+ui.qa.coach.welcome,Merge balls. Hatch a friend.,,Menu text
 ui.qa.loading,Getting the preview ready…,,Menu text
 ui.qa.retryPreview,Retry preview,,Menu text
 ui.qa.shortfallOne,{count} more Star needed,,Menu text; e.g. 3 more Star needed
@@ -849,9 +861,13 @@ ui.results.inPlace.replay,Replay,,Round results screen
 ui.results.inPlace.total,Total  ★ {count},,Round results screen; e.g. Total  ★ 3
 ui.results.leave.mid,Leave to garden,,Round results screen
 ui.results.leave.wide,Back to the garden,,Round results screen
+ui.results.next.ready,{egg}: you have enough!,,Round results screen; e.g. Toy Egg: you have enough!
+ui.results.next.short,{egg}: {count} more Stars,,Round results screen; e.g. Toy Egg: 3 more Stars
+ui.results.next.shortOne,{egg}: 1 more Star,,Round results screen; e.g. Toy Egg: 1 more Star
 ui.results.nudge.again,A win on {heat} pays {low} to {high},,Round results screen; e.g. A win on Medium pays 6 to 8
 ui.results.nudge.up,Brave? {heat} pays {low} to {high},,Round results screen; e.g. Brave? Medium pays 6 to 8
 ui.results.saved.done,Tucked into your wallet,,Round results screen
+ui.results.starter.row,Welcome bonus,,Round results screen
 ui.results.today.label,TODAY,,Round results screen
 ui.results.today.line,★ {count} earned,,Round results screen; e.g. ★ 3 earned
 ui.results.today.short,Today: ★ {count},,Round results screen; e.g. Today: ★ 3
@@ -882,7 +898,6 @@ ui.stamp.button,Stamp today +{reward},,Stamp card; e.g. Stamp today +5
 ui.stamp.done,Stamped for today,,Stamp card
 ui.stamp.full,Card full. A fresh one tomorrow.,,Stamp card
 ui.stamp.next,Today's stamp: ★ {reward},,Stamp card; e.g. Today's stamp: ★ 5
-ui.stamp.promise,"No streaks. Miss a day, lose nothing.",,Stamp card
 ui.stamp.tomorrow,Next stamp tomorrow: ★ {reward},,Stamp card; e.g. Next stamp tomorrow: ★ 5
 ui.stampChip.done,✓ {count}/{total},,Menu text; e.g. ✓ 3/12
 ui.stampChip.label,Daily stamp,,Menu text
@@ -1035,6 +1050,16 @@ ui.things.new,New,,Things to do page
 ui.things.play,Play,,Things to do page
 ui.things.tile.line,Every game in the garden,,Things to do page
 ui.things.tile.short,Things,,Things to do page
+ui.tomorrow.claim,{count} to claim,,Results TOMORROW strip and garden line; e.g. 3 to claim
+ui.tomorrow.claimOne,1 to claim,,Results TOMORROW strip and garden line
+ui.tomorrow.label,TOMORROW,,Results TOMORROW strip and garden line
+ui.tomorrow.quests,{count} new quests,,Results TOMORROW strip and garden line; e.g. 3 new quests
+ui.tomorrow.rail,Tomorrow: Stamp {count} ★ {reward} · {quests} new quests,,Results TOMORROW strip and garden line; e.g. Tomorrow: Stamp 3 ★ 5 · 3 new quests
+ui.tomorrow.railToday,Today's stamp is waiting  ★ {reward},,Results TOMORROW strip and garden line; e.g. Today's stamp is waiting  ★ 5
+ui.tomorrow.stamp,Stamp {count}  ★ {reward},,Results TOMORROW strip and garden line; e.g. Stamp 3  ★ 5
+ui.tomorrow.stampPet,Stamp 7  {pet} + ★ {reward},,Results TOMORROW strip and garden line; e.g. Stamp 7  Bear + ★ 5
+ui.tomorrow.stampToday,Today's stamp  ★ {reward},,Results TOMORROW strip and garden line; e.g. Today's stamp  ★ 5
+ui.tomorrow.statEggs,{count} Stat Eggs,,Results TOMORROW strip and garden line; e.g. 3 Stat Eggs
 ui.v2.adopt.button,Adopt for ★ {price},,Menu text; e.g. Adopt for ★ {price}
 ui.v2.adopt.confirm,Press again to adopt for ★ {price},,Menu text; e.g. Press again to adopt for ★ {price}
 ui.v2.adopt.done,{pet} came home with you!,,Menu text; e.g. Bear came home with you!
