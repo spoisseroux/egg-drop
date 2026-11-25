@@ -147,6 +147,7 @@ ui.dash.gather,{name} · {count} of 8 · {left},,Menu text; e.g. Pet Park · 3 o
 ui.dash.go,GO!,,Menu text
 ui.dash.hint.dash,Hold Dash!,,Menu text
 ui.dash.hint.jump,Tap Jump now!,,Menu text
+ui.dash.join,Join race,,Menu text
 ui.dash.jump,Jump,,"Menu text; also ui.r3.help.dash.b.title, ui.stats.name.jump"
 ui.dash.label.best,Best,,Menu text
 ui.dash.label.time,Time,,Menu text
@@ -179,11 +180,13 @@ ui.dash.racing,Racing,,Menu text
 ui.dash.reason.AlreadySeated,You're already in,,Menu text
 ui.dash.reason.Busy,Your pet is busy,,Menu text; also ui.dash.reason.Petting
 ui.dash.reason.Carried,Put your pet down first,,Menu text
+ui.dash.reason.Closed,The Play Den closed,,Menu text
 ui.dash.reason.Deck,You left the race,,Menu text; also ui.dash.reason.Left
 ui.dash.reason.Empty,The race has stopped,,"Menu text; also ui.dash.reason.Error, ui.dash.reason.Off"
 ui.dash.reason.Far,Come closer to the gate,,Menu text
 ui.dash.reason.Full,The line is full,,Menu text
 ui.dash.reason.Hatching,Finish hatching first,,Menu text
+ui.dash.reason.Missed,That race has started,,Menu text
 ui.dash.reason.NoCharacter,Try again in a moment,,"Menu text; also ui.dash.reason.StalePet, ui.shop.reason.throttled"
 ui.dash.reason.NoPet,Bring your pet with you,,Menu text
 ui.dash.reason.PetChanged,You changed pets,,Menu text
@@ -211,6 +214,9 @@ ui.dash.title,Garden Dash,,"Menu text; also ui.notice.dashIntro.title, ui.r3.hel
 ui.dash.trial,Time Trial,,Menu text
 ui.dash.trip,Oops!,,Menu text
 ui.dash.zoom,Zoomies!,,Menu text
+ui.den.board,Notice board,,Menu text
+ui.den.name,The Play Den,,Menu text; also ui.things.den.name
+ui.den.table,Pocket Deck,,"Menu text; also ui.report.category.deck, ui.things.deck.name, catalog.ToyCatalog.ById.pocket_deck.name, catalog.BookCatalog.Pages.toys.items.3.name"
 ui.e2.arrived.line,{pet} came to stay in your garden.,,Menu text; e.g. Bear came to stay in your garden.
 ui.e2.arrived.sayHi,Say hi,,Menu text
 ui.e2.arrived.title,A friend arrived!,,Menu text
@@ -808,7 +814,6 @@ ui.r5.station.EggsV3.line,"Toys, looks and snacks for your pet",,Menu text
 ui.r5.station.Journal.line,Dress up and care for your pets,,Menu text
 ui.r5.station.Park.line,Pets play here. Play dates pay Stars,,Menu text
 ui.report.about,What's it about?,,Bug report sheet
-ui.report.category.deck,Pocket Deck,,"Bug report sheet; also ui.things.deck.name, catalog.ToyCatalog.ById.pocket_deck.name, catalog.BookCatalog.Pages.toys.items.3.name"
 ui.report.category.menus,Menus,,Bug report sheet
 ui.report.category.other,Other,,Bug report sheet
 ui.report.category.pets,Pets,,Bug report sheet; also catalog.BookCatalog.Pages.pets.name
@@ -1014,6 +1019,7 @@ ui.things.dash.gather,Race: {count} of 8,,Things to do page; e.g. Race: 3 of 8
 ui.things.dash.idle,Start a race,,Things to do page
 ui.things.dash.live,A race is on,,Things to do page
 ui.things.dash.prizes,Stars races today: {done} of {total},,Things to do page; e.g. Stars races today: {done} of 12
+ui.things.den.line,Games inside the cave,,Things to do page
 ui.things.finds.done,All found today,,Things to do page
 ui.things.finds.later,Come back later,,Things to do page
 ui.things.finds.name,Garden finds,,Things to do page

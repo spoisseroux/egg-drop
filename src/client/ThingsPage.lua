@@ -10,12 +10,17 @@ local Page={};Page.__index=Page
 Page.Refresh=.5
 Page.Hit=44
 
--- Pure: the rows, in order. ctx: {park, playDate={count,target}, finds={waiting,count,limit}, dash={phase,count}, prizes,
+-- Pure: the rows, in order. ctx: {den (the Play Den is open), park, playDate={count,target}, finds={waiting,count,limit}, dash={phase,count}, prizes,
 -- saved={paid,limit}, new}. Nothing here says Stars unless the race prizes are on. The race stays the last row: paint()
 -- marks it seen only there.
 function Page.rows(ctx)
 	ctx=type(ctx)=="table"and ctx or {}
-	local rows={{id="deck",icon="faceplate",tint="style",name=UICopy.get("things.deck.name"),line=UICopy.get("things.deck.line"),button=UICopy.get("things.play")}}
+	local rows={}
+	-- The Play Den (PLAY-DEN-BUILD-PLAN): while it is open, a first row whose Show me leads to the cave mouth.
+	if ctx.den==true then
+		table.insert(rows,{id="den",icon="target",tint="garden",name=UICopy.get("things.den.name"),line=UICopy.get("things.den.line"),button=UICopy.get("things.show")})
+	end
+	table.insert(rows,{id="deck",icon="faceplate",tint="style",name=UICopy.get("things.deck.name"),line=UICopy.get("things.deck.line"),button=UICopy.get("things.play")})
 	if ctx.park then
 		local date=type(ctx.playDate)=="table"and ctx.playDate or {}
 		local target=tonumber(date.target)or 3

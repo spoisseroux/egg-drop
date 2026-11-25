@@ -32,6 +32,7 @@ local Hints=require(script.Parent.DashHints)
 local Results=require(script.Parent.DashResults)
 local Ring=require(Shared.DashRing)
 local Line=require(script.Parent.DashLine)
+local PlayDen=require(Shared.PlayDen)
 local Client={};Client.__index=Client
 Client.MaxErrors=3
 Client.ExtrapolateTicks=40
@@ -72,6 +73,20 @@ function Client.ahead(track,tick,unit)
 	return math.min(total,track.cs+unit*track.pace/100*math.clamp(tick-track.tick,0,Client.ExtrapolateTicks))
 end
 
+-- The meadow pad's prompt (PLAY-DEN-BUILD-PLAN, architect verdict 1): pure. ctx: denOpen (the Den_open attribute),
+-- waiting ("line" | "gather" | nil), anchor (where this player waits: "den" or nil), asking (the leave question is up),
+-- canRoam, seat, queued, panel (a Dash card is open), phase (the roster's), humans (players seated in it).
+-- Returns open, the text key, the hold and hop: with the den open picking a race is the den's job, so the pad only
+-- hops into a race that is gathering ("Join race"); with it closed (or missing) it is today's "Race" picker.
+function Client.promptState(ctx)
+	if ctx.waiting then
+		if ctx.anchor=="den"then return false,"dash.line.prompt",Client.LeaveHold,false end
+		return not ctx.asking and ctx.canRoam==true,"dash.line.prompt",Client.LeaveHold,false
+	end
+	local free=not ctx.seat and not ctx.queued and not ctx.panel and ctx.canRoam==true
+	if not ctx.denOpen then return free,"dash.prompt",0,false end
+	return free and ctx.phase=="gather"and(ctx.humans or 0)<8,"dash.join",0,true
+end
 -- The gate card's picture: the start arch and the lanes from the side, with the waiting pad behind the arch.
 Client.GateEye=Vector3.new(10.5,5,11) -- across the start from the pad, up, and along the course: the waiting players are behind the arch
 Client.GateLook=Vector3.new(0,1,2)
@@ -167,7 +182,7 @@ function Client:open()
 	prompt.KeyboardKeyCode,prompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
 	prompt.RequiresLineOfSight=false;prompt.HoldDuration=0;prompt.MaxActivationDistance=Client.PromptReach;prompt.Enabled=false
 	prompt.Parent=sign
-	on(prompt.Triggered,guarded(self.gate))
+	on(prompt.Triggered,guarded(self.meadow))
 	self.prompt=prompt
 	require(script.Parent.NotificationRail).holder=function()return self:held()end
 	d.roomView.dash=self
@@ -243,6 +258,20 @@ function Client:waiting()
 	local seat=self.seat
 	if seat and seat.phase=="gather"and not seat.trial then return "gather"end
 	return nil
+end
+-- Where this player waits: "den" (the Play Den, from the server's packets) or nil (the meadow pad).
+function Client:waitAnchor()
+	if self.queued==true then return self.queuedAnchor end
+	local seat=self.seat
+	return seat and seat.anchor or nil
+end
+-- Players seated in the race gathering now (pals not counted).
+function Client:gatherCount()
+	local roster,count=self.roster,0
+	if roster and roster.phase=="gather"and type(roster.seats)=="table"then
+		for _,place in ipairs(roster.seats)do if type(place)=="table"and place.pal~=true then count+=1 end end
+	end
+	return count
 end
 -- "Leave the line?": Stay in line is the primary key (Enter / A, on the right) and B, Esc or the shade stay too; Leave
 -- is the quiet alt key (X / ButtonX), ignored AltAfter after it opens. It closes itself when the wait ends any other
@@ -324,7 +353,7 @@ function Client:saved()
 end
 
 -- Requests ---------------------------------------------------------------------------------------------------
-function Client:send(kind,mode)
+function Client:send(kind,mode,hop)
 	local remote=self.requestRemote
 	if not remote then return false end
 	self.seq+=1
@@ -334,10 +363,32 @@ function Client:send(kind,mode)
 		local shown=self.d.roomView.shownPet
 		packet.petId,packet.petGeneration,packet.characterId=shown and shown.id,garden.petGeneration(),garden.characterId()
 		packet.mode=if kind=="join"then mode else nil
+		packet.hop=if kind=="join"and hop==true then true else nil
 		self.pending={seq=self.seq,at=os.clock(),kind=kind}
 	elseif kind=="ping"then self.pingSeq,self.pingSent=self.seq,os.clock()end
 	remote:FireServer(packet)
 	return true
+end
+-- The meadow pad's prompt: with the Play Den open, "Join race" hops into the race gathering (its own mode, no picker);
+-- otherwise today's gate (the picker, or the leave question while waiting).
+function Client:meadow()
+	local open,_,_,hop=self:promptNow()
+	if open and hop then
+		if self.pending then return end
+		local mode=self.roster and self.roster.mode
+		mode=if mode=="stats"then "stats"else "fun"
+		self.last={kind="join",mode=mode}
+		self:send("join",mode,true)
+		return
+	end
+	self:gate()
+end
+-- The meadow prompt's state now (Client.promptState over this client).
+function Client:promptNow()
+	local seat=self.seat
+	return Client.promptState({denOpen=PlayDen.isOpen(),waiting=self:waiting(),anchor=self:waitAnchor(),asking=self.lineAsk~=nil,
+		canRoam=self.d.canRoam()==true,seat=seat~=nil,queued=self.queued==true,panel=self:panelOpen(),
+		phase=self.roster and self.roster.phase,humans=self:gatherCount()})
 end
 function Client:gate()
 	if self:waiting()then self:askLine();return end
@@ -430,13 +481,14 @@ function Client:event(packet)
 		if packet.ok~=true then self:notify("dash.reason."..tostring(packet.reason))
 		elseif packet.reason=="Queued"or packet.reason=="WrongBand"then
 			self.queued=true
+			self.queuedAnchor=if packet.anchor=="den"then "den"else nil
 			self:notify("dash.reason."..packet.reason)
 		end
 	elseif kind=="joined"then
 		if type(packet.raceId)~="string"then return end
 		if seat and seat.phase=="done"then self:endSeat()end
 		self.queued=nil
-		self.seat={raceId=packet.raceId,mode=packet.mode,trial=packet.trial==true,phase="gather"}
+		self.seat={raceId=packet.raceId,mode=packet.mode,trial=packet.trial==true,phase="gather",anchor=if packet.anchor=="den"then "den"else nil}
 		self.pings,self.pingAt=0,0
 		table.clear(self.rtts)
 		if packet.closer==true then self:notify("dash.reason.Far")end -- from the line, but too far from the gate
@@ -879,11 +931,9 @@ function Client:slowStep(now)
 	local waiting=self:waiting()
 	if self.lineAsk and(waiting~=self.lineAskKind or self:held())then pcall(self.lineAsk.cancel);self.lineAsk=nil end
 	if self.prompt then
-		local asking=self.lineAsk~=nil
-		local open=if waiting then not asking and d.canRoam()==true else seat==nil and not self.queued and not self:panelOpen()and d.canRoam()==true
-		local text=UICopy.get(if waiting then "dash.line.prompt"else "dash.prompt")
+		local open,key,hold=self:promptNow()
+		local text=UICopy.get(key)
 		if self.prompt.ActionText~=text then self.prompt.ActionText=text end
-		local hold=if waiting then Client.LeaveHold else 0
 		if self.prompt.HoldDuration~=hold then self.prompt.HoldDuration=hold end
 		if self.prompt.Enabled~=open then self.prompt.Enabled=open end
 	end
@@ -933,7 +983,9 @@ function Client:frame(dt,now)
 	if seat and seat.predict then self:raceStep(seat,dt,now,reduced)end
 	if not self.props then return end -- closed by what the race just did
 	if self.line then
-		self.line:setWaiting(self:waiting()~=nil and not self:held())
+		-- The rope's edge is the meadow's: a player waiting in the Play Den is never pulled toward the pad.
+		self.line:setWaiting(self:waiting()~=nil and self:waitAnchor()~="den"and not self:held())
+
 		self.line:frame(dt,Ring.wanted(self.roster),os.clock())
 	end
 	self.props:step(dt)

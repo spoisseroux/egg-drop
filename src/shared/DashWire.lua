@@ -55,6 +55,8 @@ function Wire.request(packet)
 		if type(mode)~="string"or Wire.Modes[mode]~=true then return nil end
 		out.mode=mode
 	end
+	-- The Play Den (PLAY-DEN-BUILD-PLAN): the meadow's "Join race" hops into the race gathering, never into the line.
+	if packet.kind=="join"and packet.hop==true then out.hop=true end
 	return out
 end
 -- A clean input, or nil. The tick window is the race's own business (Sim.push).

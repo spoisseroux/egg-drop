@@ -68,8 +68,10 @@
 -- WorldFeel (beta 14 QA W4): the build ceiling for the lower arrival camera, the zoom cap, the haze and the walk speed
 -- test. Also needs the beta place or Studio (WorldFeel.PlaceId) and the server's switches (WorldFeelConfig: world_feel,
 -- world_walk). Missing = off.
+-- PlayDen (PLAY-DEN-BUILD-PLAN, artifacts/qa-2026-11-24-beta16): the build ceiling for the Play Den (the cave as the games
+-- room). Also needs the beta place or Studio (PlayDen.PlaceId) and the server's switch (DenConfig: play_den, missing = off).
 return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
- PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true})
+ PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true,PlayDen=true})

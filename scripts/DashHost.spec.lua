@@ -14,6 +14,8 @@ return function(server)
 	local Garden=require(server.GardenState)
 	local H=require(server.HatchProgress)
 	local Close=require(server.CloseProgress)
+	local DEN=require(Shared.DenLayout).Pocket
+	local IN_DEN=Vector3.new(-7,7,-106)
 	local S=require(server.DashState)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
@@ -81,7 +83,9 @@ return function(server)
 				return remote
 			end,heartbeat=c.beat,
 			spawn=function(fn)local ok,e=coroutine.resume(coroutine.create(fn));assert(ok,e)end,
-			wait=function(seconds)table.insert(c.parked,{due=c.now+seconds,co=coroutine.running()});coroutine.yield()end}
+			wait=function(seconds)table.insert(c.parked,{due=c.now+seconds,co=coroutine.running()});coroutine.yield()end,
+			-- The Play Den's layout while a case opens it (nil: every other case runs exactly as before).
+			den=function()return c.den end}
 		for id=1,count or 1 do player(id)end
 		c.host=Host.mount(c.d)
 		function c.run(seconds,each)
@@ -309,7 +313,49 @@ return function(server)
 			c.run(24);assert(#c.host.director.heat.lineup==8);c.run(60)
 			local heat=c.host.director.heat;assert(heat and #heat.seats==4 and c.players[9].board.dashHeld)
 		end)
+		-- The Play Den (PLAY-DEN-BUILD-PLAN, architect verdict 2 to 4): a second place to wait.
+		test("the den: a join from its waiting area waits there (anchor on the reply and the seat); out of it for 2 s is Strayed",function()
+			dash();local c=rig(1);c.den=DEN;c.run(1);local p=c.players[1]
+			p.root.Position=IN_DEN;c.run(.5)
+			local r=c.ask(1,"join",1);assert(r.ok and r.anchor=="den",tostring(r.reason))
+			assert(c.got(1,"joined")[1].anchor=="den"and c.host.director.heat.seats[1].anchor=="den")
+			c.run(3);assert(#c.host.director.heat.seats==1,"waiting in the den, 60 studs from the pad, is fine")
+			p.root.Position=Vector3.new(-6,7,-96);c.run(3);assert(#c.host.director.heat.seats==1,"the apron, within Stray")
+			p.root.Position=Vector3.new(-6,7,-85);c.run(1.5);assert(#c.host.director.heat.seats==1)
+			c.run(1);assert(c.host.director.heat==nil or #c.host.director.heat.seats==0)
+			assert(c.got(1,"refused")[1].reason=="Strayed"and p.board.dashHeld==nil)
+		end)
+		test("the den: at the countdown its seats are checked in the den (never Far from the pad, never Closer); the race runs",function()
+			dash();local c=rig(2);c.den=DEN;c.run(1)
+			c.players[1].root.Position=IN_DEN;c.run(.5)
+			assert(c.ask(1,"join",1).ok and c.ask(2,"join",1).ok)
+			assert(c.host.director.heat.seats[1].anchor=="den"and c.host.director.heat.seats[2].anchor==nil)
+			c.run(24);local heat=c.host.director.heat
+			assert(heat and heat.phase~="gather"and #heat.seats==2,"both locked in")
+			assert(#c.got(1,"refused")==0 and not c.got(1,"joined")[1].closer)
+		end)
+		test("the den closed: its waiters (a gather seat with no character, the line) leave as Closed; meadow waiters stay",function()
+			dash();local c=rig(10);c.den=DEN;c.run(1)
+			for id=1,10 do if id==1 or id==9 then c.players[id].root.Position=IN_DEN end end
+			c.run(.5);for id=1,10 do assert(c.ask(id,"join",1).ok)end;c.run(1)
+			assert(#c.host.director.queue==2 and c.host.director.queue[1].anchor=="den"and c.host.director.queue[2].anchor==nil)
+			local p=c.players[1];local character=p.Character;p.Character=nil
+			c.den=nil;c.run(1)
+			assert(c.got(1,"refused")[1].reason=="Closed"and c.got(9,"refused")[1].reason=="Closed")
+			assert(#c.host.director.heat.seats==7 and #c.host.director.queue==1 and #c.got(10,"refused")==0)
+			p.Character=character
+		end)
+		test("the meadow hop: nothing gathering is Missed (no race started); it joins the gathering race in its own mode; den off is today's join",function()
+			dash();local c=rig(3);c.den=DEN;c.run(1)
+			local r=c.ask(1,"join",1,{hop=true,mode="stats"});assert(not r.ok and r.reason=="Missed"and c.host.director.heat==nil)
+			assert(c.ask(2,"join",1,{mode="fun"}).ok and c.host.director.heat.mode=="fun")
+			c.run(.5);r=c.ask(1,"join",2,{hop=true,mode="stats"});assert(r.ok and #c.host.director.heat.seats==2 and c.host.director.heat.mode=="fun")
+			assert(c.host.director.heat.seats[2].anchor==nil,"a hop from the meadow waits at the meadow")
+			c.run(24);r=c.ask(3,"join",1,{hop=true});assert(not r.ok and r.reason=="Missed"and #c.host.director.queue==0,"never queued")
+			c.den=nil;c.run(60);r=c.ask(3,"join",2,{hop=true});assert(r.ok and c.host.director.heat and c.host.director.heat.phase=="gather","den closed: a plain join")
+		end)
 		test("an error in the host is contained; three and it closes itself, pets free",function()
+
 			dash();local c=rig(1);c.run(1);c.ask(1,"join",1);c.run(1);c.host.watch=function()error("boom")end
 			c.beat.fire();c.beat.fire();assert(c.players[1].board.dashHeld);c.beat.fire()
 			assert(c.host.dead and c.players[1].board.dashHeld==nil and c.garden.actors[1].dash==nil and #c.beat.list==0)

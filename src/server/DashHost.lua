@@ -22,6 +22,7 @@ local Guard=require(script.Parent.HatchGuard)
 local Mount=require(script.Parent.DashMount)
 local Ring=require(Shared.DashRing)
 local StatState=require(script.Parent.StatState)
+local Anchor=require(Shared.DashAnchor)
 
 local Host={};Host.__index=Host
 Host.JoinReach=12
@@ -39,7 +40,8 @@ Host.RetryMax=60
 Host.MaxErrors=3
 
 -- d: remotes, shared (the GardenState folder), room (workspace), garden, boards, players, nursery, economy,
--- canProgress(board), gardenInput(board), publishNursery(board), publishState(board), dayOf(now).
+-- canProgress(board), gardenInput(board), publishNursery(board), publishState(board), dayOf(now), and optionally den() ->
+-- the Play Den's layout while it is open (DenHost), else nil: a second place to wait (DashAnchor, PLAY-DEN-BUILD-PLAN).
 -- Specs may replace clock (), now(), guid(), seed(), remote(class, name), heartbeat, spawn, wait.
 function Host.mount(d)
 	if not Dash.ceiling()then return nil end
@@ -52,7 +54,7 @@ function Host.mount(d)
 		seed=d.seed or function()return math.floor(random:NextNumber()*4294967294)+1 end,
 		day=function()return d.dayOf(os.time())end,
 		prizes=Dash.prizes,warn=warn,
-		check=function(userId,stage)return self:check(userId,stage)end,
+		check=function(userId,stage,anchor)return self:check(userId,stage,anchor)end,
 		levels=function(userId)return self:levels(userId)end,
 		pet=function(userId)local board=self:board(userId);return board and board.profile.companionId end,
 		tag=function(userId,raceId)self:tag(userId,raceId)end,
@@ -80,6 +82,13 @@ function Host.mount(d)
 	return self
 end
 function Host:on()return not self.dead and Dash.on()end
+-- The den's layout while DenHost has it open, else nil (live: always nil).
+function Host:den()
+	local den=self.d.den
+	if not den then return nil end
+	local ok,layout=pcall(den)
+	return if ok then layout else nil
+end
 function Host:player(userId)return self.d.players:GetPlayerByUserId(userId)end
 function Host:board(userId)
 	local player=self:player(userId)
@@ -182,7 +191,8 @@ end
 
 -- Checks -----------------------------------------------------------------------------------------------------
 local function finite(value)return value==value and math.abs(value)<1e6 end
-function Host:check(userId,stage)
+-- anchor: "den" (waits in the Play Den) or nil (the meadow pad), from the director's record.
+function Host:check(userId,stage,anchor)
 	local d=self.d
 	local board=self:board(userId)
 	if not board or board.closing then return false,"Left"end
@@ -192,12 +202,18 @@ function Host:check(userId,stage)
 	if stage=="seat"then
 		return true
 	end
+	-- The Play Den closed: everyone waiting there leaves the line (character or not). Racers ("seat") race on.
+	local den=nil
+	if anchor==Anchor.Den then
+		den=self:den()
+		if not den then return false,"Closed"end
+	end
 	-- Beta 14 F2: a gather seat waits in the rope ring like the line. Only where the player stands counts here (no
 	-- save, pet or character checks: those come at the countdown); no character just now keeps the seat.
 	if stage=="gather"then
 		local root=self:root(board)
 		if not root then return true end
-		return self:line(userId,root.Position)
+		return self:line(userId,root.Position,anchor)
 	end
 	local handle=board.nursery
 	-- A save in flight must not cost a seat already taken or a place in line; a new join waits for it.
@@ -212,10 +228,16 @@ function Host:check(userId,stage)
 	if not root or not humanoid or humanoid.Health<=0 or not character:IsDescendantOf(workspace)then return false,"NoCharacter"end
 	local at,gate=root.Position,Mount.gate()
 	if not(finite(at.X)and finite(at.Y)and finite(at.Z))then return false,"Far"end
-	if stage=="queue"then return self:line(userId,at)end
-	local reach=if stage=="promote"then Host.QueueReach else Host.JoinReach
-	local far=Vector2.new(at.X-gate.X,at.Z-gate.Z).Magnitude
-	if far>reach or math.abs(at.Y-gate.Y)>Host.HeightReach then return false,"Far"end
+	if stage=="queue"then return self:line(userId,at,anchor)end
+	local far=0
+	if den then
+		local near,why=Anchor.reach(den,at)
+		if not near then return false,why end
+	else
+		local reach=if stage=="promote"then Host.QueueReach else Host.JoinReach
+		far=Vector2.new(at.X-gate.X,at.Z-gate.Z).Magnitude
+		if far>reach or math.abs(at.Y-gate.Y)>Host.HeightReach then return false,"Far"end
+	end
 	local actor=d.garden.actors[userId]
 	if not actor or actor.petId~=petId then return false,"NoPet"end
 	if actor.care or board.careEquip or board.careHeld then return false,"Carried"end
@@ -233,12 +255,13 @@ function Host:root(board)
 end
 -- The rope ring's rule for a player waiting (in the line or a gather seat), DashRing.rule: once their root has been
 -- inside Ring.Enter, more than Ring.Stray out for Ring.StraySeconds leaves the line ("Strayed"); before that the old
--- QueueReach holds. The latch starts fresh at every join (answer).
-function Host:line(userId,at)
+-- QueueReach holds. The latch starts fresh at every join (answer). In the Play Den: DashAnchor.rule (its waiting area).
+function Host:line(userId,at,anchor)
 	if not(finite(at.X)and finite(at.Y)and finite(at.Z))then return false,"Far"end
-	local gate=Mount.gate()
 	local rec=self.lines[userId]
 	if not rec then rec={};self.lines[userId]=rec end
+	if anchor==Anchor.Den then return Anchor.rule(rec,self:den(),at,self.clock())end
+	local gate=Mount.gate()
 	return Ring.rule(rec,Vector2.new(at.X-gate.X,at.Z-gate.Z).Magnitude,math.abs(at.Y-gate.Y),self.clock(),Host.QueueReach,Host.HeightReach)
 end
 -- Saved XP of the pet that is out: never a public attribute, never a packet.
@@ -329,12 +352,23 @@ function Host:answer(player,board,clean,reply)
 		or clean.characterId~=(board.characterGeneration or 0)then return reply(false,"StalePet")end
 	-- A join may come before the garden's first 2 Hz actor (as focus does); refresh only this one.
 	if board.mode=="Room"then self.d.garden:syncOne(userId,self.d.gardenInput(board))end
-	if clean.kind=="trial"then return reply(director:trial(userId))end
+	-- Where this player waits, from where they stand now (never from the client): the Play Den while it is open and
+	-- they are in its waiting area, else the meadow pad (nil). Kept on the director's record.
+	local root=self:root(board)
+	local anchor=if root and Anchor.pick(root.Position,self:den())==Anchor.Den then Anchor.Den else nil
+	local function answered(ok,reason,raceId)
+		local out=reply(ok,reason,raceId)
+		if ok and anchor then out.anchor=anchor end
+		return out
+	end
+	if clean.kind=="trial"then return answered(director:trial(userId,anchor))end
 	self.lines[userId]=nil -- a new wait: the ring's latch starts again
-	local ok,reason,raceId=director:join(userId,clean.mode)
+	-- A hop is the meadow's "Join race", only while the den is open.
+	local ok,reason,raceId=director:join(userId,clean.mode,clean.hop==true and self:den()~=nil,anchor)
 	director:flush()
-	return reply(ok,reason,raceId)
+	return answered(ok,reason,raceId)
 end
+
 function Host:input(player,packet)
 	if not self:on()or not self.isOpen then return end
 	local board=self.d.boards[player]
