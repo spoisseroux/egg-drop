@@ -77,10 +77,11 @@ return function(server)
 		end
 		return d
 	end
-	test("Studio R13 acceptance: water between every pair of stones and between each end stone and its landing, .35 at least",function()
+	-- The end stone to its landing is no longer a water gap (beta 18): the landing sits in the kerb, and the end stones'
+	-- waterline already runs under the kerb's water face (KerbFaces), so the landing is the bank there.
+	test("Studio R13 acceptance: water between every pair of stones, .35 at least",function()
 		local rows=Stones.Rows
-		local pairs_={{rows[1],rows[2]},{rows[2],rows[3]},{Stones.band(rows[1]),Stones.band(rows[2])},{Stones.band(rows[2]),Stones.band(rows[3])},
-			{rows[1],Stones.Landings[1]},{rows[3],Stones.Landings[2]}}
+		local pairs_={{rows[1],rows[2]},{rows[2],rows[3]},{Stones.band(rows[1]),Stones.band(rows[2])},{Stones.band(rows[2]),Stones.band(rows[3])}}
 		for _,pair in ipairs(pairs_)do
 			local a,b=pair[1],pair[2]
 			local d=Vector3.new(b.x-a.x,0,b.z-a.z)
@@ -141,12 +142,62 @@ return function(server)
 			assert(reach<=.3,landing.name.." "..reach)
 			assert(near(landing.top,Stones.Kerb+Stones.LandingLift))
 		end
+		-- Beta 18: each landing has its own collider, its width across, top .03 under its top, overlapping the end
+		-- stone's (no gap) and at most .5 over the lawn (4.0 by the kerb) and the end stone's collider.
+		for _,pair in ipairs({{Stones.Landings[1],rows[1]},{Stones.Landings[2],rows[3]}})do
+			local landing,stone=pair[1],pair[2]
+			local centre,depth,across,top=Stones.landingCollider(landing)
+			assert(across==landing.width and depth==1.2 and near(top,landing.top-.03)and near(centre.Y,top-.6))
+			local gap=Vector2.new(landing.x-stone.x,landing.z-stone.z).Magnitude-Stones.Collider.diameter/2-across/2
+			assert(gap<=0,landing.name.." collider gap "..gap)
+			local _,_,_,stoneTop=Stones.collider(stone)
+			assert(top-4<=.5 and top-stoneTop<=.5,landing.name.." step "..top)
+		end
 		-- The company stones stand clear of the walk and low.
 		for _,small in ipairs(Stones.Company)do
 			assert(small.top>=3.38-1e-9 and small.top<=3.6 and math.max(small.length,small.width)<=1.1)
 			for _,stone in ipairs(rows)do
 				assert(Vector2.new(small.x-stone.x,small.z-stone.z).Magnitude>Stones.Collider.diameter/2+small.length/2,small.name)
 			end
+		end
+	end)
+
+	-- Beta 18 (Studio R15 finding 3): the landings break the kerb. The kerb faces are the marble mesh's (KerbFaces).
+	local function kept(stone,point)
+		local d=Vector3.new(point.X-stone.x,0,point.Z-stone.z)
+		if d.Magnitude<1e-6 then return true end
+		return extent(stone,d.Unit)>=d.Magnitude
+	end
+	local function onLine(p,line)
+		local a,b=Vector3.new(line[1][1],0,line[1][2]),Vector3.new(line[2][1],0,line[2][2])
+		local t=(p-a):Dot(b-a)/(b-a):Dot(b-a)
+		return a+(b-a)*t
+	end
+	test("beta 18: each landing sits in the kerb: both faces under it for .6 either side of the crossing, long side along it",function()
+		for _,pair in ipairs({{Stones.Landings[1],Stones.KerbFaces.East},{Stones.Landings[2],Stones.KerbFaces.West}})do
+			local landing,kerb=pair[1],pair[2]
+			local a,b=kerb.inner[1],kerb.inner[2]
+			local along=Vector3.new(b[1]-a[1],0,b[2]-a[2]).Unit
+			-- The long side along the kerb (within 5 degrees).
+			local turn=math.rad(landing.turn)
+			local long=Vector3.new(math.cos(turn),0,-math.sin(turn))
+			assert(math.abs(long:Dot(along))>=math.cos(math.rad(5)),landing.name.." turn")
+			local centre=Vector3.new(landing.x,0,landing.z)
+			for k=-6,6 do
+				local p=centre+along*(k/10)
+				assert(kept(landing,onLine(p,kerb.inner)),landing.name.." water face shows at "..k/10)
+				assert(kept(landing,onLine(p,kerb.outer)),landing.name.." lawn face shows at "..k/10)
+			end
+			-- Not into the stream: its water edge at most .45 past the kerb's water face, on the crossing line.
+			local face=onLine(centre,kerb.inner)
+			local out=(face-centre).Unit
+			local past=extent(landing,out)-(face-centre).Magnitude
+			assert(past>=0 and past<=.45,landing.name.." past the face "..past)
+			-- The dome's rim clears the kerb's top (4.28) across the kerb: top minus the sag at the farthest kerb point.
+			local r=landing.ball*landing.length/2
+			local far=math.max((onLine(centre+along*.6,kerb.inner)-centre).Magnitude,(onLine(centre+along*.6,kerb.outer)-centre).Magnitude)
+			local sag=r-math.sqrt(r*r-far*far)
+			assert(landing.top-sag>=4.28+.02,landing.name.." rim "..(landing.top-sag))
 		end
 	end)
 
@@ -200,13 +251,17 @@ return function(server)
 		local room=Instance.new("Folder")
 		local model=Mount.build(room,{fete=true,carve=false})
 		assert(model:GetAttribute("Fete")==true and model:GetAttribute("Start")and model:GetAttribute("Finish"))
-		local colliders,props,beams,stones=0,0,0,0
+		local colliders,props,beams,stones,landings=0,0,0,0,0
 		for _,node in ipairs(model:GetDescendants())do
 			if node.ClassName=="Part"then
 				assert(node.Anchored==true and node.CanTouch==false,node.Name)
 				if node:GetAttribute("StoneCollider")then
 					colliders+=1
 					assert(node.CanCollide==true and node.Transparency==1 and near(node.Size.Y,2.9))
+				elseif node:GetAttribute("LandingCollider")then
+					landings+=1
+					assert(node.CanCollide==true and node.Transparency==1 and near(node.Size.Y,Stones.Landings[landings].width))
+					assert(node:GetAttribute("DashPart")==nil)
 				else
 					assert(node.CanCollide==false and node.CanQuery==false,node.Name)
 					if node.Parent==model then props+=1 end
@@ -216,6 +271,7 @@ return function(server)
 			if node.ClassName=="Model"and node:GetAttribute("Stone")then stones+=1 end
 		end
 		assert(colliders==3,colliders)
+		assert(landings==2,landings)
 		assert(props>=40 and props<=60,"props "..props)
 		assert(beams==6,"ropes "..beams) -- start rope, two drops, two guy lines; the finish rope
 		-- three stones, three bands, five company (R13), two landings

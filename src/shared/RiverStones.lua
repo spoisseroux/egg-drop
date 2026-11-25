@@ -3,8 +3,8 @@
 -- drifting leaves (LifeScene) both read. No instances, no services, no Random: every roll is a hash of the stone's seed,
 -- so the same stone is carved the same on every server.
 --   Rows       the three walkable stones (centres within .3 of DashCourse.Stones, where the hop is judged)
---   Company    three small stones off the row (not walkable), Landings: two flat stones set into the kerb line
---   Collider   one invisible cylinder per stone, players only (pets ignore the Dash model: PetFollow.ground)
+--   Company    three small stones off the row (not walkable), Landings: two flat stones set into the kerb (KerbFaces)
+--   Collider   one invisible cylinder per stone and per landing, players only (pets ignore the Dash model: PetFollow.ground)
 --   cuts(row)  the 5 to 7 cutting planes of the stone builder's GeometryService intersect
 --   Piers      the bridge piers the flow rings sit round [check] in Studio against W7_Bridge__marble
 local Stones={}
@@ -54,18 +54,30 @@ Stones.Company=table.freeze({
 	row("UpWest",.9,12.0,.9,.7,25,3.45,"#7C807B",71),
 	row("DownWest",2.6,7.9,.6,.5,-20,3.38,"#878580",73),
 })
--- Landings: one flat stone where the row meets each bank, set into the kerb line (its long side along the kerb), so the
--- kerb is broken where the crossing lands. Raised .03 over the kerb so the seam is the landing's edge [check] z-fight.
+-- The marble kerb where the crossing meets each bank (W7_Architecture__marble in assets/world/world-v7.fbx, top 4.28,
+-- foot 1.8, about 1.2 wide): its water face (inner) and lawn face (outer), two points each {x, z}, the stones' bank
+-- first. The end stones' waterline already runs under the inner face, so the landing is the bank there.
+Stones.KerbFaces=table.freeze({
+	East=table.freeze({inner=table.freeze({{8.13,8.44},{7.72,10.46}}),outer=table.freeze({{9.29,8.75},{8.90,10.63}})}),
+	West=table.freeze({inner=table.freeze({{.40,9.37},{.13,12.26}}),outer=table.freeze({{-.79,9.19},{-1.07,12.22}})}),
+})
+-- Landings: one flat stone where the row meets each bank, set INTO the kerb (beta 18, Studio R15 finding 3: at the
+-- kerb's lawn face the kerb stayed whole between landing and river): its long side along the kerb, its water edge .2 to .3
+-- past the kerb's water face, so for .6 studs or more either side of the crossing line both kerb faces are under the
+-- landing (the kerb is gone there) and you step from the landing to the first stone.
+-- Raised .12 over the kerb's top so the dome's rim (Ball 6 x: about .1 of sag at the edges) still clears the marble.
 -- A gently domed slab: Ball 6 x (R13: small, so even a failed cut cannot spread), the cuts through the footprint just
--- under the kerb's top.
-Stones.LandingLift=.03
+-- under the kerb's top. Each has its own walkable collider (Landing below).
+Stones.LandingLift=.12
 Stones.LandingBall=6
 Stones.Landings=table.freeze({
-	-- R13 acceptance (.35 of water between each end stone and the bank): .65 further out along the row than the look's
-	-- x 9.2 / -.2 [check] they still break the kerb.
-	row("LandingEast",9.85,8.6,2.4,1.6,90,4.3+.03,"#9A958C",61,6,4.2),
-	row("LandingWest",-.85,10.4,2.4,1.6,90,4.3+.03,"#968F86",67,6,4.2),
+	-- Turned to the kerb's own line (79 and 85 degrees); East's seed 64 (was 61) for a carve that covers the kerb on both
+	-- sides of the crossing line, not just one.
+	row("LandingEast",8.97,9.08,3.0,2.4,79,4.3+.12,"#9A958C",64,6,4.2),
+	row("LandingWest",-.64,10.26,3.0,2.4,85,4.3+.12,"#968F86",67,6,4.2),
 })
+-- A landing's collider: a Cylinder the landing's width across (inside its outline), top .03 under the landing's top.
+Stones.LandingCollider=table.freeze({below=.03,depth=1.2})
 -- The colliders (section 4, "Colliders"): 2.9 across, top .03 under the stone's top, 1.2 deep. Players only.
 Stones.Collider=table.freeze({diameter=2.9,below=.03,depth=1.2})
 -- Bridge piers for the flow rings (W7_Bridge__marble at (4, 21), 25.2 long in X): where its feet meet the water.
@@ -122,6 +134,12 @@ function Stones.collider(stone)
 	local C=Stones.Collider
 	local top=stone.top-C.below
 	return Vector3.new(stone.x,top-C.depth/2,stone.z),C.depth,C.diameter,top
+end
+-- A landing's collider, as Stones.collider: its centre, depth, diameter (the landing's width) and top.
+function Stones.landingCollider(landing)
+	local C=Stones.LandingCollider
+	local top=landing.top-C.below
+	return Vector3.new(landing.x,top-C.depth/2,landing.z),C.depth,landing.width,top
 end
 -- The cutting blocks of a stone as frames (the block's centre; its -Z face, toward the stone, is the cut) and their
 -- size: one per cut, standing OUTSIDE its face, and the floor block under the stone. For StoneBuilder and the specs.
