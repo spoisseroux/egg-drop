@@ -656,6 +656,10 @@ ui.onboarding.welcome.skip,Skip tutorial,,First-round coaching
 ui.onboarding.welcome.static,↓,,First-round coaching
 ui.park.ballOut,Ball is out,,Pet Park chip
 ui.park.count,Pets playing {count}/{capacity},,Pet Park chip; e.g. Pets playing 3/{capacity}
+ui.park.date.done,Play date done · +{reward} ★,,Pet Park chip; e.g. Play date done · +5 ★
+ui.park.date.games,Play date {count}/{target} · +{reward} ★,,Pet Park chip; e.g. Play date 3/3 · +5 ★
+ui.park.date.playing,Play date {count}/{target} · playing,,Pet Park chip; e.g. Play date 3/3 · playing
+ui.park.date.saving,Play date {count}/{target} · saving,,Pet Park chip; e.g. Play date 3/3 · saving
 ui.park.done,+{reward} ★ today,,Pet Park chip; e.g. +5 ★ today
 ui.park.fetchUnavailable,The ball needs a clear lane.,,Pet Park chip
 ui.park.fetchWait,Give them a moment.,,Pet Park chip

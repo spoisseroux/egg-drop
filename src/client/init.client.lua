@@ -4742,11 +4742,12 @@ do
    end,
    busy=function()return clientUI.anyModalOpen()==true or How.isOpen()or Confirm.isOpen()or clientUI.arrivalHatch:isOpen()end,
    compact=function()local camera=workspace.CurrentCamera;return camera~=nil and math.min(camera.ViewportSize.X,camera.ViewportSize.Y)<500 end,
-   chipHost=function()return if roomView.controls and roomView.controls.Parent then roomView.controls else nil end,
-   chipHidden=function()
-    local character=player.Character
-    local root=character and character:FindFirstChild("HumanoidRootPart")
-    return root~=nil and require(script.StationAttract).parkMember(root.Position)==true
+   -- Beta (17) U1: the egg's clock is the rail's status ticket (HudChips: ready > the play date > the clock), not a
+   -- chip above the dock, so nothing stacks over "Park full" or Throw bottom right.
+   status=function(data)return require(script.NotificationRail).status(script,require(script.NestClient).TicketKey,data)end,
+   narrow=function()
+    local Chips=require(script.HudChips)
+    return Chips.narrow(GuiService.TopbarInset.Width,Chips.NarrowEgg)
    end,
    focus=function()
     return roomView.focusing==true or roomView.focusTransitioning==true or(roomView.greetingCamera~=nil and roomView.greetingCamera~=false)

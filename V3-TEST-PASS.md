@@ -48,6 +48,8 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
+| 36 | **HUD chips: Play date, Park full, the egg in the top rail (beta 17 U1)** | Built offline 2026-11-25, not seen in Studio | The top ticket in a park says **Play date 0/3 · +4 ★** (then "· playing", "· saving", "Play date done · +4 ★"); on a phone just "Play date 0/3". Bottom right no longer says "Pets playing 3/9"; only **Park full** shows, when it is. The egg clock ("Egg 4 h") is a ticket in the top rail now, not above the dock: in a park the play date has the slot, elsewhere the egg; when the egg is ready, **Hatch egg!** in gold takes the slot anywhere; tap it for the trail to the nest. Nothing overlaps bottom right on any screen. Switch: Things to do off (`/todo off`) puts back "Games 0/3" and "Pets playing" (the egg ticket goes with the nest) |
+| 37 | **Flat sticker bubbles (beta 17 U7)** | Built offline 2026-11-25, not seen in Studio | The Bear's need bubble is flat cream with an ink outline and a darker lip under it: no shine, no grey shading, so it no longer looks like a turning ball. The nest's clock pill has the same lip. The icons are still the emoji (they have their own shine) until the six flat icons are uploaded. Switch: `/onboard needs off` hides the bubble |
 
 ## Scoped, not built
 

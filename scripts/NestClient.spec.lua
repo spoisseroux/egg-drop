@@ -3,7 +3,7 @@
 -- the only shadow, the sign carries the pet's name) and the egg at its growth look; Tuck in and Hatch go
 -- through the prompt's action; the reward shows only on `claimed`, never on the ask or a refusal; a refused claim settles
 -- back and waits; the next egg lands after the hatch; the switch going off clears everything within a frame; nestPlace
--- names where the Bear's prints end; the chip counts down.
+-- names where the Bear's prints end; the rail ticket counts down.
 -- Usage (Client): require(PlayerScripts.Client.ZZSpecs.NestClient)(PlayerScripts.Client); offline in
 -- scripts/run_dash_server_specs.py (DASH_SPECS="NestClient").
 return function(client)
@@ -49,11 +49,24 @@ return function(client)
 		if options.remotes~=false then r.event=r.add(Client.Event);r.claim=r.add(Client.Claim)end
 		r.player={CharacterAdded=signal()}
 		r.world=Instance.new("Folder")
-		r.host=Instance.new("Frame")
+		-- A fake rail status slot (NotificationRail.status): update merges, cancel takes it off.
+		r.tickets={}
+		local function status(data)
+			local ticket={data=data,cancelled=false,updates=0}
+			function ticket:update(values)for k,v in pairs(values)do self.data[k]=v end;self.updates+=1 end
+			function ticket:cancel()self.cancelled=true end
+			table.insert(r.tickets,ticket)
+			return ticket
+		end
+		function r.live()
+			local n=0
+			for _,ticket in ipairs(r.tickets)do if not ticket.cancelled then n+=1 end end
+			return n
+		end
 		local deps={remotes=r.remotes,world=r.world,player=r.player,step=false,now=function()return r.now end,
 			root=function()return r.at end,free=function()return r.open end,busy=function()return r.menu end,
-			reduced=function()return r.still==true end,compact=function()return r.small end,chipHost=function()return r.host end,
-			focus=function()return r.focus==true end,chipHidden=function()return r.inPark==true end,
+			reduced=function()return r.still==true end,compact=function()return r.small end,status=status,
+			focus=function()return r.focus==true end,narrow=function()return r.narrow==true end,
 			ground=options.ground,measure=function(text,size)return #text*size*.5 end,show=function()r.shows+=1 end,
 			toast=function(text,stars)table.insert(r.toasts,{text=text,stars=stars})end,
 			audio={play=function(_,name)table.insert(r.sounds,name);return true end}}
@@ -90,7 +103,7 @@ return function(client)
 		assert(r.client and not r.client.isOpen and #r.sent==0)
 		assert(#r.event.OnClientEvent.list==0 and #r.remotes.ChildAdded.list==0,"nothing bound")
 		r.fire(state(0));r.step(1)
-		assert(r.folder()==nil and #r.sent==0 and r.client:place3D()==nil and #r.host:GetChildren()==0)
+		assert(r.folder()==nil and #r.sent==0 and r.client:place3D()==nil and r.live()==0)
 		Onboard.inject(ON);r.client:sync()
 		assert(r.client.isOpen and r.count("sync")==1,"switch on: asks for the nest")
 		Onboard.inject(nil)
@@ -253,10 +266,10 @@ return function(client)
 	test("the switch going off clears everything within a frame; on again draws on the next packet",function()
 		local r=rig()
 		r.fire(state(60));r.client:step(0)
-		assert(r.folder()~=nil and #r.host:GetChildren()==1)
+		assert(r.folder()~=nil and r.live()==1)
 		Onboard.inject(OFF)
 		r.client:step(.016)
-		assert(r.folder()==nil and #r.host:GetChildren()==0 and not r.client.isOpen and r.client:place3D()==nil)
+		assert(r.folder()==nil and r.live()==0 and not r.client.isOpen and r.client:place3D()==nil)
 		r.fire(state(60));assert(r.folder()==nil,"nothing while off")
 		Onboard.inject(ON);r.client:sync()
 		assert(r.count("sync")==2)
@@ -359,36 +372,41 @@ return function(client)
 		assert(math.abs(onPet.client:place3D().Y-(SPOT.Y+1))<1e-6,"the hit on the pet is ignored")
 		Onboard.inject(nil)
 	end)
-	test("the chip: 7 h, 40 min, Ready!; gold when ready; above the dock, never wider; hidden in the park",function()
+	test("beta (17) U1: the egg ticket in the rail: Egg 7 h, Hatch egg! in gold above the play date, 4 h on a narrow bar",function()
 		assert(Client.chipText(7*3600-5)==UICopy.get("onb3.nest.chipHours",{hours=7})and Client.chipText(40*60)==UICopy.get("onb3.nest.chipMinutes",{minutes=40})and Client.chipText(0)==UICopy.get("onb3.nest.chipReady"))
 		assert(Client.chipText(3601)==UICopy.get("onb3.nest.chipHours",{hours=2})and Client.chipText(3600)==UICopy.get("onb3.nest.chipMinutes",{minutes=60})
 			and Client.chipText(1)==UICopy.get("onb3.nest.chipMinutes",{minutes=1}),"rounded up, never 0")
+		assert(Client.ticketText(7*3600-5,true)==UICopy.get("onb3.strip.short.h",{hours=7})and Client.ticketText(40*60,true)==UICopy.get("onb3.strip.short.m",{minutes=40})
+			and Client.ticketText(0,true)==UICopy.get("onb3.nest.chipReady"),"narrow: the word Egg drops, Hatch egg! stays")
+		assert(not string.find(Client.ticketText(3600*5,true),"Egg",1,true),"narrow: no Egg")
+		local Chips=require(client.HudChips)
+		assert(Client.TicketPriority.ready==Chips.Priority.ready and Client.TicketPriority.clock==Chips.Priority.clock,"one priority table")
+		assert(Chips.Priority.ready>Chips.Priority.date and Chips.Priority.date>Chips.Priority.clock,"Hatch egg! > play date > the clock")
+		assert(Chips.Priority.ready<1,"never above the first-spend guide (1) or the race line (2)")
 		local r=rig()
 		r.fire(state(3600));r.client:step(0)
-		local chip=r.client.chip
-		assert(chip and chip.button.Parent==r.host and chip.label.Text==UICopy.get("onb3.nest.chipHours",{hours=7})and chip.width>0)
-		assert(chip.ready==false)
+		assert(#r.tickets==1,"one ticket")
+		local ticket=r.tickets[1]
+		local d=ticket.data
+		assert(d.text==UICopy.get("onb3.nest.chipHours",{hours=7})and d.image==Client.Assets.chip and d.kind=="info"and d.tone=="plain",d.text)
+		assert(d.priority==Chips.Priority.clock and d.active==true and d.label==Client.how(r.client.view),"the clock, named")
+		assert(type(d.activate)=="function")
+		local shows=r.shows;d.activate();assert(r.shows==shows+1,"a tap lays the Show me trail")
+		local updates=ticket.updates
+		r.client:step(0);r.client:step(0)
+		assert(ticket.updates==updates,"no update while nothing changed")
 		r.now=NOW;r.fire(state(Nest.Seconds));r.client:step(0)
-		assert(chip.label.Text==UICopy.get("onb3.nest.chipReady")and chip.ready==true and chip.pill.BackgroundColor3==Client.Color.stars)
-		r.small=true;r.client:step(0)
-		assert(r.client.chip~=chip and #r.host:GetChildren()==1 and r.client.chip.hit==44,"phone: rebuilt, 44 px hit")
-		assert(r.client.chip.button:GetAttribute("AccessibleLabel")==Client.how(r.client.view),"the chip names the egg")
-		r.inPark=true;r.client:step(0);assert(r.client.chip.button.Visible==false,"the park's lane");r.inPark=false
-		r.client:step(0);assert(r.client.chip.button.Visible==true)
-		-- The 568 x 250 phone (touch: the dock 102 px off the bottom, 12 in from the right): the chip above the dock,
-		-- inside its width, under the top bar, clear of the save line on the dock's row (x < dock.x - 8).
-		local W,H=568,250
-		local dock={x=W-12-104,y=H-102-48,w=104,h=48}
-		for _,text in ipairs({"8 h","40 min","Ready!"})do
-			local rect=Client.chipRect(dock,Client.chipWidth(18,#text*13*.6),44)
-			assert(rect.x>=dock.x and rect.x+rect.w==dock.x+dock.w,text..": inside the dock's width")
-			assert(rect.y+rect.h<=dock.y-Client.ChipGap and rect.y>=36,text..": above the dock, under the top bar")
-		end
-		local wide=Client.chipRect(dock,300,36)
-		assert(wide.w==dock.w,"never wider than the dock")
-		local desk={x=1280-16-104,y=720-16-48,w=104,h=48}
-		local rect=Client.chipRect(desk,Client.chipWidth(22,3*14*.6),36)
-		assert(rect.y+rect.h<desk.y and rect.x>=desk.x and rect.w<=88,"desktop: about 76 px for 8 h, above the dock")
+		assert(#r.tickets==1 and d.text==UICopy.get("onb3.nest.chipReady")and d.tone=="gold"and d.priority==Chips.Priority.ready,"ready: gold, wins the slot")
+		r.narrow=true;r.client:step(0)
+		assert(d.text==UICopy.get("onb3.nest.chipReady"),"ready reads the same on a narrow bar")
+		-- U7: the pill's drawn lip: under it, ink, fading with it, never lit.
+		local egg=r.client.egg
+		assert(egg.pillLip and egg.pillLip.ZIndex<(egg.pill.ZIndex or 1)and egg.pillLip.BackgroundColor3==Client.Color.ink)
+		for _,o in ipairs(egg.board:GetDescendants())do assert(not o:IsA("UIGradient"),"no gradient on the pill")end
+		r.client:paintPill()
+		assert(egg.alpha~=nil and math.abs(egg.pillLip.BackgroundTransparency-(1-Client.PillLipOpacity*(1-egg.alpha)))<1e-6,"the lip fades with the pill")
+		r.client:clear()
+		assert(ticket.cancelled and r.client.ticket==nil,"the nest going clears the ticket")
 		Onboard.inject(nil)
 	end)
 	test("the ready ping: once per egg within 14 studs; Inside only within 8 (beta 14 Q2: in the one pill)",function()
