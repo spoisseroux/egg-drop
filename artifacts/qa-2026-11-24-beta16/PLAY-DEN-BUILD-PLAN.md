@@ -377,3 +377,30 @@ and `W7C_CD_*` need no code (they are island parts). No den number is in code fo
 10. Evacuate racers on `/den off` mid-race (my pick, the floor closes), or hold the close until the results?
 11. Board text in step A, or wait for A2's board art?
 12. Music duck inside (about 50%): leave for A2 with the sound (my pick)?
+
+---
+
+## 10. As built, step A (Opus, 2026-11-24, after the architect's GO WITH CHANGES)
+
+- **Clients follow `Den_open`** (DenHost writes it after `open=true`, clears it first on close). `PlayDen.isOpen()` reads
+  it; DenClient, `DashClient.promptState` and the Things den row use it. Missing = today's "Race" picker.
+- **Waiting area** `DenLayout.inWait`: the mouth's width (x -14.8..2.9) from the back (z -114.5) out to z -97, from
+  floorY - 2 up to the roof (15 in the pocket), so cliff-top roots never count. Strays: out by more than 2 for 2 s. With
+  the den closed, every den waiter (gather seat or line, character or not) gets `Closed`; racers race on.
+- **Anchor lifetime:** on the director's seat, line and trial records (`anchor` field), passed to every `check`.
+- **Hop:** `Director:join(userId, mode, hop, anchor)`: nothing gathering is `Missed` before any gather starts; full is
+  `Full`; wrong band is `WrongBand`; the race keeps its own mode. A hop with the den closed is a plain join.
+- **Deck table:** `if not roomView.busy and not clientUI.roomOverlayOpen() then roomView:requestSwitch(clientUI.playDeck) end`;
+  `clientUI.playDeck` and `clientUI.roomOverlayOpen` are the HUD button's own callbacks, lifted out unchanged.
+- **Close order:** `Den_open` cleared, everyone in the room, the waiting area, the pets' floor or the blocker's volume
+  (slack 1) moved to the doorstep (seated or racing too), their pets carried, then the blocker restored.
+- **Pets' floor** includes the apron strip from the mouth to z -88.5 (past the home Floor's -89 margin).
+- **Pocket numbers moved to the grid's flat floor** (x -10..-6 is 4.0; the grid rises at x -12 and -4 and past z -112):
+  gate (-10, -105) facing east, niche (-9.6, -111.6), table (-6.4, -111.4); gate-to-table prompts 7.4 apart.
+  Only the gate posts, lantern and board posts and the stump collide in the pocket.
+- **Step B contract** (`DenLayout.fromData`, schema 1): `CliffDenData = {schema = 1, den = {floorY, roofY, room = {min,
+  max}, mouth = {x1, x2, z, top}, sign = {at, facing}, board = {at, facing}, pin, doorstep = {at, facing, landing},
+  lanterns = 4 x {at, post}, bays = 5 x {at, facing}}}` (points as {x, y, z}; bay kinds by order: dash, niche, deck,
+  niche, niche). A mismatch or a missing field is no layout: the den stays closed with one warning. DenHost opens only a
+  `CaveBlocker` that sits on `den.mouth`'s line (within 3) and spans it; the world builds and closes it (architect 7).
+- **Not in step A** (A2, Fable): board text, the mat, music duck, room tone, art.

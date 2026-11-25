@@ -199,10 +199,17 @@ local Table={
   reason={Far="Come closer to the gate",NoPet="Bring your pet with you",NoCharacter="Try again in a moment",Carried="Put your pet down first",Busy="Your pet is busy",
    Petting="Your pet is busy",Hatching="Finish hatching first",Saving="Saving. Try again soon",Queued="You're in line for the next race!",WrongBand="That race is for other levels. You're next!",
    Full="The line is full",Off="The race has stopped",Error="The race has stopped",Empty="The race has stopped",Deck="You left the race",Left="You left the race",
-   PetChanged="You changed pets",AlreadySeated="You're already in",Throttled="One moment",StalePet="Try again in a moment",other="Can't race right now"}},
+   PetChanged="You changed pets",AlreadySeated="You're already in",Throttled="One moment",StalePet="Try again in a moment",other="Can't race right now",
+   -- The Play Den (PLAY-DEN-BUILD-PLAN): the meadow's hop found no race gathering; the den closed while you waited there.
+   Missed="That race has started",Closed="The Play Den closed"},
+  -- The Play Den: the meadow pad's prompt while the den is open (it only hops into a race that is gathering).
+  join="Join race"},
+ -- The Play Den (PLAY-DEN-BUILD-PLAN, step A): the sign over the cave mouth and the prompts' object names.
+ den={name="The Play Den",board="Notice board",table="Pocket Deck"},
  -- Things to do (V3-THINGS-TO-DO-PLAN-2026-11-22): the Pocket menu tile, its page and the trail's marker.
  things={title="Things to do",new="New",play="Play",show="Show me",tile={line="Every game in the garden",short="Things"},
   deck={name="Pocket Deck",line="Play a round"},
+  den={name="The Play Den",line="Games inside the cave"},
   dash={gather="Race: {count} of 8",live="A race is on",idle="Start a race",prizes="Stars races today: {done} of {total}"},
   finds={name="Garden finds",waiting="{count} finds waiting",one="1 find waiting",later="Come back later",done="All found today"}},
  -- Garden finds (V3-FINDS-BUILD-PLAN-2026-11-22): the trail's marker and the Smarts a find paid.

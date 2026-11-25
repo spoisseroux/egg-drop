@@ -33,6 +33,8 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "Hush", "HushConfig", "HushHost", "IslandBounds", "IslandBoundsHost",
          # The upper tier, greybox T0 (UPPER-TIER-BUILD-PLAN).
          "Tier", "TierConfig", "TierHost",
+         # The Play Den, step A (PLAY-DEN-BUILD-PLAN).
+         "PlayDen", "DenConfig", "DenHost",
          # The egg corner (EGG-CORNER-BUILD-PLAN): its numbers and switches.
          "EggCorner",
          # The Sleepy Nest landmark (NEST-LANDMARK-LOOK): its numbers and states.
@@ -43,7 +45,7 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
 CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "DashHud", "DashClient", "DashSheets", "DeckResultsLayout", "FocusRow", "TipChime",
           "FindsClient", "ThingsTrail", "ThingsTips", "LifeSim", "GardenLife", "Wind", "AliveBudget", "AmbientAudio",
           "BearNeeds", "FollowBear", "NestClient", "TomorrowStrip", "GardenHourPets", "AeroKit",
-          "HushClient", "DashLine", "WorldFeel", "LifeSceneSim", "LifeScene", "WorldMotion",
+          "HushClient", "DenClient", "DashLine", "WorldFeel", "LifeSceneSim", "LifeScene", "WorldMotion",
           "GroundDressing", "LifePet", "EggMachineClient"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
@@ -74,6 +76,8 @@ def client_modules():
                     "PetNightSurfaces.lua", "PetMaterial*.lua",
                     # The Hush: the passage's fade and the region effects.
                     "HushClient.lua",
+                    # The Play Den: its prompts.
+                    "DenClient.lua",
                     # Beta 14 garden life: the arch chimes (WorldMotion).
                     "WorldMotion.lua", "WorldDressingClient.lua",
                     # The egg corner: the machine's motion, cranks and reveal hold.

@@ -41,6 +41,8 @@ local GardenWalkability=require(ReplicatedStorage.Shared.GardenWalkability)
 local PetCatchup=require(ReplicatedStorage.Shared.PetCatchup)
 local Hush=require(ReplicatedStorage.Shared.Hush)
 local Tier=require(ReplicatedStorage.Shared.Tier)
+local PetFloors=require(ReplicatedStorage.Shared.PetFloors)
+local DenLayout=require(ReplicatedStorage.Shared.DenLayout)
 local GardenPathPlanner=require(ReplicatedStorage.Shared.GardenPathPlanner)
 local PetAppearance = require(script.PetAppearance)
 local StoreService = require(script.StoreService)
@@ -130,6 +132,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.CatchupConf
 task.spawn(function()local ok,problem=pcall(function()require(script.HushConfig).start()end);if not ok then warn("[Hush] config not started: "..tostring(problem))end end)
 -- The upper tier off switch (TierConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.TierConfig).start()end);if not ok then warn("[Tier] config not started: "..tostring(problem))end end)
+-- The Play Den off switch (DenConfig): the same way, one key. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.DenConfig).start()end);if not ok then warn("[Den] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
 local gardenShared = child("Folder", "GardenState", ReplicatedStorage)
 local trays = child("Folder", "EggDropBoards", ReplicatedStorage)
@@ -223,13 +227,17 @@ local gardenScene
 local hushHost
 -- The upper tier (TierHost, mounted below): its own `open` flag is what Tier.covers reads. nil on live.
 local tierHost
+-- The Play Den (DenHost, mounted below): its layout while it is open is what the pet floor, catch-up, the island bounds
+-- and Garden Dash read (denHost:live()). nil on live.
+local denHost
+local function denLive()return if denHost~=nil then denHost:live()else nil end
 local sceneWatch -- the one DescendantAdded listener of the current garden scene (beta and Studio only)
 local function petAnchor(state)
 	local room=workspace:FindFirstChild("EggDropLounge")
 	local floor=room and room:FindFirstChild("Floor")
 	if not floor or not state.root then return nil end
 	local position=state.position-state.root.CFrame.LookVector*3+state.root.CFrame.RightVector*2.6
-	if not Hush.onPetFloor(floor,position,hushHost~=nil and hushHost.open)or Tier.covers(position,tierHost~=nil and tierHost.open)then return nil end
+	if not PetFloors.ok(floor,position,hushHost~=nil and hushHost.open,tierHost~=nil and tierHost.open,denLive())then return nil end
 	local params=RaycastParams.new();params.RespectCanCollide=true
 	params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
 	local hit=workspace:Raycast(position+Vector3.new(0,8,0),Vector3.new(0,-80,0),params)
@@ -275,7 +283,7 @@ local function validWander(input,target,from)
  local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
  if not floor or typeof(target)~="Vector3"or typeof(from)~="Vector3"then return nil end
  gardenScene()
- if not Hush.onPetFloor(floor,target,hushHost~=nil and hushHost.open)or Tier.covers(target,tierHost~=nil and tierHost.open)then return nil end
+ if not PetFloors.ok(floor,target,hushHost~=nil and hushHost.open,tierHost~=nil and tierHost.open,denLive())then return nil end
  for _,station in ipairs(wanderScene.stations)do if station.Parent and Vector2.new(target.X-station.Position.X,target.Z-station.Position.Z).Magnitude<3 then return nil end end
  local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
  local hit=workspace:Raycast(target+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
@@ -319,13 +327,18 @@ local function catchupLanding(input,racing)
 	if typeof(anchor)~="Vector3"then return nil end
 	-- With no garden scene nothing can be checked: refuse (resolveGardenTarget would hand the spot back unchecked).
 	if not gardenScene()then return nil end
+	-- More safe ground while it is open: the Hush's, the Play Den's (its floor clear of the furniture).
+	local hushSafe=if hushHost~=nil and hushHost.open then Hush.safeCell else nil
+	local den=denLive()
+	local extraSafe=hushSafe
+	if den then extraSafe=function(x,z)return(hushSafe~=nil and hushSafe(x,z))or DenLayout.safeCell(den,x,z)end end
 	local facing=nil
 	local root=input.root
 	if root and root.Parent then local look=root.CFrame.LookVector;facing=Vector3.new(look.X,0,look.Z)end
 	for _,candidate in ipairs(PetCatchup.candidates(anchor,facing))do
 		local spot=resolveGardenTarget(candidate,nil)
 		if typeof(spot)=="Vector3"and PetCatchup.flat(spot,candidate)<=.5 and math.abs(spot.Y-anchor.Y)<=PetCatchup.Rise
-			and PetCatchup.clear(spot.X,spot.Z,racing,anchor,if hushHost~=nil and hushHost.open then Hush.safeCell else nil)then return spot end
+			and PetCatchup.clear(spot.X,spot.Z,racing,anchor,extraSafe)then return spot end
 	end
 	return nil
 end
@@ -353,7 +366,7 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
 	validFocus=function(input,target)
 		local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
 		if not floor then return false end
-		if not Hush.onPetFloor(floor,target,hushHost~=nil and hushHost.open)or Tier.covers(target,tierHost~=nil and tierHost.open)then return false end
+		if not PetFloors.ok(floor,target,hushHost~=nil and hushHost.open,tierHost~=nil and tierHost.open,denLive())then return false end
 		local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
 		local hit=workspace:Raycast(target+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
 		return hit~=nil and math.abs(hit.Position.Y+.025-target.Y)<.3
@@ -931,6 +944,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() if not require(script.HushConfig).command(message) and garden.hushHost then garden.hushHost:command(board, message) end end) end)
 		-- "/tier <on|off|clear>": the upper tier switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.TierConfig).command(message) end) end)
+		-- "/den <on|off|clear>": the Play Den switch, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.DenConfig).command(message) end) end)
 		-- "/freshsave" and "/freshsave restore": the owner's next join is a brand-new save, or the old one again
 		-- (beta (12) QA T1). One pointer write and a kick; FreshSave refuses unless ProgressKey's gate is open.
 		player.Chatted:Connect(function(message) pcall(function() require(script.FreshSave).command(player, message) end) end)
@@ -2171,7 +2186,7 @@ do
 	local ok, problem = pcall(function()
 		garden.dashHost = require(script.DashHost).mount({ remotes = remotes, shared = gardenShared, room = workspace, garden = garden,
 			boards = boards, players = Players, nursery = Nursery, economy = Economy, canProgress = canProgress, gardenInput = gardenInput,
-			publishNursery = publishNursery, publishState = publishState, dayOf = Daily.dayOf })
+			publishNursery = publishNursery, publishState = publishState, dayOf = Daily.dayOf, den = denLive })
 	end)
 	if not ok then warn("[Dash] not mounted: " .. tostring(problem)) end
 end
@@ -2206,8 +2221,14 @@ do
 				return Lounge.spawnFrame(board.player.UserId % 5 + 1, view.humanoid, view.root, workspace:FindFirstChild("EggDropLounge"))
 			end,
 			regions = function()
-				if tierHost ~= nil and tierHost.open then return Tier.BoundsRegions end
-				return if hushHost ~= nil and hushHost.open then Hush.BoundsRegions else nil
+				-- Every open extra region together (the tier, the Play Den, the Hush); nil when none, as before.
+				local out = nil
+				local function add(list) if list then out = out or {}; for _, region in ipairs(list) do table.insert(out, region) end end end
+				if tierHost ~= nil and tierHost.open then add(Tier.BoundsRegions) end
+				local den = denLive()
+				if den then add(DenLayout.boundsRegions(den)) end
+				if hushHost ~= nil and hushHost.open then add(Hush.BoundsRegions) end
+				return out
 			end })
 		garden.boundsHost = host
 		if host then Lounge.moved = function(player) host:moved(player) end end
@@ -2237,6 +2258,20 @@ do
 	end)
 	if not ok then warn("[Tier] not mounted: " .. tostring(problem)) end
 end
+-- The Play Den, step A (FeatureFlags.PlayDen, PLAY-DEN-BUILD-PLAN): nil and nothing made with the build ceiling off. The
+-- greybox, the open cave, the pets' floor; the switch off moves everyone in there (and their pets) to the doorstep first.
+do
+	local ok, problem = pcall(function()
+		denHost = require(script.DenHost).mount({ boards = boards, garden = garden,
+			room = function() return workspace:FindFirstChild("EggDropLounge") end,
+			carry = function(board, spot) board.groundAnchor = spot; return garden:carry(board.player.UserId, spot) end,
+			arrived = function(player, spot) if garden.boundsHost then garden.boundsHost:arrived(player, spot) end end,
+			hushOpen = function() return hushHost ~= nil and hushHost.open == true end })
+		garden.denHost = denHost
+	end)
+	if not ok then warn("[Den] not mounted: " .. tostring(problem)) end
+end
+
 
 -- Levels matter: when the runtime switch flips, every player gets a fresh snapshot (medal credit) and
 -- board attributes (deck juice). Only this server writes the attribute; it is not read here.

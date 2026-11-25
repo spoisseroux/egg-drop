@@ -657,18 +657,26 @@ end
 local function isPickerOpen()
 	return picker ~= nil and picker.shade.Visible
 end
-local roomView = RoomView.new(gui, backdrop, board, audio, function()
+-- The Deck button's own path (RoomView runs it through requestSwitch); the Play Den's table runs the same one.
+function clientUI.playDeck()
 	-- Garden Dash: opening the Deck gives up a seat, so it asks first (nil unless Dash is on).
 	if clientUI.dash and clientUI.dash:askLeave(function()cancelHatchNavigation();request:FireServer("mode","Board");clientUI.accepted("confirm")end)then return end
 	cancelHatchNavigation()
 	request:FireServer("mode", "Board");clientUI.accepted("confirm")
+end
+-- An overlay over the garden (RoomView's overlayOpen; the Play Den's table asks it too).
+function clientUI.roomOverlayOpen()
+	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
+		or (clientUI.dash ~= nil and (clientUI.dash:held() or clientUI.dash:panelOpen()))
+end
+local roomView = RoomView.new(gui, backdrop, board, audio, function()
+	clientUI.playDeck()
 end, function()
 	if openPicker()then clientUI.accepted("confirm")end
 end, function()
 	if openJournal()then clientUI.accepted("confirm")end
 end, function()
-	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
-		or (clientUI.dash ~= nil and (clientUI.dash:held() or clientUI.dash:panelOpen()))
+	return clientUI.roomOverlayOpen()
 end, reduceEffects, function() if openNursery then openNursery() end end)
 roomView.onShowMode=function(mode)clientUI.shownMode=mode;clientUI.refreshInsets()end
 clientUI.petContactRemote=remotes:WaitForChild("PetContact")
@@ -1774,6 +1782,15 @@ openMenu = function(options)
 		{focus=options.focus,slideFrom=options.slideFrom})
 end
 roomView.onOpenMenu=function()if openMenu()then clientUI.accepted("confirm")end end
+-- The Play Den's notice board: the Pocket menu straight on its Things to do page.
+function clientUI.openThings()
+	if openMenu()then
+		clientUI.accepted("confirm")
+		pcall(function()gameMenu:openPage()end)
+		return true
+	end
+	return false
+end
 -- Stars store access (STARS-STORE-ACCESS-PLAN-2026-11-21.md; Spencer: "clicking the stars icon
 -- opens a store to buy stars?"). One route for the header wallet and the "need more Stars"
 -- card: close whatever menu is up (never as "back", which would reopen the hub over the store),
@@ -5056,6 +5073,10 @@ do
    return if root and humanoid and humanoid.Health>0 then root.Position else nil
   end
   local function dashNow()return if Dash.on()and clientUI.dash then clientUI.dash:summary()else nil end
+  -- The Play Den while it is open (Den_open) and its layout resolved, else nil.
+  local PlayDen=require(ReplicatedStorage.Shared.PlayDen)
+  local DenLayout=require(ReplicatedStorage.Shared.DenLayout)
+  local function denNow()return if PlayDen.isOpen()then DenLayout.current()else nil end
   local function findsNow()return if Finds.on()and clientUI.finds then clientUI.finds:summary()else nil end
   -- The waiting pad, where the race's prompt is: the same numbers the gate is built from.
   local function dashGate()
@@ -5099,7 +5120,7 @@ do
     local saved=type(state.finds)=="table"and state.finds or {}
     finds={waiting=finds.waiting,count=tonumber(saved.count)or 0,limit=tonumber(saved.limit)or Finds.DailyLimit}
    end
-   return{park=Attract.parkAnchor()~=nil,playDate=state.playDate,finds=finds,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new()}
+   return{den=denNow()~=nil,park=Attract.parkAnchor()~=nil,playDate=state.playDate,finds=finds,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new()}
   end
   function things.seen(id)
    if id=="dash"and Things.on()and not Coach.has(clientUI.coach.mask,"dashSeen")then clientUI.coach:mark("dashSeen")end
@@ -5126,8 +5147,17 @@ do
     if not(finds and finds.nearest)then return false end
     return trail:start({position=finds.nearest,name=Copy.get("finds.name")})
    end
-   if dashNow()==nil then return false end
+   local den=denNow()
+   if id=="den"then return den~=nil and trail:start({position=den.pin,name=Copy.get("things.den.name")})end
+   local race=dashNow()
+   if race==nil then return false end
+   -- The Play Den open: the race is picked at its gate, so Show me leads there, or to the meadow pad while one gathers.
+   if den and race.phase~="gather"then
+    local at=DenLayout.prompts(den).gate
+    if at then return trail:start({position=Vector3.new(at.X,den.floorY,at.Z),name=Copy.get("dash.title")})end
+   end
    return trail:start({position=dashGate(),name=Copy.get("dash.title")})
+
   end
   function things.act(id)
    if not Things.on()or not closeMenu then return false end
@@ -5322,6 +5352,25 @@ do
  end)
  if not ok then warn("[Things] not mounted: "..tostring(problem))end
  end)()
+end
+-- The Play Den, step A (Shared.PlayDen, PLAY-DEN-BUILD-PLAN): nothing at all with the build ceiling off; it follows
+-- Den_open (the room really open). The gate, the Deck table and the notice board's prompts.
+do
+ local ok,problem=pcall(function()
+  local Things=require(ReplicatedStorage.Shared.Things)
+  clientUI.den=require(script.DenClient).mount({
+   dash=function()return clientUI.dash end,
+   -- The table: exactly as the Deck button (RoomView runs it through requestSwitch, never mid-switch or under an overlay).
+   deck=function()if not roomView.busy and not clientUI.roomOverlayOpen()then roomView:requestSwitch(clientUI.playDeck)end end,
+   things=function()return clientUI.openThings()end,
+   thingsOn=function()return Things.on()end,
+   free=function()
+    return board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy
+     and roomView.canRoam()==true and clientUI.anyModalOpen()~=true
+   end})
+  if clientUI.den then gui.Destroying:Connect(function()clientUI.den:destroy()end)end
+ end)
+ if not ok then warn("[Den] not mounted: "..tostring(problem))end
 end
 layout()
 updateHud()
