@@ -12,7 +12,7 @@
 local MODELS = {
 	{ slice = "den", id = 93629425333486 },
 	{ slice = "path", id = 132211469689954 },
-	{ slice = "terrace", id = 94964737287819 },
+	{ slice = "terrace", id = 127139808708242 },
 }
 
 local InsertService = game:GetService("InsertService")

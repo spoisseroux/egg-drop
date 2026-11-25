@@ -159,7 +159,10 @@ function Mount.world(world,env)
 			table.insert(made,p)
 		end
 		for _,bush in ipairs(tufts(slice.tufts or {},env))do table.insert(made,bush)end
-		for _,crown in ipairs(crowns(slice.kitCrowns or {},env))do table.insert(made,crown)end
+		-- the kit crowns are part of the slice (code review E2): all of them, or the slice waits
+		local got=crowns(slice.kitCrowns or {},env)
+		if #got<#(slice.kitCrowns or {})then warn("[WorldFinish] "..name..": the Aero kit crowns are missing; left as it is");continue end
+		for _,crown in ipairs(got)do table.insert(made,crown)end
 		-- ropes: each span sags in four segments between its stakes' tops (the Dash ring's rope look)
 		local R=slice.rope
 		for i,span in ipairs(slice.ropes or {})do

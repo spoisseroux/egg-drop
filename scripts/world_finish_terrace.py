@@ -30,6 +30,7 @@ Y = 29.0
 HALF = (38.0, 22.0)
 PARK = ((0.0, 5.0), 13.0)               # the Top Lawn's circle: kept clear
 LOOKOUT = (-33.0, 16.0)
+TREE = (20.0, -12.0)
 
 
 def T(s, t, y=Y):
@@ -91,9 +92,11 @@ def cap_and_face():
     # the lip: a ring 0.6 down, 0.4 further out
     base = len(cap_v)
     lip_ring = []
-    for (s_, t_) in ol:
+    for k, (s_, t_) in enumerate(ol):
         ln = math.hypot(s_, t_) or 1
-        lip_ring.append(T(s_ + s_ / ln * .4, t_ + t_ / ln * .4, Y - .55))
+        # Fable E1 1: the rim's drop varies 0.4 to 1.2 so no run reads as a ruled line
+        drop = .8 + .4 * math.sin(k * .55 + 1.1) * math.cos(k * .21)
+        lip_ring.append(T(s_ + s_ / ln * .4, t_ + t_ / ln * .4, Y - drop))
     cap_v += lip_ring
     last = 1 + (len(rings) - 1) * n
     for i in range(n):
@@ -171,12 +174,15 @@ def earth_patch():
 
 def outcrops_and_slab():
     """Three low outcrops (the old clumps, now boulders) and the lookout slab, one rock mesh."""
+    # Fable E1 6: three distinct outcrops, sunk 15 to 25%: a cluster of three (5 high, 9 wide), a single (3 high), a low
+    # shelf (2 high) at the north-east end
     blobs = []
-    for (s_, t_), r in (((-12.0, -19.0), (4.0, 2.4, 2.6)), ((6.0, -19.5), (3.4, 2.0, 2.4)), ((-35.0, -9.0), (2.8, 2.2, 4.0))):
+    ridge = math.atan2(-S.TIER_D[1], S.TIER_D[0])
+    for (s_, t_), r, sink, tilt in (((-13.0, -19.0), (3.2, 3.1, 2.8), .2, .08), ((-9.6, -19.8), (2.2, 2.4, 2.2), .25, -.1),
+                                    ((-15.8, -18.2), (1.9, 1.8, 1.8), .2, .15), ((7.0, -19.6), (2.4, 2.0, 2.2), .15, .05),
+                                    ((-35.0, -7.0), (2.6, 1.3, 4.6), .2, 0.0)):
         x, _, z = T(s_, t_)
-        blobs.append(((x, Y + r[1] * .6, z), r, math.atan2(-S.TIER_D[1], S.TIER_D[0]), .05))
-        x2, _, z2 = T(s_ + 2.5, t_ + 1.0)
-        blobs.append(((x2, Y + r[1] * .3, z2), (r[0] * .6, r[1] * .6, r[2] * .7), .4, -.05))
+        blobs.append(((x, Y + r[1] * (1 - 2 * sink), z), r, ridge + .3 * tilt, tilt))
     rocks = Pth.rock_mass("W7_F_TerraceRocks__cliff_rock", blobs, target=1400, floor_y=Y - .3)
     # the lookout slab: a flat stone 7 x 5, 0.35 thick, its top at 29.3
     slab = Pth.Mesh("W7_F_TerraceSlab__boulder_rock")
@@ -216,7 +222,8 @@ def trunk():
     """The tree's trunk: 9 tall, 1.1 across at the base tapering to 0.6, a slight lean (local, base at y 0)."""
     v, f = [], []
     n = 8
-    for y, r, dx in ((-.5, .6, 0), (3, .45, .1), (6, .36, .25), (9, .3, .4)):
+    # Fable E1 8: a flared foot (1.6 across) tapering to 0.7, leaning about 4 degrees
+    for y, r, dx in ((-.5, .8, 0), (1.2, .52, .08), (5, .42, .35), (9, .35, .62)):
         for k in range(n):
             a = 2 * math.pi * k / n
             v.append((dx + r * math.cos(a), y, r * math.sin(a)))
@@ -230,16 +237,20 @@ def trunk():
 def lip_layout(ol):
     """Kit lip stones along the garden side (t over 20), gaps 2 to 6, off the arrival (s 24 to 36) and the lookout's
     6-stud gap (s -36 to -30)."""
+    # Fable E1 5: groups of two or three (kit 1 to 4: 0.8 to 1.5 showing), gaps 2 to 6 between groups, yaw varied,
+    # sunk 0.2 more
     rnd = np.random.default_rng(121)
     out, s_ = [], -36.0
     while s_ < 37:
-        kit = int(rnd.integers(1, 6))
-        length = Pth.LIP_KIT[kit - 1][0]
-        if not (24 <= s_ <= 36 or -36.5 <= s_ <= -29.5):
-            x, _, z = T(s_, HALF[1] + 1.0)
-            out.append({"kit": kit, "at": [round(x, 3), Y - .05, round(z, 3)],
-                        "yaw": round(math.atan2(-S.TIER_D[1], S.TIER_D[0]) + math.radians(rnd.uniform(-15, 15)), 4)})
-        s_ += length + float(rnd.uniform(2, 6))
+        for _ in range(int(rnd.integers(2, 4))):
+            kit = int(rnd.integers(1, 5))
+            length = Pth.LIP_KIT[kit - 1][0]
+            if not (24 <= s_ <= 36 or -36.5 <= s_ <= -29.5):
+                x, _, z = T(s_ + length / 2, HALF[1] + 1.0 + float(rnd.uniform(-.3, .3)))
+                out.append({"kit": kit, "at": [round(x, 3), Y - .25, round(z, 3)],
+                            "yaw": round(math.atan2(-S.TIER_D[1], S.TIER_D[0]) + math.radians(rnd.uniform(-25, 25)), 4)})
+            s_ += length + float(rnd.uniform(.2, .6))
+        s_ += float(rnd.uniform(2, 6))
     return out
 
 
@@ -262,10 +273,12 @@ def plants():
 
 
 def outcrop_boxes():
-    """Collision for the outcrops (players): one box each, inside the drawn rock, 4 high."""
+    """Collision for the outcrops (players): one box each, inside the drawn rock; and the tree's trunk (code review E1:
+    the greybox pole it replaces collided)."""
     yaw = math.atan2(-S.TIER_D[1], S.TIER_D[0])
-    out = []
-    for (s_, t_), size in (((-12.0, -19.0), (6.4, 3.6, 3.6)), ((6.0, -19.5), (5.4, 3.0, 3.2)), ((-35.0, -9.0), (4.2, 3.2, 6.0))):
+    tx, _, tz = T(*TREE)
+    out = [{"kind": "trunk", "c": [round(tx, 3), Y + 4.5, round(tz, 3)], "s": [1.2, 9.0, 1.2], "yaw": 0.0}]
+    for (s_, t_), size in (((-12.6, -19.0), (8.0, 4.4, 4.0)), ((7.0, -19.6), (3.6, 2.6, 3.2)), ((-35.0, -7.0), (4.0, 1.6, 7.0))):
         x, _, z = T(s_, t_)
         out.append({"kind": "outcrop", "c": [round(x, 3), Y + size[1] / 2, round(z, 3)], "s": list(size), "yaw": round(yaw, 4)})
     return out

@@ -73,11 +73,16 @@
  "terrace": {
   "model": {
    "file": "world-finish-terrace.fbx",
-   "sha256": "69c262d52a8eee93ebcdc16e00c53bdaf0192ca0b0e480bdf3a5b840077f8527",
-   "manifestSha256": "a0196d315c97d0234febe0bf153a546456070999d022dd885b1b6db2acdd4107",
-   "operation": "d7aa8e41-20d9-461e-a8f9-728bced13e46",
-   "assetId": "94964737287819",
-   "moderation": "Approved"
+   "sha256": "0561448ebe2e951688211b06763a1103cf6a3bcf4fc4c3e0d71eb50d1ffe2b63",
+   "manifestSha256": "2dee18cb94b3bade4f735c63439ee7b67a286768bcff94759aa3aeabe7db976a",
+   "operation": "7d74c9a6-0b86-4dac-abd8-bc344e726682",
+   "assetId": "127139808708242",
+   "moderation": "Approved",
+   "superseded": {
+    "assetId": "94964737287819",
+    "operation": "d7aa8e41-20d9-461e-a8f9-728bced13e46",
+    "why": "Fable E1 fixes (rim, outcrops, lips, trunk) after upload"
+   }
   },
   "images": {}
  }
