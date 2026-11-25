@@ -1,0 +1,19 @@
+{
+  "uploaded": "2026-11-25",
+  "creator": {"userId": "10716920546"},
+  "made_by": "scripts/synth_machine_sounds.py (original synthesis, fixed seeds, byte-identical runs)",
+  "note": "The egg machine's capsule-shot cues. Beta only: BoardAudio gives them a voice under the onboarding v3 ceiling.",
+  "assets": {
+    "crank_click_1": 80145630517471,
+    "crank_click_2": 103028779427056,
+    "crank_click_3": 95185845064038,
+    "egg_tok_1": 115718671572041,
+    "egg_tok_2": 133278151407385,
+    "egg_tok_3": 116348629619722,
+    "crank_clunk": 126573816533590,
+    "egg_roll": 131591846822206,
+    "screen_tuck": 98215509809194,
+    "screen_rise": 123805069909569,
+    "cup_shine": 88645313518761
+  }
+}

@@ -136,11 +136,30 @@ do
   if id then assetIds[cue]=id;table.insert(cues,cue)end
  end
 end
--- The egg corner's machine (EggMachineClient; EGG-CORNER-LOOK 2): no files yet, so no voice and play() is a quiet no-op
--- until their ids land here. The landing thud is `land`.
-for _,cue in ipairs({"egg_tok_1","egg_tok_2","egg_tok_3","crank_click_1","crank_click_2","crank_click_3","crank_clunk","egg_roll",
- "screen_tuck","screen_rise","cup_shine"})do -- the capsule shot (beta 17 U5)
- Audio.PendingCues[cue]=true
+-- The egg corner's machine (EggMachineClient; EGG-CORNER-LOOK 2, the capsule shot CAPSULE-AND-HUD-LOOK U5). Original
+-- synthesis (scripts/synth_machine_sounds.py, assets/audio/custom/egg_drop_<cue>.wav), uploaded 2026-11-25, not heard by
+-- Spencer yet. Each file peaks at -3 dBFS; Machine.Volume sets the level. The landing thud is `land`. Only where the
+-- machine can exist (the onboarding v3 ceiling: the beta place and Studio): the live game makes no voice for them, and
+-- a cue without a voice is a quiet no-op.
+Audio.MachineIds=table.freeze({
+ crank_click_1=80145630517471,crank_click_2=103028779427056,crank_click_3=95185845064038,
+ egg_tok_1=115718671572041,egg_tok_2=133278151407385,egg_tok_3=116348629619722,
+ crank_clunk=126573816533590,egg_roll=131591846822206,
+ screen_tuck=98215509809194,screen_rise=123805069909569,cup_shine=88645313518761,
+})
+function Audio.machineCeiling()
+ local ok,on=pcall(function()
+  return require(game:GetService("ReplicatedStorage"):WaitForChild("Shared",5):WaitForChild("EggCorner",5)).ceiling()
+ end)
+ return ok and on==true
+end
+do
+ local built=Audio.machineCeiling()
+ for _,cue in ipairs({"egg_tok_1","egg_tok_2","egg_tok_3","crank_click_1","crank_click_2","crank_click_3","crank_clunk","egg_roll",
+  "screen_tuck","screen_rise","cup_shine"})do
+  Audio.PendingCues[cue]=true
+  if built then assetIds[cue]=Audio.MachineIds[cue];table.insert(cues,cue)end
+ end
 end
 for _,kind in ipairs({"bear","toy","hue","material","feature"})do
  local id=DisplayAssets.Audio["hatch_"..kind]
