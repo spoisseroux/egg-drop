@@ -91,7 +91,7 @@ return function(client,parent)
   local gui=Instance.new("ScreenGui");gui.Name="_CoachSpec";gui.Parent=parent
   local board=Instance.new("Frame");board.Size=UDim2.fromOffset(400,600);board.Parent=gui
   local sent,learned={},{}
-  local cards=Cards.new({gui=parent,boardParent=board,z=5,send=function(id)table.insert(sent,id)end,learned=function(s)learned[s]=true end})
+  local cards=Cards.new({flags={},gui=parent,boardParent=board,z=5,send=function(id)table.insert(sent,id)end,learned=function(s)learned[s]=true end})
   local ok,problem=pcall(function()
    cards:place(UDim2.new(),UDim2.fromOffset(400,600))
    assert(cards.gui.DisplayOrder>=14 and cards.gardenView.root.Selectable==false and cards.skip.Selectable==false,"no gamepad selection taken")
@@ -228,7 +228,7 @@ return function(client,parent)
  test("QA v775: a card is open: the garden side stands still (pure clock)",function()
   local gui=Instance.new("ScreenGui");gui.Name="_CoachHoldSpec";gui.Parent=parent
   local sent,opened={},0
-  local cards=Cards.new({gui=parent,send=function(id)table.insert(sent,id)end,tour=function()opened+=1;return true end})
+  local cards=Cards.new({flags={},gui=parent,send=function(id)table.insert(sent,id)end,tour=function()opened+=1;return true end})
   local ok,problem=pcall(function()
    local open={}
    local function step(t,extra)
@@ -260,7 +260,7 @@ return function(client,parent)
   local Rail=require(client.NotificationRail);local How=require(client.HowItWorks)
   local RunService=game:GetService("RunService")
   local gui=Instance.new("ScreenGui");gui.Name="_CoachCalmSpec";gui.Parent=parent
-  local cards=Cards.new({gui=parent,send=function()end})
+  local cards=Cards.new({flags={},gui=parent,send=function()end})
   local ok,problem=pcall(function()
    local open={};local clock=0
    -- v2 tickets: the coach's own lines on the row (other lines may show beside them).

@@ -29,9 +29,11 @@ Notice.ById=table.freeze({
  -- The first egg, and bond.
  firstSpend=define("hatch","star","egg","hatch"),
  bond=define("companions","paw","smiley","companions"),
+ -- Growth cuts (2026-11-25): the garden's Tomorrow line (TomorrowStrip).
+ tomorrow=define("quests","check","quests","quests"),
 })
 Notice.Order=table.freeze({"welcome","firstStars","locked","machines","hub","quest","customize","fillLine","item",
- "questDone","questReady","questClaimed","firstSpend","bond"})
+ "questDone","questReady","questClaimed","firstSpend","bond","tomorrow"})
 Notice.Targets=table.freeze({"quests","hatch","companions","menu"})
 -- Values every line can be filled from when the caller has none.
 Notice.Defaults=table.freeze({pet="your pet",reward="",quest="A quest"})

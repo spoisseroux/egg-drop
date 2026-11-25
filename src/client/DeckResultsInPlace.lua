@@ -6,6 +6,9 @@ local Copy=require(Shared.UICopy)
 local Kit=require(script.Parent.DeckKit)
 local C=require(script.Parent.CelebrationKit)
 local Balls=require(Shared.BallThemes)
+local Flags=require(Shared.FeatureFlags)
+-- Growth cuts (2026-11-25): the TOMORROW strip (TomorrowStrip) and the next-egg nudge (StarterBonus).
+local Chips=require(script.Parent.TomorrowChips)
 local View={};View.__index=View
 local ORDER={1,3,5,2} -- Replay, difficulty, Hatch eggs, Back to garden.
 local function text(parent,name,value,size,color)
@@ -64,6 +67,16 @@ function View.new(owner,v)
  local root=Instance.new("Frame");root.Name="InPlaceResults";root.Size=UDim2.fromScale(1,1);root.BackgroundTransparency=1;root.BorderSizePixel=0;root.ClipsDescendants=true;root.ZIndex=50;root.Parent=owner.host;self.root=root;Kit.paint(root,"BackgroundColor3","well")
  local l,r=v.left,v.right
  local m=if l.h==r.h and l.y==r.y then{x=v.center.x,y=l.y,w=v.center.w,h=l.h}else v.center
+ -- Growth cuts (TomorrowStrip, PC/tablet/console): a 36 px row at the LCD's foot across the three panes, which
+ -- each give up 42 px (the strip's height and its 6 px gap). Reserved whenever the switch is on; it stays empty
+ -- while the round saves. Phones keep their panes and get a block in the Payout pane instead (paint).
+ if Flags.TomorrowStrip==true and not v.phone then
+  local bottom=math.max(l.y+l.h,r.y+r.h,m.y+m.h)
+  local top=bottom-Chips.Height
+  local function cut(rect)return{x=rect.x,y=rect.y,w=rect.w,h=math.max(48,math.min(rect.h,top-Chips.Gap-rect.y))}end
+  l,r,m=cut(l),cut(r),cut(m)
+  self.stripRect={x=l.x,y=top,w=(r.x+r.w)-l.x,h=Chips.Height}
+ end
  self.regions={left=l,right=r,middle=m}
  self.left=pane(root,"PayoutRegion",l);self.right=pane(root,"OutcomeRegion",r);self.middle=pane(root,"StarRegion",m)
  self.payout=scroll(self.left,"PayoutRows");self.goals=scroll(self.right,"Goals")
@@ -90,7 +103,7 @@ function View.new(owner,v)
  self.payout.Size=UDim2.new(1,0,1,-34)
  self.payoutTitle=labelAt(self.payout,"Payout","Payout",12,"soft",pad,8,l.w-2*pad,16)
  self.rows={};self.amounts={}
- for i=1,4 do
+ for i=1,5 do -- growth cuts: a fifth row for the Welcome bonus (the list scrolls)
   self.rows[i]=labelAt(self.payout,"Row"..i,"",13,"text",pad,30+(i-1)*26,l.w-2*pad-self.amountWidth-4,22)
   local amount=labelAt(self.payout,"Amount"..i,"",13,"text",l.w-pad-self.amountWidth,30+(i-1)*26,self.amountWidth,22)
   amount.TextXAlignment=Enum.TextXAlignment.Right;amount.TextWrapped=false;self.amounts[i]=amount
@@ -134,9 +147,104 @@ function View.new(owner,v)
  self.face=owner.buildStarFace(self.star,starSize)
  self.count=labelAt(self.middle,"RewardCount","",if narrow then 24 else 32,"stars",6,m.h-foot+4,m.w-12,34);self.count.TextXAlignment=Enum.TextXAlignment.Center;self.count.TextWrapped=false
  self.saved=labelAt(self.middle,"Saved","",12,"soft",8,m.h-26,m.w-16,18);self.saved.TextXAlignment=Enum.TextXAlignment.Center
+ -- Growth cuts (TomorrowStrip): the strip's tray (a CanvasGroup so it fades as one) and its today-chip hits, which
+ -- sit on the root (outside the group's clip) and take input only once the strip has faded in.
+ if self.stripRect then
+  local s=self.stripRect
+  local strip=Instance.new("CanvasGroup");strip.Name="TomorrowStrip";strip.BackgroundTransparency=.05;strip.BorderSizePixel=0
+  strip.Position=UDim2.fromOffset(s.x,s.y);strip.Size=UDim2.fromOffset(s.w,s.h);strip.GroupTransparency=1;strip.ZIndex=root.ZIndex+1;strip.Parent=root
+  Kit.corner(strip,10);Kit.stroke(strip,nil,1,.75);Kit.paint(strip,"BackgroundColor3","raised")
+  self.strip=strip
+ end
+ self.stripHits={};self.phoneLines={}
  root.Destroying:Connect(function()self:hide()end)
  self.ring=Kit.focusRing(owner.host)
  return self
+end
+-- A new results screen in a reused view: the strip waits for this round's count-up, the focus rule runs again.
+function View:reset()
+ self.countEnded=nil;self.hatchFocused=nil
+end
+local function chipHit(self,parent,name,x,y,w,h)
+ local hit=Instance.new("TextButton");hit.Name=name;hit.Text="";hit.AutoButtonColor=false;hit.BackgroundTransparency=1;hit.BorderSizePixel=0
+ hit.Selectable=false;hit.Position=UDim2.fromOffset(x,y);hit.Size=UDim2.fromOffset(w,h);hit.ZIndex=parent.ZIndex+5;hit.Parent=parent
+ hit:SetAttribute("TomorrowChip",true)
+ hit.Activated:Connect(function()
+  if not hit.Active or not self.owner.visible or(self.data and self.data.pending)then return end
+  local callback=self.owner.callbacks.quests
+  if callback then callback()end
+ end)
+ table.insert(self.stripHits,hit)
+ return hit
+end
+local function clearStrip(self)
+ for _,hit in ipairs(self.stripHits)do hit:Destroy()end
+ self.stripHits={}
+ for _,item in ipairs(self.phoneLines)do item:Destroy()end
+ self.phoneLines={}
+ if self.strip then for _,child in ipairs(self.strip:GetChildren())do if child:GetAttribute("StripItem")then child:Destroy()end end end
+end
+local function signature(model,pending)
+ if pending or not model then return "none"end
+ local parts={}
+ for _,group in ipairs({model.before,model.after})do for _,chip in ipairs(group)do table.insert(parts,chip.id..":"..chip.text..":"..chip.color)end;table.insert(parts,"|")end
+ return table.concat(parts,";")
+end
+-- PC row: the laid-out chips, the eyebrow between today's and tomorrow's. Rebuilt only when its words change.
+function View:paintStrip(data)
+ if not self.strip then return end
+ local model=if data.tomorrow then data.tomorrow.wide else nil
+ local key=signature(model,data.pending)
+ if key==self.stripKey then return end
+ self.stripKey=key;clearStrip(self)
+ self.stripModel=if key=="none"then nil else model
+ if not self.stripModel then self.countEnded=nil;return end
+ local s=self.stripRect
+ local layout=Chips.layout(model,s.w,function(text,size)return Kit.measure(text,"BodyMedium",size).X end)
+ for index,item in ipairs(layout.items)do
+  if item.kind=="eyebrow"then
+   local t=Kit.text(self.strip,"BodyMedium",Copy.get("tomorrow.label"),"soft",{Name="Eyebrow",TextSize=Chips.EyebrowSize,Position=UDim2.fromOffset(item.x,0),Size=UDim2.fromOffset(item.w+4,s.h)})
+   t:SetAttribute("StripItem",true)
+  else
+   local chip=item.chip
+   local icon=Kit.icon(self.strip,chip.icon,Chips.Icon,chip.color);icon.Position=UDim2.fromOffset(item.x,math.floor((s.h-Chips.Icon)/2));icon:SetAttribute("StripItem",true)
+   local label=Kit.text(self.strip,"BodyMedium",chip.text,chip.color,{Name="Chip_"..chip.id,TextSize=Chips.TextSize,TextWrapped=false,
+    Position=UDim2.fromOffset(item.x+Chips.Icon+Chips.IconGap,0),Size=UDim2.fromOffset(item.w-Chips.Icon-Chips.IconGap+4,s.h)})
+   label:SetAttribute("StripItem",true)
+   if chip.today then
+    local hit=chipHit(self,self.root,"TomorrowHit"..index,s.x+item.x-4,s.y+math.floor(s.h/2-Chips.Hit/2),item.w+8,Chips.Hit)
+    hit.Active=false;hit.Interactable=false
+   end
+  end
+ end
+end
+-- Phone block (in the Payout pane, where the TODAY line sits): today lines first (full-width 44 px hits), then
+-- the eyebrow and one line a chip. Returns its height (0 when there is no block).
+function View:paintPhoneBlock(data,y)
+ local model=if data.tomorrow then data.tomorrow.phone else nil
+ local key=signature(model,data.pending)..":"..y
+ if key==self.stripKey then return self.phoneHeight or 0 end
+ self.stripKey=key;clearStrip(self)
+ if data.pending or not model then self.phoneHeight=0;return 0 end
+ local P=Chips.Phone;local pad=10;local lw=self.view.left.w
+ local at=y
+ local function line(chip,today)
+  local h=if today then P.todayLine else P.line
+  local icon=Kit.icon(self.payout,chip.icon,P.icon,chip.color);icon.Position=UDim2.fromOffset(pad,at+math.floor((h-P.icon)/2))
+  local label=labelAt(self.payout,"Chip_"..chip.id,chip.text,P.text,chip.color,pad+P.icon+5,at,lw-2*pad-P.icon-5,h)
+  label.TextYAlignment=Enum.TextYAlignment.Center;label.TextWrapped=false;label.TextTruncate=Enum.TextTruncate.AtEnd
+  table.insert(self.phoneLines,icon);table.insert(self.phoneLines,label)
+  if today then chipHit(self,self.payout,"TomorrowHit_"..chip.id,0,at+math.floor(h/2-P.hit/2),lw,P.hit)end
+  at+=h
+ end
+ for _,chip in ipairs(model.before)do line(chip,true)end
+ if #model.after>0 then
+  local eyebrow=labelAt(self.payout,"TomorrowEyebrow",Copy.get("tomorrow.label"),P.eyebrow,"soft",pad,at+2,lw-2*pad,16)
+  table.insert(self.phoneLines,eyebrow);at+=18
+  for _,chip in ipairs(model.after)do line(chip,false)end
+ end
+ self.phoneHeight=at-y
+ return self.phoneHeight
 end
 function View:reduced()
  local value=self.owner.options.reduce
@@ -160,6 +268,8 @@ function View:paint(data)
   row.Visible=item~=nil;amount.Visible=item~=nil
   if item then
    row.Text=item.name
+   -- Growth cuts: the Welcome bonus row reads in gold.
+   Kit.paint(row,"TextColor3",if item.gold then "stars"else "text");Kit.paint(amount,"TextColor3",if item.gold then "stars"else "text")
    amount.Text=(if item.signed then "+"else "")..tostring(item.amount)
    local height=math.max(22,math.ceil(Kit.measure(row.Text,"BodyMedium",row.TextSize,nameWidth).Y*row.LineHeight)+4)
    row.Position=UDim2.fromOffset(pad,y);row.Size=UDim2.fromOffset(nameWidth,height)
@@ -168,21 +278,32 @@ function View:paint(data)
   end
  end
  if not data.pending and(data.earned or 0)==0 then
-  self.rows[1].Visible=true;self.rows[1].Text=Copy.get("results.inPlace.noStars");self.rows[1].Size=UDim2.fromOffset(lw-2*pad,40)
+  self.rows[1].Visible=true;self.rows[1].Text=Copy.get("results.inPlace.noStars");self.rows[1].Size=UDim2.fromOffset(lw-2*pad,40);Kit.paint(self.rows[1],"TextColor3","text")
   self.amounts[1].Visible=false;y=30+46
  end
  self.rule.Position=UDim2.fromOffset(pad,y);self.rule.Size=UDim2.fromOffset(lw-2*pad,1)
  self.total.Position=UDim2.fromOffset(pad,y+8);self.total.Text=Copy.get("results.inPlace.total",{count=if data.pending then "…"else data.total or data.earned or 0})
  self.today.Position=UDim2.fromOffset(pad,y+36);self.today.Text=Copy.get("results.today.line",{count=data.todayEarned or 0})
+ -- Growth cuts (TomorrowStrip): on a phone the TOMORROW block takes the TODAY line's place (it looks forward;
+ -- that line looked back) and the stat gains move under it. No snapshot: today's line, as before.
+ local below=0
+ if self.view.phone and Flags.TomorrowStrip==true and data.tomorrow then
+  self.today.Visible=false
+  local h=self:paintPhoneBlock(data,y+34)
+  below=math.max(0,h-18)
+ else
+  self.today.Visible=true
+  self:paintStrip(data)
+ end
  local parts=data.stats or {}
  self.statsTitle.Visible=#parts>0;self.statsGains.Visible=#parts>0
  if #parts>0 then
   local Toasts=require(script.Parent.StatToasts)
   local lines={}
   for _,part in ipairs(parts)do table.insert(lines,Toasts.resultsRich({part}))end
-  self.statsTitle.Position=UDim2.fromOffset(pad,y+60)
+  self.statsTitle.Position=UDim2.fromOffset(pad,y+60+below)
   self.statsGains.Text=table.concat(lines,"\n");Kit.localizeRich(self.statsGains)
-  self.statsGains.Position=UDim2.fromOffset(pad,y+78);self.statsGains.Size=UDim2.fromOffset(lw-2*pad,#parts*17+4)
+  self.statsGains.Position=UDim2.fromOffset(pad,y+78+below);self.statsGains.Size=UDim2.fromOffset(lw-2*pad,#parts*17+4)
  end
  local rw=self.view.right.w
  local tight=self.tightGoals==true
@@ -207,7 +328,29 @@ function View:paint(data)
  Kit.setText(self.buttons[5],Copy.get("results.inPlace.hatch"))
  Kit.setText(self.buttons[2],Copy.get(if self.grid or self.view.right.w<145 then "results.leave.narrow"else "results.leave.wide"))
  for id,button in pairs(self.buttons)do Kit.setEnabled(button,if id==2 then data.canLeave~=false else not data.pending)end
- self.saved.Text=Copy.get(if data.pending then "results.saved.pending"else "results.saved.done")
+ if Flags.StarterBonus==true then
+  -- Growth cuts: once saved, the next egg's line ("Customization Egg: you have enough!") in place of "Tucked into
+  -- your wallet"; gold when it is enough; up to two lines in a narrow Star column. No egg on sale: no line.
+  local line=data.nextLine
+  local value=if data.pending then Copy.get("results.saved.pending")elseif line then line.text else ""
+  self.saved.Text=value
+  Kit.paint(self.saved,"TextColor3",if not data.pending and line and line.ready then "stars"else "soft")
+  local m=self.regions.middle
+  local two=Kit.measure(value,"BodyMedium",12).X>m.w-16
+  self.saved.Position=UDim2.fromOffset(8,if two then m.h-34 else m.h-26);self.saved.Size=UDim2.fromOffset(m.w-16,if two then 30 else 18)
+  -- Ready in a Welcome bonus round: Hatch eggs is the gold button and takes the default focus once.
+  local primary=data.hatchPrimary==true
+  if self.hatchPrimary~=primary then
+   self.hatchPrimary=primary
+   Kit.setVariant(self.buttons[5],if primary then "primary"else "secondary");Kit.setVariant(self.buttons[1],if primary then "secondary"else "primary")
+  end
+  if primary and not data.pending and not self.hatchFocused then
+   self.hatchFocused=true
+   if self.owner.focus==1 or self.owner.focus==2 then self.owner.focus=5 end
+  end
+ else
+  self.saved.Text=Copy.get(if data.pending then "results.saved.pending"else "results.saved.done")
+ end
  self.star.setMode(if self.owner.zeroPayout(data)then "glass"else "gold")
  self:paintFocus();self:paintCount(if self.owner.feedback.active then {counted=self.owner.feedback.counted} else nil)
 end
@@ -283,6 +426,20 @@ function View:step()
   local p=if reduced then 1 else math.clamp((t-E.star[1])/E.star[2],0,1)
   self.star.scale.Scale=if p>=1 then 1 else .55+.45*backOut(p)
   self.settled=reduced or t>=1
+ end
+ -- Growth cuts (TomorrowStrip): the strip arrives last, 1 s after the count-up ends (fade, and an 8 px rise
+ -- unless Reduced Motion); its today-chip hits take input only once it is in.
+ if self.strip then
+  if self.stripModel and not self.owner.feedback.active then self.countEnded=self.countEnded or os.clock()
+  elseif not self.stripModel then self.countEnded=nil end
+  local e=if self.countEnded then Chips.entry(os.clock()-self.countEnded)else 0
+  local s=self.stripRect
+  local alpha=1-e
+  if self.strip.GroupTransparency~=alpha then self.strip.GroupTransparency=alpha end
+  local y=s.y+(if reduced then 0 else math.floor(Chips.Rise*(1-e)+.5))
+  if self.strip.Position.Y.Offset~=y then self.strip.Position=UDim2.fromOffset(s.x,y)end
+  local live=e>=1
+  for _,hit in ipairs(self.stripHits)do if hit.Active~=live then hit.Active=live;hit.Interactable=live end end
  end
  -- The Star turns all the way round (45 degrees a second, from the moment the results
  -- open); its face rides the front and hides while the back is showing.

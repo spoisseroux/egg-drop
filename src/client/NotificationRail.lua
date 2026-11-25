@@ -182,6 +182,10 @@ local function paintKind(t,kind,glyph)
  if spec.icon then
   t.icon=Kit.icon(t.disc,spec.icon,math.floor(d*(if spec.icon=="check"then .82 else .78)),spec.color)
   t.icon.AnchorPoint,t.icon.Position=Vector2.new(.5,.5),UDim2.fromScale(.5,.5)
+ elseif type(glyph)=="string"and string.sub(glyph,1,1)=="@"then
+  -- Growth cuts (2026-11-25): an info line may name a Kit icon (data.kitIcon, e.g. the say-hi line's paw).
+  t.icon=Kit.icon(t.disc,string.sub(glyph,2),math.floor(d*.78),spec.color)
+  t.icon.AnchorPoint,t.icon.Position=Vector2.new(.5,.5),UDim2.fromScale(.5,.5)
  else
   t.icon=node("TextLabel",t.disc,{Name="Glyph",BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),
    Size=UDim2.fromScale(1,1),Text=glyph,FontFace=Kit.DisplayFace,TextSize=math.floor(d*.62),AutoLocalize=false,Active=false})
@@ -290,6 +294,7 @@ local function configure(t,data,size,barW,barH)
  local spec=Rail.Kinds[kind]
  -- An info line keeps its own glyph ("?", an item's glyph, "•").
  local glyph=if spec.glyph then(if kind=="info"and type(data.icon)=="string"and data.icon~=""then data.icon else spec.glyph)else nil
+ if kind=="info"and type(data.kitIcon)=="string"and data.kitIcon~=""then glyph="@"..data.kitIcon end
  if t.discSize~=t.paintedDisc then t.paintedDisc=t.discSize;t.kind=nil end
  paintKind(t,kind,glyph)
  t.alpha=nil;t.iconAlpha=nil

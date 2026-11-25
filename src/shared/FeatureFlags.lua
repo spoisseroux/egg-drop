@@ -34,5 +34,10 @@
 -- owner-only check has done its job. True again re-runs it for SimCheck.isOwner accounts.
 -- FirstSessionFunnel (funnel fix 2026-11-23): the onboarding funnel and first-session custom events
 -- (FirstSession.lua). False logs nothing: FirstSession.new returns nil, as in Studio.
-return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
+-- Growth cuts (GROWTH-CUTS-LOOK 2026-11-25), each false = today's behaviour exactly:
+-- TomorrowStrip: the TOMORROW chips on every field-round results screen and one garden rail line a session.
+-- GardenTourCut: new players get one "say hi" rail line instead of the four "Your garden" cards (Show tips again keeps them).
+-- StarterBonus: +12, +4, +4 Welcome bonus on a new save's first three field rounds (StarterBonus.lua) and the
+-- results nudge line ("{egg}: you have enough!").
+return table.freeze({TomorrowStrip=true,GardenTourCut=true,StarterBonus=true,FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true})

@@ -773,7 +773,7 @@ function Results:showInPlace(data,view)
   self.root=self.inPlace.root;self.key=key
  end
  self.data=data;self.visible=true;self.host.Parent.Visible=true
- if opening then self.inPlace.opened=os.clock();self.focus=if data.pending then 2 else 1 end
+ if opening then self.inPlace.opened=os.clock();self.inPlace:reset();self.focus=if data.pending then 2 else 1 end
  self.inPlace:paint(data)
  self.feedback:setCountWindow(.30,.35);self.feedback:setBeats({})
  if data.result then self.feedback:observe(data.result,true)end

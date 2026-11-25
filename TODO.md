@@ -2,6 +2,15 @@
 
 Updated November 14, 2026. Published private builds are recorded in [PLAY-BUILD.md](PLAY-BUILD.md). Latest: **private v685 published 2026-11-14** (reviewed runtime70e0440; current v3 music retained for phone QA). Verified source and local Studio evidence do not establish live save or physical-device coverage.
 
+## Growth cuts, live hotfix v1056 (branch growth/v1056, 2026-11-25)
+
+Plan: `artifacts/growth-2026-11-26/GROWTH-CUTS-PLAN.md`; look: Fable's GROWTH-CUTS-LOOK. Switches `TomorrowStrip`, `GardenTourCut`, `StarterBonus`.
+- [x] Built offline: Tomorrow strip + garden line, say-hi line instead of the tour, Welcome bonus (+12/+4/+4, saved `starterRounds`) and the next-egg nudge, balls/merge copy. Specs: StarterBonus, TomorrowChips, ResultsNudge, GrowthCoach.
+- [ ] Studio pass by the coordinator (fresh save in Play Solo, phone 750x402 and 1280x720, PseudoLocale): a real join pays +12 on round two; Fable's six screens.
+- [ ] Translations: sync (19 new, 4 changed, `ui.stamp.promise` row now keyed `ui.notice.tomorrow.next`, same text). Store description draft needs Spencer's OK.
+- [ ] Funnel log: note the date, step 5 ("Garden walkthrough done") now fires when the say-hi line shows. Watch step 4 to 6, 5-minute retention, rounds per session, D1.
+- [ ] Live bug, not fixed here: `lastRunReward.bonus = total - roundStars` folds the 2x pass share into the "Supporter" row and the "2x Stars" row never shows.
+
 ## v3 (proposed 2026-11-20, awaiting Fable's v3 scope doc and Spencer's approval; nothing built)
 
 Recommended order: bug fixes, then level rewards + gated items + medals, then Garden Dash on the new garden path. Capes and the other two competitions can follow as v3.1. Source plan: `V2-SCOPE-2026-11-19.md` (sections 2.4, 4, 8, 11). Scope: `V3-SCOPE-2026-11-21.md` (Spencer's decisions 2026-11-21 at its top: two publishes, Levels matter then Garden Dash; race bands by Speed+Energy+Jump; 2 Stars a race, 10 a day; pals count; Bond folds into Heart). The second Pet Park already ships (ParkLayout sites arrival + grove), so it is not on this list.

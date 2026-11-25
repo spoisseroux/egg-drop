@@ -761,6 +761,9 @@ function Kit.setTappable(button,tappable)
  s.tappable=tappable==true;button.Active=s.enabled or s.tappable;button.Interactable=button.Active
 end
 function Kit.setSelected(button,selected)local s=buttons[button];if s then s.selected=selected==true;Kit.paintButton(button)end end
+-- Growth cuts (2026-11-25): change a key's variant in place (the results Hatch eggs key turns gold). Colours only;
+-- its ledge stays the one it was built with.
+function Kit.setVariant(button,variant)local s=buttons[button];if s and s.variant~=variant then s.variant=variant;Kit.paintButton(button)end end
 function Kit.setText(button,text)local s=buttons[button];if s then s.label.Text=text;button:SetAttribute("AccessibleLabel",text)end end
 function Kit.setGlyphVisible(button,visible)local s=buttons[button];if s then s.showGlyph=visible;Kit.paintButton(button)end end
 -- A round close key with an ink X (round 3: the snack pouch closes with an X at its top right).

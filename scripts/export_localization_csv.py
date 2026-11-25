@@ -54,9 +54,10 @@ SECTION_NOTES = {
     "wardrobe": "Wardrobe screen", "companions": "Companions screen", "pet": "Petting reward",
     "book": "Collection book", "park": "Pet Park chip", "stamp": "Stamp card", "report": "Bug report sheet",
     "onboarding": "First-round coaching", "coach": "First-round coaching",
+    "tomorrow": "Results TOMORROW strip and garden line",
 }
 SAMPLE = {"count": 3, "heat": "Medium", "low": 6, "high": 8, "pet": "Bear", "reward": 5, "item": "Squeaky Bone",
-          "owned": 3, "total": 12, "target": 3, "name": "Pet Park"}
+          "owned": 3, "total": 12, "target": 3, "name": "Pet Park", "quests": 3, "egg": "Toy Egg"}
 
 HARNESS = r'''
 local Sources = SOURCES
