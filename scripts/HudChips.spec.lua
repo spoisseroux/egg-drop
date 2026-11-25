@@ -66,6 +66,33 @@ return function(client)
 		assert(not Chips.hideRail({on=false,modal=true,shot=true}),"live: the rail stays above menus")
 		assert(not Chips.hideRail(nil))
 	end)
+	test("beta 18: the rail hides over any hatch reveal stage on screen, wherever it opened (the Stat Egg over the garden)",function()
+		assert(Chips.hideRail({on=true,modal=false,shot=false,reveal=true}),"a reveal outside Hatch eggs hides it")
+		assert(not Chips.hideRail({on=false,reveal=true}),"live: unchanged")
+		local shownRoots={}
+		local function shown(root)return shownRoots[root]==true end
+		local items,pets=setmetatable({},{__mode="k"}),setmetatable({},{__mode="k"})
+		assert(not Chips.revealUp({items,pets},shown),"nothing up: the rail is back")
+		-- The Stat Egg's stage opens over the garden.
+		local stat={root={}}
+		items[stat]=true;shownRoots[stat.root]=true
+		assert(Chips.revealUp({items,pets},shown))
+		-- Hidden by its host (not on screen): it never holds the rail off.
+		shownRoots[stat.root]=nil
+		assert(not Chips.revealUp({items,pets},shown))
+		-- Leaving (a Hatch another handover) is still on screen: still hidden; destroyed: back.
+		shownRoots[stat.root]=true
+		assert(Chips.revealUp({items,pets},shown))
+		stat.destroyed=true
+		assert(not Chips.revealUp({items,pets},shown))
+		items[stat]=nil
+		-- A pet stage (the arrival hatch) counts the same.
+		local bunny={root={}};pets[bunny]=true;shownRoots[bunny.root]=true
+		assert(Chips.revealUp({items,pets},shown))
+		-- A shown() that throws, or bad input, is not up.
+		assert(not Chips.revealUp({pets},function()error("gone")end))
+		assert(not Chips.revealUp(nil,shown)and not Chips.revealUp({pets},nil))
+	end)
 
 	return{passed=#cases,cases=cases}
 end

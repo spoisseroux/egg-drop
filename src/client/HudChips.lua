@@ -50,7 +50,26 @@ end
 -- while a full-screen screen is up: a menu or the Hatch eggs screen with its reveal and result card (init's
 -- anyModalOpen, the same test the cursor and the movement lock use) and the capsule shot. state = {on, modal, shot}.
 -- Beta only: `on` is Chips.on(); off, the rail stays above game menus as on live.
+-- Beta 18 (the Stat Egg rail): `reveal`, any hatch reveal stage is up wherever it opened (the Stat Egg, Names Egg and
+-- medals over the garden, the arrival hatch, the toy and pet reveals; Chips.revealUp), a Hatch another handover too.
 function Chips.hideRail(state)
-	return type(state)=="table"and state.on==true and(state.modal==true or state.shot==true)
+	return type(state)=="table"and state.on==true and(state.modal==true or state.shot==true or state.reveal==true)
+end
+-- Pure: is any reveal stage up? `sets`: the stage modules' live sets (HatchItemStage.live, RevealStage.live: stage ->
+-- true); a stage counts while it is not destroyed and shown(stage.root) says its root is on the screen (init passes
+-- CelebrationKit.onScreen, so a stage a host keeps hidden never holds the rail off).
+function Chips.revealUp(sets,shown)
+	if type(sets)~="table"or type(shown)~="function"then return false end
+	for _,set in ipairs(sets)do
+		if type(set)=="table"then
+			for stage in pairs(set)do
+				if type(stage)=="table"and stage.destroyed~=true and stage.root~=nil then
+					local ok,up=pcall(shown,stage.root)
+					if ok and up==true then return true end
+				end
+			end
+		end
+	end
+	return false
 end
 return table.freeze(Chips)
