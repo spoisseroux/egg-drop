@@ -10,6 +10,7 @@ local Motion=require(script.Parent.PetIdleMotion)
 local ToyPose=require(script.Parent.PetToyPose)
 local Palette=require(ReplicatedStorage.Shared.PetPalette)
 local Readiness=require(script.Parent.PetAssetReadiness)
+local EyeGlance=require(script.Parent.PetEyeGlance)
 local NativeArt=require(script.Parent.CareNativeOverrides)
 local CooPose=require(script.Parent.PetCooPose)
 local PersonalPlay=require(script.Parent.PetPlayVisual)
@@ -428,7 +429,11 @@ function Visual:update(dt)
    hidden=hidden or mouth=="open"or mouth=="line"
    if mouth=="soft"then size*=.78 end
   end
-  if(name=="EyeL"or name=="EyeR"or name=="GlintL"or name=="GlintR")and self.expression=="curious"then cf*=CFrame.new(.018*self.scale,.01*self.scale,0)end
+  -- The curious glance (PetEyeGlance, hotfix v1202): turned round the head and lifted clear, and only while the curious face shows.
+  if EyeGlance.applies(name,self.expression,expression)then
+   if self.glanceScale~=self.scale or self.glanceRig~=self.definition then self.glanceScale,self.glanceRig=self.scale,self.definition;self.glanceCentre=EyeGlance.headCentre(self.definition,self.scale)end
+   cf=EyeGlance.frame(head,cf,self.glanceCentre,self.scale)
+  end
   entry.renderHidden=hidden
   if reveal then
    local stretch=reveal.stretch or 0;local scale=reveal.heroScale or 1
