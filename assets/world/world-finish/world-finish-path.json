@@ -56,14 +56,14 @@
    "centre": [
     -51.6331,
     16.175,
-    -64.821
+    -65.8067
    ],
    "size": [
     67.5882,
     25.75,
-    52.1317
+    54.1032
    ],
-   "triangles": 2234,
+   "triangles": 2316,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -71,7 +71,7 @@
    "collide": false,
    "shadow": true,
    "doubleSided": true,
-   "uvPerStud": 0.05997
+   "uvPerStud": 0.0604
   },
   {
    "name": "W7_F_PathFoot__dirt_path",
@@ -296,13 +296,13 @@
     46.836,
     210.0
    ],
-   "triangles": 5559,
+   "triangles": 5538,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__grass"
    },
    "replaces": "W7_CD_Ground__grass",
-   "facesRemoved": 2,
+   "facesRemoved": 18,
    "collide": false
   },
   {
@@ -319,13 +319,13 @@
     55.6477,
     249.0
    ],
-   "triangles": 5386,
+   "triangles": 5320,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__ground"
    },
    "replaces": "W7_CD_Ground__ground",
-   "facesRemoved": 24,
+   "facesRemoved": 74,
    "collide": false
   },
   {
@@ -333,22 +333,22 @@
    "slice": "path",
    "role": "fixed",
    "centre": [
-    -28.7567,
-    12.602,
-    -89.7591
+    -29.7085,
+    11.4542,
+    -89.2502
    ],
    "size": [
-    78.5413,
-    22.0246,
-    67.9369
+    76.6377,
+    16.4563,
+    66.9191
    ],
-   "triangles": 157,
+   "triangles": 54,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Region__cliff_rock"
    },
    "replaces": "W7_CD_Region__cliff_rock",
-   "facesRemoved": 19,
+   "facesRemoved": 20,
    "collide": false
   },
   {
@@ -356,23 +356,207 @@
    "slice": "path",
    "role": "fixed",
    "centre": [
-    -30.5695,
-    18.7336,
-    -86.082
+    -53.3285,
+    11.2179,
+    -60.8828
    ],
    "size": [
-    75.8744,
-    16.6892,
-    52.1927
+    4.1201,
+    1.6578,
+    1.7943
    ],
-   "triangles": 12,
+   "triangles": 3,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Region__grass"
    },
    "replaces": "W7_CD_Region__grass",
+   "facesRemoved": 6,
+   "collide": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__cliff_rock_1718",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -80.2138,
+    17.1138,
+    -51.794
+   ],
+   "size": [
+    36.8508,
+    31.6077,
+    31.59
+   ],
+   "triangles": 264,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__cliff_rock_1718"
+   },
+   "overlays": "W7_CD_Rocks__cliff_rock_1718",
    "facesRemoved": 2,
    "collide": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__cliff_rock_1817",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -48.8019,
+    13.2981,
+    -81.1282
+   ],
+   "size": [
+    39.8395,
+    26.628,
+    37.8019
+   ],
+   "triangles": 204,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__cliff_rock_1817"
+   },
+   "overlays": "W7_CD_Rocks__cliff_rock_1817",
+   "facesRemoved": 36,
+   "collide": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__cliff_rock_1917",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -23.9596,
+    11.0005,
+    -93.5756
+   ],
+   "size": [
+    19.9473,
+    18.8216,
+    8.5645
+   ],
+   "triangles": 54,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__cliff_rock_1917"
+   },
+   "overlays": "W7_CD_Rocks__cliff_rock_1917",
+   "facesRemoved": 12,
+   "collide": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1717",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -90.3012,
+    31.4545,
+    -66.0145
+   ],
+   "size": [
+    11.0057,
+    3.8266,
+    11.8977
+   ],
+   "triangles": 4,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__grass_1717"
+   },
+   "overlays": "W7_CD_Rocks__grass_1717",
+   "facesRemoved": 2,
+   "collide": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1817",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -46.013,
+    21.8946,
+    -84.5737
+   ],
+   "size": [
+    7.4052,
+    2.0846,
+    7.0681
+   ],
+   "triangles": 1,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__grass_1817"
+   },
+   "overlays": "W7_CD_Rocks__grass_1817",
+   "facesRemoved": 10,
+   "collide": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1916",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -22.8736,
+    21.7428,
+    -107.9413
+   ],
+   "size": [
+    13.4741,
+    23.8784,
+    27.4603
+   ],
+   "triangles": 9,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__grass_1916"
+   },
+   "overlays": "W7_CD_Rocks__grass_1916",
+   "facesRemoved": 2,
+   "collide": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1917",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -19.8955,
+    10.7861,
+    -94.3664
+   ],
+   "size": [
+    4.6307,
+    2.1314,
+    4.4573
+   ],
+   "triangles": 6,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__grass_1917"
+   },
+   "overlays": "W7_CD_Rocks__grass_1917",
+   "facesRemoved": 1,
+   "collide": false
+  },
+  {
+   "name": "W7_F_PathSkin__cliff_rock",
+   "slice": "path",
+   "role": "fixed",
+   "centre": [
+    -58.4744,
+    13.7903,
+    -68.9377
+   ],
+   "size": [
+    63.162,
+    21.0063,
+    54.0684
+   ],
+   "triangles": 78,
+   "look": {
+    "kind": "island",
+    "material": "cliff_rock"
+   },
+   "collide": false,
+   "shadow": true,
+   "doubleSided": true
   }
  ],
  "place": {
@@ -917,14 +1101,28 @@
     "kit": 5,
     "at": [
      -22.0,
-     5.32,
+     4.97,
      -78.0
     ],
     "yaw": 0.3,
     "scale": [
-     1.5,
-     2.2,
-     3.8
+     1.8,
+     3.4,
+     6.0
+    ]
+   },
+   {
+    "kit": 3,
+    "at": [
+     -20.4,
+     4.97,
+     -75.6
+    ],
+    "yaw": 1.2,
+    "scale": [
+     1.4,
+     2.0,
+     2.6
     ]
    },
    {
@@ -1074,7 +1272,7 @@
  "report": {
   "W7_F_Path__dirt_path": 112,
   "W7_F_PathGrass__grass": 110,
-  "W7_F_PathWall__cliff_rock": 2234,
+  "W7_F_PathWall__cliff_rock": 2316,
   "W7_F_PathFoot__dirt_path": 164,
   "W7_F_PathSteps__boulder_rock": 400,
   "W7_F_PathRocks__cliff_rock": 1800,
@@ -1084,11 +1282,19 @@
   "W7_F_Lip4__boulder_rock": 80,
   "W7_F_Lip5__boulder_rock": 80,
   "W7_F_Stake__wood": 10,
-  "W7_CD_Ground__grass": 5559,
-  "W7_CD_Ground__ground": 5386,
-  "W7_CD_Region__cliff_rock": 157,
-  "W7_CD_Region__grass": 12,
-  "fixedTotal": 15934,
+  "W7_CD_Ground__grass": 5538,
+  "W7_CD_Ground__ground": 5320,
+  "W7_CD_Region__cliff_rock": 54,
+  "W7_CD_Region__grass": 3,
+  "W7_F_PathOverRocks__cliff_rock_1718": 264,
+  "W7_F_PathOverRocks__cliff_rock_1817": 204,
+  "W7_F_PathOverRocks__cliff_rock_1917": 54,
+  "W7_F_PathOverRocks__grass_1717": 4,
+  "W7_F_PathOverRocks__grass_1817": 1,
+  "W7_F_PathOverRocks__grass_1916": 9,
+  "W7_F_PathOverRocks__grass_1917": 6,
+  "W7_F_PathSkin__cliff_rock": 78,
+  "fixedTotal": 16437,
   "lipStones": 11,
   "stakes": 8,
   "stepMaxDeviation": 0.542

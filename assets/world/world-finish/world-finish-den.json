@@ -38,13 +38,13 @@
     46.836,
     210.0
    ],
-   "triangles": 5561,
+   "triangles": 5556,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__grass"
    },
    "replaces": "W7_CD_Ground__grass",
-   "facesRemoved": 14,
+   "facesRemoved": 19,
    "collide": false
   },
   {
@@ -61,13 +61,59 @@
     55.6477,
     249.0
    ],
-   "triangles": 5410,
+   "triangles": 5394,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__ground"
    },
    "replaces": "W7_CD_Ground__ground",
-   "facesRemoved": 3,
+   "facesRemoved": 19,
+   "collide": false
+  },
+  {
+   "name": "W7_F_OverLandmarks__cliff_rock_1916",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -12.2542,
+    18.948,
+    -109.8152
+   ],
+   "size": [
+    29.2441,
+    25.3001,
+    26.8919
+   ],
+   "triangles": 147,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Landmarks__cliff_rock_1916"
+   },
+   "overlays": "W7_CD_Landmarks__cliff_rock_1916",
+   "facesRemoved": 35,
+   "collide": false
+  },
+  {
+   "name": "W7_F_OverLandmarks__cliff_rock_2016",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    5.3301,
+    17.4569,
+    -111.1069
+   ],
+   "size": [
+    15.8169,
+    27.9213,
+    24.3085
+   ],
+   "triangles": 34,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Landmarks__cliff_rock_2016"
+   },
+   "overlays": "W7_CD_Landmarks__cliff_rock_2016",
+   "facesRemoved": 40,
    "collide": false
   },
   {
@@ -75,22 +121,68 @@
    "slice": "den",
    "role": "fixed",
    "centre": [
-    -29.5683,
+    -30.1829,
     13.8863,
-    -89.7591
+    -89.2502
    ],
    "size": [
-    80.1646,
+    78.9356,
     24.5932,
-    67.9369
+    66.9191
    ],
-   "triangles": 176,
+   "triangles": 74,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Region__cliff_rock"
    },
    "replaces": "W7_CD_Region__cliff_rock",
-   "facesRemoved": 9,
+   "facesRemoved": 111,
+   "collide": false
+  },
+  {
+   "name": "W7_CD_Region__grass",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -30.5695,
+    18.7336,
+    -86.082
+   ],
+   "size": [
+    75.8744,
+    16.6892,
+    52.1927
+   ],
+   "triangles": 9,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Region__grass"
+   },
+   "replaces": "W7_CD_Region__grass",
+   "facesRemoved": 5,
+   "collide": false
+  },
+  {
+   "name": "W7_F_OverRocks__cliff_rock_1916",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -16.3942,
+    18.0891,
+    -111.3056
+   ],
+   "size": [
+    36.3947,
+    31.1858,
+    36.5165
+   ],
+   "triangles": 36,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__cliff_rock_1916"
+   },
+   "overlays": "W7_CD_Rocks__cliff_rock_1916",
+   "facesRemoved": 68,
    "collide": false
   },
   {
@@ -107,13 +199,13 @@
     37.215,
     36.855
    ],
-   "triangles": 220,
+   "triangles": 215,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Rocks__cliff_rock_2016"
    },
    "overlays": "W7_CD_Rocks__cliff_rock_2016",
-   "facesRemoved": 4,
+   "facesRemoved": 9,
    "collide": false
   },
   {
@@ -136,7 +228,8 @@
     "color": "den_shell_west_color",
     "normal": "den_shell_west_normal",
     "roughness": 0.9,
-    "material": "Slate"
+    "material": "Slate",
+    "tint": "#B8A39E"
    },
    "pxPerStud": {
     "walls": 27.3,
@@ -165,7 +258,8 @@
     "color": "den_shell_east_color",
     "normal": "den_shell_east_normal",
     "roughness": 0.9,
-    "material": "Slate"
+    "material": "Slate",
+    "tint": "#B8A39E"
    },
    "pxPerStud": {
     "walls": 28.4,
@@ -188,39 +282,63 @@
     0.3497,
     27.6
    ],
-   "triangles": 520,
+   "triangles": 612,
    "look": {
     "kind": "tile",
     "color": "den_floor_color",
     "normal": "den_floor_normal",
     "studsPerTile": 6.0,
-    "material": "Ground"
+    "material": "Ground",
+    "tint": "#A69487"
    },
    "collide": false,
    "shadow": false
   },
   {
-   "name": "W7_F_DenMouth__cliff_rock",
+   "name": "W7_F_DenLid__cliff_rock",
    "slice": "den",
    "role": "fixed",
    "centre": [
-    -7.2792,
-    10.4617,
-    -99.9936
+    -7.9271,
+    13.4155,
+    -109.7895
    ],
    "size": [
-    29.3483,
-    15.2959,
-    6.9745
+    32.7503,
+    9.5366,
+    23.081
    ],
-   "triangles": 2331,
+   "triangles": 2170,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
    },
    "collide": false,
    "shadow": true,
-   "uvPerStud": 0.05997
+   "uvPerStud": 0.0604
+  },
+  {
+   "name": "W7_F_DenMouth__cliff_rock",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -10.0727,
+    10.387,
+    -100.0017
+   ],
+   "size": [
+    41.4587,
+    15.4282,
+    6.9582
+   ],
+   "triangles": 2365,
+   "look": {
+    "kind": "island",
+    "material": "cliff_rock"
+   },
+   "collide": false,
+   "shadow": true,
+   "uvPerStud": 0.0604
   },
   {
    "name": "W7_F_DenApron__dirt_path",
@@ -338,6 +456,29 @@
    },
    "collide": false,
    "shadow": false
+  },
+  {
+   "name": "W7_F_DenSkin__cliff_rock",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -5.9434,
+    21.0125,
+    -96.0033
+   ],
+   "size": [
+    60.0847,
+    33.9411,
+    18.2181
+   ],
+   "triangles": 84,
+   "look": {
+    "kind": "island",
+    "material": "cliff_rock"
+   },
+   "collide": false,
+   "shadow": true,
+   "doubleSided": true
   }
  ],
  "place": {
@@ -798,8 +939,8 @@
  ],
  "report": {
   "shell": 3822,
-  "floor": 520,
-  "mouth": 2331,
+  "floor": 612,
+  "mouth": 2365,
   "lantern": 142,
   "crystal": 28,
   "stone": 40,
@@ -817,6 +958,7 @@
    "west": 775.9,
    "east": 769.1
   },
+  "skin": 84,
   "apron": 334
  }
 }

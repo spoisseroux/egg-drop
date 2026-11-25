@@ -198,7 +198,7 @@ function Mount.dressDen(model,room,env)
 	local dress=slice and slice.dress
 	if not dress then return 0 end
 	local L=dress.lantern
-	local made,hide={},{}
+	local made,hide,recolour={},{},{}
 	local function add(template,cf,size)
 		local part=still(pack[template]:Clone())
 		part.Size,part.CFrame=size,cf
@@ -240,13 +240,19 @@ function Mount.dressDen(model,room,env)
 			local part=add("W7_F_Stone__flat",at*CFrame.new(vector(P.offset)*scale)*Turn,size)
 			part.Color=Color3.fromHex(P.color)
 			table.insert(hide,row)
-		elseif string.match(row.Name,"^W7D_Apron")then
-			table.insert(hide,row) -- the drawn apron (W7_F_DenApron__dirt_path) shows instead; the slab keeps colliding
+		elseif string.match(row.Name,"^W7D_Apron")or row.Name=="W7D_FrameThreshold"then
+			-- the drawn apron (W7_F_DenApron__dirt_path) and the floor's own threshold show instead (Fable world R1 5);
+			-- the slabs keep colliding
+			table.insert(hide,row)
+		elseif string.match(row.Name,"^W7D_bay%d+Deck$")then
+			-- Fable world R1 6: the propped Deck's body (its back fills CAM-DEN-BACK) takes the stump's dark wood
+			table.insert(recolour,row)
 		end
 	end
 	for _,row in ipairs(hide)do row.Transparency=1 end
+	for _,row in ipairs(recolour)do row.Color=Color3.fromHex("#5C4330");row.Material=Enum.Material.Wood end
 	for _,part in ipairs(made)do part.Parent=model end
-	return #hide
+	return #hide+#recolour
 end
 
 -- The terrace greybox's dress (TierHost, right after GreyboxRows.build, before parenting): only with the terrace slice

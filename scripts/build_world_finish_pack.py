@@ -178,6 +178,11 @@ def xml_part(ref: str, part: dict, row: dict, images: dict) -> str:
                   f'          <Content name="RoughnessMap"><url>{MATTE_ROUGHNESS}</url></Content>']
         if "NormalMap" in sa:
             lines.append(f'          <Content name="NormalMap"><url>{sa["NormalMap"]}</url></Content>')
+        if look.get("tint"):                     # SurfaceAppearance.Color multiplies the map (Fable world R1 3, 5)
+            assert re.fullmatch(r"#[0-9A-Fa-f]{6}", look["tint"]), look["tint"]
+            h = look["tint"].lstrip("#")
+            r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+            lines.append(f'          <Color3 name="Color"><R>{r:.6f}</R><G>{g:.6f}</G><B>{b:.6f}</B></Color3>')
         lines += ["        </Properties>", "      </Item>"]
     lines.append("    </Item>")
     return "\n".join(lines) + "\n"

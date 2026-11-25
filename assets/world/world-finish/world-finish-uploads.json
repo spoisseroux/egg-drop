@@ -3,49 +3,61 @@
  "den": {
   "model": {
    "file": "world-finish-den.fbx",
-   "sha256": "c1f235c07423df673a2e318aa3491cb61fb2d460fe00b006333408f02413861e",
-   "manifestSha256": "71f93330f52bf35f895b0eaaa51621aa54cc56fe5e10b1da41f4d1709ec1554d",
-   "operation": "037f7420-a04a-4bb9-9433-b9ba9ecf654a",
-   "assetId": "93629425333486",
+   "sha256": "fbf9a8596e9c8cd1865f1bbc0c349e12d23fbb7330285ca54375ecccca930596",
+   "manifestSha256": "5bbe54538f47994ec9d07f17985f1af9bc45f62826a012821c0801399483effd",
+   "operation": "6be904a8-353f-4641-a39f-5a3df6ee0315",
+   "assetId": "74414403763324",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "120231666679986",
-    "operation": "e73d2e4f-bef7-406b-8ebe-fa63096b6e40",
-    "why": "r1 exported without vertex colours (the ground re-cut needs them)"
-   },
-   "manifestCorrected": {
-    "was": "f6a5091c6f594131e50c498600b5db8e018aeda511a4c0072769ee2a8fada225",
-    "why": "after upload: the shell halves' centre and size counted 120 loose vertices each left by the split (Roblox ignores them, so their raw MeshSize x was off the one import scale); now from face vertices only, as the FBX's faces. The FBX is unchanged."
+    "assetId": "93629425333486",
+    "operation": "037f7420-a04a-4bb9-9433-b9ba9ecf654a",
+    "why": "Fable world R1 must-fixes (round 2)"
    }
   },
   "images": {
    "den_shell_west_color": {
     "file": "textures/den_shell_west_color.png",
-    "sha256": "c456d559d64483b46d601d8a7564e0905f133657a95c5ad6acfd9283cb451e5a",
-    "operation": "9f98ff1a-b528-4fcf-8c3f-7079a2e4aa62",
-    "assetId": "71575845230571",
-    "moderation": "Approved"
+    "sha256": "864d0c847f10d58c1207f10615495656f2be1a084abe3b4379ff75d6567cd7e1",
+    "operation": "3279278c-af6f-4060-8bbe-e08676529fec",
+    "assetId": "93269884442191",
+    "moderation": "Approved",
+    "superseded": {
+     "assetId": "71575845230571",
+     "why": "Fable world R1 4 re-bake (grain, value patches, broken bedding)"
+    }
    },
    "den_shell_east_color": {
     "file": "textures/den_shell_east_color.png",
-    "sha256": "2a881c1e5683dc2528851349f46519710cbffe38004f0cce2c5df77a7a029ace",
-    "operation": "4bbcc832-bee3-41f6-ae5f-f7ff28e52b2a",
-    "assetId": "90370447380293",
-    "moderation": "Approved"
+    "sha256": "05d092d879fd8201eab076c42762ecf98bcfc32ea2552a4e953071d7bc7c368e",
+    "operation": "226c88a6-3ba6-49bc-8c78-5328d0123dca",
+    "assetId": "88485177588896",
+    "moderation": "Approved",
+    "superseded": {
+     "assetId": "90370447380293",
+     "why": "Fable world R1 4 re-bake (grain, value patches, broken bedding)"
+    }
    },
    "den_shell_west_normal": {
     "file": "textures/den_shell_west_normal.png",
-    "sha256": "88b1b2911f4d5ba97aa175de802e276392deeef2fb68875d043018df8983fb12",
-    "operation": "e8bec617-df8f-4741-81a6-2d651bb470d9",
-    "assetId": "110901372689201",
-    "moderation": "Approved"
+    "sha256": "3ccb423e5b99170bc0db43c711082cf14759ff3aaa180cd0f0474e2df1a2f1ee",
+    "operation": "5f90f055-7738-40f4-b8e0-d7711120a1c1",
+    "assetId": "119072968306012",
+    "moderation": "Approved",
+    "superseded": {
+     "assetId": "110901372689201",
+     "why": "Fable world R1 4 re-bake (grain, value patches, broken bedding)"
+    }
    },
    "den_shell_east_normal": {
     "file": "textures/den_shell_east_normal.png",
-    "sha256": "c0601b4d26b9e6dfffa609d58e722eabfdc65d4166ac8db64164a0669eeaa03f",
-    "operation": "c70090b5-4833-4ca3-bfe7-0bade6196c3b",
-    "assetId": "78338420884303",
-    "moderation": "Approved"
+    "sha256": "c79339ed7585881af2cf56a38aa5a2d5253dc73ab90974375ffbacb8ed51674e",
+    "operation": "f443b0b7-f561-4d5f-b3ff-57da0ef77253",
+    "assetId": "140144455459085",
+    "moderation": "Approved",
+    "superseded": {
+     "assetId": "78338420884303",
+     "why": "Fable world R1 4 re-bake (grain, value patches, broken bedding)"
+    }
    },
    "den_floor_color": {
     "file": "textures/den_floor_color.png",
@@ -66,11 +78,16 @@
  "path": {
   "model": {
    "file": "world-finish-path.fbx",
-   "sha256": "aecec5ac4570248cb5034316677ec313c16c80ff7c1901865fe5ad843bc584be",
-   "manifestSha256": "964d07dbc5d7f44c0bce4363ae72e114ebe4a843cbf55fec805bf0e827a2b482",
-   "operation": "15edb2d1-4fef-4bf6-b082-a394c2e9060e",
-   "assetId": "132211469689954",
-   "moderation": "Approved"
+   "sha256": "b60f91ade30e71fb6089d92dbcdde74fdae40295666415543c70a6ff045095cb",
+   "manifestSha256": "e348bad65101da3c70e89d418cfda47e7a99c85237cda34ed06d119b64781023",
+   "operation": "564c4560-258d-4e88-9508-f4e6384fb0ea",
+   "assetId": "111926656336412",
+   "moderation": "Approved",
+   "superseded": {
+    "assetId": "132211469689954",
+    "operation": "15edb2d1-4fef-4bf6-b082-a394c2e9060e",
+    "why": "Fable world R1 must-fixes (round 2)"
+   }
   },
   "images": {}
  },
@@ -89,5 +106,6 @@
    }
   },
   "images": {}
- }
+ },
+ "note2": "Round 2 also uploaded den r3 (operation ea97d46d-70ad-4034-ba0e-a624b522c0c4) and path r2 (operation 141e8972-bbfe-4e93-b992-79880ec27eae) before the rock skins; both superseded, never bound."
 }

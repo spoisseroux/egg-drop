@@ -78,6 +78,25 @@ def island_density(name_prefix):
     return ratios[len(ratios) // 2] if ratios else .25
 
 
+def rock_density():
+    """The island's own cliff rock cell size (Fable world R1 fixes 8 and 14): the median UV density over the big colliding
+    rock tiles near the hill (W7_CD_Rocks__cliff_rock_NNNN), not the small region piece."""
+    vals = []
+    for o in [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("W7_CD_Rocks__cliff_rock_")][:12]:
+        me = o.data
+        if not me.uv_layers:
+            continue
+        uv = me.uv_layers.active.data
+        for p in list(me.polygons)[:200]:
+            li = list(p.loop_indices)
+            for a, b in zip(li, li[1:] + li[:1]):
+                d = (me.vertices[me.loops[b].vertex_index].co - me.vertices[me.loops[a].vertex_index].co).length
+                if d > .5:
+                    vals.append((uv[b].uv - uv[a].uv).length / d)
+    vals.sort()
+    return vals[len(vals) // 2] if vals else island_density("W7_CD_Region__cliff_rock")
+
+
 def triplanar_uv(obj, k):
     """World-projected UVs per face on its dominant axis (as cliff_den_sculpt.Piece), k uv units per stud."""
     me = obj.data
@@ -227,11 +246,19 @@ def den_recuts(Den, rows, shell):
     out = []
     candidates = [o.name for o in bpy.data.objects if o.type == "MESH" and not o.hide_render
                   and o.name.startswith("W7_CD_") and o.name in parts and o.name != "W7_CD_CaveBars__palette"]
-    # A face whose sample points (corners, edge middles, centre) reach inside the shell goes, if it lies under the hill's
-    # skin (all corners under 13.5: the rock in the walls; the skin over the dome is never cut, the dome is kept under
-    # it instead, so the hill top shows no hole).
+
+    # Fable world R1 fix 1: by volume, not by picked faces. A triangle goes when any of its points (corners, edge
+    # middles, centre) is inside the shell or within 1.5 of it, up to y 18.5 (the dome included). The cliff face round
+    # the mouth (lawnward of z -101.4 under 12.5) keeps its faces: the mouth surround covers that front. What the cut
+    # opens over the dome is closed from outside by the lid (W7_F_DenLid__cliff_rock, 1.35 out).
+    def near_shell(p):
+        if p[1] > 18.5 or p[1] < Den.FLOOR - .7 or (p[2] > -101.4 and p[1] < 12.5):
+            return False
+        hit = tree.find_nearest(L.bl(p), 1.5)
+        return hit[0] is not None
+
     def spans(points):
-        return max(p[1] for p in points) < 13.5 and any(inside(p) for p in points)
+        return any(inside(p) or near_shell(p) for p in points)
 
     for name in candidates:
         o = bpy.data.objects[name]
@@ -254,8 +281,80 @@ def den_recuts(Den, rows, shell):
             copy, gone = recut(name, name, doomed, spans)
             rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "den",
                                      {"replaces": name, "facesRemoved": gone, "collide": False}))
+        # Fable world R1 fix 2: loose shards left near the mouth (islands of 30 faces or fewer, R2) go too
+        rows[-1]["facesRemoved"] += drop_shards(copy, lambda c: -45 < c[0] < 25 and -112 < c[2] < -80, 30)
+        rows[-1]["triangles"] = L.tris(copy)
         out.append(copy)
     return out
+
+
+def rock_skin(name, where):
+    """Fable world R1 fixes 2 and 9 (R2): the island's steep ground faces (W1_ground, tan in game) that show where the
+    sculpt took the rock in front of them get a rock skin 0.12 proud along their normals, in the island's cliff rock at
+    the hill's cell size. The ground faces stay behind it (nothing opens)."""
+    import bmesh as _bm
+    verts, faces = [], []
+    for o in bpy.data.objects:
+        if o.type != "MESH" or o.hide_render or not any(m and m.name in ("W1_ground", "WF_ground") for m in o.data.materials):
+            continue
+        mw = o.matrix_world
+        rot = mw.to_3x3()
+        for p in o.data.polygons:
+            c = L.rb(mw @ p.center)
+            n = (rot @ p.normal).normalized()
+            if abs(n.z) >= .65 or not where(c):
+                continue
+            base = len(verts)
+            for k in p.vertices:
+                verts.append(mw @ o.data.vertices[k].co + n * .12)
+            faces.append(list(range(base, base + len(p.vertices))))
+    if not faces:
+        return None
+    me = bpy.data.meshes.new(name)
+    me.from_pydata(verts, [], faces)
+    obj = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(obj)
+    bm = _bm.new()
+    bm.from_mesh(me)
+    _bm.ops.remove_doubles(bm, verts=bm.verts, dist=1e-3)
+    bm.to_mesh(me)
+    bm.free()
+    for p in me.polygons:
+        p.use_smooth = False
+    triplanar_uv(obj, rock_density())
+    obj.data.materials.append(island_material("cliff_rock"))
+    return obj
+
+
+def drop_shards(obj, where, most):
+    """Delete connected islands of `most` faces or fewer whose centre is `where`; returns how many faces went."""
+    import bmesh as _bm
+    bm = _bm.new()
+    bm.from_mesh(obj.data)
+    bm.faces.ensure_lookup_table()
+    mw = obj.matrix_world
+    seen, gone = set(), []
+    for f in bm.faces:
+        if f.index in seen:
+            continue
+        stack, island = [f], []
+        seen.add(f.index)
+        while stack:
+            g = stack.pop()
+            island.append(g)
+            for e in g.edges:
+                for h in e.link_faces:
+                    if h.index not in seen:
+                        seen.add(h.index)
+                        stack.append(h)
+        if len(island) <= most:
+            c = [sum(L.rb(mw @ g.calc_center_median())[i] for g in island) / len(island) for i in range(3)]
+            if where(c):
+                gone += island
+    _bm.ops.delete(bm, geom=gone, context="FACES")
+    bm.to_mesh(obj.data)
+    bm.free()
+    return len(gone)
 
 
 def slice_den():
@@ -273,6 +372,10 @@ def slice_den():
     low, info = Den.build_shell("W7_F_Den__shell", .9, .8, 9, 4, bvh=bvh)
     high, _ = Den.build_shell("WF_ShellHigh", .3, .27, 27, 12, detail=True, bvh=bvh)
     cut_objs = den_recuts(Den, rows, low)
+    rock_k = rock_density()
+    lid = Den.build_lid(low)
+    triplanar_uv(lid, rock_k)
+    lid.data.materials.append(island_material("cliff_rock"))
     Den.mark_seams(low, info)
     # Fable R1 9 (the brief's fallback): two welded halves, each with its own 1024 maps. The cut runs along x -8 (the
     # back wall's seam, the cut over the mouth's middle and the collar soffit's seam); the halves share the cut's
@@ -313,18 +416,22 @@ def slice_den():
         density[side] = {"walls": round(Den.texel_density(half, 1024, walls), 1),
                          "all": round(Den.texel_density(half, 1024), 1)}
         areas[side] = round(sum(p.area for p in half.data.polygons), 1)
+        # Fable world R1 3: in game the walls read about #A89F8C from a #7E6B58 map (Aero's ambient lifts them); the
+        # SurfaceAppearance tint brings them to about #7A6A5C as seen
         rows.append(manifest_row(half, "fixed", {"kind": "baked", "color": f"den_shell_{side}_color",
                                                  "normal": f"den_shell_{side}_normal", "roughness": .9,
-                                                 "material": "Slate"}, "den",
+                                                 "material": "Slate", "tint": "#B8A39E"}, "den",
                                  {"pxPerStud": density[side], "collide": False, "shadow": True}))
     floor.data.materials.clear()
     floor.data.materials.append(L.image_material("WF_Floor", fcol_path, fnrm_path))
     low = halves[0][0]
+    # Fable world R1 5: the floor read #A98C78 in game from #6B5240; tinted toward #6E5140 as seen
     rows.append(manifest_row(floor, "fixed", {"kind": "tile", "color": "den_floor_color", "normal": "den_floor_normal",
-                                              "studsPerTile": Den.FLOOR_TILE, "material": "Ground"}, "den",
-                             {"collide": False, "shadow": False}))
+                                              "studsPerTile": Den.FLOOR_TILE, "material": "Ground", "tint": "#A69487"},
+                             "den", {"collide": False, "shadow": False}))
+    rows.append(manifest_row(lid, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
+                             {"collide": False, "shadow": True, "uvPerStud": round(rock_k, 5)}))
     # the mouth surround
-    rock_k = island_density("W7_CD_Region__cliff_rock")
     mouth = Den.build_mouth("W7_F_DenMouth__cliff_rock")
     triplanar_uv(mouth, rock_k)
     mouth.data.materials.append(island_material("cliff_rock"))
@@ -372,7 +479,13 @@ def slice_den():
     print("WORLDFINISH den", json.dumps(report))
     # export: fixed parts carry world coordinates (their centre is where the part goes); templates are authored about
     # their placement point, so their centre is the offset from it (Roblox centres a MeshPart on its mesh's bounds)
-    exported = [h for h, _ in halves] + [floor, mouth, apron, cage, panes, crystal, stone] + cut_objs
+    skin = rock_skin("W7_F_DenSkin__cliff_rock", lambda c: -44 < c[0] < 24 and -106 < c[2] < -86 and c[1] > 4.8)
+    if skin:
+        rows.append(manifest_row(skin, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
+                                 {"collide": False, "shadow": True, "doubleSided": True}))
+        report["skin"] = L.tris(skin)
+    exported = [h for h, _ in halves] + [floor, lid, mouth, apron, cage, panes, crystal, stone] + cut_objs + \
+        ([skin] if skin else [])
     report["apron"] = L.tris(apron)
     L.export_fbx(exported, OUT / "world-finish-den.fbx")
     (OUT / "world-finish-den.json").write_text(json.dumps({"slice": "den", "parts": rows, "place": place,
@@ -446,7 +559,7 @@ def den_render_dressing(Den, cage, panes, crystal, stone):
 def island_object(mesh, kind, uv_from=None):
     """Build a Mesh as an island-material part: world-projected UVs at the island's density for that material."""
     obj = mesh.build(None)
-    k = island_density(uv_from) if uv_from else .25
+    k = rock_density() if kind == "cliff_rock" else (island_density(uv_from) if uv_from else .25)
     triplanar_uv(obj, k)
     obj.data.materials.append(island_material(kind))
     return obj, k
@@ -479,7 +592,7 @@ def slice_path():
                                  {"collide": False, "shadow": kind in ("cliff_rock", "boulder_rock"), "doubleSided": True,
                                   "uvPerStud": round(k, 5)}))
     rocks = Pth.fin_and_notch()
-    triplanar_uv(rocks, island_density("W7_CD_Region__cliff_rock"))
+    triplanar_uv(rocks, rock_density())
     rocks.data.materials.append(island_material("cliff_rock"))
     parts.append(rocks)
     rows.append(manifest_row(rocks, "fixed", {"kind": "island", "material": "cliff_rock"}, "path",
@@ -505,15 +618,30 @@ def slice_path():
     parts_cd = cliff_den_parts()["parts"]
     cuts = []
     for o in [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render and o.name in parts_cd
-              and not parts_cd[o.name]["collide"] and o.name != "W7_CD_CaveBars__palette" and "glow" not in o.name]:
+              and o.name != "W7_CD_CaveBars__palette" and "glow" not in o.name]:
         mw = o.matrix_world
         if not any(Pth.recut_test([L.rb(mw @ o.data.vertices[k].co) for k in p.vertices]) for p in o.data.polygons):
             continue
         name = o.name
-        copy, gone = recut(name, name, lambda c: False, Pth.recut_test)
+        if parts_cd[name]["collide"]:
+            # a colliding tile keeps its hulls: it stays invisible and colliding under a visual re-cut copy
+            copy, gone = recut(name, "W7_F_PathOver" + name[len("W7_CD_"):], lambda c: False, Pth.recut_test)
+            bpy.data.objects[name + "__pack"].name = name
+            extra = {"overlays": name, "facesRemoved": gone, "collide": False}
+        else:
+            copy, gone = recut(name, name, lambda c: False, Pth.recut_test)
+            extra = {"replaces": name, "facesRemoved": gone, "collide": False}
         cuts.append(copy)
-        rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "path",
-                                 {"replaces": name, "facesRemoved": gone, "collide": False}))
+        rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "path", extra))
+    # Fable world R1 9 (R2): the hill's steep tan ground faces near the path get the rock skin too
+    def near_path(c):
+        s = S._nearest(c[0], c[2])
+        return c[1] > 5.0 and (c[0] - s["x"]) ** 2 + (c[2] - s["z"]) ** 2 < 12 ** 2 and not (c[0] > -26 and c[2] < -86)
+    pskin = rock_skin("W7_F_PathSkin__cliff_rock", near_path)
+    if pskin:
+        parts.append(pskin)
+        rows.append(manifest_row(pskin, "fixed", {"kind": "island", "material": "cliff_rock"}, "path",
+                                 {"collide": False, "shadow": True, "doubleSided": True}))
     lips = Pth.lip_layout()
     stakes, ropes = Pth.stake_layout()
     boulders = Pth.foot_stones()
