@@ -250,14 +250,17 @@ return function(server,offline)
 			assert(not Tier.onIt(p+Vector3.new(0,3,0)),"up there "..at)
 		end
 		assert(Tier.onIt(Tier.T(0,0,Tier.FloorY+3))and Tier.onIt(Tier.T(36,20,Tier.FloorY+3)))
-		-- The path is island: someone on it is never moved (they walk down; the notch is gated).
+		-- Not the terrace, but moved too while off the lawn (code review: the gates are built across the path).
 		for k=1,#PATH.points-3,6 do assert(not Tier.onIt(PATH.points[k]+Vector3.new(0,3,0)),"path point "..k)end
+		assert(Tier.onPathUp(PATH.points[20]+Vector3.new(0,3,0))and Tier.onPathUp(PATH.points[47]+Vector3.new(0,3,0)))
+		assert(not Tier.onPathUp(PATH.points[1]+Vector3.new(0,3,0))and not Tier.onPathUp(PATH.points[20]+Vector3.new(0,-12,0)))
+		assert(not Tier.onPathUp(e.at+Vector3.new(0,3,0)))
 		-- Clear of the den: its waiting area and the doorstep.
 		local Den=DenLayout.fromData(require(Shared.CliffDenData))
 		assert(Den and not DenLayout.inWait(Den,e.at+Vector3.new(0,3,0),1)and(e.at-Den.doorstep.at).Magnitude>6)
 	end)
 
-	test("Fable R8 FIX 1: home's palette, matte: the lawn top, cliff-grey faces, the marble lip",function()
+	test("Fable R8 FIX 1: home's palette, matte: the lawn top, cliff-grey faces and a low stone lip (Fable cliff-den fix 8)",function()
 		local Look=Greybox.Look
 		local function is(r,colour,material)return r.color==colour and r.material==material end
 		local counted=0
@@ -268,11 +271,13 @@ return function(server,offline)
 			if name=="Floor"then
 				assert(is(r,Look.lawn,"Grass"),name)
 			elseif string.match(name,"^Balustrade")then
-				assert(is(r,Look.marble,"Marble"),name)
-			elseif string.match(name,"^Skirt")or string.match(name,"^Rim")or name=="FaceGarden"then
+				assert(is(r,Look.cliff,"Slate"),name) -- Fable cliff-den fix 8: a low stone lip
+			elseif name=="FaceGarden"then
+				assert(is(r,Look.face,"Slate"),name)
+			elseif string.match(name,"^Skirt")or string.match(name,"^Rim")then
 				assert(is(r,Look.cliff,"Slate"),name)
 			elseif string.match(name,"^Clump")then
-				assert(is(r,Look.clump,"Slate"),name)
+				assert(is(r,Look.cliff,"Slate"),name)
 			else
 				assert(string.match(name,"^Pad")or name=="TreePole",name.." has no palette rule")
 			end
@@ -302,6 +307,18 @@ return function(server,offline)
 		end
 		local _,n2=sRange(north);local s1=sRange(south)
 		assert(math.abs(n2-Tier.Gap.a1)<.05 and math.abs(s1-Tier.Gap.a2)<.05 and Tier.Gap.a2-Tier.Gap.a1>=7)
+		-- Fable cliff-den fix 8: the lip 1.4 high; nothing over the floor + 5 within 14 studs of the gap.
+		local top=north.cframe.Position.Y+north.size.Y/2
+		assert(math.abs(top-(Tier.FloorY+Greybox.Lip))<1e-6 and Greybox.Lip==1.4)
+		for _,r in ipairs(rows)do
+			if r.visible and r.cframe.Position.Y+r.size.Y/2>Tier.FloorY+5 then
+				for _,sx in ipairs({-1,1})do for _,sz in ipairs({-1,1})do
+					local c=r.cframe*Vector3.new(sx*r.size.X/2,0,sz*r.size.Z/2)
+					local s=Tier.local2(Tier.Pieces[1],c.X,c.Z)
+					assert(s<=Tier.Gap.a1-14+.01 or s>=Tier.Gap.a2+14-.01,r.name.." stands tall by the gap (s "..s..")")
+				end end
+			end
+		end
 		local gates=Greybox.gates(Tier.gates())
 		assert(#gates==2)
 		for _,g in ipairs(gates)do assert(not g.visible and g.collide and g.size.Z>=PATH.widths[1]+2,g.name)end

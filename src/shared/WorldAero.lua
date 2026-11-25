@@ -63,6 +63,12 @@ Aero.Surfaces=table.freeze({
 -- The five arrival chimes: the Aero palette at saturation x .75 (scripts/draw_aero_palette.py palette-chimes).
 Aero.Named=table.freeze({
 	table.freeze({prefix="W7_Chime_",kind="palette",surface=table.freeze({TextureID="rbxassetid://97924490156376"})}),
+	-- Fable cliff-den review fixes 4 to 6 (the beta's sculpt, W7_CD_ names only; live never has them): the Play Den's
+	-- floor and walls darker and warmer so its lamps and toys lead, and the carved crystals (the cave's glow-caps) amber
+	-- instead of lemon. The garden's own dirt, rock and crystals keep their surfaces.
+	table.freeze({prefix="W7_CD_PlayDen__dirt_path",kind="dirt_path",surface=table.freeze({Tint=hex("#B8A898")})}),
+	table.freeze({prefix="W7_CD_PlayDen__cliff_rock",kind="cliff_rock",surface=table.freeze({Tint=hex("#A8957E")})}),
+	table.freeze({prefix="W7_CD_Crystals__glow_pink",kind="glow_pink",surface=table.freeze({Color=hex("#E8C468")})}),
 })
 function Aero.namedSurface(name,kind)
 	for _,entry in ipairs(Aero.Named)do

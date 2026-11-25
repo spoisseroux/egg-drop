@@ -188,6 +188,23 @@ function Client:open()
 	d.roomView.dash=self
 	d.roomView.companions.dash=self
 end
+-- Code review (cliff den): is any of these prompts enabled with the local root within its reach? RoomView counts it as a
+-- station in reach, so the pet's own E (PetInteraction) steps aside and E fires this prompt.
+local function promptsInReach(prompts)
+	local character=game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Character
+	local root=character and character:FindFirstChild("HumanoidRootPart")
+	if not root then return false end
+	for _,p in pairs(prompts)do
+		local anchor=p and p.Parent
+		if p.Enabled and anchor and anchor:IsA("BasePart")and(anchor.Position-root.Position).Magnitude<=p.MaxActivationDistance then return true end
+	end
+	return false
+end
+-- The meadow gate's prompt in reach (RoomView: a station, so the pet's E steps aside).
+function Client:inReach()
+	if not self.isOpen or not self.prompt then return false end
+	return promptsInReach({self.prompt})
+end
 function Client:close()
 	self.isOpen=false
 	pcall(self.endSeat,self)

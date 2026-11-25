@@ -1,4 +1,4 @@
--- The Play Den host, step A (PLAY-DEN-BUILD-PLAN.md, architect verdict applied). mount() answers nil with the build
+-- The Play Den host (PLAY-DEN-BUILD-PLAN.md; the room from CliffDenData, step B, architect verdict applied). mount() answers nil with the build
 -- ceiling off (live): nothing made, nothing connected, no attribute written, the cave blocker never touched.
 --
 -- The layout (DenLayout.current: the pocket, or the island's room on a `CliffDen` server) is resolved the first time the

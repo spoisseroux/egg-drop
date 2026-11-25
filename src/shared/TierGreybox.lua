@@ -11,7 +11,9 @@ local Greybox={}
 -- textures.py), grass and cliff through the Aero tints (WorldAero.Surfaces): lawn #17702C, cliff rock #6B7465, plaza
 -- marble #B2B1B3, dirt path #815C3F. Matte Roblox materials. Pads stay dark, the tree pole pale.
 local LAWN,CLIFF,MARBLE,DIRT,CLUMP,PAD,POLE="#17702C","#6B7465","#B2B1B3","#815C3F","#5A6256","#3E4A3C","#E8E4D8"
-Greybox.Look=table.freeze({lawn=LAWN,cliff=CLIFF,marble=MARBLE,dirt=DIRT,clump=CLUMP})
+local FACE,LIP="#869080",1.4 -- Fable cliff-den review fix 8
+Greybox.Look=table.freeze({lawn=LAWN,cliff=CLIFF,marble=MARBLE,dirt=DIRT,clump=CLUMP,face=FACE})
+Greybox.Lip=LIP
 local GRASS,ROCK,STONE,EARTH={material="Grass"},{material="Slate"},{material="Marble"},{material="Ground"}
 local function with(a,b)local t=table.clone(a);for k,v in pairs(b or {})do t[k]=v end;return t end
 local Y,BOTTOM,TOP=Tier.FloorY,Tier.SkirtY,Tier.WallTop
@@ -21,17 +23,19 @@ function Greybox.rows(closers)
 	local T=Tier.TierFrame
 	-- The terrace: slab, garden-side retaining face, outer skirt and end skirts down to SkirtY.
 	b.block("Floor",T,-38,-22,Y-2,38,22,Y,LAWN,GRASS)
-	b.block("FaceGarden",T,-38,21,14,38,22,Y-2,CLIFF,with(ROCK,{shadow=true}))
+	-- Fable cliff-den review fix 8: the face up to the floor's top (no dark grass band), a lighter rock.
+	b.block("FaceGarden",T,-38,21,14,38,22,Y,FACE,with(ROCK,{shadow=true}))
 	b.block("SkirtOuter",T,-38,-22,BOTTOM,38,-21,Y-2,CLIFF,ROCK)
 	b.block("SkirtNorthEast",T,-38,-21,BOTTOM,-37,21,Y-2,CLIFF,ROCK)
 	b.block("SkirtSouthWest",T,37,-21,BOTTOM,38,21,Y-2,CLIFF,ROCK)
 	-- The balustrade (garden edge) with the gap where the cliff path arrives (Tier.Gap), and the outer rim and end rims, each a
 	-- visible lip with an invisible wall above it up to WallTop.
 	local g1,g2=Tier.Gap.a1,Tier.Gap.a2
-	b.block("BalustradeNorth",T,-38,21,Y,g1,22,Y+3,MARBLE,STONE)
-	b.block("BalustradeSouth",T,g2,21,Y,38,22,Y+3,MARBLE,STONE)
-	b.wall("BalustradeNorthStop",T,-38,21,Y+3,g1,22,TOP)
-	b.wall("BalustradeSouthStop",T,g2,21,Y+3,38,22,TOP)
+	-- Fable fix 8: a low stone lip like the path's, not a white wall.
+	b.block("BalustradeNorth",T,-38,21,Y,g1,22,Y+LIP,CLIFF,ROCK)
+	b.block("BalustradeSouth",T,g2,21,Y,38,22,Y+LIP,CLIFF,ROCK)
+	b.wall("BalustradeNorthStop",T,-38,21,Y+LIP,g1,22,TOP)
+	b.wall("BalustradeSouthStop",T,g2,21,Y+LIP,38,22,TOP)
 	b.block("RimOuter",T,-38,-22,Y,38,-21,Y+4,CLIFF,ROCK)
 	b.wall("RimOuterStop",T,-38,-22,Y+4,38,-21,TOP)
 	b.block("RimNorthEast",T,-38,-21,Y,-37,21,Y+4,CLIFF,ROCK)
@@ -39,8 +43,11 @@ function Greybox.rows(closers)
 	b.block("RimSouthWest",T,37,-21,Y,38,21,Y+4,CLIFF,ROCK)
 	b.wall("RimSouthWestStop",T,37,-21,Y+4,38,21,TOP)
 	-- On the terrace: two clumps (rooms), three toy pads, the tree pole.
-	b.block("ClumpOne",T,6,-8,Y,24,14,Y+10,CLUMP,with(ROCK,{shadow=true}))
-	b.block("ClumpTwo",T,-36,-20,Y,-22,-6,Y+8,CLUMP,with(ROCK,{shadow=true}))
+	-- Fable fix 8: lower, smaller, stepped, in the cliff's grey; nothing over Y+5 within 14 studs of the gap.
+	b.block("ClumpOne",T,8,-8,Y,20,6,Y+5,CLIFF,with(ROCK,{shadow=true}))
+	-- (Fable asked s 12..18; that edge is 8 from the gap, against its own 14-stud rule: the step sits at the far end.)
+	b.block("ClumpOneTop",T,8,-4,Y+5,12,4,Y+8,CLIFF,with(ROCK,{shadow=true}))
+	b.block("ClumpTwo",T,-36,-20,Y,-22,-6,Y+6,CLIFF,with(ROCK,{shadow=true}))
 	b.block("PadCrunch",T,26,4,Y,34,12,Y+.1,PAD,{collide=false})
 	b.block("PadPop",T,26,-12,Y,32,-6,Y+.1,PAD,{collide=false})
 	b.block("PadMoss",T,-18,-16,Y,-12,-10,Y+.1,PAD,{collide=false})

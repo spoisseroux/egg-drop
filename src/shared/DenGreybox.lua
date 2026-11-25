@@ -9,37 +9,97 @@ local Layout=require(script.Parent.DenLayout)
 local Greybox={}
 Greybox.Prefix="W7D_"
 Greybox.Look=table.freeze({wood="#7A5A3A",dark="#5C4330",stone="#8E8A80",cloth="#B8AE98",rope="#B79A66",slate="#3A3F3A",
-	lamp="#FFD9A0",screen="#9BE3C9",red="#D9725E",yellow="#E8C468"})
+	lamp="#D98A3A",screen="#9BE3C9",red="#D9725E",yellow="#E8C468",earth="#815C3F"})
+-- Fable cliff-den review (FABLE-REVIEW-CLIFF-DEN.md), the room only: a timber frame over the old marble mouth (lintel,
+-- jambs, a dirt threshold over the white sill), the mouth lanterns hung from the beam's ends (no posts), the sign on the
+-- beam, a mat mid-room, the apron slab joining the mouth and the cliff path's foot. Lamps #D98A3A with caps and bases.
+Greybox.Frame=table.freeze({beamY=10.5,beam=Vector3.new(17.5,1.3,1.2),out=2.5,jamb=1.5,cord=.8,tilt=8})
+Greybox.Apron=table.freeze({x1=-25,x2=3,z1=-100,z2=-90,top=4.65,thick=.4})
+Greybox.Mat=table.freeze({at=Vector2.new(-8,-108),d=8,inner=6.4})
 local L=Greybox.Look
-Greybox.MaxParts=60
+Greybox.MaxParts=80 -- Fable cliff-den review: the frame, caps, mat, apron and board rows (was 60)
 
 function Greybox.rows(layout)
 	local rows={}
 	local function add(name,size,cframe,color,options)
 		options=options or {}
 		local row={name=Greybox.Prefix..name,size=size,cframe=cframe,color=color,material=options.material,collide=options.collide==true,
-			visible=true,shadow=false,tilted=true,light=options.light}
+			visible=true,shadow=false,tilted=true,light=options.light,shape=options.shape}
 		table.insert(rows,table.freeze(row))
 		return row
 	end
 	local light=table.freeze({color=Layout.Light.color,range=Layout.Light.range,brightness=Layout.Light.brightness})
 	local solidExtras=layout.variant=="room"
-	-- The sign under the lintel, hung on two cords.
-	add("Sign",Vector3.new(8,2.2,.25),layout.sign,L.wood,{material="WoodPlanks"})
-	for side=-1,1,2 do add("SignCord",Vector3.new(.08,.9,.08),layout.sign*CFrame.new(side*3.6,1.55,0),L.rope,{material="Fabric"})end
-	-- The lanterns: posts at the mouth, wall lamps inside.
-	for i,l in ipairs(layout.lanterns)do
-		if l.post then
-			add("LanternPost"..i,Vector3.new(.35,6.6,.35),CFrame.new(l.at+Vector3.new(0,3.3,0)),L.dark,{material="Wood",collide=true})
-			add("Lantern"..i,Vector3.new(.8,1.1,.8),CFrame.new(l.at+Vector3.new(0,6.9,0)),L.lamp,{material="Neon",light=light})
-		else
-			add("LanternBracket"..i,Vector3.new(.2,.2,.8),CFrame.new(l.at+Vector3.new(0,.7,-.4)),L.dark,{material="Wood"})
-			add("Lantern"..i,Vector3.new(.8,1.1,.8),CFrame.new(l.at),L.lamp,{material="Neon",light=light})
+	local room=layout.variant=="room"
+	-- A lantern: the lamp with a dark cap and base, so it reads as a lantern and not a cube.
+	local function lantern(i,at)
+		add("Lantern"..i,Vector3.new(.8,1.1,.8),CFrame.new(at),L.lamp,{material="Neon",light=light})
+		for k,dy in ipairs({.62,-.62})do add("Lantern"..i..(if k==1 then "Cap"else "Base"),Vector3.new(.95,.15,.95),CFrame.new(at+Vector3.new(0,dy,0)),L.dark,{material="Wood"})end
+	end
+	if room then
+		-- The timber frame over the old marble mouth: the beam on the trim, a lawnward stud off the marble's face.
+		local m,F=layout.mouth,Greybox.Frame
+		local z=m.z+F.out
+		local beamCF=CFrame.new((m.x1+m.x2)/2,F.beamY,z)
+		add("FrameLintel",F.beam,beamCF,L.dark,{material="Wood"})
+		local bottom=F.beamY-F.beam.Y/2
+		for k,x in ipairs({m.x1-.5,m.x2+.5})do
+			add("FrameJamb"..k,Vector3.new(F.jamb,bottom-layout.floorY,F.jamb),CFrame.new(x,(bottom+layout.floorY)/2,z),L.dark,{material="Wood"})
+		end
+		add("FrameThreshold",Vector3.new(m.x2-m.x1+1,.5,1.8),CFrame.new((m.x1+m.x2)/2,4.5-.25,m.z+.9),L.earth,{material="Ground"})
+		-- The sign on the beam's lawn face, tilted forward; the opening stays clear.
+		local signCF=CFrame.new((m.x1+m.x2)/2,F.beamY,z+F.beam.Z/2+.14)*CFrame.Angles(math.rad(-F.tilt),0,0)
+		add("Sign",Vector3.new(8,2.2,.25),signCF,L.wood,{material="WoodPlanks"})
+		-- The mouth lanterns hang from the beam's ends; the wall lamps stay on their brackets.
+		local hung=0
+		for i,l in ipairs(layout.lanterns)do
+			if l.post then
+				hung+=1
+				local x=if hung==1 then m.x1+.5 else m.x2-.5
+				add("LanternCord"..i,Vector3.new(.08,F.cord,.08),CFrame.new(x,bottom-F.cord/2,z),L.rope,{material="Fabric"})
+				lantern(i,Vector3.new(x,bottom-F.cord-.55,z))
+			else
+				add("LanternBracket"..i,Vector3.new(.2,.2,.8),CFrame.new(l.at+Vector3.new(0,.7,-.4)),L.dark,{material="Wood"})
+				lantern(i,l.at)
+			end
+		end
+		-- The mat mid-room: a cloth disc with a red inner disc.
+		local mat=Greybox.Mat
+		local up=CFrame.Angles(0,0,math.pi/2)
+		add("Mat",Vector3.new(.08,mat.d,mat.d),CFrame.new(mat.at.X,layout.floorY+.04,mat.at.Y)*up,L.cloth,{material="Fabric",shape="cylinder"})
+		add("MatInner",Vector3.new(.08,mat.inner,mat.inner),CFrame.new(mat.at.X,layout.floorY+.05,mat.at.Y)*up,L.red,{material="Fabric",shape="cylinder"})
+		-- The apron: one worn dirt patch from the mouth to the cliff path's foot, plugging the cut's edge (the mouth's own
+		-- floor stays the room's: the slab skips it).
+		local A=Greybox.Apron
+		local y=A.top-A.thick/2
+		local function slab(name,x1,z1,x2,z2)
+			add(name,Vector3.new(x2-x1,A.thick,z2-z1),CFrame.new((x1+x2)/2,y,(z1+z2)/2),L.earth,{material="Ground",collide=true})
+		end
+		local front=m.z+7.3 -- the mouth's floor box ends about here (CliffDenData.collision, floor 2)
+		slab("ApronFront",A.x1,front,A.x2,A.z2)
+		slab("ApronWest",A.x1,A.z1,m.x1-1,front)
+		slab("ApronEast",m.x2+1,A.z1,A.x2,front)
+	else
+		-- Step A's pocket (the specs' fixture): the sign under the lintel, posts at the mouth.
+		add("Sign",Vector3.new(8,2.2,.25),layout.sign,L.wood,{material="WoodPlanks"})
+		for side=-1,1,2 do add("SignCord",Vector3.new(.08,.9,.08),layout.sign*CFrame.new(side*3.6,1.55,0),L.rope,{material="Fabric"})end
+		for i,l in ipairs(layout.lanterns)do
+			if l.post then
+				add("LanternPost"..i,Vector3.new(.35,6.6,.35),CFrame.new(l.at+Vector3.new(0,3.3,0)),L.dark,{material="Wood",collide=true})
+				lantern(i,l.at+Vector3.new(0,6.9,0))
+			else
+				add("LanternBracket"..i,Vector3.new(.2,.2,.8),CFrame.new(l.at+Vector3.new(0,.7,-.4)),L.dark,{material="Wood"})
+				lantern(i,l.at)
+			end
 		end
 	end
 	-- The notice board on its post, facing the lawn.
 	add("BoardPost",Vector3.new(.4,5,.4),layout.board*CFrame.new(0,2.5,.2),L.dark,{material="Wood",collide=true})
 	add("Board",Vector3.new(4,2.6,.2),layout.board*CFrame.new(0,3.6,-.05),L.wood,{material="WoodPlanks"})
+	-- Fable fix 11: three cloth rows on its face, so it reads as a list.
+	if room then
+		for k=1,3 do add("BoardRow"..k,Vector3.new(3.4,.5,.05),layout.board*CFrame.new(0,3.6+(2-k)*.75,-.18),L.cloth,{material="Fabric"})end
+	end
 	for _,bay in ipairs(layout.bays)do
 		local f,n=bay.frame,bay.id
 		if bay.kind=="dash"then
@@ -57,13 +117,25 @@ function Greybox.rows(layout)
 				add(n.."Paw",Vector3.new(.9,.06,.9),f*CFrame.new(math.cos(a)*r,.03,-2.8+math.sin(a)*r),L.stone,{material="Slate"})
 			end
 		elseif bay.kind=="deck"then
-			add(n.."Stump",Vector3.new(3,2.4,3),f*CFrame.new(0,1.2,0),L.dark,{material="Wood",collide=true})
-			local slab=f*CFrame.new(0,2.62,.2)*CFrame.Angles(math.rad(-18),0,0)
-			add(n.."Deck",Vector3.new(2.4,.22,1.6),slab,L.cloth,{material="SmoothPlastic"})
-			add(n.."DeckScreen",Vector3.new(1.8,.05,1.1),slab*CFrame.new(0,.13,0),L.screen,{material="Neon"})
+			if room then
+				-- Fable fix 10: a round stump, the Deck propped up at its back facing the mouth.
+				add(n.."Stump",Vector3.new(2.2,5,5),f*CFrame.new(0,1.1,0)*CFrame.Angles(0,0,math.pi/2),L.dark,{material="Wood",collide=true,shape="cylinder"})
+				local slab=f*CFrame.new(0,3.25,1.2)*CFrame.Angles(math.rad(-55),0,0)
+				add(n.."Deck",Vector3.new(3.5,.25,2.4),slab,L.cloth,{material="SmoothPlastic"})
+				add(n.."DeckScreen",Vector3.new(2.8,.05,1.7),slab*CFrame.new(0,.15,0),L.screen,{material="Neon"})
+			else
+				add(n.."Stump",Vector3.new(3,2.4,3),f*CFrame.new(0,1.2,0),L.dark,{material="Wood",collide=true})
+				local slab=f*CFrame.new(0,2.62,.2)*CFrame.Angles(math.rad(-18),0,0)
+				add(n.."Deck",Vector3.new(2.4,.22,1.6),slab,L.cloth,{material="SmoothPlastic"})
+				add(n.."DeckScreen",Vector3.new(1.8,.05,1.1),slab*CFrame.new(0,.13,0),L.screen,{material="Neon"})
+			end
 			local stools=if layout.variant=="room"then{{-2.6,-1},{2.6,-1},{-1.2,-2.6},{1.2,-2.6}}else{{-1.2,-2.4},{1.2,-2.4}}
 			for k,s in ipairs(stools)do
-				add(n.."Stool"..k,Vector3.new(.9,.9,.9),f*CFrame.new(s[1],.45,s[2]),L.wood,{material="Wood",collide=solidExtras})
+				if room then
+					add(n.."Stool"..k,Vector3.new(.9,1.1,1.1),f*CFrame.new(s[1],.45,s[2])*CFrame.Angles(0,0,math.pi/2),L.wood,{material="Wood",collide=solidExtras,shape="cylinder"})
+				else
+					add(n.."Stool"..k,Vector3.new(.9,.9,.9),f*CFrame.new(s[1],.45,s[2]),L.wood,{material="Wood",collide=solidExtras})
+				end
 			end
 		elseif bay.kind=="niche"then
 			add(n.."Crate",Vector3.new(1.6,1.6,1.6),f*CFrame.new(0,.8,0),L.wood,{material="WoodPlanks",collide=solidExtras})

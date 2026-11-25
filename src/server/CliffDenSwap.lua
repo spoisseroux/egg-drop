@@ -27,7 +27,8 @@ function Swap.allowed(env)
 	return Tier.ceiling({flags=env.flags,place=env.place,studio=env.studio})
 end
 
--- Which layer: "den" (FeatureFlags.CliffDen, the sculpt: DenLayout's room) or "pocket" (only the cave's bars split out).
+-- Which layer: "den" (FeatureFlags.CliffDen, the sculpt: DenLayout's room) or "pocket" (only the cave's bars split out;
+-- no layout reads it since step A's pocket was retired, so that layer keeps the den and the terrace closed).
 function Swap.mode(env)
 	return if((env and env.flags)or Flags).CliffDen==false then "pocket" else "den"
 end

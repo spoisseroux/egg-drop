@@ -1,4 +1,4 @@
--- The Play Den, step A (artifacts/qa-2026-11-24-beta16/PLAY-DEN-BUILD-PLAN.md, architect verdict applied; look:
+-- The Play Den (artifacts/qa-2026-11-24-beta16/PLAY-DEN-BUILD-PLAN.md; the room, step B, CLIFF-DEN-BUILD.md, architect verdict applied; look:
 -- CLIFF-PATH-AND-ARCADE-CAVE-LOOK.md section 2): the north cave as a walk-in room with one object per game. Shared and
 -- pure, the Tier pattern: FeatureFlags.PlayDen is the build ceiling and opens only on the beta place or in Studio; the
 -- server's switch (DenConfig, ConfigService `play_den`: off until the config has loaded once, then missing or malformed =

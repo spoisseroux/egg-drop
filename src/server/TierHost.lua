@@ -165,7 +165,7 @@ end
 -- Switch off with this player up there: to the lawn by the foot, held or not (the ground they stand on is going).
 function Host:evacuate(player,board)
 	local view=self.read(board)
-	if not view or not Tier.onIt(view.position)then return false end
+	if not view or not(Tier.onIt(view.position)or Tier.onPathUp(view.position))then return false end
 	self.slot=self.slot%#Tier.EvacuationOffsets+1
 	local e=Tier.Evacuation
 	local frame=CFrame.lookAt(e.at,Vector3.new(e.facing.X,e.at.Y,e.facing.Z))*CFrame.new(Tier.EvacuationOffsets[self.slot])

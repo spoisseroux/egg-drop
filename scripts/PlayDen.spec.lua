@@ -162,6 +162,20 @@ return function(server)
 		assert(Layout.petFloor(L,Vector3.new(-7,4.3,-90),true)and Layout.petFloor(L,Vector3.new(-10,4.3,-110),true))
 		local s=Layout.prompts(L);assert((s.gate-s.deck).Magnitude>=7)
 		assert(#Greybox.rows(L)<=Greybox.MaxParts)
+		-- Fable cliff-den review: warm dim lamps with caps and bases, the timber frame over the mouth (no lantern posts),
+		-- the sign on the beam, the mat, the apron (colliding, top 4.65, skipping the mouth's own floor).
+		local byName={}
+		for _,r in ipairs(Greybox.rows(L))do byName[r.name]=r end
+		assert(Layout.Light.color=="#FFB870"and Layout.Light.brightness==.9 and Greybox.Look.lamp=="#D98A3A")
+		assert(byName.W7D_FrameLintel and byName.W7D_FrameJamb1 and byName.W7D_FrameThreshold and byName.W7D_Mat and byName.W7D_MatInner)
+		assert(byName.W7D_LanternPost1==nil and byName.W7D_LanternPost2==nil and byName.W7D_Lantern1Cap and byName.W7D_Lantern3Base)
+		local beam=byName.W7D_FrameLintel
+		assert(math.abs(byName.W7D_Sign.cframe.Position.Y-beam.cframe.Position.Y)<1e-6 and byName.W7D_Sign.cframe.Position.Z>beam.cframe.Position.Z)
+		for _,n in ipairs({"W7D_ApronFront","W7D_ApronWest","W7D_ApronEast"})do
+			local r=byName[n];assert(r and r.collide and math.abs(r.cframe.Position.Y+r.size.Y/2-4.65)<1e-6,n)
+			local lo,hi=r.cframe.Position-r.size/2,r.cframe.Position+r.size/2
+			assert(hi.X<=L.mouth.x1 or lo.X>=L.mouth.x2 or lo.Z>=L.mouth.z+7.3-1e-6,n.." covers the mouth's floor")
+		end
 		-- Studio R2: ground rays in the room start under its collision ceiling (12.2); elsewhere +8 exactly.
 		assert(Layout.groundRayTop(L,Vector3.new(-7,7.6,-110),8)==L.floorY+Layout.CeilingRay and L.floorY+Layout.CeilingRay<12.2)
 		assert(Layout.groundRayTop(L,Vector3.new(-7,4.2,-98),8)==L.floorY+Layout.CeilingRay)

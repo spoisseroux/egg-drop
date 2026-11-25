@@ -144,16 +144,17 @@ return function(server)
 		Tier.inject(nil)
 	end)
 
-	test("off with people up there: each moved to the lawn by the path's foot while it is still open, then everything closed; the path stays",function()
+	test("off with people up there (the terrace, the path off the lawn): each moved to the lawn by the path's foot while it is still open, then everything closed",function()
 		Tier.inject(ON)
 		local c=rig();c.tick()
 		local p=c.player(1,Tier.T(0,0,Tier.FloorY+3))
 		local q=c.player(2,Tier.T(-30,10,Tier.FloorY+3))
 		local r=c.player(3,LAWN)
-		local onPath=c.player(5,Tier.path().points[30]+Vector3.new(0,3,0)) -- the cliff path is island: they walk down
+		local onPath=c.player(5,Tier.path().points[30]+Vector3.new(0,3,0)) -- code review: the gates are built across the path
+		local atFoot=c.player(6,Tier.path().points[1]+Vector3.new(0,3,0)) -- on the lawn at the foot: stays
 		local _,closing=c.player(4,Tier.T(5,5,Tier.FloorY+3));closing.closing=true
 		Tier.inject(OFF);c.tick()
-		assert(#c.placed==2 and not c.arrivedAt[onPath])
+		assert(#c.placed==3 and c.arrivedAt[onPath]and not c.arrivedAt[atFoot])
 		for _,m in ipairs(c.placed)do
 			assert(m.open and m.ringOff,"moved after the tier closed")
 			local at=m.cframe.Position

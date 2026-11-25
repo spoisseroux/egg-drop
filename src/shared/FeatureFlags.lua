@@ -71,9 +71,11 @@
 -- world_walk). Missing = off.
 -- CliffDen (CLIFF-DEN-ISLAND-SCOPE): with the WorldBeta pack mounted (under Tier's ceiling), true swaps in the sculpted
 -- island (the cliff path, the Play Den's room, the terrace top: DenLayout's step B); false swaps only the cave's bars
--- out of the palette (step A's pocket). Either way the bars hide while the den is open. No pack: the live island.
+-- out of the palette (no room then: step A's pocket is retired, so the den and the terrace stay closed). Either way the
+-- bars hide while the den is open. No pack: the live island.
 -- PlayDen (PLAY-DEN-BUILD-PLAN, artifacts/qa-2026-11-24-beta16): the build ceiling for the Play Den (the cave as the games
--- room). Also needs the beta place or Studio (PlayDen.PlaceId) and the server's switch (DenConfig: play_den, missing = off).
+-- room). Also needs the beta place or Studio (PlayDen.PlaceId), the server's switch (DenConfig: play_den, missing = on) and the
+-- island's sculpt (CliffDen) for its room.
 -- ParkHollow (WORLD-ALIVE-LOOK section 2, 2026-11-25): the second park becomes the Hollow (a round glade backed into the
 -- cliff, no kerb). Shared layout data read at require time, so it is a place gate only, no server switch: the beta
 -- place or Studio (ParkLayout.HollowPlaceId). false, or any other place (live), keeps the old grove park exactly.

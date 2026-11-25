@@ -1,4 +1,4 @@
--- The Play Den on this client, step A (PLAY-DEN-BUILD-PLAN.md, architect verdict applied). mount() answers nil with the
+-- The Play Den on this client (PLAY-DEN-BUILD-PLAN.md, architect verdict applied; the room from CliffDenData, step B). mount() answers nil with the
 -- build ceiling off (live). It follows `Den_open` (DenHost writes it once the room is really open), never the switch:
 -- with it missing nothing here exists and the meadow keeps today's flow.
 --   * Three prompts on local invisible anchors at DenLayout.prompts (never on the server's parts, so nothing waits for
@@ -75,6 +75,22 @@ function Client:open()
 	self.folder=folder
 	self.isOpen=true
 	self:refresh()
+end
+-- Code review (cliff den): is any of these prompts enabled with the local root within its reach? RoomView counts it as a
+-- station in reach, so the pet's own E (PetInteraction) steps aside and E fires this prompt.
+local function promptsInReach(prompts)
+	local character=game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Character
+	local root=character and character:FindFirstChild("HumanoidRootPart")
+	if not root then return false end
+	for _,p in pairs(prompts)do
+		local anchor=p and p.Parent
+		if p.Enabled and anchor and anchor:IsA("BasePart")and(anchor.Position-root.Position).Magnitude<=p.MaxActivationDistance then return true end
+	end
+	return false
+end
+function Client:inReach()
+	if not self.isOpen then return false end
+	return promptsInReach(self.prompts)
 end
 function Client:close()
 	self.isOpen=false

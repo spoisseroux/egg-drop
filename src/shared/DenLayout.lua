@@ -16,7 +16,8 @@ local World=require(script.Parent.HollowWorldLayout).V7
 local Layout={}
 Layout.Schema=1                 -- CliffDenData.schema this file reads
 Layout.BayKinds=table.freeze({"dash","niche","deck","niche","niche"}) -- step B's bays in order (Fable's table)
-Layout.Light=table.freeze({color="#FFC98A",range=14,brightness=1.2}) -- four of them: the whole light budget
+-- Four of them: the whole light budget. Fable cliff-den review fix 1: warmer and dimmer (#FFC98A at 1.2 blew out white).
+Layout.Light=table.freeze({color="#FFB870",range=14,brightness=.9})
 -- Each kind's footprint in its bay frame (x1, z1, x2, z2; -z toward the players), before the pets' Grow.
 Layout.Kinds=table.freeze({
 	dash=table.freeze({foot=table.freeze({-2.4,-1.0,2.4,.5}),prompt=Vector3.new(0,3.2,0)}),

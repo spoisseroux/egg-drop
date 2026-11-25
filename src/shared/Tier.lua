@@ -143,6 +143,15 @@ function Tier.onIt(position)
 	return false
 end
 
+-- Pure: is a root standing on the cliff path where it has left the lawn (code review: when the terrace closes the gates
+-- are built across the path, so they are moved too)? Over the path in plan, the tread there off the lawn, the root
+-- within 6 over the tread.
+function Tier.onPathUp(position,p)
+	if typeof(position)~="Vector3"or position.X~=position.X then return false end
+	local y=Tier.onPath(position.X,position.Z,.5,p)
+	return y~=nil and y>=Tier.FootY+Tier.PathLift and position.Y>=y-1 and position.Y<=y+6
+end
+
 -- Island bounds: one region round the terrace, from RegionY up. Inside it a root has left only below fallY (= RegionY).
 -- No safe function: no safe samples up there (a fall returns you to the lawn). The path itself is inside the ring.
 do

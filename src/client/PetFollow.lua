@@ -22,6 +22,20 @@ function Follow.bob(visual, reduced)
 	return (1 - math.cos(2 * phase)) * .5 * amount * scamper * (visual.gaitWeight or 0)
 end
 
+-- Code review (cliff den): where a pet ground ray starts. Inside the open Play Den it starts under the room's collision
+-- ceiling (DenLayout.groundRayTop, as the server's); anywhere else (and on live) exactly `above` over the point.
+function Follow.rayTop(position, above)
+	local ok, top = pcall(function()
+		local Shared = game:GetService("ReplicatedStorage"):FindFirstChild("Shared")
+		local PlayDen = Shared and require(Shared:FindFirstChild("PlayDen"))
+		if not PlayDen or not PlayDen.isOpen() then return nil end
+		local DenLayout = require(Shared:FindFirstChild("DenLayout"))
+		local layout = DenLayout.current()
+		return layout and DenLayout.groundRayTop(layout, position, above)
+	end)
+	return if ok and type(top) == "number" then top else position.Y + above
+end
+
 function Follow.ground(position, visual, fallback)
 	local params = RaycastParams.new()
 	local exclude = { visual.model }
@@ -36,7 +50,7 @@ function Follow.ground(position, visual, fallback)
 	end
 	params.FilterDescendantsInstances = exclude
 	params.RespectCanCollide = true
-	local hit = workspace:Raycast(position + Vector3.new(0, 8, 0), Vector3.new(0, -80, 0), params)
+	local hit = workspace:Raycast(Vector3.new(position.X, Follow.rayTop(position, 8), position.Z), Vector3.new(0, -80, 0), params)
 	return if hit then hit.Position.Y + 0.025 else fallback or 4.025
 end
 
