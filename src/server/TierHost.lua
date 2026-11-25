@@ -1,8 +1,10 @@
 -- The upper tier host (UPPER-TIER-BUILD-PLAN.md, architect verdict applied; the way up is the island's cliff path,
 -- CLIFF-DEN-BUILD.md). mount() answers nil with the build ceiling off (live): nothing made, nothing connected, no world
 -- data read. There is no remote and no client code: players walk up the cliff path; pets wait at its foot (Tier.covers
--- in the server's pet floor checks, and the pet-blocked footprints made here). The terrace opens only with the path in
--- (workspace CliffDen, set at start by CliffDenSwap); while it is closed the path's foot and notch are gated.
+-- in the server's pet floor checks, and the pet-blocked footprints made here) unless the TierPets gate is open
+-- (WORLD-FINISH-LOOK slice A: then pets follow up; the footprints still keep lawn pets from under the path). The terrace
+-- opens only with the path in (workspace CliffDen, set at start by CliffDenSwap); while it is closed the path's foot
+-- and notch are gated.
 --
 -- Mount (protected): the ring boxes that stand aside (Tier.ringAside) and the end closers (Tier.closers) from
 -- WorldV7Data.perimeter; any failure, or no box found, keeps the tier closed with one warning.
@@ -13,15 +15,22 @@
 -- Close (the switch off, or MaxErrors errors), in one step, never yielding: everyone standing up there is moved to the
 -- lawn by the foot (arrived() for the island bounds), the ring boxes that still exist get their value back, the model and
 -- the footprints are destroyed, `open` is false. A rebuilt lounge drops all tier state (its parts went with the old one).
+-- Pets (slice A): whenever the tier closes, and whenever the pets' switch turns off while it stays open, every pet up
+-- there (TierPets.zone of its position: the terrace or the path) is carried to the lawn by the foot, one pcall each
+-- (DenHost.rescuePet's way); a Top Lawn pet leaves the park first.
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Tier=require(Shared.Tier)
 local Greybox=require(Shared.TierGreybox)
+local TierPets=require(Shared.TierPets)
+local Activity=require(Shared.GardenActivity)
 local GreyboxRows=require(Shared.GreyboxRows)
 
 local Host={};Host.__index=Host
 
--- d: boards (player -> board), room() -> EggDropLounge, arrived(player, rootPosition) (island bounds), moved(player).
+-- d: boards (player -> board), room() -> EggDropLounge, arrived(player, rootPosition) (island bounds), moved(player);
+-- the pets (optional): garden (actors), carry(board, spot, leavePark) -> bool, petsUp() -> bool (the pets' switches,
+-- not `open`), petPosition(garden, actor) -> Vector3.
 -- Specs may replace perimeter (the ring data), clock, heartbeat, read(board) -> view, place(board, view, cframe), warn.
 function Host.mount(d)
 	if not Tier.ceiling()then return nil end
@@ -174,6 +183,39 @@ function Host:evacuate(player,board)
 	if self.d.arrived then self.d.arrived(player,root.Position)elseif self.d.moved then self.d.moved(player)end
 	return true
 end
+-- This player's pet, if it is up there (the terrace or the path, by its position), to the lawn by the foot. True when
+-- carried.
+function Host.petPosition(garden,actor)return garden:position(actor,garden.options.now())end
+-- A pet is up there when it stands there or is on its way (its walk ends there: code review 5).
+function Host:rescuePet(player,board,k)
+	local garden=self.d.garden
+	local actor=garden and garden.actors and garden.actors[player.UserId]
+	if not actor or not self.d.carry then return false end
+	local at=(self.d.petPosition or Host.petPosition)(garden,actor)
+	local heading=Activity.vector(actor.to)
+	if not(typeof(at)=="Vector3"and TierPets.up(at))and not(heading and TierPets.up(heading))then return false end
+	local e=Tier.Evacuation
+	-- Beside where the owners land (the same offsets), two studs nearer the plaza.
+	local frame=CFrame.lookAt(e.at,Vector3.new(e.facing.X,e.at.Y,e.facing.Z))*CFrame.new(Tier.EvacuationOffsets[(k-1)%#Tier.EvacuationOffsets+1])*CFrame.new(0,0,-2)
+	return self.d.carry(board,frame.Position+Vector3.new(0,TierPets.Sole,0),true)==true
+end
+-- Every pet up there comes down now, and again each tick for RescueFor seconds (code review 5: a pet in care, racing
+-- or holding the toy is refused by the carry; it comes when it is free). One pcall each.
+Host.RescueFor=20
+function Host:sweepPets()
+	local k=0
+	for player,board in pairs(self.d.boards)do
+		if not board.closing then
+			k+=1
+			local ok,problem=pcall(self.rescuePet,self,player,board,k)
+			if not ok then pcall(self.warn,"[Tier] pet: "..tostring(problem))end
+		end
+	end
+end
+function Host:rescuePets()
+	self.rescueUntil=self.clock()+Host.RescueFor
+	self:sweepPets()
+end
 function Host:close()
 	if self.open then
 		for player,board in pairs(self.d.boards)do
@@ -182,7 +224,10 @@ function Host:close()
 				if not ok then pcall(self.warn,"[Tier] evacuate: "..tostring(problem))end
 			end
 		end
+		-- Only if pets could be up there (code review 8: never a lawn pet by the path's foot with the pets' switch off).
+		if self.petsWere then self:rescuePets()end
 	end
+	self.petsWere=false
 	for _,entry in ipairs(self.ring or {})do
 		if entry.box.Parent then entry.box.CanCollide=entry.collide end
 	end
@@ -199,12 +244,21 @@ function Host:step()
 	local room=self:room()
 	-- A rebuilt (or removed) lounge took the tier's parts with it: drop the state, never touch the old parts.
 	if self.builtIn and room~=self.builtIn then
-		self.ring,self.model,self.blocked,self.builtIn,self.open=nil,nil,nil,nil,false
+		if self.open and self.petsWere then self:rescuePets()end
+		self.ring,self.model,self.blocked,self.builtIn,self.open,self.petsWere=nil,nil,nil,nil,false,false
 	end
 	local cliff=Tier.cliff()
 	local on=not self.broken and cliff and Tier.on()and room~=nil
 	if on and not self.open then self:openUp(room)
 	elseif not on and(self.open or self.model)then self:close()end
+	-- The pets' switch off while the tier stays open: pets up there come down (their owners stay).
+	local up=self.open and self.d.petsUp~=nil and self.d.petsUp()==true
+	if self.petsWere and not up and self.open then self:rescuePets()
+	elseif up then self.rescueUntil=nil
+	elseif self.rescueUntil then
+		if now<self.rescueUntil then self:sweepPets()else self.rescueUntil=nil end
+	end
+	self.petsWere=up
 	-- The path's foot and notch are gated while the terrace is closed (the path is part of the island: it stays).
 	self:gate(room,cliff and room~=nil and not self.open)
 end

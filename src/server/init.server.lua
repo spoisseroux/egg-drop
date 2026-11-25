@@ -42,6 +42,7 @@ local PetCatchup=require(ReplicatedStorage.Shared.PetCatchup)
 local Hush=require(ReplicatedStorage.Shared.Hush)
 local Tier=require(ReplicatedStorage.Shared.Tier)
 local PetFloors=require(ReplicatedStorage.Shared.PetFloors)
+local TierPets=require(ReplicatedStorage.Shared.TierPets)
 local DenLayout=require(ReplicatedStorage.Shared.DenLayout)
 local GardenPathPlanner=require(ReplicatedStorage.Shared.GardenPathPlanner)
 local PetAppearance = require(script.PetAppearance)
@@ -132,6 +133,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.CatchupConf
 task.spawn(function()local ok,problem=pcall(function()require(script.HushConfig).start()end);if not ok then warn("[Hush] config not started: "..tostring(problem))end end)
 -- The upper tier off switch (TierConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.TierConfig).start()end);if not ok then warn("[Tier] config not started: "..tostring(problem))end end)
+-- Pets go up off switch (TierPetsConfig, WORLD-FINISH-LOOK slice A): the same way, one key. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.TierPetsConfig).start()end);if not ok then warn("[TierPets] config not started: "..tostring(problem))end end)
 -- The Play Den off switch (DenConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.DenConfig).start()end);if not ok then warn("[Den] config not started: "..tostring(problem))end end)
 remotes:SetAttribute("PetCharmVersion",require(ReplicatedStorage.Shared.PetCharmCatalog).Version)
@@ -231,17 +234,27 @@ local tierHost
 -- and Garden Dash read (denHost:live()). nil on live.
 local denHost
 local function denLive()return if denHost~=nil then denHost:live()else nil end
+-- Pets go up (WORLD-FINISH-LOOK slice A, TierPets): the tier open, the pets' switch and the catch-up switch (a pet that
+-- falls behind on the flight needs its hop). false on live (no tier host) and with any of them off: then every hook
+-- below takes today's line exactly.
+local function petsUp()return tierHost~=nil and tierHost.open==true and TierPets.on()and PetCatchup.on()end
 local sceneWatch -- the one DescendantAdded listener of the current garden scene (beta and Studio only)
 local function petAnchor(state)
 	local room=workspace:FindFirstChild("EggDropLounge")
 	local floor=room and room:FindFirstChild("Floor")
 	if not floor or not state.root then return nil end
 	local position=state.position-state.root.CFrame.LookVector*3+state.root.CFrame.RightVector*2.6
-	if not PetFloors.ok(floor,position,hushHost~=nil and hushHost.open,tierHost~=nil and tierHost.open,denLive())then return nil end
+	local up=petsUp()
+	-- Pets go up: an owner on the terrace or the path is followed on that floor (the offset point snapped into the
+	-- path's lane or the terrace less 3, never off the tread).
+	if up then position=TierPets.anchor(state.position,position)or position end
+	if not PetFloors.ok(floor,position,hushHost~=nil and hushHost.open,tierHost~=nil and tierHost.open,denLive(),up)then return nil end
 	local params=RaycastParams.new();params.RespectCanCollide=true
 	params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
-	-- The Play Den's ceiling is lower than 8 over a root in it (DenLayout.groundRayTop; elsewhere exactly +8).
+	-- The Play Den's ceiling is lower than 8 over a root in it (DenLayout.groundRayTop; elsewhere exactly +8); on the
+	-- cliff path at most 6 over the tread (rock overhangs).
 	local top=DenLayout.groundRayTop(denLive(),position,8)
+	if up then top=TierPets.rayTop(position,top)end
 	local hit=workspace:Raycast(Vector3.new(position.X,top,position.Z),Vector3.new(0,-80,0),params)
 	if not hit or hit.Position.Y>state.position.Y+1 or hit.Position.Y<state.position.Y-6 then return nil end
     local grounded=Vector3.new(position.X,hit.Position.Y+.025,position.Z)
@@ -281,10 +294,33 @@ gardenScene=function()
  end
  return wanderScene
 end
+-- Pets go up: a ground point under `point` on the terrace or the path (the ray starts at most 6 over the tread), within
+-- `slack` of its height; nil when there is none.
+local function tierGround(point,slack)
+ local room=workspace:FindFirstChild("EggDropLounge")
+ if not room or typeof(point)~="Vector3"then return nil end
+ local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
+ local top=TierPets.rayTop(point,point.Y+8)
+ local hit=workspace:Raycast(Vector3.new(point.X,top,point.Z),Vector3.new(0,-(top-point.Y)-6,0),params)
+ if not hit or hit.Material==Enum.Material.Water or math.abs(hit.Position.Y+TierPets.Sole-point.Y)>(slack or .8)then return nil end
+ return Vector3.new(point.X,hit.Position.Y+TierPets.Sole,point.Z)
+end
 local function validWander(input,target,from)
  local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
  if not floor or typeof(target)~="Vector3"or typeof(from)~="Vector3"then return nil end
  gardenScene()
+ -- Pets go up: the terrace less 3 is wander floor; the path only at its turn's rest spot (transit only).
+ if petsUp()then
+  local ok=TierPets.targetOk(target)
+  if ok==false then return nil end
+  if ok==true then
+   local grounded=tierGround(target,.7)
+   if not grounded or(math.abs(grounded.Y-input.anchor.Y)>.7 and not TierPets.restAt(target))then return nil end
+   local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
+   if workspace:Raycast(from+Vector3.new(0,.7,0),grounded-from,params)then return nil end
+   return grounded
+  end
+ end
  if not PetFloors.ok(floor,target,hushHost~=nil and hushHost.open,tierHost~=nil and tierHost.open,denLive())then return nil end
  for _,station in ipairs(wanderScene.stations)do if station.Parent and Vector2.new(target.X-station.Position.X,target.Z-station.Position.Z).Magnitude<3 then return nil end end
  local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
@@ -308,8 +344,18 @@ local function validWander(input,target,from)
  elseif workspace:Raycast(from+lift,grounded-from,params)then return nil end
  return grounded
 end
-local function resolveGardenTarget(target,from)
+local function resolveGardenTarget(target,from,base)
         local scene=gardenScene();if not scene then return target,false end
+        -- Pets go up: a target on the terrace or the path (by the anchor's floor: `base`, before the owner's look-ahead)
+        -- snaps into that floor (the lane, the terrace less 3) and is checked by a ray; it never meets the lawn's wet
+        -- list (the path's own footprints lie under it in plan).
+        local zone=if petsUp()then TierPets.zone(if typeof(base)=="Vector3"then base else target)else "lawn"
+        if zone~="lawn"then
+            local snapped=TierPets.snap(target,zone)
+            local grounded=snapped and tierGround(snapped,.8)
+            if not grounded then return from,true end
+            return grounded,true
+        end
         local resolved=GardenWalkability.resolveAnchor(target,scene.wet)
         if not resolved then return from,true end
         local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={scene.room}
@@ -324,11 +370,28 @@ end
 -- the owner first); each must resolve to walkable ground where it stands (no `from` fallback: nil is a refusal), stay
 -- within Rise of the anchor's height, and pass PetCatchup.clear (safe ground, island walls, the course and pad while a
 -- race is live). nil when none does: the pet stays and GardenState retries later.
-local function catchupLanding(input,racing)
+local function catchupLanding(input,racing,pet)
 	local anchor=input and input.anchor
 	if typeof(anchor)~="Vector3"then return nil end
 	-- With no garden scene nothing can be checked: refuse (resolveGardenTarget would hand the spot back unchecked).
 	if not gardenScene()then return nil end
+	-- Pets go up: the owner on the path -> 4 studs behind them on the centre line, never on the flight; on the terrace ->
+	-- the rings round the anchor on the terrace less 3. The island walls and the lawn's safe cells do not apply there.
+	if petsUp()then
+		local zone=TierPets.zone(anchor)
+		if zone=="path"then
+			local spot=TierPets.landing(anchor,pet)
+			return spot and tierGround(spot,.8)
+		elseif zone=="terrace"then
+			for _,candidate in ipairs(PetCatchup.candidates(anchor,nil))do
+				if TierPets.terraceSafe(candidate.X,candidate.Z)then
+					local spot=tierGround(candidate,PetCatchup.Rise)
+					if spot then return spot end
+				end
+			end
+			return nil
+		end
+	end
 	-- More safe ground while it is open: the Hush's, the Play Den's (its floor clear of the furniture).
 	local hushSafe=if hushHost~=nil and hushHost.open then Hush.safeCell else nil
 	local den=denLive()
@@ -351,12 +414,27 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
 	end,
     planPath=function(from,to,velocity,speed,minimum,yaw,via,terminal)
         local scene=gardenScene()
-        return GardenPathPlanner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,if scene then scene.wet else {})
+        local wet=if scene then scene.wet else {}
+        -- Pets go up: between floors along the cliff path (TierPets.plan); on the terrace alone no lawn wet list (the
+        -- path's footprints and the lawn's water lie under it in plan).
+        if petsUp()then
+            local path,seconds=TierPets.plan(from,to,velocity,speed,minimum,yaw,function(a,b,v,s,m,y,i,t)return GardenPathPlanner.plan(a,b,v,s,m,y,i,t,wet)end)
+            if path then return path,seconds end
+            if TierPets.zone(from)=="terrace"and TierPets.zone(to)=="terrace"then
+                return GardenPathPlanner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,{})
+            end
+        end
+        return GardenPathPlanner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,wet)
     end,
     resolveTarget=resolveGardenTarget,
     -- Beta (12) QA G1: pets catch up (PetCatchup; off unless its switch is on).
     catchup=function()return PetCatchup.on()end,
     landing=catchupLanding,
+    -- Pets go up (TierPets): the catch-up gap along the route between floors; no settle sit on the path; no greeting
+    -- across floors or on the path. All three answer today's default when the gate is closed (live).
+    routeGap=function(pet,anchor)if not petsUp()then return nil end;return TierPets.routeDistance(pet,anchor)end,
+    canSettle=function(position)return not petsUp()or TierPets.zone(position)~="path"end,
+    canMeet=function(a,b)if not petsUp()then return true end;local za,zb=TierPets.zone(a),TierPets.zone(b);return za==zb and za~="path"end,
     warn=warn,
     validToyPath=function(path)
         local scene=gardenScene();return scene~=nil and GardenWalkability.pathAllowed(path,scene.wet)
@@ -368,15 +446,29 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
 	validFocus=function(input,target)
 		local room=workspace:FindFirstChild("EggDropLounge");local floor=room and room:FindFirstChild("Floor")
 		if not floor then return false end
+		-- Pets go up: focus on the terrace less 3, never on the path (transit only).
+		if petsUp()and TierPets.up(target)then
+			return TierPets.zone(target)=="terrace"and TierPets.terraceSafe(target.X,target.Z)and tierGround(target,.3)~=nil
+		end
 		if not PetFloors.ok(floor,target,hushHost~=nil and hushHost.open,tierHost~=nil and tierHost.open,denLive())then return false end
 		local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Include;params.FilterDescendantsInstances={room}
 		local hit=workspace:Raycast(target+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
 		return hit~=nil and math.abs(hit.Position.Y+.025-target.Y)<.3
 	end})
+-- Pets go up (TierPets): the rest spots on the terrace and at the path's turn while the gate is open; nil otherwise.
+GardenState.tierRests=function()if petsUp()then return TierPets.rests()end;return nil end
 -- Pets stay on the ground level: an owner on a terrace, ramp, pillar, ledge or
 -- bench leaves the pet at the last ground anchor (bridges and other authored
 -- spans still count as ground). Kept out of petAnchor so care reach is unchanged.
-local function groundAnchor(board,anchor)
+local function groundAnchor(board,anchor,position)
+	-- Pets go up: an anchor on the terrace or the path is followed, kept apart from the ground anchor (architect B2: the
+	-- gate closing never leaves an up-there point as a lawn pet's target); a missing one while the owner is still up
+	-- there is the last up-there anchor.
+	if petsUp()then
+		if anchor and TierPets.up(anchor)then board.upAnchor=anchor;return anchor end
+		if not anchor and board.upAnchor and TierPets.up(position)then return board.upAnchor end
+	end
+	board.upAnchor=nil
 	if anchor and(GardenWalkability.spanAt(anchor)~=nil or GardenLayout.onGround(anchor))then
 		board.groundAnchor=anchor
 		return anchor
@@ -398,7 +490,7 @@ local function gardenInput(board)
 		carryPosition=root and(root.Position+root.CFrame.LookVector*1.2+Vector3.new(0,.3,0))or nil,
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
 		characterId=board.characterGeneration or 0,petGeneration=board.companionGeneration or 0,position=position,mode=board.mode,
-		anchor=if root then groundAnchor(board,petAnchor({root=root,position=position}))or Vector3.new(position.X,GardenLayout.groundAt(position.X,position.Z),position.Z)else Vector3.zero,
+		anchor=if root then groundAnchor(board,petAnchor({root=root,position=position}),position)or Vector3.new(position.X,GardenLayout.groundAt(position.X,position.Z),position.Z)else Vector3.zero,
 		yaw=if root then math.atan2(root.CFrame.LookVector.X,root.CFrame.LookVector.Z)else 0,
 		charmVisible=preferences[petId]~=nil and preferences[petId].charmVisible==true}
 end
@@ -946,6 +1038,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() if not require(script.HushConfig).command(message) and garden.hushHost then garden.hushHost:command(board, message) end end) end)
 		-- "/tier <on|off|clear>": the upper tier switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.TierConfig).command(message) end) end)
+		-- "/tierpets <on|off|clear>": pets follow their owners up the cliff path (WORLD-FINISH-LOOK slice A), this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.TierPetsConfig).command(message) end) end)
 		-- "/den <on|off|clear>": the Play Den switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.DenConfig).command(message) end) end)
 		-- "/freshsave" and "/freshsave restore": the owner's next join is a brand-new save, or the old one again
@@ -2198,7 +2292,8 @@ do
 	local ok, problem = pcall(function()
 		garden.findsHost = require(script.FindsHost).mount({ remotes = remotes, garden = garden, boards = boards, players = Players,
 			nursery = Nursery, canProgress = canProgress, publishNursery = publishNursery, publishState = publishState, dayOf = Daily.dayOf,
-			active = function(board) local state = petState(board); return state.alive and not state.conflict end })
+			active = function(board) local state = petState(board); return state.alive and not state.conflict end,
+			up = petsUp })
 	end)
 	if not ok then warn("[Finds] not mounted: " .. tostring(problem)) end
 end
@@ -2253,9 +2348,16 @@ end
 -- off. The terrace, the switchback, the ring boxes standing aside, the evacuation; players only (pets wait at the foot).
 do
 	local ok, problem = pcall(function()
-		tierHost = require(script.TierHost).mount({ boards = boards,
+		tierHost = require(script.TierHost).mount({ boards = boards, garden = garden,
 			room = function() return workspace:FindFirstChild("EggDropLounge") end,
-			arrived = function(player, spot) if garden.boundsHost then garden.boundsHost:arrived(player, spot) end end })
+			arrived = function(player, spot) if garden.boundsHost then garden.boundsHost:arrived(player, spot) end end,
+			-- Pets go up (TierPets): pets up there come down with the tier closing or the pets' switch turning off.
+			carry = function(board, spot, leavePark)
+				local carried = garden:carry(board.player.UserId, spot, leavePark)
+				if carried then board.groundAnchor = spot; board.upAnchor = nil end
+				return carried
+			end,
+			petsUp = function() return TierPets.on() and PetCatchup.on() end })
 		garden.tierHost = tierHost
 	end)
 	if not ok then warn("[Tier] not mounted: " .. tostring(problem)) end

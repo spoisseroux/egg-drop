@@ -167,6 +167,73 @@ return function(server)
 		Tier.inject(nil)
 	end)
 
+	test("pets go up (WORLD-FINISH-LOOK slice A): /tier off or the pets' switch off carries every pet up there to the lawn by the foot; lawn pets stay",function()
+		local Pets=require(Shared.TierPets)
+		local P=Tier.path()
+		for _,how in ipairs({"tier off","pets off"})do
+			Tier.inject(ON)
+			local carried,petsOn={},true
+			local c=rig()
+			local garden={actors={},options={now=function()return c.now end}}
+			local spots={}
+			function garden:position(actor)return spots[actor.ownerId]end
+			c.host.d.garden=garden
+			c.host.d.petsUp=function()return petsOn end
+			local refuse={}
+			c.host.d.carry=function(board,spot,leavePark)
+				local id=board.player.UserId
+				if refuse[id]then return false end -- in care, racing, holding the toy: the carry says no
+				table.insert(carried,{board=board,spot=spot,leavePark=leavePark});spots[id]=spot;garden.actors[id].to=nil
+				return true
+			end
+			c.tick();assert(c.host.open)
+			local where={
+				turn=Pets.pointAt(Pets.turnU(P),0,P),                      -- owner and pet at the turn
+				flight=P.points[#P.points-3]+Vector3.new(0,Pets.Sole,0),    -- on the flight
+				bench=Tier.T(0,-6,Tier.FloorY+Pets.Sole),                   -- on the Top Lawn's bench side
+				low=Pets.pointAt(Pets.blockStart(P)+1,0,P),                 -- low on the path, in a footprint
+				lawn=LAWN,                                                  -- on the lawn: stays
+				den=Vector3.new(-8,4.2,-110),                               -- in the den: DenHost's
+			}
+			local ids,count={},0
+			for name,at in pairs(where)do
+				count+=1
+				local id=count;ids[name]=id
+				local player,board=c.player(id,at+Vector3.new(0,3,0))
+				garden.actors[id]={ownerId=id};spots[id]=at
+				board.player=player
+			end
+			-- On its way up (code review 5): on the lawn, its walk ends on the path. And one the carry refuses at first.
+			local walking=count+1
+			do
+				local player,board=c.player(walking,LAWN+Vector3.new(0,3,0))
+				garden.actors[walking]={ownerId=walking,to={Pets.pointAt(P.u[#P.u]*.5,0,P).X,Pets.pointAt(P.u[#P.u]*.5,0,P).Y,Pets.pointAt(P.u[#P.u]*.5,0,P).Z}}
+				spots[walking]=LAWN;board.player=player
+			end
+			refuse[ids.flight]=true
+			c.tick();assert(#carried==0,"nothing carried while open")
+			if how=="tier off"then Tier.inject(OFF)else petsOn=false end
+			c.tick()
+			local got={}
+			for _,move in ipairs(carried)do
+				got[move.board.player.UserId]=true
+				assert(move.leavePark==true,"a Top Lawn pet leaves the park first")
+				assert(Pets.zone(move.spot)=="lawn"and(Vector3.new(move.spot.X,0,move.spot.Z)-Vector3.new(Tier.Evacuation.at.X,0,Tier.Evacuation.at.Z)).Magnitude<5)
+			end
+			for _,name in ipairs({"turn","bench","low"})do assert(got[ids[name]],how..": the pet "..name.." was not carried")end
+			assert(got[walking],how..": the pet on its way up was not carried")
+			assert(not got[ids.flight],"refused so far")
+			assert(not got[ids.lawn],how..": a lawn pet was carried");assert(not got[ids.den],how..": a den pet was carried")
+			assert(#carried==4,how..": each once")
+			refuse[ids.flight]=nil
+			c.tick();assert(#carried==5 and carried[5].board.player.UserId==ids.flight,"the refused one comes when it is free")
+			c.tick();assert(#carried==5,"never twice")
+			c.now+=Host.RescueFor+1;c.tick();assert(c.host.rescueUntil==nil,"the sweep ends")
+			if how=="pets off"then assert(c.host.open,"the pets' switch leaves the terrace open")end
+			Tier.inject(nil)
+		end
+	end)
+
 	test("the cliff path: closed, its foot and notch are gated (invisible, colliding); open, the gates go; no path, no terrace",function()
 		Tier.inject(OFF)
 		local c=rig();c.tick()

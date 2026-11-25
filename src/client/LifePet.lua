@@ -26,7 +26,7 @@ local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Pet={};Pet.__index=Pet
 Pet.Snack=table.freeze({notice=8,cooldown=90,turn=.3,pause=.4,trot=3.5,arrive=.9,nibble=.35,nibbles=3,hop=.35,hopTime=.3,
 	content=1.5,heart=.8,heartRise=1,heartSize=.6,back=.35,drift=8,leash=16,release=.3,pausePitch=-.15,nod=9,
-	heartColour=Color3.fromHex("#F4A9C4"),heartImage="rbxassetid://129048015089227",lift=.5,sole=.025})
+	heartColour=Color3.fromHex("#F4A9C4"),heartImage="rbxassetid://129048015089227",lift=.5,sole=.025,reach=2})
 Pet.Look=table.freeze({pitch=-.25,rise=.2,hold=.7,fall=.3,over=.5})
 local S=Pet.Snack
 
@@ -103,6 +103,13 @@ function Pet:notice(loose,now)
 	if not free then self:why("refused: "..whyNot);return false end
 	local d=flat(visual.origin,loose.rest)
 	if d>S.notice then self:why(string.format("refused: fruit %.1f studs off (notice %d)",d,S.notice));return false end
+	-- Pets go up (WORLD-FINISH-LOOK slice A, architect B5): never a fruit on another floor (a pet at the path's turn or on
+	-- the terrace over a fruit on the lawn below). A trot is a straight line. Only while the server says pets go up
+	-- (the TierPets_on attribute: never written on live, so live is today's rule).
+	if workspace:GetAttribute("TierPets_on")==true then
+		local rise=math.abs((loose.rest.Y-S.lift+S.sole)-visual.origin.Y)
+		if rise>S.reach then self:why(string.format("refused: fruit %.1f studs up or down",rise));return false end
+	end
 	local owner=call(self.d.owner)
 	if typeof(owner)=="Vector3"and flat(owner,loose.rest)>S.leash then self:why("refused: past the owner's leash");return false end
 	-- Spencer (beta 15): never two pets on one fruit. On this client: one claim a fruit at a time.

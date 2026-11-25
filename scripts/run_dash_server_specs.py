@@ -46,7 +46,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # The park sites and the Hollow (WORLD-ALIVE-LOOK section 2): the pinned arrival and grove, the multi-site director.
          "ParkSites", "MultipleParks", "ParkDirector",
          # The cliff path / Play Den / terrace top (CLIFF-DEN-ISLAND-SCOPE): the beta's server-start swap and its data.
-         "CliffDen"]
+         "CliffDen",
+         # Pets go up and the Top Lawn (WORLD-FINISH-LOOK slices A and B).
+         "TierPets"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

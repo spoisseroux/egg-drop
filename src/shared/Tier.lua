@@ -1,7 +1,8 @@
 -- The upper tier (artifacts/qa-2026-11-24-beta15/UPPER-TIER-BUILD-PLAN.md; look: UPPER-TIER-LOOK.md; the way up:
 -- artifacts/qa-2026-11-25-beta17/CLIFF-DEN-BUILD.md): a terrace on the north-west ridge, 76 x 44 at y 29, reached by the
 -- island's cliff path (the beta's sculpt, CliffDenData.path: cut into the rock west of the cave, from the lawn by the
--- den up to the terrace's garden edge). The T0 zigzag is retired. Players only: pets wait at the path's foot. Shared and
+-- den up to the terrace's garden edge). The T0 zigzag is retired. Pets wait at the path's foot unless TierPets' gate is
+-- open (WORLD-FINISH-LOOK slice A: then they follow up; TierPets.lua holds their floors and route). Shared and
 -- pure, the IslandBounds pattern: FeatureFlags.Tier is the build ceiling and opens only on the beta place or in Studio;
 -- the server's switch (TierConfig, ConfigService `garden_tier`: off until the config has loaded once, then missing or
 -- malformed = on) reaches clients as `Tier_on`. The terrace also needs the cliff path: without the sculpt (no WorldBeta
@@ -85,16 +86,19 @@ function Tier.path(data)
 	local line=type(d)=="table"and type(d.path)=="table"and d.path.centreLine
 	local out=false
 	if type(line)=="table"and #line>=2 then
-		local points,widths={}, {}
+		local points,widths,steps,u={}, {}, {}, {}
 		local x0,z0,x1,z1=math.huge,math.huge,-math.huge,-math.huge
 		local good=true
 		for _,p in ipairs(line)do
 			if type(p)~="table"or type(p.x)~="number"or type(p.y)~="number"or type(p.z)~="number"or type(p.width)~="number"then good=false;break end
-			table.insert(points,Vector3.new(p.x,p.y,p.z));table.insert(widths,p.width)
+			local point=Vector3.new(p.x,p.y,p.z)
+			-- The pets' route (TierPets): the run's step flags and the arc length along the centre line.
+			table.insert(u,if #points==0 then 0 else u[#u]+(point-points[#points]).Magnitude)
+			table.insert(points,point);table.insert(widths,p.width);table.insert(steps,p.steps==true)
 			x0,z0,x1,z1=math.min(x0,p.x),math.min(z0,p.z),math.max(x1,p.x),math.max(z1,p.z)
 		end
 		if good then
-			out=table.freeze({points=table.freeze(points),widths=table.freeze(widths),
+			out=table.freeze({points=table.freeze(points),widths=table.freeze(widths),steps=table.freeze(steps),u=table.freeze(u),
 				box=table.freeze({min=Vector2.new(x0,z0),max=Vector2.new(x1,z1)})})
 		end
 	end

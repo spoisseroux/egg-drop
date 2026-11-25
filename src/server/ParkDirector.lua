@@ -37,6 +37,9 @@ Director.EnterSpeed=9
 -- are in the park (a busy park pairs on its own).
 Director.DuoWait=18 -- one activity (~13 s) plus the rest after it (3 s) and a short walk
 Director.DuoWaitMembers=4
+-- Pets go up (WORLD-FINISH-LOOK): a pet that cannot plan its way between floors into the park waits this many times
+-- (a second each), then leaves the park.
+Director.CrossTries=10
 
 local function horizontal(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
 local function angle(a,b)return math.atan2(math.sin(b-a),math.cos(b-a))end
@@ -311,6 +314,16 @@ function Director:enter(actor,input,now)
 	local last=path and path[#path]
 	local valid=last~=nil and(A.vector(last.to)-target).Magnitude<.1
 	if valid then for _,leg in ipairs(path)do if leg.safetyStop then valid=false;break end end end
+	-- Pets go up (architect B6): never a straight curve between floors (the cliff path and the terrace); wait a second
+	-- and try again. routeGap answers nil on one floor and on live, so this is today's fallback there.
+	-- After CrossTries such waits the pet leaves the park (its owner's follow takes over; code review 10).
+	if not valid and self.garden.options.routeGap and type(self.garden.options.routeGap(from,target))=="number"then
+		actor.park.crossTries=(actor.park.crossTries or 0)+1
+		if actor.park.crossTries>Director.CrossTries then self:leave(actor,input,now);return end
+		self.garden:transition(actor,"rest",from,1,"wanderPause")
+		actor.park.nextWanderAt=now+1
+		return
+	end
 	-- Pets are visuals and the park lawn is flat: the plain curve planner always reaches the point.
 	if not valid then path,seconds=A.plan(from,target,velocity,speed,0,yaw,nil,ZERO)end
 	self.garden:transition(actor,"investigate",target,0,"wander",nil,nil,{path=path,duration=seconds})

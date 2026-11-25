@@ -79,10 +79,13 @@
 -- ParkHollow (WORLD-ALIVE-LOOK section 2, 2026-11-25): the second park becomes the Hollow (a round glade backed into the
 -- cliff, no kerb). Shared layout data read at require time, so it is a place gate only, no server switch: the beta
 -- place or Studio (ParkLayout.HollowPlaceId). false, or any other place (live), keeps the old grove park exactly.
+-- TierPets (WORLD-FINISH-LOOK slice A, 2026-11-25): the build ceiling for pets following their owners up the cliff path,
+-- onto the terrace and back. Also needs Tier's ceiling (the beta place or Studio), the tier open, the pet catch-up switch
+-- and the server's switch (TierPetsConfig: garden_tier_pets, missing = on). false: pets wait at the path's foot.
 return table.freeze({FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,
  -- AliveAsmr (ASMR-AND-SCALE-LOOK 1, 2): the ASMR hatch sounds and the vibration (HatchAsmr, Haptics); beta and Studio only.
  AliveAsmr=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
- PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true})
+ PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true})
