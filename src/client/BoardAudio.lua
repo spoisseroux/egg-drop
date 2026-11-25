@@ -68,6 +68,20 @@ for cue, id in pairs(snackIds) do assetIds[cue] = id end
 -- Fable; assets/audio/custom/egg_drop_stars_bought.wav). Not heard by Spencer yet.
 assetIds.stars_bought = 105056947696236
 Audio.StarsBoughtGain = .7
+-- Garden Dash finish cues (RACE-AND-MUSIC-LOOK 1.1, 2.3 to 2.5; Spencer 2026-11-25 "race finish song"). PLACEHOLDERS:
+-- original synthesis by scripts/synth_dash_stings.py (assets/audio/custom/egg_drop_dash_*.wav, egg_drop_star_land.wav,
+-- egg_drop_stars_total.wav), uploaded 2026-11-25, not heard by Spencer yet. Only where Dash is built (its ceiling: the
+-- beta place and Studio): the live game makes no voice for them and keeps the old star_land / stars_total placeholders.
+Audio.DashIds = table.freeze({ dash_line = 125779668709193, dash_win = 137026770315578, dash_place = 98686110410220,
+	dash_best = 137334804716055, star_land = 138573712497210, stars_total = 83819844607705 })
+Audio.DashCues = table.freeze({ "dash_line", "dash_win", "dash_place", "dash_best" })
+-- Spec seam: the ceiling is read once, when this module loads.
+function Audio.dashCeiling()
+	local ok, on = pcall(function()
+		return require(game:GetService("ReplicatedStorage"):WaitForChild("Shared", 5):WaitForChild("Dash", 5)).ceiling()
+	end)
+	return ok and on == true
+end
 -- Dedicated voice pool reuses the existing80ms body; no new asset or loop.
 assetIds.hatch_finish=placeholderIds.goal_tick
 Audio.PlaceholderIds = placeholderIds
@@ -105,6 +119,10 @@ Audio.PendingCues = {}
 Audio.MusicVolume = 0.088
 local fieldCues={"aim","drop","land","bank","merge_bubble","merge_jelly","merge_chain"}
 table.insert(cues,"hatch_finish")
+if Audio.dashCeiling() then
+	for cue, id in pairs(Audio.DashIds) do assetIds[cue] = id end
+	for _, cue in ipairs(Audio.DashCues) do table.insert(cues, cue) end
+end
 -- Only newly reviewed v3 timestamped SFX are eligible here. Rejected/held
 -- music and superseded 6s/4s bursts are never mapped by this owner.
 -- Beta 12 S2: the new-tip chime's slot (TipChime). No voice until it has an id: play() answers false.

@@ -1,0 +1,14 @@
+{
+  "uploaded": "2026-11-25",
+  "creator": {"userId": "10716920546"},
+  "note": "Placeholders for the Garden Dash race song and finish cues (Spencer 2026-11-25). Beta only: the Dash ceiling.",
+  "assets": {
+    "race_song":   {"assetId": 100659120200214, "file": "assets/audio/custom/egg_drop_race_song.wav",   "from": "race/hop_to_it_120bpm_leadin3_loop32.wav", "moderation": "Approved"},
+    "dash_win":    {"assetId": 137026770315578, "file": "assets/audio/custom/egg_drop_dash_win.wav",    "from": "stings/dash_win.wav",    "moderation": "Approved"},
+    "dash_place":  {"assetId": 98686110410220,  "file": "assets/audio/custom/egg_drop_dash_place.wav",  "from": "stings/dash_place.wav",  "moderation": "Approved"},
+    "dash_best":   {"assetId": 137334804716055, "file": "assets/audio/custom/egg_drop_dash_best.wav",   "from": "stings/dash_best.wav",   "moderation": "Approved"},
+    "dash_line":   {"assetId": 125779668709193, "file": "assets/audio/custom/egg_drop_dash_line.wav",   "from": "stings/dash_line.wav",   "moderation": "Approved"},
+    "star_land":   {"assetId": 138573712497210, "file": "assets/audio/custom/egg_drop_star_land.wav",   "from": "stings/star_land.wav",   "moderation": "Approved"},
+    "stars_total": {"assetId": 83819844607705,  "file": "assets/audio/custom/egg_drop_stars_total.wav", "from": "stings/stars_total.wav", "moderation": "Approved"}
+  }
+}

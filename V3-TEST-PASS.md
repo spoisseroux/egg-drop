@@ -48,6 +48,7 @@ Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | 10 | **First-session tracking fix (live hotfix)** | Reviewed GO; waits for your go to publish live | Nothing to see in game; the funnel in Creator Hub becomes accurate |
+| 36 | **Placeholder race song and finish cues** (Spencer 2026-11-25; `RACE-AND-MUSIC-LOOK.md` 1-2; original synthesis, not heard yet) | Built offline (Opus, 2026-11-25), assets Approved; not code reviewed, not seen in Studio | Race (any mode): the garden music fades out, a 3 s lead-in plays under 3, 2, 1 and GO lands on the song's first beat; it loops while you race. Over the line: two wood notes and the song drops to about a third. Results card: the song goes; 1st (or a Time Trial cup) a win sting, 2nd/3rd a soft sting, 4th and lower the soft one quieter, a Time Trial new best with no cup the soft sting then a glock run; a new best in a race adds the glock run about 2 s in. Done / Race again: the sting cuts, the garden music comes back over 1 s. Music toggle off: no race song. Star land / Stars total sounds (deck results too) are the new ones on the beta. Switch: `/dash off` |
 
 ## Scoped, not built
 

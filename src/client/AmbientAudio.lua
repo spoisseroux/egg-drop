@@ -50,6 +50,20 @@ Ambient.RoundOut, Ambient.RoundIn = .6, 1.0
 -- v890 QA (2026-11-17): "turn down the game drop music a bit": .15 -> .105 (about -3 dB).
 Ambient.DeckMusicVolume = .105
 Ambient.DeckDuck = "deckRound"
+-- Garden Dash race song "Hop to It" (RACE-AND-MUSIC-LOOK 2.1; Spencer 2026-11-25 "put a placeholder for race music"). A
+-- PLACEHOLDER: original synthesis (scripts/synth_race_music.py, assets/audio/custom/egg_drop_race_song.wav), uploaded
+-- 2026-11-25, not heard by Spencer yet. One file, 120 bpm: a 3 s lead-in (the 3, 2, 1 on beats 1, 3, 5) and a 32 s loop
+-- from 3 to 35 s. Only DashClient (behind the Dash ceiling: the beta place and Studio) calls setRace, and the voice is
+-- made on that first call, so the live game never has it. It sits in the deck music's group (master, focus, the other
+-- ducks) and follows the music toggle; the world music is held out by its own duck from the lead-in until the race is
+-- put away, and comes back over `back` seconds.
+--   volume  the voice at full (DeckMusicVolume's level: both tracks are -19 LUFS)
+--   line    its share once the pet is over the line (it keeps playing while the others finish), reached in lineFade s
+--   inFade  the lead-in's fade up; out: the world music's fade out before the lead-in; back: the world music's return
+Ambient.RaceSongId = 100659120200214
+Ambient.Race = table.freeze({ lead = 3, loopEnd = 35, volume = .105, line = .35, lineFade = .4, cardFade = .15, leaveFade = .4,
+	inFade = .05, out = .4, back = 1.0, resync = .05 })
+Ambient.RaceDuck = "dashRace"
 -- A4 waterfall emitters. Positions come from WorldV7Data.beams.falls by name.
 Ambient.Falls = {
 	-- QA v775 note 6: the falls carried across the whole garden (tumble min 18 / max 150 was
@@ -504,6 +518,107 @@ function Ambient:setRound(active)
 	end
 end
 
+-- The race song (Ambient.Race). Where in the file a moment `elapsed` seconds after GO falls (negative: the count-in):
+-- the lead-in plays once, then 3..35 loops. Pure.
+function Ambient.racePosition(elapsed)
+	local R = Ambient.Race
+	local t = R.lead + elapsed
+	if t < R.loopEnd then return t end
+	local span = R.loopEnd - R.lead
+	return R.lead + (t - R.lead) % span
+end
+-- The voice, made on the first setRace. Sound.LoopRegion loops 3..35 after a lead-in that plays once (raceLoop
+-- "region"); where the engine refuses it, the plain loop of 3..35 from GO with no lead-in (raceLoop "section").
+function Ambient:makeRaceVoice()
+	if self.raceVoice then return self.raceVoice end
+	local R = Ambient.Race
+	local voice = sound("race_song", Ambient.RaceSongId, self.deckGroup, SoundService, true)
+	local ok = pcall(function()
+		voice.PlaybackRegionsEnabled = true
+		voice.LoopRegion = NumberRange.new(R.lead, R.loopEnd)
+	end)
+	if not ok and not pcall(function() voice.PlaybackRegion = NumberRange.new(R.lead, R.loopEnd) end) then
+		pcall(function() voice.PlaybackRegionsEnabled = false end)
+	end
+	self.raceLoop = if ok then "region" else "section"
+	self.raceVoice = voice
+	task.spawn(function() pcall(Ambient.preload, { voice }, function() end) end)
+	return voice
+end
+-- DashClient, for this player's own race only. state:
+--   "play" go  the lead-in and the loop, timed so `go` (on self.now's clock) is the downbeat of bar 1. Asked again with
+--              a new go, it re-times only past `resync` seconds (one jump, never a drift)
+--   "line"     over the line: down to `line` in lineFade s, still looping (the wait for the others is not silent)
+--   "card"     the results card opens: out in cardFade s; the world music stays held out under the card
+--   "off"      the race is put away (Done, Race again, left, aborted): out in `fade` s, the world music back over `back`
+-- Answers whether it took the state.
+function Ambient:setRace(state, go, fade)
+	if self.destroyed then return false end
+	local R = Ambient.Race
+	local race = self.race
+	if state == "play" then
+		if type(go) ~= "number" or go ~= go then return false end
+		local voice = self:makeRaceVoice()
+		if not race or race.state == "off" then
+			-- A new race (or one still fading out): from silence, at the new race's place in the song.
+			if voice.IsPlaying then voice:Stop() end
+			race = { gain = 0, go = go }
+			self.race = race
+		elseif math.abs(go - race.go) > R.resync then race.go, race.seek = go, true end
+		if race.state == "line" or race.state == "card" then return false end -- never back up once over the line
+		race.state, race.target, race.fade = "play", 1, R.inFade
+	elseif not race then return false
+	elseif state == "line" then
+		if race.state ~= "play" then return false end
+		race.state, race.target, race.fade = "line", R.line, R.lineFade
+	elseif state == "card" then
+		if race.state == "off" then return false end
+		race.state, race.target, race.fade = "card", 0, R.cardFade
+	elseif state == "off" then
+		race.state, race.target, race.fade = "off", 0, if type(fade) == "number" and fade >= 0 then fade else R.leaveFade
+	else return false end
+	race.rate = math.abs(race.target - race.gain) / math.max(race.fade, 1e-3)
+	return true
+end
+function Ambient:stepRace(dt, master, active, music)
+	local R, race, voice = Ambient.Race, self.race, self.raceVoice
+	local elapsed = 0
+	if race and voice then
+		if race.gain < race.target then race.gain = math.min(race.target, race.gain + race.rate * dt)
+		elseif race.gain > race.target then race.gain = math.max(race.target, race.gain - race.rate * dt) end
+		elapsed = self.now() - race.go
+		local from = if self.raceLoop == "region" then -R.lead else 0
+		local wanted = race.gain > 0 and music and master > 0 and active and elapsed >= from
+		voice.Volume = R.volume * race.gain
+		if wanted then
+			-- Started (or back from the music toggle, a lost focus, a mute) at the place the race has reached.
+			if not voice.IsPlaying or race.seek then
+				voice.TimePosition = Ambient.racePosition(elapsed)
+				if not voice.IsPlaying then voice:Play() end
+				race.seek = nil
+			end
+		elseif voice.IsPlaying then voice:Stop() end
+		if race.state == "off" and race.gain <= 0 then
+			self.race = nil
+			if voice.IsPlaying then voice:Stop() end
+		end
+	end
+	-- The world music: held out from `out` seconds before the lead-in until the race is put away, then back over `back`.
+	race = self.race
+	local hold = race ~= nil and race.state ~= "off" and (race.state ~= "play" or elapsed >= -(R.lead + R.out))
+	local world = self.raceWorld or 1
+	world = if hold then math.max(0, world - dt / R.out) else math.min(1, world + dt / R.back)
+	self.raceWorld = world
+	local audio = self.audio
+	if audio and audio.ducks then
+		local gain = if world < 1 then world else nil
+		if audio.ducks[Ambient.RaceDuck] ~= gain then
+			audio.ducks[Ambient.RaceDuck] = gain
+			if audio.refreshLoops then audio:refreshLoops() end
+		end
+	end
+end
+
 -- Another looped world voice (the Aero fountain, LOOK-R2 3), mixed exactly like the falls: in the ambience group (master,
 -- Ambience level, ducks, the deck round's fade, device focus) and stopped with them. spec: {id, parent, volume, speed,
 -- min, max, start = 0..1 share of the clip, fallback = {id, speed, volume}}. Returns a remover; calling it twice is nothing.
@@ -595,7 +710,8 @@ function Ambient:master()
 	if not audio then return 1, true, 1, true end
 	local duck = 1
 	for name, gain in pairs(audio.ducks or {}) do
-		if name ~= Ambient.DeckDuck then duck = math.min(duck, gain) end
+		-- The deck round's and the race song's ducks hold out the world music only, never these groups.
+		if name ~= Ambient.DeckDuck and name ~= Ambient.RaceDuck then duck = math.min(duck, gain) end
 	end
 	local music = if audio.isMusicEnabled then audio:isMusicEnabled() else true
 	return audio.master or 0, audio.deviceActive ~= false, duck, music
@@ -654,6 +770,8 @@ function Ambient:step(dt)
 		if self.deckMix > 0 and master > 0 and active then startLoop(self.deckVoice, 0)
 		elseif self.deckVoice.IsPlaying and self.deckMix == 0 then self.deckVoice:Stop() end
 	end
+	-- Nothing per frame unless a race song has ever been asked for (the beta's Dash only).
+	if self.race or (self.raceWorld or 1) < 1 then self:stepRace(dt, master, active, music) end
 	local night = self.night() == true
 	local daylight = self.daylight()
 	local events = self.birds:step(self.now(), listener, daylight, self.perches, audible and not self.round and self.mix > .5, night)
@@ -868,6 +986,11 @@ function Ambient:destroy()
 	self.bedVoice:Destroy()
 	for _, voices in pairs(self.voices) do for _, voice in ipairs(voices) do voice:Destroy() end end
 	if self.deckVoice then self.deckVoice:Destroy() end
+	if self.raceVoice then self.raceVoice:Destroy(); self.race = nil end
+	if self.audio and self.audio.ducks and self.audio.ducks[Ambient.RaceDuck] ~= nil then
+		self.audio.ducks[Ambient.RaceDuck] = nil
+		if self.audio.refreshLoops then self.audio:refreshLoops() end
+	end
 	if self.rustleVoice then self.rustleVoice:Destroy() end
 	if self.cricketBed then self.cricketBed:Destroy(); self.cricketLayer:Destroy() end
 	self.folder:Destroy()
