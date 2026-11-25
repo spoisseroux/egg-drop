@@ -1581,9 +1581,10 @@ openNursery = function()
 	journal:close()
     if clientUI.hueView then clientUI.hueView:close("forced")end
 	if nurseryState then nurseryView:open(nurseryState) end
-	-- Growth cuts: the results nudge's egg, picked once on this open if it is still on sale (never a later open).
+	-- Growth cuts: the results nudge's egg, picked once on this open if it is still on sale (never a later open:
+	-- the walk from the deck opens Hatch eggs within 4 s or not at all, LoungeStations.visitEggs).
 	local pick=clientUI.eggPick;clientUI.eggPick=nil
-	if pick and nurseryView:isOpen()and os.clock()-pick.at<60 and(pick.id~="look"or require(ReplicatedStorage.Shared.LookEggCatalog).EnablePurchases==true and nurseryState.lookAvailable~=false)then
+	if pick and nurseryView:isOpen()and os.clock()-pick.at<5 and(pick.id~="look"or require(ReplicatedStorage.Shared.LookEggCatalog).EnablePurchases==true and nurseryState.lookAvailable~=false)then
 		nurseryView:selectRecipe(pick.id)
 	end
 end

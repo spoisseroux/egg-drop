@@ -457,6 +457,9 @@ end
 function Cards:hideGarden()
  local current=self.garden
  self.garden=nil
+ -- Growth cuts (code review): a say-hi line cancelled before the rail ever showed it was not the garden step yet;
+ -- it may start again this session (gardenIntro is saved only when it shows).
+ if current and current.kind=="sayHi"and not current.presented then self.gardenDone=false end
  if current and current.rail then current.rail:cancel()end
  self.gardenView.root.Visible=false
  self.gardenView.root:SetAttribute("CoachCard",nil)
@@ -633,6 +636,8 @@ function Cards:step(now,ctx)
    or(current.kind=="sayHi"and ctx.focusing==true)
   if gone then
    self:hideGarden()
+   -- Growth cuts: the player said hi before (or while) the line showed: the garden step is done.
+   if current.kind=="sayHi"and ctx.focusing==true then self.gardenDone=true;self:mark("gardenIntro")end
    -- A beat that ran out moves on; one hidden by a menu shows again when the garden is free.
    if current.kind=="beat"and elapsed>=current.duration then self:advance(current.id)end
    -- The arrival card that ran its full time is done (shown once ever); one hidden by a
