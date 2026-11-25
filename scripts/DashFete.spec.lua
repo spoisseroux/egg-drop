@@ -29,6 +29,7 @@ return function(server)
 			local shows=stone.top-Stones.Water
 			assert(shows>=.75 and shows<=.95+1e-9,stone.name.." shows "..shows)
 			assert(stone.top<Stones.Kerb,"steps down from the bank")
+			assert(math.abs(stone.top-at.y/100)<1e-9,"the racing pets' height: none sinks in")
 		end
 	end)
 	test("the carve: 5 to 7 cuts, faces at 85 to 100% of the footprint radius, leaning out 8 to 20 degrees, the same every time",function()

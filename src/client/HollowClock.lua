@@ -46,9 +46,18 @@ function Clock.hourLook()
 	end
 	return values
 end
--- The Alive `scene` switch (beta and Studio only; a failing read is off). Specs swap it.
+-- The Alive `scene` switch (beta and Studio only; a failing read is off). The module and its ceiling are read once, so
+-- off the beta this is a constant false. Specs swap it.
+local alive, sceneCeiling
 function Clock.sceneOn()
-	local ok, on = pcall(function() return require(Shared:WaitForChild("Alive")).on("scene") end)
+	if sceneCeiling == nil then
+		local ok, module = pcall(function() return require(Shared:WaitForChild("Alive")) end)
+		alive = ok and module or nil
+		local okCeiling, ceiling = pcall(function() return alive ~= nil and alive.ceiling("scene") == true end)
+		sceneCeiling = okCeiling and ceiling == true
+	end
+	if not sceneCeiling then return false end
+	local ok, on = pcall(alive.on, "scene")
 	return ok and on == true
 end
 
@@ -279,7 +288,7 @@ end
 -- A cloud across the sun is passing (the `scene` switch, by day): the hour's blend rate paints it (1.3 A).
 function Controller:clouded(t)
  local Hour=Clock.Hour
- if not Hour.cloud or not Clock.sceneOn()then return false end
+ if not Hour.cloud or not self.scene then return false end
  local daylight=Hour.phase(t).daylight
  local _,open=Hour.cloud(t,daylight)
  return open==true and daylight>Hour.Cloud.Day
@@ -303,8 +312,11 @@ function Controller:sky()
   world.GlobalWind=self.windWas;self.windWas=nil
  end
 end
+Clock.SceneStep=1 -- the `scene` switch is read at most this often (code review: never per frame)
 function Controller:step(dt)
  if self.destroyed then return end
+ self.sceneIn=(self.sceneIn or 0)-dt
+ if self.sceneIn<=0 then self.sceneIn=Clock.SceneStep;self.scene=self.sceneOf()==true end
  if self.skyOn then
   self.skyIn=(self.skyIn or 0)-dt
   if self.skyIn<=0 then self.skyIn=Clock.SkyStep;pcall(self.sky,self)end
@@ -346,6 +358,9 @@ function Clock.new(options)
  self.level=options.level or function()return require(script.Parent.AliveBudget).level()end
  -- The sky on the wind: the game's clock (auto) follows the `scene` switch; fixtures pass options.sky or nothing.
  self.skyOn=options.sky or(if options.auto then Clock.sceneOn else nil)
+ -- The cloud's switch, cached per SceneStep (fixtures pass options.scene; nil reads Clock.sceneOn).
+ self.sceneOf=options.scene or Clock.sceneOn
+ self.scene=self.sceneOf()==true
  if self.hourCeiling then
   table.insert(self.connections,hour.changed():Connect(function()self:reapply()end))
   table.insert(self.connections,hour.offsetChanged():Connect(function()self:reapply()end))

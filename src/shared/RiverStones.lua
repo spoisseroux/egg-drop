@@ -19,10 +19,12 @@ local function row(name,x,z,length,width,turn,top,colour,seed,ball,base)
 	return table.freeze({name=name,x=x,z=z,length=length,width=width,turn=turn,top=top,colour=hex(colour),seed=seed,ball=ball,base=base})
 end
 -- East to west, in DashCourse.Stones order. Footprint length x width (studs), turn (degrees about up), top (studs).
+-- Code review: every top is DashCourse's STONE_TOP (4.00), where the racing pets stand, so no pet sinks into a stone;
+-- the dome falls away below the walking top, and the three differ in outline, turn and colour.
 Stones.Rows=table.freeze({
-	row("East",7.5,9.0,2.6,2.1,20,4.05,"#8A8580",11),
-	row("Middle",4.5,9.4,2.8,2.4,-35,4.15,"#7F847F",23),
-	row("West",1.55,10.0,2.5,2.0,70,4.05,"#948E84",37),
+	row("East",7.5,9.0,2.6,2.1,20,4.00,"#8A8580",11),
+	row("Middle",4.5,9.4,2.8,2.4,-35,4.00,"#7F847F",23),
+	row("West",1.55,10.0,2.5,2.0,70,4.00,"#948E84",37),
 })
 -- The builder's carve (section 4, "Shape, tonight"): a Ball Ball x the stone's length, sunk so its top is the stone's
 -- top, cut by Cuts big Blocks whose near faces stand at Reach of the footprint radius, each leaning out Lean degrees.
