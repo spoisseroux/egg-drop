@@ -565,5 +565,55 @@ return function(client, parent)
 		a:destroy();folder:Destroy();Ambient.shared = shared;assert(ok, err)
 	end)
 
+	test("WORLD-FINISH-LOOK slice F: the hill's sound zones: den, path, terrace eased over .6 s; music by its own duck, never timed, never the ambience's", function()
+		local Night = require(game.ReplicatedStorage.Shared.HillNight)
+		local refreshed = 0
+		local audio = { master = 1, deviceActive = true, ducks = {} }
+		function audio:isMusicEnabled() return true end
+		function audio:duck() error("the zones never use the timed duck") end
+		function audio:refreshLoops() refreshed += 1 end
+		local folder = Instance.new("Folder");folder.Parent = parent or workspace
+		local on, place, h = true, "home", 0
+		local shared = Ambient.shared
+		local a = Ambient.new(audio, { auto = false, world = folder, quiet = function() return false end, wind = false, windBed = false, echo = false,
+			zones = { on = function() return on end, camera = function() return Vector3.new(1, 2, 3) end, zone = function() return place, h end },
+			listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return 0 end })
+		local ok, err = pcall(function()
+			local function run(seconds) for _ = 1, math.floor(seconds * 30 + .5) do a:step(1 / 30) end end
+			run(1)
+			assert(a.zoneGains and near(a.zoneGains.water, 1, 1e-6) and a.zoneGains.room == 0 and audio.ducks[Ambient.ZoneDuck] == nil, "home: today's mix")
+			local bedHome = a.bedVoice.Volume
+			place = "den"
+			run(.4)
+			assert(a.zoneGains.water < 1 and a.zoneGains.water > Night.gain(-12), "on its way (sampled at 4 Hz, eased over .6 s)")
+			run(.6)
+			assert(near(a.zoneGains.water, Night.gain(-12), 1e-6) and near(a.zoneGains.birds, Night.gain(-12), 1e-6), "den: water and birds -12 dB")
+			assert(near(audio.ducks[Ambient.ZoneDuck], .5, .01) and refreshed > 0, "den: the world music at 50%")
+			assert(near(a.bedVoice.Volume, a.bed * Night.gain(-12), 1e-6) and bedHome > 0, "the bed follows")
+			-- The ambience group is never ducked by the zone (master() leaves the zone's duck out).
+			local master, _, duck = a:master()
+			assert(master == 1 and duck == 1, "the ambience is not ducked by the music's zone duck")
+			place, h = "path", .5
+			run(1)
+			assert(near(a.zoneGains.wind, Night.gain(2), 1e-6) and near(a.zoneGains.water, Night.gain(-3), 1e-6), "half way up: +2 / -3 dB")
+			assert(audio.ducks[Ambient.ZoneDuck] == nil, "out of the den: the music's duck gone")
+			place = "terrace"
+			run(1)
+			assert(near(a.zoneGains.wind, Night.gain(4), 1e-6) and near(a.zoneGains.water, Night.gain(-9), 1e-6) and near(a.zoneGains.birds, 1, 1e-6))
+			-- The gate off: eased back home, then dropped (no gains, no duck).
+			place = "den";run(1);on = false;run(1)
+			assert(a.zoneGains == nil and audio.ducks[Ambient.ZoneDuck] == nil, "off: dropped")
+			-- The room tone has no id yet: no voice is ever made.
+			assert(Ambient.RoomToneId == 0 and a.roomVoice == nil)
+		end)
+		a:destroy();folder:Destroy();Ambient.shared = shared;assert(ok, err)
+		-- A fixture that passes no zones and auto = false never reads the camera.
+		local b = Ambient.new({ master = 1, deviceActive = true, ducks = {}, isMusicEnabled = function() return true end },
+			{ auto = false, world = parent or workspace, wind = false, windBed = false, echo = false, quiet = function() return false end,
+				listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return 0 end })
+		assert(b.zonesOf == nil, "fixtures: no zones")
+		b:destroy();Ambient.shared = shared
+	end)
+
 	return { passed = #cases, cases = cases }
 end
