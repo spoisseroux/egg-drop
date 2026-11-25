@@ -269,5 +269,47 @@ return function(client)
 			if radius==3 then assert(worst<15.2,worst)else assert(worst>15.4,worst)end
 		end
 	end)
+	test("beta (16) B1: a model seen before its parts is never cached half empty; it binds once whole; found by tag too; one warning",function()
+		local now,warned=0,{}
+		local lounge=Instance.new("Folder");lounge.Name="EggDropLounge"
+		local tagged={}
+		local machine=Machine.new({step=false,clock=function()return now end,cinematic={},corner=function()return true end,
+			room=function()return lounge end,tagged=function()return tagged end,random=Random.new(3),
+			warn=function(text)table.insert(warned,text)end,audio={play=function()return true end}})
+		local function step(dt)now+=dt;machine:step(dt)end
+		step(.1)
+		assert(machine.parts==nil and string.find(machine:status(),"no EggMachine"),tostring(machine:status()))
+		local model=Instance.new("Model");model.Name="EggMachine"
+		local body=Instance.new("Part");body.Name="Body";body.Position=Vector3.new(-41,4,2);body.Parent=model
+		model.Parent=lounge
+		step(1)
+		assert(machine.parts==nil and string.find(machine:status(),"Dial"),"half there: not cached")
+		local dial=Instance.new("Part");dial.Name="Dial";dial.CFrame=CFrame.new(-41,6,4);dial.Parent=model
+		local pivot=Instance.new("Attachment");pivot.Name="DialPivot";pivot.WorldCFrame=CFrame.new(-41,6,3.7);pivot.Parent=body
+		step(1)
+		assert(machine.parts~=nil and machine.parts.dial.part==dial and machine:status()==nil,"whole: bound")
+		-- Not in the lounge but tagged (another parent): found by its tag.
+		local other=Machine.new({step=false,clock=function()return now end,cinematic={},corner=function()return true end,
+			room=function()return Instance.new("Folder")end,tagged=function()return{model}end,warn=function(text)table.insert(warned,text)end})
+		other:step(.1)
+		assert(other.parts~=nil and other.parts.model==model,"found by tag")
+		-- Nothing to animate for WarnAfter seconds: one warning, with the reason, and a Turn says why, once.
+		local lonely=Machine.new({step=false,clock=function()return now end,cinematic={},corner=function()return true end,
+			room=function()return nil end,tagged=function()return{}end,warn=function(text)table.insert(warned,text)end})
+		for _=1,30 do now+=1;lonely:step(1)end
+		local count=0
+		for _,text in ipairs(warned)do if string.find(text,"no machine to animate")then count+=1 end end
+		assert(count==1,"one warning, not one a frame: "..count)
+		lonely:openCrank();lonely.crank=nil;lonely:openCrank()
+		count=0
+		for _,text in ipairs(warned)do if string.find(text,"Turn pressed")then count+=1 end end
+		assert(count==1)
+		machine:destroy();other:destroy();lonely:destroy()
+	end)
+	test("beta (16) B3: the reveal's camera aims over the egg, never pulled sideways by the item's flight",function()
+		local Aim=require(client.HatchAim)
+		assert(Aim.target(Vector3.new(1.7,2.5,-.8),3)==Vector3.new(0,2.5,0))
+		assert((Aim.target(nil,3)-Vector3.new(0,1.8,0)).Magnitude<1e-9)
+	end)
 	return{passed=#cases,cases=cases}
 end

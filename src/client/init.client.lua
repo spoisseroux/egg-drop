@@ -4802,6 +4802,7 @@ function clientUI.eggCornerMount(Onboard)
   task.delay(if strength=="medium"then .06 else .035,function()pcall(Haptics.SetMotor,Haptics,pad,Enum.VibrationMotor.Small,0)end)
  end
  local machine=require(script.EggMachineClient).new({room=lounge,corner=on,
+  warn=function(text)warn(text)end,
   reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
   root=function()
    local character=player.Character

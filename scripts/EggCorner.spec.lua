@@ -109,5 +109,9 @@ return function(server)
 		assert(Corner.on())
 		Onboard.inject(nil)
 	end)
+	test("beta (16) B2: the machine's prompt says what it does (Hatch eggs, on the Egg machine), localized",function()
+		local UICopy=require(Shared.UICopy)
+		assert(UICopy.get("r5.station.Eggs.name")=="Hatch eggs"and UICopy.get("r5.station.Eggs.machine")=="Egg machine")
+	end)
 	return{passed=#cases,cases=cases}
 end

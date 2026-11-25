@@ -21,6 +21,12 @@
 --          its sounds and the egg still play.
 -- Sounds play flat with the screen (Fable R2 F6); the world motion only within Range of the camera. The old station's
 -- Aero dome and lip go see-through (LocalTransparencyModifier) while the corner is on.
+-- Beta (16) B1 (the crank never showed on the real server): the model is found by name in the lounge or by its tag
+--   (EggCornerMachine), and a bind is only kept once it is whole (Body, Dial and the DialPivot attachment): a model seen
+--   before its parts or attachments replicated (streaming, a late replication) used to be cached half empty forever, so
+--   nothing moved. It retries every BindRetry seconds; after WarnAfter seconds on without a whole model it warns once with
+--   the reason, and a Turn pressed meanwhile warns once too. A step error warns once per message, not every frame. The
+--   range check measures from the Body, not the model's pivot.
 -- deps: room() -> the lounge or nil, root() -> Vector3?, camera() -> Vector3?, reduced(), audio {play(name, speed,
 --   volume)}, haptic(strength) (optional), corner() (the switch), clock (default os.clock), random (default Random.new()),
 --   cinematic (the HatchCinematic module; default required), step=false (specs call :step).
@@ -46,6 +52,9 @@ Machine.Cap=1           -- the hold never outlasts this, from the first press
 Machine.StreakWindow=20 -- Hatch another: a buy this soon after the last landing
 Machine.FadeAfter=1.5   -- the egg in the cup fades this long after the reveal ends (or at Linger)
 Machine.Linger=6
+Machine.Tag="EggCornerMachine"
+Machine.BindRetry=.5
+Machine.WarnAfter=10
 Machine.Unclaimed=table.freeze({Stat=true}) -- reveals that are not the cinematic: confirmed by their Saved answer
 Machine.ConfirmWindow=3 -- an armed press with no confirmation this long after it lapses (no turn, no streak)
 -- Volumes (from Fable's dB): -16 .16, -20 .1, -24 .063, -26 .05.
@@ -115,7 +124,7 @@ function Machine.new(deps)
 	if deps.step~=false then
 		self.heartbeat=RunService.Heartbeat:Connect(function(dt)
 			local ok,problem=pcall(self.step,self,dt)
-			if not ok then warn("[EggMachine] "..tostring(problem))end
+			if not ok then self:warnOnce("step: "..tostring(problem))end
 		end)
 	end
 	return self
@@ -141,6 +150,10 @@ function Machine:busy()
 end
 function Machine:openCrank()
 	if not self:on()or self:busy()then return false end
+	pcall(self.bind,self)
+	-- B1: a Turn with nothing to turn says why, once.
+	local why=(self.parts==nil)and(self.bindReason or "not bound yet")or nil
+	if why then self:warnOnce("Turn pressed, but the machine cannot move: "..why)end
 	if self.crank and not self.crank.done then self:finish(self.crank)end
 	self.crank={kind="open",at=self.clock(),fired={}}
 	return true
@@ -271,12 +284,60 @@ function Machine:beats()
 	end
 	if crank.landed and self.clock()>=self:fadeStart(crank)+.5 then self:finish(crank)end
 end
-function Machine:bind()
+-- One warning per message (never a warning a frame).
+function Machine:warnOnce(message)
+	self.warned=self.warned or {}
+	if self.warned[message]then return end
+	self.warned[message]=true
+	local say=self.d.warn or warn
+	say("[EggMachine] "..message)
+end
+-- The machine's model: by name in the lounge, else by its tag (anywhere in the workspace). And why not, when not.
+function Machine:findModel()
 	local room=self.d.room and self.d.room()
 	local model=room and room:FindFirstChild("EggMachine")
-	if model==(self.parts and self.parts.model)then return self.parts end
+	if not model then
+		local tagged=if self.d.tagged then self.d.tagged()else game:GetService("CollectionService"):GetTagged(Machine.Tag)
+		for _,candidate in ipairs(tagged or {})do
+			if candidate.Parent~=nil and(self.d.tagged~=nil or candidate:IsDescendantOf(workspace))then model=candidate;break end
+		end
+	end
+	if model then return model,nil end
+	return nil,if room then "no EggMachine in the lounge (the server parks it while the corner is off)"else "no EggDropLounge yet"
+end
+-- Is the model whole enough to animate? nil, or what is missing.
+function Machine.missing(model)
+	local body=model:FindFirstChild("Body")
+	if not body then return "Body"end
+	if not model:FindFirstChild("Dial")then return "Dial"end
+	local pivot=body:FindFirstChild("DialPivot")
+	if not(pivot and pivot:IsA("Attachment"))then return "Body.DialPivot"end
+	return nil
+end
+-- Why the machine does not move right now (nil: bound and whole).
+function Machine:status()
+	if not self:on()then return "the corner is off on this client"end
+	if self.parts then return nil end
+	return self.bindReason or "not bound yet"
+end
+function Machine:bind()
+	local now=self.clock()
+	local cached=self.parts
+	if cached and cached.model.Parent~=nil and(now<(self.nextBindCheck or 0))then return cached end
+	local model,reason=self:findModel()
+	if cached and model==cached.model then self.nextBindCheck=now+Machine.BindRetry;return cached end
+	if not cached and now<(self.nextBindTry or 0)then return nil end
 	self.parts=nil
-	if not model then return nil end
+	self.nextBindTry=now+Machine.BindRetry
+	if not model then self.bindReason=reason;return nil end
+	local lacking=Machine.missing(model)
+	if lacking then
+		-- Seen before its parts (streaming, or a late replication): never cache it half empty; look again soon.
+		self.bindReason="EggMachine found but "..lacking.." is missing (still replicating?)"
+		return nil
+	end
+	self.bindReason=nil
+	self.nextBindCheck=now+Machine.BindRetry
 	local body=model:FindFirstChild("Body")
 	local function rest(name)
 		local part=model:FindFirstChild(name)
@@ -287,7 +348,7 @@ function Machine:bind()
 		local a=body and body:FindFirstChild(name)
 		return if a and a:IsA("Attachment")then a.WorldCFrame else nil
 	end
-	local parts={model=model,dial=rest("Dial"),sprout=rest("Sprout"),pile=rest("EggPile"),drop=rest("DropEgg"),loose={},
+	local parts={model=model,body=body,dial=rest("Dial"),sprout=rest("Sprout"),pile=rest("EggPile"),drop=rest("DropEgg"),loose={},
 		dialPivot=point("DialPivot"),sproutPivot=point("SproutPivot"),chuteTop=point("ChuteTop"),chuteEnd=point("ChuteEnd"),cup=point("CupSeat")}
 	for index=1,6 do
 		local loose=rest("Loose"..index)
@@ -331,11 +392,16 @@ function Machine:step(dt)
 	self.t+=dt or 0
 	self:aero()
 	self:beats()
-	if not self:on()then self:rest();return end
+	if not self:on()then self:rest();self.unboundSince=nil;return end
 	local parts=self:bind()
-	if not parts then return end
+	if not parts then
+		self.unboundSince=self.unboundSince or self.clock()
+		if self.clock()-self.unboundSince>=Machine.WarnAfter then self:warnOnce("no machine to animate after "..Machine.WarnAfter.." s: "..tostring(self.bindReason))end
+		return
+	end
+	self.unboundSince=nil
 	local eye=self.d.camera and self.d.camera()
-	local centre=parts.model:GetPivot().Position
+	local centre=parts.body.Position
 	if typeof(eye)=="Vector3"and(eye-centre).Magnitude>Machine.Range then self:rest();return end
 	self.atRest=false
 	local reduced=self:reduced()

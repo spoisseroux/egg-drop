@@ -77,7 +77,9 @@ def client_modules():
                     # Beta 14 garden life: the arch chimes (WorldMotion).
                     "WorldMotion.lua", "WorldDressingClient.lua",
                     # The egg corner: the machine's motion, cranks and reveal hold.
-                    "EggMachineClient.lua"):
+                    "EggMachineClient.lua",
+                    # Beta (16) B3: the hatch reveal's aim.
+                    "HatchAim.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

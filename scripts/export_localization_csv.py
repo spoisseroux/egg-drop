@@ -58,7 +58,7 @@ SECTION_NOTES = {
 }
 # One key's own note, for a word that is ambiguous on its own (EGG-CORNER-LOOK 1: "Turn" is the egg machine's prompt).
 KEY_NOTES = {
-    "r5.station.Eggs.turn": "Garden prompt on the egg machine: turn the handle of a toy machine (a verb, one word)",
+    "r5.station.Eggs.machine": "Garden prompt: the name of the egg machine (a toy capsule machine full of eggs)",
 }
 SAMPLE = {"count": 3, "heat": "Medium", "low": 6, "high": 8, "pet": "Bear", "reward": 5, "item": "Squeaky Bone",
           "owned": 3, "total": 12, "target": 3, "name": "Pet Park", "level": 10,

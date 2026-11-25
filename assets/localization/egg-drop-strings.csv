@@ -803,7 +803,7 @@ ui.r4.wardrobe.noneNote,Nothing in this slot,,Menu text
 ui.r4.wardrobe.slot,Slot,,Menu text
 ui.r4.wardrobe.takeOff,Take off,,Menu text
 ui.r5.station.Eggs.line,Spend Stars on new eggs,,Menu text
-ui.r5.station.Eggs.turn,Turn,,"Garden prompt on the egg machine: turn the handle of a toy machine (a verb, one word)"
+ui.r5.station.Eggs.machine,Egg machine,,Garden prompt: the name of the egg machine (a toy capsule machine full of eggs)
 ui.r5.station.EggsV3.line,"Toys, looks and snacks for your pet",,Menu text
 ui.r5.station.Journal.line,Dress up and care for your pets,,Menu text
 ui.r5.station.Park.line,Pets play here. Play dates pay Stars,,Menu text

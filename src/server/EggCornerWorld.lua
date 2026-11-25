@@ -153,6 +153,8 @@ function World.mount(room,deps)
 	pcall(function()model.ModelStreamingMode=Enum.ModelStreamingMode.Persistent end)
 	model:PivotTo(self.frame)
 	model:SetAttribute("EggMachine",true)
+	-- Beta (16) B1: the client can also find it by tag.
+	pcall(function()game:GetService("CollectionService"):AddTag(model,"EggCornerMachine")end)
 	for _,name in ipairs(World.Moving)do
 		local part=model:FindFirstChild(name)
 		if part then part:SetAttribute("WorldRestCFrame",part.CFrame)end
@@ -162,7 +164,8 @@ function World.mount(room,deps)
 	local anchor=invisible(World.Prompt,Corner.promptFrame(y),Vector3.new(2,.6,.2))
 	local prompt=Instance.new("ProximityPrompt")
 	prompt.Name="TurnEggs"
-	prompt.ActionText,prompt.ObjectText=UICopy.get("r5.station.Eggs.turn"),""
+	-- Beta (16) B2: say what it does: "Hatch eggs" on the "Egg machine" (localized).
+	prompt.ActionText,prompt.ObjectText=UICopy.get("r5.station.Eggs.name"),UICopy.get("r5.station.Eggs.machine")
 	prompt.UIOffset=Vector2.new(72,-16)
 	prompt.KeyboardKeyCode,prompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
 	prompt.ClickablePrompt,prompt.RequiresLineOfSight,prompt.HoldDuration=true,false,0
