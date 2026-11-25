@@ -61,15 +61,21 @@ def on_flight(s):
 
 class Mesh:
     def __init__(self, name):
-        self.name, self.v, self.f = name, [], []
+        self.name, self.v, self.f, self.uv = name, [], [], []
 
-    def quad(self, a, b, c, d):
+    def quad(self, a, b, c, d, uv=None):
         k = len(self.v)
         self.v += [a, b, c, d]
         self.f.append([k, k + 1, k + 2, k + 3])
+        self.uv.append(uv)
 
     def build(self, k_uv, up=None):
-        obj = L.mesh_object(self.name, self.v, self.f)
+        # when every quad carries its own UVs (in studs), they are kept, times k_uv (uv units per stud)
+        uvs = None
+        if k_uv and self.uv and all(self.uv):
+            uvs = [[(a * k_uv, b * k_uv) for a, b in u] for u in self.uv]
+        obj = L.mesh_object(self.name, self.v, self.f, uvs=uvs)
+        obj["own_uvs"] = uvs is not None
         bm = bmesh.new()
         bm.from_mesh(obj.data)
         bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
@@ -108,31 +114,23 @@ def wall_and_shoulders():
     R1 = {id(s): 3.6 + 1.2 * (.5 + .5 * math.sin(s["d"] * .37 + 1.3)) for s in S_}
 
     def profile(s):
-        """(u behind the inner edge, v over the tread) points from the foot up to the cap."""
+        """(u behind the inner edge, v over the tread): always the same eight points (round 3: neighbours with different
+        point counts were joined crosswise, the stretched strips and slivers in studio-r2/05), from the foot up the lower
+        face (3.6 to 4.8, leaning 20 degrees), a bench, the upper rise in two halves to the old cut's top line, then the
+        cap 1.2 and 3.4 on up the old slope. Where there is no room for a bench its points close up (zero-width faces)."""
         hgt = s["top"] - s["h"]
         back = s["back"]
         t = (s["d"] - d0) / max(1e-6, d1 - d0)
         bow = 1.25 - 1.25 * math.cos(4 * math.pi * min(1, max(0, t)))          # two bows, 0 to 2.5
         r1 = min(R1[id(s)], hgt)
         bow = min(bow, max(0.0, back - r1 * LEAN - .3))
-        pts = [(bow, -.25), (bow + r1 * LEAN, r1)]
-        u = bow + r1 * LEAN
-        rest = hgt - r1
-        if rest > 1.2 and back - u > 1.0:
-            # a bench (grass would sit here), then the upper rise; a second bench if the rise is over 8
-            bench = min(1.2, (back - u) * .45)
-            pts.append((u + bench, r1 + .15))
-            u += bench
-            if rest > 8.0:
-                mid = r1 + .15 + (rest - .15) / 2
-                pts.append((u + (back - u) * .45, mid))
-                pts.append((u + (back - u) * .45 + .6, mid + .12))
-            pts.append((back, hgt))
-        elif rest > 0:
-            pts.append((max(back, u), hgt))
-        # Fable world R1 8: the cut closes to the kept island rock: its cap runs on up the old slope 3.4 behind the cut's
-        # line (the re-cut takes the island faces in that band), so no hole opens over the wall
-        ub = max(back, u)
+        u1 = bow + r1 * LEAN
+        ub = max(back, u1)
+        bench = max(0.0, min(1.2, (ub - u1) * .45))
+        rest = max(0.0, hgt - r1)
+        pts = [(bow, -.25), (u1, r1), (u1 + bench, r1 + min(.15, rest)),
+               (u1 + bench + (ub - u1 - bench) * .5, r1 + min(.15, rest) + (rest - min(.15, rest)) * .5),
+               (ub, hgt)]
         v_prev = hgt
         for du in (1.2, 3.4):
             x, _, z = P(s, -s["w"] / 2 - ub - du, 0)
@@ -142,6 +140,7 @@ def wall_and_shoulders():
             v_prev = v
         return pts, bow
 
+    k_rock = None
     for s0, s1 in zip(S_, S_[1:]):
         if s0["flip"] != s1["flip"]:
             continue
@@ -149,13 +148,14 @@ def wall_and_shoulders():
         if s0["back"] > .05 and s1["back"] > .05:
             p0, b0 = profile(s0)
             p1, b1 = profile(s1)
-            n = min(len(p0), len(p1))
-            p0, p1 = p0[:n - 1] + [p0[-1]], p1[:n - 1] + [p1[-1]]
-            for k in range(n - 1):
+            for k in range(len(p0) - 1):
                 (ua, va), (ub, vb) = p0[k], p0[k + 1]
                 (uc, vc), (ud, vd) = p1[k], p1[k + 1]
+                # UVs along the cut (plan distance d, height): one cell size over the whole face, no axis switching
                 wall.quad(P(s0, -w0 - ua, s0["h"] + va), P(s1, -w1 - uc, s1["h"] + vc), P(s1, -w1 - ud, s1["h"] + vd),
-                          P(s0, -w0 - ub, s0["h"] + vb))
+                          P(s0, -w0 - ub, s0["h"] + vb),
+                          uv=[(s0["d"] + ua * .3, s0["h"] + va), (s1["d"] + uc * .3, s1["h"] + vc),
+                              (s1["d"] + ud * .3, s1["h"] + vd), (s0["d"] + ub * .3, s0["h"] + vb)])
             # the foot: talus from the tread's inner edge to the bowed wall, then the wall's lowest stud in dirt
             foot.quad(P(s0, -w0 + .05, s0["h"] + .04), P(s1, -w1 + .05, s1["h"] + .04),
                       P(s1, -w1 - b1, s1["h"] + .3 + .25 * b1), P(s0, -w0 - b0, s0["h"] + .3 + .25 * b0))
@@ -163,7 +163,8 @@ def wall_and_shoulders():
                       P(s1, -w1 - b1 - 1.0 * LEAN + .02, s1["h"] + 1.0), P(s0, -w0 - b0 - 1.0 * LEAN + .02, s0["h"] + 1.0))
         # Fable D1 7: the outer edge always has thickness, a skirt 1.3 deep tucked under 15 degrees
         wall.quad(P(s0, w0 + .15, s0["h"] + .05), P(s1, w1 + .15, s1["h"] + .05), P(s1, w1 - .2, s1["h"] - 1.3),
-                  P(s0, w0 - .2, s0["h"] - 1.3))
+                  P(s0, w0 - .2, s0["h"] - 1.3),
+                  uv=[(s0["d"], s0["h"] + .05), (s1["d"], s1["h"] + .05), (s1["d"], s1["h"] - 1.3), (s0["d"], s0["h"] - 1.3)])
         # shoulders: where the ground beside an edge is under the path, a stepped dry-stone bank down to it
         for side in (1, -1):
             if side < 0 and (s0["back"] > .05 or s1["back"] > .05):
@@ -174,17 +175,18 @@ def wall_and_shoulders():
             drop0, drop1 = s0["h"] - g0, s1["h"] - g1
             if drop0 <= .3 and drop1 <= .3:
                 continue
-            d0_, d1_ = max(drop0, .3) + .4, max(drop1, .3) + .4
-            courses = max(1, int(max(d0_, d1_) / .9))
+            d0_, d1_ = max(drop0, .3) + 1.2, max(drop1, .3) + 1.2      # round 3: one battered face, 1.2 under the ground
+            courses = 1                                                  # (Fable R3: the courses read as gapped strips)
             prev = (P(s0, a0, s0["h"]), P(s1, a1, s1["h"]))
+            pv = (s0["h"], s1["h"])
             for c in range(1, courses + 1):
                 f = c / courses
-                jit = .08 * math.sin(c * 2.3 + s0["d"])
-                # each course a little further out: a battered dry-stone face
-                q0 = P(s0, a0 + side * (d0_ * f * .35 + jit), s0["h"] - d0_ * f)
-                q1 = P(s1, a1 + side * (d1_ * f * .35 + jit), s1["h"] - d1_ * f)
-                wall.quad(prev[0], prev[1], q1, q0)
-                prev = (q0, q1)
+                # a battered face, each course a little further out (round 3: no per-segment jitter, which shingled it)
+                q0 = P(s0, a0 + side * d0_ * f * .45, s0["h"] - d0_ * f)
+                q1 = P(s1, a1 + side * d1_ * f * .45, s1["h"] - d1_ * f)
+                wall.quad(prev[0], prev[1], q1, q0,
+                          uv=[(s0["d"], pv[0]), (s1["d"], pv[1]), (s1["d"], q1[1]), (s0["d"], q0[1])])
+                prev, pv = (q0, q1), (q0[1], q1[1])
     return wall, foot
 
 
@@ -218,6 +220,11 @@ def steps():
                     b0, b1 = -w1 + 2 * w1 * j / 4, -w1 + 2 * w1 * (j + 1) / 4
                     wear = .1 if j in (1, 2) else 0.0
                     m.quad(Q(s0, a0, top - wear), Q(s1, b0, top - wear), Q(s1, b1, top - wear), Q(s0, a1, top - wear))
+                # round 3 (Fable R3, CAM-TURN): closed cheeks on both ends, so from beside the flight reads as solid
+                # stone blocks, not stacked thin slabs
+                for side in (-1, 1):
+                    m.quad(Q(s0, side * w0, top), Q(s1, side * w1, top), Q(s1, side * w1, top - 1.2),
+                           Q(s0, side * w0, top - 1.2))
             # the riser at the step's front, irregular, down 1.2 into the ramp below
             s = run[0]
             w = s["w"] / 2 - .1
@@ -303,6 +310,23 @@ def fin_lobes(c, yaw):
         z = c[2] + D[1] * ds + N[1] * dt
         out.append(((x, g + ry, z), r, yaw, tilt))
     return out
+
+
+def in_fin(points, grow=1.15):
+    """Round 3 (Fable R3, CAM-TURN): island faces inside the fin cluster's masses (grown 15%) interleaved with it as
+    pale strips; any point inside a lobe condemns the face."""
+    lobes = []
+    for kind, c, size, yaw in S.PATH_BLOCKS:
+        if kind == "fin":
+            lobes += fin_lobes(c, yaw)
+    for p in points:
+        for (cx, cy, cz), r, yw, _ in lobes:
+            dx, dy, dz = p[0] - cx, p[1] - cy, p[2] - cz
+            c_, s_ = math.cos(yw), math.sin(yw)
+            lx, lz = dx * c_ - dz * s_, dx * s_ + dz * c_
+            if (lx / (r[0] * grow)) ** 2 + (dy / (r[1] * grow)) ** 2 + (lz / (r[2] * grow)) ** 2 < 1:
+                return True
+    return False
 
 
 def fin_boxes():

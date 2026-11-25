@@ -10,7 +10,8 @@
 --                                  instances, collision boxes, tufts) and only then hides: the pack parts it replaces
 --                                  are destroyed (a re-cut copy with the same name takes their place, so CliffDenData.parts,
 --                                  WorldMotion and the Aero named surfaces still apply), a colliding tile it overlays
---                                  stays, invisible and colliding (its hulls never move), under a visual copy. Sets
+--                                  stays, invisible and colliding (its hulls never move), under a visual copy; one the
+--                                  re-cut left nothing of (`hideVisual`) just goes invisible and keeps colliding. Sets
 --                                  World:WorldFinish_<slice> = true.
 --   Mount.dressDen(model, room)    DenHost, right after GreyboxRows.build and before the model is parented: only when
 --                                  the den slice is in the room's World. The lanterns become the iron lantern (the row
@@ -120,6 +121,8 @@ function Mount.world(world,env)
 			table.insert(list,target)
 		end
 		for _,n in ipairs(slice.hide or {})do claim(n,destroy)end
+		-- colliding pack parts the re-cut left nothing of: invisible, still colliding (their hulls never move)
+		for _,n in ipairs(slice.hideVisual or {})do claim(n,overlay)end
 		local replaced={}
 		for _,row in ipairs(slice.fixed)do
 			if row.replaces then claim(row.replaces,destroy);replaced[row.name]=world:FindFirstChild(row.replaces)end

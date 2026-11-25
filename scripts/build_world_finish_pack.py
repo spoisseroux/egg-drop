@@ -220,7 +220,7 @@ def rot_rows(yaw):
 def slice_data(manifest: dict, allparts: dict | None = None) -> dict:
     parts = {p["name"]: p for p in manifest["parts"]}
     place = manifest.get("place", {})
-    out = {"hide": manifest.get("hide", []), "fixed": [], "instances": [], "boxes": [], "tufts": [],
+    out = {"hide": manifest.get("hide", []), "hideVisual": manifest.get("hideVisual", []), "fixed": [], "instances": [], "boxes": [], "tufts": [],
            "templates": sorted(n for n, p in parts.items()), "triangles": sum(p["triangles"] for p in parts.values())}
     for p in manifest["parts"]:
         if p["role"] != "fixed":

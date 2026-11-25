@@ -38,13 +38,13 @@
     46.836,
     210.0
    ],
-   "triangles": 5556,
+   "triangles": 5564,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__grass"
    },
    "replaces": "W7_CD_Ground__grass",
-   "facesRemoved": 19,
+   "facesRemoved": 11,
    "collide": false
   },
   {
@@ -61,13 +61,13 @@
     55.6477,
     249.0
    ],
-   "triangles": 5394,
+   "triangles": 5388,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__ground"
    },
    "replaces": "W7_CD_Ground__ground",
-   "facesRemoved": 19,
+   "facesRemoved": 25,
    "collide": false
   },
   {
@@ -75,22 +75,22 @@
    "slice": "den",
    "role": "fixed",
    "centre": [
-    -10.3531,
+    -10.4138,
     24.1338,
-    -111.3208
+    -114.9286
    ],
    "size": [
-    25.4419,
+    25.3206,
     14.9285,
-    23.8808
+    16.6652
    ],
-   "triangles": 147,
+   "triangles": 98,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Landmarks__cliff_rock_1916"
    },
    "overlays": "W7_CD_Landmarks__cliff_rock_1916",
-   "facesRemoved": 35,
+   "facesRemoved": 84,
    "collide": false
   },
   {
@@ -122,21 +122,21 @@
    "role": "fixed",
    "centre": [
     -30.5202,
-    14.7045,
+    14.9716,
     -89.2502
    ],
    "size": [
     78.261,
-    22.9569,
+    22.4226,
     66.9191
    ],
-   "triangles": 74,
+   "triangles": 73,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Region__cliff_rock"
    },
    "replaces": "W7_CD_Region__cliff_rock",
-   "facesRemoved": 111,
+   "facesRemoved": 112,
    "collide": false
   },
   {
@@ -144,22 +144,22 @@
    "slice": "den",
    "role": "fixed",
    "centre": [
-    -52.034,
+    -58.2855,
     18.7336,
-    -71.0817
+    -67.5564
    ],
    "size": [
-    32.9454,
+    20.4425,
     16.6892,
-    22.1922
+    15.1416
    ],
-   "triangles": 9,
+   "triangles": 8,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Region__grass"
    },
    "replaces": "W7_CD_Region__grass",
-   "facesRemoved": 5,
+   "facesRemoved": 6,
    "collide": false
   },
   {
@@ -191,21 +191,21 @@
    "role": "fixed",
    "centre": [
     16.0624,
-    19.0487,
+    19.4334,
     -111.4726
    ],
    "size": [
     37.6133,
-    37.215,
+    36.4456,
     36.855
    ],
-   "triangles": 215,
+   "triangles": 64,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Rocks__cliff_rock_2016"
    },
    "overlays": "W7_CD_Rocks__cliff_rock_2016",
-   "facesRemoved": 9,
+   "facesRemoved": 160,
    "collide": false
   },
   {
@@ -322,16 +322,16 @@
    "slice": "den",
    "role": "fixed",
    "centre": [
-    -10.0727,
-    10.387,
-    -100.0017
+    -12.0975,
+    11.8995,
+    -100.7403
    ],
    "size": [
-    41.4587,
-    15.4282,
-    6.9582
+    45.5083,
+    18.1167,
+    8.4354
    ],
-   "triangles": 2365,
+   "triangles": 2374,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -462,16 +462,16 @@
    "slice": "den",
    "role": "fixed",
    "centre": [
-    -5.9434,
-    21.0125,
-    -96.0033
+    13.5377,
+    21.0138,
+    -96.0508
    ],
    "size": [
-    60.0847,
-    33.9411,
-    18.2181
+    21.1225,
+    33.9385,
+    18.1232
    ],
-   "triangles": 84,
+   "triangles": 53,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -937,10 +937,14 @@
   "W7_CD_PlayDen__cliff_rock",
   "W7_CD_PlayDen__dirt_path"
  ],
+ "hideVisual": [
+  "W7_CD_Rocks__cliff_rock_1917",
+  "W7_CD_Rocks__grass_1917"
+ ],
  "report": {
   "shell": 3822,
   "floor": 612,
-  "mouth": 2365,
+  "mouth": 2374,
   "lantern": 142,
   "crystal": 28,
   "stone": 40,
@@ -958,7 +962,7 @@
    "west": 775.9,
    "east": 769.1
   },
-  "skin": 84,
+  "skin": 53,
   "apron": 334
  }
 }

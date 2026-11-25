@@ -755,6 +755,8 @@ MOUTH_BLOBS = [
     ((-7.0, 13.9, -99.4), (10.4, 1.8, 3.0), 0), ((-7.0, 16.0, -101.3), (9.2, 2.1, 2.6), 0),
     # Fable world R1 fix 2: backing masses over the tan hole west of the mouth (about 14 x 10) and the gap east of the brow
     ((-25.5, 9.6, -100.4), (5.6, 5.4, 2.6), 8), ((-21.5, 14.0, -101.0), (4.0, 3.0, 2.4), -5),
+    # round 3: the left of the mouth (studio-r2/01) buried under two more masses, up to y 20
+    ((-30.5, 13.5, -101.8), (4.6, 5.2, 3.0), 15), ((-25.0, 18.0, -102.2), (5.0, 3.0, 2.8), -8),
     ((7.8, 12.2, -100.9), (3.0, 3.2, 2.3), -10),
 ]
 # (x0, y0, z0, x1, y1, z1, push axes): nothing of the surround inside these
@@ -764,7 +766,7 @@ MOUTH_KEEP_OUT = [
     ((.15, 3.0, -98.85, 1.85, 11.25, -97.15), ("x",)),             # the east timber jamb
     ((-15.85, 9.75, -98.85, 1.85, 11.3, -97.15), ("y",)),          # the timber lintel
     ((-30.0, 3.0, -97.2, 12.0, 9.5, -80.0), ("z",)),               # the lawn in front of the buttresses
-    ((-23.0, 3.0, -121.0, 7.0, 17.0, -99.1), ("z",)),              # the room: never in front of the shell
+    ((-24.6, 3.0, -121.0, 8.6, 21.0, -99.1), ("z",)),              # the room and its corners (round 3: to y 21 and 2.6 wider)
 ]
 # Collision for the buttresses (players and pets stop at the rock): boxes {c, s} the mount builds with the den's boxes.
 MOUTH_BOXES = [
@@ -774,6 +776,7 @@ MOUTH_BOXES = [
     {"kind": "brow", "c": [-7.0, 13.9, -98.4], "s": [20.0, 3.4, 3.4]},
 ]
 HIDE = ["W7_CD_PlayDen__cliff_rock", "W7_CD_PlayDen__dirt_path"]
+HIDE_VISUAL = []          # colliding pack parts left with nothing to show: invisible, still colliding
 
 
 def _keep_out(p):
