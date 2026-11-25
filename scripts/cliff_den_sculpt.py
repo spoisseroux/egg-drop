@@ -618,6 +618,10 @@ def build_den(objs):
 # from CliffDenData.collision (architect review: primitives, exact, nothing to upload).
 REGION_TOP = 18.0
 TILE = 32.0
+# Studio R2 (2026-11-25): the carved island-wide cliff rock, left as one mesh past the ring, re-baked with hulls that
+# moved by up to 10 studs on the east mountain and the north-west band (the decomposition is global: any cut changes it
+# everywhere). These are tiled whole, so every hull stays inside its 32-stud tile, near the drawn surface.
+TILE_ALL = ("Rocks_Walls__cliff_rock", "Landmarks__cliff_rock")
 
 
 def in_region(x, y, z):
@@ -669,7 +673,7 @@ def split_region(objs, collides):
                 where[f.index] = "CDRegion_" + cat
             else:
                 n = _tile_number(c[0], c[2])
-                if n in ring:
+                if n in ring or o.name in TILE_ALL:
                     where[f.index] = f"CDTile{n}_" + cat
         bm.free()
         if not where:

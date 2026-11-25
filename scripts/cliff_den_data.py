@@ -42,6 +42,13 @@ OUT = ROOT / "src" / "shared" / "CliffDenData.lua"
 SCHEMA = 1        # the shape of this module (the code checks it); separate from the live-world stamp
 POCKET = "W7_CD_Pocket__palette"   # step A's palette: the live one less the bars (uncarved)
 BARS = "W7_CD_CaveBars__palette"   # the old cave's bars, hidden while the Play Den is open (both layers)
+DEGENERATE = .05                   # a collision piece with an extent under this is a sliver: left out of the pack
+# Studio R2 (2026-11-25): the carved marble's precise bake bridged one long hull over the plaza (y 7.1 to 7.5 from the
+# mouth to z -22, where live has bare lawn), and a fresh bake of the live marble mesh matches live exactly. The live
+# marble and trim leave the new mouth open (a 4.4 sill, posts on the new jambs at x -15 and 1, the lintel at 10.5), so
+# they stay live: no carved copy, no region piece. (The old frame stays drawn round the new mouth until the art pass.)
+KEEP_LIVE = {"W7_Landmarks__marble", "W7_Landmarks__trim"}
+KEEP_LIVE_SHOWS = {"W7_CD_Landmarks__marble", "W7_CD_Region__marble", "W7_CD_Region__trim"}
 
 
 def sha_text(path: Path) -> str:
@@ -114,6 +121,8 @@ def build():
     live = live_data()
     swap, parts = [], {}
     for e in manifest["parts"]:
+        if e["name"] in KEEP_LIVE_SHOWS:
+            continue
         if e["name"] == POCKET:
             parts[e["name"]] = {"region": "Landmarks", "collide": False, "center": e["center"], "size": e["size"]}
             continue                      # step A's layer only
@@ -128,8 +137,13 @@ def build():
         parts[e["name"]] = entry
         swap.append({"hide": e["replaces"], "show": e["name"]})
     for name in manifest.get("removed", []):
-        swap.append({"hide": name, "show": None})
+        if name not in KEEP_LIVE:
+            swap.append({"hide": name, "show": None})
     for e in collision["parts"]:
+        # Studio R2 (2026-11-25): the 8-stud re-cut leaves a few zero-width slivers (a vertical sheet on a cell line,
+        # or a point): they collide with nothing, and Studio cannot size a mesh with a zero extent. Never shown.
+        if min(e["size"]) < DEGENERATE:
+            continue
         parts[e["name"]] = {"region": "GroundCollision", "collide": True, "center": e["center"], "size": e["size"]}
         swap.append({"hide": e["replaces"], "show": e["name"]})
     for name in collision["removed"]:
