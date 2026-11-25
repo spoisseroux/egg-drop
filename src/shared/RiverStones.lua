@@ -21,41 +21,50 @@ end
 -- East to west, in DashCourse.Stones order. Footprint length x width (studs), turn (degrees about up), top (studs).
 -- Code review: every top is DashCourse's STONE_TOP (4.00), where the racing pets stand, so no pet sinks into a stone;
 -- the dome falls away below the walking top, and the three differ in outline, turn and colour.
+-- FABLE-REVIEW-R13 fix 2: wet stone is darker and cooler (the light grey read as dry concrete).
 Stones.Rows=table.freeze({
-	row("East",7.5,9.0,2.6,2.1,20,4.00,"#8A8580",11),
-	row("Middle",4.5,9.4,2.8,2.4,-35,4.00,"#7F847F",23),
-	row("West",1.55,10.0,2.5,2.0,70,4.00,"#948E84",37),
+	row("East",7.5,9.0,2.6,2.1,20,4.00,"#6F6C68",11),
+	row("Middle",4.5,9.4,2.8,2.4,-35,4.00,"#646A66",23),
+	row("West",1.55,10.0,2.5,2.0,70,4.00,"#77726A",37),
 })
 -- The builder's carve (section 4, "Shape, tonight"): a Ball Ball x the stone's length, sunk so its top is the stone's
 -- top, cut by Cuts big Blocks whose near faces stand at Reach of the footprint radius, each leaning out Lean degrees.
+-- Studio R13: IntersectAsync(ball, blocks) kept the ball wherever it met ANY block (the landings became two 10-stud
+-- slabs). The carve now cuts AWAY: each block stands outside its face and GeometryService:SubtractAsync removes it, plus
+-- one Floor block under the stone (Floor studs under the water), so nothing can spread past the footprint.
 Stones.Ball=1.5
 Stones.Cuts=table.freeze({5,7})
 Stones.Reach=table.freeze({.85,1})
 Stones.Lean=table.freeze({8,20})
-Stones.Block=10 -- a cutting block's side (studs): much bigger than any stone
+Stones.Block=60 -- a cutting block's side (studs): bigger than the largest ball (FABLE-REVIEW-R13)
+Stones.Floor=1.2 -- studs under the water where the floor cut takes the rest of the ball away
 -- The fallback when the carve throws (or offline): two stacked Cylinders, the footprint's width then Upper of it.
 Stones.Fallback=table.freeze({lower=.45,upper=.3,upperShare=.8})
--- Wet band: a second stone under each, Scale x as wide, Darker darker, its top just over the water. Its Ball is big (a
--- near-flat top), or only a sliver of it would clear the water.
-Stones.Band=table.freeze({scale=1.12,darker=.35,top=3.25,ball=16})
--- Moss: one plate on top at Share of the footprint, lawn-patch-a tinted, decal transparency.
-Stones.Moss=table.freeze({share=.7,colour=hex("#5F7F4A"),transparency=.45,lift=.02,texture="lawnPatchA"})
--- Company: small stones just off the row, tops 3.4 to 3.6; one upstream (+Z: the stream runs north to south) of the
--- middle stone, two downstream of the east one. Visual only.
+-- Wet band: a second stone under each, Scale x as wide, Darker darker, its top just over the water: a dark collar at
+-- the waterline, not a plinth (FABLE-REVIEW-R13: at 1.12 the bands touched). Ball 4 x: wide enough at the water.
+Stones.Band=table.freeze({scale=1.04,darker=.45,top=3.45,ball=4})
+-- Moss: one plate on top at Share of the footprint, lawn-patch-a tinted, decal transparency, Upstream studs toward +Z.
+Stones.Moss=table.freeze({share=.55,colour=hex("#56793F"),transparency=.25,lift=.02,upstream=.2,texture="lawnPatchA"})
+-- Company: small stones just off the row, tops 3.38 to 3.6; one upstream (+Z: the stream runs north to south) of the
+-- middle stone, two downstream of the east one (all three 20% darker, R13), two by the west one. Visual only.
 Stones.Company=table.freeze({
-	row("UpMiddle",4.2,11.9,.8,.7,15,3.5,"#878580",51),
-	row("DownEastA",7.9,6.7,1.1,.9,-40,3.6,"#8F8A82",53),
-	row("DownEastB",6.5,6.1,.7,.6,60,3.4,"#7C807B",57),
+	row("UpMiddle",4.2,11.9,.8,.7,15,3.5,"#6C6A66",51),
+	row("DownEastA",7.9,6.7,1.1,.9,-40,3.6,"#726E68",53),
+	row("DownEastB",6.5,6.1,.7,.6,60,3.4,"#636662",57),
+	row("UpWest",.9,12.0,.9,.7,25,3.45,"#7C807B",71),
+	row("DownWest",2.6,7.9,.6,.5,-20,3.38,"#878580",73),
 })
 -- Landings: one flat stone where the row meets each bank, set into the kerb line (its long side along the kerb), so the
 -- kerb is broken where the crossing lands. Raised .03 over the kerb so the seam is the landing's edge [check] z-fight.
--- A gently domed slab: Ball 12 x (its edge about .05 under its middle), the cuts through the footprint just under the
--- kerb's top.
+-- A gently domed slab: Ball 6 x (R13: small, so even a failed cut cannot spread), the cuts through the footprint just
+-- under the kerb's top.
 Stones.LandingLift=.03
-Stones.LandingBall=12
+Stones.LandingBall=6
 Stones.Landings=table.freeze({
-	row("LandingEast",9.2,8.71,2.4,1.6,90,4.3+.03,"#9A958C",61,12,4.2),
-	row("LandingWest",-.2,10.29,2.4,1.6,90,4.3+.03,"#968F86",67,12,4.2),
+	-- R13 acceptance (.35 of water between each end stone and the bank): .65 further out along the row than the look's
+	-- x 9.2 / -.2 [check] they still break the kerb.
+	row("LandingEast",9.85,8.6,2.4,1.6,90,4.3+.03,"#9A958C",61,6,4.2),
+	row("LandingWest",-.85,10.4,2.4,1.6,90,4.3+.03,"#968F86",67,6,4.2),
 })
 -- The colliders (section 4, "Colliders"): 2.9 across, top .03 under the stone's top, 1.2 deep. Players only.
 Stones.Collider=table.freeze({diameter=2.9,below=.03,depth=1.2})
@@ -113,6 +122,23 @@ function Stones.collider(stone)
 	local C=Stones.Collider
 	local top=stone.top-C.below
 	return Vector3.new(stone.x,top-C.depth/2,stone.z),C.depth,C.diameter,top
+end
+-- The cutting blocks of a stone as frames (the block's centre; its -Z face, toward the stone, is the cut) and their
+-- size: one per cut, standing OUTSIDE its face, and the floor block under the stone. For StoneBuilder and the specs.
+function Stones.blocks(stone)
+	local size=Stones.Block
+	local out={}
+	for _,cut in ipairs(Stones.cuts(stone))do
+		local lean=math.rad(cut.lean)
+		local away=Vector3.new(math.cos(cut.yaw),0,-math.sin(cut.yaw))
+		local normal=away*math.cos(lean)+Vector3.new(0,math.sin(lean),0)
+		local on=Vector3.new(stone.x,stone.base or Stones.Water,stone.z)+away*cut.distance
+		-- LookVector = the face's normal (out of the stone); the block lies in front of its face.
+		table.insert(out,CFrame.lookAt(on,on+normal)*CFrame.new(0,0,-size/2))
+	end
+	local floor=(stone.base or Stones.Water)-Stones.Floor
+	table.insert(out,CFrame.new(stone.x,floor-size/2,stone.z))
+	return out,size
 end
 -- Every point the flow rings and the leaves treat as an obstacle: the three stones and the piers, {x, z, size}.
 function Stones.obstacles()

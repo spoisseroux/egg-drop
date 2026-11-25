@@ -2,8 +2,9 @@
 -- (RiverStones: x, z, length, width, turn, top, colour, seed). Server only.
 --   Builder.stone(parent, stone, options) -> the fallback Model at once: two stacked Cylinders (the footprint's width,
 --     then 80% of it), Slate. Then, unless options.carve is false, a carve on its own thread: a Ball Ball x the stone's
---     length, sunk so its top is the stone's top, intersected (GeometryService:IntersectAsync) with 5 to 7 big Blocks
---     leaning out; the result replaces the cylinders inside the same Model. A carve that throws keeps the cylinders.
+--     length, sunk so its top is the stone's top, with 5 to 7 big Blocks leaning out and a floor block cut away
+--     (GeometryService:SubtractAsync, Studio R13); the result replaces the cylinders inside the same Model. A carve
+--     that throws keeps the cylinders.
 -- Everything is anchored with no collision, query or touch and no shadow; the walkable colliders are DashMount's.
 -- options (specs): {carve = false | function(ball, blocks) -> PartOperation, spawn = fn, ball = multiplier}.
 -- The Hollow park's rim and gap stones (section 2) use the same builder.
@@ -32,30 +33,27 @@ function Builder.fallback(parent,stone)
 	local lower=cylinder(parent,"StoneFoot",width,F.lower,at-Vector3.new(0,F.upper+F.lower/2,0),stone.colour)
 	return{upper,lower}
 end
--- The carve's inputs: the ball and the cutting blocks (unparented parts), from RiverStones.cuts. The plane of each cut
--- passes through the footprint at the waterline and leans out (its foot further out than its top).
+-- The carve's inputs: the ball and the cutting blocks (unparented parts), from RiverStones.blocks: each block stands
+-- OUTSIDE its face (the plane through the footprint at the base height, leaning out: its foot further out than its
+-- top), and one floor block takes the ball away under the stone. The carve subtracts them all from the ball.
 function Builder.inputs(stone,ballScale)
 	local diameter=(ballScale or stone.ball or Stones.Ball)*stone.length
 	local ball=Instance.new("Part")
 	ball.Shape=Enum.PartType.Ball;ball.Size=Vector3.one*diameter
 	ball.CFrame=CFrame.new(stone.x,stone.top-diameter/2,stone.z)
 	local blocks={}
-	local size=Stones.Block
-	for _,cut in ipairs(Stones.cuts(stone))do
-		local lean=math.rad(cut.lean)
-		local out=Vector3.new(math.cos(cut.yaw),0,-math.sin(cut.yaw))
-		local normal=out*math.cos(lean)+Vector3.new(0,math.sin(lean),0)
-		local on=Vector3.new(stone.x,stone.base or Stones.Water,stone.z)+out*cut.distance
+	local frames,size=Stones.blocks(stone)
+	for _,frame in ipairs(frames)do
 		local block=Instance.new("Part")
 		block.Size=Vector3.one*size
-		-- LookVector = the face's normal; the block lies behind its front face (local +Z), so the face is the cut.
-		block.CFrame=CFrame.lookAt(on,on+normal)*CFrame.new(0,0,size/2)
+		block.CFrame=frame
 		table.insert(blocks,block)
 	end
 	return ball,blocks
 end
-local function intersect(ball,blocks)
-	local results=game:GetService("GeometryService"):IntersectAsync(ball,blocks,{
+-- Studio R13: never IntersectAsync here (it keeps the ball wherever it meets any block).
+local function subtract(ball,blocks)
+	local results=game:GetService("GeometryService"):SubtractAsync(ball,blocks,{
 		CollisionFidelity=Enum.CollisionFidelity.Box,RenderFidelity=Enum.RenderFidelity.Precise,SplitApart=false})
 	return results and results[1]
 end
@@ -70,7 +68,7 @@ function Builder.stone(parent,stone,options)
 	model.Parent=parent
 	local carve=options.carve
 	if carve==false then return model end
-	carve=carve or intersect
+	carve=carve or subtract
 	local spawn=options.spawn or task.spawn
 	spawn(function()
 		local ball,blocks=Builder.inputs(stone,options.ball)

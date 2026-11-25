@@ -147,7 +147,7 @@ function Scene.new(deps)
 	-- Things on the water (beta 17, 1.3 B): 6 leaves plus 2 for the big breath, and a flow ring round each obstacle.
 	self.path=Sim.streamPath(deps.boxes)
 	self.obstacles=deps.obstacles or {}
-	self.leaves,self.flows={},{}
+	self.leaves,self.flows,self.wakes={},{},{}
 	local W=Sim.Water
 	local leaf=art("leaf")
 	if leaf and #self.path.points>=2 then
@@ -160,9 +160,15 @@ function Scene.new(deps)
 	local ripple=art("ripple")
 	if ripple then
 		for i,o in ipairs(self.obstacles)do
-			local p,d=flatPlate(kit,"SceneFlow"..i,Vector3.new(o.size,.02,o.size),ripple)
+			local p,d=flatPlate(kit,"SceneFlow"..i,Vector3.new(o.size,.02,o.size),ripple,W.ringColour)
 			d.Transparency=1
 			self.flows[i]={part=p,decal=d,obstacle=o,size=o.size,phase=(i*1.37)%Sim.Water.ringPeriod,placed=false,shown=1}
+			-- R13: a wake downstream of each river stone (not the piers).
+			if o.stone then
+				local wp,wd=flatPlate(kit,"SceneWake"..i,W.wake,ripple,W.ringColour)
+				wd.Transparency=1
+				table.insert(self.wakes,{part=wp,decal=wd,obstacle=o,phase=(i*.71)%W.wakePeriod,placed=false,shown=1})
+			end
 		end
 	end
 	self.waterIn=0
@@ -256,7 +262,7 @@ end
 -- Things on the water (beta 17, 1.3 B): leaves on the shared clock at 15 Hz, only within Water.far of the camera; two
 -- more while the big breath blows here; the flow rings pulse in place (placed once, resized while they change).
 function Scene:stepWater(ctx)
-	if #self.leaves==0 and #self.flows==0 then return end
+	if #self.leaves==0 and #self.flows==0 and #self.wakes==0 then return end
 	local W=Sim.Water
 	self.waterIn-=ctx.tick
 	if self.waterIn>0 then return end
@@ -306,6 +312,19 @@ function Scene:stepWater(ctx)
 			if not ring.placed then
 				ring.placed=true
 				ctx.put(ring.part,CFrame.new(o.x,W.surface+W.ringLift,o.z))
+			end
+		end
+	end
+	for _,wake in ipairs(self.wakes)do
+		local o=wake.obstacle
+		if not self.stonesUp then
+			if wake.placed then wake.placed=false;wake.shown=1;wake.decal.Transparency=1;ctx.hide(wake.part)end
+		else
+			local transparency=Sim.wake(now,wake.phase,reduced)
+			if math.abs(wake.shown-transparency)>.01 then wake.shown=transparency;wake.decal.Transparency=transparency end
+			if not wake.placed then
+				wake.placed=true
+				ctx.put(wake.part,CFrame.new(o.x,W.surface+W.ringLift,o.z-W.wakeBack))
 			end
 		end
 	end
@@ -402,6 +421,7 @@ function Scene:park()
 	if self.star.on then self.star.on=false;self.star.beam.Enabled=false end
 	-- GardenLife's park has hidden the water's parts too: place the rings again when it comes back.
 	for _,ring in ipairs(self.flows)do ring.placed=false end
+	for _,wake in ipairs(self.wakes)do wake.placed=false end
 	for _,entry in ipairs(self.leaves)do entry.out=false;entry.shown=1;entry.decal.Transparency=1 end
 end
 
@@ -416,6 +436,7 @@ function Scene:destroy()
 	for _,list in ipairs(self.flies)do for _,p in ipairs(list)do table.insert(parts,p)end end
 	for _,entry in ipairs(self.leaves)do table.insert(parts,entry.part)end
 	for _,ring in ipairs(self.flows)do table.insert(parts,ring.part)end
+	for _,wake in ipairs(self.wakes)do table.insert(parts,wake.part)end
 	for _,p in ipairs(parts)do pcall(function()p:Destroy()end)end
 	return parts
 end
@@ -430,7 +451,9 @@ function Scene:counts()
 	local leaves,flows=0,0
 	for _,entry in ipairs(self.leaves)do if entry.out then leaves+=1 end end
 	for _,ring in ipairs(self.flows)do if ring.placed then flows+=1 end end
-	return{dapple=#self.dapple,koi=#self.koi,flies=#self.dragonflies.list,lamps=lamps,lights=lights,star=self.star.on,leaves=leaves,flows=flows}
+	local wakes=0
+	for _,wake in ipairs(self.wakes)do if wake.placed then wakes+=1 end end
+	return{dapple=#self.dapple,koi=#self.koi,flies=#self.dragonflies.list,lamps=lamps,lights=lights,star=self.star.on,leaves=leaves,flows=flows,wakes=wakes}
 end
 
 return Scene

@@ -89,7 +89,7 @@ return function(client)
 			local r=rig()
 			local parts=r.sceneParts()
 			-- dapple, koi, rings, flock, dragonflies, lamp and star anchors; beta 17: 8 leaves and 2 flow rings.
-			assert(#parts==6+3+3+10+6+2+8+2,"scene parts: "..#parts)
+			assert(#parts==6+3+3+10+6+2+8+2+1,"scene parts: "..#parts) -- R13: and a wake behind the stone
 			for _,p in ipairs(parts)do
 				assert(p.Anchored and not p.CanCollide and not p.CanQuery and not p.CanTouch and not p.CastShadow,p.Name)
 			end
@@ -202,9 +202,12 @@ return function(client)
 			local lo,hi=math.huge,-math.huge
 			for _,v in ipairs(sizes)do lo=math.min(lo,v);hi=math.max(hi,v)end
 			assert(lo>=1.6*1.15-.05 and hi<=1.6*1.5+.05 and hi-lo>.3,"pulses "..lo.." "..hi)
-			assert(math.abs(pier.CFrame.Position.Y-(3.2+.03))<1e-6 and math.abs(pier.CFrame.Position.X-40)<1e-6)
+			assert(math.abs(pier.CFrame.Position.Y-3.22)<1e-6 and math.abs(pier.CFrame.Position.X-40)<1e-6)
+			assert(r.life.sceneParts:counts().wakes==0,"no wake before the stone")
 			r.stones=true;r.step(1.2)
 			assert(r.life.sceneParts:counts().flows==2,"the stone's ring once it stands")
+			local wake=r.folder():FindFirstChild("SceneWake1")
+			assert(r.life.sceneParts:counts().wakes==1 and math.abs(wake.CFrame.Position.Z-(-52-1.5))<1e-6,"a wake 1.5 downstream")
 			r.level=1;r.step(.5)
 			assert(r.life.sceneParts:counts().leaves==3,"level 1: 3")
 			local still=rig({reduced=true})
