@@ -130,6 +130,12 @@ return function(client)
 		for i=0,200 do local t=quiet+i*.1;assert(Wind.swayAt(here,t)==Wind.at(here,t),"swayAt off a breath")end
 	end)
 
+		test("beta 17 1.3 A: the sky's wind is 3 studs a second downwind in still air, 12 at full; odd blows are still air",function()
+			local function near(a,b)return math.abs(a-b)<1e-9 end
+			assert(near(Wind.sky(0).Magnitude,3)and near(Wind.sky(1).Magnitude,12)and near(Wind.sky(.5).Magnitude,7.5))
+			assert(near(Wind.sky(2).Magnitude,12)and near(Wind.sky(nan).Magnitude,3)and near(Wind.sky(nil).Magnitude,3))
+			assert(Wind.sky(1).Unit:Dot(Wind.Direction)>.999999,"along the wind")
+		end)
 	end)
 	Wind.Strength=strength
 	assert(ok,err)

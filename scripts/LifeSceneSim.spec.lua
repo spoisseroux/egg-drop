@@ -202,5 +202,65 @@ return function(client)
 		assert(to.Y>0 and Vector3.new(to.X,0,to.Z).Unit:Dot(Vector3.new(0,0,-1))>=math.cos(math.rad(45)),"up, near the look")
 	end)
 
+	test("beta 17 1.3 B: leaves ride the stream boxes in order at 1.1 studs a second, on the water, round the stones",function()
+		local boxes={{frame=CFrame.new(0,3.2,40),hx=7.5,hz=4.5,name="Water_Stream"},{frame=CFrame.new(0,3.2,0),hx=8,hz=5,name="Water_Pool_Lily"},
+			{frame=CFrame.new(2,3.2,20),hx=7,hz=4.5,name="Water_Stream"},{frame=CFrame.new(4,3.2,0),hx=8,hz=5.6,name="Water_Stream"}}
+		local path=Sim.streamPath(boxes)
+		assert(#path.points==3 and near(path.points[1].Z,40)and near(path.points[3].Z,0),"stream boxes only, in order")
+		assert(near(path.points[1].Y,3.22)and near(path.halves[3],5.6))
+		local obstacles={{x=4,z=9,size=2.8,stone=true}}
+		local W=Sim.Water
+		local count=6
+		for k=1,count do
+			local last
+			for i=0,400 do
+				local now=T0+i*.25
+				local frame,transparency=Sim.leaf(path,k,count,now,obstacles)
+				assert(frame and transparency>=0 and transparency<=1)
+				local p=frame.Position
+				assert(near(p.Y,3.22),"on the water")
+				-- Inside the water: never further off the line than the half width.
+				local best=math.huge
+				for j=1,#path.points-1 do
+					local a,b=path.points[j],path.points[j+1]
+					local ab=Vector3.new(b.X-a.X,0,b.Z-a.Z)
+					local u=math.clamp(Vector3.new(p.X-a.X,0,p.Z-a.Z):Dot(ab)/ab:Dot(ab),0,1)
+					best=math.min(best,(Vector3.new(a.X,0,a.Z)+ab*u-Vector3.new(p.X,0,p.Z)).Magnitude)
+				end
+				assert(best<=5.6,"on the stream: "..best)
+				-- Clear of the stone (its half size) unless fading at an end.
+				local gap=Vector2.new(p.X-4,p.Z-9).Magnitude
+				if transparency<.5 then assert(gap>=1.4-.05,"round the stone: "..gap)end
+				if last then
+					local step=Vector2.new(p.X-last.X,p.Z-last.Z).Magnitude
+					assert(step<=W.speed*.25+.5 or transparency>.9 or step>path.total*.5,"drifts: "..step)
+				end
+				last=p
+			end
+		end
+		-- Fades in over the first second and out over the last.
+		local lap=path.total/W.speed
+		local start=math.ceil(T0/lap)*lap
+		local _,a=Sim.leaf(path,1,count,start)
+		local _,b=Sim.leaf(path,1,count,start+.5)
+		local _,c=Sim.leaf(path,1,count,start+3)
+		assert(near(a,1)and b>0 and b<1 and near(c,0),"fade in")
+		local f1=Sim.leaf(path,1,count,start+2)
+		local f2=Sim.leaf(path,1,count,start+2)
+		assert(f1==f2 or(f1.Position-f2.Position).Magnitude<1e-9,"the same for everyone")
+		assert(Sim.leaf(Sim.streamPath({}),1,6,T0)==nil and Sim.cap("leaves",0)==6 and Sim.cap("leaves",1)==3 and Sim.cap("leaves",2)==0)
+	end)
+	test("beta 17 1.3 B: flow rings pulse 1.15 to 1.5 x over 2.6 s, fading .55 to .9; Reduced Motion: still at 1.2 x",function()
+		local lo,hi=math.huge,-math.huge
+		for i=0,52 do
+			local size,transparency=Sim.flowRing(T0+i*.05,.3,false)
+			lo,hi=math.min(lo,size),math.max(hi,size)
+			assert(transparency>=.55-1e-9 and transparency<=.9+1e-9)
+		end
+		assert(lo<1.17 and hi>1.48 and lo>=1.15-1e-9 and hi<=1.5+1e-9)
+		local size,transparency=Sim.flowRing(T0,0,true)
+		assert(size==1.2 and transparency==.55)
+	end)
+
 	return{passed=#cases,cases=cases}
 end

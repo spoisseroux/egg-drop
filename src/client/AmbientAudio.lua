@@ -37,6 +37,38 @@ Ambient.RustleId = nil
 -- Volume at a full gust, the most it may change per second (over a gust's own .19, so a clock jump
 -- never clicks), and how long it stays silent before the loop stops.
 Ambient.RustlePeak, Ambient.RustleSlew, Ambient.RustleHold = .10, .4, 1.5
+-- Beta 17 (WORLD-ALIVE-LOOK 1.3 D), behind its own Alive switch `windbed` (missing = OFF, for Spencer to hear first): one
+-- wind loop that plays all the time from mount at a random offset and never restarts per gust (the "toilet flush" was
+-- the old rustle's restart). Volume floor + gain x blow^2 (blow: the gust or the big breath at the camera), slewed up
+-- .12 a second and down .05; PlaybackSpeed .92 + .10 x blow; an equalizer's HighGain -6 so it is air, not hiss. It
+-- stops only in a deck round or the Hush. The id is the old rustle's, a placeholder.
+Ambient.WindBedId = 131058187750745
+Ambient.WindBed = table.freeze({ floor = .012, gain = .07, up = .12, down = .05, speed = .92, speedGain = .10, highGain = -6 })
+-- The Den's echo (1.3 D, the `scene` switch): a ReverbSoundEffect on the ambience and SFX groups (never the music),
+-- its WetLevel eased from Off to Wet over Ease seconds while the camera is inside the Play Den (DenLayout).
+Ambient.Echo = table.freeze({ decay = 1.6, density = .8, diffusion = .8, dry = 0, wet = -14, off = -60, ease = .6, sample = .25,
+	groups = { "EggDropAmbience", "EggDropAmbientCues", "EggDropSFX" } })
+function Ambient.windBedVolume(blow)
+	if type(blow) ~= "number" or blow ~= blow then blow = 0 end
+	blow = math.clamp(blow, 0, 1)
+	return Ambient.WindBed.floor + Ambient.WindBed.gain * blow * blow
+end
+function Ambient.windBedSpeed(blow)
+	if type(blow) ~= "number" or blow ~= blow then blow = 0 end
+	return Ambient.WindBed.speed + Ambient.WindBed.speedGain * math.clamp(blow, 0, 1)
+end
+-- The bed's volume one step on: toward `goal`, never faster than up / down a second.
+function Ambient.windBedSlew(level, goal, dt)
+	local W = Ambient.WindBed
+	return level + math.clamp(goal - level, -W.down * dt, W.up * dt)
+end
+-- The echo's WetLevel one step on (dB, linear: Off to Wet in Ease seconds).
+function Ambient.echoToward(wet, inside, dt)
+	local E = Ambient.Echo
+	local goal = if inside then E.wet else E.off
+	local most = (E.wet - E.off) / E.ease * dt
+	return wet + math.clamp(goal - wet, -most, most)
+end
 Ambient.OneShots = { "pet_coo_1", "pet_coo_2", "pet_coo_3", "machine_attract" }
 
 -- A3 brook bed: bed = floor + (peak - floor) * smoothstep(1 - d / 45), sampled at 4 Hz, eased 0.5 s.
@@ -471,6 +503,45 @@ function Ambient.new(audio, options)
 			}
 		end)
 	end
+	-- Beta 17 1.3 D: the wind bed (its own switch, off when missing) and the Den's echo (the `scene` switch). Not on this
+	-- place at all (the live game): nothing runs per frame. options.windBed / options.echo (specs): tables or false.
+	self.bedRandom = Random.new((options.seed or 1) + 23)
+	if options.windBed ~= nil then self.windBedOf = options.windBed or nil end
+	if options.echo ~= nil then self.echoOf = options.echo or nil end
+	if options.windBed == nil or options.echo == nil then
+		task.spawn(function()
+			local Alive = require(Shared:WaitForChild("Alive"))
+			local function camera()
+				local current = workspace.CurrentCamera
+				return current and current.CFrame.Position
+			end
+			if options.windBed == nil and Alive.ceiling("windbed") then
+				self.windBedOf = {
+					on = function() return Alive.on("windbed") end,
+					blow = function()
+						local at = camera()
+						return if at then Wind.blow(at, workspace:GetServerTimeNow()) else 0
+					end,
+					hushed = function()
+						local Hush = require(Shared:WaitForChild("Hush"))
+						local at = self:listener()
+						return Hush.on() == true and at ~= nil and Hush.regionAt(at) == "hush"
+					end,
+				}
+			end
+			if options.echo == nil and Alive.ceiling("scene") then
+				self.echoOf = {
+					on = function() return Alive.on("scene") end,
+					camera = camera,
+					inside = function(point)
+						local Layout = require(Shared:WaitForChild("DenLayout"))
+						local den = Layout.current()
+						return den ~= nil and Layout.inRoom(den, point) == true
+					end,
+				}
+			end
+		end)
+	end
 	task.spawn(function()
 		local failed = {}
 		local ok = pcall(function()
@@ -790,6 +861,22 @@ function Ambient:step(dt)
 		self.wind = nil
 		self:stopRustle()
 	end
+	if self.windBedOf then
+		local ok, problem = pcall(self.stepWindBed, self, dt)
+		if not ok then
+			self.warn("[Ambient] wind bed: " .. tostring(problem))
+			self.windBedOf = nil
+			pcall(self.stopWindBed, self)
+		end
+	end
+	if self.echoOf then
+		local ok, problem = pcall(self.stepEcho, self, dt)
+		if not ok then
+			self.warn("[Ambient] den echo: " .. tostring(problem))
+			self.echoOf = nil
+			pcall(self.dropEcho, self)
+		end
+	end
 	if night or self.cricketBed then
 		local ok, problem = pcall(self.stepCrickets, self, dt, audible and not self.round, night, daylight, listener)
 		if not ok then
@@ -926,6 +1013,88 @@ function Ambient:stopRustle()
 	end
 end
 
+-- The wind bed (1.3 D). Off (the switch) or in a deck round or the Hush: stopped. Otherwise it plays, once loaded, from
+-- a random point of the loop, and only its volume and speed follow the wind.
+function Ambient:stepWindBed(dt)
+	local bed = self.windBedOf
+	local hushed = bed.hushed ~= nil and bed.hushed() == true
+	if bed.on() ~= true or self.round or hushed then
+		self:stopWindBed()
+		return
+	end
+	local voice = self.windBedVoice
+	if not voice then
+		voice = sound("wind_bed", Ambient.WindBedId, self.ambience, SoundService, true)
+		local eq = Instance.new("EqualizerSoundEffect")
+		eq.Name = "Air"
+		eq.HighGain, eq.MidGain, eq.LowGain = Ambient.WindBed.highGain, 0, 0
+		eq.Parent = voice
+		self.windBedVoice, self.windBedLevel = voice, 0
+		task.spawn(function() pcall(function() ContentProvider:PreloadAsync({ voice }) end) end)
+	end
+	local blow = bed.blow()
+	if type(blow) ~= "number" or blow ~= blow then blow = 0 end
+	self.windBedLevel = Ambient.windBedSlew(self.windBedLevel or 0, Ambient.windBedVolume(blow), dt)
+	voice.Volume = self.windBedLevel
+	voice.PlaybackSpeed = Ambient.windBedSpeed(blow)
+	if not voice.IsPlaying and voice.IsLoaded then
+		local length = tonumber(voice.TimeLength) or 0
+		voice.TimePosition = if length > 0 then self.bedRandom:NextNumber() * length else 0
+		voice:Play()
+	end
+end
+function Ambient:stopWindBed()
+	self.windBedLevel = 0
+	local voice = self.windBedVoice
+	if voice and (voice.IsPlaying or voice.Volume > 0) then
+		voice:Stop()
+		voice.Volume = 0
+	end
+end
+-- The Den's echo (1.3 D): the camera sampled every Echo.sample s; the effects exist only while the echo is wet.
+function Ambient:stepEcho(dt)
+	local echo = self.echoOf
+	local E = Ambient.Echo
+	local on = echo.on() == true
+	self.echoClock = (self.echoClock or E.sample) + dt
+	if not on then
+		self.echoInside = false
+	elseif self.echoClock >= E.sample then
+		self.echoClock = 0
+		local at = echo.camera and echo.camera()
+		self.echoInside = typeof(at) == "Vector3" and echo.inside(at) == true
+	end
+	local inside = on and self.echoInside == true
+	self.echoWet = Ambient.echoToward(self.echoWet or E.off, inside, dt)
+	if not inside and self.echoWet <= E.off + 1e-6 then
+		self:dropEcho()
+		return
+	end
+	if not self.echoEffects then
+		self.echoEffects = {}
+		local mine = { EggDropAmbience = self.ambience, EggDropAmbientCues = self.group }
+		for _, name in ipairs(E.groups) do
+			local group = mine[name] or SoundService:FindFirstChild(name)
+			if group and group:IsA("SoundGroup") then
+				local reverb = Instance.new("ReverbSoundEffect")
+				reverb.Name = "DenEcho"
+				reverb.DecayTime, reverb.Density, reverb.Diffusion, reverb.DryLevel = E.decay, E.density, E.diffusion, E.dry
+				reverb.WetLevel = self.echoWet
+				reverb.Parent = group
+				table.insert(self.echoEffects, reverb)
+			end
+		end
+	end
+	for _, reverb in ipairs(self.echoEffects) do
+		if math.abs(reverb.WetLevel - self.echoWet) > .05 then reverb.WetLevel = self.echoWet end
+	end
+end
+function Ambient:dropEcho()
+	for _, reverb in ipairs(self.echoEffects or {}) do reverb:Destroy() end
+	self.echoEffects = nil
+	self.echoWet = Ambient.Echo.off
+end
+
 function Ambient:chirp(event)
 	local id = Ambient.Ids[event.cue]
 	if not id or not event.position then return false end
@@ -992,6 +1161,8 @@ function Ambient:destroy()
 		if self.audio.refreshLoops then self.audio:refreshLoops() end
 	end
 	if self.rustleVoice then self.rustleVoice:Destroy() end
+	if self.windBedVoice then self.windBedVoice:Destroy() end
+	self:dropEcho()
 	if self.cricketBed then self.cricketBed:Destroy(); self.cricketLayer:Destroy() end
 	self.folder:Destroy()
 	self.group:Destroy(); self.ambience:Destroy(); self.deckGroup:Destroy()

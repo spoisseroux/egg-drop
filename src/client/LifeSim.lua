@@ -725,9 +725,17 @@ Sim.Bird=table.freeze({lift=.39,land=.8,leave=1.2,stayMin=8,stayMax=20,flee=12,
 	headEveryMin=.8,headEveryMax=2.5,headMin=25,headMax=50,headTime=.12,cock=.3,cockRoll=15,
 	turnMin=20,turnMax=45,turnEveryMin=2.5,turnEveryMax=5,turnTime=.15,crouch=.10,crouchTime=.08,diveTilt=15,level=.2,
 	beatHz=table.freeze({5.5,3.5}),beats=2,beatMid=15,beatAmp=50,tuckTime=.22,tuckDip=.12,tuckBlend=.06})
+-- Beta 17 (WORLD-ALIVE-LOOK 1.3 C, the Alive `scene` switch): a sitting bird whose stay is up may instead fly down to a
+-- lawn spot (Sim.forageSpot: 10+ studs from every player, within 40 of the camera, off the course, pad, parks, finds and
+-- stations) and forage for 12 to 25 s: 2 to 4 pecks (the head down 35 degrees for .12 s, .25 s apart), a hop of .4,
+-- a look about of .6 to 1.4 s, again. It flushes when a character comes within 7 or a pet within 4: two quick hops away,
+-- up to the nearest free crown, one chirp (Birds.events). One on the ground at a time; GardenLife passes world.forage
+-- only by day, with the switch on, below budget level 2.
+Sim.Forage=table.freeze({chance=.5,near=8,far=40,players=10,timeMin=12,timeMax=25,pecksMin=2,pecksMax=4,peck=.12,
+	peckGap=.25,peckPitch=35,hop=.4,lookMin=.6,lookMax=1.4,character=7,pet=4,flushHop=.45,tries=10})
 local Birds={};Birds.__index=Birds
 Sim.Birds=Birds
-function Birds.new(seed)return setmetatable({random=Random.new(seed or 3),list={}},Birds)end
+function Birds.new(seed)return setmetatable({random=Random.new(seed or 3),list={},events={}},Birds)end
 function Birds:clear()table.clear(self.list)end
 function Birds:find(perch)
 	for _,bird in ipairs(self.list)do if bird.perch==perch then return bird end end
@@ -808,10 +816,28 @@ function Birds:step(now,world,reduced,cap,level)
 			bird.hopAt,bird.hop2,bird.turnStart=nil,nil,nil
 			bird.landedAt=-math.huge
 		end
-		if bird.state=="land"and now-bird.start>=B.land then bird.state="sit";bird.landedAt=now end
+		if bird.state=="land"and now-bird.start>=B.land then
+			bird.landedAt=now
+			if bird.ground then
+				bird.state="forage"
+				bird.forageUntil=now+r:NextNumber(Sim.Forage.timeMin,Sim.Forage.timeMax)
+				bird.cycleNext=now+Sim.Bird.dipIn+Sim.Bird.dipOut
+			else bird.state="sit"end
+		end
+		if(bird.state=="forage"or bird.state=="flush")and(reduced or not world.forage)then
+			-- Reduced Motion, night or the switch off: a bird on the ground just goes.
+			if reduced then table.remove(list,i);continue end
+			bird.state,bird.leaveAt,bird.away,bird.rise="leave",now,Vector3.new(-math.sin(bird.yaw),0,-math.cos(bird.yaw)),r:NextNumber(B.riseMin,B.riseMax)
+			bird.ground=nil
+		end
+		if bird.state=="forage"then self:forage(bird,now,world)end
+		if bird.state=="flush"then self:flushing(bird,now,world)end
 		if bird.state=="sit"then
 			local player=world.player
-			if now>=bird.stayUntil or(player and(player-bird.spot).Magnitude<B.flee)then
+			local fleeing=player and(player-bird.spot).Magnitude<B.flee
+			if not fleeing and now>=bird.stayUntil and not reduced and self:goDown(bird,now,world)then
+				-- Down to the lawn instead of away.
+			elseif now>=bird.stayUntil or fleeing then
 				if reduced then table.remove(list,i);continue end
 				local away=if player then Vector3.new(bird.spot.X-player.X,0,bird.spot.Z-player.Z)else Vector3.zero
 				if away.Magnitude<1e-3 then away=Vector3.new(-math.sin(bird.yaw),0,-math.cos(bird.yaw))end
@@ -842,6 +868,161 @@ function Birds:step(now,world,reduced,cap,level)
 		Sim.birdPose(bird,now,level)
 	end
 	return list
+end
+-- Is a bird on the ground (going down, foraging or flushing)?
+function Birds:grounded()
+	for _,bird in ipairs(self.list)do
+		if bird.ground or bird.state=="forage"or bird.state=="flush"then return bird end
+	end
+	return nil
+end
+-- A sitting bird whose stay is up: down to a lawn spot (half the time), if world.forage allows and none is down yet.
+function Birds:goDown(bird,now,world)
+	local forage=world.forage
+	if not forage or self:grounded()then return false end
+	if bird.random:NextNumber()>=Sim.Forage.chance then return false end
+	local spot=Sim.forageSpot(bird.random,world.camera,forage)
+	if not spot then return false end
+	local travel=Vector3.new(spot.X-bird.spot.X,0,spot.Z-bird.spot.Z)
+	bird.from=bird.spot
+	bird.spot,bird.start,bird.state,bird.ground,bird.perch=spot,now,"land",true,nil
+	bird.yaw=if travel.Magnitude>1e-3 then yawOf(travel)else bird.yaw
+	bird.hopAt,bird.hop2,bird.turnStart=nil,nil,nil
+	return true
+end
+-- The nearest crown landing no bird is on (forage.landings: {[perch] = Vector3}), or nil.
+function Birds:crown(at,forage)
+	local best,bestPerch,bestD=nil,nil,math.huge
+	for perch,landing in pairs(forage and forage.landings or {})do
+		if typeof(landing)=="Vector3"and not self:find(perch)then
+			local d=(landing-at).Magnitude
+			if d<bestD then best,bestPerch,bestD=landing,perch,d end
+		end
+	end
+	return best,bestPerch
+end
+-- Off the ground: up to the nearest free crown (it sits there), else away as a leaving bird.
+function Birds:rise(bird,now,world,away)
+	local B=Sim.Bird
+	local landing,perch=self:crown(bird.spot,world.forage)
+	bird.ground,bird.forageHop,bird.cycleAt=nil,nil,nil
+	if landing then
+		local travel=Vector3.new(landing.X-bird.spot.X,0,landing.Z-bird.spot.Z)
+		bird.from,bird.spot,bird.start,bird.state,bird.perch=bird.spot,landing,now,"land",perch
+		bird.yaw=if travel.Magnitude>1e-3 then yawOf(travel)else bird.yaw
+		bird.stayUntil=now+B.land+self.random:NextNumber(B.stayMin,B.stayMax)
+		bird.hopAt,bird.hop2,bird.turnStart=nil,nil,nil
+		return
+	end
+	away=away or Vector3.new(-math.sin(bird.yaw),0,-math.cos(bird.yaw))
+	bird.state,bird.leaveAt,bird.away,bird.rise="leave",now,away,self.random:NextNumber(B.riseMin,B.riseMax)
+end
+-- The nearest threat to a bird on the ground: a character within Forage.character or a pet within Forage.pet; the
+-- flat direction away from it, or nil.
+local function threat(bird,world)
+	local F=Sim.Forage
+	local list={}
+	if typeof(world.player)=="Vector3"then table.insert(list,{world.player,F.character})end
+	local forage=world.forage
+	local okP,players=pcall(function()return forage.players and forage.players()end)
+	for _,p in ipairs(okP and players or {})do if typeof(p)=="Vector3"then table.insert(list,{p,F.character})end end
+	local okPets,pets=pcall(function()return forage.pets and forage.pets()end)
+	for _,p in ipairs(okPets and pets or {})do if typeof(p)=="Vector3"then table.insert(list,{p,F.pet})end end
+	for _,entry in ipairs(list)do
+		local p,reach=entry[1],entry[2]
+		local d=Vector3.new(bird.spot.X-p.X,0,bird.spot.Z-p.Z)
+		if d.Magnitude<reach and math.abs(bird.spot.Y-p.Y)<6 then
+			return if d.Magnitude>1e-3 then d.Unit else Vector3.new(-math.sin(bird.yaw),0,-math.cos(bird.yaw))
+		end
+	end
+	return nil
+end
+-- One forage step: a threat flushes it; its time up, it rises; else the peck, hop, look about cycle.
+function Birds:forage(bird,now,world)
+	local F,B=Sim.Forage,Sim.Bird
+	local away=threat(bird,world)
+	if away then
+		bird.state,bird.flushAt,bird.away="flush",now,away
+		bird.cycleAt,bird.forageHop=nil,nil
+		bird.yaw=yawOf(away)
+		local first=bird.spot+away*F.flushHop
+		local second=first+away*F.flushHop
+		bird.flushHops={{at=now,from=bird.spot,to=first},{at=now+B.hopTime+B.pairGap,from=first,to=second}}
+		bird.hopAt,bird.hop2=now,now+B.hopTime+B.pairGap
+		table.insert(self.events,{kind="flush",position=bird.spot})
+		return
+	end
+	local hop=bird.forageHop
+	if hop and now>=hop.at+B.hopTime then bird.spot=hop.to;bird.forageHop=nil end
+	if now>=bird.forageUntil and not bird.forageHop then self:rise(bird,now,world);return end
+	if now>=bird.cycleNext and not bird.forageHop then
+		local own=bird.random
+		bird.pecks=own:NextInteger(F.pecksMin,F.pecksMax)
+		bird.cycleAt=now
+		local at=now+bird.pecks*F.peckGap+.05
+		local a=own:NextNumber()*math.pi*2
+		local dir=Vector3.new(math.cos(a),0,math.sin(a))
+		local to=bird.spot+dir*F.hop
+		local ok=world.forage.ok
+		if ok and not ok(to.X,to.Z)then dir=-dir;to=bird.spot+dir*F.hop end
+		bird.forageHop={at=at,from=bird.spot,to=to}
+		bird.hopAt,bird.hop2=at,nil
+		bird.turnFrom,bird.turnStart,bird.yaw=bird.yaw,at,yawOf(dir)
+		-- The look about once it lands.
+		bird.headAt=at+B.hopTime
+		bird.cycleNext=at+B.hopTime+own:NextNumber(F.lookMin,F.lookMax)
+	end
+	if now>=bird.headAt then
+		local own,head=bird.random,bird.head
+		local k=smooth((now-head.at)/B.headTime)
+		head.fromYaw=head.fromYaw+(head.yaw-head.fromYaw)*k
+		head.fromRoll=head.fromRoll+(head.roll-head.fromRoll)*k
+		head.yaw=own:NextNumber(B.headMin,B.headMax)*(if own:NextNumber()<.5 then -1 else 1)
+		head.roll=if own:NextNumber()<B.cock then B.cockRoll*(if own:NextNumber()<.5 then -1 else 1)else 0
+		head.at=now
+		bird.headAt=now+own:NextNumber(B.headEveryMin,B.headEveryMax)
+	end
+end
+-- Flushing: two quick hops away, then up.
+function Birds:flushing(bird,now,world)
+	local B=Sim.Bird
+	local last=bird.flushHops and bird.flushHops[#bird.flushHops]
+	if not last or now>=last.at+B.hopTime+.05 then
+		if last then bird.spot=last.to end
+		bird.flushHops=nil
+		self:rise(bird,now,world,bird.away)
+	end
+end
+-- Events since the last call ({kind = "flush", position}); the list is cleared.
+function Birds:drain()
+	local out=self.events
+	self.events={}
+	return out
+end
+-- A lawn spot for a bird to forage on: 8 to 40 studs (flat) from the camera, on safe ground (forage.safe), clear of the
+-- stations, pad, course, finds and park kerbs (Sim.fruitClear) and 10+ studs from every player. nil after `tries`.
+function Sim.forageSpot(random,camera,forage)
+	local F=Sim.Forage
+	if typeof(camera)~="Vector3"or type(forage)~="table"or type(forage.groundY)~="function"then return nil end
+	local okP,players=pcall(function()return forage.players and forage.players()end)
+	players=okP and players or {}
+	for _=1,F.tries do
+		local a=random:NextNumber()*math.pi*2
+		local d=random:NextNumber(F.near,F.far)
+		local x,z=camera.X+math.cos(a)*d,camera.Z+math.sin(a)*d
+		local g=forage.groundY(x,z)
+		if type(g)=="number"and g==g and math.abs(g)<math.huge and(not forage.safe or forage.safe(x,z))then
+			local at=Vector3.new(x,g,z)
+			local clear=Sim.fruitClear(at,forage)
+			if clear then
+				for _,p in ipairs(players)do
+					if typeof(p)=="Vector3"and Vector2.new(p.X-x,p.Z-z).Magnitude<F.players then clear=false;break end
+				end
+			end
+			if clear and (at-camera).Magnitude>=Sim.Keep.camera then return at end
+		end
+	end
+	return nil
 end
 -- Bounding flight `t` seconds in: the wing angle (degrees), how far the wings are tucked (0 beating, 1 folded) and
 -- the root's dip while they are folded. Two beats, then a .22 s tuck; level 1 beats at 3.5 Hz.
@@ -900,8 +1081,25 @@ function Sim.birdPose(bird,now,level)
 		bird.wings,bird.flick,bird.phi,bird.tuck="fly",0,math.rad(phi),tuck
 		return
 	end
-	-- Sitting: the landing squash, low hops (often a pair), turns that come with a hop, the head on its own.
+	-- Sitting (and foraging, flushing): the landing squash, low hops (often a pair), turns that come with a hop, the head
+	-- on its own; on the ground a hop slides the bird along and a peck dips the head.
 	local y,pitch,flick=0,0,0
+	local base=bird.spot
+	local slide=false
+	for _,hop in ipairs(bird.flushHops or(bird.forageHop and{bird.forageHop})or {})do
+		local h=now-hop.at
+		if h>=0 and h<B.hopTime then base=hop.from:Lerp(hop.to,smooth(h/B.hopTime));slide=true
+		elseif h>=B.hopTime then base=hop.to
+		elseif h<0 then break end
+	end
+	local peck=0
+	if bird.state=="forage"and bird.cycleAt then
+		local F=Sim.Forage
+		for i=0,(bird.pecks or 0)-1 do
+			local h=now-(bird.cycleAt+i*F.peckGap)
+			if h>=0 and h<F.peck then peck=math.sin(math.pi*h/F.peck);slide=true end
+		end
+	end
 	local since=now-(bird.landedAt or -math.huge)
 	if since<B.dipIn then
 		local k=since/B.dipIn;y-=B.dip*k;pitch-=B.dipPitch*k
@@ -929,10 +1127,11 @@ function Sim.birdPose(bird,now,level)
 	local k=smooth((now-head.at)/B.headTime)
 	local hy,hr=head.fromYaw+(head.yaw-head.fromYaw)*k,head.fromRoll+(head.roll-head.fromRoll)*k
 	bird.turn=CFrame.Angles(0,math.rad(hy),0)*CFrame.Angles(0,0,math.rad(hr))
-	bird.root=CFrame.new(bird.spot+lift+Vector3.new(0,y,0))*CFrame.Angles(0,yaw,0)*CFrame.Angles(math.rad(pitch),0,0)
+	if peck>0 then bird.turn=bird.turn*CFrame.Angles(math.rad(-Sim.Forage.peckPitch*peck),0,0)end
+	bird.root=CFrame.new(base+lift+Vector3.new(0,y,0))*CFrame.Angles(0,yaw,0)*CFrame.Angles(math.rad(pitch),0,0)
 	bird.wings,bird.flick,bird.phi,bird.tuck="perch",flick,0,0
 	-- Nothing moving this frame (no squash, hop, turn or head snap; the tail at rest): GardenLife skips the writes.
-	bird.still=since>=B.dipIn+B.dipOut and not busy and bird.tau==B.tail and now-head.at>=B.headTime
+	bird.still=since>=B.dipIn+B.dipOut and not busy and not slide and bird.tau==B.tail and now-head.at>=B.headTime
 		and not(bird.turnStart and now-bird.turnStart<B.turnTime)
 end
 -- The ten frames in pool order: body, head, beak, eye R, eye L, wing L, wing R, tail, leg R, leg L (FABLE-REVIEW-R3 3).

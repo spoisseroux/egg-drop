@@ -345,5 +345,41 @@ return function(server)
 		live.config.start();assert(not live.config.command("/hour at 10")and live.offset==nil)
 		assert(Config.offsetFor(100,3600*7+50)==50 and Config.offsetFor(0,3599)==1)
 	end)
+	test("beta 17 1.3 A: a cloud across the sun every 70 to 130 s, by day only; in 4 s, holds 5 to 9, out 6; the same everywhere",function()
+		local C=Hour.Cloud
+		local starts={}
+		for n=1000,1200 do
+			local start,length,hold=Hour.cloudTimes(n)
+			assert(hold>=C.HoldMin and hold<=C.HoldMax and near(length,C.In+hold+C.Out))
+			assert(math.abs(start-n*C.Slot)<=C.Jitter)
+			table.insert(starts,start)
+			-- Full in the hold, eased at the ends, 0 just before it starts.
+			assert(near(Hour.cloud(start+C.In+hold/2,.9),1),"full in the hold")
+			assert(Hour.cloud(start-.01,.9)==0 and Hour.cloud(start+length+.01,.9)==0,"clear either side")
+			assert(near(Hour.cloud(start+C.In/2,.9),.5,1e-9),"halfway in")
+			assert(near(Hour.cloud(start+C.In+hold+C.Out/2,.9),.5,1e-9),"halfway out")
+			local k,open=Hour.cloud(start+C.In+1,Dawn.Daylight)
+			assert(k==0 and open==true,"none at dawn, the window still open")
+			assert(Hour.cloud(start+C.In+1,Night.Daylight)==0 and Hour.cloud(start+C.In+1,Dusk.Daylight)==0)
+		end
+		for i=2,#starts do
+			local gap=starts[i]-starts[i-1]
+			assert(gap>=C.Slot-2*C.Jitter and gap<=C.Slot+2*C.Jitter,gap)
+			assert(gap>C.In+C.HoldMax+C.Out,"never two at once")
+		end
+		assert(Hour.cloud(0/0,1)==0 and Hour.cloud(nil,1)==0)
+	end)
+	test("beta 17 1.3 A: shaded(look, k): Brightness x .9, SunRays x .3, Cover +.06, grade -.02 at full; 0 is the very same table",function()
+		local day=Hour.Holds.day
+		assert(Hour.shaded(day,0)==day and Hour.shaded(day,-1)==day and Hour.shaded(day,0/0)==day and Hour.shaded(nil,1)==nil)
+		local full=Hour.shaded(day,1)
+		assert(full~=day and near(full.Lighting.Brightness,day.Lighting.Brightness*.9)and near(full.SunRays.Intensity,day.SunRays.Intensity*.3))
+		assert(near(full.Clouds.Cover,day.Clouds.Cover+.06)and near(full.Grade.Brightness,day.Grade.Brightness-.02))
+		local half=Hour.shaded(day,.5)
+		assert(near(half.Lighting.Brightness,day.Lighting.Brightness*.95)and near(half.SunRays.Intensity,day.SunRays.Intensity*.65))
+		-- The hold is untouched (frozen), and the rest of the look is shared.
+		assert(near(day.Lighting.Brightness,Day.Lighting.Brightness)and full.Atmosphere==day.Atmosphere and full.Sky==day.Sky)
+		assert(near(Hour.shaded(day,3).Lighting.Brightness,full.Lighting.Brightness),"k past 1 is 1")
+	end)
 	return{passed=#cases,cases=cases}
 end

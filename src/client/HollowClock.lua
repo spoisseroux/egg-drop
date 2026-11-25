@@ -38,7 +38,27 @@ function Clock.hourLook()
 	-- Beta 14 W4 (WorldFeel "feel"): a little more haze; off (or no such helper) the look as it was.
 	local okFeel, haze = pcall(function() return require(Shared:WaitForChild("WorldFeel")).haze() end)
 	if okFeel and type(haze) == "number" and haze > 0 and Clock.Hour.hazed then values = Clock.Hour.hazed(values, haze) end
+	-- Beta 17 (WORLD-ALIVE-LOOK 1.3 A, the `scene` switch): a cloud across the sun now and then, by day. Under Reduced
+	-- Motion too (slow light, no parts).
+	if Clock.Hour.cloud and Clock.Hour.shaded and Clock.sceneOn() then
+		local k = Clock.Hour.cloud(Clock.Hour.time(), values.Daylight)
+		if k > 0 then values = Clock.Hour.shaded(values, k) end
+	end
 	return values
+end
+-- The Alive `scene` switch (beta and Studio only; a failing read is off). The module and its ceiling are read once, so
+-- off the beta this is a constant false. Specs swap it.
+local alive, sceneCeiling
+function Clock.sceneOn()
+	if sceneCeiling == nil then
+		local ok, module = pcall(function() return require(Shared:WaitForChild("Alive")) end)
+		alive = ok and module or nil
+		local okCeiling, ceiling = pcall(function() return alive ~= nil and alive.ceiling("scene") == true end)
+		sceneCeiling = okCeiling and ceiling == true
+	end
+	if not sceneCeiling then return false end
+	local ok, on = pcall(alive.on, "scene")
+	return ok and on == true
 end
 
 -- `values`: the hour's look when the caller already has it (Controller:apply works it out once a pass; false is the
@@ -260,12 +280,47 @@ end
 function Controller:rate()
  if not self.hourCeiling or not Clock.hourOn()then return nil end
  local Hour=Clock.Hour
- if not Hour.Blending(Hour.time())then return nil end
+ local t=Hour.time()
+ if not Hour.Blending(t)and not self:clouded(t)then return nil end
  local level=self.level()
  return Hour.ApplyRate[level]or Hour.ApplyRate[#Hour.ApplyRate]
 end
+-- A cloud across the sun is passing (the `scene` switch, by day): the hour's blend rate paints it (1.3 A).
+function Controller:clouded(t)
+ local Hour=Clock.Hour
+ if not Hour.cloud or not self.scene then return false end
+ local daylight=Hour.phase(t).daylight
+ local _,open=Hour.cloud(t,daylight)
+ return open==true and daylight>Hour.Cloud.Day
+end
+-- The sky on the wind (1.3 A): every SkyStep, workspace.GlobalWind follows the gust or the big breath at the camera
+-- (Wind.sky); Reduced Motion holds it at the still-air drift. Off puts back what was there.
+Clock.SkyStep=.5
+function Controller:sky()
+ local world=self.world
+ local on=self.skyOn()==true
+ if on then
+  if self.windWas==nil then self.windWas=world.GlobalWind end
+  local Wind=require(script.Parent.Wind)
+  local camera=world.CurrentCamera
+  local look=Clock.look
+  local reduced=look~=nil and look.reduced~=nil and look.reduced()==true
+  local blow=0
+  if camera and not reduced then blow=Wind.blow(camera.CFrame.Position,world:GetServerTimeNow())end
+  world.GlobalWind=Wind.sky(blow)
+ elseif self.windWas~=nil then
+  world.GlobalWind=self.windWas;self.windWas=nil
+ end
+end
+Clock.SceneStep=1 -- the `scene` switch is read at most this often (code review: never per frame)
 function Controller:step(dt)
  if self.destroyed then return end
+ self.sceneIn=(self.sceneIn or 0)-dt
+ if self.sceneIn<=0 then self.sceneIn=Clock.SceneStep;self.scene=self.sceneOf()==true end
+ if self.skyOn then
+  self.skyIn=(self.skyIn or 0)-dt
+  if self.skyIn<=0 then self.skyIn=Clock.SkyStep;pcall(self.sky,self)end
+ end
  self.elapsed+=dt
  local rate=self:rate()
  -- Into or out of a blend: once at once, so a blend's last frame never lingers 5 s over a hold.
@@ -290,6 +345,7 @@ function Controller:destroy()
  if self.destroyed then return end;self.destroyed=true
  self:bind(nil);for _,c in ipairs(self.connections)do c:Disconnect()end;table.clear(self.connections)
  if self.ownsBloom and self.bloom then self.bloom:Destroy()end
+ if self.windWas~=nil then pcall(function()self.world.GlobalWind=self.windWas end);self.windWas=nil end
  if Clock.controller==self then Clock.controller=nil;Clock.started=false end
 end
 function Clock.new(options)
@@ -300,6 +356,11 @@ function Clock.new(options)
  local hour=options.hour or(options.auto and Clock.Hour)
  self.hourCeiling=hour~=nil and hour.ceiling()==true
  self.level=options.level or function()return require(script.Parent.AliveBudget).level()end
+ -- The sky on the wind: the game's clock (auto) follows the `scene` switch; fixtures pass options.sky or nothing.
+ self.skyOn=options.sky or(if options.auto then Clock.sceneOn else nil)
+ -- The cloud's switch, cached per SceneStep (fixtures pass options.scene; nil reads Clock.sceneOn).
+ self.sceneOf=options.scene or Clock.sceneOn
+ self.scene=self.sceneOf()==true
  if self.hourCeiling then
   table.insert(self.connections,hour.changed():Connect(function()self:reapply()end))
   table.insert(self.connections,hour.offsetChanged():Connect(function()self:reapply()end))
