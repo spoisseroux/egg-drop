@@ -44,9 +44,10 @@ function Greybox.rows(closers)
 	b.wall("RimSouthWestStop",T,37,-21,Y+4,38,21,TOP)
 	-- On the terrace: two clumps (rooms), three toy pads, the tree pole.
 	-- Fable fix 8: lower, smaller, stepped, in the cliff's grey; nothing over Y+5 within 14 studs of the gap.
-	b.block("ClumpOne",T,8,-8,Y,20,6,Y+5,CLIFF,with(ROCK,{shadow=true}))
-	-- (Fable asked s 12..18; that edge is 8 from the gap, against its own 14-stud rule: the step sits at the far end.)
-	b.block("ClumpOneTop",T,8,-4,Y+5,12,4,Y+8,CLIFF,with(ROCK,{shadow=true}))
+	-- WORLD-FINISH-LOOK slice B: the Top Lawn's circle (K (0, 5) r 13) must be clear, so the first clump moved from s 8..20,
+	-- t -8..6 to the outer side behind the bench, 17+ from K and clear of the tree spot (20, -12). Lane E sculpts it.
+	b.block("ClumpOne",T,4,-20,Y,14,-12,Y+5,CLIFF,with(ROCK,{shadow=true}))
+	b.block("ClumpOneTop",T,6,-18,Y+5,10,-14,Y+8,CLIFF,with(ROCK,{shadow=true}))
 	b.block("ClumpTwo",T,-36,-20,Y,-22,-6,Y+6,CLIFF,with(ROCK,{shadow=true}))
 	b.block("PadCrunch",T,26,4,Y,34,12,Y+.1,PAD,{collide=false})
 	b.block("PadPop",T,26,-12,Y,32,-6,Y+.1,PAD,{collide=false})

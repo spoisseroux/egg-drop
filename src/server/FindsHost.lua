@@ -42,7 +42,8 @@ Host.Retry=table.freeze({Busy=true,Pending=true,Retrying=true,RevisionChanged=tr
 Host.GiveUp=table.freeze({DailyLimit=true,NoPet=true,OperationConflict=true,InvalidFind=true})
 
 -- d: remotes, garden, boards, players, nursery, canProgress(board), publishNursery(board), publishState(board),
--- dayOf(now), active(board) (optional: init's conflict check; mode, life and movement are checked here).
+-- dayOf(now), active(board) (optional: init's conflict check; mode, life and movement are checked here), up() (optional:
+-- the spots up the cliff path are open).
 -- Specs may replace clock(), guid(), random, remote(class, name), heartbeat, spawn, wait.
 function Host.mount(d)
 	if not Finds.ceiling()then return nil end
@@ -178,6 +179,15 @@ function Host:tick(board,dt,now)
 		rec.greeted=true
 		self:sendSpots(board,rec)
 	end
+	-- Pets go up (WORLD-FINISH-LOOK slice A): with the gate closed a find up the cliff path is out of reach; it goes
+	-- (never paid, never queued: a claim already accepted keeps its own course). Nothing up there on live.
+	if #rec.live>0 and not(self.d.up~=nil and self.d.up()==true)then
+		local dropped=false
+		for index=#rec.live,1,-1 do
+			if Finds.isUp(rec.live[index].spot)then table.remove(rec.live,index);dropped=true end
+		end
+		if dropped then self:sendSpots(board,rec)end
+	end
 	local part=root(board)
 	if part and typeof(part.Position)=="Vector3"and finite(part.Position)then
 		local at=part.Position
@@ -197,7 +207,8 @@ function Host:place(board,rec)
 	-- Beta (12) QA G2: near this player (finds are per player), so the sparkle lands where they can see it.
 	local part=root(board)
 	local near=if part and typeof(part.Position)=="Vector3"and finite(part.Position)then part.Position else nil
-	local spot=Finds.pick(self.random,used,rec.recent,near)
+	-- Pets go up (WORLD-FINISH-LOOK slice A): the spots up the cliff path only while d.up() (the TierPets gate).
+	local spot=Finds.pick(self.random,used,rec.recent,near,self.d.up~=nil and self.d.up()==true)
 	if not spot then return false end
 	table.insert(rec.live,{id=self.guid(),spot=spot})
 	table.insert(rec.recent,spot)

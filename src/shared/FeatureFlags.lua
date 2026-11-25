@@ -94,10 +94,18 @@
 -- RoundTwoNudge: the round-two pill after the first toy; a tap starts a round (the need bubbles on: the deck bubble instead).
 -- ToyPillCopy: "Hatch a toy for {pet}" / "A toy for {pet}" instead of "Hatch your first egg" / "Your first egg".
 -- CalmFirstDeck: the Welcome round's deck shows the board, Next, the egg and the coach card only (DeckCalm.lua).
+-- TierPets (WORLD-FINISH-LOOK slice A, 2026-11-25): the build ceiling for pets following their owners up the cliff path,
+-- onto the terrace and back. Also needs Tier's ceiling (the beta place or Studio), the tier open, the pet catch-up switch
+-- and the server's switch (TierPetsConfig: garden_tier_pets, missing = on). false: pets wait at the path's foot.
+-- ParkTopLawn (WORLD-FINISH-LOOK slice B, 2026-11-25): the second park moves up to the terrace (the Top Lawn) and the
+-- Hollow's spot becomes the Paw Glade. A place gate like ParkHollow (shared layout data read at require time): the beta
+-- place or Studio. Membership up there also needs the TierPets gate; ParkMount builds the Top Lawn only with the
+-- island's sculpt (CliffDen). false: the Hollow exactly as before (the old site spec stays behind this for one beta);
+-- the terrace's greybox clump and the pets' rest spots up there stay where slice B put them either way (beta only).
 return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPillCopy=true,CalmFirstDeck=true,TomorrowStrip=true,GardenTourCut=true,StarterBonus=true,FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,
  -- AliveAsmr (ASMR-AND-SCALE-LOOK 1, 2): the ASMR hatch sounds and the vibration (HatchAsmr, Haptics); beta and Studio only.
  AliveAsmr=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
- PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true})
+ PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true})

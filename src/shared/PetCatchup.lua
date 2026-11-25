@@ -77,18 +77,27 @@ end
 local function flat(a,b)return math.sqrt((a.X-b.X)^2+(a.Z-b.Z)^2)end
 Catchup.flat=flat
 
+-- Pets go up (WORLD-FINISH-LOOK slice A): on the cliff path's route (`route` true, gap = route studs) a pet is far past
+-- RouteFar studs, or RouteBehind seconds behind: still more than StuckNear off RouteBehind seconds after its owner
+-- stopped (`ownerStill`; a pet trailing a walking owner is following, not behind).
+Catchup.RouteFar=18
+Catchup.RouteBehind=5
+
 -- Pure: one decide's look at a pet. `t` is the actor's own table (kept between calls), `gap` the flat studs to the
 -- anchor, `at` the pet's position, `following` true while the stuck clock may run (following or a wanderPause).
+-- `route` (optional): the gap is along the cliff path's route; `ownerStill` (with it): the owner has stopped.
 -- Returns "far", "stuck" or nil.
-function Catchup.step(t,now,gap,at,following)
-	if t.seenAt==nil or now-t.seenAt>Catchup.Gap then t.farSince,t.still,t.stillAt=nil,nil,nil end
+function Catchup.step(t,now,gap,at,following,route,ownerStill)
+	if t.seenAt==nil or now-t.seenAt>Catchup.Gap then t.farSince,t.still,t.stillAt,t.behindSince=nil,nil,nil,nil end
 	t.seenAt=now
-	if gap>Catchup.Far then t.farSince=t.farSince or now else t.farSince=nil end
+	if gap>(if route==true then Catchup.RouteFar else Catchup.Far)then t.farSince=t.farSince or now else t.farSince=nil end
+	if route==true and ownerStill==true and gap>Catchup.StuckNear then t.behindSince=t.behindSince or now else t.behindSince=nil end
 	if following and gap>Catchup.StuckNear and typeof(at)=="Vector3"then
 		if t.still==nil or flat(at,t.still)>=Catchup.StuckGain then t.still,t.stillAt=at,now end
 	else t.still,t.stillAt=nil,nil end
 	if now<(t.nextAt or -math.huge)or now<(t.quietUntil or -math.huge)then return nil end
 	if t.farSince and now-t.farSince>=Catchup.FarHold then return "far"end
+	if t.behindSince and now-t.behindSince>=Catchup.RouteBehind then return "far"end
 	if t.stillAt and now-t.stillAt>=Catchup.StuckSeconds then return "stuck"end
 	return nil
 end
@@ -97,7 +106,7 @@ end
 function Catchup.done(t,now,hopped)
 	if not hopped then t.nextAt=now+Catchup.Retry;return nil end
 	t.nextAt=now+Catchup.Cooldown
-	t.farSince,t.still,t.stillAt=nil,nil,nil
+	t.farSince,t.still,t.stillAt,t.behindSince=nil,nil,nil,nil
 	local recent={}
 	for _,at in ipairs(t.hops or {})do if now-at<Catchup.BurstWindow then table.insert(recent,at)end end
 	table.insert(recent,now)

@@ -14,11 +14,16 @@ function Garden:token() self.serial+=1;return self.serial end
 -- Extra rest anchors that come and go (beta only: the Sleepy Nest landmark's straw mat, set by EggCornerWorld while the
 -- landmark stands). nil (live): Layout.RestAnchors alone, exactly as before.
 Garden.extraRests=nil
+-- Pets go up (WORLD-FINISH-LOOK slice A): the rest spots on the terrace and at the path's turn while the server's
+-- TierPets gate is open (init.server sets it; nil on live).
+Garden.tierRests=nil
 function Garden.restAnchors()
     local extra=Garden.extraRests and Garden.extraRests()
-    if type(extra)~="table"or #extra==0 then return Layout.RestAnchors end
+    local up=Garden.tierRests and Garden.tierRests()
+    if(type(extra)~="table"or #extra==0)and(type(up)~="table"or #up==0)then return Layout.RestAnchors end
     local all=table.clone(Layout.RestAnchors)
-    for _,rest in ipairs(extra)do table.insert(all,rest)end
+    if type(extra)=="table"then for _,rest in ipairs(extra)do table.insert(all,rest)end end
+    if type(up)=="table"then for _,rest in ipairs(up)do table.insert(all,rest)end end
     return all
 end
 function Garden:position(actor,now)
@@ -41,12 +46,14 @@ function Garden:transition(actor,behavior,target,duration,action,actionId,via,pr
     -- sustained outer leash uses gradual18 recovery; near walking stays4.
     if behavior=="follow"and separation>16 then speed=Layout.CatchupSpeed+math.clamp((separation-16)/14,0,1)*(Layout.LeashSpeed-Layout.CatchupSpeed)end
     local terminal=if behavior=="follow"then actor.ownerVelocity or Vector3.zero else Vector3.zero
+    local base=target
     if terminal.Magnitude>.1 then
         speed=math.min(Layout.LeashSpeed,math.max(speed,terminal.Magnitude+math.clamp(separation/10,0,1)*2))
         target+=terminal*.5
     end
     if behavior=="follow"and self.options.resolveTarget then
-        local resolved,clamped=self.options.resolveTarget(target,from)
+        -- `base` (the anchor before the owner's look-ahead): the cliff path's floor is the anchor's, not the look-ahead's.
+        local resolved,clamped=self.options.resolveTarget(target,from,base)
         if resolved then target=resolved;if clamped then terminal=Vector3.zero end end
     end
     local planner=self.options.planPath or Activity.plan
@@ -210,6 +217,8 @@ function Garden:greeting(now,ordered)
             if second.mode~="Room" or second.pairId or second.park or second.dash or(second.behavior~="follow" and second.behavior~="rest") then continue end
             local a,b=self:position(first,now),self:position(second,now)
             if distance(a,b)>9 then continue end
+            -- Pets go up: never across floors (a pet on the cliff path and one on the lawn under it). nil: as before.
+            if self.options.canMeet and not self.options.canMeet(a,b)then continue end
             self:greetPair(first,second,now)
             self.greetingCursor=i
             return
@@ -359,7 +368,8 @@ function Garden:decide()
             local wanderTurn=self.options.sharedToyEnabled==false or self.options.validWander~=nil and ((actor.wanderCount or 0)%2==0 or not reachable or self.toy.ownerId~=nil)
             if now-actor.idleSince>=3.5 and now>=(actor.nextWanderAt or 0) and wanderTurn then
                 actor.nextWanderAt=now+7
-                if self.options.sharedToyEnabled==false and Layout.SitEvery and(actor.wanderCount or 0)%Layout.SitEvery==Layout.SitEvery-1 then
+                if self.options.sharedToyEnabled==false and Layout.SitEvery and(actor.wanderCount or 0)%Layout.SitEvery==Layout.SitEvery-1
+                    and(not self.options.canSettle or self.options.canSettle(position))then
                     -- R9: a long sit in place instead of this wander (Layout.SitRest). Only in the
                     -- live garden (shared toy retired); the old toy/wander alternation is unchanged.
                     actor.wanderCount=(actor.wanderCount or 0)+1
@@ -414,14 +424,19 @@ function Garden:catchUp(actor,input,position,now)
     self.Catchup=Catchup
     actor.catch=actor.catch or {}
     local gap=distance(position,input.anchor)
+    -- Pets go up (WORLD-FINISH-LOOK slice A): between floors the gap is along the cliff path's route (routeGap answers
+    -- nil on the lawn and on live, so this is today's flat gap there).
+    local route=self.options.routeGap and self.options.routeGap(position,input.anchor)
+    if type(route)=="number"then gap=route end
     -- Stuck counts only while following or in a wanderPause: a sit (settle and its rest), a nook rest or a greeting
     -- far from the anchor is play, not stuck (code review 2).
     local tracking=actor.pairId==nil and(actor.behavior=="follow"or actor.action=="wanderPause")
-    local why=Catchup.step(actor.catch,now,gap,position,tracking)
+    local still=(actor.ownerVelocity or Vector3.zero).Magnitude<.5
+    local why=Catchup.step(actor.catch,now,gap,position,tracking,type(route)=="number",still)
     if not why then return false end
     local racing=false
     for _,race in pairs(self.racers or {})do if race then racing=true;break end end
-    local spot=landing(input,racing)
+    local spot=landing(input,racing,position)
     if typeof(spot)~="Vector3"then Catchup.done(actor.catch,now,false);return false end
     if Catchup.done(actor.catch,now,true)=="burst"and self.options.warn then
         pcall(self.options.warn,"[Catchup] pet of "..tostring(actor.ownerId).." hopped "..Catchup.Burst.." times in a minute; quiet for "..Catchup.BurstQuiet.." s")
@@ -436,9 +451,13 @@ end
 -- The Hush passage (HushHost): the owner was just moved, so the pet comes in the same step, the catch-up move without
 -- its rules (a prepared rest hold at `spot`, then follow; `hop` with why "passage" so every client poofs and snaps).
 -- No actor: nothing. A pet in the park, in care, racing or holding the toy is refused (the passage refuses those first).
-function Garden:carry(id,spot)
+-- `leavePark` (the tier closing under a Top Lawn pet, architect B6): the pet leaves the park first, then comes.
+function Garden:carry(id,spot,leavePark)
     local actor=self.actors[id]
     if not actor or typeof(spot)~="Vector3"or not self.inputs[id]then return false end
+    if leavePark==true and actor.park and self.park and not actor.care and not actor.dash and not actor.toyReservation then
+        self.park:leave(actor,nil,self.options.now())
+    end
     if actor.park or actor.care or actor.dash or actor.toyReservation then return false end
     local Catchup=self.Catchup or require(Shared.PetCatchup)
     self.Catchup=Catchup

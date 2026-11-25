@@ -210,6 +210,37 @@ local COLLIDERS={
 	BenchLong={{v(0,.9,0),v(9.47,1.8,1.3),0},{v(0,2.42,-.56),v(9.47,1.4,.3),0}},
 }
 
+-- One bench ({id, position, yaw, mesh}) as the mount builds it: its mesh entries {group, mesh, cframe, size}, its
+-- colliders {group, cframe, size} and its seats {bench, index, cframe, size}. The layout's benches and the Paw Glade's
+-- bench (WORLD-FINISH-LOOK slice B, ParkMount) both come from here.
+function Data.benchParts(bench)
+	local static,colliders,seats={},{},{}
+	local root=Park.cframe(bench.position,bench.yaw)
+	local name=bench.mesh or "Park_Bench"
+	if name=="Park_BenchLong"and not meshes.Park_BenchLong.id then
+		for _,dx in ipairs(LONG_STAND_IN)do
+			table.insert(static,{group="Bench",mesh="Park_Bench",cframe=Data.frame("Park_Bench",root*CFrame.new(dx,0,0)),size=meshes.Park_Bench.size})
+		end
+	else
+		table.insert(static,{group="Bench",mesh=name,cframe=Data.frame(name,root),size=meshes[name].size})
+	end
+	for _,box in ipairs(if name=="Park_BenchLong"then COLLIDERS.BenchLong else COLLIDERS.Bench)do
+		table.insert(colliders,table.freeze({group="Bench",cframe=root*CFrame.new(box[1])*CFrame.Angles(-math.rad(box[3]),0,0),size=box[2]}))
+	end
+	-- A Seat sits facing its LookVector (-Z): turn it to face the bench front (+Z).
+	for index,seat in ipairs(BENCH_SEATS[name])do
+		table.insert(seats,table.freeze({bench=bench.id,index=index,cframe=root*CFrame.new(seat.center)*CFrame.Angles(0,math.pi,0),size=seat.size}))
+	end
+	return static,colliders,seats
+end
+
+-- The fallen log's player collider (the Hollow's, and the Paw Glade's): one box, the visual sits .25 into the lawn.
+function Data.logBox(log)
+	local h=log.diameter-log.sink
+	local cframe=CFrame.new(log.x,log.y+h*.5,log.z)*CFrame.Angles(0,log.heading-math.pi*.5,0)
+	return table.freeze({group="Log",cframe=cframe,size=Vector3.new(log.length,h,log.diameter*.85)})
+end
+
 -- Everything the server mounts. Built once on first use (pure; safe on both sides).
 local layout
 function Data.layout()
@@ -240,28 +271,14 @@ function Data.layout()
 		put("Kerb","Park_GateStarOrb",Data.frame("Park_GateStarOrb",root))
 	end
 	for _,bench in ipairs(Park.Benches)do
-		local root=Park.cframe(bench.position,bench.yaw)
-		local name=bench.mesh or "Park_Bench"
-		if name=="Park_BenchLong"and not meshes.Park_BenchLong.id then
-			for _,dx in ipairs(LONG_STAND_IN)do put("Bench","Park_Bench",Data.frame("Park_Bench",root*CFrame.new(dx,0,0)))end
-		else
-			put("Bench",name,Data.frame(name,root))
-		end
-		for _,box in ipairs(if name=="Park_BenchLong"then COLLIDERS.BenchLong else COLLIDERS.Bench)do
-			table.insert(colliders,table.freeze({group="Bench",cframe=root*CFrame.new(box[1])*CFrame.Angles(-math.rad(box[3]),0,0),size=box[2]}))
-		end
-		-- A Seat sits facing its LookVector (-Z): turn it to face the bench front (+Z).
-		for index,seat in ipairs(BENCH_SEATS[name])do
-			table.insert(seats,table.freeze({bench=bench.id,index=index,cframe=root*CFrame.new(seat.center)*CFrame.Angles(0,math.pi,0),size=seat.size}))
-		end
+		local parts,boxes,spots=Data.benchParts(bench)
+		for _,entry in ipairs(parts)do put(entry.group,entry.mesh,entry.cframe)end
+		for _,box in ipairs(boxes)do table.insert(colliders,box)end
+		for _,spot in ipairs(spots)do table.insert(seats,spot)end
 	end
 	-- The Hollow's fallen log: players collide with one simple box (the visual sits .25 into the lawn).
 	local log=Park.Dressing and Park.Dressing.log
-	if log then
-		local h=log.diameter-log.sink
-		local cframe=CFrame.new(log.x,log.y+h*.5,log.z)*CFrame.Angles(0,log.heading-math.pi*.5,0)
-		table.insert(colliders,table.freeze({group="Log",cframe=cframe,size=Vector3.new(log.length,h,log.diameter*.85)}))
-	end
+	if log then table.insert(colliders,Data.logBox(log))end
 	for group,boxes in pairs(COLLIDERS)do
 		if group=="Bench"or group=="BenchLong"then continue end
 		for _,box in ipairs(boxes)do

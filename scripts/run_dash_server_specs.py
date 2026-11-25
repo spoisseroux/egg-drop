@@ -49,7 +49,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "CliffDen",
          # Live growth cuts G1 + G2, ported to the beta (PORT-TO-BETA.md): the Welcome bonus and the first hello (pure
          # and the HatchProgress fixture).
-         "StarterBonus", "FirstHello"]
+         "StarterBonus", "FirstHello",
+         # Pets go up and the Top Lawn (WORLD-FINISH-LOOK slices A and B).
+         "TierPets"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

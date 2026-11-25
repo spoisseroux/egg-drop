@@ -24,7 +24,30 @@ Finds.Recent=6         -- nor one of the last six used
 -- NearMin and NearSpot flat studs of the character; with none there, the nearest open spot.
 Finds.NearSpot=45
 Finds.NearMin=10
+-- Pets go up (WORLD-FINISH-LOOK section 5, slice A): three spots up there, after the lawns' (every lawn index is today's),
+-- offered only while the server's TierPets gate is open (pick's `up`). Kept out of FindSpots on purpose: every other
+-- FindSpots reader (the Dewdrops' clear rule, the generators) stays exactly as it is. Hundredths, as FindSpots; fixed
+-- points, not the walk map: the terrace is the slab at y 29 (Tier.FloorY), the turn is CliffDenData's path.turn.
+--   lookout  Tier.T(-33, 16): the stone slab over the den's mouth
+--   tree     Tier.T(17.5, -10): under the one tree (lane E plants it at Tier.T(20, -12))
+--   turn     the path's turn pocket
+Finds.Up="tier"
+Finds.UpSpots=table.freeze({
+	table.freeze({lawn="tier",x=-2387,y=2900,z=-10227}),
+	table.freeze({lawn="tier",x=-8005,y=2900,z=-9391}),
+	table.freeze({lawn="tier",x=-7656,y=2296,z=-4851}),
+})
+do
+	local all=table.clone(Spots)
+	for _,spot in ipairs(Finds.UpSpots)do table.insert(all,spot)end
+	Spots=table.freeze(all)
+end
 Finds.Spots=Spots
+-- Is spot `index` up the cliff path?
+function Finds.isUp(index)
+	local s=Spots[index]
+	return s~=nil and s.lawn==Finds.Up
+end
 
 local injected=nil
 -- Specs pass env = {flags, place, studio}; the game passes nothing.
@@ -72,14 +95,15 @@ end
 -- Pure: the index of a spot for a new find, or nil. `live` and `recent` are lists of spot indices; `random` is a
 -- Random. Never a live spot or a recent one, never within Spacing of a live one; uniform over what is left. With
 -- `near` (the player's position, a Vector3): uniform over the open spots in the NearMin..NearSpot band, else the
--- nearest open spot.
-function Finds.pick(random,live,recent,near)
+-- nearest open spot. The spots up the cliff path (lawn "tier", WORLD-FINISH-LOOK slice A) are open only with `up` true
+-- (the server's TierPets gate); without it the pick is today's over the lawns.
+function Finds.pick(random,live,recent,near,up)
 	local blocked={}
 	for _,i in ipairs(live or {})do blocked[i]=true end
 	for _,i in ipairs(recent or {})do blocked[i]=true end
 	local open={}
 	for index,spot in ipairs(Spots)do
-		local ok=not blocked[index]
+		local ok=not blocked[index]and(up==true or spot.lawn~=Finds.Up)
 		if ok then
 			for _,i in ipairs(live or {})do
 				local other=Spots[i]

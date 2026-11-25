@@ -534,7 +534,8 @@ return function(server,offline)
 	["Version"]=1.0000,
 	["WalkSpeed"]=4.0000,
 	}
-	local EXTRA=table.freeze({Sites=true,ById=true,Specs=true,HollowOn=true,HollowPlaceId=true})
+	-- The Top Lawn (WORLD-FINISH-LOOK slice B): its switch and the Paw Glade's data hang on the module, not on a site.
+	local EXTRA=table.freeze({Sites=true,ById=true,Specs=true,HollowOn=true,HollowPlaceId=true,TopLawnOn=true,Glade=true})
 	-- {path = number | string} for every data field (functions and the site lists left out).
 	local function flatten(site)
 		local out={}
@@ -613,8 +614,13 @@ return function(server,offline)
 		assert(Park.hollowOn({flags={ParkHollow=true},place=1,studio=true}),"Studio")
 		assert(not Park.hollowOn({flags={ParkHollow=true},place=96451847774961,studio=false}),"live keeps the grove")
 		assert(not Park.hollowOn({flags={ParkHollow=false},place=Park.HollowPlaceId,studio=true}),"the flag off keeps the grove")
-		assert(Park.ById.grove.Natural==(if Park.HollowOn then true else nil),"the live second site follows the switch")
+		assert(Park.ById.grove.Natural==(if Park.HollowOn or Park.TopLawnOn then true else nil),"the live second site follows the switch")
 		assert(Park.ById.grove.Id=="grove"and Park.Sites[2]==Park.ById.grove,"one site id either way")
+		-- The Top Lawn (WORLD-FINISH-LOOK slice B): the same place gate, over the Hollow; off, the Hollow as before.
+		assert(Park.topLawnOn({flags={ParkTopLawn=true},place=Park.HollowPlaceId,studio=false})and Park.topLawnOn({flags={ParkTopLawn=true},place=1,studio=true}))
+		assert(not Park.topLawnOn({flags={ParkTopLawn=true},place=96451847774961,studio=false}),"live keeps the grove")
+		assert(not Park.topLawnOn({flags={ParkTopLawn=false},place=Park.HollowPlaceId,studio=true}),"the flag off keeps the Hollow")
+		assert(Park.ById.grove.Terrace==(if Park.TopLawnOn then true else nil)and(Park.Glade~=nil)==Park.TopLawnOn)
 	end)
 
 	test("the Hollow: Fable's circle, no kerb, the same five pieces, nine slots, order and capacity",function()
@@ -786,6 +792,195 @@ return function(server,offline)
 			clear("log",Vector2.new(D.log.x+s*math.sin(D.log.heading),D.log.z+s*math.cos(D.log.heading)),1.5+D.log.diameter*.5)
 		end
 		clear("column",Vector2.new(D.column.x,D.column.z),3)
+	end)
+
+	-- The Top Lawn (WORLD-FINISH-LOOK section 1, slice B) -----------------------------------------------------------
+	local Tier=require(Shared.Tier)
+	local T=Park.build(Park.Specs.topLawn)
+	local K=Tier.T(0,5)
+	local function st(p)return Tier.local2(nil,p.X,p.Z)end
+	local function headingTo(p,q)return math.atan2(q.X-p.X,q.Z-p.Z)end
+	local function sameAngle(a,b)return math.abs(math.atan2(math.sin(a-b),math.cos(a-b)))<1e-6 end
+
+	test("the Top Lawn: K (0, 5) r 13 on the terrace's floor, natural, the same five pieces, nine slots, order and id",function()
+		assert(T.Id=="grove"and T.Natural==true and T.Kerb==nil and T.Terrace==true and T.FloorY==Tier.FloorY)
+		assert(T.Radius==Vector2.new(13,13)and flat(T.Center)==Vector2.new(K.X,K.Z))
+		assert(math.abs(T.Center.Y-Tier.FloorY-.025)<1e-9 and T.ground(0,0)==Tier.FloorY+.025,"flat at the terrace's top")
+		assert(table.concat(T.SlotOrder,",")==table.concat(Park.SlotOrder,","))
+		for id,slot in pairs(Park.Slots)do assert(T.Slots[id]and T.Slots[id].equipment==slot.equipment,id)end
+		for id in pairs(T.Slots)do assert(Park.Slots[id],id)end
+		for id in pairs(Park.Equipment)do assert(T.Equipment[id],id)end
+		assert(#T.Benches==1 and T.Benches[1].seats==5 and T.Benches[1].mesh=="Park_BenchLong")
+		-- Membership: only standing up there, and only with the gate open (the server's own gate, if any, put back after).
+		local saved=Park.terraceGate()
+		local gate=true
+		Park.setTerraceGate(function()return gate end)
+		local ok,problem=pcall(function()
+			assert(T.member(T.Center+Vector3.new(0,3,0),false)and not T.member(T.Center-Vector3.new(0,20,0),false))
+			gate=false
+			assert(not T.member(T.Center+Vector3.new(0,3,0),false),"the gate closed")
+			assert(Park.member(Park.Center+Vector3.new(0,3,0),false),"the arrival has no floor: no gate")
+		end)
+		Park.setTerraceGate(saved)
+		assert(ok,problem)
+	end)
+
+	test("the Top Lawn: rigid groups, Fable's places, the yaws from faces K (swing -1.733, slide -2.629, see-saw -2.519, dig -0.441, ball 1.499)",function()
+		for id,slot in pairs(T.Slots)do
+			local old=Park.Slots[id]
+			local e,oe=T.Equipment[slot.equipment],Park.Equipment[slot.equipment]
+			local function check(p,q,name)
+				local a,b=local2(e.position,e.yaw,p),local2(oe.position,oe.yaw,q)
+				assert((a-b).Magnitude<1e-3,id.."."..name.." moved inside its piece")
+				local lift,oldLift=p.Y-T.ground(p.X,p.Z),q.Y-Park.ground(q.X,q.Z)
+				assert(math.abs(lift-oldLift)<1e-3,id.."."..name.." height "..lift.." was "..oldLift)
+			end
+			check(slot.approach,old.approach,"approach");check(slot.pose.position,old.pose.position,"pose")
+			for _,key in ipairs({"seatGround","pivot","ladderTop","chuteTop","chuteEnd","castle","ball"})do
+				if old[key]then check(slot[key],old[key],key)end
+			end
+		end
+		local places={swing={-7,12},slide={1,14},seesaw={8,11.5},sandbox={-9,0},ball={6,0}}
+		for id,at in pairs(places)do
+			local s,t=st(T.Equipment[id].position)
+			assert(math.abs(s-at[1])<1e-3 and math.abs(t-at[2])<1e-3,id.." not at Fable's place")
+		end
+		local yaws={swing=-1.733,slide=-2.6291,seesaw=-2.5187,sandbox=-.4405,ball=1.4993}
+		for id,want in pairs(yaws)do
+			local yaw=Park.Specs.topLawn.pieces[id][3]
+			assert(math.abs(yaw-want)<1e-3,id.." yaw "..yaw)
+		end
+		for _,id in ipairs({"swing","slide","sandbox","ball"})do
+			local e=T.Equipment[id]
+			assert(sameAngle(Park.Specs.topLawn.pieces[id][3],headingTo(e.position,K)),id.." faces K")
+		end
+		-- The see-saw's beam lies along the lip (s), its riders wait on K's side.
+		local a,b=T.Slots.seesaw1.seatGround,T.Slots.seesaw2.seatGround
+		local _,ta=st(a);local _,tb=st(b)
+		assert(math.abs(ta-tb)<1e-3,"the beam is along the lip")
+		for _,id in ipairs({"seesaw1","seesaw2"})do
+			local _,tw=st(T.Slots[id].approach);local _,ts=st(T.Slots[id].seatGround)
+			assert(tw<ts,id.." waits on the lip side")
+		end
+		-- Swing seats face K; the chute lands about (1, 6.5).
+		for _,id in ipairs({"swing1","swing2"})do
+			local slot=T.Slots[id]
+			assert(Vector2.new(math.sin(slot.yaw),math.cos(slot.yaw)):Dot((flat(K)-flat(slot.approach)).Unit)>.95,id.." faces K")
+		end
+		local fs,ft=st(T.Slots.slide.chuteEnd)
+		assert(math.abs(fs-1)<1.2 and math.abs(ft-6.5)<1.2,string.format("the chute lands at (%.2f, %.2f)",fs,ft))
+	end)
+
+	test("the Top Lawn: slots inside the circle less 1, 3+ inside the terrace everywhere, the ladder 5+ from the lip",function()
+		local keep=3
+		local function onTerrace(p,label)
+			local s,t=st(p)
+			assert(math.abs(s)<=Tier.Length/2-keep and math.abs(t)<=Tier.Width/2-keep,label.." within "..keep.." of the terrace's edge")
+		end
+		for id,slot in pairs(T.Slots)do
+			assert(T.inside(slot.approach,-1),id.." approach too near the rim")
+			onTerrace(slot.approach,id);onTerrace(slot.pose.position,id.." pose")
+			for _,key in ipairs({"seatGround","ladderTop","chuteTop","chuteEnd","castle","ball"})do if slot[key]then onTerrace(slot[key],id.."."..key)end end
+		end
+		assert(T.inside(T.Slots.slide.chuteEnd,-1))
+		local _,ladderT=st(T.Slots.slide.approach)
+		assert(Tier.Width/2-ladderT>=5,"the ladder foot is "..(Tier.Width/2-ladderT).." from the lip")
+		-- The rim: 4 inside the lip, 9 inside the outer edge, 13+ from the arrival gap.
+		for k=0,71 do
+			local a=k*math.pi/36
+			local p=Vector3.new(T.Center.X+13*math.cos(a),0,T.Center.Z+13*math.sin(a))
+			onTerrace(p,"rim")
+			local s,t=st(p)
+			assert(not(s>=Tier.Gap.a1-13 and s<=Tier.Gap.a2+13 and t>22-13),"the rim near the arrival")
+		end
+	end)
+
+	test("the Top Lawn: gaps path and lookout on the rim, 4 wide; the bench (0, -6) faces K, its ends inside, 6+ from the gaps",function()
+		assert(#T.Gateways==2 and T.Gateways[1].id=="path"and T.Gateways[2].id=="lookout")
+		for i,want in ipairs({{13,4},{-13,5}})do
+			local s,t=st(T.Gateways[i].position)
+			assert(math.abs(s-want[1])<.1 and math.abs(t-want[2])<.1 and T.Gateways[i].width==4,T.Gateways[i].id)
+		end
+		local bench=T.Benches[1]
+		local s,t=st(bench.position)
+		assert(math.abs(s)<1e-3 and math.abs(t+6)<1e-3,"the bench at (0, -6)")
+		assert(sameAngle(bench.yaw,headingTo(bench.position,K)),"the bench faces K")
+		local along=Vector2.new(math.cos(bench.yaw),-math.sin(bench.yaw))
+		for _,side in ipairs({-1,1})do
+			local tip=flat(bench.position)+along*side*bench.length*.5
+			assert(T.inside(Vector3.new(tip.X,0,tip.Y),-1),"bench end near the rim")
+			for _,gate in ipairs(T.Gateways)do assert((tip-flat(gate.position)).Magnitude>=6,"bench end by gap "..gate.id)end
+		end
+	end)
+
+	test("the Top Lawn: Fable's dressing (5 patches, 4 gap stones, 3 rim boulders, 8 flowers), clear of every slot, no log",function()
+		local D=T.Dressing
+		assert(D and #D.plates==5 and #D.stones==7 and #D.stumps==0 and #D.flowers==8 and D.log==nil and D.column==nil,"counts")
+		local boulders=0;for _,s in ipairs(D.stones)do if s.name=="TopLawnRimBoulder"then boulders+=1 end end
+		assert(boulders==3)
+		local points={}
+		for id,slot in pairs(T.Slots)do points[id]=flat(slot.approach)end
+		local deck,foot=flat(T.Equipment.slide.position),flat(T.Equipment.slide.chuteEnd)
+		local function toChute(p)
+			local d=foot-deck;local t=math.clamp((p-deck):Dot(d)/d:Dot(d),0,1)
+			return (p-(deck+d*t)).Magnitude
+		end
+		local bench=T.Benches[1]
+		for _,stone in ipairs(D.stones)do
+			local p,r=Vector2.new(stone.x,stone.z),stone.size.X*.5
+			for id,q in pairs(points)do assert((p-q).Magnitude>=r+1,stone.name.." on slot "..id)end
+			assert(toChute(p)>=r+1,stone.name.." on the chute")
+			assert((p-flat(bench.position)).Magnitude>=r+bench.length*.5+.5,stone.name.." on the bench")
+			assert(stone.y==Tier.FloorY,"on the terrace")
+			assert(not T.clearOfKeepout(Vector3.new(stone.x,0,stone.z),0),"pets keep off "..stone.name)
+		end
+		-- The drift is behind the bench (further from K than the bench), about the rim, on the terrace less 3.
+		local benchR=(flat(bench.position)-flat(K)).Magnitude
+		for _,f in ipairs(D.flowers)do
+			local s,t=st(Vector3.new(f.x,0,f.z))
+			local r=(Vector2.new(f.x,f.z)-flat(K)).Magnitude
+			assert(r>benchR+.5 and r<=13.5 and math.abs(t)<=Tier.Width/2-3 and math.abs(s)<=Tier.Length/2-3,"a flower off the drift")
+		end
+		local layout=Data.forSite(T).layout()
+		assert(layout.kerbSegments==0 and layout.gatePosts==0)
+		for _,box in ipairs(layout.colliders)do assert(box.group~="Log","no log up here")end
+	end)
+
+	test("the Paw Glade: the Hollow's dressing less the equipment and circle; clover toes with flowers; its bench looks up at the path",function()
+		local G=Park.glade(H)
+		local HD=H.Dressing
+		assert(#G.plates==#HD.plates and #G.flowers==#HD.flowers+12 and #G.stones==5)
+		local toes=0
+		for _,plate in ipairs(G.plates)do
+			assert(not string.find(plate.name,"^Hollow"),plate.name)
+			if string.find(plate.name,"^GladeToe_")then
+				toes+=1
+				assert(plate.art=="lawnPatchB"and plate.colour=="#7FB069"and plate.transparency==.35,"a clover toe")
+			end
+		end
+		assert(toes==4,"four toes, the sand one clover too")
+		for _,stone in ipairs(G.stones)do assert(stone.name=="HollowRimBoulder")end
+		assert(G.log==HD.log and G.stumps==HD.stumps,"the log and the stumps stay")
+		-- The column stays where it lay, sunk by the sand that went (still 60% under the ground).
+		assert(G.column.x==HD.column.x and G.column.z==HD.column.z and G.column.heading==HD.column.heading)
+		assert(math.abs(G.column.y-(HD.column.y-H.Equipment.sandbox.sandHeight))<1e-9 and G.column.y<G.column.sand+1e-9)
+		assert(G.bench.position==H.Benches[1].position and G.bench.seats==5 and G.bench.mesh=="Park_BenchLong")
+		-- It looks up at shelf 2 of the path, toward the cliff.
+		local Cliff=require(Shared.CliffDenData)
+		local path=Cliff.path.centreLine
+		local look=Vector2.new(math.sin(G.bench.yaw),math.cos(G.bench.yaw))
+		local best=-1
+		for i=20,32 do
+			local p=path[i]
+			best=math.max(best,look:Dot((Vector2.new(p.x,p.z)-flat(G.bench.position)).Unit))
+		end
+		assert(best>.98,"the bench looks at shelf 2")
+		-- The bench's parts, as a park's bench.
+		local static,colliders,seats=Data.benchParts(G.bench)
+		assert(#static>=1 and #colliders==2 and #seats==5)
+		-- The glade only with the Top Lawn on; no park data on it.
+		assert(G.Slots==nil and G.Equipment==nil and G.Radius==nil)
+		if Park.TopLawnOn then assert(Park.Glade and #Park.Glade.plates==#G.plates)end
 	end)
 
 	return {passed=#cases,cases=cases}

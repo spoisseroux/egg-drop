@@ -149,10 +149,12 @@ return function(server,parent)
 			part:Destroy()
 		end)
 
-		test("the Hollow (WORLD-ALIVE-LOOK 2): no kerb or star orbs, its dressing instead, all non-colliding; the log is a player box",function()
+		test("the Hollow (WORLD-ALIVE-LOOK 2) or the Top Lawn: no kerb or star orbs, its dressing instead, all non-colliding; the log (the Hollow's) is a player box",function()
 			local site=Park.ById.grove
 			if not site.Natural then return end -- live place: the old grove, covered by the kerb cases above
-			local hollow=Mount.build(host,{enabled=true,createMesh=fakeMesh,async=false,siteId="grove",carve=false})
+			-- The Top Lawn (WORLD-FINISH-LOOK slice B) stands only with the island's sculpt in: none, none built.
+			if site.Terrace then assert(Mount.build(host,{enabled=true,createMesh=fakeMesh,async=false,siteId="grove",carve=false,cliff=false})==nil,"the Top Lawn without the sculpt")end
+			local hollow=Mount.build(host,{enabled=true,createMesh=fakeMesh,async=false,siteId="grove",carve=false,cliff=true})
 			assert(hollow and hollow:FindFirstChild("Dressing"),"no dressing folder")
 			for _,part in ipairs(hollow.Meshes:GetChildren())do
 				assert(not string.find(part.Name,"^Park_Kerb")and not string.find(part.Name,"^Park_Gate"),"kerb or post at the Hollow: "..part.Name)
@@ -166,11 +168,34 @@ return function(server,parent)
 				end
 			end
 			for _,child in ipairs(hollow.Dressing:GetChildren())do if string.find(child.Name,"Stone$")or string.find(child.Name,"Boulder$")then stones+=1 end end
-			assert(stones==#site.Dressing.stones and parts>=30,"stones "..stones.." parts "..parts)
+			assert(stones==#site.Dressing.stones and parts>=(if site.Terrace then 20 else 30),"stones "..stones.." parts "..parts)
 			local logs=0
 			for _,part in ipairs(hollow.Colliders:GetChildren())do if string.find(part.Name,"^LogCollider")then logs+=1;assert(part.CanCollide and not part.CanQuery)end end
-			assert(logs==1,"log collider")
+			assert(logs==(if site.Dressing.log then 1 else 0),"log collider")
 			hollow:Destroy()
+		end)
+
+		test("the Paw Glade (WORLD-FINISH-LOOK slice B, with the Top Lawn on): the dressing that stays, a bench with five seats, the log a player box",function()
+			if not Park.Glade then return end
+			-- Without the sculpt: no Top Lawn and no glade from the full build (the arrival alone).
+			local bare=Instance.new("Folder")
+			assert(Mount.build(bare,{enabled=true,createMesh=fakeMesh,async=false,carve=false,cliff=false}))
+			assert(bare:FindFirstChild("PetPark_grove")==nil and bare:FindFirstChild("PawGlade")==nil,"the Top Lawn or the glade without the sculpt")
+			bare:Destroy()
+			local glade=Mount.buildGlade(host,{createMesh=fakeMesh,async=false,carve=false})
+			assert(glade and glade.Name=="PawGlade"and glade.Parent==host and glade:GetAttribute("GladeReady")==true)
+			for _,node in ipairs(glade.Dressing:GetDescendants())do
+				if node:IsA("BasePart")then
+					assert(node.Anchored and not node.CanCollide and not node.CanQuery and not node.CanTouch,node.Name)
+					assert(Mount.isParkPart(node)or node.Parent:IsA("Model"),node.Name.." untagged")
+				end
+			end
+			assert(#glade.Seats:GetChildren()==5 and #glade.Colliders:GetChildren()==3,"five seats, two bench boxes and the log")
+			for _,seat in ipairs(glade.Seats:GetChildren())do assert(seat:FindFirstChild("SitPrompt")and Mount.isParkPart(seat))end
+			for _,part in ipairs(glade.Colliders:GetChildren())do assert(part.CanCollide and not part.CanQuery and Mount.isParkPart(part))end
+			local again=Mount.buildGlade(host,{createMesh=fakeMesh,async=false,carve=false})
+			assert(glade.Parent==nil and again.Parent==host,"one glade")
+			again:Destroy()
 		end)
 
 		test("rebuilding replaces the old model",function()
