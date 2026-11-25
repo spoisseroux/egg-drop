@@ -1311,5 +1311,123 @@ return function(client)
 		assert(not flies:adopt(now,nil,8))
 	end)
 
+	-- Beta 17 1.3 C: foraging birds that flush.
+	local function forageWorld(extra)
+		local world={camera=Vector3.new(0,10,0),stations={Vector3.new(30,4,0)},pad={x=-30,z=0,r=2},course={0,30,40,30},finds={},kerbs={},
+			groundY=function()return 4 end,safe=function(x,z)return math.abs(x)<60 and math.abs(z)<60 end,
+			players=function()return extra and extra.players or {}end,pets=function()return extra and extra.pets or {}end,
+			landings={[1]=Vector3.new(10,14,10),[2]=Vector3.new(-20,15,-5)}}
+		world.ok=world.safe
+		return world
+	end
+	-- A bird on perch 1 whose stay ends and goes down (the 50% roll: new birds until one does). Returns birds, bird, now.
+	local function grounded(seed,extra)
+		local forage=forageWorld(extra)
+		local world={camera=forage.camera,stations={},forage=forage,player=extra and extra.player}
+		for attempt=1,40 do
+			local birds=Sim.Birds.new(seed+attempt)
+			assert(birds:chirp(0,1,forage.landings[1],3,world,false)=="land")
+			local bird=birds.list[1]
+			local now=0
+			while now<25 and bird.state~="forage"and bird.state~="leave"do now+=1/30;birds:step(now,world,false,3,0)end
+			if bird.state=="forage"then return birds,bird,now,world end
+		end
+		error("never went down")
+	end
+	test("beta 17 1.3 C: a lawn spot is 8 to 40 studs from the camera, 10+ from every player, on safe ground, off the course, pad and stations",function()
+		local forage=forageWorld({players={Vector3.new(12,4,0),Vector3.new(-12,4,4)}})
+		local random=Random.new(5)
+		local found=0
+		for _=1,400 do
+			local at=Sim.forageSpot(random,Vector3.new(0,10,0),forage)
+			if at then
+				found+=1
+				local flatD=Vector2.new(at.X,at.Z).Magnitude
+				assert(flatD>=8-1e-9 and flatD<=40+1e-9,"near the camera "..flatD)
+				for _,p in ipairs(forage.players())do assert(Vector2.new(at.X-p.X,at.Z-p.Z).Magnitude>=10,"off the players")end
+				assert(Sim.fruitClear(at,forage)and at.Y==4)
+			end
+		end
+		assert(found>50,"found "..found)
+		assert(Sim.forageSpot(random,Vector3.new(0,10,0),{groundY=function()return 0/0 end})==nil,"no ground, no spot")
+		assert(Sim.forageSpot(random,nil,forage)==nil)
+	end)
+	test("beta 17 1.3 C: a bird goes down to forage 12 to 25 s: 2 to 4 pecks (head down 35), .4 hops, a look about; then up to a crown",function()
+		local birds,bird,now,world=grounded(100)
+		local F,B=Sim.Forage,Sim.Bird
+		assert(bird.ground and bird.perch==nil and bird.spot.Y==4,"on the lawn")
+		assert(bird.forageUntil-now>=F.timeMin-.1 and bird.forageUntil-now<=F.timeMax+.1)
+		local pitched,hops,start=false,0,bird.spot
+		local last=bird.spot
+		while bird.state=="forage"do
+			now+=1/30;birds:step(now,world,false,3,0)
+			if bird.cycleAt then assert(bird.pecks>=F.pecksMin and bird.pecks<=F.pecksMax)end
+			if bird.turn.LookVector.Y<-.5 then pitched=true end
+			if bird.state=="forage"and bird.spot~=last then
+				hops+=1
+				assert(near((bird.spot-last).Magnitude,F.hop,1e-6),"a .4 hop")
+				last=bird.spot
+			end
+			assert(now<60,"stuck")
+		end
+		assert(pitched,"the head dips")
+		assert(hops>=3,"hops "..hops)
+		assert(bird.state=="land"and bird.perch~=nil and bird.spot.Y>10,"up to a crown")
+		now+=B.land+.05;birds:step(now,world,false,3,0)
+		assert(bird.state=="sit"and not bird.ground)
+	end)
+	test("beta 17 1.3 C: a character within 7 or a pet within 4 flushes it: two hops away, one chirp, up to the nearest free crown",function()
+		local extra={}
+		local birds,bird,now,world=grounded(200,extra)
+		local at=bird.spot
+		-- A pet 5 studs off is not close enough.
+		extra.pets={at+Vector3.new(5,0,0)}
+		now+=.2;birds:step(now,world,false,3,0)
+		assert(bird.state=="forage"and #birds:drain()==0)
+		at=bird.spot
+		extra.pets={at+Vector3.new(3,0,0)}
+		now+=.05;birds:step(now,world,false,3,0)
+		assert(bird.state=="flush")
+		local events=birds:drain()
+		assert(#events==1 and events[1].kind=="flush",#events)
+		local B=Sim.Bird
+		for _=1,30 do now+=1/30;birds:step(now,world,false,3,0)end
+		assert(bird.state=="land"and bird.perch~=nil,"up")
+		local hopped=Vector2.new(bird.from.X-at.X,bird.from.Z-at.Z)
+		assert(near(hopped.Magnitude,2*Sim.Forage.flushHop,1e-6)and hopped.X<0,"two hops away from the pet")
+		assert(#birds:drain()==0,"one chirp")
+		-- A character within 7 does it too.
+		local extra2={}
+		local birds2,bird2,now2,world2=grounded(300,extra2)
+		world2.player=bird2.spot+Vector3.new(0,0,6.5)
+		now2+=1/30;birds2:step(now2,world2,false,3,0)
+		assert(bird2.state=="flush")
+	end)
+	test("beta 17 1.3 C: one on the ground at a time; none without world.forage (night, the switch off); Reduced Motion: it goes",function()
+		local birds,bird,now,world=grounded(400)
+		assert(birds:chirp(now,2,world.forage.landings[2],3,world,false)=="land")
+		local other=birds.list[2]
+		other.stayUntil=now+1
+		for _=1,90 do now+=1/30;birds:step(now,world,false,3,0)end
+		assert(other.state=="leave"or other.state=="sit","not down while one forages: "..other.state)
+		assert(not other.ground)
+		-- Without forage (night): the one down flies off.
+		local off={camera=world.camera,stations={}}
+		birds:step(now+1/30,off,false,3,0)
+		assert(bird.state=="leave")
+		-- Never down without forage.
+		local plain=Sim.Birds.new(9)
+		assert(plain:chirp(0,1,Vector3.new(10,14,10),3,off,false)=="land")
+		local b=plain.list[1]
+		local t=0
+		while t<25 and plain.list[1]==b and b.state~="leave"do t+=1/30;plain:step(t,off,false,3,0)end
+		assert(b.state=="leave"and not b.ground)
+		local _,still,stillNow,stillWorld=grounded(500)
+		local list=Sim.Birds.new(1)
+		list.list={still}
+		list:step(stillNow+1/30,stillWorld,true,3,0)
+		assert(#list.list==0,"Reduced Motion: gone")
+	end)
+
 	return{passed=#cases,cases=cases}
 end

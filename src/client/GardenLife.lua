@@ -365,6 +365,22 @@ function Life.mount(deps)
 	-- bubbles, birds or fireflies follow them in (the ones out finish or fade). Optional, nil-safe; a throw is not quiet.
 	self.quiet=deps.quiet
 	self.pets=deps.pets or function()return{}end
+	-- Beta 17 1.3 C: every player's character (a foraging bird keeps 10 studs off each and flushes at 7).
+	self.players=deps.players or function()
+		local out={}
+		for _,player in ipairs(Players:GetPlayers())do
+			local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+			if root then table.insert(out,root.Position)end
+		end
+		return out
+	end
+	-- One chirp when a foraging bird flushes (AmbientAudio's pool, at the bird). Specs pass their own.
+	self.flushChirp=deps.flushChirp or function(position)
+		local Ambient=require(script.Parent.AmbientAudio).shared
+		if Ambient and not Ambient.destroyed then
+			Ambient:chirp({cue="bird_chirp_"..math.random(1,6),position=position,pitch=1.08,volume=.45})
+		end
+	end
 	-- The live kit crown parts (for the hanging fruit's sway only).
 	self.kitParts=deps.kitParts or function()
 		local room=workspace:FindFirstChild("EggDropLounge")
@@ -493,6 +509,10 @@ function Life:places()
 	local groundY=d.groundY or require(Shared:WaitForChild("HollowWorldLayout")).groundY
 	self.fruitWorld={stations=self.stations,pad=self.pad,course=self.course,finds=finds,kerbs=kerbs,groundY=groundY,
 		safe=d.safe or require(Shared:WaitForChild("IslandBounds")).safeCell}
+	-- Beta 17 1.3 C: where a bird may forage (the Dewdrops' lawn rules, the course always) and the crowns it flies up to.
+	local fruit=self.fruitWorld
+	self.forageWorld={stations=fruit.stations,pad=fruit.pad,course=fruit.course,finds=fruit.finds,kerbs=fruit.kerbs,
+		groundY=fruit.groundY,safe=fruit.safe,ok=fruit.safe,landings=self.spots.Landings,players=self.players,pets=self.pets}
 	-- Fireflies rise from the shared ground; leaves start only over the island, never where they would drift under a roof.
 	self.ground=groundY
 	self.leafWorld={ground=d.leafGround or(if d.groundY then d.groundY else islandGround(Shared,groundY)),cover=d.cover or Sim.LeafCover}
@@ -914,7 +934,9 @@ function Life:step(dt)
 	end
 	local player=self.root()
 	local world={camera=eye,player=player,stations=self.stations,pad=self.pad,course=if self.live then self.course else nil,
-		groundY=self.groundY,ground=self.ground,safe=self.fruitWorld.safe}
+		groundY=self.groundY,ground=self.ground,safe=self.fruitWorld.safe,
+		-- Beta 17 1.3 C: birds forage only with `scene` on, by day, out of the Hush (level 2 has no garden life at all).
+		forage=if self.scene and self.day~=false and not quiet then self.forageWorld else nil}
 	-- Leaves: round the player (the camera without a character), each emit at its own spot; the wind at 4 Hz (the
 	-- falling ones only: the scud has none). The fall's wind is the gust alone (never the breath: architect r1); the
 	-- big breath (`scene` on) triples the rate and runs the scud.
@@ -998,6 +1020,12 @@ function Life:step(dt)
 	end
 	for slot,pool in ipairs(self.birdPool)do
 		if not used[pool]then still[slot]=nil;for _,p in ipairs(pool)do hide(p)end end
+	end
+	for _,event in ipairs(self.birds:drain())do
+		if event.kind=="flush"then
+			local ok,problem=pcall(self.flushChirp,event.position)
+			if not ok then self.warn("[Life] flush chirp: "..tostring(problem));self.flushChirp=function()end end
+		end
 	end
 	self:stepFruit(now,camera,level,reduced,put,hide)
 	local scene=self.sceneParts
