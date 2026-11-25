@@ -68,7 +68,9 @@ Aero.Named=table.freeze({
 	-- instead of lemon. The garden's own dirt, rock and crystals keep their surfaces.
 	table.freeze({prefix="W7_CD_PlayDen__dirt_path",kind="dirt_path",surface=table.freeze({Tint=hex("#B8A898")})}),
 	table.freeze({prefix="W7_CD_PlayDen__cliff_rock",kind="cliff_rock",surface=table.freeze({Tint=hex("#A8957E")})}),
-	table.freeze({prefix="W7_CD_Crystals__glow_pink",kind="glow_pink",surface=table.freeze({Color=hex("#E8C468")})}),
+	-- Beta 18 (known: the crystals too bright): at #E8C468 the Neon still read lemon with a bloom on the lawn (R3); a
+	-- darker, warmer amber (relative luminance about 60% lower), so they glow under the Aero bloom threshold: markers, not lamps.
+	table.freeze({prefix="W7_CD_Crystals__glow_pink",kind="glow_pink",surface=table.freeze({Color=hex("#A07A3C")})}),
 })
 function Aero.namedSurface(name,kind)
 	for _,entry in ipairs(Aero.Named)do

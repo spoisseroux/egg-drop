@@ -245,5 +245,48 @@ return function(server)
 		assert(hidden.W7_Rocks__cliff_rock and hidden.W7_Ground__ground and Data.parts.W7_CD_Ground__ground.collide==false)
 		for name,info in pairs(Data.parts)do assert(info.size[1]>=.05 and info.size[2]>=.05 and info.size[3]>=.05,name.." is a sliver")end
 	end)
+	test("Fable fix 9: the den mouth's dressing: two bushes each side at the jambs, a boulder on the left slope, within budget",function()
+		local Hide=require(Shared.CliffDenDressing)
+		local Dressing=require(Shared.WorldDressing)
+		local m=Data.den.mouth
+		-- The budget: the mouth bushes take the places of the bushes the sculpt skips.
+		local skipped=0
+		for index,row in ipairs(Dressing.Bushes)do
+			if index<=Dressing.MaxBushes and Hide.skip(row[1],row[3],true,Data)then skipped+=1 end
+		end
+		assert(#Hide.MouthBushes==4 and #Hide.MouthBushes<=skipped,"budget "..skipped)
+		local left,right=0,0
+		for _,row in ipairs(Hide.MouthBushes)do
+			local x,y,z,kind,_,scale=table.unpack(row)
+			assert(Dressing.BushKinds[kind]~=nil and scale>=1 and scale<=2)
+			assert(x<m.x1-1.5 or x>m.x2+1.5,"out of the mouth's opening "..x)
+			assert(z>m.z and z<m.z+6,"at the jamb rocks' feet "..z)
+			assert(y>=4 and y<=5.2,"on the apron or the lawn "..y)
+			if x<m.x1 then left+=1;assert(math.abs(x+18)<=1.5)else right+=1;assert(math.abs(x-4)<=2.5)end
+			-- Behind the notice board's face, never in front of it.
+			local board=Vector3.new(table.unpack(Data.den.board.at))
+			if math.abs(x-board.X)<3 then assert(z<board.Z-1,"behind the board")end
+		end
+		assert(left==2 and right==2)
+		-- The boulder: left of the mouth, clear of the cliff path's treads (its footprint ellipse), Hollow-row shaped.
+		local b=Hide.MouthBoulder
+		assert(b.x<m.x1-5 and typeof(b.size)=="Vector3"and type(b.colour)=="string"and type(b.seed)=="number")
+		local frame=CFrame.new(b.x,0,b.z)*CFrame.Angles(0,b.yaw,0)
+		local treads=0
+		for _,box in ipairs(Data.collision.boxes)do
+			if box.kind=="tread"then
+				treads+=1
+				local r=box.r
+				local cf=CFrame.new(box.c[1],box.c[2],box.c[3],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9])
+				for _,sx in ipairs({-.5,.5})do for _,sz in ipairs({-.5,.5})do
+					local corner=(cf*CFrame.new(box.s[1]*sx,0,box.s[3]*sz)).Position
+					local q=frame:PointToObjectSpace(Vector3.new(corner.X,0,corner.Z))
+					local e=(q.X/(b.size.X/2))^2+(q.Z/(b.size.Z/2))^2
+					assert(e>1.1,"the boulder covers a tread corner "..e)
+				end end
+			end
+		end
+		assert(treads>=10,treads)
+	end)
 	return{passed=#cases,cases=cases}
 end
