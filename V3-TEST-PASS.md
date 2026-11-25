@@ -4,9 +4,9 @@ Spencer, 2026-11-22: "Keep track of what we've been implementing for a big test 
 
 Each piece has an owner chat switch on the beta (you only): `on`, `off` puts the game back as it was, `clear` follows the remote config. Use `off` to tell which piece caused a problem.
 
-## On the beta now (beta (23), runtime 6c18c13d)
+## On the beta now (beta (24), runtime da41a07b)
 
-Beta (23), 2026-11-25: the hill art rounds 3-4 (path wall, den back, mouth). Beta (22), 2026-11-25: the den, cliff path and terrace art, pets go up, the Top Lawn and the Paw Glade (row 51; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA22.md`). Beta (21), 2026-11-25: the live retention changes (row 50; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA21.md`). Beta (20), 2026-11-25: the Bear eye fix (row 49). Beta (19), 2026-11-25: rows 45 (ASMR hatch, vibration) and 46 (beta (18) known issues) are new; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN-BETA19.md`. Beta (18), 2026-11-26: rows 36-44 (race audio, beta 17 fixes, capsule shot, Peek, HUD chips, flat bubbles, world alive, the Hollow, cliff path + Play Den) are on the beta now; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN.md`.
+Beta (24), 2026-11-25: the hill at night and its sound (row 52). Beta (23), 2026-11-25: the hill art rounds 3-4 (path wall, den back, mouth). Beta (22), 2026-11-25: the den, cliff path and terrace art, pets go up, the Top Lawn and the Paw Glade (row 51; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA22.md`). Beta (21), 2026-11-25: the live retention changes (row 50; checklist `artifacts/qa-2026-11-26-beta21/TEST-RUN-BETA21.md`). Beta (20), 2026-11-25: the Bear eye fix (row 49). Beta (19), 2026-11-25: rows 45 (ASMR hatch, vibration) and 46 (beta (18) known issues) are new; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN-BETA19.md`. Beta (18), 2026-11-26: rows 36-44 (race audio, beta 17 fixes, capsule shot, Peek, HUD chips, flat bubbles, world alive, the Hollow, cliff path + Play Den) are on the beta now; checklist `artifacts/qa-2026-11-26-beta18/TEST-RUN.md`.
 
 | # | Piece | Beta | What to try | Switch |
 |---|---|---|---|---|
@@ -58,6 +58,7 @@ Beta (23), 2026-11-25: the hill art rounds 3-4 (path wall, den back, mouth). Bet
 | 49 | **The Bear's eye no longer sinks into his head** (Spencer, beta 19) | (20) | Meet Bear / pet focus facing the camera, and curious moments in the garden: both eyes stay whole and round, the right one too. Also on live (v1202). | — |
 | 50 | **Live retention changes on the beta (G1 + G2)**: calm first deck, paw trail, first hello +3, welcome bonus +12/+4/+4, toy pill; v3 bubbles/strip win while their switches are on | (21) | Fresh save: see TEST-RUN-BETA21 sections 1-2. | `/onboard follow|needs|nest off` for the live version |
 | 51 | **The finished hill: den art, cliff path art, terrace art; pets follow you up; the Top Lawn (second park up top) and the Paw Glade** (`WORLD-FINISH-LOOK.md`) | (22) | Walk up with your pet; play date and fetch on the Top Lawn; the glade as a paw from the path; inside the den. See TEST-RUN-BETA22. | `/tierpets`, `/tier`, `/den` |
+| 52 | **The hill at night and its sound**: the den sounds enclosed (room tone, garden muffled), wind rises up the path and on the terrace, warm lanterns at night, glow-caps on the path and lookout, fireflies on the terrace | (24) | Walk into the den, up the path and onto the terrace by day and at night (`/hour at 2800`); listen; on a phone check it stays smooth. | `/alive scene off`, `/alive windbed on` |
 
 ## Built, not on the beta yet
 

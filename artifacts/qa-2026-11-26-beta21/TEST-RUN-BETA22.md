@@ -23,7 +23,13 @@
 ## 4. Fixed in beta (23)
 
 - The path's cut wall is one continuous rock face; the den's back wall is clean; the tan patch left of the den mouth is covered.
-- Not done yet: sound zones up the hill, night lantern glow, fireflies on the terrace (slice F).
+
+## 5. New in beta (24): the hill at night and its sound
+
+- [ ] Walk into the den: the garden's water and birds go quiet and a soft room tone comes in; the music drops by half.
+- [ ] Walk up the path: the wind rises the higher you go (with `/alive windbed on`), the stream fades. On the terrace: wind, little water.
+- [ ] At night (`/hour at 2800` jumps the clock): the den's lanterns glow warmer, small glowing caps line the path edge, the turn and the lookout, fireflies over the terrace.
+- [ ] **On your phone:** does it stay smooth up there at night?
 
 ## Notes
 
