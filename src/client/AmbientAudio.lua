@@ -147,11 +147,11 @@ Ambient.Quiet = table.freeze({
 -- (-26.2 LUFS), so `volume` is 1 for them and the game's volumes keep their meaning; the brook bed is 4 dB quieter (1.6).
 Ambient.WaterLoops = table.freeze({
 	-- Fountain trickle, 10 s loop: assets/audio/custom/egg_drop_fountain_trickle.ogg
-	fountain = table.freeze({ id = 0 --[[ PLACEHOLDER: upload egg_drop_fountain_trickle.ogg ]], speed = 1, volume = 1,
+	fountain = table.freeze({ id = 93904545634789 --[[ egg_drop_fountain_trickle (uploaded 2026-11-26) ]], speed = 1, volume = 1,
 		standIn = table.freeze({ id = 71747963121003 --[[ water_bed_loop ]], speed = 1, volume = 1.6,
 			eq = table.freeze({ low = 1, mid = -2, high = -16, from = 300, to = 2400 }) }) }),
 	-- Waterfall roar, 12 s loop: assets/audio/custom/egg_drop_waterfall_roar.ogg
-	waterfall = table.freeze({ id = 0 --[[ PLACEHOLDER: upload egg_drop_waterfall_roar.ogg ]], speed = 1, volume = 1,
+	waterfall = table.freeze({ id = 115042771381451 --[[ egg_drop_waterfall_roar (uploaded 2026-11-26) ]], speed = 1, volume = 1,
 		standIn = table.freeze({ id = 110993560996896 --[[ waterfall_loop ]], speed = 1, volume = 1,
 			eq = table.freeze({ low = 3, mid = -1, high = -10, from = 400, to = 3000 }) }) }),
 })
