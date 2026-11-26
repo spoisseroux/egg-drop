@@ -70,6 +70,12 @@ class Mesh:
         self.f.append([k, k + 1, k + 2, k + 3])
         self.uv.append(uv)
 
+    def poly(self, pts, uv=None):
+        k = len(self.v)
+        self.v += list(pts)
+        self.f.append(list(range(k, k + len(pts))))
+        self.uv.append(uv)
+
     def build(self, k_uv, up=None):
         # when every quad carries its own UVs (in studs), they are kept, times k_uv (uv units per stud)
         uvs = None
@@ -489,7 +495,59 @@ def fin_and_notch():
             h = size[1]
             for k, f in enumerate((.25, .7)):
                 blobs.append(((c[0], c[1] - h / 2 + h * f, c[2]), (2.0 - .3 * k, h * .34, 2.0 - .3 * k), yaw, .12))
-    return rock_mass("W7_F_PathRocks__cliff_rock", blobs, keep_out=corridor_keep_out, target=1800, floor_y=3.5)
+    extra = flight_cheek_blobs() + wall_end_blobs()
+    return rock_mass("W7_F_PathRocks__cliff_rock", blobs + extra, keep_out=corridor_keep_out,
+                     target=1800 + 110 * len(extra), floor_y=3.5)
+
+
+CHEEK = ((2.0, 1.9, 2.2), 2.0, -.9, 2.2)   # round 9: the return flight's outer cheek masses: radii (along, up, depth),
+                                          # centre past the tread's edge, centre height from the ramp, spacing
+
+
+CHEEK_FROM_W = 6.6                  # round 9: the cheek starts where the flight is under 6.6 wide (the turn's pocket is
+                                    # the outbound leg's tread too: path check)
+
+
+def flight_cheek_blobs():
+    """Round 9 (Spencer beta 35, shot 55: "missing faces in the stairs area"; Studio: the right side of the return flight
+    was the path's single shoulder sheet, a bare slanted plane beside the steps): rock masses along the flight's outer
+    side, from the turn to the head, their tops up to a stud over the steps (a rock cheek; the corridor keep-out holds
+    them off the treads)."""
+    r, off, dy, every = CHEEK
+    leg = [s for s in S.path_samples() if s["step"] and s["w"] < CHEEK_FROM_W]   # past the turn's pocket
+    out, last = [], None
+    for s in leg:
+        if last is not None and s["d"] - last < every:
+            continue
+        last = s["d"]
+        c = P(s, s["w"] / 2 + off, s["h"] + dy)
+        out.append((c, r, math.atan2(s["out"][0], s["out"][1]), 0.0))
+    return out
+
+
+WALL_END = ((2.6, 2.4, 2.6), .6, 3.0)    # round 9: masses over the cut wall's open end at the foot: radii, how far
+                                        # before the end (toward the den), the height step
+
+
+def wall_end_blobs():
+    """Round 9 (Spencer beta 35, shot 58: a missing panel and a seam left of the den's mouth by the foot's first steps;
+    Studio: the cut wall began at the foot with a bare upright edge 18 high standing 2 to 5 in front of the mouth's west
+    backing rock): a column of rock masses over that edge, from the lawn to the wall's top, reaching back into the mouth
+    rock."""
+    r, before, step = WALL_END
+    s = samples(2)[0]
+    back, top = wall_span(s)
+    if back <= .05:
+        return []
+    bx, bz = -s["dir"][0], -s["dir"][1]
+    out = []
+    v = 3.6 + r[1] - s["h"]                       # the lowest mass's foot stays over the rock's floor (3.5)
+    while v < top - s["h"] + .5:
+        u = min(back, max(0.0, v) * LEAN) + r[2] + .3     # its inner side 0.3 behind the tread's edge (path check)
+        x, y, z = P(s, -s["w"] / 2 - u, s["h"] + v)
+        out.append(((x + bx * before, y, z + bz * before), r, math.atan2(s["out"][0], s["out"][1]), 0.0))
+        v += step
+    return out
 
 
 MASS_SEAT = (1.0, 1.5)              # Fable R7 review A: a mass must overlap the cliff or another mass by 1.0; sunk 1.5

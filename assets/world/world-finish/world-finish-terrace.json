@@ -8,14 +8,14 @@
    "centre": [
     -60.5706,
     28.4256,
-    -96.3525
+    -96.4611
    ],
    "size": [
     85.7623,
     1.2489,
-    77.5923
+    77.3751
    ],
-   "triangles": 2352,
+   "triangles": 2317,
    "look": {
     "kind": "island",
     "material": "grass"
@@ -29,16 +29,16 @@
    "slice": "terrace",
    "role": "fixed",
    "centre": [
-    -60.7676,
-    20.1806,
-    -96.1703
+    -60.7552,
+    19.7869,
+    -96.9754
    ],
    "size": [
-    92.4794,
-    17.7387,
-    83.3925
+    92.4546,
+    18.5262,
+    82.6724
    ],
-   "triangles": 1090,
+   "triangles": 1156,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -52,16 +52,16 @@
    "slice": "terrace",
    "role": "fixed",
    "centre": [
-    -37.5798,
+    -37.6023,
     26.0521,
     -81.9268
    ],
    "size": [
-    15.3124,
+    15.2672,
     5.1498,
     11.5202
    ],
-   "triangles": 22,
+   "triangles": 20,
    "look": {
     "kind": "island",
     "material": "grass"
@@ -587,13 +587,13 @@
  "hide": [],
  "report": {
   "W7_F_Terrace__grass": 2352,
-  "W7_F_TerraceFace__cliff_rock": 1090,
-  "W7_F_TerraceTongues__grass": 22,
+  "W7_F_TerraceFace__cliff_rock": 1170,
+  "W7_F_TerraceTongues__grass": 20,
   "W7_F_TerraceEarth__dirt_path": 14,
   "W7_F_TerraceRocks__cliff_rock": 1255,
   "W7_F_TerraceSlab__boulder_rock": 40,
   "W7_F_TerraceLog__bark": 36,
   "W7_F_TerraceTrunk__bark": 48,
-  "fixedTotal": 4773
+  "fixedTotal": 4851
  }
 }

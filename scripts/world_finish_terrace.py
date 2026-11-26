@@ -72,8 +72,93 @@ def outline(n=160):
     out = []
     for (ps, pt, ux, uy), d in zip(base, dist):
         off = edge_offset(d, perimeter)
-        out.append((ps + ux * off, pt + uy * off))
+        p = (ps + ux * off, pt + uy * off)
+        x, z = S.tier_xz(*p)
+        # round 9 (Spencer beta 35, shot 55: a band across the top of the stairs): the return leg's flight climbs along
+        # the garden edge, half under the cap's rim, so the lip crossed its upper steps at chest height. The edge now
+        # stands NOTCH back from the flight's inner edge all the way up (a notch in the bean for the stairs).
+        fs = flight_side(x, z)
+        if fs is not None and -(fs[1]["w"] / 2 + NOTCH) < fs[0] < fs[1]["w"] / 2:
+            s = fs[1]
+            to = -(s["w"] / 2 + NOTCH) - fs[0]
+            p = S.tier_st(x + s["out"][0] * to, z + s["out"][1] * to)
+        out.append(p)
     return out
+
+
+NOTCH = .5                          # round 9: the cap and the face stand this far off the return flight's inner edge
+
+
+def flight_side(x, z):
+    """Round 9: (a, sample) for the return leg's flight at plan point (x, z): a is the signed offset from its centre line
+    toward the lawn (`out`), from the sample whose cross-section holds the point (samples are 0.6 apart); None off the
+    flight's length."""
+    best = None
+    for s in S.path_samples():
+        if not s["step"]:
+            continue
+        along = (x - s["x"]) * s["dir"][0] + (z - s["z"]) * s["dir"][1]
+        if abs(along) > .35 or (best is not None and abs(along) >= best[2]):
+            continue
+        best = ((x - s["x"]) * s["out"][0] + (z - s["z"]) * s["out"][1], s, abs(along))
+    return None if best is None else best[:2]
+
+
+def flight_clamp(x, z):
+    """Round 9 (shot 55, the stairs' left cheek: the island's grass showed between the face and the steps): a face
+    point over the flight (inside its width, or on its inner side closer than NOTCH) moves out to NOTCH past the
+    inner edge. Returns (x, z, the flight's tread height there or None when the point is off the flight)."""
+    fs = flight_side(x, z)
+    if fs is None:
+        return x, z, None
+    a, s = fs
+    if a >= s["w"] / 2 or a <= -(s["w"] / 2 + NOTCH + 2.0):
+        return x, z, None
+    if a > -(s["w"] / 2 + NOTCH):
+        to = -(s["w"] / 2 + NOTCH) - a
+        x, z = x + s["out"][0] * to, z + s["out"][1] * to
+    return x, z, s["h"]
+
+
+TUCK = (3.0, 6.0, .4, 8.0)          # round 9: a face point with the path's cut wall within 3.0 behind it (or within 6.0
+                                    # in front of it) ends its column there, 0.4 into the wall; a column that ends on the
+                                    # ground still reaches back into the wall when it stands within 8.0 of it
+FLIGHT_FOOT = 1.9                   # round 9: by the flight the face runs down to this far under the tread (the steps
+                                    # are 1.2 deep and stand up to 0.54 over the ramp)
+
+
+def wall_tree():
+    """Round 9 (Spencer beta 35, shots 56 and 57: the face's ragged foot hung loose over the path's cut wall, with holes
+    showing the cap's underside): the path slice's cut wall (in the scene the terrace is built on), for tucking the
+    face's columns into it. None when the scene has no path."""
+    o = bpy.data.objects.get("W7_F_PathWall__cliff_rock")
+    if o is None:
+        return None
+    from mathutils.bvhtree import BVHTree
+    return BVHTree.FromObject(o, bpy.context.evaluated_depsgraph_get()), o.matrix_world, o.matrix_world.inverted()
+
+
+def tuck_into(tree, p, out_dir, behind=None):
+    """Round 9: where the face point p (Roblox) meets the cut wall: the point to end its column at, or None. out_dir is
+    the face's outward plan direction (dx, dz). Behind the wall (the wall within TUCK[1] outward): p itself; in front of
+    it (the wall within TUCK[0] inward): the wall's surface TUCK[2] further in."""
+    if tree is None:
+        return None
+    t, mw, inv = tree
+    from mathutils import Vector
+    ln = math.hypot(*out_dir) or 1.0
+    ox, oz = out_dir[0] / ln, out_dir[1] / ln
+    o = inv @ L.bl(p)
+    for sign, reach in ((1, TUCK[1]), (-1, behind or TUCK[0])):
+        d = (inv.to_3x3() @ Vector((sign * ox, -sign * oz, 0))).normalized()
+        hit = t.ray_cast(o, d, reach)
+        if hit[0] is None:
+            continue
+        if sign > 0:
+            return p
+        w = L.rb(mw @ hit[0])
+        return (w[0] - ox * TUCK[2], p[1], w[2] - oz * TUCK[2])
+    return None
 
 
 def edge_t(ol, s_):
@@ -146,12 +231,19 @@ def cap_and_face():
             cap_f.append([a, c, d, b][::-1])
     # the lip: a ring 0.6 down, 0.4 further out
     base = len(cap_v)
-    lip_ring = []
+    lip_ring, notched = [], []
     for k, (s_, t_) in enumerate(ol):
         ln = math.hypot(s_, t_) or 1
         # Fable E1 1: the rim's drop varies 0.4 to 1.2 so no run reads as a ruled line
         drop = .8 + .4 * math.sin(k * .55 + 1.1) * math.cos(k * .21)
-        lip_ring.append(T(s_ + s_ / ln * .4, t_ + t_ / ln * .4, Y - drop))
+        x, z = S.tier_xz(s_, t_)
+        fs = flight_side(x, z)
+        # round 9: in the stairs' notch the rim rolls straight down 0.3 (pushed out it would hang over the steps)
+        notched.append(fs is not None and abs(fs[0] + fs[1]["w"] / 2 + NOTCH) < 1e-3)
+        if notched[-1]:
+            lip_ring.append(T(s_, t_, Y - .3))
+        else:
+            lip_ring.append(T(s_ + s_ / ln * .4, t_ + t_ / ln * .4, Y - drop))
     cap_v += lip_ring
     last = 1 + (len(rings) - 1) * n
     lip_rock = []
@@ -186,27 +278,59 @@ def cap_and_face():
     cap = up_facing(L.mesh_object("W7_F_Terrace__grass", cap_v, cap_f))
     # the face: from the lip ring down, leaning back 15 to 26 degrees, in 1.5-stud rows, to 0.6 under the ground
     face = Pth.Mesh("W7_F_TerraceFace__cliff_rock")
-    cols = []
+    cols, beside, mouth = [], [], []  # beside: per column point, set by the flight (never cut as over the tread)
+    wall = wall_tree()
     for k, ((x, y, z), (s_, t_)) in enumerate(zip(lip_ring, ol)):
-        lean = math.tan(lean_at(k, n))
+        lean = 0.0 if notched[k] else math.tan(lean_at(k, n))   # round 9: the notch's cheek stands upright
         ln = math.hypot(s_, t_) or 1
         ox, oz = S.tier_xz(s_ / ln, t_ / ln)
         cx, cz = S.tier_xz(0, 0)
         dx, dz = ox - cx, oz - cz
-        col = [(x, y, z)]
+        col, by = [(x, y, z)], [notched[k] or flight_clamp(x, z)[2] is not None]
         yy = y
+        mouth.append(False)
         while True:
             yy -= 1.5
             drop = y - yy
             px, pz = x + dx * drop * lean, z + dz * drop * lean
             if over_mouth(px, yy, pz):
+                mouth[-1] = True
                 break
             g = S.ground(px, pz)
-            jitter = .45 * math.sin(px * .7 + pz * .5) * math.cos(yy * .9)
-            col.append((px + dx * jitter, yy, pz + dz * jitter))
-            if g is None or yy < g - .6 or yy < 12:
+            jitter = 0.0 if notched[k] else .45 * math.sin(px * .7 + pz * .5) * math.cos(yy * .9)
+            px, pz = px + dx * jitter, pz + dz * jitter
+            # round 9: by the return flight the face keeps NOTCH off its inner edge and runs down past the steps' feet
+            px, pz, tread = flight_clamp(px, pz)
+            p = (px, yy, pz)
+            if tread is None:
+                over, near_s = near_path(px, pz)
+                if over and yy > near_s["h"] - .2:
+                    # round 9 (shot 57: holes in the face where its quads over the tread were dropped): the column ends
+                    # before it reaches over the tread, reaching back into the cut wall when it is near
+                    end = tuck_into(wall, p, (dx, dz), behind=TUCK[3])
+                    if end is not None and end != p:
+                        col.append(end)
+                        by.append(False)
+                    break
+            tucked = tuck_into(wall, p, (dx, dz)) if tread is None and drop > 1.0 else None
+            if tucked is not None:
+                col.append(tucked)
+                by.append(False)
+                break
+            col.append(p)
+            by.append(tread is not None)
+            if tread is not None:
+                if yy < tread - FLIGHT_FOOT:
+                    break
+            elif g is None or yy < g - .6 or yy < 12:
+                # round 9: the column's foot reaches back into the cut wall when it stands near it (no loose edge)
+                end = tuck_into(wall, (px, yy - .75, pz), (dx, dz), behind=TUCK[3])
+                if end is not None and end != (px, yy - .75, pz):
+                    col.append(end)
+                    by.append(False)
                 break
         cols.append(col)
+        beside.append(by)
     # Round 8b (Spencer beta 34 follow-up: blocky, stretched rock patches high over the lower path, the face's top rows):
     # the face was mapped per face on its dominant axis, so neighbouring quads leaning across 45 degrees in plan swapped
     # projections (a seam and up to 1.4x stretch each), and the lip's rock strip, near level, took a top-down map. Now the
@@ -227,16 +351,35 @@ def cap_and_face():
         up_i, up_j = math.dist(cap_i, lip_ring[i]), math.dist(cap_j, lip_ring[(i + 1) % n])
         # pts = [cap j, lip j, lip i, cap i] (the cap quad's order, reversed)
         face.quad(*pts, uv=[(along[j], up_j), (along[j], 0.0), (along[i], 0.0), (along[i], up_i)])
+    def over_tread(pts, flags):
+        # never over the cliff path's tread (a point the flight set beside the stairs is not over it)
+        return any(not f and near_path(p[0], p[2])[0] and p[1] > near_path(p[0], p[2])[1]["h"] - .2
+                   for p, f in zip(pts, flags))
+
     for i in range(n):
-        c0, c1 = cols[i], cols[(i + 1) % n]
+        i1 = (i + 1) % n
+        c0, c1, b0, b1 = cols[i], cols[i1], beside[i], beside[i1]
+        d0, d1 = down[i], down[i1]
         m = min(len(c0), len(c1))
         for r in range(m - 1):
             pts = [c0[r], c1[r], c1[r + 1], c0[r + 1]]
-            if any(near_path(p[0], p[2])[0] and p[1] > near_path(p[0], p[2])[1]["h"] - .2 for p in pts):
-                continue                                    # never over the cliff path's tread
-            d0, d1 = down[i], down[(i + 1) % n]
+            if over_tread(pts, [b0[r], b1[r], b1[r + 1], b0[r + 1]]):
+                continue
             face.quad(*pts, uv=[(along[i], -d0[r]), (along[i + 1], -d1[r]), (along[i + 1], -d1[r + 1]),
                                 (along[i], -d0[r + 1])])
+        # round 9 (shots 56, 57: the face's foot was a staircase of loose ends, one column longer than the next): the
+        # longer column's tail closes onto the shorter one's end in triangles (not over the den's mouth, where the
+        # columns end short on purpose)
+        if mouth[i] or mouth[i1]:
+            continue
+        for r in range(m - 1, len(c0) - 1):
+            pts, fl = [c0[r], c1[m - 1], c0[r + 1]], [b0[r], b1[m - 1], b0[r + 1]]
+            if not over_tread(pts, fl):
+                face.poly(pts, [(along[i], -d0[r]), (along[i + 1], -d1[m - 1]), (along[i], -d0[r + 1])])
+        for r in range(m - 1, len(c1) - 1):
+            pts, fl = [c0[m - 1], c1[r], c1[r + 1]], [b0[m - 1], b1[r], b1[r + 1]]
+            if not over_tread(pts, fl):
+                face.poly(pts, [(along[i], -d0[m - 1]), (along[i + 1], -d1[r]), (along[i + 1], -d1[r + 1])])
     return cap, face, ol, cols
 
 

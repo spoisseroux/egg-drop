@@ -126,16 +126,16 @@
    "slice": "path",
    "role": "fixed",
    "centre": [
-    -71.5187,
-    18.329,
-    -51.3611
+    -50.002,
+    17.9887,
+    -69.389
    ],
    "size": [
-    11.9324,
-    27.8485,
-    27.5594
+    54.9422,
+    28.5289,
+    63.6151
    ],
-   "triangles": 1800,
+   "triangles": 2894,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -1207,7 +1207,7 @@
   "W7_F_PathWall__cliff_rock": 896,
   "W7_F_PathFoot__dirt_path": 184,
   "W7_F_PathSteps__boulder_rock": 712,
-  "W7_F_PathRocks__cliff_rock": 1800,
+  "W7_F_PathRocks__cliff_rock": 2900,
   "W7_F_Lip1__boulder_rock": 80,
   "W7_F_Lip2__boulder_rock": 80,
   "W7_F_Lip3__boulder_rock": 80,
@@ -1225,7 +1225,7 @@
   "W7_F_PathOverRocks__cliff_rock_1817": 156,
   "W7_F_PathSkin__cliff_rock": 74,
   "W7_F_PathBacking__cliff_rock": 1600,
-  "fixedTotal": 17090,
+  "fixedTotal": 18190,
   "lipStones": 10,
   "stakes": 6,
   "stepMaxDeviation": 0.543,
