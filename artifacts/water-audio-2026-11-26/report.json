@@ -1,0 +1,107 @@
+{
+  "target_lufs": -26.2,
+  "target_from": "assets/audio/placeholder/egg_drop_waterfall_loop.wav",
+  "ceiling_dbtp": -3.0,
+  "loops": {
+    "egg_drop_fountain_trickle": {
+      "seconds": 10.0,
+      "frames": 441000,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_peak_dbfs": -7.92,
+      "rms_dbfs": -26.49,
+      "mono_rms_minus_stereo_rms_db": 0.0,
+      "first_sample": 0.04657,
+      "last_sample": 0.04593,
+      "dc": 0.0,
+      "integrated_lufs": -26.2,
+      "loudness_range_lu": 0.4,
+      "true_peak_dbtp": -7.9,
+      "max_momentary_lufs": -24.1,
+      "max_short_term_lufs": -26.0,
+      "limiter_db": 0.0,
+      "seam": {
+        "step_at_join": 0.00064,
+        "step_p999_around": 0.02897,
+        "step_ratio": 0.022,
+        "curvature_near_join": 0.00583,
+        "curvature_max_around": 0.00766,
+        "curvature_ratio": 0.761
+      },
+      "rms_0_5s_spread_db": 2.5,
+      "crackle": {
+        "hf_2500_8000_share_db": -13.0,
+        "low_60_500_share_db": -4.1,
+        "above_5000_share_db": -29.0,
+        "click_kurtosis_above_5000": 3.05,
+        "spectral_centroid_hz": 889,
+        "hf_flutter_share": 0.663
+      },
+      "wav": "assets/audio/custom/egg_drop_fountain_trickle.wav",
+      "wav_sha256": "4cdb471d213b0351f5ef85abf2449772ea5a90aac8d6577bcbbcb430f79b28d9",
+      "ogg": "assets/audio/custom/egg_drop_fountain_trickle.ogg"
+    },
+    "egg_drop_waterfall_roar": {
+      "seconds": 12.0,
+      "frames": 529200,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_peak_dbfs": -12.41,
+      "rms_dbfs": -25.3,
+      "mono_rms_minus_stereo_rms_db": 0.0,
+      "first_sample": 0.04462,
+      "last_sample": 0.03479,
+      "dc": -0.0,
+      "integrated_lufs": -26.2,
+      "loudness_range_lu": 0.5,
+      "true_peak_dbtp": -12.4,
+      "max_momentary_lufs": -25.2,
+      "max_short_term_lufs": -25.9,
+      "limiter_db": 0.0,
+      "seam": {
+        "step_at_join": 0.00983,
+        "step_p999_around": 0.02391,
+        "step_ratio": 0.411,
+        "curvature_near_join": 0.00815,
+        "curvature_max_around": 0.0112,
+        "curvature_ratio": 0.728
+      },
+      "rms_0_5s_spread_db": 2.16,
+      "crackle": {
+        "hf_2500_8000_share_db": -16.0,
+        "low_60_500_share_db": -2.5,
+        "above_5000_share_db": -26.8,
+        "click_kurtosis_above_5000": 3.15,
+        "spectral_centroid_hz": 487,
+        "hf_flutter_share": 0.554
+      },
+      "wav": "assets/audio/custom/egg_drop_waterfall_roar.wav",
+      "wav_sha256": "bf1c0209ab968c6a892de937adcf76d4fc8d78aebfa7b67a1311ae6be1fb734f",
+      "ogg": "assets/audio/custom/egg_drop_waterfall_roar.ogg"
+    }
+  },
+  "references": {
+    "old_fountain_loop": {
+      "crackle": {
+        "hf_2500_8000_share_db": -2.0,
+        "low_60_500_share_db": -73.0,
+        "above_5000_share_db": -9.1,
+        "click_kurtosis_above_5000": 12.74,
+        "spectral_centroid_hz": 3193,
+        "hf_flutter_share": 0.678
+      },
+      "integrated_lufs": -19.2
+    },
+    "stand_in_waterfall_loop": {
+      "crackle": {
+        "hf_2500_8000_share_db": -7.1,
+        "low_60_500_share_db": -3.6,
+        "above_5000_share_db": -12.8,
+        "click_kurtosis_above_5000": 3.06,
+        "spectral_centroid_hz": 1408,
+        "hf_flutter_share": 0.522
+      },
+      "integrated_lufs": -26.2
+    }
+  }
+}

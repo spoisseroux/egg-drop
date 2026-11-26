@@ -267,7 +267,7 @@ Aero.Waterfall=table.freeze({
 -- LOOK-R2 3 (Fable, 2026-11-23): the fountain in the Bubble Spring's basin, while the world kit stands (AeroFountain, in
 -- the additions). Positions come from WorldAeroKit.fountain. Jet up from the finial, a spill ring off the upper bowl, a
 -- splash ring in the basin. Level 1 keeps the jet; level 2 and Reduced Motion: none. On only within Radius of the camera.
--- Sound: today's water_bed_loop as a positional voice through AmbientAudio (an original fountain loop is owed).
+-- Sound: a positional water voice through AmbientAudio (Voice below; its clip is AmbientAudio.WaterLoops.fountain).
 Aero.Fountain=table.freeze({
 	Radius=90,
 	Texture="rbxassetid://119614715171256", -- the speck, stretched along the velocity into streaks
@@ -280,10 +280,12 @@ Aero.Fountain=table.freeze({
 		Life=NumberRange.new(.4,.6),Acceleration=Vector3.new(0,-8,0),Size=keys({{0,.5},{1,1}}),Transparency=keys({{0,.35},{1,1}})}),
 	Color=hex("#F4FCFF"),
 	Squash=NumberSequence.new(-1.6), -- jet and spill: tall, thin streaks along their flight (positive squashes them flat)
-	-- LOOK-R3 3: the original loop (scripts/synth_fountain_loop.py, 32 s), from a random point, never restarted by distance.
-	-- The library stand-in (water_bed_loop at 1.25) plays if the loop does not load. Spencer's ears decide.
-	Voice=table.freeze({id=96991688758765,volume=.20,speed=1,min=7,max=30, -- LOOK-R4 B4: heard within ~15 studs, gone by 30
-		fallback=table.freeze({id=71747963121003,speed=1.25,volume=.16})}),
+	-- From a random point, never restarted by distance. Beta 35 (Spencer 2026-11-26: "the fountain should be heard from
+	-- farther away ... and make it sound less like fried chicken"): the LOOK-R3 loop (96991688758765, synth_fountain_loop.py)
+	-- was bright noise chopped at 25-60 Hz with hard ticks: frying. Its clip is now AmbientAudio.WaterLoops.fountain (the
+	-- new trickle, synth_water.py, once uploaded; the EQ'd brook stand-in until then). Heard from the player's head now
+	-- (AudioListener), full within 8 studs, about -12 dB at 30, -20 dB at the spawn lawn (52 away), gone by 72.
+	Voice=table.freeze({volume=.24,speed=1,min=8,max=72}),
 })
 
 -- "W7_Water__cloud", "W7_Backdrop__cloud_2" -> "cloud"; nil for anything else (collision tiles, pets, props).

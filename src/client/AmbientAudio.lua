@@ -120,13 +120,75 @@ Ambient.Falls = {
 -- keep the numbers above. bed: the brook bed's floor, peak and range; falls: each fall's volume and rolloff.
 -- LOOK-R4 (Fable): the bed is full within `full` studs of the stream, smoothstep to silent at `range`, eased over `ease` s,
 -- and paused after `pause` s at 0.
+-- Beta 35 (Spencer 2026-11-26: "the waterfall barely makes any sound"): with the camera 15 to 25 studs off and one
+-- point at .18 / min 6 / max 38, a player at Tumble's pool heard it at about -30 dB. Now each fall is several emitters
+-- spread down the water (Ambient.fallPoint: `at` 0 top .. 1 foot, `out` studs toward the island's middle, `lift`), heard
+-- from the player's head (AudioListener) and loudest at the pool. Each emitter its own speed and start, so the copies
+-- of one loop never comb. Every emitter is silent at the spawn lawn (spec'd with Ambient.rolloff).
 Ambient.Quiet = table.freeze({
 	bed = table.freeze({ floor = 0, peak = .10, full = 6, range = 28, ease = .6, pause = 2 }),
 	falls = table.freeze({
-		W7_Water__waterfall_tumble = table.freeze({ volume = .18, min = 6, max = 38 }),
-		W7_Water__waterfall_sky = table.freeze({ volume = .10, min = 4, max = 26 }),
+		W7_Water__waterfall_tumble = table.freeze({
+			table.freeze({ at = 1, out = 8, lift = 2.5, volume = .40, min = 10, max = 72, speed = .94, offset = 0 }), -- the pool
+			table.freeze({ at = .6, out = 0, lift = 1, volume = .24, min = 7, max = 50, speed = 1.0, offset = 4.1 }), -- the ledge
+			table.freeze({ at = .06, out = -3, lift = 0, volume = .14, min = 5, max = 36, speed = 1.07, offset = 7.3 }), -- the lip
+		}),
+		W7_Water__waterfall_sky = table.freeze({
+			table.freeze({ at = 0, out = 0, lift = -.75, volume = .30, min = 8, max = 52, speed = 1.06, offset = 3.7 }), -- the lip
+			table.freeze({ at = .3, out = 0, lift = 0, volume = .26, min = 12, max = 64, speed = .96, offset = 8.2 }), -- the drop
+		}),
 	}),
 })
+-- PLACEHOLDER water loops (beta 35, 2026-11-26). Original synthesis: scripts/synth_water.py writes both files (no
+-- samples, no AI audio; report in artifacts/water-audio-2026-11-26/). Spencer uploads the .ogg and puts its asset id in
+-- `id`. While an id is 0 the stand-in plays: the best library water we already have, through an EqualizerSoundEffect
+-- that takes the crackly highs out (gains in dB; `from`..`to` is the mid band, Hz). Once an id is filled the stand-in
+-- stays as the fallback if the new asset will not load. The new files are mastered to the waterfall stand-in's loudness
+-- (-26.2 LUFS), so `volume` is 1 for them and the game's volumes keep their meaning; the brook bed is 4 dB quieter (1.6).
+Ambient.WaterLoops = table.freeze({
+	-- Fountain trickle, 10 s loop: assets/audio/custom/egg_drop_fountain_trickle.ogg
+	fountain = table.freeze({ id = 0 --[[ PLACEHOLDER: upload egg_drop_fountain_trickle.ogg ]], speed = 1, volume = 1,
+		standIn = table.freeze({ id = 71747963121003 --[[ water_bed_loop ]], speed = 1, volume = 1.6,
+			eq = table.freeze({ low = 1, mid = -2, high = -16, from = 300, to = 2400 }) }) }),
+	-- Waterfall roar, 12 s loop: assets/audio/custom/egg_drop_waterfall_roar.ogg
+	waterfall = table.freeze({ id = 0 --[[ PLACEHOLDER: upload egg_drop_waterfall_roar.ogg ]], speed = 1, volume = 1,
+		standIn = table.freeze({ id = 110993560996896 --[[ waterfall_loop ]], speed = 1, volume = 1,
+			eq = table.freeze({ low = 3, mid = -1, high = -10, from = 400, to = 3000 }) }) }),
+})
+-- Which clip a water voice plays: the new loop once its id is in (the stand-in as its fallback), else the stand-in with
+-- its EQ. failed: the new loop would not load. Returns {id, speed, volume, eq, fallback} or nil for an unknown kind.
+function Ambient.waterSource(kind, failed)
+	local loop = Ambient.WaterLoops[kind]
+	if not loop then return nil end
+	local stand = loop.standIn
+	local standIn = { id = stand.id, speed = stand.speed or 1, volume = stand.volume or 1, eq = stand.eq }
+	if type(loop.id) == "number" and loop.id > 0 and loop.id ~= stand.id and failed ~= true then
+		return { id = loop.id, speed = loop.speed or 1, volume = loop.volume or 1, eq = loop.eq, fallback = standIn }
+	end
+	return standIn
+end
+-- Pure, for specs: Roblox's InverseTapered rolloff as its docs describe it (Inverse near the min distance, LinearSquare
+-- near the max), taken as the lower of the two. Full volume within `min`, silent from `max`.
+function Ambient.rolloff(distance, min, max)
+	if type(distance) ~= "number" or distance ~= distance then return 0 end
+	if distance <= min then return 1 end
+	if distance >= max then return 0 end
+	local inverse = min / distance
+	local square = (1 - (distance - min) / (max - min)) ^ 2
+	return math.min(inverse, square)
+end
+-- A fall emitter's point. beam: WorldV7Data.beams.falls row {top, bottom}; e: {at, out, lift}.
+function Ambient.fallPoint(beam, e)
+	local top, bottom = beam.top, beam.bottom
+	local s = math.clamp(e.at or 0, 0, 1)
+	local x = top[1] + (bottom[1] - top[1]) * s
+	local y = top[2] + (bottom[2] - top[2]) * s + (e.lift or 0)
+	local z = top[3] + (bottom[3] - top[3]) * s
+	local out = e.out or 0
+	local across = math.sqrt(x * x + z * z)
+	if out ~= 0 and across > 1e-6 then x, z = x - x / across * out, z - z / across * out end
+	return Vector3.new(x, y, z)
+end
 -- A5 birds.
 Ambient.BirdVoices, Ambient.BirdReach, Ambient.BirdChoices = 3, 70, 6
 Ambient.BirdMin, Ambient.BirdMax = 12, 85
@@ -204,16 +266,57 @@ function Ambient.bedGain(distance, quiet)
 	return floor + (peak - floor) * smoothstep(1 - math.max(0, distance - full) / (range - full))
 end
 
--- The falls' live numbers: today's spec, or its Quiet overrides (volume, min, max). Writes only on a change.
-function Ambient:applyQuiet(quiet)
-	if self.quietOn == quiet then return end
+-- A water voice's equalizer (Ambient.WaterLoops eq): made on first use, switched off when the clip needs none.
+function Ambient.applyEq(voice, eq)
+	local node = voice:FindFirstChild("WaterEq")
+	if not eq then
+		if node then node.Enabled = false end
+		return node
+	end
+	if not node then
+		node = Instance.new("EqualizerSoundEffect")
+		node.Name = "WaterEq"
+		node.Parent = voice
+	end
+	node.LowGain, node.MidGain, node.HighGain = eq.low or 0, eq.mid or 0, eq.high or 0
+	node.MidRange = NumberRange.new(eq.from or 400, eq.to or 4000)
+	node.Enabled = true
+	return node
+end
+
+-- The falls' live numbers: today's one point per fall, or the Quiet emitters down each fall with the water source
+-- (Ambient.waterSource) and its EQ. Emitters past today's first are silent (volume 0, stopped) with quiet off.
+-- Writes only on a change (force: rewrite anyway, after the new waterfall loop failed to load).
+function Ambient:applyQuiet(quiet, force)
+	if self.quietOn == quiet and not force then return end
 	self.quietOn = quiet
+	local source = Ambient.waterSource("waterfall", self.waterfallFailed)
 	for _, fall in ipairs(self.falls) do
 		if fall.name then
-			local base, over = Ambient.Falls[fall.name], quiet and Ambient.Quiet.falls[fall.name]
-			fall.spec = if over then table.freeze({ anchor = base.anchor, lift = base.lift, speed = base.speed, offset = base.offset,
-				volume = over.volume, min = over.min, max = over.max }) else base
+			local base, list = Ambient.Falls[fall.name], quiet and Ambient.Quiet.falls[fall.name]
+			local over = list and list[fall.index or 1]
+			local id, eq, position
+			if over then
+				fall.spec = table.freeze({ volume = over.volume * source.volume, min = over.min, max = over.max,
+					speed = over.speed * source.speed, offset = over.offset })
+				id, eq, position = source.id, source.eq, Ambient.fallPoint(fall.beam, over)
+			elseif (fall.index or 1) == 1 then
+				fall.spec, id = base, Ambient.Ids.waterfall_loop
+				local at = fall.beam[base.anchor]
+				position = Vector3.new(at[1], at[2] + base.lift, at[3])
+			else
+				fall.spec = table.freeze({ volume = 0, min = base.min, max = base.max, speed = base.speed, offset = 0 })
+				id = Ambient.Ids.waterfall_loop
+			end
+			local content = "rbxassetid://" .. id
+			if fall.voice.SoundId ~= content then
+				if fall.voice.IsPlaying then fall.voice:Stop() end
+				fall.voice.SoundId = content
+			end
 			fall.voice.RollOffMinDistance, fall.voice.RollOffMaxDistance = fall.spec.min, fall.spec.max
+			fall.voice.PlaybackSpeed = fall.spec.speed
+			if position and fall.part then fall.part.Position = position end
+			Ambient.applyEq(fall.voice, eq)
 		end
 	end
 end
@@ -454,14 +557,18 @@ function Ambient.new(audio, options)
 	for _, beam in ipairs(data.beams and data.beams.falls or {}) do
 		local spec = Ambient.Falls[beam.name]
 		if spec then
-			local at = beam[spec.anchor]
-			local part = emitter(beam.name .. "_Sound", Vector3.new(at[1], at[2] + spec.lift, at[3]))
-			local voice = sound("waterfall_loop", Ambient.Ids.waterfall_loop, self.ambience, part, true)
-			voice.RollOffMode = Enum.RollOffMode.InverseTapered
-			voice.RollOffMinDistance, voice.RollOffMaxDistance = spec.min, spec.max
-			voice.PlaybackSpeed = spec.speed
-			table.insert(self.falls, { voice = voice, spec = spec, name = beam.name })
-			table.insert(warm, voice)
+			-- Beta 35: one voice per Quiet emitter (the first is today's point); applyQuiet places and tunes them.
+			local count = math.max(1, #(Ambient.Quiet.falls[beam.name] or {}))
+			for index = 1, count do
+				local at = beam[spec.anchor]
+				local part = emitter(beam.name .. "_Sound" .. (if index > 1 then index else ""), Vector3.new(at[1], at[2] + spec.lift, at[3]))
+				local voice = sound("waterfall_loop", Ambient.Ids.waterfall_loop, self.ambience, part, true)
+				voice.RollOffMode = Enum.RollOffMode.InverseTapered
+				voice.RollOffMinDistance, voice.RollOffMaxDistance = spec.min, spec.max
+				voice.PlaybackSpeed = spec.speed
+				table.insert(self.falls, { voice = voice, spec = spec, name = beam.name, index = index, beam = beam, part = part })
+				if index == 1 then table.insert(warm, voice) end
+			end
 		end
 	end
 	-- LOOK-R4 Q4: the quiet mix follows the Aero look (options.quiet: a function for specs).
@@ -580,9 +687,20 @@ function Ambient.new(audio, options)
 		if not self.destroyed and (not ok or #failed > 0) then
 			warn("Egg Drop could not load ambient audio " .. table.concat(failed, ", "))
 		end
+		-- The new waterfall loop (once its id is filled) would not load: the falls go back to the stand-in.
+		local loop = Ambient.WaterLoops.waterfall
+		if not self.destroyed and loop and loop.id > 0 and table.find(failed, "rbxassetid://" .. loop.id) then
+			self.waterfallFailed = true
+			if self.quietOn then self:applyQuiet(true, true) end
+		end
 	end)
 	if options.auto ~= false then
 		table.insert(self.connections, RunService.Heartbeat:Connect(function(dt) self:step(dt) end))
+		-- Beta 35: hear the world from the player's head while the beta's water mix is on (AudioListener).
+		local ok, ears = pcall(function()
+			return require(script.Parent.AudioListener).start({ on = function() return self.quietOn == true end })
+		end)
+		if ok then self.ears = ears else warn("[Ambient] listener: " .. tostring(ears)) end
 	end
 	Ambient.shared = self
 	return self
@@ -735,11 +853,13 @@ Ambient.length = function(voice)
 	local seconds = if voice.IsLoaded == true then tonumber(voice.TimeLength) or 0 else 0
 	return if seconds > 0 then seconds else nil
 end
+-- spec.eq / fallback.eq (beta 35): an Ambient.WaterLoops equalizer for that clip (nil: none).
 function Ambient:addVoice(name, spec)
 	local voice = sound(name, spec.id, self.ambience, spec.parent, true)
 	voice.RollOffMode = Enum.RollOffMode.InverseTapered
 	voice.RollOffMinDistance, voice.RollOffMaxDistance = spec.min or 5, spec.max or 30
 	voice.PlaybackSpeed = spec.speed or 1
+	if spec.eq then Ambient.applyEq(voice, spec.eq) end
 	local entry = { voice = voice, spec = { volume = spec.volume or .2, offset = 0 } }
 	table.insert(self.falls, entry)
 	local removed = false
@@ -779,6 +899,7 @@ function Ambient:addVoice(name, spec)
 				voice.SoundId = "rbxassetid://" .. fallback.id
 				voice.PlaybackSpeed = fallback.speed or 1
 				if fallback.volume then entry.spec.volume = fallback.volume end
+				if fallback.eq or spec.eq then Ambient.applyEq(voice, fallback.eq) end
 			end)
 			entry.fellBack = true
 			entry.spec.offset = 0
@@ -793,6 +914,18 @@ function Ambient:addVoice(name, spec)
 		if at then table.remove(self.falls, at) end
 		pcall(function() voice:Destroy() end)
 	end
+end
+
+-- A water voice (beta 35): addVoice with its clip from Ambient.WaterLoops (the new loop with the stand-in as its
+-- fallback, or the stand-in and its EQ). spec: {parent, volume, speed, min, max, start}; volume and speed are the
+-- voice's own and scale the clip's.
+function Ambient:addWaterVoice(kind, spec)
+	local source = assert(Ambient.waterSource(kind), "no water loop " .. tostring(kind))
+	local volume, speed = spec.volume or .2, spec.speed or 1
+	local fallback = source.fallback
+	return self:addVoice(kind, { id = source.id, parent = spec.parent, volume = volume * source.volume, speed = speed * source.speed,
+		min = spec.min, max = spec.max, start = spec.start, eq = source.eq,
+		fallback = fallback and { id = fallback.id, speed = speed * fallback.speed, volume = volume * fallback.volume, eq = fallback.eq } })
 end
 
 function Ambient:listener()
@@ -867,7 +1000,9 @@ function Ambient:step(dt)
 		end
 		for _, fall in ipairs(self.falls) do
 			fall.voice.Volume = fall.spec.volume * water
-			startLoop(fall.voice, fall.spec.offset)
+			-- A spare emitter with quiet off (volume 0) stays stopped instead of playing silence.
+			if fall.spec.volume > 0 then startLoop(fall.voice, fall.spec.offset)
+			elseif fall.voice.IsPlaying then fall.voice:Stop() end
 		end
 	else
 		-- Fully faded (round, mute, unfocused): stop the loops instead of playing silence.
@@ -1265,6 +1400,7 @@ function Ambient:destroy()
 	if self.audio and self.audio.duck and self.deckVoice and self.round then self.audio:duck(Ambient.DeckDuck, 0, 1) end
 	for _, connection in ipairs(self.connections) do connection:Disconnect() end
 	table.clear(self.connections)
+	if self.ears then self.ears.stop();self.ears = nil end
 	self.bedVoice:Destroy()
 	for _, voices in pairs(self.voices) do for _, voice in ipairs(voices) do voice:Destroy() end end
 	if self.deckVoice then self.deckVoice:Destroy() end
