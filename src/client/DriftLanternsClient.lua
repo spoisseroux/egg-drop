@@ -1,11 +1,12 @@
 -- Drift lanterns, the garden's air (GARDEN-PLAY-BRIEF 2026-11-26 section 4; DriftLanterns holds the numbers): nine
--- eight-sided paper lanterns built from plain parts on this client, each bobbing, drifting on its own small circle and
+-- round paper lanterns (a globe round a glowing core, ribs, caps and a tassel) built from plain parts on this client, each bobbing, drifting on its own small circle and
 -- swaying (WorldMotion.pose "bob" and "sway", every lantern its own phase), and a soft seed-fluff emitter over the hub
 -- by day. Nothing replicates; they cannot be touched.
 --
 -- Gate: the Alive `air` switch (beta and Studio); off, nothing is built (turned off at runtime, it is all taken down).
--- Day and night follow HollowClock.daylight like the lamps: under .3 the paper warms to #FFD98A and glows (Neon), and
--- the four lanterns nearest the camera carry the four PointLights. One loop: 30 Hz while a lantern is within the cull
+-- Day and night follow HollowClock.daylight like the lamps: under .3, over DriftLanterns.GlowSpan, the Neon core and
+-- the see-through Cardboard globe warm (DriftLanterns.lookAt, Fable B35), and the four lanterns nearest the camera carry
+-- the four PointLights on their cores. One loop: 30 Hz while a lantern is within the cull
 -- distance (90 studs on a phone, 150 elsewhere) of the camera and the garden is up (Mode Room); otherwise it sleeps and
 -- looks again every .5 s. Reduced Motion: every lantern at rest and no fluff (the night look still follows the clock).
 --
@@ -89,36 +90,38 @@ function Client:build()
 	local folder=Instance.new("Folder");folder.Name=Client.Folder
 	folder.Parent=self.d.parent or workspace
 	self.folder=folder
-	local L,M=Lanterns.Look,Lanterns.Motion
-	local fabric,wood=material("Fabric","Fabric"),material("Wood","Wood")
-	self.fabric,self.neon=fabric,material("Neon","Neon")
-	local side=Lanterns.side()
+	local L=Lanterns.Look
+	local paper,smooth,wood=material("Cardboard","SmoothPlastic"),material("SmoothPlastic","SmoothPlastic"),material("Wood","Wood")
+	local neon=material("Neon","Neon")
 	local count=0
 	self.lanterns={}
 	for i,place in ipairs(Lanterns.Places)do
 		local y=World.groundY(place.x,place.z)+place.over
 		local rest=CFrame.new(place.x,y,place.z)*CFrame.Angles(0,Lanterns.phases(i)*math.pi,0)
 		local accent=L.accents[place.accent]
-		local pieces,offsets,boards={}, {}, {}
+		local pieces,offsets={}, {}
 		local function add(p,offset)table.insert(pieces,p);table.insert(offsets,offset);count+=1;return p end
-		-- The octagon: four boards across the flats, a quarter turn of 45 degrees apart.
-		for k=0,3 do
-			local offset=CFrame.Angles(0,k*math.pi/4,0)
-			table.insert(boards,add(part(place.id.."_paper"..(k+1),Vector3.new(L.across,L.body,side),rest*offset,L.paper,fabric,folder),offset))
+		local function disc(name,tall,across,dy,colour,mat)
+			local offset=CFrame.new(0,dy,0)*CFrame.Angles(0,0,math.pi/2) -- a Cylinder's axis is X: stood up
+			local p=add(part(name,Vector3.new(tall,across,across),rest*offset,colour,mat,folder),offset)
+			p.Shape=Enum.PartType.Cylinder
+			return p
 		end
-		for k,dy in ipairs({L.body/2,-L.body/2})do
-			local offset=CFrame.new(0,dy,0)*CFrame.Angles(0,0,math.pi/2)
-			local hoop=add(part(place.id.."_hoop"..k,Vector3.new(L.hoop,L.across+.12,L.across+.12),rest*offset,L.bark,wood,folder),offset)
-			hoop.Shape=Enum.PartType.Cylinder
-		end
-		local capOffset=CFrame.new(0,L.body/2+L.hoop/2+L.cap/2,0)*CFrame.Angles(0,0,math.pi/2)
-		local cap=add(part(place.id.."_cap",Vector3.new(L.cap,L.capAcross,L.capAcross),rest*capOffset,accent,fabric,folder),capOffset)
-		cap.Shape=Enum.PartType.Cylinder
-		local tasselOffset=CFrame.new(0,-L.body/2-L.hoop/2-L.tassel/2,0)
-		add(part(place.id.."_tassel",Vector3.new(L.tasselWidth,L.tassel,L.tasselWidth),rest*tasselOffset,accent,fabric,folder),tasselOffset)
+		-- The see-through paper globe round its Neon core.
+		local globe=add(part(place.id.."_globe",Vector3.new(L.globe,L.globe,L.globe),rest,L.day.paper,paper,folder),CFrame.new())
+		globe.Shape=Enum.PartType.Ball;globe.Transparency=L.day.paperClear
+		local core=add(part(place.id.."_core",Vector3.new(L.core,L.core,L.core),rest,L.day.core,neon,folder),CFrame.new())
+		core.Shape=Enum.PartType.Ball;core.Transparency=L.day.coreClear
+		-- The paper's hoops, in the accent.
+		for k,rib in ipairs(L.ribs)do disc(place.id.."_rib"..k,L.rib,rib[2],rib[1],accent,smooth)end
+		-- Bark caps top and bottom, and the tassel under the lower one.
+		disc(place.id.."_cap1",L.cap,L.capAcross,L.capY,L.bark,wood)
+		disc(place.id.."_cap2",L.cap,L.capAcross,-L.capY,L.bark,wood)
+		local tasselOffset=CFrame.new(0,-L.capY-L.cap/2-L.tassel/2,0)
+		add(part(place.id.."_tassel",Vector3.new(L.tasselWidth,L.tassel,L.tasselWidth),rest*tasselOffset,accent,smooth,folder),tasselOffset)
 		local bob,_,sway=Lanterns.phases(i)
-		table.insert(self.lanterns,{index=i,rest=rest,pieces=pieces,offsets=offsets,boards=boards,bob=bob,sway=sway,
-			top=L.body/2+L.hoop})
+		table.insert(self.lanterns,{index=i,rest=rest,pieces=pieces,offsets=offsets,globe=globe,core=core,bob=bob,sway=sway,
+			top=L.capY+L.cap/2})
 	end
 	-- Four lights, handed to the nearest lanterns at night.
 	self.lights={}
@@ -126,8 +129,8 @@ function Client:build()
 		local light=Instance.new("PointLight")
 		light.Name="lantern_light"..k
 		light.Range=Lanterns.Lights.range;light.Brightness=Lanterns.Lights.brightness
-		light.Color=Color3.fromHex(L.warm);light.Shadows=false;light.Enabled=false
-		light.Parent=self.lanterns[k].boards[1]
+		light.Color=Color3.fromHex(L.night.core);light.Shadows=false;light.Enabled=false
+		light.Parent=self.lanterns[k].core
 		table.insert(self.lights,light)
 	end
 	-- The seed fluff over the hub.
@@ -221,34 +224,30 @@ function Client:frame(l,t)
 	return self.pose("sway",at,(at*CFrame.new(0,l.top,0)).Position,M.sway,M.swayPeriod,l.sway,t)
 end
 
--- The day / night look: the paper's colour and material, the lights' owners, the fluff.
+-- The day / night look (Fable B35): the core and paper colours and see-through, the lights' owners and brightness,
+-- the fluff.
 function Client:look(camera,reduced)
 	local daylight=self.daylight()
 	local glow=Lanterns.glow(daylight)
 	local lit=Lanterns.lit(daylight)
-	local L=Lanterns.Look
 	local key=if lit then math.floor(glow*20+.5)else -1
+	local look=Lanterns.lookAt(glow)
 	if key~=self.glowNow then
 		self.glowNow=key
-		local colour=Color3.fromHex(L.paper)
-		if lit then
-			local a,b=Color3.fromHex(L.dusk),Color3.fromHex(L.warm)
-			colour=Color3.new(a.R+(b.R-a.R)*glow,a.G+(b.G-a.G)*glow,a.B+(b.B-a.B)*glow)
-		end
-		local mat=if lit then self.neon else self.fabric
 		for _,l in ipairs(self.lanterns)do
-			for _,board in ipairs(l.boards)do board.Color=colour;board.Material=mat end
+			l.core.Color=look.core;l.core.Transparency=look.coreClear
+			l.globe.Color=look.paper;l.globe.Transparency=look.paperClear
 		end
 		if self.folder then self.folder:SetAttribute("AirGlow",if lit then math.floor(glow*100+.5)/100 else 0)end
 	end
 	if lit and typeof(camera)=="Vector3"then
 		local positions={}
-		for i,l in ipairs(self.lanterns)do positions[i]=l.boards[1].CFrame.Position end
+		for i,l in ipairs(self.lanterns)do positions[i]=l.core.CFrame.Position end
 		local picks=Lanterns.nearest(positions,camera,#self.lights)
 		for k,light in ipairs(self.lights)do
-			local host=self.lanterns[picks[k]].boards[1]
+			local host=self.lanterns[picks[k]].core
 			if light.Parent~=host then light.Parent=host end
-			light.Brightness=Lanterns.Lights.brightness*math.max(.25,glow)
+			light.Brightness=look.light
 			light.Enabled=true
 		end
 	else

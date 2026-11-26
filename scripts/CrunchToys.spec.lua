@@ -59,6 +59,13 @@ return function(client,offline)
 
 	test("the budget: every part counted, under 120; the switch is AliveCrunch, beta and Studio only",function()
 		assert(Toys.partCount()<=Toys.Budget and Toys.Budget==120,"parts "..Toys.partCount())
+		-- Fable B35: pods 2 -> 5 parts each, gourds 12 -> 16; 94 in all. Each pod its own yaw and a .9 to 1.1 height.
+		assert(Toys.partCount()==94,"parts "..Toys.partCount())
+		local yaws={}
+		for i=1,Toys.Pod.count do
+			local yaw,high=Toys.podLook(i)
+			assert(high>=.9 and high<=1.1 and not yaws[yaw],"pod "..i);yaws[yaw]=true
+		end
 		assert(table.find(Alive.Features,"crunch")and Flags.AliveCrunch==true)
 		assert(Alive.attribute("crunch")=="Alive_crunch"and Alive.key("crunch")=="alive_crunch")
 		assert(Alive.ceiling("crunch",{AliveCrunch=true},Alive.PlaceId,false)==true)
@@ -248,6 +255,11 @@ return function(client,offline)
 			assert(#r.buzzed==0,"a pet never buzzes")
 			local popped=r.toys.pods[2]
 			assert(popped.poppedAt and popped.scale<.5,"flat")
+			-- The sepals stay put, so the squash reads against them.
+			local folder=r.parent:FindFirstChild("CrunchToysLocal")
+			local sepal=folder:FindFirstChild("pop_pod2_sepal1")
+			assert(sepal and popped.body.CFrame.Position.Y<sepal.CFrame.Position.Y+popped.tall*.4,"the body sank, the sepal did not")
+			assert(r.moved>0)
 			r.played={}
 			r.tick(Toys.Pod.reinflate)
 			assert(r.count("asmr_creak")>=1,"creaks back")
