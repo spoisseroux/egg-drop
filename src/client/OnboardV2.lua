@@ -309,7 +309,7 @@ end
 -- TODO(upload): the asset id of assets/eggs/textures/egg-companion-color-noseam.png (scripts/build_egg_textures.py
 -- noseam): the first Bear's egg without its zig-zag until it opens. PLACEHOLDER 0 = not uploaded yet: the old map
 -- (Models.Types.companion.colorMap, with the zig-zag) is used.
-V2.NoSeamId=0
+V2.NoSeamId=130682441511149 -- egg-companion-color-noseam.png (uploaded 2026-11-26)
 -- The closed egg's map, or nil for the old one.
 function V2.closedMap()return if type(V2.NoSeamId)=="number"and V2.NoSeamId>0 then "rbxassetid://"..V2.NoSeamId else nil end
 -- Pure: does a press at `at` (px) count, on a screen of `size` (px)? The middle 60% each way.
