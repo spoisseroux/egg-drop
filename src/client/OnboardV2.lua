@@ -31,6 +31,9 @@ V2.Deck=table.freeze({
 	-- Beta (36), Spencer: "we dont need that giant shiny circle" and no cracking on the deck (the egg cracks in the
 	-- world, step 3); Fable (AERO-JUICE-BRIEF 4): no disc at all and no Neon core showing. The egg itself is lit a
 	-- little brighter each combo (the viewport's light), with a short flare on the hop; the finale brightens it more.
+	-- Fable B37 1b: the grey flash: a cream base colour under the texture, the texture preloaded (at most 0.6 s) with
+	-- the egg hidden, then a 150 ms fade in.
+	base=hex("#FBF6D2"),preloadCap=.6,fadeIn=.15,
 	pad=8,light=hex("#FFF3D6"),lightIdle=0,lightStep=.12,lightFlare=.12,lightFinal=.6,
 	yawRate=25,bobDeg=3,bobHz=.5,                          -- idle: degrees a second, tilt bob
 	hop=.10,wobbleDeg=14,wobbleTime=.4,turnTime=.6,        -- each combo: a hop (card heights), a damped wobble, one turn
@@ -178,13 +181,24 @@ V2.Leave=table.freeze({clacks={.15,.42},nod=.7,fly=1.0})
 -- its body (2.2 studs over its feet) swept as a sphere of Route.radius (the wings); the first clear one is flown, and
 -- the stork leaves back along it. None clear: it comes straight down from high over the landing.
 --   headings: degrees from the player's right (0) toward beyond the landing (90); negative ones come from behind.
-V2.Route=table.freeze({radius=3,body=2.2,samples=24,out=40,bowUp=5,bowBack=6,
+V2.Route=table.freeze({radius=3,body=2.2,samples=24,coarse=6,budget=160,castsPerSweep=4,framesCasts=24,out=40,bowUp=5,bowBack=6,
 	headings={11,169,45,135,90,-20,-160},heights={18,28,38},drop=40,
 	-- the landing: 6 studs ahead first, then round the player, with open sky over it (the bundle comes down there)
 	landing={{0,6},{30,6},{-30,6},{60,6},{-60,6},{0,8},{90,6},{-90,6},{0,10},{45,9},{-45,9},{135,6},{-135,6},{180,6}},
 	sky=9,skyRadius=1.3,
 	-- the stork's beak tip from its feet (StorkModel.BeakTip): the bundle hangs here, so it hovers with its body back
 	beak=Vector3.new(0,3.4,-2.95),hoverUp=4.4})
+-- Fable B37 section 3: the open blanket 78% of its old diameter, half as thick, with no grey tufts (the dots are a pale
+-- blue), and on the arrival dais it lands 0.6 studs further in, so nothing hangs past the chamfer.
+V2.Blanket=table.freeze({radius=1.2*.78,thick=.1*.5,dots=hex("#DCEBFA"),inward=.6,daisReach=8})
+-- Pure: the landing moved Blanket.inward studs toward the dais centre when it is on (near) the dais.
+function V2.onDais(land,dais)
+	if typeof(dais)~="Vector3"then return land end
+	local d=Vector3.new(dais.X-land.X,0,dais.Z-land.Z)
+	local m=d.Magnitude
+	if m>V2.Blanket.daisReach or m<1e-3 then return land end
+	return land+d/m*math.min(V2.Blanket.inward,m)
+end
 -- Pure: the stork's feet (root) while it hovers over `land` facing the player (its beak tip over the landing).
 function V2.hover(land,toPlayer)
 	local R=V2.Route
@@ -213,18 +227,28 @@ function V2.storkRoute(land,toPlayer,hover,clear)
 	local right=away:Cross(up)
 	right=right/math.max(1e-6,right.Magnitude)
 	local bow=up*R.bowUp-toPlayer*R.bowBack
-	local tried=0
+	-- Code review: a cast budget. Each candidate is swept coarse first (Route.coarse legs), then fine only if that is
+	-- clear; the first clear one is flown; past Route.budget sweeps it stops and comes straight down.
+	local tried,calls=0,0
+	local function sweep(path)
+		for i=1,#path-1 do
+			if calls>=R.budget then return false end
+			calls+=1
+			if not clear(path[i],path[i+1],R.radius)then return false end
+		end
+		return true
+	end
 	for _,height in ipairs(R.heights)do
 		for _,degrees in ipairs(R.headings)do
+			if calls>=R.budget then break end
 			tried+=1
 			local start=land+V2.heading(right,away,degrees)*R.out+up*height
-			local path=V2.routePath(start,hover,bow)
-			local ok=true
-			for i=1,#path-1 do if not clear(path[i],path[i+1],R.radius)then ok=false;break end end
-			if ok then return{start=start,bow=bow,heading=degrees,height=height},tried end
+			if sweep(V2.routePath(start,hover,bow,R.coarse))and sweep(V2.routePath(start,hover,bow))then
+				return{start=start,bow=bow,heading=degrees,height=height},tried,calls
+			end
 		end
 	end
-	return{start=hover+up*R.drop,bow=Vector3.new(0,0,0),heading=nil,height=R.drop},tried
+	return{start=hover+up*R.drop,bow=Vector3.new(0,0,0),heading=nil,height=R.drop},tried,calls
 end
 -- Pure: the landing. ground(x, z) -> the ground point under it or nil; clear as storkRoute. look: the player's flat
 -- look; at: the player's feet. The first spot with ground and open sky (Route.sky studs) over it, else the first guess.
@@ -245,7 +269,8 @@ function V2.landing(at,look,ground,clear)
 			if clear(point+up*.6,point+up*R.sky,R.skyRadius)and clear(body,body+up*6,R.radius)then return point end
 		end
 	end
-	return first or at+look*R.landing[1][2]
+	-- no ground under any spot: nil, so the story can take the spawn pad
+	return first
 end
 
 -- ── Step 3: crack it ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -259,7 +284,7 @@ V2.Crack=table.freeze({
 	zone=.6,                                               -- any tap in the middle 60% of the screen counts
 	anticipate=.04,grow=.09,closer=.03,leakAlpha=.25,
 	flex={time=.25,to=1.08,hzFrom=5,hzTo=9},
-	pop={silence=.08,duck=.5,up=3,fade=.5,flash=.12,flashAlpha=.35,kick=.15,fovPeak=44,fovRest=42,settle=.4,hold=.6,
+	pop={silence=.08,duck=.5,keepBottom=.6,up=3,fade=.5,flash=.12,flashAlpha=.35,kick=.15,fovPeak=44,fovRest=42,settle=.4,hold=.6,
 		pieces={12,16},voiced=5,cueDelay=.12,lateFlakes={2,4},sting="rarity_common",scatter="shell_scatter"},
 	-- the pop's beat: the creak and flex, then the silence, then the burst (s after tap 3's sound)
 	creak=.25,

@@ -38,6 +38,15 @@ function Egg.new(meter,coach,deps)
 	if ok and preview then
 		self.preview=preview;pcall(function()preview:setType("companion",true)end)
 		self.ambient,self.lightColor=preview.viewport.Ambient,preview.viewport.LightColor
+		-- Fable B37 1b: preload the shell's map with the egg hidden (at most D.preloadCap s), then fade it in
+		self.createdAt=os.clock()
+		task.spawn(function()
+			pcall(function()
+				local map=V2.closedMap()or require(game:GetService("ReplicatedStorage").Shared.EggModels).Types.companion.colorMap
+				game:GetService("ContentProvider"):PreloadAsync({map})
+			end)
+			if self.alive and not self.preloadedAt then self.preloadedAt=os.clock()end
+		end)
 	end
 	-- The pips: 22 px shells, empty (navy, a light ring) or filled (gold).
 	self.pipRow=node("Frame",meter,{Name="ComboPips3D",AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-D.pad),
@@ -71,7 +80,13 @@ function Egg:reduced()
 	return false
 end
 -- The 3D egg is drawn (its meshes and texture are in). Until then WelcomePresentation keeps the pixel egg.
-function Egg:ready()return self.preview~=nil and self.preview.loaded==true end
+function Egg:ready()return self.preview~=nil and self.preview.loaded==true and self:revealAt()~=nil end
+-- When the 3D egg may show: its map preloaded, or D.preloadCap s after it was made.
+function Egg:revealAt()
+	if self.preloadedAt then return self.preloadedAt end
+	if self.createdAt and os.clock()-self.createdAt>=D.preloadCap then self.preloadedAt=self.createdAt+D.preloadCap;return self.preloadedAt end
+	return nil
+end
 -- Combo n's sound: a rising fill chime and a soft buzz (beta 36: never a crack here; it cracks in the world).
 function Egg:play(n)
 	local C=V2.ComboChime
@@ -151,7 +166,10 @@ function Egg:paint()
 	if self.finaleAt then light,lift,fade=V2.finale(self.clock-self.finaleAt,reduced)end
 	local studs=1.834 -- the preview camera's frame height in studs (EggPreview3D:measure)
 	pcall(function()preview:pose(math.rad(yaw),tilt,(hop+lift)*studs,1,0,0,0,fade,1)end)
-	preview.viewport.ImageTransparency=fade
+	-- hidden until its map is in, then a 150 ms fade in (Reduced Motion: at once)
+	local shownAt=self:revealAt()
+	local reveal=if not shownAt then 0 elseif reduced then 1 else math.clamp((os.clock()-shownAt)/D.fadeIn,0,1)
+	preview.viewport.ImageTransparency=math.max(fade,1-reveal)
 	if self.ambient then
 		preview.viewport.Ambient=V2.lift(self.ambient,light)
 		preview.viewport.LightColor=V2.lift(self.lightColor,light*.5)
@@ -163,6 +181,8 @@ function Egg:paint()
 	for _,s in ipairs(preview.sparkles or {})do s.holder.Visible=false end
 	local parts=preview.parts or {}
 	if parts.Core then parts.Core.Transparency=1 end
+	-- a cream base under the map, so a frame without it is never grey (Fable B37 1b)
+	for _,key in ipairs({"TopShell","BottomShell"})do local p=parts[key];if p and p.Color~=D.base then p.Color=D.base end end
 	local closed=V2.closedMap()
 	if closed then
 		for _,key in ipairs({"TopShell","BottomShell"})do local p=parts[key];if p and p.TextureID~=closed then p.TextureID=closed end end
