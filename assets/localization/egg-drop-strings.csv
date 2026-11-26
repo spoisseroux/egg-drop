@@ -1173,13 +1173,13 @@ catalog.BallThemes.ById.tangerine_pop.pitch,"Juicy orange, deep to bright.",,Cat
 catalog.DeckThemes.ById.aqua_pop.name,Aqua Pop,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aqua_pop.name, catalog.BookCatalog.Pages.faceplates.items.1.name"
 catalog.DeckThemes.ById.aurora_glass.name,Aurora Glass,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.aurora_glass.name, catalog.BookCatalog.Pages.faceplates.items.6.name"
 catalog.DeckThemes.ById.bookworm.name,Bookworm,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.bookworm.name
-catalog.DeckThemes.ById.cloud_glass.name,Cloud Glass,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.cloud_glass.name, catalog.BookCatalog.Pages.faceplates.items.11.name"
+catalog.DeckThemes.ById.cloud_glass.name,Cloud Glass,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.cloud_glass.name
 catalog.DeckThemes.ById.copperleaf.name,Copperleaf,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.copperleaf.name
-catalog.DeckThemes.ById.dewy_meadow.name,Dewy Meadow,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.dewy_meadow.name, catalog.BookCatalog.Pages.faceplates.items.13.name"
+catalog.DeckThemes.ById.dewy_meadow.name,Dewy Meadow,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.dewy_meadow.name, catalog.BookCatalog.Pages.faceplates.items.12.name"
 catalog.DeckThemes.ById.gloaming.name,Gloaming,,Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.gloaming.name
 catalog.DeckThemes.ById.grape_soda.name,Grape Soda,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.grape_soda.name, catalog.BookCatalog.Pages.faceplates.items.9.name"
 catalog.DeckThemes.ById.ice.name,Creek,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.ice.name, catalog.DeckBackgrounds.ById.creek.name"
-catalog.DeckThemes.ById.lagoon.name,Lagoon,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.lagoon.name, catalog.BookCatalog.Pages.faceplates.items.12.name"
+catalog.DeckThemes.ById.lagoon.name,Lagoon,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.lagoon.name, catalog.BookCatalog.Pages.faceplates.items.11.name"
 catalog.DeckThemes.ById.lime_gel.name,Lime Gel,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.lime_gel.name, catalog.BookCatalog.Pages.faceplates.items.2.name"
 catalog.DeckThemes.ById.liquid_chrome.name,Liquid Chrome,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.liquid_chrome.name, catalog.BookCatalog.Pages.faceplates.items.4.name"
 catalog.DeckThemes.ById.moss.name,Canopy,,"Catalogue DeckThemes (name); also catalog.DeckThemes.Plates.moss.name, catalog.DeckBackgrounds.ById.canopy.name"
