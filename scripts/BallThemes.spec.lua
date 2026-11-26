@@ -67,7 +67,10 @@ return function(client,parent)
 					local h,s=body:ToHSV();local band=hues[tier]
 					assert(s>.3 and h>=band[1]and h<=band[2],id.." tier "..tier.." left its hue family ("..h..")")
 					if tier>1 then assert(distance(body,Color3.fromHex(theme.ramps[tier-1].body))>=20,id.." tiers "..(tier-1).."/"..tier.." too close")end
-					assert(contrast(Color3.fromHex(theme.ink),body)>=4.45,id.." tier "..tier.." ink contrast")
+					-- Aero Glass (AERO-JUICE-BRIEF 1): the darker violet takes the ink at 4.1:1 (Fable's call; the
+					-- size, the face and the colour word carry the tier too). Every other body stays at 4.45 or more.
+					local floor=if theme.ramps==Themes.Aero and tier==5 then 4 else 4.45
+					assert(contrast(Color3.fromHex(theme.ink),body)>=floor,id.." tier "..tier.." ink contrast")
 					assert(luminance(Color3.fromHex(r.deep))<luminance(body)and luminance(body)<luminance(Color3.fromHex(r.light)),id.." ramp order")
 				end
 			end

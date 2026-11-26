@@ -29,12 +29,14 @@ Pico8.Heart, Pico8.Sleepy = Pico8[14], Pico8[13]
 -- replace the PICO-8 rim ramps for eggs; tier V is violet, not yellow.
 -- Batch 2026-11-13 R1: these are the Smileys / Marbles ramps (BallThemes `vivid`);
 -- the motifs now draw only in the free Marbles theme, and no theme draws numerals.
+-- AERO-JUICE-BRIEF 1 (2026-11-26): the "Aero Glass" ramps (BallThemes.Aero), so the ghost, the merge burst colours
+-- and Marbles' motifs match the new default balls. Was vivid #2E8BFF / #FF8A1A / #22E06A / #FF4DA6 / #A66BFF.
 Pico8.TierRamps = table.freeze({
-	table.freeze({ deep = "#0A3FD6", body = "#2E8BFF", light = "#8FE1FF", motif = "plain" }),
-	table.freeze({ deep = "#E0400A", body = "#FF8A1A", light = "#FFD45C", motif = "bands" }),
-	table.freeze({ deep = "#04963F", body = "#22E06A", light = "#B4FF7A", motif = "speckles" }),
-	table.freeze({ deep = "#C4126F", body = "#FF4DA6", light = "#FFB0DC", motif = "stars" }),
-	table.freeze({ deep = "#5B21D6", body = "#A66BFF", light = "#E3C8FF", motif = "dots" }),
+	table.freeze({ deep = "#0B74D1", body = "#22B8F2", light = "#A6ECFF", motif = "plain" }),
+	table.freeze({ deep = "#EC7A0E", body = "#FFB52A", light = "#FFEFA3", motif = "bands" }),
+	table.freeze({ deep = "#0E8F45", body = "#2FCB5A", light = "#C4FF9A", motif = "speckles" }),
+	table.freeze({ deep = "#D8327E", body = "#FF6FA8", light = "#FFD3E6", motif = "stars" }),
+	table.freeze({ deep = "#4426C2", body = "#7D5CF0", light = "#D6CBFF", motif = "dots" }),
 })
 
 -- Chain caption colours as a chain grows: 9 -> 10 -> 8.

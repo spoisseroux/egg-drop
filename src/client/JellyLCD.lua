@@ -16,6 +16,8 @@ local SpanSurface = require(script.Parent.JellySpanSurface)
 local JellyPalette=require(game:GetService("ReplicatedStorage").Shared.JellyPalette)
 local BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
 local BallFaces=require(script.Parent.BallFaces)
+-- Aero Glass (AERO-JUICE-BRIEF 1): the bubble shading for ramps with `rim` and `spec` (the default balls).
+local AeroShade=require(script.Parent.AeroShade)
 
 local LCD = {}
 LCD.__index = LCD
@@ -38,6 +40,11 @@ LCD.ShadowRows, LCD.GradientBands = 4, 12
 -- with simpler faces (eyes only on the two smallest sizes, kitten ears from size 3).
 LCD.SimplifyAbove = 1350
 LCD.EarReach = 1.32
+-- Deck juice (AERO-JUICE-BRIEF 2 P1, AeroJuice; only while its switch is on): a merge passed a `hold` draws its
+-- impact frame (the blob solid `light`, a 1 px glint cross at the contact) for FlashFor, then holds that frame for
+-- `hold` more (tiers IV and V: 40 ms, presentation only; the simulation never waits); the two balls squash Squash
+-- toward each other over the blob's first SquashFor. A merge without `hold` is drawn exactly as before.
+LCD.FlashFor, LCD.Squash, LCD.SquashFor = 0.033, 0.08, 0.06
 
 local WIDTH, HEIGHT = LCD.Width, LCD.Height
 local SIZE = Vector2.new(WIDTH, HEIGHT)
@@ -116,7 +123,9 @@ LCD.shade = shade
 
 -- ── Themed balls ───────────────────────────────────────────────────────────
 -- Extra roles after the six legacy ones.
-local LIGHTMID, INK, BLUSH, STAR, MAGNET = 7, 8, 9, 10, 11
+local LIGHTMID, INK, BLUSH, STAR, MAGNET, RIM = 7, 8, 9, 10, 11, 12
+assert(AeroShade.DEEP == DEEP and AeroShade.BODY == BODY and AeroShade.LIGHT == LIGHT and AeroShade.GLINT == GLINT
+	and AeroShade.MOTIF == MOTIF and AeroShade.KIND == KIND and AeroShade.LIGHTMID == LIGHTMID and AeroShade.RIM == RIM, "AeroShade roles")
 local toneIndex = { ink = INK, glint = GLINT, light = LIGHT, blush = BLUSH }
 local function shadeLean(t, lx, ly, q)
 	local tex = t.texture
@@ -162,12 +171,19 @@ local function themeTones(theme, tier)
 	end
 	local blushBase = Color3.fromHex("#FF3F7A")
 	local blush = if tier ~= 4 then body:Lerp(blushBase, 0.62) else deep:Lerp(blushBase, 0.3)
-	cached = { rgba(deep), rgba(body), rgba(light), rgba(WHITE), rgba(motif), motifKind,
+	local aero = ramp.rim ~= nil and ramp.spec ~= nil
+	cached = { rgba(deep), rgba(body), rgba(light), rgba(if aero then Color3.fromHex(ramp.spec) else WHITE), rgba(motif), motifKind,
 		rgba(body:Lerp(light, 0.5)), rgba(Color3.fromHex(theme.ink)), rgba(blush),
-		rgba(Color3.fromHex("#FFE14D")), rgba(Color3.fromHex("#FF3B4E")) }
+		rgba(Color3.fromHex("#FFE14D")), rgba(Color3.fromHex("#FF3B4E")), rgba(if aero then Color3.fromHex(ramp.rim) else light) }
 	cached.tier, cached.texture, cached.style = tier, theme.texture, theme.face
 	cached.ears = theme.earsFrom ~= nil and tier >= theme.earsFrom
-	cached.shader = if theme.face == "none" or theme.texture == "motif" then shade else shadeLean
+	cached.aero = aero
+	if aero then
+		cached.shader = AeroShade.shade
+		if theme.texture == "motif" then cached.motifAt = motifAt end
+	else
+		cached.shader = if theme.face == "none" or theme.texture == "motif" then shade else shadeLean
+	end
 	themeCache[key] = cached
 	return cached
 end
@@ -263,6 +279,7 @@ function LCD.ballRuns(themeId, tier, expr, dx, star, mark)
 	local cx = size / 2
 	local cy = size / 2 + (if t.ears then margin * 0.5 else 0)
 	local canvas = setmetatable({ size = size, px = table.create(size * size, 0) }, Canvas)
+	AeroShade.begin(cx, cy, r, r, 0)
 	for y = 0, size - 1 do
 		for x = 0, size - 1 do
 			local ux, uy = (x + 0.5 - cx) / r, (y + 0.5 - cy) / r
@@ -524,8 +541,10 @@ local function drawGuide(self, aim)
    buffer.writeu32(self.pixels,offset,self.guideColor);self.guidePixels[offset]=true
   end
  end
- for index=0,8 do dot(origin:Lerp(tangent,index/8))end
- for index=1,Config.PreviewCount do dot(Config.flightPoint(aim,index*Config.PreviewStep))end
+ -- Deck juice P3: the dots drift along the path (guidePhase 0..1 of a step, set per frame by AeroJuice; 0 = still).
+ local phase=self.guidePhase or 0
+ for index=0,8 do dot(origin:Lerp(tangent,math.min(1,(index+phase)/8)))end
+ for index=1,Config.PreviewCount do dot(Config.flightPoint(aim,(index+phase)*Config.PreviewStep))end
 end
 function LCD:drawGuide(aim)
 	if not self.replaying then record(self, "guide").aim = aim end
@@ -549,8 +568,10 @@ local function drawBall(self, center, radiusX, radiusY, angleRadians, color, rip
 	local reach = if ears then math.max(bloomReach, LCD.EarReach) else bloomReach
 	local reachSquared = reach * reach
 	local glow = if match then tones[LIGHT] else tones[BODY]
-	local alpha = if match then LCD.MatchAlpha else LCD.BloomAlpha
+	-- Deck juice P4: the matching ball's bloom breathes (matchPulse, set per frame by AeroJuice; 1 = steady).
+	local alpha = if match then math.min(1, LCD.MatchAlpha * (self.matchPulse or 1)) else LCD.BloomAlpha
 	local cx, cy = center.X, center.Y
+	AeroShade.begin(cx, cy, lightRadiusX, lightRadiusY, face and face.twinkle or 0)
 	local minX = math.max(math.ceil(leftWall - 0.5), math.floor(cx - lightRadiusX * reach - 1))
 	local minY = math.max(math.ceil(ceiling - 0.5), math.floor(cy - lightRadiusY * reach - 1))
 	local maxX = math.min(math.floor(rightWall - 0.5), math.ceil(cx + lightRadiusX * reach + 1))
@@ -601,7 +622,7 @@ function LCD:draw(center, radiusX, radiusY, angleRadians, color, ripple, match, 
 		command.center, command.rx, command.ry, command.angle = center, radiusX, radiusY, angleRadians
 		command.color, command.ripple, command.match = color, ripple, match
 		command.tier = face and face.tier
-		if face then command.expr, command.dx, command.star, command.mark = face.expr, face.dx, face.star, face.mark end
+		if face then command.expr, command.dx, command.star, command.mark, command.twinkle = face.expr, face.dx, face.star, face.mark, face.twinkle end
 	end
 	drawBall(self, center, radiusX, radiusY, angleRadians, color, ripple, match, face)
 end
@@ -622,8 +643,23 @@ local function capsule(x, y, a, b, radius)
 	return math.sqrt(px * px + py * py) - radius
 end
 
-local function mergeBlob(self, first, second, target, radius, resultRadius, color, age, tier)
+-- The impact frame's tones: the same roles, drawn solid `light` with the glint bar kept (AeroShade.flash).
+local flashCache = setmetatable({}, { __mode = "k" })
+local function flashTones(tones)
+	local hit = flashCache[tones]
+	if not hit then hit = setmetatable({ shader = AeroShade.flash }, { __index = tones }); flashCache[tones] = hit end
+	return hit
+end
+local CROSS = { { 0, 0 }, { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } }
+local function mergeBlob(self, first, second, target, radius, resultRadius, color, age, tier, hold)
 	if self.failed or radius <= 0 then return end
+	-- Deck juice (hold ~= nil): the impact frame, then the presentation hold; the lobes squash toward each other.
+	local flash, squash = false, 0
+	if hold then
+		flash = age < LCD.FlashFor + hold
+		if age >= LCD.FlashFor then age = math.max(LCD.FlashFor, age - hold) end
+		squash = LCD.Squash * math.max(0, 1 - age / LCD.SquashFor)
+	end
 	local t = math.clamp(age / LCD.MergeDuration, 0, 1)
 	t = 1 - (1 - t) ^ 3 -- ease-out: the balls start moving together on the first frame
 	local a, b = first:Lerp(target, t), second:Lerp(target, t)
@@ -635,11 +671,27 @@ local function mergeBlob(self, first, second, target, radius, resultRadius, colo
 	local lightRadiusY=math.max(core,math.abs(a.Y-target.Y)+lobe,math.abs(b.Y-target.Y)+lobe)+blend
 	local margin = math.max(radius, resultRadius * (1 + LCD.MergePop)) + blend + 1
 	local tones = if tier then themeTones(self.theme or BallThemes.get(BallThemes.Default), tier) else palette(color)
+	if flash then tones = flashTones(tones) end
+	AeroShade.begin(target.X, target.Y, lightRadiusX, lightRadiusY, 0)
+	-- Squash: each lobe is narrower along its line to the target (the two meet) and a little wider across it.
+	local aux, auy, bux, buy = 0, 0, 0, 0
+	if squash > 0 then
+		local da, db = target - a, target - b
+		if da.Magnitude > 0.01 then aux, auy = da.X / da.Magnitude, da.Y / da.Magnitude end
+		if db.Magnitude > 0.01 then bux, buy = db.X / db.Magnitude, db.Y / db.Magnitude end
+	end
+	local along, across = 1 / (1 - squash), 1 / (1 + squash * 0.5)
 	raster(self, math.min(a.X, b.X, target.X) - margin, math.min(a.Y, b.Y, target.Y) - margin,
 		math.max(a.X, b.X, target.X) + margin, math.max(a.Y, b.Y, target.Y) + margin,
 		tones, function(x, y)
 			local ax, ay, bx, by = x - a.X, y - a.Y, x - b.X, y - b.Y
 			local tx, ty = x - target.X, y - target.Y
+			if squash > 0 then
+				local pa, qa = (ax * aux + ay * auy) * along, (ay * aux - ax * auy) * across
+				local pb, qb = (bx * bux + by * buy) * along, (by * bux - bx * buy) * across
+				if aux ~= 0 or auy ~= 0 then ax, ay = pa, qa end
+				if bux ~= 0 or buy ~= 0 then bx, by = pb, qb end
+			end
 			local d = smoothMin(math.sqrt(ax * ax + ay * ay) - lobe,
 				math.sqrt(bx * bx + by * by) - lobe, blend)
 			d = smoothMin(d, capsule(x, y, a, target, neck), blend)
@@ -647,21 +699,31 @@ local function mergeBlob(self, first, second, target, radius, resultRadius, colo
 			d = smoothMin(d, math.sqrt(tx * tx + ty * ty) - core, blend)
 			return d,tx/lightRadiusX,ty/lightRadiusY
 		end)
+	if flash then
+		-- The glint cross where the two balls met (the well's clip applies).
+		local gx, gy = math.round(target.X), math.round(target.Y)
+		for _, p in ipairs(CROSS) do self:putPixel(gx + p[1], gy + p[2], tones[GLINT]) end
+	end
 end
--- `tier` (optional): the merged blob takes that size's themed colours.
-function LCD:merge(first, second, target, radius, resultRadius, color, age, tier)
+-- `tier` (optional): the merged blob takes that size's themed colours. `hold` (optional, deck juice): seconds the
+-- impact frame is held after FlashFor; nil draws the merge exactly as before.
+function LCD:merge(first, second, target, radius, resultRadius, color, age, tier, hold)
 	if not self.replaying then
 		local command = record(self, "merge")
 		command.first, command.second, command.target, command.radius = first, second, target, radius
-		command.resultRadius, command.color, command.age, command.tier = resultRadius, color, age, tier
+		command.resultRadius, command.color, command.age, command.tier, command.hold = resultRadius, color, age, tier, hold
 	end
-	mergeBlob(self, first, second, target, radius, resultRadius, color, age, tier)
+	mergeBlob(self, first, second, target, radius, resultRadius, color, age, tier, hold)
 end
+-- The merge's whole presentation length (the blob and its hold).
+function LCD.mergeLength(hold) return LCD.MergeDuration + (hold or 0) end
 
 -- Re-raster this frame from its recorded commands with simpler faces.
 -- `bare`: last resort, draw every ball with no face at all (code review 2026-11-13).
 local function replay(self, bare)
 	self.replaying, self.simple = true, true
+	-- Aero Glass over budget: simple faces drop the bounce crescent; bare ones the glint's dot too.
+	AeroShade.setSimple(if bare then 2 else 1)
 	if self.surface then self.surface.scanned=nil end
 	if self.guidePixels then table.clear(self.guidePixels) end
 	buffer.copy(self.pixels, 0, self.background)
@@ -673,15 +735,16 @@ local function replay(self, bare)
 		elseif command.kind == "draw" then
 			local withFace = nil
 			if command.tier and not bare then
-				face.tier, face.expr, face.dx, face.star, face.mark = command.tier, command.expr, command.dx, command.star, command.mark
+				face.tier, face.expr, face.dx, face.star, face.mark, face.twinkle = command.tier, command.expr, command.dx, command.star, command.mark, command.twinkle
 				withFace = face
 			end
 			drawBall(self, command.center, command.rx, command.ry, command.angle, command.color, command.ripple, command.match, withFace)
 		elseif command.kind == "merge" then
-			mergeBlob(self, command.first, command.second, command.target, command.radius, command.resultRadius, command.color, command.age, command.tier)
+			mergeBlob(self, command.first, command.second, command.target, command.radius, command.resultRadius, command.color, command.age, command.tier, command.hold)
 		end
 	end
 	self.replaying, self.simple = false, false
+	AeroShade.setSimple(0)
 end
 LCD.replay = replay
 
