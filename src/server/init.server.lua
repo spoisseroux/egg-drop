@@ -55,6 +55,8 @@ local BoardItems = require(script.BoardItems)
 local roundRecorder = if RunService:IsStudio() then require(script.RoundRecorder) else nil
 -- B2 client-run board (FeatureFlags.DeckClientSim, Studio override ServerStorage.DeckClientSim): lockstep field rounds.
 local ClientSim = require(script.ClientSimHost)
+-- Deck net audit (artifacts/qa-2026-11-26-beta35/DECK-NET-AUDIT.md): Studio /netsim, artificial deck latency.
+local DeckNetSim = require(ReplicatedStorage.Shared.DeckNetSim)
 local PaidRandomPolicy = require(script.PaidRandomPolicy)
 local BookCatalog = require(ReplicatedStorage.Shared.BookCatalog)
 local FeatureFlags = require(ReplicatedStorage.Shared.FeatureFlags)
@@ -1069,6 +1071,16 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.PlayerScaleConfig).command(message) end) end)
 		-- "/den <on|off|clear>": the Play Den switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.DenConfig).command(message) end) end)
+		-- "/netsim <rtt ms> [jitter ms] [loss %]" and "/netsim off" (Studio only): artificial Pocket Deck latency
+		-- (DeckNetSim; deck net audit 2026-11-26). Sets the board folder's DeckNetSim attribute.
+		if RunService:IsStudio() then
+			player.Chatted:Connect(function(message)
+				local value = DeckNetSim.command(message)
+				if value == nil then return end
+				board.folder:SetAttribute(DeckNetSim.Attribute, if value then value else nil)
+				print("[DeckNetSim] " .. (if value then "on: rtt,jitter,loss = " .. value else "off"))
+			end)
+		end
 		-- "/freshsave" and "/freshsave restore": the owner's next join is a brand-new save, or the old one again
 		-- (beta (12) QA T1). One pointer write and a kick; FreshSave refuses unless ProgressKey's gate is open.
 		player.Chatted:Connect(function(message) pcall(function() require(script.FreshSave).command(player, message) end) end)
@@ -1414,7 +1426,7 @@ local function dropRefusal(board,value,now)
 	return "Spawn" -- a ball rests in the spawn space
 end
 
-request.OnServerEvent:Connect(function(player, action, value, sticker)
+local function onBoardRequest(player, action, value, sticker)
 	local board = boards[player]
 	if not board then return end
 	local now = os.clock()
@@ -1693,7 +1705,33 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 		board.lastReset = now
 		reset(board, preset)
 	end
+end
+-- Deck net audit: in Studio, a board folder DeckNetSim ("/netsim <rtt> [jitter] [loss]") holds this player's
+-- board requests (reset, mode, pause, today's-path drops) for one simulated round trip, in order; the
+-- client driver holds its lockstep messages the same way. Live: never (IsStudio), so this is a direct call.
+local requestNetSim = {}
+local requestNetSimOn = RunService:IsStudio()
+request.OnServerEvent:Connect(function(player, action, value, sticker)
+	local link = requestNetSim[player]
+	local board = boards[player]
+	local config = if requestNetSimOn and board then DeckNetSim.parse(board.folder:GetAttribute(DeckNetSim.Attribute)) else nil
+	if not config and not (link and link:size() > 0) then onBoardRequest(player, action, value, sticker); return end
+	if not link then link = DeckNetSim.link(config, 1, player.UserId); requestNetSim[player] = link end
+	link.config = config -- nil (just switched off): no more delay, still behind what it holds
+	link:push(os.clock(), { action = action, value = value, sticker = sticker })
 end)
+if RunService:IsStudio() then
+	RunService.Heartbeat:Connect(function()
+		local now = os.clock()
+		for player, link in pairs(requestNetSim) do
+			for _, item in ipairs(link:due(now) or {}) do
+				local ok, problem = pcall(onBoardRequest, player, item.action, item.value, item.sticker)
+				if not ok then warn("[DeckNetSim] board request failed:", problem) end
+			end
+			if link:size() == 0 and (player.Parent == nil or not link.config) then requestNetSim[player] = nil end
+		end
+	end)
+end
 
 local messages = {
 	NeedNectar = "Earn more Stars in a field run.", NeedStars="Earn more Stars in a field run.", RevisionChanged = "Your progress updated. Refresh your preview.",

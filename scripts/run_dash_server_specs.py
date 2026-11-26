@@ -100,7 +100,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The garden's drift lanterns and seed fluff (GARDEN-PLAY-BRIEF section 4): spots, heights, night, the client.
           "DriftLanterns",
           # Beta (34) QA: the walk feel (eased legs, turns, corners) and the pause's look round (PetWalkBeats).
-          "PetWalk"]
+          "PetWalk",
+          # Beta (35) deck net audit: one deck round through the client path under simulated latency, jitter and loss.
+          "DeckNetFeel"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -108,6 +110,8 @@ STUBS = {
     "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end,weight=function(s)return math.clamp((s-.03)/1.6,0,1)end}",
     "PetFactory": "return{}", "DeckKit": "return{focusable=function(object)return object.ok==true end}", "NotificationRail": "return{}",
     "ConfirmDialog": "return{isOpen=function()return false end}",
+    # The deck net audit's round-end case: RoundEndPresentation's art helpers (observe never draws).
+    "DeckArt": "return{Ink=Color3.new(0,0,0),Amber=Color3.new(1,.7,0),Leaf=Color3.new(0,1,0)}",
     # Garden hour E: PetFace reads HollowClock.lastDaylight (the spec sets it); the real clock needs Lighting. GardenLife
     # and PetMaterials gate on hourOn (no Aero look offline: off; their specs swap it).
     "HollowClock": "return{daylight=function()return 1 end,hourOn=function()return false end}",
@@ -163,7 +167,9 @@ def client_modules():
                     # The garden's drift lanterns.
                     "DriftLanternsClient.lua",
                     # Beta (34): the look round in a walk's pause.
-                    "PetWalkBeats.lua"):
+                    "PetWalkBeats.lua",
+                    # Beta (35) deck net audit: the client-run deck's driver and mirror.
+                    "ClientRoundDriver.lua", "ClientBoardMirror.lua", "RoundEndPresentation.lua", "FieldQuestText.lua", "StarText.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

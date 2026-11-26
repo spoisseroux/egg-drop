@@ -11,9 +11,10 @@ end
 local function freeze(value)
  if type(value)=="table"then for _,v in pairs(value)do freeze(v)end;table.freeze(value)end;return value
 end
-function End.snapshotBalls(board,serial)
+-- list (deck net audit): the parts to read instead of the board's children (the mirror's drawn balls).
+function End.snapshotBalls(board,serial,list)
  local parts={}
- for _,part in ipairs(board:GetChildren())do
+ for _,part in ipairs(list or board:GetChildren())do
   if part:IsA("BasePart")and part:GetAttribute("BoardSerial")==serial and part:GetAttribute("Tier")and part.Transparency<1 then table.insert(parts,part)end
  end
  table.sort(parts,function(a,b)return (a:GetAttribute("EggId")or 0)<(b:GetAttribute("EggId")or 0)end)
@@ -51,16 +52,34 @@ function End:observe()
  local key=tostring(serial)..":"..tostring(sequence)
  if self.key~=key then self:cancel();self.key=key;self.frozen=nil;self.pendingBalls=nil;self.witness=nil end
  local over=b:GetAttribute("RoundOver")==true
+ -- Deck net audit: on a round the client's own host runs, its end opens the end art and the results the
+ -- frame the board ends (options.localEnd); the server's confirmed end replaces it when it arrives.
+ local localEnd=if not over and self.options.localEnd then self.options.localEnd(serial)else nil
+ if not over and localEnd then return self:observeLocal(key,serial,sequence,localEnd)end
  if not over then
+  -- Review: a provisional end the client's host took back (a rollback) leaves no trace, so the real end
+  -- still gets its intro.
+  if self.frozen and self.frozen.provisional then
+   self.seen[key]=nil
+   local at=self.history and table.find(self.history,key);if at then table.remove(self.history,at)end
+  end
   if self.frozen then self:cancel();self.frozen=nil end
   self.pendingBalls=nil
   self.witness=if b:GetAttribute("Mode")=="Board"then key else nil
   return
  end
  if not self.pendingBalls then self.pendingBalls=(self.options.snapshot or End.snapshotBalls)(b,serial)end
- if self.frozen then return self.frozen end
+ if self.frozen and not self.frozen.provisional then return self.frozen end
  local view=if self.options.readView then self.options.readView()else Copy.read(b,self.cache)
- if not End.confirmed(b,view)then return end
+ if not End.confirmed(b,view)then return self.frozen end
+ local early=self.frozen
+ if early then
+  -- The server's end for a round already shown from the client's host: its values stand, no second intro.
+  self.frozen=freeze({resetId=serial,sequence=sequence,objective=clone(view),stage=b:GetAttribute("FieldFinalStage"),
+   success=b:GetAttribute("FieldSuccess"),reason=b:GetAttribute("FieldReason"),balls=clone(early.balls)})
+  self.corrected=(self.corrected or 0)+(if early.success~=self.frozen.success or early.reason~=self.frozen.reason or early.stage~=self.frozen.stage then 1 else 0)
+  return self.frozen
+ end
  self.frozen=freeze({resetId=serial,sequence=sequence,objective=clone(view),stage=b:GetAttribute("FieldFinalStage"),
   success=b:GetAttribute("FieldSuccess"),reason=b:GetAttribute("FieldReason"),balls=clone(self.pendingBalls)})
  local witnessed=self.witness==key and not self.seen[key];self.seen[key]=true
@@ -70,6 +89,23 @@ function End:observe()
  self.active=witnessed and(not self.options.owns or self.options.owns())and not(self.options.reduced and self.options.reduced())
  self.age=if self.active then 0 else End.Duration
  if self.active then self.starts+=1 end
+ return self.frozen
+end
+-- The client host's end (deck net audit): frozen from its outcome and the drawn balls, marked provisional.
+function End:observeLocal(key,serial,sequence,localEnd)
+ if self.frozen then return self.frozen end
+ local view=if self.options.readLocalView then self.options.readLocalView()elseif self.options.readView then self.options.readView()else Copy.read(self.board,self.cache)
+ local balls=if self.options.localBalls then End.snapshotBalls(self.board,serial,self.options.localBalls())else End.snapshotBalls(self.board,serial)
+ self.pendingBalls=balls
+ self.frozen=freeze({resetId=serial,sequence=sequence,objective=clone(view),stage=localEnd.stage,success=localEnd.success,
+  reason=localEnd.reason,balls=clone(balls),provisional=true})
+ local witnessed=self.witness==key and not self.seen[key];self.seen[key]=true
+ self.history=self.history or {};table.insert(self.history,key)
+ if #self.history>32 then self.seen[table.remove(self.history,1)]=nil end
+ self.active=witnessed and(not self.options.owns or self.options.owns())and not(self.options.reduced and self.options.reduced())
+ self.age=if self.active then 0 else End.Duration
+ if self.active then self.starts+=1 end
+ self.localStarts=(self.localStarts or 0)+1
  return self.frozen
 end
 function End:build(target)
