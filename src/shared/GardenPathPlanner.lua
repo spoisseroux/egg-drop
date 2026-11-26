@@ -154,6 +154,11 @@ function Planner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,wet)
  local direct,duration=A.plan(from,to,velocity,speed,minimum,yaw,via,terminal)
  if Walk.pathAllowed(direct,wet)then return direct,duration end
  local function build(targets)
+  -- Beta (34): round a detour's corners in one smooth walk when every leg stays dry (else stop at each, as before).
+  if #targets>1 then
+   local smooth,seconds=A.through(from,targets,velocity,speed,yaw,function(leg)return Walk.pathAllowed({leg},wet)end)
+   if smooth then return smooth,seconds end
+  end
   local path,total={},0;local position,v,heading=from,velocity,yaw
   for _,target in ipairs(targets)do
    if (target-position).Magnitude<1e-4 then continue end

@@ -47,6 +47,8 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "ParkSites", "MultipleParks", "ParkDirector",
          # The Top Lawn's toys x1.25 (ROUND7-LOOK 7): every k = 1 site pinned, the scaled toys, seats and slots.
          "ParkToyScale",
+         # Beta (34) QA: park walks go round the toys (ParkRoute), every leg on every site walked.
+         "ParkRoute",
          # The cliff path / Play Den / terrace top (CLIFF-DEN-ISLAND-SCOPE): the beta's server-start swap and its data.
          "CliffDen",
          # Live growth cuts G1 + G2, ported to the beta (PORT-TO-BETA.md): the Welcome bonus and the first hello (pure
@@ -96,12 +98,14 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The garden's crunchy toys (GARDEN-PLAY-BRIEF 2026-11-26 section 2): spots, budget, switch, timings, the client.
           "CrunchToys",
           # The garden's drift lanterns and seed fluff (GARDEN-PLAY-BRIEF section 4): spots, heights, night, the client.
-          "DriftLanterns"]
+          "DriftLanterns",
+          # Beta (34) QA: the walk feel (eased legs, turns, corners) and the pause's look round (PetWalkBeats).
+          "PetWalk"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
 STUBS = {
-    "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
+    "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end,weight=function(s)return math.clamp((s-.03)/1.6,0,1)end}",
     "PetFactory": "return{}", "DeckKit": "return{focusable=function(object)return object.ok==true end}", "NotificationRail": "return{}",
     "ConfirmDialog": "return{isOpen=function()return false end}",
     # Garden hour E: PetFace reads HollowClock.lastDaylight (the spec sets it); the real clock needs Lighting. GardenLife
@@ -157,7 +161,9 @@ def client_modules():
                     # The garden's crunchy toys.
                     "CrunchToysClient.lua",
                     # The garden's drift lanterns.
-                    "DriftLanternsClient.lua"):
+                    "DriftLanternsClient.lua",
+                    # Beta (34): the look round in a walk's pause.
+                    "PetWalkBeats.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

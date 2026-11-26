@@ -8,18 +8,42 @@ local Follow = {}
 -- feet stop sliding at the cadence cap, and the body bounces twice per cycle, once
 -- per footfall (Ovelle a little less). Above 7 studs a second the bob is 1.5x (a
 -- scamper). Shared by both gait paths.
-Follow.StrideSlow, Follow.StrideFast, Follow.CadenceCap = 1.5, 3.2, 3
-Follow.Bob, Follow.BobOvelle, Follow.ScamperSpeed = .05, .042, 7
+-- Beta (34) QA ("they're floating around ... walking needs to be cuter / more natural"): a baby's walk is short quick
+-- steps with a visible hop on each footfall. The stride (one left and one right step, x the pet's world scale, so
+-- smaller pets step quicker) shortened 1.5 -> 1.25 at a stroll, the cadence cap rose 3 -> 3.5 strides a second, the
+-- footfall hop grew .05 -> .085 (x the pet's scale in GardenPetVisual) and became a bounce (|sin|: quick off the
+-- ground, round at the top) instead of a sway, and the walk reaches full weight at 1.6 studs a second (was 3.5, so a
+-- park stroll at 1.3 drew a third of a gait: the glide).
+Follow.StrideSlow, Follow.StrideFast, Follow.CadenceCap = 1.25, 3.2, 3.5
+Follow.Bob, Follow.BobOvelle, Follow.ScamperSpeed = .085, .07, 7
+Follow.FullGait = 1.6
 function Follow.stride(speed, scale)
 	local t = math.clamp(((speed or 0) - 3) / 6, 0, 1)
 	return (Follow.StrideSlow + (Follow.StrideFast - Follow.StrideSlow) * t) * (scale or 1)
+end
+-- The gait's weight (0 standing, 1 walking) at a travel speed.
+function Follow.weight(speed)
+	local weight = math.clamp(((speed or 0) - .03) / Follow.FullGait, 0, 1)
+	return if weight < .002 then 0 else weight
 end
 function Follow.bob(visual, reduced)
 	if reduced then return 0 end
 	local phase = visual.gaitPhase or 0
 	local amount = if visual.petId == "puddle" then Follow.BobOvelle else Follow.Bob
 	local scamper = if (visual.travelSpeed or 0) > Follow.ScamperSpeed then 1.5 else 1
-	return (1 - math.cos(2 * phase)) * .5 * amount * scamper * (visual.gaitWeight or 0)
+	return math.abs(math.sin(phase)) * amount * scamper * (visual.gaitWeight or 0)
+end
+-- The body's lean into a change of pace (radians, + forward): a little forward as a walk gets going, back as it
+-- settles. `state` keeps the smoothed speed between frames; reduced motion: none.
+Follow.LeanPerAccel, Follow.LeanMax = .035, .09
+function Follow.lean(state, speed, dt, reduced)
+	if reduced or dt <= 0 then state.accelLean = 0;return 0 end
+	local last = state.leanSpeed or speed
+	state.leanSpeed = speed
+	local accel = (speed - last) / dt
+	local target = math.clamp(accel * Follow.LeanPerAccel, -Follow.LeanMax, Follow.LeanMax)
+	state.accelLean = (state.accelLean or 0) + (target - (state.accelLean or 0)) * (1 - math.exp(-8 * dt))
+	return state.accelLean
 end
 
 -- Code review (cliff den): where a pet ground ray starts. Inside the open Play Den it starts under the room's collision
@@ -56,7 +80,8 @@ end
 
 function Follow.rest(visual)
 	visual.gaitPhase,visual.gaitWeight,visual.movementBob=0,0,0
-	visual.travelSpeed=0
+	visual.travelSpeed=0;visual.accelLean=0
+	visual.walkLookYaw,visual.walkLookPitch=0,0
 end
 
 function Follow.step(visual, root, dt, state, reduced)
@@ -101,8 +126,7 @@ function Follow.step(visual, root, dt, state, reduced)
 	else
 		local speed=if dt>0 then traveled/dt else 0
 		state.travelSpeed=(state.travelSpeed or 0)+(speed-(state.travelSpeed or 0))*(1-math.exp(-12*dt))
-		local weight=math.clamp((state.travelSpeed-.025)/3.5,0,1)
-		visual.gaitWeight=if weight<.002 then 0 else weight
+		visual.gaitWeight=Follow.weight(state.travelSpeed)
 		if visual.gaitWeight==0 then visual.gaitPhase=0
 		else
 			-- Distance drives slow steps; fast following never aliases into a tremor.
@@ -111,6 +135,8 @@ function Follow.step(visual, root, dt, state, reduced)
 		end
 		visual.travelSpeed=state.travelSpeed
 	end
+ visual.accelLean=Follow.lean(state,state.travelSpeed or 0,dt,reduced)
+ visual.walkLookYaw,visual.walkLookPitch=0,0
  visual.movementBob=Follow.bob(visual,reduced)
 	local toward=Vector3.new(velocity.X,0,velocity.Z)
 	if toward.Magnitude > 0.05 then
@@ -159,11 +185,15 @@ function Follow.activity(visual,actor,now,dt,state,reduced)
 	else
 		local speed=traveled/math.max(.001,dt)
 		state.travelSpeed=(state.travelSpeed or 0)+(speed-(state.travelSpeed or 0))*(1-math.exp(-12*dt))
-		visual.gaitWeight=math.clamp((state.travelSpeed-.025)/3.5,0,1)
+		visual.gaitWeight=Follow.weight(state.travelSpeed)
 		visual.gaitPhase=if visual.gaitWeight<.002 then 0 else ((visual.gaitPhase or 0)+math.min(traveled/Follow.stride(state.travelSpeed,visual.worldScale),dt*Follow.CadenceCap)*math.pi*2)%(math.pi*2)
 		visual.travelSpeed=state.travelSpeed
 		visual.movementBob=Follow.bob(visual,reduced)
+		visual.accelLean=Follow.lean(state,state.travelSpeed,dt,reduced)
 	end
+	-- A look round (or a sniff) in the pause after a stroll, the same on every screen (PetWalkBeats).
+	visual.walkLookYaw,visual.walkLookPitch=require(script.Parent.PetWalkBeats).sample(sample.action,actor.actionId,
+		if type(actor.startTime)=="number"then sampleTime-actor.startTime else 0,reduced==true or sample.mode=="Focus")
 	state.generation,state.mode=sample.generation,sample.mode
 	visual.gardenFocus=sample.action=="focus"
 	-- Shared-clock age and length of the current action: every player sees the same sit.

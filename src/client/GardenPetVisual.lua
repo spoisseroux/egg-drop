@@ -310,6 +310,8 @@ function Visual:update(dt)
  local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
  if beat then headPitch+=beatPitch;headYaw+=beatYaw;bodyStretch+=beatStretch;eye*=beatEye;if beatMouth then mouth="open"end end
  headYaw+=lookYaw+helloYaw;headPitch-=Sit.HeadUp*sit
+ -- Beta (34): the look round or sniff in the pause after a stroll (PetWalkBeats, set by PetFollow.activity).
+ if not reduced and self.gardenAction=="wanderPause"then headYaw+=self.walkLookYaw or 0;headPitch+=self.walkLookPitch or 0 end
  -- Ears roll about their base anchors and the tail yaws about its anchor (C1).
  local wagBoost=self.wagBoost;if beatWag and beatWag>0 then self.wagBoost=math.max(wagBoost or 0,beatWag)end
  local earL,earR,tailYaw=Motion.appendages(self,expression,dt)
@@ -344,12 +346,15 @@ function Visual:update(dt)
   elseif u>.58 then support=math.sin((u-.58)/.42*math.pi)end
  end
  support*=gait
- local weightX=support*.045*math.min(1,(self.worldScale or .72)/.72)
- local weightRoll=support*math.rad(3)
+ -- Beta (34): the waddle doubled (3 -> 6 degrees of roll onto the standing foot, .045 -> .06 studs across) so a walk
+ -- reads as steps, not a glide; the head rolls back half of it (below) so the face stays steady.
+ local weightX=support*.06*math.min(1,(self.worldScale or .72)/.72)
+ local weightRoll=support*math.rad(6)
  self.weightShift,self.weightRoll=weightX,weightRoll
  local hipAnchor=v(self.definition.anchors.Body)*self.scale
  -- Walk body (B2): lean 4 degrees into travel; sitting lowers 0.22 and leans back 6.
- local lean=math.rad(4)*gait-Sit.Pitch*sit
+ -- Beta (34): and a touch more forward as a walk gets going, back as it settles (PetFollow.lean).
+ local lean=math.rad(4)*gait-Sit.Pitch*sit+(if reduced then 0 else(self.accelLean or 0))
  local upper=root*CFrame.new(weightX,-(self.careBodyLower or 0)-Sit.Lower*self.scale*sit,0)*CFrame.new(hipAnchor)*CFrame.Angles(lean,0,weightRoll+(beatHip or 0))*CFrame.new(-hipAnchor)
  -- A 0.12 s settle squash at half the boop when a walk stops.
  if(self.lastGait or 0)>.3 and gait<.05 and not reduced then self.settleAt=os.clock()end
@@ -364,7 +369,7 @@ function Visual:update(dt)
  headPitch+=math.rad(2)*math.sin(2*(self.gaitPhase or 0)-math.pi*.5)*gait
  local hop=(greet*.11+reactHop*.11-boop*.05+(self.movementBob or 0)+(beatRise or 0))*self.scale
  local headAnchor=v(self.definition.anchors.Head)*self.scale
- local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0)+Sit.side(self)*Sit.HeadTilt*sit)*CFrame.new(-headAnchor)
+ local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt-weightRoll*.5+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0)+Sit.side(self)*Sit.HeadTilt*sit)*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)
  for _,entry in ipairs(self.pieces)do
   local name,channel=entry.name,entry.channel;local part=entry.part
@@ -404,7 +409,8 @@ function Visual:update(dt)
    cf=upper*CFrame.new(0,hop+cooHand+toyReach*.045*self.scale+(self.careHand or 0),toyReach*.105*self.scale)*CFrame.new(anchor)*CFrame.Angles(-fold,0,side*(-fold*.38+step*.18))*CFrame.new(-anchor)*entry.frame
   elseif channel=="FootL"or channel=="FootR"or channel=="Foot"then
    local side=if string.sub(name,-1)=="L"then -1 else 1
-   cf=root*CFrame.new(0,math.max(0,step*side)*.045*self.scale+(self.careFootLift or 0),step*side*.075*self.scale+(self.careFootForward or 0))*Sit.foot(entry.frame,side,sit,self.scale)*entry.frame
+   -- Beta (34): each foot lifts .085 (was .045) and swings .095 (was .075), x the pet's scale: visible little steps.
+   cf=root*CFrame.new(0,math.max(0,step*side)*.085*self.scale+(self.careFootLift or 0),step*side*.095*self.scale+(self.careFootForward or 0))*Sit.foot(entry.frame,side,sit,self.scale)*entry.frame
   end
   local size=entry.size;local hidden=not Charms.isVisible(self,entry)or entry.suppressed==true
   if channel=="Body"then

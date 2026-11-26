@@ -2,6 +2,11 @@
 local Activity = { Version = 1 }
 local function finite(n) return type(n)=="number" and n==n and math.abs(n)<math.huge end
 function Activity.pack(v) return {v.X,v.Y,v.Z} end
+-- Path legs pack their points, velocities and turns to 1e-4 (beta (34): routed park walks carry more legs, and a float
+-- coordinate otherwise encodes as 14 to 17 digits of JSON). The server samples the same packed legs its clients do.
+local function round(n)return math.floor(n*10000+.5)/10000 end
+local function packLeg(v)return {round(v.X),round(v.Y),round(v.Z)}end
+Activity.round=round
 function Activity.vector(v)
     if type(v)~="table" or not finite(v[1]) or not finite(v[2]) or not finite(v[3]) then return nil end
     if math.abs(v[1])>10000 or math.abs(v[2])>10000 or math.abs(v[3])>10000 then return nil end
@@ -32,20 +37,48 @@ function Activity.leg(from,to,v0,v1,speed,minimum,yaw)
     if (3*delta/duration-combined).Magnitude>speed+.0001 then return nil end
     local heading=if delta.Magnitude>.02 then math.atan2(delta.X,delta.Z)else yaw
     local turn=angle(yaw,heading)
-    return {from=Activity.pack(from),to=Activity.pack(to),v0=Activity.pack(v0),v1=Activity.pack(v1),duration=duration,
-        yaw=yaw,turn=turn,turnDuration=math.max(.12,math.abs(turn)*1.5/12)}
+    -- No turnDuration: only a pivot (built by its caller) turns on its own clock; a moving leg follows its curve.
+    return {from=packLeg(from),to=packLeg(to),v0=packLeg(v0),v1=packLeg(v1),duration=round(duration),
+        yaw=round(yaw),turn=round(turn)}
 end
+-- Walk feel (beta (34) QA: "they're floating around ... walking needs to be more natural"). A leg from a stop to a stop
+-- used to ease over its whole length (a smoothstep: a 10-stud stroll spent five studs speeding up and five slowing
+-- down, a glide). It now gets going in EaseRamp seconds, walks at a steady pace and settles in EaseRamp at the end
+-- (cosine ramps, so no jolt), on the same line in the same time: its average is unchanged and its peak is lower than
+-- the smoothstep's for any leg over 3 * EaseRamp. Legs that pass a corner moving keep their cubic.
+Activity.EaseRamp=.4
+-- 0..1 along a stop-to-stop leg at t (0..1) and its rate (per unit t), ramps of share r (at most .5) at each end.
+local function cruise(t,r)
+    local peak=1/(1-r)
+    if t<=r then return peak*(t*.5-r/(2*math.pi)*math.sin(math.pi*t/r)),peak*(1-math.cos(math.pi*t/r))*.5 end
+    if t>=1-r then
+        local s=1-t
+        return 1-peak*(s*.5-r/(2*math.pi)*math.sin(math.pi*s/r)),peak*(1-math.cos(math.pi*s/r))*.5
+    end
+    return peak*(r*.5+t-r),peak
+end
+Activity.cruise=cruise
 local function legSample(leg,elapsed)
     local duration=leg.duration;local t=math.clamp(elapsed/duration,0,1);local u=1-t
     local a,b=Activity.vector(leg.from),Activity.vector(leg.to)
     local v0,v1=Activity.vector(leg.v0),Activity.vector(leg.v1)
     local delta=b-a
+    if not leg.pivot and Activity.EaseRamp>0 and v0.Magnitude<1e-4 and v1.Magnitude<1e-4 and delta.Magnitude>.01 then
+        local share,rate=cruise(t,math.min(.5,Activity.EaseRamp/duration))
+        local velocity=if elapsed>=duration or elapsed<=0 then ZERO else delta*(rate/duration)
+        local heading=math.atan2(delta.X,delta.Z)
+        if Vector2.new(delta.X,delta.Z).Magnitude<=.00001 then heading=leg.yaw end
+        local align=math.clamp(elapsed/.12,0,1)
+        return a+delta*share,velocity,leg.yaw+angle(leg.yaw,heading)*align*align*(3-2*align)
+    end
     -- Evaluate in local offsets. Subtracting world-space Bezier controls loses
     -- velocity precision in Roblox float32 Vector3s hundreds of studs out.
     local position=a+v0*(duration*u*u*t)+(delta-v1*duration/3)*(3*u*t*t)+delta*(t*t*t)
     local velocity=if elapsed>=duration then v1 else v0*(u*u-2*u*t)+v1*(t*t-2*u*t)+delta*(6*u*t/duration)
-    local turn=math.clamp(elapsed/leg.turnDuration,0,1)
-    if leg.pivot then return position,velocity,leg.yaw+leg.turn*turn*turn*(3-2*turn)end
+    if leg.pivot then
+        local turn=math.clamp(elapsed/(leg.turnDuration or duration),0,1)
+        return position,velocity,leg.yaw+leg.turn*turn*turn*(3-2*turn)
+    end
     -- Heading follows the actual curve, including an incoming/outgoing tangent.
     -- At a stopped endpoint use its limiting tangent, then retain that heading.
     local tangent=velocity
@@ -64,7 +97,7 @@ function Activity.plan(from,to,velocity,speed,minimum,yaw,via,terminalVelocity)
         if velocity.Magnitude>.001 or Vector2.new(delta.X,delta.Z).Magnitude<.001 then return end
         local heading=math.atan2(delta.X,delta.Z);local turn=angle(yaw,heading)
         if math.abs(turn)<.12 then return end
-        local duration=math.max(.12,math.abs(turn)*1.5/12)
+        local duration=Activity.turnSeconds(turn)
         table.insert(path,{from=Activity.pack(from),to=Activity.pack(from),v0=Activity.pack(ZERO),v1=Activity.pack(ZERO),duration=duration,
             yaw=yaw,turn=turn,turnDuration=duration,pivot=true})
         total+=duration;yaw+=turn
@@ -126,6 +159,81 @@ function Activity.plan(from,to,velocity,speed,minimum,yaw,via,terminalVelocity)
     end
     return path,total
 end
+-- A walk through waypoints without stopping at each corner (beta (34): park routes round the toys). Interior points are
+-- passed at a speed that falls with the turn there (a hairpin stops), along the bisector of the two stretches
+-- (Catmull-Rom), so the heading follows one smooth curve. From rest it first turns on the spot toward the first point,
+-- as the plain planner does. `accept(leg, index, count)` may veto a leg (a caller's keep-out); the corners at its ends
+-- slow and it is tried again. Returns path, seconds; nil when no smooth walk fits (the caller stops at each corner).
+-- Each stretch is timed for a steady pace, so a walk round a corner is about as quick as the plain planner's straight
+-- walk (whose rest-to-rest legs average a third of `speed`).
+Activity.ThroughPace=.4 -- the cruise of a through walk, of `speed`
+Activity.CornerKeep=1   -- the share of that cruise kept through a straight-on corner (it falls with the turn)
+function Activity.through(from,points,velocity,speed,yaw,accept)
+    velocity=velocity or ZERO;yaw=yaw or 0
+    local n=#points
+    if n==0 then return nil end
+    local pace=math.max(.1,speed*Activity.ThroughPace)
+    local corner={}
+    for i=1,n-1 do
+        local a=points[i]-(if i==1 then from else points[i-1])
+        local b=points[i+1]-points[i]
+        local ha,hb=Vector2.new(a.X,a.Z),Vector2.new(b.X,b.Z)
+        corner[i]=ZERO
+        if ha.Magnitude>.05 and hb.Magnitude>.05 then
+            local keep=math.sqrt(math.clamp((ha.Unit:Dot(hb.Unit)+1)*.5,0,1))
+            local direction=a.Unit+b.Unit
+            if keep>=.2 and direction.Magnitude>.05 then
+                -- Never so fast into a short stretch that the curve overshoots it.
+                local room=math.min(a.Magnitude,b.Magnitude)
+                corner[i]=direction.Unit*math.min(pace*Activity.CornerKeep*keep,room*1.2)
+            end
+        end
+    end
+    for _=1,5 do
+        local path,total={},0
+        local position,v,heading=from,velocity,yaw
+        local failed=nil
+        if v.Magnitude<=.001 then
+            v=ZERO
+            local delta=points[1]-from
+            if Vector2.new(delta.X,delta.Z).Magnitude>.001 then
+                local turn=angle(heading,math.atan2(delta.X,delta.Z))
+                if math.abs(turn)>=.12 then
+                    local seconds=Activity.turnSeconds(turn)
+                    table.insert(path,{from=Activity.pack(from),to=Activity.pack(from),v0=Activity.pack(ZERO),v1=Activity.pack(ZERO),duration=seconds,
+                        yaw=heading,turn=turn,turnDuration=seconds,pivot=true})
+                    total+=seconds;heading+=turn
+                end
+            end
+        end
+        for i=1,n do
+            local v1=if i<n then corner[i]else ZERO
+            -- The stretch's time at a steady average: the cruise between two moving ends, a third of `speed` between
+            -- two stops (the plain planner's), between the two from or to a stop.
+            local moving=(if v.Magnitude>.01 then 1 else 0)+(if v1.Magnitude>.01 then 1 else 0)
+            local average=speed*(if moving==2 then Activity.ThroughPace elseif moving==1 then(Activity.ThroughPace+1/3)*.5 else 1/3)
+            local length=(points[i]-position).Magnitude
+            local leg=Activity.leg(position,points[i],v,v1,math.max(speed,v.Magnitude,v1.Magnitude),length/math.max(.1,average),heading)
+            if not leg or(accept and not accept(leg,i,n))then failed=i;break end
+            table.insert(path,leg);total+=leg.duration
+            position,v,heading=points[i],v1,select(3,legSample(leg,leg.duration))
+        end
+        if not failed then return path,total end
+        -- Slow the corners at both ends of the vetoed leg; an incoming velocity that cannot fit is the caller's to brake.
+        if failed==1 and velocity.Magnitude>.001 and(n==1 or corner[1].Magnitude<.01)then return nil end
+        for _,i in ipairs({failed-1,failed})do
+            if corner[i]then corner[i]=if corner[i].Magnitude<.3 then ZERO else corner[i]*.4 end
+        end
+    end
+    return nil
+end
+-- A turn on the spot: how long it takes (beta (34): TurnRate radians a second, was 8, so a pet looks round and turns
+-- before it sets off instead of snapping; an about-turn takes .52 s, a quarter turn .26 s).
+Activity.TurnRate=6
+Activity.TurnMin=.18
+function Activity.turnSeconds(turn)return math.max(Activity.TurnMin,math.abs(turn)/Activity.TurnRate)end
+-- A leg's position, velocity and heading at `elapsed` seconds into it (routes and keep-out checks).
+function Activity.legPose(leg,elapsed)return legSample(leg,elapsed)end
 function Activity.sample(actor,now)
     if type(actor)~="table" or not finite(now) then return nil end
     local from,to=Activity.vector(actor.from),Activity.vector(actor.to)

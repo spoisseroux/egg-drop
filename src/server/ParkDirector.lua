@@ -16,6 +16,9 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local A=require(Shared.GardenActivity)
 local DefaultPark=require(Shared.ParkLayout)
+local GardenLayout=require(Shared.GardenLayout)
+-- Beta (34) QA: every park walk goes round the toys (ParkRoute), not through the slide on the way back to the ladder.
+local Route=require(Shared.ParkRoute)
 local function build(Park)
 local Catalog=require(Shared.ParkActivities)
 local Director={};Director.__index=Director
@@ -62,6 +65,21 @@ function Director.new(garden,options)
 	return self
 end
 function Director:clock()return(self.options.now or self.garden.options.now)()end
+
+-- A walk inside the park: round every toy, bench and dressing stone (ParkRoute) from a point on the park's floor near
+-- it; else (a pet far outside, another floor, no way round, or wet ground on the lawn) the garden's own planner.
+function Director:walk(from,to,velocity,speed,yaw)
+	if math.abs(from.Y-to.Y)<1.5 and Park.inside(from,6)then
+		local path,seconds,routed=Route.plan(Park,from,to,velocity,speed,yaw)
+		-- The Top Lawn stands over the lawn's wet list (its planner checks the terrace with none).
+		local check=if Park.Terrace then nil else self.garden.options.validToyPath
+		if routed and(not check or check(path))then return path,seconds end
+	end
+	local planner=self.garden.options.planPath or A.plan
+	return planner(from,to,velocity,speed,0,yaw,nil,ZERO)
+end
+-- Whether a ground point is off every park footprint (with the route margin): where a pet may be sent to stand.
+function Director.standable(position)return #Route.at(Park,position,true)==0 end
 function Director:busy(actor)return self.options.busy~=nil and self.options.busy(actor.ownerId)==true end
 
 -- Idle in the park and free to take a slot now.
@@ -111,13 +129,12 @@ function Director:start(activity,slotIds,actors,now)
 	local occupied,equipment=self:occupancy()
 	if activity.exclusive and equipment[activity.equipment]then return false,"EquipmentBusy"end
 	for _,id in ipairs(slotIds)do if occupied[id]then return false,"SlotBusy:"..id end end
-	local planner=self.garden.options.planPath or A.plan
 	local plans,arrive={},now
 	for index,actor in ipairs(actors)do
 		local slot=Park.Slots[slotIds[index]]
 		local sample=A.sample(actor,now)
 		local from=self.garden:position(actor,now)
-		local path,seconds=planner(from,slot.approach,sample and sample.velocity or ZERO,Park.WalkSpeed,0,sample and sample.yaw or actor.yaw or 0,nil,ZERO)
+		local path,seconds=self:walk(from,slot.approach,sample and sample.velocity or ZERO,Park.WalkSpeed,sample and sample.yaw or actor.yaw or 0)
 		local last=path and path[#path]
 		if not last or(A.vector(last.to)-slot.approach).Magnitude>=.1 then return false,"PathIncomplete"end
 		for _,leg in ipairs(path)do if leg.safetyStop then return false,"PathUnsafe"end end
@@ -137,12 +154,8 @@ function Director:start(activity,slotIds,actors,now)
 	self.sessions[session.id]=session
 	for index,actor in ipairs(actors)do
 		local plan=plans[index]
-		local wait=startTime-(now+plan.seconds)
-		if wait>.0001 then
-			local last=plan.path[#plan.path]
-			local hold=assert(A.leg(plan.slot.approach,plan.slot.approach,ZERO,ZERO,Park.WalkSpeed,wait,last.yaw+last.turn))
-			hold.duration=wait;table.insert(plan.path,hold)
-		end
+		-- The wait at the spot until the play starts needs no hold leg (beta (34): one leg fewer in every snapshot): a
+		-- path sampled past its end stands still at its last point, facing the way it arrived.
 		self.garden:transition(actor,"investigate",plan.slot.approach,0,Catalog.ApproachAction,nil,nil,{path=plan.path,duration=startTime-now})
 		table.insert(session.ownerIds,actor.ownerId)
 		session.slots[actor.ownerId]=plan.slot.id
@@ -158,16 +171,15 @@ end
 -- The play path: an optional pivot to the slot heading, then a hold at the phase point or a timed
 -- move when the phase point changes (down the slide chute). Consecutive holds at one point merge
 -- into one leg (phases come from the park block, not the path), which keeps the snapshot small.
-function Director:play(actor,session,now)
-	local activity=Catalog.ById[session.activity]
-	local slot=Park.Slots[session.slots[actor.ownerId]]
-	local sample=A.sample(actor,now)
+-- A move back to the slot's approach (the slide's walk from the chute's end to the ladder) is a walk: routed round the
+-- toys (the slide itself first) and fitted into its phase, ending turned to the slot's heading.
+-- Pure (the slot, the activity, the pet's heading at the start): returns the path, its end point and heading.
+function Director.playPath(slot,activity,yaw)
 	local position=slot.approach
-	local yaw=sample and sample.yaw or actor.yaw or 0
 	local path,spent={},0
 	local turn=angle(yaw,slot.yaw)
 	if math.abs(turn)>=.12 then
-		spent=math.min(activity.phases[1].duration*.5,math.max(.12,math.abs(turn)*1.5/12))
+		spent=math.min(activity.phases[1].duration*.5,A.turnSeconds(turn))
 		table.insert(path,{from=A.pack(position),to=A.pack(position),v0={0,0,0},v1={0,0,0},duration=spent,yaw=yaw,turn=turn,turnDuration=spent,pivot=true})
 	end
 	yaw=slot.yaw
@@ -176,7 +188,12 @@ function Director:play(actor,session,now)
 		local duration=if index==1 then step.duration-spent else step.duration
 		local delta=target-position
 		local previous=path[#path]
-		if delta.Magnitude>.01 then
+		if delta.Magnitude>.01 and target==slot.approach then
+			local walk=Route.timed(Park,position,target,Park.WalkSpeed,duration,yaw,nil,slot.yaw)
+			for _,leg in ipairs(walk)do table.insert(path,leg)end
+			local last=path[#path]
+			yaw=last.yaw+last.turn
+		elseif delta.Magnitude>.01 then
 			local leg=assert(A.leg(position,target,ZERO,ZERO,math.max(Park.WalkSpeed,3*delta.Magnitude/duration+.01),duration,yaw))
 			leg.duration=duration;table.insert(path,leg)
 			yaw=math.atan2(delta.X,delta.Z)
@@ -188,6 +205,13 @@ function Director:play(actor,session,now)
 		end
 		position=target
 	end
+	return path,position,yaw
+end
+function Director:play(actor,session,now)
+	local activity=Catalog.ById[session.activity]
+	local slot=Park.Slots[session.slots[actor.ownerId]]
+	local sample=A.sample(actor,now)
+	local path,position=Director.playPath(slot,activity,sample and sample.yaw or actor.yaw or 0)
 	self.garden:transition(actor,"play",position,0,activity.action,nil,nil,{path=path,duration=session.endTime-now})
 	-- The play path is anchored to the session clock, not to this (up to 0.5 s late) tick.
 	actor.startTime,actor.endTime=session.startTime,session.endTime
@@ -293,6 +317,11 @@ function Director.entryPoint(ownerPosition)
 	else
 		target=Park.toward(ownerPosition,.75)
 	end
+	if Park.clearOfKeepout(target,.3)and Director.standable(target)then return target end
+	for _,scale in ipairs({.6,.45,.3,.15})do
+		local candidate=Park.toward(ownerPosition,scale)
+		if Park.clearOfKeepout(candidate,.3)and Director.standable(candidate)then return candidate end
+	end
 	if Park.clearOfKeepout(target,.3)then return target end
 	for _,scale in ipairs({.6,.45,.3,.15})do
 		local candidate=Park.toward(ownerPosition,scale)
@@ -309,8 +338,7 @@ function Director:enter(actor,input,now)
 	local velocity=sample and sample.velocity or ZERO
 	local yaw=sample and sample.yaw or actor.yaw or 0
 	local speed=math.clamp(horizontal(from,target)/2,Park.WalkSpeed,Director.EnterSpeed)
-	local planner=self.garden.options.planPath or A.plan
-	local path,seconds=planner(from,target,velocity,speed,0,yaw,nil,ZERO)
+	local path,seconds=self:walk(from,target,velocity,speed,yaw)
 	local last=path and path[#path]
 	local valid=last~=nil and(A.vector(last.to)-target).Magnitude<.1
 	if valid then for _,leg in ipairs(path)do if leg.safetyStop then valid=false;break end end end
@@ -357,13 +385,16 @@ function Director:mingle(actor,input,now)
 			local radius=3+self.random()*5
 			local x,z=position.X+math.cos(heading)*radius,position.Z+math.sin(heading)*radius
 			local candidate=Vector3.new(x,Park.ground(x,z),z)
-			if Park.inside(candidate,-2)and Park.clearOfKeepout(candidate,.5)then
+			if Park.inside(candidate,-2)and Park.clearOfKeepout(candidate,.5)and Director.standable(candidate)then
 				if self.garden.options.validWander then candidate=self.garden.options.validWander(input,candidate,position)end
 				if typeof(candidate)=="Vector3"then target=candidate;break end
 			end
 		end
 	end
-	if target then self.garden:transition(actor,"investigate",target,0,"wander")
+	if target then
+		local sample=A.sample(actor,now)
+		local path,seconds=self:walk(position,target,sample and sample.velocity or ZERO,GardenLayout.StrollSpeed,sample and sample.yaw or actor.yaw or 0)
+		self.garden:transition(actor,"investigate",target,0,"wander",nil,nil,{path=path,duration=seconds})
 	elseif actor.action~="wanderPause"or now>=actor.endTime then self.garden:transition(actor,"rest",position,1.5,"wanderPause")end
 end
 
@@ -552,7 +583,12 @@ function Director:greetings(now,ordered,taken)
 			local a,b=idle[i],idle[j]
 			local key=pairKey(a.ownerId,b.ownerId)
 			if self.cooldowns[key]then continue end
-			if horizontal(self.garden:position(a,now),self.garden:position(b,now))>Director.GreetReach then continue end
+			local pa,pb=self.garden:position(a,now),self.garden:position(b,now)
+			if horizontal(pa,pb)>Director.GreetReach then continue end
+			-- Beta (34): a greeting walk is a straight one, so only pets with a clear line to their meeting spots meet.
+			local centre=(pa+pb)*.5
+			local spotA,spotB=centre+Vector3.new(-.9,0,0),centre+Vector3.new(.9,0,0)
+			if not(Director.standable(spotA)and Director.standable(spotB)and Route.segmentClear(Park,pa,spotA)and Route.segmentClear(Park,pb,spotB))then continue end
 			self.garden:greetPair(a,b,now)
 			self.cooldowns[key]=now+Director.GreetCooldown
 			return
@@ -580,6 +616,11 @@ local siteClasses={[DefaultPark.Id]=Director}
 local function classFor(site)
 	if not siteClasses[site.Id]then siteClasses[site.Id]=build(site)end
 	return siteClasses[site.Id]
+end
+-- The director class of a layout built from any site spec (specs: ParkRoute.spec walks each site's play paths).
+function Director.forSite(site)
+	if site==DefaultPark then return Director end
+	return build(site)
 end
 local singleSchedule,singleTick,singleRelease,singleSnapshot=Director.schedule,Director.tick,Director.release,Director.snapshot
 -- Facade is the arrival director for legacy fixtures/tools, while all production routing

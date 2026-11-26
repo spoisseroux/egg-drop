@@ -161,10 +161,11 @@ return function(client, parent)
 		assert(peaks == 2, "bounces per stride " .. peaks)
 		assert(Follow.bob({ gaitPhase = math.pi / 2, gaitWeight = 1, petId = "pip", travelSpeed = 8 }, false) > Follow.Bob * 1.4, "no scamper")
 		assert(Follow.bob({ gaitPhase = 1, gaitWeight = 1 }, true) == 0)
-		assert(Follow.stride(3, 1) == 1.5 and Follow.stride(9, 1) == 3.2 and Follow.stride(20, .5) == 1.6)
+		-- Beta (34): baby steps, 1.25 a stride at a stroll (was 1.5), up to 3.5 strides a second (was 3).
+		assert(Follow.stride(3, 1) == 1.25 and Follow.stride(9, 1) == 3.2 and Follow.stride(20, .5) == 1.6)
 		for _, speed in ipairs({ 3, 4, 9 }) do
 			local cadence = math.min(speed / Follow.stride(speed, .72), Follow.CadenceCap)
-			assert(cadence >= 2 and cadence <= 3, "cadence " .. cadence .. " at " .. speed)
+			assert(cadence >= 2 and cadence <= Follow.CadenceCap, "cadence " .. cadence .. " at " .. speed)
 		end
 	end)
 
