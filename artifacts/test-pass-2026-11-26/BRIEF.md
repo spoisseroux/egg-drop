@@ -1,6 +1,6 @@
 # What changed since your beta (25) notes
 
-Covers beta (26) to beta (31), all on Pocket Pals Beta. **Live has not been touched.**
+Covers beta (26) to beta (31) (v92, runtime ae3b0e27), all on Pocket Pals Beta. **Live has not been touched.**
 Your test doc is `TEST-PASS.md`, in this folder.
 
 ## Your beta (25) notes, all six done

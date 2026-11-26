@@ -1,5 +1,7 @@
 # Test pass: beta (31), 2026-11-26
 
+Build: beta (31), place version v92, runtime ae3b0e27.
+
 Place: **Pocket Pals Beta** (the private beta). Live is not touched.
 Do the whole pass twice: once on a **phone**, once on **PC**.
 Mark each row **OK** or write what went wrong (a screenshot helps).
