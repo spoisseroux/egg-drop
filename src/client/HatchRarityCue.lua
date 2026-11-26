@@ -77,6 +77,35 @@ Policy.Stage=table.freeze({
  Uncommon=stage("#58C92F","#16994A","#9BE23A","#F6FFC4","#0B6B36","stripes",18,8,6,.5,.35,16,.04,2,.06),
  Rare=stage("#E845C8","#6B3BEA","#FF79D9","#FFE9F8","#3B1FA0","diamonds",12,20,10,1,.60,48,.04,2,.10),
 })
+-- AERO-JUICE-BRIEF (beta 36) section 3: the same tiers in the Sky / Meadow / Aurora colours (HatchAero), behind the
+-- Alive `aerohatch` switch. Only colours change: every number (confetti, bloom, camera, spin) is the tier's own above,
+-- so the hatch clock and the pure samples are the same either way. Stage and Look above stay the old look (switch off).
+local Aero=require(Shared.HatchAero)
+Policy.Aero=Aero
+local function aeroStage(tier)
+ local p=Aero.palette(tier);local out=table.clone(Policy.Stage[tier])
+ out.core,out.edge,out.ray,out.floor,out.deep,out.pattern=p.core,p.edge,p.ray,p.floor,p.deep,p.art
+ out.aero=p
+ return table.freeze(out)
+end
+local function aeroLook(tier)
+ local p=Aero.palette(tier);local out=table.clone(Policy.Look[tier])
+ out.color,out.second,out.back,out.backDeep=p.look,p.lookSecond,p.back,p.backDeep
+ out.aero=p
+ return table.freeze(out)
+end
+Policy.AeroStage=table.freeze({Common=aeroStage("Common"),Neutral=aeroStage("Neutral"),Uncommon=aeroStage("Uncommon"),Rare=aeroStage("Rare")})
+Policy.AeroLook=table.freeze({Common=aeroLook("Common"),Neutral=aeroLook("Neutral"),Uncommon=aeroLook("Uncommon"),Rare=aeroLook("Rare")})
+-- The look a card draws: `aero` is the switch as the card read it when it opened (a flip mid-card waits for the next one).
+function Policy.stageLook(tier,aero)
+ local set=if aero then Policy.AeroStage else Policy.Stage
+ return set[tier or ""]or set.Neutral
+end
+function Policy.lookOf(tier,aero)
+ local set=if aero then Policy.AeroLook else Policy.Look
+ return set[tier or ""]or set.Neutral
+end
+function Policy.aeroOn()return Aero.on()end
 -- The tier's sound on the hatch clock: one event, `pre` (it plays before the receipt
 -- unlocks), at the burst less the sting's lead-in. Played at speed 1 always: the stings
 -- are tuned as one family. The hatch body is quiet (about -29 LUFS) until the shell opens,

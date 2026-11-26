@@ -42,6 +42,7 @@ local C=require(script.Parent.CelebrationKit)
 local Rarity=require(script.Parent.HatchRarityCue)
 local Copy=require(game:GetService("ReplicatedStorage").Shared.UICopy)
 local Look=require(game:GetService("ReplicatedStorage").Shared.LookEggCatalog)
+local Aero=require(game:GetService("ReplicatedStorage").Shared.HatchAero)
 local Stage={};Stage.__index=Stage
 
 -- Art: two atlases built by scripts/build_hatch_v2_art.py (white, tinted in game).
@@ -445,9 +446,14 @@ end
 -- The shell and the stage well as one piece (the pet reveal draws the same backdrop).
 -- Returns {shell, checkerTile, shafts, well, clip, core, raysImage, pattern, floorLight,
 -- floorShadow, bloom, seat, waitEgg, rim, rimStroke, rimRainbow, ...}.
-function Stage.backdrop(root,z,tier,kind)
+-- `aero` (AERO-JUICE-BRIEF 3, the Alive `aerohatch` switch as the card read it): the Sky / Meadow / Aurora well, with
+-- soft shafts from the top centre instead of the sunburst, a lens glint, a grass horizon (Rare: a glass floor), rising
+-- bubbles rimmed in the egg type's accent, Uncommon's dew glints and Rare's sparkles (b.aero; Stage.placeAero and
+-- Stage.paintAero draw them). Off: exactly the old backdrop.
+function Stage.backdrop(root,z,tier,kind,aero)
  tier=if Rarity.Look[tier or ""]then tier else "Neutral"
- local look,st=Rarity.Look[tier],Rarity.Stage[tier]
+ aero=aero==true
+ local look,st=Rarity.lookOf(tier,aero),Rarity.stageLook(tier,aero)
  local b={}
  b.shell=frame(root,"Shell",z+1,{Size=UDim2.fromScale(1,1),BackgroundTransparency=0})
  Kit.paint(b.shell,"BackgroundColor3","shell")
@@ -468,17 +474,57 @@ function Stage.backdrop(root,z,tier,kind)
  b.wellStroke=node("UIStroke",b.well,{Color=Stage.Ink,Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
  b.clip=frame(b.well,"Clip",z+3,{ClipsDescendants=true})
  b.core=image(b.clip,"Core","glow",z+3,{ImageColor3=st.core,Position=UDim2.fromScale(.5,.46)})
- b.raysImage=image(b.clip,"Rays","sunburst",z+3,{ImageColor3=st.ray,ImageTransparency=.42,Position=UDim2.fromScale(.5,.5)})
- b.pattern=image(b.clip,"EdgePattern",st.pattern,z+3,{ImageColor3=Color3.new(1,1,1),ImageTransparency=.8,Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(1,1)})
+ local p=if aero then st.aero else nil
+ local R=Aero.Rays
+ if p then
+  -- Aero: soft shafts from the top centre (the atlas' twelve, two layers half a step apart), not a sunburst.
+  b.raysImage=image(b.clip,"Rays","shafts",z+3,{ImageColor3=p.ray,ImageTransparency=1-R.alpha,Position=UDim2.fromScale(.5,0)})
+ else
+  b.raysImage=image(b.clip,"Rays","sunburst",z+3,{ImageColor3=st.ray,ImageTransparency=.42,Position=UDim2.fromScale(.5,.5)})
+ end
+ local a=nil
+ if p then
+  a={palette=p,tier=tier,kind=kind,bubbles={},sparkles={},state={},turn=0}
+  a.raysAlt=image(b.clip,"RaysAlt","shafts",z+3,{ImageColor3=p.ray,ImageTransparency=1-R.alpha,Position=UDim2.fromScale(.5,0)})
+  b.aeroParts=a
+ end
+ b.pattern=image(b.clip,"EdgePattern",st.pattern,z+3,{ImageColor3=Color3.new(1,1,1),ImageTransparency=if p then 1-p.patternAlpha else .8,Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(1,1)})
  for index,rotation in ipairs({0,90})do
   local v=frame(b.clip,"Vignette"..index,z+3,{Size=UDim2.fromScale(1,1),BackgroundTransparency=0,BackgroundColor3=st.deep})
   node("UIGradient",v,{Rotation=rotation,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.7),NumberSequenceKeypoint.new(.22,1),
    NumberSequenceKeypoint.new(.78,1),NumberSequenceKeypoint.new(1,.7)})})
  end
+ if a then
+  -- The glossy grass horizon (Rare: a glass floor): the top of a big circle, a white highlight along its crest. Drawn
+  -- under the floor light and the shadow, so the egg and the pet stand on it.
+  local G=Aero.Grass
+  a.horizon=frame(b.clip,"Horizon",z+3,{AnchorPoint=Vector2.new(.5,0),BackgroundTransparency=0,BackgroundColor3=Color3.new(1,1,1)})
+  node("UICorner",a.horizon,{CornerRadius=UDim.new(.5,0)})
+  a.horizonGradient=node("UIGradient",a.horizon,{Rotation=90})
+  a.horizonStroke=node("UIStroke",a.horizon,{Color=Color3.new(1,1,1),Thickness=1,ApplyStrokeMode=Enum.ApplyStrokeMode.Border,
+   Transparency=if p.horizon=="glass"then G.glassHighlight else G.highlight})
+ end
  b.floorLight=image(b.clip,"FloorLight","glow",z+3,{ImageColor3=st.floor,ImageTransparency=.25})
  -- Spencer 2026-11-20: the white floor ring read as a leftover; a soft warm drop shadow on the
- -- stage floor instead (the glow sprite, tinted a warm cocoa, never an outline).
- b.floorShadow=image(b.clip,"FloorShadow","glow",z+3,{ImageColor3=Stage.Shadow,ImageTransparency=Stage.ShadowAlpha})
+ -- stage floor instead (the glow sprite, tinted a warm cocoa, never an outline). Aero: a deep leaf on the grass.
+ b.floorShadow=image(b.clip,"FloorShadow","glow",z+3,{ImageColor3=if p then p.shadow else Stage.Shadow,ImageTransparency=Stage.ShadowAlpha})
+ if a then
+  -- One warm lens glint at the shafts' source; Uncommon's dew glints and Rare's sparkles; the bubbles.
+  a.glint=image(b.clip,"LensGlint","glow",z+3,{ImageColor3=Aero.Glint.color,ImageTransparency=1-Aero.Glint.alpha})
+  for index=1,p.glints+p.sparkles do
+   a.sparkles[index]=image(b.clip,(if p.glints>0 then "Dew"else "Sparkle")..index,"sparkle",z+3,{ImageColor3=Color3.new(1,1,1),ImageTransparency=1})
+  end
+  local B=Aero.Bubble
+  for index=1,p.bubbles do
+   local rim=Aero.accent(kind,index)or Color3.new(1,1,1)
+   local bubble=frame(b.clip,"Bubble"..index,z+3,{AnchorPoint=Vector2.new(.5,.5),BackgroundTransparency=1,BackgroundColor3=Color3.new(1,1,1),Visible=false})
+   node("UICorner",bubble,{CornerRadius=UDim.new(.5,0)})
+   local stroke=node("UIStroke",bubble,{Color=rim,Thickness=B.rim,ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Transparency=1})
+   local spec=frame(bubble,"Spec",z+3,{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.3,.3),BackgroundTransparency=1,BackgroundColor3=Color3.new(1,1,1)})
+   node("UICorner",spec,{CornerRadius=UDim.new(.5,0)})
+   a.bubbles[index]={node=bubble,stroke=stroke,spec=spec}
+  end
+ end
  b.bloom=image(b.clip,"Bloom","glow",z+4,{ImageColor3=Color3.new(1,1,1),ImageTransparency=1})
  -- The scene seat (the 3D egg and result), and the 2D egg that waits while it loads.
  b.seat=frame(root,"NativeSceneSeat",z+4,{AnchorPoint=Vector2.new(.5,.5)})
@@ -490,10 +536,90 @@ function Stage.backdrop(root,z,tier,kind)
  b.rimRainbow=node("UIGradient",b.rimStroke,{Color=rainbowSequence(),Enabled=false})
  return b
 end
+-- Aero: lay the shafts, the glint, the horizon and the sparkles out for a clip `w` x `h` px whose floor (where the egg
+-- or the pet stands) is at `floorShare` of its height. Only when one of them changed (the Rare well punches open).
+function Stage.placeAero(b,w,h,floorShare,scale)
+ local a=b.aeroParts;if not a then return end
+ w,h,scale=math.max(1,math.floor(w+.5)),math.max(1,math.floor(h+.5)),scale or 1
+ local key=string.format("%d %d %.3f %.3f",w,h,floorShare or .78,scale)
+ if a.key==key then return end
+ a.key=key;a.w,a.h,a.scale=w,h,scale
+ local R,G,p=Aero.Rays,Aero.Grass,a.palette
+ local d=math.floor(math.max(h*R.span,w*1.3)+.5)
+ for _,rays in ipairs({b.raysImage,a.raysAlt})do rays.Position=UDim2.new(.5,0,0,math.floor(h*R.originY));rays.Size=UDim2.fromOffset(d,d)end
+ local g=math.floor(Aero.Glint.size*2*scale+.5) -- the sprite's soft edge: its bright middle is about Glint.size across
+ a.glint.Position=UDim2.new(.5,0,0,math.floor(h*Aero.Glint.y));a.glint.Size=UDim2.fromOffset(g,g)
+ local hz=Aero.horizon(floorShare,w,h)
+ local shows=math.min(.99,hz.shows)
+ a.crest=hz.crest
+ a.horizon.Position=UDim2.new(.5,0,0,math.floor(hz.y+.5));a.horizon.Size=UDim2.fromOffset(math.floor(hz.diameter),math.floor(hz.diameter))
+ if p.horizon=="glass"then
+  a.horizonGradient.Color=ColorSequence.new(Color3.new(1,1,1))
+  a.horizonGradient.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,G.glassTop),NumberSequenceKeypoint.new(shows,G.glassBottom),NumberSequenceKeypoint.new(1,G.glassBottom)})
+ else
+  a.horizonGradient.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,G.top),ColorSequenceKeypoint.new(shows,G.bottom),ColorSequenceKeypoint.new(1,G.bottom)})
+ end
+ a.horizonStroke.Thickness=math.max(1,math.floor(scale+.5))
+ local glints=p.glints>0
+ a.sparkleSize={}
+ for index,o in ipairs(a.sparkles)do
+  local x,y=Aero.spot(if glints then "glint"else "sparkle",index,#a.sparkles,hz.crest)
+  o.Position=UDim2.fromScale(x,y)
+  a.sparkleSize[index]=math.floor((if glints then 7+4*Aero.hash(index,25)else 11+8*Aero.hash(index,26))*scale+.5)
+ end
+ a.state={}
+end
+-- Aero motion on the stage's own clock: the shafts turn (Uncommon 18, Rare 12 deg/s; `turn` is the stage's integrated
+-- angle), Rare's tint sweeps aqua to pink, the glints and sparkles twinkle, the bubbles rise and pop at the burst.
+-- `burstAge`: seconds since the burst on the hatch clock (nil: no pop, a reopen); after the first sighting the stage's
+-- own clock carries it, so a hatch clock that stops never freezes the bubbles. Reduced Motion: all still. Writes only
+-- what changed (whole pixels, tenths of alpha).
+function Stage.paintAero(b,clock,burstAge,reduced,turn)
+ local a=b.aeroParts;if not a or not a.w then return end
+ local p,B,st=a.palette,Aero.Bubble,a.state
+ local rot=if reduced then 0 else math.floor((turn or 0)*4+.5)/4
+ if st.rot~=rot then st.rot=rot;b.raysImage.Rotation=rot;a.raysAlt.Rotation=rot+Aero.Rays.step end
+ if p.sweep>0 then
+  local c=Aero.raySweep(a.tier,clock,reduced)
+  local key=math.floor(c.R*48)*4096+math.floor(c.G*48)*64+math.floor(c.B*48)
+  if st.sweep~=key then st.sweep=key;b.raysImage.ImageColor3=c;a.raysAlt.ImageColor3=c end
+ end
+ local glints=p.glints>0
+ for index,o in ipairs(a.sparkles)do
+  local level=math.floor(Aero.twinkle(index,clock,reduced)*10+.5)/10
+  local k="s"..index
+  if st[k]~=level then
+   st[k]=level
+   local size=math.max(2,math.floor((a.sparkleSize and a.sparkleSize[index]or 10)*(.55+.45*level)+.5))
+   o.Size=UDim2.fromOffset(size,size);o.ImageTransparency=1-(.2+.7*level)*(if glints then .85 else 1)
+  end
+ end
+ if burstAge~=nil and burstAge>=0 and burstAge<math.huge and not a.burstClock then a.burstClock=clock-burstAge end
+ local age=if a.burstClock then clock-a.burstClock elseif burstAge~=nil and burstAge<0 then burstAge else nil
+ local n=#a.bubbles
+ local spec=math.max(2,math.floor(B.spec*a.scale+.5))
+ for index,bubble in ipairs(a.bubbles)do
+  local x,y,size,alpha=Aero.bubble(index,n,clock,age,a.w,a.h,a.scale,reduced)
+  local shown=x~=nil
+  if bubble.shown~=shown then bubble.shown=shown;bubble.node.Visible=shown end
+  if shown then
+   local px,py,sz=math.floor(x+.5),math.floor(y+.5),math.max(2,math.floor(size+.5))
+   local al=math.floor(alpha*10+.5)/10
+   if bubble.px~=px or bubble.py~=py then bubble.px,bubble.py=px,py;bubble.node.Position=UDim2.fromOffset(px,py)end
+   if bubble.sz~=sz then bubble.sz=sz;bubble.node.Size=UDim2.fromOffset(sz,sz);bubble.spec.Size=UDim2.fromOffset(spec,spec)end
+   if bubble.al~=al then
+    bubble.al=al
+    bubble.node.BackgroundTransparency=1-B.fill*al;bubble.stroke.Transparency=1-B.rimAlpha*al;bubble.spec.BackgroundTransparency=1-B.specAlpha*al
+   end
+  end
+ end
+end
 function Stage.show(parent,options)
  assert(options and options.scene,"HatchItemStage needs the hatch's native scene")
  local tier=if Rarity.Look[options.tier or ""]then options.tier else "Neutral"
- local self=setmetatable({options=options,scene=options.scene,tier=tier,look=Rarity.Look[tier],stageLook=Rarity.Stage[tier],
+ -- AERO-JUICE-BRIEF 3: the switch is read once, as the card opens (options.aero: specs force it).
+ local aero=if options.aero~=nil then options.aero==true else Rarity.aeroOn()
+ local self=setmetatable({options=options,scene=options.scene,tier=tier,aero=aero,look=Rarity.lookOf(tier,aero),stageLook=Rarity.stageLook(tier,aero),
   kind=Stage.resultKind(options.kind or "item",options.result),age=0,lastAge=0,clock=0,openClock=0,connections={},buttons={},watched={},
   pieces={},cannons={},orbit={},checker=0,rays=0,shaftTurn=0,orbitTurn=0},Stage)
  local root=Kit.frame(parent,"ItemRevealStage",nil,UDim2.new(),UDim2.fromScale(1,1))
@@ -561,7 +687,7 @@ function Stage:build()
  local root=self.root;local z=root.ZIndex;local look=self.look;local st=self.stageLook
  -- 1 shell + checker, 2 shafts, 3 well, 4 seat, 5 rim, 6 orbit, 7 confetti, 8 shockwave and
  -- rainbow, 9 text, tray, keys, 10 stamp, 11 skip, 12 controls, 14 lid and iris.
- local b=Stage.backdrop(root,z,self.tier,self.kind)
+ local b=Stage.backdrop(root,z,self.tier,self.kind,self.aero)
  for key,value in pairs(b)do self[key]=value end
  -- Orbit (Rare wind-up): eight blank stones and four sparkles in the tier colour.
  for index=1,Stage.Pool.orbit do
@@ -984,8 +1110,15 @@ function Stage:paint(dt)
  -- Inside the well: core, rays (turning), pattern, floor light, bloom.
  local diag=math.sqrt(ww*ww+wh*wh)*1.05
  self.core.Size=UDim2.fromOffset(ww*1.5,wh*1.5)
- self.raysImage.Size=UDim2.fromOffset(diag,diag);self.raysImage.Rotation=self.rays
- self.raysImage.ImageTransparency=if s.jackpot and s.t<s.burstAt and not still then .65 else .42
+ if self.aeroParts then
+  -- Aero (brief 3): the shafts from the top centre, the horizon under the egg (the floor light's .78), the bubbles.
+  local inset=Kit.patternInset(L.radius)
+  Stage.placeAero(self,ww-inset*2,wh-inset*2,.78,scale)
+  Stage.paintAero(self,self.clock,if self.instant then nil else s.burstAge,reduced,self.rays)
+ else
+  self.raysImage.Size=UDim2.fromOffset(diag,diag);self.raysImage.Rotation=self.rays
+  self.raysImage.ImageTransparency=if s.jackpot and s.t<s.burstAt and not still then .65 else .42
+ end
  local fw=side*.66
  self.floorLight.Position=UDim2.new(.5,0,.78,0);self.floorLight.Size=UDim2.fromOffset(fw,fw*.28)
  self.floorShadow.Position=UDim2.new(.5,0,.79,0);self.floorShadow.Size=UDim2.fromOffset(fw*.6,fw*.13)
@@ -1175,6 +1308,11 @@ function Stage:stoneColor(index)
  local fn=self.options.stoneColors
  local colors=if fn then fn()else nil
  if type(colors)=="table"and #colors>0 then return colors[(index-1)%#colors+1]end
+ -- Aero (brief 3): the egg type's accent (Look Eggs: a rainbow) and the tier's glass white, green or violet.
+ if self.aeroParts and index%2==0 then
+  local accent=Aero.accent(self.kind,index)
+  if accent then return accent end
+ end
  return if index%2==0 then self.look.color else self.look.second
 end
 function Stage:paintConfetti(s,still)
@@ -1212,7 +1350,9 @@ function Stage:paintConfetti(s,still)
   if x then
    if not o:GetAttribute("Painted")then
     local accent=self:accent()
-    o.ImageColor3=if index%3==0 then Color3.new(1,1,1)elseif accent then(if index%2==0 then accent else Color3.fromHex("#FFC14D"))else Color3.fromHex(Stage.Rainbow[(index%6)+1])
+    -- Aero: Stars gold is for Stars only, so the egg type's accent (or white) stands in for it.
+    local gold=if self.aeroParts then(Aero.accent(self.kind,index)or Color3.new(1,1,1))else Color3.fromHex("#FFC14D")
+    o.ImageColor3=if index%3==0 then Color3.new(1,1,1)elseif accent then(if index%2==0 then accent else gold)else Color3.fromHex(Stage.Rainbow[(index%6)+1])
     o:SetAttribute("Painted",true)
    end
    local size=math.floor((12+8*hash(index,58))*L.s+.5)
@@ -1327,7 +1467,8 @@ function Stage:paintIdle(s)
  self:paintAgain(false)
  if s.reduced then return end
  self.checkerTile.Position=UDim2.fromOffset(math.floor(-Kit.Checker.tile+self.checker),math.floor(-Kit.Checker.tile+self.checker))
- self.raysImage.Rotation=self.rays
+ if self.aeroParts then Stage.paintAero(self,self.clock,if self.instant then nil else s.burstAge,false,self.rays)
+ else self.raysImage.Rotation=self.rays end
  if self.rainbow.Visible then
   local turn=(self.clock*216)%360
   self.rainbowGradient.Rotation=turn;self.rimRainbow.Rotation=turn

@@ -411,6 +411,10 @@ function Stage.show(parent,options)
  -- The tier's well (and, Round 3, a Rare pet's jackpot) is chosen before anything is built.
  self.tier=Rarity.tier("companion",{petId=pet.id})
  self.jackpot=self.tier=="Rare"
+ -- AERO-JUICE-BRIEF 3 (the Alive `aerohatch` switch, read once as the card opens; options.aero: specs force it): the
+ -- tier's Sky / Meadow / Aurora well, white glass plate with ink, no gold, no warm lights. `sky` is the palette or nil.
+ self.aero=if options.aero~=nil then options.aero==true else Rarity.aeroOn()
+ self.sky=if self.aero then Rarity.Aero.palette(self.tier)else nil
  local root=Kit.frame(parent,"RevealStage",nil,UDim2.new(),UDim2.fromScale(1,1))
  -- v2 (V2-HATCH-REDESIGN 2.4): pets hatch on the same Pop-Out Stage as items: the deck's
  -- shell and the tier's vibrant well (Sunny Peach for the Bear). No dark stage, no spotlight
@@ -508,12 +512,21 @@ end
 
 function Stage:build()
  local root=self.root;local accent=self.accent
+ -- AERO-JUICE-BRIEF 3: with the switch on, no warm or gold light on this card. The aura behind the pet is the tier's
+ -- sky edge (so a white Bear keeps its outline on the pale core), the pool and the pet glow are the tier's floor and
+ -- core, the ring and the dust are white, the plate is white glass with ink (Gold is for Stars only), and the burst
+ -- sparkles and confetti take the Companion Egg's accent. `accent` stays the pet's own (the specs and the off look).
+ local sky=self.sky;local white=Color3.new(1,1,1)
+ local Aero=Rarity.Aero
+ local glowColor=if sky then sky.edge else accent
+ local plateColor=if sky then Aero.Plate.glass else accent
+ local typeAccent=if sky then(Aero.accent("companion")or white)else accent
  -- 1 glow, 2 streaks, 3 cone, 4 pool + shadow, 5 pet, 6 sparkles, 7 flash,
  -- 8 headline, 9 plate, 10 description, 11 spin pad, 12 buttons and hints.
  local glowLayer=layerFrame(root,"GlowLayer",1)
  -- A soft ellipse (round frame, radial-looking falloff from two crossed gradients). The
  -- 9-slice focus glow showed its slice rectangle at this size (Studio 2026-11-13).
- self.glow=Kit.node("Frame",glowLayer,{Name="AccentGlow",BackgroundColor3=accent,BackgroundTransparency=1,BorderSizePixel=0,
+ self.glow=Kit.node("Frame",glowLayer,{Name="AccentGlow",BackgroundColor3=glowColor,BackgroundTransparency=1,BorderSizePixel=0,
   AnchorPoint=Vector2.new(.5,.5),ZIndex=glowLayer.ZIndex+1})
  Kit.node("UICorner",self.glow,{CornerRadius=UDim.new(.5,0)})
  Kit.node("UIGradient",self.glow,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})})
@@ -540,7 +553,7 @@ function Stage:build()
   for side=-1,1,2 do
    local clip=Kit.frame(coneGroup,spec[1]..(if side<0 then "Left"else "Right"),nil,UDim2.new(),UDim2.fromOffset(1,1))
    clip.ClipsDescendants=true;clip.ZIndex=coneGroup.ZIndex+layerIndex
-   local light=fill(clip,"Light",Color3.fromHex("#FFE9C4"),spec[3]);light.AnchorPoint=Vector2.new(.5,.5)
+   local light=fill(clip,"Light",if sky then sky.floor else Color3.fromHex("#FFE9C4"),spec[3]);light.AnchorPoint=Vector2.new(.5,.5)
    local gradient=C.gradient(light,90,{{0,.1},{.55,.35},{1,.05}})
    table.insert(self.cone,{clip=clip,light=light,gradient=gradient,side=side,spread=spec[2],base=spec[3]})
   end
@@ -550,22 +563,22 @@ function Stage:build()
  local poolLayer=layerFrame(root,"Pool",4)
  self.pool,self.shadow,self.ringSegs={},{},{}
  for index,share in ipairs({1,.72,.44})do
-  local pill=fill(poolLayer,"Pool"..index,Color3.fromHex("#FFE2A8"),.8);pill.AnchorPoint=Vector2.new(.5,.5);Kit.corner(pill,999)
+  local pill=fill(poolLayer,"Pool"..index,if sky then sky.floor else Color3.fromHex("#FFE2A8"),.8);pill.AnchorPoint=Vector2.new(.5,.5);Kit.corner(pill,999)
   C.gradient(pill,0,{{0,1},{.18,.2},{.5,0},{.82,.2},{1,1}});self.pool[index]={node=pill,share=share}
  end
  do
-  local pill=fill(poolLayer,"Shadow",Color3.new(0,0,0),.45);pill.AnchorPoint=Vector2.new(.5,.5);pill.ZIndex+=1;Kit.corner(pill,999)
+  local pill=fill(poolLayer,"Shadow",if sky then sky.shadow else Color3.new(0,0,0),.45);pill.AnchorPoint=Vector2.new(.5,.5);pill.ZIndex+=1;Kit.corner(pill,999)
   C.gradient(pill,0,{{0,1},{.25,.1},{.5,0},{.75,.1},{1,1}});self.shadow[1]={node=pill,share=1}
  end
  for index=1,72 do
-  local seg=fill(poolLayer,"Ring"..index,accent,0);seg.AnchorPoint=Vector2.new(.5,.5);seg.ZIndex+=2;self.ringSegs[index]=seg
+  local seg=fill(poolLayer,"Ring"..index,if sky then white else accent,0);seg.AnchorPoint=Vector2.new(.5,.5);seg.ZIndex+=2;self.ringSegs[index]=seg
  end
  -- Pet, with a soft warm glow right behind it (nested discs, so no edge shows).
  local petLayer=layerFrame(root,"Pet",5)
  self.petLayer=petLayer
  self.petGlow={}
  for index=1,Stage.Light.glowDiscs do
-  local disc=fill(petLayer,"PetGlow"..index,Stage.Light.glow,1);disc.AnchorPoint=Vector2.new(.5,.5);disc.ZIndex=petLayer.ZIndex;Kit.corner(disc,999)
+  local disc=fill(petLayer,"PetGlow"..index,if sky then sky.core else Stage.Light.glow,1);disc.AnchorPoint=Vector2.new(.5,.5);disc.ZIndex=petLayer.ZIndex;Kit.corner(disc,999)
   self.petGlow[index]=disc
  end
  self:createPet()
@@ -573,19 +586,19 @@ function Stage:build()
  local sparkLayer=layerFrame(root,"Sparkles",6)
  self.burst,self.twinkles,self.dust={},{},{}
  for index=1,if self.jackpot then Stage.Rare.burstCount else Stage.BurstCount do
-  local spark=C.sparkle(sparkLayer,math.floor(16+10*hash(index,1)),if index%3==0 then accent else Color3.new(1,1,1));spark.Visible=false;self.burst[index]=spark
+  local spark=C.sparkle(sparkLayer,math.floor(16+10*hash(index,1)),if index%3==0 then typeAccent else Color3.new(1,1,1));spark.Visible=false;self.burst[index]=spark
  end
  for index=1,Stage.TwinkleCount do
   local spark=C.sparkle(sparkLayer,math.floor(12+10*hash(index,2)),Color3.new(1,1,1));spark.Visible=false;self.twinkles[index]=spark
  end
  for index=1,Stage.DustCount do
-  local mote=fill(sparkLayer,"Dust"..index,Color3.fromHex("#FFF2D6"),.4);Kit.corner(mote,999);mote.AnchorPoint=Vector2.new(.5,.5);mote.Visible=false;self.dust[index]=mote
+  local mote=fill(sparkLayer,"Dust"..index,if sky then white else Color3.fromHex("#FFF2D6"),.4);Kit.corner(mote,999);mote.AnchorPoint=Vector2.new(.5,.5);mote.Visible=false;self.dust[index]=mote
  end
  -- Confetti popper pieces (one pool, painted only while the pop is alive).
  self.confettiPieces={}
  local confettiLayer=Kit.frame(root,"Confetti",nil,UDim2.new(),UDim2.fromScale(1,1));confettiLayer.ZIndex=sparkLayer.ZIndex+5
  for index=1,Stage.ConfettiCount do
-  local piece=fill(confettiLayer,"Piece"..index,C.Confetti[(index-1)%#C.Confetti+1],0)
+  local piece=fill(confettiLayer,"Piece"..index,if sky then Aero.confetti("companion",self.tier,index)else C.Confetti[(index-1)%#C.Confetti+1],0)
   piece.AnchorPoint=Vector2.new(.5,.5);piece.Visible=false;piece.ZIndex=confettiLayer.ZIndex+1
   if index%4==0 then Kit.corner(piece,999)end
   self.confettiPieces[index]=piece
@@ -599,21 +612,23 @@ function Stage:build()
  -- Name plate group (rotated 4° up to the right).
  local plateLayer=layerFrame(root,"PlateLayer",9)
  local plate=Kit.frame(plateLayer,"NamePlate",nil,UDim2.new(),UDim2.fromOffset(10,10));plate.Rotation=-4;self.plate=plate
- self.plateSmear=fill(plate,"Smear",accent,.72)
- self.plateBody=fill(plate,"Plate",accent,0);self.plateBody.ZIndex+=1
+ -- (Aero: white glass at 85%, the slanted end the same glass, sky-edge dots.)
+ local plateAlpha=if sky then Aero.Plate.transparency else 0
+ self.plateSmear=fill(plate,"Smear",plateColor,.72)
+ self.plateBody=fill(plate,"Plate",plateColor,plateAlpha);self.plateBody.ZIndex+=1
  -- The slanted end: a frame left of the plate whose gradient cuts it along its diagonal
  -- (opaque below the cut), so its top and bottom edges are the plate's own.
- self.plateCut=fill(plate,"SlantedEnd",accent,0);self.plateCut.ZIndex+=1
+ self.plateCut=fill(plate,"SlantedEnd",plateColor,plateAlpha);self.plateCut.ZIndex+=1
  self.plateCutGradient=Kit.node("UIGradient",self.plateCut,{Name="Cut"})
  self.dots={}
- local dotColor=accent:Lerp(Color3.new(1,1,1),.45)
+ local dotColor=if sky then sky.edge else accent:Lerp(Color3.new(1,1,1),.45)
  for row=1,5 do for col=1,12 do
   local dot=fill(plate,"Dot",dotColor,0);Kit.corner(dot,999);dot.AnchorPoint=Vector2.new(.5,.5);dot.ZIndex+=2
   table.insert(self.dots,{node=dot,row=row,col=col})
  end end
  self.plateTagBox=fill(plate,"TagStrip",C.Ink,.05);self.plateTagBox.ZIndex+=3
- self.plateTag=C.display(self.plateTagBox,Stage.tagStrip(self.pet,self.kind),22,accent,{Name="TagText",TextXAlignment=Enum.TextXAlignment.Center,Size=UDim2.fromScale(1,1)})
- self.name=C.display(plate,string.upper(self.options.name or self.pet.name or "FRIEND"),128,self.ink,{Name="PetName"});self.name.ZIndex=self.plateBody.ZIndex+4
+ self.plateTag=C.display(self.plateTagBox,Stage.tagStrip(self.pet,self.kind),22,if sky then sky.core else accent,{Name="TagText",TextXAlignment=Enum.TextXAlignment.Center,Size=UDim2.fromScale(1,1)})
+ self.name=C.display(plate,string.upper(self.options.name or self.pet.name or "FRIEND"),128,if sky then Aero.Plate.ink else self.ink,{Name="PetName"});self.name.ZIndex=self.plateBody.ZIndex+4
  self.nameScale=Kit.node("UIScale",self.name,{Scale=1})
  self.glint=fill(plate,"Glint",Color3.new(1,1,1),.55);self.glint.Rotation=20;self.glint.ZIndex=self.name.ZIndex+1;self.glint.Visible=false
  C.gradient(self.glint,0,{{0,1},{.5,0},{1,1}})
@@ -621,7 +636,7 @@ function Stage:build()
  local descLayer=layerFrame(root,"DescriptionLayer",10)
  self.descClip=Kit.frame(descLayer,"DescriptionClip",nil,UDim2.new(),UDim2.fromOffset(1,1));self.descClip.ClipsDescendants=true
  self.descBox=fill(self.descClip,"Strip",C.Ink,.12)
- self.descBar=fill(self.descBox,"AccentBar",accent,0)
+ self.descBar=fill(self.descBox,"AccentBar",if sky then sky.edge else accent,0)
  self.desc=Kit.text(self.descBox,"BodyMedium",self.options.description or self.pet.description or "","text",{Name="Description",TextWrapped=true,TextTruncate=Enum.TextTruncate.AtEnd})
  -- Input pad under the buttons.
  local pad=Kit.node("TextButton",root,{Name="SpinPad",Text="",AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromScale(1,1),
@@ -656,7 +671,7 @@ function Stage:build()
  self.cover=fill(root,"FadeCover",C.Stage,1);self.cover.Size=UDim2.fromScale(1,1);self.cover.ZIndex=root.ZIndex+200;self.cover.Active=false
  Kit.paint(self.cover,"BackgroundColor3","shell")
  -- The shell's checker and the tier's well, under every layer (layers start at +10).
- local b=ItemStage.backdrop(root,root.ZIndex,self.tier,"companion")
+ local b=ItemStage.backdrop(root,root.ZIndex,self.tier,"companion",self.aero)
  b.shell.BackgroundTransparency=1
  -- Round 3: a Rare pet keeps the light shafts behind its well (Fable brief 3).
  for _,extra in ipairs({b.seat,b.waitEgg})do extra:Destroy()end
@@ -688,9 +703,12 @@ function Stage:buildJackpot(confettiLayer)
  for index=1,ItemStage.Cannon.count*2 do
   local a=art[if index%3==0 then "sparkle"else "pebble"]
   local R=Stage.Rare.cannonColors
+  local hex=R[(index-1)%#R+1]
+  -- Aero: Stars gold is for Stars only; the Companion Egg's accent takes its place.
+  if self.sky and hex=="#FFC14D"then hex=Rarity.Aero.AccentHex.companion end
   self.cannonPieces[index]=Kit.node("ImageLabel",confettiLayer,{Name="Cannon"..index,BackgroundTransparency=1,BorderSizePixel=0,
    Image=art[a[1]],ImageRectOffset=Vector2.new(a[2],a[3]),ImageRectSize=Vector2.new(a[4],a[5]),AnchorPoint=Vector2.new(.5,.5),
-   ImageColor3=Color3.fromHex(R[(index-1)%#R+1]),ZIndex=confettiLayer.ZIndex+2,Visible=false})
+   ImageColor3=Color3.fromHex(hex),ZIndex=confettiLayer.ZIndex+2,Visible=false})
  end
 end
 
@@ -773,7 +791,7 @@ function Stage:paintBackdrop()
  local alpha=self.root.BackgroundTransparency
  b.well.Visible=alpha<.5;b.rim.Visible=alpha<.5
  b.checkerTile.Position=UDim2.fromOffset(math.floor(-Kit.Checker.tile+self.checkerOffset),math.floor(-Kit.Checker.tile+self.checkerOffset))
- b.raysImage.Rotation=self.rayTurn
+ if b.aeroParts then self:paintAero(self.reducedStart==true or self:reduced())else b.raysImage.Rotation=self.rayTurn end
  -- Round 3: a Rare pet's shafts and rainbow edge keep turning while the card is up.
  if b.shafts then b.shafts.Visible=alpha<.5 and self.shaftLevel>0;b.shafts.Rotation=self.shaftTurn end
  if self.edge and self.edge.Visible and not self:reduced()then
@@ -805,11 +823,17 @@ function Stage:layout()
   local inset=Kit.patternInset(radius)
   b.clip.Position=UDim2.fromOffset(inset,inset);b.clip.Size=UDim2.new(1,-inset*2,1,-inset*2)
   local diag=math.sqrt(w*w+h*h)*1.05
-  b.core.Size=UDim2.fromOffset(w*1.5,h*1.5);b.raysImage.Size=UDim2.fromOffset(diag,diag)
+  b.core.Size=UDim2.fromOffset(w*1.5,h*1.5)
+  if not b.aeroParts then b.raysImage.Size=UDim2.fromOffset(diag,diag)end
   local fw=math.min(w,h)*.66
   local floorY=(L.feet-y)/math.max(1,h)
   b.floorLight.Position=UDim2.new(.5,0,floorY,0);b.floorLight.Size=UDim2.fromOffset(fw,fw*.28)
   b.floorShadow.Position=UDim2.new(.5,0,floorY+.01,0);b.floorShadow.Size=UDim2.fromOffset(fw*.6,fw*.13)
+  -- Aero (brief 3): the shafts, glint and sparkles in the clip; the grass crest just above the pet's feet.
+  if b.aeroParts then
+   local ch=math.max(1,h-inset*2)
+   ItemStage.placeAero(b,w-inset*2,ch,(L.feet-y-inset)/ch,L.s)
+  end
   self.wellBase={cx=x+w/2,cy=y+h/2,w=w,h=h,top=y}
   if self.jackpot then
    -- Round 3: the bloom opens on the egg; the rainbow edge has rounded inner corners
@@ -833,6 +857,7 @@ function Stage:layout()
  self.headline.tagText.TextSize=math.floor(L.tagSize);self.headline.label.TextSize=math.floor(L.lineSize);self.headline.shadow.TextSize=math.floor(L.lineSize)
  -- C.headline sizes come from its options; rebuild the measures at this size.
  self:fitHeadline(L)
+ if self.sky then self:aeroHeadline(L)end
  -- Glow behind the pet.
  self.glow.Position=UDim2.fromOffset(L.petX,L.feet-L.petH*.5);self.glow.Size=UDim2.fromOffset(L.petBox*1.5,L.petBox*1.3)
  for index,disc in ipairs(self.petGlow)do
@@ -963,6 +988,24 @@ function Stage:fitHeadline(L)
  local ul=math.max(3,math.floor(lineSize*.08))
  h.underline.Position=UDim2.fromOffset(0,y+lineH-math.floor(lineSize*.02));h.underline.Size=UDim2.fromOffset(math.floor((lw.X+8)*.86),ul)
  h.root.Size=UDim2.fromOffset(lw.X+8+drop,y+lineH+ul+4)
+end
+-- Aero (brief 3): the headline's tag is white glass with ink, its underline the tier's edge, and the white line carries
+-- an outline and drop in the tier's deep colour (white on Sky, Meadow and Aurora deep is 5:1 or better, HatchAero.spec),
+-- so it reads over the pale sky core as well as the shell. No gold.
+function Stage:aeroHeadline(L)
+ local h,sky=self.headline,self.sky
+ h.tag.BackgroundColor3=Color3.new(1,1,1);h.tagText.TextColor3=Rarity.Aero.Plate.ink
+ h.underline.BackgroundColor3=sky.edge;h.shadow.TextColor3=sky.deep
+ local stroke=h.label:FindFirstChild("AeroOutline")
+ if not stroke then stroke=Kit.node("UIStroke",h.label,{Name="AeroOutline",ApplyStrokeMode=Enum.ApplyStrokeMode.Contextual,LineJoinMode=Enum.LineJoinMode.Round})end
+ stroke.Color=sky.deep;stroke.Thickness=math.max(2,math.floor(h.label.TextSize*.035+.5))
+end
+-- Aero motion on this card: the shafts turn with the tier's spin, the bubbles rise and pop with the colour burst
+-- (Stage.PopAt on the entrance clock; none pops on a reopen), Rare's tint sweeps. Reduced Motion: all still.
+function Stage:paintAero(reduced)
+ local b=self.backdrop;if not b or not b.aeroParts then return end
+ local burstAge=if self.instant then nil else self.age-Stage.PopAt
+ ItemStage.paintAero(b,self.clock,burstAge,reduced,self.rayTurn)
 end
 
 -- Paint one sample (timeline) plus the idle layer once settled.
@@ -1239,7 +1282,7 @@ function Stage:paintJackpot(s,reduced)
   local turn=if reduced then 0 else(self.clock*216)%360
   self.edgeGradient.Rotation=turn;b.rimRainbow.Rotation=turn
   b.rimStroke.Color=Color3.new(1,1,1);b.rimStroke.Thickness=math.max(3,math.floor(5*L.s))
- else b.rimStroke.Color=Rarity.Look[self.tier].color;b.rimStroke.Thickness=3 end
+ else b.rimStroke.Color=Rarity.lookOf(self.tier,self.aero).color;b.rimStroke.Thickness=3 end
  -- The shockwave line from the egg, and the one bloom inside the well.
  local shock=j.shock
  self.shock.Visible=shock~=nil
