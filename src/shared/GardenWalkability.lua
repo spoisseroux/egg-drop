@@ -20,6 +20,10 @@ end
 -- GARDEN-PLAY-BRIEF-2 section 4: a solid prop's keep-out (GardenKeepOut.regions) is a circle record in the same list,
 -- {KeepOut = true, X, Z, R}: a segment passing within R of its centre (XZ) is refused. The beta adds them (Alive
 -- `keepout`); live has none, so every rule below is unchanged there.
+-- A keep-out circle is a plain table; the live wet/blocked regions are Parts, and indexing a Part for a property it
+-- lacks throws (Studio beta 36: "KeepOut is not a valid member of Part"), so test the type first.
+local function isCircle(entry)return type(entry)=="table"and entry.KeepOut==true end
+Walk.isCircle=isCircle
 local function toSegment(px,pz,ax,az,bx,bz)
  local dx,dz=bx-ax,bz-az
  local length=dx*dx+dz*dz
@@ -30,7 +34,7 @@ end
 Walk.toSegment=toSegment
 function Walk.segmentAllowed(from,to,wet)
  for _,water in ipairs(wet)do
-  if water.KeepOut then
+  if isCircle(water)then
    if toSegment(water.X,water.Z,from.X,from.Z,to.X,to.Z)<water.R then return false end
    continue
   end
@@ -66,7 +70,7 @@ function Walk.pushOut(position,wet)
  for _=1,4 do
   local again=false
   for _,c in ipairs(wet)do
-   if c.KeepOut then
+   if isCircle(c)then
     local dx,dz=p.X-c.X,p.Z-c.Z
     local d=math.sqrt(dx*dx+dz*dz)
     if d<c.R then
@@ -119,7 +123,7 @@ function Walk.pathAllowed(path,wet)
   table.remove(lower);table.remove(upper);local hull=lower;for _,p in ipairs(upper)do table.insert(hull,p)end
   if #hull>=3 then
    local minimumY=math.min(points[1].Y,points[2].Y,points[3].Y,points[4].Y)
-   for _,water in ipairs(wet)do if water.KeepOut then
+   for _,water in ipairs(wet)do if isCircle(water)then
     -- A keep-out the chords all miss can still sit inside the hull, round the whole curve.
     local centre=Vector3.new(water.X,minimumY,water.Z)
     local inside=true;for i=1,#hull do if cross(hull[i],hull[i%#hull+1],centre)<-1e-8 then inside=false;break end end
@@ -143,7 +147,7 @@ function Walk.split(wet)
  local cached=splits[wet]
  if cached and cached.count==#wet then return cached.boxes,cached.circles end
  local boxes,circles={},{}
- for _,entry in ipairs(wet)do if entry.KeepOut then table.insert(circles,entry)else table.insert(boxes,entry)end end
+ for _,entry in ipairs(wet)do if isCircle(entry)then table.insert(circles,entry)else table.insert(boxes,entry)end end
  if #circles==0 then boxes=wet end
  splits[wet]={count=#wet,boxes=boxes,circles=circles}
  return boxes,circles

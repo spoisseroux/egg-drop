@@ -96,7 +96,7 @@ local function staticGraph(wet)
   link(a,b);link(b,c);link(c,d);decks[id]={b,c}
  end
  for _,part in ipairs(wet)do
-  if part.Parent and not part.KeepOut and(part:GetAttribute("GardenWetRegion")==true or part:GetAttribute("GardenBlockedRegion")==true)then
+  if part.Parent and not(type(part)=="table"and part.KeepOut==true)and(part:GetAttribute("GardenWetRegion")==true or part:GetAttribute("GardenBlockedRegion")==true)then
    for _,sx in ipairs({-1,1})do for _,sz in ipairs({-1,1})do
     local c=part.CFrame:PointToWorldSpace(Vector3.new(sx*(part.Size.X*.5+CORNER_CLEARANCE),0,sz*(part.Size.Z*.5+CORNER_CLEARANCE)))
     local p=floorPoint(c.X,c.Z)
