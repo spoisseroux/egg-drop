@@ -36,6 +36,8 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 **v4: the Pocket Deck update (Spencer, 2026-11-22):** "for v4 i want to make it the pocket deck update, i wanna add games, like game cartridges". He named a reskin of a decompiled Pokemon Pinball Ruby/Sapphire, a Balatro clone, Animal Crossing NES games, Tetris, a Candy Crush type. Those exact games are other companies' code and IP: out. Original cartridges in those genres (pinball table, card-scoring roguelike, falling-block puzzle, match-3) are in. Fable scoping `V4-POCKET-DECK-SCOPE-2026-11-22.md`.
 
+**v4 also: UGC (Spencer, 2026-11-26: "add to v4 todo, ugc!").** Roblox UGC avatar items tied to the game (e.g. pet plushie backpacks, Pocket Deck shoulder accessory, egg hats), made from our own original pet and deck art; scope with Fable (which items, price points, the UGC program requirements and fees, how owning one shows up in the game) before any upload or spend.
+
 **Later, not v3:** weekly shared board, a third pet, two-player deck modes, guilds, trading (wait for retention data and concurrency).
 
 ## Next up: clip-worthy moments and sharing (Spencer 2026-11-25: "add to todo, lets make sure were doing this stuff")
