@@ -38,6 +38,22 @@ Recommended order: bug fixes, then level rewards + gated items + medals, then Ga
 
 **Later, not v3:** weekly shared board, a third pet, two-player deck modes, guilds, trading (wait for retention data and concurrency).
 
+## Next up: clip-worthy moments and sharing (Spencer 2026-11-25: "add to todo, lets make sure were doing this stuff")
+
+Why: kids clip a moment they'd want to show a friend, and the game doesn't have one yet. Checked 2026-11-25: nothing calls CaptureService, `SocialService:PromptGameInvite` or SocialService at all; nothing announces to the server; egg odds are even (1/3 each), so no hatch is rare enough to scream about. If only one thing ships: the rare tier with a big reveal and a server announcement, then daily clips of it. Comes after the round 6 cave fixes, before the level rewards work.
+
+- [ ] **Rare tier with stated odds**: e.g. a "Glimmer" variant at 1 in 500, with its own hatch: screen shake, a sound sting, a beat of slow motion. Builds on the rarity cues, HatchAsmr and the Pop-Out Stage reveal (one more tier). Odds shown in the game.
+- [ ] **Server-wide announcement**: a chat line ("Spencer hatched a GLIMMER Bunny! (1 in 500)") and a visible effect in the garden, so everyone nearby sees it.
+- [ ] **Chaos on the merge board**: big chain combos make the screen explode; an overflowing board looks dramatic and funny.
+- [ ] **Rare pets look rare from across the garden**: glow, trail or a size bump.
+- [ ] **Reads on a phone**: every one of these moments works in a vertical phone frame (clips are watched on phones).
+- [ ] **Share prompt**: after a rare hatch, CaptureService takes a screenshot and prompts the player to share it (built in, no external links).
+- [ ] **Invite**: `SocialService:PromptGameInvite` for "show your friends your new pet", with a small Stars bonus when an invited friend joins.
+- [ ] **Seed clips ourselves (Spencer, outside the game)**: our own clips on TikTok and YouTube Shorts daily for 2 to 3 weeks (rare hatches, big combos, cute moments; under 15 s, the payoff in the first 2 s, a text hook). I can prepare capture setups and cut lists; Spencer posts.
+- [ ] **Small creators (Spencer)**: pay Roblox creators with 5k to 50k followers; a creator code that unlocks a cosmetic in the game. Any spend needs Spencer's go.
+- [ ] **Community clips**: ask in the group for clips of rare hatches; feature the best.
+- **Rule (Roblox rules and child-privacy law):** never reward players for posting on outside platforms and never contact kids directly. Work with creators; keep incentives in the game (codes, cosmetics), never tied to "post on TikTok".
+
 ## Now working on
 
 - [ ] **Beta (25) feedback (Spencer 2026-11-25, `artifacts/qa-2026-11-25-beta25/FEEDBACK.md`).** Done on `fix/beta25-feedback` (2b73eb4e, offline 91 PASS, not in Studio): Cloud Glass default deck (free starter), "Pets playing N/M" back in parks. Next: Studio audit of the den/path/terrace geometry (holes, flipped faces), then art round 6 (bigger den mouth, clean geometry, a race gate that stands out, a scale pass on everything vs the avatar). Also raised: an ASMR egg crack in the first round, deck feel and juice, an endless mode, a more exciting deck UI, and whether the first 3 minutes win people.
