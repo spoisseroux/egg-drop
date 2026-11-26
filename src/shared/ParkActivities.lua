@@ -63,10 +63,12 @@ Activities.ById=table.freeze({
 		slotSets={{"swing1"},{"swing2"}},
 		phases={phase("mount","parkSwingMount",1),phase("swing","parkSwing",SWING_PERIOD*4,{period=SWING_PERIOD}),
 			phase("hop","parkHopOff",.9),cheer}}),
+	-- Beta (34): the walk back to the ladder goes round the slide (ParkRoute), about half as far again as the straight
+	-- line through it was, so it has 3.4 s (2.2 before): a happy trot, not a dash.
 	slide=define({id="slide",equipment="slide",kind="solo",exclusive=true,action="parkSlide",
 		slotSets={{"slide"}},
 		phases={phase("climb","parkSlideClimb",2),phase("sit","parkSlideSit",.6),phase("slide","parkSlide",1.2,{at="chuteEnd"}),
-			phase("tumble","parkTumble",.8,{at="chuteEnd"}),phase("return","parkSlideReturn",2.2),
+			phase("tumble","parkTumble",.8,{at="chuteEnd"}),phase("return","parkSlideReturn",3.4),
 			phase("climb2","parkSlideClimb",2),phase("sit2","parkSlideSit",.6),phase("slide2","parkSlide",1.2,{at="chuteEnd"}),
 			phase("tumble2","parkTumble",.8,{at="chuteEnd"}),phase("cheer","parkCheer",1.4,{at="chuteEnd"})}}),
 	seesaw=define({id="seesaw",equipment="seesaw",kind="duo",exclusive=true,action="parkSeesaw",period=SEESAW_PERIOD,

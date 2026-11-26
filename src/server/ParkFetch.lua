@@ -75,7 +75,8 @@ end
 function Fetch:plan(actor,target)
 	local from=self.garden:position(actor,self.director:clock())
 	local sample=A.sample(actor,self.director:clock())
-	local path,seconds=(self.garden.options.planPath or A.plan)(from,target,sample and sample.velocity or ZERO,Fetch.Speed,0,sample and sample.yaw or 0,nil,ZERO)
+	-- Beta (34): round the toys (the director's park walk), not through them.
+	local path,seconds=self.director:walk(from,target,sample and sample.velocity or ZERO,Fetch.Speed,sample and sample.yaw or 0)
 	local last=path and path[#path]
 	if not last or(A.vector(last.to)-target).Magnitude>.1 then return nil end
 	local length=0

@@ -55,7 +55,7 @@ return function(_,offline)
 		end
 		assert(blocks>20)
 	end)
-	test("off: twelve pets in and around both parks for five minutes: every garden snapshot is the base build's",function()
+	test("off: twelve pets in and around both parks for five minutes: no Dash in any garden snapshot, the base build's fields",function()
 		local function garden(tree)
 			local Garden=tree.require(tree.server.GardenState);local Park=tree.require(tree.server.ParkDirector);local Layout=tree.require(tree.shared.ParkLayout)
 			local now,seed,out,inputs=1000,9,{},{}
@@ -88,8 +88,20 @@ return function(_,offline)
 		assert(ok,"ParkLayout off Studio failed to load: "..tostring(Layout))
 		assert(not Layout.HollowOn,"ParkLayout off Studio keeps the old grove")
 		assert(not Layout.TopLawnOn and Layout.Glade==nil and not Layout.ById.grove.Terrace,"off Studio: no Top Lawn, no Paw Glade")
-		local a,b=garden(base),garden(liveNew);assert(#a==#b and #a>400)
-		for i=1,#a do assert(a[i]==b[i],"snapshot "..i)end
+		-- Beta (34) changes how pets walk (park walks round the toys, ParkRoute; eased legs and gentler turns, GardenActivity),
+		-- so a garden snapshot is no longer the base build's byte for byte. With the Dash off it still carries no Dash: no
+		-- dash key in any snapshot, exactly the base build's snapshot fields, and as many snapshots within 10%.
+		local a,b=garden(base),garden(liveNew);assert(#b>400 and math.abs(#a-#b)<=#a*.1,"snapshots "..#a.." vs "..#b)
+		local function fields(list)
+			local set,names={},{}
+			for _,snapshot in ipairs(list)do for name in string.gmatch(snapshot,'"([%a_]+)":')do
+				if not set[name]then set[name]=true;table.insert(names,name)end
+			end end
+			table.sort(names)
+			return table.concat(names,",")
+		end
+		assert(fields(a)==fields(b),"snapshot fields\n"..fields(a).."\n"..fields(b))
+		for i,snapshot in ipairs(b)do assert(not string.find(snapshot,'"dash"',1,true),"snapshot "..i.." carries the Dash")end
 	end)
 	test("a save with races in it: the live build loads it, plays, keeps the field exactly, and this build carries on",function()
 		dashOn(true);local db,c={},{now=1700000000,serial=0}
