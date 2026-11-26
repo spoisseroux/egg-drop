@@ -15,6 +15,11 @@ return function(_,offline)
 	local function dashOn(on)local Dash=new.require(new.shared.Dash);Dash.inject(if on then{flags={GardenDash=true},studio=true}else nil)end
 	local RACE={kind="race",mode="fun",place=2,us=35000000,inputs=9,seed=1,prize=true}
 	local function play(tree)
+		-- Beta (25): the default faceplate moved to Cloud Glass. This spec is about Dash parity, so the new tree
+		-- plays with the base build's default ("sherbet") and the bytes still compare.
+		local Themes=tree==new and new.require(new.shared.DeckThemes)or nil
+		local themeDefault=Themes and Themes.Default
+		if Themes then Themes.Default="sherbet"end
 		local db,c,out={},{now=1700000000,serial=0},{}
 		local h,H=open(tree,db,c)
 		local function note(...)table.insert(out,encode({...}));table.insert(out,encode(H.public(h)));table.insert(out,encode(db))end
@@ -28,6 +33,11 @@ return function(_,offline)
 			c.now+=86400;db.player_1.hatching.lease.expiresAt=c.now+60
 		end
 		note(H.release(h))
+		if Themes then
+			Themes.Default=themeDefault
+			-- Cloud Glass is a free starter now, so the Book's Faceplates page lists one plate fewer (12, was 13).
+			for i,line in ipairs(out)do out[i]=string.gsub(line,'("name":"Faceplates",[^{}]-"total":)12','%113')end
+		end
 		return out
 	end
 	test("off: every reply, snapshot and save of a three-day script is the base build's, byte for byte",function()

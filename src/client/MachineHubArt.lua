@@ -252,7 +252,7 @@ function builders.style(root,w,h,ctx)
  if not theme then
   theme,id=Art.equippedPlate()
  end
- if not theme or not id then theme=DeckThemes.ById.sherbet;id="sherbet"end
+ if not theme or not id then id=DeckThemes.Default;theme=DeckThemes.ById[id]end
  if not theme then return end
  local width=math.floor(math.min(2*(h-10),w-10))
  local deck=require(script.Parent.FaceplateShop).miniDeck(root,width,UDim2.fromOffset(math.floor((w-width)/2),math.floor((h-width/2)/2)))

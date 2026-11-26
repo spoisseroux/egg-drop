@@ -33,7 +33,7 @@ local bindings={};local currentTheme;local paletteStats={nodes=0,applies=0,write
 -- background. Menus, cards, tabs and buttons always use the house palette (the
 -- default plate's glass); `currentTheme` stays for the hardware readers (getTheme).
 local Themes=require(game:GetService("ReplicatedStorage").Shared.DeckThemes)
-local uiTheme=Themes.ById[Themes.Default]
+local uiTheme=Themes.ById[Themes.House]
 -- QA v760 (Spencer): the UI inside the game follows the equipped faceplate too. Anything
 -- under a root marked with the PlateSurface attribute (the Pocket Deck's screen: the round
 -- HUD, results, the difficulty picker, the pause menu) is painted from the equipped plate's

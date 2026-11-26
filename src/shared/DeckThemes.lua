@@ -1,6 +1,9 @@
 local Levels=require(script.Parent.Levels)
 local Themes={
-	Default = "sherbet",
+	-- Spencer, beta (25): "can we make the clouds pocket deck skin the default one? ... i hate the green".
+	-- Cloud Glass is the default and a free starter; the house menu palette stays on Scout's glass (Themes.House).
+	Default = "cloud_glass",
+	House = "sherbet",
 	Order = { "sherbet", "stone", "ice", "brick", "moss", "honey", "gloaming", "copperleaf",
 		"aqua_pop", "lime_gel", "sorbet_sky", "liquid_chrome", "tidepool", "aurora_glass", "prism_flare", "night_orb",
 		-- Overnight 2026-11-14 (slice C): palette variants, appended so the first 16 keep their places.
@@ -83,7 +86,7 @@ local Plates={
   ui={panel="#161822",raised="#222531",well="#0E0F16",selected="#373C4E",line="#A5ADC8"},overlay=nil,held3d={material="SmoothPlastic",reflectance=0.08,transparency=0}},
  -- Frutiger Aero plates (Fable, 2026-11-21; artifacts/store-listing/v2-new-look/aero-faceplates.png):
  -- Cloud Glass is the store-art hero. Orders 21 to 23, appended to Themes.Order.
- cloud_glass={name="Cloud Glass",order=21,tier="common",priceStars=40,texture="rbxassetid://131862681653621",finish="translucent sky plastic, clouds inside",accent="#8FD2FF",ink="#0E0F12",deep="#1C5BD8",band="#FFFFFF",engrave="#0E0F12",engraveOpacity=0.42,
+ cloud_glass={name="Cloud Glass",order=21,tier="starter",priceStars=0,texture="rbxassetid://131862681653621",finish="translucent sky plastic, clouds inside",accent="#8FD2FF",ink="#0E0F12",deep="#1C5BD8",band="#FFFFFF",engrave="#0E0F12",engraveOpacity=0.42,
   ui={panel="#162135",raised="#222E48",well="#0E1524",selected="#314562",line="#96B2C8"},toyShell={shell="#2667AD",shellHi="#79A6D5",shellLip="#123B66",tray="#184676",well="#0D1C2B",wellDot="#233A53",ink="#0E1924",inkSoft="#3E5267",onShellSoft="#D8EAFC",tag="#BFE6FF",tagLip="#7C98AC"},overlay={image="rbxassetid://114031715260538",kind="gloss",min=0.0,max=0.45,period=5.0},held3d={material="Glass",reflectance=0.08,transparency=0.25}},
  lagoon={name="Lagoon",order=22,tier="rare",priceStars=100,texture="rbxassetid://120926962377631",finish="clear water and splash",accent="#6FF0E0",ink="#0E0F12",deep="#0C7FA6",band="#FFFFFF",engrave="#0E0F12",engraveOpacity=0.42,
   ui={panel="#14262E",raised="#1F3440",well="#0C181F",selected="#2A4E56",line="#8BBCBD"},toyShell={shell="#107171",shellHi="#5CAFAF",shellLip="#064141",tray="#094D4D",well="#0F1A32",wellDot="#27385D",ink="#0A1B1B",inkSoft="#335656",onShellSoft="#CCEEEE",tag="#7CFFD2",tagLip="#51A88C"},overlay={image="rbxassetid://105339906963951",kind="water",min=0.1,max=0.55,period=5.0},held3d={material="Glass",reflectance=0.08,transparency=0.25}},

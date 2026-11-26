@@ -10,7 +10,6 @@ local Copy=require(ReplicatedStorage.Shared.UICopy)
 local Park=require(ReplicatedStorage.Shared.ParkLayout)
 local Rail=require(script.Parent.NotificationRail)
 local Counter=require(script.Parent.ParkCounter)
-local Chips=require(script.Parent.HudChips) -- beta (17) U1: on, the counter shows only "Park full"
 local Control={};Control.__index=Control
 function Control.new(parkClient,options)
 	local self=setmetatable({park=parkClient,garden=options.garden,guiParent=options.gui,connections={},seq=0},Control)
@@ -87,7 +86,9 @@ function Control:step(_,context)
 	if not self.gui and not self:makeGui()then return end
 	self.gui.Enabled=true
 	local snapshot=self.garden and self.garden.snapshot
-	local status=Counter.status(snapshot and snapshot.actors,site,Park.Sites,Chips.on())
+	-- Spencer, beta (25): "theres no pets playing bubble thing anymore?" The always-on count is back (the egg
+	-- chip it hid behind lives in the top rail since beta (17)), so `quiet` is no longer passed.
+	local status=Counter.status(snapshot and snapshot.actors,site,Park.Sites,false)
 	local throwAt,countAt,height=Counter.layout(context.dockPosition or UDim2.new(1,-16,1,-16),show,status.lines)
 	if status.text==nil then
 		self.count.Visible=false
