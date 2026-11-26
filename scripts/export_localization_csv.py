@@ -4,6 +4,7 @@ v1 track C (translations). Writes assets/localization/egg-drop-strings.csv with 
 columns Roblox's localization table upload takes: Key, Source, Context, Example.
 
   * UICopy (src/shared/UICopy.lua): every leaf key, `ui.<key>`.
+  * The join loading screen's Copy table (src/first/LoadingScreen.client.lua): `ui.loading.<key>`.
   * Shared catalogues (item, ball, faceplate, background, finish, toy, quest, store,
     round-item, wearable and book names, pitches and descriptions): `catalog.<Module>.<path>`.
     Pet names are left out on purpose (they stay as named; see LOCALIZATION.md).
@@ -56,6 +57,7 @@ SECTION_NOTES = {
     "onboarding": "First-round coaching", "coach": "First-round coaching",
     "onb3": "First-session onboarding: pet bubbles, Sleepy Nest, results strip",
     "tomorrow": "Results TOMORROW strip and garden line",
+    "loading": "Join loading screen",
 }
 # One key's own note, for a word that is ambiguous on its own (EGG-CORNER-LOOK 1: "Turn" is the egg machine's prompt).
 KEY_NOTES = {
@@ -197,6 +199,30 @@ def run_luau():
     return rows
 
 
+LOADING = os.path.join(ROOT, "src", "first", "LoadingScreen.client.lua")
+
+
+def loading_rows():
+    """The join loading screen's Copy table (ReplicatedFirst cannot require UICopy): ui.loading.<name>."""
+    with io.open(LOADING, encoding="utf-8") as handle:
+        text = handle.read()
+    block = re.search(r"^local Copy = \{(.*?)^\}", text, re.S | re.M)
+    if not block:
+        raise SystemExit("LoadingScreen.client.lua: no `local Copy = { ... }` table")
+    # One `key = "plain text",` per line (an optional trailing -- comment); anything else is an error, so a
+    # string can never drop out of the CSV silently.
+    rows = []
+    for line in block.group(1).splitlines():
+        line = line.strip()
+        if not line or line.startswith("--"):
+            continue
+        match = re.fullmatch(r'(\w+)\s*=\s*"([^"\\]*)",?(?:\s*--.*)?', line)
+        if not match:
+            raise SystemExit("LoadingScreen.client.lua Copy: write `key = \"text\",` one per line, no escapes: " + line)
+        rows.append(("ui", "loading." + match.group(1), match.group(2), ""))
+    return rows
+
+
 def wearable_rows():
     """Wearable item names live in the rig definitions' JSON (WearableCatalog.forPet reads them)."""
     import json
@@ -289,7 +315,7 @@ def main():
     parser.add_argument("--review", default=DEFAULT_REVIEW, help="hard-coded client strings review list")
     args = parser.parse_args()
 
-    rows = run_luau() + wearable_rows()
+    rows = run_luau() + wearable_rows() + loading_rows()
     # Pet names stay as named (LOCALIZATION.md): never exported, wherever they appear.
     pet_names = {source for kind, _, source, _ in rows if kind == "pet"}
     rows = [row for row in rows if row[0] != "pet" and row[2] not in pet_names]

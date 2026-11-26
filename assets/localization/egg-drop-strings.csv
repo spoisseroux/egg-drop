@@ -109,7 +109,7 @@ ui.coach.roundTwo.toy,Round two: hatch a toy for {pet},,First-round coaching; e.
 ui.coach.sayHi.key,Press E near {pet} to say hi,,First-round coaching; e.g. Press E near Bear to say hi
 ui.coach.sayHi.pad,Press X near {pet} to say hi,,First-round coaching; e.g. Press X near Bear to say hi
 ui.coach.sayHi.touch,Tap {pet} to say hi,,First-round coaching; e.g. Tap Bear to say hi
-ui.coach.skip,Skip,,First-round coaching
+ui.coach.skip,Skip,,First-round coaching; also ui.loading.skip
 ui.coach.style.line,"Faceplates, backgrounds and balls. Looks only.",,First-round coaching
 ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.name, ui.r3.help.style.title, ui.r5.station.Customize.name"
 ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
@@ -636,7 +636,7 @@ ui.onb3.strip.short.h,{hours} h,,"First-session onboarding: pet bubbles, Sleepy 
 ui.onb3.strip.short.hm,{hours} h {minutes} m,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 7 h 40 m"
 ui.onb3.strip.short.left,{left} left,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. {left} left"
 ui.onb3.strip.short.m,{minutes} min,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 40 min"
-ui.onb3.strip.short.ready,Ready!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; also ui.onb3.strip.tiny.ready"
+ui.onb3.strip.short.ready,Ready!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; also ui.onb3.strip.tiny.ready, ui.loading.ready"
 ui.onb3.strip.short.soon,<1 min,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.strip.stampIn,Stamp {count} in {hours} h,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Stamp 3 in 7 h"
 ui.onb3.strip.stampInHM,Stamp {count} in {hours} h {minutes} m,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Stamp 3 in 7 h 40 m"
@@ -1375,3 +1375,11 @@ catalog.WearableCatalog.pip.bands.name,Friendship Bands,,Catalogue WearableCatal
 catalog.WearableCatalog.pip.specs.name,Round Specs,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.pip.round.name,Round Eyes,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.pip.w.name,Kitty W,,Catalogue WearableCatalog (name)
+ui.loading.title,Hatch a Handheld Pal,,Join loading screen
+ui.loading.waking,Waking your pals…,,Join loading screen
+ui.loading.island,Building the island…,,Join loading screen
+ui.loading.flowers,Planting flowers…,,Join loading screen
+ui.loading.clouds,Fluffing the clouds…,,Join loading screen
+ui.loading.stream,Filling the stream…,,Join loading screen
+ui.loading.decks,Polishing the Pocket Decks…,,Join loading screen
+ui.loading.go,Here we go!,,Join loading screen
