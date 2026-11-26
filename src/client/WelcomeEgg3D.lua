@@ -1,8 +1,9 @@
 -- Onboarding v2 step 1 (Onboard "egg3d", ONBOARDING-V2.md; Spencer: "maybe make the egg on the pocket deck 3d and
 -- spinning?"). The Welcome round's calm deck: the left card says one thing at a time (no GOALS tab, one centred line,
 -- three shell pips under it) and the right card is the real Companion Egg in 3D (EggPreview3D's shell meshes), full
--- card height, spinning. Each combo the spark lands, the egg hops, wobbles, turns once, a crack seam lights a third
--- further and a pip fills; combo 3 lifts it out of the card in a rising glow.
+-- card height, spinning. Each combo the spark lands, the egg hops, wobbles, turns once, its soft backing glows a little
+-- brighter and a pip fills; combo 3 lifts it out of the card in a rising glow. Beta (36), Spencer: no big shiny circle
+-- and no cracks here ("we're gonna be cracking it ourselves in 3d"): the egg only cracks in the world (step 3).
 -- Presentation only (WelcomePresentation owns it; the server counts the combos and grants the Bear). Built in code; the
 -- 3D shell is the one Hatch eggs shows. Until its meshes are in, `ready()` is false and the pixel egg stays.
 --   local egg=WelcomeEgg3D.new(meterWell, coachCard, {copy, play(cue, speed, gain), haptic(name), reduced()})
@@ -23,28 +24,24 @@ function Egg.new(meter,coach,deps)
 	deps=deps or {}
 	local self=setmetatable({meter=meter,coach=coach,d=deps,clock=0,combos=0,shown=false,pops={},alive=true},Egg)
 	local z=meter.ZIndex+5
-	-- The egg card: an 8 px inset well, the glow behind, the viewport, the seam over it, the pips at its foot.
+	-- The egg card: an 8 px inset well, a soft backing, the viewport, the pips at its foot.
 	local well=node("Frame",meter,{Name="WelcomeEgg3D",BackgroundTransparency=1,Position=UDim2.fromOffset(D.pad,D.pad),
 		Size=UDim2.new(1,-D.pad*2,1,-D.pad*2-D.pip-D.pad),ZIndex=z,Visible=false,Active=false})
 	self.well=well
-	self.glow=node("Frame",well,{Name="Glow",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(1,1),
+	-- Beta (36), Spencer: "we dont need that giant shiny circle": a small soft backing (no hard edge, no gloss), a
+	-- little brighter each combo. No crack drawn on the deck: the egg cracks in the world (step 3).
+	self.glow=node("Frame",well,{Name="Glow",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(D.glowSize,D.glowSize),
 		BackgroundColor3=D.glow,BackgroundTransparency=1-D.glowIdle,BorderSizePixel=0,ZIndex=z})
 	round(self.glow)
-	node("UIGradient",self.glow,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})})
+	node("UIAspectRatioConstraint",self.glow,{AspectRatio=.8})
+	node("UIGradient",self.glow,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.35,.4),
+		NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(.65,.4),NumberSequenceKeypoint.new(1,1)})})
 	local ok,preview=pcall(function()
 		local Preview=require(script.Parent.EggPreview3D)
 		return Preview.new(well,{reduced=function()return self:reduced()end,
 			onLoaded=function()if self.alive then self:paint()end end})
 	end)
 	if ok and preview then self.preview=preview;pcall(function()preview:setType("companion",true)end)end
-	-- The seam: six short strokes in a zigzag across the egg's middle, lit left to right a third at a time.
-	self.seam={}
-	for i=1,6 do
-		local line=node("Frame",well,{Name="Seam"..i,AnchorPoint=Vector2.new(.5,.5),BackgroundColor3=D.seam,BorderSizePixel=0,
-			ZIndex=z+6,Visible=false})
-		round(line)
-		self.seam[i]=line
-	end
 	-- The pips: 22 px shells, empty (navy, a light ring) or filled (gold).
 	self.pipRow=node("Frame",meter,{Name="ComboPips3D",AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-D.pad),
 		Size=UDim2.fromOffset(D.pip*3+D.pipGap*2,D.pip),BackgroundTransparency=1,ZIndex=z+1,Visible=false})
@@ -154,29 +151,19 @@ function Egg:paint()
 	local g=preview.geo
 	local beat=if self.beatAt then self.clock-self.beatAt else nil
 	local yaw,tilt,hop=V2.eggPose(self.clock,beat,reduced)
-	local glow,lift,fade=D.glowIdle,0,0
+	-- the backing: a little brighter each combo, a brief flare on the hop, the finale's rise
+	local glow,lift,fade=V2.glow(self.combos),0,0
+	if beat and beat<D.wobbleTime and not reduced then glow+=D.glowStep*(1-beat/D.wobbleTime)end
 	if self.finaleAt then glow,lift,fade=V2.finale(self.clock-self.finaleAt,reduced)end
 	local studs=1.834 -- the preview camera's frame height in studs (EggPreview3D:measure)
 	pcall(function()preview:pose(math.rad(yaw),tilt,(hop+lift)*studs,1,0,0,0,fade,1)end)
 	preview.viewport.ImageTransparency=fade
 	self.glow.BackgroundTransparency=1-glow
-	local lit=V2.seam(self.combos)
-	local px=(hop+lift)*g.H
-	local w=g.ew*.9
-	for i,line in ipairs(self.seam)do
-		local on=lit>0 and i<=math.floor(lit*#self.seam+.5)and preview.loaded
-		line.Visible=on and fade<1
-		if on then
-			local x0=g.cx-w/2+(i-1)*w/#self.seam
-			local y0=g.cy-g.eh*.02+(if i%2==0 then -1 else 1)*g.eh*.035
-			local y1=g.cy-g.eh*.02+(if i%2==0 then 1 else -1)*g.eh*.035
-			local dx,dy=w/#self.seam,y1-y0
-			line.Position=UDim2.fromOffset(x0+dx/2,(y0+y1)/2-px)
-			line.Size=UDim2.fromOffset(math.sqrt(dx*dx+dy*dy)+2,3)
-			line.Rotation=math.deg(math.atan2(dy,dx))
-			line.BackgroundTransparency=fade
-		end
-	end
+	self.glow.Position=UDim2.new(.5,0,.5,-math.floor((hop+lift)*g.H))
+	-- Beta (36): none of the preview's own shine (its bloom disc, sheen, specular, sparkles, peek light) on the deck.
+	for _,d in ipairs(preview.bloom or {})do d.Visible=false end
+	for _,key in ipairs({"sheenClip","glow","crack","white"})do local f=preview[key];if f then f.Visible=false end end
+	for _,s in ipairs(preview.sparkles or {})do s.holder.Visible=false end
 end
 function Egg:destroy()
 	if not self.alive then return end
