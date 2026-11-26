@@ -13,6 +13,13 @@
 --   Onboard.on("opener")    the Welcome round: a seeded opener (a chain on drop two) and the egg hatching on 3 combos
 --   Onboard.on("crack")     the Bear's hatch: three taps crack the egg (it opens by itself untouched)
 --   Onboard.on("nestfirst") the nest bubble straight after the first hello (needs `needs` and `nest` on)
+-- Onboarding v2 (artifacts/qa-2026-11-26-beta35/ONBOARDING-V2.md; Spencer: "the new onboarding doesnt help?"):
+--   Onboard.on("egg3d")     step 1: the Welcome deck's 3D spinning egg, one instruction a step and three shell pips
+--   Onboard.on("stork")     steps 2 and 3: a stork brings the egg into the garden and three taps crack it there; no
+--                           deck hatch modal (needs `opener` and `crack`: Onboard.storyOn)
+--   Onboard.on("safecard")  step 4: every pet reveal card (RevealStage) inside the CoreUISafeInsets rect
+--   Onboard.on("guide")     step 5: one worded bubble at a time (Pet, Tuck the egg in, Play for Stars) and the end card
+-- All four off is exactly beta (35).
 -- ConfigService keys `onboard_follow`, `onboard_needs`, `onboard_nest` (server OnboardConfig): off until the config has
 -- loaded once, then missing or malformed = on. The server publishes `Onboard_<feature>` as its own value AND Things.on()
 -- and republishes when Things changes, so the attribute alone is the truth for clients; on() checks Things too, so a
@@ -24,9 +31,14 @@ local Flags=require(script.Parent.FeatureFlags)
 local Things=require(script.Parent.Things)
 local Onboard={}
 Onboard.PlaceId=107705084891479 -- Pocket Pals Beta
-Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark","capsule","opener","crack","nestfirst"})
-Onboard.Attributes=table.freeze({follow="Onboard_follow",needs="Onboard_needs",nest="Onboard_nest",corner="Onboard_corner",landmark="Onboard_landmark",capsule="Onboard_capsule",opener="Onboard_opener",crack="Onboard_crack",nestfirst="Onboard_nestfirst"})
-Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="onboard_nest",corner="onboard_corner",landmark="onboard_landmark",capsule="onboard_capsule",opener="onboard_opener",crack="onboard_crack",nestfirst="onboard_nestfirst"})
+Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark","capsule","opener","crack","nestfirst","egg3d","stork","safecard","guide"})
+Onboard.Attributes=table.freeze({follow="Onboard_follow",needs="Onboard_needs",nest="Onboard_nest",corner="Onboard_corner",landmark="Onboard_landmark",capsule="Onboard_capsule",opener="Onboard_opener",crack="Onboard_crack",nestfirst="Onboard_nestfirst",
+	egg3d="Onboard_egg3d",stork="Onboard_stork",safecard="Onboard_safecard",guide="Onboard_guide"})
+Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="onboard_nest",corner="onboard_corner",landmark="onboard_landmark",capsule="onboard_capsule",opener="onboard_opener",crack="onboard_crack",nestfirst="onboard_nestfirst",
+	egg3d="onboard_egg3d",stork="onboard_stork",safecard="onboard_safecard",guide="onboard_guide"})
+-- Onboarding v2's one-time events the client reports (the server records each name once, FirstSession:record, and only
+-- for a save that owns a pet). EggTapped, BearMet, FirstPet and NestTucked are already recorded where they happen.
+Onboard.Events=table.freeze({StorkShown=true,EggSetDown=true,AllSet=true,OnboardSkipped_Stork=true})
 function Onboard.attribute(feature)return Onboard.Attributes[feature]end
 function Onboard.key(feature)return Onboard.Keys[feature]end
 
@@ -56,7 +68,8 @@ function Onboard.resolve(configValue,override,ceiling)
 	return true
 end
 -- Server only (OnboardConfig): the resolved values every server check reads. Off until they are set.
-local switches={follow=false,needs=false,nest=false,corner=false,landmark=false,capsule=false,opener=false,crack=false,nestfirst=false}
+local switches={follow=false,needs=false,nest=false,corner=false,landmark=false,capsule=false,opener=false,crack=false,nestfirst=false,
+	egg3d=false,stork=false,safecard=false,guide=false}
 function Onboard.setSwitch(feature,value)
 	if not RunService:IsServer()or switches[feature]==nil then return false end
 	switches[feature]=value==true
@@ -85,6 +98,8 @@ function Onboard.on(feature)
 	if injected then return injected[feature]~=false and Onboard.open(injected)end
 	return Onboard.open()and Onboard.switch(feature)
 end
+-- Onboarding v2 steps 2 and 3 need the Welcome opener (the egg hatches on 3 combos) and the crack (three taps).
+function Onboard.storyOn()return Onboard.on("stork")and Onboard.on("opener")and Onboard.on("crack")end
 -- May a coach card that belongs to this part be shown and saved now? (CoachMarks.allows)
 function Onboard.allows(part)return Onboard.on(part)end
 

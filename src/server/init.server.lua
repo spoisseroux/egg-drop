@@ -1538,6 +1538,12 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	elseif action=="eggTapped"then
 		if board.firstSession and hasPet(board)then board.firstSession:record("EggTapped")end
 		return
+	elseif action=="onboardEvent"then
+		-- Onboarding v2: a one-time event from the client's list only (Onboard.Events), for a save that owns a pet;
+		-- FirstSession records each name once. Nothing is granted or saved.
+		local ok,known=pcall(function()return require(ReplicatedStorage.Shared.Onboard).Events[value]==true end)
+		if type(value)=="string"and ok and known and board.firstSession and hasPet(board)then board.firstSession:record(value)end
+		return
 	elseif action=="welcomeInput"then
 		if board.welcome and type(value)=="table"and value.sequence==board.runSequence and now-(board.welcomeInputAt or -math.huge)>=.1 then
 			board.welcomeInputAt=now;board.welcome:input();publishWelcome(board)
