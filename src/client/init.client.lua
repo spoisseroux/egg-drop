@@ -5075,6 +5075,15 @@ function clientUI.eggCornerMount(Onboard)
   warn=function(text)warn(text)end,
   -- Beta (34): the Stat Egg's reveal waits for the machine's egg too (its own module's gate).
   statReveal=require(script.StatEggReveal),
+  -- Beta (35) 4: the egg that comes out is the real shell (the preview's loaded templates; nil while they load).
+  shells=function()
+   local Preview=require(script.EggPreview3D)
+   local copies=Preview.cloneTemplates()
+   if not copies then Preview.loadTemplates(function()end)end
+   return copies
+  end,
+  -- Beta (35): a deferred reveal's skip rule before it opens (the first of each egg type plays in full).
+  firstOfType=function(kind)return require(script.HatchItemStage).firstOfType(kind)end,
   -- The capsule shot (beta 17 U5; CAPSULE-AND-HUD-LOOK 1): its switch, the camera, the HUD, this player's character,
   -- the line checks and the pocket drop in the Hatch eggs preview well.
   capsule=function()return Onboard.on("capsule")end,
@@ -5193,6 +5202,9 @@ function clientUI.eggCornerMount(Onboard)
  -- Beta (34): the Stat Egg's own reveal closing ends its buy (the Hatch eggs screen closes under it at the buy).
  local statReveal=snacks and snacks.reveal
  if statReveal then statReveal.onClosed=function()machine:revealClosed("stat")end end
+ -- Beta (35), the one path: every Stat Egg reveal (buy, Hatch another, medal egg, a late answer) opens through the
+ -- machine: crank, the egg out of the hole into the cup, then the reveal (EggMachineClient:deliver).
+ if snacks then snacks.deliver=function(show)return on()and machine:deliver("Stat",show,statReveal)end end
  local intent=snacks and snacks.intent
  if intent and type(intent.send)=="function"then
   local send=intent.send
@@ -5204,11 +5216,11 @@ function clientUI.eggCornerMount(Onboard)
     if type(callback)=="function"then
      local rest={select(2,...)}
      return send(self,action,payload,function(message)
-      -- Beta (34): confirmed with its reveal, so the shot holds that reveal until the egg is in the cup (the reveal
-      -- opens in this same callback, below).
-      -- Code review B35: only a Saved answer with a receipt opens the reveal (SnackHost), so only that one confirms.
-      if type(message)=="table"and message.status=="Saved"and type(message.receipt)=="table"and on()then pcall(machine.confirm,machine,statReveal)
-      elseif type(message)=="table"and message.status~="Retrying"then pcall(machine.refuse,machine)end
+      -- Beta (35): a Saved answer with a receipt is handed to the machine by SnackHost itself (snacks.deliver, below
+      -- in this same callback), which confirms this press; anything else but Retrying is a refusal.
+      if type(message)=="table"and not(message.status=="Saved"and type(message.receipt)=="table")and message.status~="Retrying"then
+       pcall(machine.refuse,machine)
+      end
       return callback(message)
      end,table.unpack(rest))
     end

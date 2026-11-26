@@ -51,6 +51,9 @@ DIAL_CENTRE = Vector((0.0, 1.95, 0.0))   # z filled in from the base's surface
 EGG_W, EGG_H = .66, .86          # Fable render R1: .55 x .72 left the globe a third full
 DROP_SCALE = .72 / .66           # the dropped egg is the same mesh at this scale (0.72 x 0.94)
 CREAM_BAND = (0xFF / 255, 0xF3 / 255, 0xC4 / 255)
+# Beta (35) "the leaf is still in the way, can we just make it a hole": no leaf chute on the Body. The manifest says
+# `leafless` and the client draws the hole (src/shared/EggCorner.lua Corner.hole). True rebuilds the beta 34 leaf.
+LEAF_CHUTE = False
 
 
 def hexrgb(h):
@@ -192,6 +195,8 @@ def build_body():
     p1, p2 = p0 + Vector((.15, -.05, .55)), p3 + Vector((-.05, .35, -.2))
     def bez(t):
         return p0 * (1 - t) ** 3 + p1 * 3 * t * (1 - t) ** 2 + p2 * 3 * t * t * (1 - t) + p3 * t ** 3
+    # Beta (35) "the leaf is still in the way, can we just make it a hole": LEAF_CHUTE False leaves the leaf out (its
+    # points stay in the data); the client draws the round hole the egg comes out of (EggCorner.hole).
     n_len, n_w = 7, 5
     grid = []
     # One fixed "across" for the whole leaf (a frame per point flipped where the curve turns steep: a twisted ribbon).
@@ -209,7 +214,7 @@ def build_body():
             w = .45 * max(0.0, 1 - t) ** .7                                 # tapers to a point
             row.append(c + side * (q * w) + up * (.18 * q * q - .02 + .1 * t ** 3))   # U trough, tip curled up
         grid.append(row)
-    for k in range(n_len):
+    for k in range(n_len if LEAF_CHUTE else 0):
         for s in range(n_w):
             pts = [grid[k][s], grid[k][s + 1], grid[k + 1][s + 1], grid[k + 1][s]]
             # u along the leaf (the painted midrib runs along u at v .25, the middle of the trough)
@@ -586,6 +591,8 @@ def main():
         "eggTypes": EGG_TYPES,
         "triangles": total,
     }
+    if not LEAF_CHUTE:
+        manifest["leafless"] = True
     bpy.ops.object.select_all(action="DESELECT")
     for obj, _ in objs:
         obj.select_set(True)

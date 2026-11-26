@@ -63,6 +63,26 @@ function Host.mount(deps)
 	local reveal=Reveal.new(deps.playerGui,deps.audio)
 	local owner=Instance.new("Folder");owner.Name="SnackRailOwner";owner.Parent=deps.playerGui
 	api.intent,api.reveal=intent,reveal
+	-- Beta (35), the standing rule "all eggs have the crank animation": every Stat Egg reveal (a buy, Hatch another, a
+	-- medal egg, a late answer) opens through present(): init sets api.deliver to the egg machine's deliver, which plays
+	-- the crank, drops the egg in the cup and only then runs `show` (true: it took it). Without it (the corner off, no
+	-- machine) the reveal opens at once, as before.
+	-- `before` runs once the reveal is handed over (or just before an immediate show): the shop closes under the
+	-- machine's shot, never ahead of it (its close would end an older shot still holding the camera).
+	api.deliver=nil
+	local function present(show,before)
+		local deliver=api.deliver
+		if deliver then
+			local ok,took=pcall(deliver,show)
+			if ok and took==true then
+				if before then before()end
+				return
+			end
+		end
+		if before then before()end
+		show()
+	end
+	api.present=present
 	-- Declared before intent.onLate below, which uses it (it was a nil global there).
 	local notify
 	-- A buy or feed the server settled after the client gave up waiting: show it now.
@@ -71,9 +91,11 @@ function Host.mount(deps)
 		local receipt=message.receipt
 		if action=="statEggBuy"then
 			local petId=deps.activeId()
-			reveal.fromShop=nil
-			reveal:show(receipt,api.revealInfo(petId),{
-				feed=function(r)api.feedNow(r.snackId)end,keep=function()notify(UICopy.get("hatch.stat.reveal.kept"),true)end})
+			present(function()
+				reveal.fromShop=nil
+				reveal:show(receipt,api.revealInfo(petId),{
+					feed=function(r)api.feedNow(r.snackId)end,keep=function()notify(UICopy.get("hatch.stat.reveal.kept"),true)end})
+			end)
 		else
 			notify(Host.boostLine(receipt),true)
 		end
@@ -138,15 +160,20 @@ function Host.mount(deps)
 			if message.status=="Saved"and type(message.receipt)=="table"then
 				-- Bought from Hatch eggs: the shop closes under the reveal, and Close (Keep) brings it
 				-- back (round 3). Captured per buy; Hatch another (the reveal still up) inherits it.
-				local fromShop=(deps.closeShop~=nil and deps.closeShop()==true)or(reveal:isOpen()and reveal.fromShop==true)
 				local receipt=message.receipt
-				reveal:show(receipt,api.revealInfo(petId),{
-					feed=function(r)api.feedNow(r.snackId)end,
-					keep=function()
-						notify(UICopy.get("hatch.stat.reveal.kept"),true)
-						if fromShop and deps.reopenEggs then deps.reopenEggs()end
-					end})
-				reveal.fromShop=fromShop
+				local fromShop=false
+				-- The reveal opens with the egg in the cup; the shop closes as the machine's shot starts.
+				present(function()
+					reveal:show(receipt,api.revealInfo(petId),{
+						feed=function(r)api.feedNow(r.snackId)end,
+						keep=function()
+							notify(UICopy.get("hatch.stat.reveal.kept"),true)
+							if fromShop and deps.reopenEggs then deps.reopenEggs()end
+						end})
+					reveal.fromShop=fromShop
+				end,function()
+					fromShop=(deps.closeShop~=nil and deps.closeShop()==true)or(reveal:isOpen()and reveal.fromShop==true)
+				end)
 			else
 				reveal.againPressed=nil
 				notify(Host.reasonText(message.reason,nil,nil,true))

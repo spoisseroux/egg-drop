@@ -46,9 +46,22 @@
 --   volume)}, haptic(strength) (optional), corner() (the switch), clock (default os.clock), random (default Random.new()),
 --   cinematic (the HatchCinematic module; default required), statReveal (the StatEggReveal module, optional: its
 --   reveal's gate and skip), step=false (specs call :step).
+-- Beta (35), the one path (Spencer: "we need all eggs to have the crank animation, even in the future for eggs"): every
+--   egg's reveal is handed to Machine:deliver(kind, open, owner) (EggCorner.Eggs lists the types and how each reveal
+--   waits). The crank turns, the egg comes out of the hole and lands in the cup, and only then does the reveal show:
+--   a deferred reveal (the Stat Egg, its own module) is not opened at all until Machine.openTime (open() runs then);
+--   a cinematic reveal (HatchCinematic.onPlay -> claim -> deliver) is held and kept off the screen until the same time
+--   (the panel's tuck at the machine; covering stages slid away in the pocket and Reduced Motion versions). A grant or
+--   a late answer with no armed press still plays the machine. The Stat Egg's own root cause (beta 35 1): its reveal's
+--   ScreenGui is not under the tucked panel and its stage is not a covering one, so only its clock was held while its
+--   UI showed over the whole shot.
+-- Beta (35) 4: the egg that comes out is the real egg (EggModels TopShell and BottomShell in the bought type's
+--   colorMap, deps.shells), the plain coloured DropEgg only while they load. Beta (35) 3: with the leafless Body the
+--   egg comes out of a round hole (EggHole: a dark disc and a rim, EggCorner.hole) instead of from under the leaf.
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Corner=require(Shared:WaitForChild("EggCorner"))
+local Models=require(Shared:WaitForChild("EggModels"))
 local Machine={};Machine.__index=Machine
 Machine.Range=60
 Machine.Hello=table.freeze({near=10,rearm=12,every=20,angle=15,seconds=.4})
@@ -71,7 +84,12 @@ Machine.Linger=6
 Machine.Tag="EggCornerMachine"
 Machine.BindRetry=.5
 Machine.WarnAfter=10
-Machine.Unclaimed=table.freeze({Stat=true}) -- reveals that are not the cinematic: confirmed by their Saved answer
+-- Reveals that are not the cinematic (EggCorner.Eggs reveal "deferred"): handed over by deliver with their answer.
+Machine.Unclaimed=(function()
+	local out={}
+	for _,row in pairs(Corner.Eggs)do if row.reveal=="deferred"then out[row.drop]=true end end
+	return table.freeze(out)
+end)()
 Machine.ConfirmWindow=3 -- an armed press with no confirmation this long after it lapses (no turn, no streak)
 -- Volumes (from Fable's dB): -16 .16, -20 .1, -24 .063, -26 .05.
 Machine.Volume=table.freeze({click=.1,clunk=.16,roll=.1,tok=.05,tokCrank=.063,hello=.063,land=.5,tuck=.08,rise=.063,shine=.08})
@@ -120,6 +138,53 @@ function Machine.shotSchedule(mode,streak)
 	if mode=="reduced"then return Machine.Shots.reduced end
 	local n=math.clamp(math.floor(tonumber(streak)or 1),1,3)
 	return if n==1 then Machine.Shots.first elseif n==2 then Machine.Shots.second else Machine.Shots.third
+end
+-- The hand-off (beta 35): seconds after the confirmation when an egg's reveal may show. Never before the egg is in the
+-- cup (land); at the machine, when the panel rises (rise); else when the reveal's clock starts (start).
+function Machine.openTime(sched)
+	return math.max(sched.land,sched.rise or sched.start or sched.land)
+end
+-- The machine's name for an egg: "Stat" from "stat", "Stat" or "statEggBuy"; a type it does not know keeps its own
+-- name with a capital (a future egg still comes out, in white until its colour is added).
+function Machine.dropName(kind)
+	if type(kind)~="string"or kind==""then return "Toy"end
+	if Corner.BuyActions[kind]then return Corner.BuyActions[kind]end
+	local row=Corner.eggRow(kind)
+	if row then return row.drop end
+	return string.upper(string.sub(kind,1,1))..string.sub(kind,2)
+end
+-- The real egg (beta 35 4): the two shell meshes' frames and sizes for an upright egg `height` tall centred at `at`
+-- (EggModels.Egg: the egg stands on its origin; the core is never shown).
+function Machine.shellPose(at,height)
+	local E=Models.Egg
+	local full=E.TopShell.center.Y+E.TopShell.size.Y/2
+	local k=height/full
+	local base=at*CFrame.new(0,-height/2,0)
+	return{TopShell={cframe=base*CFrame.new(E.TopShell.center*k),size=E.TopShell.size*k},
+		BottomShell={cframe=base*CFrame.new(E.BottomShell.center*k),size=E.BottomShell.size*k}},k
+end
+-- The hole's look (beta 35 3; Fable to tune): a dark disc just proud of the belly and a rim in the base's band colour
+-- riding the opening's edge, in Segments pieces.
+Machine.HoleLook=table.freeze({disc=Color3.fromHex("#2A211B"),rim=Color3.fromHex("#D2BE94"),segments=20,lift=.006,thick=.02})
+-- Pure: the hole's pieces, machine-local: {name, size, cframe, color, cylinder}. A Cylinder's axis is its X.
+function Machine.holeParts(hole)
+	local look=Machine.HoleLook
+	local n=hole.normal
+	local u=n:Cross(Vector3.new(0,1,0)).Unit
+	local v=u:Cross(n).Unit
+	local ring=hole.radius+hole.rim
+	local out={{name="Disc",cylinder=true,color=look.disc,size=Vector3.new(look.thick,ring*2,ring*2),
+		cframe=CFrame.fromMatrix(hole.centre+n*look.lift,n,v)}}
+	local count=look.segments
+	for i=1,count do
+		local a0,a1=(i-1)/count*2*math.pi,i/count*2*math.pi
+		local p0=hole.centre+(u*math.cos(a0)+v*math.sin(a0))*ring+n*look.lift
+		local p1=hole.centre+(u*math.cos(a1)+v*math.sin(a1))*ring+n*look.lift
+		local along=(p1-p0)
+		table.insert(out,{name="Rim"..i,cylinder=true,color=look.rim,size=Vector3.new(along.Magnitude+hole.rim*.6,hole.rim*2,hole.rim*2),
+			cframe=CFrame.fromMatrix((p0+p1)/2,along.Unit,n)})
+	end
+	return out
 end
 -- The streak a press at `now` starts: one more than the last when the last egg landed within StreakWindow.
 function Machine.streak(last,lastLand,now)
@@ -269,10 +334,61 @@ function Machine:refuse()
 	self:play("crank_click_1",Machine.Volume.hello)
 	return true
 end
--- HatchCinematic.onPlay: the first reveal to start after an armed press confirms it (the Stat Egg confirms by its answer).
+-- ── The one path (beta 35, the standing rule) ──────────────────────────────────────────────────────────────────────
+-- Every egg's reveal comes here: `kind` the egg (its drop name, EggModels type or buy action), `open` (optional) opens
+-- its reveal, `owner` the reveal (the one the gate holds). The crank turns, the egg comes out and lands, and only then
+-- does `open` run (Machine.openTime after the confirmation; a skip brings it to .12 s after the jump). A cinematic reveal
+-- (open nil) is already built: it stays held and off the screen until the same time. A grant, a late answer or a press
+-- that lapsed has no armed press: one is made, so the egg still comes out. True when the machine took the reveal; false
+-- (the corner off, destroyed) and the caller opens it at once, as before the corner.
+function Machine:deliver(kind,open,owner)
+	if self.destroyed or not self:on()then return false end
+	local drop=Machine.dropName(kind)
+	self:flushOpen() -- an earlier egg's reveal still waiting opens now (never two waiting)
+	local now=self.clock()
+	local armed=self.armed
+	if not(armed and armed.type==drop and now>=armed.at and now-armed.at<=Machine.ConfirmWindow)then
+		self.armed={at=now,type=drop,unclaimed=Machine.Unclaimed[drop]==true}
+	end
+	if not self:confirm(owner)then return false end
+	local crank=self.crank
+	if open then
+		local shot=self.shot
+		local mine=shot~=nil and shot.crank==crank
+		local at=if mine then shot.at+Machine.openTime(shot.sched)else crank.at+Machine.openTime(crank.sched)
+		self.pending={open=open,at=at,owner=owner,crank=crank,kind=drop}
+		-- Hatch another on a reveal of its own (the Stat Egg's result card still up): hidden while the shot plays.
+		if mine and shot.mode=="shot"then self:veil(owner,true)end
+	end
+	return true
+end
+-- The waiting reveal opens now (its time came, the corner went off, a newer egg, destroy). Never twice.
+function Machine:flushOpen()
+	local pending=self.pending
+	if not pending then return end
+	self.pending=nil
+	self:veil(pending.owner,false)
+	local ok,problem=pcall(pending.open)
+	if not ok then self:warnOnce("an egg's reveal failed to open: "..tostring(problem))end
+end
+-- Due at its time once its egg has landed (the crank without the shot lands on the frame it rolled), at the latest
+-- ShotCap after its time; at once when the corner goes off.
+function Machine:openStep()
+	local pending=self.pending
+	if not pending then return end
+	local now=self.clock()
+	local crank=pending.crank
+	local landed=crank.landed or crank.done or self.crank~=crank
+	if not self:on()or(now>=pending.at and landed)or now>=pending.at+Machine.ShotCap then self:flushOpen()end
+end
+-- The deferred reveal's own veil (StatEggReveal:veil): its old result card is hidden while the next egg's shot plays.
+function Machine:veil(owner,on)
+	if type(owner)=="table"and type(owner.veil)=="function"then pcall(owner.veil,owner,on)end
+end
+-- HatchCinematic.onPlay: the first reveal to start after an armed press is that buy's reveal: handed to deliver.
 function Machine:claim(cinematic)
 	local armed=self.armed
-	if armed and not armed.unclaimed and self.clock()>=armed.at then self:confirm(cinematic);return end
+	if armed and not armed.unclaimed and self.clock()>=armed.at then self:deliver(armed.type,nil,cinematic);return end
 	-- Code review of 071d8a6: another reveal starting while the capsule shot runs (a second buy merged into it) waits for
 	-- the shot's own reveal to start, so it never plays inside the tucked panel.
 	local shot=self.shot
@@ -447,7 +563,68 @@ function Machine:bind()
 	end
 	self.parts=parts
 	self.atRest=false
+	pcall(self.dressHole,self,parts)
 	return parts
+end
+-- Beta (35) 3: the hole the egg comes out of (only on the leafless Body: EggCorner.hole), client-side pieces in the
+-- machine's model, placed from the CupSeat attachment (the seat's machine-local point) so they follow the model.
+function Machine:dressHole(parts)
+	local data=Corner.machineData()
+	local hole=Corner.hole(data)
+	if not hole or not parts.cup or parts.model:FindFirstChild("EggHole")then return end
+	local origin=parts.cup*CFrame.new(-Corner.dropPoints(data).seat)
+	local folder=Instance.new("Model");folder.Name="EggHole"
+	for _,piece in ipairs(Machine.holeParts(hole))do
+		local part=Instance.new("Part")
+		part.Name=piece.name;part.Anchored=true;part.CanCollide=false;part.CanQuery=false;part.CanTouch=false;part.CastShadow=false
+		if piece.cylinder then part.Shape=Enum.PartType.Cylinder end
+		part.Material=Enum.Material.SmoothPlastic;part.Color=piece.color;part.Size=piece.size;part.CFrame=origin*piece.cframe
+		part.Parent=folder
+	end
+	folder.Parent=parts.model
+end
+-- Beta (35) 4: the dropped egg's real shell (deps.shells() -> {TopShell, BottomShell[, Core]} fresh MeshParts, or nil
+-- while they load; asked at most once a second), in the bought type's colorMap. Nil (no shells yet, or a type with no
+-- shell in EggModels): the plain coloured DropEgg stands in.
+function Machine:shellFor(parts,kind)
+	local typ=Models.Types[Corner.eggType(kind)or ""]
+	if not typ or not typ.colorMap then return nil end
+	local shell=parts.shell
+	local kept=not shell and parts.model:FindFirstChild("DropShell")
+	if kept and kept:FindFirstChild("TopShell")and kept:FindFirstChild("BottomShell")then
+		-- A rebind of the same model keeps the shells it already has (never a second pair).
+		shell={model=kept,TopShell=kept:FindFirstChild("TopShell"),BottomShell=kept:FindFirstChild("BottomShell")}
+		parts.shell=shell
+	end
+	if not shell then
+		local now=self.clock()
+		if not self.d.shells or now<(parts.shellNext or 0)then return nil end
+		parts.shellNext=now+1
+		local ok,made=pcall(self.d.shells)
+		if not(ok and type(made)=="table"and made.TopShell and made.BottomShell)then return nil end
+		local folder=Instance.new("Model");folder.Name="DropShell"
+		for _,name in ipairs({"BottomShell","TopShell"})do
+			local part=made[name]
+			part.Name=name;part.Anchored=true;part.CanCollide=false;part.CanQuery=false;part.CanTouch=false;part.CastShadow=true
+			part.Material=Enum.Material.SmoothPlastic;part.Color=Color3.new(1,1,1);part.Transparency=1;part.Parent=folder
+		end
+		if made.Core then pcall(function()made.Core:Destroy()end)end
+		folder.Parent=parts.model
+		shell={model=folder,TopShell=made.TopShell,BottomShell=made.BottomShell}
+		parts.shell=shell
+	end
+	if shell.type~=kind then
+		shell.type=kind
+		shell.TopShell.TextureID=typ.colorMap;shell.BottomShell.TextureID=typ.colorMap
+	end
+	return shell
+end
+function Machine.hideShell(parts)
+	local shell=parts and parts.shell
+	if not shell then return end
+	for _,name in ipairs({"TopShell","BottomShell"})do
+		if shell[name].Transparency~=1 then shell[name].Transparency=1 end
+	end
 end
 -- Puts every moved part back (out of range, the corner off).
 function Machine:rest()
@@ -457,6 +634,7 @@ function Machine:rest()
 	for _,item in ipairs({parts.dial,parts.sprout,parts.pile})do if item then item.part.CFrame=item.rest end end
 	for _,loose in ipairs(parts.loose)do loose.part.CFrame=loose.rest end
 	if parts.drop then parts.drop.part.CFrame=parts.drop.rest;parts.drop.part.Transparency=1 end
+	Machine.hideShell(parts)
 end
 local function about(pivot,turn,rest)return pivot*turn*pivot:Inverse()*rest end
 function Machine:aero()
@@ -476,6 +654,9 @@ function Machine:aero()
 end
 function Machine:step(dt)
 	if self.destroyed then return end
+	-- First, on its own: a reveal waiting for its egg must never be lost to an error further down.
+	local ok,problem=pcall(self.openStep,self)
+	if not ok then self:warnOnce("open: "..tostring(problem));self:flushOpen()end
 	self.t+=dt or 0
 	self:aero()
 	self:beats()
@@ -574,12 +755,28 @@ function Machine:step(dt)
 				shown=true
 				local p=Machine.rollAt(parts.chuteTop.Position,parts.chuteEnd.Position,parts.cup.Position,u,crank.sched.rollSeconds)
 				local rockLand=if crank.landedAt and age-crank.landedAt<.3 then math.rad(8)*math.sin((age-crank.landedAt)/.3*math.pi)else 0
-				drop.part.CFrame=CFrame.new(p)*(parts.cup-parts.cup.Position)*CFrame.Angles(rockLand,0,0)
-				drop.part.Color=Color3.fromHex((Corner.machineData().eggTypes or {})[crank.type]or "#FFFFFF")
-				drop.part.Transparency=fade
+				local at=CFrame.new(p)*(parts.cup-parts.cup.Position)*CFrame.Angles(rockLand,0,0)
+				local shell=self:shellFor(parts,crank.type)
+				drop.part.CFrame=at
+				if shell then
+					-- The real egg: the bought type's shell at the dropped egg's height (beta 35 4).
+					local data=Corner.machineData()
+					local pose=Machine.shellPose(at,data.egg.size[2]*Corner.dropScale(data))
+					for _,name in ipairs({"BottomShell","TopShell"})do
+						local part=shell[name]
+						part.Size=pose[name].size;part.CFrame=pose[name].cframe;part.Transparency=fade
+					end
+					if drop.part.Transparency~=1 then drop.part.Transparency=1 end
+				else
+					drop.part.Color=Color3.fromHex((Corner.machineData().eggTypes or {})[crank.type]or "#FFFFFF")
+					drop.part.Transparency=fade
+				end
 			end
 		end
-		if not shown and drop.part.Transparency~=1 then drop.part.Transparency=1;drop.part.CFrame=drop.rest end
+		if not shown then
+			if drop.part.Transparency~=1 then drop.part.Transparency=1;drop.part.CFrame=drop.rest end
+			Machine.hideShell(parts)
+		end
 	end
 end
 -- The reveal the buy started has ended: the egg in the cup fades FadeAfter later. `source` is "stat" for the Stat Egg's
@@ -616,9 +813,11 @@ end
 -- The camera is the machine's (a shot, the reveal behind it, or a Hatch another gap): the top rail stays hidden.
 function Machine:cameraHeld()return self.shot~=nil and self.shot.camera~=nil end
 -- How far every reveal stage is slid off the screen now (0 home, 1 gone): the panel's tuck during a shot.
+-- Beta (35): the pocket and Reduced Motion versions hold every covering reveal stage away too (1 until the hand-off,
+-- then 0 at once: no slide), so no reveal is on the screen before the egg is in the cup; their panel stays.
 function Machine:stageAmount()
 	local shot=self.shot
-	if not shot or shot.mode~="shot"or shot.panelBack then return 0 end
+	if not shot or shot.panelBack then return 0 end
 	return shot.amount or 0
 end
 
@@ -717,6 +916,7 @@ function Machine:startShot(cinematic,armed,now)
 	elseif mode=="pocket"and self.d.pocket then
 		pcall(self.d.pocket,string.lower(armed.type or "toy"),sched)
 	end
+	if mode~="shot"then self:placePanel(shot,1)end
 	return true
 end
 -- The camera: Scriptable from where it is now (or Shot B, for Hatch another), and given back later.
@@ -797,6 +997,8 @@ function Machine:shotStep()
 		end
 		if t>=s.rise and not shot.rose then shot.rose=true;self:play("screen_rise",Machine.Volume.rise)end
 	end
+	-- Pocket and Reduced Motion: the covering stages come back at the hand-off.
+	if shot.mode~="shot"and not shot.panelBack and t>=Machine.openTime(s)then self:restorePanel(shot)end
 	-- The hard cap: the panel is always back by then.
 	if t>=s.start+Machine.ShotCap and not shot.panelBack then self:restorePanel(shot)end
 	local cam=shot.camera
@@ -864,7 +1066,14 @@ function Machine:skipShot()
 	-- The first drop of each egg type cannot be skipped: the same canSkip the reveal itself asks (asked now, not at the
 	-- confirmation: the stage sets it when it opens).
 	local c=shot.cinematic
-	if type(c)=="table"and type(c.canSkip)=="function"then
+	local pending=self.pending
+	if pending and pending.crank==shot.crank then
+		-- Its reveal is not open yet (deferred): the stage's own rule, asked by type (deps.firstOfType).
+		if self.d.firstOfType then
+			local ok,first=pcall(self.d.firstOfType,Corner.eggType(pending.kind))
+			if ok and first==true then return false end
+		end
+	elseif type(c)=="table"and type(c.canSkip)=="function"then
 		local ok,allowed=pcall(c.canSkip)
 		if ok and allowed==false then return false end
 	end
@@ -884,6 +1093,7 @@ function Machine:skipShot()
 		self.gate.release=now+.12
 		self.gate.cap=now+.12+Machine.ShotCap
 	end
+	if pending and pending.crank==crank then pending.at=math.min(pending.at,now+.12)end
 	if shot.camera and shot.frames then shot.camera.from=shot.frames.B end
 	return true
 end
@@ -891,6 +1101,7 @@ function Machine:destroy()
 	if self.destroyed then return end
 	self.destroyed=true
 	if self.heartbeat then self.heartbeat:Disconnect();self.heartbeat=nil end
+	pcall(self.flushOpen,self) -- a reveal waiting for its egg opens now, never lost
 	pcall(self.returnCamera,self,true)
 	if self.cinematic then
 		if self.cinematic.gate then self.cinematic.gate=nil end

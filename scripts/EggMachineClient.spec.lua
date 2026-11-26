@@ -156,6 +156,114 @@ return function(client)
 			end
 		end
 	end)
+	-- Beta (35) "the leaf is still in the way, can we just make it a hole": the Body rebuilt without the leaf
+	-- (build_egg_machine.py LEAF_CHUTE = False writes `leafless`): the egg pops out of a round hole along the belly's
+	-- normal and drops into the cup's middle. The egg here is dense (40 rings x 32) so no crossing slips between rings.
+	local function eggSurface(scale,centre)
+		local out={}
+		for i=0,40 do
+			local th=math.pi*i/40
+			local r=.66*scale/2*math.sin(th)*(1+.1*math.cos(th))
+			local y=-.86*scale/2*math.cos(th)
+			for k=0,31 do
+				local a=2*math.pi*k/32
+				table.insert(out,centre+Vector3.new(r*math.cos(a),y,r*math.sin(a)))
+			end
+		end
+		return out
+	end
+	-- How deep a point is inside the cup's straw (the lathe in build_body, about the cup's centre): 0 outside.
+	local function cupDepth(data,q)
+		local poly={{0,.08},{.5,.1},{.53,.4},{.6,.45},{.6,.15},{.45,0},{0,0}}
+		local rho=Vector2.new(q.X-data.cup[1],q.Z-data.cup[3]).Magnitude
+		local p=Vector2.new(rho,q.Y)
+		local inside,best=false,math.huge
+		for i=1,#poly do
+			local a=Vector2.new(poly[i][1],poly[i][2])
+			local b=Vector2.new(poly[i%#poly+1][1],poly[i%#poly+1][2])
+			if(a.Y>p.Y)~=(b.Y>p.Y)and p.X<a.X+(b.X-a.X)*(p.Y-a.Y)/(b.Y-a.Y)then inside=not inside end
+			local e=b-a
+			local t=math.clamp((p-a):Dot(e)/e:Dot(e),0,1)
+			best=math.min(best,(p-(a+e*t)).Magnitude)
+		end
+		return if inside then best else 0
+	end
+	test("beta (35): the leafless Body: out of the round hole (only inside its opening), clear of its rim, the belly and the cup",function()
+		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
+		local mesh=Corner.machineData()
+		assert(not Corner.leafless(mesh)and Corner.hole(mesh)==nil,"the uploaded Body still has its leaf: no hole, the beta 34 path")
+		local data=table.clone(mesh);data.leafless=true
+		local hole=Corner.hole(data)
+		local drop=Corner.dropPoints(data)
+		local scale=Corner.dropScale(data)
+		assert(math.abs(Corner.belly(hole.centre))<1e-3,"the hole sits on the belly")
+		assert(hole.normal.Z>.6 and hole.normal.X>.3 and hole.normal.Y<0,"facing out, right and a little down, at the cup")
+		assert(Corner.belly(drop.from)<0 and Corner.belly(drop.exit)>0,"from inside, out")
+		assert((drop.from-hole.centre).Unit:Dot(-hole.normal)>.999,"straight out along the normal")
+		local half=data.egg.size[2]*scale/2
+		assert(near(drop.seat.X,data.cup[1])and near(drop.seat.Z,data.cup[3])and near(drop.seat.Y-half,data.cup[2]),"seated in the cup's middle, on its floor")
+		local n=hole.normal
+		local u=n:Cross(Vector3.new(0,1,0)).Unit
+		local v=u:Cross(n).Unit
+		local ring=hole.radius+hole.rim
+		local outside,rimGap,cup=0,math.huge,0
+		for i=0,80 do
+			local c=Machine.rollAt(drop.from,drop.exit,drop.seat,Machine.RollSeconds*i/80)
+			for _,q in ipairs(eggSurface(scale,c))do
+				local rel=q-hole.centre
+				local lateral=Vector2.new(rel:Dot(u),rel:Dot(v)).Magnitude
+				-- Inside the belly only behind the opening: the egg passes through the hole, never through the wall.
+				if Corner.belly(q)<0 and lateral>hole.radius then outside+=1 end
+				rimGap=math.min(rimGap,Vector2.new(lateral-ring,rel:Dot(n)-Machine.HoleLook.lift).Magnitude-hole.rim)
+				cup=math.max(cup,cupDepth(data,q))
+			end
+		end
+		assert(outside==0,"egg points inside the belly outside the opening: "..outside)
+		assert(rimGap>=.01,"the egg's least gap to the rim: "..rimGap)
+		assert(cup<=.02,"into the cup's straw: "..cup)
+		-- Seated: every ring of the egg below the rim inside the woven wall's inner face.
+		for _,q in ipairs(eggSurface(scale,drop.seat))do assert(cupDepth(data,q)==0,"seated, in the straw at "..q.Y)end
+		-- The hole's pieces stand on the belly (never inside it) and the disc fills the rim.
+		local pieces=Machine.holeParts(hole)
+		assert(pieces[1].name=="Disc"and near(pieces[1].size.Y,ring*2)and #pieces==1+Machine.HoleLook.segments)
+		for _,piece in ipairs(pieces)do assert(Corner.belly(piece.cframe.Position)>=0,piece.name.." is inside the belly")end
+	end)
+	test("beta (35) 4: the real egg: the shell meshes stand the dropped egg's height and width, in each type's colorMap",function()
+		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
+		local Models=require(game:GetService("ReplicatedStorage").Shared.EggModels)
+		local data=Corner.machineData()
+		local h=data.egg.size[2]*Corner.dropScale(data)
+		local pose=Machine.shellPose(CFrame.new(1,2,3),h)
+		local top=pose.TopShell.cframe.Position.Y+pose.TopShell.size.Y/2
+		local bottom=pose.BottomShell.cframe.Position.Y-pose.BottomShell.size.Y/2
+		assert(near(top,2+h/2,1e-3)and near(bottom,2-h/2,1e-3),"top "..top..", bottom "..bottom)
+		assert(math.abs(pose.BottomShell.size.X-data.egg.size[1]*Corner.dropScale(data))<.02,"as wide as the dropped egg: "..pose.BottomShell.size.X)
+		-- In the machine: the shells (deps.shells) replace the plain egg, wearing the bought type's map.
+		local lounge=Instance.new("Folder");lounge.Name="EggDropLounge"
+		local model=Instance.new("Model");model.Name="EggMachine";model.Parent=lounge
+		local body=Instance.new("Part");body.Name="Body";body.Position=Vector3.new(0,3.56,0);body.Size=Vector3.new(4.2,7.12,4.3);body.Parent=model
+		local dial=Instance.new("Part");dial.Name="Dial";dial.CFrame=CFrame.new(0,2,1.7);dial.Parent=model
+		local pivot=Instance.new("Attachment");pivot.Name="DialPivot";pivot.WorldCFrame=CFrame.new(0,2,1.7);pivot.Parent=body
+		local egg=Instance.new("Part");egg.Name="DropEgg";egg.CFrame=CFrame.new();egg.Transparency=1;egg.Parent=model
+		for name,at in pairs({ChuteTop=Vector3.new(1,1,.6),ChuteEnd=Vector3.new(1.3,.6,1.3),CupSeat=Vector3.new(1.29,.57,1.56)})do
+			local a=Instance.new("Attachment");a.Name=name;a.WorldCFrame=CFrame.new(at);a.Parent=body
+		end
+		local now=100
+		local asked=0
+		local machine=Machine.new({step=false,clock=function()return now end,cinematic={},corner=function()return true end,room=function()return lounge end,
+			tagged=function()return{}end,camera=function()return Vector3.new(0,5,10)end,warn=function()end,
+			shells=function()asked+=1;local t,b=Instance.new("MeshPart"),Instance.new("MeshPart");return{TopShell=t,BottomShell=b}end})
+		assert(machine:bought("hueBuy","sh-1"))
+		local reveal={}
+		machine.cinematic.onPlay(reveal)
+		for _=1,90 do now+=1/60;machine:step(1/60)end
+		local shell=model:FindFirstChild("DropShell")
+		assert(shell and asked==1,"made once")
+		local t=shell:FindFirstChild("TopShell")
+		assert(t.TextureID==Models.Types.hue.colorMap and t.Transparency<1 and egg.Transparency==1,"the Hue Egg's shell shows, the plain egg hides")
+		assert(near(t.Size.Y,pose.TopShell.size.Y),"at the dropped egg's size")
+		machine:destroy()
+	end)
 	test("open crank: clicks at 0 / 90 / 180 ms and one knock; a second press inside it is ignored; the corner off does nothing",function()
 		local r=rig()
 		assert(r.machine:openCrank())
@@ -435,6 +543,7 @@ return function(client)
 			root=function()return r.root end,capsule=function()return r.capsule end,cameraObject=function()return r.camera end,
 			hud=function(visible)table.insert(r.hud,visible)end,ghost=function(alpha)table.insert(r.ghost,alpha)end,
 			blocked=function(a,b)return r.blocked(a,b)end,pocket=function(kind,sched)table.insert(r.pockets,{kind=kind,sched=sched})end,
+			firstOfType=function(kind)return r.first~=nil and r.first[kind]==true end,
 			warn=function()end,audio={play=function(_,name)table.insert(r.sounds,{name=name,at=r.now});return true end}})
 		function r.advance(seconds,step)
 			step=step or 1/60
@@ -449,13 +558,15 @@ return function(client)
 			r.cinematic.onPlay(reveal)
 			return reveal
 		end
-		-- The Stat Egg (init): armed by the send, confirmed by its Saved answer with its reveal (the StatEggReveal).
+		-- The Stat Egg (init): armed by the send; its Saved answer hands its reveal's show to the machine (SnackHost
+		-- present -> deliver, beta 35), which opens it once the egg is in the cup.
+		r.opened={}
 		function r.buyStat(reveal)
 			r.at=r.now
 			reveal=reveal or {}
 			assert(r.machine:bought("statEggBuy",nil))
 			r.cinematic.onPlay({}) -- another reveal starting never confirms it
-			assert(r.machine:confirm(reveal))
+			assert(r.machine:deliver("Stat",function()table.insert(r.opened,{reveal=reveal,at=r.now-r.at})end,reveal))
 			return reveal
 		end
 		return r
@@ -550,6 +661,8 @@ return function(client)
 		assert(r.machine.shot==shot and r.camera.CameraType~="Custom","the shot plays on")
 		assert(near(r.heard("land")or -1,1.35,.03)and near(r.heard("crank_clunk")or -1,.90,.03)and near(r.heard("egg_roll")or -1,.95,.03))
 		assert(r.statReveal.gate(reveal),"still held at 1.9")
+		-- Beta (35) 1: its reveal was not even on the screen before the egg was in the cup: opened as the panel rose.
+		assert(#r.opened==1 and r.opened[1].at>=1.75-1e-9 and r.opened[1].at<1.75+.04,"opened at "..tostring(r.opened[1]and r.opened[1].at))
 		r.advance(.12)
 		assert(not r.statReveal.gate(reveal),"its hatch starts at 2.0")
 		local lands=0;for _,s in ipairs(r.sounds)do if s.name=="land"then lands+=1 end end
@@ -585,18 +698,16 @@ return function(client)
 		toy.machine:revealClosed();toy.advance(.4)
 		assert(toy.camera.CameraType=="Custom")
 	end)
-	test("beta (34): the Stat Egg's skip: never its first drop; then its reveal's own skip jumps the shot to the landing",function()
+	test("beta (34): the Stat Egg's skip: never its first drop; then the skip jumps the shot to the landing (beta 35: its reveal opens then)",function()
 		local r=capsuleRig()
+		r.first={stat=true}
 		local reveal=r.buyStat()
-		reveal.canSkip=function()return false end
 		r.advance(.2)
-		r.statReveal.onGateSkip(reveal)
-		assert(not r.machine.shot.skipped,"the first Stat Egg plays in full")
-		reveal.canSkip=function()return true end
-		r.statReveal.onGateSkip(reveal)
-		assert(r.machine.shot.skipped)
-		r.advance(.02);assert(r.heard("land"),"the thud is never skipped")
-		r.advance(.08);assert(r.statReveal.gate(reveal));r.advance(.05);assert(not r.statReveal.gate(reveal),"its hatch .12 s later")
+		assert(not r.machine:skipShot()and not r.machine.shot.skipped,"the first Stat Egg plays in full (asked by type: its reveal is not open yet)")
+		r.first.stat=false
+		assert(r.machine:skipShot()and r.machine.shot.skipped)
+		r.advance(.02);assert(r.heard("land")and #r.opened==0,"the thud is never skipped, and comes first")
+		r.advance(.08);assert(r.statReveal.gate(reveal));r.advance(.05);assert(not r.statReveal.gate(reveal)and #r.opened==1,"its reveal and hatch .12 s later")
 	end)
 	test("capsule: skip jumps to the landing (the thud plays, the reveal .12 s later); never the first drop of a type",function()
 		local r=capsuleRig()

@@ -100,7 +100,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The garden's drift lanterns and seed fluff (GARDEN-PLAY-BRIEF section 4): spots, heights, night, the client.
           "DriftLanterns",
           # Beta (34) QA: the walk feel (eased legs, turns, corners) and the pause's look round (PetWalkBeats).
-          "PetWalk"]
+          "PetWalk",
+          # Beta (35): every egg comes out of the machine (the one path: every egg type and every buy send).
+          "EggDelivery"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -181,7 +183,28 @@ def client_modules():
     modal = init[init.index("clientUI.anyModalOpen=function(others)"):init.index("-- QA v2 R2.1/R2.2: the same edge")]
     out["client/InitModal"] = "return function(clientUI,isPickerOpen,journal,nurseryView,gameMenu,modal)\n" + modal + "\nreturn clientUI.anyModalOpen\nend"
     out["client/MovementLock"] = (ROOT / "src/client/MovementLock.lua").read_text(encoding="utf-8")
+    out["client/EggEntryScan"] = egg_entry_scan()
     return out
+
+
+def egg_entry_scan():
+    """Beta (35), the standing rule "all eggs have the crank animation": what EggDelivery.spec reads from the tree. Every
+    `"...Buy"` send named anywhere in src (file by file), and the sources the hand-offs live in."""
+    buys = {}
+    for path in sorted((ROOT / "src").rglob("*.lua")):
+        for action in sorted(set(re.findall(r'"([a-z][A-Za-z]*Buy)"', path.read_text(encoding="utf-8")))):
+            buys.setdefault(action, []).append(path.relative_to(ROOT).as_posix())
+    sources = {name: (ROOT / f"src/client/{file}").read_text(encoding="utf-8")
+               for name, file in (("init", "init.client.lua"), ("SnackHost", "SnackHost.lua"), ("HatchCinematic", "HatchCinematic.lua"))}
+
+    def long(text):
+        level = 1
+        while f"]{'=' * level}]" in text:
+            level += 1
+        return f"[{'=' * level}[\n{text}]{'=' * level}]"
+    rows = ",".join(f'{action}={{{",".join(repr(p) for p in paths)}}}' for action, paths in buys.items())
+    texts = ",".join(f"{name}={long(text)}" for name, text in sources.items())
+    return f"return{{buys={{{rows}}},sources={{{texts}}}}}"
 
 
 def git(*args):
