@@ -233,6 +233,9 @@ def cliff_den_parts():
     return json.loads(re.search(r"\[=\[(.*)\]=\]", text, re.S).group(1))
 
 
+SKIN_WEST_EDGE = -15.5                # round 7c: the mouth's west edge (MOUTH x0 -16, the drawn jamb 0.1 inside)
+
+
 def cliff_depth_fn(accept):
     """Fable R7 review A: cliff_depth(centre, inward, reach) for world_finish_path.seat_masses over the visible meshes
     `accept(name)` takes: the nearest of five rays (the centre and four points a third of the way to the blob's sides)
@@ -328,6 +331,10 @@ def den_recuts(Den, rows, shell):
         return ny < .5 and any(p[1] > 20 and math.hypot(p[0] - mx, p[2] - mz) < 30 for p in points)
 
     import world_finish_path as Pth
+
+    def den_face(points, ny, grassy):
+        """The grass flaps (grass only) and, round 7c, the west-jamb plank (ground and grass; world_finish_path)."""
+        return (grassy and flap(points, ny)) or Pth.plank_face(points, ny)
     holes = []
     for name in candidates:
         o = bpy.data.objects[name]
@@ -335,13 +342,14 @@ def den_recuts(Den, rows, shell):
         rot = mw.to_3x3()
         doomed_extra = extra.get(name)
         grassy = "__grass" in name or "__meadow" in name
+        earthy = grassy or "__ground" in name
         hits = flaps = 0
         for p in o.data.polygons:
             c = L.rb(mw @ p.center)
             pts = [L.rb(mw @ o.data.vertices[k].co) for k in p.vertices] + [c]
             if inside(c) or (doomed_extra and doomed_extra(c)) or spans(pts):
                 hits += 1
-            elif grassy and flap(pts, (rot @ p.normal).normalized().z):
+            elif earthy and den_face(pts, (rot @ p.normal).normalized().z, grassy):
                 flaps += 1
         isl, bm_ = Pth.islands(o)
         small = sum(1 for f_, cen, area, _ in isl if Pth.sweepable(f_, area, den_sweep(cen)))
@@ -350,7 +358,7 @@ def den_recuts(Den, rows, shell):
             continue
         doomed = lambda c, e=doomed_extra: inside(c) or (e is not None and e(c))
         collide = parts[name]["collide"]
-        face = flap if grassy else None
+        face = (lambda pts, ny, g=grassy: den_face(pts, ny, g)) if earthy else None
         if collide:
             copy, gone = recut(name, "W7_F_Over" + name[len("W7_CD_"):], doomed, spans, face)
             bpy.data.objects[name + "__pack"].name = name          # the original stays (invisible, colliding)
@@ -625,6 +633,21 @@ def slice_den():
             bpy.data.objects.remove(skin)
         skin = rock_skin("W7_F_DenSkin__cliff_rock", skin_where, steep=skin_steep,
                          keep=lambda pts: not (den_sweep(pts[-1]) and all(covered(q) for q in pts)))
+    # Round 7c (Studio, beta 7b: the thin hanging slivers above and west of the mouth were this skin, solid rock behind
+    # them): no skin west of the mouth's west edge, nor any small piece of it left after that; the skin over the brow
+    # and east of the mouth stays
+    if skin:
+        import bmesh as _bm
+        bm = _bm.new()
+        bm.from_mesh(skin.data)
+        west = [f for f in bm.faces if L.rb(skin.matrix_world @ f.calc_center_median())[0] < SKIN_WEST_EDGE]
+        _bm.ops.delete(bm, geom=west, context="FACES")
+        bm.to_mesh(skin.data)
+        bm.free()
+        Pth.sweep(skin, lambda c: "path", Pth.SWEEP)        # every piece of 12 faces / 6 square studs or less
+        if not skin.data.polygons:
+            bpy.data.objects.remove(skin)
+            skin = None
     triplanar_uv(mouth, rock_k)
     mouth.data.materials.append(island_material("cliff_rock"))
     rows.append(manifest_row(mouth, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
@@ -841,7 +864,7 @@ def slice_path():
               and o.name != "W7_CD_CaveBars__palette" and "glow" not in o.name]:
         mw = o.matrix_world
         rot = mw.to_3x3()
-        face = Pth.bank_face if re.match(r"(ground|grass|meadow)", o.name.rsplit("__", 1)[1]) else None
+        face = Pth.earth_face if re.match(r"(ground|grass|meadow)", o.name.rsplit("__", 1)[1]) else None
 
         def hit(p):
             pts = [L.rb(mw @ o.data.vertices[k].co) for k in p.vertices]

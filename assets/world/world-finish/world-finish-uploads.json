@@ -3,17 +3,17 @@
  "den": {
   "model": {
    "file": "world-finish-den.fbx",
-   "sha256": "5ace8afdf13602220e7efa1c23731d4b1fa9959a22028b8d37b48ee696a3904a",
-   "manifestSha256": "cfe926988ff23c281659b4b4722d412b539e27eb868fb77a6d466ac591d68c62",
-   "operation": "228d2ee1-b121-4d1b-a1e3-20c208b7feb2",
-   "assetId": "79272668578896",
+   "sha256": "0f10d020cd1ced6f4b8591d0a26ec79501a666857f5327e4044e793f46911e2e",
+   "manifestSha256": "c68faf45adee52517a62947f75ffa95506ae7876ae4666f212aee637d258ed6f",
+   "operation": "5fc7640a-dd89-4519-8552-df3bec5f522f",
+   "assetId": "103471077073179",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "125885279330597",
-    "operation": "97a3d563-9865-4d1f-b587-167652a00c06",
-    "why": "round 7 first cut, superseded by 7b (Fable FABLE-REVIEW-R7 fixes A and B)"
+    "assetId": "79272668578896",
+    "operation": "228d2ee1-b121-4d1b-a1e3-20c208b7feb2",
+    "why": "round 7b, superseded by 7c (Studio: den skin slivers west of the mouth, on-edge ground at the west jamb)"
    },
-   "why": "round 7b (Fable ROUND7-LOOK items 1-6, FABLE-REVIEW-R7 fixes A and B); mesh gate PASS"
+   "why": "round 7c; mesh gate PASS"
   },
   "images": {
    "den_shell_west_color": {
@@ -79,17 +79,17 @@
  "path": {
   "model": {
    "file": "world-finish-path.fbx",
-   "sha256": "d40339a635f10b0ec1f33ab988d2add68b2c72109d188cfd67dcfa35b7453f8d",
-   "manifestSha256": "83e13c3178b871614ace510347ff935c7c00bd46e3975c57692a811b5e353f6b",
-   "operation": "09c9c6cb-51f6-480f-9f16-c71e08bca1b4",
-   "assetId": "107372779032354",
+   "sha256": "0346c0d205d635e5d08ea7c62faff4e7668e2124b330c8be1947d988e243d271",
+   "manifestSha256": "4beb850e3c0f9cd22b996190eca20e93c1b65c907897e6cd89042e5e590a0f3c",
+   "operation": "26a02f76-4346-4f28-a95a-6d896f5dce10",
+   "assetId": "129995978377799",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "121830328283890",
-    "operation": "11e5b19a-e9f5-487a-b580-01d9928bd131",
-    "why": "round 7 first cut, superseded by 7b (Fable FABLE-REVIEW-R7 fixes A and B)"
+    "assetId": "107372779032354",
+    "operation": "09c9c6cb-51f6-480f-9f16-c71e08bca1b4",
+    "why": "round 7b, superseded by 7c (Studio: den skin slivers west of the mouth, on-edge ground at the west jamb)"
    },
-   "why": "round 7b (Fable ROUND7-LOOK items 1-6, FABLE-REVIEW-R7 fixes A and B); mesh gate PASS"
+   "why": "round 7c; mesh gate PASS"
   },
   "images": {}
  },

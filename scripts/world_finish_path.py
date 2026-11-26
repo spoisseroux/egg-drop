@@ -755,6 +755,22 @@ def bank_face(points, ny):
     return False
 
 
+PLANK = ((-26.0, 3.0, -104.0), (-10.0, 20.0, -88.0), .5)   # round 7c (Studio: a tan plank at the west jamb)
+
+
+def plank_face(points, ny):
+    """Round 7c (Studio, beta 7b: a tall tan "plank" at the mouth's west jamb, island ground on edge): an island
+    ground or grass face standing on edge (normal y under 0.5) whose centre (the last point) is in the PLANK box."""
+    (x0, y0, z0), (x1, y1, z1), steep = PLANK
+    c = points[-1]
+    return ny < steep and x0 <= c[0] <= x1 and y0 <= c[1] <= y1 and z0 <= c[2] <= z1
+
+
+def earth_face(points, ny):
+    """The path slice's face rule for island ground and grass: the pale bank (ROUND7 1) and the west-jamb plank (7c)."""
+    return bank_face(points, ny) or plank_face(points, ny)
+
+
 UNDER = (.5, 1.0)                   # round 7 (Fable ROUND7 2): 0.5 past each edge, down to 1.0 under the tread
 
 

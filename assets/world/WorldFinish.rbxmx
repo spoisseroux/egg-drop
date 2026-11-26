@@ -6,7 +6,7 @@
     <Item class="StringValue" referent="WorldFinishVersion">
       <Properties>
         <string name="Name">Version</string>
-        <string name="Value">f6d3de25e5f3feda</string>
+        <string name="Value">717b092907ec6c42</string>
       </Properties>
     </Item>
     <Item class="MeshPart" referent="WFD0">
@@ -61,7 +61,7 @@
     <Item class="MeshPart" referent="WFD2">
       <Properties>
         <string name="Name">W7_CD_Ground__ground</string>
-        <Content name="MeshId"><url>rbxassetid://84775644612941</url></Content>
+        <Content name="MeshId"><url>rbxassetid://119237028824025</url></Content>
         <Content name="TextureID"><url>rbxassetid://113678904532434</url></Content>
         <Vector3 name="Size"><X>261.0</X><Y>55.6477</Y><Z>249.0</Z></Vector3>
         <Vector3 name="InitialSize"><X>2048</X><Y>436.6532897949219</Y><Z>1953.839111328125</Z></Vector3>
@@ -464,10 +464,10 @@
     <Item class="MeshPart" referent="WFD16">
       <Properties>
         <string name="Name">W7_F_DenMouth__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://128310125191185</url></Content>
+        <Content name="MeshId"><url>rbxassetid://92113501056578</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>62.2707</X><Y>23.8473</Y><Z>23.1314</Z></Vector3>
-        <Vector3 name="InitialSize"><X>488.6225891113281</X><Y>187.12391662597656</Y><Z>181.50631713867188</Z></Vector3>
+        <Vector3 name="Size"><X>62.2537</X><Y>23.3757</Y><Z>25.4728</Z></Vector3>
+        <Vector3 name="InitialSize"><X>488.488525390625</X><Y>183.42347717285156</Y><Z>199.87844848632812</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -602,10 +602,10 @@
     <Item class="MeshPart" referent="WFD22">
       <Properties>
         <string name="Name">W7_F_DenSkin__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://139302720149996</url></Content>
+        <Content name="MeshId"><url>rbxassetid://126978581994704</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>63.0143</X><Y>34.0886</Y><Z>21.2144</Z></Vector3>
-        <Vector3 name="InitialSize"><X>494.45703125</X><Y>267.48468017578125</Y><Z>166.4639129638672</Z></Vector3>
+        <Vector3 name="Size"><X>18.1825</X><Y>34.0414</Y><Z>18.1269</Z></Vector3>
+        <Vector3 name="InitialSize"><X>142.6731414794922</X><Y>267.1138916015625</Y><Z>142.23731994628906</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -999,7 +999,7 @@
     <Item class="MeshPart" referent="WFP13">
       <Properties>
         <string name="Name">W7_CD_Ground__ground@path</string>
-        <Content name="MeshId"><url>rbxassetid://107417897918540</url></Content>
+        <Content name="MeshId"><url>rbxassetid://73679165511333</url></Content>
         <Content name="TextureID"><url>rbxassetid://113678904532434</url></Content>
         <Vector3 name="Size"><X>261.0</X><Y>55.6477</Y><Z>249.0</Z></Vector3>
         <Vector3 name="InitialSize"><X>2048</X><Y>436.6532897949219</Y><Z>1953.839111328125</Z></Vector3>
