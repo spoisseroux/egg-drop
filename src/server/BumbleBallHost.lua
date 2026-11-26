@@ -139,7 +139,9 @@ function Host:kick(player,id,origin,velocity,options)
 	local from=Balls.origin(origin,current,before)
 	if Motion.blocked(id,from,self.world)then from=current end
 	if player~=nil then
-		if not Balls.inReach(self.root(player),from)then return nil,"Reach"end
+		-- Code review B35: reach is measured to the server's own ball, not the client's claimed origin (which could
+		-- stretch reach by the origin slack and nudge a far ball).
+		if not Balls.inReach(self.root(player),current)then return nil,"Reach"end
 		local history=self.history[player]
 		if not history then history={};self.history[player]=history end
 		if not Balls.allow(history,now)then return nil,"Rate"end

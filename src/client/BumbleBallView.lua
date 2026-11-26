@@ -45,6 +45,9 @@ function View:set(record,now,clock,how)
 end
 
 function View:predict(record,now,clock,seq)
+	-- Code review B35: the last record the server gave us, to go back to if no answer comes (a refusal the server
+	-- rate-limited away). A second kick while one is in flight keeps the first one's confirmed record.
+	if not self.pending then self.confirmed=self.record end
 	self.pending={seq=seq,record=record,at=clock}
 	self.deferred=nil
 	return self:set(record,now,clock,"instant")
@@ -97,7 +100,9 @@ function View:expire(now,clock)
 	if not self.pending or clock-self.pending.at<View.Pending then return false end
 	local deferred=self.deferred
 	self.pending,self.deferred=nil,nil
-	if deferred then self:set(deferred,now,clock,"correct")end
+	if deferred then self:set(deferred,now,clock,"correct")
+	elseif self.confirmed then self:set(self.confirmed,now,clock,"correct")end
+	self.confirmed=nil
 	return true
 end
 

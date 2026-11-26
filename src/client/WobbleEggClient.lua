@@ -150,9 +150,11 @@ function Client.mount()
 	local Clock=require(script.Parent.HollowClock)
 	local phone=UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 	local cull=if phone then Client.Cull.phone else Client.Cull.desktop
+	local watch
 	local function stop()
 		if controller.egg then controller.egg:destroy();controller.egg=nil end
 		if controller.step then controller.step:Disconnect();controller.step=nil end
+		if not controller.dead then watch()end
 	end
 	local function start()
 		if controller.egg or not Alive.on(Client.Feature)then return end
@@ -160,6 +162,8 @@ function Client.mount()
 		if not landmark then return end
 		controller.egg=Client.new(landmark)
 		if not controller.egg then return end
+		-- Code review B35: built, so stop listening for the landmark until the egg goes away again.
+		if controller.watching then controller.watching:Disconnect();controller.watching=nil end
 		controller.step=RunService.Heartbeat:Connect(function()
 			local egg=controller.egg
 			if not egg then return end
@@ -172,12 +176,18 @@ function Client.mount()
 	local function refresh()if Alive.on(Client.Feature)then start()else stop()end end
 	table.insert(controller.connections,Alive.changed(Client.Feature):Connect(refresh))
 	-- The world can arrive after us: try again when pieces land in the lounge, until the egg is built.
-	table.insert(controller.connections,workspace.DescendantAdded:Connect(function(node)
-		if not controller.egg and node.Name==Egg.LandmarkName then task.defer(refresh)end
-	end))
+	watch=function()
+		if controller.watching then return end
+		controller.watching=workspace.DescendantAdded:Connect(function(node)
+			if not controller.egg and node.Name==Egg.LandmarkName then task.defer(refresh)end
+		end)
+	end
+	watch()
 	refresh()
 	function controller:destroy()
+		self.dead=true
 		stop()
+		if self.watching then self.watching:Disconnect();self.watching=nil end
 		for _,c in ipairs(self.connections)do c:Disconnect()end
 		table.clear(self.connections)
 	end

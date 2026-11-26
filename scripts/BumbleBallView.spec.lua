@@ -90,6 +90,19 @@ return function(client)
 		assert(worst<3,"a blend, not a snap: "..worst)
 	end)
 
+	test("code review B35: a refusal the server rate-limited away: on expiry, back to the last server record",function()
+		local v=fresh(10)
+		local confirmed=v.record
+		local mine={id="felt",n=0,origin=home,velocity=Vector3.new(26,9,0),startTime=40,by=ME,seq=3}
+		v:predict(mine,40,0,3)
+		run(v,0,.3,40)
+		assert((v.drawn-home).Magnitude>3,"drawn on my arc")
+		assert(not v:expire(40.5,.5),"still waiting")
+		assert(v:expire(40+View.Pending+.01,View.Pending+.01))
+		assert(v.record==confirmed and v.blendFor==Balls.Correct,"the confirmed record, blended")
+		run(v,View.Pending+.02,View.Pending+.02+Balls.Correct+.05,40)
+		assert((v.drawn-home).Magnitude<1e-3,"back at home: "..tostring(v.drawn))
+	end)
 	test("contested: a newer record while mine is in flight waits; my answer decides (accepted later: mine; refused: theirs)",function()
 		local v=fresh(10)
 		local mine={id="felt",n=0,origin=home,velocity=Vector3.new(26,9,0),startTime=50,by=ME,seq=3}

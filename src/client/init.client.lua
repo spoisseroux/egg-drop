@@ -5206,7 +5206,8 @@ function clientUI.eggCornerMount(Onboard)
      return send(self,action,payload,function(message)
       -- Beta (34): confirmed with its reveal, so the shot holds that reveal until the egg is in the cup (the reveal
       -- opens in this same callback, below).
-      if type(message)=="table"and message.status=="Saved"and on()then pcall(machine.confirm,machine,statReveal)
+      -- Code review B35: only a Saved answer with a receipt opens the reveal (SnackHost), so only that one confirms.
+      if type(message)=="table"and message.status=="Saved"and type(message.receipt)=="table"and on()then pcall(machine.confirm,machine,statReveal)
       elseif type(message)=="table"and message.status~="Retrying"then pcall(machine.refuse,machine)end
       return callback(message)
      end,table.unpack(rest))

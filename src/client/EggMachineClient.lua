@@ -94,6 +94,9 @@ Machine.Shots=table.freeze({
 		land=.62,start=.62}),
 })
 Machine.ShotCap=.2       -- the reveal starts at the latest this long after its schedule's start
+-- Code review B35: a Stat Egg shot whose reveal never opened (a Saved answer without a receipt, a reveal that threw)
+-- gives the camera back this long after its schedule's start, so nothing is left Scriptable at Shot B.
+Machine.StatWatch=3
 Machine.PocketRange=24   -- farther than this from the machine: the pocket version
 Machine.ReturnSeconds=.30
 -- The two shots in the machine's frame (+Z the front, +X the cup's side, up from the ground): camera at, looks at.
@@ -814,6 +817,14 @@ function Machine:shotStep()
 		local p=math.clamp((now-cam.returning)/Machine.ReturnSeconds,0,1)
 		cam.object.CFrame=cam.returnFrom:Lerp(cam.savedCFrame,easeInOut(p))
 		if p>=1 then self:giveBack(shot)end
+	end
+	-- Code review B35: the Stat Egg's reveal owns the return (revealClosed "stat"); if it never opened, nobody would.
+	if cam and not cam.returning and Machine.Unclaimed[shot.kind]==true and t>=s.start+Machine.StatWatch then
+		local owner=shot.cinematic
+		local open=false
+		if owner and type(owner.isOpen)=="function"then local ok,value=pcall(owner.isOpen,owner);open=ok and value==true end
+		if not open and not shot.statSeenOpen then self:returnCamera(false)
+		elseif open then shot.statSeenOpen=true end
 	end
 	-- The model unbound, or the corner / capsule off, mid-shot: the camera goes back at once.
 	if cam and(not self:on()or not self:capsuleOn()or(self.parts==nil and t>.05))then self:returnCamera(true)end
