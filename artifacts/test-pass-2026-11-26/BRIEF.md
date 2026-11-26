@@ -45,7 +45,11 @@ You said the world feels tiny and asked for it to be easy to tweak. I didn't sca
   - it scales automatically after spawning, and again on respawn;
   - `/scale 1`, `0.7` and `clear` work live;
   - walking is normal.
+  - in Board mode the feet stay on the ground;
+  - a hat that loads late comes out at the right size.
   - Captures at 1.0, 0.8 and 0.7 are in `artifacts/player-scale-2026-11-26/studio/`.
+- The follow camera's zoom cap shrinks a little with the scale (0.9x at 0.8, per Fable), so you don't end up looking at a tiny avatar.
+- Fable picked 0.8: 0.75 is the floor, and at 0.7 the Bear stops reading as a baby. Tell me your number after S4 and I'll set it.
 
 ## Fixed along the way
 
