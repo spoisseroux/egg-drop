@@ -120,7 +120,9 @@ return function(client,parent)
 		end)
 		test("colour circles: rich text in the theme colour with a lighter ring, plain words for screen readers",function()
 			local markup=Themes.circle(4,14,"smileys")
-			assert(markup:find(Themes.ById.smileys.ramps[4].body,1,true)and markup:find(Themes.ById.smileys.ramps[4].light,1,true)and markup:find("<stroke",1,true))
+			-- Review B37: a light Aero body is ringed in ink (reads on light cards); other themes keep the lighter ring.
+			assert(markup:find(Themes.ById.smileys.ramps[4].body,1,true)and markup:find(Themes.ById.smileys.ink,1,true)and markup:find("<stroke",1,true))
+			assert(Themes.circle(4,14,"gumdrops"):find(Themes.ById.gumdrops.ramps[4].light,1,true))
 			assert(Themes.strip(markup)==Themes.Glyph and Themes.spoken(4)=="pink ball"and Themes.word(1)=="blue")
 			local label=Instance.new("TextLabel");label.RichText=true;label.Size=UDim2.fromOffset(240,30);label.TextSize=14;label.Parent=root
 			label.Text=Themes.questText("Make a tier IV on Hard",14);task.wait()

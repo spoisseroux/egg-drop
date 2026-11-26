@@ -4495,18 +4495,20 @@ function clientUI.playImpacts(batch,serial)
   end
  end
  local now=os.clock()
+ -- Deck juice P3: each ball's first contact (squash, two dust beads, the land buzz) and, review B37, the batch's one
+ -- land cue (pitched by tier) when a first contact is in it and the plop gap has passed; the plop below is then quiet.
+ -- Off (or no first contact), exactly today's plop. Either way one land cue a batch, at most one every 0.13 s.
+ local aeroLanded=clientUI.aero.isOn and clientUI.aero:impacts(batch,now,now-lastPlop<.13,clientUI.aeroWhere)
  -- A mirror Part is unparented: it counts as drawn (today's path keeps its Parent check).
  if strongest>=9 and now-lastPlop>=.13 and contactSource and(contactSource.Parent or(clientUI.mirror~=nil and clientUI.mirror:isMine(contactSource)))then
-  lastPlop=now
   local radius=contactSource.Size.X/2
   contact=Vector2.new(contactSource.Position.X,contactSource.Position.Y)-normal*radius
   rendererPresentation.setFieldOwner(true,serial,reduceEffects())
   rendererPresentation.fx:emit("impact",project(contact),radius*viewport.AbsoluteSize.X/(Config.Width+.8),contactSource.Color,contactSource:GetAttribute("Tier"),1,serial,now,normal)
-  audio:play(if normal.Y<.78 then "bank"else "land",math.clamp(.82+strongest/100,.9,1.2),math.clamp(strongest/70,.24,.55))
+  if not aeroLanded then audio:play(if normal.Y<.78 then "bank"else "land",math.clamp(.82+strongest/100,.9,1.2),math.clamp(strongest/70,.24,.55))end
+  lastPlop=now
  end
- -- Deck juice P3: each ball's first contact (squash, two dust beads, the land cue by tier unless the plop just played,
- -- the land buzz). Nothing while its switch is off.
- if clientUI.aero.isOn then clientUI.aero:impacts(batch,now,lastPlop==now,clientUI.aeroWhere)end
+ if aeroLanded then lastPlop=now end
 end
 -- Where AeroJuice draws a first contact: the contact point (overlay px), the ball's px radius and tier, or nil.
 clientUI.aeroWhere=function(id,normal)

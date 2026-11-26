@@ -154,10 +154,23 @@ function Themes.aBall(tier)local word=Themes.word(tier);return(if string.find(wo
 function Themes.circleSize(tier,textSize)
  return math.max(6,math.floor((textSize or 14)*1.3*Themes.CircleScale[clampTier(tier)]+.5))
 end
+-- Review B37: an Aero body under 3:1 on a white card (aqua, sun-gold, leaf, lotus) is ringed in the theme's ink, not its
+-- light, so the circle reads on the light cards (results, quest log) too; on dark cards the bright body carries it.
+local function luminance(hex)
+ local function channel(at)local v=tonumber(string.sub(hex,at,at+1),16)/255;return if v<=.04045 then v/12.92 else((v+.055)/1.055)^2.4 end
+ return .2126*channel(2)+.7152*channel(4)+.0722*channel(6)
+end
+function Themes.onWhite(hex)return 1.05/(luminance(hex)+.05)end
+function Themes.circleStroke(tier,id)
+ local theme=Themes.get(id or Themes.current);local r=theme.ramps[clampTier(tier)]
+ if r.rim~=nil and Themes.onWhite(r.body)<3 then return theme.ink,.15 end
+ return r.light,.4
+end
 function Themes.circle(tier,textSize,id)
  local r=Themes.ramp(tier,id)
- return string.format('<font color="%s" size="%d"><stroke color="%s" thickness="1" transparency="0.4">%s</stroke></font>',
-  r.body,Themes.circleSize(tier,textSize),r.light,Themes.Glyph)
+ local stroke,alpha=Themes.circleStroke(tier,id)
+ return string.format('<font color="%s" size="%d"><stroke color="%s" thickness="1" transparency="%s">%s</stroke></font>',
+  r.body,Themes.circleSize(tier,textSize),stroke,tostring(alpha),Themes.Glyph)
 end
 -- Rich markup -> the text a label would show without rich text (for measuring).
 function Themes.strip(text)

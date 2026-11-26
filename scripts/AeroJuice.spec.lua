@@ -276,6 +276,44 @@ return function(client)
 		assert(gate:try(Haptics.Patterns.merge3,0))
 		assert(not gate:try(drop,.01),"a merge still buzzing is never cut by a drop")
 	end)
+	test("review B37: one land cue a batch, first contacts only, none inside the plop gap; the board's plop then stays quiet",function()
+		local lands=0
+		local audio={play=function(_,cue)if cue=="land"then lands+=1 end;return true end,playLayer=function()return true end,duck=function()end}
+		local layer=Juice.new({audio=audio,random=function()return .5 end})
+		Juice.setSwitch(true);layer:refresh(0)
+		local function where(id)return Vector2.new(10,10),8,(id%5)+1 end
+		local batch={{1,Vector2.yAxis,20},{2,Vector2.yAxis,20},{3,Vector2.yAxis,20}}
+		assert(layer:impacts(batch,1,false,where)==true and lands==1,"three first contacts, one cue ("..lands..")")
+		assert(layer:impacts(batch,2,false,where)==false and lands==1,"no second cue for a ball already landed")
+		assert(layer:impacts({{4,Vector2.yAxis,20}},2.05,true,where)==false and lands==1,"inside the gap: quiet, and the board's plop may play")
+		assert(layer:impacts({{5,Vector2.yAxis,2}},3,false,where)==false and lands==1,"a touch too soft is not a landing")
+		-- The board (init.client playImpacts) plays its plop only when this answered false: count both paths together.
+		local boardPlops=0
+		for _,case in ipairs({{{6,Vector2.yAxis,20}},{{6,Vector2.yAxis,20}},{{7,Vector2.yAxis,20},{8,Vector2.yAxis,30}}})do
+			local before=lands
+			local aero=layer:impacts(case,5+boardPlops+lands,false,where)
+			if not aero then boardPlops+=1 end
+			assert(lands-before+(if aero then 0 else 1)==1,"exactly one land cue for the batch")
+		end
+		Juice.setSwitch(false);layer.checkedAt=-math.huge;layer:refresh(100)
+		assert(layer:impacts(batch,100,false,where)==false,"off: the board's plop as before")
+		Juice.setSwitch(nil)
+	end)
+	test("review B37: light Aero circles are ringed in ink so they read on light cards; other themes keep the light ring",function()
+		for tier=1,5 do
+			local stroke,alpha=Themes.circleStroke(tier,"smileys")
+			local body=Themes.Aero[tier].body
+			if contrast(body,"#FFFFFF")<3 then
+				assert(stroke==Themes.ById.smileys.ink and alpha<=.2,"tier "..tier.." ringed in ink")
+				assert(contrast(stroke,"#FFFFFF")>=12,"the ring reads on white")
+			else assert(stroke==Themes.Aero[tier].light,"tier "..tier.." keeps its light ring")end
+			assert(string.find(Themes.circle(tier,14,"smileys"),stroke,1,true))
+		end
+		assert(select(1,Themes.circleStroke(1,"smileys"))==Themes.ById.smileys.ink and select(1,Themes.circleStroke(2,"smileys"))==Themes.ById.smileys.ink,"tiers I and II")
+		for _,id in ipairs({"gumdrops","gems","bubbles","midnight"})do
+			for tier=1,5 do assert(select(1,Themes.circleStroke(tier,id))==Themes.ById[id].ramps[tier].light,id)end
+		end
+	end)
 	test("counters: roll up only, ease out to the exact value, 250 ms a change and 600 ms at most",function()
 		assert(UI.rolls(10,20)and not UI.rolls(20,10)and not UI.rolls(nil,5)and not UI.rolls(5,5))
 		assert(UI.rollValue(100,250,0,.25)==100 and UI.rollValue(100,250,.25,.25)==250 and UI.rollValue(100,250,1,.25)==250)
