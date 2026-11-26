@@ -1,8 +1,8 @@
 -- Onboarding v2 step 1 (Onboard "egg3d", ONBOARDING-V2.md; Spencer: "maybe make the egg on the pocket deck 3d and
 -- spinning?"). The Welcome round's calm deck: the left card says one thing at a time (no GOALS tab, one centred line,
 -- three shell pips under it) and the right card is the real Companion Egg in 3D (EggPreview3D's shell meshes), full
--- card height, spinning. Each combo the spark lands, the egg hops, wobbles, turns once, its soft backing glows a little
--- brighter and a pip fills; combo 3 lifts it out of the card in a rising glow. Beta (36), Spencer: no big shiny circle
+-- card height, spinning. Each combo the spark lands, a fill chime, the egg hops, wobbles, turns once and is lit a little
+-- brighter and a pip fills; combo 3 lifts it out of the card in a rising light. Beta (36), Spencer: no big shiny circle
 -- and no cracks here ("we're gonna be cracking it ourselves in 3d"): the egg only cracks in the world (step 3).
 -- Presentation only (WelcomePresentation owns it; the server counts the combos and grants the Bear). Built in code; the
 -- 3D shell is the one Hatch eggs shows. Until its meshes are in, `ready()` is false and the pixel egg stays.
@@ -28,20 +28,17 @@ function Egg.new(meter,coach,deps)
 	local well=node("Frame",meter,{Name="WelcomeEgg3D",BackgroundTransparency=1,Position=UDim2.fromOffset(D.pad,D.pad),
 		Size=UDim2.new(1,-D.pad*2,1,-D.pad*2-D.pip-D.pad),ZIndex=z,Visible=false,Active=false})
 	self.well=well
-	-- Beta (36), Spencer: "we dont need that giant shiny circle": a small soft backing (no hard edge, no gloss), a
-	-- little brighter each combo. No crack drawn on the deck: the egg cracks in the world (step 3).
-	self.glow=node("Frame",well,{Name="Glow",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(D.glowSize,D.glowSize),
-		BackgroundColor3=D.glow,BackgroundTransparency=1-D.glowIdle,BorderSizePixel=0,ZIndex=z})
-	round(self.glow)
-	node("UIAspectRatioConstraint",self.glow,{AspectRatio=.8})
-	node("UIGradient",self.glow,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.35,.4),
-		NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(.65,.4),NumberSequenceKeypoint.new(1,1)})})
+	-- Beta (36), Spencer: "we dont need that giant shiny circle"; Fable: no disc at all. The egg itself is lit a little
+	-- brighter each combo (the viewport's light). No crack on the deck: the egg cracks in the world (step 3).
 	local ok,preview=pcall(function()
 		local Preview=require(script.Parent.EggPreview3D)
 		return Preview.new(well,{reduced=function()return self:reduced()end,
 			onLoaded=function()if self.alive then self:paint()end end})
 	end)
-	if ok and preview then self.preview=preview;pcall(function()preview:setType("companion",true)end)end
+	if ok and preview then
+		self.preview=preview;pcall(function()preview:setType("companion",true)end)
+		self.ambient,self.lightColor=preview.viewport.Ambient,preview.viewport.LightColor
+	end
 	-- The pips: 22 px shells, empty (navy, a light ring) or filled (gold).
 	self.pipRow=node("Frame",meter,{Name="ComboPips3D",AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-D.pad),
 		Size=UDim2.fromOffset(D.pip*3+D.pipGap*2,D.pip),BackgroundTransparency=1,ZIndex=z+1,Visible=false})
@@ -75,13 +72,11 @@ function Egg:reduced()
 end
 -- The 3D egg is drawn (its meshes and texture are in). Until then WelcomePresentation keeps the pixel egg.
 function Egg:ready()return self.preview~=nil and self.preview.loaded==true end
-function Egg:play(layer)
-	local ok,Asmr=pcall(require,script.Parent.HatchAsmr)
-	if not ok then return end
-	local l=Asmr.Layers[layer];if not l then return end
-	local variant=Asmr.pick(layer,math.random())
-	if self.d.play then pcall(self.d.play,l.cue.."_"..variant,1,l.gain*1.4)end
-	if l.haptic then Asmr.fire({haptic=l.haptic})end
+-- Combo n's sound: a rising fill chime and a soft buzz (beta 36: never a crack here; it cracks in the world).
+function Egg:play(n)
+	local C=V2.ComboChime
+	if self.d.play then pcall(self.d.play,C.cue,C.pitches[n]or 1,C.gain)end
+	pcall(function()require(script.Parent.Haptics).play(C.haptic)end)
 end
 -- s: {active (the calm Welcome combo round is up), combos, drops}.
 function Egg:update(s)
@@ -94,7 +89,7 @@ function Egg:update(s)
 		for n=self.combos+1,combos do
 			self.beatAt=self.clock
 			self.pops[n]=self.clock
-			self:play(V2.ComboLayers[n])
+			self:play(n)
 		end
 		if combos>=3 and not self.finaleAt then self.finaleAt=self.clock end
 	elseif combos<self.combos and s.active then
@@ -148,22 +143,30 @@ function Egg:paint()
 	end
 	local preview=self.preview
 	if not preview or not preview.geo then return end
-	local g=preview.geo
 	local beat=if self.beatAt then self.clock-self.beatAt else nil
 	local yaw,tilt,hop=V2.eggPose(self.clock,beat,reduced)
-	-- the backing: a little brighter each combo, a brief flare on the hop, the finale's rise
-	local glow,lift,fade=V2.glow(self.combos),0,0
-	if beat and beat<D.wobbleTime and not reduced then glow+=D.glowStep*(1-beat/D.wobbleTime)end
-	if self.finaleAt then glow,lift,fade=V2.finale(self.clock-self.finaleAt,reduced)end
+	-- the egg's own light: a little brighter each combo, a brief flare on the hop, the finale's rise
+	local light,lift,fade=V2.glow(self.combos),0,0
+	if beat and beat<D.wobbleTime and not reduced then light+=D.lightFlare*(1-beat/D.wobbleTime)end
+	if self.finaleAt then light,lift,fade=V2.finale(self.clock-self.finaleAt,reduced)end
 	local studs=1.834 -- the preview camera's frame height in studs (EggPreview3D:measure)
 	pcall(function()preview:pose(math.rad(yaw),tilt,(hop+lift)*studs,1,0,0,0,fade,1)end)
 	preview.viewport.ImageTransparency=fade
-	self.glow.BackgroundTransparency=1-glow
-	self.glow.Position=UDim2.new(.5,0,.5,-math.floor((hop+lift)*g.H))
-	-- Beta (36): none of the preview's own shine (its bloom disc, sheen, specular, sparkles, peek light) on the deck.
+	if self.ambient then
+		preview.viewport.Ambient=V2.lift(self.ambient,light)
+		preview.viewport.LightColor=V2.lift(self.lightColor,light*.5)
+	end
+	-- Beta (36) / Fable: none of the preview's own shine (its bloom disc, sheen, specular, sparkles, peek light) and no
+	-- Neon core on the deck; the closed egg's map (no zig-zag) once it is uploaded (V2.closedMap).
 	for _,d in ipairs(preview.bloom or {})do d.Visible=false end
 	for _,key in ipairs({"sheenClip","glow","crack","white"})do local f=preview[key];if f then f.Visible=false end end
 	for _,s in ipairs(preview.sparkles or {})do s.holder.Visible=false end
+	local parts=preview.parts or {}
+	if parts.Core then parts.Core.Transparency=1 end
+	local closed=V2.closedMap()
+	if closed then
+		for _,key in ipairs({"TopShell","BottomShell"})do local p=parts[key];if p and p.TextureID~=closed then p.TextureID=closed end end
+	end
 end
 function Egg:destroy()
 	if not self.alive then return end

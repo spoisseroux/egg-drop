@@ -165,22 +165,24 @@ function Story:begin()
 	local camera=workspace.CurrentCamera
 	if not(root and camera)then error("no character or camera")end
 	self.folder=node("Folder",workspace,{Name="EggDropFirstHatch"})
-	-- The landing: 6 studs in front of the character, on the ground (a raycast), else the spawn pad.
+	-- The landing: 6 studs in front of the character on the ground with open sky over it (V2.landing: else round the
+	-- player), else the spawn pad. Then the flight, chosen against the world (beta 36: "the stork flies thru the arch").
 	local look=unit(flat(root.CFrame.LookVector),Vector3.new(0,0,-1))
-	local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
-	params.FilterDescendantsInstances={character,self.folder}
-	local guess=root.Position+look*V2.Stork.land
-	local hit=workspace:Raycast(guess+Vector3.new(0,8,0),Vector3.new(0,-30,0),params)
-	local land
-	if hit then land=hit.Position
-	else
+	self.ignore={character,self.folder}
+	local pet=d.pet and d.pet()
+	if pet and pet.model then table.insert(self.ignore,pet.model)end
+	local feet=root.Position-Vector3.new(0,3,0)
+	local land=V2.landing(feet,look,function(x,z,y)return self:ground(x,z,y)end,function(a,b,r)return self:clear(a,b,r)end)
+	if not land then
 		local pad=workspace:FindFirstChildWhichIsA("SpawnLocation",true)
-		land=if pad then pad.Position+Vector3.new(0,pad.Size.Y/2,0)else root.Position-Vector3.new(0,3,0)+look*V2.Stork.land
+		land=if pad then pad.Position+Vector3.new(0,pad.Size.Y/2,0)else feet+look*V2.Stork.land
 	end
 	self.land=land
 	self.toPlayer=unit(flat(root.Position-land),-look)
 	self.right=unit((-self.toPlayer):Cross(Vector3.new(0,1,0)),Vector3.new(1,0,0)) -- the player's right (look x up)
 	self.facing=CFrame.lookAt(Vector3.zero,self.toPlayer)
+	local _,hoverRoot=self:storkRoots()
+	self.route=V2.storkRoute(land,self.toPlayer,hoverRoot.Position,function(a,b,r)return self:clear(a,b,r)end)
 	-- The character turns to face it and stays still; the camera is ours.
 	pcall(function()root.CFrame=CFrame.lookAt(root.Position,Vector3.new(land.X,root.Position.Y,land.Z))end)
 	require(script.Parent.MovementLock).shared():acquire(Story.LockReason)
@@ -272,15 +274,48 @@ function Story:hidePet(on)
 end
 
 -- ── Step 2: the stork ────────────────────────────────────────────────────────────────────────────────────────────────
+-- What a sweep may hit: solid, visible, queryable world (not us, the player, the garden pet, glass or trigger boxes).
+function Story:clear(a,b,radius)
+	local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
+	local ignore=table.clone(self.ignore or {})
+	params.FilterDescendantsInstances=ignore
+	local d=b-a
+	if d.Magnitude<1e-3 then return true end
+	for _=1,8 do
+		local hit=if radius and radius>0 then workspace:Spherecast(a,radius,d,params)else workspace:Raycast(a,d,params)
+		if not hit then return true end
+		local p=hit.Instance
+		if p:IsA("BasePart")and(p.Transparency>=.95 or not p.CanCollide)then
+			table.insert(ignore,p);params.FilterDescendantsInstances=ignore
+		else return false end
+	end
+	return false
+end
+-- The ground under (x, z) near height y (solid, not water), or nil.
+function Story:ground(x,z,y)
+	local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
+	local ignore=table.clone(self.ignore or {})
+	params.FilterDescendantsInstances=ignore
+	for _=1,6 do
+		local hit=workspace:Raycast(Vector3.new(x,(y or 0)+8,z),Vector3.new(0,-30,0),params)
+		if not hit then return nil end
+		local p=hit.Instance
+		if p:IsA("BasePart")and(p.Transparency>=.95 or not p.CanCollide)then table.insert(ignore,p);params.FilterDescendantsInstances=ignore
+		elseif hit.Material==Enum.Material.Water then return nil
+		else return hit.Position end
+	end
+	return nil
+end
 function Story:storkRoots()
 	local S=V2.Stork
 	local land=self.land
 	local hoverKnot=land+Vector3.new(0,S.hoverUp+.2,0)
 	local face=CFrame.lookAt(Vector3.zero,self.toPlayer)
 	local hoverRoot=CFrame.new(hoverKnot-face:VectorToWorldSpace(Model.BeakTip))*face
-	local start=land+self.right*S.out+Vector3.new(0,S.up,0)-self.toPlayer*8
+	local start=if self.route then self.route.start else land+self.right*S.out+Vector3.new(0,S.up,0)-self.toPlayer*8
 	return start,hoverRoot,hoverKnot
 end
+function Story:bow()return if self.route then self.route.bow else Vector3.new(0,5,0)-self.toPlayer*6 end
 function Story:stepStork(dt)
 	if self.reducedStart then return self:stepStorkReduced()end
 	local S=V2.Stork
@@ -291,8 +326,8 @@ function Story:stepStork(dt)
 	local opts={flap=V2.flap(t),legs=0,fold=0}
 	if phase=="glide"then
 		local u=smooth(t/S.glide)
-		local pos=V2.curve(start,hoverRoot.Position,Vector3.new(0,5,0)-self.toPlayer*6,u)
-		local ahead=V2.curve(start,hoverRoot.Position,Vector3.new(0,5,0)-self.toPlayer*6,math.min(1,u+.04))
+		local pos=V2.curve(start,hoverRoot.Position,self:bow(),u)
+		local ahead=V2.curve(start,hoverRoot.Position,self:bow(),math.min(1,u+.04))
 		local travel=unit(flat(ahead-pos),self.toPlayer)
 		local dir=unit(travel:Lerp(self.toPlayer,smooth((t-S.glide*.6)/(S.glide*.4))),self.toPlayer)
 		root=CFrame.lookAt(pos,pos+dir)
@@ -307,10 +342,12 @@ function Story:stepStork(dt)
 		end
 		if after>=L.nod and after<L.nod+.35 then opts.nod=22*math.sin((after-L.nod)/.35*math.pi)end
 		if after>=L.fly then
-			local u=(after-L.fly)/(S.total-S.release-L.fly)
-			local away=-self.right*10+Vector3.new(0,22,0)-self.toPlayer*16
-			local pos=hoverRoot.Position+away*(u*u)
-			root=CFrame.lookAt(pos,pos+unit(flat(away),-self.toPlayer))
+			-- off back along the way it came (the route found clear), speeding up
+			local u=math.clamp((after-L.fly)/(S.total-S.release-L.fly),0,1)
+			local back=u*u
+			local pos=V2.curve(start,hoverRoot.Position,self:bow(),1-back)
+			local ahead=V2.curve(start,hoverRoot.Position,self:bow(),math.max(0,1-back-.04))
+			root=CFrame.lookAt(pos,pos+unit(flat(ahead-pos),-self.toPlayer))
 			opts.legs=.6*(1-u)
 		end
 		for i,at in ipairs(L.clacks)do
@@ -416,12 +453,17 @@ function Story:aimCamera(dt,mode,focus)
 end
 
 -- ── Step 3: crack it ─────────────────────────────────────────────────────────────────────────────────────────────────
+-- Fable's cathartic crack (AERO-JUICE-BRIEF 4) on 3D cracks (Spencer, beta 36). A tap releases the ritual's stop: a
+-- 40 ms anticipation dip, then in one frame the sound layers, the buzz and the crack stage starting to grow on the shell
+-- (EggCrackPaths + EggCrack3D), the rock (or tap 3's flex), the crumbs and the camera 3% closer. Tap 3: the creak and
+-- flex, 80 ms of near silence, then the pop. CrackFx keeps only its pill and ghost hand (no ring, no screen lines; its
+-- polylines are the fallback when the 3D cracks cannot be built).
 function Story:toCrack()
 	self.pill.Visible=false;self.skip.Visible=false
 	self:enter("crack")
 	local Ritual=require(script.Parent.CrackRitual)
 	self.ritual=Ritual.new(V2.Crack.stops,os.clock,V2.Crack.auto)
-	self.age=0;self.fired=0;self.tapAt={};self.rockAt=nil;self.rockDeg=0
+	self.age=0;self.fired=0;self.tapAt={};self.tapT={};self.soundT={};self.closer=0
 	self.cameraFrom=self.cameraAt;self.cameraFov=self.camera and self.camera.FieldOfView or 70
 	self.fx:reset()
 	self.fx:setText(self.d.inputKind and self.d.inputKind()or "Keyboard")
@@ -436,19 +478,42 @@ function Story:eggSpot()
 	local phone=camera.ViewportSize.Y<500
 	return{egg=Vector2.new(p.X,p.Y),eggH=h,pill=Vector2.new(p.X,bottom.Y+(if phone then 34 else 48)),phone=phone},on
 end
+-- The new takes (scripts/synth_asmr.py, BoardAudio.StorkIds: empty slots until uploaded, quiet), never the same
+-- variant twice running (HatchAsmr's rule).
+Story.Takes=table.freeze({tap_knuckle={"a","b","c"},shell_scatter={"a","b"},crumb_bounce={"a","b","c"},asmr_crack3={"a","b"}})
+function Story:take(name,gain)
+	local list=Story.Takes[name];if not list then return end
+	self.lastTake=self.lastTake or {}
+	local options={}
+	for _,v in ipairs(list)do if v~=self.lastTake[name]or #list==1 then table.insert(options,v)end end
+	local v=options[math.random(1,#options)]
+	self.lastTake[name]=v
+	self:play(name.."_"..v,.97+.06*math.random(),gain or .4)
+end
+-- The camera on the egg: 0.6 s in, 3% closer after taps 1 and 2, the pop's kick back and FOV (none when reduced).
+function Story:crackCamera(reduced)
+	local C=V2.Crack
+	local camera=self.camera;if not camera then return end
+	local u=if reduced or self.reducedStart then 1 else smooth(self.since/C.tween)
+	local dist=C.dist*(1-C.closer*self.closer)
+	local kick,fov=0,C.fov
+	if self.popAt and not reduced then kick,fov=V2.popCamera(self.clock-self.popAt)end
+	local centre=self.land+Vector3.new(0,.8,0)
+	local want=CFrame.lookAt(centre+self.toPlayer*(dist+kick)+Vector3.new(0,C.up,0),centre)
+	if u<1 then
+		self.cameraAt=self.cameraFrom:Lerp(want,u)
+		camera.FieldOfView=self.cameraFov+(fov-self.cameraFov)*u
+	else
+		self.cameraAt=if reduced then want else self.cameraAt:Lerp(want,.25)
+		camera.FieldOfView=fov
+	end
+	camera.CFrame=self.cameraAt
+	self:setVignette(u)
+end
 function Story:stepCrack(dt)
 	local C=V2.Crack
 	local reduced=self:reduced()
-	-- The camera comes close in 0.6 s (a cut under Reduced Motion); the vignette with it.
-	local u=if reduced or self.reducedStart then 1 else smooth(self.since/C.tween)
-	if self.camera then
-		local centre=self.land+Vector3.new(0,.8,0)
-		local want=CFrame.lookAt(centre+self.toPlayer*C.dist+Vector3.new(0,C.up,0),centre)
-		self.cameraAt=self.cameraFrom:Lerp(want,u)
-		self.camera.CFrame=self.cameraAt
-		self.camera.FieldOfView=self.cameraFov+(C.fov-self.cameraFov)*u
-	end
-	self:setVignette(u)
+	self:crackCamera(reduced)
 	local ritual=self.ritual
 	-- The ritual's clock: runs to each stop and holds there for a tap (or its own 7 s).
 	if ritual and not ritual:done()or(self.age<(C.stops[#C.stops]or 0)+.01)then
@@ -456,31 +521,44 @@ function Story:stepCrack(dt)
 		if not(ritual and ritual:hold(self.age))then self.age+=step end
 	else self.age+=dt end
 	for i=self.fired+1,#C.stops do
-		if self.age>=C.stops[i]then self.fired=i;self:beat(i,reduced)else break end
+		if self.age>=C.stops[i]then self.fired=i;self.tapT[i]=self.clock else break end
 	end
-	-- The egg: rock after a tap, the swell before the pop, the pop.
+	-- 40 ms after a tap: its sound, buzz, crack stage, crumbs, rock and camera step.
+	for i=1,self.fired do
+		if not self.soundT[i]and self.clock-self.tapT[i]>=C.anticipate then self.soundT[i]=self.clock;self:beat(i,reduced)end
+	end
 	local spot=self:eggSpot()
 	self.fx:place(self.crackLayer,spot,spot.phone)
-	self.fx:step(dt,ritual~=nil and ritual:waiting()and not self.popAt,ritual and ritual:waited()or 0,0,reduced)
+	self.fx:step(dt,ritual~=nil and ritual:waiting()and not self.creakAt,ritual and ritual:waited()or 0,0,reduced)
 	local facing=CFrame.lookAt(Vector3.zero,self.toPlayer)
 	local base=CFrame.new(self.land)*facing*CFrame.new(0,.1,0)
-	local rock=0
-	if self.rockAt and not reduced then
-		local t=self.clock-self.rockAt
-		if t<.45 then rock=self.rockDeg*math.exp(-t*5)*math.sin(t*math.pi*2*3)end
+	-- The shell: the latest tap's dip (held on tap 3), its rock, tap 3's flex.
+	local last=self.fired
+	local rock,sy,sxz=0,1,1
+	if last>0 and not reduced then
+		sy,sxz=V2.dip(last,self.clock-self.tapT[last])
+		if self.soundT[last]then rock=V2.tapRock(last,self.clock-self.soundT[last])end
 	end
-	local swell,top,fade=1,nil,0
+	local flex=1
+	if self.creakAt and not reduced then flex=V2.flex(self.clock-self.creakAt)end
+	local S=Vector3.new(sxz*flex,sy*flex,sxz*flex)
+	local top,fade=nil,0
 	if self.creakAt then
 		local t=self.clock-self.creakAt
-		if t<C.creak then swell=1+(C.swell-1)*smooth(t/C.creak)
-		else
-			if not self.popAt then self:pop(reduced)end
+		local P=C.pop
+		if t>=C.creak and not self.silentAt then
+			-- 80 ms of near silence: everything ducks 6 dB
+			self.silentAt=self.clock
+			if self.d.audio and self.d.audio.duck then pcall(function()self.d.audio:duck("firstCrackPop",P.silence+.4,P.duck)end)end
+		end
+		if self.silentAt and not self.popAt and self.clock-self.silentAt>=P.silence then self:pop(reduced)end
+		if self.popAt then
 			local p=self.clock-self.popAt
-			local P=C.pop
+			S=Vector3.new(1,1,1)
 			if reduced then top={up=0,tip=0,fade=math.clamp(p/.3,0,1)}
 			else top={up=P.up*smooth(p/P.fade),tip=40*smooth(p/P.fade),fade=math.clamp(p/P.fade,0,1)}end
 			fade=math.clamp(p/.25,0,1) -- the lower shell goes as the Bear stands
-			self.flash.BackgroundTransparency=if reduced then 1 else math.clamp(p/P.flash,0,1)
+			self.flash.BackgroundTransparency=if reduced then 1 else(if p<P.flash then 1-P.flashAlpha else 1)
 			self:stepBear(p,reduced)
 			if p>=P.fade+P.hold then
 				if self.replaying then self:finish()else self:toCard()end
@@ -488,44 +566,97 @@ function Story:stepCrack(dt)
 			end
 		end
 	end
-	self.egg:pose(base,rock,swell,top,fade)
+	self.egg:pose(base,rock,S,top,fade)
+	if self.crack3D then self.crack3D:step(self.clock,dt,self.popAt~=nil)end
 end
--- A beat released (by a tap or by itself): the rock, the crack drawn, the sound and the buzz.
+-- Tap i's moment (40 ms after it): the layered sound, the buzz, the stage on the shell, crumbs, the camera closer.
 function Story:beat(i,reduced)
 	local tap=V2.Taps[i];if not tap then return end
 	local spot=self:eggSpot()
 	local at=self.tapAt[i]or spot.egg
-	if reduced then for k in ipairs(self.fx.flakeCounts)do self.fx.flakeCounts[k]=V2.ReducedFlakes end end
-	self.fx:beat(i,at,false)
-	self.rockAt,self.rockDeg=self.clock,tap.rock
+	-- the cracks: built at the first tap, from where it landed on the shell
+	if i==1 and not self.crack3D and not self.crack2D then
+		local ok,crack=pcall(function()
+			local Paths=require(script.Parent.EggCrackPaths)
+			local half=math.max(20,spot.eggH*.38)
+			local dx,dy=(at.X-spot.egg.X)/half,(at.Y-spot.egg.Y)/half
+			local segments=Paths.build(Paths.tapPoint(dx,dy,math.pi),math.floor(os.clock()*1000)%100000)
+			return require(script.Parent.EggCrack3D).new(self.folder,self.egg,segments,{grow=V2.Crack.grow,leakAlpha=V2.Crack.leakAlpha})
+		end)
+		if ok then self.crack3D=crack else warn("[Onboard] 3D cracks: "..tostring(crack));self.crack2D=true end
+	end
+	if self.crack3D then self.crack3D:show(tap.stage,self.clock,reduced)
+	else
+		-- the fallback: CrackFx's drawn lines (no ring)
+		if reduced then for k in ipairs(self.fx.flakeCounts)do self.fx.flakeCounts[k]=V2.ReducedFlakes end end
+		self.fx:beat(i,nil,false)
+	end
 	for _,layer in ipairs(tap.layers)do self:layer(layer)end
+	for _,name in ipairs(tap.takes or {})do self:take(name,.45)end
+	if tap.under then local u=tap.under;task.delay(.04,function()if self.state=="crack"then self:layer(u.layer,1.3*u.gain)end end)end
 	self:buzz(tap.haptic)
+	if tap.duck and self.d.audio and self.d.audio.duck then pcall(function()self.d.audio:duck("firstCrack"..i,tap.duck.time,tap.duck.gain)end)end
+	if tap.closer and not reduced then self.closer+=1 end
+	-- crumbs from the tap point on the shell, each a flake as it lands
+	if self.crack3D then
+		local Paths=require(script.Parent.EggCrackPaths)
+		local first=self.crack3D.lines[1]
+		local point=if first then first.seg.a else{math.pi,Paths.Shape.seamV}
+		local world=self.egg:surface(Paths.point(point[1],point[2]),Paths.normal(point[1],point[2]),.02)
+		local count=if reduced then V2.ReducedFlakes else tap.crumbs
+		self.crack3D:crumbs(world,count,self.land.Y+.12,tap.skitter,function()self:layer("flake",1.1);self:take("crumb_bounce",.25)end)
+	end
 	if tap.pop then self.creakAt=self.clock end
 end
+-- The pop: one frame of pop, sting and scatter; the top flies, 12 to 16 pieces arc out, a 35% flash for 120 ms, the
+-- big buzz, the camera's kick; the Bear (facing the camera) and his cue 120 ms later; late flakes and the exhale.
 function Story:pop(reduced)
+	local P=V2.Crack.pop
 	self.popAt=self.clock
-	self:layer("pop",1.2);self:buzz("pop")
-	for k=1,3 do task.delay(.08*k,function()if self.state=="crack"then self:layer("flake")end end)end
-	task.delay(.35,function()if self.state=="crack"or self.state=="card"then self:layer("exhale")end end)
+	self.egg:open()
+	self:layer("pop",1.2);self:play(P.sting,1,.5);self:take(P.scatter,.5)
+	self:buzz("pop")
 	self.fx:reset()
-	if not reduced then self.flash.BackgroundTransparency=0 end
-	-- The Bear stands in the blanket (the player's own Bear, as the garden draws it).
+	if self.crack3D then
+		self.crack3D:hideLines()
+		local voiced=0
+		local count=P.pieces[1]+math.random(0,P.pieces[2]-P.pieces[1])
+		self.crack3D:burst(if reduced then V2.ReducedFlakes else count,self.land.Y+.1,function()
+			if voiced<P.voiced then voiced+=1;self:layer("flake",1.2)end
+		end)
+	end
+	local late=P.lateFlakes[1]+math.random(0,P.lateFlakes[2]-P.lateFlakes[1])
+	for k=1,late do task.delay(.7+.12*k,function()if self.state=="crack"or self.state=="card"then self:layer("flake",.9)end end)end
+	task.delay(.75+.12*late,function()if self.state=="crack"or self.state=="card"then self:layer("exhale")end end)
+	-- The Bear stands in the blanket (the player's own Bear, as the garden draws it), facing the camera, feet and all.
 	local ok=pcall(function()
 		local pet=Pets.byId.pip
 		local appearance=self.d.appearance and self.d.appearance("pip")or nil
-		self.bear=require(script.Parent.PetFactory).new(self.folder,self.land,pet,.72,appearance)
-		local d=self.toPlayer
-		self.bear.yaw=math.atan2(d.X,d.Z)
-		self.bear.reducedEffects=reduced
-		self.bear:update(0)
+		local bear=require(script.Parent.PetFactory).new(self.folder,self.land,pet,.72,appearance)
+		-- beta (36): "its feet not facing the camera": face the camera (the pet's front is +Z turned by yaw) and keep
+		-- the feet with the body (a focused pose plants nothing in the world)
+		local camera=self.camera
+		local d=unit(flat((if camera then camera.CFrame.Position else self.land+self.toPlayer)-self.land),self.toPlayer)
+		bear.yaw=math.atan2(d.X,d.Z)
+		bear.focusPose=true
+		bear.reducedEffects=reduced
+		bear:update(0)
+		self.bear=bear
 	end)
 	if not ok then self.bear=nil end
-	if self.d.audio and Pets.byId.pip.cue then self:play(Pets.byId.pip.cue,1,.55)end
+	task.delay(P.cueDelay,function()
+		if(self.state=="crack"or self.state=="card")and Pets.byId.pip.cue then self:play(Pets.byId.pip.cue,1,.55)end
+	end)
 end
 function Story:stepBear(p,reduced)
 	local bear=self.bear;if not bear then return end
 	local hop=if reduced or p>=.4 then 0 else .7*math.sin(p/.4*math.pi)
 	bear.origin=self.land+Vector3.new(0,.12+hop,0)
+	local camera=self.camera
+	if camera then
+		local d=unit(flat(camera.CFrame.Position-self.land),self.toPlayer)
+		bear.yaw=math.atan2(d.X,d.Z)
+	end
 	if p>=.35 and not self.greeted then self.greeted=true;pcall(function()bear:greet()end)end
 	pcall(function()bear:update(1/60)end)
 end
@@ -654,6 +785,7 @@ function Story:cleanup()
 		camera.CameraSubject=humanoid or saved.subject
 	end
 	self.ritual,self.popAt,self.creakAt,self.setDown,self.greeted,self.asked=nil,nil,nil,nil,nil,nil
+	self.crack3D,self.crack2D,self.silentAt,self.closer,self.route=nil,nil,nil,0,nil
 	self.clack1,self.clack2,self.lastBeat,self.heldSince=nil,nil,nil,nil
 	self.replaying=false
 end
