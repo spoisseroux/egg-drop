@@ -26,38 +26,56 @@ Toys.Heap=table.freeze({width=5,height=1.2,colours=table.freeze({"#C98A3C","#A85
 	burst=14,burstTime=1.5,lie=.4,fade=.4, -- cards fly and flutter down 1.5 s, lie .4 s, fade .4 s
 	flat=.3,squash=.12,reheap=20,     -- flattens to 30% in .12 s, heaps back over 20 s
 	reach=2.4,radius=2.6})
-Toys.Pod=table.freeze({count=6,across=.9,tall=.75,colour="#9DBF6A",dome="#C9DDA0",domeAcross=.5,domeTall=.36,
-	flat=.22,spread=1.18,pop=.06,reinflate=6,inflate=.8,overshoot=.08,reach=.9,radius=.6,
-	bend=6,spacing=1.5})                 -- the row: six along an arc of radius 6, 1.5 apart
+-- Pods (FABLE-REVIEW-B35 Fix 2: six identical olive balls said nothing): a bigger body in three greens along the row,
+-- a puckered nub on top and three sepals at the base that stay put when the pod flattens, so the squash reads against
+-- them. Each pod has its own yaw and a height scale of .9 to 1.1 from its index: a litter, not a rank.
+Toys.Pod=table.freeze({count=6,across=1.1,tall=.9,colours=table.freeze({"#9DBF6A","#B5CC6E","#8DB37A"}),
+	dome="#E9DCA6",domeAcross=.34,domeTall=.2,
+	sepals=3,sepal=Vector3.new(.6,.05,.32),sepalColour="#4F7F3A",sepalTilt=20,sepalPast=.25,
+	heightLow=.9,heightHigh=1.1,
+	flat=.22,spread=1.18,pop=.06,reinflate=6,inflate=.8,overshoot=.08,reach=1.0,radius=.85,
+	bend=6,spacing=1.7})                 -- the row: six along an arc of radius 6, 1.7 apart
 Toys.Tray=table.freeze({size=Vector2.new(6,4),board=Vector2.new(.32,.3),frame="#6B4A2E",gravel="#B9B2A3",
 	pebbles=6,pebbleColours=table.freeze({"#9C968A","#C9C2B4","#ABA393"}),stride=1.5,hop=.35,hopTime=.28,radius=3.6})
-Toys.Gourd=table.freeze({count=3,colour="#D8B56A",cord="#8A6A3C",bark="#6B4A2E",bar=2.35,span=3.4,post=.2,gap=1.05,
-	cordLength=.32,neck=Vector3.new(.36,.5,.36),body=Vector3.new(.74,.68,.74), -- 1.1 tall from neck top to foot
-	swing=25,decay=.5,period=1,settle=2,neighbour=.35,reach=1.0,radius=1.9})
+-- Gourds (FABLE-REVIEW-B35 Fix 3: read as a small brown hurdle beside a pillar): a wider arch on foot stones with
+-- accent cord wraps on the bar's ends, and three bigger gourds that are not alike.
+Toys.Gourd=table.freeze({count=3,cord="#8A6A3C",bark="#6B4A2E",bar=2.35,span=4.6,post=.3,gap=1.35,
+	cordLength=.32,neck=Vector3.new(.44,.6,.44),
+	-- {across, tall, colour} per gourd
+	bodies=table.freeze({table.freeze({1.0,.92,"#D8B56A"}),table.freeze({.88,.8,"#C98F4A"}),table.freeze({1.08,1.0,"#E6CC8E"})}),
+	stone=Vector3.new(1.0,.28,.8),stoneColour="#9C968A",stoneYaws=table.freeze({15,-25}),
+	wrap=Vector2.new(.25,.3),wrapColour="#E8785A", -- Cylinder .25 long, .3 across (the lantern accent)
+	swing=25,decay=.5,period=1,settle=2,neighbour=.35,reach=1.0,radius=2.9})
 
 -- Where (XZ; the client seats them on the ground). Moved from the brief's spots onto clear grass:
 --   heaps  (-22, 38) -> (-26, 37) under the trees west of lamp 7; (-12, -44) -> (-13, -40) north of lamp 4
 --   pods   (20, 34) -> (15, 38.5) (the brief's spot is half on the stream's path)
 --   tray   (44, 12) -> (42, 12) beside the fountain lawn, clear of the west rest dais
---   gourds (78, 56) -> (76, 63.5): the brief's spot is on the arrival path; the arch runs along it, 6 studs off
+--   gourds (78, 56) -> (76, 63.5): the brief's spot is on the arrival path; the arch runs along it, 6 studs off;
+--          Fable B35: 3 more along the arch's normal away from the path (and the pillar's plinth) -> (77.22, 66.24)
 Toys.Places=table.freeze({
 	heaps=table.freeze({table.freeze({id="leaf_heap_1",x=-26,z=37,yaw=.4}),table.freeze({id="leaf_heap_2",x=-13,z=-40,yaw=-.9})}),
 	pods=table.freeze({id="pop_pods",x=15,z=38.5,yaw=.35}),
 	tray=table.freeze({id="pebble_tray",x=42,z=12,yaw=.15}),
-	gourds=table.freeze({id="rattle_gourds",x=76,z=63.5,yaw=math.atan2(-16,-36)}), -- the bar along the arrival path
+	gourds=table.freeze({id="rattle_gourds",x=77.22,z=66.24,yaw=math.atan2(-16,-36)}), -- the bar along the arrival path
 })
 
 -- Parts, counted as the client builds them (the spec holds it to Toys.Budget).
 function Toys.partCount()
 	local H,P,T,G=Toys.Heap,Toys.Pod,Toys.Tray,Toys.Gourd
 	local heaps=#Toys.Places.heaps*(#H.mounds+H.leaves)+H.burst -- one burst pool, shared by both heaps
-	local pods=P.count*2                                        -- body and dome
+	local pods=P.count*(2+P.sepals)                             -- body, nub and three sepals
 	local tray=4+1+T.pebbles                                    -- four boards, the gravel bed, the pebbles that hop
-	local gourds=3+G.count*3                                    -- two posts and the bar; cord, neck and body each
+	local gourds=3+2+2+G.count*3                                -- posts, bar, foot stones, cord wraps; cord, neck, body each
 	return heaps+pods+tray+gourds+1                             -- and the one invisible part the sounds hang from
 end
 
 -- Pure geometry ---------------------------------------------------------------------------------------------------
+-- Pod i's own yaw (radians) and height scale (.9 to 1.1), fixed by its index.
+function Toys.podLook(i)
+	local P=Toys.Pod
+	return Toys.hash(7,i,1)*math.pi*2,P.heightLow+(P.heightHigh-P.heightLow)*Toys.hash(7,i,2)
+end
 local function turn(yaw,x,z)
 	local c,s=math.cos(yaw),math.sin(yaw)
 	return x*c+z*s,-x*s+z*c -- CFrame.Angles(0, yaw, 0) applied to (x, 0, z)

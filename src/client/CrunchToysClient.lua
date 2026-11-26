@@ -181,6 +181,7 @@ function Client:build()
 	local function count(p)self.parts+=1;return p end
 	local leafy,fabric,wood,pebble=material("LeafyGrass","Grass"),material("Fabric","Fabric"),material("Wood","Wood"),material("Pebble","Pebble")
 	local rubber,skin=material("Rubber","Fabric"),material("Cardboard","Fabric")
+	local grass,slate,smooth=material("Grass","SmoothPlastic"),material("Slate","Slate"),material("SmoothPlastic","SmoothPlastic")
 	local H,P,T,G=Toys.Heap,Toys.Pod,Toys.Tray,Toys.Gourd
 	self.heaps,self.pods,self.cards,self.gourds={}, {}, {}, {}
 
@@ -212,13 +213,27 @@ function Client:build()
 		table.insert(self.cards,{part=p,heap=nil,start=0,index=i})
 	end
 
-	-- The pop pods: a sage body and a paler dome on top.
+	-- The pop pods (Fable B35): a body in one of three greens, a puckered nub on top, and three sepals at the base that
+	-- stay put when it flattens. Each its own yaw and height (Toys.podLook).
 	for i,spot in ipairs(Toys.podSpots())do
 		local y=self:groundAt(spot.X,spot.Y)
-		local base=CFrame.new(spot.X,y,spot.Y)*CFrame.Angles(0,Toys.hash(7,i,1)*math.pi*2,0)
-		local body=count(part("pop_pod"..i,Vector3.new(P.across,P.tall,P.across),base*CFrame.new(0,P.tall*.4,0),P.colour,rubber,folder,true))
-		local dome=count(part("pop_pod"..i.."_dome",Vector3.new(P.domeAcross,P.domeTall,P.domeAcross),base*CFrame.new(0,P.tall*.8,0),P.dome,rubber,folder,false))
-		table.insert(self.pods,{body=body,dome=dome,bodyMesh=sphere(body),domeMesh=sphere(dome),base=base,centre=Vector3.new(spot.X,y,spot.Y),poppedAt=nil,scale=1})
+		local yaw,high=Toys.podLook(i)
+		local tall=P.tall*high
+		local base=CFrame.new(spot.X,y,spot.Y)*CFrame.Angles(0,yaw,0)
+		local colour=P.colours[(i-1)%#P.colours+1]
+		local body=count(part("pop_pod"..i,Vector3.new(P.across,tall,P.across),base*CFrame.new(0,tall*.4,0),colour,rubber,folder,true))
+		local dome=count(part("pop_pod"..i.."_nub",Vector3.new(P.domeAcross,P.domeTall,P.domeAcross),base*CFrame.new(0,tall*.88,0),P.dome,rubber,folder,false))
+		-- A sepal: its inner end tucked under the body, its tip tilted up and .25 past the body's edge.
+		local length,tilt=P.sepal.X,math.rad(P.sepalTilt)
+		local reach=P.across/2+P.sepalPast-length/2*math.cos(tilt)
+		for k=1,P.sepals do
+			local a=(k-1)*math.pi*2/P.sepals
+			count(part("pop_pod"..i.."_sepal"..k,P.sepal,
+				base*CFrame.Angles(0,a,0)*CFrame.new(reach,length/2*math.sin(tilt)+P.sepal.Y/2,0)*CFrame.Angles(0,0,tilt),
+				P.sepalColour,grass,folder,false))
+		end
+		table.insert(self.pods,{body=body,dome=dome,bodyMesh=sphere(body),domeMesh=sphere(dome),base=base,tall=tall,
+			centre=Vector3.new(spot.X,y,spot.Y),poppedAt=nil,scale=1})
 	end
 
 	-- The pebble tray: four timber boards round a bed of pea gravel, and six loose pebbles that hop under a step.
@@ -244,7 +259,8 @@ function Client:build()
 		end
 	end
 
-	-- The rattle gourds: a low twig arch (two leaning posts, one bar) and three gourds on short cords that swing on it.
+	-- The rattle gourds (Fable B35): a twig arch (two leaning posts on foot stones, one bar with accent cord wraps on its
+	-- ends) and three unalike gourds on short cords that swing on it.
 	do
 		local at=Toys.Places.gourds
 		local y=self:groundAt(at.x,at.z)
@@ -255,19 +271,26 @@ function Client:build()
 				base*CFrame.new(side*half,G.bar/2,0)*CFrame.Angles(0,0,math.pi/2+side*.06),G.bark,wood,folder,true))
 		end
 		count(cylinder("rattle_gourds_bar",G.span,G.post*.8,base*CFrame.new(0,G.bar,0),G.bark,wood,folder,true))
+		for k,side in ipairs({-1,1})do
+			count(part("rattle_gourds_stone"..k,G.stone,base*CFrame.new(side*half,G.stone.Y/2-.04,0)*CFrame.Angles(0,math.rad(G.stoneYaws[k]),0),
+				G.stoneColour,slate,folder,true))
+			count(cylinder("rattle_gourds_wrap"..k,G.wrap.X,G.wrap.Y,base*CFrame.new(side*(half-.05),G.bar,0),G.wrapColour,smooth,folder,false))
+		end
 		self.arch={base=base,centre=Vector3.new(at.x,y,at.z)}
 		for i=1,G.count do
 			local lx=(i-(G.count+1)/2)*G.gap
 			local pivot=base*CFrame.new(lx,G.bar-G.post*.3,0)
-			local cord=count(cylinder("rattle_gourd"..i.."_cord",G.cordLength,.05,pivot,G.cord,fabric,folder,false))
-			local neck=count(part("rattle_gourd"..i.."_neck",G.neck,pivot,G.colour,skin,folder,true))
-			local body=count(part("rattle_gourd"..i,G.body,pivot,G.colour,skin,folder,true))
+			local shape=G.bodies[i]
+			local size=Vector3.new(shape[1],shape[2],shape[1])
+			local cord=count(cylinder("rattle_gourd"..i.."_cord",G.cordLength,.05,pivot,G.cord,smooth,folder,false))
+			local neck=count(part("rattle_gourd"..i.."_neck",G.neck,pivot,shape[3],skin,folder,true))
+			local body=count(part("rattle_gourd"..i,size,pivot,shape[3],skin,folder,true))
 			sphere(neck);sphere(body)
 			local g={pivot=pivot,cord=cord,neck=neck,body=body,at=nil,push=0,
 				offsets={CFrame.new(0,-G.cordLength/2,0)*CFrame.Angles(0,0,math.pi/2),
 					CFrame.new(0,-G.cordLength-G.neck.Y*.4,0),
-					CFrame.new(0,-G.cordLength-G.neck.Y*.75-G.body.Y*.35,0)},
-				spot=(pivot*CFrame.new(0,-G.cordLength-G.neck.Y-G.body.Y*.2,0)).Position}
+					CFrame.new(0,-G.cordLength-G.neck.Y*.75-size.Y*.35,0)},
+				spot=(pivot*CFrame.new(0,-G.cordLength-G.neck.Y-size.Y*.2,0)).Position}
 			table.insert(self.gourds,g)
 			self:poseGourd(g,0)
 		end
@@ -609,8 +632,8 @@ function Client:animate(now,reduced)
 				pod.scale=sy
 				pod.bodyMesh.Scale=Vector3.new(sxz,sy,sxz)
 				pod.domeMesh.Scale=Vector3.new(sxz,sy,sxz)
-				table.insert(parts,pod.body);table.insert(frames,pod.base*CFrame.new(0,P.tall*.4*sy,0))
-				table.insert(parts,pod.dome);table.insert(frames,pod.base*CFrame.new(0,P.tall*.8*sy,0))
+				table.insert(parts,pod.body);table.insert(frames,pod.base*CFrame.new(0,pod.tall*.4*sy,0))
+				table.insert(parts,pod.dome);table.insert(frames,pod.base*CFrame.new(0,pod.tall*.88*sy,0))
 			end
 		end
 	end
