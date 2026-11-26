@@ -274,7 +274,7 @@ function Pet:drive(visual,actor,now,dt)
 	visual.yaw=a.yaw
 	if moving>0 then
 		local Follow=require(script.Parent.PetFollow)
-		visual.gaitWeight=math.clamp((moving-.025)/3.5,0,1)
+		visual.gaitWeight=Follow.weight(moving)
 		visual.travelSpeed=moving
 		local stride=Follow.stride(moving,visual.worldScale)
 		visual.gaitPhase=((visual.gaitPhase or 0)+math.min(moving*dt/stride,dt*Follow.CadenceCap)*math.pi*2)%(math.pi*2)

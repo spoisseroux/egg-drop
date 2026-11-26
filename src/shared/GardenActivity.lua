@@ -41,11 +41,36 @@ function Activity.leg(from,to,v0,v1,speed,minimum,yaw)
     return {from=packLeg(from),to=packLeg(to),v0=packLeg(v0),v1=packLeg(v1),duration=round(duration),
         yaw=round(yaw),turn=round(turn)}
 end
+-- Walk feel (beta (34) QA: "they're floating around ... walking needs to be more natural"). A leg from a stop to a stop
+-- used to ease over its whole length (a smoothstep: a 10-stud stroll spent five studs speeding up and five slowing
+-- down, a glide). It now gets going in EaseRamp seconds, walks at a steady pace and settles in EaseRamp at the end
+-- (cosine ramps, so no jolt), on the same line in the same time: its average is unchanged and its peak is lower than
+-- the smoothstep's for any leg over 3 * EaseRamp. Legs that pass a corner moving keep their cubic.
+Activity.EaseRamp=.4
+-- 0..1 along a stop-to-stop leg at t (0..1) and its rate (per unit t), ramps of share r (at most .5) at each end.
+local function cruise(t,r)
+    local peak=1/(1-r)
+    if t<=r then return peak*(t*.5-r/(2*math.pi)*math.sin(math.pi*t/r)),peak*(1-math.cos(math.pi*t/r))*.5 end
+    if t>=1-r then
+        local s=1-t
+        return 1-peak*(s*.5-r/(2*math.pi)*math.sin(math.pi*s/r)),peak*(1-math.cos(math.pi*s/r))*.5
+    end
+    return peak*(r*.5+t-r),peak
+end
+Activity.cruise=cruise
 local function legSample(leg,elapsed)
     local duration=leg.duration;local t=math.clamp(elapsed/duration,0,1);local u=1-t
     local a,b=Activity.vector(leg.from),Activity.vector(leg.to)
     local v0,v1=Activity.vector(leg.v0),Activity.vector(leg.v1)
     local delta=b-a
+    if not leg.pivot and Activity.EaseRamp>0 and v0.Magnitude<1e-4 and v1.Magnitude<1e-4 and delta.Magnitude>.01 then
+        local share,rate=cruise(t,math.min(.5,Activity.EaseRamp/duration))
+        local velocity=if elapsed>=duration or elapsed<=0 then ZERO else delta*(rate/duration)
+        local heading=math.atan2(delta.X,delta.Z)
+        if Vector2.new(delta.X,delta.Z).Magnitude<=.00001 then heading=leg.yaw end
+        local align=math.clamp(elapsed/.12,0,1)
+        return a+delta*share,velocity,leg.yaw+angle(leg.yaw,heading)*align*align*(3-2*align)
+    end
     -- Evaluate in local offsets. Subtracting world-space Bezier controls loses
     -- velocity precision in Roblox float32 Vector3s hundreds of studs out.
     local position=a+v0*(duration*u*u*t)+(delta-v1*duration/3)*(3*u*t*t)+delta*(t*t*t)
@@ -72,7 +97,7 @@ function Activity.plan(from,to,velocity,speed,minimum,yaw,via,terminalVelocity)
         if velocity.Magnitude>.001 or Vector2.new(delta.X,delta.Z).Magnitude<.001 then return end
         local heading=math.atan2(delta.X,delta.Z);local turn=angle(yaw,heading)
         if math.abs(turn)<.12 then return end
-        local duration=math.max(.12,math.abs(turn)*1.5/12)
+        local duration=Activity.turnSeconds(turn)
         table.insert(path,{from=Activity.pack(from),to=Activity.pack(from),v0=Activity.pack(ZERO),v1=Activity.pack(ZERO),duration=duration,
             yaw=yaw,turn=turn,turnDuration=duration,pivot=true})
         total+=duration;yaw+=turn
@@ -202,8 +227,11 @@ function Activity.through(from,points,velocity,speed,yaw,accept)
     end
     return nil
 end
--- A turn on the spot: how long it takes.
-function Activity.turnSeconds(turn)return math.max(.12,math.abs(turn)*1.5/12)end
+-- A turn on the spot: how long it takes (beta (34): TurnRate radians a second, was 8, so a pet looks round and turns
+-- before it sets off instead of snapping; an about-turn takes .52 s, a quarter turn .26 s).
+Activity.TurnRate=6
+Activity.TurnMin=.18
+function Activity.turnSeconds(turn)return math.max(Activity.TurnMin,math.abs(turn)/Activity.TurnRate)end
 -- A leg's position, velocity and heading at `elapsed` seconds into it (routes and keep-out checks).
 function Activity.legPose(leg,elapsed)return legSample(leg,elapsed)end
 function Activity.sample(actor,now)

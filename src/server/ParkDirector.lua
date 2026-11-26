@@ -179,7 +179,7 @@ function Director.playPath(slot,activity,yaw)
 	local path,spent={},0
 	local turn=angle(yaw,slot.yaw)
 	if math.abs(turn)>=.12 then
-		spent=math.min(activity.phases[1].duration*.5,math.max(.12,math.abs(turn)*1.5/12))
+		spent=math.min(activity.phases[1].duration*.5,A.turnSeconds(turn))
 		table.insert(path,{from=A.pack(position),to=A.pack(position),v0={0,0,0},v1={0,0,0},duration=spent,yaw=yaw,turn=turn,turnDuration=spent,pivot=true})
 	end
 	yaw=slot.yaw

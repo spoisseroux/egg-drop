@@ -84,12 +84,14 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The First Hatch (onboarding-2026-11-26): the crack ritual's clock hold.
           "CrackRitual",
           # Player scale (player-scale-2026-11-26): the knob.
-          "PlayerScale"]
+          "PlayerScale",
+          # Beta (34) QA: the walk feel (eased legs, turns, corners) and the pause's look round (PetWalkBeats).
+          "PetWalk"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
 STUBS = {
-    "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end}",
+    "PetFollow": "return{CadenceCap=3,stride=function()return 2 end,bob=function()return 0 end,rest=function(v)v.gaitWeight=0 end,weight=function(s)return math.clamp((s-.03)/1.6,0,1)end}",
     "PetFactory": "return{}", "DeckKit": "return{focusable=function(object)return object.ok==true end}", "NotificationRail": "return{}",
     "ConfirmDialog": "return{isOpen=function()return false end}",
     # Garden hour E: PetFace reads HollowClock.lastDaylight (the spec sets it); the real clock needs Lighting. GardenLife
@@ -137,7 +139,9 @@ def client_modules():
                     # The hill at night (WORLD-FINISH-LOOK slice F).
                     "HillNightClient.lua",
                     # The First Hatch: the crack ritual.
-                    "CrackRitual.lua"):
+                    "CrackRitual.lua",
+                    # Beta (34): the look round in a walk's pause.
+                    "PetWalkBeats.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

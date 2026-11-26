@@ -391,7 +391,7 @@ function Garden:decide()
                 local direction=input.position-position
                 local heading=math.atan2(direction.X,direction.Z)
                 local yaw=Activity.sample(actor,now).yaw;local turn=(heading-yaw+math.pi)%(math.pi*2)-math.pi
-                local duration=math.max(.12,math.abs(turn)*1.5/12)
+                local duration=Activity.turnSeconds(turn)
                 actor.path={{from=Activity.pack(position),to=Activity.pack(position),v0={0,0,0},v1={0,0,0},duration=duration,yaw=yaw,turn=turn,turnDuration=duration,pivot=true},
                     {from=Activity.pack(position),to=Activity.pack(position),v0={0,0,0},v1={0,0,0},duration=6-duration,yaw=heading,turn=0,turnDuration=0}}
             elseif actor.action=="wander"then
