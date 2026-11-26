@@ -1,6 +1,6 @@
-# Test pass: beta (33), 2026-11-26
+# Test pass: beta (34), 2026-11-26
 
-Build: beta (33), place version v97, runtime f37ac1e1.
+Build: beta (34), place version v100, runtime 4ae3791f.
 
 Place: **Pocket Pals Beta** (the private beta). Live is not touched.
 Do the whole pass twice: once on a **phone**, once on **PC**.
@@ -85,6 +85,15 @@ Walk speed and jump are unchanged. You can change it live, on this server only, 
 | S5 | Respawn (reset) | Still at the chosen size | |
 | S6 | Carry your Bear (pet focus) | The Bear sits right in the arms | |
 
+## E3. Top Lawn toys at 1.25x (the terrace playground)
+
+| # | Do | Expect | OK / problem |
+|---|---|---|---|
+| T1 | Stand in the Top Lawn with your pets | The swing set, slide, see-saw, sandbox and ball mat are bigger. They sit well on the lawn and none pokes over the edge | |
+| T2 | Watch your pets play for a minute or two | On the swings they sit on the seats; on the slide they climb the ladder, sit at the top and slide all the way down; on the see-saw they sit on the seats; in the sandbox they dig in the sand. Nothing floating, sunk or clipping | |
+| T3 | Throw the ball (the throw button) | It works here now (before, it never had a lane on the Top Lawn). The pets chase it and bring it back | |
+| T4 | Other parks (the arrival lawn) | Unchanged | |
+
 ## F. Your own save
 
 | # | Do | Expect | OK / problem |
@@ -102,7 +111,6 @@ Each one turns off just that part, so you can compare with beta (27). Type it in
 
 ## Known, not in this beta
 
-- Top Lawn toys are still their old size (the 1.25x scale needs each toy's pet seats reworked).
 - Two small steps remain on the path (the outer edge of the switchback, the terrace floor corners).
   You can walk over them, but say if they bother you.
 - The funnel events "DeckShown" and "EggTapped" only record on live servers.

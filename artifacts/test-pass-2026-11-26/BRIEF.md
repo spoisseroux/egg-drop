@@ -1,6 +1,6 @@
 # What changed since your beta (25) notes
 
-Covers beta (26) to beta (33) (v97, runtime f37ac1e1), all on Pocket Pals Beta. **Live has not been touched.**
+Covers beta (26) to beta (34) (v100, runtime 4ae3791f), all on Pocket Pals Beta. **Live has not been touched.**
 Your test doc is `TEST-PASS.md`, in this folder.
 
 ## Your beta (25) notes, all six done
@@ -12,7 +12,7 @@ Your test doc is `TEST-PASS.md`, in this folder.
 | "make the clouds pocket deck skin the default" | Cloud Glass (blue) is the default deck, as a free starter. Saves that picked another skin keep it. | (26) |
 | "no pets playing bubble thing anymore?" | "Pets playing N/M" is back, bottom right in parks. | (26) |
 | "the race entrance ... kinda blends in" | The Garden Dash gate was rebuilt: teal posts with cream bands, a checker banner, seven bulbs, a "Garden Dash" board, a start mat and paw stones. | (26) |
-| "everything feels a little too small" | The cave, den and path are bigger: the path is now 9 wide, with the switchback re-routed to fit. Top Lawn toys are not scaled yet (see "Not done"). | (27) |
+| "everything feels a little too small" | The cave, den and path are bigger: the path is now 9 wide, with the switchback re-routed to fit. The Top Lawn toys are 1.25x too, from beta (34). | (27) |
 
 ## Added: the First Hatch (the new first minute)
 
@@ -51,6 +51,20 @@ You said the world feels tiny and asked for it to be easy to tweak. I didn't sca
 - The follow camera's zoom cap shrinks a little with the scale (0.9x at 0.8, per Fable), so you don't end up looking at a tiny avatar.
 - Fable picked 0.8: 0.75 is the floor, and at 0.7 the Bear stops reading as a baby. Tell me your number after S4 and I'll set it.
 
+## Added overnight: the Top Lawn toys at 1.25x (beta (34))
+
+- **The swing set, slide, see-saw, sandbox and ball mat are 1.25x.** The pets' seats, the swing ropes, the ladder, the chute (now a 9.4-stud run), the dig spots and the ball spots grow with them, so the pets sit on the toys rather than floating or sinking. The pets themselves are not scaled.
+- **Two toys moved a little** so the bigger frames stay on the lawn:
+  - the see-saw, about 1 stud toward the middle;
+  - the sandbox, 0.7 toward the middle, off the rim boulders.
+- **Every other park is unchanged**, and a spec proves it.
+- **Fetch works on the Top Lawn now.** The code review found the throw never had a clear lane there (or in the Hollow), because the park's middle sits in the slide's landing zone. It was broken before the toys too. The throw now starts from the nearest clear spot.
+- **Checked:**
+  - Studio: the toys at their new size and spots, with stand-in Bears on every seat (`artifacts/toys-125-2026-11-26/`).
+  - Code review: GO.
+  - Fable: ship. The see-saw is still the smallest toy and could get one more bump later.
+  - **Not checked:** real pets riding, and a real throw. This Studio save has no pets, so please watch them in T1 to T3.
+
 ## Fixed along the way
 
 - **A tap on the reveal would have skipped the Bear's hatch.** The full-screen reveal treated a tap as "skip". It now cracks the egg instead. This covers every key too, including E, which is the pet key.
@@ -76,7 +90,8 @@ You said the world feels tiny and asked for it to be easy to tweak. I didn't sca
 
 ## Not done, or not checked
 
-- **Top Lawn toys at 1.25x.** The toy frames come from one shared park layout that every park site uses. The swing pivots, the see-saw pivot and the slide root drive the pets' animations on each client. Scaling the frames while keeping seats pet-sized means reworking those anchors and re-probing every seat. That's too risky to rush overnight, and Fable said to ship without it. It is a job of its own.
+- **Pets riding the bigger toys, and a real fetch throw** on the Top Lawn: not watched in Studio (no pets in that save).
+- **Carrying the Bear at 0.8:** the offsets are scaled, but I haven't seen it.
 - **Two small steps on the path** come from the island's collision, not the art: the switchback's outer edge and the terrace floor corners.
 - **Not seen on a real phone.** Studio can't emulate a phone here, so sizes come from the layout maths: on an 844x390 phone the Welcome egg's shell is about 95 wide by 104 tall (Fable asked for about 104 x 130). Please judge it on your phone.
 - **Studio's Output panel** is floating at the bottom of the screen after my phone-size attempt. Drag its title bar back to the bottom dock, or reopen it from the Window menu.
