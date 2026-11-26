@@ -99,7 +99,7 @@ ui.coach.next,Next,,First-round coaching; also ui.names.egg.nextValue
 ui.coach.park.line,{pet} plays here. Three play dates a day pay +4 ★.,,First-round coaching; e.g. Bear plays here. Three play dates a day pay +4 ★.
 ui.coach.park.title,Pet Park,,"First-round coaching; also ui.notice.parkInvite.title, ui.park.name, ui.r3.help.park.title, ui.r5.station.Park.name"
 ui.coach.quest.line,Today's quests pay Stars. Find them in the menu.,,First-round coaching
-ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, ui.hub.quests.title, ui.hub.tile.quests.name, ui.r3.help.quests.title"
+ui.coach.quest.title,Quests,,"First-round coaching; also ui.coach.quests.title, ui.deck.quests.button, ui.hub.quests.title, ui.hub.tile.quests.name"
 ui.coach.questDone.line,"Claim its Stars in Quests, in the menu.",,First-round coaching
 ui.coach.questDone.title,Quest done!,,"First-round coaching; also ui.notice.questDone.title, ui.notice.questReady.title"
 ui.coach.quests.line,"Three a day, three a week. Each one pays Stars.",,First-round coaching
@@ -220,6 +220,31 @@ ui.dash.title,Garden Dash,,"Menu text; also ui.notice.dashIntro.title, ui.r3.hel
 ui.dash.trial,Time Trial,,Menu text
 ui.dash.trip,Oops!,,Menu text
 ui.dash.zoom,Zoomies!,,Menu text
+ui.deck.chain.line,Quick merges in a row score more,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.chain.short,Quick merges score more,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.chain.tiny,Be quick: more points,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.chain.toast,Chain ×{count}! Quick merges in a row score more,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Chain ×3! Quick merges in a row score more"
+ui.deck.goal.chain,Make {count} quick merges in a row,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Make 3 quick merges in a row"
+ui.deck.goal.done,Done!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; also ui.onb3.strip.short.done"
+ui.deck.goal.make,Make {ball} {where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Make a green ball on the left"
+ui.deck.goal.makeUp,Make {ball} or bigger {where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Make a green ball or bigger on the left"
+ui.deck.goal.match,Match two {small} {where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Match two blue balls on the left"
+ui.deck.goal.merges,Make {count} merges {where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Make 3 merges on the left"
+ui.deck.goal.next,"Next, {goal}",,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Next, make 2 merges anywhere"
+ui.deck.goal.short.chain,{count} quick merges,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. 3 quick merges"
+ui.deck.goal.short.make,{ball} {where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. a green ball on the left; also ui.deck.goal.tiny.make"
+ui.deck.goal.short.match,Two {small} {where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Two blue balls on the left"
+ui.deck.goal.short.merges,{count} merges {where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. 3 merges on the left"
+ui.deck.goal.tiny.chain,{count} in a row,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. 3 in a row"
+ui.deck.goal.tiny.merges,{count} merges,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. 3 merges"
+ui.deck.goal.where.any,anywhere,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; also ui.deck.goal.whereTiny.any"
+ui.deck.goal.where.center,in the middle,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.goal.where.left,on the left,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.goal.where.right,on the right,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.goal.whereTiny.center,middle,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.goal.whereTiny.left,left,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.goal.whereTiny.right,right,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.quests.open,Open,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.den.board,Notice board,,Menu text
 ui.den.name,The Play Den,,Menu text; also ui.things.den.name
 ui.den.table,Pocket Deck,,"Menu text; also ui.report.category.deck, ui.things.deck.name, catalog.ToyCatalog.ById.pocket_deck.name, catalog.BookCatalog.Pages.toys.items.3.name"
@@ -632,7 +657,6 @@ ui.onb3.strip.questsInM,New quests in {minutes} min,,"First-session onboarding: 
 ui.onb3.strip.questsLeft,{left} quests to go,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. {left} quests to go"
 ui.onb3.strip.questsOne,1 quest to go,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.strip.questsReady,{count} ready to claim,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 3 ready to claim"
-ui.onb3.strip.short.done,Done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.strip.short.h,{hours} h,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 7 h"
 ui.onb3.strip.short.hm,{hours} h {minutes} m,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. 7 h 40 m"
 ui.onb3.strip.short.left,{left} left,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. {left} left"
