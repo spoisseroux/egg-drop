@@ -16,10 +16,13 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- GARDEN-PLAY-BRIEF 2026-11-26: `crunch` is the crunchy toys round the garden (CrunchToysClient), `air` the drift
 -- balloons (since GARDEN-PLAY-BRIEF-2 section 6: hot-air balloons, three with a mascot) and seed fluff over it
 -- (DriftLanternsClient). Missing = on.
-Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble","balls","crunch","air"})
+-- GARDEN-PLAY-BRIEF-2 (beta 35 notes 4 and 8): `fruit` is the 3D fruit, the tree shake, the five-bite snack and its Heart
+-- XP (GardenFruit, FruitHost); `keepout` is the pets going round the garden's solid props (GardenKeepOut). Missing = on.
+Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble","balls","crunch","air",
+ "fruit","keepout"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
  scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr",wobble="AliveWobble",balls="AliveBalls",
- crunch="AliveCrunch",air="AliveAir"})
+ crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut"})
 -- What a missing or malformed config value means, where it is not on.
 Alive.Defaults=table.freeze({windbed=false})
 

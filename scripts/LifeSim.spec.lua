@@ -1429,5 +1429,66 @@ return function(client)
 		assert(#list.list==0,"Reduced Motion: gone")
 	end)
 
+	-- GARDEN-PLAY-BRIEF-2 section 5: the fruit's shared rules, the shake's drop and the five bites ------------------
+	local Fruit=require(game:GetService("ReplicatedStorage").Shared.GardenFruit)
+	test("GardenFruit is the grove's own rule: the same chance and trigger, the same trees in the same order and places",function()
+		assert(Fruit.Chance==Sim.Fruit.chance and Fruit.DropAt==Sim.Fruit.dropAt)
+		for n=-3,40 do
+			local at=Vector3.new(n*3,12,-n)
+			assert(Sim.fruitTrigger(at,n)==Fruit.trigger(at,n)and Sim.fruitBreathTrigger(at,n)==Fruit.breathTrigger(at,n))
+		end
+		local Kit=require(client.AeroKit)
+		local data=require(game:GetService("ReplicatedStorage").Shared.WorldAeroKit)
+		local lime=Sim.kitCrowns(data,Kit.crownFrame,{foliage_blossom=true})
+		local trees=Fruit.trees()
+		assert(#trees==#lime)
+		for i,crown in ipairs(lime)do
+			assert(trees[i].tree==crown.tree and(trees[i].centre-crown.position).Magnitude<1e-4,crown.tree)
+			assert(math.abs(trees[i].x-crown.pivot.X)<1e-6 and math.abs(trees[i].z-crown.pivot.Z)<1e-6)
+		end
+		-- The server's "did it drop" sees every drop the grove makes (a superset: the grove also needs good ground).
+		local grove=Sim.Grove.new(lime,flatWorld())
+		local seen=0
+		for k=0,40 do
+			local now=T0+k*9
+			grove:refresh(now)
+			for _,drop in ipairs(grove:active(now))do
+				seen+=1
+				assert(Fruit.dropped(drop.i,lime[drop.i].position,now,Fruit.Window,false),"a grove drop the server would refuse")
+			end
+		end
+		assert(seen>0,"no drops in six minutes")
+	end)
+	test("the shake's drop: a hanging stem lets go now with the gust drop's own flight; none hanging, none lands: nothing",function()
+		local stems=Sim.fruitStems(1,CROWN)
+		assert(#stems>0)
+		local plan=Sim.fruitShakePlan(1,CROWN,stems,T0,-1000001,flatWorld())
+		assert(plan and plan.shake==true and plan.start==T0 and plan.key==stems[1].key and plan.t2>plan.t1 and plan.gone>plan.t6)
+		local skip=Sim.fruitShakePlan(1,CROWN,stems,T0,-1000002,flatWorld(),function(key)return key~=stems[1].key end)
+		assert(skip==nil or skip.key~=stems[1].key,"the hidden slot is skipped")
+		local none,why=Sim.fruitShakePlan(1,CROWN,stems,T0,-1000003,flatWorld(),function()return false end)
+		assert(none==nil and why=="hidden")
+		assert(Sim.fruitShakePlan(1,CROWN,stems,T0,-1000004,flatWorld({safe=function()return false end}))==nil,"water under it")
+		assert(Sim.fruitShakePlan(1,CROWN,{},T0,-1000005,flatWorld())==nil)
+	end)
+	test("five bites: the eaten fruit at 100, 78, 58, 40, 22 then 0 percent over 3.2 s, turning 25 degrees a bite",function()
+		local stems=Sim.fruitStems(1,CROWN)
+		local loose=Sim.fruitLoose(Sim.fruitShakePlan(1,CROWN,stems,T0,-1000006,flatWorld()),Vector3.new(1,0,0))
+		local rest=loose.t5+1
+		loose.eaten,loose.five=rest,true
+		local each=Fruit.Bites.time/Fruit.Bites.count
+		for k,scale in ipairs({1,.78,.58,.40,.22})do
+			local pose=Sim.fruitPose(loose,rest+(k-1)*each+each*.5)
+			assert(near(pose.w,scale,1e-9)and near(pose.h,scale,1e-9)and pose.bite==k-1 and pose.turn==(k-1)*25,k..": "..pose.w)
+			assert(pose.phase~="gone"and pose.eatT~=nil)
+		end
+		local gone=Sim.fruitPose(loose,rest+Fruit.Bites.time+.01)
+		assert(gone.phase=="gone"and gone.w==0)
+		-- Without five the old three nibbles stand (the switch off).
+		local old=Sim.fruitLoose(Sim.fruitShakePlan(1,CROWN,stems,T0,-1000007,flatWorld()),Vector3.new(1,0,0))
+		old.eaten=rest
+		assert(Sim.fruitPose(old,rest+Sim.Fruit.nibble*3+.01).phase=="gone"and Sim.fruitPose(old,rest+.01).eatT==nil)
+	end)
+
 	return{passed=#cases,cases=cases}
 end

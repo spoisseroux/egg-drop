@@ -17,8 +17,23 @@ local function interval(a,b,minimum,maximum,lo,hi)
  local x,y=(minimum-a)/delta,(maximum-a)/delta;if x>y then x,y=y,x end
  lo,hi=math.max(lo,x),math.min(hi,y);if lo>hi then return nil end;return lo,hi
 end
+-- GARDEN-PLAY-BRIEF-2 section 4: a solid prop's keep-out (GardenKeepOut.regions) is a circle record in the same list,
+-- {KeepOut = true, X, Z, R}: a segment passing within R of its centre (XZ) is refused. The beta adds them (Alive
+-- `keepout`); live has none, so every rule below is unchanged there.
+local function toSegment(px,pz,ax,az,bx,bz)
+ local dx,dz=bx-ax,bz-az
+ local length=dx*dx+dz*dz
+ local t=if length<1e-12 then 0 else math.clamp(((px-ax)*dx+(pz-az)*dz)/length,0,1)
+ local ex,ez=px-(ax+t*dx),pz-(az+t*dz)
+ return math.sqrt(ex*ex+ez*ez)
+end
+Walk.toSegment=toSegment
 function Walk.segmentAllowed(from,to,wet)
  for _,water in ipairs(wet)do
+  if water.KeepOut then
+   if toSegment(water.X,water.Z,from.X,from.Z,to.X,to.Z)<water.R then return false end
+   continue
+  end
   if not water.Parent then continue end
   local a,b=water.CFrame:PointToObjectSpace(from),water.CFrame:PointToObjectSpace(to)
   local lo,hi=interval(a.X,b.X,-water.Size.X*.5-.35,water.Size.X*.5+.35,0,1)
@@ -44,6 +59,28 @@ function Walk.segmentAllowed(from,to,wet)
  end
  return true
 end
+-- A point inside keep-out circles, moved straight out of each (a few passes for touching circles); nil when none holds it.
+Walk.PushPast=.05
+function Walk.pushOut(position,wet)
+ local p,moved=position,false
+ for _=1,4 do
+  local again=false
+  for _,c in ipairs(wet)do
+   if c.KeepOut then
+    local dx,dz=p.X-c.X,p.Z-c.Z
+    local d=math.sqrt(dx*dx+dz*dz)
+    if d<c.R then
+     if d<1e-6 then dx,dz,d=1,0,1 end
+     local k=(c.R+Walk.PushPast)/d
+     p=Vector3.new(c.X+dx*k,p.Y,c.Z+dz*k)
+     moved,again=true,true
+    end
+   end
+  end
+  if not again then break end
+ end
+ return if moved then p else nil
+end
 function Walk.resolveAnchor(position,wet)
  local span=Walk.spanAt(position)
  if span then
@@ -51,6 +88,9 @@ function Walk.resolveAnchor(position,wet)
   if Walk.segmentAllowed(supported,supported,wet)then return supported,(supported-position).Magnitude>.001 end
  end
  if Walk.segmentAllowed(position,position,wet)then return position,false end
+ -- A goal against a solid prop (an owner by a tree trunk): the nearest spot just outside it.
+ local pushed=Walk.pushOut(position,wet)
+ if pushed and not Walk.spanAt(pushed)and Walk.segmentAllowed(pushed,pushed,wet)then return pushed,true end
  local best,distance
  -- The ordinary lateral follow offset may fall beside a narrow deck. Project
  -- that goal onto a nearby registered support; never project the moving root.
@@ -79,7 +119,12 @@ function Walk.pathAllowed(path,wet)
   table.remove(lower);table.remove(upper);local hull=lower;for _,p in ipairs(upper)do table.insert(hull,p)end
   if #hull>=3 then
    local minimumY=math.min(points[1].Y,points[2].Y,points[3].Y,points[4].Y)
-   for _,water in ipairs(wet)do if water.Parent then
+   for _,water in ipairs(wet)do if water.KeepOut then
+    -- A keep-out the chords all miss can still sit inside the hull, round the whole curve.
+    local centre=Vector3.new(water.X,minimumY,water.Z)
+    local inside=true;for i=1,#hull do if cross(hull[i],hull[i%#hull+1],centre)<-1e-8 then inside=false;break end end
+    if inside then return false end
+   elseif water.Parent then
     for _,x in ipairs({-1,1})do for _,z in ipairs({-1,1})do
      local corner=water.CFrame:PointToWorldSpace(Vector3.new(x*(water.Size.X*.5+.35),0,z*(water.Size.Z*.5+.35)))
      corner=Vector3.new(corner.X,minimumY,corner.Z)
@@ -90,5 +135,17 @@ function Walk.pathAllowed(path,wet)
   end
  end
  return true
+end
+-- The wet list split into its parts (water, blocked boxes) and its keep-out circles; cached per list (the garden scene's
+-- list only grows). With no circles the parts list is the list itself.
+local splits=setmetatable({},{__mode="k"})
+function Walk.split(wet)
+ local cached=splits[wet]
+ if cached and cached.count==#wet then return cached.boxes,cached.circles end
+ local boxes,circles={},{}
+ for _,entry in ipairs(wet)do if entry.KeepOut then table.insert(circles,entry)else table.insert(boxes,entry)end end
+ if #circles==0 then boxes=wet end
+ splits[wet]={count=#wet,boxes=boxes,circles=circles}
+ return boxes,circles
 end
 return Walk

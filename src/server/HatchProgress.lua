@@ -59,6 +59,8 @@ local DashState=require(script.Parent.DashState)
 local Dash=require(ReplicatedStorage.Shared.Dash)
 -- Garden finds (S9): the optional finds field (FindsState); off = not read, not written, no snapshot key.
 local FindsState=require(script.Parent.FindsState)
+-- Garden fruit (GARDEN-PLAY-BRIEF-2 section 5): the optional fruit field (FruitState), Heart XP a fruit, a daily cap.
+local FruitState=require(script.Parent.FruitState)
 local Finds=require(ReplicatedStorage.Shared.Finds)
 -- Onboarding v3 slice C: the optional Sleepy Nest field (NestState); off = not read, not written, no snapshot key.
 local NestState=require(script.Parent.NestState)
@@ -1611,6 +1613,26 @@ function Hatching.findClaim(handle, operationId, petId)
 end
 function Hatching.findCommitted(handle, operationId) return FindsState.committed(handle.state, operationId) end
 function Hatching.findReceipt(handle, operationId) return FindsState.receipt(handle.state, operationId) end
+
+-- Garden fruit (FruitState): one fruit eaten by the pet the host captured when it accepted the claim, the findClaim way.
+-- `operationId` is the host's id, kept across retries; fruit.op is the proof (paid once under retry, replay and a
+-- second session). The count's day is read inside the write; the XP day is the candidate's. DailyLimit and NoPet
+-- write nothing.
+function Hatching.fruitClaim(handle, operationId, petId)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(petId) ~= "string" or #petId < 1 or #petId > 40 then return false, "InvalidFruit" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	if FruitState.committed(handle.state, operationId) then return true, "AlreadySaved" end
+	local signature = "fruit:" .. operationId
+	local pending = handle.pending
+	if pending and pending.signature ~= signature then return false, "Pending" end
+	local candidate = if pending then pending.candidate else table.freeze({ id = operationId, petId = petId, day = dayOf(handle.adapter.now()) })
+	return transact(handle, signature, handle.state.revision, function(state, captured)
+		return FruitState.apply(state, captured, dayOf(handle.adapter.now()))
+	end, candidate, operationId, nil, "fruit:" .. candidate.day .. ":" .. candidate.petId)
+end
+function Hatching.fruitCommitted(handle, operationId) return FruitState.committed(handle.state, operationId) end
+function Hatching.fruitReceipt(handle, operationId) return FruitState.receipt(handle.state, operationId) end
+function Hatching.fruitLeft(handle) return FruitState.left(handle.state, dayOf(handle.adapter.now())) end
 
 -- The Sleepy Nest (NestState, Onboarding v3 slice C). Each is one write through transact; `operationId` is the host's id,
 -- kept across retries, and a pending write resumes its own frozen candidate. The clock is read inside the write.

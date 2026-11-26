@@ -47,6 +47,8 @@ local Sim=require(script.Parent.LifeSim)
 local Wind=require(script.Parent.Wind)
 local LifeArt=require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("LifeArt"))
 local LifeArtR4=require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("LifeArtR4"))
+-- GARDEN-PLAY-BRIEF-2 section 5 (the Alive `fruit` switch): the 3D fruit, the tree shake and the five bites.
+local Fruit=require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GardenFruit"))
 
 local Life={};Life.__index=Life
 Life.Folder="EggDropLife"
@@ -280,6 +282,24 @@ local function dewdrop(folder,slot)
 	return{anchor=anchor,gui=gui,label=label,key=nil,position=nil,rotation=0,transparency=0,w=1,h=1}
 end
 
+-- The 3D fruit (GARDEN-PLAY-BRIEF-2 section 5, the `fruit` switch): a bright body, a blush sunk in one shoulder, a
+-- stem and a leaf, SmoothPlastic with no gloss, in place of the Dewdrop billboard (same slots, same pool of 16). Each
+-- part moves with the BulkMoveTo; sizes and transparency are written only when they change.
+local FRUIT_SIDE=Vector3.new(-Wind.Direction.Z,0,Wind.Direction.X) -- the hanging sway's axis (WindClient's Side)
+local function fruitModel(folder,slot)
+	local L=Fruit.Look
+	local name="LifeFruit"..slot.."_"
+	local body=part(folder,name.."Body","Part",Vector3.one*L.body.size,Color3.fromHex(L.body.colour),Enum.PartType.Ball)
+	local blush=part(folder,name.."Blush","Part",Vector3.one*L.blush.size,Color3.fromHex(L.blush.colour),Enum.PartType.Ball)
+	local stem=part(folder,name.."Stem","Part",L.stem.size,Color3.fromHex(L.stem.colour),Enum.PartType.Cylinder)
+	local leaf=part(folder,name.."Leaf","Part",L.leaf.size,Color3.fromHex(L.leaf.colour))
+	return{model=true,anchor=body,body=body,blush=blush,stem=stem,leaf=leaf,parts={body,blush,stem,leaf},
+		key=nil,position=nil,frameKey=nil,w=1,h=1,transparency=0,stemAlpha=0,rotation=0}
+end
+local function hideFruit(entry,hide)
+	if entry.model then for _,p in ipairs(entry.parts)do hide(p)end else hide(entry.anchor)end
+end
+
 -- The hand-off glow (GARDEN-LIFE-NEST-LOOK 1): one billboard on each butterfly's body, off by day. No PointLight.
 -- size: studs (the butterfly's starts small; a night firefly's is Sim.Firefly.size).
 local function glow(body,size)
@@ -361,6 +381,13 @@ function Life.mount(deps)
 	end
 	-- Beta 14 D2: my pet's snack asks about each resting fruit (LifePet sets it; nil: no snack).
 	self.notice=deps.notice
+	-- GARDEN-PLAY-BRIEF-2 section 5: the Alive `fruit` switch (read at each switch-on; a flip builds the garden again),
+	-- a crown's rock (WindClient), the shake's buzz, the server's half (FruitClient: shake(i)), and the sounds.
+	self.fruitOn=deps.fruit or function()return alive.ceiling("fruit")==true and alive.on("fruit")==true end
+	self.rock=deps.rock or function(p)require(script.Parent.WindClient).shake(p)end
+	self.buzz=deps.buzz or function(name)pcall(function()require(script.Parent.Haptics).play(name)end)end
+	self.shook=deps.shook
+	self.play=deps.play
 	-- The Hush (Fable's garden expansion through the cave): quiet() true while the player is in it, so no leaves,
 	-- bubbles, birds or fireflies follow them in (the ones out finish or fade). Optional, nil-safe; a throw is not quiet.
 	self.quiet=deps.quiet
@@ -405,6 +432,13 @@ function Life.mount(deps)
 		if player then player:SetAttribute("AliveLevel",level)end
 	end
 	table.insert(self.connections,alive.changed("life"):Connect(function()self:sync()end))
+	-- The fruit switch decides which fruit the pool holds: a flip builds the garden again (switch-on reads it).
+	pcall(function()
+		if alive.ceiling("fruit")~=true then return end
+		table.insert(self.connections,alive.changed("fruit"):Connect(function()
+			if self.enabled and self.fruit3d~=(self.fruitOn()==true)then self:disable();self:sync()end
+		end))
+	end)
 	self:sync()
 	return self
 end
@@ -706,7 +740,25 @@ function Life:enable()
 	self.fireflies=Sim.Fireflies.new(self.seed+4)
 	self.fireIn=0
 	self.fruitPool={}
-	for slot=1,Sim.Fruit.pool do self.fruitPool[slot]=dewdrop(folder,slot)end
+	local okFruit,fruitOn=pcall(self.fruitOn)
+	self.fruit3d=okFruit and fruitOn==true
+	for slot=1,Sim.Fruit.pool do self.fruitPool[slot]=if self.fruit3d then fruitModel(folder,slot)else dewdrop(folder,slot)end
+	self.shaken,self.shakeDrops,self.shakeReady,self.shakeLanded,self.shakeCount,self.shakeRoot={},{},{},{},0,nil
+	if self.fruit3d then
+		-- The shake's leaf cards (the leaf sheet's own emitter, so the drifting leaves keep theirs) and the bites' crumbs.
+		local anchor=part(folder,"LifeShakeLeaves","Part",Life.LeafAnchor,false)
+		self.shakeLeaves={anchor=anchor,emitter=leafEmitter(anchor,1)}
+		local crumbAnchor=part(folder,"LifeFruitCrumbs","Part",Vector3.new(.2,.2,.2),false)
+		self.crumbs={anchor=crumbAnchor,emitter=Life.crumbEmitter(crumbAnchor)}
+		self:fruitVoices(folder)
+		-- The fruit trees in the grove's order (both sort the lime crowns by tree name); a fallback crown list has none.
+		self.fruitTrees={}
+		local okTrees,trees=pcall(Fruit.trees)
+		for i,crown in ipairs(self.groveCrowns or {})do
+			local tree=okTrees and trees[i]
+			if tree and tree.tree==crown.tree then self.fruitTrees[i]=tree end
+		end
+	end
 	self.bubblePool={}
 	for _,kind in ipairs({"small","large"})do
 		local anchor=part(folder,if kind=="small"then "LifeBubblesSmall"else "LifeBubblesLarge","Part",Vector3.new(.2,.2,.2),false)
@@ -807,6 +859,7 @@ function Life:disable()
 	self.birds,self.flies,self.leaves,self.bubbles,self.birdStill,self.skitter=nil,nil,nil,nil,nil,nil
 	self.fruitPool,self.grove,self.loose,self.view,self.fruitOf,self.fruitCount=nil,nil,nil,nil,nil,0
 	self.firePool,self.fireflies,self.sceneParts,self.sceneFailed=nil,nil,nil,nil
+	self.shaken,self.shakeDrops,self.shakeReady,self.shakeLanded,self.shakeLeaves,self.crumbs,self.voices,self.fruitTrees=nil,nil,nil,nil,nil,nil,nil,nil
 	if folder then folder:Destroy()end
 end
 
@@ -1048,6 +1101,7 @@ function Life:step(dt)
 			if not ok then self.warn("[Life] flush chirp: "..tostring(problem));self.flushChirp=function()end end
 		end
 	end
+	self.fruitEmits=emits
 	self:stepFruit(now,camera,level,reduced,put,hide)
 	local scene=self.sceneParts
 	if scene then
@@ -1116,7 +1170,7 @@ function Life:forgetFruit()
 	self.loose:clear()
 	table.clear(self.fruitOf)
 	self.fruitCount=0
-	for _,entry in ipairs(self.fruitPool)do entry.key,entry.position=nil,nil end
+	for _,entry in ipairs(self.fruitPool)do entry.key,entry.position,entry.frameKey=nil,nil,nil end
 end
 
 -- One step of fruit. The grove (every lime crown, refreshed once a second) says what hangs and what has fallen; only
@@ -1130,13 +1184,15 @@ function Life:stepFruit(now,camera,level,reduced,put,hide)
 		-- Nothing assigned: nothing shown, nothing to walk.
 		if next(self.fruitOf)==nil and #self.loose.list==0 then return end
 		self:forgetFruit()
-		for _,entry in ipairs(pool)do hide(entry.anchor)end
+		for _,entry in ipairs(pool)do hideFruit(entry,hide)end
 		return
 	end
 	if not grove.at or now<grove.at or now-grove.at>=Sim.Grove.Every then grove:refresh(now)end
 	local want={}
 	local hanging=0
 	local eye,right=camera.Position,camera.RightVector
+	-- The tree shake (the `fruit` switch); with Reduced Motion only its sounds.
+	if self.fruit3d then self:stepShake(now,reduced,put)end
 	if reduced then self.loose:clear()
 	else
 		local view=self.view
@@ -1144,7 +1200,7 @@ function Life:stepFruit(now,camera,level,reduced,put,hide)
 		view.player=self.root()
 		local okHeading,heading=pcall(self.heading)
 		view.heading=if okHeading and typeof(heading)=="Vector3"then heading else nil
-		self.loose:step(now,grove:active(now),view,self.fruitWorld,self.pets,Sim.cap("loose",level),self.live,self.notice)
+		self.loose:step(now,self:activeFruit(now),view,self.fruitWorld,self.pets,Sim.cap("loose",level),self.live,self.notice)
 	end
 	local near={}
 	for i,crown in ipairs(grove.crowns)do
@@ -1166,26 +1222,38 @@ function Life:stepFruit(now,camera,level,reduced,put,hide)
 		for _,slot in ipairs(grove.stems[entry.i])do
 			if hanging>=room then break end
 			local scale=if reduced then 1 else grove:hanging(slot.key,now)
+			if scale and self.fruit3d then
+				local grown=self:shakenScale(slot.key,now)
+				if grown then scale=if grown<=0 then nil else math.min(scale,grown)end
+			end
 			if scale then
 				hanging+=1
 				local angle=Sim.fruitSway(slot.k,now,at,still)
 				local stem=if delta then delta*slot.stem else slot.stem
-				want[slot.key]={Sim.fruitHang(stem,angle,scale),-angle*dot,scale,scale,0}
+				want[slot.key]={Sim.fruitHang(stem,angle,scale),-angle*dot,scale,scale,0,angle,FRUIT_SIDE,0,nil}
 			end
 		end
 	end
 	for _,loose in ipairs(self.loose.list)do
 		local pose=Sim.fruitPose(loose,now)
-		want[-loose.key]={pose.position,pose.rotation,pose.w,pose.h,pose.transparency}
+		local heading=loose.heading
+		local axis=if typeof(heading)=="Vector3"and heading.Magnitude>1e-3 then Vector3.new(heading.Z,0,-heading.X).Unit else FRUIT_SIDE
+		want[-loose.key]={pose.position,pose.rotation,pose.w,pose.h,pose.transparency,pose.rotation,axis,pose.turn,pose.eatT}
+		-- Three crumbs a bite in the body's colour (the `fruit` switch's five bites).
+		if self.crumbs and pose.bite>(loose.crumbed or 0)and typeof(pose.position)=="Vector3"then
+			loose.crumbed=pose.bite
+			put(self.crumbs.anchor,CFrame.new(pose.position))
+			table.insert(self.fruitEmits,{self.crumbs.emitter,Fruit.Bites.crumbs})
+		end
 	end
 	self.fruitCount=hanging
 	local of,free=self.fruitOf,{}
 	for index,entry in ipairs(pool)do
 		if entry.key~=nil and not want[entry.key]then
-			of[entry.key]=nil;entry.key,entry.position=nil,nil
+			of[entry.key]=nil;entry.key,entry.position,entry.frameKey=nil,nil,nil
 		end
 		if entry.key==nil then
-			hide(entry.anchor)
+			hideFruit(entry,hide)
 			table.insert(free,index)
 		end
 	end
@@ -1198,6 +1266,7 @@ function Life:stepFruit(now,camera,level,reduced,put,hide)
 			of[key]=index;pool[index].key=key
 		end
 		local entry=pool[index]
+		if entry.model then self:drawFruit(entry,v,put);continue end
 		local position,rotation,w,h,transparency=v[1],v[2],v[3],v[4],v[5]
 		if entry.position~=position then entry.position=position;put(entry.anchor,CFrame.new(position))end
 		if differs(entry.rotation,rotation,.05)then entry.rotation=rotation;entry.label.Rotation=rotation end
@@ -1207,6 +1276,210 @@ function Life:stepFruit(now,camera,level,reduced,put,hide)
 			entry.gui.Size=UDim2.fromScale(size.X*w,size.Y*h)
 		end
 	end
+end
+
+-- The 3D fruit (GARDEN-PLAY-BRIEF-2 section 5) ----------------------------------------------------------------------
+-- v: {position, rotation, w, h, transparency, tilt (degrees), axis, turn (degrees about up), eatT (seconds eaten)}.
+local function moved(a,b,eps)return a==nil or math.abs(a-b)>eps end
+function Life:drawFruit(entry,v,put)
+	local L,B=Fruit.Look,Fruit.Bites
+	local position,w,h,transparency,tilt,axis,turn,eatT=v[1],v[3],v[4],v[5],v[6]or 0,v[7]or FRUIT_SIDE,v[8]or 0,v[9]
+	local s=(w+h)/2
+	-- The stem and leaf come off at the first bite: they drop and fade over stemFade.
+	local stemAlpha=if eatT then math.clamp(eatT/B.stemFade,0,1)else 0
+	local frameKey=string.format("%.3f,%.3f,%.3f,%.2f,%.2f,%.3f,%.3f,%.3f",position.X,position.Y,position.Z,tilt,turn,w,h,stemAlpha)
+	if entry.frameKey~=frameKey then
+		entry.frameKey=frameKey
+		entry.position=position
+		local frame=CFrame.new(position)*CFrame.fromAxisAngle(axis,math.rad(tilt))*CFrame.Angles(0,math.rad(turn),0)
+		local drop=Vector3.new(0,B.stemDrop*stemAlpha,0)
+		put(entry.body,frame)
+		put(entry.blush,frame*CFrame.new(L.blush.at.X*w,L.blush.at.Y*h,L.blush.at.Z*w))
+		-- A Cylinder's length is its X: stood up about Z.
+		put(entry.stem,(frame*CFrame.new(L.stem.at*h)-drop)*CFrame.Angles(0,0,math.rad(90)))
+		put(entry.leaf,(frame*CFrame.new(L.leaf.at*s)-drop)*CFrame.Angles(0,0,math.rad(L.leaf.tilt)))
+	end
+	if moved(entry.w,w,.002)or moved(entry.h,h,.002)then
+		entry.w,entry.h=w,h
+		local function at(n)return math.max(.01,n)end
+		entry.body.Size=Vector3.new(at(L.body.size*w),at(L.body.size*h),at(L.body.size*w))
+		entry.blush.Size=Vector3.one*at(L.blush.size*s)
+		entry.stem.Size=L.stem.size*at(s)
+		entry.leaf.Size=L.leaf.size*at(s)
+	end
+	if moved(entry.transparency,transparency,.005)or moved(entry.stemAlpha,stemAlpha,.005)then
+		entry.transparency,entry.stemAlpha=transparency,stemAlpha
+		entry.body.Transparency,entry.blush.Transparency=transparency,transparency
+		local top=math.max(transparency,stemAlpha)
+		entry.stem.Transparency,entry.leaf.Transparency=top,top
+	end
+end
+
+-- The bites' crumbs: a small burst that falls. One emitter, moved to the fruit for each bite.
+function Life.crumbEmitter(anchor)
+	local e=Instance.new("ParticleEmitter")
+	e.Name="Crumbs"
+	e.Texture=LifeArt.id("fireflyDot")or ""
+	e.Color=ColorSequence.new(Color3.fromHex(Fruit.Look.body.colour))
+	e.Size=keys({{0,.09},{1,.04}})
+	e.Transparency=keys({{0,0},{.7,0},{1,1}})
+	e.Lifetime=NumberRange.new(.45,.7)
+	e.Speed=NumberRange.new(2.2,3.6)
+	e.SpreadAngle=Vector2.new(70,70)
+	e.EmissionDirection=Enum.NormalId.Top
+	e.Acceleration=Vector3.new(0,-24,0)
+	e.Rate=0
+	e.Enabled=true
+	e.LockedToPart=false
+	e.LightEmission,e.LightInfluence=0,1
+	e.Parent=anchor
+	return e
+end
+
+-- The fruit's sounds (existing takes; GardenFruit.Sounds): four voices on one invisible part, through the garden's cue
+-- group so the Sound setting mutes them. LifePet plays the bites through Life:fruitSound too.
+Life.FruitVoices=4
+function Life:fruitVoices(folder)
+	local anchor=part(folder,"LifeFruitAudio","Part",Vector3.new(.2,.2,.2),false)
+	self.voices={}
+	self.uris={}
+	local group
+	pcall(function()group=game:GetService("SoundService"):FindFirstChild("EggDropAmbientCues")end)
+	for i=1,Life.FruitVoices do
+		local holder=Instance.new("Attachment");holder.Name="voice"..i;holder.Parent=anchor
+		local voice=Instance.new("Sound");voice.Name="fruit"..i
+		voice.RollOffMode=Enum.RollOffMode.InverseTapered;voice.RollOffMinDistance=6;voice.RollOffMaxDistance=60
+		voice.Volume=0;voice.SoundGroup=group;voice.Parent=holder
+		table.insert(self.voices,{holder=holder,voice=voice,at=-math.huge})
+	end
+end
+function Life:fruitUri(cue)
+	if self.uris[cue]~=nil then return self.uris[cue]or nil end
+	local out
+	pcall(function()
+		local Audio=require(script.Parent.BoardAudio)
+		local asmr=Audio.AsmrIds and Audio.AsmrIds[cue]
+		out=if type(asmr)=="number"and asmr>0 then "rbxassetid://"..asmr else Audio.uri(cue)
+	end)
+	self.uris[cue]=out or false
+	return out
+end
+-- Play `cue` at `position` (nil: the player) at `volume`, `pitch`. Answers whether it played. A spec's `play` dep
+-- hears it instead.
+function Life:fruitSound(cue,position,volume,pitch)
+	if not self.enabled then return false end
+	if typeof(position)~="Vector3"then position=self.root()end
+	if typeof(position)~="Vector3"then return false end
+	volume,pitch=volume or 1,pitch or 1
+	if self.play then
+		local ok=pcall(self.play,cue,position,volume,pitch)
+		return ok
+	end
+	if not self.voices then return false end
+	local uri=self:fruitUri(cue)
+	if not uri then return false end
+	local pick
+	for _,v in ipairs(self.voices)do if not v.voice.IsPlaying then pick=v;break end end
+	if not pick then
+		pick=self.voices[1]
+		for _,v in ipairs(self.voices)do if v.at<pick.at then pick=v end end
+	end
+	pick.at=os.clock()
+	pick.holder.WorldPosition=position
+	local voice=pick.voice
+	voice.SoundId=uri;voice.PlaybackSpeed=pitch;voice.Volume=volume;voice.TimePosition=0
+	voice:Play()
+	return true
+end
+
+-- A shaken slot: 0 while it hangs empty (Shake.hidden), then 0 to 1 as it grows back (Shake.grow); nil when it is on
+-- the tree as usual.
+function Life:shakenScale(key,now)
+	local at=self.shaken and self.shaken[key]
+	if not at then return nil end
+	local S=Fruit.Shake
+	local t=now-at
+	if t<S.hidden then return 0 end
+	if t<S.hidden+S.grow then return math.max(.001,(t-S.hidden)/S.grow)end
+	self.shaken[key]=nil
+	return nil
+end
+-- What is off the trees now: the grove's drops (a shaken slot's own drops skipped while it grows back) and this
+-- client's shake drops still about.
+function Life:activeFruit(now)
+	local active=self.grove:active(now)
+	if not self.fruit3d or(#self.shakeDrops==0 and next(self.shaken)==nil)then return active end
+	local S=Fruit.Shake
+	for index=#active,1,-1 do
+		local at=self.shaken[active[index].key]
+		if at and active[index].start>=at and active[index].start<at+S.hidden+S.grow then table.remove(active,index)end
+	end
+	for index=#self.shakeDrops,1,-1 do
+		local plan=self.shakeDrops[index]
+		if now>=plan.gone then
+			table.remove(self.shakeDrops,index)
+			self.shakeLanded[plan.id]=nil
+		elseif plan.start<=now then
+			table.insert(active,plan)
+		end
+	end
+	table.sort(active,function(a,b)return a.start<b.start end)
+	return active
+end
+-- The tree shake: the player walks into a fruit tree's trunk faster than Shake.speed (the root's own speed between two
+-- steps). The crown rocks (WindClient), eight leaf cards fall, one fruit drops with the gust drop's fall and bounces,
+-- the rustle plays twice and the buzz; the server is told (FruitClient). That tree has nothing to shake till its fruit
+-- grows back. Reduced Motion: the rustle and the buzz only (no rock, no leaves, nothing falls).
+function Life:stepShake(now,reduced,put)
+	local root=self.root()
+	if typeof(root)~="Vector3"or not self.lime then self.shakeRoot=nil;return end
+	local last=self.shakeRoot
+	self.shakeRoot={at=root,t=now}
+	-- A landing thud for every shake drop as it first lands.
+	for _,plan in ipairs(self.shakeDrops)do
+		if not self.shakeLanded[plan.id]and now>=plan.t2 then
+			self.shakeLanded[plan.id]=true
+			self:fruitSound(Fruit.Sounds.land,plan.p1,Fruit.Sounds.landVolume,1)
+		end
+	end
+	if not last or now-last.t<=1e-3 or now-last.t>.5 then return end
+	local speed=Sim.flat(root,last.at)/(now-last.t)
+	if speed<Fruit.Shake.speed then return end
+	for i,crown in ipairs(self.grove.crowns)do
+		local tree=self.fruitTrees and self.fruitTrees[i]
+		if tree and now>=(self.shakeReady[i]or -math.huge)and Fruit.shakes(tree,root.X,root.Z,speed)then
+			self:shake(i,crown,now,reduced,put)
+			return
+		end
+	end
+end
+function Life:shake(i,crown,now,reduced,put)
+	local S,Sounds=Fruit.Shake,Fruit.Sounds
+	self.shakeReady[i]=now+S.hidden+S.grow
+	local under=crown.position-Vector3.new(0,(typeof(crown.size)=="Vector3"and crown.size.Y or 4)*.25,0)
+	local takes={"a","b","c","d","e"}
+	for k=1,Sounds.rustles do
+		self:fruitSound(Sounds.rustle.."_"..takes[(self.shakeCount+k)%#takes+1],under,Sounds.rustleVolume,.95+.1*(k-1))
+	end
+	pcall(self.buzz,Fruit.Buzz)
+	if self.shook then pcall(self.shook,i)end
+	if reduced then return nil end
+	local follow=self.follow and self.follow[i]
+	if follow and follow.part.Parent then pcall(self.rock,follow.part)end
+	if self.shakeLeaves then
+		put(self.shakeLeaves.anchor,CFrame.new(under))
+		table.insert(self.fruitEmits,{self.shakeLeaves.emitter,S.leaves})
+	end
+	self.shakeCount+=1
+	local grove=self.grove
+	local plan=Sim.fruitShakePlan(i,crown,grove.stems[i],now,-(1000000+self.shakeCount),self.fruitWorld,function(key)
+		return grove:hanging(key,now)~=nil and self:shakenScale(key,now)==nil
+	end)
+	if plan then
+		self.shaken[plan.key]=now
+		table.insert(self.shakeDrops,plan)
+	end
+	return plan
 end
 
 -- AmbientAudio calls this for each chirp it actually plays. A bird comes in to that perch's crown, or the one

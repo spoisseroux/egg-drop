@@ -21,7 +21,13 @@
 --   the pet, owner() -> my root position?, ownerStill() -> boolean, scene() -> boolean, breath(position, now) ->
 --   strength, number, world (the heart's parent), audio(cue)?, life() -> GardenLife still on (nil: assumed on),
 --   userId() -> my UserId, rivals() -> {{ownerId, position}} (the other garden pets at their server positions).
+-- GARDEN-PLAY-BRIEF-2 section 5 (the Alive `fruit` switch, deps.fruit() -> boolean): the eat is five bites over 3.2 s
+--   (GardenFruit.Bites: the fruit shrinks and turns each bite, crumbs, the stem drops), a nom a bite, a gulp at the last
+--   and a happy squeak, the cheeks puff on each bite; when it is eaten the server is told (deps.claim(loose)), which may
+--   pay Heart XP. No counter: the pet eats happily either way. Section 4 (deps.blocked(from, to) -> true): a trot that
+--   would pass through a solid prop is refused.
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
+local Fruit=require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GardenFruit"))
 
 local Pet={};Pet.__index=Pet
 Pet.Snack=table.freeze({notice=8,cooldown=90,turn=.3,pause=.4,trot=3.5,arrive=.9,nibble=.35,nibbles=3,hop=.35,hopTime=.3,
@@ -123,6 +129,12 @@ function Pet:notice(loose,now)
 	local fruit=loose.rest
 	local to=Vector3.new(fruit.X-visual.origin.X,0,fruit.Z-visual.origin.Z)
 	local stop=if to.Magnitude>S.arrive then fruit-to.Unit*S.arrive else visual.origin
+	-- GARDEN-PLAY-BRIEF-2 section 4: a straight trot never goes through a solid prop.
+	if call(self.d.blocked,visual.origin,stop)==true then
+		self:why("refused: a prop in the way")
+		Pet.Claims[loose.id]=nil
+		return false
+	end
 	self.active={loose=loose,fruit=fruit,stop=Vector3.new(stop.X,fruit.Y-S.lift+S.sole,stop.Z),phase="turn",at=now,
 		pos=visual.origin,yaw=visual.yaw or 0,fromYaw=visual.yaw or 0,wantYaw=math.atan2(to.X,to.Z)}
 	self.cooldownUntil=now+S.cooldown
@@ -212,12 +224,34 @@ function Pet:drive(visual,actor,now,dt)
 			pos=Vector3.new(a.stop.X,a.stop.Y,a.stop.Z)
 			a.phase,a.at="eat",now
 			a.loose.eaten=now
-			call(self.d.audio,"dewdrop_nibble")
+			-- The `fruit` switch: five bites (LifeSim reads loose.five), their sounds below.
+			a.five=call(self.d.fruit)==true
+			if a.five then a.loose.five=true else call(self.d.audio,"dewdrop_nibble")end
 		else
 			local u=step/to.Magnitude
 			pos=Vector3.new(pos.X+to.X*u,pos.Y+(a.stop.Y-pos.Y)*u,pos.Z+to.Z*u)
 			a.yaw=math.atan2(to.X,to.Z)
 			moving=S.trot
+		end
+	elseif a.phase=="eat"and a.five then
+		local B,Sounds=Fruit.Bites,Fruit.Sounds
+		local _,bite=Fruit.bite(t)
+		if bite~=a.bite then
+			a.bite=bite
+			if bite>=1 then
+				call(self.d.audio,Sounds.bites[(bite-1)%#Sounds.bites+1],pos,Sounds.biteVolume,.96+.08*((bite*7)%5)/4)
+				a.puffAt=now
+			end
+			if bite>=B.count then call(self.d.audio,Sounds.gulp,pos,Sounds.gulpVolume,1)end
+		end
+		if t>=B.time then
+			a.phase,a.at="glad",now
+			self:why("snack: ate it")
+			visual.contentUntil=(visual.time or 0)+S.content
+			self:heart(visual,now)
+			call(self.d.audio,Sounds.happy,pos,Sounds.happyVolume,1)
+			-- The server decides whether it pays (one a minute, twelve a day): nothing waits for its answer.
+			call(self.d.claim,a.loose)
 		end
 	elseif a.phase=="eat"then
 		local bite=math.floor(t/S.nibble)
@@ -317,10 +351,14 @@ end
 function Pet:pose(visual,_dt)
 	local a=self.active
 	if not a or a.phase~="eat"or not visual or visual.destroyed or not self:on()then return false end
-	local t=self.now()-a.at
-	local b=t%S.nibble
-	local nod=math.rad(S.nod)*math.sin(math.clamp(b/S.nibble,0,1)*math.pi)
-	if nod<=0 then return false end
+	local now=self.now()
+	local t=now-a.at
+	local each=if a.five then Fruit.Bites.time/Fruit.Bites.count else S.nibble
+	local b=t%each
+	local nod=math.rad(S.nod)*math.sin(math.clamp(b/each,0,1)*math.pi)
+	local puff=if a.five and a.puffAt and now-a.puffAt<Fruit.Bites.cheekTime
+		then 1+(Fruit.Bites.cheeks-1)*math.sin(math.clamp((now-a.puffAt)/Fruit.Bites.cheekTime,0,1)*math.pi)else 1
+	if nod<=0 and puff<=1 then return false end
 	local head
 	for _,entry in ipairs(visual.pieces or {})do if entry.name=="Head"then head=entry.part end end
 	if not head then return false end
@@ -329,7 +367,12 @@ function Pet:pose(visual,_dt)
 	visual:update(0)
 	local pivot=head.Position
 	local turn=CFrame.new(pivot)*CFrame.fromAxisAngle(head.CFrame.RightVector,nod)*CFrame.new(-pivot)
-	for _,entry in ipairs(visual.pieces)do if headish(entry)then entry.part.CFrame=turn*entry.part.CFrame end end
+	for _,entry in ipairs(visual.pieces)do
+		if headish(entry)then
+			entry.part.CFrame=turn*entry.part.CFrame
+			if puff>1 and string.find(entry.name or "","Cheek")then entry.part.Size*=puff end
+		end
+	end
 	return true
 end
 

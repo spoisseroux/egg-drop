@@ -37,7 +37,11 @@ return function(client)
 			now=function()return r.now end,busy=function()return r.busy end,reduced=function()return false end,
 			owner=function()return r.owner end,ownerStill=function()return r.still end,scene=function()return r.scene end,
 			breath=function()return r.breath[1],r.breath[2]end,world=workspace,life=function()return r.life~=false end,
-			userId=function()return r.userId end,rivals=function()return r.rivals end})
+			userId=function()return r.userId end,rivals=function()return r.rivals end,
+			-- GARDEN-PLAY-BRIEF-2: the `fruit` switch, the sounds, the claim, a prop in the way.
+			fruit=function()return options.fruit==true end,audio=function(cue)table.insert(r.sounds,cue)end,
+			claim=function(loose)table.insert(r.claims,loose)end,blocked=options.blocked})
+		r.sounds,r.claims={},{}
 		r.userId,r.rivals=options.userId or 10,{}
 		r.actor={mode="Room",behavior="rest",action="settle"}
 		r.visual=visual()
@@ -309,6 +313,54 @@ return function(client)
 		local off=rig({scene=false})
 		off.breath={.9,41};off.run(.5)
 		assert(off.visual.careHeadPitch==0,"scene off: none")
+	end)
+
+	-- GARDEN-PLAY-BRIEF-2 -----------------------------------------------------------------------------------------
+	local Fruit=require(game:GetService("ReplicatedStorage").Shared.GardenFruit)
+	test("five bites (`fruit` on): 3.2 s of eating, a nom a bite, a gulp at the last, a happy squeak; the claim once; cheeks puff",function()
+		local r=rig({fruit=true})
+		r.visual.pieces={{name="Head",part={Position=Vector3.new(0,5,0),CFrame=CFrame.new(0,5,0),Size=Vector3.one}},
+			{name="CheekL",channel="Face",part={Position=Vector3.new(.3,5,.3),CFrame=CFrame.new(.3,5,.3),Size=Vector3.one*.2}}}
+		r.run(.2)
+		local loose=fruitAt(Vector3.new(4,4,0))
+		assert(r.pet:notice(loose,r.now))
+		local eating=nil
+		local puffed=false
+		for _=1,30*8 do
+			r.frame(1/30)
+			if r.pet.active and r.pet.active.phase=="eat"then
+				eating=eating or r.now
+				if r.visual.pieces[2].part.Size.X>.2+1e-6 then puffed=true end
+				r.visual.pieces[2].part.Size=Vector3.one*.2
+			end
+			if eating and r.pet.active and r.pet.active.phase~="eat"then break end
+		end
+		assert(eating and loose.five==true and loose.eaten,"the fruit knows it is the five-bite one")
+		assert(near(r.now-eating,Fruit.Bites.time,.1),"3.2 s: "..(r.now-eating))
+		local noms,gulps,happy=0,0,0
+		for _,cue in ipairs(r.sounds)do
+			if string.sub(cue,1,9)=="snack_nom"then noms+=1 end
+			if cue==Fruit.Sounds.gulp then gulps+=1 end
+			if cue==Fruit.Sounds.happy then happy+=1 end
+		end
+		assert(noms==Fruit.Bites.count and gulps==1 and happy==1,noms.." "..gulps.." "..happy)
+		assert(#r.claims==1 and r.claims[1]==loose,"told the server once")
+		assert(puffed,"the cheeks puff on a bite")
+		r.run(4)
+		assert(#r.claims==1)
+		-- Off: three nibbles, no claim, the old cue.
+		local old=rig()
+		old.run(.2)
+		local plain=fruitAt(Vector3.new(4,4,0))
+		assert(old.pet:notice(plain,old.now))
+		old.run(6)
+		assert(plain.five==nil and #old.claims==0 and old.sounds[1]=="dewdrop_nibble")
+	end)
+	test("a prop in the way (GardenKeepOut, `keepout`): the straight trot is refused; a clear one goes",function()
+		local r=rig({blocked=function(from,to)return to.X>3 end})
+		r.run(.2)
+		assert(r.pet:notice(fruitAt(Vector3.new(6,4,0)),r.now)==false and r.pet.active==nil)
+		assert(r.pet:notice(fruitAt(Vector3.new(0,4,3)),r.now)==true)
 	end)
 
 	return{passed=#cases,cases=cases}

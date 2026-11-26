@@ -5398,6 +5398,25 @@ do
  local ok,problem=pcall(function()
   local Alive=require(ReplicatedStorage.Shared.Alive)
   if not Alive.ceiling("life")then return end
+  -- GARDEN-PLAY-BRIEF-2 section 5 (Alive `fruit`): the fruit's server half (FruitHost, the GardenFruit remote). A shake
+  -- and a fruit my pet ate are told to the server, which may pay Heart XP; nothing waits for its answer (no counter:
+  -- the answer is only noted on my player as FruitClaim, for the Studio check).
+  local function fruitSend(packet)
+   local remotes=ReplicatedStorage:FindFirstChild("Remotes")
+   local remote=remotes and remotes:FindFirstChild("GardenFruit")
+   if remote and remote:IsA("RemoteEvent")then remote:FireServer(packet)end
+  end
+  task.spawn(function()
+   local remotes=ReplicatedStorage:WaitForChild("Remotes",30)
+   local remote=remotes and remotes:WaitForChild("GardenFruit",30)
+   if remote and remote:IsA("RemoteEvent")then
+    remote.OnClientEvent:Connect(function(packet)
+     if type(packet)~="table"then return end
+     local note=if packet.kind=="fed"then "fed "..tostring(packet.xp)else tostring(packet.kind).." "..tostring(packet.reason)
+     pcall(function()Players.LocalPlayer:SetAttribute("FruitClaim",note)end)
+    end)
+   end
+  end)
   -- Beta 14 D2 (GARDEN-LIFE-BUILD-PLAN 2c): my pet's Dewdrop snack, its own Alive `snack` switch (beta and Studio only).
   -- A presentation layer on the server's path (RoomView calls drive after PetFollow.activity and pose after the pet's
   -- update); a throw drops the snack for the session and hands the pet back.
@@ -5425,6 +5444,23 @@ do
     scene=function()return Alive.on("scene")end,
     breath=function(at,now)return Wind.breath(at,now)end,
     life=function()return clientUI.life~=nil and clientUI.life.enabled==true end,
+    -- GARDEN-PLAY-BRIEF-2: the five bites (Alive `fruit`), their sounds (GardenLife's voices), the claim, and the trot
+    -- that never goes through a solid prop (Alive `keepout`, GardenKeepOut).
+    fruit=function()return Alive.on("fruit")end,
+    audio=function(cue,at,volume,pitch)
+     local life=clientUI.life
+     if life~=nil and life.enabled then life:fruitSound(cue,at,volume,pitch)end
+    end,
+    claim=function(loose)
+     if Alive.on("fruit")and type(loose)=="table"and type(loose.i)=="number"and typeof(loose.rest)=="Vector3"then
+      fruitSend({kind="eat",tree=loose.i,x=loose.rest.X,z=loose.rest.Z})
+     end
+    end,
+    blocked=function(from,to)
+     if not Alive.on("keepout")then return false end
+     local KeepOut=require(ReplicatedStorage.Shared.GardenKeepOut)
+     return KeepOut.hit(from,to,KeepOut.solids(function(feature)return Alive.on(feature)end),KeepOut.Clearance)~=nil
+    end,
     -- Never two pets on one fruit (Spencer, beta 15): the other owners' pets where the server has them.
     userId=function()return Players.LocalPlayer.UserId end,
     rivals=function()
@@ -5453,6 +5489,8 @@ do
    roomView.lifePetPose=guard(pet.pose)
   end
   clientUI.life=require(script.GardenLife).mount({ambient=clientUI.ambient,
+   -- GARDEN-PLAY-BRIEF-2: a tree I shook (the server's check of a fruit from it).
+   shook=function(i)fruitSend({kind="shake",tree=i})end,
    notice=function(loose,now)
     local pet=clientUI.lifePet
     return pet~=nil and pet:notice(loose,now)==true

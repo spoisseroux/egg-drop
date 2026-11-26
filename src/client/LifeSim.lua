@@ -20,6 +20,8 @@
 -- (only while a race is live; the grove passes it always), groundY = fn?, finds = {Vector3}?, kerbs = {{x, z, rx, rz}}?,
 -- safe = fn(x, z)?}.
 local Wind=require(script.Parent.Wind)
+-- GARDEN-PLAY-BRIEF-2 section 5: the trigger's one copy (the server checks claims with it) and the five bites.
+local Fruit=require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("GardenFruit"))
 local Sim={}
 
 -- Caps by AliveBudget level 0, 1, 2 (level 1 halves every cap; level 2 shows nothing). fruit: hanging Dewdrops shown,
@@ -1329,16 +1331,8 @@ Sim.FruitHold=HOLD
 
 -- When gust n lets fruit go at a crown: the gust's peak there must reach dropAt; the let-go is the first 1/60 s on
 -- the way up that it does. World time (GetServerTimeNow), or nil. Wind only, so the same on every client.
-function Sim.fruitTrigger(position,n)
-	if typeof(position)~="Vector3"or type(n)~="number"or Wind.peak(n)<=0 then return nil end
-	local start=Wind.start(n)+position:Dot(Wind.Direction)/Wind.Speed
-	if Wind.at(position,start+Wind.Rise)<F.dropAt then return nil end
-	for step=0,math.ceil(Wind.Rise*60)do
-		local t=start+step/60
-		if Wind.at(position,t)>=F.dropAt then return t end
-	end
-	return nil
-end
+-- GARDEN-PLAY-BRIEF-2: GardenFruit.trigger is this (one copy: the server checks a fruit claim with it).
+function Sim.fruitTrigger(position,n)return Fruit.trigger(position,n)end
 
 -- The shared flight of slot `slot` of crown i in gust n, let go at `letgo`: positions and times only (no camera, no
 -- player). nil and why when any landing has no good ground or the resting point is in the way.
@@ -1391,15 +1385,7 @@ end
 -- the same): breath b lets go at a crown the first 1/60 s on its rise that its envelope reaches dropAt (it always does:
 -- the breath counts as a strong gust). Seeded apart from the gusts (salts 17 and 18, plan number -(b + 1)), with the same
 -- chance, slot and landing rules; the grove's HOLD rule covers gust and breath drops together.
-function Sim.fruitBreathTrigger(position,b)
-	if typeof(position)~="Vector3"or type(b)~="number"then return nil end
-	local start=Wind.breathStart(b)+position:Dot(Wind.Direction)/Wind.Speed
-	for step=0,math.ceil(Wind.BreathRise*60)do
-		local t=start+step/60
-		if Wind.breathEnvelope(t-start)>=F.dropAt then return t end
-	end
-	return nil
-end
+function Sim.fruitBreathTrigger(position,b)return Fruit.breathTrigger(position,b)end
 function Sim.fruitBreathCandidate(i,crown,stems,b,world)
 	if #stems==0 then return nil,"empty"end
 	local seed=b*16+i
@@ -1407,6 +1393,26 @@ function Sim.fruitBreathCandidate(i,crown,stems,b,world)
 	local letgo=Sim.fruitBreathTrigger(crown.position,b)
 	if not letgo then return nil,"calm"end
 	return Sim.fruitPlan(i,crown,stems[math.floor(Wind.hash(seed,18)*#stems)+1],-(b+1),letgo,world)
+end
+
+-- A tree shake's drop (GARDEN-PLAY-BRIEF-2 section 5; this client's view only, as a bat or a nudge): the first of crown
+-- i's stems `hanging(key)` says is on the tree whose flight lands well, let go at `now`, numbered `n` (a number no gust
+-- or breath uses: the caller's own count below -1e6). The plan (shake = true), or nil and why.
+function Sim.fruitShakePlan(i,crown,stems,now,n,world,hanging)
+	if type(stems)~="table"or #stems==0 then return nil,"empty"end
+	local why="hidden"
+	for _,slot in ipairs(stems)do
+		if hanging==nil or hanging(slot.key)then
+			local plan,reason=Sim.fruitPlan(i,crown,slot,n,now,world)
+			if plan then
+				local shaken=table.clone(plan)
+				shaken.shake=true
+				return table.freeze(shaken)
+			end
+			why=reason
+		end
+	end
+	return nil,why
 end
 
 -- One drawn fruit for a shared plan: the screen spin from the camera's right now (the roll turns about 150 a stud and
@@ -1433,6 +1439,7 @@ end
 function Sim.fruitPose(plan,now)
 	local pose=plan.pose
 	local w,h,position,rotation,phase=1,1,nil,nil,nil
+	pose.turn,pose.eatT,pose.bite=0,nil,0
 	if now<plan.t1 then
 		local u=math.clamp((now-plan.start)/F.letGo,0,1)
 		local angle=plan.sway+(F.tug-plan.sway)*u
@@ -1470,7 +1477,19 @@ function Sim.fruitPose(plan,now)
 		if d>=0 and d<F.squash then w,h=F.squashW,F.squashH;break end
 	end
 	-- Eaten by my pet (LifePet, this client's view only): smaller with each nibble, gone after the third.
-	if plan.eaten and now>=plan.eaten then
+	if plan.eaten and now>=plan.eaten and plan.five then
+		-- GARDEN-PLAY-BRIEF-2: five bites over 3.2 s, smaller each bite (GardenFruit.Bites), turning a little each time.
+		local t=now-plan.eaten
+		local scale,bite,turn=Fruit.bite(t)
+		pose.turn,pose.eatT,pose.bite=turn,t,bite
+		w*=scale;h*=scale
+		local each=Fruit.Bites.time/Fruit.Bites.count
+		if bite>=1 and bite<Fruit.Bites.count and t-bite*each<F.biteSquash then w*=F.biteW;h*=F.biteH end
+		if scale<=0 then
+			pose.position,pose.rotation,pose.w,pose.h,pose.transparency,pose.phase=position,rotation,0,0,1,"gone"
+			return pose
+		end
+	elseif plan.eaten and now>=plan.eaten then
 		local t=now-plan.eaten
 		local bite=math.floor(t/F.nibble)
 		local scale=F.bites[math.min(bite,#F.bites-1)+1]
