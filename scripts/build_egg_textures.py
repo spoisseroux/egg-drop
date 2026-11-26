@@ -327,20 +327,23 @@ PAINT = {"companion": paint_companion, "toy": paint_toy, "material": paint_mater
          "hue": paint_hue, "feature": paint_feature, "stat": paint_stat}
 
 
-def finish(img, t):
-    """Shared finish: baked top light / bottom shade (spin-invariant), crack line, inner strip."""
+def finish(img, t, seam=True):
+    """Shared finish: baked top light / bottom shade (spin-invariant), crack line, inner strip.
+    seam=False (onboarding v2, beta 36: "the zigzag crack ... should only appear once it's opening"): the same map with
+    no zig-zag, for the first Bear's egg until the pop (the shells split along the meshes' own seam)."""
     deep, light = rgb(t["deep"]), rgb(t["light"])
     img = mix(img, rgb("#FFFFFF"), smooth(0.55, 1.0, T) * 0.16)
     shade = smooth(0.42, 0.0, T)
     img = img * (1 - 0.16 * shade[..., None])
     img = mix(img, deep, shade * 0.18)
     # crack: a fine dark zig-zag with a bright lip above it, so it reads at 120 px
-    ph = (U * E.TEETH) % 1.0
-    seam = E.SEAM_T - E.SEAM_AMP_T * (1 - 2 * np.abs(ph * 2 - 1))
-    d = (T - seam) * (math.pi * E.HEIGHT / 2) * np.sin(PH)
-    dark = img * 0.42 + deep * 0.12
-    img = mix(img, light, (1 - smooth(0.004, 0.012, np.abs(d - 0.022))) * 0.6)
-    img = mix(img, dark, (1 - smooth(0.008, 0.014, np.abs(d))) * 0.9)
+    if seam:
+        ph = (U * E.TEETH) % 1.0
+        line = E.SEAM_T - E.SEAM_AMP_T * (1 - 2 * np.abs(ph * 2 - 1))
+        d = (T - line) * (math.pi * E.HEIGHT / 2) * np.sin(PH)
+        dark = img * 0.42 + deep * 0.12
+        img = mix(img, light, (1 - smooth(0.004, 0.012, np.abs(d - 0.022))) * 0.6)
+        img = mix(img, dark, (1 - smooth(0.008, 0.014, np.abs(d))) * 0.9)
     # inside of the shell and the cut rim
     inner = rgb(t["inner"])
     strip = fill(inner)
@@ -418,8 +421,13 @@ def build_star():
 
 if __name__ == "__main__":
     # `python scripts/build_egg_textures.py stat` paints only the named egg maps.
+    # `python scripts/build_egg_textures.py noseam` paints egg-companion-color-noseam.png (the first Bear's egg before
+    # it opens: the same art without the zig-zag).
     wanted = [a for a in sys.argv[1:] if a in PAINT]
-    if wanted:
+    if "noseam" in sys.argv[1:]:
+        t = E.TYPES["companion"]
+        save(finish(PAINT["companion"](t), t, seam=False), OUT / "egg-companion-color-noseam.png")
+    elif wanted:
         build_eggs(wanted)
     else:
         build_eggs()

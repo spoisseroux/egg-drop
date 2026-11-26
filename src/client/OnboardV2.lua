@@ -29,8 +29,9 @@ V2.Deck=table.freeze({
 	textMin=18,textMax=34,ink=hex("#FFFFFF"),
 	pip=22,pipGap=10,pipEmpty=hex("#2B4C7E"),pipRing=hex("#9FC4FF"),pipFilled=hex("#FFD86B"),
 	-- Beta (36), Spencer: "we dont need that giant shiny circle" and no cracking on the deck (the egg cracks in the
-	-- world, step 3). A soft, small backing only, a little brighter each combo; no seam, no gloss.
-	pad=8,glow=hex("#FFE58A"),glowIdle=.06,glowStep=.05,glowFinal=.3,glowSize=.62,
+	-- world, step 3); Fable (AERO-JUICE-BRIEF 4): no disc at all and no Neon core showing. The egg itself is lit a
+	-- little brighter each combo (the viewport's light), with a short flare on the hop; the finale brightens it more.
+	pad=8,light=hex("#FFF3D6"),lightIdle=0,lightStep=.12,lightFlare=.12,lightFinal=.6,
 	yawRate=25,bobDeg=3,bobHz=.5,                          -- idle: degrees a second, tilt bob
 	hop=.10,wobbleDeg=14,wobbleTime=.4,turnTime=.6,        -- each combo: a hop (card heights), a damped wobble, one turn
 	pipPop=.2,pipScale=1.3,                                -- a pip fills with a 1.0 -> 1.3 -> 1.0 pop
@@ -60,8 +61,10 @@ function V2.pipScale(age)
 	if type(age)~="number"or age<0 or age>=D.pipPop then return 1 end
 	return 1+(D.pipScale-1)*math.sin(age/D.pipPop*math.pi)
 end
--- The backing's alpha after `combos` combos: a little brighter each one (never a crack on the deck: beta 36).
-function V2.glow(combos)return V2.Deck.glowIdle+V2.Deck.glowStep*math.clamp(math.floor(tonumber(combos)or 0),0,3)end
+-- How much brighter the egg is lit after `combos` combos (0 = as Hatch eggs lights it): a little more each one.
+function V2.glow(combos)return V2.Deck.lightIdle+V2.Deck.lightStep*math.clamp(math.floor(tonumber(combos)or 0),0,3)end
+-- Pure: a light colour lifted toward the warm white by `amount` (0..1).
+function V2.lift(color,amount)return color:Lerp(V2.Deck.light,math.clamp(amount or 0,0,1))end
 local function smooth(u)u=math.clamp(u,0,1);return u*u*(3-2*u)end
 -- The egg's pose at clock t, `beat` s after the last combo (nil: none yet). Returns yaw and tilt (degrees) and hop (card
 -- heights). Reduced Motion: the still three-quarter pose, no hop.
@@ -81,16 +84,17 @@ function V2.eggPose(t,beat,reduced)
 	end
 	return yaw,tilt,hop
 end
--- Combo 3's finale `age` s in: glow (alpha), lift (card heights), fade (0 shown .. 1 gone).
+-- Combo 3's finale `age` s in: light (0..1), lift (card heights), fade (0 shown .. 1 gone).
 function V2.finale(age,reduced)
 	local D=V2.Deck
 	local u=math.clamp((age or 0)/D.finale,0,1)
 	local from=V2.glow(3)
-	local glow=from+(D.glowFinal-from)*u
+	local glow=from+(D.lightFinal-from)*u
 	return glow,if reduced then 0 else D.lift*smooth(u),u
 end
--- The sound and buzz of combo n (HatchAsmr layer names; no pop: the pop belongs to step 3).
-V2.ComboLayers=table.freeze({"crack1","crack2","creakLong"})
+-- Each combo's sound on the deck: a rising fill chime (the "charge" cue up a step each time) and a soft buzz. Never a
+-- crack: beta (36), the egg only cracks in the world.
+V2.ComboChime=table.freeze({cue="charge",pitches={1.12,1.26,1.5},gain=.45,haptic="settle"})
 
 -- ── Step 1 to 2: one hatch, never two (review B36) ──────────────────────────────────────────────────────────────────
 -- The deck's own hatch modal waits up to Hold s for the Bear's receipt (the stork plays it). A receipt that comes later
@@ -169,21 +173,145 @@ end
 -- The two beak clacks and the nod in the leave phase (seconds after the release): {clacks}, nodAt, flyAt.
 V2.Leave=table.freeze({clacks={.15,.42},nod=.7,fly=1.0})
 
+-- Beta (36), Spencer: "the stork flies thru the arch mesh". The flight is chosen against the world before it starts:
+-- candidate approaches (a heading round the landing and a height) are sampled along the same curve the stork flies,
+-- its body (2.2 studs over its feet) swept as a sphere of Route.radius (the wings); the first clear one is flown, and
+-- the stork leaves back along it. None clear: it comes straight down from high over the landing.
+--   headings: degrees from the player's right (0) toward beyond the landing (90); negative ones come from behind.
+V2.Route=table.freeze({radius=3,body=2.2,samples=24,out=40,bowUp=5,bowBack=6,
+	headings={11,169,45,135,90,-20,-160},heights={18,28,38},drop=40,
+	-- the landing: 6 studs ahead first, then round the player, with open sky over it (the bundle comes down there)
+	landing={{0,6},{30,6},{-30,6},{60,6},{-60,6},{0,8},{90,6},{-90,6},{0,10},{45,9},{-45,9},{135,6},{-135,6},{180,6}},
+	sky=9,skyRadius=1.3,
+	-- the stork's beak tip from its feet (StorkModel.BeakTip): the bundle hangs here, so it hovers with its body back
+	beak=Vector3.new(0,3.4,-2.95),hoverUp=4.4})
+-- Pure: the stork's feet (root) while it hovers over `land` facing the player (its beak tip over the landing).
+function V2.hover(land,toPlayer)
+	local R=V2.Route
+	return land+Vector3.new(0,R.hoverUp-R.beak.Y,0)+toPlayer*R.beak.Z
+end
+-- Pure: a heading's direction (degrees) from the player's right toward beyond the landing.
+function V2.heading(right,away,degrees)
+	local a=math.rad(degrees)
+	return right*math.cos(a)+away*math.sin(a)
+end
+-- Pure: the body's path for a start, a hover root and a bow: Route.samples + 1 points.
+function V2.routePath(start,hover,bow,samples)
+	local out={}
+	local lift=Vector3.new(0,V2.Route.body,0)
+	local n=samples or V2.Route.samples
+	for i=0,n do out[i+1]=V2.curve(start,hover,bow,i/n)+lift end
+	return out
+end
+-- Pure: the flight. land: the landing point; toPlayer: flat unit vector from it to the player; hover: the stork's root
+-- when it hovers over the landing; clear(a, b, radius): true when a sphere swept from a to b hits nothing. Returns
+-- {start, bow, heading, height} (heading nil = straight down) and how many candidates were tried.
+function V2.storkRoute(land,toPlayer,hover,clear)
+	local R=V2.Route
+	local up=Vector3.new(0,1,0)
+	local away=-toPlayer
+	local right=away:Cross(up)
+	right=right/math.max(1e-6,right.Magnitude)
+	local bow=up*R.bowUp-toPlayer*R.bowBack
+	local tried=0
+	for _,height in ipairs(R.heights)do
+		for _,degrees in ipairs(R.headings)do
+			tried+=1
+			local start=land+V2.heading(right,away,degrees)*R.out+up*height
+			local path=V2.routePath(start,hover,bow)
+			local ok=true
+			for i=1,#path-1 do if not clear(path[i],path[i+1],R.radius)then ok=false;break end end
+			if ok then return{start=start,bow=bow,heading=degrees,height=height},tried end
+		end
+	end
+	return{start=hover+up*R.drop,bow=Vector3.new(0,0,0),heading=nil,height=R.drop},tried
+end
+-- Pure: the landing. ground(x, z) -> the ground point under it or nil; clear as storkRoute. look: the player's flat
+-- look; at: the player's feet. The first spot with ground and open sky (Route.sky studs) over it, else the first guess.
+function V2.landing(at,look,ground,clear)
+	local R=V2.Route
+	local up=Vector3.new(0,1,0)
+	local first
+	for _,spot in ipairs(R.landing)do
+		local dir=CFrame.Angles(0,math.rad(spot[1]),0):VectorToWorldSpace(look)
+		local guess=at+dir*spot[2]
+		local point=ground(guess.X,guess.Z,at.Y)
+		if point then
+			first=first or point
+			-- open sky over it, and room for the hovering stork (its body and wings) over it
+			local toPlayer=Vector3.new(at.X-point.X,0,at.Z-point.Z)
+			toPlayer=if toPlayer.Magnitude>1e-3 then toPlayer/toPlayer.Magnitude else -look
+			local body=V2.hover(point,toPlayer)+up*R.body
+			if clear(point+up*.6,point+up*R.sky,R.skyRadius)and clear(body,body+up*6,R.radius)then return point end
+		end
+	end
+	return first or at+look*R.landing[1][2]
+end
+
 -- ── Step 3: crack it ─────────────────────────────────────────────────────────────────────────────────────────────────
+-- Fable's cathartic crack (AERO-JUICE-BRIEF section 4), on Spencer's 3D cracks: the cracks grow on the shell itself
+-- (EggCrackPaths: where; EggCrack3D: how it looks), never on the screen. Per tap: a 40 ms anticipation dip, the
+-- sound and buzz, the crack stage growing over 90 ms, the rock (or the flex), crumbs, the camera 3% closer.
 V2.Crack=table.freeze({
 	dist=5,up=1.6,fov=40,tween=.6,vignette=hex("#0B1220"),vignetteAlpha=.35,pill=hex("#FFD86B"),
-	stops={.05,.4,.75},                                   -- the ritual's clock: a stop per tap, a beat between
+	stops={.05,.5,.95},                                   -- the ritual's clock: a stop per tap, a beat between
 	handAfter=3,auto=7,                                    -- no countdown shown; the hand at 3 s, the tap itself at 7 s
-	creak=.25,swell=1.08,pop={up=3,fade=.5,flash=.12,hold=.6},
 	zone=.6,                                               -- any tap in the middle 60% of the screen counts
+	anticipate=.04,grow=.09,closer=.03,leakAlpha=.25,
+	flex={time=.25,to=1.08,hzFrom=5,hzTo=9},
+	pop={silence=.08,duck=.5,up=3,fade=.5,flash=.12,flashAlpha=.35,kick=.15,fovPeak=44,fovRest=42,settle=.4,hold=.6,
+		pieces={12,16},voiced=5,cueDelay=.12,lateFlakes={2,4},sting="rarity_common",scatter="shell_scatter"},
+	-- the pop's beat: the creak and flex, then the silence, then the burst (s after tap 3's sound)
+	creak=.25,
 })
--- What each tap does: the rock, the crack line count, the flakes, the sounds (HatchAsmr layers) and the buzz.
+-- What each tap does. layers: HatchAsmr layers (existing ids); takes: the new synthesised takes (Story.Takes, empty
+-- slots until uploaded); under: a layer under it at a gain; rock (deg) and its cycles, or flex; crumbs and their kind.
 V2.Taps=table.freeze({
-	{rock=10,flakes=4,layers={"crack1","flake"},haptic="crack1"},
-	{rock=14,flakes=6,layers={"crack2","creak"},haptic="crack2",leak=true},
-	{rock=0,flakes=3,layers={"creakLong"},haptic="creak_long",pop=true},
+	{dip=.03,widen=.02,layers={"crack1"},takes={"tap_knuckle"},haptic="crack1",rock=10,cycles=2,crumbs=4,stage=1,closer=true},
+	{dip=.04,widen=.02,layers={"crack2"},takes={"tap_knuckle"},under={layer="creak",gain=.4},haptic="crack2",rock=14,cycles=3,
+		crumbs=6,stage=2,leak=true,closer=true,duck={time=.6,gain=.7}},
+	{dip=.05,widen=.02,hold=true,layers={"creakLong"},takes={"asmr_crack3"},haptic="creak_long",flex=true,crumbs=3,skitter=true,
+		stage=3,pop=true},
 })
 V2.ReducedFlakes=3
+-- Pure: the anticipation dip before a tap's sound: squash Y (1 = rest) and widen XZ at t (s since the tap), for tap i.
+function V2.dip(i,t)
+	local tap=V2.Taps[i];if not tap or type(t)~="number"or t<0 then return 1,1 end
+	local A=V2.Crack.anticipate
+	if t<A then local u=smooth(t/A);return 1-tap.dip*u,1+tap.widen*u end
+	if tap.hold then return 1-tap.dip,1+tap.widen end -- tap 3 holds its dip into the flex
+	local u=smooth((t-A)/.08)
+	return 1-tap.dip*(1-u),1+tap.widen*(1-u)
+end
+-- Pure: the rock (deg) t s after a tap's sound: damped, `cycles` swings over 0.4 s.
+function V2.tapRock(i,t)
+	local tap=V2.Taps[i];if not tap or not tap.rock or type(t)~="number"or t<0 or t>=.4 then return 0 end
+	local u=t/.4
+	return tap.rock*(1-u)*(1-u)*math.sin(u*math.pi*2*tap.cycles)
+end
+-- Pure: tap 3's shell flex: the scale t s after its sound (1.00 to 1.08 while the wobble climbs 5 Hz to 9 Hz).
+function V2.flex(t)
+	local F=V2.Crack.flex
+	if type(t)~="number"or t<0 then return 1 end
+	local u=math.clamp(t/F.time,0,1)
+	local cycles=(F.hzFrom*u+.5*(F.hzTo-F.hzFrom)*u*u)*F.time -- the integral of a 5 -> 9 Hz sweep
+	return 1+(F.to-1)*u+.012*u*math.sin(cycles*math.pi*2)
+end
+-- Pure: the pop's camera, t s after the burst: kick back (studs) and the FOV (40 -> 44 -> 42 over 0.4 s).
+function V2.popCamera(t)
+	local P=V2.Crack.pop
+	if type(t)~="number"or t<0 then return 0,V2.Crack.fov end
+	local u=math.clamp((t-.06)/(P.settle-.06),0,1)
+	local up=math.clamp(t/.06,0,1)
+	local fov=if t<.06 then V2.Crack.fov+(P.fovPeak-V2.Crack.fov)*smooth(up)else P.fovPeak+(P.fovRest-P.fovPeak)*smooth(u)
+	return P.kick*smooth(up)*(1-.6*smooth(u)),fov
+end
+-- TODO(upload): the asset id of assets/eggs/textures/egg-companion-color-noseam.png (scripts/build_egg_textures.py
+-- noseam): the first Bear's egg without its zig-zag until it opens. PLACEHOLDER 0 = not uploaded yet: the old map
+-- (Models.Types.companion.colorMap, with the zig-zag) is used.
+V2.NoSeamId=0
+-- The closed egg's map, or nil for the old one.
+function V2.closedMap()return if type(V2.NoSeamId)=="number"and V2.NoSeamId>0 then "rbxassetid://"..V2.NoSeamId else nil end
 -- Pure: does a press at `at` (px) count, on a screen of `size` (px)? The middle 60% each way.
 function V2.inZone(at,size)
 	if typeof(at)~="Vector2"or typeof(size)~="Vector2"then return false end

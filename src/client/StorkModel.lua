@@ -78,7 +78,7 @@ function Stork.new(parent)
 	return self
 end
 -- Where the beak tip is from the root (the bundle's knot hangs here), for a level head.
-Stork.BeakTip=Vector3.new(0,3.4,-2.95)
+Stork.BeakTip=V2.Route.beak -- (OnboardV2: the route and the landing plan the hover from it)
 -- o: {flap (deg), nod (deg), clack (0 shut .. 1 open), legs (0 trailing .. 1 standing), fold (0 spread .. 1 folded)}
 function Stork:pose(root,o)
 	o=o or {}
@@ -116,25 +116,32 @@ Stork.Egg=Egg
 Egg.Scale=1.25 -- the 1.3-stud model egg, about 1.6 studs tall in the garden
 function Egg.new(parent)
 	local model=Instance.new("Model");model.Name="OnboardEgg"
-	local self=setmetatable({model=model,parts={},scale=Egg.Scale},Egg)
+	local self=setmetatable({model=model,parts={},scale=Egg.Scale,S=Vector3.new(1,1,1)},Egg)
 	local ok=pcall(function()
 		local Preview=require(script.Parent.EggPreview3D)
 		local copies=Preview.cloneTemplates()
 		if not copies then error("not loaded")end
 		local Models=require(game:GetService("ReplicatedStorage").Shared.EggModels)
 		local t=Models.Types.companion
+		-- Beta (36): until it opens, the egg wears the map with no zig-zag (V2.closedMap; the old one until uploaded)
+		self.openMap=t.colorMap
+		local closed=V2.closedMap()or t.colorMap
 		for key,p in pairs(copies)do
 			p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false;p.CastShadow=true
+			-- Fable (AERO-JUICE 4): the Neon core never shows through before the pop
 			if key=="Core"then p.Material=Enum.Material.Neon;p.Color=t.core;p.Transparency=1
-			else p.Material=Enum.Material.SmoothPlastic;p.TextureID=t.colorMap;p.Reflectance=0 end
+			else p.Material=Enum.Material.SmoothPlastic;p.TextureID=closed;p.Reflectance=0 end
 			p.Size=Models.Egg[key].size*self.scale
 			p.Parent=model
-			self.parts[key]={part=p,center=Models.Egg[key].center*self.scale}
+			self.parts[key]={part=p,center=Models.Egg[key].center*self.scale,size=Models.Egg[key].size*self.scale}
 		end
 		self.pivot=Models.Egg.spinPivot*self.scale
+		self.meshes=true
 	end)
 	if not ok then
 		-- The stand-in: a cream ovoid with blue spots and a lime band (the reveal egg's look), its top a cap that flies.
+		for _,child in ipairs(model:GetChildren())do child:Destroy()end
+		table.clear(self.parts)
 		local cream,spot,band=Color3.fromHex("#FFF0D2"),Color3.fromHex("#3E5BE0"),Color3.fromHex("#A6D53A")
 		local f=self.scale
 		local bottom=part(model,"BottomShell",{Color=cream},Vector3.new(1.0,1.0,1.0)*f)
@@ -152,23 +159,45 @@ function Egg.new(parent)
 	model.Parent=parent
 	return self
 end
--- base: the egg's ground point and facing. rock (deg, about its own forward axis), swell (1 = rest), top: {up (studs),
--- tip (deg), fade (0..1)}, fade: the whole egg (0..1).
+-- The pop (beta 36: "the zigzag ... should only appear once it's opening"): the shells take the map with the zig-zag
+-- as they split along the meshes' own seam. Once.
+function Egg:open()
+	if self.opened then return end
+	self.opened=true
+	if self.openMap then
+		for key,entry in pairs(self.parts)do if key~="Core"then entry.part.TextureID=self.openMap end end
+	end
+end
+-- base: the egg's ground point and facing. rock (deg, about its own forward axis), swell (1 = rest; a number, or a
+-- Vector3 of x, y, z scales for the anticipation dip and the flex), top: {up (studs), tip (deg), fade (0..1)}, fade:
+-- the whole egg (0..1). The pose's frame and scale are kept for the 3D cracks (Egg:surface).
 function Egg:pose(base,rock,swell,top,fade)
-	swell=swell or 1
+	local S=if typeof(swell)=="Vector3"then swell else Vector3.new(1,1,1)*(swell or 1)
 	local turn=CFrame.new(self.pivot)*CFrame.Angles(0,0,math.rad(rock or 0))*CFrame.new(-self.pivot)
+	self.frame,self.S=base*turn,S
+	local sizeKey=S.X*1000+S.Y
+	local resize=self.sizeKey~=sizeKey
+	self.sizeKey=sizeKey
 	for key,entry in pairs(self.parts)do
-		local c=entry.center*swell
+		local c=entry.center*S
 		local cf=base*turn*CFrame.new(c)
 		if key=="TopShell"and top then
 			cf=base*CFrame.new(0,top.up or 0,0)*turn*CFrame.new(c)*CFrame.Angles(math.rad(-(top.tip or 0)),0,0)
 		end
 		if entry.face then cf=CFrame.lookAt(cf.Position,cf.Position+(cf.Position-(base*turn).Position)*Vector3.new(1,0,1))end
 		entry.part.CFrame=cf
+		if resize and entry.size then entry.part.Size=entry.size*S end
 		local a=fade or 0
 		if key=="TopShell"and top then a=math.max(a,top.fade or 0)end
 		if key~="Core"then entry.part.Transparency=a end
 	end
+end
+-- A point on the shell (EggCrackPaths egg units) and its normal, in the world, for the last pose.
+function Egg:surface(point,normal,lift)
+	local frame=self.frame or CFrame.new()
+	local S=self.S or Vector3.new(1,1,1)
+	local at=point*self.scale*S+normal*(lift or 0)
+	return frame*at,frame:VectorToWorldSpace(normal)
 end
 -- The top of the egg (world), the egg's height (studs).
 function Egg:height()return 1.3*self.scale end
