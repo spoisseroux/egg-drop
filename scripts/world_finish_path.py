@@ -99,7 +99,7 @@ def tread():
             continue
         w0, w1 = s0["w"] / 2, s1["w"] / 2
         dirt.quad(Q(s0, -w0, s0["h"] + .03), Q(s1, -w1, s1["h"] + .03), Q(s1, w1, s1["h"] + .03), Q(s0, w0, s0["h"] + .03))
-        if s0["flip"] != s1["flip"]:
+        if s0["flip"] != s1["flip"] or on_flight(s0) or on_flight(s1):     # round 6 (Fable R6-CDE 7): no grass by the flights
             continue
         g0, g1 = gw[i], gw[i + 1]
         grass.quad(P(s0, w0 - g0, s0["h"] + .08), P(s1, w1 - g1, s1["h"] + .08), P(s1, w1 + .15, s1["h"] + .06),
@@ -487,7 +487,13 @@ def lip_layout():
             turn = math.radians(rnd.uniform(-15, 15))
             yaw = math.atan2(-s["dir"][1], s["dir"][0]) + turn
             # far enough out that a turned stone's inner corner stays off the 6-wide tread
-            at = P(s, s["w"] / 2 + .5 + abs(math.sin(turn)) * length / 2, s["h"])
+            at = P(s, s["w"] / 2 + .3 + abs(math.sin(turn)) * length / 2 * .6, s["h"])
+            # round 6 (Fable R6-CDE 6): the bigger stones never hang over a sheer drop (no bank under them)
+            g_at = S.ground(at[0], at[2])
+            if g_at is None or s["h"] - g_at > 3.0:
+                count -= 1
+                i += 1
+                continue
             out.append({"kit": kit + 1, "at": [round(v, 3) for v in at], "yaw": round(yaw, 4),
                         "box": {"c": [round(at[0], 3), round(s["h"] + height / 2 - .3, 3), round(at[2], 3)],
                                 "s": [round(length * .9, 3), round(height, 3), .8], "yaw": round(yaw, 4)}})

@@ -3,60 +3,60 @@
  "den": {
   "model": {
    "file": "world-finish-den.fbx",
-   "sha256": "075c8a488c9d8a88459e6954a58a80de7797112ddcc0fb4cf4efebf62960b1bc",
-   "manifestSha256": "3751dcb1fb83c043a4b803bf2b13c196aac49ff49771acb69b65987d7da71d85",
-   "operation": "a1230bad-d671-4603-9fb1-d81f5b512091",
-   "assetId": "96319124357754",
+   "sha256": "e8e0b4ff9168215ac8022f39e87dd109d3e655bd8f44c09bc1ec08ed04ba3444",
+   "manifestSha256": "672510b7c4b801d4036c4b1a5d1b80201f6db7c21815be84888e48697c11d6ba",
+   "operation": "cd22a4b6-6100-43be-83cd-3286288d4eef",
+   "assetId": "116612382066693",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "106683942316413",
-    "operation": "fffd9955-eb54-4459-b14e-807593811492",
-    "why": "round 5 (Fable R1 after-list: welded rock skins, terrace edge and tongues, foot boulders, den frame/cloth data)"
+    "assetId": "96319124357754",
+    "operation": "a1230bad-d671-4603-9fb1-d81f5b512091",
+    "why": "round 6 C+D+E (Spencer: the bigger cave mouth and den, the 9-wide path; Fable R6-CDE fixes); mesh gate PASS"
    }
   },
   "images": {
    "den_shell_west_color": {
     "file": "textures/den_shell_west_color.png",
-    "sha256": "864d0c847f10d58c1207f10615495656f2be1a084abe3b4379ff75d6567cd7e1",
-    "operation": "3279278c-af6f-4060-8bbe-e08676529fec",
-    "assetId": "93269884442191",
+    "sha256": "a26017be345e7778f883801fa0763b8ad5fb453bedf45aca958dbde2e9678f83",
+    "operation": "da3dea28-2b7d-4721-b84c-ff774220bef1",
+    "assetId": "96814699596274",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "71575845230571",
-     "why": "Fable world R1 4 re-bake (grain, value patches, broken bedding)"
+     "assetId": "93269884442191",
+     "why": "round 6 re-bake"
     }
    },
    "den_shell_east_color": {
     "file": "textures/den_shell_east_color.png",
-    "sha256": "05d092d879fd8201eab076c42762ecf98bcfc32ea2552a4e953071d7bc7c368e",
-    "operation": "226c88a6-3ba6-49bc-8c78-5328d0123dca",
-    "assetId": "88485177588896",
+    "sha256": "59df092739c80fb97434638c520f25a1f993dfacfb666afc51dca7a2c8aefd1a",
+    "operation": "a1134d13-4933-49ee-83eb-c21d010f5d7d",
+    "assetId": "105648387452459",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "90370447380293",
-     "why": "Fable world R1 4 re-bake (grain, value patches, broken bedding)"
+     "assetId": "88485177588896",
+     "why": "round 6 re-bake"
     }
    },
    "den_shell_west_normal": {
     "file": "textures/den_shell_west_normal.png",
-    "sha256": "3ccb423e5b99170bc0db43c711082cf14759ff3aaa180cd0f0474e2df1a2f1ee",
-    "operation": "5f90f055-7738-40f4-b8e0-d7711120a1c1",
-    "assetId": "119072968306012",
+    "sha256": "077697679c230050641252530b2bb3208be8ea16b0988a50ebc12f6bd8d5a6f6",
+    "operation": "2de858a8-81a9-4a4d-87fc-eb13e2063bb0",
+    "assetId": "78507918350468",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "110901372689201",
-     "why": "Fable world R1 4 re-bake (grain, value patches, broken bedding)"
+     "assetId": "119072968306012",
+     "why": "round 6 re-bake"
     }
    },
    "den_shell_east_normal": {
     "file": "textures/den_shell_east_normal.png",
-    "sha256": "c79339ed7585881af2cf56a38aa5a2d5253dc73ab90974375ffbacb8ed51674e",
-    "operation": "f443b0b7-f561-4d5f-b3ff-57da0ef77253",
-    "assetId": "140144455459085",
+    "sha256": "cd672649af5f2f9c2b3cf520df9c4a5a56c9526d93ca4fcd0f2d84140bbbbad1",
+    "operation": "cb575eff-4070-443f-bf59-1e4aebb44cba",
+    "assetId": "95210125629707",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "78338420884303",
-     "why": "Fable world R1 4 re-bake (grain, value patches, broken bedding)"
+     "assetId": "140144455459085",
+     "why": "round 6 re-bake"
     }
    },
    "den_floor_color": {
@@ -78,15 +78,15 @@
  "path": {
   "model": {
    "file": "world-finish-path.fbx",
-   "sha256": "41710111d8489e0a15dc7cae679ea4c634b979ae04b799d40b1440803b63b24f",
-   "manifestSha256": "c1383095416c2421426678c7ee97124abd8dcdae333259190d24d732836b95a8",
-   "operation": "64118d34-10fa-4d4d-99c3-119beddbc389",
-   "assetId": "115798993481344",
+   "sha256": "12b214266bfbc42f0648ee54584cc0d4edd108e213334827ded3d72fd576c435",
+   "manifestSha256": "1903b0014db77ec25cba9b15719fb21dbb2964a3d5d6ab475613cbe03314c714",
+   "operation": "4dcc2226-d3de-4b28-a217-0301ba9615e8",
+   "assetId": "91555248367509",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "134677323665784",
-    "operation": "b82aa6ab-bbf6-47b1-95a3-cbcf6e1abee8",
-    "why": "round 6 (Spencer beta 25: messy geometry): closed stair solids, profile-length wall UVs, rocks beautified; mesh gate PASS"
+    "assetId": "115798993481344",
+    "operation": "64118d34-10fa-4d4d-99c3-119beddbc389",
+    "why": "round 6 C+D+E (Spencer: the bigger cave mouth and den, the 9-wide path; Fable R6-CDE fixes); mesh gate PASS"
    }
   },
   "images": {}
@@ -94,17 +94,16 @@
  "terrace": {
   "model": {
    "file": "world-finish-terrace.fbx",
-   "sha256": "705254db2c8a830a5d13abc431033ec83f140f11b70697a62e20cf1b1b2ce09e",
-   "manifestSha256": "0c297f183b44c4e2ad5ababb491da3f1682410709d751ea18e5c1862dc799810",
-   "operation": "a796afdc-67f0-4a10-93b5-be21b4d847c0",
-   "assetId": "121585294183893",
+   "sha256": "4ffb8b2660170fa91cafd7ef91fc097303da739825f04414ab988c53483428d5",
+   "manifestSha256": "cce2487806f73f7e350e442d909ecf5bdb54cd7f5202d2b535785e9db69c2632",
+   "operation": "fda3fbb2-1b5d-475d-ae13-545d3776e55d",
+   "assetId": "107356068537050",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "78745586093813",
-    "operation": "9218a1de-96c5-4730-b082-0d45e5b9a2ff",
-    "why": "round 6: cap rings instead of a 160-needle fan, closed lookout slab, rocks beautified; mesh gate PASS"
-   },
-   "manifestNote": "round 6 Fable R6-AB 1: dressTier hides the greybox Floor slab (manifest-only change after upload; the FBX is the uploaded bytes)"
+    "assetId": "121585294183893",
+    "operation": "a796afdc-67f0-4a10-93b5-be21b4d847c0",
+    "why": "round 6 C+D+E (Spencer: the bigger cave mouth and den, the 9-wide path; Fable R6-CDE fixes); mesh gate PASS"
+   }
   },
   "images": {}
  },

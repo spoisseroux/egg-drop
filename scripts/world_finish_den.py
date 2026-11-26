@@ -765,33 +765,38 @@ def build_flat_stone(name="W7_F_Stone__flat", seed=3):
 # crown overhanging 2.5, the rock it hangs from, and backing masses either side so the collar reads about 46 x 24 with
 # 6+ of rock over the crown. Centre (x, y, z), radii (x, y, z), yaw degrees.
 MOUTH_BLOBS = [
+    # Fable R6-CDE 1, 3, 4: everything forward to the reveal's end (COLLAR_END -96.9) so rock, not the shell's brown
+    # reveal, faces the lawn; the brow overhangs 2.5; the backing masses stand 0.8 proud of the cliff and swallow the
+    # grass flaps; one more mass over the shard field west of the mouth.
     # west buttress and its foot
-    ((M["x0"] - 3.2, FLOOR + 6.0, -100.2), (3.0, 7.0, 3.0), 9), ((M["x0"] - 4.4, FLOOR + 1.6, -100.8), (3.4, 2.6, 3.0), -14),
+    ((M["x0"] - 3.2, FLOOR + 6.0, -96.8), (3.0, 7.0, 3.0), 9), ((M["x0"] - 4.4, FLOOR + 1.6, -96.8), (3.4, 2.6, 3.0), -14),
     # east buttress and its foot
-    ((M["x1"] + 3.2, FLOOR + 6.0, -100.3), (2.9, 7.0, 2.9), -9), ((M["x1"] + 4.4, FLOOR + 1.6, -100.9), (3.2, 2.6, 2.9), 14),
+    ((M["x1"] + 3.2, FLOOR + 6.0, -96.8), (2.9, 7.0, 2.9), -9), ((M["x1"] + 4.4, FLOOR + 1.6, -96.8), (3.2, 2.6, 2.9), 14),
     # the brow: its lower edge 0.6 over the crown, 1.5 off centre (Fable 1.2), and the rock it hangs from
-    ((-5.5, M["top"] + 2.4, -99.0), (11.6, 2.2, 3.2), 0), ((-7.0, M["top"] + 5.2, -101.2), (12.4, 2.8, 2.8), 0),
+    ((-5.5, M["top"] + 2.4, -96.4), (11.6, 2.2, 3.4), 0), ((-7.0, M["top"] + 5.2, -98.6), (12.4, 2.8, 2.8), 0),
     # the shoulders over each buttress into the brow
-    ((M["x0"] - 2.0, M["top"] + .6, -100.4), (4.2, 3.4, 2.8), 12), ((M["x1"] + 2.0, M["top"] + .4, -100.5), (4.0, 3.2, 2.8), -12),
+    ((M["x0"] - 2.0, M["top"] + .6, -96.8), (4.2, 3.4, 2.8), 12), ((M["x1"] + 2.0, M["top"] + .4, -96.8), (4.0, 3.2, 2.8), -12),
     # backing masses: the collar out to about x -30 and x 16, up to y 24
-    ((-26.5, 11.0, -100.9), (5.6, 6.4, 2.8), 8), ((-23.0, 18.5, -101.4), (5.0, 3.4, 2.6), -5),
-    ((12.0, 10.5, -101.0), (4.6, 6.0, 2.6), -8), ((9.5, 18.0, -101.4), (5.0, 3.4, 2.6), 6),
-    ((-7.0, 22.0, -102.2), (10.0, 2.6, 2.8), 0),
+    ((-26.5, 11.0, -98.0), (5.6, 6.4, 2.8), 8), ((-23.0, 18.5, -98.0), (5.0, 3.4, 2.6), -5),
+    ((12.0, 10.5, -98.0), (4.6, 6.0, 2.6), -8), ((9.5, 18.0, -98.0), (5.0, 3.4, 2.6), 6),
+    ((-7.0, 22.0, -99.0), (10.0, 2.6, 2.8), 0),
+    # the shard field west of the mouth (CAM-LAWN01)
+    ((-36.0, 14.0, -98.5), (7.0, 8.0, 3.0), 10),
 ]
 # (x0, y0, z0, x1, y1, z1, push axes): nothing of the surround inside these
 MOUTH_KEEP_OUT = [
     ((M["x0"] + .05, 3.0, Z1 - 1.0, M["x1"] - .05, M["top"] + .1, -85.0), ("x", "y")),   # the opening, up to the crown
     ((M["x0"] - 1.4, 3.0, Z1 + .3, M["x0"] + .6, FLOOR + 10.5, Z1 + 3.0), ("x",)),     # the west prop (DenGreybox)
     ((M["x1"] - .6, 3.0, Z1 + .3, M["x1"] + 1.4, FLOOR + 10.5, Z1 + 3.0), ("x",)),     # the east prop
-    ((-34.0, 3.0, -96.6, 20.0, 9.5, -80.0), ("z",)),                                   # the lawn in front of the buttresses
+    ((-44.0, 3.0, -93.0, 20.0, 9.5, -80.0), ("z",)),                                   # the lawn in front of the buttresses
     ((D["x0"] - 2.6, 3.0, D["z0"] - 2.0, D["x1"] + 2.6, PEAK + 4.0, Z1 + 1.4), ("z",)),  # the room and its corners
 ]
 # Collision for the buttresses (players and pets stop at the rock): boxes {c, s} the mount builds with the den's boxes.
 MOUTH_BOXES = [
-    {"kind": "buttress", "c": [M["x0"] - 3.4, FLOOR + 5.0, -99.6], "s": [5.0, 10.0, 4.0]},
-    {"kind": "buttress", "c": [M["x1"] + 3.4, FLOOR + 5.0, -99.6], "s": [5.0, 10.0, 4.0]},
+    {"kind": "buttress", "c": [M["x0"] - 3.6, FLOOR + 5.0, -97.6], "s": [5.0, 10.0, 5.0]},
+    {"kind": "buttress", "c": [M["x1"] + 3.6, FLOOR + 5.0, -97.6], "s": [5.0, 10.0, 5.0]},
     # the brow (architect review: the clamp's spherecast respects CanCollide; without it an orbit enters drawn rock)
-    {"kind": "brow", "c": [-6.0, M["top"] + 2.4, -98.6], "s": [26.0, 3.8, 3.6]},
+    {"kind": "brow", "c": [-5.5, M["top"] + 2.4, -97.4], "s": [24.0, 3.8, 4.6]},
 ]
 HIDE = ["W7_CD_PlayDen__cliff_rock", "W7_CD_PlayDen__dirt_path"]
 HIDE_VISUAL = []          # colliding pack parts left with nothing to show: invisible, still colliding

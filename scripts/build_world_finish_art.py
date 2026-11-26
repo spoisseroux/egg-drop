@@ -589,7 +589,7 @@ def den_render_dressing(Den, cage, panes, crystal, stone):
     wood, dark = L.material("WF_Wood", L.hexrgb("#7A5A3A")), L.material("WF_Dark", L.hexrgb("#5C4330"))
     cloth = L.material("WF_Cloth", L.hexrgb("#B8AE98"))
     red = L.material("WF_Red", L.hexrgb("#D9725E"))
-    screen = L.material("WF_Screen", L.hexrgb("#9BE3C9"), emission=L.hexrgb("#9BE3C9"), strength=3.0)
+    screen = L.material("WF_Screen", L.hexrgb("#3D6F62"), emission=L.hexrgb("#3D6F62"), strength=.4)   # as DenGreybox (round 6)
 
     def box(name, c, s, mat, rot=(0, 0, 0)):
         bpy.ops.mesh.primitive_cube_add(size=1)
