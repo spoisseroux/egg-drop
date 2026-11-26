@@ -5379,6 +5379,15 @@ do
  if ok and hill then gui.Destroying:Connect(function()hill:destroy()end)
  elseif not ok then warn("[HillNight] not mounted: "..tostring(hill))end
 end
+-- Bumble balls (GARDEN-PLAY-BRIEF 1, BumbleBallsClient): nil (nothing made) where the Alive `balls` ceiling is closed
+-- (live). Kicks only in the garden; the game's Motion setting stills the squash and spin.
+do
+ local ok,balls=pcall(function()return require(script.BumbleBallsClient).mount({
+  reduced=function()return reduceEffects()==true end,
+  mode=function()return board:GetAttribute("Mode")end})end)
+ if ok and balls then gui.Destroying:Connect(function()balls:destroy()end)
+ elseif not ok then warn("[Balls] not mounted: "..tostring(balls))end
+end
 -- Things to do (Shared.Things): nothing at all with the build ceiling off; with the switch off only the switches are
 -- watched. clientUI.things is what the Pocket menu's page (MachineHub), the coach's last line (ThingsTips) and the trail
 -- (ThingsTrail) ask.
