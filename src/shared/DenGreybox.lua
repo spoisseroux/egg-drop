@@ -79,7 +79,8 @@ function Greybox.gate(add,bay,layout)
 		end
 	end
 	-- the board on the banner's front (its words: DenClient, UICopy dash.title)
-	add(n.."GateSign",Vector3.new(math.min(G.sign.X,width-1),G.sign.Y,.15),f*CFrame.new(0,bandY,-.25),G.cream,{material="Wood"})
+	-- Studio R6: at 6 on a 7-wide banner the board hid the checks; it leaves at least 1.4 of checks each side
+	add(n.."GateSign",Vector3.new(math.min(G.sign.X,width-2.8),G.sign.Y,.15),f*CFrame.new(0,bandY,-.25),G.cream,{material="Wood"})
 	-- the start mat in front of the gate in checks of `cell`, and the paw stones in a line on toward the room
 	local mw=math.min(G.mat.X,width+1)
 	local matZ=-G.mat.Y/2-.6
