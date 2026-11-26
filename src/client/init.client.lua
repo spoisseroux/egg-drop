@@ -678,14 +678,20 @@ local function isPickerOpen()
 end
 -- The Deck button's own path (RoomView runs it through requestSwitch); the Play Den's table runs the same one.
 function clientUI.playDeck()
+	if clientUI.storyBusy and clientUI.storyBusy() then return end
 	-- Garden Dash: opening the Deck gives up a seat, so it asks first (nil unless Dash is on).
 	if clientUI.dash and clientUI.dash:askLeave(function()cancelHatchNavigation();request:FireServer("mode","Board");clientUI.accepted("confirm")end)then return end
 	cancelHatchNavigation()
 	request:FireServer("mode", "Board");clientUI.accepted("confirm")
 end
+-- Onboarding v2 (review B36): while the stork story runs (or a replay), no screen opens over it: the dock, Hatch eggs,
+-- Settings, the journal, the hub and Customize all wait.
+function clientUI.storyBusy()
+	return clientUI.firstHatchStory ~= nil and clientUI.firstHatchStory:isRunning()
+end
 -- An overlay over the garden (RoomView's overlayOpen; the Play Den's table asks it too).
 function clientUI.roomOverlayOpen()
-	return isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
+	return clientUI.storyBusy() or isPickerOpen() or (journal and journal.shade.Visible) or (nurseryView and nurseryView:isOpen()) or clientUI.isHueOpen() or (gameMenu and gameMenu.shade.Visible) or (modal and modal.Visible)
 		or (clientUI.dash ~= nil and (clientUI.dash:held() or clientUI.dash:panelOpen()))
 end
 local roomView = RoomView.new(gui, backdrop, board, audio, function()
@@ -1164,6 +1170,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   if back=="hub"and reason~="back"and clientUI.machineReturn=="companions"then clientUI.machineReturn=nil end
  end})
 clientUI.openHue=function(page,petId,back)
+ if clientUI.storyBusy()then return false end
  local purchasePage=page=="buy"or page=="materialBuy"or page=="toyBuy"or page=="featureBuy"
  if not purchasePage and back~="companions"and back~="hub"then
   local actor=roomView.care and roomView.care:actor()
@@ -1331,7 +1338,7 @@ do
    elseif reason~="customize"and reason~="stats"and reason~="names"then clientUI.machineReturn=nil end
   end})
  clientUI.openHub=function(options)
-  if not nurseryState or roomView.busy then return false end
+  if not nurseryState or roomView.busy or clientUI.storyBusy() then return false end
   options=options or {}
   if not options.assign and(nurseryState.lastHatch)then if openNursery then openNursery()end;return false end
   if not options.assign then cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")end
@@ -1609,7 +1616,7 @@ end
 openNursery = function()
 	if roomView.busy or board:GetAttribute("Mode") ~= "Room" then return end
 	-- Onboarding v2: Hatch eggs waits while the stork plays the starter receipt (never a second hatch).
-	if clientUI.firstHatchStory and clientUI.firstHatchStory:ownsReceipt() then return end
+	if clientUI.storyBusy() or (clientUI.firstHatchStory and clientUI.firstHatchStory:ownsReceipt()) then return end
 	picker:close()
 	journal:close()
     if clientUI.hueView then clientUI.hueView:close("forced")end
@@ -2125,6 +2132,7 @@ local function updateClub()
 end
 
 openPicker = function(mode,back,source)
+	if clientUI.storyBusy() then return false end
 	mode=mode or "Shell"
 	-- Pocket Trials have no page any more (QA Q5): Settings, or Deck style at its workbench.
 	if mode~="Settings"and source~="workbench"then return false end
@@ -2146,6 +2154,7 @@ openPicker = function(mode,back,source)
  return true
 end
 openJournal = function()
+	if clientUI.storyBusy() then return end
 	cancelHatchNavigation()
  return roomView.care and roomView.care:station()or false
 end
