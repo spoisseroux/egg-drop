@@ -1,6 +1,6 @@
-# Test pass: beta (32), 2026-11-26
+# Test pass: beta (33), 2026-11-26
 
-Build: beta (32), place version v94, runtime 123f8698.
+Build: beta (33), place version v97, runtime f37ac1e1.
 
 Place: **Pocket Pals Beta** (the private beta). Live is not touched.
 Do the whole pass twice: once on a **phone**, once on **PC**.
@@ -69,6 +69,21 @@ Mark each row **OK** or write what went wrong (a screenshot helps).
 | E7 | Arrival at the terrace | Clean rock below the arrival, no grass wall beside the top steps | |
 | E8 | At night (`/hour on`, then `/hour at 2800`) | Den and path lanterns lit, glow-caps along the path, fireflies on the terrace | |
 | E9 | In a park with pets | "Pets playing N/M" bottom right | |
+
+## E2. Player scale (the world feels bigger)
+
+Your avatar is now drawn at **0.8** of its size, so the island, the cave, the trees and the pets read 1.25x bigger.
+Walk speed and jump are unchanged. You can change it live, on this server only, by typing in chat:
+`/scale 0.75` (anything from 0.6 to 1.2), `/scale 1` (the old size), `/scale clear` (back to the default).
+
+| # | Do | Expect | OK / problem |
+|---|---|---|---|
+| S1 | Join and look at yourself in the garden | Smaller than before, hair and clothes in proportion, feet on the ground | |
+| S2 | Open the Pocket Deck (board mode) | The deck in your hands fits the smaller body | |
+| S3 | Walk to the den, the path, the terrace and the parks | Everything feels bigger; nothing to get stuck in | |
+| S4 | Try `/scale 0.7`, `/scale 0.85`, `/scale 1` | Changes at once. **Tell me the number that feels best**, I'll make it the default | |
+| S5 | Respawn (reset) | Still at the chosen size | |
+| S6 | Carry your Bear (pet focus) | The Bear sits right in the arms | |
 
 ## F. Your own save
 

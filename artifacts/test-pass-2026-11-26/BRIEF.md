@@ -1,6 +1,6 @@
 # What changed since your beta (25) notes
 
-Covers beta (26) to beta (32) (v94, runtime 123f8698), all on Pocket Pals Beta. **Live has not been touched.**
+Covers beta (26) to beta (33) (v97, runtime f37ac1e1), all on Pocket Pals Beta. **Live has not been touched.**
 Your test doc is `TEST-PASS.md`, in this folder.
 
 ## Your beta (25) notes, all six done
@@ -26,6 +26,26 @@ From your "It needs to be GREAT!!!" and "Maybe three combos and the egg hatches?
 - **Measuring.** Two new one-time events, "DeckShown" (the loading screen left) and "EggTapped" (the first crack tap), so the funnel can see loading losses and the tap.
 - **Switches.** Every part has its own switch: `/onboard opener|crack|nestfirst off`. Off is exactly beta (27).
 - No new Stars and no pressure timers. Art is drawn in code and the sounds are the existing crack sounds.
+
+## Added overnight: the player scale (the world feels bigger)
+
+You said the world feels tiny and asked for it to be easy to tweak. I didn't scale the geometry, because every coordinate in the island, den, path, parks, nest, dash route and pet paths is hard-coded. Instead the avatar is drawn smaller.
+
+- **Default 0.8** on the beta, so the island reads 1.25x bigger. Live is unchanged (1).
+- **One knob, live:**
+  - `/scale 0.75` in chat (0.6 to 1.2), `/scale 1`, `/scale clear`, this server only;
+  - the ConfigService value `player_scale` changes every server without a publish.
+- **What stays the same:** walk speed, jump and every world coordinate (travel times don't change).
+- **What follows the scale:**
+  - the Pocket Deck in your hands;
+  - the spot where you carry your pet;
+  - your hair and clothes, including ones that load late;
+  - Board mode, where the avatar is lowered so it doesn't float.
+- **Checked in Studio:**
+  - it scales automatically after spawning, and again on respawn;
+  - `/scale 1`, `0.7` and `clear` work live;
+  - walking is normal.
+  - Captures at 1.0, 0.8 and 0.7 are in `artifacts/player-scale-2026-11-26/studio/`.
 
 ## Fixed along the way
 
