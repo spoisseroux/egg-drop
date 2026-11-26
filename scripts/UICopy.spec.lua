@@ -20,6 +20,8 @@ return function(client,parent)
   hours=7,minutes=52,
   -- Stars store packs.
   stars=60,
+  -- beta 34 Pocket Deck goals in words (GoalWords).
+  ball="a green ball",where="on the left",small="blue balls",goal="make 2 merges anywhere",
   -- Dash level band.
   band="Full Bloom",
   -- Growth cuts (2026-11-25): the Tomorrow rail and the next-egg nudge.

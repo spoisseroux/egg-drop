@@ -131,7 +131,7 @@ return function(client,parent)
    s:setHud({score=0,goals={{text="Match "..BallThemes.circle(5,14).." + "..BallThemes.circle(5,14).." in CENTER",progress=0,target=1},
     {text="Make "..BallThemes.circle(3,14).." or bigger on RIGHT",progress=0,target=1}},next={1,1,1},eggsLeft=24,budget=24})
    local h=s.hud;local card=h.goals[1].row.Parent
-   assert(card.Size==UDim2.fromOffset(s.geometry.column,244)and card.Position==UDim2.fromOffset(s.geometry.pad,188),"Goals card rect unchanged")
+   assert(card.Size==UDim2.fromOffset(s.geometry.column,244)and card.Position==UDim2.fromOffset(s.geometry.pad,204),"Goals card rect (beta 34: 16 lower)")
    local a,b=h.goals[1],h.goals[2]
    assert(a.text.TextYAlignment==Enum.TextYAlignment.Center,"goal text centred on its row")
    for n in string.gmatch(a.text.Text,'size="(%d+)"')do assert(tonumber(n)<=a.text.TextSize,"circle capped at the text size")end
@@ -145,7 +145,8 @@ return function(client,parent)
    s:setHud({score=10,goals={{text="Make 2 merges anywhere",progress=1,target=2}},daily={{title="Finish 3 rounds",progress=1,target=3}},next={1,2,3},eggsLeft=20,budget=24,difficulty="Easy",multiplier="×0.8",input="Keyboard"})
    settle()
    local hud=s.hudRoot;local h=s.hud
-   local expected={Score={12,96},Chain={116,64},Goals={188,244},DailyQuests={440,156},Next={12,140},EggsLeft={160,96},Difficulty={264,72},WinPays={344,84},Controls={436,160}}
+   -- Beta 34 QA: the Chain card is 16 taller for its line; Goals moves down 16, Daily quests gives the 16 back.
+   local expected={Score={12,96},Chain={116,80},Goals={204,244},DailyQuests={456,140},Next={12,140},EggsLeft={160,96},Difficulty={264,72},WinPays={344,84},Controls={436,160}}
    for name,r in pairs(expected)do
     local c=hud:FindFirstChild(name);assert(c and c.Position.Y.Offset==r[1]and c.Size.Y.Offset==r[2],name.." rect unchanged")
    end

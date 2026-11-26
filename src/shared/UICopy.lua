@@ -100,6 +100,22 @@ local Table={
   -- Levels matter S3: the Effects tab (deck juice).
   effects={title="Effects",pop="Merge pop",trail="Drop trail",start="Start",classic="Classic",promise="Just for looks. Never an advantage.",locked="Needs {name} {level}"},
  },
+ -- Beta 34 QA (Spencer): the Pocket Deck round HUD in words. `goal`: each field goal as a plain instruction, longest
+ -- line first (GoalWords; {ball} is "a green ●" on the deck, "a green ball" in plain text). `chain`: what the chain
+ -- does (each merge within 1.25 s of the last adds 10 points to it, BoardConfig.mergeScore). `quests`: the deck's
+ -- button that opens the quest log.
+ deck={
+  goal={make="Make {ball} {where}",makeUp="Make {ball} or bigger {where}",match="Match two {small} {where}",
+   merges="Make {count} merges {where}",chain="Make {count} quick merges in a row",
+   short={make="{ball} {where}",match="Two {small} {where}",merges="{count} merges {where}",chain="{count} quick merges"},
+   tiny={make="{ball} {where}",merges="{count} merges",chain="{count} in a row"},
+   where={left="on the left",right="on the right",center="in the middle",any="anywhere"},
+   whereTiny={left="left",right="right",center="middle",any="anywhere"},
+   next="Next, {goal}",done="Done!"},
+  chain={line="Quick merges in a row score more",short="Quick merges score more",tiny="Be quick: more points",
+   toast="Chain ×{count}! Quick merges in a row score more"},
+  quests={open="Open",button="Quests"},
+ },
  results={
   inPlace={noStars="No Stars this round",total="Total  ★ {count}",metrics="Score {score} · Best {best} · Chain ×{chain}",replay="Replay",hatch="Hatch eggs"},
   leave={

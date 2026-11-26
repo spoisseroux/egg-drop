@@ -21,6 +21,9 @@ local UICopy=require(Shared.UICopy)
 -- G2: the calm Welcome-round screen (switch CalmFirstDeck).
 local FeatureFlags=require(Shared.FeatureFlags)
 local Calm=require(script.Parent.DeckCalm)
+-- Beta 34 QA: the deck's text knob on a computer (DeckText) and the goals in words (GoalWords).
+local DeckText=require(script.Parent.DeckText)
+local GoalWords=require(Shared.GoalWords)
 local L=Assets.Layout
 local Screen={}
 Screen.__index=Screen
@@ -1081,17 +1084,21 @@ end
 -- its text block (one or two 20 px lines, centred), a 6 px bar 6 px under it and the
 -- count beside the bar; the check is centred on the text block. Rows are spaced
 -- evenly (gap 14..26) whatever mix of one- and two-line goals the round has.
+-- Beta 34 QA (DeckText): `line` is the text's own line height (ceil(TextSize x 1.25), 20 at 16 px), and three
+-- two-line goals at the bigger computer size close the gap (down to 2) rather than run past the card.
 Screen.GoalRows={top=40,bottom=230,line=20,gapMin=14,gapMax=26,check=22,bar=6}
-function Screen.goalRows(lines)
+function Screen.goalRows(lines,line)
  local G=Screen.GoalRows
+ line=line or G.line
  local rows,sum={},0
  for index,n in ipairs(lines)do
-  local textH=math.clamp(n,1,2)*G.line
+  local textH=math.clamp(n,1,2)*line
   rows[index]={textH=textH,h=textH+6+G.bar,checkY=math.floor((textH-G.check)/2+.5),barY=textH+6}
   sum+=rows[index].h
  end
  local n=#rows
  local gap=if n>0 then math.clamp(math.floor((G.bottom-G.top-sum)/n),G.gapMin,G.gapMax)else 0
+ if n>1 and G.top+sum+(n-1)*gap>G.bottom then gap=math.max(2,math.floor((G.bottom-G.top-sum)/(n-1)))end
  local y=G.top
  for _,row in ipairs(rows)do row.y=y;y+=row.h+gap end
  return rows,gap
@@ -1296,8 +1303,16 @@ function Screen:buildCompactHud(g)
   local handle=screenCard(host,"QuestHandle",hr,"well",12)
   local icon=Kit.icon(handle,"quests",18,"text");icon.Position=UDim2.fromOffset(13,13)
   h.questDot=readyDot(icon,12,-3)
-  if hr.w>=130 then txt(handle,"Strong","Quests","text",38,0,70,hr.h,14)end
-  h.questCount=txt(handle,"Counter","","soft",hr.w-26-50,0,50,hr.h,13,right)
+  -- Beta 34 QA ("theres no quests button anymore?"): the handle opens the quest log (bindQuestTarget); it says
+  -- "Quests" whenever the word fits beside the count, and shows a chevron when there is room for that too.
+  local word=UICopy.get("deck.quests.button")
+  -- (countW: "0/3" in 13 px mono is about 24 px.)
+  local wordW=Kit.measure(word,"Strong",14).X;local countW=26
+  local chevron=38+wordW+6+countW+18<=hr.w
+  local countRight=if chevron then hr.w-24 else hr.w-10
+  if 38+wordW+2<=countRight-countW then txt(handle,"Strong",word,"text",38,0,wordW+2,hr.h,14)end
+  h.questCount=txt(handle,"Counter","","soft",countRight-50,0,50,hr.h,13,right)
+  if chevron then local c=Kit.chevron(handle,10,"down","soft");c.Rotation=-90;c.Position=UDim2.fromOffset(hr.w-18,math.floor((hr.h-10)/2))end
   h.handle=handle
   h.daily={}
  end
@@ -1318,8 +1333,80 @@ function Screen:buildCompactHud(g)
  self.lastHud=nil;self.controlsKey=nil
 end
 
--- v2 has no quest drawer: the quests card and handle show progress only (QA Q5).
+-- v2 has no quest drawer: the quests card and handle open the quest log (bindQuestTarget).
 function Screen:closeDrawer()return false end
+-- Beta 34 QA ("theres no quests button anymore?"): a small cream key that opens the quest log, drawn above its card's
+-- own OpenQuestLog hit. `text` "" with `icon`: the icon alone (the Small deck's Next corner).
+function Screen:questKey(parent,text,x,y,w,hh,icon)
+ local holder=Kit.frame(parent,"OpenQuests",nil,UDim2.fromOffset(x,y),UDim2.fromOffset(w,hh))
+ holder.ZIndex=parent.ZIndex+30
+ local key=Kit.button(holder,"QuestKey",{text=if text~=""then text else UICopy.get("deck.quests.button"),size=Vector2.new(w,hh),textSize=14,selectable=false,compact=true})
+ local state=Kit.buttonState(key)
+ if icon and state then state.label.Visible=false;Kit.icon(state.content,icon,math.min(16,hh-6),"text")end
+ key:SetAttribute("AccessibleLabel",UICopy.get("hub.quests.title"))
+ key.Activated:Connect(function()if not self:menuActive()and self.callbacks.quests then self.callbacks.quests()end end)
+ return holder
+end
+-- Pure: the longest of a goal's word lines (`goal.words`, longest first, else its text) that fits `lines` wrapped lines
+-- of `width` px at `size` px. `measure(text, size, width)` returns the wrapped text's height (Kit.measure().Y).
+function Screen.goalLine(goal,lines,width,size,measure)
+ local list=goal.words
+ if not list then
+  list={}
+  for _,key in ipairs({"text","short","tiny"})do if type(goal[key])=="string"and goal[key]~=""then table.insert(list,goal[key])end end
+  if #list==0 then list={""}end
+ end
+ return GoalWords.pick(list,function(line)
+  local plain=BallThemes.strip(line)
+  return measure(plain,size,width)<=size*(lines+.6)
+ end)
+end
+local function measureBody(text,size,width)return Kit.measure(text,"BodyMedium",size,width).Y end
+-- Beta 34 QA ("we need to know what the chain does"): the line under the chain counter, the longest that fits.
+function Screen:paintChainLine(label,lines)
+ if not label then return end
+ local width=label.Size.X.Offset
+ label.Text=GoalWords.pick({UICopy.get("deck.chain.line"),UICopy.get("deck.chain.short"),UICopy.get("deck.chain.tiny")},function(line)
+  local m=Kit.measure(line,"Small",label.TextSize,if lines>1 then width else nil)
+  return m.X<=width and m.Y<=label.TextSize*(lines+.6)
+ end)
+end
+-- The chain counter climbs visibly: a pop and Stars gold while the chain is live, back to its own colour once the chain
+-- window (1.25 s, BoardRoundSim.ChainSeconds) has passed with no merge. A phone has no room for the line, so its
+-- first climb of the session says it once in a toast.
+Screen.ChainLive=1.3
+function Screen:paintChain(chain)
+ local h=self.hud;local label=h and h.chain
+ if not label then return end
+ chain=chain or 0
+ local last=h.lastChain or 0
+ h.lastChain=chain
+ local role=label:GetAttribute("ChainRole")
+ if role==nil then role=if h.chainInGoals and h.layout~="narrow"then "soft"else "text";label:SetAttribute("ChainRole",role)end
+ -- Painted only when the state flips (a theme change keeps the right colour, as paintEyebrow).
+ local function lit(on)
+  if h.chainLit==on then return end
+  h.chainLit=on;Kit.paint(label,"TextColor3",if on then "stars"else role)
+ end
+ if chain<2 or chain<=last then
+  if chain<last or chain<2 then h.chainToken=(h.chainToken or 0)+1;lit(false)end
+  return
+ end
+ lit(true)
+ h.chainToken=(h.chainToken or 0)+1;local token=h.chainToken
+ if not Kit.reduced()then
+  local scale=label:FindFirstChild("ChainPop")or Kit.node("UIScale",label,{Name="ChainPop",Scale=1})
+  scale.Scale=1.35
+  game:GetService("TweenService"):Create(scale,TweenInfo.new(.28,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
+ end
+ task.delay(Screen.ChainLive,function()
+  if h.chainToken==token and label.Parent then lit(false)end
+ end)
+ if h.phone and not h.calm and not Screen.chainTold and self.toaster then
+  Screen.chainTold=true
+  self.toaster.show(UICopy.get("deck.chain.toast",{count=chain}))
+ end
+end
 
 function Screen:buildHud(g)
  if self.hudRoot then self.hudRoot:Destroy()end
@@ -1338,10 +1425,13 @@ function Screen:buildHud(g)
   local score=card(host,"Score",{leftX,12,col,96},"SCORE",pad)
   h.score=txt(score,"CounterL","0","text",14,31,col-28,40)
   h.best=txt(score,"Counter","BEST 0","dim",14,72,col-28,16,{TextSize=13})
-  local chain=card(host,"Chain",{leftX,116,col,64},"CHAIN",pad)
+  -- Beta 34 QA ("we need to know what the chain does"): the Chain card is 16 taller for its line (Goals and Daily
+  -- quests move down 16; Daily quests gives the 16 back with a 34 px row pitch).
+  local chain=card(host,"Chain",{leftX,116,col,80},"CHAIN",pad)
   h.chain=txt(chain,"Counter","×0","text",14,30,60,24,{TextSize=22})
   h.chainBar=Kit.progress(chain,10,5);h.chainBar.root.Position=UDim2.fromOffset(84,36);h.chainBar.layout(116,4)
-  local goals,eyebrow=card(host,"Goals",{leftX,188,col,244},"GOALS",pad,Screen.HudTint);h.goalsEyebrow=eyebrow
+  h.chainLine=txt(chain,"Small","","soft",14,56,col-28,18,{TextSize=13,TextTruncate=Enum.TextTruncate.AtEnd})
+  local goals,eyebrow=card(host,"Goals",{leftX,204,col,244},"GOALS",pad,Screen.HudTint);h.goalsEyebrow=eyebrow
   h.welcomeCoach=goals
   h.goalsCount=txt(goals,"Counter","0/2","dim",col-74,10,60,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
   h.status=txt(goals,"Small","","soft",14,40,col-28,190,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top,Visible=false})
@@ -1357,12 +1447,14 @@ function Screen:buildHud(g)
    local count=txt(row,"Counter","","soft",col-62,r.barY-7,48,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
    h.goals[index]={row=row,check=check,text=text,bar=bar,count=count}
   end
-  local daily=card(host,"DailyQuests",{leftX,440,col,156},"DAILY QUESTS",pad,Screen.HudTint);h.quests=daily
-  -- Progress only (QA Q5): the quest log opens from the garden hub's Quests tile.
+  local daily=card(host,"DailyQuests",{leftX,456,col,140},"DAILY QUESTS",pad,Screen.HudTint);h.quests=daily
+  -- Beta 34 QA ("theres no quests button anymore?"): the card opens the quest log (bindQuestTarget) and says so
+  -- with an Open key in its header (QA Q5 had taken the card's chevron away, so it read as progress only).
+  h.questOpen=self:questKey(daily,UICopy.get("deck.quests.open"),col-14-60,7,60,26)
   h.daily={}
   for index=1,3 do
-   local y=38+(index-1)*38
-   local name=txt(daily,"Small","","text",14,y,col-80,18)
+   local y=38+(index-1)*34
+   local name=txt(daily,"Small","","text",14,y,col-80,18,{TextTruncate=Enum.TextTruncate.AtEnd})
    local count=txt(daily,"Counter","","soft",col-74,y,60,18,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
    local bar=Kit.progress(daily,4);bar.root.Position=UDim2.fromOffset(14,y+22);bar.root.Size=UDim2.fromOffset(col-28,4)
    h.daily[index]={name=name,count=count,bar=bar}
@@ -1412,10 +1504,14 @@ function Screen:buildHud(g)
    local text=txt(row,"BodyMedium","","text",34,0,col-40,28,{TextWrapped=true})
    h.goals[index]={row=row,check=check,text=text}
   end
+  -- Beta 34 QA: the pips sit beside the counter so the card has two lines for what the chain does.
   local chain=card(host,"Chain",{leftX,208,col,85},"CHAIN",pad)
-  h.chain=txt(chain,"Counter","×0","text",8,26,col-16,26)
-  h.chainBar=Kit.progress(chain,8,5);h.chainBar.root.Position=UDim2.fromOffset(8,62);h.chainBar.layout(col-24,4)
+  h.chain=txt(chain,"Counter","×0","text",8,24,44,24)
+  h.chainBar=Kit.progress(chain,6,5);h.chainBar.root.Position=UDim2.fromOffset(56,33);h.chainBar.layout(col-64,3)
+  h.chainLine=txt(chain,"Small","","soft",8,50,col-16,30,{TextWrapped=true,TextYAlignment=Enum.TextYAlignment.Top})
   local nextCard=card(host,"Next",{rightX,6,col,84},"NEXT",pad)
+  -- Beta 34 QA: the Small deck has no quests card, so a quests key sits in the Next card's free corner.
+  h.questOpen=self:questKey(nextCard,"",col-6-32,5,32,22,"quests")
   h.next={egg(nextCard,40),egg(nextCard,24)}
   h.next[1].ball.Position=UDim2.fromOffset(12,30);h.next[2].ball.Position=UDim2.fromOffset(66,42)
   local eggs=card(host,"EggsLeft",{rightX,96,col,64},"BALLS LEFT",pad)
@@ -1431,6 +1527,10 @@ function Screen:buildHud(g)
   local star=Kit.icon(pays,"star",18);star.Position=UDim2.fromOffset(8,30)
   h.pays=txt(pays,"Counter","6–8","stars",30,26,col-36,26,{TextSize=17})
  end
+ -- Beta 34 QA: the computer text knob (Regular only; DeckText), then the chain line at its final size.
+ if not compact then DeckText.apply(host,DeckText.hud(g.mode))end
+ self:paintChainLine(h.chainLine,if compact then 2 else 1)
+ h.goalLine=math.ceil((h.goals[1]and h.goals[1].text.TextSize or 16)*Kit.LineHeight)
  -- Toy Shell 3.5: the caps labels sit on coloured tabs.
  Kit.hudTabs(host)
  -- A rebuilt HUD has empty control rows; repaint them on the next setHud.
@@ -1466,7 +1566,7 @@ function Screen:placeGoalRows()
  end
  if h.goalKey==key then return end
  h.goalKey=key
- local rows=Screen.goalRows(lines)
+ local rows=Screen.goalRows(lines,h.goalLine)
  for index,slot in ipairs(h.goals)do
   local r=rows[index]
   if r then
@@ -1475,6 +1575,19 @@ function Screen:placeGoalRows()
    slot.text.Size=UDim2.fromOffset(slot.text.Size.X.Offset,r.textH)
    slot.bar.root.Position=UDim2.fromOffset(46,r.barY);slot.count.Position=UDim2.fromOffset(slot.count.Position.X.Offset,r.barY-7)
   end
+ end
+end
+-- Small deck Goals rows (card 136: rows from 26). Three goals: 34 apart, one line each; two or fewer: 54 apart, two
+-- lines each, so the words fit without the old arrow shorthand.
+function Screen:pitchSmallGoals(n)
+ local h=self.hud
+ local pitch=if n<=2 then 54 else 34
+ if h.smallPitch==pitch then return end
+ h.smallPitch=pitch
+ for index,slot in ipairs(h.goals)do
+  slot.row.Position=UDim2.fromOffset(0,26+(index-1)*pitch);slot.row.Size=UDim2.fromOffset(slot.row.Size.X.Offset,pitch-2)
+  slot.text.Size=UDim2.fromOffset(slot.text.Size.X.Offset,pitch-6)
+  slot.check.root.Position=UDim2.fromOffset(8,math.floor((pitch-6-20)/2))
  end
 end
 local controlRows={
@@ -1523,11 +1636,13 @@ function Screen:setHud(data)
  local compact=self.geometry and self.geometry.compact
  h.score.Text=tostring(data.score or 0)
  if h.best then h.best.Text="BEST "..tostring(data.best or 0)end
- h.chain.Text="×"..tostring(data.chain or 0);h.chainBar.set(math.min(5,data.chain or 0))
+ h.chain.Text="×"..tostring(data.chain or 0);h.chainBar.set(math.min(5,data.chain or 0));self:paintChain(data.chain)
  local goals=data.goals or {}
  local status=data.message
  h.status.Visible=status~=nil and status~=""
  if h.status.Visible then h.status.Text=status end
+ -- Beta 34 QA: the Small deck's rows get two lines each when there are two goals (54 apart in its 136 card).
+ if compact then self:pitchSmallGoals(#goals)end
  local done=0
  for index,slot in ipairs(h.goals)do
   local goal=goals[index]
@@ -1535,10 +1650,19 @@ function Screen:setHud(data)
   if goal then
    if goal.done then done+=1 end
    slot.check.set(goal.done)
-   slot.text.RichText=true;slot.text.Text=Screen.evenCircles(if compact then goal.short or goal.text else goal.text,slot.text.TextSize);Kit.localizeRich(slot.text)
+   -- Beta 34 QA: the longest word line that fits the row (two lines on the Regular card).
+   local size=slot.text.TextSize
+   local lines=if compact then GoalWords.linesIn(slot.text.Size.Y.Offset,size,Kit.LineHeight)else 2
+   local width=if compact then slot.text.Size.X.Offset else h.goalWidth-4
+   slot.text.RichText=true;slot.text.Text=Screen.evenCircles(Screen.goalLine(goal,lines,width,size,measureBody),size);Kit.localizeRich(slot.text)
    slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
    if slot.bar then slot.bar.set(if goal.done then 1 else goal.progress or 0,if goal.done then 1 else math.max(1,goal.target or 1),false,true)end
-   if slot.count then slot.count.Text=if goal.done then string.format("%d/%d",goal.target or 1,goal.target or 1)else string.format("%d/%d",goal.progress or 0,goal.target or 1)end
+   -- A ticked goal says so: "Done!" in green where the count was.
+   if slot.count then
+    slot.count.Text=if goal.done then UICopy.get("deck.goal.done")else string.format("%d/%d",goal.progress or 0,goal.target or 1)
+    slot.count.AutoLocalize=goal.done==true
+    slot.count.TextColor3=if goal.done then Kit.Color.good else Kit.Color.soft
+   end
   end
  end
  if not compact and h.goalWidth then self:placeGoalRows()end
@@ -1591,12 +1715,20 @@ local compactRows={
 }
 Screen.compactControlRows=compactRows
 local zoneThird={left=0,center=1,right=2}
+-- A phone goal label: the longest word line (GoalWords) that fits it, wrapped over two lines where the row has them.
+local function fitGoalLabel(label,goal)
+ local size=label.TextSize
+ local lines=GoalWords.linesIn(label.Size.Y.Offset,size,Kit.LineHeight)
+ label.TextWrapped=lines>1
+ label.RichText=true
+ label.Text=Screen.evenCircles(Screen.goalLine(goal,lines,label.Size.X.Offset,size,measureBody),size);Kit.localizeRich(label)
+end
 local function paintIconGoal(slot,goal)
- -- v933 QA: a word label when the goal has one ("Merges", "Chain", a ball with up arrow and LEFT).
- local worded=slot.label~=nil and type(goal.tiny)=="string"and goal.tiny~=""
+ -- v933 QA: a word label when the goal has one. Beta 34 QA: always words now (no arrow and caps zone shorthand).
+ local worded=slot.label~=nil and(type(goal.words)=="table"or(type(goal.tiny)=="string"and goal.tiny~=""))
  if slot.label then
   slot.label.Visible=worded
-  if worded then slot.label.Text=Screen.evenCircles(goal.tiny,slot.label.TextSize);Kit.localizeRich(slot.label)end
+  if worded then fitGoalLabel(slot.label,if goal.words then goal else {words={goal.tiny}})end
  end
  if worded then
   slot.egg.ball.Visible=false;slot.glyph.Visible=false;slot.plus.Visible=false;slot.zone.root.Visible=false
@@ -1632,16 +1764,45 @@ function Screen:setScore(score,chain)
   h.score.Text=tostring(score or 0)
   h.chain.Text="×"..tostring(chain or 0);h.chainBar.set(math.min(5,chain or 0))
  end
+ self:paintChain(chain)
  return true
+end
+-- Beta 34 QA: phone Goals rows are built for three goals one line each (goalPitch apart). With one or two goals the
+-- same card height (24 + 3 x goalPitch + 6) gives each row half a pitch more, room for two lines of words.
+function Screen.compactGoalPitch(p,n,room)
+ if n>=1 and n<=2 and 24+3*p+6<=room then return math.floor(3*p/2)end
+ return p
+end
+function Screen:pitchCompactGoals(n)
+ local h=self.hud;local g=h.geometry
+ local p=h.goalPitch
+ local pitch=Screen.compactGoalPitch(p,n,g.goals and g.goals.h or 0)
+ if h.rowPitch==pitch then return pitch end
+ h.rowPitch=pitch
+ for index,slot in ipairs(h.goals)do
+  slot.row.Position=UDim2.fromOffset(0,24+(index-1)*pitch);slot.row.Size=UDim2.fromOffset(slot.row.Size.X.Offset,pitch)
+  local function middle(node,size)if node then node.Position=UDim2.fromOffset(node.Position.X.Offset,math.floor((pitch-size)/2))end end
+  middle(slot.check and slot.check.root,20)
+  if slot.icon then
+   middle(slot.egg.ball,22);middle(slot.glyph,20);middle(slot.zone.root,12)
+   slot.plus.Position=UDim2.fromOffset(slot.plus.Position.X.Offset,math.floor(pitch/2)-12)
+   slot.label.Size=UDim2.fromOffset(slot.label.Size.X.Offset,pitch)
+  else
+   slot.text.Size=UDim2.fromOffset(slot.text.Size.X.Offset,pitch)
+  end
+  slot.count.Size=UDim2.fromOffset(slot.count.Size.X.Offset,pitch)
+ end
+ return pitch
 end
 function Screen:setCompactHud(data)
  local h=self.hud;local g=h.geometry
  h.score.Text=commas(data.score)
- if h.chain then h.chain.Text=(if h.chainInGoals and h.layout~="narrow"then "CHAIN ×"else "×")..tostring(data.chain or 0)end
+ if h.chain then h.chain.Text=(if h.chainInGoals and h.layout~="narrow"then "CHAIN ×"else "×")..tostring(data.chain or 0);self:paintChain(data.chain)end
  local goals=data.goals or {}
  local status=data.message
  h.status.Visible=status~=nil and status~=""
  if h.status.Visible then h.status.Text=status end
+ local rowPitch=self:pitchCompactGoals(#goals)
  local done=0
  for index,slot in ipairs(h.goals)do
   local goal=goals[index]
@@ -1658,9 +1819,11 @@ function Screen:setCompactHud(data)
     if slot.label then slot.label.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text end
    else
     slot.check.set(goal.done)
-    slot.text.RichText=true;slot.text.Text=Screen.evenCircles(goal.short or goal.text,slot.text.TextSize);Kit.localizeRich(slot.text)
+    fitGoalLabel(slot.text,goal)
     slot.text.TextColor3=if goal.done then Kit.Color.soft else Kit.Color.text
-    slot.count.Text=count
+    slot.count.Text=if goal.done then UICopy.get("deck.goal.done")else count
+    slot.count.AutoLocalize=goal.done==true
+    slot.count.TextColor3=if goal.done then Kit.Color.good else Kit.Color.soft
    end
   end
  end
@@ -1671,7 +1834,7 @@ function Screen:setCompactHud(data)
  Screen.paintEyebrow(h,statusOn,h.tint)
  -- Card height follows the goal count (a status message gets two rows, three in a narrow column).
  local n=if data.welcome then 3 elseif h.status.Visible then(if h.layout=="narrow"then 3 else 2)else math.max(1,#goals)
- local cardH=24+n*h.goalPitch+6
+ local cardH=24+n*(if data.welcome or h.status.Visible then h.goalPitch else rowPitch)+6
  -- G2 (CalmFirstDeck): the calm Welcome screen owns the coach card's size; restoring it clears h.cardH.
  if h.cardH~=cardH and not h.calm then
   h.cardH=cardH
@@ -1836,6 +1999,7 @@ function Screen:applyCalm(h)
  for _,name in ipairs(plan.hide)do hide(cards[name])end
  -- A chain counter in the Goals header, the THEN balls and their THEN label (with its tab).
  if h.chainInGoals then hide(h.chain)end
+ hide(h.questOpen)
  for index=2,#(h.next or {})do hide(h.next[index].ball)end
  if h.thenLabel then hide(h.thenLabel);hide(Kit.hudTabOf(h.thenLabel))end
  local function place(object,r)

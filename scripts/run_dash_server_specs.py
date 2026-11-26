@@ -57,7 +57,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # The world finish art (WORLD-FINISH-ART-BUILD.md): the mount and its data.
          "WorldFinish",
          # The hill's sound zones and night (WORLD-FINISH-LOOK slice F).
-         "HillNight"]
+         "HillNight",
+         # Beta 34 QA Pocket Deck: the goals as plain instructions (GoalWords).
+         "GoalWords"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -84,7 +86,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Player scale (player-scale-2026-11-26): the knob.
           "PlayerScale",
           # Beta (34) notes: the Wobble Egg on the crag (GARDEN-PLAY-BRIEF 3).
-          "WobbleEgg"]
+          "WobbleEgg",
+          # Beta 34 QA Pocket Deck: the computer text knob.
+          "DeckText"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -137,7 +141,9 @@ def client_modules():
                     # The hill at night (WORLD-FINISH-LOOK slice F).
                     "HillNightClient.lua",
                     # The First Hatch: the crack ritual.
-                    "CrackRitual.lua"):
+                    "CrackRitual.lua",
+                    # Beta 34 QA: the Pocket Deck's computer text knob.
+                    "DeckText.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
