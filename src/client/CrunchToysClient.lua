@@ -1,13 +1,16 @@
 -- Crunchy toys round the garden (GARDEN-PLAY-BRIEF 2026-11-26 section 2; CrunchToys holds the numbers): two leaf heaps,
--- a row of pop pods, a pebble tray and rattle gourds, built from plain parts on this client and stomped locally. No
--- remotes: each client watches the characters and pets it already has (replicated, or drawn by RoomView) and reacts
--- on its own. Mine are full volume with a buzz (Haptics, its cap); my pet's at half; other players' at 40% and only
--- within 30 studs of me. A pet that pops a pod startles, then sniffs about.
+-- a row of pop pods, the crackle slab (GARDEN-PLAY-BRIEF-2 section 3, in the pebble tray's frame) and rattle gourds,
+-- built from plain parts on this client and stomped locally. No remotes: each client watches the characters and pets
+-- it already has (replicated, or drawn by RoomView) and reacts on its own. Mine are full volume with a buzz (Haptics,
+-- its cap); my pet's at half; other players' at 40% and only within 30 studs of me. A pet that pops a pod, or shatters
+-- its first slab tile, startles, then sniffs about. Brief 2 section 2: bigger moves (a .05 s gather, an overshoot and
+-- two wobbles on every toy; the heap's 24-card burst and shudder, the pod's flying nub and leaning neighbours, the
+-- gourds' chain knock, twist and the bar's dip). Nothing shakes the camera.
 --
 -- Gate: the Alive `crunch` switch (beta and Studio); off, nothing is built (and a switch turned off at runtime takes it
 -- all down). The loop runs at 30 Hz only while a toy is within the cull distance (90 studs on a phone, 150 elsewhere)
 -- and the garden is up (Mode Room); otherwise it sleeps and looks again every .5 s. Reduced Motion: the toys stay
--- still (no squash, burst, hop or swing); they still crunch.
+-- still (no squash, burst, hop, lean, swing, tilt or chips; the slab's crack lines still show); they still crunch.
 --
 -- Instance state for probes: workspace.CrunchToysLocal (attributes CrunchAwake, CrunchParts, CrunchLast).
 local RunService=game:GetService("RunService")
@@ -179,21 +182,26 @@ function Client:build()
 	self.folder=folder
 	self.parts=0
 	local function count(p)self.parts+=1;return p end
-	local leafy,fabric,wood,pebble=material("LeafyGrass","Grass"),material("Fabric","Fabric"),material("Wood","Wood"),material("Pebble","Pebble")
+	local leafy,fabric,wood,glass=material("LeafyGrass","Grass"),material("Fabric","Fabric"),material("Wood","Wood"),material("Glass","SmoothPlastic")
 	local rubber,skin=material("Rubber","Fabric"),material("Cardboard","Fabric")
 	local grass,slate,smooth=material("Grass","SmoothPlastic"),material("Slate","Slate"),material("SmoothPlastic","SmoothPlastic")
-	local H,P,T,G=Toys.Heap,Toys.Pod,Toys.Tray,Toys.Gourd
+	local H,P,S,G=Toys.Heap,Toys.Pod,Toys.Slab,Toys.Gourd
 	self.heaps,self.pods,self.cards,self.gourds={}, {}, {}, {}
 
 	-- The leaf heaps: three squashed mounds (sunk half into the ground, so a squash lowers the top) and leaves on top.
 	for n,at in ipairs(Toys.Places.heaps)do
 		local y=self:groundAt(at.x,at.z)
 		local base=CFrame.new(at.x,y,at.z)*CFrame.Angles(0,at.yaw,0)
-		local heap={id=at.id,base=base,centre=Vector3.new(at.x,y,at.z),mounds={},leaves={},state={},level=1,seed=n*101}
+		local heap={id=at.id,base=base,centre=Vector3.new(at.x,y,at.z),mounds={},moundParts={},leaves={},state={},level=1,shake=0,seed=n*101}
 		for i,m in ipairs(H.mounds)do
-			local p=count(part(at.id.."_mound"..i,Vector3.new(m[3],m[4]*2,m[5]),base*CFrame.new(m[1],0,m[2]),H.colours[m[6]],leafy,folder,i==1))
+			local frame=CFrame.new(m[1],0,m[2])
+			local p=count(part(at.id.."_mound"..i,Vector3.new(m[3],m[4]*2,m[5]),base*frame,H.colours[m[6]],leafy,folder,i==1))
 			table.insert(heap.mounds,sphere(p))
+			-- Each mound shudders about its own level axis, the small ones a little more.
+			local a=Toys.hash(heap.seed,i,9)*math.pi*2
+			table.insert(heap.moundParts,{part=p,frame=frame,axis=Vector3.new(math.cos(a),0,math.sin(a)),k=if i==1 then 1 else 1.25})
 		end
+		heap.leafAxis=heap.moundParts[1].axis
 		for i=1,H.leaves do
 			local r=Toys.hash(heap.seed,i,1)*1.9
 			local a=Toys.hash(heap.seed,i,2)*math.pi*2
@@ -232,31 +240,53 @@ function Client:build()
 				base*CFrame.Angles(0,a,0)*CFrame.new(reach,length/2*math.sin(tilt)+P.sepal.Y/2,0)*CFrame.Angles(0,0,tilt),
 				P.sepalColour,grass,folder,false))
 		end
-		table.insert(self.pods,{body=body,dome=dome,bodyMesh=sphere(body),domeMesh=sphere(dome),base=base,tall=tall,
-			centre=Vector3.new(spot.X,y,spot.Y),poppedAt=nil,scale=1})
+		local a=Toys.hash(7,i,3)*math.pi*2
+		table.insert(self.pods,{body=body,dome=dome,bodyMesh=sphere(body),domeMesh=sphere(dome),base=base,tall=tall,yaw=yaw,
+			centre=Vector3.new(spot.X,y,spot.Y),poppedAt=nil,scale=1,drawn=false,
+			nubAxis=Vector3.new(math.cos(a),0,math.sin(a)),nubWay=Vector3.new(math.cos(a+1.3),0,math.sin(a+1.3))})
 	end
 
-	-- The pebble tray: four timber boards round a bed of pea gravel, and six loose pebbles that hop under a step.
+	-- The crackle slab (brief 2 section 3): the tray's four timber boards round a dark Slate bed, ten amber sugar-glass
+	-- tiles of three shards each with two hidden crack lines on their joints, and a pool of eight chips.
 	do
 		local at=Toys.Places.tray
 		local y=self:groundAt(at.x,at.z)
 		local base=CFrame.new(at.x,y,at.z)*CFrame.Angles(0,at.yaw,0)
-		local sx,sz,bw,bh=T.size.X,T.size.Y,T.board.X,T.board.Y
-		count(part("pebble_tray_board1",Vector3.new(sx,bh,bw),base*CFrame.new(0,bh/2,sz/2-bw/2),T.frame,wood,folder,true))
-		count(part("pebble_tray_board2",Vector3.new(sx,bh,bw),base*CFrame.new(0,bh/2,-sz/2+bw/2),T.frame,wood,folder,true))
-		count(part("pebble_tray_board3",Vector3.new(bw,bh,sz-bw*2),base*CFrame.new(sx/2-bw/2,bh/2,0),T.frame,wood,folder,true))
-		count(part("pebble_tray_board4",Vector3.new(bw,bh,sz-bw*2),base*CFrame.new(-sx/2+bw/2,bh/2,0),T.frame,wood,folder,true))
-		count(part("pebble_tray_gravel",Vector3.new(sx-bw*2,.2,sz-bw*2),base*CFrame.new(0,.1,0),T.gravel,pebble,folder,false))
-		self.tray={base=base,centre=Vector3.new(at.x,y,at.z),pebbles={}}
-		for i=1,T.pebbles do
-			local lx=(Toys.hash(11,i,1)-.5)*(sx-1.2)
-			local lz=(Toys.hash(11,i,2)-.5)*(sz-1.2)
-			local w=.22+Toys.hash(11,i,3)*.14
-			local rest=base*CFrame.new(lx,.2+w*.3,lz)
-			local p=count(part("pebble_tray_pebble"..i,Vector3.new(w,w*.7,w*1.1),rest,T.pebbleColours[(i%3)+1],pebble,folder,false))
-			sphere(p)
-			table.insert(self.tray.pebbles,{part=p,rest=rest,x=lx,z=lz,hopAt=nil})
+		local sx,sz,bw,bh=S.size.X,S.size.Y,S.board.X,S.board.Y
+		count(part("crackle_slab_board1",Vector3.new(sx,bh,bw),base*CFrame.new(0,bh/2,sz/2-bw/2),S.frame,wood,folder,true))
+		count(part("crackle_slab_board2",Vector3.new(sx,bh,bw),base*CFrame.new(0,bh/2,-sz/2+bw/2),S.frame,wood,folder,true))
+		count(part("crackle_slab_board3",Vector3.new(bw,bh,sz-bw*2),base*CFrame.new(sx/2-bw/2,bh/2,0),S.frame,wood,folder,true))
+		count(part("crackle_slab_board4",Vector3.new(bw,bh,sz-bw*2),base*CFrame.new(-sx/2+bw/2,bh/2,0),S.frame,wood,folder,true))
+		count(part("crackle_slab_bed",Vector3.new(sx-bw*2,S.bedThick,sz-bw*2),base*CFrame.new(0,S.bedThick/2,0),S.bed,slate,folder,false))
+		local slab={base=base,centre=Vector3.new(at.x,y,at.z),tiles={},levels={},chips={},memory={}}
+		local amber,cream=hex(S.glass),hex(S.line)
+		for _,t in ipairs(Toys.slabTiles())do
+			local frame=base*CFrame.new(t.x,S.bedThick+S.tile.Y/2,t.z)*CFrame.Angles(0,t.yaw,0)
+			local tile={tile=t,frame=frame,shards={},lines={},c=0,lineSeen=0,touchedAt=-math.huge,healAt=-math.huge,
+				top=frame*Vector3.new(0,S.tile.Y/2,0)}
+			for n,shard in ipairs(t.shards)do
+				local p=count(part("crackle_slab_tile"..t.i.."_shard"..n,Vector3.new(t.size.X,S.tile.Y,shard.length),frame*CFrame.new(0,0,shard.z),
+					S.glass,glass,folder,false))
+				p.Transparency=S.transparency;p.Reflectance=0
+				table.insert(tile.shards,p)
+			end
+			for n,z in ipairs(t.lines)do
+				local p=count(part("crackle_slab_tile"..t.i.."_line"..n,Vector3.new(t.size.X*.96,S.lineThick,S.lineWidth),
+					frame*CFrame.new(0,S.tile.Y/2+S.lineThick/2,z),S.line,smooth,folder,false))
+				p.Transparency=1
+				table.insert(tile.lines,{part=p,z=z})
+			end
+			slab.tiles[t.i]=tile
+			slab.levels[t.i]=0
 		end
+		slab.amber,slab.cream,slab.gloss=amber,cream,hex(S.gloss)
+		slab.park=base*CFrame.new(0,-3,0)
+		for k=1,S.chips do
+			local p=count(part("crackle_slab_chip"..k,S.chip,slab.park,S.glass,glass,folder,false))
+			p.Transparency=1
+			table.insert(slab.chips,{part=p,k=k,at=nil})
+		end
+		self.slab=slab
 	end
 
 	-- The rattle gourds (Fable B35): a twig arch (two leaning posts on foot stones, one bar with accent cord wraps on its
@@ -270,13 +300,15 @@ function Client:build()
 			count(cylinder("rattle_gourds_post"..(if side<0 then 1 else 2),G.bar+.1,G.post,
 				base*CFrame.new(side*half,G.bar/2,0)*CFrame.Angles(0,0,math.pi/2+side*.06),G.bark,wood,folder,true))
 		end
-		count(cylinder("rattle_gourds_bar",G.span,G.post*.8,base*CFrame.new(0,G.bar,0),G.bark,wood,folder,true))
+		local bar=count(cylinder("rattle_gourds_bar",G.span,G.post*.8,base*CFrame.new(0,G.bar,0),G.bark,wood,folder,true))
+		local wraps={}
 		for k,side in ipairs({-1,1})do
 			count(part("rattle_gourds_stone"..k,G.stone,base*CFrame.new(side*half,G.stone.Y/2-.04,0)*CFrame.Angles(0,math.rad(G.stoneYaws[k]),0),
 				G.stoneColour,slate,folder,true))
-			count(cylinder("rattle_gourds_wrap"..k,G.wrap.X,G.wrap.Y,base*CFrame.new(side*(half-.05),G.bar,0),G.wrapColour,smooth,folder,false))
+			local wrap=count(cylinder("rattle_gourds_wrap"..k,G.wrap.X,G.wrap.Y,base*CFrame.new(side*(half-.05),G.bar,0),G.wrapColour,smooth,folder,false))
+			table.insert(wraps,{part=wrap,offset=CFrame.new(side*(half-.05),0,0)})
 		end
-		self.arch={base=base,centre=Vector3.new(at.x,y,at.z)}
+		self.arch={base=base,centre=Vector3.new(at.x,y,at.z),bar=bar,wraps=wraps,rest=base*CFrame.new(0,G.bar,0)}
 		for i=1,G.count do
 			local lx=(i-(G.count+1)/2)*G.gap
 			local pivot=base*CFrame.new(lx,G.bar-G.post*.3,0)
@@ -286,13 +318,13 @@ function Client:build()
 			local neck=count(part("rattle_gourd"..i.."_neck",G.neck,pivot,shape[3],skin,folder,true))
 			local body=count(part("rattle_gourd"..i,size,pivot,shape[3],skin,folder,true))
 			sphere(neck);sphere(body)
-			local g={pivot=pivot,cord=cord,neck=neck,body=body,at=nil,push=0,
+			local g={pivot=pivot,hang=CFrame.new(lx,-G.post*.3,0),cord=cord,neck=neck,body=body,at=nil,push=0,way=if i%2==0 then -1 else 1,
 				offsets={CFrame.new(0,-G.cordLength/2,0)*CFrame.Angles(0,0,math.pi/2),
 					CFrame.new(0,-G.cordLength-G.neck.Y*.4,0),
 					CFrame.new(0,-G.cordLength-G.neck.Y*.75-size.Y*.35,0)},
 				spot=(pivot*CFrame.new(0,-G.cordLength-G.neck.Y-size.Y*.2,0)).Position}
 			table.insert(self.gourds,g)
-			self:poseGourd(g,0)
+			self:poseGourd(g,0,0,self.arch.rest)
 		end
 	end
 
@@ -316,7 +348,7 @@ function Client:build()
 	self.clusters={
 		{centre=self.heaps[1].centre},{centre=self.heaps[2].centre},
 		{centre=self.pods[1].centre:Lerp(self.pods[#self.pods].centre,.5)},
-		{centre=self.tray.centre},{centre=self.arch.centre}}
+		{centre=self.slab.centre},{centre=self.arch.centre}}
 	folder:SetAttribute("CrunchParts",self.parts)
 	assert(self.parts<=Toys.Budget,"over the part budget: "..self.parts)
 end
@@ -325,7 +357,7 @@ function Client:teardown()
 	self:sleep()
 	if self.folder then self.folder:Destroy()end
 	self.folder=nil;self.built=false
-	self.heaps,self.pods,self.cards,self.gourds,self.tray,self.arch,self.voices=nil,nil,nil,nil,nil,nil,nil
+	self.heaps,self.pods,self.cards,self.gourds,self.slab,self.arch,self.voices=nil,nil,nil,nil,nil,nil,nil
 end
 
 -- Sound ---------------------------------------------------------------------------------------------------------
@@ -361,25 +393,27 @@ function Client:voice(layer,position,gain)
 	voice:Play()
 	return true
 end
--- Play a toy's sound at `position` for whoever made it.
-function Client:sound(name,position,kind,distance)
-	local gain=Toys.gain(kind,distance)
+-- Play a toy's sound at `position` for whoever made it. `scale` (optional) quietens an echo of it (a crack line running
+-- on), which never buzzes.
+function Client:sound(name,position,kind,distance,scale)
+	local gain=Toys.gain(kind,distance)*(scale or 1)
 	if gain<=0 then return 0 end
 	local random=self.random
-	local layers=Toys.layers(name,function(lo,hi)return random:NextNumber(lo,hi)end)
+	self.memory=self.memory or {}
+	local layers=Toys.layers(name,function(lo,hi)return random:NextNumber(lo,hi)end,nil,self.memory)
 	for _,layer in ipairs(layers)do
 		if layer.delay>0 then
 			self.delay(layer.delay,function()if self.built then self:voice(layer,position,gain)end end)
 		else self:voice(layer,position,gain)end
 	end
-	if kind=="own"and Toys.Buzz[name]then self.buzz(Toys.Buzz[name])end
+	if kind=="own"and scale==nil and Toys.Buzz[name]then self.buzz(Toys.Buzz[name])end
 	if self.folder then self.folder:SetAttribute("CrunchLast",name)end
 	return #layers
 end
 
 -- Posing --------------------------------------------------------------------------------------------------------
-function Client:poseGourd(g,angle)
-	local frame=g.pivot*CFrame.Angles(angle,0,0)
+function Client:poseGourd(g,angle,twist,bar)
+	local frame=bar*g.hang*CFrame.Angles(angle,0,0)*CFrame.Angles(0,twist or 0,0)
 	g.cord.CFrame=frame*g.offsets[1]
 	g.neck.CFrame=frame*g.offsets[2]
 	g.body.CFrame=frame*g.offsets[3]
@@ -435,11 +469,14 @@ function Client:sleep(poll)
 end
 
 function Client:busy(now)
-	for _,heap in ipairs(self.heaps)do if heap.state.hitAt and now-heap.state.hitAt<Toys.Heap.squash+Toys.Heap.reheap+.1 then return true end end
+	for _,heap in ipairs(self.heaps)do if heap.state.hitAt and now-heap.state.hitAt<Toys.heapTime()+.1 then return true end end
 	for _,card in ipairs(self.cards)do if card.heap then return true end end
 	for _,pod in ipairs(self.pods)do if pod.poppedAt then return true end end
 	for _,g in ipairs(self.gourds)do if g.at then return true end end
-	for _,p in ipairs(self.tray.pebbles)do if p.hopAt then return true end end
+	if self.arch.bumpAt then return true end
+	for _,pod in ipairs(self.pods)do if pod.leanAt or pod.drawn then return true end end
+	for i,tile in ipairs(self.slab.tiles)do if tile.anim or self.slab.levels[i]>0 then return true end end
+	for _,chip in ipairs(self.slab.chips)do if chip.at then return true end end
 	return false
 end
 
@@ -466,8 +503,16 @@ function Client:touch(agent,seen,now,listener,active)
 	if active[3]then
 		for i,pod in ipairs(self.pods)do
 			if enter("pod"..i,pod.centre,Toys.Pod.reach)and not pod.poppedAt then
-				pod.poppedAt=now
+				pod.poppedAt,pod.kind,pod.distance,pod.landed=now,kind,distance,false
 				self:sound("pop",pod.centre,kind,distance)
+				-- The neighbours lean away from it.
+				for _,j in ipairs({i-1,i+1})do
+					local other=self.pods[j]
+					if other then
+						local away=Vector3.new(other.centre.X-pod.centre.X,0,other.centre.Z-pod.centre.Z)
+						if away.Magnitude>1e-3 then other.leanAt,other.leanAxis=now+Toys.Anticipate,Vector3.yAxis:Cross(away.Unit)end
+					end
+				end
 				if agent.visual and(kind=="ownPet"or kind=="otherPet")then
 					local last=self.petReactAt[agent.visual]
 					if not last or now-last>=Toys.PetReactGap then
@@ -478,29 +523,7 @@ function Client:touch(agent,seen,now,listener,active)
 			end
 		end
 	end
-	if active[4]then
-		local tray=self.tray
-		local l=tray.base:PointToObjectSpace(Vector3.new(p.X,tray.centre.Y,p.Z))
-		local over=p.Y-tray.centre.Y
-		local on=over<Toys.Reach and over>-2 and Toys.inTray(l.X,l.Z)
-		if on then
-			local step=Vector2.new(p.X-seen.x,p.Z-seen.z).Magnitude
-			local was=inside.tray==true
-			seen.stride=(seen.stride or 0)+step
-			if not prime and(not was or seen.stride>=Toys.Tray.stride)then
-				seen.stride=0
-				self:sound("gravel",Vector3.new(p.X,tray.centre.Y+.2,p.Z),kind,distance)
-				-- The pebble nearest the foot hops.
-				local best,bestD
-				for _,pebble in ipairs(tray.pebbles)do
-					local d=(pebble.x-l.X)^2+(pebble.z-l.Z)^2
-					if not pebble.hopAt and(not bestD or d<bestD)then best,bestD=pebble,d end
-				end
-				if best then best.hopAt=now end
-			end
-		end
-		inside.tray=on
-	end
+	if active[4]then self:touchSlab(agent,seen,now,p,kind,distance,prime)end
 	if active[5]then
 		for i,g in ipairs(self.gourds)do
 			if enter("gourd"..i,g.spot,Toys.Gourd.reach)then
@@ -517,6 +540,7 @@ function Client:touch(agent,seen,now,listener,active)
 end
 function Client:hitHeap(heap,now,agent,distance)
 	local burst,gain=Toys.heapHit(heap.state,now)
+	heap.kind,heap.distance,heap.rebounded=agent.kind,distance,false
 	local g=Toys.gain(agent.kind,distance)
 	if g>0 then
 		local random=self.random
@@ -547,10 +571,114 @@ function Client:bumpGourd(i,push,now)
 	local G=Toys.Gourd
 	local g=self.gourds[i]
 	g.at,g.push=now,push
-	-- The neighbours sway a little with it.
-	for _,j in ipairs({i-1,i+1})do
-		local other=self.gourds[j]
-		if other and(not other.at or now-other.at>G.settle*.5)then other.at,other.push=now+.08,push*G.neighbour end
+	-- Brief 2: each knocks the next in a chain, .6 of its push, .12 s later.
+	for d=1,#self.gourds-1 do
+		for _,j in ipairs({i-d,i+d})do
+			local other=self.gourds[j]
+			if other and(not other.at or now-other.at>G.settle*.5)then other.at,other.push=now+G.chain*d,push*G.neighbour^d end
+		end
+	end
+	-- The bar dips and flexes toward the bumped end.
+	self.arch.bumpAt,self.arch.side=now,i-(#self.gourds+1)/2
+end
+
+-- The crackle slab ---------------------------------------------------------------------------------------------------
+-- One agent's sample over the slab: a step (entering, or every Slab.stride) cracks the tile under it; a jump landing
+-- (a drop of Slab.landDrop or more, then still) shatters it and cracks its neighbours. No steps while it falls.
+function Client:touchSlab(agent,seen,now,p,kind,distance,prime)
+	local S=Toys.Slab
+	local slab=self.slab
+	local l=slab.base:PointToObjectSpace(Vector3.new(p.X,slab.centre.Y,p.Z))
+	local over=p.Y-slab.centre.Y
+	local i=if over<Toys.Reach and over>-2 then Toys.slabTileAt(l.X,l.Z)else nil
+	local dy=p.Y-seen.y
+	local falling=dy<-S.fallStep
+	if falling then seen.fall=(seen.fall or 0)-dy end
+	local landing=not falling and dy>-.05 and(seen.fall or 0)>=S.landDrop
+	if not falling and dy>-.05 then seen.fall=0 end
+	local was=seen.slab
+	seen.slab=i
+	if not i then seen.slabStride=0;return end
+	seen.slabStride=(seen.slabStride or 0)+Vector2.new(p.X-seen.x,p.Z-seen.z).Magnitude
+	if prime then return end
+	local roll=function(lo,hi)return self.random:NextNumber(lo,hi)end
+	local at=slab.tiles[i].top
+	if landing then
+		seen.slabStride=0
+		local before=slab.levels[i]
+		local changes=Toys.slabLand(slab.levels,i)
+		local cracked=false
+		for _,change in ipairs(changes)do
+			self:setTile(change.i,now)
+			if change.i~=i then cracked=true end
+		end
+		if before<2 then
+			self:sound("shatter",at,kind,distance)
+			self:shattered(agent,kind)
+		else self:sound("chips",at,kind,distance)end
+		if cracked then self:sound("crack",at,kind,distance,.6)end
+		self:chips(i,S.chipsShatter,now)
+		return
+	end
+	if falling then return end
+	if was~=nil and seen.slabStride<S.stride then return end
+	seen.slabStride=0
+	local what,runs=Toys.slabStep(slab.levels,i,roll)
+	slab.tiles[i].touchedAt=now
+	if what=="chips"then
+		self:sound("chips",at,kind,distance)
+		self:chips(i,S.chipsStep,now)
+		return
+	end
+	self:setTile(i,now)
+	self:sound(what,at,kind,distance)
+	if what=="shatter"then self:chips(i,S.chipsShatter,now);self:shattered(agent,kind)end
+	if #runs>0 then
+		-- .08 s later the line runs on into one or two whole neighbours.
+		self.delay(S.lineDelay,function()
+			if not self.built or self.slab~=slab then return end
+			local later=self.now()
+			local any=false
+			for _,j in ipairs(runs)do
+				if Toys.slabRun(slab.levels,j)then self:setTile(j,later);any=true end
+			end
+			if any then self:sound("crack",slab.tiles[runs[1]].top,kind,distance,.6)end
+		end)
+	end
+end
+-- A tile's level changed: it moves to it (a crack overshoots and wobbles; a heal eases), and stays touched.
+function Client:setTile(i,now,heal)
+	local S=Toys.Slab
+	local slab=self.slab
+	local tile=slab.tiles[i]
+	local to=slab.levels[i]
+	tile.anim={from=tile.c,to=to,at=now,kind=if heal then "heal"else "crack",lines=tile.lineSeen,
+		dur=if heal then S.healTime elseif to>=2 then S.shatterTime else S.crackTime}
+	if not heal then tile.touchedAt=now;tile.healAt=now end
+end
+-- A pet's first shatter startles it (once a pet, then a sniff about).
+function Client:shattered(agent,kind)
+	if not agent.visual or(kind~="ownPet"and kind~="otherPet")then return end
+	self.slabStartled=self.slabStartled or setmetatable({},{__mode="k"})
+	if self.slabStartled[agent.visual]then return end
+	self.slabStartled[agent.visual]=true
+	pcall(self.react,agent.visual)
+end
+-- n chips hop from tile i, headed back over the slab (never into the boards). The free ones first, then the oldest.
+function Client:chips(i,n,now)
+	if self.reduced()or self.level()>=2 then return end
+	local slab=self.slab
+	local tile=slab.tiles[i]
+	local inward=slab.base:VectorToWorldSpace(Vector3.new(-tile.tile.x,0,-tile.tile.z))
+	local toward=math.atan2(-inward.X,-inward.Z)
+	table.sort(slab.chips,function(a,b)return(a.at or -math.huge)<(b.at or -math.huge)end)
+	for k=1,math.min(n,#slab.chips)do
+		local chip=slab.chips[k]
+		local spread=(self.random:NextNumber()-.5)*math.rad(110)
+		chip.at,chip.seed=now,self.random:NextInteger(1,10000)
+		chip.heading=toward+spread
+		local off=self.random:NextNumber(-.25,.25)
+		chip.origin=tile.top+slab.base:VectorToWorldSpace(Vector3.new(off,.04,-off))
 	end
 end
 
@@ -591,16 +719,29 @@ end
 
 function Client:animate(now,reduced)
 	local parts,frames={},{}
-	local H,P=Toys.Heap,Toys.Pod
+	local H,P,S,G=Toys.Heap,Toys.Pod,Toys.Slab,Toys.Gourd
 	for _,heap in ipairs(self.heaps)do
 		local level=if reduced then 1 else Toys.heapLevel(heap.state,now)
-		local settled=heap.state.hitAt~=nil and now-heap.state.hitAt>=H.squash+H.reheap
-		if settled then heap.state.hitAt=nil;level=1 end
-		if math.abs(level-heap.level)>.004 or(settled and level~=heap.level)then
-			heap.level=level
-			for _,mesh in ipairs(heap.mounds)do mesh.Scale=Vector3.new(1+(1-level)*.12,level,1+(1-level)*.12)end
+		local shake=if reduced then 0 else Toys.heapShudder(heap.state,now)
+		local hit=heap.state.hitAt
+		if hit and not heap.rebounded and now-hit>=Toys.heapRebound()then
+			heap.rebounded=true
+			self:sound("rebound",heap.centre,heap.kind or "world",heap.distance)
+		end
+		local settled=hit~=nil and now-hit>=Toys.heapTime()
+		if settled then heap.state.hitAt=nil;level=1;shake=0 end
+		if math.abs(level-heap.level)>.004 or math.abs(shake-heap.shake)>.002 or(settled and(level~=heap.level or shake~=heap.shake))then
+			heap.level,heap.shake=level,shake
+			local wide=1+(1-level)*.12
+			for k,mesh in ipairs(heap.mounds)do
+				mesh.Scale=Vector3.new(wide,level,wide)
+				local m=heap.moundParts[k]
+				table.insert(parts,m.part)
+				table.insert(frames,heap.base*m.frame*(if shake~=0 then CFrame.fromAxisAngle(m.axis,shake*m.k)else CFrame.identity))
+			end
+			local tilt=if shake~=0 then CFrame.fromAxisAngle(heap.leafAxis,shake)else CFrame.identity
 			for _,leaf in ipairs(heap.leaves)do
-				table.insert(parts,leaf.part);table.insert(frames,heap.base*CFrame.new(leaf.x,leaf.y*level,leaf.z)*leaf.tilt)
+				table.insert(parts,leaf.part);table.insert(frames,heap.base*tilt*CFrame.new(leaf.x,leaf.y*level,leaf.z)*leaf.tilt)
 			end
 		end
 	end
@@ -620,41 +761,128 @@ function Client:animate(now,reduced)
 		end
 	end
 	for _,pod in ipairs(self.pods)do
-		if pod.poppedAt or pod.scale~=1 then
+		if pod.poppedAt or pod.drawn or pod.leanAt then
 			local sy,sxz,phase=Toys.podScale(pod.poppedAt,now)
-			if reduced then sy,sxz=1,1 end
+			local lean=Toys.podLean(pod.leanAt,now)
+			local up,tumble,drift,landed=Toys.podNub(pod.poppedAt,now)
+			if pod.poppedAt and landed and not pod.landed then
+				pod.landed=true
+				self:sound("nub",pod.centre,pod.kind or "world",pod.distance)
+			end
 			if pod.poppedAt and phase=="inflating"and not pod.creaked then
 				pod.creaked=true
 				self:sound("creak",pod.centre,"world",0)
 			end
 			if phase=="ready"then pod.poppedAt=nil;pod.creaked=false end
-			if math.abs(sy-pod.scale)>.002 or phase=="ready"then
+			if pod.leanAt and now-pod.leanAt>=P.leanTime then pod.leanAt=nil;lean=0 end
+			if reduced then sy,sxz,lean,up,tumble,drift=1,1,0,0,0,0 end
+			local still=sy==1 and sxz==1 and lean==0 and up==0 and tumble%(math.pi*2)==0 and drift==0
+			if not still or pod.drawn then
 				pod.scale=sy
+				pod.drawn=not still
 				pod.bodyMesh.Scale=Vector3.new(sxz,sy,sxz)
-				pod.domeMesh.Scale=Vector3.new(sxz,sy,sxz)
-				table.insert(parts,pod.body);table.insert(frames,pod.base*CFrame.new(0,pod.tall*.4*sy,0))
-				table.insert(parts,pod.dome);table.insert(frames,pod.base*CFrame.new(0,pod.tall*.88*sy,0))
+				local flying=up>0 or drift>0
+				pod.domeMesh.Scale=if flying then Vector3.one else Vector3.new(sxz,sy,sxz)
+				local root=CFrame.new(pod.centre)*(if lean~=0 then CFrame.fromAxisAngle(pod.leanAxis,lean)else CFrame.identity)*CFrame.Angles(0,pod.yaw,0)
+				table.insert(parts,pod.body);table.insert(frames,root*CFrame.new(0,pod.tall*.4*sy,0))
+				local seat=root*CFrame.new(0,pod.tall*.88*sy,0)
+				table.insert(parts,pod.dome)
+				table.insert(frames,(seat+pod.nubWay*drift+Vector3.yAxis*up)*(if tumble~=0 then CFrame.fromAxisAngle(pod.nubAxis,tumble)else CFrame.identity))
 			end
 		end
 	end
-	for _,pebble in ipairs(self.tray.pebbles)do
-		if pebble.hopAt then
-			local t=now-pebble.hopAt
-			local up=if reduced then 0 else Toys.pebbleHop(t)
-			if t>=Toys.Tray.hopTime then pebble.hopAt=nil;up=0 end
-			table.insert(parts,pebble.part);table.insert(frames,pebble.rest*CFrame.new(0,up,0))
-		end
+	self:animateSlab(now,reduced,parts,frames)
+	local arch=self.arch
+	local bar=arch.rest
+	if arch.bumpAt then
+		local dip,flex=Toys.barBend(arch.bumpAt,arch.side,now)
+		if now-arch.bumpAt>=Toys.Anticipate+G.barTime then arch.bumpAt=nil;dip,flex=0,0 end
+		if reduced then dip,flex=0,0 end
+		bar=arch.rest*CFrame.new(0,-dip,0)*CFrame.Angles(0,0,flex)
+		table.insert(parts,arch.bar);table.insert(frames,bar)
+		for _,wrap in ipairs(arch.wraps)do table.insert(parts,wrap.part);table.insert(frames,bar*wrap.offset)end
+		arch.bent=true
+	elseif arch.bent then
+		arch.bent=false
+		table.insert(parts,arch.bar);table.insert(frames,bar)
+		for _,wrap in ipairs(arch.wraps)do table.insert(parts,wrap.part);table.insert(frames,bar*wrap.offset)end
 	end
+	local bending=arch.bumpAt~=nil
 	for _,g in ipairs(self.gourds)do
-		if g.at then
-			local angle=if reduced then 0 else Toys.gourdAngle(g.at,g.push,now)
-			if now-g.at>=Toys.Gourd.settle then g.at=nil;angle=0 end
-			self:poseGourd(g,angle)
+		if g.at or bending or g.angle~=0 then
+			local angle=if reduced or not g.at then 0 else Toys.gourdAngle(g.at,g.push,now)
+			local twist=if reduced or not g.at then 0 else Toys.gourdTwist(g.at,g.push,now)*g.way
+			if g.at and now-g.at>=G.settle then g.at=nil;angle,twist=0,0 end
+			self:poseGourd(g,angle,twist,bar)
 		end
 	end
 	if #parts>0 then
 		if self.d.move then self.d.move(parts,frames)
 		else workspace:BulkMoveTo(parts,frames,Enum.BulkMoveMode.FireCFrameChanged)end
+	end
+end
+-- The slab's tiles: heal the untouched ones, draw the moving ones, fly the chips.
+function Client:animateSlab(now,reduced,parts,frames)
+	local S=Toys.Slab
+	local slab=self.slab
+	for i,tile in ipairs(slab.tiles)do
+		local level=slab.levels[i]
+		if level>0 and now-tile.touchedAt>=S.idle and now-tile.healAt>=S.healEvery then
+			slab.levels[i]=level-1
+			tile.healAt=now
+			self:setTile(i,now,true)
+			if now-(slab.healSoundAt or -math.huge)>=.3 then
+				slab.healSoundAt=now
+				self:sound("heal",tile.top,"world",0)
+			end
+		end
+		local anim=tile.anim
+		if anim and now>=anim.at then
+			local u=math.clamp((now-anim.at)/anim.dur,0,1)
+			local c,lines,gloss
+			if anim.kind=="heal"then
+				c=anim.from+(anim.to-anim.from)*Toys.ease(u)
+				lines=if anim.to>=1 then 1 else anim.lines*(1-Toys.ease(u))
+				gloss=.55*math.sin(math.pi*u)
+			else
+				c=anim.from+(anim.to-anim.from)*Toys.spring(u,.25)
+				lines,gloss=1,0
+			end
+			if u>=1 then
+				c,gloss=anim.to,0
+				lines=if anim.to>=1 then 1 else 0
+				tile.anim=nil
+			end
+			tile.c,tile.lineSeen=c,lines
+			local drawn=if reduced then 0 else c
+			local pose=Toys.slabPose(tile.tile,drawn)
+			local colour=if gloss>0 then slab.amber:Lerp(slab.gloss,gloss)else slab.amber
+			for n,shard in ipairs(tile.shards)do
+				table.insert(parts,shard);table.insert(frames,tile.frame*pose[n])
+				if shard.Color~=colour then shard.Color=colour end
+			end
+			local sink=S.dip*math.clamp(drawn,0,1)+S.drop*math.max(0,drawn-1)*1.1
+			for _,line in ipairs(tile.lines)do
+				line.part.Transparency=1-lines
+				table.insert(parts,line.part);table.insert(frames,tile.frame*CFrame.new(0,S.tile.Y/2+S.lineThick/2-sink,line.z))
+			end
+		end
+	end
+	local life=Toys.chipLife()
+	for _,chip in ipairs(slab.chips)do
+		if chip.at then
+			local t=now-chip.at
+			if t>=life or reduced then
+				chip.at=nil;chip.part.Transparency=1
+				table.insert(parts,chip.part);table.insert(frames,slab.park)
+			else
+				local offset,spin,seen=Toys.chip(chip.seed,chip.k,t)
+				local heading=CFrame.Angles(0,chip.heading,0)
+				chip.part.Transparency=1-(1-S.transparency)*seen
+				table.insert(parts,chip.part)
+				table.insert(frames,CFrame.new(chip.origin+heading:VectorToWorldSpace(offset))*heading*CFrame.Angles(spin,0,spin*.6))
+			end
+		end
 	end
 end
 

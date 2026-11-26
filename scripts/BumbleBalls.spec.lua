@@ -65,7 +65,7 @@ return function()
 			local home=Motion.home(entry.id)
 			for deg=0,345,15 do
 				for _,jump in ipairs({false,true})do
-					local plan=Motion.plan(kick(entry.id,home,Balls.launch(dir(deg),jump)))
+					local plan=Motion.plan(kick(entry.id,home,Balls.launch(dir(deg),jump,entry.id)))
 					worst=math.max(worst,plan.duration)
 					assert(plan.duration<=3.2,entry.id.." "..deg.." "..tostring(jump)..": "..plan.duration)
 					assert(plan.duration>=1,"it does travel")
@@ -75,7 +75,7 @@ return function()
 		assert(worst>1.8,"about 2.5 s, not instant: "..worst)
 	end)
 
-	test("never leaves its leash or the safe ground, never ends in water or a box: 600 seeded kicks on the island",function()
+	test("never leaves its leash or the safe ground, never ends in water or a box: 200 seeded kicks a ball on the island",function()
 		local rng=Random.new(20261126)
 		local count=0
 		for _,entry in ipairs(Balls.List)do
@@ -86,8 +86,9 @@ return function()
 				local origin=Vector3.new(x,0,z)
 				if Motion.blocked(entry.id,origin)then continue end
 				count+=1
-				local speed=rng:NextNumber(4,Balls.JumpFlat*Balls.SpeedSlack)
-				local v=dir(rng:NextNumber(0,360))*speed+Vector3.new(0,rng:NextNumber(0,Balls.JumpUp),0)
+				local feel=Balls.feel(entry.id)
+				local speed=rng:NextNumber(4,feel.jumpFlat*Balls.SpeedSlack)
+				local v=dir(rng:NextNumber(0,360))*speed+Vector3.new(0,rng:NextNumber(0,feel.jumpUp),0)
 				local plan=Motion.plan(kick(entry.id,origin,v))
 				for i=1,#plan.xs,3 do
 					local p=Vector3.new(plan.xs[i],0,plan.zs[i])
@@ -99,7 +100,46 @@ return function()
 				assert(plan.duration<=Motion.MaxTime+1e-9)
 			end
 		end
-		assert(count==600)
+		assert(count==200*#Balls.List)
+	end)
+
+	test("brief 2: Patch and Stripe, lively (30 + 11, jump 36 + 15, .70 / .55 / .40, squash 18%), homes clear of the garden",function()
+		assert(#Balls.List==5 and Balls.ById.patch and Balls.ById.stripe)
+		local Clear=require(Shared.GardenClearance)
+		for _,id in ipairs({"patch","stripe"})do
+			local feel=Balls.feel(id)
+			assert(feel==Balls.Feels.lively,id)
+			local walk,jump=Balls.launch(Vector3.new(3,0,4),false,id),Balls.launch(Vector3.new(3,0,4),true,id)
+			assert(near(Balls.flat(walk).Magnitude,30,1e-6)and walk.Y==11 and near(Balls.flat(jump).Magnitude,36,1e-6)and jump.Y==15)
+			local fast=Balls.clamp(Vector3.new(300,90,0),1,id)
+			assert(near(Balls.flat(fast).Magnitude,36*Balls.SpeedSlack,1e-6)and near(fast.Y,15*Balls.SpeedSlack,1e-6),"its own envelope")
+			assert(Balls.clamp(jump,1,id)==jump,"its jump kick is inside")
+			assert(near(Balls.squash(1,0,id),.18)and near(Balls.squash(1,0,"felt"),.12))
+			local h=Balls.ById[id].home
+			local ok,why=Clear.check(h.X,h.Y,Balls.Radius+1,false)
+			assert(ok,id.." home: "..tostring(why))
+		end
+		-- The steady three keep their numbers (and a steady ball's clamp is unchanged by the lively ones).
+		for _,id in ipairs({"felt","wicker","cork"})do assert(Balls.feel(id)==Balls.Feels.steady)end
+		assert(near(Balls.flat(Balls.clamp(Vector3.new(300,90,0),1,"cork")).Magnitude,32*Balls.SpeedSlack,1e-6))
+		assert(Balls.MaxJumpFlat>=Balls.Feels.lively.jumpFlat and Balls.MaxJumpUp>=Balls.Feels.lively.jumpUp)
+		-- Livelier on flat ground: a higher first hop back, three bounces on the lively list, then a longer run.
+		local world=flat()
+		local function first(id)
+			local plan=Motion.plan(kick(id,Vector3.new(fh.X,R,fh.Y),Balls.launch(dir(0),false,id)),world)
+			local bounces,hi={},0
+			for _,e in ipairs(plan.events)do if e.kind=="bounce"then table.insert(bounces,e)end end
+			for i=1,#plan.ys do local t=(i-1)*Motion.Step;if t>bounces[1].t and t<bounces[2].t then hi=math.max(hi,plan.ys[i])end end
+			return hi-R,#bounces,plan,bounces[1].strength*Balls.feel(id).jumpUp
+		end
+		local steadyHop=first("felt")
+		local livelyHop,count,plan,impact=first("patch")
+		assert(livelyHop>steadyHop*1.8,"its second hop is far higher: "..livelyHop.." vs "..steadyHop)
+		assert(count==3,"three bounces on the lively list: "..count)
+		-- The landing's speed times .70, less the fixed step's half-step loss.
+		local e=.70
+		assert(near(livelyHop,(impact*e)^2/(2*Motion.Gravity)-impact*e*Motion.Step/2,.03),"restitution .70: "..livelyHop)
+		assert(plan.duration<=3.2,"rests in about 3.2 s on flat ground: "..plan.duration)
 	end)
 
 	test("reflections: a wall turns it back, the water's edge too (with its own event), the leash keeps it in",function()

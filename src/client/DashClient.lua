@@ -1080,9 +1080,16 @@ function Client:frame(dt,now)
 		self.line:frame(dt,Ring.wanted(self.roster),os.clock())
 	end
 	self.props:step(dt)
-	self.props:balloon(now,reduced)
-	local pet=self.d.roomView.pet
+	-- The fete balloon's countdown beats (GARDEN-PLAY-BRIEF-2 section 7): the heat's GO on this client's clock (a racer's
+	-- own lead, as the digits), so everyone near sees the puffs, the GO jump and the finish hops.
+	local cue=nil
 	local heat=self.heat
+	if heat then
+		local lead=if seat and seat.predict and seat.raceId==heat.raceId then seat.predict.lead else 0
+		cue={raceId=heat.raceId,goAt=heat.goAt-lead,phase=heat.phase}
+	end
+	self.props:balloon(now,reduced,cue,dt)
+	local pet=self.d.roomView.pet
 	if heat then
 		local racer=seat~=nil and seat.predict~=nil and seat.raceId==heat.raceId
 		self.props:placeTags(pet and pet.origin,self.project,{viewer=if racer then "racer"else "onlooker",now=now,dt=dt,reduced=reduced,

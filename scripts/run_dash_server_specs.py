@@ -104,7 +104,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Beta (35) water: the world heard from the player's head (AudioListener's choice, blend and facing).
           "AudioListener",
           # Beta (35): every egg comes out of the machine (the one path: every egg type and every buy send).
-          "EggDelivery"]
+          "EggDelivery",
+          # GARDEN-PLAY-BRIEF-2 section 7: the Dash start balloon (DashBalloon: its cues, motion, parts and stillness).
+          "DashBalloon"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]

@@ -1,5 +1,5 @@
 -- Bumble balls on this client (GARDEN-PLAY-BRIEF section 1). mount() answers nil with the Alive `balls` ceiling closed
--- (live): nothing made. With it open the switch is watched: on builds the three balls and says hello (the server answers
+-- (live): nothing made. With it open the switch is watched: on builds the five balls and says hello (the server answers
 -- every ball's record), off destroys them.
 --
 -- Kick: my character's root within Balls.KickReach of a ball's surface, moving faster than Balls.KickSpeed at it, in
@@ -27,17 +27,23 @@ Client.Folder="BumbleBallsLocal"
 -- Sound. Only existing ids (BoardAudio cues) until the new takes are uploaded: kick and bounce use `land` pitched per
 -- ball, the water's edge `puddle`, a pet's bunt `bear_boop`.
 Client.Cues=table.freeze({kick="land",bounce="land",wall="land",water="puddle",bunt="bear_boop"})
+-- `pop`: a second layer on the kick and every bounce (brief 2: Patch and Stripe kick `land` at 1.25 with `asmr_pop_a`
+-- at .3, a rubbery boing), its volume scaled like the main layer's.
 Client.Voice=table.freeze({
 	felt=table.freeze({pitch=.78,volume=.5}),     -- soft thud
 	wicker=table.freeze({pitch=1.32,volume=.42}), -- dry rattle
 	cork=table.freeze({pitch=1.06,volume=.48}),   -- knock
+	patch=table.freeze({pitch=1.25,volume=.5,pop=table.freeze({cue="asmr_pop_a",volume=.3})}),
+	stripe=table.freeze({pitch=1.25,volume=.5,pop=table.freeze({cue="asmr_pop_a",volume=.3})}),
 })
 -- New takes (scripts/synth_asmr.py, not uploaded yet): put rbxassetid numbers here, three per list; a list with ids
--- wins over the `land` cue for that ball. bounce plays at the bounce's strength.
+-- wins over the `land` cue (and the pop layer) for that ball. bounce plays at the bounce's strength.
+local rubber={kick={},bounce={}}  -- ball_rubber: 3 kick and 3 bounce takes, shared by Patch and Stripe [empty slots]
 Client.Takes={
 	wicker={kick={},bounce={}},  -- ball_wicker
 	felt={kick={},bounce={}},    -- ball_felt
 	cork={kick={},bounce={}},    -- ball_cork
+	patch=rubber,stripe=rubber,
 }
 Client.BounceVolume=.7         -- a bounce at full strength, of the ball's kick volume
 Client.WallVolume=.45
@@ -149,26 +155,36 @@ function Client:sound(id,cue,strength)
 	local takes=Client.Takes[id]
 	local list=takes and takes[if cue=="kick"then "kick"elseif cue=="bounce"then "bounce"else ""]
 	local uri
-	if list and #list>0 then uri="rbxassetid://"..tostring(list[math.random(1,#list)])
+	local taken=list and #list>0
+	if taken then uri="rbxassetid://"..tostring(list[math.random(1,#list)])
 	else
 		local ok,value=pcall(function()return require(script.Parent.BoardAudio).uri(Client.Cues[cue])end)
 		uri=ok and value or nil
 	end
-	if not uri then return end
 	local volume=voice.volume*(if cue=="bounce"then Client.BounceVolume*math.clamp(strength,.2,1)elseif cue=="wall"then Client.WallVolume else 1)
+	local speed=(if cue=="water"or cue=="bunt"then 1 else voice.pitch)*(1+(math.random()*2-1)*Client.Pitch)
+	if uri then Client.emit(look.body,uri,volume,speed)end
+	-- The rubber pop over a kick or bounce (until the ball's own takes arrive).
+	if voice.pop and not taken and(cue=="kick"or cue=="bounce")then
+		local ok,id=pcall(function()return require(script.Parent.BoardAudio).AsmrIds[voice.pop.cue]end)
+		if ok and type(id)=="number"and id>0 then
+			Client.emit(look.body,"rbxassetid://"..id,voice.pop.volume*volume/voice.volume,1+(math.random()*2-1)*Client.Pitch)
+		end
+	end
+end
+function Client.emit(parent,uri,volume,speed)
 	local sound=Instance.new("Sound")
-	sound.SoundId=uri;sound.Volume=volume
-	sound.PlaybackSpeed=(if cue=="water"or cue=="bunt"then 1 else voice.pitch)*(1+(math.random()*2-1)*Client.Pitch)
+	sound.SoundId=uri;sound.Volume=volume;sound.PlaybackSpeed=speed
 	sound.RollOffMinDistance=8;sound.RollOffMaxDistance=70
 	sound.SoundGroup=SoundService:FindFirstChild("EggDropSFX")
-	sound.Parent=look.body
+	sound.Parent=parent
 	sound.Ended:Once(function()sound:Destroy()end)
 	task.delay(4,function()if sound.Parent then sound:Destroy()end end)
 	sound:Play()
 end
 
 function Client:kick(view,velocity,airborne)
-	local v=Balls.launch(velocity,airborne)
+	local v=Balls.launch(velocity,airborne,view.id)
 	if not v then return false end
 	local now,clock=self.serverNow(),self.clock()
 	local origin=view.drawn
@@ -222,7 +238,7 @@ function Client:step()
 		if not shown then continue end
 		if before and not reduced then look:roll(drawn-before)end
 		local squash=0
-		if not reduced and look.squashAt then squash=Balls.squash(look.squashBy or 1,clock-look.squashAt)end
+		if not reduced and look.squashAt then squash=Balls.squash(look.squashBy or 1,clock-look.squashAt,id)end
 		look:draw(drawn,scale,squash,Motion.island().groundY(drawn.X,drawn.Z))
 	end
 	-- My kicks: in the garden, on my feet or a running jump.

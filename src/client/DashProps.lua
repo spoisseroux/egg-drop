@@ -397,76 +397,48 @@ function Props:placeTags(anchor,project,ctx)
 	end
 end
 -- The balloon over the start arch, tall enough to see from the arrival dais (96, 66). Placeholder: a ball and a flag.
--- Beta 17 (WORLD-ALIVE-LOOK section 3): while the server's gate is the fete set (GardenDash's Fete attribute, the Alive
--- `scene` switch), a 4-stud cloth balloon with a cream band round its middle and a rope down to the north post's top.
--- Still 16 up and bobbing; the same two parts (the band takes the flag's place).
-Props.FeteBalloon=table.freeze({size=4,colour=Color3.fromHex("#D9776B"),band=Color3.fromHex("#EFE6D2"),bandHigh=.35,
-	rope=Color3.fromHex("#B79A66"),ropeWidth=.08,postTop=11.85})
+-- Beta 17 (WORLD-ALIVE-LOOK section 3) and GARDEN-PLAY-BRIEF-2 section 7: while the server's gate is the fete set
+-- (GardenDash's Fete attribute, the Alive `scene` switch), the hot-air balloon (DashBalloon: its own parts, folder and
+-- budget, the bunting, the starter mascot and the countdown cues) in place of the ball.
 function Props.fete(world)
 	local gate=(world or workspace):FindFirstChild("GardenDash")
 	return gate~=nil and gate:GetAttribute("Fete")==true
 end
-function Props:balloon(now,still)
-	local made=self.sky
+-- Once a frame. cue (nil: no race): {raceId, goAt (GO on the clock `now` is on), phase}, for the fete balloon's beats.
+function Props:balloon(now,still,cue,dt)
 	local fete=Props.fete(self.parent)
-	if made and made.fete~=fete then
-		made.ball:Destroy();made.flag:Destroy()
-		for _,rope in ipairs(made.ropes or {})do rope:Destroy()end
-		for _,foot in ipairs(made.feet or {})do foot:Destroy()end
-		self.count-=2
-		self.sky,made=nil,nil
+	if fete then
+		if self.sky then
+			self.sky.ball:Destroy();self.sky.flag:Destroy()
+			self.count-=2
+			self.sky=nil
+		end
+		if not self.fair then
+			local ok,made=pcall(function()return require(script.Parent.DashBalloon).new(self.parent)end)
+			if not ok then warn("[Dash] balloon: "..tostring(made));self.fairFailed=true end
+			self.fair=if ok then made else nil
+		end
+		if self.fair then self.fair:frame(now,still,cue,dt)end
+		return
 	end
+	if self.fair then self.fair:destroy();self.fair=nil end
+	local made=self.sky
 	if not made then
-		local F=Props.FeteBalloon
-		local ball,flag
-		if fete then
-			ball=self:make("Balloon",Vector3.one*F.size,F.colour,Enum.PartType.Ball)
-			flag=self:make("BalloonBand",Vector3.new(F.bandHigh,F.size+.06,F.size+.06),F.band,Enum.PartType.Cylinder)
-			if ball then ball.Material=Enum.Material.Fabric end
-			if flag then flag.Material=Enum.Material.Fabric end
-		else
-			ball=self:make("Balloon",Vector3.one*Props.BalloonSize,Props.Balloon,Enum.PartType.Ball)
-			flag=self:make("BalloonFlag",Vector3.new(.2,1.6,3),Props.Flag)
-		end
+		local ball=self:make("Balloon",Vector3.one*Props.BalloonSize,Props.Balloon,Enum.PartType.Ball)
+		local flag=self:make("BalloonFlag",Vector3.new(.2,1.6,3),Props.Flag)
 		if not ball or not flag then return end
-		local x,y,z,yaw=Course.at(0)
-		made={ball=ball,flag=flag,at=CFrame.new(x,y+Props.BalloonHeight,z),fete=fete}
-		if fete then
-			-- The ropes: one to each post's top (beta 34, Spencer: "only connected by one string?"). Each starts from
-			-- an attachment low on the balloon's side toward its post, and ends in Terrain at that post's top.
-			local terrain=workspace:FindFirstChildOfClass("Terrain")
-			made.ropes,made.feet={},{}
-			for _,side in ipairs({-1,1})do
-				local post=(CFrame.new(x,y,z)*CFrame.Angles(0,yaw,0)*CFrame.new(side*Grid.PostOut/100,F.postTop,0)).Position
-				local across=Vector3.new(post.X-x,0,post.Z-z)
-				across=if across.Magnitude>1e-3 then across.Unit else Vector3.zero
-				local top=Instance.new("Attachment");top.Name="BalloonRope"
-				top.Position=across*F.size*.2+Vector3.new(0,-F.size/2*.9,0) -- the ball has no turn, so local = world axes
-				top.Parent=ball
-				local foot=Instance.new("Attachment");foot.Name="DashBalloonFoot"
-				foot.WorldPosition=post
-				foot.Parent=terrain or ball
-				local rope=Instance.new("Beam");rope.Name="BalloonRope";rope.Attachment0,rope.Attachment1=top,foot
-				rope.Width0,rope.Width1=F.ropeWidth,F.ropeWidth;rope.FaceCamera=true;rope.Segments=1
-				rope.Color=ColorSequence.new(F.rope);rope.LightEmission=0;rope.LightInfluence=1
-				rope.Parent=ball
-				table.insert(made.ropes,rope);table.insert(made.feet,foot)
-			end
-		end
+		local x,y,z=Course.at(0)
+		made={ball=ball,flag=flag,at=CFrame.new(x,y+Props.BalloonHeight,z)}
 		self.sky=made
 	end
 	local up=if still then 0 else Props.BalloonBob*math.sin(now/Props.BalloonPeriod*math.pi*2)
 	if made.up==up then return end
 	made.up=up
 	made.ball.CFrame=made.at*CFrame.new(0,up,0)
-	if made.fete then
-		made.flag.CFrame=made.at*CFrame.new(0,up,0)*CFrame.Angles(0,0,math.pi/2)
-	else
-		made.flag.CFrame=made.at*CFrame.new(0,up-Props.BalloonSize/2-1,0)
-	end
+	made.flag.CFrame=made.at*CFrame.new(0,up-Props.BalloonSize/2-1,0)
 end
 function Props:destroy()
-	if self.sky then for _,foot in ipairs(self.sky.feet or {})do foot:Destroy()end end
+	if self.fair then self.fair:destroy();self.fair=nil end
 	if self.folder then self.folder:Destroy();self.folder=nil end
 	table.clear(self.hoops);table.clear(self.clovers);table.clear(self.tags);table.clear(self.order)
 	self.sky=nil

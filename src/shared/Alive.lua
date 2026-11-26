@@ -12,7 +12,7 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- ASMR-AND-SCALE-LOOK 1 and 2: `asmr` is the ASMR hatch (HatchAsmr: layered cracks and the pop) and the vibration
 -- (Haptics: the hatch beats, Pocket Deck merges, the Vibration setting). Missing = on.
 -- Beta 34 notes (GARDEN-PLAY-BRIEF 3): `wobble` is the Wobble Egg on the crag (WobbleEggClient). Missing = on.
--- GARDEN-PLAY-BRIEF 1: `balls` is the three Bumble balls (BumbleBalls, BumbleBallHost, BumbleBallsClient). Missing = on.
+-- GARDEN-PLAY-BRIEF 1 and 2: `balls` is the five Bumble balls (BumbleBalls, BumbleBallHost, BumbleBallsClient). Missing = on.
 -- GARDEN-PLAY-BRIEF 2026-11-26: `crunch` is the crunchy toys round the garden (CrunchToysClient), `air` the drift
 -- balloons (since GARDEN-PLAY-BRIEF-2 section 6: hot-air balloons, three with a mascot) and seed fluff over it
 -- (DriftLanternsClient). Missing = on.
