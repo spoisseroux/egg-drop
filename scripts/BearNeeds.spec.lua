@@ -81,7 +81,9 @@ return function(client)
 			gate={on=true,mode="Room",canRoam=true,idleFor=5,awayFor=0,roomFor=5,windowActive=true,railEmpty=true,parkPending=0,action="idle"}}
 		for k,v in pairs(over or {})do if k~="state"then r[k]=v end end
 		r.bubble={sets={},hops=0}
-		function r.bubble:set(icon,visible)table.insert(self.sets,{icon=icon,visible=visible});self.icon=if visible then icon else nil end
+		function r.bubble:set(icon,visible,words)
+			table.insert(self.sets,{icon=icon,visible=visible,words=words});self.icon=if visible then icon else nil;self.words=if visible then words else nil
+		end
 		function r.bubble:hop()self.hops+=1 end
 		function r.bubble:press()self.presses=(self.presses or 0)+1 end
 		function r.bubble:step()end
@@ -93,7 +95,10 @@ return function(client)
 			trail=function(target,how)table.insert(r.trails,{name=target.name,how=how});r.trailUp=true;r.trailOn=target;return true end,trailActive=function()return r.trailUp end,
 			trailTarget=function()return r.trailOn end,prompt=function()return r.prompt==true end,
 			sayHi=function()table.insert(r.acts,"hi");return true end,playDeck=function()table.insert(r.acts,"deck");return true end,
-			quiet=function(on)r.quiet=on end,chirp=function()r.chirps+=1 end,react=function(id)table.insert(r.reacts,id)end})
+			quiet=function(on)r.quiet=on end,chirp=function()r.chirps+=1 end,react=function(id)table.insert(r.reacts,id)end,
+			-- Onboarding v2 step 5 (the guide): off unless a test sets r.guide.
+			guide=function()return r.guide==true end,words=function(id)return "W:"..id end,far=function()return r.far==true end,
+			pulseDeck=function(on)r.pulse=on end,allSet=function()r.allSets=(r.allSets or 0)+1 end,firstPet=function()r.pets=(r.pets or 0)+1 end})
 		r.t=0
 		function r.run(seconds,dt)
 			dt=dt or .25
@@ -371,6 +376,45 @@ return function(client)
 		local r=rig({nestFirst=false,nest=true,state={nest={n=0,at=1}}})
 		hello(r)
 		r.run(Needs.Rest+1.5);assert(r.bubble.icon=="ball",tostring(r.bubble.icon))
+		assert(r.bubble.words==nil and r.allSets==nil and r.pulse==nil,"guide off: no words, no end card, no pulse")
+	end)
+	-- Onboarding v2 step 5 (Onboard "guide", ONBOARDING-V2.md).
+	test("guide: three prompts in order (pet, tuck the egg in, play for Stars), each its words; no key on a computer",function()
+		assert(table.concat(Needs.GuideOrder,",")=="needHi,needNest,needDeck")
+		local V2=require(client.OnboardV2)
+		for _,id in ipairs(Needs.GuideOrder)do
+			local key,vars=Needs.guideWords(id,"Bear")
+			local text=UICopy.get(key,vars)
+			assert(text~=key and #text<=16 and not string.find(text,"{",1,true),text)
+		end
+		assert(V2.guideKey("Keyboard")==nil and V2.guideKey("Touch")==nil and V2.guideKey("Gamepad")=="X","the pad's X picture only")
+	end)
+	test("guide: hi in words, then the moon (the far nest gets its trail), then the deck with the button's pulse; the end card once",function()
+		local r=rig({guide=true,nest=true,far=true,state={nest={n=0,at=1}}})
+		r.run(Needs.Return+.5)
+		assert(r.needs.guide==true and r.bubble.icon=="hand"and r.bubble.words=="W:needHi","pet the Bear, in words")
+		assert(r.needs:tap()and r.acts[1]=="hi")
+		r.greeting=true;r.gate.greeting=true;r.run(.5);r.greeting=false;r.gate.greeting=nil
+		assert(r.pets==1,"the first pet's buzz")
+		r.run(Needs.Rest+1.5)
+		assert(r.bubble.icon=="moon"and r.bubble.words=="W:needNest","tuck the egg in: "..tostring(r.bubble.icon))
+		local nestTrail=false
+		for _,t in ipairs(r.trails)do if t.name=="Nest"and t.how=="auto"then nestTrail=true end end
+		assert(nestTrail,"a trail to the far nest")
+		r.state.nest={n=1,at=1,tucked=true};r.run(Needs.Rest+1.5)
+		assert(r.bubble.icon=="deck"and r.bubble.words=="W:needDeck"and r.pulse==true,"play for Stars, the deck button pulses")
+		assert(r.allSets==nil,"not yet")
+		r.gate.mode="Board";r.run(.5)
+		assert(r.allSets==1 and r.pulse==false,"the deck opened: all set, once")
+		r.gate.mode="Room";r.run(30);assert(r.allSets==1)
+	end)
+	test("guide: a prompt ignored for 20 s shrinks to its icon, then the next shows; nothing is marked done for it",function()
+		local r=rig({guide=true,nest=true,state={nest={n=0,at=1}}})
+		r.run(Needs.Return+.5);assert(r.bubble.words=="W:needHi")
+		r.run(require(client.OnboardV2).Guide.ignore-1);assert(r.bubble.words=="W:needHi","still asking")
+		r.run(1.25);assert(r.bubble.icon=="hand"and r.bubble.words==nil,"shrunk to its icon")
+		r.run(Needs.Rest+2);assert(r.bubble.icon=="moon","the next: "..tostring(r.bubble.icon))
+		assert(not table.find(r.marked,"needHi"),"passed over, not done")
 	end)
 	return{passed=#cases,cases=cases}
 end

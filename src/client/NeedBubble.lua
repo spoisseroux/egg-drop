@@ -33,6 +33,15 @@ Bubble.Press=table.freeze({low=.88,down=.06,rate=8,wobble=18}) -- beta 14 B3b: t
 Bubble.Ink=Color3.fromHex("#24304F")
 Bubble.Fill=Color3.fromHex("#FFFDF6") -- U7: flat cream-white, no shading
 Bubble.Lip=table.freeze({drop=3,opacity=.25}) -- U7: px below the face, ink opacity
+-- Onboarding v2 step 5 (the guide, ONBOARDING-V2.md): a white pill with the words in ink, a gold arrow (6 px at 1 Hz,
+-- still under Reduced Motion).
+Bubble.WordFill=Color3.fromHex("#FFFFFF");Bubble.WordInk=Color3.fromHex("#1B2A4A");Bubble.Arrow=Color3.fromHex("#FFD86B")
+Bubble.WordSize=20;Bubble.WordH=60;Bubble.ArrowPx=6;Bubble.ArrowHz=1
+-- Pure: the pill's width for these words (measure(text) -> px, else an estimate).
+function Bubble.wordWidth(text,measure)
+	local w=if type(measure)=="function"then measure(text)else #text*Bubble.WordSize*.55
+	return math.ceil(62+w+16)
+end
 
 -- Pure: where the bubble hangs now. state = {at, chasing} (kept by the caller), target = over the Bear now.
 function Bubble.follow(state,target,dt,reduced)
@@ -151,6 +160,17 @@ function Bubble.new(options)
 			if onScreen and point.Z>0 and Bubble.hits(Vector2.new(position.X,position.Y),Vector2.new(point.X,point.Y))then tapped()end
 		end)
 	end
+	-- Onboarding v2 step 5 (the guide): the prompt in words beside the icon, and a gold arrow bouncing under the bubble.
+	local words=Instance.new("TextLabel")
+	words.Name="Words";words.BackgroundTransparency=1;words.AnchorPoint=Vector2.new(0,.5);words.Position=UDim2.new(0,62,.5,0)
+	words.Size=UDim2.new(1,-74,1,-8);words.Font=Enum.Font.BuilderSansBold;words.TextSize=Bubble.WordSize;words.TextColor3=Bubble.WordInk
+	words.TextXAlignment=Enum.TextXAlignment.Left;words.Text="";words.Visible=false;words.ZIndex=4;words.Parent=art
+	local arrow=Instance.new("TextLabel")
+	arrow.Name="Arrow";arrow.BackgroundTransparency=1;arrow.AnchorPoint=Vector2.new(.5,0);arrow.Position=UDim2.new(.5,0,1,8)
+	arrow.Size=UDim2.fromOffset(20,14);arrow.Font=Enum.Font.BuilderSansBold;arrow.TextSize=18;arrow.Text="▼"
+	arrow.TextColor3=Bubble.Arrow;arrow.Visible=false;arrow.ZIndex=3;arrow.Parent=art
+	local arrowEdge=Instance.new("UIStroke");arrowEdge.Color=Bubble.WordInk;arrowEdge.Thickness=1.5;arrowEdge.Parent=arrow
+	self.words,self.arrow,self.arrowEdge=words,arrow,arrowEdge
 	local squash=Instance.new("UIScale");squash.Name="PressScale";squash.Scale=1;squash.Parent=art
 	anchor.Parent=options.world or workspace
 	gui.Parent=options.parent
@@ -166,8 +186,39 @@ function Bubble.nestFirst()
 	return ok and on==true
 end
 function Bubble:reduced()return self.options.reduced~=nil and self.options.reduced()==true end
--- Show `icon` (a Glyph key), or hide (visible false).
-function Bubble:set(icon,visible)
+-- The guide's words beside the icon (a white pill), or nil for the round icon bubble as before.
+function Bubble:setWords(text)
+	local on=type(text)=="string"and text~=""
+	if on==(self.wordText~=nil)and(not on or self.wordText==text)then return end
+	self.wordText=if on then text else nil
+	local w=Bubble.Size
+	if on then
+		local measure=function(t)
+			local ok,size=pcall(function()return game:GetService("TextService"):GetTextSize(t,Bubble.WordSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100))end)
+			return if ok and typeof(size)=="Vector2"then size.X else #t*Bubble.WordSize*.55
+		end
+		w=Bubble.wordWidth(text,measure)
+		self.words.Text=text
+	end
+	local h=if on then Bubble.WordH else Bubble.Size
+	self.art.Size=UDim2.fromOffset(w,h);self.lip.Size=self.art.Size
+	self.gui.Size=UDim2.fromOffset(math.max(Bubble.HitSize,w+16),Bubble.HitSize)
+	self.words.Visible=on;self.arrow.Visible=on
+	self.art.BackgroundColor3=if on then Bubble.WordFill else Bubble.Fill
+	self.tail.BackgroundColor3=self.art.BackgroundColor3
+	self.edge.Color=if on then Bubble.WordInk else Bubble.Ink
+	self.tailEdge.Color=self.edge.Color
+	-- the nest's egg badge rides the icon, not the words
+	self.eggBadge.Position=if on then UDim2.new(0,46,.5,9)else UDim2.fromScale(.74,.7)
+	self.eggBadge.Size=if on then UDim2.fromOffset(15,19)else UDim2.fromScale(.27,.34)
+	for _,glyph in ipairs({self.icon,self.image})do
+		if on then glyph.AnchorPoint=Vector2.new(.5,.5);glyph.Position=UDim2.new(0,32,.5,0);glyph.Size=UDim2.fromOffset(40,40)
+		else glyph.AnchorPoint=Vector2.new(.5,.5);glyph.Position=UDim2.fromScale(.5,.54);glyph.Size=UDim2.fromScale(if glyph==self.image then .64 else .6,if glyph==self.image then .64 else .6)end
+	end
+end
+-- Show `icon` (a Glyph key), or hide (visible false). words: the guide's prompt (nil: the icon alone).
+function Bubble:set(icon,visible,words)
+	if visible then self:setWords(words)end
 	if visible and icon then
 		local id=Bubble.IconIds[icon]
 		self.image.Visible=id~=nil
@@ -200,6 +251,7 @@ function Bubble:paint()
 	self.icon.TextTransparency=a;self.image.ImageTransparency=a
 	self.key.BackgroundTransparency=a;self.key.TextTransparency=a
 	self.eggBadge.BackgroundTransparency=a;self.eggEdge.Transparency=a
+	self.words.TextTransparency=a;self.arrow.TextTransparency=a;self.arrowEdge.Transparency=a
 	for _,dot in ipairs(self.eggBadge:GetChildren())do if dot:IsA("Frame")then dot.BackgroundTransparency=a end end
 end
 function Bubble:step(dt)
@@ -234,6 +286,10 @@ function Bubble:step(dt)
 		if t>=1 or reduced then self.hopAt=nil else lift=math.sin(t*math.pi)*Bubble.HopHeight end
 	end
 	self.gui.StudsOffsetWorldSpace=Vector3.new(0,lift,0)
+	if self.arrow.Visible then
+		local bounce=if reduced then 0 else Bubble.ArrowPx*(.5-.5*math.cos(self.time*Bubble.ArrowHz*math.pi*2))
+		self.arrow.Position=UDim2.new(.5,0,1,8+bounce)
+	end
 	local squash=1
 	if self.pressAt then
 		local s=if reduced then nil else Bubble.pressScale(self.time-self.pressAt)

@@ -15,18 +15,19 @@ function Hold:holding()
 	local ok,yes=pcall(holds)
 	return ok and yes==true
 end
-function Hold:set(icon,visible)
-	self.icon,self.want=icon,visible==true
+-- words (onboarding v2's guide): the prompt in words beside the icon, or nil for the icon alone.
+function Hold:set(icon,visible,words)
+	self.icon,self.want,self.words=icon,visible==true,words
 	if visible and not self.real then self.real=self.make()end
 	self.held=self.want and self:holding()
-	if self.real then self.real:set(icon,visible and not self.held)end
+	if self.real then self.real:set(icon,visible and not self.held,words)end
 end
 function Hold:hop()if self.real then self.real:hop()end end
 function Hold:press()if self.real then self.real:press()end end
 function Hold:step(dt)
 	if self.want and self.real then
 		local held=self:holding()
-		if held~=self.held then self.held=held;self.real:set(self.icon,not held)end
+		if held~=self.held then self.held=held;self.real:set(self.icon,not held,self.words)end
 	end
 	if self.real then self.real:step(dt)end
 end

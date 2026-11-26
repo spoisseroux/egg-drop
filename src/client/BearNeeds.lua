@@ -17,6 +17,7 @@ local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
 local Toys=require(Shared:WaitForChild("ToyCatalog"))
 local Tips=require(script.Parent.ThingsTips)
+local V2=require(script.Parent.OnboardV2)
 local Needs={};Needs.__index=Needs
 Needs.Order=table.freeze({"needHi","needToy","needDeck","needNest","needPark"})
 -- The First Hatch (Onboard "nestfirst"): tomorrow's egg straight after the first hello. Read once when the garden is
@@ -69,14 +70,32 @@ function Needs.available(id,f)
 	if id=="needPark"then return f.parkOn~=false end
 	return Needs.Icon[id]~=nil
 end
--- The need open now, or nil. ctx: {on (the switch), returning, owned}.
+-- The need open now, or nil. ctx: {on (the switch), returning, owned, order, skip (ids passed over this session)}.
 function Needs.current(f,ctx)
 	ctx=ctx or {}
 	if ctx.on~=true or ctx.returning==true or(ctx.owned or 0)<=0 or Coach.veteran(f.totalWins)then return nil end
 	for _,id in ipairs(ctx.order or Needs.Order)do
-		if Needs.available(id,f)and not Needs.closed(id,f)then return id end
+		if Needs.available(id,f)and not Needs.closed(id,f)and not(ctx.skip and ctx.skip[id])then return id end
 	end
 	return nil
+end
+-- Onboarding v2 step 5 (Onboard "guide", ONBOARDING-V2.md; Spencer: "it didnt say anything after hatching the bear, just
+-- to press g on it??"): three worded prompts, one at a time (Pet Bear!, Tuck the egg in!, Play for Stars!), no key caps
+-- on a computer, a trail to anything far, a prompt ignored for Guide.ignore s shrinks to its icon and the next shows,
+-- and after the third the end card ("You're all set!"). Never locked; the toy and the park are found through Things
+-- to do, as today. Off: today's bubbles exactly.
+Needs.GuideOrder=V2.Guide.order
+-- Pure: is the guide finished (every prompt closed or passed over)? f: facts, skip: the passed-over ids.
+function Needs.guideDone(f,skip)
+	for _,id in ipairs(Needs.GuideOrder)do
+		if not Needs.closed(id,f)and not(skip and skip[id])and Needs.available(id,f)then return false end
+	end
+	return true
+end
+-- Pure: the guide's words for a need (UICopy key and vars), nil when it has none.
+function Needs.guideWords(id,pet)
+	local key=V2.GuideCopy[id]
+	return key,{pet=pet or "Bear"}
 end
 -- The bubble's icon. Need 2 with fewer Stars than a Toy Egg and no toy yet: the deck first, then the ball.
 function Needs.icon(id,f)
@@ -223,7 +242,7 @@ function Needs:step(now,dt)
 	-- Beta 14 B3a: with the bubbles on for this session, a greeting counts as "said hi" only once the hand bubble has
 	-- shown (the first Meet's automatic greeting shot comes before it and used to close need 1 unseen). Bubbles off or a
 	-- returning save: any greeting counts, as before. Petting (Needs:saidHi) and a tap on the bubble count any time.
-	local asking=d.needs()==true and not(if self.ready then self.returning else(d.returning()==true or self.began==true))
+	local asking=(d.needs()==true or(d.guide~=nil and d.guide()==true))and not(if self.ready then self.returning else(d.returning()==true or self.began==true))
 	if owned>0 and d.greeting()==true and(self.hiShown or not asking)then self.live.saidHi=true end
 	if d.inPark()==true then self.live.inPark=true end
 	self.live.mask=d.mask()
@@ -243,10 +262,15 @@ function Needs:step(now,dt)
 			self.returning=returning
 			self.roundsAt=f.rounds
 			self.order=if d.nestFirst and d.nestFirst()==true then Needs.NestFirstOrder else nil
+			-- Onboarding v2 step 5: the guide's three prompts, read once here like the order
+			self.guide=d.guide~=nil and d.guide()==true and not returning
+			if self.guide then self.order=Needs.GuideOrder;self.skipped={};self.shownAt={}end
 		else self:hide();d.bubble:step(dt);return end
 	end
 	if f.rounds>(self.roundsAt or f.rounds)then self.live.deckDone=true;f.deckDone=true end
-	local needsOn=d.needs()==true and not self.returning
+	-- The guide's "Play for Stars!" is done when the deck opens.
+	if self.guide and gate.mode=="Board"then self.live.deckDone=true;f.deckDone=true end
+	local needsOn=(d.needs()==true or self.guide==true)and not self.returning
 	d.quiet(needsOn)
 	-- A: the garden step, the first trail, the idle hint's "follow" key ---------------------------------------------
 	local new=self.follow and not self.returning
@@ -265,9 +289,10 @@ function Needs:step(now,dt)
 	-- The machine is learned (its first visit saved) or the toy is given: nothing left to follow.
 	local following=new and not needsOn and not Coach.has(f.mask,"hatch")and not f.toyGiven
 	-- B: the bubbles -------------------------------------------------------------------------------------------------
-	local id=if needsOn then Needs.current(f,{on=true,owned=owned,order=self.order})else nil
+	local id=if needsOn then Needs.current(f,{on=true,owned=owned,order=self.order,skip=self.skipped})else nil
 	if needsOn and self.order then
-		if self.open and self.open~=id and Needs.available(self.open,f)and not Needs.closed(self.open,f)then
+		if self.open and self.open~=id and Needs.available(self.open,f)and not Needs.closed(self.open,f)
+			and not(self.skipped and self.skipped[self.open])then
 			id=self.open -- locked: the open need stays until it closes
 		elseif id and id~="needNest"and Needs.closed("needHi",f)and not Needs.closed("needNest",f)
 			and not Needs.available("needNest",f)then
@@ -281,17 +306,41 @@ function Needs:step(now,dt)
 		end
 	end
 	if id~=self.open then
-		if self.open~=nil then self.restUntil=now+Needs.Rest;d.react(self.open)end
+		if self.open~=nil then
+			self.restUntil=now+Needs.Rest;d.react(self.open)
+			-- The guide's first pet: the hearts and purr are the petting's own; the settle buzz is the guide's.
+			if self.guide and self.open=="needHi"and Needs.closed("needHi",f)and d.firstPet then pcall(d.firstPet)end
+		end
 		self.open=id
+		self.shrinking=nil
 		-- The first trail starts by itself after Say hi (the ball bubble), once.
 		if id=="needToy"and self.follow and not self.autoTrail then self.autoPending=true end
 	end
 	self.pointing=if id then id elseif following then "follow"else nil
 	-- Never over a machine's prompt (the bubble is always on top).
 	local show=id~=nil and now>=self.restUntil and blocked==nil and freeFor>=Needs.Return and not(d.prompt and d.prompt()==true)
+	if show and self.guide then
+		-- The guide: the prompt in words; ignored for Guide.ignore s it shrinks to its icon, then the next shows.
+		self.shownAt[id]=self.shownAt[id]or now
+		if not self.shrinking and V2.ignored(self.shownAt[id],now)then self.shrinking={id=id,at=now}end
+		if self.shrinking and now-self.shrinking.at>=V2.Guide.shrink then self.skipped[id]=true end
+		local words=nil
+		if not self.shrinking and d.words then words=d.words(id)end
+		local icon=V2.GuideIcon[id]or Needs.icon(id,f)
+		if not self.shown or self.shownIcon~=icon or self.shownWords~=words then d.bubble:set(icon,true,words)end
+		self.shownWords=words
+		-- A prompt that points somewhere far gets the dotted trail once.
+		if id=="needNest"and not self.nestTrail and d.far and d.far("Nest")==true then self.nestTrail=self:trailTo("Nest","auto")end
+		self.guideShown=true
+	end
+	if d.pulseDeck and self.guide then pcall(d.pulseDeck,show and id=="needDeck")end
+	if self.guide and self.guideShown and not self.allSet and Needs.guideDone(f,self.skipped)then
+		self.allSet=true
+		if d.allSet then pcall(d.allSet)end
+	end
 	if show then
-		local icon=Needs.icon(id,f)
-		if not self.shown or self.shownIcon~=icon then d.bubble:set(icon,true)end
+		local icon=if self.guide then(V2.GuideIcon[id]or Needs.icon(id,f))else Needs.icon(id,f)
+		if not self.shown or self.shownIcon~=icon then d.bubble:set(icon,true,if self.guide then self.shownWords else nil)end
 		self.shown,self.shownIcon=true,icon
 		if id=="needHi"then self.hiShown=true end
 		if self.autoPending and icon=="ball"and self:trailFree()then
