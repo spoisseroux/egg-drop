@@ -187,7 +187,7 @@ def client_modules():
                     # Beta (35) deck net audit: the client-run deck's driver and mirror.
                     "ClientRoundDriver.lua", "ClientBoardMirror.lua", "RoundEndPresentation.lua", "FieldQuestText.lua", "StarText.lua",
                     # Onboarding v2: the steps' pure rules (BearNeeds reads the guide's) and the reveal card's layout.
-                    "OnboardV2.lua", "RevealLayout.lua", "EggCrackPaths.lua",                    "OnboardV2.lua", "RevealLayout.lua",
+                    "OnboardV2.lua", "RevealLayout.lua", "EggCrackPaths.lua",
                     # AERO-JUICE-BRIEF 1 and 2: the bubble shading, the deck juice layer, its UI half and the faces.
                     "AeroShade.lua", "AeroJuice.lua", "AeroUI.lua", "BallFaces.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
