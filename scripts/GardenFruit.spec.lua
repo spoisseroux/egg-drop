@@ -91,6 +91,9 @@ return function(server)
 		assert(#Stat.boosts(state,PET,"heart")==1 and Stat.boosts(state,PET,"heart")[1].left==50,"a Stat Snack boost is untouched")
 		assert(state.fruit.day==DAY and state.fruit.count==1 and S.committed(state,"a")and S.receipt(state,"a").xp==2)
 		for k=2,12 do assert(claim(state,"a"..k))end
+		-- Review B36: an older write is still known (a late replay of it is AlreadySaved, never paid twice).
+		assert(S.committed(state,"a11")and S.committed(state,"a5")and not S.committed(state,"a")and S.committed(state,"a12"))
+		assert(#state.fruit.recent==S.Recent)
 		assert(heart(state)==24 and S.left(state,DAY)==0)
 		local ok,why=claim(state,"over")
 		assert(not ok and why=="DailyLimit"and heart(state)==24 and not S.committed(state,"over"))

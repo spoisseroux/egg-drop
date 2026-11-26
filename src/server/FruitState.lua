@@ -4,6 +4,8 @@
 --   day, count   the day ("20000") fruit was last counted for, and how many paid that day (0..DailyLimit)
 --   op           the last claim written: the proof it committed (exactly once under retry, replay and two sessions)
 --   receipt      what that claim paid
+--   recent       the ops written before it, newest last (at most Recent): a late replay of one of them is still
+--                AlreadySaved, never a second payment (review B36)
 -- Never part of HatchProgress.valid; load never touches it. Every read is tolerant: a good day with a malformed count
 -- reads as the day's limit used (fail closed, the next day starts again); a malformed day as no field (at most one
 -- day's 24 Heart XP at stake, never Stars); a malformed receipt as none.
@@ -16,6 +18,7 @@ local StatState=require(script.Parent.StatState)
 
 local State={}
 State.DailyLimit=Fruit.DailyLimit
+State.Recent=8
 
 local function integer(value,low,high)
 	return type(value)=="number"and value==value and value%1==0 and value>=low and value<=high
@@ -42,6 +45,10 @@ function State.read(state)
 	local source=if type(raw)=="table"then raw else{}
 	if op(source.op)then out.op=source.op end
 	out.receipt=receiptOf(source.receipt)
+	out.recent={}
+	if type(source.recent)=="table"then
+		for _,id in ipairs(source.recent)do if op(id)and #out.recent<State.Recent then table.insert(out.recent,id)end end
+	end
 	return out
 end
 -- The count as of `today`: a later saved day is kept (clock rollback), an earlier one starts again.
@@ -67,13 +74,19 @@ function State.apply(state,candidate,today)
 	-- A pet at the most Heart XP still uses up the fruit (0 XP). noBonus: plain XP, no Bonus XP, no boosts.
 	local xp=StatState.grant(state,candidate.petId,Fruit.Stat,Fruit.XP,if canonicalDay(candidate.day)then candidate.day else today,true)
 	entry.count+=1
+	if entry.op then
+		table.insert(entry.recent,entry.op)
+		while #entry.recent>State.Recent do table.remove(entry.recent,1)end
+	end
 	entry.op=candidate.id
 	entry.receipt={op=candidate.id,petId=candidate.petId,xp=xp}
-	state.fruit={day=entry.day,count=entry.count,op=entry.op,receipt=entry.receipt}
+	state.fruit={day=entry.day,count=entry.count,op=entry.op,receipt=entry.receipt,recent=entry.recent}
 	return true
 end
 function State.committed(state,operationId)
-	return type(state)=="table"and type(state.fruit)=="table"and state.fruit.op~=nil and state.fruit.op==operationId
+	if not op(operationId)or type(state)~="table"or type(state.fruit)~="table"then return false end
+	if state.fruit.op==operationId then return true end
+	return table.find(State.read(state).recent,operationId)~=nil
 end
 function State.receipt(state,operationId)
 	local proof=if State.committed(state,operationId)then receiptOf(state.fruit.receipt)else nil

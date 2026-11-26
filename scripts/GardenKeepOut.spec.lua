@@ -182,6 +182,38 @@ return function(_server,offline)
 			reached,legs,worst))
 	end)
 
+	test("review B36: the work is bounded (MaxNodes corners, their edges once a layout) even for a goal no walk reaches",function()
+		-- A goal walled in by a ring of props: every try fails, the search stays inside its caps, the pet holds or stops.
+		local goal=Vector3.new(-20,World.groundY(-20,60)+.025,60)
+		local ring={}
+		for k=0,11 do
+			local a=k*math.pi/6
+			table.insert(ring,{KeepOut=true,Parent=true,Name="ring"..k,X=goal.X+math.cos(a)*4,Z=goal.Z+math.sin(a)*4,R=1.6})
+		end
+		local walled=table.clone(wet)
+		for _,c in ipairs(ring)do table.insert(walled,c)end
+		local from=Vector3.new(-20,World.groundY(-20,40)+.025,40)
+		local path=Planner.plan(from,goal,Vector3.zero,6,0,0,nil,Vector3.zero,walled)
+		local last=path[#path]
+		assert(flat(A.vector(last.to),goal)>1,"never through the ring")
+		local stats=Planner.Stats
+		local n=Planner.MaxNodes+Planner.partNodes(Planner.layout(Walk.split(walled)))+2
+		assert(stats.nodes<=n and stats.expanded<=stats.searches*n and stats.checks<=stats.searches*n*(n-1)/2,
+			string.format("nodes %d, expanded %d, checks %d over %d searches",stats.nodes,stats.expanded,stats.checks,stats.searches))
+		-- The same walk again: its corners and their edges are remembered; only the two ends are checked again.
+		Planner.plan(from,goal,Vector3.zero,6,0,0,nil,Vector3.zero,walled)
+		assert(Planner.Stats.checks<=Planner.Stats.searches*2*n,"cached: "..Planner.Stats.checks)
+		-- Prepare checks a layout's corner edges once; a walk after it checks only its ends.
+		local L=Planner.prepare(wet)
+		assert(L and L.corners>0)
+		local _,circles=Walk.split(wet)
+		local probe=Vector3.new(regions[1].X-4,World.groundY(regions[1].X-4,regions[1].Z)+.025,regions[1].Z)
+		Planner.roundProps(probe,probe+Vector3.new(8,0,0),boxes,circles,circles)
+		assert(Planner.Stats.checks<=Planner.Stats.searches*2*n,"prepared: "..Planner.Stats.checks)
+		table.insert(cases,string.format("    (walled goal: %d searches, at most %d nodes, %d expanded, %d edges checked)",
+			stats.searches,stats.nodes,stats.expanded,stats.checks))
+	end)
+
 	test("the switch: Alive `keepout` (AliveKeepOut), beta and Studio only, never live",function()
 		assert(table.find(Alive.Features,KeepOut.Feature)and Flags.AliveKeepOut==true)
 		assert(Alive.ceiling("keepout",{AliveKeepOut=true},Alive.PlaceId,false)==true)

@@ -346,6 +346,9 @@ return function(client)
 		assert(noms==Fruit.Bites.count and gulps==1 and happy==1,noms.." "..gulps.." "..happy)
 		assert(#r.claims==1 and r.claims[1]==loose,"told the server once")
 		assert(puffed,"the cheeks puff on a bite")
+		-- Review B36: whatever the pose writes, the visual's memory is cleared so its next update writes it back (a snack
+		-- cut off mid-puff never leaves the cheeks puffed).
+		assert(r.visual.pieces[2].lastSize==nil and r.visual.pieces[2].lastFrame==nil)
 		r.run(4)
 		assert(#r.claims==1)
 		-- Off: three nibbles, no claim, the old cue.

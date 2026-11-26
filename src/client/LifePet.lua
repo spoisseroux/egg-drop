@@ -371,6 +371,9 @@ function Pet:pose(visual,_dt)
 		if headish(entry)then
 			entry.part.CFrame=turn*entry.part.CFrame
 			if puff>1 and string.find(entry.name or "","Cheek")then entry.part.Size*=puff end
+			-- Review B36: what was written here is not what the visual remembers, so its next update writes the part
+			-- again (a snack cut off mid-puff or mid-nod never leaves the cheeks puffed or the head dipped).
+			entry.lastFrame,entry.lastSize=nil,nil
 		end
 	end
 	return true
