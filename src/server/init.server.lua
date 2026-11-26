@@ -320,6 +320,7 @@ do
   end
  end)
  if not ok then warn("[KeepOut] not watched: "..tostring(problem))end
+end
 -- Pets go up: a ground point under `point` on the terrace or the path (the ray starts at most 6 over the tread), within
 -- `slack` of its height; nil when there is none.
 local function tierGround(point,slack)
@@ -1253,6 +1254,11 @@ local function closeBoard(board)
 		local ok, problem = pcall(garden.findsHost.leave, garden.findsHost, board)
 		if not ok then warn("[Finds] leave: " .. tostring(problem)) end
 	end
+	-- Garden fruit: an unsaved claim goes; a fruit write in flight is settled below, then CloseProgress.drain.
+	if garden.fruitHost then
+		local ok, problem = pcall(garden.fruitHost.leave, garden.fruitHost, board)
+		if not ok then warn("[Fruit] leave: " .. tostring(problem)) end
+	end
 	-- Sleepy Nest: writes not yet sent go; a nest write in flight is settled below, then CloseProgress.drain.
 	if garden.nestHost then
 		local ok, problem = pcall(garden.nestHost.leave, garden.nestHost, board)
@@ -1286,6 +1292,12 @@ local function closeBoard(board)
 			local from = os.clock()
 			local ok, problem = pcall(garden.findsHost.settle, garden.findsHost, board)
 			if not ok then warn("[Finds] settle: " .. tostring(problem)) end
+			settled += os.clock() - from
+		end
+		if garden.fruitHost then
+			local from = os.clock()
+			local ok, problem = pcall(garden.fruitHost.settle, garden.fruitHost, board)
+			if not ok then warn("[Fruit] settle: " .. tostring(problem)) end
 			settled += os.clock() - from
 		end
 		if garden.nestHost then
@@ -2369,6 +2381,15 @@ do
 			up = petsUp })
 	end)
 	if not ok then warn("[Finds] not mounted: " .. tostring(problem)) end
+end
+-- Garden fruit (GARDEN-PLAY-BRIEF-2 section 5, Alive `fruit`): nil and nothing made with the ceiling closed (live). Its
+-- own remote (GardenFruit) and protected connections: a fruit my pet ate pays Heart XP after the server's checks.
+do
+	local ok, problem = pcall(function()
+		garden.fruitHost = require(script.FruitHost).mount({ remotes = remotes, garden = garden, boards = boards,
+			nursery = Nursery, canProgress = canProgress, publishNursery = publishNursery, publishState = publishState })
+	end)
+	if not ok then warn("[Fruit] not mounted: " .. tostring(problem)) end
 end
 -- The Sleepy Nest (Onboarding v3 slice C, Onboard.on("nest")): nil and nothing made with the v3 build ceiling off; the
 -- remotes come the first time the switch is on. The first egg lands on the first garden arrival. Its own protected

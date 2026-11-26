@@ -117,6 +117,9 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AliveCrunch=true,
  -- AliveAir (GARDEN-PLAY-BRIEF 2026-11-26 section 4): the drift lanterns and seed fluff (client only); beta and Studio only.
  AliveAir=true,
+ -- AliveFruit (GARDEN-PLAY-BRIEF-2 section 5): the 3D fruit, the tree shake, the five-bite snack and its server-granted
+ -- Heart XP (GardenFruit, FruitHost); beta and Studio only.
+ AliveFruit=true,
  -- AliveKeepOut (GARDEN-PLAY-BRIEF-2 section 4): pets go round the garden's solid props (GardenKeepOut); beta and Studio.
  AliveKeepOut=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,

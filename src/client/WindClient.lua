@@ -42,6 +42,21 @@ Client.SlowRange=60 -- budget level 1
 local TAU=math.pi*2
 local Side=Vector3.new(-Wind.Direction.Z,0,Wind.Direction.X)
 
+-- A tree shake (GARDEN-PLAY-BRIEF-2 section 5): GardenLife marks a crown part when the player walks into its trunk, and
+-- the crown rocks Rock degrees Rocks times over RockTime about its pivot, on top of its sway, fading as it goes. Weak
+-- keys; os.clock() times. A crown not bound here (no wind, too far) simply does not rock.
+Client.Shake=table.freeze({rock=6,rocks=3,time=.6})
+Client.Shakes=setmetatable({},{__mode="k"})
+function Client.shake(part,at)
+	if typeof(part)=="Instance"then Client.Shakes[part]=at or os.clock()end
+end
+-- Degrees of a shake `t` seconds in, or nil once it is over.
+function Client.rock(t)
+	local S=Client.Shake
+	if type(t)~="number"or t<0 or t>=S.time then return nil end
+	return S.rock*math.sin(TAU*S.rocks*t/S.time)*(1-t/S.time)
+end
+
 -- Degrees for a wind of 0 to 1: nothing in still air, Rest at the breeze, Peak at full wind (a bush's, or rest/peak).
 function Client.amplitude(wind,rest,peak)
 	rest,peak=rest or Client.Rest,peak or Client.Peak
@@ -397,19 +412,29 @@ function Client:step(dt)
 	self.clock+=tick
 	local parts,frames={},{}
 	local busy=false
+	local clock=os.clock()
 	for _,e in ipairs(self.entries)do
 		e.weight=toward(e.weight,if e.wanted and not calm then 1 else 0,tick/Client.Ease)
-		if e.weight>0 then
+		local shook=e.kind=="crown"and Client.Shakes[e.part]
+		local rock=if shook then Client.rock(clock-shook)else nil
+		if shook and not rock then Client.Shakes[e.part]=nil end
+		if calm then rock=nil end
+		if e.weight>0 or rock then
 			busy=true
 			if e.part:IsDescendantOf(workspace)then
-				local wind=if self.scene then Wind.swayAt(e.rest.Position,time)else Wind.at(e.rest.Position,time)
-				e.wind=toward(e.wind,wind,Client.Slew*tick)
+				local frame=e.rest
+				if e.weight>0 then
+					local wind=if self.scene then Wind.swayAt(e.rest.Position,time)else Wind.at(e.rest.Position,time)
+					e.wind=toward(e.wind,wind,Client.Slew*tick)
+					local shown=e.weight*e.weight*(3-2*e.weight)
+					local turn=self.clock/e.period+e.phase
+					if e.kind=="crown"then frame=Client.crownPose(e.rest,e.base,e.wind,shown,turn)
+					else frame=Client.pose(e.rest,e.base,Client.amplitude(e.wind)*shown,turn)end
+				end
+				if rock then frame=CFrame.new(e.base)*CFrame.fromAxisAngle(Side,math.rad(rock))*CFrame.new(-e.base)*frame end
 				e.still=false
-				local shown=e.weight*e.weight*(3-2*e.weight)
-				local turn=self.clock/e.period+e.phase
 				table.insert(parts,e.part)
-				if e.kind=="crown"then table.insert(frames,Client.crownPose(e.rest,e.base,e.wind,shown,turn))
-				else table.insert(frames,Client.pose(e.rest,e.base,Client.amplitude(e.wind)*shown,turn))end
+				table.insert(frames,frame)
 			end
 		elseif not e.still then
 			e.still,e.wind=true,0

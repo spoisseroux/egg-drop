@@ -43,6 +43,7 @@ return function(client)
 		r.camera=CFrame.lookAt(Vector3.new(0,10,10),Vector3.new(0,8,-10))
 		r.player=Vector3.new(0,5,8)
 		r.pets={}
+		r.sounds,r.shakes,r.rocked,r.buzzed={},{},{},{}
 		r.crownColour="lime"
 		r.daylight=options.daylight
 		r.world=Instance.new("Folder");r.world.Name="_GardenLifeSpec";r.world.Parent=workspace
@@ -61,6 +62,11 @@ return function(client)
 			cover=options.cover or {},leafGround=options.leafGround,leaves=function()return options.leaves~=false end,
 			report=options.report or function()end,banks=options.banks or {},groveCrowns=options.groveCrowns,kitParts=options.kitParts,
 			quiet=options.quiet,
+			-- GARDEN-PLAY-BRIEF-2: the `fruit` switch (off unless a case asks), and what the shake does.
+			fruit=if options.fruit then function()return true end else nil,
+			play=function(cue,at,volume,pitch)table.insert(r.sounds,{cue=cue,at=at,volume=volume,pitch=pitch})end,
+			shook=function(i)table.insert(r.shakes,i)end,rock=function(p)table.insert(r.rocked,p)end,
+			buzz=function(name)table.insert(r.buzzed,name)end,
 			-- The garden hour: r.daylight (nil = the hour off), or r.hour(now) when a case drives the real clock.
 			daylight=if options.realHour then nil else function(now)if r.hour then return r.hour(now)end return r.daylight end})
 		function r.step(seconds)
@@ -948,6 +954,91 @@ return function(client)
 			broken.step(3)
 			assert(broken.life.hushed==false and broken.life.enabled)
 			table.clear(broken.warned)
+		end)
+
+		-- GARDEN-PLAY-BRIEF-2 section 5: the 3D fruit and the tree shake (the `fruit` switch) ---------------------------
+		local Fruit=require(game:GetService("ReplicatedStorage").Shared.GardenFruit)
+		local KIT=Sim.kitCrowns(require(game:GetService("ReplicatedStorage").Shared.WorldAeroKit),require(client.AeroKit).crownFrame,{foliage_blossom=true})
+		local TREE=Fruit.trees()[1]
+		local function fruitRig(extra)
+			local options={fruit=true,groveCrowns=KIT}
+			for k,v in pairs(extra or {})do options[k]=v end
+			local r=rig(options)
+			local base=Vector3.new(TREE.x,4,TREE.z)
+			r.camera=CFrame.lookAt(base+Vector3.new(0,6,14),base)
+			r.player=base+Vector3.new(6,1,0)
+			return r
+		end
+		local function models(r)
+			local out={}
+			for slot=1,Sim.Fruit.pool do table.insert(out,r.folder():FindFirstChild("LifeFruit"..slot.."_Body"))end
+			return out
+		end
+		test("3D fruit (`fruit` on): sixteen of body, blush, stem and leaf, bright and matte, inert; no billboard; off: Dewdrops",function()
+			local r=fruitRig()
+			local L=Fruit.Look
+			for slot=1,Sim.Fruit.pool do
+				for _,piece in ipairs({"Body","Blush","Stem","Leaf"})do
+					local p=r.folder():FindFirstChild("LifeFruit"..slot.."_"..piece)
+					assert(p and p.Anchored and not p.CanCollide and not p.CanQuery and not p.CanTouch and p.Reflectance==0,slot..piece)
+					assert(p.Material==Enum.Material.SmoothPlastic)
+				end
+				assert(r.folder():FindFirstChild("LifeDewdrop"..slot)==nil)
+			end
+			local function same(a,hex)local b=Color3.fromHex(hex);return math.abs(a.R-b.R)+math.abs(a.G-b.G)+math.abs(a.B-b.B)<1e-6 end
+			local body=r.folder():FindFirstChild("LifeFruit1_Body")
+			assert(same(body.Color,L.body.colour)and body.Shape==Enum.PartType.Ball)
+			assert(same(r.folder():FindFirstChild("LifeFruit1_Leaf").Color,L.leaf.colour))
+			assert(same(r.folder():FindFirstChild("LifeFruit1_Blush").Color,L.blush.colour))
+			r.step(2)
+			local shown=0
+			for _,p in ipairs(models(r))do if not hidden(p)then shown+=1 end end
+			assert(shown>0,"hanging under the lime crowns in reach")
+			local plain=rig({groveCrowns=KIT})
+			assert(plain.folder():FindFirstChild("LifeDewdrop1")and plain.folder():FindFirstChild("LifeFruit1_Body")==nil,"the switch off: today's fruit")
+		end)
+		test("the shake: walking into a fruit tree's trunk drops one fruit, rocks, rustles twice, buzzes, tells the server; once till it grows back",function()
+			local r=fruitRig()
+			r.step(1)
+			assert(#r.shakes==0,"standing by it does nothing")
+			local trunk=Vector3.new(TREE.x,5,TREE.z)
+			-- Walk in at 6 studs a second, from 5 studs out to 1 stud from the trunk's edge.
+			local function walkIn()
+				local from=trunk+Vector3.new(TREE.trunk+5,0,0)
+				for k=0,30 do
+					r.player=from-Vector3.new(k*.2,0,0)
+					if (r.player-trunk).Magnitude<TREE.trunk+1 then break end
+					r.step(1/30)
+				end
+			end
+			walkIn()
+			assert(#r.shakes==1 and r.shakes[1]==1,"the server is told about tree 1")
+			local rustles=0
+			for _,sound in ipairs(r.sounds)do if string.sub(sound.cue,1,10)=="asmr_flake"then rustles+=1 end end
+			assert(rustles==Fruit.Sounds.rustles and r.buzzed[1]==Fruit.Buzz)
+			assert(#r.life.shakeDrops==1 and r.life.shakeDrops[1].shake==true,"one fruit drops")
+			local key=r.life.shakeDrops[1].key
+			assert(r.life:shakenScale(key,r.now)==0,"its slot hangs empty")
+			r.step(2)
+			local landed=false
+			for _,sound in ipairs(r.sounds)do if sound.cue==Fruit.Sounds.land then landed=true end end
+			assert(landed,"a thud as it lands")
+			assert(#r.life.loose.list>=1,"drawn on the lawn")
+			-- Again at once: nothing (the tree has nothing to shake till its fruit grows back).
+			r.player=trunk+Vector3.new(TREE.trunk+5,0,0);r.step(.1)
+			walkIn()
+			assert(#r.shakes==1,"once till it grows back")
+			r.now+=Fruit.Shake.hidden+Fruit.Shake.grow+1
+			r.player=trunk+Vector3.new(TREE.trunk+5,0,0);r.step(.1)
+			walkIn()
+			assert(#r.shakes==2,"grown back, it shakes again")
+		end)
+		test("the shake, Reduced Motion: the rustle and the buzz only; nothing rocks or falls",function()
+			local r=fruitRig()
+			r.reduced=true
+			local trunk=Vector3.new(TREE.x,5,TREE.z)
+			for k=0,25 do r.player=trunk+Vector3.new(TREE.trunk+5-k*.2,0,0);r.step(1/30)end
+			assert(#r.shakes==1 and #r.life.shakeDrops==0 and #r.rocked==0 and #r.sounds>=Fruit.Sounds.rustles)
 		end)
 
 		test("the budget level is reported once per change (AliveLevel), including the step down to 2",function()
