@@ -99,10 +99,17 @@ function Variants.released(row,week)
  if row.gate~=nil and week~=math.huge and not Gate.listed(row.gate)then return false end
  return row.from==nil or(type(week)=="number"and row.from<=week)
 end
--- Rows listed in `week`, in data order.
+-- Rows listed in `week`, in data order, and a key naming the "This week" rows among them ("" none, "*" every one,
+-- else the pick's id). The pick is asked for once per call (review B37), never once per weekly row.
 function Variants.rows(week,rows)
  local result={}
- for _,row in ipairs(rows or Variants.Rows)do if Variants.released(row,week)then table.insert(result,row)end end
- return result
+ local all=week==math.huge
+ local pick=if all then nil else ThisWeek.featured(week)
+ local weekly=if all then "*"elseif pick then pick.id else ""
+ for _,row in ipairs(rows or Variants.Rows)do
+  local listed=if row.weekly==true then all or(pick~=nil and pick.id==row.id)else Variants.released(row,week)
+  if listed then table.insert(result,row)end
+ end
+ return result,weekly
 end
 return table.freeze(Variants)

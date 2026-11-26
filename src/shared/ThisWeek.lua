@@ -82,12 +82,21 @@ end
 
 -- The switch.
 local injected=nil
+-- The build's own ceiling never changes in a process (the flag, the place, Studio): worked out once (review B37: it
+-- runs on every wardrobe list, live too).
+local ownCeiling=nil
 function ThisWeek.ceiling(env)
+ if env==nil and injected==nil and ownCeiling~=nil then return ownCeiling end
+ local own=env==nil and injected==nil
  env=env or injected or {}
- if(env.flags or Flags).ThisWeek~=true then return false end
- local studio=env.studio
- if studio==nil then studio=RunService:IsStudio()end
- return(env.place or game.PlaceId)==ThisWeek.PlaceId or studio==true
+ local open=false
+ if(env.flags or Flags).ThisWeek==true then
+  local studio=env.studio
+  if studio==nil then studio=RunService:IsStudio()end
+  open=(env.place or game.PlaceId)==ThisWeek.PlaceId or studio==true
+ end
+ if own then ownCeiling=open end
+ return open
 end
 -- Pure: a switch value. Anything but a boolean (missing, malformed) is the shipped default, on.
 function ThisWeek.resolve(configValue,override,ceiling)
@@ -104,11 +113,24 @@ function ThisWeek.setSwitch(value)
  switch=value==true
  return true
 end
+-- The published attribute, read on change (review B37), not on every list. Before the listener is up: read it.
+local attribute,listening=nil,false
+local function published()
+ if not listening then
+  listening=true
+  local ok=pcall(function()
+   ThisWeek.changed():Connect(function()attribute=workspace:GetAttribute(ThisWeek.Attribute)==true end)
+  end)
+  if ok then attribute=workspace:GetAttribute(ThisWeek.Attribute)==true end
+ end
+ if attribute~=nil then return attribute end
+ return workspace:GetAttribute(ThisWeek.Attribute)==true
+end
 function ThisWeek.on()
  if injected then return injected.on~=false and ThisWeek.ceiling(injected)end
  if not ThisWeek.ceiling()then return false end
  if RunService:IsServer()and not switch then return false end
- return workspace:GetAttribute(ThisWeek.Attribute)==true
+ return published()
 end
 function ThisWeek.changed()return workspace:GetAttributeChangedSignal(ThisWeek.Attribute)end
 -- Spec seam, refused outside Studio. env = {on, flags, studio, place}; nil clears it.

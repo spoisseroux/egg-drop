@@ -38,17 +38,15 @@ return function(client)
   test("the pane: full price, the stated cycle, no struck price and no countdown words",function()
    on()
    local item=Catalog.forPet(pet,week).byId["partyhat_plum"]
-   local status=Shop.status(pet,"partyhat_plum",{wallet=500,row={owned={},equipped={}},week=week})
-   -- The pane reads the clock's list; on another clock week the pick is not sold here (the server would refuse it too).
-   if Catalog.item(pet,"partyhat_plum")then
-    assert(status.kind=="buy"and status.price==item.price and status.price==60 and status.full==nil,status.kind)
-    assert(status.text==UICopy.get("thisWeek.status",{weeks=8})and status.fit[2]==UICopy.get("thisWeek.statusShort",{weeks=8}))
-    for _,word in ipairs({"last","left","ends","hurry","only","%d+ days?"})do
-     assert(not string.find(string.lower(status.text),word),"no pressure words: "..word)
-    end
-   else
-    assert(status.kind=="invalid")
+   -- The server's week decides, whatever the device clock says (review B37).
+   local status=Shop.status(pet,"partyhat_plum",{wallet=500,row={owned={},equipped={}},thisWeek=week})
+   assert(status.kind=="buy"and status.price==item.price and status.price==60 and status.full==nil,status.kind)
+   assert(status.text==UICopy.get("thisWeek.status",{weeks=8})and status.fit[2]==UICopy.get("thisWeek.statusShort",{weeks=8}))
+   for _,word in ipairs({"last","left","ends","hurry","only","%d+ days?"})do
+    assert(not string.find(string.lower(status.text),word),"no pressure words: "..word)
    end
+   assert(Shop.status(pet,"partyhat_plum",{wallet=500,row={owned={},equipped={}},thisWeek=week+1}).kind=="invalid","another server week: not sold")
+   assert(Shop.status(pet,"partyhat_plum",{wallet=500,row={owned={},equipped={}},thisWeek=false}).kind=="invalid","server off: not sold")
   end)
   test("bought stays owned: another week's item the pet owns resolves, wears and stays in its slot tab",function()
    on()
@@ -57,7 +55,7 @@ return function(client)
    assert(item and item.weekly==true,"an owned weekly id resolves")
    local owned=Shop.status(pet,id,{wallet=0,row={owned={id},equipped={}}})
    assert(owned.kind=="owned"and owned.button=="Wear")
-   local unowned=Shop.status(pet,id,{wallet=500,row={owned={},equipped={}}})
+   local unowned=Shop.status(pet,id,{wallet=500,row={owned={},equipped={}},thisWeek=week})
    assert(unowned.kind=="invalid","not this week: not sold")
    local found=false;for _,card in ipairs(Shop.tileList(pet,item.slot,{id}))do if card.id==id then found=true end end
    assert(found,"listed in its slot tab")

@@ -40,6 +40,13 @@ function Deal.week(state)
  if type(state.shelfWeek)=="number"then return state.shelfWeek end
  return Deal.weekOf(state.dailyDay)
 end
+-- "This week" (ThisWeek): the server's week for the weekly pick (public.thisWeek), or nil while the server's switch is
+-- off (or before a snapshot). Never the device clock (review B37): a skewed clock near Monday 05:00 UTC still shows
+-- the pick the server sells.
+function Deal.thisWeek(state)
+ if state==nil then state=Snapshot.read()end
+ return if type(state)=="table"and type(state.thisWeek)=="number"then state.thisWeek else nil
+end
 -- Pure: this week's slots, {kind, id, full, price} each ({} when there is no shelf).
 function Deal.slots(week)
  local Shelf=Deal.shelf()

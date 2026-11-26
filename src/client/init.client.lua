@@ -1243,6 +1243,7 @@ do
   local features=(state and state.petFeatures or {})[petId]or {}
   -- Slice C: the shelf week of this snapshot (its own dailyDay), so the price sent is the server's.
   return {wallet=state and state.nectar or 0,week=require(script.ShelfDeal).week(state or {}),
+   thisWeek=require(script.ShelfDeal).thisWeek(state or {})or false,
    row={owned=table.clone(row and row.owned or {}),equipped=table.clone(row and row.equipped or {})},
    stages={horns=features.horns and features.horns.visible or 0,wings=features.wings and features.wings.visible or 0}}
  end
