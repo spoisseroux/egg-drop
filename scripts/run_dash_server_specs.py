@@ -100,7 +100,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The garden's drift lanterns and seed fluff (GARDEN-PLAY-BRIEF section 4): spots, heights, night, the client.
           "DriftLanterns",
           # Beta (34) QA: the walk feel (eased legs, turns, corners) and the pause's look round (PetWalkBeats).
-          "PetWalk"]
+          "PetWalk",
+          # GARDEN-PLAY-BRIEF-2 section 7: the Dash start balloon (DashBalloon: its cues, motion, parts and stillness).
+          "DashBalloon"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
