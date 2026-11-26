@@ -109,7 +109,7 @@ ui.coach.roundTwo.toy,Round two: hatch a toy for {pet},,First-round coaching; e.
 ui.coach.sayHi.key,Press E near {pet} to say hi,,First-round coaching; e.g. Press E near Bear to say hi
 ui.coach.sayHi.pad,Press X near {pet} to say hi,,First-round coaching; e.g. Press X near Bear to say hi
 ui.coach.sayHi.touch,Tap {pet} to say hi,,First-round coaching; e.g. Tap Bear to say hi
-ui.coach.skip,Skip,,First-round coaching; also ui.loading.skip
+ui.coach.skip,Skip,,"First-round coaching; also ui.onb2.stork.skip, ui.loading.skip"
 ui.coach.style.line,"Faceplates, backgrounds and balls. Looks only.",,First-round coaching
 ui.coach.style.title,Deck style,,"First-round coaching; also ui.hub.tile.style.name, ui.r3.help.style.title, ui.r5.station.Customize.name"
 ui.coach.welcome.line,Merge to crack the egg. Stars come with it.,,First-round coaching
@@ -603,6 +603,25 @@ ui.notice.tomorrow.what,"A new stamp, three new quests and three Stat Eggs arriv
 ui.notice.welcome.next,"Keep merging to crack the mystery egg. Your first friend hatches from it, with Stars.",,Menu text
 ui.notice.welcome.title,Your first round,,Menu text
 ui.notice.welcome.what,Drop balls into the deck. Two of the same kind merge into a bigger one.,,Menu text
+ui.onb2.card.meet,Meet {pet},,Menu text; e.g. Meet Bear
+ui.onb2.crack.click,Click the egg!,,Menu text; also ui.onboarding.crack.click
+ui.onb2.crack.pad,Crack it!,,Menu text
+ui.onb2.crack.tap,Tap the egg!,,Menu text; also ui.onboarding.crack.tap
+ui.onb2.deck.click,Click to drop,,Menu text
+ui.onb2.deck.drop,Drop a ball!,,Menu text
+ui.onb2.deck.hatching,It's hatching!,,Menu text
+ui.onb2.deck.match,Match two!,,Menu text
+ui.onb2.deck.one,1 more!,,Menu text
+ui.onb2.deck.two,2 more!,,Menu text
+ui.onb2.guide.allSet,You're all set!,,Menu text
+ui.onb2.guide.ballIcon,Ball,,"Menu text; also catalog.ToyCatalog.ById.ball.name, catalog.BookCatalog.Pages.toys.items.1.name"
+ui.onb2.guide.deck,Play for Stars!,,Menu text
+ui.onb2.guide.deckIcon,Deck,,Menu text
+ui.onb2.guide.eggsIcon,Eggs,,Menu text
+ui.onb2.guide.nest,Tuck the egg in!,,Menu text
+ui.onb2.guide.pet,Pet {pet}!,,Menu text; e.g. Pet Bear!
+ui.onb2.replay,Watch the first hatch again,,Menu text
+ui.onb2.stork.delivery,A delivery!,,Menu text
 ui.onb3.charm.name,Nest Charm,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.need.deck,{pet} wants to watch you play.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear wants to watch you play."
 ui.onb3.need.egg,{pet}'s egg is ready to hatch!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear's egg is ready to hatch!; also ui.onb3.notify"
@@ -681,9 +700,7 @@ ui.onb3.tip.park,Pets play together in here.,,"First-session onboarding: pet bub
 ui.onb3.tip.style,Dress up your Pocket Deck here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.week.line,{pet} loves the garden. A new egg naps in the nest after every hatch.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear loves the garden. A new egg naps in the nest after every hatch."
 ui.onb3.week.title,Welcome week done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
-ui.onboarding.crack.click,Click the egg!,,First-round coaching
 ui.onboarding.crack.pad,Press A!,,First-round coaching
-ui.onboarding.crack.tap,Tap the egg!,,First-round coaching
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
 ui.onboarding.spend.store,Store,,First-round coaching
@@ -1227,7 +1244,6 @@ catalog.MaterialCatalog.ById.metal.name,Metal,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.pearl_edge.name,Pearl Edge,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.speckle_satin.name,Speckle Satin,,Catalogue MaterialCatalog (name)
 catalog.MaterialCatalog.ById.standard.name,Standard,,Catalogue MaterialCatalog (name)
-catalog.ToyCatalog.ById.ball.name,Ball,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.1.name
 catalog.ToyCatalog.ById.bone.name,Bone,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.2.name
 catalog.ToyCatalog.ById.sparkler.name,Sparkler,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.4.name
 catalog.ToyCatalog.ById.squeaky_carrot.name,Squeaky Carrot,,Catalogue ToyCatalog (name); also catalog.BookCatalog.Pages.toys.items.5.name
