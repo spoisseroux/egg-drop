@@ -14,7 +14,8 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- Beta 34 notes (GARDEN-PLAY-BRIEF 3): `wobble` is the Wobble Egg on the crag (WobbleEggClient). Missing = on.
 -- GARDEN-PLAY-BRIEF 1: `balls` is the three Bumble balls (BumbleBalls, BumbleBallHost, BumbleBallsClient). Missing = on.
 -- GARDEN-PLAY-BRIEF 2026-11-26: `crunch` is the crunchy toys round the garden (CrunchToysClient), `air` the drift
--- lanterns and seed fluff over it (DriftLanternsClient). Missing = on.
+-- balloons (since GARDEN-PLAY-BRIEF-2 section 6: hot-air balloons, three with a mascot) and seed fluff over it
+-- (DriftLanternsClient). Missing = on.
 Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble","balls","crunch","air"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
  scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr",wobble="AliveWobble",balls="AliveBalls",
