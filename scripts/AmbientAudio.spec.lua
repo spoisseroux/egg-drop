@@ -409,13 +409,19 @@ return function(client, parent)
 			assert(Ambient.bedGain(0 / 0) == Ambient.BedFloor and Ambient.bedGain(0 / 0, Ambient.Quiet.bed) == Ambient.Quiet.bed.floor)
 			assert(Ambient.bedGain(0, Ambient.Quiet.bed) == Ambient.Quiet.bed.peak and Ambient.bedGain(Ambient.Quiet.bed.range, Ambient.Quiet.bed) == Ambient.Quiet.bed.floor)
 			-- Eased out over .6 s, then paused after 2 s at silence.
-			assert(#a.falls == 2, "both falls have voices")
+			assert(#a.falls == 5, "both falls have a voice per emitter (3 + 2): " .. #a.falls)
 			for _ = 1, 180 do a:step(1 / 30) end
 			assert(Ambient.bedGain(Ambient.Quiet.bed.full, Ambient.Quiet.bed) == Ambient.Quiet.bed.peak, "full within `full` studs")
 			assert(a.quietOn == true and a.bed < .002 and not a.bedVoice.IsPlaying, "quiet: the bed is silent away from water " .. a.bed)
+			local source = Ambient.waterSource("waterfall")
 			for _, fall in ipairs(a.falls) do
-				local over = Ambient.Quiet.falls[fall.name]
-				assert(fall.voice.RollOffMaxDistance == over.max and fall.voice.RollOffMinDistance == over.min and near(fall.voice.Volume, over.volume, 1e-4), fall.name)
+				local over = Ambient.Quiet.falls[fall.name][fall.index]
+				assert(fall.voice.RollOffMaxDistance == over.max and fall.voice.RollOffMinDistance == over.min
+					and near(fall.voice.Volume, over.volume * source.volume, 1e-4) and fall.voice.IsPlaying, fall.name .. " " .. fall.index)
+				assert(fall.voice.SoundId == "rbxassetid://" .. source.id and near(fall.voice.PlaybackSpeed, over.speed * source.speed, 1e-6))
+				assert(fall.part.Position == Ambient.fallPoint(fall.beam, over), "emitter placed down the fall")
+				local eq = fall.voice:FindFirstChild("WaterEq")
+				assert((source.eq == nil and (eq == nil or eq.Enabled == false)) or (eq and eq.Enabled and eq.HighGain == source.eq.high), "the stand-in's EQ")
 			end
 			listener = Vector3.new(2.5, 7, 21) -- on the bridge, over the stream
 			for _ = 1, 60 do a:step(1 / 30) end
@@ -425,8 +431,18 @@ return function(client, parent)
 			for _ = 1, 60 do a:step(1 / 30) end
 			assert(a.quietOn == false and a.bed > Ambient.BedFloor * .95 and a.bedVoice.IsPlaying, "off: today's bed floor " .. a.bed)
 			for _, fall in ipairs(a.falls) do
-				assert(fall.spec == Ambient.Falls[fall.name] and fall.voice.RollOffMaxDistance == fall.spec.max
-					and fall.voice.RollOffMinDistance == fall.spec.min and near(fall.voice.Volume, fall.spec.volume, 1e-4), fall.name)
+				if fall.index == 1 then
+					assert(fall.spec == Ambient.Falls[fall.name] and fall.voice.RollOffMaxDistance == fall.spec.max
+						and fall.voice.RollOffMinDistance == fall.spec.min and near(fall.voice.Volume, fall.spec.volume, 1e-4), fall.name)
+					local base = Ambient.Falls[fall.name]
+					local at = fall.beam[base.anchor]
+					assert(fall.part.Position == Vector3.new(at[1], at[2] + base.lift, at[3]), "off: today's point")
+					assert(fall.voice.SoundId == "rbxassetid://" .. Ambient.Ids.waterfall_loop and fall.voice.PlaybackSpeed == base.speed, "off: today's clip")
+					local eq = fall.voice:FindFirstChild("WaterEq")
+					assert(eq == nil or eq.Enabled == false, "off: no EQ")
+				else
+					assert(fall.spec.volume == 0 and fall.voice.Volume == 0 and not fall.voice.IsPlaying, "off: the spare emitters are stopped")
+				end
 			end
 		end)
 		a:destroy();folder:Destroy();assert(ok, err)
@@ -613,6 +629,124 @@ return function(client, parent)
 				listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return 0 end })
 		assert(b.zonesOf == nil, "fixtures: no zones")
 		b:destroy();Ambient.shared = shared
+	end)
+
+	test("beta 35 water: the rolloff model, the falls loud at their pools and silent at the lawn, the fountain heard to ~70", function()
+		-- InverseTapered as modelled: full within min, the lower of Inverse and LinearSquare, silent from max, never rising.
+		assert(Ambient.rolloff(5, 8, 72) == 1 and Ambient.rolloff(72, 8, 72) == 0 and Ambient.rolloff(0 / 0, 8, 72) == 0)
+		assert(near(Ambient.rolloff(16, 8, 72), .5, 1e-9), "inverse near min")
+		assert(near(Ambient.rolloff(64, 8, 72), (8 / 64) ^ 2, 1e-9), "linear-square near max")
+		local last = 1
+		for d = 0, 80, .5 do local g = Ambient.rolloff(d, 8, 72); assert(g <= last + 1e-12); last = g end
+		local World = require(game.ReplicatedStorage.Shared.WorldV7Data)
+		local function heard(point, name)
+			local sum = 0
+			for _, beam in ipairs(World.beams.falls) do
+				if beam.name == name or not name then
+					for _, e in ipairs(Ambient.Quiet.falls[beam.name]) do
+						sum += e.volume * Ambient.rolloff((Ambient.fallPoint(beam, e) - point).Magnitude, e.min, e.max)
+					end
+				end
+			end
+			return sum
+		end
+		-- Silent at the spawn lawn and on the arrival dais.
+		assert(heard(Vector3.new(0, 6, 0)) == 0 and heard(Vector3.new(96, 4, 66)) == 0, "a fall is heard from the lawn or the dais")
+		-- Tumble: walking in along its pool's axis, louder every step, loud at the pool, still there 45 studs out.
+		local tumble = "W7_Water__waterfall_tumble"
+		local foot = Ambient.fallPoint(World.beams.falls[1], Ambient.Quiet.falls[tumble][1])
+		local inward = Vector3.new(-foot.X, 0, -foot.Z).Unit
+		local previous = -1
+		for out = 70, 12, -2 do
+			local g = heard(Vector3.new(foot.X, 4, foot.Z) + inward * out, tumble)
+			assert(g >= previous - 1e-9, "quieter nearer the pool at " .. out)
+			previous = g
+		end
+		local pool = heard(Vector3.new(foot.X, 4, foot.Z) + inward * 12, tumble)
+		assert(pool > .25, "Tumble at its pool " .. pool)
+		assert(heard(Vector3.new(foot.X, 4, foot.Z) + inward * 45, tumble) > .03, "Tumble 45 studs out")
+		-- The old single point, heard from a camera 20 studs behind the same pool spot, was about .03: now ten times that.
+		assert(pool > 8 * .18 * Ambient.rolloff(24, 6, 38))
+		-- Sky Falls: from the island's edge beside it, clearly there.
+		local sky = World.beams.falls[2]
+		assert(sky.name == "W7_Water__waterfall_sky")
+		local lip = Vector3.new(sky.top[1], sky.top[2] + 2, sky.top[3]) + Vector3.new(-sky.top[1], 0, -sky.top[3]).Unit * 8
+		assert(heard(lip, sky.name) > .2, "Sky Falls from the edge " .. heard(lip, sky.name))
+		-- Each emitter's speed and start differ from its fall's others (no comb filtering between copies of one loop).
+		for name, list in pairs(Ambient.Quiet.falls) do
+			for i = 1, #list do
+				for j = i + 1, #list do
+					assert(list[i].speed ~= list[j].speed and list[i].offset ~= list[j].offset, name .. " copies in step")
+				end
+				assert(list[i].offset < 10, "offset inside the shortest clip")
+			end
+		end
+		-- The fountain: a gentle curve heard to ~70 studs, faint but there at the spawn lawn.
+		local Aero = require(game.ReplicatedStorage.Shared.WorldAero)
+		local v = Aero.Fountain.Voice
+		assert(v.max >= 60 and v.max <= 80 and v.min >= 6 and v.min <= 10, "fountain rolloff " .. v.min .. " / " .. v.max)
+		assert(v.volume * Ambient.rolloff(30, v.min, v.max) > .05, "fountain at 30 studs")
+		local lawn = v.volume * Ambient.rolloff((Vector3.new(52, 4, 3) - Vector3.new(0, 6, 0)).Magnitude, v.min, v.max)
+		assert(lawn > .01 and lawn < .04, "fountain at the lawn " .. lawn)
+		assert(v.id == nil and v.fallback == nil, "the fountain's clip comes from WaterLoops")
+	end)
+
+	test("beta 35 water: placeholder ids play the EQ'd stand-ins; a filled id plays with the stand-in as fallback; a failed one falls back", function()
+		local loops = Ambient.WaterLoops
+		local ok, err = pcall(function()
+			for kind, loop in pairs(loops) do
+				assert(type(loop.id) == "number" and loop.id >= 0, kind)
+				assert(loop.standIn.id ~= 96991688758765, "the fried fountain loop is not a stand-in")
+				assert(loop.standIn.eq and loop.standIn.eq.high <= -8, kind .. " stand-in keeps its crackly highs")
+			end
+			assert(Ambient.waterSource("lava") == nil)
+			Ambient.WaterLoops = { fountain = { id = 0, standIn = loops.fountain.standIn } }
+			local s = Ambient.waterSource("fountain")
+			assert(s.id == loops.fountain.standIn.id and s.eq == loops.fountain.standIn.eq and s.fallback == nil and s.volume == loops.fountain.standIn.volume)
+			Ambient.WaterLoops = { fountain = { id = 4242, speed = 1, volume = 1, standIn = loops.fountain.standIn } }
+			s = Ambient.waterSource("fountain")
+			assert(s.id == 4242 and s.eq == nil and s.fallback.id == loops.fountain.standIn.id and s.fallback.eq == loops.fountain.standIn.eq)
+			s = Ambient.waterSource("fountain", true)
+			assert(s.id == loops.fountain.standIn.id and s.fallback == nil, "a failed load plays the stand-in")
+			Ambient.WaterLoops = loops
+			-- The fountain voice through addWaterVoice: the clip, its EQ, its volume scale, and the fallback's.
+			local audio = { master = 1, deviceActive = true, ducks = {}, isMusicEnabled = function() return true end }
+			local folder = Instance.new("Folder");folder.Parent = parent or workspace
+			local a = Ambient.new(audio, { auto = false, world = folder, wind = false, windBed = false, echo = false, quiet = function() return true end,
+				listener = function() return Vector3.zero end, daylight = function() return 1 end, now = function() return 0 end })
+			local preload, length = Ambient.preload, Ambient.length
+			local ok2, err2 = pcall(function()
+				local host = Instance.new("Part");host.Parent = folder
+				Ambient.WaterLoops = loops
+				Ambient.preload = function(list, callback) callback(list[1].SoundId, Enum.AssetFetchStatus.Success) end
+				Ambient.length = function() return 10 end
+				local remove = a:addWaterVoice("fountain", { parent = host, volume = .24, speed = 1, min = 8, max = 72, start = .5 })
+				local entry = a.falls[#a.falls]
+				local stand = loops.fountain.standIn
+				assert(entry.voice.SoundId == "rbxassetid://" .. (if loops.fountain.id > 0 then loops.fountain.id else stand.id), entry.voice.SoundId)
+				if loops.fountain.id == 0 then
+					local eq = entry.voice:FindFirstChild("WaterEq")
+					assert(eq and eq.Enabled and eq.HighGain == stand.eq.high and eq.LowGain == stand.eq.low, "the stand-in's EQ")
+					assert(near(entry.spec.volume, .24 * stand.volume, 1e-9), "the stand-in's volume scale")
+				end
+				assert(entry.voice.RollOffMinDistance == 8 and entry.voice.RollOffMaxDistance == 72)
+				remove()
+				-- A filled id that fails: the stand-in, its speed, volume scale and EQ.
+				Ambient.WaterLoops = { fountain = { id = 4242, speed = 1, volume = 1, standIn = stand } }
+				Ambient.preload = function(list, callback) callback(list[1].SoundId, "Failure") end
+				remove = a:addWaterVoice("fountain", { parent = host, volume = .24, min = 8, max = 72 })
+				entry = a.falls[#a.falls]
+				assert(entry.fellBack and entry.voice.SoundId == "rbxassetid://" .. stand.id and near(entry.spec.volume, .24 * stand.volume, 1e-9))
+				local eq = entry.voice:FindFirstChild("WaterEq")
+				assert(eq and eq.Enabled and eq.HighGain == stand.eq.high, "the fallback's EQ")
+				remove()
+			end)
+			Ambient.preload, Ambient.length = preload, length
+			Ambient.WaterLoops = loops
+			a:destroy();folder:Destroy();assert(ok2, err2)
+		end)
+		Ambient.WaterLoops = loops
+		assert(ok, err)
 	end)
 
 	return { passed = #cases, cases = cases }

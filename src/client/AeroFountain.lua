@@ -101,11 +101,12 @@ function Fountain.build(folder,spot,ambient)
 	end
 	self.apply()
 	-- The voice last, once nothing else can throw (code review r2): a remover is never lost.
-	if ambient and ambient.addVoice then
+	if ambient and ambient.addWaterVoice then
 		local voice=Look.Voice
-		-- LOOK-R3 3: from a random point of the clip, and the stand-in if the original loop will not load.
-		local ok,result=pcall(ambient.addVoice,ambient,"fountain",{id=voice.id,parent=jetHost,volume=voice.volume,
-			speed=voice.speed,min=voice.min,max=voice.max,start=Random.new():NextNumber(),fallback=voice.fallback})
+		-- LOOK-R3 3: from a random point of the clip. Beta 35: the clip (and the stand-in if it will not load) is
+		-- AmbientAudio.WaterLoops.fountain.
+		local ok,result=pcall(ambient.addWaterVoice,ambient,"fountain",{parent=jetHost,volume=voice.volume,
+			speed=voice.speed,min=voice.min,max=voice.max,start=Random.new():NextNumber()})
 		if ok then remove=result end
 	end
 	return self
