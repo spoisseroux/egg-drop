@@ -111,7 +111,7 @@
     24.9251,
     43.6588
    ],
-   "triangles": 712,
+   "triangles": 852,
    "look": {
     "kind": "island",
     "material": "boulder_rock"
@@ -1206,7 +1206,7 @@
   "W7_F_PathGrass__grass": 220,
   "W7_F_PathWall__cliff_rock": 896,
   "W7_F_PathFoot__dirt_path": 184,
-  "W7_F_PathSteps__boulder_rock": 712,
+  "W7_F_PathSteps__boulder_rock": 852,
   "W7_F_PathRocks__cliff_rock": 2900,
   "W7_F_Lip1__boulder_rock": 80,
   "W7_F_Lip2__boulder_rock": 80,
@@ -1225,7 +1225,7 @@
   "W7_F_PathOverRocks__cliff_rock_1817": 156,
   "W7_F_PathSkin__cliff_rock": 74,
   "W7_F_PathBacking__cliff_rock": 1600,
-  "fixedTotal": 18190,
+  "fixedTotal": 18330,
   "lipStones": 10,
   "stakes": 6,
   "stepMaxDeviation": 0.543,

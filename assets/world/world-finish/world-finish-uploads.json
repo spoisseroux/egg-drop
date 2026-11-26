@@ -79,17 +79,17 @@
  "path": {
   "model": {
    "file": "world-finish-path.fbx",
-   "sha256": "2b534460c0741dd31a1462574b350b517d39ca8120cafefd5bbac1aa0dbab09b",
-   "manifestSha256": "d8d88f5483dd50a0dd146777d7758639dfbad043cbc1a0041356e071a1b9712b",
-   "operation": "453f0cb0-cc30-4031-852a-563b37b9f2e2",
-   "assetId": "106742470660694",
+   "sha256": "a7dce80115182539557320b24fbb92b7ae2c0340bdd4677c6638bd7dcd9047db",
+   "manifestSha256": "68e15b487e1b967bfa88899813dd9974dc990b7eced77e449825b8a82be7859a",
+   "operation": "c285431f-bedd-420e-b5f3-2b51ced2f34a",
+   "assetId": "96076374381066",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "139188723411606",
-    "operation": "f8a27518-31e1-494a-82c3-7e885809fa62",
-    "why": "superseded by round 9 (Spencer beta 35)"
+    "assetId": "106742470660694",
+    "operation": "453f0cb0-cc30-4031-852a-563b37b9f2e2",
+    "why": "superseded by round 9b (the turn's steps fanned apart)"
    },
-   "why": "round 9 (Spencer beta 35, shots 55 and 58): rock cheek masses along the return flight's outer side, a column of rock over the cut wall's open end at the foot; mesh gate and path check PASS"
+   "why": "round 9 and 9b (Spencer beta 35, shots 55 and 58): rock cheek masses along the return flight's outer side, a column of rock over the cut wall's open end at the foot; mesh gate and path check PASS; 9b: each step runs on under the next one's riser and its front always laps the step below (no wedges at the turn)"
   },
   "images": {}
  },

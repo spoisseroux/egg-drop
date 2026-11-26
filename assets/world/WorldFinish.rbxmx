@@ -6,7 +6,7 @@
     <Item class="StringValue" referent="WorldFinishVersion">
       <Properties>
         <string name="Name">Version</string>
-        <string name="Value">f3c11e49a2a45a22</string>
+        <string name="Value">cdd4c3712bfc4c96</string>
       </Properties>
     </Item>
     <Item class="MeshPart" referent="WFD0">
@@ -747,7 +747,7 @@
     <Item class="MeshPart" referent="WFP4">
       <Properties>
         <string name="Name">W7_F_PathSteps__boulder_rock</string>
-        <Content name="MeshId"><url>rbxassetid://105955502992159</url></Content>
+        <Content name="MeshId"><url>rbxassetid://138031135209263</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>67.5466</X><Y>24.9251</Y><Z>43.6588</Z></Vector3>
         <Vector3 name="InitialSize"><X>530.0210571289062</X><Y>195.581298828125</Y><Z>342.5797424316406</Z></Vector3>

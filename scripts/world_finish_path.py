@@ -301,19 +301,28 @@ def steps():
         if not sel:
             continue
         da, db = sel[0]["d"], sel[-1]["d"]
+        runs = [[s for s in sel if da + (db - da) * k / n - 1e-6 <= s["d"] <= da + (db - da) * (k + 1) / n + 1e-6]
+                for k in range(n)]
         for k in range(n):
             lo, hi = da + (db - da) * k / n, da + (db - da) * (k + 1) / n
-            run = [s for s in sel if lo - 1e-6 <= s["d"] <= hi + 1e-6]
+            run = runs[k]
             if len(run) < 2:
                 continue
+            # round 9b (Spencer beta 35 follow-up, the turn: the return flight's steps fanned apart, grass showing in
+            # wedges between them): a step's block runs on to the next step's first row, under its riser, so
+            # neighbouring steps meet edge to edge round the curve (the next block's front, pushed forward, covers it)
+            body = run + ([runs[k + 1][0]] if k + 1 < n and runs[k + 1] and runs[k + 1][0] is not run[-1] else [])
             # 0.2 over the ramp's middle: the island's carved ground never shows through a tread (Fable D1 1), and
             # every point of the tread stays within 0.8 of the ramp
             top = run[len(run) // 2]["h"] + .2
             out.append({"flight": name, "top": round(top, 3), "front": round(lo, 2), "back": round(hi, 2),
                         "dev": round(max(abs(s["h"] - top) for s in run), 3)})
             jf = [rnd.uniform(-.3, .3) for _ in range(5)]          # Fable D1 4: fronts vary 0.3, a 0.15 nosing
-            step_block(m, run, top, jf, nose=.15)
+            step_block(m, body, top, jf, nose=.15)
     return m, out
+
+
+STEP_LAP = .1                       # round 9b: the least a step's front stands forward of its first row
 
 
 def step_block(m, run, top, jf, nose=.15, depth=1.2, cols=5):
@@ -331,7 +340,8 @@ def step_block(m, run, top, jf, nose=.15, depth=1.2, cols=5):
         w = s["w"] / 2 - .1
         p = Q(s, -w + 2 * w * c / (cols - 1), y)
         if front:
-            push = jf[min(c, len(jf) - 1)] + nose
+            # round 9b: never pulled back behind its row (a step's front always laps the step below it)
+            push = max(STEP_LAP, jf[min(c, len(jf) - 1)] + nose)
             p = (p[0] + bx[0] * push, p[1], p[2] + bx[1] * push)
         return p
 
