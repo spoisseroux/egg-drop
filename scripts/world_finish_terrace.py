@@ -264,6 +264,7 @@ def outcrops_and_slab():
                                     ((-15.8, -18.2), (1.9, 1.8, 1.8), .2, .15), ((7.0, -19.6), (2.4, 2.0, 2.2), .15, .05),
                                     ((-35.0, -7.0), (2.6, 1.3, 4.6), .2, 0.0)):
         x, _, z = T(s_, t_)
+        r = tuple(q * 1.4 for q in r)                   # round 6 (Fable 2): the outcrops 7 high
         blobs.append(((x, Y + r[1] * (1 - 2 * sink), z), r, ridge + .3 * tilt, tilt))
     rocks = Pth.rock_mass("W7_F_TerraceRocks__cliff_rock", blobs, target=1400, floor_y=Y - .3)
     # the lookout slab: a flat stone 7 x 5, 0.35 thick, its top at 29.3
@@ -274,7 +275,7 @@ def outcrops_and_slab():
     for k in range(10):
         th = 2 * math.pi * k / 10
         r = 1 + .08 * math.sin(2 * th + .7)
-        u, v = 3.5 * r * math.cos(th), 2.5 * r * math.sin(th)
+        u, v = 5.0 * r * math.cos(th), 3.5 * r * math.sin(th)        # round 6 (Fable 2): the slab 10 x 7
         pts.append((cx + S.TIER_D[0] * u + S.TIER_N[0] * v, cz + S.TIER_D[1] * u + S.TIER_N[1] * v))
     for k in range(10):
         a, b = pts[k], pts[(k + 1) % 10]
@@ -285,15 +286,15 @@ def outcrops_and_slab():
 
 
 def log_bench():
-    """A log 6 long, 0.9 across, its top flattened, facing the garden (local: along x, base at y 0)."""
+    """A log 8 long (round 6, Fable 2), 1.1 across, its top flattened, facing the garden (local: along x, base at y 0)."""
     v, f = [], []
     n = 10
-    for end in (-3.0, 3.0):
+    for end in (-4.0, 4.0):
         for k in range(n):
             a = 2 * math.pi * k / n
-            y = .45 + .45 * math.sin(a)
-            y = min(y, .78)                              # the flattened seat
-            v.append((end, y, .45 * math.cos(a)))
+            y = .55 + .55 * math.sin(a)
+            y = min(y, .95)                              # the flattened seat
+            v.append((end, y, .55 * math.cos(a)))
     for k in range(n):
         f.append([k, (k + 1) % n, n + (k + 1) % n, n + k])
     f.append(list(range(n))[::-1])
@@ -306,7 +307,7 @@ def trunk():
     v, f = [], []
     n = 8
     # Fable E1 8: a flared foot (1.6 across) tapering to 0.7, leaning about 4 degrees
-    for y, r, dx in ((-.5, .8, 0), (1.2, .52, .08), (5, .42, .35), (9, .35, .62)):
+    for y, r, dx in ((-.5, 1.0, 0), (1.6, .65, .1), (6.6, .52, .46), (12, .44, .82)):   # round 6: the tree 18 tall
         for k in range(n):
             a = 2 * math.pi * k / n
             v.append((dx + r * math.cos(a), y, r * math.sin(a)))

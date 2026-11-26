@@ -410,7 +410,8 @@ def fin_and_notch():
 
 
 # --------------------------------------------------------------------------------------------------------- the kit
-LIP_KIT = [(1.2, 1.1, 101), (1.8, 1.3, 102), (2.4, 1.6, 103), (2.9, 1.8, 104), (3.4, 2.1, 105)]   # length, height (0.8 to 1.8 showing: sunk 0.3), seed
+# round 6 (Fable DEN-ROUND6-LOOK 2): 1.2 to 2.6 showing, 2 to 5 long
+LIP_KIT = [(2.0, 1.5, 101), (2.8, 1.9, 102), (3.6, 2.2, 103), (4.3, 2.6, 104), (5.0, 2.9, 105)]   # length, height (0.8 to 1.8 showing: sunk 0.3), seed
 
 
 def lip_stone(k):
@@ -424,7 +425,7 @@ def lip_stone(k):
         j = 1 + rnd.uniform(-.12, .12)
         y = max(y, -.55)                                                 # flat base
         top = 1.0 if y < .55 else .82 + .1 * rnd.uniform(-1, 1)          # rounded, slightly flattened top
-        v.co = (x * j * length / 2, -z * j * .45, ((y + .55) / 1.55) * height * top - .3)
+        v.co = (x * j * length / 2, -z * j * (.45 + .1 * length), ((y + .55) / 1.55) * height * top - .3)   # round 6: deeper with length
     me = bpy.data.meshes.new(f"W7_F_Lip{k + 1}__boulder_rock")
     bm.to_mesh(me)
     bm.free()
@@ -436,10 +437,10 @@ def lip_stone(k):
 
 
 def stake():
-    """A timber stake 0.35 square, 2.6 high, base at y 0 (local), a slanted cut top (24 tris)."""
+    """A timber stake 0.5 square, 3.4 high (round 6, Fable 2), base at y 0 (local), a slanted cut top."""
     v, f = [], []
-    s = .175
-    for y, sc in ((-.4, 1.0), (2.45, .92)):
+    s = .25
+    for y, sc in ((-.4, 1.0), (3.25, .92)):
         for x, z in ((-s, -s), (s, -s), (s, s), (-s, s)):
             v.append((x * sc, y + (.12 if x > 0 else 0) * (y > 0), z * sc))
     for k in range(4):

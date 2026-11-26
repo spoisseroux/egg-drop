@@ -308,7 +308,35 @@ def save_png(arr, path, size, srgb_input=True):
     return img
 
 
+def clean_slivers(obj, deg=4.0, tiny=.002, passes=6):
+    """Round 6 mesh gate: collapse the shortest edge of every face with a corner under `deg` degrees or an area under
+    `tiny` (the dome's apex fan, decimated rock), a few passes, so no needle triangle is exported. Returns the count."""
+    import bmesh
+    lim, done = math.radians(deg), 0
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    for _ in range(passes):
+        bm.faces.ensure_lookup_table()
+        edges = set()
+        for f in bm.faces:
+            if f.calc_area() < tiny or any(l.calc_angle() < lim for l in f.loops):
+                edges.add(min(f.edges, key=lambda e: e.calc_length()))
+        if not edges:
+            break
+        edges = [e for e in edges if e.is_valid]
+        bmesh.ops.collapse(bm, edges=edges, uvs=True)
+        bmesh.ops.dissolve_degenerate(bm, dist=1e-5, edges=bm.edges)
+        done += len(edges)
+    bm.to_mesh(obj.data)
+    bm.free()
+    obj.data.update()
+    return done
+
+
 def export_fbx(objs, path):
+    for o in objs:                          # round 6: the art's own meshes (never the re-cut island copies)
+        if o.type == "MESH" and o.name.startswith("W7_F_"):
+            clean_slivers(o)
     only(objs)
     bpy.ops.export_scene.fbx(filepath=str(path), use_selection=True, axis_forward="-Z", axis_up="Y", global_scale=1.0,
                              apply_unit_scale=True, use_mesh_modifiers=True, object_types={"MESH"}, add_leaf_bones=False,

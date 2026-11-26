@@ -23,17 +23,26 @@ D, M = S.DEN, S.MOUTH
 FLOOR = D["floor"]              # 4.2
 Z1 = D["z1"]                    # -100.5, the front wall's collision face
 JW, JE = M["x0"] + .1, M["x1"] - .1   # drawn jambs, .1 inside the collision mouth (they hide the live marble's inner faces)
-SOFFIT = 9.8                    # under the live trim (9.85) and the timber beam (9.85)
-WALL_TOP = 12.2
-PEAK = 16.2
+# Round 6 (Spencer beta 25 "the cave entrance is way too smal"; Fable DEN-ROUND6-LOOK 1-2): the room 36 x 24, walls
+# 10 and peak 17 over the floor, the mouth an arch 18 wide, its crown 11 over the floor (cliff_den_sculpt DEN/MOUTH).
+SOFFIT = M["top"] - .05         # the arch's crown; the mouth columns rise to the arch (arch_y), not to this
+WALL_TOP = D["wall"] + 2.4      # the drawn wall top, over the collision ceiling (14.2) and the crown
+PEAK = D["peak"] + .2
 BASE = .35                      # the drawn wall's offset outside the collision face (before scoops)
-BODY = (FLOOR + 1, FLOOR + 6)   # body height: the drawn wall within -0.3 / +1.0 of the collision here
-COLLAR_END = -97.4              # the timber beam's lawn face: the collar ends behind the frame
-PIL = (-17.0, 3.0)              # the pilaster round the marble posts (x range incl. the 1.2 eases)
+BODY = (FLOOR + 1, SOFFIT + .45)   # body height: the drawn wall within -0.3 / +1.0 of the collision here
+COLLAR_END = Z1 + 3.6           # round 6: no timber frame; the collar (the arch's reveal) runs 3.6 out to the brow
+PIL = (JW - 1.2, JE + 1.2)      # round 6: the pilaster's span is the mouth's (the marble is carved away)
 PIL_OFF = -1.0                  # its face: z -101.5, just room-side of the marble (-101.32)
-LEDGE_Y = 9.4                   # over the back-wall lanterns (their centres at 8.0, cords .8)
-ALCOVES = [(-22.0, -110.5), (6.0, -110.0)]   # behind the Dash gate (Bay1) and behind the crate (Bay5): wall points
-LANTERNS = [(-14.0, 8.0, -118.4), (0.0, 8.0, -118.4), (-14.0, 8.5, -98.0), (0.0, 8.5, -98.0)]
+LEDGE_Y = FLOOR + 7.4           # over the back-wall lanterns (their centres at floor + 6, cords .8)
+ALCOVES = [(D["x0"], -112.5), (D["x1"], -112.0)]   # behind the Dash gate (Bay1) and behind the crate (Bay5): wall points
+ALCOVE = (3.6, 2.4, 8.0)        # round 6: its half-width outer and inner (studs along the wall) and its height over the floor
+LANTERNS = [(-16.0, FLOOR + 6.0, D["z0"] + .6), (2.0, FLOOR + 6.0, D["z0"] + .6),
+            (M["x0"] - .3, FLOOR + 7.5, Z1 + 1.2), (M["x1"] + .3, FLOOR + 7.5, Z1 + 1.2)]
+
+
+def arch_y(x):
+    """The mouth's arch (cliff_den_sculpt.mouth_top) less .05: the drawn opening's top at x."""
+    return S.mouth_top(x) - .05
 CENTRE = ((D["x0"] + D["x1"]) / 2, (D["z0"] + D["z1"]) / 2)
 
 
@@ -110,8 +119,10 @@ def wall_offset(px, y, pz, nrm, detail=False):
         off += .18 * (L.fbm(p * .8, 3, seed=11) - .5) * 2      # Fable world R1 4: the mid-frequency rock x2
     for ax, az in ALCOVES:
         along = np.hypot(px - ax, pz - az)
-        w = _smooth(2.9, 1.9, along)
-        arch = _smooth(4.0, 4.6, y) * _smooth(9.9 + .4 * np.cos(np.clip(along / 2.9, 0, 1) * math.pi / 2), 9.3, y)
+        w = _smooth(ALCOVE[0], ALCOVE[1], along)
+        top = FLOOR + ALCOVE[2]
+        arch = _smooth(FLOOR - .2, FLOOR + .4, y) * _smooth(top + .4 * np.cos(np.clip(along / ALCOVE[0], 0, 1) * math.pi / 2),
+                                                             top - .6, y)
         off = off * (1 - w * arch) + .98 * w * arch
     # Fable R1 6: the ledge is a local shelf over each back-wall lantern (3 studs wide, 0.6 deep at LEDGE_Y), not a
     # rail round the room; the wall under it is scooped back 0.2.
@@ -180,9 +191,14 @@ def build_shell(name, spacing, row_step, rings, tunnel_steps, detail=False, bvh=
     nx = np.array([n[0] for n in nrm])
     nz = np.array([n[1] for n in nrm])
     verts = []
+    # round 6: in the mouth's span the rows up to the crown are pressed under the arch, so the hole is an arch
+    span = (np.abs(pz - Z1) < 1e-6) & (px >= JW - 1e-6) & (px <= JE + 1e-6)
+    arch = np.array([arch_y(x) for x in px])
     # wall rows
     for y in ys:
         yy = np.full(NC, y)
+        if FLOOR <= y <= SOFFIT + 1e-6:
+            yy = np.where(span, FLOOR + (y - FLOOR) * (arch - FLOOR) / (SOFFIT - FLOOR), yy)
         off = wall_offset(px, yy, pz, nrm, detail)
         # the front wall at the jambs and over the mouth: the collar's mouth stays exact (no scoop on the jamb columns
         # under the soffit, they meet the tunnel)
@@ -201,7 +217,7 @@ def build_shell(name, spacing, row_step, rings, tunnel_steps, detail=False, bvh=
                 if hit[0] is not None:
                     off[i] = max(-.28, min(off[i], hit[3] - .3 - .16))
         for i in range(NC):
-            verts.append((px[i] + nx[i] * off[i], y, pz[i] + nz[i] * off[i]))
+            verts.append((px[i] + nx[i] * off[i], float(yy[i]), pz[i] + nz[i] * off[i]))
     top = [verts[(NR - 1) * NC + i] for i in range(NC)]
     # dome rings (k = 1..rings-1), then the apex
     dome_start = len(verts)
@@ -745,35 +761,37 @@ def build_flat_stone(name="W7_F_Stone__flat", seed=3):
 # Rock masses (centre, radii, yaw degrees): the two leaning jamb buttresses round the live marble posts and the brow
 # over the timber lintel. Union by voxel remesh, faceted by Voronoi, decimated, then kept out of the opening, the timber
 # frame and the lawn in front of it.
+# Round 6 (Fable DEN-ROUND6-LOOK 1.4): the arch's rock. Two buttresses 4 to 5 thick leaning on the jambs, a brow over the
+# crown overhanging 2.5, the rock it hangs from, and backing masses either side so the collar reads about 46 x 24 with
+# 6+ of rock over the crown. Centre (x, y, z), radii (x, y, z), yaw degrees.
 MOUTH_BLOBS = [
-    # Fable R1 1, 2: six rounded masses, nothing thinner than 2 studs. West buttress and its foot
-    ((-18.0, 7.2, -99.9), (2.6, 4.4, 2.6), 10), ((-19.4, 4.6, -100.6), (2.8, 2.1, 2.6), -15),
+    # west buttress and its foot
+    ((M["x0"] - 3.2, FLOOR + 6.0, -100.2), (3.0, 7.0, 3.0), 9), ((M["x0"] - 4.4, FLOOR + 1.6, -100.8), (3.4, 2.6, 3.0), -14),
     # east buttress and its foot
-    ((3.7, 7.2, -100.0), (2.4, 4.4, 2.5), -10), ((5.1, 4.6, -100.8), (2.6, 2.1, 2.5), 15),
-    # the brow: one mass over x -17..3, its face 1 stud lawnward of the timber lintel (z -96.4), its lower edge 0.5
-    # over the sign's top (12.1); and the rock it hangs from
-    ((-7.0, 13.9, -99.4), (10.4, 1.8, 3.0), 0), ((-7.0, 16.0, -101.3), (9.2, 2.1, 2.6), 0),
-    # Fable world R1 fix 2: backing masses over the tan hole west of the mouth (about 14 x 10) and the gap east of the brow
-    ((-25.5, 9.6, -100.4), (5.6, 5.4, 2.6), 8), ((-21.5, 14.0, -101.0), (4.0, 3.0, 2.4), -5),
-    # round 3: the left of the mouth (studio-r2/01) buried under two more masses, up to y 20
-    ((-30.5, 13.5, -101.8), (4.6, 5.2, 3.0), 15), ((-25.0, 18.0, -102.2), (5.0, 3.0, 2.8), -8),
-    ((7.8, 12.2, -100.9), (3.0, 3.2, 2.3), -10),
+    ((M["x1"] + 3.2, FLOOR + 6.0, -100.3), (2.9, 7.0, 2.9), -9), ((M["x1"] + 4.4, FLOOR + 1.6, -100.9), (3.2, 2.6, 2.9), 14),
+    # the brow: its lower edge 0.6 over the crown, 1.5 off centre (Fable 1.2), and the rock it hangs from
+    ((-5.5, M["top"] + 2.4, -99.0), (11.6, 2.2, 3.2), 0), ((-7.0, M["top"] + 5.2, -101.2), (12.4, 2.8, 2.8), 0),
+    # the shoulders over each buttress into the brow
+    ((M["x0"] - 2.0, M["top"] + .6, -100.4), (4.2, 3.4, 2.8), 12), ((M["x1"] + 2.0, M["top"] + .4, -100.5), (4.0, 3.2, 2.8), -12),
+    # backing masses: the collar out to about x -30 and x 16, up to y 24
+    ((-26.5, 11.0, -100.9), (5.6, 6.4, 2.8), 8), ((-23.0, 18.5, -101.4), (5.0, 3.4, 2.6), -5),
+    ((12.0, 10.5, -101.0), (4.6, 6.0, 2.6), -8), ((9.5, 18.0, -101.4), (5.0, 3.4, 2.6), 6),
+    ((-7.0, 22.0, -102.2), (10.0, 2.6, 2.8), 0),
 ]
 # (x0, y0, z0, x1, y1, z1, push axes): nothing of the surround inside these
 MOUTH_KEEP_OUT = [
-    ((-14.45, 3.0, -101.5, .45, 11.25, -85.0), ("x", "y")),        # the opening, up to the brow's underside
-    ((-15.85, 3.0, -98.85, -14.15, 11.25, -97.15), ("x",)),        # the west timber jamb
-    ((.15, 3.0, -98.85, 1.85, 11.25, -97.15), ("x",)),             # the east timber jamb
-    ((-15.85, 9.75, -98.85, 1.85, 11.3, -97.15), ("y",)),          # the timber lintel
-    ((-30.0, 3.0, -97.2, 12.0, 9.5, -80.0), ("z",)),               # the lawn in front of the buttresses
-    ((-24.6, 3.0, -121.0, 8.6, 21.0, -99.1), ("z",)),              # the room and its corners (round 3: to y 21 and 2.6 wider)
+    ((M["x0"] + .05, 3.0, Z1 - 1.0, M["x1"] - .05, M["top"] + .1, -85.0), ("x", "y")),   # the opening, up to the crown
+    ((M["x0"] - 1.4, 3.0, Z1 + .3, M["x0"] + .6, FLOOR + 10.5, Z1 + 3.0), ("x",)),     # the west prop (DenGreybox)
+    ((M["x1"] - .6, 3.0, Z1 + .3, M["x1"] + 1.4, FLOOR + 10.5, Z1 + 3.0), ("x",)),     # the east prop
+    ((-34.0, 3.0, -96.6, 20.0, 9.5, -80.0), ("z",)),                                   # the lawn in front of the buttresses
+    ((D["x0"] - 2.6, 3.0, D["z0"] - 2.0, D["x1"] + 2.6, PEAK + 4.0, Z1 + 1.4), ("z",)),  # the room and its corners
 ]
 # Collision for the buttresses (players and pets stop at the rock): boxes {c, s} the mount builds with the den's boxes.
 MOUTH_BOXES = [
-    {"kind": "buttress", "c": [-18.2, 7.4, -99.5], "s": [4.4, 7.0, 4.0]},
-    {"kind": "buttress", "c": [3.9, 7.4, -99.5], "s": [4.2, 7.0, 4.0]},
+    {"kind": "buttress", "c": [M["x0"] - 3.4, FLOOR + 5.0, -99.6], "s": [5.0, 10.0, 4.0]},
+    {"kind": "buttress", "c": [M["x1"] + 3.4, FLOOR + 5.0, -99.6], "s": [5.0, 10.0, 4.0]},
     # the brow (architect review: the clamp's spherecast respects CanCollide; without it an orbit enters drawn rock)
-    {"kind": "brow", "c": [-7.0, 13.9, -98.4], "s": [20.0, 3.4, 3.4]},
+    {"kind": "brow", "c": [-6.0, M["top"] + 2.4, -98.6], "s": [26.0, 3.8, 3.6]},
 ]
 HIDE = ["W7_CD_PlayDen__cliff_rock", "W7_CD_PlayDen__dirt_path"]
 HIDE_VISUAL = []          # colliding pack parts left with nothing to show: invisible, still colliding
@@ -872,10 +890,10 @@ def _lawn(x, z):
     return round(min(S.ground(x, z) or 4.6, 5.0), 3)
 
 
-CRYSTALS = (_cluster(-16.9, -96.4, _lawn(-16.9, -96.4), (1.5, .6, 1.0), 1)
-            + _cluster(2.9, -96.6, _lawn(2.9, -96.6), (1.0, .6), 2)
-            + _cluster(-21.1, -110.5, FLOOR, (1.0, 1.5, .6), 3)
-            + _cluster(5.1, -110.0, FLOOR, (1.0, .6), 4))
+CRYSTALS = (_cluster(M["x0"] - 2.4, -96.4, _lawn(M["x0"] - 2.4, -96.4), (1.5, .6, 1.0), 1)   # round 6: the new jambs' feet
+            + _cluster(M["x1"] + 2.4, -96.6, _lawn(M["x1"] + 2.4, -96.6), (1.0, .6), 2)
+            + _cluster(D["x0"] + .9, -112.5, FLOOR, (1.0, 1.5, .6), 3)                             # and the alcoves
+            + _cluster(D["x1"] - .9, -112.0, FLOOR, (1.0, .6), 4))
 
 
 def _stone(x, y, z, sx, sz, proud, yaw):
@@ -883,16 +901,16 @@ def _stone(x, y, z, sx, sz, proud, yaw):
     return {"at": [x, y, z], "size": [sx, round(proud / .24, 3), sz], "yaw": yaw}
 
 
-FLOOR_STONES = [_stone(x, FLOOR, z, sx, sz, .05, yaw) for x, z, sx, sz, yaw in (
-    (-9.2, -101.6, 1.6, 1.2, .3), (-4.6, -102.4, 1.3, 1.0, 1.1), (-11.9, -103.1, 1.2, .9, 2.0),
-    (-9.6, -114.4, 1.5, 1.1, .7), (-4.4, -114.0, 1.3, 1.0, 2.4), (-16.0, -107.9, 1.4, 1.0, 1.6),
-    (2.4, -107.6, 1.2, .9, .2))] + [
+FLOOR_STONES = [_stone(x, FLOOR, z, sx, sz, .05, yaw) for x, z, sx, sz, yaw in (     # round 6: spread over the bigger room
+    (-9.4, -101.8, 1.6, 1.2, .3), (-3.6, -103.0, 1.3, 1.0, 1.1), (-13.0, -104.2, 1.2, .9, 2.0),
+    (-9.8, -119.0, 1.5, 1.1, .7), (-3.2, -118.4, 1.3, 1.0, 2.4), (-19.0, -110.6, 1.4, 1.0, 1.6),
+    (5.6, -110.2, 1.2, .9, .2), (-14.6, -115.6, 1.1, .8, 1.2), (1.2, -115.0, 1.2, .9, 2.8))] + [
     # rubble at the crystal clusters
     _stone(c["at"][0] + .2, c["at"][1] + .15, c["at"][2] - .25, .55, .45, .14, c["yaw"]) for c in CRYSTALS[::2]]
 
 
 # ------------------------------------------------------------------------------------------------------- the apron
-APRON = {"x0": -25.0, "x1": 3.0, "z0": -100.0, "z1": -90.0, "top": 4.97, "mouth": (-15.5, 1.5, -93.2)}
+APRON = {"x0": -28.0, "x1": 6.0, "z0": -100.0, "z1": -90.0, "top": 4.97, "mouth": (M["x0"] - 1.0, M["x1"] + 1.0, -93.2)}
 
 
 def build_apron(name, k, spacing=1.0):
@@ -953,11 +971,11 @@ def build_apron(name, k, spacing=1.0):
 # Fable R1 5: eight edge stones 0.8 to 1.4 across along the lawn side and the ends, and two leaf tufts each side
 # (WorldDressing bush rows {x, y, z, kind, yaw, scale}: kind 3 = W7D_LeafTuft, placed by the mount like Art.dressing)
 APRON_STONES = [_stone(x, _lawn(x, z) - .02, z, sx, sz, h, yaw) for x, z, sx, sz, h, yaw in (
-    (-25.6, -92.6, 1.1, .8, .34, .4), (-23.4, -89.3, 1.3, .9, .4, 1.9), (-17.9, -88.9, .9, .7, .3, .8),
-    (-12.6, -89.1, 1.4, 1.0, .42, 2.6), (-6.1, -88.8, .8, .65, .28, 1.3), (-1.2, -89.2, 1.2, .85, .36, .1),
-    (3.4, -89.9, 1.0, .8, .32, 2.2), (4.6, -93.4, .9, .7, .3, .9))]
+    (-28.6, -92.6, 1.1, .8, .34, .4), (-26.0, -89.3, 1.3, .9, .4, 1.9), (-19.4, -88.9, .9, .7, .3, .8),
+    (-12.6, -89.1, 1.4, 1.0, .42, 2.6), (-6.1, -88.8, .8, .65, .28, 1.3), (.2, -89.2, 1.2, .85, .36, .1),
+    (6.4, -89.9, 1.0, .8, .32, 2.2), (7.6, -93.4, .9, .7, .3, .9))]
 APRON_TUFTS = [[x, _lawn(x, z), z, 3, yaw, s] for x, z, yaw, s in (
-    (-24.8, -90.6, .3, 1.1), (-21.0, -88.9, 2.2, .9), (1.6, -88.7, 1.1, 1.0), (4.9, -91.8, 2.9, .9))]
+    (-27.8, -90.6, .3, 1.1), (-23.0, -88.9, 2.2, .9), (3.6, -88.7, 1.1, 1.0), (7.9, -91.8, 2.9, .9))]
 # The Dash gate's eight paw stones (DenGreybox W7D_<bay>Paw rows) are replaced in place by the flat stone, sunk 0.1: the
 # mount reads their CFrames from the built rows, so only the look is here.
 PAW_STONES = []
@@ -966,6 +984,6 @@ PAW = {"size": [.95, round(.08 / .24, 3), .85], "sink": .05, "color": "#8A8378"}
 # Round 5 (Fable world R1 10, the letterbox): the timber lintel thinned to one plank row (0.7, its underside where it
 # was, on the trim at 9.85) and the sign, smaller, standing on it instead of hanging below it, so nothing of the frame
 # hangs into the opening. The opening's own height is the sculpt's (CliffDenData mouth top 9.85, the live trim).
-FRAME = {"lintel": .7, "sign": [7.0, 1.8], "gap": .15}
+FRAME = None   # round 6: the timber door frame is gone (DenGreybox.Props); nothing to dress
 # Fable world R1 18: the crates' dust sheets in cloth, not speckled granite.
 CLOTH = {"color": "#8C8474", "material": "SmoothPlastic"}

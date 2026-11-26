@@ -31,7 +31,8 @@ ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 OUT = ARGS[ARGS.index("--json") + 1] if "--json" in ARGS else None
 SLICES = [a for a in ARGS if a in ("den", "path", "terrace")] or ["den", "path", "terrace"]
 # Parts that must be closed solids (by name; the slice builders name them).
-SOLID = ("PathSteps", "W7_F_Lip", "W7_F_Stake", "PathRocks", "TerraceLog", "TerraceSlab", "W7_F_Stone", "DashGate")
+# W7_F_Stone__flat is a flat stone sunk into the floor: its buried underside is open by design
+SOLID = ("PathSteps", "W7_F_Lip", "W7_F_Stake", "PathRocks", "TerraceLog", "TerraceSlab", "DashGate")
 SLIVER_DEG, TINY = 4.0, .002
 
 

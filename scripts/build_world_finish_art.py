@@ -609,18 +609,28 @@ def den_render_dressing(Den, cage, panes, crystal, stone):
         o.data.materials.append(mat)
         return o
 
-    box("WF_FrameLintel", (-7, 10.5, -98), (17.5, 1.3, 1.2), dark)
-    for x in (-15, 1):
-        box("WF_FrameJamb", (x, 7.025, -98), (1.5, 5.65, 1.5), dark)
-    box("WF_Sign", (-7, 10.5, -97.26), (8, 2.2, .25), wood, rot=(math.radians(-8), 0, 0))
-    disc("WF_Mat", (-8, 4.24, -108), 8, .08, cloth)
-    disc("WF_MatInner", (-8, 4.25, -108), 6.4, .08, red)
-    disc("WF_Stump", (-7, 5.3, -117), 5, 2.2, dark)
-    box("WF_DeckScreen", (-7, 7.45, -115.8), (2.8, .05, 1.7), screen, rot=(math.radians(55), 0, 0))
+    # round 6: DenGreybox's props (no frame), the sign under the brow, the room's props spread, the Garden Dash gate
+    import cliff_den_sculpt as S_
+    M_, D_ = S_.MOUTH, S_.DEN
+    F_ = D_["floor"]
+    for x, side in ((M_["x0"], -1), (M_["x1"], 1)):
+        box("WF_Prop", (x + side * (.2 + 5 * math.sin(math.radians(8))), F_ + 5, D_["z1"] + 1.6), (1, 10, 1), dark,
+            rot=(math.radians(-4.8), math.radians(-side * 8), 0))
+    box("WF_Sign", (-7, F_ + 10.1, D_["z1"] + .6), (8, 2.2, .25), wood)
+    disc("WF_Mat", (-7, F_ + .04, -112), 10, .08, cloth)
+    disc("WF_MatInner", (-7, F_ + .05, -112), 8, .08, red)
+    disc("WF_Stump", (-7, F_ + 1.1, -121.5), 5, 2.2, dark)
+    box("WF_DeckScreen", (-7, F_ + 3.25, -120.3), (2.8, .05, 1.7), screen, rot=(math.radians(55), 0, 0))
+    teal, cream = L.material("WF_Teal", L.hexrgb("#2F7F8C")), L.material("WF_Cream", L.hexrgb("#DCCAA2"))
+    gx, gz = -20.0, -112.0
+    fx, fz = -7.0 - gx, -106.0 - gz
+    ln = math.hypot(fx, fz)
+    sx, sz = -fz / ln, fx / ln
     for side in (-1, 1):
-        box("WF_GatePost", (-18 + side * 2 * .34, 6.7, -110 + side * 2 * .94), (.5, 5, .5), wood)
-    for x, z in ((-12, -116), (-2, -116), (4, -110)):
-        box("WF_Crate", (x, 5.0, z), (1.6, 1.6, 1.6), wood)
+        box("WF_GatePost", (gx + side * 5 * sx, F_ + 5.5, gz + side * 5 * sz), (1, 11, 1), teal)
+    box("WF_GateBanner", (gx, F_ + 9.7, gz), (9, 1.4, .3), cream, rot=(0, math.atan2(sz, sx), 0))
+    for x, z in ((-13, -120.5), (-1, -120.5), (6, -112)):
+        box("WF_Crate", (x, F_ + .8, z), (1.6, 1.6, 1.6), wood)
     for i, (lx, ly, lz) in enumerate(Den.LANTERNS):
         place_copy(cage, f"WF_Cage{i}", (lx, ly, lz))
         place_copy(panes, f"WF_Pane{i}", (lx, ly, lz))
@@ -798,10 +808,10 @@ def slice_terrace():
     lx, _, lz = Ter.T(Ter.LOOKOUT[0] + .5, Ter.LOOKOUT[1] - .8)
     tx, _, tz = Ter.T(20.0, -12.0)
     place = {"lips": Ter.lip_layout(ol), "tufts": Ter.plants(), "extraBoxes": Ter.outcrop_boxes(), "requires": "path",
-             "logs": [{"template": "W7_F_TerraceLog__bark", "at": [lx, Ter.Y + .3, lz], "yaw": yaw}],
+             "logs": [{"template": "W7_F_TerraceLog__bark", "at": [lx, Ter.Y + .35, lz], "yaw": yaw}],
              "trunks": [{"template": "W7_F_TerraceTrunk__bark", "at": [tx, Ter.Y, tz], "yaw": .4}],
-             "kitCrowns": [{"template": "W7_Kit_Crown_Round__foliage", "at": [tx + .5, Ter.Y + 11.6, tz], "yaw": .7,
-                            "scale": 1.15}],
+             "kitCrowns": [{"template": "W7_Kit_Crown_Round__foliage", "at": [tx + .8, Ter.Y + 15.2, tz], "yaw": .7,
+                            "scale": 1.5}],   # round 6 (Fable 2): the tree 18
              "dressTier": {"hide": ["Floor", "FaceGarden", "SkirtOuter", "SkirtNorthEast", "SkirtSouthWest", "BalustradeNorth",
                                     "BalustradeSouth", "RimOuter", "RimNorthEast", "RimSouthWest"],
                            "remove": ["ClumpOne", "ClumpOneTop", "ClumpTwo", "PadCrunch", "PadPop", "PadMoss", "TreePole"],

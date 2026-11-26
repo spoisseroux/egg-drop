@@ -173,7 +173,8 @@ function Night.glowCaps(data,p)
 		local spot=at+away*2.8
 		table.insert(out,table.freeze({position=Vector3.new(spot.X,Tier.onPath(spot.X,spot.Z,1,p)or at.Y,spot.Z),seed=20261130,cluster=3}))
 	end
-	for n,st in ipairs({{-31,13},{-35,18}})do
+	-- round 6: round the bigger lookout slab (10 x 7 at s -33, t 16), not under it (architect)
+	for n,st in ipairs({{-27.2,13.4},{-31.5,20.2}})do
 		table.insert(out,table.freeze({position=Tier.T(st[1],st[2],Tier.FloorY),seed=20261140+n,cluster=2}))
 	end
 	return out
