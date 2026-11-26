@@ -1,13 +1,13 @@
 {
- "assetId": "136222877350169",
- "operationId": "a3bf1c13-5371-4ee6-a665-f374d8a48bad",
+ "assetId": "121918716759907",
+ "operationId": "dedbc7ef-0128-4db4-9710-f4abf6331cd0",
  "moderation": "Approved",
- "fbxSha256": "1afb1e976714ffe9b81ce870c1bae13f3a40c028db879c73091d662cb7074e27",
- "manifestSha256": "5efc01a6242a631380e06a9efb263e55d4c98659155c7ceb22c61aa5a3f8d4ff",
+ "fbxSha256": "c040f815c9388e72ca619a02d6a39529db63d409daf9783338023b2381836689",
+ "manifestSha256": "f29256261b5be292045fa778b47fd11fe2fb99a421e0193ed46991f39259d5ec",
  "parts": [
   {
    "name": "EggMachine_Body",
-   "meshId": "rbxassetid://99574149544954",
+   "meshId": "rbxassetid://87818992911712",
    "meshSize": [
     420.0,
     712.0,
@@ -16,7 +16,7 @@
   },
   {
    "name": "EggMachine_Dial",
-   "meshId": "rbxassetid://134384220952647",
+   "meshId": "rbxassetid://90358362145937",
    "meshSize": [
     170.0,
     151.9708,
@@ -60,5 +60,5 @@
    ]
   }
  ],
- "recorded": "2026-11-26T21:22:12Z"
+ "recorded": "2026-11-26T22:08:48Z"
 }

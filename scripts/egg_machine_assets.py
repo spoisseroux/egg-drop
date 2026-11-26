@@ -36,11 +36,11 @@ FBX, MANIFEST, READBACK = DIR / "egg-machine.fbx", DIR / "egg-machine-manifest.j
 XML_OUT = ROOT / "assets" / "world" / "EggMachine.rbxmx"
 LUA_OUT = ROOT / "src" / "shared" / "EggMachineData.lua"
 ID = re.compile(r"^rbxassetid://([1-9][0-9]{0,19})$")
-TEXTURE = "rbxassetid://119526952958289"   # egg-machine.png (Fable Studio R1)
+TEXTURE = "rbxassetid://108872057746008"   # egg-machine.png (beta 36: the mouth swatch; R1 was 119526952958289)
 # The sha256 of the egg-machine.png TEXTURE holds. The mouth (after beta 36) drew a MOUTH swatch into the atlas (the
 # cavity's dark: the Body's SurfaceAppearance drops vertex colours), so a Body with the mouth needs the new atlas too:
 # upload egg-machine.png, set TEXTURE to its id and this to its digest. Until then generate() refuses.
-TEXTURE_SHA256 = "1561974a08b5e0ba9711744aa4a40178b8eabe14c54200806f8ca3247ff90c7d"
+TEXTURE_SHA256 = "dadc3965d38b531eb52dbf29d0580efad608ca7b0a80f7df256430bd44577abc"
 PNG = DIR / "egg-machine.png"
 ROUGH_60 = "rbxassetid://78518887759939"   # egg-machine-rough60.png (.6, collar .8)
 METAL_0 = "rbxassetid://114363080604088"   # the island's flat no-metal map (build_world_v7_assets MATTE_METALNESS)
