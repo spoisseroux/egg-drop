@@ -393,5 +393,22 @@ return function(server,offline)
 		end
 	end)
 
+	-- Code review 2026-11-26: Fetch threw only from the park's centre, which sits in a keepout on the Top Lawn (the chute's
+	-- foot) and too near one on the Hollow, so the throw always answered NoLane there (0/16 owner directions). It now
+	-- falls back to the nearest clear home; the arrival's centre is clear and stays its home.
+	test("fetch: a lane from every side on the Top Lawn, the Hollow and the arrival; the arrival still throws from its centre",function()
+		local Fetch=require(server.ParkFetch)
+		for label,site in pairs({topLawn=T,hollow=Park.build(Park.Specs.hollow),arrival=Park})do
+			local f=setmetatable({layout=site},Fetch)
+			for i=0,15 do
+				local a=i/16*math.pi*2
+				local home,target=f:lane(site.Center+Vector3.new(math.cos(a)*8,0,math.sin(a)*8))
+				assert(home and target,label.." has no lane from direction "..i)
+				assert(site.clearOfKeepout(home,.6)and site.clearOfKeepout(target,1)and site.inside(target,-2),label.." lane not clear")
+				if label=="arrival"then assert(home==site.Center,"the arrival moved its fetch home")end
+			end
+		end
+	end)
+
 	return {passed=#cases,cases=cases}
 end

@@ -14,9 +14,27 @@ local function distance(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
 function Fetch.new(director,layout)
 	return setmetatable({director=director,garden=director.garden,layout=layout,serial=0},Fetch)
 end
-function Fetch:lane(ownerPosition)
-	local park=self.layout
-	local home=park.Center
+-- Where a throw starts: the park's centre, else (code review 2026-11-26: on the Top Lawn and the Hollow the centre sits in
+-- a keepout, so no lane was ever clear and the throw always answered NoLane) the nearest clear point on rings of 1.5 to
+-- 6 studs about it, every 30 degrees. Pure layout data, so built once per layout; a park whose centre is clear (the
+-- arrival) only ever uses the centre, exactly as before.
+local homesByLayout=setmetatable({},{__mode="k"})
+local function homesOf(park)
+	local list=homesByLayout[park]
+	if list then return list end
+	list={park.Center}
+	for _,r in ipairs({1.5,2.5,3.5,4.5,6})do
+		for k=0,11 do
+			local a=k*math.pi/6
+			local x,z=park.Center.X+math.cos(a)*r,park.Center.Z+math.sin(a)*r
+			local p=Vector3.new(x,park.ground(x,z),z)
+			if park.inside(p,-2)and park.clearOfKeepout(p,.6)then table.insert(list,p)end
+		end
+	end
+	homesByLayout[park]=list
+	return list
+end
+local function laneFrom(park,home,ownerPosition)
 	local axis=ownerPosition and Vector3.new(home.X-ownerPosition.X,0,home.Z-ownerPosition.Z)or Vector3.new(1,0,0)
 	if axis.Magnitude<.1 then axis=Vector3.new(1,0,0)else axis=axis.Unit end
 	for _,turn in ipairs({0,math.pi*.5,-math.pi*.5,math.pi})do
@@ -26,6 +44,13 @@ function Fetch:lane(ownerPosition)
 		local clear=park.inside(target,-2)and park.clearOfKeepout(target,1)
 		for i=0,8 do if not park.clearOfKeepout(home:Lerp(target,i/8),.6)then clear=false;break end end
 		if clear then return home,target end
+	end
+	return nil
+end
+function Fetch:lane(ownerPosition)
+	for _,home in ipairs(homesOf(self.layout))do
+		local from,target=laneFrom(self.layout,home,ownerPosition)
+		if from then return from,target end
 	end
 	return nil
 end
@@ -228,7 +253,8 @@ end
 function Fetch:snapshot()
 	local s=self.session
 	if not s then
-		local home=self.layout.Center
+		local laneHome=self:lane()
+		local home=laneHome or self.layout.Center
 		local available={};local any=false
 		for _,host in pairs(self.garden.actors)do
 			local input=self.garden.inputs[host.ownerId]
@@ -240,7 +266,7 @@ function Fetch:snapshot()
 				available[tostring(host.ownerId)]=can;any=any or can
 			end
 		end
-		local lane=self:lane()~=nil
+		local lane=laneHome~=nil
 		return {stage="idle",home=A.pack(home),ready=lane and any,laneReady=lane,availableOwners=available}
 	end
 	return {id=s.id,stage=s.stage,home=A.pack(s.home),landing=A.pack(s.landing),throwStart=s.throwStart,landTime=s.landTime,winnerId=s.winnerId,
