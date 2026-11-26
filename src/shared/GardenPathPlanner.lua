@@ -228,19 +228,88 @@ local function circlesClear(a,b,circles)
  for _,c in ipairs(circles)do if Walk.toSegment(c.X,c.Z,a.X,a.Z,b.X,b.Z)<c.R then return false end end
  return true
 end
--- A* from points[1] to points[2]. edge(i, j) is asked the first time it is needed and remembered.
-local function search(points,edge)
+-- Review B36: the work is bounded. A search holds at most MaxNodes prop corners (the nearest to the walk) and, in its
+-- last try only, the parts' own graph nodes (a fixed few dozen whose edges among themselves are already known), so it
+-- expands each node at most once and asks each edge at most once. Every corner and every corner-to-corner edge (the "static" ones)
+-- is checked once per layout and remembered, the way ParkRoute.prepare builds its graph once a site; only the edges to
+-- this walk's two ends are checked per call. Planner.Stats holds the last roundProps call's work (specs).
+Planner.MaxNodes=48       -- prop corners a search may hold (eight props' worth), the nearest to the walk
+Planner.Stats={searches=0,expanded=0,checks=0,nodes=0}
+-- The layout of one scene's circle list (Walk.split caches the list per scene; keyed weakly by it): the props' corners
+-- clear of every prop and part, then (once a fallback needs them) the parts' own graph nodes, and the static edges.
+-- A pet's escape only drops circles from the list, so a static edge clear of every circle is clear of what is left.
+local layouts=setmetatable({},{__mode="k"})
+local function layout(boxes,circles)
+ local cached=layouts[circles]
+ if cached and cached.boxes==boxes and cached.count==#circles and cached.boxCount==#boxes then return cached end
+ local nodes={}
+ for index,c in ipairs(circles)do
+  for _,p in ipairs(circleNodes(c))do
+   if onFloor(p)and circlesClear(p,p,circles)and Walk.segmentAllowed(p,p,boxes)then table.insert(nodes,{p=p,circle=c,index=index})end
+  end
+ end
+ cached={boxes=boxes,count=#circles,boxCount=#boxes,circles=circles,nodes=nodes,corners=#nodes,edges={}}
+ layouts[circles]=cached
+ return cached
+end
+-- The parts' graph nodes join the layout once (its decks reached only along their own landings).
+local function withParts(L)
+ if L.graph then return end
+ local graph=staticGraph(L.boxes)
+ L.graph=graph
+ for index,entry in ipairs(graph.nodes)do
+  if entry.deck or circlesClear(entry.p,entry.p,L.circles)then table.insert(L.nodes,{p=entry.p,graph=index,deck=entry.deck})end
+ end
+end
+local staticEdge
+-- Every corner-to-corner edge of a scene's layout checked now (once; a server may call it as a scene is built so no walk
+-- pays for it). The layout, or nil with no keep-outs.
+function Planner.prepare(wet)
+ local boxes,circles=Walk.split(wet)
+ if #circles==0 then return nil end
+ local L=layout(boxes,circles)
+ for u=1,L.corners do for v=u+1,L.corners do staticEdge(L,u,v)end end
+ return L
+end
+Planner.layout=layout
+function staticEdge(L,u,v)
+ if u>v then u,v=v,u end
+ local key=u*65536+v
+ local known=L.edges[key]
+ if known~=nil then return known end
+ local a,b=L.nodes[u],L.nodes[v]
+ if a.graph and b.graph then known=L.graph.visible[a.graph][b.graph]==true and circlesClear(a.p,b.p,L.circles)
+ elseif a.deck or b.deck then known=false
+ else known=circlesClear(a.p,b.p,L.circles)and Walk.segmentAllowed(a.p,b.p,L.boxes)end
+ L.edges[key]=known
+ Planner.Stats.checks+=1
+ return known
+end
+-- A* from `from` to `to` over the layout nodes `ids`. The two ends' edges are checked against `live` (the circles that
+-- still count for this pet) and the parts.
+local function search(L,from,to,ids,live)
+ local points,static={from,to},{}
+ for _,id in ipairs(ids)do table.insert(points,L.nodes[id].p);static[#points]=id end
  local n=#points
  local memo={}
  local function open(i,j)
+  local si,sj=static[i],static[j]
+  if si and sj then return staticEdge(L,si,sj)end
   local key=if i<j then i*65536+j else j*65536+i
   local known=memo[key]
-  if known==nil then known=edge(i,j)==true;memo[key]=known end
+  if known==nil then
+   local node=L.nodes[si or sj]
+   known=not(node and node.deck)and circlesClear(points[i],points[j],live)and Walk.segmentAllowed(points[i],points[j],L.boxes)
+   memo[key]=known
+   Planner.Stats.checks+=1
+  end
   return known
  end
+ Planner.Stats.searches+=1
+ Planner.Stats.nodes=math.max(Planner.Stats.nodes,n)
  local goal=points[2]
  local dist,prev,done={[1]=0},{},{}
- while true do
+ for _=1,n do
   local best,bestScore=nil,math.huge
   for i,d in pairs(dist)do
    if not done[i]then
@@ -250,6 +319,7 @@ local function search(points,edge)
   end
   if not best or best==2 then break end
   done[best]=true
+  Planner.Stats.expanded+=1
   for j=1,n do
    if not done[j]then
     local d=dist[best]+(points[j]-points[best]).Magnitude
@@ -263,47 +333,42 @@ local function search(points,edge)
  local targets={};for i=#reversed,1,-1 do table.insert(targets,reversed[i])end
  return targets
 end
--- The waypoints round the keep-outs from `from` to `to` (the last is `to`), or nil.
-function Planner.roundProps(from,to,boxes,circles)
- local function corners(list,points)
-  for _,c in ipairs(list)do
-   for _,p in ipairs(circleNodes(c))do
-    if onFloor(p)and circlesClear(p,p,circles)and Walk.segmentAllowed(p,p,boxes)then table.insert(points,p)end
-   end
-  end
-  return points
+-- The prop corners of `L` that `keep(node)` takes, the nearest to the walk first, at most MaxNodes; with `parts`, every
+-- parts' graph node too.
+local function nearest(L,from,to,keep,parts)
+ local list,ids={},{}
+ for id,node in ipairs(L.nodes)do
+  if node.graph then
+   if parts then table.insert(ids,id)end
+  elseif keep(node)then table.insert(list,{id=id,d=Walk.toSegment(node.p.X,node.p.Z,from.X,from.Z,to.X,to.Z)})end
  end
- local plain=function(points)return function(i,j)
-  return circlesClear(points[i],points[j],circles)and Walk.segmentAllowed(points[i],points[j],boxes)
- end end
+ table.sort(list,function(a,b)return a.d<b.d or(a.d==b.d and a.id<b.id)end)
+ for k=1,math.min(#list,Planner.MaxNodes)do table.insert(ids,list[k].id)end
+ return ids
+end
+function Planner.partNodes(L)return if L.graph then #L.nodes-L.corners else 0 end
+-- The waypoints round the keep-outs from `from` to `to` (the last is `to`), or nil. `live`: the circles that count for
+-- this pet (its own escape dropped); `circles`: the scene's whole list (the layout's key; nil: live).
+function Planner.roundProps(from,to,boxes,live,circles)
+ local L=layout(boxes,circles or live)
+ Planner.Stats={searches=0,expanded=0,checks=0,nodes=0}
+ local counts={}
+ for _,c in ipairs(live)do counts[c]=true end
  local tried=0
  for _,width in ipairs(Planner.Corridors)do
-  local near={}
-  for _,c in ipairs(circles)do
-   if Walk.toSegment(c.X,c.Z,from.X,from.Z,to.X,to.Z)<c.R+width then table.insert(near,c)end
+  local near,size={},0
+  for _,c in ipairs(live)do
+   if Walk.toSegment(c.X,c.Z,from.X,from.Z,to.X,to.Z)<c.R+width then near[c]=true;size+=1 end
   end
-  if #near>tried then
-   tried=#near
-   local points=corners(near,{from,to})
-   local targets=search(points,plain(points))
+  if size>tried then
+   tried=size
+   local targets=search(L,from,to,nearest(L,from,to,function(node)return near[node.circle]==true end,false),live)
    if targets then return targets end
   end
  end
- -- Water or a blocked box in the way too: every prop's corners and the parts' own graph (its bridge decks reached only
- -- along their landings, its edges already checked against the parts).
- local graph=staticGraph(boxes)
- local points,node={from,to},{}
- for index,entry in ipairs(graph.nodes)do
-  if entry.deck or circlesClear(entry.p,entry.p,circles)then table.insert(points,entry.p);node[#points]=index end
- end
- corners(circles,points)
- local check=plain(points)
- return search(points,function(i,j)
-  local a,b=node[i],node[j]
-  if a and b then return graph.visible[a][b]==true and circlesClear(points[i],points[j],circles)end
-  if(a and graph.nodes[a].deck)or(b and graph.nodes[b].deck)then return false end
-  return check(i,j)
- end)
+ -- Water or a blocked box in the way too: the props' corners and the parts' own graph round the walk.
+ withParts(L)
+ return search(L,from,to,nearest(L,from,to,function(node)return counts[node.circle]==true end,true),live)
 end
 local function propPlan(from,to,velocity,speed,minimum,yaw,via,terminal,boxes,circles)
  -- A pet inside a keep-out walks out of it.
@@ -319,7 +384,7 @@ local function propPlan(from,to,velocity,speed,minimum,yaw,via,terminal,boxes,ci
   local last=path[#path]
   if last and not last.safetyStop and clear(path)then return path,total end
  end
- local targets=Planner.roundProps(from,to,boxes,live)
+ local targets=Planner.roundProps(from,to,boxes,live,circles)
  if targets then
   local walk,seconds=walkThrough(from,targets,velocity,speed,yaw,clear)
   if #walk>0 and clear(walk)then return walk,seconds end
