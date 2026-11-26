@@ -58,6 +58,8 @@
 -- Beta (35) 4: the egg that comes out is the real egg (EggModels TopShell and BottomShell in the bought type's
 --   colorMap, deps.shells), the plain coloured DropEgg only while they load. Beta (35) 3: with the leafless Body the
 --   egg comes out of a round hole (EggHole: a dark disc and a rim, EggCorner.hole) instead of from under the leaf.
+--   After beta 36 the Body bakes that hole as a real mouth (data.mouth): the egg starts in its dark cavity and the
+--   client draws nothing there.
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Corner=require(Shared:WaitForChild("EggCorner"))
@@ -568,10 +570,12 @@ function Machine:bind()
 end
 -- Beta (35) 3: the hole the egg comes out of (only on the leafless Body: EggCorner.hole), client-side pieces in the
 -- machine's model, placed from the CupSeat attachment (the seat's machine-local point) so they follow the model.
-function Machine:dressHole(parts)
-	local data=Corner.machineData()
+-- After beta 36 the Body bakes a real mouth there (data.mouth, EggCorner.mouth): then nothing is drawn; the drawn disc
+-- and rim stay only for an older leafless Body. `data` (specs) defaults to the machine's data.
+function Machine:dressHole(parts,data)
+	data=data or Corner.machineData()
 	local hole=Corner.hole(data)
-	if not hole or not parts.cup or parts.model:FindFirstChild("EggHole")then return end
+	if not hole or Corner.mouth(data)or not parts.cup or parts.model:FindFirstChild("EggHole")then return end
 	local origin=parts.cup*CFrame.new(-Corner.dropPoints(data).seat)
 	local folder=Instance.new("Model");folder.Name="EggHole"
 	for _,piece in ipairs(Machine.holeParts(hole))do

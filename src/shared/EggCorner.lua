@@ -96,6 +96,13 @@ Corner.Belly=table.freeze({profile=table.freeze({{1.35,.37},{1.85,.7},{2.1,1.4},
 -- Under the leaf (the mesh as uploaded) no hole fits: the beta 34 path leaves the belly .2 above its bottom, so any
 -- opening the egg clears hangs below the belly; the hole waits for the leafless Body.
 Corner.Hole=table.freeze({spot=Vector2.new(1.29,1.1),inside=.55,out=.45,radius=.5,rim=.06})
+-- Spencer (render-path-mouth, after beta 36) "shouldn't it have a hole or something for the egg to come out of": the
+-- Body bakes a real mouth at the hole (build_egg_machine.py MOUTH; the data says `mouth`): the belly cut, a throat in
+-- along the normal to a dark cavity the egg starts in, a rounded lip in the band's tan. Its profiles, mirrored from the
+-- build (which refuses to build when these differ): cavity {rho, h} from the back's middle out to the throat, h along
+-- the normal from the hole's centre plane; lip {rho, h} from the throat's top over the lip to its foot, h along the
+-- normal over the belly's surface at that rho. The clear opening is Hole.radius (the throat, the lip's inner edge).
+Corner.Mouth=table.freeze({cavity={{0,-1},{.36,-.92},{.56,-.62},{.5,-.24}},lip={{.5,-.05},{.505,.04},{.545,.09},{.6,.105},{.66,.085},{.7,.035},{.72,0}},segments=24})
 function Corner.bellyRadius(y)
 	local profile=Corner.Belly.profile
 	if y<=profile[1][2]then return profile[1][1]end
@@ -119,6 +126,8 @@ function Corner.bellyNormal(p)
 end
 -- The mesh has no leaf (rebuilt with LEAF_CHUTE = False).
 function Corner.leafless(data)return type(data)=="table"and data.leafless==true end
+-- The Body has the baked mouth (built with MOUTH): the client draws no hole of its own. Only on the leafless Body.
+function Corner.mouth(data)return Corner.leafless(data)and data.mouth==true end
 function Corner.dropPoints(data)
 	data=data or Corner.machineData()
 	local cup=data.cup

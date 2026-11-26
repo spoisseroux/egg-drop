@@ -197,7 +197,8 @@ return function(client)
 		local mesh=Corner.machineData()
 		-- Beta (36): the leafless Body is uploaded (asset 136222877350169) and bound: the hole path is live.
 		assert(Corner.leafless(mesh)and Corner.hole(mesh)~=nil,"the uploaded Body is leafless: the hole path")
-		local data=table.clone(mesh);data.leafless=true
+		-- The drawn hole: the fallback for a leafless Body without the baked mouth (data.mouth unset).
+		local data=table.clone(mesh);data.leafless=true;data.mouth=nil
 		local hole=Corner.hole(data)
 		local drop=Corner.dropPoints(data)
 		local scale=Corner.dropScale(data)
@@ -232,6 +233,115 @@ return function(client)
 		local pieces=Machine.holeParts(hole)
 		assert(pieces[1].name=="Disc"and near(pieces[1].size.Y,ring*2)and #pieces==1+Machine.HoleLook.segments)
 		for _,piece in ipairs(pieces)do assert(Corner.belly(piece.cframe.Position)>=0,piece.name.." is inside the belly")end
+	end)
+	-- After beta 36 (Spencer, render-path-mouth: "shouldn't it have a hole or something for the egg to come out of"): the
+	-- Body bakes a real mouth at Corner.hole (build_egg_machine.py MOUTH writes `mouth`): Corner.Mouth's cavity and throat
+	-- behind the hole's centre plane, its lip over the belly. The egg starts inside the dark cavity, leaves through the
+	-- throat (never through the wall, never into the lip) and drops into the cup's middle.
+	local function mouthModel(Corner,hole)
+		local M=Corner.Mouth
+		local n=hole.normal
+		local u=n:Cross(Vector3.new(0,1,0)).Unit
+		local v=u:Cross(n).Unit
+		-- The open radius at depth h along the normal (the cavity's profile, then the throat up to the belly), nil behind it.
+		local function openRadius(h)
+			local cav=M.cavity
+			if h<cav[1][2]then return nil end
+			for i=1,#cav-1 do
+				local a,b=cav[i],cav[i+1]
+				if h<=b[2]then return a[1]+(b[1]-a[1])*(h-a[2])/(b[2]-a[2])end
+			end
+			return M.lip[1][1]
+		end
+		-- How far along the normal the belly is from the hole's centre plane at this lateral offset.
+		local function surface(lateral)
+			local lo,hi=-.6,.6
+			for _=1,30 do
+				local mid=(lo+hi)/2
+				if Corner.belly(hole.centre+lateral+n*mid)<0 then lo=mid else hi=mid end
+			end
+			return(lo+hi)/2
+		end
+		-- Signed gap from (rho, height over the belly) to the lip's section (negative inside it).
+		local function lipGap(rho,hs)
+			local lip=M.lip
+			local best=math.huge
+			for i=1,#lip-1 do
+				local a,b=Vector2.new(lip[i][1],lip[i][2]),Vector2.new(lip[i+1][1],lip[i+1][2])
+				local e=b-a
+				local t=math.clamp((Vector2.new(rho,hs)-a):Dot(e)/e:Dot(e),0,1)
+				best=math.min(best,(Vector2.new(rho,hs)-(a+e*t)).Magnitude)
+			end
+			if rho>=lip[1][1]and rho<=lip[#lip][1]and hs>=0 then
+				for i=1,#lip-1 do
+					if rho>=lip[i][1]and rho<=lip[i+1][1]then
+						local top=lip[i][2]+(lip[i+1][2]-lip[i][2])*(rho-lip[i][1])/(lip[i+1][1]-lip[i][1])
+						if hs<top then return -best end
+					end
+				end
+			end
+			return best
+		end
+		return{n=n,u=u,v=v,openRadius=openRadius,surface=surface,lipGap=lipGap}
+	end
+	test("after beta 36: the baked mouth: the egg starts in the cavity, leaves through the throat clear of the wall and the lip, lands in the cup",function()
+		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
+		local data=table.clone(Corner.machineData());data.leafless=true;data.mouth=true
+		assert(Corner.mouth(data)and not Corner.mouth({mouth=true}),"the mouth only on the leafless Body")
+		local hole=Corner.hole(data)
+		local drop=Corner.dropPoints(data)
+		local scale=Corner.dropScale(data)
+		local shape=mouthModel(Corner,hole)
+		-- The clear opening is the hole's radius: the throat and the lip's inner edge.
+		assert(Corner.Mouth.lip[1][1]==Corner.Hole.radius and Corner.Mouth.cavity[#Corner.Mouth.cavity][1]==Corner.Hole.radius)
+		-- Deep enough: the cavity's back is behind where the egg starts.
+		local n=shape.n
+		local start=eggSurface(scale,drop.from)
+		local deepest=math.huge
+		for _,q in ipairs(start)do
+			local h=(q-hole.centre):Dot(n)
+			assert(Corner.belly(q)<0 and h<-.1,"the egg starts wholly inside the cavity, behind the opening")
+			deepest=math.min(deepest,h)
+		end
+		assert(deepest>Corner.Mouth.cavity[1][2]+.05,"the cavity's back is behind the egg: "..deepest)
+		local wall,lip,cup=math.huge,math.huge,0
+		for i=0,80 do
+			local c=Machine.rollAt(drop.from,drop.exit,drop.seat,Machine.RollSeconds*i/80)
+			for _,q in ipairs(eggSurface(scale,c))do
+				local rel=q-hole.centre
+				local h=rel:Dot(n)
+				local lateral=rel-n*h
+				local rho=lateral.Magnitude
+				if Corner.belly(q)<0 then
+					-- Inside the belly only in the mouth's open space (the cavity, the throat).
+					local open=shape.openRadius(h)
+					wall=math.min(wall,if open then open-rho else -1)
+				elseif rho>.4 and rho<.85 and math.abs(h)<.5 then
+					lip=math.min(lip,shape.lipGap(rho,h-shape.surface(lateral)))
+				end
+				cup=math.max(cup,cupDepth(data,q))
+			end
+		end
+		assert(wall>=.015,"the egg's least gap to the cavity and throat walls: "..wall)
+		assert(lip>=.015,"the egg's least gap to the lip: "..lip)
+		assert(cup<=.02,"into the cup's straw: "..cup)
+		local half=data.egg.size[2]*scale/2
+		assert(near(drop.seat.X,data.cup[1])and near(drop.seat.Z,data.cup[3])and near(drop.seat.Y-half,data.cup[2]),"seated in the cup's middle, on its floor")
+		for _,q in ipairs(eggSurface(scale,drop.seat))do assert(cupDepth(data,q)==0,"seated, in the straw at "..q.Y)end
+		print(string.format("EggMachineClient mouth: least gap to the walls %.3f, to the lip %.3f",wall,lip))
+	end)
+	test("after beta 36: with the baked mouth the client draws no hole; an older leafless Body keeps the drawn disc and rim",function()
+		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
+		local r=rig()
+		local function dressed(mouth)
+			local data=table.clone(Corner.machineData());data.leafless=true;data.mouth=mouth
+			local model=Instance.new("Model");model.Name="EggMachine"
+			r.machine:dressHole({model=model,cup=CFrame.new(1.25,.57,1.75)},data)
+			return model:FindFirstChild("EggHole")
+		end
+		assert(dressed(true)==nil,"the baked mouth: nothing drawn")
+		local drawn=dressed(nil)
+		assert(drawn~=nil and drawn:FindFirstChild("Disc")~=nil and drawn:FindFirstChild("Rim"..Machine.HoleLook.segments)~=nil,"the drawn hole")
 	end)
 	test("beta (35) 4: the real egg: the shell meshes stand the dropped egg's height and width, in each type's colorMap",function()
 		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)

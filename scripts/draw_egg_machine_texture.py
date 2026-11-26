@@ -9,7 +9,10 @@ Atlas (pixel rectangles x0, y0, x1, y1; image y down). scripts/build_egg_machine
   STRAW (256, 128, 512, 256) straw weave (u around the cup, v up it)
   DIAL  (0, 256, 256, 512)   sunflower, planar: centre at (128, 384), radius 128 = the dial's outer petal tip
   GREEN (256, 256, 384, 384) deep garden green, matte (feet, cap)
-  KNOB  (384, 256, 512, 384) knob cream
+  KNOB  (384, 256, 512, 320) knob cream
+  MOUTH (384, 320, 512, 384) the egg's mouth (Spencer, after beta 36): v down it, the band's tan at the throat's top
+                             darkening to a near-black warm brown #1E1712 from .6 down (the cavity). The Body wears a
+                             SurfaceAppearance, which drops vertex colours, so the hole's dark has to be a texel.
   EMBOSS (256, 384, 384, 512) darker sunflower #E0A422 (the dial's embossed egg)
   COLLAR (384, 384, 512, 512) one leaf lobe per u (tip at 0 and 1, notch at .5)
 
@@ -30,6 +33,7 @@ ALBEDO = .9                                             # the base read white at
 LEAF, LEAF_UNDER = (0x6F, 0xBF, 0x73), (0x4E, 0x9A, 0x5A)
 SUN, KNOB = (0xFF, 0xC8, 0x3C), (0xFF, 0xF3, 0xC4)
 GREEN = (0x38, 0x69, 0x4A)
+MOUTH_DEEP, MOUTH_MID = (0x1E, 0x17, 0x12), (0x4A, 0x38, 0x29)
 STRAW, STRAW_DARK = (0xC9, 0xA5, 0x60), (0x8A, 0x6A, 0x3A)
 
 
@@ -134,6 +138,19 @@ def dial(img, rng):
     img[256:512, 0:256] = np.clip(col, 0, 255)
 
 
+def mouth(img):
+    """MOUTH (384, 320, 512, 384): the band's tan (as the base wears it) at the top, a warm brown by .3, the near-black
+    deep from .6 down. Drawn after every random draw, so no other texel moves."""
+    h = 64
+    t = (np.arange(h) + .5) / h
+    tan = np.array(BAND, float) * ALBEDO
+    a = np.clip(t / .3, 0, 1)[:, None]
+    b = np.clip((t - .3) / .3, 0, 1)[:, None]
+    col = tan * (1 - a) + np.array(MOUTH_MID, float) * a
+    col = col * (1 - b) + np.array(MOUTH_DEEP, float) * b
+    img[320:384, 384:512] = np.clip(col[:, None, :], 0, 255)
+
+
 def main():
     rng = np.random.default_rng(424)
     img = np.zeros((512, 512, 3)) + np.array(CREAM, float)
@@ -147,6 +164,7 @@ def main():
     fill(img, (384, 256, 512, 384), KNOB)
     collar(img, rng)
     fill(img, (256, 384, 384, 512), (0xE0, 0xA4, 0x22))   # EMBOSS: darker sunflower (Fable render R1)
+    mouth(img)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     Image.fromarray(img.round().astype(np.uint8), "RGB").save(OUT)
     # The body's roughness in the atlas's layout at 64 px: .6 (grey 153) everywhere, the collar .8 (204).
