@@ -28,9 +28,9 @@ return function(client,parent)
    local color=Color3.fromHex("#35BCA8");assert(Palette.resolve(color)==Palette.resolve(color)and Palette.resolve(color).body==color)
    assert(Config.DropInterval==.2 and Config.Pace==1.3 and Config.FixedStep==1/120 and Config.MaxEggs==32)
   end)
-  test("tiers use the vivid deep/body/light ramps of the redesign (tier V violet)",function()
+  test("tiers use the Aero Glass deep/body/light ramps (AERO-JUICE-BRIEF 1; tier V violet)",function()
    local Pico8=require(game.ReplicatedStorage.Shared.Pico8)
-   local expected={{"#0A3FD6","#2E8BFF","#8FE1FF"},{"#E0400A","#FF8A1A","#FFD45C"},{"#04963F","#22E06A","#B4FF7A"},{"#C4126F","#FF4DA6","#FFB0DC"},{"#5B21D6","#A66BFF","#E3C8FF"}}
+   local expected={{"#0B74D1","#22B8F2","#A6ECFF"},{"#EC7A0E","#FFB52A","#FFEFA3"},{"#0E8F45","#2FCB5A","#C4FF9A"},{"#D8327E","#FF6FA8","#FFD3E6"},{"#4426C2","#7D5CF0","#D6CBFF"}}
    for tier,hex in ipairs(expected)do
     local roles=Palette.byTier[tier]
     assert(roles.deep:ToHex():upper()==hex[1]:sub(2)and roles.body:ToHex():upper()==hex[2]:sub(2)and roles.light:ToHex():upper()==hex[3]:sub(2),"tier "..tier.." is off the vivid ramp")

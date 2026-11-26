@@ -115,6 +115,9 @@ local Table={
   chain={line="Quick merges in a row score more",short="Quick merges score more",tiny="Be quick: more points",
    toast="Chain ×{count}! Quick merges in a row score more"},
   quests={open="Open",button="Quests"},
+  -- Deck juice P2 (AERO-JUICE-BRIEF 2, AeroJuice): the one praise word over the well on a chain of 5 and up (5, 6, 7,
+  -- 8 and up). Original words; never a clock, a near miss or an upsell.
+  praise={bubbly="Bubbly!",fizzy="Fizzy!",sparkly="Sparkly!",sky="Sky high!"},
  },
  results={
   inPlace={noStars="No Stars this round",total="Total  ★ {count}",metrics="Score {score} · Best {best} · Chain ×{chain}",replay="Replay",hatch="Hatch eggs"},

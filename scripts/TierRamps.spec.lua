@@ -14,9 +14,10 @@ return function(client,parent)
  local function luminance(c)return .2126*linear(c.R)+.7152*linear(c.G)+.0722*linear(c.B)end
  local function contrast(a,b)local x,y=luminance(a),luminance(b);return(math.max(x,y)+.05)/(math.min(x,y)+.05)end
  local function hex(c)return "#"..c:ToHex():upper()end
+ -- AERO-JUICE-BRIEF 1 (2026-11-26): the Aero Glass ramps replaced the vivid ones.
  local expected={
-  {"#0A3FD6","#2E8BFF","#8FE1FF","plain"},{"#E0400A","#FF8A1A","#FFD45C","bands"},{"#04963F","#22E06A","#B4FF7A","speckles"},
-  {"#C4126F","#FF4DA6","#FFB0DC","stars"},{"#5B21D6","#A66BFF","#E3C8FF","dots"},
+  {"#0B74D1","#22B8F2","#A6ECFF","plain"},{"#EC7A0E","#FFB52A","#FFEFA3","bands"},{"#0E8F45","#2FCB5A","#C4FF9A","speckles"},
+  {"#D8327E","#FF6FA8","#FFD3E6","stars"},{"#4426C2","#7D5CF0","#D6CBFF","dots"},
  }
  local root=Instance.new("Frame");root.Name="_TierRampsSpec";root.Size=UDim2.fromOffset(354,594);root.BackgroundTransparency=1;root.Parent=parent
  local lcd

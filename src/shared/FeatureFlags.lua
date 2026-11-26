@@ -127,5 +127,7 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AliveKeepOut=true,
  -- AliveAeroHatch (AERO-JUICE-BRIEF beta 36, section 3): the Aero hatch screens (HatchAero); beta and Studio only.
  AliveAeroHatch=true,
+ -- AliveDeckJuice (AERO-JUICE-BRIEF 2): the Pocket Deck juice pass (AeroJuice, AeroUI); beta and Studio only.
+ AliveDeckJuice=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true,ThisWeek=true})

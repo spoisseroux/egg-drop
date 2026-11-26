@@ -203,6 +203,16 @@ for cue,id in pairs(Audio.StorkIds)do
  Audio.PendingCues[cue]=true
  if type(id)=="number"and id>0 then assetIds[cue]=id;table.insert(cues,cue)end
 end
+-- Deck juice (AERO-JUICE-BRIEF 2 P1, AeroJuice): the merge's sparkle (three glass ticks, chain 2 and up) and sub (a
+-- soft thump, tiers IV, V and clears). EMPTY SLOTS: 0 = not made or uploaded yet = no voice of their own; until then
+-- each layer plays its stand-in from the ids above (AeroStandIns: cue, speed, gain scale), so the layer is heard now.
+Audio.AeroIds=table.freeze({merge_glass_tick_a=0,merge_glass_tick_b=0,merge_glass_tick_c=0,merge_thump=0})
+-- The sparkle's stand-in is today's chain accent at about today's level (.18 x 2).
+Audio.AeroStandIns=table.freeze({merge_glass_tick=table.freeze({"merge_chain",1,2}),merge_thump=table.freeze({"land",.62,1})})
+for cue,id in pairs(Audio.AeroIds)do
+ Audio.PendingCues[cue]=true
+ if type(id)=="number"and id>0 then assetIds[cue]=id;table.insert(cues,cue)end
+end
 for _,kind in ipairs({"bear","toy","hue","material","feature"})do
  local id=DisplayAssets.Audio["hatch_"..kind]
  if id then local cue="hatch_display_"..kind;assetIds[cue]=id;table.insert(cues,cue)end
@@ -568,7 +578,7 @@ function Audio:ui(kind,token)
 		end
 		return true
 	end
-	self:play("menu",variant[1],variant[2])
+	self:play("menu",variant[1]*Audio.MenuLift(),variant[2])
 	return true
 end
 
@@ -586,6 +596,17 @@ function Audio.chainAccentVolume(chain)
 	chain=if type(chain)=="number"and chain==chain then chain else 1
 	return math.clamp(.30+.04*(chain-2),.30,.50)
 end
+
+-- Deck juice: one merge layer (AeroJuice.mergeLayers). A cue with no voice of its own (an empty AeroIds slot) plays
+-- its stand-in; false when neither can play.
+function Audio:playLayer(cue,speed,gain)
+	if self.voices[cue] then return self:play(cue,speed,gain)end
+	local stand=Audio.AeroStandIns[string.gsub(cue,"_[abc]$","")]
+	if stand and self.voices[stand[1]] then return self:play(stand[1],(speed or 1)*stand[2],(gain or .5)*stand[3])end
+	return false
+end
+-- Deck juice P5: the menu click a lift higher on release (AeroUI sets it; 1 = today).
+Audio.MenuLift=function()return 1 end
 
 function Audio:setVolume(volume)
 	if self.destroyed then return end

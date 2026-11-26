@@ -13,6 +13,10 @@ Effects.PunchTime=.1 -- "+N" and the chain counter land from PunchScale to 1 in 
 Effects.PunchScale=1.45
 Effects.CaptionHold=.5 -- chain counter lifetime (was .30)
 Effects.White=Color3.fromHex("#F4F8E9")
+-- Deck juice P1: the second ring on tiers IV and V (60 ms late, 60% alpha: transparency .4 at its brightest).
+Effects.EchoDelay,Effects.EchoAlpha=.06,.4
+-- AeroJuice (or nil): read for the echo ring, the beads and the drop buzz. Nothing changes while it is nil or off.
+function Effects:setAero(juice)self.aero=juice end
 -- Text size `u` (0..1, eased) of the way through the punch: PunchScale x size down to size.
 function Effects.punchSize(size,u)return math.floor(size*(Effects.PunchScale+(1-Effects.PunchScale)*u)+.5)end
 -- Chain counter size: bigger with every chain step, capped for the phone tray.
@@ -88,17 +92,21 @@ function Effects:observeDrop(serial,count)
  self.dropSerial,self.drops=serial,count
  -- Juice: the first drop cuts the start flourish, so it is never in the way.
  if self.flourish and(count or 0)>0 then self.flourish:cancel()end
+ -- Deck juice P3: an accepted drop on the board I am looking at buzzes once and restarts the idle clock.
+ if accepted and self.visible and self.aero then self.aero:dropped(os.clock())end
  return accepted
 end
 function Effects:clear()
 	for _,slot in ipairs(self.slots)do
 		slot.active=false;put(self,slot.ring,"Visible",false)
+		if slot.echoRing then put(self,slot.echoRing,"Visible",false)end
 		for _,fragment in ipairs(slot.fragments)do put(self,fragment,"Visible",false)end
 	end
  if self.trail then self.trail:clear()end
  if self.flourish then self.flourish:cancel()end
  if self.caption then put(self,self.caption,"Visible",false)end
  if self.pops then for _,pop in ipairs(self.pops)do pop.active=false;put(self,pop.label,"Visible",false)end end
+ if self.aero then self.aero:hideAll()end
  self.captionUntil=nil
 	self.stats.active=0
 end
@@ -130,12 +138,29 @@ function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,clear
 	chosen.duration=if self.reduced then .18 elseif kind=="merge"then Effects.mergeDuration(tier) elseif kind=="impact"then .22 else .18
 	chosen.tier=tier or 1
 	chosen.style=if kind=="merge"and not self.reduced then self.popStyle else nil
+	chosen.ringTime=nil
 	if chosen.style then chosen.ringTime=chosen.duration;chosen.duration*=Effects.Pops[chosen.style].stretch end
+	-- Deck juice P1 (AeroJuice): tiers IV and V get a second ring, EchoDelay late at 60% alpha; the classic fragments
+	-- give way to AeroJuice's glass beads (a chosen pop keeps its own).
+	local aero=self.aero
+	chosen.echo=kind=="merge"and not self.reduced and(tier or 1)>=4 and aero~=nil and aero:can("echo")
+	chosen.beads=kind=="merge"and not chosen.style and aero~=nil and aero:can("beads")
+	if chosen.echo then
+		if not chosen.echoRing then
+			chosen.echoRing=node(self.root,"Echo"..table.find(self.slots,chosen))
+			chosen.echoStroke=Instance.new("UIStroke");chosen.echoStroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;chosen.echoStroke.Parent=chosen.echoRing
+		end
+		chosen.ringTime=chosen.ringTime or chosen.duration
+		chosen.duration=math.max(chosen.duration,chosen.ringTime+Effects.EchoDelay)
+		put(self,chosen.echoStroke,"Thickness",1.5+.5*math.clamp(tier or 1,1,5))
+		put(self,chosen.echoRing,"Position",UDim2.fromOffset(point.X,point.Y));put(self,chosen.echoRing,"Visible",false)
+	elseif chosen.echoRing then put(self,chosen.echoRing,"Visible",false)end
 	put(self,chosen.stroke,"Thickness",if kind=="merge"then 1.5+.5*math.clamp(tier or 1,1,5)else 1.5)
 	chosen.normal=normal or Vector2.new(0,-1)
  put(self,chosen.ring,"Rotation",if kind=="impact"then math.deg(math.atan2(chosen.normal.X,chosen.normal.Y))else 0)
 	put(self,chosen.ring,"Position",UDim2.fromOffset(point.X,point.Y));put(self,chosen.ring,"Visible",true)
 	put(self,chosen.stroke,"Color",if kind=="merge"and(cleared or(chain or 1)>1)then color:Lerp(Color3.fromHex("#F4F8E9"),.22)else color)
+	if chosen.echo then put(self,chosen.echoStroke,"Color",chosen.stroke.Color)end
  if kind=="merge"and(cleared or(chain or 1)>1)and(not self.captionUntil or now>=self.captionUntil or priority>=(self.captionPriority or 0))then
   self.captionPriority=priority
   local label=self.caption;local width=math.max(1,self.root.AbsoluteSize.X-8);local maxH=math.max(1,self.root.AbsoluteSize.Y-8)
@@ -163,7 +188,7 @@ function Effects:emit(kind,point,radius,color,tier,chain,serial,now,normal,clear
 			put(self,fragment,"Visible",true)
 		end
 	else
-		for j,fragment in ipairs(chosen.fragments)do put(self,fragment,"BackgroundColor3",if j%2==0 then color:Lerp(Effects.White,.7)else color);put(self,fragment,"Visible",not self.reduced and kind=="merge")end
+		for j,fragment in ipairs(chosen.fragments)do put(self,fragment,"BackgroundColor3",if j%2==0 then color:Lerp(Effects.White,.7)else color);put(self,fragment,"Visible",not self.reduced and kind=="merge"and not chosen.beads)end
 	end
 	self.stats.accepted+=1;self:update(now);return true
 end
@@ -189,12 +214,21 @@ function Effects:update(now)
 		local t=math.clamp((now-slot.start)/slot.duration,0,1)
 		if t>=1 then
 			slot.active=false;put(self,slot.ring,"Visible",false)
+			if slot.echoRing then put(self,slot.echoRing,"Visible",false)end
 			for _,fragment in ipairs(slot.fragments)do put(self,fragment,"Visible",false)end
 		else
 			local merge=slot.kind=="merge"
-			-- A chosen pop's fragments (`whole`) outlive the ring, which keeps its own time.
+			-- A chosen pop's fragments (`whole`) outlive the ring, which keeps its own time (so does an echo).
 			local style,whole=slot.style,t
-			if style then t=math.min(1,(now-slot.start)/slot.ringTime)end
+			if slot.ringTime then t=math.min(1,(now-slot.start)/slot.ringTime)end
+			if slot.echo then
+				local e=(now-slot.start-Effects.EchoDelay)/slot.ringTime
+				if e>=0 and e<1 then
+					local eo=1-(1-e)*(1-e);local er=slot.radius*(1+Effects.ringReach(slot.tier)*eo)
+					put(self,slot.echoRing,"Visible",true);put(self,slot.echoRing,"Size",UDim2.fromOffset(er*2,er*2))
+					put(self,slot.echoStroke,"Transparency",Effects.EchoAlpha+(1-Effects.EchoAlpha)*e)
+				else put(self,slot.echoRing,"Visible",false)end
+			end
 			-- A merge bursts out fast and eases to rest (ease-out); other rings stay linear.
 			local out=if merge then 1-(1-t)*(1-t)else t
 			active+=1;local r=slot.radius*(if self.reduced then 1.04 elseif merge then 1+Effects.ringReach(slot.tier)*out else 1+.42*t)

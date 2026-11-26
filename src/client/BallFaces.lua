@@ -203,6 +203,7 @@ function Faces:update(now,list,mood)
 		if expr=="danger"or expr=="last"then table.insert(worried,b)end
 	end
 	for id in pairs(self.balls)do if not seen[id]then self.balls[id]=nil;self.out[id]=nil end end
+	if self.nudges then for id,n in pairs(self.nudges)do if not seen[id]or now>=n.untilAt then self.nudges[id]=nil end end end
 	for id,at in pairs(self.merges)do if now-at>1 then self.merges[id]=nil end end
 	-- Shiver: worried balls first (highest first), then calm ones on their schedule.
 	local count=0
@@ -236,12 +237,24 @@ function Faces:update(now,list,mood)
 	end
 	return true
 end
-function Faces:get(id)
+-- Deck juice P1 (AERO-JUICE-BRIEF 2, AeroJuice): a neighbour of a merge bumps its face 1 px away for `seconds`, on the
+-- shiver path (only the face moves, never the body). The caller caps how many (AeroJuice.NudgeMax).
+function Faces:nudge(id,dir,now,seconds)
+	if id==nil or(dir~=1 and dir~=-1)then return end
+	self.nudges=self.nudges or {}
+	self.nudges[id]={dir=dir,untilAt=now+(seconds or .12)}
+end
+function Faces:get(id,now)
 	local o=self.out[id]
+	local nudge=self.nudges and self.nudges[id]
+	if nudge and now then
+		if now<nudge.untilAt then return(if o then o.expr else "idle"),nudge.dir end
+		self.nudges[id]=nil
+	end
 	if o then return o.expr,o.dx end
 	return "idle",0
 end
-function Faces:clear()table.clear(self.balls);table.clear(self.out);table.clear(self.merges);self.tickIndex=nil end
+function Faces:clear()table.clear(self.balls);table.clear(self.out);table.clear(self.merges);self.tickIndex=nil;self.nudges=nil end
 
 -- Next / Then / the held ball: the same faces with no neighbours. `slot` staggers
 -- blinks and shivers (0 = held, 1 = Next, 2 = Then).

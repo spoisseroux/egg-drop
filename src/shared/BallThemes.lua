@@ -22,18 +22,27 @@ Themes.Gated={"tangerine_pop"}
 Themes.CircleScale=table.freeze({.52,.64,.76,.88,1})
 Themes.Glyph="●"
 
-local function ramp(body,deep,light)return table.freeze({body=body,deep=deep,light=light})end
-local vivid={ramp("#2E8BFF","#0A3FD6","#8FE1FF"),ramp("#FF8A1A","#E0400A","#FFD45C"),ramp("#22E06A","#04963F","#B4FF7A"),
- ramp("#FF4DA6","#C4126F","#FFB0DC"),ramp("#A66BFF","#5B21D6","#E3C8FF")}
+-- `rim` (the bounce crescent) and `spec` (the two-part glint) are optional: a ramp with them is drawn with the Aero
+-- Glass bubble shading (AeroShade); themes without them render exactly as before.
+local function ramp(body,deep,light,rim,spec)return table.freeze({body=body,deep=deep,light=light,rim=rim,spec=spec})end
+-- "Aero Glass" (AERO-JUICE-BRIEF 1, Fable 2026-11-26; Spencer: "more frutiger aero? more pleasing?"): the default
+-- ramps for Smileys and Marbles, replacing `vivid` (blue #2E8BFF, orange #FF8A1A, green #22E06A, pink #FF4DA6, violet
+-- #A66BFF). Aqua, sun-gold, leaf, lotus and a darker violet: L* 70, 79, 72, 66, 50, so blue and violet no longer sit
+-- 5 dE apart under deuteranopia (worst pairs now 34 deutan, 22 protan, 14 tritan; Machado, CIELAB). Pico8.TierRamps
+-- carries the same five so the legacy and ghost paths match. Ink #15102B is 4.1:1 on violet, 7:1 or more elsewhere.
+local aero={ramp("#22B8F2","#0B74D1","#A6ECFF","#5FE3FF","#FFFFFF"),ramp("#FFB52A","#EC7A0E","#FFEFA3","#FFD866","#FFFFFF"),
+ ramp("#2FCB5A","#0E8F45","#C4FF9A","#7CF08A","#FFFFFF"),ramp("#FF6FA8","#D8327E","#FFD3E6","#FFA3C8","#FFFFFF"),
+ ramp("#7D5CF0","#4426C2","#D6CBFF","#A893FF","#FFFFFF")}
+Themes.Aero=aero
 local colourWords={"blue","orange","green","pink","violet"}
 local sizeWords={"tiny","small","medium","large","huge"}
 
 -- face: smiley | none | happy | dots | sleepy | cat. texture: none | motif | sugar | facet | planet.
 -- earsFrom: first tier that wears cat ears (nil = no ears).
 Themes.ById={
- smileys={name="Smileys",tier="starter",price=0,face="smiley",texture="none",ink="#15102B",ramps=vivid,
+ smileys={name="Smileys",tier="starter",price=0,face="smiley",texture="none",ink="#15102B",ramps=aero,
   pitch="Crude little faces. The default.",names={"Blue","Orange","Green","Pink","Violet"}},
- marbles={name="Marbles",tier="starter",price=0,face="none",texture="motif",ink="#15102B",ramps=vivid,
+ marbles={name="Marbles",tier="starter",price=0,face="none",texture="motif",ink="#15102B",ramps=aero,
   pitch="No faces. Glossy with a pattern each.",names={"Blue","Orange","Green","Pink","Violet"}},
  gumdrops={name="Gumdrops",tier="common",price=40,face="happy",texture="sugar",ink="#3A2350",
   ramps={ramp("#6FC2FF","#2F7FE0","#D4EEFF"),ramp("#FFB25E","#E8742A","#FFE6B8"),ramp("#6BE89C","#1FAE62","#D2FFD9"),
