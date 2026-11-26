@@ -33,10 +33,10 @@ local function palette(name,hex,more)
 end
 local Sky=palette("Sky",{core="#C9F1FF",edge="#2FA8F0",ray="#FFFFFF",floor="#F4FFFF",deep="#0E5FB8",back="#D9F4FF",backDeep="#58B8F2",
  look="#FFFFFF",lookSecond="#C9F1FF",shadow="#17803A",sweepFrom="#FFFFFF"},
- {pattern="bubbles",art="dots",patternAlpha=.14,spin=0,sweep=0,bubbles=6,glints=0,sparkles=0,horizon="grass"})
+ {pattern="bubbles",art="dots",patternAlpha=.06,spin=0,sweep=0,bubbles=6,glints=0,sparkles=0,horizon="grass"})
 local Meadow=palette("Meadow",{core="#E4FF9E",edge="#2DBE4E",ray="#F6FFC8",floor="#FBFFDC",deep="#0B7A3A",back="#DFFFB0",backDeep="#2DBE4E",
  look="#57E08A",lookSecond="#C8FFD9",shadow="#17803A",sweepFrom="#F6FFC8"},
- {pattern="bubbles",art="dots",patternAlpha=.14,spin=18,sweep=0,bubbles=10,glints=5,sparkles=0,horizon="grass"})
+ {pattern="bubbles",art="dots",patternAlpha=.06,spin=18,sweep=0,bubbles=10,glints=5,sparkles=0,horizon="grass"})
 local Aurora=palette("Aurora",{core="#C4F6FF",edge="#7D5CF0",ray="#FF9AE0",floor="#FFEAF9",deep="#2E1C9A",back="#D9CCFF",backDeep="#5340D8",
  look="#8E7CFF",lookSecond="#5CC8FF",shadow="#2E1C9A",sweepFrom="#6FE3FF"},
  {pattern="diamonds",art="diamonds",patternAlpha=.20,spin=12,sweep=4,bubbles=16,glints=0,sparkles=12,horizon="glass"})
@@ -48,7 +48,18 @@ function A.palette(tier)return A.Palettes[tier or ""]or Sky end
 -- atlas' twelve shafts, half a step apart; each 14% alpha (the brief's 10 to 18%). The image's centre sits a little above
 -- the well (originY x the well's height) and it spans `span` x the height, so the shafts fill the middle and fade out
 -- near the floor. One warm lens glint at the source keeps it sunny.
-A.Rays=table.freeze({layers=2,step=15,alpha=.14,span=2.6,originY=-.08})
+-- Fable B37 (studio-b37 capture 7): "rays to 14% alpha; they barely show". Each layer is 14%, and the source moves up
+-- (originY -.25) so the shafts' bright band (40 to 70% of the image's radius) lands on the card, not its floor.
+A.Rays=table.freeze({layers=2,step=15,alpha=.14,span=2.6,originY=-.25})
+-- Fable B37: the screen round the card (the deck's navy checker before) is a vertical sky gradient with no checker and
+-- six big, faint bubbles (12% alpha, white rims, twice the card bubbles' size), for every card that uses this backdrop.
+A.Backdrop=table.freeze({top=Color3.fromHex("#58B8F2"),bottom=Color3.fromHex("#0E5FB8"),hexTop="#58B8F2",hexBottom="#0E5FB8",
+ bubbles=6,alpha=.12,fill=.04,scale=2,rim=2})
+-- Fable B37: the Bear read warm grey on the card. The pet's viewport light on an Aero card: a white key and a cool
+-- #CFEFFF fill at half strength (the viewport's Ambient), so a white belly reads about #F4F8FF. Tune here in Studio.
+local fill=Color3.fromHex("#CFEFFF")
+A.PetLight=table.freeze({key=Color3.new(1,1,1),fill=fill,fillHex="#CFEFFF",strength=.5,
+ ambient=Color3.new(fill.R*.5,fill.G*.5,fill.B*.5),belly="#F4F8FF"})
 A.Glint=table.freeze({color=Color3.fromHex("#FFE58A"),hex="#FFE58A",size=24,alpha=.30,y=.05})
 -- The glossy grass horizon (Common and Uncommon) and Rare's glass floor: the top of a circle 3 x the well's width, its
 -- crest just above the floor the egg or pet stands on, a 1 px white highlight along it.

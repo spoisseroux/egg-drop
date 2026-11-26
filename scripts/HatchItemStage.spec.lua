@@ -140,6 +140,8 @@ return function(client,parent)
     assert(shown>0,"bubbles rise before the burst")
     assert(stage.aeroParts.bubbles[1].stroke.Color==Aero.accent("toy",1),"the rim is the Toy Egg's accent")
     assert(stage.floorShadow.ImageColor3==p.shadow,"no cocoa shadow on the grass")
+    -- Fable B37: the sky round the card, no checker, six faint sky bubbles.
+    assert(stage.shell.AeroSky.Enabled and not stage.shell.CheckerHolder.Visible and #stage.aeroParts.outer==Aero.Backdrop.bubbles,tier.." sky backdrop")
     for i=1,6 do assert(stage:stoneColor(i)~=Color3.fromHex("#FFC14D"),"no Stars gold in the confetti")end
     -- Common and Uncommon (the Bear's sky too) never teal-grey: saturated edges (HatchAero.spec has the full check).
     local _,s=p.edge:ToHSV();assert(s>=.6,tier.." edge saturated")

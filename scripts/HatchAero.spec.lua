@@ -197,6 +197,25 @@ return function(server)
 		end
 	end)
 
+	test("Fable B37: the sky round the card, faint sky bubbles, the polka dots at 6%, rays at 14% from higher up, a cool key light",function()
+		local D=A.Backdrop
+		assert(hexOf(D.top)=="#58B8F2"and hexOf(D.bottom)=="#0E5FB8"and D.hexTop=="#58B8F2"and D.hexBottom=="#0E5FB8","the sky gradient, top to bottom")
+		assert(D.bubbles==6 and D.alpha==.12 and D.fill<=D.alpha and D.scale>1,"six faint bubbles, bigger than the card's")
+		local _,s,v=A.hsv(D.bottom);assert(s>=.6 and v>=.7,"a saturated sky, not navy grey")
+		assert(dE(D.bottom,Color3.fromHex("#1B2340"))>=20,"not the navy deck shell")
+		assert(A.palette("Common").patternAlpha<=.06 and A.palette("Uncommon").patternAlpha<=.06,"the polka-dot grid at 6% or less")
+		assert(A.Rays.alpha==.14 and A.Rays.originY<=-.2,"14% shafts whose bright band lands on the card")
+		-- The middle of the card sits inside the shafts' bright band (40 to 70% of the image's radius).
+		local h=300;local half=h*A.Rays.span/2
+		local mid=(h*.5-h*A.Rays.originY)/half;assert(mid>=.4 and mid<=.7,"the card's middle in the bright band ("..mid..")")
+		local L=A.PetLight
+		assert(hexOf(L.key)=="#FFFFFF"and L.fillHex=="#CFEFFF"and L.strength==.5,"white key, #CFEFFF fill at half")
+		assert(math.abs(L.ambient.R-L.fill.R*.5)<1e-9 and math.abs(L.ambient.B-L.fill.B*.5)<1e-9,"the fill is the ambient")
+		assert(L.ambient.B>L.ambient.R,"the fill is cool, never warm")
+		-- A white belly lit by key + fill clips to white with a cool cast (the warm grey is gone); the target reads cool.
+		local belly=Color3.fromHex(L.belly);assert(belly.B>=belly.R and A.luminance(belly)>.9,"the belly target is a cool white")
+	end)
+
 	test("the switch: Alive `aerohatch` with its flag, beta and Studio only, a missing config is on, the attribute decides",function()
 		assert(A.Feature=="aerohatch"and table.find(Alive.Features,"aerohatch")~=nil and Flags.AliveAeroHatch==true)
 		assert(Alive.attribute("aerohatch")=="Alive_aerohatch"and Alive.key("aerohatch")=="alive_aerohatch")
