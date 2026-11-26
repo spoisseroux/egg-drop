@@ -80,13 +80,17 @@ end
 -- true, nil, item, expectedPrice. A level-gated item reads the levels of the save being written
 -- (never a public attribute): below the gate it is NeedsLevel, with no charge. While gates are off
 -- the item is not in the list at all (NotForSale), unless `gates` says the purchase began with them on.
+-- `listWeek` (a "This week" pick only, ThisWeek): the week the purchase was asked in. The item is looked up in that
+-- week's list, so a weekly pick sells only in its own week while that switch is on, at its own full price.
 function State.price(petId,itemId,week)
 	local item=Catalog.item(petId,itemId)
 	return if item then expectedPrice("wearable",itemId,item.price,week)else nil
 end
-function State.check(state,petId,itemId,price,week,gates)
+function State.check(state,petId,itemId,price,week,gates,listWeek)
 	if not Eggs.isOwned(state.inventoryMask,petId)then return false,"Unowned"end
-	local item=Catalog.item(petId,itemId)
+	local item=if type(listWeek)=="number"then Catalog.forPet(petId,listWeek).byId[itemId]else Catalog.item(petId,itemId)
+	-- A weekly row is only ever sold by its own week (never through the clock's list).
+	if item and item.weekly==true and type(listWeek)~="number"then item=nil end
 	if not item and gates==true then
 		item=Catalog.forPet(petId,math.huge).byId[itemId]
 		if item and item.gate==nil then item=nil end
@@ -101,10 +105,10 @@ function State.check(state,petId,itemId,price,week,gates)
 	return true,nil,item,expected
 end
 
--- candidate = { petId, itemId, price, operationId, equip, week }
+-- candidate = { petId, itemId, price, operationId, equip, week, listWeek }
 function State.applyBuy(state,candidate,gates)
 	if type(candidate)~="table"or not id(candidate.petId)or not id(candidate.itemId)then return false,"InvalidWearable"end
-	local ok,why,item,expected=State.check(state,candidate.petId,candidate.itemId,candidate.price,candidate.week,gates)
+	local ok,why,item,expected=State.check(state,candidate.petId,candidate.itemId,candidate.price,candidate.week,gates,candidate.listWeek)
 	if not ok then return false,why end
 	local row=State.row(state,candidate.petId)
 	table.insert(row.owned,item.id)

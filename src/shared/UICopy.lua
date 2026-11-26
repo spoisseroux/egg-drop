@@ -704,6 +704,10 @@ do
  dash.pad={dash="DASH",jump="JUMP",puff="PHEW!"} -- the HUD pads' words, in capitals as shown (so they localize as is)
  Table.results.inPlace.hatchShort="Hatch"
 end
+-- "This week" (ThisWeek, GARDEN-PLAY-BRIEF-2 section 8): the wardrobe's weekly pick. Full price, a stated cycle, no
+-- countdown and no "last chance" (kids audience): the line says when it comes back, never when it goes.
+Table.thisWeek={tab="This week",chip="This week",
+ status="This week's pick. Back every {weeks} weeks.",statusShort="Back every {weeks} weeks"}
 
 local function freeze(node)
  for _,value in pairs(node)do if type(value)=="table"then freeze(value)end end

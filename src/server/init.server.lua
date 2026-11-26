@@ -127,6 +127,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.WorldFeelCo
 task.spawn(function()local ok,problem=pcall(function()require(script.PlayerScaleConfig).start()end);if not ok then warn("[PlayerScale] config not started: "..tostring(problem))end end)
 -- Garden finds off switch (FindsConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.FindsConfig).start()end);if not ok then warn("[Finds] config not started: "..tostring(problem))end end)
+-- "This week" wardrobe pick off switch (ThisWeekConfig): the same way, one key. With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.ThisWeekConfig).start()end);if not ok then warn("[ThisWeek] config not started: "..tostring(problem))end end)
 -- Garden hour off switch (GardenHourConfig): the same way, one key, but missing = off. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.GardenHourConfig).start()end);if not ok then warn("[Hour] config not started: "..tostring(problem))end end)
 -- Island edges off switch (IslandBoundsConfig): the same way, one key. With its build ceiling off nothing starts.
@@ -1077,6 +1079,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.IslandBoundsConfig).command(message) end) end)
 		-- "/finds <on|off|clear>": the Garden finds switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.FindsConfig).command(message) end) end)
+		-- "/thisweek <on|off|clear>": the This week wardrobe pick switch, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.ThisWeekConfig).command(message) end) end)
 		-- "/finds now": one find at once near you, past the timer (beta (12) QA G2), this server only.
 		player.Chatted:Connect(function(message)
 			if not garden.findsHost or not garden.findsHost.parseNow(message) then return end

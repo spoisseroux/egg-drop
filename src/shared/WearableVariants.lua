@@ -14,11 +14,14 @@
 --   gate   optional level gate (LevelGate): {stat, level} or {total}. A gated row is listed only
 --          while Levels.on("gates"); a saved id always renders (forPet with math.huge). It never
 --          joins the weekly shelf. Append-only, and a gate may only be loosened.
+--   weekly true on the "This week" rows (ThisWeek.Rows, appended below): listed only in the week ThisWeek
+--          picks it while that switch is on (always under math.huge, so a saved one renders). Never on the shelf.
 -- Rows are append-only. Never rename or reuse an id: saves hold them.
 local Shared=script.Parent
 local Daily=require(Shared.DailyContracts)
 local Rotation=require(Shared.QuestRotation)
 local Gate=require(Shared.LevelGate)
+local ThisWeek=require(Shared.ThisWeek)
 local Variants={Version=1,IdLimit=32}
 
 Variants.Rows={
@@ -49,6 +52,10 @@ Variants.Rows={
  {id="hoodie_starbloom",base="hoodie",name="Starbloom Hoodie",color="#2F2C7C",gate={total=150}},
  {id="flowercrown_golden",base="flowercrown",name="Golden Flower Crown",color="#F0B429",gate={total=300}},
 }
+-- "This week" (ThisWeek): one featured recolour a week, in ThisWeek's cycle order, after every row above.
+for _,row in ipairs(ThisWeek.Rows)do
+ table.insert(Variants.Rows,{id=row.id,base=row.base,name=row.name,color=row.color,price=row.price,weekly=true})
+end
 
 local function hex(value)return type(value)=="string"and string.match(value,"^#%x%x%x%x%x%x$")~=nil end
 -- Pure row check (the spec feeds it bad rows): nil when the list is fine, else the reason.
@@ -66,6 +73,8 @@ function Variants.problem(rows)
   if row.from~=nil and not(type(row.from)=="number"and row.from%1==0 and row.from>=0)then return "from "..row.id end
   if row.piece~=nil and(type(row.piece)~="string"or #row.piece<1)then return "piece "..row.id end
   if row.gate~=nil and not Gate.valid(row.gate)then return "gate "..row.id end
+  -- A weekly row is sold at its own stated price, ungated and with no `from` (ThisWeek decides its weeks).
+  if row.weekly~=nil and not(row.weekly==true and row.price~=nil and row.gate==nil and row.from==nil)then return "weekly "..row.id end
  end
  -- A variant never shadows another variant's base (no variant of a variant).
  for _,row in ipairs(rows)do if seen[row.base]then return "variant base "..row.id end end
@@ -86,6 +95,7 @@ function Variants.week(now)
 end
 -- math.huge is "every row ever": rendering, saved items and the Book read it, gated or not.
 function Variants.released(row,week)
+ if row.weekly==true then return ThisWeek.listed(row.id,week)end
  if row.gate~=nil and week~=math.huge and not Gate.listed(row.gate)then return false end
  return row.from==nil or(type(week)=="number"and row.from<=week)
 end

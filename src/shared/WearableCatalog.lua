@@ -26,7 +26,7 @@ Catalog.week=Variants.week
 -- Order: each rig item, then its variants in row order, so a slot tab lists a base with its
 -- recolours right after it. A variant copies the base's slot, keys, flags, tier and main
 -- colour data and adds variant=true, base=<id>, color=<hex>, piece=<attachment name or nil>,
--- gate=<LevelGate gate or nil>.
+-- gate=<LevelGate gate or nil>, weekly=<true on a "This week" row (ThisWeek), else nil>.
 function Catalog.compose(petId,rows)
  local definition=type(petId)=="string"and Defs[petId]
  local order,byId={},{}
@@ -53,7 +53,7 @@ function Catalog.compose(petId,rows)
     local list=following[row.base];if not list then list={};following[row.base]=list end
     table.insert(list,table.freeze({id=row.id,slot=base.slot,name=row.name,tier=base.tier,price=row.price or base.price,
      flags=base.flags,perSide=base.perSide,keys=base.keys,primary=base.primary,role=base.role,
-     variant=true,base=base.id,color=row.color,piece=row.piece,gate=row.gate}))
+     variant=true,base=base.id,color=row.color,piece=row.piece,gate=row.gate,weekly=row.weekly}))
    end
   end
   for _,raw in ipairs(definition.wearableItems)do
@@ -77,8 +77,11 @@ function Catalog.forPet(petId,week)
  if type(petId)~="string"then return none end
  local rows=Variants.rows(if type(week)=="number"then week else Variants.week())
  -- Rows only ever join as the week advances, so the count names the set (with the gated rows
- -- listed or not: Levels may differ between two calls in a spec).
- local key=petId.."|"..#rows..(if Levels.on("gates")then "|g"else "")
+ -- listed or not: Levels may differ between two calls in a spec). "This week" rows come and go, so
+ -- the ones listed are named too.
+ local weekly=""
+ for _,row in ipairs(rows)do if row.weekly then weekly..="|"..row.id end end
+ local key=petId.."|"..#rows..(if Levels.on("gates")then "|g"else "")..weekly
  local found=cache[key]
  if not found then found=Catalog.compose(petId,rows);cache[key]=found end
  return found
@@ -117,13 +120,21 @@ function Catalog.inTab(petId,tabSlot)
  return result
 end
 -- The same list plus gated items the pet owns while gates are off (they are not sold then, but
--- stay wearable and removable). With gates on, or nothing gated owned, it is exactly inTab.
+-- stay wearable and removable), and "This week" items the pet owns in any week (ThisWeek: bought
+-- stays owned). With gates on and no weekly item owned, or nothing gated or weekly owned, it is
+-- exactly inTab.
+local function ownsWeekly(owned)
+ for _,id in ipairs(owned)do if Variants.ById[id]and Variants.ById[id].weekly then return true end end
+ return false
+end
 function Catalog.shopTab(petId,tabSlot,owned)
- if Levels.on("gates")or type(owned)~="table"then return Catalog.inTab(petId,tabSlot)end
+ local gates=Levels.on("gates")
+ if type(owned)~="table"or(gates and not ownsWeekly(owned))then return Catalog.inTab(petId,tabSlot)end
  local listed=Catalog.forPet(petId).byId
  local result={}
  for _,item in ipairs(Catalog.forPet(petId,math.huge).order)do
-  if item.slot==tabSlot and(listed[item.id]or(item.gate~=nil and table.find(owned,item.id)))then table.insert(result,listed[item.id]or item)end
+  local kept=((item.gate~=nil and not gates)or item.weekly==true)and table.find(owned,item.id)~=nil
+  if item.slot==tabSlot and(listed[item.id]or kept)then table.insert(result,listed[item.id]or item)end
  end
  return result
 end
