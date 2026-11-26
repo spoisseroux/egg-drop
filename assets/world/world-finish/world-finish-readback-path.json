@@ -1,9 +1,9 @@
 {
  "slice": "path",
- "assetId": "91555248367509",
+ "assetId": "84698401536715",
  "parts": [
   {
-   "meshId": "rbxassetid://129952792896225",
+   "meshId": "rbxassetid://129569016743829",
    "name": "W7_CD_Ground__grass",
    "meshSize": [
     1789.0574951171875,
@@ -12,7 +12,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://108771375827267",
+   "meshId": "rbxassetid://95254913399964",
    "name": "W7_CD_Ground__ground",
    "meshSize": [
     2048,
@@ -21,10 +21,10 @@
    ]
   },
   {
-   "meshId": "rbxassetid://122772199266463",
+   "meshId": "rbxassetid://82232748247492",
    "name": "W7_CD_Region__cliff_rock",
    "meshSize": [
-    658.4364013671875,
+    645.6989135742188,
     200.1623077392578,
     552.4715576171875
    ]
@@ -102,7 +102,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://108768923895556",
+   "meshId": "rbxassetid://73948066134680",
    "name": "W7_F_PathOverRocks__cliff_rock_1717",
    "meshSize": [
     312.51153564453125,
@@ -111,7 +111,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://95522275026331",
+   "meshId": "rbxassetid://72368792799700",
    "name": "W7_F_PathOverRocks__cliff_rock_1718",
    "meshSize": [
     289.15899658203125,
@@ -174,11 +174,11 @@
    ]
   },
   {
-   "meshId": "rbxassetid://140083319153716",
+   "meshId": "rbxassetid://127559437006675",
    "name": "W7_F_PathSkin__cliff_rock",
    "meshSize": [
     424.8929748535156,
-    164.8248291015625,
+    164.82130432128906,
     282.9177551269531
    ]
   },

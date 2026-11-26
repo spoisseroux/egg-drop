@@ -8,7 +8,7 @@
 --   a W7C_ collision tile is invisible (Transparency 1, no shadow, single-sided).
 -- Run with execute_luau in Edit (Rojo NOT serving, or it may write the pack back). It runs in a task and reports
 -- through _G.WBPACK = {done, built, missing, err}. Nothing is saved; export with the chunk script after.
-local VISUAL, COLLISION = 98284784411093, 103168916149306
+local VISUAL, COLLISION = 140553833833780, 84447177502820
 
 _G.WBPACK = { done = false, built = 0, missing = {}, err = nil }
 task.spawn(function()
@@ -66,7 +66,9 @@ task.spawn(function()
 			part.Name = name
 			part.Anchored = true
 			part.Size = Vector3.new(info.size[1], info.size[2], info.size[3])
-			part.CFrame = CFrame.new(info.center[1], info.center[2], info.center[3])
+			-- round 6c (Studio rays): the FBX import turns each mesh by pi about Y (AeroKit.Turn); the live parts carry that
+			-- turn, and without it every piece showed mirrored in its own box (rock over the path, grass through the den roof)
+			part.CFrame = CFrame.new(info.center[1], info.center[2], info.center[3]) * CFrame.Angles(0, math.pi, 0)
 			part.CanCollide, part.CanQuery, part.CanTouch = collide, collide, false
 			if string.sub(name, 1, 4) == "W7C_" then
 				part.Transparency, part.CastShadow, part.DoubleSided = 1, false, false

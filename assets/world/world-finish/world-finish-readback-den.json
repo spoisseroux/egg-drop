@@ -1,6 +1,6 @@
 {
  "slice": "den",
- "assetId": "116612382066693",
+ "assetId": "92775758678075",
  "parts": [
   {
    "meshId": "rbxassetid://123101549190510",
@@ -21,7 +21,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://119896728517581",
+   "meshId": "rbxassetid://84775644612941",
    "name": "W7_CD_Ground__ground",
    "meshSize": [
     2048,
@@ -30,7 +30,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://97513370409141",
+   "meshId": "rbxassetid://134222942557013",
    "name": "W7_CD_Region__cliff_rock",
    "meshSize": [
     658.4364013671875,
@@ -57,7 +57,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://109882346969378",
+   "meshId": "rbxassetid://79665712260501",
    "name": "W7_F_DenLid__cliff_rock",
    "meshSize": [
     319.22216796875,
@@ -75,11 +75,11 @@
    ]
   },
   {
-   "meshId": "rbxassetid://76895352264749",
+   "meshId": "rbxassetid://139302720149996",
    "name": "W7_F_DenSkin__cliff_rock",
    "meshSize": [
     494.45703125,
-    267.457275390625,
+    267.48468017578125,
     166.4639129638672
    ]
   },
@@ -102,16 +102,16 @@
    ]
   },
   {
-   "meshId": "rbxassetid://83584270589539",
+   "meshId": "rbxassetid://113721862008689",
    "name": "W7_F_Den__shellEast",
    "meshSize": [
-    160.31210327148438,
+    160.4292755126953,
     144.21644592285156,
     225.44606018066406
    ]
   },
   {
-   "meshId": "rbxassetid://118562269139196",
+   "meshId": "rbxassetid://82521502342184",
    "name": "W7_F_Den__shellWest",
    "meshSize": [
     149.57696533203125,

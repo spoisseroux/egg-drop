@@ -3,60 +3,60 @@
  "den": {
   "model": {
    "file": "world-finish-den.fbx",
-   "sha256": "e8e0b4ff9168215ac8022f39e87dd109d3e655bd8f44c09bc1ec08ed04ba3444",
-   "manifestSha256": "672510b7c4b801d4036c4b1a5d1b80201f6db7c21815be84888e48697c11d6ba",
-   "operation": "cd22a4b6-6100-43be-83cd-3286288d4eef",
-   "assetId": "116612382066693",
+   "sha256": "965bf585e9da4efbe18c61d8a76445e2ee0c7b3fcc295f27de3b45932e67a25a",
+   "manifestSha256": "636745fde71b95c8275d41cf2b8ef9370c5d47b01ec284037e748432cc9a9ba6",
+   "operation": "5a14a355-e6fa-4ff1-a00c-8a1587763b12",
+   "assetId": "92775758678075",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "96319124357754",
-    "operation": "a1230bad-d671-4603-9fb1-d81f5b512091",
-    "why": "round 6 C+D+E (Spencer: the bigger cave mouth and den, the 9-wide path; Fable R6-CDE fixes); mesh gate PASS"
+    "assetId": "132034092866805",
+    "operation": "92862d29-9a2b-4a8f-84cd-662848b20905",
+    "why": "round 6e (the island pack's pi turn and the tread plane carve; terrace arrival gap to s 37); mesh gate PASS"
    }
   },
   "images": {
    "den_shell_west_color": {
     "file": "textures/den_shell_west_color.png",
-    "sha256": "a26017be345e7778f883801fa0763b8ad5fb453bedf45aca958dbde2e9678f83",
-    "operation": "da3dea28-2b7d-4721-b84c-ff774220bef1",
-    "assetId": "96814699596274",
+    "sha256": "6f1d091de73d8ba5519a1605c2978e2c8abd7ebdd4b0cdfbd69c5c205e56cbd9",
+    "operation": "73a0464b-19f7-4cca-a3bd-da0f9e2b63f1",
+    "assetId": "104356978170281",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "93269884442191",
-     "why": "round 6 re-bake"
+     "assetId": "96814699596274",
+     "why": "round 6c re-bake"
     }
    },
    "den_shell_east_color": {
     "file": "textures/den_shell_east_color.png",
-    "sha256": "59df092739c80fb97434638c520f25a1f993dfacfb666afc51dca7a2c8aefd1a",
-    "operation": "a1134d13-4933-49ee-83eb-c21d010f5d7d",
-    "assetId": "105648387452459",
+    "sha256": "b5c12c9a2e30f0c555b424f8432ea6c33c92e4b828c41bc2366612d5e91fd7b6",
+    "operation": "6c8ec003-dd74-4cad-90ab-6edc94a8b814",
+    "assetId": "121376278515679",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "88485177588896",
-     "why": "round 6 re-bake"
+     "assetId": "105648387452459",
+     "why": "round 6c re-bake"
     }
    },
    "den_shell_west_normal": {
     "file": "textures/den_shell_west_normal.png",
-    "sha256": "077697679c230050641252530b2bb3208be8ea16b0988a50ebc12f6bd8d5a6f6",
-    "operation": "2de858a8-81a9-4a4d-87fc-eb13e2063bb0",
-    "assetId": "78507918350468",
+    "sha256": "adbf197ef6ec1d82c4ce503bb57c76bb790606ac34ecce0737cf5a6d8120307b",
+    "operation": "c3de6203-a5cf-4b0c-b106-a7f1a11aca0a",
+    "assetId": "109842978024620",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "119072968306012",
-     "why": "round 6 re-bake"
+     "assetId": "78507918350468",
+     "why": "round 6c re-bake"
     }
    },
    "den_shell_east_normal": {
     "file": "textures/den_shell_east_normal.png",
-    "sha256": "cd672649af5f2f9c2b3cf520df9c4a5a56c9526d93ca4fcd0f2d84140bbbbad1",
-    "operation": "cb575eff-4070-443f-bf59-1e4aebb44cba",
-    "assetId": "95210125629707",
+    "sha256": "da35d659568fc3f00293c5e88847d632ae1aa580c679488856da752061573b40",
+    "operation": "98009bc4-f3f6-4077-9570-1918de626ac4",
+    "assetId": "95314721544091",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "140144455459085",
-     "why": "round 6 re-bake"
+     "assetId": "95210125629707",
+     "why": "round 6c re-bake"
     }
    },
    "den_floor_color": {
@@ -78,15 +78,15 @@
  "path": {
   "model": {
    "file": "world-finish-path.fbx",
-   "sha256": "12b214266bfbc42f0648ee54584cc0d4edd108e213334827ded3d72fd576c435",
-   "manifestSha256": "1903b0014db77ec25cba9b15719fb21dbb2964a3d5d6ab475613cbe03314c714",
-   "operation": "4dcc2226-d3de-4b28-a217-0301ba9615e8",
-   "assetId": "91555248367509",
+   "sha256": "00cb080b1cd6ca0f8452f844f9ada9103de72bcba272134964f43bf0139a5415",
+   "manifestSha256": "a1fbe1d213b08b1ab1c41d877661c786331183974a409b84309cb5ce68d27c25",
+   "operation": "bc60347b-fc90-4553-9f99-7fb4d821e992",
+   "assetId": "84698401536715",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "115798993481344",
-    "operation": "64118d34-10fa-4d4d-99c3-119beddbc389",
-    "why": "round 6 C+D+E (Spencer: the bigger cave mouth and den, the 9-wide path; Fable R6-CDE fixes); mesh gate PASS"
+    "assetId": "77649928127763",
+    "operation": "4aa1185e-0f00-48dc-9ce7-45ae1fffc03c",
+    "why": "round 6f (Studio R6e captures: a ground bank by the path's inner edge, pale against the wall; re-cut over every nearby sample to head height)"
    }
   },
   "images": {}
@@ -94,15 +94,15 @@
  "terrace": {
   "model": {
    "file": "world-finish-terrace.fbx",
-   "sha256": "4ffb8b2660170fa91cafd7ef91fc097303da739825f04414ab988c53483428d5",
+   "sha256": "cc8aed63ba577655c8fc8160e953f02820e96c5add7570897bbac45213734ae7",
    "manifestSha256": "cce2487806f73f7e350e442d909ecf5bdb54cd7f5202d2b535785e9db69c2632",
-   "operation": "fda3fbb2-1b5d-475d-ae13-545d3776e55d",
-   "assetId": "107356068537050",
+   "operation": "228e6ba1-884a-4c1a-aa25-f0da3be13067",
+   "assetId": "123893436079803",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "121585294183893",
-    "operation": "a796afdc-67f0-4a10-93b5-be21b4d847c0",
-    "why": "round 6 C+D+E (Spencer: the bigger cave mouth and den, the 9-wide path; Fable R6-CDE fixes); mesh gate PASS"
+    "assetId": "117446794714330",
+    "operation": "51c37578-5c31-407f-96c6-861b33e38fee",
+    "why": "round 6f (Studio R6e captures: a ground bank by the path's inner edge, pale against the wall; re-cut over every nearby sample to head height)"
    }
   },
   "images": {}

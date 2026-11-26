@@ -308,7 +308,7 @@ def save_png(arr, path, size, srgb_input=True):
     return img
 
 
-def clean_slivers(obj, deg=4.0, tiny=.002, passes=6):
+def clean_slivers(obj, deg=4.0, tiny=.002, passes=12):
     """Round 6 mesh gate: collapse the shortest edge of every face with a corner under `deg` degrees or an area under
     `tiny` (the dome's apex fan, decimated rock), a few passes, so no needle triangle is exported. Returns the count."""
     import bmesh
@@ -317,15 +317,29 @@ def clean_slivers(obj, deg=4.0, tiny=.002, passes=6):
     bm.from_mesh(obj.data)
     for _ in range(passes):
         bm.faces.ensure_lookup_table()
-        edges = set()
+        # code review r6: collapse merges each connected run of edges into one vertex, so take only edges that share
+        # no vertex this pass (a ring round the dome's apex would otherwise go at once), shortest first
+        picked = set()
         for f in bm.faces:
             if f.calc_area() < tiny or any(l.calc_angle() < lim for l in f.loops):
-                edges.add(min(f.edges, key=lambda e: e.calc_length()))
+                picked.add(min(f.edges, key=lambda e: e.calc_length()))
+        used, edges = set(), []
+        for e in sorted(picked, key=lambda e: e.calc_length()):
+            a, b = e.verts
+            if a in used or b in used:
+                continue
+            used.update((a, b))
+            edges.append(e)
         if not edges:
             break
-        edges = [e for e in edges if e.is_valid]
         bmesh.ops.collapse(bm, edges=edges, uvs=True)
         bmesh.ops.dissolve_degenerate(bm, dist=1e-5, edges=bm.edges)
+        loose = [e for e in bm.edges if not e.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="EDGES")
+        loose = [v for v in bm.verts if not v.link_edges]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="VERTS")
         done += len(edges)
     bm.to_mesh(obj.data)
     bm.free()

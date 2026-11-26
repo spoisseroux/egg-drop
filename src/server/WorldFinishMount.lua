@@ -239,7 +239,11 @@ function Mount.dressDen(model,room,env)
 			local P=dress.paw
 			local scale=vector(P.size)
 			local size=vector(P.unit)*scale
-			local at=CFrame.new(row.CFrame.Position-Vector3.new(0,row.Size.Y/2+P.sink,0))*row.CFrame.Rotation
+			-- code review r6: the paw is a rolled cylinder now; its thickness is its smallest side and the stone keeps
+			-- only the row's yaw (the roll stood it on edge, sunk .55)
+			local thick=math.min(row.Size.X,row.Size.Y,row.Size.Z)
+			local _,yaw=row.CFrame:ToEulerAnglesYXZ()
+			local at=CFrame.new(row.CFrame.Position-Vector3.new(0,thick/2+P.sink,0))*CFrame.Angles(0,yaw,0)
 			local part=add("W7_F_Stone__flat",at*CFrame.new(vector(P.offset)*scale)*Turn,size)
 			part.Color=Color3.fromHex(P.color)
 			table.insert(hide,row)

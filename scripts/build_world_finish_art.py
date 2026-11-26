@@ -614,9 +614,10 @@ def den_render_dressing(Den, cage, panes, crystal, stone):
     M_, D_ = S_.MOUTH, S_.DEN
     F_ = D_["floor"]
     for x, side in ((M_["x0"], -1), (M_["x1"], 1)):
-        box("WF_Prop", (x + side * (.2 + 5 * math.sin(math.radians(8))), F_ + 5, D_["z1"] + 1.6), (1, 10, 1), dark,
+        # code review r6: as DenGreybox, the foot 1.6 into the opening and the top back on the jamb
+        box("WF_Prop", (x - side * 1.6 + side * 5 * math.sin(math.radians(8)), F_ + 5, D_["z1"] + 1.6), (1, 10, 1), dark,
             rot=(math.radians(-4.8), math.radians(-side * 8), 0))
-    box("WF_Sign", (-7, F_ + 10.1, D_["z1"] + .6), (8, 2.2, .25), wood)
+    box("WF_Sign", (-7, F_ + 9.2, D_["z1"] + .6), (8, 2.2, .25), wood)
     disc("WF_Mat", (-7, F_ + .04, -112), 10, .08, cloth)
     disc("WF_MatInner", (-7, F_ + .05, -112), 8, .08, red)
     disc("WF_Stump", (-7, F_ + 1.1, -121.5), 5, 2.2, dark)

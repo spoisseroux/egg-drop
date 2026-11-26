@@ -329,7 +329,7 @@ def lip_layout(ol):
         for _ in range(int(rnd.integers(2, 4))):
             kit = int(rnd.integers(1, 5))
             length = Pth.LIP_KIT[kit - 1][0]
-            if not (24 <= s_ <= 36 or -36.5 <= s_ <= -29.5) and s_ + length <= HALF[0] - 1:
+            if not (24 <= s_ <= 39 or -36.5 <= s_ <= -29.5) and s_ + length <= HALF[0] - 1:   # round 6: gap to 37
                 # round 5: on the wandering edge (0.6 inside it), not on a ruled line at t 23
                 t_ = max(HALF[1] + .3, edge_t(ol, s_ + length / 2) - .6) + float(rnd.uniform(-.2, .2))
                 x, _, z = T(s_ + length / 2, t_)

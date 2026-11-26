@@ -71,7 +71,7 @@ function Tier.inPiece(piece,x,z,grow)
 end
 -- The balustrade gap (s range) where the cliff path arrives on the garden edge (CliffDenData.terrace.gap; the path's
 -- last centre-line point is at s 30, t 22). CliffDen.spec checks the two agree.
-Tier.Gap=table.freeze({a1=26,a2=34})
+Tier.Gap=table.freeze({a1=26,a2=37})   -- round 6 (Studio rays): the return leg's inner edge reaches s 36.1
 
 -- The cliff path, from CliffDenData (lazy, once): {points = {Vector3}, widths = {number}, box = {min, max} in plan}, or
 -- false when the data is missing or malformed (then nothing is covered and the terrace never opens).

@@ -84,7 +84,7 @@ return function(server)
 		-- an arch 18 wide, its crown 11 over the floor; no trim lintel (the old door is carved away)
 		assert(den.floorY>4 and den.floorY<4.5 and den.peakY==21.2 and den.wallY==14.2)
 		assert(math.abs(den.mouth.top-den.floorY-11)<.01 and den.mouth.x1<den.mouth.x2 and den.mouth.x2-den.mouth.x1>=18)
-		assert(den.sign.under==nil and den.sign.at[2]-1.1>=den.floorY+9-1e-6)
+		assert(den.sign.under==nil and den.sign.at[2]-1.1>=den.floorY+8-1e-6 and den.sign.at[2]+1.1<=den.mouth.top-.6) -- code review r6: under the arch
 		local p=Data.path
 		assert(math.abs(p.foot[2]-4.6)<.05 and math.abs(p.arrival[2]-29)<.05 and p.turn[2]>22 and p.turn[2]<24)
 		assert(#p.centreLine>30)
@@ -229,7 +229,8 @@ return function(server)
 		end end
 		-- The posts stand out of the mouth (the blocker's volume and the passage stay clear).
 		for _,l in ipairs(L.lanterns)do
-			if l.post then assert(l.at.Z>Data.den.mouth.z+1,"post in the mouth")end
+			-- code review r6: the mouth lanterns hang on the props, clear of the blocker (1 deep on the mouth line), 0.8 wide
+			if l.post then assert(l.at.Z-.4>Data.den.mouth.z+.5,"post in the mouth")end
 		end
 	end)
 	test("Studio R2: the dressing the sculpt leaves floating is skipped only while the sculpt is in; marble and trim stay live",function()

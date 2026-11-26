@@ -21,7 +21,7 @@
     "of": "W7_CD_Crystals__glow_pink"
    },
    "replaces": "W7_CD_Crystals__glow_pink",
-   "facesRemoved": 32,
+   "facesRemoved": 30,
    "collide": false
   },
   {
@@ -61,13 +61,13 @@
     55.6477,
     249.0
    ],
-   "triangles": 5356,
+   "triangles": 5354,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__ground"
    },
    "replaces": "W7_CD_Ground__ground",
-   "facesRemoved": 16,
+   "facesRemoved": 14,
    "collide": false
   },
   {
@@ -107,13 +107,13 @@
     25.509,
     70.4077
    ],
-   "triangles": 92,
+   "triangles": 93,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Region__cliff_rock"
    },
    "replaces": "W7_CD_Region__cliff_rock",
-   "facesRemoved": 145,
+   "facesRemoved": 142,
    "collide": false
   },
   {
@@ -199,7 +199,7 @@
     18.3791,
     28.6868
    ],
-   "triangles": 2988,
+   "triangles": 3032,
    "look": {
     "kind": "baked",
     "color": "den_shell_west_color",
@@ -210,7 +210,7 @@
    },
    "pxPerStud": {
     "walls": 23.3,
-    "all": 23.4
+    "all": 23.5
    },
    "collide": false,
    "shadow": true
@@ -220,16 +220,16 @@
    "slice": "den",
    "role": "fixed",
    "centre": [
-    1.8107,
+    1.8032,
     12.7896,
     -111.2656
    ],
    "size": [
-    20.4304,
+    20.4453,
     18.3791,
     28.7312
    ],
-   "triangles": 3264,
+   "triangles": 3362,
    "look": {
     "kind": "baked",
     "color": "den_shell_east_color",
@@ -239,8 +239,8 @@
     "tint": "#B8A39E"
    },
    "pxPerStud": {
-    "walls": 21.8,
-    "all": 22.2
+    "walls": 21.6,
+    "all": 22.0
    },
    "collide": false,
    "shadow": true
@@ -285,7 +285,7 @@
     14.9376,
     30.0689
    ],
-   "triangles": 4393,
+   "triangles": 4439,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -440,15 +440,15 @@
    "role": "fixed",
    "centre": [
     -7.3969,
-    21.0887,
+    21.0869,
     -94.5089
    ],
    "size": [
     63.0143,
-    34.0851,
+    34.0886,
     21.2144
    ],
-   "triangles": 74,
+   "triangles": 71,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -959,18 +959,18 @@
   "pxPerStud": {
    "west": {
     "walls": 23.3,
-    "all": 23.4
+    "all": 23.5
    },
    "east": {
-    "walls": 21.8,
-    "all": 22.2
+    "walls": 21.6,
+    "all": 22.0
    }
   },
   "areas": {
-   "west": 1319.4,
-   "east": 1419.5
+   "west": 1318.7,
+   "east": 1416.3
   },
-  "skin": 74,
+  "skin": 71,
   "apron": 434
  }
 }

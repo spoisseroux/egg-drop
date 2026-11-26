@@ -487,7 +487,9 @@ def lip_layout():
             turn = math.radians(rnd.uniform(-15, 15))
             yaw = math.atan2(-s["dir"][1], s["dir"][0]) + turn
             # far enough out that a turned stone's inner corner stays off the 6-wide tread
-            at = P(s, s["w"] / 2 + .3 + abs(math.sin(turn)) * length / 2 * .6, s["h"])
+            # code review r6: the drawn stone is 2 * (.45 + .1 * length) deep; its inner face and turned corner clear
+            depth = 2 * (.45 + .1 * length)
+            at = P(s, s["w"] / 2 + depth / 2 + .1 + abs(math.sin(turn)) * length / 2, s["h"])
             # round 6 (Fable R6-CDE 6): the bigger stones never hang over a sheer drop (no bank under them)
             g_at = S.ground(at[0], at[2])
             if g_at is None or s["h"] - g_at > 3.0:
@@ -496,7 +498,7 @@ def lip_layout():
                 continue
             out.append({"kit": kit + 1, "at": [round(v, 3) for v in at], "yaw": round(yaw, 4),
                         "box": {"c": [round(at[0], 3), round(s["h"] + height / 2 - .3, 3), round(at[2], 3)],
-                                "s": [round(length * .9, 3), round(height, 3), .8], "yaw": round(yaw, 4)}})
+                                "s": [round(length * .9, 3), round(height, 3), round(depth * .9, 3)], "yaw": round(yaw, 4)}})
         gap = 4.2 + rnd.uniform(0, .6) if near_glade else rnd.uniform(.6, 3.0)
         if near_glade:
             glade_gaps += 1
@@ -552,14 +554,24 @@ def recut_test(points):
     behind the inner edge to 0.3 past the outer) goes: the old island poked through the new wall and talus there."""
     # Fable world R1 8: by volume, the cut's whole box: from 0.3 past the outer edge to 3.6 behind the old cut line (the
     # new wall's cap reaches 3.4 behind it), from under the tread to 1.0 over the cap
+    # round 6 (Studio R6e: a bank of island ground stood up beside the inner edge, pale against the wall): every sample
+    # near the point, not only the nearest (the hairpin's other leg let it off), and the no-wall envelope to head height
     for p in points:
-        s = S._nearest(p[0], p[2])
+        near = S._tread_grid().get((math.floor(p[0] / 4), math.floor(p[2] / 4)), ())
+        if not _recut_one(p, near):
+            continue
+        return True
+    return False
+
+
+def _recut_one(p, near):
+    for s in tuple(near) + (S._nearest(p[0], p[2]),):      # the nearest too (the grid reaches only 1.6 past the tread)
         along = (p[0] - s["x"]) * s["dir"][0] + (p[2] - s["z"]) * s["dir"][1]
         a = (p[0] - s["x"]) * s["out"][0] + (p[2] - s["z"]) * s["out"][1]
         if abs(along) > 1.0:
             continue
-        if s["back"] <= .05:                     # no cut wall here: only the low envelope over the tread
-            if -s["w"] / 2 - 2.8 <= a <= s["w"] / 2 + .3 and s["h"] - .25 < p[1] < s["h"] + 3.5:
+        if s["back"] <= .05:                     # no cut wall here: only the envelope over the tread, to head height
+            if -s["w"] / 2 - 2.8 <= a <= s["w"] / 2 + .3 and s["h"] - .25 < p[1] < s["h"] + 6.5:
                 return True
             continue
         if not (-s["w"] / 2 - s["back"] - 3.6 <= a <= s["w"] / 2 + .3):

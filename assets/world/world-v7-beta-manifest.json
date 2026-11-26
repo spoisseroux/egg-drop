@@ -341,7 +341,7 @@
    "name": "W7_CD_Region__cliff_rock",
    "group": "CD_Region__cliff_rock",
    "material": "W1_cliff_rock",
-   "tris": 237,
+   "tris": 235,
    "collide": false,
    "anim": null,
    "region": "Rocks",
@@ -356,7 +356,7 @@
     70.4077
    ],
    "top": 29.3151,
-   "hash": "54e59eb7d731e8bd",
+   "hash": "727e393a8ec5990d",
    "replaces": null
   },
   {
@@ -561,7 +561,7 @@
    "name": "W7_CD_Rocks__cliff_rock_1718",
    "group": "CD_Rocks__cliff_rock_1718",
    "material": "W1_cliff_rock",
-   "tris": 267,
+   "tris": 266,
    "collide": true,
    "anim": null,
    "region": "Rocks",
@@ -576,7 +576,7 @@
     31.59
    ],
    "top": 32.9177,
-   "hash": "625d3f1e07995691",
+   "hash": "d566f598e8a1524c",
    "replaces": null
   },
   {
@@ -781,7 +781,7 @@
    "name": "W7_CD_Rocks__cliff_rock_1917",
    "group": "CD_Rocks__cliff_rock_1917",
    "material": "W1_cliff_rock",
-   "tris": 43,
+   "tris": 47,
    "collide": true,
    "anim": null,
    "region": "Rocks",
@@ -796,7 +796,7 @@
     8.1891
    ],
    "top": 20.4113,
-   "hash": "a5831130f8f5d2b9",
+   "hash": "1ac2bbd458c5d4f1",
    "replaces": null
   },
   {
@@ -1287,22 +1287,22 @@
    "name": "W7_CD_Rocks__grass_1917",
    "group": "CD_Rocks__grass_1917",
    "material": "W1_grass",
-   "tris": 7,
+   "tris": 8,
    "collide": true,
    "anim": null,
    "region": "Rocks",
    "center": [
     -21.7018,
     15.0659,
-    -95.1934
+    -94.4925
    ],
    "size": [
     8.2434,
     10.6909,
-    6.1114
+    7.5131
    ],
    "top": 20.4113,
-   "hash": "abc21a41a39ef2a1",
+   "hash": "583a99b1317a9630",
    "replaces": null
   },
   {
@@ -1442,7 +1442,7 @@
    "name": "W7_CD_Crystals__glow_pink",
    "group": "Crystals__glow_pink",
    "material": "W1_glow_pink",
-   "tris": 244,
+   "tris": 240,
    "collide": false,
    "anim": "pulse",
    "region": "Crystals",
@@ -1457,7 +1457,7 @@
     148.9607
    ],
    "top": 6.3093,
-   "hash": "4e7529de0462784f",
+   "hash": "6ec36042cc5e4881",
    "note": "Slow pulse.",
    "replaces": "W7_Crystals__glow_pink"
   },
@@ -1487,7 +1487,7 @@
    "name": "W7_CD_Ground__ground",
    "group": "Ground__ground",
    "material": "W1_ground",
-   "tris": 5372,
+   "tris": 5368,
    "collide": true,
    "anim": null,
    "region": "Ground",
@@ -1502,7 +1502,7 @@
     249.0
    ],
    "top": 50.6477,
-   "hash": "d96bda5bcbb38c98",
+   "hash": "f9ef5d9a5ed1cc59",
    "replaces": "W7_Ground__ground"
   },
   {
@@ -1595,6 +1595,6 @@
   }
  ],
  "count": 72,
- "triangles": 19465,
+ "triangles": 19459,
  "liveManifestSha256": "27c1f802f64e5e9c0291c20a8d72349188800ec8aef712eba19cd87c30abe69d"
 }

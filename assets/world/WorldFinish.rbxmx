@@ -6,7 +6,7 @@
     <Item class="StringValue" referent="WorldFinishVersion">
       <Properties>
         <string name="Name">Version</string>
-        <string name="Value">75b3d8f8632e3e0b</string>
+        <string name="Value">6944e0c623414970</string>
       </Properties>
     </Item>
     <Item class="MeshPart" referent="WFD0">
@@ -61,7 +61,7 @@
     <Item class="MeshPart" referent="WFD2">
       <Properties>
         <string name="Name">W7_CD_Ground__ground</string>
-        <Content name="MeshId"><url>rbxassetid://119896728517581</url></Content>
+        <Content name="MeshId"><url>rbxassetid://84775644612941</url></Content>
         <Content name="TextureID"><url>rbxassetid://113678904532434</url></Content>
         <Vector3 name="Size"><X>261.0</X><Y>55.6477</Y><Z>249.0</Z></Vector3>
         <Vector3 name="InitialSize"><X>2048</X><Y>436.6532897949219</Y><Z>1953.839111328125</Z></Vector3>
@@ -110,7 +110,7 @@
     <Item class="MeshPart" referent="WFD4">
       <Properties>
         <string name="Name">W7_CD_Region__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://97513370409141</url></Content>
+        <Content name="MeshId"><url>rbxassetid://134222942557013</url></Content>
         <Content name="TextureID"><url>rbxassetid://89518320013489</url></Content>
         <Vector3 name="Size"><X>83.9121</X><Y>25.509</Y><Z>70.4077</Z></Vector3>
         <Vector3 name="InitialSize"><X>658.4364013671875</X><Y>200.1623077392578</Y><Z>552.4715576171875</Z></Vector3>
@@ -226,7 +226,7 @@
     <Item class="MeshPart" referent="WFD8">
       <Properties>
         <string name="Name">W7_F_Den__shellWest</string>
-        <Content name="MeshId"><url>rbxassetid://118562269139196</url></Content>
+        <Content name="MeshId"><url>rbxassetid://82521502342184</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>19.0623</X><Y>18.3791</Y><Z>28.6868</Z></Vector3>
         <Vector3 name="InitialSize"><X>149.57696533203125</X><Y>144.21644592285156</Y><Z>225.09771728515625</Z></Vector3>
@@ -246,10 +246,10 @@
         <Properties>
           <string name="Name">MatteFinish</string>
           <token name="AlphaMode">0</token>
-          <Content name="ColorMap"><url>rbxassetid://96814699596274</url></Content>
+          <Content name="ColorMap"><url>rbxassetid://104356978170281</url></Content>
           <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
           <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
-          <Content name="NormalMap"><url>rbxassetid://78507918350468</url></Content>
+          <Content name="NormalMap"><url>rbxassetid://109842978024620</url></Content>
           <Color3 name="Color"><R>0.721569</R><G>0.639216</G><B>0.619608</B></Color3>
         </Properties>
       </Item>
@@ -257,10 +257,10 @@
     <Item class="MeshPart" referent="WFD9">
       <Properties>
         <string name="Name">W7_F_Den__shellEast</string>
-        <Content name="MeshId"><url>rbxassetid://83584270589539</url></Content>
+        <Content name="MeshId"><url>rbxassetid://113721862008689</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>20.4304</X><Y>18.3791</Y><Z>28.7312</Z></Vector3>
-        <Vector3 name="InitialSize"><X>160.31210327148438</X><Y>144.21644592285156</Y><Z>225.44606018066406</Z></Vector3>
+        <Vector3 name="Size"><X>20.4453</X><Y>18.3791</Y><Z>28.7312</Z></Vector3>
+        <Vector3 name="InitialSize"><X>160.4292755126953</X><Y>144.21644592285156</Y><Z>225.44606018066406</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -277,10 +277,10 @@
         <Properties>
           <string name="Name">MatteFinish</string>
           <token name="AlphaMode">0</token>
-          <Content name="ColorMap"><url>rbxassetid://105648387452459</url></Content>
+          <Content name="ColorMap"><url>rbxassetid://121376278515679</url></Content>
           <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
           <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
-          <Content name="NormalMap"><url>rbxassetid://95210125629707</url></Content>
+          <Content name="NormalMap"><url>rbxassetid://95314721544091</url></Content>
           <Color3 name="Color"><R>0.721569</R><G>0.639216</G><B>0.619608</B></Color3>
         </Properties>
       </Item>
@@ -319,7 +319,7 @@
     <Item class="MeshPart" referent="WFD11">
       <Properties>
         <string name="Name">W7_F_DenLid__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://109882346969378</url></Content>
+        <Content name="MeshId"><url>rbxassetid://79665712260501</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>40.6821</X><Y>14.9376</Y><Z>30.0689</Z></Vector3>
         <Vector3 name="InitialSize"><X>319.22216796875</X><Y>117.21124267578125</Y><Z>235.94261169433594</Z></Vector3>
@@ -486,10 +486,10 @@
     <Item class="MeshPart" referent="WFD18">
       <Properties>
         <string name="Name">W7_F_DenSkin__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://76895352264749</url></Content>
+        <Content name="MeshId"><url>rbxassetid://139302720149996</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>63.0143</X><Y>34.0851</Y><Z>21.2144</Z></Vector3>
-        <Vector3 name="InitialSize"><X>494.45703125</X><Y>267.457275390625</Y><Z>166.4639129638672</Z></Vector3>
+        <Vector3 name="Size"><X>63.0143</X><Y>34.0886</Y><Z>21.2144</Z></Vector3>
+        <Vector3 name="InitialSize"><X>494.45703125</X><Y>267.48468017578125</Y><Z>166.4639129638672</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -854,7 +854,7 @@
     <Item class="MeshPart" referent="WFP12">
       <Properties>
         <string name="Name">W7_CD_Ground__grass</string>
-        <Content name="MeshId"><url>rbxassetid://129952792896225</url></Content>
+        <Content name="MeshId"><url>rbxassetid://129569016743829</url></Content>
         <Content name="TextureID"><url>rbxassetid://109820826774624</url></Content>
         <Vector3 name="Size"><X>228.0</X><Y>46.836</Y><Z>210.0</Z></Vector3>
         <Vector3 name="InitialSize"><X>1789.0574951171875</X><Y>367.5101318359375</Y><Z>1647.816162109375</Z></Vector3>
@@ -883,7 +883,7 @@
     <Item class="MeshPart" referent="WFP13">
       <Properties>
         <string name="Name">W7_CD_Ground__ground</string>
-        <Content name="MeshId"><url>rbxassetid://108771375827267</url></Content>
+        <Content name="MeshId"><url>rbxassetid://95254913399964</url></Content>
         <Content name="TextureID"><url>rbxassetid://113678904532434</url></Content>
         <Vector3 name="Size"><X>261.0</X><Y>55.6477</Y><Z>249.0</Z></Vector3>
         <Vector3 name="InitialSize"><X>2048</X><Y>436.6532897949219</Y><Z>1953.839111328125</Z></Vector3>
@@ -903,10 +903,10 @@
     <Item class="MeshPart" referent="WFP14">
       <Properties>
         <string name="Name">W7_CD_Region__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://122772199266463</url></Content>
+        <Content name="MeshId"><url>rbxassetid://82232748247492</url></Content>
         <Content name="TextureID"><url>rbxassetid://89518320013489</url></Content>
-        <Vector3 name="Size"><X>83.9121</X><Y>25.509</Y><Z>70.4077</Z></Vector3>
-        <Vector3 name="InitialSize"><X>658.4364013671875</X><Y>200.1623077392578</Y><Z>552.4715576171875</Z></Vector3>
+        <Vector3 name="Size"><X>82.2888</X><Y>25.509</Y><Z>70.4077</Z></Vector3>
+        <Vector3 name="InitialSize"><X>645.6989135742188</X><Y>200.1623077392578</Y><Z>552.4715576171875</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -961,7 +961,7 @@
     <Item class="MeshPart" referent="WFP16">
       <Properties>
         <string name="Name">W7_F_PathOverRocks__cliff_rock_1717</string>
-        <Content name="MeshId"><url>rbxassetid://108768923895556</url></Content>
+        <Content name="MeshId"><url>rbxassetid://73948066134680</url></Content>
         <Content name="TextureID"><url>rbxassetid://89518320013489</url></Content>
         <Vector3 name="Size"><X>39.8269</X><Y>29.8546</Y><Z>35.1567</Z></Vector3>
         <Vector3 name="InitialSize"><X>312.51153564453125</X><Y>234.26156616210938</Y><Z>275.865234375</Z></Vector3>
@@ -990,7 +990,7 @@
     <Item class="MeshPart" referent="WFP17">
       <Properties>
         <string name="Name">W7_F_PathOverRocks__cliff_rock_1718</string>
-        <Content name="MeshId"><url>rbxassetid://95522275026331</url></Content>
+        <Content name="MeshId"><url>rbxassetid://72368792799700</url></Content>
         <Content name="TextureID"><url>rbxassetid://89518320013489</url></Content>
         <Vector3 name="Size"><X>36.8508</X><Y>31.6077</Y><Z>31.59</Z></Vector3>
         <Vector3 name="InitialSize"><X>289.15899658203125</X><Y>248.01759338378906</Y><Z>247.87835693359375</Z></Vector3>
@@ -1164,10 +1164,10 @@
     <Item class="MeshPart" referent="WFP23">
       <Properties>
         <string name="Name">W7_F_PathSkin__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://140083319153716</url></Content>
+        <Content name="MeshId"><url>rbxassetid://127559437006675</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>54.149</X><Y>21.0055</Y><Z>36.0554</Z></Vector3>
-        <Vector3 name="InitialSize"><X>424.8929748535156</X><Y>164.8248291015625</Y><Z>282.9177551269531</Z></Vector3>
+        <Vector3 name="Size"><X>54.149</X><Y>21.0051</Y><Z>36.0554</Z></Vector3>
+        <Vector3 name="InitialSize"><X>424.8929748535156</X><Y>164.82130432128906</Y><Z>282.9177551269531</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>

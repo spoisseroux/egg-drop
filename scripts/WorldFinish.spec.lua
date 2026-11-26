@@ -93,7 +93,7 @@ return function(server)
 			local light=Instance.new("PointLight");light.Shadows=true;light.Parent=lamp
 			part("W7D_Lantern3Cap",model).Transparency=0
 			part("W7D_LanternBracket3",model).Transparency=0
-			local paw=part("W7D_Bay1Paw3",model);paw.CFrame=CFrame.new(-18,4.23,-112);paw.Size=Vector3.new(.9,.06,.9);paw.Transparency=0 -- round 6: numbered (DenGreybox.gate)
+			local paw=part("W7D_Bay1Paw3",model);paw.CFrame=CFrame.new(-18,4.23,-112)*CFrame.Angles(0,.6,0)*CFrame.Angles(0,0,math.pi/2);paw.Size=Vector3.new(.08,1.1,1.1);paw.Transparency=0 -- round 6: numbered, a rolled cylinder (DenGreybox.gate)
 			local apron=part("W7D_ApronFront",model);apron.CanCollide=true;apron.Transparency=0
 			local sill=part("W7D_FrameThreshold",model);sill.CanCollide=false;sill.Transparency=0
 			local deck=part("W7D_bay2Deck",model);deck.Color=Color3.fromHex("#B8AE98");deck.Transparency=0
@@ -112,6 +112,11 @@ return function(server)
 		assert(lamp.Transparency==1 and light.Shadows==false and model.W7D_Lantern3Cap.Transparency==1)
 		assert(model.W7_F_Lantern__cage and model.W7_F_Lantern__pane and model.W7D_LanternCordF3,"the lantern and its cord")
 		assert(model.W7D_LanternBracket3.Transparency==1 and paw.Transparency==1 and model.W7_F_Stone__flat)
+		-- code review r6: the stone lies flat on the floor (the paw's roll dropped, sunk by its .08 thickness only)
+		local stone=model.W7_F_Stone__flat
+		local y=stone.CFrame.Position.Y
+		assert(math.abs(y-(4.23-.04-.03-.03*.33))<.02,"the paw stone sits on the floor: "..y)
+		assert(stone.CFrame.UpVector.Y>.999,"the paw stone is not stood on edge")
 		assert(apron.Transparency==1 and apron.CanCollide==true,"the slab keeps colliding")
 	end)
 	test("a slice that needs another mounts only on top of it; the terrace dress hides the greybox but keeps it colliding",function()

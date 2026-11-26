@@ -196,6 +196,74 @@ def _nearest(x, z):
     return best
 
 
+_TREAD_GRID = None
+
+
+def _tread_grid():
+    """Path samples bucketed by 4-stud cell (each in every cell its tread and a little more can reach)."""
+    global _TREAD_GRID
+    if _TREAD_GRID is None:
+        grid = {}
+        for s in path_samples():
+            r = s["w"] / 2 + SAMPLE + 1.0
+            for cx in range(math.floor((s["x"] - r) / 4), math.floor((s["x"] + r) / 4) + 1):
+                for cz in range(math.floor((s["z"] - r) / 4), math.floor((s["z"] + r) / 4) + 1):
+                    grid.setdefault((cx, cz), []).append(s)
+        _TREAD_GRID = grid
+    return _TREAD_GRID
+
+
+def over_tread(x, y, z, margin=.3, head=6.5):
+    """Round 6 (Studio R6c rays): is (x, y, z) over ANY sample's tread (its width plus `margin`), 0.3 to `head` above
+    it? Unlike in_path_cut this tests every nearby sample, not only the nearest, so where the hairpin's legs run side
+    by side a face over the lower leg is not let off by the upper leg's height."""
+    for s in _tread_grid().get((math.floor(x / 4), math.floor(z / 4)), ()):
+        along = (x - s["x"]) * s["dir"][0] + (z - s["z"]) * s["dir"][1]
+        if abs(along) > SAMPLE * .6:
+            continue
+        a = (x - s["x"]) * s["out"][0] + (z - s["z"]) * s["out"][1]
+        if abs(a) <= s["w"] / 2 + margin and s["h"] + .3 < y < s["h"] + head:
+            return True
+    return False
+
+
+def face_over_tread(corners, margin=.3, head=6.5):
+    """Round 6 (Studio R6d: big decimated faces spanned the tread with every probe point off it): does the face (a
+    polygon of Roblox points) pass 0.3 to `head` over any tread point under its footprint? Tread points are each path
+    sample's cross-section at 1-stud steps (plus the edges and `margin`); the face's height there comes from its plane."""
+    xs, zs = [q[0] for q in corners], [q[2] for q in corners]
+    x0, x1, z0, z1 = min(xs), max(xs), min(zs), max(zs)
+    seen = set()
+    grid = _tread_grid()
+    for cx in range(math.floor(x0 / 4), math.floor(x1 / 4) + 1):
+        for cz in range(math.floor(z0 / 4), math.floor(z1 / 4) + 1):
+            for s in grid.get((cx, cz), ()):
+                if id(s) in seen:
+                    continue
+                seen.add(id(s))
+                half = s["w"] / 2 + margin
+                k = max(2, int(math.ceil(half * 2)))
+                for j in range(k + 1):
+                    a = -half + 2 * half * j / k
+                    px, pz = s["x"] + s["out"][0] * a, s["z"] + s["out"][1] * a
+                    if not (x0 <= px <= x1 and z0 <= pz <= z1):
+                        continue
+                    for t in range(1, len(corners) - 1):      # fan triangles
+                        A, B, C = corners[0], corners[t], corners[t + 1]
+                        den = (B[2] - C[2]) * (A[0] - C[0]) + (C[0] - B[0]) * (A[2] - C[2])
+                        if abs(den) < 1e-9:
+                            continue
+                        u = ((B[2] - C[2]) * (px - C[0]) + (C[0] - B[0]) * (pz - C[2])) / den
+                        v = ((C[2] - A[2]) * (px - C[0]) + (A[0] - C[0]) * (pz - C[2])) / den
+                        w = 1 - u - v
+                        if u < -1e-6 or v < -1e-6 or w < -1e-6:
+                            continue
+                        y = u * A[1] + v * B[1] + w * C[1]
+                        if s["h"] + .3 < y < s["h"] + head:
+                            return True
+    return False
+
+
 def in_path_cut(x, y, z):
     """Is (x, y, z) in the rock and earth the path removes: over the walk surface (from 1.5 past the lawn edge back to
     the leaning wall), and anything inside the walking corridor up to head height."""
@@ -286,6 +354,10 @@ def in_cut(x, y, z):
 
 # ---------------------------------------------------------------------------------------------------------- carving
 CARVE = ("Rocks_Walls__", "Terrain_Ground__", "Landmarks__", "Anim__Landmark_GlowGrotto_Crystals__")
+# round 6 (Studio R6c rays): the plain rock tiles were never carved, so a colliding rock kept its hulls over the 9-wide
+# path (the path art only drew a visual re-cut over it). They get the corridor and room rules only (no den-roof,
+# tier or floor-plan rules, no shard sweep).
+CARVE_ROCKS = ("Rocks__",)
 KEEP = ()   # round 6: the old door (marble, trim, gold and teal caps) goes with the bigger mouth; bars hidden while open
 
 
@@ -298,7 +370,8 @@ def carve(objs):
     corridor or the room). Returns the names actually changed."""
     changed = []
     for o in objs:
-        if not o.name.startswith(CARVE) or o.name in KEEP:
+        rock = o.name.startswith(CARVE_ROCKS)
+        if not (o.name.startswith(CARVE) or rock) or o.name in KEEP:
             continue
         bm = bmesh.new()
         bm.from_mesh(o.data)
@@ -306,6 +379,14 @@ def carve(objs):
         doomed = []
         for f in bm.faces:
             c = _roblox(mw @ f.calc_center_median())
+            if rock:
+                corners = [_roblox(mw @ v.co) for v in f.verts]
+                n = len(corners)
+                probes = corners + [tuple((corners[k][j] + corners[(k + 1) % n][j]) / 2 for j in range(3)) for k in range(n)]
+                probes += [tuple((q[j] + c[j]) / 2 for j in range(3)) for q in corners] + [c]
+                if any(in_den_cut(*p) or over_tread(*p) for p in probes) or face_over_tread(corners):
+                    doomed.append(f)
+                continue
             if in_cut(*c):
                 doomed.append(f)
                 continue
@@ -325,10 +406,22 @@ def carve(objs):
             if all(den_floor_plan(q[0], q[2]) for q in corners) and max(ys) > DEN["floor"] - .8 and min(ys) < DEN["floor"] + 2.5:
                 doomed.append(f)
                 continue
-            if any(in_den_cut(*p) or (in_path_cut(*p) and _nearest(p[0], p[2])["h"] + .3 < p[1] < _nearest(p[0], p[2])["h"] + 6)
-                   for p in corners):
+            # round 6 (Studio R6 rays: big faces whose corners sat outside the 9-wide corridor still spanned over the
+            # tread, 1 to 5 over it): test the edge midpoints and the points halfway to the centre too, not only corners
+            n = len(corners)
+            probes = corners + [tuple((corners[k][j] + corners[(k + 1) % n][j]) / 2 for j in range(3)) for k in range(n)]
+            probes += [tuple((q[j] + c[j]) / 2 for j in range(3)) for q in corners] + [c]
+            if any(in_den_cut(*p) or over_tread(*p) for p in probes) or face_over_tread(corners):
                 doomed.append(f)
-        if doomed:
+        if doomed and rock:
+            bmesh.ops.delete(bm, geom=doomed, context="FACES")
+            loose = [v for v in bm.verts if not v.link_faces]
+            if loose:
+                bmesh.ops.delete(bm, geom=loose, context="VERTS")
+            bm.to_mesh(o.data)
+            o.data.update()
+            changed.append(o.name)
+        elif doomed:
             bmesh.ops.delete(bm, geom=doomed, context="FACES")
             # Fable blockout R1 5: orphan shards left over the terrace (small islands of faces) go too.
             seen, shards = set(), []
@@ -759,7 +852,8 @@ def collision_boxes():
     F, top = d["floor"], d["wall"]   # round 6: the ceiling box at the wall top (the dome rises over it)
     out = [_aabb("floor", (d["x0"], F - 2, d["z0"]), (d["x1"], F, d["z1"]))]
     # the mouth and the apron's first studs: one slab to the west jamb's reach (the lawn there sits 4.1 to 4.5)
-    out.append(_aabb("floor", (m["x0"], F - 2, d["z1"] - .5), (m["x1"], F, m["west_to"] + 1.8)))
+    # code review r6: to x1 + 1, under the east jamb's foot (no floor there before: non-colliding region)
+    out.append(_aabb("floor", (m["x0"], F - 2, d["z1"] - .5), (m["x1"] + 1.0, F, m["west_to"] + 1.8)))
     # the walls: each outline edge but the front, 2 thick outward, from under the floor to the ceiling
     pts = [(x, z) for x, z in anchors_outline()]
     cx = sum(p[0] for p in pts) / len(pts)
@@ -780,7 +874,8 @@ def collision_boxes():
     for xa, xb in ((d["x0"] - 2, m["x0"]), (m["x1"], d["x1"] + 2)):
         out.append(_aabb("front", (xa, F - 1, d["z1"]), (xb, REGION_TOP, d["z1"] + .6)))
     out.append(_aabb("jamb", (m["x0"] - 1.0, F - 1, d["z1"]), (m["x0"], m["top"] + 1.0, m["west_to"])))
-    out.append(_aabb("jamb", (m["x1"], F - 1, d["z1"]), (m["x1"] + 1.0, m["top"] + 1.0, m["east_to"])))
+    # code review r6: the east jamb to the drawn collar's end (z1 + 3.6), so the drawn east wall cannot be walked through
+    out.append(_aabb("jamb", (m["x1"], F - 1, d["z1"]), (m["x1"] + 1.0, m["top"] + 1.0, d["z1"] + 3.6)))
     # round 6: the arch's lintel box sits at the shoulders (a flat collider under the drawn crown)
     out.append(_aabb("lintel", (m["x0"] - 1.0, m["shoulder"], d["z1"]), (m["x1"] + 1.0, REGION_TOP, SOFFIT_TO)))
     out.append(_aabb("ceiling", (d["x0"] - 2, top, d["z0"] - 2), (d["x1"] + 2, top + 1.5, d["z1"])))
@@ -794,7 +889,10 @@ def collision_boxes():
         X = _norm(f)
         Y = _norm(tuple(u - _dot((0, 1, 0), X) * x for u, x in zip((0, 1, 0), X)))
         c = tuple((p + q) / 2 - y * .75 for p, q, y in zip(pa, pb, Y))
-        out.append(_box("tread", c, (ln + .5, 1.5, max(a["w"], b["w"]) + .2), X, Y))
+        # round 6 (Studio R6e rays): on the switchback the boxes fan apart on the outer side; each overlaps its
+        # neighbour by the width times the turn between them
+        turn = abs(a["dir"][0] * b["dir"][1] - a["dir"][1] * b["dir"][0])
+        out.append(_box("tread", c, (ln + .5 + max(a["w"], b["w"]) * turn, 1.5, max(a["w"], b["w"]) + .2), X, Y))
     for s0, s1 in zip(run, run[1:]):
         if s0["flip"] != s1["flip"] or not (s0["back"] > .05 or s1["back"] > .05):
             continue
@@ -888,8 +986,9 @@ def anchors():
                 "bays": bays,
                 # The sign hangs under the lintel trim (y 10.2), its top under the mouth's top, facing the lawn.
                 # round 6 (Fable 1.5): 8 x 2.2 hung under the brow, its bottom 9 over the floor
-                "sign": {"at": [-7.0, round(d["floor"] + 10.1, 3), round(d["z1"] + .6, 3)],
-                         "facing": [-7.0, round(d["floor"] + 10.1, 3), -80.0]},
+                # code review r6: 0.9 lower (its top 14.5, under the arch's 14.66 at the sign's ends)
+                "sign": {"at": [-7.0, round(d["floor"] + 9.2, 3), round(d["z1"] + .6, 3)],
+                         "facing": [-7.0, round(d["floor"] + 9.2, 3), -80.0]},
                 # The notice board on the lawn east of the mouth, facing the lawn.
                 # round 6 (architect): out of the east buttress, on the apron's east end
                 "board": {"at": [9.0, lawn(9.0, -93.0), -93.0], "facing": [9.0, lawn(9.0, -93.0), -80.0]},
@@ -902,15 +1001,18 @@ def anchors():
                 # Two posts out of the mouth (the west one past the jamb's end, on the mouth's floor; the east one on
                 # the lawn past the east jamb) and two wall lamps on the back wall.
                 # round 6 (Fable 1.6): on hooks on the jambs' props at 7.5 over the floor; the wall lamps on the new back
-                "lanterns": [{"at": [m["x0"] - .3, d["floor"], round(d["z1"] + 1.2, 3)], "post": True},
-                             {"at": [m["x1"] + .3, d["floor"], round(d["z1"] + 1.2, 3)], "post": True},
+                # code review r6: DenGreybox hangs them from the props (feet 1.6 in the opening, tops on the jambs);
+                # these are where that lands, in the opening clear of the jamb rock
+                "lanterns": [{"at": [m["x0"] + 1.45, d["floor"], round(d["z1"] + 1.0, 3)], "post": True},
+                             {"at": [m["x1"] - 1.45, d["floor"], round(d["z1"] + 1.0, 3)], "post": True},
                              {"at": [-16.0, round(d["floor"] + 6.0, 3), round(d["z0"] + .6, 3)], "post": False},
                              {"at": [2.0, round(d["floor"] + 6.0, 3), round(d["z0"] + .6, 3)], "post": False}]},
         "path": {"foot": [round(foot["x"], 3), foot["h"], round(foot["z"], 3)],
                  "turn": [round(turn["x"], 3), turn["h"], round(turn["z"], 3)],
                  "arrival": [round(arrival["x"], 3), arrival["h"], round(arrival["z"], 3)],
                  "centreLine": centre_line, "control": [list(c) for c in PATH_CTRL]},
-        "terrace": {"maxGroundY": 27.0, "gap": {"s": [26.0, 34.0]}},
+        # round 6 (Studio R6e rays): the return leg arrives at an angle, its inner edge out to s 36.1 (cl47)
+        "terrace": {"maxGroundY": 27.0, "gap": {"s": [26.0, 37.0]}},
         "evacuate": [-27.0, ground(-27.0, -84.0) or 4.6, -84.0],
         "collision": {"boxes": collision_boxes()},
     }

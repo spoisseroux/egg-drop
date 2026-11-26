@@ -16,7 +16,7 @@ Greybox.Look=table.freeze({wood="#7A5A3A",dark="#5C4330",stone="#8E8A80",cloth="
 -- Round 6 (Fable DEN-ROUND6-LOOK 1): the timber door frame goes; the rock arch is the frame. Two raking props 1 square
 -- lean on the jambs (their feet out on the mouth's floor), the lanterns hang on hooks on them at 7.5 over the floor,
 -- the sign (8 x 2.2) hangs on two ropes under the brow.
-Greybox.Props=table.freeze({size=1,height=10,out=1.6,lean=8,hook=7.5,rope=1.4})
+Greybox.Props=table.freeze({size=1,height=10,out=1.6,lean=8,hook=7.5,rope=1.4,foot=1.6,reach=.9})
 -- top 4.95 (Fable asked 4.65, lawn + .05): the drawn lawn by the mouth stands up to about 4.9 over its 4.2 to 4.6 collision,
 -- so at 4.65 the slab showed only as a frame round the grass (Studio R3). Round 6: x -28..6 with the wider mouth.
 Greybox.Apron=table.freeze({x1=-28,x2=6,z1=-100,z2=-90,top=4.95,thick=.6})
@@ -124,20 +124,28 @@ function Greybox.rows(layout)
 		-- Round 6 (Fable DEN-ROUND6-LOOK 1): no door frame. Two raking props lean on the jambs, feet out on the mouth's
 		-- floor; the sign hangs on two ropes under the brow (CliffDenData den.sign: its bottom 9 over the floor).
 		local m,P=layout.mouth,Greybox.Props
+		-- code review r6: a raking prop's foot stands in the opening (P.foot in from the jamb) and its top leans back
+		-- onto the jamb's face; the mouth lantern hangs from a hook on the prop's opening side (P.reach off its axis).
+		local hooks={}
 		for k,x in ipairs({m.x1,m.x2})do
 			local side=if k==1 then -1 else 1
-			local foot=Vector3.new(x+side*.2,layout.floorY,m.z+P.out)
-			local cf=CFrame.new(foot)*CFrame.Angles(math.rad(-P.lean*.6),0,math.rad(side*P.lean))*CFrame.new(0,P.height/2,0)
-			add("Prop"..k,Vector3.new(P.size,P.height,P.size),cf,L.dark,{material="Wood"})
+			local foot=Vector3.new(x-side*P.foot,layout.floorY,m.z+P.out)
+			local tilt=CFrame.Angles(math.rad(-P.lean*.6),0,math.rad(-side*P.lean))
+			add("Prop"..k,Vector3.new(P.size,P.height,P.size),CFrame.new(foot)*tilt*CFrame.new(0,P.height/2,0),L.dark,{material="Wood"})
+			local up=tilt.UpVector
+			local axis=foot+up*(P.hook/up.Y)
+			hooks[k]=Vector3.new(axis.X-side*P.reach,layout.floorY+P.hook,axis.Z)
 		end
 		add("Sign",Vector3.new(8,2.2,.25),layout.sign,L.wood,{material="WoodPlanks"})
 		for side=-1,1,2 do
 			add("SignRope"..(if side<0 then "L"else "R"),Vector3.new(.08,P.rope,.08),layout.sign*CFrame.new(side*3.6,1.1+P.rope/2,0),L.rope,{material="Fabric"})
 		end
 		-- The mouth lanterns hang on hooks on the props at 7.5 over the floor; the wall lamps stay on their brackets.
+		local mouthLamp=0
 		for i,l in ipairs(layout.lanterns)do
 			if l.post then
-				local at=Vector3.new(l.at.X,layout.floorY+P.hook,l.at.Z)
+				mouthLamp+=1
+				local at=hooks[mouthLamp] or Vector3.new(l.at.X,layout.floorY+P.hook,l.at.Z)
 				add("LanternHook"..i,Vector3.new(.15,.6,.15),CFrame.new(at+Vector3.new(0,.85,0)),L.dark,{material="Wood"})
 				lantern(i,at)
 			else
