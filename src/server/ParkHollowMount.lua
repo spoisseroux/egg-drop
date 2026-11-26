@@ -72,8 +72,11 @@ function Hollow.carve(row)
 	return stone
 end
 
--- One stone, sitting on its lawn point sunk .1, turned by yaw. `carve` false (specs) skips GeometryService.
-function Hollow.stone(row,parent,carve)
+-- One stone, sitting on its lawn point sunk .1, turned by yaw. `carve` false (specs) skips GeometryService. `kit`
+-- (optional, row -> part or nil) supplies a drawn stone instead (the Top Lawn: the hill's lip-stone kit).
+function Hollow.stone(row,parent,carve,kit)
+	local drawn=kit and kit(row)
+	if drawn then return visual(drawn,row.name,parent)end
 	local colour=hex(row.colour)
 	local base=CFrame.new(row.x,row.y-.1,row.z)*CFrame.Angles(0,row.yaw,0)
 	local stone=if carve~=false then Hollow.carve(row)else nil
@@ -136,10 +139,10 @@ function Hollow.buildStatic(folder,Park)
 end
 
 -- The stones (GeometryService yields: ParkMount calls this inside its mesh task).
-function Hollow.buildStones(folder,Park,carve)
+function Hollow.buildStones(folder,Park,carve,kit)
 	for _,row in ipairs(Park.Dressing.stones)do
 		if not folder.Parent then return end
-		Hollow.stone(row,folder,carve)
+		Hollow.stone(row,folder,carve,kit)
 	end
 end
 

@@ -537,14 +537,17 @@ def foot_stones():
     rnd = np.random.default_rng(67)
     out = []
     along = math.atan2(-foot["dir"][1], foot["dir"][0])
-    for side in (1, -1):
+    # round 5 (Fable): the lawn side only; the uphill one sat on the cliff over the foot and read as a round boulder stuck
+    # in the wall west of the mouth
+    for side in (1,):
         a = side * (foot["w"] / 2 + 1.6)
         at = P(foot, a, S.ground(*P(foot, a, 0)[::2]) or foot["h"])
         out.append({"kit": 4, "at": [round(v, 3) for v in at], "yaw": round(along, 3), "scale": [1.0, 1.6, 2.2]})
     # the white column stub at the path's foot (x -23.4..-20.6, z -79.4..-76.6, up to y 9.5; Fable world R1 7): one big
-    # boulder over it and a smaller one in front, so it is buried from CAM-MOUTH30 and CAM-FOOT
+    # boulder over it and a smaller one in front, so it is buried from CAM-MOUTH30 and CAM-FOOT. Round 5: its top was
+    # only 0.2 over the stub (the stub still showed in Studio); 4.0 tall puts it about 1.3 over.
     g = S.ground(-22.0, -78.0) or 4.6
-    out.append({"kit": 5, "at": [-22.0, round(g - .1, 3), -78.0], "yaw": .3, "scale": [1.8, 3.4, 6.0]})
+    out.append({"kit": 5, "at": [-22.0, round(g - .1, 3), -78.0], "yaw": .3, "scale": [1.8, 4.0, 6.0]})
     out.append({"kit": 3, "at": [-20.4, round(g - .1, 3), -75.6], "yaw": 1.2, "scale": [1.4, 2.0, 2.6]})
     shelf1 = [s for s in S_ if 10 <= s["d"] <= 40]
     for k in range(6):

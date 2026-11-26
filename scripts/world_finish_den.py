@@ -961,4 +961,11 @@ APRON_TUFTS = [[x, _lawn(x, z), z, 3, yaw, s] for x, z, yaw, s in (
 # The Dash gate's eight paw stones (DenGreybox W7D_<bay>Paw rows) are replaced in place by the flat stone, sunk 0.1: the
 # mount reads their CFrames from the built rows, so only the look is here.
 PAW_STONES = []
-PAW = {"size": [.95, round(.08 / .24, 3), .85], "sink": .03, "color": "#8A8378"}   # its top 0.05 over the floor
+# round 5 (Fable world R1 17: "they should nearly disappear"): sunk .05, its top 0.03 over the floor
+PAW = {"size": [.95, round(.08 / .24, 3), .85], "sink": .05, "color": "#8A8378"}
+# Round 5 (Fable world R1 10, the letterbox): the timber lintel thinned to one plank row (0.7, its underside where it
+# was, on the trim at 9.85) and the sign, smaller, standing on it instead of hanging below it, so nothing of the frame
+# hangs into the opening. The opening's own height is the sculpt's (CliffDenData mouth top 9.85, the live trim).
+FRAME = {"lintel": .7, "sign": [7.0, 1.8], "gap": .15}
+# Fable world R1 18: the crates' dust sheets in cloth, not speckled granite.
+CLOTH = {"color": "#8C8474", "material": "SmoothPlastic"}

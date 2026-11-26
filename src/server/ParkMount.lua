@@ -133,7 +133,18 @@ function Mount.build(room,options)
 			end
 			part.Parent=meshes
 		end
-		if dressing then require(script.Parent.ParkHollowMount).buildStones(dressing,Park,options.carve)end
+		if dressing then
+			-- Fable world R1 20: on the Top Lawn the stones are the hill's lip-stone kit (the path's rock), when the
+			-- world finish pack is in; the Hollow keeps its carved stones.
+			local kit=nil
+			if Park.Terrace then
+				local Finish=options.finish or require(script.Parent.WorldFinishMount)
+				kit=function(row)
+					return Finish.kitStone(1+row.seed%4,Vector3.new(row.x,row.y,row.z),row.size,row.yaw,options.finishEnv)
+				end
+			end
+			require(script.Parent.ParkHollowMount).buildStones(dressing,Park,options.carve,kit)
+		end
 		model:SetAttribute("ParkMeshesReady",true)
 	end
 	if options.async==false then mountMeshes()else task.spawn(mountMeshes)end

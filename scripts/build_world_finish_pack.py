@@ -281,6 +281,13 @@ def slice_data(manifest: dict, allparts: dict | None = None) -> dict:
             "paw": dict(place.get("paw", {}), offset=parts["W7_F_Stone__flat"]["centre"],
                         unit=parts["W7_F_Stone__flat"]["size"]),
         }
+        for key in ("frame", "cloth"):
+            if place.get(key):
+                out["dress"][key] = place[key]
+    # the path's lip-stone kit, so other builders can place it (round 5: the Top Lawn's rim boulders)
+    kit = {n: {"size": p["size"], "centre": p["centre"]} for n, p in parts.items() if re.match(r"W7_F_Lip\d+__", n)}
+    if kit and manifest.get("slice") == "path":
+        out["kit"] = kit
     return out
 
 

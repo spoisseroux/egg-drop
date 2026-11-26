@@ -138,6 +138,56 @@ return function(server)
 		assert(Mount.dressTier(model,room,{storage=storage,data=d,cliffVersion="c1"})==2)
 		assert(rim.Transparency==1 and rim.CanCollide==true and clump.Parent==nil and floor.Transparency==0)
 	end)
+	test("the den's dress, round 5: the lintel one plank row on the trim, the sign standing on it, the sheets cloth",function()
+		local d=data()
+		d.slices.den.dress.frame={lintel=.7,sign={7,1.8},gap=.15}
+		d.slices.den.dress.cloth={color="#8C8474",material="SmoothPlastic"}
+		local world,storage=rig(d)
+		local room=Instance.new("Model");world.Parent=room
+		Mount.world(world,{storage=storage,data=d,cliffVersion="c1"})
+		local model=Instance.new("Model")
+		local lintel=part("W7D_FrameLintel",model);lintel.Size=Vector3.new(17.5,1.3,1.2);lintel.CFrame=CFrame.new(-7,10.5,-98)
+		local sign=part("W7D_Sign",model);sign.Size=Vector3.new(8,2.2,.25);sign.CFrame=CFrame.new(-7,10.5,-97.26)*CFrame.Angles(math.rad(-8),0,0)
+		local sheet=part("W7D_bay3Sheet",model);sheet.Material=Enum.Material.Fabric
+		local drape=part("W7D_bay3Drape",model)
+		local crate=part("W7D_bay3Crate",model);crate.Material=Enum.Material.WoodPlanks
+		assert(Mount.dressDen(model,room,{storage=storage,data=d,cliffVersion="c1"})==4)
+		local under=lintel.CFrame.Position.Y-lintel.Size.Y/2
+		assert(math.abs(under-9.85)<1e-4 and math.abs(lintel.Size.Y-.7)<1e-4,"the underside stays on the trim")
+		local signBottom=sign.CFrame.Position.Y-sign.Size.Y/2
+		assert(math.abs(signBottom-10.0)<1e-4 and sign.Size==Vector3.new(7,1.8,.25),"the sign stands on the lintel")
+		assert(math.abs(sign.CFrame.Position.Z+97.26)<1e-4,"the sign keeps its tilt and depth")
+		assert(sheet.Material==Enum.Material.SmoothPlastic and drape.Material==Enum.Material.SmoothPlastic)
+		assert(math.abs(sheet.Color.R-0x8C/255)<1e-3 and crate.Material==Enum.Material.WoodPlanks,"only the cloth")
+	end)
+	test("the lip-stone kit for other builders: only with the path slice's kit; stretched to the stone it replaces",function()
+		local d=data()
+		local size=Vector3.new(3.6,2.6,2.4)
+		assert(Mount.kitStone(2,Vector3.new(0,29,0),size,0,{storage=Instance.new("Folder"),data=d,cliffVersion="c1"})==nil,"no pack")
+		d.slices.path={packed=true,requires="den",templates={"W7_F_Den__crystal"},fixed={},
+			kit={W7_F_Lip2__boulder_rock={size={1.8,1.3,1.2},centre={0,.35,0}}}}
+		local world,storage=rig(d)
+		local env={storage=storage,data=d,cliffVersion="c1"}
+		assert(Mount.kitStone(2,Vector3.new(0,29,0),size,0,env)==nil,"the pack is missing the kit piece")
+		part("W7_F_Lip2__boulder_rock",storage[Mount.Pack],"MeshPart")
+		assert(Mount.kitStone(4,Vector3.new(0,29,0),size,0,env)==nil,"no data for that piece")
+		local stone=Mount.kitStone(2,Vector3.new(4,29,-6),size,0,env)
+		assert(stone and stone.Template and stone.CanCollide==false and stone.Anchored==true)
+		assert((stone.Size-size).Magnitude<1e-4,"the replaced stone's size")
+		assert((stone.CFrame.Position-Vector3.new(4,29.7,-6)).Magnitude<1e-4,"its centre offset scaled per axis")
+	end)
+	test("the Top Lawn's stones come from the kit; the Hollow's stay carved (ParkHollowMount)",function()
+		local Hollow=require(server.ParkHollowMount)
+		local row={name="TopLawnRimBoulder",x=1,y=29,z=2,size=Vector3.new(2,1.1,1.7),yaw=.3,seed=20261161,colour="#8A8580"}
+		local folder=Instance.new("Folder")
+		local asked
+		local drawn=Instance.new("Part")
+		local got=Hollow.stone(row,folder,false,function(r)asked=r;return drawn end)
+		assert(got==drawn and asked==row and drawn.Name=="TopLawnRimBoulder" and drawn.Parent==folder,"the kit stone stands in")
+		assert(drawn.CanCollide==false and drawn.CastShadow==false and drawn:GetAttribute("ParkPart")==true)
+		local carved=Hollow.stone(row,folder,false,function()return nil end)
+		assert(carved and carved~=drawn and carved:GetAttribute("ParkFallback")==true,"no kit stone: its own stone")
+	end)
 	test("hideVisual: the tile goes invisible and keeps colliding; missing or named twice, nothing mounts",function()
 		local d=data();d.slices.den.hideVisual={"W7_Bridge__marble"}
 		local world,storage=rig(d)
