@@ -28,7 +28,8 @@ function Pets.pick(balls,pets,now,rng)
 		if rng:NextNumber()>=Pets.Chance then continue end
 		local away=Balls.flat(ball.rest-best.position)
 		if away.Magnitude<1e-3 then continue end
-		local velocity=(away.Unit*Balls.KickFlat+Vector3.new(0,Balls.KickUp,0))*Balls.BuntScale
+		local feel=Balls.feel(entry.id)
+		local velocity=(away.Unit*feel.kickFlat+Vector3.new(0,feel.kickUp,0))*Balls.BuntScale
 		table.insert(out,{id=entry.id,origin=ball.rest,velocity=velocity,ownerId=best.ownerId})
 	end
 	return out

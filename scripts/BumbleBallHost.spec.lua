@@ -24,10 +24,10 @@ return function(server)
 	local function beside(id,dx)local h=Motion.home(id);return h+Vector3.new(dx or -2,1.8,0)end
 	local function packet(id,seq,origin,velocity)return{kind="kick",id=id,seq=seq,origin=origin,velocity=velocity}end
 
-	test("start: three still records at the homes; hello answers every rest spot, at most every 2 s",function()
+	test("start: five still records at the homes; hello answers every rest spot, at most every 2 s",function()
 		local r=rig()
 		r.host:receive(A,{kind="hello"})
-		assert(#r.sent==1 and r.sent[1].payload.kind=="state"and #r.sent[1].payload.balls==3)
+		assert(#r.sent==1 and r.sent[1].payload.kind=="state"and #r.sent[1].payload.balls==#Balls.List and #Balls.List==5)
 		for _,packed in ipairs(r.sent[1].payload.balls)do
 			local record=Balls.unpack(packed)
 			assert(record and record.n==0 and record.rest==Motion.home(record.id)and record.velocity==Vector3.zero)
@@ -104,6 +104,28 @@ return function(server)
 		local claim=at+Vector3.new(1,0,0)
 		record=r.host:receive(A,packet("cork",3,claim,Vector3.new(10,4,0)))
 		assert(record.origin==claim,"close enough: the client's own (its prediction stands)")
+	end)
+
+	test("brief 2: a lively ball's running jump (36 + 15) goes out as sent; the same packet at a steady ball is clamped",function()
+		local r=rig()
+		r.roots[A]=beside("patch")
+		local jump=Balls.launch(Vector3.new(1,0,0),true,"patch")
+		local record=r.host:receive(A,packet("patch",1,Motion.home("patch"),jump))
+		assert(record and record.velocity==jump,"Patch: its own envelope")
+		record=r.host:receive(A,packet("stripe",2,Motion.home("stripe"),jump))
+		assert(record==nil,"Stripe is far from this root: reach is the server's ball, as before")
+		r.roots[A]=beside("stripe")
+		r.t+=1
+		record=r.host:receive(A,packet("stripe",3,Motion.home("stripe"),Vector3.new(500,500,0)))
+		assert(math.abs(Balls.flat(record.velocity).Magnitude-36*Balls.SpeedSlack)<1e-6 and math.abs(record.velocity.Y-15*Balls.SpeedSlack)<1e-6)
+		r.roots[A]=beside("felt")
+		r.t+=1
+		record=r.host:receive(A,packet("felt",4,Motion.home("felt"),jump))
+		assert(record.velocity~=jump and math.abs(Balls.flat(record.velocity).Magnitude-32*Balls.SpeedSlack)<1e-6,"Felt: the steady envelope")
+		-- A pet's bunt at a lively ball: 40% of its own kick.
+		local balls={patch={rest=Motion.home("patch"),restAt=0}}
+		local bunts=Pets.pick(balls,{{ownerId=1,position=Motion.home("patch")+Vector3.new(-1.5,0,0)}},10,{NextNumber=function()return 0 end})
+		assert(#bunts==1 and math.abs(Balls.flat(bunts[1].velocity).Magnitude-30*Balls.BuntScale)<1e-6)
 	end)
 
 	test("two kicks at once: both accepted in order (n 1 then 2), the second from where the first left it",function()

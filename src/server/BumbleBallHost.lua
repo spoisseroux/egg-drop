@@ -3,7 +3,7 @@
 --
 -- The server owns one record per ball (BumbleBalls/BallMotion). A kick packet from a client:
 --   {kind = "kick", id, seq, origin: Vector3, velocity: Vector3}
--- is checked (the velocity finite and clamped to the jump kick's envelope; the root at the server within Reach of the
+-- is checked (the velocity finite and clamped to that ball's jump kick envelope; the root at the server within Reach of the
 -- ball; at most RateCount kicks per RateWindow per player; one accepted kick per ball per BallGap), stamped with the
 -- server's startTime and the next n, planned once for its rest spot, and broadcast to everyone:
 --   {kind = "kick", record = {id, n, origin, velocity, startTime, rest, by, seq, bunt?}}
@@ -132,7 +132,7 @@ function Host:kick(player,id,origin,velocity,options)
 	if not ball then return nil,"Ball"end
 	local now=self.now()
 	if now-ball.kickAt<Balls.BallGap then return nil,"Busy"end
-	local v=Balls.clamp(velocity,options.scale)
+	local v=Balls.clamp(velocity,options.scale,id) -- the ball's own feel (Patch and Stripe kick harder)
 	if not v then return nil,"Velocity"end
 	local current=Motion.sample(ball.record,now,self.world)
 	local before=Motion.sample(ball.record,now-Balls.Lag,self.world)

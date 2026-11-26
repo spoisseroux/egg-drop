@@ -1,6 +1,6 @@
 -- Bumble balls (GARDEN-PLAY-BRIEF section 1, Fable 2026-11-26; Spencer: "some animal crossing like balls that everyone
 -- and the pets can interact with ... handle server client interaction well and bad connections"). Shared and pure:
--- the three balls, their homes and leash, the kick numbers, the server's checks and the client's blend maths.
+-- the five balls, their homes, feel and leash, the kick numbers, the server's checks and the client's blend maths.
 -- BallMotion holds the sim. Every number is a [PLACEHOLDER] to tune in Studio.
 --
 -- Switch: the Alive feature `balls` (FeatureFlags.AliveBalls, the beta place or Studio, ConfigService `alive_balls`,
@@ -16,10 +16,15 @@ Balls.Radius=1.2          -- diameter 2.4 (knee to waist)
 Balls.Leash=22            -- studs from home; the sim reflects off it
 -- Homes: off Routes.ArrivalToHub, the parks and the Dash (Felt south of the Toy Lawn, Wicker on the fountain lawn
 -- outside the BubbleSpring wet box, Cork by the arrival path). Raycast-check in Studio. [PLACEHOLDER]
+-- GARDEN-PLAY-BRIEF-2 section 1 (beta 35, Spencer: "Can the balls be like animal crossing soccer balls ... i like them
+-- tho"): two livelier rubber balls with our own round panels, never a pentagon sports ball. Stripe at the brief's (-60, 6);
+-- Patch 20 west of the brief's (20, -22), which is in the stream (BumbleBalls.spec: the sim's boxes and GardenClearance).
 Balls.List=table.freeze({
-	table.freeze({id="felt",home=Vector2.new(-30,27)}),
-	table.freeze({id="wicker",home=Vector2.new(42,-11)}), -- brief (42, -6) was 6.6 from the Dash line
-	table.freeze({id="cork",home=Vector2.new(58,30)}),
+	table.freeze({id="felt",home=Vector2.new(-30,27),feel="steady"}),
+	table.freeze({id="wicker",home=Vector2.new(42,-11),feel="steady"}), -- brief (42, -6) was 6.6 from the Dash line
+	table.freeze({id="cork",home=Vector2.new(58,30),feel="steady"}),
+	table.freeze({id="patch",home=Vector2.new(0,-24),feel="lively"}), -- brief (20, -22) is in Water_Stream; the nearest open lawn
+	table.freeze({id="stripe",home=Vector2.new(-60,6),feel="lively"}),
 })
 local byId={}
 for _,ball in ipairs(Balls.List)do byId[ball.id]=ball end
@@ -33,6 +38,20 @@ Balls.KickFacing=.2       -- and heading at the ball (cosine)
 Balls.KickFlat,Balls.KickUp=26,9
 Balls.JumpFlat,Balls.JumpUp=32,13   -- a running jump kicks harder
 Balls.KickGap=.3          -- the same client kicks the same ball at most this often
+-- Each ball's feel: its kick and running jump (flat + up), the bounces' restitution, its squash and roll. Steady is the
+-- first three (the numbers above); lively is Patch and Stripe (brief 2: kick 30 + 11, jump 36 + 15, .70 / .55 / .40,
+-- squash 18%, rest in about 3.2 s: a little less roll drag, so it runs on after the bounces; worst 3.15 s from home).
+Balls.Feels=table.freeze({
+	steady=table.freeze({kickFlat=26,kickUp=9,jumpFlat=32,jumpUp=13,restitution=table.freeze({.55,.42,.30}),squash=.12,rollDrag=1.2,rollFriction=3}),
+	lively=table.freeze({kickFlat=30,kickUp=11,jumpFlat=36,jumpUp=15,restitution=table.freeze({.70,.55,.40}),squash=.18,rollDrag=.95,rollFriction=2.4}),
+})
+-- Pure: a ball's feel (steady for an unknown id).
+function Balls.feel(id)
+	local ball=byId[id]
+	return Balls.Feels[ball and ball.feel or "steady"]or Balls.Feels.steady
+end
+-- The fastest launch any ball takes (the sim's clamp for a ball is its own feel's; this bounds them all).
+Balls.MaxJumpFlat,Balls.MaxJumpUp=36,15
 
 -- The server's checks.
 Balls.Reach=6             -- the root at the server within this of the ball (plan distance)
@@ -84,22 +103,25 @@ function Balls.kicks(root,velocity,ball)
 	if gap<1e-3 then return true end
 	return move.Unit:Dot(to.Unit)>Balls.KickFacing
 end
--- Pure: the launch velocity along the walker's heading (a plan vector; nil when it has none).
-function Balls.launch(heading,jumping)
+-- Pure: the launch velocity along the walker's heading (a plan vector; nil when it has none), in ball `id`'s feel
+-- (steady when nil).
+function Balls.launch(heading,jumping,id)
 	if not Balls.finite(heading)then return nil end
 	local h=flat(heading)
 	if h.Magnitude<1e-3 then return nil end
-	local along,up=if jumping then Balls.JumpFlat else Balls.KickFlat,if jumping then Balls.JumpUp else Balls.KickUp
+	local feel=Balls.feel(id)
+	local along,up=if jumping then feel.jumpFlat else feel.kickFlat,if jumping then feel.jumpUp else feel.kickUp
 	return h.Unit*along+Vector3.new(0,up,0)
 end
 
 -- Server checks --------------------------------------------------------------------------------------------------
--- Pure: a velocity inside the jump kick's envelope (in plan up to JumpFlat, up 0..JumpUp, both with SpeedSlack), or nil
--- when it is not a finite Vector3. A velocity already inside is returned as the same value.
-function Balls.clamp(velocity,scale)
+-- Pure: a velocity inside ball `id`'s jump kick envelope (its feel: in plan up to jumpFlat, up 0..jumpUp, both with
+-- SpeedSlack; steady when nil), or nil when it is not a finite Vector3. A velocity already inside is returned as is.
+function Balls.clamp(velocity,scale,id)
 	if not Balls.finite(velocity)then return nil end
 	scale=scale or 1
-	local maxFlat,maxUp=Balls.JumpFlat*Balls.SpeedSlack*scale,Balls.JumpUp*Balls.SpeedSlack*scale
+	local feel=Balls.feel(id)
+	local maxFlat,maxUp=feel.jumpFlat*Balls.SpeedSlack*scale,feel.jumpUp*Balls.SpeedSlack*scale
 	local h=flat(velocity)
 	local up=velocity.Y
 	if h.Magnitude<=maxFlat and up>=0 and up<=maxUp then return velocity end
@@ -156,10 +178,11 @@ function Balls.fade(elapsed,duration)
 	if u<.5 then return 1-ease(u*2),false end
 	return ease((u-.5)*2),true
 end
--- Pure: the squash `elapsed` after a hit of `strength` (0..1): vertical squash fraction.
-function Balls.squash(strength,elapsed)
+-- Pure: the squash `elapsed` after a hit of `strength` (0..1): vertical squash fraction (ball `id`'s feel).
+function Balls.squash(strength,elapsed,id)
 	if elapsed<0 or elapsed>=Balls.SquashTime then return 0 end
-	return Balls.Squash*math.clamp(strength,0,1)*(1-ease(elapsed/Balls.SquashTime))
+	local most=if id then Balls.feel(id).squash else Balls.Squash
+	return most*math.clamp(strength,0,1)*(1-ease(elapsed/Balls.SquashTime))
 end
 
 -- Wire ------------------------------------------------------------------------------------------------------------

@@ -15,10 +15,10 @@ local Motion={}
 Motion.Step=1/60
 Motion.MaxTime=6          -- a plan never runs longer
 Motion.Gravity=60
-Motion.Restitution=table.freeze({.55,.42,.30})
+Motion.Restitution=Balls.Feels.steady.restitution -- a lively ball bounces on its own feel's (BumbleBalls.Feels)
 Motion.MinBounce=1.2      -- a landing slower than this (after restitution) rolls
 Motion.Grip=.9            -- plan speed kept per bounce
-Motion.RollDrag=1.2       -- per second, proportional
+Motion.RollDrag=1.2       -- per second, proportional (the steady feel's; each feel has its own)
 Motion.RollFriction=3     -- studs/s^2, constant
 Motion.StopSpeed=.3
 Motion.WallKeep=.65       -- speed kept off a wall or the leash
@@ -84,6 +84,8 @@ end
 
 local function kickPlan(record,world,home)
 	local R,dt,g=Balls.Radius,Motion.Step,Motion.Gravity
+	local feel=Balls.feel(record.id)
+	local restitution,drag,friction=feel.restitution,feel.rollDrag,feel.rollFriction
 	local o,v=record.origin,record.velocity
 	local x,y,z=o.X,o.Y,o.Z
 	local vx,vy,vz=v.X,v.Y,v.Z
@@ -119,7 +121,7 @@ local function kickPlan(record,world,home)
 			end
 			local keep=if hit=="water"then Motion.WaterKeep else Motion.WallKeep
 			vx*=keep;vz*=keep
-			table.insert(events,{t=t,kind=if hit=="water"then "water"else "wall",strength=math.min(1,speed/Balls.KickFlat)})
+			table.insert(events,{t=t,kind=if hit=="water"then "water"else "wall",strength=math.min(1,speed/feel.kickFlat)})
 			nx,nz=x,z
 		elseif trapped then
 			trapped=blocked(world,home,nx,nz)~=nil
@@ -134,15 +136,15 @@ local function kickPlan(record,world,home)
 				y=ground
 				bounces+=1
 				local impact=-vy
-				table.insert(events,{t=t,kind="bounce",strength=math.min(1,impact/Balls.JumpUp)})
-				local e=Motion.Restitution[bounces]
+				table.insert(events,{t=t,kind="bounce",strength=math.min(1,impact/feel.jumpUp)})
+				local e=restitution[bounces]
 				vx*=Motion.Grip;vz*=Motion.Grip
 				if e and impact*e>=Motion.MinBounce then vy=impact*e
 				else vy=0;airborne=false end
 			end
 		else
 			local speed=math.sqrt(vx*vx+vz*vz)
-			local slower=speed-(Motion.RollDrag*speed+Motion.RollFriction)*dt
+			local slower=speed-(drag*speed+friction)*dt
 			if slower<=Motion.StopSpeed then
 				vx,vz=0,0;done=true
 			else
