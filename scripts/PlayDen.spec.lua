@@ -140,11 +140,37 @@ return function(server)
 		local lights,solid=0,{}
 		for _,row in ipairs(rows)do
 			assert(string.sub(row.name,1,4)=="W7D_",row.name)
-			if row.light then lights+=1;assert(row.light.range==14 and row.light.brightness>0)end
+			-- round 6: the four lanterns (range 14) and the Garden Dash gate's one bulb light (Fable DEN-ROUND6-LOOK 4.4)
+			if row.light then lights+=1;assert(row.light.range==14 or(string.find(row.name,"GateBulb")and row.light==Greybox.Gate.light),row.name)end
 			if row.collide then table.insert(solid,row.name)end
 		end
-		assert(lights==4,lights)
+		assert(lights==5,lights)
 		for _,name in ipairs(solid)do assert(string.find(name,"Post")or string.find(name,"Stump"),name)end
+	end)
+
+	test("round 6: the Garden Dash gate fits its bay: today's room 7 clear under the dome, Fable's 9 x 9 with the pennant once the room is tall",function()
+		local f=CFrame.new(-18,4.2,-110)
+		local small={id="bay1",kind="dash",frame=f,roof=13.45,width=7}
+		local w,h,pole=Greybox.gateSize(small,{floorY=4.2})
+		assert(w==7 and math.abs(h-6.85)<1e-6 and pole==0,w..","..h..","..pole)
+		local big={id="bay1",kind="dash",frame=f,roof=21.2,width=11}
+		w,h,pole=Greybox.gateSize(big,{floorY=4.2})
+		assert(w==9 and h==9 and pole==2,w..","..h..","..pole)
+		-- every piece stays under the roof and inside the bay's footprint, names W7D_, only the posts collide
+		for _,bay in ipairs({small,big})do
+			local rows={}
+			Greybox.gate(function(name,size,cframe,color,options)
+				table.insert(rows,{name=Greybox.Prefix..name,size=size,cframe=cframe,collide=options and options.collide==true})
+			end,bay,{floorY=4.2})
+			local foot=Layout.Kinds.dash.foot
+			for _,r in ipairs(rows)do
+				local top=r.cframe.Position.Y+r.size.Y/2
+				assert(top<=bay.roof+1e-6,r.name)
+				local p=f:PointToObjectSpace(r.cframe.Position)
+				assert(p.X>=foot[1]-1 and p.X<=foot[3]+1.2 and p.Z>=foot[2]-13 and p.Z<=foot[4],r.name)
+				assert(not r.collide or string.find(r.name,"GatePost"),r.name)
+			end
+		end
 	end)
 
 	local function cliff()

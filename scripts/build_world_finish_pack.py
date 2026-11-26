@@ -165,6 +165,9 @@ def xml_part(ref: str, part: dict, row: dict, images: dict) -> str:
         f'        <bool name="CastShadow">{"true" if shadow else "false"}</bool>',
         f'        <bool name="DoubleSided">{"true" if double else "false"}</bool>',
         '        <token name="CollisionFidelity">2</token>',
+        # round 6 (audit 5): Precise, so Roblox never drops detail from the shells and walls at distance (Automatic did,
+        # opening holes in thin strips). Enum.RenderFidelity: Automatic 0, Precise 1, Performance 2 (read back in Studio).
+        '        <token name="RenderFidelity">1</token>',
         f'        <token name="Material">{MATERIAL[material]}</token>',
         f'        <Color3uint8 name="Color3uint8">{colour3(colour)}</Color3uint8>',
         f'        <float name="Transparency">{float(transparency)!r}</float>',

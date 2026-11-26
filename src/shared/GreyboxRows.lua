@@ -65,6 +65,7 @@ function Rows.build(rows,name)
 		part.TopSurface,part.BottomSurface=Enum.SurfaceType.Smooth,Enum.SurfaceType.Smooth
 		-- A cylinder row (size X = its height along its own X axis; the row's CFrame turns it upright).
 		if row.shape=="cylinder"then pcall(function()part.Shape=Enum.PartType.Cylinder end)end
+		if row.shape=="ball"then pcall(function()part.Shape=Enum.PartType.Ball end)end -- round 6: the gate's bulbs
 		part:SetAttribute("WorldMesh",true)
 		if row.light then
 			local l=Instance.new("PointLight")

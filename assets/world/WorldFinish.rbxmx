@@ -6,7 +6,7 @@
     <Item class="StringValue" referent="WorldFinishVersion">
       <Properties>
         <string name="Name">Version</string>
-        <string name="Value">362d9fb894a0bd36</string>
+        <string name="Value">2f256239d94e4e79</string>
       </Properties>
     </Item>
     <Item class="MeshPart" referent="WFD0">
@@ -23,6 +23,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">288</token>
         <Color3uint8 name="Color3uint8">4294934735</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -42,6 +43,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -70,6 +72,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">1312</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -89,6 +92,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -117,6 +121,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -145,6 +150,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -173,6 +179,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -201,6 +208,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -229,6 +237,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -257,6 +266,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -287,6 +297,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -317,6 +328,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -347,6 +359,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -375,6 +388,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -403,6 +417,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -431,6 +446,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">1088</token>
         <Color3uint8 name="Color3uint8">4282003496</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -450,6 +466,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">288</token>
         <Color3uint8 name="Color3uint8">4291393326</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -469,6 +486,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">288</token>
         <Color3uint8 name="Color3uint8">4291398204</Color3uint8>
         <float name="Transparency">0.4</float>
@@ -488,6 +506,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">800</token>
         <Color3uint8 name="Color3uint8">4287267704</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -507,6 +526,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -535,6 +555,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -563,6 +584,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -580,7 +602,7 @@
     <Item class="MeshPart" referent="WFP2">
       <Properties>
         <string name="Name">W7_F_PathWall__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://72219834565713</url></Content>
+        <Content name="MeshId"><url>rbxassetid://108701038999053</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>69.2067</X><Y>26.2201</Y><Z>56.1887</Z></Vector3>
         <Vector3 name="InitialSize"><X>543.0473022460938</X><Y>205.7425537109375</Y><Z>440.8984375</Z></Vector3>
@@ -591,6 +613,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -619,6 +642,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -636,7 +660,7 @@
     <Item class="MeshPart" referent="WFP4">
       <Properties>
         <string name="Name">W7_F_PathSteps__boulder_rock</string>
-        <Content name="MeshId"><url>rbxassetid://100763135569057</url></Content>
+        <Content name="MeshId"><url>rbxassetid://117900778653235</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>64.1835</X><Y>24.9263</Y><Z>41.6566</Z></Vector3>
         <Vector3 name="InitialSize"><X>503.63165283203125</X><Y>195.59059143066406</Y><Z>326.8682556152344</Z></Vector3>
@@ -647,6 +671,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -664,7 +689,7 @@
     <Item class="MeshPart" referent="WFP5">
       <Properties>
         <string name="Name">W7_F_PathRocks__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://86096169577028</url></Content>
+        <Content name="MeshId"><url>rbxassetid://79981845356555</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>11.4894</X><Y>27.9026</Y><Z>27.429</Z></Vector3>
         <Vector3 name="InitialSize"><X>90.15441131591797</X><Y>218.94427490234375</Y><Z>215.2286376953125</Z></Vector3>
@@ -675,6 +700,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -703,6 +729,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -731,6 +758,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -759,6 +787,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -787,6 +816,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -815,6 +845,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -832,7 +863,7 @@
     <Item class="MeshPart" referent="WFP11">
       <Properties>
         <string name="Name">W7_F_Stake__wood</string>
-        <Content name="MeshId"><url>rbxassetid://135574115694953</url></Content>
+        <Content name="MeshId"><url>rbxassetid://105604713559440</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>0.35</X><Y>2.97</Y><Z>0.35</Z></Vector3>
         <Vector3 name="InitialSize"><X>2.7463603019714355</X><Y>23.304828643798828</Y><Z>2.7463603019714355</Z></Vector3>
@@ -843,6 +874,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">512</token>
         <Color3uint8 name="Color3uint8">4284236592</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -862,6 +894,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -890,6 +923,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">1312</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -909,6 +943,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -937,6 +972,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -965,6 +1001,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -993,6 +1030,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1021,6 +1059,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1049,6 +1088,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1077,6 +1117,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1105,6 +1146,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1122,7 +1164,7 @@
     <Item class="MeshPart" referent="WFT0">
       <Properties>
         <string name="Name">W7_F_Terrace__grass</string>
-        <Content name="MeshId"><url>rbxassetid://85422206120742</url></Content>
+        <Content name="MeshId"><url>rbxassetid://96166512406762</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>85.7623</X><Y>1.2489</Y><Z>77.963</Z></Vector3>
         <Vector3 name="InitialSize"><X>1844.656494140625</X><Y>26.862506866455078</Y><Z>1676.9013671875</Z></Vector3>
@@ -1133,6 +1175,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1161,6 +1204,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1189,6 +1233,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1217,6 +1262,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1234,7 +1280,7 @@
     <Item class="MeshPart" referent="WFT4">
       <Properties>
         <string name="Name">W7_F_TerraceRocks__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://72743832361609</url></Content>
+        <Content name="MeshId"><url>rbxassetid://140038225754423</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>46.8643</X><Y>5.8008</Y><Z>20.3412</Z></Vector3>
         <Vector3 name="InitialSize"><X>1008.0010986328125</X><Y>124.76882934570312</Y><Z>437.516845703125</Z></Vector3>
@@ -1245,6 +1291,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1262,7 +1309,7 @@
     <Item class="MeshPart" referent="WFT5">
       <Properties>
         <string name="Name">W7_F_TerraceSlab__boulder_rock</string>
-        <Content name="MeshId"><url>rbxassetid://90889057781798</url></Content>
+        <Content name="MeshId"><url>rbxassetid://74129273911920</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>6.0469</X><Y>0.62</Y><Z>6.1135</Z></Vector3>
         <Vector3 name="InitialSize"><X>130.0633544921875</X><Y>13.335550308227539</Y><Z>131.49510192871094</Z></Vector3>
@@ -1273,6 +1320,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1301,6 +1349,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>
@@ -1329,6 +1378,7 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">true</bool>
         <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
         <token name="Material">272</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Transparency">0.0</float>

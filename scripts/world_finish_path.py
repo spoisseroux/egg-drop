@@ -79,6 +79,9 @@ class Mesh:
         bm = bmesh.new()
         bm.from_mesh(obj.data)
         bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+        # round 6: a closed solid (no open edge) gets one outward winding; open sheets keep their built winding
+        if bm.edges and not any(e.is_boundary for e in bm.edges):
+            bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
         bm.to_mesh(obj.data)
         bm.free()
         return obj
@@ -148,14 +151,23 @@ def wall_and_shoulders():
         if s0["back"] > .05 and s1["back"] > .05:
             p0, b0 = profile(s0)
             p1, b1 = profile(s1)
+
+            def arcs(pts, h):
+                # round 6 (Fable 3.6, capture 03: stretched cells): v runs along the profile's own length from a world
+                # height base, so the bench and the cap going back are not squeezed into a streak
+                out, acc = [h + pts[0][1]], h + pts[0][1]
+                for (u0, v0), (u1, v1) in zip(pts, pts[1:]):
+                    acc += math.hypot(u1 - u0, v1 - v0)
+                    out.append(acc)
+                return out
+            a0, a1 = arcs(p0, s0["h"]), arcs(p1, s1["h"])
             for k in range(len(p0) - 1):
                 (ua, va), (ub, vb) = p0[k], p0[k + 1]
                 (uc, vc), (ud, vd) = p1[k], p1[k + 1]
-                # UVs along the cut (plan distance d, height): one cell size over the whole face, no axis switching
+                # UVs along the cut (plan distance d, profile length): one cell size over the whole face, no axis switching
                 wall.quad(P(s0, -w0 - ua, s0["h"] + va), P(s1, -w1 - uc, s1["h"] + vc), P(s1, -w1 - ud, s1["h"] + vd),
                           P(s0, -w0 - ub, s0["h"] + vb),
-                          uv=[(s0["d"] + ua * .3, s0["h"] + va), (s1["d"] + uc * .3, s1["h"] + vc),
-                              (s1["d"] + ud * .3, s1["h"] + vd), (s0["d"] + ub * .3, s0["h"] + vb)])
+                          uv=[(s0["d"], a0[k]), (s1["d"], a1[k]), (s1["d"], a1[k + 1]), (s0["d"], a0[k + 1])])
             # the foot: talus from the tread's inner edge to the bowed wall, then the wall's lowest stud in dirt
             foot.quad(P(s0, -w0 + .05, s0["h"] + .04), P(s1, -w1 + .05, s1["h"] + .04),
                       P(s1, -w1 - b1, s1["h"] + .3 + .25 * b1), P(s0, -w0 - b0, s0["h"] + .3 + .25 * b0))
@@ -212,37 +224,52 @@ def steps():
             out.append({"flight": name, "top": round(top, 3), "front": round(lo, 2), "back": round(hi, 2),
                         "dev": round(max(abs(s["h"] - top) for s in run), 3)})
             jf = [rnd.uniform(-.3, .3) for _ in range(5)]          # Fable D1 4: fronts vary 0.3, a 0.15 nosing
-            nose = .15
-            for s0, s1 in zip(run, run[1:]):
-                w0, w1 = s0["w"] / 2 - .1, s1["w"] / 2 - .1
-                for j in range(4):                      # four strips across: the middle two worn 0.1
-                    a0, a1 = -w0 + 2 * w0 * j / 4, -w0 + 2 * w0 * (j + 1) / 4
-                    b0, b1 = -w1 + 2 * w1 * j / 4, -w1 + 2 * w1 * (j + 1) / 4
-                    wear = .1 if j in (1, 2) else 0.0
-                    m.quad(Q(s0, a0, top - wear), Q(s1, b0, top - wear), Q(s1, b1, top - wear), Q(s0, a1, top - wear))
-                # round 3 (Fable R3, CAM-TURN): closed cheeks on both ends, so from beside the flight reads as solid
-                # stone blocks, not stacked thin slabs
-                for side in (-1, 1):
-                    m.quad(Q(s0, side * w0, top), Q(s1, side * w1, top), Q(s1, side * w1, top - 1.2),
-                           Q(s0, side * w0, top - 1.2))
-            # the riser at the step's front, irregular, down 1.2 into the ramp below
-            s = run[0]
-            w = s["w"] / 2 - .1
-            for j in range(4):
-                a0, a1 = -w + 2 * w * j / 4, -w + 2 * w * (j + 1) / 4
-                dz0, dz1 = jf[j], jf[j + 1]
-                bx = (-s["dir"][0], -s["dir"][1])
-                pa = Q(s, a0, top)
-                pb = Q(s, a1, top)
-                pa = (pa[0] + bx[0] * (dz0 + nose), pa[1], pa[2] + bx[1] * (dz0 + nose))
-                pb = (pb[0] + bx[0] * (dz1 + nose), pb[1], pb[2] + bx[1] * (dz1 + nose))
-                m.quad(pa, pb, (pb[0] - bx[0] * nose, top - .12, pb[2] - bx[1] * nose),
-                       (pa[0] - bx[0] * nose, top - .12, pa[2] - bx[1] * nose))
-                m.quad((pa[0] - bx[0] * nose, top - .12, pa[2] - bx[1] * nose),
-                       (pb[0] - bx[0] * nose, top - .12, pb[2] - bx[1] * nose),
-                       (pb[0] - bx[0] * nose, top - 1.2, pb[2] - bx[1] * nose),
-                       (pa[0] - bx[0] * nose, top - 1.2, pa[2] - bx[1] * nose))
+            step_block(m, run, top, jf, nose=.15)
     return m, out
+
+
+def step_block(m, run, top, jf, nose=.15, depth=1.2, cols=5):
+    """Round 6 (Fable DEN-ROUND6-LOOK 3.1; audit: 444 open and 26 flipped edges): one step is ONE closed stone block.
+    A grid over the run (rows = samples, `cols` points across) whose inner columns sit 0.1 low (the worn middle as a
+    continuous dip: the old separate strips left 0.1 slits), the front row pushed out by the irregular front plus the
+    nosing, a flat bottom `depth` under the top, and the front, back, both cheeks and the bottom closing it. Faces are
+    wound outward by construction; Mesh.build welds the shared points and recalculates the normals."""
+    rows = len(run)
+    wear = [0.0] + [.1] * (cols - 2) + [0.0]
+    bx = (-run[0]["dir"][0], -run[0]["dir"][1])
+
+    def edge(s, c, y, front):
+        w = s["w"] / 2 - .1
+        p = Q(s, -w + 2 * w * c / (cols - 1), y)
+        if front:
+            push = jf[min(c, len(jf) - 1)] + nose
+            p = (p[0] + bx[0] * push, p[1], p[2] + bx[1] * push)
+        return p
+
+    top_g = [[edge(s, c, top - wear[c], r == 0) for c in range(cols)] for r, s in enumerate(run)]
+    bot_g = [[edge(s, c, top - depth, r == 0) for c in range(cols)] for r, s in enumerate(run)]
+    # which way round is "up" depends on Q's side axis against the run: test the first top quad once
+    a, b, c = top_g[0][0], top_g[1][0], top_g[0][1]
+    u, v = (b[0] - a[0], b[1] - a[1], b[2] - a[2]), (c[0] - a[0], c[1] - a[1], c[2] - a[2])
+    ny = u[2] * v[0] - u[0] * v[2]
+    flip = ny < 0
+
+    def face(p0, p1, p2, p3):
+        if flip:
+            m.quad(p3, p2, p1, p0)
+        else:
+            m.quad(p0, p1, p2, p3)
+
+    last, e = cols - 1, rows - 1
+    for r in range(rows - 1):
+        for col in range(cols - 1):
+            face(top_g[r][col], top_g[r + 1][col], top_g[r + 1][col + 1], top_g[r][col + 1])     # top
+            face(bot_g[r][col + 1], bot_g[r + 1][col + 1], bot_g[r + 1][col], bot_g[r][col])     # bottom
+        face(top_g[r + 1][0], top_g[r][0], bot_g[r][0], bot_g[r + 1][0])                         # cheek, col 0
+        face(top_g[r][last], top_g[r + 1][last], bot_g[r + 1][last], bot_g[r][last])             # cheek, far col
+    for col in range(cols - 1):
+        face(top_g[0][col + 1], top_g[0][col], bot_g[0][col], bot_g[0][col + 1])                 # front riser
+        face(top_g[e][col], top_g[e][col + 1], bot_g[e][col + 1], bot_g[e][col])                 # back
 
 
 # ---------------------------------------------------------------------------------------------------------- rocks
@@ -293,6 +320,15 @@ def rock_mass(name, blobs, keep_out=None, voxel=.3, target=1500, cell=2.6, seed=
         bmesh.ops.delete(bm, geom=gone, context="FACES")
         bm.to_mesh(obj.data)
         bm.free()
+    # round 6 (mesh gate): the decimation leaves a few needle triangles; turn their edges (beauty fill) and drop the
+    # ones that are still degenerate
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.triangulate(bm, faces=bm.faces)
+    bmesh.ops.beautify_fill(bm, faces=bm.faces, edges=[e for e in bm.edges if not e.is_boundary])
+    bmesh.ops.dissolve_degenerate(bm, dist=.02, edges=bm.edges)
+    bm.to_mesh(obj.data)
+    bm.free()
     for p in obj.data.polygons:
         p.use_smooth = False
     return obj
@@ -407,8 +443,20 @@ def stake():
             v.append((x * sc, y + (.12 if x > 0 else 0) * (y > 0), z * sc))
     for k in range(4):
         f.append([k, (k + 1) % 4, 4 + (k + 1) % 4, 4 + k])
-    f.append([4, 5, 6, 7][::-1])
-    return L.mesh_object("W7_F_Stake__wood", v, f, smooth=False, local=True)
+    f.append([4, 5, 6, 7])
+    f.append([3, 2, 1, 0])                  # round 6: the buried end closes too (one closed solid, wound outward)
+    return outward(L.mesh_object("W7_F_Stake__wood", v, f, smooth=False, local=True))
+
+
+def outward(obj):
+    """Round 6: weld and wind a closed solid outward (bmesh), so no face of it renders inside out."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(obj.data)
+    bm.free()
+    return obj
 
 
 def lip_layout():

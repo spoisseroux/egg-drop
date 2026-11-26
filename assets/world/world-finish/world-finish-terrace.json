@@ -15,7 +15,7 @@
     1.2489,
     77.963
    ],
-   "triangles": 2080,
+   "triangles": 2360,
    "look": {
     "kind": "island",
     "material": "grass"
@@ -130,7 +130,7 @@
     0.62,
     6.1135
    ],
-   "triangles": 30,
+   "triangles": 40,
    "look": {
     "kind": "island",
     "material": "boulder_rock"
@@ -621,14 +621,14 @@
  },
  "hide": [],
  "report": {
-  "W7_F_Terrace__grass": 2080,
+  "W7_F_Terrace__grass": 2360,
   "W7_F_TerraceFace__cliff_rock": 1216,
   "W7_F_TerraceTongues__grass": 29,
   "W7_F_TerraceEarth__dirt_path": 14,
   "W7_F_TerraceRocks__cliff_rock": 1293,
-  "W7_F_TerraceSlab__boulder_rock": 30,
+  "W7_F_TerraceSlab__boulder_rock": 40,
   "W7_F_TerraceLog__bark": 36,
   "W7_F_TerraceTrunk__bark": 48,
-  "fixedTotal": 4662
+  "fixedTotal": 4952
  }
 }

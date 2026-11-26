@@ -20,7 +20,9 @@ Layout.BayKinds=table.freeze({"dash","niche","deck","niche","niche"}) -- step B'
 Layout.Light=table.freeze({color="#FFB870",range=14,brightness=.9})
 -- Each kind's footprint in its bay frame (x1, z1, x2, z2; -z toward the players), before the pets' Grow.
 Layout.Kinds=table.freeze({
-	dash=table.freeze({foot=table.freeze({-2.4,-1.0,2.4,.5}),prompt=Vector3.new(0,3.2,0)}),
+	-- round 6: the gate is up to 9 clear between 1-stud posts (DenGreybox.Gate); the flat start mat in front stays
+	-- walkable for pets
+	dash=table.freeze({foot=table.freeze({-5.5,-1.0,5.5,.6}),prompt=Vector3.new(0,3.2,0)}),
 	deck=table.freeze({foot=table.freeze({-2.1,-3.0,2.1,1.5}),prompt=Vector3.new(0,3.4,0)}),
 	niche=table.freeze({foot=table.freeze({-1.6,-1.6,1.6,.8})}),
 })
@@ -119,7 +121,9 @@ function Layout.fromData(data)
 	local bays,lanterns={},{}
 	for i,b in ipairs(d.bays)do
 		local at=v(b.at)
-		bays[i]=table.freeze({id="bay"..i,kind=Layout.BayKinds[i],frame=facing(at,v(b.facing))})
+		-- round 6: the bay's roof and width (CliffDenData) size the Garden Dash gate (DenGreybox.gateSize)
+		bays[i]=table.freeze({id="bay"..i,kind=Layout.BayKinds[i],frame=facing(at,v(b.facing)),
+			roof=if type(b.roof)=="number"then b.roof else nil,width=if type(b.width)=="number"then b.width else nil})
 	end
 	for i,l in ipairs(d.lanterns)do lanterns[i]=table.freeze({at=v(l.at),post=l.post==true})end
 	return table.freeze({

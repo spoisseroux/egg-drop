@@ -9,7 +9,7 @@ local Layout=require(script.Parent.DenLayout)
 local Greybox={}
 Greybox.Prefix="W7D_"
 Greybox.Look=table.freeze({wood="#7A5A3A",dark="#5C4330",stone="#8E8A80",cloth="#B8AE98",rope="#B79A66",slate="#3A3F3A",
-	lamp="#D98A3A",screen="#9BE3C9",red="#D9725E",yellow="#E8C468",earth="#815C3F"})
+	lamp="#D98A3A",screen="#9BE3C9",red="#D9725E",yellow="#E8C468",earth="#815C3F",pawStone="#A39684"})
 -- Fable cliff-den review (FABLE-REVIEW-CLIFF-DEN.md), the room only: a timber frame over the old marble mouth (lintel,
 -- jambs, a dirt threshold over the white sill), the mouth lanterns hung from the beam's ends (no posts), the sign on the
 -- beam, a mat mid-room, the apron slab joining the mouth and the cliff path's foot. Lamps #D98A3A with caps and bases.
@@ -19,7 +19,83 @@ Greybox.Frame=table.freeze({beamY=10.5,beam=Vector3.new(17.5,1.3,1.2),out=2.5,ja
 Greybox.Apron=table.freeze({x1=-25,x2=3,z1=-100,z2=-90,top=4.95,thick=.6})
 Greybox.Mat=table.freeze({at=Vector2.new(-8,-108),d=8,inner=6.4})
 local L=Greybox.Look
-Greybox.MaxParts=80 -- Fable cliff-den review: the frame, caps, mat, apron and board rows (was 60)
+Greybox.MaxParts=120 -- round 6: the Garden Dash gate's banner, bulbs, pennant and start mat (was 80)
+-- Round 6 (Spencer, beta 25: "the race entrance in the cave thing needs to be clearer / the model / it kinda belnds in";
+-- Fable DEN-ROUND6-LOOK.md section 4): the room's only saturated object. Painted timber: teal posts with cream bands, a
+-- banner of cream and charcoal checks, seven warm bulbs and one light, a coral swallow-tail pennant, a "Garden Dash"
+-- board, a checker start mat and a line of paw stones toward the room. Fable's size is 9 x 9 clear; it shrinks to the
+-- bay's width and roof (CliffDenData den.bays) so it always fits under the dome, and grows with the room.
+Greybox.Gate=table.freeze({clear=9,clearH=9,post=1,beam=.6,band=1.4,q=.7,bulbs=7,pennant=2,head=.4,sign=Vector2.new(6,1.6),
+	mat=Vector2.new(9,4),cell=1.5,paws=6,teal="#2F7F8C",cream="#EFE3C8",charcoal="#2E2A28",coral="#E2603F",bulb="#FFD27A",
+	light=table.freeze({color="#FFE2A8",range=12,brightness=1.2})})
+
+-- The gate's clear width and height in this bay, and the pennant pole's height (0 when it does not fit): Greybox.Gate,
+-- shrunk to the bay's width (between the post centres' room) and to its roof less a 0.4 margin.
+function Greybox.gateSize(bay,layout)
+	local G=Greybox.Gate
+	local width=math.min(G.clear,bay.width or 7)   -- the bay's slot is the opening; the posts stand just outside it
+	local head=(bay.roof or (layout.floorY+9.25))-layout.floorY-G.head
+	local clearH=math.min(G.clearH,head-G.beam-G.band)
+	local pennant=math.max(0,math.min(G.pennant,head-G.beam-G.band-clearH))
+	return width,clearH,pennant
+end
+
+function Greybox.gate(add,bay,layout)
+	local G,f,n=Greybox.Gate,bay.frame,bay.id
+	local width,clearH,pennant=Greybox.gateSize(bay,layout)
+	local half=width/2+G.post/2
+	local top=clearH+G.band+G.beam                  -- the beam's top over the floor
+	for side=-1,1,2 do
+		local s=if side<0 then "L"else "R"
+		add(n.."GatePost"..s,Vector3.new(G.post,top,G.post),f*CFrame.new(side*half,top/2,0),G.teal,{material="Wood",collide=true})
+		for k,y in ipairs({1.1,clearH-.6})do
+			add(n.."GateBand"..s..k,Vector3.new(G.post+.1,.35,G.post+.1),f*CFrame.new(side*half,y,0),G.cream,{material="Wood"})
+		end
+	end
+	add(n.."GateBeam",Vector3.new(width+2*G.post,G.beam,G.post),f*CFrame.new(0,top-G.beam/2,0),G.teal,{material="Wood"})
+	-- the checker band: a cream board with charcoal squares on alternate cells, two rows of q, on both faces
+	local bandY=clearH+G.band/2
+	add(n.."GateBanner",Vector3.new(width,G.band,.3),f*CFrame.new(0,bandY,0),G.cream,{material="Wood"})
+	local cols=math.floor(width/G.q)
+	local x0=-cols*G.q/2+G.q/2
+	for r=0,1 do
+		for c=0,cols-1 do
+			if (r+c)%2==0 then
+				add(n.."GateCheck"..r.."_"..c,Vector3.new(G.q,G.q,.36),f*CFrame.new(x0+c*G.q,clearH+G.band/4+r*G.q,0),G.charcoal,{material="Wood"})
+			end
+		end
+	end
+	-- seven bulbs under the band; the middle one carries the gate's one light
+	for k=1,G.bulbs do
+		local x=-width/2+.4+(width-.8)*(k-1)/(G.bulbs-1)
+		add(n.."GateBulb"..k,Vector3.new(.35,.35,.35),f*CFrame.new(x,clearH-.25,0),G.bulb,
+			{material="Neon",shape="ball",light=if k==math.ceil(G.bulbs/2)then G.light else nil})
+	end
+	-- the pennant: a pole off the right post and a coral swallow tail (two wedges); dropped when the roof is too low
+	if pennant>=.8 then
+		add(n.."GatePole",Vector3.new(.2,pennant,.2),f*CFrame.new(half,top+pennant/2,0),G.cream,{material="Wood"})
+		for k,dy in ipairs({.18,-.18})do
+			add(n.."GatePennant"..k,Vector3.new(1.6,.32,.06),f*CFrame.new(half+.9,top+pennant-.35+dy,0)*CFrame.Angles(0,0,math.rad(-dy*60)),G.coral,{material="Fabric"})
+		end
+	end
+	-- the board on the banner's front (its words: DenClient, UICopy dash.title)
+	add(n.."GateSign",Vector3.new(math.min(G.sign.X,width-1),G.sign.Y,.15),f*CFrame.new(0,bandY,-.25),G.cream,{material="Wood"})
+	-- the start mat in front of the gate in checks of `cell`, and the paw stones in a line on toward the room
+	local mw=math.min(G.mat.X,width+1)
+	local matZ=-G.mat.Y/2-.6
+	add(n.."GateMat",Vector3.new(mw,.06,G.mat.Y),f*CFrame.new(0,.03,matZ),G.cream,{material="Fabric"})
+	local mc,mr=math.floor(mw/G.cell),math.floor(G.mat.Y/G.cell)
+	for r=0,mr-1 do
+		for c=0,mc-1 do
+			if (r+c)%2==0 then
+				add(n.."GateMatCheck"..r.."_"..c,Vector3.new(G.cell,.07,G.cell),f*CFrame.new(-mc*G.cell/2+G.cell/2+c*G.cell,.035,matZ-mr*G.cell/2+G.cell/2+r*G.cell),G.charcoal,{material="Fabric"})
+			end
+		end
+	end
+	for k=1,G.paws do
+		add(n.."Paw"..k,Vector3.new(.9,.06,.9),f*CFrame.new(((k%2)*2-1)*.5,.03,matZ-G.mat.Y/2-1.2-(k-1)*1.3),L.pawStone,{material="Slate"})
+	end
+end
 
 function Greybox.rows(layout)
 	local rows={}
@@ -105,19 +181,7 @@ function Greybox.rows(layout)
 	for _,bay in ipairs(layout.bays)do
 		local f,n=bay.frame,bay.id
 		if bay.kind=="dash"then
-			for side=-1,1,2 do add(n.."GatePost",Vector3.new(.5,5,.5),f*CFrame.new(side*2,2.5,0),L.wood,{material="Wood",collide=true})end
-			add(n.."GateBar",Vector3.new(4.5,.4,.3),f*CFrame.new(0,4.9,0),L.wood,{material="Wood"})
-			for k=1,5 do
-				add(n.."Bunting",Vector3.new(.6,.6,.08),f*CFrame.new(-1.6+(k-1)*.8,4.45,0)*CFrame.Angles(0,0,math.pi/4),if k%2==1 then L.red else L.yellow,{material="Fabric"})
-			end
-			add(n.."Slate",Vector3.new(1.4,1.1,.12),f*CFrame.new(1.6,1.1,-.45)*CFrame.Angles(math.rad(-12),0,0),L.slate,{material="Slate"})
-			-- The paw stones where you wait, round the spot in front of the gate.
-			local count=if layout.variant=="room"then 8 else 6
-			local r=if layout.variant=="room"then 5 else 2
-			for k=1,count do
-				local a=(k-1)/count*math.pi*2
-				add(n.."Paw",Vector3.new(.9,.06,.9),f*CFrame.new(math.cos(a)*r,.03,-2.8+math.sin(a)*r),L.stone,{material="Slate"})
-			end
+			Greybox.gate(add,bay,layout)
 		elseif bay.kind=="deck"then
 			if room then
 				-- Fable fix 10: a round stump, the Deck propped up at its back facing the mouth.

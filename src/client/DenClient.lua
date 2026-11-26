@@ -144,10 +144,31 @@ function Client:refresh()
 	self:sign()
 end
 -- The sign's name, once the server's sign part has arrived.
+-- Round 6 (Fable DEN-ROUND6-LOOK 4.5): the Garden Dash gate's board says "Garden Dash" (dash.title), charcoal on cream.
+function Client:gateSign(model)
+	if self.gateGui and self.gateGui.Parent then return end
+	local part
+	for _,child in ipairs(model:GetChildren())do
+		if string.match(child.Name,"^W7D_bay%d+GateSign$")then part=child;break end
+	end
+	if not part then return end
+	local gui=Instance.new("SurfaceGui")
+	gui.Name="DenGateSign";gui.Face=Enum.NormalId.Front;gui.SizingMode=Enum.SurfaceGuiSizingMode.PixelsPerStud;gui.PixelsPerStud=40
+	gui.LightInfluence=1
+	local label=Instance.new("TextLabel")
+	label.BackgroundTransparency=1;label.Size=UDim2.fromScale(1,1);label.TextScaled=true
+	label.Font=Enum.Font.FredokaOne;label.TextColor3=Color3.fromHex("#2E2A28");label.Text=UICopy.get("dash.title")
+	local pad=Instance.new("UIPadding");pad.PaddingLeft=UDim.new(.06,0);pad.PaddingRight=UDim.new(.06,0)
+	pad.PaddingTop=UDim.new(.14,0);pad.PaddingBottom=UDim.new(.14,0);pad.Parent=label
+	label.Parent=gui
+	gui.Parent=part
+	self.gateGui=gui
+end
 function Client:sign()
-	if self.signGui and self.signGui.Parent then return end
 	local lounge=if self.d.lounge then self.d.lounge()else self.world:FindFirstChild("EggDropLounge")
 	local model=lounge and lounge:FindFirstChild(PlayDen.Model)
+	if model then self:gateSign(model)end
+	if self.signGui and self.signGui.Parent then return end
 	local part=model and model:FindFirstChild("W7D_Sign")
 	if not part then return end
 	local gui=Instance.new("SurfaceGui")

@@ -1,6 +1,6 @@
 {
  "slice": "terrace",
- "assetId": "78745586093813",
+ "assetId": "121585294183893",
  "parts": [
   {
    "meshId": "rbxassetid://135402309585235",
@@ -30,7 +30,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://72743832361609",
+   "meshId": "rbxassetid://140038225754423",
    "name": "W7_F_TerraceRocks__cliff_rock",
    "meshSize": [
     1008.0010986328125,
@@ -39,7 +39,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://90889057781798",
+   "meshId": "rbxassetid://74129273911920",
    "name": "W7_F_TerraceSlab__boulder_rock",
    "meshSize": [
     130.0633544921875,
@@ -66,7 +66,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://85422206120742",
+   "meshId": "rbxassetid://96166512406762",
    "name": "W7_F_Terrace__grass",
    "meshSize": [
     1844.656494140625,

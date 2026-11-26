@@ -1,6 +1,6 @@
 {
  "slice": "path",
- "assetId": "134677323665784",
+ "assetId": "115798993481344",
  "parts": [
   {
    "meshId": "rbxassetid://105342966452134",
@@ -147,7 +147,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://86096169577028",
+   "meshId": "rbxassetid://79981845356555",
    "name": "W7_F_PathRocks__cliff_rock",
    "meshSize": [
     90.15441131591797,
@@ -165,7 +165,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://100763135569057",
+   "meshId": "rbxassetid://117900778653235",
    "name": "W7_F_PathSteps__boulder_rock",
    "meshSize": [
     503.63165283203125,
@@ -174,7 +174,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://72219834565713",
+   "meshId": "rbxassetid://108701038999053",
    "name": "W7_F_PathWall__cliff_rock",
    "meshSize": [
     543.0473022460938,
@@ -192,7 +192,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://135574115694953",
+   "meshId": "rbxassetid://105604713559440",
    "name": "W7_F_Stake__wood",
    "meshSize": [
     2.7463603019714355,

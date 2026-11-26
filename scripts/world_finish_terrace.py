@@ -106,8 +106,8 @@ def cap_and_face():
             y = Y + .05
             cap_v.append(T(s_ * f, t_ * f, y))
     n = len(ol)
-    for i in range(n):
-        cap_f.append([0, 1 + i, 1 + (i + 1) % n][::-1])
+    # round 6 (mesh gate: 160 needles): no fan from the middle; the first ring's hole is filled after building, with
+    # beauty-filled triangles (fill_centre below)
     for r in range(len(rings) - 1):
         for i in range(n):
             a, b = 1 + r * n + i, 1 + r * n + (i + 1) % n
@@ -126,7 +126,25 @@ def cap_and_face():
     for i in range(n):
         a, b = last + i, last + (i + 1) % n
         cap_f.append([a, base + i, base + (i + 1) % n, b][::-1])
-    cap = L.mesh_object("W7_F_Terrace__grass", cap_v, cap_f)
+    # round 6 (mesh gate: the old fan was 160 needles): the middle steps down through rings of half as many points
+    # (n, n/2, n/4, n/8) to a fan of n/8 spokes, so no triangle is a needle
+    prev, stride = list(range(1, 1 + n)), 1
+    for f in (1 / 8, 1 / 11, 1 / 16):
+        stride *= 2
+        idx = []
+        for i in range(0, n, stride):
+            s_, t_ = ol[i]
+            cap_v.append(T(s_ * f, t_ * f, Y + .05))
+            idx.append(len(cap_v) - 1)
+        m = len(idx)
+        for j in range(m):
+            o0, o1, o2 = prev[(2 * j) % len(prev)], prev[(2 * j + 1) % len(prev)], prev[(2 * j + 2) % len(prev)]
+            i0, i1 = idx[j], idx[(j + 1) % m]
+            cap_f += [[o1, o0, i0], [o2, o1, i1], [o1, i0, i1][::-1]]
+        prev = idx
+    for j in range(len(prev)):
+        cap_f.append([prev[(j + 1) % len(prev)], prev[j], 0])
+    cap = up_facing(L.mesh_object("W7_F_Terrace__grass", cap_v, cap_f))
     # the face: from the lip ring down, leaning back 15 to 26 degrees, in 1.5-stud rows, to 0.6 under the ground
     face = Pth.Mesh("W7_F_TerraceFace__cliff_rock")
     cols = []
@@ -157,6 +175,22 @@ def cap_and_face():
                 continue                                    # never over the cliff path's tread
             face.quad(*pts)
     return cap, face, ol, cols
+
+
+def up_facing(obj):
+    """Round 6: one winding over the cap (recalculated), facing up (Blender z) on average."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.normal_update()
+    if sum(f.normal.z * f.calc_area() for f in bm.faces) < 0:
+        bmesh.ops.reverse_faces(bm, faces=bm.faces)
+    bm.to_mesh(obj.data)
+    bm.free()
+    for p in obj.data.polygons:
+        p.use_smooth = True
+    return obj
 
 
 def tongues(cols, ol):
@@ -245,6 +279,7 @@ def outcrops_and_slab():
         a, b = pts[k], pts[(k + 1) % 10]
         slab.quad((cx, Y + .32, cz), (a[0], Y + .3, a[1]), (b[0], Y + .3, b[1]), (cx, Y + .32, cz))
         slab.quad((a[0], Y + .3, a[1]), (a[0], Y - .3, a[1]), (b[0], Y - .3, b[1]), (b[0], Y + .3, b[1]))
+        slab.quad((cx, Y - .3, cz), (b[0], Y - .3, b[1]), (a[0], Y - .3, a[1]), (cx, Y - .3, cz))   # round 6: closed
     return rocks, slab
 
 

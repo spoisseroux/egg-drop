@@ -11,8 +11,8 @@
 -- without a "no Studio readback" note. Commit the three files.
 local MODELS = {
 	{ slice = "den", id = 96319124357754 },
-	{ slice = "path", id = 134677323665784 },
-	{ slice = "terrace", id = 78745586093813 },
+	{ slice = "path", id = 115798993481344 },
+	{ slice = "terrace", id = 121585294183893 },
 }
 
 local InsertService = game:GetService("InsertService")

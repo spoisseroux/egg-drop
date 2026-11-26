@@ -78,15 +78,15 @@
  "path": {
   "model": {
    "file": "world-finish-path.fbx",
-   "sha256": "8a545ea64ba29a906425e92205f3a17716c959ceee153178298fd094cd2def19",
-   "manifestSha256": "bb6be08841ce7b1c35e906d34a2da41a448f3d648515ab0a3e5afa50718d9987",
-   "operation": "b82aa6ab-bbf6-47b1-95a3-cbcf6e1abee8",
-   "assetId": "134677323665784",
+   "sha256": "41710111d8489e0a15dc7cae679ea4c634b979ae04b799d40b1440803b63b24f",
+   "manifestSha256": "c1383095416c2421426678c7ee97124abd8dcdae333259190d24d732836b95a8",
+   "operation": "64118d34-10fa-4d4d-99c3-119beddbc389",
+   "assetId": "115798993481344",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "111136020424731",
-    "operation": "45f9e201-2c2c-4400-8d96-d1d25a9c8c02",
-    "why": "round 5 (Fable R1 after-list: welded rock skins, terrace edge and tongues, foot boulders, den frame/cloth data)"
+    "assetId": "134677323665784",
+    "operation": "b82aa6ab-bbf6-47b1-95a3-cbcf6e1abee8",
+    "why": "round 6 (Spencer beta 25: messy geometry): closed stair solids, profile-length wall UVs, rocks beautified; mesh gate PASS"
    }
   },
   "images": {}
@@ -94,15 +94,15 @@
  "terrace": {
   "model": {
    "file": "world-finish-terrace.fbx",
-   "sha256": "8ea44f63e34ee51df907a59d06b32b71362a830a40337e0e582ad8cd98e54ec6",
-   "manifestSha256": "a97924fd7b8d5eb4fce1966deed8164df8c64d6fd4a9052b572f2be290c19ae1",
-   "operation": "9218a1de-96c5-4730-b082-0d45e5b9a2ff",
-   "assetId": "78745586093813",
+   "sha256": "705254db2c8a830a5d13abc431033ec83f140f11b70697a62e20cf1b1b2ce09e",
+   "manifestSha256": "73dd0fd9c5c269029c7174f5328ba7a6af46aeea2966a77217fab5a347e32899",
+   "operation": "a796afdc-67f0-4a10-93b5-be21b4d847c0",
+   "assetId": "121585294183893",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "127139808708242",
-    "operation": "7d74c9a6-0b86-4dac-abd8-bc344e726682",
-    "why": "round 5 (Fable R1 after-list: welded rock skins, terrace edge and tongues, foot boulders, den frame/cloth data)"
+    "assetId": "78745586093813",
+    "operation": "9218a1de-96c5-4730-b082-0d45e5b9a2ff",
+    "why": "round 6: cap rings instead of a 160-needle fan, closed lookout slab, rocks beautified; mesh gate PASS"
    }
   },
   "images": {}

@@ -1,0 +1,408 @@
+{
+ "den": [
+  {
+   "name": "W7_CD_Crystals__glow_pink",
+   "faces": 90,
+   "open": 96,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_CD_Ground__grass",
+   "faces": 5564,
+   "open": 724,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_CD_Ground__ground",
+   "faces": 5388,
+   "open": 1268,
+   "flipped": 0,
+   "shards": 19,
+   "solid": false
+  },
+  {
+   "name": "W7_CD_Region__cliff_rock",
+   "faces": 73,
+   "open": 71,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_CD_Region__grass",
+   "faces": 8,
+   "open": 18,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_DenApron__dirt_path",
+   "faces": 167,
+   "open": 108,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_DenLid__cliff_rock",
+   "faces": 1134,
+   "open": 110,
+   "flipped": 0,
+   "shards": 24,
+   "solid": false
+  },
+  {
+   "name": "W7_F_DenMouth__cliff_rock",
+   "faces": 2335,
+   "open": 18,
+   "flipped": 0,
+   "shards": 82,
+   "solid": false
+  },
+  {
+   "name": "W7_F_DenSkin__cliff_rock",
+   "faces": 90,
+   "open": 50,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Den__crystal",
+   "faces": 13,
+   "open": 6,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Den__floor",
+   "faces": 306,
+   "open": 76,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Den__shellEast",
+   "faces": 976,
+   "open": 97,
+   "flipped": 0,
+   "shards": 21,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Den__shellWest",
+   "faces": 984,
+   "open": 97,
+   "flipped": 0,
+   "shards": 27,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Lantern__cage",
+   "faces": 67,
+   "open": 68,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Lantern__pane",
+   "faces": 4,
+   "open": 16,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_OverLandmarks__cliff_rock_1916",
+   "faces": 98,
+   "open": 24,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_OverLandmarks__cliff_rock_2016",
+   "faces": 34,
+   "open": 14,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_OverRocks__cliff_rock_1916",
+   "faces": 36,
+   "open": 32,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_OverRocks__cliff_rock_2016",
+   "faces": 64,
+   "open": 40,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Stone__flat",
+   "faces": 24,
+   "open": 8,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  }
+ ],
+ "path": [
+  {
+   "name": "W7_CD_Ground__grass",
+   "faces": 5532,
+   "open": 720,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_CD_Ground__ground",
+   "faces": 5310,
+   "open": 1260,
+   "flipped": 0,
+   "shards": 19,
+   "solid": false
+  },
+  {
+   "name": "W7_CD_Region__cliff_rock",
+   "faces": 53,
+   "open": 43,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_CD_Region__grass",
+   "faces": 3,
+   "open": 5,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Lip1__boulder_rock",
+   "faces": 80,
+   "open": 0,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  },
+  {
+   "name": "W7_F_Lip2__boulder_rock",
+   "faces": 80,
+   "open": 0,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  },
+  {
+   "name": "W7_F_Lip3__boulder_rock",
+   "faces": 80,
+   "open": 0,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  },
+  {
+   "name": "W7_F_Lip4__boulder_rock",
+   "faces": 80,
+   "open": 0,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  },
+  {
+   "name": "W7_F_Lip5__boulder_rock",
+   "faces": 80,
+   "open": 0,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  },
+  {
+   "name": "W7_F_PathFoot__dirt_path",
+   "faces": 82,
+   "open": 168,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_PathGrass__grass",
+   "faces": 55,
+   "open": 114,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__cliff_rock_1718",
+   "faces": 264,
+   "open": 48,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__cliff_rock_1817",
+   "faces": 204,
+   "open": 108,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1717",
+   "faces": 4,
+   "open": 6,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1817",
+   "faces": 1,
+   "open": 3,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1916",
+   "faces": 9,
+   "open": 15,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_PathRocks__cliff_rock",
+   "faces": 1729,
+   "open": 0,
+   "flipped": 0,
+   "shards": 2,
+   "solid": true
+  },
+  {
+   "name": "W7_F_PathSkin__cliff_rock",
+   "faces": 78,
+   "open": 60,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_PathSteps__boulder_rock",
+   "faces": 356,
+   "open": 0,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  },
+  {
+   "name": "W7_F_PathWall__cliff_rock",
+   "faces": 415,
+   "open": 446,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Path__dirt_path",
+   "faces": 56,
+   "open": 114,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Stake__wood",
+   "faces": 6,
+   "open": 0,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  }
+ ],
+ "terrace": [
+  {
+   "name": "W7_F_TerraceEarth__dirt_path",
+   "faces": 14,
+   "open": 14,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_TerraceFace__cliff_rock",
+   "faces": 608,
+   "open": 420,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_TerraceLog__bark",
+   "faces": 12,
+   "open": 0,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  },
+  {
+   "name": "W7_F_TerraceRocks__cliff_rock",
+   "faces": 1209,
+   "open": 51,
+   "flipped": 0,
+   "shards": 1,
+   "solid": false
+  },
+  {
+   "name": "W7_F_TerraceSlab__boulder_rock",
+   "faces": 20,
+   "open": 10,
+   "flipped": 0,
+   "shards": 0,
+   "solid": true
+  },
+  {
+   "name": "W7_F_TerraceTongues__grass",
+   "faces": 16,
+   "open": 35,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_TerraceTrunk__bark",
+   "faces": 24,
+   "open": 16,
+   "flipped": 0,
+   "shards": 0,
+   "solid": false
+  },
+  {
+   "name": "W7_F_Terrace__grass",
+   "faces": 1120,
+   "open": 160,
+   "flipped": 0,
+   "shards": 160,
+   "solid": false
+  }
+ ]
+}

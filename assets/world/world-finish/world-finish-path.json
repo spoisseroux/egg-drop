@@ -111,7 +111,7 @@
     24.9263,
     41.6566
    ],
-   "triangles": 504,
+   "triangles": 712,
    "look": {
     "kind": "island",
     "material": "boulder_rock"
@@ -272,7 +272,7 @@
     2.97,
     0.35
    ],
-   "triangles": 10,
+   "triangles": 12,
    "look": {
     "kind": "flat",
     "color": "#5C4330",
@@ -1215,14 +1215,14 @@
   "W7_F_PathGrass__grass": 110,
   "W7_F_PathWall__cliff_rock": 830,
   "W7_F_PathFoot__dirt_path": 164,
-  "W7_F_PathSteps__boulder_rock": 504,
+  "W7_F_PathSteps__boulder_rock": 712,
   "W7_F_PathRocks__cliff_rock": 1800,
   "W7_F_Lip1__boulder_rock": 80,
   "W7_F_Lip2__boulder_rock": 80,
   "W7_F_Lip3__boulder_rock": 80,
   "W7_F_Lip4__boulder_rock": 80,
   "W7_F_Lip5__boulder_rock": 80,
-  "W7_F_Stake__wood": 10,
+  "W7_F_Stake__wood": 12,
   "W7_CD_Ground__grass": 5532,
   "W7_CD_Ground__ground": 5310,
   "W7_CD_Region__cliff_rock": 53,
@@ -1233,7 +1233,7 @@
   "W7_F_PathOverRocks__grass_1817": 1,
   "W7_F_PathOverRocks__grass_1916": 9,
   "W7_F_PathSkin__cliff_rock": 78,
-  "fixedTotal": 14978,
+  "fixedTotal": 15186,
   "lipStones": 11,
   "stakes": 8,
   "stepMaxDeviation": 0.542
