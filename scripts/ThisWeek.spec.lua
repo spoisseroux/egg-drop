@@ -131,6 +131,25 @@ return function(server)
 		clear()
 	end)
 
+	test("review B37: one pick per list (its key names it), and the clock's list never sells the pick in a slot tab",function()
+		on()
+		local rows,key=Variants.rows(ThisWeek.Anchor)
+		assert(key==ThisWeek.pick(ThisWeek.Anchor).id,"the key is the pick")
+		local weekly=0;for _,row in ipairs(rows)do if row.weekly then weekly+=1 end end
+		assert(weekly==1)
+		local all,allKey=Variants.rows(math.huge);assert(allKey=="*"and #all==#Variants.Rows)
+		off()
+		local _,offKey=Variants.rows(ThisWeek.Anchor);assert(offKey=="")
+		on()
+		local clock=ThisWeek.pick(ThisWeek.week())
+		local slot=Wear.forPet("pip",math.huge).byId[clock.id].slot
+		assert(Wear.forPet("pip").byId[clock.id]~=nil,"the clock's list holds the pick")
+		for _,entry in ipairs(Wear.shopTab("pip",slot,{}))do assert(entry.id~=clock.id,"unowned, only the This week tab sells it")end
+		for _,entry in ipairs(Wear.shopTab("pip",slot))do assert(entry.id~=clock.id)end
+		clear()
+		assert(ThisWeek.ceiling()==ThisWeek.ceiling(),"the build's own ceiling is stable")
+	end)
+
 	test("bought stays owned: a weekly item the pet owns is in its slot tab every week after, and wears",function()
 		on()
 		local clockPick=ThisWeek.pick(ThisWeek.week())

@@ -56,6 +56,15 @@ function Shop.tileList(petId,slot,owned,tab)
  for _,item in ipairs(items)do table.insert(list,item)end
  return list
 end
+-- Pure: the item if it is for sale to this pet now. A "This week" pick is for sale only in the server's week
+-- (ctx.thisWeek, public.thisWeek), never by the device clock (review B37); everything else is the catalogue's list.
+function Shop.forSale(petId,itemId,ctx)
+ if ThisWeek.isWeekly(itemId)then
+  local week=ctx and ctx.thisWeek
+  return if type(week)=="number"then Catalog.forPet(petId,week).byId[itemId]else nil
+ end
+ return Catalog.item(petId,itemId)
+end
 -- Pure: an item by id. A gated item the shop does not list (gates off), or a "This week" item
 -- outside its week, still resolves, so an owned one can be seen, worn and taken off; `status`
 -- never sells it.
@@ -80,7 +89,7 @@ function Shop.status(petId,itemId,ctx)
  if not item then return {kind="invalid",text="",button=nil}end
  local row=ctx.row or {owned={},equipped={}}
  local owned=table.find(row.owned or {},itemId)~=nil
- if not owned and not Catalog.item(petId,itemId)then return {kind="invalid",text="",button=nil}end
+ if not owned and not Shop.forSale(petId,itemId,ctx)then return {kind="invalid",text="",button=nil}end
  if owned and Catalog.equippedIn(petId,row.equipped,item.slot)==itemId then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
  if owned then return {kind="owned",text="",button="Wear",enabled=true}end
  local wallet=ctx.wallet or 0
@@ -117,8 +126,9 @@ end
 function Shop.thisWeekLines()
  return {UICopy.get("thisWeek.status",{weeks=ThisWeek.Every}),UICopy.get("thisWeek.statusShort",{weeks=ThisWeek.Every})}
 end
--- Pure: the "This week" tab for this pet in `week` (the snapshot's shelf week, ShelfDeal.week), or nil: no week
--- yet, the switch is off, or the pet's rig does not sell this week's pick. Its slot is the pick's own slot.
+-- Pure: the "This week" tab for this pet in `week` (the server's week, ShelfDeal.thisWeek), or nil: no week (the
+-- server's switch is off, or no snapshot yet), the switch is off here, or the pet's rig does not sell this week's
+-- pick. Its slot is the pick's own slot.
 function Shop.thisWeekTab(petId,week)
  if not petId or type(week)~="number"then return nil end
  local row=ThisWeek.featured(week)
@@ -429,7 +439,7 @@ function Shop:build(view)
  -- Slice B: the tabs this pet has items for; the front tab stays on its slot when it can.
  local frontId=self.tabList and self.tabList[self.tab]and self.tabList[self.tab].id
  self.levelsKey=Levels.key()
- self.tabList=Shop.tabsFor(self.petId,self:owned(),self.ctx.week);self.tabKey=Shop.tabKey(self.tabList)
+ self.tabList=Shop.tabsFor(self.petId,self:owned(),self.ctx.thisWeek);self.tabKey=Shop.tabKey(self.tabList)
  self.tab=1;for i,tab in ipairs(self.tabList)do if tab.id==frontId then self.tab=i end end
  local labels={};for _,tab in ipairs(self.tabList)do table.insert(labels,Shop.tabLabel(tab))end
  if phone then
@@ -558,6 +568,10 @@ function Shop:setContext(ctx)
  self.ctx.levels=if Locked.on()then ctx.levels or Locked.levels()else nil
  -- Slice C: the shelf week (the snapshot's own day; ShelfDeal.week reads the owner snapshot).
  if ctx.week~=nil then self.ctx.week=ctx.week else self.ctx.week=Deal.week()or self.ctx.week end
+ -- This week: the server's week (false = none, as a spec passes week=false); never the device clock (review B37).
+ if ctx.thisWeek~=nil then self.ctx.thisWeek=ctx.thisWeek
+ elseif ctx.week==false then self.ctx.thisWeek=false
+ else self.ctx.thisWeek=Deal.thisWeek()or false end
  if self.wallet then self.wallet.set(self.ctx.wallet)end
  -- The runtime switch flipped while the shop is open: list, chips and tabs again.
  if self.visible and self.levelsKey~=Levels.key()then self:build(self.view);self:relayout();return end
@@ -767,7 +781,7 @@ function Shop:paintPane()
  if self.deal then self.deal.set(status.full~=nil,self.dealWidth)end
  -- This week: the chip on the pick in every state (bought or not) while it is this week's.
  if self.weekChip then
-  local weekly=item~=nil and item.weekly==true and type(self.ctx.week)=="number"and ThisWeek.listed(id,self.ctx.week)
+  local weekly=item~=nil and item.weekly==true and type(self.ctx.thisWeek)=="number"and ThisWeek.listed(id,self.ctx.thisWeek)
   self.weekChip.root.Visible=weekly
   self.root:SetAttribute("ThisWeek",weekly)
  end
@@ -968,7 +982,7 @@ function Shop:open(petId,ctx)
  self.visible=true;self.root.Visible=true;self.confirmId,self.errorId=nil,nil
  Kit.shadeOpen(self,self.shade,function(covered)self.root.Visible=not covered end)
  -- Slice B: another pet can have other tabs; rebuild the bar when the set changes.
- if Shop.tabKey(Shop.tabsFor(self.petId,self:owned(),self.ctx.week))~=self.tabKey or self.levelsKey~=Levels.key()then self:build(self.view);self:relayout()end
+ if Shop.tabKey(Shop.tabsFor(self.petId,self:owned(),self.ctx.thisWeek))~=self.tabKey or self.levelsKey~=Levels.key()then self:build(self.view);self:relayout()end
  self:fit(self.host.AbsoluteSize)
  if self.visual and self.visualPet~=self.petId then self.visual:destroy();self.visual=nil end
  self:setTab(self.tab)

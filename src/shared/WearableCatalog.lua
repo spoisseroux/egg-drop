@@ -75,13 +75,11 @@ local none=Catalog.compose(nil)
 -- math.huge for every row ever released (rendering a saved id never depends on the clock).
 function Catalog.forPet(petId,week)
  if type(petId)~="string"then return none end
- local rows=Variants.rows(if type(week)=="number"then week else Variants.week())
+ local rows,weekly=Variants.rows(if type(week)=="number"then week else Variants.week())
  -- Rows only ever join as the week advances, so the count names the set (with the gated rows
  -- listed or not: Levels may differ between two calls in a spec). "This week" rows come and go, so
  -- the ones listed are named too.
- local weekly=""
- for _,row in ipairs(rows)do if row.weekly then weekly..="|"..row.id end end
- local key=petId.."|"..#rows..(if Levels.on("gates")then "|g"else "")..weekly
+ local key=petId.."|"..#rows..(if Levels.on("gates")then "|g"else "").."|"..weekly
  local found=cache[key]
  if not found then found=Catalog.compose(petId,rows);cache[key]=found end
  return found
@@ -120,21 +118,29 @@ function Catalog.inTab(petId,tabSlot)
  return result
 end
 -- The same list plus gated items the pet owns while gates are off (they are not sold then, but
--- stay wearable and removable), and "This week" items the pet owns in any week (ThisWeek: bought
--- stays owned). With gates on and no weekly item owned, or nothing gated or weekly owned, it is
--- exactly inTab.
+-- stay wearable and removable). "This week" items show here only once owned (ThisWeek: bought stays
+-- owned, in any week); unowned, the pick is sold from the Wardrobe's This week tab alone, by the
+-- server's week, never by this clock's list (review B37). With gates on and no weekly item listed or
+-- owned, or nothing gated or weekly owned, it is exactly inTab.
 local function ownsWeekly(owned)
  for _,id in ipairs(owned)do if Variants.ById[id]and Variants.ById[id].weekly then return true end end
  return false
 end
+local function listsWeekly(petId)
+ for _,item in ipairs(Catalog.forPet(petId).order)do if item.weekly then return true end end
+ return false
+end
 function Catalog.shopTab(petId,tabSlot,owned)
  local gates=Levels.on("gates")
- if type(owned)~="table"or(gates and not ownsWeekly(owned))then return Catalog.inTab(petId,tabSlot)end
+ if type(owned)~="table"then owned={}end
+ if gates and not ownsWeekly(owned)and not listsWeekly(petId)then return Catalog.inTab(petId,tabSlot)end
  local listed=Catalog.forPet(petId).byId
  local result={}
  for _,item in ipairs(Catalog.forPet(petId,math.huge).order)do
-  local kept=((item.gate~=nil and not gates)or item.weekly==true)and table.find(owned,item.id)~=nil
-  if item.slot==tabSlot and(listed[item.id]or kept)then table.insert(result,listed[item.id]or item)end
+  local mine=table.find(owned,item.id)~=nil
+  local sold=listed[item.id]~=nil and item.weekly~=true
+  local kept=((item.gate~=nil and not gates)or item.weekly==true)and mine
+  if item.slot==tabSlot and(sold or kept)then table.insert(result,listed[item.id]or item)end
  end
  return result
 end
