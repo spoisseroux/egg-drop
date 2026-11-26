@@ -69,6 +69,8 @@
 -- WorldFeel (beta 14 QA W4): the build ceiling for the lower arrival camera, the zoom cap, the haze and the walk speed
 -- test. Also needs the beta place or Studio (WorldFeel.PlaceId) and the server's switches (WorldFeelConfig: world_feel,
 -- world_walk). Missing = off.
+-- PlayerScale (artifacts/player-scale-2026-11-26/PLAN.md): the build ceiling for drawing the avatar smaller so the world
+-- reads bigger. Also needs the beta place or Studio (PlayerScale.PlaceId). Missing = off: scale 1, nothing touched.
 -- CliffDen (CLIFF-DEN-ISLAND-SCOPE): with the WorldBeta pack mounted (under Tier's ceiling), true swaps in the sculpted
 -- island (the cliff path, the Play Den's room, the terrace top: DenLayout's step B); false swaps only the cave's bars
 -- out of the palette (no room then: step A's pocket is retired, so the den and the terrace stay closed). Either way the
@@ -108,4 +110,4 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  -- AliveAsmr (ASMR-AND-SCALE-LOOK 1, 2): the ASMR hatch sounds and the vibration (HatchAsmr, Haptics); beta and Studio only.
  AliveAsmr=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
- PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true})
+ PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true})

@@ -2,6 +2,7 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Palette = require(ReplicatedStorage.Shared.DeckPalette)
 local Themes = require(ReplicatedStorage.Shared.DeckThemes)
+local PlayerScale = require(ReplicatedStorage.Shared.PlayerScale)
 
 local LoungeArt = require(script.Parent.LoungeArt)
 local WorldLayout = require(ReplicatedStorage.Shared.HollowWorldLayout)
@@ -254,11 +255,20 @@ function Lounge.setMode(character, userId, mode, themeId)
 	-- The device's Front (screen, controls) faces back toward the holder's
 	-- face: turned 180 degrees about Y and tipped 22 degrees up toward the eyes.
 	-- Device +X therefore lies on the holder's left, so the pad reads left and A right.
-	local mount = CFrame.new(0, -0.39, -1.02) * CFrame.Angles(math.rad(-22), math.pi, 0)
+	-- Player scale (PlayerScale): a deck built for a smaller holder is built at the holder's scale (offsets, sizes,
+	-- attachments); an existing deck is scaled with the character by Model:ScaleTo.
+	local s = PlayerScale.of(character)
+	local mount = CFrame.new(0, -0.39 * s, -1.02 * s) * CFrame.Angles(math.rad(-22), math.pi, 0)
 	for _, source in ipairs(template:GetChildren()) do
 		if source:IsA("BasePart") then
 			local piece = source:Clone()
-			weldPiece(piece, torso, mount * source.CFrame)
+			if s ~= 1 then
+				piece.Size = piece.Size * s
+				for _, child in ipairs(piece:GetDescendants()) do
+					if child:IsA("Attachment") then child.Position = child.Position * s end
+				end
+			end
+			weldPiece(piece, torso, mount * PlayerScale.scaleCFrame(source.CFrame, s))
 			piece.Parent = device
 		end
 	end
@@ -279,7 +289,7 @@ function Lounge.setMode(character, userId, mode, themeId)
 			local target = Instance.new("Attachment")
 			target.Name = side .. "Grip"
 			-- Shell +X is the holder's left; grip from the holder's side of the shell.
-			target.Position = Vector3.new(if side == "Left" then 0.88 else -0.88, -0.27, -0.10)
+			target.Position = Vector3.new(if side == "Left" then 0.88 else -0.88, -0.27, -0.10) * s
 			target.Parent = shell
 			local grip = Instance.new("IKControl")
 			grip.Name = "Deck" .. side

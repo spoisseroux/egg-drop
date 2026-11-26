@@ -1,4 +1,5 @@
 local Data=require(game:GetService("ReplicatedStorage").Shared.GardenCarePoseData)
+local PlayerScale=require(game:GetService("ReplicatedStorage").Shared.PlayerScale)
 local Pose={}
 local function extents(visual)
  local key=tostring(visual.rigRevision)..":"..tostring(visual.renderCharmShape)..":"..tostring(visual.charmVisible)..":"..tostring(visual.featureRevision)
@@ -29,9 +30,11 @@ function Pose.carried(visual,character,dt)
  local head=character:FindFirstChild("Head");local row=Data.bounds[visual.petId];local hold=Data.hold
  local measured=extents(visual);local top=measured.top
  local chin=if head then head.Position.Y-head.Size.Y*.5 else torso.Position.Y+torso.Size.Y*.5
- local sole=math.min(torso.Position.Y-hold.baseSoleBelowTorsoY,chin-hold.chinClearanceStud-top-hold.visibleCharmMotionReserveStud)
+ -- player scale (PlayerScale): the holder's fixed offsets shrink with the avatar; the pet keeps its size
+ local s=PlayerScale.of(character)
+ local sole=math.min(torso.Position.Y-hold.baseSoleBelowTorsoY*s,chin-hold.chinClearanceStud-top-hold.visibleCharmMotionReserveStud)
  local forward=torso.Size.Z*.5+measured.rear+hold.forwardClearanceStud
- local target=torso.Position+torso.CFrame.LookVector*forward+torso.CFrame.RightVector*hold.sideStud
+ local target=torso.Position+torso.CFrame.LookVector*forward+torso.CFrame.RightVector*hold.sideStud*s
  visual.origin=Pose.blend(visual,Vector3.new(target.X,sole,target.Z),dt)
  local look=torso.CFrame.LookVector;visual.yaw=math.atan2(look.X,look.Z)+math.rad(hold.facingYawToAvatarDegrees)
  return true

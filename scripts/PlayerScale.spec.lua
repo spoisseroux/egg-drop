@@ -1,0 +1,47 @@
+-- Player scale (artifacts/player-scale-2026-11-26/PLAN.md): the ceiling, the default, the clamp, the override over
+-- the config value, the chat command, and the published value.
+-- Usage (Client): require(PlayerScripts.Client.ZZSpecs.PlayerScale)(PlayerScripts.Client)
+return function()
+	local Scale=require(game:GetService("ReplicatedStorage").Shared.PlayerScale)
+	local cases={}
+	local function test(name,run)run();table.insert(cases,name)end
+	local ON={flags={PlayerScale=true},studio=false,place=Scale.PlaceId}
+	test("the ceiling: the flag and the beta place or Studio; outside it the scale is 1",function()
+		assert(Scale.ceiling(ON)and Scale.ceiling({flags={PlayerScale=true},studio=true,place=1}))
+		assert(not Scale.ceiling({flags={PlayerScale=false},studio=true,place=Scale.PlaceId}),"flag off")
+		assert(not Scale.ceiling({flags={PlayerScale=true},studio=false,place=96451847774961}),"live place")
+		assert(Scale.resolve(.5,.7,false)==1,"ceiling closed: 1 whatever the values")
+	end)
+	test("resolve: the override, else the config value, else Default (0.8); clamped to 0.6..1.2; junk ignored",function()
+		assert(Scale.resolve(nil,nil,true)==Scale.Default and Scale.Default==.8)
+		assert(Scale.resolve(.9,nil,true)==.9 and Scale.resolve(.9,.7,true)==.7,"the override wins")
+		assert(Scale.resolve("0.75",nil,true)==.75,"a config string number")
+		assert(Scale.resolve(.1,nil,true)==Scale.Min and Scale.resolve(5,nil,true)==Scale.Max)
+		assert(Scale.resolve("big",nil,true)==Scale.Default and Scale.resolve(0/0,nil,true)==Scale.Default and Scale.resolve(math.huge,nil,true)==Scale.Default)
+		assert(Scale.resolve({},true,true)==Scale.Default,"tables and booleans are not numbers")
+	end)
+	test("parse: /scale <number> (clamped), /scale clear|reset; anything else nil",function()
+		assert(Scale.parse("/scale 0.75").value==.75 and Scale.parse("  /SCALE 2 ").value==Scale.Max)
+		assert(Scale.parse("/scale clear").clear==true and Scale.parse("/scale reset").clear==true)
+		for _,odd in ipairs({"/scale","/scale big","scale 0.8","/scales 0.8","/scale 0.8 now",5,nil})do assert(Scale.parse(odd)==nil,tostring(odd))end
+	end)
+	test("value: injected env resolves; of() reads a model's scale and is 1 for anything else",function()
+		assert(Scale.inject({flags={PlayerScale=true},studio=true,config=.85}))
+		assert(Scale.value()==.85)
+		Scale.inject({flags={PlayerScale=false},studio=true,config=.85});assert(Scale.value()==1)
+		Scale.inject(nil)
+		assert(Scale.of(nil)==1 and Scale.of("x")==1)
+	end)
+	test("scaleCFrame: the position scales, the rotation stays; s = 1 is the CFrame itself (the held deck's pieces)",function()
+		local cf=CFrame.new(1,2,-3)*CFrame.Angles(0,math.pi/2,0)
+		local half=Scale.scaleCFrame(cf,.5)
+		assert((half.Position-Vector3.new(.5,1,-1.5)).Magnitude<1e-6)
+		assert((half.LookVector-cf.LookVector).Magnitude<1e-6,"rotation kept")
+		local same=Scale.scaleCFrame(cf,1);assert((same.Position-cf.Position).Magnitude<1e-9)
+	end)
+	test("zoomFactor: half the scale's change (0.9 at 0.8), 1 at 1, clamped like the scale",function()
+		assert(math.abs(Scale.zoomFactor(.8)-.9)<1e-9 and Scale.zoomFactor(1)==1 and Scale.zoomFactor(nil)==1)
+		assert(math.abs(Scale.zoomFactor(.1)-(1-(1-Scale.Min)*.5))<1e-9)
+	end)
+	return{passed=#cases,cases=cases}
+end

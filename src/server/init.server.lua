@@ -121,6 +121,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.ThingsConfi
 task.spawn(function()local ok,problem=pcall(function()require(script.OnboardConfig).start()end);if not ok then warn("[Onboard] config not started: "..tostring(problem))end end)
 -- Beta 14 W4 world feel switches (WorldFeelConfig): the same way, two keys. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.WorldFeelConfig).start()end);if not ok then warn("[Feel] config not started: "..tostring(problem))end end)
+-- Player scale (PlayerScaleConfig): ConfigService player_scale (a number) and the owner's /scale. Ceiling off: nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.PlayerScaleConfig).start()end);if not ok then warn("[PlayerScale] config not started: "..tostring(problem))end end)
 -- Garden finds off switch (FindsConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.FindsConfig).start()end);if not ok then warn("[Finds] config not started: "..tostring(problem))end end)
 -- Garden hour off switch (GardenHourConfig): the same way, one key, but missing = off. With its build ceiling off nothing starts.
@@ -490,7 +492,8 @@ local function gardenInput(board)
 	-- Charm ownership (Customization Egg): public() masks a saved charm the save does not own.
 	local preferences=PetAppearance.public(board.profile,board.nursery.state.hues,board.nursery.state.petHues,board.nursery.state.petMaterials,board.nursery.state.petToys,board.nursery.state.petFeatures,board.profile.companionId,board.nursery.state.petWearables,board.nursery.state)
 	return {petId=petId,owned=petId~=nil and NurseryCatalog.isOwned(inventory(board),petId),root=root,character=character,
-		carryPosition=root and(root.Position+root.CFrame.LookVector*1.2+Vector3.new(0,.3,0))or nil,
+		-- player scale: the carry anchor's offsets shrink with the avatar (PlayerScale)
+		carryPosition=root and(root.Position+(root.CFrame.LookVector*1.2+Vector3.new(0,.3,0))*require(ReplicatedStorage.Shared.PlayerScale).of(character))or nil,
 		alive=not board.closing and root~=nil and humanoid~=nil and humanoid.Health>0 and character:IsDescendantOf(workspace),
 		characterId=board.characterGeneration or 0,petGeneration=board.companionGeneration or 0,position=position,mode=board.mode,
 		anchor=if root then groundAnchor(board,petAnchor({root=root,position=position}),position)or Vector3.new(position.X,GardenLayout.groundAt(position.X,position.Z),position.Z)else Vector3.zero,
@@ -1062,6 +1065,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.TierConfig).command(message) end) end)
 		-- "/tierpets <on|off|clear>": pets follow their owners up the cliff path (WORLD-FINISH-LOOK slice A), this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.TierPetsConfig).command(message) end) end)
+		-- "/scale <0.6-1.2|clear>": the player's drawn scale (the world reads bigger), this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.PlayerScaleConfig).command(message) end) end)
 		-- "/den <on|off|clear>": the Play Den switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.DenConfig).command(message) end) end)
 		-- "/freshsave" and "/freshsave restore": the owner's next join is a brand-new save, or the old one again
@@ -1187,6 +1192,9 @@ local function addPlayer(player)
 		board.characterGeneration=(board.characterGeneration or 0)+1;board.groundAnchor=nil
 		character:SetAttribute("GardenCharacterId",board.characterGeneration)
 		board.folder:SetAttribute("GardenCharacterId",board.characterGeneration)
+		-- Player scale (beta): the avatar is drawn at PlayerScale once its appearance has loaded, in place (never holds
+		-- the spawn; architect review). Ceiling off: returns at once, nothing touched.
+		pcall(function() require(script.PlayerScaleConfig).prepare(player, character) end)
 		Lounge.spawn(character, slot, player, function()
 			return board.mode, profile.theme
 		end)

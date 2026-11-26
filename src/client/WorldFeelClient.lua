@@ -8,6 +8,7 @@
 -- Off writes nothing: a switch that was never on leaves every value as the place has it.
 -- deps: player (LocalPlayer), starter (StarterPlayer), step=false for specs (they call :apply()).
 local Feel=require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("WorldFeel"))
+local PlayerScale=require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("PlayerScale"))
 local Client={};Client.__index=Client
 
 -- Pure: the WalkSpeed to write for a humanoid at `current`, or nil to leave it. `given` is what this module last
@@ -21,10 +22,10 @@ function Client.walkTarget(current,on,given,base,fresh)
 	if given~=nil and current==given and current~=base then return base end
 	return nil
 end
--- Pure: the zoom cap to write, or nil.
-function Client.zoomTarget(current,on,base,capped)
+-- Pure: the zoom cap to write, or nil. factor: the player scale's zoom factor (PlayerScale.zoomFactor; 1 = as before).
+function Client.zoomTarget(current,on,base,capped,factor)
 	if on then
-		local want=math.min(base,Feel.MaxZoom)
+		local want=math.min(base,Feel.MaxZoom*(factor or 1))
 		return if current~=want then want else nil
 	end
 	if capped and current~=base then return base end
@@ -41,6 +42,7 @@ function Client.mount(deps)
 	if deps.step~=false then
 		on(Feel.changed("feel"),function()self:apply(false)end)
 		on(Feel.changed("walk"),function()self:apply(false)end)
+		on(PlayerScale.changed(),function()self:apply(false)end)
 		local function watch(humanoid)
 			-- A lock (PetFocusUI) that lets go writes back the speed it saved: with the switch off by then, the place's
 			-- speed goes back instead of the 14 it held.
@@ -64,7 +66,7 @@ function Client:walk(humanoid,fresh)
 end
 function Client:apply(fresh)
 	local player=self.player
-	local zoom=Client.zoomTarget(player.CameraMaxZoomDistance,Feel.on("feel"),self.zoomBase,self.capped)
+	local zoom=Client.zoomTarget(player.CameraMaxZoomDistance,Feel.on("feel"),self.zoomBase,self.capped,PlayerScale.zoomFactor(PlayerScale.value()))
 	if zoom then player.CameraMaxZoomDistance=zoom;self.capped=zoom~=self.zoomBase end
 	local character=player.Character
 	local humanoid=character and character:FindFirstChildOfClass("Humanoid")

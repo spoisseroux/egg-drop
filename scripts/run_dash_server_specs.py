@@ -78,7 +78,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The hill at night (WORLD-FINISH-LOOK slice F): the lanterns, the glow-caps, the terrace fireflies.
           "HillNightClient",
           # The First Hatch (onboarding-2026-11-26): the crack ritual's clock hold.
-          "CrackRitual"]
+          "CrackRitual",
+          # Player scale (player-scale-2026-11-26): the knob.
+          "PlayerScale"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
