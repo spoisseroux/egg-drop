@@ -1843,7 +1843,15 @@ function Screen:applyCalm(h)
   keep(object,"Position");keep(object,"Size")
   object.Position=UDim2.fromOffset(r.x,r.y);object.Size=UDim2.fromOffset(r.w,r.h)
  end
- place(cards.Goals,plan.coach);place(cards.EggsLeft,plan.egg)
+ place(cards.Goals,plan.coach);place(cards.EggsLeft,plan.egg);place(cards.Next,plan.next)
+ -- The First Hatch: the shorter NEXT card shows its one ball at the right, centred, inside the card.
+ local ball=plan.next and h.next and h.next[1]and h.next[1].ball
+ if ball then
+  keep(ball,"Position");keep(ball,"Size")
+  local side=math.min(ball.Size.X.Offset,plan.next.h-16)
+  ball.Size=UDim2.fromOffset(side,side)
+  ball.Position=UDim2.fromOffset(plan.next.w-side-14,math.floor((plan.next.h-side)/2))
+ end
  if h.status then keep(h.status,"TextSize");h.status.TextSize=Calm.textSize(h.phone==true)end
  h.calm={saved=saved}
 end

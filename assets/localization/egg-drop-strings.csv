@@ -657,7 +657,9 @@ ui.onb3.tip.park,Pets play together in here.,,"First-session onboarding: pet bub
 ui.onb3.tip.style,Dress up your Pocket Deck here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.week.line,{pet} loves the garden. A new egg naps in the nest after every hatch.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear loves the garden. A new egg naps in the nest after every hatch."
 ui.onb3.week.title,Welcome week done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
-ui.onboarding.crack.tap,Tap the egg,,First-round coaching
+ui.onboarding.crack.click,Click the egg!,,First-round coaching
+ui.onboarding.crack.pad,Press A!,,First-round coaching
+ui.onboarding.crack.tap,Tap the egg!,,First-round coaching
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
 ui.onboarding.spend.store,Store,,First-round coaching

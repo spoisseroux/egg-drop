@@ -163,11 +163,12 @@ return function(client)
 		local plan=Calm.plan("regular",regular)
 		assert(#plan.hide==6 and not table.find(plan.hide,"Next")and not table.find(plan.hide,"Goals")and not table.find(plan.hide,"EggsLeft"))
 		assert(plan.coach.x==L and plan.coach.y==188 and plan.coach.h==596-188 and plan.coach.w==col)
-		assert(plan.egg.y==160 and plan.egg.h==428-160,"the Controls slot stays empty")
+		assert(plan.egg.y==160-56 and plan.egg.h==428-104,"the Controls slot stays empty; NEXT gives the egg 40%")
+		assert(plan.next.y==12 and plan.next.h==140-56 and plan.next.x==R)
 		local small={Score={x=6,y=6,w=100,h=54},Goals={x=6,y=66,w=100,h=136},Chain={x=6,y=208,w=100,h=85},
 			Next={x=300,y=6,w=100,h=84},EggsLeft={x=300,y=96,w=100,h=64},Difficulty={x=300,y=166,w=100,h=60},WinPays={x=300,y=232,w=100,h=61}}
 		plan=Calm.plan("small",small)
-		assert(plan.coach.h==293-66 and plan.egg.h==293-96)
+		assert(plan.coach.h==293-66 and plan.egg.h==293-(96-33)and plan.next.h==84-33)
 	end)
 
 	test("calm deck, phone: two columns grow down their own column; one column stacks the egg under the words",function()
@@ -176,7 +177,7 @@ return function(client)
 			Next={x=440,y=70,w=110,h=64},EggsLeft={x=440,y=142,w=110,h=44},Difficulty={x=440,y=194,w=110,h=44},WinPays={x=440,y=246,w=110,h=44},Controls={x=440,y=280,w=110,h=86}}
 		local plan=Calm.plan("narrow",cards)
 		assert(plan.coach.y==174 and plan.coach.h==364-174,"to the quest handle's foot")
-		assert(plan.egg.y==142 and plan.egg.h==290-142,"to Win pays' foot")
+		assert(plan.egg.y==142-24 and plan.egg.h==290-118 and plan.next.h==40,"to Win pays' foot, with NEXT's spare height (its ball stays 24 px)")
 		local one={Score={x=10,y=40,w=80,h=44},Next={x=134,y=40,w=76,h=44},Goals={x=10,y=92,w=200,h=108},EggsLeft={x=10,y=208,w=88,h=44},
 			Difficulty={x=106,y=208,w=104,h=44},WinPays={x=10,y=260,w=200,h=44},QuestHandle={x=10,y=320,w=200,h=44}}
 		plan=Calm.plan("one",one)

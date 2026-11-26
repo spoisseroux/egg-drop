@@ -87,7 +87,9 @@ require(script.CrackRitual).onFirstTap=function()request:FireServer("eggTapped")
 task.spawn(function()
 	local gui=player:WaitForChild("PlayerGui")
 	if gui:GetAttribute("LoadingSeconds")==nil then gui:GetAttributeChangedSignal("LoadingSeconds"):Wait()end
-	request:FireServer("deckShown")
+	-- Code review of the First Hatch: the server drops it while the board or the save is still loading, and records
+	-- it once; so it is sent again a little later (never more than three times).
+	for _,later in ipairs({0,8,25})do task.wait(later);request:FireServer("deckShown")end
 end)
 local feedback = remotes:WaitForChild("BoardMerge")
 local impacts = remotes:WaitForChild("BoardImpact")
@@ -2601,6 +2603,11 @@ updateHud = function()
 	if type(guideTarget)=="number"and guideTarget>0 then guideCharge=(board:GetAttribute("WelcomeCombos")or 0)/guideTarget*Pets.byId.pip.charge end
 	local lesson = firstHatchGuide:step(drops, merges, guideCharge, owned, UserInputService:GetLastInputType(),
 		clientUI.BallThemes.word(nextTier()), canPlay(), backdrop:GetAttribute("CompactInstruction")==true)
+	-- The First Hatch (Fable): the combo round keeps one goal in words, "Hatch a friend"; the egg's pips count combos.
+	if type(guideTarget)=="number"and guideTarget>0 and lesson then
+		local Copy=require(ReplicatedStorage.Shared.UICopy)
+		if lesson==Copy.get("onboarding.welcome.match")or lesson==Copy.get("onboarding.welcome.more")then lesson=Copy.get("onboarding.welcome.friend")end
+	end
 	local fieldCoaching = false
 	firstHatchGuide:fieldStep(0, 1, false)
 	local fieldActive = nurseryActive and owned > 0
@@ -3464,10 +3471,25 @@ do
  local dependencies={copy=Copy.get,
   skip=function(sequence)request:FireServer("welcomeSkip",{sequence=sequence})end,
   cue=function(pitch,gain)audio:play("charge",pitch,gain)end,
-  quietCue=function()audio:play("aim",1,.25)end}
+  quietCue=function()audio:play("aim",1,.25)end,
+  -- The First Hatch's merge sparks fly over the board (EggDrop, DisplayOrder 10) and the deck (9).
+  sparkLayer=function()
+   local gui=player.PlayerGui:FindFirstChild("EggDropWelcomeSparks")
+   if not gui then gui=make("ScreenGui","EggDropWelcomeSparks",{ResetOnSpawn=false,DisplayOrder=11,IgnoreGuiInset=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},player.PlayerGui)end
+   return gui
+  end}
  -- Set before RoomView can start the initial deck boot, not on its first frame.
  clientUI.deck.boot.maxMs=if(board:GetAttribute("OwnedPets")or 0)==0 then 1200 else nil
  local legacy=Welcome.new({meter=meter,gesture=legacyGesture,skip=legacySkip},dependencies)
+ -- The First Hatch (Onboard "opener"): a Welcome merge sends a spark in its tier's colour to the egg.
+ clientUI.welcomeSpark=function(position,tier)
+  if type(board:GetAttribute("WelcomeComboTarget"))~="number"or(board:GetAttribute("OwnedPets")or 0)>0 or clientUI.attr("FieldPhase")~="Welcome"then return end
+  local at=viewport.AbsolutePosition+project(position)
+  local palette=clientUI.JellyPalette.byTier[tier]
+  local pitch=1.1+.1*(tonumber(tier)or 1)
+  if clientUI.deck.welcomeView then clientUI.deck.welcomeView:spark(at,palette and palette.body,pitch)end
+  legacy:spark(at,palette and palette.body,pitch)
+ end
  local context={}
  clientUI.welcomeInput=function()
   clientUI.deck:welcomeInput();legacy:input()
@@ -3536,7 +3558,8 @@ do
   context.threshold=Pets.byId.pip.charge;context.owned=board:GetAttribute("OwnedPets")or 0;context.phase=clientUI.attr("FieldPhase")
   -- The First Hatch (Onboard "opener"): the egg's three stages are the three combos
   local comboTarget=board:GetAttribute("WelcomeComboTarget")
-  if type(comboTarget)=="number"and comboTarget>0 then context.charge=board:GetAttribute("WelcomeCombos")or 0;context.threshold=comboTarget end
+  context.combo=nil
+  if type(comboTarget)=="number"and comboTarget>0 then context.charge=board:GetAttribute("WelcomeCombos")or 0;context.threshold=comboTarget;context.combo=true end
   context.drops=clientUI.attr("Drops")or 0;context.skipReady=board:GetAttribute("WelcomeSkipReady")==true
   context.grantPending=board:GetAttribute("WelcomeGrantPending")==true;context.revealPending=nurseryState and nurseryState.lastHatch~=nil
   context.device=clientUI.inputKind();context.reduced=reduceEffects()
@@ -4433,6 +4456,7 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  if clientUI.boardNet.active()then clientUI.netScoreKick()end
  if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then clientUI.ballFaces:merged(id,os.clock());return end
  local now=os.clock()
+ if clientUI.welcomeSpark then clientUI.welcomeSpark(position,tier)end
  if predicted then
   -- The blob, burst, jolt and merge sound played at the prediction: only the score popup
   -- and the chain accent (the server's chain) remain.

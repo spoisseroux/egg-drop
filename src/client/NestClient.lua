@@ -1038,6 +1038,20 @@ function Client:measure(text,size)
 	end
 	return #text*size*.6
 end
+-- The clock "tomorrow" is read against (local time; specs pin it).
+Client.now=os.time
+-- Pure: is an egg ready `left` seconds from `now` ready on a later local day? (Code review of the First Hatch: an
+-- egg tucked in at 9 in the morning is ready the same afternoon, so it must not say tomorrow.)
+function Client.laterDay(left,now)
+	now=now or Client.now()
+	local a,b=os.date("*t",now),os.date("*t",now+math.max(0,tonumber(left)or 0))
+	return b.year>a.year or(b.year==a.year and b.yday>a.yday)
+end
+-- Pure (with the switch): no ticket yet for the first egg until it is tucked in (nest first only). Code review: the
+-- egg's clock runs from when it lands, not the tuck, so once it is ready the gold "Hatch egg!" ticket always shows.
+function Client.waitForTuck(view,tucking,left)
+	return type(view)=="table"and view.n==0 and view.tucked~=true and not tucking and(tonumber(left)or 0)>0 and Client.firstTomorrow()
+end
 function Client.firstTomorrow()
 	local ok,on=pcall(function()return require(game:GetService("ReplicatedStorage").Shared.Onboard).on("nestfirst")end)
 	return ok and on==true
@@ -1054,8 +1068,8 @@ end
 function Client.ticketData(view,left,narrow)
 	local text,kind=Client.ticketText(left,narrow)
 	-- The First Hatch (Onboard "nestfirst"): the very first egg says "Hatches tomorrow", not a countdown (a gift that
-	-- waits, never one that runs out); once it is ready, the ready words as always.
-	if kind~="ready"and type(view)=="table"and view.n==0 and Client.firstTomorrow()then text=UICopy.get("onb3.nest.tomorrow")end
+	-- waits, never one that runs out), when it is ready on a later day; the same day it counts down; ready reads ready.
+	if kind~="ready"and type(view)=="table"and view.n==0 and Client.laterDay(left)and Client.firstTomorrow()then text=UICopy.get("onb3.nest.tomorrow")end
 	local ready=kind=="ready"
 	return{text=text,kind="info",image=Client.Assets.chip,label=Client.how(view),tone=if ready then "gold"else "plain",
 		priority=if ready then Client.TicketPriority.ready else Client.TicketPriority.clock,active=true}
@@ -1063,6 +1077,8 @@ end
 function Client:paintTicket(left)
 	local status=self.d.status
 	if not status or not self.view then return end
+	-- The First Hatch (Fable MUST 5): the first egg's ticket arrives once it is tucked in, never before.
+	if Client.waitForTuck(self.view,self.tuck~=nil,left)then self:dropTicket();return end
 	local narrow=self.d.narrow~=nil and self.d.narrow()==true
 	local data=Client.ticketData(self.view,left,narrow)
 	local key=data.text.."|"..data.label.."|"..tostring(data.tone)

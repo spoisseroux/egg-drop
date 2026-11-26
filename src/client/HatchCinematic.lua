@@ -15,6 +15,7 @@ local DisplayPose=require(script.Parent.HatchDisplayPose)
 local RarityCue=require(script.Parent.HatchRarityCue)
 local Asmr=require(script.Parent.HatchAsmr)
 local CrackRitual=require(script.Parent.CrackRitual)
+local CrackFx=require(script.Parent.CrackFx)
 local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24;Cinematic.HeroDelay=.12
 local live=setmetatable({},{__mode="k"});local visibleOwner;local seen={};local seenOrder={};local drainInput
 Input.InputEnded:Connect(function(input)if drainInput==input then task.delay(.05,function()if drainInput==input then drainInput=nil end end)end end)
@@ -51,11 +52,12 @@ function Cinematic.new(parent,audio,reduceEffects,owns)
  local pool=frame(root,"HatchParticlePool","inset",47);pool.BackgroundTransparency=1;pool.Size=UDim2.fromScale(1,1)
  local self=setmetatable({frame=root,poolRoot=pool,bits={},audio=audio,reduceEffects=reduceEffects,owns=owns,epoch=0,age=0,active=false,connections={},ancestorConnections={},windowActive=true,writes=0},Cinematic)
  self.skipButton=skip
- -- The First Hatch (Onboard "crack"): the prompt while the Bear's egg waits for a tap
+ -- The First Hatch (Onboard "crack"): the "Tap the egg!" pill, the ghost hand and the drawn cracks (CrackFx), at the
+ -- foot of whatever shows the egg: this frame, or the full-screen RevealStage when EggHatchView hands the reveal over
+ -- (promptLayer, promptSpot)
  local tapPrompt=label(root,"CrackTapPrompt","","Heading","text");tapPrompt.Visible=false;tapPrompt.ZIndex=61
- tapPrompt.AnchorPoint=Vector2.new(.5,1);tapPrompt.Position=UDim2.new(.5,0,1,-18);tapPrompt.Size=UDim2.new(.8,0,0,36)
- pcall(function()tapPrompt.Text=require(game:GetService("ReplicatedStorage").Shared.UICopy).get("onboarding.crack.tap")end)
  self.tapPrompt=tapPrompt
+ self.crackFx=CrackFx.new(tapPrompt,function(key)return require(game:GetService("ReplicatedStorage").Shared.UICopy).get(key)end)
  live[self]=true;skip.Activated:Connect(function()self:skip()end)
  for i=1,24 do local bit=circle(pool,"HatchBit"..i,"accent",47);bit.Visible=false;self.bits[i]=bit end
  local function watch(signal,callback)table.insert(self.connections,signal:Connect(callback))end
@@ -159,12 +161,14 @@ function Cinematic:cancel()
  self.result=nil;self.liveBits=0;self.frame.Visible=false;self.heroGraphic=nil
  if visibleOwner==self then visibleOwner=nil end;for _,bit in ipairs(self.bits)do bit.Visible=false end
  self.quietPainted=nil
- self.crackRitual=nil;if self.tapPrompt then self.tapPrompt.Visible=false end
+ self.crackRitual=nil;if self.crackFx then self.crackFx:reset()end
 end
 function Cinematic:destroy(fromSignal)
  if self.destroyed then return end;self:cancel();self.destroyed=true;live[self]=nil
  for _,c in ipairs(self.connections)do c:Disconnect()end;for _,c in ipairs(self.ancestorConnections)do c:Disconnect()end
  table.clear(self.connections);table.clear(self.ancestorConnections);if not fromSignal then self.frame:Destroy()end
+ -- the pill, hand and cracks may sit on the stage layer, outside this frame
+ if self.crackFx then self.crackFx:destroy();self.crackFx=nil;self.tapPrompt=nil end
 end
 function Cinematic:complete()local callback=self.onComplete;self.onComplete=nil;if callback then callback()end end
 function Cinematic:createHero()
@@ -455,7 +459,7 @@ function Cinematic:paintBits(revealed,quiet)
 end
 
 function Cinematic:finishStatic()
- if self.tapPrompt then self.tapPrompt.Visible=false end
+ if self.crackFx then self.crackFx:reset()end
  if self.nativeScene then
   self.active=false;self:disconnectClock();self.age=if self:reduced()then RarityCue.timing(self.tier,self.kind,true).duration else self.duration
   self:stopAudio();self:paint();self:complete();return
@@ -554,7 +558,21 @@ function Cinematic:step(dt)
   -- (the app was away) still settles it.
   if dt>2 or(self.audio and self.deviceEpoch~=(self.audio.deviceEpoch or 0))then self:finishStatic();return end
   if dt>.25 then dt=.1 end
-  if self.tapPrompt then self.tapPrompt.Visible=self.crackRitual~=nil and self.active and self.crackRitual:waiting()end
+  if self.crackFx and self.crackRitual then
+   local ritual=self.crackRitual
+   local waiting=self.active and ritual:waiting()
+   self.crackWaited=if waiting then(self.crackWaited or 0)+dt else 0
+   local spot=self.promptSpot and self.promptSpot()
+   self.crackFx:place(self:crackLayer(),spot,spot and spot.phone)
+   -- a beat that released itself (untouched) still draws its crack
+   for index=1,ritual.index-1 do if ritual.released[index]then self.crackFx:beat(index,nil)end end
+   self.crackFx:setText(self.inputKind and self.inputKind()or"Mouse")
+   -- the ghost hand only at the first stop, before any tap
+   self.crackFx:step(dt,waiting,self.crackWaited,if ritual.index>1 then math.max(1,ritual.taps)else ritual.taps,self:reduced())
+   -- the drawn cracks go with the pop
+   local stops=ritual.stops
+   if ritual:done()and self.age>=stops[#stops]+.18 then self.crackFx:clearCracks()end
+  end
   if self:held()then self:paint();return end
   -- The First Hatch: the clock stops exactly at the next crack, never one frame past it (its sound waits for the tap).
   if self.crackHold and self.crackRitual then dt=self.crackRitual:cap(self.age,math.max(0,dt))end
@@ -625,8 +643,8 @@ function Cinematic:play(result,onComplete,options)
  -- The First Hatch (Onboard "crack", options.crack from EggHatchView for the Bear's starter receipt): the clock holds
  -- before each crack beat until a tap (or CrackRitual.Auto); the beat's sound and buzz then play off this clock as before.
  if self.crackHold then self.clockHold=nil;self.crackHold=nil end
- self.crackRitual=nil
- if self.tapPrompt then self.tapPrompt.Visible=false end
+ self.crackRitual=nil;self.crackWaited=0
+ if self.crackFx then self.crackFx:reset()end
  if options.crack==true and asmr and not self.reducedIntro then
   local ritual=CrackRitual.new(CrackRitual.stopsFrom(asmr))
   if ritual then
@@ -653,11 +671,28 @@ function Cinematic:play(result,onComplete,options)
  if not self.active then self.age=self.duration;self:paint();local epoch=self.epoch;self:handoff(true);if self.epoch~=epoch then return end end
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end
-function Cinematic:skip()
- -- The First Hatch: a tap during the ritual cracks the egg (releases the next beat); it never skips the reveal.
- if self.crackRitual and self.active and not self.crackRitual:done()and self:owned()then
-  if self.crackRitual:tap()then return true end
+-- The First Hatch: a tap during the ritual cracks the egg (releases the next beat); it never skips the reveal.
+-- RevealStage asks this first (options.tapFirst) so a press on the full-screen stage cracks instead of settling.
+function Cinematic:crackTap(position)
+ local ritual=self.crackRitual
+ if not(ritual and self.active and not ritual:done()and self:owned())then return false end
+ local index,before=ritual.index,ritual.taps
+ local taken=ritual:tap()
+ -- a tap that released a beat: the ring and flakes where it landed, the crack across the egg
+ if ritual.taps>before and self.crackFx then
+  local spot=self.promptSpot and self.promptSpot()
+  self.crackFx:place(self:crackLayer(),spot,spot and spot.phone)
+  self.crackFx:beat(index,position or(spot and spot.egg),self:reduced())
  end
+ return taken
+end
+-- Where the crack ritual draws: the full-screen stage when it is up (it covers this frame), else this frame.
+function Cinematic:crackLayer()
+ local layer=self.promptLayer and self.promptLayer()
+ return if layer and layer.Visible then layer else self.frame
+end
+function Cinematic:skip()
+ if self:crackTap()then return true end
  -- The crank beat cannot be skipped (it is under a second); finishStatic would ignore the hold. The capsule shot
  -- (EggMachineClient) jumps to its landing instead, when its own rule allows (Cinematic.onGateSkip).
  if self:gated()then

@@ -23,9 +23,23 @@ return function(client,gui,modules)
 	assert(view.pending and view.interacted and view.replayed and not view.ghost.Visible and not view:requestSkip(),"same-run HUD rebuild preserves pending/input/replay state")
 	view:setSkipPending(false)
 	view:input();assert(not view.ghost.Visible and not view.glyph.Visible)
+	-- The First Hatch: merge sparks fly to the egg on an arc, land once with a tick and a bump that settles.
+	local a,b=Vector2.new(0,100),Vector2.new(200,100)
+	assert(View.sparkPath(a,b,0)==a and View.sparkPath(a,b,1)==b and View.sparkPath(a,b,.5).Y<100,"an arc from the merge to the egg")
+	local before=cues
+	assert(view:spark(Vector2.new(10,10),Color3.new(1,0,0),1.4),"a spark flies")
+	assert(#view.sparks==1 and view.sparks[1].dot.Parent~=nil and view.sparks[1].dot.BackgroundColor3==Color3.new(1,0,0))
+	for _=1,4 do view:step(.25)end
+	assert(#view.sparks==0 and cues==before+1,"lands once with a tick")
+	assert(view.bumpScale.Scale==1 and view.bumpAge==nil,"the bump settles")
+	for _=1,View.Spark.max+2 do view:spark(Vector2.new(10,10))end
+	assert(#view.sparks==View.Spark.max,"never more than "..View.Spark.max.." at once")
+	view:clearSparks();assert(#view.sparks==0)
 	s.generation=11;s.reduced=true;s.charge=6;sync()
-	assert(cues==2 and view.egg.Rotation==0 and view.glyph.Visible,"rejoin baseline silent and reduced motion static")
+	assert(cues==3 and view.egg.Rotation==0 and view.glyph.Visible,"rejoin baseline silent and reduced motion static")
+	assert(not view:spark(Vector2.new(10,10))and #view.sparks==0,"Reduced Motion: no spark")
 	s.active=false;sync();assert(not view.egg.Visible and not view.skip.Visible and not view.ghost.Visible)
+	assert(not view:spark(Vector2.new(10,10)),"no egg showing: no spark")
 	s.active=true;s.owned=1;sync();assert(not view.egg.Visible,"returning owners bypass")
 	view:destroy();view:destroy();assert(not view:requestSkip(),"destroyed view is inert")
 	for _,host in pairs(hosts)do host:Destroy()end

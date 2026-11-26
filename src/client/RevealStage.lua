@@ -1430,6 +1430,19 @@ function Stage:stepIdle(dt)
  if not reduced then self.yaw+=Stage.Spin.idle*dt end
 end
 
+-- The First Hatch: the host may take a press first (options.tapFirst(position): the crack ritual); then nothing
+-- settles. position: the press in absolute pixels (nil for a key or button).
+function Stage:tapFirst(position)return type(self.options.tapFirst)=="function"and self.options.tapFirst(position)==true end
+-- The First Hatch: where the crack ritual draws, in absolute pixels: the card's bottom centre (the "Tap the egg!"
+-- pill), the egg's centre and height (the lead-in seat brings the egg to about 60% of the pet's height, standing
+-- on the feet line). Nil before the first layout.
+function Stage:cueSpot()
+ local L,base=self.L,self.wellBase
+ if self.destroyed or not L or not base or not self.root then return nil end
+ local o=self.root.AbsolutePosition
+ local eggH=L.petH*.66
+ return{pill=o+Vector2.new(base.cx,base.top+base.h),egg=o+Vector2.new(L.petX,L.feet-eggH*.5),eggH=eggH,phone=L.phone==true}
+end
 -- A press before the input opens jumps to the settled frame; it never acts.
 function Stage:settle(quiet,pop)
  if self.destroyed then return end
@@ -1452,7 +1465,7 @@ function Stage:bindInput()
  local function touchOrMouse(input)return input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch end
  table.insert(self.connections,pad.InputBegan:Connect(function(input)
   if not touchOrMouse(input)or not self:owned()then return end
-  if not self:isSettled()then self:settle();return end
+  if not self:isSettled()then if self:tapFirst(Vector2.new(input.Position.X,input.Position.Y))then return end;self:settle();return end
   self.drag={input=input,x=input.Position.X,start=input.Position,moved=0,samples={{t=self.clock,yaw=self.yaw}}}
   self.omega,self.velocity,self.homed=0,0,false;self.lastTouch=self.clock
  end))
@@ -1485,20 +1498,20 @@ function Stage:bindInput()
   if not self:owned()then return end
   local key=input.KeyCode
   if key==Enum.KeyCode.ButtonL1 or key==Enum.KeyCode.ButtonR1 or(not processed and(key==Enum.KeyCode.Q or key==Enum.KeyCode.E))then
-   if not self:isSettled()then self:settle();return end
+   if not self:isSettled()then if self:tapFirst()then return end;self:settle();return end
    local direction=if key==Enum.KeyCode.ButtonL1 or key==Enum.KeyCode.Q then -1 else 1
    self.omega=if self:reduced()then 0 else Stage.flickSpeed(direction);self.homed=false;self.lastTouch=self.clock
    if self:reduced()then self.yaw+=direction*Stage.Spin.flick end
    self:spunOnce();return
   end
   if key==Enum.KeyCode.Space then
-   if not self:isSettled()then self:settle()end
+   if not self:isSettled()and not self:tapFirst()then self:settle()end
    return
   end
   if key==Enum.KeyCode.Return or key==Enum.KeyCode.KeypadEnter or key==Enum.KeyCode.ButtonA then
    -- The press that skipped the egg lead-in never also presses Meet.
    if self.options.consumeSkipInput and self.options.consumeSkipInput()then return end
-   if not self:isSettled()then self:settle();return end
+   if not self:isSettled()then if self:tapFirst()then return end;self:settle();return end
    -- A selected stage button already receives the native gamepad press.
    if key==Enum.KeyCode.ButtonA and self:ownsSelection()then return end
    if processed and key~=Enum.KeyCode.ButtonA then return end
@@ -1554,7 +1567,7 @@ function Stage:activate(index,fromPointer)
  local entry=self.buttons[index];if not entry or self.leaving then return false end
  -- The press that skipped the egg lead-in never also presses a button.
  if self.options.consumeSkipInput and self.options.consumeSkipInput()then return false end
- if not self:isSettled()then self:settle();return false end
+ if not self:isSettled()then if self:tapFirst()then return false end;self:settle();return false end
  if not entry.enabled then return false end
  if not fromPointer then Kit.pulse(entry.node)end
  if self.options.onButton then self.options.onButton(entry.id)end

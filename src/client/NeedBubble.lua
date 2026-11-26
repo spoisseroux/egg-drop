@@ -101,6 +101,18 @@ function Bubble.new(options)
 	local image=Instance.new("ImageLabel")
 	image.Name="IconImage";image.AnchorPoint=Vector2.new(.5,.5);image.Position=UDim2.fromScale(.5,.54);image.Size=UDim2.fromScale(.64,.64)
 	image.BackgroundTransparency=1;image.Visible=false;image.ZIndex=4;image.Parent=art
+	-- The First Hatch (Fable MUST 5): the nest bubble shows tomorrow's egg beside the moon (drawn: a cream ovoid with
+	-- two speckles, lower right), so it reads as a present, not bedtime.
+	local eggBadge=Instance.new("Frame")
+	eggBadge.Name="EggBadge";eggBadge.AnchorPoint=Vector2.new(.5,.5);eggBadge.Position=UDim2.fromScale(.74,.7);eggBadge.Size=UDim2.fromScale(.27,.34)
+	eggBadge.BackgroundColor3=Color3.fromHex("#FFF4DC");eggBadge.BorderSizePixel=0;eggBadge.ZIndex=5;eggBadge.Visible=false;eggBadge.Parent=art
+	local eggRound=Instance.new("UICorner");eggRound.CornerRadius=UDim.new(.5,0);eggRound.Parent=eggBadge
+	local eggEdge=Instance.new("UIStroke");eggEdge.Color=Bubble.Ink;eggEdge.Thickness=2;eggEdge.Parent=eggBadge
+	for i,p in ipairs({{.34,.38,.22},{.62,.62,.18}})do
+		local dot=Instance.new("Frame");dot.Name="Speckle"..i;dot.AnchorPoint=Vector2.new(.5,.5);dot.Position=UDim2.fromScale(p[1],p[2])
+		dot.Size=UDim2.fromScale(p[3],p[3]*.8);dot.BackgroundColor3=Color3.fromHex("#94DFB7");dot.BorderSizePixel=0;dot.ZIndex=6;dot.Parent=eggBadge
+		local r=Instance.new("UICorner");r.CornerRadius=UDim.new(.5,0);r.Parent=dot
+	end
 	-- The key cap: 22 px at the bubble's top right, clear of the tail (Fable R1), the key that does what a tap does.
 	local key=Instance.new("TextLabel")
 	key.Name="Key";key.AnchorPoint=Vector2.new(1,0);key.Position=UDim2.new(1,6,0,-6);key.Size=UDim2.fromOffset(22,22)
@@ -145,7 +157,13 @@ function Bubble.new(options)
 	self.anchor,self.gui,self.button,self.art,self.tail,self.edge,self.tailEdge,self.lip,self.icon,self.image,self.key=
 		anchor,gui,button,art,tail,edge,tailEdge,lip,icon,image,key
 	self.squash,self.lipSquash=squash,lipSquash
+	self.eggBadge,self.eggEdge=eggBadge,eggEdge
 	return self
+end
+-- The egg badge belongs to the First Hatch's nest first (Onboard "nestfirst"); off, the moon as before.
+function Bubble.nestFirst()
+	local ok,on=pcall(function()return require(game:GetService("ReplicatedStorage").Shared.Onboard).on("nestfirst")end)
+	return ok and on==true
 end
 function Bubble:reduced()return self.options.reduced~=nil and self.options.reduced()==true end
 -- Show `icon` (a Glyph key), or hide (visible false).
@@ -156,6 +174,7 @@ function Bubble:set(icon,visible)
 		if id then self.image.Image="rbxassetid://"..id end
 		self.icon.Text=if id then "" else Bubble.Glyph[icon]or "?"
 		self.icon.Visible=id==nil
+		self.eggBadge.Visible=icon=="moon"and Bubble.nestFirst()
 		if not self.shown then self:hop()end
 		self.shown,self.kind,self.target=true,icon,0
 		self.gui:SetAttribute("Need",icon)
@@ -180,6 +199,8 @@ function Bubble:paint()
 	self.lip.BackgroundTransparency=1-Bubble.Lip.opacity*(1-a)
 	self.icon.TextTransparency=a;self.image.ImageTransparency=a
 	self.key.BackgroundTransparency=a;self.key.TextTransparency=a
+	self.eggBadge.BackgroundTransparency=a;self.eggEdge.Transparency=a
+	for _,dot in ipairs(self.eggBadge:GetChildren())do if dot:IsA("Frame")then dot.BackgroundTransparency=a end end
 end
 function Bubble:step(dt)
 	dt=dt or 0

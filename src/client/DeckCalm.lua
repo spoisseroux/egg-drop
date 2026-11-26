@@ -11,6 +11,7 @@
 local Calm={}
 Calm.Hidden=table.freeze({"Score","Chain","DailyQuests","QuestHandle","Difficulty","WinPays","Controls"})
 Calm.Gap=8
+Calm.NextCut=.4
 Calm.TextPC=20;Calm.TextPhone=16
 
 -- Is the Welcome round's calm screen wanted? Exactly the Welcome round on a save with no pet.
@@ -45,7 +46,16 @@ function Calm.plan(layout,cards)
 	for _,name in ipairs({"Difficulty","WinPays"})do
 		local r=cards[name];if r and r.y>=egg.y and overlaps(r,egg)then eggFoot=math.max(eggFoot,bottom(r))end
 	end
-	return{hide=hide,coach={x=coach.x,y=coach.y,w=coach.w,h=coachFoot-coach.y},egg={x=egg.x,y=egg.y,w=egg.w,h=eggFoot-egg.y}}
+	local plan={hide=hide,coach={x=coach.x,y=coach.y,w=coach.w,h=coachFoot-coach.y},egg={x=egg.x,y=egg.y,w=egg.w,h=eggFoot-egg.y}}
+	-- The First Hatch (Fable MUST 4): the NEXT card right above the egg gives it 40% of its height (it shows one ball).
+	local nextCard=cards.Next
+	-- (up to 40%, never leaving its ball under 24 px: card height minus 16 of padding; code review)
+	local cut=if nextCard then math.min(math.floor(nextCard.h*Calm.NextCut),nextCard.h-40)else 0
+	if nextCard and overlaps(nextCard,egg)and bottom(nextCard)<=egg.y and cut>=8 then
+		plan.next={x=nextCard.x,y=nextCard.y,w=nextCard.w,h=nextCard.h-cut}
+		plan.egg.y-=cut;plan.egg.h+=cut
+	end
+	return plan
 end
 function Calm.textSize(phone)return if phone then Calm.TextPhone else Calm.TextPC end
 return table.freeze(Calm)

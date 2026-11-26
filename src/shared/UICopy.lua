@@ -265,7 +265,7 @@ local Table={
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
  onboarding={
   welcome={friend="Hatch a friend",match="Merge",more="One more!",skip="Skip tutorial",saving="Saving…",static="↓",gamepad="D-pad · A",keyboard="← → · SPACE",egg="Mystery egg"},
-  crack={tap="Tap the egg"}, -- the First Hatch (Onboard "crack")
+  crack={tap="Tap the egg!",click="Click the egg!",pad="Press A!"}, -- the First Hatch (Onboard "crack"), by last input
   spend={hatch="Hatch eggs",give="Give to {pet}",store="Store",ready="A toy for {pet}",line="Choose a Toy Egg when you're ready."},
  },
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).

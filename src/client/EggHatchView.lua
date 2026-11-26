@@ -175,6 +175,10 @@ function View.new(parent, audio, reduceEffects, sendCommand)
 	shade.Destroying:Connect(function() self:retire() end)
 	self.cinematic.stageHandoff = function(info) return self:showRevealStage(info) end
 	self.cinematic.stageClear = function() self:hideRevealStage() end
+	-- The First Hatch: "Tap the egg" sits over the full-screen stage while it covers the card.
+	self.cinematic.promptLayer = function() return self.stageLayer end
+	self.cinematic.promptSpot = function() return self.reveal and self.reveal.cueSpot and self.reveal:cueSpot() end
+	self.cinematic.inputKind = function() return View.inputKind() end
 	Art.watchTextPreference(shade,function()return shade.Visible end,function()
 		self:layout()
 		if self.state.lastHatch and self.cinematic.result then
@@ -341,6 +345,8 @@ function View:showRevealStage(info)
 		buttons = { View.secondaryButton(info.result), { id = "meet", text = "Meet " .. name, glyph = "A", primary = true } },
 		onButton = function(id) if id == "play" or id == "exit" then self:revealPlay() else self:chooseResult(id) end end,
 		onSkip = function() if self.cinematic and self.cinematic.skip then self.cinematic:skip() end end,
+		-- The First Hatch: a press while the Bear's egg waits cracks it, never settles the stage.
+		tapFirst = function(position) return self.cinematic ~= nil and self.cinematic.crackTap ~= nil and self.cinematic:crackTap(position) end,
 	})
 	if not ok then
 		warn("Reveal stage could not open: " .. tostring(stage))
