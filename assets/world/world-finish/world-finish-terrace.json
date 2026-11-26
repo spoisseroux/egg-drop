@@ -605,7 +605,8 @@
     "BalustradeSouth",
     "RimOuter",
     "RimNorthEast",
-    "RimSouthWest"
+    "RimSouthWest",
+    "Floor"
    ],
    "remove": [
     "ClumpOne",

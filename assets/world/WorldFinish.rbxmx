@@ -6,7 +6,7 @@
     <Item class="StringValue" referent="WorldFinishVersion">
       <Properties>
         <string name="Name">Version</string>
-        <string name="Value">2f256239d94e4e79</string>
+        <string name="Value">eaf7eb9f139d6242</string>
       </Properties>
     </Item>
     <Item class="MeshPart" referent="WFD0">

@@ -6,7 +6,7 @@
 --    (1) stay above all three: a ready egg never covers a race.
 --  * The play date ticket says "Play date 1/3 · +4 ★" (the Things page's name; 3 is the day's target, not a limit; the
 --    reward is the snapshot's own `reward`, ParkActivities only as the fallback). A top bar under 600 px drops the reward.
---  * The park counter keeps only "Park full" (the always-on "Pets playing 3/9" is gone).
+--  * (beta 17) The park counter kept only "Park full"; beta (26) brings the always-on "Pets playing 3/9" back (Spencer).
 -- Beta only: on() is Things to do on (the beta place or Studio, and its switch). Off, the live game is unchanged: "Games
 -- 0/3" and "Pets playing 3/9". The egg ticket needs no gate of its own: the nest is only ever on where Things is.
 local ReplicatedStorage=game:GetService("ReplicatedStorage")

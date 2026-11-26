@@ -235,7 +235,7 @@ function Mount.dressDen(model,room,env)
 					table.insert(made,cord)
 				end
 			end
-		elseif string.match(row.Name,"Paw$")then
+		elseif string.match(row.Name,"Paw%d*$")then -- round 6: the gate's paws are numbered (code review)
 			local P=dress.paw
 			local scale=vector(P.size)
 			local size=vector(P.unit)*scale
@@ -298,7 +298,8 @@ end
 -- The terrace greybox's dress (TierHost, right after GreyboxRows.build, before parenting): only with the terrace slice
 -- in the room's World. Its visible faces, skirts, balustrades and rims go invisible and keep colliding (the invisible
 -- walls do the safety; the drawn cap, face and lip stones show instead); the clumps, pads and pole go (the outcrops and
--- the tree replace them). The floor slab stays: the cap lies 0.05 over it. Returns the number of rows it changed.
+-- the tree replace them). The floor slab keeps colliding but goes invisible (round 6, Fable R6-AB 1: its square corner
+-- showed as a grass cube by the stairs): the cap lies 0.05 over it. Returns the number of rows it changed.
 function Mount.dressTier(model,room,env)
 	env=env or {}
 	local world=room and room:FindFirstChild("World")

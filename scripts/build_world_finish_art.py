@@ -802,7 +802,7 @@ def slice_terrace():
              "trunks": [{"template": "W7_F_TerraceTrunk__bark", "at": [tx, Ter.Y, tz], "yaw": .4}],
              "kitCrowns": [{"template": "W7_Kit_Crown_Round__foliage", "at": [tx + .5, Ter.Y + 11.6, tz], "yaw": .7,
                             "scale": 1.15}],
-             "dressTier": {"hide": ["FaceGarden", "SkirtOuter", "SkirtNorthEast", "SkirtSouthWest", "BalustradeNorth",
+             "dressTier": {"hide": ["Floor", "FaceGarden", "SkirtOuter", "SkirtNorthEast", "SkirtSouthWest", "BalustradeNorth",
                                     "BalustradeSouth", "RimOuter", "RimNorthEast", "RimSouthWest"],
                            "remove": ["ClumpOne", "ClumpOneTop", "ClumpTwo", "PadCrunch", "PadPop", "PadMoss", "TreePole"],
                            "prefix": "W7T_"}}

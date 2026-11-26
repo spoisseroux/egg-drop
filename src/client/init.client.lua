@@ -903,7 +903,7 @@ local function paintDeck(id, stickerId,backgroundId)
  end
  Art.setBackground(backing,backgroundId or "canopy",theme)
  do -- QA v760: the board's area bands, lines and names take the plate's accent (they were mint on every plate).
-  local default=id==Themes.Default
+  local default=id==Themes.House -- round 6 (code review): the mint bands are Scout's, not the default plate's
   local accent=if default then Color3.fromHex("#76F6B0")else theme.accent or Color3.fromHex("#76F6B0")
   local line=if default then Color3.fromHex("#466853")else accent:Lerp(Color3.fromHex("#20242A"),.55)
   for _,item in ipairs(fieldZones)do

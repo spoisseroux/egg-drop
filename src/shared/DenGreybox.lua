@@ -9,7 +9,7 @@ local Layout=require(script.Parent.DenLayout)
 local Greybox={}
 Greybox.Prefix="W7D_"
 Greybox.Look=table.freeze({wood="#7A5A3A",dark="#5C4330",stone="#8E8A80",cloth="#B8AE98",rope="#B79A66",slate="#3A3F3A",
-	lamp="#D98A3A",screen="#9BE3C9",red="#D9725E",yellow="#E8C468",earth="#815C3F",pawStone="#A39684"})
+	lamp="#D98A3A",screen="#3D6F62",red="#D9725E",yellow="#E8C468",earth="#815C3F",pawStone="#A39684"})
 -- Fable cliff-den review (FABLE-REVIEW-CLIFF-DEN.md), the room only: a timber frame over the old marble mouth (lintel,
 -- jambs, a dirt threshold over the white sill), the mouth lanterns hung from the beam's ends (no posts), the sign on the
 -- beam, a mat mid-room, the apron slab joining the mouth and the cliff path's foot. Lamps #D98A3A with caps and bases.
@@ -21,12 +21,13 @@ Greybox.Mat=table.freeze({at=Vector2.new(-8,-108),d=8,inner=6.4})
 local L=Greybox.Look
 Greybox.MaxParts=120 -- round 6: the Garden Dash gate's banner, bulbs, pennant and start mat (was 80)
 -- Round 6 (Spencer, beta 25: "the race entrance in the cave thing needs to be clearer / the model / it kinda belnds in";
--- Fable DEN-ROUND6-LOOK.md section 4): the room's only saturated object. Painted timber: teal posts with cream bands, a
+-- Fable DEN-ROUND6-LOOK.md section 4; R6-AB: the cream a shade down so it reads cream, not white; the Deck screen
+-- dimmed below the bulbs): the room's only saturated object. Painted timber: teal posts with cream bands, a
 -- banner of cream and charcoal checks, seven warm bulbs and one light, a coral swallow-tail pennant, a "Garden Dash"
 -- board, a checker start mat and a line of paw stones toward the room. Fable's size is 9 x 9 clear; it shrinks to the
 -- bay's width and roof (CliffDenData den.bays) so it always fits under the dome, and grows with the room.
 Greybox.Gate=table.freeze({clear=9,clearH=9,post=1,beam=.6,band=1.4,q=.7,bulbs=7,pennant=2,head=.4,sign=Vector2.new(6,1.6),
-	mat=Vector2.new(9,4),cell=1.5,paws=6,teal="#2F7F8C",cream="#EFE3C8",charcoal="#2E2A28",coral="#E2603F",bulb="#FFD27A",
+	mat=Vector2.new(9,4),cell=1.5,paws=6,teal="#2F7F8C",cream="#DCCAA2",charcoal="#2E2A28",coral="#E2603F",bulb="#FFD27A",
 	light=table.freeze({color="#FFE2A8",range=12,brightness=1.2})})
 
 -- The gate's clear width and height in this bay, and the pennant pole's height (0 when it does not fit): Greybox.Gate,
@@ -94,7 +95,8 @@ function Greybox.gate(add,bay,layout)
 		end
 	end
 	for k=1,G.paws do
-		add(n.."Paw"..k,Vector3.new(.9,.06,.9),f*CFrame.new(((k%2)*2-1)*.5,.03,matZ-G.mat.Y/2-1.2-(k-1)*1.3),L.pawStone,{material="Slate"})
+		-- round, worn stones (Fable R6-AB 6: the square one read as a lone tile)
+		add(n.."Paw"..k,Vector3.new(.08,1.1,1.1),f*CFrame.new(((k%2)*2-1)*.5,.04,matZ-G.mat.Y/2-1.2-(k-1)*1.3)*CFrame.Angles(0,0,math.pi/2),L.pawStone,{material="Slate",shape="cylinder"})
 	end
 end
 

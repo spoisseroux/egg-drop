@@ -95,7 +95,7 @@
   "model": {
    "file": "world-finish-terrace.fbx",
    "sha256": "705254db2c8a830a5d13abc431033ec83f140f11b70697a62e20cf1b1b2ce09e",
-   "manifestSha256": "73dd0fd9c5c269029c7174f5328ba7a6af46aeea2966a77217fab5a347e32899",
+   "manifestSha256": "0c297f183b44c4e2ad5ababb491da3f1682410709d751ea18e5c1862dc799810",
    "operation": "a796afdc-67f0-4a10-93b5-be21b4d847c0",
    "assetId": "121585294183893",
    "moderation": "Approved",
@@ -103,7 +103,8 @@
     "assetId": "78745586093813",
     "operation": "9218a1de-96c5-4730-b082-0d45e5b9a2ff",
     "why": "round 6: cap rings instead of a 160-needle fan, closed lookout slab, rocks beautified; mesh gate PASS"
-   }
+   },
+   "manifestNote": "round 6 Fable R6-AB 1: dressTier hides the greybox Floor slab (manifest-only change after upload; the FBX is the uploaded bytes)"
   },
   "images": {}
  },

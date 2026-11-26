@@ -93,7 +93,7 @@ return function(server)
 			local light=Instance.new("PointLight");light.Shadows=true;light.Parent=lamp
 			part("W7D_Lantern3Cap",model).Transparency=0
 			part("W7D_LanternBracket3",model).Transparency=0
-			local paw=part("W7D_Bay1Paw",model);paw.CFrame=CFrame.new(-18,4.23,-112);paw.Size=Vector3.new(.9,.06,.9);paw.Transparency=0
+			local paw=part("W7D_Bay1Paw3",model);paw.CFrame=CFrame.new(-18,4.23,-112);paw.Size=Vector3.new(.9,.06,.9);paw.Transparency=0 -- round 6: numbered (DenGreybox.gate)
 			local apron=part("W7D_ApronFront",model);apron.CanCollide=true;apron.Transparency=0
 			local sill=part("W7D_FrameThreshold",model);sill.CanCollide=false;sill.Transparency=0
 			local deck=part("W7D_bay2Deck",model);deck.Color=Color3.fromHex("#B8AE98");deck.Transparency=0

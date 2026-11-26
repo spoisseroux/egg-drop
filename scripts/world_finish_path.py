@@ -233,7 +233,8 @@ def step_block(m, run, top, jf, nose=.15, depth=1.2, cols=5):
     A grid over the run (rows = samples, `cols` points across) whose inner columns sit 0.1 low (the worn middle as a
     continuous dip: the old separate strips left 0.1 slits), the front row pushed out by the irregular front plus the
     nosing, a flat bottom `depth` under the top, and the front, back, both cheeks and the bottom closing it. Faces are
-    wound outward by construction; Mesh.build welds the shared points and recalculates the normals."""
+    wound consistently (code review: the riser and back were reversed); Mesh.build welds the shared points and still
+    recalculates the normals outward, and the mesh gate fails loudly if a step ever comes out flipped."""
     rows = len(run)
     wear = [0.0] + [.1] * (cols - 2) + [0.0]
     bx = (-run[0]["dir"][0], -run[0]["dir"][1])
@@ -268,8 +269,8 @@ def step_block(m, run, top, jf, nose=.15, depth=1.2, cols=5):
         face(top_g[r + 1][0], top_g[r][0], bot_g[r][0], bot_g[r + 1][0])                         # cheek, col 0
         face(top_g[r][last], top_g[r + 1][last], bot_g[r + 1][last], bot_g[r][last])             # cheek, far col
     for col in range(cols - 1):
-        face(top_g[0][col + 1], top_g[0][col], bot_g[0][col], bot_g[0][col + 1])                 # front riser
-        face(top_g[e][col], top_g[e][col + 1], bot_g[e][col + 1], bot_g[e][col])                 # back
+        face(top_g[0][col], top_g[0][col + 1], bot_g[0][col + 1], bot_g[0][col])                 # front riser
+        face(top_g[e][col + 1], top_g[e][col], bot_g[e][col], bot_g[e][col + 1])                 # back
 
 
 # ---------------------------------------------------------------------------------------------------------- rocks

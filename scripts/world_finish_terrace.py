@@ -107,7 +107,7 @@ def cap_and_face():
             cap_v.append(T(s_ * f, t_ * f, y))
     n = len(ol)
     # round 6 (mesh gate: 160 needles): no fan from the middle; the first ring's hole is filled after building, with
-    # beauty-filled triangles (fill_centre below)
+    # rings of fewer points (below, after the rings)
     for r in range(len(rings) - 1):
         for i in range(n):
             a, b = 1 + r * n + i, 1 + r * n + (i + 1) % n
@@ -128,6 +128,7 @@ def cap_and_face():
         cap_f.append([a, base + i, base + (i + 1) % n, b][::-1])
     # round 6 (mesh gate: the old fan was 160 needles): the middle steps down through rings of half as many points
     # (n, n/2, n/4, n/8) to a fan of n/8 spokes, so no triangle is a needle
+    assert n % 8 == 0, n                     # code review: the halving rings need n divisible by 8
     prev, stride = list(range(1, 1 + n)), 1
     for f in (1 / 8, 1 / 11, 1 / 16):
         stride *= 2

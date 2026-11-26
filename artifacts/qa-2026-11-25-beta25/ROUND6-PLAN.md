@@ -28,7 +28,7 @@ Order: A and B first, since they need no island re-export and fix the "messy" an
 | Pets on the wider path (D) | `TierPets` lanes follow `PATH_CTRL` samples and the new width; probe "pets climb 4/4" must still pass |
 | Live | Untouched: WorldFinish, WorldBeta and CliffDenData are beta-only (`launch.project.json` never mounts them) |
 | Phones | Budgets per Fable section 3.8; Precise fidelity costs memory, not triangles; Hub p75 compared with the Studio profiler |
-| Race gate when Dash is off | The gate hides as today; the start mat and paw line hide with it |
+| Race gate when Dash is off | Stays, as the old gate did (code review: nothing hid it before either); a follow-up if Spencer wants it gone |
 
 ## Not in this round
 
