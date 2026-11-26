@@ -10,8 +10,9 @@ No AI imagery, no outside assets.
 
 Run: python build_v3.py
  ->  icon-K.png (512, pick), icon-K-1024.png, icon-K-beanie.png, icons-JK.png (old vs new at 512/150/50)
-     T1-hatch-a-handheld-pal.png, ad-D-merge-hatch.png (1920x1080, each with a -480 check)
-     T2..T7 retitled (same art as live, the corner mark now reads the new name)
+     T1-hatch-a-handheld-pal.png (1920x1080; every frame also gets a -480 check)
+     T2..T7 retitled (same art as live, the corner mark now reads the new name; T6 adds name tags)
+     ad-D / ad-E / ad-F (new) and ad-B-control, ads-at-size.png (each ad at four tile widths)
      contact.png
 """
 import os
@@ -287,6 +288,36 @@ def stat_icon(c, sid, cx, cy, size=84):
     bs.paste_center(c, bs.drop(disc, 6, 0.25, 6), cx, cy)
 
 
+def starter_names():
+    """The six starter name pieces, read from NameCatalog (free with the first pet)."""
+    import re
+    src = bs.read("src/shared/NameCatalog.lua")
+    return re.findall(r'text="([^"]+)",lane="starter"', src)
+
+
+NAMES = starter_names()
+assert {"Biscuit", "Sprinkle", "Puddle", "Button"} <= set(NAMES), NAMES
+
+
+def name_tag(c, text, cx, cy, size=40):
+    """The garden name tag, drawn to match the game's (v2-naming-build/11-garden-nameplate-over-pet.jpg):
+    a cream pill, a dark ink ring, the name in ink. `text` must be a real name from NameCatalog."""
+    assert all(w in NAMES for w in text.split()), text
+    f = bs.font(size)
+    tw = f.getbbox(text)[2]
+    h = int(size * 1.6)
+    w = tw + int(size * 1.3)
+    s = 3
+    big = Image.new("RGBA", (w * s, h * s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(big)
+    d.rounded_rectangle((0, 0, w * s - 1, h * s - 1), h * s // 2, fill=(34, 28, 44, 255))
+    b = max(3, size // 9) * s
+    d.rounded_rectangle((b, b, w * s - 1 - b, h * s - 1 - b), (h * s - 2 * b) // 2, fill=(255, 245, 222, 255))
+    im = big.resize((w, h), Image.LANCZOS)
+    ImageDraw.Draw(im).text((w / 2, h / 2 - 1), text, font=f, fill=(34, 28, 44), anchor="mm")
+    bs.paste_center(c, bs.drop(im, 6, 0.28, 6), cx, cy + 3)
+
+
 def t1():
     """The lead frame and the Home Page tile: the name, the hatch on the handheld, the first minute in three
     numbered chips, and what comes after it on the left: three pals in their colours and outfits, a Feast snack,
@@ -362,25 +393,32 @@ def ad_e():
     rays(c, 1000, 640, n=20, alpha=0.10, length=1700)
     bs.bubbles(c, [(1880, 380, 60), (30, 420, 44)])
     floor = 990
-    bs.put(c, bs.cut("C7c", 0.84), 668, bottom=floor - 30)
-    bs.put(c, bs.cut("F7b", 0.84), 1318, bottom=floor - 30)
-    hero(c, ox=1000 - 512 * 0.86, oy=140, k=0.86, deck=None, light=False)
-    bs.put(c, bs.cut("C7a", 1.00), 170, bottom=floor + 40)
-    bs.put(c, bs.cut("B2", 1.00), 420, bottom=floor + 56)
-    bs.put(c, bs.cut("C13", 1.00), 1548, bottom=floor + 56)
-    bs.put(c, bs.cut("C1", 1.04), 1792, bottom=floor + 44)
+    k = 0.84
+    ox, oy = 1000 - 512 * k, 156
+    glow(c, 1000, 560, 1000, 0.36)
+    # two pals peeking over the handheld from behind it
+    bs.put(c, bs.cut("C7c", 0.84), 640, bottom=floor - 60)
+    bs.put(c, bs.cut("F7b", 0.84), 1356, bottom=floor - 60)
+    hero(c, ox=ox, oy=oy, k=k, deck="D-cloud", deck_w=1010, deck_y=548, lift=126, pal=0.84, tilt=-2.0, light=False)
+    left, right = bs.cut("C7a", 0.92), bs.cut("C1", 0.96)
+    bs.put(c, left, 150, bottom=floor + 40)
+    bs.put(c, bs.cut("B2", 0.92), 392, bottom=floor + 56)
+    bs.put(c, bs.cut("C13", 0.92), 1600, bottom=floor + 56)
+    bs.put(c, right, 1810, bottom=floor + 44)
+    name_tag(c, "Puddle", 150, floor + 40 - left.height - 30, 40)
+    name_tag(c, "Button", 1810, floor + 44 - right.height - 30, 40)
     x = 1010
     for jar in ("rose", "tide", "citrus", "iris"):
         j = bs.cut("P-jar-" + jar, 0.30, cool=0)
         bi.paste(c, bs.drop(j, 6, 0.22), (x, 26))
         x += j.width + 2
-    ch = bs.chip(f"hats · outfits · 4 dyes · {bs.N_CHARMS} charms", 34)
+    ch = bs.chip(f"names · hats · outfits · 4 dyes · {bs.N_CHARMS} charms", 34)
     bi.paste(c, ch, (1010, 176))
-    for name, sc, x, y, r in (("P-toy-ball", 0.32, 690, 336, 0), ("P-toy-top", 0.28, 1520, 330, 14)):
+    for name, sc, x, y, r in (("P-toy-ball", 0.32, 700, 330, 0), ("P-toy-top", 0.28, 1560, 340, 14)):
         prop(c, name, sc, x, y, r)
-    for x, y, r, rot in ((800, 262, 22, -80), (1270, 470, 20, -100), (1700, 300, 20, -75)):
+    for x, y, r, rot in ((560, 300, 22, -80), (1440, 300, 20, -100), (1700, 300, 20, -75)):
         bs.gold_star(c, x, y, r, rot)
-    for hx, hy, r, rot in ((560, 400, 22, -12), (1420, 420, 20, 14)):
+    for hx, hy, r, rot in ((500, 420, 22, -12), (1480, 440, 20, 14)):
         bs.heart(c, hx, hy, r, rot=rot)
     cap = bs.caption(["hatch a pal.", "make it yours."], 900, [0.0, 0.0])
     bi.paste(c, cap, (30, 10))
@@ -414,15 +452,21 @@ def ad_f():
     bi.contact(c, x + 10, P(0, 560)[1], 70, 10, alpha=80, blur=10)
     pal_("A-F7b-ride", 0.58, 768, 574, rot=6, ry=6, sh=50)
     pal_("A-J3-ride", 0.55, 985, 502, rot=-8, ry=5, sh=40)
-    for name, s, px, py, rot in (("P-toy-top", 0.26, 452, 662, 14), ("P-toy-bone", 0.28, 1075, 640, -12),
-                                 ("P-toy-ball", 0.34, 700, 700, 0)):
+    for name, s, px, py, rot in (("P-toy-bone", 0.28, 1075, 640, -12),):
         im = bs.cut(name, s, rot, cool=0)
         x, y = P(px, py)
         bi.contact(c, x, y - 6, im.width * 0.40, 10, alpha=90, blur=10)
         bi.paste(c, im, (int(x - im.width / 2), int(y - im.height)))
+    # the real Pocket Deck (Cloud Glass, frozen mid-merge) propped on the lawn
+    dk = scaled(bs.cut("D-bigmerge", 1.0, cool=0), 640 / 1273, -5)
+    dxy = (296, 1072 - dk.height)
+    bi.contact(c, dxy[0] + dk.width / 2, 1062, dk.width * 0.44, 16, alpha=110, blur=14)
+    bi.soft_shadow(c, dk, dxy, dx=10, dy=10, blur=14, alpha=0.30)
+    bi.paste(c, dk, dxy)
     bun = bs.cut("A-B2-sit", 1.10, cool=0)
     bi.contact(c, 168, 1046, bun.width * 0.46, 22, alpha=120, blur=14)
     bi.paste(c, bun, (168 - bun.width // 2, 1066 - bun.height))
+    name_tag(c, "Sprinkle", 176, 1066 - bun.height - 30, 40)
     # the Bear, big, waving, with his snack and the handheld toy
     bear = bs.cut("B1", 1.16, cool=0)  # the wave capture is too small to hold up at this size
     bx = 1480
@@ -431,28 +475,43 @@ def ad_f():
     fe = bs.cut("P-feast", 0.50, cool=0)
     bi.contact(c, 1190, 1050, fe.width * 0.42, 14, alpha=100, blur=10)
     bi.paste(c, fe, (1190 - fe.width // 2, 1062 - fe.height))
-    td = bs.cut("P-toy-deck", 0.56, rot=-8, cool=0)
+    td = bs.cut("P-toy-ball", 0.44, cool=0)
     bi.contact(c, 1790, 1052, td.width * 0.40, 12, alpha=100, blur=10)
     bi.paste(c, td, (1790 - td.width // 2, 1066 - td.height))
     # six stats in an arc over him
     ids = [s[0] for s in bs.STATS]
     for i, sid in enumerate(ids):
         a = np.radians(210 + i * 24)
-        stat_icon(c, sid, bx + 400 * np.cos(a), 590 + 330 * np.sin(a), 78)
+        stat_icon(c, sid, bx + 400 * np.cos(a), 548 + 330 * np.sin(a), 78)
     b = bs.burst("+1", 50, fill=bi.rgb("#B9EE5A"), ink=(30, 120, 40))
-    bs.paste_center(c, b, bx + 330, 170)
+    bs.paste_center(c, b, bx + 350, 110)
     lv = bs.chip("LEVEL UP!", 38)
-    bi.paste(c, lv, (bx - lv.width // 2, 130))
+    bi.paste(c, lv, (bx + 250 - lv.width, 60))
+    name_tag(c, "Biscuit", bx, 1074 - bear.height - 26, 42)
     for hx_, hy_, r, rot in ((1200, 640, 24, -12), (330, 440, 22, -10), (860, 400, 20, 12)):
         bs.heart(c, hx_, hy_, r, rot=rot)
     for sx, sy, r in ((930, 300, 22), (1130, 420, 16), (40, 460, 18), (1880, 620, 18)):
         sparkle(c, sx, sy, r)
     cap = bs.caption(["raise your pal"], 900, [0.0])
     bi.paste(c, cap, (30, 10))
-    ch = bs.chip("feed · train · dress up · play", 46)
+    ch = bs.chip("name · feed · train · dress up · play", 46)
     bi.paste(c, ch, (40, 10 + cap.height - 6))
     m = name_mark(330)
     bi.paste(c, m, (36, 10 + cap.height + ch.height - 20))
+    return c
+
+
+def play_named():
+    """T6: the live "play with friends" frame, with name tags over the Bear and the Bunny and a second chip."""
+    c = bs.t5()
+    bear_h = bs.cut("A-B1-wave", 1.28, cool=0).height
+    bun_h = bs.cut("A-B2-sit", 1.10, cool=0).height
+    name_tag(c, "Biscuit", 1748, 1070 - bear_h - 34, 40)
+    name_tag(c, "Sprinkle", 176, 1066 - bun_h - 30, 40)
+    cap = bs.caption(["play with", "friends"], 700, [0.0, 0.0])
+    first = bs.chip("park · toys · friends", 34)
+    ch = bs.chip("name your pal", 34)
+    bi.paste(c, ch, (40 + first.width - 26, 20 + cap.height - 10))
     return c
 
 
@@ -471,7 +530,7 @@ SET_LIST = [
     ("T3-hatch-eggs", lambda: retitled(bs.t4)),
     ("T4-level-up", lambda: retitled(bs.t7)),
     ("T5-dress-up", lambda: retitled(bs.t2)),
-    ("T6-play", lambda: retitled(bs.t5)),
+    ("T6-play", lambda: retitled(play_named)),
     ("T7-decks", lambda: retitled(bs.t6, pos="br")),
     ("ad-D-merge-hatch", ad_d),
     ("ad-E-pals", ad_e),

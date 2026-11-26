@@ -17,10 +17,11 @@ moment. The store now leads with it: **merge balls on the handheld, the Bear hat
 |---|---|---|---|
 | Name | Pocket Pals: Pet Garden | Hatch a Handheld Pal (Spencer's pick) | The name states the verb and the object. |
 | First line | "Pocket Pals is a cozy merge game with cute pets to raise..." (155 chars) | "Hatch a pal on your handheld, then raise it in the garden. Merge balls on your Pocket Deck and your first pal, the Bear, cracks out of its egg." (143) | Hook first. The verb lands in three words. |
-| Description | 869 chars, a feature list | `DESCRIPTION.txt`, 835 chars: first minute, every day, fair play | Matches the live first session (Welcome bonus, say hi, first toy, tomorrow's stamp and quests). Fair-play lines are unchanged. |
+| Description | 869 chars, a feature list | `DESCRIPTION.txt`, 844 chars: first minute, every day, fair play | Matches the live first session (Welcome bonus, say hi, first toy, tomorrow's stamp and quests). Fair-play lines are unchanged. |
 | Icon | `icon-J.png`: Bear and Bunny, deck in the corner, "pocket pals" wordmark | `icon-K.png`: the Bear popping out of a cracked egg on the Pocket Deck's screen. **No text.** | The old wordmark is the old name. The new name is 20 characters and can't be read at 150 px, so the icon is a picture of the name. |
 | Thumbnail 1 | `T1-pocket-pals`: wordmark, four verbs, six chips | `T1-hatch-a-handheld-pal.png`: the name, the same hatch, three numbered chips (**play your handheld**, hatch your pal, raise it in the garden), and on the left three dressed pals, a Feast snack, a Stat Egg, a Customization Egg, toys and dye jars | A hook, then the first minute in order, then what you get after it. Round 2 (Spencer: "a bit bare"): chip 1 reworded and the left side filled with real items. |
 | Thumbnails 2 to 7 | "pocket pals" corner mark | Same art, corner mark reads "hatch a handheld pal" | Checked pixel for pixel: nothing outside the mark changed, so every printed name, price and count is still the live one. |
+| T6 "play with friends" | No names shown | Name tags over the Bear ("Biscuit") and the Bunny ("Sprinkle"), and a second chip, "name your pal" | Round 3 (Spencer: "mention you can name them"). The rest of the frame is the live art. |
 | Home Page tile | T1 (old) | New T1 | Same promise on Home as on the page. |
 | Ads | ad-A, B, C from v2 (paused, old name on them) | Three new ones, D, E and F, plus B rebuilt as the control. See "The ads". | Each tests one promise: the first minute, the pals, raising. |
 
@@ -55,7 +56,7 @@ moment. The store now leads with it: **merge balls on the handheld, the Bear hat
 
 | Where in Creator Hub | File | Note |
 |---|---|---|
-| Basic Settings > Description | `DESCRIPTION.txt` | 835 chars. Paste, then recount in the field. |
+| Basic Settings > Description | `DESCRIPTION.txt` | 844 chars. Paste, then recount in the field. |
 | Basic Settings > Name | Hatch a Handheld Pal | If not already changed. Translate the name too. |
 | Place > Icon | `icon-K.png` (512 x 512) | Goes through moderation. Keep J until K shows Completed. |
 | Thumbnails (detail page), in this order | `T1-hatch-a-handheld-pal`, `T2-merge`, `T3-hatch-eggs`, `T4-level-up`, `T5-dress-up`, `T6-play`, `T7-decks` | Delete the 7 live ones after the new ones are Completed. Record the new ids beside `../v2-new-look/set/live-asset-ids.json`. |
@@ -73,8 +74,8 @@ The new set is four files here, all 1920 x 1080:
 | File | Headline | What it shows | What it tests |
 |---|---|---|---|
 | `ad-D-merge-hatch.png` | merge balls. hatch a pal. | The real deck frozen mid-merge (Chain ×4), the Bear bursting out of his egg on top of it, balls and toys flying, three dressed pals, a Feast snack and a Stat Egg. Chip: "then raise it in the garden". | The literal first minute. My lead. |
-| `ad-E-pals.png` | hatch a pal. make it yours. | The Bear hatching in the middle of six pals in their dyes and outfits, the four dye jars, "hats · outfits · 4 dyes · 6 charms". | Faces and colour against gameplay. |
-| `ad-F-raise.png` | raise your pal | The Pet Park, the Bear up front with a Feast snack and the handheld toy, pals on the swing and see-saw, the six stat icons, LEVEL UP. Chip: "feed · train · dress up · play". | What you do after the hatch. |
+| `ad-E-pals.png` | hatch a pal. make it yours. | The real Pocket Deck front and centre with the Bear hatching on it, six pals in their dyes and outfits around it (two peeking over the deck), name tags "Puddle" and "Button", the four dye jars, "names · hats · outfits · 4 dyes · 6 charms". | Faces and colour against gameplay. |
+| `ad-F-raise.png` | raise your pal | The Pet Park, the Bear ("Biscuit") up front with a Feast snack, the real Pocket Deck mid-merge on the lawn beside the Bunny ("Sprinkle"), pals on the swing and see-saw, the six stat icons, LEVEL UP. Chip: "name · feed · train · dress up · play". | What you do after the hatch. |
 | `ad-B-control.png` | merge. hatch. repeat. | The old ad B unchanged, corner mark now the new name. | Control: the old look. |
 
 `ads-at-size.png` shows all four at 728, 480, 256 and 150 px wide on dark and light. Headlines read down to 256;
@@ -87,6 +88,12 @@ sponsored tile sizes in the repo, so those four widths are my stand-ins: check o
   larger daily budget. Your call.
 - **Rule:** the winner's image becomes thumbnail 1 and its line the description's first line.
 - **Hold:** the diagnosis says keep spend off until a build shows D1 of 4% or more. Any spend needs your explicit go.
+- **Round 3 (Spencer):** ads E and F now show the real Pocket Deck, and naming appears in T6, ads E and F and
+  the description ("name it").
+- **Name tags:** the names are four of the six free starter names, read from `src/shared/NameCatalog.lua` at
+  build time. The tag itself is drawn to match the game's garden tag (cream pill, dark ring), because the only
+  capture of it (`../../v2-naming-build/11-garden-nameplate-over-pet.jpg`) is 110 px wide. Shot H8 replaces it.
+  Opus: confirm naming is on in the live place before these go up.
 - **Honesty notes:** ad D's deck is a real frame, and it still reads "EGGS LEFT" in small print. Ad E shows two
   species (Bear and Bunny) in different dyes and outfits, not seven kinds of pet. Ad F's backdrop is the Pet Park,
   not the garden, so its headline says "raise", not "garden".
@@ -103,4 +110,5 @@ Same setup as the S-shots in `../v2-new-look/ART-DIRECTION.md`: FOV 35, key ligh
 | H4 | T2-merge, T7-decks | The two real deck frames again | As D-bigmerge and D-cloud | Only after the HUD says balls. |
 | H6 | Ad F, a true garden version | Wide garden plate, day lighting, no pets, no GUIs, camera at pet eye height looking across the lawn to the egg machine | FOV 45. One with and one without the Sleepy Nest. | Lets ad F say "raise it in the garden" over the real garden. |
 | H7 | Ad F, ad E | The Bear waving and the Bunny jumping again, **at 2x the old capture size** (subject 1,000 px tall or more) | As A-B1-wave and A-J2-jump | The current ones are about 500 px tall and go soft when they lead a frame. Ad F uses the standing Bear for now. |
+| H8 | T6, ads E and F | The garden name tag over a pet, close: the Bear named "Biscuit" and the Bunny named "Sprinkle" | Camera 6 studs from the pet, level, tag sharp and at least 400 px wide. Black and grey pair if the tag mattes cleanly, else on plain sky. | Replaces the drawn tags with the real one. |
 | H5 | Video (optional) | 10 s screen recording: three drops, the merge, the egg cracks, the Bear, the garden | Phone-size window, a fresh save, no passes | The first minute as it plays. No voice, game music only. |
