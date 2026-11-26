@@ -100,7 +100,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The garden's drift lanterns and seed fluff (GARDEN-PLAY-BRIEF section 4): spots, heights, night, the client.
           "DriftLanterns",
           # Beta (34) QA: the walk feel (eased legs, turns, corners) and the pause's look round (PetWalkBeats).
-          "PetWalk"]
+          "PetWalk",
+          # Onboarding v2 (qa-2026-11-26-beta35/ONBOARDING-V2.md): the five steps' rules, the safe reveal card.
+          "OnboardV2", "RevealLayout"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -163,7 +165,9 @@ def client_modules():
                     # The garden's drift lanterns.
                     "DriftLanternsClient.lua",
                     # Beta (34): the look round in a walk's pause.
-                    "PetWalkBeats.lua"):
+                    "PetWalkBeats.lua",
+                    # Onboarding v2: the steps' pure rules (BearNeeds reads the guide's) and the reveal card's layout.
+                    "OnboardV2.lua", "RevealLayout.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
