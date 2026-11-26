@@ -96,7 +96,7 @@ local function staticGraph(wet)
   link(a,b);link(b,c);link(c,d);decks[id]={b,c}
  end
  for _,part in ipairs(wet)do
-  if part.Parent and(part:GetAttribute("GardenWetRegion")==true or part:GetAttribute("GardenBlockedRegion")==true)then
+  if part.Parent and not part.KeepOut and(part:GetAttribute("GardenWetRegion")==true or part:GetAttribute("GardenBlockedRegion")==true)then
    for _,sx in ipairs({-1,1})do for _,sz in ipairs({-1,1})do
     local c=part.CFrame:PointToWorldSpace(Vector3.new(sx*(part.Size.X*.5+CORNER_CLEARANCE),0,sz*(part.Size.Z*.5+CORNER_CLEARANCE)))
     local p=floorPoint(c.X,c.Z)
@@ -150,24 +150,28 @@ local function graphTargets(from,to,wet)
  local targets={};for i=#reversed,1,-1 do table.insert(targets,reversed[i])end
  return targets
 end
-function Planner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,wet)
+-- A walk through `targets`: one smooth walk when every leg passes `allowed` (beta (34): round a detour's corners),
+-- else a stop at each, as before.
+local function walkThrough(from,targets,velocity,speed,yaw,allowed)
+ if #targets>1 then
+  local smooth,seconds=A.through(from,targets,velocity,speed,yaw,function(leg)return allowed({leg})end)
+  if smooth then return smooth,seconds end
+ end
+ local path,total={},0;local position,v,heading=from,velocity,yaw
+ for _,target in ipairs(targets)do
+  if (target-position).Magnitude<1e-4 then continue end
+  local part,seconds=A.plan(position,target,v,speed,0,heading)
+  for _,leg in ipairs(part)do table.insert(path,leg)end
+  total+=seconds
+  local last=part[#part];heading=last.yaw+last.turn;position,v=target,Vector3.zero
+ end
+ return path,total
+end
+local function boxPlan(from,to,velocity,speed,minimum,yaw,via,terminal,wet)
  local direct,duration=A.plan(from,to,velocity,speed,minimum,yaw,via,terminal)
  if Walk.pathAllowed(direct,wet)then return direct,duration end
  local function build(targets)
-  -- Beta (34): round a detour's corners in one smooth walk when every leg stays dry (else stop at each, as before).
-  if #targets>1 then
-   local smooth,seconds=A.through(from,targets,velocity,speed,yaw,function(leg)return Walk.pathAllowed({leg},wet)end)
-   if smooth then return smooth,seconds end
-  end
-  local path,total={},0;local position,v,heading=from,velocity,yaw
-  for _,target in ipairs(targets)do
-   if (target-position).Magnitude<1e-4 then continue end
-   local part,seconds=A.plan(position,target,v,speed,0,heading)
-   for _,leg in ipairs(part)do table.insert(path,leg)end
-   total+=seconds
-   local last=part[#part];heading=last.yaw+last.turn;position,v=target,Vector3.zero
-  end
-  return path,total
+  return walkThrough(from,targets,velocity,speed,yaw,function(path)return Walk.pathAllowed(path,wet)end)
  end
  -- Single-bridge detours (identical to the original planner for one bridge)
  -- and the multi-waypoint graph route; keep the shortest valid one. A graph
@@ -201,5 +205,134 @@ function Planner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,wet)
  local hold,holdSeconds=A.plan(from,from,Vector3.zero,speed,.5,yaw)
  for _,leg in ipairs(hold)do leg.safetyStop=true end
  return hold,holdSeconds
+end
+
+-- Solid props (GARDEN-PLAY-BRIEF-2 section 4: GardenKeepOut circles in the wet list, beta only). The parts are planned
+-- as before; a walk that would pass through a prop goes round it instead, the way ParkRoute goes round the park toys:
+-- a small visibility graph over a hexagon of corners round each prop near the walk (props further out, then the parts'
+-- own graph too, only when that finds nothing), every edge clear of every prop and part. A pet already standing in a
+-- keep-out (it was there before the prop was) walks out of it. With no circles in the list none of this runs.
+Planner.CirclePush=.25      -- hexagon corners stand this far beyond a keep-out, so an edge between two never grazes it
+Planner.Corridors=table.freeze({0,4,10}) -- props within this of the straight walk join the graph, widest last
+local HEX_OUT=1/math.cos(math.pi/6)
+local function circleNodes(c)
+ local out={}
+ local r=(c.R+Planner.CirclePush)*HEX_OUT
+ for k=0,5 do
+  local a=k*math.pi/3+math.pi/6
+  table.insert(out,floorPoint(c.X+math.cos(a)*r,c.Z+math.sin(a)*r))
+ end
+ return out
+end
+local function circlesClear(a,b,circles)
+ for _,c in ipairs(circles)do if Walk.toSegment(c.X,c.Z,a.X,a.Z,b.X,b.Z)<c.R then return false end end
+ return true
+end
+-- A* from points[1] to points[2]. edge(i, j) is asked the first time it is needed and remembered.
+local function search(points,edge)
+ local n=#points
+ local memo={}
+ local function open(i,j)
+  local key=if i<j then i*65536+j else j*65536+i
+  local known=memo[key]
+  if known==nil then known=edge(i,j)==true;memo[key]=known end
+  return known
+ end
+ local goal=points[2]
+ local dist,prev,done={[1]=0},{},{}
+ while true do
+  local best,bestScore=nil,math.huge
+  for i,d in pairs(dist)do
+   if not done[i]then
+    local score=d+(points[i]-goal).Magnitude
+    if score<bestScore then best,bestScore=i,score end
+   end
+  end
+  if not best or best==2 then break end
+  done[best]=true
+  for j=1,n do
+   if not done[j]then
+    local d=dist[best]+(points[j]-points[best]).Magnitude
+    if d<(dist[j]or math.huge)and open(best,j)then dist[j],prev[j]=d,best end
+   end
+  end
+ end
+ if not dist[2]then return nil end
+ local reversed,at={},2
+ while at~=1 do table.insert(reversed,points[at]);at=prev[at] end
+ local targets={};for i=#reversed,1,-1 do table.insert(targets,reversed[i])end
+ return targets
+end
+-- The waypoints round the keep-outs from `from` to `to` (the last is `to`), or nil.
+function Planner.roundProps(from,to,boxes,circles)
+ local function corners(list,points)
+  for _,c in ipairs(list)do
+   for _,p in ipairs(circleNodes(c))do
+    if onFloor(p)and circlesClear(p,p,circles)and Walk.segmentAllowed(p,p,boxes)then table.insert(points,p)end
+   end
+  end
+  return points
+ end
+ local plain=function(points)return function(i,j)
+  return circlesClear(points[i],points[j],circles)and Walk.segmentAllowed(points[i],points[j],boxes)
+ end end
+ local tried=0
+ for _,width in ipairs(Planner.Corridors)do
+  local near={}
+  for _,c in ipairs(circles)do
+   if Walk.toSegment(c.X,c.Z,from.X,from.Z,to.X,to.Z)<c.R+width then table.insert(near,c)end
+  end
+  if #near>tried then
+   tried=#near
+   local points=corners(near,{from,to})
+   local targets=search(points,plain(points))
+   if targets then return targets end
+  end
+ end
+ -- Water or a blocked box in the way too: every prop's corners and the parts' own graph (its bridge decks reached only
+ -- along their landings, its edges already checked against the parts).
+ local graph=staticGraph(boxes)
+ local points,node={from,to},{}
+ for index,entry in ipairs(graph.nodes)do
+  if entry.deck or circlesClear(entry.p,entry.p,circles)then table.insert(points,entry.p);node[#points]=index end
+ end
+ corners(circles,points)
+ local check=plain(points)
+ return search(points,function(i,j)
+  local a,b=node[i],node[j]
+  if a and b then return graph.visible[a][b]==true and circlesClear(points[i],points[j],circles)end
+  if(a and graph.nodes[a].deck)or(b and graph.nodes[b].deck)then return false end
+  return check(i,j)
+ end)
+end
+local function propPlan(from,to,velocity,speed,minimum,yaw,via,terminal,boxes,circles)
+ -- A pet inside a keep-out walks out of it.
+ local live={}
+ for _,c in ipairs(circles)do if Walk.toSegment(c.X,c.Z,from.X,from.Z,from.X,from.Z)>=c.R then table.insert(live,c)end end
+ local function clear(path)return Walk.pathAllowed(path,boxes)and Walk.pathAllowed(path,live)end
+ local direct,duration=A.plan(from,to,velocity,speed,minimum,yaw,via,terminal)
+ local dry=Walk.pathAllowed(direct,boxes)
+ if dry and Walk.pathAllowed(direct,live)then return direct,duration end
+ if not dry then
+  -- The parts' own detour (a bridge, round a pond) when it happens to miss every prop.
+  local path,total=boxPlan(from,to,velocity,speed,minimum,yaw,via,terminal,boxes)
+  local last=path[#path]
+  if last and not last.safetyStop and clear(path)then return path,total end
+ end
+ local targets=Planner.roundProps(from,to,boxes,live)
+ if targets then
+  local walk,seconds=walkThrough(from,targets,velocity,speed,yaw,clear)
+  if #walk>0 and clear(walk)then return walk,seconds end
+ end
+ local stop,seconds=A.plan(from,from,velocity,speed,.5,yaw)
+ if clear(stop)then return stop,seconds end
+ local hold,holdSeconds=A.plan(from,from,Vector3.zero,speed,.5,yaw)
+ for _,leg in ipairs(hold)do leg.safetyStop=true end
+ return hold,holdSeconds
+end
+function Planner.plan(from,to,velocity,speed,minimum,yaw,via,terminal,wet)
+ local boxes,circles=Walk.split(wet)
+ if #circles==0 then return boxPlan(from,to,velocity,speed,minimum,yaw,via,terminal,wet)end
+ return propPlan(from,to,velocity,speed,minimum,yaw,via,terminal,boxes,circles)
 end
 return Planner

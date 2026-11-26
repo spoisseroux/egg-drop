@@ -241,6 +241,19 @@ local function denLive()return if denHost~=nil then denHost:live()else nil end
 -- below takes today's line exactly.
 local function petsUp()return tierHost~=nil and tierHost.open==true and TierPets.on()and PetCatchup.on()end
 local sceneWatch -- the one DescendantAdded listener of the current garden scene (beta and Studio only)
+-- Pets go round the garden's solid props (GARDEN-PLAY-BRIEF-2 section 4, GardenKeepOut; the Alive `keepout` switch, beta
+-- and Studio only): the built props' keep-out circles join the scene's wet list. A flip of it, or of a prop's own
+-- switch, drops the cached scene so the next plan reads the list again. Live: the ceiling is closed, nothing is added.
+local GardenKeepOut=require(ReplicatedStorage.Shared.GardenKeepOut)
+local function keepOutRegions()
+	local ok,regions=pcall(function()
+		local Alive=require(ReplicatedStorage.Shared.Alive)
+		if not Alive.on(GardenKeepOut.Feature)then return {}end
+		return GardenKeepOut.regions(function(feature)return Alive.on(feature)end)
+	end)
+	if not ok then warn("[KeepOut] not read: "..tostring(regions));return {}end
+	return regions
+end
 local function petAnchor(state)
 	local room=workspace:FindFirstChild("EggDropLounge")
 	local floor=room and room:FindFirstChild("Floor")
@@ -293,9 +306,20 @@ gardenScene=function()
    if node:IsA("BasePart")and(node:GetAttribute("GardenWetRegion")==true or node:GetAttribute("GardenBlockedRegion")==true or node.Name=="Creek"or node.Name=="MeadowCreek"or node.Name=="OutlookPond"or node.Name=="LanternPool")then table.insert(wanderScene.wet,node)
    elseif node:IsA("ProximityPrompt")and node:GetAttribute("PocketClubStation")and node.Parent:IsA("BasePart")then table.insert(wanderScene.stations,node.Parent)end
   end
+  for _,region in ipairs(keepOutRegions())do table.insert(wanderScene.wet,region)end
  end
  return wanderScene
 end
+-- GardenKeepOut: a flip of `keepout` or of a prop's own switch reads the scene again (the keep-outs come and go).
+do
+ local ok,problem=pcall(function()
+  local Alive=require(ReplicatedStorage.Shared.Alive)
+  if not Alive.ceiling(GardenKeepOut.Feature)then return end
+  for _,feature in ipairs({GardenKeepOut.Feature,"crunch","wobble"})do
+   Alive.changed(feature):Connect(function()wanderScene=nil end)
+  end
+ end)
+ if not ok then warn("[KeepOut] not watched: "..tostring(problem))end
 -- Pets go up: a ground point under `point` on the terrace or the path (the ray starts at most 6 over the tread), within
 -- `slack` of its height; nil when there is none.
 local function tierGround(point,slack)
