@@ -362,7 +362,7 @@
         <Properties>
           <string name="Name">MatteFinish</string>
           <token name="AlphaMode">0</token>
-          <Content name="ColorMap"><url>rbxassetid://86178763675956</url></Content>
+          <Content name="ColorMap"><url>rbxassetid://140202742254966</url></Content>
           <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
           <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
           <Content name="NormalMap"><url>rbxassetid://109842978024620</url></Content>
@@ -393,7 +393,7 @@
         <Properties>
           <string name="Name">MatteFinish</string>
           <token name="AlphaMode">0</token>
-          <Content name="ColorMap"><url>rbxassetid://113064623468087</url></Content>
+          <Content name="ColorMap"><url>rbxassetid://106938470772534</url></Content>
           <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
           <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
           <Content name="NormalMap"><url>rbxassetid://95314721544091</url></Content>
@@ -1309,7 +1309,7 @@
     <Item class="MeshPart" referent="WFT1">
       <Properties>
         <string name="Name">W7_F_TerraceFace__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://112114428230401</url></Content>
+        <Content name="MeshId"><url>rbxassetid://71793849920465</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>92.4794</X><Y>17.7387</Y><Z>83.3925</Z></Vector3>
         <Vector3 name="InitialSize"><X>2048</X><Y>392.83306884765625</Y><Z>1846.7666015625</Z></Vector3>

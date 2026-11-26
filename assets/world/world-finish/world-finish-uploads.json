@@ -18,24 +18,24 @@
   "images": {
    "den_shell_west_color": {
     "file": "textures/den_shell_west_color.png",
-    "sha256": "bb3e4dfe156aa9d9aee78dd1d78035aec78a066e10598303d41d69f5ece0a5cd",
-    "operation": "ab9af050-a5ff-46c6-979b-b582b12d5e6c",
-    "assetId": "86178763675956",
+    "sha256": "36d37024ece7b815385bc1c27d7ea9450a8be5e05e602c4f95d78446cf2a1234",
+    "operation": "e67a6281-65c9-45d7-9593-4323581ff1fd",
+    "assetId": "140202742254966",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "104356978170281",
-     "why": "round 7 reveal grade re-bake"
+     "assetId": "86178763675956",
+     "why": "round 8b re-bake (the collar's lining in the island's cliff rock)"
     }
    },
    "den_shell_east_color": {
     "file": "textures/den_shell_east_color.png",
-    "sha256": "35ac636011d0f09c5dc0555c5cda88975112de46fd98dd2b09bb525fd80d38c5",
-    "operation": "00e4a672-bc1f-4a59-bf1a-24fe4021cec7",
-    "assetId": "113064623468087",
+    "sha256": "dbac6d61a2408b0502d09a119f7755b2c84d2858678047e896a2128390987070",
+    "operation": "85d5874e-d649-4375-a620-e29556eb3c74",
+    "assetId": "106938470772534",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "81328421670391",
-     "why": "round 8 re-bake (the floor reaches the apron's hole)"
+     "assetId": "113064623468087",
+     "why": "round 8b re-bake (the collar's lining in the island's cliff rock)"
     }
    },
    "den_shell_west_normal": {
@@ -96,17 +96,17 @@
  "terrace": {
   "model": {
    "file": "world-finish-terrace.fbx",
-   "sha256": "344cee049d7a7e45a90b8c278361f3d5c28abde36f5415a8377eaf6aeb95e1f1",
+   "sha256": "2ab97b7145376e08ce103ef5fdb503a30d50dd5e5161815cf72d53103f1b8fcb",
    "manifestSha256": "be4929b650108ee5b53afbbd62e72ead9c5d1da922218592a67fd03047d29cfb",
-   "operation": "5fb82209-c81b-4461-bcee-654452ae0609",
-   "assetId": "129996986518154",
+   "operation": "325fbae9-8bbb-4cc5-aa31-dca8f2cb9077",
+   "assetId": "93433774427724",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "123763033162161",
-    "operation": "74f494a5-a149-479c-a081-9345ae849d83",
-    "why": "round 8 first cut, superseded by 8b (the foot's tread over the lawn; terrace re-exported with it)"
+    "assetId": "129996986518154",
+    "operation": "5fb82209-c81b-4461-bcee-654452ae0609",
+    "why": "round 8b: superseded by the face's continuous rock map"
    },
-   "why": "round 8b: the face stops over the den's mouth (no flap into the arch); mesh gate PASS"
+   "why": "round 8b: the face (and the lip's rock strip) one continuous rock map in studs; mesh gate PASS"
   },
   "images": {}
  },
