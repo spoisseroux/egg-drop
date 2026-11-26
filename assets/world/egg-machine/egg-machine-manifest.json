@@ -9,13 +9,13 @@
   {
    "name": "EggMachine_Body",
    "part": "Body",
-   "tris": 1470,
+   "tris": 1332,
    "size": [
     4.2,
     7.12,
     4.3
    ],
-   "hash": "3b3ad6c064f80ef9",
+   "hash": "cb42cfc4d26eba93",
    "center": [
     0.0,
     3.56,
@@ -231,5 +231,6 @@
   "Feature": "#9CFFDD",
   "Stat": "#FF8A5C"
  },
- "triangles": 5638
+ "triangles": 5500,
+ "leafless": true
 }

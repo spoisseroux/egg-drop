@@ -141,9 +141,13 @@ return function(client)
 		-- The model sees the leaf: the old seat (the cup's middle) has the tip inside the egg.
 		assert(clearance(oldSeat)<-.1,"the old seat: "..clearance(oldSeat))
 		local drop=Corner.dropPoints(data)
-		local least=worst(drop.from,drop.exit,drop.seat)
-		assert(least>=.015,"the new path's least clearance to the leaf: "..least)
-		assert(clearance(drop.seat)>=.015,"seated")
+		-- Beta (36): the leafless build (data.leafless) drops the leaf from the Body; the hole path has its own spec,
+		-- so the leaf clearance applies only to a leafed build.
+		if not data.leafless then
+			local least=worst(drop.from,drop.exit,drop.seat)
+			assert(least>=.015,"the new path's least clearance to the leaf: "..least)
+			assert(clearance(drop.seat)>=.015,"seated")
+		end
 		-- Seated in the cup, on its floor: every ring of the egg below the rim inside the woven wall's inner face (the
 		-- lathe in build_body: r .5 at .1, .53 at .4, the lip .6 at .45).
 		local off=Vector2.new(drop.seat.X-data.cup[1],drop.seat.Z-data.cup[3]).Magnitude
@@ -191,7 +195,8 @@ return function(client)
 	test("beta (35): the leafless Body: out of the round hole (only inside its opening), clear of its rim, the belly and the cup",function()
 		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
 		local mesh=Corner.machineData()
-		assert(not Corner.leafless(mesh)and Corner.hole(mesh)==nil,"the uploaded Body still has its leaf: no hole, the beta 34 path")
+		-- Beta (36): the leafless Body is uploaded (asset 136222877350169) and bound: the hole path is live.
+		assert(Corner.leafless(mesh)and Corner.hole(mesh)~=nil,"the uploaded Body is leafless: the hole path")
 		local data=table.clone(mesh);data.leafless=true
 		local hole=Corner.hole(data)
 		local drop=Corner.dropPoints(data)
