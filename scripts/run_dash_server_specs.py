@@ -82,7 +82,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The First Hatch (onboarding-2026-11-26): the crack ritual's clock hold.
           "CrackRitual",
           # Player scale (player-scale-2026-11-26): the knob.
-          "PlayerScale"]
+          "PlayerScale",
+          # The garden's crunchy toys (GARDEN-PLAY-BRIEF 2026-11-26 section 2): spots, budget, switch, timings, the client.
+          "CrunchToys"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -135,7 +137,9 @@ def client_modules():
                     # The hill at night (WORLD-FINISH-LOOK slice F).
                     "HillNightClient.lua",
                     # The First Hatch: the crack ritual.
-                    "CrackRitual.lua"):
+                    "CrackRitual.lua",
+                    # The garden's crunchy toys.
+                    "CrunchToysClient.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

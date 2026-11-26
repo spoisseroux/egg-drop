@@ -5379,6 +5379,14 @@ do
  if ok and hill then gui.Destroying:Connect(function()hill:destroy()end)
  elseif not ok then warn("[HillNight] not mounted: "..tostring(hill))end
 end
+-- Crunchy toys round the garden (GARDEN-PLAY-BRIEF 2026-11-26 section 2, CrunchToysClient): local only, nil (nothing
+-- made) where the Alive `crunch` ceiling is closed (live).
+do
+ local ok,toys=pcall(function()return require(script.CrunchToysClient).mount({roomView=roomView,ambient=clientUI.ambient,
+  mode=function()return board:GetAttribute("Mode")end,reduced=function()return reduceEffects()==true end})end)
+ if ok and toys then gui.Destroying:Connect(function()toys:destroy()end)
+ elseif not ok then warn("[CrunchToys] not mounted: "..tostring(toys))end
+end
 -- Things to do (Shared.Things): nothing at all with the build ceiling off; with the switch off only the switches are
 -- watched. clientUI.things is what the Pocket menu's page (MachineHub), the coach's last line (ThingsTips) and the trail
 -- (ThingsTrail) ask.
