@@ -447,6 +447,8 @@ function Client:clear()
 	if self.hosted then self.hosted:Destroy();self.hosted=nil end
 	self.signWords=nil
 	self:dropTicket()
+	if self.fly then self.fly.egg:Destroy();self.fly=nil end
+	self.flyArmed=nil -- code review: a later ticket (another egg) never flies in; paintTicket arms it again while waiting
 	self.view,self.drawn,self.egg,self.hatching,self.waiting,self.queued,self.tuck=nil,nil,nil,nil,nil,nil,nil
 	self.beat,self.beatUntil=nil,nil
 	self.looking=nil -- code review of 071d8a6: a Peek never outlives its nest
@@ -1077,8 +1079,9 @@ end
 function Client:paintTicket(left)
 	local status=self.d.status
 	if not status or not self.view then return end
-	-- The First Hatch (Fable MUST 5): the first egg's ticket arrives once it is tucked in, never before.
-	if Client.waitForTuck(self.view,self.tuck~=nil,left)then self:dropTicket();return end
+	-- The First Hatch (Fable MUST 5): the first egg's ticket arrives once it is tucked in, never before, and then
+	-- flies in from the nest (startFly).
+	if Client.waitForTuck(self.view,self.tuck~=nil,left)then self:dropTicket();self.flyArmed=true;return end
 	local narrow=self.d.narrow~=nil and self.d.narrow()==true
 	local data=Client.ticketData(self.view,left,narrow)
 	local key=data.text.."|"..data.label.."|"..tostring(data.tone)
@@ -1087,6 +1090,7 @@ function Client:paintTicket(left)
 	if not self.ticket then
 		data.activate=function()if self.d.show then pcall(self.d.show)end;return true end
 		self.ticket=status(data)
+		if self.flyArmed then self.flyArmed=nil;self:startFly()end
 	else
 		self.ticket:update(data)
 	end
@@ -1220,10 +1224,52 @@ function Client:float(stars)
 end
 
 -- ── Per frame ──────────────────────────────────────────────────────────────────────────────────────────────────────
+-- The First Hatch (Fable MUST 5): once the first egg is tucked in, a little egg flies from the nest to its new ticket
+-- (Fly.time, ease out), then the ticket pulses. Reduced Motion: no flight, the pulse only. Drawn in code.
+Client.Fly=table.freeze({time=.5,size=26,lift=.25})
+function Client:startFly()
+	local ticket=self.ticket;if not ticket then return end
+	if self:reduced()or not self.root then if ticket.pulse then ticket:pulse()end;return end
+	local camera=workspace.CurrentCamera;if not camera then if ticket.pulse then ticket:pulse()end;return end
+	local at,onScreen=camera:WorldToViewportPoint(self.root.Position+Vector3.new(0,2,0))
+	if not onScreen then if ticket.pulse then ticket:pulse()end;return end
+	local ok=pcall(function()
+		local player=game:GetService("Players").LocalPlayer
+		local gui=player.PlayerGui:FindFirstChild("EggDropNestFly")
+		if not gui then
+			gui=Instance.new("ScreenGui");gui.Name="EggDropNestFly";gui.ResetOnSpawn=false;gui.IgnoreGuiInset=true;gui.DisplayOrder=101
+			gui.Parent=player.PlayerGui
+		end
+		local egg=Instance.new("Frame");egg.Name="FlyingEgg";egg.AnchorPoint=Vector2.new(.5,.5)
+		egg.Size=UDim2.fromOffset(Client.Fly.size*.8,Client.Fly.size);egg.BackgroundColor3=Color3.fromHex("#FFF4DC");egg.BorderSizePixel=0
+		local round=Instance.new("UICorner");round.CornerRadius=UDim.new(.5,0);round.Parent=egg
+		local edge=Instance.new("UIStroke");edge.Color=Color3.fromHex("#24313B");edge.Thickness=2;edge.Parent=egg
+		egg.Position=UDim2.fromOffset(at.X,at.Y);egg.Parent=gui
+		self.fly={egg=egg,gui=gui,from=Vector2.new(at.X,at.Y),t=0}
+	end)
+	if not ok and ticket.pulse then ticket:pulse()end
+end
+function Client:stepFly(dt)
+	local fly=self.fly;if not fly then return end
+	fly.t+=dt
+	local u=math.clamp(fly.t/Client.Fly.time,0,1)
+	local center=self.ticket and self.ticket.center and self.ticket:center()
+	-- the ticket's GUI pixels in this gui's own space (code review: holds whatever the insets are)
+	local base=fly.gui.AbsolutePosition
+	local to=if center then center-base else Vector2.new(60,-base.Y+24) -- (the rail's first slot while it enters)
+	local e=1-(1-u)^3
+	local p=fly.from:Lerp(to,e)-Vector2.new(0,math.sin(u*math.pi)*(fly.from-to).Magnitude*Client.Fly.lift)
+	fly.egg.Position=UDim2.fromOffset(p.X,p.Y);fly.egg.Size=UDim2.fromOffset(Client.Fly.size*.8*(1-.4*u),Client.Fly.size*(1-.4*u))
+	if u>=1 then
+		fly.egg:Destroy();self.fly=nil
+		if self.ticket and self.ticket.pulse then self.ticket:pulse()end
+	end
+end
 function Client:step(dt)
 	if self.isOpen and not Onboard.on("nest")then self:close()end -- off: gone within the frame, whatever the signal does
 	if not self.isOpen then return end
 	self.clock+=dt
+	self:stepFly(dt)
 	if self.beat and self.clock>=self.beat.untilT then self.beat=nil end
 	self:stepBeats(dt)
 	if not self.view or not self.egg then return end

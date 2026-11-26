@@ -1388,7 +1388,11 @@ function View:update(state)
 				local pet = Pets.byId[result.petId]
 				local family = result.family or (pet and (pet.family or pet.id))
 
-				if result.starter then
+				-- The First Hatch (Fable, can wait): with the nest first, the Bear's first ask is tomorrow's egg, so the reveal
+				-- does not point at the Toy Egg (a nil goal hides the NEXT line); switch off, as before.
+				local nestFirst = false
+				pcall(function() nestFirst = require(ReplicatedStorage.Shared.Onboard).on("nestfirst") end)
+				if result.starter and not nestFirst then
 					local recipe = shopRecipe(self.selected)
 					local balance = self.state.nectar or 0
 					presentation.starterGoal = if balance >= recipe.cost then recipe.name .. " ready · choose it in Menu"

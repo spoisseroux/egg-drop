@@ -533,6 +533,12 @@ local function add(owner,key,data,persistent)
   local t=item and tickets[item]
   return item~=nil and queue:visible(item)and t~=nil and not t.leaving and row~=nil and row.Visible
  end
+ -- The First Hatch: the ticket's card centre in absolute GUI pixels while it shows (for the nest's fly-in), else nil.
+ function handle:center()
+  local t=item and tickets[item]
+  if not(t and t.card and handle:isVisible())then return nil end
+  return t.card.AbsolutePosition+t.card.AbsoluteSize/2
+ end
  return handle
 end
 function Rail.enqueue(owner,key,data)return add(owner,key,data,false)end
