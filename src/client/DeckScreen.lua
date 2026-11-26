@@ -820,6 +820,7 @@ function Screen:setFinish(overlay)
  self.finishToken=(self.finishToken or 0)+1;local token=self.finishToken
  if self.finishTween then self.finishTween:Cancel();self.finishTween=nil end
  self.finish.Visible=overlay~=nil
+ self.finishOverlay=overlay
  if not overlay then return end
  self.finish.Image=overlay.image
  local low,high=1-overlay.min,1-overlay.max
@@ -828,6 +829,20 @@ function Screen:setFinish(overlay)
  local tween=game:GetService("TweenService"):Create(self.finish,TweenInfo.new(overlay.period/2,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{ImageTransparency=high})
  self.finishTween=tween
  task.defer(function()if self.finishToken==token then tween:Play()end end)
+end
+-- Deck juice P2 (AeroJuice, chain 7 and up): one white light sweep across the faceplate: the plate's own gloss overlay
+-- up to its max for `seconds`, then its ping-pong again. Nothing on a plate without one or under Reduced Motion.
+function Screen:sweepFinish(seconds)
+ local overlay=self.finishOverlay
+ if not overlay or not self.finish.Visible or Kit.reduced()then return false end
+ self.finishToken=(self.finishToken or 0)+1;local token=self.finishToken
+ if self.finishTween then self.finishTween:Cancel();self.finishTween=nil end
+ local TweenService=game:GetService("TweenService")
+ self.finish.ImageTransparency=1-overlay.max
+ local back=TweenService:Create(self.finish,TweenInfo.new(seconds or .4,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageTransparency=1-overlay.min})
+ back.Completed:Once(function()if self.finishToken==token then self:setFinish(overlay)end end)
+ self.finishTween=back;back:Play()
+ return true
 end
 
 function Screen:setVisible(visible)
@@ -1133,6 +1148,25 @@ local function commas(n)
  return(out:gsub("^,",""))
 end
 Screen.commas=commas
+-- Deck juice P5 (AeroUI): the score label keeps its real Text; the digits roll up over it. Nothing while off.
+local function plain(n)return tostring(n or 0)end
+local function rollScore(label,value,format)
+ local aero=Kit.aero and Kit.aero()
+ if aero and type(value)=="number"then aero.roll(label,value,format)end
+end
+-- Deck juice P5: a goal's count pops and ticks when it moves forward (same goal, more progress).
+function Screen:popGoal(index,goal,node)
+ local h=self.hud;h.goalSeen=h.goalSeen or {}
+ local key=goal and(goal.text or goal.short)
+ local seen=h.goalSeen[index]
+ h.goalSeen[index]=goal and{key=key,progress=goal.progress or 0,done=goal.done==true}or nil
+ if not(goal and seen and seen.key==key)then return false end
+ if(goal.progress or 0)>seen.progress or(goal.done and not seen.done)then
+  local aero=Kit.aero and Kit.aero()
+  if aero then return aero.pop(node)end
+ end
+ return false
+end
 
 -- Compact v2 round HUD (UI-SPEC-COMPACT-FRAME 3 and section 9): cards inside the
 -- lit screen. Wide (two text columns), narrow (decision 5: board centred,
@@ -1634,7 +1668,7 @@ function Screen:setHud(data)
  local h=self.hud;if not h.score then return end
  if h.phone then return self:setCompactHud(data)end
  local compact=self.geometry and self.geometry.compact
- h.score.Text=tostring(data.score or 0)
+ h.score.Text=tostring(data.score or 0);rollScore(h.score,data.score,plain)
  if h.best then h.best.Text="BEST "..tostring(data.best or 0)end
  h.chain.Text="×"..tostring(data.chain or 0);h.chainBar.set(math.min(5,data.chain or 0));self:paintChain(data.chain)
  local goals=data.goals or {}
@@ -1664,6 +1698,7 @@ function Screen:setHud(data)
     slot.count.TextColor3=if goal.done then Kit.Color.good else Kit.Color.soft
    end
   end
+  self:popGoal(index,goal,slot.count or slot.text)
  end
  if not compact and h.goalWidth then self:placeGoalRows()end
  h.goalsCount.Text=if #goals>0 and not h.status.Visible then string.format("%d/%d",done,#goals)else ""
@@ -1758,10 +1793,10 @@ end
 function Screen:setScore(score,chain)
  local h=self.hud;if not h or not h.score then return false end
  if h.phone then
-  h.score.Text=commas(score)
+  h.score.Text=commas(score);rollScore(h.score,score,commas)
   if h.chain then h.chain.Text=(if h.chainInGoals and h.layout~="narrow"then "CHAIN ×"else "×")..tostring(chain or 0)end
  else
-  h.score.Text=tostring(score or 0)
+  h.score.Text=tostring(score or 0);rollScore(h.score,score,plain)
   h.chain.Text="×"..tostring(chain or 0);h.chainBar.set(math.min(5,chain or 0))
  end
  self:paintChain(chain)
@@ -1796,7 +1831,7 @@ function Screen:pitchCompactGoals(n)
 end
 function Screen:setCompactHud(data)
  local h=self.hud;local g=h.geometry
- h.score.Text=commas(data.score)
+ h.score.Text=commas(data.score);rollScore(h.score,data.score,commas)
  if h.chain then h.chain.Text=(if h.chainInGoals and h.layout~="narrow"then "CHAIN ×"else "×")..tostring(data.chain or 0);self:paintChain(data.chain)end
  local goals=data.goals or {}
  local status=data.message
@@ -1826,6 +1861,7 @@ function Screen:setCompactHud(data)
     slot.count.TextColor3=if goal.done then Kit.Color.good else Kit.Color.soft
    end
   end
+  self:popGoal(index,goal,if goal and slot.icon and goal.done then slot.check.root else slot.count)
  end
  h.goalsCount.Text=""
  local statusOn=data.statusLabel~=nil and data.statusLabel~=""

@@ -791,6 +791,15 @@ Kit.PressScale=table.freeze({
 -- Kit buttons get their Face holder (Edge, Fill and Content under one frame that can scale) only on the place where
 -- springs can ever run (Alive's place ceiling, read once); the live game keeps today's button tree exactly. Specs set it.
 Kit.FaceOn=(function()local ok,on=pcall(Alive.ceiling,"springs");return ok and on==true end)()
+-- Deck juice P5 (AeroUI: the aero press, the key glints, the card caustics, the rolling Stars): required on first use and
+-- only where its switch can ever be on (Alive "deckjuice", read once); the live game never loads it.
+Kit.AeroOn=(function()local ok,on=pcall(Alive.ceiling,"deckjuice");return ok and on==true end)()
+local aeroModule=nil
+function Kit.aero()
+ if not Kit.AeroOn then return nil end
+ if aeroModule==nil then local ok,m=pcall(require,script.Parent.AeroUI);aeroModule=if ok then m else false end
+ return aeroModule or nil
+end
 -- The press scale on `target` (a face or a disc, never a GuiButton): down (a 60 ms tween to spec.scale) or up (a
 -- spring back to 1, clamped at spec.top). Nothing beside a foreign UIScale or under a grid layout; springs off or
 -- Reduced Motion: none at all (rest at 1).
@@ -828,7 +837,13 @@ local function dropButton(s,d)
  end
 end
 local function springButton(button,s,drop)
- if s.face then Kit.pressScale(s.face,drop>0,if s.variant=="ghost"then Kit.PressScale.ghost else Kit.PressScale.ledge)end
+ if s.face then
+  local spec=if s.variant=="ghost"then Kit.PressScale.ghost else Kit.PressScale.ledge
+  local aero=Kit.aero();if aero then spec=aero.pressSpec(spec)end
+  Kit.pressScale(s.face,drop>0,spec)
+  -- Deck juice P5: a glint sweeps the key's face on release.
+  if aero and drop==0 then aero.sweep(s.fill)end
+ end
  if drop>0 then
   Spring.cancel(s.content,"KitDrop")
   s.wide=s.ledge>0 and button.AbsoluteSize.X>=Kit.Press.minWidth and(s.wide or s.fill.Size==FillRest)or nil
@@ -985,6 +1000,8 @@ function Kit.button(parent,name,options)
   Kit.capButtonLabel(button)
  end
  Art.bind(fill,{BackgroundColor3=function()Kit.paintButton(button);return fill.BackgroundColor3 end})
+ -- Deck juice P5: a primary key glints when it appears and every 6 s while shown.
+ if variant=="primary"then local aero=Kit.aero();if aero then aero.watchPrimary(button,fill)end end
  button.MouseEnter:Connect(function()if state.enabled then state.hover=true;Kit.paintButton(button)end end)
  button.MouseLeave:Connect(function()state.hover=false;state.pressed=false;Kit.paintButton(button)end)
  button.MouseButton1Down:Connect(function()if state.enabled then state.pressed=true;Kit.paintButton(button)end end)
@@ -1069,6 +1086,8 @@ function Kit.card(parent,name,label,options)
  -- options.seam (T2): the stitched seam 6 px inside the edge (information panes only;
  -- no seam asset = no instance; hidden on cards under 150 px tall).
  if options.seam then card:SetAttribute("KitSeam",true);Kit.seam(card)end
+ -- Deck juice P5: the light-net under the card's text (nothing until its image is uploaded).
+ local aero=Kit.aero();if aero then aero.caustics(card)end
  local pad=options.pad or 20
  local eyebrow
  if label then eyebrow=Kit.text(card,"Label",label,"dim",{Name="Eyebrow",Position=UDim2.fromOffset(pad,options.labelY or 12),Size=UDim2.new(1,-pad*2,0,16)})end
@@ -1796,6 +1815,8 @@ function Kit.wallet(parent,height,options)
   amount.Size=UDim2.fromOffset(math.ceil(w)+2,faceH)
   root.Size=UDim2.fromOffset(Kit.walletWidth(height,w),height)
   root:SetAttribute("AccessibleLabel",require(script.Parent.StarText).amount(value))
+  -- Deck juice P5: the digits roll up to the new amount (Text already holds it).
+  local aero=Kit.aero();if aero then aero.roll(amount,value,Kit.formatStars)end
   if type(before)=="number"and type(value)=="number"and value>before then earn()end
  end
  -- Stars store access (opt-in: Kit.header only). A transparent key over the capsule and its
