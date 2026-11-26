@@ -82,14 +82,104 @@ end
 Corner.DropSeat=Vector3.new(.04,0,-.19)   -- from the cup's centre on the floor (+ half the dropped egg's height)
 Corner.DropFrom=Vector3.new(0,.431,-.96)  -- from the seat: hidden inside the belly
 Corner.DropExit=Vector3.new(0,.071,-.22)  -- from the seat: out of the belly, over the cup's back lip
+-- Beta (35) "the leaf is still in the way, can we just make it a hole": the egg comes out of a round hole in the belly.
+-- The leaf is baked into the Body mesh (build_egg_machine.py build_body), so the client cannot remove it; the client
+-- draws the hole (EggMachineClient: a dark recessed disc and a rim) where the egg's path crosses the belly. Rebuilt with
+-- LEAF_CHUTE = False the script leaves the leaf out and writes `leafless` into the data (egg_machine_assets.py): then
+-- the hole sits higher, right over the cup's back lip, and the egg pops straight out along the belly's normal and drops
+-- into the cup's middle. Until then (the leaf still in the mesh) the beta 34 path under the leaf stays, its hole where
+-- that path leaves the belly.
+-- The belly (BASE_PROFILE and BASE_DEPTH in build_egg_machine.py): radius by height, the front squashed by Depth.
+Corner.Belly=table.freeze({profile=table.freeze({{1.35,.37},{1.85,.7},{2.1,1.4},{2.0,2.0},{1.8,2.55},{1.6,2.95}}),depth=1.8/2.1,bottom=.35})
+-- The hole: Spot (x, y) on the belly's surface (the leafless mesh), the egg starts In behind it and leaves Out in front,
+-- both along the belly's normal; Radius the clear opening, Rim the rim's tube radius (it rides the opening's edge).
+-- Under the leaf (the mesh as uploaded) no hole fits: the beta 34 path leaves the belly .2 above its bottom, so any
+-- opening the egg clears hangs below the belly; the hole waits for the leafless Body.
+Corner.Hole=table.freeze({spot=Vector2.new(1.29,1.1),inside=.55,out=.45,radius=.5,rim=.06})
+function Corner.bellyRadius(y)
+	local profile=Corner.Belly.profile
+	if y<=profile[1][2]then return profile[1][1]end
+	for i=1,#profile-1 do
+		local r0,y0,r1,y1=profile[i][1],profile[i][2],profile[i+1][1],profile[i+1][2]
+		if y>=y0 and y<=y1 then return r0+(r1-r0)*(y-y0)/(y1-y0)end
+	end
+	return profile[#profile][1]
+end
+-- < 0 inside the belly, 0 on its surface, > 0 outside (and below its bottom). Machine-local.
+function Corner.belly(p)
+	if p.Y<Corner.Belly.bottom or p.Y>Corner.Belly.profile[#Corner.Belly.profile][2]then return 1 end
+	local r=Corner.bellyRadius(p.Y)
+	return(p.X/r)^2+(p.Z/(r*Corner.Belly.depth))^2-1
+end
+function Corner.bellyNormal(p)
+	local e=1e-4
+	local g=Vector3.new(Corner.belly(p+Vector3.new(e,0,0))-Corner.belly(p-Vector3.new(e,0,0)),
+		Corner.belly(p+Vector3.new(0,e,0))-Corner.belly(p-Vector3.new(0,e,0)),Corner.belly(p+Vector3.new(0,0,e))-Corner.belly(p-Vector3.new(0,0,e)))
+	return g.Unit
+end
+-- The mesh has no leaf (rebuilt with LEAF_CHUTE = False).
+function Corner.leafless(data)return type(data)=="table"and data.leafless==true end
 function Corner.dropPoints(data)
 	data=data or Corner.machineData()
 	local cup=data.cup
-	local seat=Vector3.new(cup[1],cup[2],cup[3])+Corner.DropSeat+Vector3.new(0,data.egg.size[2]*Corner.dropScale(data)/2,0)
+	local half=Vector3.new(0,data.egg.size[2]*Corner.dropScale(data)/2,0)
+	if Corner.leafless(data)then
+		local h=Corner.Hole
+		local x,y=h.spot.X,h.spot.Y
+		local centre=Vector3.new(x,y,Corner.Belly.depth*math.sqrt(Corner.bellyRadius(y)^2-x*x))
+		local normal=Corner.bellyNormal(centre)
+		return{from=centre-normal*h.inside,exit=centre+normal*h.out,seat=Vector3.new(cup[1],cup[2],cup[3])+half}
+	end
+	local seat=Vector3.new(cup[1],cup[2],cup[3])+Corner.DropSeat+half
 	return{from=seat+Corner.DropFrom,exit=seat+Corner.DropExit,seat=seat}
 end
--- The buy actions (the press starts the buy crank) and the egg colour each drops. The Customization Egg wears the Hue art.
-Corner.BuyActions=table.freeze({toyBuy="Toy",hueBuy="Hue",lookBuy="Hue",materialBuy="Material",featureBuy="Feature",statEggBuy="Stat"})
+-- The hole the egg comes out of: where its path (from -> exit) crosses the belly, facing out. {centre, normal, radius,
+-- rim}, machine-local; nil while the Body still has its leaf.
+function Corner.hole(data)
+	data=data or Corner.machineData()
+	if not Corner.leafless(data)then return nil end
+	local drop=Corner.dropPoints(data)
+	local lo,hi=0,1
+	for _=1,40 do
+		local mid=(lo+hi)/2
+		if Corner.belly(drop.from:Lerp(drop.exit,mid))<0 then lo=mid else hi=mid end
+	end
+	local centre=drop.from:Lerp(drop.exit,lo)
+	local h=Corner.Hole
+	return{centre=centre,normal=Corner.bellyNormal(centre),radius=h.radius,rim=h.rim}
+end
+-- STANDING RULE (Spencer, beta 35: "we need all eggs to have the crank animation, even in the future for eggs"): every
+-- egg bought or granted comes out of the machine. One row per EggModels.Order type the machine sells: `drop` its name
+-- here (its colour in EggMachineData.eggTypes, its shell EggModels.Types[type]), `actions` the sends that buy it (the
+-- press arms the crank), `reveal` how its reveal waits for the egg in the cup (EggMachineClient:deliver, the one path):
+--   "cinematic"  a HatchCinematic reveal (HatchCinematic.onPlay hands it to deliver): its clock held, off the screen
+--   "deferred"   its own reveal module: deliver opens it only at the hand-off (SnackHost for the Stat Egg)
+-- Medal eggs are Stat Eggs (statEggBuy, free): the same row. A type the machine does not sell is in NotMachine with
+-- the reason; every other `...Buy` send in the game is in OtherBuys. scripts/EggDelivery.spec.lua fails for an
+-- EggModels type in neither table, a send in no table, or an Eggs row whose reveal is not routed.
+Corner.Eggs=table.freeze({
+	toy=table.freeze({drop="Toy",actions=table.freeze({"toyBuy"}),reveal="cinematic"}),
+	material=table.freeze({drop="Material",actions=table.freeze({"materialBuy"}),reveal="cinematic"}),
+	-- The Customization Egg (lookBuy) wears the Hue art.
+	hue=table.freeze({drop="Hue",actions=table.freeze({"hueBuy","lookBuy"}),reveal="cinematic"}),
+	feature=table.freeze({drop="Feature",actions=table.freeze({"featureBuy"}),reveal="cinematic"}),
+	-- `host`: the client module that opens a deferred reveal (through the machine's deliver).
+	stat=table.freeze({drop="Stat",actions=table.freeze({"statEggBuy"}),reveal="deferred",host="SnackHost"}),
+})
+Corner.NotMachine=table.freeze({
+	companion="the pet's own egg: it hatches in the Sleepy Nest (the arrival hatch and the First Hatch's crack ritual), never sold by the machine",
+})
+-- Every other `...Buy` send: not an egg, or (nameEggBuy) an egg sold on the naming screen with no shell in EggModels
+-- (Spencer to rule whether it comes out of the machine too).
+Corner.OtherBuys=table.freeze({ballThemeBuy="a ball theme (shop)",faceplateBuy="a faceplate (shop)",wearableBuy="a wearable (shop)",
+	nameEggBuy="the Names Egg: bought on the naming screen (Companions, Name), its own NameEggReveal; no shell in EggModels"})
+-- The buy actions (the press starts the buy crank) and the egg each drops: from Eggs.
+local buyActions={}
+for _,row in pairs(Corner.Eggs)do for _,action in ipairs(row.actions)do buyActions[action]=row.drop end end
+Corner.BuyActions=table.freeze(buyActions)
+-- The EggModels type id for a drop name ("Stat" -> "stat"), and the row.
+function Corner.eggType(drop)return if type(drop)=="string"then string.lower(drop)else nil end
+function Corner.eggRow(drop)return Corner.Eggs[Corner.eggType(drop)or ""]end
 
 -- ── Switch and data switches ─────────────────────────────────────────────────────────────────────────────────────
 function Corner.ceiling()return Onboard.ceiling()end

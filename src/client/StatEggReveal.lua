@@ -80,6 +80,8 @@ Reveal.scene=snackScene -- (scripts/RevealCaptureFixture.lua draws the Stat Egg 
 -- clock while its egg comes out of the machine, exactly as HatchCinematic.gate holds the other eggs': Reveal.gate(reveal)
 -- -> held, Reveal.onGateSkip(reveal) (a skip meanwhile jumps the machine's shot to its landing). Both nil (live, the
 -- corner off): as before. Each instance's onClosed(reason) hears a real close (never Hatch another's hand-over).
+-- Beta (35): the reveal is not even shown until the machine's egg is in the cup: SnackHost hands show() to the machine
+-- (EggMachineClient:deliver), so the gate only covers the last beat between the panel's rise and the hatch's start.
 Reveal.gate=nil
 Reveal.onGateSkip=nil
 function Reveal:gated()
@@ -102,6 +104,15 @@ function Reveal.new(playerGui,audio)
 	return self
 end
 function Reveal:isOpen()return self.open end
+-- Beta (35): Hatch another plays the next egg's machine shot with this result card still up (its reveal opens only when
+-- the egg is in the cup: EggMachineClient:deliver), so the machine hides it meanwhile; its keys are dead while veiled.
+function Reveal:veil(on)
+	if on then
+		if self.open and not self.veiled then self.veiled=true;self.gui.Enabled=false end
+	elseif self.veiled then
+		self.veiled=nil;self.gui.Enabled=self.open==true
+	end
+end
 function Reveal:reduced()return Kit.reduced()end
 -- receipt: the server's buy receipt {snackId, stat, size, free}. info: {pill, canFeed,
 -- odds(), pity(), again()}. callbacks: feed(receipt), keep(receipt).
@@ -114,6 +125,7 @@ function Reveal:show(receipt,info,callbacks)
 	local tier=Reveal.tier(receipt)
 	self.tier=tier
 	self.feedSource.Interactable=info.canFeed~=false
+	self.veiled=nil
 	self.open=true;self.gui.Enabled=true
 	local reduced=self:reduced()
 	local fresh=true
@@ -160,7 +172,7 @@ function Reveal:show(receipt,info,callbacks)
 	self.clock=RunService.RenderStepped:Connect(function(dt)self:step(dt)end)
 	self:step(0)
 	ContextActionService:BindActionAtPriority("EggDropStatReveal",function(_,state,input)
-		if not self.open or GuiService.MenuIsOpen then return Enum.ContextActionResult.Pass end
+		if not self.open or self.veiled or GuiService.MenuIsOpen then return Enum.ContextActionResult.Pass end
 		if state==Enum.UserInputState.Begin then
 			local k=input.KeyCode
 			local settled=self.stage and self.stage:inputOpen()
@@ -240,7 +252,7 @@ function Reveal:close(reason,handover)
 		local function gone()if scene then scene:destroy()end end
 		if not stage:dismiss(gone,{handover=handover,pending=function()return self.againPressed==true end})then stage:destroy();gone()end
 	end
-	self.gui.Enabled=false
+	self.gui.Enabled=false;self.veiled=nil
 	if reason~="replaced"and self.onClosed then pcall(self.onClosed,reason)end
 	return true
 end
