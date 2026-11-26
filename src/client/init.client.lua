@@ -113,6 +113,15 @@ end
 clientUI.boardView={GetAttribute=function(_,name)return clientUI.attr(name)end}
 -- True while the mirror draws this serial (the server's events for it were already played locally).
 function clientUI.mirrorOwns(serial)return clientUI.mirror~=nil and clientUI.mirror:owns(serial)end
+-- Deck net audit (artifacts/qa-2026-11-26-beta35/DECK-NET-AUDIT.md): the round's end as the client's own
+-- host has it, from the step the board ends (nil while it plays, off a lockstep round, and once the
+-- server's end has landed). The end art, the pet's cheer and the results open from it at once; the
+-- results' Stars stay "Saving..." until the server's RewardStatus and receipt, as they always did.
+function clientUI.localEnd()
+ local mirror=clientUI.mirror
+ return if mirror then mirror:localEnd(board:GetAttribute("ResetId"))else nil
+end
+function clientUI.roundOver()return board:GetAttribute("RoundOver")==true or clientUI.localEnd()~=nil end
 
 local function make(class, name, properties, parent)
 	local instance = Instance.new(class)
@@ -953,7 +962,7 @@ local function canAim()
 	return board:GetAttribute("Mode") == "Board" and not modal.Visible and not roomView.busy
 		and not journal.shade.Visible and not (gameMenu and gameMenu.shade.Visible)
 		and not (nurseryView and nurseryView:isOpen()) and not clientUI.isHueOpen() and clientUI.attr("FieldPhase") ~= "Settling"
-		and not board:GetAttribute("RoundOver") and not clientUI.deckOverlayOpen()
+		and not clientUI.roundOver() and not clientUI.deckOverlayOpen()
 end
 
 local function canPlay()
@@ -2015,7 +2024,7 @@ do
 end
 
 roomView.transition.presentationState = function()
-	return { mode=board:GetAttribute("Mode"), ended=board:GetAttribute("RoundOver")==true,
+	return { mode=board:GetAttribute("Mode"), ended=clientUI.roundOver(),
 		pendingHatch=hatchQueue[1]~=nil or (nurseryState and nurseryState.lastHatch~=nil),
 		overlay=modal.Visible or isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen()
 			or gameMenu.shade.Visible or GuiService.MenuIsOpen, reduced=reduceEffects() }
@@ -2031,12 +2040,25 @@ end
 GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"):Connect(function() roomView.transition:refresh() end)
 -- The resting pet answers the round's end: a double hop for a win, startled then
 -- sleepy for a loss. Local presentation; the Welcome hatch round is left alone.
+-- Deck net audit: once per round, from the client's host's end when it runs the round (no wait), else the server's.
+function clientUI.cheerRoundEnd()
+ if board:GetAttribute("Mode")~="Board"or clientUI.attr("FieldPhase")=="Welcome"then return end
+ local serial=board:GetAttribute("ResetId")
+ if clientUI.cheeredSerial==serial then return end
+ local localEnd=clientUI.localEnd()
+ local success
+ if localEnd then success=localEnd.success
+ elseif board:GetAttribute("RoundOver")==true then success=board:GetAttribute("FieldSuccess")==true
+ else return end
+ clientUI.cheeredSerial=serial
+ roomView:cheerPet(if success then "win"else "loss")
+end
 board:GetAttributeChangedSignal("RoundOver"):Connect(function()
  if board:GetAttribute("RoundOver")~=true or board:GetAttribute("Mode")~="Board"or clientUI.attr("FieldPhase")=="Welcome"then return end
  local serial=board:GetAttribute("ResetId")
  task.defer(function()
   if board:GetAttribute("ResetId")~=serial or board:GetAttribute("RoundOver")~=true then return end
-  roomView:cheerPet(if board:GetAttribute("FieldSuccess")==true then "win"else "loss")
+  clientUI.cheerRoundEnd()
  end)
 end)
 GuiService.MenuOpened:Connect(function() roomView.transition:refresh() end)
@@ -2317,14 +2339,14 @@ function clientUI.syncPause()
  if clientUI.syncItemChip then clientUI.syncItemChip()end
  -- The item carousel is the third deck owner (BUILD-PLAN 2026-11-13 item 6).
  local wanted=clientUI.ItemCarousel.pauseWanted({modal=modalShade.Visible,questLog=clientUI.questLog.visible and board:GetAttribute("Mode")=="Board",
-  pocketMenu=clientUI.pocketMenu.visible,carousel=clientUI.items~=nil and clientUI.items.isOpen,roundOver=board:GetAttribute("RoundOver")==true,
+  pocketMenu=clientUI.pocketMenu.visible,carousel=clientUI.items~=nil and clientUI.items.isOpen,roundOver=clientUI.roundOver(),
   book=clientUI.book~=nil and clientUI.book:isOpen()and board:GetAttribute("Mode")=="Board"})
  request:FireServer("pause",wanted)
  -- B2: a lockstep round pauses as a tick-stamped input on the client's own host.
  if clientUI.clientSim then clientUI.clientSim.pause(wanted)end
 end
 function clientUI.pocketShouldClose()
- return recap.visible or modalShade.Visible or board:GetAttribute("Mode")~="Board"or board:GetAttribute("RoundOver")==true or roomView.busy
+ return recap.visible or modalShade.Visible or board:GetAttribute("Mode")~="Board"or clientUI.roundOver()or roomView.busy
 end
 function clientUI.weeklyLine()
  local q=nurseryState and nurseryState.quests
@@ -2573,7 +2595,9 @@ updateHud = function()
         lcd:setRegions(nurseryActive and owned>0,clientUI.fieldCopy.zone,board:GetAttribute("FieldZoneBound")or 2.6,region and region.min,region and region.max)
     end
 	local showHatch = hatchPet ~= nil and mode == "Board"
-	local over = mode == "Board" and board:GetAttribute("RoundOver") == true and not showHatch
+	local over = mode == "Board" and clientUI.roundOver() and not showHatch
+	if over and clientUI.localEnd() then clientUI.cheerRoundEnd()
+	elseif not clientUI.roundOver() and clientUI.cheeredSerial==board:GetAttribute("ResetId") then clientUI.cheeredSerial=nil end -- a rolled-back end
 	-- S2b: the recap waits for the clock to reach the round's last tick (its last merge).
 	if over and clientUI.boardNet and clientUI.boardNet.active()and not clientUI.mirrorOwns(board:GetAttribute("ResetId"))then
 		local endTick=board:GetAttribute("RoundOverTick")
@@ -2946,8 +2970,8 @@ local function dropEgg()
   if clientUI.welcomeInput then clientUI.welcomeInput()end
   if clientUI.clientSim then
    -- B3: the mirror plays the drop (sound, jolt) the frame it draws the ball; without one, here.
-   local taken=clientUI.clientSim.drop(aim)
-   if taken~=nil then if taken and not clientUI.mirror then audio:play("drop",1,.48)end;return end
+   local taken,why=clientUI.clientSim.drop(aim)
+   if taken~=nil then if taken and why~="Held"and not clientUI.mirror then audio:play("drop",1,.48)end;return end
   end
   -- Deck network S4: with DeckNetDrop the tap answers at once (drop sound, dispenser kick)
   -- under the client's own throttle and not-ready latch; the server's ack settles it.
@@ -3063,6 +3087,10 @@ end
 
 rendererPresentation.roundEnd=require(script.RoundEndPresentation).new(board,{
  readView=function()return clientUI.FieldQuestText.read(board,clientUI.fieldCache)end,
+ -- Deck net audit: the client host's end, its goals and its drawn balls (a lockstep round only).
+ localEnd=function()return clientUI.localEnd()end,
+ readLocalView=function()return clientUI.FieldQuestText.read(clientUI.boardView,clientUI.fieldCache)end,
+ localBalls=function()return if clientUI.mirror then clientUI.mirror:drawnParts()else {}end,
  reduced=reduceEffects,
  owns=function()
   return not rendererPresentation.destroyed and gui.Parent~=nil and gui.Enabled and backdrop.Visible
@@ -3368,7 +3396,7 @@ do
   local companion=Pets.byId[board:GetAttribute("CompanionId")or ""]or Pets.byId.pip
   clientUI.coach:step(os.clock(),{mode=mode,canRoam=roomView.canRoam(),
    presented=backdrop.Visible and rendererPresentation.canPresent~=nil and rendererPresentation.canPresent(board:GetAttribute("ResetId")),
-   phase=clientUI.attr("FieldPhase"),over=board:GetAttribute("RoundOver")==true,merges=clientUI.attr("Merges")or 0,
+   phase=clientUI.attr("FieldPhase"),over=clientUI.roundOver(),merges=clientUI.attr("Merges")or 0,
    pressure=clientUI.attr("OverflowPressure")or 0,belt=clientUI.coachBelt or 0,owned=board:GetAttribute("OwnedPets")or 0,
    input=clientUI.inputKind(),open=open,used=clientUI.attract and clientUI.attract.used or nil,pet=companion and companion.name or "Bear",
    companionId=board:GetAttribute("CompanionId"),
@@ -3684,7 +3712,7 @@ end
 function clientUI.itemsInRound()
  return board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not roomView.busy and not recap.visible
   and not isPickerOpen()and not journal.shade.Visible and not gameMenu.shade.Visible and not nurseryView:isOpen()and not clientUI.isHueOpen()
-  and board:GetAttribute("RoundOver")~=true and not clientUI.heatPicker.visible and not clientUI.questLog.visible
+  and not clientUI.roundOver()and not clientUI.heatPicker.visible and not clientUI.questLog.visible
   and not clientUI.pocketMenu.visible and not GuiService.MenuIsOpen
 end
 function clientUI.openItems()
@@ -3876,7 +3904,7 @@ end
 -- Pocket Menu routes. Restart / Quit confirm in the menu itself (one more tap mid-round).
 function clientUI.pocketState()
  local owned=(board:GetAttribute("OwnedPets")or 0)>0
- local over=board:GetAttribute("RoundOver")==true
+ local over=clientUI.roundOver()
  return{empty=(clientUI.attr("Drops")or 0)==0,locked=not owned,canRestart=owned and not over and(clientUI.attr("FieldPhase")or "Welcome")~="Welcome",
   canQuit=owned,canSettings=true}
 end
@@ -3885,7 +3913,7 @@ function clientUI.openPocketMenu(focusId)
  if clientUI.pocketMenu.visible then return false end
  if clientUI.items.isOpen then clientUI.closeItems(true)end
  if board:GetAttribute("Mode")~="Board"or roomView.busy or modal.Visible or recap.visible or isPickerOpen()or gameMenu.shade.Visible
-  or nurseryView:isOpen()or clientUI.isHueOpen()or board:GetAttribute("RoundOver")==true then return false end
+  or nurseryView:isOpen()or clientUI.isHueOpen()or clientUI.roundOver()then return false end
  if clientUI.questLog.visible then return false end
  clearPlayInputs()
  local state=clientUI.pocketState()
@@ -3932,7 +3960,7 @@ end
 clientUI.pocketCallbacks.armed=function()audio:play("aim",.8,.4)end
 clientUI.pocketCallbacks.locked=function(id,state)
  clientUI.deck.toaster.show(if state.locked then "Win this round to meet your first pet"
-  elseif id=="restart"then(if state.empty then "The round has not started"elseif board:GetAttribute("RoundOver")==true then "The round is over"else "Restarting, one moment")else "Not available right now",
+  elseif id=="restart"then(if state.empty then "The round has not started"elseif clientUI.roundOver()then "The round is over"else "Restarting, one moment")else "Not available right now",
   nil,nil,if state.locked then require(script.NoticeCards).detail("locked")else nil)
  audio:play("aim",.6,.3)
 end
@@ -4000,7 +4028,7 @@ ContextActionService:BindActionAtPriority("EggDropDeckOverlay",function(_,state,
   local k=input.KeyCode
   local menuKey=k==Enum.KeyCode.M or k==Enum.KeyCode.ButtonY or k==Enum.KeyCode.ButtonSelect or k==Enum.KeyCode.ButtonStart
   if recap.visible and menuKey then return Enum.ContextActionResult.Sink end
-  local inRound=board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not isPickerOpen()and not board:GetAttribute("RoundOver")
+  local inRound=board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not isPickerOpen()and not clientUI.roundOver()
   if menuKey and inRound then
    if state==Enum.UserInputState.Begin and clientUI.openPocketMenu()then clientUI.accepted("confirm")end
    return Enum.ContextActionResult.Sink
@@ -4629,7 +4657,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	end
 	-- Transition completion changes local busy state without a replicated attribute.
 	-- Re-evaluate the button so returning from the lounge cannot leave A disabled.
-	action.Interactable = canPlay() and not board:GetAttribute("RoundOver")
+	action.Interactable = canPlay() and not clientUI.roundOver()
 	clientUI.refreshBack()
 	firstHatchGuide:fieldStep(0, 1, false)
 	rail.Interactable = canAim() and not isPickerOpen() and not roomView.busy
@@ -4680,13 +4708,13 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
   clientUI.deck:setShake(if jolt.active and jolt.active.kind=="merge"then jolt.offset else nil,reduced)
   local phase=clientUI.attr("FieldPhase")
   local hintState=clientUI.hintState or {};clientUI.hintState=hintState -- reused, no table per frame
-  hintState.presented,hintState.settling=presented,phase=="Settling"and board:GetAttribute("RoundOver")~=true
+  hintState.presented,hintState.settling=presented,phase=="Settling"and not clientUI.roundOver()
   hintState.live,hintState.firstRun=canPlay()and not isPickerOpen(),clientUI.boardHints.firstRun(phase,clientUI.attr("Drops"))
   hintState.input,hintState.reduced=clientUI.inputKind(),reduced
   clientUI.boardHints:step(now,hintState)
  end
  -- The danger cues only play on a presented board, never under a menu, modal or hidden deck.
- clientUI.danger:update(pressure, graceLeft, now, reduced, presented, board:GetAttribute("RoundOver") == true)
+ clientUI.danger:update(pressure, graceLeft, now, reduced, presented, clientUI.roundOver())
  if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
  rendererPresentation.fx:update(now)
 	if not rendererPresentation.visible then

@@ -29,13 +29,28 @@ local Config = require(Shared.BoardConfig)
 local Sim = require(Shared.BoardSim)
 local RoundSim = require(Shared.BoardRoundSim)
 local L = require(Shared.BoardLockstep)
+local NetSim = require(Shared.DeckNetSim)
 
 local Driver = {}
 local FIXED = Config.FixedStep
 local MAX_FRAME_STEPS = 20
+-- Deck net audit (artifacts/qa-2026-11-26-beta35/DECK-NET-AUDIT.md): a tap never waits on a reply.
+-- Before the server's hello ack, taps play at once while the hello can still reach the server well inside
+-- its no-hello fallback (L.HelloSeconds, on the server's clock from the start it sent): the time since the
+-- server sent the start plus one more trip for the hello (the start's own trip, measured on the synced
+-- clock) stays under this.
+Driver.EarlyTapSeconds = L.HelloSeconds - 2
+-- A tap the host cannot take yet only for a network reason (its ball's tier not revealed yet, the
+-- hello late, the resend backlog full) is held, not dropped, and plays the frame the reason clears;
+-- after this long it is let go (counted).
+Driver.HoldTapSeconds = 1.5
 local studio = RunService:IsStudio()
+local clock = os.clock -- the offline harness (scripts/DeckNetFeel.spec.lua) passes a simulated clock
+local serverNow = function() return workspace:GetServerTimeNow() end
 local started = false
 local remote, folder = nil, nil
+-- Studio /netsim (DeckNetSim): outgoing messages wait one simulated round trip; nil = off.
+local netsim = { link = nil, text = nil }
 local round = nil -- the live lockstep round, or nil
 local view = nil -- B3: the deck's mirror (step, input and stop hooks), or nil
 local impacts = {} -- B3: reused per step, only while a view is attached
@@ -50,13 +65,35 @@ local function newStats()
 	return { sent = 0, messages = 0, accepted = 0, latched = 0, localRefused = {}, acks = 0, hashes = {}, steps = 0,
 		checks = 0, matched = 0, mismatches = 0, skipped = 0, missing = 0, wants = 0, states = 0, restoreBad = {},
 		replays = 0, replaySteps = 0, replayFramesMax = 0, replayStepsFrameMax = 0, rollbacks = 0, abandoned = 0,
-		recoverMs = {}, joins = 0, joinsSent = 0, perturbs = 0 }
+		recoverMs = {}, joins = 0, joinsSent = 0, perturbs = 0, early = 0, held = 0, heldPlayed = 0, heldExpired = 0,
+		heldMsMax = 0 }
 end
 local lastStats = newStats()
 
 local function fire(packet)
 	if test.hold then table.insert(test.held, packet); return end
+	if netsim.link then netsim.link:push(clock(), packet); return end
 	remote:FireServer(packet)
+end
+
+-- Studio /netsim: follows the board folder's DeckNetSim attribute; sends what the link has let go.
+local function pumpNetSim()
+	local text = if studio and folder then folder:GetAttribute(NetSim.Attribute) else nil
+	if text ~= netsim.text then
+		netsim.text = text
+		local config = NetSim.parse(text)
+		if config then
+			if netsim.link then netsim.link.config = config else netsim.link = NetSim.link(config, 1, 26) end
+		elseif netsim.link then
+			local held = netsim.link:flush()
+			netsim.link = nil
+			for _, packet in ipairs(held) do remote:FireServer(packet) end
+		end
+	end
+	local due = netsim.link and netsim.link:due(clock())
+	if due then
+		for _, packet in ipairs(due) do remote:FireServer(packet) end
+	end
 end
 
 -- want (B4): a checkpoint tick whose hash did not match.
@@ -78,7 +115,7 @@ local function sendNow(want)
 	state.reportedTick = tick
 	fire({ resetId = state.resetId, run = state.run, tick = tick, inputs = inputs, want = want,
 		over = if host.over then true else nil })
-	state.sentAt = os.clock()
+	state.sentAt = clock()
 	state.stats.messages += 1
 end
 
@@ -126,21 +163,67 @@ end
 
 -- ── Public: the deck's taps (init.client.lua). nil = no lockstep round (use today's path). ──
 
+-- Deck net audit: true while the server's hello ack is late enough that a tap should not play yet
+-- (the start is older than EarlyTapSeconds). Before that, taps play and are sent with the hello.
+local function helloLate(state)
+	return not state.hello and clock() - state.startedAt + 2 * state.startAge >= Driver.EarlyTapSeconds
+end
+
+-- Why a drop must wait for the network (nil: it can go to the host now).
+local function dropWait(state)
+	-- Review: a joined round applies the server's queued inputs first (submit would refuse "Joining").
+	if state.joining or #state.future > 0 then return "Joining" end
+	if helloLate(state) then return "Hello" end
+	-- The ball's queue slot must be revealed (the server reveals a few ahead of its drops).
+	if state.host.board.drops >= state.revealed then return "Unrevealed" end
+	if #state.unacked >= L.MaxUnacked then return "Backlog" end
+	return nil
+end
+
+local function playDrop(state, index)
+	if not state.hello then state.stats.early += 1 end
+	return submit(state, { kind = "drop", aim = index })
+end
+
+-- A held tap plays the frame its reason clears (before the step, as a tap would); let go after
+-- HoldTapSeconds or when the round can no longer take it.
+local function playHeld(state)
+	local held = state.heldTap
+	if not held then return end
+	if state.host.over or state.joining then state.heldTap = nil; return end
+	local waited = clock() - held.at
+	if dropWait(state) == nil then
+		state.heldTap = nil
+		state.stats.heldPlayed += 1
+		if waited * 1000 > state.stats.heldMsMax then state.stats.heldMsMax = waited * 1000 end
+		playDrop(state, held.aim)
+	elseif waited > Driver.HoldTapSeconds then
+		state.heldTap = nil
+		state.stats.heldExpired += 1
+		refuseLocal(state, "Held" .. held.why)
+	end
+end
+
 function Driver.drop(aim)
 	local state = round
 	if not active() then return closedTap(state) end
-	if not state.hello then return refuseLocal(state, "Hello") end
 	local index = Sim.aimIndex(aim)
 	if not index then return refuseLocal(state, "Aim") end
-	-- The ball's queue slot must be revealed (the server reveals a few ahead of its drops).
-	if state.host.board.drops >= state.revealed then return refuseLocal(state, "Unrevealed") end
-	return submit(state, { kind = "drop", aim = index })
+	local why = dropWait(state)
+	if why then
+		-- One tap is held; another made while it waits is the same press repeated.
+		if state.heldTap then return refuseLocal(state, "Held") end
+		state.heldTap = { aim = index, at = clock(), why = why }
+		state.stats.held += 1
+		return true, "Held"
+	end
+	return playDrop(state, index)
 end
 
 function Driver.item(id)
 	local state = round
 	if not active() then return closedTap(state) end
-	if not state.hello then return refuseLocal(state, "Hello") end
+	if helloLate(state) then return refuseLocal(state, "Hello") end
 	if id == "swap" then
 		if state.host.board.drops + 2 > state.revealed then return refuseLocal(state, "Unrevealed") end
 		return submit(state, { kind = "swap" })
@@ -227,8 +310,8 @@ local function verify(state, packet)
 	end
 	stats.mismatches += 1
 	stats.wants += 1
-	state.want = { tick = packet.tick, at = os.clock() }
-	state.mismatchAt = state.mismatchAt or os.clock()
+	state.want = { tick = packet.tick, at = clock() }
+	state.mismatchAt = state.mismatchAt or clock()
 	state.mismatchTick = math.min(state.mismatchTick or packet.tick, packet.tick)
 	sendNow(packet.tick)
 end
@@ -337,9 +420,9 @@ local function advanceReplay(state)
 	state.final = if rhost.over then L.hash(rhost) else nil
 	state.result = if rhost.over then RoundSim.result(rhost) else nil
 	stats.rollbacks += 1
-	stats.lastRollbackAt = os.clock()
+	stats.lastRollbackAt = clock()
 	if state.mismatchAt then
-		push(stats.recoverMs, (os.clock() - state.mismatchAt) * 1000)
+		push(stats.recoverMs, (clock() - state.mismatchAt) * 1000)
 		state.mismatchAt, state.mismatchTick = nil, nil
 	end
 	stats.lastReplay = { from = job.from, to = rhost.board.tick, steps = job.steps, frames = job.frames }
@@ -370,11 +453,17 @@ local function onMessage(kind, packet)
 		roundStats.round = key
 		round = {
 			host = host, resetId = packet.resetId, run = packet.run, revealed = 0,
-			unacked = {}, acc = 0, sentAt = -math.huge, startedAt = os.clock(), stats = roundStats,
+			unacked = {}, acc = 0, sentAt = -math.huge, startedAt = clock(), stats = roundStats,
 			-- B4
 			log = {}, nextN = 0, ring = {}, ringTicks = {}, future = {}, want = nil, replay = nil,
 			reportedTick = 0, joining = packet.join == true,
+			-- Deck net audit: the start's trip on the synced clock (0 when unknown; a nonsense value counts as late).
+			startAge = 0,
 		}
+		if type(packet.sentAt) == "number" and packet.sentAt == packet.sentAt then
+			local age = serverNow() - packet.sentAt
+			round.startAge = if age >= 0 and age < 30 then age elseif age < 0 then 0 else math.huge
+		end
 		lastStats = round.stats
 		round.revealed = L.applyReveal(host, 0, packet.reveal)
 		if round.joining then return end -- held until the server's state (B4 join)
@@ -415,7 +504,7 @@ local function checkJoin()
 		join.waitSince = nil
 		return
 	end
-	local now = os.clock()
+	local now = clock()
 	join.waitSince = join.waitSince or now
 	if now - join.waitSince >= L.JoinWaitSeconds and now - join.sentAt >= L.JoinRetrySeconds then
 		join.sentAt = now
@@ -431,11 +520,12 @@ local function perturb(state, dx)
 	if not egg then return end
 	egg.x += dx
 	state.stats.perturbs += 1
-	state.stats.perturbAt, state.stats.perturbTick = os.clock(), state.host.board.tick
+	state.stats.perturbAt, state.stats.perturbTick = clock(), state.host.board.tick
 end
 
 local function onHeartbeat(dt)
 	if test.freeze then return end
+	pumpNetSim()
 	checkJoin()
 	local state = round
 	if not state or state.joining then return end
@@ -443,6 +533,7 @@ local function onHeartbeat(dt)
 	if test.perturb then perturb(state, test.perturb); test.perturb = nil end
 	if test.perturbEvery and not host.over then perturb(state, test.perturbEvery) end
 	syncPause(state)
+	playHeld(state)
 	if not host.over then
 		state.acc = math.min(state.acc + dt * Config.Pace * test.rate, FIXED * MAX_FRAME_STEPS * math.max(1, test.rate))
 		while state.acc >= FIXED do
@@ -470,9 +561,9 @@ local function onHeartbeat(dt)
 		end
 	end
 	if state.replay then advanceReplay(state) end
-	if state.want and os.clock() - state.want.at > L.WantRetrySeconds then state.want = nil end
+	if state.want and clock() - state.want.at > L.WantRetrySeconds then state.want = nil end
 	local interval = if state.host.over then L.OverHeartbeatSeconds else L.HeartbeatSeconds
-	if os.clock() - state.sentAt >= interval then sendNow() end
+	if clock() - state.sentAt >= interval then sendNow() end
 end
 
 -- ── Studio test bindable (PlayerGui.EggDropClientSim) ─────────────────────
@@ -489,12 +580,15 @@ local function stats()
 		out.belt, out.armed, out.final, out.result = table.clone(host.belt), host.board.armed, state.final, state.result
 		out.hello = state.hello
 		out.hash = L.hash(host)
-		out.wallSeconds = os.clock() - state.startedAt
+		out.wallSeconds = clock() - state.startedAt
 		out.joining, out.replaying, out.wanting, out.verified = state.joining, state.replay ~= nil, state.want ~= nil, state.verified
 		out.logSize, out.ringSize, out.nextN = #state.log, #state.ringTicks, state.nextN
+		out.heldTap = state.heldTap ~= nil
 	end
+	out.netsim = netsim.text
 	return out
 end
+Driver.stats = stats
 
 local function mountTest(player)
 	local gui = player:WaitForChild("PlayerGui")
@@ -523,7 +617,7 @@ local function mountTest(player)
 			if not test.hold then
 				local held = test.held
 				test.held = {}
-				for _, packet in ipairs(held) do remote:FireServer(packet) end
+				for _, packet in ipairs(held) do fire(packet) end
 				return #held
 			end
 			return 0
@@ -539,10 +633,18 @@ local function mountTest(player)
 	hook.Parent = gui
 end
 
-function Driver.start()
+-- deps (the offline harness only): {remote, folder, clock, heartbeat}: no Players, no WaitForChild, no
+-- Studio bindable; the harness fires `heartbeat` itself with its own clock.
+function Driver.start(deps)
 	if started then return Driver end
 	started = true
 	if not (Flags.DeckClientSim == true or Flags.DeckClientSimTesters == true or studio) then return Driver end
+	if deps then
+		remote, folder, clock, serverNow = deps.remote, deps.folder, deps.clock or clock, deps.serverNow or serverNow
+		remote.OnClientEvent:Connect(onMessage)
+		deps.heartbeat:Connect(onHeartbeat)
+		return Driver
+	end
 	task.spawn(function()
 		local player = Players.LocalPlayer
 		remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild(L.RemoteName, 60)

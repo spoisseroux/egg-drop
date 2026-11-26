@@ -25,6 +25,7 @@ local L = require(Shared.BoardLockstep)
 
 local Mirror = {}
 Mirror.__index = Mirror
+local clock = os.clock -- per mirror: o.clock (the offline harness's simulated clock)
 Mirror.LateLimit = 0.25 -- an event this old (hidden or throttled deck) keeps its state, skips the juice
 Mirror.MaxQueue = 64
 Mirror.ImpactCooldown = 0.12 -- per ball, as the server's BoardImpact batches
@@ -73,7 +74,7 @@ function Mirror.new(o)
 		parts = {}, mine = setmetatable({}, { __mode = "k" }), live = {}, prevX = {}, prevY = {},
 		queue = {}, mergeLog = {}, note = {}, grantsPlayed = 0, grantsSeen = 0,
 		playedSerial = nil, playedMerges = {}, playedGrants = 0, objectiveCache = {}, beltCache = {}, frame = 0,
-		lastDrops = 0, tap = nil, stats = newStats(), connections = {},
+		lastDrops = 0, tap = nil, stats = newStats(), connections = {}, clock = o.clock or clock,
 	}, Mirror)
 	self.driver.attach({
 		beforeStep = function(state) self:beforeStep(state) end,
@@ -85,10 +86,13 @@ function Mirror.new(o)
 		stats = function() return self:publicStats() end,
 		resetStats = function() self:resetStats() end,
 	})
-	RunService:BindToRenderStep(Mirror.RenderAction, Enum.RenderPriority.First.Value + 1, function()
+	local function render()
 		local ok, problem = pcall(self.sync, self)
 		if not ok then warn("[ClientBoardMirror] " .. tostring(problem)) end
-	end)
+	end
+	-- o.bindRender (the offline harness): it calls render once per simulated frame.
+	if o.bindRender then o.bindRender(render)
+	else RunService:BindToRenderStep(Mirror.RenderAction, Enum.RenderPriority.First.Value + 1, render) end
 	for _, name in ipairs({ "RoundOver", "FieldPhase" }) do
 		table.insert(self.connections, self.board:GetAttributeChangedSignal(name):Connect(function()
 			self:serverOver()
@@ -98,7 +102,7 @@ function Mirror.new(o)
 end
 
 function Mirror:destroy()
-	pcall(function() RunService:UnbindFromRenderStep(Mirror.RenderAction) end)
+	if not self.o.bindRender then pcall(function() RunService:UnbindFromRenderStep(Mirror.RenderAction) end) end
 	for _, connection in ipairs(self.connections) do connection:Disconnect() end
 	self.driver.attach(nil)
 	if self.state then self:release("Destroy") end
@@ -192,8 +196,8 @@ function Mirror:value(name)
 		end
 		return cache.value, true
 	elseif name == "FieldReady" then
-		-- Before the server's hello ack the deck cannot drop yet; the server's value stands.
-		if not state.hello then return nil, false end
+		-- Deck net audit: the host's own value from the first frame. A tap before the server's hello ack
+		-- plays at once (ClientRoundDriver holds it only when the ack is very late), so it never waits.
 		return fieldReady(state), true
 	elseif name == "OverflowPressure" then
 		return if host.over then 0 else host.danger, true
@@ -224,7 +228,7 @@ local function pairKey(firstId, secondId) return tostring(firstId) .. ":" .. tos
 
 function Mirror:afterStep(state, events, impacts)
 	if state ~= self.state then return end
-	local now = os.clock()
+	local now = self.clock()
 	for _, merge in ipairs(events.merges) do
 		enqueue(self, { kind = "merge", m = merge, at = now, frame = self.frame })
 		for _, grant in ipairs(merge.grants or {}) do
@@ -245,7 +249,7 @@ end
 function Mirror:input(state, input, ok, result)
 	if state ~= self.state and self.state ~= nil then return end
 	if input.kind == "drop" and ok and type(result) == "table" then
-		self.tap = { id = result.id, at = os.clock(), frame = self.frame }
+		self.tap = { id = result.id, at = self.clock(), frame = self.frame }
 	end
 end
 
@@ -370,6 +374,28 @@ function Mirror:serverOver()
 	end)
 end
 
+-- Deck net audit: the round's end as this client's host has it, for the round the deck draws (`serial`),
+-- from the step the board ends: {success, reason, stage, sequence?, result}. nil while it plays, and
+-- after the server's own end has arrived (its values stand then). Rewards are never read from here:
+-- the results show them "Saving..." until the server's RewardStatus and receipt.
+function Mirror:localEnd(serial)
+	local state = self.state
+	if not state or self.settled or not self:owns(serial) or self.board:GetAttribute("ResetId") ~= state.resetId then return nil end
+	local host = state.host
+	if not host.over or not host.outcome then return nil end
+	local outcome = host.outcome
+	return { success = outcome.success == true, reason = outcome.reason, stage = host.stage, overTick = host.overTick,
+		resetId = state.resetId }
+end
+
+-- The drawn balls (the mirror's Parts) for the round-end art, in id order.
+function Mirror:drawnParts()
+	local out = {}
+	for _, record in pairs(self.parts) do table.insert(out, record.part) end
+	table.sort(out, function(a, b) return (a:GetAttribute("EggId") or 0) < (b:GetAttribute("EggId") or 0) end)
+	return out
+end
+
 -- ── Adopt / release ───────────────────────────────────────────────────────
 
 function Mirror:adopt(state)
@@ -433,7 +459,7 @@ local function makePart(self, egg, state)
 end
 
 function Mirror:sync()
-	local started = os.clock()
+	local started = self.clock()
 	local current = self.driver.round()
 	if current ~= self.state then
 		if self.state then self:release("Replaced") end
@@ -492,7 +518,7 @@ function Mirror:sync()
 			o.add(part)
 			if o.hasView(part) then
 				if tap and tap.id == id then
-					push(self.stats.tapToBallMs, (os.clock() - tap.at) * 1000)
+					push(self.stats.tapToBallMs, (self.clock() - tap.at) * 1000)
 					push(self.stats.tapToBallFrames, self.frame - tap.frame)
 					self.tap, tap = nil, nil
 				end
@@ -518,7 +544,7 @@ function Mirror:sync()
 		self.lastDrops = board.drops
 	end
 	-- Step events, oldest first.
-	local now = os.clock()
+	local now = self.clock()
 	local queue = self.queue
 	if #queue > 0 then
 		self.queue = {}
@@ -556,7 +582,7 @@ function Mirror:sync()
 	-- Readers keyed on attribute signals (HUD, items, the quest layout) hear the host's changes.
 	if not self.settled then
 		local note = self.note
-		local ready = state.hello and fieldReady(state)
+		local ready = fieldReady(state)
 		local hud = note.drops ~= board.drops or note.phase ~= host.phase or note.ready ~= ready
 			or note.armed ~= board.armed or note.revealed ~= state.revealed or note.over ~= host.over
 			or note.paused ~= host.paused or note.hello ~= state.hello
@@ -573,7 +599,7 @@ function Mirror:sync()
 	end
 	self.frame += 1
 	local stats = self.stats
-	local cost = os.clock() - started
+	local cost = self.clock() - started
 	stats.frames += 1
 	stats.syncSum += cost
 	if cost > stats.syncMax then stats.syncMax = cost end

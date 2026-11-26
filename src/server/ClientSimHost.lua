@@ -27,6 +27,9 @@ local L = require(Shared.BoardLockstep)
 local Net = require(script.Parent.BoardNet)
 
 local Host = {}
+-- Deck net audit: the start carries the server's clock, so the client can tell how long its hello can take
+-- (its early taps stop before the no-hello fallback could take them). The offline harness swaps it.
+Host.serverNow = function() return workspace:GetServerTimeNow() end
 local FIXED = Config.FixedStep
 local TPS = L.TicksPerSecond
 local remote = nil
@@ -154,7 +157,7 @@ function Host.begin(board, preset, serial, descriptor, itemsOn, fallback)
 	public.descriptor.seed = nil -- the queue is made from it: never sent
 	state.public = public
 	send(board, "start", { version = L.Version, resetId = state.resetId, run = state.run, spec = public,
-		queueLength = #spec.queue, reveal = revealTo(board, state, L.Reveal) or L.revealSlice(host, 0, 0) })
+		queueLength = #spec.queue, reveal = revealTo(board, state, L.Reveal) or L.revealSlice(host, 0, 0), sentAt = Host.serverNow() })
 	publishOpen(board, state)
 	return view
 end
