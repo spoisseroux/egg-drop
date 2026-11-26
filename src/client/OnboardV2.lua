@@ -28,7 +28,9 @@ end
 V2.Deck=table.freeze({
 	textMin=18,textMax=34,ink=hex("#FFFFFF"),
 	pip=22,pipGap=10,pipEmpty=hex("#2B4C7E"),pipRing=hex("#9FC4FF"),pipFilled=hex("#FFD86B"),
-	pad=8,glow=hex("#FFE58A"),glowIdle=.2,glowFinal=.6,seam=hex("#FFFBE6"),
+	-- Beta (36), Spencer: "we dont need that giant shiny circle" and no cracking on the deck (the egg cracks in the
+	-- world, step 3). A soft, small backing only, a little brighter each combo; no seam, no gloss.
+	pad=8,glow=hex("#FFE58A"),glowIdle=.06,glowStep=.05,glowFinal=.3,glowSize=.62,
 	yawRate=25,bobDeg=3,bobHz=.5,                          -- idle: degrees a second, tilt bob
 	hop=.10,wobbleDeg=14,wobbleTime=.4,turnTime=.6,        -- each combo: a hop (card heights), a damped wobble, one turn
 	pipPop=.2,pipScale=1.3,                                -- a pip fills with a 1.0 -> 1.3 -> 1.0 pop
@@ -58,8 +60,8 @@ function V2.pipScale(age)
 	if type(age)~="number"or age<0 or age>=D.pipPop then return 1 end
 	return 1+(D.pipScale-1)*math.sin(age/D.pipPop*math.pi)
 end
--- How much of the crack seam is lit: a third more each combo.
-function V2.seam(combos)return math.clamp(math.floor(tonumber(combos)or 0),0,3)/3 end
+-- The backing's alpha after `combos` combos: a little brighter each one (never a crack on the deck: beta 36).
+function V2.glow(combos)return V2.Deck.glowIdle+V2.Deck.glowStep*math.clamp(math.floor(tonumber(combos)or 0),0,3)end
 local function smooth(u)u=math.clamp(u,0,1);return u*u*(3-2*u)end
 -- The egg's pose at clock t, `beat` s after the last combo (nil: none yet). Returns yaw and tilt (degrees) and hop (card
 -- heights). Reduced Motion: the still three-quarter pose, no hop.
@@ -83,7 +85,8 @@ end
 function V2.finale(age,reduced)
 	local D=V2.Deck
 	local u=math.clamp((age or 0)/D.finale,0,1)
-	local glow=D.glowIdle+(D.glowFinal-D.glowIdle)*u
+	local from=V2.glow(3)
+	local glow=from+(D.glowFinal-from)*u
 	return glow,if reduced then 0 else D.lift*smooth(u),u
 end
 -- The sound and buzz of combo n (HatchAsmr layer names; no pop: the pop belongs to step 3).
