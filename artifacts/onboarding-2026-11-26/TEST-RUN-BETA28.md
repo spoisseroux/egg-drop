@@ -1,4 +1,8 @@
-# Beta (28) test run: the First Hatch
+# Beta (28) and (29) test run: the First Hatch
+
+Beta (29) (runtime d17d5ac9, v88) adds Fable's fixes: sparks from each merge into the egg, a gold "Tap the egg!" pill
+centred on the card with a hand that shows how, a drawn crack per tap (ring and flakes where you tap), a bigger
+egg, an egg in the nest bubble, and the ticket only after the tuck. Try those in steps 1, 2 and 4 below.
 
 Runtime f65a2be9, published to Pocket Pals Beta on 2026-11-26. All three parts are on in the beta by default.
 Switches: `/onboard opener off`, `/onboard crack off`, `/onboard nestfirst off` (each off is beta (27)).
