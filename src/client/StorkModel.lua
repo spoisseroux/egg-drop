@@ -130,7 +130,8 @@ function Egg.new(parent)
 			p.Anchored=true;p.CanCollide=false;p.CanQuery=false;p.CanTouch=false;p.CastShadow=true
 			-- Fable (AERO-JUICE 4): the Neon core never shows through before the pop
 			if key=="Core"then p.Material=Enum.Material.Neon;p.Color=t.core;p.Transparency=1
-			else p.Material=Enum.Material.SmoothPlastic;p.TextureID=closed;p.Reflectance=0 end
+			-- Fable B37 1b: a cream base, so a frame before the texture is in is never grey
+			else p.Material=Enum.Material.SmoothPlastic;p.TextureID=closed;p.Reflectance=0;p.Color=V2.Deck.base end
 			p.Size=Models.Egg[key].size*self.scale
 			p.Parent=model
 			self.parts[key]={part=p,center=Models.Egg[key].center*self.scale,size=Models.Egg[key].size*self.scale}
@@ -216,11 +217,14 @@ function Blanket.new(parent)
 	self.ears={part(model,"KnotEar",fabric,Vector3.new(.42,.22,.26)),part(model,"KnotEar",fabric,Vector3.new(.42,.22,.26))}
 	self.strap=cylinder(model,"Strap",1,.09,S.blanket:Lerp(Color3.new(1,1,1),.25))
 	self.strap.Material=Enum.Material.Fabric
-	self.flat=cylinder(model,"OpenBlanket",.1,S.open*2,S.blanket)
+	-- Fable B37 section 3: the open blanket 78% as wide and half as thick; the dots pale blue and smooth (in Fabric
+	-- white they read as grey pebbles)
+	local B=V2.Blanket
+	self.flat=cylinder(model,"OpenBlanket",B.thick,B.radius*2,S.blanket)
 	self.flat.Material=Enum.Material.Fabric
 	for i=1,#Blanket.Dots do
-		local dot=cylinder(model,"Dot",.04,.24,S.dots)
-		dot.Material=Enum.Material.Fabric
+		local dot=cylinder(model,"Dot",.02,.19,B.dots)
+		dot.Material=Enum.Material.SmoothPlastic
 		self.dots[i]=dot
 	end
 	model.Parent=parent
@@ -261,12 +265,13 @@ function Blanket:open(ground,u,facing)
 	self.bag.Transparency=if u>=1 then 1 else u
 	self.bag.CFrame=CFrame.new(ground+Vector3.new(0,.6*(1-u),0))*yaw
 	self.flat.Transparency=1-u
-	local r=S.open*(.4+.6*u)
-	self.flat.Size=Vector3.new(.1,r*2,r*2)
-	self.flat.CFrame=CFrame.new(ground+Vector3.new(0,.05,0))*yaw*CFrame.Angles(0,0,math.rad(90))
+	local B=V2.Blanket
+	local r=B.radius*(.4+.6*u)
+	self.flat.Size=Vector3.new(B.thick,r*2,r*2)
+	self.flat.CFrame=CFrame.new(ground+Vector3.new(0,B.thick/2,0))*yaw*CFrame.Angles(0,0,math.rad(90))
 	for i,dot in ipairs(self.dots)do
 		local d=Blanket.Dots[i]
-		local at=ground+yaw*Vector3.new(d[1]*r*.7,.11,d[2]*r*.6)
+		local at=ground+yaw*Vector3.new(d[1]*r*.7,B.thick+.011,d[2]*r*.6)
 		dot.CFrame=CFrame.new(at)*yaw*CFrame.Angles(0,0,math.rad(90))
 		dot.Transparency=1-u
 	end

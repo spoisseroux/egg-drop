@@ -208,7 +208,43 @@ return function(client)
 		-- the landing: open sky first; under the arch it moves round the player
 		local under=V2.landing(Vector3.new(84,GROUND,50),Vector3.new(0,0,1),function(x,z)return Vector3.new(x,GROUND,z)end,clearOf(boxes(ARCH)))
 		assert(clearOf(boxes(ARCH))(under+Vector3.new(0,.6,0),under+Vector3.new(0,V2.Route.sky,0),V2.Route.skyRadius),"open sky over the landing")
-		assert(V2.landing(Vector3.new(0,0,0),Vector3.new(0,0,1),function()return nil end,clear)==Vector3.new(0,0,6),"no ground: the first guess")
+		assert(V2.landing(Vector3.new(0,0,0),Vector3.new(0,0,1),function()return nil end,clear)==nil,"no ground: nil (the story takes the spawn pad)")
+	end)
+	test("code review: the flight's cast budget: coarse first, the first clear wins, never past Route.budget sweeps",function()
+		local R=V2.Route
+		local land,toPlayer=Vector3.new(0,0,0),Vector3.new(0,0,1)
+		local hover=V2.hover(land,toPlayer)
+		-- open sky: the first candidate, coarse then fine
+		local calls=0
+		local route,tried,used=V2.storkRoute(land,toPlayer,hover,function()calls+=1;return true end)
+		assert(tried==1 and used==R.coarse+R.samples and calls==used,"one candidate: "..calls.." sweeps")
+		-- the worst case: every coarse check passes and every fine one fails at its last leg
+		calls=0
+		local n=0
+		route,tried,used=V2.storkRoute(land,toPlayer,hover,function(a,b)
+			calls+=1;n+=1
+			return n%(R.coarse+R.samples)~=0
+		end)
+		assert(calls<=R.budget and used==calls,"within the budget: "..calls)
+		assert(route.heading==nil,"out of budget: straight down")
+		-- boxed in: one sweep a candidate
+		calls=0
+		route,tried=V2.storkRoute(land,toPlayer,hover,function()calls+=1;return false end)
+		assert(calls==tried and calls<=#R.headings*#R.heights)
+		-- and at the frame rate it is spread over: every sweep is at most castsPerSweep casts, framesCasts a frame
+		assert(R.budget*R.castsPerSweep/R.framesCasts<=30,"half a second of frames at most")
+	end)
+	test("Fable B37: the blanket 78% wide and half as thick, pale blue dots, 0.6 studs into the dais; the cream egg base",function()
+		assert(math.abs(V2.Blanket.radius-1.2*.78)<1e-9 and math.abs(V2.Blanket.thick-.05)<1e-9 and V2.Blanket.inward==.6)
+		local function hex(c)return string.format("%02X%02X%02X",math.floor(c.R*255+.5),math.floor(c.G*255+.5),math.floor(c.B*255+.5))end
+		assert(hex(V2.Blanket.dots)=="DCEBFA"and hex(V2.Deck.base)=="FBF6D2")
+		assert(V2.Deck.preloadCap==.6 and V2.Deck.fadeIn==.15)
+		local dais=Vector3.new(96,4.05,66)
+		local moved=V2.onDais(Vector3.new(90,4.5,63),dais)
+		local d=Vector3.new(moved.X-90,0,moved.Z-63)
+		assert(math.abs(d.Magnitude-.6)<1e-6 and d:Dot(Vector3.new(6,0,3))>0,"0.6 toward the centre")
+		assert(V2.onDais(Vector3.new(50,4,50),dais)==Vector3.new(50,4,50),"off the dais: where it was")
+		assert(V2.onDais(Vector3.new(90,4,63),nil)==Vector3.new(90,4,63))
 	end)
 	test("Fable's crack: the 40 ms dip, two and three swings, the 5 to 9 Hz flex to 1.08, the pop's kick and FOV 40 -> 44 -> 42",function()
 		assert(V2.Crack.anticipate==.04 and V2.Crack.grow==.09 and V2.Crack.closer==.03)

@@ -64,7 +64,17 @@ function Story:copy(key,vars)
 	return if ok and type(text)=="string"then text else ""
 end
 function Story:reduced()return self.d.reduced and self.d.reduced()==true or GuiService.ReducedMotionEnabled end
-function Story:play(name,speed,gain)if self.d.audio then pcall(function()self.d.audio:play(name,speed or 1,gain or .5)end)end end
+-- Every voice the story plays is its own (one owner), so the pop's near silence can stop them (code review: the duck
+-- alone only reached the music group).
+function Story:play(name,speed,gain)
+	self.voices=self.voices or {}
+	if self.d.audio then pcall(function()self.d.audio:play(name,speed or 1,gain or .5,self.voices)end)end
+end
+function Story:hush()
+	local audio=self.d.audio
+	if audio and audio.stopOwner and self.voices then pcall(function()audio:stopOwner(self.voices)end)end
+	self.voices={}
+end
 function Story:layer(layer,gainScale)
 	local ok,Asmr=pcall(require,script.Parent.HatchAsmr)
 	if not ok then return end
@@ -137,6 +147,7 @@ function Story:step(dt)
 	if self.state=="tuck"then return self:stepTuck()end
 	-- the garden Bear may be drawn again (a rig swap): keep it hidden while ours is on stage
 	if self.folder then self:hidePet(true)end
+	if self.state=="plan"then return self:stepPlan()end
 	if self.state=="stork"then return self:stepStork(dt)end
 	if self.state=="crack"then return self:stepCrack(dt)end
 	if self.state=="card"then return self:stepCard(dt)end
@@ -165,26 +176,11 @@ function Story:begin()
 	local camera=workspace.CurrentCamera
 	if not(root and camera)then error("no character or camera")end
 	self.folder=node("Folder",workspace,{Name="EggDropFirstHatch"})
-	-- The landing: 6 studs in front of the character on the ground with open sky over it (V2.landing: else round the
-	-- player), else the spawn pad. Then the flight, chosen against the world (beta 36: "the stork flies thru the arch").
-	local look=unit(flat(root.CFrame.LookVector),Vector3.new(0,0,-1))
 	self.ignore={character,self.folder}
 	local pet=d.pet and d.pet()
 	if pet and pet.model then table.insert(self.ignore,pet.model)end
-	local feet=root.Position-Vector3.new(0,3,0)
-	local land=V2.landing(feet,look,function(x,z,y)return self:ground(x,z,y)end,function(a,b,r)return self:clear(a,b,r)end)
-	if not land then
-		local pad=workspace:FindFirstChildWhichIsA("SpawnLocation",true)
-		land=if pad then pad.Position+Vector3.new(0,pad.Size.Y/2,0)else feet+look*V2.Stork.land
-	end
-	self.land=land
-	self.toPlayer=unit(flat(root.Position-land),-look)
-	self.right=unit((-self.toPlayer):Cross(Vector3.new(0,1,0)),Vector3.new(1,0,0)) -- the player's right (look x up)
-	self.facing=CFrame.lookAt(Vector3.zero,self.toPlayer)
-	local _,hoverRoot=self:storkRoots()
-	self.route=V2.storkRoute(land,self.toPlayer,hoverRoot.Position,function(a,b,r)return self:clear(a,b,r)end)
-	-- The character turns to face it and stays still; the camera is ours.
-	pcall(function()root.CFrame=CFrame.lookAt(root.Position,Vector3.new(land.X,root.Position.Y,land.Z))end)
+	-- The player stays still and the camera is ours from here; the landing and the flight are planned over the next
+	-- few frames (stepPlan), a bounded number of casts a frame (code review: never thousands in one frame).
 	require(script.Parent.MovementLock).shared():acquire(Story.LockReason)
 	self.locked=true
 	holdRail(true);self.railHeld=true
@@ -197,12 +193,52 @@ function Story:begin()
 	self.bound=true
 	table.insert(self.links,Input.InputBegan:Connect(function(input,processed)self:press(input,processed)end))
 	self:buildGui()
-	-- The models.
+	self.reducedStart=self:reduced()
+	self:enter("plan")
+	self.planned,self.planError,self.casts=false,nil,0
+	local look=unit(flat(root.CFrame.LookVector),Vector3.new(0,0,-1))
+	local feet=root.Position-Vector3.new(0,3,0)
+	local token={}
+	self.planToken=token
+	task.spawn(function()
+		local ok,problem=pcall(function()
+			-- The landing: 6 studs in front on the ground with open sky and room for the hovering stork (V2.landing:
+			-- else round the player); no ground at all: the spawn pad. On the arrival dais it sits 0.6 studs further in.
+			local land=V2.landing(feet,look,function(x,z,y)return self:ground(x,z,y)end,function(a,b,r)return self:clear(a,b,r)end)
+			if self.planToken~=token then return end
+			if not land then
+				local pad=workspace:FindFirstChildWhichIsA("SpawnLocation",true)
+				land=if pad then pad.Position+Vector3.new(0,pad.Size.Y/2,0)else feet+look*V2.Stork.land
+			end
+			local okDais,dais=pcall(function()return require(game:GetService("ReplicatedStorage").Shared.HollowWorldLayout).Stations.ArrivalDais.Position end)
+			land=V2.onDais(land,if okDais then dais else nil)
+			self.land=land
+			self.toPlayer=unit(flat(root.Position-land),-look)
+			self.right=unit((-self.toPlayer):Cross(Vector3.new(0,1,0)),Vector3.new(1,0,0)) -- the player's right (look x up)
+			self.facing=CFrame.lookAt(Vector3.zero,self.toPlayer)
+			-- The flight, chosen against the world (beta 36: "the stork flies thru the arch").
+			local _,hoverRoot=self:storkRoots()
+			self.route=V2.storkRoute(land,self.toPlayer,hoverRoot.Position,function(a,b,r)return self:clear(a,b,r)end)
+		end)
+		if self.planToken~=token then return end
+		if ok then self.planned=true else self.planError=problem end
+	end)
+end
+-- The plan is in: the character turns to face the landing and the stork sets off.
+function Story:stepPlan()
+	if self.planError then error(self.planError)end
+	if not self.planned then
+		if self.since>3 then error("the flight could not be planned")end
+		return
+	end
+	local character=self.d.character and self.d.character()
+	local root=character and character:FindFirstChild("HumanoidRootPart")
+	local land=self.land
+	if root then pcall(function()root.CFrame=CFrame.lookAt(root.Position,Vector3.new(land.X,root.Position.Y,land.Z))end)end
 	self.stork=Model.new(self.folder)
 	self.blanket=Model.Blanket.new(self.folder)
 	self.egg=Model.Egg.new(self.folder)
 	self:hidePet(true)
-	self.reducedStart=self:reduced()
 	self:enter("stork")
 	self:event("StorkShown")
 	self.pill.Visible=true
@@ -275,13 +311,20 @@ end
 
 -- ── Step 2: the stork ────────────────────────────────────────────────────────────────────────────────────────────────
 -- What a sweep may hit: solid, visible, queryable world (not us, the player, the garden pet, glass or trigger boxes).
+-- Every cast counts toward a budget (V2.Route): at most castsPerSweep retries a sweep (past glass and trigger boxes),
+-- and while the plan runs it waits a frame every framesCasts casts, so planning never stalls a frame.
+function Story:cast()
+	self.casts=(self.casts or 0)+1
+	if self.state=="plan"and self.casts%V2.Route.framesCasts==0 then task.wait()end
+end
 function Story:clear(a,b,radius)
 	local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
 	local ignore=table.clone(self.ignore or {})
 	params.FilterDescendantsInstances=ignore
 	local d=b-a
 	if d.Magnitude<1e-3 then return true end
-	for _=1,8 do
+	for _=1,V2.Route.castsPerSweep do
+		self:cast()
 		local hit=if radius and radius>0 then workspace:Spherecast(a,radius,d,params)else workspace:Raycast(a,d,params)
 		if not hit then return true end
 		local p=hit.Instance
@@ -296,7 +339,8 @@ function Story:ground(x,z,y)
 	local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
 	local ignore=table.clone(self.ignore or {})
 	params.FilterDescendantsInstances=ignore
-	for _=1,6 do
+	for _=1,V2.Route.castsPerSweep do
+		self:cast()
 		local hit=workspace:Raycast(Vector3.new(x,(y or 0)+8,z),Vector3.new(0,-30,0),params)
 		if not hit then return nil end
 		local p=hit.Instance
@@ -378,7 +422,7 @@ function Story:stepStork(dt)
 		end
 		local u=math.clamp((t-S.hover)/(S.release-S.hover),0,1)
 		self.blanket:open(self.land,u,facing)
-		self.egg:pose(ground*CFrame.new(0,.1,0),V2.rock(t-S.hover),1,nil,0)
+		self.egg:pose(ground*CFrame.new(0,V2.Blanket.thick,0),V2.rock(t-S.hover),1,nil,0)
 	end
 	self.skip.Visible=t>=S.skipAt
 	self:aimCamera(dt,"stork",root.Position)
@@ -398,7 +442,7 @@ function Story:stepStorkReduced()
 	local ground=CFrame.new(self.land)*facing
 	if self.setDown then
 		self.blanket:open(self.land,1,facing)
-		self.egg:pose(ground*CFrame.new(0,.1,0),0,1,nil,0)
+		self.egg:pose(ground*CFrame.new(0,V2.Blanket.thick,0),0,1,nil,0)
 		local spot=self.land+self.right*2.4
 		local root=CFrame.lookAt(spot,spot+self.toPlayer)
 		local nod=if t>=.9 and t<1.25 then 22*math.sin((t-.9)/.35*math.pi)else 0
@@ -424,7 +468,7 @@ function Story:skipStork()
 	if self.stork then self.stork:destroy();self.stork=nil end
 	local facing=CFrame.lookAt(Vector3.zero,self.toPlayer)
 	self.blanket:open(self.land,1,facing)
-	self.egg:pose(CFrame.new(self.land)*facing*CFrame.new(0,.1,0),0,1,nil,0)
+	self.egg:pose(CFrame.new(self.land)*facing*CFrame.new(0,V2.Blanket.thick,0),0,1,nil,0)
 	if not self.setDown then self.setDown=true;self:layer("settle");self:buzz("settle");self:event("EggSetDown")end
 	self.cover.BackgroundTransparency=1
 	self:toCrack()
@@ -531,7 +575,7 @@ function Story:stepCrack(dt)
 	self.fx:place(self.crackLayer,spot,spot.phone)
 	self.fx:step(dt,ritual~=nil and ritual:waiting()and not self.creakAt,ritual and ritual:waited()or 0,0,reduced)
 	local facing=CFrame.lookAt(Vector3.zero,self.toPlayer)
-	local base=CFrame.new(self.land)*facing*CFrame.new(0,.1,0)
+	local base=CFrame.new(self.land)*facing*CFrame.new(0,V2.Blanket.thick,0)
 	-- The shell: the latest tap's dip (held on tap 3), its rock, tap 3's flex.
 	local last=self.fired
 	local rock,sy,sxz=0,1,1
@@ -550,6 +594,8 @@ function Story:stepCrack(dt)
 			-- 80 ms of near silence: everything ducks 6 dB
 			self.silentAt=self.clock
 			if self.d.audio and self.d.audio.duck then pcall(function()self.d.audio:duck("firstCrackPop",P.silence+.4,P.duck)end)end
+			-- and the story's own voices (the creak's tail, crumbs, flakes, any stork take) stop for the beat
+			self:hush()
 		end
 		if self.silentAt and not self.popAt and self.clock-self.silentAt>=P.silence then self:pop(reduced)end
 		if self.popAt then
@@ -557,7 +603,8 @@ function Story:stepCrack(dt)
 			S=Vector3.new(1,1,1)
 			if reduced then top={up=0,tip=0,fade=math.clamp(p/.3,0,1)}
 			else top={up=P.up*smooth(p/P.fade),tip=40*smooth(p/P.fade),fade=math.clamp(p/P.fade,0,1)}end
-			fade=math.clamp(p/.25,0,1) -- the lower shell goes as the Bear stands
+			-- Fable B37 section 6: the bottom half-shell stays under the Bear for 600 ms, then goes
+			fade=math.clamp((p-V2.Crack.pop.keepBottom)/.25,0,1)
 			self.flash.BackgroundTransparency=if reduced then 1 else(if p<P.flash then 1-P.flashAlpha else 1)
 			self:stepBear(p,reduced)
 			if p>=P.fade+P.hold then
@@ -580,8 +627,8 @@ function Story:beat(i,reduced)
 			local Paths=require(script.Parent.EggCrackPaths)
 			local half=math.max(20,spot.eggH*.38)
 			local dx,dy=(at.X-spot.egg.X)/half,(at.Y-spot.egg.Y)/half
-			local segments=Paths.build(Paths.tapPoint(dx,dy,math.pi),math.floor(os.clock()*1000)%100000)
-			return require(script.Parent.EggCrack3D).new(self.folder,self.egg,segments,{grow=V2.Crack.grow,leakAlpha=V2.Crack.leakAlpha})
+			local segments,chips=Paths.build(Paths.tapPoint(dx,dy,math.pi),math.floor(os.clock()*1000)%100000)
+			return require(script.Parent.EggCrack3D).new(self.folder,self.egg,segments,{grow=V2.Crack.grow,leakAlpha=V2.Crack.leakAlpha,chips=chips})
 		end)
 		if ok then self.crack3D=crack else warn("[Onboard] 3D cracks: "..tostring(crack));self.crack2D=true end
 	end
@@ -604,7 +651,7 @@ function Story:beat(i,reduced)
 		local point=if first then first.seg.a else{math.pi,Paths.Shape.seamV}
 		local world=self.egg:surface(Paths.point(point[1],point[2]),Paths.normal(point[1],point[2]),.02)
 		local count=if reduced then V2.ReducedFlakes else tap.crumbs
-		self.crack3D:crumbs(world,count,self.land.Y+.12,tap.skitter,function()self:layer("flake",1.1);self:take("crumb_bounce",.25)end)
+		self.crack3D:crumbs(world,count,self.land.Y+V2.Blanket.thick+.02,tap.skitter,function()self:layer("flake",1.1);self:take("crumb_bounce",.25)end)
 	end
 	if tap.pop then self.creakAt=self.clock end
 end
@@ -621,7 +668,7 @@ function Story:pop(reduced)
 		self.crack3D:hideLines()
 		local voiced=0
 		local count=P.pieces[1]+math.random(0,P.pieces[2]-P.pieces[1])
-		self.crack3D:burst(if reduced then V2.ReducedFlakes else count,self.land.Y+.1,function()
+		self.crack3D:burst(if reduced then V2.ReducedFlakes else count,self.land.Y+V2.Blanket.thick,self.toPlayer,function()
 			if voiced<P.voiced then voiced+=1;self:layer("flake",1.2)end
 		end)
 	end
@@ -651,7 +698,7 @@ end
 function Story:stepBear(p,reduced)
 	local bear=self.bear;if not bear then return end
 	local hop=if reduced or p>=.4 then 0 else .7*math.sin(p/.4*math.pi)
-	bear.origin=self.land+Vector3.new(0,.12+hop,0)
+	bear.origin=self.land+Vector3.new(0,V2.Blanket.thick+.02+hop,0)
 	local camera=self.camera
 	if camera then
 		local d=unit(flat(camera.CFrame.Position-self.land),self.toPlayer)
@@ -787,7 +834,7 @@ function Story:cleanup()
 	self.ritual,self.popAt,self.creakAt,self.setDown,self.greeted,self.asked=nil,nil,nil,nil,nil,nil
 	self.crack3D,self.crack2D,self.silentAt,self.closer,self.route=nil,nil,nil,0,nil
 	self.clack1,self.clack2,self.lastBeat,self.heldSince=nil,nil,nil,nil
-	self.replaying=false
+	self.replaying=false;self.planToken=nil;self.planned=false;self.planError=nil
 end
 function Story:destroy()
 	self.disabled=true
