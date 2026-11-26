@@ -230,7 +230,7 @@ local Table={
   nest={title="Napping egg",sign="{pet}'s egg",signPlain="Your egg",how="{pet}'s egg naps for {hours} hours. Come back to hatch a gift.",
    howPlain="This egg naps for {hours} hours. Come back to hatch a gift.",
    inside="Inside: {item} and {stars} Stars.",insideStars="Inside: {stars} Stars.",
-   hours="Hatches in {hours} h",minutes="Hatches in {minutes} min",ready="Hatch me!",tuck="Tuck in",hatch="Hatch",
+   hours="Hatches in {hours} h",tomorrow="Hatches tomorrow",minutes="Hatches in {minutes} min",ready="Hatch me!",tuck="Tuck in",hatch="Hatch",
    tuckedFirst="Tucked in! Come back in {hours} hours to hatch a gift.",
    tucked="Sleep tight. It naps while you're away.",next="A new egg is napping. Come back in {hours} hours.",count="Egg {count} of 7",
    chipHours="Egg {hours} h",chipMinutes="Egg {minutes} min",chipReady="Hatch egg!",got="{item} from the napping egg!",
@@ -265,6 +265,7 @@ local Table={
  -- Remaining Welcome board and optional first-spend route. Catalogs own prices/odds.
  onboarding={
   welcome={friend="Hatch a friend",match="Merge",more="One more!",skip="Skip tutorial",saving="Saving…",static="↓",gamepad="D-pad · A",keyboard="← → · SPACE",egg="Mystery egg"},
+  crack={tap="Tap the egg"}, -- the First Hatch (Onboard "crack")
   spend={hatch="Hatch eggs",give="Give to {pet}",store="Store",ready="A toy for {pet}",line="Choose a Toy Egg when you're ready."},
  },
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).

@@ -611,6 +611,7 @@ ui.onb3.nest.pinReady,Hatch!,,"First-session onboarding: pet bubbles, Sleepy Nes
 ui.onb3.nest.ready,Hatch me!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.sign,{pet}'s egg,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear's egg"
 ui.onb3.nest.signPlain,Your egg,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onb3.nest.tomorrow,Hatches tomorrow,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.tuck,Tuck in,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.tucked,Sleep tight. It naps while you're away.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.nest.tuckedFirst,Tucked in! Come back in {hours} hours to hatch a gift.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Tucked in! Come back in 7 hours to hatch a gift."
@@ -656,6 +657,7 @@ ui.onb3.tip.park,Pets play together in here.,,"First-session onboarding: pet bub
 ui.onb3.tip.style,Dress up your Pocket Deck here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.week.line,{pet} loves the garden. A new egg naps in the nest after every hatch.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear loves the garden. A new egg naps in the nest after every hatch."
 ui.onb3.week.title,Welcome week done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onboarding.crack.tap,Tap the egg,,First-round coaching
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
 ui.onboarding.spend.store,Store,,First-round coaching

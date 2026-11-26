@@ -14,6 +14,7 @@ local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
 local DisplayPose=require(script.Parent.HatchDisplayPose)
 local RarityCue=require(script.Parent.HatchRarityCue)
 local Asmr=require(script.Parent.HatchAsmr)
+local CrackRitual=require(script.Parent.CrackRitual)
 local Cinematic={};Cinematic.__index=Cinematic;Cinematic.BitLimit=24;Cinematic.HeroDelay=.12
 local live=setmetatable({},{__mode="k"});local visibleOwner;local seen={};local seenOrder={};local drainInput
 Input.InputEnded:Connect(function(input)if drainInput==input then task.delay(.05,function()if drainInput==input then drainInput=nil end end)end end)
@@ -50,6 +51,11 @@ function Cinematic.new(parent,audio,reduceEffects,owns)
  local pool=frame(root,"HatchParticlePool","inset",47);pool.BackgroundTransparency=1;pool.Size=UDim2.fromScale(1,1)
  local self=setmetatable({frame=root,poolRoot=pool,bits={},audio=audio,reduceEffects=reduceEffects,owns=owns,epoch=0,age=0,active=false,connections={},ancestorConnections={},windowActive=true,writes=0},Cinematic)
  self.skipButton=skip
+ -- The First Hatch (Onboard "crack"): the prompt while the Bear's egg waits for a tap
+ local tapPrompt=label(root,"CrackTapPrompt","","Heading","text");tapPrompt.Visible=false;tapPrompt.ZIndex=61
+ tapPrompt.AnchorPoint=Vector2.new(.5,1);tapPrompt.Position=UDim2.new(.5,0,1,-18);tapPrompt.Size=UDim2.new(.8,0,0,36)
+ pcall(function()tapPrompt.Text=require(game:GetService("ReplicatedStorage").Shared.UICopy).get("onboarding.crack.tap")end)
+ self.tapPrompt=tapPrompt
  live[self]=true;skip.Activated:Connect(function()self:skip()end)
  for i=1,24 do local bit=circle(pool,"HatchBit"..i,"accent",47);bit.Visible=false;self.bits[i]=bit end
  local function watch(signal,callback)table.insert(self.connections,signal:Connect(callback))end
@@ -153,6 +159,7 @@ function Cinematic:cancel()
  self.result=nil;self.liveBits=0;self.frame.Visible=false;self.heroGraphic=nil
  if visibleOwner==self then visibleOwner=nil end;for _,bit in ipairs(self.bits)do bit.Visible=false end
  self.quietPainted=nil
+ self.crackRitual=nil;if self.tapPrompt then self.tapPrompt.Visible=false end
 end
 function Cinematic:destroy(fromSignal)
  if self.destroyed then return end;self:cancel();self.destroyed=true;live[self]=nil
@@ -448,6 +455,7 @@ function Cinematic:paintBits(revealed,quiet)
 end
 
 function Cinematic:finishStatic()
+ if self.tapPrompt then self.tapPrompt.Visible=false end
  if self.nativeScene then
   self.active=false;self:disconnectClock();self.age=if self:reduced()then RarityCue.timing(self.tier,self.kind,true).duration else self.duration
   self:stopAudio();self:paint();self:complete();return
@@ -546,7 +554,10 @@ function Cinematic:step(dt)
   -- (the app was away) still settles it.
   if dt>2 or(self.audio and self.deviceEpoch~=(self.audio.deviceEpoch or 0))then self:finishStatic();return end
   if dt>.25 then dt=.1 end
+  if self.tapPrompt then self.tapPrompt.Visible=self.crackRitual~=nil and self.active and self.crackRitual:waiting()end
   if self:held()then self:paint();return end
+  -- The First Hatch: the clock stops exactly at the next crack, never one frame past it (its sound waits for the tap).
+  if self.crackHold and self.crackRitual then dt=self.crackRitual:cap(self.age,math.max(0,dt))end
   self.age+=math.max(0,dt);self.sampleAge=(self.sampleAge or 0)+dt
   -- v2 (R1.3 "one clock"): every frame is sampled, so the jackpot's fast beats never stair-step.
   self.sampleAge=0;self:paint()
@@ -611,6 +622,18 @@ function Cinematic:play(result,onComplete,options)
  local asmr=if self.nativeDisplay and self.freshReveal then Asmr.layer(self.kind,result,self.reducedIntro)else nil
  self.asmrOn=asmr~=nil
  self.rarityState=if self.nativeDisplay then RarityCue.new(self.kind,result,T.ready,self.reducedIntro,asmr)else nil
+ -- The First Hatch (Onboard "crack", options.crack from EggHatchView for the Bear's starter receipt): the clock holds
+ -- before each crack beat until a tap (or CrackRitual.Auto); the beat's sound and buzz then play off this clock as before.
+ if self.crackHold then self.clockHold=nil;self.crackHold=nil end
+ self.crackRitual=nil
+ if self.tapPrompt then self.tapPrompt.Visible=false end
+ if options.crack==true and asmr and not self.reducedIntro then
+  local ritual=CrackRitual.new(CrackRitual.stopsFrom(asmr))
+  if ritual then
+   self.crackRitual,self.crackHold=ritual,true
+   self.clockHold=function()return self.active and self.crackRitual==ritual and ritual:hold(self.age)end
+  end
+ end
  if self.reducedIntro then self.timing=T end
  self.frame:SetAttribute("HatchPresentationTier",if self.rarityState then self.rarityState.tier else "Neutral")
  self.active=self.freshReveal and(not self:reduced()or self.reducedIntro);self.startedAt=os.clock();self.frame.Visible=true;self:buildScene();self.building=false
@@ -631,6 +654,10 @@ function Cinematic:play(result,onComplete,options)
  local epoch=self.epoch;self:refreshOwner();if self.epoch==epoch and not self.active then self:complete()end
 end
 function Cinematic:skip()
+ -- The First Hatch: a tap during the ritual cracks the egg (releases the next beat); it never skips the reveal.
+ if self.crackRitual and self.active and not self.crackRitual:done()and self:owned()then
+  if self.crackRitual:tap()then return true end
+ end
  -- The crank beat cannot be skipped (it is under a second); finishStatic would ignore the hold. The capsule shot
  -- (EggMachineClient) jumps to its landing instead, when its own rule allows (Cinematic.onGateSkip).
  if self:gated()then

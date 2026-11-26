@@ -45,7 +45,8 @@ function Simulation.new(preset, serial, options)
 		if options.bounce~=nil then board.physics.bounce=options.bounce end
 	end
 	for _, seed in ipairs(options.starter or Config.Starter) do
-		addEgg(board, Vector2.new(seed.x, Config.Tiers[seed.tier].radius), seed.tier)
+		-- seed.y: a starter recorded at rest (the Welcome opener stacks a ball); default on the floor.
+		addEgg(board, Vector2.new(seed.x, seed.y or Config.Tiers[seed.tier].radius), seed.tier)
 	end
 	return board
 end

@@ -3,9 +3,18 @@
 local Config=require(game:GetService("ReplicatedStorage").Shared.BoardConfig)
 local Seed={DemoAim=.5}
 local starter=table.freeze({table.freeze({x=-1.5,tier=1}),table.freeze({x=.7,tier=1}),table.freeze({x=2.75,tier=2})})
-function Seed.options()return {starter=starter,contactGate=true}end
-function Seed.create(simulation,preset,serial,drops)
-	local board=simulation.new(preset,serial,Seed.options())
+-- The First Hatch (Onboard "opener", artifacts/onboarding-2026-11-26/PLAN.md): six balls recorded where they come to
+-- rest (x and y, so nothing moves before the first drop), whose first drop sets off a three-step chain (1+1, 2+2,
+-- 3+3, to tier IV). Found by a search over the real BoardSimulation in Studio (2026-11-26): a 3-chain at 81/81 first
+-- aims on Springy (the Welcome preset) and on Gentle, no aim without a merge, dropped at once or after 10 s at rest.
+local function at(x,y,tier)return table.freeze({x=x,y=y,tier=tier})end
+local opener=table.freeze({at(1.142,.720,1),at(-3.004,.722,1),at(-1.277,1.040,2),at(2.871,1.042,2),at(.486,2.767,3),
+	at(2.636,2.781,1)})
+Seed.Opener=opener
+function Seed.options(useOpener)return {starter=if useOpener then opener else starter,contactGate=true}end
+function Seed.create(simulation,preset,serial,drops,useOpener)
+	local board=simulation.new(preset,serial,Seed.options(useOpener))
+	board.welcomeOpener=useOpener==true or nil
 	board.drops=drops or 0
 	board.queue=table.clone(Config.Queue)
 	-- Preserve absolute drop count on a cap refresh while selecting one matching opener.
@@ -32,6 +41,6 @@ end
 -- Replacement simulation only: caller retains the same WelcomeState, charge,
 -- run sequence, timer, grant latch and score. No reset()/RoundOver/payout call.
 function Seed.refresh(simulation,board)
-	return Seed.create(simulation,board.preset,board.serial,board.drops)
+	return Seed.create(simulation,board.preset,board.serial,board.drops,board.welcomeOpener)
 end
 return Seed

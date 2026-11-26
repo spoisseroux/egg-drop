@@ -30,9 +30,10 @@ return function(client)
 		return s
 	end
 	-- The cases below are the nest before the egg corner (its own cases are at the end, CORNER).
-	local ON={flags={OnboardingV3=true},studio=true,corner=false}
-	local CORNER={flags={OnboardingV3=true},studio=true}
-	local OFF={flags={OnboardingV3=true},studio=true,nest=false,corner=false}
+	-- nestfirst=false: these cases pin the beta (27) ticket; the First Hatch ticket has its own case at the end.
+	local ON={flags={OnboardingV3=true},studio=true,corner=false,nestfirst=false}
+	local CORNER={flags={OnboardingV3=true},studio=true,nestfirst=false}
+	local OFF={flags={OnboardingV3=true},studio=true,nest=false,corner=false,nestfirst=false}
 	local NOW=1800000000
 	local function rig(options)
 		options=options or {}
@@ -851,6 +852,27 @@ return function(client)
 		r.model:SetAttribute("NestRoot",reseat);r.step(.1)
 		assert(math.abs(r.client.root.Y-reseat.Y)<1e-6 and r.client.egg~=nil and r.client.view~=nil,"re-seated, the egg still there")
 		Onboard.inject(nil)
+	end)
+	test("First Hatch (nestfirst): the first egg's ticket says Hatches tomorrow; a later egg counts down; ready reads ready",function()
+		local tomorrow=UICopy.get("onb3.nest.tomorrow")
+		assert(tomorrow=="Hatches tomorrow",tomorrow)
+		local r=rig({env={flags={OnboardingV3=true},studio=true,corner=false}})
+		r.fire(state(3600));r.client:step(0)
+		local d=r.tickets[1]and r.tickets[1].data
+		assert(d and d.text==tomorrow and d.tone=="plain"and d.priority==Client.TicketPriority.clock,d and d.text)
+		r.narrow=true;r.client:step(0)
+		assert(d.text==tomorrow,"narrow too")
+		r.narrow=false;r.now=NOW;r.fire(state(Nest.Seconds));r.client:step(0)
+		assert(d.text==UICopy.get("onb3.nest.chipReady")and d.tone=="gold","ready: the ready words, never tomorrow")
+		r.client:clear();Onboard.inject(nil)
+		local later=rig({env={flags={OnboardingV3=true},studio=true,corner=false}})
+		later.fire(state(3600,{n=1}));later.client:step(0)
+		assert(later.tickets[1].data.text==UICopy.get("onb3.nest.chipHours",{hours=7}),"a second egg counts down")
+		later.client:clear();Onboard.inject(nil)
+		local off=rig()
+		off.fire(state(3600));off.client:step(0)
+		assert(off.tickets[1].data.text==UICopy.get("onb3.nest.chipHours",{hours=7}),"switch off: today's countdown")
+		off.client:clear();Onboard.inject(nil)
 	end)
 	return{passed=#cases,cases=cases}
 end

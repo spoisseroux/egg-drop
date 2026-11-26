@@ -81,6 +81,14 @@ pcall(function()if require(ReplicatedStorage.Shared.Aero).ceiling()then clientUI
 pcall(function()require(script.AliveBudget).level()end) -- Alive: starts the frame sampler (beta only)
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local request = remotes:WaitForChild("BoardRequest")
+-- The First Hatch (architect review): two one-time events. "EggTapped" when the first tap cracks the Bear's egg
+-- (CrackRitual), "DeckShown" when the loading screen has left (LoadingScreen sets LoadingSeconds on PlayerGui).
+require(script.CrackRitual).onFirstTap=function()request:FireServer("eggTapped")end
+task.spawn(function()
+	local gui=player:WaitForChild("PlayerGui")
+	if gui:GetAttribute("LoadingSeconds")==nil then gui:GetAttributeChangedSignal("LoadingSeconds"):Wait()end
+	request:FireServer("deckShown")
+end)
 local feedback = remotes:WaitForChild("BoardMerge")
 local impacts = remotes:WaitForChild("BoardImpact")
 local nurseryRequest = remotes:WaitForChild("HatchRequest")
@@ -2524,7 +2532,10 @@ updateHud = function()
 	dispenser:setTheme(Themes.ById[board:GetAttribute("DeckThemeId")]or Themes.ById[Themes.Default])
 	dispenser:update(board:GetAttribute("ResetId"),if clientUI.dropIntent then clientUI.dropIntent:shownDrops(drops)else drops,budget,owned > 0 and board:GetAttribute("Mode")=="Board",rendererPresentation.canPresent(board:GetAttribute("ResetId")))
 	meterText.Visible=owned==0
-	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget) else string.format("%s %d/%d", Pets.byId.pip.name, charge, nextPet and nextPet.charge or 6)
+	local comboTarget=board:GetAttribute("WelcomeComboTarget")
+	meterText.Text = if owned > 0 then string.format("%d/%d", remaining, budget)
+		elseif type(comboTarget)=="number"and comboTarget>0 then string.format("%s %d/%d", Pets.byId.pip.name, board:GetAttribute("WelcomeCombos")or 0, comboTarget)
+		else string.format("%s %d/%d", Pets.byId.pip.name, charge, nextPet and nextPet.charge or 6)
 	eggGoal.Visible = not backdrop:GetAttribute("CompactLandscape") and not backdrop:GetAttribute("SideGoalLayout") and owned > 0 and shell.AbsoluteSize.Y >= 260
 	-- Perf (v775): eggGoalText belongs to the render loop, which rewrote this before
 	-- every paint; writing a different string here only re-fitted the label twice.
@@ -2584,7 +2595,11 @@ updateHud = function()
 	Art.type(status,"Body",false)
 	status.TextSize=if instrumentLayout and instrumentLayout.roomy then 20 elseif backdrop:GetAttribute("CompactInstruction") then 12 else 16
 	status.TextWrapped=true
-	local lesson = firstHatchGuide:step(drops, merges, charge, owned, UserInputService:GetLastInputType(),
+	-- The First Hatch: combos stand in for charge (same three stages)
+	local guideCharge=charge
+	local guideTarget=board:GetAttribute("WelcomeComboTarget")
+	if type(guideTarget)=="number"and guideTarget>0 then guideCharge=(board:GetAttribute("WelcomeCombos")or 0)/guideTarget*Pets.byId.pip.charge end
+	local lesson = firstHatchGuide:step(drops, merges, guideCharge, owned, UserInputService:GetLastInputType(),
 		clientUI.BallThemes.word(nextTier()), canPlay(), backdrop:GetAttribute("CompactInstruction")==true)
 	local fieldCoaching = false
 	firstHatchGuide:fieldStep(0, 1, false)
@@ -3519,6 +3534,9 @@ do
   elseif not welcome then lastActive,lastGeneration=nil,nil end
   context.generation=board:GetAttribute("RunSequence");context.charge=board:GetAttribute("HatchCharge")or 0
   context.threshold=Pets.byId.pip.charge;context.owned=board:GetAttribute("OwnedPets")or 0;context.phase=clientUI.attr("FieldPhase")
+  -- The First Hatch (Onboard "opener"): the egg's three stages are the three combos
+  local comboTarget=board:GetAttribute("WelcomeComboTarget")
+  if type(comboTarget)=="number"and comboTarget>0 then context.charge=board:GetAttribute("WelcomeCombos")or 0;context.threshold=comboTarget end
   context.drops=clientUI.attr("Drops")or 0;context.skipReady=board:GetAttribute("WelcomeSkipReady")==true
   context.grantPending=board:GetAttribute("WelcomeGrantPending")==true;context.revealPending=nurseryState and nurseryState.lastHatch~=nil
   context.device=clientUI.inputKind();context.reduced=reduceEffects()
@@ -5543,6 +5561,7 @@ do
    needs=Needs.new({bubble=bubble,clock=os.clock,state=function()return nurseryState end,owned=function()return board:GetAttribute("OwnedPets")or 0 end,
     mask=function()return clientUI.coach.mask end,mark=function(id)clientUI.coach:mark(id)end,finishIntro=function()clientUI.coach:finishGarden()end,
     follow=function()return Onboard.sessionFollow()end,needs=function()return Onboard.on("needs")end,returning=function()return things.returning==true end,
+    nestFirst=function()return Onboard.on("nestfirst")and Onboard.on("needs")and Onboard.on("nest")end, -- the First Hatch
     -- Things to do itself, not its tips switch (with tips off the Bear would never start, nor the garden step's clock).
     gate=function()local since=clientUI.coach.roomSince;return Needs.gate(gate(if since then os.clock()-since else 0),Things.on())end,
     greeting=function()return roomView.focusing==true end,inPark=function()return Attract.parkMember(rootPosition())end,

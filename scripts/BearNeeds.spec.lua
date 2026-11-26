@@ -88,7 +88,7 @@ return function(client)
 		r.needs=Needs.new({bubble=r.bubble,state=function()return r.state end,owned=function()return r.owned end,mask=function()return r.mask end,
 			mark=function(id)table.insert(r.marked,id);r.mask=Coach.with(r.mask,id)end,finishIntro=function()r.intro+=1;r.mask=Coach.with(r.mask,"gardenIntro")end,
 			follow=function()return r.follow end,needs=function()return r.needsOn~=false end,returning=function()return r.returning end,
-			gate=function()return r.gate end,greeting=function()return r.greeting end,inPark=function()return r.inPark end,nest=function()return r.nest end,
+			gate=function()return r.gate end,greeting=function()return r.greeting end,inPark=function()return r.inPark end,nest=function()return r.nest end,nestFirst=function()return r.nestFirst==true end,
 			place=function(where)return Vector3.new(#where,0,0),where end,
 			trail=function(target,how)table.insert(r.trails,{name=target.name,how=how});r.trailUp=true;r.trailOn=target;return true end,trailActive=function()return r.trailUp end,
 			trailTarget=function()return r.trailOn end,prompt=function()return r.prompt==true end,
@@ -333,6 +333,44 @@ return function(client)
 		assert(toy.needs:key()and toy.trails[1].name=="Eggs")
 		toy.gate=with(toy.gate,{modal=true});toy.run(.25);assert(not toy.needs:key(),"hidden: the key passes")
 		local off=rig({needsOn=false});off.run(4);assert(not off.needs:key())
+	end)
+	-- The First Hatch (Onboard "nestfirst", artifacts/onboarding-2026-11-26/PLAN.md): tomorrow's egg straight after hi.
+	test("First Hatch: the order hi, nest, toy, deck, park; current() keeps today's order without one",function()
+		assert(table.concat(Needs.NestFirstOrder,",")=="needHi,needNest,needToy,needDeck,needPark")
+		local on={on=true,owned=1}
+		local f=facts({nest={n=0,at=1},coachMask=Coach.with(0,"needHi")},{nest=true})
+		assert(Needs.current(f,on)=="needToy","no order: today")
+		assert(Needs.current(f,{on=true,owned=1,order=Needs.NestFirstOrder})=="needNest","nest first")
+	end)
+	local function hello(r)
+		r.run(Needs.Return+.5);assert(r.bubble.icon=="hand","the hand bubble")
+		assert(r.needs:tap())
+		r.greeting=true;r.gate.greeting=true;r.run(.5)
+		assert(table.find(r.marked,"needHi"),"hi closed")
+		r.greeting=false;r.gate.greeting=nil
+	end
+	test("First Hatch: after hi, the moon (the nest drawn) before the ball",function()
+		local r=rig({nestFirst=true,nest=true,state={nest={n=0,at=1}}})
+		hello(r)
+		r.run(Needs.Rest+1.5);assert(r.bubble.icon=="moon","the nest first: "..tostring(r.bubble.icon))
+	end)
+	test("First Hatch: the nest not drawn yet: the Bear waits up to NestWait, then the toy; a nest drawn later never replaces the open ball",function()
+		local r=rig({nestFirst=true,nest=false,state={nest={n=0,at=1}}})
+		hello(r)
+		r.run(Needs.NestWait-1);assert(r.bubble.icon==nil,"waiting for the nest: "..tostring(r.bubble.icon))
+		r.run(2.5);assert(r.bubble.icon=="ball","waited out: the toy")
+		r.nest=true;r.run(1);assert(r.bubble.icon=="ball","locked: the open ball stays")
+	end)
+	test("First Hatch: the nest drawn inside the wait opens the moon",function()
+		local r=rig({nestFirst=true,nest=false,state={nest={n=0,at=1}}})
+		hello(r)
+		r.run(2);r.nest=true;r.run(Needs.Rest)
+		assert(r.bubble.icon=="moon",tostring(r.bubble.icon))
+	end)
+	test("First Hatch off: today's order exactly (the ball after hi, the nest drawn or not)",function()
+		local r=rig({nestFirst=false,nest=true,state={nest={n=0,at=1}}})
+		hello(r)
+		r.run(Needs.Rest+1.5);assert(r.bubble.icon=="ball",tostring(r.bubble.icon))
 	end)
 	return{passed=#cases,cases=cases}
 end

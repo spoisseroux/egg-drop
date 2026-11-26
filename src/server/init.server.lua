@@ -687,6 +687,24 @@ local function publishNursery(board)
 	board.folder:SetAttribute("MasteryMask", masteryMask)
 end
 
+-- The First Hatch (artifacts/onboarding-2026-11-26/PLAN.md; Spencer: "three combos and the egg hatches"): with
+-- Onboard.on("opener") the Welcome egg hatches on its third combo (a drop that merges at least once), counted here in
+-- server memory; pip.charge and the saved charge are never touched until the grant. Read once per Welcome round, and
+-- again until the first drop (the switch is off until OnboardConfig has loaded).
+local function welcomeOpener(board)
+	local welcome=board.welcome
+	if not welcome or welcome.combo or(welcome.drops or 0)>0 then return end
+	local on=false
+	pcall(function()on=require(ReplicatedStorage.Shared.Onboard).on("opener")end)
+	if not on then board.folder:SetAttribute("WelcomeComboTarget",nil);return end
+	welcome.combo,welcome.combos,welcome.comboDrop=3,0,nil
+	-- the opener's staircase (WelcomeSeed.Opener); a switch that resolves after the board was built re-seeds it
+	-- before the first drop (code review: never mid-round)
+	if board.sim and not board.sim.welcomeOpener and(board.sim.drops or 0)==0 then
+		board.sim=require(script.WelcomeSeed).create(Simulation,board.sim.preset,board.sim.serial,board.sim.drops,true)
+	end
+	board.folder:SetAttribute("WelcomeComboTarget",3);board.folder:SetAttribute("WelcomeCombos",0)
+end
 local function publishWelcome(board)
 	local welcome=board.welcome
 	local snapshot=welcome and welcome:snapshot()
@@ -856,6 +874,7 @@ local function reset(board, preset, sameField)
 		board.sim=require(script.WelcomeSeed).create(Simulation,preset,board.sim and board.sim.serial)
 		board.welcome=require(script.WelcomeState).new(board.runSequence)
 		board.welcomeReplay=0;board.welcomeWindowActive=false
+		welcomeOpener(board)
 	else
 		-- B3: today's board for this round, put in place when the client never answers the lockstep start.
 		local function todaysBoard(serial)
@@ -1352,6 +1371,7 @@ local function acceptedDrop(board,value,now,isDemo,token)
 		or(board.field and(not board.field:canDrop(board.sim.drops)or not Simulation.canDrop(board.sim)))
 		or typeof(value)~="number"or not(value>=0 and value<=1)or now-board.lastDrop<Config.DropInterval then return false end
 	board.lastDrop=now
+	if board.welcome then welcomeOpener(board)end -- the First Hatch: a late-loading switch still counts from drop one
 	if not Simulation.drop(board.sim,value)then return false end
 	if roundRecorder then roundRecorder.drop(board,value)end
 	if token then local dropped=board.sim.eggs[#board.sim.eggs];if dropped and dropped.id==board.sim.fallingId then dropped.dropToken=token end end
@@ -1502,6 +1522,13 @@ request.OnServerEvent:Connect(function(player, action, value, sticker)
 	end
 	if action=="welcomeActive"then
 		if type(value)=="boolean"and board.welcome and not hasPet(board)then board.welcomeWindowActive=value end
+		return
+	elseif action=="deckShown"then
+		-- The First Hatch (architect review): one-time events, never a v3 step (FirstSession records each name once)
+		if board.firstSession then board.firstSession:record("DeckShown")end
+		return
+	elseif action=="eggTapped"then
+		if board.firstSession and hasPet(board)then board.firstSession:record("EggTapped")end
 		return
 	elseif action=="welcomeInput"then
 		if board.welcome and type(value)=="table"and value.sequence==board.runSequence and now-(board.welcomeInputAt or -math.huge)>=.1 then
@@ -2508,9 +2535,23 @@ RunService.Heartbeat:Connect(function(dt)
 				board.round.score += Config.mergeScore(merge.tier, board.chain, merge.cleared)
 				if roundRecorder then roundRecorder.merge(board, merge, board.chain) end
 				Progress.recordScore(board.profile, board.round.score)
-				Progress.recordTrials(board.profile, board.chain, board.round.score, board.round.maxClears)
+				-- The First Hatch: the Welcome opener's chain never opens Trials (no rare hatch in the first minute).
+				if not(board.welcome and board.welcome.combo)then
+					Progress.recordTrials(board.profile, board.chain, board.round.score, board.round.maxClears)
+				end
 				if board.field then board.field:observe(merge,{sequence=board.runSequence,ordinal=board.merges,chain=board.chain,playTime=board.playTime}) end
-				if not hasPet(board) and board.profile.rank < 1 then
+				local welcomeCombo=board.welcome and board.welcome.combo
+				if welcomeCombo and not hasPet(board)then
+					local welcome=board.welcome
+					-- One combo per chain (code review: counting by drop number let a quick second drop take the
+					-- first drop's later merges, so two drops could hatch the Bear). A chain that a second drop
+					-- extends inside the chain window still counts once.
+					if board.chain==1 then
+						welcome.combos=math.min(welcome.combos+1,welcomeCombo)
+						board.folder:SetAttribute("WelcomeCombos",welcome.combos)
+						if welcome.combos>=welcomeCombo then grantWelcome(player,board)end
+					end
+				elseif not hasPet(board) and board.profile.rank < 1 then
 					Progress.chargeHatch(board.profile, merge.tier)
 				end
 				if board.firstSession then

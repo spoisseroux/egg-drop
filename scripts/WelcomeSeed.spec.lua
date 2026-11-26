@@ -39,5 +39,37 @@ return function(server,shared,modules)
 	local fresh=Seed.refresh(Simulation,sim)
 	assert(#fresh.eggs==3 and fresh.drops==sim.drops and fresh.serial>sim.serial,"bounded refresh preserves counters and monotonic egg ids")
 	assert(Simulation.drop(fresh,.5),"refresh remains playable")
-	return {passed=4,tested=tested,aimSteps=count,minFirstMerge=minTime,maxFirstMerge=maxTime,universalProof=false}
+	-- The First Hatch opener (Onboard "opener", artifacts/onboarding-2026-11-26/PLAN.md): five balls that sit still; the
+	-- first drop sets off a chain of three or more merges at nearly every aim; nothing reaches tier V (Trials); a
+	-- refresh keeps the opener. A measured rate, not a proof.
+	local opener={}
+	for _,preset in ipairs({"Springy","Gentle"})do
+		local steps=modules.openerSteps or 80
+		local chains,misses,top=0,0,0
+		for index=0,steps do
+			local board=Seed.create(Simulation,preset,0,0,true)
+			assert(#board.eggs==#Seed.Opener and board.welcomeOpener==true)
+			local merged={}
+			for _=1,120 do table.clear(merged);Simulation.step(board,Config.FixedStep,merged);assert(#merged==0,"the opener must not merge by itself")end
+			for k,e in ipairs(board.eggs)do
+				local s=Seed.Opener[k]
+				assert((e.position-Vector2.new(s.x,s.y)).Magnitude<.05,preset..": the opener moves before the first drop")
+			end
+			assert(Simulation.drop(board,index/steps))
+			local count=0
+			for _=1,600 do
+				table.clear(merged);Simulation.step(board,Config.FixedStep,merged)
+				for _,m in ipairs(merged)do count+=1;top=math.max(top,m.tier or 0)end
+			end
+			if count>=3 then chains+=1 elseif count==0 then misses+=1 end
+		end
+		opener[preset]={aims=steps+1,chains=chains,misses=misses,topTier=top}
+		assert(top<5,preset..": the opener reaches tier "..top.." (Trials)")
+		assert(chains/(steps+1)>=.95,preset..": chain on "..chains.."/"..(steps+1))
+		assert(misses==0,preset..": "..misses.." aims merge nothing")
+	end
+	local refreshed=Seed.refresh(Simulation,Seed.create(Simulation,"Springy",0,0,true))
+	assert(refreshed.welcomeOpener==true and #refreshed.eggs==#Seed.Opener,"a refresh keeps the opener")
+	assert(Seed.create(Simulation,"Springy",0).welcomeOpener==nil,"off: today's starter")
+	return {passed=5,tested=tested,aimSteps=count,minFirstMerge=minTime,maxFirstMerge=maxTime,universalProof=false,opener=opener}
 end

@@ -1397,7 +1397,10 @@ function View:update(state)
 					self.ackReady = true
 					self:refreshFooter()
 					if self:ownsInput() then self:selectResultAction() end
-				end, { nativeDisplay=self.nativeDisplay~=false,appearance=self.appearanceFor and self.appearanceFor(result.petId),skipIntro = skipIntro, onPresented = function()
+				end, { nativeDisplay=self.nativeDisplay~=false,appearance=self.appearanceFor and self.appearanceFor(result.petId),skipIntro = skipIntro,
+					-- The First Hatch (Onboard "crack"): the player cracks the Bear's starter egg
+					crack = result.starter == true and result.petId == "pip" and (function() local ok, on = pcall(function() return require(ReplicatedStorage.Shared.Onboard).on("crack") end); return ok and on == true end)(),
+					onPresented = function()
 					if self.presentationGeneration == generation and self.shade.Visible
 						and self.state.lastHatch and self.state.lastHatch.id == result.id then
 						-- One bounded session marker survives X; it never acknowledges a result.

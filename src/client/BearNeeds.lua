@@ -19,6 +19,11 @@ local Toys=require(Shared:WaitForChild("ToyCatalog"))
 local Tips=require(script.Parent.ThingsTips)
 local Needs={};Needs.__index=Needs
 Needs.Order=table.freeze({"needHi","needToy","needDeck","needNest","needPark"})
+-- The First Hatch (Onboard "nestfirst"): tomorrow's egg straight after the first hello. Read once when the garden is
+-- ready; with it an open bubble is never replaced by an earlier one, and after Say hi the Bear waits up to NestWait
+-- for the nest to be drawn (it is placed by a save write on the first garden stand) before the toy goes first.
+Needs.NestFirstOrder=table.freeze({"needHi","needNest","needToy","needDeck","needPark"})
+Needs.NestWait=6
 Needs.Icon=table.freeze({needHi="hand",needToy="ball",needDeck="deck",needNest="moon",needPark="paws"})
 -- The same words for readers (the Things to do top row), whole sentences with {pet}.
 Needs.Copy=table.freeze({needHi="onb3.need.hi",needToy="onb3.need.toy",needDeck="onb3.need.deck",needNest="onb3.need.nest",needPark="onb3.need.park"})
@@ -68,7 +73,7 @@ end
 function Needs.current(f,ctx)
 	ctx=ctx or {}
 	if ctx.on~=true or ctx.returning==true or(ctx.owned or 0)<=0 or Coach.veteran(f.totalWins)then return nil end
-	for _,id in ipairs(Needs.Order)do
+	for _,id in ipairs(ctx.order or Needs.Order)do
 		if Needs.available(id,f)and not Needs.closed(id,f)then return id end
 	end
 	return nil
@@ -237,6 +242,7 @@ function Needs:step(now,dt)
 			self.follow=d.follow()==true
 			self.returning=returning
 			self.roundsAt=f.rounds
+			self.order=if d.nestFirst and d.nestFirst()==true then Needs.NestFirstOrder else nil
 		else self:hide();d.bubble:step(dt);return end
 	end
 	if f.rounds>(self.roundsAt or f.rounds)then self.live.deckDone=true;f.deckDone=true end
@@ -259,7 +265,16 @@ function Needs:step(now,dt)
 	-- The machine is learned (its first visit saved) or the toy is given: nothing left to follow.
 	local following=new and not needsOn and not Coach.has(f.mask,"hatch")and not f.toyGiven
 	-- B: the bubbles -------------------------------------------------------------------------------------------------
-	local id=if needsOn then Needs.current(f,{on=true,owned=owned})else nil
+	local id=if needsOn then Needs.current(f,{on=true,owned=owned,order=self.order})else nil
+	if needsOn and self.order then
+		if self.open and self.open~=id and Needs.available(self.open,f)and not Needs.closed(self.open,f)then
+			id=self.open -- locked: the open need stays until it closes
+		elseif id and id~="needNest"and Needs.closed("needHi",f)and not Needs.closed("needNest",f)
+			and not Needs.available("needNest",f)then
+			self.nestWaitFrom=self.nestWaitFrom or now
+			if now-self.nestWaitFrom<Needs.NestWait then id=nil end
+		end
+	end
 	if needsOn then
 		for _,need in ipairs(Needs.Order)do
 			if not Coach.has(f.mask,need)and Needs.available(need,f)and Needs.closed(need,f)then d.mark(need)end

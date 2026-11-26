@@ -76,7 +76,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # trail, pill and calm deck rules.
           "TomorrowChips", "ResultsNudge", "GrowthCoach", "GrowthG2", "GrowthPort",
           # The hill at night (WORLD-FINISH-LOOK slice F): the lanterns, the glow-caps, the terrace fireflies.
-          "HillNightClient"]
+          "HillNightClient",
+          # The First Hatch (onboarding-2026-11-26): the crack ritual's clock hold.
+          "CrackRitual"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -127,7 +129,9 @@ def client_modules():
                     # Live growth cuts G1 + G2 (ported): the strip, the nudge, the round-two pill, the trail, the calm deck.
                     "TomorrowChips.lua", "ResultsNudge.lua", "GrowthNudge.lua", "PetTrail.lua", "DeckCalm.lua", "PetLookAt.lua",
                     # The hill at night (WORLD-FINISH-LOOK slice F).
-                    "HillNightClient.lua"):
+                    "HillNightClient.lua",
+                    # The First Hatch: the crack ritual.
+                    "CrackRitual.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

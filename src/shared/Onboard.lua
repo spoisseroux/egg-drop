@@ -9,6 +9,10 @@
 --                         glass and glow hidden, the nest's "?" card and Peek, no Napping egg row (EggCorner)
 --   Onboard.on("capsule")  the egg machine's capsule shot on a buy (EggMachineClient; CAPSULE-AND-HUD-LOOK 1)
 --   Onboard.on("landmark") the Sleepy Nest as a landmark (bowl, woven nest, moon lantern) at the corner's spot (NestLandmark)
+-- The First Hatch (artifacts/onboarding-2026-11-26/PLAN.md; Spencer: "three combos and the egg hatches"):
+--   Onboard.on("opener")    the Welcome round: a seeded opener (a chain on drop two) and the egg hatching on 3 combos
+--   Onboard.on("crack")     the Bear's hatch: three taps crack the egg (it opens by itself untouched)
+--   Onboard.on("nestfirst") the nest bubble straight after the first hello (needs `needs` and `nest` on)
 -- ConfigService keys `onboard_follow`, `onboard_needs`, `onboard_nest` (server OnboardConfig): off until the config has
 -- loaded once, then missing or malformed = on. The server publishes `Onboard_<feature>` as its own value AND Things.on()
 -- and republishes when Things changes, so the attribute alone is the truth for clients; on() checks Things too, so a
@@ -20,9 +24,9 @@ local Flags=require(script.Parent.FeatureFlags)
 local Things=require(script.Parent.Things)
 local Onboard={}
 Onboard.PlaceId=107705084891479 -- Pocket Pals Beta
-Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark","capsule"})
-Onboard.Attributes=table.freeze({follow="Onboard_follow",needs="Onboard_needs",nest="Onboard_nest",corner="Onboard_corner",landmark="Onboard_landmark",capsule="Onboard_capsule"})
-Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="onboard_nest",corner="onboard_corner",landmark="onboard_landmark",capsule="onboard_capsule"})
+Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark","capsule","opener","crack","nestfirst"})
+Onboard.Attributes=table.freeze({follow="Onboard_follow",needs="Onboard_needs",nest="Onboard_nest",corner="Onboard_corner",landmark="Onboard_landmark",capsule="Onboard_capsule",opener="Onboard_opener",crack="Onboard_crack",nestfirst="Onboard_nestfirst"})
+Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="onboard_nest",corner="onboard_corner",landmark="onboard_landmark",capsule="onboard_capsule",opener="onboard_opener",crack="onboard_crack",nestfirst="onboard_nestfirst"})
 function Onboard.attribute(feature)return Onboard.Attributes[feature]end
 function Onboard.key(feature)return Onboard.Keys[feature]end
 
@@ -52,7 +56,7 @@ function Onboard.resolve(configValue,override,ceiling)
 	return true
 end
 -- Server only (OnboardConfig): the resolved values every server check reads. Off until they are set.
-local switches={follow=false,needs=false,nest=false,corner=false,landmark=false,capsule=false}
+local switches={follow=false,needs=false,nest=false,corner=false,landmark=false,capsule=false,opener=false,crack=false,nestfirst=false}
 function Onboard.setSwitch(feature,value)
 	if not RunService:IsServer()or switches[feature]==nil then return false end
 	switches[feature]=value==true
