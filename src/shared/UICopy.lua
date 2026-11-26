@@ -489,8 +489,9 @@ local Table={
  },
  shelf={
   -- Lane U (C-cli): the weekly shelf chip (shops) and the machine hub line. No countdown.
-  chip="This week −20%",chipShort="−20%",
-  line="This week: {item}",short="20% off this week",
+  -- Beta 37: "This week" now names the weekly full-price pick (ThisWeek); the 20%-off shelf is the Deal.
+  chip="Deal −20%",chipShort="−20%",
+  line="Deal: {item}",short="20% off",
   status="On this week's shelf",
   deluxe="Deluxe",
  },

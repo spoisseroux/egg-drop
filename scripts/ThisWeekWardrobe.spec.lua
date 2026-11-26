@@ -15,12 +15,14 @@ return function(client)
  local week=ThisWeek.Anchor -- row 1: Plum Party Hat, 60 Stars
  local function on()assert(ThisWeek.inject({on=true,studio=true,flags={ThisWeek=true}}))end
  local ok,problem=xpcall(function()
-  test("the tab: first in line with the switch on and a week; none without either",function()
+  test("the tab: last in line with the switch on and a week; none without either",function()
    on()
    local tabs=Shop.tabsFor(pet,{},week)
    local item=Catalog.forPet(pet,math.huge).byId["partyhat_plum"]
-   assert(tabs[1].id=="thisweek"and tabs[1].thisWeek=="partyhat_plum"and tabs[1].slot==item.slot,tabs[1].id)
-   assert(Shop.tabLabel(tabs[1])==UICopy.get("thisWeek.tab")and UICopy.get("thisWeek.tab")=="This week")
+   local last=tabs[#tabs]
+   assert(last.id=="thisweek"and last.thisWeek=="partyhat_plum"and last.slot==item.slot,last.id)
+   assert(tabs[1].id~="thisweek","the Wardrobe never opens on the sale tab")
+   assert(Shop.tabLabel(last)==UICopy.get("thisWeek.tab")and UICopy.get("thisWeek.tab")=="This week")
    for i=2,#tabs do assert(tabs[i].thisWeek==nil,"one This week tab")end
    assert(Shop.tabsFor(pet,{})[1].id~="thisweek","no week: no tab")
    ThisWeek.inject({on=false,studio=true,flags={ThisWeek=true}})

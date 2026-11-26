@@ -138,10 +138,11 @@ end
 function Shop.tabsFor(petId,owned,week)
  local list={}
  if petId then
-  -- This week: its own tab, first in line (only while the switch is on and this pet's rig sells the pick).
+  for _,tab in ipairs(Catalog.Tabs)do if #Catalog.shopTab(petId,tab.slot,owned)>0 then table.insert(list,tab)end end
+  -- This week: its own tab, last in line so the Wardrobe never opens on a sale item (only while the switch is on and
+  -- this pet's rig sells the pick).
   local pick=Shop.thisWeekTab(petId,week)
   if pick then table.insert(list,pick)end
-  for _,tab in ipairs(Catalog.Tabs)do if #Catalog.shopTab(petId,tab.slot,owned)>0 then table.insert(list,tab)end end
  end
  if #list==0 then for _,tab in ipairs(Catalog.Tabs)do table.insert(list,tab)end end
  return list
