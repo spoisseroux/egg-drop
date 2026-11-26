@@ -575,7 +575,9 @@ def build_floor(name, spacing=1.9):
             return True
         if JW - 2.0 <= cx <= JE + 2.0 and Z1 - .5 <= cz <= -97.6:      # the threshold under the timber jambs too
             return True
-        return JW - .6 <= cx <= JE + .6 and Z1 - .5 <= cz <= -93.2
+        # round 8: out to the apron's hole either side (x0 - 1 .. x1 + 1, APRON["mouth"]): at 0.6 a strip by the east jamb
+        # had nothing under it but the island's underside
+        return JW - 1.2 <= cx <= JE + 1.2 and Z1 - .5 <= cz <= -93.2
 
     def height(x, z):
         u = (x - CENTRE[0]) / ((D["x1"] - D["x0"]) / 2)
@@ -804,10 +806,25 @@ MOUTH_BLOBS = [
     ((-7.0, 22.0, -99.0), (10.0, 2.6, 2.8), 0),
     # the shard field west of the mouth (CAM-LAWN01)
     ((-36.0, 14.0, -98.5), (7.0, 8.0, 3.0), 10),
+] + [
+    # Round 8 (Spencer beta 34, "the entrance to the play den still has some disconnected meshes"; Studio: the collar's
+    # bare end stood free inside the rock, with a gap up to 2.6 over the arch's shoulders where the lid and a loose
+    # flap showed, and a tall grey slab down the east jamb): a rim of rock round the collar's end, from 0.4 behind it
+    # to 2.6 in front, along the arch and down both jambs. The opening's keep-out (now the arch itself, OPENING) presses
+    # its inner side to a lip just inside the collar (LIP), so the collar's end is tucked behind rock.
+    ((x, S.mouth_top(x) + .9, -95.7), (2.1, 1.6, 1.4), 0) for x in (-16.2, -13.4, -10.2, -7.0, -3.8, -.6, 2.2)
+] + [
+    ((jx, FLOOR + y, -95.7), (1.5, ry, 1.4), 0)
+    for jx in (M["x0"] - .9, M["x1"] + .9) for y, ry in ((1.0, 1.6), (3.8, 2.0), (6.8, 2.0), (9.0, 1.8))
 ]
+# Round 8: the opening is the arch (cliff_den_sculpt.mouth_top), not the box up to the crown: the box left the rock
+# 2.6 short of the arch over each shoulder, and the collar's end showed there as a thin grey sheet.
+OPENING = (M["x0"] + .05, M["x1"] - .05, 3.0, Z1 - 1.0, -85.0)     # x0, x1, y0, z0, z1; its top is mouth_top(x)
+# In front of the collar's end the rock's lip stands LIP inside the collar (jambs and arch), so the collar's end is
+# tucked behind it: from the lawn the rock's lip, never the shell's edge, frames the opening.
+LIP = (.35, COLLAR_END - .1)        # how far inside; from which z outward
 # (x0, y0, z0, x1, y1, z1, push axes): nothing of the surround inside these
 MOUTH_KEEP_OUT = [
-    ((M["x0"] + .05, 3.0, Z1 - 1.0, M["x1"] - .05, M["top"] + .1, -85.0), ("x", "y")),   # the opening, up to the crown
     ((M["x0"] - 1.4, 3.0, Z1 + .3, M["x0"] + .6, FLOOR + 10.5, Z1 + 3.0), ("x",)),     # the west prop (DenGreybox)
     ((M["x1"] - .6, 3.0, Z1 + .3, M["x1"] + 1.4, FLOOR + 10.5, Z1 + 3.0), ("x",)),     # the east prop
     ((-44.0, 3.0, -93.0, 20.0, 9.5, -80.0), ("z",)),                                   # the lawn in front of the buttresses
@@ -825,8 +842,19 @@ HIDE_VISUAL = []          # colliding pack parts left with nothing to show: invi
 
 
 def _keep_out(p):
-    """Push points (N x 3, Roblox) out of the keep-out boxes along their allowed axes (the shortest way)."""
+    """Push points (N x 3, Roblox) out of the opening (to its nearest jamb or up to the arch) and then out of the
+    keep-out boxes along their allowed axes (the shortest way)."""
     p = p.copy()
+    ox0, ox1, oy0, oz0, oz1 = OPENING
+    top = np.array([S.mouth_top(float(x)) for x in p[:, 0]])
+    inside = (p[:, 0] > ox0) & (p[:, 0] < ox1) & (p[:, 1] > oy0) & (p[:, 1] < top) & (p[:, 2] > oz0) & (p[:, 2] < oz1)
+    inset, lip_z = LIP
+    for i in np.nonzero(inside)[0]:
+        x, y = p[i, 0], p[i, 1]
+        k = inset if p[i, 2] > lip_z else -.02
+        moves = [(ox0 + k - x, 0), (ox1 - k - x, 0), (0, top[i] - k - y)]
+        dx, dy = min(moves, key=lambda m: abs(m[0]) + abs(m[1]))
+        p[i, 0], p[i, 1] = x + dx, y + dy
     for (x0, y0, z0, x1, y1, z1), axes in MOUTH_KEEP_OUT:
         lo, hi = np.array([x0, y0, z0]), np.array([x1, y1, z1])
         inside = np.all((p > lo) & (p < hi), axis=1)
@@ -847,7 +875,7 @@ def _keep_out(p):
     return p
 
 
-def build_mouth(name, voxel=.28, target_tris=2400, extra=(), per_extra=150):
+def build_mouth(name, voxel=.28, target_tris=3000, extra=(), per_extra=150):   # round 8: 3000 (the rim's 15 masses)
     """The surround: MOUTH_BLOBS and any `extra` blobs (round 7: the masses backing the swept shards over the path's
     foot), one welded rock."""
     bm = bmesh.new()
@@ -955,6 +983,10 @@ def build_apron(name, k, spacing=1.0):
     xs = np.arange(A["x0"] - 2.0, A["x1"] + 2.0 + 1e-6, spacing)
     # its cliff side starts at -99.3, behind the shell's front wall (Fable R1 11: at -100.5 its edge showed in the room)
     zs = np.arange(-99.3, A["z1"] + 2.6 + 1e-6, spacing)
+    # Round 8 (Spencer beta 34, shot 51; Studio: a stretched skirt and a slit to the island's underside at the den
+    # floor's front edge): the hole's lawn edge is the grid line nearest the mouth's z (-93.3), not the cell edge after
+    # it (-92.3): the riser stood 0.9 behind the drawn edge, its texture stretched down, with nothing under the gap
+    mz = float(zs[np.argmin(np.abs(zs - mz))])
     X, Z = np.meshgrid(xs, zs, indexing="ij")
     P = np.stack([X.ravel() * .45, np.zeros(X.size), Z.ravel() * .45], 1)
     margin = (.4 + 1.6 * L.fbm(P, 3, seed=81)).reshape(X.shape)      # Fable R1 5: a broken edge 0.4 to 2.0
@@ -984,10 +1016,16 @@ def build_apron(name, k, spacing=1.0):
         base = len(verts)
         verts.extend([(a[0], A["top"], a[1]), (b[0], A["top"], b[1]), (b[0], FLOOR - .05, b[1]), (a[0], FLOOR - .05, a[1])])
         faces.append([base, base + 1, base + 2, base + 3])
+    grid_faces = len(faces)
     riser((mx0, mz), (mx1, mz), (0, 0, -1))
     riser((mx0, -97.2), (mx0, mz), (1, 0, 0))
     riser((mx1, mz), (mx1, -97.2), (-1, 0, 0))
-    uvs = [[(verts[q][0] * k, -verts[q][2] * k) if abs(verts[q][1] - A["top"]) < 2 else (0, 0) for q in f] for f in faces]
+    # round 8: the risers are mapped on their own plane (along the riser, down it) at the same density; the top's
+    # projection streaked them
+    uvs = [[(verts[q][0] * k, -verts[q][2] * k) for q in f] for f in faces[:grid_faces]]
+    for f in faces[grid_faces:]:
+        along = 0 if abs(verts[f[0]][0] - verts[f[1]][0]) > 1e-6 else 2
+        uvs.append([(verts[q][along] * k, verts[q][1] * k) for q in f])
     obj = L.mesh_object(name, verts, faces, uvs=uvs)
     bm = bmesh.new()
     bm.from_mesh(obj.data)

@@ -1018,7 +1018,7 @@ def main():
         pocket = [duplicate(o, "CDPocket__" + raw_material(o.name)) for o in sources
                   if o.name.startswith("Landmarks__") and material_of(o.name) == "palette" and raw_material(o.name) not in CAVE_BARS]
         sources, carved, new_pieces = cliff_den_sculpt.apply(sources)
-        sources, split = cliff_den_sculpt.split_region(sources, lambda n: classify(n)[1])
+        sources, split = cliff_den_sculpt.split_region(sources, lambda n: classify(n)[1], lambda n: classify(n)[0])
         carved = set(carved) | split
         print("CLIFFDEN split", sorted(split))
         sources = sources + pocket

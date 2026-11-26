@@ -113,6 +113,19 @@ def by_flight(pts):
     return False
 
 
+MOUTH_ZONE = (3.0, 2.0, 5.0)        # round 8: past either jamb, in front of the den's front wall, over the crown
+
+
+def over_mouth(x, y, z):
+    """Round 8 (Spencer beta 34, shot 51: a flap hanging at the top left of the den's arch; Studio: the face's columns
+    at the terrace's north-east end ran down past the brow to y 11.7, into the opening): a face point in front of the
+    den's mouth (MOUTH_ZONE[0] past either jamb, from MOUTH_ZONE[1] behind the front wall out) and under
+    MOUTH_ZONE[2] over its crown ends its column there; the mouth's brow and backing rock stand over that height."""
+    side, behind, over = MOUTH_ZONE
+    m, d = S.MOUTH, S.DEN
+    return m["x0"] - side < x < m["x1"] + side and z > d["z1"] - behind and y < m["top"] + over
+
+
 def cap_and_face():
     """The cap (a fan from the middle to the outline, rings every ~2 studs, the last ring rolling over) and the face from
     the rolled edge down at 20 degrees to the island's ground."""
@@ -186,6 +199,8 @@ def cap_and_face():
             yy -= 1.5
             drop = y - yy
             px, pz = x + dx * drop * lean, z + dz * drop * lean
+            if over_mouth(px, yy, pz):
+                break
             g = S.ground(px, pz)
             jitter = .45 * math.sin(px * .7 + pz * .5) * math.cos(yy * .9)
             col.append((px + dx * jitter, yy, pz + dz * jitter))

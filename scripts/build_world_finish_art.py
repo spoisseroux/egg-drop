@@ -159,11 +159,11 @@ def restore(was):
         o.hide_render = h
 
 
-def recut(source_name, new_name, doomed, corner=None, face=None):
+def recut(source_name, new_name, doomed, corner=None, face=None, keep=None):
     """A copy of an island pack part with the faces `doomed(centre_roblox)` removed (its UVs and material kept). The
     pack's part is hidden by the mount and this copy shown in its place (visual-only parts only: never a colliding
     one, whose hulls a cut would move). Round 7: `face(points, normal_y)` (Roblox) condemns a face by its points and
-    its world normal's y."""
+    its world normal's y. Round 8: `keep(points)` (Roblox) spares a face whatever the rest says."""
     src = bpy.data.objects[source_name]
     src.name = source_name + "__pack"         # the copy takes the pack part's own name (Aero, CliffDenData.parts)
     o = src.copy()
@@ -185,8 +185,9 @@ def recut(source_name, new_name, doomed, corner=None, face=None):
         out.append(tuple(sum(c[i] for c in cs) / len(cs) for i in range(3)))
         return out
     rot = mw.to_3x3()
-    gone = [f for f in bm.faces if doomed(L.rb(mw @ f.calc_center_median())) or (corner and corner(samples(f)))
-            or (face and face(samples(f), (rot @ f.normal).normalized().z))]
+    gone = [f for f in bm.faces if not (keep and keep(samples(f)))
+            and (doomed(L.rb(mw @ f.calc_center_median())) or (corner and corner(samples(f)))
+                 or (face and face(samples(f), (rot @ f.normal).normalized().z)))]
     _bm.ops.delete(bm, geom=gone, context="FACES")
     bm.to_mesh(o.data)
     bm.free()
@@ -865,10 +866,13 @@ def slice_path():
         mw = o.matrix_world
         rot = mw.to_3x3()
         face = Pth.earth_face if re.match(r"(ground|grass|meadow)", o.name.rsplit("__", 1)[1]) else None
+        keep = Pth.foot_lawn if face is not None else None       # round 8: the lawn round the foot's flight stays
 
         def hit(p):
             pts = [L.rb(mw @ o.data.vertices[k].co) for k in p.vertices]
             c = L.rb(mw @ p.center)
+            if keep is not None and keep(pts + [c]):
+                return False
             return test(pts) or Pth.under_tread(c) or (face is not None and face(pts + [c], (rot @ p.normal).normalized().z))
         isl, bm_ = Pth.islands(o)
         small = any(Pth.sweepable(f_, area, Pth.sweep_envelope(cen)) for f_, cen, area, _ in isl)
@@ -879,15 +883,15 @@ def slice_path():
         name = den_overlay_tile(o.name) or o.name
         collide = parts_cd[name]["collide"]
         if den_copy:
-            copy, gone = recut(den_copy, "W7_F_PathOver" + name[len("W7_CD_"):], Pth.under_tread, test, face)
+            copy, gone = recut(den_copy, "W7_F_PathOver" + name[len("W7_CD_"):], Pth.under_tread, test, face, keep)
             bpy.data.objects[den_copy + "__pack"].name = den_copy
             path_hide.append(den_copy)                       # the den's copy goes; the tile stays invisible, colliding
         elif collide:
             # a colliding tile keeps its hulls: it stays invisible and colliding under a visual re-cut copy
-            copy, gone = recut(name, "W7_F_PathOver" + name[len("W7_CD_"):], Pth.under_tread, test, face)
+            copy, gone = recut(name, "W7_F_PathOver" + name[len("W7_CD_"):], Pth.under_tread, test, face, keep)
             bpy.data.objects[name + "__pack"].name = name
         else:
-            copy, gone = recut(name, name, Pth.under_tread, test, face)
+            copy, gone = recut(name, name, Pth.under_tread, test, face, keep)
         n0 = len(copy.data.polygons)
         holes += Pth.sweep(copy)
         gone += n0 - len(copy.data.polygons)

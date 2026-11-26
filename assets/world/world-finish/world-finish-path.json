@@ -6,16 +6,16 @@
    "slice": "path",
    "role": "fixed",
    "centre": [
-    -53.2604,
-    14.3125,
-    -64.3257
+    -49.4678,
+    13.9015,
+    -67.7961
    ],
    "size": [
-    62.269,
-    17.6211,
-    45.5427
+    69.8541,
+    18.4431,
+    52.4835
    ],
-   "triangles": 226,
+   "triangles": 232,
    "look": {
     "kind": "island",
     "material": "dirt_path"
@@ -296,13 +296,13 @@
     46.836,
     210.0
    ],
-   "triangles": 5484,
+   "triangles": 5491,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__grass"
    },
    "replaces": "W7_CD_Ground__grass",
-   "facesRemoved": 65,
+   "facesRemoved": 58,
    "collide": false
   },
   {
@@ -319,13 +319,13 @@
     55.6477,
     249.0
    ],
-   "triangles": 5288,
+   "triangles": 5290,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__ground"
    },
    "replaces": "W7_CD_Ground__ground",
-   "facesRemoved": 62,
+   "facesRemoved": 60,
    "collide": false
   },
   {
@@ -1202,7 +1202,7 @@
  ],
  "hideVisual": [],
  "report": {
-  "W7_F_Path__dirt_path": 226,
+  "W7_F_Path__dirt_path": 232,
   "W7_F_PathGrass__grass": 220,
   "W7_F_PathWall__cliff_rock": 896,
   "W7_F_PathFoot__dirt_path": 184,
@@ -1214,8 +1214,8 @@
   "W7_F_Lip4__boulder_rock": 80,
   "W7_F_Lip5__boulder_rock": 80,
   "W7_F_Stake__wood": 12,
-  "W7_CD_Ground__grass": 5484,
-  "W7_CD_Ground__ground": 5288,
+  "W7_CD_Ground__grass": 5491,
+  "W7_CD_Ground__ground": 5290,
   "W7_CD_Region__cliff_rock": 61,
   "W7_CD_Region__grass": 3,
   "W7_F_PathOverRocks__cliff_rock_1717": 96,
@@ -1225,7 +1225,7 @@
   "W7_F_PathOverRocks__cliff_rock_1817": 156,
   "W7_F_PathSkin__cliff_rock": 74,
   "W7_F_PathBacking__cliff_rock": 1600,
-  "fixedTotal": 17075,
+  "fixedTotal": 17090,
   "lipStones": 10,
   "stakes": 6,
   "stepMaxDeviation": 0.543,

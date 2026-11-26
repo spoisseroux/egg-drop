@@ -351,7 +351,7 @@
     0.3496,
     33.1
    ],
-   "triangles": 910,
+   "triangles": 916,
    "look": {
     "kind": "tile",
     "color": "den_floor_color",
@@ -391,16 +391,16 @@
    "slice": "den",
    "role": "fixed",
    "centre": [
-    -14.8258,
+    -14.8343,
     15.0411,
     -92.7164
    ],
    "size": [
-    62.2537,
+    62.2707,
     23.3757,
     25.4728
    ],
-   "triangles": 4720,
+   "triangles": 5320,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -423,7 +423,7 @@
     0.82,
     10.0
    ],
-   "triangles": 434,
+   "triangles": 474,
    "look": {
     "kind": "island",
     "material": "dirt_path"
@@ -1234,8 +1234,8 @@
    ]
   ],
   "shell": 6531,
-  "floor": 910,
-  "mouth": 4800,
+  "floor": 916,
+  "mouth": 5400,
   "lantern": 142,
   "crystal": 28,
   "stone": 40,
@@ -1254,6 +1254,6 @@
    "east": 1416.3
   },
   "skin": 45,
-  "apron": 434
+  "apron": 474
  }
 }

@@ -3,17 +3,17 @@
  "den": {
   "model": {
    "file": "world-finish-den.fbx",
-   "sha256": "0f10d020cd1ced6f4b8591d0a26ec79501a666857f5327e4044e793f46911e2e",
-   "manifestSha256": "c68faf45adee52517a62947f75ffa95506ae7876ae4666f212aee637d258ed6f",
-   "operation": "5fc7640a-dd89-4519-8552-df3bec5f522f",
-   "assetId": "103471077073179",
+   "sha256": "2d3ce04a015c890ea141270587da588dd170b02096f429f5532229d5ac72e04f",
+   "manifestSha256": "612fd8bd5ac168d5bac7051a361b46e1b0db8083d4e63205c841c924b190d44f",
+   "operation": "2f58f37f-30da-4ce8-a096-e31d7d8d0e92",
+   "assetId": "104220495494857",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "79272668578896",
-    "operation": "228d2ee1-b121-4d1b-a1e3-20c208b7feb2",
-    "why": "round 7b, superseded by 7c (Studio: den skin slivers west of the mouth, on-edge ground at the west jamb)"
+    "assetId": "103471077073179",
+    "operation": "5fc7640a-dd89-4519-8552-df3bec5f522f",
+    "why": "round 7c, superseded by round 8 (Spencer beta 34: den mouth, stair holes)"
    },
-   "why": "round 7c; mesh gate PASS"
+   "why": "round 8: the mouth rock tucks the collar's end (arch keep-out, rim masses, lip), the apron's riser on its drawn edge with its own UVs, the floor out to the apron's hole; mesh gate PASS"
   },
   "images": {
    "den_shell_west_color": {
@@ -29,13 +29,13 @@
    },
    "den_shell_east_color": {
     "file": "textures/den_shell_east_color.png",
-    "sha256": "9e8a86e2eb0e03e306d0b40b5809fc10fc5ba11379009abc8ea1011b027b0149",
-    "operation": "ec3cf364-d45f-4da4-a5ed-61c2e8a8dc50",
-    "assetId": "81328421670391",
+    "sha256": "35ac636011d0f09c5dc0555c5cda88975112de46fd98dd2b09bb525fd80d38c5",
+    "operation": "00e4a672-bc1f-4a59-bf1a-24fe4021cec7",
+    "assetId": "113064623468087",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "121376278515679",
-     "why": "round 7 reveal grade re-bake"
+     "assetId": "81328421670391",
+     "why": "round 8 re-bake (the floor reaches the apron's hole)"
     }
    },
    "den_shell_west_normal": {
@@ -79,34 +79,34 @@
  "path": {
   "model": {
    "file": "world-finish-path.fbx",
-   "sha256": "0346c0d205d635e5d08ea7c62faff4e7668e2124b330c8be1947d988e243d271",
-   "manifestSha256": "4beb850e3c0f9cd22b996190eca20e93c1b65c907897e6cd89042e5e590a0f3c",
-   "operation": "26a02f76-4346-4f28-a95a-6d896f5dce10",
-   "assetId": "129995978377799",
+   "sha256": "069bbb33cd931247f6c41c0bc12056ebb7d2fa5673019434dc808a535b673037",
+   "manifestSha256": "eae6d0b0a17661d4db199e8ff0b57397ea40857265c3fb0375b7411271c69fb3",
+   "operation": "f8a27518-31e1-494a-82c3-7e885809fa62",
+   "assetId": "139188723411606",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "107372779032354",
-    "operation": "09c9c6cb-51f6-480f-9f16-c71e08bca1b4",
-    "why": "round 7b, superseded by 7c (Studio: den skin slivers west of the mouth, on-edge ground at the west jamb)"
+    "assetId": "136341625541650",
+    "operation": "fb9d54f5-4f1c-4682-95d9-dd11b2e7f1fc",
+    "why": "round 8 first cut, superseded by 8b (the foot's tread over the lawn; terrace re-exported with it)"
    },
-   "why": "round 7c; mesh gate PASS"
+   "why": "round 8b: the lawn round the foot's flight kept, the tread runs back from the foot (no underside under the lowest steps); mesh gate PASS"
   },
   "images": {}
  },
  "terrace": {
   "model": {
    "file": "world-finish-terrace.fbx",
-   "sha256": "58f8121a6f38b835a15cf1647c36703420573e63504f257f39a32c0b2bae2280",
-   "manifestSha256": "10bbb9dc70b01f042158bd296615def2a857e838976120707221348cbeb32ce1",
-   "operation": "dd6c2ac7-6bf2-4170-b673-712ebf7399e1",
-   "assetId": "95735155301156",
+   "sha256": "344cee049d7a7e45a90b8c278361f3d5c28abde36f5415a8377eaf6aeb95e1f1",
+   "manifestSha256": "be4929b650108ee5b53afbbd62e72ead9c5d1da922218592a67fd03047d29cfb",
+   "operation": "5fb82209-c81b-4461-bcee-654452ae0609",
+   "assetId": "129996986518154",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "89156781527438",
-    "operation": "b672cc5b-6def-4d2e-a33e-50311f189fe5",
-    "why": "round 7 first cut, superseded by 7b (Fable FABLE-REVIEW-R7 fixes A and B)"
+    "assetId": "123763033162161",
+    "operation": "74f494a5-a149-479c-a081-9345ae849d83",
+    "why": "round 8 first cut, superseded by 8b (the foot's tread over the lawn; terrace re-exported with it)"
    },
-   "why": "round 7b (Fable ROUND7-LOOK items 1-6, FABLE-REVIEW-R7 fixes A and B); mesh gate PASS"
+   "why": "round 8b: the face stops over the den's mouth (no flap into the arch); mesh gate PASS"
   },
   "images": {}
  },

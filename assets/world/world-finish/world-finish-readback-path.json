@@ -1,9 +1,9 @@
 {
  "slice": "path",
- "assetId": "129995978377799",
+ "assetId": "139188723411606",
  "parts": [
   {
-   "meshId": "rbxassetid://119081558574747",
+   "meshId": "rbxassetid://109713961793073",
    "name": "W7_CD_Ground__grass",
    "meshSize": [
     1789.0574951171875,
@@ -12,7 +12,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://73679165511333",
+   "meshId": "rbxassetid://123920119087797",
    "name": "W7_CD_Ground__ground",
    "meshSize": [
     2048,
@@ -192,12 +192,12 @@
    ]
   },
   {
-   "meshId": "rbxassetid://122945720044121",
+   "meshId": "rbxassetid://114121733521186",
    "name": "W7_F_Path__dirt_path",
    "meshSize": [
-    488.6087951660156,
-    138.2685546875,
-    357.3617858886719
+    548.12744140625,
+    144.71807861328125,
+    411.82421875
    ]
   },
   {

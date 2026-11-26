@@ -757,7 +757,7 @@ def _tile_number(x, z):
     return (math.floor(x / TILE) + 20) * 100 + (math.floor(z / TILE) + 20)
 
 
-def split_region(objs, collides):
+def split_region(objs, collides, group=None):
     """Colliding island meshes: faces in the region move to CDRegion_<cat>__<mat> (visual, never colliding); faces in
     the 32-stud tiles around the region move to CDTile<NN>_<cat>__<mat> (colliding, small); the rest stays. Returns
     (objects, names changed)."""
@@ -773,7 +773,10 @@ def split_region(objs, collides):
     out, changed = [], set()
     col = bpy.context.scene.collection
     for o in objs:
-        if not (o.name.startswith(("Rocks_", "Landmarks__")) and collides(o.name)):
+        # round 8: the colliding station groups the nap daises left are tiled whole too (none of them near the region)
+        # (by group key: never the Eggs station's or the west bench's own groups, which the beta hides by name)
+        station = group is not None and group(o.name) in TILE_STATIONS
+        if not ((o.name.startswith(("Rocks_", "Landmarks__")) or station) and collides(o.name)):
             out.append(o)
             continue
         cat, mat = o.name.rsplit("__", 1)
@@ -783,11 +786,11 @@ def split_region(objs, collides):
         where = {}
         for f in bm.faces:
             c = _roblox(mw @ f.calc_center_median())
-            if in_region(*c):
+            if in_region(*c) and not station:        # round 8: a station keeps colliding where it always did
                 where[f.index] = "CDRegion_" + cat
             else:
                 n = _tile_number(c[0], c[2])
-                if n in ring or o.name in TILE_ALL:
+                if n in ring or o.name in TILE_ALL or station:
                     where[f.index] = f"CDTile{n}_" + cat
         bm.free()
         if not where:
@@ -802,6 +805,14 @@ def split_region(objs, collides):
             pb.faces.ensure_lookup_table()
             bmesh.ops.delete(pb, geom=[f for f in pb.faces if f.index not in keep], context="FACES")
             bmesh.ops.delete(pb, geom=[v for v in pb.verts if not v.link_faces], context="VERTS")   # round 6
+            if station and pb.verts and max(v.co.z for v in pb.verts) - min(v.co.z for v in pb.verts) < FLAT:
+                # round 8: a station tile that is one flat inlay (the arrival dais's trim rings, flush on its marble) gets
+                # a facing-down copy FLAT_BACK under it, inside the marble: no part may be under 0.05 thick (a sliver)
+                dup = bmesh.ops.duplicate(pb, geom=list(pb.faces))
+                faces = [g for g in dup["geom"] if isinstance(g, bmesh.types.BMFace)]
+                verts = [g for g in dup["geom"] if isinstance(g, bmesh.types.BMVert)]
+                bmesh.ops.translate(pb, verts=verts, vec=(0.0, 0.0, -FLAT_BACK))
+                bmesh.ops.reverse_faces(pb, faces=faces)
             pb.to_mesh(piece.data)
             pb.free()
             piece.name = name + "__" + mat
@@ -933,9 +944,35 @@ def anchors_outline():
     return outline
 
 
+# Round 8 (Spencer beta 34: "what even are these things / can we get rid of them?"): the three nap daises (a cushion on a
+# stone ring with a lamp post: SpringRestWest (49.5, 14) and SpringRestEast (54.5, 14) by the fountain, CreekNook (1, -33))
+# leave the beta. Each is its own import object per material, standing on whole ground (meadow 4.10, lawn 4.00), so their
+# faces simply go. Their marble, marble_smooth and trim collide: those groups are tiled whole (TILE_STATIONS), so the
+# re-baked hulls stay inside their 32-stud tiles (Studio R2: a carved island-wide marble re-baked one hull over the plaza).
+NAP_DAIS = "Stations_NapDais_"
+TILE_STATIONS = ("Stations__marble", "Stations__marble_smooth", "Stations__trim")   # group keys
+FLAT, FLAT_BACK = .05, .06          # a flat station tile (thinner than a sliver) is backed this far under itself
+
+
+def drop_nap_daises(objs):
+    """Empty every nap dais import object (kept in the sources, so its group counts as carved). Returns their names."""
+    gone = []
+    for o in objs:
+        if not o.name.startswith(NAP_DAIS) or not o.data.polygons:
+            continue
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        bmesh.ops.delete(bm, geom=list(bm.verts), context="VERTS")
+        bm.to_mesh(o.data)
+        bm.free()
+        o.data.update()
+        gone.append(o.name)
+    return gone
+
+
 def apply(sources):
     """--beta: carve the sources in place and add the new pieces. Returns (sources + new, carved names, new names)."""
-    carved = carve(sources)
+    carved = carve(sources) + drop_nap_daises(sources)
     new = build_path(sources) + build_den(sources)
     return sources + new, set(carved), {o.name for o in new}
 

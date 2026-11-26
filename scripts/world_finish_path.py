@@ -127,7 +127,34 @@ def tread():
         # edge and turns down 0.4, a turf lip over the rock skirt, a touch outward so the two never fight
         grass.quad(P(s0, w0 + e, s0["h"] + .07), P(s1, w1 + e, s1["h"] + .07), P(s1, w1 + e + .08, s1["h"] - GRASS_SKIRT),
                    P(s0, w0 + e + .08, s0["h"] - GRASS_SKIRT))
+    foot_apron(dirt)
     return dirt, grass
+
+
+FOOT_APRON = (3.0, 3)               # round 8: how far the tread runs back from the foot's first step, in how many rows
+
+
+def foot_apron(dirt):
+    """Round 8 (Spencer beta 34, shot 52; Studio and Blender: the island's underside showed 40 down in front of the
+    lowest step): the sculpt's ramp (CD_CliffPath__dirt_path, hidden by this slice) began before the foot's first step,
+    where the island was carved away and no tread is drawn (the flights have none). The tread now runs back from the
+    foot FOOT_APRON[0] studs at its full width, just over the lawn round it."""
+    length, rows = FOOT_APRON
+    s0 = S.path_samples()[0]
+    w, h0 = s0["w"] / 2 + .4, s0["h"] + .03
+
+    def back(k):
+        d = length * k / rows
+        s = dict(s0, x=s0["x"] - s0["dir"][0] * d, z=s0["z"] - s0["dir"][1] * d)
+        g = S.ground(s["x"], s["z"])
+        # over the lawn it meets (the kept lawn's big faces reach 4.66; under it they cut it into a zigzag), and within
+        # a stud of the foot inside the tread's band (check_world_finish_path: 0.1 over the ramp at most)
+        h = h0 + .05 if d <= 1.0 + 1e-6 else max(h0 + .05, (g if g is not None else h0) + .06)
+        return s, h
+
+    for k in range(rows):
+        (sa, ha), (sb, hb) = back(k + 1), back(k)
+        dirt.quad(Q(sa, -w, ha), Q(sb, -w, hb), Q(sb, w, hb), Q(sa, w, ha))
 
 
 BANK_SPAN = (5.0, 6.0, 4.0)         # round 7 (Fable ROUND7 1): the wall's least reach over a bank, how far behind
@@ -769,6 +796,20 @@ def plank_face(points, ny):
 def earth_face(points, ny):
     """The path slice's face rule for island ground and grass: the pale bank (ROUND7 1) and the west-jamb plank (7c)."""
     return bank_face(points, ny) or plank_face(points, ny)
+
+
+FOOT_LAWN = ((-33.0, -96.0), (-11.0, -75.0), .15)   # round 8: (x, z) min, max round the foot's flight; over its foot
+
+
+def foot_lawn(points):
+    """Round 8 (Spencer beta 34, shot 52: "at the bottom of the stairs ... some missing faces / under/between the
+    stairs"; Studio and Blender: the island's lawn round the foot's flight was cut away, and the island's underside
+    showed 40 studs down beside and below the lowest steps, where no tread is drawn): an island ground or grass face at
+    the foot whose every point stays at or under the path's foot height + 0.15 is lawn the steps stand on, never cut.
+    Nothing of it reaches a step's top (the lowest is 0.4 over the foot) or a tread."""
+    (x0, z0), (x1, z1), over = FOOT_LAWN
+    top = S.path_samples()[0]["h"] + over
+    return all(x0 <= p[0] <= x1 and z0 <= p[2] <= z1 and p[1] <= top for p in points)
 
 
 UNDER = (.5, 1.0)                   # round 7 (Fable ROUND7 2): 0.5 past each edge, down to 1.0 under the tread

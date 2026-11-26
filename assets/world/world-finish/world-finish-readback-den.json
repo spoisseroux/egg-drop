@@ -1,6 +1,6 @@
 {
  "slice": "den",
- "assetId": "103471077073179",
+ "assetId": "104220495494857",
  "parts": [
   {
    "meshId": "rbxassetid://123101549190510",
@@ -48,7 +48,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://78944097638379",
+   "meshId": "rbxassetid://86861759818869",
    "name": "W7_F_DenApron__dirt_path",
    "meshSize": [
     282.4827575683594,
@@ -66,12 +66,12 @@
    ]
   },
   {
-   "meshId": "rbxassetid://92113501056578",
+   "meshId": "rbxassetid://135807272469741",
    "name": "W7_F_DenMouth__cliff_rock",
    "meshSize": [
-    488.488525390625,
+    488.62255859375,
     183.42347717285156,
-    199.87844848632812
+    199.87860107421875
    ]
   },
   {
@@ -93,7 +93,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://128917636568260",
+   "meshId": "rbxassetid://117758473293745",
    "name": "W7_F_Den__floor",
    "meshSize": [
     298.17626953125,

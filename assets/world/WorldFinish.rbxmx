@@ -6,7 +6,7 @@
     <Item class="StringValue" referent="WorldFinishVersion">
       <Properties>
         <string name="Name">Version</string>
-        <string name="Value">717b092907ec6c42</string>
+        <string name="Value">8a86aa6741729a3d</string>
       </Properties>
     </Item>
     <Item class="MeshPart" referent="WFD0">
@@ -393,7 +393,7 @@
         <Properties>
           <string name="Name">MatteFinish</string>
           <token name="AlphaMode">0</token>
-          <Content name="ColorMap"><url>rbxassetid://81328421670391</url></Content>
+          <Content name="ColorMap"><url>rbxassetid://113064623468087</url></Content>
           <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
           <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
           <Content name="NormalMap"><url>rbxassetid://95314721544091</url></Content>
@@ -404,7 +404,7 @@
     <Item class="MeshPart" referent="WFD14">
       <Properties>
         <string name="Name">W7_F_Den__floor</string>
-        <Content name="MeshId"><url>rbxassetid://128917636568260</url></Content>
+        <Content name="MeshId"><url>rbxassetid://117758473293745</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>38.0</X><Y>0.3496</Y><Z>33.1</Z></Vector3>
         <Vector3 name="InitialSize"><X>298.17626953125</X><Y>2.7434699535369873</Y><Z>259.7272033691406</Z></Vector3>
@@ -464,10 +464,10 @@
     <Item class="MeshPart" referent="WFD16">
       <Properties>
         <string name="Name">W7_F_DenMouth__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://92113501056578</url></Content>
+        <Content name="MeshId"><url>rbxassetid://135807272469741</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>62.2537</X><Y>23.3757</Y><Z>25.4728</Z></Vector3>
-        <Vector3 name="InitialSize"><X>488.488525390625</X><Y>183.42347717285156</Y><Z>199.87844848632812</Z></Vector3>
+        <Vector3 name="Size"><X>62.2707</X><Y>23.3757</Y><Z>25.4728</Z></Vector3>
+        <Vector3 name="InitialSize"><X>488.62255859375</X><Y>183.42347717285156</Y><Z>199.87860107421875</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -493,7 +493,7 @@
     <Item class="MeshPart" referent="WFD17">
       <Properties>
         <string name="Name">W7_F_DenApron__dirt_path</string>
-        <Content name="MeshId"><url>rbxassetid://78944097638379</url></Content>
+        <Content name="MeshId"><url>rbxassetid://86861759818869</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>36.0</X><Y>0.82</Y><Z>10.0</Z></Vector3>
         <Vector3 name="InitialSize"><X>282.4827575683594</X><Y>6.4343390464782715</Y><Z>78.46743774414062</Z></Vector3>
@@ -631,10 +631,10 @@
     <Item class="MeshPart" referent="WFP0">
       <Properties>
         <string name="Name">W7_F_Path__dirt_path</string>
-        <Content name="MeshId"><url>rbxassetid://122945720044121</url></Content>
+        <Content name="MeshId"><url>rbxassetid://114121733521186</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>62.269</X><Y>17.6211</Y><Z>45.5427</Z></Vector3>
-        <Vector3 name="InitialSize"><X>488.6087951660156</X><Y>138.2685546875</Y><Z>357.3617858886719</Z></Vector3>
+        <Vector3 name="Size"><X>69.8541</X><Y>18.4431</Y><Z>52.4835</Z></Vector3>
+        <Vector3 name="InitialSize"><X>548.12744140625</X><Y>144.71807861328125</Y><Z>411.82421875</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -970,7 +970,7 @@
     <Item class="MeshPart" referent="WFP12">
       <Properties>
         <string name="Name">W7_CD_Ground__grass@path</string>
-        <Content name="MeshId"><url>rbxassetid://119081558574747</url></Content>
+        <Content name="MeshId"><url>rbxassetid://109713961793073</url></Content>
         <Content name="TextureID"><url>rbxassetid://109820826774624</url></Content>
         <Vector3 name="Size"><X>228.0</X><Y>46.836</Y><Z>210.0</Z></Vector3>
         <Vector3 name="InitialSize"><X>1789.0574951171875</X><Y>367.5101318359375</Y><Z>1647.816162109375</Z></Vector3>
@@ -999,7 +999,7 @@
     <Item class="MeshPart" referent="WFP13">
       <Properties>
         <string name="Name">W7_CD_Ground__ground@path</string>
-        <Content name="MeshId"><url>rbxassetid://73679165511333</url></Content>
+        <Content name="MeshId"><url>rbxassetid://123920119087797</url></Content>
         <Content name="TextureID"><url>rbxassetid://113678904532434</url></Content>
         <Vector3 name="Size"><X>261.0</X><Y>55.6477</Y><Z>249.0</Z></Vector3>
         <Vector3 name="InitialSize"><X>2048</X><Y>436.6532897949219</Y><Z>1953.839111328125</Z></Vector3>
@@ -1280,10 +1280,10 @@
     <Item class="MeshPart" referent="WFT0">
       <Properties>
         <string name="Name">W7_F_Terrace__grass</string>
-        <Content name="MeshId"><url>rbxassetid://95309983439204</url></Content>
+        <Content name="MeshId"><url>rbxassetid://118223652039451</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>85.7623</X><Y>1.2489</Y><Z>77.5923</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1844.656494140625</X><Y>26.862506866455078</Y><Z>1668.92919921875</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1899.24609375</X><Y>27.657459259033203</Y><Z>1718.3184814453125</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -1309,10 +1309,10 @@
     <Item class="MeshPart" referent="WFT1">
       <Properties>
         <string name="Name">W7_F_TerraceFace__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://134245935094505</url></Content>
+        <Content name="MeshId"><url>rbxassetid://112114428230401</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>95.2162</X><Y>17.7387</Y><Z>83.3925</Z></Vector3>
-        <Vector3 name="InitialSize"><X>2047.9998779296875</X><Y>381.5419616699219</Y><Z>1793.6854248046875</Z></Vector3>
+        <Vector3 name="Size"><X>92.4794</X><Y>17.7387</Y><Z>83.3925</Z></Vector3>
+        <Vector3 name="InitialSize"><X>2048</X><Y>392.83306884765625</Y><Z>1846.7666015625</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -1338,10 +1338,10 @@
     <Item class="MeshPart" referent="WFT2">
       <Properties>
         <string name="Name">W7_F_TerraceTongues__grass</string>
-        <Content name="MeshId"><url>rbxassetid://73019783409844</url></Content>
+        <Content name="MeshId"><url>rbxassetid://136433628433236</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>15.3124</X><Y>5.1498</Y><Z>11.5202</Z></Vector3>
-        <Vector3 name="InitialSize"><X>329.3533020019531</X><Y>110.76673889160156</Y><Z>247.78794860839844</Z></Vector3>
+        <Vector3 name="InitialSize"><X>339.0999755859375</X><Y>114.0447006225586</Y><Z>255.12083435058594</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -1367,10 +1367,10 @@
     <Item class="MeshPart" referent="WFT3">
       <Properties>
         <string name="Name">W7_F_TerraceEarth__dirt_path</string>
-        <Content name="MeshId"><url>rbxassetid://100131879881886</url></Content>
+        <Content name="MeshId"><url>rbxassetid://137741255921254</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>5.9398</X><Y>0.001</Y><Z>5.7056</Z></Vector3>
-        <Vector3 name="InitialSize"><X>127.75886535644531</X><Y>5.2512088586809114e-05</Y><Z>122.72158813476562</Z></Vector3>
+        <Vector3 name="InitialSize"><X>131.53968811035156</X><Y>5.406609852798283e-05</Y><Z>126.35334014892578</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -1396,10 +1396,10 @@
     <Item class="MeshPart" referent="WFT4">
       <Properties>
         <string name="Name">W7_F_TerraceRocks__cliff_rock</string>
-        <Content name="MeshId"><url>rbxassetid://71206898802732</url></Content>
+        <Content name="MeshId"><url>rbxassetid://111888098507549</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>49.2886</X><Y>7.9655</Y><Z>22.7609</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1060.14697265625</X><Y>171.32908630371094</Y><Z>489.5622253417969</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1091.520263671875</X><Y>176.3992919921875</Y><Z>504.0500183105469</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -1425,10 +1425,10 @@
     <Item class="MeshPart" referent="WFT5">
       <Properties>
         <string name="Name">W7_F_TerraceSlab__boulder_rock</string>
-        <Content name="MeshId"><url>rbxassetid://76981128088537</url></Content>
+        <Content name="MeshId"><url>rbxassetid://102221033755686</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>8.5915</X><Y>0.62</Y><Z>8.6603</Z></Vector3>
-        <Vector3 name="InitialSize"><X>184.7952117919922</X><Y>13.335550308227539</Y><Z>186.27508544921875</Z></Vector3>
+        <Vector3 name="InitialSize"><X>190.263916015625</X><Y>13.730194091796875</Y><Z>191.78758239746094</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -1454,10 +1454,10 @@
     <Item class="MeshPart" referent="WFT6">
       <Properties>
         <string name="Name">W7_F_TerraceLog__bark</string>
-        <Content name="MeshId"><url>rbxassetid://76820533732799</url></Content>
+        <Content name="MeshId"><url>rbxassetid://130812072119162</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>8.0</X><Y>0.9231</Y><Z>1.1</Z></Vector3>
-        <Vector3 name="InitialSize"><X>172.0716094970703</X><Y>19.854507446289062</Y><Z>23.659847259521484</Z></Vector3>
+        <Vector3 name="InitialSize"><X>177.16378784179688</X><Y>20.44207000732422</Y><Z>24.360021591186523</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -1483,10 +1483,10 @@
     <Item class="MeshPart" referent="WFT7">
       <Properties>
         <string name="Name">W7_F_TerraceTrunk__bark</string>
-        <Content name="MeshId"><url>rbxassetid://140250728375500</url></Content>
+        <Content name="MeshId"><url>rbxassetid://139720450126697</url></Content>
         <Content name="TextureID"><url /></Content>
         <Vector3 name="Size"><X>2.26</X><Y>12.5</Y><Z>2.0</Z></Vector3>
-        <Vector3 name="InitialSize"><X>48.6102294921875</X><Y>268.8619079589844</Y><Z>43.01790237426758</Z></Vector3>
+        <Vector3 name="InitialSize"><X>50.048770904541016</X><Y>276.81842041015625</Y><Z>44.29094696044922</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>

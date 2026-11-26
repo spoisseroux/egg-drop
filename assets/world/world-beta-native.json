@@ -1,17 +1,17 @@
 {
  "schemaVersion": 1,
- "note": "The beta overlay pack (CLIFF-DEN-ISLAND-SCOPE): built in Studio Edit from the readback ids (AssetService:CreateMeshPartAsync, precise collision where CliffDenData.parts says collide, Box and no query otherwise; each part a clone of its live template with the mesh applied, TextureID restored), exported with SerializationService:SerializeInstancesAsync and checked by a round trip (201 parts, 2958 rays identical). Mounted by default.project.json only; scripts/world_beta_pack.py --check binds it. Round 6 (2026-11-25): rebuilt the same way by artifacts/qa-2026-11-25-beta25/build_world_beta_pack.luau (the tiled parts' looks applied after, from the same live templates), exported with SerializationService and reassembled byte for byte (h=(h*31+b)%2^32 2717870127). Round 6c (2026-11-25): rebuilt the same way after the path corridor re-carve (231 parts), reassembled byte for byte (h 4259326611). Round 6e (2026-11-25): each piece now carries the FBX import's pi turn about Y as the live parts do (the r6 rebuild had dropped it, mirroring every piece in its box); 232 parts, reassembled byte for byte (h 1796520539).",
+ "note": "The beta overlay pack (CLIFF-DEN-ISLAND-SCOPE): built in Studio Edit from the readback ids (AssetService:CreateMeshPartAsync, precise collision where CliffDenData.parts says collide, Box and no query otherwise; each part a clone of its live template with the mesh applied, TextureID restored), exported with SerializationService:SerializeInstancesAsync and checked by a round trip (201 parts, 2958 rays identical). Mounted by default.project.json only; scripts/world_beta_pack.py --check binds it. Round 6 (2026-11-25): rebuilt the same way by artifacts/qa-2026-11-25-beta25/build_world_beta_pack.luau (the tiled parts' looks applied after, from the same live templates), exported with SerializationService and reassembled byte for byte (h=(h*31+b)%2^32 2717870127). Round 6c (2026-11-25): rebuilt the same way after the path corridor re-carve (231 parts), reassembled byte for byte (h 4259326611). Round 6e (2026-11-25): each piece now carries the FBX import's pi turn about Y as the live parts do (the r6 rebuild had dropped it, mirroring every piece in its box); 232 parts, reassembled byte for byte (h 1796520539). Round 8 (2026-11-26, beta 34 notes): the nap daises left the beta (cliff_den_sculpt.NAP_DAIS); the colliding station groups are tiled whole (W7_CD_Stations__<mat>_<tile>, precise collision per tile, each dressed as its live group); rebuilt the same way by artifacts/qa-2026-11-26-beta34/build_world_beta_pack.luau (257 parts), exported with SerializationService and reassembled byte for byte (h 3073345123); round 8b: the arrival dais's flat trim tiles backed 0.06 under themselves (no sliver part), rebuilt and exported the same way.",
  "nativePath": "assets/world/WorldBeta.rbxm",
- "nativeBytes": 149109,
- "nativeSha256": "8c2c87516a3faab17d2da271e73f0761bc77abcbb543aceab4c8867ce75ceea0",
- "version": "6890559a522d3259",
- "parts": 232,
- "readback": "artifacts/qa-2026-11-25-beta25/build_world_beta_pack.luau (uploads 140553833833780 visual, 84447177502820 collision)",
+ "nativeBytes": 165341,
+ "nativeSha256": "bc432d870d238cdf653118d821f059b71d8dd33833029b645d5a10e3059a404a",
+ "version": "7c5a1db2d4b1a801",
+ "parts": 257,
+ "readback": "artifacts/qa-2026-11-26-beta34/build_world_beta_pack.luau (uploads 110533473261863 visual, 84447177502820 collision)",
  "previous": {
-  "nativeBytes": 140918,
-  "nativeSha256": "1fdd3359ae5c356d441edd3e3bff13d408935f63a38bf39b125b3859668d6637",
-  "version": "a93e14640fa4192b",
-  "parts": 215,
-  "readback": "artifacts/qa-2026-11-25-beta25/build_world_beta_pack.luau (uploads 98284784411093 visual, 103168916149306 collision)"
+  "nativeBytes": 149109,
+  "nativeSha256": "8c2c87516a3faab17d2da271e73f0761bc77abcbb543aceab4c8867ce75ceea0",
+  "version": "6890559a522d3259",
+  "parts": 232,
+  "readback": "artifacts/qa-2026-11-25-beta25/build_world_beta_pack.luau (uploads 140553833833780 visual, 84447177502820 collision)"
  }
 }
