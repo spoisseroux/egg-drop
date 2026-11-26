@@ -28,10 +28,16 @@ function Ritual.stopsFrom(events)
 	return out
 end
 
-function Ritual.new(stops,clock)
+-- auto (optional): this ritual's own wait before a stop lets go by itself. Onboarding v2 step 3 (the egg in the garden)
+-- waits FirstHatchStory's 7 s (ONBOARDING-V2: "Ritual.Auto = 1.1 on the first hatch" was too fast for the taps to
+-- matter); the reveal's own ritual keeps Ritual.Auto.
+function Ritual.new(stops,clock,auto)
 	if type(stops)~="table"or #stops==0 then return nil end
-	return setmetatable({stops=stops,index=1,since=nil,taps=0,clock=clock or os.clock,released={}},Ritual)
+	return setmetatable({stops=stops,index=1,since=nil,taps=0,clock=clock or os.clock,released={},
+		auto=if type(auto)=="number"and auto>0 then auto else nil},Ritual)
 end
+-- How long the clock has waited at the stop it is held at (0 when not held).
+function Ritual:waited()return if self.since then self.clock()-self.since else 0 end
 -- Is the clock held at this age? Advances past a stop when it is released (tap or Auto).
 function Ritual:hold(age)
 	local at=self.stops[self.index]
@@ -39,7 +45,7 @@ function Ritual:hold(age)
 	if self.released[self.index]then self.index+=1;self.since=nil;return self:hold(age)end
 	local now=self.clock()
 	self.since=self.since or now
-	if now-self.since>=Ritual.Auto then self.released[self.index]=true;self.index+=1;self.since=nil;return false end
+	if now-self.since>=(self.auto or Ritual.Auto)then self.released[self.index]=true;self.index+=1;self.since=nil;return false end
 	return true
 end
 -- Waiting for a tap right now (the "Tap the egg" prompt)?

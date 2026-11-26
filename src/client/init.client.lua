@@ -1608,6 +1608,8 @@ roomView.onPresentationOwnerChanged = function()
 end
 openNursery = function()
 	if roomView.busy or board:GetAttribute("Mode") ~= "Room" then return end
+	-- Onboarding v2: Hatch eggs waits while the stork plays the starter receipt (never a second hatch).
+	if clientUI.firstHatchStory and clientUI.firstHatchStory:ownsReceipt() then return end
 	picker:close()
 	journal:close()
     if clientUI.hueView then clientUI.hueView:close("forced")end
@@ -1666,6 +1668,40 @@ visitEggs = function()
 end
 
 eggButton.Visible = false
+-- Onboarding v2 steps 2 to 4 (Onboard "stork", FirstHatchStory): the starter Bear's receipt plays as the stork, the
+-- crack in the garden and the Bear's card, instead of the deck's hatch modal and the Hatch eggs reveal. The server has
+-- granted and saved the Bear already; the story acks the receipt on Meet with the reveal's own ack.
+do
+ (function()
+ local Story=require(script.FirstHatchStory)
+ local story=Story.new({gui=player:WaitForChild("PlayerGui"),audio=audio,copy=require(ReplicatedStorage.Shared.UICopy).get,
+  inputKind=function()return clientUI.inputKind and clientUI.inputKind()or "Keyboard"end,
+  reduced=function()return reduceEffects()==true end,
+  mode=function()return board:GetAttribute("Mode")end,
+  ready=function()return board:GetAttribute("Mode")=="Room"and not roomView.busy and roomView.canRoam()and player.Character~=nil
+   and not roomView.transition.shade.Visible end,
+  toRoom=function()clearPlayInputs();request:FireServer("mode","Room")end,
+  character=function()return player.Character end,
+  pet=function()return roomView.pet end,
+  appearance=function(petId)return nurseryView.appearanceFor and nurseryView.appearanceFor(petId)or nil end,
+  receipt=function()return nurseryState and nurseryState.lastHatch end,
+  ack=function(id)nurseryRequest:FireServer("ack",id,nurseryState and nurseryState.revision or 0)end,
+  companion=function()if board:GetAttribute("CompanionId")~="pip"then request:FireServer("companion","pip")end end,
+  event=function(name)request:FireServer("onboardEvent",name)end,
+  -- Anything went wrong: the receipt goes the old way (Hatch eggs plays it), so the Bear is always met.
+  fallback=function(result)
+   task.spawn(function()
+    if board:GetAttribute("Mode")~="Room"then request:FireServer("mode","Room")end
+    local deadline=os.clock()+5
+    repeat task.wait(.1)until(board:GetAttribute("Mode")=="Room"and not roomView.busy)or os.clock()>deadline
+    if nurseryState and nurseryState.lastHatch and nurseryState.lastHatch.id==result.id and openNursery then openNursery()end
+   end)
+  end,
+  done=function()if clientUI.onFirstHatchDone then clientUI.onFirstHatchDone()end end})
+ clientUI.firstHatchStory=story
+ gui.Destroying:Connect(function()story:destroy()end)
+ end)()
+end
 local shownNurseryHatch
 local function refreshNursery(state)
  if type(state)~="table"then return end
@@ -1697,6 +1733,8 @@ local function refreshNursery(state)
 	if result and result.id ~= shownNurseryHatch then
 		cancelHatchNavigation()
 		shownNurseryHatch = result.id
+		-- Onboarding v2: the starter Bear's receipt is the stork's (FirstHatchStory), never the Hatch eggs reveal.
+		if clientUI.firstHatchStory and not nurseryView:isOpen() and clientUI.firstHatchStory:claim(result) then return end
 		-- Purchase already shows the committed result in the current view. Do not
 		-- schedule a second open that could undo an immediate Close.
 		if nurseryView:isOpen() then return end
@@ -2007,6 +2045,17 @@ do
 	picker.onTips=function()
 		if not clientUI.replayCoachTips then return false end
 		picker:close("tips");task.defer(clientUI.replayCoachTips);return true
+	end
+	-- Onboarding v2: Settings > "Watch the first hatch again" (the stork and the crack with a stand-in egg, no rewards).
+	picker.replayHatchShown=function()
+		return clientUI.firstHatchStory~=nil and (board:GetAttribute("OwnedPets") or 0)>0 and require(script.OnboardV2).on("stork")
+	end
+	picker.onReplayHatch=function()
+		local story=clientUI.firstHatchStory
+		if not story or story:isRunning() or board:GetAttribute("Mode")~="Room" then return false end
+		picker:close("replay")
+		task.delay(.4,function()story:replay()end)
+		return true
 	end
 	for _, node in ipairs({ modal, picker.shade, journal.shade, nurseryView.shade, gameMenu.shade, clientUI.hueView.shade }) do
 		node:GetPropertyChangedSignal("Visible"):Connect(function()
@@ -2612,7 +2661,10 @@ updateHud = function()
 	end
 	local wasVisible = modal.Visible
 	local sheetOpen=isPickerOpen() or journal.shade.Visible or nurseryView:isOpen() or clientUI.isHueOpen() or gameMenu.shade.Visible
-	modal.Visible = showHatch and not over and not sheetOpen
+	-- Onboarding v2 (Onboard "stork"): the first Bear's deck hatch modal never shows; the stork brings the egg instead.
+	-- (a clientUI field, not a local: this function is near Luau's register limit)
+	clientUI.storyHolds = clientUI.firstHatchStory ~= nil and clientUI.firstHatchStory:holdsDeck(hatchPet)
+	modal.Visible = showHatch and not over and not sheetOpen and not clientUI.storyHolds
 	if modal.Visible or(over and not sheetOpen)then
 		clearPlayInputs()
 		picker:close()
@@ -2711,7 +2763,7 @@ updateHud = function()
 	if clientUI.pocketMenu.visible and clientUI.pocketShouldClose()then clientUI.closePocketMenu(true)end
 	clientUI.refreshBack()
 	drawAim()
-	if showHatch and not over and revealedPet ~= hatchName then
+	if showHatch and not over and not clientUI.storyHolds and revealedPet ~= hatchName then
 		revealedPet = hatchName
 		local oldPortrait = pet:FindFirstChild("Portrait")
 		if oldPortrait then
@@ -3331,6 +3383,13 @@ clientUI.items:place(viewport.Position,viewport.Size,clientUI.deck.geometry~=nil
 -- QA 2026-11-13 Q1: settle feedback and the first-drop idle hint over the board.
 clientUI.boardHints=require(script.BoardHints).new(clientUI.deviceRoot,{z=37,audio=audio})
 clientUI.boardHints:place(viewport.Position,viewport.Size)
+-- Onboarding v2 step 1 (Onboard "egg3d"): the first-drop pill says "Click to drop" on a computer (no key names).
+clientUI.boardHints.idleTextFor=function(input)
+ local V2=require(script.OnboardV2)
+ if not V2.on("egg3d")then return nil end
+ local key=V2.dropHint(input)
+ return key and require(ReplicatedStorage.Shared.UICopy).get(key)or nil
+end
 gui.Destroying:Connect(function()clientUI.boardHints:destroy()end)
 -- v1 track A onboarding: coach cards (Welcome card over the board, the guided garden step,
 -- one-time cards saved in coachMask). Own frame step and snapshot listener; see CoachCards.lua.
@@ -3499,6 +3558,8 @@ do
   skip=function(sequence)request:FireServer("welcomeSkip",{sequence=sequence})end,
   cue=function(pitch,gain)audio:play("charge",pitch,gain)end,
   quietCue=function()audio:play("aim",1,.25)end,
+  -- Onboarding v2 step 1 (WelcomeEgg3D): the 3D egg's crack sounds by name.
+  play=function(name,speed,gain)return audio:play(name,speed,gain)end,
   -- The First Hatch's merge sparks fly over the board (EggDrop, DisplayOrder 10) and the deck (9).
   sparkLayer=function()
    local gui=player.PlayerGui:FindFirstChild("EggDropWelcomeSparks")
@@ -5650,7 +5711,11 @@ do
    local bubble=require(script.BubbleHold).new(function()
     return require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),adornee=petPart,
      reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
-     keyHint=function()return Needs.keyHint(clientUI.inputKind())end,
+     -- Onboarding v2 (Onboard "guide"): never a key name on a computer; the pad's X picture.
+     keyHint=function()
+      if needs and needs.guide then return require(script.OnboardV2).guideKey(clientUI.inputKind())end
+      return Needs.keyHint(clientUI.inputKind())
+     end,
      onTap=function()if needs then needs:tap()end end})
    end,function()local nest=clientUI.nest;return nest~=nil and nest:holdsBubble()==true end)
    clientUI.needBubble=bubble
@@ -5664,6 +5729,38 @@ do
     mask=function()return clientUI.coach.mask end,mark=function(id)clientUI.coach:mark(id)end,finishIntro=function()clientUI.coach:finishGarden()end,
     follow=function()return Onboard.sessionFollow()end,needs=function()return Onboard.on("needs")end,returning=function()return things.returning==true end,
     nestFirst=function()return Onboard.on("nestfirst")and Onboard.on("needs")and Onboard.on("nest")end, -- the First Hatch
+    -- Onboarding v2 step 5 (Onboard "guide"): the worded prompts, the trail to the far nest, the deck button's pulse,
+    -- the first pet's settle buzz and the end card.
+    guide=function()return Onboard.on("guide")end,
+    words=function(id)local key,vars=Needs.guideWords(id,petName());return if key then Copy.get(key,vars)else nil end,
+    far=function(where)
+     local at=if where=="Nest"then nestAt()else nil
+     local from=rootPosition()
+     return at~=nil and from~=nil and(at-from).Magnitude>require(script.OnboardV2).Guide.far
+    end,
+    pulseDeck=function(on)
+     local button=roomView.controls and roomView.controls:FindFirstChild("OpenHandheld")
+     if not button then return end
+     local ring=button:FindFirstChild("GuidePulse")
+     if not on then if ring then ring.Visible=false end;return end
+     if not ring then
+      ring=Instance.new("Frame");ring.Name="GuidePulse";ring.BackgroundTransparency=1;ring.AnchorPoint=Vector2.new(.5,.5)
+      ring.Position=UDim2.fromScale(.5,.5);ring.Size=UDim2.fromScale(1,1);ring.ZIndex=button.ZIndex+5;ring.Active=false
+      local corner=Instance.new("UICorner");corner.CornerRadius=UDim.new(.5,0);corner.Parent=ring
+      local stroke=Instance.new("UIStroke");stroke.Name="Line";stroke.Thickness=4;stroke.Color=require(script.OnboardV2).Guide.arrow;stroke.Parent=ring
+      local scale=Instance.new("UIScale");scale.Name="Grow";scale.Parent=ring
+      ring.Parent=button
+     end
+     ring.Visible=true
+     local u=if reduceEffects()then .3 else(os.clock()%1)
+     ring.Grow.Scale=1+.35*u;ring.Line.Transparency=u
+    end,
+    firstPet=function()pcall(function()require(script.Haptics).play("settle")end)end,
+    allSet=function()
+     request:FireServer("onboardEvent","AllSet")
+     require(script.GuideEndCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,
+      play=function(name,speed,gain)return audio:play(name,speed,gain)end,reduced=function()return reduceEffects()==true end})
+    end,
     -- Things to do itself, not its tips switch (with tips off the Bear would never start, nor the garden step's clock).
     gate=function()local since=clientUI.coach.roomSince;return Needs.gate(gate(if since then os.clock()-since else 0),Things.on())end,
     greeting=function()return roomView.focusing==true end,inPark=function()return Attract.parkMember(rootPosition())end,

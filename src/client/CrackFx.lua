@@ -63,6 +63,15 @@ function Fx.new(prompt,copy)
 	self.layer=node("Frame",nil,"CrackFxLayer",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Active=false,ZIndex=prompt.ZIndex-1})
 	return self
 end
+-- Onboarding v2 step 3 (the egg in the garden): its own pill colour, wording and help timing. opts: {fill = Color3,
+-- copy = {Touch, Gamepad, other = UICopy keys}, handAfter = s before the hand bounces, everyStop = true (the hand helps
+-- at every stop, not only the first)}. Unset, everything is as the reveal's.
+function Fx:configure(opts)
+	opts=opts or {}
+	if typeof(opts.fill)=="Color3"then self.prompt.BackgroundColor3=opts.fill end
+	self.copyKeys=opts.copy;self.handAfter=opts.handAfter;self.everyStop=opts.everyStop==true
+	return self
+end
 function Fx:local_(layer,abs)return abs-layer.AbsolutePosition end
 -- Follow the layer the prompt is in (the full-screen stage, or the cinematic's frame) and the spot.
 function Fx:place(layer,spot,phone)
@@ -81,7 +90,9 @@ function Fx:place(layer,spot,phone)
 	self.spot=spot;self.phone=phone
 end
 function Fx:setText(kind)
-	local ok,text=pcall(self.copy,Fx.copyKey(kind))
+	local keys=self.copyKeys
+	local key=if keys then(keys[kind]or keys.other)else Fx.copyKey(kind)
+	local ok,text=pcall(self.copy,key)
 	if ok and type(text)=="string"then self.prompt.Text=text end
 end
 function Fx:center(layer)
@@ -93,7 +104,7 @@ function Fx:beat(index,at,reduced)
 	local layer=self.layer.Parent;if not layer or index<=self.drawn then return end
 	self.drawn=index
 	local center,eggH=self:center(layer)
-	if at then self:ring(self:local_(layer,at));self:flakes(self:local_(layer,at),Fx.Flakes.counts[index]or 6,reduced)end
+	if at then self:ring(self:local_(layer,at));self:flakes(self:local_(layer,at),(self.flakeCounts or Fx.Flakes.counts)[index]or 6,reduced)end
 	local shape=Fx.Shapes[index];if not shape then return end
 	for li,line in ipairs(shape)do
 		local pts=Fx.points(line,self:local_(layer,center),eggH)
@@ -136,12 +147,13 @@ function Fx:step(dt,waiting,waited,taps,reduced)
 	self.prompt.Visible=waiting
 	self.pulse.Scale=if waiting and not reduced then 1+Fx.Pill.pulse*(.5-.5*math.cos(self.age/Fx.Pill.period*math.pi*2))else 1
 	local layer=self.layer.Parent
-	local showHand=waiting and taps==0 and waited>=Fx.HandAfter and layer~=nil and not reduced
+	local after=self.handAfter or Fx.HandAfter
+	local showHand=waiting and(taps==0 or self.everyStop)and waited>=after and layer~=nil and not reduced
 	self.hand.Visible=showHand
 	if showHand then
 		local center,eggH=self:center(layer)
 		local at=self:local_(layer,center)+Vector2.new(eggH*.12,eggH*.05)
-		local press=math.max(0,math.sin((waited-Fx.HandAfter)/Fx.HandPeriod*math.pi*2))
+		local press=math.max(0,math.sin((waited-after)/Fx.HandPeriod*math.pi*2))
 		self.hand.Position=UDim2.fromOffset(at.X+10*(1-press),at.Y+10*(1-press))
 	end
 	for _,c in ipairs(self.cracks)do

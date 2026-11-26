@@ -40,7 +40,7 @@ return function(server)
 		assert(not Onboard.resolve(true,false,true)and Onboard.resolve(false,true,true))
 	end)
 	test("three parts with their keys and attributes; each switches alone; unknown parts are off",function()
-		assert(table.concat(Onboard.Features,",")=="follow,needs,nest,corner,landmark,capsule,opener,crack,nestfirst")
+		assert(table.concat(Onboard.Features,",")=="follow,needs,nest,corner,landmark,capsule,opener,crack,nestfirst,egg3d,stork,safecard,guide")
 		for _,feature in ipairs(Onboard.Features)do
 			assert(Onboard.key(feature)=="onboard_"..feature and Onboard.attribute(feature)=="Onboard_"..feature,feature)
 		end

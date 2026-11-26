@@ -190,6 +190,14 @@ do
   if built and type(id)=="number"and id>0 then assetIds[cue]=id;table.insert(cues,cue)end
  end
 end
+-- Onboarding v2 step 2 (FirstHatchStory.Sounds, ONBOARDING-V2.md): the stork's soft cloth whooshes, its two woody beak
+-- clicks and the blanket's rustle, to synthesise with scripts/synth_asmr.py. EMPTY SLOTS: 0 = not made or uploaded yet =
+-- no voice (play() answers false, quietly). Put each uploaded asset id here.
+Audio.StorkIds=table.freeze({stork_flap_a=0,stork_flap_b=0,stork_flap_c=0,stork_clack=0,blanket_rustle=0})
+for cue,id in pairs(Audio.StorkIds)do
+ Audio.PendingCues[cue]=true
+ if type(id)=="number"and id>0 then assetIds[cue]=id;table.insert(cues,cue)end
+end
 for _,kind in ipairs({"bear","toy","hue","material","feature"})do
  local id=DisplayAssets.Audio["hatch_"..kind]
  if id then local cue="hatch_display_"..kind;assetIds[cue]=id;table.insert(cues,cue)end

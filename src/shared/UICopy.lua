@@ -284,6 +284,16 @@ local Table={
   crack={tap="Tap the egg!",click="Click the egg!",pad="Press A!"}, -- the First Hatch (Onboard "crack"), by last input
   spend={hatch="Hatch eggs",give="Give to {pet}",store="Store",ready="A toy for {pet}",line="Choose a Toy Egg when you're ready."},
  },
+ -- Onboarding v2 (artifacts/qa-2026-11-26-beta35/ONBOARDING-V2.md): one instruction a step, 16 characters or fewer,
+ -- never a key name (a phone shows a hand, a computer the words, a gamepad the button picture).
+ onb2={
+  deck={drop="Drop a ball!",match="Match two!",two="2 more!",one="1 more!",hatching="It's hatching!",click="Click to drop"},
+  stork={delivery="A delivery!",skip="Skip"},
+  crack={tap="Tap the egg!",click="Click the egg!",pad="Crack it!"},
+  card={meet="Meet {pet}"},
+  guide={pet="Pet {pet}!",nest="Tuck the egg in!",deck="Play for Stars!",allSet="You're all set!",deckIcon="Deck",ballIcon="Ball",eggsIcon="Eggs"},
+  replay="Watch the first hatch again",
+ },
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).
  -- A title of three words or fewer and one short line; the game assumes merge-game players.
  coach={effortPay="Good effort",

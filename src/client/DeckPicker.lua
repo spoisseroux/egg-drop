@@ -96,6 +96,9 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  -- QA v2 R3.8: "Show tips again" (init.client sets `onTips`: R1's coach-tip replay).
  self.tipsButton=button(scroll,"TipsSetting",require(Shared.UICopy).get("r3.tips"),function()self:replayTips()end)
  self.tipsButton.Visible=false
+ -- Onboarding v2: "Watch the first hatch again" (init.client sets `onReplayHatch`: the stork and the crack, no rewards).
+ self.replayButton=button(scroll,"ReplayHatchSetting",require(Shared.UICopy).get("onb2.replay"),function()self:replayHatch()end)
+ self.replayButton.Visible=false
  shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
  Art.watchTextPreference(shade,function()return shade.Visible end,function()self.safeTop=nil;self:layout()end)
  self.shop=Shop.new(shade,{
@@ -175,8 +178,8 @@ function Picker:layout()
    local h=Art.textHeight(self.saveDetail,bodyW-8,24)
    place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
   end
-  for _,control in ipairs({self.sound,self.music,self.motion,self.vibration,self.greet,self.menuColours,self.reportButton,self.tipsButton})do
-   if(control==self.tipsButton or control==self.vibration)and not control.Visible then continue end
+  for _,control in ipairs({self.sound,self.music,self.motion,self.vibration,self.greet,self.menuColours,self.reportButton,self.tipsButton,self.replayButton})do
+   if(control==self.tipsButton or control==self.vibration or control==self.replayButton)and not control.Visible then continue end
    styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
    place(control,4,y,bodyW-8,h);y+=h+8
   end
@@ -245,6 +248,7 @@ function Picker:showTab(active)
  self.menuColours.Visible=settings
  self.reportButton.Visible=settings and self.onReport~=nil
  self.tipsButton.Visible=settings and self.onTips~=nil
+ self.replayButton.Visible=settings and self.onReplayHatch~=nil and(self.replayHatchShown==nil or self.replayHatchShown()==true)
  self.scroll.CanvasPosition=Vector2.zero;self:layout()
  if changed then
   self:bumpControllerEpoch();local selected=GuiService.SelectedObject
@@ -288,6 +292,12 @@ end
 function Picker:openReport()
  if not self.shade.Visible or self.active~="Settings"or not self.onReport then return false end
  if self.onReport()==false then return false end
+ if self.onAccepted then self.onAccepted("confirm")end;return true
+end
+-- Settings > Watch the first hatch again (onboarding v2): init.client closes Settings and plays the replay.
+function Picker:replayHatch()
+ if not self.shade.Visible or self.active~="Settings"or not self.onReplayHatch then return false end
+ if self.onReplayHatch()==false then return false end
  if self.onAccepted then self.onAccepted("confirm")end;return true
 end
 -- Settings > Show tips again (R3.8): R1's coach tips replay; the screen stays as it is.

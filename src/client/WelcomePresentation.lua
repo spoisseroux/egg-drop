@@ -1,6 +1,7 @@
 -- Procedural Welcome art only; never grants progress or fabricates player input.
 -- hosts={meter,gesture,skip}; each must be an existing free well. No modal.
 local Progress=require(game:GetService("ReplicatedStorage").Shared.WelcomeProgress)
+local V2=require(script.Parent.OnboardV2)
 local View={};View.__index=View
 local CREAM=Color3.fromHex("#FFF0D2")
 local MINT=Color3.fromHex("#94DFB7")
@@ -140,9 +141,13 @@ function View:paint()
 	local touch=s.device=="Touch"
 	self.ghost.Visible=input and touch and not reduced
 	self.glyph.Visible=input and(not touch or reduced)
-	self.glyph.Text=self:copy(if reduced and touch then "onboarding.welcome.static"elseif s.device=="Gamepad"then "onboarding.welcome.gamepad"else "onboarding.welcome.keyboard")
+	self.glyph.Text=self:copy(if reduced and touch then "onboarding.welcome.static"elseif s.device=="Gamepad"then "onboarding.welcome.gamepad"
+		elseif self.egg3d then "onb2.deck.click"else "onboarding.welcome.keyboard") -- onboarding v2: no key names
 	local side=View.fit(self.hosts.meter.AbsoluteSize.X,self.hosts.meter.AbsoluteSize.Y)
 	self.egg.Size=UDim2.fromOffset(math.floor(side/scale),math.floor(side/scale))
+	-- Onboarding v2 step 1 (Onboard "egg3d"): the 3D egg and its pips take the pixel egg's place once it is drawn.
+	local v2=self.egg3d~=nil and self.egg3d.shown
+	if v2 and self.egg3d:ready()then self.egg.Visible=false end
 	self.egg:SetAttribute("Inset",8);self.egg:SetAttribute("Stage",self.stage or 0)
 	local combos=if s.combo==true then math.clamp(math.floor(s.charge or 0),0,3)else nil
 	-- the combo round's egg wears the reveal egg's look (switch off: as before)
@@ -151,7 +156,7 @@ function View:paint()
 		for _,dot in ipairs(self.speckles)do dot.BackgroundColor3=if self.lookCombo then SPOT else MINT end
 		for _,b in ipairs(self.band)do b.strip.BackgroundColor3=if self.lookCombo then BAND else CREAM;b.soft.Enabled=not self.lookCombo end
 	end
-	for i,pip in ipairs(self.pips)do pip.Visible=wanted and combos~=nil;pip.BackgroundTransparency=if combos and i<=combos then 0 else 1 end
+	for i,pip in ipairs(self.pips)do pip.Visible=wanted and combos~=nil and not v2;pip.BackgroundTransparency=if combos and i<=combos then 0 else 1 end
 	self.egg:SetAttribute("LayoutBlocked",wanted and side<1)
 end
 function View:update(snapshot)
@@ -164,9 +169,20 @@ function View:update(snapshot)
 	if s.grantPending==true then self.pending=true elseif old and old.grantPending==true then self.pending=false end
 	local stage,cue=Progress.update(self.progress,s.generation,s.charge or 0,s.threshold,self.active)
 	self.stage=stage
+	-- Onboarding v2 step 1 (Onboard "egg3d"): the combo round's 3D egg, its words and pips (its own crack sounds).
+	-- The calm deck's cards only (DeckScreen's Goals card holds the skip well); the portrait fallback keeps its pixel egg.
+	local coach=self.hosts.skip and self.hosts.skip.Parent
+	if s.combo==true and not self.egg3d and coach and coach.Name=="Goals"and V2.on("egg3d")then
+		local ok,egg=pcall(function()
+			return require(script.Parent.WelcomeEgg3D).new(self.hosts.meter,self.hosts.skip.Parent,{copy=self.d.copy,play=self.d.play,
+				reduced=function()return self.snapshot~=nil and self.snapshot.reduced==true end})
+		end)
+		if ok then self.egg3d=egg else warn("[Onboard] egg3d: "..tostring(egg))end
+	end
+	if self.egg3d then self.egg3d:update({active=self.active and s.combo==true,combos=if s.combo==true then s.charge else 0,drops=s.drops,granted=(s.owned or 0)>0})end
 	if cue then
 		if not s.reduced then self.wobble=0 end
-		if self.d.cue then self.d.cue(Progress.Pitches[cue],.35)end
+		if self.d.cue and not self.egg3d then self.d.cue(Progress.Pitches[cue],.35)end
 	end
 	self:paint()
 	-- the combo round keeps its one goal in words: Hatch a friend (the pips count the combos)
@@ -176,7 +192,8 @@ end
 function View:input()self.interacted=true;self.ghost.Visible=false;self.glyph.Visible=false end
 -- A merge at `from` (absolute screen pixels), in `color`. Only the showing egg takes it; false when nothing flies.
 function View:spark(from,color,pitch)
-	if not self.alive or not self.active or not self.egg.Visible or typeof(from)~="Vector2"then return false end
+	local egg3d=self.egg3d~=nil and self.egg3d.shown
+	if not self.alive or not self.active or not(self.egg.Visible or egg3d)or typeof(from)~="Vector2"then return false end
 	if self.snapshot and self.snapshot.reduced then return false end
 	-- its own layer above the board (the board draws in a ScreenGui over the deck's); else the egg's own
 	local gui=(self.d.sparkLayer and self.d.sparkLayer())or self.egg:FindFirstAncestorWhichIsA("LayerCollector")
@@ -283,6 +300,7 @@ function View:destroy()
 	if not self.alive then return end
 	self:clearSparks();self.alive=false
 	for _,link in ipairs(self.links)do link:Disconnect()end
+	if self.egg3d then self.egg3d:destroy();self.egg3d=nil end
 	self.egg:Destroy();self.ghost:Destroy();self.glyph:Destroy();self.skip:Destroy()
 	self.flash:Destroy();for _,pip in ipairs(self.pips)do pip:Destroy()end
 end

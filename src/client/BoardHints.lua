@@ -127,7 +127,9 @@ function Hints:step(now,state)
  if live then self.idleSince=self.idleSince or now else self.idleSince=nil end
  local want=Hints.idleWanted({firstRun=state.firstRun,dropped=self.dropped,live=live,idleFor=if self.idleSince then now-self.idleSince else 0})
  if want then
+  -- Onboarding v2 step 1 (Onboard "egg3d"): the Welcome round's own words (no key names); off, as before.
   local text=Hints.idleText(state.input)
+  if self.idleTextFor then local ok,other=pcall(self.idleTextFor,state.input);if ok and type(other)=="string"then text=other end end
   if self.hintText.Text~=text then self.hintText.Text=text;self:sizeHint()end
   if not self.hint.Visible then
    self.hint.Visible=true;self.shownAt=now
